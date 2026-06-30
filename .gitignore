@@ -28,7 +28,13 @@ Thumbs.db
 CLAUDE.md
 
 # Secrets
+.env.local
 *.key
 *.pem
 secrets.json
 config.local.*
+
+# Datenbank (lokal, nicht versionieren)
+*.db
+*.sqlite
+*.sqlite3

@@ -1,0 +1,311 @@
+==================================================================
+ TradingInfoTool — Basisinformationen & funktionale Spezifikation
+==================================================================
+Dokumenttyp : Fachliche Ausgangsbasis (Lastenheft-Charakter)
+Eigentümer  : Gernot Spiessmaier
+Stand       : 2026-06-30
+Hinweis     : Dieses Dokument ist die fachliche Grundlage. Technische
+              Umsetzung/Projektstruktur siehe CLAUDE.md im Projektroot.
+              Legende:  [ORIGINAL] = ursprünglicher Inhalt des Eigentümers
+                        [ERGÄNZUNG] = von Claude vorgeschlagene Präzisierung
+                        [OFFEN]     = noch zu entscheiden (siehe Kap. 13)
+
+
+------------------------------------------------------------------
+1. VISION & ÜBERGEORDNETES ZIEL
+------------------------------------------------------------------
+[ORIGINAL]
+Trotz der aktuellen angespannten Finanzlage und zukünftiger Krisen mit
+dem TradingInfoTool einen hohen Gewinn und keinen Verlust zu erleiden
+und sinnvoll zu investieren. Da die investierten Summen nicht hoch sind,
+ist das Risikomanagement als übergeordnet für die Zielerreichung zu
+betrachten. Dennoch soll das Risikomanagement keine pauschale Bewertung
+sein, sondern sehr detailliert auf Assetklassen und Einzelwerte
+angewendet werden.
+
+[ERGÄNZUNG] Konkretisierung der Zielgrößen (messbar machen):
+- Z-1  Kapitalerhalt hat IMMER Vorrang vor Gewinnmaximierung.
+- Z-2  Zielsetzung pro Position: positives Chance-Risiko-Verhältnis
+       (CRV) von mindestens 2:1, bevor ein Kaufsignal ausgegeben wird.
+- Z-3  Maximal akzeptierter Gesamt-Drawdown des Portfolios: [OFFEN]
+       (Vorschlag: -15 %). Bei Überschreitung → Agent wechselt in
+       Kapitalschutz-Modus (keine Neukäufe, ggf. Teilverkäufe).
+- Z-4  Jede Empfehlung ist nachvollziehbar (Begründung + Datenbasis +
+       Konfidenz in %), damit Entscheidungen prüfbar bleiben.
+
+
+------------------------------------------------------------------
+2. LEITPRINZIPIEN DES AGENTEN
+------------------------------------------------------------------
+[ORIGINAL]
+- Der Agent soll Experte im Tradingbereich sein und Fibonacci,
+  Retracements, wichtige Indikatoren etc. heranziehen.
+- Die Empfehlungen des Agenten sollen in einer kurzen UND einer langen
+  Begründung gegeben werden.
+
+[ERGÄNZUNG]
+- P-1  "Risikomanagement zuerst": Jedes Signal wird zuerst gegen die
+       Risikoregeln (Kap. 3) geprüft, erst dann gegen die Chance.
+- P-2  Transparenz: Der Agent nennt zu jeder Empfehlung die verwendeten
+       Indikatoren/Datenquellen und seine Konfidenz (0-100 %).
+- P-3  Kein Overtrading: Signale nur bei klarer Faktenlage; "Halten /
+       Abwarten" ist eine gültige und oft beste Empfehlung.
+- P-4  Konsistenz: Empfehlungen widersprechen nicht der gewählten
+       Strategie (Kap. 6) und der Haltedauer-Logik (R-5.x).
+- P-5  Ausgabeformat jeder Empfehlung (einheitlich, UI- und DB-tauglich):
+         * Asset & Aktion (KAUFEN / VERKAUFEN / HALTEN / NACHKAUFEN)
+         * Kurzbegründung (1-2 Sätze, für schnelle Entscheidung)
+         * Langbegründung (technisch + fundamental + Makro)
+         * Empfohlene Positionsgröße bzw. Stückzahl
+         * Einstieg / Stop-Loss / Take-Profit-Ziele
+         * Empfohlene Haltedauer + Begründung
+         * Konfidenz in % und wichtigste Risiken/Gegenargumente
+
+
+------------------------------------------------------------------
+3. RISIKOMANAGEMENT  (KERNMODUL — höchste Priorität)
+------------------------------------------------------------------
+[ERGÄNZUNG — dieses Kapitel war im Original nur als Ziel benannt,
+ hier wird es operationalisierbar gemacht. Werte sind Vorschläge und
+ in der Oberfläche pro Nutzer einstellbar.]
+
+3.1 Positionsgrößen / Money-Management
+- RM-1  Risiko pro Einzeltrade: max. 1-2 % des Gesamtkapitals
+        (Verlust bis Stop-Loss, nicht Positionsgröße).
+- RM-2  Maximale Allokation pro Einzelwert: [OFFEN] (Vorschlag: 25 %).
+- RM-3  Maximale Allokation pro Assetklasse: pro Klasse definierbar
+        (z.B. Krypto gesamt max. X %), detailliert je Klasse/Einzelwert
+        statt pauschal — wie vom Eigentümer gefordert.
+- RM-4  Cash-Reserve-Regel: Mindest-Cash-Quote für Krisen/Nachkäufe.
+
+3.2 Verlustbegrenzung
+- RM-5  Pflicht-Stop-Loss je Position (technisch hergeleitet, z.B. unter
+        letztem Swing-Low / unter relevantem Fibonacci-Level).
+- RM-6  Trailing-Stop-Option zur Gewinnsicherung.
+- RM-7  Portfolio-Notbremse bei Überschreiten von Z-3 (Drawdown-Limit).
+
+3.3 Asset-spezifische Risikobewertung (statt Pauschalbewertung)
+- RM-8  Pro Asset ein Risiko-Score aus: Volatilität, Liquidität/
+        Marktkapitalisierung, Korrelation zu BTC, Reife des Projekts.
+- RM-9  Höheres Risiko → kleinere erlaubte Positionsgröße (automatische
+        Skalierung der Empfehlung).
+
+3.4 Hebel-Risiko
+- RM-10 Hebel nur Long, kein Short (siehe Original Kap. 5). Hebelhöhe
+        gedeckelt und an Volatilität/Risiko-Score gekoppelt.
+- RM-11 Liquidationspreis muss bei jeder Hebel-Empfehlung ausgewiesen
+        und mit Sicherheitsabstand zum Stop-Loss versehen sein.
+
+
+------------------------------------------------------------------
+4. ASSETS & DIVERSIFIKATION
+------------------------------------------------------------------
+[ORIGINAL] Basiswerte / langfristige Kryptowährungen (Watchlist):
+- BTC        (Bitcoin)
+- ETH        (Ethereum)
+- SOL        (Solana)
+- TAO        (Bittensor)
+- LINK       (Chainlink)
+- Canton     (Canton Network — [OFFEN]: Ticker/Verfügbarkeit bei
+             CoinGecko prüfen, ggf. alternative Datenquelle)
+- Morpho     (Morpho)
+
+[ERGÄNZUNG]
+- A-1  Jedes Asset bekommt eine Klassifizierung: Basiswert (Core, lang-
+       fristig) vs. taktische Position (kürzere Haltedauer).
+- A-2  Diversifikationsregel: Klumpenrisiko vermeiden — Korrelationen
+       beachten (viele Altcoins laufen stark mit BTC; das ist KEINE echte
+       Diversifikation und muss im Risiko-Score berücksichtigt werden).
+- A-3  Watchlist ist in der Oberfläche pflegbar (Assets hinzufügen/
+       entfernen), Datenanbindung erfolgt automatisch falls verfügbar.
+
+
+------------------------------------------------------------------
+5. AGENT-LOGIK & ENTSCHEIDUNGSGRUNDLAGEN
+------------------------------------------------------------------
+[ORIGINAL]
+- Die wichtigsten Finanzmärkte analysieren und bewerten
+  (USA, Japan, China, EU, Korea).
+- Historische Daten heranziehen.
+- Strategien anwenden.
+- Hebeltrading berücksichtigen (vorerst nur Long, kein Short).
+- Spotkäufe und -verkäufe.
+- Empfehlung zur Haltedauer der Assets mit konkreter Begründung; der
+  User kann interaktiv weitere Parameter zur Bewertung hinzufügen.
+- Seriöse Posts in X (Twitter) durchsuchen.
+- YouTube-Kanäle und Beiträge bewerten.
+
+[ERGÄNZUNG] Entscheidungs-Pipeline (empfohlene Reihenfolge je Analyse):
+  R-5.1  Marktregime bestimmen (Bullen-/Bären-/Seitwärtsmarkt) anhand
+         BTC-Trend, BTC-Dominanz, Fear & Greed Index.
+  R-5.2  Makro-Kontext (Kap. 8.3): Leitzinsen, Risikoumfeld der Leit-
+         börsen USA/Japan/China/EU/Korea.
+  R-5.3  Technische Analyse je Asset: Trend, Indikatoren (Kap. 7),
+         Fibonacci-Retracements, Support/Resistance.
+  R-5.4  Sentiment (Kap. 8.4): X/YouTube nur als Zusatz, gewichtet
+         niedrig und nur "seriöse" Quellen (Quellen-Whitelist).
+  R-5.5  Risikoprüfung (Kap. 3) — VETO-Stufe: scheitert hier, kein Kauf.
+  R-5.6  Signal + Konfidenz + vollständige Empfehlung (Format P-5).
+
+  R-5.7  Haltedauer-Empfehlung: kurz / mittel / lang mit Begründung;
+         Nutzer kann eigene Parameter ergänzen (interaktiver Dialog),
+         die der Agent in die nächste Bewertung einbezieht.
+  R-5.8  Zeithorizonte/Timeframes für die TA festlegen [OFFEN]
+         (Vorschlag: 1D als Basis, 4H für Feintiming, 1W für Trend).
+  R-5.9  Forecast: Der Agent liefert ein Szenario (Bull/Base/Bear) mit
+         Wahrscheinlichkeiten statt einer einzelnen "Punktprognose".
+
+
+------------------------------------------------------------------
+6. STRATEGIE-KATALOG  (auswählbar pro Asset)
+------------------------------------------------------------------
+[ORIGINAL] Pro Asset kann auf Basis einer Basisbewertung eine eigene
+Strategie gewählt werden. Über die Oberfläche kann man unterschiedliche
+Strategien auswählen — die zum aktuellen Zeitpunkt beste Strategie wird
+dem User vorgeschlagen.
+
+[ERGÄNZUNG] Konkreter Strategie-Katalog (Startset, erweiterbar):
+- S-1  HODL / Core-Position    : langfristig halten, nur an starken
+                                 Leveln nachkaufen (DCA).
+- S-2  DCA (Cost-Averaging)    : regelmäßige Käufe unabhängig vom Preis.
+- S-3  Swing-Trading           : Ein-/Ausstieg an Support/Resistance &
+                                 Fibonacci, Haltedauer Tage–Wochen.
+- S-4  Trendfolge              : Einstieg bei bestätigtem Trend
+                                 (EMA-Crossover/MACD), Trailing-Stop.
+- S-5  Kapitalschutz-Modus     : automatisch aktiv bei Drawdown-Limit
+                                 (Z-3) — defensiv, hohe Cash-Quote.
+- S-6  Hebel-Long (optional)   : nur für geeignete Assets, strikt nach
+                                 RM-10/RM-11.
+- S-X  "Beste Strategie jetzt" : Agent schlägt aus S-1..S-6 die zum
+                                 Marktregime passende Strategie vor und
+                                 begründet die Auswahl.
+
+
+------------------------------------------------------------------
+7. TECHNISCHE INDIKATOREN (Mindestumfang)
+------------------------------------------------------------------
+[ERGÄNZUNG — Präzisierung von "wichtige Indikatoren" aus dem Original]
+- I-1  Trend     : EMA (z.B. 20/50/200), MACD
+- I-2  Momentum  : RSI (Überkauft/Überverkauft, Divergenzen)
+- I-3  Volatilität: Bollinger Bands, ATR (für Stop-Loss-Abstand)
+- I-4  Levels    : Fibonacci-Retracements & -Extensions, Support/
+                   Resistance, Swing-Highs/-Lows
+- I-5  Volumen   : Volumenbestätigung von Ausbrüchen
+- I-6  Marktbreite: BTC-Dominanz, Fear & Greed Index
+Hinweis: Kein Indikator allein erzeugt ein Signal — Bestätigung durch
+mehrere Indikatoren (Confluence) ist Voraussetzung.
+
+
+------------------------------------------------------------------
+8. DATENQUELLEN
+------------------------------------------------------------------
+8.1 Marktdaten (Pflicht)
+- D-1  Aktuelle Preise, Marktkapitalisierung, Volumen — CoinGecko
+       (Free Tier, max. 30 Req/Min beachten → Caching/Scheduler).
+- D-2  Historische Kursdaten für TA & Backtesting.
+
+8.2 [ORIGINAL] Historische Daten
+- Historische Kurs- und Indikatordaten werden für Mustererkennung und
+  Backtesting (Kap. 11) herangezogen.
+
+8.3 Makroökonomische Daten
+- D-3  Leitzinsen / Geldpolitik (Fed, EZB, BoJ, PBoC, BoK).
+- D-4  Stimmung der Leitbörsen: USA, Japan, China, EU, Korea.
+- D-5  Krypto-Makro: BTC-Dominanz, Fear & Greed Index, Stablecoin-Flows.
+       [OFFEN] Konkrete kostenlose APIs je Quelle festlegen.
+
+8.4 Sentiment / Social (Zusatzsignal, niedrig gewichtet)
+- D-6  X/Twitter: nur kuratierte Whitelist "seriöser" Accounts.
+       [OFFEN] X-API kostenpflichtig/limitiert → Machbarkeit & ToS prüfen,
+       ggf. erst in späterer Phase.
+- D-7  YouTube: Bewertung ausgewählter Kanäle/Beiträge.
+       [OFFEN] YouTube Data API + Transkript-Auswertung; rechtliche/
+       technische Machbarkeit prüfen. Sentiment NIE als alleiniger
+       Signalgeber (Manipulationsgefahr).
+
+
+------------------------------------------------------------------
+9. FUNKTIONEN IN DER OBERFLÄCHE (UI)
+------------------------------------------------------------------
+[ORIGINAL]
+- Beginn mit Kryptowährungen, zukünftig erweiterbar auf Aktien, ETF,
+  Rohstoffe.
+- Pro Asset kann auf Basis einer Basisbewertung eine eigene Strategie
+  gewählt werden.
+- Grafische Darstellung der Charts inkl. Forecast.
+
+[ERGÄNZUNG] Konkrete UI-Bausteine:
+- U-1  Dashboard: Portfolio-Wert, P&L, aktueller Drawdown, Cash-Quote,
+       Marktregime-Ampel.
+- U-2  Watchlist mit Live-Preisen und Asset-Risiko-Score.
+- U-3  Chart-Ansicht je Asset mit Indikatoren (Kap. 7) + Forecast-Szenario.
+- U-4  Signal-/Empfehlungsansicht im Format P-5 (kurz + lang).
+- U-5  Strategie-Auswahl je Asset + Vorschlag "beste Strategie jetzt".
+- U-6  Portfolio-Verwaltung: Bestände eintragen, Signale zuordnen.
+- U-7  Einstellungen: Risikoparameter (Kap. 3) pro Nutzer anpassbar.
+- U-8  Desktop-Benachrichtigungen bei neuen Signalen.
+- U-9  Interaktiver Dialog: Nutzer ergänzt Bewertungsparameter (R-5.7).
+
+
+------------------------------------------------------------------
+10. AGENT- & DATENBANK-BETRIEB
+------------------------------------------------------------------
+[ORIGINAL]
+- Der Agent soll eigenständig und ohne Client funktionieren; die
+  erforderlichen Daten stehen zur Laufzeit zur Verfügung.
+- Die Datenbank fungiert als Abgleich, wenn Agent/Oberfläche gestartet
+  sind.
+- Über die Oberfläche kann man unterschiedliche Strategien auswählen —
+  die aktuell beste Strategie wird dem User vorgeschlagen.
+
+[ERGÄNZUNG]
+- B-1  Hintergrund-Scheduler (APScheduler) holt periodisch Marktdaten,
+       respektiert das CoinGecko-Rate-Limit (Caching in SQLite).
+- B-2  Persistenz: Preise, Indikatoren, Signale, Portfolio, Strategien,
+       Nutzer-Parameter und Agent-Begründungen werden in SQLite
+       gespeichert (Historie & Nachvollziehbarkeit).
+- B-3  Der Agent läuft auch ohne offene UI (Hintergrundanalyse); beim
+       Start der UI erfolgt Abgleich mit dem letzten DB-Stand.
+- B-4  Claude API-Key in lokaler .env (niemals committen).
+
+
+------------------------------------------------------------------
+11. ROADMAP & ERWEITERBARKEIT
+------------------------------------------------------------------
+[ERGÄNZUNG]
+- Phase 1: Grundgerüst (Struktur, SQLite, CoinGecko, Basis-UI, Watchlist).
+- Phase 2: Marktdaten & Charts (Indikatoren Kap. 7, Visualisierung).
+- Phase 3: KI-Agent (Claude API, Entscheidungs-Pipeline Kap. 5,
+           Risikomodul Kap. 3, Strategie-Katalog Kap. 6, Makro).
+- Phase 4: Portfolio, Benachrichtigungen, Sentiment (X/YouTube).
+- Phase 5: Backtesting der Strategien gegen historische Daten (D-2),
+           danach Forecast-Qualität bewerten.
+- Phase 6: Erweiterung auf Aktien / ETF / Rohstoffe (neue Datenquellen).
+Architektur-Hinweis: Datenquellen, Indikatoren und Strategien als
+austauschbare Module (Plug-in-Prinzip) anlegen, damit Erweiterungen
+ohne Umbau des Kerns möglich sind.
+
+
+------------------------------------------------------------------
+12. RECHTLICHER HINWEIS
+------------------------------------------------------------------
+[ERGÄNZUNG] Das Tool dient der privaten Information und Entscheidungs-
+unterstützung. Es stellt KEINE Anlageberatung dar. Alle Empfehlungen sind
+algorithmisch/KI-generiert und können fehlerhaft sein. Trading birgt
+Verlustrisiken (Hebel: Totalverlust möglich). Letzte Entscheidung und
+Verantwortung liegen beim Nutzer. Dieser Hinweis sollte in der UI sichtbar
+sein.
+
+
+------------------------------------------------------------------
+13. OFFENE PUNKTE / ZU ENTSCHEIDEN
+------------------------------------------------------------------
+- [OFFEN] Maximaler tolerierter Gesamt-Drawdown (Z-3)?  Vorschlag -15 %.
+- [OFFEN] Max. Allokation pro Einzelwert (RM-2) und pro Assetklasse (RM-3)?
+- [OFFEN] Verfügbarkeit/Ticker von "Canton" bei CoinGecko.
+- [OFFEN] Konkrete kostenlose APIs für Makro-/Zinsdaten (D-3).
+- [OFFEN] X-API & YouTube-API: Kosten, Limits, ToS, Phase der Umsetzung.
+- [OFFEN] Standard-Timeframes für die technische Analyse (R-5.8).
+- [OFFEN] Welche Claude-Modellversion (siehe CLAUDE.md) und Budget/Token.
+- [OFFEN] GitHub-Token aus altem Chat muss invalidiert/ersetzt werden.
+==================================================================
