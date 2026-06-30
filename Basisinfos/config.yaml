@@ -1,0 +1,150 @@
+# ==========================================================
+# TradingInfoTool - Laufzeit-Konfiguration (maschinenlesbar)
+# ----------------------------------------------------------
+# Diese Datei enthaelt die "harten" Parameter, die App und
+# KI-Agent zur Laufzeit auslesen. Erklaerungen und Begruendungen
+# stehen in Spezifikation.md (gleicher Ordner).
+#
+# BEARBEITEN IN NOTEPAD++ - bitte beachten:
+#   - Nur LEERZEICHEN zum Einruecken (KEINE Tabs!), 2 pro Ebene
+#   - Nach dem Schluessel immer Doppelpunkt + Leerzeichen:  schluessel: wert
+#   - Listenpunkte beginnen mit "- "
+#   - Kommentare beginnen mit #
+#   - Tipp: in Notepad++  Ansicht > Symbole > Leerzeichen/Tab anzeigen,
+#     dann sieht man Tabs sofort. Sprache > YAML aktiviert Farb-Hervorhebung.
+#   - Werte mit Kommentar [OFFEN] sind Vorschlaege -> bitte bestaetigen/anpassen
+# ==========================================================
+
+meta:
+  projekt: TradingInfoTool
+  eigentuemer: Gernot Spiessmaier
+  version: 0.1
+  stand: 2026-06-30
+
+# --- Uebergeordnete Ziele / Leitplanken (siehe Spezifikation Kap. 1) ---
+ziele:
+  kapitalerhalt_vor_gewinn: true       # Z-1: Kapitalerhalt hat immer Vorrang
+  crv_minimum: 2.0                     # Z-2: Mindest-Chance-Risiko-Verhaeltnis (2:1)
+  max_drawdown_prozent: 15             # Z-3: [OFFEN] Vorschlag -> bei Ueberschreitung Kapitalschutz-Modus
+  begruendung_pflicht: true            # Z-4: jede Empfehlung mit Begruendung + Konfidenz
+
+# --- Risikomanagement / Kernmodul (siehe Spezifikation Kap. 3) ---
+risiko:
+  risiko_pro_trade_prozent: 2          # RM-1: max. Verlust bis Stop-Loss je Trade
+  max_allokation_pro_asset_prozent: 25 # RM-2: [OFFEN] Vorschlag
+  cash_reserve_min_prozent: 10         # RM-4: [OFFEN] Vorschlag
+  stop_loss_pflicht: true              # RM-5: jede Position braucht einen Stop-Loss
+  trailing_stop_erlaubt: true          # RM-6: Gewinnsicherung
+  # RM-3: maximale Allokation je Assetklasse (detailliert statt pauschal)
+  max_allokation_pro_klasse_prozent:
+    krypto: 100                        # [OFFEN] aktuell nur Krypto im Einsatz
+    aktien: 0
+    etf: 0
+    rohstoffe: 0
+  hebel:
+    erlaubt: true
+    nur_long: true                     # RM-10: kein Short
+    max_hebel: 3                       # [OFFEN] Vorschlag, an Volatilitaet koppeln
+    liquidationspreis_ausweisen: true  # RM-11
+
+# --- Watchlist / Basiswerte (siehe Spezifikation Kap. 4) ---
+# typ: core = langfristige Kernposition | taktisch = kuerzere Haltedauer
+watchlist:
+  - symbol: BTC
+    name: Bitcoin
+    typ: core
+    coingecko_id: bitcoin
+  - symbol: ETH
+    name: Ethereum
+    typ: core
+    coingecko_id: ethereum
+  - symbol: SOL
+    name: Solana
+    typ: core
+    coingecko_id: solana
+  - symbol: TAO
+    name: Bittensor
+    typ: core
+    coingecko_id: bittensor
+  - symbol: LINK
+    name: Chainlink
+    typ: core
+    coingecko_id: chainlink
+  - symbol: CANTON
+    name: Canton Network
+    typ: core
+    coingecko_id: ""                   # [OFFEN] CoinGecko-ID / Verfuegbarkeit pruefen
+  - symbol: MORPHO
+    name: Morpho
+    typ: core
+    coingecko_id: morpho
+
+# --- Strategie-Katalog (siehe Spezifikation Kap. 6) ---
+strategien:
+  - id: S-1
+    name: HODL / Core
+    beschreibung: Langfristig halten, nur an starken Leveln nachkaufen (DCA)
+    aktiv: true
+  - id: S-2
+    name: DCA
+    beschreibung: Regelmaessige Kaeufe unabhaengig vom Preis
+    aktiv: true
+  - id: S-3
+    name: Swing-Trading
+    beschreibung: Ein-/Ausstieg an Support/Resistance und Fibonacci, Haltedauer Tage bis Wochen
+    aktiv: true
+  - id: S-4
+    name: Trendfolge
+    beschreibung: Einstieg bei bestaetigtem Trend (EMA-Crossover/MACD), Trailing-Stop
+    aktiv: true
+  - id: S-5
+    name: Kapitalschutz
+    beschreibung: Defensiv, hohe Cash-Quote; automatisch aktiv bei Drawdown-Limit
+    aktiv: true
+  - id: S-6
+    name: Hebel-Long
+    beschreibung: Nur fuer geeignete Assets, strikt nach Risiko-Regeln, nur Long
+    aktiv: false                       # vorerst deaktiviert
+
+# --- Technische Indikatoren (siehe Spezifikation Kap. 7) ---
+indikatoren:
+  trend: [EMA, MACD]
+  ema_perioden: [20, 50, 200]
+  momentum: [RSI]
+  rsi_periode: 14
+  volatilitaet: [BollingerBands, ATR]
+  levels: [Fibonacci, SupportResistance]
+  marktbreite: [BTC_Dominanz, FearGreedIndex]
+  confluence_pflicht: true             # kein Signal aus einem einzelnen Indikator
+
+# --- Agent-Entscheidung: Zeithorizonte und Gewichtung (siehe Kap. 5) ---
+agent:
+  timeframes:
+    trend: 1W                          # [OFFEN] Vorschlag
+    basis: 1D
+    feintiming: 4H
+  # Gewichtung der Faktoren in der Signal-Entscheidung (Summe ~ 1.0)
+  gewichtung:
+    technische_analyse: 0.5
+    makro: 0.3
+    sentiment: 0.2                     # niedrig - Manipulationsgefahr
+  forecast_szenarien: [bull, base, bear]
+
+# --- Datenquellen (siehe Spezifikation Kap. 8) ---
+datenquellen:
+  marktdaten:
+    anbieter: CoinGecko
+    api_key_noetig: false
+    rate_limit_pro_minute: 30
+  makro:
+    leitzinsen: [Fed, EZB, BoJ, PBoC, BoK]
+    maerkte: [USA, Japan, China, EU, Korea]
+    krypto_makro: [BTC_Dominanz, FearGreedIndex]
+    api: ""                            # [OFFEN] konkrete kostenlose Quelle festlegen
+  sentiment:
+    x_twitter:
+      aktiv: false                     # [OFFEN] API-Kosten/ToS pruefen, spaetere Phase
+      whitelist: []                    # seriose Accounts hier eintragen
+    youtube:
+      aktiv: false                     # [OFFEN] YouTube Data API + Transkripte pruefen
+      kanaele: []
