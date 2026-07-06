@@ -1,6 +1,6 @@
 # TradingInfoTool — Spezifikation (fachliche Grundlage)
 
-> **Eigentümer:** Gernot Spiessmaier · **Version:** 0.5 · **Stand:** 2026-07-06
+> **Eigentümer:** Gernot Spiessmaier · **Version:** 0.6 · **Stand:** 2026-07-06
 >
 > Dieses Dokument beschreibt **was** das Tool leisten soll und **warum** (lesbarer Teil).
 > Die konkreten, vom Programm auslesbaren **Parameter** (Watchlist, Risiko-Limits,
@@ -173,9 +173,17 @@ Liste in `config.yaml → indikatoren`. Kein Signal aus einem einzelnen Indikato
 Konfiguration in `config.yaml → datenquellen`.
 
 - **Marktdaten (Pflicht):** CoinGecko (Free Tier, max. 30 Req/Min → Caching/Scheduler).
-- **Historische Daten:** für TA und Backtesting (Kap. 11).
+- **Historische Daten:** für TA und Backtesting (Kap. 11). Grundsatz: Historie wiederholt
+  sich nicht 1:1, ähnelt sich aber oft — Muster aus der Vergangenheit sollen daher (ab
+  Phase 3, Agent-Logik) als Vergleichsbasis einfließen, nicht nur aktuelle Werte isoliert
+  betrachtet werden.
 - **Makro:** Leitzinsen (Fed, EZB, BoJ, PBoC, BoK), Leitbörsen USA/Japan/China/EU/Korea,
-  BTC-Dominanz, Fear & Greed. `[OFFEN]` konkrete kostenlose APIs.
+  BTC-Dominanz, Fear & Greed. Zusätzlich vom Nutzer gewünscht (2026-07-06), noch zu
+  sondieren: **ISM** (Einkaufsmanagerindex), **M2-Geldmenge**, **CPI** (Verbraucher-
+  preisindex), **Trueflation** (Echtzeit-Inflationsdaten) — und weitere vergleichbare
+  Makro-/Inflationsindikatoren. `[OFFEN]` konkrete kostenlose APIs für alle genannten
+  Werte, aktuell UND historisch. Gehört zu Phase 3 (Makro-Modul, `api/macro.py`), nicht
+  zu Phase 2.
 - **Sentiment (niedrig gewichtet):** X/Twitter (kuratierte Whitelist) und YouTube
   (ausgewählte Kanäle). `[OFFEN]` API-Kosten/ToS/Machbarkeit, spätere Phase. Sentiment
   **nie** als alleiniger Signalgeber.
@@ -395,7 +403,8 @@ seinen Emotionen scheitert. Grundsatz: **antizyklisch, aber bedingt.**
 - Herleitung des `risikoappetit_faktor` aus konkreten Makro-Daten (hängt an Makro-APIs).
 
 **Daten & Betrieb:**
-- Konkrete kostenlose APIs für Makro-/Zinsdaten.
+- Konkrete kostenlose APIs für Makro-/Zinsdaten — inkl. ISM, M2-Geldmenge, CPI,
+  Trueflation und weitere (siehe Kap. 8), jeweils aktuell UND historisch. Phase 3.
 - X-API & YouTube-API: Kosten, Limits, ToS, Umsetzungsphase.
 - **E-Mail-Versand** (Kap. 13): SMTP-Server vs. Mail-API wählen; Zugangsdaten nur in `.env`.
 - **Flush-Erkennung** (AZ-1): reichere Signale (Funding-Rates, Liquidationsdaten) brauchen
