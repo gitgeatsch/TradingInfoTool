@@ -5,6 +5,7 @@ import tkinter as tk
 from tkinter import ttk
 
 import database.db as db
+from ui.formatting import format_money
 
 
 class PortfolioView(ttk.Frame):
@@ -67,10 +68,10 @@ class PortfolioView(ttk.Frame):
                     holding.symbol,
                     name,
                     f"{holding.quantity:g}",
-                    f"{price_usd:,.2f}" if price_usd is not None else "-",
-                    f"{price_eur:,.2f}" if price_eur is not None else "-",
-                    f"{value_usd:,.2f}" if value_usd is not None else "-",
-                    f"{value_eur:,.2f}" if value_eur is not None else "-",
+                    format_money(price_usd),
+                    format_money(price_eur),
+                    format_money(value_usd),
+                    format_money(value_eur),
                 ),
             )
 

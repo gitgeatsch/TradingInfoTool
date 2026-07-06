@@ -6,6 +6,7 @@ from tkinter import messagebox, ttk
 
 import database.db as db
 from importer.excel_import import import_holdings
+from ui.formatting import format_money
 from ui.portfolio import PortfolioView
 
 UI_POLL_INTERVAL_MS = 3000
@@ -95,8 +96,8 @@ class TradingInfoToolApp(tk.Tk):
 
         for asset in sorted(self._watchlist, key=lambda a: a.symbol):
             snap = latest_prices.get(asset.symbol)
-            price_usd = f"{snap.price_usd:,.4g}" if snap and snap.price_usd is not None else "-"
-            price_eur = f"{snap.price_eur:,.4g}" if snap and snap.price_eur is not None else "-"
+            price_usd = format_money(snap.price_usd if snap else None)
+            price_eur = format_money(snap.price_eur if snap else None)
             change = f"{snap.change_24h_pct:+.2f}" if snap and snap.change_24h_pct is not None else "-"
             tree.insert(
                 "",
