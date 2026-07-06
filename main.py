@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import os
 
 import config
 import database.db as db
@@ -16,6 +17,13 @@ logger = logging.getLogger(__name__)
 
 
 def main() -> None:
+    config.load_env()
+    coingecko_api_key = os.environ.get("COINGECKO_API_KEY")
+    if coingecko_api_key:
+        logger.info("CoinGecko API-Key gefunden (100 Req/Min statt 30).")
+    else:
+        logger.info("Kein CoinGecko API-Key gesetzt - anonymer Zugriff (30 Req/Min).")
+
     watchlist = config.get_watchlist()
 
     conn = db.get_connection()
@@ -27,7 +35,7 @@ def main() -> None:
         for warning in result.warnings:
             logger.warning(warning)
 
-    coingecko_client = CoinGeckoClient()
+    coingecko_client = CoinGeckoClient(api_key=coingecko_api_key)
 
     if db.is_history_first_run(conn):
         results = backfill_all(coingecko_client, conn, watchlist)

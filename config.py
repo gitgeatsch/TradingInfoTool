@@ -1,14 +1,25 @@
-"""Laedt Basisinfos/config.yaml (Watchlist etc.) fuer den Rest der App."""
+"""Laedt Basisinfos/config.yaml (Watchlist etc.) sowie optional .env fuer den Rest der App.
+
+.env-Loading ist bewusst minimal (nur COINGECKO_API_KEY, siehe P-9/P-10-Kontext) - kein
+ANTHROPIC_API_KEY/GITHUB_TOKEN-Gebrauch hier, das bleibt Phase 3 vorbehalten (P-8:
+lokale Autonomie, Claude nur optional)."""
 from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
 
 import yaml
+from dotenv import load_dotenv
 
 CONFIG_PATH = Path(__file__).resolve().parent / "Basisinfos" / "config.yaml"
+ENV_PATH = Path(__file__).resolve().parent / ".env"
 
 _config_cache: dict | None = None
+
+
+def load_env() -> None:
+    """Laedt .env falls vorhanden (kein Fehler falls die Datei fehlt - Key ist optional)."""
+    load_dotenv(ENV_PATH)
 
 
 @dataclass

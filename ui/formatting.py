@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 # P-10 / Spezifikation Kap. 16: Schwellenwerte fuer "veraltet"
-PRICE_STALE_THRESHOLD_MINUTES = 10  # 2x 5-Min-Scheduler-Takt
+PRICE_STALE_THRESHOLD_MINUTES = 30  # 2x 15-Min-Scheduler-Takt
 HISTORY_STALE_THRESHOLD_DAYS = 2  # 1 Tag Rueckstand ist normal, 2+ deutet auf Ausfall hin
 
 

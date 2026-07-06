@@ -10,7 +10,9 @@ from api.history import backfill_all
 
 logger = logging.getLogger(__name__)
 
-REFRESH_INTERVAL_MINUTES = 5
+REFRESH_INTERVAL_MINUTES = 15  # Verbrauchsreduzierung: 15 statt 5 Min (siehe Kap. 16/8,
+# Monats-Kontingent-Rechnung 2026-07-06 - 5 Min haette zusammen mit dem taeglichen
+# Historie-Refresh das 10.000/Monat-Limit ueberschritten)
 HISTORY_REFRESH_INTERVAL_HOURS = 24
 
 

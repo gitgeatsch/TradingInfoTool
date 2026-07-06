@@ -1,6 +1,6 @@
 # TradingInfoTool — Spezifikation (fachliche Grundlage)
 
-> **Eigentümer:** Gernot Spiessmaier · **Version:** 0.9 · **Stand:** 2026-07-06
+> **Eigentümer:** Gernot Spiessmaier · **Version:** 1.0 · **Stand:** 2026-07-06
 >
 > Dieses Dokument beschreibt **was** das Tool leisten soll und **warum** (lesbarer Teil).
 > Die konkreten, vom Programm auslesbaren **Parameter** (Watchlist, Risiko-Limits,
@@ -68,6 +68,11 @@ Messbare Zielgrößen (Werte in `config.yaml → ziele`):
   (Datenabruf, Persistenz, Basis-UI) dürfen zu keinem Zeitpunkt zwingend von einem
   Claude-API-Schlüssel abhängen; die Anbindung wird erst dann verdrahtet, wenn eine
   Phase sie tatsächlich aktiv nutzt.
+  **Klarstellung (2026-07-06):** Betrifft ausschließlich den Claude/Anthropic-Key.
+  `.env`-Loading wurde in Phase 2 eingeführt, aber nur für einen optionalen
+  `COINGECKO_API_KEY` (siehe Kap. 8) — CoinGecko bleibt reine Marktdaten-Anbindung,
+  hat nichts mit der KI-Autonomie-Frage zu tun. `ANTHROPIC_API_KEY`/`GITHUB_TOKEN`
+  bleiben weiterhin ungenutzt bis zur jeweils benötigten Phase.
 - **P-10** Fail-Loud statt Fail-Silent bei Datenproblemen — Ausfälle, fehlende oder
   veraltete Daten (z. B. CoinGecko nicht erreichbar, Preis-Cache veraltet, zu wenig
   Historie für einen Indikator) dürfen **niemals** zu stillschweigend falschen oder
@@ -218,7 +223,20 @@ gekennzeichnete Näherung bevorzugen statt vorschnell eine zweite Quelle einzuba
 Entscheidungen/Signale auf einer nur genäherten Datenart aufbauen will, ist die
 Näherung an dieser Stelle neu zu bewerten.
 
-- **Marktdaten (Pflicht):** CoinGecko (Free Tier, max. 30 Req/Min → Caching/Scheduler).
+- **Marktdaten (Pflicht):** CoinGecko. **ERLEDIGT (2026-07-06):** Anonymer Zugriff
+  (30 Req/Min) erwies sich als unzuverlässig — bei intensiverer Nutzung verhängt
+  CoinGecko längere Sperren, als das dokumentierte Limit vermuten lässt. Optionaler
+  kostenloser **Demo-API-Key** (100 Req/Min, stabiler) via `COINGECKO_API_KEY` in
+  `.env` eingebaut — App funktioniert weiterhin auch ohne Key (Fallback auf 30 Req/Min),
+  ein Key wird aber empfohlen. Kein Widerspruch zu P-8 (betrifft nur Claude/Anthropic).
+  **Wichtige Ergänzung:** Der Demo-Key erhöht nur das Minuten-Limit — das
+  **Monats-Kontingent bleibt bei 10.000 Calls, mit oder ohne Key**. Ursprünglich
+  geplanter 5-Min-Live-Preis-Takt hätte zusammen mit dem täglichen Historie-Refresh
+  (41 Assets × 2 Währungen) ca. 11.100 Calls/Monat verbraucht — über dem Limit.
+  Deshalb Live-Preis-Takt auf **15 Min** reduziert (`scheduler/background.py`,
+  `REFRESH_INTERVAL_MINUTES`) → ca. 5.340 Calls/Monat, mit Puffer für Erstimport/
+  manuelle Aktualisierungen. Staleness-Schwelle entsprechend auf 30 Min angepasst
+  (weiterhin 2× Scheduler-Takt, siehe `ui/formatting.py`).
 - **Historische Daten:** für TA und Backtesting (Kap. 11). Grundsatz: Historie wiederholt
   sich nicht 1:1, ähnelt sich aber oft — Muster aus der Vergangenheit sollen daher (ab
   Phase 3, Agent-Logik) als Vergleichsbasis einfließen, nicht nur aktuelle Werte isoliert

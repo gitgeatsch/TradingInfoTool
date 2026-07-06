@@ -1,4 +1,7 @@
-"""CoinGecko API Anbindung (Free Tier, kein API-Key noetig, max. 30 Req/Min)."""
+"""CoinGecko API Anbindung. Free Tier ohne Key: 30 Req/Min (anonym, in der Praxis
+unzuverlaessig - siehe Spezifikation Kap. 8/16, laengere Sperren bei intensivem Testen
+moeglich). Mit kostenlosem Demo-API-Key (COINGECKO_API_KEY in .env): 100 Req/Min,
+stabiler. Key ist optional - App funktioniert auch ohne (konservativeres Limit)."""
 from __future__ import annotations
 
 import time
@@ -10,17 +13,23 @@ import requests
 from database.models import PriceSnapshot
 
 BASE_URL = "https://api.coingecko.com/api/v3"
-RATE_LIMIT_PER_MINUTE = 30
+RATE_LIMIT_ANONYMOUS_PER_MINUTE = 30
+RATE_LIMIT_WITH_KEY_PER_MINUTE = 100
 DEFAULT_COOLDOWN_SECONDS = 60  # Backoff nach 429, falls kein Retry-After-Header vorhanden
 MAX_COOLDOWN_SECONDS = 300  # Deckel fuer den exponentiellen Backoff (5 Min)
 
 
 class CoinGeckoClient:
-    def __init__(self, session: requests.Session | None = None):
+    def __init__(self, session: requests.Session | None = None, api_key: str | None = None):
         self._session = session or requests.Session()
         self._call_timestamps: deque[float] = deque()
         self._cooldown_until: float = 0.0
         self._consecutive_429s: int = 0
+        self._rate_limit_per_minute = (
+            RATE_LIMIT_WITH_KEY_PER_MINUTE if api_key else RATE_LIMIT_ANONYMOUS_PER_MINUTE
+        )
+        if api_key:
+            self._session.headers.update({"x-cg-demo-api-key": api_key})
 
     def _respect_rate_limit(self) -> None:
         now = time.monotonic()
@@ -29,7 +38,7 @@ class CoinGeckoClient:
             now = time.monotonic()
         while self._call_timestamps and now - self._call_timestamps[0] > 60:
             self._call_timestamps.popleft()
-        if len(self._call_timestamps) >= RATE_LIMIT_PER_MINUTE:
+        if len(self._call_timestamps) >= self._rate_limit_per_minute:
             sleep_for = 60 - (now - self._call_timestamps[0])
             if sleep_for > 0:
                 time.sleep(sleep_for)
