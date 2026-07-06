@@ -1,6 +1,6 @@
 # TradingInfoTool — Spezifikation (fachliche Grundlage)
 
-> **Eigentümer:** Gernot Spiessmaier · **Version:** 0.4 · **Stand:** 2026-07-06
+> **Eigentümer:** Gernot Spiessmaier · **Version:** 0.5 · **Stand:** 2026-07-06
 >
 > Dieses Dokument beschreibt **was** das Tool leisten soll und **warum** (lesbarer Teil).
 > Die konkreten, vom Programm auslesbaren **Parameter** (Watchlist, Risiko-Limits,
@@ -39,7 +39,7 @@ Messbare Zielgrößen (Werte in `config.yaml → ziele`):
   - Asset & Aktion (KAUFEN / VERKAUFEN / TAUSCHEN / HALTEN / NACHKAUFEN)
   - Kurzbegründung (1–2 Sätze) + Langbegründung (technisch + fundamental + Makro)
   - Empfohlene Positionsgröße / Stückzahl
-  - Einstieg / Stop-Loss / Take-Profit
+  - Einstieg / Stop-Loss / Take-Profit — **jeweils in USD und EUR** (siehe P-9)
   - Empfohlene Haltedauer + Begründung
   - Konfidenz in % und wichtigste Risiken/Gegenargumente
 - **P-6** Steuerliche Einordnung (Österreich): Ein Tausch Krypto-zu-Krypto (auch in
@@ -68,6 +68,13 @@ Messbare Zielgrößen (Werte in `config.yaml → ziele`):
   (Datenabruf, Persistenz, Basis-UI) dürfen zu keinem Zeitpunkt zwingend von einem
   Claude-API-Schlüssel abhängen; die Anbindung wird erst dann verdrahtet, wenn eine
   Phase sie tatsächlich aktiv nutzt.
+- **P-9** Referenzwährung Euro + durchgängige USD/EUR-Doppelanzeige — der Nutzer hält
+  Bestände und denkt in **Euro**. Alle aktuellen bzw. veränderlichen Geldwertangaben
+  (Live-Preise, Portfolio-Wert, P&L) werden **immer gemeinsam in USD und EUR**
+  dargestellt, nicht nur in einer Währung. Gilt ausdrücklich auch für
+  Empfehlungen/Signale (siehe P-5: Einstieg/Stop-Loss/Take-Profit/Positionsgröße in
+  beiden Währungen). CoinGecko liefert beide Währungen direkt mit (kein zusätzlicher
+  Umrechnungsschritt/Wechselkurs-Risiko nötig).
 
 ## 3. Risikomanagement (Kernmodul — höchste Priorität)
 
@@ -177,12 +184,13 @@ Konfiguration in `config.yaml → datenquellen`.
 
 Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
 
-- **U-1** Dashboard: Portfolio-Wert, P&L, Drawdown, Cash-Quote, Marktregime-Ampel.
-- **U-2** Watchlist mit Live-Preisen + Asset-Risiko-Score.
+- **U-1** Dashboard: Portfolio-Wert, P&L, Drawdown, Cash-Quote, Marktregime-Ampel —
+  Geldwerte in **USD und EUR** (P-9).
+- **U-2** Watchlist mit Live-Preisen (**USD und EUR**, P-9) + Asset-Risiko-Score.
 - **U-3** Chart-Ansicht je Asset mit Indikatoren + Forecast-Szenario.
-- **U-4** Signal-/Empfehlungsansicht im Format P-5 (kurz + lang).
+- **U-4** Signal-/Empfehlungsansicht im Format P-5 (kurz + lang, Geldwerte in USD+EUR).
 - **U-5** Strategie-Auswahl je Asset + Vorschlag „beste Strategie jetzt".
-- **U-6** Portfolio-Verwaltung: Bestände eintragen, Signale zuordnen.
+- **U-6** Portfolio-Verwaltung: Bestände eintragen, Signale zuordnen, Wert in USD+EUR.
 - **U-7** Einstellungen: Risikoparameter (Kap. 3) pro Nutzer anpassbar.
 - **U-8** Desktop-Benachrichtigungen bei neuen Signalen.
 - **U-9** Interaktiver Dialog: Nutzer ergänzt Bewertungsparameter (R-5.7).

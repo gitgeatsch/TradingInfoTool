@@ -13,14 +13,16 @@ class PortfolioView(ttk.Frame):
         self._db_conn_factory = db_conn_factory
         self._watchlist_by_symbol = {asset.symbol: asset for asset in watchlist}
 
-        columns = ("symbol", "name", "quantity", "price_usd", "value_usd")
+        columns = ("symbol", "name", "quantity", "price_usd", "price_eur", "value_usd", "value_eur")
         self.tree = ttk.Treeview(self, columns=columns, show="headings")
         headings = {
             "symbol": "Symbol",
             "name": "Name",
             "quantity": "Bestand",
             "price_usd": "Preis (USD)",
+            "price_eur": "Preis (EUR)",
             "value_usd": "Wert (USD)",
+            "value_eur": "Wert (EUR)",
         }
         for col in columns:
             self.tree.heading(col, text=headings[col])
@@ -43,15 +45,20 @@ class PortfolioView(ttk.Frame):
         for item in self.tree.get_children():
             self.tree.delete(item)
 
-        total_value = 0.0
+        total_value_usd = 0.0
+        total_value_eur = 0.0
         for holding in sorted(holdings, key=lambda h: h.symbol):
             asset = self._watchlist_by_symbol.get(holding.symbol)
             name = asset.name if asset else holding.symbol
             price_snapshot = latest_prices.get(holding.symbol)
             price_usd = price_snapshot.price_usd if price_snapshot else None
+            price_eur = price_snapshot.price_eur if price_snapshot else None
             value_usd = (holding.quantity * price_usd) if price_usd is not None else None
+            value_eur = (holding.quantity * price_eur) if price_eur is not None else None
             if value_usd is not None:
-                total_value += value_usd
+                total_value_usd += value_usd
+            if value_eur is not None:
+                total_value_eur += value_eur
 
             self.tree.insert(
                 "",
@@ -61,8 +68,12 @@ class PortfolioView(ttk.Frame):
                     name,
                     f"{holding.quantity:g}",
                     f"{price_usd:,.2f}" if price_usd is not None else "-",
+                    f"{price_eur:,.2f}" if price_eur is not None else "-",
                     f"{value_usd:,.2f}" if value_usd is not None else "-",
+                    f"{value_eur:,.2f}" if value_eur is not None else "-",
                 ),
             )
 
-        self.total_label.config(text=f"Gesamtwert: {total_value:,.2f} USD")
+        self.total_label.config(
+            text=f"Gesamtwert: {total_value_usd:,.2f} USD / {total_value_eur:,.2f} EUR"
+        )
