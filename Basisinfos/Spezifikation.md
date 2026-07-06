@@ -1,6 +1,6 @@
 # TradingInfoTool — Spezifikation (fachliche Grundlage)
 
-> **Eigentümer:** Gernot Spiessmaier · **Version:** 0.3 · **Stand:** 2026-07-02
+> **Eigentümer:** Gernot Spiessmaier · **Version:** 0.4 · **Stand:** 2026-07-06
 >
 > Dieses Dokument beschreibt **was** das Tool leisten soll und **warum** (lesbarer Teil).
 > Die konkreten, vom Programm auslesbaren **Parameter** (Watchlist, Risiko-Limits,
@@ -60,6 +60,14 @@ Messbare Zielgrößen (Werte in `config.yaml → ziele`):
   die Auslösung liegt beim Nutzer. Nebeneffekt: Das System benötigt **keinen
   Börsen-API-Schlüssel mit Handelsrecht** (Preise via CoinGecko, Bestände via
   Import/GUI). Deckt sich mit Kap. 12.
+- **P-8** Lokale Autonomie — der Agent muss perspektivisch **vollständig eigenständig
+  mit lokaler Intelligenz** funktionieren können (Hybrid-Architektur aus Decision-Trees,
+  Fuzzy Logic und lokalem ML, siehe `Agent_Architecture_Analysis_2026-07-02.html`). Die
+  Claude API ist eine **optionale Erweiterung** (Meta-Analyse, strategische Overrides,
+  Nutzer-Dialog) — **keine Voraussetzung** für den Betrieb. Konsequenz: Kernfunktionen
+  (Datenabruf, Persistenz, Basis-UI) dürfen zu keinem Zeitpunkt zwingend von einem
+  Claude-API-Schlüssel abhängen; die Anbindung wird erst dann verdrahtet, wenn eine
+  Phase sie tatsächlich aktiv nutzt.
 
 ## 3. Risikomanagement (Kernmodul — höchste Priorität)
 
@@ -390,5 +398,9 @@ seinen Emotionen scheitert. Grundsatz: **antizyklisch, aber bedingt.**
 **Steuer & Datenpflege:**
 - Steuerregel P-6 (Swap steuerneutral bis Auszahlung) mit Steuerberater verifizieren
   (Sonderfälle: Altvermögen/Spekulationsfrist, Besteuerung von Staking-Erträgen).
-- Ticker von Stellar in `Assets.xlsx` stand fälschlich als „XML" statt „XLM" — wurde
-  in `config.yaml` korrigiert; bei künftiger Datenpflege in der Excel-Datei beachten.
+- **ERLEDIGT (2026-07-06):** Zwei fehlerhafte Ticker in `Assets.xlsx` direkt in der
+  Originaldatei korrigiert (nicht nur in `config.yaml`): Stellar stand als „XML" statt
+  „XLM"; Canton Network stand als „CC" statt „CANTON" (beim Phase-1-Import entdeckt).
+  Damit ist der `SYMBOL_OVERRIDES`-Workaround in `importer/excel_import.py` nicht mehr
+  nötig und wurde entfernt. Backup der Originaldatei vor der Korrektur liegt lokal unter
+  `.claude/backups/` (nicht versioniert).

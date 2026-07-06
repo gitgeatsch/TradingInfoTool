@@ -1,0 +1,68 @@
+"""Portfolio-Tab: Bestaende, aktueller Preis, aktueller Wert (U-6, Phase-1-Umfang)."""
+from __future__ import annotations
+
+import tkinter as tk
+from tkinter import ttk
+
+import database.db as db
+
+
+class PortfolioView(ttk.Frame):
+    def __init__(self, parent, db_conn_factory, watchlist):
+        super().__init__(parent)
+        self._db_conn_factory = db_conn_factory
+        self._watchlist_by_symbol = {asset.symbol: asset for asset in watchlist}
+
+        columns = ("symbol", "name", "quantity", "price_usd", "value_usd")
+        self.tree = ttk.Treeview(self, columns=columns, show="headings")
+        headings = {
+            "symbol": "Symbol",
+            "name": "Name",
+            "quantity": "Bestand",
+            "price_usd": "Preis (USD)",
+            "value_usd": "Wert (USD)",
+        }
+        for col in columns:
+            self.tree.heading(col, text=headings[col])
+            self.tree.column(col, width=120, anchor="e" if col != "name" else "w")
+        self.tree.pack(fill="both", expand=True, padx=8, pady=8)
+
+        self.total_label = ttk.Label(self, text="Gesamtwert: -", font=("", 10, "bold"))
+        self.total_label.pack(anchor="e", padx=8, pady=(0, 8))
+
+        self.refresh()
+
+    def refresh(self) -> None:
+        conn = self._db_conn_factory()
+        try:
+            holdings = db.get_all_holdings(conn)
+            latest_prices = db.get_latest_prices(conn)
+        finally:
+            conn.close()
+
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+
+        total_value = 0.0
+        for holding in sorted(holdings, key=lambda h: h.symbol):
+            asset = self._watchlist_by_symbol.get(holding.symbol)
+            name = asset.name if asset else holding.symbol
+            price_snapshot = latest_prices.get(holding.symbol)
+            price_usd = price_snapshot.price_usd if price_snapshot else None
+            value_usd = (holding.quantity * price_usd) if price_usd is not None else None
+            if value_usd is not None:
+                total_value += value_usd
+
+            self.tree.insert(
+                "",
+                "end",
+                values=(
+                    holding.symbol,
+                    name,
+                    f"{holding.quantity:g}",
+                    f"{price_usd:,.2f}" if price_usd is not None else "-",
+                    f"{value_usd:,.2f}" if value_usd is not None else "-",
+                ),
+            )
+
+        self.total_label.config(text=f"Gesamtwert: {total_value:,.2f} USD")
