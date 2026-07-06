@@ -9,6 +9,7 @@ import tkinter as tk
 from tkinter import ttk
 
 import numpy as np
+import matplotlib.dates as mdates
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
@@ -132,7 +133,7 @@ class ChartWindow(tk.Toplevel):
         for ax in (self._ax_price, self._ax_rsi, self._ax_macd):
             ax.clear()
 
-        x = np.arange(len(dates))
+        x = mdates.datestr2num(dates)
         self._ax_price.plot(x, closes, label=f"Preis ({currency_label})", color="black", linewidth=1)
 
         for period, color in ((20, "tab:blue"), (50, "tab:orange"), (200, "tab:green")):
@@ -155,7 +156,7 @@ class ChartWindow(tk.Toplevel):
 
         swing = swing_highs_lows_close_proxy(closes, dates)
         if swing.available:
-            date_to_x = {d: i for i, d in enumerate(dates)}
+            date_to_x = {d: x[i] for i, d in enumerate(dates)}
             high_x = [date_to_x[d] for d, _ in swing.value["highs"]]
             high_prices = [p for _, p in swing.value["highs"]]
             low_x = [date_to_x[d] for d, _ in swing.value["lows"]]
@@ -213,6 +214,12 @@ class ChartWindow(tk.Toplevel):
             self._ax_macd.set_ylabel("MACD")
         else:
             unavailable_notes.append(f"MACD: nicht verfügbar ({macd_result.reason})")
+
+        locator = mdates.AutoDateLocator()
+        self._ax_macd.xaxis.set_major_locator(locator)
+        self._ax_macd.xaxis.set_major_formatter(mdates.ConciseDateFormatter(locator))
+        self._ax_macd.set_xlabel("Datum")
+        self._figure.autofmt_xdate()
 
         atr_result = atr_close_to_close_proxy(closes)
         if atr_result.available:
