@@ -1,9 +1,23 @@
-# Memory Sync Strategy
+# Memory & CLAUDE.md Sync Strategy
 
 ## Übersicht
 
-Die Claude Code Memory wird **manuell über Google Drive synchronisiert** zwischen zwei
-Rechnern. Wichtig: Die Memory liegt **NICHT im Projektordner**, sondern im
+Zwei Arten von Daten werden **manuell über Google Drive synchronisiert** zwischen den
+zwei Rechnern (Desktop + Notebook) — **bewusst NICHT über GitHub**:
+
+1. **Claude Code Memory** (siehe Abschnitt „Memory" unten)
+2. **CLAUDE.md-Dateien** (siehe Abschnitt „CLAUDE.md-Dateien" weiter unten)
+
+**Warum nicht GitHub?** Git-Historie ist permanent — auch nachträglich gelöschte
+Inhalte bleiben in alten Commits abrufbar. Das Projekt-`CLAUDE.md` ist deshalb bewusst
+in `.gitignore` eingetragen (u. a. weil es früher Kontext zu einem inzwischen
+behobenen Token-Leak-Vorfall enthielt). Manueller Austausch über Drive vermeidet dieses
+Risiko vollständig, unabhängig davon ob das Repo `gitgeatsch/TradingInfoTool` public
+oder private ist.
+
+## Teil 1: Memory
+
+Die Claude Code Memory liegt **NICHT im Projektordner**, sondern im
 **Windows-Benutzerprofil** (`C:\Users\<username>\.claude\`), unabhängig davon, auf
 welchem Laufwerk das Projekt selbst liegt.
 
@@ -96,13 +110,68 @@ C:\Users\<username>\.claude\projects\
 
 ---
 
+## Teil 2: CLAUDE.md-Dateien
+
+Es gibt **zwei verschiedene CLAUDE.md-Dateien**, an zwei unterschiedlichen Orten. Beide
+werden manuell synchronisiert, ändern sich aber viel seltener als die Memory — also
+reicht ein Abgleich bei Bedarf, kein regelmäßiger Rhythmus.
+
+### 2a. Projekt-`CLAUDE.md` (projektspezifisch)
+
+**Ort:**
+- Desktop: `D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\CLAUDE.md`
+- Notebook: `C:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\CLAUDE.md`
+
+**Inhalt:** Projektbeschreibung, Tech-Stack, Anforderungen, Entwicklungsphasen — sollte
+auf beiden Rechnern **identisch** sein, da es dasselbe Projekt beschreibt.
+
+**Wichtig:** Diese Datei ist absichtlich in `.gitignore` (`CLAUDE.md`-Zeile) — **nicht
+über `git pull`/`git push` synchronisieren**, auch nicht versehentlich mit `git add -f`
+erzwingen. Immer manuell über Drive austauschen.
+
+### 2b. Globales `CLAUDE.md` (rechnerübergreifend, für ALLE Projekte)
+
+**Ort:**
+- Desktop: `C:\Users\Geatsch\.claude\CLAUDE.md`
+- Notebook: `C:\Users\<notebook-username>\.claude\CLAUDE.md`
+
+**Inhalt:** Präferenzen, die für *alle* deine Projekte gelten (aktuell z. B. der Name
+„Charlie"). Liegt außerhalb jedes Projektordners — hat mit Git grundsätzlich nichts zu
+tun, egal welches Repo.
+
+**Falls die Datei auf dem Notebook noch nicht existiert:** einfach neu anlegen mit dem
+Inhalt von Desktop (keine Migration nötig, ist nur eine einzelne kurze Textdatei).
+
+### Sync-Ablauf für beide CLAUDE.md-Dateien (gleiches Muster wie Memory)
+
+1. **Vor dem Ändern/Überschreiben:** Kopie der aktuellen Datei lokal sichern (z. B. in
+   `<Projektordner>\.claude\backups\CLAUDE.md_backup_YYYY-MM-DD.md` bzw. analog für die
+   globale Datei)
+2. **Hochladen zu Drive:** aktuelle Version in den gleichen Drive-Ordner wie die Memory
+   legen (z. B. `/TradingInfoTool/memory_sync/CLAUDE_project.md` und
+   `/TradingInfoTool/memory_sync/CLAUDE_global.md` — klar benennen, welche Datei welche ist)
+3. **Auf dem Zielrechner:** vor dem Überschreiben ebenfalls Backup der dortigen Version,
+   dann die Datei von Drive an den korrekten Pfad kopieren (siehe oben, 2a bzw. 2b)
+4. Kein `claude code`-Neustart nötig — CLAUDE.md wird bei der nächsten Session-Anfrage
+   ohnehin neu gelesen
+
+**Merksatz fürs Notebook:** Zwei Dateien, zwei Orte — die eine (`CLAUDE.md` im
+Projektordner) betrifft nur TradingInfoTool, die andere (`CLAUDE.md` im
+`.claude`-Ordner deines Benutzerprofils) betrifft alle Projekte auf diesem Rechner.
+Beide werden genauso wie die Memory behandelt: manuell, über Drive, mit Backup davor —
+niemals über Git.
+
+---
+
 ## Wichtige Regeln
 
-- ✅ **Immer Backup vor Sync** — keine Ausnahmen
-- ✅ **Nie beide Rechner gleichzeitig an Memory arbeiten**
+- ✅ **Immer Backup vor Sync** — keine Ausnahmen (gilt für Memory UND CLAUDE.md)
+- ✅ **Nie beide Rechner gleichzeitig an denselben Dateien arbeiten**
 - ✅ **Backups lokal halten** — mindestens letzte 7 Tage
 - ✅ **Pfade genau prüfen** — Memory liegt im Benutzerprofil (`C:\Users\...\.claude\`),
   NICHT im Projektordner. Nur die Backups liegen praktischerweise projekt-lokal.
+- ✅ **CLAUDE.md niemals über Git syncen** — auch nicht versehentlich (`.gitignore`
+  beachten, keine `git add -f`)
 - ✅ **Klar dokumentieren** — siehe Log unten
 
 ---
@@ -131,20 +200,28 @@ Falls etwas schiefgeht:
 
 ## Workflow-Checklist
 
-### Desktop → Notebook
+### Desktop → Notebook (Memory, bei jeder relevanten Session)
 - [ ] Backup erstellen (aus `C:\Users\Geatsch\.claude\projects\D--...\memory\`)
 - [ ] Zu Google Drive hochladen
 - [ ] Auf Notebook: Backup erstellen (aus `C:\Users\<notebook-user>\.claude\projects\C--...\memory\`, falls vorhanden)
 - [ ] Von Drive herunterladen nach `C:\Users\<notebook-user>\.claude\projects\C--...\memory\`
 - [ ] `claude code .` im Projektordner starten
 
-### Notebook → Desktop
+### Notebook → Desktop (Memory, bei jeder relevanten Session)
 - [ ] Backup erstellen (Notebook-Memory-Pfad)
 - [ ] Zu Google Drive hochladen
 - [ ] Desktop: Backup erstellen (Desktop-Memory-Pfad)
 - [ ] Von Drive herunterladen nach `C:\Users\Geatsch\.claude\projects\D--...\memory\`
 - [ ] `claude code .` im Projektordner starten
 
+### CLAUDE.md abgleichen (nur bei Bedarf, wenn eine der Dateien geändert wurde)
+- [ ] Betroffene Datei identifizieren: Projekt-`CLAUDE.md` und/oder globale `CLAUDE.md`?
+- [ ] Backup der aktuellen Version auf dem Quellrechner
+- [ ] Hochladen zu Drive (klar benannt: `CLAUDE_project.md` / `CLAUDE_global.md`)
+- [ ] Auf Zielrechner: Backup der dortigen Version
+- [ ] Von Drive herunterladen an korrekten Zielpfad (siehe Teil 2a/2b oben)
+- [ ] Kein Neustart nötig, wird bei nächster Session automatisch gelesen
+
 ---
 
-**Erstellt:** 2026-07-06 | **Korrigiert:** 2026-07-06 (Pfade auf tatsächliche User-Profil-Location korrigiert) | **Strategie:** Manueller Drive-Sync mit lokalen Backups
+**Erstellt:** 2026-07-06 | **Korrigiert:** 2026-07-06 (Pfade auf tatsächliche User-Profil-Location korrigiert) | **Erweitert:** 2026-07-06 (CLAUDE.md-Sync ergänzt) | **Strategie:** Manueller Drive-Sync mit lokalen Backups, kein Git für Memory/CLAUDE.md
