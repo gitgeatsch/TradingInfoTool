@@ -39,6 +39,35 @@ bewusste Entscheidung des Nutzers, kein automatischer Vorschlag einer Claude-Ses
 
 ---
 
+## Sync-Checkliste: Was wird übertragen?
+
+**Wenn du einen Sync von Desktop → Notebook durchführst, synchronisierst du genau diese
+drei Dinge:**
+
+| Was | Quelle (Desktop) | Ziel (Notebook) | Format | Anzahl |
+|---|---|---|---|---|
+| **1. Projekt-CLAUDE.md** | `D:\CLAUDE_Projects\...\CLAUDE.md` | `C:\CLAUDE_Projects\...\CLAUDE.md` | Textdatei | 1 Datei |
+| **2. Globale CLAUDE.md** | `C:\Users\Geatsch\.claude\CLAUDE.md` | `C:\Users\<user>\.claude\CLAUDE.md` | Textdatei | 1 Datei |
+| **3. Memory-Ordner (alle *.md)** | `C:\Users\Geatsch\.claude\projects\D--...\memory\` | `C:\Users\<user>\.claude\projects\C--...\memory\` | Markdown-Dateien | Alle (z. B. MEMORY.md, project_dev_setup.md, feedback_*.md, etc.) |
+
+**Beispiel Kategorie 3 (Memory-Ordner) — alle diese Dateien werden übertragen:**
+- `MEMORY.md` (Index aller Memory-Notizen)
+- `project_dev_setup.md`
+- `project_github_token.md`
+- `project_stand_basisinfos.md`
+- `feedback_assistant_name.md`
+- `feedback_limits_strategy.md`
+- `feedback_no_cross_device_secrets.md`
+- (und später weitere `.md`-Dateien, die im Memory-Ordner hinzukommen)
+
+**Nicht übertragen werden:**
+- `.env` (API-Keys, siehe oben)
+- `Assets.xlsx` (persönliche Finanzdaten, siehe oben)
+- Keine Code-Dateien (`*.py`, `*.json`, etc. — laufen über Git)
+- `.gitignore`, `requirements.txt`, etc. (laufen über Git)
+
+---
+
 ## Teil 1: Memory
 
 Die Claude Code Memory liegt **NICHT im Projektordner**, sondern im
@@ -224,21 +253,46 @@ Falls etwas schiefgeht:
 
 ## Workflow-Checklist
 
-### Desktop → Notebook (Memory, bei jeder relevanten Session)
-- [ ] Backup erstellen (aus `C:\Users\Geatsch\.claude\projects\D--...\memory\`)
-- [ ] Zu Google Drive hochladen
-- [ ] Auf Notebook: Backup erstellen (aus `C:\Users\<notebook-user>\.claude\projects\C--...\memory\`, falls vorhanden)
-- [ ] Von Drive herunterladen nach `C:\Users\<notebook-user>\.claude\projects\C--...\memory\`
-- [ ] `claude code .` im Projektordner starten
+### Desktop → Notebook (kompletter Sync mit Memory + CLAUDE.md)
 
-### Notebook → Desktop (Memory, bei jeder relevanten Session)
-- [ ] Backup erstellen (Notebook-Memory-Pfad)
-- [ ] Zu Google Drive hochladen
-- [ ] Desktop: Backup erstellen (Desktop-Memory-Pfad)
-- [ ] Von Drive herunterladen nach `C:\Users\Geatsch\.claude\projects\D--...\memory\`
-- [ ] `claude code .` im Projektordner starten
+**Schritt 1: Backup erstellen (Desktop)**
+- [ ] Memory-Ordner: `C:\Users\Geatsch\.claude\projects\D--...\memory\` → ZIP in Backups
+- [ ] Projekt-CLAUDE.md: `D:\CLAUDE_Projects\...\CLAUDE.md` → Kopie in Backups
+- [ ] Globale CLAUDE.md: `C:\Users\Geatsch\.claude\CLAUDE.md` → Kopie in Backups
 
-### CLAUDE.md abgleichen (nur bei Bedarf, wenn eine der Dateien geändert wurde)
+**Schritt 2: Zu Google Drive hochladen**
+- [ ] Memory-Ordner (alle *.md-Dateien) → `/TradingInfoTool/memory_sync/memory/`
+  (oder direkt einzelne Dateien oder ein ZIP, Hauptsache alles beisammen)
+- [ ] CLAUDE_project.md → `/TradingInfoTool/memory_sync/`
+- [ ] CLAUDE_global.md → `/TradingInfoTool/memory_sync/`
+
+**Schritt 3: Auf Notebook vorbereiten**
+- [ ] Memory-Ordner-Backup erstellen (falls vorhanden): `C:\Users\<user>\.claude\projects\C--...\memory\`
+- [ ] CLAUDE_project.md-Backup erstellen (falls vorhanden): `C:\CLAUDE_Projects\...\CLAUDE.md`
+- [ ] CLAUDE_global.md-Backup erstellen (falls vorhanden): `C:\Users\<user>\.claude\CLAUDE.md`
+
+**Schritt 4: Von Drive herunterladen & überschreiben**
+- [ ] Memory-Ordner: von Drive → `C:\Users\<user>\.claude\projects\C--...\memory\`
+  (alle *.md-Dateien dorthin kopieren, alte Dateien überschreiben)
+- [ ] CLAUDE_project.md: von Drive → `C:\CLAUDE_Projects\...\CLAUDE.md`
+- [ ] CLAUDE_global.md: von Drive → `C:\Users\<user>\.claude\CLAUDE.md`
+
+**Schritt 5: Starten**
+- [ ] `claude code .` im Projektordner starten → sollte neue Memory haben
+
+---
+
+### Notebook → Desktop (umgekehrt, gleiches Prinzip)
+- [ ] Backup erstellen (Notebook: Memory, beide CLAUDE.md)
+- [ ] Zu Google Drive hochladen
+- [ ] Desktop: Backup erstellen (vor Download)
+- [ ] Von Drive herunterladen & überschreiben (Memory + beide CLAUDE.md)
+- [ ] `claude code .` starten
+
+---
+
+### Nur CLAUDE.md synchronisieren (ohne Memory, seltener Fall)
+Nutze diesen Ablauf, wenn sich **nur** eine CLAUDE.md-Datei geändert hat (ohne Memory-Änderungen):
 - [ ] Betroffene Datei identifizieren: Projekt-`CLAUDE.md` und/oder globale `CLAUDE.md`?
 - [ ] Backup der aktuellen Version auf dem Quellrechner
 - [ ] Hochladen zu Drive (klar benannt: `CLAUDE_project.md` / `CLAUDE_global.md`)
