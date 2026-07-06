@@ -38,3 +38,6 @@ config.local.*
 *.db
 *.sqlite
 *.sqlite3
+
+# Persoenliche Bestandsdaten (Anzahl Coins etc.), nicht versionieren
+Basisinfos/Assets.xlsx

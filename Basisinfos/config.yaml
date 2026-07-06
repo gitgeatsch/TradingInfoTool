@@ -18,8 +18,8 @@
 meta:
   projekt: TradingInfoTool
   eigentuemer: Gernot Spiessmaier
-  version: 0.1
-  stand: 2026-06-30
+  version: 0.3
+  stand: 2026-07-02
 
 # --- Uebergeordnete Ziele / Leitplanken (siehe Spezifikation Kap. 1) ---
 ziele:
@@ -33,6 +33,7 @@ risiko:
   risiko_pro_trade_prozent: 2          # RM-1: max. Verlust bis Stop-Loss je Trade
   max_allokation_pro_asset_prozent: 25 # RM-2: [OFFEN] Vorschlag
   cash_reserve_min_prozent: 10         # RM-4: [OFFEN] Vorschlag
+  max_allokation_small_cap_prozent: 12 # [OFFEN] Tier-3 Small-Cap-Budget, Vorschlag 10-15 (Kap. 13/14)
   stop_loss_pflicht: true              # RM-5: jede Position braucht einen Stop-Loss
   trailing_stop_erlaubt: true          # RM-6: Gewinnsicherung
   # RM-3: maximale Allokation je Assetklasse (detailliert statt pauschal)
@@ -48,36 +49,218 @@ risiko:
     liquidationspreis_ausweisen: true  # RM-11
 
 # --- Watchlist / Basiswerte (siehe Spezifikation Kap. 4) ---
-# typ: core = langfristige Kernposition | taktisch = kuerzere Haltedauer
+# Quelle: Basisinfos/Assets.xlsx (Erstimport Stand 2026-07-01), 41 Assets.
+# typ: core = langfristige Kernposition | taktisch = kuerzere Haltedauer | stablecoin = Cash-/Swap-Reserve
+# status: aktiv = Bestand vorhanden (Anzahl Coins > 0 in Assets.xlsx) | watchlist = Beobachtung, noch keine Position
+# Die tatsaechliche Anzahl Coins (Bestand) wird NICHT hier gepflegt, sondern in der
+# SQLite-Datenbank (siehe Spezifikation Kap. 10, B-5); Erstbefuellung per Import von
+# Basisinfos/Assets.xlsx, danach Aktualisierung ueber die GUI.
 watchlist:
+  - symbol: EURCV
+    name: EUR CoinVertible
+    typ: stablecoin
+    status: aktiv
+    coingecko_id: societe-generale-forge-eurcv
   - symbol: BTC
     name: Bitcoin
     typ: core
+    status: aktiv
     coingecko_id: bitcoin
   - symbol: ETH
     name: Ethereum
     typ: core
+    status: aktiv
     coingecko_id: ethereum
   - symbol: SOL
     name: Solana
     typ: core
+    status: aktiv
     coingecko_id: solana
-  - symbol: TAO
-    name: Bittensor
-    typ: core
-    coingecko_id: bittensor
   - symbol: LINK
     name: Chainlink
     typ: core
+    status: aktiv
     coingecko_id: chainlink
-  - symbol: CANTON
-    name: Canton Network
+  - symbol: AVAX
+    name: Avalanche
     typ: core
-    coingecko_id: ""                   # [OFFEN] CoinGecko-ID / Verfuegbarkeit pruefen
+    status: aktiv
+    coingecko_id: avalanche-2
+  - symbol: SUI
+    name: Sui
+    typ: core
+    status: aktiv
+    coingecko_id: sui
+  - symbol: TAO
+    name: Bittensor
+    typ: core
+    status: aktiv
+    coingecko_id: bittensor
+  - symbol: NEAR
+    name: Near Protocol
+    typ: core
+    status: aktiv
+    coingecko_id: near
+  - symbol: APT
+    name: Aptos
+    typ: taktisch
+    status: watchlist
+    coingecko_id: aptos
+  - symbol: ONDO
+    name: Ondo Finance
+    typ: taktisch
+    status: watchlist
+    coingecko_id: ondo-finance
+  - symbol: ALGO
+    name: Algorand
+    typ: taktisch
+    status: watchlist
+    coingecko_id: algorand
+  - symbol: KAS
+    name: Kaspa
+    typ: taktisch
+    status: aktiv
+    coingecko_id: kaspa
+  - symbol: RENDER
+    name: Render
+    typ: taktisch
+    status: watchlist
+    coingecko_id: render-token
+  - symbol: SEI
+    name: Sei
+    typ: core
+    status: aktiv
+    coingecko_id: sei-network
   - symbol: MORPHO
     name: Morpho
     typ: core
+    status: aktiv
     coingecko_id: morpho
+  - symbol: INJ
+    name: Injective
+    typ: taktisch
+    status: watchlist
+    coingecko_id: injective-protocol
+  - symbol: KAIA
+    name: Kaia
+    typ: taktisch
+    status: aktiv
+    coingecko_id: kaia
+  - symbol: FLOKI
+    name: Floki
+    typ: taktisch
+    status: watchlist
+    coingecko_id: floki
+  - symbol: S
+    name: Sonic
+    typ: taktisch
+    status: watchlist
+    coingecko_id: sonic-3          # ex-Fantom, 2024 Rebrand
+  - symbol: IMX
+    name: Immutable X
+    typ: taktisch
+    status: watchlist
+    coingecko_id: immutable-x
+  - symbol: W
+    name: Wormhole
+    typ: taktisch
+    status: watchlist
+    coingecko_id: wormhole
+  - symbol: BEAMX
+    name: Beam
+    typ: taktisch
+    status: watchlist
+    coingecko_id: beam-2           # bestaetigt: Rang 336, ex-Merit Circle
+  - symbol: AKT
+    name: Akash Network
+    typ: taktisch
+    status: watchlist
+    coingecko_id: akash-network
+  - symbol: AIOZ
+    name: AIOZ Network
+    typ: taktisch
+    status: watchlist
+    coingecko_id: aioz-network
+  - symbol: BRETT
+    name: Brett
+    typ: taktisch
+    status: watchlist
+    coingecko_id: based-brett
+  - symbol: BIO
+    name: Bio Protocol
+    typ: taktisch
+    status: aktiv
+    coingecko_id: bio-protocol
+  - symbol: TURBO
+    name: Turbo
+    typ: taktisch
+    status: watchlist
+    coingecko_id: turbo
+  - symbol: PLUME
+    name: Plume
+    typ: taktisch
+    status: watchlist
+    coingecko_id: plume
+  - symbol: IO
+    name: IO.NET
+    typ: taktisch
+    status: watchlist
+    coingecko_id: io
+  - symbol: SUPRA
+    name: Supra
+    typ: taktisch
+    status: aktiv
+    coingecko_id: supra            # bestaetigt: bestehende Position, vorerst mit Verlust gehalten
+  - symbol: CAT
+    name: "Simon's Cat"
+    typ: taktisch
+    status: watchlist
+    coingecko_id: simon-s-cat
+  - symbol: GRIFFAIN
+    name: Griffain
+    typ: taktisch
+    status: watchlist
+    coingecko_id: griffain
+  - symbol: MON
+    name: Monad
+    typ: taktisch
+    status: aktiv
+    coingecko_id: monad
+  - symbol: CANTON
+    name: Canton Network
+    typ: core
+    status: aktiv
+    coingecko_id: canton-network
+  - symbol: XLM
+    name: Stellar
+    typ: taktisch
+    status: aktiv
+    coingecko_id: stellar          # Ticker in Assets.xlsx war fehlerhaft "XML", korrekt XLM
+  - symbol: QNT
+    name: Quant
+    typ: taktisch
+    status: aktiv
+    coingecko_id: quant-network
+  - symbol: ASTER
+    name: Aster
+    typ: taktisch
+    status: aktiv
+    coingecko_id: aster-2          # nicht verwechseln mit Astar (ASTR)
+  - symbol: HYPE
+    name: Hyperliquid
+    typ: core
+    status: aktiv
+    coingecko_id: hyperliquid
+  - symbol: BNB
+    name: BNB
+    typ: core
+    status: aktiv
+    coingecko_id: binancecoin
+  - symbol: VIRTUAL
+    name: Virtuals Protocol
+    typ: taktisch
+    status: watchlist
+    coingecko_id: virtual-protocol
 
 # --- Strategie-Katalog (siehe Spezifikation Kap. 6) ---
 strategien:
@@ -148,3 +331,84 @@ datenquellen:
     youtube:
       aktiv: false                     # [OFFEN] YouTube Data API + Transkripte pruefen
       kanaele: []
+
+# --- Marktscan: Entdeckung neuer Assets (siehe Spezifikation Kap. 13) ---
+marktscan:
+  aktiv: true
+  quelle: trending_gainers_vorfilter   # CoinGecko Trending/Top-Gainers als Vorfilter, dann Fundamentalcheck
+  zeiten: ["04:00", "16:00"]           # 2x taeglich (Watchlist-Scan); weitere Funktionen [OFFEN]
+  auto_watchlist: true                 # Kandidat automatisch als status: watchlist aufnehmen (MS-1)
+  benachrichtigung_email: true         # zusaetzlich E-Mail mit P-5-Begruendung (MS-1)
+  # Tier-Modell (Stufe A), Marktkap.-Grenzen in USD, VORLAEUFIG
+  tiers:
+    tier1_min_marktkap_usd: 1000000000 # >= 1 Mrd = etabliert
+    tier2_min_marktkap_usd: 150000000  # 150 Mio - 1 Mrd = mittelgross
+    tier3_min_marktkap_usd: 20000000   # 20 - 150 Mio = Small Cap (weiche Untergrenze, Override moeglich)
+  filter:
+    min_volumen_24h_usd: 5000000       # [OFFEN] A(MS)-3 Mindestliquiditaet
+    min_alter_tage: 90                 # [OFFEN] A(MS)-3 Mindestalter
+    vol_marktkap_ratio_min: 0.005      # A(MS)-3 unteres Limit (Illiquiditaet)
+    vol_marktkap_ratio_max: 1.0        # A(MS)-3 oberes Limit (Wash-Trading-Verdacht)
+    stablecoins_ausschliessen: true    # A(MS)-3
+  # Stufe B (positive Signale), C (Scoring) und D (Schwellen): [OFFEN], IN AUSARBEITUNG
+
+# --- E-Mail-Benachrichtigung (siehe Kap. 13; Zugangsdaten NUR in .env, nie hier) ---
+benachrichtigung:
+  email:
+    aktiv: true
+    smtp_host: ""                      # [OFFEN] SMTP-Server oder Mail-API festlegen
+    empfaenger: gernotspiessmaier@gmail.com
+    # User/Passwort/API-Key ausschliesslich in .env speichern
+
+# --- Regime-Steuerung: marktabhaengiges Verhalten (siehe Spezifikation Kap. 14) ---
+regime:
+  bestimmung: hybrid                   # RG-1: regelbasiert (Basis) + KI-Override + manueller Override
+  manueller_override: none             # RG-8: none | krise_extrem | baer | seitwaerts | bulle | euphorie_extrem
+  risikoappetit_faktor: 1.0            # [OFFEN] RG-4: globaler Makro-Multiplikator 0.3-1.0
+  # RG-3 Profile ueberschreiben je Regime: Kategorie-Gewichte (Stufe B), Small-Cap-Budget,
+  # Mindest-Konfidenz. Gewichte technik+fundamental+momentum ~ 1.0. Alle Werte VORLAEUFIG (Stufe C offen).
+  profile:
+    krise_extrem:
+      small_cap_budget_prozent: 0
+      gewicht_technik: 0.2
+      gewicht_fundamental: 0.6
+      gewicht_momentum: 0.2
+      min_konfidenz_prozent: 85
+    baer:
+      small_cap_budget_prozent: 4
+      gewicht_technik: 0.3
+      gewicht_fundamental: 0.5
+      gewicht_momentum: 0.2
+      min_konfidenz_prozent: 75
+    seitwaerts:
+      small_cap_budget_prozent: 8
+      gewicht_technik: 0.4
+      gewicht_fundamental: 0.4
+      gewicht_momentum: 0.2
+      min_konfidenz_prozent: 65
+    bulle:
+      small_cap_budget_prozent: 12
+      gewicht_technik: 0.5
+      gewicht_fundamental: 0.3
+      gewicht_momentum: 0.2
+      min_konfidenz_prozent: 60
+    euphorie_extrem:
+      small_cap_budget_prozent: 15
+      gewicht_technik: 0.5
+      gewicht_fundamental: 0.2
+      gewicht_momentum: 0.3
+      min_konfidenz_prozent: 60
+      gewinnabsicherung_verschaerft: true  # RG-11: engere Trailing-Stops, Teilverkaeufe
+
+# --- Antizyklische Kauf-Disziplin (siehe Spezifikation Kap. 15) ---
+antizyklisch:
+  aktiv: true
+  bestaetigung_pflicht: true           # AZ-2: "kaufe die Bestaetigung, nicht das Messer"
+  spot_sondierung_nur_kernwerte: true  # AZ-3: kleine Vorab-Tranche nur fuer core (BTC/ETH)
+  gestaffelt_kaufen: true              # AZ-4: Tranchen/DCA, nie all-in
+  fundamental_gate: true               # AZ-5: Nachkauf nur bei intakter Substanz
+  these_gescheitert_stop: true         # AZ-6: Nachkaufen stoppen, wenn These scheitert
+  hebel:
+    nur_nach_bestaetigung: true        # AZ-7
+    aus_bei_krise_extrem: true         # AZ-7
+    aus_bei_strukturrisiko: true       # AZ-7

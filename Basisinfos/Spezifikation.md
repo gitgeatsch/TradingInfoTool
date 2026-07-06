@@ -1,13 +1,13 @@
 # TradingInfoTool — Spezifikation (fachliche Grundlage)
 
-> **Eigentümer:** Gernot Spiessmaier · **Version:** 0.1 · **Stand:** 2026-06-30
+> **Eigentümer:** Gernot Spiessmaier · **Version:** 0.3 · **Stand:** 2026-07-02
 >
 > Dieses Dokument beschreibt **was** das Tool leisten soll und **warum** (lesbarer Teil).
 > Die konkreten, vom Programm auslesbaren **Parameter** (Watchlist, Risiko-Limits,
 > Strategien, Indikatoren, Datenquellen) liegen in [`config.yaml`](config.yaml).
 > So gibt es für jeden Wert nur **eine** Quelle der Wahrheit.
 >
-> **Legende:** `[OFFEN]` = noch zu entscheiden (siehe Kapitel 13).
+> **Legende:** `[OFFEN]` = noch zu entscheiden (siehe Kapitel 16).
 > Technik/Projektstruktur stehen in `CLAUDE.md` im Projektroot.
 
 ---
@@ -36,12 +36,30 @@ Messbare Zielgrößen (Werte in `config.yaml → ziele`):
 - **P-3** Kein Overtrading: „Halten/Abwarten" ist eine gültige Empfehlung.
 - **P-4** Konsistenz mit gewählter Strategie und Haltedauer-Logik.
 - **P-5** Einheitliches Ausgabeformat je Empfehlung:
-  - Asset & Aktion (KAUFEN / VERKAUFEN / HALTEN / NACHKAUFEN)
+  - Asset & Aktion (KAUFEN / VERKAUFEN / TAUSCHEN / HALTEN / NACHKAUFEN)
   - Kurzbegründung (1–2 Sätze) + Langbegründung (technisch + fundamental + Makro)
   - Empfohlene Positionsgröße / Stückzahl
   - Einstieg / Stop-Loss / Take-Profit
   - Empfohlene Haltedauer + Begründung
   - Konfidenz in % und wichtigste Risiken/Gegenargumente
+- **P-6** Steuerliche Einordnung (Österreich): Ein Tausch Krypto-zu-Krypto (auch in
+  Stablecoins) ist nach aktueller Rechtslage bis zur Auszahlung in Fiat steuerlich
+  neutral — es fallen nur Transaktionskosten an, keine Steuer. Erst die Auszahlung
+  („Realisierung" in Fiat bzw. Nutzung für Waren/Dienstleistungen) ist steuerrelevant.
+  Deshalb unterscheidet das Ausgabeformat TAUSCHEN von VERKAUFEN, und der Agent soll
+  bei gleichwertigen Alternativen den steuerlich günstigeren Weg vorschlagen (siehe
+  R-5.9). `[OFFEN]` mit Steuerberater gegenprüfen (Details wie Spekulationsfrist bei
+  Altvermögen, Besteuerung von Staking-Erträgen als laufende Einkünfte).
+- **P-7** Advisory-only — **keine autonome Orderausführung.** Der Agent analysiert,
+  bewertet, pflegt Watchlist/DB und erzeugt **Empfehlungen** samt Benachrichtigungen.
+  Er platziert **niemals** Orders, führt keine Trades aus und bewegt kein Kapital; die
+  Ausführung erfolgt stets manuell durch den Nutzer. Alle Aktionen in P-5 (KAUFEN,
+  VERKAUFEN, …) sind Vorschläge. **Konsequenz:** Schutzmechanismen (Stop-Loss RM-5,
+  Drawdown-Notbremse Z-3/RM-7) wirken als **dringende Alerts**, nicht als automatische
+  Ausführung — der Agent eskaliert (z. B. hochpriore E-Mail + auffällige UI-Warnung),
+  die Auslösung liegt beim Nutzer. Nebeneffekt: Das System benötigt **keinen
+  Börsen-API-Schlüssel mit Handelsrecht** (Preise via CoinGecko, Bestände via
+  Import/GUI). Deckt sich mit Kap. 12.
 
 ## 3. Risikomanagement (Kernmodul — höchste Priorität)
 
@@ -62,12 +80,21 @@ gekoppelt; Liquidationspreis stets ausweisen, Sicherheitsabstand zum Stop-Loss (
 
 ## 4. Assets & Diversifikation
 
-Watchlist in `config.yaml → watchlist` (BTC, ETH, SOL, TAO, LINK, CANTON, MORPHO).
+Watchlist in `config.yaml → watchlist`. Quelle: `Basisinfos/Assets.xlsx` (Erstimport
+Stand 2026-07-01, 41 Assets — eigene Bestände und reine Beobachtungswerte).
 
-- **A-1** Jedes Asset hat einen Typ: `core` (langfristig) vs. `taktisch` (kürzer).
+- **A-1** Jedes Asset hat einen Typ: `core` (langfristig), `taktisch` (kürzer) oder
+  `stablecoin` (Cash-/Swap-Reserve, siehe A-4, kein eigenständiges Handelssignal).
 - **A-2** Klumpenrisiko vermeiden: Viele Altcoins korrelieren stark mit BTC — das ist
   **keine** echte Diversifikation und fließt in den Risiko-Score ein.
 - **A-3** Watchlist ist in der UI pflegbar; Datenanbindung automatisch, falls verfügbar.
+- **A-4** Jedes Asset hat einen Status: `aktiv` (Bestand vorhanden) oder `watchlist`
+  (reine Beobachtung, potenzielle künftige Position, noch kein Kauf). Die konkrete
+  Bestandsmenge wird nicht in `config.yaml` gepflegt, sondern in der Datenbank
+  (siehe Kap. 10, B-5).
+- **A-5** Stablecoins (aktuell EURCV) zählen zur Cash-Reserve (RM-4) und dienen dem
+  Agenten als Ziel-/Zwischenstation für steuerneutrale Swaps (siehe P-6, R-5.9)
+  sowie als Kapitalschutz-Parkplatz (S-5).
 
 ## 5. Agent-Logik & Entscheidungsgrundlagen
 
@@ -86,6 +113,19 @@ Entscheidungs-Pipeline (Reihenfolge je Analyse):
    Parameter ergänzen (interaktiver Dialog), die in die nächste Bewertung einfließen.
 8. **R-5.8** Forecast als Szenario (Bull/Base/Bear) mit Wahrscheinlichkeiten, statt
    einzelner Punktprognose.
+9. **R-5.9** Steuerliche Optimierung (AT, siehe P-6): Bei strategisch gleichwertigen
+   Alternativen bevorzugt TAUSCHEN (Krypto-zu-Krypto/Stablecoin) statt VERKAUFEN
+   vorschlagen, da steuerlich neutral bis zur Auszahlung in Fiat.
+10. **R-5.10** Regime-Profil anwenden (Kap. 14): Das in R-5.1/R-5.2 bestimmte Regime
+    moduliert Gewichte, Schwellen, Small-Cap-Budget und Mindest-Konfidenz; Overrides
+    nach der Governance-Regel (Sicherheits-Asymmetrie, harte Limits unantastbar).
+11. **R-5.11** Bei Kauf-/Nachkauf-Empfehlungen antizyklische Disziplin (Kap. 15):
+    Flush vs. fundamentaler Zusammenbruch klassifizieren, Bestätigungs-Gate, gestaffelt.
+
+> **Separater Job — Marktscan (Kap. 13):** Die Entdeckung *neuer* Assets läuft nicht
+> in dieser Pro-Asset-Pipeline, sondern als periodischer Hintergrund-Scan (2× täglich).
+> Treffer werden automatisch als `status: watchlist` aufgenommen und durchlaufen danach
+> dieselbe Pipeline wie bestehende Watchlist-Assets.
 
 ## 6. Strategie-Katalog (auswählbar je Asset)
 
@@ -138,6 +178,10 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
 - **U-7** Einstellungen: Risikoparameter (Kap. 3) pro Nutzer anpassbar.
 - **U-8** Desktop-Benachrichtigungen bei neuen Signalen.
 - **U-9** Interaktiver Dialog: Nutzer ergänzt Bewertungsparameter (R-5.7).
+- **U-10** Marktscan-Vorschläge (Kap. 13): neu entdeckte Kandidaten mit P-5-Begründung
+  anzeigen; Nutzer kann sie in der Watchlist behalten oder entfernen.
+- **U-11** Regime-Anzeige (Kap. 14): aktuelles Marktregime sichtbar; manueller Override
+  wählbar und — solange aktiv — permanent als Warnhinweis eingeblendet.
 
 ## 10. Agent- & Datenbank-Betrieb
 
@@ -148,10 +192,20 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
 - **B-3** Agent läuft auch ohne offene UI (Hintergrundanalyse); beim UI-Start Abgleich
   mit dem letzten DB-Stand.
 - **B-4** Claude API-Key in lokaler `.env` (niemals committen).
+- **B-5** Bestände (Anzahl Coins je Asset) sind sensible Finanzdaten und werden
+  **ausschließlich** in der SQLite-Datenbank gehalten — nicht in `config.yaml`
+  (keine Versionierung/kein Git-Commit). Erstbefüllung per Datei-Import aus
+  `Basisinfos/Assets.xlsx`; danach Aktualisierung über die GUI oder erneuten Import.
+  Watchlist-Zugehörigkeit und Asset-Metadaten (Typ, Status, CoinGecko-ID) bleiben in
+  `config.yaml`, da sie nicht personenbezogen/sensibel sind.
+- **B-6** Persistenz erweitert um: neu vom Marktscan entdeckte Assets (Kap. 13),
+  Regime-Verlauf und alle Overrides (Quelle, Grund, Zeitpunkt, Dauer — Kap. 14) sowie
+  antizyklische Kaufpläne/Tranchen-Status (Kap. 15) — für Nachvollziehbarkeit (Z-4).
 
 ## 11. Roadmap & Erweiterbarkeit
 
-1. **Phase 1** Grundgerüst (Struktur, SQLite, CoinGecko, Basis-UI, Watchlist).
+1. **Phase 1** Grundgerüst (Struktur, SQLite, CoinGecko, Basis-UI, Watchlist,
+   Erstimport der Bestände aus `Basisinfos/Assets.xlsx`).
 2. **Phase 2** Marktdaten & Charts (Indikatoren Kap. 7, Visualisierung).
 3. **Phase 3** KI-Agent (Claude API, Pipeline Kap. 5, Risikomodul Kap. 3, Strategien, Makro).
 4. **Phase 4** Portfolio, Benachrichtigungen, Sentiment (X/YouTube).
@@ -169,12 +223,172 @@ fehlerhaft sein. Trading birgt Verlustrisiken (Hebel: Totalverlust möglich). Di
 Entscheidung und Verantwortung liegen beim Nutzer. Dieser Hinweis sollte in der UI
 sichtbar sein.
 
-## 13. Offene Punkte / zu entscheiden
+## 13. Marktscan — Entdeckung neuer Assets
 
+Werte in `config.yaml → marktscan`. Der Agent bewertet nicht nur Bestands-/Watchlist-
+Assets, sondern sucht **aktiv neue, bisher nicht erfasste Assets** und nimmt aussichts-
+reiche Kandidaten eigenständig als `status: watchlist` auf — als Grundlage für Kauf-
+Empfehlungen abseits der bestehenden Liste. Advisory-only (P-7): Aufnahme in die
+Watchlist ist eine Daten-, keine Handelsaktion.
+
+- **MS-1 Ablauf (hybrid):** Findet der Scan einen Kandidaten, wird er (a) automatisch
+  in die Watchlist aufgenommen, (b) per E-Mail gemeldet und (c) mit vollständiger
+  P-5-Begründung (warum Kauf/Potenzial) versehen. Der Nutzer entscheidet über die GUI,
+  ob der Kandidat bleibt oder entfernt wird (U-10).
+- **MS-2 Datenquelle:** CoinGecko **Trending/Top-Gainers als Vorfilter**, Treffer
+  danach gegen die Fundamental-/Sicherheitskriterien (Stufe A) geprüft.
+- **MS-3 Frequenz:** 2× täglich, **04:00 und 16:00** (reiner Watchlist-Scan). Frequenz
+  für weitergehende Agent-Funktionen (laufende Bestandsbewertung, De-Risking) noch offen.
+
+### Stufe A — Ausschluss & Einordnung (harte Filter, Tier-Modell)
+
+Kein Einzel-Cutoff, sondern ein **Tier-Modell** (Grenzen vorläufig):
+
+| Tier | Marktkap. | Rolle | Filter |
+|------|-----------|-------|--------|
+| Tier 1 | ≥ ~1 Mrd. USD | Kern-Diversifikation, Narrativ-Abdeckung | Standard |
+| Tier 2 | ~150 Mio.–1 Mrd. | Wachstums-Chance | strenger |
+| Tier 3 | ~20–150 Mio. | Small-Cap-Beimischung (High-Risk) | strengste Signale + Budget-Deckel |
+
+- **A(MS)-1 Tier-3-Budgetdeckel:** Small Caps insgesamt max. **10–15 %** des Portfolios
+  (`config.yaml → risiko.max_allokation_small_cap_prozent`), regime-abhängig gedrosselt.
+- **A(MS)-2 Weiche Untergrenze:** Coins < 20 Mio. USD nur über **Override**, wenn der
+  Risiko-Score sie trotz Größe als moderat/gering-riskant einstuft. Da die Marktkap.
+  selbst in RM-8 einfließt, muss dieser Override durch **andere** Faktoren (Liquidität,
+  Trend, Volumen, Narrativ) „verdient" werden — er ist selten.
+- **A(MS)-3 weitere Filter:** Mindest-Handelsvolumen 24h, Mindestalter, Volumen/Marktkap.-
+  Ratio (Wash-Trading-Schutz), Stablecoins ausgeschlossen, Duplikat-Check gegen
+  bestehende Watchlist. Konkrete Werte in `config.yaml → marktscan.filter`.
+- **A(MS)-4 Geltungsbereich:** Nur für **Agent-Neufunde**; manuelle Nutzer-Picks bleiben
+  unberührt (dürfen riskanter sein).
+- **A(MS)-5 Narrativ-Abdeckung** (RWA, KI, DePIN, L1/L2 …): fehlende Narrative werden
+  bevorzugt ergänzt (Diversifikation, gegen Klumpenrisiko A-2) — zugleich Positiv-Signal
+  in Stufe B.
+
+### Stufe B / C / D — `[OFFEN]`, in Ausarbeitung
+
+- **Stufe B (positive Signale):** vier Kategorien — Technik, Fundamental/Qualität,
+  Markt-/Momentum, Kontext/Makro. Grundlinie: Bei *Neufunden* wiegen Fundamental &
+  Momentum schwerer als reines Technik-Timing (das zählt mehr für laufende Watchlist).
+- **Stufe C (Scoring/Gewichtung):** Verrechnung der Signale; Gewichte kommen aus dem
+  aktiven Regime-Profil (Kap. 14).
+- **Stufe D (Schwellenwerte):** ab welchem Score „watchlist-würdig" bzw. „Kaufkandidat".
+
+## 14. Regime-Steuerung — marktabhängiges Verhalten
+
+Werte in `config.yaml → regime`. **Querschnitts-Modul**, das sowohl den Marktscan
+(Kap. 13) als auch die laufende Bestandsbewertung speist. Grundidee: Die *Struktur* der
+Bewertung bleibt gleich, ihre *Parameter* atmen mit dem Markt.
+
+**Regime-Spektrum:** `KRISE-EXTREM — BÄR — SEITWÄRTS — BULLE — EUPHORIE-EXTREM`.
+
+- **RG-1 Bestimmung (hybrid):** (a) **regelbasiert** als Basis (deterministisch, prüfbar)
+  aus BTC-Trend × BTC-Dominanz, Fear & Greed, Zinsen; (b) **KI-Override** durch den Agenten
+  bei belastbaren Gegengründen oder absehbarem Regimewechsel; (c) **manueller Override**
+  durch den Nutzer.
+- **RG-2 BTC-Matrix:** Ein Altcoin-Signal wird immer im Kontext von BTC-Trend *und*
+  BTC-Dominanz gelesen (BTC-Season / Altseason / Flucht-in-BTC / Kapitulation).
+- **RG-3 Regime-Profile:** Jedes Regime überschreibt vier Stellschrauben — Tier-Schwellen,
+  Kategorie-Gewichte (Stufe B), Tier-3-Budget, Mindest-Konfidenz. Im Bär z. B.
+  Fundamental & relative Stärke höher, reine Ausbrüche niedriger; Budget gedrosselt.
+- **RG-4 Makro-Multiplikator (`risikoappetit_faktor`, 0,3–1,0):** globaler Regler aus der
+  Makro-Lage (Zinsen/Krise), der Budgets und Positionsgrößen *zusätzlich* skaliert — kann
+  selbst eine Krypto-Altseason dämpfen, wenn das Makro-Umfeld feindlich ist.
+
+### Override-Governance
+
+- **RG-5 Sicherheits-Asymmetrie (Herzstück):** *Defensiver* werden (Richtung Bär/
+  Kapitalschutz) darf jede Quelle **autonom und sofort**. *Offensiver* werden (Filter
+  lockern, Budget erhöhen) braucht eine **Bremse** (höhere Konfidenz, Quellennachweis,
+  beim Nutzer bewusste Bestätigung). Begründung: Z-1/P-1 — ein Fehler „zu vorsichtig"
+  kostet Gewinn, „zu offensiv" kostet Kapital.
+- **RG-6 Unantastbare harte Limits:** Kein Override — weder Nutzer noch KI — darf
+  Pflicht-Stop-Loss (RM-5), Risiko/Trade (RM-1) oder Drawdown-Notbremse (Z-3/RM-7)
+  abschalten. Overrides bewegen nur die *einstellbaren* Regime-Parameter.
+- **RG-7 Vorausschauender KI-Override = Bias, kein Voll-Flip:** Ein erwarteter Wechsel
+  verschiebt das Regime nur teilweise (z. B. „Bär mit aufhellender Tendenz"); voll kippt
+  es erst bei Datenbestätigung. Quelle der Erwartung ist Pflichtangabe (P-2).
+- **RG-8 Manueller Override:** permanent sichtbar (U-11) und mit Ablauf/periodischer
+  Bestätigung, damit er nicht vergessen wird. Alle Overrides landen in der DB (B-6).
+- **RG-9 Vorrang:** harte Limits > manueller Override (offensiv nur mit Bestätigung) >
+  KI-Override (defensiv autonom, offensiv mit Nachweis) > regelbasierte Basis.
+
+### Extremregime (Sonderregeln, keine bloße Extrapolation)
+
+- **RG-10 Krise-extrem, zwei Typen:** (a) **Liquiditäts-/Deflationskrise** (Anleihenmarkt
+  kippt, Korrelation→1) → maximale Defensive, Flucht in Cash. (b) **Währungs-/Vertrauens-
+  krise** → BTC kann *Fluchtwert* sein, Rotation in BTC/harte Assets. Enthält eine
+  **Stablecoin-Peg-Prüfung**: In einer Euro-Krise ist **EURCV** (Euro-besichert) *nicht*
+  automatisch sicher. Der Agent **warnt** in diesem Fall nur (keine autonome Umschichtung).
+- **RG-11 Euphorie-extrem = Offense + Sicherheitsgurt:** offensiver werden, um den
+  Melt-up mitzunehmen, **gekoppelt** mit verschärfter Gewinnabsicherung (engere
+  Trailing-Stops RM-6, Teilverkäufe/Distribution). Extreme Gier gilt zugleich als Chance
+  *und* Warnsignal (Countdown). Offense ohne mitwachsende Absicherung bleibt verboten.
+
+## 15. Antizyklische Kauf-Disziplin
+
+Werte in `config.yaml → antizyklisch`. **Kern-Mehrwert des Agenten:** Er kontert den
+häufigsten Kleininvestor-Fehler — in den fallenden Kurs verkaufen (Panik) und im Tief
+nicht kaufen. Als regelbasiertes System kann er antizyklisch handeln, wo der Mensch an
+seinen Emotionen scheitert. Grundsatz: **antizyklisch, aber bedingt.**
+
+- **AZ-1 Klassifikation Flush vs. Zusammenbruch:** Ein **Liquidations-Flush** (sehr
+  schnell, hohes Volumen, keine Fundamental-News, Zwangsverkäufe) wird meist V-förmig
+  zurückgekauft → Kaufgelegenheit. Ein **fundamentaler Zusammenbruch** (zäh, Substanz
+  erodiert, konkrete News) ist es *nicht*.
+- **AZ-2 Bestätigungs-Gate („kaufe die Bestätigung, nicht das Messer"):** Vor Kapital-
+  einsatz Stabilisierung/Umkehr abwarten — keine neuen Tiefs, Level-Rückeroberung,
+  bullische Divergenz, versiegendes Verkaufsvolumen, bestätigte Umkehr-Struktur.
+- **AZ-3 Abgestuftes Modell:** kleine **Spot-Sondierungstranche** nur für **Kernwerte
+  (BTC/ETH)** ggf. vor voller Bestätigung; größere Positionen **und jeglicher Hebel** nur
+  **nach Bestätigung**; im **Totalcrash / Extrem-Krise-Regime** wird nichts gekauft, bis
+  eine klare Bestätigung vorliegt.
+- **AZ-4 Gestaffelt & begrenzt:** in Tranchen kaufen (DCA/S-1/S-2), **nie all-in** →
+  ein tieferer Absturz wird zur nächsten Chance statt zum Ruin; Cash-Reserve (RM-4) bleibt.
+- **AZ-5 Fundamental-Gate:** Nachkaufen nur bei **intakter Substanz**. Fallender Kurs +
+  erodierende Substanz = Value-Falle, **kein** Kauf.
+- **AZ-6 „Gescheiterte-These"-Ausstieg:** Läuft ein antizyklischer Kauf über Schwelle
+  *und* erwartete Zyklusdauer hinaus gegen die These, **stoppt** das Nachkaufen und wird
+  neu bewertet — kein mechanisches Weiter-Mitteln.
+- **AZ-7 Hebel-Regeln:** gehebeltes antizyklisches Kaufen **nur nach Bestätigung**, im
+  Extrem-Krise-Regime und bei erhöhtem Strukturrisiko **komplett aus**; sonst nur niedrig,
+  gestaffelt, Liquidationspreis weit unter dem nächsten plausiblen Tief (RM-10/RM-11).
+  Grund: Hebel nimmt genau die Zeit, die die antizyklische These zum Aufgehen braucht.
+- **AZ-8 Strukturell vs. zyklisch — ehrlicher Umgang:** Die Unterscheidung ist in Echtzeit
+  **nicht sicher** treffbar (oft erst im Rückblick klar). Schutz kommt daher **nicht aus
+  Vorhersage**, sondern aus den Schaltkreis-Unterbrechern (gestaffelt, Fundamental-Gate,
+  These-Ausstieg, Drawdown-Notbremse, Cash-Reserve, Diversifikation, Hebel-Aus). Ziel:
+  *beide* Fälle überleben — bei zyklisch profitieren, bei strukturell den Verlust deckeln.
+
+## 16. Offene Punkte / zu entscheiden
+
+**Risiko-/Basiswerte:**
 - Maximaler tolerierter Gesamt-Drawdown (Z-3)? Vorschlag −15 %.
 - Max. Allokation pro Einzelwert (RM-2) und pro Assetklasse (RM-3)?
-- Verfügbarkeit/CoinGecko-ID von „Canton".
-- Konkrete kostenlose APIs für Makro-/Zinsdaten.
-- X-API & YouTube-API: Kosten, Limits, ToS, Umsetzungsphase.
 - Standard-Timeframes für die technische Analyse.
 - Claude-Modellversion und Budget/Token.
+
+**Marktscan (Kap. 13):**
+- **Stufe B, C, D** ausarbeiten (positive Signale, Scoring, Schwellenwerte).
+- Tier-Grenzen, Small-Cap-Budget (10–15 %) und Filter-Werte (Volumen, Alter) bestätigen.
+- Frequenz weiterer Agent-Funktionen (Bestandsbewertung/De-Risking) festlegen (bisher
+  nur Watchlist-Scan 2× täglich).
+
+**Regime-Steuerung (Kap. 14):**
+- Regime-Profil-Werte (Gewichte, Mindest-Konfidenz, Budgets) sind Platzhalter → kalibrieren.
+- Herleitung des `risikoappetit_faktor` aus konkreten Makro-Daten (hängt an Makro-APIs).
+
+**Daten & Betrieb:**
+- Konkrete kostenlose APIs für Makro-/Zinsdaten.
+- X-API & YouTube-API: Kosten, Limits, ToS, Umsetzungsphase.
+- **E-Mail-Versand** (Kap. 13): SMTP-Server vs. Mail-API wählen; Zugangsdaten nur in `.env`.
+- **Flush-Erkennung** (AZ-1): reichere Signale (Funding-Rates, Liquidationsdaten) brauchen
+  zusätzliche Datenquellen jenseits CoinGecko → spätere Phase.
+- **Advisory-Konsequenz** (P-7): Eskalationsweg für Schutz-Alerts (Stop-Loss/Drawdown)
+  definieren — E-Mail-Priorität, UI-Warnstufe.
+
+**Steuer & Datenpflege:**
+- Steuerregel P-6 (Swap steuerneutral bis Auszahlung) mit Steuerberater verifizieren
+  (Sonderfälle: Altvermögen/Spekulationsfrist, Besteuerung von Staking-Erträgen).
+- Ticker von Stellar in `Assets.xlsx` stand fälschlich als „XML" statt „XLM" — wurde
+  in `config.yaml` korrigiert; bei künftiger Datenpflege in der Excel-Datei beachten.
