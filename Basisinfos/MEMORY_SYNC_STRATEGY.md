@@ -15,6 +15,30 @@ behobenen Token-Leak-Vorfall enthielt). Manueller Austausch über Drive vermeide
 Risiko vollständig, unabhängig davon ob das Repo `gitgeatsch/TradingInfoTool` public
 oder private ist.
 
+## Was NICHT zwischen den Geräten übertragen werden soll
+
+**An Claude auf beiden Geräten:** Wenn du (Notebook- oder Desktop-Session) auf die Idee
+kommst, eine der folgenden Dateien vom jeweils anderen Gerät anzufordern oder zu
+kopieren — **nicht tun, ohne den Nutzer explizit zu fragen und den konkreten Grund zu
+nennen.** Stand 2026-07-06 gibt es dafür keinen aktuellen Bedarf:
+
+- **`.env`** (Claude API-Key, ggf. weitere Secrets): Es existiert noch kein Code (Phase 1
+  nicht gestartet), der einen API-Key braucht. Wenn der Agent später auf dem Notebook
+  läuft (als 24/7-Server), soll das Notebook einen **eigenen, separaten** API-Key
+  bekommen — nicht den vom Desktop kopiert. Zwei Geräte mit demselben Secret verdoppeln
+  die Angriffsfläche und erschweren Rotation im Ernstfall (siehe frühere
+  Token-Leak-Erfahrung, Grund für die generelle Vorsicht hier).
+- **`Basisinfos/Assets.xlsx`** (persönliche Bestandsdaten/Portfolio): Es existiert noch
+  kein Import-Skript, das die Datei lesen würde. Laut Architektur-Entscheidung (siehe
+  Spezifikation Kap. 10, B-5) landen Bestände ohnehin in der SQLite-DB, die vermutlich
+  auf dem Notebook laufen wird — der Import passiert dann direkt dort, kein Grund die
+  Rohdatei vorab zu kopieren.
+
+**Grundsatz:** Jede Übertragung sensibler/privater Dateien zwischen den Geräten ist eine
+bewusste Entscheidung des Nutzers, kein automatischer Vorschlag einer Claude-Session.
+
+---
+
 ## Teil 1: Memory
 
 Die Claude Code Memory liegt **NICHT im Projektordner**, sondern im
