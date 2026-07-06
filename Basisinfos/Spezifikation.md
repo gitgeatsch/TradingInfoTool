@@ -1,6 +1,6 @@
 # TradingInfoTool — Spezifikation (fachliche Grundlage)
 
-> **Eigentümer:** Gernot Spiessmaier · **Version:** 1.0 · **Stand:** 2026-07-06
+> **Eigentümer:** Gernot Spiessmaier · **Version:** 1.1 · **Stand:** 2026-07-06
 >
 > Dieses Dokument beschreibt **was** das Tool leisten soll und **warum** (lesbarer Teil).
 > Die konkreten, vom Programm auslesbaren **Parameter** (Watchlist, Risiko-Limits,
@@ -241,6 +241,16 @@ Näherung an dieser Stelle neu zu bewerten.
   sich nicht 1:1, ähnelt sich aber oft — Muster aus der Vergangenheit sollen daher (ab
   Phase 3, Agent-Logik) als Vergleichsbasis einfließen, nicht nur aktuelle Werte isoliert
   betrachtet werden.
+  **Klarstellung 365-Tage-Grenze (2026-07-06):** Gilt gleichermaßen für Charts UND für
+  die Daten, die der Agent (Phase 3) nutzen wird — beide greifen auf dieselbe
+  `price_history`-Tabelle zu, gespeist vom selben CoinGecko-Endpunkt mit derselben
+  Grenze. Kein separater, "besserer" Datentopf für den Agenten. Ist aber **kein**
+  festes Dauerlimit: Der tägliche Historie-Job löscht nie alte Tage, die DB wächst mit
+  der Zeit über ein Jahr hinaus, solange die App läuft. Einschränkung bleibt aber:
+  **rückwirkend** weiter als 365 Tage zurückliegende Muster (z. B. Zyklen von 2018/2021)
+  sind mit dem Free/Demo-Tier grundsätzlich nicht nachträglich abrufbar — nur ab jetzt
+  laufend akkumulierbar. Für echte mehrjährige Rückblicke wäre ein kostenpflichtiger
+  CoinGecko-Tier oder eine andere Quelle nötig (spätere Phase, falls gewünscht).
 - **Makro:** Leitzinsen (Fed, EZB, BoJ, PBoC, BoK), Leitbörsen USA/Japan/China/EU/Korea,
   BTC-Dominanz, Fear & Greed. Zusätzlich vom Nutzer gewünscht (2026-07-06), noch zu
   sondieren: **ISM** (Einkaufsmanagerindex), **M2-Geldmenge**, **CPI** (Verbraucher-
