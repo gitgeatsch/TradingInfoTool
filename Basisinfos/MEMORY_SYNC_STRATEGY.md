@@ -2,23 +2,46 @@
 
 ## Übersicht
 
-Das `projects/` Verzeichnis (Claude Code Memory) wird **manuell über Google Drive synchronisiert** zwischen zwei Rechnern:
-- **Desktop:** `D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\`
-- **Notebook:** `C:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\`
+Die Claude Code Memory wird **manuell über Google Drive synchronisiert** zwischen zwei
+Rechnern. Wichtig: Die Memory liegt **NICHT im Projektordner**, sondern im
+**Windows-Benutzerprofil** (`C:\Users\<username>\.claude\`), unabhängig davon, auf
+welchem Laufwerk das Projekt selbst liegt.
+
+- **Desktop:** Projekt liegt auf `D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\`
+  → Memory liegt auf `C:\Users\Geatsch\.claude\projects\D--CLAUDE-Projects-SoftwareProjekte-TradingInfoTool\memory\`
+- **Notebook:** Projekt liegt auf `C:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\`
+  → Memory liegt auf `C:\Users\<notebook-username>\.claude\projects\C--CLAUDE-Projects-SoftwareProjekte-TradingInfoTool\memory\`
+
+**Wichtig zum Ordnernamen:** Das Präfix (`D--` bzw. `C--`) kodiert das **Laufwerk des
+Projekt-Pfads**, nicht das Laufwerk, auf dem die Memory selbst liegt. Die Memory selbst
+liegt auf beiden Rechnern unter `C:\Users\...\.claude\` (Standard-Windows-Benutzerprofil).
+Unterschiedliche Ordnernamen auf Desktop/Notebook sind normal, kein Fehler.
 
 **Sicherheit:** Lokale Backups vor jedem Sync-Punkt verhindern Datenverlust.
+
+---
+
+## Zwei getrennte `.claude`-Bereiche — nicht verwechseln
+
+Es gibt **zwei unterschiedliche `.claude`-Ordner**, die leicht verwechselt werden:
+
+| Bereich | Pfad | Inhalt | In Git? |
+|---|---|---|---|
+| **Projekt-lokal** | `<Projektordner>\.claude\` | `settings.json`, `launch.json` (Tool-Berechtigungen) | Nein (`.gitignore`) |
+| **User-global (Memory)** | `C:\Users\<username>\.claude\projects\<kodierter-pfad>\memory\` | Die eigentliche Memory (`.md`-Dateien, `MEMORY.md`-Index) | Nein, nicht im Projekt-Repo |
+
+**Die Memory-Sync-Strategie hier betrifft ausschließlich den zweiten Bereich** (User-global).
 
 ---
 
 ## Struktur
 
 ```
-.claude/
-├── projects/
-│   ├── D--CLAUDE-Projects-SoftwareProjekte-TradingInfoTool/memory/
-│   └── C--CLAUDE-Projects-SoftwareProjekte-TradingInfoTool/memory/
-│
-└── backups/
+C:\Users\<username>\.claude\projects\
+├── D--CLAUDE-Projects-SoftwareProjekte-TradingInfoTool\memory\   ← Desktop
+└── C--CLAUDE-Projects-SoftwareProjekte-TradingInfoTool\memory\   ← Notebook
+
+<Projektordner>\.claude\backups\   ← lokale Backups (projekt-lokal, da praktisch)
     ├── memory_backup_2026-07-06.zip
     ├── memory_backup_2026-07-07.zip
     └── [weitere Backups...]
@@ -30,41 +53,45 @@ Das `projects/` Verzeichnis (Claude Code Memory) wird **manuell über Google Dri
 
 ### **Von Desktop → Notebook**
 
-1. **Backup erstellen** (Sicherung der aktuellen Memory)
+1. **Backup erstellen** (Sicherung der aktuellen Memory, Desktop-Pfad)
    ```powershell
    $date = Get-Date -Format 'yyyy-MM-dd'
-   Compress-Archive -Path "D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\.claude\projects" `
+   New-Item -ItemType Directory -Force -Path "D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\.claude\backups"
+   Compress-Archive -Path "C:\Users\Geatsch\.claude\projects\D--CLAUDE-Projects-SoftwareProjekte-TradingInfoTool\memory" `
      -DestinationPath "D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\.claude\backups\memory_backup_$date.zip" `
      -Force
    ```
 
 2. **Zu Google Drive hochladen**
-   - Ordner: `D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\.claude\projects\`
-   - In Drive-Ordner: `/TradingInfoTool/memory_sync/` oder ähnlich
-   - Neue Datei oder Update bestehende Datei
+   - Quelle: `C:\Users\Geatsch\.claude\projects\D--CLAUDE-Projects-SoftwareProjekte-TradingInfoTool\memory\`
+   - Ziel in Drive: `/TradingInfoTool/memory_sync/` (oder ähnlich)
 
-3. **Auf Notebook: Backup VOR dem Download**
+3. **Auf Notebook: Backup VOR dem Download** (Notebook-Pfad, `<username>` anpassen!)
    ```powershell
    $date = Get-Date -Format 'yyyy-MM-dd_HHmm'
-   Compress-Archive -Path "C:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\.claude\projects" `
+   New-Item -ItemType Directory -Force -Path "C:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\.claude\backups"
+   Compress-Archive -Path "C:\Users\<notebook-username>\.claude\projects\C--CLAUDE-Projects-SoftwareProjekte-TradingInfoTool\memory" `
      -DestinationPath "C:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\.claude\backups\memory_backup_vor_sync_$date.zip" `
      -Force
    ```
+   *(Falls der Ordner auf dem Notebook noch nicht existiert, weil dort noch nie eine
+   Session lief: Schritt überspringen, es gibt noch nichts zu sichern.)*
 
 4. **Von Drive herunterladen**
-   - Neuer Inhalt in: `C:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\.claude\projects\`
-   - Überschreibt alte Memory, Backup ist gesichert
+   - Zielordner: `C:\Users\<notebook-username>\.claude\projects\C--CLAUDE-Projects-SoftwareProjekte-TradingInfoTool\memory\`
+   - Ordner ggf. manuell anlegen, falls er noch nicht existiert
+   - Dateien aus Drive dort hineinkopieren (überschreiben)
 
-5. **Starten:** `claude code .`
+5. **Starten:** im Projektordner `claude code .`
 
 ---
 
 ### **Von Notebook → Desktop** (umgekehrt)
 
-1. **Auf Notebook:** Backup erstellen (wie oben, mit C:\ Pfad)
+1. **Auf Notebook:** Backup erstellen (Notebook-Memory-Pfad, siehe oben)
 2. **Zu Drive hochladen**
-3. **Desktop:** Backup erstellen (vor Download)
-4. **Von Drive herunterladen** (in D:\ Ordner)
+3. **Desktop:** Backup erstellen (Desktop-Memory-Pfad, vor Download)
+4. **Von Drive herunterladen** in `C:\Users\Geatsch\.claude\projects\D--CLAUDE-Projects-SoftwareProjekte-TradingInfoTool\memory\`
 5. **Starten:** `claude code .`
 
 ---
@@ -74,6 +101,8 @@ Das `projects/` Verzeichnis (Claude Code Memory) wird **manuell über Google Dri
 - ✅ **Immer Backup vor Sync** — keine Ausnahmen
 - ✅ **Nie beide Rechner gleichzeitig an Memory arbeiten**
 - ✅ **Backups lokal halten** — mindestens letzte 7 Tage
+- ✅ **Pfade genau prüfen** — Memory liegt im Benutzerprofil (`C:\Users\...\.claude\`),
+  NICHT im Projektordner. Nur die Backups liegen praktischerweise projekt-lokal.
 - ✅ **Klar dokumentieren** — siehe Log unten
 
 ---
@@ -87,37 +116,35 @@ Das `projects/` Verzeichnis (Claude Code Memory) wird **manuell über Google Dri
 ...
 ```
 
-**Datei:** `.claude/SYNC_LOG.txt` oder in der Git-History nachschauen.
+**Datei:** `.claude/SYNC_LOG.txt` (projekt-lokal, nicht versioniert) oder hier direkt fortschreiben.
 
 ---
 
 ## Fallback: Bei Datenverlust
 
 Falls etwas schiefgeht:
-1. Lokale Backups im `backups/` Ordner prüfen
+1. Lokale Backups im `<Projektordner>\.claude\backups\` Ordner prüfen
 2. Neueste `.zip` extrahieren
-3. Zurückgehen zu letztem bekannten guten Stand
+3. Inhalt zurück nach `C:\Users\<username>\.claude\projects\<kodierter-pfad>\memory\` kopieren
 
 ---
 
 ## Workflow-Checklist
 
 ### Desktop → Notebook
-- [ ] Backup erstellen (`memory_backup_YYYY-MM-DD.zip`)
+- [ ] Backup erstellen (aus `C:\Users\Geatsch\.claude\projects\D--...\memory\`)
 - [ ] Zu Google Drive hochladen
-- [ ] Auf Notebook: Backup erstellen
-- [ ] Von Drive herunterladen
-- [ ] Memory-Ordner auf Notebook aktualisiert
-- [ ] `claude code .` starten
+- [ ] Auf Notebook: Backup erstellen (aus `C:\Users\<notebook-user>\.claude\projects\C--...\memory\`, falls vorhanden)
+- [ ] Von Drive herunterladen nach `C:\Users\<notebook-user>\.claude\projects\C--...\memory\`
+- [ ] `claude code .` im Projektordner starten
 
 ### Notebook → Desktop
-- [ ] Backup erstellen (mit C:\ Pfad)
+- [ ] Backup erstellen (Notebook-Memory-Pfad)
 - [ ] Zu Google Drive hochladen
-- [ ] Desktop: Backup erstellen
-- [ ] Von Drive herunterladen
-- [ ] Memory-Ordner auf Desktop aktualisiert
-- [ ] `claude code .` starten
+- [ ] Desktop: Backup erstellen (Desktop-Memory-Pfad)
+- [ ] Von Drive herunterladen nach `C:\Users\Geatsch\.claude\projects\D--...\memory\`
+- [ ] `claude code .` im Projektordner starten
 
 ---
 
-**Erstellt:** 2026-07-06 | **Strategie:** Manueller Drive-Sync mit lokalen Backups
+**Erstellt:** 2026-07-06 | **Korrigiert:** 2026-07-06 (Pfade auf tatsächliche User-Profil-Location korrigiert) | **Strategie:** Manueller Drive-Sync mit lokalen Backups
