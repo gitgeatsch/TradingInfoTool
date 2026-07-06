@@ -7,6 +7,7 @@ import config
 import database.db as db
 import ui.app as app
 from api.coingecko import CoinGeckoClient
+from api.history import backfill_all
 from importer.excel_import import import_holdings
 from scheduler.background import build_scheduler
 
@@ -26,9 +27,22 @@ def main() -> None:
         for warning in result.warnings:
             logger.warning(warning)
 
-    conn.close()
-
     coingecko_client = CoinGeckoClient()
+
+    if db.is_history_first_run(conn):
+        results = backfill_all(coingecko_client, conn, watchlist)
+        degraded = [r for r in results if r.degraded]
+        logger.info(
+            "Historie-Erstbefüllung: %d/%d Assets, %d degradiert",
+            len(results) - len(degraded),
+            len(results),
+            len(degraded),
+        )
+        for r in degraded:
+            logger.warning("Historie für %s unvollständig: %s", r.coingecko_id, r.reason)
+        db.mark_history_backfilled(conn)
+
+    conn.close()
 
     bg_scheduler = build_scheduler(
         coingecko_client=coingecko_client,

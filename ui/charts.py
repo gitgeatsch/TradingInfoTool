@@ -1,0 +1,235 @@
+"""Chart-Fenster je Asset: Preis + Indikatoren (U-3, Spezifikation Kap. 7).
+
+Naeherungs-Indikatoren (Volatilitaet, Swing-Punkte) sind IMMER als solche
+gekennzeichnet - siehe indicators/calculations.py fuer die Begruendung (P-2/P-10).
+"""
+from __future__ import annotations
+
+import tkinter as tk
+from tkinter import ttk
+
+import numpy as np
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+
+import database.db as db
+from indicators.calculations import (
+    atr_close_to_close_proxy,
+    bollinger_bands,
+    ema,
+    fibonacci_levels,
+    macd,
+    rsi,
+    support_resistance_levels,
+    swing_highs_lows_close_proxy,
+)
+from ui.formatting import format_money, is_history_stale
+
+STALE_COLOR = "#b36b00"
+INFO_COLOR = "#666666"
+
+
+class ChartWindow(tk.Toplevel):
+    def __init__(self, parent, db_conn_factory, asset):
+        super().__init__(parent)
+        self._db_conn_factory = db_conn_factory
+        self._asset = asset
+        self._currency = tk.StringVar(value="eur")
+
+        self.title(f"{asset.symbol} — {asset.name}")
+        self.geometry("1000x820")
+
+        self._build_controls()
+        self._build_figure()
+        self._reload()
+
+    def _build_controls(self) -> None:
+        toolbar = ttk.Frame(self)
+        toolbar.pack(fill="x", padx=8, pady=8)
+
+        ttk.Label(toolbar, text="Währung:").pack(side="left")
+        ttk.Radiobutton(
+            toolbar, text="EUR", variable=self._currency, value="eur", command=self._reload
+        ).pack(side="left", padx=(4, 0))
+        ttk.Radiobutton(
+            toolbar, text="USD", variable=self._currency, value="usd", command=self._reload
+        ).pack(side="left")
+
+        self._staleness_label = ttk.Label(toolbar, text="", foreground=STALE_COLOR)
+        self._staleness_label.pack(side="left", padx=(16, 0))
+
+    def _build_figure(self) -> None:
+        self._figure = Figure(figsize=(9, 7), dpi=100)
+        self._ax_price, self._ax_rsi, self._ax_macd = self._figure.subplots(
+            3, 1, sharex=True, gridspec_kw={"height_ratios": [3, 1, 1]}
+        )
+        self._canvas = FigureCanvasTkAgg(self._figure, master=self)
+        self._canvas.get_tk_widget().pack(fill="both", expand=True, padx=8, pady=(0, 8))
+
+        self._volatility_label = ttk.Label(self, text="", foreground=INFO_COLOR)
+        self._volatility_label.pack(fill="x", padx=8)
+
+        self._unavailable_label = ttk.Label(
+            self, text="", foreground=INFO_COLOR, wraplength=980, justify="left"
+        )
+        self._unavailable_label.pack(fill="x", padx=8, pady=(0, 8))
+
+    def _reload(self) -> None:
+        currency = self._currency.get()
+        conn = self._db_conn_factory()
+        try:
+            history = db.get_price_history(conn, self._asset.coingecko_id)
+            last_date = db.get_last_history_date(conn, self._asset.coingecko_id)
+        finally:
+            conn.close()
+
+        if is_history_stale(last_date):
+            age_text = f"letzter Tag: {last_date}" if last_date else "keine Daten vorhanden"
+            self._staleness_label.config(text=f"⚠ Historie veraltet ({age_text})")
+        else:
+            self._staleness_label.config(text="")
+
+        if not history:
+            self._render_no_data()
+            return
+
+        dates = np.array([p.date for p in history])
+        closes = np.array(
+            [(p.price_usd if currency == "usd" else p.price_eur) for p in history],
+            dtype=float,
+        )
+        # Zeilen ohne Preis in der gewählten Währung ausfiltern (P-10: keine Lücken
+        # silently interpolieren).
+        valid_mask = ~np.isnan(closes)
+        dates = dates[valid_mask]
+        closes = closes[valid_mask]
+
+        if len(closes) == 0:
+            self._render_no_data()
+            return
+
+        self._render_chart(dates, closes, currency)
+
+    def _render_no_data(self) -> None:
+        for ax in (self._ax_price, self._ax_rsi, self._ax_macd):
+            ax.clear()
+        self._ax_price.text(
+            0.5,
+            0.5,
+            "Keine historischen Daten verfügbar",
+            ha="center",
+            va="center",
+            transform=self._ax_price.transAxes,
+        )
+        self._canvas.draw()
+        self._volatility_label.config(text="")
+        self._unavailable_label.config(text="")
+
+    def _render_chart(self, dates: np.ndarray, closes: np.ndarray, currency: str) -> None:
+        currency_label = currency.upper()
+        unavailable_notes: list[str] = []
+
+        for ax in (self._ax_price, self._ax_rsi, self._ax_macd):
+            ax.clear()
+
+        x = np.arange(len(dates))
+        self._ax_price.plot(x, closes, label=f"Preis ({currency_label})", color="black", linewidth=1)
+
+        for period, color in ((20, "tab:blue"), (50, "tab:orange"), (200, "tab:green")):
+            result = ema(closes, period)
+            if result.available:
+                self._ax_price.plot(x, result.value, label=f"EMA-{period}", color=color, linewidth=1)
+            else:
+                unavailable_notes.append(f"EMA-{period}: nicht verfügbar ({result.reason})")
+
+        bb = bollinger_bands(closes)
+        if bb.available:
+            self._ax_price.plot(
+                x, bb.value["upper"], label="Bollinger oben", color="grey", linestyle="--", linewidth=0.8
+            )
+            self._ax_price.plot(
+                x, bb.value["lower"], label="Bollinger unten", color="grey", linestyle="--", linewidth=0.8
+            )
+        else:
+            unavailable_notes.append(f"Bollinger Bands: nicht verfügbar ({bb.reason})")
+
+        swing = swing_highs_lows_close_proxy(closes, dates)
+        if swing.available:
+            date_to_x = {d: i for i, d in enumerate(dates)}
+            high_x = [date_to_x[d] for d, _ in swing.value["highs"]]
+            high_prices = [p for _, p in swing.value["highs"]]
+            low_x = [date_to_x[d] for d, _ in swing.value["lows"]]
+            low_prices = [p for _, p in swing.value["lows"]]
+
+            if high_prices:
+                self._ax_price.scatter(
+                    high_x,
+                    high_prices,
+                    marker="v",
+                    color="red",
+                    s=25,
+                    label="Swing-Punkte (Näherung, Schlusskurs-basiert)",
+                    zorder=5,
+                )
+            if low_prices:
+                self._ax_price.scatter(low_x, low_prices, marker="^", color="green", s=25, zorder=5)
+
+            sr = support_resistance_levels(swing)
+            if sr.available:
+                for level in sr.value:
+                    self._ax_price.axhline(
+                        level["price"], color="purple", linestyle=":", linewidth=0.6, alpha=0.5
+                    )
+
+            if high_prices and low_prices:
+                fib = fibonacci_levels(max(high_prices), min(low_prices))
+                for ratio, price in fib.items():
+                    self._ax_price.axhline(price, color="goldenrod", linestyle=":", linewidth=0.5, alpha=0.4)
+        else:
+            unavailable_notes.append(
+                f"Swing-Punkte/Support-Resistance/Fibonacci (Näherung): nicht verfügbar ({swing.reason})"
+            )
+
+        self._ax_price.set_ylabel(f"Preis ({currency_label})")
+        self._ax_price.legend(loc="upper left", fontsize=7)
+        self._ax_price.set_title(f"{self._asset.symbol} — {self._asset.name}")
+
+        rsi_result = rsi(closes)
+        if rsi_result.available:
+            self._ax_rsi.plot(x, rsi_result.value, color="tab:purple", linewidth=1)
+            self._ax_rsi.axhline(70, color="red", linestyle="--", linewidth=0.6)
+            self._ax_rsi.axhline(30, color="green", linestyle="--", linewidth=0.6)
+            self._ax_rsi.set_ylim(0, 100)
+            self._ax_rsi.set_ylabel("RSI-14")
+        else:
+            unavailable_notes.append(f"RSI-14: nicht verfügbar ({rsi_result.reason})")
+
+        macd_result = macd(closes)
+        if macd_result.available:
+            self._ax_macd.plot(x, macd_result.value["macd"], label="MACD", color="tab:blue", linewidth=1)
+            self._ax_macd.plot(x, macd_result.value["signal"], label="Signal", color="tab:orange", linewidth=1)
+            self._ax_macd.bar(x, macd_result.value["histogram"], color="grey", alpha=0.4, width=0.8)
+            self._ax_macd.legend(loc="upper left", fontsize=7)
+            self._ax_macd.set_ylabel("MACD")
+        else:
+            unavailable_notes.append(f"MACD: nicht verfügbar ({macd_result.reason})")
+
+        atr_result = atr_close_to_close_proxy(closes)
+        if atr_result.available:
+            latest_vol = atr_result.value[~np.isnan(atr_result.value)][-1]
+            self._volatility_label.config(
+                text=f"Volatilitäts-Näherung (kein ATR): {format_money(latest_vol)} {currency_label}/Tag"
+            )
+        else:
+            self._volatility_label.config(text="")
+            unavailable_notes.append(
+                f"Volatilitäts-Näherung (kein ATR): nicht verfügbar ({atr_result.reason})"
+            )
+
+        self._figure.tight_layout()
+        self._canvas.draw()
+
+        if unavailable_notes:
+            self._unavailable_label.config(text="Nicht verfügbar: " + " | ".join(unavailable_notes))
+        else:
+            self._unavailable_label.config(text="")

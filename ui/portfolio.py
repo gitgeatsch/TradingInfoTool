@@ -5,7 +5,9 @@ import tkinter as tk
 from tkinter import ttk
 
 import database.db as db
-from ui.formatting import format_money
+from ui.formatting import format_money, is_price_stale
+
+STALE_COLOR = "#b36b00"
 
 
 class PortfolioView(ttk.Frame):
@@ -28,6 +30,7 @@ class PortfolioView(ttk.Frame):
         for col in columns:
             self.tree.heading(col, text=headings[col])
             self.tree.column(col, width=120, anchor="e" if col != "name" else "w")
+        self.tree.tag_configure("stale", foreground=STALE_COLOR)
         self.tree.pack(fill="both", expand=True, padx=8, pady=8)
 
         self.total_label = ttk.Label(self, text="Gesamtwert: -", font=("", 10, "bold"))
@@ -61,6 +64,12 @@ class PortfolioView(ttk.Frame):
             if value_eur is not None:
                 total_value_eur += value_eur
 
+            fetched_at = price_snapshot.fetched_at if price_snapshot else None
+            stale = is_price_stale(fetched_at)
+            price_usd_text = format_money(price_usd)
+            if stale and price_usd_text != "-":
+                price_usd_text = f"⚠ {price_usd_text}"
+
             self.tree.insert(
                 "",
                 "end",
@@ -68,11 +77,12 @@ class PortfolioView(ttk.Frame):
                     holding.symbol,
                     name,
                     f"{holding.quantity:g}",
-                    format_money(price_usd),
+                    price_usd_text,
                     format_money(price_eur),
                     format_money(value_usd),
                     format_money(value_eur),
                 ),
+                tags=("stale",) if stale else (),
             )
 
         self.total_label.config(

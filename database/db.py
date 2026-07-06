@@ -5,7 +5,7 @@ import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 
-from database.models import Holding, PriceSnapshot
+from database.models import Holding, PriceHistoryPoint, PriceSnapshot
 
 DB_PATH = Path(__file__).resolve().parent.parent / "data" / "tradinginfotool.db"
 
@@ -32,6 +32,15 @@ CREATE TABLE IF NOT EXISTS price_cache (
 CREATE TABLE IF NOT EXISTS meta (
     key             TEXT PRIMARY KEY,
     value           TEXT
+);
+
+CREATE TABLE IF NOT EXISTS price_history (
+    coingecko_id    TEXT NOT NULL,
+    date            TEXT NOT NULL,
+    price_usd       REAL,
+    price_eur       REAL,
+    fetched_at      TEXT NOT NULL,
+    PRIMARY KEY (coingecko_id, date)
 );
 """
 
@@ -104,6 +113,65 @@ def insert_price_snapshot(conn: sqlite3.Connection, snap: PriceSnapshot) -> None
         ),
     )
     conn.commit()
+
+
+def is_history_first_run(conn: sqlite3.Connection) -> bool:
+    row = conn.execute(
+        "SELECT value FROM meta WHERE key = 'history_backfilled_at'"
+    ).fetchone()
+    return row is None or row["value"] is None
+
+
+def mark_history_backfilled(conn: sqlite3.Connection) -> None:
+    conn.execute(
+        "INSERT INTO meta (key, value) VALUES ('history_backfilled_at', ?) "
+        "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        (_now_iso(),),
+    )
+    conn.commit()
+
+
+def upsert_price_history_points(
+    conn: sqlite3.Connection, points: list[PriceHistoryPoint]
+) -> None:
+    conn.executemany(
+        "INSERT INTO price_history (coingecko_id, date, price_usd, price_eur, fetched_at) "
+        "VALUES (?, ?, ?, ?, ?) "
+        "ON CONFLICT(coingecko_id, date) DO UPDATE SET "
+        "price_usd = excluded.price_usd, price_eur = excluded.price_eur, "
+        "fetched_at = excluded.fetched_at",
+        [
+            (p.coingecko_id, p.date, p.price_usd, p.price_eur, p.fetched_at)
+            for p in points
+        ],
+    )
+    conn.commit()
+
+
+def get_price_history(
+    conn: sqlite3.Connection, coingecko_id: str, min_date: str | None = None
+) -> list[PriceHistoryPoint]:
+    if min_date is not None:
+        rows = conn.execute(
+            "SELECT coingecko_id, date, price_usd, price_eur, fetched_at "
+            "FROM price_history WHERE coingecko_id = ? AND date >= ? ORDER BY date ASC",
+            (coingecko_id, min_date),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT coingecko_id, date, price_usd, price_eur, fetched_at "
+            "FROM price_history WHERE coingecko_id = ? ORDER BY date ASC",
+            (coingecko_id,),
+        ).fetchall()
+    return [PriceHistoryPoint(**dict(row)) for row in rows]
+
+
+def get_last_history_date(conn: sqlite3.Connection, coingecko_id: str) -> str | None:
+    row = conn.execute(
+        "SELECT MAX(date) AS max_date FROM price_history WHERE coingecko_id = ?",
+        (coingecko_id,),
+    ).fetchone()
+    return row["max_date"] if row else None
 
 
 def get_latest_prices(conn: sqlite3.Connection) -> dict[str, PriceSnapshot]:

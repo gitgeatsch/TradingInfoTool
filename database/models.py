@@ -22,3 +22,12 @@ class PriceSnapshot:
     volume_24h_usd: float | None
     change_24h_pct: float | None
     fetched_at: str
+
+
+@dataclass
+class PriceHistoryPoint:
+    coingecko_id: str
+    date: str  # 'YYYY-MM-DD', UTC-Tagesbucket
+    price_usd: float | None
+    price_eur: float | None
+    fetched_at: str

@@ -6,8 +6,10 @@ from tkinter import messagebox, ttk
 
 import database.db as db
 from importer.excel_import import import_holdings
-from ui.formatting import format_money
+from ui.formatting import format_money, format_price_age, is_price_stale
 from ui.portfolio import PortfolioView
+
+STALE_COLOR = "#b36b00"
 
 UI_POLL_INTERVAL_MS = 3000
 DISCLAIMER_TEXT = (
@@ -63,7 +65,16 @@ class TradingInfoToolApp(tk.Tk):
             side="left"
         )
 
-        columns = ("symbol", "name", "typ", "status", "price_usd", "price_eur", "change_24h")
+        columns = (
+            "symbol",
+            "name",
+            "typ",
+            "status",
+            "price_usd",
+            "price_eur",
+            "change_24h",
+            "aktualisiert",
+        )
         headings = {
             "symbol": "Symbol",
             "name": "Name",
@@ -72,12 +83,15 @@ class TradingInfoToolApp(tk.Tk):
             "price_usd": "Preis (USD)",
             "price_eur": "Preis (EUR)",
             "change_24h": "24h %",
+            "aktualisiert": "Aktualisiert",
         }
         tree = ttk.Treeview(frame, columns=columns, show="headings")
         for col in columns:
             tree.heading(col, text=headings[col])
             anchor = "w" if col in ("name", "typ", "status") else "e"
             tree.column(col, width=110, anchor=anchor)
+        tree.tag_configure("stale", foreground=STALE_COLOR)
+        tree.bind("<Double-1>", self._open_chart)
         tree.pack(fill="both", expand=True, padx=8, pady=8)
 
         frame.tree = tree
@@ -99,11 +113,41 @@ class TradingInfoToolApp(tk.Tk):
             price_usd = format_money(snap.price_usd if snap else None)
             price_eur = format_money(snap.price_eur if snap else None)
             change = f"{snap.change_24h_pct:+.2f}" if snap and snap.change_24h_pct is not None else "-"
+
+            fetched_at = snap.fetched_at if snap else None
+            stale = is_price_stale(fetched_at)
+            age_text = format_price_age(fetched_at)
+            aktualisiert = f"⚠ {age_text}" if stale else age_text
+
             tree.insert(
                 "",
                 "end",
-                values=(asset.symbol, asset.name, asset.typ, asset.status, price_usd, price_eur, change),
+                values=(
+                    asset.symbol,
+                    asset.name,
+                    asset.typ,
+                    asset.status,
+                    price_usd,
+                    price_eur,
+                    change,
+                    aktualisiert,
+                ),
+                tags=("stale",) if stale else (),
             )
+
+    def _open_chart(self, event) -> None:
+        tree = self._watchlist_frame.tree
+        selected = tree.selection()
+        if not selected:
+            return
+        symbol = tree.item(selected[0], "values")[0]
+        asset = next((a for a in self._watchlist if a.symbol == symbol), None)
+        if asset is None:
+            return
+
+        from ui.charts import ChartWindow
+
+        ChartWindow(self, self._db_conn_factory, asset)
 
     def _poll_prices(self) -> None:
         self._refresh_watchlist_from_db()

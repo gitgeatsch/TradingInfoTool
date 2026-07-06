@@ -1,6 +1,6 @@
 # TradingInfoTool — Spezifikation (fachliche Grundlage)
 
-> **Eigentümer:** Gernot Spiessmaier · **Version:** 0.7 · **Stand:** 2026-07-06
+> **Eigentümer:** Gernot Spiessmaier · **Version:** 0.9 · **Stand:** 2026-07-06
 >
 > Dieses Dokument beschreibt **was** das Tool leisten soll und **warum** (lesbarer Teil).
 > Die konkreten, vom Programm auslesbaren **Parameter** (Watchlist, Risiko-Limits,
@@ -204,6 +204,19 @@ liefern (Rate-Limit, Netzwerk, Wartung). Bei Ausfall: letzter bekannter Wert ble
 der DB, wird in der UI aber mit **Alter/Zeitstempel sichtbar** dargestellt, nicht
 kommentarlos als aktuell präsentiert. Exakte „veraltet ab wann"-Schwellen je Datenart
 sind `[OFFEN]` (Kap. 16).
+
+**Prinzip zur Quellenwahl (2026-07-06):** CoinGecko deckt bewusst nur Krypto-
+Marktdaten ab. Zwei Fälle sind zu unterscheiden: (1) Wird für eine **tatsächlich
+erforderliche** Funktionalität eine Datenart benötigt, die CoinGecko grundsätzlich
+nicht liefert (z. B. Makro-/Zinsdaten, Sentiment, Funding-Rates) → gezielt eine
+passende zusätzliche Quelle recherchieren, nicht versuchen, es mit CoinGecko zu
+erzwingen. (2) Liefert CoinGecko eine Datenart nur eingeschränkt, aber die
+Einschränkung blockiert **keine** tatsächlich erforderliche Funktionalität (z. B. echtes
+Tages-OHLC für ATR — Phase 2 zeigt nur an, entscheidet noch nichts) → eine transparent
+gekennzeichnete Näherung bevorzugen statt vorschnell eine zweite Quelle einzubauen
+(siehe P-10-Entscheidung zu ATR/Swing-Highs-Lows). Sobald eine Phase tatsächlich
+Entscheidungen/Signale auf einer nur genäherten Datenart aufbauen will, ist die
+Näherung an dieser Stelle neu zu bewerten.
 
 - **Marktdaten (Pflicht):** CoinGecko (Free Tier, max. 30 Req/Min → Caching/Scheduler).
 - **Historische Daten:** für TA und Backtesting (Kap. 11). Grundsatz: Historie wiederholt
@@ -426,13 +439,21 @@ seinen Emotionen scheitert. Grundsatz: **antizyklisch, aber bedingt.**
 - Standard-Timeframes für die technische Analyse.
 - Claude-Modellversion und Budget/Token.
 
-**Datenqualität (P-10):**
-- Exakte „veraltet ab wann"-Schwelle für Live-Preise (Vorschlag: 2× Scheduler-Intervall,
-  aktuell also 10 Min bei 5-Min-Takt) — zu bestätigen.
-- Mindest-Historienlänge je Indikator, ab der er als „verfügbar" gilt (z. B. EMA-200
-  braucht mindestens 200 Tage — reicht genau 200, oder soll ein Puffer gefordert werden?).
-- Visuelle Konvention für „veraltet"/„nicht verfügbar" in der UI (Farbe, Symbol, Text) —
-  wird in Phase 2 (erste betroffene UI-Erweiterung) konkret festgelegt.
+**Datenqualität (P-10) — ERLEDIGT (2026-07-06, Phase 2):**
+- Live-Preise gelten als veraltet ab `> 10 Min` (2× 5-Min-Scheduler-Takt), historische
+  Tagesdaten ab `> 2 Kalendertage` Rückstand — implementiert in `ui/formatting.py`
+  (`is_price_stale`, `is_history_stale`).
+- Mindest-Historienlänge je Indikator: exakt der jeweils benötigte Zeitraum (z. B. EMA-200
+  braucht genau 200 Tage, kein zusätzlicher Puffer) — implementiert als Gating in
+  `indicators/calculations.py` (`IndicatorResult.available`/`.reason`).
+- Visuelle Konvention: `⚠`-Präfix in Warnfarbe (`#b36b00`) plus konkretes Alter im Text
+  (Text + Farbe zusammen, nicht nur Farbe) — in Watchlist/Portfolio/Chart-Fenster
+  umgesetzt.
+- **Zusatz-Entscheidung (Phase 2):** Echtes ATR und echtes Williams-Fraktal (Swing-
+  Highs/-Lows) sind mit CoinGecko Free Tier nicht in brauchbarer Tages-Auflösung möglich
+  (echte OHLC-Daten nur als 4-Tage-Kerzen für ein Jahr). Stattdessen werden Näherungen
+  verwendet (Schlusskurs-basierte Volatilität bzw. lokale Extrema), die in der UI **immer**
+  explizit als Näherung gekennzeichnet sind, nie kommentarlos als „ATR"/„Swing-High/Low".
 
 **Marktscan (Kap. 13):**
 - **Stufe B, C, D** ausarbeiten (positive Signale, Scoring, Schwellenwerte).
