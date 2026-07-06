@@ -1,6 +1,6 @@
 # TradingInfoTool — Spezifikation (fachliche Grundlage)
 
-> **Eigentümer:** Gernot Spiessmaier · **Version:** 0.6 · **Stand:** 2026-07-06
+> **Eigentümer:** Gernot Spiessmaier · **Version:** 0.7 · **Stand:** 2026-07-06
 >
 > Dieses Dokument beschreibt **was** das Tool leisten soll und **warum** (lesbarer Teil).
 > Die konkreten, vom Programm auslesbaren **Parameter** (Watchlist, Risiko-Limits,
@@ -68,6 +68,23 @@ Messbare Zielgrößen (Werte in `config.yaml → ziele`):
   (Datenabruf, Persistenz, Basis-UI) dürfen zu keinem Zeitpunkt zwingend von einem
   Claude-API-Schlüssel abhängen; die Anbindung wird erst dann verdrahtet, wenn eine
   Phase sie tatsächlich aktiv nutzt.
+- **P-10** Fail-Loud statt Fail-Silent bei Datenproblemen — Ausfälle, fehlende oder
+  veraltete Daten (z. B. CoinGecko nicht erreichbar, Preis-Cache veraltet, zu wenig
+  Historie für einen Indikator) dürfen **niemals** zu stillschweigend falschen oder
+  unvollständigen Analysen/Signalen führen. Gilt **einheitlich für alle Bereiche**:
+  Datenabruf, Persistenz, UI-Anzeige und (ab Phase 3) die Agent-Pipeline. Konkret:
+  - Jeder Wert, der auf veralteten/fehlenden Daten beruht, wird **sichtbar als solcher
+    gekennzeichnet** (nicht einfach der letzte bekannte Wert kommentarlos angezeigt).
+  - Reicht die Datenlage für eine Berechnung nicht aus (z. B. zu wenig Historie für
+    EMA-200), wird **„nicht verfügbar"** angezeigt statt eines aus unzureichenden Daten
+    berechneten (potenziell irreführenden) Werts.
+  - Ab Phase 3: ein **Datenqualitäts-Gate** läuft in der Pipeline (Kap. 5) **vor** R-5.1
+    — bei unzureichender Datenlage für ein Asset wird kein Signal erzeugt, sondern
+    „HALTEN — Datenlage unsicher" mit Begründung ausgegeben (siehe R-5.0). Ergänzt die
+    bestehende Risiko-VETO-Stufe (R-5.5), ersetzt sie nicht.
+  - Jeder Ausfall/jede Degradation wird geloggt (Nachvollziehbarkeit, Z-4).
+  - Exakte Schwellenwerte (ab wann „veraltet"/„zu wenig Historie") sind `[OFFEN]`
+    (Kap. 16) und pro Datenart/Indikator festzulegen.
 - **P-9** Referenzwährung Euro + durchgängige USD/EUR-Doppelanzeige — der Nutzer hält
   Bestände und denkt in **Euro**. Alle aktuellen bzw. veränderlichen Geldwertangaben
   (Live-Preise, Portfolio-Wert, P&L) werden **immer gemeinsam in USD und EUR**
@@ -116,6 +133,11 @@ Stand 2026-07-01, 41 Assets — eigene Bestände und reine Beobachtungswerte).
 Zeithorizonte und Gewichtung in `config.yaml → agent`.
 
 Entscheidungs-Pipeline (Reihenfolge je Analyse):
+0. **R-5.0** Datenqualitäts-Gate (P-10, VOR allem anderen): Sind die für dieses Asset
+   benötigten Daten aktuell und vollständig genug? Wenn nein → Abbruch für dieses Asset,
+   Ausgabe „HALTEN — Datenlage unsicher" mit konkretem Grund (z. B. „Preis seit X Min.
+   nicht aktualisiert", „nur Y Tage Historie, benötigt Z"), kein Rateversuch mit
+   Lückendaten.
 1. **R-5.1** Marktregime bestimmen (Bulle/Bär/Seitwärts) via BTC-Trend, BTC-Dominanz,
    Fear & Greed.
 2. **R-5.2** Makro-Kontext: Leitzinsen, Risikoumfeld USA/Japan/China/EU/Korea.
@@ -161,6 +183,11 @@ Marktregime passende Strategie vor und begründet die Auswahl („beste Strategi
 Liste in `config.yaml → indikatoren`. Kein Signal aus einem einzelnen Indikator —
 **Bestätigung durch mehrere (Confluence)** ist Voraussetzung.
 
+**Datenqualität (P-10):** Reicht die vorhandene Historie für einen Indikator nicht aus
+(z. B. Asset erst seit 50 Tagen gelistet, EMA-200 braucht 200 Tage), wird dieser
+Indikator als **„nicht verfügbar"** markiert statt mit einem verkürzten/falschen Fenster
+berechnet. Confluence-Bewertung berücksichtigt nur tatsächlich verfügbare Indikatoren.
+
 - Trend: EMA (20/50/200), MACD
 - Momentum: RSI (Überkauft/Überverkauft, Divergenzen)
 - Volatilität: Bollinger Bands, ATR (Stop-Loss-Abstand)
@@ -171,6 +198,12 @@ Liste in `config.yaml → indikatoren`. Kein Signal aus einem einzelnen Indikato
 ## 8. Datenquellen
 
 Konfiguration in `config.yaml → datenquellen`.
+
+**Datenqualität (P-10):** Jede hier genannte Quelle kann ausfallen oder veraltete Daten
+liefern (Rate-Limit, Netzwerk, Wartung). Bei Ausfall: letzter bekannter Wert bleibt in
+der DB, wird in der UI aber mit **Alter/Zeitstempel sichtbar** dargestellt, nicht
+kommentarlos als aktuell präsentiert. Exakte „veraltet ab wann"-Schwellen je Datenart
+sind `[OFFEN]` (Kap. 16).
 
 - **Marktdaten (Pflicht):** CoinGecko (Free Tier, max. 30 Req/Min → Caching/Scheduler).
 - **Historische Daten:** für TA und Backtesting (Kap. 11). Grundsatz: Historie wiederholt
@@ -193,8 +226,9 @@ Konfiguration in `config.yaml → datenquellen`.
 Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
 
 - **U-1** Dashboard: Portfolio-Wert, P&L, Drawdown, Cash-Quote, Marktregime-Ampel —
-  Geldwerte in **USD und EUR** (P-9).
-- **U-2** Watchlist mit Live-Preisen (**USD und EUR**, P-9) + Asset-Risiko-Score.
+  Geldwerte in **USD und EUR** (P-9), veraltete Werte sichtbar markiert (P-10).
+- **U-2** Watchlist mit Live-Preisen (**USD und EUR**, P-9) + Asset-Risiko-Score;
+  Preis-Zeitstempel/Alter sichtbar, veraltete Werte optisch markiert (P-10).
 - **U-3** Chart-Ansicht je Asset mit Indikatoren + Forecast-Szenario.
 - **U-4** Signal-/Empfehlungsansicht im Format P-5 (kurz + lang, Geldwerte in USD+EUR).
 - **U-5** Strategie-Auswahl je Asset + Vorschlag „beste Strategie jetzt".
@@ -391,6 +425,14 @@ seinen Emotionen scheitert. Grundsatz: **antizyklisch, aber bedingt.**
 - Max. Allokation pro Einzelwert (RM-2) und pro Assetklasse (RM-3)?
 - Standard-Timeframes für die technische Analyse.
 - Claude-Modellversion und Budget/Token.
+
+**Datenqualität (P-10):**
+- Exakte „veraltet ab wann"-Schwelle für Live-Preise (Vorschlag: 2× Scheduler-Intervall,
+  aktuell also 10 Min bei 5-Min-Takt) — zu bestätigen.
+- Mindest-Historienlänge je Indikator, ab der er als „verfügbar" gilt (z. B. EMA-200
+  braucht mindestens 200 Tage — reicht genau 200, oder soll ein Puffer gefordert werden?).
+- Visuelle Konvention für „veraltet"/„nicht verfügbar" in der UI (Farbe, Symbol, Text) —
+  wird in Phase 2 (erste betroffene UI-Erweiterung) konkret festgelegt.
 
 **Marktscan (Kap. 13):**
 - **Stufe B, C, D** ausarbeiten (positive Signale, Scoring, Schwellenwerte).
