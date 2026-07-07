@@ -18,8 +18,8 @@
 meta:
   projekt: TradingInfoTool
   eigentuemer: Gernot Spiessmaier
-  version: 1.1
-  stand: 2026-07-06
+  version: 1.2
+  stand: 2026-07-07
 
 # --- Uebergeordnete Ziele / Leitplanken (siehe Spezifikation Kap. 1) ---
 ziele:

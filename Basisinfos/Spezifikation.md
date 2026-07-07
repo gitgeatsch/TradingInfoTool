@@ -1,6 +1,6 @@
 # TradingInfoTool — Spezifikation (fachliche Grundlage)
 
-> **Eigentümer:** Gernot Spiessmaier · **Version:** 1.1 · **Stand:** 2026-07-06
+> **Eigentümer:** Gernot Spiessmaier · **Version:** 1.2 · **Stand:** 2026-07-07
 >
 > Dieses Dokument beschreibt **was** das Tool leisten soll und **warum** (lesbarer Teil).
 > Die konkreten, vom Programm auslesbaren **Parameter** (Watchlist, Risiko-Limits,
@@ -73,6 +73,16 @@ Messbare Zielgrößen (Werte in `config.yaml → ziele`):
   `COINGECKO_API_KEY` (siehe Kap. 8) — CoinGecko bleibt reine Marktdaten-Anbindung,
   hat nichts mit der KI-Autonomie-Frage zu tun. `ANTHROPIC_API_KEY`/`GITHUB_TOKEN`
   bleiben weiterhin ungenutzt bis zur jeweils benötigten Phase.
+  **KI-Ebene entschieden (2026-07-07):** Nach Detail-Recherche (Kosten, Nachhaltigkeit,
+  Nutzungsbedingungen) fällt die Wahl auf **Groq** (Llama 3.3 70B, remote, `GROQ_API_KEY`)
+  als primäre Analyse-Ebene für Phase 3 — dauerhaft kostenlos (kein Kreditkarten-Zwang,
+  kein zeitlich begrenztes Guthaben), finanziell solide unterlegt (>1,4 Mrd. $ Kapital),
+  Nutzungsbedingungen erlauben automatisierte Nutzung innerhalb der Rate-Limits. Damit
+  ist P-8 sowohl erfüllt (lokal via Phi-4-mini weiterhin voll funktionsfähig als
+  Offline-Fallback) als auch übertroffen (deutlich stärkeres Modell als lokal möglich,
+  ohne Kostenschranke). Grundsatz dahinter: kostenlose Optionen zuerst voll ausschöpfen
+  (lokal UND remote parallel), kostenpflichtige Quellen (z. B. Claude API) erst wenn
+  eine konkrete Aufgabe die Qualität von Groq/lokalem Modell nachweislich übersteigt.
 - **P-10** Fail-Loud statt Fail-Silent bei Datenproblemen — Ausfälle, fehlende oder
   veraltete Daten (z. B. CoinGecko nicht erreichbar, Preis-Cache veraltet, zu wenig
   Historie für einen Indikator) dürfen **niemals** zu stillschweigend falschen oder
@@ -237,6 +247,19 @@ Näherung an dieser Stelle neu zu bewerten.
   `REFRESH_INTERVAL_MINUTES`) → ca. 5.340 Calls/Monat, mit Puffer für Erstimport/
   manuelle Aktualisierungen. Staleness-Schwelle entsprechend auf 30 Min angepasst
   (weiterhin 2× Scheduler-Takt, siehe `ui/formatting.py`).
+- **Echtes OHLC (ATR, Swing-Highs/-Lows):** **ERLEDIGT (2026-07-07):** Kraken liefert
+  echte Kerzendaten (Open/High/Low/Close) über öffentliche Endpunkte — kein Account,
+  kein API-Key, keine Anmeldung nötig, zählt nicht gegen Rate-Limits. Ersetzt die in
+  Phase 2 eingeführte Schlusskurs-Näherung (`atr_close_to_close_proxy`,
+  `swing_highs_lows_close_proxy`) für alle bei Kraken gelisteten Assets — echtes
+  Wilder's-ATR und echtes Williams-Fraktal werden möglich. Nur sehr kleine/exotische
+  Watchlist-Coins ohne Kraken-Listing behalten die Näherung. Auch Funding-Rate-Historie
+  (Kraken Futures) ist über denselben öffentlichen Zugang verfügbar — deckt AZ-1
+  (Flush-Erkennung) ab, ohne CoinGlass (kostenpflichtig ab 29 $/Monat) zu benötigen.
+  **MiCA-Klarstellung:** Die EU-Regulierung betrifft Kunden-Dienstleistungen (Handel,
+  Verwahrung, Transfer) — nicht rein lesende, öffentliche Marktdaten-APIs. Kraken wurde
+  trotzdem als pragmatischer Standard gewählt (unkompliziert, gut dokumentiert), nicht
+  aus einer unbegründeten Regulierungs-Sorge bei alternativen Börsen.
 - **Historische Daten:** für TA und Backtesting (Kap. 11). Grundsatz: Historie wiederholt
   sich nicht 1:1, ähnelt sich aber oft — Muster aus der Vergangenheit sollen daher (ab
   Phase 3, Agent-Logik) als Vergleichsbasis einfließen, nicht nur aktuelle Werte isoliert
