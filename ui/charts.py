@@ -15,18 +15,7 @@ from matplotlib.figure import Figure
 
 import database.db as db
 from api.kraken import KRAKEN_PAIR_MAP
-from indicators.calculations import (
-    atr_close_to_close_proxy,
-    atr_wilder,
-    bollinger_bands,
-    ema,
-    fibonacci_levels,
-    macd,
-    rsi,
-    support_resistance_levels,
-    swing_highs_lows_close_proxy,
-    swing_highs_lows_fractal,
-)
+from indicators.calculations import build_technical_snapshot, latest_value
 from ui.formatting import format_money, is_history_stale
 
 STALE_COLOR = "#b36b00"
@@ -142,12 +131,8 @@ class ChartWindow(tk.Toplevel):
         # nur fuer ATR und Swing-Punkte, die Preislinie selbst bleibt CoinGecko-basiert
         # (Waehrungs-Umschalter/Kontinuitaet unveraendert). Fehlt Kraken-Abdeckung,
         # bleibt die Naeherung aus Phase 2 die einzige Quelle (P-10: klar gekennzeichnet).
-        has_real_ohlc = len(ohlc_history) >= 3
-        if has_real_ohlc:
-            ohlc_dates = np.array([p.date for p in ohlc_history])
-            ohlc_highs = np.array([p.high for p in ohlc_history], dtype=float)
-            ohlc_lows = np.array([p.low for p in ohlc_history], dtype=float)
-            ohlc_closes = np.array([p.close for p in ohlc_history], dtype=float)
+        # Geteilte Logik mit agent/pipeline.py, siehe indicators/calculations.py.
+        snapshot = build_technical_snapshot(closes, dates, ohlc_history)
 
         for ax in (self._ax_price, self._ax_rsi, self._ax_macd):
             ax.clear()
@@ -156,13 +141,13 @@ class ChartWindow(tk.Toplevel):
         self._ax_price.plot(x, closes, label=f"Preis ({currency_label})", color="black", linewidth=1)
 
         for period, color in ((20, "tab:blue"), (50, "tab:orange"), (200, "tab:green")):
-            result = ema(closes, period)
+            result = snapshot.ema[period]
             if result.available:
                 self._ax_price.plot(x, result.value, label=f"EMA-{period}", color=color, linewidth=1)
             else:
                 unavailable_notes.append(f"EMA-{period}: nicht verfügbar ({result.reason})")
 
-        bb = bollinger_bands(closes)
+        bb = snapshot.bollinger
         if bb.available:
             self._ax_price.plot(
                 x, bb.value["upper"], label="Bollinger oben", color="grey", linestyle="--", linewidth=0.8
@@ -173,14 +158,13 @@ class ChartWindow(tk.Toplevel):
         else:
             unavailable_notes.append(f"Bollinger Bands: nicht verfügbar ({bb.reason})")
 
-        if has_real_ohlc:
-            swing = swing_highs_lows_fractal(ohlc_highs, ohlc_lows, ohlc_dates)
-            swing_label = "Swing-Punkte (echt, Williams-Fraktal/Kraken)"
-            swing_indicator_name = "Swing-Punkte/Support-Resistance/Fibonacci"
-        else:
-            swing = swing_highs_lows_close_proxy(closes, dates)
-            swing_label = "Swing-Punkte (Näherung, Schlusskurs-basiert)"
-            swing_indicator_name = "Swing-Punkte/Support-Resistance/Fibonacci (Näherung)"
+        swing = snapshot.swing
+        swing_label = snapshot.swing_label
+        swing_indicator_name = (
+            "Swing-Punkte/Support-Resistance/Fibonacci"
+            if snapshot.swing_source == "real"
+            else "Swing-Punkte/Support-Resistance/Fibonacci (Näherung)"
+        )
 
         if swing.available:
             # date_to_x basiert auf der (CoinGecko-)Preislinie - Swing-Punkte, deren Datum
@@ -201,18 +185,15 @@ class ChartWindow(tk.Toplevel):
             if low_prices:
                 self._ax_price.scatter(low_x, low_prices, marker="^", color="green", s=25, zorder=5)
 
-            sr = support_resistance_levels(swing)
+            sr = snapshot.support_resistance
             if sr.available:
                 for level in sr.value:
                     self._ax_price.axhline(
                         level["price"], color="purple", linestyle=":", linewidth=0.6, alpha=0.5
                     )
 
-            all_highs = [p for _, p in swing.value["highs"]]
-            all_lows = [p for _, p in swing.value["lows"]]
-            if all_highs and all_lows:
-                fib = fibonacci_levels(max(all_highs), min(all_lows))
-                for ratio, price in fib.items():
+            if snapshot.fibonacci is not None:
+                for ratio, price in snapshot.fibonacci.items():
                     self._ax_price.axhline(price, color="goldenrod", linestyle=":", linewidth=0.5, alpha=0.4)
         else:
             unavailable_notes.append(f"{swing_indicator_name}: nicht verfügbar ({swing.reason})")
@@ -221,7 +202,7 @@ class ChartWindow(tk.Toplevel):
         self._ax_price.legend(loc="upper left", fontsize=7)
         self._ax_price.set_title(f"{self._asset.symbol} — {self._asset.name}")
 
-        rsi_result = rsi(closes)
+        rsi_result = snapshot.rsi
         if rsi_result.available:
             self._ax_rsi.plot(x, rsi_result.value, color="tab:purple", linewidth=1)
             self._ax_rsi.axhline(70, color="red", linestyle="--", linewidth=0.6)
@@ -231,7 +212,7 @@ class ChartWindow(tk.Toplevel):
         else:
             unavailable_notes.append(f"RSI-14: nicht verfügbar ({rsi_result.reason})")
 
-        macd_result = macd(closes)
+        macd_result = snapshot.macd
         if macd_result.available:
             self._ax_macd.plot(x, macd_result.value["macd"], label="MACD", color="tab:blue", linewidth=1)
             self._ax_macd.plot(x, macd_result.value["signal"], label="Signal", color="tab:orange", linewidth=1)
@@ -247,15 +228,10 @@ class ChartWindow(tk.Toplevel):
         self._ax_macd.set_xlabel("Datum")
         self._figure.autofmt_xdate()
 
-        if has_real_ohlc:
-            atr_result = atr_wilder(ohlc_highs, ohlc_lows, ohlc_closes)
-            atr_label = "ATR-14 (echt, Kraken)"
-        else:
-            atr_result = atr_close_to_close_proxy(closes)
-            atr_label = "Volatilitäts-Näherung (kein ATR)"
-
+        atr_result = snapshot.atr
+        atr_label = snapshot.atr_label
         if atr_result.available:
-            latest_vol = atr_result.value[~np.isnan(atr_result.value)][-1]
+            latest_vol = latest_value(atr_result)
             self._volatility_label.config(
                 text=f"{atr_label}: {format_money(latest_vol)} {currency_label}/Tag"
             )

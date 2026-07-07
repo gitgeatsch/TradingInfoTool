@@ -219,6 +219,205 @@ def swing_highs_lows_fractal(
     return IndicatorResult({"highs": swing_highs, "lows": swing_lows}, True)
 
 
+def _last_valid(arr: np.ndarray) -> float | None:
+    valid = arr[~np.isnan(arr)]
+    if len(valid) == 0:
+        return None
+    return float(valid[-1])
+
+
+def latest_value(result: IndicatorResult) -> float | int | None:
+    """Letzter nicht-NaN-Wert eines IndicatorResult, als natives float/int (kein
+    numpy-Skalar) - gebraucht ueberall dort, wo ein einzelner aktueller Wert statt der
+    ganzen Zeitreihe noetig ist (Chart-Label, Agent-Facts-Objekt)."""
+    if not result.available or result.value is None:
+        return None
+    return _last_valid(np.asarray(result.value, dtype=float))
+
+
+@dataclass
+class TechnicalSnapshot:
+    """Buendelt alle Chart-/Agent-Indikatoren fuer eine Preisreihe, inkl. der
+    "echte Kraken-OHLC-Daten bevorzugen, sonst Naeherung"-Weiche (siehe
+    atr_wilder/atr_close_to_close_proxy, swing_highs_lows_fractal/_close_proxy).
+    Geteilte Quelle fuer ui/charts.py UND agent/pipeline.py - vermeidet Drift zwischen
+    Chart-Anzeige und Agent-Fakten."""
+    has_real_ohlc: bool
+    ema: dict[int, IndicatorResult]
+    macd: IndicatorResult
+    rsi: IndicatorResult
+    bollinger: IndicatorResult
+    swing: IndicatorResult
+    swing_label: str
+    swing_source: str  # "real" | "proxy"
+    support_resistance: IndicatorResult
+    fibonacci: dict[float, float] | None
+    atr: IndicatorResult
+    atr_label: str
+    atr_source: str  # "real" | "proxy"
+
+
+def build_technical_snapshot(
+    closes: np.ndarray,
+    dates: np.ndarray,
+    ohlc_history: list,
+    ema_periods: tuple[int, ...] = (20, 50, 200),
+) -> TechnicalSnapshot:
+    has_real_ohlc = len(ohlc_history) >= 3
+
+    if has_real_ohlc:
+        ohlc_dates = np.array([p.date for p in ohlc_history])
+        ohlc_highs = np.array([p.high for p in ohlc_history], dtype=float)
+        ohlc_lows = np.array([p.low for p in ohlc_history], dtype=float)
+        ohlc_closes = np.array([p.close for p in ohlc_history], dtype=float)
+
+        swing = swing_highs_lows_fractal(ohlc_highs, ohlc_lows, ohlc_dates)
+        swing_label = "Swing-Punkte (echt, Williams-Fraktal/Kraken)"
+        swing_source = "real"
+
+        atr_result = atr_wilder(ohlc_highs, ohlc_lows, ohlc_closes)
+        atr_label = "ATR-14 (echt, Kraken)"
+        atr_source = "real"
+    else:
+        swing = swing_highs_lows_close_proxy(closes, dates)
+        swing_label = "Swing-Punkte (Näherung, Schlusskurs-basiert)"
+        swing_source = "proxy"
+
+        atr_result = atr_close_to_close_proxy(closes)
+        atr_label = "Volatilitäts-Näherung (kein ATR)"
+        atr_source = "proxy"
+
+    ema_results = {period: ema(closes, period) for period in ema_periods}
+
+    fibonacci = None
+    if swing.available:
+        all_highs = [p for _, p in swing.value["highs"]]
+        all_lows = [p for _, p in swing.value["lows"]]
+        if all_highs and all_lows:
+            fibonacci = fibonacci_levels(max(all_highs), min(all_lows))
+
+    return TechnicalSnapshot(
+        has_real_ohlc=has_real_ohlc,
+        ema=ema_results,
+        macd=macd(closes),
+        rsi=rsi(closes),
+        bollinger=bollinger_bands(closes),
+        swing=swing,
+        swing_label=swing_label,
+        swing_source=swing_source,
+        support_resistance=support_resistance_levels(swing),
+        fibonacci=fibonacci,
+        atr=atr_result,
+        atr_label=atr_label,
+        atr_source=atr_source,
+    )
+
+
+@dataclass
+class ConfluenceItem:
+    indicator: str
+    available: bool
+    bias: str | None = None  # "bullish" | "bearish" | "neutral"
+    detail: str | None = None
+
+
+@dataclass
+class ConfluenceSummary:
+    """Einfache, bewusst als Heuristik gekennzeichnete Zusammenfassung, WELCHE
+    Indikatoren bullish/bearish/neutral stehen (Kap. 7: confluence_pflicht - kein
+    Signal aus einem einzelnen Indikator). Entscheidet NICHTS selbst - liefert nur
+    deskriptive Fakten, die Signal-Synthese (KAUFEN/VERKAUFEN/HALTEN) passiert in
+    agent/analyst.py durch Groq, nicht hier."""
+    items: list[ConfluenceItem]
+    bullish_count: int
+    bearish_count: int
+    neutral_count: int
+    unavailable_count: int
+    overall_bias: str  # "bullish" | "bearish" | "neutral" | "gemischt"
+
+
+def summarize_confluence(snapshot: TechnicalSnapshot, latest_close: float) -> ConfluenceSummary:
+    items: list[ConfluenceItem] = []
+
+    ema20, ema50, ema200 = (latest_value(snapshot.ema[p]) for p in (20, 50, 200))
+    if ema20 is not None and ema50 is not None and ema200 is not None:
+        if latest_close > ema20 > ema50 > ema200:
+            items.append(ConfluenceItem("EMA-Ordnung", True, "bullish", "Preis > EMA20 > EMA50 > EMA200"))
+        elif latest_close < ema20 < ema50 < ema200:
+            items.append(ConfluenceItem("EMA-Ordnung", True, "bearish", "Preis < EMA20 < EMA50 < EMA200"))
+        else:
+            items.append(ConfluenceItem("EMA-Ordnung", True, "neutral", "gemischte EMA-Reihenfolge"))
+    else:
+        missing = [p for p in (20, 50, 200) if not snapshot.ema[p].available]
+        detail = "; ".join(f"EMA-{p}: {snapshot.ema[p].reason}" for p in missing)
+        items.append(ConfluenceItem("EMA-Ordnung", False, detail=detail))
+
+    if snapshot.macd.available:
+        macd_val = _last_valid(snapshot.macd.value["macd"])
+        signal_val = _last_valid(snapshot.macd.value["signal"])
+        hist_val = _last_valid(snapshot.macd.value["histogram"])
+        if macd_val is not None and signal_val is not None and hist_val is not None:
+            if macd_val > signal_val and hist_val > 0:
+                items.append(ConfluenceItem("MACD", True, "bullish", f"MACD {macd_val:.4g} > Signal {signal_val:.4g}"))
+            elif macd_val < signal_val and hist_val < 0:
+                items.append(ConfluenceItem("MACD", True, "bearish", f"MACD {macd_val:.4g} < Signal {signal_val:.4g}"))
+            else:
+                items.append(ConfluenceItem("MACD", True, "neutral"))
+        else:
+            items.append(ConfluenceItem("MACD", False))
+    else:
+        items.append(ConfluenceItem("MACD", False, detail=snapshot.macd.reason))
+
+    if snapshot.rsi.available:
+        rsi_val = latest_value(snapshot.rsi)
+        if rsi_val is not None:
+            if rsi_val > 70:
+                items.append(ConfluenceItem("RSI-14", True, "neutral", f"{rsi_val:.1f} überkauft"))
+            elif rsi_val > 60:
+                items.append(ConfluenceItem("RSI-14", True, "bullish", f"{rsi_val:.1f}"))
+            elif rsi_val < 30:
+                items.append(ConfluenceItem("RSI-14", True, "neutral", f"{rsi_val:.1f} überverkauft"))
+            elif rsi_val < 40:
+                items.append(ConfluenceItem("RSI-14", True, "bearish", f"{rsi_val:.1f}"))
+            else:
+                items.append(ConfluenceItem("RSI-14", True, "neutral", f"{rsi_val:.1f}"))
+        else:
+            items.append(ConfluenceItem("RSI-14", False))
+    else:
+        items.append(ConfluenceItem("RSI-14", False, detail=snapshot.rsi.reason))
+
+    if snapshot.bollinger.available:
+        upper = _last_valid(snapshot.bollinger.value["upper"])
+        lower = _last_valid(snapshot.bollinger.value["lower"])
+        if upper is not None and lower is not None:
+            if latest_close >= upper:
+                items.append(ConfluenceItem("Bollinger", True, "bullish", "am/über oberem Band (überdehnt)"))
+            elif latest_close <= lower:
+                items.append(ConfluenceItem("Bollinger", True, "bearish", "am/unter unterem Band (überdehnt)"))
+            else:
+                items.append(ConfluenceItem("Bollinger", True, "neutral"))
+        else:
+            items.append(ConfluenceItem("Bollinger", False))
+    else:
+        items.append(ConfluenceItem("Bollinger", False, detail=snapshot.bollinger.reason))
+
+    bullish = sum(1 for i in items if i.bias == "bullish")
+    bearish = sum(1 for i in items if i.bias == "bearish")
+    neutral = sum(1 for i in items if i.available and i.bias == "neutral")
+    unavailable = sum(1 for i in items if not i.available)
+
+    if bullish > bearish and bullish > neutral:
+        overall = "bullish"
+    elif bearish > bullish and bearish > neutral:
+        overall = "bearish"
+    elif bullish == 0 and bearish == 0:
+        overall = "neutral"
+    else:
+        overall = "gemischt"
+
+    return ConfluenceSummary(items, bullish, bearish, neutral, unavailable, overall)
+
+
 def support_resistance_levels(
     swing_result: IndicatorResult, tolerance_pct: float = 0.02
 ) -> IndicatorResult:

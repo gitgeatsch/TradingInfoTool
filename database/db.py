@@ -5,7 +5,7 @@ import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 
-from database.models import Holding, OhlcPoint, PriceHistoryPoint, PriceSnapshot
+from database.models import Holding, MacroSnapshot, OhlcPoint, PriceHistoryPoint, PriceSnapshot, Signal
 
 DB_PATH = Path(__file__).resolve().parent.parent / "data" / "tradinginfotool.db"
 
@@ -55,6 +55,56 @@ CREATE TABLE IF NOT EXISTS price_history_ohlc (
     fetched_at      TEXT NOT NULL,
     PRIMARY KEY (symbol, currency, date)
 );
+
+CREATE TABLE IF NOT EXISTS macro_snapshot (
+    date                TEXT PRIMARY KEY,
+    btc_dominance_pct   REAL,
+    fear_greed_value    INTEGER,
+    fear_greed_label    TEXT,
+    fetched_at          TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS signals (
+    id                          INTEGER PRIMARY KEY AUTOINCREMENT,
+    symbol                      TEXT NOT NULL,
+    created_at                  TEXT NOT NULL,
+    pipeline_version            TEXT NOT NULL DEFAULT '1',
+    action                      TEXT NOT NULL,
+    confidence_pct              REAL,
+    short_reasoning             TEXT,
+    long_reasoning_technisch    TEXT,
+    long_reasoning_fundamental  TEXT,
+    long_reasoning_makro        TEXT,
+    position_size_usd           REAL,
+    position_size_eur           REAL,
+    position_size_note          TEXT,
+    entry_usd                   REAL,
+    entry_eur                   REAL,
+    stop_loss_usd                REAL,
+    stop_loss_eur                REAL,
+    take_profit_usd              REAL,
+    take_profit_eur              REAL,
+    holding_duration              TEXT,
+    holding_duration_reason       TEXT,
+    key_risks_text                 TEXT,
+    regime                          TEXT,
+    regime_source                   TEXT,
+    forecast_bull_text              TEXT,
+    forecast_bull_prob_pct          REAL,
+    forecast_base_text              TEXT,
+    forecast_base_prob_pct          REAL,
+    forecast_bear_text              TEXT,
+    forecast_bear_prob_pct          REAL,
+    tauschen_target_symbol           TEXT,
+    gate_passed                       INTEGER NOT NULL,
+    gate_reason                       TEXT,
+    risk_veto                          INTEGER NOT NULL DEFAULT 0,
+    risk_veto_reason                   TEXT,
+    facts_json                          TEXT NOT NULL,
+    groq_raw_response                   TEXT,
+    groq_model                          TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_signals_symbol_created ON signals(symbol, created_at);
 """
 
 
@@ -244,6 +294,92 @@ def get_last_ohlc_date(conn: sqlite3.Connection, symbol: str, currency: str) -> 
         (symbol, currency),
     ).fetchone()
     return row["max_date"] if row else None
+
+
+def upsert_macro_snapshot(conn: sqlite3.Connection, snap: MacroSnapshot) -> None:
+    conn.execute(
+        "INSERT INTO macro_snapshot (date, btc_dominance_pct, fear_greed_value, "
+        "fear_greed_label, fetched_at) VALUES (?, ?, ?, ?, ?) "
+        "ON CONFLICT(date) DO UPDATE SET "
+        "btc_dominance_pct = excluded.btc_dominance_pct, "
+        "fear_greed_value = excluded.fear_greed_value, "
+        "fear_greed_label = excluded.fear_greed_label, fetched_at = excluded.fetched_at",
+        (snap.date, snap.btc_dominance_pct, snap.fear_greed_value, snap.fear_greed_label, snap.fetched_at),
+    )
+    conn.commit()
+
+
+def get_macro_snapshot_history(conn: sqlite3.Connection, min_date: str | None = None) -> list[MacroSnapshot]:
+    if min_date is not None:
+        rows = conn.execute(
+            "SELECT date, btc_dominance_pct, fear_greed_value, fear_greed_label, fetched_at "
+            "FROM macro_snapshot WHERE date >= ? ORDER BY date ASC",
+            (min_date,),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT date, btc_dominance_pct, fear_greed_value, fear_greed_label, fetched_at "
+            "FROM macro_snapshot ORDER BY date ASC"
+        ).fetchall()
+    return [MacroSnapshot(**dict(row)) for row in rows]
+
+
+def get_latest_macro_snapshot(conn: sqlite3.Connection) -> MacroSnapshot | None:
+    row = conn.execute(
+        "SELECT date, btc_dominance_pct, fear_greed_value, fear_greed_label, fetched_at "
+        "FROM macro_snapshot ORDER BY date DESC LIMIT 1"
+    ).fetchone()
+    return MacroSnapshot(**dict(row)) if row else None
+
+
+_SIGNAL_COLUMNS = (
+    "symbol", "created_at", "pipeline_version", "action", "confidence_pct",
+    "short_reasoning", "long_reasoning_technisch", "long_reasoning_fundamental",
+    "long_reasoning_makro", "position_size_usd", "position_size_eur", "position_size_note",
+    "entry_usd", "entry_eur", "stop_loss_usd", "stop_loss_eur", "take_profit_usd",
+    "take_profit_eur", "holding_duration", "holding_duration_reason", "key_risks_text",
+    "regime", "regime_source", "forecast_bull_text", "forecast_bull_prob_pct",
+    "forecast_base_text", "forecast_base_prob_pct", "forecast_bear_text",
+    "forecast_bear_prob_pct", "tauschen_target_symbol", "gate_passed", "gate_reason",
+    "risk_veto", "risk_veto_reason", "facts_json", "groq_raw_response", "groq_model",
+)
+
+
+def insert_signal(conn: sqlite3.Connection, signal: Signal) -> int:
+    placeholders = ", ".join("?" for _ in _SIGNAL_COLUMNS)
+    values = [
+        int(getattr(signal, col)) if col in ("gate_passed", "risk_veto") else getattr(signal, col)
+        for col in _SIGNAL_COLUMNS
+    ]
+    cursor = conn.execute(
+        f"INSERT INTO signals ({', '.join(_SIGNAL_COLUMNS)}) VALUES ({placeholders})",
+        values,
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def _row_to_signal(row: sqlite3.Row) -> Signal:
+    data = dict(row)
+    data["gate_passed"] = bool(data["gate_passed"])
+    data["risk_veto"] = bool(data["risk_veto"])
+    return Signal(**data)
+
+
+def get_latest_signal(conn: sqlite3.Connection, symbol: str) -> Signal | None:
+    row = conn.execute(
+        "SELECT * FROM signals WHERE symbol = ? ORDER BY created_at DESC LIMIT 1",
+        (symbol,),
+    ).fetchone()
+    return _row_to_signal(row) if row else None
+
+
+def get_signal_history(conn: sqlite3.Connection, symbol: str, limit: int = 20) -> list[Signal]:
+    rows = conn.execute(
+        "SELECT * FROM signals WHERE symbol = ? ORDER BY created_at DESC LIMIT ?",
+        (symbol, limit),
+    ).fetchall()
+    return [_row_to_signal(row) for row in rows]
 
 
 def get_latest_prices(conn: sqlite3.Connection) -> dict[str, PriceSnapshot]:

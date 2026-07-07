@@ -33,11 +33,17 @@ class GroqClient:
         self._call_timestamps.append(time.monotonic())
 
     def chat(
-        self, messages: list[dict], model: str = DEFAULT_MODEL, temperature: float = 0.3
+        self,
+        messages: list[dict],
+        model: str = DEFAULT_MODEL,
+        temperature: float = 0.3,
+        response_format: dict | None = None,
     ) -> str:
         self._respect_rate_limit()
         headers = {"Authorization": f"Bearer {self._api_key}"}
         payload = {"model": model, "messages": messages, "temperature": temperature}
+        if response_format is not None:
+            payload["response_format"] = response_format
         response = self._session.post(
             f"{BASE_URL}/chat/completions", json=payload, headers=headers, timeout=30
         )

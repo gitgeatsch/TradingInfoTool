@@ -84,6 +84,10 @@ class CoinGeckoClient:
         params = {"vs_currency": vs_currency, "days": days}
         return self._get(f"{BASE_URL}/coins/{coingecko_id}/market_chart", params)
 
+    def get_global_data(self) -> dict:
+        """Liefert u.a. data.market_cap_percentage.btc (BTC-Dominanz, Kap. 8 R-5.1)."""
+        return self._get(f"{BASE_URL}/global", params={})
+
     def fetch_price_snapshots(self, assets: list) -> list[PriceSnapshot]:
         coingecko_ids = [asset.coingecko_id for asset in assets]
         raw = self.get_simple_prices(coingecko_ids)

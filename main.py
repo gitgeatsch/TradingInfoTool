@@ -9,6 +9,7 @@ import database.db as db
 import ui.app as app
 from api.coingecko import CoinGeckoClient
 from api.history import backfill_all
+from api.groq import GroqClient
 from api.kraken import KrakenClient
 from api.kraken_history import backfill_all_ohlc
 from importer.excel_import import import_holdings
@@ -25,6 +26,17 @@ def main() -> None:
         logger.info("CoinGecko API-Key gefunden (100 Req/Min statt 30).")
     else:
         logger.info("Kein CoinGecko API-Key gesetzt - anonymer Zugriff (30 Req/Min).")
+
+    groq_api_key = os.environ.get("GROQ_API_KEY")
+    if groq_api_key:
+        groq_client = GroqClient(api_key=groq_api_key)
+        logger.info("Groq API-Key gefunden - Signal-Pipeline (Phase 3) verfügbar.")
+    else:
+        # P-8: Kernfunktionen duerfen nie zwingend von einem KI-Key abhaengen - ohne
+        # GROQ_API_KEY bleibt der Signale-Tab nutzbar, nur die Berechnung ist deaktiviert
+        # (siehe ui/signals_view.py).
+        groq_client = None
+        logger.info("Kein GROQ_API_KEY gesetzt - Signalberechnung (Phase 3) deaktiviert.")
 
     watchlist = config.get_watchlist()
 
@@ -84,6 +96,8 @@ def main() -> None:
             db_conn_factory=db.get_connection,
             watchlist=watchlist,
             coingecko_client=coingecko_client,
+            kraken_client=kraken_client,
+            groq_client=groq_client,
         )
     finally:
         bg_scheduler.shutdown(wait=False)

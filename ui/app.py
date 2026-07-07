@@ -8,6 +8,7 @@ import database.db as db
 from importer.excel_import import import_holdings
 from ui.formatting import format_money, format_price_age, is_price_stale
 from ui.portfolio import PortfolioView
+from ui.signals_view import SignalsView
 
 STALE_COLOR = "#b36b00"
 
@@ -19,7 +20,7 @@ DISCLAIMER_TEXT = (
 
 
 class TradingInfoToolApp(tk.Tk):
-    def __init__(self, db_conn_factory, watchlist, coingecko_client):
+    def __init__(self, db_conn_factory, watchlist, coingecko_client, kraken_client=None, groq_client=None):
         super().__init__()
         self.title("TradingInfoTool")
         self.geometry("900x600")
@@ -27,6 +28,8 @@ class TradingInfoToolApp(tk.Tk):
         self._db_conn_factory = db_conn_factory
         self._watchlist = watchlist
         self._coingecko_client = coingecko_client
+        self._kraken_client = kraken_client
+        self._groq_client = groq_client
 
         self._build_menu()
 
@@ -38,6 +41,11 @@ class TradingInfoToolApp(tk.Tk):
 
         self._portfolio_view = PortfolioView(notebook, db_conn_factory, watchlist)
         notebook.add(self._portfolio_view, text="Portfolio")
+
+        self._signals_view = SignalsView(
+            notebook, db_conn_factory, watchlist, groq_client, coingecko_client, kraken_client
+        )
+        notebook.add(self._signals_view, text="Signale")
 
         disclaimer = ttk.Label(
             self, text=DISCLAIMER_TEXT, foreground="#666666", wraplength=880, justify="center"
@@ -176,6 +184,6 @@ class TradingInfoToolApp(tk.Tk):
         messagebox.showinfo("Bestände neu importieren", message)
 
 
-def run_app(db_conn_factory, watchlist, coingecko_client) -> None:
-    app = TradingInfoToolApp(db_conn_factory, watchlist, coingecko_client)
+def run_app(db_conn_factory, watchlist, coingecko_client, kraken_client=None, groq_client=None) -> None:
+    app = TradingInfoToolApp(db_conn_factory, watchlist, coingecko_client, kraken_client, groq_client)
     app.mainloop()

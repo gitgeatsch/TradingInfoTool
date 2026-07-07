@@ -1,6 +1,6 @@
 # TradingInfoTool — Spezifikation (fachliche Grundlage)
 
-> **Eigentümer:** Gernot Spiessmaier · **Version:** 1.2 · **Stand:** 2026-07-07
+> **Eigentümer:** Gernot Spiessmaier · **Version:** 1.3 · **Stand:** 2026-07-07
 >
 > Dieses Dokument beschreibt **was** das Tool leisten soll und **warum** (lesbarer Teil).
 > Die konkreten, vom Programm auslesbaren **Parameter** (Watchlist, Risiko-Limits,
@@ -147,32 +147,87 @@ Stand 2026-07-01, 41 Assets — eigene Bestände und reine Beobachtungswerte).
 
 Zeithorizonte und Gewichtung in `config.yaml → agent`.
 
+**Umsetzungsstand (2026-07-07, Phase 3 Slice 1 — siehe Kap. 11):** Die Pipeline läuft
+seit dieser Slice erstmals real, ausgelöst manuell über den "Signale"-Tab
+(`ui/signals_view.py` → `agent/pipeline.py::generate_signal()`), noch nicht geplant/
+automatisch (siehe Kap. 11). KI-Ebene: Groq (Llama 3.3 70B, siehe P-8), nicht Claude —
+die Fakten-Schicht (Indikatoren, Regime, Risiko-Check) ist deterministisches Python,
+Groq synthetisiert daraus die Empfehlung inkl. Begründung; das Modell wird dabei nie
+blind vertraut, `agent/risk_gate.py::post_check()` erzwingt die harten Regeln nach dem
+Groq-Aufruf nochmals deterministisch. Detaillierter Implementierungsplan (inkl.
+bewusster Vereinfachungen je Schritt) unter
+`C:\Users\Geatsch\.claude\plans\deep-launching-zebra.md`.
+
 Entscheidungs-Pipeline (Reihenfolge je Analyse):
 0. **R-5.0** Datenqualitäts-Gate (P-10, VOR allem anderen): Sind die für dieses Asset
    benötigten Daten aktuell und vollständig genug? Wenn nein → Abbruch für dieses Asset,
    Ausgabe „HALTEN — Datenlage unsicher" mit konkretem Grund (z. B. „Preis seit X Min.
    nicht aktualisiert", „nur Y Tage Historie, benötigt Z"), kein Rateversuch mit
-   Lückendaten.
+   Lückendaten. **ERLEDIGT (2026-07-07):** `agent/pipeline.py` prüft Preis-/Historie-
+   Staleness (`staleness.py`) + Mindestverfügbarkeit von RSI/MACD/Bollinger, bevor
+   irgendein Groq-Call erfolgt.
 1. **R-5.1** Marktregime bestimmen (Bulle/Bär/Seitwärts) via BTC-Trend, BTC-Dominanz,
-   Fear & Greed.
+   Fear & Greed. **ERLEDIGT, regelbasiert (2026-07-07):** `agent/regime.py` — BTC-
+   EMA-Ordnung, BTC-Dominanz-Trend (CoinGecko `/global`, neu `api/macro.py`), Fear &
+   Greed (alternative.me, kostenlos/kein Key). Bewusst einfache, dokumentierte
+   Heuristik statt der vollen RG-1..RG-11-Feinheit (siehe Kap. 14); KI-Override (RG-1b)
+   noch nicht umgesetzt. Manueller Override (`config.yaml regime.manueller_override`)
+   wird respektiert (RG-8/RG-9).
 2. **R-5.2** Makro-Kontext: Leitzinsen, Risikoumfeld USA/Japan/China/EU/Korea.
+   **Weiterhin `[OFFEN]`** (Kap. 16) — bewusst NICHT Teil der Slice 1, da die
+   konkreten kostenlosen APIs für Leitzinsen/ISM/M2/CPI/Trueflation noch nicht
+   recherchiert sind. Wird im Facts-Objekt an Groq ehrlich als
+   `disclaimers.makro_einbezogen: false` ausgewiesen (P-2/P-10) statt stillschweigend
+   zu fehlen — Groq muss das im Antwortfeld `long_reasoning.makro` explizit nennen.
 3. **R-5.3** Technische Analyse je Asset: Trend, Indikatoren (Kap. 7), Fibonacci,
-   Support/Resistance.
-4. **R-5.4** Sentiment (X/YouTube) — nur Zusatz, niedrig gewichtet, nur seriöse Quellen.
+   Support/Resistance. **ERLEDIGT:** volle Wiederverwendung von
+   `indicators/calculations.py` (`build_technical_snapshot()`, geteilt mit
+   `ui/charts.py` — keine zwei Datenquellen), neu `summarize_confluence()` als
+   einfache, explizit als Heuristik gekennzeichnete Zusammenfassung (entscheidet
+   nichts selbst, liefert nur Fakten an Groq).
+4. **R-5.4** Sentiment (X/YouTube) — nur Zusatz, niedrig gewichtet, nur seriöse
+   Quellen. Weiterhin Phase 4 (siehe Kap. 11), im Facts-Objekt ebenfalls als
+   `disclaimers.sentiment_einbezogen: false` ausgewiesen.
 5. **R-5.5** Risikoprüfung (Kap. 3) als **VETO-Stufe**: scheitert hier → kein Kauf.
-6. **R-5.6** Signal + Konfidenz + vollständige Empfehlung (Format P-5).
+   **ERLEDIGT (RM-1/-2/-4/-5):** `agent/risk_gate.py::pre_check()` (vor dem Groq-Call,
+   liefert eine harte Positionsgrößen-Obergrenze als Fakt) UND `post_check()` (danach,
+   erzwingt dieselben Regeln nochmal deterministisch — das Modell wird nie blind
+   vertraut). RM-7/Z-3 (Drawdown-Notbremse) bleibt `[OFFEN]` (braucht eine noch nicht
+   existierende Portfolio-Wert-Historie), RM-8/-9 (voller Risiko-Score) und RM-10/-11
+   (Hebel) ebenfalls offen (S-6 Hebel-Long ist in `config.yaml` `aktiv: false`).
+6. **R-5.6** Signal + Konfidenz + vollständige Empfehlung (Format P-5). **ERLEDIGT:**
+   `agent/analyst.py` — striktes JSON-Schema (Groq `response_format: json_object`),
+   Validierung inkl. case-insensitiver Enum-Normalisierung (Groq antwortet nicht immer
+   in Großbuchstaben), ein Retry bei kaputtem JSON, danach fail-loud
+   („HALTEN — Agent-Antwort ungültig").
 7. **R-5.7** Haltedauer-Empfehlung (kurz/mittel/lang) mit Begründung; Nutzer kann eigene
    Parameter ergänzen (interaktiver Dialog), die in die nächste Bewertung einfließen.
+   Haltedauer-Feld **ERLEDIGT** (Teil der Groq-Antwort), der interaktive Dialog (U-9)
+   bleibt `[OFFEN]`.
 8. **R-5.8** Forecast als Szenario (Bull/Base/Bear) mit Wahrscheinlichkeiten, statt
-   einzelner Punktprognose.
+   einzelner Punktprognose. **ERLEDIGT** (zusätzliches Feld in der Groq-Antwort).
 9. **R-5.9** Steuerliche Optimierung (AT, siehe P-6): Bei strategisch gleichwertigen
    Alternativen bevorzugt TAUSCHEN (Krypto-zu-Krypto/Stablecoin) statt VERKAUFEN
-   vorschlagen, da steuerlich neutral bis zur Auszahlung in Fiat.
+   vorschlagen, da steuerlich neutral bis zur Auszahlung in Fiat. **ERLEDIGT:** per
+   Prompt-Klausel UND mechanisch in `risk_gate.post_check()` erzwungen (VERKAUFEN →
+   TAUSCHEN, wenn ein Swap-Ziel genannt wurde) — nicht nur der Prompt-Hoffnung
+   überlassen.
 10. **R-5.10** Regime-Profil anwenden (Kap. 14): Das in R-5.1/R-5.2 bestimmte Regime
     moduliert Gewichte, Schwellen, Small-Cap-Budget und Mindest-Konfidenz; Overrides
     nach der Governance-Regel (Sicherheits-Asymmetrie, harte Limits unantastbar).
+    **ERLEDIGT (Mindest-Konfidenz + Small-Cap-Budget):** `risk_gate.py` nutzt
+    `config.yaml regime.profile[<regime>]` statt der statischen Werte.
 11. **R-5.11** Bei Kauf-/Nachkauf-Empfehlungen antizyklische Disziplin (Kap. 15):
     Flush vs. fundamentaler Zusammenbruch klassifizieren, Bestätigungs-Gate, gestaffelt.
+    **Nur einfache Heuristik (2026-07-07):** `agent/anticyclic.py` — Funding-Rate-
+    Extremwert (Kraken Futures) + Kursrückgang-Geschwindigkeit als grober Hinweis,
+    NICHT die volle AZ-1..AZ-8-Klassifikation (fehlt eine unabhängige Nachrichten-/
+    Fundamentalquelle). Liefert nur Kontext an Groq, trifft keine eigene Veto-
+    Entscheidung.
+
+> **A-1-Ausnahme:** Stablecoins (`typ: stablecoin`, aktuell nur EURCV) durchlaufen die
+> Pipeline gar nicht erst — festes „HALTEN" ohne Groq-Call, da sie laut Kap. 4 (A-1)
+> kein eigenständiges Handelssignal bekommen sollen.
 
 > **Separater Job — Marktscan (Kap. 13):** Die Entdeckung *neuer* Assets läuft nicht
 > in dieser Pro-Asset-Pipeline, sondern als periodischer Hintergrund-Scan (2× täglich).
@@ -337,7 +392,14 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
 1. **Phase 1** Grundgerüst (Struktur, SQLite, CoinGecko, Basis-UI, Watchlist,
    Erstimport der Bestände aus `Basisinfos/Assets.xlsx`).
 2. **Phase 2** Marktdaten & Charts (Indikatoren Kap. 7, Visualisierung).
-3. **Phase 3** KI-Agent (Claude API, Pipeline Kap. 5, Risikomodul Kap. 3, Strategien, Makro).
+3. **Phase 3** KI-Agent (Groq statt Claude API, Pipeline Kap. 5, Risikomodul Kap. 3,
+   Strategien, Makro). **In Arbeit — Slice 1 ERLEDIGT (2026-07-07):** Signal-Pipeline
+   (R-5.0/-5.1/-5.3/-5.5/-5.6/-5.7/-5.8/-5.9/-5.10/-5.11, jeweils mit dokumentierten
+   Vereinfachungen, siehe Kap. 5) inkl. neuem „Signale"-Tab (U-4, manueller Trigger,
+   noch nicht geplant/automatisch). Bewusst offen für spätere Slices: volles Makro-
+   Modul (R-5.2), Sentiment (R-5.4), Marktscan Stufe B/C/D (Kap. 13), interaktiver
+   Dialog (U-9), E-Mail-Benachrichtigung (U-8), KI-Regime-Override (RG-1b), Drawdown-
+   Notbremse (RM-7/Z-3), Hebelpositionen (RM-10/-11, S-6 — siehe Kap. 16).
 4. **Phase 4** Portfolio, Benachrichtigungen, Sentiment (X/YouTube).
 5. **Phase 5** Backtesting der Strategien gegen historische Daten.
 6. **Phase 6** Erweiterung auf Aktien / ETF / Rohstoffe (neue Datenquellen).
@@ -493,10 +555,20 @@ seinen Emotionen scheitert. Grundsatz: **antizyklisch, aber bedingt.**
 ## 16. Offene Punkte / zu entscheiden
 
 **Risiko-/Basiswerte:**
-- Maximaler tolerierter Gesamt-Drawdown (Z-3)? Vorschlag −15 %.
-- Max. Allokation pro Einzelwert (RM-2) und pro Assetklasse (RM-3)?
+- Maximaler tolerierter Gesamt-Drawdown (Z-3)? Vorschlag −15 %. Drawdown-Notbremse
+  (RM-7) technisch noch nicht umgesetzt (braucht eine Portfolio-Wert-Historie, die
+  noch nicht existiert) — im Facts-Objekt an Groq ehrlich als
+  `risiko_check.drawdown_notbremse_geprueft: false` ausgewiesen.
+- Max. Allokation pro Einzelwert (RM-2): **vorläufig entschieden (2026-07-07)** —
+  25 % für taktische Assets, 35 % für Core-Assets (BTC/ETH,
+  `config.yaml risiko.max_allokation_pro_core_asset_prozent`), nachdem die reale
+  BTC-Allokation (28,4 %) das bis dahin einheitliche 25 %-Limit überschritten hatte.
+  **Explizit weiter zu besprechen:** die grundsätzliche Rolle von BTC im Portfolio
+  („BTC hat den Lead") — nicht nur die Prozentzahl. Max. Allokation pro Assetklasse
+  (RM-3) weiterhin offen.
 - Standard-Timeframes für die technische Analyse.
-- Claude-Modellversion und Budget/Token.
+- ~~Claude-Modellversion und Budget/Token~~ — entfällt, KI-Ebene ist Groq (Llama 3.3
+  70B, siehe P-8/Kap. 8, kostenlos), nicht Claude API.
 
 **Datenqualität (P-10) — ERLEDIGT (2026-07-06, Phase 2):**
 - Live-Preise gelten als veraltet ab `> 10 Min` (2× 5-Min-Scheduler-Takt), historische
@@ -529,10 +601,21 @@ seinen Emotionen scheitert. Grundsatz: **antizyklisch, aber bedingt.**
   Trueflation und weitere (siehe Kap. 8), jeweils aktuell UND historisch. Phase 3.
 - X-API & YouTube-API: Kosten, Limits, ToS, Umsetzungsphase.
 - **E-Mail-Versand** (Kap. 13): SMTP-Server vs. Mail-API wählen; Zugangsdaten nur in `.env`.
-- **Flush-Erkennung** (AZ-1): reichere Signale (Funding-Rates, Liquidationsdaten) brauchen
-  zusätzliche Datenquellen jenseits CoinGecko → spätere Phase.
+- **Flush-Erkennung** (AZ-1): **einfache Heuristik ERLEDIGT (2026-07-07)** —
+  `agent/anticyclic.py` nutzt Kraken-Funding-Rates (bereits vorhanden, siehe Kap. 8)
+  + Kursrückgang-Geschwindigkeit als groben Hinweis. Die volle AZ-1..AZ-8-
+  Klassifikation (unabhängige Nachrichten-/Fundamentalquelle nötig) bleibt offen.
 - **Advisory-Konsequenz** (P-7): Eskalationsweg für Schutz-Alerts (Stop-Loss/Drawdown)
   definieren — E-Mail-Priorität, UI-Warnstufe.
+- **Umsetzungs-Rückmeldung bei Signalen** (2026-07-07, Nutzer-Idee): Der Nutzer soll
+  bei jeder Empfehlung (`signals`-Tabelle) nachträglich angeben können, ob sie
+  umgesetzt wurde oder nicht (Nachvollziehbarkeit Z-4, Grundlage für spätere
+  Auswertungen). Noch nicht implementiert.
+- **Hebelpositionen als eigene Empfehlungsart** (2026-07-07, Nutzer-Idee): Der Agent
+  soll perspektivisch nicht nur Spot-, sondern auch Hebel-Empfehlungen (Long/Short,
+  2x/5x, aktiv/passiv gemanaged) inkl. Forecasts geben — zunächst nur Long, später
+  auch Short. Betrifft RM-10/RM-11 und S-6 (aktuell `aktiv: false`). Noch nicht Teil
+  der Agent-Pipeline (Slice 1 ist Spot-only).
 
 **Steuer & Datenpflege:**
 - Steuerregel P-6 (Swap steuerneutral bis Auszahlung) mit Steuerberater verifizieren
