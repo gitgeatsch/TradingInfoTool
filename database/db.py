@@ -5,7 +5,7 @@ import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 
-from database.models import Holding, PriceHistoryPoint, PriceSnapshot
+from database.models import Holding, OhlcPoint, PriceHistoryPoint, PriceSnapshot
 
 DB_PATH = Path(__file__).resolve().parent.parent / "data" / "tradinginfotool.db"
 
@@ -41,6 +41,19 @@ CREATE TABLE IF NOT EXISTS price_history (
     price_eur       REAL,
     fetched_at      TEXT NOT NULL,
     PRIMARY KEY (coingecko_id, date)
+);
+
+CREATE TABLE IF NOT EXISTS price_history_ohlc (
+    symbol          TEXT NOT NULL,
+    currency        TEXT NOT NULL,
+    date            TEXT NOT NULL,
+    open            REAL NOT NULL,
+    high            REAL NOT NULL,
+    low             REAL NOT NULL,
+    close           REAL NOT NULL,
+    volume          REAL NOT NULL,
+    fetched_at      TEXT NOT NULL,
+    PRIMARY KEY (symbol, currency, date)
 );
 """
 
@@ -170,6 +183,65 @@ def get_last_history_date(conn: sqlite3.Connection, coingecko_id: str) -> str | 
     row = conn.execute(
         "SELECT MAX(date) AS max_date FROM price_history WHERE coingecko_id = ?",
         (coingecko_id,),
+    ).fetchone()
+    return row["max_date"] if row else None
+
+
+def is_ohlc_first_run(conn: sqlite3.Connection) -> bool:
+    row = conn.execute(
+        "SELECT value FROM meta WHERE key = 'ohlc_backfilled_at'"
+    ).fetchone()
+    return row is None or row["value"] is None
+
+
+def mark_ohlc_backfilled(conn: sqlite3.Connection) -> None:
+    conn.execute(
+        "INSERT INTO meta (key, value) VALUES ('ohlc_backfilled_at', ?) "
+        "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        (_now_iso(),),
+    )
+    conn.commit()
+
+
+def upsert_ohlc_points(conn: sqlite3.Connection, points: list[OhlcPoint]) -> None:
+    conn.executemany(
+        "INSERT INTO price_history_ohlc "
+        "(symbol, currency, date, open, high, low, close, volume, fetched_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "
+        "ON CONFLICT(symbol, currency, date) DO UPDATE SET "
+        "open = excluded.open, high = excluded.high, low = excluded.low, "
+        "close = excluded.close, volume = excluded.volume, fetched_at = excluded.fetched_at",
+        [
+            (p.symbol, p.currency, p.date, p.open, p.high, p.low, p.close, p.volume, p.fetched_at)
+            for p in points
+        ],
+    )
+    conn.commit()
+
+
+def get_ohlc_history(
+    conn: sqlite3.Connection, symbol: str, currency: str, min_date: str | None = None
+) -> list[OhlcPoint]:
+    if min_date is not None:
+        rows = conn.execute(
+            "SELECT symbol, currency, date, open, high, low, close, volume, fetched_at "
+            "FROM price_history_ohlc WHERE symbol = ? AND currency = ? AND date >= ? "
+            "ORDER BY date ASC",
+            (symbol, currency, min_date),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT symbol, currency, date, open, high, low, close, volume, fetched_at "
+            "FROM price_history_ohlc WHERE symbol = ? AND currency = ? ORDER BY date ASC",
+            (symbol, currency),
+        ).fetchall()
+    return [OhlcPoint(**dict(row)) for row in rows]
+
+
+def get_last_ohlc_date(conn: sqlite3.Connection, symbol: str, currency: str) -> str | None:
+    row = conn.execute(
+        "SELECT MAX(date) AS max_date FROM price_history_ohlc WHERE symbol = ? AND currency = ?",
+        (symbol, currency),
     ).fetchone()
     return row["max_date"] if row else None
 

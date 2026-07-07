@@ -31,3 +31,17 @@ class PriceHistoryPoint:
     price_usd: float | None
     price_eur: float | None
     fetched_at: str
+
+
+@dataclass
+class OhlcPoint:
+    """Echte Tageskerze von Kraken (nicht die CoinGecko-Schlusskurs-Naeherung)."""
+    symbol: str
+    currency: str  # 'USD' oder 'EUR'
+    date: str  # 'YYYY-MM-DD', UTC-Tagesbucket
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: float
+    fetched_at: str

@@ -17,17 +17,92 @@ SPOT_BASE_URL = "https://api.kraken.com/0/public"
 FUTURES_BASE_URL = "https://futures.kraken.com/derivatives/api/v3"
 RATE_LIMIT_PER_MINUTE = 15  # konservativ; oeffentliche Endpunkte haben kein dokumentiertes hartes Limit
 
-# Bekannte Kraken-Spot-Paare fuer die Anker-Assets (Kraken nutzt eigene Symbolik, z.B.
-# "XBT" statt "BTC"). Wird bei Bedarf erweitert, sobald weitere Assets angebunden werden.
+# Verifiziert gegen /0/public/AssetPairs am 2026-07-07 (siehe Basisinfos/Spezifikation.md
+# Kap. 8): 35 der 41 Watchlist-Assets haben ein Kraken-Spot-Paar in USD UND EUR, nicht
+# nur BTC/ETH. Kraken nutzt teils eigene Symbolik (z.B. "XBT" statt "BTC").
+# NICHT gelistet (Stand 2026-07-07): EURCV (Stablecoin, braucht ohnehin kein OHLC/ATR),
+# KAIA, BRETT, IO, SUPRA, CANTON — fuer diese bleibt die Naeherung aus
+# indicators/calculations.py der einzige Weg.
 KRAKEN_PAIR_MAP = {
-    "BTC": "XBTUSD",
-    "ETH": "ETHUSD",
+    "BTC": {"USD": "XBTUSD", "EUR": "XBTEUR"},
+    "ETH": {"USD": "ETHUSD", "EUR": "ETHEUR"},
+    "SOL": {"USD": "SOLUSD", "EUR": "SOLEUR"},
+    "LINK": {"USD": "LINKUSD", "EUR": "LINKEUR"},
+    "AVAX": {"USD": "AVAXUSD", "EUR": "AVAXEUR"},
+    "SUI": {"USD": "SUIUSD", "EUR": "SUIEUR"},
+    "TAO": {"USD": "TAOUSD", "EUR": "TAOEUR"},
+    "NEAR": {"USD": "NEARUSD", "EUR": "NEAREUR"},
+    "APT": {"USD": "APTUSD", "EUR": "APTEUR"},
+    "ONDO": {"USD": "ONDOUSD", "EUR": "ONDOEUR"},
+    "ALGO": {"USD": "ALGOUSD", "EUR": "ALGOEUR"},
+    "KAS": {"USD": "KASUSD", "EUR": "KASEUR"},
+    "RENDER": {"USD": "RENDERUSD", "EUR": "RENDEREUR"},
+    "SEI": {"USD": "SEIUSD", "EUR": "SEIEUR"},
+    "MORPHO": {"USD": "MORPHOUSD", "EUR": "MORPHOEUR"},
+    "INJ": {"USD": "INJUSD", "EUR": "INJEUR"},
+    "FLOKI": {"USD": "FLOKIUSD", "EUR": "FLOKIEUR"},
+    "S": {"USD": "SUSD", "EUR": "SEUR"},
+    "IMX": {"USD": "IMXUSD", "EUR": "IMXEUR"},
+    "W": {"USD": "WUSD", "EUR": "WEUR"},
+    "BEAMX": {"USD": "BEAMUSD", "EUR": "BEAMEUR"},
+    "AKT": {"USD": "AKTUSD", "EUR": "AKTEUR"},
+    "AIOZ": {"USD": "AIOZUSD", "EUR": "AIOZEUR"},
+    "BIO": {"USD": "BIOUSD", "EUR": "BIOEUR"},
+    "TURBO": {"USD": "TURBOUSD", "EUR": "TURBOEUR"},
+    "PLUME": {"USD": "PLUMEUSD", "EUR": "PLUMEEUR"},
+    "CAT": {"USD": "CATUSD", "EUR": "CATEUR"},
+    "GRIFFAIN": {"USD": "GRIFFAINUSD", "EUR": "GRIFFAINEUR"},
+    "MON": {"USD": "MONUSD", "EUR": "MONEUR"},
+    "XLM": {"USD": "XLMUSD", "EUR": "XLMEUR"},
+    "QNT": {"USD": "QNTUSD", "EUR": "QNTEUR"},
+    "ASTER": {"USD": "ASTERUSD", "EUR": "ASTEREUR"},
+    "HYPE": {"USD": "HYPEUSD", "EUR": "HYPEEUR"},
+    "BNB": {"USD": "BNBUSD", "EUR": "BNBEUR"},
+    "VIRTUAL": {"USD": "VIRTUALUSD", "EUR": "VIRTUALEUR"},
 }
 
 # Kraken-Futures-Symbole fuer Funding-Rates (Perpetual Futures, "PF_" Prefix).
+# Waehrungsunabhaengig (relative Rate in %), daher kein separates EUR-Mapping noetig.
+# 36/41 Assets abgedeckt — inkl. KAIA/BRETT/IO, die zwar KEIN Kraken-Spot-Paar haben
+# (siehe KRAKEN_PAIR_MAP), aber trotzdem als Perpetual gelistet sind (getrennte Produkte).
+# SUPRA/CANTON/EURCV: weder Spot noch Futures bei Kraken.
 KRAKEN_FUTURES_SYMBOL_MAP = {
     "BTC": "PF_XBTUSD",
     "ETH": "PF_ETHUSD",
+    "SOL": "PF_SOLUSD",
+    "LINK": "PF_LINKUSD",
+    "AVAX": "PF_AVAXUSD",
+    "SUI": "PF_SUIUSD",
+    "TAO": "PF_TAOUSD",
+    "NEAR": "PF_NEARUSD",
+    "APT": "PF_APTUSD",
+    "ONDO": "PF_ONDOUSD",
+    "ALGO": "PF_ALGOUSD",
+    "KAS": "PF_KASUSD",
+    "RENDER": "PF_RENDERUSD",
+    "SEI": "PF_SEIUSD",
+    "MORPHO": "PF_MORPHOUSD",
+    "INJ": "PF_INJUSD",
+    "KAIA": "PF_KAIAUSD",
+    "FLOKI": "PF_FLOKIUSD",
+    "S": "PF_SUSD",
+    "IMX": "PF_IMXUSD",
+    "W": "PF_WUSD",
+    "BEAMX": "PF_BEAMUSD",
+    "AKT": "PF_AKTUSD",
+    "BRETT": "PF_BRETTUSD",
+    "BIO": "PF_BIOUSD",
+    "TURBO": "PF_TURBOUSD",
+    "IO": "PF_IOUSD",
+    "CAT": "PF_CATUSD",
+    "GRIFFAIN": "PF_GRIFFAINUSD",
+    "MON": "PF_MONUSD",
+    "XLM": "PF_XLMUSD",
+    "QNT": "PF_QNTUSD",
+    "ASTER": "PF_ASTERUSD",
+    "HYPE": "PF_HYPEUSD",
+    "BNB": "PF_BNBUSD",
+    "VIRTUAL": "PF_VIRTUALUSD",
 }
 
 

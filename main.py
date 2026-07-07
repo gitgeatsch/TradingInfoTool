@@ -9,6 +9,8 @@ import database.db as db
 import ui.app as app
 from api.coingecko import CoinGeckoClient
 from api.history import backfill_all
+from api.kraken import KrakenClient
+from api.kraken_history import backfill_all_ohlc
 from importer.excel_import import import_holdings
 from scheduler.background import build_scheduler
 
@@ -50,10 +52,28 @@ def main() -> None:
             logger.warning("Historie für %s unvollständig: %s", r.coingecko_id, r.reason)
         db.mark_history_backfilled(conn)
 
+    kraken_client = KrakenClient()
+
+    if db.is_ohlc_first_run(conn):
+        ohlc_results = backfill_all_ohlc(kraken_client, conn, watchlist)
+        ohlc_skipped = [r for r in ohlc_results if r.skipped]
+        ohlc_degraded = [r for r in ohlc_results if r.degraded]
+        logger.info(
+            "Kraken-OHLC-Erstbefüllung: %d/%d Assets, %d ohne Kraken-Listing, %d degradiert",
+            len(ohlc_results) - len(ohlc_skipped) - len(ohlc_degraded),
+            len(ohlc_results),
+            len(ohlc_skipped),
+            len(ohlc_degraded),
+        )
+        for r in ohlc_degraded:
+            logger.warning("Kraken-OHLC für %s unvollständig: %s", r.symbol, r.reason)
+        db.mark_ohlc_backfilled(conn)
+
     conn.close()
 
     bg_scheduler = build_scheduler(
         coingecko_client=coingecko_client,
+        kraken_client=kraken_client,
         db_conn_factory=db.get_connection,
         watchlist_provider=lambda: watchlist,
     )

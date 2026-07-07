@@ -252,10 +252,18 @@ Näherung an dieser Stelle neu zu bewerten.
   kein API-Key, keine Anmeldung nötig, zählt nicht gegen Rate-Limits. Ersetzt die in
   Phase 2 eingeführte Schlusskurs-Näherung (`atr_close_to_close_proxy`,
   `swing_highs_lows_close_proxy`) für alle bei Kraken gelisteten Assets — echtes
-  Wilder's-ATR und echtes Williams-Fraktal werden möglich. Nur sehr kleine/exotische
-  Watchlist-Coins ohne Kraken-Listing behalten die Näherung. Auch Funding-Rate-Historie
-  (Kraken Futures) ist über denselben öffentlichen Zugang verfügbar — deckt AZ-1
-  (Flush-Erkennung) ab, ohne CoinGlass (kostenpflichtig ab 29 $/Monat) zu benötigen.
+  Wilder's-ATR (`atr_wilder`) und echtes Williams-Fraktal (`swing_highs_lows_fractal`)
+  in `indicators/calculations.py`, verdrahtet in `ui/charts.py` (bevorzugt echte Werte,
+  fällt für nicht gelistete Assets automatisch und klar gekennzeichnet auf die Näherung
+  zurück). **Verifizierte Abdeckung (gegen `/0/public/AssetPairs` geprüft, nicht nur
+  BTC/ETH angenommen):** 35 von 41 Watchlist-Assets haben ein Kraken-Spot-Paar in USD
+  **und** EUR; 36 von 41 haben zusätzlich Funding-Rate-Daten (Kraken Futures, deckt AZ-1
+  ab, ohne CoinGlass ab 29 $/Monat zu benötigen). Ohne Kraken-Listing (bleiben bei der
+  Näherung): EURCV (Stablecoin, braucht ohnehin kein OHLC/ATR), KAIA, BRETT, IO, SUPRA,
+  CANTON. Persistiert in eigener Tabelle `price_history_ohlc` (Schlüssel: Symbol +
+  Währung + Datum, getrennt von der CoinGecko-basierten `price_history`), täglicher
+  Backfill/Refresh über `api/kraken_history.py` + eigenen Scheduler-Job
+  (`refresh_ohlc_job`, 24 h).
   **MiCA-Klarstellung:** Die EU-Regulierung betrifft Kunden-Dienstleistungen (Handel,
   Verwahrung, Transfer) — nicht rein lesende, öffentliche Marktdaten-APIs. Kraken wurde
   trotzdem als pragmatischer Standard gewählt (unkompliziert, gut dokumentiert), nicht

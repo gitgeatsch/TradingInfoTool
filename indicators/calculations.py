@@ -166,6 +166,59 @@ def swing_highs_lows_close_proxy(
     return IndicatorResult({"highs": highs, "lows": lows}, True)
 
 
+def atr_wilder(
+    highs: np.ndarray, lows: np.ndarray, closes: np.ndarray, period: int = 14
+) -> IndicatorResult:
+    """Echtes Wilder's ATR auf Basis von Kraken-OHLC-Daten (High/Low verfuegbar,
+    siehe Basisinfos/Spezifikation.md Kap. 8). Nur fuer die 35/41 Assets nutzbar, die
+    ein Kraken-Spot-Paar haben - fuer den Rest bleibt atr_close_to_close_proxy die
+    einzige Quelle. True Range = max(H-L, |H-Cprev|, |L-Cprev|); erster ATR-Wert =
+    einfacher Mittelwert der ersten `period` True Ranges, danach Wilder-Glaettung
+    (wie bei RSI: (vorheriger*(period-1) + aktueller) / period)."""
+    if len(closes) < period + 1:
+        reason = f"benötigt {period + 1} Tage, nur {len(closes)} vorhanden"
+        _log_unavailable("ATR", reason)
+        return IndicatorResult(None, False, reason)
+
+    prev_closes = closes[:-1]
+    true_ranges = np.maximum(
+        highs[1:] - lows[1:],
+        np.maximum(np.abs(highs[1:] - prev_closes), np.abs(lows[1:] - prev_closes)),
+    )
+
+    n = len(closes)
+    values = np.full(n, np.nan)
+    values[period] = true_ranges[:period].mean()
+    for i in range(period, len(true_ranges)):
+        values[i + 1] = (values[i] * (period - 1) + true_ranges[i]) / period
+    return IndicatorResult(values, True)
+
+
+def swing_highs_lows_fractal(
+    highs: np.ndarray, lows: np.ndarray, dates: np.ndarray, window: int = 2
+) -> IndicatorResult:
+    """Echtes Williams-Fraktal auf Basis von Kraken-OHLC-Daten (High/Low verfuegbar).
+    Standard-Fenster window=2 (5-Kerzen-Muster). Swing-High: high[i] ist das Maximum
+    unter den `window` Kerzen davor UND danach. Swing-Low analog fuer Minimum. Gleiche
+    Rueckgabeform wie swing_highs_lows_close_proxy ({"highs": [...], "lows": [...]}),
+    damit UI-Code beide Quellen gleich weiterverarbeiten kann."""
+    min_required = window * 2 + 1
+    if len(highs) < min_required:
+        reason = f"benötigt mind. {min_required} Tage, nur {len(highs)} vorhanden"
+        _log_unavailable("Swing-Punkte (Williams-Fraktal)", reason)
+        return IndicatorResult(None, False, reason)
+
+    swing_highs, swing_lows = [], []
+    for i in range(window, len(highs) - window):
+        high_window = highs[i - window : i + window + 1]
+        low_window = lows[i - window : i + window + 1]
+        if highs[i] == high_window.max():
+            swing_highs.append((dates[i], highs[i]))
+        if lows[i] == low_window.min():
+            swing_lows.append((dates[i], lows[i]))
+    return IndicatorResult({"highs": swing_highs, "lows": swing_lows}, True)
+
+
 def support_resistance_levels(
     swing_result: IndicatorResult, tolerance_pct: float = 0.02
 ) -> IndicatorResult:

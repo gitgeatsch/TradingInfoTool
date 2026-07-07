@@ -14,8 +14,10 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
 import database.db as db
+from api.kraken import KRAKEN_PAIR_MAP
 from indicators.calculations import (
     atr_close_to_close_proxy,
+    atr_wilder,
     bollinger_bands,
     ema,
     fibonacci_levels,
@@ -23,6 +25,7 @@ from indicators.calculations import (
     rsi,
     support_resistance_levels,
     swing_highs_lows_close_proxy,
+    swing_highs_lows_fractal,
 )
 from ui.formatting import format_money, is_history_stale
 
@@ -81,6 +84,9 @@ class ChartWindow(tk.Toplevel):
         try:
             history = db.get_price_history(conn, self._asset.coingecko_id)
             last_date = db.get_last_history_date(conn, self._asset.coingecko_id)
+            ohlc_history = []
+            if self._asset.symbol in KRAKEN_PAIR_MAP:
+                ohlc_history = db.get_ohlc_history(conn, self._asset.symbol, currency.upper())
         finally:
             conn.close()
 
@@ -109,7 +115,7 @@ class ChartWindow(tk.Toplevel):
             self._render_no_data()
             return
 
-        self._render_chart(dates, closes, currency)
+        self._render_chart(dates, closes, currency, ohlc_history)
 
     def _render_no_data(self) -> None:
         for ax in (self._ax_price, self._ax_rsi, self._ax_macd):
@@ -126,9 +132,22 @@ class ChartWindow(tk.Toplevel):
         self._volatility_label.config(text="")
         self._unavailable_label.config(text="")
 
-    def _render_chart(self, dates: np.ndarray, closes: np.ndarray, currency: str) -> None:
+    def _render_chart(
+        self, dates: np.ndarray, closes: np.ndarray, currency: str, ohlc_history: list
+    ) -> None:
         currency_label = currency.upper()
         unavailable_notes: list[str] = []
+
+        # Echte OHLC-Daten von Kraken bevorzugen (35/41 Assets, siehe api/kraken.py) -
+        # nur fuer ATR und Swing-Punkte, die Preislinie selbst bleibt CoinGecko-basiert
+        # (Waehrungs-Umschalter/Kontinuitaet unveraendert). Fehlt Kraken-Abdeckung,
+        # bleibt die Naeherung aus Phase 2 die einzige Quelle (P-10: klar gekennzeichnet).
+        has_real_ohlc = len(ohlc_history) >= 3
+        if has_real_ohlc:
+            ohlc_dates = np.array([p.date for p in ohlc_history])
+            ohlc_highs = np.array([p.high for p in ohlc_history], dtype=float)
+            ohlc_lows = np.array([p.low for p in ohlc_history], dtype=float)
+            ohlc_closes = np.array([p.close for p in ohlc_history], dtype=float)
 
         for ax in (self._ax_price, self._ax_rsi, self._ax_macd):
             ax.clear()
@@ -154,23 +173,30 @@ class ChartWindow(tk.Toplevel):
         else:
             unavailable_notes.append(f"Bollinger Bands: nicht verfügbar ({bb.reason})")
 
-        swing = swing_highs_lows_close_proxy(closes, dates)
+        if has_real_ohlc:
+            swing = swing_highs_lows_fractal(ohlc_highs, ohlc_lows, ohlc_dates)
+            swing_label = "Swing-Punkte (echt, Williams-Fraktal/Kraken)"
+            swing_indicator_name = "Swing-Punkte/Support-Resistance/Fibonacci"
+        else:
+            swing = swing_highs_lows_close_proxy(closes, dates)
+            swing_label = "Swing-Punkte (Näherung, Schlusskurs-basiert)"
+            swing_indicator_name = "Swing-Punkte/Support-Resistance/Fibonacci (Näherung)"
+
         if swing.available:
+            # date_to_x basiert auf der (CoinGecko-)Preislinie - Swing-Punkte, deren Datum
+            # dort nicht existiert (z.B. Kraken-Historie beginnt frueher), werden beim
+            # Zeichnen uebersprungen statt einen KeyError zu werfen.
             date_to_x = {d: x[i] for i, d in enumerate(dates)}
-            high_x = [date_to_x[d] for d, _ in swing.value["highs"]]
-            high_prices = [p for _, p in swing.value["highs"]]
-            low_x = [date_to_x[d] for d, _ in swing.value["lows"]]
-            low_prices = [p for _, p in swing.value["lows"]]
+            high_points = [(date_to_x[d], p) for d, p in swing.value["highs"] if d in date_to_x]
+            low_points = [(date_to_x[d], p) for d, p in swing.value["lows"] if d in date_to_x]
+            high_x = [px for px, _ in high_points]
+            high_prices = [p for _, p in high_points]
+            low_x = [px for px, _ in low_points]
+            low_prices = [p for _, p in low_points]
 
             if high_prices:
                 self._ax_price.scatter(
-                    high_x,
-                    high_prices,
-                    marker="v",
-                    color="red",
-                    s=25,
-                    label="Swing-Punkte (Näherung, Schlusskurs-basiert)",
-                    zorder=5,
+                    high_x, high_prices, marker="v", color="red", s=25, label=swing_label, zorder=5
                 )
             if low_prices:
                 self._ax_price.scatter(low_x, low_prices, marker="^", color="green", s=25, zorder=5)
@@ -182,14 +208,14 @@ class ChartWindow(tk.Toplevel):
                         level["price"], color="purple", linestyle=":", linewidth=0.6, alpha=0.5
                     )
 
-            if high_prices and low_prices:
-                fib = fibonacci_levels(max(high_prices), min(low_prices))
+            all_highs = [p for _, p in swing.value["highs"]]
+            all_lows = [p for _, p in swing.value["lows"]]
+            if all_highs and all_lows:
+                fib = fibonacci_levels(max(all_highs), min(all_lows))
                 for ratio, price in fib.items():
                     self._ax_price.axhline(price, color="goldenrod", linestyle=":", linewidth=0.5, alpha=0.4)
         else:
-            unavailable_notes.append(
-                f"Swing-Punkte/Support-Resistance/Fibonacci (Näherung): nicht verfügbar ({swing.reason})"
-            )
+            unavailable_notes.append(f"{swing_indicator_name}: nicht verfügbar ({swing.reason})")
 
         self._ax_price.set_ylabel(f"Preis ({currency_label})")
         self._ax_price.legend(loc="upper left", fontsize=7)
@@ -221,17 +247,21 @@ class ChartWindow(tk.Toplevel):
         self._ax_macd.set_xlabel("Datum")
         self._figure.autofmt_xdate()
 
-        atr_result = atr_close_to_close_proxy(closes)
+        if has_real_ohlc:
+            atr_result = atr_wilder(ohlc_highs, ohlc_lows, ohlc_closes)
+            atr_label = "ATR-14 (echt, Kraken)"
+        else:
+            atr_result = atr_close_to_close_proxy(closes)
+            atr_label = "Volatilitäts-Näherung (kein ATR)"
+
         if atr_result.available:
             latest_vol = atr_result.value[~np.isnan(atr_result.value)][-1]
             self._volatility_label.config(
-                text=f"Volatilitäts-Näherung (kein ATR): {format_money(latest_vol)} {currency_label}/Tag"
+                text=f"{atr_label}: {format_money(latest_vol)} {currency_label}/Tag"
             )
         else:
             self._volatility_label.config(text="")
-            unavailable_notes.append(
-                f"Volatilitäts-Näherung (kein ATR): nicht verfügbar ({atr_result.reason})"
-            )
+            unavailable_notes.append(f"{atr_label}: nicht verfügbar ({atr_result.reason})")
 
         self._figure.tight_layout()
         self._canvas.draw()
