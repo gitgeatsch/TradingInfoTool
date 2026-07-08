@@ -17,6 +17,7 @@ Folgeschritt.
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass
 
 import requests
@@ -53,6 +54,26 @@ FRED_SERIES = {
 # dokumentiert/versioniert, kann sich ohne Vorankuendigung aendern (siehe Kap. 8).
 EASTMONEY_URL = "https://datacenter-web.eastmoney.com/api/data/v1/get"
 EASTMONEY_LPR_TOKEN = "894050c76af8597a853f5b408b759f5d"
+EASTMONEY_M2_REPORT = "RPT_ECONOMY_CURRENCY_SUPPLY"  # kein Token noetig (anders als LPR)
+
+# Globale M2-Gesamtsicht (Liquiditaetszyklus-Diskussion, 2026-07-08, siehe
+# Spezifikation Kap. 8/16) - USA laeuft bereits ueber FRED (m2_geldmenge), hier die
+# Ergaenzung um Eurozone/China/Japan.
+
+# EZB-eigene SDMX-API (nicht FRED - FREDs Eurozone-M2-Kopie war seit 2017 tot, siehe
+# Kap. 8) - Series-Key live ermittelt, kein API-Key noetig.
+ECB_SDMX_BASE_URL = "https://data-api.ecb.europa.eu/service/data"
+ECB_M2_SERIES_KEY = "BSI/M.U2.Y.V.M20.X.1.U2.2300.Z01.E"
+
+# Japan-M2: KEINE der beiden FRED-Kopien (tot seit 2016/17) UND KEINE nutzbare
+# Anbindung an die 2026 gestartete BoJ-JSON-API gefunden (zu neu/kaum dokumentiert -
+# selbst die Community-Bibliothek `bojpy` scraped aus demselben Grund HTML statt die
+# neue API zu nutzen). Deshalb bewusster HTML-Scraping-Fallback der oeffentlichen
+# Statistik-Tabellenseite - fragiler als eine echte API (Spaltenreihenfolge koennte
+# sich aendern), aber live verifiziert funktionsfaehig (2026-07-08, Update taeglich
+# 15:00 JST laut Seite). Faellt bei strukturellen Aenderungen der Seite mit einem
+# klaren ValueError aus, nicht mit einem stillen Falschwert.
+BOJ_M2_URL = "https://www.stat-search.boj.or.jp/ssi/mtshtml/md02_m_1_en.html"
 
 
 @dataclass
@@ -73,6 +94,14 @@ class PbocLprReading:
     date: str
     lpr_1y: float
     lpr_5y: float
+
+
+@dataclass
+class RegionalM2Reading:
+    region: str
+    date: str
+    value: float
+    unit: str  # Rohe gemeldete Einheit je Quelle, bewusst NICHT umgerechnet/vereinheitlicht
 
 
 def get_btc_dominance(coingecko_client) -> float:
@@ -148,3 +177,98 @@ def get_pboc_lpr(session: requests.Session | None = None) -> PbocLprReading:
     entry = data["result"]["data"][0]
     date = str(entry["TRADE_DATE"]).split(" ")[0]
     return PbocLprReading(date=date, lpr_1y=float(entry["LPR1Y"]), lpr_5y=float(entry["LPR5Y"]))
+
+
+def get_ecb_m2(session: requests.Session | None = None) -> RegionalM2Reading:
+    """Eurozone-M2 (Average Amounts Outstanding) direkt von der EZB-eigenen SDMX-API,
+    kein API-Key noetig. Live verifiziert 2026-07-08."""
+    session = session or requests.Session()
+    response = session.get(
+        f"{ECB_SDMX_BASE_URL}/{ECB_M2_SERIES_KEY}",
+        params={"lastNObservations": 1, "format": "jsondata"},
+        timeout=15,
+    )
+    response.raise_for_status()
+    data = response.json()
+    times = data["structure"]["dimensions"]["observation"][0]["values"]
+    series_key = next(iter(data["dataSets"][0]["series"]))
+    obs = data["dataSets"][0]["series"][series_key]["observations"]
+    date = times[-1]["id"]
+    value = obs[str(len(times) - 1)][0]
+    return RegionalM2Reading(region="eurozone", date=date, value=float(value), unit="Mio. EUR")
+
+
+def get_china_m2(session: requests.Session | None = None) -> RegionalM2Reading:
+    """China-M2 ueber denselben Eastmoney-Endpunkt wie PBoC-LPR, anderer reportName,
+    kein Token noetig. Live verifiziert 2026-07-08."""
+    session = session or requests.Session()
+    params = {
+        "columns": "REPORT_DATE,TIME,BASIC_CURRENCY,BASIC_CURRENCY_SAME,BASIC_CURRENCY_SEQUENTIAL",
+        "pageNumber": "1",
+        "pageSize": "1",
+        "sortColumns": "REPORT_DATE",
+        "sortTypes": "-1",
+        "source": "WEB",
+        "client": "WEB",
+        "reportName": EASTMONEY_M2_REPORT,
+    }
+    response = session.get(EASTMONEY_URL, params=params, timeout=15)
+    response.raise_for_status()
+    data = response.json()
+    entry = data["result"]["data"][0]
+    date = str(entry["REPORT_DATE"]).split(" ")[0]
+    return RegionalM2Reading(
+        region="china", date=date, value=float(entry["BASIC_CURRENCY"]), unit="hundert Mio. CNY"
+    )
+
+
+def get_japan_m2(session: requests.Session | None = None) -> RegionalM2Reading:
+    """Japan-M2 (Average Amounts Outstanding) - HTML-Scraping-Fallback, siehe
+    Modul-Docstring bei BOJ_M2_URL fuer den Vorbehalt. Sucht die Spalte
+    "M2/Average Amounts Outstanding/Money Stock" dynamisch (nicht per festem Index),
+    damit eine Spalten-Umsortierung nicht zu einem stillen Falschwert fuehrt - schlaegt
+    stattdessen mit ValueError fehl."""
+    session = session or requests.Session()
+    response = session.get(BOJ_M2_URL, timeout=15)
+    response.raise_for_status()
+    html = response.text
+
+    header_idx = html.find("Name of <br>time-series")
+    if header_idx == -1:
+        raise ValueError("BoJ-Tabellenkopf nicht gefunden - Seitenstruktur hat sich vermutlich geändert")
+    header_segment = html[header_idx : header_idx + 8000]
+    column_names = re.findall(r"<td[^>]*>([^<]*Money Stock[^<]*)</td>", header_segment)
+    m2_col_index = next(
+        (i for i, name in enumerate(column_names) if name.startswith("M2/Average Amounts Outstanding")),
+        None,
+    )
+    if m2_col_index is None:
+        raise ValueError("M2-Spalte (Average Amounts Outstanding) nicht in der BoJ-Tabelle gefunden")
+
+    row_matches = list(
+        re.finditer(r"<tr nowrap align=right><th[^>]*>(\d{4}/\d{2})</th>((?:<td[^>]*>[^<]*</td>)+)", html)
+    )
+    if not row_matches:
+        raise ValueError("Keine Datenzeile in der BoJ-Tabelle gefunden")
+    last_date, last_row_html = row_matches[-1].groups()
+    values = re.findall(r"<td[^>]*>([^<]*)</td>", last_row_html)
+    return RegionalM2Reading(
+        region="japan", date=last_date, value=float(values[m2_col_index].strip()), unit="100 Mio. JPY"
+    )
+
+
+def get_all_regional_m2(session: requests.Session | None = None) -> dict[str, RegionalM2Reading | None]:
+    """Ergaenzt US-M2 (bereits ueber FRED/get_all_fred_rates) um Eurozone/China/Japan
+    fuer eine globale M2-Gesamtsicht (Liquiditaetszyklus-Diskussion, Spezifikation
+    Kap. 8/16). P-10: jede Region einzeln versucht, ein Fehlschlag blockiert nicht
+    die anderen."""
+    session = session or requests.Session()
+    fetchers = {"eurozone": get_ecb_m2, "china": get_china_m2, "japan": get_japan_m2}
+    results: dict[str, RegionalM2Reading | None] = {}
+    for name, fetcher in fetchers.items():
+        try:
+            results[name] = fetcher(session)
+        except Exception as exc:  # noqa: BLE001 - eine Region darf die anderen nicht blockieren
+            logger.warning("Regionale M2-Abfrage fuer %s fehlgeschlagen: %s", name, exc)
+            results[name] = None
+    return results
