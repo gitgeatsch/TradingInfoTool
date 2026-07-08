@@ -25,11 +25,22 @@ api/kraken.py fuer die bestehende Funding-Rate-Anbindung)."""
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
 
 import requests
 
 COINMETRICS_BASE_URL = "https://community-api.coinmetrics.io/v4/timeseries/asset-metrics"
 COINMETRICS_FREE_METRICS = "CapMVRVCur,CapMrktCurUSD,SplyCur,PriceUSD"
+
+# Blockchain.com Charts API: einzige kostenlose Quelle gefunden, die BTC-Preise seit
+# dem Genesis-Block (2009-01-03) liefert - CoinGecko begrenzt den freien Zugriff
+# explizit auf 365 Tage rueckwirkend (live per Fehlermeldung bestaetigt), Kraken/
+# CoinMetrics-Community geben nur ein Fenster von ~2 Jahren bzw. ~30 Tagen. Fuer das
+# BTC-Log-Regressions-Risiko-Modell (Spezifikation Kap. 8/16) noetig - mehrjaehrige
+# Historie, um einen sinnvollen langfristigen Trend zu fitten. `timespan=all` liefert
+# eine ausgeduennte Reihe (~alle 4 Tage ein Punkt ueber die gesamte Historie), was fuer
+# einen Langfrist-Trend voellig ausreicht - keine Tagesaufloesung noetig/verfuegbar.
+BLOCKCHAIN_COM_MARKET_PRICE_URL = "https://api.blockchain.info/charts/market-price"
 
 
 @dataclass
@@ -88,3 +99,19 @@ def get_btc_onchain_snapshot(session: requests.Session | None = None) -> OnChain
         realized_cap_usd=realized_cap,
         realized_price_usd=realized_price,
     )
+
+
+def get_btc_full_price_history(session: requests.Session | None = None) -> list[tuple[datetime, float]]:
+    """Komplette BTC-Preishistorie seit dem Genesis-Block, ~alle 4 Tage ein
+    Datenpunkt. Enthaelt am Anfang (2009, kein etablierter Markt) Preis 0.0 -
+    Aufrufer muss das vor einer Log-Transformation herausfiltern (log(0) undefiniert)."""
+    session = session or requests.Session()
+    response = session.get(
+        BLOCKCHAIN_COM_MARKET_PRICE_URL, params={"timespan": "all", "format": "json"}, timeout=20
+    )
+    response.raise_for_status()
+    data = response.json()
+    return [
+        (datetime.fromtimestamp(point["x"], tz=timezone.utc), float(point["y"]))
+        for point in data["values"]
+    ]

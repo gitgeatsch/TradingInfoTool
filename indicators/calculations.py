@@ -444,3 +444,68 @@ def support_resistance_levels(
         {"price": float(np.mean(cluster)), "touches": len(cluster)} for cluster in clusters
     ]
     return IndicatorResult(levels, True)
+
+
+BTC_GENESIS_DATE = np.datetime64("2009-01-03")
+
+
+@dataclass
+class BtcLogRegressionRisk:
+    """Bewusst EIGENES, einfaches Modell - KEINE Nachbildung der proprietaeren
+    "Bitcoin Risk"-Formel von Into The Cryptoverse (Benjamin Cowen) oder aehnlicher
+    kommerzieller Anbieter, deren exakte Methodik nicht oeffentlich ist. Einfache,
+    transparente Log-Log-lineare Regression ueber die gesamte verfuegbare Historie
+    plus Residuen-Streuung als Band - an vier bekannten historischen Zyklus-Extremen
+    (2017/2018/2021/2022) live gegengeprueft, zeigt die richtige Richtung, aber ist
+    keine praezise Nachbildung etablierter kommerzieller Modelle."""
+    date: str
+    current_price: float
+    predicted_price: float  # Wert der Regressionslinie zum aktuellen Datum
+    deviation_std: float  # Abweichung des aktuellen Preises von der Linie, in Std.
+    risk: float  # 0-1, siehe deviation_std_range Parameter fuer die Skalierung
+
+
+def compute_btc_log_regression_risk(
+    history: list[tuple[Any, float]], deviation_std_range: float = 3.0
+) -> BtcLogRegressionRisk:
+    """`history`: Liste von (Datum, Preis) ueber moeglichst die gesamte BTC-Historie
+    (siehe api/onchain.py::get_btc_full_price_history()). Preise <= 0 (2009,
+    kein etablierter Markt) werden herausgefiltert, log(0) ist undefiniert.
+
+    Modell: lineare Regression von log10(Preis) auf log10(Tage seit Genesis-Block)
+    ueber die GESAMTE Historie. `risk` bildet die aktuelle Abweichung von dieser
+    Linie (in Streuungs-Einheiten der historischen Residuen) linear auf [0, 1] ab,
+    wobei +-`deviation_std_range` Standardabweichungen auf die vollen Baender
+    (0 bzw. 1) gemappt werden - Werte ausserhalb werden auf 0/1 begrenzt (clamped).
+
+    Wirft ValueError bei zu wenig verwertbaren Datenpunkten statt einen unsicheren
+    Wert zurueckzugeben (P-10)."""
+    # np.datetime64 kennt keine Zeitzonen - tzinfo vorher entfernen (Daten sind ohnehin
+    # UTC, siehe api/onchain.py::get_btc_full_price_history()), sonst UserWarning.
+    dates = np.array([np.datetime64(d.replace(tzinfo=None)) for d, _ in history])
+    prices = np.array([p for _, p in history], dtype=float)
+    valid = prices > 0
+    dates, prices = dates[valid], prices[valid]
+
+    if len(prices) < 30:
+        raise ValueError(f"Zu wenige verwertbare BTC-Historiendaten fuer eine Regression: {len(prices)}")
+
+    days_since_genesis = (dates - BTC_GENESIS_DATE).astype("timedelta64[D]").astype(float)
+    x = np.log10(days_since_genesis)
+    y = np.log10(prices)
+    slope, intercept = np.polyfit(x, y, 1)
+    residuals = y - (slope * x + intercept)
+    std = residuals.std()
+
+    current_price = float(prices[-1])
+    deviation = float(residuals[-1] / std) if std > 0 else 0.0
+    predicted_price = float(10 ** (slope * x[-1] + intercept))
+    risk = float(np.clip((deviation + deviation_std_range) / (2 * deviation_std_range), 0.0, 1.0))
+
+    return BtcLogRegressionRisk(
+        date=str(dates[-1]),
+        current_price=current_price,
+        predicted_price=predicted_price,
+        deviation_std=deviation,
+        risk=risk,
+    )
