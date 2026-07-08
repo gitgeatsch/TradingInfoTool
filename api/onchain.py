@@ -42,6 +42,17 @@ COINMETRICS_FREE_METRICS = "CapMVRVCur,CapMrktCurUSD,SplyCur,PriceUSD"
 # einen Langfrist-Trend voellig ausreicht - keine Tagesaufloesung noetig/verfuegbar.
 BLOCKCHAIN_COM_MARKET_PRICE_URL = "https://api.blockchain.info/charts/market-price"
 
+# DefiLlama Stablecoins API: kostenlos, kein Key, gut dokumentiert - reine On-Chain-
+# Token-Supply (Gesamtangebot), keine proprietaere Aggregation noetig anders als bei
+# Exchange-Reserven. "Trockenpulver"-Proxy (verfuegbare Krypto-native Liquiditaet,
+# Spezifikation Kap. 8/16).
+DEFILLAMA_STABLECOINS_URL = "https://stablecoins.llama.fi/stablecoins"
+
+# CoinMetrics-Metrik fuer die Gesamt-Reserven (Bestand) auf Boersen wurde NICHT
+# gefunden (mehrere Kandidaten-Namen probiert, alle "bad_parameter") - nur die
+# Zu-/Abfluesse (FlowInExNtv/FlowOutExNtv) sind im Gratis-Tier verfuegbar. Das ist
+# ohnehin das dynamischere Signal (taegliche Bewegung statt trage Bestandsgroesse).
+
 
 @dataclass
 class OnChainReading:
@@ -98,6 +109,67 @@ def get_btc_onchain_snapshot(session: requests.Session | None = None) -> OnChain
         nupl=nupl,
         realized_cap_usd=realized_cap,
         realized_price_usd=realized_price,
+    )
+
+
+@dataclass
+class ExchangeFlowReading:
+    date: str
+    inflow_btc: float
+    outflow_btc: float
+    net_flow_btc: float  # positiv = mehr rein als raus (potenziell Verkaufsdruck)
+
+
+def get_btc_exchange_flows(session: requests.Session | None = None) -> ExchangeFlowReading:
+    """Taegliche BTC-Boersen-Zu-/Abfluesse ueber CoinMetrics Community API (kostenlos,
+    kein Key). Reine Fluss-Groesse, KEIN Gesamt-Bestand - eine Metrik fuer den
+    Gesamt-Bestand auf Boersen wurde im Gratis-Tier nicht gefunden (siehe Kap. 16)."""
+    session = session or requests.Session()
+    response = session.get(
+        COINMETRICS_BASE_URL,
+        params={
+            "assets": "btc",
+            "metrics": "FlowInExNtv,FlowOutExNtv",
+            "frequency": "1d",
+            "page_size": 10,
+            "sort": "time",
+        },
+        timeout=15,
+    )
+    response.raise_for_status()
+    data = response.json()
+    entry = data["data"][-1]
+    inflow = float(entry["FlowInExNtv"])
+    outflow = float(entry["FlowOutExNtv"])
+    return ExchangeFlowReading(
+        date=str(entry["time"]).split("T")[0], inflow_btc=inflow, outflow_btc=outflow,
+        net_flow_btc=inflow - outflow,
+    )
+
+
+@dataclass
+class StablecoinSupplyReading:
+    date: str
+    total_usd: float
+    usdt_usd: float | None
+    usdc_usd: float | None
+
+
+def get_stablecoin_supply(session: requests.Session | None = None) -> StablecoinSupplyReading:
+    """Gesamt-Marktkapitalisierung aller getrackten Stablecoins (~400) ueber
+    DefiLlama, kostenlos, kein Key. "Trockenpulver"-Proxy - hoehere Summe = mehr
+    verfuegbare Krypto-native Liquiditaet, die potenziell in Risiko-Assets fliessen
+    koennte (nicht garantiert, nur ein grober Indikator)."""
+    session = session or requests.Session()
+    response = session.get(DEFILLAMA_STABLECOINS_URL, params={"includePrices": "true"}, timeout=20)
+    response.raise_for_status()
+    assets = response.json()["peggedAssets"]
+    total = sum(a["circulating"].get("peggedUSD", 0) for a in assets)
+    usdt = next((a["circulating"].get("peggedUSD") for a in assets if a["symbol"] == "USDT"), None)
+    usdc = next((a["circulating"].get("peggedUSD") for a in assets if a["symbol"] == "USDC"), None)
+    return StablecoinSupplyReading(
+        date=datetime.now(timezone.utc).date().isoformat(),
+        total_usd=float(total), usdt_usd=usdt, usdc_usd=usdc,
     )
 
 
