@@ -18,7 +18,7 @@
 meta:
   projekt: TradingInfoTool
   eigentuemer: Gernot Spiessmaier
-  version: 1.4
+  version: 1.5
   stand: 2026-07-08
 
 # --- Uebergeordnete Ziele / Leitplanken (siehe Spezifikation Kap. 1) ---
@@ -336,10 +336,11 @@ datenquellen:
     #   kostenlos, 120 Req/Min): FEDFUNDS, ECBDFR/ECBMRRFR/ECBMLFR, M2SL,
     #   CPIAUCSL/CPILFESL, GACDFSA066MSFRBPHI, IRSTCI01JPM156N, INTDSRKRM193N
     #   (BoJ/BoK ~2 Mon. Verzug, eigene Staleness-Schwelle noetig)
-    #   PBoC -> keine automatisierbare Quelle (LPR nur als Bild veroeffentlicht),
-    #   manuelle Monats-Eintragung vorgesehen statt API
+    #   PBoC -> datacenter-web.eastmoney.com (via akshare-Recherche gefunden,
+    #   2026-07-08), leichtgewichtiger requests-Call statt akshare-Dependency;
+    #   inoffiziell/reverse-engineered, siehe Spezifikation Kap. 8 fuer Details+Risiko
     #   Trueflation -> verworfen, kein kostenloser API-Zugang (nur Dashboard)
-    api: "fred"                        # FRED = St. Louis Fed, siehe Kommentar oben
+    api: "fred+eastmoney"              # FRED = St. Louis Fed, Eastmoney fuer PBoC-LPR
   sentiment:
     x_twitter:
       aktiv: false                     # [OFFEN] API-Kosten/ToS pruefen, spaetere Phase

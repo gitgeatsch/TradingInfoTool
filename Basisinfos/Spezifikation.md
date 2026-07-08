@@ -1,6 +1,6 @@
 # TradingInfoTool — Spezifikation (fachliche Grundlage)
 
-> **Eigentümer:** Gernot Spiessmaier · **Version:** 1.4 · **Stand:** 2026-07-08
+> **Eigentümer:** Gernot Spiessmaier · **Version:** 1.5 · **Stand:** 2026-07-08
 >
 > Dieses Dokument beschreibt **was** das Tool leisten soll und **warum** (lesbarer Teil).
 > Die konkreten, vom Programm auslesbaren **Parameter** (Watchlist, Risiko-Limits,
@@ -369,14 +369,25 @@ Näherung an dieser Stelle neu zu bewerten.
     - FRED-API: kostenlos, Key wird sofort bei Registrierung vergeben
       (`fredaccount.stlouisfed.org/apikeys`), 120 Requests/Minute Limit (fuer unseren
       Bedarf grosszuegig), Nutzung fuer private/kommerzielle Projekte laut ToS erlaubt.
-  - **PBoC (China): keine automatisierbare freie Quelle gefunden.** Offizielle Quelle
-    (chinamoney.com.cn/NIFC, der amtliche LPR-Herausgeber) zeigt den aktuellen Satz nur
-    als Bild-Datei, nicht als Text/Daten — keine Automatisierung ohne OCR moeglich.
-    World Bank/IMF fuehren China-Zinsen nur mit >1 Jahr Verzug (Jahresdaten), FRED-Reihe
-    `INTDSRCNM193N` ist seit Mitte 2025 nicht mehr aktualisiert. **Empfehlung:** Da sich
-    der LPR nur ca. 1×/Monat aendert (oft ueber viele Monate unveraendert, Stand
-    2026-07-08: 13 Monate in Folge unveraendert), **manuelle Monats-Eintragung** durch
-    den Nutzer statt Automatisierung — geringer Pflegeaufwand.
+  - **PBoC (China): automatisierbare Quelle gefunden bei vertiefter Recherche
+    (2026-07-08).** Amtliche Quelle (chinamoney.com.cn/NIFC) und World Bank/IMF (>1
+    Jahr Verzug) sowie FRED (`INTDSRCNM193N`, seit Mitte 2025 nicht mehr aktualisiert)
+    bleiben unbrauchbar. **Gefunden:** die Open-Source-Bibliothek `akshare`
+    (16,6k GitHub-Stars, aktiv gepflegt, aggregiert chinesische Finanzdaten) nutzt
+    fuer `macro_china_lpr()` intern den Endpunkt
+    `https://datacenter-web.eastmoney.com/api/data/v1/get` (Eastmoney, einer der
+    groessten chinesischen Finanzdatenanbieter) mit einem oeffentlichen Token im
+    Query-String — liefert strukturiertes JSON mit LPR1Y/LPR5Y, live getestet:
+    2026-06-22, 3,0 %/3,5 %, deckt sich mit unabhaengiger News-Recherche. Kein
+    OCR/Scraping noetig. **Integrationsentscheidung:** direkter, leichtgewichtiger
+    `requests`-Call (wie bei `api/kraken.py`/`api/groq.py`), NICHT die volle
+    `akshare`-Bibliothek als Dependency (zieht pandas/tqdm/weitere Pakete mit) — der
+    eine Endpunkt reicht. **Wichtiger Vorbehalt (P-10):** das ist keine offiziell
+    dokumentierte, versionierte API, sondern der interne Endpunkt von Eastmoneys
+    eigener Webseite, den `akshare` reverse-engineered hat — kann sich ohne
+    Vorankuendigung aendern. Bei Fehlschlag: letzter bekannter Wert bleibt in der DB,
+    mit Alters-Kennzeichnung (wie bei allen anderen Quellen), kein Absturz, keine
+    Fantasiewerte. Da der LPR nur ca. 1×/Monat wechselt, ist das Abfrage-Risiko gering.
   - **Trueflation: verworfen, kein kostenloser API-Zugang.** Das Web-Dashboard ist mit
     einem kostenlosen Konto nutzbar (1.200 Credits/90 Tage, Live-Test zeigte Daten mit
     nur 1 Tag Verzug), aber programmatischer API-Zugang (das, was `api/macro.py`
@@ -416,6 +427,17 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
   anzeigen; Nutzer kann sie in der Watchlist behalten oder entfernen.
 - **U-11** Regime-Anzeige (Kap. 14): aktuelles Marktregime sichtbar; manueller Override
   wählbar und — solange aktiv — permanent als Warnhinweis eingeblendet.
+- **U-12** Datenquellen-Gesundheitsstatus `[OFFEN, Idee 2026-07-08]`: Erweiterung von
+  P-10 — nicht nur einzelne veraltete Werte in der jeweiligen Ansicht kennzeichnen
+  (bereits umgesetzt), sondern eine **zentrale, aggregierte Übersicht**, welche
+  Datenquellen-Abhängigkeiten (CoinGecko, Kraken, Groq, künftig FRED/Eastmoney-PBoC/
+  alternative.me) gerade fehlschlagen oder unerwartet reagieren — inkl. seit wann und
+  mit welchem Fehler. Ziel: der Nutzer erfährt aktiv, wenn eine Quelle "nicht mehr wie
+  gewünscht/erforderlich funktioniert" (Zitat), statt es zufällig in einer einzelnen
+  Ansicht zu bemerken oder es unbemerkt zu bleiben, bis ein Signal falsch/unvollständig
+  wird. Anlass: beim Live-Test mehrerer Makro-Quellen (Kap. 8) traten mehrfach stille
+  Qualitätsprobleme auf (z. B. ISM-Ersatzquelle mit offensichtlich falschen Werten,
+  inkonsistente Trueflation-Pricing-Angaben) — ein Mensch musste das manuell bemerken.
 
 ## 10. Agent- & Datenbank-Betrieb
 
