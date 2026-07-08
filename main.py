@@ -38,6 +38,14 @@ def main() -> None:
         groq_client = None
         logger.info("Kein GROQ_API_KEY gesetzt - Signalberechnung (Phase 3) deaktiviert.")
 
+    fred_api_key = os.environ.get("FRED_API_KEY")
+    if fred_api_key:
+        logger.info("FRED API-Key gefunden - Leitzinsen/CPI/M2/ISM-Ersatz im Makro-Kontext verfügbar.")
+    else:
+        # Ebenfalls optional (P-8) - ohne Key bleiben nur BTC-Dominanz/Fear&Greed/PBoC
+        # im Makro-Kontext (agent/pipeline.py degradiert sauber, kein Absturz).
+        logger.info("Kein FRED_API_KEY gesetzt - Fed/EZB/M2/CPI/ISM-Ersatz/BoJ/BoK bleiben leer.")
+
     watchlist = config.get_watchlist()
 
     conn = db.get_connection()
@@ -98,6 +106,7 @@ def main() -> None:
             coingecko_client=coingecko_client,
             kraken_client=kraken_client,
             groq_client=groq_client,
+            fred_api_key=fred_api_key,
         )
     finally:
         bg_scheduler.shutdown(wait=False)

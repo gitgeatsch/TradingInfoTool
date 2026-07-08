@@ -40,6 +40,23 @@ class MacroSnapshot:
     fear_greed_value: int | None
     fear_greed_label: str | None
     fetched_at: str
+    # FRED-Leitzinsen/CPI/M2/ISM-Ersatz (api/macro.py, Spezifikation Kap. 8) - alle
+    # optional, da ein einzelner fehlgeschlagener FRED-Call die anderen Werte nicht
+    # blockieren soll (P-10) und FRED_API_KEY optional ist (ohne Key bleiben alle None).
+    fed_funds_rate: float | None = None
+    m2_geldmenge: float | None = None
+    cpi_headline: float | None = None
+    cpi_core: float | None = None
+    ezb_einlagensatz: float | None = None
+    ezb_hauptrefinanzierung: float | None = None
+    ezb_spitzenrefinanzierung: float | None = None
+    ism_ersatz_philly_fed: float | None = None
+    boj_tagesgeldsatz: float | None = None
+    bok_diskontsatz: float | None = None
+    # PBoC-LPR (Eastmoney, api/macro.py) - separat von den FRED-Werten, da eigener
+    # Endpunkt/eigene Fehlerklasse.
+    pboc_lpr_1y: float | None = None
+    pboc_lpr_5y: float | None = None
 
 
 @dataclass

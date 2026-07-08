@@ -20,7 +20,10 @@ DISCLAIMER_TEXT = (
 
 
 class TradingInfoToolApp(tk.Tk):
-    def __init__(self, db_conn_factory, watchlist, coingecko_client, kraken_client=None, groq_client=None):
+    def __init__(
+        self, db_conn_factory, watchlist, coingecko_client, kraken_client=None, groq_client=None,
+        fred_api_key=None,
+    ):
         super().__init__()
         self.title("TradingInfoTool")
         self.geometry("900x600")
@@ -30,6 +33,7 @@ class TradingInfoToolApp(tk.Tk):
         self._coingecko_client = coingecko_client
         self._kraken_client = kraken_client
         self._groq_client = groq_client
+        self._fred_api_key = fred_api_key
 
         self._build_menu()
 
@@ -43,7 +47,8 @@ class TradingInfoToolApp(tk.Tk):
         notebook.add(self._portfolio_view, text="Portfolio")
 
         self._signals_view = SignalsView(
-            notebook, db_conn_factory, watchlist, groq_client, coingecko_client, kraken_client
+            notebook, db_conn_factory, watchlist, groq_client, coingecko_client, kraken_client,
+            fred_api_key=fred_api_key,
         )
         notebook.add(self._signals_view, text="Signale")
 
@@ -184,6 +189,12 @@ class TradingInfoToolApp(tk.Tk):
         messagebox.showinfo("Bestände neu importieren", message)
 
 
-def run_app(db_conn_factory, watchlist, coingecko_client, kraken_client=None, groq_client=None) -> None:
-    app = TradingInfoToolApp(db_conn_factory, watchlist, coingecko_client, kraken_client, groq_client)
+def run_app(
+    db_conn_factory, watchlist, coingecko_client, kraken_client=None, groq_client=None,
+    fred_api_key=None,
+) -> None:
+    app = TradingInfoToolApp(
+        db_conn_factory, watchlist, coingecko_client, kraken_client, groq_client,
+        fred_api_key=fred_api_key,
+    )
     app.mainloop()

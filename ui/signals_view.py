@@ -30,7 +30,10 @@ INFO_COLOR = "#666666"
 
 
 class SignalsView(ttk.Frame):
-    def __init__(self, parent, db_conn_factory, watchlist, groq_client, coingecko_client, kraken_client):
+    def __init__(
+        self, parent, db_conn_factory, watchlist, groq_client, coingecko_client, kraken_client,
+        fred_api_key=None,
+    ):
         super().__init__(parent)
         self._db_conn_factory = db_conn_factory
         self._full_watchlist = watchlist  # generate_signal braucht ALLE Assets (Stablecoins
@@ -39,6 +42,8 @@ class SignalsView(ttk.Frame):
         self._groq_client = groq_client
         self._coingecko_client = coingecko_client
         self._kraken_client = kraken_client
+        self._fred_api_key = fred_api_key  # optional (P-8) - ohne Key liefert
+        # agent/pipeline.py fuer die FRED-Felder sauber None statt abzustuerzen.
         self._selected_asset = None
 
         self._build_layout()
@@ -225,7 +230,8 @@ class SignalsView(ttk.Frame):
         conn = self._db_conn_factory()
         try:
             signal = generate_signal(
-                asset, self._full_watchlist, conn, self._groq_client, self._coingecko_client, self._kraken_client
+                asset, self._full_watchlist, conn, self._groq_client, self._coingecko_client, self._kraken_client,
+                fred_api_key=self._fred_api_key,
             )
             error = None
         except Exception as exc:  # noqa: BLE001 - an die UI durchreichen statt den Thread stumm sterben zu lassen

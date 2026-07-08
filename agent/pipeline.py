@@ -58,8 +58,8 @@ def _load_closes_and_ohlc(conn, symbol: str, coingecko_id: str):
     return dates, closes, ohlc_history, last_date
 
 
-def _update_macro_snapshot(conn, coingecko_client) -> list[MacroSnapshot]:
-    from api.macro import get_btc_dominance, get_fear_greed_index
+def _update_macro_snapshot(conn, coingecko_client, fred_api_key: str | None) -> list[MacroSnapshot]:
+    from api.macro import get_all_fred_rates, get_btc_dominance, get_fear_greed_index, get_pboc_lpr
 
     today = datetime.now(timezone.utc).date().isoformat()
     try:
@@ -74,14 +74,50 @@ def _update_macro_snapshot(conn, coingecko_client) -> list[MacroSnapshot]:
         logger.info("Fear&Greed-Abruf fehlgeschlagen: %s", exc)
         fgi_value, fgi_label = None, None
 
-    if dominance is not None or fgi_value is not None:
+    # FRED_API_KEY ist optional (P-8: Kernfunktionen duerfen nicht zwingend von einem
+    # KI-/externen Key abhaengen) - ohne Key bleiben alle FRED-Felder None, kein Fehler.
+    fred_values: dict[str, float | None] = {}
+    if fred_api_key:
+        for name, obs in get_all_fred_rates(fred_api_key).items():
+            fred_values[name] = obs.value if obs is not None else None
+
+    pboc_lpr_1y = pboc_lpr_5y = None
+    try:
+        lpr = get_pboc_lpr()
+        pboc_lpr_1y, pboc_lpr_5y = lpr.lpr_1y, lpr.lpr_5y
+    except Exception as exc:
+        logger.info("PBoC-LPR-Abruf fehlgeschlagen (Eastmoney): %s", exc)
+
+    any_new_value = any(
+        v is not None
+        for v in (dominance, fgi_value, pboc_lpr_1y, pboc_lpr_5y, *fred_values.values())
+    )
+    if any_new_value:
         db.upsert_macro_snapshot(
-            conn, MacroSnapshot(today, dominance, fgi_value, fgi_label, _now())
+            conn,
+            MacroSnapshot(
+                today, dominance, fgi_value, fgi_label, _now(),
+                fed_funds_rate=fred_values.get("fed_funds_rate"),
+                m2_geldmenge=fred_values.get("m2_geldmenge"),
+                cpi_headline=fred_values.get("cpi_headline"),
+                cpi_core=fred_values.get("cpi_core"),
+                ezb_einlagensatz=fred_values.get("ezb_einlagensatz"),
+                ezb_hauptrefinanzierung=fred_values.get("ezb_hauptrefinanzierung"),
+                ezb_spitzenrefinanzierung=fred_values.get("ezb_spitzenrefinanzierung"),
+                ism_ersatz_philly_fed=fred_values.get("ism_ersatz_philly_fed"),
+                boj_tagesgeldsatz=fred_values.get("boj_tagesgeldsatz"),
+                bok_diskontsatz=fred_values.get("bok_diskontsatz"),
+                pboc_lpr_1y=pboc_lpr_1y,
+                pboc_lpr_5y=pboc_lpr_5y,
+            ),
         )
     return db.get_macro_snapshot_history(conn)
 
 
-def generate_signal(asset, watchlist, conn, groq_client, coingecko_client, kraken_client) -> Signal:
+def generate_signal(
+    asset, watchlist, conn, groq_client, coingecko_client, kraken_client,
+    fred_api_key: str | None = None,
+) -> Signal:
     # A-1: Stablecoins haben kein eigenstaendiges Handelssignal.
     if asset.typ == "stablecoin":
         signal = _fixed_signal(
@@ -125,7 +161,7 @@ def generate_signal(asset, watchlist, conn, groq_client, coingecko_client, krake
     # R-5.1 Marktregime (BTC-Trend + BTC-Dominanz + Fear&Greed).
     config_dict = config.load_config()
     btc_asset = next((a for a in watchlist if a.symbol == "BTC"), None)
-    macro_history = _update_macro_snapshot(conn, coingecko_client)
+    macro_history = _update_macro_snapshot(conn, coingecko_client, fred_api_key)
     if btc_asset is not None and btc_asset.symbol != asset.symbol:
         btc_dates, btc_closes, btc_ohlc, _ = _load_closes_and_ohlc(conn, "BTC", btc_asset.coingecko_id)
         btc_snapshot = build_technical_snapshot(btc_closes, btc_dates, btc_ohlc) if len(btc_closes) else snapshot

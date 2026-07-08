@@ -63,6 +63,10 @@ CREATE TABLE IF NOT EXISTS macro_snapshot (
     fear_greed_label    TEXT,
     fetched_at          TEXT NOT NULL
 );
+-- FRED/PBoC-Spalten (fed_funds_rate etc.) werden per ALTER TABLE in
+-- _migrate_macro_snapshot_columns() nachgezogen, nicht hier - macro_snapshot
+-- existiert bereits in bestehenden Installationen, CREATE TABLE IF NOT EXISTS greift
+-- dort nicht mehr (siehe init_db()).
 
 CREATE TABLE IF NOT EXISTS signals (
     id                          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -119,9 +123,29 @@ def get_connection() -> sqlite3.Connection:
     return conn
 
 
+_MACRO_SNAPSHOT_NEW_COLUMNS = (
+    "fed_funds_rate", "m2_geldmenge", "cpi_headline", "cpi_core", "ezb_einlagensatz",
+    "ezb_hauptrefinanzierung", "ezb_spitzenrefinanzierung", "ism_ersatz_philly_fed",
+    "boj_tagesgeldsatz", "bok_diskontsatz", "pboc_lpr_1y", "pboc_lpr_5y",
+)
+
+
+def _migrate_macro_snapshot_columns(conn: sqlite3.Connection) -> None:
+    """Leichtgewichtige Migration: macro_snapshot existierte bereits vor den
+    FRED/PBoC-Spalten (Phase 3, 2026-07-08 Folge-Slice) - CREATE TABLE IF NOT EXISTS
+    greift bei bereits existierenden Tabellen nicht, daher ALTER TABLE nachziehen.
+    Alle neuen Spalten sind nullable REAL, daher unkritisch fuer Bestandsdaten."""
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(macro_snapshot)")}
+    for column in _MACRO_SNAPSHOT_NEW_COLUMNS:
+        if column not in existing:
+            conn.execute(f"ALTER TABLE macro_snapshot ADD COLUMN {column} REAL")
+    conn.commit()
+
+
 def init_db(conn: sqlite3.Connection) -> None:
     conn.executescript(_SCHEMA)
     conn.commit()
+    _migrate_macro_snapshot_columns(conn)
 
 
 def is_first_run(conn: sqlite3.Connection) -> bool:
@@ -296,38 +320,49 @@ def get_last_ohlc_date(conn: sqlite3.Connection, symbol: str, currency: str) -> 
     return row["max_date"] if row else None
 
 
+_MACRO_SNAPSHOT_COLUMNS = (
+    "date", "btc_dominance_pct", "fear_greed_value", "fear_greed_label", "fetched_at",
+) + _MACRO_SNAPSHOT_NEW_COLUMNS
+
+
 def upsert_macro_snapshot(conn: sqlite3.Connection, snap: MacroSnapshot) -> None:
+    """P-10: mehrere Pipeline-Laeufe am selben Tag duerfen sich nicht gegenseitig
+    Werte loeschen, nur weil ein einzelner Fetch an diesem Lauf fehlgeschlagen ist
+    (z.B. FRED_API_KEY erst spaeter gesetzt, oder ein einzelner Provider kurzzeitig
+    down) - COALESCE behaelt den zuletzt bekannten Wert, wenn der neue NULL ist.
+    `fetched_at` wird immer aktualisiert (Zeitpunkt des letzten Schreibversuchs)."""
+    placeholders = ", ".join("?" for _ in _MACRO_SNAPSHOT_COLUMNS)
+    update_clause = ", ".join(
+        f"{col} = excluded.{col}" if col == "fetched_at"
+        else f"{col} = COALESCE(excluded.{col}, macro_snapshot.{col})"
+        for col in _MACRO_SNAPSHOT_COLUMNS
+        if col != "date"
+    )
+    values = [getattr(snap, col) for col in _MACRO_SNAPSHOT_COLUMNS]
     conn.execute(
-        "INSERT INTO macro_snapshot (date, btc_dominance_pct, fear_greed_value, "
-        "fear_greed_label, fetched_at) VALUES (?, ?, ?, ?, ?) "
-        "ON CONFLICT(date) DO UPDATE SET "
-        "btc_dominance_pct = excluded.btc_dominance_pct, "
-        "fear_greed_value = excluded.fear_greed_value, "
-        "fear_greed_label = excluded.fear_greed_label, fetched_at = excluded.fetched_at",
-        (snap.date, snap.btc_dominance_pct, snap.fear_greed_value, snap.fear_greed_label, snap.fetched_at),
+        f"INSERT INTO macro_snapshot ({', '.join(_MACRO_SNAPSHOT_COLUMNS)}) "
+        f"VALUES ({placeholders}) ON CONFLICT(date) DO UPDATE SET {update_clause}",
+        values,
     )
     conn.commit()
 
 
 def get_macro_snapshot_history(conn: sqlite3.Connection, min_date: str | None = None) -> list[MacroSnapshot]:
+    columns = ", ".join(_MACRO_SNAPSHOT_COLUMNS)
     if min_date is not None:
         rows = conn.execute(
-            "SELECT date, btc_dominance_pct, fear_greed_value, fear_greed_label, fetched_at "
-            "FROM macro_snapshot WHERE date >= ? ORDER BY date ASC",
+            f"SELECT {columns} FROM macro_snapshot WHERE date >= ? ORDER BY date ASC",
             (min_date,),
         ).fetchall()
     else:
-        rows = conn.execute(
-            "SELECT date, btc_dominance_pct, fear_greed_value, fear_greed_label, fetched_at "
-            "FROM macro_snapshot ORDER BY date ASC"
-        ).fetchall()
+        rows = conn.execute(f"SELECT {columns} FROM macro_snapshot ORDER BY date ASC").fetchall()
     return [MacroSnapshot(**dict(row)) for row in rows]
 
 
 def get_latest_macro_snapshot(conn: sqlite3.Connection) -> MacroSnapshot | None:
+    columns = ", ".join(_MACRO_SNAPSHOT_COLUMNS)
     row = conn.execute(
-        "SELECT date, btc_dominance_pct, fear_greed_value, fear_greed_label, fetched_at "
-        "FROM macro_snapshot ORDER BY date DESC LIMIT 1"
+        f"SELECT {columns} FROM macro_snapshot ORDER BY date DESC LIMIT 1"
     ).fetchone()
     return MacroSnapshot(**dict(row)) if row else None
 
