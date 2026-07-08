@@ -127,6 +127,7 @@ _MACRO_SNAPSHOT_NEW_COLUMNS = (
     "fed_funds_rate", "m2_geldmenge", "cpi_headline", "cpi_core", "ezb_einlagensatz",
     "ezb_hauptrefinanzierung", "ezb_spitzenrefinanzierung", "ism_ersatz_philly_fed",
     "boj_tagesgeldsatz", "bok_diskontsatz", "pboc_lpr_1y", "pboc_lpr_5y",
+    "m2_eurozone", "m2_china", "m2_japan",
 )
 
 

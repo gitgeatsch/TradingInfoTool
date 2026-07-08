@@ -46,6 +46,17 @@ BTC_MATRIX = {
 }
 
 
+# Liquiditaets-Regime (Nutzungs-Diskussion 2026-07-08, siehe
+# project-offene-agent-diskussionspunkte Abschnitt 6): kombiniert den Trend der
+# globalen M2-Geldmenge mit der Fed-Funds-Rate-Richtung. Bewusst als EIGENE
+# Dimension neben `regime` (nicht eingemischt) - beantwortet eine andere Frage
+# ("wird die Liquiditaet groesser oder kleiner") als das bestehende Bär/Bulle-Regime
+# ("wie verhaelt sich der Markt gerade"). Schwellenwerte sind eine bewusste,
+# dokumentierte Modellierungsentscheidung, keine Standardwerte aus der Literatur.
+LIQUIDITY_M2_TREND_THRESHOLD_PCT = 1.0  # Veraenderung ueber ~6 Monate, siehe agent/pipeline.py::_fetch_liquidity_context
+LIQUIDITY_FED_FUNDS_THRESHOLD_PP = 0.1  # Prozentpunkte
+
+
 @dataclass
 class RegimeResult:
     regime: str
@@ -57,6 +68,8 @@ class RegimeResult:
     fear_greed_label: str | None
     btc_matrix_state: str
     btc_matrix_beschreibung: str
+    liquiditaets_regime: str
+    liquiditaets_regime_begruendung: str
 
 
 def _btc_change_pct(btc_closes: np.ndarray, days: int = 30) -> float | None:
@@ -89,12 +102,92 @@ def _dominance_trend_label(macro_history: list[MacroSnapshot]) -> str:
     return f"{richtung} ({delta:+.2f} Prozentpunkte seit {since})"
 
 
+def _pct_trend(values: list[float], threshold_pct: float = LIQUIDITY_M2_TREND_THRESHOLD_PCT) -> str:
+    if len(values) < 2 or values[0] == 0:
+        return "unbekannt"
+    change_pct = (values[-1] - values[0]) / values[0] * 100
+    if change_pct > threshold_pct:
+        return "steigend"
+    if change_pct < -threshold_pct:
+        return "fallend"
+    return "gleichbleibend"
+
+
+def _fed_funds_direction(values: list[float], threshold_pp: float = LIQUIDITY_FED_FUNDS_THRESHOLD_PP) -> str:
+    if len(values) < 2:
+        return "unbekannt"
+    delta = values[-1] - values[0]
+    if delta > threshold_pp:
+        return "straffung"
+    if delta < -threshold_pp:
+        return "lockerung"
+    return "halten"
+
+
+def _m2_global_trend(
+    m2_us_history: list[float], m2_eurozone_history: list[float], m2_china_history: list[float]
+) -> tuple[str, str]:
+    """Mehrheitsentscheid ueber die verfuegbaren Regionen (Japan bewusst aussen vor -
+    keine Historien-Quelle, siehe api/macro.py::get_japan_m2). Prozent-Veraenderung
+    statt absoluter Summen: die drei Serien liegen in unterschiedlichen Waehrungen/
+    Einheiten vor (USD Mrd. / EUR Mio. / CNY hundert Mio.) - eine Wachstumsrate ist
+    waehrungsneutral vergleichbar, eine direkte Summe waere es nicht."""
+    trends = {
+        "USA": _pct_trend(m2_us_history),
+        "Eurozone": _pct_trend(m2_eurozone_history),
+        "China": _pct_trend(m2_china_history),
+    }
+    known = {region: t for region, t in trends.items() if t != "unbekannt"}
+    if not known:
+        return "unbekannt", "keine ausreichende M2-Historie fuer USA/Eurozone/China verfuegbar"
+    detail = ", ".join(f"{region}: {t}" for region, t in known.items())
+    steigend = sum(1 for t in known.values() if t == "steigend")
+    fallend = sum(1 for t in known.values() if t == "fallend")
+    if steigend > fallend:
+        return "steigend", detail
+    if fallend > steigend:
+        return "fallend", detail
+    return "gemischt", detail
+
+
+def _liquidity_regime(m2_trend: str, fed_direction: str, m2_detail: str) -> tuple[str, str]:
+    if m2_trend == "unbekannt" or fed_direction == "unbekannt":
+        return "unbekannt", f"zu wenig Historie ({m2_detail}; Fed-Funds-Richtung: {fed_direction})"
+    if m2_trend == "gemischt":
+        return "gemischt", f"regionale M2-Trends uneinheitlich, keine Mehrheit ({m2_detail})"
+    if m2_trend == "steigend" and fed_direction in ("lockerung", "halten"):
+        return (
+            "expansiv",
+            f"globales M2 {m2_trend} ({m2_detail}), Fed {fed_direction} - Liquidität fließt tendenziell eher in "
+            "Risiko-Assets.",
+        )
+    if m2_trend == "fallend" and fed_direction in ("straffung", "halten"):
+        return (
+            "restriktiv",
+            f"globales M2 {m2_trend} ({m2_detail}), Fed {fed_direction} - Liquidität wird tendenziell eher knapper.",
+        )
+    return (
+        "widerspruechlich",
+        f"globales M2 {m2_trend} ({m2_detail}), aber Fed {fed_direction} - gegenläufige Signale, keine klare "
+        "Einordnung möglich.",
+    )
+
+
 def determine_regime(
     btc_closes: np.ndarray,
     btc_snapshot: TechnicalSnapshot,
     macro_history: list[MacroSnapshot],
     manual_override: str,
+    fed_funds_history: list[float] | None = None,
+    m2_us_history: list[float] | None = None,
+    m2_eurozone_history: list[float] | None = None,
+    m2_china_history: list[float] | None = None,
 ) -> RegimeResult:
+    m2_trend, m2_detail = _m2_global_trend(
+        m2_us_history or [], m2_eurozone_history or [], m2_china_history or []
+    )
+    fed_direction = _fed_funds_direction(fed_funds_history or [])
+    liquiditaets_regime, liquiditaets_regime_begruendung = _liquidity_regime(m2_trend, fed_direction, m2_detail)
     ema20 = latest_value(btc_snapshot.ema[20])
     ema50 = latest_value(btc_snapshot.ema[50])
     ema200 = latest_value(btc_snapshot.ema[200])
@@ -163,6 +256,8 @@ def determine_regime(
             fear_greed_label=fgi_label,
             btc_matrix_state=btc_matrix_state,
             btc_matrix_beschreibung=btc_matrix_beschreibung,
+            liquiditaets_regime=liquiditaets_regime,
+            liquiditaets_regime_begruendung=liquiditaets_regime_begruendung,
         )
 
     return RegimeResult(
@@ -173,6 +268,8 @@ def determine_regime(
         dominance_trend_label=dominance_trend_label,
         fear_greed_value=fgi_value,
         fear_greed_label=fgi_label,
+        liquiditaets_regime=liquiditaets_regime,
+        liquiditaets_regime_begruendung=liquiditaets_regime_begruendung,
         btc_matrix_state=btc_matrix_state,
         btc_matrix_beschreibung=btc_matrix_beschreibung,
     )

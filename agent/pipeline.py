@@ -58,7 +58,9 @@ def _load_closes_and_ohlc(conn, symbol: str, coingecko_id: str):
     return dates, closes, ohlc_history, last_date
 
 
-def _update_macro_snapshot(conn, coingecko_client, fred_api_key: str | None) -> list[MacroSnapshot]:
+def _update_macro_snapshot(
+    conn, coingecko_client, fred_api_key: str | None, liquidity_context: dict
+) -> list[MacroSnapshot]:
     from api.macro import get_all_fred_rates, get_btc_dominance, get_fear_greed_index, get_pboc_lpr
 
     today = datetime.now(timezone.utc).date().isoformat()
@@ -88,9 +90,16 @@ def _update_macro_snapshot(conn, coingecko_client, fred_api_key: str | None) -> 
     except Exception as exc:
         logger.info("PBoC-LPR-Abruf fehlgeschlagen (Eastmoney): %s", exc)
 
+    m2_eurozone = liquidity_context.get("m2_eurozone_latest")
+    m2_china = liquidity_context.get("m2_china_latest")
+    m2_japan = liquidity_context.get("m2_japan_latest")
+
     any_new_value = any(
         v is not None
-        for v in (dominance, fgi_value, pboc_lpr_1y, pboc_lpr_5y, *fred_values.values())
+        for v in (
+            dominance, fgi_value, pboc_lpr_1y, pboc_lpr_5y, m2_eurozone, m2_china, m2_japan,
+            *fred_values.values(),
+        )
     )
     if any_new_value:
         db.upsert_macro_snapshot(
@@ -109,9 +118,61 @@ def _update_macro_snapshot(conn, coingecko_client, fred_api_key: str | None) -> 
                 bok_diskontsatz=fred_values.get("bok_diskontsatz"),
                 pboc_lpr_1y=pboc_lpr_1y,
                 pboc_lpr_5y=pboc_lpr_5y,
+                m2_eurozone=m2_eurozone,
+                m2_china=m2_china,
+                m2_japan=m2_japan,
             ),
         )
     return db.get_macro_snapshot_history(conn)
+
+
+def _fetch_liquidity_context(fred_api_key: str | None) -> dict:
+    """Bootstrap-Historie fuers Liquiditaets-Regime (agent/regime.py) - bewusst ein
+    frischer Live-Abruf statt aus der macro_snapshot-Akkumulation abgeleitet: die
+    Pipeline laeuft nur bei manuellem "Signal berechnen"-Klick (kein taeglicher
+    Scheduler), ueber `_dominance_direction()`-Logik haette der Liquiditaets-Trend
+    daher realistisch Monate gebraucht, um ueberhaupt einen zweiten Datenpunkt zu
+    bekommen. FRED/EZB/Eastmoney liefern die Historie aber bereits fertig - genutzt
+    statt darauf zu warten. P-10: jede Quelle einzeln versucht, ein Fehlschlag
+    blockiert die anderen nicht. Japan bewusst ohne Trend-Beitrag (keine Historien-
+    Quelle vorhanden, siehe api/macro.py::get_japan_m2 - nur der letzte Wert)."""
+    from datetime import date, timedelta
+
+    from api.macro import get_china_m2_history, get_ecb_m2_history, get_fred_history, get_japan_m2
+
+    context: dict = {
+        "fed_funds_history": [], "m2_us_history": [], "m2_eurozone_history": [], "m2_china_history": [],
+        "m2_eurozone_latest": None, "m2_china_latest": None, "m2_japan_latest": None,
+    }
+    if fred_api_key:
+        start = (date.today() - timedelta(days=200)).isoformat()
+        try:
+            obs = get_fred_history("FEDFUNDS", fred_api_key, start)
+            context["fed_funds_history"] = [o.value for o in obs if o.value is not None]
+        except Exception as exc:
+            logger.info("Fed-Funds-Rate-Historie-Abruf fehlgeschlagen: %s", exc)
+        try:
+            obs = get_fred_history("M2SL", fred_api_key, start)
+            context["m2_us_history"] = [o.value for o in obs if o.value is not None]
+        except Exception as exc:
+            logger.info("US-M2-Historie-Abruf fehlgeschlagen: %s", exc)
+    try:
+        ezb = get_ecb_m2_history(6)
+        context["m2_eurozone_history"] = [o.value for o in ezb]
+        context["m2_eurozone_latest"] = ezb[-1].value if ezb else None
+    except Exception as exc:
+        logger.info("EZB-M2-Historie-Abruf fehlgeschlagen: %s", exc)
+    try:
+        cn = get_china_m2_history(6)
+        context["m2_china_history"] = [o.value for o in cn]
+        context["m2_china_latest"] = cn[-1].value if cn else None
+    except Exception as exc:
+        logger.info("China-M2-Historie-Abruf fehlgeschlagen: %s", exc)
+    try:
+        context["m2_japan_latest"] = get_japan_m2().value
+    except Exception as exc:
+        logger.info("Japan-M2-Abruf fehlgeschlagen: %s", exc)
+    return context
 
 
 def generate_signal(
@@ -161,7 +222,8 @@ def generate_signal(
     # R-5.1 Marktregime (BTC-Trend + BTC-Dominanz + Fear&Greed).
     config_dict = config.load_config()
     btc_asset = next((a for a in watchlist if a.symbol == "BTC"), None)
-    macro_history = _update_macro_snapshot(conn, coingecko_client, fred_api_key)
+    liquidity_context = _fetch_liquidity_context(fred_api_key)
+    macro_history = _update_macro_snapshot(conn, coingecko_client, fred_api_key, liquidity_context)
     if btc_asset is not None and btc_asset.symbol != asset.symbol:
         btc_dates, btc_closes, btc_ohlc, _ = _load_closes_and_ohlc(conn, "BTC", btc_asset.coingecko_id)
         btc_snapshot = build_technical_snapshot(btc_closes, btc_dates, btc_ohlc) if len(btc_closes) else snapshot
@@ -169,7 +231,11 @@ def generate_signal(
         btc_closes, btc_snapshot = closes, snapshot
 
     regime_result = determine_regime(
-        btc_closes, btc_snapshot, macro_history, config_dict["regime"]["manueller_override"]
+        btc_closes, btc_snapshot, macro_history, config_dict["regime"]["manueller_override"],
+        fed_funds_history=liquidity_context["fed_funds_history"],
+        m2_us_history=liquidity_context["m2_us_history"],
+        m2_eurozone_history=liquidity_context["m2_eurozone_history"],
+        m2_china_history=liquidity_context["m2_china_history"],
     )
     regime_profile = config_dict["regime"]["profile"].get(regime_result.regime, {})
 

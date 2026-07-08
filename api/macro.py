@@ -179,6 +179,86 @@ def get_pboc_lpr(session: requests.Session | None = None) -> PbocLprReading:
     return PbocLprReading(date=date, lpr_1y=float(entry["LPR1Y"]), lpr_5y=float(entry["LPR5Y"]))
 
 
+def get_fred_history(
+    series_id: str, api_key: str, observation_start: str, session: requests.Session | None = None
+) -> list[FredObservation]:
+    """Fuer Trend-/Richtungsberechnungen (Liquiditaets-Regime, agent/regime.py) reicht
+    der letzte Wert allein nicht - FRED veroeffentlicht die volle Historie ueber
+    denselben Endpunkt wie `get_fred_latest`, nur mit `observation_start` statt
+    `limit=1`. Genutzt fuer Fed Funds Rate + US-M2, damit der Liquiditaets-Trend ab dem
+    ersten Lauf verfuegbar ist statt erst nach Monaten manuell angehaeufter
+    `macro_snapshot`-Zeilen (die Pipeline laeuft nur bei manuellem "Signal
+    berechnen"-Klick, kein taeglicher Scheduler - siehe agent/pipeline.py)."""
+    session = session or requests.Session()
+    response = session.get(
+        FRED_BASE_URL,
+        params={
+            "series_id": series_id,
+            "api_key": api_key,
+            "file_type": "json",
+            "sort_order": "asc",
+            "observation_start": observation_start,
+        },
+        timeout=15,
+    )
+    response.raise_for_status()
+    data = response.json()
+    return [
+        FredObservation(
+            series_id=series_id, date=o["date"], value=None if o["value"] == "." else float(o["value"])
+        )
+        for o in data["observations"]
+    ]
+
+
+def get_ecb_m2_history(n_observations: int = 13, session: requests.Session | None = None) -> list[RegionalM2Reading]:
+    """Wie `get_fred_history`: mehrere Beobachtungen statt nur der letzten, fuer den
+    Liquiditaets-Trend. `n_observations=13` deckt >1 Jahr ab (EZB-M2 ist monatlich)."""
+    session = session or requests.Session()
+    response = session.get(
+        f"{ECB_SDMX_BASE_URL}/{ECB_M2_SERIES_KEY}",
+        params={"lastNObservations": n_observations, "format": "jsondata"},
+        timeout=15,
+    )
+    response.raise_for_status()
+    data = response.json()
+    times = data["structure"]["dimensions"]["observation"][0]["values"]
+    series_key = next(iter(data["dataSets"][0]["series"]))
+    obs = data["dataSets"][0]["series"][series_key]["observations"]
+    return [
+        RegionalM2Reading(region="eurozone", date=t["id"], value=float(obs[str(i)][0]), unit="Mio. EUR")
+        for i, t in enumerate(times)
+        if str(i) in obs
+    ]
+
+
+def get_china_m2_history(n_observations: int = 13, session: requests.Session | None = None) -> list[RegionalM2Reading]:
+    """Wie `get_fred_history`: mehrere Beobachtungen statt nur der letzten, fuer den
+    Liquiditaets-Trend. `n_observations=13` deckt >1 Jahr ab (China-M2 ist monatlich)."""
+    session = session or requests.Session()
+    params = {
+        "columns": "REPORT_DATE,TIME,BASIC_CURRENCY,BASIC_CURRENCY_SAME,BASIC_CURRENCY_SEQUENTIAL",
+        "pageNumber": "1",
+        "pageSize": str(n_observations),
+        "sortColumns": "REPORT_DATE",
+        "sortTypes": "-1",
+        "source": "WEB",
+        "client": "WEB",
+        "reportName": EASTMONEY_M2_REPORT,
+    }
+    response = session.get(EASTMONEY_URL, params=params, timeout=15)
+    response.raise_for_status()
+    data = response.json()
+    entries = data["result"]["data"]
+    return [
+        RegionalM2Reading(
+            region="china", date=str(e["REPORT_DATE"]).split(" ")[0], value=float(e["BASIC_CURRENCY"]),
+            unit="hundert Mio. CNY",
+        )
+        for e in reversed(entries)  # Eastmoney liefert absteigend (neuestes zuerst) -> umdrehen fuer aufsteigend
+    ]
+
+
 def get_ecb_m2(session: requests.Session | None = None) -> RegionalM2Reading:
     """Eurozone-M2 (Average Amounts Outstanding) direkt von der EZB-eigenen SDMX-API,
     kein API-Key noetig. Live verifiziert 2026-07-08."""

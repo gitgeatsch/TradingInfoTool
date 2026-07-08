@@ -73,9 +73,14 @@ Widerstandszone" oder "Kurs zwischen dem 38,2%- und 50%-Level, kein unmittelbare
 Fibonacci-Level in der Naehe". Nenne das konkret im Feld `long_reasoning.technisch`, \
 nicht nur die Standard-Indikatoren (EMA/MACD/RSI/Bollinger) - diese Level werden \
 sonst systematisch ignoriert, obwohl sie geliefert werden.
-10. `action` MUSS EXAKT einer dieser fuenf Werte sein (Grossbuchstaben, keine Variante): \
+10. Beziehe `regime.liquiditaets_regime` (expansiv/restriktiv/gemischt/widerspruechlich/ \
+unbekannt) als ZUSAETZLICHEN Kontext in `long_reasoning.makro` ein - NICHT als harte \
+Regel wie regime.btc_matrix, sondern als beschreibende Einordnung ("globale \
+Liquiditaet expandiert/kontrahiert aktuell laut M2-Trend + Fed-Kurs"). Bei \
+`unbekannt` (zu wenig Historie) einfach nicht erwaehnen, keine Luecke erfinden.
+11. `action` MUSS EXAKT einer dieser fuenf Werte sein (Grossbuchstaben, keine Variante): \
 KAUFEN, VERKAUFEN, TAUSCHEN, HALTEN, NACHKAUFEN.
-11. Antworte AUSSCHLIESSLICH mit einem einzigen JSON-Objekt gemaess dem vorgegebenen \
+12. Antworte AUSSCHLIESSLICH mit einem einzigen JSON-Objekt gemaess dem vorgegebenen \
 Schema. Kein Markdown, keine Code-Fences, kein Text ausserhalb des JSON.
 
 SCHEMA:
@@ -219,6 +224,8 @@ def build_facts(
             },
             "btc_matrix": regime_result.btc_matrix_state,
             "btc_matrix_hinweis": regime_result.btc_matrix_beschreibung,
+            "liquiditaets_regime": regime_result.liquiditaets_regime,
+            "liquiditaets_regime_begruendung": regime_result.liquiditaets_regime_begruendung,
         },
         "regime_profil": regime_profile,
         "risiko_check": {
@@ -242,12 +249,15 @@ def build_facts(
         },
         "strategien_aktiv": strategien_aktiv,
         "disclaimers": {
-            "makro_einbezogen": False,
+            "makro_einbezogen": "teilweise",
             "sentiment_einbezogen": False,
             "hinweis": (
-                "Leitzinsen/ISM/CPI/Trueflation (Makro) und X/YouTube (Sentiment) sind in "
-                "diesem System noch nicht implementiert (Spezifikation Kap. 16 offen bzw. "
-                "Kap. 11 Roadmap Phase 4)."
+                "Makro ist NUR teilweise einbezogen: Fed-Funds-Rate-Richtung + globaler "
+                "M2-Trend (USA/Eurozone/China) fliessen ueber regime.liquiditaets_regime "
+                "ein (siehe Nutzungs-Diskussion 2026-07-08). CPI/ISM-Ersatz/Trueflation/ "
+                "einzelne Leitboersen sind weiterhin NICHT einbezogen (Spezifikation "
+                "Kap. 16 offen). Sentiment (X/YouTube) ist in diesem System noch nicht "
+                "implementiert (Kap. 11 Roadmap Phase 4)."
             ),
         },
     }

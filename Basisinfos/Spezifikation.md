@@ -174,11 +174,20 @@ Entscheidungs-Pipeline (Reihenfolge je Analyse):
    noch nicht umgesetzt. Manueller Override (`config.yaml regime.manueller_override`)
    wird respektiert (RG-8/RG-9).
 2. **R-5.2** Makro-Kontext: Leitzinsen, Risikoumfeld USA/Japan/China/EU/Korea.
-   **Weiterhin `[OFFEN]`** (Kap. 16) — bewusst NICHT Teil der Slice 1, da die
-   konkreten kostenlosen APIs für Leitzinsen/ISM/M2/CPI/Trueflation noch nicht
-   recherchiert sind. Wird im Facts-Objekt an Groq ehrlich als
-   `disclaimers.makro_einbezogen: false` ausgewiesen (P-2/P-10) statt stillschweigend
-   zu fehlen — Groq muss das im Antwortfeld `long_reasoning.makro` explizit nennen.
+   **Teilweise ERLEDIGT (2026-07-08, Nutzungs-Diskussion).** Neue Regime-Dimension
+   `liquiditaets_regime` (`agent/regime.py`) kombiniert Fed-Funds-Rate-Richtung
+   (Historie via `api/macro.py::get_fred_history`) mit dem globalen M2-Trend
+   (USA/Eurozone/China, Mehrheitsentscheid über die prozentuale Veränderung —
+   bewusst keine Währungsumrechnung/Summe, siehe Modul-Docstring) zu
+   expansiv/restriktiv/gemischt/widersprüchlich/unbekannt. Bewusst als **frischer
+   Live-Abruf pro Pipeline-Lauf** (`agent/pipeline.py::_fetch_liquidity_context`),
+   nicht aus der `macro_snapshot`-Akkumulation abgeleitet — die Pipeline läuft nur
+   bei manuellem Klick (kein täglicher Scheduler), ein reiner "erster vs. letzter
+   Snapshot"-Trend hätte real Monate gebraucht, bis genug Datenpunkte da sind. Fließt
+   als **Kontext, keine harte Regel** in `long_reasoning.makro` ein (Regel 10,
+   `agent/analyst.py`). **Weiterhin `[OFFEN]`:** CPI/ISM-Ersatz/Trueflation/einzelne
+   Leitbörsen — `disclaimers.makro_einbezogen` steht deshalb ehrlich auf
+   `"teilweise"` (P-2/P-10), nicht mehr fest auf `false`.
 3. **R-5.3** Technische Analyse je Asset: Trend, Indikatoren (Kap. 7), Fibonacci,
    Support/Resistance. **ERLEDIGT:** volle Wiederverwendung von
    `indicators/calculations.py` (`build_technical_snapshot()`, geteilt mit

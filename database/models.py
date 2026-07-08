@@ -57,6 +57,13 @@ class MacroSnapshot:
     # Endpunkt/eigene Fehlerklasse.
     pboc_lpr_1y: float | None = None
     pboc_lpr_5y: float | None = None
+    # Globale M2-Gesamtsicht (api/onchain.py::get_all_regional_m2, Spezifikation
+    # Kap. 8) - Rohwerte in ihrer jeweiligen Landeswaehrung/Einheit, bewusst NICHT
+    # umgerechnet (siehe agent/regime.py fuer die waehrungsneutrale Trendberechnung
+    # ueber Prozent-Veraenderung statt absoluter Summen).
+    m2_eurozone: float | None = None
+    m2_china: float | None = None
+    m2_japan: float | None = None
 
 
 @dataclass
