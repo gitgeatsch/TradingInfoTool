@@ -18,7 +18,7 @@
 meta:
   projekt: TradingInfoTool
   eigentuemer: Gernot Spiessmaier
-  version: 1.5
+  version: 1.6
   stand: 2026-07-08
 
 # --- Uebergeordnete Ziele / Leitplanken (siehe Spezifikation Kap. 1) ---
@@ -330,15 +330,15 @@ datenquellen:
     maerkte: [USA, Japan, China, EU, Korea]
     krypto_makro: [BTC_Dominanz, FearGreedIndex]  # ERLEDIGT 2026-07-07: api/macro.py
                                         # (CoinGecko /global + alternative.me, beide kostenlos)
-    # Quellen RECHERCHIERT + ENTSCHIEDEN 2026-07-08 (Spezifikation Kap. 8/16),
-    # Umsetzung in api/macro.py noch offen:
+    # ERLEDIGT 2026-07-08: recherchiert, implementiert UND live mit echtem Key
+    # verifiziert (Spezifikation Kap. 8):
     #   Fed/EZB/M2/CPI/ISM-Ersatz(Philly-Fed)/BoJ/BoK -> alles ueber FRED (ein Key,
     #   kostenlos, 120 Req/Min): FEDFUNDS, ECBDFR/ECBMRRFR/ECBMLFR, M2SL,
     #   CPIAUCSL/CPILFESL, GACDFSA066MSFRBPHI, IRSTCI01JPM156N, INTDSRKRM193N
-    #   (BoJ/BoK ~2 Mon. Verzug, eigene Staleness-Schwelle noetig)
-    #   PBoC -> datacenter-web.eastmoney.com (via akshare-Recherche gefunden,
-    #   2026-07-08), leichtgewichtiger requests-Call statt akshare-Dependency;
-    #   inoffiziell/reverse-engineered, siehe Spezifikation Kap. 8 fuer Details+Risiko
+    #   (BoJ/BoK ~2 Mon. Verzug, eigene Staleness-Schwelle noch zu definieren)
+    #   PBoC -> datacenter-web.eastmoney.com (via akshare-Recherche gefunden),
+    #   leichtgewichtiger requests-Call statt akshare-Dependency; inoffiziell/
+    #   reverse-engineered, siehe Spezifikation Kap. 8 fuer Details+Risiko
     #   Trueflation -> verworfen, kein kostenloser API-Zugang (nur Dashboard)
     api: "fred+eastmoney"              # FRED = St. Louis Fed, Eastmoney fuer PBoC-LPR
   sentiment:

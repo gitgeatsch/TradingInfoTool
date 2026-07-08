@@ -1,6 +1,6 @@
 # TradingInfoTool — Spezifikation (fachliche Grundlage)
 
-> **Eigentümer:** Gernot Spiessmaier · **Version:** 1.5 · **Stand:** 2026-07-08
+> **Eigentümer:** Gernot Spiessmaier · **Version:** 1.6 · **Stand:** 2026-07-08
 >
 > Dieses Dokument beschreibt **was** das Tool leisten soll und **warum** (lesbarer Teil).
 > Die konkreten, vom Programm auslesbaren **Parameter** (Watchlist, Risiko-Limits,
@@ -338,12 +338,13 @@ Näherung an dieser Stelle neu zu bewerten.
   laufend akkumulierbar. Für echte mehrjährige Rückblicke wäre ein kostenpflichtiger
   CoinGecko-Tier oder eine andere Quelle nötig (spätere Phase, falls gewünscht).
 - **Makro:** Leitzinsen (Fed, EZB, BoJ, PBoC, BoK), Leitbörsen USA/Japan/China/EU/Korea,
-  BTC-Dominanz, Fear & Greed. BTC-Dominanz/Fear&Greed sind bereits live (`api/macro.py`,
-  Phase 3 Slice 1, siehe oben). Für die übrigen Werte (Leitzinsen + Zusatzwunsch vom
-  Nutzer 2026-07-06: **ISM**, **M2-Geldmenge**, **CPI**, **Trueflation**) wurden am
-  2026-07-08 alle Quellen live recherchiert und verifiziert (nicht nur angenommen) —
-  Ergebnis, noch NICHT implementiert (nur Recherche/Entscheidung, Umsetzung folgt in
-  einer späteren Slice):
+  BTC-Dominanz, Fear & Greed. **ERLEDIGT (2026-07-08):** Alle Werte sind live in
+  `api/macro.py`/`agent/pipeline.py`/`database/models.py::MacroSnapshot` implementiert
+  UND end-to-end mit einem echten `FRED_API_KEY` verifiziert (Fed 3,63 %, EZB
+  2,25/2,40/2,65 %, M2, CPI, Philly-Fed-ISM-Ersatz, BoJ/BoK, PBoC-LPR 3,0/3,5 % —
+  alle korrekt in der DB gelandet). Für die übrigen Werte (Leitzinsen + Zusatzwunsch
+  vom Nutzer 2026-07-06: **ISM**, **M2-Geldmenge**, **CPI**, **Trueflation**) wurden am
+  2026-07-08 alle Quellen live recherchiert und verifiziert (nicht nur angenommen):
 
   - **FRED (St. Louis Fed) deckt den Grossteil ab, EINE einzige API statt der
     urspruenglich angenommenen mehreren Notenbank-Systeme:**
@@ -668,13 +669,15 @@ seinen Emotionen scheitert. Grundsatz: **antizyklisch, aber bedingt.**
 - Herleitung des `risikoappetit_faktor` aus konkreten Makro-Daten (hängt an Makro-APIs).
 
 **Daten & Betrieb:**
-- **Makro-/Zinsdaten-Quellen: RECHERCHIERT UND ENTSCHIEDEN (2026-07-08), Umsetzung
-  noch offen.** Siehe Kap. 8 für die vollständige, live verifizierte Aufstellung.
-  Kurzfassung: Fed/EZB/M2/CPI/Philly-Fed(ISM-Ersatz)/BoJ/BoK laufen über eine einzige
-  kostenlose FRED-API; PBoC braucht manuelle Monats-Pflege (keine automatisierbare
-  Quelle gefunden); Trueflation ist verworfen (kein kostenloser API-Zugang, nur
-  Dashboard). Offen: `api/macro.py` um die FRED-Anbindung erweitern, eigene
-  Staleness-Schwellen für Makro-Daten (deutlich länger als bei Preisen).
+- **Makro-/Zinsdaten-Quellen: ERLEDIGT (2026-07-08).** Siehe Kap. 8 für die
+  vollständige, live verifizierte Aufstellung. Kurzfassung: Fed/EZB/M2/CPI/
+  Philly-Fed(ISM-Ersatz)/BoJ/BoK laufen über eine einzige kostenlose FRED-API
+  (live mit echtem Key getestet); PBoC über einen Eastmoney-Endpunkt (inoffiziell,
+  aber strukturiert und live verifiziert); Trueflation ist verworfen (kein
+  kostenloser API-Zugang, nur Dashboard). **Weiterhin offen:** eigene, deutlich
+  großzügigere Staleness-Schwellen für Makro-Daten definieren (CPI/M2 sind bei
+  1-2 Monaten Alter normal aktuell, nicht "veraltet" wie bei Preisen) — Werte
+  werden bereits gespeichert, aber noch nirgends auf Alter geprüft.
 - X-API & YouTube-API: Kosten, Limits, ToS, Umsetzungsphase.
 - **E-Mail-Versand** (Kap. 13): SMTP-Server vs. Mail-API wählen; Zugangsdaten nur in `.env`.
 - **Flush-Erkennung** (AZ-1): **einfache Heuristik ERLEDIGT (2026-07-07)** —
