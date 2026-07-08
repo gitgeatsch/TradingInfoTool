@@ -408,6 +408,108 @@ Näherung an dieser Stelle neu zu bewerten.
 - **Sentiment (niedrig gewichtet):** X/Twitter (kuratierte Whitelist) und YouTube
   (ausgewählte Kanäle). `[OFFEN]` API-Kosten/ToS/Machbarkeit, spätere Phase. Sentiment
   **nie** als alleiniger Signalgeber.
+- **Globale M2-Geldmenge (Eurozone/China/Japan): ERLEDIGT (2026-07-08).** Ergänzt die
+  US-M2 (`M2SL` über FRED) um eine echte globale Liquiditätssicht, `api/onchain.py` +
+  `agent/cycles.py`-Nachbarmodul-Muster. Eurozone über die EZB-eigene SDMX-API, China
+  über denselben Eastmoney-Endpunkt wie der PBoC-LPR. **Japan ist ein HTML-Scraping-
+  Fallback**, keine echte API: die 2026 gestartete BoJ-JSON-API ließ sich trotz ~30
+  Versuchen (Query-Parameter, POST-Body-Varianten, ~15 Feldnamen) nicht ansteuern —
+  selbst `bojpy` (einzige gefundene Community-Bibliothek) scraped aus demselben Grund
+  HTML. Der Scraper sucht die M2-Spalte über ihren Namen (nicht per festem Index) und
+  wirft bei Strukturänderung einen klaren Fehler statt eines falschen Werts. Alle drei
+  live verifiziert (Mai 2026). **Korea-M2 pausiert** (5. der ursprünglich 5
+  Notenbanken Fed/EZB/BoJ/PBoC/BoK) — Quelle ist die Bank-of-Korea-eigene ECOS-API,
+  URL-Format bereits recherichert, braucht aber einen registrierten Key UND die
+  Registrierung selbst ist bis 24.07.2026 ausgesetzt (die Bank of Korea fährt vom
+  29.06.–24.07.2026 einen offiziellen Penetrationstest/"Mock Hack" gegen ECOS,
+  Instabilität ist laut eigener Ankündigung erwartet — SSL-Zertifikat bei eigener
+  Prüfung echt und gültig, kein Hinweis auf Kompromittierung). Revisit nach dem
+  24.07.2026.
+- **On-Chain-Metriken (MVRV/NUPL/Realized Price): ERLEDIGT (2026-07-08).**
+  `api/onchain.py` nutzt die **CoinMetrics Community API**
+  (`community-api.coinmetrics.io`, kein API-Key nötig, Rate-Limit 10 Req/6-Sek.-
+  Fenster) für `CapMVRVCur` (MVRV), `CapMrktCurUSD`, `SplyCur`, `PriceUSD`. NUPL und
+  Realized Price/-Cap sind dort selbst nicht frei ("forbidden" bei Live-Test), werden
+  aber **mathematisch exakt** hergeleitet (keine Näherung): `NUPL = 1 − 1/MVRV`,
+  `RealizedCap = MarketCap/MVRV`, `RealizedPrice = RealizedCap/Supply`. Live
+  verifiziert: MVRV 1,196, NUPL 0,164, Realized Price 53.046 $ vs. Kurs 63.458 $ —
+  intern konsistent. **Wichtig:** die API kennt keinen `order`-Parameter (Standard ist
+  aufsteigend nach Zeit) — `page_size` mit Puffer abfragen und den letzten Eintrag
+  nehmen, nicht `page_size=1`. **SOPR wurde endgültig verworfen** (vier Anbieter
+  geprüft: BGeometrics, CoinMetrics, Glassnode, CryptoQuant zeigen alle dasselbe
+  Muster — frei im Dashboard, API nur ab Professional-/Premium-Stufe; strukturell
+  nicht aus Bestandsgrößen wie MVRV herleitbar, da Transaktions-Ebene-Daten nötig).
+  Kein Revisit-Trigger.
+- **BTC-Log-Regression-Risk-Modell: ERLEDIGT (2026-07-08).**
+  `indicators/calculations.py::compute_btc_log_regression_risk()` — Log-Log-lineare
+  Regression (Power-Law) über die gesamte BTC-Historie seit Genesis (2009-01-03),
+  liefert Abweichung vom Regressions-Trend in Standardabweichungen + einen Risiko-Wert
+  0–1. Bewusst **nicht** die Replikation einer kommerziellen proprietären Formel,
+  sondern ein eigenes, einfaches statistisches Modell. Historie-Beschaffung brauchte
+  eine eigene Recherche: CoinGecko (365-Tage-Grenze, live bestätigt), Kraken
+  (720-Kerzen-Hardlimit, live bestätigt mit `since=2015` getestet) reichen beide nicht
+  — **Blockchain.com's Charts-API liefert die volle Historie seit Genesis**, kostenlos,
+  kein Key. Live gegen vier historische Extrempunkte (2017/2018/2021/2022 Top/Bottom)
+  geprüft — alle Richtungen korrekt.
+- **On-Chain Exchange-Reserven/Stablecoin-Supply: ERLEDIGT (2026-07-08).**
+  `api/onchain.py::get_btc_exchange_flows()` nutzt CoinMetrics
+  (`FlowInExNtv`/`FlowOutExNtv`) für Netto-Exchange-Flow (Zufluss = potenzieller
+  Verkaufsdruck, Abfluss = Akkumulation/Self-Custody).
+  `api/onchain.py::get_stablecoin_supply()` nutzt DefiLlama
+  (`stablecoins.llama.fi`, kein Key) für USDT/USDC-Gesamt-Supply (wachsende
+  Stablecoin-Supply gilt als "trockenes Pulver" am Seitenrand). Beide kostenlos, live
+  verifiziert.
+- **Derivate (Open Interest/Long-Short-Ratio): ERLEDIGT (2026-07-08).**
+  Neues Modul `api/derivatives.py` — Open Interest von Binance, Bybit und OKX
+  (Diversifikation über drei Börsen statt Einzelquelle), Long-Short-Ratio von Binance.
+  Alle öffentliche Endpunkte, kein Key nötig. Ergänzt die bereits vorhandenen
+  Kraken-Funding-Rates (Kap. 8, AZ-1-Heuristik) um eine breitere Derivate-Sicht.
+- **Ereignis-Kalender (FOMC-Termine + US-Präsidentschaftszyklus): ERLEDIGT
+  (2026-07-08).** Neues Modul `agent/cycles.py`, bewusst getrennt von den übrigen
+  `api/*.py`-Modulen, da **keine** Live-API nötig ist: `FOMC_MEETING_DATES_2026` ist
+  eine statische, öffentlich Jahre im Voraus veröffentlichte Liste
+  (federalreserve.gov/monetarypolicy/fomccalendars.htm, live verifiziert) — braucht
+  **jährliche manuelle Pflege**, kein automatischer Abruf. Der
+  Präsidentschaftszyklus-Kontext (`get_presidential_cycle_context()`) ist reine
+  Datumsrechnung (US-Wahlen sind laut Verfassung immer im November eines durch 4
+  teilbaren Jahres) mit einer deskriptiven historischen Tendenz je Zyklusjahr (Jahr 1
+  schwächstes, Jahr 3 stärkstes) — **explizit keine Prognose-Garantie**, nur
+  Kontext-Information für Groq. Ein zunächst mit erwogener FRED-Release-Calendar-Weg
+  (`release_id=101`, "FOMC Press Release") erwies sich als Fehlspur: lieferte ~187
+  tägliche Pseudo-Termine statt der ~8 echten Jahressitzungen. **Noch nicht
+  verdrahtet** — reine Datenschicht, gleiches "Datensicht vor Nutzung"-Muster wie der
+  Rest dieses Abschnitts. Weitere Ereignistypen (NFP/CPI-Release-Termine, US-Wahltermine
+  selbst, Schuldenobergrenze) wurden bewusst **nicht** in dieser Slice ergänzt (Umfang
+  als "kleinerer Punkt" begrenzt) — bei Bedarf später erweiterbar, gleiches
+  statisches Muster.
+- **Spot-ETF-Flows (IBIT/FBTC/ARKB/BITB/GBTC etc.) — offen, bedingt pausiert
+  (2026-07-08).** Mehrere echte Blockaden gefunden: Farside Investors durch
+  Cloudflare-Bot-Schutz blockiert; bitbo.io lädt Flow-Daten per JavaScript nach (kein
+  statischer Endpunkt); SoSoValue ohne dokumentierte freie API; CoinGlass
+  kostenpflichtig; Dune Analytics API-Zugang im Gratis-Tier unklar. Eine
+  Eigenkonstruktion über Shares-Outstanding-Änderungen (Yahoo Finance/Alpha Vantage)
+  wäre technisch möglich, aber deutlich komplexer. **Nutzer-Bedingung:** nur
+  weiterverfolgen, falls sich zeigt, dass diese Werte für die Agent-Entscheidungen
+  essenziell sind.
+- **Trueflation — verworfen (2026-07-08).** Kein kostenloser API-Zugang (nur
+  kostenpflichtige "API Access"-Stufe), Web-Dashboard ist kein Ersatz für
+  `api/macro.py`. Zusätzlich wich der eigene "Echtzeit"-CPI-Wert beim Live-Test
+  massiv vom offiziellen BLS-Wert ab (1,79 % vs. 4,20 % YoY). Revisit falls ein
+  echtes Gratis-API-Tier eingeführt wird.
+
+**Wichtige Klarstellung zu allen Punkten oben:** "ERLEDIGT" heißt hier ausschließlich
+die **Datenbeschaffung**. Ob/wie diese Werte tatsächlich in `agent/regime.py` oder den
+Groq-Prompt (`agent/analyst.py::build_facts()`) einfließen, ist ein separates,
+weiterhin offenes Thema (Kap. 16).
+
+**Staleness-Schwellen für Makro-/On-Chain-Daten: ERLEDIGT (2026-07-08).**
+`staleness.py::is_macro_value_stale()` mit vier Kategorien: Zinsen/Wirtschaftsdaten
+60 Tage (Notenbank-Sitzungsrhythmus/Meldeverzug), On-Chain 4 Tage, bestehende
+BTC-Dominanz/Fear&Greed (`krypto_makro`) 2 Tage. **Bekannte Einschränkung, bewusst
+nicht gelöst:** `fetched_at` ist ein Zeitstempel fürs ganze Zeilen-Upsert
+(COALESCE-Merge in `agent/pipeline.py::_update_macro_snapshot`), nicht pro Feld —
+echte feldgenaue Frische bräuchte eine Schema-Erweiterung (pro Feld ein eigenes
+"zuletzt erfolgreich aktualisiert"). Noch nicht in UI/Facts verdrahtet.
 
 ## 9. Funktionen in der Oberfläche (UI)
 
@@ -669,15 +771,15 @@ seinen Emotionen scheitert. Grundsatz: **antizyklisch, aber bedingt.**
 - Herleitung des `risikoappetit_faktor` aus konkreten Makro-Daten (hängt an Makro-APIs).
 
 **Daten & Betrieb:**
-- **Makro-/Zinsdaten-Quellen: ERLEDIGT (2026-07-08).** Siehe Kap. 8 für die
-  vollständige, live verifizierte Aufstellung. Kurzfassung: Fed/EZB/M2/CPI/
-  Philly-Fed(ISM-Ersatz)/BoJ/BoK laufen über eine einzige kostenlose FRED-API
-  (live mit echtem Key getestet); PBoC über einen Eastmoney-Endpunkt (inoffiziell,
-  aber strukturiert und live verifiziert); Trueflation ist verworfen (kein
-  kostenloser API-Zugang, nur Dashboard). **Weiterhin offen:** eigene, deutlich
-  großzügigere Staleness-Schwellen für Makro-Daten definieren (CPI/M2 sind bei
-  1-2 Monaten Alter normal aktuell, nicht "veraltet" wie bei Preisen) — Werte
-  werden bereits gespeichert, aber noch nirgends auf Alter geprüft.
+- **Makro-/Zinsdaten-Quellen, globale M2, On-Chain-Metriken, Log-Regression-Risk,
+  Exchange-Flows/Stablecoin-Supply, Derivate, Ereignis-Kalender: ERLEDIGT
+  (2026-07-08).** Siehe Kap. 8 für die vollständige, live verifizierte Aufstellung
+  inkl. Register verworfener/pausierter Quellen mit Revisit-Bedingung
+  (Korea-M2/Spot-ETF-Flows/Trueflation/SOPR). **Staleness-Schwellen für Makro-/
+  On-Chain-Daten ebenfalls ERLEDIGT** (`staleness.py::is_macro_value_stale()`, vier
+  Kategorien). **Weiterhin offen, für alle diese Punkte gemeinsam:** die eigentliche
+  Nutzung in `agent/regime.py`/`agent/analyst.py::build_facts()` — reine Datenschicht
+  bisher, noch nicht in die Regime-Bestimmung oder den Groq-Prompt verdrahtet.
 - X-API & YouTube-API: Kosten, Limits, ToS, Umsetzungsphase.
 - **E-Mail-Versand** (Kap. 13): SMTP-Server vs. Mail-API wählen; Zugangsdaten nur in `.env`.
 - **Flush-Erkennung** (AZ-1): **einfache Heuristik ERLEDIGT (2026-07-07)** —
