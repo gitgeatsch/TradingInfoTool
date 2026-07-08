@@ -1,6 +1,6 @@
 # TradingInfoTool — Spezifikation (fachliche Grundlage)
 
-> **Eigentümer:** Gernot Spiessmaier · **Version:** 1.3 · **Stand:** 2026-07-07
+> **Eigentümer:** Gernot Spiessmaier · **Version:** 1.4 · **Stand:** 2026-07-08
 >
 > Dieses Dokument beschreibt **was** das Tool leisten soll und **warum** (lesbarer Teil).
 > Die konkreten, vom Programm auslesbaren **Parameter** (Watchlist, Risiko-Limits,
@@ -338,12 +338,61 @@ Näherung an dieser Stelle neu zu bewerten.
   laufend akkumulierbar. Für echte mehrjährige Rückblicke wäre ein kostenpflichtiger
   CoinGecko-Tier oder eine andere Quelle nötig (spätere Phase, falls gewünscht).
 - **Makro:** Leitzinsen (Fed, EZB, BoJ, PBoC, BoK), Leitbörsen USA/Japan/China/EU/Korea,
-  BTC-Dominanz, Fear & Greed. Zusätzlich vom Nutzer gewünscht (2026-07-06), noch zu
-  sondieren: **ISM** (Einkaufsmanagerindex), **M2-Geldmenge**, **CPI** (Verbraucher-
-  preisindex), **Trueflation** (Echtzeit-Inflationsdaten) — und weitere vergleichbare
-  Makro-/Inflationsindikatoren. `[OFFEN]` konkrete kostenlose APIs für alle genannten
-  Werte, aktuell UND historisch. Gehört zu Phase 3 (Makro-Modul, `api/macro.py`), nicht
-  zu Phase 2.
+  BTC-Dominanz, Fear & Greed. BTC-Dominanz/Fear&Greed sind bereits live (`api/macro.py`,
+  Phase 3 Slice 1, siehe oben). Für die übrigen Werte (Leitzinsen + Zusatzwunsch vom
+  Nutzer 2026-07-06: **ISM**, **M2-Geldmenge**, **CPI**, **Trueflation**) wurden am
+  2026-07-08 alle Quellen live recherchiert und verifiziert (nicht nur angenommen) —
+  Ergebnis, noch NICHT implementiert (nur Recherche/Entscheidung, Umsetzung folgt in
+  einer späteren Slice):
+
+  - **FRED (St. Louis Fed) deckt den Grossteil ab, EINE einzige API statt der
+    urspruenglich angenommenen mehreren Notenbank-Systeme:**
+    - Fed Funds Rate: Series `FEDFUNDS`
+    - M2-Geldmenge: Series `M2SL`
+    - CPI (Headline/Core): Series `CPIAUCSL` / `CPILFESL`
+    - **EZB-Leitzinsen laufen ebenfalls über FRED** (nicht über eine separate ECB-SDW-
+      Integration, wie urspruenglich angenommen): `ECBDFR` (Einlagensatz),
+      `ECBMRRFR` (Hauptrefinanzierungssatz), `ECBMLFR` (Spitzenrefinanzierungssatz) —
+      live bis 2026-07-07 verifiziert.
+    - BoJ (Japan): `IRSTCI01JPM156N` (Tagesgeld-/Interbankensatz, OECD-Quelle),
+      **~2 Monate Meldeverzug** — eigene, grosszuegigere Staleness-Schwelle noetig.
+    - BoK (Korea): `INTDSRKRM193N` (Diskontsatz, OECD-Quelle), ebenfalls ~2 Monate
+      Verzug.
+    - **ISM Manufacturing PMI ist NICHT ueber FRED verfuegbar** (2016 wegen
+      Lizenzrechten des Institute for Supply Management entfernt). Ersatzquelle
+      DBnomics (`db.nomics.world`) hat noch Daten, ABER die letzten 4 Monatswerte
+      waren beim Live-Test (2026-07-08) offensichtlich fehlerhaft (PMI ~10-11 statt
+      der ueblichen 40-60er-Spanne) — als Quelle NICHT vertrauenswuerdig ohne eigene
+      Plausibilitaetspruefung. **Empfohlener Ersatz:** Philadelphia Fed Manufacturing
+      Index, Series `GACDFSA066MSFRBPHI`, ebenfalls ueber FRED, aktuell (bis Juni 2026
+      verifiziert), etablierter Fruehindikator, methodisch aehnlich (Diffusionsindex).
+    - FRED-API: kostenlos, Key wird sofort bei Registrierung vergeben
+      (`fredaccount.stlouisfed.org/apikeys`), 120 Requests/Minute Limit (fuer unseren
+      Bedarf grosszuegig), Nutzung fuer private/kommerzielle Projekte laut ToS erlaubt.
+  - **PBoC (China): keine automatisierbare freie Quelle gefunden.** Offizielle Quelle
+    (chinamoney.com.cn/NIFC, der amtliche LPR-Herausgeber) zeigt den aktuellen Satz nur
+    als Bild-Datei, nicht als Text/Daten — keine Automatisierung ohne OCR moeglich.
+    World Bank/IMF fuehren China-Zinsen nur mit >1 Jahr Verzug (Jahresdaten), FRED-Reihe
+    `INTDSRCNM193N` ist seit Mitte 2025 nicht mehr aktualisiert. **Empfehlung:** Da sich
+    der LPR nur ca. 1×/Monat aendert (oft ueber viele Monate unveraendert, Stand
+    2026-07-08: 13 Monate in Folge unveraendert), **manuelle Monats-Eintragung** durch
+    den Nutzer statt Automatisierung — geringer Pflegeaufwand.
+  - **Trueflation: verworfen, kein kostenloser API-Zugang.** Das Web-Dashboard ist mit
+    einem kostenlosen Konto nutzbar (1.200 Credits/90 Tage, Live-Test zeigte Daten mit
+    nur 1 Tag Verzug), aber programmatischer API-Zugang (das, was `api/macro.py`
+    braeuchte) ist laut eigener Pricing-Seite explizit NICHT in den guenstigen Stufen
+    enthalten, sondern nur in einer separaten, individuell bepreisten "API Access"-Stufe
+    — vom Nutzer am eigenen Konto bestaetigt (API-Keys vorhanden, aber ohne kostenlose
+    Variante beworben). Zusaetzlicher Vorbehalt: Truflations eigener "Echtzeit"-CPI-Wert
+    wich beim Live-Test massiv vom offiziellen BLS-Wert ab (1,79 % vs. 4,20 % YoY) —
+    andere Methodik, muesste bei Nutzung klar gekennzeichnet werden, um nicht wie ein
+    Fehler zu wirken.
+  - **Wichtig fuer die spaetere Umsetzung:** Makro-Daten haben von Natur aus einen viel
+    laengeren Meldeverzug als Krypto-Preise (CPI/M2 ueblicherweise 1-2 Monate, selbst
+    beim Erscheinen brandaktuell). Die bestehende Staleness-Logik (`staleness.py`,
+    aktuell auf Minuten/Tage fuer Preise/Historie ausgelegt) braucht fuer Makro-Daten
+    eigene, deutlich groessere Schwellen — sonst wuerden korrekte, aktuelle FRED-Daten
+    faelschlich als "veraltet" markiert.
 - **Sentiment (niedrig gewichtet):** X/Twitter (kuratierte Whitelist) und YouTube
   (ausgewählte Kanäle). `[OFFEN]` API-Kosten/ToS/Machbarkeit, spätere Phase. Sentiment
   **nie** als alleiniger Signalgeber.
@@ -597,8 +646,13 @@ seinen Emotionen scheitert. Grundsatz: **antizyklisch, aber bedingt.**
 - Herleitung des `risikoappetit_faktor` aus konkreten Makro-Daten (hängt an Makro-APIs).
 
 **Daten & Betrieb:**
-- Konkrete kostenlose APIs für Makro-/Zinsdaten — inkl. ISM, M2-Geldmenge, CPI,
-  Trueflation und weitere (siehe Kap. 8), jeweils aktuell UND historisch. Phase 3.
+- **Makro-/Zinsdaten-Quellen: RECHERCHIERT UND ENTSCHIEDEN (2026-07-08), Umsetzung
+  noch offen.** Siehe Kap. 8 für die vollständige, live verifizierte Aufstellung.
+  Kurzfassung: Fed/EZB/M2/CPI/Philly-Fed(ISM-Ersatz)/BoJ/BoK laufen über eine einzige
+  kostenlose FRED-API; PBoC braucht manuelle Monats-Pflege (keine automatisierbare
+  Quelle gefunden); Trueflation ist verworfen (kein kostenloser API-Zugang, nur
+  Dashboard). Offen: `api/macro.py` um die FRED-Anbindung erweitern, eigene
+  Staleness-Schwellen für Makro-Daten (deutlich länger als bei Preisen).
 - X-API & YouTube-API: Kosten, Limits, ToS, Umsetzungsphase.
 - **E-Mail-Versand** (Kap. 13): SMTP-Server vs. Mail-API wählen; Zugangsdaten nur in `.env`.
 - **Flush-Erkennung** (AZ-1): **einfache Heuristik ERLEDIGT (2026-07-07)** —
