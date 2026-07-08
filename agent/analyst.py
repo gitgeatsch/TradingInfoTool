@@ -48,9 +48,27 @@ System noch nicht integriert") - erfinde keine Makro-Einschaetzung.
 6. Bevorzuge bei strategisch gleichwertigen Alternativen "TAUSCHEN" (in einen \
 Stablecoin/anderes Asset) statt "VERKAUFEN", da Krypto-zu-Krypto-Tausch in Oesterreich \
 bis zur Fiat-Auszahlung steuerneutral ist - nenne dann `tauschen_target_symbol`.
-7. `action` MUSS EXAKT einer dieser fuenf Werte sein (Grossbuchstaben, keine Variante): \
+7. Bei `asset.typ == "core"` (aktuell BTC/ETH) wird eine langfristige Kernposition \
+gehalten, kein kurzfristiges Trading-Vehikel. Bewerte hier ZWEI GETRENNTE Ebenen: \
+(a) die kurz-/mittelfristige technische Lage wie bei jedem Asset, UND (b) den Status \
+der grundlegenden langfristigen These (ist sie noch intakt, oder gibt es einen echten \
+fundamentalen Bruch - z.B. ein technisches/protokollarisches Versagen, eine global \
+durchsetzbare Verbots-Regulierung? Kurzfristige Kursschwaeche oder ein schwacher \
+technischer Trend allein sind KEIN Bruch). Empfiehl VERKAUFEN/TAUSCHEN fuer \
+Core-Assets nur, wenn (b) tatsaechlich gebrochen ist. Ist nur (a) schwach, aber (b) \
+intakt, empfiehl HALTEN trotz kurzfristiger Schwaeche. Nenne im Feld \
+`long_reasoning.fundamental` IMMER explizit, ob die langfristige These aus deiner \
+Sicht intakt ist und warum - unabhaengig davon, was `action` letztlich ist.
+8. Bei `asset.typ != "core"` (taktische Assets/Altcoins) beachte `regime.btc_matrix` \
+bei der Einschaetzung bullischer technischer Signale: bei `btc_season` oder \
+`baer_flucht` sind Alt-Kaufsignale (z.B. Ausbrueche, bullische Konfluenz) mit erhoehter \
+Skepsis zu behandeln, auch wenn die Technik fuer sich genommen positiv aussieht - nenne \
+das explizit in `long_reasoning.technisch`. Bei `altseason` duerfen bullische Alt-Signale \
+mit normalem/hoeherem Vertrauen bewertet werden. Bei `nicht_verfuegbar` ignoriere diesen \
+Punkt. Diese Regel gilt NICHT fuer Core-Assets (die werden nach Regel 7 bewertet).
+9. `action` MUSS EXAKT einer dieser fuenf Werte sein (Grossbuchstaben, keine Variante): \
 KAUFEN, VERKAUFEN, TAUSCHEN, HALTEN, NACHKAUFEN.
-8. Antworte AUSSCHLIESSLICH mit einem einzigen JSON-Objekt gemaess dem vorgegebenen \
+10. Antworte AUSSCHLIESSLICH mit einem einzigen JSON-Objekt gemaess dem vorgegebenen \
 Schema. Kein Markdown, keine Code-Fences, kein Text ausserhalb des JSON.
 
 SCHEMA:
@@ -192,6 +210,8 @@ def build_facts(
                 "wert": regime_result.fear_greed_value,
                 "einstufung": regime_result.fear_greed_label,
             },
+            "btc_matrix": regime_result.btc_matrix_state,
+            "btc_matrix_hinweis": regime_result.btc_matrix_beschreibung,
         },
         "regime_profil": regime_profile,
         "risiko_check": {

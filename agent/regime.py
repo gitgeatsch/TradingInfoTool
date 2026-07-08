@@ -19,6 +19,32 @@ from indicators.calculations import TechnicalSnapshot, latest_value
 
 REGIME_STATES = ("krise_extrem", "baer", "seitwaerts", "bulle", "euphorie_extrem")
 
+# RG-2 BTC-Matrix (Spezifikation Kap. 14): ordnet zusammen mit dem BTC-Trend die
+# BTC-Dominanz-Richtung ein, um Alt-Signale (nicht Core-Assets) im richtigen Kontext
+# zu lesen - z.B. ist ein bullischer Alt-Ausbruch in "btc_season" meist eine Falle.
+BTC_MATRIX = {
+    ("aufwaerts", "steigend"): (
+        "btc_season",
+        "BTC steigt, Dominanz steigt (BTC-Season): Kapital rotiert eher in BTC als in "
+        "Alts - Alt-Ausbrueche mit Skepsis behandeln, viele erweisen sich als Fallen.",
+    ),
+    ("aufwaerts", "fallend"): (
+        "altseason",
+        "BTC steigt, Dominanz faellt (Altseason-Tendenz): Kapital rotiert von BTC in "
+        "Alts - Alt-Ausbrueche sind eher vertrauenswuerdig.",
+    ),
+    ("abwaerts", "steigend"): (
+        "baer_flucht",
+        "BTC faellt, Dominanz steigt (klassischer Baer/Flucht in BTC): Alt-Ausbrueche "
+        "meist Fallen - erhoehte Vorsicht bei Alt-Kaufsignalen.",
+    ),
+    ("abwaerts", "fallend"): (
+        "unklar_defensiv",
+        "BTC faellt, Dominanz faellt gleichzeitig (unueblich, ggf. breiter Risk-Off "
+        "inkl. BTC-Abfluss): uneindeutige Lage, tendenziell defensiv einordnen.",
+    ),
+}
+
 
 @dataclass
 class RegimeResult:
@@ -29,6 +55,8 @@ class RegimeResult:
     dominance_trend_label: str
     fear_greed_value: int | None
     fear_greed_label: str | None
+    btc_matrix_state: str
+    btc_matrix_beschreibung: str
 
 
 def _btc_change_pct(btc_closes: np.ndarray, days: int = 30) -> float | None:
@@ -37,16 +65,28 @@ def _btc_change_pct(btc_closes: np.ndarray, days: int = 30) -> float | None:
     return float((btc_closes[-1] - btc_closes[-days - 1]) / btc_closes[-days - 1] * 100)
 
 
-def _dominance_trend(macro_history: list[MacroSnapshot]) -> str:
+def _dominance_direction(macro_history: list[MacroSnapshot]) -> tuple[str, float | None, str | None]:
+    """Gibt (richtung, delta, seit_datum) zurueck - richtung in
+    {"steigend","fallend","gleichbleibend","unbekannt"}. Einzige Quelle fuer den
+    Schwellenwert (0.5 Prozentpunkte), sowohl fuer das Anzeige-Label als auch fuer
+    die BTC-Matrix genutzt."""
     with_dominance = [m for m in macro_history if m.btc_dominance_pct is not None]
     if len(with_dominance) < 2:
-        return "nicht verfügbar (nur 1 Messpunkt)"
+        return "unbekannt", None, None
     delta = with_dominance[-1].btc_dominance_pct - with_dominance[0].btc_dominance_pct
+    since = with_dominance[0].date
     if delta > 0.5:
-        return f"steigend ({delta:+.2f} Prozentpunkte seit {with_dominance[0].date})"
+        return "steigend", delta, since
     if delta < -0.5:
-        return f"fallend ({delta:+.2f} Prozentpunkte seit {with_dominance[0].date})"
-    return f"gleichbleibend ({delta:+.2f} Prozentpunkte seit {with_dominance[0].date})"
+        return "fallend", delta, since
+    return "gleichbleibend", delta, since
+
+
+def _dominance_trend_label(macro_history: list[MacroSnapshot]) -> str:
+    richtung, delta, since = _dominance_direction(macro_history)
+    if richtung == "unbekannt":
+        return "nicht verfügbar (nur 1 Messpunkt)"
+    return f"{richtung} ({delta:+.2f} Prozentpunkte seit {since})"
 
 
 def determine_regime(
@@ -62,15 +102,28 @@ def determine_regime(
 
     if ema20 is not None and ema50 is not None and ema200 is not None:
         if ema20 > ema50 > ema200:
+            btc_direction = "aufwaerts"
             btc_trend_label = "aufwärts (EMA20 > EMA50 > EMA200)"
         elif ema20 < ema50 < ema200:
+            btc_direction = "abwaerts"
             btc_trend_label = "abwärts (EMA20 < EMA50 < EMA200)"
         else:
+            btc_direction = "gemischt"
             btc_trend_label = "gemischt"
     else:
+        btc_direction = "unbekannt"
         btc_trend_label = "nicht verfügbar (zu wenig Historie)"
 
-    dominance_trend_label = _dominance_trend(macro_history)
+    dominance_direction, _, _ = _dominance_direction(macro_history)
+    dominance_trend_label = _dominance_trend_label(macro_history)
+    btc_matrix_state, btc_matrix_beschreibung = BTC_MATRIX.get(
+        (btc_direction, dominance_direction),
+        (
+            "nicht_verfuegbar",
+            "BTC-Trend und/oder Dominanz-Trend nicht eindeutig genug fuer eine "
+            "Matrix-Einordnung (z.B. gemischter Trend oder nur ein Dominanz-Messpunkt).",
+        ),
+    )
 
     latest_macro = macro_history[-1] if macro_history else None
     fgi_value = latest_macro.fear_greed_value if latest_macro else None
@@ -108,6 +161,8 @@ def determine_regime(
             dominance_trend_label=dominance_trend_label,
             fear_greed_value=fgi_value,
             fear_greed_label=fgi_label,
+            btc_matrix_state=btc_matrix_state,
+            btc_matrix_beschreibung=btc_matrix_beschreibung,
         )
 
     return RegimeResult(
@@ -118,4 +173,6 @@ def determine_regime(
         dominance_trend_label=dominance_trend_label,
         fear_greed_value=fgi_value,
         fear_greed_label=fgi_label,
+        btc_matrix_state=btc_matrix_state,
+        btc_matrix_beschreibung=btc_matrix_beschreibung,
     )
