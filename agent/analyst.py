@@ -66,9 +66,16 @@ Skepsis zu behandeln, auch wenn die Technik fuer sich genommen positiv aussieht 
 das explizit in `long_reasoning.technisch`. Bei `altseason` duerfen bullische Alt-Signale \
 mit normalem/hoeherem Vertrauen bewertet werden. Bei `nicht_verfuegbar` ignoriere diesen \
 Punkt. Diese Regel gilt NICHT fuer Core-Assets (die werden nach Regel 7 bewertet).
-9. `action` MUSS EXAKT einer dieser fuenf Werte sein (Grossbuchstaben, keine Variante): \
+9. Ordne den aktuellen Kurs EXPLIZIT relativ zu `technische_analyse.fibonacci` \
+(Fibonacci-Retracement-Level) und `technische_analyse.support_resistance` ein - \
+z.B. "Kurs nahe dem 61,8%-Retracement bei X - historisch oft eine Unterstuetzungs-/ \
+Widerstandszone" oder "Kurs zwischen dem 38,2%- und 50%-Level, kein unmittelbares \
+Fibonacci-Level in der Naehe". Nenne das konkret im Feld `long_reasoning.technisch`, \
+nicht nur die Standard-Indikatoren (EMA/MACD/RSI/Bollinger) - diese Level werden \
+sonst systematisch ignoriert, obwohl sie geliefert werden.
+10. `action` MUSS EXAKT einer dieser fuenf Werte sein (Grossbuchstaben, keine Variante): \
 KAUFEN, VERKAUFEN, TAUSCHEN, HALTEN, NACHKAUFEN.
-10. Antworte AUSSCHLIESSLICH mit einem einzigen JSON-Objekt gemaess dem vorgegebenen \
+11. Antworte AUSSCHLIESSLICH mit einem einzigen JSON-Objekt gemaess dem vorgegebenen \
 Schema. Kein Markdown, keine Code-Fences, kein Text ausserhalb des JSON.
 
 SCHEMA:
