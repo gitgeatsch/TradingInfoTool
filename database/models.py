@@ -15,7 +15,10 @@ class Holding:
 @dataclass
 class PriceSnapshot:
     symbol: str
-    coingecko_id: str
+    # None fuer Nicht-Krypto-Assets (Multi-Asset-Tracking, Nutzer-Idee 2026-07-09) -
+    # kein Default, bleibt bewusst ein Pflichtfeld, das jeder Aufrufer explizit setzt
+    # (verhindert versehentliches Vergessen bei neuen Aufrufstellen).
+    coingecko_id: str | None
     price_usd: float | None
     price_eur: float | None
     market_cap_usd: float | None

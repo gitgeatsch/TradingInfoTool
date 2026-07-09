@@ -31,7 +31,19 @@ class WatchlistAsset:
     name: str
     typ: str        # core | taktisch | stablecoin
     status: str     # aktiv | watchlist
-    coingecko_id: str
+    # coingecko_id ist nur fuer assetklasse=krypto gesetzt; optional statt required,
+    # damit Aktien/ETF/Rohstoffe (kein CoinGecko-Eintrag) denselben Datentyp nutzen
+    # koennen (Multi-Asset-Tracking, Nutzer-Idee 2026-07-09, siehe Spezifikation Kap. 11
+    # "Zielarchitektur fuer Multi-Asset-Erweiterbarkeit").
+    coingecko_id: str | None = None
+    # Default "krypto" erhaelt Rueckwaertskompatibilitaet fuer alle bestehenden
+    # config.yaml-Eintraege, ohne dass dort ueberall assetklasse: krypto ergaenzt
+    # werden muss.
+    assetklasse: str = "krypto"  # krypto | aktien | etf | rohstoffe
+    # Nur fuer assetklasse != krypto gesetzt - Ticker-Format fuer api/yfinance_client.py
+    # (z.B. "VST" fuer US-Aktien, "VVMX.DE" fuer Xetra, ISIN+".SG" fuer duenn gehandelte
+    # WisdomTree-ETNs ohne Xetra-Kurzcode bei Yahoo Finance).
+    yfinance_symbol: str | None = None
 
 
 def load_config() -> dict:
@@ -50,7 +62,9 @@ def get_watchlist() -> list[WatchlistAsset]:
             name=entry["name"],
             typ=entry["typ"],
             status=entry["status"],
-            coingecko_id=entry["coingecko_id"],
+            coingecko_id=entry.get("coingecko_id"),
+            assetklasse=entry.get("assetklasse", "krypto"),
+            yfinance_symbol=entry.get("yfinance_symbol"),
         )
         for entry in config["watchlist"]
     ]
@@ -80,7 +94,15 @@ def _find_watchlist_insert_point(lines: list[str]) -> int:
     return insert_at
 
 
-def add_watchlist_entry(symbol: str, name: str, typ: str, status: str, coingecko_id: str) -> None:
+def add_watchlist_entry(
+    symbol: str,
+    name: str,
+    typ: str,
+    status: str,
+    coingecko_id: str | None = None,
+    assetklasse: str = "krypto",
+    yfinance_symbol: str | None = None,
+) -> None:
     """Fügt einen neuen Eintrag ans Ende des bestehenden `watchlist:`-Blocks in
     Basisinfos/config.yaml an - reine TEXT-Einfügung (keine vollständige YAML-
     Neuserialisierung mit `yaml.dump()`), damit Kommentare/Formatierung im Rest der
@@ -89,21 +111,41 @@ def add_watchlist_entry(symbol: str, name: str, typ: str, status: str, coingecko
     (.claude/backups/config.yaml.<Zeitstempel>.bak), validiert die neue Datei per
     `yaml.safe_load()` und stellt bei Fehlschlag automatisch das Backup wieder her
     (Fail-Loud, P-10) - kein stiller Teilerfolg. Nutzer-Wunsch (2026-07-09), ersetzt
-    den reinen Copy-Paste-YAML-Weg aus Marktscan Stufe B/C/D."""
+    den reinen Copy-Paste-YAML-Weg aus Marktscan Stufe B/C/D.
+
+    `assetklasse`/`yfinance_symbol` sind fuer Multi-Asset-Tracking (Aktien/ETF/
+    Rohstoffe, Nutzer-Idee 2026-07-09) ergaenzt - Default bleibt "krypto" ohne
+    Zusatzzeilen, damit bestehende Aufrufer (UI-Watchlist-Button, Marktscan)
+    unveraendert funktionieren und der geschriebene Block fuer Krypto-Eintraege
+    exakt wie bisher aussieht."""
     if any(existing.symbol == symbol for existing in get_watchlist()):
         raise WatchlistWriteError(f"{symbol} ist bereits in der Watchlist - keine Änderung vorgenommen")
 
-    original_text = CONFIG_PATH.read_text(encoding="utf-8")
+    # Bewusst read_bytes()/write_bytes() statt read_text()/write_text(): Letzteres
+    # uebersetzt beim Schreiben unter Windows JEDES "\n" in "\r\n" (Python-Standard-
+    # verhalten bei newline=None), was die komplette Datei von LF auf CRLF umgestellt
+    # haette - genau das "byte-fuer-byte unangetastet"-Versprechen oben gebrochen
+    # haette. Zeilenende-Stil wird stattdessen aus der Originaldatei erkannt und fuer
+    # die neuen Zeilen exakt uebernommen (gefunden + gefixt 2026-07-09).
+    original_bytes = CONFIG_PATH.read_bytes()
+    newline_style = "\r\n" if b"\r\n" in original_bytes else "\n"
+    original_text = original_bytes.decode("utf-8")
     lines = original_text.splitlines(keepends=True)
     insert_at = _find_watchlist_insert_point(lines)
 
-    entry_block = (
-        f"  - symbol: {symbol}\n"
-        f"    name: {name}\n"
-        f"    typ: {typ}\n"
-        f"    status: {status}\n"
-        f"    coingecko_id: {coingecko_id}\n"
-    )
+    entry_lines = [
+        f"  - symbol: {symbol}{newline_style}",
+        f"    name: {name}{newline_style}",
+        f"    typ: {typ}{newline_style}",
+        f"    status: {status}{newline_style}",
+    ]
+    if coingecko_id is not None:
+        entry_lines.append(f"    coingecko_id: {coingecko_id}{newline_style}")
+    if assetklasse != "krypto":
+        entry_lines.append(f"    assetklasse: {assetklasse}{newline_style}")
+    if yfinance_symbol is not None:
+        entry_lines.append(f"    yfinance_symbol: {yfinance_symbol}{newline_style}")
+    entry_block = "".join(entry_lines)
     new_text = "".join(lines[:insert_at] + [entry_block] + lines[insert_at:])
 
     BACKUP_DIR.mkdir(parents=True, exist_ok=True)
@@ -111,7 +153,7 @@ def add_watchlist_entry(symbol: str, name: str, typ: str, status: str, coingecko
     backup_path = BACKUP_DIR / f"config.yaml.{timestamp}.bak"
     shutil.copy2(CONFIG_PATH, backup_path)
 
-    CONFIG_PATH.write_text(new_text, encoding="utf-8")
+    CONFIG_PATH.write_bytes(new_text.encode("utf-8"))
 
     try:
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:

@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS holdings (
 
 CREATE TABLE IF NOT EXISTS price_cache (
     symbol          TEXT NOT NULL,
-    coingecko_id    TEXT NOT NULL,
+    coingecko_id    TEXT,
     price_usd       REAL,
     price_eur       REAL,
     market_cap_usd  REAL,
@@ -223,12 +223,47 @@ def _migrate_signal_umsetzung_columns(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+def _migrate_price_cache_nullable_coingecko_id(conn: sqlite3.Connection) -> None:
+    """price_cache.coingecko_id war urspruenglich NOT NULL (reines Krypto-Schema) -
+    fuer Multi-Asset-Tracking (Nutzer-Idee 2026-07-09, Aktien/ETF/Rohstoffe ohne
+    CoinGecko-ID) muss die Spalte NULL erlauben. SQLite kennt kein ALTER COLUMN,
+    daher Tabellen-Neubau (Standard-SQLite-Migrationsmuster): neue Tabelle mit
+    korrigiertem Schema anlegen, Daten kopieren, alte Tabelle ersetzen. Idempotent -
+    ueberspringt, wenn die Spalte bereits NULL erlaubt (z.B. frische DB, _SCHEMA
+    liefert das direkt)."""
+    columns = conn.execute("PRAGMA table_info(price_cache)").fetchall()
+    coingecko_id_col = next(c for c in columns if c["name"] == "coingecko_id")
+    if coingecko_id_col["notnull"] == 0:
+        return
+
+    conn.execute(
+        """
+        CREATE TABLE price_cache_new (
+            symbol          TEXT NOT NULL,
+            coingecko_id    TEXT,
+            price_usd       REAL,
+            price_eur       REAL,
+            market_cap_usd  REAL,
+            volume_24h_usd  REAL,
+            change_24h_pct  REAL,
+            fetched_at      TEXT NOT NULL,
+            PRIMARY KEY (symbol, fetched_at)
+        )
+        """
+    )
+    conn.execute("INSERT INTO price_cache_new SELECT * FROM price_cache")
+    conn.execute("DROP TABLE price_cache")
+    conn.execute("ALTER TABLE price_cache_new RENAME TO price_cache")
+    conn.commit()
+
+
 def init_db(conn: sqlite3.Connection) -> None:
     conn.executescript(_SCHEMA)
     conn.commit()
     _migrate_macro_snapshot_columns(conn)
     _migrate_marktscan_candidates_columns(conn)
     _migrate_signal_umsetzung_columns(conn)
+    _migrate_price_cache_nullable_coingecko_id(conn)
 
 
 def is_first_run(conn: sqlite3.Connection) -> bool:

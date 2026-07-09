@@ -9,6 +9,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import database.db as db
 from api.history import backfill_all
 from api.kraken_history import backfill_all_ohlc
+from api.yfinance_client import YFinanceClient
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +19,11 @@ REFRESH_INTERVAL_MINUTES = 15  # Verbrauchsreduzierung: 15 statt 5 Min (siehe Ka
 HISTORY_REFRESH_INTERVAL_HOURS = 24
 OHLC_REFRESH_INTERVAL_HOURS = 24  # eigener Job, oeffentliche Kraken-Endpunkte teilen sich
 # kein Kontingent mit CoinGecko - unabhaengig vom Historie-Refresh getaktet
+SECURITIES_REFRESH_INTERVAL_MINUTES = 15  # eigener Job (Multi-Asset-Tracking,
+# Nutzer-Idee 2026-07-09) - yfinance hat keine offizielle Rate-Limit-Dokumentation,
+# defensiv aehnlich wie der Krypto-Preis-Takt gewaehlt. Bewusst ein SEPARATER Job statt
+# in refresh_prices_job() mit hineingemischt, damit ein yfinance-Ausfall den Krypto-
+# Preis-Takt nicht blockiert (P-10-Isolation, gleiches Prinzip wie der Kraken-OHLC-Job).
 
 
 def refresh_prices_job(client, conn_factory, watchlist) -> None:
@@ -29,6 +35,23 @@ def refresh_prices_job(client, conn_factory, watchlist) -> None:
         logger.info("Preis-Refresh: %d/%d Assets aktualisiert", len(snapshots), len(watchlist))
     except Exception:
         logger.exception("Preis-Refresh fehlgeschlagen")
+    finally:
+        conn.close()
+
+
+def refresh_securities_prices_job(client, conn_factory, watchlist) -> None:
+    """Multi-Asset-Tracking (Nutzer-Idee 2026-07-09): Preis-Refresh fuer Aktien/ETF/
+    Rohstoffe ueber yfinance, analog zu refresh_prices_job() fuer Krypto. Assets mit
+    assetklasse == 'krypto' werden von YFinanceClient.fetch_price_snapshots() selbst
+    uebersprungen, kein Vorfiltern hier noetig."""
+    conn = conn_factory()
+    try:
+        snapshots = client.fetch_price_snapshots(watchlist)
+        for snapshot in snapshots:
+            db.insert_price_snapshot(conn, snapshot)
+        logger.info("Wertpapier-Preis-Refresh: %d Assets aktualisiert", len(snapshots))
+    except Exception:
+        logger.exception("Wertpapier-Preis-Refresh fehlgeschlagen")
     finally:
         conn.close()
 
@@ -142,6 +165,13 @@ def build_scheduler(
         hours=OHLC_REFRESH_INTERVAL_HOURS,
         args=[kraken_client, db_conn_factory, watchlist],
         id="refresh_ohlc",
+    )
+    scheduler.add_job(
+        refresh_securities_prices_job,
+        "interval",
+        minutes=SECURITIES_REFRESH_INTERVAL_MINUTES,
+        args=[YFinanceClient(), db_conn_factory, watchlist],
+        id="refresh_securities_prices",
     )
     # MS-3: erster CronTrigger im Projekt (bisherige Jobs nutzen nur "interval") -
     # feste Uhrzeiten statt Intervall, siehe config.yaml marktscan.zeiten.
