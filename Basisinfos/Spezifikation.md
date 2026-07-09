@@ -625,7 +625,15 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
   (keine Versionierung/kein Git-Commit). Erstbefüllung per Datei-Import aus
   `Basisinfos/Assets.xlsx`; danach Aktualisierung über die GUI oder erneuten Import.
   Watchlist-Zugehörigkeit und Asset-Metadaten (Typ, Status, CoinGecko-ID) bleiben in
-  `config.yaml`, da sie nicht personenbezogen/sensibel sind.
+  `config.yaml`, da sie nicht personenbezogen/sensibel sind. **Export-Gegenstück
+  ERLEDIGT (2026-07-09, Nutzer-Idee):** "Bestände exportieren…" schreibt den
+  aktuellen `holdings`-Stand in eine SEPARATE, neue Datei (`Basisinfos/
+  Assets_export.xlsx`, ebenfalls nicht versioniert) — bewusst NICHT als In-Place-
+  Überschreibung der handgepflegten Original-Assets.xlsx (gleiches Risiko wie ein
+  voller `config.yaml`-Rundlauf: Formatierung/Zusatzspalten könnten verlorengehen).
+  "Bestände aus Datei importieren…" (Filedialog) rundet das zum echten
+  Export→Bearbeiten→Import-Workflow ab, ohne dass der Nutzer die exportierte Datei
+  manuell über Assets.xlsx kopieren muss.
 - **B-6** Persistenz erweitert um: neu vom Marktscan entdeckte Assets (Kap. 13),
   Regime-Verlauf und alle Overrides (Quelle, Grund, Zeitpunkt, Dauer — Kap. 14) sowie
   antizyklische Kaufpläne/Tranchen-Status (Kap. 15) — für Nachvollziehbarkeit (Z-4).
