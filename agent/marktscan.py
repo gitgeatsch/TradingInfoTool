@@ -32,6 +32,7 @@ import numpy as np
 
 import database.db as db
 from agent.regime import RegimeResult
+from agent.risk_gate import small_cap_budget_headroom
 from api.coingecko import CoinGeckoClient, MarketCoin
 from api.history import backfill_history
 from config import WatchlistAsset
@@ -346,6 +347,9 @@ def run_scan(
     kontext_score, kontext_signale = score_kontext_makro(regime_result)
     gewichte = config_dict["regime"]["profile"].get(regime_result.regime, {})
 
+    holdings = db.get_all_holdings(conn)
+    latest_prices = db.get_latest_prices(conn)
+
     candidates: list[MarktscanCandidate] = []
     for coingecko_id, entry in raw.items():
         if _duplicate_should_skip(conn, coingecko_id, watchlist):
@@ -365,9 +369,23 @@ def run_scan(
             "technik": tech_score, "fundamental": fund_score, "momentum": mom_score,
             "kontext_makro": kontext_score,
         }
+        small_cap_budget_hinweis = None
         if stufe_a.bestanden:
             score_gesamt = combine_scores(scores, gewichte)
             einstufung, einstufung_begruendung = classify(score_gesamt, marktscan_cfg["schwellen"])
+            # Stufe D + Small-Cap-Budget: ein Tier-3-Kaufkandidat ohne Budget-Headroom
+            # wird auf watchlist_wuerdig heruntergestuft - sonst wuerde ein
+            # "Kaufkandidat" angezeigt, den agent/risk_gate.py::pre_check() beim
+            # Versuch sofort veto'en wuerde (R-5.10, siehe Plan).
+            if einstufung == "kaufkandidat" and stufe_a.tier == "tier3":
+                headroom = small_cap_budget_headroom(watchlist, holdings, latest_prices, regime_result, config_dict)
+                if headroom <= 0:
+                    small_cap_budget_hinweis = (
+                        f"Score erreicht die Kaufkandidat-Schwelle, aber Small-Cap-Budget im "
+                        f"Regime '{regime_result.regime}' bereits ausgeschöpft (Headroom {headroom:.1f} "
+                        "Prozentpunkte) - auf watchlist_wuerdig heruntergestuft."
+                    )
+                    einstufung = "watchlist_wuerdig"
         else:
             score_gesamt = None
             einstufung, einstufung_begruendung = "kein_treffer", f"Stufe A nicht bestanden: {stufe_a.begruendung}"
@@ -391,6 +409,7 @@ def run_scan(
             gewichte_json=json.dumps(gewichte, ensure_ascii=False),
             regime_bei_scan=regime_result.regime,
             einstufung=einstufung, einstufung_begruendung=einstufung_begruendung,
+            small_cap_budget_hinweis=small_cap_budget_hinweis,
         )
         db.upsert_marktscan_candidate(conn, candidate)
         candidates.append(candidate)
