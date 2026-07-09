@@ -679,6 +679,65 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
 > Architektur: Datenquellen, Indikatoren und Strategien als austauschbare Module
 > (Plug-in-Prinzip) anlegen, damit Erweiterungen ohne Kern-Umbau möglich sind.
 
+### Zielarchitektur für Multi-Asset-Erweiterbarkeit `[Idee 2026-07-09, noch nicht umgesetzt]`
+
+Code-Analyse (2026-07-09) hat gezeigt: die Kopplung an Krypto ist nicht oberflächlich,
+sondern reicht bis in den Kern der Agent-Entscheidungslogik. Bevor Phase 6 (Aktien/
+ETF/Rohstoffe) tatsächlich angegangen wird, gilt folgende Zielarchitektur als
+Leitplanke — **noch nicht implementiert**, nur festgehalten, damit spätere
+Erweiterungen ohne Kern-Umbau möglich sind:
+
+**Bereits assetklassen-agnostisch, direkt wiederverwendbar:**
+- Technische Indikatoren (`indicators/calculations.py` — RSI/MACD/EMA/Bollinger
+  funktionieren auf jeder Kursreihe unabhängig von der Assetklasse).
+- `holdings`-Tabelle (bereits generisch auf `symbol` geschlüsselt, keine
+  Krypto-Annahme im Schema).
+- UI-Layer (Treeview-Tabs, `ui/theme.py`, `ui/sortable_tree.py`), Excel-Import/
+  Export-Mechanismus.
+- Makro-Daten (FRED/EZB/PBoC-Leitzinsen, M2, CPI, FOMC-Kalender — relevant für alle
+  Assetklassen, nicht nur Krypto).
+
+**Tief Krypto-spezifisch, braucht eigene Module statt Wiederverwendung:**
+- Datenquellen (CoinGecko/Kraken/Bitpanda sind reine Krypto-Anbindungen — für
+  Aktien/ETF/Rohstoffe braucht es eigene Provider).
+- `agent/regime.py`: Regime-Bestimmung ist im Kern BTC-Dominanz-/BTC-Matrix-basiert,
+  nicht neutral verallgemeinerbar.
+- `agent/risk_gate.py`: Stablecoins als Cash-Reserve-Ersatz — hat kein Äquivalent
+  bei Aktien (dort wäre Cash echtes Bargeld/Geldmarkt).
+- On-Chain-Metriken (MVRV/NUPL/Exchange-Flows) und Krypto-Derivate (OI/Long-Short)
+  sind außerhalb von Krypto bedeutungslos.
+
+**Entscheidung (Empfehlung, mit Nutzer abgestimmt 2026-07-09): eigene Agent-Logik
+pro Assetklasse, aber EINE gemeinsame Datenbank — keine separate DB je Assetklasse.**
+Eine vollständig getrennte Datenbank je Assetklasse würde die eigentliche Stärke
+eines Gesamtportfolios verhindern (echte Netto-Vermögensübersicht über
+Krypto+Aktien+Rohstoffe hinweg, siehe Portfolio-Tab/Gesamtwert). Stattdessen:
+
+1. **Eigene Agent-Module je Assetklasse** (z. B. `agent/krypto/regime.py`,
+   `agent/aktien/regime.py`, jeweils mit eigenem Risiko-Gate/Facts-Schema/
+   Groq-Prompt) statt einem Versuch, eine "universelle" Regime-Engine zu bauen, die
+   sowohl BTC-Dominanz als auch P/E-Ratios/Sektor-Rotation/VIX abdecken müsste — das
+   würde entweder zu einer aufgeblähten If/Else-Kaskade oder zu einem verwässerten
+   kleinsten gemeinsamen Nenner führen, der die bereits gebaute Krypto-Feinheit
+   (BTC-Zyklus-Risk-Modell, antizyklische Flush-Erkennung, Stablecoin-Cash-Logik)
+   verlieren würde.
+2. **DB-Schema generalisieren, aber erst beim ersten echten Zweit-Asset**, nicht
+   spekulativ vorab: `price_history`/`price_cache`/`marktscan_candidates` hängen
+   aktuell hart an `coingecko_id` als Schlüssel — müsste auf eine generische
+   `(asset_id, asset_klasse)`-Kennung umgestellt werden. `holdings` bräuchte nur
+   eine zusätzliche `asset_klasse`-Spalte zum Filtern/Routen. Bewusst NICHT vorab
+   umbauen, ohne einen konkreten zweiten Anwendungsfall vor Augen — sonst besteht
+   das Risiko, die Abstraktion falsch zu treffen (YAGNI).
+3. **Eine Assetklasse zuerst konkret durchziehen, nicht alle gleichzeitig** —
+   Aktien wären der pragmatischste Einstieg (freie Datenquellen wie yfinance
+   großzügiger als bei Rohstoffen), bevor ETFs/Rohstoffe folgen.
+4. **Günstige, risikoarme Vorbereitung, die schon vor einem konkreten Zweit-Asset
+   sinnvoll ist:** `agent/*.py` bei Gelegenheit unter einen Namespace verschieben
+   (`agent/krypto/*` statt `agent/*`) — rein mechanisches Refactoring, legt aber das
+   Muster fest, sodass eine zweite Assetklasse später additiv reinkommt statt einen
+   bestehenden Umbau zu erzwingen. Noch nicht terminiert, kann bei nächster
+   Gelegenheit als kleiner Zwischenschritt erfolgen.
+
 ## 12. Rechtlicher Hinweis
 
 Das Tool dient der privaten Information und Entscheidungsunterstützung und stellt
@@ -963,6 +1022,18 @@ seinen Emotionen scheitert. Grundsatz: **antizyklisch, aber bedingt.**
   bisher, noch nicht in die Regime-Bestimmung oder den Groq-Prompt verdrahtet.
 - X-API & YouTube-API: Kosten, Limits, ToS, Umsetzungsphase.
 - **E-Mail-Versand** (Kap. 13): SMTP-Server vs. Mail-API wählen; Zugangsdaten nur in `.env`.
+- **Web-Oberfläche für Fernzugriff** `[OFFEN, Idee 2026-07-09]`: zusätzlich zur
+  lokalen tkinter-Desktop-App soll perspektivisch ein Web-GUI möglich sein, um von
+  einem anderen Gerät (z. B. unterwegs, vom Notebook auf eine auf dem Desktop
+  laufende Instanz) auf die App zuzugreifen. Bisher **nirgends im Code oder in der
+  Architektur vorbereitet** — kein Web-Framework in `requirements.txt`, `ui/*.py`
+  ist direkt an tkinter/ttk gekoppelt (keine Trennung von Anzeige-Logik und
+  Business-Logik, die eine zweite Oberfläche einfach wiederverwenden könnte). Vor
+  einer Umsetzung zu klären: (a) Web-GUI als vollwertiger Ersatz oder nur
+  Lesezugriff (Read-Only-Dashboard) auf denselben SQLite-Stand, (b)
+  Authentifizierung/Absicherung, falls von außerhalb des lokalen Netzwerks
+  erreichbar, (c) ob das die bestehende tkinter-App ersetzt oder parallel dazu
+  läuft. Kein akuter Auftrag, nur als offener Punkt festgehalten.
 - **Flush-Erkennung** (AZ-1): **einfache Heuristik ERLEDIGT (2026-07-07)** —
   `agent/anticyclic.py` nutzt Kraken-Funding-Rates (bereits vorhanden, siehe Kap. 8)
   + Kursrückgang-Geschwindigkeit als groben Hinweis. Die volle AZ-1..AZ-8-
