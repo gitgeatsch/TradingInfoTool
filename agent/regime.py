@@ -14,8 +14,9 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from api.onchain import OnChainReading
 from database.models import MacroSnapshot
-from indicators.calculations import TechnicalSnapshot, latest_value
+from indicators.calculations import BtcLogRegressionRisk, TechnicalSnapshot, latest_value
 
 REGIME_STATES = ("krise_extrem", "baer", "seitwaerts", "bulle", "euphorie_extrem")
 
@@ -56,6 +57,24 @@ BTC_MATRIX = {
 LIQUIDITY_M2_TREND_THRESHOLD_PCT = 1.0  # Veraenderung ueber ~6 Monate, siehe agent/pipeline.py::_fetch_liquidity_context
 LIQUIDITY_FED_FUNDS_THRESHOLD_PP = 0.1  # Prozentpunkte
 
+# Zyklus-Risiko (Nutzungs-Diskussion, Schritt 2, 2026-07-08): BTC-Log-Regression-Risk
+# (indicators/calculations.py) als primaeres, quantifiziertes Regime-Feld; MVRV/NUPL
+# (api/onchain.py) bewusst NICHT als eigenes Regime-Feld, sondern nur als Cross-Check-
+# Text daneben - beide Modelle beantworten dieselbe Frage ("wie weit ist BTC von einem
+# Bewertungsextrem entfernt"), ein zweites Regime-Feld wuerde dasselbe Signal doppelt
+# gewichten (Fear&Greed zaehlt es implizit schon mit).
+#
+# MVRV-Baender: eigene, dokumentierte Einteilung (keine Nachbildung einer
+# kommerziellen Formel) - grobe Orientierung an haeufig zitierten historischen
+# MVRV-Zonen (< 1 = Kapitulation, > 3.5 = fruehere Zyklus-Top-Naehe), NICHT
+# wissenschaftlich hergeleitet oder statistisch optimiert.
+MVRV_BANDS = (
+    (1.0, "unterbewertet (historisch: Kapitulationszone)"),
+    (2.0, "neutral/moderat"),
+    (3.5, "erhöht"),
+    (float("inf"), "historisch extrem (Nähe an früheren Zyklus-Toppen)"),
+)
+
 
 @dataclass
 class RegimeResult:
@@ -70,6 +89,8 @@ class RegimeResult:
     btc_matrix_beschreibung: str
     liquiditaets_regime: str
     liquiditaets_regime_begruendung: str
+    zyklus_risiko: float | None  # 0-1, siehe BtcLogRegressionRisk.risk
+    zyklus_risiko_begruendung: str
 
 
 def _btc_change_pct(btc_closes: np.ndarray, days: int = 30) -> float | None:
@@ -173,6 +194,39 @@ def _liquidity_regime(m2_trend: str, fed_direction: str, m2_detail: str) -> tupl
     )
 
 
+def _mvrv_band(mvrv: float) -> str:
+    for threshold, label in MVRV_BANDS:
+        if mvrv < threshold:
+            return label
+    return MVRV_BANDS[-1][1]
+
+
+def _zyklus_risiko(
+    log_regression_risk: BtcLogRegressionRisk | None, onchain: OnChainReading | None
+) -> tuple[float | None, str]:
+    if log_regression_risk is None:
+        return None, "BTC-Log-Regression-Risk nicht verfügbar (Historien-Abruf fehlgeschlagen)."
+
+    parts = [
+        f"BTC-Log-Regression-Risk: {log_regression_risk.risk:.2f} "
+        f"(Abweichung {log_regression_risk.deviation_std:+.2f} Standardabweichungen von der "
+        "langfristigen Trendlinie)."
+    ]
+    if onchain is None:
+        parts.append("MVRV/NUPL nicht verfügbar für einen Cross-Check.")
+    else:
+        band = _mvrv_band(onchain.mvrv)
+        parts.append(f"MVRV: {onchain.mvrv:.2f} ({band}), NUPL: {onchain.nupl:.2f}.")
+        risk_high, risk_low = log_regression_risk.risk >= 0.6, log_regression_risk.risk <= 0.4
+        mvrv_high, mvrv_low = onchain.mvrv >= 2.0, onchain.mvrv < 1.0
+        if (risk_high and mvrv_high) or (risk_low and mvrv_low):
+            parts.append("Beide Modelle deuten in dieselbe Richtung (Cross-Check bestätigt).")
+        elif (risk_high and mvrv_low) or (risk_low and mvrv_high):
+            parts.append("Modelle weichen voneinander ab - keine eindeutige Einordnung, mit Vorsicht behandeln.")
+
+    return log_regression_risk.risk, " ".join(parts)
+
+
 def determine_regime(
     btc_closes: np.ndarray,
     btc_snapshot: TechnicalSnapshot,
@@ -182,12 +236,15 @@ def determine_regime(
     m2_us_history: list[float] | None = None,
     m2_eurozone_history: list[float] | None = None,
     m2_china_history: list[float] | None = None,
+    btc_log_regression_risk: BtcLogRegressionRisk | None = None,
+    btc_onchain_reading: OnChainReading | None = None,
 ) -> RegimeResult:
     m2_trend, m2_detail = _m2_global_trend(
         m2_us_history or [], m2_eurozone_history or [], m2_china_history or []
     )
     fed_direction = _fed_funds_direction(fed_funds_history or [])
     liquiditaets_regime, liquiditaets_regime_begruendung = _liquidity_regime(m2_trend, fed_direction, m2_detail)
+    zyklus_risiko, zyklus_risiko_begruendung = _zyklus_risiko(btc_log_regression_risk, btc_onchain_reading)
     ema20 = latest_value(btc_snapshot.ema[20])
     ema50 = latest_value(btc_snapshot.ema[50])
     ema200 = latest_value(btc_snapshot.ema[200])
@@ -258,6 +315,8 @@ def determine_regime(
             btc_matrix_beschreibung=btc_matrix_beschreibung,
             liquiditaets_regime=liquiditaets_regime,
             liquiditaets_regime_begruendung=liquiditaets_regime_begruendung,
+            zyklus_risiko=zyklus_risiko,
+            zyklus_risiko_begruendung=zyklus_risiko_begruendung,
         )
 
     return RegimeResult(
@@ -270,6 +329,8 @@ def determine_regime(
         fear_greed_label=fgi_label,
         liquiditaets_regime=liquiditaets_regime,
         liquiditaets_regime_begruendung=liquiditaets_regime_begruendung,
+        zyklus_risiko=zyklus_risiko,
+        zyklus_risiko_begruendung=zyklus_risiko_begruendung,
         btc_matrix_state=btc_matrix_state,
         btc_matrix_beschreibung=btc_matrix_beschreibung,
     )

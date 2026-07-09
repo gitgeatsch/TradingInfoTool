@@ -78,9 +78,15 @@ unbekannt) als ZUSAETZLICHEN Kontext in `long_reasoning.makro` ein - NICHT als h
 Regel wie regime.btc_matrix, sondern als beschreibende Einordnung ("globale \
 Liquiditaet expandiert/kontrahiert aktuell laut M2-Trend + Fed-Kurs"). Bei \
 `unbekannt` (zu wenig Historie) einfach nicht erwaehnen, keine Luecke erfinden.
-11. `action` MUSS EXAKT einer dieser fuenf Werte sein (Grossbuchstaben, keine Variante): \
+11. Beziehe `regime.zyklus_risiko` (0-1, hoeher = naeher an einem historischen \
+Bewertungsextrem laut Log-Regression-Modell) UND `regime.zyklus_risiko_begruendung` \
+(enthaelt bereits den MVRV/NUPL-Cross-Check) in `long_reasoning.fundamental` ein - \
+als BTC-weite Zyklus-Einordnung, relevant fuer ALLE Assets (nicht nur BTC selbst), \
+da Alts historisch am staerksten leiden, wenn BTC nahe einem Zyklus-Top steht. Bei \
+`null`/nicht verfuegbar einfach nicht erwaehnen.
+12. `action` MUSS EXAKT einer dieser fuenf Werte sein (Grossbuchstaben, keine Variante): \
 KAUFEN, VERKAUFEN, TAUSCHEN, HALTEN, NACHKAUFEN.
-12. Antworte AUSSCHLIESSLICH mit einem einzigen JSON-Objekt gemaess dem vorgegebenen \
+13. Antworte AUSSCHLIESSLICH mit einem einzigen JSON-Objekt gemaess dem vorgegebenen \
 Schema. Kein Markdown, keine Code-Fences, kein Text ausserhalb des JSON.
 
 SCHEMA:
@@ -226,6 +232,8 @@ def build_facts(
             "btc_matrix_hinweis": regime_result.btc_matrix_beschreibung,
             "liquiditaets_regime": regime_result.liquiditaets_regime,
             "liquiditaets_regime_begruendung": regime_result.liquiditaets_regime_begruendung,
+            "zyklus_risiko": _native(regime_result.zyklus_risiko),
+            "zyklus_risiko_begruendung": regime_result.zyklus_risiko_begruendung,
         },
         "regime_profil": regime_profile,
         "risiko_check": {

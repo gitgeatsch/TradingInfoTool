@@ -188,6 +188,17 @@ Entscheidungs-Pipeline (Reihenfolge je Analyse):
    `agent/analyst.py`). **Weiterhin `[OFFEN]`:** CPI/ISM-Ersatz/Trueflation/einzelne
    Leitbörsen — `disclaimers.makro_einbezogen` steht deshalb ehrlich auf
    `"teilweise"` (P-2/P-10), nicht mehr fest auf `false`.
+   **Schritt 2 ERLEDIGT (2026-07-08): Zyklus-Risiko.** Weiteres neues Regime-Feld
+   `zyklus_risiko` (0–1) aus dem BTC-Log-Regression-Risk-Modell
+   (`indicators/calculations.py::compute_btc_log_regression_risk`), MVRV/NUPL
+   (`api/onchain.py`) bewusst NICHT als eigenes Feld, sondern nur als Cross-Check-Text
+   daneben (`_mvrv_band()`, eigene dokumentierte Bänder — keine Nachbildung einer
+   kommerziellen Formel) — beide Modelle beantworten dieselbe Frage
+   (Bewertungsextrem), ein zweites Feld würde das Signal doppelt gewichten. Gilt für
+   **alle** Assets, nicht nur BTC (Prompt-Regel 11) — Alts leiden historisch am
+   stärksten nahe einem BTC-Zyklus-Top. Live-verifiziert gegen echte BTC- **und**
+   ETH-Pipeline-Läufe: Groq hat `zyklus_risiko: 0.32` in beiden Fällen korrekt in
+   `long_reasoning.fundamental` eingeordnet.
 3. **R-5.3** Technische Analyse je Asset: Trend, Indikatoren (Kap. 7), Fibonacci,
    Support/Resistance. **ERLEDIGT:** volle Wiederverwendung von
    `indicators/calculations.py` (`build_technical_snapshot()`, geteilt mit

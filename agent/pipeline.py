@@ -175,6 +175,28 @@ def _fetch_liquidity_context(fred_api_key: str | None) -> dict:
     return context
 
 
+def _fetch_cycle_risk_context() -> dict:
+    """BTC-Zyklus-Risiko-Kontext fuer agent/regime.py (Nutzungs-Diskussion, Schritt 2,
+    2026-07-08): Log-Regression-Risk (indicators/calculations.py) + MVRV/NUPL
+    (api/onchain.py) als Cross-Check. P-10: beide Quellen unabhaengig versucht, ein
+    Fehlschlag blockiert die andere nicht. Bewusst ein frischer Live-Abruf pro
+    Pipeline-Lauf statt Caching - konsistent mit `_fetch_liquidity_context`."""
+    from api.onchain import get_btc_full_price_history, get_btc_onchain_snapshot
+    from indicators.calculations import compute_btc_log_regression_risk
+
+    context: dict = {"log_regression_risk": None, "onchain_reading": None}
+    try:
+        history = get_btc_full_price_history()
+        context["log_regression_risk"] = compute_btc_log_regression_risk(history)
+    except Exception as exc:
+        logger.info("BTC-Log-Regression-Risk-Berechnung fehlgeschlagen: %s", exc)
+    try:
+        context["onchain_reading"] = get_btc_onchain_snapshot()
+    except Exception as exc:
+        logger.info("MVRV/NUPL-Abruf (CoinMetrics) fehlgeschlagen: %s", exc)
+    return context
+
+
 def generate_signal(
     asset, watchlist, conn, groq_client, coingecko_client, kraken_client,
     fred_api_key: str | None = None,
@@ -223,6 +245,7 @@ def generate_signal(
     config_dict = config.load_config()
     btc_asset = next((a for a in watchlist if a.symbol == "BTC"), None)
     liquidity_context = _fetch_liquidity_context(fred_api_key)
+    cycle_risk_context = _fetch_cycle_risk_context()
     macro_history = _update_macro_snapshot(conn, coingecko_client, fred_api_key, liquidity_context)
     if btc_asset is not None and btc_asset.symbol != asset.symbol:
         btc_dates, btc_closes, btc_ohlc, _ = _load_closes_and_ohlc(conn, "BTC", btc_asset.coingecko_id)
@@ -236,6 +259,8 @@ def generate_signal(
         m2_us_history=liquidity_context["m2_us_history"],
         m2_eurozone_history=liquidity_context["m2_eurozone_history"],
         m2_china_history=liquidity_context["m2_china_history"],
+        btc_log_regression_risk=cycle_risk_context["log_regression_risk"],
+        btc_onchain_reading=cycle_risk_context["onchain_reading"],
     )
     regime_profile = config_dict["regime"]["profile"].get(regime_result.regime, {})
 
