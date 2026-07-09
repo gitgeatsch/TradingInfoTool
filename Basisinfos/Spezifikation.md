@@ -607,9 +607,25 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
   zahlenbewusst für Preis-/Wert-/Mengen-/Prozent-Spalten (fehlende Werte immer am
   Ende), sonst alphabetisch — auf allen vier Treeview-Tabs (Watchlist, Portfolio,
   Signale, Marktscan) einheitlich verdrahtet statt Tab-für-Tab-Einzellösungen.
-  **Weiterhin offen:** Dark Mode (aktuell Standard-Tk/ttk-Look, keine
-  Theme-Unterstützung), allgemeine Hintergrund-/Schrift-Lesbarkeit (Kontrast,
-  Schriftgrößen).
+  **Lesbarkeits-Politur ERLEDIGT (2026-07-09):** `ui/theme.py::apply_base_style()`
+  bumpt die von Tk benannten Standard-Fonts von ~9pt auf 10pt (wirkt automatisch auf
+  klassische Tk- UND ttk-Widgets), größere Treeview-Zeilenhöhe, großzügigere
+  Button-/Checkbutton-/Radiobutton-Abstände.
+  **Dark Mode ERLEDIGT (2026-07-09).** Neues `ui/settings.py` speichert die
+  Präferenz in einer lokalen, nicht versionierten `data/settings.json` (bewusst
+  NICHT `config.yaml`, die Datei ist handgepflegt/versioniert). `ui/theme.py` hat
+  Light-/Dark-Paletten + semantische Farbfunktionen (`action_color()`,
+  `einstufung_color()`, `stale_color()`, ...), die alle vier Tabs statt verstreuter
+  Farb-Literale abfragen. **Bewusster Scope-Schnitt:** Dark Mode wird einmal beim
+  Start angewendet, kein Live-Umschalten während die App läuft — der Menüpunkt
+  "Ansicht → Dark Mode" speichert die Einstellung nur und bittet um einen Neustart.
+  ttk wechselt für Dark Mode auf das `clam`-Theme (die einzige eingebaute
+  Theme-Basis, die Farb-Overrides unter Windows tatsächlich vollständig übernimmt —
+  vista/xpnative zeichnen viele Elemente OS-nativ). Die Charts (matplotlib,
+  `ui/charts.py`) ziehen mit: Flächen-/Text-/Gitterfarben passend zum aktiven
+  Theme, einzelne Indikatorfarben (EMA/Bollinger/RSI/MACD) bleiben unverändert, da
+  auf beiden Hintergründen ausreichend lesbar. Light Mode ist unverändert zum
+  vorherigen Stand (keine Regression).
 
 ## 10. Agent- & Datenbank-Betrieb
 
