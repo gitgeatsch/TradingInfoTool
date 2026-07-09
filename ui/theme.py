@@ -108,6 +108,21 @@ def einstufung_color(einstufung: str) -> str:
     }.get(einstufung, p["fg"])
 
 
+def chart_facecolor() -> str:
+    """Etwas heller als der Fenster-Hintergrund (wie Treeview/Entry) - hebt die
+    Chart-Flaeche im Dark Mode leicht vom Rest des Fensters ab, analog zu
+    Panel-Hintergruenden in anderen dunklen Oberflaechen."""
+    return _palette()["entry_bg"]
+
+
+def chart_grid_color() -> str:
+    return _palette()["muted"] if _dark_mode else "#cccccc"
+
+
+def chart_price_line_color() -> str:
+    return _palette()["fg"]
+
+
 def umgesetzt_color() -> str:
     return _palette()["success"]
 

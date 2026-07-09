@@ -14,12 +14,10 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
 import database.db as db
+import ui.theme as theme
 from api.kraken import KRAKEN_PAIR_MAP
 from indicators.calculations import build_technical_snapshot, latest_value
 from ui.formatting import format_money, is_history_stale
-
-STALE_COLOR = "#b36b00"
-INFO_COLOR = "#666666"
 
 
 class ChartWindow(tk.Toplevel):
@@ -48,7 +46,7 @@ class ChartWindow(tk.Toplevel):
             toolbar, text="USD", variable=self._currency, value="usd", command=self._reload
         ).pack(side="left")
 
-        self._staleness_label = ttk.Label(toolbar, text="", foreground=STALE_COLOR)
+        self._staleness_label = ttk.Label(toolbar, text="", foreground=theme.stale_color())
         self._staleness_label.pack(side="left", padx=(16, 0))
 
     def _build_figure(self) -> None:
@@ -59,13 +57,33 @@ class ChartWindow(tk.Toplevel):
         self._canvas = FigureCanvasTkAgg(self._figure, master=self)
         self._canvas.get_tk_widget().pack(fill="both", expand=True, padx=8, pady=(0, 8))
 
-        self._volatility_label = ttk.Label(self, text="", foreground=INFO_COLOR)
+        self._volatility_label = ttk.Label(self, text="", foreground=theme.info_color())
         self._volatility_label.pack(fill="x", padx=8)
 
         self._unavailable_label = ttk.Label(
-            self, text="", foreground=INFO_COLOR, wraplength=980, justify="left"
+            self, text="", foreground=theme.info_color(), wraplength=980, justify="left"
         )
         self._unavailable_label.pack(fill="x", padx=8, pady=(0, 8))
+
+    def _apply_chart_theme(self) -> None:
+        """Dark-Mode-Politur fuers Chart (Nutzer-Idee 2026-07-09, "Charts
+        mitziehen"): Flaechen-/Text-/Gitterfarben passend zum aktiven Theme. Bei
+        jedem Render neu gesetzt, da Axes.clear() die Flaechenfarbe zuruecksetzt.
+        Einzelne Indikator-/Kurvenfarben (tab:blue, tab:orange, ...) bleiben
+        unveraendert - die sind auf beiden Hintergruenden ausreichend lesbar."""
+        facecolor = theme.chart_facecolor()
+        text_color = theme.chart_price_line_color()
+        grid_color = theme.chart_grid_color()
+
+        self._figure.patch.set_facecolor(facecolor)
+        for ax in (self._ax_price, self._ax_rsi, self._ax_macd):
+            ax.set_facecolor(facecolor)
+            ax.tick_params(colors=text_color)
+            ax.xaxis.label.set_color(text_color)
+            ax.yaxis.label.set_color(text_color)
+            ax.title.set_color(text_color)
+            for spine in ax.spines.values():
+                spine.set_color(grid_color)
 
     def _reload(self) -> None:
         currency = self._currency.get()
@@ -109,12 +127,14 @@ class ChartWindow(tk.Toplevel):
     def _render_no_data(self) -> None:
         for ax in (self._ax_price, self._ax_rsi, self._ax_macd):
             ax.clear()
+        self._apply_chart_theme()
         self._ax_price.text(
             0.5,
             0.5,
             "Keine historischen Daten verfügbar",
             ha="center",
             va="center",
+            color=theme.chart_price_line_color(),
             transform=self._ax_price.transAxes,
         )
         self._canvas.draw()
@@ -136,9 +156,12 @@ class ChartWindow(tk.Toplevel):
 
         for ax in (self._ax_price, self._ax_rsi, self._ax_macd):
             ax.clear()
+        self._apply_chart_theme()
 
         x = mdates.datestr2num(dates)
-        self._ax_price.plot(x, closes, label=f"Preis ({currency_label})", color="black", linewidth=1)
+        self._ax_price.plot(
+            x, closes, label=f"Preis ({currency_label})", color=theme.chart_price_line_color(), linewidth=1,
+        )
 
         for period, color in ((20, "tab:blue"), (50, "tab:orange"), (200, "tab:green")):
             result = snapshot.ema[period]
@@ -199,7 +222,7 @@ class ChartWindow(tk.Toplevel):
             unavailable_notes.append(f"{swing_indicator_name}: nicht verfügbar ({swing.reason})")
 
         self._ax_price.set_ylabel(f"Preis ({currency_label})")
-        self._ax_price.legend(loc="upper left", fontsize=7)
+        self._ax_price.legend(loc="upper left", fontsize=7, labelcolor=theme.chart_price_line_color())
         self._ax_price.set_title(f"{self._asset.symbol} — {self._asset.name}")
 
         rsi_result = snapshot.rsi
@@ -217,7 +240,7 @@ class ChartWindow(tk.Toplevel):
             self._ax_macd.plot(x, macd_result.value["macd"], label="MACD", color="tab:blue", linewidth=1)
             self._ax_macd.plot(x, macd_result.value["signal"], label="Signal", color="tab:orange", linewidth=1)
             self._ax_macd.bar(x, macd_result.value["histogram"], color="grey", alpha=0.4, width=0.8)
-            self._ax_macd.legend(loc="upper left", fontsize=7)
+            self._ax_macd.legend(loc="upper left", fontsize=7, labelcolor=theme.chart_price_line_color())
             self._ax_macd.set_ylabel("MACD")
         else:
             unavailable_notes.append(f"MACD: nicht verfügbar ({macd_result.reason})")
