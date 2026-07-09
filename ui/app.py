@@ -37,8 +37,8 @@ class TradingInfoToolApp(tk.Tk):
         self._kraken_client = kraken_client
         self._groq_client = groq_client
         self._fred_api_key = fred_api_key
-        self._bitpanda_symbols: set[str] | None = None
-        self._refresh_bitpanda_symbols()
+        self._bitpanda_assets: list | None = None
+        self._refresh_bitpanda_assets()
 
         self._build_menu()
 
@@ -146,10 +146,10 @@ class TradingInfoToolApp(tk.Tk):
             age_text = format_price_age(fetched_at)
             aktualisiert = f"⚠ {age_text}" if stale else age_text
 
-            if self._bitpanda_symbols is None:
+            if self._bitpanda_assets is None:
                 bitpanda_text = "?"
                 bitpanda_fehlt = False
-            elif bitpanda_is_listed(asset.symbol, self._bitpanda_symbols):
+            elif bitpanda_is_listed(asset.symbol, self._bitpanda_assets, name=asset.name):
                 bitpanda_text = "✓"
                 bitpanda_fehlt = False
             else:
@@ -198,24 +198,24 @@ class TradingInfoToolApp(tk.Tk):
         self._portfolio_view.refresh()
         self.after(UI_POLL_INTERVAL_MS, self._poll_prices)
 
-    def _refresh_bitpanda_symbols(self) -> None:
+    def _refresh_bitpanda_assets(self) -> None:
         """Handelsboersen-Check (Nutzer-Wunsch 2026-07-09) - einmalig beim Start und
         bei manuellem Refresh, NICHT im 3-Sekunden-Preis-Poll (Bitpandas gelistete
-        Assets aendern sich nicht minuetlich, ein wiederholter Call waere
-        verschwendet). P-10: Fehlschlag blockiert den Start nicht, Spalte zeigt
-        dann "?" statt eines falschen Werts."""
-        from api.bitpanda import get_listed_symbols
+        Assets aendern sich nicht minuetlich, ein wiederholter Call (paginiert,
+        mehrere Requests) waere verschwendet). P-10: Fehlschlag blockiert den Start
+        nicht, Spalte zeigt dann "?" statt eines falschen Werts."""
+        from api.bitpanda import get_listed_assets
 
         try:
-            self._bitpanda_symbols = get_listed_symbols()
+            self._bitpanda_assets = get_listed_assets()
         except Exception:
-            self._bitpanda_symbols = None
+            self._bitpanda_assets = None
 
     def _manual_refresh(self) -> None:
         from scheduler.background import refresh_prices_job
 
         refresh_prices_job(self._coingecko_client, self._db_conn_factory, self._watchlist)
-        self._refresh_bitpanda_symbols()
+        self._refresh_bitpanda_assets()
         self._refresh_watchlist_from_db()
         self._portfolio_view.refresh()
 

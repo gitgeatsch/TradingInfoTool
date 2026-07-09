@@ -360,12 +360,12 @@ def run_scan(
     # pro Kandidat. Bewusst NUR Warnung, kein Stufe-A-Ausschluss - siehe
     # database/models.py::MarktscanCandidate.bitpanda_gelistet.
     try:
-        from api.bitpanda import get_listed_symbols
+        from api.bitpanda import get_listed_assets
         from api.bitpanda import is_listed as bitpanda_is_listed
 
-        bitpanda_symbols = get_listed_symbols()
+        bitpanda_assets = get_listed_assets()
     except Exception as exc:
-        bitpanda_symbols = None
+        bitpanda_assets = None
         logger.info("Bitpanda-Listing-Abruf fehlgeschlagen: %s", exc)
 
     holdings = db.get_all_holdings(conn)
@@ -378,7 +378,8 @@ def run_scan(
         coin: MarketCoin = entry["coin"]
         stufe_a = apply_stufe_a_filters(coin, marktscan_cfg)
         bitpanda_gelistet = (
-            bitpanda_is_listed(coin.symbol, bitpanda_symbols) if bitpanda_symbols is not None else None
+            bitpanda_is_listed(coin.symbol, bitpanda_assets, name=coin.name)
+            if bitpanda_assets is not None else None
         )
 
         snapshot = None
