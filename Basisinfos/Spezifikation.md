@@ -254,6 +254,19 @@ Entscheidungs-Pipeline (Reihenfolge je Analyse):
     `moeglicher_flush=true` + 81,8 % Long-Bias (GRIFFAIN) und eines Falls mit
     fehlender OKX-Notierung (graceful, P-10).
 
+> **Nutzungs-Diskussion abgeschlossen (letzter Schritt, 2026-07-08):** Facts-Feld
+> `markt_kontext` (`agent/analyst.py::build_facts`) — BTC-Exchange-Flow-Netto
+> (`api/onchain.py`), globale Stablecoin-Supply (DefiLlama), Präsidentschaftszyklus-
+> Kontext + nächste FOMC-Sitzungen (beide `agent/cycles.py`, reine Datumsrechnung,
+> kein Netzwerk-Call). **Bewusst KEINE neue Regime-Logik** — reiner, niedrig
+> gewichteter Kontext für Groq (Prompt-Regel 13): FOMC-Sitzung < 14 Tage entfernt →
+> explizit als Volatilitätsfaktor in `key_risks` nennen, Präsidentschaftszyklus nur
+> mit explizitem "keine Prognose-Garantie"-Vorbehalt. Live verifiziert: bei der
+> echten, 19 Tage entfernten Sitzung korrekt nicht erzwungen (unter der Schwelle),
+> bei einer künstlich auf 5 Tage gesetzten Sitzung korrekt in `key_risks` genannt.
+> Damit ist die gesamte am 2026-07-08 vereinbarte Nutzungs-Tabelle (Liquiditäts-
+> Regime, Zyklus-Risiko, AZ-1-Erweiterung, Markt-Kontext) umgesetzt.
+
 > **A-1-Ausnahme:** Stablecoins (`typ: stablecoin`, aktuell nur EURCV) durchlaufen die
 > Pipeline gar nicht erst — festes „HALTEN" ohne Groq-Call, da sie laut Kap. 4 (A-1)
 > kein eigenständiges Handelssignal bekommen sollen.

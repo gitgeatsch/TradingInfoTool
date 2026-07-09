@@ -90,9 +90,17 @@ da Alts historisch am staerksten leiden, wenn BTC nahe einem Zyklus-Top steht. B
 Long-Short-Ratio als Cross-Check) mit ein. Das ist ein grober Hinweis, KEINE \
 gesicherte Klassifikation (keine unabhaengige Nachrichtenquelle) - formuliere \
 entsprechend vorsichtig ("moeglicherweise", "Hinweis auf", nicht "ist ein Flush").
-13. `action` MUSS EXAKT einer dieser fuenf Werte sein (Grossbuchstaben, keine Variante): \
+13. `markt_kontext` ist NIEDRIG gewichteter Zusatzkontext, keine harte Regel: \
+`btc_exchange_flow_netto_btc` und `stablecoin_supply_gesamt_usd` gehoeren eher in \
+`long_reasoning.makro` (nutze `btc_exchange_flow_hinweis` fuer die Interpretations- \
+richtung). `praesidentschaftszyklus` ist rein deskriptiv - nenne die historische \
+Tendenz NUR mit einem klaren Vorbehalt, dass sie keine Prognose-Garantie ist, falls \
+du sie erwaehnst. Ist ein Eintrag in `naechste_fomc_sitzungen` weniger als 14 Tage \
+entfernt, nenne das als moeglichen Volatilitaets-Faktor in `key_risks`. Erfinde KEINE \
+Werte fuer leere/null Felder, erzwinge auch keine Erwaehnung.
+14. `action` MUSS EXAKT einer dieser fuenf Werte sein (Grossbuchstaben, keine Variante): \
 KAUFEN, VERKAUFEN, TAUSCHEN, HALTEN, NACHKAUFEN.
-14. Antworte AUSSCHLIESSLICH mit einem einzigen JSON-Objekt gemaess dem vorgegebenen \
+15. Antworte AUSSCHLIESSLICH mit einem einzigen JSON-Objekt gemaess dem vorgegebenen \
 Schema. Kein Markdown, keine Code-Fences, kein Text ausserhalb des JSON.
 
 SCHEMA:
@@ -145,6 +153,7 @@ def build_facts(
     anticyclic_context: AnticyclicContext,
     strategien_aktiv: list[str],
     price_age_minutes: float | None,
+    market_context: dict,
 ) -> dict:
     macd_val = technical_snapshot.macd
     macd_facts = None
@@ -266,6 +275,28 @@ def build_facts(
             "long_konten_anteil_prozent": _native(anticyclic_context.long_account_pct),
             "retail_long_bias_extrem": anticyclic_context.retail_long_bias_extreme,
             "grund": anticyclic_context.reason,
+        },
+        "markt_kontext": {
+            "btc_exchange_flow_netto_btc": (
+                _native(market_context["exchange_flow"].net_flow_btc)
+                if market_context["exchange_flow"] else None
+            ),
+            "btc_exchange_flow_hinweis": (
+                "positiv = mehr Zufluss als Abfluss (potenzieller Verkaufsdruck), "
+                "negativ = Nettoabfluss (Akkumulation/Self-Custody)"
+            ),
+            "stablecoin_supply_gesamt_usd": (
+                _native(market_context["stablecoin_supply"].total_usd)
+                if market_context["stablecoin_supply"] else None
+            ),
+            "praesidentschaftszyklus": {
+                "jahr_im_zyklus": market_context["presidential_cycle"].year_in_cycle,
+                "einordnung": market_context["presidential_cycle"].label,
+                "historische_tendenz": market_context["presidential_cycle"].historical_bias,
+            },
+            "naechste_fomc_sitzungen": [
+                {"name": e.name, "in_tagen": e.days_until} for e in market_context["upcoming_fomc"]
+            ],
         },
         "strategien_aktiv": strategien_aktiv,
         "disclaimers": {

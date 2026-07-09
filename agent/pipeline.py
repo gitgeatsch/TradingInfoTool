@@ -197,6 +197,32 @@ def _fetch_cycle_risk_context() -> dict:
     return context
 
 
+def _fetch_market_context() -> dict:
+    """Reiner Groq-Kontext (Nutzungs-Diskussion, letzter Schritt, 2026-07-08) - KEINE
+    neue Regime-Logik, nur zusaetzliche Fakten fuers Facts-Objekt (agent/analyst.py::
+    build_facts). P-10: Exchange-Flow/Stablecoin-Supply unabhaengig versucht: FOMC-
+    Kalender/Praesidentschaftszyklus sind reine Datumsrechnung (agent/cycles.py),
+    kein Netzwerk-Call, daher kein try/except noetig."""
+    from api.onchain import get_btc_exchange_flows, get_stablecoin_supply
+    from agent.cycles import get_presidential_cycle_context, get_upcoming_fomc_meetings
+
+    context: dict = {
+        "exchange_flow": None,
+        "stablecoin_supply": None,
+        "presidential_cycle": get_presidential_cycle_context(),
+        "upcoming_fomc": get_upcoming_fomc_meetings(within_days=30),
+    }
+    try:
+        context["exchange_flow"] = get_btc_exchange_flows()
+    except Exception as exc:
+        logger.info("BTC-Exchange-Flow-Abruf fehlgeschlagen: %s", exc)
+    try:
+        context["stablecoin_supply"] = get_stablecoin_supply()
+    except Exception as exc:
+        logger.info("Stablecoin-Supply-Abruf fehlgeschlagen: %s", exc)
+    return context
+
+
 def generate_signal(
     asset, watchlist, conn, groq_client, coingecko_client, kraken_client,
     fred_api_key: str | None = None,
@@ -273,6 +299,8 @@ def generate_signal(
     # R-5.11 Antizyklik-Heuristik.
     anticyclic_context = assess_anticyclic(asset, kraken_client, closes)
 
+    market_context = _fetch_market_context()
+
     holdings = {h.symbol: h for h in db.get_all_holdings(conn)}
     strategien_aktiv = [s["name"] for s in config_dict["strategien"] if s["aktiv"]]
     price_age_minutes = None
@@ -285,6 +313,7 @@ def generate_signal(
     facts = build_facts(
         asset, price_snap, holdings.get(asset.symbol), snapshot, confluence, regime_result,
         regime_profile, risk_result, anticyclic_context, strategien_aktiv, price_age_minutes,
+        market_context,
     )
 
     # R-5.6 Groq-Synthese.
