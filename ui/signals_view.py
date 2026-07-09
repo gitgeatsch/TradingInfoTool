@@ -37,6 +37,14 @@ NICHT_UMGESETZT_COLOR = "#666666"
 ACTION_HOLDING_SIGN = {"KAUFEN": 1, "NACHKAUFEN": 1, "VERKAUFEN": -1, "TAUSCHEN": -1}
 
 
+def _parse_optional_float(text: str) -> float | None:
+    """Wie importer/excel_import.py::_parse_quantity() - deutsches Komma als
+    Dezimaltrennzeichen akzeptieren (Nutzer-Review 2026-07-09: dieselbe Konvention
+    gilt bereits beim Excel-Import, ein rohes float() waere hier inkonsistent)."""
+    text = text.strip().replace(",", ".")
+    return float(text) if text else None
+
+
 class SignalsView(ttk.Frame):
     def __init__(
         self, parent, db_conn_factory, watchlist, groq_client, coingecko_client, kraken_client,
@@ -338,6 +346,10 @@ class UmsetzungDialog(tk.Toplevel):
         )
         self._bestand_aktualisieren_var = tk.BooleanVar(value=False)
         self._neuer_bestand_var = tk.StringVar(value="")
+        # Vorschlag live neu berechnen, wenn die Menge SPAETER (nach dem Ankreuzen der
+        # Checkbox) eingegeben wird - sonst bliebe der Vorschlag auf menge=0 stehen
+        # (Nutzer-Review 2026-07-09).
+        self._menge_var.trace_add("write", lambda *_: self._on_bestand_toggle())
 
         frame = ttk.Frame(self, padding=12)
         frame.pack(fill="both", expand=True)
@@ -411,14 +423,16 @@ class UmsetzungDialog(tk.Toplevel):
         current_qty = self._current_holding_quantity()
         sign = ACTION_HOLDING_SIGN.get(self._signal.action)
         try:
-            menge = float(self._menge_var.get()) if self._menge_var.get().strip() else 0.0
+            menge = _parse_optional_float(self._menge_var.get()) or 0.0
         except ValueError:
             menge = 0.0
         suggestion = current_qty + sign * menge if sign is not None else current_qty
 
+        warn = " ⚠ Ergibt einen negativen Bestand — bitte prüfen." if suggestion < 0 else ""
         self._bestand_info_label.config(
             text=f"Aktueller Bestand: {current_qty}. Vorschlag basiert auf Aktion '{self._signal.action}' "
-            f"und Menge — bitte prüfen und bei Bedarf anpassen."
+            f"und Menge — bitte prüfen und bei Bedarf anpassen.{warn}",
+            foreground="#c0392b" if suggestion < 0 else INFO_COLOR,
         )
         self._neuer_bestand_var.set(str(suggestion))
         self._neuer_bestand_entry.config(state="normal")
@@ -427,11 +441,9 @@ class UmsetzungDialog(tk.Toplevel):
         self._error_label.config(text="")
         umgesetzt = self._umgesetzt_var.get() == "ja"
 
-        menge_text = self._menge_var.get().strip()
-        preis_text = self._preis_var.get().strip()
         try:
-            menge = float(menge_text) if menge_text else None
-            preis = float(preis_text) if preis_text else None
+            menge = _parse_optional_float(self._menge_var.get())
+            preis = _parse_optional_float(self._preis_var.get())
         except ValueError:
             self._error_label.config(text="Menge/Preis müssen Zahlen sein.")
             return
@@ -439,9 +451,15 @@ class UmsetzungDialog(tk.Toplevel):
         neuer_bestand = None
         if umgesetzt and self._bestand_aktualisieren_var.get():
             try:
-                neuer_bestand = float(self._neuer_bestand_var.get())
+                neuer_bestand = _parse_optional_float(self._neuer_bestand_var.get())
             except ValueError:
                 self._error_label.config(text="Neuer Bestand muss eine Zahl sein.")
+                return
+            if neuer_bestand is None:
+                self._error_label.config(text="Neuer Bestand darf nicht leer sein.")
+                return
+            if neuer_bestand < 0:
+                self._error_label.config(text="Neuer Bestand darf nicht negativ sein.")
                 return
 
         conn = self._db_conn_factory()
