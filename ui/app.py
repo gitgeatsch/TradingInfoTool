@@ -7,6 +7,7 @@ from tkinter import messagebox, ttk
 import database.db as db
 from importer.excel_import import import_holdings
 from ui.formatting import format_money, format_price_age, is_price_stale
+from ui.marktscan_view import MarktscanView
 from ui.portfolio import PortfolioView
 from ui.signals_view import SignalsView
 
@@ -51,6 +52,12 @@ class TradingInfoToolApp(tk.Tk):
             fred_api_key=fred_api_key,
         )
         notebook.add(self._signals_view, text="Signale")
+
+        self._marktscan_view = MarktscanView(
+            notebook, db_conn_factory, watchlist, groq_client, coingecko_client, kraken_client,
+            fred_api_key=fred_api_key,
+        )
+        notebook.add(self._marktscan_view, text="Marktscan")
 
         disclaimer = ttk.Label(
             self, text=DISCLAIMER_TEXT, foreground="#666666", wraplength=880, justify="center"
