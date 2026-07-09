@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import time
 from collections import deque
+from dataclasses import dataclass
 from datetime import datetime, timezone
 
 import requests
@@ -17,6 +18,28 @@ RATE_LIMIT_ANONYMOUS_PER_MINUTE = 30
 RATE_LIMIT_WITH_KEY_PER_MINUTE = 100
 DEFAULT_COOLDOWN_SECONDS = 60  # Backoff nach 429, falls kein Retry-After-Header vorhanden
 MAX_COOLDOWN_SECONDS = 300  # Deckel fuer den exponentiellen Backoff (5 Min)
+
+
+@dataclass
+class TrendingCoin:
+    coingecko_id: str
+    symbol: str
+    name: str
+    market_cap_rank: int | None
+    trending_rank: int  # Position in der Trending-Liste (1-basiert)
+
+
+@dataclass
+class MarketCoin:
+    coingecko_id: str
+    symbol: str
+    name: str
+    price_usd: float | None
+    market_cap_usd: float | None
+    volume_24h_usd: float | None
+    change_24h_pct: float | None
+    atl_date: str | None  # Alters-Proxy, siehe agent/marktscan.py - CoinGecko liefert
+    # kein echtes Listing-Datum, live geprueft 2026-07-09
 
 
 class CoinGeckoClient:
@@ -87,6 +110,57 @@ class CoinGeckoClient:
     def get_global_data(self) -> dict:
         """Liefert u.a. data.market_cap_percentage.btc (BTC-Dominanz, Kap. 8 R-5.1)."""
         return self._get(f"{BASE_URL}/global", params={})
+
+    def get_trending(self) -> list[TrendingCoin]:
+        """CoinGecko `/search/trending` - taeglich neu berechnete Trending-Coins
+        (suchanfragen-basiert, nicht Kursperformance). MS-2. Live verifiziert
+        2026-07-09."""
+        data = self._get(f"{BASE_URL}/search/trending", params={})
+        result = []
+        for rank, entry in enumerate(data.get("coins", []), start=1):
+            item = entry["item"]
+            result.append(
+                TrendingCoin(
+                    coingecko_id=item["id"], symbol=item["symbol"].upper(), name=item["name"],
+                    market_cap_rank=item.get("market_cap_rank"), trending_rank=rank,
+                )
+            )
+        return result
+
+    def get_markets_page(self, page: int, per_page: int = 250, vs_currency: str = "usd") -> list[MarketCoin]:
+        """Eine Seite von `/coins/markets`, sortiert nach Marktkapitalisierung
+        (absteigend). WICHTIG: der `order=price_change_percentage_24h_desc`-Parameter
+        ist auf der Free-Tier praktisch wirkungslos (live verifiziert 2026-07-09 -
+        lieferte weiterhin nach Marktkap. sortierte Ergebnisse, keine echten
+        Top-Gewinner) - deshalb IMMER `market_cap_desc` abrufen und bei Bedarf
+        client-seitig sortieren, siehe `fetch_top_gainers()`."""
+        params = {
+            "vs_currency": vs_currency, "order": "market_cap_desc", "per_page": per_page,
+            "page": page, "sparkline": "false", "price_change_percentage": "24h",
+        }
+        data = self._get(f"{BASE_URL}/coins/markets", params)
+        return [
+            MarketCoin(
+                coingecko_id=c["id"], symbol=c["symbol"].upper(), name=c["name"],
+                price_usd=c.get("current_price"), market_cap_usd=c.get("market_cap"),
+                volume_24h_usd=c.get("total_volume"),
+                change_24h_pct=c.get("price_change_percentage_24h"), atl_date=c.get("atl_date"),
+            )
+            for c in data
+        ]
+
+    def fetch_top_gainers(self, pages: int = 5, top_n: int = 30) -> list[MarketCoin]:
+        """Top-Gewinner nach 24h-Aenderung ueber die obersten `pages` Marktkap.-Seiten
+        (client-seitiger Workaround, siehe `get_markets_page()`-Docstring). MS-2.
+        `pages=5` deckt die Top ~1250 nach Marktkap. ab - reicht i.d.R. bis in den
+        Tier-3-Bereich (>= 20 Mio. $, siehe config.yaml marktscan.tiers), Quota-Kosten
+        ~5 Calls/Scan-Lauf."""
+        all_coins: list[MarketCoin] = []
+        for page in range(1, pages + 1):
+            all_coins.extend(self.get_markets_page(page))
+        sortable = [c for c in all_coins if c.change_24h_pct is not None]
+        sortable.sort(key=lambda c: c.change_24h_pct, reverse=True)
+        return sortable[:top_n]
 
     def fetch_price_snapshots(self, assets: list) -> list[PriceSnapshot]:
         coingecko_ids = [asset.coingecko_id for asset in assets]
