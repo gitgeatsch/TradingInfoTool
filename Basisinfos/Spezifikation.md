@@ -568,8 +568,12 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
 - **U-7** Einstellungen: Risikoparameter (Kap. 3) pro Nutzer anpassbar.
 - **U-8** Desktop-Benachrichtigungen bei neuen Signalen.
 - **U-9** Interaktiver Dialog: Nutzer ergänzt Bewertungsparameter (R-5.7).
-- **U-10** Marktscan-Vorschläge (Kap. 13): neu entdeckte Kandidaten mit P-5-Begründung
-  anzeigen; Nutzer kann sie in der Watchlist behalten oder entfernen.
+- **U-10** Marktscan-Vorschläge (Kap. 13): **ERLEDIGT (2026-07-09).** Neuer Tab
+  "Marktscan" (`ui/marktscan_view.py`) zeigt neu entdeckte Kandidaten mit
+  Score-Aufschlüsselung und optionaler P-5-Begründung; "Watchlist-Eintrag
+  vorbereiten" zeigt einen copy-paste-baren YAML-Block statt automatisch zu
+  schreiben (siehe Kap. 13 MS-1), "Verwerfen" markiert einen Kandidaten dauerhaft
+  als nicht relevant.
 - **U-11** Regime-Anzeige (Kap. 14): aktuelles Marktregime sichtbar; manueller Override
   wählbar und — solange aktiv — permanent als Warnhinweis eingeblendet.
 - **U-12** Datenquellen-Gesundheitsstatus `[OFFEN, Idee 2026-07-08]`: Erweiterung von
@@ -612,9 +616,14 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
    Strategien, Makro). **In Arbeit — Slice 1 ERLEDIGT (2026-07-07):** Signal-Pipeline
    (R-5.0/-5.1/-5.3/-5.5/-5.6/-5.7/-5.8/-5.9/-5.10/-5.11, jeweils mit dokumentierten
    Vereinfachungen, siehe Kap. 5) inkl. neuem „Signale"-Tab (U-4, manueller Trigger,
-   noch nicht geplant/automatisch). Bewusst offen für spätere Slices: volles Makro-
-   Modul (R-5.2), Sentiment (R-5.4), Marktscan Stufe B/C/D (Kap. 13), interaktiver
-   Dialog (U-9), E-Mail-Benachrichtigung (U-8), KI-Regime-Override (RG-1b), Drawdown-
+   noch nicht geplant/automatisch). **Nutzungs-Diskussion ERLEDIGT (2026-07-08):**
+   Liquiditäts-Regime, Zyklus-Risiko, AZ-1-Erweiterung (OI/Long-Short), Markt-Kontext
+   (Exchange-Flows/FOMC-Kalender) in `agent/regime.py`/`agent/anticyclic.py`/
+   `agent/analyst.py` verdrahtet. **Marktscan Stufe B/C/D ERLEDIGT (2026-07-09,
+   Kap. 13)** inkl. neuem „Marktscan"-Tab (U-10) und erstem Cron-Job (MS-3).
+   Bewusst offen für spätere Slices: volles Makro-Modul (R-5.2, CPI/ISM-Ersatz/
+   Trueflation/Leitbörsen), Sentiment (R-5.4), interaktiver Dialog (U-9),
+   E-Mail-Benachrichtigung (U-8, inkl. MS-1b), KI-Regime-Override (RG-1b), Drawdown-
    Notbremse (RM-7/Z-3), Hebelpositionen (RM-10/-11, S-6 — siehe Kap. 16).
 4. **Phase 4** Portfolio, Benachrichtigungen, Sentiment (X/YouTube).
 5. **Phase 5** Backtesting der Strategien gegen historische Daten.
@@ -639,14 +648,30 @@ reiche Kandidaten eigenständig als `status: watchlist` auf — als Grundlage f�
 Empfehlungen abseits der bestehenden Liste. Advisory-only (P-7): Aufnahme in die
 Watchlist ist eine Daten-, keine Handelsaktion.
 
-- **MS-1 Ablauf (hybrid):** Findet der Scan einen Kandidaten, wird er (a) automatisch
-  in die Watchlist aufgenommen, (b) per E-Mail gemeldet und (c) mit vollständiger
-  P-5-Begründung (warum Kauf/Potenzial) versehen. Der Nutzer entscheidet über die GUI,
-  ob der Kandidat bleibt oder entfernt wird (U-10).
-- **MS-2 Datenquelle:** CoinGecko **Trending/Top-Gainers als Vorfilter**, Treffer
-  danach gegen die Fundamental-/Sicherheitskriterien (Stufe A) geprüft.
-- **MS-3 Frequenz:** 2× täglich, **04:00 und 16:00** (reiner Watchlist-Scan). Frequenz
-  für weitergehende Agent-Funktionen (laufende Bestandsbewertung, De-Risking) noch offen.
+- **MS-1 Ablauf: ERLEDIGT, mit zwei bewussten, dokumentierten Abweichungen vom
+  Wortlaut (2026-07-09, siehe Plan `deep-launching-zebra.md` für die volle
+  Begründung).** (a) Statt automatischem Schreiben in `config.yaml` (die Datei ist
+  explizit handgepflegt, "BEARBEITEN IN NOTEPAD++") zeigt die UI (`ui/marktscan_view.py`)
+  einen fertigen, copy-paste-baren YAML-Block — der Nutzer trägt den Eintrag selbst
+  ein. (b) Statt automatisch für JEDEN Kandidaten eine volle P-5-Begründung zu
+  generieren, ist das **hybrid**: immer per UI-Klick verfügbar, zusätzlich per
+  Konfig-Schalter `marktscan.groq_automatisch_kaufkandidaten` (Default `false`)
+  automatisch nur für `kaufkandidat`-Treffer — kostenbewusst, Groq-Calls bleiben
+  dadurch auf eine Handvoll/Tag begrenzt statt einer pro Rohkandidat. (c) Der
+  Nutzer entscheidet über die GUI (U-10, `ui/marktscan_view.py`: "Watchlist-Eintrag
+  vorbereiten"/"Verwerfen"), ob ein Kandidat übernommen oder verworfen wird —
+  wortgetreu umgesetzt.
+- **MS-2 Datenquelle: ERLEDIGT.** CoinGecko Trending (`/search/trending`) + Top-Gainers.
+  **Wichtiger Live-Fund (2026-07-09):** der `order=price_change_percentage_24h_desc`-
+  Parameter von `/coins/markets` ist auf der Free-Tier praktisch wirkungslos (liefert
+  weiterhin nach Marktkap. sortierte Ergebnisse) — Workaround: mehrere Seiten mit
+  `order=market_cap_desc` abrufen und client-seitig in Python nach 24h-Änderung
+  sortieren (`api/coingecko.py::fetch_top_gainers()`).
+- **MS-3 Frequenz: ERLEDIGT.** 2× täglich, **04:00 und 16:00**, per APScheduler
+  `CronTrigger` (`scheduler/background.py::marktscan_job()`, erster Cron-Job im
+  Projekt — vorherige Jobs nutzten nur feste Intervalle). Respektiert
+  `config.yaml marktscan.aktiv` (Deaktivierung möglich, überspringt sauber statt
+  Fehler zu werfen).
 
 ### Stufe A — Ausschluss & Einordnung (harte Filter, Tier-Modell)
 
@@ -658,29 +683,65 @@ Kein Einzel-Cutoff, sondern ein **Tier-Modell** (Grenzen vorläufig):
 | Tier 2 | ~150 Mio.–1 Mrd. | Wachstums-Chance | strenger |
 | Tier 3 | ~20–150 Mio. | Small-Cap-Beimischung (High-Risk) | strengste Signale + Budget-Deckel |
 
-- **A(MS)-1 Tier-3-Budgetdeckel:** Small Caps insgesamt max. **10–15 %** des Portfolios
-  (`config.yaml → risiko.max_allokation_small_cap_prozent`), regime-abhängig gedrosselt.
-- **A(MS)-2 Weiche Untergrenze:** Coins < 20 Mio. USD nur über **Override**, wenn der
-  Risiko-Score sie trotz Größe als moderat/gering-riskant einstuft. Da die Marktkap.
-  selbst in RM-8 einfließt, muss dieser Override durch **andere** Faktoren (Liquidität,
-  Trend, Volumen, Narrativ) „verdient" werden — er ist selten.
-- **A(MS)-3 weitere Filter:** Mindest-Handelsvolumen 24h, Mindestalter, Volumen/Marktkap.-
-  Ratio (Wash-Trading-Schutz), Stablecoins ausgeschlossen, Duplikat-Check gegen
-  bestehende Watchlist. Konkrete Werte in `config.yaml → marktscan.filter`.
+- **A(MS)-1 Tier-3-Budgetdeckel: ERLEDIGT.** Small Caps insgesamt max. **10–15 %** des
+  Portfolios (regime-abhängig, `config.yaml → regime.profile[*].small_cap_budget_prozent`).
+  Ein Tier-3-`kaufkandidat` ohne Budget-Headroom (`agent/risk_gate.py::
+  small_cap_budget_headroom()`, extrahiert aus `pre_check()`) wird in Stufe D auf
+  `watchlist_wuerdig` heruntergestuft, statt einen "Kaufkandidaten" zu zeigen, den das
+  echte Risiko-Gate sofort veto'en würde.
+- **A(MS)-2 Weiche Untergrenze:** noch nicht als eigener Override umgesetzt (bewusst
+  ausgelassen in dieser Slice — Coins < 20 Mio. USD fallen aktuell einfach durch
+  Stufe A, kein Sonderpfad).
+- **A(MS)-3 weitere Filter: ERLEDIGT.** Mindest-Handelsvolumen 24h, Mindestalter
+  (Näherung über `atl_date`, siehe unten), Volumen/Marktkap.-Ratio, Stablecoin-Filter
+  (Preis-nahe-1-$-Heuristik, kein Categories-API-Call), Duplikat-Check gegen
+  bestehende Watchlist UND bereits vom Nutzer entschiedene frühere Kandidaten
+  (`agent/marktscan.py::apply_stufe_a_filters()`/`_duplicate_should_skip()`).
+  **Wichtiger Live-Fund:** CoinGecko liefert kein echtes Listing-Datum — das
+  Mindestalter wird über das Datum des Allzeittiefs (`atl_date`) angenähert
+  (dokumentierter Proxy, wie der bestehende ATR-Close-to-Close-Proxy). Für reine
+  Trending-Funde (nicht auch über Top-Gainers gefunden) ist auch das nicht
+  verfügbar — solche Kandidaten fallen durch den Alters-Filter.
 - **A(MS)-4 Geltungsbereich:** Nur für **Agent-Neufunde**; manuelle Nutzer-Picks bleiben
   unberührt (dürfen riskanter sein).
-- **A(MS)-5 Narrativ-Abdeckung** (RWA, KI, DePIN, L1/L2 …): fehlende Narrative werden
-  bevorzugt ergänzt (Diversifikation, gegen Klumpenrisiko A-2) — zugleich Positiv-Signal
-  in Stufe B.
+- **A(MS)-5 Narrativ-Abdeckung** (RWA, KI, DePIN, L1/L2 …): bewusst NICHT bewertet
+  (bräuchte einen zusätzlichen `/coins/{id}`-Call pro Kandidat) — als offener Punkt
+  dokumentiert, kein stillschweigender Abstrich.
 
-### Stufe B / C / D — `[OFFEN]`, in Ausarbeitung
+### Stufe B / C / D — ERLEDIGT (Slice, 2026-07-09)
 
-- **Stufe B (positive Signale):** vier Kategorien — Technik, Fundamental/Qualität,
-  Markt-/Momentum, Kontext/Makro. Grundlinie: Bei *Neufunden* wiegen Fundamental &
-  Momentum schwerer als reines Technik-Timing (das zählt mehr für laufende Watchlist).
-- **Stufe C (Scoring/Gewichtung):** Verrechnung der Signale; Gewichte kommen aus dem
-  aktiven Regime-Profil (Kap. 14).
-- **Stufe D (Schwellenwerte):** ab welchem Score „watchlist-würdig" bzw. „Kaufkandidat".
+- **Stufe B (positive Signale): ERLEDIGT**, vier Kategorien (`agent/marktscan.py`,
+  Rubriken je 0–100, VORLAEUFIG dokumentiert):
+  - **Technik:** 24h-Änderung (immer verfügbar) + RSI-14/EMA-20/MACD-Histogramm, falls
+    ein gezielter Backfill (nur für Stufe-A-Überlebende, Kosten sparen) genug Historie
+    ergibt. EMA-50/-200/Fibonacci/ATR bleiben für Neufunde praktisch immer
+    `nicht_verfügbar`.
+  - **Fundamental/Qualität:** Tier-Basiswert + Alters-Bonus (gedeckelt) + Position
+    innerhalb der Volumen/Marktkap.-Bandbreite.
+  - **Markt-/Momentum:** 24h-Änderung + Trending-Rang-Bonus (falls über Trending
+    gefunden).
+  - **Kontext/Makro (neu, 4. Kategorie):** nutzt `liquiditaets_regime`/
+    `zyklus_risiko`/`btc_matrix_state` aus `agent/regime.py` (dort bereits einmal pro
+    Scan-Lauf berechnet, kein Zusatz-Call) — expansive Liquidität/niedriges
+    Zyklus-Risiko/Altseason wirken als Bonus, das Gegenteil als Malus.
+- **Stufe C (Scoring/Gewichtung): ERLEDIGT.** Kombination der vier Kategorie-Scores
+  mit den Gewichten aus dem aktiven Regime-Profil
+  (`config.yaml → regime.profile[*].gewicht_*`, neues `gewicht_kontext_makro`-Feld
+  in allen 5 Regimen ergänzt, bestehende drei Gewichte proportional angepasst, Summe
+  weiterhin 1.0 — höher gewichtet in den Extremregimen, wo Zyklus-/Liquiditätslage am
+  aussagekräftigsten ist). Kategorien ohne Score werden aus Zähler UND Nenner
+  ausgeschlossen, nicht als 0 gewertet.
+- **Stufe D (Schwellenwerte): ERLEDIGT.** `score_gesamt >= 70` → `kaufkandidat`,
+  `>= 50` → `watchlist_wuerdig`, sonst `kein_treffer` (VORLAEUFIG,
+  `config.yaml → marktscan.schwellen`). Jeder Kandidat wird gespeichert
+  (`marktscan_candidates`-Tabelle), auch `kein_treffer` (Audit/Z-4).
+
+**Live-verifiziert (2026-07-09):** echter Scan-Lauf mit 38–42 realen Kandidaten,
+korrekt in 2 Kaufkandidaten (APE, EIGEN) + 4–5 watchlist-würdige Funde eingestuft,
+vollständige Score-Aufschlüsselung + verwendete Gewichte + Regime-Stand persistiert.
+Echte Groq-P-5-Begründung für einen Kaufkandidaten erzeugt (manueller UND
+automatischer Pfad). Neuer UI-Tab "Marktscan" (`ui/marktscan_view.py`) inkl.
+"Jetzt scannen" (~46s für einen vollen Lauf, UI bleibt reaktionsfähig).
 
 ## 14. Regime-Steuerung — marktabhängiges Verhalten
 
