@@ -925,10 +925,21 @@ seinen Emotionen scheitert. Grundsatz: **antizyklisch, aber bedingt.**
   Klassifikation (unabhängige Nachrichten-/Fundamentalquelle nötig) bleibt offen.
 - **Advisory-Konsequenz** (P-7): Eskalationsweg für Schutz-Alerts (Stop-Loss/Drawdown)
   definieren — E-Mail-Priorität, UI-Warnstufe.
-- **Umsetzungs-Rückmeldung bei Signalen** (2026-07-07, Nutzer-Idee): Der Nutzer soll
-  bei jeder Empfehlung (`signals`-Tabelle) nachträglich angeben können, ob sie
-  umgesetzt wurde oder nicht (Nachvollziehbarkeit Z-4, Grundlage für spätere
-  Auswertungen). Noch nicht implementiert.
+- **Umsetzungs-Rückmeldung bei Signalen** (2026-07-07, Nutzer-Idee) — **ERLEDIGT
+  (2026-07-09).** `signals` hat vier neue Spalten (`umgesetzt`, `umgesetzt_am`,
+  `umgesetzt_menge`, `umgesetzt_preis_usd`; Menge/Preis bewusst optional, auch bei
+  `umgesetzt=True`). Im Signale-Tab öffnet ein Button "Rückmeldung erfassen" einen
+  Modal-Dialog (Ja/Nein, optional Menge/Ausführungspreis). **Bewusste
+  Zusatzentscheidung (hybrid, mit dem Nutzer abgestimmt):** derselbe Dialog bietet
+  optional einen ZWEITEN, separat bestätigten Schreibpfad in `holdings`
+  (`source="signal_bestaetigung"`) an — er schlägt einen neuen Gesamtbestand aus
+  aktuellem Bestand + Aktion (KAUFEN/NACHKAUFEN: +Menge, VERKAUFEN/TAUSCHEN:
+  -Menge) vor, den der Nutzer vor dem Speichern frei überschreiben kann; kein
+  automatischer, unbestätigter Bestands-Write. TAUSCHEN reduziert nur die
+  Quell-Position, das Ziel-Asset wird nicht automatisch angelegt (out of scope
+  dieser Slice). `holdings` bleibt weiterhin Stand-ohne-Historie (kein Delta-Log) —
+  dieselbe Architektur wie beim Excel-Import, nur ein zweiter Auslöser für
+  denselben `upsert_holding()`-Pfad.
 - **Hebelpositionen als eigene Empfehlungsart** (2026-07-07, Nutzer-Idee): Der Agent
   soll perspektivisch nicht nur Spot-, sondern auch Hebel-Empfehlungen (Long/Short,
   2x/5x, aktiv/passiv gemanaged) inkl. Forecasts geben — zunächst nur Long, später
