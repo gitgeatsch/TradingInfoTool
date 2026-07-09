@@ -707,6 +707,19 @@ Kein Einzel-Cutoff, sondern ein **Tier-Modell** (Grenzen vorläufig):
 - **A(MS)-5 Narrativ-Abdeckung** (RWA, KI, DePIN, L1/L2 …): bewusst NICHT bewertet
   (bräuchte einen zusätzlichen `/coins/{id}`-Call pro Kandidat) — als offener Punkt
   dokumentiert, kein stillschweigender Abstrich.
+- **A(MS)-6 Handelsbörsen-Check (Bitpanda): ERLEDIGT (2026-07-09, Nutzer-Wunsch).**
+  Weder CoinGecko noch Kraken wissen, ob ein Coin auf der tatsächlichen Handelsbörse
+  des Nutzers (Bitpanda) überhaupt kaufbar ist — ein Marktscan-Kandidat (oder sogar
+  ein bereits bestehender Watchlist-Eintrag) kann bei beiden existieren, ohne dort
+  gelistet zu sein. Neues Modul `api/bitpanda.py::get_listed_symbols()` — öffentlicher
+  Preis-Ticker-Endpunkt (`api.bitpanda.com/v1/ticker`), kein Key nötig, live
+  verifiziert 868 Symbole ohne Auth. **Bewusst NUR Warnung, kein Stufe-A-Ausschluss**
+  (ein nicht gelisteter Coin kann trotzdem beobachtenswert sein) — sichtbar als
+  eigene Spalte im Marktscan-Tab UND im bestehenden Watchlist-Tab (`ui/app.py`),
+  zusätzlich verstärkte Warnung im "Watchlist-Eintrag vorbereiten"-Dialog. Einmal pro
+  Scan-Lauf bzw. beim App-Start/manuellen Refresh abgerufen, nicht im 3-Sekunden-Poll.
+  **Live-Fund:** deckt einen echten, bereits bestehenden Fall auf — **CANTON ist in
+  der Watchlist, aber nicht bei Bitpanda gelistet.**
 
 ### Stufe B / C / D — ERLEDIGT (Slice, 2026-07-09)
 
