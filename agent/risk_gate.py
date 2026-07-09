@@ -51,6 +51,32 @@ def _portfolio_values_usd(watchlist, holdings, latest_prices) -> tuple[float, di
     return sum(values.values()), values
 
 
+def small_cap_budget_headroom(watchlist, holdings, latest_prices, regime_result, config) -> float:
+    """Verfuegbares Tier-3-Small-Cap-Budget in Prozentpunkten (Regime-Limit minus
+    aktuelle Small-Cap-Allokation), unabhaengig von einem konkreten zu bewertenden
+    Asset. Kann negativ sein (Budget bereits ueberschritten). Extrahiert aus
+    `pre_check()` fuer Wiederverwendung durch agent/marktscan.py (Stufe D,
+    Nutzungs-Diskussion Marktscan 2026-07-09) - reiner Refactor, keine
+    Verhaltensaenderung an `pre_check()` selbst (aequivalente Bedingung, siehe dort)."""
+    total_value_usd, values_by_symbol = _portfolio_values_usd(watchlist, holdings, latest_prices)
+    tier2_threshold = config["marktscan"]["tiers"]["tier2_min_marktkap_usd"]
+    profile = config["regime"]["profile"].get(regime_result.regime, {})
+    budget_pct = profile.get(
+        "small_cap_budget_prozent", config["risiko"]["max_allokation_small_cap_prozent"]
+    )
+    small_cap_value = sum(
+        v
+        for sym, v in values_by_symbol.items()
+        if (a := next((w for w in watchlist if w.symbol == sym), None))
+        and a.typ == "taktisch"
+        and (p := latest_prices.get(sym))
+        and p.market_cap_usd is not None
+        and p.market_cap_usd < tier2_threshold
+    )
+    current_pct = (small_cap_value / total_value_usd * 100) if total_value_usd > 0 else 0.0
+    return budget_pct - current_pct
+
+
 def pre_check(
     asset,
     watchlist,
@@ -126,7 +152,8 @@ def pre_check(
             max_position_size_usd = min(max_position_size_usd, remaining_usd)
 
     # R-5.10: Small-Cap-Budget aus dem aktiven Regime-Profil (nicht dem statischen
-    # config-Wert) - das ist der Kern von R-5.10.
+    # config-Wert) - das ist der Kern von R-5.10. Headroom-Berechnung ausgelagert
+    # (small_cap_budget_headroom() oben), von agent/marktscan.py wiederverwendet.
     small_cap_budget_pct_applicable = None
     tier2_threshold = config["marktscan"]["tiers"]["tier2_min_marktkap_usd"]
     is_small_cap = (
@@ -140,26 +167,17 @@ def pre_check(
         small_cap_budget_pct_applicable = profile.get(
             "small_cap_budget_prozent", risiko_cfg["max_allokation_small_cap_prozent"]
         )
-        small_cap_value = sum(
-            v
-            for sym, v in values_by_symbol.items()
-            if (a := next((w for w in watchlist if w.symbol == sym), None))
-            and a.typ == "taktisch"
-            and (p := latest_prices.get(sym))
-            and p.market_cap_usd is not None
-            and p.market_cap_usd < tier2_threshold
-        )
-        small_cap_pct_current = (small_cap_value / total_value_usd * 100) if total_value_usd > 0 else 0.0
-        if small_cap_pct_current >= small_cap_budget_pct_applicable:
+        headroom_pct = small_cap_budget_headroom(watchlist, holdings, latest_prices, regime_result, config)
+        if headroom_pct <= 0:
             veto_reasons.append(
-                f"Small-Cap-Budget {small_cap_pct_current:.1f}% bereits >= Regime-Limit "
-                f"{small_cap_budget_pct_applicable}% ({regime_result.regime}, R-5.10)"
+                f"Small-Cap-Budget bereits ausgeschöpft (Headroom {headroom_pct:.1f} Prozentpunkte, "
+                f"Regime-Limit {small_cap_budget_pct_applicable}% - {regime_result.regime}, R-5.10)"
             )
             checks.append("R-5.10: FEHLGESCHLAGEN - Small-Cap-Budget am/über Regime-Limit")
         else:
             checks.append(
-                f"R-5.10: OK - Small-Cap-Budget {small_cap_pct_current:.1f}% von "
-                f"{small_cap_budget_pct_applicable}% ({regime_result.regime})"
+                f"R-5.10: OK - Small-Cap-Budget-Headroom {headroom_pct:.1f} Prozentpunkte "
+                f"(Regime-Limit {small_cap_budget_pct_applicable}%, {regime_result.regime})"
             )
 
     max_position_size_eur = None
