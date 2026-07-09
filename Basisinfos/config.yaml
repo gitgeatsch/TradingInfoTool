@@ -297,6 +297,54 @@ watchlist:
     status: aktiv
     assetklasse: etf
     yfinance_symbol: DBPK.DE
+  - symbol: X136
+    name: Amundi Global Bioenergy UCITS ETF
+    typ: taktisch
+    status: aktiv
+    assetklasse: etf
+    yfinance_symbol: X136.BE
+  - symbol: EXH3
+    name: iShares STOXX Europe 600 Food & Beverage UCITS ETF (DE)
+    typ: taktisch
+    status: aktiv
+    assetklasse: etf
+    yfinance_symbol: EXH3.DE
+  - symbol: CEBS
+    name: iShares Copper Miners UCITS ETF
+    typ: taktisch
+    status: aktiv
+    assetklasse: etf
+    yfinance_symbol: CEBS.DE
+  - symbol: ISOC
+    name: iShares Agribusiness UCITS ETF
+    typ: taktisch
+    status: aktiv
+    assetklasse: etf
+    yfinance_symbol: IS0C.DE
+  - symbol: OD7H
+    name: WisdomTree Gold
+    typ: taktisch
+    status: aktiv
+    assetklasse: rohstoffe
+    yfinance_symbol: OD7H.SG
+  - symbol: OD7C
+    name: WisdomTree Copper
+    typ: taktisch
+    status: aktiv
+    assetklasse: rohstoffe
+    yfinance_symbol: OD7C.SG
+  - symbol: OD7L
+    name: WisdomTree Natural Gas
+    typ: taktisch
+    status: aktiv
+    assetklasse: rohstoffe
+    yfinance_symbol: JE00BN7KB334.SG
+  - symbol: PLTR
+    name: Palantir Technologies Inc.
+    typ: taktisch
+    status: aktiv
+    assetklasse: aktien
+    yfinance_symbol: PLTR
 
 # --- Strategie-Katalog (siehe Spezifikation Kap. 6) ---
 strategien:
