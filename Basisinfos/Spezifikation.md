@@ -679,7 +679,7 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
 > Architektur: Datenquellen, Indikatoren und Strategien als austauschbare Module
 > (Plug-in-Prinzip) anlegen, damit Erweiterungen ohne Kern-Umbau möglich sind.
 
-### Zielarchitektur für Multi-Asset-Erweiterbarkeit `[Idee 2026-07-09, noch nicht umgesetzt]`
+### Zielarchitektur für Multi-Asset-Erweiterbarkeit `[Slice 1: Tracking ERLEDIGT 2026-07-09]`
 
 Code-Analyse (2026-07-09) hat gezeigt: die Kopplung an Krypto ist nicht oberflächlich,
 sondern reicht bis in den Kern der Agent-Entscheidungslogik. Bevor Phase 6 (Aktien/
@@ -736,9 +736,58 @@ Krypto+Aktien+Rohstoffe hinweg, siehe Portfolio-Tab/Gesamtwert). Stattdessen:
    jetzt unter `agent/krypto/*` statt `agent/*` (reines Refactoring, keine
    Verhaltensänderung — alle Cross-Imports und Aufrufstellen live geprüft).
    `agent/cycles.py` (FOMC-Kalender/Präsidentschaftszyklus) bleibt bewusst auf
-   Top-Level, da bereits assetklassen-neutral. Punkte 2 (Schema-Generalisierung)
-   und 3 (erste konkrete Zweit-Assetklasse) bleiben offen bis zum ersten echten
-   Anwendungsfall.
+   Top-Level, da bereits assetklassen-neutral.
+
+**Slice 1 (reines Tracking) — ERLEDIGT (2026-07-09), ausgelöst durch echte
+Bitpanda-Bestände des Nutzers (Aktien/ETF/Rohstoffe seit dem 29.1.2026-Relaunch des
+dortigen steuereinfachen Wertpapierdepots).** Mit dem Nutzer abgestimmt: bewusst NUR
+Bestand/Kurs/Wert in Watchlist/Portfolio, KEINE Signale/Regime/Risiko-Gate/Marktscan
+für diese Assetklassen (Punkt 1 oben, eigene Agent-Module, bleibt ein separater,
+größerer Folge-Slice).
+
+- **Datenmodell:** `config.py::WatchlistAsset` hat jetzt `assetklasse` (Default
+  `"krypto"`, rückwärtskompatibel) und `yfinance_symbol`; `coingecko_id` ist optional
+  geworden. `database/models.py::PriceSnapshot.coingecko_id` ebenso.
+- **DB-Migration (Punkt 2, aber minimal statt vollständig):** nur `price_cache.
+  coingecko_id` wurde NULL-fähig gemacht (SQLite-Tabellen-Neubau, da kein `ALTER
+  COLUMN`) — `price_history`/`price_history_ohlc`/`marktscan_candidates` bleiben
+  bewusst unverändert Krypto-only, da dieser Slice keine Historie/Charts für die
+  neuen Assetklassen liefert. Die volle `(asset_id, asset_klasse)`-Generalisierung
+  aus Punkt 2 bleibt weiterhin offen für einen künftigen Slice mit Historie/Charts.
+- **Kursquelle:** neues `api/yfinance_client.py` (yfinance, kostenlos, kein Key) —
+  Bitpanda selbst liefert für diese Assetklassen keine freien Marktdaten (live
+  geprüft: `/v1/ticker` deckt nur Krypto + die separate Edelmetall-Wallet ab, die
+  echte Wertpapier-Marktdaten-API ist ein B2B-Enterprise-Produkt). `fast_info` statt
+  `.history()`, da nur der aktuelle Kurs gebraucht wird; Währung wird aus `fast_info`
+  gelesen statt angenommen (P-10).
+- **Eigener Scheduler-Job**, isoliert vom Krypto-Preis-Takt (P-10-Prinzip).
+- **5 echte Bestände identifiziert und eingetragen:** VST (Vistra Corp, Aktie), OD7N
+  (WisdomTree Silver ETC, Rohstoff), VVMX (VanEck Rare Earth & Strategic Metals UCITS
+  ETF), 3QSS (WisdomTree NASDAQ 100 3x Daily Short) und DBPK (Xtrackers S&P 500 2x
+  Inverse Daily Swap UCITS ETF) — letztere zwei sind laut Nutzer bewusste
+  Absicherungs-/Hedging-Positionen, kein Widerspruch zu Z-1.
+- **UI:** Watchlist/Portfolio zeigen eine neue "Assetklasse"-Spalte; der
+  Bitpanda-Listing-Check (Krypto-spezifisch) wird für Nicht-Krypto-Zeilen übersprungen
+  (zeigt "-" statt einer irreführenden "nicht gelistet"-Warnung). Signale-/Marktscan-
+  Tab filtern Nicht-Krypto-Assets bereits aus der intern verwendeten Watchlist heraus
+  (nicht nur der Anzeige), da `agent/krypto/risk_gate.py::_portfolio_values_usd()`
+  sonst deren Wert in die Portfolio-Gesamtsumme für die Allokations-Prozentrechnung
+  hätte einfließen lassen.
+- **Nebenbefund + Fix:** `config.py::add_watchlist_entry()` hatte einen echten,
+  bisher unentdeckten Bug — `Path.write_text()` wandelt unter Windows beim Schreiben
+  jedes `\n` in `\r\n` um, was bei jedem Aufruf die GESAMTE `config.yaml` von LF auf
+  CRLF umgestellt hätte, nicht nur die neuen Zeilen (Widerspruch zum eigenen
+  "byte-für-byte unangetastet"-Versprechen der Funktion). Behoben durch
+  `read_bytes()`/`write_bytes()` mit expliziter Zeilenende-Erkennung.
+- **Live verifiziert:** alle 5 echten Symbole liefern korrekten Kurs in der
+  richtigen Währung, Fehlerisolierung je Symbol bestätigt, bestehende 41
+  Krypto-Assets unverändert funktionsfähig, DB-Migration ohne Datenverlust,
+  vollständiger End-to-End-Test (App-Start → Watchlist zeigt 46 Assets →
+  Preis-Job befüllt `price_cache` → Portfolio berechnet korrekten Wert für einen
+  Test-Bestand → Signale-/Marktscan-Tab zeigen unverändert nur Krypto-Assets).
+
+Punkte 2 (volle Schema-Generalisierung) und 3 (eigene Agent-Module je Assetklasse)
+bleiben bewusst offen für einen künftigen, separaten Slice.
 
 ## 12. Rechtlicher Hinweis
 
