@@ -223,6 +223,34 @@ def fetch_market_context() -> dict:
     return context
 
 
+def compute_current_regime(conn, coingecko_client, watchlist, fred_api_key: str | None, config_dict: dict):
+    """Buendelt die vollstaendige Regime-Bestimmung (R-5.1 + Liquiditaets-Regime +
+    Zyklus-Risiko, siehe agent/regime.py) - von generate_signal() UND
+    scheduler/background.py::marktscan_job() genutzt, damit beide denselben
+    aktuellen Markt-/Makro-Zustand verwenden statt die Logik zu duplizieren.
+    Wirft ValueError, falls kein BTC-Asset in der Watchlist ist (die
+    Regime-Bestimmung braucht zwingend BTC-Daten)."""
+    btc_asset = next((a for a in watchlist if a.symbol == "BTC"), None)
+    if btc_asset is None:
+        raise ValueError("Kein BTC-Asset in der Watchlist gefunden - Regime-Bestimmung braucht BTC")
+
+    liquidity_context = _fetch_liquidity_context(fred_api_key)
+    cycle_risk_context = _fetch_cycle_risk_context()
+    macro_history = _update_macro_snapshot(conn, coingecko_client, fred_api_key, liquidity_context)
+    btc_dates, btc_closes, btc_ohlc, _ = _load_closes_and_ohlc(conn, "BTC", btc_asset.coingecko_id)
+    btc_snapshot = build_technical_snapshot(btc_closes, btc_dates, btc_ohlc)
+
+    return determine_regime(
+        btc_closes, btc_snapshot, macro_history, config_dict["regime"]["manueller_override"],
+        fed_funds_history=liquidity_context["fed_funds_history"],
+        m2_us_history=liquidity_context["m2_us_history"],
+        m2_eurozone_history=liquidity_context["m2_eurozone_history"],
+        m2_china_history=liquidity_context["m2_china_history"],
+        btc_log_regression_risk=cycle_risk_context["log_regression_risk"],
+        btc_onchain_reading=cycle_risk_context["onchain_reading"],
+    )
+
+
 def generate_signal(
     asset, watchlist, conn, groq_client, coingecko_client, kraken_client,
     fred_api_key: str | None = None,
@@ -267,27 +295,9 @@ def generate_signal(
         db.insert_signal(conn, signal)
         return signal
 
-    # R-5.1 Marktregime (BTC-Trend + BTC-Dominanz + Fear&Greed).
+    # R-5.1 Marktregime (BTC-Trend + BTC-Dominanz + Fear&Greed + Liquiditaet + Zyklus-Risiko).
     config_dict = config.load_config()
-    btc_asset = next((a for a in watchlist if a.symbol == "BTC"), None)
-    liquidity_context = _fetch_liquidity_context(fred_api_key)
-    cycle_risk_context = _fetch_cycle_risk_context()
-    macro_history = _update_macro_snapshot(conn, coingecko_client, fred_api_key, liquidity_context)
-    if btc_asset is not None and btc_asset.symbol != asset.symbol:
-        btc_dates, btc_closes, btc_ohlc, _ = _load_closes_and_ohlc(conn, "BTC", btc_asset.coingecko_id)
-        btc_snapshot = build_technical_snapshot(btc_closes, btc_dates, btc_ohlc) if len(btc_closes) else snapshot
-    else:
-        btc_closes, btc_snapshot = closes, snapshot
-
-    regime_result = determine_regime(
-        btc_closes, btc_snapshot, macro_history, config_dict["regime"]["manueller_override"],
-        fed_funds_history=liquidity_context["fed_funds_history"],
-        m2_us_history=liquidity_context["m2_us_history"],
-        m2_eurozone_history=liquidity_context["m2_eurozone_history"],
-        m2_china_history=liquidity_context["m2_china_history"],
-        btc_log_regression_risk=cycle_risk_context["log_regression_risk"],
-        btc_onchain_reading=cycle_risk_context["onchain_reading"],
-    )
+    regime_result = compute_current_regime(conn, coingecko_client, watchlist, fred_api_key, config_dict)
     regime_profile = config_dict["regime"]["profile"].get(regime_result.regime, {})
 
     # R-5.3 Technische Analyse -> Confluence-Zusammenfassung.

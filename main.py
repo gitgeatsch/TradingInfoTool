@@ -96,6 +96,8 @@ def main() -> None:
         kraken_client=kraken_client,
         db_conn_factory=db.get_connection,
         watchlist_provider=lambda: watchlist,
+        groq_client=groq_client,
+        fred_api_key=fred_api_key,
     )
     bg_scheduler.start()
 

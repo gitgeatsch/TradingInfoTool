@@ -68,8 +68,43 @@ def refresh_ohlc_job(client, conn_factory, watchlist) -> None:
         conn.close()
 
 
+def marktscan_job(coingecko_client, kraken_client, groq_client, conn_factory, watchlist, fred_api_key) -> None:
+    """MS-3: 2x taeglich (04:00/16:00, siehe build_scheduler()) - kompletter
+    Marktscan-Lauf (Stufe A-D, agent/marktscan.py). Braucht ein aktuelles Regime
+    (R-5.1 + Liquiditaets-Regime + Zyklus-Risiko) fuer Stufe C/D, dafuer dieselbe
+    Logik wie agent/pipeline.py::generate_signal() (compute_current_regime(), nicht
+    dupliziert). `groq_client` kann None sein (P-8) - dann greift nur der manuelle
+    UI-Klick-Pfad fuer P-5-Begruendungen, keine automatischen."""
+    conn = conn_factory()
+    try:
+        import config as config_module
+        from agent.marktscan import run_scan
+        from agent.pipeline import compute_current_regime
+
+        config_dict = config_module.load_config()
+        if not config_dict["marktscan"].get("aktiv", True):
+            logger.info("Marktscan deaktiviert (config.yaml marktscan.aktiv=false) - übersprungen")
+            return
+
+        regime_result = compute_current_regime(conn, coingecko_client, watchlist, fred_api_key, config_dict)
+        candidates = run_scan(
+            coingecko_client, conn, watchlist, regime_result, config_dict,
+            groq_client=groq_client, kraken_client=kraken_client,
+        )
+        treffer = [c for c in candidates if c.einstufung in ("kaufkandidat", "watchlist_wuerdig")]
+        logger.info(
+            "Marktscan: %d Kandidaten bewertet (%d Treffer: watchlist_würdig/Kaufkandidat, Regime %s)",
+            len(candidates), len(treffer), regime_result.regime,
+        )
+    except Exception:
+        logger.exception("Marktscan fehlgeschlagen")
+    finally:
+        conn.close()
+
+
 def build_scheduler(
-    coingecko_client, kraken_client, db_conn_factory, watchlist_provider
+    coingecko_client, kraken_client, db_conn_factory, watchlist_provider,
+    groq_client=None, fred_api_key=None,
 ) -> BackgroundScheduler:
     watchlist = watchlist_provider()
     scheduler = BackgroundScheduler()
@@ -93,5 +128,15 @@ def build_scheduler(
         hours=OHLC_REFRESH_INTERVAL_HOURS,
         args=[kraken_client, db_conn_factory, watchlist],
         id="refresh_ohlc",
+    )
+    # MS-3: erster CronTrigger im Projekt (bisherige Jobs nutzen nur "interval") -
+    # feste Uhrzeiten statt Intervall, siehe config.yaml marktscan.zeiten.
+    scheduler.add_job(
+        marktscan_job,
+        "cron",
+        hour="4,16",
+        minute=0,
+        args=[coingecko_client, kraken_client, groq_client, db_conn_factory, watchlist, fred_api_key],
+        id="marktscan",
     )
     return scheduler
