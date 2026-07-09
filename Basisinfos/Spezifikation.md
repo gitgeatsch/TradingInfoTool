@@ -721,19 +721,26 @@ Kein Einzel-Cutoff, sondern ein **Tier-Modell** (Grenzen vorläufig):
 - **A(MS)-5 Narrativ-Abdeckung** (RWA, KI, DePIN, L1/L2 …): bewusst NICHT bewertet
   (bräuchte einen zusätzlichen `/coins/{id}`-Call pro Kandidat) — als offener Punkt
   dokumentiert, kein stillschweigender Abstrich.
-- **A(MS)-6 Handelsbörsen-Check (Bitpanda): ERLEDIGT (2026-07-09, Nutzer-Wunsch).**
-  Weder CoinGecko noch Kraken wissen, ob ein Coin auf der tatsächlichen Handelsbörse
-  des Nutzers (Bitpanda) überhaupt kaufbar ist — ein Marktscan-Kandidat (oder sogar
-  ein bereits bestehender Watchlist-Eintrag) kann bei beiden existieren, ohne dort
-  gelistet zu sein. Neues Modul `api/bitpanda.py::get_listed_symbols()` — öffentlicher
-  Preis-Ticker-Endpunkt (`api.bitpanda.com/v1/ticker`), kein Key nötig, live
-  verifiziert 868 Symbole ohne Auth. **Bewusst NUR Warnung, kein Stufe-A-Ausschluss**
-  (ein nicht gelisteter Coin kann trotzdem beobachtenswert sein) — sichtbar als
-  eigene Spalte im Marktscan-Tab UND im bestehenden Watchlist-Tab (`ui/app.py`),
-  zusätzlich verstärkte Warnung im "Watchlist-Eintrag vorbereiten"-Dialog. Einmal pro
-  Scan-Lauf bzw. beim App-Start/manuellen Refresh abgerufen, nicht im 3-Sekunden-Poll.
-  **Live-Fund:** deckt einen echten, bereits bestehenden Fall auf — **CANTON ist in
-  der Watchlist, aber nicht bei Bitpanda gelistet.**
+- **A(MS)-6 Handelsbörsen-Check (Bitpanda): ERLEDIGT (2026-07-09, Nutzer-Wunsch,
+  noch am selben Tag auf Namensabgleich nachgebessert).** Weder CoinGecko noch
+  Kraken wissen, ob ein Coin auf der tatsächlichen Handelsbörse des Nutzers
+  (Bitpanda) überhaupt kaufbar ist — ein Marktscan-Kandidat (oder sogar ein bereits
+  bestehender Watchlist-Eintrag) kann bei beiden existieren, ohne dort gelistet zu
+  sein. `api/bitpanda.py::get_listed_assets()` — öffentlicher, paginierter
+  `/v3/assets`-Endpunkt (kein Key nötig, live verifiziert 866 Krypto-relevante
+  Einträge), liefert Symbol UND Name je Asset. `is_listed()` prüft primär per
+  Symbol (inkl. bekannter Ticker-Abweichungen, `BITPANDA_SYMBOL_OVERRIDES`) und
+  fällt bei Fehlschlag automatisch auf einen Namensvergleich zurück — deckt damit
+  auch künftig unbekannte Symbol-Mismatches ab, ohne jeden Fall manuell nachtragen
+  zu müssen. **Bewusst NUR Warnung, kein Stufe-A-Ausschluss** (ein nicht gelisteter
+  Coin kann trotzdem beobachtenswert sein) — sichtbar als eigene Spalte im
+  Marktscan-Tab UND im bestehenden Watchlist-Tab (`ui/app.py`), zusätzlich
+  verstärkte Warnung im "In Watchlist übernehmen"-Dialog. Einmal pro Scan-Lauf bzw.
+  beim App-Start/manuellen Refresh abgerufen, nicht im 3-Sekunden-Poll.
+  **Live-Fund + vollständiger Audit:** deckte zunächst einen echten Bestandsfall auf
+  — CANTON war in der Watchlist, aber der interne Ticker weicht vom Marktstandard
+  ("CC") ab. Vollständiger Namensabgleich aller 41 Watchlist-Assets bestätigte
+  danach: CANTON war der EINZIGE Fall, keine weiteren Mismatches gefunden.
 
 ### Stufe B / C / D — ERLEDIGT (Slice, 2026-07-09)
 
