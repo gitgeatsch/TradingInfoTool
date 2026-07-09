@@ -38,7 +38,7 @@ class MarketCoin:
     market_cap_usd: float | None
     volume_24h_usd: float | None
     change_24h_pct: float | None
-    atl_date: str | None  # Alters-Proxy, siehe agent/marktscan.py - CoinGecko liefert
+    atl_date: str | None  # Alters-Proxy, siehe agent/krypto/marktscan.py - CoinGecko liefert
     # kein echtes Listing-Datum, live geprueft 2026-07-09
 
 

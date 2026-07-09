@@ -59,7 +59,7 @@ class MacroSnapshot:
     pboc_lpr_5y: float | None = None
     # Globale M2-Gesamtsicht (api/onchain.py::get_all_regional_m2, Spezifikation
     # Kap. 8) - Rohwerte in ihrer jeweiligen Landeswaehrung/Einheit, bewusst NICHT
-    # umgerechnet (siehe agent/regime.py fuer die waehrungsneutrale Trendberechnung
+    # umgerechnet (siehe agent/krypto/regime.py fuer die waehrungsneutrale Trendberechnung
     # ueber Prozent-Veraenderung statt absoluter Summen).
     m2_eurozone: float | None = None
     m2_china: float | None = None
@@ -121,7 +121,7 @@ class Signal:
 
 @dataclass
 class MarktscanCandidate:
-    """Ein von agent/marktscan.py entdeckter, bewerteter Kandidat (Spezifikation
+    """Ein von agent/krypto/marktscan.py entdeckter, bewerteter Kandidat (Spezifikation
     Kap. 13, Stufe A-D). Anders als Signal (reines Append-only-Log je Pipeline-Lauf)
     ist das ein EINZELNER, veraenderlicher Datensatz mit Lifecycle-`status` (U-10) -
     ein `upsert`, kein `insert` je Scan. id=None vor dem ersten Insert."""
@@ -166,7 +166,7 @@ class MarktscanCandidate:
     einstufung: str | None = None  # 'kein_treffer'|'watchlist_wuerdig'|'kaufkandidat'
     einstufung_begruendung: str | None = None
     small_cap_budget_hinweis: str | None = None
-    # optionale Groq-Begruendung (hybrid, siehe agent/marktscan.py)
+    # optionale Groq-Begruendung (hybrid, siehe agent/krypto/marktscan.py)
     groq_kurzbegruendung: str | None = None
     groq_langbegruendung_json: str | None = None
     groq_generiert_am: str | None = None

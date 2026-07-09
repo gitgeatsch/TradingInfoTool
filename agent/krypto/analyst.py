@@ -18,9 +18,9 @@ import logging
 
 import numpy as np
 
-from agent.anticyclic import AnticyclicContext
-from agent.regime import RegimeResult
-from agent.risk_gate import RiskPreCheckResult
+from agent.krypto.anticyclic import AnticyclicContext
+from agent.krypto.regime import RegimeResult
+from agent.krypto.risk_gate import RiskPreCheckResult
 from indicators.calculations import ConfluenceSummary, TechnicalSnapshot, latest_value
 
 logger = logging.getLogger(__name__)

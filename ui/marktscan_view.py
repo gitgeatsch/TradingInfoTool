@@ -1,4 +1,4 @@
-"""Marktscan-Tab (U-10): zeigt die von agent/marktscan.py entdeckten und bewerteten
+"""Marktscan-Tab (U-10): zeigt die von agent/krypto/marktscan.py entdeckten und bewerteten
 Kandidaten (Spezifikation Kap. 13) und erlaubt, einen Scan manuell auszuloesen sowie
 Kandidaten zu behalten/verwerfen.
 
@@ -281,8 +281,8 @@ class MarktscanView(ttk.Frame):
 
     def _run_scan(self) -> None:
         import config as config_module
-        from agent.marktscan import run_scan
-        from agent.pipeline import compute_current_regime
+        from agent.krypto.marktscan import run_scan
+        from agent.krypto.pipeline import compute_current_regime
 
         conn = self._db_conn_factory()
         try:
@@ -326,8 +326,8 @@ class MarktscanView(ttk.Frame):
 
     def _run_writeup(self, candidate) -> None:
         import config as config_module
-        from agent.marktscan import generate_candidate_writeup
-        from agent.pipeline import compute_current_regime
+        from agent.krypto.marktscan import generate_candidate_writeup
+        from agent.krypto.pipeline import compute_current_regime
 
         conn = self._db_conn_factory()
         try:

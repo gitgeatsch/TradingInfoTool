@@ -240,7 +240,7 @@ class TechnicalSnapshot:
     """Buendelt alle Chart-/Agent-Indikatoren fuer eine Preisreihe, inkl. der
     "echte Kraken-OHLC-Daten bevorzugen, sonst Naeherung"-Weiche (siehe
     atr_wilder/atr_close_to_close_proxy, swing_highs_lows_fractal/_close_proxy).
-    Geteilte Quelle fuer ui/charts.py UND agent/pipeline.py - vermeidet Drift zwischen
+    Geteilte Quelle fuer ui/charts.py UND agent/krypto/pipeline.py - vermeidet Drift zwischen
     Chart-Anzeige und Agent-Fakten."""
     has_real_ohlc: bool
     ema: dict[int, IndicatorResult]
@@ -327,7 +327,7 @@ class ConfluenceSummary:
     Indikatoren bullish/bearish/neutral stehen (Kap. 7: confluence_pflicht - kein
     Signal aus einem einzelnen Indikator). Entscheidet NICHTS selbst - liefert nur
     deskriptive Fakten, die Signal-Synthese (KAUFEN/VERKAUFEN/HALTEN) passiert in
-    agent/analyst.py durch Groq, nicht hier."""
+    agent/krypto/analyst.py durch Groq, nicht hier."""
     items: list[ConfluenceItem]
     bullish_count: int
     bearish_count: int

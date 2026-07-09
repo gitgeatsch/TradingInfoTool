@@ -542,7 +542,7 @@ def upsert_marktscan_candidate(conn: sqlite3.Connection, candidate: MarktscanCan
     innerhalb desselben Laufs darf einen bereits gesetzten Nutzer-Status nicht
     zuruecksetzen. Cross-Lauf-Duplikat-Unterdrueckung (bereits abgelehnte/uebernommene
     Coins nicht erneut anzeigen) ist bewusst NICHT hier, sondern Aufgabe von
-    agent/marktscan.py (andere scan_run_id = andere Zeile, kein UNIQUE-Konflikt)."""
+    agent/krypto/marktscan.py (andere scan_run_id = andere Zeile, kein UNIQUE-Konflikt)."""
     placeholders = ", ".join("?" for _ in _MARKTSCAN_COLUMNS)
     update_clause = ", ".join(
         f"{col} = excluded.{col}"
@@ -591,7 +591,7 @@ def get_marktscan_candidates(
 
 
 def get_latest_marktscan_status_by_coingecko_id(conn: sqlite3.Connection, coingecko_id: str) -> str | None:
-    """Fuer den Cross-Lauf-Duplikat-Check (agent/marktscan.py): letzter bekannter
+    """Fuer den Cross-Lauf-Duplikat-Check (agent/krypto/marktscan.py): letzter bekannter
     Status dieses Coins ueber ALLE frueheren Scan-Laeufe hinweg, nicht auf den
     aktuellen scan_run_id beschraenkt."""
     row = conn.execute(

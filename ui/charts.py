@@ -151,7 +151,7 @@ class ChartWindow(tk.Toplevel):
         # nur fuer ATR und Swing-Punkte, die Preislinie selbst bleibt CoinGecko-basiert
         # (Waehrungs-Umschalter/Kontinuitaet unveraendert). Fehlt Kraken-Abdeckung,
         # bleibt die Naeherung aus Phase 2 die einzige Quelle (P-10: klar gekennzeichnet).
-        # Geteilte Logik mit agent/pipeline.py, siehe indicators/calculations.py.
+        # Geteilte Logik mit agent/krypto/pipeline.py, siehe indicators/calculations.py.
         snapshot = build_technical_snapshot(closes, dates, ohlc_history)
 
         for ax in (self._ax_price, self._ax_rsi, self._ax_macd):

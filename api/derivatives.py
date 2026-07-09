@@ -1,6 +1,6 @@
 """Open Interest + Long/Short-Ratio - Spezifikation Kap. 8/16, Bestandsaufnahme
 "Krypto-typische Datentypen" 2026-07-08. Ergaenzt die bestehende Kraken-Funding-Rate
-(`api/kraken.py`, genutzt in `agent/anticyclic.py` fuer AZ-1) um weitere
+(`api/kraken.py`, genutzt in `agent/krypto/anticyclic.py` fuer AZ-1) um weitere
 Positionierungs-/Derivate-Kontextdaten.
 
 KEIN Liquidations-Heatmap-Ersatz: eine Heatmap braucht eine Modellierung, bei welchen

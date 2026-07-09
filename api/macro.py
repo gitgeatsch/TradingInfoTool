@@ -9,7 +9,7 @@ kein strenges Limit, CoinGecko /global laeuft ueber den bereits gedrosselten
 CoinGeckoClient. Falls das spaeter in den Scheduler wandert, dann Drosselung
 nachruesten.
 
-WICHTIG (P-10): Noch NICHT an agent/pipeline.py oder database/models.py::MacroSnapshot
+WICHTIG (P-10): Noch NICHT an agent/krypto/pipeline.py oder database/models.py::MacroSnapshot
 angebunden - dieser Commit liefert nur die Fetcher-Funktionen, live gegen echte
 Endpunkte getestet. Verdrahtung in MacroSnapshot/regime.py ist ein separater
 Folgeschritt.
@@ -182,13 +182,13 @@ def get_pboc_lpr(session: requests.Session | None = None) -> PbocLprReading:
 def get_fred_history(
     series_id: str, api_key: str, observation_start: str, session: requests.Session | None = None
 ) -> list[FredObservation]:
-    """Fuer Trend-/Richtungsberechnungen (Liquiditaets-Regime, agent/regime.py) reicht
+    """Fuer Trend-/Richtungsberechnungen (Liquiditaets-Regime, agent/krypto/regime.py) reicht
     der letzte Wert allein nicht - FRED veroeffentlicht die volle Historie ueber
     denselben Endpunkt wie `get_fred_latest`, nur mit `observation_start` statt
     `limit=1`. Genutzt fuer Fed Funds Rate + US-M2, damit der Liquiditaets-Trend ab dem
     ersten Lauf verfuegbar ist statt erst nach Monaten manuell angehaeufter
     `macro_snapshot`-Zeilen (die Pipeline laeuft nur bei manuellem "Signal
-    berechnen"-Klick, kein taeglicher Scheduler - siehe agent/pipeline.py)."""
+    berechnen"-Klick, kein taeglicher Scheduler - siehe agent/krypto/pipeline.py)."""
     session = session or requests.Session()
     response = session.get(
         FRED_BASE_URL,

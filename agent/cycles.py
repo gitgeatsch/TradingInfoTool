@@ -1,7 +1,7 @@
 """US-Praesidentschaftszyklus + FOMC-Ereigniskalender - Spezifikation Kap. 8/16,
 Diskussion "erweiterte Makro-Zyklen-Sicht" 2026-07-08. Bewusst NUR Kontext-
 Information (deskriptiv, historische Tendenz), KEINE Handelsentscheidung und KEINE
-Handelslogik - siehe agent/regime.py fuer die eigentliche Regime-Bestimmung. Noch
+Handelslogik - siehe agent/krypto/regime.py fuer die eigentliche Regime-Bestimmung. Noch
 NICHT in Facts/Pipeline verdrahtet, gleiches "Datensicht vor Nutzung"-Muster wie die
 uebrigen Makro-Erweiterungen von heute.
 

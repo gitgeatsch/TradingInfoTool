@@ -1,5 +1,5 @@
 """P-10-Schwellenwerte fuer "veraltet" - Domaenenlogik, kein UI-Detail. Wird sowohl von
-ui/formatting.py (Anzeige) als auch von agent/pipeline.py (Datenqualitaets-Gate R-5.0)
+ui/formatting.py (Anzeige) als auch von agent/krypto/pipeline.py (Datenqualitaets-Gate R-5.0)
 gebraucht - lebt deshalb auf Top-Level statt in ui/, um eine agent/ -> ui/ Abhaengigkeit
 zu vermeiden."""
 from __future__ import annotations
@@ -53,7 +53,7 @@ def is_history_stale(last_date: str | None) -> bool:
 #
 # WICHTIGE EINSCHRAENKUNG (bewusst nicht geloest, siehe Spezifikation Kap. 16):
 # `MacroSnapshot.fetched_at` ist EIN Zeitstempel fuers gesamte Zeilen-Upsert, nicht
-# je Einzelfeld (COALESCE-Upsert, siehe agent/pipeline.py::_update_macro_snapshot).
+# je Einzelfeld (COALESCE-Upsert, siehe agent/krypto/pipeline.py::_update_macro_snapshot).
 # Faellt z.B. FRED laengere Zeit aus, aber PBoC wird weiterhin taeglich erfolgreich
 # aktualisiert, bumped das `fetched_at` trotzdem - ohne dass die FRED-Felder wirklich
 # neu sind. Echte feld-genaue Frische braeuchte eine Schema-Erweiterung (pro Feld ein

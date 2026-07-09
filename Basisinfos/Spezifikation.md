@@ -149,11 +149,11 @@ Zeithorizonte und Gewichtung in `config.yaml → agent`.
 
 **Umsetzungsstand (2026-07-07, Phase 3 Slice 1 — siehe Kap. 11):** Die Pipeline läuft
 seit dieser Slice erstmals real, ausgelöst manuell über den "Signale"-Tab
-(`ui/signals_view.py` → `agent/pipeline.py::generate_signal()`), noch nicht geplant/
+(`ui/signals_view.py` → `agent/krypto/pipeline.py::generate_signal()`), noch nicht geplant/
 automatisch (siehe Kap. 11). KI-Ebene: Groq (Llama 3.3 70B, siehe P-8), nicht Claude —
 die Fakten-Schicht (Indikatoren, Regime, Risiko-Check) ist deterministisches Python,
 Groq synthetisiert daraus die Empfehlung inkl. Begründung; das Modell wird dabei nie
-blind vertraut, `agent/risk_gate.py::post_check()` erzwingt die harten Regeln nach dem
+blind vertraut, `agent/krypto/risk_gate.py::post_check()` erzwingt die harten Regeln nach dem
 Groq-Aufruf nochmals deterministisch. Detaillierter Implementierungsplan (inkl.
 bewusster Vereinfachungen je Schritt) unter
 `C:\Users\Geatsch\.claude\plans\deep-launching-zebra.md`.
@@ -163,11 +163,11 @@ Entscheidungs-Pipeline (Reihenfolge je Analyse):
    benötigten Daten aktuell und vollständig genug? Wenn nein → Abbruch für dieses Asset,
    Ausgabe „HALTEN — Datenlage unsicher" mit konkretem Grund (z. B. „Preis seit X Min.
    nicht aktualisiert", „nur Y Tage Historie, benötigt Z"), kein Rateversuch mit
-   Lückendaten. **ERLEDIGT (2026-07-07):** `agent/pipeline.py` prüft Preis-/Historie-
+   Lückendaten. **ERLEDIGT (2026-07-07):** `agent/krypto/pipeline.py` prüft Preis-/Historie-
    Staleness (`staleness.py`) + Mindestverfügbarkeit von RSI/MACD/Bollinger, bevor
    irgendein Groq-Call erfolgt.
 1. **R-5.1** Marktregime bestimmen (Bulle/Bär/Seitwärts) via BTC-Trend, BTC-Dominanz,
-   Fear & Greed. **ERLEDIGT, regelbasiert (2026-07-07):** `agent/regime.py` — BTC-
+   Fear & Greed. **ERLEDIGT, regelbasiert (2026-07-07):** `agent/krypto/regime.py` — BTC-
    EMA-Ordnung, BTC-Dominanz-Trend (CoinGecko `/global`, neu `api/macro.py`), Fear &
    Greed (alternative.me, kostenlos/kein Key). Bewusst einfache, dokumentierte
    Heuristik statt der vollen RG-1..RG-11-Feinheit (siehe Kap. 14); KI-Override (RG-1b)
@@ -175,17 +175,17 @@ Entscheidungs-Pipeline (Reihenfolge je Analyse):
    wird respektiert (RG-8/RG-9).
 2. **R-5.2** Makro-Kontext: Leitzinsen, Risikoumfeld USA/Japan/China/EU/Korea.
    **Teilweise ERLEDIGT (2026-07-08, Nutzungs-Diskussion).** Neue Regime-Dimension
-   `liquiditaets_regime` (`agent/regime.py`) kombiniert Fed-Funds-Rate-Richtung
+   `liquiditaets_regime` (`agent/krypto/regime.py`) kombiniert Fed-Funds-Rate-Richtung
    (Historie via `api/macro.py::get_fred_history`) mit dem globalen M2-Trend
    (USA/Eurozone/China, Mehrheitsentscheid über die prozentuale Veränderung —
    bewusst keine Währungsumrechnung/Summe, siehe Modul-Docstring) zu
    expansiv/restriktiv/gemischt/widersprüchlich/unbekannt. Bewusst als **frischer
-   Live-Abruf pro Pipeline-Lauf** (`agent/pipeline.py::_fetch_liquidity_context`),
+   Live-Abruf pro Pipeline-Lauf** (`agent/krypto/pipeline.py::_fetch_liquidity_context`),
    nicht aus der `macro_snapshot`-Akkumulation abgeleitet — die Pipeline läuft nur
    bei manuellem Klick (kein täglicher Scheduler), ein reiner "erster vs. letzter
    Snapshot"-Trend hätte real Monate gebraucht, bis genug Datenpunkte da sind. Fließt
    als **Kontext, keine harte Regel** in `long_reasoning.makro` ein (Regel 10,
-   `agent/analyst.py`). **Weiterhin `[OFFEN]`:** CPI/ISM-Ersatz/Trueflation/einzelne
+   `agent/krypto/analyst.py`). **Weiterhin `[OFFEN]`:** CPI/ISM-Ersatz/Trueflation/einzelne
    Leitbörsen — `disclaimers.makro_einbezogen` steht deshalb ehrlich auf
    `"teilweise"` (P-2/P-10), nicht mehr fest auf `false`.
    **Schritt 2 ERLEDIGT (2026-07-08): Zyklus-Risiko.** Weiteres neues Regime-Feld
@@ -209,14 +209,14 @@ Entscheidungs-Pipeline (Reihenfolge je Analyse):
    Quellen. Weiterhin Phase 4 (siehe Kap. 11), im Facts-Objekt ebenfalls als
    `disclaimers.sentiment_einbezogen: false` ausgewiesen.
 5. **R-5.5** Risikoprüfung (Kap. 3) als **VETO-Stufe**: scheitert hier → kein Kauf.
-   **ERLEDIGT (RM-1/-2/-4/-5):** `agent/risk_gate.py::pre_check()` (vor dem Groq-Call,
+   **ERLEDIGT (RM-1/-2/-4/-5):** `agent/krypto/risk_gate.py::pre_check()` (vor dem Groq-Call,
    liefert eine harte Positionsgrößen-Obergrenze als Fakt) UND `post_check()` (danach,
    erzwingt dieselben Regeln nochmal deterministisch — das Modell wird nie blind
    vertraut). RM-7/Z-3 (Drawdown-Notbremse) bleibt `[OFFEN]` (braucht eine noch nicht
    existierende Portfolio-Wert-Historie), RM-8/-9 (voller Risiko-Score) und RM-10/-11
    (Hebel) ebenfalls offen (S-6 Hebel-Long ist in `config.yaml` `aktiv: false`).
 6. **R-5.6** Signal + Konfidenz + vollständige Empfehlung (Format P-5). **ERLEDIGT:**
-   `agent/analyst.py` — striktes JSON-Schema (Groq `response_format: json_object`),
+   `agent/krypto/analyst.py` — striktes JSON-Schema (Groq `response_format: json_object`),
    Validierung inkl. case-insensitiver Enum-Normalisierung (Groq antwortet nicht immer
    in Großbuchstaben), ein Retry bei kaputtem JSON, danach fail-loud
    („HALTEN — Agent-Antwort ungültig").
@@ -239,7 +239,7 @@ Entscheidungs-Pipeline (Reihenfolge je Analyse):
     `config.yaml regime.profile[<regime>]` statt der statischen Werte.
 11. **R-5.11** Bei Kauf-/Nachkauf-Empfehlungen antizyklische Disziplin (Kap. 15):
     Flush vs. fundamentaler Zusammenbruch klassifizieren, Bestätigungs-Gate, gestaffelt.
-    **Nur einfache Heuristik (2026-07-07):** `agent/anticyclic.py` — Funding-Rate-
+    **Nur einfache Heuristik (2026-07-07):** `agent/krypto/anticyclic.py` — Funding-Rate-
     Extremwert (Kraken Futures) + Kursrückgang-Geschwindigkeit als grober Hinweis,
     NICHT die volle AZ-1..AZ-8-Klassifikation (fehlt eine unabhängige Nachrichten-/
     Fundamentalquelle). Liefert nur Kontext an Groq, trifft keine eigene Veto-
@@ -255,7 +255,7 @@ Entscheidungs-Pipeline (Reihenfolge je Analyse):
     fehlender OKX-Notierung (graceful, P-10).
 
 > **Nutzungs-Diskussion abgeschlossen (letzter Schritt, 2026-07-08):** Facts-Feld
-> `markt_kontext` (`agent/analyst.py::build_facts`) — BTC-Exchange-Flow-Netto
+> `markt_kontext` (`agent/krypto/analyst.py::build_facts`) — BTC-Exchange-Flow-Netto
 > (`api/onchain.py`), globale Stablecoin-Supply (DefiLlama), Präsidentschaftszyklus-
 > Kontext + nächste FOMC-Sitzungen (beide `agent/cycles.py`, reine Datumsrechnung,
 > kein Netzwerk-Call). **Bewusst KEINE neue Regime-Logik** — reiner, niedrig
@@ -381,7 +381,7 @@ Näherung an dieser Stelle neu zu bewerten.
   CoinGecko-Tier oder eine andere Quelle nötig (spätere Phase, falls gewünscht).
 - **Makro:** Leitzinsen (Fed, EZB, BoJ, PBoC, BoK), Leitbörsen USA/Japan/China/EU/Korea,
   BTC-Dominanz, Fear & Greed. **ERLEDIGT (2026-07-08):** Alle Werte sind live in
-  `api/macro.py`/`agent/pipeline.py`/`database/models.py::MacroSnapshot` implementiert
+  `api/macro.py`/`agent/krypto/pipeline.py`/`database/models.py::MacroSnapshot` implementiert
   UND end-to-end mit einem echten `FRED_API_KEY` verifiziert (Fed 3,63 %, EZB
   2,25/2,40/2,65 %, M2, CPI, Philly-Fed-ISM-Ersatz, BoJ/BoK, PBoC-LPR 3,0/3,5 % —
   alle korrekt in der DB gelandet). Für die übrigen Werte (Leitzinsen + Zusatzwunsch
@@ -540,8 +540,8 @@ Näherung an dieser Stelle neu zu bewerten.
   echtes Gratis-API-Tier eingeführt wird.
 
 **Wichtige Klarstellung zu allen Punkten oben:** "ERLEDIGT" heißt hier ausschließlich
-die **Datenbeschaffung**. Ob/wie diese Werte tatsächlich in `agent/regime.py` oder den
-Groq-Prompt (`agent/analyst.py::build_facts()`) einfließen, ist ein separates,
+die **Datenbeschaffung**. Ob/wie diese Werte tatsächlich in `agent/krypto/regime.py` oder den
+Groq-Prompt (`agent/krypto/analyst.py::build_facts()`) einfließen, ist ein separates,
 weiterhin offenes Thema (Kap. 16).
 
 **Staleness-Schwellen für Makro-/On-Chain-Daten: ERLEDIGT (2026-07-08).**
@@ -549,7 +549,7 @@ weiterhin offenes Thema (Kap. 16).
 60 Tage (Notenbank-Sitzungsrhythmus/Meldeverzug), On-Chain 4 Tage, bestehende
 BTC-Dominanz/Fear&Greed (`krypto_makro`) 2 Tage. **Bekannte Einschränkung, bewusst
 nicht gelöst:** `fetched_at` ist ein Zeitstempel fürs ganze Zeilen-Upsert
-(COALESCE-Merge in `agent/pipeline.py::_update_macro_snapshot`), nicht pro Feld —
+(COALESCE-Merge in `agent/krypto/pipeline.py::_update_macro_snapshot`), nicht pro Feld —
 echte feldgenaue Frische bräuchte eine Schema-Erweiterung (pro Feld ein eigenes
 "zuletzt erfolgreich aktualisiert"). Noch nicht in UI/Facts verdrahtet.
 
@@ -665,8 +665,8 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
    Vereinfachungen, siehe Kap. 5) inkl. neuem „Signale"-Tab (U-4, manueller Trigger,
    noch nicht geplant/automatisch). **Nutzungs-Diskussion ERLEDIGT (2026-07-08):**
    Liquiditäts-Regime, Zyklus-Risiko, AZ-1-Erweiterung (OI/Long-Short), Markt-Kontext
-   (Exchange-Flows/FOMC-Kalender) in `agent/regime.py`/`agent/anticyclic.py`/
-   `agent/analyst.py` verdrahtet. **Marktscan Stufe B/C/D ERLEDIGT (2026-07-09,
+   (Exchange-Flows/FOMC-Kalender) in `agent/krypto/regime.py`/`agent/krypto/anticyclic.py`/
+   `agent/krypto/analyst.py` verdrahtet. **Marktscan Stufe B/C/D ERLEDIGT (2026-07-09,
    Kap. 13)** inkl. neuem „Marktscan"-Tab (U-10) und erstem Cron-Job (MS-3).
    Bewusst offen für spätere Slices: volles Makro-Modul (R-5.2, CPI/ISM-Ersatz/
    Trueflation/Leitbörsen), Sentiment (R-5.4), interaktiver Dialog (U-9),
@@ -700,9 +700,9 @@ Erweiterungen ohne Kern-Umbau möglich sind:
 **Tief Krypto-spezifisch, braucht eigene Module statt Wiederverwendung:**
 - Datenquellen (CoinGecko/Kraken/Bitpanda sind reine Krypto-Anbindungen — für
   Aktien/ETF/Rohstoffe braucht es eigene Provider).
-- `agent/regime.py`: Regime-Bestimmung ist im Kern BTC-Dominanz-/BTC-Matrix-basiert,
+- `agent/krypto/regime.py`: Regime-Bestimmung ist im Kern BTC-Dominanz-/BTC-Matrix-basiert,
   nicht neutral verallgemeinerbar.
-- `agent/risk_gate.py`: Stablecoins als Cash-Reserve-Ersatz — hat kein Äquivalent
+- `agent/krypto/risk_gate.py`: Stablecoins als Cash-Reserve-Ersatz — hat kein Äquivalent
   bei Aktien (dort wäre Cash echtes Bargeld/Geldmarkt).
 - On-Chain-Metriken (MVRV/NUPL/Exchange-Flows) und Krypto-Derivate (OI/Long-Short)
   sind außerhalb von Krypto bedeutungslos.
@@ -802,7 +802,7 @@ Kein Einzel-Cutoff, sondern ein **Tier-Modell** (Grenzen vorläufig):
 
 - **A(MS)-1 Tier-3-Budgetdeckel: ERLEDIGT.** Small Caps insgesamt max. **10–15 %** des
   Portfolios (regime-abhängig, `config.yaml → regime.profile[*].small_cap_budget_prozent`).
-  Ein Tier-3-`kaufkandidat` ohne Budget-Headroom (`agent/risk_gate.py::
+  Ein Tier-3-`kaufkandidat` ohne Budget-Headroom (`agent/krypto/risk_gate.py::
   small_cap_budget_headroom()`, extrahiert aus `pre_check()`) wird in Stufe D auf
   `watchlist_wuerdig` heruntergestuft, statt einen "Kaufkandidaten" zu zeigen, den das
   echte Risiko-Gate sofort veto'en würde.
@@ -813,7 +813,7 @@ Kein Einzel-Cutoff, sondern ein **Tier-Modell** (Grenzen vorläufig):
   (Näherung über `atl_date`, siehe unten), Volumen/Marktkap.-Ratio, Stablecoin-Filter
   (Preis-nahe-1-$-Heuristik, kein Categories-API-Call), Duplikat-Check gegen
   bestehende Watchlist UND bereits vom Nutzer entschiedene frühere Kandidaten
-  (`agent/marktscan.py::apply_stufe_a_filters()`/`_duplicate_should_skip()`).
+  (`agent/krypto/marktscan.py::apply_stufe_a_filters()`/`_duplicate_should_skip()`).
   **Wichtiger Live-Fund:** CoinGecko liefert kein echtes Listing-Datum — das
   Mindestalter wird über das Datum des Allzeittiefs (`atl_date`) angenähert
   (dokumentierter Proxy, wie der bestehende ATR-Close-to-Close-Proxy). Für reine
@@ -847,7 +847,7 @@ Kein Einzel-Cutoff, sondern ein **Tier-Modell** (Grenzen vorläufig):
 
 ### Stufe B / C / D — ERLEDIGT (Slice, 2026-07-09)
 
-- **Stufe B (positive Signale): ERLEDIGT**, vier Kategorien (`agent/marktscan.py`,
+- **Stufe B (positive Signale): ERLEDIGT**, vier Kategorien (`agent/krypto/marktscan.py`,
   Rubriken je 0–100, VORLAEUFIG dokumentiert):
   - **Technik:** 24h-Änderung (immer verfügbar) + RSI-14/EMA-20/MACD-Histogramm, falls
     ein gezielter Backfill (nur für Stufe-A-Überlebende, Kosten sparen) genug Historie
@@ -858,7 +858,7 @@ Kein Einzel-Cutoff, sondern ein **Tier-Modell** (Grenzen vorläufig):
   - **Markt-/Momentum:** 24h-Änderung + Trending-Rang-Bonus (falls über Trending
     gefunden).
   - **Kontext/Makro (neu, 4. Kategorie):** nutzt `liquiditaets_regime`/
-    `zyklus_risiko`/`btc_matrix_state` aus `agent/regime.py` (dort bereits einmal pro
+    `zyklus_risiko`/`btc_matrix_state` aus `agent/krypto/regime.py` (dort bereits einmal pro
     Scan-Lauf berechnet, kein Zusatz-Call) — expansive Liquidität/niedriges
     Zyklus-Risiko/Altseason wirken als Bonus, das Gegenteil als Malus.
 - **Stufe C (Scoring/Gewichtung): ERLEDIGT.** Kombination der vier Kategorie-Scores
@@ -1018,7 +1018,7 @@ seinen Emotionen scheitert. Grundsatz: **antizyklisch, aber bedingt.**
   (Korea-M2/Spot-ETF-Flows/Trueflation/SOPR). **Staleness-Schwellen für Makro-/
   On-Chain-Daten ebenfalls ERLEDIGT** (`staleness.py::is_macro_value_stale()`, vier
   Kategorien). **Weiterhin offen, für alle diese Punkte gemeinsam:** die eigentliche
-  Nutzung in `agent/regime.py`/`agent/analyst.py::build_facts()` — reine Datenschicht
+  Nutzung in `agent/krypto/regime.py`/`agent/krypto/analyst.py::build_facts()` — reine Datenschicht
   bisher, noch nicht in die Regime-Bestimmung oder den Groq-Prompt verdrahtet.
 - X-API & YouTube-API: Kosten, Limits, ToS, Umsetzungsphase.
 - **E-Mail-Versand** (Kap. 13): SMTP-Server vs. Mail-API wählen; Zugangsdaten nur in `.env`.
@@ -1035,7 +1035,7 @@ seinen Emotionen scheitert. Grundsatz: **antizyklisch, aber bedingt.**
   erreichbar, (c) ob das die bestehende tkinter-App ersetzt oder parallel dazu
   läuft. Kein akuter Auftrag, nur als offener Punkt festgehalten.
 - **Flush-Erkennung** (AZ-1): **einfache Heuristik ERLEDIGT (2026-07-07)** —
-  `agent/anticyclic.py` nutzt Kraken-Funding-Rates (bereits vorhanden, siehe Kap. 8)
+  `agent/krypto/anticyclic.py` nutzt Kraken-Funding-Rates (bereits vorhanden, siehe Kap. 8)
   + Kursrückgang-Geschwindigkeit als groben Hinweis. Die volle AZ-1..AZ-8-
   Klassifikation (unabhängige Nachrichten-/Fundamentalquelle nötig) bleibt offen.
 - **Advisory-Konsequenz** (P-7): Eskalationsweg für Schutz-Alerts (Stop-Loss/Drawdown)

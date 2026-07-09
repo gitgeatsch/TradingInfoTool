@@ -1,5 +1,5 @@
 """Signale-Tab (U-4): zeigt die zuletzt berechnete Empfehlung je Asset im P-5-Format
-und erlaubt, die Agent-Pipeline (agent/pipeline.py) manuell fuer ein ausgewaehltes
+und erlaubt, die Agent-Pipeline (agent/krypto/pipeline.py) manuell fuer ein ausgewaehltes
 Asset auszuloesen (Kap. 5). Bewusst NICHT automatisch/geplant - siehe Plan
 (C:\\Users\\Geatsch\\.claude\\plans\\deep-launching-zebra.md), erst Kosten/Qualitaet/
 Rate-Limits manuell pruefen, bevor das in den Scheduler wandert.
@@ -43,13 +43,13 @@ class SignalsView(ttk.Frame):
         super().__init__(parent)
         self._db_conn_factory = db_conn_factory
         self._full_watchlist = watchlist  # generate_signal braucht ALLE Assets (Stablecoins
-        # zaehlen z.B. als Cash-Reserve in agent/risk_gate.py) - nur die Anzeige-Liste filtert.
+        # zaehlen z.B. als Cash-Reserve in agent/krypto/risk_gate.py) - nur die Anzeige-Liste filtert.
         self._watchlist = [a for a in watchlist if a.typ != "stablecoin"]
         self._groq_client = groq_client
         self._coingecko_client = coingecko_client
         self._kraken_client = kraken_client
         self._fred_api_key = fred_api_key  # optional (P-8) - ohne Key liefert
-        # agent/pipeline.py fuer die FRED-Felder sauber None statt abzustuerzen.
+        # agent/krypto/pipeline.py fuer die FRED-Felder sauber None statt abzustuerzen.
         self._selected_asset = None
         self._current_signal = None
 
@@ -283,7 +283,7 @@ class SignalsView(ttk.Frame):
         thread.start()
 
     def _run_pipeline(self, asset) -> None:
-        from agent.pipeline import generate_signal
+        from agent.krypto.pipeline import generate_signal
 
         conn = self._db_conn_factory()
         try:

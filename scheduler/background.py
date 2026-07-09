@@ -71,16 +71,16 @@ def refresh_ohlc_job(client, conn_factory, watchlist) -> None:
 
 def marktscan_job(coingecko_client, kraken_client, groq_client, conn_factory, watchlist, fred_api_key) -> None:
     """MS-3: 2x taeglich (04:00/16:00, siehe build_scheduler()) - kompletter
-    Marktscan-Lauf (Stufe A-D, agent/marktscan.py). Braucht ein aktuelles Regime
+    Marktscan-Lauf (Stufe A-D, agent/krypto/marktscan.py). Braucht ein aktuelles Regime
     (R-5.1 + Liquiditaets-Regime + Zyklus-Risiko) fuer Stufe C/D, dafuer dieselbe
-    Logik wie agent/pipeline.py::generate_signal() (compute_current_regime(), nicht
+    Logik wie agent/krypto/pipeline.py::generate_signal() (compute_current_regime(), nicht
     dupliziert). `groq_client` kann None sein (P-8) - dann greift nur der manuelle
     UI-Klick-Pfad fuer P-5-Begruendungen, keine automatischen."""
     conn = conn_factory()
     try:
         import config as config_module
-        from agent.marktscan import run_scan
-        from agent.pipeline import compute_current_regime
+        from agent.krypto.marktscan import run_scan
+        from agent.krypto.pipeline import compute_current_regime
 
         config_dict = config_module.load_config()
         if not config_dict["marktscan"].get("aktiv", True):

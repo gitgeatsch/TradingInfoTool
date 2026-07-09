@@ -31,8 +31,8 @@ from datetime import datetime, timezone
 import numpy as np
 
 import database.db as db
-from agent.regime import RegimeResult
-from agent.risk_gate import small_cap_budget_headroom
+from agent.krypto.regime import RegimeResult
+from agent.krypto.risk_gate import small_cap_budget_headroom
 from api.coingecko import CoinGeckoClient, MarketCoin
 from api.history import backfill_history
 from config import WatchlistAsset
@@ -486,10 +486,10 @@ def generate_candidate_writeup(
     automatische Zweig in run_scan() (nur kaufkandidat + Konfig-Schalter). Wirft
     AnalystResponseInvalid unveraendert weiter - der Aufrufer entscheidet, wie er
     damit umgeht (siehe agent/pipeline.py fuer das etablierte Muster)."""
-    from agent.analyst import build_facts, call_groq_for_signal
-    from agent.anticyclic import assess as assess_anticyclic
-    from agent.pipeline import fetch_market_context
-    from agent.risk_gate import pre_check
+    from agent.krypto.analyst import build_facts, call_groq_for_signal
+    from agent.krypto.anticyclic import assess as assess_anticyclic
+    from agent.krypto.pipeline import fetch_market_context
+    from agent.krypto.risk_gate import pre_check
     from database.models import PriceSnapshot
     from indicators.calculations import summarize_confluence
 

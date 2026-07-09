@@ -58,7 +58,7 @@ def main() -> None:
         logger.info("FRED API-Key gefunden - Leitzinsen/CPI/M2/ISM-Ersatz im Makro-Kontext verfügbar.")
     else:
         # Ebenfalls optional (P-8) - ohne Key bleiben nur BTC-Dominanz/Fear&Greed/PBoC
-        # im Makro-Kontext (agent/pipeline.py degradiert sauber, kein Absturz).
+        # im Makro-Kontext (agent/krypto/pipeline.py degradiert sauber, kein Absturz).
         logger.info("Kein FRED_API_KEY gesetzt - Fed/EZB/M2/CPI/ISM-Ersatz/BoJ/BoK bleiben leer.")
 
     watchlist = config.get_watchlist()
