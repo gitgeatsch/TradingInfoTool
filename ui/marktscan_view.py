@@ -1,9 +1,14 @@
 """Marktscan-Tab (U-10): zeigt die von agent/marktscan.py entdeckten und bewerteten
 Kandidaten (Spezifikation Kap. 13) und erlaubt, einen Scan manuell auszuloesen sowie
-Kandidaten zu behalten/verwerfen. Bewusst KEIN automatisches Schreiben in
-Basisinfos/config.yaml (siehe Plan, C:\\Users\\Geatsch\\.claude\\plans\\
-deep-launching-zebra.md, Design-Entscheidung 1) - "Watchlist-Eintrag vorbereiten"
-zeigt stattdessen einen fertigen, copy-paste-baren YAML-Block.
+Kandidaten zu behalten/verwerfen.
+
+Ueberarbeitet (2026-07-09, Nutzer-Wunsch "eleganter loesen"): "In Watchlist
+uebernehmen" schreibt den Eintrag jetzt direkt via config.py::add_watchlist_entry()
+(chirurgische Text-Einfuegung + automatisches Backup + Validierung, siehe dort -
+NICHT die urspruenglich geplante volle YAML-Neuserialisierung, die Kommentare/
+Formatierung zerstoert haette). Bei einem Fehlschlag faellt der Button auf den
+copy-paste-baren YAML-Block als manuellen Fallback zurueck, statt den Nutzer ohne
+Ausweg dastehen zu lassen.
 
 Threading-Muster identisch zu ui/signals_view.py: ein Scan-Lauf braucht mehrere
 Sekunden (mehrere CoinGecko-Calls + optional Groq) - synchron im Tk-Main-Thread
@@ -13,8 +18,9 @@ from __future__ import annotations
 import json
 import threading
 import tkinter as tk
-from tkinter import ttk
+from tkinter import messagebox, ttk
 
+import config as config_module
 import database.db as db
 from ui.formatting import format_money
 
@@ -125,7 +131,7 @@ class MarktscanView(ttk.Frame):
         )
         self.writeup_button.pack(side="left", padx=(8, 0))
         self.watchlist_button = ttk.Button(
-            toolbar, text="Watchlist-Eintrag vorbereiten", command=self._on_prepare_watchlist_clicked,
+            toolbar, text="In Watchlist übernehmen", command=self._on_adopt_to_watchlist_clicked,
             state="disabled",
         )
         self.watchlist_button.pack(side="left", padx=(8, 0))
@@ -367,12 +373,46 @@ class MarktscanView(ttk.Frame):
             self._selected_candidate = refreshed
             self._render_candidate(refreshed)
 
-    def _on_prepare_watchlist_clicked(self) -> None:
+    def _on_adopt_to_watchlist_clicked(self) -> None:
         candidate = self._selected_candidate
         if candidate is None:
             return
-        yaml_block = _candidate_to_yaml_block(candidate)
-        _YamlDialog(self, candidate.symbol, yaml_block, candidate.bitpanda_gelistet)
+
+        warn_text = ""
+        if candidate.bitpanda_gelistet is False:
+            warn_text = "\n\n⚠ NICHT bei Bitpanda gelistet — dort aktuell nicht direkt kaufbar."
+        confirmed = messagebox.askyesno(
+            "In Watchlist übernehmen",
+            f"{candidate.symbol} ({candidate.name}) in Basisinfos/config.yaml aufnehmen?\n\n"
+            "Ein Backup der Datei wird vorher automatisch angelegt "
+            f"(.claude/backups/).{warn_text}\n\n"
+            "Hinweis: für volle Wirkung (Signale/Portfolio) ist ein Neustart der App nötig -"
+            " die Watchlist-Liste laufender Tabs wird nicht automatisch neu geladen.",
+        )
+        if not confirmed:
+            return
+
+        try:
+            config_module.add_watchlist_entry(
+                symbol=candidate.symbol, name=candidate.name, typ="taktisch", status="watchlist",
+                coingecko_id=candidate.coingecko_id,
+            )
+        except config_module.WatchlistWriteError as exc:
+            # Fallback: automatisches Schreiben fehlgeschlagen (z.B. Datei manuell
+            # zwischenzeitlich veraendert) - Nutzer bekommt trotzdem einen Weg weiter,
+            # statt ohne Ausweg dazustehen (P-10).
+            messagebox.showerror(
+                "Automatisches Übernehmen fehlgeschlagen",
+                f"{exc}\n\nStattdessen wird ein Textblock zum manuellen Einfügen angezeigt.",
+            )
+            yaml_block = _candidate_to_yaml_block(candidate)
+            _YamlDialog(self, candidate.symbol, yaml_block, candidate.bitpanda_gelistet)
+        else:
+            messagebox.showinfo(
+                "In Watchlist übernehmen",
+                f"{candidate.symbol} wurde in Basisinfos/config.yaml aufgenommen.\n\n"
+                "Bitte die App neu starten, damit der Eintrag überall (Signale, Portfolio) wirkt.",
+            )
 
         conn = self._db_conn_factory()
         try:
