@@ -731,12 +731,14 @@ Krypto+Aktien+Rohstoffe hinweg, siehe Portfolio-Tab/Gesamtwert). Stattdessen:
 3. **Eine Assetklasse zuerst konkret durchziehen, nicht alle gleichzeitig** —
    Aktien wären der pragmatischste Einstieg (freie Datenquellen wie yfinance
    großzügiger als bei Rohstoffen), bevor ETFs/Rohstoffe folgen.
-4. **Günstige, risikoarme Vorbereitung, die schon vor einem konkreten Zweit-Asset
-   sinnvoll ist:** `agent/*.py` bei Gelegenheit unter einen Namespace verschieben
-   (`agent/krypto/*` statt `agent/*`) — rein mechanisches Refactoring, legt aber das
-   Muster fest, sodass eine zweite Assetklasse später additiv reinkommt statt einen
-   bestehenden Umbau zu erzwingen. Noch nicht terminiert, kann bei nächster
-   Gelegenheit als kleiner Zwischenschritt erfolgen.
+4. **Günstige, risikoarme Vorbereitung — ERLEDIGT (2026-07-09).** `agent/analyst.py`/
+   `anticyclic.py`/`marktscan.py`/`pipeline.py`/`regime.py`/`risk_gate.py` liegen
+   jetzt unter `agent/krypto/*` statt `agent/*` (reines Refactoring, keine
+   Verhaltensänderung — alle Cross-Imports und Aufrufstellen live geprüft).
+   `agent/cycles.py` (FOMC-Kalender/Präsidentschaftszyklus) bleibt bewusst auf
+   Top-Level, da bereits assetklassen-neutral. Punkte 2 (Schema-Generalisierung)
+   und 3 (erste konkrete Zweit-Assetklasse) bleiben offen bis zum ersten echten
+   Anwendungsfall.
 
 ## 12. Rechtlicher Hinweis
 
