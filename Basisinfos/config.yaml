@@ -363,11 +363,19 @@ marktscan:
     tier3_min_marktkap_usd: 20000000   # 20 - 150 Mio = Small Cap (weiche Untergrenze, Override moeglich)
   filter:
     min_volumen_24h_usd: 5000000       # [OFFEN] A(MS)-3 Mindestliquiditaet
-    min_alter_tage: 90                 # [OFFEN] A(MS)-3 Mindestalter
+    min_alter_tage: 90                 # [OFFEN] A(MS)-3 Mindestalter (Naeherung ueber atl_date, siehe agent/marktscan.py)
     vol_marktkap_ratio_min: 0.005      # A(MS)-3 unteres Limit (Illiquiditaet)
     vol_marktkap_ratio_max: 1.0        # A(MS)-3 oberes Limit (Wash-Trading-Verdacht)
     stablecoins_ausschliessen: true    # A(MS)-3
-  # Stufe B (positive Signale), C (Scoring) und D (Schwellen): [OFFEN], IN AUSARBEITUNG
+  # Stufe B (vier Kategorien: Technik/Fundamental/Momentum/Kontext-Makro), C (Gewichtung
+  # aus regime.profile, siehe unten) und D (Schwellen) - VORLAEUFIG, siehe agent/marktscan.py
+  schwellen:
+    score_kaufkandidat_ab: 70          # VORLAEUFIG - Stufe D
+    score_watchlist_wuerdig_ab: 50     # VORLAEUFIG - Stufe D
+  # Hybrid (2026-07-09): Groq-P-5-Begruendung ist IMMER per UI-Klick verfuegbar;
+  # dieser Schalter steuert zusaetzlich, ob der Scan-Job selbst automatisch fuer jeden
+  # kaufkandidat-Treffer eine Begruendung generiert (Default aus, Kosten-/Quota-bewusst).
+  groq_automatisch_kaufkandidaten: false
 
 # --- E-Mail-Benachrichtigung (siehe Kap. 13; Zugangsdaten NUR in .env, nie hier) ---
 benachrichtigung:
@@ -382,38 +390,50 @@ regime:
   bestimmung: hybrid                   # RG-1: regelbasiert (Basis) + KI-Override + manueller Override
   manueller_override: none             # RG-8: none | krise_extrem | baer | seitwaerts | bulle | euphorie_extrem
   risikoappetit_faktor: 1.0            # [OFFEN] RG-4: globaler Makro-Multiplikator 0.3-1.0
-  # RG-3 Profile ueberschreiben je Regime: Kategorie-Gewichte (Stufe B), Small-Cap-Budget,
-  # Mindest-Konfidenz. Gewichte technik+fundamental+momentum ~ 1.0. Alle Werte VORLAEUFIG (Stufe C offen).
+  # RG-3 Profile ueberschreiben je Regime: Kategorie-Gewichte (Stufe B, Marktscan),
+  # Small-Cap-Budget, Mindest-Konfidenz. Gewichte technik+fundamental+momentum+
+  # kontext_makro = 1.0. Alle Werte VORLAEUFIG. gewicht_kontext_makro (2026-07-09,
+  # Nutzungs-Diskussion Marktscan Stufe C) nutzt liquiditaets_regime/zyklus_risiko/
+  # btc_matrix_state aus agent/regime.py - bewusst hoeher gewichtet in den Extrem-
+  # Regimen (krise_extrem/euphorie_extrem), da genau dort Zyklus-/Liquiditaetslage am
+  # aussagekraeftigsten ist; die drei bestehenden Gewichte wurden proportional
+  # reduziert, damit die Summe weiterhin 1.0 ergibt (kein Verhaltensrisiko, da vorher
+  # nichts diese Gewichte konsumiert hat).
   profile:
     krise_extrem:
       small_cap_budget_prozent: 0
-      gewicht_technik: 0.2
-      gewicht_fundamental: 0.6
-      gewicht_momentum: 0.2
+      gewicht_technik: 0.15
+      gewicht_fundamental: 0.45
+      gewicht_momentum: 0.15
+      gewicht_kontext_makro: 0.25
       min_konfidenz_prozent: 85
     baer:
       small_cap_budget_prozent: 4
-      gewicht_technik: 0.3
-      gewicht_fundamental: 0.5
-      gewicht_momentum: 0.2
+      gewicht_technik: 0.24
+      gewicht_fundamental: 0.40
+      gewicht_momentum: 0.16
+      gewicht_kontext_makro: 0.20
       min_konfidenz_prozent: 75
     seitwaerts:
       small_cap_budget_prozent: 8
-      gewicht_technik: 0.4
-      gewicht_fundamental: 0.4
-      gewicht_momentum: 0.2
+      gewicht_technik: 0.34
+      gewicht_fundamental: 0.34
+      gewicht_momentum: 0.17
+      gewicht_kontext_makro: 0.15
       min_konfidenz_prozent: 65
     bulle:
       small_cap_budget_prozent: 12
-      gewicht_technik: 0.5
-      gewicht_fundamental: 0.3
-      gewicht_momentum: 0.2
+      gewicht_technik: 0.43
+      gewicht_fundamental: 0.25
+      gewicht_momentum: 0.17
+      gewicht_kontext_makro: 0.15
       min_konfidenz_prozent: 60
     euphorie_extrem:
       small_cap_budget_prozent: 15
-      gewicht_technik: 0.5
-      gewicht_fundamental: 0.2
-      gewicht_momentum: 0.3
+      gewicht_technik: 0.38
+      gewicht_fundamental: 0.15
+      gewicht_momentum: 0.22
+      gewicht_kontext_makro: 0.25
       min_konfidenz_prozent: 60
       gewinnabsicherung_verschaerft: true  # RG-11: engere Trailing-Stops, Teilverkaeufe
 
