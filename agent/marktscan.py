@@ -361,6 +361,7 @@ def run_scan(
     # database/models.py::MarktscanCandidate.bitpanda_gelistet.
     try:
         from api.bitpanda import get_listed_symbols
+        from api.bitpanda import is_listed as bitpanda_is_listed
 
         bitpanda_symbols = get_listed_symbols()
     except Exception as exc:
@@ -376,7 +377,9 @@ def run_scan(
             continue
         coin: MarketCoin = entry["coin"]
         stufe_a = apply_stufe_a_filters(coin, marktscan_cfg)
-        bitpanda_gelistet = coin.symbol in bitpanda_symbols if bitpanda_symbols is not None else None
+        bitpanda_gelistet = (
+            bitpanda_is_listed(coin.symbol, bitpanda_symbols) if bitpanda_symbols is not None else None
+        )
 
         snapshot = None
         if stufe_a.bestanden:

@@ -5,6 +5,7 @@ import tkinter as tk
 from tkinter import messagebox, ttk
 
 import database.db as db
+from api.bitpanda import is_listed as bitpanda_is_listed
 from importer.excel_import import import_holdings
 from ui.formatting import format_money, format_price_age, is_price_stale
 from ui.marktscan_view import MarktscanView
@@ -148,7 +149,7 @@ class TradingInfoToolApp(tk.Tk):
             if self._bitpanda_symbols is None:
                 bitpanda_text = "?"
                 bitpanda_fehlt = False
-            elif asset.symbol in self._bitpanda_symbols:
+            elif bitpanda_is_listed(asset.symbol, self._bitpanda_symbols):
                 bitpanda_text = "✓"
                 bitpanda_fehlt = False
             else:
