@@ -11,6 +11,7 @@ from ui.formatting import format_money, format_price_age, is_price_stale
 from ui.marktscan_view import MarktscanView
 from ui.portfolio import PortfolioView
 from ui.signals_view import SignalsView
+from ui.sortable_tree import make_sortable
 
 STALE_COLOR = "#b36b00"
 NOT_LISTED_COLOR = "#c0392b"
@@ -118,6 +119,7 @@ class TradingInfoToolApp(tk.Tk):
             tree.column(col, width=90 if col == "bitpanda" else 110, anchor=anchor)
         tree.tag_configure("stale", foreground=STALE_COLOR)
         tree.tag_configure("bitpanda_fehlt", foreground=NOT_LISTED_COLOR)
+        make_sortable(tree, numeric_columns=frozenset({"price_usd", "price_eur", "change_24h"}))
         tree.bind("<Double-1>", self._open_chart)
         tree.pack(fill="both", expand=True, padx=8, pady=8)
 

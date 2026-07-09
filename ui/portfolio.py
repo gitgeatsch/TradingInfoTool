@@ -6,6 +6,7 @@ from tkinter import ttk
 
 import database.db as db
 from ui.formatting import format_money, is_price_stale
+from ui.sortable_tree import make_sortable
 
 STALE_COLOR = "#b36b00"
 
@@ -31,6 +32,10 @@ class PortfolioView(ttk.Frame):
             self.tree.heading(col, text=headings[col])
             self.tree.column(col, width=120, anchor="e" if col != "name" else "w")
         self.tree.tag_configure("stale", foreground=STALE_COLOR)
+        make_sortable(
+            self.tree,
+            numeric_columns=frozenset({"quantity", "price_usd", "price_eur", "value_usd", "value_eur"}),
+        )
         self.tree.pack(fill="both", expand=True, padx=8, pady=8)
 
         self.total_label = ttk.Label(self, text="Gesamtwert: -", font=("", 10, "bold"))

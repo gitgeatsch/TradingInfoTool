@@ -23,6 +23,7 @@ from tkinter import messagebox, ttk
 import config as config_module
 import database.db as db
 from ui.formatting import format_money
+from ui.sortable_tree import make_sortable
 
 EINSTUFUNG_COLORS = {
     "kaufkandidat": "#1a7f37",
@@ -116,6 +117,7 @@ class MarktscanView(ttk.Frame):
         for col in columns:
             self.tree.heading(col, text=headings[col])
             self.tree.column(col, width=90, anchor="w" if col == "symbol" else "center")
+        make_sortable(self.tree, numeric_columns=frozenset({"score"}))
         self.tree.pack(fill="both", expand=True)
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
 

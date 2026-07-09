@@ -17,6 +17,7 @@ from tkinter import ttk
 
 import database.db as db
 from ui.formatting import format_money
+from ui.sortable_tree import make_sortable
 
 ACTION_COLORS = {
     "KAUFEN": "#1a7f37",
@@ -79,6 +80,7 @@ class SignalsView(ttk.Frame):
         for col in columns:
             self.tree.heading(col, text=headings[col])
             self.tree.column(col, width=110, anchor="w" if col in ("symbol", "name") else "center")
+        make_sortable(self.tree)
         self.tree.pack(fill="both", expand=True)
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
 
