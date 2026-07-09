@@ -568,12 +568,15 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
 - **U-7** Einstellungen: Risikoparameter (Kap. 3) pro Nutzer anpassbar.
 - **U-8** Desktop-Benachrichtigungen bei neuen Signalen.
 - **U-9** Interaktiver Dialog: Nutzer ergänzt Bewertungsparameter (R-5.7).
-- **U-10** Marktscan-Vorschläge (Kap. 13): **ERLEDIGT (2026-07-09).** Neuer Tab
-  "Marktscan" (`ui/marktscan_view.py`) zeigt neu entdeckte Kandidaten mit
-  Score-Aufschlüsselung und optionaler P-5-Begründung; "Watchlist-Eintrag
-  vorbereiten" zeigt einen copy-paste-baren YAML-Block statt automatisch zu
-  schreiben (siehe Kap. 13 MS-1), "Verwerfen" markiert einen Kandidaten dauerhaft
-  als nicht relevant.
+- **U-10** Marktscan-Vorschläge (Kap. 13): **ERLEDIGT (2026-07-09, Schreibweg am
+  selben Tag nachgebessert).** Neuer Tab "Marktscan" (`ui/marktscan_view.py`) zeigt
+  neu entdeckte Kandidaten mit Score-Aufschlüsselung und optionaler P-5-Begründung;
+  "In Watchlist übernehmen" schreibt den Eintrag jetzt **direkt** in
+  `Basisinfos/config.yaml` (`config.py::add_watchlist_entry()` — chirurgische
+  Text-Einfügung statt voller YAML-Neuserialisierung, IMMER mit Backup + Nachher-
+  Validierung, fällt bei Fehlschlag auf den ursprünglichen copy-paste-YAML-Weg
+  zurück, siehe Kap. 13 MS-1), "Verwerfen" markiert einen Kandidaten dauerhaft als
+  nicht relevant.
 - **U-11** Regime-Anzeige (Kap. 14): aktuelles Marktregime sichtbar; manueller Override
   wählbar und — solange aktiv — permanent als Warnhinweis eingeblendet.
 - **U-12** Datenquellen-Gesundheitsstatus `[OFFEN, Idee 2026-07-08]`: Erweiterung von
@@ -648,19 +651,30 @@ reiche Kandidaten eigenständig als `status: watchlist` auf — als Grundlage f�
 Empfehlungen abseits der bestehenden Liste. Advisory-only (P-7): Aufnahme in die
 Watchlist ist eine Daten-, keine Handelsaktion.
 
-- **MS-1 Ablauf: ERLEDIGT, mit zwei bewussten, dokumentierten Abweichungen vom
-  Wortlaut (2026-07-09, siehe Plan `deep-launching-zebra.md` für die volle
-  Begründung).** (a) Statt automatischem Schreiben in `config.yaml` (die Datei ist
-  explizit handgepflegt, "BEARBEITEN IN NOTEPAD++") zeigt die UI (`ui/marktscan_view.py`)
-  einen fertigen, copy-paste-baren YAML-Block — der Nutzer trägt den Eintrag selbst
-  ein. (b) Statt automatisch für JEDEN Kandidaten eine volle P-5-Begründung zu
-  generieren, ist das **hybrid**: immer per UI-Klick verfügbar, zusätzlich per
-  Konfig-Schalter `marktscan.groq_automatisch_kaufkandidaten` (Default `false`)
-  automatisch nur für `kaufkandidat`-Treffer — kostenbewusst, Groq-Calls bleiben
+- **MS-1 Ablauf: ERLEDIGT.** (a) **Nachgebessert (2026-07-09, gleicher Tag,
+  Nutzer-Wunsch "eleganter lösen"):** ursprünglich war bewusst KEIN automatisches
+  Schreiben in `config.yaml` vorgesehen (Sorge: die Datei ist explizit handgepflegt,
+  "BEARBEITEN IN NOTEPAD++", ein `yaml.dump()`-Rundlauf hätte Kommentare/Formatierung
+  zerstört) — stattdessen nur ein copy-paste-barer YAML-Block. Das wurde durch einen
+  **sicheren direkten Schreibweg** ersetzt: `config.py::add_watchlist_entry()` fügt
+  den neuen Eintrag als reinen TEXT-Block chirurgisch ans Ende des bestehenden
+  `watchlist:`-Blocks an (keine volle YAML-Neuserialisierung, Rest der Datei
+  byte-für-byte unangetastet), legt IMMER vorher ein Backup an
+  (`.claude/backups/config.yaml.<Zeitstempel>.bak`) und validiert die neue Datei
+  danach per `yaml.safe_load()` — bei jedem Fehlschlag automatische
+  Backup-Wiederherstellung (Fail-Loud) + Fallback auf den ursprünglichen
+  Copy-Paste-YAML-Weg, damit der Nutzer nie ohne Ausweg dasteht. Live-verifiziert:
+  Diff für einen echten Add ist exakt die 5 neuen Zeilen, nichts sonst in der
+  400+-Zeilen-Datei verändert. (b) Statt automatisch für JEDEN Kandidaten eine volle
+  P-5-Begründung zu generieren, ist das **hybrid**: immer per UI-Klick verfügbar,
+  zusätzlich per Konfig-Schalter `marktscan.groq_automatisch_kaufkandidaten`
+  (Default `false`) automatisch nur für `kaufkandidat`-Treffer — kostenbewusst,
+  Groq-Calls bleiben
   dadurch auf eine Handvoll/Tag begrenzt statt einer pro Rohkandidat. (c) Der
-  Nutzer entscheidet über die GUI (U-10, `ui/marktscan_view.py`: "Watchlist-Eintrag
-  vorbereiten"/"Verwerfen"), ob ein Kandidat übernommen oder verworfen wird —
-  wortgetreu umgesetzt.
+  Nutzer entscheidet über die GUI (U-10, `ui/marktscan_view.py`: "In Watchlist
+  übernehmen"/"Verwerfen"), ob ein Kandidat übernommen oder verworfen wird —
+  wortgetreu umgesetzt (seit dem Schreibweg-Update sogar direkter als ursprünglich
+  geplant).
 - **MS-2 Datenquelle: ERLEDIGT.** CoinGecko Trending (`/search/trending`) + Top-Gainers.
   **Wichtiger Live-Fund (2026-07-09):** der `order=price_change_percentage_24h_desc`-
   Parameter von `/coins/markets` ist auf der Free-Tier praktisch wirkungslos (liefert
