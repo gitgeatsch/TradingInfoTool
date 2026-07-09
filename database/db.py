@@ -551,6 +551,20 @@ def update_marktscan_candidate_status(conn: sqlite3.Connection, candidate_id: in
     conn.commit()
 
 
+def update_marktscan_candidate_groq_writeup(
+    conn: sqlite3.Connection, candidate_id: int, kurzbegruendung: str | None, langbegruendung_json: str
+) -> None:
+    """Ergaenzt eine per Klick oder automatisch (config.yaml
+    marktscan.groq_automatisch_kaufkandidaten) generierte P-5-Begruendung auf einem
+    bereits existierenden Kandidaten-Datensatz - kein neuer Scan-Lauf, reines Update."""
+    conn.execute(
+        "UPDATE marktscan_candidates SET groq_kurzbegruendung = ?, groq_langbegruendung_json = ?, "
+        "groq_generiert_am = ? WHERE id = ?",
+        (kurzbegruendung, langbegruendung_json, _now_iso(), candidate_id),
+    )
+    conn.commit()
+
+
 def get_latest_prices(conn: sqlite3.Connection) -> dict[str, PriceSnapshot]:
     rows = conn.execute(
         """

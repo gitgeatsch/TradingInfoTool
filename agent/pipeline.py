@@ -197,7 +197,7 @@ def _fetch_cycle_risk_context() -> dict:
     return context
 
 
-def _fetch_market_context() -> dict:
+def fetch_market_context() -> dict:
     """Reiner Groq-Kontext (Nutzungs-Diskussion, letzter Schritt, 2026-07-08) - KEINE
     neue Regime-Logik, nur zusaetzliche Fakten fuers Facts-Objekt (agent/analyst.py::
     build_facts). P-10: Exchange-Flow/Stablecoin-Supply unabhaengig versucht: FOMC-
@@ -299,7 +299,7 @@ def generate_signal(
     # R-5.11 Antizyklik-Heuristik.
     anticyclic_context = assess_anticyclic(asset, kraken_client, closes)
 
-    market_context = _fetch_market_context()
+    market_context = fetch_market_context()
 
     holdings = {h.symbol: h for h in db.get_all_holdings(conn)}
     strategien_aktiv = [s["name"] for s in config_dict["strategien"] if s["aktiv"]]

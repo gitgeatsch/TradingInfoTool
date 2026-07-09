@@ -336,10 +336,19 @@ def _collect_raw_candidates(coingecko_client: CoinGeckoClient) -> dict[str, dict
 
 
 def run_scan(
-    coingecko_client: CoinGeckoClient, conn, watchlist, regime_result: RegimeResult, config_dict: dict
+    coingecko_client: CoinGeckoClient,
+    conn,
+    watchlist,
+    regime_result: RegimeResult,
+    config_dict: dict,
+    groq_client=None,
+    kraken_client=None,
 ) -> list[MarktscanCandidate]:
     """Orchestriert Stufe A-D fuer einen kompletten Scan-Lauf. Speichert jeden
-    Kandidaten (auch `kein_treffer`, Audit/Z-4) und gibt die Liste zurueck."""
+    Kandidaten (auch `kein_treffer`, Audit/Z-4) und gibt die Liste zurueck.
+    `groq_client`/`kraken_client` sind optional (P-8) - ohne Groq-Client wird der
+    automatische Kaufkandidat-Begruendungs-Zweig einfach uebersprungen, auch wenn
+    `marktscan.groq_automatisch_kaufkandidaten` in config.yaml aktiviert ist."""
     marktscan_cfg = config_dict["marktscan"]
     scan_run_id = f"{datetime.now(timezone.utc).isoformat()}_{uuid.uuid4().hex[:8]}"
     raw = _collect_raw_candidates(coingecko_client)
@@ -411,7 +420,100 @@ def run_scan(
             einstufung=einstufung, einstufung_begruendung=einstufung_begruendung,
             small_cap_budget_hinweis=small_cap_budget_hinweis,
         )
-        db.upsert_marktscan_candidate(conn, candidate)
+        candidate.id = db.upsert_marktscan_candidate(conn, candidate)
         candidates.append(candidate)
 
+        # Hybrid Groq-Begruendung (Design-Entscheidung 3, siehe Plan): der manuelle
+        # UI-Klick-Pfad ruft generate_candidate_writeup() direkt auf; hier nur der
+        # AUTOMATISCHE Zweig, ausschliesslich wenn per config.yaml explizit
+        # eingeschaltet UND ein Groq-Client vorhanden ist (P-8: nie hart von einem
+        # KI-Key abhaengen).
+        if (
+            einstufung == "kaufkandidat"
+            and groq_client is not None
+            and marktscan_cfg.get("groq_automatisch_kaufkandidaten", False)
+        ):
+            try:
+                parsed = generate_candidate_writeup(
+                    candidate, regime_result, groq_client, kraken_client, conn, watchlist, config_dict
+                )
+                db.update_marktscan_candidate_groq_writeup(
+                    conn, candidate.id, parsed.get("short_reasoning"),
+                    json.dumps(parsed.get("long_reasoning") or {}, ensure_ascii=False),
+                )
+            except Exception as exc:
+                logger.warning(
+                    "Automatische Groq-Begründung für Marktscan-Kandidat %s fehlgeschlagen: %s",
+                    candidate.symbol, exc,
+                )
+
     return candidates
+
+
+def generate_candidate_writeup(
+    candidate: MarktscanCandidate,
+    regime_result: RegimeResult,
+    groq_client,
+    kraken_client,
+    conn,
+    watchlist,
+    config_dict: dict,
+) -> dict:
+    """Baut ein Facts-Objekt analog zu agent/analyst.py::build_facts() aus einem
+    bereits gescorten Kandidaten und ruft call_groq_for_signal() UNVERAENDERT auf -
+    kein zweites Prompt-Schema (Design-Entscheidung 3, siehe Plan). Zwei Aufrufpfade
+    fuehren hierher: manueller UI-Klick (jederzeit, jeder Kandidat) und der
+    automatische Zweig in run_scan() (nur kaufkandidat + Konfig-Schalter). Wirft
+    AnalystResponseInvalid unveraendert weiter - der Aufrufer entscheidet, wie er
+    damit umgeht (siehe agent/pipeline.py fuer das etablierte Muster)."""
+    from agent.analyst import build_facts, call_groq_for_signal
+    from agent.anticyclic import assess as assess_anticyclic
+    from agent.pipeline import fetch_market_context
+    from agent.risk_gate import pre_check
+    from database.models import PriceSnapshot
+    from indicators.calculations import summarize_confluence
+
+    asset = WatchlistAsset(
+        symbol=candidate.symbol, name=candidate.name, typ="taktisch", status="watchlist",
+        coingecko_id=candidate.coingecko_id,
+    )
+    latest_price = PriceSnapshot(
+        symbol=candidate.symbol, coingecko_id=candidate.coingecko_id, price_usd=candidate.price_usd,
+        price_eur=candidate.price_eur, market_cap_usd=candidate.market_cap_usd,
+        volume_24h_usd=candidate.volume_24h_usd, change_24h_pct=candidate.change_24h_pct,
+        fetched_at=candidate.discovered_at,
+    )
+
+    history = db.get_price_history(conn, candidate.coingecko_id)
+    dates = np.array([p.date for p in history])
+    closes = np.array([p.price_usd for p in history], dtype=float)
+    valid = ~np.isnan(closes)
+    dates, closes = dates[valid], closes[valid]
+    snapshot = build_technical_snapshot(closes, dates, [])
+
+    latest_close = float(closes[-1]) if len(closes) else candidate.price_usd
+    confluence = summarize_confluence(snapshot, latest_close)
+
+    latest_prices = dict(db.get_latest_prices(conn))
+    latest_prices[candidate.symbol] = latest_price
+    risk_result = pre_check(asset, watchlist, conn, latest_prices, snapshot, regime_result, config_dict)
+    anticyclic_context = assess_anticyclic(asset, kraken_client, closes)
+    market_context = fetch_market_context()
+
+    price_age_minutes = None
+    try:
+        fetched = datetime.fromisoformat(candidate.discovered_at)
+        if fetched.tzinfo is None:
+            fetched = fetched.replace(tzinfo=timezone.utc)
+        price_age_minutes = (datetime.now(timezone.utc) - fetched).total_seconds() / 60
+    except ValueError:
+        pass
+
+    strategien_aktiv = [s["name"] for s in config_dict["strategien"] if s["aktiv"]]
+    regime_profile = config_dict["regime"]["profile"].get(regime_result.regime, {})
+
+    facts = build_facts(
+        asset, latest_price, None, snapshot, confluence, regime_result, regime_profile,
+        risk_result, anticyclic_context, strategien_aktiv, price_age_minutes, market_context,
+    )
+    return call_groq_for_signal(groq_client, facts)
