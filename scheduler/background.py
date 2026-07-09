@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 
+from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_MISSED
 from apscheduler.schedulers.background import BackgroundScheduler
 
 import database.db as db
@@ -102,6 +103,19 @@ def marktscan_job(coingecko_client, kraken_client, groq_client, conn_factory, wa
         conn.close()
 
 
+def _log_job_event(event) -> None:
+    """U-12-Minimalfix (2026-07-09): jeder Job faengt seine eigenen Exceptions
+    bereits selbst ab (siehe *_job()-Funktionen oben) - dieser Listener ist die
+    zweite Verteidigungslinie fuer alles, was DENNOCH bis zum Scheduler durchschlaegt
+    (z.B. ein Bug im Job-Wrapper selbst), UND faengt zusaetzlich verpasste Laeufe ab
+    (EVENT_JOB_MISSED - z.B. wenn der Rechner zur geplanten Zeit im Standby war),
+    was bisher komplett unsichtbar blieb."""
+    if event.exception:
+        logger.error("Scheduler-Job '%s' fehlgeschlagen (unbehandelt): %s", event.job_id, event.exception)
+    else:
+        logger.warning("Scheduler-Job '%s' verpasst (Misfire)", event.job_id)
+
+
 def build_scheduler(
     coingecko_client, kraken_client, db_conn_factory, watchlist_provider,
     groq_client=None, fred_api_key=None,
@@ -139,4 +153,5 @@ def build_scheduler(
         args=[coingecko_client, kraken_client, groq_client, db_conn_factory, watchlist, fred_api_key],
         id="marktscan",
     )
+    scheduler.add_listener(_log_job_event, EVENT_JOB_ERROR | EVENT_JOB_MISSED)
     return scheduler

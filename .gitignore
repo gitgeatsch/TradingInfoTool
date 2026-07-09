@@ -39,5 +39,8 @@ config.local.*
 *.sqlite
 *.sqlite3
 
+# Log-Dateien (lokal, U-12-Minimalfix)
+*.log
+
 # Persoenliche Bestandsdaten (Anzahl Coins etc.), nicht versionieren
 Basisinfos/Assets.xlsx

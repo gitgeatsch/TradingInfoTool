@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import logging
 import os
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 import config
 import database.db as db
@@ -15,7 +17,20 @@ from api.kraken_history import backfill_all_ohlc
 from importer.excel_import import import_holdings
 from scheduler.background import build_scheduler
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+# U-12-Minimalfix (2026-07-09): bisher NUR Konsole - laeuft die App ohne sichtbares
+# Terminal (z.B. als Hintergrundprozess), waren alle Fehler unwiederbringlich
+# verloren. Rotierende Datei (max. 5 MB x 3, UTF-8) daneben, damit es auch dann
+# eine Log-Datei zum Nachschauen gibt.
+LOG_PATH = Path(__file__).resolve().parent / "data" / "tradinginfotool.log"
+LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    handlers=[
+        logging.StreamHandler(),
+        RotatingFileHandler(LOG_PATH, maxBytes=5_000_000, backupCount=3, encoding="utf-8"),
+    ],
+)
 logger = logging.getLogger(__name__)
 
 
