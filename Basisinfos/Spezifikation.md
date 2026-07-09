@@ -579,17 +579,37 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
   nicht relevant.
 - **U-11** Regime-Anzeige (Kap. 14): aktuelles Marktregime sichtbar; manueller Override
   wählbar und — solange aktiv — permanent als Warnhinweis eingeblendet.
-- **U-12** Datenquellen-Gesundheitsstatus `[OFFEN, Idee 2026-07-08]`: Erweiterung von
-  P-10 — nicht nur einzelne veraltete Werte in der jeweiligen Ansicht kennzeichnen
-  (bereits umgesetzt), sondern eine **zentrale, aggregierte Übersicht**, welche
-  Datenquellen-Abhängigkeiten (CoinGecko, Kraken, Groq, künftig FRED/Eastmoney-PBoC/
-  alternative.me) gerade fehlschlagen oder unerwartet reagieren — inkl. seit wann und
-  mit welchem Fehler. Ziel: der Nutzer erfährt aktiv, wenn eine Quelle "nicht mehr wie
-  gewünscht/erforderlich funktioniert" (Zitat), statt es zufällig in einer einzelnen
-  Ansicht zu bemerken oder es unbemerkt zu bleiben, bis ein Signal falsch/unvollständig
-  wird. Anlass: beim Live-Test mehrerer Makro-Quellen (Kap. 8) traten mehrfach stille
-  Qualitätsprobleme auf (z. B. ISM-Ersatzquelle mit offensichtlich falschen Werten,
-  inkonsistente Trueflation-Pricing-Angaben) — ein Mensch musste das manuell bemerken.
+- **U-12** Datenquellen-Gesundheitsstatus `[TEILWEISE ERLEDIGT, Idee 2026-07-08]`:
+  Erweiterung von P-10 — nicht nur einzelne veraltete Werte in der jeweiligen Ansicht
+  kennzeichnen (bereits umgesetzt), sondern eine **zentrale, aggregierte Übersicht**,
+  welche Datenquellen-Abhängigkeiten (CoinGecko, Kraken, Groq, künftig FRED/
+  Eastmoney-PBoC/alternative.me) gerade fehlschlagen oder unerwartet reagieren —
+  inkl. seit wann und mit welchem Fehler. Ziel: der Nutzer erfährt aktiv, wenn eine
+  Quelle "nicht mehr wie gewünscht/erforderlich funktioniert" (Zitat), statt es
+  zufällig in einer einzelnen Ansicht zu bemerken oder es unbemerkt zu bleiben, bis
+  ein Signal falsch/unvollständig wird. Anlass: beim Live-Test mehrerer Makro-Quellen
+  (Kap. 8) traten mehrfach stille Qualitätsprobleme auf (z. B. ISM-Ersatzquelle mit
+  offensichtlich falschen Werten, inkonsistente Trueflation-Pricing-Angaben) — ein
+  Mensch musste das manuell bemerken. **Minimalfix ERLEDIGT (2026-07-09):**
+  `main.py` schreibt zusätzlich in eine rotierende Logdatei (`data/
+  tradinginfotool.log`, UTF-8, 5 MB × 3) statt nur in die Konsole; `scheduler/
+  background.py` hat einen `EVENT_JOB_ERROR`/`EVENT_JOB_MISSED`-Listener als zweite
+  Verteidigungslinie zu den bereits vorhandenen Try/Except-Blöcken je Job, und deckt
+  neu auch verpasste Läufe ab (z. B. Rechner im Standby zur geplanten Uhrzeit).
+  **Weiterhin offen:** die eigentliche aggregierte UI-Übersicht, Verlaufsstatistik
+  über mehrere Läufe, proaktive Benachrichtigung — aktuell muss der Nutzer die
+  Logdatei selbst öffnen.
+- **U-13** GUI-Usability-Standards `[Idee 2026-07-09]`: allgemeine UI-Politur für
+  alle Tabs, nicht nur einzelne Features — bewusst offen als Kategorie formuliert
+  ("etc."), nicht als abschließende Liste. **Sortierbare Spalten ERLEDIGT
+  (2026-07-09):** neues `ui/sortable_tree.py::make_sortable()` — Klick auf einen
+  Spaltenkopf sortiert (erneuter Klick kehrt um, Pfeil zeigt Richtung),
+  zahlenbewusst für Preis-/Wert-/Mengen-/Prozent-Spalten (fehlende Werte immer am
+  Ende), sonst alphabetisch — auf allen vier Treeview-Tabs (Watchlist, Portfolio,
+  Signale, Marktscan) einheitlich verdrahtet statt Tab-für-Tab-Einzellösungen.
+  **Weiterhin offen:** Dark Mode (aktuell Standard-Tk/ttk-Look, keine
+  Theme-Unterstützung), allgemeine Hintergrund-/Schrift-Lesbarkeit (Kontrast,
+  Schriftgrößen).
 
 ## 10. Agent- & Datenbank-Betrieb
 
