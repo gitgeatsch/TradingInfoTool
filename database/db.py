@@ -5,7 +5,15 @@ import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 
-from database.models import Holding, MacroSnapshot, OhlcPoint, PriceHistoryPoint, PriceSnapshot, Signal
+from database.models import (
+    Holding,
+    MacroSnapshot,
+    MarktscanCandidate,
+    OhlcPoint,
+    PriceHistoryPoint,
+    PriceSnapshot,
+    Signal,
+)
 
 DB_PATH = Path(__file__).resolve().parent.parent / "data" / "tradinginfotool.db"
 
@@ -109,6 +117,48 @@ CREATE TABLE IF NOT EXISTS signals (
     groq_model                          TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_signals_symbol_created ON signals(symbol, created_at);
+
+CREATE TABLE IF NOT EXISTS marktscan_candidates (
+    id                          INTEGER PRIMARY KEY AUTOINCREMENT,
+    coingecko_id                TEXT NOT NULL,
+    symbol                      TEXT NOT NULL,
+    name                        TEXT NOT NULL,
+    discovered_at                TEXT NOT NULL,
+    discovery_source              TEXT NOT NULL,
+    scan_run_id                    TEXT NOT NULL,
+    filter_a_bestanden              INTEGER NOT NULL,
+    tier                             TEXT,
+    market_cap_usd                   REAL,
+    volume_24h_usd                    REAL,
+    vol_marktkap_ratio                 REAL,
+    alter_tage_geschaetzt               INTEGER,
+    alter_tage_quelle                    TEXT,
+    filter_a_begruendung                  TEXT,
+    price_usd                              REAL,
+    price_eur                               REAL,
+    change_24h_pct                           REAL,
+    score_technik                             REAL,
+    score_fundamental                          REAL,
+    score_momentum                              REAL,
+    score_kontext_makro                          REAL,
+    signale_technik_json                          TEXT,
+    signale_fundamental_json                       TEXT,
+    signale_momentum_json                           TEXT,
+    signale_kontext_json                             TEXT,
+    score_gesamt                                      REAL,
+    gewichte_json                                      TEXT,
+    regime_bei_scan                                     TEXT,
+    einstufung                                           TEXT,
+    einstufung_begruendung                                TEXT,
+    small_cap_budget_hinweis                               TEXT,
+    groq_kurzbegruendung                                    TEXT,
+    groq_langbegruendung_json                                TEXT,
+    groq_generiert_am                                         TEXT,
+    status                                                     TEXT NOT NULL DEFAULT 'neu',
+    status_geaendert_am                                         TEXT,
+    UNIQUE(coingecko_id, scan_run_id)
+);
+CREATE INDEX IF NOT EXISTS idx_marktscan_status ON marktscan_candidates(status, discovered_at);
 """
 
 
@@ -416,6 +466,89 @@ def get_signal_history(conn: sqlite3.Connection, symbol: str, limit: int = 20) -
         (symbol, limit),
     ).fetchall()
     return [_row_to_signal(row) for row in rows]
+
+
+_MARKTSCAN_COLUMNS = (
+    "coingecko_id", "symbol", "name", "discovered_at", "discovery_source", "scan_run_id",
+    "filter_a_bestanden", "tier", "market_cap_usd", "volume_24h_usd", "vol_marktkap_ratio",
+    "alter_tage_geschaetzt", "alter_tage_quelle", "filter_a_begruendung", "price_usd",
+    "price_eur", "change_24h_pct", "score_technik", "score_fundamental", "score_momentum",
+    "score_kontext_makro", "signale_technik_json", "signale_fundamental_json",
+    "signale_momentum_json", "signale_kontext_json", "score_gesamt", "gewichte_json",
+    "regime_bei_scan", "einstufung", "einstufung_begruendung", "small_cap_budget_hinweis",
+    "groq_kurzbegruendung", "groq_langbegruendung_json", "groq_generiert_am", "status",
+    "status_geaendert_am",
+)
+
+
+def upsert_marktscan_candidate(conn: sqlite3.Connection, candidate: MarktscanCandidate) -> int:
+    """Ein Kandidat kann innerhalb EINES Scan-Laufs ueber mehrere Quellen (Trending
+    UND Top-Gainers) gefunden werden - `ON CONFLICT` merged das dann, statt einen
+    Fehler zu werfen. `status`/`status_geaendert_am` werden hier NICHT ueberschrieben
+    (siehe `update_marktscan_candidate_status()`) - ein zweiter Scoring-Durchlauf
+    innerhalb desselben Laufs darf einen bereits gesetzten Nutzer-Status nicht
+    zuruecksetzen. Cross-Lauf-Duplikat-Unterdrueckung (bereits abgelehnte/uebernommene
+    Coins nicht erneut anzeigen) ist bewusst NICHT hier, sondern Aufgabe von
+    agent/marktscan.py (andere scan_run_id = andere Zeile, kein UNIQUE-Konflikt)."""
+    placeholders = ", ".join("?" for _ in _MARKTSCAN_COLUMNS)
+    update_clause = ", ".join(
+        f"{col} = excluded.{col}"
+        for col in _MARKTSCAN_COLUMNS
+        if col not in ("coingecko_id", "scan_run_id", "status", "status_geaendert_am")
+    )
+    values = [
+        int(candidate.filter_a_bestanden) if col == "filter_a_bestanden" else getattr(candidate, col)
+        for col in _MARKTSCAN_COLUMNS
+    ]
+    cursor = conn.execute(
+        f"INSERT INTO marktscan_candidates ({', '.join(_MARKTSCAN_COLUMNS)}) "
+        f"VALUES ({placeholders}) "
+        f"ON CONFLICT(coingecko_id, scan_run_id) DO UPDATE SET {update_clause}",
+        values,
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def _row_to_marktscan_candidate(row: sqlite3.Row) -> MarktscanCandidate:
+    data = dict(row)
+    data["filter_a_bestanden"] = bool(data["filter_a_bestanden"])
+    return MarktscanCandidate(**data)
+
+
+def get_marktscan_candidates(
+    conn: sqlite3.Connection, status: str | None = None, limit: int = 200
+) -> list[MarktscanCandidate]:
+    if status is not None:
+        rows = conn.execute(
+            "SELECT * FROM marktscan_candidates WHERE status = ? ORDER BY discovered_at DESC LIMIT ?",
+            (status, limit),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT * FROM marktscan_candidates ORDER BY discovered_at DESC LIMIT ?", (limit,)
+        ).fetchall()
+    return [_row_to_marktscan_candidate(row) for row in rows]
+
+
+def get_latest_marktscan_status_by_coingecko_id(conn: sqlite3.Connection, coingecko_id: str) -> str | None:
+    """Fuer den Cross-Lauf-Duplikat-Check (agent/marktscan.py): letzter bekannter
+    Status dieses Coins ueber ALLE frueheren Scan-Laeufe hinweg, nicht auf den
+    aktuellen scan_run_id beschraenkt."""
+    row = conn.execute(
+        "SELECT status FROM marktscan_candidates WHERE coingecko_id = ? "
+        "ORDER BY discovered_at DESC LIMIT 1",
+        (coingecko_id,),
+    ).fetchone()
+    return row["status"] if row else None
+
+
+def update_marktscan_candidate_status(conn: sqlite3.Connection, candidate_id: int, status: str) -> None:
+    conn.execute(
+        "UPDATE marktscan_candidates SET status = ?, status_geaendert_am = ? WHERE id = ?",
+        (status, _now_iso(), candidate_id),
+    )
+    conn.commit()
 
 
 def get_latest_prices(conn: sqlite3.Connection) -> dict[str, PriceSnapshot]:

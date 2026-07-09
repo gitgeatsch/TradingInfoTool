@@ -112,6 +112,58 @@ class Signal:
 
 
 @dataclass
+class MarktscanCandidate:
+    """Ein von agent/marktscan.py entdeckter, bewerteter Kandidat (Spezifikation
+    Kap. 13, Stufe A-D). Anders als Signal (reines Append-only-Log je Pipeline-Lauf)
+    ist das ein EINZELNER, veraenderlicher Datensatz mit Lifecycle-`status` (U-10) -
+    ein `upsert`, kein `insert` je Scan. id=None vor dem ersten Insert."""
+    coingecko_id: str
+    symbol: str
+    name: str
+    discovered_at: str
+    discovery_source: str  # 'trending' | 'top_gainers'
+    scan_run_id: str
+    filter_a_bestanden: bool
+    id: int | None = None
+    # Stufe A
+    tier: str | None = None  # 'tier1'|'tier2'|'tier3'|None (unter Tier-3-Untergrenze)
+    market_cap_usd: float | None = None
+    volume_24h_usd: float | None = None
+    vol_marktkap_ratio: float | None = None
+    alter_tage_geschaetzt: int | None = None
+    alter_tage_quelle: str | None = None  # 'atl_date_proxy'
+    filter_a_begruendung: str | None = None
+    # Marktdaten zum Entdeckungszeitpunkt
+    price_usd: float | None = None
+    price_eur: float | None = None
+    change_24h_pct: float | None = None
+    # Stufe B (0-100 je Kategorie, None wenn nicht bewertbar)
+    score_technik: float | None = None
+    score_fundamental: float | None = None
+    score_momentum: float | None = None
+    score_kontext_makro: float | None = None
+    signale_technik_json: str | None = None
+    signale_fundamental_json: str | None = None
+    signale_momentum_json: str | None = None
+    signale_kontext_json: str | None = None
+    # Stufe C
+    score_gesamt: float | None = None
+    gewichte_json: str | None = None
+    regime_bei_scan: str | None = None
+    # Stufe D
+    einstufung: str | None = None  # 'kein_treffer'|'watchlist_wuerdig'|'kaufkandidat'
+    einstufung_begruendung: str | None = None
+    small_cap_budget_hinweis: str | None = None
+    # optionale Groq-Begruendung (hybrid, siehe agent/marktscan.py)
+    groq_kurzbegruendung: str | None = None
+    groq_langbegruendung_json: str | None = None
+    groq_generiert_am: str | None = None
+    # Lifecycle (U-10)
+    status: str = "neu"  # 'neu'|'nutzer_behalten_manuell_uebernommen'|'nutzer_verworfen'
+    status_geaendert_am: str | None = None
+
+
+@dataclass
 class OhlcPoint:
     """Echte Tageskerze von Kraken (nicht die CoinGecko-Schlusskurs-Naeherung)."""
     symbol: str
