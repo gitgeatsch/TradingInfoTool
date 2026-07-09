@@ -940,6 +940,22 @@ seinen Emotionen scheitert. Grundsatz: **antizyklisch, aber bedingt.**
   dieser Slice). `holdings` bleibt weiterhin Stand-ohne-Historie (kein Delta-Log) —
   dieselbe Architektur wie beim Excel-Import, nur ein zweiter Auslöser für
   denselben `upsert_holding()`-Pfad.
+  **Nachgebessert nach Expertengegenprüfung (2026-07-09, gleicher Tag):** vier reale
+  Lücken gefunden und behoben: (a) Excel-Reimport überschrieb einen per
+  Signal-Rückmeldung gesetzten Bestand bisher kommentarlos — `import_holdings()`
+  warnt jetzt, wenn ein Symbol mit `source="signal_bestaetigung"` einen
+  abweichenden neuen Wert bekommt (überschreibt trotzdem, Assets.xlsx bleibt
+  Quelle der Wahrheit, aber sichtbar); (b) deutsches Komma als Dezimaltrennzeichen
+  wird jetzt akzeptiert (wie beim Excel-Import); (c) der Bestand-Vorschlag
+  berechnet sich live neu, auch wenn die Menge erst NACH dem Ankreuzen der
+  Checkbox eingegeben wird; (d) ein negativer vorgeschlagener/eingegebener Bestand
+  wird beim Speichern blockiert. **Bewusst offen gelassen (dokumentierte
+  Deferrals):** `holdings.source` wird im Portfolio-Tab weiterhin nicht angezeigt
+  (Herkunft eines Wertes bleibt in der UI unsichtbar); `signals.umgesetzt*` wird
+  bei jeder erneuten Rückmeldung überschrieben, keine Korrektur-Historie. Beide
+  sind niedrigpriorisiert und ohne akuten Anlass — Revisit-Bedingung: sobald
+  entweder ein Nutzer-Bericht über verwirrende Portfolio-Herkunft ODER ein
+  konkreter Bedarf an Rückmeldungs-Historie auftritt.
 - **Hebelpositionen als eigene Empfehlungsart** (2026-07-07, Nutzer-Idee): Der Agent
   soll perspektivisch nicht nur Spot-, sondern auch Hebel-Empfehlungen (Long/Short,
   2x/5x, aktiv/passiv gemanaged) inkl. Forecasts geben — zunächst nur Long, später
