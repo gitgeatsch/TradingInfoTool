@@ -18,6 +18,7 @@ from tkinter import ttk
 import database.db as db
 from ui.formatting import format_money
 from ui.sortable_tree import make_sortable
+from ui.theme import DEFAULT_TEXT_COLOR
 
 ACTION_COLORS = {
     "KAUFEN": "#1a7f37",
@@ -162,13 +163,13 @@ class SignalsView(ttk.Frame):
         self._render_umsetzung_status(signal)
 
         if signal is None:
-            self.action_label.config(text=f"{asset.symbol} — noch kein Signal berechnet", foreground="black")
+            self.action_label.config(text=f"{asset.symbol} — noch kein Signal berechnet", foreground=DEFAULT_TEXT_COLOR)
             self.meta_label.config(text="")
             self.gate_label.config(text="")
             self._set_detail_text("")
             return
 
-        color = ACTION_COLORS.get(signal.action, "black")
+        color = ACTION_COLORS.get(signal.action, DEFAULT_TEXT_COLOR)
         self.action_label.config(text=f"{asset.symbol}: {signal.action}", foreground=color)
         conf_text = f"{signal.confidence_pct:.0f}%" if signal.confidence_pct is not None else "-"
         self.meta_label.config(

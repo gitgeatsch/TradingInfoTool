@@ -13,6 +13,7 @@ from ui.marktscan_view import MarktscanView
 from ui.portfolio import PortfolioView
 from ui.signals_view import SignalsView
 from ui.sortable_tree import make_sortable
+from ui.theme import apply_base_style
 
 STALE_COLOR = "#b36b00"
 NOT_LISTED_COLOR = "#c0392b"
@@ -32,6 +33,7 @@ class TradingInfoToolApp(tk.Tk):
         super().__init__()
         self.title("TradingInfoTool")
         self.geometry("900x600")
+        apply_base_style(self)
 
         self._db_conn_factory = db_conn_factory
         self._watchlist = watchlist

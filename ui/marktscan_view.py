@@ -24,6 +24,7 @@ import config as config_module
 import database.db as db
 from ui.formatting import format_money
 from ui.sortable_tree import make_sortable
+from ui.theme import DEFAULT_TEXT_COLOR
 
 EINSTUFUNG_COLORS = {
     "kaufkandidat": "#1a7f37",
@@ -211,7 +212,7 @@ class MarktscanView(ttk.Frame):
         self._render_candidate(candidate)
 
     def _render_candidate(self, c) -> None:
-        color = EINSTUFUNG_COLORS.get(c.einstufung, "black")
+        color = EINSTUFUNG_COLORS.get(c.einstufung, DEFAULT_TEXT_COLOR)
         score_text = f"{c.score_gesamt:.1f}" if c.score_gesamt is not None else "-"
         self.title_label.config(text=f"{c.symbol} — {c.name}", foreground=color)
 
