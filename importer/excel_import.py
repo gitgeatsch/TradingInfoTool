@@ -12,6 +12,13 @@ import database.db as db
 
 XLSX_PATH = Path(__file__).resolve().parent.parent / "Basisinfos" / "Assets.xlsx"
 SHEET_NAME = "Krypto"
+# Gegenstueck zum Import (Nutzer-Idee 2026-07-09): eine SEPARATE Datei, nie die
+# handgepflegte Original-Assets.xlsx direkt ueberschreiben. Export erzeugt eine
+# frische Arbeitsmappe (kein Risiko, bestehende Formatierung/Zusatzspalten zu
+# zerstoeren, wie es ein In-Place-Rundlauf koennte) - der Nutzer kann sie pruefen/
+# bearbeiten und via "Bestaende aus Datei importieren..." (Filedialog, ui/app.py)
+# wieder einlesen, import_holdings() akzeptiert dafuer bereits einen path-Parameter.
+EXPORT_XLSX_PATH = Path(__file__).resolve().parent.parent / "Basisinfos" / "Assets_export.xlsx"
 
 
 @dataclass
@@ -90,3 +97,26 @@ def import_holdings(
     db.mark_holdings_imported(conn)
 
     return ImportResult(imported_count=len(holdings), warnings=warnings)
+
+
+def export_holdings(conn: sqlite3.Connection, path: Path = EXPORT_XLSX_PATH) -> int:
+    """Schreibt den aktuellen holdings-Stand in eine neue Arbeitsmappe (gleiches
+    Format wie read_holdings_from_excel() erwartet - Sheet 'Krypto', Spalten
+    'Coin Name'/'Kurzzeichen'/'Anzahl Coins'). Eine Zeile pro Watchlist-Asset (nicht
+    nur pro vorhandenem Bestand), Bestand 0 fuer Assets ohne holdings-Eintrag - so
+    ist die Datei beim naechsten Import vollstaendig und loest keine
+    "kein Eintrag in Assets.xlsx"-Warnung aus. Gibt die Anzahl geschriebener Zeilen
+    zurueck."""
+    holdings_by_symbol = {h.symbol: h.quantity for h in db.get_all_holdings(conn)}
+    watchlist = sorted(config.get_watchlist(), key=lambda asset: asset.symbol)
+
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    sheet.title = SHEET_NAME
+    sheet.append(["Coin Name", "Kurzzeichen", "Anzahl Coins"])
+    for asset in watchlist:
+        sheet.append([asset.name, asset.symbol, holdings_by_symbol.get(asset.symbol, 0.0)])
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    workbook.save(path)
+    return len(watchlist)

@@ -44,3 +44,4 @@ config.local.*
 
 # Persoenliche Bestandsdaten (Anzahl Coins etc.), nicht versionieren
 Basisinfos/Assets.xlsx
+Basisinfos/Assets_export.xlsx

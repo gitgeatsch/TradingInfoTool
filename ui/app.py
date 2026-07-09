@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import tkinter as tk
-from tkinter import messagebox, ttk
+from pathlib import Path
+from tkinter import filedialog, messagebox, ttk
 
 import database.db as db
 from api.bitpanda import is_listed as bitpanda_is_listed
-from importer.excel_import import import_holdings
+from importer.excel_import import EXPORT_XLSX_PATH, export_holdings, import_holdings
 from ui.formatting import format_money, format_price_age, is_price_stale
 from ui.marktscan_view import MarktscanView
 from ui.portfolio import PortfolioView
@@ -76,6 +77,8 @@ class TradingInfoToolApp(tk.Tk):
         menubar = tk.Menu(self)
         file_menu = tk.Menu(menubar, tearoff=0)
         file_menu.add_command(label="Bestände neu importieren", command=self._reimport_holdings)
+        file_menu.add_command(label="Bestände aus Datei importieren…", command=self._import_holdings_from_file)
+        file_menu.add_command(label="Bestände exportieren…", command=self._export_holdings)
         file_menu.add_separator()
         file_menu.add_command(label="Beenden", command=self.destroy)
         menubar.add_cascade(label="Datei", menu=file_menu)
@@ -234,6 +237,47 @@ class TradingInfoToolApp(tk.Tk):
         if result.warnings:
             message += "\n\nWarnungen:\n" + "\n".join(result.warnings)
         messagebox.showinfo("Bestände neu importieren", message)
+
+    def _import_holdings_from_file(self) -> None:
+        """Gegenstueck zum Export (Nutzer-Idee 2026-07-09): laesst den Nutzer eine
+        beliebige Excel-Datei (typischerweise die zuvor exportierte, ggf. bearbeitete
+        Assets_export.xlsx) auswaehlen, statt fix von Assets.xlsx zu importieren."""
+        selected = filedialog.askopenfilename(
+            title="Bestände aus Datei importieren",
+            initialdir=str(EXPORT_XLSX_PATH.parent),
+            filetypes=[("Excel-Dateien", "*.xlsx"), ("Alle Dateien", "*.*")],
+        )
+        if not selected:
+            return
+
+        conn = self._db_conn_factory()
+        try:
+            result = import_holdings(conn, path=Path(selected))
+        finally:
+            conn.close()
+
+        self._portfolio_view.refresh()
+
+        message = f"{result.imported_count} Bestände aus '{Path(selected).name}' importiert."
+        if result.warnings:
+            message += "\n\nWarnungen:\n" + "\n".join(result.warnings)
+        messagebox.showinfo("Bestände aus Datei importieren", message)
+
+    def _export_holdings(self) -> None:
+        """Gegenstueck zum Import (Nutzer-Idee 2026-07-09): schreibt eine SEPARATE
+        Datei (nie die handgepflegte Original-Assets.xlsx direkt), die der Nutzer
+        pruefen/bearbeiten und ueber 'Bestände aus Datei importieren…' wieder
+        einlesen kann."""
+        conn = self._db_conn_factory()
+        try:
+            count = export_holdings(conn)
+        finally:
+            conn.close()
+
+        messagebox.showinfo(
+            "Bestände exportieren",
+            f"{count} Assets nach '{EXPORT_XLSX_PATH.name}' exportiert.\n\n{EXPORT_XLSX_PATH}",
+        )
 
 
 def run_app(
