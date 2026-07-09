@@ -42,6 +42,9 @@ config.local.*
 # Log-Dateien (lokal, U-12-Minimalfix)
 *.log
 
+# Lokale UI-Einstellungen (z.B. Dark Mode), nicht versionieren
+data/settings.json
+
 # Persoenliche Bestandsdaten (Anzahl Coins etc.), nicht versionieren
 Basisinfos/Assets.xlsx
 Basisinfos/Assets_export.xlsx

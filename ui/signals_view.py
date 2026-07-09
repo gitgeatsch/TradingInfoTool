@@ -16,21 +16,9 @@ import tkinter as tk
 from tkinter import ttk
 
 import database.db as db
+import ui.theme as theme
 from ui.formatting import format_money
 from ui.sortable_tree import make_sortable
-from ui.theme import DEFAULT_TEXT_COLOR
-
-ACTION_COLORS = {
-    "KAUFEN": "#1a7f37",
-    "NACHKAUFEN": "#1a7f37",
-    "VERKAUFEN": "#c0392b",
-    "TAUSCHEN": "#8a5a00",
-    "HALTEN": "#555555",
-}
-WARN_COLOR = "#b36b00"
-INFO_COLOR = "#666666"
-UMGESETZT_COLOR = "#1a7f37"
-NICHT_UMGESETZT_COLOR = "#666666"
 
 # Vorzeichen fuer die Bestand-Aktualisierungs-Vorschlagslogik (Nutzeridee 2026-07-07,
 # umgesetzt 2026-07-09): bei TAUSCHEN wird nur die Quell-Position reduziert, das
@@ -94,27 +82,27 @@ class SignalsView(ttk.Frame):
             toolbar, text="Signal berechnen", command=self._on_compute_clicked, state="disabled"
         )
         self.compute_button.pack(side="left")
-        self.status_label = ttk.Label(toolbar, text="", foreground=INFO_COLOR)
+        self.status_label = ttk.Label(toolbar, text="", foreground=theme.info_color())
         self.status_label.pack(side="left", padx=(12, 0))
 
         if self._groq_client is None:
             self.status_label.config(
                 text="⚠ Kein GROQ_API_KEY gesetzt — Signalberechnung deaktiviert (siehe .env)",
-                foreground=WARN_COLOR,
+                foreground=theme.warn_color(),
             )
 
         self.action_label = ttk.Label(right, text="Kein Asset ausgewählt", font=("", 13, "bold"))
         self.action_label.pack(anchor="w")
 
-        self.meta_label = ttk.Label(right, text="", foreground=INFO_COLOR)
+        self.meta_label = ttk.Label(right, text="", foreground=theme.info_color())
         self.meta_label.pack(anchor="w", pady=(0, 8))
 
-        self.gate_label = ttk.Label(right, text="", foreground=WARN_COLOR, wraplength=600, justify="left")
+        self.gate_label = ttk.Label(right, text="", foreground=theme.warn_color(), wraplength=600, justify="left")
         self.gate_label.pack(anchor="w", pady=(0, 4))
 
         umsetzung_frame = ttk.Frame(right)
         umsetzung_frame.pack(fill="x", pady=(0, 8))
-        self.umsetzung_label = ttk.Label(umsetzung_frame, text="", foreground=INFO_COLOR)
+        self.umsetzung_label = ttk.Label(umsetzung_frame, text="", foreground=theme.info_color())
         self.umsetzung_label.pack(side="left")
         self.umsetzung_button = ttk.Button(
             umsetzung_frame, text="Rückmeldung erfassen", command=self._on_umsetzung_clicked, state="disabled"
@@ -163,13 +151,13 @@ class SignalsView(ttk.Frame):
         self._render_umsetzung_status(signal)
 
         if signal is None:
-            self.action_label.config(text=f"{asset.symbol} — noch kein Signal berechnet", foreground=DEFAULT_TEXT_COLOR)
+            self.action_label.config(text=f"{asset.symbol} — noch kein Signal berechnet", foreground=theme.default_text_color())
             self.meta_label.config(text="")
             self.gate_label.config(text="")
             self._set_detail_text("")
             return
 
-        color = ACTION_COLORS.get(signal.action, DEFAULT_TEXT_COLOR)
+        color = theme.action_color(signal.action)
         self.action_label.config(text=f"{asset.symbol}: {signal.action}", foreground=color)
         conf_text = f"{signal.confidence_pct:.0f}%" if signal.confidence_pct is not None else "-"
         self.meta_label.config(
@@ -253,7 +241,7 @@ class SignalsView(ttk.Frame):
 
         self.umsetzung_button.config(state="normal")
         if signal.umgesetzt is None:
-            self.umsetzung_label.config(text="Umsetzung: noch keine Rückmeldung", foreground=INFO_COLOR)
+            self.umsetzung_label.config(text="Umsetzung: noch keine Rückmeldung", foreground=theme.info_color())
         elif signal.umgesetzt:
             detail_parts = []
             if signal.umgesetzt_menge is not None:
@@ -262,10 +250,10 @@ class SignalsView(ttk.Frame):
                 detail_parts.append(f"Preis {format_money(signal.umgesetzt_preis_usd)} USD")
             detail = f" ({', '.join(detail_parts)})" if detail_parts else ""
             when = signal.umgesetzt_am[:16].replace("T", " ") if signal.umgesetzt_am else "-"
-            self.umsetzung_label.config(text=f"✓ Umgesetzt am {when}{detail}", foreground=UMGESETZT_COLOR)
+            self.umsetzung_label.config(text=f"✓ Umgesetzt am {when}{detail}", foreground=theme.umgesetzt_color())
         else:
             when = signal.umgesetzt_am[:16].replace("T", " ") if signal.umgesetzt_am else "-"
-            self.umsetzung_label.config(text=f"✗ Nicht umgesetzt (Rückmeldung am {when})", foreground=NICHT_UMGESETZT_COLOR)
+            self.umsetzung_label.config(text=f"✗ Nicht umgesetzt (Rückmeldung am {when})", foreground=theme.nicht_umgesetzt_color())
 
     def _on_umsetzung_clicked(self) -> None:
         if self._selected_asset is None or self._current_signal is None:
@@ -289,7 +277,7 @@ class SignalsView(ttk.Frame):
             return
 
         self.compute_button.config(state="disabled")
-        self.status_label.config(text=f"Berechne Signal für {asset.symbol} …", foreground=INFO_COLOR)
+        self.status_label.config(text=f"Berechne Signal für {asset.symbol} …", foreground=theme.info_color())
 
         thread = threading.Thread(target=self._run_pipeline, args=(asset,), daemon=True)
         thread.start()
@@ -315,9 +303,9 @@ class SignalsView(ttk.Frame):
     def _on_pipeline_done(self, asset, signal, error) -> None:
         self.compute_button.config(state="normal" if self._groq_client is not None else "disabled")
         if error is not None:
-            self.status_label.config(text=f"Fehler: {error}", foreground="#c0392b")
+            self.status_label.config(text=f"Fehler: {error}", foreground=theme.danger_color())
             return
-        self.status_label.config(text="Fertig.", foreground=INFO_COLOR)
+        self.status_label.config(text="Fertig.", foreground=theme.info_color())
         self._refresh_list()
         if self._selected_asset is not None and self._selected_asset.symbol == asset.symbol:
             self._render_signal(asset, signal)
@@ -381,14 +369,14 @@ class UmsetzungDialog(tk.Toplevel):
         )
         self._bestand_check.grid(row=4, column=0, columnspan=2, sticky="w", pady=(12, 0))
 
-        self._bestand_info_label = ttk.Label(frame, text="", foreground=INFO_COLOR, wraplength=320, justify="left")
+        self._bestand_info_label = ttk.Label(frame, text="", foreground=theme.info_color(), wraplength=320, justify="left")
         self._bestand_info_label.grid(row=5, column=0, columnspan=2, sticky="w")
 
         ttk.Label(frame, text="Neuer Bestand (gesamt):").grid(row=6, column=0, sticky="w", pady=(4, 0))
         self._neuer_bestand_entry = ttk.Entry(frame, textvariable=self._neuer_bestand_var, width=18, state="disabled")
         self._neuer_bestand_entry.grid(row=6, column=1, sticky="w", pady=(4, 0))
 
-        self._error_label = ttk.Label(frame, text="", foreground="#c0392b", wraplength=320, justify="left")
+        self._error_label = ttk.Label(frame, text="", foreground=theme.danger_color(), wraplength=320, justify="left")
         self._error_label.grid(row=7, column=0, columnspan=2, sticky="w", pady=(8, 0))
 
         button_frame = ttk.Frame(frame)
@@ -435,7 +423,7 @@ class UmsetzungDialog(tk.Toplevel):
         self._bestand_info_label.config(
             text=f"Aktueller Bestand: {current_qty}. Vorschlag basiert auf Aktion '{self._signal.action}' "
             f"und Menge — bitte prüfen und bei Bedarf anpassen.{warn}",
-            foreground="#c0392b" if suggestion < 0 else INFO_COLOR,
+            foreground=theme.danger_color() if suggestion < 0 else theme.info_color(),
         )
         self._neuer_bestand_var.set(str(suggestion))
         self._neuer_bestand_entry.config(state="normal")

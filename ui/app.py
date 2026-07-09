@@ -6,6 +6,8 @@ from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
 import database.db as db
+import ui.settings as ui_settings
+import ui.theme as theme
 from api.bitpanda import is_listed as bitpanda_is_listed
 from importer.excel_import import EXPORT_XLSX_PATH, export_holdings, import_holdings
 from ui.formatting import format_money, format_price_age, is_price_stale
@@ -13,10 +15,6 @@ from ui.marktscan_view import MarktscanView
 from ui.portfolio import PortfolioView
 from ui.signals_view import SignalsView
 from ui.sortable_tree import make_sortable
-from ui.theme import apply_base_style
-
-STALE_COLOR = "#b36b00"
-NOT_LISTED_COLOR = "#c0392b"
 
 UI_POLL_INTERVAL_MS = 3000
 DISCLAIMER_TEXT = (
@@ -33,7 +31,12 @@ class TradingInfoToolApp(tk.Tk):
         super().__init__()
         self.title("TradingInfoTool")
         self.geometry("900x600")
-        apply_base_style(self)
+
+        self._settings = ui_settings.load_settings()
+        theme.set_dark_mode(self._settings["dark_mode"])
+        if theme.is_dark():
+            theme.apply_dark_mode(self)
+        theme.apply_base_style(self)
 
         self._db_conn_factory = db_conn_factory
         self._watchlist = watchlist
@@ -68,7 +71,7 @@ class TradingInfoToolApp(tk.Tk):
         notebook.add(self._marktscan_view, text="Marktscan")
 
         disclaimer = ttk.Label(
-            self, text=DISCLAIMER_TEXT, foreground="#666666", wraplength=880, justify="center"
+            self, text=DISCLAIMER_TEXT, foreground=theme.info_color(), wraplength=880, justify="center"
         )
         disclaimer.pack(side="bottom", fill="x", padx=8, pady=4)
 
@@ -84,7 +87,26 @@ class TradingInfoToolApp(tk.Tk):
         file_menu.add_separator()
         file_menu.add_command(label="Beenden", command=self.destroy)
         menubar.add_cascade(label="Datei", menu=file_menu)
+
+        view_menu = tk.Menu(menubar, tearoff=0)
+        self._dark_mode_var = tk.BooleanVar(value=self._settings["dark_mode"])
+        view_menu.add_checkbutton(
+            label="Dark Mode", variable=self._dark_mode_var, command=self._toggle_dark_mode
+        )
+        menubar.add_cascade(label="Ansicht", menu=view_menu)
+
         self.config(menu=menubar)
+
+    def _toggle_dark_mode(self) -> None:
+        """Speichert nur die Praeferenz - wendet sie NICHT live an (siehe
+        ui/theme.py-Docstring: Neustart-Modell statt Live-Umfaerben aller bereits
+        gerenderten Widgets/Treeview-Tags)."""
+        self._settings["dark_mode"] = self._dark_mode_var.get()
+        ui_settings.save_settings(self._settings)
+        messagebox.showinfo(
+            "Dark Mode",
+            "Einstellung gespeichert. Bitte TradingInfoTool neu starten, damit die Änderung wirkt.",
+        )
 
     def _build_watchlist_tab(self, parent) -> ttk.Frame:
         frame = ttk.Frame(parent)
@@ -122,8 +144,8 @@ class TradingInfoToolApp(tk.Tk):
             tree.heading(col, text=headings[col])
             anchor = "w" if col in ("name", "typ", "status") else "e"
             tree.column(col, width=90 if col == "bitpanda" else 110, anchor=anchor)
-        tree.tag_configure("stale", foreground=STALE_COLOR)
-        tree.tag_configure("bitpanda_fehlt", foreground=NOT_LISTED_COLOR)
+        tree.tag_configure("stale", foreground=theme.stale_color())
+        tree.tag_configure("bitpanda_fehlt", foreground=theme.danger_color())
         make_sortable(tree, numeric_columns=frozenset({"price_usd", "price_eur", "change_24h"}))
         tree.bind("<Double-1>", self._open_chart)
         tree.pack(fill="both", expand=True, padx=8, pady=8)

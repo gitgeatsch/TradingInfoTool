@@ -22,17 +22,10 @@ from tkinter import messagebox, ttk
 
 import config as config_module
 import database.db as db
+import ui.theme as theme
 from ui.formatting import format_money
 from ui.sortable_tree import make_sortable
-from ui.theme import DEFAULT_TEXT_COLOR
 
-EINSTUFUNG_COLORS = {
-    "kaufkandidat": "#1a7f37",
-    "watchlist_wuerdig": "#8a5a00",
-    "kein_treffer": "#666666",
-}
-WARN_COLOR = "#b36b00"
-INFO_COLOR = "#666666"
 STATUS_LABELS = {
     "neu": "neu",
     "nutzer_behalten_manuell_uebernommen": "übernommen",
@@ -63,7 +56,7 @@ class _YamlDialog(tk.Toplevel):
                 self,
                 text=f"⚠ {symbol} ist NICHT bei Bitpanda gelistet — dort aktuell nicht direkt "
                 "kaufbar. Trotzdem zur Beobachtung hinzufügen möglich.",
-                wraplength=500, justify="left", foreground="#c0392b",
+                wraplength=500, justify="left", foreground=theme.danger_color(),
             ).pack(anchor="w", padx=10, pady=(10, 0))
         ttk.Label(
             self, text="In Basisinfos/config.yaml unter watchlist: einfügen (Notepad++):",
@@ -143,19 +136,19 @@ class MarktscanView(ttk.Frame):
         )
         self.reject_button.pack(side="left", padx=(8, 0))
 
-        self.status_label = ttk.Label(right, text="", foreground=INFO_COLOR)
+        self.status_label = ttk.Label(right, text="", foreground=theme.info_color())
         self.status_label.pack(anchor="w")
 
         if self._groq_client is None:
             self.status_label.config(
                 text="⚠ Kein GROQ_API_KEY gesetzt — P-5-Begründung deaktiviert (siehe .env)",
-                foreground=WARN_COLOR,
+                foreground=theme.warn_color(),
             )
 
         self.title_label = ttk.Label(right, text="Kein Kandidat ausgewählt", font=("", 13, "bold"))
         self.title_label.pack(anchor="w", pady=(8, 0))
 
-        self.meta_label = ttk.Label(right, text="", foreground=INFO_COLOR)
+        self.meta_label = ttk.Label(right, text="", foreground=theme.info_color())
         self.meta_label.pack(anchor="w", pady=(0, 8))
 
         self.detail_text = tk.Text(right, height=26, wrap="word", state="disabled", relief="flat")
@@ -191,7 +184,7 @@ class MarktscanView(ttk.Frame):
                         entdeckt_text, STATUS_LABELS.get(c.status, c.status)),
                 tags=("nicht_gelistet",) if c.bitpanda_gelistet is False else (),
             )
-        self.tree.tag_configure("nicht_gelistet", foreground="#c0392b")
+        self.tree.tag_configure("nicht_gelistet", foreground=theme.danger_color())
 
     def _on_select(self, event) -> None:
         selected = self.tree.selection()
@@ -212,22 +205,22 @@ class MarktscanView(ttk.Frame):
         self._render_candidate(candidate)
 
     def _render_candidate(self, c) -> None:
-        color = EINSTUFUNG_COLORS.get(c.einstufung, DEFAULT_TEXT_COLOR)
+        color = theme.einstufung_color(c.einstufung)
         score_text = f"{c.score_gesamt:.1f}" if c.score_gesamt is not None else "-"
         self.title_label.config(text=f"{c.symbol} — {c.name}", foreground=color)
 
         if c.bitpanda_gelistet is True:
             bitpanda_text = " · Bitpanda: ✓ gelistet"
-            bitpanda_color = INFO_COLOR
+            bitpanda_color = theme.info_color()
         elif c.bitpanda_gelistet is False:
             bitpanda_text = " · Bitpanda: ✗ NICHT gelistet"
-            bitpanda_color = "#c0392b"
+            bitpanda_color = theme.danger_color()
         else:
             bitpanda_text = " · Bitpanda: unbekannt (Prüfung fehlgeschlagen)"
-            bitpanda_color = INFO_COLOR
+            bitpanda_color = theme.info_color()
         self.meta_label.config(
             text=f"Einstufung: {c.einstufung or '-'} · Score: {score_text}{bitpanda_text}",
-            foreground=bitpanda_color if c.bitpanda_gelistet is False else INFO_COLOR,
+            foreground=bitpanda_color if c.bitpanda_gelistet is False else theme.info_color(),
         )
 
         lines: list[str] = []
@@ -282,7 +275,7 @@ class MarktscanView(ttk.Frame):
 
     def _on_scan_clicked(self) -> None:
         self.scan_button.config(state="disabled")
-        self.status_label.config(text="Scanne CoinGecko Trending/Top-Gainers …", foreground=INFO_COLOR)
+        self.status_label.config(text="Scanne CoinGecko Trending/Top-Gainers …", foreground=theme.info_color())
         thread = threading.Thread(target=self._run_scan, daemon=True)
         thread.start()
 
@@ -313,12 +306,12 @@ class MarktscanView(ttk.Frame):
     def _on_scan_done(self, candidates, error) -> None:
         self.scan_button.config(state="normal")
         if error is not None:
-            self.status_label.config(text=f"Fehler: {error}", foreground="#c0392b")
+            self.status_label.config(text=f"Fehler: {error}", foreground=theme.danger_color())
             return
         treffer = [c for c in candidates if c.einstufung in ("kaufkandidat", "watchlist_wuerdig")]
         self.status_label.config(
             text=f"Fertig — {len(candidates)} Kandidaten bewertet, {len(treffer)} Treffer.",
-            foreground=INFO_COLOR,
+            foreground=theme.info_color(),
         )
         self._refresh_list()
 
@@ -327,7 +320,7 @@ class MarktscanView(ttk.Frame):
         if candidate is None or self._groq_client is None:
             return
         self.writeup_button.config(state="disabled")
-        self.status_label.config(text=f"Generiere P-5-Begründung für {candidate.symbol} …", foreground=INFO_COLOR)
+        self.status_label.config(text=f"Generiere P-5-Begründung für {candidate.symbol} …", foreground=theme.info_color())
         thread = threading.Thread(target=self._run_writeup, args=(candidate,), daemon=True)
         thread.start()
 
@@ -361,9 +354,9 @@ class MarktscanView(ttk.Frame):
     def _on_writeup_done(self, candidate, error) -> None:
         self.writeup_button.config(state="normal" if self._groq_client is not None else "disabled")
         if error is not None:
-            self.status_label.config(text=f"Fehler: {error}", foreground="#c0392b")
+            self.status_label.config(text=f"Fehler: {error}", foreground=theme.danger_color())
             return
-        self.status_label.config(text="Fertig.", foreground=INFO_COLOR)
+        self.status_label.config(text="Fertig.", foreground=theme.info_color())
         self._refresh_list()
         if self._selected_candidate is not None and self._selected_candidate.id == candidate.id:
             conn = self._db_conn_factory()
