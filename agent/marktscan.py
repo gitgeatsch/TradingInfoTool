@@ -356,6 +356,17 @@ def run_scan(
     kontext_score, kontext_signale = score_kontext_makro(regime_result)
     gewichte = config_dict["regime"]["profile"].get(regime_result.regime, {})
 
+    # Handelsboersen-Check (Nutzer-Wunsch 2026-07-09): einmal pro Scan-Lauf, nicht
+    # pro Kandidat. Bewusst NUR Warnung, kein Stufe-A-Ausschluss - siehe
+    # database/models.py::MarktscanCandidate.bitpanda_gelistet.
+    try:
+        from api.bitpanda import get_listed_symbols
+
+        bitpanda_symbols = get_listed_symbols()
+    except Exception as exc:
+        bitpanda_symbols = None
+        logger.info("Bitpanda-Listing-Abruf fehlgeschlagen: %s", exc)
+
     holdings = db.get_all_holdings(conn)
     latest_prices = db.get_latest_prices(conn)
 
@@ -365,6 +376,7 @@ def run_scan(
             continue
         coin: MarketCoin = entry["coin"]
         stufe_a = apply_stufe_a_filters(coin, marktscan_cfg)
+        bitpanda_gelistet = coin.symbol in bitpanda_symbols if bitpanda_symbols is not None else None
 
         snapshot = None
         if stufe_a.bestanden:
@@ -399,6 +411,9 @@ def run_scan(
             score_gesamt = None
             einstufung, einstufung_begruendung = "kein_treffer", f"Stufe A nicht bestanden: {stufe_a.begruendung}"
 
+        if bitpanda_gelistet is False and einstufung != "kein_treffer":
+            einstufung_begruendung += " ⚠ NICHT bei Bitpanda gelistet - dort aktuell nicht kaufbar."
+
         candidate = MarktscanCandidate(
             coingecko_id=coingecko_id, symbol=coin.symbol, name=coin.name,
             discovered_at=datetime.now(timezone.utc).isoformat(), discovery_source=entry["source"],
@@ -407,6 +422,7 @@ def run_scan(
             vol_marktkap_ratio=stufe_a.vol_marktkap_ratio, alter_tage_geschaetzt=stufe_a.alter_tage_geschaetzt,
             alter_tage_quelle="atl_date_proxy" if coin.atl_date else None,
             filter_a_begruendung=stufe_a.begruendung,
+            bitpanda_gelistet=bitpanda_gelistet,
             price_usd=coin.price_usd, change_24h_pct=coin.change_24h_pct,
             score_technik=tech_score, score_fundamental=fund_score, score_momentum=mom_score,
             score_kontext_makro=kontext_score,

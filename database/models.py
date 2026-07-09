@@ -133,6 +133,10 @@ class MarktscanCandidate:
     alter_tage_geschaetzt: int | None = None
     alter_tage_quelle: str | None = None  # 'atl_date_proxy'
     filter_a_begruendung: str | None = None
+    # Handelsboersen-Check (Nutzer-Wunsch 2026-07-09, api/bitpanda.py) - bewusst NUR
+    # Warnung, kein Stufe-A-Ausschluss (ein nicht gelisteter Coin kann trotzdem
+    # beobachtenswert sein). None = Pruefung fehlgeschlagen/nicht durchgefuehrt.
+    bitpanda_gelistet: bool | None = None
     # Marktdaten zum Entdeckungszeitpunkt
     price_usd: float | None = None
     price_eur: float | None = None

@@ -46,10 +46,17 @@ def _candidate_to_yaml_block(candidate) -> str:
 
 
 class _YamlDialog(tk.Toplevel):
-    def __init__(self, parent, symbol: str, yaml_block: str):
+    def __init__(self, parent, symbol: str, yaml_block: str, bitpanda_gelistet: bool | None):
         super().__init__(parent)
         self.title(f"Watchlist-Eintrag für {symbol}")
-        self.geometry("520x220")
+        self.geometry("520x260" if bitpanda_gelistet is False else "520x220")
+        if bitpanda_gelistet is False:
+            ttk.Label(
+                self,
+                text=f"⚠ {symbol} ist NICHT bei Bitpanda gelistet — dort aktuell nicht direkt "
+                "kaufbar. Trotzdem zur Beobachtung hinzufügen möglich.",
+                wraplength=500, justify="left", foreground="#c0392b",
+            ).pack(anchor="w", padx=10, pady=(10, 0))
         ttk.Label(
             self, text="In Basisinfos/config.yaml unter watchlist: einfügen (Notepad++):",
             wraplength=500, justify="left",
@@ -94,11 +101,11 @@ class MarktscanView(ttk.Frame):
             command=self._refresh_list,
         ).pack(side="left")
 
-        columns = ("symbol", "tier", "score", "einstufung", "entdeckt", "status")
+        columns = ("symbol", "tier", "score", "einstufung", "bitpanda", "entdeckt", "status")
         self.tree = ttk.Treeview(left, columns=columns, show="headings", height=20)
         headings = {
             "symbol": "Symbol", "tier": "Tier", "score": "Score", "einstufung": "Einstufung",
-            "entdeckt": "Entdeckt", "status": "Status",
+            "bitpanda": "Bitpanda", "entdeckt": "Entdeckt", "status": "Status",
         }
         for col in columns:
             self.tree.heading(col, text=headings[col])
@@ -163,11 +170,19 @@ class MarktscanView(ttk.Frame):
             self._candidates_by_id[c.id] = c
             score_text = f"{c.score_gesamt:.1f}" if c.score_gesamt is not None else "-"
             entdeckt_text = c.discovered_at[:16].replace("T", " ")
+            if c.bitpanda_gelistet is True:
+                bitpanda_text = "✓"
+            elif c.bitpanda_gelistet is False:
+                bitpanda_text = "✗"
+            else:
+                bitpanda_text = "?"
             self.tree.insert(
                 "", "end", iid=str(c.id),
-                values=(c.symbol, c.tier or "-", score_text, c.einstufung or "-", entdeckt_text,
-                        STATUS_LABELS.get(c.status, c.status)),
+                values=(c.symbol, c.tier or "-", score_text, c.einstufung or "-", bitpanda_text,
+                        entdeckt_text, STATUS_LABELS.get(c.status, c.status)),
+                tags=("nicht_gelistet",) if c.bitpanda_gelistet is False else (),
             )
+        self.tree.tag_configure("nicht_gelistet", foreground="#c0392b")
 
     def _on_select(self, event) -> None:
         selected = self.tree.selection()
@@ -191,11 +206,26 @@ class MarktscanView(ttk.Frame):
         color = EINSTUFUNG_COLORS.get(c.einstufung, "black")
         score_text = f"{c.score_gesamt:.1f}" if c.score_gesamt is not None else "-"
         self.title_label.config(text=f"{c.symbol} — {c.name}", foreground=color)
-        self.meta_label.config(text=f"Einstufung: {c.einstufung or '-'} · Score: {score_text}")
+
+        if c.bitpanda_gelistet is True:
+            bitpanda_text = " · Bitpanda: ✓ gelistet"
+            bitpanda_color = INFO_COLOR
+        elif c.bitpanda_gelistet is False:
+            bitpanda_text = " · Bitpanda: ✗ NICHT gelistet"
+            bitpanda_color = "#c0392b"
+        else:
+            bitpanda_text = " · Bitpanda: unbekannt (Prüfung fehlgeschlagen)"
+            bitpanda_color = INFO_COLOR
+        self.meta_label.config(
+            text=f"Einstufung: {c.einstufung or '-'} · Score: {score_text}{bitpanda_text}",
+            foreground=bitpanda_color if c.bitpanda_gelistet is False else INFO_COLOR,
+        )
 
         lines: list[str] = []
         lines.append(f"EINSTUFUNG: {c.einstufung}")
         lines.append(c.einstufung_begruendung or "")
+        if c.bitpanda_gelistet is False:
+            lines.append("\n⚠ NICHT bei Bitpanda gelistet — dort aktuell nicht direkt kaufbar.")
         if c.small_cap_budget_hinweis:
             lines.append(f"\n⚠ {c.small_cap_budget_hinweis}")
         lines.append("")
@@ -342,7 +372,7 @@ class MarktscanView(ttk.Frame):
         if candidate is None:
             return
         yaml_block = _candidate_to_yaml_block(candidate)
-        _YamlDialog(self, candidate.symbol, yaml_block)
+        _YamlDialog(self, candidate.symbol, yaml_block, candidate.bitpanda_gelistet)
 
         conn = self._db_conn_factory()
         try:

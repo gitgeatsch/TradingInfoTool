@@ -134,6 +134,7 @@ CREATE TABLE IF NOT EXISTS marktscan_candidates (
     alter_tage_geschaetzt               INTEGER,
     alter_tage_quelle                    TEXT,
     filter_a_begruendung                  TEXT,
+    bitpanda_gelistet                      INTEGER,
     price_usd                              REAL,
     price_eur                               REAL,
     change_24h_pct                           REAL,
@@ -193,10 +194,20 @@ def _migrate_macro_snapshot_columns(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+def _migrate_marktscan_candidates_columns(conn: sqlite3.Connection) -> None:
+    """Wie _migrate_macro_snapshot_columns(): marktscan_candidates existierte bereits
+    vor der bitpanda_gelistet-Spalte (2026-07-09, Nutzer-Wunsch Handelsboersen-Check)."""
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(marktscan_candidates)")}
+    if "bitpanda_gelistet" not in existing:
+        conn.execute("ALTER TABLE marktscan_candidates ADD COLUMN bitpanda_gelistet INTEGER")
+    conn.commit()
+
+
 def init_db(conn: sqlite3.Connection) -> None:
     conn.executescript(_SCHEMA)
     conn.commit()
     _migrate_macro_snapshot_columns(conn)
+    _migrate_marktscan_candidates_columns(conn)
 
 
 def is_first_run(conn: sqlite3.Connection) -> bool:
@@ -471,9 +482,9 @@ def get_signal_history(conn: sqlite3.Connection, symbol: str, limit: int = 20) -
 _MARKTSCAN_COLUMNS = (
     "coingecko_id", "symbol", "name", "discovered_at", "discovery_source", "scan_run_id",
     "filter_a_bestanden", "tier", "market_cap_usd", "volume_24h_usd", "vol_marktkap_ratio",
-    "alter_tage_geschaetzt", "alter_tage_quelle", "filter_a_begruendung", "price_usd",
-    "price_eur", "change_24h_pct", "score_technik", "score_fundamental", "score_momentum",
-    "score_kontext_makro", "signale_technik_json", "signale_fundamental_json",
+    "alter_tage_geschaetzt", "alter_tage_quelle", "filter_a_begruendung", "bitpanda_gelistet",
+    "price_usd", "price_eur", "change_24h_pct", "score_technik", "score_fundamental",
+    "score_momentum", "score_kontext_makro", "signale_technik_json", "signale_fundamental_json",
     "signale_momentum_json", "signale_kontext_json", "score_gesamt", "gewichte_json",
     "regime_bei_scan", "einstufung", "einstufung_begruendung", "small_cap_budget_hinweis",
     "groq_kurzbegruendung", "groq_langbegruendung_json", "groq_generiert_am", "status",
@@ -496,10 +507,14 @@ def upsert_marktscan_candidate(conn: sqlite3.Connection, candidate: MarktscanCan
         for col in _MARKTSCAN_COLUMNS
         if col not in ("coingecko_id", "scan_run_id", "status", "status_geaendert_am")
     )
-    values = [
-        int(candidate.filter_a_bestanden) if col == "filter_a_bestanden" else getattr(candidate, col)
-        for col in _MARKTSCAN_COLUMNS
-    ]
+    values = []
+    for col in _MARKTSCAN_COLUMNS:
+        value = getattr(candidate, col)
+        if col == "filter_a_bestanden":
+            value = int(value)
+        elif col == "bitpanda_gelistet" and value is not None:
+            value = int(value)
+        values.append(value)
     cursor = conn.execute(
         f"INSERT INTO marktscan_candidates ({', '.join(_MARKTSCAN_COLUMNS)}) "
         f"VALUES ({placeholders}) "
@@ -513,6 +528,8 @@ def upsert_marktscan_candidate(conn: sqlite3.Connection, candidate: MarktscanCan
 def _row_to_marktscan_candidate(row: sqlite3.Row) -> MarktscanCandidate:
     data = dict(row)
     data["filter_a_bestanden"] = bool(data["filter_a_bestanden"])
+    if data.get("bitpanda_gelistet") is not None:
+        data["bitpanda_gelistet"] = bool(data["bitpanda_gelistet"])
     return MarktscanCandidate(**data)
 
 

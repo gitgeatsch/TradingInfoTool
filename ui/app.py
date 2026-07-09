@@ -12,6 +12,7 @@ from ui.portfolio import PortfolioView
 from ui.signals_view import SignalsView
 
 STALE_COLOR = "#b36b00"
+NOT_LISTED_COLOR = "#c0392b"
 
 UI_POLL_INTERVAL_MS = 3000
 DISCLAIMER_TEXT = (
@@ -35,6 +36,8 @@ class TradingInfoToolApp(tk.Tk):
         self._kraken_client = kraken_client
         self._groq_client = groq_client
         self._fred_api_key = fred_api_key
+        self._bitpanda_symbols: set[str] | None = None
+        self._refresh_bitpanda_symbols()
 
         self._build_menu()
 
@@ -90,6 +93,7 @@ class TradingInfoToolApp(tk.Tk):
             "name",
             "typ",
             "status",
+            "bitpanda",
             "price_usd",
             "price_eur",
             "change_24h",
@@ -100,6 +104,7 @@ class TradingInfoToolApp(tk.Tk):
             "name": "Name",
             "typ": "Typ",
             "status": "Status",
+            "bitpanda": "Bitpanda",
             "price_usd": "Preis (USD)",
             "price_eur": "Preis (EUR)",
             "change_24h": "24h %",
@@ -109,8 +114,9 @@ class TradingInfoToolApp(tk.Tk):
         for col in columns:
             tree.heading(col, text=headings[col])
             anchor = "w" if col in ("name", "typ", "status") else "e"
-            tree.column(col, width=110, anchor=anchor)
+            tree.column(col, width=90 if col == "bitpanda" else 110, anchor=anchor)
         tree.tag_configure("stale", foreground=STALE_COLOR)
+        tree.tag_configure("bitpanda_fehlt", foreground=NOT_LISTED_COLOR)
         tree.bind("<Double-1>", self._open_chart)
         tree.pack(fill="both", expand=True, padx=8, pady=8)
 
@@ -139,6 +145,22 @@ class TradingInfoToolApp(tk.Tk):
             age_text = format_price_age(fetched_at)
             aktualisiert = f"⚠ {age_text}" if stale else age_text
 
+            if self._bitpanda_symbols is None:
+                bitpanda_text = "?"
+                bitpanda_fehlt = False
+            elif asset.symbol in self._bitpanda_symbols:
+                bitpanda_text = "✓"
+                bitpanda_fehlt = False
+            else:
+                bitpanda_text = "✗"
+                bitpanda_fehlt = True
+
+            tags = []
+            if stale:
+                tags.append("stale")
+            if bitpanda_fehlt:
+                tags.append("bitpanda_fehlt")  # zuletzt hinzugefuegt = hoehere Prioritaet bei ttk-Tag-Kollision
+
             tree.insert(
                 "",
                 "end",
@@ -147,12 +169,13 @@ class TradingInfoToolApp(tk.Tk):
                     asset.name,
                     asset.typ,
                     asset.status,
+                    bitpanda_text,
                     price_usd,
                     price_eur,
                     change,
                     aktualisiert,
                 ),
-                tags=("stale",) if stale else (),
+                tags=tuple(tags),
             )
 
     def _open_chart(self, event) -> None:
@@ -174,10 +197,24 @@ class TradingInfoToolApp(tk.Tk):
         self._portfolio_view.refresh()
         self.after(UI_POLL_INTERVAL_MS, self._poll_prices)
 
+    def _refresh_bitpanda_symbols(self) -> None:
+        """Handelsboersen-Check (Nutzer-Wunsch 2026-07-09) - einmalig beim Start und
+        bei manuellem Refresh, NICHT im 3-Sekunden-Preis-Poll (Bitpandas gelistete
+        Assets aendern sich nicht minuetlich, ein wiederholter Call waere
+        verschwendet). P-10: Fehlschlag blockiert den Start nicht, Spalte zeigt
+        dann "?" statt eines falschen Werts."""
+        from api.bitpanda import get_listed_symbols
+
+        try:
+            self._bitpanda_symbols = get_listed_symbols()
+        except Exception:
+            self._bitpanda_symbols = None
+
     def _manual_refresh(self) -> None:
         from scheduler.background import refresh_prices_job
 
         refresh_prices_job(self._coingecko_client, self._db_conn_factory, self._watchlist)
+        self._refresh_bitpanda_symbols()
         self._refresh_watchlist_from_db()
         self._portfolio_view.refresh()
 
