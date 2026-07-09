@@ -163,7 +163,7 @@ class CoinGeckoClient:
         return sortable[:top_n]
 
     def fetch_price_snapshots(self, assets: list) -> list[PriceSnapshot]:
-        coingecko_ids = [asset.coingecko_id for asset in assets]
+        coingecko_ids = [asset.coingecko_id for asset in assets if asset.coingecko_id is not None]
         raw = self.get_simple_prices(coingecko_ids)
         fetched_at = datetime.now(timezone.utc).isoformat()
 
