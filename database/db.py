@@ -114,7 +114,11 @@ CREATE TABLE IF NOT EXISTS signals (
     risk_veto_reason                   TEXT,
     facts_json                          TEXT NOT NULL,
     groq_raw_response                   TEXT,
-    groq_model                          TEXT
+    groq_model                          TEXT,
+    umgesetzt                            INTEGER,
+    umgesetzt_am                          TEXT,
+    umgesetzt_menge                        REAL,
+    umgesetzt_preis_usd                     REAL
 );
 CREATE INDEX IF NOT EXISTS idx_signals_symbol_created ON signals(symbol, created_at);
 
@@ -203,11 +207,28 @@ def _migrate_marktscan_candidates_columns(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+_SIGNAL_UMSETZUNG_NEW_COLUMNS = {
+    "umgesetzt": "INTEGER", "umgesetzt_am": "TEXT", "umgesetzt_menge": "REAL",
+    "umgesetzt_preis_usd": "REAL",
+}
+
+
+def _migrate_signal_umsetzung_columns(conn: sqlite3.Connection) -> None:
+    """Wie _migrate_macro_snapshot_columns(): signals existierte bereits vor den
+    Umsetzungs-Rueckmeldung-Spalten (2026-07-09, Nutzer-Idee vom 2026-07-07)."""
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(signals)")}
+    for column, sql_type in _SIGNAL_UMSETZUNG_NEW_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE signals ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
 def init_db(conn: sqlite3.Connection) -> None:
     conn.executescript(_SCHEMA)
     conn.commit()
     _migrate_macro_snapshot_columns(conn)
     _migrate_marktscan_candidates_columns(conn)
+    _migrate_signal_umsetzung_columns(conn)
 
 
 def is_first_run(conn: sqlite3.Connection) -> bool:
@@ -460,6 +481,8 @@ def _row_to_signal(row: sqlite3.Row) -> Signal:
     data = dict(row)
     data["gate_passed"] = bool(data["gate_passed"])
     data["risk_veto"] = bool(data["risk_veto"])
+    if data["umgesetzt"] is not None:
+        data["umgesetzt"] = bool(data["umgesetzt"])
     return Signal(**data)
 
 
@@ -469,6 +492,25 @@ def get_latest_signal(conn: sqlite3.Connection, symbol: str) -> Signal | None:
         (symbol,),
     ).fetchone()
     return _row_to_signal(row) if row else None
+
+
+def update_signal_umsetzung(
+    conn: sqlite3.Connection,
+    signal_id: int,
+    umgesetzt: bool,
+    umgesetzt_menge: float | None = None,
+    umgesetzt_preis_usd: float | None = None,
+) -> None:
+    """Nachtraegliche Umsetzungs-Rueckmeldung (Nutzer-Idee 2026-07-07, umgesetzt
+    2026-07-09) - signals bleibt Append-only fuer neue Pipeline-Laeufe, dies ist ein
+    gezieltes Update EINER bestehenden Zeile, kein neuer Insert. Menge/Preis bleiben
+    optional (koennen None bleiben, auch wenn umgesetzt=True)."""
+    conn.execute(
+        "UPDATE signals SET umgesetzt = ?, umgesetzt_am = ?, umgesetzt_menge = ?, "
+        "umgesetzt_preis_usd = ? WHERE id = ?",
+        (int(umgesetzt), _now_iso(), umgesetzt_menge, umgesetzt_preis_usd, signal_id),
+    )
+    conn.commit()
 
 
 def get_signal_history(conn: sqlite3.Connection, symbol: str, limit: int = 20) -> list[Signal]:

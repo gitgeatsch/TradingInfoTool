@@ -27,6 +27,14 @@ ACTION_COLORS = {
 }
 WARN_COLOR = "#b36b00"
 INFO_COLOR = "#666666"
+UMGESETZT_COLOR = "#1a7f37"
+NICHT_UMGESETZT_COLOR = "#666666"
+
+# Vorzeichen fuer die Bestand-Aktualisierungs-Vorschlagslogik (Nutzeridee 2026-07-07,
+# umgesetzt 2026-07-09): bei TAUSCHEN wird nur die Quell-Position reduziert, das
+# Ziel-Asset wird bewusst NICHT automatisch angelegt (out of scope fuer diese Slice,
+# Nutzer muesste das separat/manuell erfassen).
+ACTION_HOLDING_SIGN = {"KAUFEN": 1, "NACHKAUFEN": 1, "VERKAUFEN": -1, "TAUSCHEN": -1}
 
 
 class SignalsView(ttk.Frame):
@@ -45,6 +53,7 @@ class SignalsView(ttk.Frame):
         self._fred_api_key = fred_api_key  # optional (P-8) - ohne Key liefert
         # agent/pipeline.py fuer die FRED-Felder sauber None statt abzustuerzen.
         self._selected_asset = None
+        self._current_signal = None
 
         self._build_layout()
         self._refresh_list()
@@ -92,6 +101,15 @@ class SignalsView(ttk.Frame):
         self.gate_label = ttk.Label(right, text="", foreground=WARN_COLOR, wraplength=600, justify="left")
         self.gate_label.pack(anchor="w", pady=(0, 4))
 
+        umsetzung_frame = ttk.Frame(right)
+        umsetzung_frame.pack(fill="x", pady=(0, 8))
+        self.umsetzung_label = ttk.Label(umsetzung_frame, text="", foreground=INFO_COLOR)
+        self.umsetzung_label.pack(side="left")
+        self.umsetzung_button = ttk.Button(
+            umsetzung_frame, text="Rückmeldung erfassen", command=self._on_umsetzung_clicked, state="disabled"
+        )
+        self.umsetzung_button.pack(side="left", padx=(12, 0))
+
         self.detail_text = tk.Text(right, height=28, wrap="word", state="disabled", relief="flat")
         self.detail_text.pack(fill="both", expand=True)
 
@@ -130,6 +148,9 @@ class SignalsView(ttk.Frame):
         self._render_signal(self._selected_asset, signal)
 
     def _render_signal(self, asset, signal) -> None:
+        self._current_signal = signal
+        self._render_umsetzung_status(signal)
+
         if signal is None:
             self.action_label.config(text=f"{asset.symbol} — noch kein Signal berechnet", foreground="black")
             self.meta_label.config(text="")
@@ -213,6 +234,44 @@ class SignalsView(ttk.Frame):
         self.detail_text.insert("1.0", text)
         self.detail_text.config(state="disabled")
 
+    def _render_umsetzung_status(self, signal) -> None:
+        if signal is None:
+            self.umsetzung_label.config(text="")
+            self.umsetzung_button.config(state="disabled")
+            return
+
+        self.umsetzung_button.config(state="normal")
+        if signal.umgesetzt is None:
+            self.umsetzung_label.config(text="Umsetzung: noch keine Rückmeldung", foreground=INFO_COLOR)
+        elif signal.umgesetzt:
+            detail_parts = []
+            if signal.umgesetzt_menge is not None:
+                detail_parts.append(f"Menge {signal.umgesetzt_menge}")
+            if signal.umgesetzt_preis_usd is not None:
+                detail_parts.append(f"Preis {format_money(signal.umgesetzt_preis_usd)} USD")
+            detail = f" ({', '.join(detail_parts)})" if detail_parts else ""
+            when = signal.umgesetzt_am[:16].replace("T", " ") if signal.umgesetzt_am else "-"
+            self.umsetzung_label.config(text=f"✓ Umgesetzt am {when}{detail}", foreground=UMGESETZT_COLOR)
+        else:
+            when = signal.umgesetzt_am[:16].replace("T", " ") if signal.umgesetzt_am else "-"
+            self.umsetzung_label.config(text=f"✗ Nicht umgesetzt (Rückmeldung am {when})", foreground=NICHT_UMGESETZT_COLOR)
+
+    def _on_umsetzung_clicked(self) -> None:
+        if self._selected_asset is None or self._current_signal is None:
+            return
+        UmsetzungDialog(self, self._selected_asset, self._current_signal, self._db_conn_factory, self._on_umsetzung_saved)
+
+    def _on_umsetzung_saved(self) -> None:
+        asset = self._selected_asset
+        conn = self._db_conn_factory()
+        try:
+            signal = db.get_latest_signal(conn, asset.symbol) if asset else None
+        finally:
+            conn.close()
+        self._refresh_list()
+        if asset is not None:
+            self._render_signal(asset, signal)
+
     def _on_compute_clicked(self) -> None:
         asset = self._selected_asset
         if asset is None or self._groq_client is None:
@@ -251,3 +310,147 @@ class SignalsView(ttk.Frame):
         self._refresh_list()
         if self._selected_asset is not None and self._selected_asset.symbol == asset.symbol:
             self._render_signal(asset, signal)
+
+
+class UmsetzungDialog(tk.Toplevel):
+    """Modal-Dialog fuer die Umsetzungs-Rueckmeldung (Nutzeridee 2026-07-07, umgesetzt
+    2026-07-09). Optionaler zweiter Schritt "Bestand jetzt aktualisieren" ist bewusst
+    ein SEPARATER, vom Nutzer explizit bestaetigter Schreibpfad in holdings (kein
+    automatischer Auto-Write) - schlaegt lediglich einen aus Aktion+Menge berechneten
+    neuen Gesamtbestand vor, der Nutzer kann ihn vor dem Speichern frei ueberschreiben."""
+
+    def __init__(self, parent, asset, signal, db_conn_factory, on_saved) -> None:
+        super().__init__(parent)
+        self._asset = asset
+        self._signal = signal
+        self._db_conn_factory = db_conn_factory
+        self._on_saved = on_saved
+
+        self.title(f"Umsetzungs-Rückmeldung — {asset.symbol}")
+        self.resizable(False, False)
+        self.transient(parent)
+        self.grab_set()
+
+        self._umgesetzt_var = tk.StringVar(value="ja" if signal.umgesetzt in (True, None) else "nein")
+        self._menge_var = tk.StringVar(value=str(signal.umgesetzt_menge) if signal.umgesetzt_menge is not None else "")
+        self._preis_var = tk.StringVar(
+            value=str(signal.umgesetzt_preis_usd) if signal.umgesetzt_preis_usd is not None else ""
+        )
+        self._bestand_aktualisieren_var = tk.BooleanVar(value=False)
+        self._neuer_bestand_var = tk.StringVar(value="")
+
+        frame = ttk.Frame(self, padding=12)
+        frame.pack(fill="both", expand=True)
+
+        ttk.Label(frame, text=f"{asset.symbol} — {signal.action}", font=("", 11, "bold")).grid(
+            row=0, column=0, columnspan=2, sticky="w", pady=(0, 8)
+        )
+
+        ttk.Label(frame, text="Empfehlung umgesetzt?").grid(row=1, column=0, sticky="w")
+        radio_frame = ttk.Frame(frame)
+        radio_frame.grid(row=1, column=1, sticky="w")
+        ttk.Radiobutton(radio_frame, text="Ja", variable=self._umgesetzt_var, value="ja", command=self._on_umgesetzt_toggle).pack(side="left")
+        ttk.Radiobutton(radio_frame, text="Nein", variable=self._umgesetzt_var, value="nein", command=self._on_umgesetzt_toggle).pack(side="left")
+
+        ttk.Label(frame, text="Menge (optional):").grid(row=2, column=0, sticky="w", pady=(8, 0))
+        self._menge_entry = ttk.Entry(frame, textvariable=self._menge_var, width=18)
+        self._menge_entry.grid(row=2, column=1, sticky="w", pady=(8, 0))
+
+        ttk.Label(frame, text="Ausführungspreis USD (optional):").grid(row=3, column=0, sticky="w", pady=(4, 0))
+        self._preis_entry = ttk.Entry(frame, textvariable=self._preis_var, width=18)
+        self._preis_entry.grid(row=3, column=1, sticky="w", pady=(4, 0))
+
+        self._bestand_check = ttk.Checkbutton(
+            frame, text="Bestand (Portfolio) jetzt aktualisieren", variable=self._bestand_aktualisieren_var,
+            command=self._on_bestand_toggle,
+        )
+        self._bestand_check.grid(row=4, column=0, columnspan=2, sticky="w", pady=(12, 0))
+
+        self._bestand_info_label = ttk.Label(frame, text="", foreground=INFO_COLOR, wraplength=320, justify="left")
+        self._bestand_info_label.grid(row=5, column=0, columnspan=2, sticky="w")
+
+        ttk.Label(frame, text="Neuer Bestand (gesamt):").grid(row=6, column=0, sticky="w", pady=(4, 0))
+        self._neuer_bestand_entry = ttk.Entry(frame, textvariable=self._neuer_bestand_var, width=18, state="disabled")
+        self._neuer_bestand_entry.grid(row=6, column=1, sticky="w", pady=(4, 0))
+
+        self._error_label = ttk.Label(frame, text="", foreground="#c0392b", wraplength=320, justify="left")
+        self._error_label.grid(row=7, column=0, columnspan=2, sticky="w", pady=(8, 0))
+
+        button_frame = ttk.Frame(frame)
+        button_frame.grid(row=8, column=0, columnspan=2, sticky="e", pady=(12, 0))
+        ttk.Button(button_frame, text="Abbrechen", command=self.destroy).pack(side="left", padx=(0, 8))
+        ttk.Button(button_frame, text="Speichern", command=self._on_save_clicked).pack(side="left")
+
+        self._on_umgesetzt_toggle()
+
+    def _on_umgesetzt_toggle(self) -> None:
+        ja = self._umgesetzt_var.get() == "ja"
+        state = "normal" if ja else "disabled"
+        self._menge_entry.config(state=state)
+        self._preis_entry.config(state=state)
+        self._bestand_check.config(state="normal" if ja else "disabled")
+        if not ja:
+            self._bestand_aktualisieren_var.set(False)
+            self._on_bestand_toggle()
+
+    def _current_holding_quantity(self) -> float:
+        conn = self._db_conn_factory()
+        try:
+            holdings = db.get_all_holdings(conn)
+        finally:
+            conn.close()
+        existing = next((h for h in holdings if h.symbol == self._asset.symbol), None)
+        return existing.quantity if existing else 0.0
+
+    def _on_bestand_toggle(self) -> None:
+        if not self._bestand_aktualisieren_var.get():
+            self._neuer_bestand_entry.config(state="disabled")
+            self._bestand_info_label.config(text="")
+            return
+
+        current_qty = self._current_holding_quantity()
+        sign = ACTION_HOLDING_SIGN.get(self._signal.action)
+        try:
+            menge = float(self._menge_var.get()) if self._menge_var.get().strip() else 0.0
+        except ValueError:
+            menge = 0.0
+        suggestion = current_qty + sign * menge if sign is not None else current_qty
+
+        self._bestand_info_label.config(
+            text=f"Aktueller Bestand: {current_qty}. Vorschlag basiert auf Aktion '{self._signal.action}' "
+            f"und Menge — bitte prüfen und bei Bedarf anpassen."
+        )
+        self._neuer_bestand_var.set(str(suggestion))
+        self._neuer_bestand_entry.config(state="normal")
+
+    def _on_save_clicked(self) -> None:
+        self._error_label.config(text="")
+        umgesetzt = self._umgesetzt_var.get() == "ja"
+
+        menge_text = self._menge_var.get().strip()
+        preis_text = self._preis_var.get().strip()
+        try:
+            menge = float(menge_text) if menge_text else None
+            preis = float(preis_text) if preis_text else None
+        except ValueError:
+            self._error_label.config(text="Menge/Preis müssen Zahlen sein.")
+            return
+
+        neuer_bestand = None
+        if umgesetzt and self._bestand_aktualisieren_var.get():
+            try:
+                neuer_bestand = float(self._neuer_bestand_var.get())
+            except ValueError:
+                self._error_label.config(text="Neuer Bestand muss eine Zahl sein.")
+                return
+
+        conn = self._db_conn_factory()
+        try:
+            db.update_signal_umsetzung(conn, self._signal.id, umgesetzt, umgesetzt_menge=menge, umgesetzt_preis_usd=preis)
+            if neuer_bestand is not None:
+                db.upsert_holding(conn, self._asset.symbol, neuer_bestand, source="signal_bestaetigung")
+        finally:
+            conn.close()
+
+        self.destroy()
+        self._on_saved()

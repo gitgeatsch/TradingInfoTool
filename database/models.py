@@ -109,6 +109,14 @@ class Signal:
     risk_veto_reason: str | None = None
     groq_raw_response: str | None = None
     groq_model: str | None = None
+    # Nachtraegliche Umsetzungs-Rueckmeldung (Nutzer-Idee 2026-07-07, umgesetzt
+    # 2026-07-09) - None = noch nicht entschieden/nicht abgefragt, sonst True/False.
+    # umgesetzt_menge/-preis_usd sind bewusst optional (koennen leer bleiben, auch
+    # wenn umgesetzt=True) - fuer eine spaetere Empfehlung-vs-Realitaet-Auswertung.
+    umgesetzt: bool | None = None
+    umgesetzt_am: str | None = None
+    umgesetzt_menge: float | None = None
+    umgesetzt_preis_usd: float | None = None
 
 
 @dataclass
