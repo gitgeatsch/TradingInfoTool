@@ -42,9 +42,19 @@ class SignalsView(ttk.Frame):
     ):
         super().__init__(parent)
         self._db_conn_factory = db_conn_factory
-        self._full_watchlist = watchlist  # generate_signal braucht ALLE Assets (Stablecoins
-        # zaehlen z.B. als Cash-Reserve in agent/krypto/risk_gate.py) - nur die Anzeige-Liste filtert.
-        self._watchlist = [a for a in watchlist if a.typ != "stablecoin"]
+        # Multi-Asset-Tracking (Nutzer-Idee 2026-07-09): Aktien/ETF/Rohstoffe werden
+        # HIER bewusst herausgefiltert, nicht nur aus der Anzeige-Liste - die Agent-
+        # Pipeline (Regime/Risiko-Gate) ist fuer diese Assetklassen nicht gebaut, siehe
+        # Spezifikation Kap. 11 "Zielarchitektur fuer Multi-Asset-Erweiterbarkeit".
+        # Wuerden sie in _full_watchlist landen, wuerde
+        # agent/krypto/risk_gate.py::_portfolio_values_usd() ihren Wert in die
+        # Gesamtportfolio-Summe einrechnen und damit die Krypto-Allokations-Prozente
+        # verzerren, obwohl das Risiko-Gate nichts von ihnen "weiss".
+        krypto_watchlist = [a for a in watchlist if a.assetklasse == "krypto"]
+        self._full_watchlist = krypto_watchlist  # generate_signal braucht ALLE
+        # Krypto-Assets (Stablecoins zaehlen z.B. als Cash-Reserve) - nur die
+        # Anzeige-Liste filtert zusaetzlich Stablecoins raus.
+        self._watchlist = [a for a in krypto_watchlist if a.typ != "stablecoin"]
         self._groq_client = groq_client
         self._coingecko_client = coingecko_client
         self._kraken_client = kraken_client

@@ -77,7 +77,11 @@ class MarktscanView(ttk.Frame):
     ):
         super().__init__(parent)
         self._db_conn_factory = db_conn_factory
-        self._watchlist = watchlist
+        # Multi-Asset-Tracking (2026-07-09): Marktscan/Small-Cap-Budget-Logik ist
+        # Krypto-only (siehe ui/signals_view.py fuer dieselbe Begruendung) - Aktien/
+        # ETF/Rohstoffe wuerden sonst faelschlich in die Portfolio-Gesamtsumme fuer
+        # das Budget-Headroom einfliessen.
+        self._watchlist = [a for a in watchlist if a.assetklasse == "krypto"]
         self._groq_client = groq_client
         self._coingecko_client = coingecko_client
         self._kraken_client = kraken_client

@@ -16,11 +16,12 @@ class PortfolioView(ttk.Frame):
         self._db_conn_factory = db_conn_factory
         self._watchlist_by_symbol = {asset.symbol: asset for asset in watchlist}
 
-        columns = ("symbol", "name", "quantity", "price_usd", "price_eur", "value_usd", "value_eur")
+        columns = ("symbol", "name", "assetklasse", "quantity", "price_usd", "price_eur", "value_usd", "value_eur")
         self.tree = ttk.Treeview(self, columns=columns, show="headings")
         headings = {
             "symbol": "Symbol",
             "name": "Name",
+            "assetklasse": "Assetklasse",
             "quantity": "Bestand",
             "price_usd": "Preis (USD)",
             "price_eur": "Preis (EUR)",
@@ -29,7 +30,7 @@ class PortfolioView(ttk.Frame):
         }
         for col in columns:
             self.tree.heading(col, text=headings[col])
-            self.tree.column(col, width=120, anchor="e" if col != "name" else "w")
+            self.tree.column(col, width=120, anchor="w" if col in ("name", "assetklasse") else "e")
         self.tree.tag_configure("stale", foreground=theme.stale_color())
         make_sortable(
             self.tree,
@@ -58,6 +59,7 @@ class PortfolioView(ttk.Frame):
         for holding in sorted(holdings, key=lambda h: h.symbol):
             asset = self._watchlist_by_symbol.get(holding.symbol)
             name = asset.name if asset else holding.symbol
+            assetklasse = asset.assetklasse if asset else "-"
             price_snapshot = latest_prices.get(holding.symbol)
             price_usd = price_snapshot.price_usd if price_snapshot else None
             price_eur = price_snapshot.price_eur if price_snapshot else None
@@ -80,6 +82,7 @@ class PortfolioView(ttk.Frame):
                 values=(
                     holding.symbol,
                     name,
+                    assetklasse,
                     f"{holding.quantity:g}",
                     price_usd_text,
                     format_money(price_eur),

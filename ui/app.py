@@ -121,6 +121,7 @@ class TradingInfoToolApp(tk.Tk):
             "symbol",
             "name",
             "typ",
+            "assetklasse",
             "status",
             "bitpanda",
             "price_usd",
@@ -132,6 +133,7 @@ class TradingInfoToolApp(tk.Tk):
             "symbol": "Symbol",
             "name": "Name",
             "typ": "Typ",
+            "assetklasse": "Assetklasse",
             "status": "Status",
             "bitpanda": "Bitpanda",
             "price_usd": "Preis (USD)",
@@ -142,7 +144,7 @@ class TradingInfoToolApp(tk.Tk):
         tree = ttk.Treeview(frame, columns=columns, show="headings")
         for col in columns:
             tree.heading(col, text=headings[col])
-            anchor = "w" if col in ("name", "typ", "status") else "e"
+            anchor = "w" if col in ("name", "typ", "assetklasse", "status") else "e"
             tree.column(col, width=90 if col == "bitpanda" else 110, anchor=anchor)
         tree.tag_configure("stale", foreground=theme.stale_color())
         tree.tag_configure("bitpanda_fehlt", foreground=theme.danger_color())
@@ -175,7 +177,14 @@ class TradingInfoToolApp(tk.Tk):
             age_text = format_price_age(fetched_at)
             aktualisiert = f"⚠ {age_text}" if stale else age_text
 
-            if self._bitpanda_assets is None:
+            if asset.assetklasse != "krypto":
+                # Bitpanda-Listing-Check ist Krypto-spezifisch (vergleicht gegen den
+                # Krypto-Asset-Katalog) - fuer Aktien/ETF/Rohstoffe ergibt "ist es dort
+                # gelistet" keinen Sinn, die liegen ja bereits im Wertpapierdepot des
+                # Nutzers (Multi-Asset-Tracking, 2026-07-09).
+                bitpanda_text = "-"
+                bitpanda_fehlt = False
+            elif self._bitpanda_assets is None:
                 bitpanda_text = "?"
                 bitpanda_fehlt = False
             elif bitpanda_is_listed(asset.symbol, self._bitpanda_assets, name=asset.name):
@@ -198,6 +207,7 @@ class TradingInfoToolApp(tk.Tk):
                     asset.symbol,
                     asset.name,
                     asset.typ,
+                    asset.assetklasse,
                     asset.status,
                     bitpanda_text,
                     price_usd,
