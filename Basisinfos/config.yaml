@@ -267,6 +267,36 @@ watchlist:
     typ: taktisch
     status: watchlist
     coingecko_id: virtual-protocol
+  - symbol: VST
+    name: Vistra Corp
+    typ: taktisch
+    status: aktiv
+    assetklasse: aktien
+    yfinance_symbol: VST
+  - symbol: OD7N
+    name: WisdomTree Silver ETC
+    typ: taktisch
+    status: aktiv
+    assetklasse: rohstoffe
+    yfinance_symbol: GB00B15KY328.SG
+  - symbol: VVMX
+    name: VanEck Rare Earth and Strategic Metals UCITS ETF
+    typ: taktisch
+    status: aktiv
+    assetklasse: etf
+    yfinance_symbol: VVMX.DE
+  - symbol: 3QSS
+    name: WisdomTree NASDAQ 100 3x Daily Short
+    typ: taktisch
+    status: aktiv
+    assetklasse: etf
+    yfinance_symbol: IE00BLRPRJ20.SG
+  - symbol: DBPK
+    name: Xtrackers S&P 500 2x Inverse Daily Swap UCITS ETF
+    typ: taktisch
+    status: aktiv
+    assetklasse: etf
+    yfinance_symbol: DBPK.DE
 
 # --- Strategie-Katalog (siehe Spezifikation Kap. 6) ---
 strategien:
