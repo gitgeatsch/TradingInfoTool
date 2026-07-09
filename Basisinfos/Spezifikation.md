@@ -243,7 +243,16 @@ Entscheidungs-Pipeline (Reihenfolge je Analyse):
     Extremwert (Kraken Futures) + Kursrückgang-Geschwindigkeit als grober Hinweis,
     NICHT die volle AZ-1..AZ-8-Klassifikation (fehlt eine unabhängige Nachrichten-/
     Fundamentalquelle). Liefert nur Kontext an Groq, trifft keine eigene Veto-
-    Entscheidung.
+    Entscheidung. **Erweitert (Nutzungs-Diskussion Schritt 3, 2026-07-08):** zusätzlich
+    Open Interest (Binance/Bybit/OKX, `api/derivatives.py`, unabhängig voneinander
+    versucht — fehlt eine Börse, blockiert das nicht die anderen) und Binance-
+    Long-Short-Ratio. Der Long-Konten-Anteil (`LONG_BIAS_EXTREME_THRESHOLD_PCT = 65%`,
+    dokumentierter Platzhalter wie die bestehende Funding-Rate-Schwelle) verstärkt nur
+    den Beschreibungstext ("zusätzlich bestätigt"/"uneindeutig"), ändert aber NICHT die
+    bestehende `moeglicher_flush`-Formel selbst — kein Risiko einer Verhaltensänderung
+    an bereits getesteter Logik. Live verifiziert inkl. eines echten Falls mit
+    `moeglicher_flush=true` + 81,8 % Long-Bias (GRIFFAIN) und eines Falls mit
+    fehlender OKX-Notierung (graceful, P-10).
 
 > **A-1-Ausnahme:** Stablecoins (`typ: stablecoin`, aktuell nur EURCV) durchlaufen die
 > Pipeline gar nicht erst — festes „HALTEN" ohne Groq-Call, da sie laut Kap. 4 (A-1)

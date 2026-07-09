@@ -84,9 +84,15 @@ Bewertungsextrem laut Log-Regression-Modell) UND `regime.zyklus_risiko_begruendu
 als BTC-weite Zyklus-Einordnung, relevant fuer ALLE Assets (nicht nur BTC selbst), \
 da Alts historisch am staerksten leiden, wenn BTC nahe einem Zyklus-Top steht. Bei \
 `null`/nicht verfuegbar einfach nicht erwaehnen.
-12. `action` MUSS EXAKT einer dieser fuenf Werte sein (Grossbuchstaben, keine Variante): \
+12. Wenn `antizyklisch.moeglicher_flush` true ist, nenne das explizit in \
+`long_reasoning.technisch` oder `key_risks` und beziehe `antizyklisch.grund` \
+(enthaelt bereits Funding-Rate, Kursaenderung und - falls verfuegbar - Open Interest/ \
+Long-Short-Ratio als Cross-Check) mit ein. Das ist ein grober Hinweis, KEINE \
+gesicherte Klassifikation (keine unabhaengige Nachrichtenquelle) - formuliere \
+entsprechend vorsichtig ("moeglicherweise", "Hinweis auf", nicht "ist ein Flush").
+13. `action` MUSS EXAKT einer dieser fuenf Werte sein (Grossbuchstaben, keine Variante): \
 KAUFEN, VERKAUFEN, TAUSCHEN, HALTEN, NACHKAUFEN.
-13. Antworte AUSSCHLIESSLICH mit einem einzigen JSON-Objekt gemaess dem vorgegebenen \
+14. Antworte AUSSCHLIESSLICH mit einem einzigen JSON-Objekt gemaess dem vorgegebenen \
 Schema. Kein Markdown, keine Code-Fences, kein Text ausserhalb des JSON.
 
 SCHEMA:
@@ -253,6 +259,12 @@ def build_facts(
             "kursaenderung_letzte_tage_prozent": _native(anticyclic_context.recent_drop_pct),
             "moeglicher_flush": anticyclic_context.possible_flush,
             "bestaetigung_gate_erfuellt": anticyclic_context.confirmation_gate_passed,
+            "open_interest_binance": _native(anticyclic_context.open_interest_binance),
+            "open_interest_bybit": _native(anticyclic_context.open_interest_bybit),
+            "open_interest_okx_usd": _native(anticyclic_context.open_interest_okx_usd),
+            "long_short_ratio_binance": _native(anticyclic_context.long_short_ratio),
+            "long_konten_anteil_prozent": _native(anticyclic_context.long_account_pct),
+            "retail_long_bias_extrem": anticyclic_context.retail_long_bias_extreme,
             "grund": anticyclic_context.reason,
         },
         "strategien_aktiv": strategien_aktiv,
