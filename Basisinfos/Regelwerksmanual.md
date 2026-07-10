@@ -222,7 +222,77 @@ optional KI-gestützt läuft (siehe oben).
 
 ---
 
-## 7. Strategie-Katalog (S-1 bis S-6)
+## 7. Backward-Tracking im Detail — wie Signal-Ergebnisse geprüft werden
+
+**Zweck:** Schritt 2 der Selbstverifikations-Vision (Schritt 1 war dieses Manual
+selbst). Der Agent soll über Zeit lernen können, ob seine eigenen KAUFEN/
+NACHKAUFEN-Empfehlungen tatsächlich zutrafen — ohne diese Ist-Ergebnisse kann
+später (Schritt 3) keine KI-gestützte Regel-Anpassung sinnvoll vorgeschlagen
+werden. Rein beobachtend: der tägliche Job liest nur bereits vorhandene
+Kursdaten und trägt ein Ergebnis nach — er ändert nie eine Empfehlung, ein Veto
+oder eine Position (P-7 Advisory-only).
+
+**Was wird geprüft:** Ausschließlich **KAUFEN**- und **NACHKAUFEN**-Signale mit
+gültiger Entry-/Stop-Loss-/Take-Profit-Zone. HALTEN, VERKAUFEN und TAUSCHEN
+haben keine vergleichbare Take-Profit/Stop-Loss-Logik und werden sofort als
+„Nicht anwendbar" markiert, ohne dass jemals Kursdaten dafür geprüft werden.
+
+**Ablauf, Schritt für Schritt** (`agent/krypto/backward_tracking.py`):
+
+1. Jeden Morgen um 6 Uhr (Scheduler-Job `backward_tracking`, siehe Abschnitt 6)
+   werden alle Signale gesucht, deren Ergebnis noch **offen** ist (also weder
+   Take-Profit noch Stop-Loss noch „abgelaufen" noch „nicht anwendbar").
+2. Für jedes Signal wird die Kurshistorie **ab dem Erstellungsdatum** des
+   Signals geholt — bevorzugt aus `price_history_ohlc` (echtes Tages-High/Low,
+   nur für Krypto-Assets mit Kraken-Listing verfügbar), sonst als Rückfallebene
+   aus `price_history` (nur der tägliche Schlusskurs). Welche Quelle verwendet
+   wurde, wird transparent im Feld **Datenquelle** festgehalten (`real` vs.
+   `proxy`) — ein Ergebnis auf Basis von echtem Intraday-High/Low ist
+   verlässlicher als eines, das nur auf dem Tagesschlusskurs beruht.
+3. Die Tage werden **chronologisch, ältester zuerst**, durchgegangen. Für jeden
+   Tag wird geprüft: Hat der Tages-Höchstwert (bzw. bei „proxy" der
+   Schlusskurs) die Take-Profit-Zone erreicht? Hat der Tages-Tiefstwert (bzw.
+   Schlusskurs) die Stop-Loss-Zone erreicht?
+4. **Konservative Regel bei Gleichzeitigkeit:** Trifft ein einzelner Tag
+   sowohl die Stop-Loss- als auch die Take-Profit-Zone (nur bei echten
+   OHLC-Daten überhaupt feststellbar), gewinnt **immer Stop-Loss** — dieselbe
+   Logik wie Z-1 (Kapitalerhalt vor Gewinn) und dieselbe Vorsicht wie bei der
+   CRV-Berechnung (Abschnitt 2): ohne Kenntnis der tatsächlichen
+   Innertages-Reihenfolge wird nie zugunsten des optimistischeren Ausgangs
+   angenommen.
+5. Wird an keinem Tag eine Zone erreicht, bleibt das Signal **offen** — außer
+   es ist bereits älter als `backward_tracking.abgelaufen_nach_tagen`
+   (`config.yaml`, aktuell **90 Tage**, vorläufiger Wert) — dann wird es als
+   **„Abgelaufen (unentschieden)"** markiert und nicht weiter täglich neu
+   geprüft.
+
+**Die fünf neuen Ergebnis-Felder je Signal:**
+
+| Feld | Bedeutung |
+|------|-----------|
+| **Ergebnis-Status** | Einer von: Offen · Take-Profit erreicht · Stop-Loss erreicht · Abgelaufen (unentschieden) · Nicht anwendbar |
+| **Zuletzt geprüft am** | Zeitstempel des letzten Prüflaufs |
+| **Entschieden am** | Datum, an dem die Zone erreicht wurde (leer, solange offen) |
+| **Realisiertes CRV** | Nur bei entschiedenem Ergebnis: `(erzielter Kurs − Entry-Mitte) / (Entry-Mitte − Stop-Loss-Zone-Untergrenze)` — dieselbe konservative Formel wie die ursprünglich vorhergesagte CRV (Abschnitt 2, Z-2), nur mit dem tatsächlich erreichten Kurs statt der Zonen-Grenze. Positiv bei Take-Profit, negativ bei Stop-Loss. |
+| **Datenquelle** | `real` (echtes OHLC) oder `proxy` (nur Tagesschlusskurs) |
+
+**Wo du das siehst:** neuer Button **"Signal-Historie"** im Signale-Tab, direkt
+neben "Signal berechnen" — zeigt alle bisherigen Signale des ausgewählten
+Assets mit Datum, Aktion, Konfidenz und Ergebnis-Status, farblich markiert
+(grün = Take-Profit, rot = Stop-Loss, neutral = offen, grau = abgelaufen).
+Macht eine bereits vorhandene, aber bis dahin nie genutzte Datenbank-Abfrage
+erstmals sichtbar.
+
+**Aktueller Stand (2026-07-10):** Bisher gibt es **kein einziges echtes
+KAUFEN/NACHKAUFEN-Signal** in der Datenbank — alle bisherigen Signale sind
+HALTEN. Backward-Tracking ist also einsatzbereit, aber noch ohne echte
+Auswertungsgrundlage. Schritt 3 der Vision (KI-gestützte Regel-
+Anpassungsvorschläge) braucht erst eine gewisse Anzahl echter, aufgelöster
+Kauf-Signale, bevor er sinnvoll ansetzen kann.
+
+---
+
+## 8. Strategie-Katalog (S-1 bis S-6)
 
 Pro Asset wählbar, der Agent schlägt die zur Marktlage passende Strategie vor.
 
@@ -237,7 +307,7 @@ Pro Asset wählbar, der Agent schlägt die zur Marktlage passende Strategie vor.
 
 ---
 
-## 8. Wo diese Regeln im Code stehen (für Nachvollziehbarkeit)
+## 9. Wo diese Regeln im Code stehen (für Nachvollziehbarkeit)
 
 - `Basisinfos/config.yaml` — alle einstellbaren Zahlen (Abschnitte `risiko`, `regime`, `antizyklisch`, `strategien`)
 - `agent/krypto/risk_gate.py` — harte Durchsetzung von RM-1/2/4/5, Z-2 (CRV), Positionsgrößen-Clamp, Bitpanda-Veto
@@ -247,11 +317,11 @@ Pro Asset wählbar, der Agent schlägt die zur Marktlage passende Strategie vor.
 - `agent/krypto/pipeline.py` — Reihenfolge R-5.0 bis R-5.11 (Orchestrierung)
 - `scheduler/background.py` — alle automatischen Jobs (Abschnitt 6)
 - `importer/bitpanda_sync.py`, `importer/excel_import.py` — manuelle Bestands-Abgleiche (Abschnitt 6)
-- `agent/krypto/backward_tracking.py` — Signal-Ergebnis-Prüfung (Abschnitt 6, Selbstverifikations-Vision Schritt 2)
+- `agent/krypto/backward_tracking.py` — Signal-Ergebnis-Prüfung (Abschnitt 7, Selbstverifikations-Vision Schritt 2)
 
 ---
 
-## 9. Offene / vorläufige Werte — die naheliegendsten Kandidaten für spätere Anpassung
+## 10. Offene / vorläufige Werte — die naheliegendsten Kandidaten für spätere Anpassung
 
 Diese Werte sind laut Spezifikation ausdrücklich **vorläufig** (`[OFFEN]`-markiert) und
 noch nicht durch echte Ergebnisse verifiziert — sie sind der wahrscheinlichste
