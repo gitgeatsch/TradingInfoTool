@@ -519,6 +519,13 @@ regime:
       min_konfidenz_prozent: 60
       gewinnabsicherung_verschaerft: true  # RG-11: engere Trailing-Stops, Teilverkaeufe
 
+# --- Backward-Tracking (Selbstverifikations-Vision Schritt 2, siehe
+# Basisinfos/Regelwerksmanual.md Kap. 9 / Spezifikation Kap. 16) ---
+backward_tracking:
+  abgelaufen_nach_tagen: 90   # [OFFEN] Vorschlag - ab wann ein unentschiedenes
+                              # KAUFEN/NACHKAUFEN-Signal als "abgelaufen" gilt
+                              # (weder Take-Profit- noch Stop-Loss-Zone erreicht)
+
 # --- Antizyklische Kauf-Disziplin (siehe Spezifikation Kap. 15) ---
 antizyklisch:
   aktiv: true

@@ -181,6 +181,7 @@ dieselbe Datenbank — der Unterschied ist nur, ob du selbst klicken musst.
 | `refresh_history` | alle 24 Std. | Tages-Historie (für Indikatoren wie EMA-200) | CoinGecko |
 | `refresh_ohlc` | alle 24 Std. | Echtes OHLC (für ATR/Swing-Highs-Lows) | Kraken |
 | `marktscan` | 2× täglich, fix 04:00 + 16:00 Uhr | Kompletter Marktscan-Lauf (Stufe A-D, Kap. 13) | CoinGecko + Kraken, optional Groq |
+| `backward_tracking` | 1× täglich, fix 06:00 Uhr | Prüft vergangene KAUFEN/NACHKAUFEN-Signale gegen die Kurshistorie — Take-Profit oder Stop-Loss erreicht? | keine (nur bereits vorhandene DB-Daten) |
 
 **Der Marktscan-Job nutzt Groq nur, wenn du das explizit erlaubst:** Standardmäßig
 (`config.yaml marktscan.groq_automatisch_kaufkandidaten: false`) generiert der
@@ -193,12 +194,21 @@ auf `true`, ruft der Scheduler Groq automatisch für jeden neu erkannten
 Monats-Kontingent — ein 5-Minuten-Takt hätte zusammen mit dem täglichen
 Historie-Refresh das Limit überschritten (siehe Spezifikation Kap. 16).
 
+**Backward-Tracking (2026-07-10, ERGÄNZT — Selbstverifikations-Vision Schritt 2).**
+Jeden Morgen um 6 Uhr prüft die App automatisch, ob vergangene KAUFEN/NACHKAUFEN-
+Signale ihre Take-Profit- oder Stop-Loss-Zone erreicht haben — anhand bereits
+vorhandener Kursdaten, kein zusätzlicher Netzwerk-Aufruf. Das Ergebnis siehst du
+über den neuen Button "Signal-Historie" im Signale-Tab. Das ist die Datengrundlage
+für Schritt 3 der Vision (KI-gestützte Regel-Anpassungsvorschläge) — ohne
+gespeicherte Ist-Ergebnisse kann später nichts verglichen werden.
+
 ### Manuell (GUI-Aktionen, nur bei Klick)
 
 | Aktion | Wo | Was |
 |--------|-----|-----|
 | "Jetzt aktualisieren" | Toolbar (oben) | Sofortiger Krypto-Preis-Refresh (CoinGecko) + Bitpanda-Listing-Check |
 | "Signal berechnen" | Signale-Tab | Die **gesamte** Agent-Pipeline (R-5.0 bis R-5.11, Abschnitt 5) für **ein** Asset — inkl. echtem Groq-Aufruf. Bewusst **nie automatisch/geplant** — jeder Signal-Lauf kostet einen KI-Aufruf und soll bewusst ausgelöst werden. |
+| "Signal-Historie" | Signale-Tab | Zeigt alle bisherigen Signale des ausgewählten Assets inkl. Backward-Tracking-Ergebnis (Take-Profit/Stop-Loss/Offen/Abgelaufen) — reine Anzeige, kein externer Aufruf. |
 | "Jetzt scannen" | Marktscan-Tab | Derselbe Marktscan-Lauf wie der 04:00/16:00-Scheduler-Job, nur sofort statt zur festen Uhrzeit |
 | "Bestände von Bitpanda abgleichen" | Datei-Menü | Live-Abgleich aller Bestände (Krypto + Aktien/ETF/Rohstoffe) + EUR-Cash direkt von Bitpanda (siehe RM-4-Abschnitt oben) — **nie automatisch**, da ein echter, authentifizierter API-Key beteiligt ist |
 | "Bestände neu importieren" / "aus Datei importieren…" / "exportieren…" | Datei-Menü | Excel-Import/-Export (`Basisinfos/Assets.xlsx`) — rein lokal, kein externer Netzwerk-Aufruf |
@@ -237,6 +247,7 @@ Pro Asset wählbar, der Agent schlägt die zur Marktlage passende Strategie vor.
 - `agent/krypto/pipeline.py` — Reihenfolge R-5.0 bis R-5.11 (Orchestrierung)
 - `scheduler/background.py` — alle automatischen Jobs (Abschnitt 6)
 - `importer/bitpanda_sync.py`, `importer/excel_import.py` — manuelle Bestands-Abgleiche (Abschnitt 6)
+- `agent/krypto/backward_tracking.py` — Signal-Ergebnis-Prüfung (Abschnitt 6, Selbstverifikations-Vision Schritt 2)
 
 ---
 

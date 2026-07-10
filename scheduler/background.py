@@ -126,6 +126,30 @@ def marktscan_job(coingecko_client, kraken_client, groq_client, conn_factory, wa
         conn.close()
 
 
+def backward_tracking_job(conn_factory, watchlist) -> None:
+    """Selbstverifikations-Vision Schritt 2 (2026-07-10, siehe
+    agent/krypto/backward_tracking.py) - taeglich, feste Uhrzeit (siehe
+    build_scheduler()): prueft vergangene KAUFEN/NACHKAUFEN-Signale gegen die
+    bereits vorhandene Kurshistorie (price_history/price_history_ohlc), kein
+    eigener Netzwerk-Call noetig - reine Beobachtung, keine Empfehlung/kein Veto."""
+    conn = conn_factory()
+    try:
+        import config as config_module
+        from agent.krypto.backward_tracking import run_backward_tracking
+
+        config_dict = config_module.load_config()
+        result = run_backward_tracking(conn, watchlist, config_dict)
+        logger.info(
+            "Backward-Tracking: %d geprüft, %d Take-Profit, %d Stop-Loss, %d abgelaufen, %d weiterhin offen",
+            result.geprueft_count, result.resolved_take_profit, result.resolved_stop_loss,
+            result.expired, result.still_open,
+        )
+    except Exception:
+        logger.exception("Backward-Tracking fehlgeschlagen")
+    finally:
+        conn.close()
+
+
 def _log_job_event(event) -> None:
     """U-12-Minimalfix (2026-07-09): jeder Job faengt seine eigenen Exceptions
     bereits selbst ab (siehe *_job()-Funktionen oben) - dieser Listener ist die
@@ -182,6 +206,18 @@ def build_scheduler(
         minute=0,
         args=[coingecko_client, kraken_client, groq_client, db_conn_factory, watchlist, fred_api_key],
         id="marktscan",
+    )
+    # Backward-Tracking (2026-07-10): taeglich, kein eigener API-Call noetig (reine
+    # Auswertung bereits vorhandener Kursdaten) - feste Uhrzeit nach dem ueblichen
+    # naechtlichen Refresh-Fenster, keine harte Abhaengigkeit (holt am naechsten Tag
+    # nach, falls refresh_history/refresh_ohlc an dem Tag noch nicht durch waren).
+    scheduler.add_job(
+        backward_tracking_job,
+        "cron",
+        hour=6,
+        minute=0,
+        args=[db_conn_factory, watchlist],
+        id="backward_tracking",
     )
     scheduler.add_listener(_log_job_event, EVENT_JOB_ERROR | EVENT_JOB_MISSED)
     return scheduler

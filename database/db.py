@@ -255,6 +255,26 @@ def _migrate_signal_range_kriterium_columns(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+_SIGNAL_OUTCOME_NEW_COLUMNS = {
+    "outcome_status": "TEXT",
+    "outcome_geprueft_am": "TEXT",
+    "outcome_entschieden_am": "TEXT",
+    "outcome_realisiertes_crv": "REAL",
+    "outcome_datenquelle": "TEXT",
+}
+
+
+def _migrate_signal_outcome_columns(conn: sqlite3.Connection) -> None:
+    """Wie _migrate_signal_range_kriterium_columns(): signals existierte bereits vor
+    dem Backward-Tracking (2026-07-10, Selbstverifikations-Vision Schritt 2 - siehe
+    agent/krypto/backward_tracking.py)."""
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(signals)")}
+    for column, sql_type in _SIGNAL_OUTCOME_NEW_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE signals ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
 def _migrate_price_cache_nullable_coingecko_id(conn: sqlite3.Connection) -> None:
     """price_cache.coingecko_id war urspruenglich NOT NULL (reines Krypto-Schema) -
     fuer Multi-Asset-Tracking (Nutzer-Idee 2026-07-09, Aktien/ETF/Rohstoffe ohne
@@ -297,6 +317,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_signal_umsetzung_columns(conn)
     _migrate_signal_range_kriterium_columns(conn)
     _migrate_price_cache_nullable_coingecko_id(conn)
+    _migrate_signal_outcome_columns(conn)
 
 
 def is_first_run(conn: sqlite3.Connection) -> bool:
@@ -592,6 +613,11 @@ def get_latest_signal(conn: sqlite3.Connection, symbol: str) -> Signal | None:
     return _row_to_signal(row) if row else None
 
 
+def get_signal_by_id(conn: sqlite3.Connection, signal_id: int) -> Signal | None:
+    row = conn.execute("SELECT * FROM signals WHERE id = ?", (signal_id,)).fetchone()
+    return _row_to_signal(row) if row else None
+
+
 def update_signal_umsetzung(
     conn: sqlite3.Connection,
     signal_id: int,
@@ -607,6 +633,27 @@ def update_signal_umsetzung(
         "UPDATE signals SET umgesetzt = ?, umgesetzt_am = ?, umgesetzt_menge = ?, "
         "umgesetzt_preis_usd = ? WHERE id = ?",
         (int(umgesetzt), _now_iso(), umgesetzt_menge, umgesetzt_preis_usd, signal_id),
+    )
+    conn.commit()
+
+
+def update_signal_outcome(
+    conn: sqlite3.Connection,
+    signal_id: int,
+    status: str,
+    entschieden_am: str | None = None,
+    realisiertes_crv: float | None = None,
+    datenquelle: str | None = None,
+) -> None:
+    """Backward-Tracking-Ergebnis (2026-07-10, Selbstverifikations-Vision Schritt 2,
+    siehe agent/krypto/backward_tracking.py) - wie update_signal_umsetzung() ein
+    gezieltes Update EINER bestehenden Zeile, signals bleibt fuer neue Pipeline-
+    Laeufe weiterhin Append-only."""
+    conn.execute(
+        "UPDATE signals SET outcome_status = ?, outcome_geprueft_am = ?, "
+        "outcome_entschieden_am = ?, outcome_realisiertes_crv = ?, "
+        "outcome_datenquelle = ? WHERE id = ?",
+        (status, _now_iso(), entschieden_am, realisiertes_crv, datenquelle, signal_id),
     )
     conn.commit()
 

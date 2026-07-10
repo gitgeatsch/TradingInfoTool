@@ -92,6 +92,10 @@ class SignalsView(ttk.Frame):
             toolbar, text="Signal berechnen", command=self._on_compute_clicked, state="disabled"
         )
         self.compute_button.pack(side="left")
+        self.history_button = ttk.Button(
+            toolbar, text="Signal-Historie", command=self._on_history_clicked, state="disabled"
+        )
+        self.history_button.pack(side="left", padx=(6, 0))
         self.status_label = ttk.Label(toolbar, text="", foreground=theme.info_color())
         self.status_label.pack(side="left", padx=(12, 0))
 
@@ -148,6 +152,7 @@ class SignalsView(ttk.Frame):
         symbol = selected[0]
         self._selected_asset = self._asset_by_symbol(symbol)
         self.compute_button.config(state="normal" if self._groq_client is not None else "disabled")
+        self.history_button.config(state="normal")  # braucht keinen Groq-Key, reine DB-Anzeige
 
         conn = self._db_conn_factory()
         try:
@@ -322,6 +327,19 @@ class SignalsView(ttk.Frame):
         self._refresh_list()
         if asset is not None:
             self._render_signal(asset, signal)
+
+    def _on_history_clicked(self) -> None:
+        """Backward-Tracking (2026-07-10, Selbstverifikations-Vision Schritt 2) -
+        macht db.get_signal_history() sichtbar, das bis dahin toter Code war (nie
+        in der UI verdrahtet). Reine Anzeige, keine Eingabe."""
+        if self._selected_asset is None:
+            return
+        conn = self._db_conn_factory()
+        try:
+            history = db.get_signal_history(conn, self._selected_asset.symbol)
+        finally:
+            conn.close()
+        SignalHistoryDialog(self, self._selected_asset, history)
 
     def _on_compute_clicked(self) -> None:
         asset = self._selected_asset
@@ -515,3 +533,70 @@ class UmsetzungDialog(tk.Toplevel):
 
         self.destroy()
         self._on_saved()
+
+
+_OUTCOME_LABELS = {
+    "offen": "Offen",
+    "take_profit_erreicht": "Take-Profit erreicht",
+    "stop_loss_erreicht": "Stop-Loss erreicht",
+    "abgelaufen_unentschieden": "Abgelaufen (unentschieden)",
+    "nicht_anwendbar": "Nicht anwendbar",
+}
+
+
+def _outcome_color(status: str | None):
+    if status == "take_profit_erreicht":
+        return theme.umgesetzt_color()
+    if status == "stop_loss_erreicht":
+        return theme.danger_color()
+    if status == "abgelaufen_unentschieden":
+        return theme.stale_color()
+    if status == "offen":
+        return theme.info_color()
+    return theme.default_text_color()
+
+
+class SignalHistoryDialog(tk.Toplevel):
+    """Backward-Tracking-Anzeige (2026-07-10, Selbstverifikations-Vision Schritt 2)
+    - reine Anzeige aller bisherigen Signale eines Assets inkl. Outcome-Status, macht
+    db.get_signal_history() (bis dahin toter Code) erstmals in der UI sichtbar. Kein
+    Aggregat/keine Statistik in dieser Slice - das ist Schritt 3 (KI-Trimm-
+    Vorschlaege brauchen genau diese Aggregation als Eingabe)."""
+
+    def __init__(self, parent, asset, history: list) -> None:
+        super().__init__(parent)
+        self.title(f"Signal-Historie — {asset.symbol}")
+        self.resizable(True, True)
+        self.transient(parent)
+        self.grab_set()
+        self.geometry("720x400")
+
+        frame = ttk.Frame(self, padding=12)
+        frame.pack(fill="both", expand=True)
+
+        if not history:
+            ttk.Label(frame, text="Noch keine Signale für dieses Asset vorhanden.").pack(anchor="w")
+            ttk.Button(frame, text="Schließen", command=self.destroy).pack(anchor="e", pady=(10, 0))
+            return
+
+        columns = ("datum", "aktion", "konfidenz", "outcome")
+        tree = ttk.Treeview(frame, columns=columns, show="headings", height=14)
+        headings = {"datum": "Datum", "aktion": "Aktion", "konfidenz": "Konfidenz", "outcome": "Ergebnis"}
+        for col in columns:
+            tree.heading(col, text=headings[col])
+            tree.column(col, width=150 if col != "outcome" else 220, anchor="w")
+        tree.pack(fill="both", expand=True)
+
+        for signal in history:
+            when = signal.created_at[:16].replace("T", " ") if signal.created_at else "-"
+            konfidenz = f"{signal.confidence_pct:.0f} %" if signal.confidence_pct is not None else "-"
+            status = signal.outcome_status
+            outcome_text = _OUTCOME_LABELS.get(status, "—") if status else "—"
+            if status == "take_profit_erreicht" and signal.outcome_realisiertes_crv is not None:
+                outcome_text += f" (CRV {signal.outcome_realisiertes_crv:.2f})"
+            item_id = tree.insert(
+                "", "end", values=(when, signal.action, konfidenz, outcome_text), tags=(status or "none",)
+            )
+            tree.tag_configure(status or "none", foreground=_outcome_color(status))
+
+        ttk.Button(frame, text="Schließen", command=self.destroy).pack(anchor="e", pady=(10, 0))

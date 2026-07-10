@@ -155,6 +155,15 @@ class Signal:
     halte_kriterium_ziel_datum: str | None = None
     halte_kriterium_bedingung_text: str | None = None
     halte_kriterium_reasoning: str | None = None
+    # Backward-Tracking (2026-07-10, Selbstverifikations-Vision Schritt 2) - nur fuer
+    # KAUFEN/NACHKAUFEN gefuellt (agent/krypto/backward_tracking.py), vergleicht die
+    # Entry/Stop/Take-Zonen gegen die seit created_at vorliegende Kurshistorie.
+    # None = noch nie geprueft.
+    outcome_status: str | None = None  # offen | take_profit_erreicht | stop_loss_erreicht | abgelaufen_unentschieden | nicht_anwendbar
+    outcome_geprueft_am: str | None = None
+    outcome_entschieden_am: str | None = None
+    outcome_realisiertes_crv: float | None = None
+    outcome_datenquelle: str | None = None  # real (OHLC) | proxy (Tagesschlusskurs)
 
 
 @dataclass

@@ -1086,8 +1086,24 @@ manuell passiert" — Tabelle aller Scheduler-Jobs (`scheduler/background.py`,
 Takt + Quelle) und aller manuellen GUI-Aktionen (Toolbar/Menü/Tabs), inkl. der
 Regel, dass alles Kostenpflichtige/API-Key-gebundene (Groq pro Signal,
 Bitpanda-Sync) bewusst manuell bleibt, während kostenlose Marktdaten automatisch
-laufen. Schritte 2-4 (Backward-Tracking, KI-Trimm-Vorschläge, Prüfzyklen) noch
-offen.
+laufen. **Schritt 2 ERLEDIGT (2026-07-10):** `agent/krypto/backward_tracking.py`
+prüft vergangene KAUFEN/NACHKAUFEN-Signale gegen die bereits vorhandene
+Kurshistorie (`price_history_ohlc` bevorzugt für echtes Intraday-High/Low,
+`price_history`-Tagesschlusskurs als Fallback — Transparenz über
+`outcome_datenquelle: real|proxy`) — wurde die Take-Profit- oder die
+Stop-Loss-Zone zuerst erreicht? Bei Gleichzeitigkeit am selben Tag gewinnt
+konservativ Stop-Loss (Z-1). Neuer täglicher Scheduler-Job
+(`backward_tracking_job`, 06:00 Uhr, kein eigener Netzwerk-Call — reine
+Auswertung bereits vorhandener Daten). Ergebnis in 5 neuen `signals`-Spalten
+(`outcome_status`/`_geprueft_am`/`_entschieden_am`/`_realisiertes_crv`/
+`_datenquelle`), sichtbar über einen neuen "Signal-Historie"-Button im
+Signale-Tab (`ui/signals_view.py::SignalHistoryDialog`) — macht
+`db.get_signal_history()` erstmals nutzbar (war seit seiner Einführung toter,
+unverdrahteter Code). Live gegen echte BTC-OHLC-Historie verifiziert
+(synthetisches Test-Signal korrekt als `stop_loss_erreicht` am erwarteten Tag
+aufgelöst, danach wieder entfernt). Schritte 3-4 (KI-Trimm-Vorschläge,
+Prüfzyklen) noch offen — brauchen jetzt erstmal echte KAUFEN/NACHKAUFEN-Signale
+mit Zeit zum Auflösen als Datengrundlage.
 
 **Risiko-/Basiswerte:**
 - Maximaler tolerierter Gesamt-Drawdown (Z-3)? Vorschlag −15 %. Drawdown-Notbremse
