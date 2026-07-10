@@ -61,6 +61,14 @@ def main() -> None:
         # im Makro-Kontext (agent/krypto/pipeline.py degradiert sauber, kein Absturz).
         logger.info("Kein FRED_API_KEY gesetzt - Fed/EZB/M2/CPI/ISM-Ersatz/BoJ/BoK bleiben leer.")
 
+    bitpanda_api_key = os.environ.get("BITPANDA_API_KEY")
+    if bitpanda_api_key:
+        logger.info("Bitpanda API-Key gefunden - Bestands-/Cash-Reserve-Abgleich verfügbar.")
+    else:
+        # P-8: manuelle Excel-Import/Export- und Fiat-Cash-Eingabe (Portfolio-Tab)
+        # bleiben ohne Key voll nutzbar, nur der Live-Abgleich ist deaktiviert.
+        logger.info("Kein BITPANDA_API_KEY gesetzt - Bestandsabgleich mit Bitpanda deaktiviert.")
+
     watchlist = config.get_watchlist()
 
     conn = db.get_connection()
@@ -124,6 +132,7 @@ def main() -> None:
             kraken_client=kraken_client,
             groq_client=groq_client,
             fred_api_key=fred_api_key,
+            bitpanda_api_key=bitpanda_api_key,
         )
     finally:
         bg_scheduler.shutdown(wait=False)

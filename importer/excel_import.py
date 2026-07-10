@@ -11,7 +11,13 @@ import config
 import database.db as db
 
 XLSX_PATH = Path(__file__).resolve().parent.parent / "Basisinfos" / "Assets.xlsx"
-SHEET_NAME = "Krypto"
+SHEET_NAME_KRYPTO = "Krypto"
+# Non-Krypto-Sheet (Aktien/ETF/Rohstoffe, Multi-Asset-Tracking) - Design abgestimmt
+# 2026-07-09, hier umgesetzt (2026-07-10): identische Spalten wie das Krypto-Sheet,
+# gleiche read_holdings_from_excel()/export_holdings()-Logik. Optional in der
+# Nutzer-Datei (P-10: fehlt das Sheet, wird es uebersprungen statt abzustuerzen -
+# die Non-Krypto-Bestaende sind dann schlicht noch nicht erfasst).
+SHEET_NAME_NICHT_KRYPTO = "Nicht-Krypto"
 # Gegenstueck zum Import (Nutzer-Idee 2026-07-09): eine SEPARATE Datei, nie die
 # handgepflegte Original-Assets.xlsx direkt ueberschreiben. Export erzeugt eine
 # frische Arbeitsmappe (kein Risiko, bestehende Formatierung/Zusatzspalten zu
@@ -38,10 +44,7 @@ def _parse_quantity(raw) -> float:
     return float(raw)
 
 
-def read_holdings_from_excel(path: Path = XLSX_PATH) -> dict[str, float]:
-    workbook = openpyxl.load_workbook(path, data_only=True)
-    sheet = workbook[SHEET_NAME]
-
+def _read_sheet(sheet) -> dict[str, float]:
     header = [cell.value for cell in next(sheet.iter_rows(min_row=1, max_row=1))]
     col_index = {name: idx for idx, name in enumerate(header)}
     coin_name_idx = col_index["Coin Name"]
@@ -58,6 +61,18 @@ def read_holdings_from_excel(path: Path = XLSX_PATH) -> dict[str, float]:
         quantity = _parse_quantity(row[anzahl_idx].value)
         holdings[symbol] = quantity
 
+    return holdings
+
+
+def read_holdings_from_excel(path: Path = XLSX_PATH) -> dict[str, float]:
+    """Liest Krypto- UND Nicht-Krypto-Sheet (falls vorhanden) und merged beide
+    Bestandslisten. Das Nicht-Krypto-Sheet ist optional (P-10) - fehlt es in der
+    Nutzer-Datei (noch nicht angelegt), wird es einfach uebersprungen, kein Absturz."""
+    workbook = openpyxl.load_workbook(path, data_only=True)
+    holdings: dict[str, float] = {}
+    holdings.update(_read_sheet(workbook[SHEET_NAME_KRYPTO]))
+    if SHEET_NAME_NICHT_KRYPTO in workbook.sheetnames:
+        holdings.update(_read_sheet(workbook[SHEET_NAME_NICHT_KRYPTO]))
     return holdings
 
 
@@ -99,23 +114,45 @@ def import_holdings(
     return ImportResult(imported_count=len(holdings), warnings=warnings)
 
 
+def _write_sheet(sheet, assets, holdings_by_symbol) -> None:
+    sheet.append(["Coin Name", "Kurzzeichen", "Anzahl Coins", "Quelle"])
+    for asset in assets:
+        holding = holdings_by_symbol.get(asset.symbol)
+        quantity = holding.quantity if holding else 0.0
+        quelle = holding.source if holding else "-"
+        sheet.append([asset.name, asset.symbol, quantity, quelle])
+
+
 def export_holdings(conn: sqlite3.Connection, path: Path = EXPORT_XLSX_PATH) -> int:
     """Schreibt den aktuellen holdings-Stand in eine neue Arbeitsmappe (gleiches
-    Format wie read_holdings_from_excel() erwartet - Sheet 'Krypto', Spalten
-    'Coin Name'/'Kurzzeichen'/'Anzahl Coins'). Eine Zeile pro Watchlist-Asset (nicht
-    nur pro vorhandenem Bestand), Bestand 0 fuer Assets ohne holdings-Eintrag - so
-    ist die Datei beim naechsten Import vollstaendig und loest keine
-    "kein Eintrag in Assets.xlsx"-Warnung aus. Gibt die Anzahl geschriebener Zeilen
-    zurueck."""
-    holdings_by_symbol = {h.symbol: h.quantity for h in db.get_all_holdings(conn)}
+    Format wie read_holdings_from_excel() erwartet - zwei Sheets 'Krypto'/
+    'Nicht-Krypto', Spalten 'Coin Name'/'Kurzzeichen'/'Anzahl Coins'/'Quelle'). Eine
+    Zeile pro Watchlist-Asset (nicht nur pro vorhandenem Bestand), Bestand 0 fuer
+    Assets ohne holdings-Eintrag - so ist die Datei beim naechsten Import
+    vollstaendig und loest keine "kein Eintrag in Assets.xlsx"-Warnung aus. Gibt die
+    Anzahl geschriebener Zeilen (beide Sheets zusammen) zurueck.
+
+    Zwei Sheets nach Assetklasse getrennt (2026-07-10, Non-Krypto-Slice, Design
+    bereits 2026-07-09 abgestimmt, siehe Basisinfos/Spezifikation.md) - Krypto- und
+    Nicht-Krypto-Assets (Aktien/ETF/Rohstoffe) landen je in ihrem eigenen Sheet,
+    identisches Spaltenformat wie zuvor bei "Krypto" allein.
+
+    Spalte "Quelle" (2026-07-10, Bitpanda-Sync-Slice): reine Herkunfts-Anzeige
+    (import/signal_bestaetigung/bitpanda_sync/-), wird beim Reimport ueber den
+    Header-Namen-Lookup in read_holdings_from_excel() automatisch ignoriert - kein
+    neuer Quelle-pro-Zeile-Importmechanismus, Rundlauf bleibt unveraendert."""
+    holdings_by_symbol = {h.symbol: h for h in db.get_all_holdings(conn)}
     watchlist = sorted(config.get_watchlist(), key=lambda asset: asset.symbol)
+    krypto_assets = [a for a in watchlist if a.assetklasse == "krypto"]
+    nicht_krypto_assets = [a for a in watchlist if a.assetklasse != "krypto"]
 
     workbook = openpyxl.Workbook()
-    sheet = workbook.active
-    sheet.title = SHEET_NAME
-    sheet.append(["Coin Name", "Kurzzeichen", "Anzahl Coins"])
-    for asset in watchlist:
-        sheet.append([asset.name, asset.symbol, holdings_by_symbol.get(asset.symbol, 0.0)])
+    krypto_sheet = workbook.active
+    krypto_sheet.title = SHEET_NAME_KRYPTO
+    _write_sheet(krypto_sheet, krypto_assets, holdings_by_symbol)
+
+    nicht_krypto_sheet = workbook.create_sheet(SHEET_NAME_NICHT_KRYPTO)
+    _write_sheet(nicht_krypto_sheet, nicht_krypto_assets, holdings_by_symbol)
 
     path.parent.mkdir(parents=True, exist_ok=True)
     workbook.save(path)

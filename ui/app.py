@@ -26,7 +26,7 @@ DISCLAIMER_TEXT = (
 class TradingInfoToolApp(tk.Tk):
     def __init__(
         self, db_conn_factory, watchlist, coingecko_client, kraken_client=None, groq_client=None,
-        fred_api_key=None,
+        fred_api_key=None, bitpanda_api_key=None,
     ):
         super().__init__()
         self.title("TradingInfoTool")
@@ -44,6 +44,7 @@ class TradingInfoToolApp(tk.Tk):
         self._kraken_client = kraken_client
         self._groq_client = groq_client
         self._fred_api_key = fred_api_key
+        self._bitpanda_api_key = bitpanda_api_key
         self._bitpanda_assets: list | None = None
         self._refresh_bitpanda_assets()
 
@@ -84,6 +85,11 @@ class TradingInfoToolApp(tk.Tk):
         file_menu.add_command(label="Bestände neu importieren", command=self._reimport_holdings)
         file_menu.add_command(label="Bestände aus Datei importieren…", command=self._import_holdings_from_file)
         file_menu.add_command(label="Bestände exportieren…", command=self._export_holdings)
+        file_menu.add_command(
+            label="Bestände von Bitpanda abgleichen",
+            command=self._sync_bitpanda,
+            state=("normal" if self._bitpanda_api_key else "disabled"),
+        )
         file_menu.add_separator()
         file_menu.add_command(label="Beenden", command=self.destroy)
         menubar.add_cascade(label="Datei", menu=file_menu)
@@ -313,13 +319,200 @@ class TradingInfoToolApp(tk.Tk):
             f"{count} Assets nach '{EXPORT_XLSX_PATH.name}' exportiert.\n\n{EXPORT_XLSX_PATH}",
         )
 
+    def _sync_bitpanda(self) -> None:
+        """Bestände + EUR-Fiat-Cash live von Bitpanda abgleichen (2026-07-10,
+        Nutzer-Wunsch, hybrid neben dem bestehenden Excel-Import/-Export - siehe
+        importer/bitpanda_sync.py). Manuell ausgeloest, kein Hintergrund-Job."""
+        if not self._bitpanda_api_key:
+            return  # defensiver Re-Check, Menuepunkt ist ohne Key ohnehin deaktiviert
+
+        from importer.bitpanda_sync import sync_from_bitpanda
+
+        conn = self._db_conn_factory()
+        try:
+            try:
+                result = sync_from_bitpanda(conn, self._bitpanda_api_key, self._bitpanda_assets or [])
+            except Exception as exc:
+                messagebox.showerror(
+                    "Bestände von Bitpanda abgleichen",
+                    f"Abgleich abgebrochen, nichts wurde verändert:\n\n{exc}",
+                )
+                return
+        finally:
+            conn.close()
+
+        self._portfolio_view.refresh()
+        if result.cash_reserve_updated:
+            self._portfolio_view.reload_cash_reserve_from_db()
+
+        lines = [f"{result.synced_count} Bestände aktualisiert."]
+        if result.updated_holdings:
+            lines.append("\nGeänderte Bestände:\n" + "\n".join(result.updated_holdings))
+        if result.cash_reserve_updated:
+            lines.append(
+                f"\nFiat-Cash-Reserve: {result.cash_reserve_old_eur:.2f} € → "
+                f"{result.cash_reserve_new_eur:.2f} €"
+            )
+        if result.unmatched_bitpanda_symbols:
+            lines.append(
+                "\nBei Bitpanda gehalten, aber keiner Watchlist zuordenbar:\n"
+                + "\n".join(result.unmatched_bitpanda_symbols)
+            )
+        if result.stale_bitpanda_sync_symbols:
+            lines.append(
+                "\n⚠ Früher per Bitpanda-Sync gesetzt, jetzt nicht mehr in der Antwort "
+                "(NICHT automatisch auf 0 gesetzt, bitte manuell prüfen):\n"
+                + "\n".join(result.stale_bitpanda_sync_symbols)
+            )
+        if result.decreased_holdings_needs_confirmation:
+            lines.append(
+                f"\n⚠ {len(result.decreased_holdings_needs_confirmation)} Bestand/-e mit "
+                "gemeldetem Rückgang - NICHT automatisch übernommen (z. B. weil Bitpanda "
+                "gestakte Anteile nicht als Guthaben ausweist). Bestätigung im nächsten "
+                "Dialog nötig."
+            )
+        if result.warnings:
+            lines.append("\nWarnungen:\n" + "\n".join(result.warnings))
+        lines.append(
+            "\nHinweis: Es werden ausschließlich lesende Abfragen gemacht (kein Order-/"
+            "Auszahlungszugriff über Bitpanda-API-Keys möglich)."
+        )
+        messagebox.showinfo("Bestände von Bitpanda abgleichen", "\n".join(lines))
+
+        if result.plausible_signal_matches:
+            BitpandaMatchConfirmDialog(self, self._db_conn_factory, result.plausible_signal_matches)
+
+        if result.decreased_holdings_needs_confirmation:
+            BitpandaDecreaseConfirmDialog(
+                self, self._db_conn_factory, result.decreased_holdings_needs_confirmation,
+                on_applied=self._portfolio_view.refresh,
+            )
+
+
+class BitpandaMatchConfirmDialog(tk.Toplevel):
+    """Bestaetigungs-Dialog fuer plausible Signal-Umsetzungen, die der Bitpanda-Sync
+    erkannt hat (2026-07-10, Nutzer-Idee). Bewusst NICHT der bestehende
+    UmsetzungDialog (ui/signals_view.py) - der Bestand ist zu diesem Zeitpunkt vom
+    Sync bereits korrekt geschrieben, ein zweiter Schreibpfad in holdings waere hier
+    nur redundant. Dieser Dialog schreibt AUSSCHLIESSLICH die Signal-Umsetzungs-
+    Rueckmeldung (db.update_signal_umsetzung), nie holdings. Kein Auto-Confirm ohne
+    Blick des Nutzers (RG-5/"KI schlaegt vor, Mensch entscheidet")."""
+
+    def __init__(self, parent, db_conn_factory, matches) -> None:
+        super().__init__(parent)
+        self._db_conn_factory = db_conn_factory
+        self._matches = matches
+        self._vars = [tk.BooleanVar(value=True) for _ in matches]
+
+        self.title("Signal-Umsetzung erkannt?")
+        self.resizable(False, False)
+        self.transient(parent)
+        self.grab_set()
+
+        frame = ttk.Frame(self, padding=12)
+        frame.pack(fill="both", expand=True)
+
+        ttk.Label(
+            frame,
+            text="Diese Bestandsänderungen passen zu noch offenen Signalen. Bestätigen?",
+            wraplength=420,
+        ).grid(row=0, column=0, sticky="w", pady=(0, 8))
+
+        for i, match in enumerate(matches):
+            when = match.signal_datum[:16].replace("T", " ") if match.signal_datum else "-"
+            text = (
+                f"{match.symbol} — {match.action}: {match.alt_menge:g} → {match.neu_menge:g} "
+                f"(Signal vom {when})"
+            )
+            ttk.Checkbutton(frame, text=text, variable=self._vars[i]).grid(
+                row=i + 1, column=0, sticky="w", pady=2
+            )
+
+        button_frame = ttk.Frame(frame)
+        button_frame.grid(row=len(matches) + 1, column=0, sticky="e", pady=(10, 0))
+        ttk.Button(button_frame, text="Abbrechen", command=self.destroy).pack(side="right", padx=(6, 0))
+        ttk.Button(button_frame, text="Ausgewählte bestätigen", command=self._on_confirm).pack(side="right")
+
+    def _on_confirm(self) -> None:
+        conn = self._db_conn_factory()
+        try:
+            for match, var in zip(self._matches, self._vars):
+                if var.get():
+                    db.update_signal_umsetzung(conn, match.signal_id, True, umgesetzt_menge=match.neu_menge)
+        finally:
+            conn.close()
+        self.destroy()
+
+
+class BitpandaDecreaseConfirmDialog(tk.Toplevel):
+    """Bestaetigungs-Dialog fuer von Bitpanda gemeldete BESTANDSRUECKGAENGE
+    (2026-07-10, live entdeckt: gestakte Anteile sind ueber die Bitpanda-API nicht
+    auslesbar - live gegen /wallets, /asset-wallets und /wallets/transactions
+    geprueft, keine liefert einen Staking-Wert - ein Rueckgang kann also ein echter
+    Verkauf ODER nur ein API-Sichtfeld-Problem sein). Standardmaessig ALLE Checkboxen
+    UNGEHAKT (anders als BitpandaMatchConfirmDialog) - ein Rueckgang ist die
+    riskantere Richtung, hier soll der Nutzer aktiv zustimmen statt nur abwaehlen."""
+
+    def __init__(self, parent, db_conn_factory, candidates, on_applied=None) -> None:
+        super().__init__(parent)
+        self._db_conn_factory = db_conn_factory
+        self._candidates = candidates
+        self._on_applied = on_applied
+        self._vars = [tk.BooleanVar(value=False) for _ in candidates]
+
+        self.title("Bestandsrückgänge bestätigen")
+        self.resizable(False, False)
+        self.transient(parent)
+        self.grab_set()
+
+        frame = ttk.Frame(self, padding=12)
+        frame.pack(fill="both", expand=True)
+
+        ttk.Label(
+            frame,
+            text=(
+                "Bitpanda meldet für diese Bestände einen Rückgang. Das kann ein echter "
+                "Verkauf sein, oder nur daran liegen, dass gestakte Anteile über die API "
+                "nicht sichtbar sind. Nur bestätigte Positionen werden übernommen."
+            ),
+            wraplength=440,
+        ).grid(row=0, column=0, sticky="w", pady=(0, 8))
+
+        for i, cand in enumerate(candidates):
+            text = f"{cand.symbol}: {cand.alt_menge:g} → {cand.neu_menge:g}"
+            if cand.matching_signal_id is not None:
+                when = cand.matching_signal_datum[:16].replace("T", " ") if cand.matching_signal_datum else "-"
+                text += f" (passt zu offenem {cand.matching_signal_action}-Signal vom {when})"
+            ttk.Checkbutton(frame, text=text, variable=self._vars[i]).grid(
+                row=i + 1, column=0, sticky="w", pady=2
+            )
+
+        button_frame = ttk.Frame(frame)
+        button_frame.grid(row=len(candidates) + 1, column=0, sticky="e", pady=(10, 0))
+        ttk.Button(button_frame, text="Keine übernehmen", command=self.destroy).pack(side="right", padx=(6, 0))
+        ttk.Button(button_frame, text="Ausgewählte übernehmen", command=self._on_confirm).pack(side="right")
+
+    def _on_confirm(self) -> None:
+        from importer.bitpanda_sync import apply_decrease
+
+        conn = self._db_conn_factory()
+        try:
+            for cand, var in zip(self._candidates, self._vars):
+                if var.get():
+                    apply_decrease(conn, cand)
+        finally:
+            conn.close()
+        if self._on_applied:
+            self._on_applied()
+        self.destroy()
+
 
 def run_app(
     db_conn_factory, watchlist, coingecko_client, kraken_client=None, groq_client=None,
-    fred_api_key=None,
+    fred_api_key=None, bitpanda_api_key=None,
 ) -> None:
     app = TradingInfoToolApp(
         db_conn_factory, watchlist, coingecko_client, kraken_client, groq_client,
-        fred_api_key=fred_api_key,
+        fred_api_key=fred_api_key, bitpanda_api_key=bitpanda_api_key,
     )
     app.mainloop()

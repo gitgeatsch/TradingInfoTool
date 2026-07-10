@@ -88,3 +88,110 @@ def is_listed(symbol: str, listed_assets: list[BitpandaAsset], name: str | None 
         name_normalized = name.strip().lower()
         return any(a.name.strip().lower() == name_normalized for a in listed_assets)
     return False
+
+
+# ---------------------------------------------------------------------------
+# Authentifizierte Bitpanda-Wallet-Abfrage (2026-07-10, Nutzer besitzt bereits einen
+# API-Key mit "Trading, Transaction, Balance"-Scopes). Live gegen die offizielle Doku
+# (developers.bitpanda.com) verifiziert: Basis-URL, Header und Antwortschema unten
+# entsprechen den dort dokumentierten Beispielen. Recherche diese Session bestaetigt:
+# alle drei Scopes sind laut Bitpanda-Doku UND mehreren Drittanbieter-Portfolio-
+# Trackern (CoinTracking, Blockpit, Outbank - alle nutzen dasselbe Muster) rein
+# LESEND - es gibt ueber die Bitpanda-API grundsaetzlich keine Order-/Auszahlungs-
+# faehigkeit, unabhaengig vom gewaehlten Scope. Dieses Modul macht ausschliesslich
+# GET-Aufrufe - niemals POST/Order/Auszahlung (P-7: Advisory-only, keine autonome
+# Orderausfuehrung).
+BITPANDA_API_V1_URL = "https://api.bitpanda.com/v1"
+
+
+class BitpandaAuthError(Exception):
+    """401 von der Bitpanda API - Key ungueltig/abgelaufen/falscher Scope, klar von
+    Netzwerkfehlern unterschieden (P-10: sichtbarer, spezifischer Fehler statt
+    genereller Exception, die der Aufrufer nicht sinnvoll unterscheiden koennte)."""
+
+
+@dataclass
+class BitpandaFiatWallet:
+    symbol: str
+    balance: float
+    name: str | None = None
+
+
+@dataclass
+class BitpandaCryptoWallet:
+    symbol: str
+    balance: float
+    name: str | None = None
+
+
+def _auth_headers(api_key: str) -> dict:
+    return {"X-Api-Key": api_key}
+
+
+def _authenticated_get(path: str, api_key: str, session: requests.Session) -> dict:
+    response = session.get(f"{BITPANDA_API_V1_URL}{path}", headers=_auth_headers(api_key), timeout=15)
+    if response.status_code == 401:
+        raise BitpandaAuthError(
+            f"Bitpanda API antwortet mit 401 Unauthorized bei {path} - Key ungueltig, "
+            "abgelaufen oder ohne 'Balance'-Scope."
+        )
+    response.raise_for_status()
+    return response.json()
+
+
+def get_fiat_wallets(api_key: str, session: requests.Session | None = None) -> list[BitpandaFiatWallet]:
+    """GET /fiatwallets - Fiat-Guthaben (u.a. EUR) des Nutzers, nur lesend."""
+    session = session or requests.Session()
+    payload = _authenticated_get("/fiatwallets", api_key, session)
+    return [
+        BitpandaFiatWallet(
+            symbol=entry["attributes"]["fiat_symbol"],
+            balance=float(entry["attributes"]["balance"]),
+            name=entry["attributes"].get("name"),
+        )
+        for entry in payload["data"]
+    ]
+
+
+def get_crypto_wallets(api_key: str, session: requests.Session | None = None) -> list[BitpandaCryptoWallet]:
+    """GET /wallets - Krypto-Bestaende des Nutzers, nur lesend. Geloeschte Wallets
+    (`deleted: true`) werden uebersprungen; mehrere Wallets desselben Symbols (z.B.
+    nach einer Wallet-Neuanlage) werden aufsummiert statt nur die erste zu nehmen."""
+    session = session or requests.Session()
+    payload = _authenticated_get("/wallets", api_key, session)
+    balances: dict[str, float] = {}
+    names: dict[str, str] = {}
+    for entry in payload["data"]:
+        attrs = entry["attributes"]
+        if attrs.get("deleted"):
+            continue
+        symbol = attrs["cryptocoin_symbol"]
+        balances[symbol] = balances.get(symbol, 0.0) + float(attrs["balance"])
+        names.setdefault(symbol, attrs.get("name"))
+    return [BitpandaCryptoWallet(symbol=sym, balance=bal, name=names.get(sym)) for sym, bal in balances.items()]
+
+
+def resolve_bitpanda_symbol_to_watchlist(
+    bitpanda_symbol: str,
+    watchlist: list,
+    listed_assets: list[BitpandaAsset],
+) -> str | None:
+    """Kehrt is_listed()/BITPANDA_SYMBOL_OVERRIDES um: bildet ein von der Wallet-API
+    geliefertes Symbol auf das interne config.yaml-Symbol ab. 1) direkter Symbol-
+    Treffer, 2) Override-Ruecksuche (z.B. Bitpanda "CC" -> internes "CANTON"),
+    3) Namensvergleich ueber listed_assets (wie is_listed(), deckt kuenftige
+    unbekannte Symbol-Abweichungen automatisch ab)."""
+    for asset in watchlist:
+        if asset.symbol == bitpanda_symbol:
+            return asset.symbol
+    reverse_overrides = {v: k for k, v in BITPANDA_SYMBOL_OVERRIDES.items()}
+    if bitpanda_symbol in reverse_overrides:
+        internal_symbol = reverse_overrides[bitpanda_symbol]
+        if any(a.symbol == internal_symbol for a in watchlist):
+            return internal_symbol
+    bitpanda_name = next((a.name.strip().lower() for a in listed_assets if a.symbol == bitpanda_symbol), None)
+    if bitpanda_name:
+        for asset in watchlist:
+            if asset.name.strip().lower() == bitpanda_name:
+                return asset.symbol
+    return None

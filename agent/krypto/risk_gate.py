@@ -93,11 +93,38 @@ def pre_check(
     holdings = db.get_all_holdings(conn)
     total_value_usd, values_by_symbol = _portfolio_values_usd(watchlist, holdings, latest_prices)
     asset_value_usd = values_by_symbol.get(asset.symbol, 0.0)
-    allocation_pct_current = (asset_value_usd / total_value_usd * 100) if total_value_usd > 0 else 0.0
 
     stablecoin_symbols = {a.symbol for a in watchlist if a.typ == "stablecoin"}
     cash_value_usd = sum(v for sym, v in values_by_symbol.items() if sym in stablecoin_symbols)
+
+    # RM-4-Erweiterung (2026-07-10): echtes Fiat-Guthaben (z.B. auf Bitpanda), das die
+    # App sonst nirgends kennt - manuell gepflegt (ui/portfolio.py), da kein Boersen-
+    # API-Zugriff besteht (P-7). EUR->USD ueber EURCV's eigenes Preis-Snapshot
+    # abgeleitet (1 EURCV ~= 1 EUR, siehe A-5) - kein zusaetzlicher Wechselkurs-Call
+    # noetig. Fehlt das Snapshot (P-10), wird das Fiat-Guthaben NICHT mitgezaehlt statt
+    # falsch geraten (1:1-USD-Annahme waere bei EUR/USD != 1 schlicht falsch).
+    eurcv_snap = latest_prices.get("EURCV")
+    eur_usd_fx_rate = (
+        eurcv_snap.price_usd / eurcv_snap.price_eur
+        if eurcv_snap and eurcv_snap.price_usd and eurcv_snap.price_eur
+        else None
+    )
+
+    fiat_cash_eur = db.get_cash_reserve_fiat_eur(conn)
+    fiat_cash_usd = 0.0
+    if fiat_cash_eur > 0:
+        if eur_usd_fx_rate is not None:
+            fiat_cash_usd = fiat_cash_eur * eur_usd_fx_rate
+            checks.append(f"RM-4: Fiat-Guthaben {fiat_cash_eur:.2f} EUR = {fiat_cash_usd:.2f} USD beruecksichtigt")
+        else:
+            checks.append("RM-4: Fiat-Guthaben gesetzt, aber EUR/USD-Kurs (EURCV) nicht verfuegbar - nicht mitgezaehlt")
+
+    cash_value_usd += fiat_cash_usd
+    total_value_usd += fiat_cash_usd
     cash_reserve_pct_current = (cash_value_usd / total_value_usd * 100) if total_value_usd > 0 else 0.0
+    # RM-2 (allocation_pct_current) bewusst NACH der Fiat-Ergaenzung berechnet, damit
+    # RM-1/RM-2/RM-4 durchgaengig dieselbe (fiat-inklusive) Portfolio-Gesamtbasis nutzen.
+    allocation_pct_current = (asset_value_usd / total_value_usd * 100) if total_value_usd > 0 else 0.0
 
     risiko_cfg = config["risiko"]
 
@@ -124,14 +151,31 @@ def pre_check(
 
     # RM-4: Cash-Reserve - bei Unterschreitung wird jeder weitere Kauf blockiert
     # (konservativ: die konkrete Kaufgröße ist an dieser Stelle noch unbekannt).
-    if cash_reserve_pct_current <= risiko_cfg["cash_reserve_min_prozent"]:
+    # Hybrid-Formel (2026-07-10, Nutzer-Wunsch): erforderliche Reserve ist das GROESSERE
+    # aus (a) Prozentsatz vom Portfolio (skaliert mit wachsendem Risiko-Exposure) und
+    # (b) einem festen Mindestbetrag in EUR (Vorhersehbarkeit bei kleinen Portfolios) -
+    # reiner Prozentsatz allein wuerde bei kleinen Portfolios zu duenne Puffer in
+    # absoluten Zahlen erlauben, ein reiner Festbetrag wuerde bei wachsendem Portfolio
+    # nicht mitskalieren. Vergleich in USD (nicht Prozent), um einen sauberen Floor
+    # zu ermoeglichen, der bei total_value_usd == 0 nicht kollabiert.
+    required_reserve_pct_usd = total_value_usd * risiko_cfg["cash_reserve_min_prozent"] / 100
+    required_reserve_fixed_usd = (
+        risiko_cfg["cash_reserve_min_fixed_eur"] * eur_usd_fx_rate if eur_usd_fx_rate is not None else 0.0
+    )
+    required_reserve_usd = max(required_reserve_pct_usd, required_reserve_fixed_usd)
+    if cash_value_usd < required_reserve_usd:
         veto_reasons.append(
-            f"Cash-Reserve {cash_reserve_pct_current:.1f}% <= Minimum "
-            f"{risiko_cfg['cash_reserve_min_prozent']}% (RM-4)"
+            f"Cash-Reserve {cash_value_usd:.2f} USD ({cash_reserve_pct_current:.1f}%) < "
+            f"erforderlichem Minimum {required_reserve_usd:.2f} USD (RM-4: max. von "
+            f"{risiko_cfg['cash_reserve_min_prozent']}% oder "
+            f"{risiko_cfg['cash_reserve_min_fixed_eur']:.0f} EUR)"
         )
         checks.append("RM-4: FEHLGESCHLAGEN - Cash-Reserve unter Minimum")
     else:
-        checks.append(f"RM-4: OK - Cash-Reserve {cash_reserve_pct_current:.1f}%")
+        checks.append(
+            f"RM-4: OK - Cash-Reserve {cash_value_usd:.2f} USD ({cash_reserve_pct_current:.1f}%) "
+            f">= erforderlichem Minimum {required_reserve_usd:.2f} USD"
+        )
 
     # RM-Bitpanda: nicht auf Bitpanda (der tatsaechlichen Handelsboerse des Nutzers)
     # gelistete Krypto-Assets koennen nicht gekauft werden - Veto analog RM-1/2/4/5.

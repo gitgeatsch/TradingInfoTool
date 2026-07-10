@@ -42,7 +42,7 @@ Diese vier stehen über allen anderen Regeln — jede andere Regel muss sich dar
 | RM-1 | Risiko pro Trade — wie viel des Portfolios darf bis zum Stop-Loss maximal verloren gehen | **2 %** | AKTIV, seit heute (2026-07-10) hart durchgesetzt: schlägt die KI eine größere Position vor, wird sie automatisch auf diesen Wert gekürzt |
 | RM-2 | Max. Allokation pro Einzelwert | **25 %** (taktische Assets) / **35 %** (Kernwerte BTC/ETH) | AKTIV, siehe RM-1 (gleicher Clamp-Mechanismus) |
 | RM-3 | Max. Allokation pro Assetklasse | Krypto **100 %**, Aktien/ETF/Rohstoffe je **0 %** | Konfiguriert, aber noch nicht aktiv genutzt (nur Krypto im Einsatz) |
-| RM-4 | Cash-Reserve-Minimum | **10 %** | AKTIV — Unterschreitung blockiert weitere Käufe |
+| RM-4 | Cash-Reserve-Minimum | **Größerer Wert aus 10 %** des Portfolios **oder 2000 €** Festbetrag | AKTIV, seit heute (2026-07-10) Hybrid-Formel — Unterschreitung blockiert weitere Käufe |
 | RM-5 | Pflicht-Stop-Loss | jede Position braucht einen | AKTIV, unantastbar (kein Override erlaubt) |
 | RM-6 | Trailing-Stop | erlaubt | Als Option vorhanden, keine automatische Durchsetzung |
 | RM-7 | Drawdown-Notbremse | — | **OFFEN**, siehe Z-3 |
@@ -52,6 +52,38 @@ Diese vier stehen über allen anderen Regeln — jede andere Regel muss sich dar
 **Unantastbar (RG-6):** Weder Nutzer noch KI dürfen RM-1, RM-5 oder Z-3 per Override
 abschalten — das sind die harten Leitplanken, die auch eine künftige KI-gestützte
 Anpassung nicht in Frage stellen darf, ohne dass du das bewusst und explizit änderst.
+
+**RM-4 zählt jetzt auch echtes Fiat-Geld (2026-07-10).** Bis dahin kannte die App nur
+Stablecoin-Bestände (EURCV) als "Cash" — echtes EUR-Guthaben auf der Börse (z. B.
+Bitpanda) war ihr komplett unbekannt, weder als Reserve noch im Portfolio-Gesamtwert.
+Jetzt gibt es dafür ein manuelles Eingabefeld im Portfolio-Tab ("Fiat-Guthaben auf
+Börse"), das du gelegentlich aktuell hältst — kein Börsen-API-Zugriff nötig (P-7 bleibt
+gewahrt). Zusätzlich wurde die Formel von reinem Prozentsatz auf **Hybrid** umgestellt:
+erforderlich ist das *Größere* aus 10 % des Portfolios und einem festen Mindestbetrag
+(aktuell 2000 €, `cash_reserve_min_fixed_eur` in `config.yaml`) — reiner Prozentsatz
+hätte bei kleinen Portfolios einen zu dünnen Puffer erlaubt, ein reiner Festbetrag hätte
+bei wachsendem Portfolio nicht mitskaliert.
+
+**Optionaler Live-Abgleich mit Bitpanda (2026-07-10, ERGÄNZT).** Wer bereits einen
+Bitpanda-API-Key besitzt (`BITPANDA_API_KEY` in `.env`), kann über "Datei → Bestände
+von Bitpanda abgleichen" Krypto-Bestände UND das EUR-Fiat-Guthaben automatisch von der
+Börse abrufen (rein lesend — laut Bitpanda-Doku besteht über API-Keys grundsätzlich
+keine Order-/Auszahlungsfähigkeit, unabhängig vom gewählten Scope). Das manuelle
+Eingabefeld und der bestehende Excel-Import/Export bleiben **vollständig als Backup**
+erhalten (bewusst hybrid, da Bitpanda öfter Ausfälle hat und Nicht-Krypto-Assets wie
+Aktien/ETF/Rohstoffe ohnehin nicht auf Bitpanda gelistet sind) — der Sync ist rein
+manuell ausgelöst, kein Hintergrund-Job. Erkennt der Abgleich, dass sich ein Bestand
+passend zu einem noch offenen Signal geändert hat, wird das als Vorschlag angezeigt
+(nie automatisch bestätigt).
+
+**Wichtige Einschränkung, live entdeckt (2026-07-10): gestakte Bestände sind über
+diese API nicht sichtbar.** Drei Endpunkte live geprüft (`/wallets`, `/asset-wallets`,
+`/wallets/transactions`) — keiner liefert einen Staking-Wert; gestakte Anteile
+erscheinen fälschlich als 0 oder reduziert. **Deshalb gilt seit demselben Tag:
+Zuwächse werden weiterhin automatisch übernommen, Rückgänge NIE automatisch** —
+sie erscheinen als eigener Bestätigungsdialog, den du explizit pro Symbol bestätigen
+musst. So bleibt der Sync auch bei dieser API-Lücke sicher, ohne echte Bestände
+versehentlich zu überschreiben.
 
 ---
 
@@ -164,7 +196,7 @@ Startpunkt, sobald Backward-Tracking/Outcome-Daten vorliegen:
 - RM-2 Core-Allokations-Limit (35 % für BTC/ETH) — nachträglich erhöht, weil die reale
   BTC-Allokation das alte 25%-Limit überschritt; "BTC hat den Lead"-Frage insgesamt
   noch nicht grundsätzlich besprochen.
-- RM-4 Cash-Reserve-Minimum (10 %)
+- RM-4 Cash-Reserve-Minimum (10 % **und** der neue Festbetrag 2000 €, beide vorläufig)
 - Small-Cap-Budget je Regime (0/4/8/12/15 %)
 - Mindest-Konfidenz je Regime (85/75/65/60/60 %)
 - Die vier Gewichte je Regime (Technik/Fundamental/Momentum/Makro)

@@ -334,6 +334,28 @@ def get_all_holdings(conn: sqlite3.Connection) -> list[Holding]:
     return [Holding(**dict(row)) for row in rows]
 
 
+def get_cash_reserve_fiat_eur(conn: sqlite3.Connection) -> float:
+    """Manuell gepflegtes Fiat-Guthaben (EUR) auf der Boerse, z.B. Bitpanda - nicht
+    in Stablecoins umgewandeltes Geld, das die App sonst nirgends kennt (RM-4-
+    Erweiterung, 2026-07-10). 0.0 falls nie gesetzt."""
+    row = conn.execute("SELECT value FROM meta WHERE key = 'cash_reserve_fiat_eur'").fetchone()
+    if row is None or row["value"] is None:
+        return 0.0
+    try:
+        return float(row["value"])
+    except ValueError:
+        return 0.0
+
+
+def set_cash_reserve_fiat_eur(conn: sqlite3.Connection, value_eur: float) -> None:
+    conn.execute(
+        "INSERT INTO meta (key, value) VALUES ('cash_reserve_fiat_eur', ?) "
+        "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        (str(value_eur),),
+    )
+    conn.commit()
+
+
 def insert_price_snapshot(conn: sqlite3.Connection, snap: PriceSnapshot) -> None:
     conn.execute(
         "INSERT INTO price_cache "

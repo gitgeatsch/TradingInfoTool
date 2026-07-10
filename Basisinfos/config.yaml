@@ -39,6 +39,10 @@ risiko:
                                         # besprechen (Rolle von BTC im Portfolio insgesamt,
                                         # nicht nur die Prozentzahl) - siehe Memory.
   cash_reserve_min_prozent: 10         # RM-4: [OFFEN] Vorschlag
+  cash_reserve_min_fixed_eur: 2000     # RM-4: [OFFEN] Vorschlag - Hybrid-Formel (2026-07-10):
+                                        # erforderlich ist das GROESSERE aus Prozentsatz und
+                                        # diesem Festbetrag (Vorhersehbarkeit bei kleinen
+                                        # Portfolios, skaliert trotzdem bei grossen mit)
   max_allokation_small_cap_prozent: 12 # [OFFEN] Tier-3 Small-Cap-Budget, Vorschlag 10-15 (Kap. 13/14)
   stop_loss_pflicht: true              # RM-5: jede Position braucht einen Stop-Loss
   trailing_stop_erlaubt: true          # RM-6: Gewinnsicherung

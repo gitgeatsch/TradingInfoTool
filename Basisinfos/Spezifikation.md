@@ -649,7 +649,42 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
   voller `config.yaml`-Rundlauf: Formatierung/Zusatzspalten könnten verlorengehen).
   "Bestände aus Datei importieren…" (Filedialog) rundet das zum echten
   Export→Bearbeiten→Import-Workflow ab, ohne dass der Nutzer die exportierte Datei
-  manuell über Assets.xlsx kopieren muss.
+  manuell über Assets.xlsx kopieren muss. **Dritter, hybrider Pfad ERGÄNZT
+  (2026-07-10):** wer einen `BITPANDA_API_KEY` besitzt, kann Krypto-Bestände UND
+  EUR-Fiat-Cash live von Bitpanda abgleichen ("Datei → Bestände von Bitpanda
+  abgleichen", `importer/bitpanda_sync.py::sync_from_bitpanda()`) — ausschließlich
+  GET-Aufrufe (`api/bitpanda.py::get_fiat_wallets()`/`get_crypto_wallets()`, konform
+  mit P-7: über Bitpanda-API-Keys besteht laut Doku grundsätzlich keine Order-/
+  Auszahlungsfähigkeit). Neuer `Holding.source`-Wert `"bitpanda_sync"`. Atomar (P-10):
+  alle Netzwerk-Aufrufe passieren vor jedem DB-Write, ein Fehlschlag lässt Bestände/
+  Cash-Reserve komplett unverändert. Excel-Import/-Export UND das manuelle
+  Fiat-Cash-Feld (siehe RM-4, Kap. 3) bleiben vollständig als Backup erhalten —
+  bewusst hybrid (Bitpanda-Ausfälle, Nicht-Krypto-Assets sind ohnehin nicht auf
+  Bitpanda gelistet). Erkennt eine Bestandsänderung, die zu einem noch offenen Signal
+  passt (Einzelsymbol-Aktionen KAUFEN/NACHKAUFEN/VERKAUFEN, Richtung muss exakt
+  passen; TAUSCHEN bewusst ausgeklammert), wird das als Vorschlag angezeigt
+  (`ui/app.py::BitpandaMatchConfirmDialog`) — nie automatisch bestätigt, ergänzt aber
+  die bisher rein manuelle Umsetzungs-Rückmeldung (R-5.7/U-9) um eine Vorausfüllung.
+  **Vierter Pfad ERGÄNZT (2026-07-10): Non-Krypto-Sheet.** Design bereits 2026-07-09
+  abgestimmt, aber nie umgesetzt — die 13 Non-Krypto-Assets (Aktien/ETF/Rohstoffe,
+  Kap. 11) hatten trotz `status: aktiv` **keinen einzigen** `holdings`-Eintrag in der
+  DB. Jetzt liest `read_holdings_from_excel()` zusätzlich ein optionales
+  "Nicht-Krypto"-Sheet (P-10: fehlt es in der Nutzer-Datei, wird es übersprungen,
+  kein Absturz), `export_holdings()` schreibt beide Sheets getrennt nach
+  `assetklasse`, jeweils mit derselben "Quelle"-Spalte wie das Krypto-Sheet.
+  **Wichtiger Fund beim Live-Test (2026-07-10):** gestakte Krypto-Bestände sind über
+  die konsumentenseitige Bitpanda-API strukturell nicht auslesbar — live gegen drei
+  Endpunkte geprüft (`/wallets`, `/asset-wallets`, `/wallets/transactions`, alle ohne
+  Staking-Feld/Sub-Wallet-Sichtbarkeit; selbst CoinTracking unterstützt laut Recherche
+  keine Bitpanda-Staking-Rewards, nur Blockpit über eine vermutlich tiefere,
+  nicht-öffentliche Integration). Deshalb gilt: **Zuwächse werden automatisch
+  übernommen, Rückgänge NIE** — sie landen in
+  `BitpandaSyncResult.decreased_holdings_needs_confirmation` und erfordern eine
+  explizite Bestätigung pro Symbol (`ui/app.py::BitpandaDecreaseConfirmDialog`,
+  `importer/bitpanda_sync.py::apply_decrease()`) — verhindert, dass gestakte Anteile
+  fälschlich als verkauft in die Bestände geschrieben werden. Live verifiziert: ein
+  zweiter Sync-Lauf ließ alle neun betroffenen Symbole korrekt unverändert
+  (`synced_count: 0`, alle als Rückgang vorgemerkt).
 - **B-6** Persistenz erweitert um: neu vom Marktscan entdeckte Assets (Kap. 13),
   Regime-Verlauf und alle Overrides (Quelle, Grund, Zeitpunkt, Dauer — Kap. 14) sowie
   antizyklische Kaufpläne/Tranchen-Status (Kap. 15) — für Nachvollziehbarkeit (Z-4).
