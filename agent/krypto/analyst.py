@@ -36,12 +36,24 @@ REGELN (strikt einhalten):
 1. Nutze AUSSCHLIESSLICH die im Fakten-JSON gelieferten Zahlen und Informationen. \
 Erfinde keine Kurse, Indikatorwerte, Nachrichten oder Ereignisse.
 2. Wenn `risiko_check.kauf_erlaubt` == false ist, darfst du NIEMALS "KAUFEN" oder \
-"NACHKAUFEN" empfehlen - schlage stattdessen "HALTEN" vor und nenne den Veto-Grund.
+"NACHKAUFEN" empfehlen - schlage stattdessen "HALTEN" vor und nenne den Veto-Grund. \
+Ist `asset.bitpanda_gelistet` explizit false, ist das bei Krypto-Assets der typischste \
+Veto-Grund - benenne das explizit (z.B. in `top_gruende`/`key_risks`), auch wenn \
+`action` wegen einer bestehenden Position VERKAUFEN/TAUSCHEN statt HALTEN ist.
 3. Bei "KAUFEN"/"NACHKAUFEN" ist ein Stop-Loss PFLICHT und das Chance-Risiko-Verhaeltnis \
-((take_profit-entry)/(entry-stop_loss)) MUSS mindestens 2.0 betragen.
-4. Berechne den prozentualen Abstand von Entry/Stop-Loss/Take-Profit zum aktuellen Kurs \
-EINMAL und wende ihn auf USD- UND EUR-Kurs gleichermassen an (keine unabhaengig \
-erfundenen Werte je Waehrung).
+MUSS mindestens 2.0 betragen, konservativ gerechnet ueber die Zonen-Grenzen aus Regel 16: \
+((take_profit.usd_von - entry_mitte) / (entry_mitte - stop_loss.usd_von)), wobei \
+entry_mitte = (entry.usd_von + entry.usd_bis) / 2. Deine Zonen muessen so gewaehlt sein, \
+dass diese konservative Rechnung >= 2.0 ergibt - sonst wird der Vorschlag nachtraeglich \
+deterministisch auf HALTEN korrigiert. Zusaetzlich MUSS `position_size.usd` <= \
+`risiko_check.max_positionsgroesse_usd` sein (analog `position_size.eur` <= \
+`risiko_check.max_positionsgroesse_eur`), falls diese Obergrenze nicht null ist - \
+schlaegst du dennoch mehr vor, wird die Positionsgroesse nachtraeglich deterministisch \
+auf die Obergrenze gekuerzt (keine Ablehnung der Kauf-Idee, nur eine Korrektur der \
+Groesse).
+4. Berechne den prozentualen Abstand jeder Zonen-Grenze (von UND bis) von Entry/Stop-Loss/ \
+Take-Profit zum aktuellen Kurs EINMAL und wende ihn auf USD- UND EUR-Kurs gleichermassen an \
+(keine unabhaengig erfundenen Werte je Waehrung).
 5. `disclaimers` zeigt an, ob Makro/Sentiment einbezogen sind. Sind sie es nicht, muss \
 das Feld `long_reasoning.makro` das explizit sagen (z.B. "Makrodaten sind in diesem \
 System noch nicht integriert") - erfinde keine Makro-Einschaetzung.
@@ -100,7 +112,29 @@ entfernt, nenne das als moeglichen Volatilitaets-Faktor in `key_risks`. Erfinde 
 Werte fuer leere/null Felder, erzwinge auch keine Erwaehnung.
 14. `action` MUSS EXAKT einer dieser fuenf Werte sein (Grossbuchstaben, keine Variante): \
 KAUFEN, VERKAUFEN, TAUSCHEN, HALTEN, NACHKAUFEN.
-15. Antworte AUSSCHLIESSLICH mit einem einzigen JSON-Objekt gemaess dem vorgegebenen \
+15. Fuelle zusaetzlich zu `long_reasoning` das Feld `top_gruende` mit GENAU 5 Eintraegen, \
+sortiert von der staerksten zur schwaechsten Begruendung (rang 1 = staerkste, rang 5 = \
+schwaechste, jede Zahl 1-5 genau einmal). Jeder Eintrag hat `rang` (1-5), `kategorie` \
+(EXAKT einer von: technisch, fundamental, makro, risiko, antizyklisch) und `text` (ein \
+praegnanter Satz). `top_gruende` ist eine RANGIERTE ZUSAMMENFASSUNG der wichtigsten \
+Treiber - sie darf auch fundamentale/makro Gruende enthalten, die nicht Teil der \
+technischen Konfluenz sind. Sie ersetzt NICHT `long_reasoning`, das weiterhin die volle \
+Begruendung je Kategorie enthaelt.
+16. Entry/Stop-Loss/Take-Profit sind KEINE Einzelkurse mehr, sondern Kurszonen (von <= \
+bis). Leite jede Zone aus echten, gelieferten Referenzpunkten ab \
+(`technische_analyse.atr.wert`, `technische_analyse.support_resistance`, \
+`technische_analyse.fibonacci`) - KEINE frei geratene Bandbreite. Beispiel: Kauf-Zone um \
+ein Support-/Fibonacci-Level +/- einen Bruchteil der ATR; Stop-Loss-Zone knapp unterhalb \
+der naechsten Unterstuetzung; Take-Profit-Zone um den naechsten Widerstand/ein hoeheres \
+Fibonacci-Level. Siehe Regel 3 fuer die daran gekoppelte CRV-Pflicht.
+17. Fuelle `halte_kriterium` zusaetzlich zum groben `bucket` (kurz|mittel|lang) mit \
+mindestens EINEM konkreten, ueberpruefbaren Kriterium: einem Ziel-Kurs (`ziel_preis_usd`/ \
+`ziel_preis_eur`), einem Ziel-Datum (`ziel_datum`, Format YYYY-MM-DD) und/oder einer \
+Bedingung als Text (`bedingung_text`, z.B. "RSI faellt unter 30" oder "Kurs bricht unter \
+Unterstuetzung X"). Mindestens eines der drei Felder MUSS gesetzt sein (nicht alle drei \
+null). Dieses Kriterium wird bei jedem manuellen Pipeline-Lauf neu bewertet - es ist \
+KEIN automatischer Trigger, der Nutzer entscheidet weiterhin manuell.
+18. Antworte AUSSCHLIESSLICH mit einem einzigen JSON-Objekt gemaess dem vorgegebenen \
 Schema. Kein Markdown, keine Code-Fences, kein Text ausserhalb des JSON.
 
 SCHEMA:
@@ -108,12 +142,26 @@ SCHEMA:
   "action": "KAUFEN|VERKAUFEN|TAUSCHEN|HALTEN|NACHKAUFEN",
   "confidence_pct": <0-100>,
   "short_reasoning": "<1-2 Saetze>",
+  "top_gruende": [
+    {"rang": 1, "kategorie": "technisch|fundamental|makro|risiko|antizyklisch", "text": "<Text>"},
+    {"rang": 2, "kategorie": "technisch|fundamental|makro|risiko|antizyklisch", "text": "<Text>"},
+    {"rang": 3, "kategorie": "technisch|fundamental|makro|risiko|antizyklisch", "text": "<Text>"},
+    {"rang": 4, "kategorie": "technisch|fundamental|makro|risiko|antizyklisch", "text": "<Text>"},
+    {"rang": 5, "kategorie": "technisch|fundamental|makro|risiko|antizyklisch", "text": "<Text>"}
+  ],
   "long_reasoning": {"technisch": "<Text>", "fundamental": "<Text>", "makro": "<Text>"},
   "position_size": {"usd": <Zahl oder null>, "eur": <Zahl oder null>, "note": "<Text>"},
-  "entry": {"usd": <Zahl oder null>, "eur": <Zahl oder null>},
-  "stop_loss": {"usd": <Zahl oder null>, "eur": <Zahl oder null>},
-  "take_profit": {"usd": <Zahl oder null>, "eur": <Zahl oder null>},
-  "holding_duration": {"bucket": "kurz|mittel|lang", "reasoning": "<Text>"},
+  "entry": {"usd_von": <Zahl oder null>, "usd_bis": <Zahl oder null>, "eur_von": <Zahl oder null>, "eur_bis": <Zahl oder null>},
+  "stop_loss": {"usd_von": <Zahl oder null>, "usd_bis": <Zahl oder null>, "eur_von": <Zahl oder null>, "eur_bis": <Zahl oder null>},
+  "take_profit": {"usd_von": <Zahl oder null>, "usd_bis": <Zahl oder null>, "eur_von": <Zahl oder null>, "eur_bis": <Zahl oder null>},
+  "halte_kriterium": {
+    "bucket": "kurz|mittel|lang",
+    "ziel_preis_usd": <Zahl oder null>,
+    "ziel_preis_eur": <Zahl oder null>,
+    "ziel_datum": "<YYYY-MM-DD oder null>",
+    "bedingung_text": "<Text oder null>",
+    "reasoning": "<Text>"
+  },
   "key_risks": ["<Text>", ...],
   "forecast": {
     "bull": {"scenario": "<Text>", "probability_pct": <0-100>},
@@ -154,6 +202,7 @@ def build_facts(
     strategien_aktiv: list[str],
     price_age_minutes: float | None,
     market_context: dict,
+    bitpanda_gelistet: bool | None,
 ) -> dict:
     macd_val = technical_snapshot.macd
     macd_facts = None
@@ -193,6 +242,7 @@ def build_facts(
             "name": asset.name,
             "typ": asset.typ,
             "status": asset.status,
+            "bitpanda_gelistet": bitpanda_gelistet,
         },
         "preis": {
             "usd": _native(latest_price.price_usd) if latest_price else None,
@@ -316,9 +366,13 @@ def build_facts(
 
 
 REQUIRED_TOP_LEVEL_FIELDS = (
-    "action", "confidence_pct", "short_reasoning", "long_reasoning", "position_size",
-    "entry", "stop_loss", "take_profit", "holding_duration", "key_risks", "forecast",
+    "action", "confidence_pct", "short_reasoning", "top_gruende", "long_reasoning",
+    "position_size", "entry", "stop_loss", "take_profit", "halte_kriterium",
+    "key_risks", "forecast",
 )
+
+TOP_GRUENDE_KATEGORIEN = ("technisch", "fundamental", "makro", "risiko", "antizyklisch")
+_HALTE_KRITERIUM_BUCKETS = ("kurz", "mittel", "lang")
 
 
 def _validate(data: dict) -> dict:
@@ -341,17 +395,65 @@ def _validate(data: dict) -> dict:
     if not (0 <= data["confidence_pct"] <= 100):
         raise AnalystResponseInvalid(f"confidence_pct außerhalb 0-100: {data['confidence_pct']}")
 
-    for field_name in ("long_reasoning", "position_size", "entry", "stop_loss", "take_profit", "holding_duration", "forecast"):
+    for field_name in ("long_reasoning", "position_size", "entry", "stop_loss", "take_profit", "halte_kriterium", "forecast"):
         if not isinstance(data[field_name], dict):
             raise AnalystResponseInvalid(f"{field_name} ist kein Objekt")
 
     if not isinstance(data["key_risks"], list):
         raise AnalystResponseInvalid("key_risks ist keine Liste")
 
+    top_gruende = data["top_gruende"]
+    if not isinstance(top_gruende, list) or len(top_gruende) != 5:
+        raise AnalystResponseInvalid(f"top_gruende muss genau 5 Einträge enthalten: {top_gruende!r}")
+    ranks_seen = set()
+    for eintrag in top_gruende:
+        if not isinstance(eintrag, dict):
+            raise AnalystResponseInvalid(f"top_gruende-Eintrag ist kein Objekt: {eintrag!r}")
+        rang = eintrag.get("rang")
+        if rang not in (1, 2, 3, 4, 5) or rang in ranks_seen:
+            raise AnalystResponseInvalid(f"top_gruende.rang ungültig oder doppelt: {rang!r}")
+        ranks_seen.add(rang)
+        kategorie = str(eintrag.get("kategorie", "")).strip().lower()
+        if kategorie not in TOP_GRUENDE_KATEGORIEN:
+            raise AnalystResponseInvalid(f"top_gruende.kategorie ungültig: {eintrag.get('kategorie')!r}")
+        eintrag["kategorie"] = kategorie
+        if not str(eintrag.get("text") or "").strip():
+            raise AnalystResponseInvalid("top_gruende.text fehlt/leer")
+
+    for field_name in ("entry", "stop_loss", "take_profit"):
+        obj = data[field_name]
+        for currency in ("usd", "eur"):
+            von, bis = obj.get(f"{currency}_von"), obj.get(f"{currency}_bis")
+            if von is None and bis is None:
+                continue
+            if von is None or bis is None:
+                raise AnalystResponseInvalid(f"{field_name}.{currency}_von/{currency}_bis: nur einer gesetzt")
+            try:
+                von, bis = float(von), float(bis)
+            except (TypeError, ValueError):
+                raise AnalystResponseInvalid(f"{field_name}.{currency}_von/{currency}_bis nicht numerisch")
+            if von > bis:
+                raise AnalystResponseInvalid(f"{field_name}.{currency}_von > {currency}_bis ({von} > {bis})")
+            obj[f"{currency}_von"], obj[f"{currency}_bis"] = von, bis
+
+    halte = data["halte_kriterium"]
+    bucket = str(halte.get("bucket", "")).strip().lower()
+    if bucket not in _HALTE_KRITERIUM_BUCKETS:
+        raise AnalystResponseInvalid(f"halte_kriterium.bucket ungültig: {halte.get('bucket')!r}")
+    halte["bucket"] = bucket
+    if (
+        halte.get("ziel_preis_usd") is None
+        and not str(halte.get("ziel_datum") or "").strip()
+        and not str(halte.get("bedingung_text") or "").strip()
+    ):
+        raise AnalystResponseInvalid(
+            "halte_kriterium: mindestens eines von ziel_preis_usd/ziel_datum/bedingung_text muss gesetzt sein"
+        )
+
     return data
 
 
-def call_groq_for_signal(groq_client, facts: dict, max_retries: int = 1) -> dict:
+def call_groq_for_signal(groq_client, facts: dict, max_retries: int = 2) -> dict:
     """Ruft Groq auf, validiert die Antwort. Bei kaputtem/unvollstaendigem JSON wird
     einmal mit Korrektur-Hinweis retryed, danach fail-loud (AnalystResponseInvalid) -
     der Aufrufer (agent/pipeline.py) faengt das ab und erzeugt ein HALTEN-Signal."""

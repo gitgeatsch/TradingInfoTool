@@ -185,6 +185,18 @@ class SignalsView(ttk.Frame):
         self.gate_label.config(text="\n".join(gate_notes))
 
         lines = []
+        top_gruende_pairs = [
+            (getattr(signal, f"top_grund_{i}_kategorie"), getattr(signal, f"top_grund_{i}_text"))
+            for i in range(1, 6)
+        ]
+        top_gruende_pairs = [(k, t) for k, t in top_gruende_pairs if t]
+        if top_gruende_pairs:
+            lines.append("TOP 5 GRÜNDE")
+            for idx, (kategorie, text) in enumerate(top_gruende_pairs, start=1):
+                tag = f"[{kategorie}] " if kategorie else ""
+                lines.append(f"  {idx}. {tag}{text}")
+            lines.append("")
+
         if signal.short_reasoning:
             lines.append(f"KURZBEGRÜNDUNG\n{signal.short_reasoning}\n")
         if signal.long_reasoning_technisch or signal.long_reasoning_fundamental or signal.long_reasoning_makro:
@@ -206,14 +218,44 @@ class SignalsView(ttk.Frame):
                 lines.append(signal.position_size_note)
             lines.append("")
 
-        if signal.entry_usd or signal.stop_loss_usd or signal.take_profit_usd:
+        if signal.entry_usd_von is not None or signal.stop_loss_usd_von is not None or signal.take_profit_usd_von is not None:
+            lines.append("KAUF-ZONE / STOP-LOSS-ZONE / TAKE-PROFIT-ZONE (USD | EUR)")
+            lines.append(
+                f"  Kauf-Zone:    {format_money(signal.entry_usd_von)}–{format_money(signal.entry_usd_bis)} | "
+                f"{format_money(signal.entry_eur_von)}–{format_money(signal.entry_eur_bis)}"
+            )
+            lines.append(
+                f"  Stop-Loss:    {format_money(signal.stop_loss_usd_von)}–{format_money(signal.stop_loss_usd_bis)} | "
+                f"{format_money(signal.stop_loss_eur_von)}–{format_money(signal.stop_loss_eur_bis)}"
+            )
+            lines.append(
+                f"  Take-Profit:  {format_money(signal.take_profit_usd_von)}–{format_money(signal.take_profit_usd_bis)} | "
+                f"{format_money(signal.take_profit_eur_von)}–{format_money(signal.take_profit_eur_bis)}"
+            )
+            lines.append("")
+        elif signal.entry_usd or signal.stop_loss_usd or signal.take_profit_usd:
             lines.append("EINSTIEG / STOP-LOSS / TAKE-PROFIT (USD | EUR)")
             lines.append(f"  Entry:        {format_money(signal.entry_usd)} | {format_money(signal.entry_eur)}")
             lines.append(f"  Stop-Loss:    {format_money(signal.stop_loss_usd)} | {format_money(signal.stop_loss_eur)}")
             lines.append(f"  Take-Profit:  {format_money(signal.take_profit_usd)} | {format_money(signal.take_profit_eur)}")
             lines.append("")
 
-        if signal.holding_duration:
+        if signal.halte_kriterium_bucket:
+            lines.append("HALTE-KRITERIUM")
+            lines.append(f"  Grobe Einordnung: {signal.halte_kriterium_bucket}")
+            if signal.halte_kriterium_ziel_preis_usd or signal.halte_kriterium_ziel_preis_eur:
+                lines.append(
+                    f"  Ziel-Kurs: {format_money(signal.halte_kriterium_ziel_preis_usd)} USD / "
+                    f"{format_money(signal.halte_kriterium_ziel_preis_eur)} EUR"
+                )
+            if signal.halte_kriterium_ziel_datum:
+                lines.append(f"  Ziel-Datum: {signal.halte_kriterium_ziel_datum}")
+            if signal.halte_kriterium_bedingung_text:
+                lines.append(f"  Bedingung: {signal.halte_kriterium_bedingung_text}")
+            if signal.halte_kriterium_reasoning:
+                lines.append(f"  Begründung: {signal.halte_kriterium_reasoning}")
+            lines.append("")
+        elif signal.holding_duration:
             lines.append(f"HALTEDAUER\n{signal.holding_duration} — {signal.holding_duration_reason}\n")
 
         if signal.key_risks_text:

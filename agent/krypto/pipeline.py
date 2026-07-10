@@ -303,8 +303,23 @@ def generate_signal(
     # R-5.3 Technische Analyse -> Confluence-Zusammenfassung.
     confluence = summarize_confluence(snapshot, closes[-1])
 
+    # RM-Bitpanda: Handelsboersen-Check (analog marktscan.py) - einmal pro Signal-Lauf,
+    # kein Cache noetig (oeffentlicher, unauthentifizierter Endpunkt, ein Lauf dauert
+    # ohnehin schon mehrere Sekunden wegen Groq/Regime/Makro).
+    try:
+        from api.bitpanda import get_listed_assets
+        from api.bitpanda import is_listed as bitpanda_is_listed
+
+        bitpanda_assets = get_listed_assets()
+        bitpanda_gelistet = bitpanda_is_listed(asset.symbol, bitpanda_assets, name=asset.name)
+    except Exception as exc:
+        bitpanda_gelistet = None
+        logger.info("Bitpanda-Listing-Abruf fehlgeschlagen: %s", exc)
+
     # R-5.5 (pre) Risikopruefung.
-    risk_result = pre_check(asset, watchlist, conn, latest_prices, snapshot, regime_result, config_dict)
+    risk_result = pre_check(
+        asset, watchlist, conn, latest_prices, snapshot, regime_result, config_dict, bitpanda_gelistet,
+    )
 
     # R-5.11 Antizyklik-Heuristik.
     anticyclic_context = assess_anticyclic(asset, kraken_client, closes)
@@ -323,7 +338,7 @@ def generate_signal(
     facts = build_facts(
         asset, price_snap, holdings.get(asset.symbol), snapshot, confluence, regime_result,
         regime_profile, risk_result, anticyclic_context, strategien_aktiv, price_age_minutes,
-        market_context,
+        market_context, bitpanda_gelistet,
     )
 
     # R-5.6 Groq-Synthese.
@@ -351,8 +366,15 @@ def generate_signal(
     entry = corrected.get("entry", {})
     stop_loss = corrected.get("stop_loss", {})
     take_profit = corrected.get("take_profit", {})
-    holding_duration = corrected.get("holding_duration", {})
+    halte_kriterium = corrected.get("halte_kriterium", {})
+    top_gruende_by_rang = {g.get("rang"): g for g in corrected.get("top_gruende", [])}
     forecast = corrected.get("forecast", {})
+
+    top_grund_fields = {}
+    for rang in range(1, 6):
+        eintrag = top_gruende_by_rang.get(rang, {})
+        top_grund_fields[f"top_grund_{rang}_kategorie"] = eintrag.get("kategorie")
+        top_grund_fields[f"top_grund_{rang}_text"] = eintrag.get("text")
 
     signal = Signal(
         symbol=asset.symbol,
@@ -372,14 +394,24 @@ def generate_signal(
         position_size_usd=position_size.get("usd"),
         position_size_eur=position_size.get("eur"),
         position_size_note=position_size.get("note"),
-        entry_usd=entry.get("usd"),
-        entry_eur=entry.get("eur"),
-        stop_loss_usd=stop_loss.get("usd"),
-        stop_loss_eur=stop_loss.get("eur"),
-        take_profit_usd=take_profit.get("usd"),
-        take_profit_eur=take_profit.get("eur"),
-        holding_duration=holding_duration.get("bucket"),
-        holding_duration_reason=holding_duration.get("reasoning"),
+        entry_usd_von=entry.get("usd_von"),
+        entry_usd_bis=entry.get("usd_bis"),
+        entry_eur_von=entry.get("eur_von"),
+        entry_eur_bis=entry.get("eur_bis"),
+        stop_loss_usd_von=stop_loss.get("usd_von"),
+        stop_loss_usd_bis=stop_loss.get("usd_bis"),
+        stop_loss_eur_von=stop_loss.get("eur_von"),
+        stop_loss_eur_bis=stop_loss.get("eur_bis"),
+        take_profit_usd_von=take_profit.get("usd_von"),
+        take_profit_usd_bis=take_profit.get("usd_bis"),
+        take_profit_eur_von=take_profit.get("eur_von"),
+        take_profit_eur_bis=take_profit.get("eur_bis"),
+        halte_kriterium_bucket=halte_kriterium.get("bucket"),
+        halte_kriterium_ziel_preis_usd=halte_kriterium.get("ziel_preis_usd"),
+        halte_kriterium_ziel_preis_eur=halte_kriterium.get("ziel_preis_eur"),
+        halte_kriterium_ziel_datum=halte_kriterium.get("ziel_datum"),
+        halte_kriterium_bedingung_text=halte_kriterium.get("bedingung_text"),
+        halte_kriterium_reasoning=halte_kriterium.get("reasoning"),
         key_risks_text="\n".join(corrected.get("key_risks", [])),
         regime=regime_result.regime,
         regime_source=regime_result.source,
@@ -392,6 +424,7 @@ def generate_signal(
         tauschen_target_symbol=corrected.get("tauschen_target_symbol"),
         groq_raw_response=raw_response,
         groq_model="llama-3.3-70b-versatile",
+        **top_grund_fields,
     )
     db.insert_signal(conn, signal)
     return signal

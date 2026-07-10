@@ -120,6 +120,41 @@ class Signal:
     umgesetzt_am: str | None = None
     umgesetzt_menge: float | None = None
     umgesetzt_preis_usd: float | None = None
+    # Entry/Stop-Loss/Take-Profit als Kurszonen statt Einzelwerte (2026-07-10,
+    # Nutzer-Wunsch "von/bis" statt Punktwert). Alte *_usd/*_eur-Spalten bleiben fuer
+    # Bestandszeilen (Append-only, Z-4/B-6) - neue Zeilen befuellen NUR die *_von/*_bis-Spalten.
+    entry_usd_von: float | None = None
+    entry_usd_bis: float | None = None
+    entry_eur_von: float | None = None
+    entry_eur_bis: float | None = None
+    stop_loss_usd_von: float | None = None
+    stop_loss_usd_bis: float | None = None
+    stop_loss_eur_von: float | None = None
+    stop_loss_eur_bis: float | None = None
+    take_profit_usd_von: float | None = None
+    take_profit_usd_bis: float | None = None
+    take_profit_eur_von: float | None = None
+    take_profit_eur_bis: float | None = None
+    # Top-5 rangierte Gruende (2026-07-10) - flach abgelegt analog forecast_bull/base/bear,
+    # rang ergibt sich implizit aus der Spaltennummer.
+    top_grund_1_kategorie: str | None = None
+    top_grund_1_text: str | None = None
+    top_grund_2_kategorie: str | None = None
+    top_grund_2_text: str | None = None
+    top_grund_3_kategorie: str | None = None
+    top_grund_3_text: str | None = None
+    top_grund_4_kategorie: str | None = None
+    top_grund_4_text: str | None = None
+    top_grund_5_kategorie: str | None = None
+    top_grund_5_text: str | None = None
+    # Strukturiertes Halte-Kriterium (2026-07-10), ersetzt holding_duration fuer neue
+    # Signale (Feld bleibt fuer Bestandszeilen erhalten).
+    halte_kriterium_bucket: str | None = None
+    halte_kriterium_ziel_preis_usd: float | None = None
+    halte_kriterium_ziel_preis_eur: float | None = None
+    halte_kriterium_ziel_datum: str | None = None
+    halte_kriterium_bedingung_text: str | None = None
+    halte_kriterium_reasoning: str | None = None
 
 
 @dataclass

@@ -223,6 +223,38 @@ def _migrate_signal_umsetzung_columns(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+_SIGNAL_RANGE_KRITERIUM_NEW_COLUMNS = {
+    "entry_usd_von": "REAL", "entry_usd_bis": "REAL",
+    "entry_eur_von": "REAL", "entry_eur_bis": "REAL",
+    "stop_loss_usd_von": "REAL", "stop_loss_usd_bis": "REAL",
+    "stop_loss_eur_von": "REAL", "stop_loss_eur_bis": "REAL",
+    "take_profit_usd_von": "REAL", "take_profit_usd_bis": "REAL",
+    "take_profit_eur_von": "REAL", "take_profit_eur_bis": "REAL",
+    "top_grund_1_kategorie": "TEXT", "top_grund_1_text": "TEXT",
+    "top_grund_2_kategorie": "TEXT", "top_grund_2_text": "TEXT",
+    "top_grund_3_kategorie": "TEXT", "top_grund_3_text": "TEXT",
+    "top_grund_4_kategorie": "TEXT", "top_grund_4_text": "TEXT",
+    "top_grund_5_kategorie": "TEXT", "top_grund_5_text": "TEXT",
+    "halte_kriterium_bucket": "TEXT",
+    "halte_kriterium_ziel_preis_usd": "REAL",
+    "halte_kriterium_ziel_preis_eur": "REAL",
+    "halte_kriterium_ziel_datum": "TEXT",
+    "halte_kriterium_bedingung_text": "TEXT",
+    "halte_kriterium_reasoning": "TEXT",
+}
+
+
+def _migrate_signal_range_kriterium_columns(conn: sqlite3.Connection) -> None:
+    """Wie _migrate_signal_umsetzung_columns(): signals existierte bereits vor den
+    Entry/Stop/Take-Kurszonen- und Halte-Kriterium-Spalten (2026-07-10, Nutzer-Wunsch
+    von/bis-Ranges statt Einzelwerte + strukturiertes Halte-Kriterium)."""
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(signals)")}
+    for column, sql_type in _SIGNAL_RANGE_KRITERIUM_NEW_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE signals ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
 def _migrate_price_cache_nullable_coingecko_id(conn: sqlite3.Connection) -> None:
     """price_cache.coingecko_id war urspruenglich NOT NULL (reines Krypto-Schema) -
     fuer Multi-Asset-Tracking (Nutzer-Idee 2026-07-09, Aktien/ETF/Rohstoffe ohne
@@ -263,6 +295,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_macro_snapshot_columns(conn)
     _migrate_marktscan_candidates_columns(conn)
     _migrate_signal_umsetzung_columns(conn)
+    _migrate_signal_range_kriterium_columns(conn)
     _migrate_price_cache_nullable_coingecko_id(conn)
 
 
@@ -490,8 +523,16 @@ _SIGNAL_COLUMNS = (
     "short_reasoning", "long_reasoning_technisch", "long_reasoning_fundamental",
     "long_reasoning_makro", "position_size_usd", "position_size_eur", "position_size_note",
     "entry_usd", "entry_eur", "stop_loss_usd", "stop_loss_eur", "take_profit_usd",
-    "take_profit_eur", "holding_duration", "holding_duration_reason", "key_risks_text",
-    "regime", "regime_source", "forecast_bull_text", "forecast_bull_prob_pct",
+    "take_profit_eur", "entry_usd_von", "entry_usd_bis", "entry_eur_von", "entry_eur_bis",
+    "stop_loss_usd_von", "stop_loss_usd_bis", "stop_loss_eur_von", "stop_loss_eur_bis",
+    "take_profit_usd_von", "take_profit_usd_bis", "take_profit_eur_von", "take_profit_eur_bis",
+    "holding_duration", "holding_duration_reason",
+    "halte_kriterium_bucket", "halte_kriterium_ziel_preis_usd", "halte_kriterium_ziel_preis_eur",
+    "halte_kriterium_ziel_datum", "halte_kriterium_bedingung_text", "halte_kriterium_reasoning",
+    "top_grund_1_kategorie", "top_grund_1_text", "top_grund_2_kategorie", "top_grund_2_text",
+    "top_grund_3_kategorie", "top_grund_3_text", "top_grund_4_kategorie", "top_grund_4_text",
+    "top_grund_5_kategorie", "top_grund_5_text",
+    "key_risks_text", "regime", "regime_source", "forecast_bull_text", "forecast_bull_prob_pct",
     "forecast_base_text", "forecast_base_prob_pct", "forecast_bear_text",
     "forecast_bear_prob_pct", "tauschen_target_symbol", "gate_passed", "gate_reason",
     "risk_veto", "risk_veto_reason", "facts_json", "groq_raw_response", "groq_model",

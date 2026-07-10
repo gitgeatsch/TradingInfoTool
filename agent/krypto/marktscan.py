@@ -411,6 +411,12 @@ def run_scan(
                         "Prozentpunkte) - auf watchlist_wuerdig heruntergestuft."
                     )
                     einstufung = "watchlist_wuerdig"
+            # Bitpanda-Downgrade (2026-07-10, analog Small-Cap-Budget-Downgrade oben):
+            # ein nicht bei Bitpanda gelisteter Coin ist auf der Handelsboerse des
+            # Nutzers nicht kaufbar, gilt fuer JEDEN Tier (nicht nur tier3) - agent/
+            # risk_gate.py::pre_check() wuerde einen Kaufversuch ohnehin veto'en.
+            if einstufung == "kaufkandidat" and bitpanda_gelistet is False:
+                einstufung = "watchlist_wuerdig"
         else:
             score_gesamt = None
             einstufung, einstufung_begruendung = "kein_treffer", f"Stufe A nicht bestanden: {stufe_a.begruendung}"

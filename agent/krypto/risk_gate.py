@@ -85,6 +85,7 @@ def pre_check(
     technical_snapshot: TechnicalSnapshot,
     regime_result,
     config: dict,
+    bitpanda_gelistet: bool | None,
 ) -> RiskPreCheckResult:
     checks: list[str] = []
     veto_reasons: list[str] = []
@@ -131,6 +132,22 @@ def pre_check(
         checks.append("RM-4: FEHLGESCHLAGEN - Cash-Reserve unter Minimum")
     else:
         checks.append(f"RM-4: OK - Cash-Reserve {cash_reserve_pct_current:.1f}%")
+
+    # RM-Bitpanda: nicht auf Bitpanda (der tatsaechlichen Handelsboerse des Nutzers)
+    # gelistete Krypto-Assets koennen nicht gekauft werden - Veto analog RM-1/2/4/5.
+    # Nur fuer assetklasse=="krypto" relevant (Aktien/ETF/Rohstoffe: kein Vergleich
+    # sinnvoll, siehe ui/app.py). bitpanda_gelistet is None (Abruf fehlgeschlagen)
+    # -> kein Veto (P-10: unbekannt != Ausschlussgrund).
+    if asset.assetklasse == "krypto" and bitpanda_gelistet is False:
+        veto_reasons.append(
+            f"{asset.symbol} ist nicht bei Bitpanda gelistet - auf der Handelsbörse "
+            "des Nutzers aktuell nicht kaufbar"
+        )
+        checks.append("RM-Bitpanda: FEHLGESCHLAGEN - nicht bei Bitpanda gelistet")
+    elif asset.assetklasse == "krypto" and bitpanda_gelistet is True:
+        checks.append("RM-Bitpanda: OK - bei Bitpanda gelistet")
+    else:
+        checks.append("RM-Bitpanda: übersprungen (nicht krypto oder Status unbekannt)")
 
     # RM-2: max. Allokation je Einzelwert. Core-Assets (BTC/ETH) haben eine eigene,
     # hoehere Grenze (2026-07-07 eingefuehrt, vorlaeufig - Thema "BTC hat den Lead"
@@ -204,7 +221,9 @@ _BUY_ACTIONS = ("KAUFEN", "NACHKAUFEN")
 def post_check(parsed: dict, pre_result: RiskPreCheckResult, regime_result, config: dict) -> dict:
     """Nimmt die bereits validierte (siehe agent/analyst.py) Groq-Antwort und erzwingt
     RM-1/-2/-4/-5, Mindest-Konfidenz (R-5.10) und CRV >= 2.0 (Z-2) noch einmal
-    deterministisch. Gibt die (ggf. korrigierte) Antwort + Veto-Metadaten zurueck."""
+    deterministisch. Klemmt zusaetzlich eine zu gross vorgeschlagene Positionsgroesse
+    auf die RM-1/RM-2-Obergrenze (Korrektur, kein Veto). Gibt die (ggf. korrigierte)
+    Antwort + Veto-Metadaten zurueck."""
     result = dict(parsed)
     risk_veto = False
     risk_veto_reason = None
@@ -228,16 +247,49 @@ def post_check(parsed: dict, pre_result: RiskPreCheckResult, regime_result, conf
             action = "HALTEN"
 
     if action in _BUY_ACTIONS:
-        entry = (result.get("entry") or {}).get("usd")
-        stop = (result.get("stop_loss") or {}).get("usd")
-        take = (result.get("take_profit") or {}).get("usd")
-        if entry and stop and take and entry != stop:
-            crv = (take - entry) / (entry - stop) if entry > stop else None
+        entry = result.get("entry") or {}
+        stop = result.get("stop_loss") or {}
+        take = result.get("take_profit") or {}
+        entry_von, entry_bis = entry.get("usd_von"), entry.get("usd_bis")
+        stop_von = stop.get("usd_von")
+        take_von = take.get("usd_von")
+        if entry_von is not None and entry_bis is not None and stop_von is not None and take_von is not None:
+            entry_mid = (entry_von + entry_bis) / 2
+            crv = (take_von - entry_mid) / (entry_mid - stop_von) if entry_mid > stop_von else None
             if crv is None or crv < CRV_MINIMUM:
                 risk_veto = True
-                reason = f"CRV {crv} unter Minimum {CRV_MINIMUM} (Z-2)"
+                reason = (
+                    f"CRV {crv} unter Minimum {CRV_MINIMUM} (Z-2, konservativ: "
+                    f"Entry-Mitte {entry_mid}, ungünstigster Stop {stop_von}, ungünstigstes Ziel {take_von})"
+                )
                 risk_veto_reason = f"{risk_veto_reason}; {reason}" if risk_veto_reason else reason
                 action = "HALTEN"
+
+    # RM-1/RM-2: Positionsgroesse deterministisch auf die von pre_check() berechnete
+    # Obergrenze klemmen, statt bei Ueberschreitung die ganze Kauf-Idee zu veto'en -
+    # eine zu gross vorgeschlagene Positionsgroesse macht die Idee nicht ungueltig,
+    # nur die Groesse falsch (anders als CRV/Konfidenz/Bitpanda-Veto oben). Bisher nur
+    # als Fakt an Groq gegeben (risiko_check.max_positionsgroesse_*), aber nie
+    # nachtraeglich erzwungen - diese Luecke schliesst dieser Block. Transparent im
+    # Notizfeld vermerkt, damit der Nutzer sieht, dass korrigiert wurde.
+    if action in _BUY_ACTIONS:
+        position_size = result.get("position_size") or {}
+        proposed_usd = position_size.get("usd")
+        max_usd = pre_result.max_position_size_usd
+        if proposed_usd is not None and max_usd is not None and proposed_usd > max_usd:
+            fx = None
+            proposed_eur = position_size.get("eur")
+            if proposed_eur is not None and proposed_usd:
+                fx = proposed_eur / proposed_usd
+            clamp_note = (
+                f"Von {proposed_usd:.2f} USD auf Risiko-Obergrenze {max_usd:.2f} USD "
+                "gekürzt (RM-1/RM-2, deterministisch erzwungen)."
+            )
+            position_size["usd"] = max_usd
+            position_size["eur"] = max_usd * fx if fx is not None else pre_result.max_position_size_eur
+            existing_note = position_size.get("note")
+            position_size["note"] = f"{existing_note} {clamp_note}" if existing_note else clamp_note
+            result["position_size"] = position_size
 
     # R-5.9: TAUSCHEN statt VERKAUFEN, wenn ein Swap-Ziel genannt wurde (P-6) -
     # mechanisch durchgesetzt statt nur per Prompt erhofft.
