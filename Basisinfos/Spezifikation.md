@@ -650,9 +650,11 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
   "Bestände aus Datei importieren…" (Filedialog) rundet das zum echten
   Export→Bearbeiten→Import-Workflow ab, ohne dass der Nutzer die exportierte Datei
   manuell über Assets.xlsx kopieren muss. **Dritter, hybrider Pfad ERGÄNZT
-  (2026-07-10):** wer einen `BITPANDA_API_KEY` besitzt, kann Krypto-Bestände UND
-  EUR-Fiat-Cash live von Bitpanda abgleichen ("Datei → Bestände von Bitpanda
-  abgleichen", `importer/bitpanda_sync.py::sync_from_bitpanda()`) — ausschließlich
+  (2026-07-10, Korrektur zum Umfang siehe unten):** wer einen `BITPANDA_API_KEY`
+  besitzt, kann **alle** Bestände (Krypto **und** Aktien/ETF/Rohstoffe, siehe
+  Korrektur) UND EUR-Fiat-Cash live von Bitpanda abgleichen ("Datei → Bestände von
+  Bitpanda abgleichen", `importer/bitpanda_sync.py::sync_from_bitpanda()`) —
+  ausschließlich
   GET-Aufrufe (`api/bitpanda.py::get_fiat_wallets()`/`get_crypto_wallets()`, konform
   mit P-7: über Bitpanda-API-Keys besteht laut Doku grundsätzlich keine Order-/
   Auszahlungsfähigkeit). Neuer `Holding.source`-Wert `"bitpanda_sync"`. Atomar (P-10):
@@ -685,6 +687,19 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
   fälschlich als verkauft in die Bestände geschrieben werden. Live verifiziert: ein
   zweiter Sync-Lauf ließ alle neun betroffenen Symbole korrekt unverändert
   (`synced_count: 0`, alle als Rückgang vorgemerkt).
+  **Korrektur zum Umfang (2026-07-10, vom Nutzer richtiggestellt):** ursprünglich
+  als "nur Krypto" gebaut (`GET /wallets` zeigt nur die Krypto-Gruppe) — Bitpanda
+  führt aber Aktien/ETF/Rohstoffe im selben Account, über `GET /asset-wallets`
+  unter separaten Gruppen (`commodity`/`index`/`security`/`equity_security`, je mit
+  Untergruppen wie `equity_stock`/`equity_etf`). `api/bitpanda.py::
+  get_non_crypto_wallets()` deckt das jetzt ab, inkl. zweier live gefundener
+  Symbol-Abweichungen (`BITPANDA_NON_CRYPTO_WALLET_SYMBOL_OVERRIDES`: Bitpanda
+  "VST-US"→intern "VST", Bitpanda "IS0C"→intern "ISOC"). Dieselbe Zuwachs-/
+  Rückgangs-Logik gilt jetzt einheitlich für alle Assetklassen. Nach jedem Sync
+  wird automatisch auch `Assets_export.xlsx` aktualisiert (`ui/app.py::
+  _sync_bitpanda()`), ohne die Original-Datei anzutasten. Live verifiziert: alle 13
+  Non-Krypto-Assets korrekt gefunden und synchronisiert, `synced_count: 0` bei
+  einem Wiederholungslauf nach Abgleich mit der echten `Assets.xlsx`.
 - **B-6** Persistenz erweitert um: neu vom Marktscan entdeckte Assets (Kap. 13),
   Regime-Verlauf und alle Overrides (Quelle, Grund, Zeitpunkt, Dauer — Kap. 14) sowie
   antizyklische Kaufpläne/Tranchen-Status (Kap. 15) — für Nachvollziehbarkeit (Z-4).

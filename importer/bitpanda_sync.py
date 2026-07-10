@@ -1,8 +1,16 @@
-"""Bitpanda-Live-Abgleich der Krypto-Bestaende + EUR-Fiat-Cash (2026-07-10, Nutzer
-besitzt bereits einen API-Key). Bewusst ein DRITTER, unabhaengiger Pfad neben dem
-bestehenden Excel-Import/-Export (importer/excel_import.py) - der bleibt vollstaendig
-als Backup/Fallback erhalten (Nutzer-Wunsch: Bitpanda hat oefter Ausfaelle, und
-Nicht-Krypto-Assets/Aktien/ETF/Rohstoffe sind ohnehin nicht auf Bitpanda gelistet).
+"""Bitpanda-Live-Abgleich der Bestaende (Krypto UND Aktien/ETF/Rohstoffe, siehe
+Korrektur unten) + EUR-Fiat-Cash (2026-07-10, Nutzer besitzt bereits einen API-Key).
+Bewusst ein DRITTER, unabhaengiger Pfad neben dem bestehenden Excel-Import/-Export
+(importer/excel_import.py) - der bleibt vollstaendig als Backup/Fallback erhalten
+(Nutzer-Wunsch: Bitpanda hat oefter Ausfaelle).
+
+Korrektur (2026-07-10, vom Nutzer richtiggestellt): urspruenglich als "nur Krypto"
+gebaut, da GET /wallets nur die Krypto-Gruppe zeigt - Bitpanda fuehrt aber auch
+Aktien/ETF/Rohstoffe im selben Account (GET /asset-wallets, separate Gruppen), live
+gegen den echten Account verifiziert (alle 13 Non-Krypto-Watchlist-Assets gefunden).
+Beide Wallet-Quellen (api.bitpanda.get_crypto_wallets() + get_non_crypto_wallets())
+werden deshalb kombiniert, dieselbe Zuwachs-/Rueckgangs-Logik gilt fuer alle
+Assetklassen einheitlich.
 
 Atomaritaet (P-10): ALLE Netzwerk-Aufrufe passieren vor jedem DB-Write. Schlaegt
 irgendein Call fehl, propagiert die Exception zum Aufrufer und es wurde noch nichts
@@ -19,6 +27,7 @@ from api.bitpanda import (
     BitpandaAsset,
     get_crypto_wallets,
     get_fiat_wallets,
+    get_non_crypto_wallets,
     resolve_bitpanda_symbol_to_watchlist,
 )
 
@@ -80,11 +89,14 @@ def sync_from_bitpanda(
     conn: sqlite3.Connection, api_key: str, listed_assets: list[BitpandaAsset]
 ) -> BitpandaSyncResult:
     watchlist = config.get_watchlist()
-    crypto_symbols = {a.symbol for a in watchlist if a.assetklasse == "krypto"}
+    watchlist_symbols = {a.symbol for a in watchlist}
 
     # Netzwerk-Aufrufe zuerst - noch keine DB-Schreibung (Atomaritaet, siehe Docstring).
     fiat_wallets = get_fiat_wallets(api_key)
-    crypto_wallets = get_crypto_wallets(api_key)
+    # Krypto- UND Non-Krypto-Wallets kombiniert (2026-07-10, Korrektur: Bitpanda
+    # fuehrt Aktien/ETF/Rohstoffe im selben Account) - dieselbe Zuwachs-/Rueckgangs-
+    # Logik unten gilt fuer alle Assetklassen einheitlich.
+    all_wallets = get_crypto_wallets(api_key) + get_non_crypto_wallets(api_key)
 
     result = BitpandaSyncResult()
     existing_holdings = {h.symbol: h for h in db.get_all_holdings(conn)}
@@ -99,17 +111,18 @@ def sync_from_bitpanda(
             result.cash_reserve_old_eur = old_cash
             result.cash_reserve_new_eur = eur_wallet.balance
 
-    # --- Krypto-Bestaende ---
+    # --- Bestaende (Krypto + Aktien/ETF/Rohstoffe, siehe Modul-Docstring) ---
     matched_symbols: set[str] = set()
-    for wallet in crypto_wallets:
+    for wallet in all_wallets:
         internal_symbol = resolve_bitpanda_symbol_to_watchlist(wallet.symbol, watchlist, listed_assets)
         if internal_symbol is None:
             if wallet.balance > 0:
                 result.unmatched_bitpanda_symbols.append(f"{wallet.symbol} ({wallet.balance:g})")
             continue
-        if internal_symbol not in crypto_symbols:
-            # Sollte durch resolve_bitpanda_symbol_to_watchlist() nicht vorkommen (nur
-            # Krypto-Assets sind bei Bitpanda gelistet), aber defensiv geprueft (P-10).
+        if internal_symbol not in watchlist_symbols:
+            # Sollte durch resolve_bitpanda_symbol_to_watchlist() nicht vorkommen
+            # (das Symbol kommt ja aus der watchlist selbst), aber defensiv
+            # geprueft (P-10).
             continue
 
         matched_symbols.add(internal_symbol)
@@ -175,7 +188,7 @@ def sync_from_bitpanda(
     # geloescht/API liefert sie nicht mehr) - nur gemeldet, NICHT automatisch auf 0
     # gesetzt (unbekannt != verkauft, P-10).
     for symbol, holding in existing_holdings.items():
-        if holding.source == SOURCE_BITPANDA_SYNC and symbol in crypto_symbols and symbol not in matched_symbols:
+        if holding.source == SOURCE_BITPANDA_SYNC and symbol in watchlist_symbols and symbol not in matched_symbols:
             result.stale_bitpanda_sync_symbols.append(symbol)
 
     return result

@@ -171,6 +171,46 @@ def get_crypto_wallets(api_key: str, session: requests.Session | None = None) ->
     return [BitpandaCryptoWallet(symbol=sym, balance=bal, name=names.get(sym)) for sym, bal in balances.items()]
 
 
+# Nutzer-Korrektur (2026-07-10): Bitpanda fuehrt Aktien/ETF/Rohstoffe im selben
+# Account wie Krypto - GET /wallets zeigt nur die Krypto-Gruppe, die anderen
+# Assetklassen stecken in GET /asset-wallets unter separaten Gruppen (commodity,
+# index, security, equity_security), je mit eigenen Untergruppen (z.B.
+# equity_security.equity_stock fuer Aktien, equity_security.equity_etf fuer ETFs).
+# Live gegen den echten Account geprueft: alle 13 Non-Krypto-Watchlist-Assets
+# gefunden, zwei mit abweichendem Wallet-Symbol (siehe Override-Dict unten).
+BITPANDA_NON_CRYPTO_WALLET_SYMBOL_OVERRIDES = {
+    "VST-US": "VST",
+    "IS0C": "ISOC",  # Ziffer Null statt Buchstabe O im Bitpanda-Wallet-Symbol
+}
+_NON_CRYPTO_ASSET_WALLET_GROUPS = ("commodity", "index", "security", "equity_security")
+
+
+def get_non_crypto_wallets(api_key: str, session: requests.Session | None = None) -> list[BitpandaCryptoWallet]:
+    """GET /asset-wallets - Aktien-/ETF-/Rohstoff-Bestaende des Nutzers, nur lesend.
+    Wallet-Symbole werden ueber BITPANDA_NON_CRYPTO_WALLET_SYMBOL_OVERRIDES auf die
+    internen config.yaml-Symbole abgebildet (analog BITPANDA_SYMBOL_OVERRIDES bei
+    is_listed()). Geloeschte Wallets uebersprungen, mehrere Wallets desselben
+    (abgebildeten) Symbols aufsummiert - identisches Verhalten zu
+    get_crypto_wallets()."""
+    session = session or requests.Session()
+    payload = _authenticated_get("/asset-wallets", api_key, session)
+    top_level = payload["data"]["attributes"]
+    balances: dict[str, float] = {}
+    names: dict[str, str] = {}
+    for group_name in _NON_CRYPTO_ASSET_WALLET_GROUPS:
+        group = top_level.get(group_name, {})
+        for sub in group.values():
+            for entry in sub.get("attributes", {}).get("wallets", []):
+                attrs = entry["attributes"]
+                if attrs.get("deleted"):
+                    continue
+                raw_symbol = attrs["cryptocoin_symbol"]
+                symbol = BITPANDA_NON_CRYPTO_WALLET_SYMBOL_OVERRIDES.get(raw_symbol, raw_symbol)
+                balances[symbol] = balances.get(symbol, 0.0) + float(attrs["balance"])
+                names.setdefault(symbol, attrs.get("name"))
+    return [BitpandaCryptoWallet(symbol=sym, balance=bal, name=names.get(sym)) for sym, bal in balances.items()]
+
+
 def resolve_bitpanda_symbol_to_watchlist(
     bitpanda_symbol: str,
     watchlist: list,

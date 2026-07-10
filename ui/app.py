@@ -345,6 +345,17 @@ class TradingInfoToolApp(tk.Tk):
         if result.cash_reserve_updated:
             self._portfolio_view.reload_cash_reserve_from_db()
 
+        # Nutzer-Wunsch (2026-07-10): nach jedem Sync automatisch die Export-Datei
+        # aktualisieren, damit sich der Live-Abgleich auch in Excel niederschlaegt -
+        # bewusst NICHT die handgepflegte Original-Assets.xlsx (die bleibt wie
+        # bisher unangetastet), sondern dieselbe separate Assets_export.xlsx wie
+        # beim manuellen "Bestände exportieren…".
+        export_conn = self._db_conn_factory()
+        try:
+            export_holdings(export_conn)
+        finally:
+            export_conn.close()
+
         lines = [f"{result.synced_count} Bestände aktualisiert."]
         if result.updated_holdings:
             lines.append("\nGeänderte Bestände:\n" + "\n".join(result.updated_holdings))
@@ -374,7 +385,8 @@ class TradingInfoToolApp(tk.Tk):
         if result.warnings:
             lines.append("\nWarnungen:\n" + "\n".join(result.warnings))
         lines.append(
-            "\nHinweis: Es werden ausschließlich lesende Abfragen gemacht (kein Order-/"
+            f"\n'{EXPORT_XLSX_PATH.name}' wurde automatisch aktualisiert."
+            "\n\nHinweis: Es werden ausschließlich lesende Abfragen gemacht (kein Order-/"
             "Auszahlungszugriff über Bitpanda-API-Keys möglich)."
         )
         messagebox.showinfo("Bestände von Bitpanda abgleichen", "\n".join(lines))
@@ -385,8 +397,19 @@ class TradingInfoToolApp(tk.Tk):
         if result.decreased_holdings_needs_confirmation:
             BitpandaDecreaseConfirmDialog(
                 self, self._db_conn_factory, result.decreased_holdings_needs_confirmation,
-                on_applied=self._portfolio_view.refresh,
+                on_applied=self._after_decrease_applied,
             )
+
+    def _after_decrease_applied(self) -> None:
+        """Callback fuer BitpandaDecreaseConfirmDialog - Portfolio-Ansicht neu laden
+        UND die Export-Datei erneut schreiben, damit bestaetigte Rueckgaenge sich
+        ebenfalls dort niederschlagen (Nutzer-Wunsch 2026-07-10, siehe _sync_bitpanda())."""
+        self._portfolio_view.refresh()
+        conn = self._db_conn_factory()
+        try:
+            export_holdings(conn)
+        finally:
+            conn.close()
 
 
 class BitpandaMatchConfirmDialog(tk.Toplevel):

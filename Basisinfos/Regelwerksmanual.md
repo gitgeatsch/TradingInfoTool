@@ -58,23 +58,28 @@ Stablecoin-Bestände (EURCV) als "Cash" — echtes EUR-Guthaben auf der Börse (
 Bitpanda) war ihr komplett unbekannt, weder als Reserve noch im Portfolio-Gesamtwert.
 Jetzt gibt es dafür ein manuelles Eingabefeld im Portfolio-Tab ("Fiat-Guthaben auf
 Börse"), das du gelegentlich aktuell hältst — kein Börsen-API-Zugriff nötig (P-7 bleibt
-gewahrt). Zusätzlich wurde die Formel von reinem Prozentsatz auf **Hybrid** umgestellt:
+gewahrt). **Korrektur (2026-07-10):** Bitpanda führt auch Aktien/ETF/Rohstoffe im
+selben Account — der Live-Abgleich deckt seitdem alle Assetklassen ab, nicht nur
+Krypto (siehe unten). Zusätzlich wurde die Formel von reinem Prozentsatz auf
+**Hybrid** umgestellt:
 erforderlich ist das *Größere* aus 10 % des Portfolios und einem festen Mindestbetrag
 (aktuell 2000 €, `cash_reserve_min_fixed_eur` in `config.yaml`) — reiner Prozentsatz
 hätte bei kleinen Portfolios einen zu dünnen Puffer erlaubt, ein reiner Festbetrag hätte
 bei wachsendem Portfolio nicht mitskaliert.
 
-**Optionaler Live-Abgleich mit Bitpanda (2026-07-10, ERGÄNZT).** Wer bereits einen
-Bitpanda-API-Key besitzt (`BITPANDA_API_KEY` in `.env`), kann über "Datei → Bestände
-von Bitpanda abgleichen" Krypto-Bestände UND das EUR-Fiat-Guthaben automatisch von der
-Börse abrufen (rein lesend — laut Bitpanda-Doku besteht über API-Keys grundsätzlich
-keine Order-/Auszahlungsfähigkeit, unabhängig vom gewählten Scope). Das manuelle
-Eingabefeld und der bestehende Excel-Import/Export bleiben **vollständig als Backup**
-erhalten (bewusst hybrid, da Bitpanda öfter Ausfälle hat und Nicht-Krypto-Assets wie
-Aktien/ETF/Rohstoffe ohnehin nicht auf Bitpanda gelistet sind) — der Sync ist rein
-manuell ausgelöst, kein Hintergrund-Job. Erkennt der Abgleich, dass sich ein Bestand
-passend zu einem noch offenen Signal geändert hat, wird das als Vorschlag angezeigt
-(nie automatisch bestätigt).
+**Optionaler Live-Abgleich mit Bitpanda (2026-07-10, ERGÄNZT + KORRIGIERT).** Wer
+bereits einen Bitpanda-API-Key besitzt (`BITPANDA_API_KEY` in `.env`), kann über
+"Datei → Bestände von Bitpanda abgleichen" **alle** Bestände (Krypto **und**
+Aktien/ETF/Rohstoffe, da Bitpanda diese im selben Account führt) UND das EUR-Fiat-
+Guthaben automatisch von der Börse abrufen (rein lesend — laut Bitpanda-Doku besteht
+über API-Keys grundsätzlich keine Order-/Auszahlungsfähigkeit, unabhängig vom
+gewählten Scope). Das manuelle Eingabefeld und der bestehende Excel-Import/Export
+bleiben **vollständig als Backup** erhalten (bewusst hybrid, da Bitpanda öfter
+Ausfälle hat) — der Sync ist rein manuell ausgelöst, kein Hintergrund-Job. Nach jedem
+Sync wird automatisch auch `Assets_export.xlsx` aktualisiert (beide Tabs), ohne die
+handgepflegte Original-`Assets.xlsx` anzutasten. Erkennt der Abgleich, dass sich ein
+Bestand passend zu einem noch offenen Signal geändert hat, wird das als Vorschlag
+angezeigt (nie automatisch bestätigt).
 
 **Wichtige Einschränkung, live entdeckt (2026-07-10): gestakte Bestände sind über
 diese API nicht sichtbar.** Drei Endpunkte live geprüft (`/wallets`, `/asset-wallets`,
