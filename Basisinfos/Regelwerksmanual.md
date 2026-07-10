@@ -292,7 +292,53 @@ Kauf-Signale, bevor er sinnvoll ansetzen kann.
 
 ---
 
-## 8. Strategie-Katalog (S-1 bis S-6)
+## 8. Lokale KI-Ebene (P-8) — Architektur vorbereitet, noch nicht aktiv
+
+**Hintergrund:** P-8 verlangt seit Projektbeginn, dass der Agent perspektivisch
+auch **ohne** externen KI-Zugang funktionieren können soll. Groq ist bereits
+vollständig optional (kein `GROQ_API_KEY` → Signale-Tab bleibt nutzbar, nur die
+Berechnung ist deaktiviert) — aber es gab bisher **keine echte lokale
+Alternative**, nur eine nie umgesetzte Absichtserklärung. Das ist jetzt
+richtiggestellt: entweder etwas ist gebaut, oder es steht offen als geplant da.
+
+**Was heute (2026-07-10) tatsächlich gemacht wurde — ein Architektur-Seam, kein
+lauffähiges lokales Modell:**
+- Neuer Konfig-Schalter `config.yaml agent.ai_provider` (`groq` oder `lokal`).
+- Neue Datei `api/local_model.py` mit `LocalModelClient` — hat exakt dieselbe
+  Schnittstelle wie der bestehende `GroqClient` (`.chat(messages, model,
+  temperature, response_format)`). Die eigentliche Signal-Pipeline
+  (`agent/krypto/analyst.py::call_groq_for_signal()`) ruft ohnehin nur diese
+  Methode auf — sie war also bereits vorher "egal welches Modell", nur nie so
+  dokumentiert. Ein künftiges echtes lokales Modell ersetzt später nur diese
+  eine Klasse, der Rest der Pipeline ändert sich nicht.
+- Aktuell wirft `LocalModelClient.chat()` bewusst einen klaren Fehler
+  (`NotImplementedError`), falls `ai_provider: lokal` gesetzt wird — kein
+  stilles Scheitern.
+
+**Modell-/Runtime-Entscheidung getroffen, aber bewusst nicht installiert:**
+**llama.cpp (über `llama-cpp-python`) + ein Phi-4-mini-Modell im GGUF-Format +
+GBNF-Grammar-Constraint** — nicht Microsofts eigener „ONNX Runtime GenAI"-Pfad.
+Grund: unser Signal-Schema ist sehr streng (genau 5 rangierte Gründe, feste
+Kategorien, Kurszonen mit `von <= bis`, bedingte Pflichtfelder im
+Halte-Kriterium) — selbst Groq (ein 70-Milliarden-Parameter-Modell) braucht
+dafür gelegentlich einen zweiten Versuch. Ein kleines lokales Modell (3-4
+Milliarden Parameter) bräuchte vermutlich noch öfter einen Retry, wenn es sich
+nur auf trainiertes Verhalten verlässt. GBNF-Grammar-Constraint erzwingt
+gültiges JSON bereits beim Erzeugen jedes einzelnen Wortes — eine strukturelle
+Garantie, kein bloß antrainiertes Verhalten.
+
+**Warum die eigentliche Installation bewusst zurückgestellt bleibt:** ein
+int4-quantisiertes Modell dieser Größe bräuchte schätzungsweise 2,5-3,5 GB RAM
+allein für die Modell-Gewichte. Auf der aktuellen 24/7-Notebook-Hardware (8 GB
+RAM) würde das den bisher komfortablen Speicherpuffer spürbar einengen — und
+ein Zuverlässigkeitstest auf beengter
+Hardware würde ohnehin ein zu pessimistisches Bild liefern. **Empfehlung:**
+diesen Schritt erst nach einem Hardware-Upgrade tatsächlich umsetzen, dann mit
+realistischen Testbedingungen.
+
+---
+
+## 9. Strategie-Katalog (S-1 bis S-6)
 
 Pro Asset wählbar, der Agent schlägt die zur Marktlage passende Strategie vor.
 
@@ -307,7 +353,7 @@ Pro Asset wählbar, der Agent schlägt die zur Marktlage passende Strategie vor.
 
 ---
 
-## 9. Wo diese Regeln im Code stehen (für Nachvollziehbarkeit)
+## 10. Wo diese Regeln im Code stehen (für Nachvollziehbarkeit)
 
 - `Basisinfos/config.yaml` — alle einstellbaren Zahlen (Abschnitte `risiko`, `regime`, `antizyklisch`, `strategien`)
 - `agent/krypto/risk_gate.py` — harte Durchsetzung von RM-1/2/4/5, Z-2 (CRV), Positionsgrößen-Clamp, Bitpanda-Veto
@@ -318,10 +364,11 @@ Pro Asset wählbar, der Agent schlägt die zur Marktlage passende Strategie vor.
 - `scheduler/background.py` — alle automatischen Jobs (Abschnitt 6)
 - `importer/bitpanda_sync.py`, `importer/excel_import.py` — manuelle Bestands-Abgleiche (Abschnitt 6)
 - `agent/krypto/backward_tracking.py` — Signal-Ergebnis-Prüfung (Abschnitt 7, Selbstverifikations-Vision Schritt 2)
+- `api/local_model.py` — lokale KI-Ebene, Architektur-Seam (Abschnitt 8, noch nicht aktiv)
 
 ---
 
-## 10. Offene / vorläufige Werte — die naheliegendsten Kandidaten für spätere Anpassung
+## 11. Offene / vorläufige Werte — die naheliegendsten Kandidaten für spätere Anpassung
 
 Diese Werte sind laut Spezifikation ausdrücklich **vorläufig** (`[OFFEN]`-markiert) und
 noch nicht durch echte Ergebnisse verifiziert — sie sind der wahrscheinlichste

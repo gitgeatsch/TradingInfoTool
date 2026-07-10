@@ -42,8 +42,18 @@ def main() -> None:
     else:
         logger.info("Kein CoinGecko API-Key gesetzt - anonymer Zugriff (30 Req/Min).")
 
+    # KI-Ebene: config.yaml agent.ai_provider waehlt zwischen "groq" (aktiv) und
+    # "lokal" (Architektur-Seam vorbereitet, siehe api/local_model.py - noch nicht
+    # implementiert, wirft bei tatsaechlicher Nutzung bewusst NotImplementedError
+    # statt still zu scheitern, P-10).
+    ai_provider = config.load_config().get("agent", {}).get("ai_provider", "groq")
     groq_api_key = os.environ.get("GROQ_API_KEY")
-    if groq_api_key:
+    if ai_provider == "lokal":
+        from api.local_model import LocalModelClient
+
+        groq_client = LocalModelClient()
+        logger.info("KI-Ebene: lokal (config.yaml agent.ai_provider) - Architektur-Seam, noch nicht implementiert.")
+    elif groq_api_key:
         groq_client = GroqClient(api_key=groq_api_key)
         logger.info("Groq API-Key gefunden - Signal-Pipeline (Phase 3) verfügbar.")
     else:

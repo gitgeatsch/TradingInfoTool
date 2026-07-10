@@ -400,6 +400,10 @@ agent:
     makro: 0.3
     sentiment: 0.2                     # niedrig - Manipulationsgefahr
   forecast_szenarien: [bull, base, bear]
+  # KI-Ebene (P-8, Architektur-Seam 2026-07-10, siehe api/local_model.py):
+  # "groq" (aktiv) oder "lokal" (vorbereitet, noch NICHT implementiert - erst nach
+  # Hardware-Upgrade des Notebooks, siehe api/local_model.py fuer die Begruendung).
+  ai_provider: groq
 
 # --- Datenquellen (siehe Spezifikation Kap. 8) ---
 datenquellen:

@@ -83,6 +83,29 @@ Messbare Zielgrößen (Werte in `config.yaml → ziele`):
   ohne Kostenschranke). Grundsatz dahinter: kostenlose Optionen zuerst voll ausschöpfen
   (lokal UND remote parallel), kostenpflichtige Quellen (z. B. Claude API) erst wenn
   eine konkrete Aufgabe die Qualität von Groq/lokalem Modell nachweislich übersteigt.
+  **Ehrlichkeits-Korrektur (2026-07-10):** die obige Aussage "lokal via Phi-4-mini
+  voll funktionsfähig" war zum Zeitpunkt 2026-07-07 eine Absicht, keine Tatsache —
+  es existierte nie tatsächlicher Code dafür (nur ein Kommentar-Verweis in
+  `api/groq.py`), `requirements.txt` enthält bis heute keine lokale-ML-Bibliothek.
+  **Architektur-Seam jetzt nachgeholt** (2026-07-10, siehe `api/local_model.py`):
+  `agent/krypto/analyst.py::call_groq_for_signal()` ruft bereits ausschließlich
+  `.chat(messages, model, temperature, response_format)` auf einem beliebigen
+  Client auf — war also schon vorher provider-agnostisch, ohne dass das
+  dokumentiert war. Neuer Konfig-Schalter `config.yaml agent.ai_provider`
+  (`groq` | `lokal`), `main.py` wählt entsprechend zwischen `GroqClient` und dem
+  neuen `LocalModelClient`-Platzhalter. Modell-/Runtime-Entscheidung getroffen:
+  **llama-cpp-python + Phi-4-mini-GGUF + GBNF-Grammar-Constraint** (nicht ONNX
+  Runtime GenAI/Microsofts eigener Pfad) — Begründung: unser SYSTEM_PROMPT-Schema
+  ist streng validiert (exakt 5 `top_gruende`, Enum-Werte, `von<=bis`-Zonen,
+  bedingte Pflichtfelder), GBNF erzwingt gültiges JSON strukturell auf
+  Token-Ebene, während natives Tool-Calling nur trainiertes Verhalten ohne
+  harte Garantie ist. **Bewusst NICHT installiert/umgesetzt** (Stufe 2, erst
+  nach Hardware-Upgrade des 24/7-Notebooks, aktuell 8 GB RAM) — ein
+  int4-quantisiertes 3-4B-Modell bräuchte schätzungsweise 2,5-3,5 GB RAM allein
+  für die Gewichte, das würde den aktuell komfortablen Speicherpuffer spürbar
+  einengen, und ein JSON-Zuverlässigkeitstest auf beengter Hardware wäre
+  ohnehin nicht aussagekräftig. `LocalModelClient.chat()` wirft bis dahin
+  bewusst `NotImplementedError` (P-10: kein stilles Scheitern).
 - **P-10** Fail-Loud statt Fail-Silent bei Datenproblemen — Ausfälle, fehlende oder
   veraltete Daten (z. B. CoinGecko nicht erreichbar, Preis-Cache veraltet, zu wenig
   Historie für einen Indikator) dürfen **niemals** zu stillschweigend falschen oder
