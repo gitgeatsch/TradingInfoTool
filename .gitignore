@@ -23,6 +23,9 @@ node_modules/
 .DS_Store
 Thumbs.db
 
+# Office-Sperrdateien (entstehen beim Oeffnen von .docx/.xlsx in Word/Excel)
+~$*
+
 # Claude
 .claude/
 CLAUDE.md

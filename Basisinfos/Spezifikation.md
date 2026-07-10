@@ -1019,6 +1019,19 @@ seinen Emotionen scheitert. Grundsatz: **antizyklisch, aber bedingt.**
 
 ## 16. Offene Punkte / zu entscheiden
 
+**Selbstverifikation & KI-gestütztes Regel-Trimmen (2026-07-10, NEU, Vision formuliert,
+Umsetzung begonnen):** Der Agent soll über Zeit lernen können, ob seine eigenen
+Signale/Annahmen zutrafen (kurz-/mittel-/langfristig), und daraus **manuelle**
+Regel-Anpassungen mit KI-Unterstützung ermöglichen — ausdrücklich **kein** autonomes
+Selbst-Justieren, der Nutzer bleibt Entscheider, die KI liefert die datenbasierte
+Experten-Einschätzung. Geplanter Ablauf: (1) Regelwerksmanual (siehe unten, ERLEDIGT),
+(2) Backward-/Outcome-Tracking vergangener Signale gegen tatsächliche Kursverläufe,
+(3) KI-gestützte Trimm-Vorschläge auf Basis der Tracking-Daten, (4) manuelle
+Prüfen/Lernen/Anpassen-Zyklen. **Schritt 1 ERLEDIGT:**
+`Basisinfos/Regelwerksmanual.md` — nutzerlesbare, destillierte Fassung aller Regeln
+(Z-/RM-/RG-/AZ-/R-5.x/S-Serie) mit aktuell konfigurierten Werten, als gemeinsame
+Referenz für künftige Anpassungsvorschläge gedacht. Schritte 2-4 noch offen.
+
 **Risiko-/Basiswerte:**
 - Maximaler tolerierter Gesamt-Drawdown (Z-3)? Vorschlag −15 %. Drawdown-Notbremse
   (RM-7) technisch noch nicht umgesetzt (braucht eine Portfolio-Wert-Historie, die
