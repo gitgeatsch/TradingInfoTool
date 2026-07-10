@@ -1080,7 +1080,14 @@ Experten-Einschätzung. Geplanter Ablauf: (1) Regelwerksmanual (siehe unten, ERL
 Prüfen/Lernen/Anpassen-Zyklen. **Schritt 1 ERLEDIGT:**
 `Basisinfos/Regelwerksmanual.md` — nutzerlesbare, destillierte Fassung aller Regeln
 (Z-/RM-/RG-/AZ-/R-5.x/S-Serie) mit aktuell konfigurierten Werten, als gemeinsame
-Referenz für künftige Anpassungsvorschläge gedacht. Schritte 2-4 noch offen.
+Referenz für künftige Anpassungsvorschläge gedacht. Um Kap. 6 ergänzt
+(2026-07-10, Nutzer-Wunsch): "Datenabfragen — was wann wie automatisch vs.
+manuell passiert" — Tabelle aller Scheduler-Jobs (`scheduler/background.py`,
+Takt + Quelle) und aller manuellen GUI-Aktionen (Toolbar/Menü/Tabs), inkl. der
+Regel, dass alles Kostenpflichtige/API-Key-gebundene (Groq pro Signal,
+Bitpanda-Sync) bewusst manuell bleibt, während kostenlose Marktdaten automatisch
+laufen. Schritte 2-4 (Backward-Tracking, KI-Trimm-Vorschläge, Prüfzyklen) noch
+offen.
 
 **Risiko-/Basiswerte:**
 - Maximaler tolerierter Gesamt-Drawdown (Z-3)? Vorschlag −15 %. Drawdown-Notbremse

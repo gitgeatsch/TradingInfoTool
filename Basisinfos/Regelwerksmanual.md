@@ -166,7 +166,53 @@ Risiko-Grenzen hat.
 
 ---
 
-## 6. Strategie-Katalog (S-1 bis S-6)
+## 6. Datenabfragen — was wann wie automatisch vs. manuell passiert
+
+Zwei getrennte Wege: ein **Hintergrund-Scheduler** (läuft automatisch, solange die
+App offen ist) und **manuelle GUI-Aktionen** (nur bei Klick). Beide schreiben in
+dieselbe Datenbank — der Unterschied ist nur, ob du selbst klicken musst.
+
+### Automatisch (Scheduler, `scheduler/background.py::build_scheduler()`)
+
+| Job | Takt | Was | Quelle |
+|-----|------|-----|--------|
+| `refresh_prices` | alle 15 Min | Live-Preise für alle Krypto-Assets | CoinGecko |
+| `refresh_securities_prices` | alle 15 Min | Live-Preise für Aktien/ETF/Rohstoffe | yfinance |
+| `refresh_history` | alle 24 Std. | Tages-Historie (für Indikatoren wie EMA-200) | CoinGecko |
+| `refresh_ohlc` | alle 24 Std. | Echtes OHLC (für ATR/Swing-Highs-Lows) | Kraken |
+| `marktscan` | 2× täglich, fix 04:00 + 16:00 Uhr | Kompletter Marktscan-Lauf (Stufe A-D, Kap. 13) | CoinGecko + Kraken, optional Groq |
+
+**Der Marktscan-Job nutzt Groq nur, wenn du das explizit erlaubst:** Standardmäßig
+(`config.yaml marktscan.groq_automatisch_kaufkandidaten: false`) generiert der
+automatische Lauf nur die deterministischen Kennzahlen (Stufe A-C), aber keine
+KI-Begründungstexte — die holst du dir manuell im Marktscan-Tab. Setzt du das Flag
+auf `true`, ruft der Scheduler Groq automatisch für jeden neu erkannten
+"Kaufkandidat" auf (Stufe D), um zusätzlich eine kurze Begründung zu erzeugen.
+
+**15-Minuten-Takt bewusst gewählt** (nicht kürzer): CoinGecko Free-Tier hat ein
+Monats-Kontingent — ein 5-Minuten-Takt hätte zusammen mit dem täglichen
+Historie-Refresh das Limit überschritten (siehe Spezifikation Kap. 16).
+
+### Manuell (GUI-Aktionen, nur bei Klick)
+
+| Aktion | Wo | Was |
+|--------|-----|-----|
+| "Jetzt aktualisieren" | Toolbar (oben) | Sofortiger Krypto-Preis-Refresh (CoinGecko) + Bitpanda-Listing-Check |
+| "Signal berechnen" | Signale-Tab | Die **gesamte** Agent-Pipeline (R-5.0 bis R-5.11, Abschnitt 5) für **ein** Asset — inkl. echtem Groq-Aufruf. Bewusst **nie automatisch/geplant** — jeder Signal-Lauf kostet einen KI-Aufruf und soll bewusst ausgelöst werden. |
+| "Jetzt scannen" | Marktscan-Tab | Derselbe Marktscan-Lauf wie der 04:00/16:00-Scheduler-Job, nur sofort statt zur festen Uhrzeit |
+| "Bestände von Bitpanda abgleichen" | Datei-Menü | Live-Abgleich aller Bestände (Krypto + Aktien/ETF/Rohstoffe) + EUR-Cash direkt von Bitpanda (siehe RM-4-Abschnitt oben) — **nie automatisch**, da ein echter, authentifizierter API-Key beteiligt ist |
+| "Bestände neu importieren" / "aus Datei importieren…" / "exportieren…" | Datei-Menü | Excel-Import/-Export (`Basisinfos/Assets.xlsx`) — rein lokal, kein externer Netzwerk-Aufruf |
+| Fiat-Cash-Reserve "Speichern" | Portfolio-Tab | Manuelle Eingabe, kein externer Aufruf |
+
+**Grundprinzip:** alles, was **Geld kostet oder einen persönlichen API-Key
+voraussetzt** (Groq pro Einzelsignal, Bitpanda-Sync), ist bewusst manuell — alles,
+was **kostenlose öffentliche Marktdaten** sind (Preise, Historie), läuft automatisch
+im Hintergrund. Der Marktscan ist der einzige Fall, der teilweise automatisch UND
+optional KI-gestützt läuft (siehe oben).
+
+---
+
+## 7. Strategie-Katalog (S-1 bis S-6)
 
 Pro Asset wählbar, der Agent schlägt die zur Marktlage passende Strategie vor.
 
@@ -181,7 +227,7 @@ Pro Asset wählbar, der Agent schlägt die zur Marktlage passende Strategie vor.
 
 ---
 
-## 7. Wo diese Regeln im Code stehen (für Nachvollziehbarkeit)
+## 8. Wo diese Regeln im Code stehen (für Nachvollziehbarkeit)
 
 - `Basisinfos/config.yaml` — alle einstellbaren Zahlen (Abschnitte `risiko`, `regime`, `antizyklisch`, `strategien`)
 - `agent/krypto/risk_gate.py` — harte Durchsetzung von RM-1/2/4/5, Z-2 (CRV), Positionsgrößen-Clamp, Bitpanda-Veto
@@ -189,10 +235,12 @@ Pro Asset wählbar, der Agent schlägt die zur Marktlage passende Strategie vor.
 - `agent/krypto/anticyclic.py` — vereinfachte AZ-1-Heuristik
 - `agent/krypto/analyst.py` — SYSTEM_PROMPT (alle Regeln, die der KI als Anweisung mitgegeben werden) + Schema-Validierung
 - `agent/krypto/pipeline.py` — Reihenfolge R-5.0 bis R-5.11 (Orchestrierung)
+- `scheduler/background.py` — alle automatischen Jobs (Abschnitt 6)
+- `importer/bitpanda_sync.py`, `importer/excel_import.py` — manuelle Bestands-Abgleiche (Abschnitt 6)
 
 ---
 
-## 8. Offene / vorläufige Werte — die naheliegendsten Kandidaten für spätere Anpassung
+## 9. Offene / vorläufige Werte — die naheliegendsten Kandidaten für spätere Anpassung
 
 Diese Werte sind laut Spezifikation ausdrücklich **vorläufig** (`[OFFEN]`-markiert) und
 noch nicht durch echte Ergebnisse verifiziert — sie sind der wahrscheinlichste
