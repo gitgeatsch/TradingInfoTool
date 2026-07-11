@@ -186,6 +186,7 @@ dieselbe Datenbank — der Unterschied ist nur, ob du selbst klicken musst.
 | `refresh_ohlc` | alle 24 Std. | Echtes OHLC (für ATR/Swing-Highs-Lows) | Kraken |
 | `marktscan` | 2× täglich, fix 04:00 + 16:00 Uhr | Kompletter Marktscan-Lauf (Stufe A-D, Kap. 13) | CoinGecko + Kraken, optional Groq |
 | `backward_tracking` | 1× täglich, fix 06:00 Uhr | Prüft vergangene KAUFEN/NACHKAUFEN-Signale gegen die Kurshistorie — Take-Profit oder Stop-Loss erreicht? | keine (nur bereits vorhandene DB-Daten) |
+| `bitpanda_cash` | alle 30 Min (nur mit gesetztem `BITPANDA_API_KEY`) | Nur der EUR-Fiat-Cash-Stand für RM-4 — **nicht** die vollen Bestände | Bitpanda (`/fiatwallets`) |
 
 **Der Marktscan-Job nutzt Groq nur, wenn du das explizit erlaubst:** Standardmäßig
 (`config.yaml marktscan.groq_automatisch_kaufkandidaten: false`) generiert der
@@ -206,6 +207,18 @@ vorhandener Kursdaten, kein zusätzlicher Netzwerk-Aufruf. Das Ergebnis siehst d
 für Schritt 3 der Vision (KI-gestützte Regel-Anpassungsvorschläge) — ohne
 gespeicherte Ist-Ergebnisse kann später nichts verglichen werden.
 
+**Automatischer Fiat-Cash-Sync (2026-07-11, ERGÄNZT).** Ausgelöst durch die Frage
+"was ist ein sinnvoller Cash-Betrag für Agent/Regelwerk" — Ergebnis: RM-4 bekam
+über `/fiatwallets` schon immer den korrekten, um offene Fusion-Order-Sperren
+bereinigten Betrag, das eigentliche Problem war nur die **Aktualität**: der Wert
+zog erst bei manuellem "Bestände von Bitpanda abgleichen"-Klick nach. Seit heute
+läuft dafür ein eigener, schlanker Job alle 30 Minuten (nur EUR-Fiat-Cash, NICHT
+die vollen Bestände — die haben einen interaktiven Rückgangs-Bestätigungsdialog,
+der aus einem Hintergrund-Thread nicht sauber aufrufbar ist). Läuft sofort nach
+dem App-Start ein erstes Mal, danach im 30-Minuten-Takt. Ohne `BITPANDA_API_KEY`
+bleibt der Job wie gehabt deaktiviert (P-8) — dann gilt weiterhin nur der manuelle
+Sync bzw. die Eingabe im Portfolio-Tab.
+
 ### Manuell (GUI-Aktionen, nur bei Klick)
 
 | Aktion | Wo | Was |
@@ -214,7 +227,7 @@ gespeicherte Ist-Ergebnisse kann später nichts verglichen werden.
 | "Signal berechnen" | Signale-Tab | Die **gesamte** Agent-Pipeline (R-5.0 bis R-5.11, Abschnitt 5) für **ein** Asset — inkl. echtem Groq-Aufruf. Bewusst **nie automatisch/geplant** — jeder Signal-Lauf kostet einen KI-Aufruf und soll bewusst ausgelöst werden. |
 | "Signal-Historie" | Signale-Tab | Zeigt alle bisherigen Signale des ausgewählten Assets inkl. Backward-Tracking-Ergebnis (Take-Profit/Stop-Loss/Offen/Abgelaufen) — reine Anzeige, kein externer Aufruf. |
 | "Jetzt scannen" | Marktscan-Tab | Derselbe Marktscan-Lauf wie der 04:00/16:00-Scheduler-Job, nur sofort statt zur festen Uhrzeit |
-| "Bestände von Bitpanda abgleichen" | Datei-Menü | Live-Abgleich aller Bestände (Krypto + Aktien/ETF/Rohstoffe) + EUR-Cash direkt von Bitpanda (siehe RM-4-Abschnitt oben) — **nie automatisch**, da ein echter, authentifizierter API-Key beteiligt ist |
+| "Bestände von Bitpanda abgleichen" | Datei-Menü | Live-Abgleich **aller Bestände** (Krypto + Aktien/ETF/Rohstoffe) + EUR-Cash direkt von Bitpanda (siehe RM-4-Abschnitt oben) — **nie automatisch**, da ein echter, authentifizierter API-Key UND ggf. der interaktive Rückgangs-Bestätigungsdialog beteiligt sind. Der reine EUR-Cash-Anteil läuft seit 2026-07-11 zusätzlich automatisch (siehe oben). |
 | "Einstandspreise von Bitpanda berechnen" | Datei-Menü | Echter Anschaffungspreis je Asset aus der Bitpanda-Trade-Historie (siehe Abschnitt 9) — **eigener, unabhängiger Menüpunkt**, nie automatisch (Erstlauf kann ~40s dauern, läuft threaded im Hintergrund) |
 | "Bestände neu importieren" / "aus Datei importieren…" / "exportieren…" | Datei-Menü | Excel-Import/-Export (`Basisinfos/Assets.xlsx`) — rein lokal, kein externer Netzwerk-Aufruf |
 | Fiat-Cash-Reserve "Speichern" | Portfolio-Tab | Manuelle Eingabe, kein externer Aufruf |
@@ -577,7 +590,7 @@ bewusst offen bleibt.
 
 | Ursache | Betrag (Live-Test) | Status |
 |---|---|---|
-| In offener Bitpanda-Fusion-Limit-Order gebunden ("Committed Balance") | ~188 € | Erkannt + dokumentiert, Sync-Zeitstempel zeigt Alter der Anzeige — automatische Berechnung noch offen |
+| In offener Bitpanda-Fusion-Limit-Order gebunden ("Committed Balance") | ~188 € | Erkannt + dokumentiert; RM-4 rechnete schon immer korrekt (siehe unten), Aktualität jetzt zusätzlich per automatischem Sync abgesichert |
 | Aktuell gestakte Krypto-Bestände (ETH, SOL, AVAX, SUI, TAO, HYPE, NEAR, SEI, BNB) | ~2.435 € | **Behoben** — Anzeige (Portfolio-Tab, Remote-Seite) UND `risk_gate.py` (ETH-Ausnahme, siehe unten) |
 | PLTR/VST: yfinance liefert nur USD, keine EUR-Umrechnung | ~660 € | **Behoben** |
 | Historische, aktuell nicht offene Margin-/Hebel-Trading-Aktivität (Krypto) | — | Kein Handlungsbedarf (aktuell keine offene Position, Nutzer bestätigt) |
@@ -595,11 +608,17 @@ App nicht erkennen ließ, ob dieser Wert *aktuell* ist. **Behoben (2026-07-11):*
 ("Bitpanda-Sync: vor X Min") — bewusst OHNE Stale-Färbung wie bei Preisen, da ein
 manueller Sync normalerweise stundenlang zurückliegt, ohne dass etwas falsch ist.
 
-**Automatische Schätzung des gesperrten Betrags** (statt eines manuellen Felds,
-Nutzer-Wunsch: kein manuelles Pflegen) wäre aus der bereits vorhandenen
-Transaktionshistorie ableitbar (Cash-Delta seit letztem Sync minus alle
-sichtbaren echten Trades/Transfers im selben Zeitraum = wahrscheinlich in
-offenen Orders gebunden) — **konzipiert, aber noch nicht gebaut**.
+**Klargestellt (2026-07-11): keine Schätzung des gesperrten Betrags nötig.** Eine
+ursprünglich angedachte Herleitung aus der Transaktionshistorie (Cash-Delta minus
+sichtbare Trades/Transfers) erübrigt sich — `/fiatwallets` liefert den gesperrten
+Betrag serverseitig bereits korrekt heraus, das war für RM-4 nie das Problem.
+**Stattdessen umgesetzt: automatischer Sync alle 30 Minuten**
+(`scheduler/background.py::refresh_bitpanda_cash_job`, neue Funktion
+`importer/bitpanda_sync.py::sync_fiat_cash_from_bitpanda()`, aus dem bestehenden
+manuellen Sync extrahiert) — damit RM-4 nie länger als eine halbe Stunde auf
+einem veralteten Cash-Stand rechnet, ohne dass dafür die vollen Bestände
+automatisch mitlaufen müssen (siehe Kap. 6). Details/Verifikation: Memory
+`project-portfolio-vollstaendigkeit-cash-staking`.
 
 ### Staking-Sichtbarkeit
 
@@ -666,8 +685,10 @@ Startpunkt, sobald Backward-Tracking/Outcome-Daten vorliegen:
   Nutzer-Erfahrung, nicht auf einer systematischen Prüfung aller Bitpanda-
   Staking-Produkte — bei künftigen neuen gestakten Assets prüfen, ob die Liste
   erweitert werden muss.
-- **NEU (2026-07-11):** automatische Schätzung des in offenen Fusion-Orders
-  gebundenen Cash-Betrags (Kap. 14) — konzipiert, noch nicht gebaut.
+- **ERLEDIGT, war hier gelistet (2026-07-11):** eine Schätzung des in offenen
+  Fusion-Orders gebundenen Cash-Betrags erwies sich als unnötig — `/fiatwallets`
+  liefert den korrekten, bereinigten Betrag bereits serverseitig; gelöst wurde
+  stattdessen die Aktualität per automatischem 30-Minuten-Sync (Kap. 6/14).
 - **NEU (2026-07-11):** RM-10/RM-11 (Hebel) bräuchten eine Positions-
   Rekonstruktion aus den `margin_trading.*`-Transaktions-Tags (Kap. 14) — nicht
   trivial, Bitpanda liefert keine "offene Positionen"-Übersicht.

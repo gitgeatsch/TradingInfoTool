@@ -86,6 +86,40 @@ class BitpandaSyncResult:
     warnings: list[str] = field(default_factory=list)
 
 
+@dataclass
+class BitpandaCashSyncResult:
+    updated: bool = False
+    old_eur: float | None = None
+    new_eur: float | None = None
+
+
+def sync_fiat_cash_from_bitpanda(conn: sqlite3.Connection, api_key: str) -> BitpandaCashSyncResult:
+    """Nur der EUR-Fiat-Cash-Anteil von sync_from_bitpanda() - extrahiert
+    (2026-07-11), damit ein automatischer Scheduler-Job (scheduler/background.py::
+    refresh_bitpanda_cash_job) diesen Teil regelmaessig nachziehen kann, OHNE die
+    volle Bestaende-Sync-Logik (inkl. interaktivem Rueckgangs-Bestaetigungsdialog)
+    aus einem Hintergrund-Thread aufzurufen. sync_from_bitpanda() ruft diese
+    Funktion intern auf, keine Logik-Duplikation."""
+    result = BitpandaCashSyncResult()
+    fiat_wallets = get_fiat_wallets(api_key)
+    eur_wallet = next((w for w in fiat_wallets if w.symbol == FIAT_SYMBOL), None)
+    if eur_wallet is not None:
+        old_cash = db.get_cash_reserve_fiat_eur(conn)
+        if old_cash != eur_wallet.balance:
+            db.set_cash_reserve_fiat_eur(conn, eur_wallet.balance)
+            result.updated = True
+            result.old_eur = old_cash
+            result.new_eur = eur_wallet.balance
+        # Zeitstempel IMMER setzen, auch wenn sich der Wert nicht geaendert hat -
+        # das beantwortet "wann haben wir zuletzt tatsaechlich nachgefragt", nicht
+        # nur "wann hat sich etwas geaendert" (2026-07-11, Nutzer-Fund: Bitpanda
+        # sperrt fuer offene Fusion-Limit-Orders reservierte Betraege sofort aus
+        # dem Wallet-Guthaben, ohne dass die App das mitbekommt - siehe
+        # db.get_cash_reserve_synced_at()-Docstring).
+        db.set_cash_reserve_synced_at(conn, datetime.now(timezone.utc).isoformat())
+    return result
+
+
 def sync_from_bitpanda(
     conn: sqlite3.Connection, api_key: str, listed_assets: list[BitpandaAsset]
 ) -> BitpandaSyncResult:
@@ -93,7 +127,9 @@ def sync_from_bitpanda(
     watchlist_symbols = {a.symbol for a in watchlist}
 
     # Netzwerk-Aufrufe zuerst - noch keine DB-Schreibung (Atomaritaet, siehe Docstring).
-    fiat_wallets = get_fiat_wallets(api_key)
+    # Fiat-Cash separat via sync_fiat_cash_from_bitpanda() (macht dort selbst den
+    # get_fiat_wallets()-Call und die DB-Schreibung - kein Bruch der Atomaritaets-
+    # Garantie hier, da dieser Teil ohnehin unabhaengig von den Bestaenden ist).
     # Krypto- UND Non-Krypto-Wallets kombiniert (2026-07-10, Korrektur: Bitpanda
     # fuehrt Aktien/ETF/Rohstoffe im selben Account) - dieselbe Zuwachs-/Rueckgangs-
     # Logik unten gilt fuer alle Assetklassen einheitlich.
@@ -103,21 +139,10 @@ def sync_from_bitpanda(
     existing_holdings = {h.symbol: h for h in db.get_all_holdings(conn)}
 
     # --- EUR-Fiat-Cash ---
-    eur_wallet = next((w for w in fiat_wallets if w.symbol == FIAT_SYMBOL), None)
-    if eur_wallet is not None:
-        old_cash = db.get_cash_reserve_fiat_eur(conn)
-        if old_cash != eur_wallet.balance:
-            db.set_cash_reserve_fiat_eur(conn, eur_wallet.balance)
-            result.cash_reserve_updated = True
-            result.cash_reserve_old_eur = old_cash
-            result.cash_reserve_new_eur = eur_wallet.balance
-        # Zeitstempel IMMER setzen, auch wenn sich der Wert nicht geaendert hat -
-        # das beantwortet "wann haben wir zuletzt tatsaechlich nachgefragt", nicht
-        # nur "wann hat sich etwas geaendert" (2026-07-11, Nutzer-Fund: Bitpanda
-        # sperrt fuer offene Fusion-Limit-Orders reservierte Betraege sofort aus
-        # dem Wallet-Guthaben, ohne dass die App das mitbekommt - siehe
-        # db.get_cash_reserve_synced_at()-Docstring).
-        db.set_cash_reserve_synced_at(conn, datetime.now(timezone.utc).isoformat())
+    cash_result = sync_fiat_cash_from_bitpanda(conn, api_key)
+    result.cash_reserve_updated = cash_result.updated
+    result.cash_reserve_old_eur = cash_result.old_eur
+    result.cash_reserve_new_eur = cash_result.new_eur
 
     # --- Bestaende (Krypto + Aktien/ETF/Rohstoffe, siehe Modul-Docstring) ---
     matched_symbols: set[str] = set()

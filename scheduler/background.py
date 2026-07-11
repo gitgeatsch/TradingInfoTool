@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
+from datetime import datetime
 
 from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_MISSED
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -24,10 +25,12 @@ logger = logging.getLogger(__name__)
 refresh_prices_lock = threading.Lock()
 refresh_securities_lock = threading.Lock()
 marktscan_lock = threading.Lock()
+bitpanda_cash_lock = threading.Lock()
 _JOB_LOCKS = {
     "refresh_prices": refresh_prices_lock,
     "refresh_securities": refresh_securities_lock,
     "marktscan": marktscan_lock,
+    "bitpanda_cash": bitpanda_cash_lock,
 }
 _job_started_at: dict[str, float] = {}
 
@@ -42,6 +45,11 @@ SECURITIES_REFRESH_INTERVAL_MINUTES = 15  # eigener Job (Multi-Asset-Tracking,
 # defensiv aehnlich wie der Krypto-Preis-Takt gewaehlt. Bewusst ein SEPARATER Job statt
 # in refresh_prices_job() mit hineingemischt, damit ein yfinance-Ausfall den Krypto-
 # Preis-Takt nicht blockiert (P-10-Isolation, gleiches Prinzip wie der Kraken-OHLC-Job).
+BITPANDA_CASH_REFRESH_INTERVAL_MINUTES = 30  # 2026-07-11: seltener als der Preis-Takt
+# (15 Min) - authentifizierter Call, Fiat-Cash aendert sich normalerweise seltener als
+# Marktpreise. Nur der Fiat-Cash-Anteil, NICHT die vollen Bestaende (die haben einen
+# interaktiven Rueckgangs-Bestaetigungsdialog, siehe importer/bitpanda_sync.py::
+# sync_fiat_cash_from_bitpanda()-Docstring).
 
 
 def refresh_prices_job(client, conn_factory, watchlist) -> bool:
@@ -204,6 +212,35 @@ def backward_tracking_job(conn_factory, watchlist) -> None:
         conn.close()
 
 
+def refresh_bitpanda_cash_job(api_key, conn_factory) -> bool:
+    """Automatischer Fiat-Cash-Sync (2026-07-11) - haelt agent/krypto/risk_gate.py's
+    RM-4-Cash-Reserve-Pruefung aktuell, ohne auf den manuellen "Bestaende von Bitpanda
+    abgleichen"-Klick angewiesen zu sein. Nur der Fiat-Cash-Anteil (siehe
+    importer/bitpanda_sync.py::sync_fiat_cash_from_bitpanda()-Docstring, warum die
+    vollen Bestaende bewusst NICHT automatisch mitlaufen). Rueckgabewert wie
+    refresh_prices_job() (Lock-Status)."""
+    if not bitpanda_cash_lock.acquire(blocking=False):
+        logger.info("Bitpanda-Cash-Sync: bereits in Ausführung - übersprungen")
+        return False
+    _job_started_at["bitpanda_cash"] = time.monotonic()
+    conn = conn_factory()
+    try:
+        from importer.bitpanda_sync import sync_fiat_cash_from_bitpanda
+
+        result = sync_fiat_cash_from_bitpanda(conn, api_key)
+        if result.updated:
+            logger.info("Bitpanda-Cash-Sync: %.2f -> %.2f EUR", result.old_eur, result.new_eur)
+        else:
+            logger.info("Bitpanda-Cash-Sync: unverändert")
+    except Exception:
+        logger.exception("Bitpanda-Cash-Sync fehlgeschlagen")
+    finally:
+        conn.close()
+        bitpanda_cash_lock.release()
+        _job_started_at.pop("bitpanda_cash", None)
+    return True
+
+
 def get_lock_status() -> dict[str, dict]:
     """Fuer die Remote-Steuer-Seite (remote/status.py) - liest den aktuellen
     Sperr-/Laufzeit-Status der ueberwachten Jobs, ohne selbst einen Lock zu
@@ -255,7 +292,7 @@ def _log_job_event(event) -> None:
 
 def build_scheduler(
     coingecko_client, kraken_client, db_conn_factory, watchlist_provider,
-    groq_client=None, fred_api_key=None,
+    groq_client=None, fred_api_key=None, bitpanda_api_key=None,
 ) -> BackgroundScheduler:
     watchlist = watchlist_provider()
     scheduler = BackgroundScheduler()
@@ -309,5 +346,20 @@ def build_scheduler(
         args=[db_conn_factory, watchlist],
         id="backward_tracking",
     )
+    # Automatischer Fiat-Cash-Sync (2026-07-11) - P-8: nur registriert, wenn ein
+    # BITPANDA_API_KEY vorhanden ist, sonst bleibt RM-4 wie bisher auf den manuellen
+    # Sync angewiesen. next_run_time=jetzt verkuerzt das Stale-Fenster direkt nach dem
+    # App-Start, statt bis zu BITPANDA_CASH_REFRESH_INTERVAL_MINUTES zu warten.
+    if bitpanda_api_key:
+        scheduler.add_job(
+            refresh_bitpanda_cash_job,
+            "interval",
+            minutes=BITPANDA_CASH_REFRESH_INTERVAL_MINUTES,
+            args=[bitpanda_api_key, db_conn_factory],
+            id="bitpanda_cash",
+            next_run_time=datetime.now(),
+        )
+    else:
+        logger.info("Kein BITPANDA_API_KEY - automatischer Cash-Sync deaktiviert (P-8)")
     scheduler.add_listener(_log_job_event, EVENT_JOB_ERROR | EVENT_JOB_MISSED)
     return scheduler

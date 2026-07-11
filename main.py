@@ -132,6 +132,7 @@ def main() -> None:
         watchlist_provider=lambda: watchlist,
         groq_client=groq_client,
         fred_api_key=fred_api_key,
+        bitpanda_api_key=bitpanda_api_key,
     )
     bg_scheduler.start()
 
