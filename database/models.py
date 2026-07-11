@@ -22,6 +22,11 @@ class Holding:
     avg_buy_price_tracked_qty: float | None = None
     avg_buy_price_computed_at: str | None = None
     avg_buy_price_manual_eur: float | None = None
+    # 2026-07-11, Nutzer-Fund: aktuell gestakte Menge - ueber die normalen Wallet-
+    # Endpunkte strukturell unsichtbar (siehe importer/bitpanda_avg_cost.py::
+    # compute_staked_quantities()), additiv zu `quantity` zu behandeln, NICHT
+    # bereits darin enthalten.
+    staked_quantity: float | None = None
 
     @property
     def effective_avg_buy_price_eur(self) -> float | None:

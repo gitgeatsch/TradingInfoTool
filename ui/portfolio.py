@@ -10,7 +10,7 @@ import database.db as db
 import ui.theme as theme
 from database.models import Holding
 from importer.bitpanda_avg_cost import compute_cost_basis_view
-from ui.formatting import format_money, is_price_stale
+from ui.formatting import format_money, format_price_age, is_price_stale
 from ui.sortable_tree import make_sortable
 
 
@@ -70,6 +70,10 @@ class PortfolioView(ttk.Frame):
         ttk.Button(cash_frame, text="Speichern", command=self._save_cash_reserve).pack(side="left", padx=(6, 0))
         self.cash_reserve_status = ttk.Label(cash_frame, text="")
         self.cash_reserve_status.pack(side="left", padx=(6, 0))
+        # 2026-07-11, Nutzer-Fund: macht sichtbar, ob der Wert seit dem letzten
+        # Bitpanda-Sync ueberholt sein koennte (siehe _update_cash_reserve_synced_label()).
+        self.cash_reserve_synced_label = ttk.Label(cash_frame, text="", foreground=theme.info_color())
+        self.cash_reserve_synced_label.pack(side="left", padx=(10, 0))
 
         # Nur einmal beim Start laden, nicht bei jedem refresh() (der auch durch
         # Preis-Updates o.ae. ausgeloest wird) - sonst wuerde eine noch nicht
@@ -82,15 +86,31 @@ class PortfolioView(ttk.Frame):
         """Laedt das Fiat-Cash-Feld frisch aus der DB - bewusst NICHT Teil von
         refresh() (siehe Kommentar dort), da refresh() auch durch periodische
         Preis-Updates ausgeloest wird und eine noch nicht gespeicherte Nutzereingabe
-        sonst ueberschreiben wuerde. Wird beim Start UND explizit nach einem
-        erfolgreichen Bitpanda-Sync (ui/app.py::_sync_bitpanda()) aufgerufen, wenn der
-        Sync die Cash-Reserve tatsaechlich veraendert hat."""
+        sonst ueberschreiben wuerde. Wird beim Start UND nach jedem Bitpanda-Sync
+        (ui/app.py::_sync_bitpanda()) aufgerufen."""
         conn = self._db_conn_factory()
         try:
             current_cash = db.get_cash_reserve_fiat_eur(conn)
+            synced_at = db.get_cash_reserve_synced_at(conn)
         finally:
             conn.close()
         self.cash_reserve_var.set(f"{current_cash:g}" if current_cash else "")
+        self._update_cash_reserve_synced_label(synced_at)
+
+    def _update_cash_reserve_synced_label(self, synced_at: str | None) -> None:
+        """2026-07-11, Nutzer-Fund: Bitpanda sperrt fuer offene Fusion-Limit-Orders
+        reservierte Betraege sofort aus dem Wallet-Guthaben, ohne dass die App das
+        mitbekommt, solange kein neuer Sync laeuft - dieser Zeitstempel macht
+        sichtbar, ob die angezeigte Cash-Reserve noch aktuell sein kann. Bewusst
+        KEINE Stale-Faerbung wie bei Preisen (staleness.py-Schwelle 30 Min ist fuer
+        den 15-Min-Scheduler-Takt gedacht) - ein manueller Sync bleibt normalerweise
+        stundenlang "veraltet" im technischen Sinn, ohne dass etwas falsch ist."""
+        if synced_at is None:
+            self.cash_reserve_synced_label.config(text="nie per Bitpanda-Sync geprüft", foreground=theme.info_color())
+            return
+        self.cash_reserve_synced_label.config(
+            text=f"Bitpanda-Sync: {format_price_age(synced_at)}", foreground=theme.info_color()
+        )
 
     def _save_cash_reserve(self) -> None:
         raw = self.cash_reserve_var.get().strip().replace(",", ".")
@@ -113,6 +133,7 @@ class PortfolioView(ttk.Frame):
         try:
             holdings = db.get_all_holdings(conn)
             latest_prices = db.get_latest_prices(conn)
+            fiat_cash_eur = db.get_cash_reserve_fiat_eur(conn)
         finally:
             conn.close()
 
@@ -121,6 +142,7 @@ class PortfolioView(ttk.Frame):
 
         total_value_usd = 0.0
         total_value_eur = 0.0
+        staked_value_eur = 0.0
         for holding in sorted(holdings, key=lambda h: h.symbol):
             asset = self._watchlist_by_symbol.get(holding.symbol)
             name = asset.name if asset else holding.symbol
@@ -134,6 +156,17 @@ class PortfolioView(ttk.Frame):
                 total_value_usd += value_usd
             if value_eur is not None:
                 total_value_eur += value_eur
+
+            # 2026-07-11, Nutzer-Fund: gestakte Menge ist ueber die normale Wallet-API
+            # unsichtbar (siehe importer/bitpanda_avg_cost.py::compute_staked_quantities()) -
+            # additiv zu holding.quantity, nicht darin enthalten. Fliesst separat in die
+            # Gesamtwert-Zeile ein (siehe unten), damit sie nicht mit dem regulaeren
+            # Bestand verwechselt wird.
+            quantity_text = f"{holding.quantity:g}"
+            if holding.staked_quantity and holding.staked_quantity > 0:
+                quantity_text += f" (+{holding.staked_quantity:g} gestakt)"
+                if price_eur is not None:
+                    staked_value_eur += holding.staked_quantity * price_eur
 
             fetched_at = price_snapshot.fetched_at if price_snapshot else None
             stale = is_price_stale(fetched_at)
@@ -165,7 +198,7 @@ class PortfolioView(ttk.Frame):
                     holding.symbol,
                     name,
                     assetklasse,
-                    f"{holding.quantity:g}",
+                    quantity_text,
                     price_usd_text,
                     format_money(price_eur),
                     format_money(value_usd),
@@ -176,8 +209,40 @@ class PortfolioView(ttk.Frame):
                 tags=tuple(tags),
             )
 
+        # RM-4/Konsistenz-Fix (2026-07-11, Nutzer-Fund): agent/krypto/risk_gate.py::
+        # pre_check() zaehlt die Fiat-Cash-Reserve seit 2026-07-10 korrekt zum
+        # Portfoliowert dazu (RM-4/RM-1/RM-2 nutzen durchgaengig dieselbe Basis) -
+        # diese Anzeige tat das bisher NICHT, zeigte also einen kleineren Wert als
+        # den, auf dem die KI ihre Entscheidungen tatsaechlich stuetzt. EUR-Seite ist
+        # direkt (fiat_cash_eur ist bereits EUR), USD-Seite nutzt denselben EURCV-
+        # Wechselkurs-Trick wie risk_gate.py (1 EURCV ~= 1 EUR, siehe A-5) - fehlt das
+        # Snapshot, wird die USD-Seite NICHT hochgerechnet statt falsch geraten (P-10).
+        total_value_eur += fiat_cash_eur
+        if fiat_cash_eur > 0:
+            eurcv_snap = latest_prices.get("EURCV")
+            if eurcv_snap and eurcv_snap.price_usd and eurcv_snap.price_eur:
+                total_value_usd += fiat_cash_eur * (eurcv_snap.price_usd / eurcv_snap.price_eur)
+
+        # 2026-07-11, Nutzer-Fund: gestakter Wert zaehlt hier zum Gesamtwert dazu (echtes
+        # Vermoegen, nur voruebergehend nicht handelbar) - WICHTIG: agent/krypto/
+        # risk_gate.py (RM-1/RM-2/RM-4) rechnet aktuell noch OHNE diesen Anteil, diese
+        # Anzeige ist also bewusst vollstaendiger als das, was die KI aktuell sieht.
+        # Das Zusammenfuehren beider Werte ist ein separates, noch offenes Folge-Thema
+        # (siehe Basisinfos/Regelwerksmanual.md Kap. 13/14) - nicht heute in die
+        # "unantastbare" Risk-Gate-Formel eingegriffen.
+        total_value_eur += staked_value_eur
+        eurcv_snap = latest_prices.get("EURCV")
+        if staked_value_eur > 0 and eurcv_snap and eurcv_snap.price_usd and eurcv_snap.price_eur:
+            total_value_usd += staked_value_eur * (eurcv_snap.price_usd / eurcv_snap.price_eur)
+
+        notes = []
+        if fiat_cash_eur > 0:
+            notes.append(f"{fiat_cash_eur:,.2f} EUR Fiat-Cash")
+        if staked_value_eur > 0:
+            notes.append(f"{staked_value_eur:,.2f} EUR gestakt (im Regelwerk noch nicht berücksichtigt)")
+        note_text = f" (davon {', '.join(notes)})" if notes else ""
         self.total_label.config(
-            text=f"Gesamtwert: {total_value_usd:,.2f} USD / {total_value_eur:,.2f} EUR"
+            text=f"Gesamtwert: {total_value_usd:,.2f} USD / {total_value_eur:,.2f} EUR{note_text}"
         )
 
     def _on_edit_avg_price(self, event) -> None:

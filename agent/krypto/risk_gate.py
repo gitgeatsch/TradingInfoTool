@@ -21,6 +21,13 @@ from indicators.calculations import TechnicalSnapshot, latest_value
 STOP_LOSS_ATR_MULTIPLE = 2.0  # Arbeits-Konvention, nicht spezifikationsseitig vorgegeben
 CRV_MINIMUM = 2.0  # Z-2
 
+# Symbole, deren gestakter Anteil NICHT in die Risikoberechnung einfliesst
+# (konservativ, Z-1): Un-/Restaking dort bisher nicht instant moeglich.
+# Stand 2026-07-11 (Nutzer-Erfahrung): nur ETH betroffen, alle anderen
+# bisher gestakten Bitpanda-Assets waren instant handelbar - bei neuen
+# gestakten Assets pruefen, ob diese Liste erweitert werden muss.
+STAKING_ILLIQUID_SYMBOLS = {"ETH"}
+
 
 @dataclass
 class RiskPreCheckResult:
@@ -41,13 +48,19 @@ def _portfolio_values_usd(watchlist, holdings, latest_prices) -> tuple[float, di
     (P-10: fehlender Preis wird NICHT als 0 angenommen und stillschweigend
     ausgelassen - er wird einfach nicht mitgezaehlt, das ist hier akzeptabel, da es
     nur eine Obergrenzen-Berechnung ist, keine Anzeige eines vermeintlich vollstaendigen
-    Portfoliowerts)."""
+    Portfoliowerts). Gestakte Mengen (holding.staked_quantity, additiv zu quantity)
+    zaehlen mit, ausser fuer STAKING_ILLIQUID_SYMBOLS (konservativ, Z-1) - dadurch
+    zaehlt ein gestakter Stablecoin-Bestand automatisch auch als Cash (siehe
+    stablecoin-Filter in pre_check()), ohne eigenen Sonderfall hier."""
     values: dict[str, float] = {}
     for holding in holdings:
         snap = latest_prices.get(holding.symbol)
         if snap is None or snap.price_usd is None:
             continue
-        values[holding.symbol] = holding.quantity * snap.price_usd
+        quantity = holding.quantity
+        if holding.staked_quantity and holding.symbol not in STAKING_ILLIQUID_SYMBOLS:
+            quantity += holding.staked_quantity
+        values[holding.symbol] = quantity * snap.price_usd
     return sum(values.values()), values
 
 
@@ -93,6 +106,15 @@ def pre_check(
     holdings = db.get_all_holdings(conn)
     total_value_usd, values_by_symbol = _portfolio_values_usd(watchlist, holdings, latest_prices)
     asset_value_usd = values_by_symbol.get(asset.symbol, 0.0)
+
+    # Transparenz (Z-4): ausgeschlossene Staking-Mengen sichtbar machen statt
+    # sie stillschweigend aus der Risikoberechnung zu lassen.
+    for holding in holdings:
+        if holding.symbol in STAKING_ILLIQUID_SYMBOLS and holding.staked_quantity:
+            checks.append(
+                f"Hinweis: {holding.staked_quantity:g} {holding.symbol} gestakt, "
+                "nicht in Risikoberechnung einbezogen (Illiquiditäts-Vorsicht)"
+            )
 
     stablecoin_symbols = {a.symbol for a in watchlist if a.typ == "stablecoin"}
     cash_value_usd = sum(v for sym, v in values_by_symbol.items() if sym in stablecoin_symbols)

@@ -282,6 +282,11 @@ _HOLDINGS_AVG_COST_NEW_COLUMNS = {
     "avg_buy_price_tracked_qty": "REAL",
     "avg_buy_price_computed_at": "TEXT",
     "avg_buy_price_manual_eur": "REAL",
+    # 2026-07-11, Nutzer-Fund: aktuell gestakte Menge, ueber Wallet-Endpunkte
+    # strukturell unsichtbar (siehe importer/bitpanda_avg_cost.py::
+    # compute_staked_quantities()) - ohne dieses Feld war ein signifikanter Teil
+    # des Portfolios (im Live-Test ~2.400 EUR) fuer Anzeige UND Regelwerk unsichtbar.
+    "staked_quantity": "REAL",
 }
 
 
@@ -373,10 +378,21 @@ def upsert_holding(
 def get_all_holdings(conn: sqlite3.Connection) -> list[Holding]:
     rows = conn.execute(
         "SELECT symbol, quantity, updated_at, source, avg_buy_price_eur, "
-        "avg_buy_price_tracked_qty, avg_buy_price_computed_at, avg_buy_price_manual_eur "
-        "FROM holdings"
+        "avg_buy_price_tracked_qty, avg_buy_price_computed_at, avg_buy_price_manual_eur, "
+        "staked_quantity FROM holdings"
     ).fetchall()
     return [Holding(**dict(row)) for row in rows]
+
+
+def update_holding_staked_quantity(conn: sqlite3.Connection, symbol: str, staked_quantity: float) -> None:
+    """2026-07-11: aktuell gestakte Menge (aus Wallet-Transaktions-Tags berechnet,
+    siehe importer/bitpanda_avg_cost.py::compute_staked_quantities()) - additiv zu
+    holdings.quantity (der normalen, ueber die Wallet-API sichtbaren Menge)."""
+    conn.execute(
+        "UPDATE holdings SET staked_quantity = ? WHERE symbol = ?",
+        (staked_quantity, symbol),
+    )
+    conn.commit()
 
 
 def update_holding_avg_buy_price(
@@ -447,6 +463,28 @@ def set_cash_reserve_fiat_eur(conn: sqlite3.Connection, value_eur: float) -> Non
         "INSERT INTO meta (key, value) VALUES ('cash_reserve_fiat_eur', ?) "
         "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
         (str(value_eur),),
+    )
+    conn.commit()
+
+
+def get_cash_reserve_synced_at(conn: sqlite3.Connection) -> str | None:
+    """Zeitstempel des letzten ERFOLGREICHEN Bitpanda-Sync-Abrufs der Cash-Reserve
+    (2026-07-11, Nutzer-Fund) - unabhaengig davon, ob sich der Wert dabei
+    tatsaechlich geaendert hat. Grund: Bitpanda sperrt den fuer offene Fusion-
+    Limit-Orders reservierten Betrag sofort aus dem Wallet-Guthaben (live
+    bestaetigt) - die App bekommt davon nichts mit, bis der naechste manuelle
+    Sync laeuft. Ohne diesen Zeitstempel war nicht erkennbar, ob eine angezeigte
+    Cash-Reserve noch aktuell oder laengst veraltet ist. None, wenn noch nie
+    per Bitpanda-Sync synchronisiert (z.B. nur manuell eingetragen)."""
+    row = conn.execute("SELECT value FROM meta WHERE key = 'cash_reserve_synced_at'").fetchone()
+    return row["value"] if row and row["value"] is not None else None
+
+
+def set_cash_reserve_synced_at(conn: sqlite3.Connection, timestamp: str) -> None:
+    conn.execute(
+        "INSERT INTO meta (key, value) VALUES ('cash_reserve_synced_at', ?) "
+        "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        (timestamp,),
     )
     conn.commit()
 

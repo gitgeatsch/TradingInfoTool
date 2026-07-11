@@ -1220,18 +1220,52 @@ mit Zeit zum Auflösen als Datengrundlage.
   bisher, noch nicht in die Regime-Bestimmung oder den Groq-Prompt verdrahtet.
 - X-API & YouTube-API: Kosten, Limits, ToS, Umsetzungsphase.
 - **E-Mail-Versand** (Kap. 13): SMTP-Server vs. Mail-API wählen; Zugangsdaten nur in `.env`.
-- **Web-Oberfläche für Fernzugriff** `[OFFEN, Idee 2026-07-09]`: zusätzlich zur
-  lokalen tkinter-Desktop-App soll perspektivisch ein Web-GUI möglich sein, um von
-  einem anderen Gerät (z. B. unterwegs, vom Notebook auf eine auf dem Desktop
-  laufende Instanz) auf die App zuzugreifen. Bisher **nirgends im Code oder in der
-  Architektur vorbereitet** — kein Web-Framework in `requirements.txt`, `ui/*.py`
-  ist direkt an tkinter/ttk gekoppelt (keine Trennung von Anzeige-Logik und
-  Business-Logik, die eine zweite Oberfläche einfach wiederverwenden könnte). Vor
-  einer Umsetzung zu klären: (a) Web-GUI als vollwertiger Ersatz oder nur
-  Lesezugriff (Read-Only-Dashboard) auf denselben SQLite-Stand, (b)
-  Authentifizierung/Absicherung, falls von außerhalb des lokalen Netzwerks
-  erreichbar, (c) ob das die bestehende tkinter-App ersetzt oder parallel dazu
-  läuft. Kein akuter Auftrag, nur als offener Punkt festgehalten.
+- **Web-Oberfläche für Fernzugriff** `[Idee 2026-07-09, TEILWEISE ERLEDIGT 2026-07-11]`:
+  ursprünglich als vollwertiger Web-GUI-Ersatz gedacht — stattdessen bewusst
+  kleiner geschnitten (Nutzer-Entscheidung): eine minimale **Remote-Steuer-Seite**
+  (`remote/status.py` + `remote/server.py`, Flask, eingebettet in `main.py` als
+  Hintergrund-Thread) mit reinem Status-Überblick (Portfolio-Wert, veraltete
+  Preise, letzter Marktscan, letzte Log-Fehler) + zwei Aktionen (Preise
+  aktualisieren, Marktscan starten) + einem Not-Reset für haengende Job-Locks.
+  KEIN Ersatz der tkinter-App, rein additiv. Absicherung: Tailscale-VPN
+  (Basisinfos/Tailscale-Setup-Anleitung.md) + zusaetzliches Zugriffs-Token
+  (`.env REMOTE_ACCESS_TOKEN`, P-8: ohne Token bleibt die Seite komplett
+  deaktiviert). Dabei entdeckt: `api/yfinance_client.py` hatte als einzige
+  Netzwerk-Quelle im Projekt keinen kontrollierten Timeout - behoben (15s,
+  `concurrent.futures`), da ein haengender Call sonst den neuen Job-Lock
+  dauerhaft blockiert haette. Live gegen den echten Account/die echte DB
+  verifiziert (u.a. Doppel-Trigger-Schutz, Not-Reset waehrend eines echten
+  laufenden Marktscans, main.py-Wiring mit UND ohne Token). **Weiterhin offen:**
+  Backward-Tracking/Bitpanda-Sync als weitere Remote-Aktionen (bewusst nicht in
+  v1), echter Cross-Device-Test vom Handy übers Notebook (nur dort durchführbar,
+  nicht von dieser Session aus).
+- **Portfolio-Vollständigkeit** `[2026-07-11, Nutzer-Fund, TEILWEISE ERLEDIGT]`:
+  eine Cash-Reserve-Nachfrage deckte eine Luecke von ~5.760 EUR (~37% des echten
+  Vermoegens) zwischen Bitpandas eigener Portfolio-Anzeige (15.694,69 EUR) und
+  unserer Berechnung (9.934,31 EUR) auf. Ursachen im Detail geprueft: (a)
+  Bitpanda sperrt Betraege fuer offene Fusion-Limit-Orders ("Committed
+  Balance") sofort aus dem Wallet-Guthaben - unsere `/fiatwallets`-Abfrage
+  liefert bereits den korrekten freien Betrag, das Problem war fehlende
+  Sichtbarkeit des Sync-Alters (**ERLEDIGT**: `cash_reserve_synced_at` in
+  `database/db.py` + Label in `ui/portfolio.py`; automatische Schaetzung des
+  gesperrten Betrags aus der Transaktionshistorie konzipiert, noch nicht
+  gebaut). (b) Aktuell gestakte Krypto-Bestaende (~2.435 EUR, ETH/SOL/AVAX/
+  SUI/TAO/HYPE/NEAR/SEI/BNB) sind ueber die normalen Wallet-Endpunkte
+  strukturell unsichtbar, aber automatisch aus stake/unstake-Transaktions-Tags
+  berechenbar (**ERLEDIGT**: `importer/bitpanda_avg_cost.py::
+  compute_staked_quantities()`, neue Spalte `holdings.staked_quantity`,
+  Anzeige in Portfolio-Tab + Remote-Seite - **`agent/krypto/risk_gate.py`
+  RM-1/RM-2/RM-4 beruecksichtigen das bewusst NOCH NICHT**, RG-6-unantastbare
+  Datei, eigene Planungs-Session noetig). (c) US-Aktien PLTR/VST hatten keine
+  EUR-Umrechnung (yfinance liefert nur USD) - **ERLEDIGT** (`api/
+  yfinance_client.py`, EURCV-Peg-Wechselkurs-Trick wie risk_gate.py). (d)
+  Live entdeckt: echte historische Margin-/Hebel-Trading-Aktivitaet auf dem
+  Account (`margin_trading.open/borrow/close/repay/fee`-Tags, 1828/811/622/
+  311/311 Vorkommen) - aktuell keine offene Krypto-Position (Nutzer
+  bestaetigt), zwei offene Positionen in anderen Assetklassen bewusst
+  ausserhalb des Tool-Scopes. Bitpanda bietet keine "offene Positionen"-API,
+  eine kuenftige RM-10/RM-11-Umsetzung muesste Positionen aus den Tag-Paaren
+  selbst rekonstruieren. Volle Details: `Basisinfos/Regelwerksmanual.md` Kap. 14.
 - **Flush-Erkennung** (AZ-1): **einfache Heuristik ERLEDIGT (2026-07-07)** —
   `agent/krypto/anticyclic.py` nutzt Kraken-Funding-Rates (bereits vorhanden, siehe Kap. 8)
   + Kursrückgang-Geschwindigkeit als groben Hinweis. Die volle AZ-1..AZ-8-

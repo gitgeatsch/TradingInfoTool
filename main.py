@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import os
+import threading
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
@@ -133,6 +134,30 @@ def main() -> None:
         fred_api_key=fred_api_key,
     )
     bg_scheduler.start()
+
+    # Remote-Steuer-Seite (2026-07-11, ueber Tailscale erreichbar, siehe
+    # Basisinfos/Regelwerksmanual.md Kap. 12/13) - P-8: ohne Token bleibt sie
+    # komplett deaktiviert, kein lauschender Port. Eingebettet als Hintergrund-
+    # Thread im selben Prozess (kein separater Prozess noetig, siehe remote/server.py
+    # Modul-Docstring) - nutzt dieselben bereits instanziierten Clients wieder.
+    remote_access_token = os.environ.get("REMOTE_ACCESS_TOKEN")
+    if remote_access_token:
+        from remote.server import create_app, run_remote_server
+
+        remote_app = create_app(
+            coingecko_client=coingecko_client,
+            kraken_client=kraken_client,
+            groq_client=groq_client,
+            conn_factory=db.get_connection,
+            watchlist=watchlist,
+            fred_api_key=fred_api_key,
+            access_token=remote_access_token,
+            log_path=LOG_PATH,
+        )
+        threading.Thread(target=run_remote_server, args=(remote_app,), daemon=True).start()
+        logger.info("Remote-Steuer-Seite gestartet (Port %d, nur ueber Tailscale/lokales Netz erreichbar).", 8765)
+    else:
+        logger.info("Kein REMOTE_ACCESS_TOKEN gesetzt - Remote-Steuer-Seite deaktiviert (P-8).")
 
     try:
         app.run_app(

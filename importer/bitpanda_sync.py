@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import sqlite3
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 
 import config
 import database.db as db
@@ -110,6 +111,13 @@ def sync_from_bitpanda(
             result.cash_reserve_updated = True
             result.cash_reserve_old_eur = old_cash
             result.cash_reserve_new_eur = eur_wallet.balance
+        # Zeitstempel IMMER setzen, auch wenn sich der Wert nicht geaendert hat -
+        # das beantwortet "wann haben wir zuletzt tatsaechlich nachgefragt", nicht
+        # nur "wann hat sich etwas geaendert" (2026-07-11, Nutzer-Fund: Bitpanda
+        # sperrt fuer offene Fusion-Limit-Orders reservierte Betraege sofort aus
+        # dem Wallet-Guthaben, ohne dass die App das mitbekommt - siehe
+        # db.get_cash_reserve_synced_at()-Docstring).
+        db.set_cash_reserve_synced_at(conn, datetime.now(timezone.utc).isoformat())
 
     # --- Bestaende (Krypto + Aktien/ETF/Rohstoffe, siehe Modul-Docstring) ---
     matched_symbols: set[str] = set()

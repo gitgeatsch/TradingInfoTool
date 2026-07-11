@@ -90,6 +90,10 @@ sie erscheinen als eigener Bestätigungsdialog, den du explizit pro Symbol best�
 musst. So bleibt der Sync auch bei dieser API-Lücke sicher, ohne echte Bestände
 versehentlich zu überschreiben.
 
+**Gestakte Bestände fließen seit 2026-07-11 auch in RM-1/RM-2/RM-4 selbst ein**
+(nicht nur in die Anzeige) — mit einer konservativen Ausnahme für ETH, dessen
+Un-/Restaking bisher nicht instant war. Volle Details in Kap. 14.
+
 ---
 
 ## 3. Regime-Steuerung — wie sich die Regeln je nach Marktlage anpassen (RG-1 bis RG-11)
@@ -423,10 +427,226 @@ Pro Asset wählbar, der Agent schlägt die zur Marktlage passende Strategie vor.
 - `agent/krypto/backward_tracking.py` — Signal-Ergebnis-Prüfung (Abschnitt 7, Selbstverifikations-Vision Schritt 2)
 - `api/local_model.py` — lokale KI-Ebene, Architektur-Seam (Abschnitt 8, noch nicht aktiv)
 - `importer/bitpanda_avg_cost.py`, `api/bitpanda.py::get_wallet_transactions()` — Einstandspreis aus Bitpanda-Trades (Abschnitt 9)
+- `remote/server.py`, `remote/status.py` — Remote-Steuer-Seite (Abschnitt 13)
+- `importer/bitpanda_avg_cost.py::compute_staked_quantities()` — aktuell gestakte Mengen (Abschnitt 14)
+- `api/yfinance_client.py` — EUR-Umrechnung für USD-only-Aktien wie PLTR/VST (Abschnitt 14)
 
 ---
 
-## 12. Offene / vorläufige Werte — die naheliegendsten Kandidaten für spätere Anpassung
+## 12. Betriebssicherheit — Systemstart, Fehlerbehandlung, wie du informiert wirst
+
+**Zweck (2026-07-11, Nutzer-Wunsch):** vollständige, ehrliche Bestandsaufnahme —
+was passiert beim Start automatisch, was brauchst du manuell, wie stabil sind
+Scheduler und Agent wirklich, und auf welchem Weg erfährst du von einem Problem.
+Wichtig für den geplanten 24/7-Betrieb am Notebook, wo du nicht ständig danebensitzt.
+
+### Was beim Start passiert
+
+| Schritt | Wann | Bei einem Fehler |
+|---|---|---|
+| Logging-Setup (Konsole + Logdatei) | immer | — |
+| `.env`/`config.yaml` laden | immer | **Kein Try/Except** — kaputte/fehlende `config.yaml` bringt die App **vor der UI zum Absturz** |
+| Datenbank initialisieren (`db.init_db`) | immer | **Kein Try/Except** — ein DB-Problem bringt die App ebenfalls vor der UI zum Absturz |
+| Bestände aus `Assets.xlsx` importieren | **nur beim allerersten Start** | **Kein Try/Except** — fehlt die Datei oder eine Pflichtspalte, stürzt die App vor der UI ab |
+| Kurs-/OHLC-Historie erstbefüllen (CoinGecko/Kraken) | **nur beim allerersten Start** | Robust — jeder Asset-Abruf einzeln abgesichert, degradiert statt abzustürzen |
+| Scheduler starten, Fenster öffnen | immer | — |
+
+**Wichtigste Konsequenz:** Die drei fett markierten Schritte sind aktuell **ungeschützt**.
+Läuft die App ohne sichtbares Terminal (z. B. per Verknüpfung am 24/7-Notebook), siehst
+du bei einem Fehlschlag dort **buchstäblich nichts** — nicht mal einen Logeintrag,
+weil der Absturz vor oder während dieser Schritte passiert. Das betrifft nur den
+**Start selbst**; ist die App einmal erfolgreich hochgefahren, sind die laufenden
+Scheduler-Jobs (siehe unten) deutlich robuster.
+
+### Scheduler-Jobs — wie stabil sie wirklich sind
+
+Jeder der sechs automatischen Jobs (Abschnitt 6) hat sein **eigenes**
+Try/Except (`logger.exception(...)`, Verbindung wird im `finally` geschlossen) —
+**kein** Job bleibt bei einem Fehler "hängen", jeder läuft beim nächsten Takt
+automatisch wieder an, egal wie oft er vorher fehlgeschlagen ist. Zusätzlich gibt
+es einen globalen Fehler-Listener (`EVENT_JOB_ERROR`/`EVENT_JOB_MISSED`) als
+zweite Verteidigungslinie, falls doch etwas bis zum Scheduler selbst durchschlägt.
+**Was fehlt:** jeglicher Backoff oder Alarm bei einem *dauerhaften* Ausfall (z. B.
+API drei Tage down) — die App versucht stur im gleichen Takt weiter, ohne dich
+aktiv zu warnen.
+
+### Wie du aktuell von einem Problem erfährst
+
+- **Logdatei** (`data/tradinginfotool.log`, rotierend, 5 MB × 3) ist der einzige
+  vollständige Weg — aktuell **kein Menüpunkt**, der sie dir öffnet, du müsstest
+  den Installationsordner kennen.
+- **Indirekt, verzögert:** Watchlist/Portfolio/Charts markieren Zeilen farblich
+  als "veraltet" (⚠), wenn Preise seit 30 Minuten bzw. Historie seit 2 Tagen nicht
+  aktualisiert wurde — aber nur für genau diese beiden Datenarten, nicht für
+  Marktscan- oder Backward-Tracking-Fehlschläge.
+- **Bei manuellen Aktionen** (Bitpanda-Sync, Einstandspreise berechnen, Signal
+  berechnen) siehst du Fehler direkt in der Oberfläche (Popup bzw. Status-Zeile).
+  Ausnahme: "Bestände neu importieren"/"aus Datei importieren" haben **kein**
+  Try/Except — ein Fehler landet nur auf der Konsole, ohne Popup und ohne
+  Logeintrag.
+- **E-Mail-/Push-Benachrichtigung ist NICHT implementiert.** `config.yaml` hat nur
+  einen leeren Platzhalter (`smtp_host: ""`), der von keinem Code gelesen wird —
+  bleibt ein offener Punkt (U-8), bräuchte zuerst eine SMTP-/Mail-API-Entscheidung.
+
+### Agent-Pipeline ("Signal berechnen") im Detail
+
+Zwei unterschiedliche Fehlerklassen: **(a) Groq liefert ungültiges/kaputtes JSON**
+— sauberer, automatischer Fallback auf HALTEN mit erklärendem Grund, kein Absturz,
+Signal wird trotzdem gespeichert. **(b) Echter Netzwerkausfall von Groq selbst**
+(Server down, Timeout) — **kein** Fallback, der rohe Fehlertext erscheint in der
+Status-Zeile, es wird nichts gespeichert. Ausfälle aller anderen Datenquellen
+innerhalb der Pipeline (CoinGecko/Kraken/FRED/Bitpanda-Listing) sind dagegen
+durchgehend nach dem P-10-Prinzip abgesichert — ein Ausfall degradiert nur den
+jeweiligen Fakt auf `null`, ohne die Pipeline abzubrechen.
+
+### Empfehlung für den nächsten Schritt
+
+Am wertvollsten für den geplanten 24/7-Betrieb wäre, die drei ungeschützten
+Start-Schritte oben abzusichern (Try/Except + garantierter Logeintrag, im
+schlimmsten Fall ein sichtbarer Fehlerdialog statt eines stillen Absturzes) —
+kleiner, klar abgegrenzter Fix mit hohem Nutzen, noch **nicht** umgesetzt.
+E-Mail-Benachrichtigung bleibt ebenfalls offen (SMTP-Konto-Entscheidung nötig).
+Die aggregierte Status-Übersicht selbst ist inzwischen Teil der Remote-Steuer-
+Seite geworden (Abschnitt 13).
+
+---
+
+## 13. Remote-Steuer-Seite — Status + Aktionen von unterwegs über Tailscale
+
+**Zweck (2026-07-11, direkter Anschluss an Abschnitt 12):** löst zwei der dort
+genannten Lücken — kein Weg, unterwegs auf Probleme zu reagieren, und Fehler
+nur über die schwer auffindbare Logdatei sichtbar. Voraussetzung: Tailscale
+(privates Mesh-VPN, siehe `Basisinfos/Tailscale-Setup-Anleitung.md`) zwischen
+Notebook und Handy eingerichtet.
+
+**Was die Seite zeigt/kann:** Portfolio-Gesamtwert, Anzahl veralteter Preise,
+letzter Marktscan (Kandidaten/Treffer), die letzten Fehlerzeilen aus dem Log —
+plus zwei Aktions-Buttons: **„Preise aktualisieren“** (Krypto + Aktien/ETF/
+Rohstoffe zusammen) und **„Marktscan jetzt starten“**. Bewusst nur diese zwei
+in dieser Version — Backward-Tracking ist selten zeitkritisch, ein
+Bitpanda-Sync-Button wäre durch den echten authentifizierten API-Call
+sensibler, beides kann später nach demselben Muster ergänzt werden.
+
+**Technisch:** eingebettet in `main.py` als Hintergrund-Thread (`remote/server.py`,
+Flask) — kein separater Prozess, läuft im selben Prozess wie die Tkinter-App
+und der Scheduler, nutzt dieselben bereits vorhandenen Verbindungen. Ohne einen
+gesetzten `REMOTE_ACCESS_TOKEN` (`.env`) bleibt die Seite komplett deaktiviert,
+kein lauschender Port (P-8).
+
+**Absicherung, zwei Schichten:** (1) nur innerhalb des Tailscale-Netzes
+erreichbar, (2) zusätzlich ein geheimer Zugriffs-Token wie ein API-Key. Ein
+Klick auf einen Aktions-Button startet den jeweiligen Job im Hintergrund und
+antwortet sofort — die Seite fragt danach alle paar Sekunden den Status ab,
+bis der Job fertig ist (kein langes Warten auf eine einzelne Antwort, wichtig
+bei wackliger Mobilfunkverbindung).
+
+**Doppelte Läufe ausgeschlossen:** jeder Job (Preise/Marktscan) hat eine
+eigene Sperre, geteilt zwischen dem normalen automatischen Takt (Abschnitt 6)
+und der Remote-Seite — ein manueller Klick kann einen bereits laufenden Job
+also nie doppelt anstoßen.
+
+**Not-Reset bei einem hängenden Job:** läuft ein Job ungewöhnlich lange (die
+Seite zeigt „läuft seit X Min“), blendet sie einen „Zurücksetzen“-Button ein.
+**Wichtig zu wissen:** das gibt nur die interne Sperre frei, damit ein neuer
+Versuch möglich ist — es beendet nicht zwingend den ursprünglich hängenden
+Hintergrund-Vorgang selbst. Bewusst als Not-Funktion gekennzeichnet, nicht für
+den Alltag gedacht.
+
+**Dabei gefundener und behobener Fehler:** `api/yfinance_client.py` (Kursquelle
+für Aktien/ETF/Rohstoffe) hatte als einzige Netzwerk-Quelle im Projekt keinen
+kontrollierten Timeout — ein hängender Yahoo-Finance-Aufruf hätte die neue
+Sperre dauerhaft blockiert. Jetzt mit einem harten 15-Sekunden-Timeout
+versehen, unabhängig von der Steuer-Seite ein eigenständiger Zuverlässigkeits-
+Gewinn.
+
+**Erreichbar unter:** `http://notebook.<dein-tailnet>.ts.net:8765/?token=DEIN_TOKEN`
+(Details/Ersteinrichtung siehe `Basisinfos/Tailscale-Setup-Anleitung.md`).
+
+---
+
+## 14. Portfolio-Vollständigkeit — Cash-Sperren, Staking, Margin-Trading
+
+**Zweck (2026-07-11, Nutzer-Fund):** eine Nachfrage zur Cash-Reserve-Anzeige
+deckte auf, dass der von der App gesehene Portfoliowert deutlich kleiner war als
+der tatsächliche (Bitpanda selbst zeigte 15.694,69 €, die App kam nur auf
+9.934,31 € — eine Lücke von ca. 5.760 €, rund 37 % des echten Vermögens). Diese
+Sektion hält fest, was die Lücke verursacht hat, was schon behoben ist, und was
+bewusst offen bleibt.
+
+### Gefundene Ursachen, im Detail geprüft
+
+| Ursache | Betrag (Live-Test) | Status |
+|---|---|---|
+| In offener Bitpanda-Fusion-Limit-Order gebunden ("Committed Balance") | ~188 € | Erkannt + dokumentiert, Sync-Zeitstempel zeigt Alter der Anzeige — automatische Berechnung noch offen |
+| Aktuell gestakte Krypto-Bestände (ETH, SOL, AVAX, SUI, TAO, HYPE, NEAR, SEI, BNB) | ~2.435 € | **Behoben** — Anzeige (Portfolio-Tab, Remote-Seite) UND `risk_gate.py` (ETH-Ausnahme, siehe unten) |
+| PLTR/VST: yfinance liefert nur USD, keine EUR-Umrechnung | ~660 € | **Behoben** |
+| Historische, aktuell nicht offene Margin-/Hebel-Trading-Aktivität (Krypto) | — | Kein Handlungsbedarf (aktuell keine offene Position, Nutzer bestätigt) |
+| Zwei offene Margin-Positionen in anderen Assetklassen | — | Bewusst außerhalb des Tool-Scopes |
+
+### Committed Balance (offene Fusion-Orders)
+
+Bitpanda sperrt den für eine offene Limit-Order benötigten Betrag sofort aus dem
+Wallet-Guthaben (offiziell dokumentiert in den Bitpanda-Fusion-Terms als
+"Committed Balance") — unsere `/fiatwallets`-Abfrage liefert bereits den
+**bereinigten, wirklich freien** Betrag, das ist für RM-4 (Cash-Reserve-Minimum)
+die korrekte, sicherheitsseitig richtige Zahl. Das Problem war nur, dass die
+App nicht erkennen ließ, ob dieser Wert *aktuell* ist. **Behoben (2026-07-11):**
+`database/db.py::get/set_cash_reserve_synced_at()` + neues Label im Portfolio-Tab
+("Bitpanda-Sync: vor X Min") — bewusst OHNE Stale-Färbung wie bei Preisen, da ein
+manueller Sync normalerweise stundenlang zurückliegt, ohne dass etwas falsch ist.
+
+**Automatische Schätzung des gesperrten Betrags** (statt eines manuellen Felds,
+Nutzer-Wunsch: kein manuelles Pflegen) wäre aus der bereits vorhandenen
+Transaktionshistorie ableitbar (Cash-Delta seit letztem Sync minus alle
+sichtbaren echten Trades/Transfers im selben Zeitraum = wahrscheinlich in
+offenen Orders gebunden) — **konzipiert, aber noch nicht gebaut**.
+
+### Staking-Sichtbarkeit
+
+Gestakte Bestände sind über die normalen Bitpanda-Wallet-Endpunkte strukturell
+unsichtbar (bereits länger bekannt, siehe `[[project-bitpanda-exchange]]`) — neu
+ist, dass sich das jetzt **automatisch aus der Transaktionshistorie berechnen**
+lässt, ohne eine eigene Order-API zu brauchen: jeder "stake"-Transfer bucht die
+Menge aus der normalen Wallet ab, jeder "unstake"-Transfer wieder zu — der
+verbleibende, noch nicht zurückgeholte Rest ist die aktuell gestakte Menge.
+
+**Umgesetzt (2026-07-11):** `importer/bitpanda_avg_cost.py::compute_staked_quantities()`
+läuft automatisch bei jedem "Einstandspreise berechnen"-Sync mit (kein
+zusätzlicher API-Aufruf, nutzt dieselben bereits geladenen Transaktionen), neue
+Spalte `holdings.staked_quantity`. Portfolio-Tab und Remote-Steuer-Seite zeigen
+den gestakten Anteil jetzt separat ausgewiesen im Gesamtwert.
+
+**Jetzt auch in `risk_gate.py` berücksichtigt (2026-07-11, eigene Planungs-
+Session).** Die zunächst bewusst zurückgestellte Einbindung (RG-6-unantastbare
+Datei) wurde nachgeholt: `_portfolio_values_usd()` zählt `staked_quantity`
+seitdem additiv zu `quantity` — sowohl in die Gesamtwert-Basis (RM-1/RM-2) als
+auch, für Stablecoins, automatisch in die Cash-Reserve (RM-4), da der
+bestehende Stablecoin-Filter dieselbe erweiterte Zahl liest. **Eine
+Ausnahme:** ETH ist laut Nutzer-Erfahrung der einzige Bitpanda-Staking-Fall,
+bei dem Un-/Restaking bisher nicht instant möglich war (alle anderen bisher
+gestakten Assets waren es) — ETH-Staking bleibt deshalb konservativ (Z-1) von
+der Risikoberechnung ausgeschlossen (`STAKING_ILLIQUID_SYMBOLS`-Konstante in
+`risk_gate.py`), mit einer sichtbaren Hinweiszeile im Check-Protokoll. Live
+gegen die echte DB verifiziert: Gesamtwert-Basis stieg um ~1.949 USD (die
+gestakten Nicht-ETH-Bestände), die ~832 USD gestaktes ETH blieben korrekt
+außen vor.
+
+### Margin-/Hebel-Trading — Tag-Vokabular dokumentiert (RM-10/RM-11-Grundlage)
+
+Live in der Transaktionshistorie gefunden: `margin_trading.open` (1828×),
+`margin_trading.borrow` (811×), `margin_trading.close` (622×),
+`margin_trading.repay` (311×), `margin_trading.fee` (311×) — echte historische
+Margin-Aktivität auf dem Account, jüngstes Ereignis ein "close" vom 07.05.2026,
+seitdem keine weitere Aktivität. Aktuell **keine offene Krypto-Margin-Position**
+(Nutzer bestätigt); zwei offene Positionen in anderen Assetklassen bewusst
+außerhalb des Tool-Scopes. Bitpandas API bietet **keine Übersicht offener
+Positionen** (nur den Bewegungs-Log) — eine künftige RM-10/RM-11-Umsetzung
+müsste Positionen aus `open`/`close`/`borrow`/`repay`-Paaren selbst
+rekonstruieren, das ist nicht trivial und bleibt ein offener Punkt für später.
+
+---
+
+## 15. Offene / vorläufige Werte — die naheliegendsten Kandidaten für spätere Anpassung
 
 Diese Werte sind laut Spezifikation ausdrücklich **vorläufig** (`[OFFEN]`-markiert) und
 noch nicht durch echte Ergebnisse verifiziert — sie sind der wahrscheinlichste
@@ -441,3 +661,13 @@ Startpunkt, sobald Backward-Tracking/Outcome-Daten vorliegen:
 - Die vier Gewichte je Regime (Technik/Fundamental/Momentum/Makro)
 - RG-4 Makro-Multiplikator (`risikoappetit_faktor`, aktuell fix auf 1,0)
 - RM-10 max. Hebel (3x, aktuell ohnehin deaktiviert)
+- **NEU (2026-07-11):** die ETH-Ausnahme in `risk_gate.py`
+  (`STAKING_ILLIQUID_SYMBOLS`, siehe Kap. 14) beruht auf einer einzelnen
+  Nutzer-Erfahrung, nicht auf einer systematischen Prüfung aller Bitpanda-
+  Staking-Produkte — bei künftigen neuen gestakten Assets prüfen, ob die Liste
+  erweitert werden muss.
+- **NEU (2026-07-11):** automatische Schätzung des in offenen Fusion-Orders
+  gebundenen Cash-Betrags (Kap. 14) — konzipiert, noch nicht gebaut.
+- **NEU (2026-07-11):** RM-10/RM-11 (Hebel) bräuchten eine Positions-
+  Rekonstruktion aus den `margin_trading.*`-Transaktions-Tags (Kap. 14) — nicht
+  trivial, Bitpanda liefert keine "offene Positionen"-Übersicht.

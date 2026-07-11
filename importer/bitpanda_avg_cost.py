@@ -109,12 +109,44 @@ def compute_avg_buy_prices(
     return results
 
 
+def compute_staked_quantities(
+    transactions: list[BitpandaTransaction],
+    existing: dict[str, float] | None = None,
+) -> dict[str, float]:
+    """2026-07-11, Nutzer-Fund: gestakte Bestaende sind ueber die normalen Wallet-
+    Endpunkte strukturell nicht sichtbar (siehe [[project-bitpanda-exchange]]) -
+    Bitpanda bucht einen "stake"-Transfer als ABGANG aus der normalen Wallet, ein
+    spaeterer "unstake"-Transfer als ZUGANG zurueck. Reine Funktion, keine DB/
+    Netzwerk - laeuft chronologisch durch alle "transfer"-Transaktionen mit
+    stake/unstake-Tag und fuehrt je Symbol Buch: outgoing+stake erhoeht die
+    gestakte Menge, incoming+unstake reduziert sie. Der verbleibende Rest ist die
+    AKTUELL (noch nicht zurueckgeholte) gestakte Menge - live gegen den echten
+    Account verifiziert (2026-07-11).
+
+    existing (optional): wie compute_avg_buy_prices() - Startpunkt fuer
+    inkrementelle Folge-Syncs, da sync_avg_buy_prices() nur neue Transaktionen
+    seit dem letzten Lauf nachlaedt, nicht die komplette Historie erneut."""
+    staked = dict(existing) if existing else {}
+    stake_events = [t for t in transactions if t.type == "transfer" and t.cryptocoin_symbol]
+    stake_events.sort(key=lambda t: t.unix_timestamp)
+
+    for t in stake_events:
+        symbol = t.cryptocoin_symbol
+        if "stake" in t.tags and t.in_or_out == "outgoing":
+            staked[symbol] = staked.get(symbol, 0.0) + t.amount_cryptocoin_wallet
+        elif "unstake" in t.tags and t.in_or_out == "incoming":
+            staked[symbol] = max(0.0, staked.get(symbol, 0.0) - t.amount_cryptocoin_wallet)
+
+    return {sym: qty for sym, qty in staked.items() if qty > 0.0001}
+
+
 @dataclass
 class AvgCostSyncResult:
     updated_symbols: list[str] = field(default_factory=list)
     unmatched_bitpanda_symbols: list[str] = field(default_factory=list)
     total_transactions_fetched: int = 0
     incremental: bool = False
+    staked_quantities: dict[str, float] = field(default_factory=dict)
 
 
 def sync_avg_buy_prices(
@@ -170,11 +202,29 @@ def sync_avg_buy_prices(
                 trade_amount_fiat=t.trade_amount_fiat,
                 trade_amount_cryptocoin=t.trade_amount_cryptocoin,
                 trade_fiat_id=t.trade_fiat_id,
+                tags=t.tags,
             )
         mapped_transactions.append(t)
     result.unmatched_bitpanda_symbols = sorted(unmatched)
 
     computed = compute_avg_buy_prices(mapped_transactions, existing=existing_results)
+
+    existing_staked = {
+        symbol: holding.staked_quantity
+        for symbol, holding in existing_holdings.items()
+        if holding.staked_quantity
+    }
+    staked = compute_staked_quantities(mapped_transactions, existing=existing_staked)
+    result.staked_quantities = staked
+    for symbol, qty in staked.items():
+        if symbol in existing_holdings:
+            db.update_holding_staked_quantity(conn, symbol, qty)
+    # Symbole, die frueher gestakt waren, jetzt aber vollstaendig zurueckgeholt sind
+    # (qty auf 0 gefallen, daher von compute_staked_quantities() bereits herausgefiltert) -
+    # muessen explizit auf 0 zurueckgesetzt werden, sonst bliebe der alte Wert stehen.
+    for symbol in existing_staked:
+        if symbol not in staked and symbol in existing_holdings:
+            db.update_holding_staked_quantity(conn, symbol, 0.0)
 
     max_unix = last_synced or 0
     for t in transactions:

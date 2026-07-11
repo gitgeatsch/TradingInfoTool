@@ -241,6 +241,7 @@ class BitpandaTransaction:
     trade_amount_fiat: float | None
     trade_amount_cryptocoin: float | None
     trade_fiat_id: str | None  # "1" = EUR - Aufrufer sollte nicht-EUR-Trades ausschliessen (P-10)
+    tags: list[str]  # 2026-07-11, Staking-Sichtbarkeit: short_name je Tag, z.B. "stake"/"unstake"
 
 
 def get_wallet_transactions(
@@ -288,6 +289,7 @@ def get_wallet_transactions(
                     trade_amount_fiat=float(trade_attrs["amount_fiat"]) if trade_attrs else None,
                     trade_amount_cryptocoin=float(trade_attrs["amount_cryptocoin"]) if trade_attrs else None,
                     trade_fiat_id=trade_attrs.get("fiat_id") if trade_attrs else None,
+                    tags=[t["attributes"]["short_name"] for t in attrs.get("tags", [])],
                 )
             )
         if on_page_fetched:

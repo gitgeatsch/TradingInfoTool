@@ -350,8 +350,10 @@ class TradingInfoToolApp(tk.Tk):
             conn.close()
 
         self._portfolio_view.refresh()
-        if result.cash_reserve_updated:
-            self._portfolio_view.reload_cash_reserve_from_db()
+        # Immer neu laden, nicht nur bei result.cash_reserve_updated (2026-07-11) -
+        # der "zuletzt synchronisiert"-Zeitstempel aendert sich bei JEDEM erfolgreichen
+        # Sync-Check, auch wenn der Cash-Wert selbst unveraendert blieb.
+        self._portfolio_view.reload_cash_reserve_from_db()
 
         # Nutzer-Wunsch (2026-07-10): nach jedem Sync automatisch die Export-Datei
         # aktualisieren, damit sich der Live-Abgleich auch in Excel niederschlaegt -
