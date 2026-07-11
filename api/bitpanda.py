@@ -25,6 +25,7 @@ einzige Fall, "CC" heißt bei Bitpanda selbst offiziell "Canton" (exakte
 Namensübereinstimmung, kein Ticker-Zufallstreffer)."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 import requests
@@ -128,8 +129,12 @@ def _auth_headers(api_key: str) -> dict:
     return {"X-Api-Key": api_key}
 
 
-def _authenticated_get(path: str, api_key: str, session: requests.Session) -> dict:
-    response = session.get(f"{BITPANDA_API_V1_URL}{path}", headers=_auth_headers(api_key), timeout=15)
+def _authenticated_get(
+    path: str, api_key: str, session: requests.Session, params: dict | None = None
+) -> dict:
+    response = session.get(
+        f"{BITPANDA_API_V1_URL}{path}", headers=_auth_headers(api_key), params=params, timeout=15
+    )
     if response.status_code == 401:
         raise BitpandaAuthError(
             f"Bitpanda API antwortet mit 401 Unauthorized bei {path} - Key ungueltig, "
@@ -209,6 +214,88 @@ def get_non_crypto_wallets(api_key: str, session: requests.Session | None = None
                 balances[symbol] = balances.get(symbol, 0.0) + float(attrs["balance"])
                 names.setdefault(symbol, attrs.get("name"))
     return [BitpandaCryptoWallet(symbol=sym, balance=bal, name=names.get(sym)) for sym, bal in balances.items()]
+
+
+# ---------------------------------------------------------------------------
+# Wallet-Transaktionshistorie (2026-07-11, Einstandspreis-Feature) - liefert fuer
+# jede buy/sell-Transaktion den ECHTEN Marktpreis zum Zeitpunkt (attributes.trade.
+# attributes.price), live gegen den echten Account verifiziert. Live-Test bestaetigt:
+# page_number-Paginierung funktioniert identisch zu get_listed_assets() (page_size
+# bis mind. 500 akzeptiert, total_count=9534 -> 20 statt ~95 Requests). Ebenfalls
+# bestaetigt: die API liefert neueste Transaktion zuerst - ermoeglicht fruehzeitigen
+# Pagination-Abbruch bei inkrementellen Folge-Syncs (since_unix-Parameter).
+BITPANDA_TRANSACTIONS_PAGE_SIZE = 500
+
+
+BITPANDA_EUR_FIAT_ID = "1"  # live gegen /fiatwallets verifiziert 2026-07-11
+
+
+@dataclass
+class BitpandaTransaction:
+    type: str  # "buy" | "sell" | "transfer" | ...
+    in_or_out: str  # "incoming" | "outgoing"
+    cryptocoin_symbol: str | None
+    amount_cryptocoin_wallet: float
+    unix_timestamp: int
+    trade_price: float | None  # None wenn kein trade-Unterobjekt (transfer/stake/fee)
+    trade_amount_fiat: float | None
+    trade_amount_cryptocoin: float | None
+    trade_fiat_id: str | None  # "1" = EUR - Aufrufer sollte nicht-EUR-Trades ausschliessen (P-10)
+
+
+def get_wallet_transactions(
+    api_key: str,
+    session: requests.Session | None = None,
+    since_unix: int | None = None,
+    page_size: int = BITPANDA_TRANSACTIONS_PAGE_SIZE,
+    on_page_fetched: Callable[[int, int], None] | None = None,
+) -> list[BitpandaTransaction]:
+    """GET /wallets/transactions - komplette Transaktionshistorie, nur lesend.
+    since_unix (optional) bricht die Paginierung fruehzeitig ab, sobald eine
+    Transaktion mit unix_timestamp <= since_unix erscheint - fuer inkrementelle
+    Folge-Syncs (siehe importer/bitpanda_avg_cost.py), da neuere Transaktionen
+    immer zuerst geliefert werden. on_page_fetched(bisher_geladen, total_count)
+    fuer eine Fortschrittsanzeige bei langlaufenden Erstlaeufen."""
+    session = session or requests.Session()
+    transactions: list[BitpandaTransaction] = []
+    page = 1
+    while True:
+        payload = _authenticated_get(
+            "/wallets/transactions",
+            api_key,
+            session,
+            params={"page_size": page_size, "page_number": page},
+        )
+        meta = payload["meta"]
+        total_count = meta["total_count"]
+        stop_early = False
+        for entry in payload["data"]:
+            attrs = entry["attributes"]
+            unix_ts = int(attrs["time"]["unix"])
+            if since_unix is not None and unix_ts <= since_unix:
+                stop_early = True
+                break
+            trade = attrs.get("trade")
+            trade_attrs = trade["attributes"] if trade else None
+            transactions.append(
+                BitpandaTransaction(
+                    type=attrs["type"],
+                    in_or_out=attrs["in_or_out"],
+                    cryptocoin_symbol=attrs.get("cryptocoin_symbol"),
+                    amount_cryptocoin_wallet=float(attrs["amount"]),
+                    unix_timestamp=unix_ts,
+                    trade_price=float(trade_attrs["price"]) if trade_attrs else None,
+                    trade_amount_fiat=float(trade_attrs["amount_fiat"]) if trade_attrs else None,
+                    trade_amount_cryptocoin=float(trade_attrs["amount_cryptocoin"]) if trade_attrs else None,
+                    trade_fiat_id=trade_attrs.get("fiat_id") if trade_attrs else None,
+                )
+            )
+        if on_page_fetched:
+            on_page_fetched(len(transactions), total_count)
+        if stop_early or page * page_size >= total_count:
+            break
+        page += 1
+    return transactions
 
 
 def resolve_bitpanda_symbol_to_watchlist(

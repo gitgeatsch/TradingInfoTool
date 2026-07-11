@@ -275,6 +275,27 @@ def _migrate_signal_outcome_columns(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+_HOLDINGS_AVG_COST_NEW_COLUMNS = {
+    # EUR, nicht USD - Bitpandas trade.attributes.price ist EUR-denominiert
+    # (fiat_id "1" = EUR, live gegen /fiatwallets verifiziert 2026-07-11).
+    "avg_buy_price_eur": "REAL",
+    "avg_buy_price_tracked_qty": "REAL",
+    "avg_buy_price_computed_at": "TEXT",
+    "avg_buy_price_manual_eur": "REAL",
+}
+
+
+def _migrate_holdings_avg_cost_columns(conn: sqlite3.Connection) -> None:
+    """Wie _migrate_signal_outcome_columns(): holdings existierte bereits vor dem
+    Einstandspreis-Feature (2026-07-11, echter Marktpreis aus Bitpanda-Trades,
+    siehe importer/bitpanda_avg_cost.py)."""
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(holdings)")}
+    for column, sql_type in _HOLDINGS_AVG_COST_NEW_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE holdings ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
 def _migrate_price_cache_nullable_coingecko_id(conn: sqlite3.Connection) -> None:
     """price_cache.coingecko_id war urspruenglich NOT NULL (reines Krypto-Schema) -
     fuer Multi-Asset-Tracking (Nutzer-Idee 2026-07-09, Aktien/ETF/Rohstoffe ohne
@@ -318,6 +339,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_signal_range_kriterium_columns(conn)
     _migrate_price_cache_nullable_coingecko_id(conn)
     _migrate_signal_outcome_columns(conn)
+    _migrate_holdings_avg_cost_columns(conn)
 
 
 def is_first_run(conn: sqlite3.Connection) -> bool:
@@ -350,9 +372,61 @@ def upsert_holding(
 
 def get_all_holdings(conn: sqlite3.Connection) -> list[Holding]:
     rows = conn.execute(
-        "SELECT symbol, quantity, updated_at, source FROM holdings"
+        "SELECT symbol, quantity, updated_at, source, avg_buy_price_eur, "
+        "avg_buy_price_tracked_qty, avg_buy_price_computed_at, avg_buy_price_manual_eur "
+        "FROM holdings"
     ).fetchall()
     return [Holding(**dict(row)) for row in rows]
+
+
+def update_holding_avg_buy_price(
+    conn: sqlite3.Connection, symbol: str, avg_buy_price_eur: float | None, tracked_qty: float
+) -> None:
+    """Schreibt nur den automatisch berechneten Einstandspreis (Slice: Bitpanda-
+    Transaktions-Auswertung, importer/bitpanda_avg_cost.py) - avg_buy_price_manual_eur
+    bleibt unberuehrt (siehe Plan: manueller Override wird von keiner automatischen
+    Berechnung je angefasst). Setzt nur, wenn die Zeile bereits existiert (holdings
+    wird ausschliesslich ueber upsert_holding() neu angelegt)."""
+    conn.execute(
+        "UPDATE holdings SET avg_buy_price_eur = ?, avg_buy_price_tracked_qty = ?, "
+        "avg_buy_price_computed_at = ? WHERE symbol = ?",
+        (avg_buy_price_eur, tracked_qty, _now_iso(), symbol),
+    )
+    conn.commit()
+
+
+def set_holding_avg_buy_price_manual(conn: sqlite3.Connection, symbol: str, value: float | None) -> None:
+    """value=None loescht den Override explizit (faellt dann auf den automatischen
+    Wert zurueck, siehe Holding.effective_avg_buy_price_eur)."""
+    conn.execute(
+        "UPDATE holdings SET avg_buy_price_manual_eur = ? WHERE symbol = ?",
+        (value, symbol),
+    )
+    conn.commit()
+
+
+def get_bitpanda_avg_cost_last_synced_unix(conn: sqlite3.Connection) -> int | None:
+    """Globaler Wasserstand (nicht pro Symbol, ein API-Aufruf liefert Transaktionen
+    ueber alle Symbole gemischt) - ermoeglicht inkrementelle Folge-Syncs, da Bitpanda
+    /wallets/transactions neueste-zuerst liefert (live verifiziert 2026-07-11)."""
+    row = conn.execute(
+        "SELECT value FROM meta WHERE key = 'bitpanda_avg_cost_last_synced_unix'"
+    ).fetchone()
+    if row is None or row["value"] is None:
+        return None
+    try:
+        return int(row["value"])
+    except ValueError:
+        return None
+
+
+def set_bitpanda_avg_cost_last_synced_unix(conn: sqlite3.Connection, unix_timestamp: int) -> None:
+    conn.execute(
+        "INSERT INTO meta (key, value) VALUES ('bitpanda_avg_cost_last_synced_unix', ?) "
+        "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        (str(unix_timestamp),),
+    )
+    conn.commit()
 
 
 def get_cash_reserve_fiat_eur(conn: sqlite3.Connection) -> float:

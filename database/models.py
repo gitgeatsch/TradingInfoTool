@@ -10,6 +10,24 @@ class Holding:
     quantity: float
     updated_at: str
     source: str = "import"
+    # Einstandspreis (2026-07-11, echter Marktpreis aus Bitpanda-Trades, siehe
+    # importer/bitpanda_avg_cost.py) - EUR, nicht USD (Bitpandas trade.attributes.
+    # price ist EUR-denominiert, fiat_id "1" = EUR, live verifiziert). avg_buy_price_eur
+    # ist automatisch berechnet (gleitender Durchschnitt), avg_buy_price_manual_eur ein
+    # manueller Override mit komplettem Vorrang. tracked_qty ist die Menge, auf die
+    # sich avg_buy_price_eur bezieht - kann kleiner als quantity sein (Staking-
+    # Gutschriften/externe Einzahlungen ohne bepreisten Trade bleiben bewusst
+    # unbepreist statt geschaetzt).
+    avg_buy_price_eur: float | None = None
+    avg_buy_price_tracked_qty: float | None = None
+    avg_buy_price_computed_at: str | None = None
+    avg_buy_price_manual_eur: float | None = None
+
+    @property
+    def effective_avg_buy_price_eur(self) -> float | None:
+        """Einzige Quelle der Wahrheit fuer "welcher Einstandspreis gilt" - manueller
+        Override hat komplett Vorrang vor dem automatisch berechneten Wert."""
+        return self.avg_buy_price_manual_eur if self.avg_buy_price_manual_eur is not None else self.avg_buy_price_eur
 
 
 @dataclass

@@ -123,6 +123,10 @@ def chart_price_line_color() -> str:
     return _palette()["fg"]
 
 
+def success_color() -> str:
+    return _palette()["success"]
+
+
 def umgesetzt_color() -> str:
     return _palette()["success"]
 

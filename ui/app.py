@@ -1,6 +1,7 @@
 """Hauptfenster: Watchlist- und Portfolio-Tab, Basis-UI fuer Phase 1."""
 from __future__ import annotations
 
+import threading
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
@@ -90,6 +91,13 @@ class TradingInfoToolApp(tk.Tk):
             command=self._sync_bitpanda,
             state=("normal" if self._bitpanda_api_key else "disabled"),
         )
+        file_menu.add_command(
+            label="Einstandspreise von Bitpanda berechnen",
+            command=self._sync_bitpanda_avg_cost,
+            state=("normal" if self._bitpanda_api_key else "disabled"),
+        )
+        self._avg_cost_menu = file_menu
+        self._avg_cost_menu_index = file_menu.index("end")
         file_menu.add_separator()
         file_menu.add_command(label="Beenden", command=self.destroy)
         menubar.add_cascade(label="Datei", menu=file_menu)
@@ -399,6 +407,70 @@ class TradingInfoToolApp(tk.Tk):
                 self, self._db_conn_factory, result.decreased_holdings_needs_confirmation,
                 on_applied=self._after_decrease_applied,
             )
+
+    def _sync_bitpanda_avg_cost(self) -> None:
+        """Echter Anschaffungspreis (2026-07-11, Nutzer-Wunsch) aus Bitpanda-Trade-
+        Historie berechnen - bewusst EIGENER Menuepunkt, unabhaengig vom Bestands-
+        abgleich (siehe importer/bitpanda_avg_cost.py Modul-Docstring). Anders als
+        _sync_bitpanda() (schnell, ~60 Objekte) braucht dieser Lauf bei einem
+        Erstsync bis zu ~9500 Transaktionen (live gemessen: ~40s) - MUSS deshalb
+        threaded laufen, sonst friert die UI ein."""
+        if not self._bitpanda_api_key:
+            return  # defensiver Re-Check, Menuepunkt ist ohne Key ohnehin deaktiviert
+
+        self._avg_cost_menu.entryconfig(self._avg_cost_menu_index, state="disabled")
+        self.title("TradingInfoTool — Einstandspreise werden berechnet …")
+
+        thread = threading.Thread(target=self._run_avg_cost_sync, daemon=True)
+        thread.start()
+
+    def _run_avg_cost_sync(self) -> None:
+        from importer.bitpanda_avg_cost import sync_avg_buy_prices
+
+        def on_progress(loaded: int, total: int) -> None:
+            self.after(0, self._update_avg_cost_progress, loaded, total)
+
+        conn = self._db_conn_factory()
+        try:
+            watchlist = self._watchlist
+            result = sync_avg_buy_prices(
+                conn, self._bitpanda_api_key, watchlist, self._bitpanda_assets or [], on_progress=on_progress
+            )
+            error = None
+        except Exception as exc:  # noqa: BLE001 - an die UI durchreichen statt den Thread stumm sterben zu lassen
+            result = None
+            error = exc
+        finally:
+            conn.close()
+
+        self.after(0, self._on_avg_cost_sync_done, result, error)
+
+    def _update_avg_cost_progress(self, loaded: int, total: int) -> None:
+        self.title(f"TradingInfoTool — Einstandspreise werden berechnet … ({loaded}/{total})")
+
+    def _on_avg_cost_sync_done(self, result, error) -> None:
+        self.title("TradingInfoTool")
+        self._avg_cost_menu.entryconfig(self._avg_cost_menu_index, state="normal")
+
+        if error is not None:
+            messagebox.showerror(
+                "Einstandspreise von Bitpanda berechnen",
+                f"Berechnung abgebrochen, nichts wurde verändert:\n\n{error}",
+            )
+            return
+
+        self._portfolio_view.refresh()
+
+        lines = [
+            f"{result.total_transactions_fetched} Transaktionen "
+            f"{'neu ' if result.incremental else ''}geladen, {len(result.updated_symbols)} Assets aktualisiert."
+        ]
+        if result.unmatched_bitpanda_symbols:
+            lines.append(
+                "\nBei Bitpanda gehandelt, aber keiner Watchlist zuordenbar:\n"
+                + ", ".join(result.unmatched_bitpanda_symbols)
+            )
+        messagebox.showinfo("Einstandspreise von Bitpanda berechnen", "\n".join(lines))
 
     def _after_decrease_applied(self) -> None:
         """Callback fuer BitpandaDecreaseConfirmDialog - Portfolio-Ansicht neu laden

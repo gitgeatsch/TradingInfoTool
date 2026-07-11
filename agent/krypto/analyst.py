@@ -21,6 +21,7 @@ import numpy as np
 from agent.krypto.anticyclic import AnticyclicContext
 from agent.krypto.regime import RegimeResult
 from agent.krypto.risk_gate import RiskPreCheckResult
+from importer.bitpanda_avg_cost import compute_cost_basis_view
 from indicators.calculations import ConfluenceSummary, TechnicalSnapshot, latest_value
 
 logger = logging.getLogger(__name__)
@@ -136,6 +137,14 @@ null). Dieses Kriterium wird bei jedem manuellen Pipeline-Lauf neu bewertet - es
 KEIN automatischer Trigger, der Nutzer entscheidet weiterhin manuell.
 18. Antworte AUSSCHLIESSLICH mit einem einzigen JSON-Objekt gemaess dem vorgegebenen \
 Schema. Kein Markdown, keine Code-Fences, kein Text ausserhalb des JSON.
+19. `haltung.gewinn_verlust_pct` (falls nicht null) ist der aktuelle Gewinn/Verlust der \
+bestehenden Position gegenueber dem echten Anschaffungspreis (`haltung.einstandspreis_eur`, \
+EUR, KEINE steuerliche Kostenbasis) - niedrig gewichteter Kontext fuer die Halten/ \
+Verkaufen-Abwaegung (z.B. bei einer bereits stark gescheiterten These), KEINE harte Regel \
+und KEIN Ersatz fuer die Stop-Loss-/CRV-Pflicht (Regel 3). Ist `einstandspreis_quelle` \
+"unbekannt" oder `menge_ohne_bekannten_einstandspreis` > 0, erwaehne diese Unsicherheit \
+knapp, statt den Gewinn/Verlust als vollstaendig sicher darzustellen. Bei null: nicht \
+erwaehnen, keine Luecke erfinden.
 
 SCHEMA:
 {
@@ -187,6 +196,36 @@ def _native(value):
 def _last(arr: np.ndarray) -> float | None:
     valid = arr[~np.isnan(arr)]
     return float(valid[-1]) if len(valid) else None
+
+
+def _build_haltung_facts(holding, latest_price) -> dict:
+    """Einstandspreis-Kontext (2026-07-11, Nutzer-Wunsch) - echter Marktpreis aus
+    Bitpanda-Trades, EUR, KEINE steuerliche Kostenbasis (siehe importer/
+    bitpanda_avg_cost.py Modul-Docstring). menge_ohne_bekannten_einstandspreis
+    macht sichtbar, wenn ein Teil des Bestands nicht bepreist werden konnte
+    (Staking-Gutschriften/externe Einzahlungen) - wird nie stillschweigend mit
+    eingepreist (P-10)."""
+    menge = _native(holding.quantity) if holding else 0.0
+    wert_usd = (
+        _native(holding.quantity * latest_price.price_usd)
+        if holding and latest_price and latest_price.price_usd
+        else 0.0
+    )
+    if not holding:
+        return {"menge": menge, "wert_usd": wert_usd, "einstandspreis_eur": None,
+                 "einstandspreis_quelle": "unbekannt", "menge_ohne_bekannten_einstandspreis": 0.0,
+                 "gewinn_verlust_pct": None}
+
+    price_eur = latest_price.price_eur if latest_price else None
+    view = compute_cost_basis_view(holding, price_eur)
+    return {
+        "menge": menge,
+        "wert_usd": wert_usd,
+        "einstandspreis_eur": _native(view.effective_avg_price_eur),
+        "einstandspreis_quelle": view.source,
+        "menge_ohne_bekannten_einstandspreis": _native(view.unknown_quantity),
+        "gewinn_verlust_pct": _native(view.pl_pct),
+    }
 
 
 def build_facts(
@@ -249,12 +288,7 @@ def build_facts(
             "eur": _native(latest_price.price_eur) if latest_price else None,
             "aktualisiert_vor_min": price_age_minutes,
         },
-        "haltung": {
-            "menge": _native(holding.quantity) if holding else 0.0,
-            "wert_usd": _native(holding.quantity * latest_price.price_usd)
-            if holding and latest_price and latest_price.price_usd
-            else 0.0,
-        },
+        "haltung": _build_haltung_facts(holding, latest_price),
         "technische_analyse": {
             "ema": {str(p): _native(latest_value(r)) for p, r in technical_snapshot.ema.items()},
             "macd": macd_facts,

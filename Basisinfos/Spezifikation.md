@@ -723,6 +723,44 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
   _sync_bitpanda()`), ohne die Original-Datei anzutasten. Live verifiziert: alle 13
   Non-Krypto-Assets korrekt gefunden und synchronisiert, `synced_count: 0` bei
   einem Wiederholungslauf nach Abgleich mit der echten `Assets.xlsx`.
+  **Fünfter Pfad ERGÄNZT (2026-07-11, Nutzer-Wunsch): Einstandspreis/Gewinn-
+  Verlust.** Bisher zeigte die App nirgends, ob eine Position im Gewinn/Verlust
+  steht. Auslöser: Bitpandas eigene "durchschnittlicher Kaufpreis"-Anzeige
+  vermischt echten Marktpreis mit steuerlicher Bemessungsgrundlage (Swap-Ketten
+  übertragen den ursprünglichen EUR-Anschaffungswert, keine Realisierung in
+  Österreich) — konkretes Nutzer-Beispiel: BTC zeigte bei Bitpanda "157.586 €
+  Kaufpreis" an, obwohl BTC nie so hoch stand. Bewusste Eingrenzung (Nutzer-
+  Entscheidung): NUR der echte Marktpreis, KEINE steuerliche Kostenbasis-
+  Verfolgung über Swap-Ketten (bleibt bei Bitpanda selbst, für das Tool nicht
+  relevant). Neuer Endpunkt-Wrapper `api/bitpanda.py::get_wallet_transactions()`
+  (`GET /wallets/transactions`, page-number-paginiert wie `get_listed_assets()`,
+  live verifiziert: 9534 Transaktionen, ~41s Erstlauf) liefert für jede
+  `buy`/`sell`-Transaktion den echten Marktpreis (`trade.price`, EUR-denominiert,
+  `fiat_id "1"` = EUR, live gegen `/fiatwallets` verifiziert). Neues Modul
+  `importer/bitpanda_avg_cost.py::compute_avg_buy_prices()` — gleitender
+  Durchschnitt (Kauf blendet ein, Verkauf reduziert nur die Menge), live gegen
+  eine manuelle Gegenrechnung exakt verifiziert (BTC: 68.331,28 €, deutlich
+  plausibler als Bitpandas 157.586 €, resultierender G/V −18,1% statt Bitpandas
+  −64,36%). **P-10-Sorgfalt:** `tracked_quantity` hält fest, auf wie viel Menge
+  sich der Durchschnitt tatsächlich bezieht — Staking-Gutschriften/externe
+  Einzahlungen ohne bepreisten Trade werden NIE stillschweigend mitgepreist,
+  sondern explizit als "unbepreist" ausgewiesen (`compute_cost_basis_view()`).
+  Zwei neue `holdings`-Spalten: `avg_buy_price_eur` (automatisch) und
+  `avg_buy_price_manual_eur` (manueller Override, kompletter Vorrang — Dialog per
+  Doppelklick im Portfolio-Tab, für Bestände ohne vollständige Bitpanda-Historie).
+  **Trigger-Verhalten:** eigener, unabhängiger Menüpunkt "Einstandspreise von
+  Bitpanda berechnen" (nicht in den bestehenden Bestandsabgleich integriert, um
+  dessen Atomaritätslogik nicht zu gefährden), kein automatischer Start-Trigger
+  (gleiches Prinzip wie der Bestandsabgleich). Threaded (`ui/app.py`), da der
+  Erstlauf ~40s dauert. **Inkrementelle Folge-Syncs:** neuer `meta`-Wasserstand
+  `bitpanda_avg_cost_last_synced_unix` — da Bitpanda Transaktionen neueste-zuerst
+  liefert, bricht die Paginierung früh ab, sobald bereits verarbeitete
+  Transaktionen erscheinen (live verifiziert: 1,6s statt 41s bei nur 6 neuen
+  Transaktionen). **KI-Integration:** `agent/krypto/analyst.py::build_facts()`
+  liefert `haltung.einstandspreis_eur`/`gewinn_verlust_pct` als niedrig
+  gewichteten Kontext-Fakt (SYSTEM_PROMPT Regel 19) — keine harte Regel, kein
+  Ersatz für Stop-Loss-/CRV-Pflicht (Z-2). Live-Pipeline-Lauf für BTC verifiziert
+  (`facts_json` korrekt befüllt, konsistent mit Portfolio-Anzeige).
 - **B-6** Persistenz erweitert um: neu vom Marktscan entdeckte Assets (Kap. 13),
   Regime-Verlauf und alle Overrides (Quelle, Grund, Zeitpunkt, Dauer — Kap. 14) sowie
   antizyklische Kaufpläne/Tranchen-Status (Kap. 15) — für Nachvollziehbarkeit (Z-4).

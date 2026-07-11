@@ -211,6 +211,7 @@ gespeicherte Ist-Ergebnisse kann später nichts verglichen werden.
 | "Signal-Historie" | Signale-Tab | Zeigt alle bisherigen Signale des ausgewählten Assets inkl. Backward-Tracking-Ergebnis (Take-Profit/Stop-Loss/Offen/Abgelaufen) — reine Anzeige, kein externer Aufruf. |
 | "Jetzt scannen" | Marktscan-Tab | Derselbe Marktscan-Lauf wie der 04:00/16:00-Scheduler-Job, nur sofort statt zur festen Uhrzeit |
 | "Bestände von Bitpanda abgleichen" | Datei-Menü | Live-Abgleich aller Bestände (Krypto + Aktien/ETF/Rohstoffe) + EUR-Cash direkt von Bitpanda (siehe RM-4-Abschnitt oben) — **nie automatisch**, da ein echter, authentifizierter API-Key beteiligt ist |
+| "Einstandspreise von Bitpanda berechnen" | Datei-Menü | Echter Anschaffungspreis je Asset aus der Bitpanda-Trade-Historie (siehe Abschnitt 9) — **eigener, unabhängiger Menüpunkt**, nie automatisch (Erstlauf kann ~40s dauern, läuft threaded im Hintergrund) |
 | "Bestände neu importieren" / "aus Datei importieren…" / "exportieren…" | Datei-Menü | Excel-Import/-Export (`Basisinfos/Assets.xlsx`) — rein lokal, kein externer Netzwerk-Aufruf |
 | Fiat-Cash-Reserve "Speichern" | Portfolio-Tab | Manuelle Eingabe, kein externer Aufruf |
 
@@ -338,7 +339,63 @@ realistischen Testbedingungen.
 
 ---
 
-## 9. Strategie-Katalog (S-1 bis S-6)
+## 9. Einstandspreis / Gewinn-Verlust — echter Marktpreis aus Bitpanda-Trades
+
+**Zweck (2026-07-11, Nutzer-Wunsch):** bisher zeigte die App nirgends, ob eine
+Position im Gewinn oder Verlust steht — nur den aktuellen Marktwert (Menge ×
+Kurs). Auslöser war eine konkrete Beobachtung des Nutzers: Bitpandas eigene
+Anzeige "durchschnittlicher Kaufpreis" verwechselt den echten Marktpreis mit der
+**steuerlichen** Bemessungsgrundlage — bei Krypto-zu-Krypto-Swaps (in Österreich
+keine steuerliche Realisierung) wird der ursprüngliche EUR-Anschaffungswert der
+gesamten Swap-Kette übertragen, nicht der tatsächliche Preis des neu erhaltenen
+Assets. Konkretes Beispiel: Bitpanda zeigte für eine BTC-Position einen
+"Kaufpreis" von 157.586 € an — einen Wert, den BTC nie hatte.
+
+**Bewusste Eingrenzung:** Diese Funktion bildet ausschließlich den **echten
+Marktpreis** zum Kaufzeitpunkt ab — **keine** steuerliche Kostenbasis-Verfolgung
+über Swap-Ketten. Das bleibt bei Bitpanda selbst (dort steuerlich korrekt
+geführt) und ist für dieses Tool nicht relevant.
+
+**Datenquelle:** `GET /v1/wallets/transactions` (Bitpanda, authentifiziert) liefert
+für jede `buy`/`sell`-Transaktion den echten Marktpreis zum Zeitpunkt
+(`trade.price`, EUR-denominiert) — auch für die Empfangs-/Verkaufsseite eines
+Swaps, da beide Seiten zu echten Marktpreisen "gehandelt" werden. Interne
+Bewegungen (Transfer/Staking/Gebühren) haben keinen Preis und werden ignoriert.
+
+**Berechnung — gleitender Durchschnitt:** alle bepreisten Buy/Sell-Trades eines
+Assets werden chronologisch verarbeitet — ein Kauf blendet in den bestehenden
+Durchschnittspreis ein, ein Verkauf reduziert nur die Menge (der Durchschnitt der
+verbleibenden Stücke bleibt unverändert).
+
+**Ehrlichkeits-Regel (P-10):** nicht jede gehaltene Einheit stammt aus einem
+bepreisten Trade — Staking-Gutschriften oder externe Einzahlungen haben keinen
+Marktpreis. Diese Menge wird **nie stillschweigend mitgepreist**, sondern in der
+Portfolio-Anzeige explizit als "⚠ unbepreist" ausgewiesen.
+
+**Manueller Override:** für Bestände ohne (vollständige) Bitpanda-Handelshistorie
+(Alt-Bestände, Excel-Import) kann im Portfolio-Tab per Doppelklick auf eine Zeile
+ein manueller Einstandspreis eingetragen werden — hat dann **kompletten Vorrang**
+vor dem automatisch berechneten Wert, sowohl in der Anzeige als auch im
+KI-Kontext.
+
+**App-Start- und Trigger-Verhalten:** kein automatischer Trigger beim App-Start
+(gleiches Prinzip wie der Bestandsabgleich — braucht einen optionalen API-Key,
+ist bewusst nutzergetrieben). Der Erstlauf holt die komplette Transaktionshistorie
+(kann je nach Kontogröße bis zu einer Minute dauern, läuft threaded im
+Hintergrund). Jeder weitere Lauf ist **inkrementell**: da Bitpanda Transaktionen
+neueste-zuerst liefert, bricht die Abfrage früh ab, sobald bereits bekannte
+Transaktionen erscheinen — nur echt neue Trades werden geladen und in den
+bestehenden Durchschnitt eingeblendet.
+
+**KI-Integration:** der effektive Einstandspreis und der daraus resultierende
+Gewinn/Verlust in % fließen als niedrig gewichteter Kontext-Fakt in die
+Signal-Pipeline ein (`haltung.einstandspreis_eur`/`gewinn_verlust_pct`, SYSTEM_PROMPT-
+Regel 19) — relevant für die Halten/Verkaufen-Abwägung, aber **keine harte Regel**
+und kein Ersatz für die Stop-Loss-/CRV-Pflicht (Z-2).
+
+---
+
+## 10. Strategie-Katalog (S-1 bis S-6)
 
 Pro Asset wählbar, der Agent schlägt die zur Marktlage passende Strategie vor.
 
@@ -353,7 +410,7 @@ Pro Asset wählbar, der Agent schlägt die zur Marktlage passende Strategie vor.
 
 ---
 
-## 10. Wo diese Regeln im Code stehen (für Nachvollziehbarkeit)
+## 11. Wo diese Regeln im Code stehen (für Nachvollziehbarkeit)
 
 - `Basisinfos/config.yaml` — alle einstellbaren Zahlen (Abschnitte `risiko`, `regime`, `antizyklisch`, `strategien`)
 - `agent/krypto/risk_gate.py` — harte Durchsetzung von RM-1/2/4/5, Z-2 (CRV), Positionsgrößen-Clamp, Bitpanda-Veto
@@ -365,10 +422,11 @@ Pro Asset wählbar, der Agent schlägt die zur Marktlage passende Strategie vor.
 - `importer/bitpanda_sync.py`, `importer/excel_import.py` — manuelle Bestands-Abgleiche (Abschnitt 6)
 - `agent/krypto/backward_tracking.py` — Signal-Ergebnis-Prüfung (Abschnitt 7, Selbstverifikations-Vision Schritt 2)
 - `api/local_model.py` — lokale KI-Ebene, Architektur-Seam (Abschnitt 8, noch nicht aktiv)
+- `importer/bitpanda_avg_cost.py`, `api/bitpanda.py::get_wallet_transactions()` — Einstandspreis aus Bitpanda-Trades (Abschnitt 9)
 
 ---
 
-## 11. Offene / vorläufige Werte — die naheliegendsten Kandidaten für spätere Anpassung
+## 12. Offene / vorläufige Werte — die naheliegendsten Kandidaten für spätere Anpassung
 
 Diese Werte sind laut Spezifikation ausdrücklich **vorläufig** (`[OFFEN]`-markiert) und
 noch nicht durch echte Ergebnisse verifiziert — sie sind der wahrscheinlichste
