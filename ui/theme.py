@@ -37,7 +37,7 @@ _LIGHT = {
     "entry_bg": "#ffffff",
     "select_bg": "#0078d7",
     "select_fg": "#ffffff",
-    "zebra_odd": "#f4f4f4",
+    "zebra_odd": "#ebebeb",
 }
 _DARK = {
     "fg": "#e0e0e0",
@@ -51,7 +51,7 @@ _DARK = {
     "entry_bg": "#2d2d2d",
     "select_bg": "#094771",
     "select_fg": "#ffffff",
-    "zebra_odd": "#333333",
+    "zebra_odd": "#404040",
 }
 
 _dark_mode = False
