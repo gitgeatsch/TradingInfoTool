@@ -145,6 +145,7 @@ class SignalsView(ttk.Frame):
             action_text = sig.action if sig else "-"
             created_text = sig.created_at[:16].replace("T", " ") if sig else "-"
             self.tree.insert("", "end", iid=asset.symbol, values=(asset.symbol, asset.name, action_text, created_text))
+        theme.restripe_treeview(self.tree)
 
     def _on_select(self, event) -> None:
         selected = self.tree.selection()
@@ -671,5 +672,6 @@ class SignalHistoryDialog(tk.Toplevel):
                 "", "end", values=(when, signal.action, konfidenz, outcome_text), tags=(status or "none",)
             )
             tree.tag_configure(status or "none", foreground=_outcome_color(status))
+        theme.restripe_treeview(tree)
 
         ttk.Button(frame, text="Schließen", command=self.destroy).pack(anchor="e", pady=(10, 0))

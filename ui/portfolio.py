@@ -208,6 +208,7 @@ class PortfolioView(ttk.Frame):
                 ),
                 tags=tuple(tags),
             )
+        theme.restripe_treeview(self.tree)
 
         # RM-4/Konsistenz-Fix (2026-07-11, Nutzer-Fund): agent/krypto/risk_gate.py::
         # pre_check() zaehlt die Fiat-Cash-Reserve seit 2026-07-10 korrekt zum

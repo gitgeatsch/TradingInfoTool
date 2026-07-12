@@ -248,6 +248,7 @@ class TradingInfoToolApp(tk.Tk):
                 ),
                 tags=tuple(tags),
             )
+        theme.restripe_treeview(tree)
 
     def _open_chart(self, event) -> None:
         tree = self._watchlist_frame.tree

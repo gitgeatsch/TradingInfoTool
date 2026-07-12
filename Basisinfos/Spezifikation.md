@@ -649,6 +649,17 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
   Theme, einzelne Indikatorfarben (EMA/Bollinger/RSI/MACD) bleiben unverändert, da
   auf beiden Hintergründen ausreichend lesbar. Light Mode ist unverändert zum
   vorherigen Stand (keine Regression).
+  **Zeilentrennung ERLEDIGT (2026-07-12).** Nutzer-Wunsch nach Rasterlinien
+  zwischen Tabellenzeilen — echte Rasterlinien unterstützt `ttk.Treeview`
+  unter Windows nicht zuverlässig nativ, stattdessen Zebra-Streifen als
+  robuste Standard-Alternative (per Nutzer-Entscheidung). Neues
+  `ui/theme.py::restripe_treeview()` (nur `background`, kollidiert nie mit
+  bestehenden `foreground`-Tags wie `stale`/`kaufkandidat`), automatisch
+  nach jedem Sortier-Klick erneut angewendet
+  (`ui/sortable_tree.py::make_sortable()`), sowie nach jeder
+  Tabellen-Neubefüllung auf allen fünf Treeviews (Watchlist, Portfolio,
+  Marktscan, Signale, Signal-Historie-Dialog). Eigene, dezente Farbtöne für
+  Light (`#f4f4f4`) und Dark (`#333333`).
 
 ## 10. Agent- & Datenbank-Betrieb
 

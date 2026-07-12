@@ -37,6 +37,7 @@ _LIGHT = {
     "entry_bg": "#ffffff",
     "select_bg": "#0078d7",
     "select_fg": "#ffffff",
+    "zebra_odd": "#f4f4f4",
 }
 _DARK = {
     "fg": "#e0e0e0",
@@ -50,6 +51,7 @@ _DARK = {
     "entry_bg": "#2d2d2d",
     "select_bg": "#094771",
     "select_fg": "#ffffff",
+    "zebra_odd": "#333333",
 }
 
 _dark_mode = False
@@ -133,6 +135,28 @@ def umgesetzt_color() -> str:
 
 def nicht_umgesetzt_color() -> str:
     return _palette()["info"]
+
+
+def restripe_treeview(tree: ttk.Treeview) -> None:
+    """Zebra-Streifen fuer Treeview-Zeilen (Nutzer-Wunsch 2026-07-12: 'Rasterlinien
+    fuer schoen getrennte Zeilen'). Echte Rasterlinien zwischen Zeilen unterstuetzt
+    ttk.Treeview unter Windows nicht zuverlaessig nativ (per Nutzer-Entscheidung
+    bewusst NICHT nachgebaut) - abwechselnde Zeilenfarben sind die robuste
+    Standard-Alternative. Nur `background` gesetzt, nie `foreground` - kollidiert
+    dadurch nie mit den bestehenden semantischen Tags (stale/kaufkandidat/...), die
+    ausschliesslich `foreground` setzen, unabhaengig von der Tag-Reihenfolge.
+
+    Muss nach JEDER Neubefuellung (Zeilen loeschen+neu einfuegen) UND nach jeder
+    Sortierung erneut aufgerufen werden, da sich dabei die Zeilenreihenfolge
+    aendert - sortable_tree.py::make_sortable() ruft das bereits automatisch nach
+    jedem Sortier-Klick auf, Aufrufer muessen es nur nach eigenen
+    Tabelleninhalts-Aenderungen selbst aufrufen."""
+    tree.tag_configure("zebra_odd", background=_palette()["zebra_odd"])
+    for index, item in enumerate(tree.get_children("")):
+        tags = tuple(t for t in tree.item(item, "tags") if t != "zebra_odd")
+        if index % 2 == 1:
+            tags = tags + ("zebra_odd",)
+        tree.item(item, tags=tags)
 
 
 def apply_base_style(root: tk.Tk) -> None:

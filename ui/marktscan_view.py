@@ -189,6 +189,7 @@ class MarktscanView(ttk.Frame):
                 tags=("nicht_gelistet",) if c.bitpanda_gelistet is False else (),
             )
         self.tree.tag_configure("nicht_gelistet", foreground=theme.danger_color())
+        theme.restripe_treeview(self.tree)
 
     def _on_select(self, event) -> None:
         selected = self.tree.selection()

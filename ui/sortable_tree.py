@@ -6,6 +6,8 @@ from __future__ import annotations
 import re
 from tkinter import ttk
 
+import ui.theme as theme
+
 _STRIP_RE = re.compile(r"[⚠✓✗€$\s]")
 _ARROW_UP = " ▲"
 _ARROW_DOWN = " ▼"
@@ -52,6 +54,8 @@ def make_sortable(tree: ttk.Treeview, numeric_columns: frozenset[str] = frozense
 
         for index, item in enumerate(ordered):
             tree.move(item, "", index)
+        theme.restripe_treeview(tree)  # Zeilenreihenfolge hat sich geaendert -
+        # Zebra-Streifen (2026-07-12) muessen neu zugeordnet werden.
 
         state["column"] = col
         state["reverse"] = reverse
