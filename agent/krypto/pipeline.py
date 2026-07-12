@@ -335,10 +335,19 @@ def generate_signal(
             fetched = fetched.replace(tzinfo=timezone.utc)
         price_age_minutes = (datetime.now(timezone.utc) - fetched).total_seconds() / 60
 
+    # AZ-4-Tranchen (2026-07-12): nur Regime baer/krise_extrem/seitwaerts + BTC/ETH +
+    # per-Asset-Toggle (ui/app.py Watchlist-Tab, Default an fuer BTC/ETH) - siehe
+    # Regelwerksmanual Kap. 4.
+    tranchen_erlaubt = (
+        regime_result.regime in ("baer", "krise_extrem", "seitwaerts")
+        and asset.symbol in ("BTC", "ETH")
+        and db.get_dca_erlaubt(conn, asset.symbol)
+    )
+
     facts = build_facts(
         asset, price_snap, holdings.get(asset.symbol), snapshot, confluence, regime_result,
         regime_profile, risk_result, anticyclic_context, strategien_aktiv, price_age_minutes,
-        market_context, bitpanda_gelistet,
+        market_context, bitpanda_gelistet, tranchen_erlaubt,
     )
 
     # R-5.6 Groq-Synthese.
@@ -422,6 +431,10 @@ def generate_signal(
         forecast_bear_text=forecast.get("bear", {}).get("scenario"),
         forecast_bear_prob_pct=forecast.get("bear", {}).get("probability_pct"),
         tauschen_target_symbol=corrected.get("tauschen_target_symbol"),
+        tranchen_json=(
+            json.dumps(corrected["tranchen"], ensure_ascii=False)
+            if corrected.get("tranchen") else None
+        ),
         groq_raw_response=raw_response,
         groq_model="llama-3.3-70b-versatile",
         **top_grund_fields,

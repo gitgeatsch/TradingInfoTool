@@ -130,6 +130,10 @@ class TradingInfoToolApp(tk.Tk):
         ttk.Button(toolbar, text="Jetzt aktualisieren", command=self._manual_refresh).pack(
             side="left"
         )
+        ttk.Button(
+            toolbar, text="Tranchen-Vorschläge umschalten (BTC/ETH)",
+            command=self._toggle_dca_erlaubt,
+        ).pack(side="left", padx=(8, 0))
 
         columns = (
             "symbol",
@@ -138,6 +142,7 @@ class TradingInfoToolApp(tk.Tk):
             "assetklasse",
             "status",
             "bitpanda",
+            "tranchen",
             "price_usd",
             "price_eur",
             "change_24h",
@@ -150,6 +155,7 @@ class TradingInfoToolApp(tk.Tk):
             "assetklasse": "Assetklasse",
             "status": "Status",
             "bitpanda": "Bitpanda",
+            "tranchen": "AZ-4-Tranchen",
             "price_usd": "Preis (USD)",
             "price_eur": "Preis (EUR)",
             "change_24h": "24h %",
@@ -159,7 +165,7 @@ class TradingInfoToolApp(tk.Tk):
         for col in columns:
             tree.heading(col, text=headings[col])
             anchor = "w" if col in ("name", "typ", "assetklasse", "status") else "e"
-            tree.column(col, width=90 if col == "bitpanda" else 110, anchor=anchor)
+            tree.column(col, width=90 if col in ("bitpanda", "tranchen") else 110, anchor=anchor)
         tree.tag_configure("stale", foreground=theme.stale_color())
         tree.tag_configure("bitpanda_fehlt", foreground=theme.danger_color())
         make_sortable(tree, numeric_columns=frozenset({"price_usd", "price_eur", "change_24h"}))
@@ -173,6 +179,9 @@ class TradingInfoToolApp(tk.Tk):
         conn = self._db_conn_factory()
         try:
             latest_prices = db.get_latest_prices(conn)
+            dca_erlaubt_by_symbol = {
+                sym: db.get_dca_erlaubt(conn, sym) for sym in ("BTC", "ETH")
+            }
         finally:
             conn.close()
 
@@ -214,6 +223,13 @@ class TradingInfoToolApp(tk.Tk):
             if bitpanda_fehlt:
                 tags.append("bitpanda_fehlt")  # zuletzt hinzugefuegt = hoehere Prioritaet bei ttk-Tag-Kollision
 
+            # AZ-4-Tranchen-Toggle (2026-07-12): nur fuer BTC/ETH relevant (siehe
+            # agent/krypto/pipeline.py::generate_signal() tranchen_erlaubt-Berechnung).
+            if asset.symbol in dca_erlaubt_by_symbol:
+                tranchen_text = "An" if dca_erlaubt_by_symbol[asset.symbol] else "Aus"
+            else:
+                tranchen_text = "-"
+
             tree.insert(
                 "",
                 "end",
@@ -224,6 +240,7 @@ class TradingInfoToolApp(tk.Tk):
                     asset.assetklasse,
                     asset.status,
                     bitpanda_text,
+                    tranchen_text,
                     price_usd,
                     price_eur,
                     change,
@@ -263,6 +280,34 @@ class TradingInfoToolApp(tk.Tk):
             self._bitpanda_assets = get_listed_assets()
         except Exception:
             self._bitpanda_assets = None
+
+    def _toggle_dca_erlaubt(self) -> None:
+        """AZ-4-Tranchen-Toggle (2026-07-12) - nur fuer BTC/ETH sinnvoll (siehe
+        agent/krypto/pipeline.py::generate_signal()), operiert auf der aktuell in der
+        Watchlist ausgewaehlten Zeile."""
+        tree = self._watchlist_frame.tree
+        selected = tree.selection()
+        if not selected:
+            messagebox.showinfo(
+                "Tranchen-Vorschläge umschalten", "Bitte zuerst BTC oder ETH in der Watchlist auswählen."
+            )
+            return
+        symbol = tree.item(selected[0], "values")[0]
+        if symbol not in ("BTC", "ETH"):
+            messagebox.showinfo(
+                "Tranchen-Vorschläge umschalten",
+                "AZ-4-Tranchen sind aktuell nur für BTC und ETH vorgesehen.",
+            )
+            return
+
+        conn = self._db_conn_factory()
+        try:
+            neuer_wert = not db.get_dca_erlaubt(conn, symbol)
+            db.set_dca_erlaubt(conn, symbol, neuer_wert)
+        finally:
+            conn.close()
+
+        self._refresh_watchlist_from_db()
 
     def _manual_refresh(self) -> None:
         from scheduler.background import refresh_prices_job

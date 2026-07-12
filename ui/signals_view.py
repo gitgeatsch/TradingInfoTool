@@ -11,6 +11,7 @@ zurueck in den Main-Thread marshalt (Tkinter-Widgets duerfen nur dort angefasst 
 """
 from __future__ import annotations
 
+import json
 import threading
 import tkinter as tk
 from tkinter import ttk
@@ -223,10 +224,21 @@ class SignalsView(ttk.Frame):
                 lines.append(signal.position_size_note)
             lines.append("")
 
+        # AZ-4-Tranchen (2026-07-12): rein informativ, siehe agent/krypto/analyst.py.
+        # entry_usd_von/_bis bleibt bei aktiven Tranchen die Gesamtspanne - Zeile wird
+        # dann als "Gesamt-Zone" statt "Kauf-Zone" beschriftet.
+        tranchen = None
+        if signal.tranchen_json:
+            try:
+                tranchen = sorted(json.loads(signal.tranchen_json), key=lambda t: t.get("rang", 0))
+            except (ValueError, TypeError):
+                tranchen = None
+
         if signal.entry_usd_von is not None or signal.stop_loss_usd_von is not None or signal.take_profit_usd_von is not None:
             lines.append("KAUF-ZONE / STOP-LOSS-ZONE / TAKE-PROFIT-ZONE (USD | EUR)")
+            entry_label = "Gesamt-Zone: " if tranchen else "Kauf-Zone:   "
             lines.append(
-                f"  Kauf-Zone:    {format_money(signal.entry_usd_von)}–{format_money(signal.entry_usd_bis)} | "
+                f"  {entry_label} {format_money(signal.entry_usd_von)}–{format_money(signal.entry_usd_bis)} | "
                 f"{format_money(signal.entry_eur_von)}–{format_money(signal.entry_eur_bis)}"
             )
             lines.append(
@@ -238,6 +250,24 @@ class SignalsView(ttk.Frame):
                 f"{format_money(signal.take_profit_eur_von)}–{format_money(signal.take_profit_eur_bis)}"
             )
             lines.append("")
+
+            if tranchen:
+                lines.append("AZ-4-TRANCHEN (Info, keine automatische Ausführung)")
+                gesamt_usd = signal.position_size_usd
+                for eintrag in tranchen:
+                    anteil = eintrag.get("anteil_prozent")
+                    zone = eintrag.get("zone", {})
+                    betrag_text = ""
+                    if gesamt_usd and anteil is not None:
+                        betrag_text = f" (~{format_money(gesamt_usd * anteil / 100)} USD)"
+                    lines.append(
+                        f"  Tranche {eintrag.get('rang')}: {anteil:g}%{betrag_text} bei "
+                        f"{format_money(zone.get('usd_von'))}–{format_money(zone.get('usd_bis'))} USD | "
+                        f"{format_money(zone.get('eur_von'))}–{format_money(zone.get('eur_bis'))} EUR"
+                    )
+                    if eintrag.get("trigger_bedingung"):
+                        lines.append(f"    Trigger: {eintrag['trigger_bedingung']}")
+                lines.append("")
         elif signal.entry_usd or signal.stop_loss_usd or signal.take_profit_usd:
             lines.append("EINSTIEG / STOP-LOSS / TAKE-PROFIT (USD | EUR)")
             lines.append(f"  Entry:        {format_money(signal.entry_usd)} | {format_money(signal.entry_eur)}")

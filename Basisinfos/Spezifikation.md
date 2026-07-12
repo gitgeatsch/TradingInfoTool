@@ -1113,6 +1113,13 @@ seinen Emotionen scheitert. Grundsatz: **antizyklisch, aber bedingt.**
   eine klare Bestätigung vorliegt.
 - **AZ-4 Gestaffelt & begrenzt:** in Tranchen kaufen (DCA/S-1/S-2), **nie all-in** →
   ein tieferer Absturz wird zur nächsten Chance statt zum Ruin; Cash-Reserve (RM-4) bleibt.
+  **Implementiert (2026-07-12):** `agent/krypto/analyst.py` unterstützt jetzt ein
+  optionales `tranchen`-Feld (2-5 Preiszonen mit Prozentanteil, symmetrisch für Käufe/
+  Verkäufe) — nur bei Regime `baer`/`krise_extrem`/`seitwaerts` + Asset BTC/ETH + per-
+  Asset-UI-Toggel. Rein informativ (kein neues Veto, keine Order-Anbindung möglich,
+  live gegen die Bitpanda-API verifiziert). Löst den vormals in Kap. „Strategie-
+  Katalog" offenen Punkt „keine echte Mehrfach-Tranchen-Unterstützung". Volle Details:
+  `Basisinfos/Regelwerksmanual.md` Kap. 4.
 - **AZ-5 Fundamental-Gate:** Nachkaufen nur bei **intakter Substanz**. Fallender Kurs +
   erodierende Substanz = Value-Falle, **kein** Kauf.
 - **AZ-6 „Gescheiterte-These"-Ausstieg:** Läuft ein antizyklischer Kauf über Schwelle

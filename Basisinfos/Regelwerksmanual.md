@@ -144,6 +144,41 @@ vermeiden (im Absturz verkaufen, im Tief nicht kaufen).
 die KI) — nicht die volle AZ-1-Klassifikation, da eine unabhängige Nachrichtenquelle
 fehlt. Liefert Kontext, trifft aber keinen eigenen Veto-Entscheid.
 
+**AZ-4 seit 2026-07-12 strukturiert umsetzbar (gestaffelte Kauf-/Verkaufszonen).**
+Bisher war "gestaffelt kaufen" nur eine lose Absicht ohne Schema-Unterstützung — Groq
+konnte höchstens EINE Kauf-/Verkaufszone (`entry`) vorschlagen. Jetzt kann Groq
+zusätzlich das optionale Feld `tranchen` füllen: 2-5 Preiszonen mit Prozentanteil der
+Gesamtposition (Summe 100 %), aufsteigend von der nächsten/höchsten zur tiefsten Zone,
+optional mit einer Trigger-Bedingung als Freitext (z. B. "Bodenbestätigung laut
+Regime-/Risiko-Modell"). Gilt symmetrisch für Käufe UND Verkäufe.
+
+**Voraussetzungen, alle drei müssen gleichzeitig erfüllt sein:**
+1. Regime ist `baer`, `krise_extrem` **oder** `seitwaerts` (bewusst weiter gefasst als
+   nur die Extremfälle — Akkumulation beginnt oft schon vor der offiziellen
+   Bär-Bestätigung; Bulle/Euphorie-extrem sind ausgeschlossen, weil tiefere
+   Tranchen-Zonen dort meist unausgefüllt bleiben und Kapital unnötig binden).
+2. Asset ist BTC oder ETH (aktuell keine anderen Assets vorgesehen).
+3. Ein per-Asset-Schalter im Watchlist-Tab ("Tranchen-Vorschläge umschalten
+   (BTC/ETH)") steht auf "An" — Default: an für BTC/ETH.
+
+**Bewusst reine Zusatz-Information, kein neues Veto und keine echte Order-Anbindung:**
+- Die eine `position_size` bleibt die geklemmte Gesamtgröße (RM-1/RM-2 unverändert) —
+  jede Tranche ist nur ein Prozentanteil davon, kein eigener Absolutbetrag von Groq.
+- Ein fehlerhafter Tranchen-Vorschlag (Summe ≠ 100 %, kaputte Zone) wird verworfen,
+  löst aber **keinen** Validierungsfehler des Gesamtsignals aus.
+- **Keine Order-Ausführung oder -Verfolgung möglich** — live geprüft (2026-07-12):
+  weder `/fiatwallets`, `/wallets`, `/wallets/transactions` noch `/trades` zeigen
+  offene Orders der persönlichen Bitpanda-API. Ein Order-Ausführungs-API existiert nur
+  als separates B2B-Partnerprodukt, für Privatkunden nicht zugänglich. Wer eine
+  Tranche tatsächlich umsetzen will, muss sie selbst als echte Bitpanda-Order anlegen
+  (Fusion empfohlen — sperrt den Betrag korrekt in `/fiatwallets`, siehe Kap. 14).
+- Die Z-2-CRV-Prüfung (Mindest-Chance-Risiko-Verhältnis) rechnet bei aktiven Tranchen
+  weiterhin über die `entry`-Gesamtspanne — wird dadurch zu einem **geblendeten
+  Gesamtwert** über alle Tranchen, keine scharfe Einzeltrade-Kennzahl mehr.
+- Kein Ausführungs-Tracking je einzelner Tranche (die bestehende
+  Umsetzungs-Rückmeldung/Backward-Tracking bleibt signal-weit) — ohnehin nicht
+  sinnvoll umsetzbar ohne Order-API.
+
 ---
 
 ## 5. Entscheidungs-Reihenfolge bei jedem Signal (R-5.0 bis R-5.11)
@@ -419,11 +454,19 @@ Pro Asset wählbar, der Agent schlägt die zur Marktlage passende Strategie vor.
 | ID | Name | Kern | Status |
 |----|------|------|--------|
 | S-1 | HODL / Core | langfristig halten, an starken Leveln nachkaufen | aktiv |
-| S-2 | DCA | regelmäßige Käufe unabhängig vom Preis | aktiv, aber noch **keine echte Mehrfach-Tranchen-Unterstützung im Signal-Schema** (offener Punkt) |
+| S-2 | DCA | regelmäßige Käufe unabhängig vom Preis (kalenderbasiert) | aktiv |
 | S-3 | Swing-Trading | Ein-/Ausstieg an Support/Resistance und Fibonacci | aktiv |
 | S-4 | Trendfolge | Einstieg bei bestätigtem Trend, Trailing-Stop | aktiv |
 | S-5 | Kapitalschutz | defensiv, hohe Cash-Quote, automatisch bei Drawdown | aktiv |
 | S-6 | Hebel-Long | nur Long, strikt nach Risiko-Regeln | **deaktiviert** |
+
+**Terminologie-Klarstellung (2026-07-12):** die gestaffelten Kauf-/Verkaufszonen
+("mehrere Tranchen an unterschiedlichen Preiszonen") gehören fachlich zu **AZ-4**
+("gestaffelt, nie all-in", siehe Kap. 4), **nicht** zu S-2 — S-2/DCA ist per
+Definition kalenderbasiert ("regelmäßig", unabhängig vom Preis), während die
+Tranchen-Funktion preiszonen-basiertes Scaling-in/Laddering ist. Der vormals hier
+offene Punkt "keine echte Mehrfach-Tranchen-Unterstützung" ist damit über AZ-4
+gelöst, siehe Kap. 4.
 
 ---
 

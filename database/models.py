@@ -187,6 +187,12 @@ class Signal:
     outcome_entschieden_am: str | None = None
     outcome_realisiertes_crv: float | None = None
     outcome_datenquelle: str | None = None  # real (OHLC) | proxy (Tagesschlusskurs)
+    # AZ-4-Tranchen (2026-07-12, gestaffelte Kauf-/Verkaufszonen) - JSON-Liste von
+    # {rang, anteil_prozent, zone, trigger_bedingung}, rein informativ (siehe
+    # agent/krypto/analyst.py::_validate()). None = keine Tranchierung vorgeschlagen
+    # (Normalfall) oder Groq-Antwort war fehlerhaft (wird dann verworfen, kein Fehlerfall
+    # fuer das Gesamtsignal).
+    tranchen_json: str | None = None
 
 
 @dataclass

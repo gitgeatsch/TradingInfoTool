@@ -122,6 +122,11 @@ CREATE TABLE IF NOT EXISTS signals (
 );
 CREATE INDEX IF NOT EXISTS idx_signals_symbol_created ON signals(symbol, created_at);
 
+CREATE TABLE IF NOT EXISTS asset_dca_settings (
+    symbol          TEXT PRIMARY KEY,
+    dca_erlaubt     INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS marktscan_candidates (
     id                          INTEGER PRIMARY KEY AUTOINCREMENT,
     coingecko_id                TEXT NOT NULL,
@@ -275,6 +280,22 @@ def _migrate_signal_outcome_columns(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+_SIGNAL_TRANCHEN_NEW_COLUMNS = {"tranchen_json": "TEXT"}
+
+
+def _migrate_signal_tranchen_columns(conn: sqlite3.Connection) -> None:
+    """Wie _migrate_signal_outcome_columns(): signals existierte bereits vor der
+    AZ-4-Tranchen-Erweiterung (2026-07-12, gestaffelte Kauf-/Verkaufszonen). Variable
+    Anzahl Tranchen (2-5) -> JSON-Blob statt fester Spalten (Muster aus
+    marktscan_candidates.signale_technik_json etc.), da tranchen rein informativ ist
+    (siehe agent/krypto/analyst.py) und keine feste Spaltenzahl wie top_gruende hat."""
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(signals)")}
+    for column, sql_type in _SIGNAL_TRANCHEN_NEW_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE signals ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
 _HOLDINGS_AVG_COST_NEW_COLUMNS = {
     # EUR, nicht USD - Bitpandas trade.attributes.price ist EUR-denominiert
     # (fiat_id "1" = EUR, live gegen /fiatwallets verifiziert 2026-07-11).
@@ -345,6 +366,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_price_cache_nullable_coingecko_id(conn)
     _migrate_signal_outcome_columns(conn)
     _migrate_holdings_avg_cost_columns(conn)
+    _migrate_signal_tranchen_columns(conn)
 
 
 def is_first_run(conn: sqlite3.Connection) -> bool:
@@ -463,6 +485,31 @@ def set_cash_reserve_fiat_eur(conn: sqlite3.Connection, value_eur: float) -> Non
         "INSERT INTO meta (key, value) VALUES ('cash_reserve_fiat_eur', ?) "
         "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
         (str(value_eur),),
+    )
+    conn.commit()
+
+
+_DCA_ERLAUBT_DEFAULT_SYMBOLS = {"BTC", "ETH"}
+
+
+def get_dca_erlaubt(conn: sqlite3.Connection, symbol: str) -> bool:
+    """AZ-4-Tranchen-Toggle (2026-07-12) - per Asset umschaltbar, ob der Agent
+    gestaffelte Kauf-/Verkaufszonen vorschlagen darf (zusaetzlich zur Regime-
+    Bedingung in agent/krypto/pipeline.py). Default: an fuer BTC/ETH, sonst aus,
+    solange keine explizite Zeile existiert."""
+    row = conn.execute(
+        "SELECT dca_erlaubt FROM asset_dca_settings WHERE symbol = ?", (symbol,)
+    ).fetchone()
+    if row is None:
+        return symbol in _DCA_ERLAUBT_DEFAULT_SYMBOLS
+    return bool(row["dca_erlaubt"])
+
+
+def set_dca_erlaubt(conn: sqlite3.Connection, symbol: str, erlaubt: bool) -> None:
+    conn.execute(
+        "INSERT INTO asset_dca_settings (symbol, dca_erlaubt) VALUES (?, ?) "
+        "ON CONFLICT(symbol) DO UPDATE SET dca_erlaubt = excluded.dca_erlaubt",
+        (symbol, int(erlaubt)),
     )
     conn.commit()
 
@@ -691,6 +738,7 @@ _SIGNAL_COLUMNS = (
     "forecast_base_text", "forecast_base_prob_pct", "forecast_bear_text",
     "forecast_bear_prob_pct", "tauschen_target_symbol", "gate_passed", "gate_reason",
     "risk_veto", "risk_veto_reason", "facts_json", "groq_raw_response", "groq_model",
+    "tranchen_json",
 )
 
 

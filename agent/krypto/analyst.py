@@ -145,6 +145,17 @@ und KEIN Ersatz fuer die Stop-Loss-/CRV-Pflicht (Regel 3). Ist `einstandspreis_q
 "unbekannt" oder `menge_ohne_bekannten_einstandspreis` > 0, erwaehne diese Unsicherheit \
 knapp, statt den Gewinn/Verlust als vollstaendig sicher darzustellen. Bei null: nicht \
 erwaehnen, keine Luecke erfinden.
+20. NUR wenn `tranchen_erlaubt` true ist, darfst du zusaetzlich zu `entry` das optionale \
+Feld `tranchen` fuellen (AZ-4, gestaffelter Kauf/Verkauf statt einer einzigen Zone) - bei \
+`tranchen_erlaubt` false lasse `tranchen` immer null. Gilt symmetrisch fuer KAUFEN/ \
+NACHKAUFEN UND VERKAUFEN/TAUSCHEN. 2 bis 5 Eintraege, jeder mit `rang` (aufsteigend, \
+1 = naechste/hoechste Zone, hoehere Zahl = tiefere/spaetere Zone), `anteil_prozent` \
+(Summe ALLER Eintraege muss exakt 100 ergeben), einer eigenen `zone` (gleiches Format wie \
+`entry`) und optional `trigger_bedingung` als Freitext (z.B. "Bodenbestaetigung laut \
+Regime-/Risiko-Modell"). `entry` selbst bleibt dabei die GESAMTSPANNE ueber alle Tranchen \
+(niedrigste bis hoechste Zone). `tranchen` ist eine reine Zusatz-Information fuer den \
+Nutzer, KEINE separate Positionsgroessen-Vorgabe - die eine `position_size` bleibt \
+unveraendert die Gesamtgroesse.
 
 SCHEMA:
 {
@@ -161,6 +172,10 @@ SCHEMA:
   "long_reasoning": {"technisch": "<Text>", "fundamental": "<Text>", "makro": "<Text>"},
   "position_size": {"usd": <Zahl oder null>, "eur": <Zahl oder null>, "note": "<Text>"},
   "entry": {"usd_von": <Zahl oder null>, "usd_bis": <Zahl oder null>, "eur_von": <Zahl oder null>, "eur_bis": <Zahl oder null>},
+  "tranchen": null oder [
+    {"rang": 1, "anteil_prozent": <Zahl>, "zone": {"usd_von": <Zahl>, "usd_bis": <Zahl>, "eur_von": <Zahl>, "eur_bis": <Zahl>}, "trigger_bedingung": "<Text oder null>"},
+    ...
+  ],
   "stop_loss": {"usd_von": <Zahl oder null>, "usd_bis": <Zahl oder null>, "eur_von": <Zahl oder null>, "eur_bis": <Zahl oder null>},
   "take_profit": {"usd_von": <Zahl oder null>, "usd_bis": <Zahl oder null>, "eur_von": <Zahl oder null>, "eur_bis": <Zahl oder null>},
   "halte_kriterium": {
@@ -242,6 +257,7 @@ def build_facts(
     price_age_minutes: float | None,
     market_context: dict,
     bitpanda_gelistet: bool | None,
+    tranchen_erlaubt: bool = False,
 ) -> dict:
     macd_val = technical_snapshot.macd
     macd_facts = None
@@ -383,6 +399,7 @@ def build_facts(
             ],
         },
         "strategien_aktiv": strategien_aktiv,
+        "tranchen_erlaubt": tranchen_erlaubt,
         "disclaimers": {
             "makro_einbezogen": "teilweise",
             "sentiment_einbezogen": False,
@@ -483,6 +500,45 @@ def _validate(data: dict) -> dict:
         raise AnalystResponseInvalid(
             "halte_kriterium: mindestens eines von ziel_preis_usd/ziel_datum/bedingung_text muss gesetzt sein"
         )
+
+    # AZ-4-Tranchen (2026-07-12): rein informativ, KEIN Pflichtfeld und KEIN harter
+    # Validierungsfehler bei Verstoss - es gibt ohnehin keine Moeglichkeit, den
+    # tatsaechlichen Order-Status ueber die Bitpanda-API zu verfolgen (siehe
+    # Regelwerksmanual Kap. 4), die Info bleibt bewusst unverbindlich. Ein fehlerhafter
+    # Tranchen-Vorschlag darf deshalb nicht das sonst valide Gesamtsignal scheitern lassen.
+    tranchen = data.get("tranchen")
+    if tranchen is not None:
+        try:
+            if not isinstance(tranchen, list) or not (2 <= len(tranchen) <= 5):
+                raise ValueError(f"tranchen muss 2-5 Einträge enthalten: {tranchen!r}")
+            ranks_seen = set()
+            anteil_summe = 0.0
+            for eintrag in tranchen:
+                if not isinstance(eintrag, dict):
+                    raise ValueError(f"tranchen-Eintrag ist kein Objekt: {eintrag!r}")
+                rang = eintrag.get("rang")
+                if not isinstance(rang, int) or rang in ranks_seen:
+                    raise ValueError(f"tranchen.rang ungültig oder doppelt: {rang!r}")
+                ranks_seen.add(rang)
+                anteil = float(eintrag.get("anteil_prozent"))
+                anteil_summe += anteil
+                eintrag["anteil_prozent"] = anteil
+                zone = eintrag.get("zone")
+                if not isinstance(zone, dict):
+                    raise ValueError(f"tranchen.zone fehlt/kein Objekt: {zone!r}")
+                for currency in ("usd", "eur"):
+                    von, bis = zone.get(f"{currency}_von"), zone.get(f"{currency}_bis")
+                    if von is None or bis is None:
+                        raise ValueError(f"tranchen.zone.{currency}_von/{currency}_bis fehlt")
+                    von, bis = float(von), float(bis)
+                    if von > bis:
+                        raise ValueError(f"tranchen.zone.{currency}_von > {currency}_bis ({von} > {bis})")
+                    zone[f"{currency}_von"], zone[f"{currency}_bis"] = von, bis
+            if not (99.5 <= anteil_summe <= 100.5):
+                raise ValueError(f"tranchen.anteil_prozent-Summe nicht ~100: {anteil_summe}")
+        except (ValueError, TypeError) as exc:
+            logger.warning("tranchen-Vorschlag verworfen (fehlerhaft, kein Signal-Fehler): %s", exc)
+            data["tranchen"] = None
 
     return data
 
