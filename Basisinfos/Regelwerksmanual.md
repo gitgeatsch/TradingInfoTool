@@ -769,9 +769,20 @@ Try/Except (`logger.exception(...)`, Verbindung wird im `finally` geschlossen) �
 automatisch wieder an, egal wie oft er vorher fehlgeschlagen ist. Zusätzlich gibt
 es einen globalen Fehler-Listener (`EVENT_JOB_ERROR`/`EVENT_JOB_MISSED`) als
 zweite Verteidigungslinie, falls doch etwas bis zum Scheduler selbst durchschlägt.
-**Was fehlt:** jeglicher Backoff oder Alarm bei einem *dauerhaften* Ausfall (z. B.
-API drei Tage down) — die App versucht stur im gleichen Takt weiter, ohne dich
-aktiv zu warnen.
+**Job-Ausfall-Backoff — ERLEDIGT (2026-07-12).** Die drei häufig getakteten
+Jobs (`refresh_prices`, `refresh_securities_prices`, `bitpanda_cash` — je
+15/15/30 Min. Normal-Takt) verdoppeln ab dem zweiten Fehlschlag in Folge das
+Intervall bis zum nächsten Versuch (`_record_job_failure_for_backoff()` in
+`scheduler/background.py`, verschiebt `next_run_time` per
+`scheduler.modify_job()`), gedeckelt auf 4 Std. Ein erfolgreicher Lauf setzt
+den Zähler zurück (`_record_job_success_for_backoff()`) — APScheduler's
+`IntervalTrigger` rechnet den Normal-Takt danach automatisch ab dem
+tatsächlichen letzten Lauf weiter, kein manueller Reset des nächsten
+Laufzeitpunkts nötig (live gegen eine echte `BackgroundScheduler`-Instanz
+verifiziert). Die beiden 24-Std.-Jobs (Historie/OHLC) und die
+Cron-getakteten Jobs (Marktscan/Backward-Tracking) bewusst OHNE Backoff — ihr
+Normal-Takt ist bereits so groß, dass ein zusätzliches Backoff keinen
+nennenswerten Nutzen hätte.
 
 ### Wie du aktuell von einem Problem erfährst
 
@@ -882,12 +893,10 @@ Die drei ungeschützten Start-Schritte sind seit 2026-07-12 abgesichert (siehe
 oben), ebenso der sofortige erste Preis-Lauf und der staleness-bewusste
 Sofort-Trigger für die Kurs-/OHLC-Historie-Jobs nach jedem Neustart (siehe
 "Verhalten nach längerer Downtime"). E-Mail-Benachrichtigung bei Start-Fehlern
-und Job-Ausfällen ist seit 2026-07-12 ebenfalls erledigt (U-8, siehe eigener
-Abschnitt oben) — ein echter Sendetest mit dem eingerichteten Robot-Account
-steht noch aus. **Weiterhin offen:** ein Backoff bei dauerhaftem
-Scheduler-Job-Ausfall über den Cooldown hinaus (z. B. exponentiell steigende
-Wiederholungs-Intervalle statt des festen Job-Takts, siehe "Scheduler-Jobs"
-oben). Die aggregierte Status-Übersicht selbst ist inzwischen Teil der
+und Job-Ausfällen (U-8) sowie bei Marktscan-Kaufkandidaten (MS-1b) ist seit
+2026-07-12 erledigt, ebenso der Job-Ausfall-Backoff (siehe "Scheduler-Jobs"
+oben) — damit ist die komplette Betriebssicherheits-Liste aus diesem Kapitel
+abgearbeitet. Die aggregierte Status-Übersicht selbst ist inzwischen Teil der
 Remote-Steuer-Seite geworden (Abschnitt 13).
 
 ---

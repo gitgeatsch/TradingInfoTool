@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_MISSED
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -53,6 +53,27 @@ BITPANDA_CASH_REFRESH_INTERVAL_MINUTES = 30  # 2026-07-11: seltener als der Prei
 # interaktiven Rueckgangs-Bestaetigungsdialog, siehe importer/bitpanda_sync.py::
 # sync_fiat_cash_from_bitpanda()-Docstring).
 
+# Job-Ausfall-Backoff (2026-07-12, letzter offener Betriebssicherheits-Punkt): Referenz
+# auf die scheduler-Instanz selbst, gesetzt am Ende von build_scheduler() - noetig, damit
+# _record_job_failure_for_backoff() den naechsten Lauf per scheduler.modify_job()
+# verschieben kann, obwohl die *_job()-Funktionen selbst keine Scheduler-Referenz als
+# Parameter bekommen (gleiches Modul-Level-Zugriffsmuster wie die Locks oben).
+_scheduler_ref = None
+_consecutive_failures: dict[str, int] = {}
+# Bewusst NUR die drei haeufig getakteten Jobs (15-30 Min) - bei den beiden
+# 24-Stunden-Jobs (Historie/OHLC) und den Cron-getakteten Jobs (Marktscan/
+# Backward-Tracking) ist der Normal-Takt bereits so gross, dass ein zusaetzliches
+# Backoff keinen nennenswerten Nutzen haette (ein einzelner taeglicher Fehlschlag
+# "haemmert" keine API).
+_BACKOFF_BASE_INTERVAL_MINUTES = {
+    "refresh_prices": REFRESH_INTERVAL_MINUTES,
+    "refresh_securities_prices": SECURITIES_REFRESH_INTERVAL_MINUTES,
+    "bitpanda_cash": BITPANDA_CASH_REFRESH_INTERVAL_MINUTES,
+}
+_BACKOFF_MAX_MINUTES = 240  # Deckel 4 Std. - auch bei einem sehr langen Ausfall soll die
+# App nach spaetestens 4 Std. wieder einen Versuch starten, statt den Job faktisch
+# stillzulegen.
+
 
 def refresh_prices_job(client, conn_factory, watchlist) -> bool:
     """Rueckgabe: True = tatsaechlich gelaufen, False = uebersprungen (Lock
@@ -68,9 +89,11 @@ def refresh_prices_job(client, conn_factory, watchlist) -> bool:
         for snapshot in snapshots:
             db.insert_price_snapshot(conn, snapshot)
         logger.info("Preis-Refresh: %d/%d Assets aktualisiert", len(snapshots), len(watchlist))
+        _record_job_success_for_backoff("refresh_prices")
     except Exception as exc:
         logger.exception("Preis-Refresh fehlgeschlagen")
         _notify_job_failure("refresh_prices", f"Preis-Refresh fehlgeschlagen: {exc}")
+        _record_job_failure_for_backoff("refresh_prices")
     finally:
         conn.close()
         refresh_prices_lock.release()
@@ -104,9 +127,11 @@ def refresh_securities_prices_job(client, conn_factory, watchlist) -> bool:
         for snapshot in snapshots:
             db.insert_price_snapshot(conn, snapshot)
         logger.info("Wertpapier-Preis-Refresh: %d Assets aktualisiert", len(snapshots))
+        _record_job_success_for_backoff("refresh_securities_prices")
     except Exception as exc:
         logger.exception("Wertpapier-Preis-Refresh fehlgeschlagen")
         _notify_job_failure("refresh_securities_prices", f"Wertpapier-Preis-Refresh fehlgeschlagen: {exc}")
+        _record_job_failure_for_backoff("refresh_securities_prices")
     finally:
         conn.close()
         refresh_securities_lock.release()
@@ -242,9 +267,11 @@ def refresh_bitpanda_cash_job(api_key, conn_factory) -> bool:
             logger.info("Bitpanda-Cash-Sync: %.2f -> %.2f EUR", result.old_eur, result.new_eur)
         else:
             logger.info("Bitpanda-Cash-Sync: unverändert")
+        _record_job_success_for_backoff("bitpanda_cash")
     except Exception as exc:
         logger.exception("Bitpanda-Cash-Sync fehlgeschlagen")
         _notify_job_failure("bitpanda_cash", f"Bitpanda-Cash-Sync fehlgeschlagen: {exc}")
+        _record_job_failure_for_backoff("bitpanda_cash")
     finally:
         conn.close()
         bitpanda_cash_lock.release()
@@ -339,6 +366,47 @@ def _notify_job_failure(job_id: str, fehler_text: str) -> None:
         empfaenger,
     ):
         _last_failure_email_sent[job_id] = time.monotonic()
+
+
+def _record_job_failure_for_backoff(job_id: str) -> None:
+    """Job-Ausfall-Backoff (2026-07-12): verdoppelt bei WIEDERHOLTEN Fehlschlägen
+    desselben Jobs das Intervall bis zum nächsten Versuch (gedeckelt auf
+    _BACKOFF_MAX_MINUTES), statt stur im Normal-Takt (z. B. alle 15 Min) weiter
+    gegen eine erkennbar nicht erreichbare API zu laufen. Bewusst erst AB dem
+    zweiten Fehlschlag in Folge aktiv (2^0 = Normal-Takt beim ersten Fehlschlag) -
+    eine einzelne fehlgeschlagene Anfrage soll nicht gleich als Dauerausfall
+    gewertet werden, das waere bei einem kurzen Netzwerk-Hänger unnötig träge.
+
+    Nur für die in _BACKOFF_BASE_INTERVAL_MINUTES gelisteten Jobs aktiv - für
+    alle anderen (job_id nicht im Dict, z. B. Historie/OHLC/Marktscan) ein reines
+    No-Op."""
+    base_minutes = _BACKOFF_BASE_INTERVAL_MINUTES.get(job_id)
+    if base_minutes is None or _scheduler_ref is None:
+        return
+    _consecutive_failures[job_id] = _consecutive_failures.get(job_id, 0) + 1
+    failures = _consecutive_failures[job_id]
+    delay_minutes = min(base_minutes * (2 ** (failures - 1)), _BACKOFF_MAX_MINUTES)
+    if delay_minutes <= base_minutes:
+        return
+    try:
+        _scheduler_ref.modify_job(job_id, next_run_time=datetime.now() + timedelta(minutes=delay_minutes))
+        logger.warning(
+            "Job '%s': %d Fehlschläge in Folge - nächster Versuch erst in %d Min (Backoff)",
+            job_id, failures, delay_minutes,
+        )
+    except Exception:
+        logger.exception("Backoff für Job '%s' konnte nicht angewendet werden", job_id)
+
+
+def _record_job_success_for_backoff(job_id: str) -> None:
+    """Gegenstück zu _record_job_failure_for_backoff() - setzt den Fehlschlag-Zähler
+    zurück, sobald ein Job wieder erfolgreich läuft. Kein manueller Reset des
+    nächsten Laufzeitpunkts nötig: APScheduler's IntervalTrigger rechnet den
+    nächsten Takt ab dem TATSÄCHLICHEN letzten Lauf weiter, der Normal-Takt stellt
+    sich damit von selbst wieder ein, sobald ein Lauf erfolgreich war."""
+    if _consecutive_failures.get(job_id):
+        logger.info("Job '%s': wieder erfolgreich - Backoff zurückgesetzt", job_id)
+    _consecutive_failures[job_id] = 0
 
 
 def _notify_marktscan_kaufkandidaten(kaufkandidaten: list) -> None:
@@ -551,4 +619,7 @@ def build_scheduler(
     else:
         logger.info("Kein BITPANDA_API_KEY - automatischer Cash-Sync deaktiviert (P-8)")
     scheduler.add_listener(_log_job_event, EVENT_JOB_ERROR | EVENT_JOB_MISSED)
+
+    global _scheduler_ref
+    _scheduler_ref = scheduler
     return scheduler
