@@ -303,6 +303,25 @@ def _migrate_signal_tranchen_columns(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+_SIGNAL_CASH_RESERVE_ZIEL_NEW_COLUMNS = {
+    "cash_reserve_ziel_btc_usd": "REAL",
+    "cash_reserve_ziel_eth_usd": "REAL",
+    "cash_reserve_ziel_gesamt_usd": "REAL",
+    "cash_reserve_ziel_begruendung": "TEXT",
+}
+
+
+def _migrate_signal_cash_reserve_ziel_columns(conn: sqlite3.Connection) -> None:
+    """AZ-4 Baustein 3 (2026-07-12) - gleiches Muster wie
+    _migrate_signal_tranchen_columns(). Signal-gebunden (nicht macro_snapshot-artig
+    wie Boden-Zielzone), da an die konkrete BTC/ETH-Signalerzeugung gebunden."""
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(signals)")}
+    for column, sql_type in _SIGNAL_CASH_RESERVE_ZIEL_NEW_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE signals ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
 _HOLDINGS_AVG_COST_NEW_COLUMNS = {
     # EUR, nicht USD - Bitpandas trade.attributes.price ist EUR-denominiert
     # (fiat_id "1" = EUR, live gegen /fiatwallets verifiziert 2026-07-11).
@@ -374,6 +393,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_signal_outcome_columns(conn)
     _migrate_holdings_avg_cost_columns(conn)
     _migrate_signal_tranchen_columns(conn)
+    _migrate_signal_cash_reserve_ziel_columns(conn)
 
 
 def is_first_run(conn: sqlite3.Connection) -> bool:
@@ -746,6 +766,8 @@ _SIGNAL_COLUMNS = (
     "forecast_bear_prob_pct", "tauschen_target_symbol", "gate_passed", "gate_reason",
     "risk_veto", "risk_veto_reason", "facts_json", "groq_raw_response", "groq_model",
     "tranchen_json",
+    "cash_reserve_ziel_btc_usd", "cash_reserve_ziel_eth_usd", "cash_reserve_ziel_gesamt_usd",
+    "cash_reserve_ziel_begruendung",
 )
 
 

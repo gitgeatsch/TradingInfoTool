@@ -1122,8 +1122,13 @@ seinen Emotionen scheitert. Grundsatz: **antizyklisch, aber bedingt.**
   `Basisinfos/Regelwerksmanual.md` Kap. 4. **Baustein 2 implementiert (2026-07-12):**
   Boden-Zielzone für BTC/ETH (Log-Regressions-Modell + historisches
   Zyklus-Tief-Band + Reifegrad-Dämpfer + Aktien-Bärenmarkt-Overlay S&P 500/
-  Nasdaq) — ebenfalls rein informativ, Details ebd. Baustein 3 (Cash-Reserve-
-  Ziel) bleibt offen.
+  Nasdaq) — ebenfalls rein informativ, Details ebd. **Baustein 3 implementiert
+  (2026-07-12):** Cash-Reserve-Ziel für BTC/ETH (3 Runden "Buying in Thirds",
+  20/30/50-Gewichtung nach Value-Averaging-Prinzip, RM-1-Bedarf hart gedeckelt
+  durch RM-2-Allokationsgrenze) — ebenfalls rein informativ, RM-4 bleibt der
+  harte Minimum-Floor, Details ebd. **Damit ist die komplette 3-Bausteine-
+  Roadmap (Tranchen-Struktur → Boden-Zielzone → Cash-Reserve-Ziel)
+  abgeschlossen.**
 - **AZ-5 Fundamental-Gate:** Nachkaufen nur bei **intakter Substanz**. Fallender Kurs +
   erodierende Substanz = Value-Falle, **kein** Kauf.
 - **AZ-6 „Gescheiterte-These"-Ausstieg:** Läuft ein antizyklischer Kauf über Schwelle

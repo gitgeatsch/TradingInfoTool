@@ -17,7 +17,7 @@ import database.db as db
 from agent.krypto.analyst import AnalystResponseInvalid, build_facts, call_groq_for_signal
 from agent.krypto.anticyclic import assess as assess_anticyclic
 from agent.krypto.regime import determine_regime
-from agent.krypto.risk_gate import pre_check, post_check
+from agent.krypto.risk_gate import CashReserveZielResult, compute_cash_reserve_ziel, pre_check, post_check
 from database.models import MacroSnapshot, Signal
 from indicators.calculations import build_technical_snapshot, summarize_confluence
 from staleness import is_history_stale, is_price_stale
@@ -371,6 +371,43 @@ def compute_current_regime(conn, coingecko_client, watchlist, fred_api_key: str 
     return regime_result
 
 
+def _compute_cash_reserve_ziel_context(
+    conn, watchlist, regime_result, config_dict: dict, latest_prices: dict
+) -> CashReserveZielResult | None:
+    """AZ-4 Baustein 3 (2026-07-12): siehe agent/krypto/risk_gate.py::
+    compute_cash_reserve_ziel() fuer die Methodik. Bewusst OHNE den per-Asset-DCA-
+    Toggle (anders als tranchen_erlaubt unten) - Cash-Reserve-Ziel ist ein
+    portfolioweiter Informationswert, keine Tranchen-Vorschlag-Einstellung. Reine
+    DB-Reads (keine Netzwerk-Calls), daher kein Cache noetig - wird nur aufgerufen,
+    wenn das aktuell zu bewertende Asset selbst BTC oder ETH ist (siehe
+    generate_signal()), nicht bei jedem Alt-Coin-Signal."""
+    if regime_result.regime not in ("baer", "krise_extrem", "seitwaerts"):
+        return None
+
+    btc_asset = next((a for a in watchlist if a.symbol == "BTC"), None)
+    eth_asset = next((a for a in watchlist if a.symbol == "ETH"), None)
+    if btc_asset is None or eth_asset is None:
+        return None
+
+    btc_dates, btc_closes, btc_ohlc, _ = _load_closes_and_ohlc(conn, "BTC", btc_asset.coingecko_id)
+    btc_snapshot = build_technical_snapshot(btc_closes, btc_dates, btc_ohlc)
+    btc_risk_result = pre_check(
+        btc_asset, watchlist, conn, latest_prices, btc_snapshot, regime_result, config_dict,
+        bitpanda_gelistet=None,
+    )
+
+    eth_dates, eth_closes, eth_ohlc, _ = _load_closes_and_ohlc(conn, "ETH", eth_asset.coingecko_id)
+    eth_snapshot = build_technical_snapshot(eth_closes, eth_dates, eth_ohlc)
+    eth_risk_result = pre_check(
+        eth_asset, watchlist, conn, latest_prices, eth_snapshot, regime_result, config_dict,
+        bitpanda_gelistet=None,
+    )
+
+    cfg = config_dict.get("cash_reserve_ziel", {})
+    rundengewichte = tuple(cfg.get("rundengewichte", (20.0, 30.0, 50.0)))
+    return compute_cash_reserve_ziel(btc_risk_result, eth_risk_result, rundengewichte)
+
+
 def generate_signal(
     asset, watchlist, conn, groq_client, coingecko_client, kraken_client,
     fred_api_key: str | None = None,
@@ -464,10 +501,19 @@ def generate_signal(
         and db.get_dca_erlaubt(conn, asset.symbol)
     )
 
+    # Cash-Reserve-Ziel (AZ-4 Baustein 3, 2026-07-12): nur berechnen, wenn das
+    # aktuelle Asset selbst BTC/ETH ist - kein unnoetiger Mehraufwand fuer
+    # Alt-Coin-Signale, die das Ergebnis ohnehin nicht anzeigen (siehe
+    # ui/signals_view.py). Regime-Bedingung wird innerhalb der Funktion geprueft.
+    cash_reserve_ziel = (
+        _compute_cash_reserve_ziel_context(conn, watchlist, regime_result, config_dict, latest_prices)
+        if asset.symbol in ("BTC", "ETH") else None
+    )
+
     facts = build_facts(
         asset, price_snap, holdings.get(asset.symbol), snapshot, confluence, regime_result,
         regime_profile, risk_result, anticyclic_context, strategien_aktiv, price_age_minutes,
-        market_context, bitpanda_gelistet, tranchen_erlaubt,
+        market_context, bitpanda_gelistet, tranchen_erlaubt, cash_reserve_ziel,
     )
 
     # R-5.6 Groq-Synthese.
@@ -555,6 +601,10 @@ def generate_signal(
             json.dumps(corrected["tranchen"], ensure_ascii=False)
             if corrected.get("tranchen") else None
         ),
+        cash_reserve_ziel_btc_usd=cash_reserve_ziel.btc_ziel_usd if cash_reserve_ziel else None,
+        cash_reserve_ziel_eth_usd=cash_reserve_ziel.eth_ziel_usd if cash_reserve_ziel else None,
+        cash_reserve_ziel_gesamt_usd=cash_reserve_ziel.gesamt_ziel_usd if cash_reserve_ziel else None,
+        cash_reserve_ziel_begruendung=cash_reserve_ziel.begruendung if cash_reserve_ziel else None,
         groq_raw_response=raw_response,
         groq_model="llama-3.3-70b-versatile",
         **top_grund_fields,

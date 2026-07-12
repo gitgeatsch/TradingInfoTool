@@ -305,6 +305,19 @@ class SignalsView(ttk.Frame):
                         lines.append(f"  Aktien-Kontext: S&P 500 {sp500_text}, Nasdaq {nasdaq_text} vom Hoch")
                     lines.append("")
 
+        # Cash-Reserve-Ziel (AZ-4 Baustein 3, 2026-07-12): signal-gebunden (anders als
+        # Boden-Zielzone oben) - direkt vom Signal-Objekt, kein separater DB-Fetch.
+        if asset.symbol in ("BTC", "ETH") and signal.cash_reserve_ziel_gesamt_usd is not None:
+            lines.append("CASH-RESERVE-ZIEL (Info, keine harte Regel - RM-4-Minimum bleibt bindend)")
+            lines.append(f"  Gesamt: {format_money(signal.cash_reserve_ziel_gesamt_usd)} USD")
+            lines.append(
+                f"  davon BTC: {format_money(signal.cash_reserve_ziel_btc_usd)} USD, "
+                f"ETH: {format_money(signal.cash_reserve_ziel_eth_usd)} USD"
+            )
+            if signal.cash_reserve_ziel_begruendung:
+                lines.append(f"  {signal.cash_reserve_ziel_begruendung}")
+            lines.append("")
+
         if signal.halte_kriterium_bucket:
             lines.append("HALTE-KRITERIUM")
             lines.append(f"  Grobe Einordnung: {signal.halte_kriterium_bucket}")

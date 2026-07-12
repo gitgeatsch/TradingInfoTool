@@ -537,6 +537,15 @@ boden_zielzone:
   equities_overlay_shift_std: 0.2           # [OFFEN] zusaetzliche Vertiefung der unteren
     # Bandkante (Standardabweichungen), wenn der Aktien-Baermarkt aktiv ist
 
+# --- Cash-Reserve-Ziel: gewichtete Nachkauf-Reserve fuer BTC/ETH
+# (AZ-4 Baustein 3, 2026-07-12, siehe Basisinfos/Regelwerksmanual.md) ---
+cash_reserve_ziel:
+  rundengewichte: [20, 30, 50]              # Nutzer-Entscheidung 2026-07-12, fest
+    # (kein [OFFEN]): 3 Runden ("Buying in Thirds"), asymmetrisch gewichtet
+    # (Value-Averaging-Prinzip - bei groesserem Ruecksetzer proportional mehr
+    # Kapital). Muss auf 100 summieren. Reine Zusatz-Information, kein neues
+    # Veto - RM-4 (oben) bleibt der harte Minimum-Floor.
+
 # --- Backward-Tracking (Selbstverifikations-Vision Schritt 2, siehe
 # Basisinfos/Regelwerksmanual.md Kap. 9 / Spezifikation Kap. 16) ---
 backward_tracking:

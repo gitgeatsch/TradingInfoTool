@@ -41,6 +41,15 @@ class RiskPreCheckResult:
     small_cap_budget_pct_applicable: float | None
     checks: list[str] = field(default_factory=list)
     drawdown_check_status: str = "nicht implementiert"
+    # Cash-Reserve-Ziel (AZ-4 Baustein 3, 2026-07-12) - exponieren bereits intern
+    # berechnete Zwischenwerte zusaetzlich, statt sie erneut zu berechnen (gleiches
+    # Prinzip wie BtcLogRegressionRisk.residual_std in Baustein 2). rm1_risk_ceiling_usd
+    # ist der Wert VOR dem min() mit RM-2 (siehe max_position_size_usd), rm2_allocation_
+    # headroom_usd das verbleibende Allokations-Budget in USD (RM-2), rm4_required_
+    # reserve_usd das bereits berechnete RM-4-Minimum (max aus Prozentsatz/Festbetrag).
+    rm1_risk_ceiling_usd: float | None = None
+    rm2_allocation_headroom_usd: float | None = None
+    rm4_required_reserve_usd: float | None = None
 
 
 def _portfolio_values_usd(watchlist, holdings, latest_prices) -> tuple[float, dict[str, float]]:
@@ -164,9 +173,11 @@ def pre_check(
 
     # RM-1: Risiko pro Trade begrenzt die Positionsgroesse.
     max_position_size_usd = None
+    rm1_risk_ceiling_usd = None
     if stop_loss_distance_pct and stop_loss_distance_pct > 0 and total_value_usd > 0:
         risk_budget_usd = total_value_usd * risiko_cfg["risiko_pro_trade_prozent"] / 100
         max_position_size_usd = risk_budget_usd / (stop_loss_distance_pct / 100)
+        rm1_risk_ceiling_usd = max_position_size_usd  # Cash-Reserve-Ziel (Baustein 3): Wert VOR RM-2-Deckelung
         checks.append(f"RM-1: max. Positionsgröße aus Risiko/Trade = {max_position_size_usd:.2f} USD")
     else:
         checks.append("RM-1: nicht berechenbar (Portfolio-Wert oder Stop-Loss-Abstand unbekannt)")
@@ -223,6 +234,12 @@ def pre_check(
         if asset.typ == "core"
         else risiko_cfg["max_allokation_pro_asset_prozent"]
     )
+    # Cash-Reserve-Ziel (Baustein 3): Allokations-Headroom in USD immer berechnen
+    # (auch im Veto-Fall, dort schlicht <= 0) - unabhaengig davon, ob RM-1 ueberhaupt
+    # einen max_position_size_usd liefern konnte.
+    rm2_allocation_headroom_usd = (
+        total_value_usd * (max_allok_pct - allocation_pct_current) / 100 if total_value_usd > 0 else None
+    )
     if allocation_pct_current >= max_allok_pct:
         veto_reasons.append(
             f"Allokation {allocation_pct_current:.1f}% bereits >= Limit {max_allok_pct}% (RM-2)"
@@ -230,9 +247,8 @@ def pre_check(
         checks.append("RM-2: FEHLGESCHLAGEN - Asset-Allokation am/über Limit")
     else:
         checks.append(f"RM-2: OK - Allokation {allocation_pct_current:.1f}% von {max_allok_pct}%")
-        if max_position_size_usd is not None and total_value_usd > 0:
-            remaining_usd = total_value_usd * (max_allok_pct - allocation_pct_current) / 100
-            max_position_size_usd = min(max_position_size_usd, remaining_usd)
+        if max_position_size_usd is not None and rm2_allocation_headroom_usd is not None:
+            max_position_size_usd = min(max_position_size_usd, rm2_allocation_headroom_usd)
 
     # R-5.10: Small-Cap-Budget aus dem aktiven Regime-Profil (nicht dem statischen
     # config-Wert) - das ist der Kern von R-5.10. Headroom-Berechnung ausgelagert
@@ -278,6 +294,92 @@ def pre_check(
         allocation_pct_current=allocation_pct_current,
         small_cap_budget_pct_applicable=small_cap_budget_pct_applicable,
         checks=checks,
+        rm1_risk_ceiling_usd=rm1_risk_ceiling_usd,
+        rm2_allocation_headroom_usd=rm2_allocation_headroom_usd,
+        rm4_required_reserve_usd=required_reserve_usd,
+    )
+
+
+@dataclass
+class CashReserveZielResult:
+    """AZ-4 Baustein 3 (2026-07-12): Zielgroesse fuer die Cash-Reserve, die eine
+    gestaffelte Nachkauf-Kampagne (AZ-4-Tranchen, Baustein 1) ueber BTC UND ETH
+    hinweg realistisch abdecken wuerde - REIN INFORMATIV, kein neues Veto. RM-4
+    bleibt der bestehende harte Minimum-Floor in risk_gate.py::pre_check()."""
+    btc_ziel_usd: float | None
+    eth_ziel_usd: float | None
+    gesamt_ziel_usd: float | None  # RM-4-Minimum + btc_ziel_usd + eth_ziel_usd
+    rm4_minimum_usd: float | None
+    begruendung: str
+
+
+def _cash_reserve_ziel_pro_asset(
+    result: RiskPreCheckResult, rundengewichte: tuple[float, float, float], asset_label: str
+) -> tuple[float | None, str]:
+    """Gibt (ziel_usd, begruendungs_teilsatz) fuer ein einzelnes Asset (BTC/ETH)
+    zurueck. Methodik (Nutzer-Diskussion 2026-07-12): 3 Runden, jede unabhaengig so
+    bemessen wie ein einzelner Trade heute (RM-1-Risiko-Obergrenze) - naiv summiert
+    also 3x diese Zahl. Das wird hart durch die RM-2-Allokations-Obergrenze gedeckelt
+    (strukturelles Limit, kann nie ueberschritten werden), erst DANACH werden die
+    20/30/50-Gewichte auf die gedeckelte Gesamtsumme verteilt (sonst wuerde sich die
+    Gewichtung rechnerisch wegkuerzen - min()-Deckelung zuerst, Gewichtung danach)."""
+    if result.rm1_risk_ceiling_usd is None:
+        return None, f"{asset_label}: nicht berechenbar (RM-1-Risiko-Obergrenze nicht verfügbar)."
+
+    naive_total = len(rundengewichte) * result.rm1_risk_ceiling_usd
+    if result.rm2_allocation_headroom_usd is not None:
+        capped_total = max(0.0, min(naive_total, result.rm2_allocation_headroom_usd))
+    else:
+        capped_total = naive_total
+
+    if capped_total <= 0:
+        return 0.0, f"{asset_label}: 0 $ (Allokation bereits am/über RM-2-Limit, kein Spielraum für weitere Nachkäufe)."
+
+    runden_text = ", ".join(
+        f"Runde {i + 1} {gewicht:.0f}% = {gewicht / 100 * capped_total:,.0f} $"
+        for i, gewicht in enumerate(rundengewichte)
+    )
+    begruendung = (
+        f"{asset_label}: {capped_total:,.0f} $ (3 Runden à heutiger RM-1-Obergrenze "
+        f"{result.rm1_risk_ceiling_usd:,.0f} $, gedeckelt durch RM-2-Headroom "
+        f"{result.rm2_allocation_headroom_usd:,.0f} $ falls kleiner; verteilt: {runden_text})."
+    )
+    return capped_total, begruendung
+
+
+def compute_cash_reserve_ziel(
+    btc_result: RiskPreCheckResult,
+    eth_result: RiskPreCheckResult,
+    rundengewichte: tuple[float, float, float] = (20.0, 30.0, 50.0),
+) -> CashReserveZielResult:
+    """AZ-4 Baustein 3 - reine Funktion, keine DB-/Netzwerk-Zugriffe. Nimmt die
+    bereits fuer BTC und ETH berechneten RiskPreCheckResult-Objekte entgegen (siehe
+    agent/krypto/pipeline.py::_compute_cash_reserve_ziel_context()). `rundengewichte`
+    sind PROZENTWERTE (muessen auf 100 summieren, z.B. (20, 30, 50) - Nutzer-
+    Entscheidung 2026-07-12), gleiche Konvention wie alle anderen Prozent-Werte in
+    config.yaml (z.B. risiko_pro_trade_prozent: 2, nicht 0.02). Wird hier NICHT
+    validiert (config.yaml-Ladefehler waeren ein Aufrufer-Problem, P-10 gilt fuer
+    Datenverfuegbarkeit, nicht fuer Konfigurationsfehler)."""
+    btc_ziel_usd, btc_begruendung = _cash_reserve_ziel_pro_asset(btc_result, rundengewichte, "BTC")
+    eth_ziel_usd, eth_begruendung = _cash_reserve_ziel_pro_asset(eth_result, rundengewichte, "ETH")
+
+    rm4_minimum_usd = btc_result.rm4_required_reserve_usd or eth_result.rm4_required_reserve_usd
+    gesamt_ziel_usd = None
+    if rm4_minimum_usd is not None and btc_ziel_usd is not None and eth_ziel_usd is not None:
+        gesamt_ziel_usd = rm4_minimum_usd + btc_ziel_usd + eth_ziel_usd
+
+    begruendung = (
+        f"RM-4-Minimum {rm4_minimum_usd:,.0f} $ + {btc_begruendung} {eth_begruendung}"
+        if rm4_minimum_usd is not None
+        else f"{btc_begruendung} {eth_begruendung} (RM-4-Minimum nicht verfügbar)"
+    )
+
+    return CashReserveZielResult(
+        btc_ziel_usd=btc_ziel_usd,
+        eth_ziel_usd=eth_ziel_usd,
+        gesamt_ziel_usd=gesamt_ziel_usd,
+        rm4_minimum_usd=rm4_minimum_usd,
+        begruendung=begruendung,
     )
 
 

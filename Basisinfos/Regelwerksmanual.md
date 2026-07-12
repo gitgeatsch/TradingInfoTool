@@ -239,6 +239,58 @@ Fetch-Fehlschlag (ETH-Historie oder Aktien-Indizes nicht erreichbar) degradiert
 nur der jeweilige Fakt auf `None`/nicht angezeigt (P-10) — die restliche
 Signal-Pipeline läuft unbeeinträchtigt weiter.
 
+### AZ-4 Baustein 3: Cash-Reserve-Ziel für BTC/ETH (2026-07-12)
+
+Letzter Baustein der Bärenmarkt-Akkumulations-Roadmap. Ursprüngliche
+Nutzer-Sorge: "zu geringe Reserve verhindert u. U. Nachkäufe". Antwort bisher
+nur eine grobe Schätzung ("verdoppeln") — jetzt ein konkreter **Zielwert**
+(kein neues hartes Veto, RM-4 bleibt der bestehende Minimum-Floor), wie viel
+Cash-Reserve für die geplante Nachkauf-Kampagne über BTC/ETH sinnvoll wäre.
+
+**Methodik, referenziert zwei verbreitete Praktiken aus dem
+Risikomanagement** (bewusst als Konvention eingeordnet, nicht als
+Marktgesetz):
+- **"Buying in Thirds":** 3 Runden als Basis — balanciert zwischen
+  All-in-Risiko (1 Kauf) und Überkomplexität (5+ kleine Käufe).
+- **Value Averaging** (Michael Edleson, 1988): bei größerem Rücksetzer wird
+  bewusst überproportional mehr Kapital eingesetzt, nicht gleichmäßig
+  verteilt. Umgesetzt als **20 % / 30 % / 50 %**-Gewichtung über die drei
+  Runden (Nutzer-Entscheidung 2026-07-12, `config.yaml
+  cash_reserve_ziel.rundengewichte`).
+
+**Rechnerische Präzisierung** (notwendig — sonst kürzt sich die Gewichtung
+rechnerisch weg): naiver Gesamtbedarf je Asset = 3 × heutige
+RM-1-Risiko-Obergrenze (jede Runde unabhängig wie ein normaler Trade heute
+bemessen), **hart gedeckelt durch die RM-2-Allokationsgrenze** (strukturelles
+Limit, das nie überschritten werden kann — RM-1 allein würde sonst beliebig
+oft "neu bemessen" und die Allokationsgrenze ignorieren). Die 20/30/50-Gewichte
+verteilen erst diesen bereits gedeckelten Gesamtbetrag auf die drei Runden.
+Cash-Reserve-Ziel (gesamt) = RM-4-Minimum + BTC-Ziel + ETH-Ziel.
+
+**Live-Beispiel (2026-07-12, echte Daten):** BTC-Ziel 4.014 $ (RM-2-Headroom
+deckelte den naiven Bedarf von 3×6.137=18.411 $ auf 4.014 $ — das
+RM-2-Allokationslimit war der bindende Faktor), ETH-Ziel 5.678 $, RM-4-Minimum
+2.282 $ → Gesamt-Ziel 11.975 $.
+
+**Grenzfälle, ehrlich behandelt (P-10):** ist die RM-2-Allokation für ein
+Asset bereits ausgeschöpft, wird dessen Ziel-Anteil `0` (kein Spielraum mehr,
+statt eines irreführenden positiven Werts). Ist RM-1 nicht berechenbar (kein
+Stop-Loss ableitbar, z. B. fehlende ATR-Daten), wird der Wert `None` statt
+geraten — degradiert nur diesen einen Fakt, blockiert nicht die Pipeline.
+
+**Bewusst KEIN UI-Feld für die Rundengewichte** — Konsistenz mit allen
+anderen Risikoparametern (RM-1/RM-2/RM-4/Regime-Gewichte), die ausschließlich
+in `config.yaml` leben; ein UI-Editor wäre Mehraufwand für einen selten
+geänderten Wert. Nur berechnet, wenn das aktuell bewertete Asset selbst
+BTC/ETH ist (kein Mehraufwand für Alt-Coin-Signale) UND das Regime
+`baer`/`krise_extrem`/`seitwaerts` ist — bewusst OHNE den per-Asset-AZ-4-
+Toggle (Cash-Reserve-Ziel ist ein portfolioweiter Informationswert, keine
+Tranchen-Einstellung). Signal-gebunden gespeichert (`signals`-Tabelle, wie
+`tranchen_json`), nicht macro_snapshot-artig wie die Boden-Zielzone.
+
+**Damit ist die komplette 3-Bausteine-Roadmap (Tranchen-Struktur →
+Boden-Zielzone → Cash-Reserve-Ziel) abgeschlossen.**
+
 ---
 
 ## 5. Entscheidungs-Reihenfolge bei jedem Signal (R-5.0 bis R-5.11)
@@ -547,6 +599,7 @@ gelöst, siehe Kap. 4.
 - `importer/bitpanda_avg_cost.py::compute_staked_quantities()` — aktuell gestakte Mengen (Abschnitt 14)
 - `api/yfinance_client.py` — EUR-Umrechnung für USD-only-Aktien wie PLTR/VST (Abschnitt 14)
 - `indicators/calculations.py::compute_btc_log_regression_risk()`/`compute_eth_log_regression_risk()`, `agent/krypto/regime.py::_boden_zielzone()`, `api/yfinance_history.py` — AZ-4 Baustein 2, Boden-Zielzone (Abschnitt 4)
+- `agent/krypto/risk_gate.py::compute_cash_reserve_ziel()`, `agent/krypto/pipeline.py::_compute_cash_reserve_ziel_context()` — AZ-4 Baustein 3, Cash-Reserve-Ziel (Abschnitt 4)
 
 ---
 

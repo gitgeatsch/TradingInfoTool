@@ -20,7 +20,7 @@ import numpy as np
 
 from agent.krypto.anticyclic import AnticyclicContext
 from agent.krypto.regime import RegimeResult
-from agent.krypto.risk_gate import RiskPreCheckResult
+from agent.krypto.risk_gate import CashReserveZielResult, RiskPreCheckResult
 from importer.bitpanda_avg_cost import compute_cost_basis_view
 from indicators.calculations import ConfluenceSummary, TechnicalSnapshot, latest_value
 
@@ -258,6 +258,7 @@ def build_facts(
     market_context: dict,
     bitpanda_gelistet: bool | None,
     tranchen_erlaubt: bool = False,
+    cash_reserve_ziel: CashReserveZielResult | None = None,
 ) -> dict:
     macd_val = technical_snapshot.macd
     macd_facts = None
@@ -367,6 +368,18 @@ def build_facts(
                 "aktiv": regime_result.equities_baermarkt_aktiv,
                 "begruendung": regime_result.equities_baermarkt_begruendung,
             },
+            # Cash-Reserve-Ziel (AZ-4 Baustein 3, 2026-07-12) - deterministischer Fakt
+            # (wie boden_zielzone_btc/_eth oben), None wenn Regime nicht antizyklisch
+            # ist oder das aktuelle Asset nicht BTC/ETH.
+            "cash_reserve_ziel": (
+                {
+                    "btc_usd": _native(cash_reserve_ziel.btc_ziel_usd),
+                    "eth_usd": _native(cash_reserve_ziel.eth_ziel_usd),
+                    "gesamt_usd": _native(cash_reserve_ziel.gesamt_ziel_usd),
+                    "begruendung": cash_reserve_ziel.begruendung,
+                }
+                if cash_reserve_ziel is not None else None
+            ),
         },
         "regime_profil": regime_profile,
         "risiko_check": {

@@ -216,6 +216,13 @@ class Signal:
     # (Normalfall) oder Groq-Antwort war fehlerhaft (wird dann verworfen, kein Fehlerfall
     # fuer das Gesamtsignal).
     tranchen_json: str | None = None
+    # Cash-Reserve-Ziel (AZ-4 Baustein 3, 2026-07-12, agent/krypto/risk_gate.py::
+    # compute_cash_reserve_ziel()) - nur befuellt bei BTC/ETH-Signalen im Regime
+    # baer/krise_extrem/seitwaerts. Rein informativ, kein neues Veto.
+    cash_reserve_ziel_btc_usd: float | None = None
+    cash_reserve_ziel_eth_usd: float | None = None
+    cash_reserve_ziel_gesamt_usd: float | None = None
+    cash_reserve_ziel_begruendung: str | None = None
 
 
 @dataclass
