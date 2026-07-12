@@ -349,6 +349,24 @@ def build_facts(
             "liquiditaets_regime_begruendung": regime_result.liquiditaets_regime_begruendung,
             "zyklus_risiko": _native(regime_result.zyklus_risiko),
             "zyklus_risiko_begruendung": regime_result.zyklus_risiko_begruendung,
+            # Boden-Zielzone (AZ-4 Baustein 2, 2026-07-12) - deterministisch berechnete
+            # Fakten (wie zyklus_risiko oben), KEIN Groq-Ausgabefeld, daher keine
+            # SCHEMA-/_validate()-Aenderung noetig.
+            "boden_zielzone_btc": {
+                "von": _native(regime_result.btc_boden_zielzone_von),
+                "bis": _native(regime_result.btc_boden_zielzone_bis),
+                "begruendung": regime_result.btc_boden_zielzone_begruendung,
+            },
+            "boden_zielzone_eth": {
+                "von": _native(regime_result.eth_boden_zielzone_von),
+                "bis": _native(regime_result.eth_boden_zielzone_bis),
+                "begruendung": regime_result.eth_boden_zielzone_begruendung,
+                "hinweis": "Niedrige Konfidenz - nur 2 historische ETH-Zyklus-Tiefpunkte verfügbar.",
+            },
+            "equities_baermarkt": {
+                "aktiv": regime_result.equities_baermarkt_aktiv,
+                "begruendung": regime_result.equities_baermarkt_begruendung,
+            },
         },
         "regime_profil": regime_profile,
         "risiko_check": {

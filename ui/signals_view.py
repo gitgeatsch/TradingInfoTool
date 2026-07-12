@@ -275,6 +275,36 @@ class SignalsView(ttk.Frame):
             lines.append(f"  Take-Profit:  {format_money(signal.take_profit_usd)} | {format_money(signal.take_profit_eur)}")
             lines.append("")
 
+        # Boden-Zielzone (AZ-4 Baustein 2, 2026-07-12): NICHT signal-gebunden (anders
+        # als tranchen_json oben) - eine taegliche macro_snapshot-Ablesung (siehe
+        # agent/krypto/regime.py::_boden_zielzone()), daher separat aus der DB gelesen
+        # statt ueber das Signal-Objekt. Nur fuer BTC/ETH relevant.
+        if asset.symbol in ("BTC", "ETH"):
+            conn = self._db_conn_factory()
+            try:
+                macro_snap = db.get_latest_macro_snapshot(conn)
+            finally:
+                conn.close()
+            if macro_snap is not None:
+                von = macro_snap.btc_boden_zielzone_von if asset.symbol == "BTC" else macro_snap.eth_boden_zielzone_von
+                bis = macro_snap.btc_boden_zielzone_bis if asset.symbol == "BTC" else macro_snap.eth_boden_zielzone_bis
+                if von is not None and bis is not None:
+                    lines.append("BODEN-ZIELZONE (Info, Wahrscheinlichkeits-Zone, kein hartes Kursziel)")
+                    lines.append(f"  {format_money(von)}–{format_money(bis)} USD")
+                    if asset.symbol == "ETH":
+                        lines.append("  ⚠ Niedrige Konfidenz (nur 2 historische ETH-Zyklus-Tiefpunkte)")
+                    if macro_snap.equities_sp500_drawdown_pct is not None or macro_snap.equities_nasdaq_drawdown_pct is not None:
+                        sp500_text = (
+                            f"{macro_snap.equities_sp500_drawdown_pct:+.1f}%"
+                            if macro_snap.equities_sp500_drawdown_pct is not None else "n/v"
+                        )
+                        nasdaq_text = (
+                            f"{macro_snap.equities_nasdaq_drawdown_pct:+.1f}%"
+                            if macro_snap.equities_nasdaq_drawdown_pct is not None else "n/v"
+                        )
+                        lines.append(f"  Aktien-Kontext: S&P 500 {sp500_text}, Nasdaq {nasdaq_text} vom Hoch")
+                    lines.append("")
+
         if signal.halte_kriterium_bucket:
             lines.append("HALTE-KRITERIUM")
             lines.append(f"  Grobe Einordnung: {signal.halte_kriterium_bucket}")

@@ -16,7 +16,13 @@ import numpy as np
 
 from api.onchain import OnChainReading
 from database.models import MacroSnapshot
-from indicators.calculations import BtcLogRegressionRisk, TechnicalSnapshot, latest_value
+from indicators.calculations import (
+    BTC_CYCLE_BOTTOM_DEVIATIONS_STD,
+    ETH_CYCLE_BOTTOM_DEVIATIONS_STD,
+    BtcLogRegressionRisk,
+    TechnicalSnapshot,
+    latest_value,
+)
 
 REGIME_STATES = ("krise_extrem", "baer", "seitwaerts", "bulle", "euphorie_extrem")
 
@@ -91,6 +97,20 @@ class RegimeResult:
     liquiditaets_regime_begruendung: str
     zyklus_risiko: float | None  # 0-1, siehe BtcLogRegressionRisk.risk
     zyklus_risiko_begruendung: str
+    # Boden-Zielzone (AZ-4 Baustein 2, 2026-07-12) - siehe _boden_zielzone() unten.
+    # In USD, None wenn die zugrundeliegende Regression nicht berechnet werden konnte
+    # (P-10, kein Fallback-Wert).
+    btc_boden_zielzone_von: float | None
+    btc_boden_zielzone_bis: float | None
+    btc_boden_zielzone_begruendung: str
+    eth_boden_zielzone_von: float | None
+    eth_boden_zielzone_bis: float | None
+    eth_boden_zielzone_begruendung: str
+    # Aktien-Baermarkt-Overlay: None = Datenlage unbekannt (Abruf fehlgeschlagen),
+    # sonst bool ob mindestens einer der beiden Indizes ueber der config.yaml-
+    # Schwelle liegt (Verknuepfung "entweder", Nutzer-Entscheidung 2026-07-12).
+    equities_baermarkt_aktiv: bool | None
+    equities_baermarkt_begruendung: str
 
 
 def _btc_change_pct(btc_closes: np.ndarray, days: int = 30) -> float | None:
@@ -227,6 +247,74 @@ def _zyklus_risiko(
     return log_regression_risk.risk, " ".join(parts)
 
 
+def _boden_zielzone(
+    log_regression_risk: BtcLogRegressionRisk | None,
+    deviation_band: tuple[float, float],
+    daempfer_staerke: float,
+    equities_baermarkt_aktiv: bool | None,
+    overlay_shift_std: float,
+    asset_label: str,
+) -> tuple[float | None, float | None, str]:
+    """Boden-Zielzone (AZ-4 Baustein 2, 2026-07-12) - projiziert ein historisches
+    Zyklus-Tief-Abweichungsband (siehe indicators/calculations.py::
+    BTC_CYCLE_BOTTOM_DEVIATIONS_STD/ETH_CYCLE_BOTTOM_DEVIATIONS_STD) auf die aktuelle
+    Log-Regressionslinie. Wahrscheinlichkeits-Zone, KEIN hartes Kursziel (Z-4-
+    Transparenz) - `asset_label` sorgt bei ETH fuer einen sichtbaren
+    Niedrig-Konfidenz-Hinweis (nur 2 statt 3 historische Vergleichspunkte, siehe
+    Modul-Konstante).
+
+    `daempfer_staerke` (Reifegrad-Daempfer, config.yaml boden_zielzone.
+    reifegrad_daempfer_staerke): zieht beide Bandkanten um diesen Anteil Richtung 0
+    (die Regressionslinie) - mit wachsender Marktkapitalisierung werden Korrekturen
+    historisch tendenziell milder, ein starres Band aus frueheren, kleineren Zyklen
+    waere sonst zu tief angesetzt.
+
+    `equities_baermarkt_aktiv`/`overlay_shift_std`: wenn Aktien (S&P 500/Nasdaq)
+    selbst im Baermarkt sind, wirkt das dem Reifegrad-Daempfer entgegen - die untere
+    (negativere) Bandkante wird zusaetzlich vertieft, weil ein gemeinsamer
+    Liquiditaetsentzug BTC/ETH zusaetzlich unter die reine Krypto-Zyklus-Zone
+    druecken kann (Nutzer-Punkt).
+
+    Gibt (zone_von, zone_bis, begruendung) zurueck - (None, None, ...) wenn die
+    zugrundeliegende Regression nicht verfuegbar ist (P-10, kein Fallback-Wert)."""
+    if log_regression_risk is None:
+        return None, None, f"{asset_label}-Log-Regression nicht verfügbar (Historien-Abruf fehlgeschlagen)."
+
+    raw_edges = list(deviation_band)
+    effective_edges = [edge * (1 - daempfer_staerke) for edge in raw_edges]
+    overlay_wirkte = False
+    if equities_baermarkt_aktiv:
+        deepest_idx = effective_edges.index(min(effective_edges))
+        effective_edges[deepest_idx] -= overlay_shift_std
+        overlay_wirkte = True
+
+    prices = [
+        log_regression_risk.predicted_price * 10 ** (edge * log_regression_risk.residual_std)
+        for edge in effective_edges
+    ]
+    zone_von, zone_bis = min(prices), max(prices)
+
+    parts = [
+        f"{asset_label}-Boden-Zielzone: {zone_von:,.0f}-{zone_bis:,.0f} $ "
+        f"(historisches Zyklus-Tief-Band {min(raw_edges):+.2f} bis {max(raw_edges):+.2f} Std., "
+        f"Reifegrad-gedaempft auf {min(effective_edges):+.2f} bis {max(effective_edges):+.2f} Std.)."
+    ]
+    if overlay_wirkte:
+        parts.append(
+            f"Aktien-Bärenmarkt-Overlay aktiv: untere Bandkante um zusätzlich "
+            f"{overlay_shift_std:.2f} Std. vertieft (gemeinsamer Liquiditätsentzug)."
+        )
+    elif equities_baermarkt_aktiv is None:
+        parts.append("Aktien-Bärenmarkt-Status nicht verfügbar - Overlay konnte nicht geprüft werden.")
+    if asset_label == "ETH":
+        parts.append(
+            "Niedrige Konfidenz: nur 2 historische ETH-Zyklus-Tiefpunkte verfügbar (statt 3 bei BTC), "
+            "die Werte liegen zudem weit auseinander - deutlich unsicherere Schätzung als bei BTC."
+        )
+
+    return zone_von, zone_bis, " ".join(parts)
+
+
 def determine_regime(
     btc_closes: np.ndarray,
     btc_snapshot: TechnicalSnapshot,
@@ -238,13 +326,30 @@ def determine_regime(
     m2_china_history: list[float] | None = None,
     btc_log_regression_risk: BtcLogRegressionRisk | None = None,
     btc_onchain_reading: OnChainReading | None = None,
+    eth_log_regression_risk: BtcLogRegressionRisk | None = None,
+    boden_zielzone_daempfer_staerke: float = 0.0,
+    equities_baermarkt_aktiv: bool | None = None,
+    equities_baermarkt_begruendung: str = "Aktien-Bärenmarkt-Status nicht verfügbar.",
+    boden_zielzone_overlay_shift_std: float = 0.0,
 ) -> RegimeResult:
+    """Boden-Zielzone-Parameter (AZ-4 Baustein 2, 2026-07-12): bewusst als bereits
+    aufgeloeste Werte uebergeben (wie `manual_override`) statt hier config.yaml zu
+    lesen - regime.py bleibt komplett config-frei, der Schwellenwert-Vergleich fuer
+    `equities_baermarkt_aktiv` passiert in pipeline.py."""
     m2_trend, m2_detail = _m2_global_trend(
         m2_us_history or [], m2_eurozone_history or [], m2_china_history or []
     )
     fed_direction = _fed_funds_direction(fed_funds_history or [])
     liquiditaets_regime, liquiditaets_regime_begruendung = _liquidity_regime(m2_trend, fed_direction, m2_detail)
     zyklus_risiko, zyklus_risiko_begruendung = _zyklus_risiko(btc_log_regression_risk, btc_onchain_reading)
+    btc_zielzone_von, btc_zielzone_bis, btc_zielzone_begruendung = _boden_zielzone(
+        btc_log_regression_risk, BTC_CYCLE_BOTTOM_DEVIATIONS_STD, boden_zielzone_daempfer_staerke,
+        equities_baermarkt_aktiv, boden_zielzone_overlay_shift_std, "BTC",
+    )
+    eth_zielzone_von, eth_zielzone_bis, eth_zielzone_begruendung = _boden_zielzone(
+        eth_log_regression_risk, ETH_CYCLE_BOTTOM_DEVIATIONS_STD, boden_zielzone_daempfer_staerke,
+        equities_baermarkt_aktiv, boden_zielzone_overlay_shift_std, "ETH",
+    )
     ema20 = latest_value(btc_snapshot.ema[20])
     ema50 = latest_value(btc_snapshot.ema[50])
     ema200 = latest_value(btc_snapshot.ema[200])
@@ -317,6 +422,14 @@ def determine_regime(
             liquiditaets_regime_begruendung=liquiditaets_regime_begruendung,
             zyklus_risiko=zyklus_risiko,
             zyklus_risiko_begruendung=zyklus_risiko_begruendung,
+            btc_boden_zielzone_von=btc_zielzone_von,
+            btc_boden_zielzone_bis=btc_zielzone_bis,
+            btc_boden_zielzone_begruendung=btc_zielzone_begruendung,
+            eth_boden_zielzone_von=eth_zielzone_von,
+            eth_boden_zielzone_bis=eth_zielzone_bis,
+            eth_boden_zielzone_begruendung=eth_zielzone_begruendung,
+            equities_baermarkt_aktiv=equities_baermarkt_aktiv,
+            equities_baermarkt_begruendung=equities_baermarkt_begruendung,
         )
 
     return RegimeResult(
@@ -333,4 +446,12 @@ def determine_regime(
         zyklus_risiko_begruendung=zyklus_risiko_begruendung,
         btc_matrix_state=btc_matrix_state,
         btc_matrix_beschreibung=btc_matrix_beschreibung,
+        btc_boden_zielzone_von=btc_zielzone_von,
+        btc_boden_zielzone_bis=btc_zielzone_bis,
+        btc_boden_zielzone_begruendung=btc_zielzone_begruendung,
+        eth_boden_zielzone_von=eth_zielzone_von,
+        eth_boden_zielzone_bis=eth_zielzone_bis,
+        eth_boden_zielzone_begruendung=eth_zielzone_begruendung,
+        equities_baermarkt_aktiv=equities_baermarkt_aktiv,
+        equities_baermarkt_begruendung=equities_baermarkt_begruendung,
     )

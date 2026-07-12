@@ -447,6 +447,22 @@ def support_resistance_levels(
 
 
 BTC_GENESIS_DATE = np.datetime64("2009-01-03")
+# Boden-Zielzone (AZ-4 Baustein 2, 2026-07-12): ETH hat keinen Genesis-Block im
+# Bitcoin-Sinn - Mainnet-Launch als Anker verwendet, analog zu BTC_GENESIS_DATE.
+ETH_GENESIS_DATE = np.datetime64("2015-07-30")
+
+# Boden-Zielzone: live-verifizierte historische Abweichung (in Streuungs-Einheiten,
+# siehe BtcLogRegressionRisk.deviation_std) an echten Zyklus-Tiefs, mit auf das
+# jeweilige Datum GEKUERZTER Historie berechnet (kein Lookahead-Bias) - 2026-07-12
+# nachgerechnet. 2020-03-13 (COVID-Crash) bewusst ausgeschlossen: ein Liquiditaets-
+# schock, kein echtes mehrjaehriges Zyklus-Tief.
+BTC_CYCLE_BOTTOM_DEVIATIONS_STD = (-1.16, -0.78, -1.26)  # 2015-01-14, 2018-12-15, 2022-11-21
+# ETH: nur 2 verwertbare Vergleichspunkte (yfinance-Historie erst ab 2017-11, siehe
+# api/yfinance_history.py), UND die beiden Werte liegen weit auseinander (Faktor ~5) -
+# deutlich unsicherere Datengrundlage als BTC. Jeder Verbraucher dieser Konstante
+# MUSS das als Niedrig-Konfidenz kennzeichnen (siehe agent/krypto/regime.py::
+# _boden_zielzone()).
+ETH_CYCLE_BOTTOM_DEVIATIONS_STD = (-2.04, -0.41)  # 2018-12-15, 2022-11-21
 
 
 @dataclass
@@ -457,26 +473,41 @@ class BtcLogRegressionRisk:
     transparente Log-Log-lineare Regression ueber die gesamte verfuegbare Historie
     plus Residuen-Streuung als Band - an vier bekannten historischen Zyklus-Extremen
     (2017/2018/2021/2022) live gegengeprueft, zeigt die richtige Richtung, aber ist
-    keine praezise Nachbildung etablierter kommerzieller Modelle."""
+    keine praezise Nachbildung etablierter kommerzieller Modelle.
+
+    Trotz des Namens asset-agnostisch (siehe genesis_date-Parameter unten) - wird
+    seit der Boden-Zielzone (2026-07-12) auch fuer ETH genutzt
+    (compute_eth_log_regression_risk())."""
     date: str
     current_price: float
     predicted_price: float  # Wert der Regressionslinie zum aktuellen Datum
     deviation_std: float  # Abweichung des aktuellen Preises von der Linie, in Std.
     risk: float  # 0-1, siehe deviation_std_range Parameter fuer die Skalierung
+    residual_std: float  # Streuung (Standardabweichung) der log10-Residuen ueber die
+    # gesamte Regression, in log10-Einheiten - noetig, um eine beliebige Ziel-
+    # Abweichung (z.B. ein historisches Zyklus-Tief-Band) wieder in einen Preis
+    # zurueckzurechnen (Boden-Zielzone, agent/krypto/regime.py::_boden_zielzone()).
+    # War bisher nur eine lokale Variable, nie zurueckgegeben.
 
 
 def compute_btc_log_regression_risk(
-    history: list[tuple[Any, float]], deviation_std_range: float = 3.0
+    history: list[tuple[Any, float]],
+    deviation_std_range: float = 3.0,
+    genesis_date: np.datetime64 = BTC_GENESIS_DATE,
 ) -> BtcLogRegressionRisk:
-    """`history`: Liste von (Datum, Preis) ueber moeglichst die gesamte BTC-Historie
-    (siehe api/onchain.py::get_btc_full_price_history()). Preise <= 0 (2009,
-    kein etablierter Markt) werden herausgefiltert, log(0) ist undefiniert.
+    """`history`: Liste von (Datum, Preis) ueber moeglichst die gesamte Historie des
+    Assets (siehe api/onchain.py::get_btc_full_price_history() fuer BTC,
+    api/yfinance_history.py::get_full_price_history() fuer ETH). Preise <= 0 werden
+    herausgefiltert, log(0) ist undefiniert.
 
-    Modell: lineare Regression von log10(Preis) auf log10(Tage seit Genesis-Block)
+    Modell: lineare Regression von log10(Preis) auf log10(Tage seit `genesis_date`)
     ueber die GESAMTE Historie. `risk` bildet die aktuelle Abweichung von dieser
     Linie (in Streuungs-Einheiten der historischen Residuen) linear auf [0, 1] ab,
     wobei +-`deviation_std_range` Standardabweichungen auf die vollen Baender
     (0 bzw. 1) gemappt werden - Werte ausserhalb werden auf 0/1 begrenzt (clamped).
+
+    `genesis_date` macht die Funktion asset-agnostisch nutzbar (Default = BTC) -
+    siehe compute_eth_log_regression_risk() fuer den ETH-Anwendungsfall.
 
     Wirft ValueError bei zu wenig verwertbaren Datenpunkten statt einen unsicheren
     Wert zurueckzugeben (P-10)."""
@@ -488,9 +519,9 @@ def compute_btc_log_regression_risk(
     dates, prices = dates[valid], prices[valid]
 
     if len(prices) < 30:
-        raise ValueError(f"Zu wenige verwertbare BTC-Historiendaten fuer eine Regression: {len(prices)}")
+        raise ValueError(f"Zu wenige verwertbare Historiendaten fuer eine Regression: {len(prices)}")
 
-    days_since_genesis = (dates - BTC_GENESIS_DATE).astype("timedelta64[D]").astype(float)
+    days_since_genesis = (dates - genesis_date).astype("timedelta64[D]").astype(float)
     x = np.log10(days_since_genesis)
     y = np.log10(prices)
     slope, intercept = np.polyfit(x, y, 1)
@@ -508,4 +539,13 @@ def compute_btc_log_regression_risk(
         predicted_price=predicted_price,
         deviation_std=deviation,
         risk=risk,
+        residual_std=float(std),
     )
+
+
+def compute_eth_log_regression_risk(
+    history: list[tuple[Any, float]], deviation_std_range: float = 3.0
+) -> BtcLogRegressionRisk:
+    """Duenner Wrapper um compute_btc_log_regression_risk() mit ETH_GENESIS_DATE -
+    siehe dessen Docstring fuer die Modell-Details. Boden-Zielzone (2026-07-12)."""
+    return compute_btc_log_regression_risk(history, deviation_std_range, genesis_date=ETH_GENESIS_DATE)

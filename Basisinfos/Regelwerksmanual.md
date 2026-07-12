@@ -179,6 +179,66 @@ Regime-/Risiko-Modell"). Gilt symmetrisch für Käufe UND Verkäufe.
   Umsetzungs-Rückmeldung/Backward-Tracking bleibt signal-weit) — ohnehin nicht
   sinnvoll umsetzbar ohne Order-API.
 
+### AZ-4 Baustein 2: Boden-Zielzone für BTC/ETH (2026-07-12)
+
+Zweite Bausteinstufe der Bärenmarkt-Akkumulations-Roadmap (Baustein 1 =
+AZ-4-Tranchen oben, Baustein 3 = Cash-Reserve-Ziel, noch offen). Liefert eine
+**Wahrscheinlichkeits-Zone** (kein hartes Kursziel), wo ein Zyklus-Tief für BTC
+bzw. ETH realistisch liegen könnte — als zusätzlicher Kontext für den Nutzer UND
+als Groq-Fakt (fließt in die Begründung/den Tranchen-Vorschlag ein, ohne selbst
+ein Veto oder eine Regel durchzusetzen).
+
+**Methodik:** eine einfache Log-Log-lineare Regression über die gesamte
+verfügbare Preishistorie (dasselbe bestehende Modell wie beim BTC-Zyklus-Risiko,
+Kap. 5) liefert eine Trendlinie. Das historische Abweichungs-Band vergangener
+echter Zyklus-Tiefs (live nachgerechnet, 2026-07-12, ohne Lookahead) wird auf die
+aktuelle Trendlinie projiziert:
+- **BTC** (Datenquelle: blockchain.com, seit 2009): −1,16 / −0,78 / −1,26
+  Standardabweichungen an den Tiefs vom 2015-01-14 / 2018-12-15 / 2022-11-21.
+- **ETH** (Datenquelle: yfinance `ETH-USD`, seit 2017-11 — kein BTC-Äquivalent
+  verfügbar: CoinGecko-Free-Tier auf 365 Tage limitiert, Kraken nur ~720 Tage):
+  −2,04 / −0,41 Standardabweichungen an den Tiefs vom 2018-12-15 / 2022-11-21.
+  **Nur 2 Vergleichspunkte, weit gestreut — deutlich unsichere Datengrundlage.**
+  Jede Anzeige/jeder Groq-Fakt zur ETH-Zone trägt deshalb einen sichtbaren
+  Niedrig-Konfidenz-Hinweis.
+- 2020-03-13 (COVID-Crash) bewusst aus beiden Bändern ausgeschlossen — ein
+  Liquiditätsschock, kein echtes mehrjähriges Zyklus-Tief.
+
+**Zwei Korrektur-Komponenten** (config.yaml `boden_zielzone:`, beide bewusst
+transparent getrennt statt zu einem Faktor verschmolzen):
+1. **Reifegrad-Dämpfer** (`reifegrad_daempfer_staerke`, Start 0,15): zieht beide
+   Bandkanten Richtung Trendlinie — mit wachsender Marktkapitalisierung werden
+   Korrekturen historisch tendenziell milder, ein starres Band aus früheren,
+   kleineren Zyklen wäre sonst zu tief angesetzt.
+2. **Aktien-Bärenmarkt-Overlay** (Nutzer-Punkt: gemeinsamer Liquiditätsentzug
+   kann BTC/ETH zusätzlich tiefer drücken): sind S&P 500 **oder** Nasdaq
+   (`equities_baermarkt_verknuepfung: entweder`, feste Nutzer-Entscheidung) mehr
+   als `equities_baermarkt_schwelle_prozent` (Start 20 %) vom
+   `equities_baermarkt_lookback_jahre`-Hoch (Start 5 Jahre) entfernt, wird die
+   untere Bandkante um `equities_overlay_shift_std` (Start 0,2) zusätzlich
+   vertieft. Wirkt dem Reifegrad-Dämpfer entgegen, bewusst getrennt sichtbar.
+
+**Live-Beispiel (2026-07-12, echte Daten):** BTC-Zone 63.029–83.601 $, ETH-Zone
+986–2.729 $ (mit Niedrig-Konfidenz-Hinweis), Aktien-Bärenmarkt aktuell nicht
+aktiv (S&P −0,5 %, Nasdaq −3,0 % vom Hoch — beide unter der 20-%-Schwelle).
+
+**Persistenz:** täglicher Snapshot in `macro_snapshot` (dieselbe Tabelle wie
+BTC-Dominanz/Fear&Greed/FRED — day-keyed, signal-unabhängig), damit die
+Verschiebung der Zone über Zeit nachvollziehbar bleibt. ETH- und
+Aktien-Index-Daten werden dabei **höchstens 1×/Tag** live abgerufen
+(Tages-Cache) — jeder manuelle "Signal berechnen"-Klick und jeder der beiden
+täglichen Marktscan-Läufe würde sonst zusätzliche Netzwerk-Calls auslösen. Die
+eigentliche Zonen-Berechnung läuft trotzdem bei jedem Aufruf frisch (reine
+Arithmetik, kein Netzwerk), damit eine config.yaml-Änderung sofort greift. BTC
+selbst bleibt wie das bestehende Zyklus-Risiko **immer** frisch berechnet (kein
+Cache nötig, kein zusätzlicher Netzwerk-Call gegenüber vorher).
+
+**Bewusst reine Zusatz-Information**, wie die AZ-4-Tranchen oben: kein neues
+Veto, keine Positionsgrößen-Beeinflussung, kein Automatismus. Bei einem
+Fetch-Fehlschlag (ETH-Historie oder Aktien-Indizes nicht erreichbar) degradiert
+nur der jeweilige Fakt auf `None`/nicht angezeigt (P-10) — die restliche
+Signal-Pipeline läuft unbeeinträchtigt weiter.
+
 ---
 
 ## 5. Entscheidungs-Reihenfolge bei jedem Signal (R-5.0 bis R-5.11)
@@ -486,6 +546,7 @@ gelöst, siehe Kap. 4.
 - `remote/server.py`, `remote/status.py` — Remote-Steuer-Seite (Abschnitt 13)
 - `importer/bitpanda_avg_cost.py::compute_staked_quantities()` — aktuell gestakte Mengen (Abschnitt 14)
 - `api/yfinance_client.py` — EUR-Umrechnung für USD-only-Aktien wie PLTR/VST (Abschnitt 14)
+- `indicators/calculations.py::compute_btc_log_regression_risk()`/`compute_eth_log_regression_risk()`, `agent/krypto/regime.py::_boden_zielzone()`, `api/yfinance_history.py` — AZ-4 Baustein 2, Boden-Zielzone (Abschnitt 4)
 
 ---
 
@@ -869,3 +930,9 @@ Startpunkt, sobald Backward-Tracking/Outcome-Daten vorliegen:
 - **NEU (2026-07-11):** RM-10/RM-11 (Hebel) bräuchten eine Positions-
   Rekonstruktion aus den `margin_trading.*`-Transaktions-Tags (Kap. 14) — nicht
   trivial, Bitpanda liefert keine "offene Positionen"-Übersicht.
+- **NEU (2026-07-12):** Boden-Zielzone (Abschnitt 4, `config.yaml
+  boden_zielzone:`) — `reifegrad_daempfer_staerke` (0,15), `equities_baermarkt_
+  schwelle_prozent` (20), `equities_baermarkt_lookback_jahre` (5),
+  `equities_overlay_shift_std` (0,2) sind erste plausible Startwerte, noch nicht
+  gegen echte Ergebnisse validiert. `equities_baermarkt_verknuepfung: entweder`
+  ist dagegen eine bewusste, feste Nutzer-Entscheidung (kein `[OFFEN]`).

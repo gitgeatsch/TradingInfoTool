@@ -197,6 +197,100 @@ def _fetch_cycle_risk_context() -> dict:
     return context
 
 
+def _fetch_boden_zielzone_context(conn, config_dict: dict) -> dict:
+    """Boden-Zielzone (AZ-4 Baustein 2, 2026-07-12): ETH-Log-Regression + Aktien-
+    Baermarkt-Status (S&P 500/Nasdaq) fuer agent/regime.py::_boden_zielzone().
+    BTC selbst braucht hier nichts (nutzt das ohnehin schon frische
+    btc_log_regression_risk aus _fetch_cycle_risk_context() weiter, bewusst IMMER
+    frisch wie zyklus_risiko).
+
+    ETH + Aktien-Indizes sind dagegen ECHTE NEUE yfinance-Netzwerk-Calls -
+    Tages-Cache ueber macro_snapshot (existiert fuer heute schon eine Zeile mit
+    gefuelltem eth_regression_predicted_price, werden die gespeicherten Werte
+    wiederverwendet statt neu abgerufen). Das verhindert, dass jeder manuelle
+    "Signal berechnen"-Klick UND jeder der 2 taeglichen Marktscan-Laeufe zusaetzliche
+    yfinance-Calls ausloest - compute_current_regime() laeuft sonst komplett
+    ungedrosselt. _boden_zielzone() selbst wird trotzdem bei JEDEM Aufruf frisch
+    gerechnet (billige Arithmetik, kein Netzwerk) - auch bei einem Cache-Treffer,
+    damit eine zwischenzeitliche config.yaml-Aenderung sofort greift."""
+    from api.yfinance_history import get_equities_bear_market_status, get_full_price_history
+    from indicators.calculations import BtcLogRegressionRisk, compute_eth_log_regression_risk
+
+    cfg = config_dict.get("boden_zielzone", {})
+    context: dict = {
+        "eth_log_regression_risk": None,
+        "daempfer_staerke": cfg.get("reifegrad_daempfer_staerke", 0.0),
+        "overlay_shift_std": cfg.get("equities_overlay_shift_std", 0.0),
+        "equities_baermarkt_aktiv": None,
+        "equities_baermarkt_begruendung": "Aktien-Bärenmarkt-Status nicht verfügbar.",
+    }
+    if not cfg.get("aktiv", True):
+        context["equities_baermarkt_begruendung"] = "Boden-Zielzone deaktiviert (config.yaml boden_zielzone.aktiv=false)."
+        return context
+
+    today = datetime.now(timezone.utc).date().isoformat()
+    cached = db.get_latest_macro_snapshot(conn)
+    cache_hit = (
+        cached is not None and cached.date == today
+        and cached.eth_regression_predicted_price is not None
+    )
+    sp500_drawdown_pct = nasdaq_drawdown_pct = None
+    if cache_hit:
+        context["eth_log_regression_risk"] = BtcLogRegressionRisk(
+            date=today, current_price=0.0, predicted_price=cached.eth_regression_predicted_price,
+            deviation_std=0.0, risk=0.0, residual_std=cached.eth_regression_residual_std,
+        )
+        sp500_drawdown_pct = cached.equities_sp500_drawdown_pct
+        nasdaq_drawdown_pct = cached.equities_nasdaq_drawdown_pct
+    else:
+        try:
+            eth_history = get_full_price_history("ETH-USD")
+            context["eth_log_regression_risk"] = compute_eth_log_regression_risk(eth_history)
+        except Exception as exc:
+            logger.info("ETH-Log-Regression-Risk-Berechnung fehlgeschlagen: %s", exc)
+        try:
+            equities = get_equities_bear_market_status(
+                lookback_years=cfg.get("equities_baermarkt_lookback_jahre", 5)
+            )
+            sp500_drawdown_pct = equities.sp500_drawdown_pct
+            nasdaq_drawdown_pct = equities.nasdaq_drawdown_pct
+        except Exception as exc:
+            logger.info("Aktien-Bärenmarkt-Status-Abruf fehlgeschlagen: %s", exc)
+
+        elr = context["eth_log_regression_risk"]
+        db.upsert_macro_snapshot(conn, MacroSnapshot(
+            date=today, btc_dominance_pct=None, fear_greed_value=None, fear_greed_label=None,
+            fetched_at=_now(),
+            eth_regression_predicted_price=elr.predicted_price if elr else None,
+            eth_regression_residual_std=elr.residual_std if elr else None,
+            equities_sp500_drawdown_pct=sp500_drawdown_pct,
+            equities_nasdaq_drawdown_pct=nasdaq_drawdown_pct,
+        ))
+
+    # "aktiv"-Entscheidung: config-abhaengiger Schwellenwert-Vergleich, bewusst HIER
+    # (nicht in regime.py, das komplett config-frei bleibt) - bei jedem Aufruf neu,
+    # egal ob die Drawdown-Werte aus dem Cache oder frisch kommen (siehe Docstring).
+    schwelle = cfg.get("equities_baermarkt_schwelle_prozent", 20)
+    lookback = cfg.get("equities_baermarkt_lookback_jahre", 5)
+    verknuepfung = cfg.get("equities_baermarkt_verknuepfung", "entweder")
+    if sp500_drawdown_pct is None and nasdaq_drawdown_pct is None:
+        context["equities_baermarkt_begruendung"] = "Aktien-Bärenmarkt-Status nicht verfügbar (Datenabruf fehlgeschlagen)."
+    else:
+        sp500_aktiv = sp500_drawdown_pct is not None and sp500_drawdown_pct <= -schwelle
+        nasdaq_aktiv = nasdaq_drawdown_pct is not None and nasdaq_drawdown_pct <= -schwelle
+        context["equities_baermarkt_aktiv"] = (
+            (sp500_aktiv and nasdaq_aktiv) if verknuepfung == "beide" else (sp500_aktiv or nasdaq_aktiv)
+        )
+        sp500_text = f"{sp500_drawdown_pct:+.1f}%" if sp500_drawdown_pct is not None else "n/v"
+        nasdaq_text = f"{nasdaq_drawdown_pct:+.1f}%" if nasdaq_drawdown_pct is not None else "n/v"
+        context["equities_baermarkt_begruendung"] = (
+            f"S&P 500: {sp500_text}, Nasdaq: {nasdaq_text} vom {lookback}-Jahres-Hoch "
+            f"(Schwelle: -{schwelle}%, Verknüpfung: {verknuepfung}) - "
+            f"{'aktiv' if context['equities_baermarkt_aktiv'] else 'nicht aktiv'}."
+        )
+    return context
+
+
 def fetch_market_context() -> dict:
     """Reiner Groq-Kontext (Nutzungs-Diskussion, letzter Schritt, 2026-07-08) - KEINE
     neue Regime-Logik, nur zusaetzliche Fakten fuers Facts-Objekt (agent/analyst.py::
@@ -237,10 +331,11 @@ def compute_current_regime(conn, coingecko_client, watchlist, fred_api_key: str 
     liquidity_context = _fetch_liquidity_context(fred_api_key)
     cycle_risk_context = _fetch_cycle_risk_context()
     macro_history = _update_macro_snapshot(conn, coingecko_client, fred_api_key, liquidity_context)
+    boden_zielzone_context = _fetch_boden_zielzone_context(conn, config_dict)
     btc_dates, btc_closes, btc_ohlc, _ = _load_closes_and_ohlc(conn, "BTC", btc_asset.coingecko_id)
     btc_snapshot = build_technical_snapshot(btc_closes, btc_dates, btc_ohlc)
 
-    return determine_regime(
+    regime_result = determine_regime(
         btc_closes, btc_snapshot, macro_history, config_dict["regime"]["manueller_override"],
         fed_funds_history=liquidity_context["fed_funds_history"],
         m2_us_history=liquidity_context["m2_us_history"],
@@ -248,7 +343,32 @@ def compute_current_regime(conn, coingecko_client, watchlist, fred_api_key: str 
         m2_china_history=liquidity_context["m2_china_history"],
         btc_log_regression_risk=cycle_risk_context["log_regression_risk"],
         btc_onchain_reading=cycle_risk_context["onchain_reading"],
+        eth_log_regression_risk=boden_zielzone_context["eth_log_regression_risk"],
+        boden_zielzone_daempfer_staerke=boden_zielzone_context["daempfer_staerke"],
+        equities_baermarkt_aktiv=boden_zielzone_context["equities_baermarkt_aktiv"],
+        equities_baermarkt_begruendung=boden_zielzone_context["equities_baermarkt_begruendung"],
+        boden_zielzone_overlay_shift_std=boden_zielzone_context["overlay_shift_std"],
     )
+
+    # Fertige Zone zusaetzlich zu den Cache-Rohwerten persistieren (siehe
+    # _fetch_boden_zielzone_context()) - erst hier bekannt, da _boden_zielzone() erst
+    # innerhalb von determine_regime() laeuft. Reiner Verlaufszweck (Nutzer-Wunsch
+    # 2026-07-12: Verschiebung der Zone ueber Zeit nachvollziehbar machen), beeinflusst
+    # keine Entscheidung - ein Fehlschlag hier darf die Regime-Berechnung nicht kippen.
+    try:
+        today = datetime.now(timezone.utc).date().isoformat()
+        db.upsert_macro_snapshot(conn, MacroSnapshot(
+            date=today, btc_dominance_pct=None, fear_greed_value=None, fear_greed_label=None,
+            fetched_at=_now(),
+            btc_boden_zielzone_von=regime_result.btc_boden_zielzone_von,
+            btc_boden_zielzone_bis=regime_result.btc_boden_zielzone_bis,
+            eth_boden_zielzone_von=regime_result.eth_boden_zielzone_von,
+            eth_boden_zielzone_bis=regime_result.eth_boden_zielzone_bis,
+        ))
+    except Exception:
+        logger.exception("Boden-Zielzone-Verlaufs-Persistierung fehlgeschlagen (unkritisch)")
+
+    return regime_result
 
 
 def generate_signal(

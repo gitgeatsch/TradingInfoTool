@@ -523,6 +523,20 @@ regime:
       min_konfidenz_prozent: 60
       gewinnabsicherung_verschaerft: true  # RG-11: engere Trailing-Stops, Teilverkaeufe
 
+# --- Boden-Zielzone: BTC/ETH-Bodenpreis-Schaetzung + Aktien-Baermarkt-Overlay
+# (AZ-4 Baustein 2, 2026-07-12, siehe Basisinfos/Regelwerksmanual.md) ---
+boden_zielzone:
+  aktiv: true
+  reifegrad_daempfer_staerke: 0.15          # [OFFEN] 0-1: zieht die historische
+    # Abweichungs-Bandkante Richtung 0 (mildere Korrekturen bei wachsender
+    # Marktkapitalisierung, "diminishing returns"). effective_edge = raw_edge * (1 - Wert)
+  equities_baermarkt_schwelle_prozent: 20   # [OFFEN] Drawdown vom trailing-Lookback-ATH
+  equities_baermarkt_lookback_jahre: 5      # [OFFEN]
+  equities_baermarkt_verknuepfung: entweder # Nutzer-Entscheidung 2026-07-12, fest:
+    # "entweder" (S&P 500 ODER Nasdaq reicht) statt "beide gleichzeitig"
+  equities_overlay_shift_std: 0.2           # [OFFEN] zusaetzliche Vertiefung der unteren
+    # Bandkante (Standardabweichungen), wenn der Aktien-Baermarkt aktiv ist
+
 # --- Backward-Tracking (Selbstverifikations-Vision Schritt 2, siehe
 # Basisinfos/Regelwerksmanual.md Kap. 9 / Spezifikation Kap. 16) ---
 backward_tracking:

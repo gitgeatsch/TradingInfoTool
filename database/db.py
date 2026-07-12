@@ -188,6 +188,13 @@ _MACRO_SNAPSHOT_NEW_COLUMNS = (
     "ezb_hauptrefinanzierung", "ezb_spitzenrefinanzierung", "ism_ersatz_philly_fed",
     "boj_tagesgeldsatz", "bok_diskontsatz", "pboc_lpr_1y", "pboc_lpr_5y",
     "m2_eurozone", "m2_china", "m2_japan",
+    # Boden-Zielzone (AZ-4 Baustein 2, 2026-07-12) - siehe database/models.py::
+    # MacroSnapshot fuer die Feld-Dokumentation. Gleiche generische Migration wie
+    # oben, kein eigener Funktionsblock noetig.
+    "btc_boden_zielzone_von", "btc_boden_zielzone_bis",
+    "eth_boden_zielzone_von", "eth_boden_zielzone_bis",
+    "equities_sp500_drawdown_pct", "equities_nasdaq_drawdown_pct",
+    "eth_regression_predicted_price", "eth_regression_residual_std",
 )
 
 

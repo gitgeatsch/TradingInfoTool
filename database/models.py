@@ -90,6 +90,29 @@ class MacroSnapshot:
     m2_eurozone: float | None = None
     m2_china: float | None = None
     m2_japan: float | None = None
+    # Boden-Zielzone (AZ-4 Baustein 2, 2026-07-12, agent/krypto/regime.py::
+    # _boden_zielzone()) - Preiszone in USD, nicht historisiert je Aenderung sondern
+    # taeglich ueberschrieben (COALESCE-Upsert wie alle anderen Spalten hier).
+    btc_boden_zielzone_von: float | None = None
+    btc_boden_zielzone_bis: float | None = None
+    eth_boden_zielzone_von: float | None = None
+    eth_boden_zielzone_bis: float | None = None
+    # ETH-Regressionswerte (indicators/calculations.py::BtcLogRegressionRisk.
+    # predicted_price/residual_std) zusaetzlich zur fertigen Zone gespeichert - ETH
+    # braucht (anders als BTC) einen neuen yfinance-Netzwerk-Call, der hoechstens
+    # 1x/Tag ausgefuehrt wird (Tages-Cache, agent/krypto/pipeline.py::
+    # _fetch_boden_zielzone_context()). Mit diesen zwei Werten laesst sich
+    # _boden_zielzone() bei einem Cache-Treffer trotzdem jedes Mal FRISCH neu
+    # rechnen (z.B. falls sich reifegrad_daempfer_staerke seit dem letzten Fetch
+    # geaendert hat), statt nur die fertige alte Zone stur zu uebernehmen.
+    eth_regression_predicted_price: float | None = None
+    eth_regression_residual_std: float | None = None
+    # Aktien-Baermarkt-Overlay: nur die rohen Drawdown-Werte gespeichert, bewusst
+    # KEIN gespeichertes "aktiv"-Bool - der Schwellenwert (config.yaml
+    # boden_zielzone.equities_baermarkt_schwelle_prozent) kann sich spaeter aendern,
+    # ein gespeichertes Bool wuerde alte Zeilen dann falsch einfrieren.
+    equities_sp500_drawdown_pct: float | None = None
+    equities_nasdaq_drawdown_pct: float | None = None
 
 
 @dataclass
