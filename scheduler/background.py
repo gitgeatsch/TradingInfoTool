@@ -10,7 +10,9 @@ from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_MISSED
 from apscheduler.schedulers.background import BackgroundScheduler
 
 import database.db as db
+import staleness
 from api.history import backfill_all
+from api.kraken import KRAKEN_PAIR_MAP
 from api.kraken_history import backfill_all_ohlc
 from api.yfinance_client import YFinanceClient
 
@@ -290,32 +292,103 @@ def _log_job_event(event) -> None:
         logger.warning("Scheduler-Job '%s' verpasst (Misfire)", event.job_id)
 
 
+def _history_data_is_stale(conn, watchlist) -> bool:
+    """Betriebssicherheit (2026-07-12): staleness-bewusster Vorab-Check fuer den
+    sofortigen ersten refresh_history-Lauf nach einem Neustart - vermeidet einen
+    vollen Asset-Refresh (CoinGecko-Kontingent) bei JEDEM Neustart, holt einen
+    echten Rueckstand (z.B. nach laengerer Downtime) aber trotzdem sofort nach,
+    statt bis zu 24 Std. auf den naechsten Intervall-Takt zu warten. Ein einzelnes
+    stalles Asset genuegt, weil der Job ohnehin alle Assets in einem Lauf
+    aktualisiert. Bei einem Fehler im Check selbst (z.B. DB-Problem) sicherer
+    Default False - kein unbeabsichtigter sofortiger Kontingent-Verbrauch."""
+    try:
+        for asset in watchlist:
+            if asset.coingecko_id is None:
+                continue
+            if staleness.is_history_stale(db.get_last_history_date(conn, asset.coingecko_id)):
+                return True
+        return False
+    except Exception:
+        logger.exception("Staleness-Check fuer Kurs-Historie fehlgeschlagen - kein Sofort-Lauf ausgeloest")
+        return False
+
+
+def _ohlc_data_is_stale(conn, watchlist) -> bool:
+    """Analog zu _history_data_is_stale(), fuer den Kraken-OHLC-Job. Prueft nur
+    Assets/Waehrungen mit echtem Kraken-Listing (KRAKEN_PAIR_MAP) - fehlende
+    Listings sind eine bekannte, dokumentierte Deckungsluecke (siehe
+    api/kraken_history.py), kein Staleness-Fall."""
+    try:
+        for asset in watchlist:
+            pair_map = KRAKEN_PAIR_MAP.get(asset.symbol)
+            if pair_map is None:
+                continue
+            for currency in pair_map:
+                if staleness.is_history_stale(db.get_last_ohlc_date(conn, asset.symbol, currency)):
+                    return True
+        return False
+    except Exception:
+        logger.exception("Staleness-Check fuer Kraken-OHLC fehlgeschlagen - kein Sofort-Lauf ausgeloest")
+        return False
+
+
 def build_scheduler(
     coingecko_client, kraken_client, db_conn_factory, watchlist_provider,
     groq_client=None, fred_api_key=None, bitpanda_api_key=None,
 ) -> BackgroundScheduler:
     watchlist = watchlist_provider()
     scheduler = BackgroundScheduler()
+    # Betriebssicherheit (2026-07-12): next_run_time=jetzt, damit Preise nach
+    # einem Neustart (egal wie lange die App vorher offline war) nicht erst nach
+    # einem vollen Intervall aktualisiert werden - guenstiger Einzelabruf, immer
+    # sinnvoll, analog zum bitpanda_cash-Job unten.
     scheduler.add_job(
         refresh_prices_job,
         "interval",
         minutes=REFRESH_INTERVAL_MINUTES,
         args=[coingecko_client, db_conn_factory, watchlist],
         id="refresh_prices",
+        next_run_time=datetime.now(),
     )
+    # Betriebssicherheit (2026-07-12): anders als bei den Preisen oben KEIN
+    # bedingungsloses next_run_time=jetzt - ein voller Historie-/OHLC-Refresh ist
+    # teuer (CoinGecko-Kontingent), waere sonst bei JEDEM Neustart faellig, auch
+    # nach einem Absturz vor 5 Minuten. Stattdessen ein staleness-bewusster Check
+    # (siehe _history_data_is_stale()/_ohlc_data_is_stale() oben): nur sofort
+    # laufen, wenn die Daten tatsaechlich veraltet sind (z.B. nach laengerer
+    # Downtime) - sonst wie bisher der naechste reguelaere 24-Std.-Takt.
+    conn = db_conn_factory()
+    try:
+        history_stale = _history_data_is_stale(conn, watchlist)
+        ohlc_stale = _ohlc_data_is_stale(conn, watchlist)
+    finally:
+        conn.close()
+    if history_stale:
+        logger.info("Kurs-Historie veraltet (> %d Tage) - sofortiger Refresh nach Neustart ausgeloest", staleness.HISTORY_STALE_THRESHOLD_DAYS)
+    if ohlc_stale:
+        logger.info("Kraken-OHLC-Historie veraltet (> %d Tage) - sofortiger Refresh nach Neustart ausgeloest", staleness.HISTORY_STALE_THRESHOLD_DAYS)
+    # WICHTIG: next_run_time=None ist NICHT gleichbedeutend mit "normal aus dem
+    # Trigger berechnen" - APScheduler wuerde den Job dann dauerhaft ohne
+    # next_run_time anlegen und er liefe NIE mehr (live geprueft). Das kwarg muss
+    # bei "nicht veraltet" deshalb komplett WEGGELASSEN werden, nicht auf None
+    # gesetzt werden.
+    history_job_kwargs = {"next_run_time": datetime.now()} if history_stale else {}
     scheduler.add_job(
         refresh_history_job,
         "interval",
         hours=HISTORY_REFRESH_INTERVAL_HOURS,
         args=[coingecko_client, db_conn_factory, watchlist],
         id="refresh_history",
+        **history_job_kwargs,
     )
+    ohlc_job_kwargs = {"next_run_time": datetime.now()} if ohlc_stale else {}
     scheduler.add_job(
         refresh_ohlc_job,
         "interval",
         hours=OHLC_REFRESH_INTERVAL_HOURS,
         args=[kraken_client, db_conn_factory, watchlist],
         id="refresh_ohlc",
+        **ohlc_job_kwargs,
     )
     scheduler.add_job(
         refresh_securities_prices_job,
@@ -323,6 +396,7 @@ def build_scheduler(
         minutes=SECURITIES_REFRESH_INTERVAL_MINUTES,
         args=[YFinanceClient(), db_conn_factory, watchlist],
         id="refresh_securities_prices",
+        next_run_time=datetime.now(),
     )
     # MS-3: erster CronTrigger im Projekt (bisherige Jobs nutzen nur "interval") -
     # feste Uhrzeiten statt Intervall, siehe config.yaml marktscan.zeiten.

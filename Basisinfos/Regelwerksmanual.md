@@ -501,18 +501,151 @@ Wichtig für den geplanten 24/7-Betrieb am Notebook, wo du nicht ständig danebe
 | Schritt | Wann | Bei einem Fehler |
 |---|---|---|
 | Logging-Setup (Konsole + Logdatei) | immer | — |
-| `.env`/`config.yaml` laden | immer | **Kein Try/Except** — kaputte/fehlende `config.yaml` bringt die App **vor der UI zum Absturz** |
-| Datenbank initialisieren (`db.init_db`) | immer | **Kein Try/Except** — ein DB-Problem bringt die App ebenfalls vor der UI zum Absturz |
-| Bestände aus `Assets.xlsx` importieren | **nur beim allerersten Start** | **Kein Try/Except** — fehlt die Datei oder eine Pflichtspalte, stürzt die App vor der UI ab |
+| `.env`/`config.yaml` laden | immer | **Behoben (2026-07-12):** Try/Except → `logger.exception()` (landet garantiert in der Logdatei) + sichtbarer Fehlerdialog + sauberer Prozess-Abbruch (`sys.exit(1)`), statt eines stillen Absturzes |
+| Datenbank initialisieren (`db.init_db`) | immer | **Behoben (2026-07-12):** gleiches Muster wie oben — Log + Dialog + `sys.exit(1)` |
+| Bestände aus `Assets.xlsx` importieren | **nur beim allerersten Start** | **Behoben (2026-07-12), aber bewusst NICHT fatal:** Log + Dialog, die App startet trotzdem mit leeren Beständen weiter (Bestände lassen sich jederzeit über "Datei → Bestände aus Datei importieren…" nachholen) |
 | Kurs-/OHLC-Historie erstbefüllen (CoinGecko/Kraken) | **nur beim allerersten Start** | Robust — jeder Asset-Abruf einzeln abgesichert, degradiert statt abzustürzen |
 | Scheduler starten, Fenster öffnen | immer | — |
 
-**Wichtigste Konsequenz:** Die drei fett markierten Schritte sind aktuell **ungeschützt**.
-Läuft die App ohne sichtbares Terminal (z. B. per Verknüpfung am 24/7-Notebook), siehst
-du bei einem Fehlschlag dort **buchstäblich nichts** — nicht mal einen Logeintrag,
-weil der Absturz vor oder während dieser Schritte passiert. Das betrifft nur den
-**Start selbst**; ist die App einmal erfolgreich hochgefahren, sind die laufenden
-Scheduler-Jobs (siehe unten) deutlich robuster.
+**Alle drei vormals ungeschützten Schritte sind jetzt abgesichert (2026-07-12,
+`main.py::_show_startup_error()`).** Ein minimaler, versteckter Tk-Root zeigt
+einen Fehlerdialog auch dann, wenn die eigentliche App-Hauptschleife noch gar
+nicht läuft — wichtig, weil ein unbehandelter Python-Absturz sonst nur über
+`sys.excepthook` auf `stderr` landet, **nicht** durch die `logging`-Handler
+(die Logdatei bliebe sonst leer, egal wie gut sie eingerichtet ist). Config-
+und DB-Fehler sind bewusst fatal (App kann ohne beides nicht sinnvoll
+weiterlaufen), der Erstimport-Fehler bewusst nicht (fehlende Bestände sind
+jederzeit nachholbar). Live gegen drei simulierte Fehlerfälle verifiziert
+(fehlende `config.yaml`, beschädigte DB, fehlgeschlagener Erstimport) — in
+allen drei Fällen landete der volle Traceback garantiert in der Logdatei.
+
+### Was tun bei einem Fehler — Schritt für Schritt
+
+Diese Anleitung ist für den Fall gedacht, dass die App nicht wie erwartet
+hochfährt oder sich merkwürdig verhält — besonders relevant am 24/7-Notebook,
+wo niemand direkt danebensitzt. Für jedes Szenario: woran du es erkennst, und
+was du konkret manuell tun musst.
+
+**1. App startet gar nicht, kein Fenster erscheint, dafür ein Fehlerdialog
+("TradingInfoTool - Start fehlgeschlagen")**
+
+Das ist ein **fataler** Config- oder Datenbank-Fehler (siehe Tabelle oben).
+Die App hat sich bewusst sauber beendet, statt mit kaputtem Zustand
+weiterzulaufen.
+- Dialogtext lesen — er nennt bereits, ob es an `Basisinfos/config.yaml` oder
+  an der Datenbank liegt, plus die eigentliche Python-Fehlermeldung.
+- **Bei Config-Fehler:** `Basisinfos/config.yaml` öffnen (Texteditor genügt)
+  und auf offensichtliche Syntaxfehler prüfen (fehlende Doppelpunkte,
+  falsche Einrückung — YAML ist einrückungsempfindlich). Am einfachsten:
+  letzte funktionierende Version aus dem Git-Verlauf vergleichen
+  (`git log -- Basisinfos/config.yaml`, dann `git diff <commit> --
+  Basisinfos/config.yaml`).
+- **Bei DB-Fehler:** meist eine beschädigte/nicht lesbare
+  `data/tradinginfotool.db`. **Nicht selbst reparieren versuchen** — stattdessen
+  die Datei umbenennen (z. B. `tradinginfotool.db.defekt`) und die App erneut
+  starten. Sie legt beim nächsten Start automatisch eine neue, leere Datenbank
+  an (`db.init_db()`); Bestände lässt sich danach über "Datei → Bestände aus
+  Datei importieren…" neu einspielen (historische Signale/Kursverlauf sind
+  dann allerdings weg — falls die alte Datei noch gebraucht wird, vor dem
+  Umbenennen eine Kopie sichern).
+- Nach der Korrektur: App neu starten. Kommt derselbe Dialog wieder, Logdatei
+  prüfen (siehe Punkt 4) für den vollen Traceback.
+
+**2. App startet, aber ein Dialog "Erstimport fehlgeschlagen" erscheint**
+
+Nur beim allerersten Start relevant (leere Datenbank). **Nicht fatal** — die
+App läuft danach normal weiter, nur ohne importierte Bestände.
+- Meist liegt es daran, dass `Basisinfos/Assets.xlsx` fehlt, das falsche
+  Format hat, oder gerade in Excel geöffnet ist (Datei dann gesperrt).
+  Excel schließen bzw. die Datei an den richtigen Ort legen.
+- Import manuell nachholen: Menü "Datei → Bestände aus Datei importieren…" —
+  identischer Code wie beim automatischen Erstimport, kein Unterschied im
+  Ergebnis.
+
+**3. Ein einzelner Scheduler-Job hängt (z. B. "Preise aktualisieren" läuft
+seit über 10 Minuten, obwohl das normal Sekunden dauert)**
+
+Am einfachsten über die Remote-Steuer-Seite (Abschnitt 13) zu erkennen ("läuft
+seit X Min") und zu beheben — funktioniert aber auch ohne Remote-Zugriff:
+- **Mit Remote-Zugriff (Handy/Tailscale):** Seite öffnen, "Zurücksetzen"-Button
+  nutzen. Wichtig: das gibt nur die interne Sperre frei, ein neuer Versuch wird
+  danach möglich — der ursprünglich hängende Vorgang im Hintergrund wird dadurch
+  nicht zwangsläufig beendet.
+- **Ohne Remote-Zugriff, direkt am Notebook:** App komplett beenden (Fenster
+  schließen oder über den Task-Manager den `python`-Prozess beenden) und neu
+  starten. Der Scheduler baut beim Start alle Sperren neu auf — ein Neustart
+  behebt einen hängenden Job also immer zuverlässig, auch ohne den
+  "Zurücksetzen"-Button.
+- Einzelne Jobs schlagen normalerweise nicht dauerhaft fehl, sondern laufen im
+  nächsten Takt automatisch wieder an (siehe "Scheduler-Jobs" unten) — ein
+  manueller Eingriff ist nur bei einem echten Hänger nötig, nicht bei einem
+  einzelnen fehlgeschlagenen Lauf.
+
+**4. Logdatei finden und lesen**
+
+Weg für alle Fälle, die keinen sichtbaren Dialog auslösen (z. B. ein
+fehlgeschlagener einzelner Scheduler-Job):
+- Pfad: `data/tradinginfotool.log` im Installationsordner (rotierend, max.
+  3 × 5 MB — bei Bedarf existieren `tradinginfotool.log.1`, `.2`, `.3` mit
+  älteren Einträgen).
+- Mit einem normalen Texteditor öffnen (Editor, Notepad++, VS Code). Suche
+  nach `ERROR` oder `Traceback`, um Fehler schnell zu finden — jede Zeile hat
+  Zeitstempel + Modulname, um sie zeitlich einzuordnen.
+- Seit 2026-07-11 zeigt die Remote-Steuer-Seite (Abschnitt 13) zusätzlich die
+  letzten Fehlerzeilen direkt an, ohne die Datei selbst öffnen zu müssen.
+
+**5. App war lange offline (Notebook aus, Update, Reise) — was beim nächsten
+Start zu erwarten ist**
+
+Siehe die eigene Auswertung dazu direkt im Anschluss ("Verhalten nach
+längerer Downtime").
+
+### Verhalten nach längerer Downtime (2026-07-12, Nutzer-Frage, geprüft)
+
+**Frage:** Funktioniert/aktualisiert sich die App beim nächsten Start korrekt,
+wenn sie längere Zeit nicht gelaufen ist?
+
+**Kurz:** Ja — inklusive der Kurs-/OHLC-Historie, seit dem staleness-bewussten
+Sofort-Trigger (siehe unten, ebenfalls 2026-07-12 umgesetzt).
+
+Kein Job "merkt sich" eine verpasste Downtime im Sinne eines Nachhol-Zählers —
+APScheduler nutzt einen reinen In-Memory-Job-Store, der beim Neustart verworfen
+wird. Jeder Job verhält sich beim nächsten Start so, als wäre er neu:
+
+| Job | Verhalten beim nächsten Start, unabhängig von der Downtime-Dauer |
+|---|---|
+| Kryptopreise, Aktien/ETF/Rohstoff-Preise | **Behoben (2026-07-12):** sofortiger erster Lauf direkt nach dem Start (`next_run_time=jetzt`), kein Warten mehr auf ein volles Intervall |
+| Bitpanda-Cash-Sync | War bereits seit 2026-07-11 sofort (`next_run_time=jetzt`) |
+| Kurs-/OHLC-Historie (für Indikatoren wie EMA-200) | **Behoben (2026-07-12), staleness-bewusst:** kein bedingungsloser Sofort-Lauf bei jedem Neustart, sondern nur, wenn die Daten tatsächlich veraltet sind (`_history_data_is_stale()`/`_ohlc_data_is_stale()`, `scheduler/background.py`) — prüft beim Scheduler-Aufbau je Asset das letzte Datum gegen `HISTORY_STALE_THRESHOLD_DAYS` (2 Tage). War die App z. B. eine Woche offline, läuft der Refresh sofort; nach einem kurzen Neustart (Daten noch frisch) wartet er wie gehabt bis zum nächsten 24-Std.-Takt |
+| Marktscan, Backward-Tracking | Feste Cron-Uhrzeiten (04:00/16:00 bzw. 06:00) — kein Nachhol-Mechanismus nötig, der nächste reguläre Termin reicht, kein API-Kontingent-Risiko |
+
+**Warum kein bedingungsloses "sofort" wie bei den Preisen:** anders als der
+günstige Einzel-Preisabruf wäre ein bedingungsloser sofortiger Historie-/OHLC-
+Lauf bei *jedem* Neustart (auch nach einem kurzen Absturz oder einem gewollten
+Neustart nach 5 Minuten) ein vollständiger Asset-Refresh — unnötiger Verbrauch
+von CoinGecko-/Kraken-API-Kontingent ohne echten Nutzen. Der staleness-bewusste
+Trigger löst das: er prüft vor dem Scheduler-Start je Asset (mit
+CoinGecko-ID bzw. Kraken-Listing) das letzte gespeicherte Datum und löst nur
+dann sofort aus, wenn mindestens ein Asset tatsächlich veraltet ist — schlägt
+der Check selbst fehl (z. B. DB-Problem), ist der sichere Default kein
+Sofort-Lauf (P-10). Live gegen drei Szenarien verifiziert (frische Daten,
+5 Tage alte Daten, leere Datenbank) — dabei auch eine Falle in APScheduler
+selbst gefunden: `next_run_time=None` bedeutet NICHT "normal aus dem
+Trigger berechnen", sondern legt den Job dauerhaft ohne nächsten Lauf an (er
+würde nie mehr laufen) — das kwarg muss bei "nicht veraltet" deshalb komplett
+weggelassen werden, nicht auf `None` gesetzt werden.
+
+**In der Zwischenzeit erkennbar:** die Watchlist/Portfolio-Ansicht markiert
+veraltete Preise/Historie ohnehin farblich (⚠, siehe "Wie du aktuell von einem
+Problem erfährst" unten) — die Staleness-Anzeige selbst funktioniert nach
+jeder Downtime-Länge korrekt, sie zeigt nur an, dass es bis zu 24 Std. dauern
+kann, bis die Warnung von selbst verschwindet.
+
+Ein einmaliger Ersteinrichtungs-Sonderfall bleibt unverändert bestehen: die
+Kurs-/OHLC-**Erstbefüllung** (`is_history_first_run()`/`is_ohlc_first_run()`)
+läuft nur exakt einmal im Leben der Datenbank, unabhängig von jeder späteren
+Downtime — das ist beabsichtigt (danach übernehmen die 24-Std.-Jobs), betrifft
+also nicht das oben beschriebene Downtime-Verhalten.
 
 ### Scheduler-Jobs — wie stabil sie wirklich sind
 
@@ -557,13 +690,14 @@ jeweiligen Fakt auf `null`, ohne die Pipeline abzubrechen.
 
 ### Empfehlung für den nächsten Schritt
 
-Am wertvollsten für den geplanten 24/7-Betrieb wäre, die drei ungeschützten
-Start-Schritte oben abzusichern (Try/Except + garantierter Logeintrag, im
-schlimmsten Fall ein sichtbarer Fehlerdialog statt eines stillen Absturzes) —
-kleiner, klar abgegrenzter Fix mit hohem Nutzen, noch **nicht** umgesetzt.
-E-Mail-Benachrichtigung bleibt ebenfalls offen (SMTP-Konto-Entscheidung nötig).
-Die aggregierte Status-Übersicht selbst ist inzwischen Teil der Remote-Steuer-
-Seite geworden (Abschnitt 13).
+Die drei ungeschützten Start-Schritte sind seit 2026-07-12 abgesichert (siehe
+oben), ebenso der sofortige erste Preis-Lauf und der staleness-bewusste
+Sofort-Trigger für die Kurs-/OHLC-Historie-Jobs nach jedem Neustart (siehe
+"Verhalten nach längerer Downtime"). **Weiterhin offen:** E-Mail-Benachrichtigung
+(SMTP-Konto-Entscheidung nötig, U-8) und ein Backoff/Alarm bei dauerhaftem
+Scheduler-Job-Ausfall (siehe "Scheduler-Jobs" oben). Die aggregierte
+Status-Übersicht selbst ist inzwischen Teil der Remote-Steuer-Seite geworden
+(Abschnitt 13).
 
 ---
 

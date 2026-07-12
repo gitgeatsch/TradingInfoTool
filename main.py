@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
 import threading
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
@@ -35,6 +36,21 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def _show_startup_error(title: str, message: str) -> None:
+    """Betriebssicherheit (2026-07-12): ein unbehandelter Crash VOR der UI landet
+    per sys.excepthook nur auf stderr, NICHT durch die logging-Handler oben - laeuft
+    die App ohne sichtbares Terminal (z.B. Verknuepfung am 24/7-Notebook), ist das
+    sonst komplett unsichtbar. Baut einen minimalen, versteckten Tk-Root nur fuer
+    den Dialog, da die eigentliche App-Hauptschleife an dieser Stelle noch nicht laeuft."""
+    import tkinter as tk
+    from tkinter import messagebox
+
+    root = tk.Tk()
+    root.withdraw()
+    messagebox.showerror(title, message)
+    root.destroy()
+
+
 def main() -> None:
     config.load_env()
     coingecko_api_key = os.environ.get("COINGECKO_API_KEY")
@@ -47,7 +63,16 @@ def main() -> None:
     # "lokal" (Architektur-Seam vorbereitet, siehe api/local_model.py - noch nicht
     # implementiert, wirft bei tatsaechlicher Nutzung bewusst NotImplementedError
     # statt still zu scheitern, P-10).
-    ai_provider = config.load_config().get("agent", {}).get("ai_provider", "groq")
+    try:
+        ai_provider = config.load_config().get("agent", {}).get("ai_provider", "groq")
+    except Exception as exc:
+        logger.exception("config.yaml konnte nicht geladen werden")
+        _show_startup_error(
+            "TradingInfoTool - Start fehlgeschlagen",
+            f"Basisinfos/config.yaml konnte nicht geladen werden:\n\n{exc}\n\n"
+            "Details in der Logdatei (data/tradinginfotool.log).",
+        )
+        sys.exit(1)
     groq_api_key = os.environ.get("GROQ_API_KEY")
     if ai_provider == "lokal":
         from api.local_model import LocalModelClient
@@ -80,16 +105,46 @@ def main() -> None:
         # bleiben ohne Key voll nutzbar, nur der Live-Abgleich ist deaktiviert.
         logger.info("Kein BITPANDA_API_KEY gesetzt - Bestandsabgleich mit Bitpanda deaktiviert.")
 
-    watchlist = config.get_watchlist()
+    try:
+        watchlist = config.get_watchlist()
+    except Exception as exc:
+        logger.exception("Watchlist konnte nicht aus config.yaml geladen werden")
+        _show_startup_error(
+            "TradingInfoTool - Start fehlgeschlagen",
+            f"Watchlist konnte nicht aus Basisinfos/config.yaml geladen werden:\n\n{exc}\n\n"
+            "Details in der Logdatei (data/tradinginfotool.log).",
+        )
+        sys.exit(1)
 
-    conn = db.get_connection()
-    db.init_db(conn)
+    try:
+        conn = db.get_connection()
+        db.init_db(conn)
+    except Exception as exc:
+        logger.exception("Datenbank konnte nicht initialisiert werden")
+        _show_startup_error(
+            "TradingInfoTool - Start fehlgeschlagen",
+            f"Datenbank konnte nicht initialisiert werden:\n\n{exc}\n\n"
+            "Details in der Logdatei (data/tradinginfotool.log).",
+        )
+        sys.exit(1)
 
     if db.is_first_run(conn):
-        result = import_holdings(conn)
-        logger.info("Erstimport: %d Bestände importiert.", result.imported_count)
-        for warning in result.warnings:
-            logger.warning(warning)
+        try:
+            result = import_holdings(conn)
+            logger.info("Erstimport: %d Bestände importiert.", result.imported_count)
+            for warning in result.warnings:
+                logger.warning(warning)
+        except Exception as exc:
+            # NICHT fatal (anders als Config/DB oben) - die App kann mit leeren
+            # Bestaenden starten, der Nutzer kann jederzeit ueber "Datei -> Bestaende
+            # aus Datei importieren..." nachholen (identischer Codepfad).
+            logger.exception("Erstimport aus Assets.xlsx fehlgeschlagen")
+            _show_startup_error(
+                "TradingInfoTool - Erstimport fehlgeschlagen",
+                f"Bestände aus Basisinfos/Assets.xlsx konnten nicht importiert werden:"
+                f"\n\n{exc}\n\nDie App startet trotzdem mit leeren Beständen - du kannst "
+                "sie später über \"Datei → Bestände aus Datei importieren…\" nachholen.",
+            )
 
     coingecko_client = CoinGeckoClient(api_key=coingecko_api_key)
 
