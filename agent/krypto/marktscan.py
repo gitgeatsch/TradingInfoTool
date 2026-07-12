@@ -467,6 +467,12 @@ def run_scan(
                     conn, candidate.id, parsed.get("short_reasoning"),
                     json.dumps(parsed.get("long_reasoning") or {}, ensure_ascii=False),
                 )
+                # MS-1b (2026-07-12): candidate ist dieselbe Objekt-Referenz wie in
+                # candidates[] - direkt mitpflegen, damit der Aufrufer (marktscan_job())
+                # die frische Begruendung ohne erneutes DB-Lesen fuer die
+                # Kaufkandidaten-E-Mail nutzen kann.
+                candidate.groq_kurzbegruendung = parsed.get("short_reasoning")
+                candidate.groq_langbegruendung_json = json.dumps(parsed.get("long_reasoning") or {}, ensure_ascii=False)
             except Exception as exc:
                 logger.warning(
                     "Automatische Groq-Begründung für Marktscan-Kandidat %s fehlgeschlagen: %s",

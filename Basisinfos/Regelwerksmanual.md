@@ -839,11 +839,31 @@ primäre Absicherung — die E-Mail ist ein zusätzlicher, best-effort Kanal
 obendrauf, ein Versandfehler (z. B. fehlendes App-Passwort) wird von
 `send_notification_email()` selbst abgefangen und blockiert nichts (P-10).
 
-**Bewusst nicht Teil dieser Version:** Marktscan-Kaufkandidaten-Mails
-(`config.yaml marktscan.benachrichtigung_email`) — eigener, kleinerer
-Folgeschritt. Auch keine "Ausfall-Streak"-Zählung (z. B. erst nach 3x in
-Folge alarmieren) — der Cooldown allein gilt als ausreichender Spam-Schutz
-für den ersten Wurf.
+Auch keine "Ausfall-Streak"-Zählung (z. B. erst nach 3x in Folge alarmieren)
+— der Cooldown allein gilt als ausreichender Spam-Schutz für Job-Ausfälle.
+
+### Marktscan-Kaufkandidaten-Mails (MS-1b, 2026-07-12)
+
+Direkter Folgeschritt zu U-8, nutzt dieselbe E-Mail-Infrastruktur
+(`api/email_notify.py`) wieder: findet ein Marktscan-Lauf (`marktscan_job()`,
+2x täglich, 04:00/16:00) mindestens einen echten Kaufkandidaten
+(`einstufung == "kaufkandidat"`), verschickt `_notify_marktscan_kaufkandidaten()`
+in `scheduler/background.py` **eine gebündelte E-Mail** mit allen
+Kaufkandidaten des Laufs (Symbol, Score, Tier, Einstufungs-Begründung, plus
+KI-Kurzbegründung falls `marktscan.groq_automatisch_kaufkandidaten` aktiv
+ist und Groq bereits automatisch dazu befragt wurde) — kein separater Mail
+pro Kandidat. Schalter: `config.yaml marktscan.benachrichtigung_email`
+(zusätzlich zum globalen `benachrichtigung.email.aktiv`).
+
+**Bewusst OHNE Cooldown**, anders als bei Job-Ausfällen: ein wiederholt
+gemeldeter Kaufkandidat ist keine Spam-Situation, sondern eine weiterhin
+gültige Kauf-Chance — der Scan läuft ohnehin nur 2x täglich, und bereits vom
+Nutzer entschiedene Kandidaten (verworfen/übernommen) tauchen wegen der
+bestehenden Duplikat-Prüfung (`marktscan.py::_duplicate_should_skip()`)
+gar nicht erst erneut auf. Eigener try/except um den gesamten
+E-Mail-Versand (P-10) — ein Fehler beim Mailen darf einen erfolgreich
+abgeschlossenen Marktscan-Lauf nicht nachträglich als "fehlgeschlagen"
+markieren.
 
 ### Agent-Pipeline ("Signal berechnen") im Detail
 

@@ -185,6 +185,8 @@ def marktscan_job(coingecko_client, kraken_client, groq_client, conn_factory, wa
             "Marktscan: %d Kandidaten bewertet (%d Treffer: watchlist_würdig/Kaufkandidat, Regime %s)",
             len(candidates), len(treffer), regime_result.regime,
         )
+        kaufkandidaten = [c for c in candidates if c.einstufung == "kaufkandidat"]
+        _notify_marktscan_kaufkandidaten(kaufkandidaten)
     except Exception as exc:
         logger.exception("Marktscan fehlgeschlagen")
         _notify_job_failure("marktscan", f"Marktscan fehlgeschlagen: {exc}")
@@ -337,6 +339,57 @@ def _notify_job_failure(job_id: str, fehler_text: str) -> None:
         empfaenger,
     ):
         _last_failure_email_sent[job_id] = time.monotonic()
+
+
+def _notify_marktscan_kaufkandidaten(kaufkandidaten: list) -> None:
+    """MS-1b (2026-07-12): eine gebündelte E-Mail pro Scan-Lauf über alle neuen
+    Kaufkandidaten, wiederverwendet dieselbe Infrastruktur wie _notify_job_failure()
+    (api/email_notify.py). Bewusst OHNE Cooldown - anders als ein Job-Fehlschlag ist
+    ein wiederholt gemeldeter Kaufkandidat keine Spam-Situation, sondern eine
+    weiterhin gültige Kauf-Chance; der Scan selbst läuft ohnehin nur 2x täglich, und
+    bereits vom Nutzer entschiedene Kandidaten (verworfen/übernommen) tauchen wegen
+    marktscan.py::_duplicate_should_skip() gar nicht erst erneut auf.
+
+    Eigener try/except (P-10): ein Fehler beim E-Mail-Versand darf einen erfolgreich
+    abgeschlossenen Marktscan-Lauf nicht nachträglich als 'fehlgeschlagen' erscheinen
+    lassen - deshalb hier abgefangen statt den Aufrufer (marktscan_job()) crashen zu
+    lassen."""
+    if not kaufkandidaten:
+        return
+    try:
+        import config as config_module
+        from api.email_notify import send_notification_email
+
+        config_dict = config_module.load_config()
+        email_cfg = config_dict.get("benachrichtigung", {}).get("email", {})
+        if not email_cfg.get("aktiv", False):
+            return
+        empfaenger = email_cfg.get("empfaenger")
+        if not empfaenger:
+            return
+        if not config_dict.get("marktscan", {}).get("benachrichtigung_email", False):
+            return
+
+        zeilen = []
+        for c in kaufkandidaten:
+            score_text = f"{c.score_gesamt:.0f}" if c.score_gesamt is not None else "?"
+            zeile = f"- {c.symbol} ({c.name}), Score {score_text}, Tier {c.tier}: {c.einstufung_begruendung}"
+            if c.groq_kurzbegruendung:
+                zeile += f"\n  KI-Kurzbegründung: {c.groq_kurzbegruendung}"
+            zeilen.append(zeile)
+
+        body = (
+            f"{len(kaufkandidaten)} neue(r) Kaufkandidat(en) beim Marktscan gefunden:\n\n"
+            + "\n".join(zeilen)
+            + "\n\nDetails im Marktscan-Tab der App."
+        )
+        send_notification_email(
+            f"TradingInfoTool: {len(kaufkandidaten)} neue(r) Marktscan-Kaufkandidat(en)",
+            body,
+            empfaenger,
+        )
+    except Exception:
+        logger.exception("Marktscan-Kaufkandidaten-E-Mail fehlgeschlagen")
 
 
 def _log_job_event(event) -> None:
