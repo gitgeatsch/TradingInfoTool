@@ -787,9 +787,63 @@ aktiv zu warnen.
   Ausnahme: "Bestände neu importieren"/"aus Datei importieren" haben **kein**
   Try/Except — ein Fehler landet nur auf der Konsole, ohne Popup und ohne
   Logeintrag.
-- **E-Mail-/Push-Benachrichtigung ist NICHT implementiert.** `config.yaml` hat nur
-  einen leeren Platzhalter (`smtp_host: ""`), der von keinem Code gelesen wird —
-  bleibt ein offener Punkt (U-8), bräuchte zuerst eine SMTP-/Mail-API-Entscheidung.
+- **E-Mail-Benachrichtigung — ERLEDIGT (U-8, 2026-07-12).** Siehe eigener
+  Abschnitt unten für Details.
+
+### E-Mail-Benachrichtigung (U-8, 2026-07-12)
+
+**Zweck:** die App läuft künftig auf dem 24/7-Notebook ohne ständige
+Beaufsichtigung — bisher war der einzige Weg, von einem Problem zu erfahren,
+aktiv in die Logdatei oder auf die Remote-Steuer-Seite (Abschnitt 13) zu
+schauen. E-Mail schließt diese Lücke passiv: die App meldet sich selbst.
+
+**Technisch:** neues Modul `api/email_notify.py`, `smtplib` +
+`email.mime.text` (Python-Standardbibliothek, keine neue Abhängigkeit).
+Gmail bewusst fest verdrahtet (`smtp.gmail.com:587`, STARTTLS) statt
+konfigurierbarem SMTP-Host — die konzeptionelle Vorentscheidung (2026-07-11)
+war ein eigener, separat angelegter **"Robot"-Gmail-Account** mit
+App-Passwort, nicht der Hauptaccount des Nutzers: das App-Passwort ist ein
+dauerhafter, programmatischer Zugriffsschlüssel zur gesamten Mailbox, der
+auf dem 24/7-Notebook liegt — ein separates Konto begrenzt den Schaden im
+Fall eines Leaks auf diesen einen Kanal. `GMAIL_ABSENDER_ADRESSE`/
+`GMAIL_APP_PASSWORT` in `.env` (P-8: fehlen beide, bleibt die Funktion
+komplett deaktiviert, kein Fehler, nur ein Info-Log — Kernfunktionen dürfen
+nie von einem optionalen Benachrichtigungs-Kanal abhängen).
+
+**Zwei Auslöser-Pfade, bewusst beide verdrahtet:** beim Durcharbeiten des
+Scheduler-Codes zeigte sich, dass der bereits bestehende
+`EVENT_JOB_ERROR`/`EVENT_JOB_MISSED`-Listener (`_log_job_event()`) nur bei
+unbehandelten Bugs im Job-Wrapper selbst feuert. Der weitaus häufigere
+Realfall — eine externe API (Groq/CoinGecko/Bitpanda) ist über Stunden nicht
+erreichbar — wird von jedem der sieben `*_job()` bereits INTERN in seinem
+eigenen `except Exception:`-Block abgefangen und geloggt, ohne den Listener
+je zu erreichen. Eine E-Mail nur am Listener aufzuhängen hätte also genau
+den Fall verpasst, um den es eigentlich geht. Deshalb ruft sowohl
+`_log_job_event()` als auch jede der sieben Job-Funktionen denselben
+gemeinsamen Helper `_notify_job_failure(job_id, fehler_text)` auf.
+
+**Cooldown gegen Postfach-Spam:** `_notify_job_failure()` merkt sich pro
+`job_id` den Zeitpunkt der letzten gesendeten Mail
+(`_last_failure_email_sent`-Dict) und unterdrückt weitere Mails innerhalb von
+`config.yaml benachrichtigung.email.job_ausfall_cooldown_minuten` (Start: 60)
+— ein mehrstündiger oder mehrtägiger Ausfall erzeugt so höchstens eine Mail
+pro Stunde statt eine pro fehlgeschlagenem Lauf.
+
+**Start-Fehler:** an den zwei echten fatalen Stellen verdrahtet
+(Watchlist-Laden, `db.init_db()` — siehe "Betriebssicherheit" oben), NICHT
+beim allerersten Config-Lade-Fehler (Empfänger-Adresse kommt selbst aus
+`config.yaml`, an der Stelle noch unbekannt) und NICHT beim nicht-fatalen
+Erstimport-Fehler (einmaliges Ereignis, typischerweise während der Nutzer
+ohnehin am Rechner sitzt). Dialog + Logdatei bleiben in jedem Fall die
+primäre Absicherung — die E-Mail ist ein zusätzlicher, best-effort Kanal
+obendrauf, ein Versandfehler (z. B. fehlendes App-Passwort) wird von
+`send_notification_email()` selbst abgefangen und blockiert nichts (P-10).
+
+**Bewusst nicht Teil dieser Version:** Marktscan-Kaufkandidaten-Mails
+(`config.yaml marktscan.benachrichtigung_email`) — eigener, kleinerer
+Folgeschritt. Auch keine "Ausfall-Streak"-Zählung (z. B. erst nach 3x in
+Folge alarmieren) — der Cooldown allein gilt als ausreichender Spam-Schutz
+für den ersten Wurf.
 
 ### Agent-Pipeline ("Signal berechnen") im Detail
 
@@ -807,11 +861,14 @@ jeweiligen Fakt auf `null`, ohne die Pipeline abzubrechen.
 Die drei ungeschützten Start-Schritte sind seit 2026-07-12 abgesichert (siehe
 oben), ebenso der sofortige erste Preis-Lauf und der staleness-bewusste
 Sofort-Trigger für die Kurs-/OHLC-Historie-Jobs nach jedem Neustart (siehe
-"Verhalten nach längerer Downtime"). **Weiterhin offen:** E-Mail-Benachrichtigung
-(SMTP-Konto-Entscheidung nötig, U-8) und ein Backoff/Alarm bei dauerhaftem
-Scheduler-Job-Ausfall (siehe "Scheduler-Jobs" oben). Die aggregierte
-Status-Übersicht selbst ist inzwischen Teil der Remote-Steuer-Seite geworden
-(Abschnitt 13).
+"Verhalten nach längerer Downtime"). E-Mail-Benachrichtigung bei Start-Fehlern
+und Job-Ausfällen ist seit 2026-07-12 ebenfalls erledigt (U-8, siehe eigener
+Abschnitt oben) — ein echter Sendetest mit dem eingerichteten Robot-Account
+steht noch aus. **Weiterhin offen:** ein Backoff bei dauerhaftem
+Scheduler-Job-Ausfall über den Cooldown hinaus (z. B. exponentiell steigende
+Wiederholungs-Intervalle statt des festen Job-Takts, siehe "Scheduler-Jobs"
+oben). Die aggregierte Status-Übersicht selbst ist inzwischen Teil der
+Remote-Steuer-Seite geworden (Abschnitt 13).
 
 ---
 

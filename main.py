@@ -36,12 +36,17 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def _show_startup_error(title: str, message: str) -> None:
+def _show_startup_error(title: str, message: str, email_empfaenger: str | None = None) -> None:
     """Betriebssicherheit (2026-07-12): ein unbehandelter Crash VOR der UI landet
     per sys.excepthook nur auf stderr, NICHT durch die logging-Handler oben - laeuft
     die App ohne sichtbares Terminal (z.B. Verknuepfung am 24/7-Notebook), ist das
     sonst komplett unsichtbar. Baut einen minimalen, versteckten Tk-Root nur fuer
-    den Dialog, da die eigentliche App-Hauptschleife an dieser Stelle noch nicht laeuft."""
+    den Dialog, da die eigentliche App-Hauptschleife an dieser Stelle noch nicht laeuft.
+
+    E-Mail-Benachrichtigung (U-8, 2026-07-12): best-effort, wenn `email_empfaenger`
+    gesetzt ist - Dialog + Logdatei bleiben so oder so die primaere Absicherung,
+    ein E-Mail-Fehlschlag (z.B. kein App-Passwort gesetzt) wird von
+    send_notification_email() selbst abgefangen (P-8/P-10)."""
     import tkinter as tk
     from tkinter import messagebox
 
@@ -49,6 +54,11 @@ def _show_startup_error(title: str, message: str) -> None:
     root.withdraw()
     messagebox.showerror(title, message)
     root.destroy()
+
+    if email_empfaenger:
+        from api.email_notify import send_notification_email
+
+        send_notification_email(f"TradingInfoTool: {title}", message, email_empfaenger)
 
 
 def main() -> None:
@@ -73,6 +83,15 @@ def main() -> None:
             "Details in der Logdatei (data/tradinginfotool.log).",
         )
         sys.exit(1)
+
+    # E-Mail-Benachrichtigung (U-8, 2026-07-12): erst HIER ermittelbar, da
+    # config.yaml gerade erst erfolgreich geladen wurde - der Config-Lade-Fehler
+    # oben bleibt bewusst OHNE E-Mail-Versuch (Empfaenger-Adresse an der Stelle
+    # noch unbekannt). Nur bei den beiden folgenden echten fatalen Stellen
+    # verdrahtet, nicht beim nicht-fatalen Erstimport-Fehler weiter unten.
+    email_cfg = config.load_config().get("benachrichtigung", {}).get("email", {})
+    email_empfaenger = email_cfg.get("empfaenger") if email_cfg.get("aktiv", False) else None
+
     groq_api_key = os.environ.get("GROQ_API_KEY")
     if ai_provider == "lokal":
         from api.local_model import LocalModelClient
@@ -113,6 +132,7 @@ def main() -> None:
             "TradingInfoTool - Start fehlgeschlagen",
             f"Watchlist konnte nicht aus Basisinfos/config.yaml geladen werden:\n\n{exc}\n\n"
             "Details in der Logdatei (data/tradinginfotool.log).",
+            email_empfaenger=email_empfaenger,
         )
         sys.exit(1)
 
@@ -125,6 +145,7 @@ def main() -> None:
             "TradingInfoTool - Start fehlgeschlagen",
             f"Datenbank konnte nicht initialisiert werden:\n\n{exc}\n\n"
             "Details in der Logdatei (data/tradinginfotool.log).",
+            email_empfaenger=email_empfaenger,
         )
         sys.exit(1)
 

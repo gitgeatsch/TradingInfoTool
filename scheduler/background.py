@@ -68,8 +68,9 @@ def refresh_prices_job(client, conn_factory, watchlist) -> bool:
         for snapshot in snapshots:
             db.insert_price_snapshot(conn, snapshot)
         logger.info("Preis-Refresh: %d/%d Assets aktualisiert", len(snapshots), len(watchlist))
-    except Exception:
+    except Exception as exc:
         logger.exception("Preis-Refresh fehlgeschlagen")
+        _notify_job_failure("refresh_prices", f"Preis-Refresh fehlgeschlagen: {exc}")
     finally:
         conn.close()
         refresh_prices_lock.release()
@@ -103,8 +104,9 @@ def refresh_securities_prices_job(client, conn_factory, watchlist) -> bool:
         for snapshot in snapshots:
             db.insert_price_snapshot(conn, snapshot)
         logger.info("Wertpapier-Preis-Refresh: %d Assets aktualisiert", len(snapshots))
-    except Exception:
+    except Exception as exc:
         logger.exception("Wertpapier-Preis-Refresh fehlgeschlagen")
+        _notify_job_failure("refresh_securities_prices", f"Wertpapier-Preis-Refresh fehlgeschlagen: {exc}")
     finally:
         conn.close()
         refresh_securities_lock.release()
@@ -123,8 +125,9 @@ def refresh_history_job(client, conn_factory, watchlist) -> None:
             len(results),
             len(degraded),
         )
-    except Exception:
+    except Exception as exc:
         logger.exception("Historie-Refresh fehlgeschlagen")
+        _notify_job_failure("refresh_history", f"Historie-Refresh fehlgeschlagen: {exc}")
     finally:
         conn.close()
 
@@ -142,8 +145,9 @@ def refresh_ohlc_job(client, conn_factory, watchlist) -> None:
             len(skipped),
             len(degraded),
         )
-    except Exception:
+    except Exception as exc:
         logger.exception("Kraken-OHLC-Refresh fehlgeschlagen")
+        _notify_job_failure("refresh_ohlc", f"Kraken-OHLC-Refresh fehlgeschlagen: {exc}")
     finally:
         conn.close()
 
@@ -181,8 +185,9 @@ def marktscan_job(coingecko_client, kraken_client, groq_client, conn_factory, wa
             "Marktscan: %d Kandidaten bewertet (%d Treffer: watchlist_würdig/Kaufkandidat, Regime %s)",
             len(candidates), len(treffer), regime_result.regime,
         )
-    except Exception:
+    except Exception as exc:
         logger.exception("Marktscan fehlgeschlagen")
+        _notify_job_failure("marktscan", f"Marktscan fehlgeschlagen: {exc}")
     finally:
         conn.close()
         marktscan_lock.release()
@@ -208,8 +213,9 @@ def backward_tracking_job(conn_factory, watchlist) -> None:
             result.geprueft_count, result.resolved_take_profit, result.resolved_stop_loss,
             result.expired, result.still_open,
         )
-    except Exception:
+    except Exception as exc:
         logger.exception("Backward-Tracking fehlgeschlagen")
+        _notify_job_failure("backward_tracking", f"Backward-Tracking fehlgeschlagen: {exc}")
     finally:
         conn.close()
 
@@ -234,8 +240,9 @@ def refresh_bitpanda_cash_job(api_key, conn_factory) -> bool:
             logger.info("Bitpanda-Cash-Sync: %.2f -> %.2f EUR", result.old_eur, result.new_eur)
         else:
             logger.info("Bitpanda-Cash-Sync: unverändert")
-    except Exception:
+    except Exception as exc:
         logger.exception("Bitpanda-Cash-Sync fehlgeschlagen")
+        _notify_job_failure("bitpanda_cash", f"Bitpanda-Cash-Sync fehlgeschlagen: {exc}")
     finally:
         conn.close()
         bitpanda_cash_lock.release()
@@ -279,6 +286,59 @@ def force_release_lock(job_name: str) -> bool:
     return True
 
 
+# E-Mail-Benachrichtigung bei Job-Ausfall (U-8, 2026-07-12) - Cooldown-Speicher
+# pro Job-ID, geteilt zwischen BEIDEN Fehlerquellen unten (den eigenen
+# except-Bloecken der *_job()-Funktionen UND dem globalen Listener), damit ein
+# Job sich insgesamt hoechstens 1x pro Cooldown-Fenster meldet, egal ueber
+# welchen der beiden Wege der Fehler bekannt wurde.
+_last_failure_email_sent: dict[str, float] = {}
+
+
+def _notify_job_failure(job_id: str, fehler_text: str) -> None:
+    """E-Mail-Benachrichtigung bei Job-Fehlschlag, mit Cooldown (U-8, 2026-07-12).
+
+    WICHTIGER FUND beim Bauen: der globale EVENT_JOB_ERROR-Listener (siehe
+    _log_job_event() unten) feuert NUR bei unbehandelten Bugs im Job-Wrapper
+    selbst - der weitaus haeufigere Realfall (z.B. Groq/CoinGecko/Bitpanda
+    mehrere Stunden nicht erreichbar) wird von jedem *_job() bereits INTERN
+    abgefangen (eigener try/except, siehe oben) und erreicht den Listener nie.
+    Deshalb wird diese Funktion von BEIDEN Stellen aus aufgerufen - vom
+    Listener UND direkt aus den bestehenden except-Bloecken der Jobs selbst.
+
+    Cooldown (config.yaml benachrichtigung.email.job_ausfall_cooldown_minuten)
+    verhindert Postfach-Spam bei einem mehrstuendigen/-taegigen Ausfall - ein
+    Job meldet sich pro Fenster hoechstens einmal."""
+    import config as config_module
+    from api.email_notify import send_notification_email
+
+    config_dict = config_module.load_config()
+    email_cfg = config_dict.get("benachrichtigung", {}).get("email", {})
+    if not email_cfg.get("aktiv", False):
+        return
+    empfaenger = email_cfg.get("empfaenger")
+    if not empfaenger:
+        return
+
+    cooldown_minuten = email_cfg.get("job_ausfall_cooldown_minuten", 60)
+    last_sent = _last_failure_email_sent.get(job_id)
+    # Bugfix (2026-07-12, bei der Verifikation gefunden): time.monotonic() zaehlt
+    # unter Windows ab Systemstart - ein 0.0-Default fuer "noch nie gesendet"
+    # wuerde einen allerersten Job-Fehlschlag in der ersten Stunde nach einem
+    # Neustart faelschlich als "kuerzlich gesendet" werten und die Mail
+    # unterdruecken. None statt 0.0 als Default macht "noch nie gesendet"
+    # explizit und umgeht den Cooldown-Check in diesem Fall komplett.
+    if last_sent is not None and time.monotonic() - last_sent < cooldown_minuten * 60:
+        return
+
+    if send_notification_email(
+        f"TradingInfoTool: Job '{job_id}' fehlgeschlagen",
+        f"{fehler_text}\n\nWeitere Meldungen für denselben Job werden für "
+        f"{cooldown_minuten} Minuten unterdrückt (Spam-Schutz).",
+        empfaenger,
+    ):
+        _last_failure_email_sent[job_id] = time.monotonic()
+
+
 def _log_job_event(event) -> None:
     """U-12-Minimalfix (2026-07-09): jeder Job faengt seine eigenen Exceptions
     bereits selbst ab (siehe *_job()-Funktionen oben) - dieser Listener ist die
@@ -288,8 +348,10 @@ def _log_job_event(event) -> None:
     was bisher komplett unsichtbar blieb."""
     if event.exception:
         logger.error("Scheduler-Job '%s' fehlgeschlagen (unbehandelt): %s", event.job_id, event.exception)
+        _notify_job_failure(event.job_id, f"Unbehandelter Fehler im Job-Wrapper: {event.exception}")
     else:
         logger.warning("Scheduler-Job '%s' verpasst (Misfire)", event.job_id)
+        _notify_job_failure(event.job_id, "Verpasster Lauf (Misfire) - z. B. Rechner war im Standby.")
 
 
 def _history_data_is_stale(conn, watchlist) -> bool:

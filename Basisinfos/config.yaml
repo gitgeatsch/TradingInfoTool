@@ -463,13 +463,18 @@ marktscan:
   # kaufkandidat-Treffer eine Begruendung generiert (Default aus, Kosten-/Quota-bewusst).
   groq_automatisch_kaufkandidaten: false
 
-# --- E-Mail-Benachrichtigung (siehe Kap. 13; Zugangsdaten NUR in .env, nie hier) ---
+# --- E-Mail-Benachrichtigung (U-8, 2026-07-12, siehe Regelwerksmanual.md Kap. 12;
+# Zugangsdaten NUR in .env, nie hier) ---
 benachrichtigung:
   email:
     aktiv: true
-    smtp_host: ""                      # [OFFEN] SMTP-Server oder Mail-API festlegen
     empfaenger: gernotspiessmaier@gmail.com
-    # User/Passwort/API-Key ausschliesslich in .env speichern
+    job_ausfall_cooldown_minuten: 60   # [OFFEN] Spam-Schutz: derselbe Job meldet
+      # sich hoechstens 1x pro Cooldown-Fenster, auch bei einem mehrstuendigen
+      # Ausfall (siehe scheduler/background.py::_notify_job_failure())
+    # SMTP ist fest auf Gmail verdrahtet (smtp.gmail.com:587, siehe
+    # api/email_notify.py) - kein config-seitiger Wert mehr noetig.
+    # Zugangsdaten (GMAIL_ABSENDER_ADRESSE/GMAIL_APP_PASSWORT) ausschliesslich in .env.
 
 # --- Regime-Steuerung: marktabhaengiges Verhalten (siehe Spezifikation Kap. 14) ---
 regime:
