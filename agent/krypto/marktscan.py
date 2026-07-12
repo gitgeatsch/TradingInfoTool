@@ -522,7 +522,20 @@ def generate_candidate_writeup(
 
     latest_prices = dict(db.get_latest_prices(conn))
     latest_prices[candidate.symbol] = latest_price
-    risk_result = pre_check(asset, watchlist, conn, latest_prices, snapshot, regime_result, config_dict)
+
+    try:
+        from api.bitpanda import get_listed_assets
+        from api.bitpanda import is_listed as bitpanda_is_listed
+
+        bitpanda_assets = get_listed_assets()
+        bitpanda_gelistet = bitpanda_is_listed(asset.symbol, bitpanda_assets, name=asset.name)
+    except Exception as exc:
+        bitpanda_gelistet = None
+        logger.info("Bitpanda-Listing-Abruf fehlgeschlagen: %s", exc)
+
+    risk_result = pre_check(
+        asset, watchlist, conn, latest_prices, snapshot, regime_result, config_dict, bitpanda_gelistet,
+    )
     anticyclic_context = assess_anticyclic(asset, kraken_client, closes)
     market_context = fetch_market_context()
 
@@ -541,5 +554,6 @@ def generate_candidate_writeup(
     facts = build_facts(
         asset, latest_price, None, snapshot, confluence, regime_result, regime_profile,
         risk_result, anticyclic_context, strategien_aktiv, price_age_minutes, market_context,
+        bitpanda_gelistet,
     )
     return call_groq_for_signal(groq_client, facts)
