@@ -24,12 +24,23 @@ import config as config_module
 import database.db as db
 import ui.theme as theme
 from ui.formatting import format_money
+from ui.heading_tooltip import add_heading_tooltips
 from ui.sortable_tree import make_sortable
 
 STATUS_LABELS = {
     "neu": "neu",
     "nutzer_behalten_manuell_uebernommen": "übernommen",
     "nutzer_verworfen": "verworfen",
+}
+
+_MARKTSCAN_COLUMN_DESCRIPTIONS = {
+    "symbol": "Kurzzeichen des vom Marktscan entdeckten Assets.",
+    "tier": "Marktkapitalisierungs-Stufe (Tier 1 = groß, Tier 3 = klein) - Basis für den Score.",
+    "score": "Gesamt-Score aus Stufe A (Basis) + Stufe B (Kontext/Makro) - je höher, desto eher ein Kaufkandidat.",
+    "einstufung": "Kaufkandidat, watchlist-würdig oder kein Treffer - Ergebnis der Score-Schwellenwerte.",
+    "bitpanda": "Ob das Asset aktuell auf Bitpanda handelbar ist.",
+    "entdeckt": "Datum, an dem der Marktscan dieses Asset erstmals gefunden hat.",
+    "status": "Neu, übernommen (in die Watchlist aufgenommen) oder verworfen (manuell abgelehnt).",
 }
 
 
@@ -116,6 +127,7 @@ class MarktscanView(ttk.Frame):
             self.tree.heading(col, text=headings[col])
             self.tree.column(col, width=90, anchor="w" if col == "symbol" else "center")
         make_sortable(self.tree, numeric_columns=frozenset({"score"}))
+        add_heading_tooltips(self.tree, _MARKTSCAN_COLUMN_DESCRIPTIONS)
         self.tree.pack(fill="both", expand=True)
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
 

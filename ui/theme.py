@@ -125,6 +125,14 @@ def chart_price_line_color() -> str:
     return _palette()["fg"]
 
 
+def tooltip_colors() -> tuple[str, str]:
+    """(Hintergrund, Vordergrund) fuer Mouseover-Tooltips (z.B. Spaltenkopf-
+    Erklaerungen, siehe ui/heading_tooltip.py) - wiederverwendet die bestehende
+    entry_bg/fg-Palette statt einer eigenen dritten Tooltip-Farbe."""
+    p = _palette()
+    return p["entry_bg"], p["fg"]
+
+
 def success_color() -> str:
     return _palette()["success"]
 
