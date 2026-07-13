@@ -11,7 +11,29 @@ import ui.theme as theme
 from database.models import Holding
 from importer.bitpanda_avg_cost import compute_cost_basis_view
 from ui.formatting import format_money, format_price_age, is_price_stale
+from ui.heading_tooltip import add_heading_tooltips
 from ui.sortable_tree import make_sortable
+
+_COLUMN_DESCRIPTIONS = {
+    "symbol": "Kurzzeichen des Assets (z. B. an der Börse/CoinGecko).",
+    "name": "Vollständiger Name des Assets.",
+    "assetklasse": "Krypto, Aktie, ETF oder Rohstoff.",
+    "quantity": (
+        "Aktuell gehaltene Stückzahl. Gestakte Mengen (über die normale "
+        "Börsen-API nicht sichtbar) werden zusätzlich in Klammern angezeigt."
+    ),
+    "price_eur": (
+        "Aktueller Marktpreis pro Einheit in Euro. ⚠ markiert einen veralteten "
+        "Preis (kein aktuelles Update erhalten)."
+    ),
+    "value_eur": "Aktueller Gesamtwert des Bestands in Euro (Stückzahl × Preis).",
+    "avg_buy_price_eur": (
+        "Durchschnittlicher Einstandspreis in Euro - automatisch aus den echten "
+        "Bitpanda-Kauf-Trades berechnet, oder per Doppelklick auf die Zeile "
+        "manuell überschrieben."
+    ),
+    "pl_pct": "Gewinn/Verlust in Prozent: aktueller Wert gegenüber dem Einstandspreis.",
+}
 
 
 class PortfolioView(ttk.Frame):
@@ -20,9 +42,13 @@ class PortfolioView(ttk.Frame):
         self._db_conn_factory = db_conn_factory
         self._watchlist_by_symbol = {asset.symbol: asset for asset in watchlist}
 
+        # Nutzer-Wunsch (2026-07-13): nur noch EUR anzeigen (USD-Spalten waren
+        # redundant fuer den EUR-fokussierten Nutzer) - die interne, USD-basierte
+        # Risiko-/Signal-Berechnung (agent/krypto/risk_gate.py) bleibt davon
+        # unberuehrt, betrifft nur diese Anzeige.
         columns = (
-            "symbol", "name", "assetklasse", "quantity", "price_usd", "price_eur",
-            "value_usd", "value_eur", "avg_buy_price_eur", "pl_pct",
+            "symbol", "name", "assetklasse", "quantity", "price_eur",
+            "value_eur", "avg_buy_price_eur", "pl_pct",
         )
         self.tree = ttk.Treeview(self, columns=columns, show="headings")
         headings = {
@@ -30,9 +56,7 @@ class PortfolioView(ttk.Frame):
             "name": "Name",
             "assetklasse": "Assetklasse",
             "quantity": "Bestand",
-            "price_usd": "Preis (USD)",
             "price_eur": "Preis (EUR)",
-            "value_usd": "Wert (USD)",
             "value_eur": "Wert (EUR)",
             "avg_buy_price_eur": "Einstandspreis (EUR)",
             "pl_pct": "G/V %",
@@ -46,9 +70,10 @@ class PortfolioView(ttk.Frame):
         make_sortable(
             self.tree,
             numeric_columns=frozenset(
-                {"quantity", "price_usd", "price_eur", "value_usd", "value_eur", "avg_buy_price_eur", "pl_pct"}
+                {"quantity", "price_eur", "value_eur", "avg_buy_price_eur", "pl_pct"}
             ),
         )
+        add_heading_tooltips(self.tree, _COLUMN_DESCRIPTIONS)
         # Einstandspreis manuell setzen/korrigieren (2026-07-11) - Doppelklick auf eine
         # Zeile, exakt dasselbe Muster wie ui/app.py::_open_chart() (dort fuer die
         # Watchlist), nur hier fuer den Portfolio-Tab.
@@ -140,20 +165,28 @@ class PortfolioView(ttk.Frame):
         for item in self.tree.get_children():
             self.tree.delete(item)
 
-        total_value_usd = 0.0
         total_value_eur = 0.0
         staked_value_eur = 0.0
         for holding in sorted(holdings, key=lambda h: h.symbol):
+            # Nutzer-Wunsch (2026-07-13): Portfolio soll nur zeigen, was
+            # tatsaechlich gehalten wird - viele holdings-Zeilen (z.B. durch
+            # Bitpanda-Sync) haben quantity=0 fuer Assets, die nie/nicht mehr
+            # gehalten werden. WICHTIG (Nutzer-Hinweis): gestakte Bestaende
+            # stehen NICHT in quantity, sondern separat in staked_quantity
+            # (ueber die normale Wallet-API unsichtbar, siehe
+            # importer/bitpanda_avg_cost.py::compute_staked_quantities()) - ein
+            # Asset kann quantity=0 UND trotzdem vollstaendig gestakt sein,
+            # darf dann NICHT ausgeblendet werden.
+            has_staked = bool(holding.staked_quantity and holding.staked_quantity > 0)
+            if holding.quantity == 0 and not has_staked:
+                continue
+
             asset = self._watchlist_by_symbol.get(holding.symbol)
             name = asset.name if asset else holding.symbol
             assetklasse = asset.assetklasse if asset else "-"
             price_snapshot = latest_prices.get(holding.symbol)
-            price_usd = price_snapshot.price_usd if price_snapshot else None
             price_eur = price_snapshot.price_eur if price_snapshot else None
-            value_usd = (holding.quantity * price_usd) if price_usd is not None else None
             value_eur = (holding.quantity * price_eur) if price_eur is not None else None
-            if value_usd is not None:
-                total_value_usd += value_usd
             if value_eur is not None:
                 total_value_eur += value_eur
 
@@ -163,16 +196,16 @@ class PortfolioView(ttk.Frame):
             # Gesamtwert-Zeile ein (siehe unten), damit sie nicht mit dem regulaeren
             # Bestand verwechselt wird.
             quantity_text = f"{holding.quantity:g}"
-            if holding.staked_quantity and holding.staked_quantity > 0:
+            if has_staked:
                 quantity_text += f" (+{holding.staked_quantity:g} gestakt)"
                 if price_eur is not None:
                     staked_value_eur += holding.staked_quantity * price_eur
 
             fetched_at = price_snapshot.fetched_at if price_snapshot else None
             stale = is_price_stale(fetched_at)
-            price_usd_text = format_money(price_usd)
-            if stale and price_usd_text != "-":
-                price_usd_text = f"⚠ {price_usd_text}"
+            price_eur_text = format_money(price_eur)
+            if stale and price_eur_text != "-":
+                price_eur_text = f"⚠ {price_eur_text}"
 
             cost_basis = compute_cost_basis_view(holding, price_eur)
             if cost_basis.source == "unbekannt":
@@ -199,9 +232,7 @@ class PortfolioView(ttk.Frame):
                     name,
                     assetklasse,
                     quantity_text,
-                    price_usd_text,
-                    format_money(price_eur),
-                    format_money(value_usd),
+                    price_eur_text,
                     format_money(value_eur),
                     avg_price_text,
                     pl_text,
@@ -214,15 +245,8 @@ class PortfolioView(ttk.Frame):
         # pre_check() zaehlt die Fiat-Cash-Reserve seit 2026-07-10 korrekt zum
         # Portfoliowert dazu (RM-4/RM-1/RM-2 nutzen durchgaengig dieselbe Basis) -
         # diese Anzeige tat das bisher NICHT, zeigte also einen kleineren Wert als
-        # den, auf dem die KI ihre Entscheidungen tatsaechlich stuetzt. EUR-Seite ist
-        # direkt (fiat_cash_eur ist bereits EUR), USD-Seite nutzt denselben EURCV-
-        # Wechselkurs-Trick wie risk_gate.py (1 EURCV ~= 1 EUR, siehe A-5) - fehlt das
-        # Snapshot, wird die USD-Seite NICHT hochgerechnet statt falsch geraten (P-10).
+        # den, auf dem die KI ihre Entscheidungen tatsaechlich stuetzt.
         total_value_eur += fiat_cash_eur
-        if fiat_cash_eur > 0:
-            eurcv_snap = latest_prices.get("EURCV")
-            if eurcv_snap and eurcv_snap.price_usd and eurcv_snap.price_eur:
-                total_value_usd += fiat_cash_eur * (eurcv_snap.price_usd / eurcv_snap.price_eur)
 
         # 2026-07-11, Nutzer-Fund: gestakter Wert zaehlt hier zum Gesamtwert dazu (echtes
         # Vermoegen, nur voruebergehend nicht handelbar) - WICHTIG: agent/krypto/
@@ -232,9 +256,6 @@ class PortfolioView(ttk.Frame):
         # (siehe Basisinfos/Regelwerksmanual.md Kap. 13/14) - nicht heute in die
         # "unantastbare" Risk-Gate-Formel eingegriffen.
         total_value_eur += staked_value_eur
-        eurcv_snap = latest_prices.get("EURCV")
-        if staked_value_eur > 0 and eurcv_snap and eurcv_snap.price_usd and eurcv_snap.price_eur:
-            total_value_usd += staked_value_eur * (eurcv_snap.price_usd / eurcv_snap.price_eur)
 
         notes = []
         if fiat_cash_eur > 0:
@@ -242,9 +263,7 @@ class PortfolioView(ttk.Frame):
         if staked_value_eur > 0:
             notes.append(f"{staked_value_eur:,.2f} EUR gestakt (im Regelwerk noch nicht berücksichtigt)")
         note_text = f" (davon {', '.join(notes)})" if notes else ""
-        self.total_label.config(
-            text=f"Gesamtwert: {total_value_usd:,.2f} USD / {total_value_eur:,.2f} EUR{note_text}"
-        )
+        self.total_label.config(text=f"Gesamtwert: {total_value_eur:,.2f} EUR{note_text}")
 
     def _on_edit_avg_price(self, event) -> None:
         selected = self.tree.selection()
