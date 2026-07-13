@@ -332,6 +332,7 @@ dieselbe Datenbank — der Unterschied ist nur, ob du selbst klicken musst.
 | `refresh_history` | alle 24 Std. | Tages-Historie (für Indikatoren wie EMA-200) | CoinGecko |
 | `refresh_ohlc` | alle 24 Std. | Echtes OHLC (für ATR/Swing-Highs-Lows) | Kraken |
 | `marktscan` | 2× täglich, fix 04:00 + 16:00 Uhr | Kompletter Marktscan-Lauf (Stufe A-D, Kap. 13) | CoinGecko + Kraken, optional Groq |
+| `signal_batch` | 1× täglich, fix 05:00 Uhr | Batch-Signal-Berechnung: die am längsten überfälligen Krypto-Assets bekommen automatisch eine echte Groq-Analyse (Budget-begrenzt, siehe unten) | Groq (budget-limitiert) |
 | `backward_tracking` | 1× täglich, fix 06:00 Uhr | Prüft vergangene KAUFEN/NACHKAUFEN-Signale gegen die Kurshistorie — Take-Profit oder Stop-Loss erreicht? | keine (nur bereits vorhandene DB-Daten) |
 | `bitpanda_cash` | alle 30 Min (nur mit gesetztem `BITPANDA_API_KEY`) | Nur der EUR-Fiat-Cash-Stand für RM-4 — **nicht** die vollen Bestände | Bitpanda (`/fiatwallets`) |
 
@@ -366,6 +367,51 @@ dem App-Start ein erstes Mal, danach im 30-Minuten-Takt. Ohne `BITPANDA_API_KEY`
 bleibt der Job wie gehabt deaktiviert (P-8) — dann gilt weiterhin nur der manuelle
 Sync bzw. die Eingabe im Portfolio-Tab.
 
+**Batch-Signal-Berechnung (2026-07-13, NEU).** Ausgelöst durch die Beobachtung,
+dass der Signale-Tab fast überall "-" zeigte — Signal-Berechnung ist bewusst
+manuell (jeder Lauf kostet einen echten Groq-Aufruf), aber bei 54 Watchlist-
+Assets (35 aktiv + 19 watchlist-Status) unpraktisch, wenn niemand 54× einzeln
+klicken kann, gerade im 24/7-Betrieb ohne Handy-App.
+
+**Gemessen statt geschätzt:** Groq Free-Tier erlaubt zwar 1.000 Requests/Tag,
+aber nur **100.000 Tokens/Tag** — und eine echte Signal-Berechnung in dieser
+App verbraucht ~5.600-6.000 Tokens (System-Prompt ~12.072 Zeichen/~3.450
+Tokens, Fakten-JSON ~5.100-6.500 Zeichen, Antwort ~2.560 Zeichen — real gegen
+den Code gemessen, nicht geschätzt). Das Token-Limit ist die bindende Grenze:
+**reales Maximum ~15-18 Berechnungen/Tag**, nicht 1.000. Alle 54 Assets an
+einem Tag ist damit unmöglich.
+
+**Lösung: zweistufig wie Marktscan.** Eine günstige Auswahl (reine Staleness-
+Sortierung — am längsten ohne echte Analyse zuerst, kein Groq-Aufruf) läuft
+über alle Krypto-Assets (Aktien/ETF/Rohstoffe ausgeschlossen — die Pipeline
+ist Krypto-only, siehe Spezifikation Kap. 11), die teure Groq-Analyse nur für
+eine budget-begrenzte Teilmenge (`config.yaml signale_batch.taegliches_budget`,
+Default 15). Stablecoins ebenfalls ausgeschlossen (A-1: bekommen strukturell
+nie ein echtes Signal, würden sonst wegen "nie berechnet" dauerhaft ganz oben
+stehen). Bewusst KEIN Gate auf die 7-Tage-Schwelle bei der Auswahl selbst —
+das würde bei einer eingeschwungenen Rotation zeitweise Leerlauf und dann
+einen Stau erzeugen, siehe `agent/krypto/signal_batch.py`-Docstring.
+
+**Geteiltes Tagesbudget ohne eigene Zähltabelle:** sowohl der tägliche
+Scheduler-Job als auch der manuelle "Fällige Signale jetzt berechnen"-Button
+(Signale-Tab) als auch der bestehende Einzel-Klick-Button zählen automatisch
+gegen dasselbe Budget, da alle drei in dieselbe `signals`-Tabelle schreiben
+(`groq_raw_response IS NOT NULL AND created_at >= heute`). Lock-geschützt
+(`signal_batch_lock`, wie bei `marktscan_lock`) gegen einen gleichzeitigen
+Doppel-Lauf von Scheduler und manuellem Klick.
+
+**E-Mail nur bei echtem Anlass:** anders als der Job-Ausfall-Cooldown gibt es
+hier keinen Cooldown, sondern ein Inhalts-Gate — eine E-Mail geht nur raus,
+wenn mindestens ein Ergebnis NICHT HALTEN ist (`config.yaml
+signale_batch.benachrichtigung_email`). Ein reiner HALTEN-Batch (der
+Normalfall) verschickt keine tägliche Spam-Mail.
+
+**Wichtiger Korrektheits-Fund beim Bauen:** `signals.gate_passed=True` reicht
+NICHT als "hat eine echte Groq-Analyse bekommen" — der
+`AnalystResponseInvalid`-Fallback-Pfad (kaputtes/unvollständiges JSON nach
+Retries) setzt `gate_passed=True`, aber `groq_raw_response` bleibt `None`.
+Korrektes Kriterium: `groq_raw_response IS NOT NULL`.
+
 ### Manuell (GUI-Aktionen, nur bei Klick)
 
 | Aktion | Wo | Was |
@@ -373,6 +419,7 @@ Sync bzw. die Eingabe im Portfolio-Tab.
 | "Jetzt aktualisieren" | Toolbar (oben) | Sofortiger Krypto-Preis-Refresh (CoinGecko) + Bitpanda-Listing-Check |
 | "Signal berechnen" | Signale-Tab | Die **gesamte** Agent-Pipeline (R-5.0 bis R-5.11, Abschnitt 5) für **ein** Asset — inkl. echtem Groq-Aufruf. Bewusst **nie automatisch/geplant** — jeder Signal-Lauf kostet einen KI-Aufruf und soll bewusst ausgelöst werden. |
 | "Signal-Historie" | Signale-Tab | Zeigt alle bisherigen Signale des ausgewählten Assets inkl. Backward-Tracking-Ergebnis (Take-Profit/Stop-Loss/Offen/Abgelaufen) — reine Anzeige, kein externer Aufruf. |
+| "Fällige Signale jetzt berechnen" (2026-07-13, NEU) | Signale-Tab | Berechnet die am längsten überfälligen Krypto-Assets sofort statt beim nächsten 05:00-Scheduler-Lauf, respektiert dasselbe geteilte Tagesbudget (siehe oben) — kein separater Klick pro Asset nötig. |
 | "Jetzt scannen" | Marktscan-Tab | Derselbe Marktscan-Lauf wie der 04:00/16:00-Scheduler-Job, nur sofort statt zur festen Uhrzeit |
 | "Bestände von Bitpanda abgleichen" | Datei-Menü | Live-Abgleich **aller Bestände** (Krypto + Aktien/ETF/Rohstoffe) + EUR-Cash direkt von Bitpanda (siehe RM-4-Abschnitt oben) — **nie automatisch**, da ein echter, authentifizierter API-Key UND ggf. der interaktive Rückgangs-Bestätigungsdialog beteiligt sind. Der reine EUR-Cash-Anteil läuft seit 2026-07-11 zusätzlich automatisch (siehe oben). |
 | "Einstandspreise von Bitpanda berechnen" | Datei-Menü | Echter Anschaffungspreis je Asset aus der Bitpanda-Trade-Historie (siehe Abschnitt 9) — **eigener, unabhängiger Menüpunkt**, nie automatisch (Erstlauf kann ~40s dauern, läuft threaded im Hintergrund) |
@@ -887,6 +934,71 @@ innerhalb der Pipeline (CoinGecko/Kraken/FRED/Bitpanda-Listing) sind dagegen
 durchgehend nach dem P-10-Prinzip abgesichert — ein Ausfall degradiert nur den
 jeweiligen Fakt auf `null`, ohne die Pipeline abzubrechen.
 
+### Watchdog + Tray-Monitor (2026-07-13) — sichtbarer Status, einfacher Start/Stop
+
+**Auslöser:** Am 24/7-Notebook war die GUI über Nacht verschwunden, während
+Scheduler und Agent im Hintergrund unbeeindruckt weiterliefen — **kein
+einziger Fehler** stand in `data/tradinginfotool.log`. Da `main.py`s
+`finally: bg_scheduler.shutdown(...)` direkt nach `app.mainloop()` läuft, hätte
+ein echter Absturz auch den Scheduler mit heruntergefahren. Die wahrscheinlichere
+Erklärung: der Tk-Mainloop ist eingefroren/unsichtbar geworden (Display-Sleep,
+Tcl-Hänger o. ä.), und eventuelle Fehlerausgaben landeten im Leeren, weil beim
+Start per Verknüpfung keine Konsole angehängt ist (Tkinters Standard-Callback-
+Exception-Handling schreibt nur nach `stderr`).
+
+**Bewusst KEIN Windows-Service mit Auto-Restart** (Nutzer-Entscheidung): ein
+kaputter Auto-Restart-Loop wäre selbst ein stilles Fehlerbild, der Mensch soll
+in der Schleife bleiben. Stattdessen: ein separater **Watchdog-Prozess**
+(`monitor/watchdog.py`), der `main.py` als Kindprozess startet und unabhängig
+davon überwacht — ein Tray-Icon im selben Prozess wie ein hängender Tk-Mainloop
+wäre im schlimmsten Fall selbst mitbetroffen.
+
+**Funktionsweise:**
+- `ui/app.py::_poll_prices()` (bestehender 3-Sekunden-Tick) schreibt bei jedem
+  Durchlauf einen Zeitstempel nach `data/gui_heartbeat.txt` — feuert nur, wenn
+  der Tk-Event-Loop tatsächlich pumpt, beweist also "Fenster reagiert" statt
+  nur "Prozess existiert".
+- `TradingInfoToolApp.report_callback_exception()` routet Tk-Callback-
+  Exceptions zusätzlich durch `logging` (landet in `tradinginfotool.log`).
+- Der Watchdog startet `main.py` per `subprocess.Popen(..., stdout=crash_log,
+  stderr=crash_log)` — alle bisher unsichtbaren Ausgaben landen jetzt in
+  `data/watchdog_crash.log` (append, einfache 2-MB-Größenbremse statt echter
+  Rotation).
+- **Tray-Icon-Farben:** grau = startet gerade (erste 60s nach Spawn) /
+  🟢 grün = läuft normal / 🟡 gelb = Heartbeat seit >30s veraltet (möglicher
+  Hänger, Prozess aber noch da) / 🔴 rot = Prozess beendet.
+- **Tray-Menü (Rechtsklick):** "Fenster anzeigen" (holt das bestehende
+  Tk-Fenster per Windows-API in den Vordergrund, OHNE `main.py` neu zu
+  starten — passt zum Fall "Fenster nur unsichtbar/minimiert/verschoben",
+  fällt auf einen echten Neustart zurück, falls kein Fenster-Handle mehr
+  gefunden wird), "Status-Details" (öffnet die bestehende Remote-Steuer-Seite,
+  Abschnitt 13, lokal auf `127.0.0.1:8765`), "Neu starten" (beendet + startet
+  `main.py` komplett neu, für einen echten Absturz/Hänger), "Beenden"
+  (beendet `main.py` und den Watchdog selbst).
+- **Stop-Mechanismus bewusst einfach gehalten:** `terminate()` (kein
+  Graceful-Shutdown-Signal) — vertretbar, da die App durchgängig
+  Connection-per-Call statt langlebiger DB-Transaktionen nutzt.
+- Einfache PID-Datei (`data/watchdog.pid`) verhindert einen versehentlichen
+  zweiten Start (zwei `main.py`-Instanzen würden sich um dieselbe SQLite-Datei
+  und Port 8765 streiten).
+
+**Einmaliges Setup pro Gerät** (nicht Teil des USB-Syncs, da der
+Windows-Desktop-Ordner nicht mitgenommen wird):
+```
+powershell -ExecutionPolicy Bypass -File monitor\create_shortcut.ps1
+```
+Legt zwei identische Verknüpfungen `TradingInfoTool.lnk` an — auf dem
+Windows-Desktop UND im Start-Menü (startet jeweils `pythonw.exe
+monitor\watchdog.py`, kein Konsolenfenster). Die Start-Menü-Verknüpfung lässt
+sich per Rechtsklick → "An Taskleiste anheften" dauerhaft in der Taskleiste
+verankern (native Windows-Funktion, kein zusätzlicher Code nötig).
+
+**Bekannte Grenze (bewusst so belassen für v1):** kein automatischer
+Neustart bei einem echten Hänger/Absturz — der Nutzer muss den gelben/roten
+Tray-Status selbst bemerken und "Neu starten" klicken. Ein möglicher
+Folgeschritt wäre ein lokaler `/api/shutdown`-Endpoint auf der bestehenden
+Remote-Seite für ein saubereres Stop-Signal statt `terminate()`.
+
 ### Empfehlung für den nächsten Schritt
 
 Die drei ungeschützten Start-Schritte sind seit 2026-07-12 abgesichert (siehe
@@ -897,7 +1009,9 @@ und Job-Ausfällen (U-8) sowie bei Marktscan-Kaufkandidaten (MS-1b) ist seit
 2026-07-12 erledigt, ebenso der Job-Ausfall-Backoff (siehe "Scheduler-Jobs"
 oben) — damit ist die komplette Betriebssicherheits-Liste aus diesem Kapitel
 abgearbeitet. Die aggregierte Status-Übersicht selbst ist inzwischen Teil der
-Remote-Steuer-Seite geworden (Abschnitt 13).
+Remote-Steuer-Seite geworden (Abschnitt 13). Neu hinzugekommen (2026-07-13):
+Watchdog + Tray-Monitor für einfachen Start/Stop/Status vom Windows-Desktop
+aus (siehe oben) — der eigentliche Live-Test am 24/7-Notebook steht noch aus.
 
 ---
 
