@@ -48,6 +48,10 @@ config.local.*
 # Lokale UI-Einstellungen (z.B. Dark Mode), nicht versionieren
 data/settings.json
 
+# Watchdog-Laufzeitdateien (2026-07-13, siehe monitor/watchdog.py), nicht versionieren
+data/gui_heartbeat.txt
+data/watchdog.pid
+
 # Persoenliche Bestandsdaten (Anzahl Coins etc.), nicht versionieren
 Basisinfos/Assets.xlsx
 Basisinfos/Assets.xlsx.bak_*

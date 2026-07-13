@@ -1,8 +1,12 @@
 """Hauptfenster: Watchlist- und Portfolio-Tab, Basis-UI fuer Phase 1."""
 from __future__ import annotations
 
+import logging
+import os
 import threading
 import tkinter as tk
+import traceback
+from datetime import datetime, timezone
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
@@ -12,16 +16,51 @@ import ui.theme as theme
 from api.bitpanda import is_listed as bitpanda_is_listed
 from importer.excel_import import EXPORT_XLSX_PATH, export_holdings, import_holdings
 from ui.formatting import format_money, format_price_age, is_price_stale
+from ui.heading_tooltip import add_heading_tooltips
 from ui.marktscan_view import MarktscanView
 from ui.portfolio import PortfolioView
 from ui.signals_view import SignalsView
 from ui.sortable_tree import make_sortable
+
+logger = logging.getLogger(__name__)
 
 UI_POLL_INTERVAL_MS = 3000
 DISCLAIMER_TEXT = (
     "Keine Anlageberatung. Alle Angaben algorithmisch/KI-generiert und koennen "
     "fehlerhaft sein. Entscheidung und Verantwortung liegen beim Nutzer."
 )
+
+_WATCHLIST_COLUMN_DESCRIPTIONS = {
+    "symbol": "Kurzzeichen des Assets (z. B. an der Börse/CoinGecko).",
+    "name": "Vollständiger Name des Assets.",
+    "typ": "Core, taktisch oder Stablecoin - Einstufung aus der Watchlist-Konfiguration.",
+    "assetklasse": "Krypto, Aktie, ETF oder Rohstoff.",
+    "status": "Aktiv (wird regelmäßig abgefragt) oder Watchlist (nur beobachtet).",
+    "bitpanda": (
+        "✓ = auf Bitpanda handelbar, ✗ = nicht gelistet (blockiert Kauf-/Nachkauf-"
+        "Signale), ? = noch nicht geprüft, - = nicht zutreffend (Nicht-Krypto-Asset)."
+    ),
+    "tranchen": (
+        "AZ-4-Tranchen-Vorschläge (gestaffelte Kauf-/Verkaufszonen) an/aus - "
+        "nur für BTC/ETH verfügbar."
+    ),
+    "price_usd": "Aktueller Marktpreis pro Einheit in US-Dollar.",
+    "price_eur": "Aktueller Marktpreis pro Einheit in Euro.",
+    "change_24h": "Preisänderung der letzten 24 Stunden in Prozent.",
+    "aktualisiert": (
+        "Wie lange der angezeigte Preis her ist. ⚠ markiert einen veralteten "
+        "Preis (kein aktuelles Update erhalten)."
+    ),
+}
+
+# Watchdog-Heartbeat (2026-07-13, siehe monitor/watchdog.py): _poll_prices()
+# schreibt hier bei jedem Tick einen Zeitstempel rein - ein externer Watchdog-
+# Prozess kann so erkennen, ob der Tk-Event-Loop wirklich noch pumpt (ein
+# after()-Callback feuert nur dann), statt sich nur auf "Prozess existiert
+# noch" zu verlassen. Ausloeser: GUI verschwand ueber Nacht am 24/7-Notebook,
+# Scheduler lief im Hintergrund unbeeindruckt weiter - kein Absturz, sondern
+# vermutlich ein eingefrorener/unsichtbarer Mainloop.
+HEARTBEAT_PATH = Path(__file__).resolve().parent.parent / "data" / "gui_heartbeat.txt"
 
 
 class TradingInfoToolApp(tk.Tk):
@@ -79,6 +118,16 @@ class TradingInfoToolApp(tk.Tk):
 
         self._refresh_watchlist_from_db()
         self.after(UI_POLL_INTERVAL_MS, self._poll_prices)
+
+    def report_callback_exception(self, exc, val, tb) -> None:
+        """Tkinter faengt Exceptions aus Callbacks/after()-Ticks selbst ab und
+        ruft diese Methode auf - der Default (Basisklasse) schreibt NUR nach
+        stderr, was ohne angehaengte Konsole (Start per Verknuepfung) spurlos
+        verschwindet (siehe HEARTBEAT_PATH-Docstring oben, Notebook-Vorfall
+        2026-07-13). Zusaetzlich ins normale Logging, damit es in
+        data/tradinginfotool.log UND im Watchdog-Crash-Log (stderr-Redirect)
+        auftaucht."""
+        logger.error("Unbehandelte Exception in Tk-Callback:\n%s", "".join(traceback.format_exception(exc, val, tb)))
 
     def _build_menu(self) -> None:
         menubar = tk.Menu(self)
@@ -169,6 +218,7 @@ class TradingInfoToolApp(tk.Tk):
         tree.tag_configure("stale", foreground=theme.stale_color())
         tree.tag_configure("bitpanda_fehlt", foreground=theme.danger_color())
         make_sortable(tree, numeric_columns=frozenset({"price_usd", "price_eur", "change_24h"}))
+        add_heading_tooltips(tree, _WATCHLIST_COLUMN_DESCRIPTIONS)
         tree.bind("<Double-1>", self._open_chart)
         tree.pack(fill="both", expand=True, padx=8, pady=8)
 
@@ -265,9 +315,23 @@ class TradingInfoToolApp(tk.Tk):
         ChartWindow(self, self._db_conn_factory, asset)
 
     def _poll_prices(self) -> None:
+        self._write_heartbeat()
         self._refresh_watchlist_from_db()
         self._portfolio_view.refresh()
         self.after(UI_POLL_INTERVAL_MS, self._poll_prices)
+
+    def _write_heartbeat(self) -> None:
+        """Atomarer Write (tmp-Datei + os.replace) - vermeidet einen Torn-Read,
+        falls monitor/watchdog.py genau in dem Moment liest, in dem geschrieben
+        wird. Best-effort: ein Schreibfehler (z.B. Datentraeger kurz nicht
+        erreichbar) darf die _poll_prices()-Rekursion nicht abbrechen, sonst
+        wuerde ausgerechnet der Heartbeat-Mechanismus selbst zum Absturzgrund."""
+        try:
+            tmp_path = HEARTBEAT_PATH.with_suffix(".tmp")
+            tmp_path.write_text(datetime.now(timezone.utc).isoformat(), encoding="utf-8")
+            os.replace(tmp_path, HEARTBEAT_PATH)
+        except OSError:
+            logger.exception("Heartbeat-Datei konnte nicht geschrieben werden")
 
     def _refresh_bitpanda_assets(self) -> None:
         """Handelsboersen-Check (Nutzer-Wunsch 2026-07-09) - einmalig beim Start und
