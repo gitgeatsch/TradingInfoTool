@@ -463,6 +463,22 @@ marktscan:
   # kaufkandidat-Treffer eine Begruendung generiert (Default aus, Kosten-/Quota-bewusst).
   groq_automatisch_kaufkandidaten: false
 
+# --- Batch-Signal-Berechnung (2026-07-13, siehe Regelwerksmanual.md Kap. 5/12) ---
+# Signal-Berechnung kostet pro Asset einen echten Groq-Aufruf (~5.600-6.000 Tokens
+# gemessen, siehe agent/krypto/signal_batch.py Modul-Docstring) - bei Groq Free-Tier
+# (100.000 Tokens/Tag) sind real nur ~15-18 Berechnungen/Tag moeglich, NICHT die 1.000
+# Requests/Tag, die das offizielle RPD-Limit allein suggerieren wuerde (TPD ist die
+# bindende Grenze). Taeglicher Scheduler-Job (05:00 Uhr, Luecke zwischen Marktscan und
+# Backward-Tracking) berechnet die am laengsten ueberfaelligen Assets automatisch nach,
+# damit jedes Watchlist-Asset (aktiv UND watchlist-Status) mindestens 1x/Woche eine
+# echte Analyse bekommt, auch ohne manuellen Klick. Teilt sich das Tagesbudget mit dem
+# manuellen "Fällige Signale jetzt berechnen"-Button (Signale-Tab) UND dem bestehenden
+# Einzel-Klick-Button - alle drei schreiben in dieselbe signals-Tabelle.
+signale_batch:
+  aktiv: true
+  taegliches_budget: 15                # konservativ unter dem gemessenen Maximum (~15-18)
+  benachrichtigung_email: true          # E-Mail nur bei mind. 1 aktionablem (nicht HALTEN) Ergebnis
+
 # --- E-Mail-Benachrichtigung (U-8, 2026-07-12, siehe Regelwerksmanual.md Kap. 12;
 # Zugangsdaten NUR in .env, nie hier) ---
 benachrichtigung:

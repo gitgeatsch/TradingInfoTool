@@ -19,7 +19,25 @@ from tkinter import ttk
 import database.db as db
 import ui.theme as theme
 from ui.formatting import format_money
+from ui.heading_tooltip import add_heading_tooltips
 from ui.sortable_tree import make_sortable
+
+_SIGNAL_LIST_COLUMN_DESCRIPTIONS = {
+    "symbol": "Kurzzeichen des Assets (z. B. an der Börse/CoinGecko).",
+    "name": "Vollständiger Name des Assets.",
+    "letztes_signal": "Zuletzt berechnete Empfehlung (KAUFEN/NACHKAUFEN/HALTEN/VERKAUFEN/TAUSCHEN).",
+    "berechnet": "Zeitpunkt, an dem dieses Signal zuletzt berechnet wurde.",
+}
+
+_SIGNAL_HISTORY_COLUMN_DESCRIPTIONS = {
+    "datum": "Zeitpunkt, an dem dieses Signal berechnet wurde.",
+    "aktion": "Damals empfohlene Aktion (KAUFEN/NACHKAUFEN/HALTEN/VERKAUFEN/TAUSCHEN).",
+    "konfidenz": "KI-Konfidenz in Prozent zum Zeitpunkt der Berechnung.",
+    "outcome": (
+        "Ergebnis der Selbstverifikation (Backward-Tracking): ob Take-Profit oder "
+        "Stop-Loss erreicht wurde, oder ob das Signal noch offen/abgelaufen ist."
+    ),
+}
 
 # Vorzeichen fuer die Bestand-Aktualisierungs-Vorschlagslogik (Nutzeridee 2026-07-07,
 # umgesetzt 2026-07-09): bei TAUSCHEN wird nur die Quell-Position reduziert, das
@@ -81,6 +99,7 @@ class SignalsView(ttk.Frame):
             self.tree.heading(col, text=headings[col])
             self.tree.column(col, width=110, anchor="w" if col in ("symbol", "name") else "center")
         make_sortable(self.tree)
+        add_heading_tooltips(self.tree, _SIGNAL_LIST_COLUMN_DESCRIPTIONS)
         self.tree.pack(fill="both", expand=True)
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
 
@@ -97,6 +116,16 @@ class SignalsView(ttk.Frame):
             toolbar, text="Signal-Historie", command=self._on_history_clicked, state="disabled"
         )
         self.history_button.pack(side="left", padx=(6, 0))
+        # Batch-Signal-Berechnung (2026-07-13) - Gegenstueck zum taeglichen
+        # Scheduler-Job (scheduler/background.py::signal_batch_job), siehe
+        # agent/krypto/signal_batch.py Modul-Docstring fuer die Budget-
+        # Herleitung. Braucht keinen Asset-Fokus, daher nicht an
+        # self._selected_asset gekoppelt wie compute_button/history_button.
+        self.batch_button = ttk.Button(
+            toolbar, text="Fällige Signale jetzt berechnen", command=self._on_batch_clicked,
+            state="normal" if self._groq_client is not None else "disabled",
+        )
+        self.batch_button.pack(side="left", padx=(6, 0))
         self.status_label = ttk.Label(toolbar, text="", foreground=theme.info_color())
         self.status_label.pack(side="left", padx=(12, 0))
 
@@ -454,6 +483,83 @@ class SignalsView(ttk.Frame):
         if self._selected_asset is not None and self._selected_asset.symbol == asset.symbol:
             self._render_signal(asset, signal)
 
+    def _on_batch_clicked(self) -> None:
+        import scheduler.background as background
+
+        # Non-blocking Check (wie remote/server.py::api_refresh_prices()) -
+        # verhindert, dass ein Klick waehrend des taeglichen 05:00-Scheduler-
+        # Laufs (oder eines bereits laufenden vorherigen Klicks) das geteilte
+        # Tagesbudget doppelt verplant. Das eigentliche Acquire passiert im
+        # Hintergrund-Thread selbst (_run_batch()), symmetrisch zu
+        # signal_batch_job()'s eigenem Lock-Handling.
+        if background.signal_batch_lock.locked():
+            self.status_label.config(
+                text="Batch-Berechnung läuft bereits (Scheduler oder vorheriger Klick) …",
+                foreground=theme.warn_color(),
+            )
+            return
+
+        self.batch_button.config(state="disabled")
+        self.status_label.config(text="Prüfe fällige Assets …", foreground=theme.info_color())
+        thread = threading.Thread(target=self._run_batch, daemon=True)
+        thread.start()
+
+    def _set_status(self, text: str, color: str) -> None:
+        """Kleiner Helper, damit self.after(0, ...) einfache Positionsargumente
+        durchreichen kann (statt der tkinter-Eigenheit, ein dict als
+        .config()-cnf-Argument zu uebergeben - hier bewusst vermieden, um
+        jeden Zweifel an der Aufrufsemantik auszuschliessen)."""
+        self.status_label.config(text=text, foreground=color)
+
+    def _on_batch_progress(self, done: int, total: int, symbol: str) -> None:
+        self.after(0, self._set_status, f"Berechne {done + 1}/{total}: {symbol} …", theme.info_color())
+
+    def _run_batch(self) -> None:
+        import config as config_module
+        import scheduler.background as background
+        from agent.krypto.signal_batch import run_signal_batch
+
+        if not background.signal_batch_lock.acquire(blocking=False):
+            self.after(0, self._set_status, "Batch-Berechnung läuft bereits.", theme.warn_color())
+            self.after(0, self.batch_button.config, state="normal")
+            return
+
+        try:
+            daily_budget = config_module.load_config().get("signale_batch", {}).get("taegliches_budget", 15)
+            result = run_signal_batch(
+                self._db_conn_factory, self._full_watchlist, self._groq_client, self._coingecko_client,
+                self._kraken_client, self._fred_api_key, daily_budget=daily_budget,
+                progress_callback=self._on_batch_progress,
+            )
+            error = None
+        except Exception as exc:  # noqa: BLE001 - an die UI durchreichen statt den Thread stumm sterben zu lassen
+            result = None
+            error = exc
+        finally:
+            background.signal_batch_lock.release()
+
+        self.after(0, self._on_batch_done, result, error)
+
+    def _on_batch_done(self, result, error) -> None:
+        self.batch_button.config(state="normal" if self._groq_client is not None else "disabled")
+        if error is not None:
+            self.status_label.config(text=f"Fehler: {error}", foreground=theme.danger_color())
+            return
+
+        anzahl = len(result.berechnet)
+        text = f"{anzahl} Signal(e) berechnet."
+        if result.fehlgeschlagen:
+            text += f" {len(result.fehlgeschlagen)} fehlgeschlagen ({', '.join(result.fehlgeschlagen)})."
+        if result.budget_erschoepft:
+            text += " Tagesbudget für heute aufgebraucht."
+        elif result.verbleibend_ueberfaellig == 0:
+            text += " Keine Assets mehr überfällig."
+        self.status_label.config(
+            text=text,
+            foreground=theme.danger_color() if result.fehlgeschlagen else theme.info_color(),
+        )
+        self._refresh_list()
+
 
 class UmsetzungDialog(tk.Toplevel):
     """Modal-Dialog fuer die Umsetzungs-Rueckmeldung (Nutzeridee 2026-07-07, umgesetzt
@@ -659,6 +765,7 @@ class SignalHistoryDialog(tk.Toplevel):
         for col in columns:
             tree.heading(col, text=headings[col])
             tree.column(col, width=150 if col != "outcome" else 220, anchor="w")
+        add_heading_tooltips(tree, _SIGNAL_HISTORY_COLUMN_DESCRIPTIONS)
         tree.pack(fill="both", expand=True)
 
         for signal in history:

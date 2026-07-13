@@ -28,11 +28,17 @@ refresh_prices_lock = threading.Lock()
 refresh_securities_lock = threading.Lock()
 marktscan_lock = threading.Lock()
 bitpanda_cash_lock = threading.Lock()
+# Batch-Signal-Berechnung (2026-07-13) - geteilt zwischen dem taeglichen
+# Scheduler-Job (Wochen-Sicherheitsnetz) UND dem manuellen UI-Button
+# (ui/signals_view.py), verhindert einen gleichzeitigen Doppel-Lauf egal
+# wodurch ausgeloest.
+signal_batch_lock = threading.Lock()
 _JOB_LOCKS = {
     "refresh_prices": refresh_prices_lock,
     "refresh_securities": refresh_securities_lock,
     "marktscan": marktscan_lock,
     "bitpanda_cash": bitpanda_cash_lock,
+    "signal_batch": signal_batch_lock,
 }
 _job_started_at: dict[str, float] = {}
 
@@ -460,6 +466,94 @@ def _notify_marktscan_kaufkandidaten(kaufkandidaten: list) -> None:
         logger.exception("Marktscan-Kaufkandidaten-E-Mail fehlgeschlagen")
 
 
+def _notify_signal_batch_ergebnis(berechnet: list, verbleibend_ueberfaellig: int) -> None:
+    """Batch-Signal-Berechnung (2026-07-13) - analog zu
+    _notify_marktscan_kaufkandidaten(): eigener try/except (P-10, ein
+    Mail-Fehler darf den Batch-Lauf nicht nachtraeglich als 'fehlgeschlagen'
+    erscheinen lassen), nur bei mind. einem AKTIONABLEN Ergebnis (nicht
+    HALTEN) - ein reiner HALTEN-Batch ist kein Grund fuer eine taegliche
+    E-Mail (matcht das 'kein Cooldown, aber nur bei echtem Anlass'-Prinzip
+    von Marktscan, nur andersherum: dort kein Cooldown noetig weil selten,
+    hier waere taeglich HALTEN-Spam sonst der Normalfall)."""
+    aktionabel = [s for s in berechnet if s.action != "HALTEN"]
+    if not aktionabel:
+        return
+    try:
+        import config as config_module
+        from api.email_notify import send_notification_email
+
+        config_dict = config_module.load_config()
+        email_cfg = config_dict.get("benachrichtigung", {}).get("email", {})
+        if not email_cfg.get("aktiv", False):
+            return
+        empfaenger = email_cfg.get("empfaenger")
+        if not empfaenger:
+            return
+        if not config_dict.get("signale_batch", {}).get("benachrichtigung_email", True):
+            return
+
+        zeilen = [
+            f"- {s.symbol}: {s.action} (Konfidenz {s.confidence_pct:.0f}%): {s.short_reasoning}"
+            for s in aktionabel
+        ]
+        body = (
+            f"{len(berechnet)} Signal(e) automatisch berechnet, davon {len(aktionabel)} "
+            f"nicht HALTEN:\n\n" + "\n".join(zeilen)
+            + f"\n\n{verbleibend_ueberfaellig} Asset(s) sind aktuell länger als "
+            "7 Tage ohne echte Analyse (werden in den nächsten Läufen priorisiert)."
+            "\n\nDetails im Signale-Tab der App."
+        )
+        send_notification_email(
+            f"TradingInfoTool: {len(aktionabel)} neue Signal-Empfehlung(en)",
+            body,
+            empfaenger,
+        )
+    except Exception:
+        logger.exception("Signal-Batch-E-Mail fehlgeschlagen")
+
+
+def signal_batch_job(coingecko_client, kraken_client, groq_client, conn_factory, watchlist, fred_api_key) -> bool:
+    """Wochen-Sicherheitsnetz fuer die Batch-Signal-Berechnung (2026-07-13,
+    siehe agent/krypto/signal_batch.py Modul-Docstring fuer die volle
+    Token-Budget-Herleitung). Taeglich (siehe build_scheduler()), respektiert
+    dasselbe geteilte Tagesbudget wie der manuelle UI-Button - `run_signal_batch()`
+    prueft selbst, wie viele echte Analysen heute schon (ueber IRGENDEINEN
+    Ausloeser) gelaufen sind. `groq_client` kann None sein (P-8) - dann
+    schlaegt jeder generate_signal()-Aufruf beim eigentlichen Groq-Call fehl,
+    wird aber pro Asset einzeln abgefangen (siehe run_signal_batch())."""
+    if not signal_batch_lock.acquire(blocking=False):
+        logger.info("Signal-Batch: bereits in Ausführung - übersprungen")
+        return False
+    _job_started_at["signal_batch"] = time.monotonic()
+    try:
+        import config as config_module
+        from agent.krypto.signal_batch import run_signal_batch
+
+        config_dict = config_module.load_config()
+        batch_cfg = config_dict.get("signale_batch", {})
+        if not batch_cfg.get("aktiv", True):
+            logger.info("Signal-Batch deaktiviert (config.yaml signale_batch.aktiv=false) - übersprungen")
+            return True
+
+        result = run_signal_batch(
+            conn_factory, watchlist, groq_client, coingecko_client, kraken_client, fred_api_key,
+            daily_budget=batch_cfg.get("taegliches_budget", 15),
+        )
+        logger.info(
+            "Signal-Batch: %d berechnet, %d fehlgeschlagen, %d weiterhin >7 Tage überfällig, Budget erschöpft: %s",
+            len(result.berechnet), len(result.fehlgeschlagen), result.verbleibend_ueberfaellig,
+            result.budget_erschoepft,
+        )
+        _notify_signal_batch_ergebnis(result.berechnet, result.verbleibend_ueberfaellig)
+    except Exception as exc:
+        logger.exception("Signal-Batch fehlgeschlagen")
+        _notify_job_failure("signal_batch", f"Signal-Batch fehlgeschlagen: {exc}")
+    finally:
+        signal_batch_lock.release()
+        _job_started_at.pop("signal_batch", None)
+    return True
+
+
 def _log_job_event(event) -> None:
     """U-12-Minimalfix (2026-07-09): jeder Job faengt seine eigenen Exceptions
     bereits selbst ab (siehe *_job()-Funktionen oben) - dieser Listener ist die
@@ -590,6 +684,18 @@ def build_scheduler(
         minute=0,
         args=[coingecko_client, kraken_client, groq_client, db_conn_factory, watchlist, fred_api_key],
         id="marktscan",
+    )
+    # Batch-Signal-Berechnung (2026-07-13) - Luecke zwischen Marktscan (4/16 Uhr)
+    # und Backward-Tracking (6 Uhr). Immer registriert, der Aktiv-Schalter wird
+    # IM Job-Body geprueft (identisches Muster wie marktscan_job() oben), nicht
+    # bei der Registrierung.
+    scheduler.add_job(
+        signal_batch_job,
+        "cron",
+        hour=5,
+        minute=0,
+        args=[coingecko_client, kraken_client, groq_client, db_conn_factory, watchlist, fred_api_key],
+        id="signal_batch",
     )
     # Backward-Tracking (2026-07-10): taeglich, kein eigener API-Call noetig (reine
     # Auswertung bereits vorhandener Kursdaten) - feste Uhrzeit nach dem ueblichen

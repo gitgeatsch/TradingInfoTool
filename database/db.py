@@ -802,6 +802,44 @@ def get_latest_signal(conn: sqlite3.Connection, symbol: str) -> Signal | None:
     return _row_to_signal(row) if row else None
 
 
+def get_latest_real_signal_per_symbol(conn: sqlite3.Connection) -> dict[str, Signal]:
+    """Neuestes Signal je Symbol MIT echter Groq-Analyse (Batch-Signal-
+    Berechnung, 2026-07-13, siehe agent/krypto/signal_batch.py) -
+    groq_raw_response IS NOT NULL statt gate_passed, da der
+    AnalystResponseInvalid-Fallback-Pfad gate_passed=True setzt, OHNE dass
+    tatsaechlich eine Groq-Antwort vorliegt (siehe analyst.py::
+    call_groq_for_signal()). Ein Self-Join statt einer Schleife ueber
+    get_latest_signal() pro Symbol, da hier alle Watchlist-Symbole auf
+    einmal gebraucht werden."""
+    rows = conn.execute(
+        """
+        SELECT s.* FROM signals s
+        INNER JOIN (
+            SELECT symbol, MAX(created_at) AS max_created_at
+            FROM signals
+            WHERE groq_raw_response IS NOT NULL
+            GROUP BY symbol
+        ) latest ON s.symbol = latest.symbol AND s.created_at = latest.max_created_at
+        """
+    ).fetchall()
+    return {row["symbol"]: _row_to_signal(row) for row in rows}
+
+
+def count_real_signals_today(conn: sqlite3.Connection) -> int:
+    """Fuer die gemeinsame Tagesbudget-Pruefung der Batch-Signal-Berechnung
+    (2026-07-13, siehe agent/krypto/signal_batch.py) - zaehlt echte
+    Groq-Analysen seit Mitternacht UTC (gleiche Zeitzone wie created_at
+    ueberall in der DB). Zaehlt automatisch AUCH Einzel-Klicks ueber den
+    bestehenden "Signal berechnen"-Button mit, da beide Wege in dieselbe
+    signals-Tabelle schreiben - kein separater Zaehler noetig."""
+    today_utc_midnight = datetime.now(timezone.utc).strftime("%Y-%m-%dT00:00:00")
+    row = conn.execute(
+        "SELECT COUNT(*) AS n FROM signals WHERE groq_raw_response IS NOT NULL AND created_at >= ?",
+        (today_utc_midnight,),
+    ).fetchone()
+    return row["n"]
+
+
 def get_signal_by_id(conn: sqlite3.Connection, signal_id: int) -> Signal | None:
     row = conn.execute("SELECT * FROM signals WHERE id = ?", (signal_id,)).fetchone()
     return _row_to_signal(row) if row else None
