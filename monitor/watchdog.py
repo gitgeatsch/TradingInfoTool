@@ -42,6 +42,12 @@ DATA_DIR = PROJECT_ROOT / "data"
 HEARTBEAT_PATH = DATA_DIR / "gui_heartbeat.txt"
 CRASH_LOG_PATH = DATA_DIR / "watchdog_crash.log"
 PID_PATH = DATA_DIR / "watchdog.pid"
+# Neustart-Bruecke von der Remote-Steuer-Seite (2026-07-14, siehe
+# remote/server.py::api_restart_app()) - main.py kann sich nicht selbst neu
+# starten (ein haengender Tk-Mainloop kann sich nicht selbst beenden), deshalb
+# nur eine Flag-Datei schreiben, die hier im ohnehin laufenden 5-Sek.-Takt
+# aufgegriffen wird.
+RESTART_FLAG_PATH = DATA_DIR / "watchdog_restart_requested.txt"
 
 CHECK_INTERVAL_SECONDS = 5
 STALE_THRESHOLD_SECONDS = 30
@@ -184,9 +190,22 @@ class Watchdog:
 
         return "ok", "TradingInfoTool: laeuft"
 
+    def _check_remote_restart_request(self, icon: pystray.Icon) -> None:
+        """Siehe RESTART_FLAG_PATH oben - Fund wird sofort verarbeitet UND die
+        Datei geloescht, damit derselbe Request nicht bei jedem Poll-Tick erneut
+        einen Neustart ausloest."""
+        if not RESTART_FLAG_PATH.exists():
+            return
+        try:
+            RESTART_FLAG_PATH.unlink()
+        except OSError:
+            pass
+        self.on_restart(icon, None)
+
     def _monitor_loop(self, icon: pystray.Icon) -> None:
         icon.visible = True
         while icon.visible:
+            self._check_remote_restart_request(icon)
             state, tooltip = self._current_state()
             icon.icon = _build_icon_image(state)
             icon.title = tooltip

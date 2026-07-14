@@ -923,6 +923,53 @@ E-Mail-Versand (P-10) — ein Fehler beim Mailen darf einen erfolgreich
 abgeschlossenen Marktscan-Lauf nicht nachträglich als "fehlgeschlagen"
 markieren.
 
+### Empfehlungs-E-Mails bei Spot-/Hebel-Signalen (2026-07-14)
+
+**Zweck:** U-8 war ursprünglich als "Desktop-Benachrichtigungen bei neuen
+Signalen" gedacht (Spezifikation), umgesetzt wurde zunächst bewusst nur der
+schmalere Job-Ausfall-/Marktscan-Kandidaten-Teil — die eigentlichen
+Kauf-/Verkauf-Empfehlungen selbst lösten bislang **keine** E-Mail aus. Da der
+Nutzer selten am Notebook ist und die tatsächliche Umsetzung ohnehin manuell
+über die Bitpanda-App erfolgt (P-7, Advisory-only), schließt dies die Lücke:
+jede **handlungsrelevante** Spot- oder Hebel-Empfehlung löst jetzt eine
+eigene E-Mail aus.
+
+**Handlungsrelevant heißt:** alle Aktionen außer HALTEN (Spot:
+KAUFEN/VERKAUFEN/TAUSCHEN/NACHKAUFEN; Hebel: ERÖFFNEN/NACHKAUFEN/
+HEBEL_ERHÖHEN/HEBEL_SENKEN/TEILVERKAUF/SCHLIESSEN). HALTEN — der weitaus
+häufigste Fall — löst bewusst **nie** eine Mail aus, sonst würde die
+Mailflut kontraproduktiv.
+
+**Nur automatische Läufe, keine manuellen Klicks:** die E-Mail wird direkt
+im Budget-Allocator-Pfad (`hebel_screening_job()`, 15-Min-Takt) ausgelöst,
+NICHT wenn du selbst im Signale-/Hebel-Tab manuell "Signal berechnen"/"Jetzt
+analysieren" klickst — dann siehst du das Ergebnis ja bereits live vor dir,
+eine zusätzliche Mail wäre redundant. Gleiches Prinzip wie bei MS-1b (auch
+dort löst nur der automatische `marktscan_job()`-Lauf eine Mail aus, nicht
+der manuelle "Kaufkandidaten aktualisieren"-Button).
+
+**Bitpanda-Listing-Filter (Schalter im Menü "Benachrichtigungen"):**
+"E-Mail-Empfehlungen nur für Bitpanda-gelistete Assets", Standard AN — da
+die Ausführung ohnehin nur über die Bitpanda-App erfolgt, wäre eine
+Empfehlung für ein dort nicht gelistetes Asset nicht direkt umsetzbar.
+Anders als Dark Mode **sofort wirksam ohne Neustart** (in
+`data/settings.json`, wird erst beim tatsächlichen Mailversand gelesen).
+Schlägt der Bitpanda-Listing-Abruf fehl, wird bewusst NICHT blockiert
+(P-10: lieber eine Mail zu viel als eine verlorene Empfehlung).
+
+**Schalter:** `config.yaml benachrichtigung.email.empfehlungen_aktiv`
+(zusätzlich zum globalen `benachrichtigung.email.aktiv`, gleiches Muster
+wie `marktscan.benachrichtigung_email` bei MS-1b).
+
+**Bewusst zurückgestellt:** eine gebündelte Tages-/Wochen-Zusammenfassung
+mit Performance-Rückblick (Backward-Tracking, `agent/krypto/
+backward_tracking.py`) wäre reizvoll, aber die Datenlage ist aktuell noch
+zu dünn für eine aussagekräftige Auswertung (Stand 2026-07-14: von 30
+Signalen haben 25 den Status "nicht_anwendbar", 0 haben tatsächlich
+Take-Profit/Stop-Loss erreicht) — wird revisitiert, sobald mehr echte
+Outcome-Daten vorliegen. Außerdem gilt Backward-Tracking bisher NUR für
+Spot-Signale, nicht für Hebel.
+
 ### Agent-Pipeline ("Signal berechnen") im Detail
 
 Zwei unterschiedliche Fehlerklassen: **(a) Groq liefert ungültiges/kaputtes JSON**
@@ -1024,12 +1071,27 @@ nur über die schwer auffindbare Logdatei sichtbar. Voraussetzung: Tailscale
 Notebook und Handy eingerichtet.
 
 **Was die Seite zeigt/kann:** Portfolio-Gesamtwert, Anzahl veralteter Preise,
-letzter Marktscan (Kandidaten/Treffer), die letzten Fehlerzeilen aus dem Log —
-plus zwei Aktions-Buttons: **„Preise aktualisieren“** (Krypto + Aktien/ETF/
-Rohstoffe zusammen) und **„Marktscan jetzt starten“**. Bewusst nur diese zwei
-in dieser Version — Backward-Tracking ist selten zeitkritisch, ein
-Bitpanda-Sync-Button wäre durch den echten authentifizierten API-Call
-sensibler, beides kann später nach demselben Muster ergänzt werden.
+letzter Marktscan (Kandidaten/Treffer), das gemeinsame LLM-Tagesbudget
+(Hebel/Marktscan/Spot-Rotation, siehe Abschnitt 14 „Hebel-Trading“ →
+Budget-Allocator) mit Aufteilung je Verbraucher, die letzten Fehlerzeilen aus
+dem Log — plus drei Aktions-Buttons: **„Preise aktualisieren“** (Krypto +
+Aktien/ETF/Rohstoffe zusammen), **„Marktscan jetzt starten“** und **„App neu
+starten (erzwingen)“**. Backward-Tracking bleibt bewusst ohne eigenen Button
+(selten zeitkritisch), ein Bitpanda-Sync-Button wäre durch den echten
+authentifizierten API-Call sensibler — beides kann später nach demselben
+Muster ergänzt werden.
+
+**Neustart-Bruecke zum Watchdog (2026-07-14):** `main.py` kann sich nicht
+selbst neu starten — ein hängender Tk-Mainloop kann sich nicht selbst
+beenden. Der Neustart-Button auf der Remote-Seite schreibt deshalb nur eine
+Flag-Datei (`data/watchdog_restart_requested.txt`), die der separate
+Watchdog-Prozess (Abschnitt 12) in seinem ohnehin laufenden 5-Sekunden-Takt
+aufgreift und ausführt — kein neuer Netzwerk-Port, keine neue Auth (nutzt den
+bestehenden Zugriffs-Token dieser Seite). Der Button fragt vorher per
+Bestätigungsdialog nach, da ein Neustart eine gerade laufende Analyse/
+Marktscan mitten drin abbricht. **Bekannte Grenze:** ist der Watchdog-Prozess
+selbst tot (nicht nur `main.py`), greift auch diese Brücke nicht — dann hilft
+nur physischer Zugriff oder ein Notebook-Neustart.
 
 **Technisch:** eingebettet in `main.py` als Hintergrund-Thread (`remote/server.py`,
 Flask) — kein separater Prozess, läuft im selben Prozess wie die Tkinter-App

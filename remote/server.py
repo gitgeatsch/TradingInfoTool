@@ -12,7 +12,9 @@ from __future__ import annotations
 
 import hmac
 import logging
+import os
 import threading
+from datetime import datetime, timezone
 from pathlib import Path
 
 from flask import Flask, Response, jsonify, request
@@ -23,6 +25,14 @@ from api.yfinance_client import YFinanceClient
 from remote.status import build_status
 
 DEFAULT_PORT = 8765
+
+# Neustart-Bruecke zum separaten Watchdog-Prozess (2026-07-14, siehe
+# monitor/watchdog.py::_monitor_loop()) - main.py kann sich nicht selbst neu
+# starten (Neustart eines haengenden Tk-Mainloops von innen ist nicht
+# moeglich), deshalb nur eine Flag-Datei schreiben, die der ohnehin alle 5 Sek.
+# pollende Watchdog aufgreift und ausfuehrt. Kein neuer Port/keine neue Auth -
+# nutzt den bestehenden Token-Check dieser Seite.
+RESTART_FLAG_PATH = Path(__file__).resolve().parent.parent / "data" / "watchdog_restart_requested.txt"
 
 logger = logging.getLogger(__name__)
 
@@ -63,10 +73,22 @@ _INDEX_HTML = """<!doctype html>
 </div>
 
 <div class="card">
+  <div class="row"><span>LLM-Budget heute</span><span id="budget-total">-</span></div>
+  <div class="row"><span>&nbsp;&nbsp;davon Hebel</span><span id="budget-hebel">-</span></div>
+  <div class="row"><span>&nbsp;&nbsp;davon Marktscan</span><span id="budget-marktscan">-</span></div>
+  <div class="row"><span>&nbsp;&nbsp;davon Spot-Rotation</span><span id="budget-spot">-</span></div>
+</div>
+
+<div class="card">
   <button id="btn-prices" onclick="triggerAction('refresh-prices')">Preise aktualisieren</button>
   <div id="status-prices" class="row"></div>
   <button id="btn-marktscan" onclick="triggerAction('marktscan')">Marktscan jetzt starten</button>
   <div id="status-marktscan" class="row"></div>
+</div>
+
+<div class="card">
+  <button class="danger" onclick="restartApp()">App neu starten (erzwingen)</button>
+  <div id="status-restart" class="row"></div>
 </div>
 
 <div class="card" id="errors-card" style="display:none">
@@ -104,6 +126,15 @@ async function resetLock(job) {
   refreshStatus();
 }
 
+async function restartApp() {
+  if (!confirm("App wirklich neu starten? Eine gerade laufende Analyse/Marktscan wird dabei abgebrochen.")) {
+    return;
+  }
+  const statusDiv = document.getElementById("status-restart");
+  await apiFetch("/api/restart-app", "POST");
+  statusDiv.textContent = "Neustart angefordert - Watchdog uebernimmt in wenigen Sekunden.";
+}
+
 function fmtMoney(value) {
   if (value === null || value === undefined) return "-";
   return value.toLocaleString("de-AT", { maximumFractionDigits: 2 }) + " EUR";
@@ -132,6 +163,14 @@ async function refreshStatus() {
   if (data.marktscan_last) {
     document.getElementById("marktscan-info").textContent =
       data.marktscan_last.kandidaten + " Kandidaten, " + data.marktscan_last.treffer + " Treffer";
+  }
+
+  if (data.budget_heute) {
+    const b = data.budget_heute;
+    document.getElementById("budget-total").textContent = b.verbraucht_gesamt + " / " + b.gesamt;
+    document.getElementById("budget-hebel").textContent = b.hebel;
+    document.getElementById("budget-marktscan").textContent = b.marktscan;
+    document.getElementById("budget-spot").textContent = b.spot;
   }
 
   for (const [action, jobs] of Object.entries(ACTION_JOBS)) {
@@ -260,6 +299,21 @@ def create_app(
             return jsonify({"error": "missing_job"}), 400
         released = background.force_release_lock(job_name)
         return jsonify({"released": released})
+
+    @app.route("/api/restart-app", methods=["POST"])
+    def api_restart_app():
+        """Schreibt nur die Flag-Datei fuer den Watchdog (siehe RESTART_FLAG_PATH
+        oben) - main.py fuehrt den Neustart NICHT selbst aus. Atomarer Write wie
+        beim GUI-Heartbeat (tmp-Datei + os.replace), damit der Watchdog nie einen
+        halb geschriebenen Inhalt liest."""
+        try:
+            tmp_path = RESTART_FLAG_PATH.with_suffix(".tmp")
+            tmp_path.write_text(datetime.now(timezone.utc).isoformat(), encoding="utf-8")
+            os.replace(tmp_path, RESTART_FLAG_PATH)
+        except OSError:
+            logger.exception("Neustart-Flag-Datei konnte nicht geschrieben werden")
+            return jsonify({"error": "flag_write_failed"}), 500
+        return jsonify({"requested": True}), 202
 
     return app
 

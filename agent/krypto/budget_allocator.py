@@ -50,6 +50,15 @@ class AllocationResult:
     uebersprungen_cooldown_marktscan: int = 0
     cerebras_calls_verbraucht: int = 0
     cerebras_budget_erschoepft: bool = False
+    # 2026-07-14 (Empfehlungs-E-Mails): die echten Signal-/HebelSignal-Objekte
+    # zu jedem schluessel aus hebel_verarbeitet/spot_verarbeitet - nur befuellt,
+    # wenn provider_je_call[schluessel] ebenfalls gesetzt wurde (also ein
+    # ECHTER LLM-Call stattfand, kein Gate-Skip). scheduler/background.py::
+    # hebel_screening_job() liest das aus, um E-Mails bei handlungsrelevanten
+    # Empfehlungen auszuloesen - budget_allocator.py selbst bleibt frei von
+    # E-Mail-Logik (gleiche Trennung wie bei marktscan.py/_notify_marktscan_
+    # kaufkandidaten()).
+    ergebnis_objekt: dict[str, object] = field(default_factory=dict)
 
 
 def _cooldown_grenze(cooldown_stunden: float) -> str:
@@ -174,6 +183,7 @@ def run_budget_allocator(
             if getattr(res, "gate_passed", True) is False:
                 return True
             result.provider_je_call[schluessel] = "groq"
+            result.ergebnis_objekt[schluessel] = res
             return True
         except Exception as exc:
             logger.info("Groq-Call für %s fehlgeschlagen (%s), versuche Cerebras", schluessel, exc)
@@ -189,6 +199,7 @@ def run_budget_allocator(
             cerebras_verbraucht += 1
             result.cerebras_calls_verbraucht = cerebras_verbraucht
             result.provider_je_call[schluessel] = "cerebras"
+            result.ergebnis_objekt[schluessel] = res
             return True
         except Exception as exc:
             logger.warning("Cerebras-Call für %s ebenfalls fehlgeschlagen: %s", schluessel, exc)

@@ -166,6 +166,17 @@ class TradingInfoToolApp(tk.Tk):
         )
         menubar.add_cascade(label="Ansicht", menu=view_menu)
 
+        benachrichtigung_menu = tk.Menu(menubar, tearoff=0)
+        self._email_nur_bitpanda_var = tk.BooleanVar(
+            value=self._settings["email_empfehlungen_nur_bitpanda"]
+        )
+        benachrichtigung_menu.add_checkbutton(
+            label="E-Mail-Empfehlungen nur für Bitpanda-gelistete Assets",
+            variable=self._email_nur_bitpanda_var,
+            command=self._toggle_email_nur_bitpanda,
+        )
+        menubar.add_cascade(label="Benachrichtigungen", menu=benachrichtigung_menu)
+
         self.config(menu=menubar)
 
     def _toggle_dark_mode(self) -> None:
@@ -178,6 +189,14 @@ class TradingInfoToolApp(tk.Tk):
             "Dark Mode",
             "Einstellung gespeichert. Bitte TradingInfoTool neu starten, damit die Änderung wirkt.",
         )
+
+    def _toggle_email_nur_bitpanda(self) -> None:
+        """Anders als Dark Mode SOFORT wirksam, kein Neustart noetig - der
+        Hintergrund-Job liest die Einstellung erst beim tatsaechlichen
+        E-Mail-Versand (siehe scheduler/background.py::
+        _ist_email_relevantes_asset())."""
+        self._settings["email_empfehlungen_nur_bitpanda"] = self._email_nur_bitpanda_var.get()
+        ui_settings.save_settings(self._settings)
 
     def _build_watchlist_tab(self, parent) -> ttk.Frame:
         frame = ttk.Frame(parent)

@@ -10,7 +10,15 @@ from pathlib import Path
 
 SETTINGS_PATH = Path(__file__).resolve().parent.parent / "data" / "settings.json"
 
-_DEFAULTS = {"dark_mode": False}
+_DEFAULTS = {
+    "dark_mode": False,
+    # 2026-07-14: Empfehlungs-E-Mails (Spot/Hebel) nur fuer aktuell Bitpanda-
+    # gelistete Assets, da Umsetzung manuell ueber die Bitpanda-App erfolgt -
+    # siehe scheduler/background.py::_ist_email_relevantes_asset(). Anders als
+    # dark_mode LIVE wirksam (wird erst beim tatsaechlichen E-Mail-Versand aus
+    # dem Hintergrund-Job gelesen, kein Neustart noetig).
+    "email_empfehlungen_nur_bitpanda": True,
+}
 
 
 def load_settings() -> dict:

@@ -477,6 +477,119 @@ def _notify_marktscan_kaufkandidaten(kaufkandidaten: list) -> None:
         logger.exception("Marktscan-Kaufkandidaten-E-Mail fehlgeschlagen")
 
 
+def _ist_email_relevantes_asset(symbol: str, watchlist: list, bitpanda_assets: list | None) -> bool:
+    """Bitpanda-Listing-Filter (2026-07-14, In-App-Schalter, siehe ui/app.py::
+    _toggle_email_nur_bitpanda(), Standard AN) - Umsetzung erfolgt manuell ueber
+    die Bitpanda-App, eine Empfehlung fuer ein dort nicht gelistetes Asset waere
+    also ohnehin nicht direkt ausfuehrbar. ui/settings.py hat keine tkinter-
+    Abhaengigkeit, deshalb hier ohne Probleme aus dem Hintergrund-Job lesbar.
+
+    WatchlistAsset speichert KEIN bitpanda_gelistet-Feld (das wird bei jedem
+    Signal-Lauf frisch per API abgefragt, siehe agent/krypto/pipeline.py::
+    generate_signal()) - bitpanda_assets wird deshalb einmal pro Job-Lauf vom
+    Aufrufer (hebel_screening_job()) geholt und hier durchgereicht, statt es
+    pro Signal erneut abzufragen."""
+    import ui.settings as ui_settings
+
+    settings = ui_settings.load_settings()
+    if not settings.get("email_empfehlungen_nur_bitpanda", True):
+        return True
+    if bitpanda_assets is None:
+        # P-10: Abruf fehlgeschlagen -> nicht blockieren, lieber eine Mail zu
+        # viel als eine handlungsrelevante Empfehlung zu verlieren.
+        return True
+    asset = next((a for a in watchlist if a.symbol == symbol), None)
+    if asset is None:
+        return True
+    from api.bitpanda import is_listed
+
+    return is_listed(symbol, bitpanda_assets, name=asset.name)
+
+
+def _formatiere_top_gruende(signal) -> str:
+    gruende = [getattr(signal, f"top_grund_{i}_text", None) for i in range(1, 6)]
+    return "\n".join(f"- {g}" for g in gruende if g)
+
+
+def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None) -> None:
+    """E-Mail bei handlungsrelevanter Spot-Empfehlung (2026-07-14, Erweiterung
+    von U-8/P-7 - Empfehlungen sollen den Nutzer auch erreichen, wenn er selten
+    am Notebook ist). HALTEN loest bewusst NIE eine Mail aus. Eigener try/except
+    (P-10) - ein E-Mail-Fehler darf den Budget-Allocator-Lauf nicht nachtraeglich
+    als fehlgeschlagen erscheinen lassen."""
+    from agent.krypto.analyst import REQUIRED_ACTIONS
+
+    if signal.action not in REQUIRED_ACTIONS or signal.action == "HALTEN":
+        return
+    if not _ist_email_relevantes_asset(signal.symbol, watchlist, bitpanda_assets):
+        return
+    try:
+        import config as config_module
+        from api.email_notify import send_notification_email
+
+        email_cfg = config_module.load_config().get("benachrichtigung", {}).get("email", {})
+        if not email_cfg.get("aktiv", False) or not email_cfg.get("empfehlungen_aktiv", False):
+            return
+        empfaenger = email_cfg.get("empfaenger")
+        if not empfaenger:
+            return
+
+        body = (
+            f"Aktion: {signal.action}\n"
+            f"Konfidenz: {signal.confidence_pct}%\n\n"
+            f"{signal.short_reasoning or ''}\n\n"
+            f"Top-Gründe:\n{_formatiere_top_gruende(signal)}\n\n"
+            f"Entry: {signal.entry_eur_von}-{signal.entry_eur_bis} EUR\n"
+            f"Stop-Loss: {signal.stop_loss_eur_von}-{signal.stop_loss_eur_bis} EUR\n"
+            f"Take-Profit: {signal.take_profit_eur_von}-{signal.take_profit_eur_bis} EUR\n\n"
+            "Details im Signale-Tab der App. Ausführung manuell über die Bitpanda-App."
+        )
+        send_notification_email(f"TradingInfoTool: {signal.action} {signal.symbol}", body, empfaenger)
+    except Exception:
+        logger.exception("Spot-Empfehlungs-E-Mail für %s fehlgeschlagen", signal.symbol)
+
+
+def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None) -> None:
+    """Analog _notify_spot_signal() fuer Hebel-Empfehlungen (7-Aktionen-
+    Vokabular statt 5, siehe agent/krypto/hebel_analyst.REQUIRED_HEBEL_
+    ACTIONS)."""
+    from agent.krypto.hebel_analyst import REQUIRED_HEBEL_ACTIONS
+
+    if signal.action not in REQUIRED_HEBEL_ACTIONS or signal.action == "HALTEN":
+        return
+    if not _ist_email_relevantes_asset(signal.symbol, watchlist, bitpanda_assets):
+        return
+    try:
+        import config as config_module
+        from api.email_notify import send_notification_email
+
+        email_cfg = config_module.load_config().get("benachrichtigung", {}).get("email", {})
+        if not email_cfg.get("aktiv", False) or not email_cfg.get("empfehlungen_aktiv", False):
+            return
+        empfaenger = email_cfg.get("empfaenger")
+        if not empfaenger:
+            return
+
+        hinweis = f"\nHinweis: {signal.ausfuehrbarkeit_hinweis}\n" if signal.ausfuehrbarkeit_hinweis else ""
+        body = (
+            f"Richtung: {signal.richtung}, Aktion: {signal.action}\n"
+            f"Hebel: {signal.hebel_final}x, Konfidenz: {signal.confidence_pct}%\n\n"
+            f"{signal.short_reasoning or ''}\n\n"
+            f"Top-Gründe:\n{_formatiere_top_gruende(signal)}\n\n"
+            f"Entry: {signal.entry_eur_von}-{signal.entry_eur_bis} EUR\n"
+            f"Stop-Loss: {signal.stop_loss_eur_von}-{signal.stop_loss_eur_bis} EUR\n"
+            f"Take-Profit: {signal.take_profit_eur_von}-{signal.take_profit_eur_bis} EUR\n"
+            f"Geschätzter Liquidationspreis: {signal.liquidationspreis_geschaetzt_usd} USD\n"
+            f"{hinweis}\n"
+            "Details im Hebel-Tab der App. Ausführung manuell über die Bitpanda-App."
+        )
+        send_notification_email(
+            f"TradingInfoTool: Hebel {signal.action} {signal.symbol} ({signal.richtung})", body, empfaenger,
+        )
+    except Exception:
+        logger.exception("Hebel-Empfehlungs-E-Mail für %s fehlgeschlagen", signal.symbol)
+
+
 def _refresh_hebel_position_liquidation_prices(conn) -> None:
     """Fuer jede aktuell offene Margin-Position den geschaetzten Liquidationspreis
     mit den ECHTEN verstrichenen Tagen neu berechnen (2026-07-14, Phase 3) -
@@ -571,6 +684,19 @@ def hebel_screening_job(
                 len(allocation.spot_verarbeitet), len(allocation.fehlgeschlagen),
                 allocation.cerebras_calls_verbraucht, allocation.cerebras_budget_erschoepft,
             )
+            if allocation.ergebnis_objekt:
+                try:
+                    from api.bitpanda import get_listed_assets
+
+                    bitpanda_assets = get_listed_assets()
+                except Exception as exc:
+                    bitpanda_assets = None
+                    logger.info("Bitpanda-Listing-Abruf für Empfehlungs-E-Mails fehlgeschlagen: %s", exc)
+                for schluessel, ergebnis in allocation.ergebnis_objekt.items():
+                    if schluessel.startswith("hebel:"):
+                        _notify_hebel_signal(ergebnis, watchlist, bitpanda_assets)
+                    elif schluessel.startswith("spot:"):
+                        _notify_spot_signal(ergebnis, watchlist, bitpanda_assets)
         else:
             logger.info("Budget-Allocator übersprungen (kein Groq- und/oder Cerebras-Client konfiguriert)")
     except Exception as exc:

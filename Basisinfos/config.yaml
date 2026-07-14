@@ -543,6 +543,11 @@ benachrichtigung:
   email:
     aktiv: true
     empfaenger: gernotspiessmaier@gmail.com
+    empfehlungen_aktiv: true           # 2026-07-14: E-Mail bei handlungsrelevanten
+      # Spot-/Hebel-Empfehlungen (KAUFEN/VERKAUFEN/NACHKAUFEN/TAUSCHEN bzw.
+      # ERÖFFNEN/HEBEL_ERHÖHEN/HEBEL_SENKEN/TEILVERKAUF/SCHLIESSEN) - HALTEN
+      # loest bewusst NIE eine Mail aus. Bitpanda-Listing-Filter separat als
+      # In-App-Schalter (Menü "Benachrichtigungen"), nicht hier.
     job_ausfall_cooldown_minuten: 60   # [OFFEN] Spam-Schutz: derselbe Job meldet
       # sich hoechstens 1x pro Cooldown-Fenster, auch bei einem mehrstuendigen
       # Ausfall (siehe scheduler/background.py::_notify_job_failure())

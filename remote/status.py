@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
+import config as config_module
 import database.db as db
 import scheduler.background as background
 from staleness import is_price_stale
@@ -28,6 +29,7 @@ class RemoteStatus:
     recent_errors: list[str] = field(default_factory=list)
     jobs_running: dict[str, bool] = field(default_factory=dict)
     jobs_running_seit_minuten: dict[str, float | None] = field(default_factory=dict)
+    budget_heute: dict | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -41,6 +43,7 @@ class RemoteStatus:
             "recent_errors": self.recent_errors,
             "jobs_running": self.jobs_running,
             "jobs_running_seit_minuten": self.jobs_running_seit_minuten,
+            "budget_heute": self.budget_heute,
         }
 
 
@@ -104,7 +107,27 @@ def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, erro
         recent_errors=_tail_log_errors(log_path, error_tail_lines),
         jobs_running=jobs_running,
         jobs_running_seit_minuten=jobs_running_seit_minuten,
+        budget_heute=_get_budget_heute(conn),
     )
+
+
+def _get_budget_heute(conn: sqlite3.Connection) -> dict:
+    """Budget-Sichtbarkeit fuer alle 3 Tiers des gemeinsamen Tagesbudgets
+    (docs/budget_queue_design.md) - reiner Lesezugriff auf bereits vorhandene
+    Zaehlfunktionen, keine neue Logik. taegliches_budget_gesamt ist EIN
+    gemeinsamer Deckel ueber Hebel+Marktscan+Spot (kein Budget pro Tier)."""
+    config_dict = config_module.load_config()
+    gesamt = config_dict.get("budget_allocator", {}).get("taegliches_budget_gesamt", 15)
+    hebel = db.count_real_hebel_signals_today(conn)
+    marktscan = db.count_real_marktscan_writeups_today(conn)
+    spot = db.count_real_signals_today(conn)
+    return {
+        "hebel": hebel,
+        "marktscan": marktscan,
+        "spot": spot,
+        "verbraucht_gesamt": hebel + marktscan + spot,
+        "gesamt": gesamt,
+    }
 
 
 def _get_marktscan_last(conn: sqlite3.Connection) -> dict | None:
