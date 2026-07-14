@@ -54,9 +54,25 @@ risiko:
     rohstoffe: 0
   hebel:
     erlaubt: true
-    nur_long: true                     # RM-10: kein Short
-    max_hebel: 3                       # [OFFEN] Vorschlag, an Volatilitaet koppeln
-    liquidationspreis_ausweisen: true  # RM-11
+    nur_long: false                    # RM-10 (2026-07-14 korrigiert): Short bleibt Teil
+                                        # der Agent-Logik (rein beratend), nur Bitpanda
+                                        # kann Short aktuell nicht ausfuehren
+    max_hebel: 10                      # 2026-07-14 kalibriert gegen echte Bitpanda-
+                                        # Margin-Historie (185 Positionen, 2-10x genutzt,
+                                        # Oe 6,44x je Einzelkauf) - vorher Platzhalter "3"
+    risiko_pro_trade_prozent_hebel: 1  # RM-1-Aequivalent fuer Hebel, bewusst niedriger als
+                                        # Spot (2%) wegen Liquidations-Gap-Risiko +
+                                        # laufender Finanzierungsgebuehr, siehe
+                                        # docs/hebel_positionsformel.md
+    liquidationspreis_ausweisen: true  # RM-11 - nur Schaetzung, Bitpanda-Formel nicht
+                                        # oeffentlich, siehe docs/hebel_positionsformel.md
+    liquidations_sicherheitsmarge_relativ: 0.175  # RM-11, Mittelwert 15-20%-Spanne, [OFFEN]
+    max_hebel_faellt_regime_krise_extrem_auf_null: true  # AZ-7
+    kontra_konservativ_faktor: 0.6  # [OFFEN] AZ-7-Konservativ-Bias NUR fuer Zweig 2
+                                    # (Kontra) - daempft max_sicherer_hebel zusaetzlich,
+                                    # gilt NICHT fuer Zweig 1 (Trendfolge), siehe
+                                    # docs/hebel_positionsformel.md Sanity-Check-Korrektur
+                                    # vom 2026-07-14
 
 # --- Watchlist / Basiswerte (siehe Spezifikation Kap. 4) ---
 # Quelle: Basisinfos/Assets.xlsx (Erstimport Stand 2026-07-01), 41 Assets.
@@ -478,6 +494,34 @@ signale_batch:
   aktiv: true
   taegliches_budget: 15                # konservativ unter dem gemessenen Maximum (~15-18)
   benachrichtigung_email: true          # E-Mail nur bei mind. 1 aktionablem (nicht HALTEN) Ergebnis
+
+# --- Hebel-Screening (2026-07-14, Phase 1, siehe docs/hebel_positionsformel.md) ---
+# Deterministisches Zwei-Zweige-Scoring (Trendfolge + Kontra), KEIN Groq-Aufruf hier -
+# reine Vorpruefung alle 15 Min, analog zur Marktscan-Stufe-B-Bewertung.
+hebel_screening:
+  aktiv: true
+  intervall_minuten: 15
+  oi_lookback_stunden: 4               # Fenster fuer die OI-%-Aenderung (Trendfolge-Zweig)
+  trendfolge:
+    oi_aenderung_schwelle_prozent: 3.0       # [OFFEN] Platzhalter, keine OI-Historie zum Kalibrieren vorhanden
+    kursaenderung_schwelle_prozent: 2.0       # [OFFEN] angelehnt an Marktscan-Muster
+    funding_rate_noch_nicht_extrem: 0.0001    # wiederverwendet aus anticyclic.py, live gegengeprueft
+  kontra:
+    funding_rate_extrem_schwelle: 0.0001       # wie oben
+    long_bias_extrem_oben_prozent: 75.0         # angehoben von anticyclic.py's 65% - Live-Check
+                                                  # zeigte 65% ist bei Binance schon Alltag, kein Extrem
+    long_bias_extrem_unten_prozent: 25.0
+  score_schwelle_kandidat: 70            # ab hier gilt ein Trigger als "Kandidat"
+  gewichte:                               # [OFFEN] noch nicht final festgelegt
+    trendfolge:
+      gewicht_oi_aenderung: 0.3
+      gewicht_kursaenderung: 0.3
+      gewicht_funding_rate: 0.2
+      gewicht_konfluenz: 0.2
+    kontra:
+      gewicht_funding_rate_extrem: 0.35
+      gewicht_long_bias_extrem: 0.35
+      gewicht_wende_anzeichen: 0.3
 
 # --- E-Mail-Benachrichtigung (U-8, 2026-07-12, siehe Regelwerksmanual.md Kap. 12;
 # Zugangsdaten NUR in .env, nie hier) ---

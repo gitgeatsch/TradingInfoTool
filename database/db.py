@@ -6,10 +6,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from database.models import (
+    HebelPosition,
+    HebelTrigger,
     Holding,
     MacroSnapshot,
     MarktscanCandidate,
     OhlcPoint,
+    OpenInterestSnapshot,
     PriceHistoryPoint,
     PriceSnapshot,
     Signal,
@@ -169,6 +172,62 @@ CREATE TABLE IF NOT EXISTS marktscan_candidates (
     UNIQUE(coingecko_id, scan_run_id)
 );
 CREATE INDEX IF NOT EXISTS idx_marktscan_status ON marktscan_candidates(status, discovered_at);
+
+CREATE TABLE IF NOT EXISTS open_interest_snapshot (
+    symbol              TEXT NOT NULL,
+    exchange            TEXT NOT NULL,
+    open_interest       REAL,
+    open_interest_usd   REAL,
+    funding_rate        REAL,
+    long_account_pct    REAL,
+    fetched_at          TEXT NOT NULL,
+    PRIMARY KEY (symbol, exchange, fetched_at)
+);
+CREATE INDEX IF NOT EXISTS idx_oi_snapshot_symbol_fetched ON open_interest_snapshot(symbol, exchange, fetched_at);
+
+CREATE TABLE IF NOT EXISTS hebel_triggers (
+    id                          INTEGER PRIMARY KEY AUTOINCREMENT,
+    symbol                      TEXT NOT NULL,
+    richtung                    TEXT NOT NULL,
+    screened_at                 TEXT NOT NULL,
+    screening_run_id            TEXT NOT NULL,
+    trigger_zweig               TEXT,
+    score_gesamt                REAL,
+    score_details_json          TEXT,
+    oi_change_pct_lookback      REAL,
+    kursaenderung_pct_lookback  REAL,
+    funding_rate_aktuell        REAL,
+    long_konten_anteil_prozent  REAL,
+    ist_kandidat                INTEGER NOT NULL DEFAULT 0,
+    status                      TEXT NOT NULL DEFAULT 'neu',
+    status_geaendert_am         TEXT,
+    -- trigger_zweig gehoert zum UNIQUE-Schluessel: Trendfolge UND Kontra koennen
+    -- unabhaengig voneinander dieselbe Richtung fuer dasselbe Symbol vorschlagen
+    -- (z.B. beide SHORT, aus unterschiedlichen Gruenden) - live gefunden 2026-07-14
+    -- beim Test gegen die komplette Watchlist, siehe docs/hebel_positionsformel.md.
+    UNIQUE(symbol, richtung, trigger_zweig, screening_run_id)
+);
+CREATE INDEX IF NOT EXISTS idx_hebel_triggers_kandidat ON hebel_triggers(ist_kandidat, screened_at);
+
+CREATE TABLE IF NOT EXISTS hebel_positions (
+    id                                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    symbol                              TEXT NOT NULL,
+    richtung                            TEXT NOT NULL DEFAULT 'LONG',
+    status                              TEXT NOT NULL DEFAULT 'offen',
+    eroeffnet_am                        TEXT NOT NULL,
+    geschlossen_am                      TEXT,
+    hebel_effektiv                      REAL,
+    positionswert_eur                   REAL,
+    kreditbetrag_eur                    REAL,
+    eigenkapital_eur                    REAL,
+    positionsmenge                      REAL,
+    letzte_transaktion_unix_timestamp   INTEGER NOT NULL,
+    liquidationspreis_geschaetzt_eur    REAL,
+    liquidationspreis_berechnet_am      TEXT,
+    quelle_tags_json                    TEXT,
+    UNIQUE(symbol, eroeffnet_am)
+);
+CREATE INDEX IF NOT EXISTS idx_hebel_positions_status ON hebel_positions(status, symbol);
 """
 
 
@@ -1011,3 +1070,177 @@ def get_latest_prices(conn: sqlite3.Connection) -> dict[str, PriceSnapshot]:
         """
     ).fetchall()
     return {row["symbol"]: PriceSnapshot(**dict(row)) for row in rows}
+
+
+# --- Hebel-Screening (2026-07-14, siehe docs/hebel_positionsformel.md) ---
+
+
+def insert_oi_snapshot(conn: sqlite3.Connection, snap: OpenInterestSnapshot) -> None:
+    """Ein Snapshot pro Aufruf (nicht executemany/Liste) - fetch_and_store_oi_snapshot()
+    in agent/krypto/hebel_screening.py ruft das je Boerse einzeln auf, analog zum
+    bisherigen anticyclic.py-Abrufmuster (jede Boerse einzeln try/except)."""
+    conn.execute(
+        "INSERT INTO open_interest_snapshot "
+        "(symbol, exchange, open_interest, open_interest_usd, funding_rate, long_account_pct, fetched_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?) "
+        "ON CONFLICT(symbol, exchange, fetched_at) DO UPDATE SET "
+        "open_interest = excluded.open_interest, open_interest_usd = excluded.open_interest_usd, "
+        "funding_rate = excluded.funding_rate, long_account_pct = excluded.long_account_pct",
+        (
+            snap.symbol, snap.exchange, snap.open_interest, snap.open_interest_usd,
+            snap.funding_rate, snap.long_account_pct, snap.fetched_at,
+        ),
+    )
+    conn.commit()
+
+
+def get_oi_history(
+    conn: sqlite3.Connection, symbol: str, exchange: str, min_fetched_at: str | None = None
+) -> list[OpenInterestSnapshot]:
+    if min_fetched_at is not None:
+        rows = conn.execute(
+            "SELECT symbol, exchange, open_interest, open_interest_usd, funding_rate, "
+            "long_account_pct, fetched_at FROM open_interest_snapshot "
+            "WHERE symbol = ? AND exchange = ? AND fetched_at >= ? ORDER BY fetched_at ASC",
+            (symbol, exchange, min_fetched_at),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT symbol, exchange, open_interest, open_interest_usd, funding_rate, "
+            "long_account_pct, fetched_at FROM open_interest_snapshot "
+            "WHERE symbol = ? AND exchange = ? ORDER BY fetched_at ASC",
+            (symbol, exchange),
+        ).fetchall()
+    return [OpenInterestSnapshot(**dict(row)) for row in rows]
+
+
+_HEBEL_TRIGGER_COLUMNS = (
+    "symbol", "richtung", "screened_at", "screening_run_id", "trigger_zweig",
+    "score_gesamt", "score_details_json", "oi_change_pct_lookback",
+    "kursaenderung_pct_lookback", "funding_rate_aktuell", "long_konten_anteil_prozent",
+    "ist_kandidat", "status", "status_geaendert_am",
+)
+
+
+def insert_hebel_trigger(conn: sqlite3.Connection, trigger: HebelTrigger) -> int:
+    """Plain INSERT (kein upsert) - jeder Screening-Tick ist eine eigene Bewertung,
+    kein Merge-Bedarf wie bei marktscan_candidates (dort koennen Trending UND
+    Top-Gainers denselben Coin im selben Lauf finden, hier nicht - ein Lauf bewertet
+    jedes Symbol/Richtung-Paar genau einmal)."""
+    placeholders = ", ".join("?" for _ in _HEBEL_TRIGGER_COLUMNS)
+    values = [
+        int(getattr(trigger, col)) if col == "ist_kandidat" else getattr(trigger, col)
+        for col in _HEBEL_TRIGGER_COLUMNS
+    ]
+    cursor = conn.execute(
+        f"INSERT INTO hebel_triggers ({', '.join(_HEBEL_TRIGGER_COLUMNS)}) VALUES ({placeholders})",
+        values,
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def _row_to_hebel_trigger(row: sqlite3.Row) -> HebelTrigger:
+    data = dict(row)
+    data["ist_kandidat"] = bool(data["ist_kandidat"])
+    return HebelTrigger(**data)
+
+
+def get_pending_hebel_candidates(conn: sqlite3.Connection) -> list[HebelTrigger]:
+    """Neuester Trigger je (symbol, richtung) mit ist_kandidat=1 UND status='neu' -
+    fuer den kuenftigen Budget-Allocator (Tier 1). Self-Join analog
+    get_latest_real_signal_per_symbol(), aber zusaetzlich nach richtung gruppiert,
+    da LONG und SHORT desselben Symbols unabhaengige Kandidaten sein koennen."""
+    rows = conn.execute(
+        """
+        SELECT t.* FROM hebel_triggers t
+        INNER JOIN (
+            SELECT symbol, richtung, MAX(screened_at) AS max_screened_at
+            FROM hebel_triggers
+            WHERE ist_kandidat = 1 AND status = 'neu'
+            GROUP BY symbol, richtung
+        ) latest
+        ON t.symbol = latest.symbol AND t.richtung = latest.richtung
+           AND t.screened_at = latest.max_screened_at
+        WHERE t.ist_kandidat = 1 AND t.status = 'neu'
+        ORDER BY t.score_gesamt DESC
+        """
+    ).fetchall()
+    return [_row_to_hebel_trigger(row) for row in rows]
+
+
+def update_hebel_trigger_status(conn: sqlite3.Connection, trigger_id: int, status: str) -> None:
+    conn.execute(
+        "UPDATE hebel_triggers SET status = ?, status_geaendert_am = ? WHERE id = ?",
+        (status, _now_iso(), trigger_id),
+    )
+    conn.commit()
+
+
+_HEBEL_POSITION_COLUMNS = (
+    "symbol", "richtung", "status", "eroeffnet_am", "geschlossen_am",
+    "hebel_effektiv", "positionswert_eur", "kreditbetrag_eur", "eigenkapital_eur",
+    "positionsmenge", "letzte_transaktion_unix_timestamp", "liquidationspreis_geschaetzt_eur",
+    "liquidationspreis_berechnet_am", "quelle_tags_json",
+)
+
+
+def upsert_hebel_position(conn: sqlite3.Connection, pos: HebelPosition) -> int:
+    """`(symbol, eroeffnet_am)` identifiziert eine Position eindeutig - ein erneuter
+    Sync derselben (noch offenen oder inzwischen geschlossenen) Position aktualisiert
+    dieselbe Zeile, analog upsert_marktscan_candidate()."""
+    placeholders = ", ".join("?" for _ in _HEBEL_POSITION_COLUMNS)
+    update_clause = ", ".join(
+        f"{col} = excluded.{col}"
+        for col in _HEBEL_POSITION_COLUMNS
+        if col not in ("symbol", "eroeffnet_am")
+    )
+    values = [getattr(pos, col) for col in _HEBEL_POSITION_COLUMNS]
+    cursor = conn.execute(
+        f"INSERT INTO hebel_positions ({', '.join(_HEBEL_POSITION_COLUMNS)}) "
+        f"VALUES ({placeholders}) "
+        f"ON CONFLICT(symbol, eroeffnet_am) DO UPDATE SET {update_clause}",
+        values,
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def _row_to_hebel_position(row: sqlite3.Row) -> HebelPosition:
+    return HebelPosition(**dict(row))
+
+
+def get_open_hebel_positions(conn: sqlite3.Connection, symbol: str | None = None) -> list[HebelPosition]:
+    if symbol is not None:
+        rows = conn.execute(
+            "SELECT * FROM hebel_positions WHERE status = 'offen' AND symbol = ? ORDER BY eroeffnet_am ASC",
+            (symbol,),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT * FROM hebel_positions WHERE status = 'offen' ORDER BY eroeffnet_am ASC"
+        ).fetchall()
+    return [_row_to_hebel_position(row) for row in rows]
+
+
+def get_hebel_position_last_synced_unix(conn: sqlite3.Connection) -> int | None:
+    """Globaler Wasserstand, analog get_bitpanda_avg_cost_last_synced_unix() -
+    Bitpanda liefert Transaktionen ueber alle Symbole gemischt, neueste zuerst."""
+    row = conn.execute(
+        "SELECT value FROM meta WHERE key = 'hebel_position_last_synced_unix'"
+    ).fetchone()
+    if row is None or row["value"] is None:
+        return None
+    try:
+        return int(row["value"])
+    except ValueError:
+        return None
+
+
+def set_hebel_position_last_synced_unix(conn: sqlite3.Connection, unix_timestamp: int) -> None:
+    conn.execute(
+        "INSERT INTO meta (key, value) VALUES ('hebel_position_last_synced_unix', ?) "
+        "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        (str(unix_timestamp),),
+    )
+    conn.commit()

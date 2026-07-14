@@ -293,3 +293,78 @@ class OhlcPoint:
     close: float
     volume: float
     fetched_at: str
+
+
+@dataclass
+class OpenInterestSnapshot:
+    """Zeitreihen-Punkt fuer Open Interest/Funding-Rate/Long-Konten-Anteil je
+    Boerse (Hebel-Screening, 2026-07-14, siehe docs/hebel_positionsformel.md).
+    Bisher wurde OI nur live/on-demand in agent/krypto/anticyclic.py::assess()
+    abgerufen, nie gespeichert - fuer die %-Aenderung uebers Lookback-Fenster
+    (Trendfolge-Zweig) braucht es eine echte Historie. Wie price_history_ohlc
+    KEINE Pruning-Logik (Zeilen akkumulieren dauerhaft)."""
+    symbol: str
+    exchange: str  # 'binance'|'bybit'|'okx'
+    fetched_at: str  # volle ISO-Zeit (nicht nur Datum - Lookback ist in Stunden)
+    open_interest: float | None = None
+    open_interest_usd: float | None = None  # nur OKX liefert das direkt
+    funding_rate: float | None = None
+    long_account_pct: float | None = None
+
+
+@dataclass
+class HebelTrigger:
+    """Ein Eintrag pro Hebel-Screening-Tick (agent/krypto/hebel_screening.py,
+    alle 15 Min) - analog MarktscanCandidate ein Lifecycle-Datensatz mit
+    status, aber EIN Eintrag PRO LAUF (nicht upsert-gemergt), da jeder
+    Screening-Tick eine eigene Bewertung ist. `richtung` ist hier die vom
+    Screening implizierte Richtung, keine KI-Entscheidung."""
+    symbol: str
+    richtung: str  # 'LONG'|'SHORT'
+    screened_at: str
+    screening_run_id: str
+    id: int | None = None
+    trigger_zweig: str | None = None  # 'trendfolge'|'kontra'|None
+    score_gesamt: float | None = None
+    score_details_json: str | None = None
+    oi_change_pct_lookback: float | None = None
+    kursaenderung_pct_lookback: float | None = None
+    funding_rate_aktuell: float | None = None
+    long_konten_anteil_prozent: float | None = None
+    ist_kandidat: bool = False
+    # Lifecycle: 'neu'|'an_llm_uebergeben'|'llm_generiert'|'budget_erschoepft_uebersprungen'
+    status: str = "neu"
+    status_geaendert_am: str | None = None
+
+
+@dataclass
+class HebelPosition:
+    """Rekonstruierter Bitpanda-Margin-Positions-Lebenszyklus (importer/
+    bitpanda_margin_positions.py, 2026-07-14, siehe docs/hebel_positionsformel.md).
+    Bitpanda kennzeichnet Liquidationen nicht separat (identisches Tag wie
+    normaler Close) - `status='wahrscheinlich_liquidiert'` ist ein statistischer
+    Befund (Gebuehren-Anomalie), keine von Bitpanda bestaetigte Tatsache.
+    Die Zeile MIT status='offen' ist selbst der Akkumulator-Zustand zwischen
+    inkrementellen Syncs (kein separates Compute-Objekt wie bei AvgCostResult).
+    liquidationspreis_geschaetzt_eur ist bewusst EUR (nicht USD wie sonst im
+    Hebel-System ueblich) - Bitpanda-Margin-Trades sind EUR-denominiert
+    (trade_fiat_id=1), eine Umrechnung waere hier eine zusaetzliche, ungenutzte
+    Fehlerquelle ohne Mehrwert."""
+    symbol: str
+    richtung: str  # 'LONG' - Bitpanda fuehrt aktuell kein Short aus
+    status: str  # 'offen'|'geschlossen'|'wahrscheinlich_liquidiert'
+    eroeffnet_am: str
+    letzte_transaktion_unix_timestamp: int
+    id: int | None = None
+    geschlossen_am: str | None = None
+    hebel_effektiv: float | None = None
+    positionswert_eur: float | None = None
+    kreditbetrag_eur: float | None = None
+    eigenkapital_eur: float | None = None
+    # Aggregierte gekaufte Menge (Summe trade_amount_cryptocoin ueber alle Open-
+    # Tranchen) - ermoeglicht einen effektiven Einstandspreis (positionswert_eur /
+    # positionsmenge) fuer die Liquidationspreis-Neuberechnung offener Positionen.
+    positionsmenge: float | None = None
+    liquidationspreis_geschaetzt_eur: float | None = None
+    liquidationspreis_berechnet_am: str | None = None
+    quelle_tags_json: str | None = None

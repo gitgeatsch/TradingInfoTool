@@ -47,7 +47,7 @@ Diese vier stehen über allen anderen Regeln — jede andere Regel muss sich dar
 | RM-6 | Trailing-Stop | erlaubt | Als Option vorhanden, keine automatische Durchsetzung |
 | RM-7 | Drawdown-Notbremse | — | **OFFEN**, siehe Z-3 |
 | RM-8/RM-9 | Risiko-Score je Asset (aus Volatilität, Liquidität, BTC-Korrelation, Projektreife) → höheres Risiko = kleinere erlaubte Position | — | **OFFEN**, noch nicht gebaut |
-| RM-10/RM-11 | Hebel: nur Long, max. **3x**, Liquidationspreis muss ausgewiesen werden | konfiguriert | **DEAKTIVIERT** (Strategie S-6 aus) — eigenes, noch zu führendes Thema |
+| RM-10/RM-11 | Hebel: Long **und** Short (Short nur beratend, Bitpanda kann es noch nicht ausführen), max. **10x** (2026-07-14 kalibriert), eigenes Risiko-pro-Trade von **1 %** (statt 2 % bei Spot), Liquidationspreis als Schätzung ausgewiesen | Formel/Regelwerk fertig entschieden, **noch nicht als Code gebaut** | **DEAKTIVIERT** (Strategie S-6 aus) — volles Design in Kap. 14, `docs/hebel_positionsformel.md` |
 
 **Unantastbar (RG-6):** Weder Nutzer noch KI dürfen RM-1, RM-5 oder Z-3 per Override
 abschalten — das sind die harten Leitplanken, die auch eine künftige KI-gestützte
@@ -1141,18 +1141,84 @@ gegen die echte DB verifiziert: Gesamtwert-Basis stieg um ~1.949 USD (die
 gestakten Nicht-ETH-Bestände), die ~832 USD gestaktes ETH blieben korrekt
 außen vor.
 
-### Margin-/Hebel-Trading — Tag-Vokabular dokumentiert (RM-10/RM-11-Grundlage)
+### Margin-/Hebel-Trading — Rahmenbedingungen jetzt vollständig entschieden (2026-07-14)
 
-Live in der Transaktionshistorie gefunden: `margin_trading.open` (1828×),
-`margin_trading.borrow` (811×), `margin_trading.close` (622×),
-`margin_trading.repay` (311×), `margin_trading.fee` (311×) — echte historische
-Margin-Aktivität auf dem Account, jüngstes Ereignis ein "close" vom 07.05.2026,
-seitdem keine weitere Aktivität. Aktuell **keine offene Krypto-Margin-Position**
-(Nutzer bestätigt); zwei offene Positionen in anderen Assetklassen bewusst
-außerhalb des Tool-Scopes. Bitpandas API bietet **keine Übersicht offener
-Positionen** (nur den Bewegungs-Log) — eine künftige RM-10/RM-11-Umsetzung
-müsste Positionen aus `open`/`close`/`borrow`/`repay`-Paaren selbst
-rekonstruieren, das ist nicht trivial und bleibt ein offener Punkt für später.
+**Status: Design fertig, Phase 1 (Screening) + Phase 2 (Risiko-/
+Liquidationsformeln) + Phase 3 (Positions-Rekonstruktion) sind gebaut und
+gegen echte Daten verifiziert.** Noch offen: die LLM-gestützte Empfehlung
+selbst (Cerebras-Anbindung + Budget-Allocator), bis dahin liefert das
+Screening nur Kandidaten, aber noch keine fertige Kauf-/Verkaufsempfehlung.
+Volle technische Herleitung in `docs/hebel_positionsformel.md`, hier die für
+dich relevante Zusammenfassung.
+
+**RM-10 korrigiert:** stand bisher als "nur Long, kein Short" — das war aber
+nur ein Bitpanda-Fakt (Bitpanda kann aktuell kein Short ausführen), keine
+bewusste Risiko-Entscheidung gegen Short. **Short bleibt Teil der Empfehlungs-
+Logik** (rein beratend wie überall sonst — der Agent führt nie selbst aus),
+du bekommst also auch Short-Empfehlungen angezeigt, kannst sie aktuell nur
+nicht über Bitpanda direkt umsetzen.
+
+**Echte Bitpanda-Margin-Historie ausgewertet** (rein lesend, dieselbe API wie
+beim Bestände-Abgleich): 185 vollständig geschlossene Positionen (22.09.2025
+bis 07.05.2026) chronologisch rekonstruiert (Korrektur 2026-07-14: die
+ursprünglich hier notierte Zahl 311 war ein Bug im ersten Auswertungs-Skript
+— 126 Phantom-Einträge ohne echten Wert wurden mitgezählt; beim Bau des
+richtigen, wiederverwendbaren Codes aufgefallen und korrigiert):
+- Genutzter Hebel real: klare Bitpanda-Stufen 2x/3x/5x/10x, Ø 6,44x je
+  Einzelkauf — **`max_hebel` deshalb von 3x auf 10x angehoben**, der alte
+  Wert war niedriger als deine eigene bisherige Praxis
+- Ø Haltedauer nur 1,1 Tage (Min 0, Max 16,7) — laut dir Marktreaktion, keine
+  bewusste Kurzfrist-Strategie
+- **4 wahrscheinliche Liquidationen erkannt**, obwohl Bitpandas API das nicht
+  extra kennzeichnet — über eine Gebühren-Auffälligkeit gefunden (die
+  betroffenen Closes zeigten ca. 1 Prozentpunkt mehr Gebühr als normal, exakt
+  Bitpandas dokumentierte Zwangsliquidations-Gebühr). Bewusst **keine
+  Testposition mit echtem Geld** eröffnet, um das weiter zu prüfen — die
+  vorhandenen Daten waren überzeugend genug.
+
+**Liquidationspreis-Formel (Schätzung, nie Bitpandas exakter Wert):**
+Bitpanda veröffentlicht die genaue Formel nicht — unsere Schätzung ist bewusst
+konservativ (zeigt Liquidation eher zu früh als zu spät an):
+```
+Long:  Liquidationspreis ≈ Entry × (1 − 1/Hebel + Tage_gehalten × 0,0018)
+Short: Liquidationspreis ≈ Entry × (1 + 1/Hebel − Tage_gehalten × 0,0018)
+```
+Die 0,18 %/Tag-Finanzierungsgebühr lässt den Wert mit der Zeit näher rücken,
+auch ohne Kursbewegung — gegen die echte Historie geprüft, passt gut (nur
+0,08 Prozentpunkte Abweichung im Schnitt).
+
+**Positionsgröße bei Hebel — eigener, niedrigerer Risikowert:** Bei Spot
+riskierst du 2 % pro Trade (RM-1). Bei Hebel setzen wir das bewusst auf
+**1 %** herunter — Gründe: Kurs kann in schnellen Bewegungen über den
+Stop-Loss hinweg direkt Richtung Liquidation springen (Slippage), dazu
+kommt die laufende Gebühr, und die 4 echten Liquidationen zeigen, dass das
+kein theoretisches Risiko ist. Der gewählte Hebel wird zusätzlich so
+gedeckelt, dass zwischen Stop-Loss und geschätztem Liquidationspreis immer
+ein Sicherheitsabstand bleibt (15-20 %) — ein weiter Stop-Loss erlaubt also
+automatisch nur einen niedrigeren Hebel.
+
+**Automatische Positions-Verfolgung (statt manueller Bestätigung) — gebaut:**
+Sobald eine Hebel-Position wirklich offen ist, erkennt die App das
+**automatisch** aus deinen echten Bitpanda-Transaktionen (`importer/
+bitpanda_margin_positions.py`, alle 15 Min huckepack auf dem Hebel-
+Screening-Takt) — keine manuelle "ich hab's umgesetzt"-Bestätigung wie bei
+Spot-Signalen nötig. Grund: bei "den fragilsten, zeitkritischsten Positionen"
+(deine eigene Einordnung) ist eine vergessene manuelle Bestätigung besonders
+riskant. Der geschätzte Liquidationspreis wird bei jedem Tick mit den echten
+verstrichenen Tagen neu berechnet. Aktuell hast du keine offene Hebel-
+Position — dieser Pfad ist gebaut und mit einer künstlichen Testposition
+durchgespielt, aber noch nicht an einer echten offenen Position beobachtet.
+
+**Zusätzliche Sicherheitsregel aus AZ-7:** in einem Extrem-Krise-Regime wird
+Hebel komplett deaktiviert, unabhängig von der reinen Rechnung; ansonsten
+tendiert die Empfehlung zum unteren Ende des sicher berechneten Hebel-
+Korridors statt zum Maximum.
+
+**Noch offen (Phase 4+):**
+- Die eigentliche LLM-Empfehlung (Cerebras-Anbindung + Budget-Allocator) —
+  das Screening liefert bereits Kandidaten, aber noch keine fertige Kauf-/
+  Verkaufsempfehlung mit Begründung
+- Marktscan-Umbau (Automatik-Zweig zentralisieren), Scheduler-Cutover, UI-Tab
 
 ---
 
@@ -1170,7 +1236,11 @@ Startpunkt, sobald Backward-Tracking/Outcome-Daten vorliegen:
 - Mindest-Konfidenz je Regime (85/75/65/60/60 %)
 - Die vier Gewichte je Regime (Technik/Fundamental/Momentum/Makro)
 - RG-4 Makro-Multiplikator (`risikoappetit_faktor`, aktuell fix auf 1,0)
-- RM-10 max. Hebel (3x, aktuell ohnehin deaktiviert)
+- RM-10 max. Hebel (10x, 2026-07-14 gegen echte Bitpanda-Historie kalibriert,
+  aktuell ohnehin deaktiviert) — Liquidations-Sicherheitsmarge (15-20 %, Mitte
+  0,175 als Startwert) und die Hebel-Trigger-Schwellenwerte selbst (OI-Änderung
+  ±3 %, Kursänderung ±2 %, Long-Anteil 75 %/25 %) sind noch unbestätigte
+  Platzhalter, siehe `docs/hebel_positionsformel.md`
 - **NEU (2026-07-11):** die ETH-Ausnahme in `risk_gate.py`
   (`STAKING_ILLIQUID_SYMBOLS`, siehe Kap. 14) beruht auf einer einzelnen
   Nutzer-Erfahrung, nicht auf einer systematischen Prüfung aller Bitpanda-
@@ -1180,9 +1250,11 @@ Startpunkt, sobald Backward-Tracking/Outcome-Daten vorliegen:
   Fusion-Orders gebundenen Cash-Betrags erwies sich als unnötig — `/fiatwallets`
   liefert den korrekten, bereinigten Betrag bereits serverseitig; gelöst wurde
   stattdessen die Aktualität per automatischem 30-Minuten-Sync (Kap. 6/14).
-- **NEU (2026-07-11):** RM-10/RM-11 (Hebel) bräuchten eine Positions-
-  Rekonstruktion aus den `margin_trading.*`-Transaktions-Tags (Kap. 14) — nicht
-  trivial, Bitpanda liefert keine "offene Positionen"-Übersicht.
+- **ERLEDIGT, Design UND Code (2026-07-14):** RM-10/RM-11 (Hebel) Positions-
+  Rekonstruktion aus den `margin_trading.*`-Transaktions-Tags (Kap. 14) —
+  Logik gegen 185 echte historische Positionen (korrigierte Zahl, siehe dort)
+  erfolgreich getestet, läuft automatisch alle 15 Min. Aktuell keine offene
+  Position zum Live-Beobachten.
 - **NEU (2026-07-12):** Boden-Zielzone (Abschnitt 4, `config.yaml
   boden_zielzone:`) — `reifegrad_daempfer_staerke` (0,15), `equities_baermarkt_
   schwelle_prozent` (20), `equities_baermarkt_lookback_jahre` (5),

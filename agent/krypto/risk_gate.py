@@ -9,7 +9,13 @@ Abdeckung: RM-1 (Risiko/Trade), RM-2 (max. Allokation/Asset), RM-4 (Cash-Reserve
 RM-5 (Stop-Loss-Pflicht), R-5.10 (Small-Cap-Budget aus dem Regime-Profil). NICHT
 abgedeckt (bewusste Luecke, siehe Spezifikation Kap. 16): RM-7/Z-3 Drawdown-
 Notbremse (braucht eine Portfolio-Wert-Historie, die noch nicht existiert), RM-8/-9
-(voller Risiko-Score), RM-10/-11 (Hebel - S-6 ist ohnehin `aktiv: false`).
+(voller Risiko-Score).
+
+RM-10/-11 (Hebel) sind NICHT hier abgedeckt, aber NICHT mehr wegen `aktiv: false` -
+`config.yaml risiko.hebel.erlaubt` ist seit 2026-07-14 `true`. Eigenes Modul
+`agent/krypto/hebel_risk_gate.py` (andere Schwellenwerte/Zeitkomponente als Spot,
+siehe docs/hebel_positionsformel.md), `CRV_MINIMUM` von dort importiert statt
+dupliziert.
 """
 from __future__ import annotations
 

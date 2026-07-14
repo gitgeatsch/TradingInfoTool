@@ -145,8 +145,18 @@ Portfolio-Notbremse bei Drawdown-Limit Z-3 (RM-7).
 Marktkapitalisierung, Korrelation zu BTC, Projektreife (RM-8). Höheres Risiko →
 kleinere erlaubte Position (RM-9).
 
-**Hebel:** nur Long, kein Short (RM-10). Hebelhöhe gedeckelt und an Volatilität
-gekoppelt; Liquidationspreis stets ausweisen, Sicherheitsabstand zum Stop-Loss (RM-11).
+**Hebel:** Long UND Short sind Teil der Agent-Logik (P-7, rein beratend) — RM-10
+war urspruenglich als "nur Long, kein Short" formuliert, das war aber ein reiner
+Bitpanda-Ausfuehrungs-Fakt (Bitpanda unterstuetzt aktuell kein Short), keine
+unabhaengige Risiko-Entscheidung gegen Short an sich (Nutzer-Klarstellung
+2026-07-14). Short-Empfehlungen bleiben also moeglich, nur ohne aktuellen
+Ausfuehrungsweg fuer den Nutzer. Hebelhoehe gedeckelt (RM-1-Risiko-% eigens fuer
+Hebel auf 1% statt der Spot-2%, siehe unten) und an Volatilitaet/Stop-Loss-Abstand
+gekoppelt (max_sicherer_hebel = (1 - Sicherheitsmarge) / Stop-Loss-Abstand%);
+Liquidationspreis stets als Schaetzung ausweisen (Bitpanda veroeffentlicht keine
+exakte Formel), Sicherheitsabstand zum Stop-Loss (RM-11) - volle Formel-Herleitung
+und Kalibrierung gegen echte Margin-Trade-Historie siehe
+`docs/hebel_positionsformel.md`.
 
 ## 4. Assets & Diversifikation
 

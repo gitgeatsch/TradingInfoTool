@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_MISSED
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -33,12 +33,18 @@ bitpanda_cash_lock = threading.Lock()
 # (ui/signals_view.py), verhindert einen gleichzeitigen Doppel-Lauf egal
 # wodurch ausgeloest.
 signal_batch_lock = threading.Lock()
+# Hebel-Screening (2026-07-14, Phase 1, siehe docs/hebel_positionsformel.md) -
+# rein deterministisches Scoring, kein Groq-Aufruf, daher (noch) kein zweiter
+# Ausloeser wie bei signal_batch_lock - Lock existiert trotzdem, falls spaeter
+# ein manueller "Jetzt screenen"-Button dazukommt (gleiches Muster).
+hebel_screening_lock = threading.Lock()
 _JOB_LOCKS = {
     "refresh_prices": refresh_prices_lock,
     "refresh_securities": refresh_securities_lock,
     "marktscan": marktscan_lock,
     "bitpanda_cash": bitpanda_cash_lock,
     "signal_batch": signal_batch_lock,
+    "hebel_screening": hebel_screening_lock,
 }
 _job_started_at: dict[str, float] = {}
 
@@ -58,6 +64,11 @@ BITPANDA_CASH_REFRESH_INTERVAL_MINUTES = 30  # 2026-07-11: seltener als der Prei
 # Marktpreise. Nur der Fiat-Cash-Anteil, NICHT die vollen Bestaende (die haben einen
 # interaktiven Rueckgangs-Bestaetigungsdialog, siehe importer/bitpanda_sync.py::
 # sync_fiat_cash_from_bitpanda()-Docstring).
+HEBEL_SCREENING_INTERVAL_MINUTES = 15  # muss mit config.yaml hebel_screening.
+# intervall_minuten uebereinstimmen (wie bei allen anderen Jobs ist die Taktung selbst
+# ein Python-Konstante, nur der aktiv-Schalter wird dynamisch aus config.yaml gelesen,
+# siehe hebel_screening_job()) - kalibriert auf die reale Ø-Haltedauer echter
+# Hebel-Positionen (1,1 Tage), siehe docs/hebel_positionsformel.md.
 
 # Job-Ausfall-Backoff (2026-07-12, letzter offener Betriebssicherheits-Punkt): Referenz
 # auf die scheduler-Instanz selbst, gesetzt am Ende von build_scheduler() - noetig, damit
@@ -554,6 +565,85 @@ def signal_batch_job(coingecko_client, kraken_client, groq_client, conn_factory,
     return True
 
 
+def _refresh_hebel_position_liquidation_prices(conn) -> None:
+    """Fuer jede aktuell offene Margin-Position den geschaetzten Liquidationspreis
+    mit den ECHTEN verstrichenen Tagen neu berechnen (2026-07-14, Phase 3) -
+    entry_preis_eur wird aus positionswert_eur/positionsmenge abgeleitet (kein
+    separat gespeicherter Einstandspreis noetig, siehe database/models.py::
+    HebelPosition-Docstring). Ohne positionsmenge (z.B. sehr alte/unvollstaendige
+    Datensaetze) wird die Position uebersprungen statt eine falsche Schaetzung
+    zu zeigen (P-10)."""
+    from agent.krypto.hebel_risk_gate import estimate_liquidation_price
+
+    now_unix = int(time.time())
+    for pos in db.get_open_hebel_positions(conn):
+        if not pos.positionsmenge or not pos.positionswert_eur:
+            continue
+        entry_preis_eur = pos.positionswert_eur / pos.positionsmenge
+        hebel = pos.hebel_effektiv or 1.0
+        eroeffnet_unix = int(datetime.fromisoformat(pos.eroeffnet_am).timestamp())
+        days_held = max(0.0, (now_unix - eroeffnet_unix) / 86400)
+        pos.liquidationspreis_geschaetzt_eur = estimate_liquidation_price(
+            entry_preis_eur, hebel, pos.richtung, days_held=days_held,
+        )
+        pos.liquidationspreis_berechnet_am = datetime.now(timezone.utc).isoformat()
+        db.upsert_hebel_position(conn, pos)
+
+
+def hebel_screening_job(coingecko_client, kraken_client, conn_factory, watchlist, bitpanda_api_key=None) -> bool:
+    """Hebel-Screening (2026-07-14, Phase 1, siehe docs/hebel_positionsformel.md)
+    - rein deterministisches Zwei-Zweige-Scoring, KEIN Groq-Aufruf. Ergebnis
+    landet in hebel_triggers, ein kuenftiger Budget-Allocator (spaetere Phase)
+    entscheidet, welche Kandidaten eine echte LLM-Empfehlung bekommen - das ist
+    NICHT Teil dieses Jobs.
+
+    Seit Phase 3 (Positions-Rekonstruktion) huckepack im selben 15-Min-Takt:
+    Bitpanda-Margin-Positions-Sync + Liquidationspreis-Neuberechnung fuer
+    offene Positionen (P-8: nur falls bitpanda_api_key gesetzt ist, sonst
+    stillschweigend uebersprungen - kein Fehler)."""
+    if not hebel_screening_lock.acquire(blocking=False):
+        logger.info("Hebel-Screening: bereits in Ausführung - übersprungen")
+        return False
+    _job_started_at["hebel_screening"] = time.monotonic()
+    try:
+        import config as config_module
+        from agent.krypto.hebel_screening import run_hebel_screening
+
+        config_dict = config_module.load_config()
+        if not config_dict.get("hebel_screening", {}).get("aktiv", True):
+            logger.info("Hebel-Screening deaktiviert (config.yaml hebel_screening.aktiv=false) - übersprungen")
+            return True
+
+        triggers = run_hebel_screening(conn_factory, watchlist, kraken_client, coingecko_client, config_dict)
+        kandidaten = [t for t in triggers if t.ist_kandidat]
+        logger.info(
+            "Hebel-Screening: %d Assets bewertet, %d Kandidaten (Score >= Schwelle)",
+            len(triggers), len(kandidaten),
+        )
+
+        if bitpanda_api_key:
+            from importer.bitpanda_margin_positions import sync_hebel_positions
+
+            conn = conn_factory()
+            try:
+                sync_result = sync_hebel_positions(conn, bitpanda_api_key)
+                logger.info(
+                    "Hebel-Positions-Sync: %d Transaktionen geladen, %d Positionen aktualisiert, %d neu geschlossen",
+                    sync_result.total_transactions_fetched, len(sync_result.positionen_aktualisiert),
+                    sync_result.neu_geschlossen,
+                )
+                _refresh_hebel_position_liquidation_prices(conn)
+            finally:
+                conn.close()
+    except Exception as exc:
+        logger.exception("Hebel-Screening fehlgeschlagen")
+        _notify_job_failure("hebel_screening", f"Hebel-Screening fehlgeschlagen: {exc}")
+    finally:
+        hebel_screening_lock.release()
+        _job_started_at.pop("hebel_screening", None)
+    return True
+
+
 def _log_job_event(event) -> None:
     """U-12-Minimalfix (2026-07-09): jeder Job faengt seine eigenen Exceptions
     bereits selbst ab (siehe *_job()-Funktionen oben) - dieser Listener ist die
@@ -673,6 +763,18 @@ def build_scheduler(
         minutes=SECURITIES_REFRESH_INTERVAL_MINUTES,
         args=[YFinanceClient(), db_conn_factory, watchlist],
         id="refresh_securities_prices",
+        next_run_time=datetime.now(),
+    )
+    # Hebel-Screening (2026-07-14, Phase 1) - eigener 15-Min-Takt, unabhaengig vom
+    # Preis-Refresh oben (andere Datenquellen: Binance/Bybit/OKX/Kraken statt
+    # CoinGecko/yfinance). Aktiv-Schalter wird IM Job-Body geprueft (identisches
+    # Muster wie marktscan_job()/signal_batch_job()), daher immer registriert.
+    scheduler.add_job(
+        hebel_screening_job,
+        "interval",
+        minutes=HEBEL_SCREENING_INTERVAL_MINUTES,
+        args=[coingecko_client, kraken_client, db_conn_factory, watchlist, bitpanda_api_key],
+        id="hebel_screening",
         next_run_time=datetime.now(),
     )
     # MS-3: erster CronTrigger im Projekt (bisherige Jobs nutzen nur "interval") -
