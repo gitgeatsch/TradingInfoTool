@@ -2,12 +2,57 @@
 
 Status: Design komplett entschieden. **Phase 1 (Screening) + Phase 2
 (Risiko-/Liquidationsformeln) + Phase 3 (Positions-Rekonstruktion) + Phase 4
-(Cerebras-Client + LLM-Analyst) sind implementiert und gegen echte Daten
-verifiziert (2026-07-14)** — siehe `agent/krypto/hebel_screening.py`,
-`agent/krypto/hebel_risk_gate.py`, `importer/bitpanda_margin_positions.py`,
-`api/cerebras.py`, `agent/krypto/hebel_analyst.py`, `agent/krypto/
-hebel_pipeline.py`. Phase 5+ (Budget-Allocator, Marktscan-Refactor,
-Scheduler-Cutover, UI) weiterhin offen, siehe eigener Plan pro Phase.
+(Cerebras-Client + LLM-Analyst) + Phase 5 (Budget-Allocator) sind
+implementiert und gegen echte Daten verifiziert (2026-07-14)** — siehe
+`agent/krypto/hebel_screening.py`, `agent/krypto/hebel_risk_gate.py`,
+`importer/bitpanda_margin_positions.py`, `api/cerebras.py`, `agent/krypto/
+hebel_analyst.py`, `agent/krypto/hebel_pipeline.py`, `agent/krypto/
+budget_allocator.py`. Hebel-Empfehlungen laufen damit erstmals vollautomatisch
+im 15-Min-Takt. Marktscan-Refactor, Scheduler-Cutover, UI weiterhin offen.
+
+## Phase 5 (Budget-Allocator) implementiert (2026-07-14)
+
+`agent/krypto/budget_allocator.py::run_budget_allocator()` verteilt das
+gemeinsame Tagesbudget ueber Hebel (Tier 1) + Marktscan-Kaufkandidaten
+(Tier 2) + Spot-Rotation (Tier 3), huckepack auf dem 15-Min-`hebel_screening_job`-
+Takt (siehe `scheduler/background.py`). Ersetzt den deaktivierten
+automatischen Marktscan-Groq-Zweig UND den fixen 05:00-Uhr-`signal_batch_job`-
+Cron (beide entfernt) - der manuelle Marktscan-/Batch-Button bleiben
+unveraendert bestehen (Nutzer-Entscheidung).
+
+**Wichtiger neuer Fund (empirisch geprueft, nicht nur dokumentiert):**
+Cerebras' echte Limits via `x-ratelimit-*`-Response-Headern ausgelesen -
+5 Requests/Min, 2.400/Tag, 1.000.000 Tokens/Tag. Bei ~6.000 Tokens/Call
+ergibt das ~166 echte Calls/Tag, ~10x Groqs reale ~15-18/Tag. Das beantwortet
+die zuvor offene Design-Frage: Cerebras-Overflow ist ADDITIV zu Groqs Budget
+(mit einem eigenen, konservativen Tages-Deckel), nicht nur "nicht auf morgen
+vertagen". `api/cerebras.py` bekam daraufhin doch einen Rate-Limiter
+(4 Req/Min, Sicherheitspuffer unter dem echten 5er-Limit) - die urspruengliche
+Phase-4-Entscheidung "kein Rate-Limiter" war durch fehlende Daten begruendet,
+jetzt korrigiert.
+
+**Zwei weitere Funde waehrend der Umsetzung:**
+- `pipeline.py::generate_signal()` hatte den Modellnamen hart codiert
+  (`"llama-3.3-70b-versatile"`) - harmlos, solange nur Groq je aufgerufen
+  wurde, aber falsch geworden, seit der Allocator auch Spot-Signale ueber
+  Cerebras generieren kann. Neues gemeinsames Modul `agent/krypto/
+  llm_provider.py::llm_model_label()` (erkennt den Provider am Client-Modul)
+  behebt das, wird jetzt auch von `hebel_pipeline.py` genutzt (vorher dort
+  dupliziert).
+- Eigener Bug beim Bauen gefunden und behoben: ein Datenqualitaets-Gate
+  (z.B. veralteter Preis) schlaegt VOR jedem echten LLM-Call fehl - das ist
+  kein Fehler, aber `_mit_overflow()` haette das faelschlich als "erfolgreicher
+  Groq-Call" verbucht (kein Retry noetig, aber auch keine Provider-Zuschreibung
+  ohne echten Call). Live am echten Fall APT (Preis kurzzeitig veraltet)
+  gefunden, korrigiert, danach mit frischen Preisen ein echter Erfolgsfall
+  bestaetigt (APT SHORT → HALTEN, `llm_model: groq:llama-3.3-70b-versatile`).
+
+Verifiziert: Verteilungsformel gegen 6 konstruierte Grenzfaelle (0 Kandidaten,
+Hebel-Dominanz, ruhiger Tag, Ueberschuss in allen 3 Stufen, etc.); Cooldown-
+Filter (Hebel UND Marktscan) mit synthetischen 1-Std-vs-5-Std-Zeitstempeln;
+zwei echte End-to-End-Laeufe gegen die Produktions-DB (APT dann CAT jeweils
+genau einmal verarbeitet, keine Doppel-Verarbeitung, `hebel_triggers`-Status
+korrekt fortgeschrieben).
 
 ## Phase 4 (Cerebras-Client + LLM-Analyst) implementiert (2026-07-14)
 
@@ -474,6 +519,6 @@ in `top_gruende` (Regel 8) ein, das reicht ohne Redundanz.
 - Sicherheitsmarge-Wert (0,175) ist Mittelwert einer Spanne, kein
   recherchierter Fixwert — wie alle anderen Schwellenwerte im Projekt
   vorläufig
-- **Phase 5+: Budget-Allocator** (entscheidet, wann `generate_hebel_signal()`
-  automatisch aufgerufen wird, siehe `docs/budget_queue_design.md`),
-  Marktscan-Refactor, Scheduler-Cutover, UI-Tab
+- **Phase 6+:** UI-Tab fuer Hebel-Empfehlungen (bisher nur DB/Scheduler,
+  keine Anzeige) - Marktscan-Refactor UND Scheduler-Cutover sind mit
+  Phase 5 bereits erledigt

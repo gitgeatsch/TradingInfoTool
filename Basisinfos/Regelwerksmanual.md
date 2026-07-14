@@ -47,7 +47,7 @@ Diese vier stehen über allen anderen Regeln — jede andere Regel muss sich dar
 | RM-6 | Trailing-Stop | erlaubt | Als Option vorhanden, keine automatische Durchsetzung |
 | RM-7 | Drawdown-Notbremse | — | **OFFEN**, siehe Z-3 |
 | RM-8/RM-9 | Risiko-Score je Asset (aus Volatilität, Liquidität, BTC-Korrelation, Projektreife) → höheres Risiko = kleinere erlaubte Position | — | **OFFEN**, noch nicht gebaut |
-| RM-10/RM-11 | Hebel: Long **und** Short (Short nur beratend, Bitpanda kann es noch nicht ausführen), max. **10x** (2026-07-14 kalibriert), eigenes Risiko-pro-Trade von **1 %** (statt 2 % bei Spot), Liquidationspreis als Schätzung ausgewiesen | Formel/Regelwerk fertig entschieden, **noch nicht als Code gebaut** | **DEAKTIVIERT** (Strategie S-6 aus) — volles Design in Kap. 14, `docs/hebel_positionsformel.md` |
+| RM-10/RM-11 | Hebel: Long **und** Short (Short nur beratend, Bitpanda kann es noch nicht ausführen), max. **10x** (2026-07-14 kalibriert), eigenes Risiko-pro-Trade von **1 %** (statt 2 % bei Spot), Liquidationspreis als Schätzung ausgewiesen | Formel/Regelwerk fertig, Screening+Risiko-Formeln+Positions-Rekonstruktion+KI-Empfehlung+Budget-Allocator als Code implementiert | **AKTIV, automatisch im 15-Min-Takt** (Budget-Allocator) — volles Design in Kap. 14, `docs/hebel_positionsformel.md` |
 
 **Unantastbar (RG-6):** Weder Nutzer noch KI dürfen RM-1, RM-5 oder Z-3 per Override
 abschalten — das sind die harten Leitplanken, die auch eine künftige KI-gestützte
@@ -1145,13 +1145,11 @@ außen vor.
 
 **Status: Design fertig, Phase 1 (Screening) + Phase 2 (Risiko-/
 Liquidationsformeln) + Phase 3 (Positions-Rekonstruktion) + Phase 4
-(Cerebras-Anbindung + KI-Empfehlung) sind gebaut und gegen echte Daten
-verifiziert.** Noch offen: der Budget-Allocator, der entscheidet, WANN welcher
-Kandidat automatisch eine KI-Empfehlung bekommt (Tagesbudget-Verteilung über
-Hebel/Marktscan/Spot-Rotation) - bis dahin läuft die KI-Empfehlung nur
-manuell/testweise, noch nicht automatisch im 15-Min-Takt. Volle technische
-Herleitung in `docs/hebel_positionsformel.md`, hier die für dich relevante
-Zusammenfassung.
+(Cerebras-Anbindung + KI-Empfehlung) + Phase 5 (Budget-Allocator) sind gebaut
+und gegen echte Daten verifiziert.** Hebel-Empfehlungen laufen damit
+erstmals vollautomatisch im 15-Min-Takt, mit demselben Tagesbudget wie
+Marktscan und deine Spot-Signal-Rotation. Volle technische Herleitung in
+`docs/hebel_positionsformel.md`, hier die für dich relevante Zusammenfassung.
 
 **RM-10 korrigiert:** stand bisher als "nur Long, kein Short" — das war aber
 nur ein Bitpanda-Fakt (Bitpanda kann aktuell kein Short ausführen), keine
@@ -1230,13 +1228,21 @@ Echt gegen die Produktions-DB getestet: für AIOZ (ein automatisch erkannter
 Short-Kandidat) kam eine vollständige, plausible Empfehlung heraus (Short-
 Eröffnung, 5-facher Hebel, Kurszonen samt Liquidationspreis-Schätzung).
 
-**Noch offen (Phase 5+):**
-- Budget-Allocator — entscheidet automatisch, wann welcher Kandidat
-  (Hebel/Marktscan/Spot-Rotation) eine echte KI-Analyse bekommt, verteilt
-  über euer gemeinsames Tagesbudget (siehe `docs/budget_queue_design.md`).
-  Bis dahin läuft die Hebel-KI-Empfehlung nur manuell/testweise, nicht
-  automatisch im 15-Min-Takt.
-- Marktscan-Umbau (Automatik-Zweig zentralisieren), Scheduler-Cutover, UI-Tab
+**Budget-Allocator — gebaut:** entscheidet jetzt automatisch, wann welcher
+Kandidat (Hebel/Marktscan/Spot-Rotation) eine echte KI-Analyse bekommt,
+verteilt über euer gemeinsames Tagesbudget (siehe
+`docs/budget_queue_design.md`) - läuft huckepack auf dem 15-Min-Hebel-
+Screening-Takt. Der fixe tägliche 05:00-Uhr-Job für Spot-Signale ist damit
+entfallen (der Allocator übernimmt Spot-Rotation jetzt viel häufiger mit),
+der manuelle "Fällige Signale jetzt berechnen"-Button bleibt trotzdem
+bestehen. Wichtiger Fund dabei: Cerebras (deine zweite, kostenlose KI-Ebene)
+hat ein echtes, deutlich größeres Tageslimit als bisher angenommen (~166
+statt Groqs ~15-18 Analysen/Tag) - Hebel-/Marktscan-/Spot-Empfehlungen
+können dadurch bei Bedarf automatisch auf Cerebras ausweichen, ohne dein
+Groq-Kontingent zu belasten.
+
+**Noch offen (Phase 6+):** UI-Tab für Hebel-Empfehlungen (bisher nur in der
+Datenbank/im Log sichtbar, keine eigene Anzeige in der App).
 
 ---
 

@@ -1091,6 +1091,61 @@ def get_marktscan_candidates(
     return [_row_to_marktscan_candidate(row) for row in rows]
 
 
+def get_pending_marktscan_kaufkandidaten(conn: sqlite3.Connection) -> list[MarktscanCandidate]:
+    """Fuer den Budget-Allocator (agent/krypto/budget_allocator.py, 2026-07-14) -
+    NICHT `get_marktscan_candidates(status=...)` verwenden, `status` ist die
+    NUTZER-Lifecycle-Spalte ('neu'|'nutzer_behalten_manuell_uebernommen'|
+    'nutzer_verworfen'), keine Scoring-Klassifikation. Neuester Eintrag je
+    `coingecko_id` mit `einstufung='kaufkandidat' AND status='neu' AND
+    groq_generiert_am IS NULL` (noch keine echte Begruendung erhalten),
+    Self-Join analog get_pending_hebel_candidates(), sortiert nach
+    score_gesamt DESC (Tier-2-Prioritaet)."""
+    rows = conn.execute(
+        """
+        SELECT c.* FROM marktscan_candidates c
+        INNER JOIN (
+            SELECT coingecko_id, MAX(discovered_at) AS max_discovered_at
+            FROM marktscan_candidates
+            WHERE einstufung = 'kaufkandidat' AND status = 'neu' AND groq_generiert_am IS NULL
+            GROUP BY coingecko_id
+        ) latest
+        ON c.coingecko_id = latest.coingecko_id AND c.discovered_at = latest.max_discovered_at
+        WHERE c.einstufung = 'kaufkandidat' AND c.status = 'neu' AND c.groq_generiert_am IS NULL
+        ORDER BY c.score_gesamt DESC
+        """
+    ).fetchall()
+    return [_row_to_marktscan_candidate(row) for row in rows]
+
+
+def get_latest_marktscan_writeup_at(conn: sqlite3.Connection, coingecko_id: str) -> str | None:
+    """Fuer den Budget-Allocator-Cooldown (2026-07-14): `groq_generiert_am`
+    IS NULL auf der neuesten Zeile (siehe get_pending_marktscan_kaufkandidaten())
+    verhindert NICHT, dass ein Coin bei einem FRUEHEREN scan_run bereits eine
+    Begruendung bekam - jeder neue Scan-Lauf legt eine neue Zeile an
+    (UNIQUE(coingecko_id, scan_run_id)). Dieser Query sucht ueber ALLE Zeilen
+    dieses Coins den zuletzt gesetzten Zeitstempel, unabhaengig vom scan_run_id."""
+    row = conn.execute(
+        "SELECT MAX(groq_generiert_am) AS letzter FROM marktscan_candidates "
+        "WHERE coingecko_id = ? AND groq_generiert_am IS NOT NULL",
+        (coingecko_id,),
+    ).fetchone()
+    return row["letzter"] if row else None
+
+
+def count_real_marktscan_writeups_today(conn: sqlite3.Connection) -> int:
+    """Fuer den Budget-Allocator, analog count_real_signals_today()/
+    count_real_hebel_signals_today() - zaehlt echte Groq/Cerebras-Begruendungen
+    (`groq_generiert_am` gesetzt) seit Mitternacht UTC, unabhaengig ob durch
+    den manuellen Button oder den Allocator ausgeloest (beide schreiben in
+    dieselbe Spalte)."""
+    today_utc_midnight = datetime.now(timezone.utc).strftime("%Y-%m-%dT00:00:00")
+    row = conn.execute(
+        "SELECT COUNT(*) AS n FROM marktscan_candidates WHERE groq_generiert_am IS NOT NULL AND groq_generiert_am >= ?",
+        (today_utc_midnight,),
+    ).fetchone()
+    return row["n"]
+
+
 def get_latest_marktscan_status_by_coingecko_id(conn: sqlite3.Connection, coingecko_id: str) -> str | None:
     """Fuer den Cross-Lauf-Duplikat-Check (agent/krypto/marktscan.py): letzter bekannter
     Status dieses Coins ueber ALLE frueheren Scan-Laeufe hinweg, nicht auf den

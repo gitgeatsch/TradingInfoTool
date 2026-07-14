@@ -245,7 +245,7 @@ def create_app(
 
         threading.Thread(
             target=background.marktscan_job,
-            args=(coingecko_client, kraken_client, groq_client, conn_factory, watchlist, fred_api_key),
+            args=(coingecko_client, kraken_client, conn_factory, watchlist, fred_api_key),
             daemon=True,
         ).start()
         return jsonify({"started": True}), 202

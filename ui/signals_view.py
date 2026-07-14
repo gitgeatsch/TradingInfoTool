@@ -116,11 +116,11 @@ class SignalsView(ttk.Frame):
             toolbar, text="Signal-Historie", command=self._on_history_clicked, state="disabled"
         )
         self.history_button.pack(side="left", padx=(6, 0))
-        # Batch-Signal-Berechnung (2026-07-13) - Gegenstueck zum taeglichen
-        # Scheduler-Job (scheduler/background.py::signal_batch_job), siehe
-        # agent/krypto/signal_batch.py Modul-Docstring fuer die Budget-
-        # Herleitung. Braucht keinen Asset-Fokus, daher nicht an
-        # self._selected_asset gekoppelt wie compute_button/history_button.
+        # Batch-Signal-Berechnung (2026-07-13) - manueller "genau jetzt sofort"-Pfad,
+        # bleibt bestehen neben dem automatischen Budget-Allocator (2026-07-14, Phase 5,
+        # siehe agent/krypto/budget_allocator.py), siehe agent/krypto/signal_batch.py
+        # Modul-Docstring fuer die Budget-Herleitung. Braucht keinen Asset-Fokus,
+        # daher nicht an self._selected_asset gekoppelt wie compute_button/history_button.
         self.batch_button = ttk.Button(
             toolbar, text="Fällige Signale jetzt berechnen", command=self._on_batch_clicked,
             state="normal" if self._groq_client is not None else "disabled",
@@ -487,11 +487,9 @@ class SignalsView(ttk.Frame):
         import scheduler.background as background
 
         # Non-blocking Check (wie remote/server.py::api_refresh_prices()) -
-        # verhindert, dass ein Klick waehrend des taeglichen 05:00-Scheduler-
-        # Laufs (oder eines bereits laufenden vorherigen Klicks) das geteilte
-        # Tagesbudget doppelt verplant. Das eigentliche Acquire passiert im
-        # Hintergrund-Thread selbst (_run_batch()), symmetrisch zu
-        # signal_batch_job()'s eigenem Lock-Handling.
+        # verhindert einen doppelten gleichzeitigen Lauf bei Mehrfach-Klick.
+        # Das eigentliche Acquire passiert im Hintergrund-Thread selbst
+        # (_run_batch()).
         if background.signal_batch_lock.locked():
             self.status_label.config(
                 text="Batch-Berechnung läuft bereits (Scheduler oder vorheriger Klick) …",

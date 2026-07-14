@@ -1,6 +1,11 @@
 # Gemeinsame Budget-Queue: Spot-Rotation + Marktscan + Hebel-Empfehlungen
 
-Status: Entwurf zur Diskussion, noch nicht implementiert.
+Status: **Implementiert und gegen echte Daten verifiziert (2026-07-14,
+Phase 5)** — siehe `agent/krypto/budget_allocator.py` und
+`docs/hebel_positionsformel.md` Abschnitt "Phase 5" für Details/Fund-
+Lektionen (u.a. Cerebras' echte Rate-Limits per API-Header bestätigt, Cerebras-
+Overflow additiv statt nur "nicht vertagen", Cooldown ohne neue Tabelle über
+bestehende Zeitstempel gelöst).
 
 ## Ausgangslage
 
@@ -155,28 +160,29 @@ das verbleibende Tagesbudget und wird bei Erschöpfung blockiert/mit Warnung
 versehen (Verhaltensänderung ggü. heute — bisher funktioniert der Klick immer
 sofort). Ohne diesen Fix wäre "manuell" ein Schlupfloch am Budget vorbei.
 
-## Neue/geänderte Dateien (grober Schnitt, noch nicht final)
-
-**Update 2026-07-14:** `agent/krypto/hebel_screening.py` (Trigger-Scoring),
-`agent/krypto/hebel_risk_gate.py` (Formeln), `importer/
-bitpanda_margin_positions.py` (Positions-Rekonstruktion), `api/cerebras.py` +
-`agent/krypto/hebel_analyst.py` + `agent/krypto/hebel_pipeline.py`
-(Cerebras-Client + KI-Empfehlung) sind bereits gebaut+verifiziert (Phase 1-4,
-siehe `docs/hebel_positionsformel.md`) — der Allocator unten ruft
-`hebel_pipeline.py::generate_hebel_signal()` künftig auf, statt sie neu zu
-bauen. Nur noch offen:
+## Neue/geänderte Dateien — ALLE erledigt (2026-07-14, Phase 5)
 
 - **Neu:** `agent/krypto/budget_allocator.py` — Kandidaten aus allen Quellen
-  sammeln, Stufen-Logik anwenden, Cooldown prüfen, Calls ausführen
+  gesammelt, Stufen-Logik angewendet, Cooldown geprüft (über bestehende
+  Zeitstempel statt neuer Tabelle, siehe unten), Groq-dann-Cerebras-Ausführung
+- **Neu:** `agent/krypto/llm_provider.py` — Provider-Erkennung für
+  Qualitäts-Tracking (welcher Anbieter hat dieses Signal erzeugt), von
+  `pipeline.py` und `hebel_pipeline.py` gemeinsam genutzt
 - **Geändert:** `marktscan.py` — automatischer Groq-Zweig entfernt,
   `run_scan()` liefert nur noch Kandidaten; manueller Button bleibt, bekommt
-  aber eine Budget-Prüfung vor dem Call
-- **Geändert:** `database/db.py` — ggf. generische Cooldown-Tabelle statt
-  drei Einzellösungen (`hebel_triggers`/`hebel_signals` existieren bereits)
+  eine Budget-Warnung (kein hartes Blockieren) vor dem Call
+- **Geändert:** `database/db.py` — KEINE generische Cooldown-Tabelle nötig
+  (bestehende Zeitstempel in `hebel_signals`/`marktscan_candidates.
+  groq_generiert_am` reichen), stattdessen 2 neue Abfrage-Funktionen
+  (`get_pending_marktscan_kaufkandidaten()`, `count_real_marktscan_writeups_today()`)
+  + `get_latest_marktscan_writeup_at()` für den Cooldown-Check
 - **Geändert:** `scheduler/background.py` — Allocator-Aufruf huckepack auf dem
-  bereits bestehenden 15-Min-`hebel_screening_job` (ersetzt den fixen
-  05:00-`signal_batch_job`-Cron durch einen häufiger laufenden Allocator, der
-  Spot-Rotation als Tier 3 mitbedient)
+  bereits bestehenden 15-Min-`hebel_screening_job`; fixer
+  05:00-`signal_batch_job`-Cron entfernt (Funktion + Registrierung), manueller
+  Batch-Button bleibt (Nutzer-Entscheidung)
+- **Geändert:** `api/cerebras.py` — Rate-Limiter nachgerüstet (siehe Fund oben)
+- **Geändert:** `main.py` — `CerebrasClient`-Konstruktion (P-8, optional wie
+  Groq/Bitpanda/FRED), an `build_scheduler()` durchgereicht
 
 ## Status der Design-Entscheidungen
 
@@ -192,6 +198,5 @@ bauen. Nur noch offen:
 5. ~~Hebel-Empfehlungsschema~~ — **erledigt** (Phase 4, `agent/krypto/
    hebel_analyst.py`, siehe `docs/hebel_positionsformel.md`)
 
-Das Budget-Queue-Design selbst ist damit vollständig entschieden UND alle
-Voraussetzungen (4/5) sind inzwischen erledigt — **bereit zur direkten
-Implementierung des Allocators selbst**, keine weitere Abhängigkeit offen.
+Das Budget-Queue-Design selbst ist jetzt vollständig implementiert (siehe
+oben) — nichts mehr offen aus diesem Dokument.

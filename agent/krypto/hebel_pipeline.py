@@ -4,11 +4,11 @@ docs/hebel_positionsformel.md). Mirrort agent/krypto/pipeline.py::
 generate_signal() 1:1 im Aufbau, wiederverwendet dessen Bausteine wo die
 Bedeutung gleich ist (Regime/Antizyklik/Markt-Kontext/Technische Analyse).
 
-Bewusst NICHT automatisch im 15-Min-Scheduler-Takt aufgerufen (siehe
-scheduler/background.py::hebel_screening_job) - ohne Budget-Allocator
-(spaetere Phase) wuerde das unkontrolliert LLM-Calls fuer jeden Kandidaten
-ausloesen. generate_hebel_signal() ist eine reine, manuell/testweise
-aufrufbare Funktion, bis der Budget-Allocator sie kontrolliert orchestriert."""
+Seit Phase 5 (siehe docs/budget_queue_design.md) wird generate_hebel_signal()
+automatisch vom Budget-Allocator (agent/krypto/budget_allocator.py) im
+15-Min-Takt aufgerufen - bleibt aber weiterhin eine reine, auch manuell
+aufrufbare Funktion ohne eigene Scheduler-/Budget-Logik (die lebt zentral im
+Allocator, nicht hier)."""
 from __future__ import annotations
 
 import json
@@ -20,6 +20,7 @@ from agent.krypto.analyst import AnalystResponseInvalid
 from agent.krypto.anticyclic import assess as assess_anticyclic
 from agent.krypto.hebel_analyst import build_hebel_facts, call_llm_for_hebel_signal
 from agent.krypto.hebel_risk_gate import post_check_hebel, pre_check_hebel
+from agent.krypto.llm_provider import llm_model_label
 from agent.krypto.pipeline import _load_closes_and_ohlc, compute_current_regime, fetch_market_context
 from agent.krypto.risk_gate import STOP_LOSS_ATR_MULTIPLE, _portfolio_values_usd
 from database.models import HebelSignal, HebelTrigger
@@ -34,23 +35,6 @@ MIN_GATE_INDICATORS_AVAILABLE = ("rsi", "macd", "bollinger")
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
-
-
-def _llm_model_label(llm_client) -> str:
-    """Provider+Modell-Label fuer HebelSignal.llm_model (z.B. "cerebras:gpt-oss-120b") -
-    call_llm_for_hebel_signal() ruft llm_client.chat() bewusst providerunabhaengig auf
-    (duck-typing), daher wird der Provider hier anhand des Client-Moduls erkannt statt
-    das Interface um einen Rueckgabewert zu erweitern."""
-    module = type(llm_client).__module__
-    if module.endswith("cerebras"):
-        from api.cerebras import DEFAULT_MODEL
-
-        return f"cerebras:{DEFAULT_MODEL}"
-    if module.endswith("groq"):
-        from api.groq import DEFAULT_MODEL
-
-        return f"groq:{DEFAULT_MODEL}"
-    return type(llm_client).__name__
 
 
 def _fixed_hebel_signal(
@@ -188,7 +172,7 @@ def generate_hebel_signal(
         top_grund_fields[f"top_grund_{rang}_kategorie"] = eintrag.get("kategorie")
         top_grund_fields[f"top_grund_{rang}_text"] = eintrag.get("text")
 
-    llm_model = _llm_model_label(llm_client)
+    llm_model = llm_model_label(llm_client)
 
     signal = HebelSignal(
         symbol=asset.symbol,

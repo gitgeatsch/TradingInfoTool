@@ -16,6 +16,7 @@ import config
 import database.db as db
 from agent.krypto.analyst import AnalystResponseInvalid, build_facts, call_groq_for_signal
 from agent.krypto.anticyclic import assess as assess_anticyclic
+from agent.krypto.llm_provider import llm_model_label
 from agent.krypto.regime import determine_regime
 from agent.krypto.risk_gate import CashReserveZielResult, compute_cash_reserve_ziel, pre_check, post_check
 from database.models import MacroSnapshot, Signal
@@ -606,7 +607,7 @@ def generate_signal(
         cash_reserve_ziel_gesamt_usd=cash_reserve_ziel.gesamt_ziel_usd if cash_reserve_ziel else None,
         cash_reserve_ziel_begruendung=cash_reserve_ziel.begruendung if cash_reserve_ziel else None,
         groq_raw_response=raw_response,
-        groq_model="llama-3.3-70b-versatile",
+        groq_model=llm_model_label(groq_client),
         **top_grund_fields,
     )
     db.insert_signal(conn, signal)

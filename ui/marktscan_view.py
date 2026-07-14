@@ -307,10 +307,7 @@ class MarktscanView(ttk.Frame):
             regime_result = compute_current_regime(
                 conn, self._coingecko_client, self._watchlist, self._fred_api_key, config_dict
             )
-            candidates = run_scan(
-                self._coingecko_client, conn, self._watchlist, regime_result, config_dict,
-                groq_client=self._groq_client, kraken_client=self._kraken_client,
-            )
+            candidates = run_scan(self._coingecko_client, conn, self._watchlist, regime_result, config_dict)
             error = None
         except Exception as exc:  # noqa: BLE001 - an die UI durchreichen statt den Thread stumm sterben zu lassen
             candidates = []
@@ -342,13 +339,26 @@ class MarktscanView(ttk.Frame):
         thread.start()
 
     def _run_writeup(self, candidate) -> None:
-        import config as config_module
         from agent.krypto.marktscan import generate_candidate_writeup
         from agent.krypto.pipeline import compute_current_regime
 
         conn = self._db_conn_factory()
+        budget_erschoepft = False
         try:
             config_dict = config_module.load_config()
+            # Budget-Warnung (2026-07-14, Phase 5, siehe docs/budget_queue_design.md
+            # "wichtiger Fix") - der manuelle Klick zaehlte bisher NICHT gegen das
+            # gemeinsame Tagesbudget, ein Schlupfloch am Allocator vorbei. Bewusst
+            # KEIN hartes Blockieren: ein bewusster Einzel-Klick ("genau DIESEN
+            # Kandidaten will ich jetzt") hat weiterhin Vorrang vor der Automatik.
+            budget_gesamt = config_dict.get("budget_allocator", {}).get("taegliches_budget_gesamt", 15)
+            verbraucht_heute = (
+                db.count_real_signals_today(conn)
+                + db.count_real_hebel_signals_today(conn)
+                + db.count_real_marktscan_writeups_today(conn)
+            )
+            budget_erschoepft = verbraucht_heute >= budget_gesamt
+
             regime_result = compute_current_regime(
                 conn, self._coingecko_client, self._watchlist, self._fred_api_key, config_dict
             )
@@ -366,14 +376,20 @@ class MarktscanView(ttk.Frame):
         finally:
             conn.close()
 
-        self.after(0, self._on_writeup_done, candidate, error)
+        self.after(0, self._on_writeup_done, candidate, error, budget_erschoepft)
 
-    def _on_writeup_done(self, candidate, error) -> None:
+    def _on_writeup_done(self, candidate, error, budget_erschoepft: bool = False) -> None:
         self.writeup_button.config(state="normal" if self._groq_client is not None else "disabled")
         if error is not None:
             self.status_label.config(text=f"Fehler: {error}", foreground=theme.danger_color())
             return
-        self.status_label.config(text="Fertig.", foreground=theme.info_color())
+        if budget_erschoepft:
+            self.status_label.config(
+                text="Fertig — Hinweis: Tagesbudget war bereits erschöpft, Begründung trotzdem generiert.",
+                foreground=theme.warn_color(),
+            )
+        else:
+            self.status_label.config(text="Fertig.", foreground=theme.info_color())
         self._refresh_list()
         if self._selected_candidate is not None and self._selected_candidate.id == candidate.id:
             conn = self._db_conn_factory()

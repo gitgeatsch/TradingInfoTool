@@ -341,14 +341,14 @@ def run_scan(
     watchlist,
     regime_result: RegimeResult,
     config_dict: dict,
-    groq_client=None,
-    kraken_client=None,
 ) -> list[MarktscanCandidate]:
     """Orchestriert Stufe A-D fuer einen kompletten Scan-Lauf. Speichert jeden
-    Kandidaten (auch `kein_treffer`, Audit/Z-4) und gibt die Liste zurueck.
-    `groq_client`/`kraken_client` sind optional (P-8) - ohne Groq-Client wird der
-    automatische Kaufkandidat-Begruendungs-Zweig einfach uebersprungen, auch wenn
-    `marktscan.groq_automatisch_kaufkandidaten` in config.yaml aktiviert ist."""
+    Kandidaten (auch `kein_treffer`, Audit/Z-4) und gibt die Liste zurueck -
+    NUR bewertete Kandidaten, KEIN Groq-Call mehr (seit Phase 5, siehe
+    docs/budget_queue_design.md). Der automatische Groq-Begruendungs-Zweig ist
+    in den zentralen Budget-Allocator (agent/krypto/budget_allocator.py)
+    umgezogen - der manuelle Button (ui/marktscan_view.py) ruft
+    `generate_candidate_writeup()` weiterhin direkt auf."""
     marktscan_cfg = config_dict["marktscan"]
     scan_run_id = f"{datetime.now(timezone.utc).isoformat()}_{uuid.uuid4().hex[:8]}"
     raw = _collect_raw_candidates(coingecko_client)
@@ -449,36 +449,6 @@ def run_scan(
         candidate.id = db.upsert_marktscan_candidate(conn, candidate)
         candidates.append(candidate)
 
-        # Hybrid Groq-Begruendung (Design-Entscheidung 3, siehe Plan): der manuelle
-        # UI-Klick-Pfad ruft generate_candidate_writeup() direkt auf; hier nur der
-        # AUTOMATISCHE Zweig, ausschliesslich wenn per config.yaml explizit
-        # eingeschaltet UND ein Groq-Client vorhanden ist (P-8: nie hart von einem
-        # KI-Key abhaengen).
-        if (
-            einstufung == "kaufkandidat"
-            and groq_client is not None
-            and marktscan_cfg.get("groq_automatisch_kaufkandidaten", False)
-        ):
-            try:
-                parsed = generate_candidate_writeup(
-                    candidate, regime_result, groq_client, kraken_client, conn, watchlist, config_dict
-                )
-                db.update_marktscan_candidate_groq_writeup(
-                    conn, candidate.id, parsed.get("short_reasoning"),
-                    json.dumps(parsed.get("long_reasoning") or {}, ensure_ascii=False),
-                )
-                # MS-1b (2026-07-12): candidate ist dieselbe Objekt-Referenz wie in
-                # candidates[] - direkt mitpflegen, damit der Aufrufer (marktscan_job())
-                # die frische Begruendung ohne erneutes DB-Lesen fuer die
-                # Kaufkandidaten-E-Mail nutzen kann.
-                candidate.groq_kurzbegruendung = parsed.get("short_reasoning")
-                candidate.groq_langbegruendung_json = json.dumps(parsed.get("long_reasoning") or {}, ensure_ascii=False)
-            except Exception as exc:
-                logger.warning(
-                    "Automatische Groq-Begründung für Marktscan-Kandidat %s fehlgeschlagen: %s",
-                    candidate.symbol, exc,
-                )
-
     return candidates
 
 
@@ -493,9 +463,12 @@ def generate_candidate_writeup(
 ) -> dict:
     """Baut ein Facts-Objekt analog zu agent/analyst.py::build_facts() aus einem
     bereits gescorten Kandidaten und ruft call_groq_for_signal() UNVERAENDERT auf -
-    kein zweites Prompt-Schema (Design-Entscheidung 3, siehe Plan). Zwei Aufrufpfade
-    fuehren hierher: manueller UI-Klick (jederzeit, jeder Kandidat) und der
-    automatische Zweig in run_scan() (nur kaufkandidat + Konfig-Schalter). Wirft
+    kein zweites Prompt-Schema (Design-Entscheidung 3, siehe Plan). `groq_client`
+    kann trotz des Parameternamens auch ein CerebrasClient sein (identisches
+    .chat()-Interface, siehe agent/krypto/budget_allocator.py). Zwei Aufrufpfade
+    fuehren hierher: manueller UI-Klick (jederzeit, jeder Kandidat) und seit
+    Phase 5 der zentrale Budget-Allocator (run_scan() selbst macht seit Phase 5
+    KEINE Groq-Calls mehr, siehe docs/budget_queue_design.md). Wirft
     AnalystResponseInvalid unveraendert weiter - der Aufrufer entscheidet, wie er
     damit umgeht (siehe agent/pipeline.py fuer das etablierte Muster)."""
     from agent.krypto.analyst import build_facts, call_groq_for_signal

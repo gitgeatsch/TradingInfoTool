@@ -28,10 +28,12 @@ refresh_prices_lock = threading.Lock()
 refresh_securities_lock = threading.Lock()
 marktscan_lock = threading.Lock()
 bitpanda_cash_lock = threading.Lock()
-# Batch-Signal-Berechnung (2026-07-13) - geteilt zwischen dem taeglichen
-# Scheduler-Job (Wochen-Sicherheitsnetz) UND dem manuellen UI-Button
-# (ui/signals_view.py), verhindert einen gleichzeitigen Doppel-Lauf egal
-# wodurch ausgeloest.
+# Batch-Signal-Berechnung (2026-07-13) - der urspruengliche taegliche
+# 05:00-Scheduler-Job ist seit Phase 5 (2026-07-14) entfernt (der Budget-
+# Allocator uebernimmt Spot-Rotation jetzt im 15-Min-Takt, siehe
+# hebel_screening_job()/budget_allocator.py). Der manuelle UI-Button
+# (ui/signals_view.py) bleibt bestehen (Nutzer-Entscheidung) und nutzt diesen
+# Lock weiterhin selbst (verhindert einen Doppel-Lauf bei Mehrfach-Klick).
 signal_batch_lock = threading.Lock()
 # Hebel-Screening (2026-07-14, Phase 1, siehe docs/hebel_positionsformel.md) -
 # rein deterministisches Scoring, kein Groq-Aufruf, daher (noch) kein zweiter
@@ -194,13 +196,14 @@ def refresh_ohlc_job(client, conn_factory, watchlist) -> None:
         conn.close()
 
 
-def marktscan_job(coingecko_client, kraken_client, groq_client, conn_factory, watchlist, fred_api_key) -> bool:
+def marktscan_job(coingecko_client, kraken_client, conn_factory, watchlist, fred_api_key) -> bool:
     """MS-3: 2x taeglich (04:00/16:00, siehe build_scheduler()) - kompletter
     Marktscan-Lauf (Stufe A-D, agent/krypto/marktscan.py). Braucht ein aktuelles Regime
     (R-5.1 + Liquiditaets-Regime + Zyklus-Risiko) fuer Stufe C/D, dafuer dieselbe
     Logik wie agent/krypto/pipeline.py::generate_signal() (compute_current_regime(), nicht
-    dupliziert). `groq_client` kann None sein (P-8) - dann greift nur der manuelle
-    UI-Klick-Pfad fuer P-5-Begruendungen, keine automatischen. Rueckgabewert wie
+    dupliziert). Seit Phase 5 (2026-07-14) macht `run_scan()` selbst KEINE Groq-Calls
+    mehr (siehe agent/krypto/marktscan.py) - der Budget-Allocator generiert
+    Kaufkandidaten-Begruendungen zentral im 15-Min-Takt. Rueckgabewert wie
     refresh_prices_job() (Lock-Status)."""
     if not marktscan_lock.acquire(blocking=False):
         logger.info("Marktscan: bereits in Ausführung - übersprungen")
@@ -218,10 +221,7 @@ def marktscan_job(coingecko_client, kraken_client, groq_client, conn_factory, wa
             return True
 
         regime_result = compute_current_regime(conn, coingecko_client, watchlist, fred_api_key, config_dict)
-        candidates = run_scan(
-            coingecko_client, conn, watchlist, regime_result, config_dict,
-            groq_client=groq_client, kraken_client=kraken_client,
-        )
+        candidates = run_scan(coingecko_client, conn, watchlist, regime_result, config_dict)
         treffer = [c for c in candidates if c.einstufung in ("kaufkandidat", "watchlist_wuerdig")]
         logger.info(
             "Marktscan: %d Kandidaten bewertet (%d Treffer: watchlist_würdig/Kaufkandidat, Regime %s)",
@@ -477,94 +477,6 @@ def _notify_marktscan_kaufkandidaten(kaufkandidaten: list) -> None:
         logger.exception("Marktscan-Kaufkandidaten-E-Mail fehlgeschlagen")
 
 
-def _notify_signal_batch_ergebnis(berechnet: list, verbleibend_ueberfaellig: int) -> None:
-    """Batch-Signal-Berechnung (2026-07-13) - analog zu
-    _notify_marktscan_kaufkandidaten(): eigener try/except (P-10, ein
-    Mail-Fehler darf den Batch-Lauf nicht nachtraeglich als 'fehlgeschlagen'
-    erscheinen lassen), nur bei mind. einem AKTIONABLEN Ergebnis (nicht
-    HALTEN) - ein reiner HALTEN-Batch ist kein Grund fuer eine taegliche
-    E-Mail (matcht das 'kein Cooldown, aber nur bei echtem Anlass'-Prinzip
-    von Marktscan, nur andersherum: dort kein Cooldown noetig weil selten,
-    hier waere taeglich HALTEN-Spam sonst der Normalfall)."""
-    aktionabel = [s for s in berechnet if s.action != "HALTEN"]
-    if not aktionabel:
-        return
-    try:
-        import config as config_module
-        from api.email_notify import send_notification_email
-
-        config_dict = config_module.load_config()
-        email_cfg = config_dict.get("benachrichtigung", {}).get("email", {})
-        if not email_cfg.get("aktiv", False):
-            return
-        empfaenger = email_cfg.get("empfaenger")
-        if not empfaenger:
-            return
-        if not config_dict.get("signale_batch", {}).get("benachrichtigung_email", True):
-            return
-
-        zeilen = [
-            f"- {s.symbol}: {s.action} (Konfidenz {s.confidence_pct:.0f}%): {s.short_reasoning}"
-            for s in aktionabel
-        ]
-        body = (
-            f"{len(berechnet)} Signal(e) automatisch berechnet, davon {len(aktionabel)} "
-            f"nicht HALTEN:\n\n" + "\n".join(zeilen)
-            + f"\n\n{verbleibend_ueberfaellig} Asset(s) sind aktuell länger als "
-            "7 Tage ohne echte Analyse (werden in den nächsten Läufen priorisiert)."
-            "\n\nDetails im Signale-Tab der App."
-        )
-        send_notification_email(
-            f"TradingInfoTool: {len(aktionabel)} neue Signal-Empfehlung(en)",
-            body,
-            empfaenger,
-        )
-    except Exception:
-        logger.exception("Signal-Batch-E-Mail fehlgeschlagen")
-
-
-def signal_batch_job(coingecko_client, kraken_client, groq_client, conn_factory, watchlist, fred_api_key) -> bool:
-    """Wochen-Sicherheitsnetz fuer die Batch-Signal-Berechnung (2026-07-13,
-    siehe agent/krypto/signal_batch.py Modul-Docstring fuer die volle
-    Token-Budget-Herleitung). Taeglich (siehe build_scheduler()), respektiert
-    dasselbe geteilte Tagesbudget wie der manuelle UI-Button - `run_signal_batch()`
-    prueft selbst, wie viele echte Analysen heute schon (ueber IRGENDEINEN
-    Ausloeser) gelaufen sind. `groq_client` kann None sein (P-8) - dann
-    schlaegt jeder generate_signal()-Aufruf beim eigentlichen Groq-Call fehl,
-    wird aber pro Asset einzeln abgefangen (siehe run_signal_batch())."""
-    if not signal_batch_lock.acquire(blocking=False):
-        logger.info("Signal-Batch: bereits in Ausführung - übersprungen")
-        return False
-    _job_started_at["signal_batch"] = time.monotonic()
-    try:
-        import config as config_module
-        from agent.krypto.signal_batch import run_signal_batch
-
-        config_dict = config_module.load_config()
-        batch_cfg = config_dict.get("signale_batch", {})
-        if not batch_cfg.get("aktiv", True):
-            logger.info("Signal-Batch deaktiviert (config.yaml signale_batch.aktiv=false) - übersprungen")
-            return True
-
-        result = run_signal_batch(
-            conn_factory, watchlist, groq_client, coingecko_client, kraken_client, fred_api_key,
-            daily_budget=batch_cfg.get("taegliches_budget", 15),
-        )
-        logger.info(
-            "Signal-Batch: %d berechnet, %d fehlgeschlagen, %d weiterhin >7 Tage überfällig, Budget erschöpft: %s",
-            len(result.berechnet), len(result.fehlgeschlagen), result.verbleibend_ueberfaellig,
-            result.budget_erschoepft,
-        )
-        _notify_signal_batch_ergebnis(result.berechnet, result.verbleibend_ueberfaellig)
-    except Exception as exc:
-        logger.exception("Signal-Batch fehlgeschlagen")
-        _notify_job_failure("signal_batch", f"Signal-Batch fehlgeschlagen: {exc}")
-    finally:
-        signal_batch_lock.release()
-        _job_started_at.pop("signal_batch", None)
-    return True
-
-
 def _refresh_hebel_position_liquidation_prices(conn) -> None:
     """Fuer jede aktuell offene Margin-Position den geschaetzten Liquidationspreis
     mit den ECHTEN verstrichenen Tagen neu berechnen (2026-07-14, Phase 3) -
@@ -590,17 +502,26 @@ def _refresh_hebel_position_liquidation_prices(conn) -> None:
         db.upsert_hebel_position(conn, pos)
 
 
-def hebel_screening_job(coingecko_client, kraken_client, conn_factory, watchlist, bitpanda_api_key=None) -> bool:
+def hebel_screening_job(
+    coingecko_client, kraken_client, conn_factory, watchlist, bitpanda_api_key=None,
+    groq_client=None, cerebras_client=None, fred_api_key=None,
+) -> bool:
     """Hebel-Screening (2026-07-14, Phase 1, siehe docs/hebel_positionsformel.md)
     - rein deterministisches Zwei-Zweige-Scoring, KEIN Groq-Aufruf. Ergebnis
-    landet in hebel_triggers, ein kuenftiger Budget-Allocator (spaetere Phase)
-    entscheidet, welche Kandidaten eine echte LLM-Empfehlung bekommen - das ist
-    NICHT Teil dieses Jobs.
+    landet in hebel_triggers.
 
     Seit Phase 3 (Positions-Rekonstruktion) huckepack im selben 15-Min-Takt:
     Bitpanda-Margin-Positions-Sync + Liquidationspreis-Neuberechnung fuer
     offene Positionen (P-8: nur falls bitpanda_api_key gesetzt ist, sonst
-    stillschweigend uebersprungen - kein Fehler)."""
+    stillschweigend uebersprungen - kein Fehler).
+
+    Seit Phase 5 (Budget-Allocator, siehe docs/budget_queue_design.md)
+    zusaetzlich: der zentrale Allocator laeuft im selben Takt und verteilt das
+    gemeinsame Tagesbudget ueber Hebel-Kandidaten (dieses Screening),
+    Marktscan-Kaufkandidaten UND Spot-Rotation (P-8: nur falls sowohl
+    groq_client ALS AUCH cerebras_client gesetzt sind, sonst uebersprungen -
+    ohne mindestens einen echten LLM-Client waere jeder Allocator-Call
+    ohnehin zum Scheitern verurteilt)."""
     if not hebel_screening_lock.acquire(blocking=False):
         logger.info("Hebel-Screening: bereits in Ausführung - übersprungen")
         return False
@@ -635,6 +556,23 @@ def hebel_screening_job(coingecko_client, kraken_client, conn_factory, watchlist
                 _refresh_hebel_position_liquidation_prices(conn)
             finally:
                 conn.close()
+
+        if groq_client is not None and cerebras_client is not None:
+            from agent.krypto.budget_allocator import run_budget_allocator
+
+            allocation = run_budget_allocator(
+                conn_factory, watchlist, groq_client, cerebras_client, coingecko_client, kraken_client,
+                fred_api_key, config_dict,
+            )
+            logger.info(
+                "Budget-Allocator: Hebel %d, Marktscan %d, Spot %d verarbeitet, %d fehlgeschlagen, "
+                "Cerebras-Calls %d, Cerebras-Budget erschöpft: %s",
+                len(allocation.hebel_verarbeitet), len(allocation.marktscan_verarbeitet),
+                len(allocation.spot_verarbeitet), len(allocation.fehlgeschlagen),
+                allocation.cerebras_calls_verbraucht, allocation.cerebras_budget_erschoepft,
+            )
+        else:
+            logger.info("Budget-Allocator übersprungen (kein Groq- und/oder Cerebras-Client konfiguriert)")
     except Exception as exc:
         logger.exception("Hebel-Screening fehlgeschlagen")
         _notify_job_failure("hebel_screening", f"Hebel-Screening fehlgeschlagen: {exc}")
@@ -701,7 +639,7 @@ def _ohlc_data_is_stale(conn, watchlist) -> bool:
 
 def build_scheduler(
     coingecko_client, kraken_client, db_conn_factory, watchlist_provider,
-    groq_client=None, fred_api_key=None, bitpanda_api_key=None,
+    groq_client=None, cerebras_client=None, fred_api_key=None, bitpanda_api_key=None,
 ) -> BackgroundScheduler:
     watchlist = watchlist_provider()
     scheduler = BackgroundScheduler()
@@ -768,12 +706,18 @@ def build_scheduler(
     # Hebel-Screening (2026-07-14, Phase 1) - eigener 15-Min-Takt, unabhaengig vom
     # Preis-Refresh oben (andere Datenquellen: Binance/Bybit/OKX/Kraken statt
     # CoinGecko/yfinance). Aktiv-Schalter wird IM Job-Body geprueft (identisches
-    # Muster wie marktscan_job()/signal_batch_job()), daher immer registriert.
+    # Muster wie marktscan_job()), daher immer registriert. Seit Phase 5
+    # traegt derselbe Takt zusaetzlich den Budget-Allocator (Groq/Cerebras-Clients
+    # + fred_api_key durchgereicht, P-8-Grundprinzip: fehlt einer der beiden
+    # LLM-Clients, wird der Allocator-Teil im Job-Body still uebersprungen).
     scheduler.add_job(
         hebel_screening_job,
         "interval",
         minutes=HEBEL_SCREENING_INTERVAL_MINUTES,
-        args=[coingecko_client, kraken_client, db_conn_factory, watchlist, bitpanda_api_key],
+        args=[
+            coingecko_client, kraken_client, db_conn_factory, watchlist, bitpanda_api_key,
+            groq_client, cerebras_client, fred_api_key,
+        ],
         id="hebel_screening",
         next_run_time=datetime.now(),
     )
@@ -784,21 +728,14 @@ def build_scheduler(
         "cron",
         hour="4,16",
         minute=0,
-        args=[coingecko_client, kraken_client, groq_client, db_conn_factory, watchlist, fred_api_key],
+        args=[coingecko_client, kraken_client, db_conn_factory, watchlist, fred_api_key],
         id="marktscan",
     )
-    # Batch-Signal-Berechnung (2026-07-13) - Luecke zwischen Marktscan (4/16 Uhr)
-    # und Backward-Tracking (6 Uhr). Immer registriert, der Aktiv-Schalter wird
-    # IM Job-Body geprueft (identisches Muster wie marktscan_job() oben), nicht
-    # bei der Registrierung.
-    scheduler.add_job(
-        signal_batch_job,
-        "cron",
-        hour=5,
-        minute=0,
-        args=[coingecko_client, kraken_client, groq_client, db_conn_factory, watchlist, fred_api_key],
-        id="signal_batch",
-    )
+    # Batch-Signal-Berechnung (2026-07-13): fixer 05:00-Cron entfernt (2026-07-14,
+    # Phase 5) - der Budget-Allocator uebernimmt Spot-Rotation jetzt im 15-Min-Takt
+    # mit (siehe hebel_screening_job()). agent/krypto/signal_batch.py::
+    # run_signal_batch() bleibt bestehen, nur noch fuer den manuellen UI-Button
+    # (ui/signals_view.py, Nutzer-Entscheidung) genutzt.
     # Backward-Tracking (2026-07-10): taeglich, kein eigener API-Call noetig (reine
     # Auswertung bereits vorhandener Kursdaten) - feste Uhrzeit nach dem ueblichen
     # naechtlichen Refresh-Fenster, keine harte Abhaengigkeit (holt am naechsten Tag

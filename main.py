@@ -11,6 +11,7 @@ from pathlib import Path
 import config
 import database.db as db
 import ui.app as app
+from api.cerebras import CerebrasClient
 from api.coingecko import CoinGeckoClient
 from api.history import backfill_all
 from api.groq import GroqClient
@@ -107,6 +108,17 @@ def main() -> None:
         # (siehe ui/signals_view.py).
         groq_client = None
         logger.info("Kein GROQ_API_KEY gesetzt - Signalberechnung (Phase 3) deaktiviert.")
+
+    cerebras_api_key = os.environ.get("CEREBRAS_API_KEY")
+    if cerebras_api_key:
+        cerebras_client = CerebrasClient(api_key=cerebras_api_key)
+        logger.info("Cerebras API-Key gefunden - Budget-Allocator (Phase 5) verfügbar.")
+    else:
+        # P-8: ohne Cerebras-Key laeuft der Budget-Allocator einfach nicht automatisch
+        # (siehe scheduler/background.py::hebel_screening_job()) - alle manuellen
+        # Pfade (Groq-Einzel-Klicks) bleiben unveraendert nutzbar.
+        cerebras_client = None
+        logger.info("Kein CEREBRAS_API_KEY gesetzt - automatischer Budget-Allocator (Phase 5) deaktiviert.")
 
     fred_api_key = os.environ.get("FRED_API_KEY")
     if fred_api_key:
@@ -207,6 +219,7 @@ def main() -> None:
         db_conn_factory=db.get_connection,
         watchlist_provider=lambda: watchlist,
         groq_client=groq_client,
+        cerebras_client=cerebras_client,
         fred_api_key=fred_api_key,
         bitpanda_api_key=bitpanda_api_key,
     )

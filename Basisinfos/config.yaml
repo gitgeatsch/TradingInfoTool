@@ -389,9 +389,15 @@ strategien:
     beschreibung: Defensiv, hohe Cash-Quote; automatisch aktiv bei Drawdown-Limit
     aktiv: true
   - id: S-6
-    name: Hebel-Long
-    beschreibung: Nur fuer geeignete Assets, strikt nach Risiko-Regeln, nur Long
-    aktiv: false                       # vorerst deaktiviert
+    name: Hebel (Long und Short)
+    beschreibung: Nur fuer geeignete Assets, strikt nach Risiko-Regeln (siehe Kap. 14
+      Regelwerksmanual/docs/hebel_positionsformel.md). Short beratend, Bitpanda fuehrt
+      aktuell nur Long aus.
+    aktiv: true                        # 2026-07-14: dieser Eintrag war bisher NICHT mit
+    # dem echten Code verdrahtet (kein hebel_screening.py/budget_allocator.py-Codepfad
+    # prueft ihn) - die tatsaechlichen Schalter sind hebel_screening.aktiv und
+    # budget_allocator.aktiv (beide default true). Auf true korrigiert, damit dieser
+    # Eintrag die reale Aktivitaet widerspiegelt statt sie faelschlich zu verneinen.
 
 # --- Technische Indikatoren (siehe Spezifikation Kap. 7) ---
 indikatoren:
@@ -474,26 +480,34 @@ marktscan:
   schwellen:
     score_kaufkandidat_ab: 70          # VORLAEUFIG - Stufe D
     score_watchlist_wuerdig_ab: 50     # VORLAEUFIG - Stufe D
-  # Hybrid (2026-07-09): Groq-P-5-Begruendung ist IMMER per UI-Klick verfuegbar;
-  # dieser Schalter steuert zusaetzlich, ob der Scan-Job selbst automatisch fuer jeden
-  # kaufkandidat-Treffer eine Begruendung generiert (Default aus, Kosten-/Quota-bewusst).
-  groq_automatisch_kaufkandidaten: false
+  # `groq_automatisch_kaufkandidaten` (2026-07-09) entfernt (2026-07-14, Phase 5) -
+  # der automatische Groq-Zweig ist in den zentralen budget_allocator (oben)
+  # umgezogen, der manuelle UI-Klick bleibt weiterhin unveraendert verfuegbar.
 
 # --- Batch-Signal-Berechnung (2026-07-13, siehe Regelwerksmanual.md Kap. 5/12) ---
 # Signal-Berechnung kostet pro Asset einen echten Groq-Aufruf (~5.600-6.000 Tokens
 # gemessen, siehe agent/krypto/signal_batch.py Modul-Docstring) - bei Groq Free-Tier
 # (100.000 Tokens/Tag) sind real nur ~15-18 Berechnungen/Tag moeglich, NICHT die 1.000
 # Requests/Tag, die das offizielle RPD-Limit allein suggerieren wuerde (TPD ist die
-# bindende Grenze). Taeglicher Scheduler-Job (05:00 Uhr, Luecke zwischen Marktscan und
-# Backward-Tracking) berechnet die am laengsten ueberfaelligen Assets automatisch nach,
-# damit jedes Watchlist-Asset (aktiv UND watchlist-Status) mindestens 1x/Woche eine
-# echte Analyse bekommt, auch ohne manuellen Klick. Teilt sich das Tagesbudget mit dem
-# manuellen "Fällige Signale jetzt berechnen"-Button (Signale-Tab) UND dem bestehenden
-# Einzel-Klick-Button - alle drei schreiben in dieselbe signals-Tabelle.
+# bindende Grenze). Der urspruengliche taegliche 05:00-Scheduler-Job ist seit Phase 5
+# (2026-07-14) entfernt - der Budget-Allocator (unten) uebernimmt die automatische
+# Ueberfaellig-Rotation jetzt im 15-Min-Takt. `taegliches_budget` gilt nur noch fuer
+# den manuellen "Fällige Signale jetzt berechnen"-Button (Signale-Tab), voellig
+# eigenstaendig neben budget_allocator.taegliches_budget_gesamt.
 signale_batch:
-  aktiv: true
   taegliches_budget: 15                # konservativ unter dem gemessenen Maximum (~15-18)
-  benachrichtigung_email: true          # E-Mail nur bei mind. 1 aktionablem (nicht HALTEN) Ergebnis
+
+# --- Budget-Allocator (2026-07-14, Phase 5, siehe docs/budget_queue_design.md) ---
+# Zentrale Tagesbudget-Verteilung ueber Hebel (Tier 1) + Marktscan-Kaufkandidaten
+# (Tier 2) + Spot-Rotation (Tier 3), huckepack auf dem 15-Min-Hebel-Screening-Takt.
+budget_allocator:
+  aktiv: true
+  taegliches_budget_gesamt: 15          # B, Groqs realer Tages-Deckel (~15-18 gemessen)
+  spot_rotation_reserve: 5              # F, garantiert Grundrotation (bestaetigt 2026-07-13)
+  cerebras_taegliches_budget: 60        # eigener Deckel, konservativ unter der echten
+                                        # ~166-Calls/Tag-Grenze (2026-07-14 per API-Headern
+                                        # bestaetigt: 1.000.000 Tokens/Tag / ~6.000 Tokens/Call)
+  cooldown_stunden: 3.5                 # Mitte der bestaetigten 3-4-Std.-Spanne (2026-07-13)
 
 # --- Hebel-Screening (2026-07-14, Phase 1, siehe docs/hebel_positionsformel.md) ---
 # Deterministisches Zwei-Zweige-Scoring (Trendfolge + Kontra), KEIN Groq-Aufruf hier -
