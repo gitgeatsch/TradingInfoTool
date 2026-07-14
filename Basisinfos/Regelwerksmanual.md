@@ -1144,12 +1144,14 @@ außen vor.
 ### Margin-/Hebel-Trading — Rahmenbedingungen jetzt vollständig entschieden (2026-07-14)
 
 **Status: Design fertig, Phase 1 (Screening) + Phase 2 (Risiko-/
-Liquidationsformeln) + Phase 3 (Positions-Rekonstruktion) sind gebaut und
-gegen echte Daten verifiziert.** Noch offen: die LLM-gestützte Empfehlung
-selbst (Cerebras-Anbindung + Budget-Allocator), bis dahin liefert das
-Screening nur Kandidaten, aber noch keine fertige Kauf-/Verkaufsempfehlung.
-Volle technische Herleitung in `docs/hebel_positionsformel.md`, hier die für
-dich relevante Zusammenfassung.
+Liquidationsformeln) + Phase 3 (Positions-Rekonstruktion) + Phase 4
+(Cerebras-Anbindung + KI-Empfehlung) sind gebaut und gegen echte Daten
+verifiziert.** Noch offen: der Budget-Allocator, der entscheidet, WANN welcher
+Kandidat automatisch eine KI-Empfehlung bekommt (Tagesbudget-Verteilung über
+Hebel/Marktscan/Spot-Rotation) - bis dahin läuft die KI-Empfehlung nur
+manuell/testweise, noch nicht automatisch im 15-Min-Takt. Volle technische
+Herleitung in `docs/hebel_positionsformel.md`, hier die für dich relevante
+Zusammenfassung.
 
 **RM-10 korrigiert:** stand bisher als "nur Long, kein Short" — das war aber
 nur ein Bitpanda-Fakt (Bitpanda kann aktuell kein Short ausführen), keine
@@ -1214,10 +1216,26 @@ Hebel komplett deaktiviert, unabhängig von der reinen Rechnung; ansonsten
 tendiert die Empfehlung zum unteren Ende des sicher berechneten Hebel-
 Korridors statt zum Maximum.
 
-**Noch offen (Phase 4+):**
-- Die eigentliche LLM-Empfehlung (Cerebras-Anbindung + Budget-Allocator) —
-  das Screening liefert bereits Kandidaten, aber noch keine fertige Kauf-/
-  Verkaufsempfehlung mit Begründung
+**KI-Empfehlung selbst (Cerebras + Analyst) — gebaut:** aus einem
+Screening-Kandidaten wird jetzt eine vollständige Empfehlung mit Begründung,
+Kurszonen, Hebel-Vorschlag und Halte-Kriterium (gleicher Aufbau wie bei
+Spot-Signalen, plus Hebel-spezifische Felder wie "Einmal-Trade vs.
+Swing-Strategie"). Läuft über Cerebras (zweite, kostenlose KI-Ebene neben
+Groq) statt über dein bestehendes Groq-Tagesbudget, damit die Hebel-
+Empfehlungen die knappe Spot-/Marktscan-Kapazität nicht verdrängen. Dein
+gewählter Hebel-Vorschlag wird - wie überall im System - nie blind
+übernommen: die Sicherheitsregeln oben (Liquidations-Sicherheitsmarge,
+Extrem-Krise-Deaktivierung) werden danach nochmal deterministisch erzwungen.
+Echt gegen die Produktions-DB getestet: für AIOZ (ein automatisch erkannter
+Short-Kandidat) kam eine vollständige, plausible Empfehlung heraus (Short-
+Eröffnung, 5-facher Hebel, Kurszonen samt Liquidationspreis-Schätzung).
+
+**Noch offen (Phase 5+):**
+- Budget-Allocator — entscheidet automatisch, wann welcher Kandidat
+  (Hebel/Marktscan/Spot-Rotation) eine echte KI-Analyse bekommt, verteilt
+  über euer gemeinsames Tagesbudget (siehe `docs/budget_queue_design.md`).
+  Bis dahin läuft die Hebel-KI-Empfehlung nur manuell/testweise, nicht
+  automatisch im 15-Min-Takt.
 - Marktscan-Umbau (Automatik-Zweig zentralisieren), Scheduler-Cutover, UI-Tab
 
 ---

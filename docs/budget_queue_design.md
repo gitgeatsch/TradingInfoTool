@@ -157,18 +157,26 @@ sofort). Ohne diesen Fix wäre "manuell" ein Schlupfloch am Budget vorbei.
 
 ## Neue/geänderte Dateien (grober Schnitt, noch nicht final)
 
+**Update 2026-07-14:** `agent/krypto/hebel_screening.py` (Trigger-Scoring),
+`agent/krypto/hebel_risk_gate.py` (Formeln), `importer/
+bitpanda_margin_positions.py` (Positions-Rekonstruktion), `api/cerebras.py` +
+`agent/krypto/hebel_analyst.py` + `agent/krypto/hebel_pipeline.py`
+(Cerebras-Client + KI-Empfehlung) sind bereits gebaut+verifiziert (Phase 1-4,
+siehe `docs/hebel_positionsformel.md`) — der Allocator unten ruft
+`hebel_pipeline.py::generate_hebel_signal()` künftig auf, statt sie neu zu
+bauen. Nur noch offen:
+
 - **Neu:** `agent/krypto/budget_allocator.py` — Kandidaten aus allen Quellen
   sammeln, Stufen-Logik anwenden, Cooldown prüfen, Calls ausführen
-- **Neu:** `agent/krypto/hebel_screening.py` — deterministisches 15-Min-Scoring
-  (kein LLM), schreibt in neue Tabelle `hebel_triggers`
 - **Geändert:** `marktscan.py` — automatischer Groq-Zweig entfernt,
   `run_scan()` liefert nur noch Kandidaten; manueller Button bleibt, bekommt
   aber eine Budget-Prüfung vor dem Call
-- **Geändert:** `database/db.py` — neue Tabelle/Funktionen für `hebel_triggers`,
-  ggf. generische Cooldown-Tabelle statt drei Einzellösungen
-- **Geändert:** `scheduler/background.py` — neuer 15-Min-Job für Hebel-Screening
-  + Allocator-Aufruf (ersetzt den fixen 05:00-`signal_batch_job`-Cron durch
-  einen häufiger laufenden Allocator, der Spot-Rotation als Tier 3 mitbedient)
+- **Geändert:** `database/db.py` — ggf. generische Cooldown-Tabelle statt
+  drei Einzellösungen (`hebel_triggers`/`hebel_signals` existieren bereits)
+- **Geändert:** `scheduler/background.py` — Allocator-Aufruf huckepack auf dem
+  bereits bestehenden 15-Min-`hebel_screening_job` (ersetzt den fixen
+  05:00-`signal_batch_job`-Cron durch einen häufiger laufenden Allocator, der
+  Spot-Rotation als Tier 3 mitbedient)
 
 ## Status der Design-Entscheidungen
 
@@ -179,13 +187,11 @@ sofort). Ohne diesen Fix wäre "manuell" ein Schlupfloch am Budget vorbei.
 
 ## Noch offen (separate Themen, nicht Teil dieser Queue selbst)
 
-4. Trigger-Schwellenwerte für Hebel-Screening selbst (noch nicht definiert -
-   das ist die eigentliche Scoring-Formel aus der Hebel-Diskussion, separates
-   Thema von dieser Queue)
-5. Hebel-Empfehlungsschema selbst (volle Komplexität wie Spot-Signale
-   angenommen, aber noch nicht mit dem Nutzer im Detail spezifiziert)
+4. ~~Trigger-Schwellenwerte für Hebel-Screening~~ — **erledigt** (Phase 1,
+   `agent/krypto/hebel_screening.py`, siehe `docs/hebel_positionsformel.md`)
+5. ~~Hebel-Empfehlungsschema~~ — **erledigt** (Phase 4, `agent/krypto/
+   hebel_analyst.py`, siehe `docs/hebel_positionsformel.md`)
 
-Das Budget-Queue-Design selbst ist damit vollständig entschieden und bereit
-zur Implementierung, sobald 4/5 geklärt sind (die Queue-Logik ist unabhängig
-davon, WAS die Hebel-Trigger-Schwelle genau ist — sie braucht nur eine
-Trigger-Schwere-Zahl 0-100 als Input, egal wie die berechnet wird).
+Das Budget-Queue-Design selbst ist damit vollständig entschieden UND alle
+Voraussetzungen (4/5) sind inzwischen erledigt — **bereit zur direkten
+Implementierung des Allocators selbst**, keine weitere Abhängigkeit offen.

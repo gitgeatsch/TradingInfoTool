@@ -368,3 +368,78 @@ class HebelPosition:
     liquidationspreis_geschaetzt_eur: float | None = None
     liquidationspreis_berechnet_am: str | None = None
     quelle_tags_json: str | None = None
+
+
+@dataclass
+class HebelSignal:
+    """Ergebnis der Hebel-Analyst-Pipeline (agent/krypto/hebel_pipeline.py,
+    2026-07-14, Phase 4, siehe docs/hebel_positionsformel.md). Append-only wie
+    Signal - jeder Lauf fuegt eine neue Zeile ein, nie ein Upsert. Bewusst eine
+    EIGENE Tabelle statt Wiederverwendung von `signals` (andere Spalten:
+    richtung, 7-Aktionen-Vokabular statt 5, hebel_vorschlag/hebel_final,
+    trigger_*, kein position_size/tranchen)."""
+    symbol: str
+    created_at: str
+    richtung: str  # LONG|SHORT
+    action: str  # 7-Aktionen-Vokabular, siehe hebel_analyst.REQUIRED_HEBEL_ACTIONS
+    gate_passed: bool
+    gate_reason: str | None
+    risk_veto: bool
+    facts_json: str
+    id: int | None = None
+    pipeline_version: str = "1"
+    hebel_vorschlag: float | None = None
+    hebel_final: float | None = None
+    hebel_korrektur_hinweis: str | None = None
+    trade_thesis_typ: str | None = None
+    hebel_trigger_id: int | None = None
+    trigger_zweig: str | None = None
+    trigger_score: float | None = None
+    confidence_pct: float | None = None
+    short_reasoning: str | None = None
+    long_reasoning_technisch: str | None = None
+    long_reasoning_fundamental: str | None = None
+    long_reasoning_makro: str | None = None
+    entry_usd_von: float | None = None
+    entry_usd_bis: float | None = None
+    entry_eur_von: float | None = None
+    entry_eur_bis: float | None = None
+    stop_loss_usd_von: float | None = None
+    stop_loss_usd_bis: float | None = None
+    stop_loss_eur_von: float | None = None
+    stop_loss_eur_bis: float | None = None
+    take_profit_usd_von: float | None = None
+    take_profit_usd_bis: float | None = None
+    take_profit_eur_von: float | None = None
+    take_profit_eur_bis: float | None = None
+    halte_kriterium_bucket: str | None = None
+    halte_kriterium_ziel_preis_usd: float | None = None
+    halte_kriterium_ziel_preis_eur: float | None = None
+    halte_kriterium_ziel_datum: str | None = None
+    halte_kriterium_bedingung_text: str | None = None
+    halte_kriterium_reasoning: str | None = None
+    top_grund_1_kategorie: str | None = None
+    top_grund_1_text: str | None = None
+    top_grund_2_kategorie: str | None = None
+    top_grund_2_text: str | None = None
+    top_grund_3_kategorie: str | None = None
+    top_grund_3_text: str | None = None
+    top_grund_4_kategorie: str | None = None
+    top_grund_4_text: str | None = None
+    top_grund_5_kategorie: str | None = None
+    top_grund_5_text: str | None = None
+    key_risks_text: str | None = None
+    regime: str | None = None
+    regime_source: str | None = None
+    forecast_bull_text: str | None = None
+    forecast_bull_prob_pct: float | None = None
+    forecast_base_text: str | None = None
+    forecast_base_prob_pct: float | None = None
+    forecast_bear_text: str | None = None
+    forecast_bear_prob_pct: float | None = None
+    liquidationspreis_geschaetzt_usd: float | None = None
+    eigenkapitalbedarf_usd: float | None = None
+    ausfuehrbarkeit_hinweis: str | None = None
+    risk_veto_reason: str | None = None
+    groq_raw_response: str | None = None
+    llm_model: str | None = None

@@ -1,12 +1,47 @@
 # Hebel-Positionsgrößen- und Liquidationspreis-Formel (RM-1/RM-10/RM-11/AZ-7)
 
 Status: Design komplett entschieden. **Phase 1 (Screening) + Phase 2
-(Risiko-/Liquidationsformeln) + Phase 3 (Positions-Rekonstruktion) sind
-implementiert und gegen echte Daten verifiziert (2026-07-14)** — siehe
-`agent/krypto/hebel_screening.py`, `agent/krypto/hebel_risk_gate.py`,
-`importer/bitpanda_margin_positions.py`. Phase 4+ (Cerebras-Client,
-LLM-Analyst, Budget-Allocator, Marktscan-Refactor, Scheduler-Cutover, UI)
-weiterhin offen, siehe eigener Plan pro Phase.
+(Risiko-/Liquidationsformeln) + Phase 3 (Positions-Rekonstruktion) + Phase 4
+(Cerebras-Client + LLM-Analyst) sind implementiert und gegen echte Daten
+verifiziert (2026-07-14)** — siehe `agent/krypto/hebel_screening.py`,
+`agent/krypto/hebel_risk_gate.py`, `importer/bitpanda_margin_positions.py`,
+`api/cerebras.py`, `agent/krypto/hebel_analyst.py`, `agent/krypto/
+hebel_pipeline.py`. Phase 5+ (Budget-Allocator, Marktscan-Refactor,
+Scheduler-Cutover, UI) weiterhin offen, siehe eigener Plan pro Phase.
+
+## Phase 4 (Cerebras-Client + LLM-Analyst) implementiert (2026-07-14)
+
+`api/cerebras.py::CerebrasClient` (identisches `.chat()`-Interface wie
+`GroqClient`, kein interner Rate-Limiter) + `agent/krypto/hebel_analyst.py`
+(SYSTEM_PROMPT unverändert aus diesem Dokument übernommen, `build_hebel_facts()`,
+`_validate_hebel()`, `call_llm_for_hebel_signal()`) + `agent/krypto/
+hebel_pipeline.py::generate_hebel_signal()` (Orchestrierung, mirrort
+`pipeline.py::generate_signal()`). Neue Tabelle `hebel_signals` (append-only,
+analog `signals`, siehe `database/models.py::HebelSignal`).
+
+**Design-Punkte während der Umsetzung geklärt:**
+- Stop-Loss-Distanz für `max_sicherer_hebel` wird deterministisch aus 2× ATR
+  berechnet (`risk_gate.STOP_LOSS_ATR_MULTIPLE`, wiederverwendet statt
+  dupliziert) — GENAU wie bei Spot (`risk_gate.py::pre_check()`), NICHT vom
+  späteren Modell-Zonen-Vorschlag abhängig. Kein Fix an `hebel_risk_gate.py`
+  nötig, dessen Signaturen waren bereits konsistent mit diesem Prinzip.
+- "Noch zu klären"-Punkt gelöst: KEIN separates `long_reasoning.derivate`-Feld
+  — OI/Funding/LSR-Kontext fließt wie geplant in `top_gruende` (Regel 8) und
+  den unveränderten `antizyklisch`-Block (identisch zu Spot).
+- `generate_hebel_signal()` ist bewusst NICHT in den 15-Min-Scheduler-Takt
+  eingehängt (siehe "Bewusst NICHT Teil dieser Phase" im Plan) — erst der
+  Budget-Allocator (spätere Phase) ruft sie kontrolliert auf.
+
+**Verifiziert:** synthetischer Bull-Case (Cerebras, valides Schema, LONG/
+ERÖFFNEN mit sauberen Zonen + Pflicht-Hebel-Risiken) und Krise-Extrem-Case
+(Modell antwortete bereits selbst HALTEN, deterministischer Veto in
+`post_check_hebel()` greift zusätzlich); **echter End-to-End-Lauf gegen die
+Produktions-DB** (Kandidat AIOZ, SHORT/Trendfolge, Score 78,1) — Ergebnis
+SHORT/ERÖFFNEN, Hebel 5x (keine Korrektur nötig), Zonen/Liquidationspreis/
+Eigenkapitalbedarf/`ausführbarkeit_hinweis` alle korrekt und plausibel
+(Liquidationspreis 0,0608 $ oberhalb der Stop-Loss-Zone 0,0515-0,0516 $ -
+Stop-Loss löst vor der Liquidation aus, wie beabsichtigt). Trigger-Status
+korrekt auf `llm_generiert` aktualisiert.
 
 ## Phase 3 (Positions-Rekonstruktion) implementiert (2026-07-14)
 
@@ -428,19 +463,17 @@ Eigenkapital/Eröffnungsdatum, aus der automatischen Positions-Rekonstruktion),
 (OI-Änderung%, aktuelle Funding-Rate, Long-Konten-Anteil — teils schon in
 `antizyklisch` vorhanden, ggf. wiederverwenden statt duplizieren).
 
-**Noch zu klären, sobald Code gebaut wird:** ob `long_reasoning.makro` bei
-Hebel dieselbe Bedeutung hat wie bei Spot, oder ob ein Hebel-spezifisches
-Feld (z.B. `long_reasoning.derivate` für OI/Funding/LSR-Einordnung) sauberer
-wäre statt das in `top_gruende` zu quetschen.
+**Geklärt bei der Phase-4-Implementierung (2026-07-14):** KEIN separates
+`long_reasoning.derivate`-Feld — die OI/Funding/LSR-Werte fließen wie geplant
+über den unveränderten `antizyklisch`-Block (identisch zu Spot) UND explizit
+in `top_gruende` (Regel 8) ein, das reicht ohne Redundanz.
 
 ## Noch offen
 
 - Exakte Gewichte pro Bedingung im Trigger-Score
-- Positions-Rekonstruktions-Logik als wiederverwendbarer, getesteter Code
-  (bisher nur Scratchpad-Skripte)
 - Sicherheitsmarge-Wert (0,175) ist Mittelwert einer Spanne, kein
   recherchierter Fixwert — wie alle anderen Schwellenwerte im Projekt
   vorläufig
-- `long_reasoning.derivate` vs. bestehende Felder (siehe oben)
-- **Vollständiger Code für alles oben — Design/Formel-/Prompt-Arbeit ist
-  jetzt komplett, nächster Schritt ist die eigentliche Umsetzung**
+- **Phase 5+: Budget-Allocator** (entscheidet, wann `generate_hebel_signal()`
+  automatisch aufgerufen wird, siehe `docs/budget_queue_design.md`),
+  Marktscan-Refactor, Scheduler-Cutover, UI-Tab

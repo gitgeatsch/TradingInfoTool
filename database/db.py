@@ -7,6 +7,7 @@ from pathlib import Path
 
 from database.models import (
     HebelPosition,
+    HebelSignal,
     HebelTrigger,
     Holding,
     MacroSnapshot,
@@ -228,6 +229,75 @@ CREATE TABLE IF NOT EXISTS hebel_positions (
     UNIQUE(symbol, eroeffnet_am)
 );
 CREATE INDEX IF NOT EXISTS idx_hebel_positions_status ON hebel_positions(status, symbol);
+
+CREATE TABLE IF NOT EXISTS hebel_signals (
+    id                            INTEGER PRIMARY KEY AUTOINCREMENT,
+    symbol                        TEXT NOT NULL,
+    created_at                    TEXT NOT NULL,
+    pipeline_version              TEXT NOT NULL DEFAULT '1',
+    richtung                      TEXT NOT NULL,
+    action                        TEXT NOT NULL,
+    hebel_vorschlag                REAL,
+    hebel_final                    REAL,
+    hebel_korrektur_hinweis         TEXT,
+    trade_thesis_typ                 TEXT,
+    hebel_trigger_id                  INTEGER,
+    trigger_zweig                      TEXT,
+    trigger_score                       REAL,
+    confidence_pct                       REAL,
+    short_reasoning                      TEXT,
+    long_reasoning_technisch              TEXT,
+    long_reasoning_fundamental              TEXT,
+    long_reasoning_makro                     TEXT,
+    entry_usd_von                             REAL,
+    entry_usd_bis                              REAL,
+    entry_eur_von                               REAL,
+    entry_eur_bis                                REAL,
+    stop_loss_usd_von                             REAL,
+    stop_loss_usd_bis                              REAL,
+    stop_loss_eur_von                               REAL,
+    stop_loss_eur_bis                                REAL,
+    take_profit_usd_von                               REAL,
+    take_profit_usd_bis                                REAL,
+    take_profit_eur_von                                 REAL,
+    take_profit_eur_bis                                  REAL,
+    halte_kriterium_bucket                                TEXT,
+    halte_kriterium_ziel_preis_usd                         REAL,
+    halte_kriterium_ziel_preis_eur                          REAL,
+    halte_kriterium_ziel_datum                               TEXT,
+    halte_kriterium_bedingung_text                            TEXT,
+    halte_kriterium_reasoning                                  TEXT,
+    top_grund_1_kategorie                                       TEXT,
+    top_grund_1_text                                             TEXT,
+    top_grund_2_kategorie                                         TEXT,
+    top_grund_2_text                                               TEXT,
+    top_grund_3_kategorie                                           TEXT,
+    top_grund_3_text                                                 TEXT,
+    top_grund_4_kategorie                                             TEXT,
+    top_grund_4_text                                                   TEXT,
+    top_grund_5_kategorie                                               TEXT,
+    top_grund_5_text                                                     TEXT,
+    key_risks_text                                                       TEXT,
+    regime                                                                TEXT,
+    regime_source                                                         TEXT,
+    forecast_bull_text                                                     TEXT,
+    forecast_bull_prob_pct                                                  REAL,
+    forecast_base_text                                                       TEXT,
+    forecast_base_prob_pct                                                    REAL,
+    forecast_bear_text                                                         TEXT,
+    forecast_bear_prob_pct                                                      REAL,
+    liquidationspreis_geschaetzt_usd                                             REAL,
+    eigenkapitalbedarf_usd                                                        REAL,
+    ausfuehrbarkeit_hinweis                                                        TEXT,
+    gate_passed                                                                    INTEGER NOT NULL,
+    gate_reason                                                                    TEXT,
+    risk_veto                                                                      INTEGER NOT NULL DEFAULT 0,
+    risk_veto_reason                                                               TEXT,
+    facts_json                                                                     TEXT NOT NULL,
+    groq_raw_response                                                              TEXT,
+    llm_model                                                                      TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_hebel_signals_symbol_created ON hebel_signals(symbol, created_at);
 """
 
 
@@ -1244,3 +1314,79 @@ def set_hebel_position_last_synced_unix(conn: sqlite3.Connection, unix_timestamp
         (str(unix_timestamp),),
     )
     conn.commit()
+
+
+_HEBEL_SIGNAL_COLUMNS = (
+    "symbol", "created_at", "pipeline_version", "richtung", "action",
+    "hebel_vorschlag", "hebel_final", "hebel_korrektur_hinweis", "trade_thesis_typ",
+    "hebel_trigger_id", "trigger_zweig", "trigger_score",
+    "confidence_pct", "short_reasoning", "long_reasoning_technisch",
+    "long_reasoning_fundamental", "long_reasoning_makro",
+    "entry_usd_von", "entry_usd_bis", "entry_eur_von", "entry_eur_bis",
+    "stop_loss_usd_von", "stop_loss_usd_bis", "stop_loss_eur_von", "stop_loss_eur_bis",
+    "take_profit_usd_von", "take_profit_usd_bis", "take_profit_eur_von", "take_profit_eur_bis",
+    "halte_kriterium_bucket", "halte_kriterium_ziel_preis_usd", "halte_kriterium_ziel_preis_eur",
+    "halte_kriterium_ziel_datum", "halte_kriterium_bedingung_text", "halte_kriterium_reasoning",
+    "top_grund_1_kategorie", "top_grund_1_text", "top_grund_2_kategorie", "top_grund_2_text",
+    "top_grund_3_kategorie", "top_grund_3_text", "top_grund_4_kategorie", "top_grund_4_text",
+    "top_grund_5_kategorie", "top_grund_5_text",
+    "key_risks_text", "regime", "regime_source", "forecast_bull_text", "forecast_bull_prob_pct",
+    "forecast_base_text", "forecast_base_prob_pct", "forecast_bear_text", "forecast_bear_prob_pct",
+    "liquidationspreis_geschaetzt_usd", "eigenkapitalbedarf_usd", "ausfuehrbarkeit_hinweis",
+    "gate_passed", "gate_reason", "risk_veto", "risk_veto_reason", "facts_json",
+    "groq_raw_response", "llm_model",
+)
+
+
+def insert_hebel_signal(conn: sqlite3.Connection, signal: HebelSignal) -> int:
+    """Append-only wie insert_signal() - jeder Hebel-Analyst-Lauf ist eine eigene
+    Zeile, kein Upsert."""
+    placeholders = ", ".join("?" for _ in _HEBEL_SIGNAL_COLUMNS)
+    values = [
+        int(getattr(signal, col)) if col in ("gate_passed", "risk_veto") else getattr(signal, col)
+        for col in _HEBEL_SIGNAL_COLUMNS
+    ]
+    cursor = conn.execute(
+        f"INSERT INTO hebel_signals ({', '.join(_HEBEL_SIGNAL_COLUMNS)}) VALUES ({placeholders})",
+        values,
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def _row_to_hebel_signal(row: sqlite3.Row) -> HebelSignal:
+    data = dict(row)
+    data["gate_passed"] = bool(data["gate_passed"])
+    data["risk_veto"] = bool(data["risk_veto"])
+    return HebelSignal(**data)
+
+
+def get_latest_hebel_signal_per_symbol(conn: sqlite3.Connection) -> dict[str, HebelSignal]:
+    """Neuestes Hebel-Signal je Symbol MIT echter LLM-Analyse, analog
+    get_latest_real_signal_per_symbol() - groq_raw_response IS NOT NULL statt
+    gate_passed, aus demselben Grund (AnalystResponseInvalid-Fallback setzt
+    gate_passed=True ohne echte Antwort)."""
+    rows = conn.execute(
+        """
+        SELECT s.* FROM hebel_signals s
+        INNER JOIN (
+            SELECT symbol, MAX(created_at) AS max_created_at
+            FROM hebel_signals
+            WHERE groq_raw_response IS NOT NULL
+            GROUP BY symbol
+        ) latest ON s.symbol = latest.symbol AND s.created_at = latest.max_created_at
+        """
+    ).fetchall()
+    return {row["symbol"]: _row_to_hebel_signal(row) for row in rows}
+
+
+def count_real_hebel_signals_today(conn: sqlite3.Connection) -> int:
+    """Fuer den kuenftigen Budget-Allocator (docs/budget_queue_design.md), analog
+    count_real_signals_today() - zaehlt echte LLM-Analysen (Groq ODER Cerebras)
+    seit Mitternacht UTC."""
+    today_utc_midnight = datetime.now(timezone.utc).strftime("%Y-%m-%dT00:00:00")
+    row = conn.execute(
+        "SELECT COUNT(*) AS n FROM hebel_signals WHERE groq_raw_response IS NOT NULL AND created_at >= ?",
+        (today_utc_midnight,),
+    ).fetchone()
+    return row["n"]

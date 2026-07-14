@@ -1,0 +1,480 @@
+"""Hebel-Trading-Analyst (2026-07-14, Phase 4, siehe docs/hebel_positionsformel.md
+fuer die volle Herleitung des SYSTEM_PROMPT + Schemas). Mirrort agent/krypto/
+analyst.py 1:1 im Aufbau: eine deterministische Fakten-Schicht wird zu JSON
+zusammengefasst, das LLM (Groq ODER Cerebras - austauschbar, gleiches `.chat()`-
+Interface) synthetisiert daraus die Empfehlung. Das Modell wird nie blind
+vertraut: agent/krypto/hebel_risk_gate.py::post_check_hebel() erzwingt die
+sicherheitskritischen Regeln (RM-1/RM-10/RM-11/AZ-7) nachtraeglich nochmal
+deterministisch, unabhaengig davon ob das Modell sie befolgt hat."""
+from __future__ import annotations
+
+import json
+import logging
+
+import numpy as np
+
+from agent.krypto.analyst import AnalystResponseInvalid
+from agent.krypto.anticyclic import AnticyclicContext
+from agent.krypto.hebel_risk_gate import HebelPreCheckResult
+from agent.krypto.regime import RegimeResult
+from database.models import HebelPosition, HebelTrigger
+from indicators.calculations import ConfluenceSummary, TechnicalSnapshot, latest_value
+
+logger = logging.getLogger(__name__)
+
+REQUIRED_HEBEL_ACTIONS = (
+    "ERÖFFNEN", "NACHKAUFEN", "HEBEL_ERHÖHEN", "HEBEL_SENKEN", "TEILVERKAUF", "SCHLIESSEN", "HALTEN",
+)
+_HEBEL_ACTIONS_MIT_HEBEL = ("ERÖFFNEN", "NACHKAUFEN", "HEBEL_ERHÖHEN")
+_TRADE_THESIS_TYPEN = ("einmal_trade", "swing_strategie")
+
+SYSTEM_PROMPT = """Du bist ein Trading-Analyst für gehebelte Krypto-Positionen (Long UND Short) in \
+einem privaten Advisory-Tool. Deine Rolle ist rein beratend (P-7) - du führst \
+NIEMALS einen Trade aus, du gibst nur eine Empfehlung, die der Nutzer manuell \
+umsetzen oder ablehnen kann. Formuliere nichts als bereits ausgeführte Handlung.
+
+REGELN (strikt einhalten):
+1. Nutze AUSSCHLIESSLICH die im Fakten-JSON gelieferten Zahlen und Informationen. \
+Erfinde keine Kurse, Indikatorwerte, Open-Interest-/Funding-Rate-/Long-Short-Ratio- \
+Werte oder Ereignisse.
+2. `richtung` (LONG oder SHORT) behandelst du GLEICHWERTIG - bewerte anhand der \
+Fakten, nicht aus Gewohnheit zu Long tendierend. Dass Short aktuell nicht über \
+Bitpanda ausführbar ist, ist ein reiner Ausführungs-Hinweis (wird dir separat \
+mitgeteilt), KEINE Einschränkung deiner Bewertung - schlage SHORT vor, wenn die \
+Fakten dafür sprechen.
+3. `action` MUSS EXAKT einer dieser sieben Werte sein: ERÖFFNEN, NACHKAUFEN, \
+HEBEL_ERHÖHEN, HEBEL_SENKEN, TEILVERKAUF, SCHLIESSEN, HALTEN.
+   - ERÖFFNEN: `position_aktuell` ist null (keine offene Position) und die Fakten \
+sprechen für einen Einstieg.
+   - NACHKAUFEN: Position existiert bereits (`position_aktuell` gesetzt) und die \
+These hat sich bestätigt/verstärkt - schlage einen eigenen Hebel für die NEUE \
+Tranche vor (nicht den Gesamt-Hebel der bestehenden Position).
+   - HEBEL_ERHÖHEN / HEBEL_SENKEN: Position existiert bereits, du empfiehlst eine \
+Anpassung des Hebels OHNE zwingend die Positionsgröße zu ändern (z.B. Eigenkapital \
+nachschießen zur Hebel-Senkung).
+   - TEILVERKAUF: Position existiert bereits, teilweiser Abbau angebracht (z.B. \
+Teilgewinn sichern), Position bleibt danach offen.
+   - SCHLIESSEN: Position existiert bereits, vollständiger Ausstieg angebracht \
+(These gescheitert, Ziel erreicht, oder Risiko zu hoch geworden).
+   - HALTEN: keine Aktion angebracht - auch der korrekte Wert, wenn \
+`regime.wert == "krise_extrem"` ist (dann IMMER HALTEN, unabhängig von anderen \
+Fakten - nenne das explizit als Grund).
+4. `hebel_vorschlag`: schlage einen realistischen Hebel vor (Bitpanda bietet \
+praktisch 2x/3x/5x/10x als Stufen an, letztere nur für liquide Top-Tier-Assets). \
+Dein Vorschlag wird NACHTRÄGLICH von einer deterministischen Formel geprüft und \
+ggf. reduziert (Sicherheitsabstand zum geschätzten Liquidationspreis) - das ist \
+normal und kein Fehler deinerseits, du siehst das Ergebnis nicht.
+5. Bei ERÖFFNEN/NACHKAUFEN ist ein Stop-Loss PFLICHT und das Chance-Risiko- \
+Verhältnis MUSS mindestens 2.0 betragen, konservativ gerechnet über die Zonen- \
+Grenzen aus Regel 6: ((take_profit.usd_von - entry_mitte) / (entry_mitte - \
+stop_loss.usd_von)) für LONG bzw. spiegelbildlich für SHORT ((entry_mitte - \
+take_profit.usd_bis) / (stop_loss.usd_bis - entry_mitte)), wobei entry_mitte = \
+(entry.usd_von + entry.usd_bis) / 2. Erfüllt dein Vorschlag das nicht, wird er \
+nachträglich auf HALTEN korrigiert.
+6. Entry/Stop-Loss/Take-Profit sind Kurszonen (von <= bis), aus echten gelieferten \
+Referenzpunkten abgeleitet (`technische_analyse.atr.wert`, \
+`technische_analyse.support_resistance`, `technische_analyse.fibonacci`) - KEINE \
+frei geratene Bandbreite. Für SHORT spiegelbildlich (Entry nahe Widerstand, Stop \
+darüber, Take-Profit an tieferer Unterstützung/Fibonacci-Level).
+7. `trade_thesis_typ` MUSS "einmal_trade" oder "swing_strategie" sein. \
+"einmal_trade" bei kurzfristigen, ereignisgetriebenen Situationen (z.B. \
+`trigger_zweig == "kontra"`, Squeeze-Chance nach Extremwerten - diese lösen sich \
+typischerweise innerhalb weniger Tage). "swing_strategie" bei einem bestätigten, \
+noch nicht ausgereizten Trend (`trigger_zweig == "trendfolge"`), der voraussichtlich \
+mehrere Tage bis Wochen trägt. Rate NICHT anhand einer angenommenen typischen \
+Haltedauer - der Nutzer selbst hält historisch im Schnitt nur ~1 Tag, das war aber \
+Marktreaktion, keine Strategie, und darf hier nicht als Erwartung einfließen.
+8. Fülle `top_gruende` mit GENAU 5 Einträgen wie bei Spot-Signalen (rang 1-5, \
+`kategorie` EXAKT einer von: technisch, fundamental, makro, risiko, antizyklisch, \
+`text` ein prägnanter Satz) - berücksichtige dabei explizit `trigger_zweig` und die \
+gelieferten Open-Interest-/Funding-Rate-/Long-Short-Ratio-Werte, die zum Trigger \
+geführt haben.
+9. `key_risks` MUSS bei ERÖFFNEN/NACHKAUFEN/HEBEL_ERHÖHEN mindestens einen Eintrag \
+zu hebel-spezifischen Risiken enthalten (Liquidationsrisiko bei schnellen \
+Kursbewegungen, laufende Finanzierungsgebühr bei längerer Haltedauer) - das sind \
+Risiken, die es bei Spot-Positionen nicht gibt, sie dürfen nicht generisch \
+übergangen werden.
+10. Fülle `halte_kriterium` wie bei Spot-Signalen (siehe dortige Regel) - \
+mindestens eines von `ziel_preis_usd`/`ziel_datum`/`bedingung_text` muss gesetzt \
+sein.
+11. Fülle `forecast` (bull/base/bear mit je `scenario` und `probability_pct`) wie \
+bei Spot-Signalen.
+12. Antworte AUSSCHLIESSLICH mit einem einzigen JSON-Objekt gemäß dem vorgegebenen \
+Schema. Kein Markdown, keine Code-Fences, kein Text außerhalb des JSON.
+
+SCHEMA:
+{
+  "richtung": "LONG|SHORT",
+  "action": "ERÖFFNEN|NACHKAUFEN|HEBEL_ERHÖHEN|HEBEL_SENKEN|TEILVERKAUF|SCHLIESSEN|HALTEN",
+  "confidence_pct": <0-100>,
+  "short_reasoning": "<1-2 Sätze>",
+  "hebel_vorschlag": <Zahl oder null bei HALTEN/SCHLIESSEN>,
+  "trade_thesis_typ": "einmal_trade|swing_strategie",
+  "top_gruende": [
+    {"rang": 1, "kategorie": "technisch|fundamental|makro|risiko|antizyklisch", "text": "<Text>"},
+    {"rang": 2, "kategorie": "...", "text": "<Text>"},
+    {"rang": 3, "kategorie": "...", "text": "<Text>"},
+    {"rang": 4, "kategorie": "...", "text": "<Text>"},
+    {"rang": 5, "kategorie": "...", "text": "<Text>"}
+  ],
+  "long_reasoning": {"technisch": "<Text>", "fundamental": "<Text>", "makro": "<Text>"},
+  "entry": {"usd_von": <Zahl oder null>, "usd_bis": <Zahl oder null>, "eur_von": <Zahl oder null>, "eur_bis": <Zahl oder null>},
+  "stop_loss": {"usd_von": <Zahl oder null>, "usd_bis": <Zahl oder null>, "eur_von": <Zahl oder null>, "eur_bis": <Zahl oder null>},
+  "take_profit": {"usd_von": <Zahl oder null>, "usd_bis": <Zahl oder null>, "eur_von": <Zahl oder null>, "eur_bis": <Zahl oder null>},
+  "halte_kriterium": {
+    "bucket": "kurz|mittel|lang",
+    "ziel_preis_usd": <Zahl oder null>,
+    "ziel_preis_eur": <Zahl oder null>,
+    "ziel_datum": "<YYYY-MM-DD oder null>",
+    "bedingung_text": "<Text oder null>",
+    "reasoning": "<Text>"
+  },
+  "key_risks": ["<Text>", ...],
+  "forecast": {
+    "bull": {"scenario": "<Text>", "probability_pct": <0-100>},
+    "base": {"scenario": "<Text>", "probability_pct": <0-100>},
+    "bear": {"scenario": "<Text>", "probability_pct": <0-100>}
+  }
+}"""
+
+
+def _native(value):
+    if isinstance(value, (np.floating,)):
+        return None if np.isnan(value) else float(value)
+    if isinstance(value, (np.integer,)):
+        return int(value)
+    return value
+
+
+def _last(arr: np.ndarray) -> float | None:
+    valid = arr[~np.isnan(arr)]
+    return float(valid[-1]) if len(valid) else None
+
+
+def _build_position_aktuell_facts(position: HebelPosition | None, now_unix: int) -> dict | None:
+    """`position_aktuell` fürs Fakten-JSON - null, wenn keine offene Hebel-Position
+    für dieses Symbol existiert (siehe database/db.py::get_open_hebel_positions())."""
+    if position is None:
+        return None
+    from datetime import datetime
+
+    eroeffnet_unix = int(datetime.fromisoformat(position.eroeffnet_am).timestamp())
+    return {
+        "richtung": position.richtung,
+        "hebel_effektiv": _native(position.hebel_effektiv),
+        "eigenkapital_eur": _native(position.eigenkapital_eur),
+        "positionswert_eur": _native(position.positionswert_eur),
+        "eroeffnet_am": position.eroeffnet_am,
+        "tage_gehalten": round(max(0.0, (now_unix - eroeffnet_unix) / 86400), 2),
+    }
+
+
+def build_hebel_facts(
+    asset,
+    latest_price,
+    technical_snapshot: TechnicalSnapshot,
+    confluence: ConfluenceSummary,
+    regime_result: RegimeResult,
+    regime_profile: dict,
+    anticyclic_context: AnticyclicContext,
+    market_context: dict,
+    trigger: HebelTrigger,
+    position_aktuell: HebelPosition | None,
+    pre_result: HebelPreCheckResult,
+    price_age_minutes: float | None,
+    now_unix: int,
+) -> dict:
+    """Analog agent/krypto/analyst.py::build_facts() - wiederverwendet dieselben
+    Bausteine fuer technische_analyse/regime/markt_kontext/antizyklisch 1:1 (siehe
+    docs/hebel_positionsformel.md, "noch zu klären"-Punkt geloest: KEIN separates
+    Derivate-Feld, die Live-OI/Funding/LSR-Werte kommen unveraendert aus
+    antizyklisch, wie bei Spot). Neu: trigger/position_aktuell/hebel_kontext."""
+    macd_val = technical_snapshot.macd
+    macd_facts = None
+    if macd_val.available:
+        macd_facts = {
+            "macd": _last(macd_val.value["macd"]),
+            "signal": _last(macd_val.value["signal"]),
+            "histogram": _last(macd_val.value["histogram"]),
+        }
+
+    bollinger_facts = None
+    if technical_snapshot.bollinger.available:
+        bv = technical_snapshot.bollinger.value
+        bollinger_facts = {
+            "upper": _last(bv["upper"]),
+            "middle": _last(bv["middle"]),
+            "lower": _last(bv["lower"]),
+        }
+
+    nicht_verfuegbar = []
+    for period, r in technical_snapshot.ema.items():
+        if not r.available:
+            nicht_verfuegbar.append(f"EMA-{period}: {r.reason}")
+    for name, r in (
+        ("MACD", technical_snapshot.macd),
+        ("RSI-14", technical_snapshot.rsi),
+        ("Bollinger Bands", technical_snapshot.bollinger),
+        (technical_snapshot.swing_label, technical_snapshot.swing),
+        (technical_snapshot.atr_label, technical_snapshot.atr),
+    ):
+        if not r.available:
+            nicht_verfuegbar.append(f"{name}: {r.reason}")
+
+    return {
+        "asset": {
+            "symbol": asset.symbol,
+            "name": asset.name,
+        },
+        "preis": {
+            "usd": _native(latest_price.price_usd) if latest_price else None,
+            "eur": _native(latest_price.price_eur) if latest_price else None,
+            "aktualisiert_vor_min": price_age_minutes,
+        },
+        "technische_analyse": {
+            "ema": {str(p): _native(latest_value(r)) for p, r in technical_snapshot.ema.items()},
+            "macd": macd_facts,
+            "rsi_14": _native(latest_value(technical_snapshot.rsi)),
+            "bollinger": bollinger_facts,
+            "atr": {
+                "wert": _native(latest_value(technical_snapshot.atr)),
+                "label": technical_snapshot.atr_label,
+                "quelle": technical_snapshot.atr_source,
+            },
+            "support_resistance": technical_snapshot.support_resistance.value
+            if technical_snapshot.support_resistance.available
+            else [],
+            "fibonacci": {str(k): _native(v) for k, v in (technical_snapshot.fibonacci or {}).items()},
+            "confluence": {
+                "bullish": confluence.bullish_count,
+                "bearish": confluence.bearish_count,
+                "neutral": confluence.neutral_count,
+                "nicht_verfuegbar": confluence.unavailable_count,
+                "gesamttendenz": confluence.overall_bias,
+                "details": [
+                    {"indikator": i.indicator, "bias": i.bias, "detail": i.detail}
+                    for i in confluence.items
+                    if i.available
+                ],
+            },
+            "nicht_verfuegbar": nicht_verfuegbar,
+        },
+        "regime": {
+            "wert": regime_result.regime,
+            "quelle": regime_result.source,
+            "begruendung": regime_result.reason,
+            "btc_trend": regime_result.btc_trend_label,
+            "btc_dominanz_trend": regime_result.dominance_trend_label,
+            "fear_greed": {
+                "wert": regime_result.fear_greed_value,
+                "einstufung": regime_result.fear_greed_label,
+            },
+            "btc_matrix": regime_result.btc_matrix_state,
+            "liquiditaets_regime": regime_result.liquiditaets_regime,
+            "zyklus_risiko": _native(regime_result.zyklus_risiko),
+        },
+        "regime_profil": regime_profile,
+        "antizyklisch": {
+            "funding_rate_aktuell": _native(anticyclic_context.funding_rate_current),
+            "funding_rate_extrem": anticyclic_context.funding_rate_extreme,
+            "kursaenderung_letzte_tage_prozent": _native(anticyclic_context.recent_drop_pct),
+            "moeglicher_flush": anticyclic_context.possible_flush,
+            "open_interest_binance": _native(anticyclic_context.open_interest_binance),
+            "open_interest_bybit": _native(anticyclic_context.open_interest_bybit),
+            "open_interest_okx_usd": _native(anticyclic_context.open_interest_okx_usd),
+            "long_short_ratio_binance": _native(anticyclic_context.long_short_ratio),
+            "long_konten_anteil_prozent": _native(anticyclic_context.long_account_pct),
+            "retail_long_bias_extrem": anticyclic_context.retail_long_bias_extreme,
+            "grund": anticyclic_context.reason,
+        },
+        "trigger": {
+            "trigger_zweig": trigger.trigger_zweig,
+            "score_gesamt": _native(trigger.score_gesamt),
+            "oi_change_pct_lookback": _native(trigger.oi_change_pct_lookback),
+            "kursaenderung_pct_lookback": _native(trigger.kursaenderung_pct_lookback),
+        },
+        "position_aktuell": _build_position_aktuell_facts(position_aktuell, now_unix),
+        "hebel_kontext": {
+            "max_hebel_config": pre_result.config_max_hebel,
+            "max_sicherer_hebel_geschaetzt": _native(pre_result.max_sicherer_hebel),
+            "hinweis": (
+                "max_sicherer_hebel_geschaetzt ist ein informativer Richtwert (basiert auf "
+                "einer deterministischen Standard-Stop-Loss-Distanz, NICHT auf deinem "
+                "spaeteren Zonen-Vorschlag) - die tatsaechliche Deckelung erfolgt nachtraeglich "
+                "deterministisch, unabhaengig von diesem Wert."
+            ),
+        },
+        "markt_kontext": {
+            "praesidentschaftszyklus": {
+                "jahr_im_zyklus": market_context["presidential_cycle"].year_in_cycle,
+                "einordnung": market_context["presidential_cycle"].label,
+            },
+            "naechste_fomc_sitzungen": [
+                {"name": e.name, "in_tagen": e.days_until} for e in market_context["upcoming_fomc"]
+            ],
+        },
+        "disclaimers": {
+            "hinweis": (
+                "Makro ist NUR teilweise einbezogen (siehe regime.liquiditaets_regime). "
+                "Sentiment (X/YouTube) ist in diesem System nicht implementiert."
+            ),
+        },
+    }
+
+
+REQUIRED_HEBEL_TOP_LEVEL_FIELDS = (
+    "richtung", "action", "confidence_pct", "short_reasoning", "hebel_vorschlag",
+    "trade_thesis_typ", "top_gruende", "long_reasoning", "entry", "stop_loss",
+    "take_profit", "halte_kriterium", "key_risks", "forecast",
+)
+
+TOP_GRUENDE_KATEGORIEN = ("technisch", "fundamental", "makro", "risiko", "antizyklisch")
+_HALTE_KRITERIUM_BUCKETS = ("kurz", "mittel", "lang")
+_HALTEN_AEHNLICHE_ACTIONS = ("HALTEN", "SCHLIESSEN")
+
+
+def _validate_hebel(data: dict) -> dict:
+    """Analog agent/krypto/analyst.py::_validate() - angepasst auf das 7-Aktionen-
+    Vokabular, `richtung`, `hebel_vorschlag`, `trade_thesis_typ`. KEIN `position_size`/
+    `tranchen` (existiert im Hebel-Schema nicht, siehe docs/hebel_positionsformel.md)."""
+    if not isinstance(data, dict):
+        raise AnalystResponseInvalid("Antwort ist kein JSON-Objekt")
+
+    missing = [f for f in REQUIRED_HEBEL_TOP_LEVEL_FIELDS if f not in data]
+    if missing:
+        raise AnalystResponseInvalid(f"Pflichtfelder fehlen: {missing}")
+
+    richtung = str(data["richtung"]).strip().upper()
+    if richtung not in ("LONG", "SHORT"):
+        raise AnalystResponseInvalid(f"Ungültige richtung: {data['richtung']!r}")
+    data["richtung"] = richtung
+
+    action = str(data["action"]).strip().upper()
+    if action not in REQUIRED_HEBEL_ACTIONS:
+        raise AnalystResponseInvalid(f"Ungültige action: {data['action']!r}")
+    data["action"] = action
+
+    try:
+        data["confidence_pct"] = float(data["confidence_pct"])
+    except (TypeError, ValueError):
+        raise AnalystResponseInvalid(f"confidence_pct nicht numerisch: {data['confidence_pct']!r}")
+    if not (0 <= data["confidence_pct"] <= 100):
+        raise AnalystResponseInvalid(f"confidence_pct außerhalb 0-100: {data['confidence_pct']}")
+
+    hebel_vorschlag = data.get("hebel_vorschlag")
+    if hebel_vorschlag is not None:
+        try:
+            data["hebel_vorschlag"] = float(hebel_vorschlag)
+        except (TypeError, ValueError):
+            raise AnalystResponseInvalid(f"hebel_vorschlag nicht numerisch: {hebel_vorschlag!r}")
+    elif action not in _HALTEN_AEHNLICHE_ACTIONS:
+        raise AnalystResponseInvalid(f"hebel_vorschlag fehlt bei action={action!r}")
+
+    trade_thesis_typ = str(data["trade_thesis_typ"]).strip().lower()
+    if trade_thesis_typ not in _TRADE_THESIS_TYPEN:
+        raise AnalystResponseInvalid(f"Ungültiger trade_thesis_typ: {data['trade_thesis_typ']!r}")
+    data["trade_thesis_typ"] = trade_thesis_typ
+
+    for field_name in ("long_reasoning", "entry", "stop_loss", "take_profit", "halte_kriterium", "forecast"):
+        if not isinstance(data[field_name], dict):
+            raise AnalystResponseInvalid(f"{field_name} ist kein Objekt")
+
+    if not isinstance(data["key_risks"], list):
+        raise AnalystResponseInvalid("key_risks ist keine Liste")
+    if action in _HEBEL_ACTIONS_MIT_HEBEL and not data["key_risks"]:
+        raise AnalystResponseInvalid(f"key_risks darf bei action={action!r} nicht leer sein")
+
+    top_gruende = data["top_gruende"]
+    if not isinstance(top_gruende, list) or len(top_gruende) != 5:
+        raise AnalystResponseInvalid(f"top_gruende muss genau 5 Einträge enthalten: {top_gruende!r}")
+    ranks_seen = set()
+    for eintrag in top_gruende:
+        if not isinstance(eintrag, dict):
+            raise AnalystResponseInvalid(f"top_gruende-Eintrag ist kein Objekt: {eintrag!r}")
+        rang = eintrag.get("rang")
+        if rang not in (1, 2, 3, 4, 5) or rang in ranks_seen:
+            raise AnalystResponseInvalid(f"top_gruende.rang ungültig oder doppelt: {rang!r}")
+        ranks_seen.add(rang)
+        kategorie = str(eintrag.get("kategorie", "")).strip().lower()
+        if kategorie not in TOP_GRUENDE_KATEGORIEN:
+            raise AnalystResponseInvalid(f"top_gruende.kategorie ungültig: {eintrag.get('kategorie')!r}")
+        eintrag["kategorie"] = kategorie
+        if not str(eintrag.get("text") or "").strip():
+            raise AnalystResponseInvalid("top_gruende.text fehlt/leer")
+
+    for field_name in ("entry", "stop_loss", "take_profit"):
+        obj = data[field_name]
+        for currency in ("usd", "eur"):
+            von, bis = obj.get(f"{currency}_von"), obj.get(f"{currency}_bis")
+            if von is None and bis is None:
+                continue
+            if von is None or bis is None:
+                raise AnalystResponseInvalid(f"{field_name}.{currency}_von/{currency}_bis: nur einer gesetzt")
+            try:
+                von, bis = float(von), float(bis)
+            except (TypeError, ValueError):
+                raise AnalystResponseInvalid(f"{field_name}.{currency}_von/{currency}_bis nicht numerisch")
+            if von > bis:
+                raise AnalystResponseInvalid(f"{field_name}.{currency}_von > {currency}_bis ({von} > {bis})")
+            obj[f"{currency}_von"], obj[f"{currency}_bis"] = von, bis
+
+    if action in _HEBEL_ACTIONS_MIT_HEBEL:
+        stop = data["stop_loss"]
+        if stop.get("usd_von") is None:
+            raise AnalystResponseInvalid(f"stop_loss fehlt bei action={action!r} (Stop-Loss-Pflicht)")
+
+    halte = data["halte_kriterium"]
+    bucket = str(halte.get("bucket", "")).strip().lower()
+    if bucket not in _HALTE_KRITERIUM_BUCKETS:
+        raise AnalystResponseInvalid(f"halte_kriterium.bucket ungültig: {halte.get('bucket')!r}")
+    halte["bucket"] = bucket
+    if (
+        halte.get("ziel_preis_usd") is None
+        and not str(halte.get("ziel_datum") or "").strip()
+        and not str(halte.get("bedingung_text") or "").strip()
+    ):
+        raise AnalystResponseInvalid(
+            "halte_kriterium: mindestens eines von ziel_preis_usd/ziel_datum/bedingung_text muss gesetzt sein"
+        )
+
+    return data
+
+
+def call_llm_for_hebel_signal(llm_client, facts: dict, max_retries: int = 2) -> dict:
+    """Ruft das uebergebene LLM (Groq- ODER Cerebras-Client, identisches `.chat()`-
+    Interface) auf, validiert die Antwort. Bei kaputtem/unvollstaendigem JSON wird
+    einmal mit Korrektur-Hinweis retryed, danach fail-loud (AnalystResponseInvalid) -
+    der Aufrufer (agent/krypto/hebel_pipeline.py) faengt das ab und erzeugt ein
+    HALTEN-Signal, analog call_groq_for_signal()."""
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": json.dumps(facts, ensure_ascii=False)},
+    ]
+
+    last_error: Exception | None = None
+    for attempt in range(max_retries + 1):
+        raw = llm_client.chat(
+            messages,
+            temperature=0.2,
+            response_format={"type": "json_object"},
+        )
+        try:
+            parsed = json.loads(raw)
+            validated = _validate_hebel(parsed)
+            validated["_raw_response"] = raw
+            return validated
+        except (json.JSONDecodeError, AnalystResponseInvalid) as exc:
+            last_error = exc
+            logger.info("Hebel-LLM-Antwort ungültig (Versuch %d): %s", attempt + 1, exc)
+            messages.append({"role": "assistant", "content": raw})
+            messages.append(
+                {
+                    "role": "user",
+                    "content": (
+                        f"Deine letzte Antwort war ungültig: {exc}. Antworte erneut, "
+                        "ausschließlich mit einem korrekten JSON-Objekt gemäß Schema."
+                    ),
+                }
+            )
+
+    raise AnalystResponseInvalid(f"Nach {max_retries + 1} Versuchen weiterhin ungültig: {last_error}")
