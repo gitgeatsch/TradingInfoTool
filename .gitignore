@@ -56,3 +56,7 @@ data/watchdog.pid
 Basisinfos/Assets.xlsx
 Basisinfos/Assets.xlsx.bak_*
 Basisinfos/Assets_export.xlsx
+
+# Lokale Backups und Checklists
+database/Backup_*.zip
+Upload_Checklist.txt
