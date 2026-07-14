@@ -47,7 +47,7 @@ Diese vier stehen über allen anderen Regeln — jede andere Regel muss sich dar
 | RM-6 | Trailing-Stop | erlaubt | Als Option vorhanden, keine automatische Durchsetzung |
 | RM-7 | Drawdown-Notbremse | — | **OFFEN**, siehe Z-3 |
 | RM-8/RM-9 | Risiko-Score je Asset (aus Volatilität, Liquidität, BTC-Korrelation, Projektreife) → höheres Risiko = kleinere erlaubte Position | — | **OFFEN**, noch nicht gebaut |
-| RM-10/RM-11 | Hebel: Long **und** Short (Short nur beratend, Bitpanda kann es noch nicht ausführen), max. **10x** (2026-07-14 kalibriert), eigenes Risiko-pro-Trade von **1 %** (statt 2 % bei Spot), Liquidationspreis als Schätzung ausgewiesen | Formel/Regelwerk fertig, Screening+Risiko-Formeln+Positions-Rekonstruktion+KI-Empfehlung+Budget-Allocator als Code implementiert | **AKTIV, automatisch im 15-Min-Takt** (Budget-Allocator) — volles Design in Kap. 14, `docs/hebel_positionsformel.md` |
+| RM-10/RM-11 | Hebel: Long **und** Short (Short nur beratend, Bitpanda kann es noch nicht ausführen), max. **10x** (2026-07-14 kalibriert), eigenes Risiko-pro-Trade von **1 %** (statt 2 % bei Spot), Liquidationspreis als Schätzung ausgewiesen | Formel/Regelwerk + komplette Umsetzung (Screening/Risiko-Formeln/Positions-Rekonstruktion/KI-Empfehlung/Budget-Allocator/UI-Tab) fertig | **AKTIV, automatisch im 15-Min-Takt + im "Hebel"-Tab sichtbar** — volles Design in Kap. 14, `docs/hebel_positionsformel.md` |
 
 **Unantastbar (RG-6):** Weder Nutzer noch KI dürfen RM-1, RM-5 oder Z-3 per Override
 abschalten — das sind die harten Leitplanken, die auch eine künftige KI-gestützte
@@ -1143,13 +1143,14 @@ außen vor.
 
 ### Margin-/Hebel-Trading — Rahmenbedingungen jetzt vollständig entschieden (2026-07-14)
 
-**Status: Design fertig, Phase 1 (Screening) + Phase 2 (Risiko-/
-Liquidationsformeln) + Phase 3 (Positions-Rekonstruktion) + Phase 4
-(Cerebras-Anbindung + KI-Empfehlung) + Phase 5 (Budget-Allocator) sind gebaut
-und gegen echte Daten verifiziert.** Hebel-Empfehlungen laufen damit
-erstmals vollautomatisch im 15-Min-Takt, mit demselben Tagesbudget wie
-Marktscan und deine Spot-Signal-Rotation. Volle technische Herleitung in
-`docs/hebel_positionsformel.md`, hier die für dich relevante Zusammenfassung.
+**Status: komplett fertig.** Alle sechs Phasen (Screening, Risiko-/
+Liquidationsformeln, Positions-Rekonstruktion, Cerebras-Anbindung +
+KI-Empfehlung, Budget-Allocator, UI-Tab) sind gebaut und gegen echte Daten
+verifiziert. Hebel-Empfehlungen laufen vollautomatisch im 15-Min-Takt, mit
+demselben Tagesbudget wie Marktscan und deine Spot-Signal-Rotation, UND sind
+jetzt im neuen "Hebel"-Tab in der App selbst sichtbar. Volle technische
+Herleitung in `docs/hebel_positionsformel.md`, hier die für dich relevante
+Zusammenfassung.
 
 **RM-10 korrigiert:** stand bisher als "nur Long, kein Short" — das war aber
 nur ein Bitpanda-Fakt (Bitpanda kann aktuell kein Short ausführen), keine
@@ -1241,8 +1242,12 @@ statt Groqs ~15-18 Analysen/Tag) - Hebel-/Marktscan-/Spot-Empfehlungen
 können dadurch bei Bedarf automatisch auf Cerebras ausweichen, ohne dein
 Groq-Kontingent zu belasten.
 
-**Noch offen (Phase 6+):** UI-Tab für Hebel-Empfehlungen (bisher nur in der
-Datenbank/im Log sichtbar, keine eigene Anzeige in der App).
+**Neuer "Hebel"-Tab in der App — gebaut:** zeigt die zuletzt berechnete
+Empfehlung je Symbol (gleicher Aufbau wie der Signale-Tab), noch nicht
+analysierte Screening-Kandidaten (optisch abgesetzt, mit einem "Jetzt
+analysieren"-Button für den sofortigen manuellen Einzel-Wunsch), sowie ein
+kompaktes Panel mit deinen aktuell offenen Hebel-Positionen. Damit ist die
+komplette Hebel-Roadmap (alle 6 Phasen) abgeschlossen.
 
 ---
 

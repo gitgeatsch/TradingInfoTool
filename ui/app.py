@@ -17,6 +17,7 @@ from api.bitpanda import is_listed as bitpanda_is_listed
 from importer.excel_import import EXPORT_XLSX_PATH, export_holdings, import_holdings
 from ui.formatting import format_money, format_price_age, is_price_stale
 from ui.heading_tooltip import add_heading_tooltips
+from ui.hebel_view import HebelView
 from ui.marktscan_view import MarktscanView
 from ui.portfolio import PortfolioView
 from ui.signals_view import SignalsView
@@ -66,7 +67,7 @@ HEARTBEAT_PATH = Path(__file__).resolve().parent.parent / "data" / "gui_heartbea
 class TradingInfoToolApp(tk.Tk):
     def __init__(
         self, db_conn_factory, watchlist, coingecko_client, kraken_client=None, groq_client=None,
-        fred_api_key=None, bitpanda_api_key=None,
+        cerebras_client=None, fred_api_key=None, bitpanda_api_key=None,
     ):
         super().__init__()
         self.title("TradingInfoTool")
@@ -83,6 +84,7 @@ class TradingInfoToolApp(tk.Tk):
         self._coingecko_client = coingecko_client
         self._kraken_client = kraken_client
         self._groq_client = groq_client
+        self._cerebras_client = cerebras_client
         self._fred_api_key = fred_api_key
         self._bitpanda_api_key = bitpanda_api_key
         self._bitpanda_assets: list | None = None
@@ -110,6 +112,12 @@ class TradingInfoToolApp(tk.Tk):
             fred_api_key=fred_api_key,
         )
         notebook.add(self._marktscan_view, text="Marktscan")
+
+        self._hebel_view = HebelView(
+            notebook, db_conn_factory, watchlist, groq_client, cerebras_client, coingecko_client,
+            kraken_client, fred_api_key=fred_api_key,
+        )
+        notebook.add(self._hebel_view, text="Hebel")
 
         disclaimer = ttk.Label(
             self, text=DISCLAIMER_TEXT, foreground=theme.info_color(), wraplength=880, justify="center"
@@ -318,6 +326,7 @@ class TradingInfoToolApp(tk.Tk):
         self._write_heartbeat()
         self._refresh_watchlist_from_db()
         self._portfolio_view.refresh()
+        self._hebel_view.refresh()
         self.after(UI_POLL_INTERVAL_MS, self._poll_prices)
 
     def _write_heartbeat(self) -> None:
@@ -716,10 +725,10 @@ class BitpandaDecreaseConfirmDialog(tk.Toplevel):
 
 def run_app(
     db_conn_factory, watchlist, coingecko_client, kraken_client=None, groq_client=None,
-    fred_api_key=None, bitpanda_api_key=None,
+    cerebras_client=None, fred_api_key=None, bitpanda_api_key=None,
 ) -> None:
     app = TradingInfoToolApp(
         db_conn_factory, watchlist, coingecko_client, kraken_client, groq_client,
-        fred_api_key=fred_api_key, bitpanda_api_key=bitpanda_api_key,
+        cerebras_client=cerebras_client, fred_api_key=fred_api_key, bitpanda_api_key=bitpanda_api_key,
     )
     app.mainloop()

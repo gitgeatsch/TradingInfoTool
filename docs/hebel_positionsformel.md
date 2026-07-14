@@ -1,14 +1,44 @@
 # Hebel-Positionsgrößen- und Liquidationspreis-Formel (RM-1/RM-10/RM-11/AZ-7)
 
-Status: Design komplett entschieden. **Phase 1 (Screening) + Phase 2
-(Risiko-/Liquidationsformeln) + Phase 3 (Positions-Rekonstruktion) + Phase 4
-(Cerebras-Client + LLM-Analyst) + Phase 5 (Budget-Allocator) sind
-implementiert und gegen echte Daten verifiziert (2026-07-14)** — siehe
-`agent/krypto/hebel_screening.py`, `agent/krypto/hebel_risk_gate.py`,
-`importer/bitpanda_margin_positions.py`, `api/cerebras.py`, `agent/krypto/
-hebel_analyst.py`, `agent/krypto/hebel_pipeline.py`, `agent/krypto/
-budget_allocator.py`. Hebel-Empfehlungen laufen damit erstmals vollautomatisch
-im 15-Min-Takt. Marktscan-Refactor, Scheduler-Cutover, UI weiterhin offen.
+Status: Design komplett entschieden. **Phase 1-6 (Screening, Risiko-/
+Liquidationsformeln, Positions-Rekonstruktion, Cerebras-Client + LLM-Analyst,
+Budget-Allocator, UI-Tab) sind implementiert und gegen echte Daten
+verifiziert (2026-07-14)** — siehe `agent/krypto/hebel_screening.py`,
+`agent/krypto/hebel_risk_gate.py`, `importer/bitpanda_margin_positions.py`,
+`api/cerebras.py`, `agent/krypto/hebel_analyst.py`, `agent/krypto/
+hebel_pipeline.py`, `agent/krypto/budget_allocator.py`, `ui/hebel_view.py`.
+Hebel-Empfehlungen laufen vollautomatisch im 15-Min-Takt UND sind jetzt
+erstmals in der App selbst sichtbar. Nichts mehr offen aus der ursprünglichen
+Roadmap.
+
+## Phase 6 (UI-Tab) implementiert (2026-07-14)
+
+`ui/hebel_view.py::HebelView` — neuer "Hebel"-Tab, mirrort `ui/signals_view.py`s
+bewährtes Liste+Detail-Panedwindow-Layout. Zeigt (a) die zuletzt berechnete
+Empfehlung je Symbol (`db.get_latest_hebel_signal_per_symbol()`), (b) noch
+nicht analysierte Screening-Kandidaten (`db.get_pending_hebel_candidates()`,
+optisch abgesetzt), (c) offene Margin-Positionen
+(`db.get_open_hebel_positions()`, kompaktes Zusatz-Panel). Manueller "Jetzt
+analysieren"-Button für einen ausgewählten pending Kandidaten (Groq-dann-
+Cerebras-Fallback, analog zum Budget-Allocator, aber ohne dessen Budget-/
+Cooldown-Prüfung — ein expliziter Einzel-Klick hat Vorrang, wie bei den
+bestehenden manuellen Buttons bei Spot/Marktscan). `theme.action_color()`
+um die fünf noch fehlenden Hebel-Aktionen erweitert.
+
+Verifiziert: `HebelView` programmatisch (kein sichtbares Fenster nötig)
+gegen die echte Produktions-DB instanziiert — zeigte korrekt 3 echte Signale
+(AIOZ/APT/CAT) und 1 echten pending Kandidaten (FLOKI), Detail-Rendering für
+beide Zeilentypen ohne Exception. Dabei nebenbei bestätigt: CAT bekam vom
+Modell tatsächlich `richtung=LONG` zugewiesen, obwohl der Screening-Trigger
+SHORT/Trendfolge war — das Modell bewertet die Richtung wie in Regel 2 des
+SYSTEM_PROMPT vorgesehen unabhängig von der Trigger-Richtung. Offene-
+Positionen-Panel: echter Leerzustand (0 Positionen) UND ein synthetischer
+Fall (temporäre In-Memory-DB) beide korrekt gerendert, keine Verunreinigung
+der echten DB.
+
+**Bekannte Grenze:** Tkinter-GUI-Layout/-Optik selbst wurde NICHT visuell
+geprüft (kein Browser-Preview für Desktop-Apps in dieser Umgebung) — nur die
+zugrundeliegende Daten-/Rendering-Logik.
 
 ## Phase 5 (Budget-Allocator) implementiert (2026-07-14)
 
@@ -519,6 +549,7 @@ in `top_gruende` (Regel 8) ein, das reicht ohne Redundanz.
 - Sicherheitsmarge-Wert (0,175) ist Mittelwert einer Spanne, kein
   recherchierter Fixwert — wie alle anderen Schwellenwerte im Projekt
   vorläufig
-- **Phase 6+:** UI-Tab fuer Hebel-Empfehlungen (bisher nur DB/Scheduler,
-  keine Anzeige) - Marktscan-Refactor UND Scheduler-Cutover sind mit
-  Phase 5 bereits erledigt
+- Tkinter-GUI-Layout des neuen Hebel-Tabs nicht visuell geprüft (siehe
+  Phase-6-Abschnitt oben) - nur die Daten-/Rendering-Logik
+
+Ansonsten ist die komplette Hebel-Roadmap (Phase 1-6) abgeschlossen.

@@ -256,6 +256,7 @@ def main() -> None:
             coingecko_client=coingecko_client,
             kraken_client=kraken_client,
             groq_client=groq_client,
+            cerebras_client=cerebras_client,
             fred_api_key=fred_api_key,
             bitpanda_api_key=bitpanda_api_key,
         )

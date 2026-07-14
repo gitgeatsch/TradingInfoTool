@@ -98,6 +98,14 @@ def action_color(action: str) -> str:
         "VERKAUFEN": p["danger"],
         "TAUSCHEN": p["swap"],
         "HALTEN": p["muted"],
+        # Hebel-Aktionsvokabular (2026-07-14, Phase 6, siehe agent/krypto/
+        # hebel_analyst.py::REQUIRED_HEBEL_ACTIONS) - NACHKAUFEN/HALTEN oben
+        # bereits abgedeckt, gelten identisch.
+        "ERÖFFNEN": p["success"],
+        "HEBEL_ERHÖHEN": p["warn"],  # Risiko steigt
+        "HEBEL_SENKEN": p["success"],  # Risiko sinkt, vorsichtiger Schritt
+        "TEILVERKAUF": p["swap"],
+        "SCHLIESSEN": p["danger"],
     }.get(action, p["fg"])
 
 
