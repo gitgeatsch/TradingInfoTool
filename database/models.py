@@ -450,3 +450,11 @@ class HebelSignal:
     risk_veto_reason: str | None = None
     groq_raw_response: str | None = None
     llm_model: str | None = None
+    # Hebel-Backward-Tracking (2026-07-15, agent/krypto/hebel_backward_tracking.py) -
+    # nur fuer ERÖFFNEN/NACHKAUFEN gefuellt, mirror Signal.outcome_* (models.py:204-212).
+    # Zusaetzlicher Status "liquidation_wahrscheinlich" gegenueber Spot (siehe dort).
+    outcome_status: str | None = None
+    outcome_geprueft_am: str | None = None
+    outcome_entschieden_am: str | None = None
+    outcome_realisiertes_crv: float | None = None
+    outcome_datenquelle: str | None = None

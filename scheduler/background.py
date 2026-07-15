@@ -244,18 +244,30 @@ def backward_tracking_job(conn_factory, watchlist) -> None:
     agent/krypto/backward_tracking.py) - taeglich, feste Uhrzeit (siehe
     build_scheduler()): prueft vergangene KAUFEN/NACHKAUFEN-Signale gegen die
     bereits vorhandene Kurshistorie (price_history/price_history_ohlc), kein
-    eigener Netzwerk-Call noetig - reine Beobachtung, keine Empfehlung/kein Veto."""
+    eigener Netzwerk-Call noetig - reine Beobachtung, keine Empfehlung/kein Veto.
+
+    2026-07-15 um Hebel-Signale erweitert (agent/krypto/hebel_backward_tracking.py) -
+    derselbe taegliche Lauf, dieselbe Fehlerbehandlung, kein zweiter Scheduler-
+    Eintrag noetig (identisches Timing, identische Konfiguration)."""
     conn = conn_factory()
     try:
         import config as config_module
         from agent.krypto.backward_tracking import run_backward_tracking
+        from agent.krypto.hebel_backward_tracking import run_hebel_backward_tracking
 
         config_dict = config_module.load_config()
         result = run_backward_tracking(conn, watchlist, config_dict)
         logger.info(
-            "Backward-Tracking: %d geprüft, %d Take-Profit, %d Stop-Loss, %d abgelaufen, %d weiterhin offen",
+            "Backward-Tracking (Spot): %d geprüft, %d Take-Profit, %d Stop-Loss, %d abgelaufen, %d weiterhin offen",
             result.geprueft_count, result.resolved_take_profit, result.resolved_stop_loss,
             result.expired, result.still_open,
+        )
+        hebel_result = run_hebel_backward_tracking(conn, watchlist, config_dict)
+        logger.info(
+            "Backward-Tracking (Hebel): %d geprüft, %d Take-Profit, %d Stop-Loss, %d Liquidation, "
+            "%d abgelaufen, %d weiterhin offen",
+            hebel_result.geprueft_count, hebel_result.resolved_take_profit, hebel_result.resolved_stop_loss,
+            hebel_result.resolved_liquidation, hebel_result.expired, hebel_result.still_open,
         )
     except Exception as exc:
         logger.exception("Backward-Tracking fehlgeschlagen")

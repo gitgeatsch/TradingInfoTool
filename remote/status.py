@@ -30,6 +30,7 @@ class RemoteStatus:
     jobs_running: dict[str, bool] = field(default_factory=dict)
     jobs_running_seit_minuten: dict[str, float | None] = field(default_factory=dict)
     budget_heute: dict | None = None
+    provider_performance: dict | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -44,6 +45,7 @@ class RemoteStatus:
             "jobs_running": self.jobs_running,
             "jobs_running_seit_minuten": self.jobs_running_seit_minuten,
             "budget_heute": self.budget_heute,
+            "provider_performance": self.provider_performance,
         }
 
 
@@ -108,7 +110,18 @@ def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, erro
         jobs_running=jobs_running,
         jobs_running_seit_minuten=jobs_running_seit_minuten,
         budget_heute=_get_budget_heute(conn),
+        provider_performance=_get_provider_performance(conn),
     )
+
+
+def _get_provider_performance(conn: sqlite3.Connection) -> dict:
+    """Sichtbarkeit fuer die Backward-Tracking-Provider-Performance (2026-07-15,
+    siehe agent/krypto/backward_tracking.py::compute_provider_performance()) -
+    reiner Lesezugriff, keine neue Logik. Erwartet aktuell noch leere/nahezu
+    leere Ergebnisse (reine Infrastruktur, sammelt ab jetzt automatisch Daten)."""
+    from agent.krypto.backward_tracking import compute_provider_performance
+
+    return compute_provider_performance(conn)
 
 
 def _get_budget_heute(conn: sqlite3.Connection) -> dict:

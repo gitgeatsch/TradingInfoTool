@@ -422,6 +422,26 @@ def _migrate_signal_outcome_columns(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+_HEBEL_SIGNAL_OUTCOME_NEW_COLUMNS = {
+    "outcome_status": "TEXT",
+    "outcome_geprueft_am": "TEXT",
+    "outcome_entschieden_am": "TEXT",
+    "outcome_realisiertes_crv": "REAL",
+    "outcome_datenquelle": "TEXT",
+}
+
+
+def _migrate_hebel_signal_outcome_columns(conn: sqlite3.Connection) -> None:
+    """Wie _migrate_signal_outcome_columns(), aber fuer hebel_signals (2026-07-15,
+    Hebel-Backward-Tracking - siehe agent/krypto/hebel_backward_tracking.py).
+    hebel_signals existierte bereits vor diesen Spalten (seit Hebel-Phase 4)."""
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(hebel_signals)")}
+    for column, sql_type in _HEBEL_SIGNAL_OUTCOME_NEW_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE hebel_signals ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
 _SIGNAL_TRANCHEN_NEW_COLUMNS = {"tranchen_json": "TEXT"}
 
 
@@ -529,6 +549,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_holdings_avg_cost_columns(conn)
     _migrate_signal_tranchen_columns(conn)
     _migrate_signal_cash_reserve_ziel_columns(conn)
+    _migrate_hebel_signal_outcome_columns(conn)
 
 
 def is_first_run(conn: sqlite3.Connection) -> bool:
@@ -1482,3 +1503,27 @@ def count_real_hebel_signals_today(conn: sqlite3.Connection) -> int:
         (today_utc_midnight,),
     ).fetchone()
     return row["n"]
+
+
+def get_hebel_signal_by_id(conn: sqlite3.Connection, hebel_signal_id: int) -> HebelSignal | None:
+    row = conn.execute("SELECT * FROM hebel_signals WHERE id = ?", (hebel_signal_id,)).fetchone()
+    return _row_to_hebel_signal(row) if row else None
+
+
+def update_hebel_signal_outcome(
+    conn: sqlite3.Connection,
+    hebel_signal_id: int,
+    status: str,
+    entschieden_am: str | None = None,
+    realisiertes_crv: float | None = None,
+    datenquelle: str | None = None,
+) -> None:
+    """Wie update_signal_outcome(), aber fuer hebel_signals (2026-07-15, Hebel-
+    Backward-Tracking - siehe agent/krypto/hebel_backward_tracking.py)."""
+    conn.execute(
+        "UPDATE hebel_signals SET outcome_status = ?, outcome_geprueft_am = ?, "
+        "outcome_entschieden_am = ?, outcome_realisiertes_crv = ?, "
+        "outcome_datenquelle = ? WHERE id = ?",
+        (status, _now_iso(), entschieden_am, realisiertes_crv, datenquelle, hebel_signal_id),
+    )
+    conn.commit()

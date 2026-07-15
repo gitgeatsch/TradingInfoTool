@@ -27,3 +27,17 @@ def llm_model_label(llm_client) -> str:
 
         return f"gemini:{DEFAULT_MODEL}"
     return type(llm_client).__name__
+
+
+def provider_from_label(label: str | None) -> str:
+    """Rueckwaerts-Mapping zu llm_model_label(): Label-String (aus
+    signals.groq_model/hebel_signals.llm_model) -> Anbietername, fuer die
+    Provider-Performance-Aggregation (2026-07-15, siehe
+    agent/krypto/backward_tracking.py::compute_provider_performance()).
+    Altbestand vor der Multi-Provider-Umstellung hat kein "provider:model"-
+    Praefix (z. B. "llama-3.3-70b-versatile") - das war ausschliesslich Groq."""
+    if label is None:
+        return "unbekannt"
+    if ":" not in label:
+        return "groq"
+    return label.split(":", 1)[0]

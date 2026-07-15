@@ -502,6 +502,40 @@ Auswertungsgrundlage. Schritt 3 der Vision (KI-gestützte Regel-
 Anpassungsvorschläge) braucht erst eine gewisse Anzahl echter, aufgelöster
 Kauf-Signale, bevor er sinnvoll ansetzen kann.
 
+### Erweiterung: Hebel-Backward-Tracking + Provider-Performance-Vergleich (2026-07-15)
+
+Ausgangsfrage: sollen Groq/Cerebras/Gemini nach echter Trefferquote statt nur
+nach roher Kapazität geordnet werden? Ein Qualitätsvergleich per Hand (siehe
+Gemini-Memory) zeigte bereits qualitative Unterschiede, aber ohne Langzeit-
+Historie lässt sich die Reihenfolge nicht belastbar optimieren — die
+Infrastruktur wird deshalb jetzt gebaut, damit sie ab sofort automatisch
+Daten sammelt, auch wenn heute noch fast keine vorliegen.
+
+**Neu: `agent/krypto/hebel_backward_tracking.py`** — mirror des obigen
+Mechanismus, aber für `hebel_signals` (ERÖFFNEN/NACHKAUFEN statt KAUFEN/
+NACHKAUFEN), **richtungsabhängig** (LONG/SHORT kehren die Vergleichsrichtung
+für Take-Profit/Stop-Loss um). Zusätzlicher vierter Ergebnis-Status
+**„Liquidation wahrscheinlich"** — der Liquidationspreis liegt näher am Kurs
+als der Stop-Loss (Sicherheitsmarge 15-20 %, siehe Abschnitt „Margin-/
+Hebel-Trading"), wird deshalb bei einer Tages-Kerze, die mehrere Zonen
+gleichzeitig trifft, **zuerst** geprüft — noch konservativer als die
+bestehende „Stop-Loss gewinnt bei Gleichzeitigkeit"-Regel. Läuft im selben
+täglichen Job wie oben (`backward_tracking`), keine zusätzliche Konfiguration
+nötig.
+
+**Neu: Provider-Performance-Aggregation** (`compute_provider_performance()`)
+— gruppiert alle bereits aufgelösten Signale (Spot UND Hebel, getrennt
+gehalten wegen unterschiedlicher Risikoprofile: 2 % vs. 1 % Positionsgröße)
+nach Anbieter (Groq/Cerebras/Gemini) und zeigt je Anbieter Trefferzahl,
+Win-Rate und durchschnittliches realisiertes CRV. Sichtbar als neue Karte
+„Provider-Performance" auf der Remote-Steuer-Seite (Abschnitt 13).
+
+**Wichtiger Datenstand (2026-07-15):** aktuell liegen praktisch keine
+aufgelösten Signale vor (Spot: 2 offene, 0 aufgelöst; Hebel: 2 offene,
+0 aufgelöst) — die Karte zeigt deshalb vorerst „noch keine Daten". Das ist
+erwartetes Verhalten, kein Fehler — reine Infrastruktur, die erst über die
+kommenden Wochen echte Vergleichswerte ansammelt.
+
 ---
 
 ## 8. Lokale KI-Ebene (P-8) — Architektur vorbereitet, noch nicht aktiv

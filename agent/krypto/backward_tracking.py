@@ -14,12 +14,17 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 import database.db as db
+from agent.krypto.llm_provider import provider_from_label
 
 OUTCOME_OFFEN = "offen"
 OUTCOME_TAKE_PROFIT = "take_profit_erreicht"
 OUTCOME_STOP_LOSS = "stop_loss_erreicht"
 OUTCOME_ABGELAUFEN = "abgelaufen_unentschieden"
 OUTCOME_NICHT_ANWENDBAR = "nicht_anwendbar"
+# Nur fuer hebel_signals relevant (siehe agent/krypto/hebel_backward_tracking.py),
+# hier definiert statt dort, um einen Kreisimport zu vermeiden (hebel_backward_
+# tracking.py importiert die OUTCOME_*-Konstanten bereits von hier).
+OUTCOME_LIQUIDATION = "liquidation_wahrscheinlich"
 
 # Nur diese Aktionen haben eine Take-Profit/Stop-Loss-Semantik, die sich gegen
 # Kurshistorie pruefen laesst - HALTEN/VERKAUFEN/TAUSCHEN nicht.
@@ -176,3 +181,84 @@ def run_backward_tracking(conn, watchlist, config: dict) -> BackwardTrackingResu
             result.still_open += 1
 
     return result
+
+
+_RESOLVED_OUTCOMES = (OUTCOME_TAKE_PROFIT, OUTCOME_STOP_LOSS, OUTCOME_LIQUIDATION)
+
+
+def compute_provider_performance(conn) -> dict:
+    """Provider-Performance-Aggregation (2026-07-15, Nutzer-Wunsch: Groq/Cerebras/
+    Gemini nach echter Trefferquote statt nur Kapazitaet vergleichen). Liest ALLE
+    bereits aufgeloesten Signale (take_profit_erreicht/stop_loss_erreicht, bei
+    Hebel zusaetzlich liquidation_wahrscheinlich) aus signals UND hebel_signals,
+    gruppiert nach (tier, provider_from_label(...)). Spot und Hebel bleiben
+    GETRENNT (unterschiedliche Risikoprofile - RM-1 2% vs. Hebel 1%
+    Positionsgroesse, siehe Regelwerksmanual "Positionsgroesse bei Hebel" - eine
+    gemeinsame Kennzahl waere irrefuehrend). Reine Lesefunktion, kein
+    Seiteneffekt. Erwartet aktuell (2026-07-15) noch leere/nahezu leere
+    Ergebnisse - reine Infrastruktur, die ab jetzt automatisch Daten sammelt."""
+    gruppen: dict[tuple[str, str], dict] = {}
+
+    def _stelle_sicher(tier: str, provider: str) -> dict:
+        key = (tier, provider)
+        if key not in gruppen:
+            gruppen[key] = {
+                "anzahl_resolved": 0,
+                "take_profit_count": 0,
+                "stop_loss_count": 0,
+                "liquidation_count": 0,
+                "_crv_summe": 0.0,
+                "_crv_count": 0,
+            }
+        return gruppen[key]
+
+    placeholders = ", ".join("?" for _ in _RESOLVED_OUTCOMES)
+    spot_rows = conn.execute(
+        f"SELECT groq_model AS llm_model, outcome_status, outcome_realisiertes_crv "
+        f"FROM signals WHERE outcome_status IN ({placeholders})",
+        _RESOLVED_OUTCOMES,
+    ).fetchall()
+    for row in spot_rows:
+        eintrag = _stelle_sicher("spot", provider_from_label(row["llm_model"]))
+        eintrag["anzahl_resolved"] += 1
+        if row["outcome_status"] == OUTCOME_TAKE_PROFIT:
+            eintrag["take_profit_count"] += 1
+        elif row["outcome_status"] == OUTCOME_STOP_LOSS:
+            eintrag["stop_loss_count"] += 1
+        if row["outcome_realisiertes_crv"] is not None:
+            eintrag["_crv_summe"] += row["outcome_realisiertes_crv"]
+            eintrag["_crv_count"] += 1
+
+    hebel_rows = conn.execute(
+        f"SELECT llm_model, outcome_status, outcome_realisiertes_crv "
+        f"FROM hebel_signals WHERE outcome_status IN ({placeholders})",
+        _RESOLVED_OUTCOMES,
+    ).fetchall()
+    for row in hebel_rows:
+        eintrag = _stelle_sicher("hebel", provider_from_label(row["llm_model"]))
+        eintrag["anzahl_resolved"] += 1
+        if row["outcome_status"] == OUTCOME_TAKE_PROFIT:
+            eintrag["take_profit_count"] += 1
+        elif row["outcome_status"] == OUTCOME_STOP_LOSS:
+            eintrag["stop_loss_count"] += 1
+        elif row["outcome_status"] == OUTCOME_LIQUIDATION:
+            eintrag["liquidation_count"] += 1
+        if row["outcome_realisiertes_crv"] is not None:
+            eintrag["_crv_summe"] += row["outcome_realisiertes_crv"]
+            eintrag["_crv_count"] += 1
+
+    ergebnis: dict = {"spot": {}, "hebel": {}}
+    for (tier, provider), eintrag in gruppen.items():
+        anzahl = eintrag["anzahl_resolved"]
+        ergebnis[tier][provider] = {
+            "anzahl_resolved": anzahl,
+            "take_profit_count": eintrag["take_profit_count"],
+            "stop_loss_count": eintrag["stop_loss_count"],
+            "liquidation_count": eintrag["liquidation_count"],
+            "win_rate": (eintrag["take_profit_count"] / anzahl) if anzahl > 0 else None,
+            "avg_realisiertes_crv": (
+                eintrag["_crv_summe"] / eintrag["_crv_count"] if eintrag["_crv_count"] > 0 else None
+            ),
+        }
+
+    return ergebnis

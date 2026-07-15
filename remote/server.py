@@ -80,6 +80,13 @@ _INDEX_HTML = """<!doctype html>
 </div>
 
 <div class="card">
+  <div class="row"><strong>Provider-Performance (Spot)</strong></div>
+  <div id="provider-performance-spot"></div>
+  <div class="row"><strong>Provider-Performance (Hebel)</strong></div>
+  <div id="provider-performance-hebel"></div>
+</div>
+
+<div class="card">
   <button id="btn-prices" onclick="triggerAction('refresh-prices')">Preise aktualisieren</button>
   <div id="status-prices" class="row"></div>
   <button id="btn-marktscan" onclick="triggerAction('marktscan')">Marktscan jetzt starten</button>
@@ -140,6 +147,22 @@ function fmtMoney(value) {
   return value.toLocaleString("de-AT", { maximumFractionDigits: 2 }) + " EUR";
 }
 
+function renderProviderPerformance(tierData) {
+  const providers = Object.keys(tierData);
+  if (providers.length === 0) {
+    return '<div class="row"><span>noch keine Daten</span></div>';
+  }
+  return providers.map(function(p) {
+    const d = tierData[p];
+    const winRate = d.win_rate !== null && d.win_rate !== undefined
+      ? Math.round(d.win_rate * 100) + "%" : "-";
+    const crv = d.avg_realisiertes_crv !== null && d.avg_realisiertes_crv !== undefined
+      ? d.avg_realisiertes_crv.toFixed(2) : "-";
+    return '<div class="row"><span>' + p + ' (' + d.anzahl_resolved + ')</span>' +
+      '<span>Win-Rate ' + winRate + ', &oslash; CRV ' + crv + '</span></div>';
+  }).join("");
+}
+
 async function refreshStatus() {
   let data;
   try {
@@ -171,6 +194,13 @@ async function refreshStatus() {
     document.getElementById("budget-hebel").textContent = b.hebel;
     document.getElementById("budget-marktscan").textContent = b.marktscan;
     document.getElementById("budget-spot").textContent = b.spot;
+  }
+
+  if (data.provider_performance) {
+    document.getElementById("provider-performance-spot").innerHTML =
+      renderProviderPerformance(data.provider_performance.spot || {});
+    document.getElementById("provider-performance-hebel").innerHTML =
+      renderProviderPerformance(data.provider_performance.hebel || {});
   }
 
   for (const [action, jobs] of Object.entries(ACTION_JOBS)) {
