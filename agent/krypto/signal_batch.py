@@ -100,18 +100,27 @@ def run_signal_batch(
     fred_api_key: str | None,
     daily_budget: int,
     progress_callback: Callable[[int, int, str], None] | None = None,
+    cerebras_client=None,
 ) -> BatchResult:
-    """Wird sowohl vom Scheduler-Job (scheduler/background.py::
-    signal_batch_job, taeglicher Wochen-Sicherheitsnetz-Lauf) als auch vom
-    manuellen UI-Button (ui/signals_view.py) aufgerufen - keine doppelte
-    Auswahl-/Budget-Logik in zwei Dateien. `progress_callback(done, total,
-    symbol)` optional fuer eine UI-Fortschrittsanzeige.
+    """Nur noch vom manuellen UI-Button (ui/signals_view.py) aufgerufen - der
+    urspruengliche taegliche Scheduler-Job (signal_batch_job) wurde in Phase 5
+    entfernt, seitdem laeuft die automatische Spot-Rotation ausschliesslich
+    ueber den Budget-Allocator (agent/krypto/budget_allocator.py, Tier 3).
+    `progress_callback(done, total, symbol)` optional fuer eine
+    UI-Fortschrittsanzeige.
+
+    Groq-dann-Cerebras-Fallback (2026-07-14, nachgezogen nach echtem
+    Notebook-Vorfall) - `cerebras_client` optional (P-8), ohne ihn bleibt der
+    Batch reines Groq wie zuvor. Pro Asset EIGENE Fallback-Entscheidung
+    (kein gemeinsamer "Groq ist heute tot"-Kurzschluss ueber den ganzen
+    Batch) - konsistent mit dem Budget-Allocator/Hebel-Tab-Muster.
 
     Budget-Pruefung ueber db.count_real_signals_today() statt eines eigenen
-    Zaehlers: da auch der bestehende Einzel-Klick-Button ("Signal berechnen")
-    in dieselbe signals-Tabelle schreibt, ist das Tagesbudget automatisch
-    ueber alle drei Ausloeser (Einzel-Klick, Batch-Button, Scheduler-Job)
-    hinweg korrekt geteilt - kein zusaetzlicher Zaehler/Tabelle noetig.
+    Zaehlers: da sowohl der Einzel-Klick-Button ("Signal berechnen") als auch
+    der Budget-Allocator in dieselbe signals-Tabelle schreiben, ist das
+    Tagesbudget automatisch ueber alle drei Ausloeser (Einzel-Klick,
+    Batch-Button, Budget-Allocator) hinweg korrekt geteilt - kein
+    zusaetzlicher Zaehler/Tabelle noetig.
 
     Bekannte Ungenauigkeit (P-10-Stil, dokumentiert statt versteckt): ein
     fehlgeschlagener Retry-Versuch (kaputtes JSON, siehe analyst.py::
@@ -131,22 +140,35 @@ def run_signal_batch(
     finally:
         conn.close()
 
+    def _attempt(asset, llm_client):
+        conn = conn_factory()
+        try:
+            return generate_signal(
+                asset, watchlist, conn, llm_client, coingecko_client, kraken_client,
+                fred_api_key=fred_api_key,
+            )
+        finally:
+            conn.close()
+
     result = BatchResult()
     for index, asset in enumerate(faellige):
         if progress_callback:
             progress_callback(index, len(faellige), asset.symbol)
-        conn = conn_factory()
         try:
-            signal = generate_signal(
-                asset, watchlist, conn, groq_client, coingecko_client, kraken_client,
-                fred_api_key=fred_api_key,
-            )
+            signal = _attempt(asset, groq_client)
             result.berechnet.append(signal)
-        except Exception:
-            logger.exception("Batch-Signal-Berechnung für %s fehlgeschlagen", asset.symbol)
+        except Exception as exc:
+            if cerebras_client is not None:
+                try:
+                    signal = _attempt(asset, cerebras_client)
+                    result.berechnet.append(signal)
+                    continue
+                except Exception:
+                    logger.exception("Batch-Signal-Berechnung für %s (Groq UND Cerebras) fehlgeschlagen", asset.symbol)
+                    result.fehlgeschlagen.append(asset.symbol)
+                    continue
+            logger.exception("Batch-Signal-Berechnung für %s fehlgeschlagen (%s)", asset.symbol, exc)
             result.fehlgeschlagen.append(asset.symbol)
-        finally:
-            conn.close()
 
     conn = conn_factory()
     try:

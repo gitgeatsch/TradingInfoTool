@@ -22,4 +22,8 @@ def llm_model_label(llm_client) -> str:
         from api.groq import DEFAULT_MODEL
 
         return f"groq:{DEFAULT_MODEL}"
+    if module.endswith("gemini"):
+        from api.gemini import DEFAULT_MODEL
+
+        return f"gemini:{DEFAULT_MODEL}"
     return type(llm_client).__name__

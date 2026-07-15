@@ -13,9 +13,18 @@ Tokens/Min, 1.000.000 Tokens/Tag. Bei ~6.000 Tokens/Call (gemessene
 Payload-Groesse, siehe signal_batch.py-Docstring) ist der Tages-Token-Wert
 mit ~166 Calls/Tag die bindende Grenze - deutlich mehr als Groqs reale
 ~15-18/Tag, aber eben nicht unbegrenzt. Rate-Limiter unten schuetzt vor dem
-Minuten-Limit (das echte 429 in Phase 4 ausgeloest hat); das Tages-/
-Stunden-Budget selbst verwaltet der Budget-Allocator (agent/krypto/
-budget_allocator.py), nicht dieser reine HTTP-Client."""
+Minuten- UND dem Stunden-Limit; das Tages-Budget selbst verwaltet der
+Budget-Allocator (agent/krypto/budget_allocator.py), nicht dieser reine
+HTTP-Client.
+
+**Live-Fund (2026-07-14):** an einem Tag, an dem Groqs Tageskontingent
+komplett ausfiel, musste Cerebras faktisch die GESAMTE Last des Budget-
+Allocators tragen (normalerweise nur gelegentlicher Ueberlauf) - reale 429s
+von Cerebras selbst im Log, obwohl der reine Minuten-Limiter (4/Min) nie
+ausgeloest haben sollte. Ursache: bei nachhaltig ~4 Anfragen/Min waeren das
+240/Std. - weit ueber dem echten 150/Std.-Limit, das der urspruengliche
+Rate-Limiter (nur Minuten-Fenster) nicht abgedeckt hat. Deshalb jetzt ZWEI
+Sliding-Windows (Minute UND Stunde)."""
 from __future__ import annotations
 
 import time
@@ -26,23 +35,35 @@ import requests
 BASE_URL = "https://api.cerebras.ai/v1/chat/completions"
 DEFAULT_MODEL = "gpt-oss-120b"
 RATE_LIMIT_PER_MINUTE = 4  # echtes Limit ist 5/Min, kleiner Puffer (siehe Docstring)
+RATE_LIMIT_PER_HOUR = 140  # echtes Limit ist 150/Std., kleiner Puffer (siehe Docstring)
 
 
 class CerebrasClient:
     def __init__(self, api_key: str, session: requests.Session | None = None):
         self._api_key = api_key
         self._session = session or requests.Session()
-        self._call_timestamps: deque[float] = deque()
+        self._call_timestamps_minute: deque[float] = deque()
+        self._call_timestamps_hour: deque[float] = deque()
 
     def _respect_rate_limit(self) -> None:
         now = time.monotonic()
-        while self._call_timestamps and now - self._call_timestamps[0] > 60:
-            self._call_timestamps.popleft()
-        if len(self._call_timestamps) >= RATE_LIMIT_PER_MINUTE:
-            sleep_for = 60 - (now - self._call_timestamps[0])
-            if sleep_for > 0:
-                time.sleep(sleep_for)
-        self._call_timestamps.append(time.monotonic())
+
+        while self._call_timestamps_minute and now - self._call_timestamps_minute[0] > 60:
+            self._call_timestamps_minute.popleft()
+        while self._call_timestamps_hour and now - self._call_timestamps_hour[0] > 3600:
+            self._call_timestamps_hour.popleft()
+
+        sleep_for = 0.0
+        if len(self._call_timestamps_minute) >= RATE_LIMIT_PER_MINUTE:
+            sleep_for = max(sleep_for, 60 - (now - self._call_timestamps_minute[0]))
+        if len(self._call_timestamps_hour) >= RATE_LIMIT_PER_HOUR:
+            sleep_for = max(sleep_for, 3600 - (now - self._call_timestamps_hour[0]))
+        if sleep_for > 0:
+            time.sleep(sleep_for)
+
+        call_time = time.monotonic()
+        self._call_timestamps_minute.append(call_time)
+        self._call_timestamps_hour.append(call_time)
 
     def chat(
         self,

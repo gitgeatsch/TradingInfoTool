@@ -970,6 +970,51 @@ Take-Profit/Stop-Loss erreicht) — wird revisitiert, sobald mehr echte
 Outcome-Daten vorliegen. Außerdem gilt Backward-Tracking bisher NUR für
 Spot-Signale, nicht für Hebel.
 
+### Cerebras-Stunden-Rate-Limit + manueller Signale-Fallback (2026-07-14)
+
+**Realer Vorfall am Notebook:** an einem Tag mit ungewöhnlich hoher Auslastung
+(komplette Hebel-Roadmap live entwickelt+getestet, plus normaler 15-Min-Takt)
+fiel Groqs Tageskontingent nachmittags komplett aus (jeder Call schlug fehl —
+erwartetes Verhalten, `taegliches_budget_gesamt: 15` ist ja an Groqs realer
+Kapazität ausgerichtet). Dadurch musste **Cerebras faktisch die gesamte
+restliche Tageslast tragen statt nur gelegentlichen Überlauf** — und geriet
+dabei selbst in echte 429-Fehler, obwohl das Tageskontingent (~166 Calls/Tag)
+bei Weitem nicht ausgeschöpft war.
+
+**Ursache gefunden:** der Cerebras-Rate-Limiter (`api/cerebras.py`) schützte
+bisher nur vor dem 5-Anfragen/Minute-Limit, nicht vor dem separaten,
+ebenfalls per API-Headern bestätigten 150-Anfragen/Stunde-Limit. Bei
+nachhaltig ~4 Anfragen/Min (unser eigener Minuten-Puffer) kommt man auf
+240/Std. — weit über der echten Stunden-Grenze. Solange Cerebras nur
+gelegentlich einspringt, fällt das nie auf; sobald es aber (wie an diesem
+Tag) zur Hauptlast wird, greift die Lücke.
+
+**Fix:** `CerebrasClient._respect_rate_limit()` hat jetzt **zwei** parallele
+Sliding-Windows (Minute UND Stunde, `RATE_LIMIT_PER_HOUR = 140`, Puffer unter
+dem echten 150/Std.-Limit) — analog zum bestehenden Minuten-Fenster. Gilt
+automatisch für alle Aufrufer (Budget-Allocator, Hebel-Tab-Button, Marktscan-
+Writeups), da alle dieselbe `CerebrasClient`-Instanz aus `main.py` teilen.
+
+**Zweiter, dabei gefundener Fund:** sowohl der manuelle "Signal berechnen"-
+Button als auch der Batch-Button ("Fällige Signale jetzt berechnen") im
+Signale-Tab hatten — anders als der Hebel-Tab's "Jetzt analysieren"-Button
+und der automatische Budget-Allocator — **gar keinen Cerebras-Fallback**,
+ein Rest aus der Zeit vor Cerebras (Phase 4). Ein manueller Klick brach
+dadurch hart mit dem rohen Groq-429-Fehler ab, selbst wenn Cerebras noch
+Kapazität gehabt hätte. Beide jetzt nachgezogen (`ui/signals_view.py::
+_run_pipeline()` und `agent/krypto/signal_batch.py::run_signal_batch()`,
+identisches Groq-dann-Cerebras-Muster wie im Hebel-Tab — beim Batch **pro
+Asset einzeln entschieden**, kein gemeinsamer "Groq ist heute tot"-
+Kurzschluss für den ganzen Lauf). Damit haben jetzt alle drei manuellen
+KI-Auslöser (Einzel-Klick, Batch, Hebel) sowie der automatische Allocator
+denselben Fallback — volle Konsistenz.
+
+**Wichtig zu wissen:** wenn bei einem Kandidaten sowohl Groq als auch
+Cerebras scheitern, wird in diesem Zyklus einfach nichts geschrieben (auch
+kein HALTEN-Platzhalter) — kein dauerhafter Datenverlust, der Kandidat gilt
+weiterhin als "fällig" und wird beim nächsten 15-Min-Zyklus automatisch
+erneut versucht. Die Konsequenz ist Verzögerung, nicht Verlust.
+
 ### Agent-Pipeline ("Signal berechnen") im Detail
 
 Zwei unterschiedliche Fehlerklassen: **(a) Groq liefert ungültiges/kaputtes JSON**

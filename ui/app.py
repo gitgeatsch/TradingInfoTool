@@ -103,7 +103,7 @@ class TradingInfoToolApp(tk.Tk):
 
         self._signals_view = SignalsView(
             notebook, db_conn_factory, watchlist, groq_client, coingecko_client, kraken_client,
-            fred_api_key=fred_api_key,
+            fred_api_key=fred_api_key, cerebras_client=cerebras_client,
         )
         notebook.add(self._signals_view, text="Signale")
 
