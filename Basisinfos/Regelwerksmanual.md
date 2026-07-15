@@ -331,8 +331,8 @@ dieselbe Datenbank — der Unterschied ist nur, ob du selbst klicken musst.
 | `refresh_securities_prices` | alle 15 Min | Live-Preise für Aktien/ETF/Rohstoffe | yfinance |
 | `refresh_history` | alle 24 Std. | Tages-Historie (für Indikatoren wie EMA-200) | CoinGecko |
 | `refresh_ohlc` | alle 24 Std. | Echtes OHLC (für ATR/Swing-Highs-Lows) | Kraken |
-| `marktscan` | 2× täglich, fix 04:00 + 16:00 Uhr | Kompletter Marktscan-Lauf (Stufe A-D, Kap. 13) | CoinGecko + Kraken, optional Groq |
-| `signal_batch` | 1× täglich, fix 05:00 Uhr | Batch-Signal-Berechnung: die am längsten überfälligen Krypto-Assets bekommen automatisch eine echte Groq-Analyse (Budget-begrenzt, siehe unten) | Groq (budget-limitiert) |
+| `marktscan` | 2× täglich, fix 04:00 + 16:00 Uhr | Kompletter Marktscan-Lauf (Stufe A-D, Kap. 13) — rein deterministisch, **kein** Groq-Aufruf mehr direkt in diesem Job (seit Phase 5, siehe unten) | CoinGecko + Kraken |
+| `hebel_screening` (+ Budget-Allocator huckepack) | alle 15 Min | Hebel-Screening (Kap. 7) UND die zentrale Tagesbudget-Verteilung über drei Verbraucher: Hebel-Kandidaten (Tier 1), Marktscan-Kaufkandidaten-Begründung (Tier 2), Spot-Rotation für die am längsten überfälligen Krypto-Assets (Tier 3 — ersetzt seit 2026-07-14/Phase 5 den ehemaligen eigenen `signal_batch`-05:00-Cron) | Binance/Bybit/OKX/Kraken (Screening) + Groq→Cerebras→Gemini (je Tier budget-limitiert) |
 | `backward_tracking` | 1× täglich, fix 06:00 Uhr | Prüft vergangene KAUFEN/NACHKAUFEN-Signale gegen die Kurshistorie — Take-Profit oder Stop-Loss erreicht? | keine (nur bereits vorhandene DB-Daten) |
 | `bitpanda_cash` | alle 30 Min (nur mit gesetztem `BITPANDA_API_KEY`) | Nur der EUR-Fiat-Cash-Stand für RM-4 — **nicht** die vollen Bestände | Bitpanda (`/fiatwallets`) |
 
@@ -411,6 +411,35 @@ NICHT als "hat eine echte Groq-Analyse bekommen" — der
 `AnalystResponseInvalid`-Fallback-Pfad (kaputtes/unvollständiges JSON nach
 Retries) setzt `gate_passed=True`, aber `groq_raw_response` bleibt `None`.
 Korrektes Kriterium: `groq_raw_response IS NOT NULL`.
+
+**Nachtrag: echter Spot-Cooldown-Fix (2026-07-15, nach einem echten
+3-Provider-Erschöpfungs-Vorfall am Notebook, Details in Memory
+`project_llm_budget_ueberlast_2026-07-15`).** Die Verteilungsformel oben
+(Tier 1/2/3) hatte für Hebel (Tier 1) und Marktscan (Tier 2) schon immer
+einen echten Cooldown (`budget_allocator.cooldown_stunden`, 3,5 Std.) — Tier
+3 (Spot-Rotation) dagegen **keinen**: `select_assets_due_for_signal()` hat
+nur nach "am längsten nicht analysiert zuerst" sortiert, ohne jeden
+Mindestabstand. Bei ~40 aktiven Krypto-Assets und einem 15-Minuten-Takt
+bedeutete das: eine komplette Rotation dauerte nur ~40 Minuten statt eines
+Tages — real bestätigt mit 234 Spot-Signalen an einem einzigen Tag für nur
+40 distinkte Symbole. Fix: `select_assets_due_for_signal()` bekam einen
+echten `cooldown_stunden`-Parameter (Default `SPOT_COOLDOWN_STUNDEN = 20`,
+`config.yaml budget_allocator.spot_cooldown_stunden`) — ein Asset mit einer
+echten Analyse innerhalb des Cooldown-Fensters wird jetzt ausgeschlossen,
+bevor sortiert/gekappt wird. Gilt automatisch auch für den manuellen
+"Fällige Signale jetzt berechnen"-Button (dieselbe Funktion), nicht nur für
+den Budget-Allocator.
+
+**Nachtrag: GUI-Schalter "Nur Long" für Hebel-Kandidaten (2026-07-15,
+Nutzer-Wunsch).** Von 14 tatsächlichen Hebel-"ERÖFFNEN"-Empfehlungen im
+gesamten bisherigen Datensatz waren 13 SHORT, nur 1 LONG — Bitpanda kann
+Hebel-Short aber gar nicht ausführen, jede SHORT-Analyse war damit
+faktisch verschwendetes LLM-Budget. Neues Menü "Hebel" → "Nur Long
+analysieren" (`ui/settings.py::hebel_richtung_modus`, LIVE wirksam, kein
+Neustart nötig) filtert SHORT-Kandidaten schon **vor** dem Cooldown-Check
+und dem LLM-Aufruf heraus (`agent/krypto/budget_allocator.py::
+run_budget_allocator()`) — ein direkter Hebel auf die tatsächliche
+Aufrufzahl, keine nachträgliche Anzeige-Filterung.
 
 ### Manuell (GUI-Aktionen, nur bei Klick)
 
@@ -1513,6 +1542,10 @@ Startpunkt, sobald Backward-Tracking/Outcome-Daten vorliegen:
   `equities_overlay_shift_std` (0,2) sind erste plausible Startwerte, noch nicht
   gegen echte Ergebnisse validiert. `equities_baermarkt_verknuepfung: entweder`
   ist dagegen eine bewusste, feste Nutzer-Entscheidung (kein `[OFFEN]`).
+- **NEU (2026-07-15):** `budget_allocator.spot_cooldown_stunden` (20 Std.,
+  Kap. 6) — erster plausibler Startwert für den neuen Spot-Rotation-Cooldown
+  (< 24 Std., damit die tägliche Rotation nicht durch feste Tick-Zeiten
+  driftet), noch nicht gegen mehrere Tage echten Betrieb verifiziert.
 
 ---
 

@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Callable
 
 import database.db as db
@@ -36,6 +36,13 @@ logger = logging.getLogger(__name__)
 # Rotations-Ansatz (aeltestes zuerst, jeden Tag erneut) nur ~4 Tage fuer
 # einen kompletten Durchlauf - deutlich Puffer gegenueber 7 Tagen.
 SIGNAL_STALE_THRESHOLD_DAYS = 7
+
+# Fix (2026-07-15, echter Notebook-Vorfall - siehe Memory
+# project_llm_budget_ueberlast_2026-07-15.md): Default-Cooldown fuer
+# select_assets_due_for_signal(), siehe dortige Docstring-Erweiterung fuer
+# den vollen Kontext. <24h, damit die Rotation nicht durch feste Tick-Zeiten
+# schrittweise nach hinten driftet.
+SPOT_COOLDOWN_STUNDEN = 20.0
 
 
 @dataclass
@@ -57,19 +64,35 @@ def _tage_seit(created_at: str | None) -> float:
     return (datetime.now(timezone.utc) - then).total_seconds() / 86400
 
 
-def select_assets_due_for_signal(conn, watchlist: list, max_count: int) -> list:
+def select_assets_due_for_signal(
+    conn, watchlist: list, max_count: int, cooldown_stunden: float | None = SPOT_COOLDOWN_STUNDEN,
+) -> list:
     """Sortiert alle Watchlist-Assets (aktiv UND watchlist-Status - Nutzer-
     Wunsch 2026-07-13: 'sonst macht es keinen Sinn') nach Tagen seit der
     letzten ECHTEN Groq-Analyse absteigend (nie berechnet zuerst), gibt die
     ersten `max_count` zurueck.
 
-    Bewusst KEIN Gate auf SIGNAL_STALE_THRESHOLD_DAYS hier: das wuerde bei
-    einer bereits "eingeschwungenen" Rotation (alles < 7 Tage alt) dazu
-    fuehren, dass der taegliche Job/manuelle Klick zeitweise NICHTS tut und
-    sich dann alle Assets gleichzeitig stauen, sobald sie die 7-Tage-Grenze
-    reissen. Stattdessen: immer die global aeltesten zuerst, das ergibt eine
+    Ehemals KEIN Gate auf SIGNAL_STALE_THRESHOLD_DAYS: das wuerde bei einer
+    bereits "eingeschwungenen" Rotation (alles < 7 Tage alt) dazu fuehren,
+    dass der taegliche Job/manuelle Klick zeitweise NICHTS tut und sich dann
+    alle Assets gleichzeitig stauen, sobald sie die 7-Tage-Grenze reissen.
+    Stattdessen: immer die global aeltesten zuerst, das ergibt eine
     gleichmaessige Rotation ohne Bursts. Die Schwelle dient nur der
     Ueberfaellig-Meldung (siehe run_signal_batch()).
+
+    Cooldown-Fix (2026-07-15, echter Notebook-Vorfall - siehe Memory
+    project_llm_budget_ueberlast_2026-07-15.md): diese Begruendung stimmte
+    fuer EINEN taeglichen Cron-Lauf, aber seit Phase 5 ruft der Budget-
+    Allocator (budget_allocator.py) diese Funktion alle 15 Min auf - ohne
+    Cooldown rotierte das System bei ~40 Krypto-Assets komplett innerhalb
+    von ~40 Minuten durch (bestaetigt: 234 Spot-Signale an einem Tag fuer
+    nur 40 distinkte Symbole). `cooldown_stunden` (Default
+    SPOT_COOLDOWN_STUNDEN) schliesst jetzt Assets mit einer echten Analyse
+    INNERHALB des Cooldown-Fensters aus, bevor sortiert/gekappt wird -
+    analog zum bereits bestehenden Hebel-/Marktscan-Cooldown in
+    budget_allocator.py (dort war Tier 3 bisher die einzige Ausnahme ohne
+    Gate). `cooldown_stunden=None` behaelt das alte, ungefilterte Verhalten
+    bei (z.B. fuer Tests).
 
     Stablecoins ausgeschlossen (A-1: bekommen strukturell nie ein echtes
     Signal - generate_signal() gibt sofort HALTEN zurueck, ohne Groq zu
@@ -84,6 +107,12 @@ def select_assets_due_for_signal(conn, watchlist: list, max_count: int) -> list:
     ui/signals_view.py::SignalsView.__init__()."""
     latest_real = db.get_latest_real_signal_per_symbol(conn)
     candidates = [a for a in watchlist if a.assetklasse == "krypto" and a.typ != "stablecoin"]
+    if cooldown_stunden:
+        grenze = (datetime.now(timezone.utc) - timedelta(hours=cooldown_stunden)).isoformat()
+        candidates = [
+            a for a in candidates
+            if a.symbol not in latest_real or latest_real[a.symbol].created_at < grenze
+        ]
     candidates.sort(
         key=lambda a: _tage_seit(latest_real[a.symbol].created_at if a.symbol in latest_real else None),
         reverse=True,

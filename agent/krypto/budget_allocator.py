@@ -43,11 +43,13 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 
 import database.db as db
+import ui.settings as ui_settings
 from agent.krypto.hebel_pipeline import generate_hebel_signal
+from agent.krypto.hebel_screening import RICHTUNG_LONG
 from agent.krypto.llm_provider import llm_model_label
 from agent.krypto.marktscan import generate_candidate_writeup
 from agent.krypto.pipeline import compute_current_regime, generate_signal
-from agent.krypto.signal_batch import select_assets_due_for_signal
+from agent.krypto.signal_batch import SPOT_COOLDOWN_STUNDEN, select_assets_due_for_signal
 from database.models import HebelTrigger, MarktscanCandidate
 
 logger = logging.getLogger(__name__)
@@ -157,16 +159,31 @@ def run_budget_allocator(
     cerebras_budget = cfg.get("cerebras_taegliches_budget", 60)
     gemini_budget = cfg.get("gemini_taegliches_budget", 200)
     cooldown_stunden = cfg.get("cooldown_stunden", 3.5)
+    spot_cooldown_stunden = cfg.get("spot_cooldown_stunden", SPOT_COOLDOWN_STUNDEN)
+
+    # GUI-Schalter (2026-07-15, Nutzer-Wunsch): "Nur Long" filtert Hebel-
+    # Kandidaten VOR dem Cooldown-Check/LLM-Call heraus, nicht erst
+    # nachtraeglich in der Anzeige - direkter Hebel auf die tatsaechliche
+    # LLM-Aufrufzahl (siehe Memory project_llm_budget_ueberlast_2026-07-15:
+    # 13 von 14 echten ERGOEFFNEN-Empfehlungen waren SHORT, auf Bitpanda
+    # aber gar nicht ausfuehrbar). LIVE wirksam, kein Neustart noetig -
+    # gleiches Muster wie email_empfehlungen_nur_bitpanda (ui/settings.py).
+    hebel_richtung_modus = ui_settings.load_settings().get("hebel_richtung_modus", "beide")
 
     conn = conn_factory()
     try:
+        hebel_pending = db.get_pending_hebel_candidates(conn)
+        if hebel_richtung_modus == "nur_long":
+            hebel_pending = [c for c in hebel_pending if c.richtung == RICHTUNG_LONG]
         hebel_kandidaten, result.uebersprungen_cooldown_hebel = _filter_hebel_cooldown(
-            conn, db.get_pending_hebel_candidates(conn), cooldown_stunden,
+            conn, hebel_pending, cooldown_stunden,
         )
         marktscan_kandidaten, result.uebersprungen_cooldown_marktscan = _filter_marktscan_cooldown(
             conn, db.get_pending_marktscan_kaufkandidaten(conn), cooldown_stunden,
         )
-        spot_kandidaten = select_assets_due_for_signal(conn, watchlist, max_count=budget_gesamt)
+        spot_kandidaten = select_assets_due_for_signal(
+            conn, watchlist, max_count=budget_gesamt, cooldown_stunden=spot_cooldown_stunden,
+        )
         # Echte Tages-Zaehler (2026-07-14-Fix) - EINMAL pro Lauf aus der DB
         # gelesen, statt einer lokalen Variable, die bei jedem 15-Min-Lauf
         # auf 0 zurueckgesetzt wurde (siehe Modul-Docstring).
@@ -182,9 +199,10 @@ def run_budget_allocator(
         len(hebel_kandidaten), len(marktscan_kandidaten), len(spot_kandidaten), budget_gesamt, spot_reserve,
     )
     logger.info(
-        "Budget-Allocator: Hebel %d/%d, Marktscan %d/%d, Spot %d/%d ausgewaehlt (B=%d, F=%d), "
+        "Budget-Allocator: Hebel %d/%d (Richtung=%s), Marktscan %d/%d, Spot %d/%d ausgewaehlt (B=%d, F=%d), "
         "Cooldown uebersprungen: Hebel %d, Marktscan %d",
-        tier1_n, len(hebel_kandidaten), tier2_n, len(marktscan_kandidaten), tier3_n, len(spot_kandidaten),
+        tier1_n, len(hebel_kandidaten), hebel_richtung_modus, tier2_n, len(marktscan_kandidaten),
+        tier3_n, len(spot_kandidaten),
         budget_gesamt, spot_reserve, result.uebersprungen_cooldown_hebel, result.uebersprungen_cooldown_marktscan,
     )
 

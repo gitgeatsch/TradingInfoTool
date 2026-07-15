@@ -18,6 +18,12 @@ _DEFAULTS = {
     # dark_mode LIVE wirksam (wird erst beim tatsaechlichen E-Mail-Versand aus
     # dem Hintergrund-Job gelesen, kein Neustart noetig).
     "email_empfehlungen_nur_bitpanda": True,
+    # 2026-07-15 (Nutzer-Wunsch, siehe Memory project_llm_budget_ueberlast_
+    # 2026-07-15): "beide" oder "nur_long" - steuert, ob der Budget-Allocator
+    # SHORT-Hebel-Kandidaten ueberhaupt noch an ein LLM schickt (Bitpanda kann
+    # Hebel-Short nicht ausfuehren). LIVE wirksam, direkt vor dem naechsten
+    # 15-Min-Allocator-Lauf (agent/krypto/budget_allocator.py) gelesen.
+    "hebel_richtung_modus": "beide",
 }
 
 

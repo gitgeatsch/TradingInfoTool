@@ -178,6 +178,21 @@ class TradingInfoToolApp(tk.Tk):
         )
         menubar.add_cascade(label="Benachrichtigungen", menu=benachrichtigung_menu)
 
+        hebel_menu = tk.Menu(menubar, tearoff=0)
+        self._hebel_richtung_var = tk.StringVar(
+            value=self._settings["hebel_richtung_modus"]
+        )
+        hebel_menu.add_radiobutton(
+            label="Long + Short analysieren", variable=self._hebel_richtung_var,
+            value="beide", command=self._toggle_hebel_richtung,
+        )
+        hebel_menu.add_radiobutton(
+            label="Nur Long analysieren (Bitpanda kann Hebel-Short nicht ausführen)",
+            variable=self._hebel_richtung_var,
+            value="nur_long", command=self._toggle_hebel_richtung,
+        )
+        menubar.add_cascade(label="Hebel", menu=hebel_menu)
+
         self.config(menu=menubar)
 
     def _toggle_dark_mode(self) -> None:
@@ -197,6 +212,14 @@ class TradingInfoToolApp(tk.Tk):
         E-Mail-Versand (siehe scheduler/background.py::
         _ist_email_relevantes_asset())."""
         self._settings["email_empfehlungen_nur_bitpanda"] = self._email_nur_bitpanda_var.get()
+        ui_settings.save_settings(self._settings)
+
+    def _toggle_hebel_richtung(self) -> None:
+        """LIVE wirksam wie E-Mail-Filter, kein Neustart noetig - der
+        Budget-Allocator liest die Einstellung direkt vor dem naechsten
+        15-Min-Lauf (siehe agent/krypto/budget_allocator.py::
+        run_budget_allocator())."""
+        self._settings["hebel_richtung_modus"] = self._hebel_richtung_var.get()
         ui_settings.save_settings(self._settings)
 
     def _build_watchlist_tab(self, parent) -> ttk.Frame:

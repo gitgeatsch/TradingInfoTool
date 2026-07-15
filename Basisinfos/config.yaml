@@ -513,6 +513,12 @@ budget_allocator:
                                         # bewusst am seltensten genutzt (siehe agent/krypto/
                                         # budget_allocator.py Modul-Docstring)
   cooldown_stunden: 3.5                 # Mitte der bestaetigten 3-4-Std.-Spanne (2026-07-13)
+  spot_cooldown_stunden: 20             # Fix (2026-07-15, echter Notebook-Vorfall, siehe Memory
+                                        # project_llm_budget_ueberlast_2026-07-15): Tier 3 (Spot)
+                                        # hatte bisher KEINEN Cooldown, rotierte bei ~40 Krypto-
+                                        # Assets alle ~40 Min komplett durch (234 Signale/Tag fuer
+                                        # nur 40 Symbole). <24h, damit die taegliche Rotation nicht
+                                        # durch feste Tick-Zeiten nach hinten driftet.
 
 # --- Hebel-Screening (2026-07-14, Phase 1, siehe docs/hebel_positionsformel.md) ---
 # Deterministisches Zwei-Zweige-Scoring (Trendfolge + Kontra), KEIN Groq-Aufruf hier -
