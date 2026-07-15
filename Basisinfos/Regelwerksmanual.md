@@ -1015,6 +1015,45 @@ kein HALTEN-Platzhalter) — kein dauerhafter Datenverlust, der Kandidat gilt
 weiterhin als "fällig" und wird beim nächsten 15-Min-Zyklus automatisch
 erneut versucht. Die Konsequenz ist Verzögerung, nicht Verlust.
 
+### Gemini als dritte Fallback-Stufe + echte Tages-Zähler (2026-07-14)
+
+**Qualitätsvergleich Groq/Cerebras/Gemini** (zwei echte Testrunden gegen
+dieselben Assets) ergab: Gemini liefert am vollständigsten (immer Entry/
+Stop/Take-Zonen, auch bei HALTEN), hat aber einen echten Halluzinations-Fund
+(ETH-spezifischer Text tauchte in einer SEI-Analyse auf). Cerebras war 2/2
+mal aggressiver als der Konsens der anderen beiden. Ohne Backward-Tracking-
+Historie lässt sich die Reihenfolge nicht weiter optimieren — Gemini wird
+deshalb als **dritte, letzte Stufe** ergänzt: **Groq → Cerebras → Gemini**,
+nach Reife/Vertrauen sortiert, nicht nach roher Kapazität (Gemini hätte mit
+Abstand die größte Kapazität, ist aber am wenigsten erprobt).
+
+**Halluzinations-Absicherung:** eine neue Prüfung
+(`agent/krypto/analyst.py::_pruefe_kreuzkontamination()`, identisch in
+`hebel_analyst.py`) erkennt, wenn eine Antwort für ein Nicht-BTC/ETH-Asset
+den Begriff "Boden-Zielzone" erwähnt — dieses Feature wird im Facts-JSON
+NUR für BTC/ETH überhaupt mitgeschickt, jede Erwähnung bei einem anderen
+Symbol ist also garantiert erfunden. Löst automatisch denselben Retry aus
+wie kaputtes JSON (Korrektur-Hinweis ans Modell). Bewusst nur dieser eine,
+konkret beobachtete Begriff — ein breiterer "andere Symbole erwähnt"-Filter
+hätte legitime Vergleiche ("ähnlich wie bei BTC") fälschlich abgewiesen.
+
+**Echter Tages-Zähler-Fix (Kern-Prinzip: "eine KI darf nicht durch einen
+eigenen Buchführungsfehler sterben"):** Cerebras' bisheriger "Tagesbudget"-
+Zähler war eine lokale Variable, die bei **jedem** 15-Min-Lauf auf 0
+zurückgesetzt wurde — da ein einzelner Lauf maximal `taegliches_budget_
+gesamt` (~15) Kandidaten verarbeitet, konnte die 60er-Grenze nie erreicht
+werden, die Tagesobergrenze wirkte also nie wirklich. Neue Funktion
+`database/db.py::count_real_llm_calls_today_by_provider()` zählt jetzt
+**echt** über alle drei Tiers (Hebel/Spot/Marktscan-Tabellen) hinweg, seit
+Mitternacht UTC — dafür bekam `marktscan_candidates` eine neue `llm_model`-
+Spalte (fehlte bisher als einzige der drei Tabellen). Gilt jetzt genauso für
+Gemini (`gemini_taegliches_budget: 200`, config.yaml) wie für Cerebras.
+
+**Integration:** wie beim Cerebras-Fix an allen vier Stellen ergänzt (Budget-
+Allocator automatisch, Hebel-Tab-Button, Signale-Einzel-Button, Signale-
+Batch-Button) — volle Konsistenz. `GEMINI_API_KEY` optional (P-8), ohne Key
+bleibt die Kette bei Groq→Cerebras wie zuvor.
+
 ### Agent-Pipeline ("Signal berechnen") im Detail
 
 Zwei unterschiedliche Fehlerklassen: **(a) Groq liefert ungültiges/kaputtes JSON**

@@ -43,13 +43,14 @@ _POSITIONS_COLUMN_DESCRIPTIONS = {
 class HebelView(ttk.Frame):
     def __init__(
         self, parent, db_conn_factory, watchlist, groq_client, cerebras_client,
-        coingecko_client, kraken_client, fred_api_key=None,
+        coingecko_client, kraken_client, fred_api_key=None, gemini_client=None,
     ):
         super().__init__(parent)
         self._db_conn_factory = db_conn_factory
         self._watchlist = watchlist
         self._groq_client = groq_client
         self._cerebras_client = cerebras_client
+        self._gemini_client = gemini_client
         self._coingecko_client = coingecko_client
         self._kraken_client = kraken_client
         self._fred_api_key = fred_api_key
@@ -60,6 +61,9 @@ class HebelView(ttk.Frame):
 
         self._build_layout()
         self.refresh()
+
+    def _any_llm_client_available(self) -> bool:
+        return self._groq_client is not None or self._cerebras_client is not None or self._gemini_client is not None
 
     def _build_layout(self) -> None:
         paned = ttk.Panedwindow(self, orient="horizontal")
@@ -109,9 +113,9 @@ class HebelView(ttk.Frame):
         self.status_label = ttk.Label(toolbar, text="", foreground=theme.info_color())
         self.status_label.pack(side="left", padx=(12, 0))
 
-        if self._groq_client is None and self._cerebras_client is None:
+        if not self._any_llm_client_available():
             self.status_label.config(
-                text="⚠ Kein Groq-/Cerebras-Key gesetzt — manuelle Analyse deaktiviert",
+                text="⚠ Kein Groq-/Cerebras-/Gemini-Key gesetzt — manuelle Analyse deaktiviert",
                 foreground=theme.warn_color(),
             )
 
@@ -219,7 +223,7 @@ class HebelView(ttk.Frame):
             self._render_signal(obj)
 
     def _render_kandidat(self, trig) -> None:
-        can_analyze = self._groq_client is not None or self._cerebras_client is not None
+        can_analyze = self._any_llm_client_available()
         self.analyze_button.config(state="normal" if can_analyze else "disabled")
         self.action_label.config(
             text=f"{trig.symbol} {trig.richtung}: Kandidat (wartet auf Analyse)",
@@ -383,7 +387,7 @@ class HebelView(ttk.Frame):
     def _on_analyze_clicked(self) -> None:
         if self._selected_row is None or self._selected_row[0] != "kandidat":
             return
-        if self._groq_client is None and self._cerebras_client is None:
+        if not self._any_llm_client_available():
             return
 
         trig = self._selected_row[1]
@@ -393,6 +397,9 @@ class HebelView(ttk.Frame):
         thread.start()
 
     def _run_analysis(self, trig) -> None:
+        """Groq-dann-Cerebras-dann-Gemini-Fallback (2026-07-14 um Gemini als
+        dritte Stufe ergaenzt, bewusst ohne Budget-/Cooldown-Pruefung - ein
+        manueller Klick ist ein expliziter Einzel-Wunsch)."""
         from agent.krypto.hebel_pipeline import generate_hebel_signal
 
         asset = next((a for a in self._watchlist if a.symbol == trig.symbol), None)
@@ -411,20 +418,13 @@ class HebelView(ttk.Frame):
                 conn.close()
 
         error = None
-        if self._groq_client is not None:
+        for llm_client in (self._groq_client, self._cerebras_client, self._gemini_client):
+            if llm_client is None:
+                continue
             try:
-                _attempt(self._groq_client)
-            except Exception as exc:
-                error = exc
-                if self._cerebras_client is not None:
-                    try:
-                        _attempt(self._cerebras_client)
-                        error = None
-                    except Exception as exc2:
-                        error = exc2
-        elif self._cerebras_client is not None:
-            try:
-                _attempt(self._cerebras_client)
+                _attempt(llm_client)
+                error = None
+                break
             except Exception as exc:
                 error = exc
 

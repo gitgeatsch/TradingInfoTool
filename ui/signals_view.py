@@ -57,7 +57,7 @@ def _parse_optional_float(text: str) -> float | None:
 class SignalsView(ttk.Frame):
     def __init__(
         self, parent, db_conn_factory, watchlist, groq_client, coingecko_client, kraken_client,
-        fred_api_key=None, cerebras_client=None,
+        fred_api_key=None, cerebras_client=None, gemini_client=None,
     ):
         super().__init__(parent)
         self._db_conn_factory = db_conn_factory
@@ -75,12 +75,11 @@ class SignalsView(ttk.Frame):
         # Anzeige-Liste filtert zusaetzlich Stablecoins raus.
         self._watchlist = [a for a in krypto_watchlist if a.typ != "stablecoin"]
         self._groq_client = groq_client
-        # 2026-07-14: nur der Einzel-Signal-Button ("Signal berechnen") bekommt
-        # denselben Groq-dann-Cerebras-Fallback wie ui/hebel_view.py - der
-        # Batch-Button (agent/krypto/signal_batch.py::run_signal_batch())
-        # bleibt bewusst Groq-only (siehe dortiger Docstring), das haette eine
-        # groessere Aenderung ueber mehrere Ebenen gebraucht.
+        # 2026-07-14: Einzel-Klick-Button UND Batch-Button teilen sich denselben
+        # Groq-dann-Cerebras-dann-Gemini-Fallback wie ui/hebel_view.py (Batch:
+        # pro Asset einzeln entschieden, siehe agent/krypto/signal_batch.py).
         self._cerebras_client = cerebras_client
+        self._gemini_client = gemini_client
         self._coingecko_client = coingecko_client
         self._kraken_client = kraken_client
         self._fred_api_key = fred_api_key  # optional (P-8) - ohne Key liefert
@@ -129,15 +128,15 @@ class SignalsView(ttk.Frame):
         # daher nicht an self._selected_asset gekoppelt wie compute_button/history_button.
         self.batch_button = ttk.Button(
             toolbar, text="Fällige Signale jetzt berechnen", command=self._on_batch_clicked,
-            state="normal" if self._batch_client_available() else "disabled",
+            state="normal" if self._any_llm_client_available() else "disabled",
         )
         self.batch_button.pack(side="left", padx=(6, 0))
         self.status_label = ttk.Label(toolbar, text="", foreground=theme.info_color())
         self.status_label.pack(side="left", padx=(12, 0))
 
-        if self._groq_client is None and self._cerebras_client is None:
+        if not self._any_llm_client_available():
             self.status_label.config(
-                text="⚠ Kein GROQ_API_KEY/CEREBRAS_API_KEY gesetzt — Signalberechnung deaktiviert (siehe .env)",
+                text="⚠ Kein GROQ_API_KEY/CEREBRAS_API_KEY/GEMINI_API_KEY gesetzt — Signalberechnung deaktiviert (siehe .env)",
                 foreground=theme.warn_color(),
             )
 
@@ -162,8 +161,8 @@ class SignalsView(ttk.Frame):
         self.detail_text = tk.Text(right, height=28, wrap="word", state="disabled", relief="flat")
         self.detail_text.pack(fill="both", expand=True)
 
-    def _batch_client_available(self) -> bool:
-        return self._groq_client is not None or self._cerebras_client is not None
+    def _any_llm_client_available(self) -> bool:
+        return self._groq_client is not None or self._cerebras_client is not None or self._gemini_client is not None
 
     def _asset_by_symbol(self, symbol: str):
         return next((a for a in self._watchlist if a.symbol == symbol), None)
@@ -191,7 +190,7 @@ class SignalsView(ttk.Frame):
             return
         symbol = selected[0]
         self._selected_asset = self._asset_by_symbol(symbol)
-        can_compute = self._groq_client is not None or self._cerebras_client is not None
+        can_compute = self._any_llm_client_available()
         self.compute_button.config(state="normal" if can_compute else "disabled")
         self.history_button.config(state="normal")  # braucht keinen Groq-Key, reine DB-Anzeige
 
@@ -456,7 +455,7 @@ class SignalsView(ttk.Frame):
 
     def _on_compute_clicked(self) -> None:
         asset = self._selected_asset
-        if asset is None or (self._groq_client is None and self._cerebras_client is None):
+        if asset is None or not self._any_llm_client_available():
             return
 
         self.compute_button.config(state="disabled")
@@ -466,9 +465,10 @@ class SignalsView(ttk.Frame):
         thread.start()
 
     def _run_pipeline(self, asset) -> None:
-        """Groq-dann-Cerebras-Fallback (2026-07-14), analog ui/hebel_view.py::
-        _run_analysis() - ein manueller Einzel-Klick soll nicht hart mit dem
-        rohen Groq-429-Fehler abbrechen, wenn Cerebras noch Kapazitaet hat."""
+        """Groq-dann-Cerebras-dann-Gemini-Fallback (2026-07-14 um Gemini als
+        dritte Stufe ergaenzt), analog ui/hebel_view.py::_run_analysis() - ein
+        manueller Einzel-Klick soll nicht hart mit dem rohen Groq-429-Fehler
+        abbrechen, wenn Cerebras/Gemini noch Kapazitaet haben."""
         from agent.krypto.pipeline import generate_signal
 
         def _attempt(llm_client):
@@ -482,27 +482,20 @@ class SignalsView(ttk.Frame):
                 conn.close()
 
         signal, error = None, None
-        if self._groq_client is not None:
+        for llm_client in (self._groq_client, self._cerebras_client, self._gemini_client):
+            if llm_client is None:
+                continue
             try:
-                signal = _attempt(self._groq_client)
+                signal = _attempt(llm_client)
+                error = None
+                break
             except Exception as exc:  # noqa: BLE001 - an die UI durchreichen statt den Thread stumm sterben zu lassen
-                error = exc
-                if self._cerebras_client is not None:
-                    try:
-                        signal = _attempt(self._cerebras_client)
-                        error = None
-                    except Exception as exc2:
-                        error = exc2
-        elif self._cerebras_client is not None:
-            try:
-                signal = _attempt(self._cerebras_client)
-            except Exception as exc:
                 error = exc
 
         self.after(0, self._on_pipeline_done, asset, signal, error)
 
     def _on_pipeline_done(self, asset, signal, error) -> None:
-        can_compute = self._groq_client is not None or self._cerebras_client is not None
+        can_compute = self._any_llm_client_available()
         self.compute_button.config(state="normal" if can_compute else "disabled")
         if error is not None:
             self.status_label.config(text=f"Fehler: {error}", foreground=theme.danger_color())
@@ -557,6 +550,7 @@ class SignalsView(ttk.Frame):
                 self._db_conn_factory, self._full_watchlist, self._groq_client, self._coingecko_client,
                 self._kraken_client, self._fred_api_key, daily_budget=daily_budget,
                 progress_callback=self._on_batch_progress, cerebras_client=self._cerebras_client,
+                gemini_client=self._gemini_client,
             )
             error = None
         except Exception as exc:  # noqa: BLE001 - an die UI durchreichen statt den Thread stumm sterben zu lassen
@@ -568,7 +562,7 @@ class SignalsView(ttk.Frame):
         self.after(0, self._on_batch_done, result, error)
 
     def _on_batch_done(self, result, error) -> None:
-        self.batch_button.config(state="normal" if self._batch_client_available() else "disabled")
+        self.batch_button.config(state="normal" if self._any_llm_client_available() else "disabled")
         if error is not None:
             self.status_label.config(text=f"Fehler: {error}", foreground=theme.danger_color())
             return

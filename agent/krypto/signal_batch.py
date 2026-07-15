@@ -101,6 +101,7 @@ def run_signal_batch(
     daily_budget: int,
     progress_callback: Callable[[int, int, str], None] | None = None,
     cerebras_client=None,
+    gemini_client=None,
 ) -> BatchResult:
     """Nur noch vom manuellen UI-Button (ui/signals_view.py) aufgerufen - der
     urspruengliche taegliche Scheduler-Job (signal_batch_job) wurde in Phase 5
@@ -109,11 +110,12 @@ def run_signal_batch(
     `progress_callback(done, total, symbol)` optional fuer eine
     UI-Fortschrittsanzeige.
 
-    Groq-dann-Cerebras-Fallback (2026-07-14, nachgezogen nach echtem
-    Notebook-Vorfall) - `cerebras_client` optional (P-8), ohne ihn bleibt der
-    Batch reines Groq wie zuvor. Pro Asset EIGENE Fallback-Entscheidung
-    (kein gemeinsamer "Groq ist heute tot"-Kurzschluss ueber den ganzen
-    Batch) - konsistent mit dem Budget-Allocator/Hebel-Tab-Muster.
+    Groq-dann-Cerebras-dann-Gemini-Fallback (2026-07-14, Gemini als dritte
+    Stufe ergaenzt) - `cerebras_client`/`gemini_client` optional (P-8), ohne
+    sie bleibt der Batch entsprechend kuerzer in der Kette. Pro Asset EIGENE
+    Fallback-Entscheidung (kein gemeinsamer "Groq ist heute tot"-Kurzschluss
+    ueber den ganzen Batch) - konsistent mit dem Budget-Allocator/Hebel-Tab-
+    Muster.
 
     Budget-Pruefung ueber db.count_real_signals_today() statt eines eigenen
     Zaehlers: da sowohl der Einzel-Klick-Button ("Signal berechnen") als auch
@@ -150,24 +152,25 @@ def run_signal_batch(
         finally:
             conn.close()
 
+    llm_clients = [c for c in (groq_client, cerebras_client, gemini_client) if c is not None]
+
     result = BatchResult()
     for index, asset in enumerate(faellige):
         if progress_callback:
             progress_callback(index, len(faellige), asset.symbol)
-        try:
-            signal = _attempt(asset, groq_client)
+        signal, last_exc = None, None
+        for llm_client in llm_clients:
+            try:
+                signal = _attempt(asset, llm_client)
+                break
+            except Exception as exc:
+                last_exc = exc
+        if signal is not None:
             result.berechnet.append(signal)
-        except Exception as exc:
-            if cerebras_client is not None:
-                try:
-                    signal = _attempt(asset, cerebras_client)
-                    result.berechnet.append(signal)
-                    continue
-                except Exception:
-                    logger.exception("Batch-Signal-Berechnung für %s (Groq UND Cerebras) fehlgeschlagen", asset.symbol)
-                    result.fehlgeschlagen.append(asset.symbol)
-                    continue
-            logger.exception("Batch-Signal-Berechnung für %s fehlgeschlagen (%s)", asset.symbol, exc)
+        else:
+            logger.error(
+                "Batch-Signal-Berechnung für %s fehlgeschlagen (%s)", asset.symbol, last_exc, exc_info=last_exc,
+            )
             result.fehlgeschlagen.append(asset.symbol)
 
     conn = conn_factory()

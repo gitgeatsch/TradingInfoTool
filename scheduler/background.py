@@ -617,7 +617,7 @@ def _refresh_hebel_position_liquidation_prices(conn) -> None:
 
 def hebel_screening_job(
     coingecko_client, kraken_client, conn_factory, watchlist, bitpanda_api_key=None,
-    groq_client=None, cerebras_client=None, fred_api_key=None,
+    groq_client=None, cerebras_client=None, gemini_client=None, fred_api_key=None,
 ) -> bool:
     """Hebel-Screening (2026-07-14, Phase 1, siehe docs/hebel_positionsformel.md)
     - rein deterministisches Zwei-Zweige-Scoring, KEIN Groq-Aufruf. Ergebnis
@@ -675,14 +675,15 @@ def hebel_screening_job(
 
             allocation = run_budget_allocator(
                 conn_factory, watchlist, groq_client, cerebras_client, coingecko_client, kraken_client,
-                fred_api_key, config_dict,
+                fred_api_key, config_dict, gemini_client=gemini_client,
             )
             logger.info(
                 "Budget-Allocator: Hebel %d, Marktscan %d, Spot %d verarbeitet, %d fehlgeschlagen, "
-                "Cerebras-Calls %d, Cerebras-Budget erschöpft: %s",
+                "Cerebras-Calls %d, Cerebras-Budget erschöpft: %s, Gemini-Calls %d, Gemini-Budget erschöpft: %s",
                 len(allocation.hebel_verarbeitet), len(allocation.marktscan_verarbeitet),
                 len(allocation.spot_verarbeitet), len(allocation.fehlgeschlagen),
                 allocation.cerebras_calls_verbraucht, allocation.cerebras_budget_erschoepft,
+                allocation.gemini_calls_verbraucht, allocation.gemini_budget_erschoepft,
             )
             if allocation.ergebnis_objekt:
                 try:
@@ -765,7 +766,7 @@ def _ohlc_data_is_stale(conn, watchlist) -> bool:
 
 def build_scheduler(
     coingecko_client, kraken_client, db_conn_factory, watchlist_provider,
-    groq_client=None, cerebras_client=None, fred_api_key=None, bitpanda_api_key=None,
+    groq_client=None, cerebras_client=None, gemini_client=None, fred_api_key=None, bitpanda_api_key=None,
 ) -> BackgroundScheduler:
     watchlist = watchlist_provider()
     scheduler = BackgroundScheduler()
@@ -842,7 +843,7 @@ def build_scheduler(
         minutes=HEBEL_SCREENING_INTERVAL_MINUTES,
         args=[
             coingecko_client, kraken_client, db_conn_factory, watchlist, bitpanda_api_key,
-            groq_client, cerebras_client, fred_api_key,
+            groq_client, cerebras_client, gemini_client, fred_api_key,
         ],
         id="hebel_screening",
         next_run_time=datetime.now(),

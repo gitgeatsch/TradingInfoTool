@@ -13,6 +13,7 @@ import database.db as db
 import ui.app as app
 from api.cerebras import CerebrasClient
 from api.coingecko import CoinGeckoClient
+from api.gemini import GeminiClient
 from api.history import backfill_all
 from api.groq import GroqClient
 from api.kraken import KrakenClient
@@ -120,6 +121,16 @@ def main() -> None:
         cerebras_client = None
         logger.info("Kein CEREBRAS_API_KEY gesetzt - automatischer Budget-Allocator (Phase 5) deaktiviert.")
 
+    gemini_api_key = os.environ.get("GEMINI_API_KEY")
+    if gemini_api_key:
+        gemini_client = GeminiClient(api_key=gemini_api_key)
+        logger.info("Gemini API-Key gefunden - dritte Fallback-Stufe im Budget-Allocator verfügbar.")
+    else:
+        # P-8: Gemini ist rein additiv (dritte, optionale Fallback-Stufe nach
+        # Groq/Cerebras) - ohne Key bleibt die Kette bei Groq->Cerebras wie zuvor.
+        gemini_client = None
+        logger.info("Kein GEMINI_API_KEY gesetzt - Gemini-Fallback-Stufe deaktiviert.")
+
     fred_api_key = os.environ.get("FRED_API_KEY")
     if fred_api_key:
         logger.info("FRED API-Key gefunden - Leitzinsen/CPI/M2/ISM-Ersatz im Makro-Kontext verfügbar.")
@@ -220,6 +231,7 @@ def main() -> None:
         watchlist_provider=lambda: watchlist,
         groq_client=groq_client,
         cerebras_client=cerebras_client,
+        gemini_client=gemini_client,
         fred_api_key=fred_api_key,
         bitpanda_api_key=bitpanda_api_key,
     )
@@ -257,6 +269,7 @@ def main() -> None:
             kraken_client=kraken_client,
             groq_client=groq_client,
             cerebras_client=cerebras_client,
+            gemini_client=gemini_client,
             fred_api_key=fred_api_key,
             bitpanda_api_key=bitpanda_api_key,
         )

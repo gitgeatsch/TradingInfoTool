@@ -507,6 +507,11 @@ budget_allocator:
   cerebras_taegliches_budget: 60        # eigener Deckel, konservativ unter der echten
                                         # ~166-Calls/Tag-Grenze (2026-07-14 per API-Headern
                                         # bestaetigt: 1.000.000 Tokens/Tag / ~6.000 Tokens/Call)
+  gemini_taegliches_budget: 200          # dritte, optionale Fallback-Stufe (2026-07-14) -
+                                        # konservativer Deckel weit unter der recherchierten
+                                        # ~1.000-1.500-Calls/Tag-Kapazitaet (Gemini 3.1 Flash-Lite),
+                                        # bewusst am seltensten genutzt (siehe agent/krypto/
+                                        # budget_allocator.py Modul-Docstring)
   cooldown_stunden: 3.5                 # Mitte der bestaetigten 3-4-Std.-Spanne (2026-07-13)
 
 # --- Hebel-Screening (2026-07-14, Phase 1, siehe docs/hebel_positionsformel.md) ---

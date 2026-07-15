@@ -14,14 +14,27 @@ Verteilungsformel (1:1 aus docs/budget_queue_design.md):
     rest_fuer_3 = B - tier1_verbraucht - tier2_verbraucht
     tier3_verbraucht = min(anzahl_faelliger_spot_assets, rest_fuer_3)
 
-Cerebras-Overflow (additiv zu B - siehe 2026-07-14-Fund: Cerebras' echtes
-Tageslimit liegt bei ~166 Calls, ~10x Groqs reale ~15-18/Tag): fuer jeden
-ausgewaehlten Kandidaten wird ZUERST Groq versucht; schlaegt der Call fehl
-(jede Exception - Netzwerk, HTTP-Fehler, Rate-Limit), wird SOFORT mit
-Cerebras retryed, solange dessen eigener Tages-Deckel (config
-cerebras_taegliches_budget) noch nicht erschoepft ist. Kandidaten, die auch
-daran scheitern, bleiben unverarbeitet - kein Datenverlust (P-10), der
-naechste 15-Min-Lauf bewertet sie automatisch neu."""
+Fallback-Kette Groq -> Cerebras -> Gemini (2026-07-14 um Gemini als dritte,
+optionale Stufe erweitert - siehe Memory project_gemini_option.md): fuer
+jeden ausgewaehlten Kandidaten wird ZUERST Groq versucht; schlaegt der Call
+fehl (jede Exception - Netzwerk, HTTP-Fehler, Rate-Limit), wird SOFORT die
+naechste Stufe versucht, solange deren eigener Tages-Deckel (config
+cerebras_taegliches_budget/gemini_taegliches_budget) noch nicht erschoepft
+ist. Reihenfolge nach Reife/Vertrauen, NICHT nach roher Kapazitaet - Gemini
+hat zwar mit Abstand die groesste Kapazitaet, ist aber am wenigsten erprobt
+(ein Halluzinations-Fund, siehe agent/krypto/analyst.py::_pruefe_
+kreuzkontamination()), soll deshalb am seltensten drankommen. Kandidaten,
+die an ALLEN verfuegbaren Stufen scheitern, bleiben unverarbeitet - kein
+Datenverlust (P-10), der naechste 15-Min-Lauf bewertet sie automatisch neu.
+`gemini_client` ist optional (P-8) - ohne ihn bleibt die Kette wie zuvor bei
+Groq->Cerebras.
+
+Echte Tages-Zaehler (2026-07-14-Fix): Cerebras'/Gemini's Tagesbudget wird zu
+Beginn jedes Laufs EINMAL per db.count_real_llm_calls_today_by_provider()
+aus der DB gelesen (nicht mehr nur eine lokale, bei jedem 15-Min-Lauf
+zurueckgesetzte Variable) - vorher konnte die 60er-Cerebras-Grenze innerhalb
+eines einzelnen Laufs (max. ~15 Kandidaten) nie erreicht werden, die
+Tagesobergrenze wirkte also nie wirklich."""
 from __future__ import annotations
 
 import json
@@ -31,6 +44,7 @@ from datetime import datetime, timedelta, timezone
 
 import database.db as db
 from agent.krypto.hebel_pipeline import generate_hebel_signal
+from agent.krypto.llm_provider import llm_model_label
 from agent.krypto.marktscan import generate_candidate_writeup
 from agent.krypto.pipeline import compute_current_regime, generate_signal
 from agent.krypto.signal_batch import select_assets_due_for_signal
@@ -50,6 +64,8 @@ class AllocationResult:
     uebersprungen_cooldown_marktscan: int = 0
     cerebras_calls_verbraucht: int = 0
     cerebras_budget_erschoepft: bool = False
+    gemini_calls_verbraucht: int = 0
+    gemini_budget_erschoepft: bool = False
     # 2026-07-14 (Empfehlungs-E-Mails): die echten Signal-/HebelSignal-Objekte
     # zu jedem schluessel aus hebel_verarbeitet/spot_verarbeitet - nur befuellt,
     # wenn provider_je_call[schluessel] ebenfalls gesetzt wurde (also ein
@@ -129,6 +145,7 @@ def run_budget_allocator(
     kraken_client,
     fred_api_key: str | None,
     config_dict: dict,
+    gemini_client=None,
 ) -> AllocationResult:
     cfg = config_dict.get("budget_allocator", {})
     result = AllocationResult()
@@ -138,6 +155,7 @@ def run_budget_allocator(
     budget_gesamt = cfg.get("taegliches_budget_gesamt", 15)
     spot_reserve = cfg.get("spot_rotation_reserve", 5)
     cerebras_budget = cfg.get("cerebras_taegliches_budget", 60)
+    gemini_budget = cfg.get("gemini_taegliches_budget", 200)
     cooldown_stunden = cfg.get("cooldown_stunden", 3.5)
 
     conn = conn_factory()
@@ -149,8 +167,16 @@ def run_budget_allocator(
             conn, db.get_pending_marktscan_kaufkandidaten(conn), cooldown_stunden,
         )
         spot_kandidaten = select_assets_due_for_signal(conn, watchlist, max_count=budget_gesamt)
+        # Echte Tages-Zaehler (2026-07-14-Fix) - EINMAL pro Lauf aus der DB
+        # gelesen, statt einer lokalen Variable, die bei jedem 15-Min-Lauf
+        # auf 0 zurueckgesetzt wurde (siehe Modul-Docstring).
+        tages_verbraucht = {
+            "cerebras": db.count_real_llm_calls_today_by_provider(conn, "cerebras:"),
+            "gemini": db.count_real_llm_calls_today_by_provider(conn, "gemini:"),
+        }
     finally:
         conn.close()
+    tages_budget = {"cerebras": cerebras_budget, "gemini": gemini_budget}
 
     tier1_n, tier2_n, tier3_n = _verteile_budget(
         len(hebel_kandidaten), len(marktscan_kandidaten), len(spot_kandidaten), budget_gesamt, spot_reserve,
@@ -162,49 +188,51 @@ def run_budget_allocator(
         budget_gesamt, spot_reserve, result.uebersprungen_cooldown_hebel, result.uebersprungen_cooldown_marktscan,
     )
 
-    cerebras_verbraucht = 0
-
-    def _mit_overflow(schluessel: str, groq_call, cerebras_call) -> bool:
-        """Versucht groq_call(); bei JEDER Exception sofort cerebras_call()
-        (solange dessen eigener Tages-Deckel nicht erschoepft ist). True bei
-        Erfolg (egal welcher Anbieter), False wenn beide scheitern/Cerebras-
-        Budget leer ist - Kandidat bleibt dann unverarbeitet.
+    def _mit_fallback_chain(schluessel: str, calls: list[tuple[str, object]]) -> bool:
+        """Versucht `calls` (Liste von (provider_name, call_fn)) der Reihe nach.
+        "groq" hat kein eigenes Tagesbudget hier (Groqs reales Tageslimit
+        wirkt extern ueber echte 429s). "cerebras"/"gemini" werden nur
+        versucht, wenn ihr echter Tages-Zaehler (`tages_verbraucht`) das
+        eigene Budget (`tages_budget`) noch nicht erreicht hat - sonst wird
+        diese Stufe uebersprungen (NICHT versucht) und die naechste Stufe
+        an der Reihe.
 
         Wichtig: ein Datenqualitaets-Gate (Signal.gate_passed/HebelSignal.
         gate_passed == False, z.B. veralteter Preis) schlaegt VOR jedem echten
-        LLM-Call fehl - kein Fehler, aber auch KEIN echter Groq-/Cerebras-Call.
-        Ein Retry mit Cerebras waere hier sinnlos (identische zugrundeliegende
+        LLM-Call fehl - kein Fehler, aber auch KEIN echter Call. Ein Retry an
+        der naechsten Stufe waere hier sinnlos (identische zugrundeliegende
         Datenlage), UND `provider_je_call` darf keinen Anbieter zuschreiben,
         der nie tatsaechlich aufgerufen wurde (verfaelscht sonst das in
         docs/budget_queue_design.md geforderte Qualitaets-Tracking)."""
-        nonlocal cerebras_verbraucht
-        try:
-            res = groq_call()
-            if getattr(res, "gate_passed", True) is False:
+        last_exc: Exception | None = None
+        for provider_name, call_fn in calls:
+            if provider_name in tages_budget:
+                if tages_verbraucht[provider_name] >= tages_budget[provider_name]:
+                    if provider_name == "cerebras":
+                        result.cerebras_budget_erschoepft = True
+                    elif provider_name == "gemini":
+                        result.gemini_budget_erschoepft = True
+                    continue
+            try:
+                res = call_fn()
+                if getattr(res, "gate_passed", True) is False:
+                    return True
+                result.provider_je_call[schluessel] = provider_name
+                result.ergebnis_objekt[schluessel] = res
+                if provider_name in tages_verbraucht:
+                    tages_verbraucht[provider_name] += 1
+                    if provider_name == "cerebras":
+                        result.cerebras_calls_verbraucht = tages_verbraucht["cerebras"]
+                    elif provider_name == "gemini":
+                        result.gemini_calls_verbraucht = tages_verbraucht["gemini"]
                 return True
-            result.provider_je_call[schluessel] = "groq"
-            result.ergebnis_objekt[schluessel] = res
-            return True
-        except Exception as exc:
-            logger.info("Groq-Call für %s fehlgeschlagen (%s), versuche Cerebras", schluessel, exc)
+            except Exception as exc:
+                last_exc = exc
+                logger.info("%s-Call für %s fehlgeschlagen (%s)", provider_name, schluessel, exc)
 
-        if cerebras_verbraucht >= cerebras_budget:
-            result.cerebras_budget_erschoepft = True
-            result.fehlgeschlagen.append(schluessel)
-            return False
-        try:
-            res = cerebras_call()
-            if getattr(res, "gate_passed", True) is False:
-                return True
-            cerebras_verbraucht += 1
-            result.cerebras_calls_verbraucht = cerebras_verbraucht
-            result.provider_je_call[schluessel] = "cerebras"
-            result.ergebnis_objekt[schluessel] = res
-            return True
-        except Exception as exc:
-            logger.warning("Cerebras-Call für %s ebenfalls fehlgeschlagen: %s", schluessel, exc)
-            result.fehlgeschlagen.append(schluessel)
-            return False
+        logger.warning("Alle Provider für %s fehlgeschlagen (letzter Fehler: %s)", schluessel, last_exc)
+        result.fehlgeschlagen.append(schluessel)
+        return False
 
     def _mit_conn(fn):
         """Oeffnet/schliesst einen eigenen conn je Call - jeder LLM-Call ist
@@ -222,15 +250,19 @@ def run_budget_allocator(
         if asset is None:
             continue
         schluessel = f"hebel:{trigger.symbol}:{trigger.richtung}"
-        ok = _mit_overflow(
-            schluessel,
-            lambda t=trigger, a=asset: _mit_conn(
+        calls = [
+            ("groq", lambda t=trigger, a=asset: _mit_conn(
                 lambda c: generate_hebel_signal(t, a, watchlist, c, groq_client, coingecko_client, kraken_client, fred_api_key)
-            ),
-            lambda t=trigger, a=asset: _mit_conn(
+            )),
+            ("cerebras", lambda t=trigger, a=asset: _mit_conn(
                 lambda c: generate_hebel_signal(t, a, watchlist, c, cerebras_client, coingecko_client, kraken_client, fred_api_key)
-            ),
-        )
+            )),
+        ]
+        if gemini_client is not None:
+            calls.append(("gemini", lambda t=trigger, a=asset: _mit_conn(
+                lambda c: generate_hebel_signal(t, a, watchlist, c, gemini_client, coingecko_client, kraken_client, fred_api_key)
+            )))
+        ok = _mit_fallback_chain(schluessel, calls)
         if ok:
             result.hebel_verarbeitet.append(schluessel)
 
@@ -251,32 +283,39 @@ def run_budget_allocator(
                 db.update_marktscan_candidate_groq_writeup(
                     conn, candidate.id, parsed.get("short_reasoning"),
                     json.dumps(parsed.get("long_reasoning") or {}, ensure_ascii=False),
+                    llm_model=llm_model_label(llm_client),
                 )
             finally:
                 conn.close()
 
         for candidate in marktscan_kandidaten[:tier2_n]:
             schluessel = f"marktscan:{candidate.coingecko_id}"
-            ok = _mit_overflow(
-                schluessel,
-                lambda c=candidate: _writeup(c, groq_client),
-                lambda c=candidate: _writeup(c, cerebras_client),
-            )
+            calls = [
+                ("groq", lambda c=candidate: _writeup(c, groq_client)),
+                ("cerebras", lambda c=candidate: _writeup(c, cerebras_client)),
+            ]
+            if gemini_client is not None:
+                calls.append(("gemini", lambda c=candidate: _writeup(c, gemini_client)))
+            ok = _mit_fallback_chain(schluessel, calls)
             if ok:
                 result.marktscan_verarbeitet.append(schluessel)
 
     # --- Tier 3: Spot-Rotation ---
     for asset in spot_kandidaten[:tier3_n]:
         schluessel = f"spot:{asset.symbol}"
-        ok = _mit_overflow(
-            schluessel,
-            lambda a=asset: _mit_conn(
+        calls = [
+            ("groq", lambda a=asset: _mit_conn(
                 lambda c: generate_signal(a, watchlist, c, groq_client, coingecko_client, kraken_client, fred_api_key)
-            ),
-            lambda a=asset: _mit_conn(
+            )),
+            ("cerebras", lambda a=asset: _mit_conn(
                 lambda c: generate_signal(a, watchlist, c, cerebras_client, coingecko_client, kraken_client, fred_api_key)
-            ),
-        )
+            )),
+        ]
+        if gemini_client is not None:
+            calls.append(("gemini", lambda a=asset: _mit_conn(
+                lambda c: generate_signal(a, watchlist, c, gemini_client, coingecko_client, kraken_client, fred_api_key)
+            )))
+        ok = _mit_fallback_chain(schluessel, calls)
         if ok:
             result.spot_verarbeitet.append(schluessel)
 

@@ -345,6 +345,12 @@ def _migrate_marktscan_candidates_columns(conn: sqlite3.Connection) -> None:
     existing = {row["name"] for row in conn.execute("PRAGMA table_info(marktscan_candidates)")}
     if "bitpanda_gelistet" not in existing:
         conn.execute("ALTER TABLE marktscan_candidates ADD COLUMN bitpanda_gelistet INTEGER")
+    if "llm_model" not in existing:
+        # 2026-07-14: fehlte bisher als einzige der drei Signal-erzeugenden
+        # Tabellen (signals.groq_model/hebel_signals.llm_model existieren schon)
+        # - noetig fuer einen echten, providerspezifischen Tages-Zaehler ueber
+        # alle 3 Budget-Allocator-Tiers (siehe count_real_llm_calls_today_by_provider()).
+        conn.execute("ALTER TABLE marktscan_candidates ADD COLUMN llm_model TEXT")
     conn.commit()
 
 
@@ -1132,6 +1138,34 @@ def get_latest_marktscan_writeup_at(conn: sqlite3.Connection, coingecko_id: str)
     return row["letzter"] if row else None
 
 
+def count_real_llm_calls_today_by_provider(conn: sqlite3.Connection, provider_prefix: str) -> int:
+    """Echter, providerspezifischer Tages-Zaehler (2026-07-14) - ersetzt den
+    kaputten In-Memory-Zaehler in agent/krypto/budget_allocator.py
+    (`cerebras_verbraucht` wurde bei JEDEM 15-Min-Lauf auf 0 zurueckgesetzt,
+    eine echte Tagesgrenze konnte so nie greifen). Zaehlt ueber ALLE DREI
+    Signal-erzeugenden Tabellen (hebel_signals/signals/marktscan_candidates),
+    deren Provider-Spalte mit `provider_prefix` beginnt (z.B. "cerebras:",
+    "gemini:") - Kern-Prinzip: jeder Anbieter soll so oft benutzt werden, wie
+    sein ECHTES Kontingent hergibt, nicht durch einen Buchfuehrungs-Bug
+    unbegrenzt zugelassen oder faelschlich blockiert werden."""
+    today_utc_midnight = datetime.now(timezone.utc).strftime("%Y-%m-%dT00:00:00")
+    like_pattern = f"{provider_prefix}%"
+    total = 0
+    for table, column in (
+        ("hebel_signals", "llm_model"),
+        ("signals", "groq_model"),
+        ("marktscan_candidates", "llm_model"),
+    ):
+        row = conn.execute(
+            f"SELECT COUNT(*) AS n FROM {table} WHERE {column} LIKE ? AND created_at >= ?"
+            if table != "marktscan_candidates"
+            else f"SELECT COUNT(*) AS n FROM {table} WHERE {column} LIKE ? AND groq_generiert_am >= ?",
+            (like_pattern, today_utc_midnight),
+        ).fetchone()
+        total += row["n"]
+    return total
+
+
 def count_real_marktscan_writeups_today(conn: sqlite3.Connection) -> int:
     """Fuer den Budget-Allocator, analog count_real_signals_today()/
     count_real_hebel_signals_today() - zaehlt echte Groq/Cerebras-Begruendungen
@@ -1167,15 +1201,18 @@ def update_marktscan_candidate_status(conn: sqlite3.Connection, candidate_id: in
 
 
 def update_marktscan_candidate_groq_writeup(
-    conn: sqlite3.Connection, candidate_id: int, kurzbegruendung: str | None, langbegruendung_json: str
+    conn: sqlite3.Connection, candidate_id: int, kurzbegruendung: str | None, langbegruendung_json: str,
+    llm_model: str | None = None,
 ) -> None:
-    """Ergaenzt eine per Klick oder automatisch (config.yaml
-    marktscan.groq_automatisch_kaufkandidaten) generierte P-5-Begruendung auf einem
-    bereits existierenden Kandidaten-Datensatz - kein neuer Scan-Lauf, reines Update."""
+    """Ergaenzt eine per Klick oder automatisch (Budget-Allocator) generierte
+    P-5-Begruendung auf einem bereits existierenden Kandidaten-Datensatz - kein
+    neuer Scan-Lauf, reines Update. `llm_model` (2026-07-14, z.B. "cerebras:...")
+    optional, damit auch dieser Tier fuer count_real_llm_calls_today_by_provider()
+    zaehlbar ist - wie bei signals.groq_model/hebel_signals.llm_model."""
     conn.execute(
         "UPDATE marktscan_candidates SET groq_kurzbegruendung = ?, groq_langbegruendung_json = ?, "
-        "groq_generiert_am = ? WHERE id = ?",
-        (kurzbegruendung, langbegruendung_json, _now_iso(), candidate_id),
+        "groq_generiert_am = ?, llm_model = ? WHERE id = ?",
+        (kurzbegruendung, langbegruendung_json, _now_iso(), llm_model, candidate_id),
     )
     conn.commit()
 

@@ -457,7 +457,46 @@ TOP_GRUENDE_KATEGORIEN = ("technisch", "fundamental", "makro", "risiko", "antizy
 _HALTE_KRITERIUM_BUCKETS = ("kurz", "mittel", "lang")
 
 
-def _validate(data: dict) -> dict:
+# 2026-07-14: echter Gemini-Fund (siehe Memory project_gemini_option.md) -
+# eine SEI-Analyse enthielt den Satz "Niedrige Konfidenz bei der ETH-Boden-
+# Zielzone...", obwohl cash_reserve_ziel/"Boden-Zielzone" im Facts-JSON NUR
+# fuer BTC/ETH ueberhaupt mitgeschickt wird (siehe pipeline.py::generate_
+# signal(), cash_reserve_ziel ist None fuer alle anderen Assets) - jede
+# Erwaehnung bei einem Nicht-BTC/ETH-Asset ist also garantiert erfunden,
+# nicht nur "vielleicht unpassend". Bewusst NUR dieser eine, konkret
+# beobachtete Begriff (kein genereller "andere Symbole erwaehnt"-Filter, der
+# legitime Vergleiche wie "aehnlich wie bei BTC" faelschlich abweisen wuerde).
+_BODEN_ZIELZONE_BEGRIFFE = ("boden-zielzone", "bodenzielzone")
+
+
+def _pruefe_kreuzkontamination(data: dict, asset_symbol: str) -> None:
+    if asset_symbol in ("BTC", "ETH"):
+        return
+    freitexte: list[str] = [str(data.get("short_reasoning") or "")]
+    long_reasoning = data.get("long_reasoning")
+    if isinstance(long_reasoning, dict):
+        freitexte.extend(str(v) for v in long_reasoning.values())
+    key_risks = data.get("key_risks")
+    if isinstance(key_risks, list):
+        freitexte.extend(str(r) for r in key_risks)
+    top_gruende = data.get("top_gruende")
+    if isinstance(top_gruende, list):
+        freitexte.extend(str(e.get("text") or "") for e in top_gruende if isinstance(e, dict))
+    halte_kriterium = data.get("halte_kriterium")
+    if isinstance(halte_kriterium, dict):
+        freitexte.append(str(halte_kriterium.get("bedingung_text") or ""))
+        freitexte.append(str(halte_kriterium.get("reasoning") or ""))
+
+    gesamt_text = " ".join(freitexte).lower()
+    for begriff in _BODEN_ZIELZONE_BEGRIFFE:
+        if begriff in gesamt_text:
+            raise AnalystResponseInvalid(
+                f"Antwort erwaehnt '{begriff}' fuer {asset_symbol} - dieses Feature existiert nur fuer "
+                "BTC/ETH und wurde im Facts-JSON nicht mitgeschickt (Kreuzkontamination/Halluzination)"
+            )
+
+
+def _validate(data: dict, asset_symbol: str) -> dict:
     if not isinstance(data, dict):
         raise AnalystResponseInvalid("Antwort ist kein JSON-Objekt")
 
@@ -571,6 +610,8 @@ def _validate(data: dict) -> dict:
             logger.warning("tranchen-Vorschlag verworfen (fehlerhaft, kein Signal-Fehler): %s", exc)
             data["tranchen"] = None
 
+    _pruefe_kreuzkontamination(data, asset_symbol)
+
     return data
 
 
@@ -578,6 +619,7 @@ def call_groq_for_signal(groq_client, facts: dict, max_retries: int = 2) -> dict
     """Ruft Groq auf, validiert die Antwort. Bei kaputtem/unvollstaendigem JSON wird
     einmal mit Korrektur-Hinweis retryed, danach fail-loud (AnalystResponseInvalid) -
     der Aufrufer (agent/pipeline.py) faengt das ab und erzeugt ein HALTEN-Signal."""
+    asset_symbol = facts["asset"]["symbol"]
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": json.dumps(facts, ensure_ascii=False)},
@@ -592,7 +634,7 @@ def call_groq_for_signal(groq_client, facts: dict, max_retries: int = 2) -> dict
         )
         try:
             parsed = json.loads(raw)
-            validated = _validate(parsed)
+            validated = _validate(parsed, asset_symbol)
             validated["_raw_response"] = raw
             return validated
         except (json.JSONDecodeError, AnalystResponseInvalid) as exc:

@@ -333,7 +333,44 @@ _HALTE_KRITERIUM_BUCKETS = ("kurz", "mittel", "lang")
 _HALTEN_AEHNLICHE_ACTIONS = ("HALTEN", "SCHLIESSEN")
 
 
-def _validate_hebel(data: dict) -> dict:
+# 2026-07-14: identischer Halluzinations-Check wie agent/krypto/analyst.py::
+# _pruefe_kreuzkontamination() - "Boden-Zielzone" (cash_reserve_ziel) ist ein
+# BTC/ETH-only-Feature, das dem Modell fuer Hebel-Signale ueberhaupt nicht im
+# Facts-JSON mitgeschickt wird (siehe build_hebel_facts()), jede Erwaehnung
+# bei einem anderen Symbol ist also erfunden. Gleicher Fund uebertragen,
+# nicht dupliziert-und-vergessen: das Modell (Gemini) ist dasselbe fuer
+# beide Pipelines, das Risiko besteht identisch.
+_BODEN_ZIELZONE_BEGRIFFE = ("boden-zielzone", "bodenzielzone")
+
+
+def _pruefe_kreuzkontamination(data: dict, asset_symbol: str) -> None:
+    if asset_symbol in ("BTC", "ETH"):
+        return
+    freitexte: list[str] = [str(data.get("short_reasoning") or "")]
+    long_reasoning = data.get("long_reasoning")
+    if isinstance(long_reasoning, dict):
+        freitexte.extend(str(v) for v in long_reasoning.values())
+    key_risks = data.get("key_risks")
+    if isinstance(key_risks, list):
+        freitexte.extend(str(r) for r in key_risks)
+    top_gruende = data.get("top_gruende")
+    if isinstance(top_gruende, list):
+        freitexte.extend(str(e.get("text") or "") for e in top_gruende if isinstance(e, dict))
+    halte_kriterium = data.get("halte_kriterium")
+    if isinstance(halte_kriterium, dict):
+        freitexte.append(str(halte_kriterium.get("bedingung_text") or ""))
+        freitexte.append(str(halte_kriterium.get("reasoning") or ""))
+
+    gesamt_text = " ".join(freitexte).lower()
+    for begriff in _BODEN_ZIELZONE_BEGRIFFE:
+        if begriff in gesamt_text:
+            raise AnalystResponseInvalid(
+                f"Antwort erwaehnt '{begriff}' fuer {asset_symbol} - dieses Feature existiert nur fuer "
+                "BTC/ETH und wurde im Facts-JSON nicht mitgeschickt (Kreuzkontamination/Halluzination)"
+            )
+
+
+def _validate_hebel(data: dict, asset_symbol: str) -> dict:
     """Analog agent/krypto/analyst.py::_validate() - angepasst auf das 7-Aktionen-
     Vokabular, `richtung`, `hebel_vorschlag`, `trade_thesis_typ`. KEIN `position_size`/
     `tranchen` (existiert im Hebel-Schema nicht, siehe docs/hebel_positionsformel.md)."""
@@ -437,6 +474,8 @@ def _validate_hebel(data: dict) -> dict:
             "halte_kriterium: mindestens eines von ziel_preis_usd/ziel_datum/bedingung_text muss gesetzt sein"
         )
 
+    _pruefe_kreuzkontamination(data, asset_symbol)
+
     return data
 
 
@@ -446,6 +485,7 @@ def call_llm_for_hebel_signal(llm_client, facts: dict, max_retries: int = 2) -> 
     einmal mit Korrektur-Hinweis retryed, danach fail-loud (AnalystResponseInvalid) -
     der Aufrufer (agent/krypto/hebel_pipeline.py) faengt das ab und erzeugt ein
     HALTEN-Signal, analog call_groq_for_signal()."""
+    asset_symbol = facts["asset"]["symbol"]
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": json.dumps(facts, ensure_ascii=False)},
@@ -460,7 +500,7 @@ def call_llm_for_hebel_signal(llm_client, facts: dict, max_retries: int = 2) -> 
         )
         try:
             parsed = json.loads(raw)
-            validated = _validate_hebel(parsed)
+            validated = _validate_hebel(parsed, asset_symbol)
             validated["_raw_response"] = raw
             return validated
         except (json.JSONDecodeError, AnalystResponseInvalid) as exc:
