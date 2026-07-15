@@ -1513,3 +1513,82 @@ Startpunkt, sobald Backward-Tracking/Outcome-Daten vorliegen:
   `equities_overlay_shift_std` (0,2) sind erste plausible Startwerte, noch nicht
   gegen echte Ergebnisse validiert. `equities_baermarkt_verknuepfung: entweder`
   ist dagegen eine bewusste, feste Nutzer-Entscheidung (kein `[OFFEN]`).
+
+---
+
+## 16. Multi-Asset-Erweiterung — Aktien-Agent-Pipeline Phase 1 (2026-07-15)
+
+**Hintergrund:** Non-Krypto-Assets (Aktien/ETFs/Rohstoffe) hatten bisher nur
+Kursanzeige — kein Regime, kein Risiko-Gate, keine KI-Empfehlung. Nach der
+Non-Krypto-Margin-Recherche (RM-10/11 lässt sich für Aktien/ETFs technisch
+NICHT rekonstruieren, siehe Kap. 14 — Bitpanda-API bietet dafür keine
+Transaktionshistorie an) hat der Nutzer stattdessen entschieden, das größere
+Thema anzugehen: eine echte Agent-Pipeline auch für diese Assetklassen, mit
+Marktscan-Äquivalent als Fernziel.
+
+**Architektur-Entscheidung (bereits 2026-07-09 in der Spezifikation getroffen,
+jetzt erstmals umgesetzt):** eigene Agent-Logik pro Assetklasse
+(`agent/aktien/`, künftig `agent/etfs/`, `agent/rohstoffe/`) statt einer
+verallgemeinerten Engine — vermeidet sowohl eine aufgeblähte If/Else-Kaskade
+als auch einen verwässerten kleinsten gemeinsamen Nenner. Eine gemeinsame
+Datenbank (`signals`-Tabelle wird direkt mitgenutzt, kein neues Schema nötig).
+
+**Was Phase 1 umfasst (Einzelaktien PLTR/VST):**
+- Neues Modul `agent/aktien/` (Analyst + Pipeline), mirror von
+  `agent/krypto/`, aber mit eigenem Prompt/Schema — OHNE Bitpanda-Veto,
+  TAUSCHEN-Aktion, BTC-Matrix, On-Chain-Zyklus-Risiko oder
+  Funding-Rate/Open-Interest (kein Aktien-Äquivalent). Vier statt fünf
+  Aktionen (kein TAUSCHEN — Aktienverkauf ist immer steuerlich relevant,
+  anders als der österreichische Krypto-zu-Krypto-Tausch).
+- **Wiederverwendet direkt, kein Duplikat:** `agent/krypto/risk_gate.py`
+  (RM-1/RM-2/RM-4/RM-5-Mathematik ist bereits assetklassen-neutral, der
+  Bitpanda-Veto ist bereits bedingt auf `assetklasse == "krypto"`),
+  `agent/krypto/pipeline.py::compute_current_regime()` (liefert
+  Liquiditäts-Regime + Aktien-Bärenmarkt-Overlay als Nebenprodukt der
+  ohnehin nötigen BTC-Regime-Berechnung), `indicators/calculations.py`
+  (bereits generisch).
+- **Neu: Fundamentaldaten** (KGV, Forward-KGV, Gewinn-/Umsatzwachstum,
+  Dividendenrendite, Analysten-Konsens + Kursziel, Marktkapitalisierung,
+  Sektor, nächstes Earnings-Datum) über die bereits vorhandene `yfinance`-
+  Abhängigkeit (`Ticker.info`/`.calendar`, bisher ungenutzt) — komplett neue
+  Datenkategorie. Eigene Bewertungs-/Bubble-Risiko-Regel: **wichtige
+  Nachbesserung nach dem ersten Testlauf** (Nutzer-Nachfrage "welche Regeln
+  fehlen noch?") — die Regel verglich anfangs nur das trailing-KGV, ohne
+  Wachstumsdaten mitzuschicken, wodurch ein echter Testlauf PLTRs hohes KGV
+  fälschlich als "ohne erkennbares Wachstum" bewertete, obwohl real ein
+  Gewinnwachstum von +325 %/Umsatzwachstum von +85 % vorlag. Jetzt vergleicht
+  die Regel trailing- GEGEN forward-KGV UND die Wachstumsraten, bevor ein
+  Bewertungsrisiko ausgesprochen wird — zweiter Testlauf bestätigt eine
+  deutlich fundiertere Einordnung ("dank starkem Gewinnwachstum attraktives
+  Bewertungsprofil", zusätzlich weiterhin der Blasen-Hinweis bei fehlender
+  Wachstumsbestätigung). Analysten-Konsens/Kursziel fließen nur als
+  niedrig gewichtete Drittmeinung ein (inkl. deterministisch vorberechnetem
+  Kursziel-Potenzial in Prozent), nie als eigene Empfehlung.
+- **Neu: echte OHLC-Historie** statt nur Schlusskurs — `price_history_ohlc`
+  war bereits nach Symbol (nicht Coingecko-ID) geschlüsselt, also strukturell
+  schon assetklassen-neutral, bisher nur von Kraken befüllt. Wird jetzt bei
+  Bedarf automatisch aus derselben yfinance-Antwort befüllt, die ohnehin
+  für den Schlusskurs abgerufen wird (kein zusätzlicher Netzwerk-Call).
+- **Eigener, großzügigerer Staleness-Schwellenwert** für die Kurshistorie
+  (5 Tage statt der Krypto-üblichen 2) — Aktienmärkte schließen an
+  Wochenenden/Feiertagen, der Krypto-Schwellenwert (24/7-Handel) hätte an
+  jedem Montag fälschlich "veraltet" ausgelöst.
+- **Manueller Button, bewusst kein Scheduler-Automatismus** in Phase 1 (wie
+  beim ursprünglichen Krypto-Aufbau) — im Signale-Tab erscheinen Aktien
+  jetzt zusätzlich zu Krypto-Assets in derselben Liste, "Signal berechnen"
+  verzweigt automatisch zur richtigen Pipeline.
+
+**Live verifiziert (2026-07-15):** echter End-to-End-Lauf für PLTR und VST
+gegen die Produktions-DB, inkl. echtem LLM-Call (Groq 429 korrekt auf
+Cerebras abgefangen) — beide Signale korrekt mit Regime-Konfidenz-Veto
+(R-5.10) auf HALTEN korrigiert, CRV-Zonen plausibel, Bewertungs- und
+Earnings-Nähe-Hinweise korrekt erkannt.
+
+**Roadmap (konzeptionell, noch nicht umgesetzt):**
+
+| Phase | Umfang | Kern-Unterschied |
+|---|---|---|
+| 1 (erledigt) | Einzelaktien (PLTR/VST) | Fundamentaldaten/Bewertung/Bubble-Risiko |
+| 2 | Rohstoff-ETCs (Gold/Silber/Kupfer/Erdgas) | Kein KGV, sondern Angebot/Nachfrage + Zyklen/Knappheit; festes kleines Universum, keine Discovery nötig |
+| 3 | Themen-ETFs (Food&Bev/Agribusiness/Bioenergy/Rare Earth/Copper Miners) | Sektor-Rotation/Themen-Zyklen |
+| 4 | Discovery/Marktscan-Äquivalent | Neue Aktien/ETFs vorschlagen — braucht zuerst eine freie Screener-Datenquelle (kein CoinGecko-Äquivalent bekannt) |

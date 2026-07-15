@@ -60,6 +60,33 @@ class PriceHistoryPoint:
 
 
 @dataclass
+class FundamentalsSnapshot:
+    """Aktien-Fundamentaldaten (2026-07-15, Non-Krypto-Agent-Pipeline Phase 1,
+    siehe agent/aktien/pipeline.py) - komplett neue Datenkategorie, bisher nirgends
+    im Projekt genutzt. Rein informativ (kein eigener Regime-Baustein), fliesst als
+    Fact-Kontext in agent/aktien/analyst.py ein. P-10: einzelne fehlende Felder
+    bleiben None statt geraten - kein Aufrufer sollte einen Wert erzwingen.
+
+    Wachstumsfelder (2026-07-15, Nutzer-Nachfrage "welche Regeln fehlen noch?"):
+    ohne diese waere die Bubble-Risiko-Regel (agent/aktien/analyst.py) nicht wirklich
+    fundiert gewesen - ein erster Live-Test bewertete PLTRs hohes KGV faelschlich als
+    "ohne erkennbares Wachstum", obwohl real ein Gewinnwachstum von +325%/Umsatz-
+    wachstum von +85% vorlag (nur schlicht nie mitgeschickt)."""
+    symbol: str
+    kgv: float | None  # KGV = trailingPE (Kurs-Gewinn-Verhaeltnis)
+    forward_kgv: float | None  # forwardPE - beruecksichtigt erwartetes Gewinnwachstum
+    gewinnwachstum_pct: float | None  # earningsGrowth, als Prozent (yfinance liefert Faktor, z.B. 3.25 = +325%)
+    umsatzwachstum_pct: float | None  # revenueGrowth, als Prozent
+    dividendenrendite_pct: float | None  # dividendYield, als Prozent
+    analysten_konsens: str | None  # recommendationKey, z.B. "buy"/"strong_buy"/"hold" - Drittmeinung, KEINE eigene Empfehlung
+    analysten_kursziel_usd: float | None  # targetMeanPrice
+    market_cap_usd: float | None
+    sektor: str | None
+    naechstes_earnings_datum: str | None  # 'YYYY-MM-DD', None wenn unbekannt/nicht gemeldet
+    fetched_at: str
+
+
+@dataclass
 class MacroSnapshot:
     date: str  # 'YYYY-MM-DD', UTC-Tagesbucket
     btc_dominance_pct: float | None

@@ -25,7 +25,7 @@ from datetime import datetime, timezone
 import yfinance as yf
 
 from database.api_health import track_api_health
-from database.models import PriceSnapshot
+from database.models import FundamentalsSnapshot, PriceSnapshot
 
 logger = logging.getLogger(__name__)
 
@@ -189,3 +189,60 @@ class YFinanceClient:
             change_24h_pct=None,
             fetched_at=fetched_at,
         )
+
+
+def fetch_fundamentals(symbol: str, yfinance_symbol: str) -> FundamentalsSnapshot:
+    """Aktien-Fundamentaldaten (2026-07-15, Non-Krypto-Agent-Pipeline Phase 1, siehe
+    agent/aktien/pipeline.py) - komplett neue Datenkategorie ueber die bereits
+    vorhandene yfinance-Abhaengigkeit (Ticker.info/.calendar), bisher nirgends im
+    Projekt genutzt. P-10: einzelne fehlende Felder bleiben None statt geraten -
+    nur ein echter Netzwerk-/Timeout-Fehler wirft (wie bei _fetch_one()), ein
+    fehlendes EINZELNES Feld in einer sonst erfolgreichen Antwort nicht."""
+    return run_with_daemon_timeout(
+        lambda: _fetch_fundamentals(symbol, yfinance_symbol), _YFINANCE_TIMEOUT_SECONDS
+    )
+
+
+@track_api_health("yfinance")
+def _fetch_fundamentals(symbol: str, yfinance_symbol: str) -> FundamentalsSnapshot:
+    ticker = yf.Ticker(yfinance_symbol)
+    info = ticker.info or {}
+
+    naechstes_earnings_datum = None
+    try:
+        calendar = ticker.calendar
+        # yfinance liefert je nach Version entweder ein dict ({"Earnings Date": [...]})
+        # oder ein pandas.DataFrame - beide Formen abfangen, P-10: bei unbekannter
+        # Struktur bleibt das Feld None statt eines geratenen Werts.
+        if isinstance(calendar, dict):
+            dates = calendar.get("Earnings Date")
+            if dates:
+                naechstes_earnings_datum = str(dates[0])
+        elif calendar is not None and not calendar.empty and "Earnings Date" in calendar.index:
+            naechstes_earnings_datum = str(calendar.loc["Earnings Date"].iloc[0])
+    except Exception:
+        logger.warning("yfinance-Earnings-Datum fuer %s (%s) nicht lesbar - Feld bleibt None", symbol, yfinance_symbol)
+
+    # Live geprueft (2026-07-15, PLTR/VST): earningsGrowth/revenueGrowth kommen als
+    # Faktor (3.25 = +325%), *100 fuer Prozent. dividendYield kommt dagegen bereits
+    # in Prozentpunkten (0.58 = 0,58%, NICHT 58%) - bestaetigt durch Abgleich mit
+    # trailingAnnualDividendYield (0,0057 = 0,57%, konsistent mit obigem 0,58) -
+    # bekannte yfinance-Inkonsistenz zwischen Feldern, deshalb hier explizit
+    # dokumentiert statt blind *100 auf alle Felder anzuwenden.
+    earnings_growth = info.get("earningsGrowth")
+    revenue_growth = info.get("revenueGrowth")
+
+    return FundamentalsSnapshot(
+        symbol=symbol,
+        kgv=info.get("trailingPE"),
+        forward_kgv=info.get("forwardPE"),
+        gewinnwachstum_pct=earnings_growth * 100 if earnings_growth is not None else None,
+        umsatzwachstum_pct=revenue_growth * 100 if revenue_growth is not None else None,
+        dividendenrendite_pct=info.get("dividendYield"),
+        analysten_konsens=info.get("recommendationKey"),
+        analysten_kursziel_usd=info.get("targetMeanPrice"),
+        market_cap_usd=info.get("marketCap"),
+        sektor=info.get("sector"),
+        naechstes_earnings_datum=naechstes_earnings_datum,
+        fetched_at=datetime.now(timezone.utc).isoformat(),
+    )

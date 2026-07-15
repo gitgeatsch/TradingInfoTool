@@ -20,12 +20,13 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
 import yfinance as yf
 
 from api.yfinance_client import run_with_daemon_timeout
 from database.api_health import track_api_health
+from database.models import OhlcPoint
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +59,45 @@ def _fetch_history(ticker: str) -> list[tuple[datetime, float]]:
     hist = yf.Ticker(ticker).history(period="max", interval="1d")
     hist = hist[hist["Close"].notna()]
     return [(ts.to_pydatetime(), float(close)) for ts, close in hist["Close"].items()]
+
+
+def get_full_ohlc_history(ticker: str, symbol: str, currency: str = "USD") -> list[OhlcPoint]:
+    """Echte OHLC-Historie (statt nur Schlusskurs) fuer die Non-Krypto-Agent-Pipeline
+    Phase 1 (2026-07-15, agent/aktien/pipeline.py) - liest Open/High/Low/Close/Volume
+    aus DERSELBEN `.history()`-Antwort, die _fetch_history() bereits holt (kein
+    zusaetzlicher Netzwerk-Call). `price_history_ohlc` ist bereits nach `symbol`
+    (nicht `coingecko_id`) geschluesselt - strukturell schon assetklassen-neutral,
+    bisher nur von Kraken befuellt. `symbol`/`currency` sind unser internes Symbol
+    bzw. die Handelswaehrung (nicht zwingend identisch mit `ticker`, dem
+    yfinance-Symbol) - analog zu api/kraken.py's Trennung von Pair-Symbol und
+    internem Symbol.
+
+    Wirft bei einem haengenden Aufruf `concurrent.futures.TimeoutError`, sonst die
+    zugrundeliegende yfinance-Exception durch (P-10), analog zu get_full_price_history()."""
+    return run_with_daemon_timeout(
+        lambda: _fetch_ohlc_history(ticker, symbol, currency), _YFINANCE_HISTORY_TIMEOUT_SECONDS
+    )
+
+
+@track_api_health("yfinance")
+def _fetch_ohlc_history(ticker: str, symbol: str, currency: str) -> list[OhlcPoint]:
+    hist = yf.Ticker(ticker).history(period="max", interval="1d")
+    hist = hist[hist["Close"].notna()]
+    fetched_at = datetime.now(timezone.utc).isoformat()
+    return [
+        OhlcPoint(
+            symbol=symbol,
+            currency=currency,
+            date=ts.date().isoformat(),
+            open=float(row["Open"]),
+            high=float(row["High"]),
+            low=float(row["Low"]),
+            close=float(row["Close"]),
+            volume=float(row["Volume"]),
+            fetched_at=fetched_at,
+        )
+        for ts, row in hist.iterrows()
+    ]
 
 
 @dataclass

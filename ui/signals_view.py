@@ -62,9 +62,8 @@ class SignalsView(ttk.Frame):
         super().__init__(parent)
         self._db_conn_factory = db_conn_factory
         # Multi-Asset-Tracking (Nutzer-Idee 2026-07-09): Aktien/ETF/Rohstoffe werden
-        # HIER bewusst herausgefiltert, nicht nur aus der Anzeige-Liste - die Agent-
-        # Pipeline (Regime/Risiko-Gate) ist fuer diese Assetklassen nicht gebaut, siehe
-        # Spezifikation Kap. 11 "Zielarchitektur fuer Multi-Asset-Erweiterbarkeit".
+        # HIER bewusst herausgefiltert, nicht nur aus der Anzeige-Liste - die Krypto-
+        # Agent-Pipeline (Regime/Risiko-Gate) "weiss" nichts von diesen Assetklassen.
         # Wuerden sie in _full_watchlist landen, wuerde
         # agent/krypto/risk_gate.py::_portfolio_values_usd() ihren Wert in die
         # Gesamtportfolio-Summe einrechnen und damit die Krypto-Allokations-Prozente
@@ -74,6 +73,17 @@ class SignalsView(ttk.Frame):
         # Krypto-Assets (Stablecoins zaehlen z.B. als Cash-Reserve) - nur die
         # Anzeige-Liste filtert zusaetzlich Stablecoins raus.
         self._watchlist = [a for a in krypto_watchlist if a.typ != "stablecoin"]
+        # Non-Krypto-Agent-Pipeline Phase 1 (2026-07-15, agent/aktien/pipeline.py) -
+        # eigene, von der Krypto-Portfolio-Summe getrennte Watchlist (analoges
+        # Prinzip wie oben: RM-2-Allokations-Prozent soll sich auf den Aktien-Anteil
+        # beziehen, nicht auf das gemischte Gesamtportfolio). ETFs/Rohstoffe folgen
+        # in einer spaeteren Phase (siehe Regelwerksmanual), deshalb hier bewusst nur
+        # "aktien", nicht "assetklasse != 'krypto'".
+        self._aktien_watchlist = [a for a in watchlist if a.assetklasse == "aktien"]
+        # agent/aktien/pipeline.py::generate_signal() braucht die VOLLSTAENDIGE
+        # Watchlist (inkl. BTC) fuer compute_current_regime() - filtert intern selbst
+        # auf die Aktien-Teilmenge fuer RM-2, siehe dessen Docstring.
+        self._raw_watchlist = watchlist
         self._groq_client = groq_client
         # 2026-07-14: Einzel-Klick-Button UND Batch-Button teilen sich denselben
         # Groq-dann-Cerebras-dann-Gemini-Fallback wie ui/hebel_view.py (Batch:
@@ -165,19 +175,20 @@ class SignalsView(ttk.Frame):
         return self._groq_client is not None or self._cerebras_client is not None or self._gemini_client is not None
 
     def _asset_by_symbol(self, symbol: str):
-        return next((a for a in self._watchlist if a.symbol == symbol), None)
+        return next((a for a in self._watchlist + self._aktien_watchlist if a.symbol == symbol), None)
 
     def _refresh_list(self) -> None:
+        alle_assets = self._watchlist + self._aktien_watchlist
         conn = self._db_conn_factory()
         try:
-            latest_by_symbol = {a.symbol: db.get_latest_signal(conn, a.symbol) for a in self._watchlist}
+            latest_by_symbol = {a.symbol: db.get_latest_signal(conn, a.symbol) for a in alle_assets}
         finally:
             conn.close()
 
         for item in self.tree.get_children():
             self.tree.delete(item)
 
-        for asset in sorted(self._watchlist, key=lambda a: a.symbol):
+        for asset in sorted(alle_assets, key=lambda a: a.symbol):
             sig = latest_by_symbol.get(asset.symbol)
             action_text = sig.action if sig else "-"
             created_text = sig.created_at[:16].replace("T", " ") if sig else "-"
@@ -468,12 +479,21 @@ class SignalsView(ttk.Frame):
         """Groq-dann-Cerebras-dann-Gemini-Fallback (2026-07-14 um Gemini als
         dritte Stufe ergaenzt), analog ui/hebel_view.py::_run_analysis() - ein
         manueller Einzel-Klick soll nicht hart mit dem rohen Groq-429-Fehler
-        abbrechen, wenn Cerebras/Gemini noch Kapazitaet haben."""
-        from agent.krypto.pipeline import generate_signal
+        abbrechen, wenn Cerebras/Gemini noch Kapazitaet haben.
 
+        2026-07-15: verzweigt nach assetklasse - Aktien laufen ueber die neue
+        agent/aktien/pipeline.py (siehe deren Modul-Docstring fuer die
+        Architektur-Begruendung), Krypto weiterhin ueber agent/krypto/pipeline.py."""
         def _attempt(llm_client):
             conn = self._db_conn_factory()
             try:
+                if asset.assetklasse == "aktien":
+                    from agent.aktien.pipeline import generate_signal as generate_aktien_signal
+
+                    return generate_aktien_signal(asset, self._raw_watchlist, conn, llm_client, self._coingecko_client)
+
+                from agent.krypto.pipeline import generate_signal
+
                 return generate_signal(
                     asset, self._full_watchlist, conn, llm_client, self._coingecko_client, self._kraken_client,
                     fred_api_key=self._fred_api_key,
