@@ -87,6 +87,15 @@ _INDEX_HTML = """<!doctype html>
 </div>
 
 <div class="card">
+  <div class="row"><strong>API-Status: LLM-Anbieter</strong></div>
+  <div id="api-health-llm"></div>
+  <div class="row"><strong>API-Status: Markt-/Preisdaten</strong></div>
+  <div id="api-health-markt"></div>
+  <div class="row"><strong>API-Status: Makro/On-Chain/Derivate</strong></div>
+  <div id="api-health-makro"></div>
+</div>
+
+<div class="card">
   <button id="btn-prices" onclick="triggerAction('refresh-prices')">Preise aktualisieren</button>
   <div id="status-prices" class="row"></div>
   <button id="btn-marktscan" onclick="triggerAction('marktscan')">Marktscan jetzt starten</button>
@@ -163,6 +172,43 @@ function renderProviderPerformance(tierData) {
   }).join("");
 }
 
+const API_HEALTH_GROUPS = {
+  "api-health-llm": ["groq", "cerebras", "gemini"],
+  "api-health-markt": ["coingecko", "kraken", "bitpanda", "yfinance"],
+  "api-health-makro": [
+    "fear_greed", "fred", "ecb", "china_pboc_lpr", "china_m2", "japan_boj",
+    "coinmetrics", "defillama", "blockchain_com", "binance", "bybit", "okx",
+  ],
+};
+
+function fmtRelativeTime(iso) {
+  if (!iso) return "nie";
+  const diffMinutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (diffMinutes < 60) return "vor " + diffMinutes + " Min";
+  const diffHours = Math.round(diffMinutes / 60);
+  if (diffHours < 48) return "vor " + diffHours + " Std.";
+  return "vor " + Math.round(diffHours / 24) + " Tagen";
+}
+
+function renderApiHealthGroup(sourceKeys, apiHealth) {
+  return sourceKeys.map(function(key) {
+    const entry = apiHealth[key];
+    let statusClass = "";
+    let statusText = "unbekannt";
+    if (entry) {
+      if (entry.status === "ok") {
+        statusClass = "ok";
+        statusText = "OK (" + fmtRelativeTime(entry.last_success_at) + ")";
+      } else if (entry.status === "fehler") {
+        statusClass = "err";
+        statusText = "Fehler (" + fmtRelativeTime(entry.last_error_at) + ")";
+      }
+    }
+    return '<div class="row"><span>' + key + '</span><span class="' + statusClass + '">' +
+      statusText + '</span></div>';
+  }).join("");
+}
+
 async function refreshStatus() {
   let data;
   try {
@@ -201,6 +247,12 @@ async function refreshStatus() {
       renderProviderPerformance(data.provider_performance.spot || {});
     document.getElementById("provider-performance-hebel").innerHTML =
       renderProviderPerformance(data.provider_performance.hebel || {});
+  }
+
+  if (data.api_health) {
+    for (const [elementId, sourceKeys] of Object.entries(API_HEALTH_GROUPS)) {
+      document.getElementById(elementId).innerHTML = renderApiHealthGroup(sourceKeys, data.api_health);
+    }
   }
 
   for (const [action, jobs] of Object.entries(ACTION_JOBS)) {

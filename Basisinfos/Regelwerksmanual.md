@@ -1241,6 +1241,19 @@ Marktscan mitten drin abbricht. **Bekannte Grenze:** ist der Watchdog-Prozess
 selbst tot (nicht nur `main.py`), greift auch diese Brücke nicht — dann hilft
 nur physischer Zugriff oder ein Notebook-Neustart.
 
+**API-Status-Karte (2026-07-15):** nach den echten Vorfällen (Groq-429-
+Erschöpfung, Cerebras-Ausfälle, yfinance-Hänger am Notebook) zeigt eine neue
+Karte für **alle 19 externen Quellen** (LLM-Anbieter, Markt-/Preisdaten,
+Makro/On-Chain/Derivate), ob der jeweils letzte echte Aufruf erfolgreich war
+oder fehlschlug — inkl. Zeitpunkt. Rein **passiv**: es wird nichts zusätzlich
+angefragt (kein zusätzliches Kontingent-Risiko bei den LLM-Anbietern), nur
+aufgezeichnet, was die App ohnehin schon tut. Umgesetzt über einen Decorator
+(`database/api_health.py::track_api_health()`), der an der jeweils schmalsten
+bestehenden Funnel-Stelle jeder Quelle angebracht ist (z. B. `GroqClient.
+chat()`, `CoinGeckoClient._get()`) — verändert nie Rückgabewert oder
+Exception-Typ des eigentlichen Aufrufs. Eine Quelle, die noch nie aufgerufen
+wurde, erscheint als „unbekannt" statt als Fehler.
+
 **Technisch:** eingebettet in `main.py` als Hintergrund-Thread (`remote/server.py`,
 Flask) — kein separater Prozess, läuft im selben Prozess wie die Tkinter-App
 und der Scheduler, nutzt dieselben bereits vorhandenen Verbindungen. Ohne einen

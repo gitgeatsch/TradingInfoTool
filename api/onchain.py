@@ -29,6 +29,8 @@ from datetime import datetime, timezone
 
 import requests
 
+from database.api_health import track_api_health
+
 COINMETRICS_BASE_URL = "https://community-api.coinmetrics.io/v4/timeseries/asset-metrics"
 COINMETRICS_FREE_METRICS = "CapMVRVCur,CapMrktCurUSD,SplyCur,PriceUSD"
 
@@ -66,6 +68,7 @@ class OnChainReading:
     realized_price_usd: float  # hergeleitet
 
 
+@track_api_health("coinmetrics")
 def get_btc_onchain_snapshot(session: requests.Session | None = None) -> OnChainReading:
     """Neuester verfuegbarer Tageswert fuer BTC. Wirft bei fehlenden/kaputten
     Rohdaten eine Exception statt einen falschen abgeleiteten Wert zu berechnen
@@ -120,6 +123,7 @@ class ExchangeFlowReading:
     net_flow_btc: float  # positiv = mehr rein als raus (potenziell Verkaufsdruck)
 
 
+@track_api_health("coinmetrics")
 def get_btc_exchange_flows(session: requests.Session | None = None) -> ExchangeFlowReading:
     """Taegliche BTC-Boersen-Zu-/Abfluesse ueber CoinMetrics Community API (kostenlos,
     kein Key). Reine Fluss-Groesse, KEIN Gesamt-Bestand - eine Metrik fuer den
@@ -155,6 +159,7 @@ class StablecoinSupplyReading:
     usdc_usd: float | None
 
 
+@track_api_health("defillama")
 def get_stablecoin_supply(session: requests.Session | None = None) -> StablecoinSupplyReading:
     """Gesamt-Marktkapitalisierung aller getrackten Stablecoins (~400) ueber
     DefiLlama, kostenlos, kein Key. "Trockenpulver"-Proxy - hoehere Summe = mehr
@@ -173,6 +178,7 @@ def get_stablecoin_supply(session: requests.Session | None = None) -> Stablecoin
     )
 
 
+@track_api_health("blockchain_com")
 def get_btc_full_price_history(session: requests.Session | None = None) -> list[tuple[datetime, float]]:
     """Komplette BTC-Preishistorie seit dem Genesis-Block, ~alle 4 Tage ein
     Datenpunkt. Enthaelt am Anfang (2009, kein etablierter Markt) Preis 0.0 -

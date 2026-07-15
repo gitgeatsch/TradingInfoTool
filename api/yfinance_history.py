@@ -25,6 +25,7 @@ from datetime import datetime
 import yfinance as yf
 
 from api.yfinance_client import run_with_daemon_timeout
+from database.api_health import track_api_health
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +53,7 @@ def get_full_price_history(ticker: str) -> list[tuple[datetime, float]]:
     return run_with_daemon_timeout(lambda: _fetch_history(ticker), _YFINANCE_HISTORY_TIMEOUT_SECONDS)
 
 
+@track_api_health("yfinance")
 def _fetch_history(ticker: str) -> list[tuple[datetime, float]]:
     hist = yf.Ticker(ticker).history(period="max", interval="1d")
     hist = hist[hist["Close"].notna()]

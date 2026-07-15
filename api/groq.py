@@ -11,6 +11,8 @@ from collections import deque
 
 import requests
 
+from database.api_health import track_api_health
+
 BASE_URL = "https://api.groq.com/openai/v1"
 DEFAULT_MODEL = "llama-3.3-70b-versatile"
 RATE_LIMIT_PER_MINUTE = 28  # Free-Tier-Limit ist 30 RPM, kleiner Puffer
@@ -32,6 +34,7 @@ class GroqClient:
                 time.sleep(sleep_for)
         self._call_timestamps.append(time.monotonic())
 
+    @track_api_health("groq")
     def chat(
         self,
         messages: list[dict],

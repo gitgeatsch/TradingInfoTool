@@ -22,6 +22,8 @@ from dataclasses import dataclass
 
 import requests
 
+from database.api_health import track_api_health
+
 BINANCE_OI_URL = "https://fapi.binance.com/fapi/v1/openInterest"
 BINANCE_LSR_URL = "https://fapi.binance.com/futures/data/globalLongShortAccountRatio"
 BYBIT_OI_URL = "https://api.bybit.com/v5/market/open-interest"
@@ -46,6 +48,7 @@ class LongShortRatioReading:
     long_short_ratio: float
 
 
+@track_api_health("binance")
 def get_binance_open_interest(symbol: str = "BTCUSDT", session: requests.Session | None = None) -> OpenInterestReading:
     session = session or requests.Session()
     response = session.get(BINANCE_OI_URL, params={"symbol": symbol}, timeout=15)
@@ -56,6 +59,7 @@ def get_binance_open_interest(symbol: str = "BTCUSDT", session: requests.Session
     )
 
 
+@track_api_health("binance")
 def get_binance_long_short_ratio(
     symbol: str = "BTCUSDT", period: str = "1d", session: requests.Session | None = None
 ) -> LongShortRatioReading:
@@ -80,6 +84,7 @@ def get_binance_long_short_ratio(
     )
 
 
+@track_api_health("bybit")
 def get_bybit_open_interest(symbol: str = "BTCUSDT", session: requests.Session | None = None) -> OpenInterestReading:
     session = session or requests.Session()
     response = session.get(
@@ -95,6 +100,7 @@ def get_bybit_open_interest(symbol: str = "BTCUSDT", session: requests.Session |
     )
 
 
+@track_api_health("okx")
 def get_okx_open_interest(inst_id: str = "BTC-USDT-SWAP", session: requests.Session | None = None) -> OpenInterestReading:
     session = session or requests.Session()
     response = session.get(

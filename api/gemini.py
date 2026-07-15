@@ -21,6 +21,8 @@ from collections import deque
 
 import requests
 
+from database.api_health import track_api_health
+
 BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
 # 2026-07-14 live geprueft: die in der Web-Recherche genannten Modelle
 # (gemini-2.5-flash-lite/-flash) sind fuer NEUE Konten nicht mehr verfuegbar
@@ -56,6 +58,7 @@ class GeminiClient:
                 time.sleep(sleep_for)
         self._call_timestamps_minute.append(time.monotonic())
 
+    @track_api_health("gemini")
     def chat(
         self,
         messages: list[dict],

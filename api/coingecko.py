@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 
 import requests
 
+from database.api_health import track_api_health
 from database.models import PriceSnapshot
 
 BASE_URL = "https://api.coingecko.com/api/v3"
@@ -67,6 +68,7 @@ class CoinGeckoClient:
                 time.sleep(sleep_for)
         self._call_timestamps.append(time.monotonic())
 
+    @track_api_health("coingecko")
     def _get(self, url: str, params: dict) -> dict:
         self._respect_rate_limit()
         response = self._session.get(url, params=params, timeout=15)

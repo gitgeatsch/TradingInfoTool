@@ -31,6 +31,7 @@ class RemoteStatus:
     jobs_running_seit_minuten: dict[str, float | None] = field(default_factory=dict)
     budget_heute: dict | None = None
     provider_performance: dict | None = None
+    api_health: dict | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -46,6 +47,7 @@ class RemoteStatus:
             "jobs_running_seit_minuten": self.jobs_running_seit_minuten,
             "budget_heute": self.budget_heute,
             "provider_performance": self.provider_performance,
+            "api_health": self.api_health,
         }
 
 
@@ -111,7 +113,15 @@ def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, erro
         jobs_running_seit_minuten=jobs_running_seit_minuten,
         budget_heute=_get_budget_heute(conn),
         provider_performance=_get_provider_performance(conn),
+        api_health=_get_api_health(conn),
     )
+
+
+def _get_api_health(conn: sqlite3.Connection) -> dict:
+    """Sichtbarkeit fuer das passive API-Gesundheits-Tracking (2026-07-15, siehe
+    database/api_health.py::track_api_health()) - reiner Lesezugriff, keine neue
+    Logik."""
+    return db.get_api_health_status(conn)
 
 
 def _get_provider_performance(conn: sqlite3.Connection) -> dict:

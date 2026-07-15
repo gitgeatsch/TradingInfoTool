@@ -13,6 +13,8 @@ from datetime import datetime, timezone
 
 import requests
 
+from database.api_health import track_api_health
+
 SPOT_BASE_URL = "https://api.kraken.com/0/public"
 FUTURES_BASE_URL = "https://futures.kraken.com/derivatives/api/v3"
 RATE_LIMIT_PER_MINUTE = 15  # konservativ; oeffentliche Endpunkte haben kein dokumentiertes hartes Limit
@@ -121,6 +123,7 @@ class KrakenClient:
                 time.sleep(sleep_for)
         self._call_timestamps.append(time.monotonic())
 
+    @track_api_health("kraken")
     def get_ohlc(self, pair: str, interval: int = 1440, since: int | None = None) -> list[dict]:
         """interval in Minuten (1440 = 1 Tag). Liefert bis zu 720 Kerzen."""
         self._respect_rate_limit()
@@ -154,6 +157,7 @@ class KrakenClient:
             for row in candles
         ]
 
+    @track_api_health("kraken")
     def get_funding_rates(self, futures_symbol: str) -> list[dict]:
         self._respect_rate_limit()
         params = {"symbol": futures_symbol}

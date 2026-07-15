@@ -32,6 +32,8 @@ from collections import deque
 
 import requests
 
+from database.api_health import track_api_health
+
 BASE_URL = "https://api.cerebras.ai/v1/chat/completions"
 DEFAULT_MODEL = "gpt-oss-120b"
 RATE_LIMIT_PER_MINUTE = 4  # echtes Limit ist 5/Min, kleiner Puffer (siehe Docstring)
@@ -65,6 +67,7 @@ class CerebrasClient:
         self._call_timestamps_minute.append(call_time)
         self._call_timestamps_hour.append(call_time)
 
+    @track_api_health("cerebras")
     def chat(
         self,
         messages: list[dict],

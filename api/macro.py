@@ -22,6 +22,8 @@ from dataclasses import dataclass
 
 import requests
 
+from database.api_health import track_api_health
+
 logger = logging.getLogger(__name__)
 
 FEAR_GREED_URL = "https://api.alternative.me/fng/"
@@ -109,6 +111,7 @@ def get_btc_dominance(coingecko_client) -> float:
     return data["data"]["market_cap_percentage"]["btc"]
 
 
+@track_api_health("fear_greed")
 def get_fear_greed_index(session: requests.Session | None = None) -> FearGreedReading:
     session = session or requests.Session()
     response = session.get(FEAR_GREED_URL, params={"limit": 1}, timeout=15)
@@ -119,6 +122,7 @@ def get_fear_greed_index(session: requests.Session | None = None) -> FearGreedRe
     return FearGreedReading(value=int(entry["value"]), classification=entry["value_classification"])
 
 
+@track_api_health("fred")
 def get_fred_latest(series_id: str, api_key: str, session: requests.Session | None = None) -> FredObservation:
     session = session or requests.Session()
     response = session.get(
@@ -156,6 +160,7 @@ def get_all_fred_rates(
     return results
 
 
+@track_api_health("china_pboc_lpr")
 def get_pboc_lpr(session: requests.Session | None = None) -> PbocLprReading:
     """PBoC-Leitzins (Loan Prime Rate) ueber Eastmoney, siehe Modul-Docstring/Kap. 8
     fuer den Vorbehalt (inoffizieller Endpunkt). Aendert sich nur ca. 1x/Monat -
@@ -179,6 +184,7 @@ def get_pboc_lpr(session: requests.Session | None = None) -> PbocLprReading:
     return PbocLprReading(date=date, lpr_1y=float(entry["LPR1Y"]), lpr_5y=float(entry["LPR5Y"]))
 
 
+@track_api_health("fred")
 def get_fred_history(
     series_id: str, api_key: str, observation_start: str, session: requests.Session | None = None
 ) -> list[FredObservation]:
@@ -211,6 +217,7 @@ def get_fred_history(
     ]
 
 
+@track_api_health("ecb")
 def get_ecb_m2_history(n_observations: int = 13, session: requests.Session | None = None) -> list[RegionalM2Reading]:
     """Wie `get_fred_history`: mehrere Beobachtungen statt nur der letzten, fuer den
     Liquiditaets-Trend. `n_observations=13` deckt >1 Jahr ab (EZB-M2 ist monatlich)."""
@@ -232,6 +239,7 @@ def get_ecb_m2_history(n_observations: int = 13, session: requests.Session | Non
     ]
 
 
+@track_api_health("china_m2")
 def get_china_m2_history(n_observations: int = 13, session: requests.Session | None = None) -> list[RegionalM2Reading]:
     """Wie `get_fred_history`: mehrere Beobachtungen statt nur der letzten, fuer den
     Liquiditaets-Trend. `n_observations=13` deckt >1 Jahr ab (China-M2 ist monatlich)."""
@@ -259,6 +267,7 @@ def get_china_m2_history(n_observations: int = 13, session: requests.Session | N
     ]
 
 
+@track_api_health("ecb")
 def get_ecb_m2(session: requests.Session | None = None) -> RegionalM2Reading:
     """Eurozone-M2 (Average Amounts Outstanding) direkt von der EZB-eigenen SDMX-API,
     kein API-Key noetig. Live verifiziert 2026-07-08."""
@@ -278,6 +287,7 @@ def get_ecb_m2(session: requests.Session | None = None) -> RegionalM2Reading:
     return RegionalM2Reading(region="eurozone", date=date, value=float(value), unit="Mio. EUR")
 
 
+@track_api_health("china_m2")
 def get_china_m2(session: requests.Session | None = None) -> RegionalM2Reading:
     """China-M2 ueber denselben Eastmoney-Endpunkt wie PBoC-LPR, anderer reportName,
     kein Token noetig. Live verifiziert 2026-07-08."""
@@ -302,6 +312,7 @@ def get_china_m2(session: requests.Session | None = None) -> RegionalM2Reading:
     )
 
 
+@track_api_health("japan_boj")
 def get_japan_m2(session: requests.Session | None = None) -> RegionalM2Reading:
     """Japan-M2 (Average Amounts Outstanding) - HTML-Scraping-Fallback, siehe
     Modul-Docstring bei BOJ_M2_URL fuer den Vorbehalt. Sucht die Spalte

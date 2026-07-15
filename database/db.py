@@ -298,6 +298,16 @@ CREATE TABLE IF NOT EXISTS hebel_signals (
     llm_model                                                                      TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_hebel_signals_symbol_created ON hebel_signals(symbol, created_at);
+
+-- API-Gesundheits-Status (2026-07-15) - passive Erfolg/Fehler-Aufzeichnung je
+-- externer Quelle, siehe database/api_health.py::track_api_health().
+CREATE TABLE IF NOT EXISTS api_health_status (
+    source              TEXT PRIMARY KEY,
+    last_success_at     TEXT,
+    last_error_at       TEXT,
+    last_error_type     TEXT,
+    last_error_message  TEXT
+);
 """
 
 
@@ -1527,3 +1537,59 @@ def update_hebel_signal_outcome(
         (status, _now_iso(), entschieden_am, realisiertes_crv, datenquelle, hebel_signal_id),
     )
     conn.commit()
+
+
+def record_api_health_success(conn: sqlite3.Connection, source: str) -> None:
+    """Passives API-Gesundheits-Tracking (2026-07-15, siehe database/api_health.py::
+    track_api_health()) - Upsert, laesst etwaige Fehler-Felder unangetastet (ein
+    Erfolg loescht nicht die Erinnerung an den letzten Fehler, get_api_health_status()
+    vergleicht beide Zeitstempel)."""
+    conn.execute(
+        "INSERT INTO api_health_status (source, last_success_at) VALUES (?, ?) "
+        "ON CONFLICT(source) DO UPDATE SET last_success_at = excluded.last_success_at",
+        (source, _now_iso()),
+    )
+    conn.commit()
+
+
+def record_api_health_error(conn: sqlite3.Connection, source: str, error_type: str, error_message: str) -> None:
+    """Wie record_api_health_success(), aber fuer einen Fehlschlag - laesst
+    last_success_at unangetastet."""
+    conn.execute(
+        "INSERT INTO api_health_status (source, last_error_at, last_error_type, last_error_message) "
+        "VALUES (?, ?, ?, ?) "
+        "ON CONFLICT(source) DO UPDATE SET last_error_at = excluded.last_error_at, "
+        "last_error_type = excluded.last_error_type, last_error_message = excluded.last_error_message",
+        (source, _now_iso(), error_type, error_message),
+    )
+    conn.commit()
+
+
+def get_api_health_status(conn: sqlite3.Connection) -> dict[str, dict]:
+    """Liest alle bekannten Quellen mit einem abgeleiteten 'status'-Feld:
+    'ok' (letzter Erfolg ist juenger als/gleichauf mit dem letzten Fehler, oder es
+    gab noch nie einen Fehler), 'fehler' (letzter Fehler ist juenger als der letzte
+    Erfolg, oder es gab noch nie einen Erfolg), 'unbekannt' (weder Erfolg noch
+    Fehler bisher aufgezeichnet - sollte praktisch nicht vorkommen, da ein Upsert
+    immer mindestens ein Feld setzt)."""
+    rows = conn.execute("SELECT * FROM api_health_status").fetchall()
+    ergebnis: dict[str, dict] = {}
+    for row in rows:
+        last_success_at = row["last_success_at"]
+        last_error_at = row["last_error_at"]
+        if last_success_at is None and last_error_at is None:
+            status = "unbekannt"
+        elif last_error_at is None:
+            status = "ok"
+        elif last_success_at is None:
+            status = "fehler"
+        else:
+            status = "ok" if last_success_at >= last_error_at else "fehler"
+        ergebnis[row["source"]] = {
+            "status": status,
+            "last_success_at": last_success_at,
+            "last_error_at": last_error_at,
+            "last_error_type": row["last_error_type"],
+            "last_error_message": row["last_error_message"],
+        }
+    return ergebnis

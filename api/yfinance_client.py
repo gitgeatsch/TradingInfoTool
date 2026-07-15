@@ -24,6 +24,7 @@ from datetime import datetime, timezone
 
 import yfinance as yf
 
+from database.api_health import track_api_health
 from database.models import PriceSnapshot
 
 logger = logging.getLogger(__name__)
@@ -153,6 +154,7 @@ class YFinanceClient:
         except Exception as exc:
             result_queue.put((asset, "error", exc))
 
+    @track_api_health("yfinance")
     def _fetch_one(self, asset, fetched_at: str, eur_usd_fx_rate: float | None = None) -> PriceSnapshot | None:
         info = yf.Ticker(asset.yfinance_symbol).fast_info
         last_price = info.get("lastPrice")

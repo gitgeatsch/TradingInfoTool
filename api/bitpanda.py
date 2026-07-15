@@ -30,6 +30,8 @@ from dataclasses import dataclass
 
 import requests
 
+from database.api_health import track_api_health
+
 BITPANDA_ASSETS_URL = "https://api.bitpanda.com/v3/assets"
 BITPANDA_ASSETS_PAGE_SIZE = 500
 # Gruppen, die tatsaechlich Kryptowaehrungen sind (schliesst stock/etf/etc/metal aus,
@@ -52,6 +54,7 @@ class BitpandaAsset:
     group: str
 
 
+@track_api_health("bitpanda")
 def get_listed_assets(session: requests.Session | None = None) -> list[BitpandaAsset]:
     """Alle Krypto-relevanten Bitpanda-Assets (Symbol + Name), paginiert abgerufen."""
     session = session or requests.Session()
@@ -129,6 +132,7 @@ def _auth_headers(api_key: str) -> dict:
     return {"X-Api-Key": api_key}
 
 
+@track_api_health("bitpanda")
 def _authenticated_get(
     path: str, api_key: str, session: requests.Session, params: dict | None = None
 ) -> dict:
