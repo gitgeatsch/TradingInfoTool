@@ -276,6 +276,13 @@ class MarktscanCandidate:
     groq_kurzbegruendung: str | None = None
     groq_langbegruendung_json: str | None = None
     groq_generiert_am: str | None = None
+    # Providerkennzeichnung (2026-07-14, z.B. "cerebras:...") - analog zu
+    # Signal.groq_model/HebelSignal.llm_model, siehe update_marktscan_candidate_groq_writeup().
+    # Bugfix 2026-07-15: Spalte existierte seit der Gemini-Integration bereits in der
+    # DB (_migrate_marktscan_candidates_columns()), aber dieses Feld fehlte hier -
+    # jeder SELECT * ueber _row_to_marktscan_candidate() brach seitdem mit
+    # "unexpected keyword argument 'llm_model'" (real auf dem Notebook aufgetreten).
+    llm_model: str | None = None
     # Lifecycle (U-10)
     status: str = "neu"  # 'neu'|'nutzer_behalten_manuell_uebernommen'|'nutzer_verworfen'
     status_geaendert_am: str | None = None
