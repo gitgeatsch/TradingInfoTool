@@ -1144,6 +1144,36 @@ Remote-Steuer-Seite geworden (Abschnitt 13). Neu hinzugekommen (2026-07-13):
 Watchdog + Tray-Monitor für einfachen Start/Stop/Status vom Windows-Desktop
 aus (siehe oben) — der eigentliche Live-Test am 24/7-Notebook steht noch aus.
 
+### Bugfix: yfinance-Kursabrufe blockierten Prozess-Ende + Scheduler-Start (2026-07-15)
+
+Beim echten Notebook-Test hing die App beim Start dauerhaft im gelben
+("stale") Tray-Status. Ursache: `api/yfinance_client.py` und
+`api/yfinance_history.py` schützten haltlose Yahoo-Finance-Aufrufe bisher je
+mit einem eigenen `concurrent.futures.ThreadPoolExecutor(max_workers=1)` +
+`shutdown(wait=False)`. Zwei echte Probleme dabei:
+
+1. **Prozess-Ende blockiert:** `ThreadPoolExecutor`-Worker sind nicht
+   daemonisch, und Python registriert global (unabhängig vom `shutdown()` der
+   einzelnen Instanz) einen `atexit`-Hook, der beim Interpreter-Ende ALLE
+   jemals erzeugten Executor-Threads joint — ein einzelner hängender
+   Yahoo-Finance-Call blockierte dadurch das komplette Prozess-Beenden/
+   Neustarten. Real reproduziert: alter Code hing trotz `shutdown(wait=False)`
+   und abgelaufenem Timeout exakt so lange wie der simulierte Hänger.
+2. **Scheduler-Start wirkte hängengeblieben:** die Wertpapier-Preise wurden
+   sequenziell abgerufen, jedes Symbol mit eigenem bis zu 15s-Timeout — bei
+   mehreren gleichzeitig unerreichbaren Symbolen (z. B. Yahoo Finance vom
+   Notebook-Netzwerk aus nicht erreichbar) summierte sich das auf N × 15s.
+
+**Fix:** neue Funktion `run_with_daemon_timeout()` (`api/yfinance_client.py`)
+nutzt einen echten `threading.Thread(daemon=True)` statt eines Executors —
+Daemon-Threads werden beim Interpreter-Exit nicht gejoint, sondern abrupt
+beendet. `fetch_price_snapshots()` ruft zusätzlich alle Assets PARALLEL ab
+(ein Daemon-Thread je Asset) mit einer GEMEINSAMEN Gesamt-Deadline statt
+einer Summe von Einzel-Timeouts — Gesamtlaufzeit bleibt dadurch bei ca. 15s,
+unabhängig von der Anzahl betroffener Assets. `api/yfinance_history.py`
+(identisches Muster dort dupliziert) nutzt jetzt denselben
+`run_with_daemon_timeout()`-Helper.
+
 ---
 
 ## 13. Remote-Steuer-Seite — Status + Aktionen von unterwegs über Tailscale

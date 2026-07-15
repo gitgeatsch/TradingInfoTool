@@ -18,12 +18,13 @@ taegliche Kurse seit 2017-11-09 (3168 Punkte, live geprueft) - die beste frei
 verfuegbare Quelle, auch wenn kuerzer als BTCs Historie seit 2009."""
 from __future__ import annotations
 
-import concurrent.futures
 import logging
 from dataclasses import dataclass
 from datetime import datetime
 
 import yfinance as yf
+
+from api.yfinance_client import run_with_daemon_timeout
 
 logger = logging.getLogger(__name__)
 
@@ -41,13 +42,14 @@ def get_full_price_history(ticker: str) -> list[tuple[datetime, float]]:
     Wirft bei einem haengenden Aufruf `concurrent.futures.TimeoutError` nach
     `_YFINANCE_HISTORY_TIMEOUT_SECONDS`, sonst die zugrundeliegende yfinance-Exception
     durch (P-10: kein stiller Fallback auf eine leere/falsche Historie) - Aufrufer
-    muss beides behandeln, analog zu YFinanceClient.fetch_price_snapshots()."""
-    executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
-    future = executor.submit(_fetch_history, ticker)
-    try:
-        return future.result(timeout=_YFINANCE_HISTORY_TIMEOUT_SECONDS)
-    finally:
-        executor.shutdown(wait=False)
+    muss beides behandeln, analog zu YFinanceClient.fetch_price_snapshots().
+
+    Nutzt run_with_daemon_timeout() (api/yfinance_client.py) statt eines eigenen
+    ThreadPoolExecutor - 2026-07-15-Bugfix, siehe dortigen Docstring (Notebook blieb
+    beim Beenden/Neustarten haengen, da ThreadPoolExecutor-Worker nicht daemonisch
+    sind und Pythons globaler atexit-Hook alle jemals erzeugten Executor-Threads
+    joint, nicht nur die der aktuellen Instanz)."""
+    return run_with_daemon_timeout(lambda: _fetch_history(ticker), _YFINANCE_HISTORY_TIMEOUT_SECONDS)
 
 
 def _fetch_history(ticker: str) -> list[tuple[datetime, float]]:
