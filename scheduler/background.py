@@ -782,8 +782,14 @@ def hebel_screening_job(
                 # Positions-Prioritaet fuer sie ins Leere laufen.
                 try:
                     from api.bitpanda import get_listed_assets
+                    # BUGFIX (2026-07-16, live am Notebook gefunden): get_listed_assets()
+                    # nimmt eine optionale requests.Session fuer Connection-Reuse entgegen,
+                    # KEINEN API-Key (der Bitpanda-Asset-Katalog ist ein oeffentlicher,
+                    # unauthentifizierter Endpunkt) - der urspruengliche Aufruf mit
+                    # bitpanda_api_key als Positionsargument loeste bei JEDEM Lauf
+                    # "AttributeError: 'str' object has no attribute 'get'" aus.
                     neue_symbole = auto_add_unknown_hebel_symbols(
-                        conn, watchlist, get_listed_assets(bitpanda_api_key)
+                        conn, watchlist, get_listed_assets()
                     )
                     if neue_symbole:
                         logger.info(
