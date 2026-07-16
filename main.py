@@ -18,6 +18,7 @@ from api.history import backfill_all
 from api.groq import GroqClient
 from api.kraken import KrakenClient
 from api.kraken_history import backfill_all_ohlc
+from api.yfinance_client import YFINANCE_HISTORY_UNRELIABLE_TICKERS
 from importer.excel_import import import_holdings
 from scheduler.background import build_scheduler
 
@@ -36,6 +37,25 @@ logging.basicConfig(
     ],
 )
 logger = logging.getLogger(__name__)
+
+
+class _YfinanceKnownThinTickerFilter(logging.Filter):
+    """Unterdrueckt NUR die bereits bestaetigten 'possibly delisted'-Meldungen
+    fuer die bekannten duenn gehandelten Ticker (2026-07-16, Notebook-Log-
+    Analyse: 2.637 ERROR-Zeilen ueber 4 Tage, ausschliesslich diese 5 Ticker -
+    siehe api/yfinance_client.py::YFINANCE_HISTORY_UNRELIABLE_TICKERS). Kein
+    Fehler in unserem Code (fast_info liefert trotzdem einen Kurs), aber
+    massives Log-Rauschen bei jedem Preis-Refresh-Zyklus. Bewusst NICHT
+    pauschal jede 'possibly delisted'-Meldung unterdrueckt (P-10) - ein
+    bisher unbekanntes/neu betroffenes Symbol bleibt weiterhin sichtbar."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.name != "yfinance" or "possibly delisted" not in record.getMessage():
+            return True
+        return not any(t in record.getMessage() for t in YFINANCE_HISTORY_UNRELIABLE_TICKERS)
+
+
+logging.getLogger("yfinance").addFilter(_YfinanceKnownThinTickerFilter())
 
 
 def _show_startup_error(title: str, message: str, email_empfaenger: str | None = None) -> None:

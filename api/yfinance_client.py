@@ -29,6 +29,24 @@ from database.models import FundamentalsSnapshot, PriceSnapshot
 
 logger = logging.getLogger(__name__)
 
+# Bekannte, bereits live bestaetigte "nur fast_info"-Ticker (2026-07-16, aus
+# Notebook-Log-Analyse: 2.637 ERROR-Zeilen ueber 4 Tage, alle von genau diesen
+# 5 Tickern). yfinance's EIGENER interner Logger meldet bei jedem fast_info-
+# Zugriff auf diese Ticker "possibly delisted; no price data found" (probiert
+# intern period=1y/5d, beides schlaegt hier erwartungsgemaess fehl - kein
+# Fehler in unserem Code, fast_info liefert trotzdem einen Kurs). Wird in
+# main.py per Logging-Filter genutzt, um GENAU diese bekannten, erwarteten
+# Faelle zu unterdruecken - ein bisher unbekanntes/neu betroffenes Symbol mit
+# demselben yfinance-Fehler bleibt weiterhin sichtbar (P-10: nicht blind alle
+# "possibly delisted"-Meldungen unterdruecken, nur die bereits bestaetigten).
+YFINANCE_HISTORY_UNRELIABLE_TICKERS = frozenset({
+    "GB00B15KY328.SG",  # OD7N
+    "IE00BLRPRJ20.SG",  # 3QSS
+    "JE00BN7KB334.SG",  # OD7L
+    "OD7H.SG",
+    "OD7C.SG",
+})
+
 # 2026-07-11 (Remote-Steuer-Seite-Planung): anders als requests-basierte Clients
 # im Projekt (alle mit explizitem timeout=) bietet yfinance keinen von uns
 # kontrollierten Netzwerk-Timeout - ein haengender Yahoo-Finance-Call wuerde
