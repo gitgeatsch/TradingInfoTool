@@ -2193,6 +2193,38 @@ tatsächlich etwas geändert hat (z. B. eine neue automatische Analyse für
 das gerade angezeigte Asset) — ein echter Klick des Nutzers auf eine Zeile
 läuft weiterhin unverändert über `_on_select()`.
 
+### Nachtrag (2026-07-16, zweite Runde): Fix griff nach App-Neustart trotzdem nicht — Guard kam zu spät
+
+Nutzer-Fund NACH einem echten App-Neustart mit dem obigen Fix: das
+Detail-Panel im Hebel-Tab resettete die Scroll-Position weiterhin bei einem
+bereits berechneten Signal (kein Kandidat, dessen Score sich laufend
+ändert). Der erste Fix-Ansatz (Guard direkt im `finally`-Block
+zurücksetzen) hatte in einem synchronen Test (kein laufender `mainloop()`)
+funktioniert, aber in der echten App versagt.
+
+**Ursache (per echtem `mainloop()`-Test bestätigt, siehe
+`project_technische_lektionen_uebergreifend`):** Tk feuert `<<TreeviewSelect>>`
+NICHT synchron innerhalb von `selection_set()`, sondern hängt das virtuelle
+Event hinten an die Tcl-Event-Queue an — es wird erst beim nächsten
+Durchlauf des Event-Loops zugestellt. Der Guard wurde aber bereits im
+`finally`-Block SOFORT zurückgesetzt, also lange bevor das verzögerte
+Event tatsächlich ankam — zu diesem Zeitpunkt war die Unterdrückung schon
+wieder deaktiviert, `_on_select()` lief also doch durch. Ein synchroner
+Test ohne echten `mainloop()` bekommt das verzögerte Event nie zugestellt
+und hätte den Bug nie zeigen können — daher unauffällig in den ersten
+Tests.
+
+**Fix:** Guard wird jetzt per `self.after_idle(self._clear_suppress_select_event)`
+zurückgesetzt statt sofort im `finally`-Block — `after_idle()` läuft erst,
+nachdem alle bereits anstehenden Events (inklusive des verzögerten
+`<<TreeviewSelect>>`) abgearbeitet wurden.
+
+**Verifiziert:** neuer Tk-Smoke-Test mit ECHTEM laufenden `mainloop()`
+(`root.after(ms, root.quit)` + `root.mainloop()`, damit verzögerte Events
+tatsächlich zugestellt werden) für alle drei Tabs — bestätigt kein
+Re-Render ohne Datenänderung UND weiterhin korrektes Re-Render bei
+tatsächlicher Änderung.
+
 **Verifikation:** synthetischer Test für alle drei Tabs — bestätigt sowohl
 "kein Re-Render ohne Datenänderung" als auch "Re-Render, sobald sich die
 Daten für die ausgewählte Zeile ändern" (je 2 Fälle, 6 insgesamt).

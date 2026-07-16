@@ -203,11 +203,19 @@ class HebelView(ttk.Frame):
         theme.restripe_treeview(self.tree)
 
         if vorher_iid and vorher_iid in self._rows:
+            # 2026-07-16, Nutzer-Fund (Detail-Panel resettet trotz Fix weiterhin):
+            # <<TreeviewSelect>> wird von selection_set() NICHT synchron gefeuert,
+            # sondern erst im naechsten Tk-Event-Loop-Durchlauf (Tcl "event
+            # generate" ohne "-when now" haengt hinten an die Event-Queue an) -
+            # das Flag sofort im finally-Block zurueckzusetzen kam also zu frueh,
+            # das Event traf erst danach ein und wurde NICHT unterdrueckt (per
+            # echtem mainloop()-Test bestaetigt, mit synchronem Test/ohne Mainloop
+            # unsichtbar geblieben). Fix: Flag erst per after_idle() zuruecksetzen,
+            # also NACH allen bereits anstehenden Events (inkl. dem verzoegerten
+            # <<TreeviewSelect>>).
             self._suppress_select_event = True
-            try:
-                self.tree.selection_set(vorher_iid)
-            finally:
-                self._suppress_select_event = False
+            self.tree.selection_set(vorher_iid)
+            self.after_idle(self._clear_suppress_select_event)
             # Nur re-rendern, wenn sich die Zeile tatsaechlich geaendert hat (z.B.
             # neue Analyse fuer denselben Kandidaten) - sonst bleibt das
             # Detail-Panel (inkl. Scroll-Position) unangetastet.
@@ -236,6 +244,9 @@ class HebelView(ttk.Frame):
                     format_money(pos.liquidationspreis_geschaetzt_eur),
                 ),
             )
+
+    def _clear_suppress_select_event(self) -> None:
+        self._suppress_select_event = False
 
     def _on_select(self, event) -> None:
         if self._suppress_select_event:

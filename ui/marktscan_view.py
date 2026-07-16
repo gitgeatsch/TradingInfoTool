@@ -214,11 +214,15 @@ class MarktscanView(ttk.Frame):
         self._reapply_sort()
         theme.restripe_treeview(self.tree)
         if vorher_iid and self.tree.exists(vorher_iid):
+            # 2026-07-16, Nutzer-Fund (Detail-Panel resettet trotz Fix weiterhin):
+            # <<TreeviewSelect>> feuert asynchron (Tk-Event-Queue), nicht sofort -
+            # das Flag im finally-Block zurueckzusetzen war zu frueh, das
+            # verzoegerte Event traf danach ein und wurde NICHT unterdrueckt (per
+            # echtem mainloop()-Test bestaetigt). Fix: Flag erst per
+            # after_idle() zuruecksetzen (nach allen bereits anstehenden Events).
             self._suppress_select_event = True
-            try:
-                self.tree.selection_set(vorher_iid)
-            finally:
-                self._suppress_select_event = False
+            self.tree.selection_set(vorher_iid)
+            self.after_idle(self._clear_suppress_select_event)
             # Nur re-rendern, wenn sich der Kandidat tatsaechlich geaendert hat
             # (z.B. neuer Score/Status) - sonst bleibt das Detail-Panel (inkl.
             # Scroll-Position) unangetastet.
@@ -234,6 +238,9 @@ class MarktscanView(ttk.Frame):
                     )
                     self.reject_button.config(state="normal" if neuer_kandidat.status == "neu" else "disabled")
                     self._render_candidate(neuer_kandidat)
+
+    def _clear_suppress_select_event(self) -> None:
+        self._suppress_select_event = False
 
     def _on_select(self, event) -> None:
         if self._suppress_select_event:
