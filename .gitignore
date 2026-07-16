@@ -61,3 +61,11 @@ Basisinfos/Assets_export.xlsx
 # Lokale Backups und Checklists
 database/Backup_*.zip
 Upload_Checklist.txt
+
+# Analyse-Export und Notebook-Datenexporte (2026-07-16, nicht versionieren)
+Basisinfos/Notebook_Analysedaten/
+Basisinfos/Notebook_Analysedaten.zip
+Basisinfos/LLM_*.json
+Basisinfos/LLM_*.csv
+Basisinfos/LLM_*.md
+export_*.py
