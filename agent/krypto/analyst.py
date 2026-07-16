@@ -61,24 +61,31 @@ System noch nicht integriert") - erfinde keine Makro-Einschaetzung.
 6. Bevorzuge bei strategisch gleichwertigen Alternativen "TAUSCHEN" (in einen \
 Stablecoin/anderes Asset) statt "VERKAUFEN", da Krypto-zu-Krypto-Tausch in Oesterreich \
 bis zur Fiat-Auszahlung steuerneutral ist - nenne dann `tauschen_target_symbol`.
-7. Bei `asset.typ == "core"` (aktuell BTC/ETH) wird eine langfristige Kernposition \
-gehalten, kein kurzfristiges Trading-Vehikel. Bewerte hier ZWEI GETRENNTE Ebenen: \
-(a) die kurz-/mittelfristige technische Lage wie bei jedem Asset, UND (b) den Status \
-der grundlegenden langfristigen These (ist sie noch intakt, oder gibt es einen echten \
-fundamentalen Bruch - z.B. ein technisches/protokollarisches Versagen, eine global \
-durchsetzbare Verbots-Regulierung? Kurzfristige Kursschwaeche oder ein schwacher \
-technischer Trend allein sind KEIN Bruch). Empfiehl VERKAUFEN/TAUSCHEN fuer \
-Core-Assets nur, wenn (b) tatsaechlich gebrochen ist. Ist nur (a) schwach, aber (b) \
-intakt, empfiehl HALTEN trotz kurzfristiger Schwaeche. Nenne im Feld \
-`long_reasoning.fundamental` IMMER explizit, ob die langfristige These aus deiner \
-Sicht intakt ist und warum - unabhaengig davon, was `action` letztlich ist.
-8. Bei `asset.typ != "core"` (taktische Assets/Altcoins) beachte `regime.btc_matrix` \
-bei der Einschaetzung bullischer technischer Signale: bei `btc_season` oder \
-`baer_flucht` sind Alt-Kaufsignale (z.B. Ausbrueche, bullische Konfluenz) mit erhoehter \
-Skepsis zu behandeln, auch wenn die Technik fuer sich genommen positiv aussieht - nenne \
-das explizit in `long_reasoning.technisch`. Bei `altseason` duerfen bullische Alt-Signale \
+7. Bei `asset.rolle == "core"` (aktuell BTC/ETH) ODER einem taktischen Beobachtungs-/ \
+Wiedereinstiegs-Kandidaten (`asset.rolle == "taktisch"`, `asset.wird_aktuell_gehalten \
+== false`, `asset.beobachtungsstatus == "beobachtung"` - 2026-07-16, Klassifikations- \
+Redesign: gilt jetzt auch fuer taktische Kandidaten mit einer bewussten Wiedereinstiegs- \
+oder Erstkauf-These, nicht mehr nur fuer Core) wird KEINE aktive Trading-Position \
+verfolgt, sondern eine langfristige Kernposition gehalten bzw. eine bewusste These \
+beobachtet. Bewerte hier ZWEI GETRENNTE Ebenen: (a) die kurz-/mittelfristige technische \
+Lage wie bei jedem Asset, UND (b) den Status der grundlegenden langfristigen These (ist \
+sie noch intakt, oder gibt es einen echten fundamentalen Bruch - z.B. ein technisches/ \
+protokollarisches Versagen, eine global durchsetzbare Verbots-Regulierung? Kurzfristige \
+Kursschwaeche oder ein schwacher technischer Trend allein sind KEIN Bruch). Empfiehl \
+VERKAUFEN/TAUSCHEN (bzw. bei einem noch nicht gehaltenen Beobachtungs-Kandidaten: rate \
+explizit von einem Einstieg ab) nur, wenn (b) tatsaechlich gebrochen ist. Ist nur (a) \
+schwach, aber (b) intakt, empfiehl HALTEN (bzw. weiter Beobachten) trotz kurzfristiger \
+Schwaeche. Nenne im Feld `long_reasoning.fundamental` IMMER explizit, ob die \
+langfristige These aus deiner Sicht intakt ist und warum - unabhaengig davon, was \
+`action` letztlich ist.
+8. Bei allen anderen taktischen Assets (aktiv gehalten ohne Regel-7-These, oder \
+`asset.beobachtungsstatus == "ausgemustert"`) beachte `regime.btc_matrix` bei der \
+Einschaetzung bullischer technischer Signale: bei `btc_season` oder `baer_flucht` sind \
+Alt-Kaufsignale (z.B. Ausbrueche, bullische Konfluenz) mit erhoehter Skepsis zu \
+behandeln, auch wenn die Technik fuer sich genommen positiv aussieht - nenne das \
+explizit in `long_reasoning.technisch`. Bei `altseason` duerfen bullische Alt-Signale \
 mit normalem/hoeherem Vertrauen bewertet werden. Bei `nicht_verfuegbar` ignoriere diesen \
-Punkt. Diese Regel gilt NICHT fuer Core-Assets (die werden nach Regel 7 bewertet).
+Punkt. Diese Regel gilt NICHT fuer Assets nach Regel 7.
 9. Ordne den aktuellen Kurs EXPLIZIT relativ zu `technische_analyse.fibonacci` \
 (Fibonacci-Retracement-Level) und `technische_analyse.support_resistance` ein - \
 z.B. "Kurs nahe dem 61,8%-Retracement bei X - historisch oft eine Unterstuetzungs-/ \
@@ -292,12 +299,20 @@ def build_facts(
         if not r.available:
             nicht_verfuegbar.append(f"{name}: {r.reason}")
 
+    # Klassifikations-Redesign (2026-07-16): "wird_aktuell_gehalten" live aus
+    # dem uebergebenen holding-Objekt abgeleitet statt eines gespeicherten
+    # Status-Felds - kann dadurch nie veralten (siehe config.py::
+    # WatchlistAsset-Docstring).
+    wird_aktuell_gehalten = bool(
+        holding and ((holding.quantity or 0.0) + (holding.staked_quantity or 0.0)) > 0.0
+    )
     facts = {
         "asset": {
             "symbol": asset.symbol,
             "name": asset.name,
-            "typ": asset.typ,
-            "status": asset.status,
+            "rolle": asset.rolle,
+            "wird_aktuell_gehalten": wird_aktuell_gehalten,
+            "beobachtungsstatus": asset.beobachtungsstatus,
             "bitpanda_gelistet": bitpanda_gelistet,
         },
         "preis": {

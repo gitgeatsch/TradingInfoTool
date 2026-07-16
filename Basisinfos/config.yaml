@@ -76,293 +76,295 @@ risiko:
 
 # --- Watchlist / Basiswerte (siehe Spezifikation Kap. 4) ---
 # Quelle: Basisinfos/Assets.xlsx (Erstimport Stand 2026-07-01), 41 Assets.
-# typ: core = langfristige Kernposition | taktisch = kuerzere Haltedauer | stablecoin = Cash-/Swap-Reserve
-# status: aktiv = Bestand vorhanden (Anzahl Coins > 0 in Assets.xlsx) | watchlist = Beobachtung, noch keine Position
+# rolle: core = langfristige Kernposition | taktisch = alles andere (auch bisherige stablecoin-Eintraege - siehe ist_cash_aequivalent)
+# beobachtungsstatus: beobachtung = aktive Kandidatur (Erstkauf/Wiedereinstieg) | ausgemustert = niedrigste Prioritaet, aber nie ausgeschlossen
+# (Klassifikations-Redesign 2026-07-16: "gehalten" wird NICHT mehr hier gespeichert, sondern live aus den echten Bestaenden/Hebel-Positionen abgeleitet)
 # Die tatsaechliche Anzahl Coins (Bestand) wird NICHT hier gepflegt, sondern in der
 # SQLite-Datenbank (siehe Spezifikation Kap. 10, B-5); Erstbefuellung per Import von
 # Basisinfos/Assets.xlsx, danach Aktualisierung ueber die GUI.
 watchlist:
   - symbol: EURCV
     name: EUR CoinVertible
-    typ: stablecoin
-    status: aktiv
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
+    ist_cash_aequivalent: true
     coingecko_id: societe-generale-forge-eurcv
   - symbol: BTC
     name: Bitcoin
-    typ: core
-    status: aktiv
+    rolle: core
+    beobachtungsstatus: beobachtung
     coingecko_id: bitcoin
   - symbol: ETH
     name: Ethereum
-    typ: core
-    status: aktiv
+    rolle: core
+    beobachtungsstatus: beobachtung
     coingecko_id: ethereum
   - symbol: SOL
     name: Solana
-    typ: core
-    status: aktiv
+    rolle: core
+    beobachtungsstatus: beobachtung
     coingecko_id: solana
   - symbol: LINK
     name: Chainlink
-    typ: core
-    status: aktiv
+    rolle: core
+    beobachtungsstatus: beobachtung
     coingecko_id: chainlink
   - symbol: AVAX
     name: Avalanche
-    typ: core
-    status: aktiv
+    rolle: core
+    beobachtungsstatus: beobachtung
     coingecko_id: avalanche-2
   - symbol: SUI
     name: Sui
-    typ: core
-    status: aktiv
+    rolle: core
+    beobachtungsstatus: beobachtung
     coingecko_id: sui
   - symbol: TAO
     name: Bittensor
-    typ: core
-    status: aktiv
+    rolle: core
+    beobachtungsstatus: beobachtung
     coingecko_id: bittensor
   - symbol: NEAR
     name: Near Protocol
-    typ: core
-    status: aktiv
+    rolle: core
+    beobachtungsstatus: beobachtung
     coingecko_id: near
   - symbol: APT
     name: Aptos
-    typ: taktisch
-    status: watchlist
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: aptos
   - symbol: ONDO
     name: Ondo Finance
-    typ: taktisch
-    status: watchlist
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: ondo-finance
   - symbol: ALGO
     name: Algorand
-    typ: taktisch
-    status: watchlist
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: algorand
   - symbol: KAS
     name: Kaspa
-    typ: taktisch
-    status: aktiv
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: kaspa
   - symbol: RENDER
     name: Render
-    typ: taktisch
-    status: watchlist
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: render-token
   - symbol: SEI
     name: Sei
-    typ: core
-    status: aktiv
+    rolle: core
+    beobachtungsstatus: beobachtung
     coingecko_id: sei-network
   - symbol: MORPHO
     name: Morpho
-    typ: core
-    status: aktiv
+    rolle: core
+    beobachtungsstatus: beobachtung
     coingecko_id: morpho
   - symbol: INJ
     name: Injective
-    typ: taktisch
-    status: watchlist
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: injective-protocol
   - symbol: KAIA
     name: Kaia
-    typ: taktisch
-    status: aktiv
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: kaia
   - symbol: FLOKI
     name: Floki
-    typ: taktisch
-    status: watchlist
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: floki
   - symbol: S
     name: Sonic
-    typ: taktisch
-    status: watchlist
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: sonic-3          # ex-Fantom, 2024 Rebrand
   - symbol: IMX
     name: Immutable X
-    typ: taktisch
-    status: watchlist
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: immutable-x
   - symbol: W
     name: Wormhole
-    typ: taktisch
-    status: watchlist
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: wormhole
   - symbol: BEAMX
     name: Beam
-    typ: taktisch
-    status: watchlist
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: beam-2           # bestaetigt: Rang 336, ex-Merit Circle
   - symbol: AKT
     name: Akash Network
-    typ: taktisch
-    status: watchlist
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: akash-network
   - symbol: AIOZ
     name: AIOZ Network
-    typ: taktisch
-    status: watchlist
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: aioz-network
   - symbol: BRETT
     name: Brett
-    typ: taktisch
-    status: watchlist
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: based-brett
   - symbol: BIO
     name: Bio Protocol
-    typ: taktisch
-    status: aktiv
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: bio-protocol
   - symbol: TURBO
     name: Turbo
-    typ: taktisch
-    status: watchlist
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: turbo
   - symbol: PLUME
     name: Plume
-    typ: taktisch
-    status: watchlist
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: plume
   - symbol: IO
     name: IO.NET
-    typ: taktisch
-    status: watchlist
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: io
   - symbol: SUPRA
     name: Supra
-    typ: taktisch
-    status: aktiv
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: supra            # bestaetigt: bestehende Position, vorerst mit Verlust gehalten
   - symbol: CAT
     name: "Simon's Cat"
-    typ: taktisch
-    status: watchlist
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: simon-s-cat
   - symbol: GRIFFAIN
     name: Griffain
-    typ: taktisch
-    status: watchlist
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: griffain
   - symbol: MON
     name: Monad
-    typ: taktisch
-    status: aktiv
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: monad
   - symbol: CANTON
     name: Canton Network
-    typ: core
-    status: aktiv
+    rolle: core
+    beobachtungsstatus: beobachtung
     coingecko_id: canton-network
   - symbol: XLM
     name: Stellar
-    typ: taktisch
-    status: aktiv
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: stellar          # Ticker in Assets.xlsx war fehlerhaft "XML", korrekt XLM
   - symbol: QNT
     name: Quant
-    typ: taktisch
-    status: aktiv
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: quant-network
   - symbol: ASTER
     name: Aster
-    typ: taktisch
-    status: aktiv
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: aster-2          # nicht verwechseln mit Astar (ASTR)
   - symbol: HYPE
     name: Hyperliquid
-    typ: core
-    status: aktiv
+    rolle: core
+    beobachtungsstatus: beobachtung
     coingecko_id: hyperliquid
   - symbol: BNB
     name: BNB
-    typ: core
-    status: aktiv
+    rolle: core
+    beobachtungsstatus: beobachtung
     coingecko_id: binancecoin
   - symbol: VIRTUAL
     name: Virtuals Protocol
-    typ: taktisch
-    status: watchlist
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     coingecko_id: virtual-protocol
   - symbol: VST
     name: Vistra Corp
-    typ: taktisch
-    status: aktiv
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     assetklasse: aktien
     yfinance_symbol: VST
   - symbol: OD7N
     name: WisdomTree Silver ETC
-    typ: taktisch
-    status: aktiv
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     assetklasse: rohstoffe
     yfinance_symbol: GB00B15KY328.SG
   - symbol: VVMX
     name: VanEck Rare Earth and Strategic Metals UCITS ETF
-    typ: taktisch
-    status: aktiv
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     assetklasse: etf
     yfinance_symbol: VVMX.DE
   - symbol: 3QSS
     name: WisdomTree NASDAQ 100 3x Daily Short
-    typ: taktisch
-    status: aktiv
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     assetklasse: etf
     yfinance_symbol: IE00BLRPRJ20.SG
   - symbol: DBPK
     name: Xtrackers S&P 500 2x Inverse Daily Swap UCITS ETF
-    typ: taktisch
-    status: aktiv
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     assetklasse: etf
     yfinance_symbol: DBPK.DE
   - symbol: X136
     name: Amundi Global Bioenergy UCITS ETF
-    typ: taktisch
-    status: aktiv
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     assetklasse: etf
     yfinance_symbol: X136.BE
   - symbol: EXH3
     name: iShares STOXX Europe 600 Food & Beverage UCITS ETF (DE)
-    typ: taktisch
-    status: aktiv
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     assetklasse: etf
     yfinance_symbol: EXH3.DE
   - symbol: CEBS
     name: iShares Copper Miners UCITS ETF
-    typ: taktisch
-    status: aktiv
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     assetklasse: etf
     yfinance_symbol: CEBS.DE
   - symbol: ISOC
     name: iShares Agribusiness UCITS ETF
-    typ: taktisch
-    status: aktiv
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     assetklasse: etf
     yfinance_symbol: IS0C.DE
   - symbol: OD7H
     name: WisdomTree Gold
-    typ: taktisch
-    status: aktiv
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     assetklasse: rohstoffe
     yfinance_symbol: OD7H.SG
   - symbol: OD7C
     name: WisdomTree Copper
-    typ: taktisch
-    status: aktiv
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     assetklasse: rohstoffe
     yfinance_symbol: OD7C.SG
   - symbol: OD7L
     name: WisdomTree Natural Gas
-    typ: taktisch
-    status: aktiv
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     assetklasse: rohstoffe
     yfinance_symbol: JE00BN7KB334.SG
   - symbol: PLTR
     name: Palantir Technologies Inc.
-    typ: taktisch
-    status: aktiv
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
     assetklasse: aktien
     yfinance_symbol: PLTR
 
@@ -522,12 +524,33 @@ budget_allocator:
                                         # rein taktische Watchlist-Assets ohne Position (siehe
                                         # spot_cooldown_stunden_kern).
   spot_cooldown_stunden_kern: 10         # Zwei-Stufen-Cooldown (2026-07-16, Nutzer-Wunsch nach
-                                        # Gewichtungs-Analyse): kuerzerer Cooldown fuer typ=core
-                                        # UND aktuell gehaltene Assets (~2x/Tag statt ~1x/Tag) -
-                                        # echtes Geld/strategische Kernrolle verdient haeufigere
-                                        # Neubewertung als ein unbeobachteter taktischer
-                                        # Watchlist-Kandidat ohne Position, siehe agent/krypto/
+                                        # Gewichtungs-Analyse): kuerzerer Cooldown fuer rolle=core
+                                        # ODER aktuell gehaltene Assets ODER offene Hebel-Position
+                                        # (~2x/Tag statt ~1x/Tag) - echtes Geld/strategische
+                                        # Kernrolle verdient haeufigere Neubewertung als ein
+                                        # unbeobachteter taktischer Watchlist-Kandidat ohne
+                                        # Position, siehe agent/krypto/
                                         # signal_batch.py::select_assets_due_for_signal().
+  spot_cooldown_stunden_ausgemustert: 120  # [OFFEN]/vorlaeufig (Klassifikations-Redesign
+                                        # 2026-07-16): dritte Cooldown-Stufe fuer
+                                        # beobachtungsstatus=ausgemustert - niedrigste
+                                        # Prioritaet, aber NIE Ausschluss ("darf nicht sterben",
+                                        # Nutzer-Formulierung). 5 Tage = plausibler Startwert,
+                                        # noch nicht ueber echten Betrieb kalibriert. Kern
+                                        # (rolle=core/gehalten/offene Hebel-Position) schlaegt
+                                        # IMMER Ausgemustert (Praezedenz).
+  hebel_cooldown_stunden_ausgemustert: 120  # Analog zu oben, fuer Hebel-Trigger-Kandidaten -
+                                        # Kern/Taktisch bleiben bei cooldown_stunden (3.5h)
+                                        # unveraendert, nur diese neue Stufe kommt dazu.
+  hebel_position_cooldown_stunden: 3     # NEU (2026-07-16, Nutzer-Wunsch: "getaetigte und
+                                        # aktive Positionen haben hohe Prioritaet unabhaengig
+                                        # davon, ob es eine Empfehlung gab"): offene
+                                        # Hebel-Positionen als eigene, vom Trigger-Screening
+                                        # unabhaengige Kandidatenquelle mit engem Cooldown -
+                                        # 3h ist deutlich enger als Kern (3.5h Standard-Trigger-
+                                        # Cooldown), aber budgetvertraeglich (siehe Diskussion:
+                                        # 15 Min haette bei nur 1 offener Position mehr Budget
+                                        # verbraucht als der gesamte Tagesdeckel).
 
 # --- Hebel-Screening (2026-07-14, Phase 1, siehe docs/hebel_positionsformel.md) ---
 # Deterministisches Zwei-Zweige-Scoring (Trendfolge + Kontra), KEIN Groq-Aufruf hier -

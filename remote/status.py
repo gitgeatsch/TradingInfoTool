@@ -53,7 +53,19 @@ class RemoteStatus:
 
 def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, error_tail_lines: int = 5) -> RemoteStatus:
     latest_prices = db.get_latest_prices(conn)
-    active_symbols = {a.symbol for a in watchlist if a.status == "aktiv"}
+    # Klassifikations-Redesign (2026-07-16): "gehalten" live aus den echten
+    # Bestaenden (Spot) UND offenen Hebel-Positionen abgeleitet statt eines
+    # gespeicherten Status-Felds - kann dadurch nie veralten (siehe config.py::
+    # WatchlistAsset-Docstring).
+    gehaltene_symbole = {
+        h.symbol for h in db.get_all_holdings(conn)
+        if (h.quantity or 0.0) + (h.staked_quantity or 0.0) > 0.0
+    }
+    offene_hebel_symbole = {p.symbol for p in db.get_open_hebel_positions(conn)}
+    active_symbols = {
+        a.symbol for a in watchlist
+        if a.symbol in gehaltene_symbole or a.symbol in offene_hebel_symbole
+    }
 
     prices = []
     for symbol in sorted(active_symbols):

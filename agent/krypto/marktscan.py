@@ -317,7 +317,8 @@ def _try_backfill_snapshot(
     bereits rein duck-typed (`.coingecko_id`/`.symbol`)."""
     try:
         asset = WatchlistAsset(
-            symbol=symbol, name=symbol, typ="taktisch", status="watchlist", coingecko_id=coingecko_id
+            symbol=symbol, name=symbol, rolle="taktisch", beobachtungsstatus="beobachtung",
+            coingecko_id=coingecko_id,
         )
         backfill_history(coingecko_client, conn, asset)
         history = db.get_price_history(conn, coingecko_id)
@@ -522,7 +523,7 @@ def generate_candidate_writeup(
     from indicators.calculations import summarize_confluence
 
     asset = WatchlistAsset(
-        symbol=candidate.symbol, name=candidate.name, typ="taktisch", status="watchlist",
+        symbol=candidate.symbol, name=candidate.name, rolle="taktisch", beobachtungsstatus="beobachtung",
         coingecko_id=candidate.coingecko_id,
     )
     latest_price = PriceSnapshot(

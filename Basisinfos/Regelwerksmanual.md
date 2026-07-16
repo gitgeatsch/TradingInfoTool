@@ -75,8 +75,10 @@ Guthaben automatisch von der Börse abrufen (rein lesend — laut Bitpanda-Doku 
 über API-Keys grundsätzlich keine Order-/Auszahlungsfähigkeit, unabhängig vom
 gewählten Scope). Das manuelle Eingabefeld und der bestehende Excel-Import/Export
 bleiben **vollständig als Backup** erhalten (bewusst hybrid, da Bitpanda öfter
-Ausfälle hat) — der Sync ist rein manuell ausgelöst, kein Hintergrund-Job. Nach jedem
-Sync wird automatisch auch `Assets_export.xlsx` aktualisiert (beide Tabs), ohne die
+Ausfälle hat). **Seit 2026-07-16 läuft derselbe Abgleich zusätzlich automatisch
+alle 30 Minuten im Hintergrund** (Staking-Verifikation macht das sicher, siehe
+Kap. 6) — der manuelle Klick bleibt für sofortige Abgleiche und als seltener
+Fallback bestehen. Nach jedem Sync wird automatisch auch `Assets_export.xlsx` aktualisiert (beide Tabs), ohne die
 handgepflegte Original-`Assets.xlsx` anzutasten. Erkennt der Abgleich, dass sich ein
 Bestand passend zu einem noch offenen Signal geändert hat, wird das als Vorschlag
 angezeigt (nie automatisch bestätigt).
@@ -334,7 +336,7 @@ dieselbe Datenbank — der Unterschied ist nur, ob du selbst klicken musst.
 | `marktscan` | 2× täglich, fix 04:00 + 16:00 Uhr | Kompletter Marktscan-Lauf (Stufe A-D, Kap. 13) — rein deterministisch, **kein** Groq-Aufruf mehr direkt in diesem Job (seit Phase 5, siehe unten) | CoinGecko + Kraken |
 | `hebel_screening` (+ Budget-Allocator huckepack) | alle 15 Min | Hebel-Screening (Kap. 7) UND die zentrale Tagesbudget-Verteilung über drei Verbraucher: Hebel-Kandidaten (Tier 1), Marktscan-Kaufkandidaten-Begründung (Tier 2), Spot-Rotation für die am längsten überfälligen Krypto-Assets (Tier 3 — ersetzt seit 2026-07-14/Phase 5 den ehemaligen eigenen `signal_batch`-05:00-Cron) | Binance/Bybit/OKX/Kraken (Screening) + Groq→Cerebras→Gemini (je Tier budget-limitiert) |
 | `backward_tracking` | 1× täglich, fix 06:00 Uhr | Prüft vergangene KAUFEN/NACHKAUFEN-Signale gegen die Kurshistorie — Take-Profit oder Stop-Loss erreicht? | keine (nur bereits vorhandene DB-Daten) |
-| `bitpanda_cash` | alle 30 Min (nur mit gesetztem `BITPANDA_API_KEY`) | Nur der EUR-Fiat-Cash-Stand für RM-4 — **nicht** die vollen Bestände | Bitpanda (`/fiatwallets`) |
+| `bitpanda_holdings` | alle 30 Min (nur mit gesetztem `BITPANDA_API_KEY`) | **Seit 2026-07-16 der komplette Bestandsabgleich** (Krypto + Aktien/ETF/Rohstoffe + EUR-Cash) — ursprünglich (2026-07-11) nur der EUR-Fiat-Cash-Anteil, siehe Nachtrag unten | Bitpanda (Wallets + Transaktionshistorie) |
 
 **Der Marktscan-Job nutzt Groq nur, wenn du das explizit erlaubst:** Standardmäßig
 (`config.yaml marktscan.groq_automatisch_kaufkandidaten: false`) generiert der
@@ -483,12 +485,103 @@ automatische Wiederherstellung bei Fehlschlag) wird jetzt vom
 `importer/bitpanda_sync.py`-Zuwachs-Zweig aufgerufen, sobald ein Symbol mit
 Status "watchlist" einen echten Bestands-Zuwachs bekommt — für Krypto UND
 Non-Krypto gleichermaßen (derselbe Sync-Pfad). Bewusst NUR diese eine
-Richtung (watchlist → aktiv); die Rückrichtung bei vollständigem Verkauf
-wird NICHT automatisch ausgelöst (ein Coin bleibt oft absichtlich weiter
-beobachtet). Isoliert per try/except — ein Config-Schreibfehler blockiert
-nie den eigentlichen Holdings-Sync. Verifiziert gegen eine Kopie der echten
-`config.yaml` (BRETT watchlist→aktiv, No-Op bei bereits gesetztem Status,
-Nachbar-Einträge unangetastet) — die echte Datei wurde dabei nicht berührt.
+Richtung automatisch (watchlist → aktiv) — die Rückrichtung bei
+vollständigem Verkauf ist bewusst KEINE stille Automatik (siehe nächster
+Nachtrag), ein Coin bleibt oft absichtlich weiter beobachtet. Isoliert per
+try/except — ein Config-Schreibfehler blockiert nie den eigentlichen
+Holdings-Sync. Verifiziert gegen eine Kopie der echten `config.yaml`
+(BRETT watchlist→aktiv, No-Op bei bereits gesetztem Status, Nachbar-
+Einträge unangetastet) — die echte Datei wurde dabei nicht berührt.
+
+**Sicherheits-Nachprüfung (2026-07-16, Nutzer-Wunsch "prüfe ob die Änderung
+keine negative Auswirkung hat").** Alle 4 Lesestellen von `.status` im
+gesamten Code identifiziert — keine ist veto-/berechnungsrelevant (KI-
+Kontext-Fakt, Remote-Status-Zähler, UI-Anzeigespalte). Dieselbe, bereits
+etablierte Einschränkung wie bei `add_watchlist_entry()` gilt weiterhin:
+die laufende App hält die Watchlist als einmaliges Snapshot beim Start
+(`main.py`), eine Änderung wirkt daher erst nach einem Neustart vollständig
+(Portfolio/Bestände selbst sind davon NICHT betroffen, die kommen immer
+frisch aus der DB). Ein echter kleiner Fund dabei: die Sync-Erfolgsmeldung
+erwähnte Status-Hochstufungen bisher gar nicht — ergänzt, inkl.
+Neustart-Hinweis.
+
+**Nachtrag: Status-Rückstufung beim Verkauf, Variante 1 umgesetzt
+(2026-07-16, Nutzer-Entscheidung nach Rückfrage).** Der bestehende
+`BitpandaDecreaseConfirmDialog` (Rückgangs-Bestätigung) bekommt bei einem
+Rückgang auf exakt 0 eine zusätzliche, standardmäßig UNGEHAKTE Checkbox
+"Watchlist-Status auch auf 'watchlist' zurücksetzen" — bewusst KEINE
+automatische Rückstufung wie beim Kauf-Fall, sondern eine bewusste
+Nutzer-Entscheidung im selben Moment, in dem der Verkauf ohnehin schon
+bestätigt werden muss. Bestätigt der Nutzer sowohl den Rückgang als auch
+diese Checkbox, ruft `_on_confirm()` `config.py::update_watchlist_status()`
+mit `"watchlist"` auf — eigenes try/except, ein Fehlschlag verhindert nicht
+die Bestands-Übernahme selbst. Verifiziert gegen Kopien von `config.yaml`
+UND einer In-Memory-DB (beide Richtungen: Checkbox angehakt → Status
+zurückgesetzt; nicht angehakt → Status bleibt).
+
+**Wichtiger Nachtrag zur Wechselwirkung mit der Staking-Verifikation
+(2026-07-16, noch am selben Tag):** seit der Staking-Verifikation (siehe
+unten) läuft ein Rückgang meistens automatisch über `apply_decrease()`
+INNERHALB von `sync_from_bitpanda()` — der `BitpandaDecreaseConfirmDialog`
+(und damit auch die neue Status-Rückstufungs-Checkbox) erscheint jetzt nur
+noch im SELTENEN Fallback-Fall (Transaktions-Abruf fehlgeschlagen). Für den
+NORMALEN automatischen Rückgang-auf-0-Fall gibt es aktuell KEINE
+Status-Rückstufung (bewusst nicht automatisiert, siehe oben) — ein
+vollständig verkaufter Coin behält seinen `status: aktiv`, bis der seltene
+Fallback-Dialog erscheint oder der Nutzer manuell editiert. Das ist ein
+bekannter, noch nicht abschließend entschiedener Punkt: ob die
+Rückstufung auch für den automatischen Pfad nachgezogen werden soll
+(z. B. als zusätzliche, informative Meldung statt einer Checkbox), ist
+noch offen.
+
+**Nachtrag: Staking-Verifikation + vollautomatischer Bestandsabgleich
+(2026-07-16, Nutzer-Frage "Kauf/Verkauf erfolgt nur durch den Nutzer selbst
+- wo ist das Risiko?").** Zutreffender Einwand: WER eine Bestandsänderung
+auslöst war nie das Risiko (immer der Nutzer, per Trade oder Limit-Order).
+Das tatsächliche, rein technische Risiko: Bitpandas Live-Wallet-API kann
+einen echten Verkauf nicht von einem Staking-Transfer unterscheiden (beide
+erscheinen identisch als Rückgang, siehe `DecreaseCandidate`-Docstring).
+Diese Ambiguität war aber bereits an anderer Stelle gelöst -
+`importer/bitpanda_avg_cost.py::compute_staked_quantities()` rekonstruiert
+aus der Transaktionshistorie (stake/unstake-Tags), wie viel aktuell gestakt
+ist, bisher nur beim manuellen "Einstandspreise berechnen"-Button genutzt.
+
+**Fix:** `sync_from_bitpanda()` ruft dieselbe Berechnung jetzt inkrementell
+mit auf (EIGENER Cursor, `db.get/set_bitpanda_holdings_last_synced_unix()`
+— bewusst NICHT derselbe Schlüssel wie der bestehende
+`bitpanda_avg_cost_last_synced_unix`-Cursor, sonst würden sich beide
+Features gegenseitig Transaktionen "wegkonsumieren"). Gelingt der
+Transaktions-Abruf, lassen sich BEIDE Richtungen sicher automatisch
+schreiben: `quantity` kommt direkt vom Live-Wallet-Saldo, `staked_quantity`
+unabhängig aus der Transaktionshistorie — keine Interpretation "war das ein
+Verkauf?" mehr nötig, egal ob es sich um einen echten Verkauf oder einen
+Staking-Transfer handelt. Nur wenn der Transaktions-Abruf selbst fehlschlägt
+(z. B. Netzwerkfehler), bleibt der alte, konservative
+Bestätigungsdialog als Fallback.
+
+**Konsequenz für den Scheduler:** der bisherige `bitpanda_cash`-Job (nur
+EUR-Cash, 30 Min) wurde durch `bitpanda_holdings` ersetzt — ruft direkt die
+volle `sync_from_bitpanda()` auf (die den Cash-Anteil intern bereits
+mitmacht), kein separater Job mehr nötig. Schlägt die Staking-Verifikation
+in einem einzelnen automatischen Lauf fehl, bleiben etwaige Rückgänge
+unangewendet (Bestand bleibt auf altem, bekanntem Stand — kein
+Datenverlust, nur Staleness) und werden per E-Mail gemeldet (mit demselben
+Cooldown-Mechanismus wie Job-Ausfälle, kein Postfach-Spam).
+
+**Verifikation:** 6 synthetische Testfälle (Zuwachs, Rückgang durch Staking
+erklärt, Rückgang ohne Stake-Event/echter Verkauf, Netzwerkfehler-Fallback,
+Randfall "komplett gestaktes Symbol ohne vorherige Zeile", unabhängiger
+Cursor) — dabei einen echten Bug gefunden und behoben: die ursprüngliche
+`staked_quantity`-Persistenz prüfte fälschlich gegen `matched_symbols`
+(nur "in einer Wallet-Antwort gesehen") statt gegen tatsächlich
+geschriebene Zeilen — ein Symbol mit `alt_menge == neu_menge == 0` aber
+positivem `staked_quantity` hätte sonst stillschweigend keine Zeile
+bekommen und die UPDATE-Anweisung wäre ins Leere gelaufen.
+
+**Offener Punkt:** die Status-Rückstufungs-Checkbox (Nachtrag oben)
+erscheint jetzt nur noch im seltenen Fallback-Fall, nicht beim
+normalen automatischen Rückgang-auf-0 — ob das nachgezogen werden soll,
+ist noch nicht entschieden.
 
 **Audit-Ergebnis: Hebel-"Swing" (`trade_thesis_typ: swing_strategie`) und
 Bitpanda-Einschränkung (2026-07-16, Nutzer-Nachfrage).** `richtung`
@@ -521,16 +614,22 @@ Restriktion nötig.
 | "Signal-Historie" | Signale-Tab | Zeigt alle bisherigen Signale des ausgewählten Assets inkl. Backward-Tracking-Ergebnis (Take-Profit/Stop-Loss/Offen/Abgelaufen) — reine Anzeige, kein externer Aufruf. |
 | "Fällige Signale jetzt berechnen" (2026-07-13, NEU) | Signale-Tab | Berechnet die am längsten überfälligen Krypto-Assets sofort statt beim nächsten 05:00-Scheduler-Lauf, respektiert dasselbe geteilte Tagesbudget (siehe oben) — kein separater Klick pro Asset nötig. |
 | "Jetzt scannen" | Marktscan-Tab | Derselbe Marktscan-Lauf wie der 04:00/16:00-Scheduler-Job, nur sofort statt zur festen Uhrzeit |
-| "Bestände von Bitpanda abgleichen" | Datei-Menü | Live-Abgleich **aller Bestände** (Krypto + Aktien/ETF/Rohstoffe) + EUR-Cash direkt von Bitpanda (siehe RM-4-Abschnitt oben) — **nie automatisch**, da ein echter, authentifizierter API-Key UND ggf. der interaktive Rückgangs-Bestätigungsdialog beteiligt sind. Der reine EUR-Cash-Anteil läuft seit 2026-07-11 zusätzlich automatisch (siehe oben). |
+| "Bestände von Bitpanda abgleichen" | Datei-Menü | Live-Abgleich **aller Bestände** (Krypto + Aktien/ETF/Rohstoffe) + EUR-Cash direkt von Bitpanda (siehe RM-4-Abschnitt oben) — läuft seit 2026-07-16 bereits automatisch alle 30 Min (siehe `bitpanda_holdings`-Job oben, Staking-Verifikation macht das sicher). Der manuelle Klick bleibt für sofortige Abgleiche UND als Ort, an dem der Bestätigungsdialog erscheint, falls die automatische Staking-Verifikation in einem Lauf mal fehlschlägt (seltener Fallback). |
 | "Einstandspreise von Bitpanda berechnen" | Datei-Menü | Echter Anschaffungspreis je Asset aus der Bitpanda-Trade-Historie (siehe Abschnitt 9) — **eigener, unabhängiger Menüpunkt**, nie automatisch (Erstlauf kann ~40s dauern, läuft threaded im Hintergrund) |
 | "Bestände neu importieren" / "aus Datei importieren…" / "exportieren…" | Datei-Menü | Excel-Import/-Export (`Basisinfos/Assets.xlsx`) — rein lokal, kein externer Netzwerk-Aufruf |
 | Fiat-Cash-Reserve "Speichern" | Portfolio-Tab | Manuelle Eingabe, kein externer Aufruf |
 
-**Grundprinzip:** alles, was **Geld kostet oder einen persönlichen API-Key
-voraussetzt** (Groq pro Einzelsignal, Bitpanda-Sync), ist bewusst manuell — alles,
-was **kostenlose öffentliche Marktdaten** sind (Preise, Historie), läuft automatisch
-im Hintergrund. Der Marktscan ist der einzige Fall, der teilweise automatisch UND
-optional KI-gestützt läuft (siehe oben).
+**Grundprinzip (2026-07-16 nachgeschärft):** Groq/Cerebras/Gemini-Aufrufe pro
+Einzelsignal bleiben bewusst manuell — jeder Lauf kostet einen echten
+KI-Aufruf und soll gezielt ausgelöst werden. Bitpanda-Bestandsabgleich war
+ursprünglich ebenfalls aus Vorsicht manuell (ein Rückgang ließ sich nicht
+sicher von einem Staking-Transfer unterscheiden) — seit der Staking-
+Verifikation (Kap. 6, `bitpanda_holdings`-Job) ist diese Ambiguität
+technisch aufgelöst, der volle Abgleich läuft jetzt automatisch. Der
+manuelle Klick bleibt als Fallback und für sofortige Abgleiche bestehen.
+Kostenlose öffentliche Marktdaten (Preise, Historie) liefen schon immer
+automatisch. Der Marktscan ist weiterhin der einzige Fall, der teilweise
+automatisch UND optional KI-gestützt läuft (siehe oben).
 
 ---
 
@@ -974,7 +1073,7 @@ automatisch wieder an, egal wie oft er vorher fehlgeschlagen ist. Zusätzlich gi
 es einen globalen Fehler-Listener (`EVENT_JOB_ERROR`/`EVENT_JOB_MISSED`) als
 zweite Verteidigungslinie, falls doch etwas bis zum Scheduler selbst durchschlägt.
 **Job-Ausfall-Backoff — ERLEDIGT (2026-07-12).** Die drei häufig getakteten
-Jobs (`refresh_prices`, `refresh_securities_prices`, `bitpanda_cash` — je
+Jobs (`refresh_prices`, `refresh_securities_prices`, `bitpanda_holdings` — je
 15/15/30 Min. Normal-Takt) verdoppeln ab dem zweiten Fehlschlag in Folge das
 Intervall bis zum nächsten Versuch (`_record_job_failure_for_backoff()` in
 `scheduler/background.py`, verschiebt `next_run_time` per
@@ -1450,12 +1549,15 @@ ursprünglich angedachte Herleitung aus der Transaktionshistorie (Cash-Delta min
 sichtbare Trades/Transfers) erübrigt sich — `/fiatwallets` liefert den gesperrten
 Betrag serverseitig bereits korrekt heraus, das war für RM-4 nie das Problem.
 **Stattdessen umgesetzt: automatischer Sync alle 30 Minuten**
-(`scheduler/background.py::refresh_bitpanda_cash_job`, neue Funktion
+(damals `scheduler/background.py::refresh_bitpanda_cash_job`, neue Funktion
 `importer/bitpanda_sync.py::sync_fiat_cash_from_bitpanda()`, aus dem bestehenden
 manuellen Sync extrahiert) — damit RM-4 nie länger als eine halbe Stunde auf
 einem veralteten Cash-Stand rechnet, ohne dass dafür die vollen Bestände
-automatisch mitlaufen müssen (siehe Kap. 6). Details/Verifikation: Memory
-`project-portfolio-vollstaendigkeit-cash-staking`.
+automatisch mitlaufen müssen (damals noch nicht möglich, siehe Kap. 6).
+**Überholt (2026-07-16):** dank Staking-Verifikation läuft seither auch der
+volle Bestandsabgleich automatisch im selben Takt (`refresh_bitpanda_
+holdings_job`) — dieser Cash-only-Job wurde dadurch ersetzt, siehe Kap. 6.
+Details/Verifikation: Memory `project-portfolio-vollstaendigkeit-cash-staking`.
 
 ### Staking-Sichtbarkeit
 
@@ -1648,6 +1750,11 @@ Startpunkt, sobald Backward-Tracking/Outcome-Daten vorliegen:
   analog zum Signale-Tab (Kap. 7) — die neue Überholt-Erkennung schreibt den
   Status zwar korrekt in `hebel_signals.outcome_status`, ist aber im
   Hebel-Tab aktuell nirgends sichtbar (nur über eine direkte DB-Abfrage).
+- **NEU (2026-07-16, Klassifikations-Redesign, siehe Kap. 17):**
+  `spot_cooldown_stunden_ausgemustert`/`hebel_cooldown_stunden_ausgemustert`
+  (je 120 Std. = 5 Tage) und `hebel_position_cooldown_stunden` (3 Std.) sind
+  erste plausible Startwerte für die neuen Cooldown-Stufen, noch nicht gegen
+  echten Betrieb kalibriert.
 
 ---
 
@@ -1757,3 +1864,173 @@ Gewichtung) geändert haben. Zwei echte Fundstellen, beide sofort behoben:
 | 2 | Rohstoff-ETCs (Gold/Silber/Kupfer/Erdgas) | Kein KGV, sondern Angebot/Nachfrage + Zyklen/Knappheit; festes kleines Universum, keine Discovery nötig |
 | 3 | Themen-ETFs (Food&Bev/Agribusiness/Bioenergy/Rare Earth/Copper Miners) | Sektor-Rotation/Themen-Zyklen |
 | 4 | Discovery/Marktscan-Äquivalent | Neue Aktien/ETFs vorschlagen — braucht zuerst eine freie Screener-Datenquelle (kein CoinGecko-Äquivalent bekannt); Bitpanda-Check jetzt bereit dafür |
+
+---
+
+## 17. Asset-Klassifikation — drei Achsen statt zwei Felder (2026-07-16)
+
+### Ausgangslage und Diagnose
+
+Bis hierhin gab es zwei Felder je Watchlist-Asset: `typ` (core|taktisch|
+stablecoin) und `status` (aktiv|watchlist). Auslöser für die Überarbeitung:
+der BRETT-Kauf zeigte, dass `status` nach einem echten Kauf veraltet stehen
+blieb (erst per Auto-Hochstufung gefixt, siehe Kap. 14/16-Historie), und die
+symmetrische Frage beim Verkauf ("sollen wir auch zurückstufen?") führte zur
+kritischen Nutzer-Nachfrage: *warum automatisieren wir den ganzen
+Bestandsabgleich nicht durchgängig, wo ist das Risiko?*
+
+Bei der Prüfung zeigten sich drei echte Probleme, nicht nur das
+Rückstufungs-Symptom:
+
+1. **`status` war ein manuell gepflegtes Duplikat einer Tatsache, die die App
+   bereits live kennt.** Ob ein Asset gehalten wird, steht in `holdings`
+   (Bestand + gestakte Menge). `status` versuchte, dieselbe Information ein
+   zweites Mal manuell zu pflegen — und driftete deshalb strukturell (Kauf-
+   UND Verkaufsfall).
+2. **Kein Code las `status` risikorelevant.** Alle vier Lesestellen waren
+   kosmetisch (LLM-Kontext-Fakt, Remote-Zähler, UI-Spalte) — die einzige
+   Stelle, wo "gehalten" tatsächlich zählte (Zwei-Stufen-Cooldown, Kap. 6),
+   las `status` schon vorher NICHT, sondern direkt `db.get_all_holdings()`.
+3. **`typ` vermischte zwei Achsen in einem Feld.** `core`/`taktisch` ist eine
+   Risiko-Rolle (gilt sinnvoll für jede Assetklasse), `stablecoin` ist keine
+   Rolle auf derselben Skala, sondern eine Cash-Charakter-Eigenschaft (nie
+   core/taktisch).
+
+### Das neue Modell: drei unabhängige Achsen
+
+1. **`rolle`** (`core`|`taktisch`) — rein strategisch, manuell, UNABHÄNGIG
+   vom Bestand (ein Asset kann `rolle=core` tragen, bevor es je gekauft
+   wurde — bewusster Erstkauf-Kandidat). Bestimmt weiterhin RM-2-Obergrenze,
+   Kern-Cooldown-Mitwirkung, LLM-Fakt.
+2. **"gehalten"** — KEIN gespeichertes Feld mehr, sondern live aus
+   `db.get_all_holdings()` (Spot) UND `db.get_open_hebel_positions()` (Hebel)
+   abgeleitet. Kann dadurch nie veralten — es gibt nichts mehr, das beim
+   Kauf/Verkauf synchronisiert werden müsste. `config.py::
+   update_watchlist_status()` und die zugehörige Checkbox im
+   `BitpandaDecreaseConfirmDialog` wurden ersatzlos entfernt (Netto-
+   Code-Reduktion statt eines weiteren Sonderfalls).
+3. **`beobachtungsstatus`** (`beobachtung`|`ausgemustert`) — manuell, nur
+   relevant solange NICHT gehalten. `ausgemustert` bedeutet niedrigste
+   Priorität, **kein** Ausschluss ("darf nicht sterben", Nutzer-
+   Formulierung) — wirkt nur als dritte, längere Cooldown-Stufe (siehe
+   unten). Wird NIE automatisch geschrieben (weder hoch- noch
+   heruntergestuft), rein manuell über den neuen GUI-Bearbeiten-Dialog.
+
+Zusätzlich ersetzt `ist_cash_aequivalent: bool` den Sonderfall
+`typ==stablecoin` (aktuell nur EURCV) — eine eigene Achse statt eines
+dritten Werts auf der Rolle-Skala. Für Cash-Äquivalente trägt `rolle` einen
+harmlosen Füllwert (`taktisch`), da jeder rolle-lesende Codepfad Cash-
+Äquivalente vorher bereits ausschließt (A-1, `pipeline.py::generate_signal()`
+bricht sofort mit HALTEN ab).
+
+### Drei-Stufen-Cooldown (Präzedenz: Kern > Ausgemustert > Taktisch/Beobachtung)
+
+Ein Asset gilt als **Kern** (kürzester Cooldown), wenn `rolle==core` ODER es
+aktuell gehalten wird (Spot) ODER eine offene Hebel-Position darauf existiert
+— echtes Engagement (Spot oder gehebelt) verdient IMMER die höchste
+Priorität, unabhängig von `beobachtungsstatus`. Nur wenn keine Kern-
+Bedingung zutrifft UND `beobachtungsstatus==ausgemustert`, gilt die neue,
+deutlich längere Ausgemustert-Stufe. Sonst gilt der Standardwert
+(Taktisch/Beobachtung).
+
+| Kontext | Kern | Taktisch/Beobachtung (Standard) | Ausgemustert |
+|---|---|---|---|
+| Spot (`signal_batch.py`) | 10 Std. | 20 Std. | 120 Std. (5 Tage, `[OFFEN]`) |
+| Hebel-Trigger (`budget_allocator.py`) | 3,5 Std. (unverändert) | 3,5 Std. (unverändert) | 120 Std. (5 Tage, `[OFFEN]`) |
+
+### Offene Hebel-Positionen — eigene, unabhängige Prioritätsstufe
+
+Nutzer-Anliegen: *"getätigte und aktive Positionen haben hohe Priorität
+unabhängig davon, ob es eine Empfehlung gab — nach Wegfall/Verkauf/Stop-Loss
+ist wieder die normale Ausgangslage vorhanden."* Geprüft: das galt bisher
+NICHT — Tier-1-Kandidaten kamen ausschließlich aus `hebel_screening.py`s
+deterministischen Triggern; eine offene Position ohne aktuell feuernden
+Trigger wurde nicht regelmäßig neu bewertet.
+
+Fix: `budget_allocator.py::_offene_positionen_als_kandidaten()` liest
+`db.get_open_hebel_positions()` direkt und erzeugt daraus synthetische
+`HebelTrigger`-Kandidaten mit eigenem, engem Cooldown
+(`hebel_position_cooldown_stunden`, 3 Std. — deutlich enger als der
+Standard-Trigger-Cooldown, aber budgetverträglich: 15 Min hätte bei nur
+einer offenen Position bereits mehr Budget verbraucht als der gesamte
+Tagesdeckel). `_dedupe_hebel_kandidaten()` verhindert einen doppelten
+LLM-Call, falls eine offene Position zusätzlich einen frischen Trigger hat.
+Schließt die Position, verschwindet sie automatisch aus dieser Quelle (keine
+gespeicherte Sondermarkierung nötig) und fällt in die normale Trigger-Logik
+zurück — genau das gewünschte Verhalten.
+
+### Regel 7/8 (Spot-Analyst) erweitert
+
+Die strikte "ist die langfristige These noch intakt"-Prüfung (bisher nur
+`rolle==core`) gilt jetzt auch für taktische Beobachtungs-/Wiedereinstiegs-
+Kandidaten (`rolle==taktisch`, nicht gehalten, `beobachtungsstatus==
+beobachtung`) — sowohl in `agent/krypto/analyst.py` als auch `agent/aktien/
+analyst.py` (identisches Schema). Der LLM-Fakt `asset.status` wurde durch
+`asset.wird_aktuell_gehalten` (live abgeleitet) ersetzt.
+
+### "Letzte Bewertung" — kein neues Feld nötig
+
+Ursprünglich als "Notizfeld" angefragt, dann verworfen: die gewünschte
+Information (kurz-/mittel-/langfristige Einschätzung je Asset) existiert
+bereits strukturiert in jedem Signal (`long_reasoning.technisch/fundamental/
+makro`, `top_gruende`), asset-klassen-übergreifend (Spot-Krypto UND Aktien
+identisches Schema), automatisch bei jedem echten Analyse-Lauf neu
+geschrieben — auch bei stark reduzierter Frequenz (Ausgemustert-Stufe) bleibt
+die Einschätzung damit immer aktuell, ohne Drift-Risiko eines manuell
+gepflegten Felds. Fehlend war nur die Anzeige-Oberfläche: der Signale-Tab
+zeigte das bereits bei Zeilenauswahl an (auch für nicht gehaltene Assets),
+neu ist ein Button "Letzte Bewertung anzeigen" im Portfolio-Tab
+(`ui/letzte_bewertung.py`, wiederverwendet von beiden Tabs).
+
+### Neuer GUI-Dialog: Asset hinzufügen/bearbeiten
+
+Bisher gab es keinen generischen Weg, ein neues Asset über die GUI
+hinzuzufügen — nur das Marktscan-"Übernehmen" (fest `taktisch`/`beobachtung`)
+oder manuelles Editieren von `config.yaml`. Neu: "Asset hinzufügen…"/"Asset
+bearbeiten…" im Watchlist-Tab (`ui/app.py::AssetAddDialog`/
+`AssetEditDialog`). `rolle` ist dabei frei wählbar (core oder taktisch,
+keine Einschränkung) — löst das Solana-Beispiel des Nutzers (Rolle=core
+festlegen, bevor je gekauft wurde). Vor dem Hinzufügen läuft eine Live-
+Validierung gegen CoinGecko (löst die ID auf echte Preisdaten auf?) und
+Bitpanda (Symbol/Name gelistet?) — analog zum manuellen BRETT-Check aus
+derselben Session, jetzt fest eingebaut. Warnungen blockieren nicht (P-10),
+der Nutzer entscheidet nach Kenntnis der Warnung final selbst.
+
+### Auto-Add unbekannter Hebel-Symbole
+
+Geprüfter Nachbar-Fund: eine neu eröffnete Hebel-Position auf einem noch
+nicht in der Watchlist geführten Symbol wurde zwar vom Positions-Sync
+korrekt in `hebel_positions` gespeichert (rein transaktionsbasiert,
+watchlist-unabhängig), aber Screening/Preisversorgung/die neue Positions-
+Priorität liefen für dieses Symbol ins Leere, da sie alle auf einen
+Watchlist-Eintrag angewiesen sind. Fix:
+`importer/bitpanda_margin_positions.py::auto_add_unknown_hebel_symbols()`
+ergänzt bei jedem `hebel_screening_job`-Lauf automatisch fehlende Einträge
+für offene Positionen (Default `rolle=taktisch`, `beobachtungsstatus=
+beobachtung`, Bitpanda-Listing geprüft) — `coingecko_id` bleibt bewusst leer
+(keine zuverlässige Symbol→ID-Auflösung verfügbar, analog zu Aktien/ETF/
+Rohstoffe), kann später manuell über den neuen Bearbeiten-Dialog ergänzt
+werden.
+
+### Migration
+
+`config.yaml`: alle 54 Watchlist-Einträge migriert (`typ:`→`rolle:` mit
+Wertübernahme, `stablecoin`→`taktisch`+`ist_cash_aequivalent: true` für
+EURCV; `status:`→`beobachtungsstatus:`, alle Einträge einheitlich auf
+`beobachtung` — niemand startet als bewusst "ausgemustert", das ist ein
+neuer, erst ab jetzt aktiv vergebener Zustand). Reine Text-Transformation
+(kein `yaml.dump()`), Backup vorher, `yaml.safe_load()`-Validierung danach.
+
+### Verifikation
+
+Synthetischer Test (6 Gruppen): Drei-Stufen-Cooldown inkl. Kern-Präzedenz
+(auch für ein ausgemustertes, aber gehaltenes Asset), Hebel-Trigger-
+Ausgemustert-Stufe + Präzedenz, offene-Positionen-Kandidatenquelle +
+Dedupe, `config.py`-Roundtrip (`add_watchlist_entry`/
+`update_watchlist_rolle`/`update_watchlist_beobachtungsstatus`, inkl.
+No-Op-Erkennung bei identischem Wert), Auto-Add unbekannter Hebel-Symbole
+inkl. Idempotenz beim zweiten Lauf — alle bestanden. Zusätzlich gegen eine
+Kopie der echten Produktions-DB + der echten migrierten `config.yaml`
+verifiziert (54 Assets korrekt geladen, 13 core, 1 Cash-Äquivalent,
+Spot-Cooldown-Selektion/Kern-Symbol-Berechnung/Remote-Status liefen
+fehlerfrei, 0 aktuell offene Hebel-Positionen bestätigt).

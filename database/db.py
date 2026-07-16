@@ -660,6 +660,36 @@ def set_bitpanda_avg_cost_last_synced_unix(conn: sqlite3.Connection, unix_timest
     conn.commit()
 
 
+def get_bitpanda_holdings_last_synced_unix(conn: sqlite3.Connection) -> int | None:
+    """EIGENER Wasserstand fuer die Staking-Verifikation im Bestandsabgleich
+    (2026-07-16, importer/bitpanda_sync.py::sync_from_bitpanda()) - bewusst
+    NICHT derselbe Schluessel wie bitpanda_avg_cost_last_synced_unix: beide
+    Features verarbeiten dieselben Rohtransaktionen fuer unterschiedliche
+    Zwecke (Einstandspreis vs. Staking-Erkennung) und duerfen sich nicht
+    gegenseitig Transaktionen "wegkonsumieren" - ein gemeinsamer Cursor haette
+    sonst dazu gefuehrt, dass der jeweils andere Feature-Sync Transaktionen
+    verpasst, die der erste Aufrufer bereits als 'bis hierhin gesehen'
+    markiert hat."""
+    row = conn.execute(
+        "SELECT value FROM meta WHERE key = 'bitpanda_holdings_last_synced_unix'"
+    ).fetchone()
+    if row is None or row["value"] is None:
+        return None
+    try:
+        return int(row["value"])
+    except ValueError:
+        return None
+
+
+def set_bitpanda_holdings_last_synced_unix(conn: sqlite3.Connection, unix_timestamp: int) -> None:
+    conn.execute(
+        "INSERT INTO meta (key, value) VALUES ('bitpanda_holdings_last_synced_unix', ?) "
+        "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        (str(unix_timestamp),),
+    )
+    conn.commit()
+
+
 def get_cash_reserve_fiat_eur(conn: sqlite3.Connection) -> float:
     """Manuell gepflegtes Fiat-Guthaben (EUR) auf der Boerse, z.B. Bitpanda - nicht
     in Stablecoins umgewandeltes Geld, das die App sonst nirgends kennt (RM-4-

@@ -257,7 +257,7 @@ def run_hebel_screening(
     conn = conn_factory()
     try:
         latest_prices = db.get_latest_prices(conn)
-        krypto_assets = [a for a in watchlist if a.assetklasse == "krypto" and a.typ != "stablecoin"]
+        krypto_assets = [a for a in watchlist if a.assetklasse == "krypto" and not a.ist_cash_aequivalent]
         for asset in krypto_assets:
             fetch_and_store_oi_snapshot(conn, asset, kraken_client)
 

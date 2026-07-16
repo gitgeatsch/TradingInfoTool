@@ -413,8 +413,8 @@ def generate_signal(
     asset, watchlist, conn, groq_client, coingecko_client, kraken_client,
     fred_api_key: str | None = None,
 ) -> Signal:
-    # A-1: Stablecoins haben kein eigenstaendiges Handelssignal.
-    if asset.typ == "stablecoin":
+    # A-1: Stablecoins/Cash-Aequivalente haben kein eigenstaendiges Handelssignal.
+    if asset.ist_cash_aequivalent:
         signal = _fixed_signal(
             asset.symbol, "HALTEN", gate_passed=False,
             gate_reason="Stablecoin (A-1): kein eigenständiges Handelssignal",

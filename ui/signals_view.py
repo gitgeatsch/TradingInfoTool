@@ -72,7 +72,7 @@ class SignalsView(ttk.Frame):
         self._full_watchlist = krypto_watchlist  # generate_signal braucht ALLE
         # Krypto-Assets (Stablecoins zaehlen z.B. als Cash-Reserve) - nur die
         # Anzeige-Liste filtert zusaetzlich Stablecoins raus.
-        self._watchlist = [a for a in krypto_watchlist if a.typ != "stablecoin"]
+        self._watchlist = [a for a in krypto_watchlist if not a.ist_cash_aequivalent]
         # Non-Krypto-Agent-Pipeline Phase 1 (2026-07-15, agent/aktien/pipeline.py) -
         # eigene, von der Krypto-Portfolio-Summe getrennte Watchlist (analoges
         # Prinzip wie oben: RM-2-Allokations-Prozent soll sich auf den Aktien-Anteil

@@ -19,14 +19,18 @@ Objekt als Vorbild - eine offene Margin-Position ist eine mehrstufige Sequenz
 inkrementellen Syncs, uebergeben als `existing`-Parameter."""
 from __future__ import annotations
 
+import logging
 import sqlite3
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
+import config as config_module
 import database.db as db
-from api.bitpanda import BitpandaTransaction, get_wallet_transactions
+from api.bitpanda import BitpandaAsset, BitpandaTransaction, get_wallet_transactions, is_listed
 from database.models import HebelPosition
+
+logger = logging.getLogger(__name__)
 
 # Bitpanda-Doku-Angabe: 0,3% Verkaufsgebuehr + 0,18%/Tag laufende Kreditgebuehr.
 # Eine tatsaechliche Gebuehr, die mehr als diese Marge darueber liegt, deckt sich
@@ -230,3 +234,49 @@ def sync_hebel_positions(conn: sqlite3.Connection, api_key: str) -> HebelPositio
         db.set_hebel_position_last_synced_unix(conn, max_unix)
 
     return result
+
+
+def auto_add_unknown_hebel_symbols(
+    conn: sqlite3.Connection, watchlist: list, listed_assets: list[BitpandaAsset]
+) -> list[str]:
+    """Automatische Watchlist-Ergaenzung fuer Hebel-Symbole ohne Watchlist-
+    Eintrag (2026-07-16, Klassifikations-Redesign, Nutzer-Frage "werden neue
+    Hebel-Assets bereits automatisch hinzugefuegt?" - Antwort war NEIN: ohne
+    Watchlist-Eintrag funktioniert weder das Screening noch die Preis-
+    versorgung noch die neue "offene Position hat Prioritaet"-Funktion
+    (budget_allocator.py) fuer dieses Symbol, siehe Memory
+    project_asset_klassifikation_redesign).
+
+    Default `rolle=taktisch` (die strategische Absicht hinter einer spontan
+    eroeffneten Position ist unbekannt, sicherer Default - der Nutzer kann
+    das jederzeit manuell auf "core" aendern), `beobachtungsstatus=
+    beobachtung`. Bitpanda-Listing wird trotzdem geprueft (P-10, defensiv -
+    sollte fuer eine tatsaechlich bei Bitpanda offene Position immer
+    zutreffen). `coingecko_id` bleibt bewusst leer - anders als bei der
+    manuellen GUI-Ergaenzung gibt es hier keine vom Nutzer angegebene ID und
+    keine zuverlaessige automatische Symbol->ID-Aufloesung (wie bei Aktien/
+    ETF/Rohstoffe auch); Spot-Analyse fuer dieses Symbol bleibt bis zur
+    manuellen Ergaenzung der ID inaktiv, Hebel-Screening/-Signale
+    funktionieren bereits ohne sie. Gibt die Liste tatsaechlich neu
+    hinzugefuegter Symbole zurueck (fuer Logging/Benachrichtigung)."""
+    watchlist_symbols = {a.symbol for a in watchlist}
+    hinzugefuegt: list[str] = []
+    for pos in db.get_open_hebel_positions(conn):
+        if pos.symbol in watchlist_symbols:
+            continue
+        if not is_listed(pos.symbol, listed_assets):
+            logger.warning(
+                "Hebel-Position auf %s ohne Watchlist-Eintrag, aber nicht als bei Bitpanda "
+                "gelistet erkannt - kein Auto-Add (unerwartet, da die Position ja existiert)",
+                pos.symbol,
+            )
+            continue
+        try:
+            config_module.add_watchlist_entry(
+                symbol=pos.symbol, name=pos.symbol, rolle="taktisch", beobachtungsstatus="beobachtung",
+            )
+            hinzugefuegt.append(pos.symbol)
+            watchlist_symbols.add(pos.symbol)
+        except config_module.WatchlistWriteError as exc:
+            logger.warning("Automatisches Watchlist-Hinzufuegen fuer Hebel-Symbol %s fehlgeschlagen: %s", pos.symbol, exc)
+    return hinzugefuegt

@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 refresh_prices_lock = threading.Lock()
 refresh_securities_lock = threading.Lock()
 marktscan_lock = threading.Lock()
-bitpanda_cash_lock = threading.Lock()
+bitpanda_holdings_lock = threading.Lock()
 # Batch-Signal-Berechnung (2026-07-13) - der urspruengliche taegliche
 # 05:00-Scheduler-Job ist seit Phase 5 (2026-07-14) entfernt (der Budget-
 # Allocator uebernimmt Spot-Rotation jetzt im 15-Min-Takt, siehe
@@ -45,7 +45,7 @@ _JOB_LOCKS = {
     "refresh_prices": refresh_prices_lock,
     "refresh_securities": refresh_securities_lock,
     "marktscan": marktscan_lock,
-    "bitpanda_cash": bitpanda_cash_lock,
+    "bitpanda_holdings": bitpanda_holdings_lock,
     "signal_batch": signal_batch_lock,
     "hebel_screening": hebel_screening_lock,
 }
@@ -62,11 +62,15 @@ SECURITIES_REFRESH_INTERVAL_MINUTES = 15  # eigener Job (Multi-Asset-Tracking,
 # defensiv aehnlich wie der Krypto-Preis-Takt gewaehlt. Bewusst ein SEPARATER Job statt
 # in refresh_prices_job() mit hineingemischt, damit ein yfinance-Ausfall den Krypto-
 # Preis-Takt nicht blockiert (P-10-Isolation, gleiches Prinzip wie der Kraken-OHLC-Job).
-BITPANDA_CASH_REFRESH_INTERVAL_MINUTES = 30  # 2026-07-11: seltener als der Preis-Takt
-# (15 Min) - authentifizierter Call, Fiat-Cash aendert sich normalerweise seltener als
-# Marktpreise. Nur der Fiat-Cash-Anteil, NICHT die vollen Bestaende (die haben einen
-# interaktiven Rueckgangs-Bestaetigungsdialog, siehe importer/bitpanda_sync.py::
-# sync_fiat_cash_from_bitpanda()-Docstring).
+BITPANDA_HOLDINGS_REFRESH_INTERVAL_MINUTES = 30  # 2026-07-11: seltener als der
+# Preis-Takt (15 Min) - authentifizierter Call, Bestaende/Cash aendern sich
+# normalerweise seltener als Marktpreise. Deckte urspruenglich NUR den Fiat-Cash-
+# Anteil ab (die vollen Bestaende hatten einen interaktiven Rueckgangs-
+# Bestaetigungsdialog, der sich nicht sauber aus einem Hintergrund-Thread aufrufen
+# liess) - seit 2026-07-16 (Staking-Verifikation, siehe importer/bitpanda_sync.py
+# Modul-Docstring) deckt derselbe Takt den KOMPLETTEN Bestandsabgleich ab
+# (sync_from_bitpanda() macht Cash intern automatisch mit, kein separater Job
+# mehr noetig).
 HEBEL_SCREENING_INTERVAL_MINUTES = 15  # muss mit config.yaml hebel_screening.
 # intervall_minuten uebereinstimmen (wie bei allen anderen Jobs ist die Taktung selbst
 # ein Python-Konstante, nur der aktiv-Schalter wird dynamisch aus config.yaml gelesen,
@@ -88,7 +92,7 @@ _consecutive_failures: dict[str, int] = {}
 _BACKOFF_BASE_INTERVAL_MINUTES = {
     "refresh_prices": REFRESH_INTERVAL_MINUTES,
     "refresh_securities_prices": SECURITIES_REFRESH_INTERVAL_MINUTES,
-    "bitpanda_cash": BITPANDA_CASH_REFRESH_INTERVAL_MINUTES,
+    "bitpanda_holdings": BITPANDA_HOLDINGS_REFRESH_INTERVAL_MINUTES,
 }
 _BACKOFF_MAX_MINUTES = 240  # Deckel 4 Std. - auch bei einem sehr langen Ausfall soll die
 # App nach spaetestens 4 Std. wieder einen Versuch starten, statt den Job faktisch
@@ -299,35 +303,57 @@ def backward_tracking_job(conn_factory, watchlist) -> None:
         conn.close()
 
 
-def refresh_bitpanda_cash_job(api_key, conn_factory) -> bool:
-    """Automatischer Fiat-Cash-Sync (2026-07-11) - haelt agent/krypto/risk_gate.py's
-    RM-4-Cash-Reserve-Pruefung aktuell, ohne auf den manuellen "Bestaende von Bitpanda
-    abgleichen"-Klick angewiesen zu sein. Nur der Fiat-Cash-Anteil (siehe
-    importer/bitpanda_sync.py::sync_fiat_cash_from_bitpanda()-Docstring, warum die
-    vollen Bestaende bewusst NICHT automatisch mitlaufen). Rueckgabewert wie
-    refresh_prices_job() (Lock-Status)."""
-    if not bitpanda_cash_lock.acquire(blocking=False):
-        logger.info("Bitpanda-Cash-Sync: bereits in Ausführung - übersprungen")
+def refresh_bitpanda_holdings_job(api_key, conn_factory) -> bool:
+    """Automatischer VOLLER Bestandsabgleich (2026-07-16, ersetzt den bisherigen
+    reinen Cash-Sync) - moeglich geworden durch die Staking-Verifikation in
+    importer/bitpanda_sync.py::sync_from_bitpanda() (siehe dortigen Modul-
+    Docstring): die urspruengliche Vorsicht ("Rueckgang koennte Staking statt
+    Verkauf sein, nur der Nutzer kann das unterscheiden") ist jetzt technisch
+    aufgeloest, kein interaktiver Dialog mehr noetig fuer den Normalfall.
+
+    Fallback (selten): schlaegt die Staking-Verifikation NUR in diesem einen
+    Lauf fehl (z.B. Netzwerkfehler beim Transaktions-Abruf), bleiben etwaige
+    Rueckgaenge unangewendet (Bestand bleibt auf dem alten, bekannten Stand -
+    kein Datenverlust, nur Staleness) UND werden hier per E-Mail gemeldet
+    (wiederverwendet _notify_job_failure()'s Cooldown-Mechanismus, damit ein
+    laengerer Ausfall nicht taeglich x-mal eine Mail ausloest) - der Nutzer
+    kann dann jederzeit manuell "Bestände von Bitpanda abgleichen" klicken,
+    was den bestehenden Bestaetigungsdialog als echten Rueckfallweg zeigt."""
+    if not bitpanda_holdings_lock.acquire(blocking=False):
+        logger.info("Bitpanda-Bestandsabgleich: bereits in Ausführung - übersprungen")
         return False
-    _job_started_at["bitpanda_cash"] = time.monotonic()
+    _job_started_at["bitpanda_holdings"] = time.monotonic()
     conn = conn_factory()
     try:
-        from importer.bitpanda_sync import sync_fiat_cash_from_bitpanda
+        from api.bitpanda import get_listed_assets
+        from importer.bitpanda_sync import sync_from_bitpanda
 
-        result = sync_fiat_cash_from_bitpanda(conn, api_key)
-        if result.updated:
-            logger.info("Bitpanda-Cash-Sync: %.2f -> %.2f EUR", result.old_eur, result.new_eur)
-        else:
-            logger.info("Bitpanda-Cash-Sync: unverändert")
-        _record_job_success_for_backoff("bitpanda_cash")
+        listed_assets = get_listed_assets()
+        result = sync_from_bitpanda(conn, api_key, listed_assets)
+        logger.info(
+            "Bitpanda-Bestandsabgleich: %d aktualisiert (%d Zuwächse, %d automatisch "
+            "bestätigte Rückgänge, %d Rückgänge weiterhin bestätigungspflichtig, "
+            "Staking-Verifikation: %s)",
+            result.synced_count, len(result.updated_holdings), len(result.auto_confirmed_decreases),
+            len(result.decreased_holdings_needs_confirmation), result.staking_verified,
+        )
+        if result.decreased_holdings_needs_confirmation:
+            symbole = ", ".join(c.symbol for c in result.decreased_holdings_needs_confirmation)
+            _notify_job_failure(
+                "bitpanda_holdings_decreases_pending",
+                f"Staking-Verifikation in diesem Lauf nicht möglich - {len(result.decreased_holdings_needs_confirmation)} "
+                f"Rückgang/-gänge bleiben unangewendet, bis manuell bestätigt: {symbole}. "
+                "Bitte im Datei-Menü 'Bestände von Bitpanda abgleichen' klicken.",
+            )
+        _record_job_success_for_backoff("bitpanda_holdings")
     except Exception as exc:
-        logger.exception("Bitpanda-Cash-Sync fehlgeschlagen")
-        _notify_job_failure("bitpanda_cash", f"Bitpanda-Cash-Sync fehlgeschlagen: {exc}")
-        _record_job_failure_for_backoff("bitpanda_cash")
+        logger.exception("Bitpanda-Bestandsabgleich fehlgeschlagen")
+        _notify_job_failure("bitpanda_holdings", f"Bitpanda-Bestandsabgleich fehlgeschlagen: {exc}")
+        _record_job_failure_for_backoff("bitpanda_holdings")
     finally:
         conn.close()
-        bitpanda_cash_lock.release()
-        _job_started_at.pop("bitpanda_cash", None)
+        bitpanda_holdings_lock.release()
+        _job_started_at.pop("bitpanda_holdings", None)
     return True
 
 
@@ -738,7 +764,7 @@ def hebel_screening_job(
         )
 
         if bitpanda_api_key:
-            from importer.bitpanda_margin_positions import sync_hebel_positions
+            from importer.bitpanda_margin_positions import auto_add_unknown_hebel_symbols, sync_hebel_positions
 
             conn = conn_factory()
             try:
@@ -749,6 +775,23 @@ def hebel_screening_job(
                     sync_result.neu_geschlossen,
                 )
                 _refresh_hebel_position_liquidation_prices(conn)
+
+                # Klassifikations-Redesign (2026-07-16): offene Positionen auf
+                # bisher unbekannten Symbolen automatisch zur Watchlist
+                # ergaenzen, sonst wuerden Screening/Preisversorgung/die neue
+                # Positions-Prioritaet fuer sie ins Leere laufen.
+                try:
+                    from api.bitpanda import get_listed_assets
+                    neue_symbole = auto_add_unknown_hebel_symbols(
+                        conn, watchlist, get_listed_assets(bitpanda_api_key)
+                    )
+                    if neue_symbole:
+                        logger.info(
+                            "Hebel-Position(en) ohne Watchlist-Eintrag automatisch ergaenzt: %s",
+                            ", ".join(neue_symbole),
+                        )
+                except Exception:
+                    logger.exception("Auto-Add unbekannter Hebel-Symbole fehlgeschlagen")
             finally:
                 conn.close()
 
@@ -855,7 +898,7 @@ def build_scheduler(
     # Betriebssicherheit (2026-07-12): next_run_time=jetzt, damit Preise nach
     # einem Neustart (egal wie lange die App vorher offline war) nicht erst nach
     # einem vollen Intervall aktualisiert werden - guenstiger Einzelabruf, immer
-    # sinnvoll, analog zum bitpanda_cash-Job unten.
+    # sinnvoll, analog zum bitpanda_holdings-Job unten.
     scheduler.add_job(
         refresh_prices_job,
         "interval",
@@ -969,21 +1012,24 @@ def build_scheduler(
         args=[db_conn_factory, watchlist],
         id="backward_tracking",
     )
-    # Automatischer Fiat-Cash-Sync (2026-07-11) - P-8: nur registriert, wenn ein
-    # BITPANDA_API_KEY vorhanden ist, sonst bleibt RM-4 wie bisher auf den manuellen
-    # Sync angewiesen. next_run_time=jetzt verkuerzt das Stale-Fenster direkt nach dem
-    # App-Start, statt bis zu BITPANDA_CASH_REFRESH_INTERVAL_MINUTES zu warten.
+    # Automatischer VOLLER Bestandsabgleich (2026-07-11 als reiner Cash-Sync
+    # eingefuehrt, 2026-07-16 auf den kompletten Bestandsabgleich erweitert, siehe
+    # refresh_bitpanda_holdings_job()-Docstring) - P-8: nur registriert, wenn ein
+    # BITPANDA_API_KEY vorhanden ist, sonst bleibt RM-4/Portfolio wie bisher auf
+    # den manuellen Sync angewiesen. next_run_time=jetzt verkuerzt das Stale-
+    # Fenster direkt nach dem App-Start, statt bis zu
+    # BITPANDA_HOLDINGS_REFRESH_INTERVAL_MINUTES zu warten.
     if bitpanda_api_key:
         scheduler.add_job(
-            refresh_bitpanda_cash_job,
+            refresh_bitpanda_holdings_job,
             "interval",
-            minutes=BITPANDA_CASH_REFRESH_INTERVAL_MINUTES,
+            minutes=BITPANDA_HOLDINGS_REFRESH_INTERVAL_MINUTES,
             args=[bitpanda_api_key, db_conn_factory],
-            id="bitpanda_cash",
+            id="bitpanda_holdings",
             next_run_time=datetime.now(),
         )
     else:
-        logger.info("Kein BITPANDA_API_KEY - automatischer Cash-Sync deaktiviert (P-8)")
+        logger.info("Kein BITPANDA_API_KEY - automatischer Bestandsabgleich deaktiviert (P-8)")
     scheduler.add_listener(_log_job_event, EVENT_JOB_ERROR | EVENT_JOB_MISSED)
 
     global _scheduler_ref

@@ -27,10 +27,35 @@ def load_env() -> None:
 
 @dataclass
 class WatchlistAsset:
+    """Klassifikations-Redesign (2026-07-16, siehe Memory
+    project_asset_klassifikation_redesign): drei unabhaengige Achsen statt der
+    frueheren zwei Felder typ/status.
+
+    - `rolle` (core | taktisch): rein strategisch, manuell, UNABHAENGIG vom
+      aktuellen Bestand (ein core-Asset kann z.B. noch nie gehalten worden
+      sein - bewusster Erstkauf-Kandidat). Fuer `ist_cash_aequivalent=True`
+      ohne funktionale Bedeutung (siehe dort), traegt trotzdem "taktisch" als
+      harmlosen Fuellwert (Schema-Vollstaendigkeit).
+    - "gehalten" gibt es bewusst NICHT mehr als gespeichertes Feld - wird
+      ueberall live aus database.db.get_all_holdings() (Spot) bzw.
+      get_open_hebel_positions() (Hebel) abgeleitet, kann daher nie
+      veralten/driften (loeste die fruehere Status-Auf-/Abstufungs-
+      Problematik strukturell auf, siehe Memory).
+    - `beobachtungsstatus` (beobachtung | ausgemustert): manuell, nur
+      relevant/wirksam solange NICHT gehalten (Spot oder Hebel). Kein
+      Ausschluss aus der Signal-Rotation, sondern nur eine Prioritaets-/
+      Cooldown-Stufe (niedrigste Prioritaet, nie komplett null - "darf nicht
+      sterben"). Wird NIE automatisch geschrieben (weder hoch- noch
+      runtergestuft) - bewusst rein manuell, um genau die Drift zu vermeiden,
+      die das alte `status`-Feld anfaellig gemacht hat.
+    - `ist_cash_aequivalent`: ersetzt den frueheren Sonderfall `typ ==
+      "stablecoin"` - eine eigene Achse statt eines dritten Werts auf der
+      rolle-Skala (ein Stablecoin ist nie "core" oder "taktisch", sondern
+      grundsaetzlich kein Risiko-Asset)."""
     symbol: str
     name: str
-    typ: str        # core | taktisch | stablecoin
-    status: str     # aktiv | watchlist
+    rolle: str               # core | taktisch
+    beobachtungsstatus: str  # beobachtung | ausgemustert
     # coingecko_id ist nur fuer assetklasse=krypto gesetzt; optional statt required,
     # damit Aktien/ETF/Rohstoffe (kein CoinGecko-Eintrag) denselben Datentyp nutzen
     # koennen (Multi-Asset-Tracking, Nutzer-Idee 2026-07-09, siehe Spezifikation Kap. 11
@@ -44,6 +69,7 @@ class WatchlistAsset:
     # (z.B. "VST" fuer US-Aktien, "VVMX.DE" fuer Xetra, ISIN+".SG" fuer duenn gehandelte
     # WisdomTree-ETNs ohne Xetra-Kurzcode bei Yahoo Finance).
     yfinance_symbol: str | None = None
+    ist_cash_aequivalent: bool = False
 
 
 def load_config() -> dict:
@@ -60,11 +86,12 @@ def get_watchlist() -> list[WatchlistAsset]:
         WatchlistAsset(
             symbol=entry["symbol"],
             name=entry["name"],
-            typ=entry["typ"],
-            status=entry["status"],
+            rolle=entry["rolle"],
+            beobachtungsstatus=entry["beobachtungsstatus"],
             coingecko_id=entry.get("coingecko_id"),
             assetklasse=entry.get("assetklasse", "krypto"),
             yfinance_symbol=entry.get("yfinance_symbol"),
+            ist_cash_aequivalent=entry.get("ist_cash_aequivalent", False),
         )
         for entry in config["watchlist"]
     ]
@@ -97,11 +124,12 @@ def _find_watchlist_insert_point(lines: list[str]) -> int:
 def add_watchlist_entry(
     symbol: str,
     name: str,
-    typ: str,
-    status: str,
+    rolle: str,
+    beobachtungsstatus: str,
     coingecko_id: str | None = None,
     assetklasse: str = "krypto",
     yfinance_symbol: str | None = None,
+    ist_cash_aequivalent: bool = False,
 ) -> None:
     """Fügt einen neuen Eintrag ans Ende des bestehenden `watchlist:`-Blocks in
     Basisinfos/config.yaml an - reine TEXT-Einfügung (keine vollständige YAML-
@@ -136,8 +164,8 @@ def add_watchlist_entry(
     entry_lines = [
         f"  - symbol: {symbol}{newline_style}",
         f"    name: {name}{newline_style}",
-        f"    typ: {typ}{newline_style}",
-        f"    status: {status}{newline_style}",
+        f"    rolle: {rolle}{newline_style}",
+        f"    beobachtungsstatus: {beobachtungsstatus}{newline_style}",
     ]
     if coingecko_id is not None:
         entry_lines.append(f"    coingecko_id: {coingecko_id}{newline_style}")
@@ -145,6 +173,8 @@ def add_watchlist_entry(
         entry_lines.append(f"    assetklasse: {assetklasse}{newline_style}")
     if yfinance_symbol is not None:
         entry_lines.append(f"    yfinance_symbol: {yfinance_symbol}{newline_style}")
+    if ist_cash_aequivalent:
+        entry_lines.append(f"    ist_cash_aequivalent: true{newline_style}")
     entry_block = "".join(entry_lines)
     new_text = "".join(lines[:insert_at] + [entry_block] + lines[insert_at:])
 
@@ -168,23 +198,20 @@ def add_watchlist_entry(
     _config_cache = None
 
 
-def update_watchlist_status(symbol: str, new_status: str) -> bool:
-    """Aktualisiert NUR das `status`-Feld eines bestehenden Watchlist-Eintrags
-    (2026-07-16, Nutzer-Wunsch: automatischer Übergang watchlist -> aktiv,
-    sobald ein Coin/Asset tatsächlich gehalten wird - Auslöser war der BRETT-
-    Fund, dessen `status: watchlist` nach einem echten Kauf veraltet blieb,
-    weil nichts es je automatisch nachzog). Reine Text-Ersetzung INNERHALB des
-    betroffenen Eintrags-Blocks (identisches Backup+Validierungs-Muster wie
-    `add_watchlist_entry()` - Backup vorher, `yaml.safe_load()`-Validierung
-    danach, automatische Wiederherstellung bei Fehlschlag).
+def _update_watchlist_field(symbol: str, field_name: str, new_value: str) -> bool:
+    """Aktualisiert EIN Feld eines bestehenden Watchlist-Eintrags per reiner
+    Text-Ersetzung INNERHALB des betroffenen Eintrags-Blocks (identisches
+    Backup+Validierungs-Muster wie `add_watchlist_entry()`). Interner Helfer
+    fuer `update_watchlist_rolle()`/`update_watchlist_beobachtungsstatus()` -
+    beide manuell vom Nutzer ausgeloest (GUI-Bearbeiten-Dialog), NIE
+    automatisch aus einem Sync-Vorgang heraus (Klassifikations-Redesign
+    2026-07-16, siehe Memory project_asset_klassifikation_redesign - genau
+    diese fehlende Trennung zwischen "manuell" und "automatisch geschrieben"
+    war der Kern der Drift-Problematik beim frueheren `status`-Feld).
 
     Gibt `False` zurück (kein Schreibvorgang, kein Backup) wenn der Eintrag
-    nicht existiert ODER bereits den Zielstatus hat - nur ein echter
-    Wertwechsel schreibt tatsächlich. Bewusst NUR diese eine Richtung
-    (watchlist -> aktiv als Nebeneffekt eines Bestands-Zuwachses) - die
-    Rückrichtung (aktiv -> watchlist bei vollständigem Verkauf) ist eine
-    bewusst andere Entscheidung (ein Coin bleibt oft absichtlich beobachtet)
-    und wird hier nicht automatisch ausgelöst."""
+    nicht existiert, das Feld dort nicht vorkommt, ODER bereits den
+    Zielwert hat - nur ein echter Wertwechsel schreibt tatsächlich."""
     original_bytes = CONFIG_PATH.read_bytes()
     newline_style = "\r\n" if b"\r\n" in original_bytes else "\n"
     original_text = original_bytes.decode("utf-8")
@@ -202,18 +229,18 @@ def update_watchlist_status(symbol: str, new_status: str) -> bool:
             entry_end = i
             break
 
-    status_line_idx = next(
-        (i for i in range(entry_start, entry_end) if lines[i].strip().startswith("status:")), None,
+    field_line_idx = next(
+        (i for i in range(entry_start, entry_end) if lines[i].strip().startswith(f"{field_name}:")), None,
     )
-    if status_line_idx is None:
+    if field_line_idx is None:
         return False
 
-    current_status = lines[status_line_idx].split(":", 1)[1].strip()
-    if current_status == new_status:
+    current_value = lines[field_line_idx].split(":", 1)[1].strip()
+    if current_value == new_value:
         return False
 
-    indent = lines[status_line_idx][: len(lines[status_line_idx]) - len(lines[status_line_idx].lstrip())]
-    lines[status_line_idx] = f"{indent}status: {new_status}{newline_style}"
+    indent = lines[field_line_idx][: len(lines[field_line_idx]) - len(lines[field_line_idx].lstrip())]
+    lines[field_line_idx] = f"{indent}{field_name}: {new_value}{newline_style}"
     new_text = "".join(lines)
 
     BACKUP_DIR.mkdir(parents=True, exist_ok=True)
@@ -227,8 +254,8 @@ def update_watchlist_status(symbol: str, new_status: str) -> bool:
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
             reparsed = yaml.safe_load(f)
         matching = next((e for e in reparsed["watchlist"] if e["symbol"] == symbol), None)
-        if matching is None or matching["status"] != new_status:
-            raise WatchlistWriteError("Validierung fehlgeschlagen: status nicht wie erwartet gesetzt")
+        if matching is None or matching.get(field_name) != new_value:
+            raise WatchlistWriteError(f"Validierung fehlgeschlagen: {field_name} nicht wie erwartet gesetzt")
     except Exception as exc:
         shutil.copy2(backup_path, CONFIG_PATH)
         raise WatchlistWriteError(f"Schreiben fehlgeschlagen, Backup wiederhergestellt: {exc}") from exc
@@ -236,3 +263,21 @@ def update_watchlist_status(symbol: str, new_status: str) -> bool:
     global _config_cache
     _config_cache = None
     return True
+
+
+def update_watchlist_rolle(symbol: str, new_rolle: str) -> bool:
+    """Setzt `rolle` (core|taktisch) eines bestehenden Watchlist-Eintrags -
+    ausschliesslich manuell ausgeloest (GUI-Bearbeiten-Dialog), nie
+    automatisch."""
+    return _update_watchlist_field(symbol, "rolle", new_rolle)
+
+
+def update_watchlist_beobachtungsstatus(symbol: str, new_beobachtungsstatus: str) -> bool:
+    """Setzt `beobachtungsstatus` (beobachtung|ausgemustert) eines bestehenden
+    Watchlist-Eintrags - ausschliesslich manuell ausgeloest (GUI-Bearbeiten-
+    Dialog), nie automatisch aus einem Sync-Vorgang heraus. Anders als beim
+    frueheren `status`-Feld gibt es dafuer bewusst KEINEN Aufrufer in
+    importer/bitpanda_sync.py - "gehalten" wird seit dem Klassifikations-
+    Redesign live aus den echten Bestaenden abgeleitet, nicht mehr hier
+    gespeichert."""
+    return _update_watchlist_field(symbol, "beobachtungsstatus", new_beobachtungsstatus)

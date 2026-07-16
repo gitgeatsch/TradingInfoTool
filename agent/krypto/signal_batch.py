@@ -57,6 +57,14 @@ SPOT_COOLDOWN_STUNDEN = 20.0
 # Teil der 40 Assets betroffen ist, kein Rueckfall in die alte Burst-Problematik.
 SPOT_COOLDOWN_STUNDEN_KERN = 10.0
 
+# Dritte Cooldown-Stufe (Klassifikations-Redesign 2026-07-16, siehe Memory
+# project_asset_klassifikation_redesign): `beobachtungsstatus == "ausgemustert"`
+# bedeutet niedrigste Prioritaet, NICHT Ausschluss ("darf nicht sterben",
+# Nutzer-Formulierung) - ein Tage- statt Stunden-Wert macht das spuerbar
+# seltener, ohne auf null zu gehen. [OFFEN]/vorlaeufig wie die anderen
+# Cooldown-Werte, noch nicht ueber echten Betrieb kalibriert.
+SPOT_COOLDOWN_STUNDEN_AUSGEMUSTERT = 120.0  # 5 Tage
+
 
 @dataclass
 class BatchResult:
@@ -80,6 +88,7 @@ def _tage_seit(created_at: str | None) -> float:
 def select_assets_due_for_signal(
     conn, watchlist: list, max_count: int, cooldown_stunden: float | None = SPOT_COOLDOWN_STUNDEN,
     cooldown_stunden_kern: float | None = SPOT_COOLDOWN_STUNDEN_KERN,
+    cooldown_stunden_ausgemustert: float | None = SPOT_COOLDOWN_STUNDEN_AUSGEMUSTERT,
 ) -> list:
     """Sortiert alle Watchlist-Assets (aktiv UND watchlist-Status - Nutzer-
     Wunsch 2026-07-13: 'sonst macht es keinen Sinn') nach Tagen seit der
@@ -107,19 +116,28 @@ def select_assets_due_for_signal(
     Gate). `cooldown_stunden=None` behaelt das alte, ungefilterte Verhalten
     bei (z.B. fuer Tests).
 
-    Zwei-Stufen-Cooldown (2026-07-16, Nutzer-Wunsch nach Gewichtungs-
-    Analyse): ein Asset gilt als "Kern" (kuerzerer `cooldown_stunden_kern`),
-    wenn `asset.typ == "core"` ODER es aktuell gehalten wird (Bestand+
-    gestakte Menge > 0, live per `db.get_all_holdings()` geprueft) - beide
-    Faelle bedeuten "echtes Geld/strategische Rolle", verdienen haeufigere
-    Neubewertung als ein unbeobachteter taktischer Watchlist-Kandidat ohne
-    Position. `cooldown_stunden_kern=None` deaktiviert die Zwei-Stufigkeit
+    Drei-Stufen-Cooldown (2026-07-16, Klassifikations-Redesign, siehe Memory
+    project_asset_klassifikation_redesign): ein Asset gilt als "Kern"
+    (kuerzester `cooldown_stunden_kern`), wenn `asset.rolle == "core"` ODER es
+    aktuell gehalten wird (Spot-Bestand+gestakte Menge > 0, live per
+    `db.get_all_holdings()` geprueft) ODER es eine offene Hebel-Position
+    darauf gibt (live per `db.get_open_hebel_positions()` geprueft - echtes,
+    gehebeltes Geld verdient dieselbe Prioritaet wie ein Spot-Bestand). Ist
+    keine Kern-Bedingung erfuellt UND `asset.beobachtungsstatus ==
+    "ausgemustert"`, gilt der laengste `cooldown_stunden_ausgemustert`
+    (niedrigste Prioritaet, aber NIE Ausschluss - "darf nicht sterben",
+    Nutzer-Formulierung, siehe Memory). Praezedenz: Kern schlaegt IMMER
+    Ausgemustert (ein Asset mit echtem Engagement wird nie durch eine
+    Beobachtungsabsicht ausgebremst). Sonst `cooldown_stunden` als Standard
+    (Taktisch/Beobachtung). `cooldown_stunden_kern=None` UND
+    `cooldown_stunden_ausgemustert=None` deaktivieren die Mehrstufigkeit
     (dann gilt `cooldown_stunden` fuer alle gleich, altes Verhalten).
 
-    Stablecoins ausgeschlossen (A-1: bekommen strukturell nie ein echtes
-    Signal - generate_signal() gibt sofort HALTEN zurueck, ohne Groq zu
-    rufen - wuerden sonst wegen "nie berechnet" dauerhaft ganz oben in der
-    Prioritaet stehen und echte Analysen verdraengen).
+    Cash-Aequivalente (Stablecoins) ausgeschlossen (A-1: bekommen
+    strukturell nie ein echtes Signal - generate_signal() gibt sofort HALTEN
+    zurueck, ohne Groq zu rufen - wuerden sonst wegen "nie berechnet"
+    dauerhaft ganz oben in der Prioritaet stehen und echte Analysen
+    verdraengen).
 
     Nicht-Krypto-Assets (Aktien/ETF/Rohstoffe) ebenfalls ausgeschlossen -
     agent/krypto/pipeline.py::generate_signal() ist Krypto-only (braucht
@@ -128,7 +146,7 @@ def select_assets_due_for_signal(
     Erweiterbarkeit"). Identisches Filtermuster wie
     ui/signals_view.py::SignalsView.__init__()."""
     latest_real = db.get_latest_real_signal_per_symbol(conn)
-    candidates = [a for a in watchlist if a.assetklasse == "krypto" and a.typ != "stablecoin"]
+    candidates = [a for a in watchlist if a.assetklasse == "krypto" and not a.ist_cash_aequivalent]
 
     kern_symbole: set[str] = set()
     if cooldown_stunden_kern is not None:
@@ -136,12 +154,25 @@ def select_assets_due_for_signal(
             h.symbol for h in db.get_all_holdings(conn)
             if (h.quantity or 0.0) + (h.staked_quantity or 0.0) > 0.0
         }
-        kern_symbole = {a.symbol for a in candidates if a.typ == "core" or a.symbol in gehaltene_symbole}
+        offene_hebel_symbole = {p.symbol for p in db.get_open_hebel_positions(conn)}
+        kern_symbole = {
+            a.symbol for a in candidates
+            if a.rolle == "core" or a.symbol in gehaltene_symbole or a.symbol in offene_hebel_symbole
+        }
+
+    ausgemusterte_symbole = {
+        a.symbol for a in candidates
+        if a.beobachtungsstatus == "ausgemustert" and a.symbol not in kern_symbole
+    }
 
     def _cooldown_fuer(asset) -> float | None:
-        return cooldown_stunden_kern if asset.symbol in kern_symbole else cooldown_stunden
+        if asset.symbol in kern_symbole:
+            return cooldown_stunden_kern
+        if asset.symbol in ausgemusterte_symbole:
+            return cooldown_stunden_ausgemustert
+        return cooldown_stunden
 
-    if cooldown_stunden or cooldown_stunden_kern:
+    if cooldown_stunden or cooldown_stunden_kern or cooldown_stunden_ausgemustert:
         now = datetime.now(timezone.utc)
         gefiltert = []
         for a in candidates:
@@ -254,7 +285,7 @@ def run_signal_batch(
     result.verbleibend_ueberfaellig = sum(
         1
         for a in watchlist
-        if a.assetklasse == "krypto" and a.typ != "stablecoin"
+        if a.assetklasse == "krypto" and not a.ist_cash_aequivalent
         and _tage_seit(latest_real[a.symbol].created_at if a.symbol in latest_real else None)
         > SIGNAL_STALE_THRESHOLD_DAYS
     )

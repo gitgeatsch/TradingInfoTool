@@ -12,6 +12,7 @@ from database.models import Holding
 from importer.bitpanda_avg_cost import compute_cost_basis_view
 from ui.formatting import format_money, format_price_age, is_price_stale
 from ui.heading_tooltip import add_heading_tooltips
+from ui.letzte_bewertung import show_letzte_bewertung
 from ui.sortable_tree import make_sortable
 
 _COLUMN_DESCRIPTIONS = {
@@ -79,6 +80,15 @@ class PortfolioView(ttk.Frame):
         # Watchlist), nur hier fuer den Portfolio-Tab.
         self.tree.bind("<Double-1>", self._on_edit_avg_price)
         self.tree.pack(fill="both", expand=True, padx=8, pady=8)
+
+        # 'Letzte Bewertung'-Anzeige (2026-07-16, Klassifikations-Redesign) -
+        # zeigt fuer die ausgewaehlte Zeile die letzte echte KI-Analyse
+        # (technisch/fundamental/makro), ohne durch die Signal-Historie
+        # klicken zu muessen. Kein Doppelklick (der ist bereits fuer den
+        # Einstandspreis belegt, siehe oben) - eigener Button.
+        ttk.Button(self, text="Letzte Bewertung anzeigen", command=self._show_letzte_bewertung).pack(
+            anchor="w", padx=8, pady=(0, 4)
+        )
 
         self.total_label = ttk.Label(self, text="Gesamtwert: -", font=("", 10, "bold"))
         self.total_label.pack(anchor="e", padx=8, pady=(0, 8))
@@ -278,6 +288,13 @@ class PortfolioView(ttk.Frame):
         if holding is None:
             return
         AvgBuyPriceDialog(self, holding, self._db_conn_factory, on_saved=self.refresh)
+
+    def _show_letzte_bewertung(self) -> None:
+        selected = self.tree.selection()
+        if not selected:
+            return
+        symbol = self.tree.item(selected[0], "values")[0]
+        show_letzte_bewertung(self, self._db_conn_factory, symbol)
 
 
 class AvgBuyPriceDialog(tk.Toplevel):

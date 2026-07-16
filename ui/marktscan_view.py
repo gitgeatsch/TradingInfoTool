@@ -423,7 +423,7 @@ class MarktscanView(ttk.Frame):
 
         try:
             config_module.add_watchlist_entry(
-                symbol=candidate.symbol, name=candidate.name, typ="taktisch", status="watchlist",
+                symbol=candidate.symbol, name=candidate.name, rolle="taktisch", beobachtungsstatus="beobachtung",
                 coingecko_id=candidate.coingecko_id,
             )
         except config_module.WatchlistWriteError as exc:

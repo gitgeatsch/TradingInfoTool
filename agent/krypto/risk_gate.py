@@ -96,7 +96,7 @@ def small_cap_budget_headroom(watchlist, holdings, latest_prices, regime_result,
         v
         for sym, v in values_by_symbol.items()
         if (a := next((w for w in watchlist if w.symbol == sym), None))
-        and a.typ == "taktisch"
+        and a.rolle == "taktisch" and not a.ist_cash_aequivalent
         and (p := latest_prices.get(sym))
         and p.market_cap_usd is not None
         and p.market_cap_usd < tier2_threshold
@@ -131,7 +131,7 @@ def pre_check(
                 "nicht in Risikoberechnung einbezogen (Illiquiditäts-Vorsicht)"
             )
 
-    stablecoin_symbols = {a.symbol for a in watchlist if a.typ == "stablecoin"}
+    stablecoin_symbols = {a.symbol for a in watchlist if a.ist_cash_aequivalent}
     cash_value_usd = sum(v for sym, v in values_by_symbol.items() if sym in stablecoin_symbols)
 
     # RM-4-Erweiterung (2026-07-10): echtes Fiat-Guthaben (z.B. auf Bitpanda), das die
@@ -241,7 +241,7 @@ def pre_check(
     # noch explizit zu besprechen, siehe Memory project_offene_agent_diskussionspunkte).
     max_allok_pct = (
         risiko_cfg["max_allokation_pro_core_asset_prozent"]
-        if asset.typ == "core"
+        if asset.rolle == "core"
         else risiko_cfg["max_allokation_pro_asset_prozent"]
     )
     # Cash-Reserve-Ziel (Baustein 3): Allokations-Headroom in USD immer berechnen
@@ -266,7 +266,7 @@ def pre_check(
     small_cap_budget_pct_applicable = None
     tier2_threshold = config["marktscan"]["tiers"]["tier2_min_marktkap_usd"]
     is_small_cap = (
-        asset.typ == "taktisch"
+        asset.rolle == "taktisch" and not asset.ist_cash_aequivalent
         and current_price is not None
         and current_price.market_cap_usd is not None
         and current_price.market_cap_usd < tier2_threshold

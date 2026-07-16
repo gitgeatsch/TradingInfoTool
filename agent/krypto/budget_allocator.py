@@ -51,10 +51,24 @@ from agent.krypto.marktscan import generate_candidate_writeup
 from agent.krypto.pipeline import compute_current_regime, generate_signal
 from agent.krypto.signal_batch import (
     SPOT_COOLDOWN_STUNDEN,
+    SPOT_COOLDOWN_STUNDEN_AUSGEMUSTERT,
     SPOT_COOLDOWN_STUNDEN_KERN,
     select_assets_due_for_signal,
 )
 from database.models import HebelTrigger, MarktscanCandidate
+
+# Klassifikations-Redesign (2026-07-16, siehe Memory
+# project_asset_klassifikation_redesign): offene Hebel-Positionen sind eigene,
+# vom Trigger-Screening unabhaengige Investitionsentscheidungen - bekommen
+# eine eigene, engere Prioritaetsstufe, unabhaengig davon, ob hebel_screening.py
+# fuer dieses Symbol gerade ueberhaupt einen Trigger findet. Nach Schliessen
+# der Position faellt das Symbol automatisch zurueck in die normale
+# Trigger-basierte Logik (keine gespeicherte Sondermarkierung).
+HEBEL_POSITION_COOLDOWN_STUNDEN = 3.0
+# Ausgemustert-Stufe fuer Hebel-Trigger, analog Spot - Kern/Taktisch bleiben
+# bewusst UNVERAENDERT bei cooldown_stunden (3.5h), nur die neue
+# Ausgemustert-Stufe kommt dazu (kleinstmoegliche Aenderung).
+HEBEL_COOLDOWN_STUNDEN_AUSGEMUSTERT = 120.0  # 5 Tage
 
 logger = logging.getLogger(__name__)
 
@@ -87,24 +101,94 @@ def _cooldown_grenze(cooldown_stunden: float) -> str:
     return (datetime.now(timezone.utc) - timedelta(hours=cooldown_stunden)).isoformat()
 
 
+def _kern_symbole_hebel(conn, watchlist: list) -> set[str]:
+    """Symbole mit "echtem Engagement" (rolle==core ODER Spot-gehalten ODER
+    offene Hebel-Position) - identische Definition wie signal_batch.py::
+    select_assets_due_for_signal(), hier wiederverwendet fuer die
+    Ausgemustert-Praezedenz-Regel (Kern schlaegt IMMER Ausgemustert)."""
+    gehaltene_symbole = {
+        h.symbol for h in db.get_all_holdings(conn)
+        if (h.quantity or 0.0) + (h.staked_quantity or 0.0) > 0.0
+    }
+    offene_hebel_symbole = {p.symbol for p in db.get_open_hebel_positions(conn)}
+    return {
+        a.symbol for a in watchlist
+        if a.rolle == "core" or a.symbol in gehaltene_symbole or a.symbol in offene_hebel_symbole
+    }
+
+
 def _filter_hebel_cooldown(
-    conn, candidates: list[HebelTrigger], cooldown_stunden: float
+    conn, candidates: list[HebelTrigger], watchlist: list, cooldown_stunden: float,
+    cooldown_stunden_ausgemustert: float | None = None,
 ) -> tuple[list[HebelTrigger], int]:
     """Symbol+Richtung mit einem hebel_signals-Eintrag NACH der Cooldown-Grenze
     (echte Analyse, groq_raw_response gesetzt) ausschliessen - verhindert, dass
     ein dauerhaft ausloesendes Symbol (z.B. anhaltend extreme Funding-Rate)
     jeden 15-Min-Zyklus erneut analysiert wird und damit das Budget allein
-    aufbraucht."""
-    grenze = _cooldown_grenze(cooldown_stunden)
+    aufbraucht.
+
+    Ausgemustert-Stufe (2026-07-16, Klassifikations-Redesign): ein Kandidat,
+    dessen Watchlist-Eintrag `beobachtungsstatus == "ausgemustert"` traegt,
+    bekommt den laengeren `cooldown_stunden_ausgemustert` statt des
+    Standardwerts - AUSSER das Symbol ist "Kern" (siehe
+    _kern_symbole_hebel()), dann gilt weiterhin der Standardwert (Praezedenz:
+    Kern schlaegt immer Ausgemustert). `cooldown_stunden_ausgemustert=None`
+    deaktiviert diese Stufe (altes, einstufiges Verhalten)."""
+    grenze_standard = _cooldown_grenze(cooldown_stunden)
+    grenze_ausgemustert = (
+        _cooldown_grenze(cooldown_stunden_ausgemustert) if cooldown_stunden_ausgemustert is not None else None
+    )
+    watchlist_by_symbol = {a.symbol: a for a in watchlist}
+    kern_symbole = _kern_symbole_hebel(conn, watchlist) if grenze_ausgemustert is not None else set()
+
     latest = db.get_latest_hebel_signal_per_symbol(conn)
     gefiltert, uebersprungen = [], 0
     for c in candidates:
+        asset = watchlist_by_symbol.get(c.symbol)
+        if (
+            grenze_ausgemustert is not None and asset is not None
+            and asset.beobachtungsstatus == "ausgemustert" and c.symbol not in kern_symbole
+        ):
+            grenze = grenze_ausgemustert
+        else:
+            grenze = grenze_standard
         sig = latest.get(c.symbol)
         if sig is not None and sig.richtung == c.richtung and sig.created_at >= grenze:
             uebersprungen += 1
             continue
         gefiltert.append(c)
     return gefiltert, uebersprungen
+
+
+def _offene_positionen_als_kandidaten(conn) -> list[HebelTrigger]:
+    """Offene Hebel-Positionen als eigene, vom Trigger-Screening unabhaengige
+    Kandidatenquelle (2026-07-16, Nutzer-Wunsch: "getaetigte und aktive
+    Positionen haben hohe Prioritaet unabhaengig davon, ob es eine Empfehlung
+    gab") - garantiert echtem, gehebeltem Engagement eine regelmaessige
+    KI-Neubewertung, unabhaengig davon, ob hebel_screening.py fuer dieses
+    Symbol gerade ueberhaupt einen Trigger findet. Synthetischer HebelTrigger
+    (trigger_zweig=None, ist_kandidat=True) - generate_hebel_signal() braucht
+    nur symbol/richtung/trigger_zweig aus dem Trigger-Objekt, alles andere ist
+    fuer diesen Pfad irrelevant. Nach Schliessen der Position verschwindet das
+    Symbol automatisch aus dieser Quelle (keine gespeicherte Sondermarkierung
+    noetig) und faellt in die normale Trigger-basierte Logik zurueck."""
+    now_iso = datetime.now(timezone.utc).isoformat()
+    return [
+        HebelTrigger(
+            symbol=pos.symbol, richtung=pos.richtung, screened_at=now_iso,
+            screening_run_id="offene_position_monitoring", ist_kandidat=True,
+        )
+        for pos in db.get_open_hebel_positions(conn)
+    ]
+
+
+def _dedupe_hebel_kandidaten(vorrang: list[HebelTrigger], rest: list[HebelTrigger]) -> list[HebelTrigger]:
+    """`vorrang` (offene Positionen) zuerst, `rest` (Trigger-Kandidaten) nur
+    fuer noch nicht enthaltene Symbol+Richtung-Kombinationen - verhindert
+    einen doppelten LLM-Call fuer dasselbe Symbol, falls eine offene Position
+    ZUSAETZLICH einen frischen Trigger hat."""
+    gesehen = {(t.symbol, t.richtung) for t in vorrang}
+    return vorrang + [t for t in rest if (t.symbol, t.richtung) not in gesehen]
 
 
 def _filter_marktscan_cooldown(
@@ -163,8 +247,17 @@ def run_budget_allocator(
     cerebras_budget = cfg.get("cerebras_taegliches_budget", 60)
     gemini_budget = cfg.get("gemini_taegliches_budget", 200)
     cooldown_stunden = cfg.get("cooldown_stunden", 3.5)
+    hebel_cooldown_stunden_ausgemustert = cfg.get(
+        "hebel_cooldown_stunden_ausgemustert", HEBEL_COOLDOWN_STUNDEN_AUSGEMUSTERT
+    )
+    hebel_position_cooldown_stunden = cfg.get(
+        "hebel_position_cooldown_stunden", HEBEL_POSITION_COOLDOWN_STUNDEN
+    )
     spot_cooldown_stunden = cfg.get("spot_cooldown_stunden", SPOT_COOLDOWN_STUNDEN)
     spot_cooldown_stunden_kern = cfg.get("spot_cooldown_stunden_kern", SPOT_COOLDOWN_STUNDEN_KERN)
+    spot_cooldown_stunden_ausgemustert = cfg.get(
+        "spot_cooldown_stunden_ausgemustert", SPOT_COOLDOWN_STUNDEN_AUSGEMUSTERT
+    )
 
     # GUI-Schalter (2026-07-15, Nutzer-Wunsch): "Nur Long" filtert Hebel-
     # Kandidaten VOR dem Cooldown-Check/LLM-Call heraus, nicht erst
@@ -180,15 +273,26 @@ def run_budget_allocator(
         hebel_pending = db.get_pending_hebel_candidates(conn)
         if hebel_richtung_modus == "nur_long":
             hebel_pending = [c for c in hebel_pending if c.richtung == RICHTUNG_LONG]
-        hebel_kandidaten, result.uebersprungen_cooldown_hebel = _filter_hebel_cooldown(
-            conn, hebel_pending, cooldown_stunden,
+        hebel_trigger_kandidaten, uebersprungen_trigger = _filter_hebel_cooldown(
+            conn, hebel_pending, watchlist, cooldown_stunden,
+            cooldown_stunden_ausgemustert=hebel_cooldown_stunden_ausgemustert,
         )
+        # Offene Hebel-Positionen: eigene, vom Trigger-Screening unabhaengige
+        # Kandidatenquelle mit engerem Cooldown (siehe _offene_positionen_
+        # als_kandidaten()-Docstring) - zuerst in die Liste, damit sie im
+        # Zweifel vor reinen Trigger-Kandidaten das Tier-1-Budget bekommen.
+        offene_positionen_kandidaten, uebersprungen_position = _filter_hebel_cooldown(
+            conn, _offene_positionen_als_kandidaten(conn), watchlist, hebel_position_cooldown_stunden,
+        )
+        hebel_kandidaten = _dedupe_hebel_kandidaten(offene_positionen_kandidaten, hebel_trigger_kandidaten)
+        result.uebersprungen_cooldown_hebel = uebersprungen_trigger + uebersprungen_position
         marktscan_kandidaten, result.uebersprungen_cooldown_marktscan = _filter_marktscan_cooldown(
             conn, db.get_pending_marktscan_kaufkandidaten(conn), cooldown_stunden,
         )
         spot_kandidaten = select_assets_due_for_signal(
             conn, watchlist, max_count=budget_gesamt, cooldown_stunden=spot_cooldown_stunden,
             cooldown_stunden_kern=spot_cooldown_stunden_kern,
+            cooldown_stunden_ausgemustert=spot_cooldown_stunden_ausgemustert,
         )
         # Echte Tages-Zaehler (2026-07-14-Fix) - EINMAL pro Lauf aus der DB
         # gelesen, statt einer lokalen Variable, die bei jedem 15-Min-Lauf

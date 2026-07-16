@@ -34,9 +34,12 @@ DISCLAIMER_TEXT = (
 _WATCHLIST_COLUMN_DESCRIPTIONS = {
     "symbol": "Kurzzeichen des Assets (z. B. an der Börse/CoinGecko).",
     "name": "Vollständiger Name des Assets.",
-    "typ": "Core, taktisch oder Stablecoin - Einstufung aus der Watchlist-Konfiguration.",
+    "rolle": "Core oder taktisch - strategische Einstufung aus der Watchlist-Konfiguration, unabhängig vom aktuellen Bestand.",
     "assetklasse": "Krypto, Aktie, ETF oder Rohstoff.",
-    "status": "Aktiv (wird regelmäßig abgefragt) oder Watchlist (nur beobachtet).",
+    "status": (
+        "Gehalten (echter Bestand oder offene Hebel-Position, live abgeleitet) oder - falls nicht gehalten - "
+        "Beobachtung (aktive Kandidatur) bzw. Ausgemustert (niedrigste Priorität, aber nicht ausgeschlossen)."
+    ),
     "bitpanda": (
         "✓ = auf Bitpanda handelbar, ✗ = nicht gelistet (blockiert Kauf-/Nachkauf-"
         "Signale), ? = noch nicht geprüft, - = nicht zutreffend (Nicht-Krypto-Asset)."
@@ -234,11 +237,17 @@ class TradingInfoToolApp(tk.Tk):
             toolbar, text="Tranchen-Vorschläge umschalten (BTC/ETH)",
             command=self._toggle_dca_erlaubt,
         ).pack(side="left", padx=(8, 0))
+        ttk.Button(
+            toolbar, text="Asset hinzufügen…", command=self._open_asset_add_dialog,
+        ).pack(side="left", padx=(8, 0))
+        ttk.Button(
+            toolbar, text="Asset bearbeiten…", command=self._open_asset_edit_dialog,
+        ).pack(side="left", padx=(8, 0))
 
         columns = (
             "symbol",
             "name",
-            "typ",
+            "rolle",
             "assetklasse",
             "status",
             "bitpanda",
@@ -251,7 +260,7 @@ class TradingInfoToolApp(tk.Tk):
         headings = {
             "symbol": "Symbol",
             "name": "Name",
-            "typ": "Typ",
+            "rolle": "Rolle",
             "assetklasse": "Assetklasse",
             "status": "Status",
             "bitpanda": "Bitpanda",
@@ -264,7 +273,7 @@ class TradingInfoToolApp(tk.Tk):
         tree = ttk.Treeview(frame, columns=columns, show="headings")
         for col in columns:
             tree.heading(col, text=headings[col])
-            anchor = "w" if col in ("name", "typ", "assetklasse", "status") else "e"
+            anchor = "w" if col in ("name", "rolle", "assetklasse", "status") else "e"
             tree.column(col, width=90 if col in ("bitpanda", "tranchen") else 110, anchor=anchor)
         tree.tag_configure("stale", foreground=theme.stale_color())
         tree.tag_configure("bitpanda_fehlt", foreground=theme.danger_color())
@@ -283,6 +292,15 @@ class TradingInfoToolApp(tk.Tk):
             dca_erlaubt_by_symbol = {
                 sym: db.get_dca_erlaubt(conn, sym) for sym in ("BTC", "ETH")
             }
+            # Klassifikations-Redesign (2026-07-16): "gehalten" ist kein
+            # gespeichertes Feld mehr, sondern wird live aus den echten
+            # Bestaenden (Spot) UND offenen Hebel-Positionen abgeleitet - kann
+            # dadurch nie veralten (siehe config.py::WatchlistAsset-Docstring).
+            gehaltene_symbole = {
+                h.symbol for h in db.get_all_holdings(conn)
+                if (h.quantity or 0.0) + (h.staked_quantity or 0.0) > 0.0
+            }
+            offene_hebel_symbole = {p.symbol for p in db.get_open_hebel_positions(conn)}
         finally:
             conn.close()
 
@@ -331,15 +349,20 @@ class TradingInfoToolApp(tk.Tk):
             else:
                 tranchen_text = "-"
 
+            if asset.symbol in gehaltene_symbole or asset.symbol in offene_hebel_symbole:
+                status_text = "Gehalten"
+            else:
+                status_text = asset.beobachtungsstatus
+
             tree.insert(
                 "",
                 "end",
                 values=(
                     asset.symbol,
                     asset.name,
-                    asset.typ,
+                    asset.rolle,
                     asset.assetklasse,
-                    asset.status,
+                    status_text,
                     bitpanda_text,
                     tranchen_text,
                     price_usd,
@@ -364,6 +387,32 @@ class TradingInfoToolApp(tk.Tk):
         from ui.charts import ChartWindow
 
         ChartWindow(self, self._db_conn_factory, asset)
+
+    def _open_asset_add_dialog(self) -> None:
+        AssetAddDialog(self, on_added=self._on_watchlist_changed)
+
+    def _open_asset_edit_dialog(self) -> None:
+        tree = self._watchlist_frame.tree
+        selected = tree.selection()
+        if not selected:
+            messagebox.showinfo("Asset bearbeiten", "Bitte zuerst eine Zeile in der Watchlist auswählen.")
+            return
+        symbol = tree.item(selected[0], "values")[0]
+        asset = next((a for a in self._watchlist if a.symbol == symbol), None)
+        if asset is None:
+            return
+        AssetEditDialog(self, asset, on_edited=self._on_watchlist_changed)
+
+    def _on_watchlist_changed(self) -> None:
+        """Nach Hinzufuegen/Bearbeiten: Watchlist-Anzeige aktualisieren. Wirkt
+        NUR auf die Anzeige (self._watchlist selbst wird erst mit einem
+        Neustart neu aus config.yaml geladen, gleiche Einschraenkung wie bei
+        add_watchlist_entry()/update_watchlist_rolle() schon immer)."""
+        messagebox.showinfo(
+            "Watchlist geändert",
+            "Änderung gespeichert. Für volle Wirkung (Signale/Facts/Cooldown-Einstufung) "
+            "ist ein Neustart der App nötig.",
+        )
 
     def _poll_prices(self) -> None:
         self._write_heartbeat()
@@ -547,12 +596,23 @@ class TradingInfoToolApp(tk.Tk):
                 "(NICHT automatisch auf 0 gesetzt, bitte manuell prüfen):\n"
                 + "\n".join(result.stale_bitpanda_sync_symbols)
             )
+        if result.auto_confirmed_decreases:
+            lines.append(
+                "\nRückgänge automatisch übernommen (Staking-Verifikation erfolgreich, "
+                "kein echter Verkauf/Staking-Blindspot mehr möglich):\n"
+                + "\n".join(result.auto_confirmed_decreases)
+            )
         if result.decreased_holdings_needs_confirmation:
+            grund = (
+                "Staking-Verifikation in diesem Lauf nicht möglich (z. B. Netzwerkfehler "
+                "beim Transaktions-Abruf)"
+                if not result.staking_verified
+                else "unbekannter Grund"
+            )
             lines.append(
                 f"\n⚠ {len(result.decreased_holdings_needs_confirmation)} Bestand/-e mit "
-                "gemeldetem Rückgang - NICHT automatisch übernommen (z. B. weil Bitpanda "
-                "gestakte Anteile nicht als Guthaben ausweist). Bestätigung im nächsten "
-                "Dialog nötig."
+                f"gemeldetem Rückgang - NICHT automatisch übernommen ({grund}). "
+                "Bestätigung im nächsten Dialog nötig."
             )
         if result.warnings:
             lines.append("\nWarnungen:\n" + "\n".join(result.warnings))
@@ -718,6 +778,12 @@ class BitpandaDecreaseConfirmDialog(tk.Toplevel):
         self._candidates = candidates
         self._on_applied = on_applied
         self._vars = [tk.BooleanVar(value=False) for _ in candidates]
+        # Klassifikations-Redesign (2026-07-16): keine Status-Downgrade-Option
+        # mehr hier - "gehalten" wird live aus den echten Bestaenden abgeleitet
+        # (siehe config.py::WatchlistAsset-Docstring), es gibt also nichts mehr,
+        # das bei einem Verkauf zurueckgesetzt werden muesste. `beobachtungsstatus`
+        # bleibt bewusst rein manuell (GUI-Bearbeiten-Dialog), nie automatisch
+        # geschrieben.
 
         self.title("Bestandsrückgänge bestätigen")
         self.resizable(False, False)
@@ -737,17 +803,19 @@ class BitpandaDecreaseConfirmDialog(tk.Toplevel):
             wraplength=440,
         ).grid(row=0, column=0, sticky="w", pady=(0, 8))
 
+        row = 1
         for i, cand in enumerate(candidates):
             text = f"{cand.symbol}: {cand.alt_menge:g} → {cand.neu_menge:g}"
             if cand.matching_signal_id is not None:
                 when = cand.matching_signal_datum[:16].replace("T", " ") if cand.matching_signal_datum else "-"
                 text += f" (passt zu offenem {cand.matching_signal_action}-Signal vom {when})"
             ttk.Checkbutton(frame, text=text, variable=self._vars[i]).grid(
-                row=i + 1, column=0, sticky="w", pady=2
+                row=row, column=0, sticky="w", pady=2
             )
+            row += 1
 
         button_frame = ttk.Frame(frame)
-        button_frame.grid(row=len(candidates) + 1, column=0, sticky="e", pady=(10, 0))
+        button_frame.grid(row=row, column=0, sticky="e", pady=(10, 0))
         ttk.Button(button_frame, text="Keine übernehmen", command=self.destroy).pack(side="right", padx=(6, 0))
         ttk.Button(button_frame, text="Ausgewählte übernehmen", command=self._on_confirm).pack(side="right")
 
@@ -757,13 +825,215 @@ class BitpandaDecreaseConfirmDialog(tk.Toplevel):
         conn = self._db_conn_factory()
         try:
             for cand, var in zip(self._candidates, self._vars):
-                if var.get():
-                    apply_decrease(conn, cand)
+                if not var.get():
+                    continue
+                apply_decrease(conn, cand)
         finally:
             conn.close()
         if self._on_applied:
             self._on_applied()
         self.destroy()
+
+
+def _validate_new_asset(
+    symbol: str, name: str, assetklasse: str, coingecko_id: str | None, coingecko_client,
+) -> list[str]:
+    """Live-Validierung gegen CoinGecko + Bitpanda (2026-07-16, Nutzer-Wunsch:
+    "gleich eine Validierung ... ob das Asset korrekt eingetragen ist und
+    gelistet") - analog zum manuellen BRETT-Check aus derselben Session, jetzt
+    fest eingebaut statt Einzelfall-Handarbeit. Gibt eine Liste von
+    Warnungen zurueck (leer = alles ok) - blockiert das Hinzufuegen NICHT
+    (P-10: der Nutzer behaelt die letzte Entscheidung, aber wird gewarnt statt
+    eines stillen Fehlschlags)."""
+    warnungen: list[str] = []
+
+    if assetklasse == "krypto":
+        if coingecko_id:
+            try:
+                prices = coingecko_client.get_simple_prices([coingecko_id])
+                if coingecko_id not in prices or not prices[coingecko_id]:
+                    warnungen.append(
+                        f"CoinGecko-ID '{coingecko_id}' liefert keine Preisdaten - bitte prüfen, ob sie korrekt ist."
+                    )
+            except Exception as exc:
+                warnungen.append(f"CoinGecko-Validierung fehlgeschlagen (Netzwerkfehler?): {exc}")
+        else:
+            warnungen.append("Keine CoinGecko-ID angegeben - Spot-Analyse funktioniert erst, wenn sie nachgetragen wird.")
+
+        try:
+            from api.bitpanda import get_listed_assets
+            listed = get_listed_assets()
+            if not bitpanda_is_listed(symbol, listed, name=name):
+                warnungen.append(f"'{symbol}' wurde nicht in Bitpandas Krypto-Katalog gefunden.")
+        except Exception as exc:
+            warnungen.append(f"Bitpanda-Validierung fehlgeschlagen (Netzwerkfehler?): {exc}")
+    else:
+        try:
+            from api.bitpanda import get_listed_non_crypto_assets
+            listed = get_listed_non_crypto_assets()
+            if not bitpanda_is_listed(symbol, listed, name=name):
+                warnungen.append(f"'{symbol}' wurde nicht in Bitpandas Nicht-Krypto-Katalog gefunden.")
+        except Exception as exc:
+            warnungen.append(f"Bitpanda-Validierung fehlgeschlagen (Netzwerkfehler?): {exc}")
+
+    return warnungen
+
+
+class AssetAddDialog(tk.Toplevel):
+    """Manuelles Hinzufügen eines neuen Watchlist-Assets (2026-07-16,
+    Klassifikations-Redesign - Nutzer-Beispiel: ein Symbol wie Solana soll mit
+    `rolle=core` eintragbar sein, BEVOR es je gekauft wurde; bisher war das
+    nur per Hand in config.yaml möglich, der einzige GUI-Weg war das
+    Marktscan-"Übernehmen", das immer taktisch/beobachtung fest verdrahtete).
+    Führt vor dem eigentlichen Schreiben eine Live-Validierung gegen
+    CoinGecko/Bitpanda durch (_validate_new_asset()) - Warnungen blockieren
+    NICHT, der Nutzer entscheidet nach Kenntnis der Warnung final selbst."""
+
+    def __init__(self, parent, on_added=None) -> None:
+        super().__init__(parent)
+        self._parent_app = parent
+        self._on_added = on_added
+        self.title("Asset hinzufügen")
+        self.resizable(False, False)
+        self.transient(parent)
+        self.grab_set()
+
+        frame = ttk.Frame(self, padding=12)
+        frame.pack(fill="both", expand=True)
+
+        self._symbol_var = tk.StringVar()
+        self._name_var = tk.StringVar()
+        self._assetklasse_var = tk.StringVar(value="krypto")
+        self._rolle_var = tk.StringVar(value="taktisch")
+        self._beobachtungsstatus_var = tk.StringVar(value="beobachtung")
+        self._coingecko_id_var = tk.StringVar()
+        self._yfinance_symbol_var = tk.StringVar()
+
+        fields = [
+            ("Symbol", self._symbol_var, None),
+            ("Name", self._name_var, None),
+            ("Assetklasse", self._assetklasse_var, ("krypto", "aktien", "etf", "rohstoffe")),
+            ("Rolle", self._rolle_var, ("core", "taktisch")),
+            ("Beobachtungsstatus", self._beobachtungsstatus_var, ("beobachtung", "ausgemustert")),
+            ("CoinGecko-ID (optional)", self._coingecko_id_var, None),
+            ("yfinance-Symbol (optional)", self._yfinance_symbol_var, None),
+        ]
+        for row, (label, var, values) in enumerate(fields):
+            ttk.Label(frame, text=label).grid(row=row, column=0, sticky="w", pady=2)
+            if values:
+                ttk.Combobox(frame, textvariable=var, values=values, state="readonly", width=22).grid(
+                    row=row, column=1, sticky="w", pady=2, padx=(8, 0)
+                )
+            else:
+                ttk.Entry(frame, textvariable=var, width=25).grid(
+                    row=row, column=1, sticky="w", pady=2, padx=(8, 0)
+                )
+
+        button_frame = ttk.Frame(frame)
+        button_frame.grid(row=len(fields), column=0, columnspan=2, sticky="e", pady=(10, 0))
+        ttk.Button(button_frame, text="Abbrechen", command=self.destroy).pack(side="right", padx=(6, 0))
+        ttk.Button(button_frame, text="Hinzufügen", command=self._on_submit).pack(side="right")
+
+    def _on_submit(self) -> None:
+        import config as config_module
+
+        symbol = self._symbol_var.get().strip().upper()
+        name = self._name_var.get().strip()
+        assetklasse = self._assetklasse_var.get()
+        coingecko_id = self._coingecko_id_var.get().strip() or None
+        yfinance_symbol = self._yfinance_symbol_var.get().strip() or None
+
+        if not symbol or not name:
+            messagebox.showwarning("Asset hinzufügen", "Symbol und Name sind Pflichtfelder.")
+            return
+
+        warnungen = _validate_new_asset(
+            symbol, name, assetklasse, coingecko_id, self._parent_app._coingecko_client,
+        )
+        if warnungen:
+            proceed = messagebox.askyesno(
+                "Validierungswarnungen",
+                "Folgende Punkte wurden auffällig:\n\n" + "\n".join(f"- {w}" for w in warnungen)
+                + "\n\nTrotzdem hinzufügen?",
+            )
+            if not proceed:
+                return
+
+        try:
+            config_module.add_watchlist_entry(
+                symbol=symbol, name=name, rolle=self._rolle_var.get(),
+                beobachtungsstatus=self._beobachtungsstatus_var.get(),
+                coingecko_id=coingecko_id, assetklasse=assetklasse, yfinance_symbol=yfinance_symbol,
+            )
+        except config_module.WatchlistWriteError as exc:
+            messagebox.showerror("Asset hinzufügen", f"Fehlgeschlagen: {exc}")
+            return
+
+        self.destroy()
+        if self._on_added:
+            self._on_added()
+
+
+class AssetEditDialog(tk.Toplevel):
+    """Bearbeiten von `rolle`/`beobachtungsstatus` eines bestehenden Watchlist-
+    Assets (2026-07-16, Klassifikations-Redesign) - z.B. um ein taktisches
+    Asset nach einem Strategiewechsel auf "ausgemustert" zu setzen, oder
+    core/taktisch umzustellen. Symbol/Name/CoingeckoID etc. bleiben hier
+    unveraendert (Symbol-Umbenennung o.ae. ist ein anderer, hier nicht
+    abgedeckter Vorgang)."""
+
+    def __init__(self, parent, asset, on_edited=None) -> None:
+        super().__init__(parent)
+        self._asset = asset
+        self._on_edited = on_edited
+        self.title(f"Asset bearbeiten: {asset.symbol}")
+        self.resizable(False, False)
+        self.transient(parent)
+        self.grab_set()
+
+        frame = ttk.Frame(self, padding=12)
+        frame.pack(fill="both", expand=True)
+
+        ttk.Label(frame, text=f"{asset.symbol} — {asset.name}", font=("", 10, "bold")).grid(
+            row=0, column=0, columnspan=2, sticky="w", pady=(0, 8)
+        )
+
+        self._rolle_var = tk.StringVar(value=asset.rolle)
+        self._beobachtungsstatus_var = tk.StringVar(value=asset.beobachtungsstatus)
+
+        ttk.Label(frame, text="Rolle").grid(row=1, column=0, sticky="w", pady=2)
+        ttk.Combobox(
+            frame, textvariable=self._rolle_var, values=("core", "taktisch"), state="readonly", width=22
+        ).grid(row=1, column=1, sticky="w", pady=2, padx=(8, 0))
+
+        ttk.Label(frame, text="Beobachtungsstatus").grid(row=2, column=0, sticky="w", pady=2)
+        ttk.Combobox(
+            frame, textvariable=self._beobachtungsstatus_var, values=("beobachtung", "ausgemustert"),
+            state="readonly", width=22,
+        ).grid(row=2, column=1, sticky="w", pady=2, padx=(8, 0))
+        ttk.Label(
+            frame, text="(wirkt nur, solange das Asset nicht gehalten wird - siehe Spalte 'Status')",
+            wraplength=280, foreground=theme.stale_color(),
+        ).grid(row=3, column=0, columnspan=2, sticky="w", pady=(0, 8))
+
+        button_frame = ttk.Frame(frame)
+        button_frame.grid(row=4, column=0, columnspan=2, sticky="e", pady=(10, 0))
+        ttk.Button(button_frame, text="Abbrechen", command=self.destroy).pack(side="right", padx=(6, 0))
+        ttk.Button(button_frame, text="Speichern", command=self._on_submit).pack(side="right")
+
+    def _on_submit(self) -> None:
+        import config as config_module
+
+        try:
+            config_module.update_watchlist_rolle(self._asset.symbol, self._rolle_var.get())
+            config_module.update_watchlist_beobachtungsstatus(self._asset.symbol, self._beobachtungsstatus_var.get())
+        except config_module.WatchlistWriteError as exc:
+            messagebox.showerror("Asset bearbeiten", f"Fehlgeschlagen: {exc}")
+            return
+
+        self.destroy()
+        if self._on_edited:
+            self._on_edited()
 
 
 def run_app(

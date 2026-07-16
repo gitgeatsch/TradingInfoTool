@@ -59,15 +59,21 @@ Take-Profit zum aktuellen Kurs EINMAL und wende ihn auf USD- UND EUR-Kurs gleich
 (keine unabhaengig erfundenen Werte je Waehrung).
 5. `disclaimers` zeigt an, ob Makro/Sentiment einbezogen sind. Sind sie es nicht, muss \
 das Feld `long_reasoning.makro` das explizit sagen - erfinde keine Makro-Einschaetzung.
-6. Bei `asset.typ == "core"` wird eine langfristige Kernposition gehalten, kein \
-kurzfristiges Trading-Vehikel. Bewerte hier ZWEI GETRENNTE Ebenen: (a) die kurz-/ \
-mittelfristige technische Lage wie bei jedem Asset, UND (b) den Status der grundlegenden \
-langfristigen Investment-These (ist sie noch intakt, oder gibt es einen echten \
-fundamentalen Bruch - z.B. ein Bilanzskandal, ein branchenweiter regulatorischer \
-Umbruch, ein struktureller Wettbewerbsverlust? Kurzfristige Kursschwaeche oder ein \
-schwacher technischer Trend allein sind KEIN Bruch). Empfiehl VERKAUFEN fuer \
-Core-Assets nur, wenn (b) tatsaechlich gebrochen ist. Ist nur (a) schwach, aber (b) \
-intakt, empfiehl HALTEN trotz kurzfristiger Schwaeche. Nenne im Feld \
+6. Bei `asset.rolle == "core"` ODER einem taktischen Beobachtungs-/Wiedereinstiegs- \
+Kandidaten (`asset.rolle == "taktisch"`, `asset.wird_aktuell_gehalten == false`, \
+`asset.beobachtungsstatus == "beobachtung"` - 2026-07-16, Klassifikations-Redesign: \
+gilt jetzt auch fuer taktische Kandidaten mit einer bewussten Wiedereinstiegs- oder \
+Erstkauf-These, nicht mehr nur fuer Core) wird KEINE aktive Trading-Position verfolgt, \
+sondern eine langfristige Kernposition gehalten bzw. eine bewusste These beobachtet. \
+Bewerte hier ZWEI GETRENNTE Ebenen: (a) die kurz-/mittelfristige technische Lage wie bei \
+jedem Asset, UND (b) den Status der grundlegenden langfristigen Investment-These (ist \
+sie noch intakt, oder gibt es einen echten fundamentalen Bruch - z.B. ein \
+Bilanzskandal, ein branchenweiter regulatorischer Umbruch, ein struktureller \
+Wettbewerbsverlust? Kurzfristige Kursschwaeche oder ein schwacher technischer Trend \
+allein sind KEIN Bruch). Empfiehl VERKAUFEN (bzw. bei einem noch nicht gehaltenen \
+Beobachtungs-Kandidaten: rate explizit von einem Einstieg ab) nur, wenn (b) \
+tatsaechlich gebrochen ist. Ist nur (a) schwach, aber (b) intakt, empfiehl HALTEN \
+(bzw. weiter Beobachten) trotz kurzfristiger Schwaeche. Nenne im Feld \
 `long_reasoning.fundamental` IMMER explizit, ob die langfristige These aus deiner \
 Sicht intakt ist und warum - unabhaengig davon, was `action` letztlich ist.
 7. Ordne den aktuellen Kurs EXPLIZIT relativ zu `technische_analyse.fibonacci` \
@@ -252,12 +258,20 @@ def build_facts(
         if not r.available:
             nicht_verfuegbar.append(f"{name}: {r.reason}")
 
+    # Klassifikations-Redesign (2026-07-16): "wird_aktuell_gehalten" live aus
+    # dem uebergebenen holding-Objekt abgeleitet statt eines gespeicherten
+    # Status-Felds - kann dadurch nie veralten (siehe config.py::
+    # WatchlistAsset-Docstring).
+    wird_aktuell_gehalten = bool(
+        holding and ((holding.quantity or 0.0) + (holding.staked_quantity or 0.0)) > 0.0
+    )
     facts = {
         "asset": {
             "symbol": asset.symbol,
             "name": asset.name,
-            "typ": asset.typ,
-            "status": asset.status,
+            "rolle": asset.rolle,
+            "wird_aktuell_gehalten": wird_aktuell_gehalten,
+            "beobachtungsstatus": asset.beobachtungsstatus,
         },
         "preis": {
             "usd": _native(latest_price.price_usd) if latest_price else None,
