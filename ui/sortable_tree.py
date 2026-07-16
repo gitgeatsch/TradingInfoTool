@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import re
 from tkinter import ttk
+from typing import Callable
 
 import ui.theme as theme
 
@@ -26,17 +27,25 @@ def _numeric_key(raw: str) -> float | None:
         return None
 
 
-def make_sortable(tree: ttk.Treeview, numeric_columns: frozenset[str] = frozenset()) -> None:
+def make_sortable(
+    tree: ttk.Treeview, numeric_columns: frozenset[str] = frozenset()
+) -> Callable[[], None]:
     """Bindet jeden Spaltenkopf von `tree` an eine Klick-Sortierung (erneuter Klick
     kehrt die Richtung um, Pfeil im Spaltenkopf zeigt die aktive Richtung). Spalten in
     `numeric_columns` werden zahlenbasiert sortiert (fehlende Werte '-' immer ans
-    Ende), alle anderen alphabetisch."""
+    Ende), alle anderen alphabetisch.
+
+    Gibt eine `reapply_sort()`-Funktion zurueck (2026-07-16, GUI-Refresh-Fix,
+    Nutzer-Fund: periodische Refreshs bauen die Zeilen komplett neu auf und
+    zerstoeren dabei jede aktive Sortierung) - ruft man das nach einem
+    Neuaufbau der Zeilen auf, wird die zuletzt vom Nutzer gewaehlte Spalte/
+    Richtung erneut angewendet. No-Op, solange noch nie sortiert wurde."""
     columns = tree["columns"]
     original_text = {col: tree.heading(col)["text"] for col in columns}
     state = {"column": None, "reverse": False}
 
-    def sort_by(col: str) -> None:
-        reverse = state["column"] == col and not state["reverse"]
+    def sort_by(col: str, *, toggle: bool = True) -> None:
+        reverse = (state["column"] == col and not state["reverse"]) if toggle else state["reverse"]
         rows = [(tree.set(item, col), item) for item in tree.get_children("")]
 
         if col in numeric_columns:
@@ -65,3 +74,9 @@ def make_sortable(tree: ttk.Treeview, numeric_columns: frozenset[str] = frozense
 
     for col in columns:
         tree.heading(col, command=lambda c=col: sort_by(c))
+
+    def reapply_sort() -> None:
+        if state["column"] is not None:
+            sort_by(state["column"], toggle=False)
+
+    return reapply_sort

@@ -82,7 +82,7 @@ class HebelView(ttk.Frame):
             self.tree.heading(col, text=headings[col])
             self.tree.column(col, width=110, anchor="w" if col in ("symbol", "status") else "center")
         self.tree.tag_configure("kandidat", foreground=theme.info_color())
-        make_sortable(self.tree)
+        self._reapply_sort = make_sortable(self.tree)
         add_heading_tooltips(self.tree, _LIST_COLUMN_DESCRIPTIONS)
         self.tree.pack(fill="both", expand=True)
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
@@ -177,6 +177,7 @@ class HebelView(ttk.Frame):
                 tags=("kandidat",),
             )
 
+        self._reapply_sort()
         theme.restripe_treeview(self.tree)
 
         if vorher_iid and vorher_iid in self._rows:

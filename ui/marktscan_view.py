@@ -126,7 +126,7 @@ class MarktscanView(ttk.Frame):
         for col in columns:
             self.tree.heading(col, text=headings[col])
             self.tree.column(col, width=90, anchor="w" if col == "symbol" else "center")
-        make_sortable(self.tree, numeric_columns=frozenset({"score"}))
+        self._reapply_sort = make_sortable(self.tree, numeric_columns=frozenset({"score"}))
         add_heading_tooltips(self.tree, _MARKTSCAN_COLUMN_DESCRIPTIONS)
         self.tree.pack(fill="both", expand=True)
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
@@ -180,6 +180,11 @@ class MarktscanView(ttk.Frame):
         if not self._show_alle.get():
             candidates = [c for c in candidates if c.einstufung != "kein_treffer"]
 
+        # GUI-Refresh-Fix (2026-07-16, Nutzer-Fund): Auswahl vor dem Neuaufbau
+        # merken + danach wiederherstellen (iid war hier schon stabil), analog
+        # zu ui/hebel_view.py::refresh().
+        vorher_selected = self.tree.selection()
+        vorher_iid = vorher_selected[0] if vorher_selected else None
         for item in self.tree.get_children():
             self.tree.delete(item)
 
@@ -201,7 +206,10 @@ class MarktscanView(ttk.Frame):
                 tags=("nicht_gelistet",) if c.bitpanda_gelistet is False else (),
             )
         self.tree.tag_configure("nicht_gelistet", foreground=theme.danger_color())
+        self._reapply_sort()
         theme.restripe_treeview(self.tree)
+        if vorher_iid and self.tree.exists(vorher_iid):
+            self.tree.selection_set(vorher_iid)
 
     def _on_select(self, event) -> None:
         selected = self.tree.selection()

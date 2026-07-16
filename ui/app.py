@@ -20,6 +20,7 @@ from ui.heading_tooltip import add_heading_tooltips
 from ui.hebel_view import HebelView
 from ui.marktscan_view import MarktscanView
 from ui.portfolio import PortfolioView
+from ui.row_tooltip import add_row_tooltips
 from ui.signals_view import SignalsView
 from ui.sortable_tree import make_sortable
 
@@ -277,8 +278,11 @@ class TradingInfoToolApp(tk.Tk):
             tree.column(col, width=90 if col in ("bitpanda", "tranchen") else 110, anchor=anchor)
         tree.tag_configure("stale", foreground=theme.stale_color())
         tree.tag_configure("bitpanda_fehlt", foreground=theme.danger_color())
-        make_sortable(tree, numeric_columns=frozenset({"price_usd", "price_eur", "change_24h"}))
+        frame.reapply_sort = make_sortable(
+            tree, numeric_columns=frozenset({"price_usd", "price_eur", "change_24h"})
+        )
         add_heading_tooltips(tree, _WATCHLIST_COLUMN_DESCRIPTIONS)
+        add_row_tooltips(tree, self._watchlist_row_tooltip_text)
         tree.bind("<Double-1>", self._open_chart)
         tree.pack(fill="both", expand=True, padx=8, pady=8)
 
@@ -305,6 +309,14 @@ class TradingInfoToolApp(tk.Tk):
             conn.close()
 
         tree = self._watchlist_frame.tree
+        # GUI-Refresh-Fix (2026-07-16, Nutzer-Fund): dieser Refresh laeuft alle
+        # 3 Sek. automatisch (_poll_prices()) - ohne Auswahl-/Sortierungs-
+        # Erhalt waere jede Zeilenauswahl/Spaltensortierung binnen 3 Sek.
+        # wieder weg. Stabile iid (Symbol) + Auswahl vor dem Neuaufbau merken
+        # + danach wiederherstellen, analog zum bereits bestehenden Muster in
+        # ui/hebel_view.py::refresh().
+        vorher_selected = tree.selection()
+        vorher_iid = vorher_selected[0] if vorher_selected else None
         for item in tree.get_children():
             tree.delete(item)
 
@@ -357,6 +369,7 @@ class TradingInfoToolApp(tk.Tk):
             tree.insert(
                 "",
                 "end",
+                iid=asset.symbol,
                 values=(
                     asset.symbol,
                     asset.name,
@@ -372,7 +385,29 @@ class TradingInfoToolApp(tk.Tk):
                 ),
                 tags=tuple(tags),
             )
+        self._watchlist_frame.reapply_sort()
         theme.restripe_treeview(tree)
+        if vorher_iid and tree.exists(vorher_iid):
+            tree.selection_set(vorher_iid)
+
+    def _watchlist_row_tooltip_text(self, symbol: str) -> str | None:
+        """Lazy (nur beim tatsaechlichen Hover aufgerufen, siehe ui/row_tooltip.py)
+        - zeigt die letzte echte Analyse fuer dieses Symbol, ohne in den
+        Signale-Tab wechseln zu muessen (2026-07-16, Nutzer-Wunsch: sinnvolle
+        Zusatzinfo je Zeile, wo es aktuell kein eigenes Detail-Panel gibt)."""
+        conn = self._db_conn_factory()
+        try:
+            signal = db.get_latest_signal(conn, symbol)
+        finally:
+            conn.close()
+        if signal is None:
+            return "Noch keine Analyse berechnet."
+        when = signal.created_at[:16].replace("T", " ") if signal.created_at else "-"
+        conf = f"{signal.confidence_pct:.0f}%" if signal.confidence_pct is not None else "-"
+        text = f"Letztes Signal: {signal.action} ({when}, Konfidenz {conf})"
+        if signal.short_reasoning:
+            text += f"\n{signal.short_reasoning}"
+        return text
 
     def _open_chart(self, event) -> None:
         tree = self._watchlist_frame.tree

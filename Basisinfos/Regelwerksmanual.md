@@ -2034,3 +2034,76 @@ Kopie der echten Produktions-DB + der echten migrierten `config.yaml`
 verifiziert (54 Assets korrekt geladen, 13 core, 1 Cash-Äquivalent,
 Spot-Cooldown-Selektion/Kern-Symbol-Berechnung/Remote-Status liefen
 fehlerfrei, 0 aktuell offene Hebel-Positionen bestätigt).
+
+---
+
+## 18. GUI-Refresh: Auswahl/Sortierung über Refresh hinweg erhalten + Zeilen-Hover (2026-07-16)
+
+### Ausgangslage und Root Cause
+
+Nutzer-Beobachtung: eine aktive Spaltensortierung "zerstört sich" von selbst,
+und eine Zeilenauswahl (z. B. für "Asset bearbeiten…") muss "unter
+Zeitdruck" getroffen werden, bevor sie wieder verschwindet. Code-Audit über
+alle 5 Treeview-Bereiche bestätigte die Vermutung des Nutzers: der Watchlist-
+und der Portfolio-Tab werden von `ui/app.py::_poll_prices()` automatisch
+**alle 3 Sekunden** komplett neu aufgebaut (`tree.delete()` + Neueinfügen in
+fester Reihenfolge) — dabei gehen zwangsläufig sowohl eine aktive Sortierung
+als auch die aktuelle Zeilenauswahl verloren.
+
+**Befund je Bereich vor dem Fix:**
+
+| Tab | Stabile iid | Auswahl erhalten | Sortierung erhalten | Trigger |
+|---|---|---|---|---|
+| Watchlist | ✗ | ✗ | ✗ | alle 3 Sek. |
+| Portfolio | ✗ | ✗ | ✗ | alle 3 Sek. |
+| Signale | ✓ | ✗ | ✗ | nur Nutzeraktion |
+| Marktscan | ✓ | ✗ | ✗ | nur Nutzeraktion |
+| Hebel | ✓ | ✓ (bereits gelöst) | ✗ | nur Nutzeraktion |
+
+`ui/hebel_view.py` hatte das Auswahl-Problem bereits sauber gelöst (Auswahl
+vor dem Neuaufbau merken, stabile iid vergeben, danach Auswahl anhand der
+iid wiederherstellen) — dieses Muster fehlte nur bei den anderen vier Tabs.
+
+### Fix
+
+1. **`ui/sortable_tree.py::make_sortable()`** gibt jetzt eine
+   `reapply_sort()`-Funktion zurück (No-Op, solange nie sortiert wurde) —
+   wendet die zuletzt vom Nutzer gewählte Spalte/Richtung nach einem
+   Neuaufbau erneut an.
+2. **Alle 5 `refresh()`/`_refresh_list()`-Funktionen** (Watchlist, Portfolio,
+   Signale, Marktscan, Hebel) merken jetzt die Auswahl vor dem Neuaufbau,
+   vergeben eine stabile iid (Symbol bzw. bereits vorhandene stabile ID),
+   stellen die Auswahl danach wieder her und rufen `reapply_sort()` auf.
+3. Bewusst **keine Checkboxen** eingeführt — mit stabiler Auswahl/Sortierung
+   entfällt der ursprüngliche Auslöser ("Zeitdruck"); Checkboxen wären nur
+   für einen anderen Anwendungsfall sinnvoll (mehrere Zeilen gleichzeitig
+   markieren für Bulk-Aktionen), der aktuell nicht gebraucht wird.
+
+### Neue Mouseover-Funktion: Zeilen-Hover-Tooltips
+
+Bestehende Infrastruktur (`ui/heading_tooltip.py`) deckte bisher nur
+Spaltenkopf-Tooltips ab. Neues, analog aufgebautes `ui/row_tooltip.py`
+(`add_row_tooltips()`) zeigt Zusatzinfo beim Hover über eine Datenzeile —
+der Text wird bewusst LAZY erst beim tatsächlichen Hover berechnet (kein
+Vorab-Fetch bei jedem 3-Sekunden-Refresh):
+
+- **Watchlist:** letztes Signal (Aktion, Zeitpunkt, Konfidenz, Kurzbegründung)
+  ohne in den Signale-Tab wechseln zu müssen.
+- **Portfolio:** volle Einstandspreis-Herkunft (manuell/berechnet/unbekannt),
+  Menge ohne bekannten Einstandspreis, Gewinn/Verlust — nutzt einen während
+  `refresh()` bereits gefüllten Cache (`_cost_basis_by_symbol`), keine
+  zusätzliche Berechnung beim Hover selbst.
+- Signale/Marktscan/Hebel bekamen bewusst KEINEN Zeilen-Hover — die zeigen
+  bereits ein vollständiges Detail-Panel bei Zeilenauswahl, ein Hover wäre
+  dort redundant.
+
+### Verifikation
+
+Tk-Smoke-Test (echter, versteckter Tk-Root, kein `mainloop()`): `make_
+sortable()`s `reapply_sort()` erhält eine aktive Sortierung über einen
+simulierten Neuaufbau hinweg; `PortfolioView` erhält sowohl Auswahl als
+auch Sortierung über `refresh()` hinweg; `SignalsView`/`MarktscanView`
+erhalten die Auswahl über `_refresh_list()` hinweg; `HebelView.refresh()`
+läuft nach der Sortierungs-Ergänzung weiterhin fehlerfrei. Portfolio-
+Hover-Tooltip-Text separat gegen einen bekannten und einen unbekannten
+Symbol-Fall geprüft (liefert Text bzw. `None` wie erwartet).

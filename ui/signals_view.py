@@ -113,7 +113,7 @@ class SignalsView(ttk.Frame):
         for col in columns:
             self.tree.heading(col, text=headings[col])
             self.tree.column(col, width=110, anchor="w" if col in ("symbol", "name") else "center")
-        make_sortable(self.tree)
+        self._reapply_sort = make_sortable(self.tree)
         add_heading_tooltips(self.tree, _SIGNAL_LIST_COLUMN_DESCRIPTIONS)
         self.tree.pack(fill="both", expand=True)
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
@@ -185,6 +185,11 @@ class SignalsView(ttk.Frame):
         finally:
             conn.close()
 
+        # GUI-Refresh-Fix (2026-07-16, Nutzer-Fund): Auswahl vor dem Neuaufbau
+        # merken + danach wiederherstellen (iid war hier schon stabil), analog
+        # zu ui/hebel_view.py::refresh().
+        vorher_selected = self.tree.selection()
+        vorher_iid = vorher_selected[0] if vorher_selected else None
         for item in self.tree.get_children():
             self.tree.delete(item)
 
@@ -193,7 +198,10 @@ class SignalsView(ttk.Frame):
             action_text = sig.action if sig else "-"
             created_text = sig.created_at[:16].replace("T", " ") if sig else "-"
             self.tree.insert("", "end", iid=asset.symbol, values=(asset.symbol, asset.name, action_text, created_text))
+        self._reapply_sort()
         theme.restripe_treeview(self.tree)
+        if vorher_iid and self.tree.exists(vorher_iid):
+            self.tree.selection_set(vorher_iid)
 
     def _on_select(self, event) -> None:
         selected = self.tree.selection()

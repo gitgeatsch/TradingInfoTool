@@ -13,6 +13,7 @@ from importer.bitpanda_avg_cost import compute_cost_basis_view
 from ui.formatting import format_money, format_price_age, is_price_stale
 from ui.heading_tooltip import add_heading_tooltips
 from ui.letzte_bewertung import show_letzte_bewertung
+from ui.row_tooltip import add_row_tooltips
 from ui.sortable_tree import make_sortable
 
 _COLUMN_DESCRIPTIONS = {
@@ -41,6 +42,7 @@ class PortfolioView(ttk.Frame):
     def __init__(self, parent, db_conn_factory, watchlist):
         super().__init__(parent)
         self._db_conn_factory = db_conn_factory
+        self._cost_basis_by_symbol: dict[str, object] = {}
         self._watchlist_by_symbol = {asset.symbol: asset for asset in watchlist}
 
         # Nutzer-Wunsch (2026-07-13): nur noch EUR anzeigen (USD-Spalten waren
@@ -68,13 +70,14 @@ class PortfolioView(ttk.Frame):
         self.tree.tag_configure("stale", foreground=theme.stale_color())
         self.tree.tag_configure("pl_positive", foreground=theme.success_color())
         self.tree.tag_configure("pl_negative", foreground=theme.danger_color())
-        make_sortable(
+        self._reapply_sort = make_sortable(
             self.tree,
             numeric_columns=frozenset(
                 {"quantity", "price_eur", "value_eur", "avg_buy_price_eur", "pl_pct"}
             ),
         )
         add_heading_tooltips(self.tree, _COLUMN_DESCRIPTIONS)
+        add_row_tooltips(self.tree, self._row_tooltip_text)
         # Einstandspreis manuell setzen/korrigieren (2026-07-11) - Doppelklick auf eine
         # Zeile, exakt dasselbe Muster wie ui/app.py::_open_chart() (dort fuer die
         # Watchlist), nur hier fuer den Portfolio-Tab.
@@ -163,6 +166,26 @@ class PortfolioView(ttk.Frame):
             conn.close()
         self.cash_reserve_status.config(text="gespeichert", foreground=theme.info_color())
 
+    def _row_tooltip_text(self, symbol: str) -> str | None:
+        """Lazy (nur beim tatsaechlichen Hover aufgerufen, siehe ui/row_tooltip.py)
+        - liest aus dem waehrend refresh() gecachten cost_basis-Dict (keine
+        erneute Berechnung), zeigt die volle Einstandspreis-Herkunft/-Menge
+        ohne bekannten Preis, die in der kompakten Spalte abgeschnitten wird
+        (2026-07-16, Nutzer-Wunsch: sinnvolle Zusatzinfo je Zeile)."""
+        cost_basis = self._cost_basis_by_symbol.get(symbol)
+        if cost_basis is None:
+            return None
+        if cost_basis.source == "unbekannt":
+            return "Einstandspreis unbekannt (kein Bitpanda-Trade und keine manuelle Eingabe gefunden)."
+        quelle = {"manuell": "manuell eingetragen", "berechnet": "aus echten Bitpanda-Trades berechnet"}[cost_basis.source]
+        preis = format_money(cost_basis.effective_avg_price_eur)
+        text = f"Einstandspreis: {preis} EUR ({quelle})"
+        if cost_basis.unknown_quantity > 0:
+            text += f"\n⚠ {cost_basis.unknown_quantity:g} Stück ohne bekannten Einstandspreis (z. B. Staking-Gutschrift)"
+        if cost_basis.pl_pct is not None:
+            text += f"\nGewinn/Verlust: {cost_basis.pl_pct:+.1f}%"
+        return text
+
     def refresh(self) -> None:
         conn = self._db_conn_factory()
         try:
@@ -172,8 +195,19 @@ class PortfolioView(ttk.Frame):
         finally:
             conn.close()
 
+        # GUI-Refresh-Fix (2026-07-16, Nutzer-Fund): dieser Refresh laeuft alle
+        # 3 Sek. automatisch (ui/app.py::_poll_prices()) - ohne Auswahl-/
+        # Sortierungs-Erhalt waere jede Zeilenauswahl/Spaltensortierung binnen
+        # 3 Sek. wieder weg. Stabile iid (Symbol) + Auswahl vor dem Neuaufbau
+        # merken + danach wiederherstellen, analog zu ui/hebel_view.py::refresh().
+        vorher_selected = self.tree.selection()
+        vorher_iid = vorher_selected[0] if vorher_selected else None
         for item in self.tree.get_children():
             self.tree.delete(item)
+
+        # Fuer den Hover-Tooltip (2026-07-16) - vermeidet eine erneute
+        # compute_cost_basis_view()-Berechnung beim Hover selbst.
+        self._cost_basis_by_symbol = {}
 
         total_value_eur = 0.0
         staked_value_eur = 0.0
@@ -218,6 +252,7 @@ class PortfolioView(ttk.Frame):
                 price_eur_text = f"⚠ {price_eur_text}"
 
             cost_basis = compute_cost_basis_view(holding, price_eur)
+            self._cost_basis_by_symbol[holding.symbol] = cost_basis
             if cost_basis.source == "unbekannt":
                 avg_price_text = "unbekannt"
             else:
@@ -237,6 +272,7 @@ class PortfolioView(ttk.Frame):
             self.tree.insert(
                 "",
                 "end",
+                iid=holding.symbol,
                 values=(
                     holding.symbol,
                     name,
@@ -249,7 +285,10 @@ class PortfolioView(ttk.Frame):
                 ),
                 tags=tuple(tags),
             )
+        self._reapply_sort()
         theme.restripe_treeview(self.tree)
+        if vorher_iid and self.tree.exists(vorher_iid):
+            self.tree.selection_set(vorher_iid)
 
         # RM-4/Konsistenz-Fix (2026-07-11, Nutzer-Fund): agent/krypto/risk_gate.py::
         # pre_check() zaehlt die Fiat-Cash-Reserve seit 2026-07-10 korrekt zum
