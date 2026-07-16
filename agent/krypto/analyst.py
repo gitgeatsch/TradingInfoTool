@@ -51,7 +51,15 @@ deterministisch auf HALTEN korrigiert. Zusaetzlich MUSS `position_size.usd` <= \
 `risiko_check.max_positionsgroesse_eur`), falls diese Obergrenze nicht null ist - \
 schlaegst du dennoch mehr vor, wird die Positionsgroesse nachtraeglich deterministisch \
 auf die Obergrenze gekuerzt (keine Ablehnung der Kauf-Idee, nur eine Korrektur der \
-Groesse).
+Groesse). WICHTIG: `max_positionsgroesse_usd/eur` ist eine harte Obergrenze, KEIN \
+Zielwert - schlage nicht automatisch die volle Obergrenze vor. Bei `confidence_pct` \
+nahe der fuer dieses Regime geltenden Mindestschwelle (siehe `risiko_check` bzw. \
+Fakten-JSON) ist das die am wenigsten ueberzeugende noch zulaessige Empfehlung und \
+sollte deutlich UNTER der Obergrenze liegen; nur bei hoher Konfidenz (nahe 100%) ist \
+eine Positionsgroesse nahe der vollen Obergrenze gerechtfertigt. Die Obergrenze selbst \
+wird zusaetzlich serverseitig nach Konfidenz skaliert (deterministisch, nicht von dir \
+zu berechnen) - eine konfidenz-bewusste eigene Einschaetzung vermeidet unnoetige \
+nachtraegliche Kuerzungen.
 4. Berechne den prozentualen Abstand jeder Zonen-Grenze (von UND bis) von Entry/Stop-Loss/ \
 Take-Profit zum aktuellen Kurs EINMAL und wende ihn auf USD- UND EUR-Kurs gleichermassen an \
 (keine unabhaengig erfundenen Werte je Waehrung).

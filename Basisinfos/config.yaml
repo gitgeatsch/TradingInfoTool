@@ -38,6 +38,21 @@ risiko:
                                         # [OFFEN] Thema "BTC hat den Lead" noch explizit zu
                                         # besprechen (Rolle von BTC im Portfolio insgesamt,
                                         # nicht nur die Prozentzahl) - siehe Memory.
+  konfidenz_positionsgroesse_sockel_anteil: 0.5  # RM-1/RM-2 (2026-07-16 ergaenzt):
+                                        # Konfidenz-skalierte Positionsgroessen-Obergrenze
+                                        # statt einer flachen Obergrenze fuer jede Konfidenz
+                                        # oberhalb der Regime-Mindestschwelle. Bei genau
+                                        # min_konfidenz_prozent (siehe regime.profile) greift
+                                        # dieser Sockel-Anteil (50% der RM-1/RM-2-Obergrenze),
+                                        # bei 100% Konfidenz die volle Obergrenze - linear
+                                        # dazwischen. Gaengige Trading-Praxis (konvitions-
+                                        # gewichtete Positionsgroesse/Bruchteils-Kelly-Logik):
+                                        # eine Empfehlung an der Mindestschwelle ist der am
+                                        # wenigsten ueberzeugende Fall, der ueberhaupt noch
+                                        # durchgelassen wird - sollte nie automatisch die volle
+                                        # Obergrenze bekommen. Siehe agent/krypto/risk_gate.py
+                                        # ::post_check() fuer die Umsetzung; gilt fuer Krypto
+                                        # UND Aktien (teilen sich risk_gate.py).
   cash_reserve_min_prozent: 10         # RM-4: [OFFEN] Vorschlag
   cash_reserve_min_fixed_eur: 2000     # RM-4: [OFFEN] Vorschlag - Hybrid-Formel (2026-07-10):
                                         # erforderlich ist das GROESSERE aus Prozentsatz und

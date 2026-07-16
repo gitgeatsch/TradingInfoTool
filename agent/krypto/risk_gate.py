@@ -450,24 +450,60 @@ def post_check(parsed: dict, pre_result: RiskPreCheckResult, regime_result, conf
     # als Fakt an Groq gegeben (risiko_check.max_positionsgroesse_*), aber nie
     # nachtraeglich erzwungen - diese Luecke schliesst dieser Block. Transparent im
     # Notizfeld vermerkt, damit der Nutzer sieht, dass korrigiert wurde.
+    #
+    # 2026-07-16 ergaenzt: die Obergrenze selbst ist jetzt Konfidenz-skaliert statt
+    # flach - gaengige Trading-Praxis (konviktionsgewichtete Positionsgroesse). Eine
+    # Empfehlung genau an der Regime-Mindestschwelle (R-5.10, min_konfidenz_prozent)
+    # ist der am wenigsten ueberzeugende noch durchgelassene Fall und bekommt nur den
+    # Sockel-Anteil (config risiko.konfidenz_positionsgroesse_sockel_anteil, Default
+    # 50%) der Obergrenze; bei 100% Konfidenz die volle Obergrenze, linear dazwischen.
+    # Vorher clusterten reale Positionsgroessen empirisch nahe 100% der Obergrenze
+    # unabhaengig von der tatsaechlichen Konfidenz (Nutzer-Beobachtung 2026-07-16).
     if action in _BUY_ACTIONS:
         position_size = result.get("position_size") or {}
         proposed_usd = position_size.get("usd")
         max_usd = pre_result.max_position_size_usd
-        if proposed_usd is not None and max_usd is not None and proposed_usd > max_usd:
-            fx = None
-            proposed_eur = position_size.get("eur")
-            if proposed_eur is not None and proposed_usd:
-                fx = proposed_eur / proposed_usd
-            clamp_note = (
-                f"Von {proposed_usd:.2f} USD auf Risiko-Obergrenze {max_usd:.2f} USD "
-                "gekürzt (RM-1/RM-2, deterministisch erzwungen)."
+        max_eur = pre_result.max_position_size_eur
+        if max_usd is not None:
+            effective_max_usd = max_usd
+            effective_max_eur = max_eur
+            konfidenz_scale_note = None
+            sockel_anteil = config["risiko"].get("konfidenz_positionsgroesse_sockel_anteil")
+            min_konfidenz = (
+                config["regime"]["profile"].get(regime_result.regime, {}).get("min_konfidenz_prozent")
             )
-            position_size["usd"] = max_usd
-            position_size["eur"] = max_usd * fx if fx is not None else pre_result.max_position_size_eur
-            existing_note = position_size.get("note")
-            position_size["note"] = f"{existing_note} {clamp_note}" if existing_note else clamp_note
-            result["position_size"] = position_size
+            confidence = result.get("confidence_pct")
+            if (
+                sockel_anteil is not None
+                and min_konfidenz is not None
+                and confidence is not None
+                and min_konfidenz < 100
+            ):
+                spanne = max(0.0, min(1.0, (confidence - min_konfidenz) / (100 - min_konfidenz)))
+                scale = sockel_anteil + (1 - sockel_anteil) * spanne
+                effective_max_usd = max_usd * scale
+                effective_max_eur = max_eur * scale if max_eur is not None else None
+                konfidenz_scale_note = (
+                    f"Obergrenze bei Konfidenz {confidence}% auf {scale * 100:.0f}% skaliert "
+                    f"(Sockel {sockel_anteil * 100:.0f}% bei {min_konfidenz}% Konfidenz, "
+                    "100% bei 100% Konfidenz)."
+                )
+            if proposed_usd is not None and proposed_usd > effective_max_usd:
+                fx = None
+                proposed_eur = position_size.get("eur")
+                if proposed_eur is not None and proposed_usd:
+                    fx = proposed_eur / proposed_usd
+                clamp_note = (
+                    f"Von {proposed_usd:.2f} USD auf Risiko-Obergrenze {effective_max_usd:.2f} USD "
+                    "gekürzt (RM-1/RM-2, deterministisch erzwungen)."
+                )
+                if konfidenz_scale_note:
+                    clamp_note = f"{clamp_note} {konfidenz_scale_note}"
+                position_size["usd"] = effective_max_usd
+                position_size["eur"] = effective_max_usd * fx if fx is not None else effective_max_eur
+                existing_note = position_size.get("note")
+                position_size["note"] = f"{existing_note} {clamp_note}" if existing_note else clamp_note
+                result["position_size"] = position_size
 
     # R-5.9: TAUSCHEN statt VERKAUFEN, wenn ein Swap-Ziel genannt wurde (P-6) -
     # mechanisch durchgesetzt statt nur per Prompt erhofft.

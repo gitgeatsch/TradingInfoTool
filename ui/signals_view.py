@@ -96,6 +96,13 @@ class SignalsView(ttk.Frame):
         # agent/krypto/pipeline.py fuer die FRED-Felder sauber None statt abzustuerzen.
         self._selected_asset = None
         self._current_signal = None
+        # GUI-Refresh-Fix Teil 2 (2026-07-16, Nutzer-Fund): selection_set() in
+        # _refresh_list() feuert <<TreeviewSelect>> auch, wenn dieselbe Zeile
+        # erneut ausgewaehlt wird - das hat bei JEDEM periodischen Refresh das
+        # rechte Detail-Panel komplett neu aufgebaut (Scroll-Position verloren),
+        # obwohl sich am Signal meistens gar nichts geaendert hat. Dieser Guard
+        # unterdrueckt den dadurch ausgeloesten _on_select().
+        self._suppress_select_event = False
 
         self._build_layout()
         self._refresh_list()
@@ -201,9 +208,25 @@ class SignalsView(ttk.Frame):
         self._reapply_sort()
         theme.restripe_treeview(self.tree)
         if vorher_iid and self.tree.exists(vorher_iid):
-            self.tree.selection_set(vorher_iid)
+            self._suppress_select_event = True
+            try:
+                self.tree.selection_set(vorher_iid)
+            finally:
+                self._suppress_select_event = False
+            # Nur re-rendern, wenn sich das Signal fuer die ausgewaehlte Zeile
+            # tatsaechlich geaendert hat (z.B. neuer automatischer Signal-Lauf) -
+            # sonst bleibt das Detail-Panel (inkl. Scroll-Position) unangetastet.
+            neues_signal = latest_by_symbol.get(vorher_iid)
+            if neues_signal != self._current_signal:
+                self._selected_asset = self._asset_by_symbol(vorher_iid)
+                can_compute = self._any_llm_client_available()
+                self.compute_button.config(state="normal" if can_compute else "disabled")
+                self.history_button.config(state="normal")
+                self._render_signal(self._selected_asset, neues_signal)
 
     def _on_select(self, event) -> None:
+        if self._suppress_select_event:
+            return
         selected = self.tree.selection()
         if not selected:
             return

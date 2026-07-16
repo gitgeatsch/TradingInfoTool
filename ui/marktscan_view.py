@@ -99,6 +99,11 @@ class MarktscanView(ttk.Frame):
         self._fred_api_key = fred_api_key
         self._selected_candidate = None
         self._show_alle = tk.BooleanVar(value=False)
+        # GUI-Refresh-Fix Teil 2 (2026-07-16) - siehe ui/signals_view.py fuer die
+        # volle Begruendung: unterdrueckt das durch die periodische selection_set()-
+        # Wiederherstellung ausgeloeste <<TreeviewSelect>>, das sonst das rechte
+        # Detail-Panel bei jedem Refresh unnoetig neu aufgebaut haette.
+        self._suppress_select_event = False
 
         self._build_layout()
         self._refresh_list()
@@ -209,9 +214,30 @@ class MarktscanView(ttk.Frame):
         self._reapply_sort()
         theme.restripe_treeview(self.tree)
         if vorher_iid and self.tree.exists(vorher_iid):
-            self.tree.selection_set(vorher_iid)
+            self._suppress_select_event = True
+            try:
+                self.tree.selection_set(vorher_iid)
+            finally:
+                self._suppress_select_event = False
+            # Nur re-rendern, wenn sich der Kandidat tatsaechlich geaendert hat
+            # (z.B. neuer Score/Status) - sonst bleibt das Detail-Panel (inkl.
+            # Scroll-Position) unangetastet.
+            neuer_kandidat = self._candidates_by_id.get(int(vorher_iid))
+            if neuer_kandidat != self._selected_candidate:
+                self._selected_candidate = neuer_kandidat
+                if neuer_kandidat is not None:
+                    self.writeup_button.config(
+                        state="normal" if (self._groq_client is not None and neuer_kandidat.einstufung == "kaufkandidat") else "disabled"
+                    )
+                    self.watchlist_button.config(
+                        state="normal" if neuer_kandidat.einstufung in ("kaufkandidat", "watchlist_wuerdig") else "disabled"
+                    )
+                    self.reject_button.config(state="normal" if neuer_kandidat.status == "neu" else "disabled")
+                    self._render_candidate(neuer_kandidat)
 
     def _on_select(self, event) -> None:
+        if self._suppress_select_event:
+            return
         selected = self.tree.selection()
         if not selected:
             return

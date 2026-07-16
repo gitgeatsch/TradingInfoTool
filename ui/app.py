@@ -454,6 +454,15 @@ class TradingInfoToolApp(tk.Tk):
         self._refresh_watchlist_from_db()
         self._portfolio_view.refresh()
         self._hebel_view.refresh()
+        # 2026-07-16, Nutzer-Fund: Signale/Marktscan hatten (anders als Hebel
+        # hier schon immer) KEINEN periodischen Refresh - der automatische
+        # Scheduler (budget_allocator, alle 15 Min) schreibt neue Signale/
+        # Marktscan-Ergebnisse in die DB und verschickt E-Mails, aber die GUI
+        # zeigte das erst nach einer manuellen Aktion im jeweiligen Tab. Jetzt
+        # konsistent mit Hebel behandelt - sicher seit dem GUI-Refresh-Fix
+        # (Auswahl/Sortierung ueberleben einen Neuaufbau).
+        self._signals_view._refresh_list()
+        self._marktscan_view._refresh_list()
         self.after(UI_POLL_INTERVAL_MS, self._poll_prices)
 
     def _write_heartbeat(self) -> None:

@@ -27,8 +27,18 @@ _LIST_COLUMN_DESCRIPTIONS = {
     "richtung": "LONG oder SHORT.",
     "status": "Letzte KI-Empfehlung, oder \"Kandidat (wartet auf Analyse)\", falls noch keine Empfehlung vorliegt.",
     "hebel_score": "Bei einer Empfehlung: der final gedeckelte Hebel. Bei einem wartenden Kandidaten: der Trigger-Score (0-100).",
+    "these": (
+        "Zeithorizont der KI-These, NICHT die empfohlene Haltedauer fuer dich als "
+        "Trader: 'Einmaltrade' = kurzlebige, ereignisgetriebene Gegenbewegung "
+        "(Zweig Kontra). 'Swing' = bestaetigter mehrtaegiger Trend (Zweig "
+        "Trendfolge). Deine eigene Ausfuehrung ist in beiden Faellen identisch: "
+        "Position eroeffnen, Stop-Loss setzen, in der Take-Profit-Zone oder am "
+        "Stop-Loss aussteigen - siehe Regelwerksmanual."
+    ),
     "zeitpunkt": "Wann die Empfehlung berechnet wurde bzw. wann der Kandidat gefunden wurde.",
 }
+
+_TRADE_THESIS_LABELS = {"einmal_trade": "Einmaltrade", "swing_strategie": "Swing"}
 
 _POSITIONS_COLUMN_DESCRIPTIONS = {
     "symbol": "Kurzzeichen des Assets.",
@@ -58,6 +68,11 @@ class HebelView(ttk.Frame):
         # iid -> ("signal", HebelSignal) oder ("kandidat", HebelTrigger)
         self._rows: dict[str, tuple[str, object]] = {}
         self._selected_row: tuple[str, object] | None = None
+        # GUI-Refresh-Fix Teil 2 (2026-07-16) - siehe ui/signals_view.py fuer die
+        # volle Begruendung: unterdrueckt das durch die periodische selection_set()-
+        # Wiederherstellung ausgeloeste <<TreeviewSelect>>, das sonst das rechte
+        # Detail-Panel bei jedem 3-Sek.-Refresh unnoetig neu aufgebaut haette.
+        self._suppress_select_event = False
 
         self._build_layout()
         self.refresh()
@@ -72,11 +87,11 @@ class HebelView(ttk.Frame):
         left = ttk.Frame(paned)
         paned.add(left, weight=1)
 
-        columns = ("symbol", "richtung", "status", "hebel_score", "zeitpunkt")
+        columns = ("symbol", "richtung", "status", "hebel_score", "these", "zeitpunkt")
         self.tree = ttk.Treeview(left, columns=columns, show="headings", height=16)
         headings = {
             "symbol": "Symbol", "richtung": "Richtung", "status": "Status/Aktion",
-            "hebel_score": "Hebel/Score", "zeitpunkt": "Zeitpunkt",
+            "hebel_score": "Hebel/Score", "these": "These", "zeitpunkt": "Zeitpunkt",
         }
         for col in columns:
             self.tree.heading(col, text=headings[col])
@@ -135,7 +150,13 @@ class HebelView(ttk.Frame):
     def refresh(self) -> None:
         conn = self._db_conn_factory()
         try:
-            signals = db.get_latest_hebel_signal_per_symbol(conn)
+            # get_latest_hebel_signal_per_symbol_and_richtung() statt der reinen
+            # Pro-Symbol-Variante (2026-07-16, entdeckt bei der These-Spalten-Ergaenzung):
+            # LONG/SHORT sind unabhaengige Thesen (siehe hebel_backward_tracking.py) -
+            # die Pro-Symbol-Variante haette ein aelteres, weiterhin relevantes Signal der
+            # jeweils anderen Richtung stillschweigend aus der Liste verschwinden lassen,
+            # sobald fuer dieselbe Symbol die andere Richtung neuer analysiert wurde.
+            signals = db.get_latest_hebel_signal_per_symbol_and_richtung(conn)
             kandidaten = db.get_pending_hebel_candidates(conn)
             positions = db.get_open_hebel_positions(conn)
         finally:
@@ -154,9 +175,10 @@ class HebelView(ttk.Frame):
             self._rows[iid] = ("signal", sig)
             zeit = sig.created_at[:16].replace("T", " ") if sig.created_at else "-"
             hebel_text = f"{sig.hebel_final:.1f}x" if sig.hebel_final else "-"
+            these_text = _TRADE_THESIS_LABELS.get(sig.trade_thesis_typ, sig.trade_thesis_typ or "-")
             self.tree.insert(
                 "", "end", iid=iid,
-                values=(sig.symbol, sig.richtung, sig.action, hebel_text, zeit),
+                values=(sig.symbol, sig.richtung, sig.action, hebel_text, these_text, zeit),
             )
 
         for trig in kandidaten:
@@ -173,7 +195,7 @@ class HebelView(ttk.Frame):
             score_text = f"{trig.score_gesamt:.0f}" if trig.score_gesamt is not None else "-"
             self.tree.insert(
                 "", "end", iid=iid,
-                values=(trig.symbol, trig.richtung, "Kandidat (wartet auf Analyse)", score_text, zeit),
+                values=(trig.symbol, trig.richtung, "Kandidat (wartet auf Analyse)", score_text, "-", zeit),
                 tags=("kandidat",),
             )
 
@@ -181,7 +203,17 @@ class HebelView(ttk.Frame):
         theme.restripe_treeview(self.tree)
 
         if vorher_iid and vorher_iid in self._rows:
-            self.tree.selection_set(vorher_iid)
+            self._suppress_select_event = True
+            try:
+                self.tree.selection_set(vorher_iid)
+            finally:
+                self._suppress_select_event = False
+            # Nur re-rendern, wenn sich die Zeile tatsaechlich geaendert hat (z.B.
+            # neue Analyse fuer denselben Kandidaten) - sonst bleibt das
+            # Detail-Panel (inkl. Scroll-Position) unangetastet.
+            neue_row = self._rows.get(vorher_iid)
+            if neue_row != self._selected_row:
+                self._render_selection(neue_row)
         else:
             self._render_selection(None)
 
@@ -206,6 +238,8 @@ class HebelView(ttk.Frame):
             )
 
     def _on_select(self, event) -> None:
+        if self._suppress_select_event:
+            return
         selected = self.tree.selection()
         if not selected:
             self._render_selection(None)

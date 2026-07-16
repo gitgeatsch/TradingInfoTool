@@ -96,6 +96,29 @@ versehentlich zu überschreiben.
 (nicht nur in die Anzeige) — mit einer konservativen Ausnahme für ETH, dessen
 Un-/Restaking bisher nicht instant war. Volle Details in Kap. 14.
 
+**RM-1/RM-2-Obergrenze jetzt konfidenz-skaliert statt flach (2026-07-16).**
+Nutzer-Beobachtung: die vorgeschlagene Positionsgröße lag empirisch fast immer
+nahe der vollen RM-1/RM-2-Obergrenze, unabhängig von der tatsächlichen
+Konfidenz der Empfehlung — wirkte willkürlich. Grund: die Obergrenze war ein
+reiner Deckel (nie ein Zielwert), es gab aber keine Vorgabe, INNERHALB der
+Obergrenze kleiner zu bleiben. Fix nach gängiger Trading-Praxis
+(konviktionsgewichtete Positionsgröße/Bruchteils-Kelly-Logik): die Obergrenze
+selbst skaliert jetzt linear mit `confidence_pct` zwischen einem Sockel-Anteil
+(Konfidenz genau an der Regime-Mindestschwelle R-5.10, `config.yaml
+risiko.konfidenz_positionsgroesse_sockel_anteil`, aktuell **50 %**) und der
+vollen Obergrenze (Konfidenz 100 %). Eine Empfehlung genau an der
+Mindestschwelle ist der am wenigsten überzeugende noch zulässige Fall und
+bekommt entsprechend nur die Hälfte der Obergrenze; erst bei sehr hoher
+Konfidenz wird die volle Obergrenze ausgeschöpft. Gilt für **Krypto UND
+Aktien** (teilen sich `agent/krypto/risk_gate.py::post_check()`) — Hebel ist
+NICHT betroffen, dort berechnet `hebel_risk_gate.py` die Positionsgröße
+ohnehin vollständig deterministisch aus Risikobetrag/Stop-Distanz, die KI
+schlägt dort nie selbst eine Positionsgröße vor. Zusätzlich bekam der
+Analyst-Prompt (`agent/krypto/analyst.py` + `agent/aktien/analyst.py`) einen
+Hinweis, die Obergrenze nicht als automatischen Zielwert zu behandeln — das
+serverseitige Klemmen bleibt aber die verbindliche, deterministische Grenze,
+unabhängig davon, was die KI selbst vorschlägt.
+
 ---
 
 ## 3. Regime-Steuerung — wie sich die Regeln je nach Marktlage anpassen (RG-1 bis RG-11)
@@ -1511,6 +1534,13 @@ Gewinn.
 **Erreichbar unter:** `http://notebook.<dein-tailnet>.ts.net:8765/?token=DEIN_TOKEN`
 (Details/Ersteinrichtung siehe `Basisinfos/Tailscale-Setup-Anleitung.md`).
 
+**Zusätzlicher Fernzugriffsweg (2026-07-16):** Chrome Remote Desktop (Google)
+ist eingerichtet — echter Vollzugriff auf den Bildschirm/die Tkinter-
+Oberfläche selbst, unabhängig von dieser Steuer-Seite. Für vollen
+GUI-Zugriff unterwegs der einfachere Weg; die Tailscale-Steuer-Seite bleibt
+sinnvoll für einen schnellen Status-Blick oder falls Remote Desktop selbst
+nicht erreichbar ist.
+
 ---
 
 ## 14. Portfolio-Vollständigkeit — Cash-Sperren, Staking, Margin-Trading
@@ -2107,3 +2137,87 @@ erhalten die Auswahl über `_refresh_list()` hinweg; `HebelView.refresh()`
 läuft nach der Sortierungs-Ergänzung weiterhin fehlerfrei. Portfolio-
 Hover-Tooltip-Text separat gegen einen bekannten und einen unbekannten
 Symbol-Fall geprüft (liefert Text bzw. `None` wie erwartet).
+
+### Nachtrag (2026-07-16): periodischer Refresh für Signale/Marktscan
+
+Nutzer-Beobachtung: die Signale-/Marktscan-Tabelle aktualisierte sich
+scheinbar nicht, obwohl im Hintergrund bereits E-Mails zu neuen
+Empfehlungen verschickt wurden. Ursache: `ui/app.py::_poll_prices()`
+(3-Sekunden-Timer) rief bereits `self._hebel_view.refresh()` mit auf, aber
+NICHT `_signals_view`/`_marktscan_view` — beide zeigten neue
+Scheduler-Ergebnisse (`budget_allocator`, 15-Min-Takt) erst nach einer
+manuellen Aktion im jeweiligen Tab (z. B. Tab-Wechsel oder eigener
+Signal-Lauf). **Fix:** `_signals_view._refresh_list()` und
+`_marktscan_view._refresh_list()` einfach konsistent mit dem bereits
+etablierten Hebel-Muster in denselben 3-Sekunden-Takt aufgenommen — kein
+neuer, separater Timer/Tick-Zähler nötig, da der bewusst gebaute
+GUI-Refresh-Fix (Auswahl/Sortierung überleben `refresh()`, siehe oben)
+genau dafür sorgt, dass ein häufiger Neuaufbau unauffällig bleibt.
+
+### Nachtrag (2026-07-16): rechtes Detail-Panel flackerte bei jedem periodischen Refresh
+
+Nutzer-Fund direkt im Anschluss an den periodischen Refresh (siehe oben):
+das rechte Detail-Panel (Signale/Marktscan/Hebel) baute sich bei JEDEM
+3-Sekunden-Tick komplett neu auf, auch wenn sich am angezeigten Signal/
+Kandidaten nichts geändert hatte — "extrem störend" beim Lesen (Scroll-
+Position sprang zurück auf Anfang, jede Textauswahl ging verloren).
+
+**Ursache:** `tree.selection_set(vorher_iid)` (Teil des GUI-Refresh-Fixes
+oben) stellt die Auswahl nach jedem Neuaufbau der Liste wieder her — aber
+Tkinter feuert `<<TreeviewSelect>>` dabei IMMER, auch wenn exakt dieselbe
+Zeile erneut ausgewählt wird. Das löste bei jedem Tick einen kompletten
+Re-Render des Detail-Panels aus, unabhängig davon, ob sich die
+zugrundeliegenden Daten geändert hatten.
+
+**Fix (`ui/signals_view.py`, `ui/marktscan_view.py`, `ui/hebel_view.py`):**
+ein Guard (`self._suppress_select_event`) unterdrückt das durch die
+programmatische `selection_set()` ausgelöste `<<TreeviewSelect>>` komplett.
+Stattdessen vergleicht der Refresh die frisch geladenen Daten der
+ausgewählten Zeile explizit mit dem zuletzt gerenderten Objekt (Dataclass-
+Vergleich per `!=`) und rendert das Detail-Panel NUR neu, wenn sich
+tatsächlich etwas geändert hat (z. B. eine neue automatische Analyse für
+das gerade angezeigte Asset) — ein echter Klick des Nutzers auf eine Zeile
+läuft weiterhin unverändert über `_on_select()`.
+
+**Verifikation:** synthetischer Test für alle drei Tabs — bestätigt sowohl
+"kein Re-Render ohne Datenänderung" als auch "Re-Render, sobald sich die
+Daten für die ausgewählte Zeile ändern" (je 2 Fälle, 6 insgesamt).
+
+## 19. Hebel-These: Einmaltrade vs. Swing (2026-07-16)
+
+`agent/krypto/hebel_analyst.py` liefert bei jeder Hebel-Empfehlung ein
+Feld `trade_thesis_typ` mit zwei möglichen Werten:
+
+- **`einmal_trade`** — kurzlebige, ereignisgetriebene Gegenbewegung
+  (Trigger-Zweig "Kontra", z. B. ein Squeeze nach Übertreibung).
+- **`swing_strategie`** — bestätigter, mehrtägiger bis wochenlanger Trend
+  (Trigger-Zweig "Trendfolge").
+
+**Wichtig — was dieses Feld NICHT ist:** es ist keine Vorgabe für dein
+eigenes Handelsverhalten und ändert NICHTS an der Ausführung. In beiden
+Fällen gilt exakt derselbe Ablauf: Position eröffnen, Stop-Loss setzen,
+in der Take-Profit-Zone ODER am Stop-Loss wieder aussteigen. Das Feld
+beschreibt ausschließlich den von der KI eingeschätzten Zeithorizont der
+zugrundeliegenden Marktthese — nicht, wie lange DU die Position halten
+sollst. Der Prompt weist die KI explizit an, dieses Feld NICHT anhand
+einer angenommenen "typischen Haltedauer" zu schätzen (der Nutzer hält
+historisch im Schnitt nur ca. 1 Tag).
+
+Der Feldname ist auch unabhängig von `richtung` (LONG/SHORT) und von der
+separaten Bitpanda-Short-Einschränkung (siehe Kap. 6, "Nur Long"-Schalter)
+— beides sind unabhängige Achsen, keine Kombination davon ändert die
+Ausführungsregel oben.
+
+**Sichtbarkeit in der GUI:** neue Spalte "These" in der Hebel-Liste
+(`ui/hebel_view.py`, Werte "Einmaltrade"/"Swing"), mit Mouseover-Erklärung
+über `add_heading_tooltips()` (identischer Mechanismus wie bei allen
+anderen Spaltenköpfen) — Text der Erklärung entspricht den zwei
+Absätzen oben. Bei dieser Gelegenheit einen echten, unabhängig davon
+bereits bestehenden Anzeigefehler gefunden und behoben:
+`HebelView.refresh()` nutzte `db.get_latest_hebel_signal_per_symbol()`
+(nur pro Symbol, nicht pro Richtung) statt der bereits an anderer Stelle
+(`hebel_backward_tracking.py`) korrekt verwendeten `..._and_richtung()`-
+Variante — dadurch konnte ein älteres, weiterhin relevantes Signal einer
+Richtung (z. B. LONG) unsichtbar werden, sobald für dasselbe Symbol die
+andere Richtung (SHORT) neuer analysiert wurde. Jetzt konsistent
+richtungsbewusst wie überall sonst im Hebel-Code.
