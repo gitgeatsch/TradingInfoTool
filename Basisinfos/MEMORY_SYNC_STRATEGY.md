@@ -1,48 +1,65 @@
 # Memory & CLAUDE.md Sync Strategy
 
-## Übersicht
+## Drei Sync-Ebenen (Stand 2026-07-16 — korrigiert/vereinheitlicht)
 
-Zwei Arten von Daten werden **manuell über Google Drive synchronisiert** zwischen den
-zwei Rechnern (Desktop + Notebook) — **bewusst NICHT über GitHub**:
+Der Desktop↔Notebook-Sync läuft je nach Situation über einen von drei
+unterschiedlichen Wegen, mit unterschiedlichem Umfang. Diese drei Ebenen
+lösen den ursprünglichen, inzwischen überholten "immer Drive"-Ansatz weiter
+unten ab:
 
-1. **Claude Code Memory** (siehe Abschnitt „Memory" unten)
-2. **CLAUDE.md-Dateien** (siehe Abschnitt „CLAUDE.md-Dateien" weiter unten)
+1. **USB-Stick, vor Ort (bevorzugt, voller Umfang).** Wenn beide Geräte
+   physisch zusammen sind: **alles** — `.env`, `Basisinfos/Assets.xlsx`,
+   die SQLite-Datenbank, die Claude-Code-Memory UND beide `CLAUDE.md`-Dateien
+   (Projekt + global). Vermeidet jede Cloud-Exposition von Secrets/
+   persönlichen Finanzdaten. Voller Ablauf, Ordnerstruktur (`claudesync`)
+   und Reihenfolge-Regeln: siehe Memory `reference_usb_sync_workflow.md`
+   (liegt nicht im Repo, ist Claude-Code-Memory).
+2. **Google Drive, remote (nur wenn kein USB möglich, reduzierter Umfang).**
+   Wenn die Geräte NICHT physisch zusammen sind UND weder `.env`/Secrets noch
+   die Datenbank aktuell übertragen werden müssen: nur Claude-Code-Memory +
+   beide `CLAUDE.md`-Dateien. Rest dieses Dokuments (unten) beschreibt genau
+   diesen Fall im Detail.
+3. **Nur `git push`/`git pull` (kleine Code-Änderungen ohne Memory-Relevanz).**
+   Wenn eine Änderung rein den Code betrifft und keine neue Erkenntnis
+   enthält, die eine künftige Session kennen müsste (kein Memory-Update
+   nötig): einfacher Git-Sync reicht, ohne Memory/CLAUDE.md anzufassen.
+   **Wichtig:** bei Schema-/Konfigurationsänderungen (z. B. `config.yaml`-
+   Struktur, umbenannte Scheduler-Jobs) reicht ein reines `git pull` auf dem
+   Zielgerät NICHT aus — der laufende Prozess muss zusätzlich neu gestartet
+   werden, da `config.py`/der Scheduler den alten Stand im Speicher halten.
 
-**Warum nicht GitHub?** Git-Historie ist permanent — auch nachträglich gelöschte
-Inhalte bleiben in alten Commits abrufbar. Das Projekt-`CLAUDE.md` ist deshalb bewusst
-in `.gitignore` eingetragen (u. a. weil es früher Kontext zu einem inzwischen
-behobenen Token-Leak-Vorfall enthielt). Manueller Austausch über Drive vermeidet dieses
-Risiko vollständig, unabhängig davon ob das Repo `gitgeatsch/TradingInfoTool` public
-oder private ist.
+**Warum nicht immer GitHub?** Git-Historie ist permanent — auch nachträglich
+gelöschte Inhalte bleiben in alten Commits abrufbar. Das Projekt-`CLAUDE.md`
+ist deshalb bewusst in `.gitignore` eingetragen (u. a. weil es früher Kontext
+zu einem inzwischen behobenen Token-Leak-Vorfall enthielt). Secrets/
+persönliche Daten laufen deshalb nie über Git, sondern über Ebene 1 oder 2.
 
-## Was NICHT zwischen den Geräten übertragen werden soll
+## Was NICHT ohne explizite Nutzer-Anweisung zwischen den Geräten übertragen werden soll
 
-**An Claude auf beiden Geräten:** Wenn du (Notebook- oder Desktop-Session) auf die Idee
-kommst, eine der folgenden Dateien vom jeweils anderen Gerät anzufordern oder zu
-kopieren — **nicht tun, ohne den Nutzer explizit zu fragen und den konkreten Grund zu
-nennen.** Stand 2026-07-06 gibt es dafür keinen aktuellen Bedarf:
+**An Claude auf beiden Geräten:** `.env` und `Basisinfos/Assets.xlsx` NICHT
+automatisch/unaufgefordert anfordern oder kopieren — nur wenn der Nutzer das
+explizit anweist (z. B. im Rahmen eines vollen Ebene-1-USB-Syncs, siehe oben).
+Ein automatischer Vorschlag einer Claude-Session ist das nicht.
 
-- **`.env`** (Claude API-Key, ggf. weitere Secrets): Es existiert noch kein Code (Phase 1
-  nicht gestartet), der einen API-Key braucht. Wenn der Agent später auf dem Notebook
-  läuft (als 24/7-Server), soll das Notebook einen **eigenen, separaten** API-Key
-  bekommen — nicht den vom Desktop kopiert. Zwei Geräte mit demselben Secret verdoppeln
-  die Angriffsfläche und erschweren Rotation im Ernstfall (siehe frühere
-  Token-Leak-Erfahrung, Grund für die generelle Vorsicht hier).
-- **`Basisinfos/Assets.xlsx`** (persönliche Bestandsdaten/Portfolio): Es existiert noch
-  kein Import-Skript, das die Datei lesen würde. Laut Architektur-Entscheidung (siehe
-  Spezifikation Kap. 10, B-5) landen Bestände ohnehin in der SQLite-DB, die vermutlich
-  auf dem Notebook laufen wird — der Import passiert dann direkt dort, kein Grund die
-  Rohdatei vorab zu kopieren.
-
-**Grundsatz:** Jede Übertragung sensibler/privater Dateien zwischen den Geräten ist eine
-bewusste Entscheidung des Nutzers, kein automatischer Vorschlag einer Claude-Session.
+**Hinweis, historisch überholt:** eine frühere Fassung dieses Dokuments
+(2026-07-06) begründete den generellen .env/DB-Ausschluss noch damit, dass
+"kein Code existiert, der das braucht" (Phase 1 war damals noch nicht
+gestartet) — das ist seit Langem nicht mehr zutreffend, die App läuft
+produktiv, die DB enthält echte Portfoliodaten, `.env` echte API-Keys. Der
+eigentliche Grund, .env/DB nicht *automatisch* zu übertragen, ist unverändert
+gültig (siehe Memory `feedback_no_cross_device_secrets.md`), nur die
+Begründung war veraltet.
 
 ---
 
-## Sync-Checkliste: Was wird übertragen?
+## Sync-Checkliste: Was wird übertragen? (Ebene 2 — Drive, ohne .env/DB)
 
-**Wenn du einen Sync von Desktop → Notebook durchführst, synchronisierst du genau diese
-drei Dinge:**
+**Der Rest dieses Dokuments beschreibt Ebene 2 (Drive, remote, ohne Secrets/DB) im
+Detail.** Für Ebene 1 (USB, vor Ort, voller Umfang inkl. `.env`/Assets.xlsx/DB) siehe
+Memory `reference_usb_sync_workflow.md`.
+
+**Wenn du einen Sync von Desktop → Notebook auf Ebene 2 durchführst, synchronisierst du
+genau diese drei Dinge:**
 
 | Was | Quelle (Desktop) | Ziel (Notebook) | Format | Anzahl |
 |---|---|---|---|---|
@@ -60,10 +77,11 @@ drei Dinge:**
 - `feedback_no_cross_device_secrets.md`
 - (und später weitere `.md`-Dateien, die im Memory-Ordner hinzukommen)
 
-**Nicht übertragen werden:**
-- `.env` (API-Keys, siehe oben)
-- `Assets.xlsx` (persönliche Finanzdaten, siehe oben)
-- Keine Code-Dateien (`*.py`, `*.json`, etc. — laufen über Git)
+**Auf Ebene 2 nicht übertragen (dafür Ebene 1/USB nutzen, falls nötig):**
+- `.env` (API-Keys)
+- `Assets.xlsx` (persönliche Finanzdaten)
+- Die SQLite-Datenbank
+- Keine Code-Dateien (`*.py`, `*.json`, etc. — laufen immer über Git, alle Ebenen)
 - `.gitignore`, `requirements.txt`, etc. (laufen über Git)
 
 ---
