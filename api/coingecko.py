@@ -41,6 +41,14 @@ class MarketCoin:
     change_24h_pct: float | None
     atl_date: str | None  # Alters-Proxy, siehe agent/krypto/marktscan.py - CoinGecko liefert
     # kein echtes Listing-Datum, live geprueft 2026-07-09
+    # Mehrtages-Kontext (2026-07-16, Marktscan-Momentum-Nachbesserung, siehe
+    # agent/krypto/marktscan.py::score_momentum()) - GRATIS im selben
+    # /coins/markets-Call miterfasst (live per WebFetch verifiziert:
+    # price_change_percentage=24h,7d,30d liefert alle drei Felder ohne
+    # Zusatzkosten). None fuer Kandidaten aus dem Trending-Ergaenzungs-Call
+    # (get_simple_prices() liefert kein 7d/30d, P-10: fehlend statt geraten).
+    change_7d_pct: float | None = None
+    change_30d_pct: float | None = None
 
 
 class CoinGeckoClient:
@@ -138,7 +146,11 @@ class CoinGeckoClient:
         client-seitig sortieren, siehe `fetch_top_gainers()`."""
         params = {
             "vs_currency": vs_currency, "order": "market_cap_desc", "per_page": per_page,
-            "page": page, "sparkline": "false", "price_change_percentage": "24h",
+            "page": page, "sparkline": "false",
+            # 24h,7d,30d in EINEM Call (2026-07-16 erweitert, live per WebFetch
+            # verifiziert - keine Zusatzkosten) - Grundlage fuer den
+            # Mehrtages-Kontext in marktscan.py::score_momentum().
+            "price_change_percentage": "24h,7d,30d",
         }
         data = self._get(f"{BASE_URL}/coins/markets", params)
         return [
@@ -147,6 +159,8 @@ class CoinGeckoClient:
                 price_usd=c.get("current_price"), market_cap_usd=c.get("market_cap"),
                 volume_24h_usd=c.get("total_volume"),
                 change_24h_pct=c.get("price_change_percentage_24h"), atl_date=c.get("atl_date"),
+                change_7d_pct=c.get("price_change_percentage_7d_in_currency"),
+                change_30d_pct=c.get("price_change_percentage_30d_in_currency"),
             )
             for c in data
         ]

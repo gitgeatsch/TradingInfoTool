@@ -217,20 +217,24 @@ def pre_check(
         )
 
     # RM-Bitpanda: nicht auf Bitpanda (der tatsaechlichen Handelsboerse des Nutzers)
-    # gelistete Krypto-Assets koennen nicht gekauft werden - Veto analog RM-1/2/4/5.
-    # Nur fuer assetklasse=="krypto" relevant (Aktien/ETF/Rohstoffe: kein Vergleich
-    # sinnvoll, siehe ui/app.py). bitpanda_gelistet is None (Abruf fehlgeschlagen)
-    # -> kein Veto (P-10: unbekannt != Ausschlussgrund).
-    if asset.assetklasse == "krypto" and bitpanda_gelistet is False:
+    # gelistete Assets koennen nicht gekauft werden - Veto analog RM-1/2/4/5. Bis
+    # 2026-07-16 nur fuer assetklasse=="krypto" geprueft (Audit-Fund: Aktien-Pipeline
+    # reicht bitpanda_gelistet=None durch, kein Vergleich fand je statt) - jetzt
+    # assetklassen-neutral, der Aufrufer liefert den Wert (agent/krypto/pipeline.py
+    # ueber get_listed_assets(), agent/aktien/pipeline.py ueber die neue
+    # get_listed_non_crypto_assets(), beide api/bitpanda.py). bitpanda_gelistet is
+    # None (Abruf fehlgeschlagen ODER Aufrufer verzichtet bewusst) -> kein Veto
+    # (P-10: unbekannt != Ausschlussgrund).
+    if bitpanda_gelistet is False:
         veto_reasons.append(
             f"{asset.symbol} ist nicht bei Bitpanda gelistet - auf der Handelsbörse "
             "des Nutzers aktuell nicht kaufbar"
         )
         checks.append("RM-Bitpanda: FEHLGESCHLAGEN - nicht bei Bitpanda gelistet")
-    elif asset.assetklasse == "krypto" and bitpanda_gelistet is True:
+    elif bitpanda_gelistet is True:
         checks.append("RM-Bitpanda: OK - bei Bitpanda gelistet")
     else:
-        checks.append("RM-Bitpanda: übersprungen (nicht krypto oder Status unbekannt)")
+        checks.append("RM-Bitpanda: übersprungen (Status unbekannt)")
 
     # RM-2: max. Allokation je Einzelwert. Core-Assets (BTC/ETH) haben eine eigene,
     # hoehere Grenze (2026-07-07 eingefuehrt, vorlaeufig - Thema "BTC hat den Lead"

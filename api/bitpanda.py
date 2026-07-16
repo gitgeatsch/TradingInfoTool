@@ -37,6 +37,12 @@ BITPANDA_ASSETS_PAGE_SIZE = 500
 # Gruppen, die tatsaechlich Kryptowaehrungen sind (schliesst stock/etf/etc/metal aus,
 # siehe Modul-Docstring - live per Gruppen-Auszaehlung ermittelt 2026-07-09).
 CRYPTO_ASSET_GROUPS = {"coin", "token", "leveraged_token", "index"}
+# Aktien/ETF/Rohstoff-relevante Gruppen (2026-07-16, schliesst die Aktien-Pipeline-
+# Luecke: risk_gate.py::pre_check() prueft den Bitpanda-Veto bisher nur fuer Krypto,
+# obwohl Bitpanda auch Aktien/ETFs/Rohstoffe fuehrt, siehe importer/bitpanda_sync.py) -
+# live per Gruppen-Auszaehlung desselben /v3/assets-Feeds ermittelt (PLTR/VST als
+# 'stock' bestaetigt gefunden, kein Zusatz-Call noetig).
+NON_CRYPTO_ASSET_GROUPS = {"stock", "etf", "etc", "metal", "security_token"}
 
 # Bekannte Abweichungen zwischen dem internen config.yaml-Symbol und dem am Markt
 # tatsächlich verwendeten Ticker (siehe Modul-Docstring) - dient nur noch als
@@ -55,8 +61,11 @@ class BitpandaAsset:
 
 
 @track_api_health("bitpanda")
-def get_listed_assets(session: requests.Session | None = None) -> list[BitpandaAsset]:
-    """Alle Krypto-relevanten Bitpanda-Assets (Symbol + Name), paginiert abgerufen."""
+def _fetch_all_bitpanda_assets(session: requests.Session | None = None) -> list[BitpandaAsset]:
+    """Alle Bitpanda-Assets ueber ALLE Anlageklassen, paginiert abgerufen (2026-07-16,
+    aus get_listed_assets() extrahiert) - get_listed_assets()/get_listed_non_crypto_
+    assets() filtern beide aus demselben Abruf, kein doppelter Netzwerk-Call noetig,
+    wenn beide in derselben Anfrage gebraucht wuerden."""
     session = session or requests.Session()
     assets: list[BitpandaAsset] = []
     page = 1
@@ -70,13 +79,25 @@ def get_listed_assets(session: requests.Session | None = None) -> list[BitpandaA
         payload = response.json()
         for entry in payload["data"]:
             attrs = entry["attributes"]
-            if attrs["group"] in CRYPTO_ASSET_GROUPS:
-                assets.append(BitpandaAsset(symbol=attrs["symbol"], name=attrs["name"], group=attrs["group"]))
+            assets.append(BitpandaAsset(symbol=attrs["symbol"], name=attrs["name"], group=attrs["group"]))
         meta = payload["meta"]
         if meta["page_number"] * BITPANDA_ASSETS_PAGE_SIZE >= meta["total_count"]:
             break
         page += 1
     return assets
+
+
+def get_listed_assets(session: requests.Session | None = None) -> list[BitpandaAsset]:
+    """Alle Krypto-relevanten Bitpanda-Assets (Symbol + Name), paginiert abgerufen."""
+    return [a for a in _fetch_all_bitpanda_assets(session) if a.group in CRYPTO_ASSET_GROUPS]
+
+
+def get_listed_non_crypto_assets(session: requests.Session | None = None) -> list[BitpandaAsset]:
+    """Alle Aktien/ETF/Rohstoff-relevanten Bitpanda-Assets (2026-07-16) - schliesst
+    die Aktien-Pipeline-Luecke (siehe agent/aktien/pipeline.py::generate_signal(),
+    das bisher bitpanda_gelistet=None hartkodierte). Gleicher oeffentlicher
+    /v3/assets-Endpunkt, live verifiziert: PLTR/VST als Gruppe 'stock' gefunden."""
+    return [a for a in _fetch_all_bitpanda_assets(session) if a.group in NON_CRYPTO_ASSET_GROUPS]
 
 
 def is_listed(symbol: str, listed_assets: list[BitpandaAsset], name: str | None = None) -> bool:

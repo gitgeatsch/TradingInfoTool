@@ -49,7 +49,11 @@ from agent.krypto.hebel_screening import RICHTUNG_LONG
 from agent.krypto.llm_provider import llm_model_label
 from agent.krypto.marktscan import generate_candidate_writeup
 from agent.krypto.pipeline import compute_current_regime, generate_signal
-from agent.krypto.signal_batch import SPOT_COOLDOWN_STUNDEN, select_assets_due_for_signal
+from agent.krypto.signal_batch import (
+    SPOT_COOLDOWN_STUNDEN,
+    SPOT_COOLDOWN_STUNDEN_KERN,
+    select_assets_due_for_signal,
+)
 from database.models import HebelTrigger, MarktscanCandidate
 
 logger = logging.getLogger(__name__)
@@ -160,6 +164,7 @@ def run_budget_allocator(
     gemini_budget = cfg.get("gemini_taegliches_budget", 200)
     cooldown_stunden = cfg.get("cooldown_stunden", 3.5)
     spot_cooldown_stunden = cfg.get("spot_cooldown_stunden", SPOT_COOLDOWN_STUNDEN)
+    spot_cooldown_stunden_kern = cfg.get("spot_cooldown_stunden_kern", SPOT_COOLDOWN_STUNDEN_KERN)
 
     # GUI-Schalter (2026-07-15, Nutzer-Wunsch): "Nur Long" filtert Hebel-
     # Kandidaten VOR dem Cooldown-Check/LLM-Call heraus, nicht erst
@@ -183,6 +188,7 @@ def run_budget_allocator(
         )
         spot_kandidaten = select_assets_due_for_signal(
             conn, watchlist, max_count=budget_gesamt, cooldown_stunden=spot_cooldown_stunden,
+            cooldown_stunden_kern=spot_cooldown_stunden_kern,
         )
         # Echte Tages-Zaehler (2026-07-14-Fix) - EINMAL pro Lauf aus der DB
         # gelesen, statt einer lokalen Variable, die bei jedem 15-Min-Lauf

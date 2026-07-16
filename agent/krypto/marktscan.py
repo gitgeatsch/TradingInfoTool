@@ -193,13 +193,55 @@ def score_fundamental(stufe_a: StufeAResult, filter_cfg: dict) -> tuple[float | 
 
 
 def score_momentum(
-    change_24h_pct: float | None, trending_rank: int | None
+    change_24h_pct: float | None, trending_rank: int | None, change_7d_pct: float | None = None,
 ) -> tuple[float | None, dict]:
+    """Nachbesserung (2026-07-16, Nutzer-Wunsch "Top-Gainer sind bereits
+    gestiegene Coins, ggf. eher zur Korrektur"): die urspruengliche Formel
+    (change_score = 50 + change_24h_pct, ungedeckelt nach oben bis +50%)
+    belohnte JEDE weitere 24h-Steigerung monoton - im Widerspruch zu
+    score_technik() nebenan, das RSI > 70 explizit NICHT als bullisches
+    Signal zaehlt (Zeile "if 30 < rsi < 70"). Reale Notebook-Daten (2026-07-16
+    analysiert, siehe Memory project_llm_budget_ueberlast_2026-07-15)
+    bestaetigten: 9% aller rohen Kandidaten waren schon >100% in 24h
+    gestiegen (ein Ausreisser +2867%) - das alte Scoring haette solche
+    Extremfaelle weiter aufgewertet statt vorsichtiger zu werden.
+
+    Neue Kurve fuer die 24h-Komponente: 0-20% linear steigend (gesunde
+    Beschleunigung), 20-50% Plateau nahe Maximum (weiterhin klar bullisch),
+    > 50% linear ABWERTEND (Ueberhitzungs-/Reversion-Risiko statt weiterem
+    Bonus) - macht dieselbe Grundhaltung wie score_technik()'s RSI-Handling
+    konsistent, ohne dessen Zahlen zu aendern.
+
+    Mehrtages-Kontext (`change_7d_pct`, optional - None fuer Kandidaten aus
+    dem Trending-Ergaenzungscall, siehe api/coingecko.py::MarketCoin):
+    zusaetzlicher Abschlag, wenn der Coin SCHON UEBER 7 TAGE stark gelaufen
+    ist (eher spaet als frisch) - ein frischer Ausbruch (24h hoch, 7d flach)
+    bleibt unbeeinflusst, P-10: fehlende 7d-Daten loesen KEINEN Abschlag aus."""
     if change_24h_pct is None:
         return None, {}
     signale: dict = {"change_24h_pct": change_24h_pct}
-    change_score = 50.0 + max(min(change_24h_pct, 50.0), -50.0)
+
+    if change_24h_pct <= -50.0:
+        change_score = 0.0
+    elif change_24h_pct < 0.0:
+        change_score = 50.0 + change_24h_pct
+    elif change_24h_pct <= 20.0:
+        change_score = 50.0 + change_24h_pct * 2.5
+    elif change_24h_pct <= 50.0:
+        change_score = 100.0
+    else:
+        ueberzogen = min(change_24h_pct - 50.0, 175.0)
+        change_score = max(100.0 - ueberzogen * 0.4, 30.0)
     signale["change_score"] = round(change_score, 1)
+
+    verlaengerungs_malus = 0.0
+    if change_7d_pct is not None and change_24h_pct > 0.0:
+        if change_7d_pct >= 80.0:
+            verlaengerungs_malus = 20.0
+        elif change_7d_pct >= 40.0:
+            verlaengerungs_malus = 10.0
+        signale["change_7d_pct"] = change_7d_pct
+        signale["verlaengerungs_malus"] = verlaengerungs_malus
 
     rank_bonus = 0.0
     if trending_rank is not None:
@@ -207,7 +249,8 @@ def score_momentum(
         signale["trending_rank"] = trending_rank
         signale["rank_bonus"] = round(rank_bonus, 1)
 
-    return round(min(max(change_score + rank_bonus, 0.0), 100.0), 1), signale
+    score = change_score + rank_bonus - verlaengerungs_malus
+    return round(min(max(score, 0.0), 100.0), 1), signale
 
 
 def score_kontext_makro(regime_result: RegimeResult) -> tuple[float | None, dict]:
@@ -388,7 +431,7 @@ def run_scan(
 
         tech_score, tech_signale = score_technik(coin.price_usd, coin.change_24h_pct, snapshot)
         fund_score, fund_signale = score_fundamental(stufe_a, marktscan_cfg["filter"])
-        mom_score, mom_signale = score_momentum(coin.change_24h_pct, entry["trending_rank"])
+        mom_score, mom_signale = score_momentum(coin.change_24h_pct, entry["trending_rank"], coin.change_7d_pct)
 
         scores = {
             "technik": tech_score, "fundamental": fund_score, "momentum": mom_score,

@@ -1503,6 +1503,40 @@ def get_latest_hebel_signal_per_symbol(conn: sqlite3.Connection) -> dict[str, He
     return {row["symbol"]: _row_to_hebel_signal(row) for row in rows}
 
 
+def get_hebel_signal_history(
+    conn: sqlite3.Connection, symbol: str, richtung: str, limit: int = 20,
+) -> list[HebelSignal]:
+    """Wie get_signal_history(), aber fuer hebel_signals - nach (symbol,
+    richtung) gefiltert (2026-07-16, ui/hebel_view.py::HebelSignalHistoryDialog):
+    LONG/SHORT sind unabhaengige Thesen (siehe hebel_backward_tracking.py::
+    _is_superseded()), eine gemeinsame Historie waere irrefuehrend."""
+    rows = conn.execute(
+        "SELECT * FROM hebel_signals WHERE symbol = ? AND richtung = ? ORDER BY created_at DESC LIMIT ?",
+        (symbol, richtung, limit),
+    ).fetchall()
+    return [_row_to_hebel_signal(row) for row in rows]
+
+
+def get_latest_hebel_signal_per_symbol_and_richtung(conn: sqlite3.Connection) -> dict[tuple[str, str], HebelSignal]:
+    """Wie get_latest_hebel_signal_per_symbol(), aber zusaetzlich nach `richtung`
+    gruppiert (2026-07-16, Ueberholt-Erkennung in hebel_backward_tracking.py::
+    _is_superseded()) - ein LONG- und ein SHORT-Signal fuer denselben Coin sind
+    zwei unabhaengige Thesen, eines macht das andere nicht ueberholt."""
+    rows = conn.execute(
+        """
+        SELECT s.* FROM hebel_signals s
+        INNER JOIN (
+            SELECT symbol, richtung, MAX(created_at) AS max_created_at
+            FROM hebel_signals
+            WHERE groq_raw_response IS NOT NULL
+            GROUP BY symbol, richtung
+        ) latest ON s.symbol = latest.symbol AND s.richtung = latest.richtung
+            AND s.created_at = latest.max_created_at
+        """
+    ).fetchall()
+    return {(row["symbol"], row["richtung"]): _row_to_hebel_signal(row) for row in rows}
+
+
 def count_real_hebel_signals_today(conn: sqlite3.Connection) -> int:
     """Fuer den kuenftigen Budget-Allocator (docs/budget_queue_design.md), analog
     count_real_signals_today() - zaehlt echte LLM-Analysen (Groq ODER Cerebras)

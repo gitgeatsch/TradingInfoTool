@@ -441,6 +441,77 @@ und dem LLM-Aufruf heraus (`agent/krypto/budget_allocator.py::
 run_budget_allocator()`) — ein direkter Hebel auf die tatsächliche
 Aufrufzahl, keine nachträgliche Anzeige-Filterung.
 
+**Nachtrag: Zwei-Stufen-Cooldown für Spot-Rotation (2026-07-16, Nutzer-
+Wunsch nach Gewichtungs-Analyse).** Der einheitliche Spot-Cooldown (siehe
+oben, 20 Std.) behandelte gehaltene Kernpositionen (`typ: core`, RM-2) und
+reine taktische Watchlist-Kandidaten ohne Position gleich — obwohl bei
+gehaltenen Positionen echtes Geld an einer Neubewertung hängt. Neuer
+`cooldown_stunden_kern`-Parameter (Default 10 Std., `config.yaml
+budget_allocator.spot_cooldown_stunden_kern`) in
+`select_assets_due_for_signal()`: ein Asset gilt als "Kern", wenn
+`asset.typ == "core"` ODER es aktuell gehalten wird (Bestand + gestakte
+Menge > 0, live per `db.get_all_holdings()` geprüft) — bekommt dann ~2×/Tag
+statt ~1×/Tag eine Neubewertung. Reale Watchlist (2026-07-16): 13 core
+(100 % davon gehalten) + 8 weitere gehaltene taktische Assets = 21
+"Kern"-Symbole, 19 rein taktische Watchlist-Symbole ohne Position bleiben
+bei 20 Std. Moderater Mehrverbrauch (~13-21 zusätzliche Calls/Tag), kein
+Rückfall in die alte Burst-Problematik.
+
+**Nachtrag: Vollständigkeits-Audit der Empfehlungs-E-Mails (2026-07-16,
+Nutzer-Wunsch "prüfe ob alle relevanten Informationen enthalten sind").**
+Bestätigter Fund: `_notify_spot_signal()`/`_notify_hebel_signal()`
+(`scheduler/background.py`) enthielten Positionsgröße
+(`position_size_usd/eur/note`) und AZ-4-Tranchen (`tranchen_json`,
+Anteile je Kauf-Stufe) NICHT im E-Mail-Text — obwohl beides im Signale-Tab
+schon immer vollständig angezeigt wurde. Ebenso fehlte bei Hebel-
+Empfehlungen der `eigenkapitalbedarf_usd` (im Hebel-Tab längst sichtbar).
+Beide E-Mails um die fehlenden Felder ergänzt (neue Hilfsfunktion
+`_formatiere_positionsgroesse_und_tranchen()`, gleiche Rundung/Darstellung
+wie im Signale-Tab). Der Bitpanda-Ausführbarkeits-Hinweis
+(`ausfuehrbarkeit_hinweis`, siehe unten) war dagegen bereits vollständig in
+der Hebel-E-Mail enthalten — keine Lücke dort.
+
+**Nachtrag: automatische Status-Hochstufung watchlist → aktiv (2026-07-16,
+Nutzer-Wunsch nach dem BRETT-Fund).** `config.yaml`s `status`-Feld
+(aktiv/watchlist) wurde bisher NIE automatisch nachgezogen — ein Kauf über
+Bitpanda ließ die Bestandsmenge korrekt synchronisieren, aber der Watchlist-
+Status blieb auf "watchlist" stehen, bis jemand die Datei manuell editierte.
+Neue Funktion `config.py::update_watchlist_status()` (identisches Backup+
+Validierungs-Muster wie `add_watchlist_entry()` — reine Text-Ersetzung NUR
+der betroffenen Zeile, Backup vorher, `yaml.safe_load()`-Validierung danach,
+automatische Wiederherstellung bei Fehlschlag) wird jetzt vom
+`importer/bitpanda_sync.py`-Zuwachs-Zweig aufgerufen, sobald ein Symbol mit
+Status "watchlist" einen echten Bestands-Zuwachs bekommt — für Krypto UND
+Non-Krypto gleichermaßen (derselbe Sync-Pfad). Bewusst NUR diese eine
+Richtung (watchlist → aktiv); die Rückrichtung bei vollständigem Verkauf
+wird NICHT automatisch ausgelöst (ein Coin bleibt oft absichtlich weiter
+beobachtet). Isoliert per try/except — ein Config-Schreibfehler blockiert
+nie den eigentlichen Holdings-Sync. Verifiziert gegen eine Kopie der echten
+`config.yaml` (BRETT watchlist→aktiv, No-Op bei bereits gesetztem Status,
+Nachbar-Einträge unangetastet) — die echte Datei wurde dabei nicht berührt.
+
+**Audit-Ergebnis: Hebel-"Swing" (`trade_thesis_typ: swing_strategie`) und
+Bitpanda-Einschränkung (2026-07-16, Nutzer-Nachfrage).** `richtung`
+(LONG/SHORT) und `trade_thesis_typ` (`einmal_trade` = kurzfristige,
+ereignisgetriebene Squeeze-Chance vs. `swing_strategie` = bestätigter,
+mehrtägiger bis wochenlanger Trend) sind zwei UNABHÄNGIGE Felder im
+Hebel-Schema (`agent/krypto/hebel_analyst.py`) — Swing war nie bewusst
+long-only konzipiert, der SYSTEM_PROMPT deckt "Long UND Short" für beide
+Thesentypen gleich ab. Reale Daten bestätigen aber eine starke
+Konzentration: von 13 realen SHORT-"ERÖFFNEN"-Empfehlungen waren 12
+`swing_strategie` (nur 1 `einmal_trade`) — SHORT-Empfehlungen sind also
+fast ausschließlich mehrtägige Trendfolge-Swings, keine kurzen
+Squeeze-Spielereien. Die Bitpanda-Einschränkung selbst ist bereits
+vollständig und **deterministisch** (nicht von der KI entschieden)
+abgedeckt: `agent/krypto/hebel_risk_gate.py` setzt
+`ausführbarkeit_hinweis` = "Aktuell nicht über Bitpanda ausführbar..." für
+JEDE SHORT-Empfehlung, unabhängig vom Thesentyp — sichtbar im Hebel-Tab UND
+(nach obigem Fix) in der E-Mail. **Kein Code-Fund/keine Lücke** — die
+Entscheidung "Swing/SHORT trotzdem informativ zeigen (Marktlese-Wert) vs.
+komplett unterdrücken" ist bereits als Nutzer-Wahl über den "Nur
+Long"-Schalter (siehe oben) verfügbar, keine zusätzliche Swing-spezifische
+Restriktion nötig.
+
 ### Manuell (GUI-Aktionen, nur bei Klick)
 
 | Aktion | Wo | Was |
@@ -501,17 +572,39 @@ haben keine vergleichbare Take-Profit/Stop-Loss-Logik und werden sofort als
    CRV-Berechnung (Abschnitt 2): ohne Kenntnis der tatsächlichen
    Innertages-Reihenfolge wird nie zugunsten des optimistischeren Ausgangs
    angenommen.
-5. Wird an keinem Tag eine Zone erreicht, bleibt das Signal **offen** — außer
-   es ist bereits älter als `backward_tracking.abgelaufen_nach_tagen`
+5. Bleibt ein Signal an keinem Tag entschieden, wird VOR der reinen
+   Zeitablauf-Prüfung zusätzlich geprüft, ob es bereits **überholt** ist
+   (siehe Punkt 6) — erst wenn auch das nicht zutrifft, bleibt es **offen**,
+   außer es ist bereits älter als `backward_tracking.abgelaufen_nach_tagen`
    (`config.yaml`, aktuell **90 Tage**, vorläufiger Wert) — dann wird es als
    **„Abgelaufen (unentschieden)"** markiert und nicht weiter täglich neu
    geprüft.
+6. **Überholt-Erkennung (2026-07-16, Nutzer-Wunsch: "redundante bzw.
+   gegensätzliche Empfehlungen müssen rausfallen").** Backward-Tracking war
+   bis dahin rein rückblickend/statistisch (Schritt 2 der
+   Selbstverifikations-Vision) — es gab keinen Mechanismus, der eine noch
+   offene, aber durch eine neuere Analyse längst überholte Empfehlung aktiv
+   markiert. Jetzt: bevor ein offenes Signal zeitbasiert abläuft (90 Tage),
+   prüft derselbe tägliche Lauf zusätzlich, ob für dasselbe Symbol (bei
+   Hebel zusätzlich dieselbe Richtung LONG/SHORT) bereits eine **neuere**
+   echte Analyse existiert — unabhängig davon, ob diese zustimmt
+   (redundant, z. B. erneut KAUFEN) oder widerspricht (gegensätzlich, z. B.
+   jetzt VERKAUFEN/HALTEN). Ist das der Fall, wird das ältere Signal sofort
+   als **„Überholt (neuere Analyse vorhanden)"** markiert, unabhängig vom
+   90-Tage-Fenster. Rein deterministischer Datumsvergleich gegen
+   `db.get_latest_real_signal_per_symbol()` (Spot) bzw.
+   `db.get_latest_hebel_signal_per_symbol_and_richtung()` (Hebel, neu) —
+   **kein LLM-Call**, erhöht das Tagesbudget nicht. Bewusst **ohne**
+   automatische Benachrichtigung (Nutzer-Vorgabe "mit oder ohne
+   Benachrichtigung") — sichtbar über den bestehenden
+   "Signal-Historie"-Button (Spot). Für Hebel gibt es aktuell noch keine
+   entsprechende History-Ansicht im Hebel-Tab (offener Punkt, siehe Kap. 15).
 
-**Die fünf neuen Ergebnis-Felder je Signal:**
+**Die sechs Ergebnis-Felder je Signal:**
 
 | Feld | Bedeutung |
 |------|-----------|
-| **Ergebnis-Status** | Einer von: Offen · Take-Profit erreicht · Stop-Loss erreicht · Abgelaufen (unentschieden) · Nicht anwendbar |
+| **Ergebnis-Status** | Einer von: Offen · Take-Profit erreicht · Stop-Loss erreicht · Abgelaufen (unentschieden) · Überholt (neuere Analyse vorhanden) · Nicht anwendbar |
 | **Zuletzt geprüft am** | Zeitstempel des letzten Prüflaufs |
 | **Entschieden am** | Datum, an dem die Zone erreicht wurde (leer, solange offen) |
 | **Realisiertes CRV** | Nur bei entschiedenem Ergebnis: `(erzielter Kurs − Entry-Mitte) / (Entry-Mitte − Stop-Loss-Zone-Untergrenze)` — dieselbe konservative Formel wie die ursprünglich vorhergesagte CRV (Abschnitt 2, Z-2), nur mit dem tatsächlich erreichten Kurs statt der Zonen-Grenze. Positiv bei Take-Profit, negativ bei Stop-Loss. |
@@ -520,7 +613,8 @@ haben keine vergleichbare Take-Profit/Stop-Loss-Logik und werden sofort als
 **Wo du das siehst:** neuer Button **"Signal-Historie"** im Signale-Tab, direkt
 neben "Signal berechnen" — zeigt alle bisherigen Signale des ausgewählten
 Assets mit Datum, Aktion, Konfidenz und Ergebnis-Status, farblich markiert
-(grün = Take-Profit, rot = Stop-Loss, neutral = offen, grau = abgelaufen).
+(grün = Take-Profit, rot = Stop-Loss, neutral = offen, grau = abgelaufen
+ODER überholt).
 Macht eine bereits vorhandene, aber bis dahin nie genutzte Datenbank-Abfrage
 erstmals sichtbar.
 
@@ -1546,6 +1640,14 @@ Startpunkt, sobald Backward-Tracking/Outcome-Daten vorliegen:
   Kap. 6) — erster plausibler Startwert für den neuen Spot-Rotation-Cooldown
   (< 24 Std., damit die tägliche Rotation nicht durch feste Tick-Zeiten
   driftet), noch nicht gegen mehrere Tage echten Betrieb verifiziert.
+- **NEU (2026-07-16):** `budget_allocator.spot_cooldown_stunden_kern` (10
+  Std., Kap. 6) — erster plausibler Wert für die kürzere Kern-Cooldown-Stufe
+  (core/gehaltene Assets), ebenfalls noch nicht über mehrere Tage echten
+  Betrieb verifiziert.
+- **NEU (2026-07-16):** Hebel hat noch keine "Signal-Historie"-Ansicht
+  analog zum Signale-Tab (Kap. 7) — die neue Überholt-Erkennung schreibt den
+  Status zwar korrekt in `hebel_signals.outcome_status`, ist aber im
+  Hebel-Tab aktuell nirgends sichtbar (nur über eine direkte DB-Abfrage).
 
 ---
 
@@ -1574,8 +1676,9 @@ Datenbank (`signals`-Tabelle wird direkt mitgenutzt, kein neues Schema nötig).
   Aktionen (kein TAUSCHEN — Aktienverkauf ist immer steuerlich relevant,
   anders als der österreichische Krypto-zu-Krypto-Tausch).
 - **Wiederverwendet direkt, kein Duplikat:** `agent/krypto/risk_gate.py`
-  (RM-1/RM-2/RM-4/RM-5-Mathematik ist bereits assetklassen-neutral, der
-  Bitpanda-Veto ist bereits bedingt auf `assetklasse == "krypto"`),
+  (RM-1/RM-2/RM-4/RM-5-Mathematik ist bereits assetklassen-neutral; der
+  Bitpanda-Veto war anfangs auf `assetklasse == "krypto"` beschränkt — als
+  echte Lücke erkannt und am 2026-07-16 behoben, siehe Nachtrag unten),
   `agent/krypto/pipeline.py::compute_current_regime()` (liefert
   Liquiditäts-Regime + Aktien-Bärenmarkt-Overlay als Nebenprodukt der
   ohnehin nötigen BTC-Regime-Berechnung), `indicators/calculations.py`
@@ -1617,6 +1720,35 @@ Cerebras abgefangen) — beide Signale korrekt mit Regime-Konfidenz-Veto
 (R-5.10) auf HALTEN korrigiert, CRV-Zonen plausibel, Bewertungs- und
 Earnings-Nähe-Hinweise korrekt erkannt.
 
+**Nachtrag: zwei Lücken aus dem Asset-Verwaltungs-Audit behoben (2026-07-16).**
+Der Nutzer bat um eine Prüfung, ob sich in der Asset-Verwaltung über alle
+Klassen Lücken angesammelt haben, seit sich Rahmenbedingungen (Cooldowns,
+Gewichtung) geändert haben. Zwei echte Fundstellen, beide sofort behoben:
+
+1. **Kein automatischer OHLC-Refresh für Aktien.** Der tägliche Backward-
+   Tracking-Job (Kap. 7) läuft automatisch über ALLE `signals`-Zeilen ohne
+   Assetklassen-Filter — aber Phase 1 aktualisierte `price_history_ohlc`
+   nur bei manuellem Signal-Klick (`_ensure_ohlc_backfilled()`, 5-Tage-
+   Schwelle). Ein offenes PLTR/VST-KAUFEN-Signal wäre also zunehmend gegen
+   veraltete Kurse geprüft worden. Fix: neuer Scheduler-Job
+   `refresh_aktien_ohlc_job` (alle 24 Std., wie der Kraken-OHLC-Refresh),
+   `api/yfinance_history.py::backfill_all_aktien_ohlc()`. Live gegen eine
+   Kopie der Produktions-DB verifiziert: VST 2455→2456, PLTR 1452→1453
+   OHLC-Punkte.
+2. **Fehlender Bitpanda-Check bei Aktien.** `risk_gate.py::pre_check()`
+   prüfte den Bitpanda-Veto bisher nur für `assetklasse == "krypto"` — die
+   Aktien-Pipeline reichte `bitpanda_gelistet=None` hartkodiert durch, der
+   Veto konnte nie auslösen. Aktuell unkritisch (alle 13 Non-Krypto-
+   Einträge sind bereits bestätigt gehaltene Positionen), würde aber zum
+   echten Problem sobald Phase 4 (Discovery) neue, ungeprüfte Kandidaten
+   vorschlägt. Fix: neue `api/bitpanda.py::get_listed_non_crypto_assets()`
+   (derselbe öffentliche `/v3/assets`-Feed wie beim Krypto-Check, live
+   verifiziert: PLTR/VST als Gruppe `stock` gefunden), `pre_check()`s
+   Bitpanda-Bedingung ist jetzt assetklassen-neutral. Live verifiziert
+   (echte DB-Kopie, echter Bitpanda-Call): `bitpanda_gelistet=False` löst
+   jetzt korrekt einen Veto aus (`kauf_erlaubt=False`), `True` lässt den
+   Kauf zu, `None` wird wie zuvor übersprungen (P-10).
+
 **Roadmap (konzeptionell, noch nicht umgesetzt):**
 
 | Phase | Umfang | Kern-Unterschied |
@@ -1624,4 +1756,4 @@ Earnings-Nähe-Hinweise korrekt erkannt.
 | 1 (erledigt) | Einzelaktien (PLTR/VST) | Fundamentaldaten/Bewertung/Bubble-Risiko |
 | 2 | Rohstoff-ETCs (Gold/Silber/Kupfer/Erdgas) | Kein KGV, sondern Angebot/Nachfrage + Zyklen/Knappheit; festes kleines Universum, keine Discovery nötig |
 | 3 | Themen-ETFs (Food&Bev/Agribusiness/Bioenergy/Rare Earth/Copper Miners) | Sektor-Rotation/Themen-Zyklen |
-| 4 | Discovery/Marktscan-Äquivalent | Neue Aktien/ETFs vorschlagen — braucht zuerst eine freie Screener-Datenquelle (kein CoinGecko-Äquivalent bekannt) |
+| 4 | Discovery/Marktscan-Äquivalent | Neue Aktien/ETFs vorschlagen — braucht zuerst eine freie Screener-Datenquelle (kein CoinGecko-Äquivalent bekannt); Bitpanda-Check jetzt bereit dafür |

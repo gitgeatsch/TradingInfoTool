@@ -44,6 +44,19 @@ SIGNAL_STALE_THRESHOLD_DAYS = 7
 # schrittweise nach hinten driftet.
 SPOT_COOLDOWN_STUNDEN = 20.0
 
+# Zwei-Stufen-Cooldown (2026-07-16, Nutzer-Wunsch nach Gewichtungs-Analyse):
+# `core`-Assets (RM-2-Kernallokation) UND aktuell gehaltene Assets bekommen
+# einen kuerzeren Cooldown als reine taktische Watchlist-Kandidaten ohne
+# Position - beide vertreten "echtes Geld/strategische Kernrolle" und
+# verdienen haeufigere Neubewertung als ein x-beliebiger unbeobachteter
+# Satellit. Reale Watchlist (2026-07-16): 13 core (100% davon gehalten) +
+# 8 weitere gehaltene taktische Assets = 21 "Kern"-Symbole, 19 rein
+# taktische Watchlist-Symbole ohne Position bleiben bei SPOT_COOLDOWN_STUNDEN.
+# ~2x/Tag statt ~1x/Tag fuer diese 21 Symbole - moderater Mehrverbrauch
+# (~13-21 zusaetzliche Calls/Tag ggue. reiner Gleichbehandlung), da nur ein
+# Teil der 40 Assets betroffen ist, kein Rueckfall in die alte Burst-Problematik.
+SPOT_COOLDOWN_STUNDEN_KERN = 10.0
+
 
 @dataclass
 class BatchResult:
@@ -66,6 +79,7 @@ def _tage_seit(created_at: str | None) -> float:
 
 def select_assets_due_for_signal(
     conn, watchlist: list, max_count: int, cooldown_stunden: float | None = SPOT_COOLDOWN_STUNDEN,
+    cooldown_stunden_kern: float | None = SPOT_COOLDOWN_STUNDEN_KERN,
 ) -> list:
     """Sortiert alle Watchlist-Assets (aktiv UND watchlist-Status - Nutzer-
     Wunsch 2026-07-13: 'sonst macht es keinen Sinn') nach Tagen seit der
@@ -86,13 +100,21 @@ def select_assets_due_for_signal(
     Allocator (budget_allocator.py) diese Funktion alle 15 Min auf - ohne
     Cooldown rotierte das System bei ~40 Krypto-Assets komplett innerhalb
     von ~40 Minuten durch (bestaetigt: 234 Spot-Signale an einem Tag fuer
-    nur 40 distinkte Symbole). `cooldown_stunden` (Default
-    SPOT_COOLDOWN_STUNDEN) schliesst jetzt Assets mit einer echten Analyse
-    INNERHALB des Cooldown-Fensters aus, bevor sortiert/gekappt wird -
-    analog zum bereits bestehenden Hebel-/Marktscan-Cooldown in
-    budget_allocator.py (dort war Tier 3 bisher die einzige Ausnahme ohne
+    nur 40 distinkte Symbole). `cooldown_stunden` schliesst jetzt Assets mit
+    einer echten Analyse INNERHALB des Cooldown-Fensters aus, bevor sortiert/
+    gekappt wird - analog zum bereits bestehenden Hebel-/Marktscan-Cooldown
+    in budget_allocator.py (dort war Tier 3 bisher die einzige Ausnahme ohne
     Gate). `cooldown_stunden=None` behaelt das alte, ungefilterte Verhalten
     bei (z.B. fuer Tests).
+
+    Zwei-Stufen-Cooldown (2026-07-16, Nutzer-Wunsch nach Gewichtungs-
+    Analyse): ein Asset gilt als "Kern" (kuerzerer `cooldown_stunden_kern`),
+    wenn `asset.typ == "core"` ODER es aktuell gehalten wird (Bestand+
+    gestakte Menge > 0, live per `db.get_all_holdings()` geprueft) - beide
+    Faelle bedeuten "echtes Geld/strategische Rolle", verdienen haeufigere
+    Neubewertung als ein unbeobachteter taktischer Watchlist-Kandidat ohne
+    Position. `cooldown_stunden_kern=None` deaktiviert die Zwei-Stufigkeit
+    (dann gilt `cooldown_stunden` fuer alle gleich, altes Verhalten).
 
     Stablecoins ausgeschlossen (A-1: bekommen strukturell nie ein echtes
     Signal - generate_signal() gibt sofort HALTEN zurueck, ohne Groq zu
@@ -107,12 +129,32 @@ def select_assets_due_for_signal(
     ui/signals_view.py::SignalsView.__init__()."""
     latest_real = db.get_latest_real_signal_per_symbol(conn)
     candidates = [a for a in watchlist if a.assetklasse == "krypto" and a.typ != "stablecoin"]
-    if cooldown_stunden:
-        grenze = (datetime.now(timezone.utc) - timedelta(hours=cooldown_stunden)).isoformat()
-        candidates = [
-            a for a in candidates
-            if a.symbol not in latest_real or latest_real[a.symbol].created_at < grenze
-        ]
+
+    kern_symbole: set[str] = set()
+    if cooldown_stunden_kern is not None:
+        gehaltene_symbole = {
+            h.symbol for h in db.get_all_holdings(conn)
+            if (h.quantity or 0.0) + (h.staked_quantity or 0.0) > 0.0
+        }
+        kern_symbole = {a.symbol for a in candidates if a.typ == "core" or a.symbol in gehaltene_symbole}
+
+    def _cooldown_fuer(asset) -> float | None:
+        return cooldown_stunden_kern if asset.symbol in kern_symbole else cooldown_stunden
+
+    if cooldown_stunden or cooldown_stunden_kern:
+        now = datetime.now(timezone.utc)
+        gefiltert = []
+        for a in candidates:
+            cd = _cooldown_fuer(a)
+            if not cd:
+                gefiltert.append(a)
+                continue
+            grenze = (now - timedelta(hours=cd)).isoformat()
+            sig = latest_real.get(a.symbol)
+            if sig is None or sig.created_at < grenze:
+                gefiltert.append(a)
+        candidates = gefiltert
+
     candidates.sort(
         key=lambda a: _tage_seit(latest_real[a.symbol].created_at if a.symbol in latest_real else None),
         reverse=True,

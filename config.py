@@ -166,3 +166,73 @@ def add_watchlist_entry(
 
     global _config_cache
     _config_cache = None
+
+
+def update_watchlist_status(symbol: str, new_status: str) -> bool:
+    """Aktualisiert NUR das `status`-Feld eines bestehenden Watchlist-Eintrags
+    (2026-07-16, Nutzer-Wunsch: automatischer Übergang watchlist -> aktiv,
+    sobald ein Coin/Asset tatsächlich gehalten wird - Auslöser war der BRETT-
+    Fund, dessen `status: watchlist` nach einem echten Kauf veraltet blieb,
+    weil nichts es je automatisch nachzog). Reine Text-Ersetzung INNERHALB des
+    betroffenen Eintrags-Blocks (identisches Backup+Validierungs-Muster wie
+    `add_watchlist_entry()` - Backup vorher, `yaml.safe_load()`-Validierung
+    danach, automatische Wiederherstellung bei Fehlschlag).
+
+    Gibt `False` zurück (kein Schreibvorgang, kein Backup) wenn der Eintrag
+    nicht existiert ODER bereits den Zielstatus hat - nur ein echter
+    Wertwechsel schreibt tatsächlich. Bewusst NUR diese eine Richtung
+    (watchlist -> aktiv als Nebeneffekt eines Bestands-Zuwachses) - die
+    Rückrichtung (aktiv -> watchlist bei vollständigem Verkauf) ist eine
+    bewusst andere Entscheidung (ein Coin bleibt oft absichtlich beobachtet)
+    und wird hier nicht automatisch ausgelöst."""
+    original_bytes = CONFIG_PATH.read_bytes()
+    newline_style = "\r\n" if b"\r\n" in original_bytes else "\n"
+    original_text = original_bytes.decode("utf-8")
+    lines = original_text.splitlines(keepends=True)
+
+    entry_start = next(
+        (i for i, line in enumerate(lines) if line.strip() == f"- symbol: {symbol}"), None,
+    )
+    if entry_start is None:
+        return False
+
+    entry_end = len(lines)
+    for i in range(entry_start + 1, len(lines)):
+        if lines[i].lstrip().startswith("- symbol:") or not lines[i].startswith(" "):
+            entry_end = i
+            break
+
+    status_line_idx = next(
+        (i for i in range(entry_start, entry_end) if lines[i].strip().startswith("status:")), None,
+    )
+    if status_line_idx is None:
+        return False
+
+    current_status = lines[status_line_idx].split(":", 1)[1].strip()
+    if current_status == new_status:
+        return False
+
+    indent = lines[status_line_idx][: len(lines[status_line_idx]) - len(lines[status_line_idx].lstrip())]
+    lines[status_line_idx] = f"{indent}status: {new_status}{newline_style}"
+    new_text = "".join(lines)
+
+    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    backup_path = BACKUP_DIR / f"config.yaml.{timestamp}.bak"
+    shutil.copy2(CONFIG_PATH, backup_path)
+
+    CONFIG_PATH.write_bytes(new_text.encode("utf-8"))
+
+    try:
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+            reparsed = yaml.safe_load(f)
+        matching = next((e for e in reparsed["watchlist"] if e["symbol"] == symbol), None)
+        if matching is None or matching["status"] != new_status:
+            raise WatchlistWriteError("Validierung fehlgeschlagen: status nicht wie erwartet gesetzt")
+    except Exception as exc:
+        shutil.copy2(backup_path, CONFIG_PATH)
+        raise WatchlistWriteError(f"Schreiben fehlgeschlagen, Backup wiederhergestellt: {exc}") from exc
+
+    global _config_cache
+    _config_cache = None
+    return True

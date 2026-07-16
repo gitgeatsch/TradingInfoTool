@@ -23,6 +23,7 @@ from agent.krypto.backward_tracking import (
     OUTCOME_OFFEN,
     OUTCOME_STOP_LOSS,
     OUTCOME_TAKE_PROFIT,
+    OUTCOME_UEBERHOLT,
 )
 
 # ERÖFFNEN/NACHKAUFEN sind die einzigen Aktionen mit Entry/Stop-Pflicht + CRV>=2.0-
@@ -38,6 +39,7 @@ class HebelBackwardTrackingResult:
     resolved_stop_loss: int = 0
     resolved_liquidation: int = 0
     expired: int = 0
+    superseded: int = 0
     still_open: int = 0
     warnings: list[str] = field(default_factory=list)
 
@@ -134,6 +136,15 @@ def check_hebel_signal_outcome(conn, signal, watchlist) -> tuple[str, dict]:
     return OUTCOME_OFFEN, {}
 
 
+def _is_superseded(signal, latest_real: dict) -> bool:
+    """Mirror backward_tracking.py::_is_superseded(), aber nach (symbol,
+    richtung) geschluesselt - ein LONG- und ein SHORT-Signal fuer denselben
+    Coin sind unabhaengige Thesen, eines ueberholt das andere nicht. Rein
+    deterministischer Datums-/ID-Vergleich, KEIN LLM-Call."""
+    latest = latest_real.get((signal.symbol, signal.richtung))
+    return latest is not None and latest.id != signal.id and latest.created_at > signal.created_at
+
+
 def _is_expired(signal, abgelaufen_nach_tagen: int) -> bool:
     created = datetime.fromisoformat(signal.created_at)
     if created.tzinfo is None:
@@ -152,6 +163,7 @@ def run_hebel_backward_tracking(conn, watchlist, config: dict) -> HebelBackwardT
     abgelaufen_nach_tagen = (
         config.get("backward_tracking", {}).get("abgelaufen_nach_tagen", DEFAULT_ABGELAUFEN_NACH_TAGEN)
     )
+    latest_real = db.get_latest_hebel_signal_per_symbol_and_richtung(conn)
 
     rows = conn.execute(
         "SELECT id FROM hebel_signals WHERE outcome_status IS NULL OR outcome_status = ?",
@@ -185,8 +197,11 @@ def run_hebel_backward_tracking(conn, watchlist, config: dict) -> HebelBackwardT
                 result.resolved_liquidation += 1
             continue
 
-        # status == OUTCOME_OFFEN: nur schreiben, wenn zusaetzlich abgelaufen.
-        if _is_expired(signal, abgelaufen_nach_tagen):
+        # status == OUTCOME_OFFEN: erst Ueberholt-Check, dann Ablauf-Check.
+        if _is_superseded(signal, latest_real):
+            db.update_hebel_signal_outcome(conn, signal.id, OUTCOME_UEBERHOLT)
+            result.superseded += 1
+        elif _is_expired(signal, abgelaufen_nach_tagen):
             db.update_hebel_signal_outcome(conn, signal.id, OUTCOME_ABGELAUFEN)
             result.expired += 1
         else:

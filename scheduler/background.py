@@ -15,6 +15,7 @@ from api.history import backfill_all
 from api.kraken import KRAKEN_PAIR_MAP
 from api.kraken_history import backfill_all_ohlc
 from api.yfinance_client import YFinanceClient
+from api.yfinance_history import backfill_all_aktien_ohlc
 
 logger = logging.getLogger(__name__)
 
@@ -192,6 +193,28 @@ def refresh_ohlc_job(client, conn_factory, watchlist) -> None:
     except Exception as exc:
         logger.exception("Kraken-OHLC-Refresh fehlgeschlagen")
         _notify_job_failure("refresh_ohlc", f"Kraken-OHLC-Refresh fehlgeschlagen: {exc}")
+    finally:
+        conn.close()
+
+
+def refresh_aktien_ohlc_job(conn_factory, watchlist) -> None:
+    """Automatischer taeglicher OHLC-Refresh fuer Einzelaktien (2026-07-16, siehe
+    api/yfinance_history.py::backfill_all_aktien_ohlc() Docstring fuer den vollen
+    Kontext - schliesst eine Luecke aus dem Asset-Verwaltungs-Audit: ohne diesen Job
+    haette der taegliche Backward-Tracking-Job offene Aktien-Signale zunehmend gegen
+    veraltete Kursdaten geprueft, da Phase 1 der Aktien-Pipeline OHLC bisher nur bei
+    manuellem Signal-Klick aktualisierte)."""
+    conn = conn_factory()
+    try:
+        results = backfill_all_aktien_ohlc(conn, watchlist)
+        degraded = [r for r in results if r.degraded]
+        logger.info(
+            "Aktien-OHLC-Refresh: %d/%d Assets aktualisiert (%d degradiert)",
+            len(results) - len(degraded), len(results), len(degraded),
+        )
+    except Exception as exc:
+        logger.exception("Aktien-OHLC-Refresh fehlgeschlagen")
+        _notify_job_failure("refresh_aktien_ohlc", f"Aktien-OHLC-Refresh fehlgeschlagen: {exc}")
     finally:
         conn.close()
 
@@ -523,6 +546,46 @@ def _formatiere_top_gruende(signal) -> str:
     return "\n".join(f"- {g}" for g in gruende if g)
 
 
+def _formatiere_positionsgroesse_und_tranchen(signal) -> str:
+    """Nachbesserung (2026-07-16, Nutzer-Audit 'sind alle relevanten Infos in
+    der E-Mail enthalten?'): position_size_*/tranchen_json waren im
+    Signale-Tab (ui/signals_view.py) schon immer vollstaendig sichtbar, in
+    der E-Mail bisher aber komplett gefehlt - ohne Kaufmenge/Tranchen-Anteile
+    ist eine Empfehlung von unterwegs nicht vollstaendig umsetzbar. Gleiche
+    Rundung/Darstellung wie im Signale-Tab (format_money), bewusst kompakter
+    (keine Zonen-Wiederholung, die stehen bereits weiter oben in der Mail)."""
+    import json
+
+    from ui.formatting import format_money
+
+    zeilen = []
+    if signal.position_size_usd or signal.position_size_eur or signal.position_size_note:
+        zeilen.append(
+            f"Positionsgröße: {format_money(signal.position_size_usd)} USD / "
+            f"{format_money(signal.position_size_eur)} EUR"
+        )
+        if signal.position_size_note:
+            zeilen.append(f"  {signal.position_size_note}")
+
+    tranchen = None
+    if signal.tranchen_json:
+        try:
+            tranchen = sorted(json.loads(signal.tranchen_json), key=lambda t: t.get("rang", 0))
+        except (ValueError, TypeError):
+            tranchen = None
+    if tranchen:
+        zeilen.append("Tranchen (Info, keine automatische Ausführung):")
+        gesamt_usd = signal.position_size_usd
+        for eintrag in tranchen:
+            anteil = eintrag.get("anteil_prozent")
+            betrag_text = ""
+            if gesamt_usd and anteil is not None:
+                betrag_text = f" (~{format_money(gesamt_usd * anteil / 100)} USD)"
+            zeilen.append(f"  Tranche {eintrag.get('rang')}: {anteil:g}%{betrag_text}")
+
+    return "\n".join(zeilen)
+
+
 def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None) -> None:
     """E-Mail bei handlungsrelevanter Spot-Empfehlung (2026-07-14, Erweiterung
     von U-8/P-7 - Empfehlungen sollen den Nutzer auch erreichen, wenn er selten
@@ -546,6 +609,7 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None) -
         if not empfaenger:
             return
 
+        positionsgroesse_text = _formatiere_positionsgroesse_und_tranchen(signal)
         body = (
             f"Aktion: {signal.action}\n"
             f"Konfidenz: {signal.confidence_pct}%\n\n"
@@ -554,7 +618,8 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None) -
             f"Entry: {signal.entry_eur_von}-{signal.entry_eur_bis} EUR\n"
             f"Stop-Loss: {signal.stop_loss_eur_von}-{signal.stop_loss_eur_bis} EUR\n"
             f"Take-Profit: {signal.take_profit_eur_von}-{signal.take_profit_eur_bis} EUR\n\n"
-            "Details im Signale-Tab der App. Ausführung manuell über die Bitpanda-App."
+            + (f"{positionsgroesse_text}\n\n" if positionsgroesse_text else "")
+            + "Details im Signale-Tab der App. Ausführung manuell über die Bitpanda-App."
         )
         send_notification_email(f"TradingInfoTool: {signal.action} {signal.symbol}", body, empfaenger)
     except Exception:
@@ -583,6 +648,10 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None) 
             return
 
         hinweis = f"\nHinweis: {signal.ausfuehrbarkeit_hinweis}\n" if signal.ausfuehrbarkeit_hinweis else ""
+        eigenkapital_zeile = (
+            f"Eigenkapitalbedarf: {signal.eigenkapitalbedarf_usd} USD\n"
+            if signal.eigenkapitalbedarf_usd is not None else ""
+        )
         body = (
             f"Richtung: {signal.richtung}, Aktion: {signal.action}\n"
             f"Hebel: {signal.hebel_final}x, Konfidenz: {signal.confidence_pct}%\n\n"
@@ -592,6 +661,7 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None) 
             f"Stop-Loss: {signal.stop_loss_eur_von}-{signal.stop_loss_eur_bis} EUR\n"
             f"Take-Profit: {signal.take_profit_eur_von}-{signal.take_profit_eur_bis} EUR\n"
             f"Geschätzter Liquidationspreis: {signal.liquidationspreis_geschaetzt_usd} USD\n"
+            f"{eigenkapital_zeile}"
             f"{hinweis}\n"
             "Details im Hebel-Tab der App. Ausführung manuell über die Bitpanda-App."
         )
@@ -840,6 +910,18 @@ def build_scheduler(
         minutes=SECURITIES_REFRESH_INTERVAL_MINUTES,
         args=[YFinanceClient(), db_conn_factory, watchlist],
         id="refresh_securities_prices",
+        next_run_time=datetime.now(),
+    )
+    # Aktien-OHLC-Refresh (2026-07-16, Asset-Verwaltungs-Audit-Fund, siehe
+    # refresh_aktien_ohlc_job()-Docstring) - kein Staleness-Vorab-Check wie bei
+    # refresh_ohlc oben noetig: nur eine Handvoll Aktien-Assets, yfinance-Abruf
+    # ist im Gegensatz zu CoinGecko/Kraken nicht kontingentiert.
+    scheduler.add_job(
+        refresh_aktien_ohlc_job,
+        "interval",
+        hours=OHLC_REFRESH_INTERVAL_HOURS,
+        args=[db_conn_factory, watchlist],
+        id="refresh_aktien_ohlc",
         next_run_time=datetime.now(),
     )
     # Hebel-Screening (2026-07-14, Phase 1) - eigener 15-Min-Takt, unabhaengig vom

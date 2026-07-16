@@ -110,6 +110,10 @@ class HebelView(ttk.Frame):
             toolbar, text="Jetzt analysieren", command=self._on_analyze_clicked, state="disabled"
         )
         self.analyze_button.pack(side="left")
+        self.history_button = ttk.Button(
+            toolbar, text="Signal-Historie", command=self._on_history_clicked, state="disabled"
+        )
+        self.history_button.pack(side="left", padx=(8, 0))
         self.status_label = ttk.Label(toolbar, text="", foreground=theme.info_color())
         self.status_label.pack(side="left", padx=(12, 0))
 
@@ -211,10 +215,12 @@ class HebelView(ttk.Frame):
         self._selected_row = row
         if row is None:
             self.analyze_button.config(state="disabled")
+            self.history_button.config(state="disabled")
             self.action_label.config(text="Keine Auswahl", foreground=theme.default_text_color())
             self.meta_label.config(text="")
             self._set_detail_text("")
             return
+        self.history_button.config(state="normal")
 
         kind, obj = row
         if kind == "kandidat":
@@ -436,3 +442,98 @@ class HebelView(ttk.Frame):
         else:
             self.status_label.config(text="Fertig.", foreground=theme.info_color())
         self.refresh()
+
+    def _on_history_clicked(self) -> None:
+        """Signal-Historie-Dialog (2026-07-16, mirror ui/signals_view.py::
+        SignalHistoryDialog) - macht die Ueberholt-/Ablauf-/Take-Profit-/
+        Stop-Loss-/Liquidations-Ergebnisse aus dem Hebel-Backward-Tracking
+        erstmals im Hebel-Tab sichtbar (bisher nur per direkter DB-Abfrage
+        einsehbar). Nach (symbol, richtung) gefiltert, da LONG/SHORT
+        unabhaengige Thesen sind - identisches Prinzip wie die neue
+        Ueberholt-Erkennung."""
+        if self._selected_row is None:
+            return
+        _, obj = self._selected_row
+        symbol, richtung = obj.symbol, obj.richtung
+        conn = self._db_conn_factory()
+        try:
+            history = db.get_hebel_signal_history(conn, symbol, richtung)
+        finally:
+            conn.close()
+        HebelSignalHistoryDialog(self, symbol, richtung, history)
+
+
+_HEBEL_OUTCOME_LABELS = {
+    "offen": "Offen",
+    "take_profit_erreicht": "Take-Profit erreicht",
+    "stop_loss_erreicht": "Stop-Loss erreicht",
+    "liquidation_wahrscheinlich": "Liquidation wahrscheinlich",
+    "abgelaufen_unentschieden": "Abgelaufen (unentschieden)",
+    "ueberholt_durch_neuere_analyse": "Überholt (neuere Analyse vorhanden)",
+    "nicht_anwendbar": "Nicht anwendbar",
+}
+
+
+def _hebel_outcome_color(status: str | None):
+    if status == "take_profit_erreicht":
+        return theme.umgesetzt_color()
+    if status in ("stop_loss_erreicht", "liquidation_wahrscheinlich"):
+        return theme.danger_color()
+    if status in ("abgelaufen_unentschieden", "ueberholt_durch_neuere_analyse"):
+        return theme.stale_color()
+    if status == "offen":
+        return theme.info_color()
+    return theme.default_text_color()
+
+
+_HEBEL_SIGNAL_HISTORY_COLUMN_DESCRIPTIONS = {
+    "datum": "Zeitpunkt der Analyse.",
+    "aktion": "Empfohlene Aktion.",
+    "konfidenz": "Von der KI angegebene Konfidenz (0-100%).",
+    "outcome": "Ergebnis des Hebel-Backward-Trackings (taeglicher 06:00-Job).",
+}
+
+
+class HebelSignalHistoryDialog(tk.Toplevel):
+    """Hebel-Pendant zu ui/signals_view.py::SignalHistoryDialog - reine
+    Anzeige aller bisherigen Hebel-Signale fuer EIN (symbol, richtung),
+    inkl. Outcome-Status (Take-Profit/Stop-Loss/Liquidation/Abgelaufen/
+    Überholt/Offen)."""
+
+    def __init__(self, parent, symbol: str, richtung: str, history: list) -> None:
+        super().__init__(parent)
+        self.title(f"Hebel-Signal-Historie — {symbol} ({richtung})")
+        self.resizable(True, True)
+        self.transient(parent)
+        self.grab_set()
+        self.geometry("720x400")
+
+        frame = ttk.Frame(self, padding=12)
+        frame.pack(fill="both", expand=True)
+
+        if not history:
+            ttk.Label(frame, text="Noch keine Hebel-Signale für diese Richtung vorhanden.").pack(anchor="w")
+            ttk.Button(frame, text="Schließen", command=self.destroy).pack(anchor="e", pady=(10, 0))
+            return
+
+        columns = ("datum", "aktion", "konfidenz", "outcome")
+        tree = ttk.Treeview(frame, columns=columns, show="headings", height=14)
+        headings = {"datum": "Datum", "aktion": "Aktion", "konfidenz": "Konfidenz", "outcome": "Ergebnis"}
+        for col in columns:
+            tree.heading(col, text=headings[col])
+            tree.column(col, width=150 if col != "outcome" else 220, anchor="w")
+        add_heading_tooltips(tree, _HEBEL_SIGNAL_HISTORY_COLUMN_DESCRIPTIONS)
+        tree.pack(fill="both", expand=True)
+
+        for signal in history:
+            when = signal.created_at[:16].replace("T", " ") if signal.created_at else "-"
+            konfidenz = f"{signal.confidence_pct:.0f} %" if signal.confidence_pct is not None else "-"
+            status = signal.outcome_status
+            outcome_text = _HEBEL_OUTCOME_LABELS.get(status, "—") if status else "—"
+            if status in ("take_profit_erreicht", "stop_loss_erreicht") and signal.outcome_realisiertes_crv is not None:
+                outcome_text += f" (CRV {signal.outcome_realisiertes_crv:.2f})"
+            item_id = tree.insert(
+                "", "end", values=(when, signal.action, konfidenz, outcome_text), tags=(status or "none",)
+            )
+            tree.tag_configure(status or "none", foreground=_hebel_outcome_color(status))
+        theme.restripe_treeview(tree)

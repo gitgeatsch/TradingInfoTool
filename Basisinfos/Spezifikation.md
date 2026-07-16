@@ -1063,6 +1063,31 @@ Echte Groq-P-5-Begründung für einen Kaufkandidaten erzeugt (manueller UND
 automatischer Pfad). Neuer UI-Tab "Marktscan" (`ui/marktscan_view.py`) inkl.
 "Jetzt scannen" (~46s für einen vollen Lauf, UI bleibt reaktionsfähig).
 
+**Nachbesserung Momentum-Score (2026-07-16, Nutzer-Einschätzung "Top-Gainer
+sind bereits gestiegene Coins, ggf. eher zur Korrektur").** Reale Notebook-
+Daten (13 Scan-Läufe, 500 Kandidaten, siehe Memory
+`project_llm_budget_ueberlast_2026-07-15`) bestätigten den Verdacht
+teilweise: 9 % aller rohen Kandidaten waren bei Entdeckung bereits >100 %
+in 24h gestiegen (ein Ausreißer +2867 %), die ursprüngliche `score_momentum()`-
+Formel (`50 + change_24h_pct`, ungedeckelt bis +50 %) hätte solche Extremfälle
+aber nur immer WEITER aufgewertet — im Widerspruch zu `score_technik()`
+daneben, das RSI-Extremzonen (>70) bewusst NICHT als bullisches Signal
+zählt. Die tatsächlichen `kaufkandidat`-Fälle selbst lagen historisch
+moderater (13–32 % 24h-Änderung, Median 14,7 %) — die extremsten Ausreißer
+scheitern meist schon an Stufe A (Volumen/Marktkap.-Band, Mindestalter).
+
+Fix: `score_momentum()` bekam eine Kurve mit Sattelpunkt (0–20 % linear
+steigend, 20–50 % Plateau nahe Maximum, > 50 % linear ABWERTEND statt
+weiterem Bonus) plus einen optionalen Mehrtages-Malus, wenn `change_7d_pct`
+(neu, GRATIS im selben `/coins/markets`-Call miterfasst, live per WebFetch
+verifiziert) zeigt, dass die Bewegung schon über mehrere Tage lief statt
+frisch zu sein. Gegen die historischen 18 echten Kaufkandidaten
+durchgerechnet: keiner lag in der neuen Abwertungszone (>50 %), alle
+bekamen tendenziell einen HÖHEREN Score (steilere Belohnung im
+10–20-%-Bereich) — die Korrektur wirkt also gezielt nur auf die bisher
+ungebremst belohnten Extremfälle, nicht auf den typischen historischen
+Kaufkandidaten.
+
 ## 14. Regime-Steuerung — marktabhängiges Verhalten
 
 Werte in `config.yaml → regime`. **Querschnitts-Modul**, das sowohl den Marktscan

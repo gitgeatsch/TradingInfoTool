@@ -21,6 +21,10 @@ OUTCOME_TAKE_PROFIT = "take_profit_erreicht"
 OUTCOME_STOP_LOSS = "stop_loss_erreicht"
 OUTCOME_ABGELAUFEN = "abgelaufen_unentschieden"
 OUTCOME_NICHT_ANWENDBAR = "nicht_anwendbar"
+# Aktive Ueberholt-Erkennung (2026-07-16, Nutzer-Wunsch: "redundante bzw.
+# gegensaetzliche Empfehlungen muessen rausfallen") - siehe _is_superseded().
+# Rein deterministischer Datumsvergleich, KEIN LLM-Call.
+OUTCOME_UEBERHOLT = "ueberholt_durch_neuere_analyse"
 # Nur fuer hebel_signals relevant (siehe agent/krypto/hebel_backward_tracking.py),
 # hier definiert statt dort, um einen Kreisimport zu vermeiden (hebel_backward_
 # tracking.py importiert die OUTCOME_*-Konstanten bereits von hier).
@@ -39,6 +43,7 @@ class BackwardTrackingResult:
     resolved_take_profit: int = 0
     resolved_stop_loss: int = 0
     expired: int = 0
+    superseded: int = 0
     still_open: int = 0
     warnings: list[str] = field(default_factory=list)
 
@@ -123,6 +128,21 @@ def check_signal_outcome(conn, signal, watchlist) -> tuple[str, dict]:
     return OUTCOME_OFFEN, {}
 
 
+def _is_superseded(signal, latest_real: dict) -> bool:
+    """2026-07-16 (Nutzer-Wunsch nach der Backward-Tracking-Diskussion:
+    'redundante bzw. gegensaetzliche Empfehlungen muessen rausfallen, mit
+    oder ohne Benachrichtigung'): ein noch offenes KAUFEN/NACHKAUFEN-Signal
+    gilt als ueberholt, sobald fuer dasselbe Symbol bereits eine NEUERE
+    echte Analyse vorliegt - unabhaengig davon, ob die neue Empfehlung
+    zustimmt (redundant - z.B. erneut KAUFEN) oder widerspricht
+    (gegensaetzlich - z.B. jetzt VERKAUFEN/HALTEN). Rein deterministischer
+    Datums-/ID-Vergleich gegen `db.get_latest_real_signal_per_symbol()`
+    (bereits einmal pro Lauf geladen) - KEIN LLM-Call, erhoeht das
+    Tagesbudget nicht."""
+    latest = latest_real.get(signal.symbol)
+    return latest is not None and latest.id != signal.id and latest.created_at > signal.created_at
+
+
 def _is_expired(signal, abgelaufen_nach_tagen: int) -> bool:
     from datetime import datetime, timezone
 
@@ -137,11 +157,16 @@ def run_backward_tracking(conn, watchlist, config: dict) -> BackwardTrackingResu
     """Holt alle Signale mit outcome_status IN (NULL, 'offen'), prueft jedes gegen
     die Kurshistorie, schreibt ein Ergebnis nur bei tatsaechlicher Statusaenderung
     (kein Write bei weiterhin 'offen' - reduziert unnoetige DB-Last bei jedem
-    taeglichen Lauf)."""
+    taeglichen Lauf).
+
+    Ueberholt-Erkennung (2026-07-16, siehe _is_superseded()): `latest_real`
+    einmal pro Lauf geladen (identisches Muster wie signal_batch.py), damit
+    der Vergleich ohne N Zusatz-Queries auskommt."""
     result = BackwardTrackingResult()
     abgelaufen_nach_tagen = (
         config.get("backward_tracking", {}).get("abgelaufen_nach_tagen", DEFAULT_ABGELAUFEN_NACH_TAGEN)
     )
+    latest_real = db.get_latest_real_signal_per_symbol(conn)
 
     rows = conn.execute(
         "SELECT id FROM signals WHERE outcome_status IS NULL OR outcome_status = ?",
@@ -173,8 +198,11 @@ def run_backward_tracking(conn, watchlist, config: dict) -> BackwardTrackingResu
                 result.resolved_stop_loss += 1
             continue
 
-        # status == OUTCOME_OFFEN: nur schreiben, wenn zusaetzlich abgelaufen.
-        if _is_expired(signal, abgelaufen_nach_tagen):
+        # status == OUTCOME_OFFEN: erst Ueberholt-Check, dann Ablauf-Check.
+        if _is_superseded(signal, latest_real):
+            db.update_signal_outcome(conn, signal.id, OUTCOME_UEBERHOLT)
+            result.superseded += 1
+        elif _is_expired(signal, abgelaufen_nach_tagen):
             db.update_signal_outcome(conn, signal.id, OUTCOME_ABGELAUFEN)
             result.expired += 1
         else:

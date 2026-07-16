@@ -518,7 +518,16 @@ budget_allocator:
                                         # hatte bisher KEINEN Cooldown, rotierte bei ~40 Krypto-
                                         # Assets alle ~40 Min komplett durch (234 Signale/Tag fuer
                                         # nur 40 Symbole). <24h, damit die taegliche Rotation nicht
-                                        # durch feste Tick-Zeiten nach hinten driftet.
+                                        # durch feste Tick-Zeiten nach hinten driftet. Gilt fuer
+                                        # rein taktische Watchlist-Assets ohne Position (siehe
+                                        # spot_cooldown_stunden_kern).
+  spot_cooldown_stunden_kern: 10         # Zwei-Stufen-Cooldown (2026-07-16, Nutzer-Wunsch nach
+                                        # Gewichtungs-Analyse): kuerzerer Cooldown fuer typ=core
+                                        # UND aktuell gehaltene Assets (~2x/Tag statt ~1x/Tag) -
+                                        # echtes Geld/strategische Kernrolle verdient haeufigere
+                                        # Neubewertung als ein unbeobachteter taktischer
+                                        # Watchlist-Kandidat ohne Position, siehe agent/krypto/
+                                        # signal_batch.py::select_assets_due_for_signal().
 
 # --- Hebel-Screening (2026-07-14, Phase 1, siehe docs/hebel_positionsformel.md) ---
 # Deterministisches Zwei-Zweige-Scoring (Trendfolge + Kontra), KEIN Groq-Aufruf hier -

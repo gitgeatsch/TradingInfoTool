@@ -5,8 +5,10 @@ Signal), aber eigenstaendig (siehe agent/aktien/analyst.py Modul-Docstring fuer 
 Architektur-Begruendung).
 
 Wiederverwendet direkt (kein Duplikat): `agent.krypto.risk_gate.pre_check()`/
-`post_check()` (RM-1/RM-2/RM-4/RM-5-Mathematik ist bereits assetklassen-neutral, der
-Bitpanda-Veto ist bereits `if asset.assetklasse == "krypto"` bedingt),
+`post_check()` (RM-1/RM-2/RM-4/RM-5-Mathematik ist bereits assetklassen-neutral;
+der Bitpanda-Veto war urspruenglich `if asset.assetklasse == "krypto"` bedingt -
+2026-07-16 als echte Luecke erkannt und behoben, siehe `bitpanda_gelistet`-Berechnung
+unten via `api.bitpanda.get_listed_non_crypto_assets()`),
 `agent.krypto.pipeline.compute_current_regime()` (liefert Liquiditaets-Regime +
 Aktien-Baermarkt-Overlay als Nebenprodukt der ohnehin noetigen BTC-Regime-Berechnung -
 kein zweiter Berechnungsweg noetig), `indicators.calculations.build_technical_snapshot()`/
@@ -143,7 +145,22 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
 
     confluence = summarize_confluence(snapshot, closes[-1])
 
-    risk_result = pre_check(asset, aktien_watchlist, conn, latest_prices, snapshot, regime_result, config_dict, bitpanda_gelistet=None)
+    # Bitpanda-Listing-Check (2026-07-16, Audit-Fund: bisher hartkodiert None -
+    # risk_gate.py::pre_check() konnte den Bitpanda-Veto fuer Aktien nie auslösen,
+    # obwohl Bitpanda auch Aktien/ETFs fuehrt). Gleiches Muster wie
+    # agent/krypto/pipeline.py::generate_signal() - eigener try/except, ein
+    # Fehlschlag degradiert nur auf "unbekannt" (P-10), blockiert nicht die Analyse.
+    try:
+        from api.bitpanda import get_listed_non_crypto_assets
+        from api.bitpanda import is_listed as bitpanda_is_listed
+
+        bitpanda_assets = get_listed_non_crypto_assets()
+        bitpanda_gelistet = bitpanda_is_listed(asset.symbol, bitpanda_assets, name=asset.name)
+    except Exception as exc:
+        bitpanda_gelistet = None
+        logger.info("Bitpanda-Listing-Abruf fuer %s fehlgeschlagen: %s", asset.symbol, exc)
+
+    risk_result = pre_check(asset, aktien_watchlist, conn, latest_prices, snapshot, regime_result, config_dict, bitpanda_gelistet)
 
     fundamentals = None
     try:

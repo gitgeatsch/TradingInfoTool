@@ -24,6 +24,8 @@ from datetime import datetime, timezone
 
 import yfinance as yf
 
+import database.db as db
+from api.kraken_history import OhlcUpdateResult
 from api.yfinance_client import run_with_daemon_timeout
 from database.api_health import track_api_health
 from database.models import OhlcPoint
@@ -125,6 +127,34 @@ def _drawdown_from_ath(history: list[tuple[datetime, float]], lookback_years: fl
     last_date, last_price = windowed[-1]
     ath = max(p for _, p in windowed)
     return last_date.date().isoformat(), last_price, ath, (last_price - ath) / ath * 100
+
+
+def backfill_all_aktien_ohlc(conn, watchlist) -> list[OhlcUpdateResult]:
+    """Automatischer OHLC-Refresh fuer Einzelaktien (2026-07-16, schliesst eine im
+    Asset-Verwaltungs-Audit gefundene Luecke: die Aktien-Pipeline Phase 1
+    aktualisierte `price_history_ohlc` bisher NUR bei manuellem Signal-Klick
+    (agent/aktien/pipeline.py::_ensure_ohlc_backfilled(), 5-Tage-Staleness-Schwelle) -
+    der taegliche Backward-Tracking-Job (06:00) haette ein offenes Aktien-Signal
+    sonst zunehmend gegen veraltete Kursdaten geprueft, ohne dass das auffiel.
+    Analog zu api/kraken_history.py::backfill_all_ohlc(), aber fuer
+    assetklasse=='aktien' via yfinance - IMMER volle Neuabfrage (kein inkrementelles
+    `since`, anders als Kraken), da get_full_ohlc_history() ohnehin die komplette
+    Historie in einem Call liefert (siehe dortigen Docstring)."""
+    results: list[OhlcUpdateResult] = []
+    for asset in watchlist:
+        if asset.assetklasse != "aktien":
+            continue
+        try:
+            ohlc_points = get_full_ohlc_history(asset.yfinance_symbol, asset.symbol, "USD")
+        except Exception as exc:
+            results.append(OhlcUpdateResult(asset.symbol, 0, degraded=True, reason=str(exc)))
+            continue
+        if not ohlc_points:
+            results.append(OhlcUpdateResult(asset.symbol, 0, degraded=True, reason="Keine OHLC-Punkte erhalten"))
+            continue
+        db.upsert_ohlc_points(conn, ohlc_points)
+        results.append(OhlcUpdateResult(asset.symbol, len(ohlc_points)))
+    return results
 
 
 def get_equities_bear_market_status(lookback_years: float = 5.0) -> EquitiesBearMarketReading:

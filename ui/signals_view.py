@@ -761,6 +761,7 @@ _OUTCOME_LABELS = {
     "take_profit_erreicht": "Take-Profit erreicht",
     "stop_loss_erreicht": "Stop-Loss erreicht",
     "abgelaufen_unentschieden": "Abgelaufen (unentschieden)",
+    "ueberholt_durch_neuere_analyse": "Überholt (neuere Analyse vorhanden)",
     "nicht_anwendbar": "Nicht anwendbar",
 }
 
@@ -770,7 +771,7 @@ def _outcome_color(status: str | None):
         return theme.umgesetzt_color()
     if status == "stop_loss_erreicht":
         return theme.danger_color()
-    if status == "abgelaufen_unentschieden":
+    if status in ("abgelaufen_unentschieden", "ueberholt_durch_neuere_analyse"):
         return theme.stale_color()
     if status == "offen":
         return theme.info_color()

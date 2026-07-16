@@ -83,6 +83,11 @@ class BitpandaSyncResult:
     stale_bitpanda_sync_symbols: list[str] = field(default_factory=list)
     plausible_signal_matches: list[PlausibleSignalMatch] = field(default_factory=list)
     decreased_holdings_needs_confirmation: list[DecreaseCandidate] = field(default_factory=list)
+    # 2026-07-16 (Nutzer-Wunsch, siehe config.py::update_watchlist_status()):
+    # Symbole, deren watchlist-Status automatisch von "watchlist" auf "aktiv"
+    # hochgestuft wurde, weil dieser Sync-Lauf einen echten Bestands-Zuwachs
+    # fand (0 -> positiv oder erster Zuwachs seit "watchlist"-Status).
+    status_upgraded: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
 
 
@@ -173,6 +178,18 @@ def sync_from_bitpanda(
             )
             db.upsert_holding(conn, internal_symbol, neu_menge, source=SOURCE_BITPANDA_SYNC)
             result.synced_count += 1
+
+            # Status-Auto-Hochstufung (2026-07-16, Nutzer-Wunsch nach dem BRETT-
+            # Fund): "watchlist" -> "aktiv", sobald ein echter Bestands-Zuwachs
+            # gefunden wird - eigenes try/except (P-10), ein Config-Schreibfehler
+            # darf den eigentlichen Holdings-Sync (wichtiger) nicht abbrechen.
+            asset = next((a for a in watchlist if a.symbol == internal_symbol), None)
+            if asset is not None and asset.status == "watchlist":
+                try:
+                    if config.update_watchlist_status(internal_symbol, "aktiv"):
+                        result.status_upgraded.append(internal_symbol)
+                except config.WatchlistWriteError as exc:
+                    result.warnings.append(f"Status-Hochstufung für {internal_symbol} fehlgeschlagen: {exc}")
 
             latest_signal = db.get_latest_signal(conn, internal_symbol)
             if (
