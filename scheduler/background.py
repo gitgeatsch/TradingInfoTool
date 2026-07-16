@@ -706,8 +706,10 @@ def _refresh_hebel_position_liquidation_prices(conn) -> None:
     HebelPosition-Docstring). Ohne positionsmenge (z.B. sehr alte/unvollstaendige
     Datensaetze) wird die Position uebersprungen statt eine falsche Schaetzung
     zu zeigen (P-10)."""
+    import config as config_module
     from agent.krypto.hebel_risk_gate import estimate_liquidation_price
 
+    sicherheitsmarge_relativ = config_module.load_config()["risiko"]["hebel"]["liquidations_sicherheitsmarge_relativ"]
     now_unix = int(time.time())
     for pos in db.get_open_hebel_positions(conn):
         if not pos.positionsmenge or not pos.positionswert_eur:
@@ -718,6 +720,7 @@ def _refresh_hebel_position_liquidation_prices(conn) -> None:
         days_held = max(0.0, (now_unix - eroeffnet_unix) / 86400)
         pos.liquidationspreis_geschaetzt_eur = estimate_liquidation_price(
             entry_preis_eur, hebel, pos.richtung, days_held=days_held,
+            sicherheitsmarge_relativ=sicherheitsmarge_relativ,
         )
         pos.liquidationspreis_berechnet_am = datetime.now(timezone.utc).isoformat()
         db.upsert_hebel_position(conn, pos)

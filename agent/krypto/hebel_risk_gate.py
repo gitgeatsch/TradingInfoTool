@@ -30,18 +30,42 @@ _HEBEL_ACTIONS_MIT_HEBEL = ("ERÖFFNEN", "NACHKAUFEN", "HEBEL_ERHÖHEN")
 def estimate_liquidation_price(
     entry_price: float, hebel: float, richtung: str,
     days_held: float = 0.0, funding_rate_daily_pct: float = 0.18,
+    sicherheitsmarge_relativ: float = 0.0,
 ) -> float:
     """Konservative Schaetzung (Bitpanda veroeffentlicht keine exakte Formel) -
-    ignoriert bewusst den unbekannten Maintenance-Margin-Puffer, zeigt Liquidation
-    also eher zu frueh als zu spaet an (sichere Richtung fuer ein Warnsystem).
-    `days_held=0` bei der Empfehlung selbst (Position existiert noch nicht, keine
-    Haltedauer zu raten) - `days_held` > 0 nur, sobald eine Position real offen
-    ist und die echten verstrichenen Tage bekannt sind (automatische Positions-
-    Verfolgung, spaetere Phase)."""
+    soll Liquidation eher zu frueh als zu spaet anzeigen (sichere Richtung fuer
+    ein Warnsystem). `days_held=0` bei der Empfehlung selbst (Position existiert
+    noch nicht, keine Haltedauer zu raten) - `days_held` > 0 nur, sobald eine
+    Position real offen ist und die echten verstrichenen Tage bekannt sind.
+
+    2026-07-16 KORRIGIERT: die urspruengliche Formel ignorierte den unbekannten
+    Maintenance-Margin-Puffer komplett (Liquidation erst bei Eigenkapital=0) -
+    live an einer echten offenen LINK-Position gegengeprueft: Bitpandas
+    tatsaechlicher Liquidationspreis lag ca. 7% HOEHER (fuer einen LONG - loest
+    frueher aus) als die alte Schaetzung, also GENAU in die falsche, unsichere
+    Richtung (weniger statt mehr Sicherheitsabstand als angezeigt). Rueck-
+    rechnung aus diesem echten Fall ergab eine implizite Wartungsmarge von
+    ~6,5% Eigenkapitalanteil - mit dieser Zahl reproduziert die Formel unten
+    (Long, Tag 0) den echten Bitpanda-Wert fast exakt (6,3505 vs. real 6,3515).
+
+    Fix: `sicherheitsmarge_relativ` (config risiko.hebel.liquidations_
+    sicherheitsmarge_relativ, aktuell 0.175 - bisher nur in max_safe_hebel()
+    verwendet) wird jetzt als Naeherung fuer diese Wartungsmarge auch hier
+    eingerechnet, indem der komplette Hebel-Abstand-Term durch (1 -
+    sicherheitsmarge_relativ) geteilt wird (Long) bzw. durch (1 +
+    sicherheitsmarge_relativ) (Short) - mathematisch hergeleitet aus Eigen-
+    kapital(t)/Positionswert(t) = Wartungsmarge bei Liquidation, nicht nur
+    eine multiplikative Naeherung. Da der konfigurierte Wert (17,5%) groesser
+    ist als die empirisch beobachtete echte Marge (~6,5%), bleibt die Schaetzung
+    bewusst UEBERKONSERVATIV (zeigt Liquidation noch etwas frueher an, als der
+    eine beobachtete Realfall nahelegt) - passend zur dokumentierten Absicht.
+    Default 0.0 (kein Puffer, altes Verhalten) fuer Rueckwaertskompatibilitaet,
+    falls kein Wert uebergeben wird."""
     zeit_faktor = days_held * (funding_rate_daily_pct / 100)
+    hebel_abstand = 1 / hebel
     if richtung == RICHTUNG_SHORT:
-        return entry_price * (1 + 1 / hebel - zeit_faktor)
-    return entry_price * (1 - 1 / hebel + zeit_faktor)
+        return entry_price * (1 + hebel_abstand - zeit_faktor) / (1 + sicherheitsmarge_relativ)
+    return entry_price * (1 - hebel_abstand + zeit_faktor) / (1 - sicherheitsmarge_relativ)
 
 
 def max_safe_hebel(stop_loss_distance_pct: float, sicherheitsmarge_relativ: float) -> float:
@@ -171,6 +195,7 @@ def post_check_hebel(parsed: dict, pre_result: HebelPreCheckResult, regime_resul
                 if hebel_final is not None and hebel_final > 0 and entry_mid > 0:
                     result["liquidationspreis_geschätzt"] = estimate_liquidation_price(
                         entry_mid, hebel_final, richtung,
+                        sicherheitsmarge_relativ=config["risiko"]["hebel"]["liquidations_sicherheitsmarge_relativ"],
                     )
                     positionsgroesse = pre_result.risikobetrag_usd / (
                         abs(entry_mid - stop_von) / entry_mid

@@ -1762,6 +1762,20 @@ Startpunkt, sobald Backward-Tracking/Outcome-Daten vorliegen:
   Logik gegen 185 echte historische Positionen (korrigierte Zahl, siehe dort)
   erfolgreich getestet, läuft automatisch alle 15 Min. Aktuell keine offene
   Position zum Live-Beobachten.
+- **KORRIGIERT (2026-07-16), echter Nutzer-Fund an einer offenen LINK-
+  Position:** `estimate_liquidation_price()` ignorierte den unbekannten
+  Bitpanda-Maintenance-Margin-Puffer komplett — Bitpandas realer
+  Liquidationspreis lag ~7% HÖHER (LONG, löst früher aus) als die alte
+  Schätzung, also in die unsichere statt die dokumentierte "lieber zu früh
+  warnen"-Richtung. Fix: `liquidations_sicherheitsmarge_relativ` (bisher nur
+  in `max_safe_hebel()` verwendet) wird jetzt auch in die Liquidationspreis-
+  Schätzung selbst eingerechnet, mathematisch aus Eigenkapital/Positionswert-
+  Verhältnis hergeleitet (nicht nur genähert) — mit dem empirischen Wert
+  reproduziert die Formel den echten Fall fast exakt. Auch geprüft:
+  Bitpandas öffentliche API bietet keinerlei Einsicht in offene Stop-Loss-/
+  Take-Profit-Limit-Orders (weder eigener Code noch offizielle Doku kennen
+  einen solchen Endpunkt) — nur Wallet-Salden und bereits ausgeführte
+  Trades sind zugänglich. Volle Details: `docs/hebel_positionsformel.md`.
 - **NEU (2026-07-12):** Boden-Zielzone (Abschnitt 4, `config.yaml
   boden_zielzone:`) — `reifegrad_daempfer_staerke` (0,15), `equities_baermarkt_
   schwelle_prozent` (20), `equities_baermarkt_lookback_jahre` (5),

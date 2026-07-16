@@ -212,12 +212,30 @@ Einträgen und sind unverändert korrekt.
 
 ## Liquidationspreis-Formel (Schätzung, konservativ)
 
-Ignoriert bewusst den unbekannten Bitpanda-Maintenance-Margin-Puffer (sichere
-Richtung: zu früh warnen statt zu spät):
+**KORRIGIERT (2026-07-16):** die ursprüngliche Fassung ignorierte den
+unbekannten Bitpanda-Maintenance-Margin-Puffer komplett (Liquidation erst bei
+Eigenkapital = 0) — Nutzer-Fund an einer echten offenen LINK-Position zeigte,
+dass das GENAU in die falsche, unsichere Richtung geht: Bitpandas realer
+Liquidationspreis lag ~7% HÖHER (für einen LONG — löst früher aus) als die
+alte Schätzung. Rückrechnung aus diesem Fall ergab eine implizite
+Wartungsmarge von ~6,5% Eigenkapitalanteil.
+
+Fix: der gesamte Hebel-Abstand-Term wird jetzt durch (1 − `sicherheitsmarge_
+relativ`) geteilt (Long) bzw. durch (1 + `sicherheitsmarge_relativ`) (Short) —
+mathematisch hergeleitet aus Eigenkapital(t)/Positionswert(t) = Wartungsmarge
+bei Liquidation, keine reine Näherung. `sicherheitsmarge_relativ` ist
+dieselbe Config-Zahl wie bei `max_safe_hebel()` (`risiko.hebel.
+liquidations_sicherheitsmarge_relativ`, aktuell 0,175) — mit dem
+empirischen Wert (~0,0654) reproduziert die Formel den echten LINK-Fall fast
+exakt (6,3505 € vs. real 6,3515 €); mit dem konfigurierten, bewusst
+größeren Wert (0,175) bleibt die angezeigte Schätzung zusätzlich
+konservativ (zeigt Liquidation noch etwas früher an als der eine beobachtete
+Realfall) — passend zur ursprünglich beabsichtigten "lieber zu früh warnen"-
+Richtung, die die alte Formel tatsächlich verfehlt hatte.
 
 ```
-Long,  Tag 0:  Liquidationspreis ≈ Entry × (1 − 1/Hebel)
-Short, Tag 0:  Liquidationspreis ≈ Entry × (1 + 1/Hebel)
+Long,  Tag 0:  Liquidationspreis ≈ Entry × (1 − 1/Hebel) / (1 − Sicherheitsmarge)
+Short, Tag 0:  Liquidationspreis ≈ Entry × (1 + 1/Hebel) / (1 + Sicherheitsmarge)
 ```
 
 **Zeitkomponente** (0,18%/Tag Finanzierungsgebühr, gegen echte Daten
@@ -225,8 +243,8 @@ verifiziert — Median-Abweichung der Fee-Formel gegen die 185 echten Closes nur
 0,08 Prozentpunkte):
 
 ```
-Long,  Tag t:  Liquidationspreis(t) ≈ Entry × (1 − 1/Hebel + t_Tage × 0,0018)
-Short, Tag t:  Liquidationspreis(t) ≈ Entry × (1 + 1/Hebel − t_Tage × 0,0018)
+Long,  Tag t:  Liquidationspreis(t) ≈ Entry × (1 − 1/Hebel + t_Tage × 0,0018) / (1 − Sicherheitsmarge)
+Short, Tag t:  Liquidationspreis(t) ≈ Entry × (1 + 1/Hebel − t_Tage × 0,0018) / (1 + Sicherheitsmarge)
 ```
 
 ### Zwei Momente, zwei Bedeutungen von "t"

@@ -81,7 +81,14 @@ risiko:
                                         # docs/hebel_positionsformel.md
     liquidationspreis_ausweisen: true  # RM-11 - nur Schaetzung, Bitpanda-Formel nicht
                                         # oeffentlich, siehe docs/hebel_positionsformel.md
-    liquidations_sicherheitsmarge_relativ: 0.175  # RM-11, Mittelwert 15-20%-Spanne, [OFFEN]
+    liquidations_sicherheitsmarge_relativ: 0.175  # RM-11, Mittelwert 15-20%-Spanne, [OFFEN].
+                                        # Seit 2026-07-16 NICHT mehr nur fuer max_safe_hebel(),
+                                        # sondern auch in estimate_liquidation_price() selbst
+                                        # eingerechnet (echter LINK-Fall zeigte: die Schaetzung
+                                        # war ohne diesen Puffer in die unsichere Richtung
+                                        # verzerrt) - empirisch beobachtete reale Wartungsmarge
+                                        # bei diesem einen Fall war nur ~6,5%, siehe
+                                        # docs/hebel_positionsformel.md.
     max_hebel_faellt_regime_krise_extrem_auf_null: true  # AZ-7
     kontra_konservativ_faktor: 0.6  # [OFFEN] AZ-7-Konservativ-Bias NUR fuer Zweig 2
                                     # (Kontra) - daempft max_sicherer_hebel zusaetzlich,
