@@ -690,6 +690,30 @@ def set_bitpanda_holdings_last_synced_unix(conn: sqlite3.Connection, unix_timest
     conn.commit()
 
 
+def get_backward_tracking_last_run_date(conn: sqlite3.Connection) -> str | None:
+    """2026-07-17, Nutzer-Fund: der taegliche 06:00-Cron fuer backward_tracking_job
+    hatte am 07-15 UND 07-16 keinen einzigen Lauf, weil die App zu diesem Zeitpunkt
+    schlicht nicht lief (APScheduler-Cron-Trigger holen einen verpassten festen
+    Zeitpunkt NICHT automatisch nach) - zwei Tage lang wurden dadurch offene
+    Hebel-Signale nie auf ein Ergebnis geprueft, obwohl die Haltedauer (~1,1 Tage
+    im Schnitt) laengst reif dafuer war. Dieses ISO-Datum (Wasserstand statt
+    Unix-Timestamp, da nur Tag-Genauigkeit noetig) ermoeglicht einen Nachhol-Lauf
+    beim naechsten App-Start, falls der heutige 06:00-Termin verpasst wurde."""
+    row = conn.execute(
+        "SELECT value FROM meta WHERE key = 'backward_tracking_last_run_date'"
+    ).fetchone()
+    return row["value"] if row is not None else None
+
+
+def set_backward_tracking_last_run_date(conn: sqlite3.Connection, iso_date: str) -> None:
+    conn.execute(
+        "INSERT INTO meta (key, value) VALUES ('backward_tracking_last_run_date', ?) "
+        "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        (iso_date,),
+    )
+    conn.commit()
+
+
 def get_cash_reserve_fiat_eur(conn: sqlite3.Connection) -> float:
     """Manuell gepflegtes Fiat-Guthaben (EUR) auf der Boerse, z.B. Bitpanda - nicht
     in Stablecoins umgewandeltes Geld, das die App sonst nirgends kennt (RM-4-

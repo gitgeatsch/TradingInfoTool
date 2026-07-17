@@ -296,11 +296,37 @@ def backward_tracking_job(conn_factory, watchlist) -> None:
             hebel_result.geprueft_count, hebel_result.resolved_take_profit, hebel_result.resolved_stop_loss,
             hebel_result.resolved_liquidation, hebel_result.expired, hebel_result.still_open,
         )
+        db.set_backward_tracking_last_run_date(conn, datetime.now().date().isoformat())
     except Exception as exc:
         logger.exception("Backward-Tracking fehlgeschlagen")
         _notify_job_failure("backward_tracking", f"Backward-Tracking fehlgeschlagen: {exc}")
     finally:
         conn.close()
+
+
+def backward_tracking_catchup_if_missed(conn_factory, watchlist) -> None:
+    """2026-07-17, Nutzer-Fund: der feste 06:00-Cron holt einen verpassten Termin
+    NICHT automatisch nach, wenn die App zu diesem Zeitpunkt gar nicht lief (an
+    zwei aufeinanderfolgenden Tagen passiert, 07-15 und 07-16 - zwei Tage lang
+    keine einzige Backward-Tracking-Auswertung, obwohl laengst faellig). Beim
+    App-Start einmalig geprueft: wurde der heutige Lauf bereits erledigt? Falls
+    nicht, sofort synchron nachholen (kein Netzwerk-Call, reine DB-Auswertung,
+    siehe backward_tracking_job()-Docstring - unbedenklich, das direkt beim
+    Start zu tun). Verhindert gleichzeitig unnoetige Mehrfach-Laeufe bei
+    mehreren Neustarts am selben Tag, nachdem der heutige Lauf schon glückte."""
+    conn = conn_factory()
+    try:
+        last_run = db.get_backward_tracking_last_run_date(conn)
+    finally:
+        conn.close()
+    heute = datetime.now().date().isoformat()
+    if last_run == heute:
+        return
+    logger.info(
+        "Backward-Tracking: heutiger 06:00-Termin noch nicht erledigt (zuletzt: %s) - hole sofort nach.",
+        last_run or "nie",
+    )
+    backward_tracking_job(conn_factory, watchlist)
 
 
 def refresh_bitpanda_holdings_job(api_key, conn_factory) -> bool:
@@ -1021,6 +1047,13 @@ def build_scheduler(
         args=[db_conn_factory, watchlist],
         id="backward_tracking",
     )
+    # 2026-07-17, Nutzer-Fund: ein fester Cron holt einen verpassten Termin NICHT
+    # automatisch nach, wenn die App zu diesem Zeitpunkt gar nicht lief - an zwei
+    # Tagen in Folge passiert (07-15/07-16), zwei Tage lang keine einzige
+    # Backward-Tracking-Auswertung trotz laengst reifer Hebel-Positionen. Direkter
+    # synchroner Nachhol-Check beim Start (kein Netzwerk-Call, siehe Docstring
+    # dort) - No-Op, falls der heutige Lauf schon glückte.
+    backward_tracking_catchup_if_missed(db_conn_factory, watchlist)
     # Automatischer VOLLER Bestandsabgleich (2026-07-11 als reiner Cash-Sync
     # eingefuehrt, 2026-07-16 auf den kompletten Bestandsabgleich erweitert, siehe
     # refresh_bitpanda_holdings_job()-Docstring) - P-8: nur registriert, wenn ein

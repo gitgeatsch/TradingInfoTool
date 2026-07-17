@@ -781,6 +781,41 @@ aufgelösten Signale vor (Spot: 2 offene, 0 aufgelöst; Hebel: 2 offene,
 erwartetes Verhalten, kein Fehler — reine Infrastruktur, die erst über die
 kommenden Wochen echte Vergleichswerte ansammelt.
 
+### Nachtrag (2026-07-17): echter Betriebsfehler gefunden — 06:00-Cron zwei Tage in Folge komplett ausgefallen
+
+Beim Versuch, den Datenstand für Schritt 3 (KI-Trimm-Vorschläge) neu zu
+prüfen, fiel auf: die zwei ältesten offenen Hebel-ERÖFFNEN-Signale (AIOZ,
+CAT, beide vom 07-14) hatten `outcome_geprueft_am = null` — nicht nur
+„weiterhin offen", sondern **nie auch nur geprüft**, obwohl die
+durchschnittliche Hebel-Haltedauer (~1,1 Tage) längst eine Auflösung
+erwarten ließe. Log-Abgleich bestätigte die Ursache: der `backward_
+tracking`-Cron (fest auf 6 Uhr) ist an **zwei aufeinanderfolgenden Tagen**
+(07-15 und 07-16) komplett ausgefallen — die App lief zu diesem Zeitpunkt
+schlicht nicht (letzter Log-Eintrag vor der Lücke: 07-14, 06:00 Uhr).
+APScheduler holt einen an einem festen Zeitpunkt verpassten Cron-Termin
+**nicht automatisch nach**, wenn der Prozess zu diesem Zeitpunkt gar nicht
+läuft — anders als bei den 15-Minuten-Intervall-Jobs, die beim nächsten
+Start einfach wieder anlaufen.
+
+**Fix:** neuer Wasserstand `meta.backward_tracking_last_run_date` (ISO-
+Datum, `database/db.py::get/set_backward_tracking_last_run_date()`), von
+`backward_tracking_job()` bei jedem erfolgreichen Lauf aktualisiert. Neue
+Funktion `scheduler/background.py::backward_tracking_catchup_if_missed()`
+prüft beim App-Start synchron (kein Netzwerk-Call nötig, reine DB-
+Auswertung bereits vorhandener Kursdaten — siehe oben), ob der heutige
+Termin bereits erledigt wurde; falls nicht, wird sofort nachgeholt. Kein
+Mehrfach-Lauf bei mehreren Neustarts am selben Tag, da der Wasserstand
+bereits nach dem ersten (Nachhol-)Lauf aktualisiert ist.
+
+**Einordnung:** dasselbe Resilienz-Prinzip wie bereits bei `refresh_
+prices_job`/`refresh_securities_prices_job` (Kap. 12, laufen seit 2026-07-12
+sofort nach jedem Neustart) — dort ging es um Intervall-Jobs, hier um einen
+**festen Cron-Termin**, der beim Verpassen zusätzlich einen Datums-
+Wasserstand braucht, um Mehrfach-Läufe am selben Tag zu vermeiden.
+Verifiziert: 4 synthetische Tests (Rundlauf des Wasserstands, Nachhol-Lauf
+bei verpasstem Termin, kein Lauf bei bereits erledigtem Termin, korrekte
+Persistierung bei echtem `backward_tracking_job()`-Aufruf).
+
 ---
 
 ## 8. Lokale KI-Ebene (P-8) — Architektur vorbereitet, noch nicht aktiv
