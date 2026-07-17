@@ -1997,6 +1997,76 @@ ETH wird korrekt herausgefiltert. Regressionstest: im Modus `beide` erreichen
 weiterhin beide Positionen den LLM-Aufruf (keine Verhaltensänderung für den
 Standardmodus).
 
+### Nachtrag (2026-07-17): Regelwerk-Überarbeitung nach LINK-Fall — vier Punkte
+
+**Auslöser:** dieselbe LINK-Empfehlungsfolge (ERÖFFNEN 5x LONG während
+bereits erkanntem `baer`-Regime, 20 Stunden später fast wortgleiches
+HEBEL_SENKEN) warf eine grundsätzlichere Frage auf als der Long/Short-Bugfix
+oben: sollte ein 5x-gehebelter Long überhaupt eröffnet werden, WÄHREND das
+Regime selbst schon bärisch eingestuft ist? Nutzer-Einschätzung: ein rein
+mathematischer Konfidenz-Schwellenwert (R-5.10) reicht dafür nicht aus
+("deterministisch dumm"). Vier konkrete Nachbesserungen, alle deterministisch
+UND als expliziter Fakt fürs Modell selbst:
+
+**1. Bisher ungenutzte Modell-Wahrscheinlichkeiten jetzt scharf geschaltet:**
+das Modell erzeugt bei jedem Signal ohnehin eine Drei-Szenario-Prognose
+(`forecast.bull/base/bear.probability_pct`) — bisher nur zur Anzeige, von
+keiner Gate-Logik gelesen. Neu: liegt die Gegenszenario-Wahrscheinlichkeit
+(Bear bei LONG, Bull bei SHORT) über `gegenszenario_wahrscheinlichkeit_
+schwelle_prozent` (Config, Startwert 35%), wird der maximal erlaubte Hebel
+zusätzlich auf `gegenszenario_hebel_deckel` (Startwert 3.0) gedeckelt.
+
+**2. Regime-Richtungs-Konflikt (der eigentliche LINK-Auslöser):** eine
+Position GEGEN das aktuelle Regime (LONG im `bär`-Regime, SHORT im
+`bulle`-Regime) ist eine gehebelte Gegen-Trend-Wette — strukturell riskanter
+als beides einzeln. Zwei Ebenen: (a) expliziter Fakt
+`regime.richtungs_konflikt_mit_trigger` im Fakten-JSON, das Modell soll das
+selbst gegenrechnen (Prompt-Regel 2 entsprechend erweitert); (b)
+deterministischer Rückfall-Deckel `regime_konflikt_hebel_deckel` (Startwert
+3.0) in `hebel_risk_gate.py::post_check_hebel()`, unabhängig davon ob das
+Modell den Konflikt selbst berücksichtigt hat.
+
+**3. `HEBEL_SENKEN` war bisher weder konkret noch ehrlich ausführbar:**
+bedeutet praktisch "Eigenkapital nachschießen" (kein Ein-Klick-Vorgang in der
+Bitpanda-App), aber (a) es gab nie eine konkrete EUR-Zahl dafür — neue Spalte
+`hebel_senkung_eigenkapital_nachschuss_eur`, deterministisch berechnet
+(Ziel-Eigenkapital = Positionswert / Ziel-Hebel, Differenz zum aktuellen
+Eigenkapital); (b) der Ausführbarkeits-Hinweis war stumm dazu — jetzt
+explizit erweitert ("Erfordert manuellen Eigenkapital-Nachschuss von ca. X
+EUR … kein Ein-Klick-'Hebel senken'"). **Nebenfund dabei:** `HEBEL_SENKEN`
+bekam bisher NIE ein `hebel_final` (war nicht in `_HEBEL_ACTIONS_MIT_HEBEL`
+enthalten, dieser Zweig existierte für `HEBEL_SENKEN` schlicht nicht) — ohne
+das wäre der konkrete Nachschussbetrag nie berechenbar gewesen. Bewusst OHNE
+CRV-Pflicht (eine Risikoreduktion braucht keine Chance-Risiko-
+Rechtfertigung), aber MIT denselben Sicherheits-Deckeln wie ERÖFFNEN
+(gemeinsamer Helper `_hebel_deckel_kandidaten()`, Refactoring ohne
+Verhaltensänderung für die bestehenden drei Aktionen).
+
+**4. Keine Erkennung wiederholter, wirkungsloser Empfehlungen:** die zweite
+HEBEL_SENKEN-Empfehlung wusste nichts von der ersten, unwirksam gebliebenen.
+Neu: `_build_position_aktuell_facts()` vergleicht den `hebel_effektiv` der
+offenen Position mit dem `hebel_final` des letzten Signals für dasselbe
+Symbol+dieselbe Richtung (`database/db.py::get_hebel_signal_history()`,
+limit=1) — bei unverändertem Hebel UND mindestens 2 Stunden verstrichener
+Zeit wird `vorherige_hebel_empfehlung_nicht_umgesetzt` als eigener Fakt
+mitgegeben, das Modell soll explizit darauf eingehen statt wortgleich zu
+wiederholen (Prompt-Regel 3 entsprechend erweitert).
+
+**Verifiziert:** 7 isolierte Testfälle in `hebel_risk_gate.py` (Regime-
+Konflikt LONG/SHORT, Gegenszenario-Deckel, Normalfall unverändert,
+HEBEL_SENKEN mit/ohne Konflikt), 5 isolierte Testfälle in
+`_build_position_aktuell_facts()` (Wiederholung erkannt/noch zu frisch/
+umgesetzt/kein Vorsignal/nur-HALTEN-Vorsignal), sowie ein echter
+End-to-End-Lauf durch `generate_hebel_signal()` mit **ETH statt LINK**
+(bewusst ein anderes Symbol, um Generik zu belegen — nichts an der neuen
+Logik ist LINK-spezifisch): offene ETH-LONG-Position bei 5x, eine 20 Stunden
+alte, unwirksame HEBEL_SENKEN-Empfehlung, `bär`-Regime, gemocktes LLM-Signal
+mit 45 % Bear-Wahrscheinlichkeit — Ergebnis bestätigt alle vier Punkte
+gleichzeitig (Konflikt-Fakt gesetzt, Wiederholungs-Fakt gesetzt, `hebel_final`
+korrekt auf 3.0 gedeckelt, Eigenkapital-Nachschuss korrekt auf 66,67 EUR
+berechnet). Regressionstest des Long/Short-Bugfixes von weiter oben lief
+danach unverändert erfolgreich durch.
+
 ---
 
 ## 15. Offene / vorläufige Werte — die naheliegendsten Kandidaten für spätere Anpassung

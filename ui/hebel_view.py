@@ -388,7 +388,11 @@ class HebelView(ttk.Frame):
             )
             lines.append("")
 
-        if signal.liquidationspreis_geschaetzt_usd is not None or signal.eigenkapitalbedarf_usd is not None:
+        if (
+            signal.liquidationspreis_geschaetzt_usd is not None
+            or signal.eigenkapitalbedarf_usd is not None
+            or signal.hebel_senkung_eigenkapital_nachschuss_eur is not None
+        ):
             lines.append("RISIKO-KENNZAHLEN")
             if signal.liquidationspreis_geschaetzt_usd is not None:
                 lines.append(
@@ -396,6 +400,11 @@ class HebelView(ttk.Frame):
                 )
             if signal.eigenkapitalbedarf_usd is not None:
                 lines.append(f"  Eigenkapitalbedarf: {format_money(signal.eigenkapitalbedarf_usd)} USD")
+            if signal.hebel_senkung_eigenkapital_nachschuss_eur is not None:
+                lines.append(
+                    f"  Eigenkapital-Nachschuss für Hebel-Senkung: "
+                    f"{format_money(signal.hebel_senkung_eigenkapital_nachschuss_eur)} EUR"
+                )
             lines.append("")
 
         if signal.ausfuehrbarkeit_hinweis:

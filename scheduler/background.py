@@ -704,6 +704,10 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None) 
             f"Eigenkapitalbedarf: {signal.eigenkapitalbedarf_usd} USD\n"
             if signal.eigenkapitalbedarf_usd is not None else ""
         )
+        senkung_zeile = (
+            f"Eigenkapital-Nachschuss für Hebel-Senkung: {signal.hebel_senkung_eigenkapital_nachschuss_eur} EUR\n"
+            if signal.hebel_senkung_eigenkapital_nachschuss_eur is not None else ""
+        )
         body = (
             f"Richtung: {signal.richtung}, Aktion: {signal.action}\n"
             f"Hebel: {signal.hebel_final}x, Konfidenz: {signal.confidence_pct}%\n\n"
@@ -714,6 +718,7 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None) 
             f"Take-Profit: {signal.take_profit_eur_von}-{signal.take_profit_eur_bis} EUR\n"
             f"Geschätzter Liquidationspreis: {signal.liquidationspreis_geschaetzt_usd} USD\n"
             f"{eigenkapital_zeile}"
+            f"{senkung_zeile}"
             f"{hinweis}\n"
             "Details im Hebel-Tab der App. Ausführung manuell über die Bitpanda-App."
         )

@@ -127,6 +127,13 @@ def generate_hebel_signal(
     open_positions = db.get_open_hebel_positions(conn, symbol=asset.symbol)
     position_aktuell = open_positions[0] if open_positions else None
 
+    # Nachtrag 2026-07-17 (echter LINK-Fall, siehe Memory
+    # project_hebel_rahmenbedingungen.md): letztes Signal fuer dasselbe
+    # Symbol+dieselbe Richtung laden, damit build_hebel_facts() erkennen kann,
+    # ob eine vorherige Hebel-Empfehlung offenbar nicht umgesetzt wurde.
+    letztes_signal_liste = db.get_hebel_signal_history(conn, asset.symbol, trigger.richtung, limit=1)
+    letztes_signal = letztes_signal_liste[0] if letztes_signal_liste else None
+
     price_age_minutes = None
     if price_snap is not None:
         fetched = datetime.fromisoformat(price_snap.fetched_at)
@@ -138,7 +145,7 @@ def generate_hebel_signal(
     facts = build_hebel_facts(
         asset, price_snap, snapshot, confluence, regime_result, regime_profile,
         anticyclic_context, market_context, trigger, position_aktuell, pre_result,
-        price_age_minutes, now_unix,
+        price_age_minutes, now_unix, letztes_signal,
     )
 
     try:
@@ -157,6 +164,35 @@ def generate_hebel_signal(
     corrected = post_check_hebel(parsed, pre_result, regime_result, config_dict)
     risk_veto = corrected.pop("_risk_veto")
     risk_veto_reason = corrected.pop("_risk_veto_reason")
+
+    # Nachtrag 2026-07-17 (echter LINK-Fall - Punkt 3A+3B der Regelwerk-
+    # Ueberarbeitung, siehe Memory project_hebel_rahmenbedingungen.md):
+    # HEBEL_SENKEN war bisher nur ein vager Hinweis ohne konkrete Zahl UND
+    # ohne klarzustellen, dass das kein Ein-Klick-Vorgang ist. Beides jetzt
+    # zusammen geloest - konkreter EUR-Nachschussbetrag deterministisch
+    # berechnet (Positionswert bleibt gleich, nur Eigenkapital steigt: neues
+    # Eigenkapital = Positionswert / Ziel-Hebel) UND explizit im
+    # Ausfuehrbarkeits-Hinweis benannt, damit die Empfehlung nicht als
+    # trivial umsetzbar missverstanden wird.
+    senkung_nachschuss_eur = None
+    if (
+        corrected.get("action") == "HEBEL_SENKEN"
+        and position_aktuell is not None
+        and corrected.get("hebel_final") is not None
+        and position_aktuell.positionswert_eur is not None
+        and corrected["hebel_final"] > 0
+    ):
+        ziel_eigenkapital_eur = position_aktuell.positionswert_eur / corrected["hebel_final"]
+        senkung_nachschuss_eur = max(0.0, ziel_eigenkapital_eur - (position_aktuell.eigenkapital_eur or 0.0))
+        hinweis_senkung = (
+            f"Erfordert manuellen Eigenkapital-Nachschuss von ca. {senkung_nachschuss_eur:.2f} EUR "
+            "in der Bitpanda-App (kein Ein-Klick-'Hebel senken', der Hebel selbst laesst sich bei "
+            "einer offenen Position nicht direkt aendern)."
+        )
+        bestehender_hinweis = corrected.get("ausführbarkeit_hinweis")
+        corrected["ausführbarkeit_hinweis"] = (
+            f"{bestehender_hinweis} {hinweis_senkung}" if bestehender_hinweis else hinweis_senkung
+        )
 
     long_reasoning = corrected.get("long_reasoning", {})
     entry = corrected.get("entry", {})
@@ -226,6 +262,7 @@ def generate_hebel_signal(
         forecast_bear_prob_pct=forecast.get("bear", {}).get("probability_pct"),
         liquidationspreis_geschaetzt_usd=corrected.get("liquidationspreis_geschätzt"),
         eigenkapitalbedarf_usd=corrected.get("eigenkapitalbedarf"),
+        hebel_senkung_eigenkapital_nachschuss_eur=senkung_nachschuss_eur,
         ausfuehrbarkeit_hinweis=corrected.get("ausführbarkeit_hinweis"),
         groq_raw_response=raw_response,
         llm_model=llm_model,

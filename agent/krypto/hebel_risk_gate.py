@@ -143,17 +143,77 @@ def post_check_hebel(parsed: dict, pre_result: HebelPreCheckResult, regime_resul
     RM-11/CRV noch einmal deterministisch, analog risk_gate.py::post_check().
     Haengt zusaetzlich die rein deterministisch berechneten Felder an
     (hebel_final, liquidationspreis_geschaetzt, eigenkapitalbedarf,
-    ausfuehrbarkeit_hinweis) - die KI sieht/entscheidet diese Werte nicht."""
+    ausfuehrbarkeit_hinweis) - die KI sieht/entscheidet diese Werte nicht.
+
+    Nachtrag 2026-07-17 (echter LINK-Fall, siehe Memory
+    project_hebel_rahmenbedingungen.md): zwei zusaetzliche Hebel-Deckel neben
+    Config-Maximum/RM-11 - Regime-Richtungs-Konflikt (Position widerspricht
+    dem Regime, z.B. LONG im baer-Regime) und hohe Gegenszenario-
+    Wahrscheinlichkeit (das Modell selbst schaetzt via forecast.bear/bull
+    hoch ein, dass sich die Position als falsch herausstellt). Beide rein
+    deterministisch, unabhaengig davon ob das Modell das selbst schon
+    beruecksichtigt hat."""
     result = dict(parsed)
     risk_veto = False
     risk_veto_reason = None
     action = str(result.get("action", "")).upper()
     richtung = str(result.get("richtung", "")).upper()
+    hebel_cfg = config["risiko"]["hebel"]
 
     if not pre_result.hebel_erlaubt:
         risk_veto = True
         risk_veto_reason = pre_result.veto_reason
         action = "HALTEN"
+
+    def _hebel_deckel_kandidaten() -> list[tuple[str, float]]:
+        """Nachtrag 2026-07-17 (echter LINK-Fall): gemeinsame Deckel-Logik fuer
+        beide Faelle, die einen Ziel-Hebel brauchen - ERÖFFNEN/NACHKAUFEN/
+        HEBEL_ERHÖHEN (mit CRV-Pflicht) UND HEBEL_SENKEN (ohne, siehe unten,
+        eine Reduktion braucht keine CRV-Rechtfertigung)."""
+        kandidaten: list[tuple[str, float]] = [("Config-Maximum", pre_result.config_max_hebel)]
+        if pre_result.max_sicherer_hebel is not None:
+            kandidaten.append(("RM-11 max. sicherer Hebel", pre_result.max_sicherer_hebel))
+
+        regime_konflikt = (
+            (regime_result.regime == "baer" and richtung == RICHTUNG_LONG)
+            or (regime_result.regime == "bulle" and richtung == RICHTUNG_SHORT)
+        )
+        if regime_konflikt:
+            kandidaten.append(("Regime-Richtungs-Konflikt", hebel_cfg["regime_konflikt_hebel_deckel"]))
+
+        forecast = result.get("forecast") or {}
+        gegenszenario_feld = "bear" if richtung == RICHTUNG_LONG else "bull"
+        gegenszenario_pct = (forecast.get(gegenszenario_feld) or {}).get("probability_pct")
+        gegenszenario_hoch = (
+            gegenszenario_pct is not None
+            and gegenszenario_pct >= hebel_cfg["gegenszenario_wahrscheinlichkeit_schwelle_prozent"]
+        )
+        if gegenszenario_hoch:
+            kandidaten.append(
+                (f"Gegenszenario-Wahrscheinlichkeit {gegenszenario_pct:.0f}%", hebel_cfg["gegenszenario_hebel_deckel"])
+            )
+        return kandidaten
+
+    if action == "HEBEL_SENKEN" and pre_result.hebel_erlaubt:
+        # Kein CRV/Zonen-Zwang (eine Risikoreduktion braucht keine Chance-
+        # Risiko-Rechtfertigung) - trotzdem denselben Sicherheits-Deckel
+        # anwenden wie bei ERÖFFNEN, damit hebel_final ueberhaupt gesetzt
+        # wird (vorher: HEBEL_SENKEN bekam NIE ein hebel_final, dadurch
+        # konnte hebel_pipeline.py auch nie den konkreten Eigenkapital-
+        # Nachschuss berechnen).
+        hebel_vorschlag = result.get("hebel_vorschlag")
+        deckel_kandidaten = _hebel_deckel_kandidaten()
+        deckel_werte = [wert for _, wert in deckel_kandidaten]
+        hebel_final = min([hebel_vorschlag] + deckel_werte) if hebel_vorschlag is not None else None
+        if hebel_final is not None and hebel_vorschlag is not None and hebel_final < hebel_vorschlag:
+            bindender_grund, _ = min(deckel_kandidaten, key=lambda paar: paar[1])
+            result["hebel_korrektur_hinweis"] = (
+                f"KI schlug {hebel_vorschlag:.2f}x vor, auf {hebel_final:.2f}x reduziert "
+                f"(bindender Grund: {bindender_grund})."
+            )
+        else:
+            result["hebel_korrektur_hinweis"] = None
+        result["hebel_final"] = hebel_final
 
     if action in _HEBEL_ACTIONS_MIT_HEBEL and pre_result.hebel_erlaubt:
         entry = result.get("entry") or {}
@@ -178,15 +238,15 @@ def post_check_hebel(parsed: dict, pre_result: HebelPreCheckResult, regime_resul
                 action = "HALTEN"
             else:
                 hebel_vorschlag = result.get("hebel_vorschlag")
-                deckel = [pre_result.config_max_hebel]
-                if pre_result.max_sicherer_hebel is not None:
-                    deckel.append(pre_result.max_sicherer_hebel)
-                hebel_final = min([hebel_vorschlag] + deckel) if hebel_vorschlag is not None else None
+                deckel_kandidaten = _hebel_deckel_kandidaten()
+                deckel_werte = [wert for _, wert in deckel_kandidaten]
+                hebel_final = min([hebel_vorschlag] + deckel_werte) if hebel_vorschlag is not None else None
 
                 if hebel_final is not None and hebel_vorschlag is not None and hebel_final < hebel_vorschlag:
+                    bindender_grund, _ = min(deckel_kandidaten, key=lambda paar: paar[1])
                     result["hebel_korrektur_hinweis"] = (
                         f"KI schlug {hebel_vorschlag:.2f}x vor, auf {hebel_final:.2f}x reduziert "
-                        f"(Deckel: max. sicherer Hebel/Config-Maximum/AZ-7)."
+                        f"(bindender Grund: {bindender_grund})."
                     )
                 else:
                     result["hebel_korrektur_hinweis"] = None

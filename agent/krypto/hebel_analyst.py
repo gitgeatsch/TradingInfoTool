@@ -41,7 +41,15 @@ Werte oder Ereignisse.
 Fakten, nicht aus Gewohnheit zu Long tendierend. Dass Short aktuell nicht über \
 Bitpanda ausführbar ist, ist ein reiner Ausführungs-Hinweis (wird dir separat \
 mitgeteilt), KEINE Einschränkung deiner Bewertung - schlage SHORT vor, wenn die \
-Fakten dafür sprechen.
+Fakten dafür sprechen. Falls `regime.richtungs_konflikt_mit_trigger` true ist \
+(der Screening-Kandidat widerspricht dem aktuellen Regime, z.B. LONG-Kandidat \
+im baer-Regime), wiege das EXPLIZIT in deiner Begründung - eine gehebelte \
+Gegen-Trend-Position ist strukturell riskanter als dieselbe Position ohne \
+Hebel, das reicht nicht mit reiner kurzfristiger Technik zu rechtfertigen. \
+Nutze dazu auch deine eigene `forecast`-Einschätzung (Regel 11) - eine hohe \
+Gegenszenario-Wahrscheinlichkeit (Bear bei LONG, Bull bei SHORT) sollte \
+Konfidenz und Hebel-Vorschlag dämpfen, nicht nur informativ im Forecast-Text \
+stehen.
 3. `action` MUSS EXAKT einer dieser sieben Werte sein: ERÖFFNEN, NACHKAUFEN, \
 HEBEL_ERHÖHEN, HEBEL_SENKEN, TEILVERKAUF, SCHLIESSEN, HALTEN.
    - ERÖFFNEN: `position_aktuell` ist null (keine offene Position) und die Fakten \
@@ -50,8 +58,19 @@ sprechen für einen Einstieg.
 These hat sich bestätigt/verstärkt - schlage einen eigenen Hebel für die NEUE \
 Tranche vor (nicht den Gesamt-Hebel der bestehenden Position).
    - HEBEL_ERHÖHEN / HEBEL_SENKEN: Position existiert bereits, du empfiehlst eine \
-Anpassung des Hebels OHNE zwingend die Positionsgröße zu ändern (z.B. Eigenkapital \
-nachschießen zur Hebel-Senkung).
+Anpassung des Hebels OHNE zwingend die Positionsgröße zu ändern. WICHTIG bei \
+HEBEL_SENKEN: das ist in der Bitpanda-App KEIN Ein-Klick-Vorgang, sondern \
+bedeutet konkret "Eigenkapital nachschießen" - der exakte EUR-Betrag dafür wird \
+dir NICHT von dir selbst berechnet, sondern nachträglich deterministisch \
+ermittelt und dem Nutzer separat angezeigt (du musst diesen Betrag nicht \
+schätzen). Schlage HEBEL_SENKEN nur vor, wenn das Risiko wirklich eine aktive \
+Reaktion rechtfertigt - wenn `position_aktuell.vorherige_hebel_empfehlung_nicht_umgesetzt` \
+gesetzt ist (eine frühere Hebel-Empfehlung wurde nachweislich nicht umgesetzt), \
+wiederhole NICHT einfach dieselbe Empfehlung wortgleich, sondern gehe explizit \
+darauf ein (z.B. in `short_reasoning`): hat sich die Lage seitdem verschärft \
+(dann ggf. SCHLIESSEN/TEILVERKAUF statt erneut HEBEL_SENKEN erwägen), oder ist \
+die Empfehlung weiterhin gültig, aber schlicht noch nicht umgesetzt (dann das \
+benennen, nicht verschweigen).
    - TEILVERKAUF: Position existiert bereits, teilweiser Abbau angebracht (z.B. \
 Teilgewinn sichern), Position bleibt danach offen.
    - SCHLIESSEN: Position existiert bereits, vollständiger Ausstieg angebracht \
@@ -151,14 +170,62 @@ def _last(arr: np.ndarray) -> float | None:
     return float(valid[-1]) if len(valid) else None
 
 
-def _build_position_aktuell_facts(position: HebelPosition | None, now_unix: int) -> dict | None:
+_HEBEL_ZIEL_AKTIONEN = ("HEBEL_ERHÖHEN", "HEBEL_SENKEN")
+# Nachtrag 2026-07-17 (echter LINK-Fall: HEBEL_SENKEN wurde 20 Stunden nach der
+# ersten, fast wortgleichen Empfehlung erneut vorgeschlagen, ohne zu wissen,
+# dass der Hebel der Position unveraendert bei 5.0 stand) - Toleranz/Mindest-
+# Wartezeit bewusst grosszuegig, um eine gerade erst ausgesprochene Empfehlung
+# nicht sofort als "nicht umgesetzt" zu brandmarken.
+_HEBEL_UNVERAENDERT_TOLERANZ = 0.15
+_HEBEL_WIEDERHOLUNG_MINDEST_STUNDEN = 2.0
+
+
+def _build_position_aktuell_facts(
+    position: HebelPosition | None, now_unix: int, letztes_signal=None,
+) -> dict | None:
     """`position_aktuell` fürs Fakten-JSON - null, wenn keine offene Hebel-Position
-    für dieses Symbol existiert (siehe database/db.py::get_open_hebel_positions())."""
+    für dieses Symbol existiert (siehe database/db.py::get_open_hebel_positions()).
+
+    Nachtrag 2026-07-17: `letztes_signal` (das zuletzt fuer dieses Symbol+diese
+    Richtung erzeugte HebelSignal, siehe database/db.py::
+    get_latest_hebel_signal_per_symbol_and_richtung()) - wenn die letzte
+    Empfehlung eine Hebel-Aenderung war (HEBEL_ERHÖHEN/HEBEL_SENKEN) und der
+    tatsaechliche `hebel_effektiv` der Position sich seitdem NICHT veraendert
+    hat (trotz ausreichend verstrichener Zeit), wird das explizit als eigener
+    Fakt mitgegeben - verhindert, dass dieselbe wirkungslose Empfehlung
+    wortgleich wiederholt wird, ohne das zu wissen."""
     if position is None:
         return None
     from datetime import datetime
 
     eroeffnet_unix = int(datetime.fromisoformat(position.eroeffnet_am).timestamp())
+
+    vorherige_empfehlung_nicht_umgesetzt = None
+    if (
+        letztes_signal is not None
+        and letztes_signal.action in _HEBEL_ZIEL_AKTIONEN
+        and letztes_signal.hebel_final is not None
+        and letztes_signal.created_at is not None
+    ):
+        empfohlen_unix = int(datetime.fromisoformat(letztes_signal.created_at).timestamp())
+        stunden_seit_empfehlung = (now_unix - empfohlen_unix) / 3600
+        hebel_unveraendert = (
+            abs(position.hebel_effektiv - letztes_signal.hebel_final) > _HEBEL_UNVERAENDERT_TOLERANZ
+        )
+        if hebel_unveraendert and stunden_seit_empfehlung >= _HEBEL_WIEDERHOLUNG_MINDEST_STUNDEN:
+            vorherige_empfehlung_nicht_umgesetzt = {
+                "empfohlene_aktion": letztes_signal.action,
+                "empfohlener_ziel_hebel": _native(letztes_signal.hebel_final),
+                "tatsaechlicher_hebel_seitdem": _native(position.hebel_effektiv),
+                "stunden_seit_empfehlung": round(stunden_seit_empfehlung, 1),
+                "hinweis": (
+                    "Diese Empfehlung wurde offenbar noch nicht umgesetzt - nicht "
+                    "wortgleich wiederholen, sondern explizit darauf eingehen (z.B. "
+                    "ob die Empfehlung noch gilt, sich die Lage veraendert hat, oder "
+                    "eine staerkere Massnahme angebracht waere)."
+                ),
+            }
+
     return {
         "richtung": position.richtung,
         "hebel_effektiv": _native(position.hebel_effektiv),
@@ -166,6 +233,7 @@ def _build_position_aktuell_facts(position: HebelPosition | None, now_unix: int)
         "positionswert_eur": _native(position.positionswert_eur),
         "eroeffnet_am": position.eroeffnet_am,
         "tage_gehalten": round(max(0.0, (now_unix - eroeffnet_unix) / 86400), 2),
+        "vorherige_hebel_empfehlung_nicht_umgesetzt": vorherige_empfehlung_nicht_umgesetzt,
     }
 
 
@@ -183,12 +251,23 @@ def build_hebel_facts(
     pre_result: HebelPreCheckResult,
     price_age_minutes: float | None,
     now_unix: int,
+    letztes_signal=None,
 ) -> dict:
     """Analog agent/krypto/analyst.py::build_facts() - wiederverwendet dieselben
     Bausteine fuer technische_analyse/regime/markt_kontext/antizyklisch 1:1 (siehe
     docs/hebel_positionsformel.md, "noch zu klären"-Punkt geloest: KEIN separates
     Derivate-Feld, die Live-OI/Funding/LSR-Werte kommen unveraendert aus
-    antizyklisch, wie bei Spot). Neu: trigger/position_aktuell/hebel_kontext."""
+    antizyklisch, wie bei Spot). Neu: trigger/position_aktuell/hebel_kontext.
+
+    Nachtrag 2026-07-17: `letztes_signal` wird nur an _build_position_aktuell_
+    facts() durchgereicht (siehe dort). `regime.richtungs_konflikt_mit_trigger`
+    ist ein neuer, explizit berechneter Fakt (echter LINK-Fall: 5x-LONG-
+    Eroeffnung WAEHREND bereits erkanntem baer-Regime, ohne dass dieser
+    Widerspruch dem Modell je explizit benannt wurde) - basiert bewusst auf
+    `trigger.richtung` (dem VOR der LLM-Entscheidung bekannten Kandidaten-
+    Vorschlag), nicht auf der erst danach feststehenden finalen Richtung -
+    der deterministische Hebel-Deckel in hebel_risk_gate.py::post_check_hebel()
+    prueft unabhaengig davon nochmal gegen die tatsaechlich gewaehlte Richtung."""
     macd_val = technical_snapshot.macd
     macd_facts = None
     if macd_val.available:
@@ -272,6 +351,18 @@ def build_hebel_facts(
             "btc_matrix": regime_result.btc_matrix_state,
             "liquiditaets_regime": regime_result.liquiditaets_regime,
             "zyklus_risiko": _native(regime_result.zyklus_risiko),
+            "richtungs_konflikt_mit_trigger": (
+                (regime_result.regime == "baer" and trigger.richtung == "LONG")
+                or (regime_result.regime == "bulle" and trigger.richtung == "SHORT")
+            ),
+            "richtungs_konflikt_hinweis": (
+                "Der Screening-Kandidat schlaegt eine Richtung vor, die dem aktuellen "
+                "Regime entgegensteht (Gegen-Trend-Wette MIT Hebel - staerker verstaerktes "
+                "Risiko als ohne Hebel). Wird nachtraeglich zusaetzlich deterministisch "
+                "gedeckelt (siehe hebel_kontext), aber bereits hier in deiner eigenen "
+                "Einschaetzung explizit gegenrechnen, nicht nur an kurzfristiger Technik "
+                "festmachen."
+            ),
         },
         "regime_profil": regime_profile,
         "antizyklisch": {
@@ -293,7 +384,7 @@ def build_hebel_facts(
             "oi_change_pct_lookback": _native(trigger.oi_change_pct_lookback),
             "kursaenderung_pct_lookback": _native(trigger.kursaenderung_pct_lookback),
         },
-        "position_aktuell": _build_position_aktuell_facts(position_aktuell, now_unix),
+        "position_aktuell": _build_position_aktuell_facts(position_aktuell, now_unix, letztes_signal),
         "hebel_kontext": {
             "max_hebel_config": pre_result.config_max_hebel,
             "max_sicherer_hebel_geschaetzt": _native(pre_result.max_sicherer_hebel),

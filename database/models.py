@@ -487,6 +487,12 @@ class HebelSignal:
     forecast_bear_prob_pct: float | None = None
     liquidationspreis_geschaetzt_usd: float | None = None
     eigenkapitalbedarf_usd: float | None = None
+    # Nachtrag 2026-07-17 (echter LINK-Fall): bei action == HEBEL_SENKEN der
+    # konkrete, deterministisch berechnete EUR-Betrag, der ins Eigenkapital
+    # der Position nachgeschossen werden muesste, um den empfohlenen
+    # hebel_final tatsaechlich zu erreichen - macht die Empfehlung erst
+    # praktisch umsetzbar (vorher nur "Hebel senken" ohne konkrete Zahl).
+    hebel_senkung_eigenkapital_nachschuss_eur: float | None = None
     ausfuehrbarkeit_hinweis: str | None = None
     risk_veto_reason: str | None = None
     groq_raw_response: str | None = None

@@ -302,6 +302,7 @@ CREATE TABLE IF NOT EXISTS hebel_signals (
     forecast_bear_prob_pct                                                      REAL,
     liquidationspreis_geschaetzt_usd                                             REAL,
     eigenkapitalbedarf_usd                                                        REAL,
+    hebel_senkung_eigenkapital_nachschuss_eur                                      REAL,
     ausfuehrbarkeit_hinweis                                                        TEXT,
     gate_passed                                                                    INTEGER NOT NULL,
     gate_reason                                                                    TEXT,
@@ -481,6 +482,21 @@ def _migrate_hebel_signal_outcome_columns(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+_HEBEL_SIGNAL_SENKUNG_NEW_COLUMNS = {"hebel_senkung_eigenkapital_nachschuss_eur": "REAL"}
+
+
+def _migrate_hebel_signal_senkung_columns(conn: sqlite3.Connection) -> None:
+    """Nachtrag 2026-07-17 (echter LINK-Fall, siehe Memory
+    project_hebel_rahmenbedingungen.md) - konkreter EUR-Nachschussbetrag bei
+    HEBEL_SENKEN, macht die Empfehlung erst praktisch umsetzbar. Gleiches
+    additive Migrations-Muster wie _migrate_hebel_signal_outcome_columns()."""
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(hebel_signals)")}
+    for column, sql_type in _HEBEL_SIGNAL_SENKUNG_NEW_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE hebel_signals ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
 _SIGNAL_TRANCHEN_NEW_COLUMNS = {"tranchen_json": "TEXT"}
 
 
@@ -589,6 +605,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_signal_tranchen_columns(conn)
     _migrate_signal_cash_reserve_ziel_columns(conn)
     _migrate_hebel_signal_outcome_columns(conn)
+    _migrate_hebel_signal_senkung_columns(conn)
     import_holdings_manual_overrides(conn)
 
 
@@ -1593,7 +1610,8 @@ _HEBEL_SIGNAL_COLUMNS = (
     "top_grund_5_kategorie", "top_grund_5_text",
     "key_risks_text", "regime", "regime_source", "forecast_bull_text", "forecast_bull_prob_pct",
     "forecast_base_text", "forecast_base_prob_pct", "forecast_bear_text", "forecast_bear_prob_pct",
-    "liquidationspreis_geschaetzt_usd", "eigenkapitalbedarf_usd", "ausfuehrbarkeit_hinweis",
+    "liquidationspreis_geschaetzt_usd", "eigenkapitalbedarf_usd",
+    "hebel_senkung_eigenkapital_nachschuss_eur", "ausfuehrbarkeit_hinweis",
     "gate_passed", "gate_reason", "risk_veto", "risk_veto_reason", "facts_json",
     "groq_raw_response", "llm_model",
 )

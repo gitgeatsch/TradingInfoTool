@@ -103,6 +103,33 @@ risiko:
                                     # gilt NICHT fuer Zweig 1 (Trendfolge), siehe
                                     # docs/hebel_positionsformel.md Sanity-Check-Korrektur
                                     # vom 2026-07-14
+    # --- Regelwerk-Nachtrag 2026-07-17 (echter LINK-Fall: 5x-LONG-Eroeffnung
+    # WAEHREND bereits erkanntem baer-Regime, 80% Konfidenz reichte damals
+    # aus, keine dieser beiden Bremsen existierte) - siehe Memory
+    # project_hebel_rahmenbedingungen.md fuer die volle Herleitung. [OFFEN],
+    # noch nicht ueber laengeren echten Betrieb kalibriert.
+    regime_konflikt_hebel_deckel: 3.0  # gilt, wenn die Positions-Richtung dem
+                                        # Regime entgegensteht (bär+LONG oder
+                                        # bulle+SHORT) - Hebel wird zusaetzlich
+                                        # zu Config-Maximum/RM-11 auf diesen
+                                        # Wert gedeckelt, unabhaengig von der
+                                        # Konfidenz (Gegen-Trend + Hebel ist
+                                        # strukturell riskanter als beides
+                                        # einzeln).
+    gegenszenario_wahrscheinlichkeit_schwelle_prozent: 35  # ab dieser vom
+                                        # Modell selbst geschaetzten Gegen-
+                                        # szenario-Wahrscheinlichkeit (bear_prob
+                                        # bei LONG, bull_prob bei SHORT) greift
+                                        # der Deckel unten - nutzt die ohnehin
+                                        # vom Modell erzeugte forecast-
+                                        # Wahrscheinlichkeit statt nur die
+                                        # Konfidenz zu betrachten.
+    gegenszenario_hebel_deckel: 3.0     # wie regime_konflikt_hebel_deckel,
+                                        # aber ausgeloest durch die Forecast-
+                                        # Wahrscheinlichkeit (siehe oben) -
+                                        # beide Deckel koennen gleichzeitig
+                                        # greifen, es zaehlt immer der
+                                        # niedrigste bindende Wert.
 
 # --- Watchlist / Basiswerte (siehe Spezifikation Kap. 4) ---
 # Quelle: Basisinfos/Assets.xlsx (Erstimport Stand 2026-07-01), 41 Assets.
