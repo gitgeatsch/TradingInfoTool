@@ -1969,6 +1969,34 @@ korrekt wiederhergestellt) plus Phantom-Symbol-Schutztest (unbekanntes Symbol
 in der JSON legt keine neue `holdings`-Zeile an) plus Regressionstest (frische
 leere DB, `init_db()` läuft fehlerfrei durch).
 
+### Nachtrag (2026-07-17): BUGFIX — "Nur Long" griff nicht bei offenen Short-Positionen
+
+**Auslöser:** Nutzer meldete weiterhin unnötige Short-Empfehlungs-E-Mails,
+obwohl `hebel_richtung_modus: nur_long` (Einstellungen-Dialog) aktiv war.
+
+**Ursache gefunden (Code-Review, nicht nur Vermutung):** die Einstellung
+filterte in `budget_allocator.py` nur `hebel_pending` (frisch entdeckte
+Trigger-Kandidaten, seit 2026-07-15 so gebaut). Die zweite, unabhängige
+Kandidatenquelle `_offene_positionen_als_kandidaten()` (seit 2026-07-16,
+garantiert bestehenden offenen Hebel-Positionen eine regelmäßige KI-
+Neubewertung) hatte **keinen** Richtungsfilter — offene SHORT-Positionen
+wurden weiterhin unbegrenzt dem LLM vorgelegt, neue Signale erzeugt, und
+`scheduler/background.py::_notify_hebel_signal()` prüft die Richtung
+seinerseits nicht (nur `action != HALTEN`) — jedes daraus entstehende
+Signal wurde gemailt.
+
+**Fix:** derselbe `if hebel_richtung_modus == "nur_long":`-Filter
+(`richtung == RICHTUNG_LONG`) jetzt auch auf `_offene_positionen_als_
+kandidaten()`-Ergebnisse angewendet, bevor der Cooldown-Filter läuft —
+konsistent mit der bereits bestehenden Filterung von `hebel_pending`.
+
+**Verifiziert:** echter End-to-End-Lauf gegen `run_budget_allocator()` mit
+einer echten temporären SQLite-DB (zwei offene Positionen: BTC LONG, ETH
+SHORT) — im Modus `nur_long` erreicht nur BTC den (gemockten) LLM-Aufruf,
+ETH wird korrekt herausgefiltert. Regressionstest: im Modus `beide` erreichen
+weiterhin beide Positionen den LLM-Aufruf (keine Verhaltensänderung für den
+Standardmodus).
+
 ---
 
 ## 15. Offene / vorläufige Werte — die naheliegendsten Kandidaten für spätere Anpassung
