@@ -14,6 +14,33 @@ unten ab:
    persönlichen Finanzdaten. Voller Ablauf, Ordnerstruktur (`claudesync`)
    und Reihenfolge-Regeln: siehe Memory `reference_usb_sync_workflow.md`
    (liegt nicht im Repo, ist Claude-Code-Memory).
+
+   **Wichtige Ausnahme seit 2026-07-17 — manuelle Einstandspreis-Korrekturen
+   brauchen KEINE volle DB-Kopie mehr:** das Notebook läuft 24/7 und erzeugt
+   laufend selbst Produktivdaten (Signale, Hebel-Positionen, Preis-Historie,
+   Makro-Snapshots, API-Health-Verlauf) — eine volle DB-Überschreibung würde
+   das jedes Mal vernichten. Für den konkreten, praktisch relevanten Fall
+   "am Desktop einen manuellen Einstandspreis korrigiert/ergänzt" (Portfolio-
+   Tab, Doppelklick auf eine Zeile) reicht jetzt eine einzige kleine Datei:
+
+   - **Datei:** `data/holdings_manual_overrides.json` (liegt neben der DB,
+     ebenfalls `.gitignore`'t, gleiche Sensitivität wie `Assets.xlsx`)
+   - **Wird automatisch erzeugt/aktualisiert:** bei jeder Änderung eines
+     manuellen Einstandspreises — kein Export-Schritt nötig.
+   - **Wird automatisch angewendet:** beim nächsten Start von `main.py`
+     auf dem Zielgerät (egal ob Desktop oder Notebook) — kein Import-Skript
+     nötig, kein Neustart-Sonderfall.
+   - **Sync-Schritt dafür:** nur diese eine JSON-Datei per USB (oder
+     grundsätzlich jedem anderen Weg) auf das Zielgerät kopieren, an
+     denselben relativen Pfad (`data/holdings_manual_overrides.json`) —
+     fertig, keine weiteren Schritte.
+
+   **Die volle DB-Kopie bleibt weiterhin nötig für:** Erstinstallation eines
+   neuen Geräts, oder falls aus anderem Grund die komplette DB ersetzt werden
+   muss (Reihenfolge-Regeln dafür unverändert in `reference_usb_sync_workflow.md`).
+   Technischer Hintergrund/Code: `database/db.py::HOLDINGS_MANUAL_OVERRIDES_PATH`,
+   `export_holdings_manual_overrides()`/`import_holdings_manual_overrides()`,
+   siehe `Basisinfos/Regelwerksmanual.md` Kap. 14 (Nachtrag 2026-07-17).
 2. **Google Drive, remote (nur wenn kein USB möglich, reduzierter Umfang).**
    Wenn die Geräte NICHT physisch zusammen sind UND weder `.env`/Secrets noch
    die Datenbank aktuell übertragen werden müssen: nur Claude-Code-Memory +
