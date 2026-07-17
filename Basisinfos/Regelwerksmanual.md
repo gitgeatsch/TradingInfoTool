@@ -816,6 +816,77 @@ Verifiziert: 4 synthetische Tests (Rundlauf des Wasserstands, Nachhol-Lauf
 bei verpasstem Termin, kein Lauf bei bereits erledigtem Termin, korrekte
 Persistierung bei echtem `backward_tracking_job()`-Aufruf).
 
+### Nachtrag (2026-07-17): Erfolgsmetrik für Schritt 3 (Regel-Anpassungsvorschläge) festgelegt
+
+**Warum das jetzt schon nötig ist, obwohl die Governance-Frage von Schritt 3
+(automatisch vs. Nutzer-Bestätigung) noch offen ist:** ohne eine vorher
+festgelegte Metrik lässt sich ein späterer KI- oder Nutzer-Vorschlag
+("Regel X mit Wert Y statt Z ist besser kalibriert") nicht objektiv prüfen —
+das gilt unabhängig davon, wer am Ende entscheidet. Diese Festlegung ist
+deshalb eine reine Dokumentations-Ergänzung, keine Verhaltensänderung.
+
+**Primärmetrik: realisiertes CRV** (bereits vorhanden, siehe Abschnitt
+„Die sechs Ergebnis-Felder" oben) — durchschnittlich über alle aufgelösten
+Signale einer Regel-Variante, getrennt nach Spot und Hebel (unterschiedliche
+Positionsgrößen-Logik, siehe Abschnitt „Provider-Performance-Aggregation").
+Begründung: bildet direkt das ursprüngliche Z-2-Versprechen ab (Chance im
+Verhältnis zum Risiko) und ist bereits Teil der bestehenden Datenstruktur —
+keine neue Berechnung nötig.
+
+**Sekundärmetriken** (zur Einordnung, nicht als alleiniger Maßstab, da CRV
+allein z. B. eine niedrige Trefferquote mit wenigen großen Gewinnen
+kaschieren könnte):
+- **Trefferquote** (Anteil Take-Profit an allen entschiedenen Signalen,
+  bereits Teil der Provider-Performance-Karte).
+- **Maximaler Drawdown** einer simulierten/realen Sequenz aufeinanderfolgender
+  Signale — noch nicht berechnet, wird mit der Backtesting-Engine (siehe
+  unten) erstmals verfügbar.
+
+**Mindest-Stichprobe vor jeder Bewertung:** ein einzelner Vorschlag wird erst
+ab **30 aufgelösten Fällen** je Regel-Variante überhaupt in Betracht gezogen
+(siehe Machbarkeits-Analyse-Notiz, Plandatei `swift-napping-muffin`),
+idealerweise geprüft in **zwei nicht-überlappenden Teilzeiträumen** (ein
+Muster muss in beiden auftauchen, um nicht auf eine einzelne Marktphase
+überzufittet zu sein). Diese Schwelle ist bewusst vorläufig — siehe Kap. 15.
+
+### Nachtrag (2026-07-17): Backtesting-Engine — bestehende Regeln rückwirkend gegen historische Kursdaten simulieren
+
+**Warum:** der größte praktische Engpass für Schritt 3 ist nicht fehlendes
+Können, sondern fehlende Zeit — echte KAUFEN/ERÖFFNEN-Signale lösen sich nur
+mit der Geschwindigkeit auf, mit der neue Signale entstehen (für Spot eher
+Wochen, siehe Abschnitt „Aktueller Stand"). Das Projekt verfügt aber bereits
+über eine mehrjährige Kurshistorie (`price_history_ohlc`), die bisher nur für
+Charts und Backward-Tracking genutzt wird, nicht aber, um die AKTUELLEN
+Regeln testweise gegen die Vergangenheit laufen zu lassen.
+
+**Umfang:** rein analytisch, kein Live-Verhalten wird geändert. Nimmt die
+bereits vorhandene, deterministische Regel-Logik (Indikatoren, Regime-
+Klassifikation, Risikomanagement-Schwellenwerte) und wendet sie Tag für Tag
+auf die gespeicherte Kurshistorie an, als wäre jeder Tag ein neuer Lauf in
+der Vergangenheit — erzeugt so synthetische, aber methodisch identische
+Signal-Ergebnisse, die genauso wie echte Signale nach CRV/Trefferquote/
+Drawdown ausgewertet werden können. Der eigentliche KI-Anteil (Prompt an
+Groq/Cerebras/Gemini) ist dabei bewusst AUSSER Betracht — nur der
+deterministische Regel-Teil ist rückwirkend reproduzierbar, ein LLM-Aufruf
+für einen historischen Tag wäre weder reproduzierbar noch budgetneutral.
+
+**Wo im Code:** `agent/krypto/backtesting.py` (siehe Abschnitt 11 für den
+vollständigen Verweis).
+
+**Verifiziert (2026-07-17):** 7 synthetische Tests (Stop-Loss-Priorität bei
+Gleichzeitigkeit, CRV-Berechnung, „Ende der Historie" vs. „Haltefrist
+abgelaufen", CRV exakt auf `CRV_MINIMUM` skaliert, zu kurze Historie ohne
+Crash, Flanken-Trigger verhindert Dutzende korrelierte Trades in einem
+einzigen Trend) + echter Lauf gegen die Produktions-DB (BTC/ETH/SOL/LINK,
+2025-02 bis 2026-07): 12–21 synthetische Trades je Symbol, Trefferquote
+24–33 %, durchschnittliches CRV negativ (−0,03 bis −0,46) in diesem
+Zeitfenster. **Einordnung:** kein Widerspruch zur echten Signalqualität —
+die vereinfachte Konfluenz-Regel ersetzt bewusst NICHT die mehrfaktorielle
+KI-Bewertung (siehe Grenzen oben), das Ergebnis zeigt aber, dass das
+gewählte Zeitfenster für eine reine „Konfluenz-bullish + 2:1-CRV"-Heuristik
+ungünstig war — ein plausibles, nicht offensichtlich falsches Ergebnis,
+kein Hinweis auf einen Fehler in der Engine selbst.
+
 ---
 
 ## 8. Lokale KI-Ebene (P-8) — Architektur vorbereitet, noch nicht aktiv
@@ -961,6 +1032,7 @@ gelöst, siehe Kap. 4.
 - `api/yfinance_client.py` — EUR-Umrechnung für USD-only-Aktien wie PLTR/VST (Abschnitt 14)
 - `indicators/calculations.py::compute_btc_log_regression_risk()`/`compute_eth_log_regression_risk()`, `agent/krypto/regime.py::_boden_zielzone()`, `api/yfinance_history.py` — AZ-4 Baustein 2, Boden-Zielzone (Abschnitt 4)
 - `agent/krypto/risk_gate.py::compute_cash_reserve_ziel()`, `agent/krypto/pipeline.py::_compute_cash_reserve_ziel_context()` — AZ-4 Baustein 3, Cash-Reserve-Ziel (Abschnitt 4)
+- `agent/krypto/backtesting.py` — Backtesting-Engine, deterministische Regeln rückwirkend gegen `price_history_ohlc` (Abschnitt 7, Selbstverifikations-Vision Schritt 3 Vorbereitung)
 
 ---
 
