@@ -202,7 +202,6 @@ def run_signal_batch(
     fred_api_key: str | None,
     daily_budget: int,
     progress_callback: Callable[[int, int, str], None] | None = None,
-    cerebras_client=None,
     gemini_client=None,
     mistral_client=None,
 ) -> BatchResult:
@@ -213,11 +212,10 @@ def run_signal_batch(
     `progress_callback(done, total, symbol)` optional fuer eine
     UI-Fortschrittsanzeige.
 
-    Groq-dann-Mistral-dann-Cerebras-dann-Gemini-Fallback (2026-07-17 umgestellt,
-    Cerebras beendet seinen kostenlosen Tier zum 2026-08-17, Mistral uebernimmt
-    dessen Rolle als zweite Stufe - siehe Memory
-    project_cerebras_free_tier_aenderung_2026-08-17.md) - `mistral_client`/
-    `cerebras_client`/`gemini_client` optional (P-8), ohne sie bleibt der Batch
+    Groq-dann-Mistral-dann-Gemini-Fallback (2026-07-17: Cerebras vollstaendig
+    entfernt, Mistral hat dessen Rolle als zweite Stufe uebernommen - siehe
+    Memory project_cerebras_free_tier_aenderung_2026-08-17.md) -
+    `mistral_client`/`gemini_client` optional (P-8), ohne sie bleibt der Batch
     entsprechend kuerzer in der Kette. Pro Asset EIGENE
     Fallback-Entscheidung (kein gemeinsamer "Groq ist heute tot"-Kurzschluss
     ueber den ganzen Batch) - konsistent mit dem Budget-Allocator/Hebel-Tab-
@@ -258,7 +256,7 @@ def run_signal_batch(
         finally:
             conn.close()
 
-    llm_clients = [c for c in (groq_client, mistral_client, cerebras_client, gemini_client) if c is not None]
+    llm_clients = [c for c in (groq_client, mistral_client, gemini_client) if c is not None]
 
     result = BatchResult()
     for index, asset in enumerate(faellige):

@@ -14,43 +14,35 @@ Verteilungsformel (1:1 aus docs/budget_queue_design.md):
     rest_fuer_3 = B - tier1_verbraucht - tier2_verbraucht
     tier3_verbraucht = min(anzahl_faelliger_spot_assets, rest_fuer_3)
 
-Fallback-Kette Groq -> Mistral -> Cerebras -> Gemini (2026-07-17 umgestellt,
-siehe Memory project_cerebras_free_tier_aenderung_2026-08-17.md): Cerebras
-beendet seinen kostenlosen Tier zum 2026-08-17 - Mistral uebernimmt dessen
-bisherige Rolle als zuverlaessige zweite Stufe (echt verifizierte Kapazitaet
-weit ueber Cerebras/Gemini, saubere Vertragsbedingungen). Cerebras bleibt bis
-2026-08-17 aktiv, ist aber jetzt GENAUSO OPTIONAL wie Gemini (vorher
-faelschlich unbedingt in jeder calls-Liste - echter Bug, siehe Nachtrag
-unten), damit die spaetere Entfernung nur noch "Key aus .env loeschen"
-bedeutet, kein weiterer Code-Eingriff.
+Fallback-Kette Groq -> Mistral -> Gemini (2026-07-17: Cerebras vollstaendig
+entfernt, siehe Memory project_cerebras_free_tier_aenderung_2026-08-17.md -
+urspruenglich war geplant, Cerebras erst zum Auslaufen seines kostenlosen
+Tiers am 2026-08-17 zu entfernen, der Nutzer hat sich aber bewusst fuer die
+sofortige vollstaendige Entfernung entschieden, um nicht spaeter darueber zu
+stolpern. Mistral hat Cerebras' bisherige Rolle als zuverlaessige zweite
+Stufe uebernommen (echt verifizierte Kapazitaet weit ueber Cerebras/Gemini,
+saubere Vertragsbedingungen). Der `CEREBRAS_API_KEY` bleibt einzig in `.env`
+als Referenz stehen, jetzt kommentiert als obsolet fuer die Produktion.
 
 Fuer jeden ausgewaehlten Kandidaten wird ZUERST Groq versucht; schlaegt der
 Call fehl (jede Exception - Netzwerk, HTTP-Fehler, Rate-Limit), wird SOFORT
 die naechste Stufe versucht, solange deren eigener Tages-Deckel (config
-mistral_taegliches_budget/cerebras_taegliches_budget/gemini_taegliches_budget)
-noch nicht erschoepft ist. Reihenfolge nach Reife/Vertrauen UND Vertrags-
-guenstigkeit, NICHT nach roher Kapazitaet - Gemini hat zwar naechst zu Mistral
-die groesste Kapazitaet, aber vertraglich die ungueenstigsten Bedingungen der
-vier Anbieter (EWR/CH/UK-Sonderklausel, explizite Warnung vor vertraulichen/
-Finanzdaten, nicht abwaehlbare Trainings-Nutzung - siehe Memory), soll deshalb
-bewusst am seltensten drankommen. Kandidaten, die an ALLEN verfuegbaren
-Stufen scheitern, bleiben unverarbeitet - kein Datenverlust (P-10), der
-naechste 15-Min-Lauf bewertet sie automatisch neu. `mistral_client`/
-`cerebras_client`/`gemini_client` sind alle optional (P-8) - ohne sie
-schrumpft die Kette entsprechend, bis minimal auf Groq allein.
+mistral_taegliches_budget/gemini_taegliches_budget) noch nicht erschoepft
+ist. Reihenfolge nach Reife/Vertrauen UND Vertragsguenstigkeit, NICHT nach
+roher Kapazitaet - Gemini hat zwar mehr Kapazitaet als Mistral noetig waere,
+aber vertraglich die ungueenstigsten Bedingungen aller Anbieter (EWR/CH/UK-
+Sonderklausel, explizite Warnung vor vertraulichen/Finanzdaten, nicht
+abwaehlbare Trainings-Nutzung - siehe Memory), soll deshalb bewusst am
+seltensten drankommen. Kandidaten, die an ALLEN verfuegbaren Stufen
+scheitern, bleiben unverarbeitet - kein Datenverlust (P-10), der naechste
+15-Min-Lauf bewertet sie automatisch neu. `mistral_client`/`gemini_client`
+sind beide optional (P-8) - ohne sie schrumpft die Kette entsprechend, bis
+minimal auf Groq allein.
 
-**Nachtrag (2026-07-17):** `cerebras_client` war bisher in allen drei
-calls-Listen UNBEDINGT eingetragen (kein `is not None`-Check, anders als
-`gemini_client`) - ein echter, bisher unbemerkter Bug, der die geplante
-Cerebras-Entfernung (2026-08-17) ohne Fix gefaehrlich gemacht haette (ohne
-CEREBRAS_API_KEY waere jeder Call an dieser Stufe schlicht mit einer
-Exception gescheitert, statt die Stufe sauber zu ueberspringen). Jetzt
-behoben, Cerebras ist ab sofort echt optional.
-
-Echte Tages-Zaehler (2026-07-14-Fix): Cerebras'/Gemini's Tagesbudget wird zu
+Echte Tages-Zaehler (2026-07-14-Fix): Mistrals/Gemini's Tagesbudget wird zu
 Beginn jedes Laufs EINMAL per db.count_real_llm_calls_today_by_provider()
 aus der DB gelesen (nicht mehr nur eine lokale, bei jedem 15-Min-Lauf
-zurueckgesetzte Variable) - vorher konnte die 60er-Cerebras-Grenze innerhalb
+zurueckgesetzte Variable) - vorher konnte eine feste Tagesgrenze innerhalb
 eines einzelnen Laufs (max. ~15 Kandidaten) nie erreicht werden, die
 Tagesobergrenze wirkte also nie wirklich."""
 from __future__ import annotations
@@ -102,8 +94,6 @@ class AllocationResult:
     uebersprungen_cooldown_marktscan: int = 0
     mistral_calls_verbraucht: int = 0
     mistral_budget_erschoepft: bool = False
-    cerebras_calls_verbraucht: int = 0
-    cerebras_budget_erschoepft: bool = False
     gemini_calls_verbraucht: int = 0
     gemini_budget_erschoepft: bool = False
     # 2026-07-14 (Empfehlungs-E-Mails): die echten Signal-/HebelSignal-Objekte
@@ -250,7 +240,6 @@ def run_budget_allocator(
     conn_factory,
     watchlist: list,
     groq_client,
-    cerebras_client,
     coingecko_client,
     kraken_client,
     fred_api_key: str | None,
@@ -266,7 +255,6 @@ def run_budget_allocator(
     budget_gesamt = cfg.get("taegliches_budget_gesamt", 15)
     spot_reserve = cfg.get("spot_rotation_reserve", 5)
     mistral_budget = cfg.get("mistral_taegliches_budget", 150)
-    cerebras_budget = cfg.get("cerebras_taegliches_budget", 60)
     gemini_budget = cfg.get("gemini_taegliches_budget", 200)
     cooldown_stunden = cfg.get("cooldown_stunden", 3.5)
     hebel_cooldown_stunden_ausgemustert = cfg.get(
@@ -332,12 +320,11 @@ def run_budget_allocator(
         # auf 0 zurueckgesetzt wurde (siehe Modul-Docstring).
         tages_verbraucht = {
             "mistral": db.count_real_llm_calls_today_by_provider(conn, "mistral:"),
-            "cerebras": db.count_real_llm_calls_today_by_provider(conn, "cerebras:"),
             "gemini": db.count_real_llm_calls_today_by_provider(conn, "gemini:"),
         }
     finally:
         conn.close()
-    tages_budget = {"mistral": mistral_budget, "cerebras": cerebras_budget, "gemini": gemini_budget}
+    tages_budget = {"mistral": mistral_budget, "gemini": gemini_budget}
 
     tier1_n, tier2_n, tier3_n = _verteile_budget(
         len(hebel_kandidaten), len(marktscan_kandidaten), len(spot_kandidaten), budget_gesamt, spot_reserve,
@@ -353,7 +340,7 @@ def run_budget_allocator(
     def _mit_fallback_chain(schluessel: str, calls: list[tuple[str, object]]) -> bool:
         """Versucht `calls` (Liste von (provider_name, call_fn)) der Reihe nach.
         "groq" hat kein eigenes Tagesbudget hier (Groqs reales Tageslimit
-        wirkt extern ueber echte 429s). "cerebras"/"gemini" werden nur
+        wirkt extern ueber echte 429s). "mistral"/"gemini" werden nur
         versucht, wenn ihr echter Tages-Zaehler (`tages_verbraucht`) das
         eigene Budget (`tages_budget`) noch nicht erreicht hat - sonst wird
         diese Stufe uebersprungen (NICHT versucht) und die naechste Stufe
@@ -372,8 +359,6 @@ def run_budget_allocator(
                 if tages_verbraucht[provider_name] >= tages_budget[provider_name]:
                     if provider_name == "mistral":
                         result.mistral_budget_erschoepft = True
-                    elif provider_name == "cerebras":
-                        result.cerebras_budget_erschoepft = True
                     elif provider_name == "gemini":
                         result.gemini_budget_erschoepft = True
                     continue
@@ -387,8 +372,6 @@ def run_budget_allocator(
                     tages_verbraucht[provider_name] += 1
                     if provider_name == "mistral":
                         result.mistral_calls_verbraucht = tages_verbraucht["mistral"]
-                    elif provider_name == "cerebras":
-                        result.cerebras_calls_verbraucht = tages_verbraucht["cerebras"]
                     elif provider_name == "gemini":
                         result.gemini_calls_verbraucht = tages_verbraucht["gemini"]
                 return True
@@ -424,10 +407,6 @@ def run_budget_allocator(
         if mistral_client is not None:
             calls.append(("mistral", lambda t=trigger, a=asset: _mit_conn(
                 lambda c: generate_hebel_signal(t, a, watchlist, c, mistral_client, coingecko_client, kraken_client, fred_api_key)
-            )))
-        if cerebras_client is not None:
-            calls.append(("cerebras", lambda t=trigger, a=asset: _mit_conn(
-                lambda c: generate_hebel_signal(t, a, watchlist, c, cerebras_client, coingecko_client, kraken_client, fred_api_key)
             )))
         if gemini_client is not None:
             calls.append(("gemini", lambda t=trigger, a=asset: _mit_conn(
@@ -466,8 +445,6 @@ def run_budget_allocator(
             ]
             if mistral_client is not None:
                 calls.append(("mistral", lambda c=candidate: _writeup(c, mistral_client)))
-            if cerebras_client is not None:
-                calls.append(("cerebras", lambda c=candidate: _writeup(c, cerebras_client)))
             if gemini_client is not None:
                 calls.append(("gemini", lambda c=candidate: _writeup(c, gemini_client)))
             ok = _mit_fallback_chain(schluessel, calls)
@@ -485,10 +462,6 @@ def run_budget_allocator(
         if mistral_client is not None:
             calls.append(("mistral", lambda a=asset: _mit_conn(
                 lambda c: generate_signal(a, watchlist, c, mistral_client, coingecko_client, kraken_client, fred_api_key)
-            )))
-        if cerebras_client is not None:
-            calls.append(("cerebras", lambda a=asset: _mit_conn(
-                lambda c: generate_signal(a, watchlist, c, cerebras_client, coingecko_client, kraken_client, fred_api_key)
             )))
         if gemini_client is not None:
             calls.append(("gemini", lambda a=asset: _mit_conn(

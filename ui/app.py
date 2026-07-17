@@ -72,7 +72,7 @@ HEARTBEAT_PATH = Path(__file__).resolve().parent.parent / "data" / "gui_heartbea
 class TradingInfoToolApp(tk.Tk):
     def __init__(
         self, db_conn_factory, watchlist, coingecko_client, kraken_client=None, groq_client=None,
-        cerebras_client=None, gemini_client=None, fred_api_key=None, bitpanda_api_key=None,
+        gemini_client=None, fred_api_key=None, bitpanda_api_key=None,
         mistral_client=None,
     ):
         super().__init__()
@@ -90,7 +90,6 @@ class TradingInfoToolApp(tk.Tk):
         self._coingecko_client = coingecko_client
         self._kraken_client = kraken_client
         self._groq_client = groq_client
-        self._cerebras_client = cerebras_client
         self._gemini_client = gemini_client
         self._mistral_client = mistral_client
         self._fred_api_key = fred_api_key
@@ -111,7 +110,7 @@ class TradingInfoToolApp(tk.Tk):
 
         self._signals_view = SignalsView(
             notebook, db_conn_factory, watchlist, groq_client, coingecko_client, kraken_client,
-            fred_api_key=fred_api_key, cerebras_client=cerebras_client, gemini_client=gemini_client,
+            fred_api_key=fred_api_key, gemini_client=gemini_client,
             mistral_client=mistral_client,
         )
         notebook.add(self._signals_view, text="Signale")
@@ -123,7 +122,7 @@ class TradingInfoToolApp(tk.Tk):
         notebook.add(self._marktscan_view, text="Marktscan")
 
         self._hebel_view = HebelView(
-            notebook, db_conn_factory, watchlist, groq_client, cerebras_client, coingecko_client,
+            notebook, db_conn_factory, watchlist, groq_client, coingecko_client,
             kraken_client, fred_api_key=fred_api_key, gemini_client=gemini_client,
             mistral_client=mistral_client,
         )
@@ -1091,12 +1090,12 @@ class AssetEditDialog(tk.Toplevel):
 
 def run_app(
     db_conn_factory, watchlist, coingecko_client, kraken_client=None, groq_client=None,
-    cerebras_client=None, gemini_client=None, fred_api_key=None, bitpanda_api_key=None,
+    gemini_client=None, fred_api_key=None, bitpanda_api_key=None,
     mistral_client=None,
 ) -> None:
     app = TradingInfoToolApp(
         db_conn_factory, watchlist, coingecko_client, kraken_client, groq_client,
-        cerebras_client=cerebras_client, gemini_client=gemini_client, fred_api_key=fred_api_key,
+        gemini_client=gemini_client, fred_api_key=fred_api_key,
         bitpanda_api_key=bitpanda_api_key, mistral_client=mistral_client,
     )
     app.mainloop()

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import logging
+from datetime import datetime, timezone
 
 import numpy as np
 
@@ -27,6 +28,18 @@ from indicators.calculations import ConfluenceSummary, TechnicalSnapshot, latest
 logger = logging.getLogger(__name__)
 
 REQUIRED_ACTIONS = ("KAUFEN", "VERKAUFEN", "TAUSCHEN", "HALTEN", "NACHKAUFEN")
+
+# Wiederholungs-Erkennung (2026-07-17, Regelwerk-Konsistenzpruefung nach dem
+# Hebel-Fix, siehe hebel_analyst.py::_build_position_aktuell_facts()): nur
+# VERKAUFEN/TAUSCHEN sind hier risikorelevant genug, um als "wirkungslos"
+# geflaggt zu werden - eine nicht umgesetzte KAUFEN/NACHKAUFEN-Empfehlung ist
+# neutral (kein eskalierendes Risiko wie bei Hebel/Liquidation, nur eine
+# verpasste Gelegenheit). Mindestabstand bewusst groesszuegiger als Hebels 2
+# Std. (dort 15-Min-Trigger-Takt) - Spot-Signale laufen manuell oder ueber
+# einen mehrstuendigen Cooldown (siehe signal_batch.py), ein zu kurzer Abstand
+# wuerde bei schnellen Wiederholungs-Klicks faelschlich anschlagen.
+_WIEDERHOLUNG_RELEVANTE_AKTIONEN = ("VERKAUFEN", "TAUSCHEN")
+_WIEDERHOLUNG_MINDEST_STUNDEN = 4.0
 
 SYSTEM_PROMPT = """Du bist ein Trading-Analyst fuer ein privates Krypto-Advisory-Tool. \
 Deine Rolle ist rein beratend (P-7) - du fuehrst NIEMALS einen Trade aus, du gibst nur \
@@ -171,6 +184,13 @@ Regime-/Risiko-Modell"). `entry` selbst bleibt dabei die GESAMTSPANNE ueber alle
 (niedrigste bis hoechste Zone). `tranchen` ist eine reine Zusatz-Information fuer den \
 Nutzer, KEINE separate Positionsgroessen-Vorgabe - die eine `position_size` bleibt \
 unveraendert die Gesamtgroesse.
+21. Ist `vorherige_empfehlung` NICHT null, wurde die letzte VERKAUFEN/TAUSCHEN-Empfehlung \
+fuer dieses Asset nachweislich nicht umgesetzt (Position wird laut `haltung` weiterhin \
+gehalten). Wiederhole die Empfehlung nicht unveraendert, ohne diesen Umstand explizit in \
+`long_reasoning` oder `key_risks` zu benennen - entweder nenne einen NEUEN, zusaetzlichen \
+Grund, der seit der letzten Empfehlung hinzugekommen ist, oder erklaere ausdruecklich, \
+warum die Empfehlung trotz Nicht-Umsetzung unveraendert bestehen bleibt. Bloss dieselbe \
+Begruendung wortgleich zu wiederholen ist nicht hilfreich fuer den Nutzer.
 
 SCHEMA:
 {
@@ -274,6 +294,7 @@ def build_facts(
     bitpanda_gelistet: bool | None,
     tranchen_erlaubt: bool = False,
     cash_reserve_ziel: CashReserveZielResult | None = None,
+    letztes_signal=None,
 ) -> dict:
     macd_val = technical_snapshot.macd
     macd_facts = None
@@ -314,6 +335,33 @@ def build_facts(
     wird_aktuell_gehalten = bool(
         holding and ((holding.quantity or 0.0) + (holding.staked_quantity or 0.0)) > 0.0
     )
+
+    # Wiederholungs-Erkennung (2026-07-17, siehe Konstanten-Docstring oben) -
+    # rein deterministischer Datumsvergleich, KEIN LLM-Call. Nur relevant, wenn
+    # die letzte Empfehlung VERKAUFEN/TAUSCHEN war UND die Position laut
+    # aktuellem holding-Objekt weiterhin gehalten wird (sonst wurde entweder
+    # nicht verkauft-relevant empfohlen, oder die Empfehlung wurde bereits
+    # umgesetzt).
+    vorherige_empfehlung_fact = None
+    if (
+        letztes_signal is not None
+        and letztes_signal.action in _WIEDERHOLUNG_RELEVANTE_AKTIONEN
+        and wird_aktuell_gehalten
+    ):
+        letzter_zeitpunkt = datetime.fromisoformat(letztes_signal.created_at)
+        if letzter_zeitpunkt.tzinfo is None:
+            letzter_zeitpunkt = letzter_zeitpunkt.replace(tzinfo=timezone.utc)
+        stunden_seit = (datetime.now(timezone.utc) - letzter_zeitpunkt).total_seconds() / 3600
+        if stunden_seit >= _WIEDERHOLUNG_MINDEST_STUNDEN:
+            vorherige_empfehlung_fact = {
+                "letzte_aktion": letztes_signal.action,
+                "vor_stunden": round(stunden_seit, 1),
+                "hinweis": (
+                    f"Vorherige Empfehlung '{letztes_signal.action}' vor {stunden_seit:.1f} Std. "
+                    "nicht umgesetzt - Position wird laut aktuellem Bestand weiterhin gehalten."
+                ),
+            }
+
     facts = {
         "asset": {
             "symbol": asset.symbol,
@@ -329,6 +377,7 @@ def build_facts(
             "aktualisiert_vor_min": price_age_minutes,
         },
         "haltung": _build_haltung_facts(holding, latest_price),
+        "vorherige_empfehlung": vorherige_empfehlung_fact,
         "technische_analyse": {
             "ema": {str(p): _native(latest_value(r)) for p, r in technical_snapshot.ema.items()},
             "macd": macd_facts,

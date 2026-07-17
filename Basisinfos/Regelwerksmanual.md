@@ -1934,6 +1934,31 @@ einfacher Chat-Call sowie ein Call mit
 `analyst.py:656`) beide erfolgreich — Mistral verhält sich formatkompatibel
 zu den anderen drei OpenAI-kompatiblen Anbietern.
 
+### Nachtrag (2026-07-17, gleicher Tag): Korrektur — Cerebras sofort vollständig entfernt statt bis 2026-08-17 auslaufen zu lassen
+
+Der oben dokumentierte Plan ("Cerebras bleibt bis 2026-08-17 als dritte
+Stufe aktiv") war der zum damaligen Zeitpunkt abgesegnete Stand. Der Nutzer
+hat sich nach Sichtung der Remote-Steuer-Seite (Provider-Performance zeigte
+weiterhin echte Cerebras-Calls) explizit umentschieden: Cerebras sollte
+bereits jetzt vollständig durch Mistral ersetzt werden, einzige Ausnahme
+der `CEREBRAS_API_KEY` in `.env` (Wert unverändert, nur als obsolet für die
+Produktion kommentiert).
+
+**Umgesetzt:** `api/cerebras.py` gelöscht; `cerebras_client`-Parameter und
+alle Cerebras-Zweige aus `main.py`, `agent/krypto/budget_allocator.py`
+(inkl. `cerebras_taegliches_budget`, `AllocationResult`-Felder, alle drei
+`calls`-Listen), `scheduler/background.py`, `ui/app.py`/`ui/hebel_view.py`/
+`ui/signals_view.py`, `agent/krypto/signal_batch.py`,
+`agent/krypto/llm_provider.py::llm_model_label()` und
+`remote/server.py::API_HEALTH_GROUPS` entfernt. **Aktive Fallback-Kette
+jetzt: Groq → Mistral → Gemini.**
+
+Bewusst NICHT angetastet: historische DB-Einträge mit `"cerebras:..."`-
+Provider-Präfix (Provider-Performance-Statistik) sowie
+`provider_from_label()` (bleibt generisch, liest Altbestand weiterhin
+korrekt). Details siehe Memory
+`project_cerebras_free_tier_aenderung_2026-08-17.md`, Abschnitt "KORREKTUR".
+
 ### Nachtrag (2026-07-17): Selektiver Desktop↔Notebook-Sync für manuelle Einstandspreise
 
 **Auslöser:** beim Vervollständigen der Einstandspreise für 13 Bitpanda-
@@ -2606,3 +2631,126 @@ Variante — dadurch konnte ein älteres, weiterhin relevantes Signal einer
 Richtung (z. B. LONG) unsichtbar werden, sobald für dasselbe Symbol die
 andere Richtung (SHORT) neuer analysiert wurde. Jetzt konsistent
 richtungsbewusst wie überall sonst im Hebel-Code.
+
+## Nachtrag (2026-07-17, gleicher Tag): Spot-Regelwerk-Konsistenzprüfung nach dem Hebel-Fix
+
+**Auslöser:** Nutzer-Wunsch, dieselbe Detailanalyse, die zum 4-Punkte-Hebel-
+Fix führte (siehe oben), auf das Spot-Regelwerk (`agent/krypto/risk_gate.py`,
+`agent/krypto/analyst.py`, `agent/krypto/pipeline.py` — gilt größtenteils
+auch für `agent/aktien/*`, das `risk_gate.py` wiederverwendet) anzuwenden,
+explizit als Detailanalyse VOR jeder Implementierung.
+
+**Ergebnis der Analyse (Stand + Meinung, 4 Punkte gegen die Hebel-
+Nachbesserung gespiegelt):**
+
+1. **Ungenutzte Forecast-Wahrscheinlichkeiten — echte Lücke, identisch zum
+   Hebel-Fall.** `analyst.py` lässt sich bereits `forecast.bull/base/bear.
+   probability_pct` liefern, `risk_gate.py::post_check()` hat das nie
+   ausgewertet. **Umgesetzt** (siehe unten).
+2. **Regime-Richtungs-Konflikt-Deckel — KEINE Lücke, bereits anders
+   abgedeckt.** Hebel brauchte das wegen Liquidationsrisiko bei einer
+   Position gegen das Regime. Spot/Aktien haben keinen Hebel/keine
+   Liquidation — Kaufen im Bär-Regime ist oft die beabsichtigte Strategie
+   (AZ-4-Tranchen-Akkumulation). R-5.10s bereits bestehende regime-skalierte
+   `min_konfidenz_prozent` (85 % im `baer`, nur 60 % im `bulle`) leistet
+   strukturell dasselbe. **Bewusst NICHT umgesetzt** — kein Fix nötig.
+3. **HEBEL_SENKEN-Konkretisierung — nicht anwendbar.** Spot/Aktien haben
+   keine Hebel-Reduktions-Aktion.
+4. **Wiederholte, wirkungslose Empfehlungen — echte, aber geringere Lücke
+   als bei Hebel.** Der bestehende "Überholt"-Mechanismus (`backward_
+   tracking.py`) erkennt einen ANDEREN Fall (eine offene Empfehlung wird
+   durch eine NEUERE Analyse überholt), nicht "VERKAUFEN/TAUSCHEN wiederholt
+   empfohlen, Position aber weiterhin gehalten". Geringere Dringlichkeit als
+   bei Hebel (kein eskalierendes strukturelles Risiko wie Liquidation, nur
+   eine verpasste Gelegenheit). **Umgesetzt** (siehe unten).
+
+**Umsetzung Punkt 1 — Gegenszenario-Deckel (`risk_gate.py::post_check()`):**
+bei KAUFEN/NACHKAUFEN wird zusätzlich zur bestehenden Konfidenz-Skalierung
+geprüft, ob `forecast.bear.probability_pct` die neue Schwelle
+`risiko.gegenszenario_wahrscheinlichkeit_schwelle_prozent` (Startwert 35)
+erreicht/überschreitet — falls ja, wird die bereits konfidenz-skalierte
+Positionsgrößen-Obergrenze zusätzlich multiplikativ auf
+`risiko.gegenszenario_positionsgroesse_deckel_anteil` (Startwert 0.5, d.h.
+50 %) reduziert. Bewusst **kein hartes Veto** wie beim Hebel-Pendant
+(`risiko.hebel.gegenszenario_hebel_deckel`) — Spot/Aktien tragen kein
+Liquidationsrisiko, eine Korrektur der Größe (bestehende Philosophie dieser
+Funktion) reicht aus. Wirkt automatisch auch für Aktien-Signale, da
+`agent/aktien/pipeline.py` dieselbe `post_check()`-Funktion aufruft.
+
+**Umsetzung Punkt 4 — Wiederholungs-Erkennung (`analyst.py::build_facts()` +
+`pipeline.py::generate_signal()`):** neuer Fakt `vorherige_empfehlung` —
+`pipeline.py` lädt vor jedem neuen Signal-Lauf das zuletzt gespeicherte
+Signal für dasselbe Symbol (`db.get_latest_signal()`) und reicht es an
+`build_facts()` durch. War die letzte Aktion VERKAUFEN oder TAUSCHEN
+(NICHT KAUFEN/NACHKAUFEN — eine ignorierte Kauf-Empfehlung ist risikoneutral,
+keine Warnung wert), UND wird das Asset laut aktuellem Bestand weiterhin
+gehalten, UND sind mindestens 4 Stunden vergangen (Grace-Period, bewusst
+großzügiger als Hebels 2 Std. — Spot-Signale laufen manuell oder über einen
+mehrstündigen Cooldown, kein 15-Min-Trigger-Takt), wird der Fakt gesetzt.
+SYSTEM_PROMPT-Regel 21 verlangt vom Modell, den Umstand zu benennen statt
+die Begründung wortgleich zu wiederholen. **Bewusst NUR in `agent/krypto/
+analyst.py` umgesetzt, NICHT in `agent/aktien/analyst.py`** (eigene, separate
+`build_facts()`/SYSTEM_PROMPT-Kopie) — der Nutzer sprach explizit von
+"Spot"; Aktien-Analog auf Anfrage nachrüstbar.
+
+**Config (`Basisinfos/config.yaml`, unter `risiko:`, NICHT `risiko.hebel:`):**
+```yaml
+gegenszenario_wahrscheinlichkeit_schwelle_prozent: 35
+gegenszenario_positionsgroesse_deckel_anteil: 0.5
+```
+Beide Startwerte unkalibriert, identisch zum Hebel-Pendant übernommen — nach
+echten Betriebsdaten anzupassen.
+
+**Verifiziert:** 7 synthetische Testfälle (Gegenszenario-Deckel greift bei
+hoher/nicht bei niedriger Bear-Wahrscheinlichkeit, Rückwärtskompatibilität
+ohne `forecast`-Feld; Wiederholungs-Fakt gesetzt bei VERKAUFEN vor 5 Std. +
+Position gehalten, NICHT gesetzt innerhalb der Grace-Period, NICHT gesetzt
+wenn Position nicht mehr gehalten wird, NICHT gesetzt bei KAUFEN als letzter
+Aktion) plus ein echter Kompatibilitätstest gegen eine Kopie der Produktions-
+DB (`db.get_latest_signal()` auf 5 echten Symbolen, reale ISO-Zeitstempel
+korrekt geparst, reale `forecast_bear_prob_pct`-Werte 20-30 % liegen
+plausibel unter der neuen 35 %-Schwelle).
+
+## Nachtrag (2026-07-17, gleicher Tag): RM-4 (Cash-Reserve) war rueckwaerts- statt vorwaertsgerichtet
+
+**Auslöser:** Nutzer-Wunsch, das Thema Spot-Regelwerk breiter zu denken -
+nicht nur Hebel-Punkte auf Spot uebertragen, sondern zusaetzliche,
+eigenstaendige Luecken und Eigenheiten des Spot-Markts identifizieren.
+
+**Fund:** RM-4 (`risk_gate.py::pre_check()`) prueft bisher nur, ob die
+Cash-Reserve JETZT SCHON unter dem Minimum liegt (`cash_value_usd <
+required_reserve_usd`) - anders als RM-1 (berechnet eine maximale
+Positionsgroesse aus dem Risikobudget) und RM-2 (deckelt zusaetzlich auf das
+verbleibende Allokations-Headroom), die beide VORWAERTSGERICHTET sind. RM-4
+rechnete nie durch, ob die konkret vorgeschlagene Positionsgroesse SELBST die
+Reserve unter das Minimum druecken wuerde - ein Kauf, der die Reserve von
+z. B. 21 % auf 15 % senkt, wurde anstandslos durchgelassen; erst der
+NAECHSTE Kaufversuch haette die dann bereits unterschrittene Reserve
+gesehen. Verwandter, nicht behobener Nebeneffekt (bewusst zurueckgestellt,
+siehe unten): mehrere KAUFEN-Empfehlungen im selben Batch-Lauf
+(`signal_batch.py`/Budget-Allocator) werten unabhaengig voneinander gegen
+denselben `db.get_all_holdings()`-Snapshot aus - keine "weiss" von den
+anderen vorgeschlagenen Kaeufen desselben Laufs.
+
+**Fix (umgesetzt):** analog zu RM-2s Allokations-Headroom wird jetzt ein
+Cash-Reserve-Headroom (`cash_value_usd - required_reserve_usd`) berechnet
+und per `min()` direkt in `max_position_size_usd` eingerechnet, sobald RM-4
+selbst nicht bereits vetoed (im "OK"-Zweig) - ein einzelner Kauf kann die
+Reserve dadurch nicht mehr unter das Minimum druecken, unabhaengig davon,
+was sonst im Portfolio passiert. Kein neues Feld in `RiskPreCheckResult`
+noetig (reine `max_position_size_usd`/`_eur`-Anpassung, wie bei RM-1/RM-2).
+
+**Bewusst zurueckgestellt:** die Batch-Kumulierung (mehrere gleichzeitige
+Kaufempfehlungen im selben Lauf, die sich gegenseitig nicht "sehen") -
+Nutzer moechte hierzu erst mehr Informationen, bevor entschieden wird
+(z. B. wie haeufig Nutzer tatsaechlich mehrere Tages-Empfehlungen gleichzeitig
+exekutiert). Deutlich aufwaendiger als Fix 1 (braeuchte einen laufenden
+Spend-Akkumulator ueber den gesamten Batch-Lauf), fuer einen eher seltenen
+Grenzfall.
+
+**Verifiziert:** 2 synthetische Testfaelle gegen ein handgebautes Portfolio
+(BTC-Allokation bewusst unter dem RM-2-Limit gehalten, um RM-4 isoliert zu
+pruefen) - (1) knappe Cash-Reserve (21 % bei 20 % Minimum, nur 100 USD
+Headroom): Obergrenze korrekt auf ~100 USD gedeckelt, obwohl RM-1 rechnerisch
+110.600 USD erlaubt haette; (2) reichlich Cash-Reserve: RM-1/RM-2 bleiben
+weiterhin die bindende (kleinere) Grenze, RM-4 greift nicht faelschlich ein.

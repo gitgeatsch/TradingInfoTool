@@ -52,7 +52,7 @@ _POSITIONS_COLUMN_DESCRIPTIONS = {
 
 class HebelView(ttk.Frame):
     def __init__(
-        self, parent, db_conn_factory, watchlist, groq_client, cerebras_client,
+        self, parent, db_conn_factory, watchlist, groq_client,
         coingecko_client, kraken_client, fred_api_key=None, gemini_client=None,
         mistral_client=None,
     ):
@@ -60,7 +60,6 @@ class HebelView(ttk.Frame):
         self._db_conn_factory = db_conn_factory
         self._watchlist = watchlist
         self._groq_client = groq_client
-        self._cerebras_client = cerebras_client
         self._gemini_client = gemini_client
         self._mistral_client = mistral_client
         self._coingecko_client = coingecko_client
@@ -82,7 +81,7 @@ class HebelView(ttk.Frame):
     def _any_llm_client_available(self) -> bool:
         return (
             self._groq_client is not None or self._mistral_client is not None
-            or self._cerebras_client is not None or self._gemini_client is not None
+            or self._gemini_client is not None
         )
 
     def _build_layout(self) -> None:
@@ -139,7 +138,7 @@ class HebelView(ttk.Frame):
 
         if not self._any_llm_client_available():
             self.status_label.config(
-                text="⚠ Kein Groq-/Cerebras-/Gemini-Key gesetzt — manuelle Analyse deaktiviert",
+                text="⚠ Kein Groq-/Mistral-/Gemini-Key gesetzt — manuelle Analyse deaktiviert",
                 foreground=theme.warn_color(),
             )
 
@@ -463,9 +462,9 @@ class HebelView(ttk.Frame):
         thread.start()
 
     def _run_analysis(self, trig) -> None:
-        """Groq-dann-Cerebras-dann-Gemini-Fallback (2026-07-14 um Gemini als
-        dritte Stufe ergaenzt, bewusst ohne Budget-/Cooldown-Pruefung - ein
-        manueller Klick ist ein expliziter Einzel-Wunsch)."""
+        """Groq-dann-Mistral-dann-Gemini-Fallback (bewusst ohne Budget-/
+        Cooldown-Pruefung - ein manueller Klick ist ein expliziter
+        Einzel-Wunsch)."""
         from agent.krypto.hebel_pipeline import generate_hebel_signal
 
         asset = next((a for a in self._watchlist if a.symbol == trig.symbol), None)
@@ -484,7 +483,7 @@ class HebelView(ttk.Frame):
                 conn.close()
 
         error = None
-        for llm_client in (self._groq_client, self._mistral_client, self._cerebras_client, self._gemini_client):
+        for llm_client in (self._groq_client, self._mistral_client, self._gemini_client):
             if llm_client is None:
                 continue
             try:

@@ -496,6 +496,11 @@ def generate_signal(
     market_context = fetch_market_context()
 
     holdings = {h.symbol: h for h in db.get_all_holdings(conn)}
+    # Wiederholungs-Erkennung (2026-07-17, siehe analyst.py::build_facts()
+    # Konstanten-Docstring) - letztes Signal fuer dieses Symbol VOR dem
+    # Schreiben des neuen, damit build_facts() die vorherige Empfehlung mit
+    # dem aktuellen Haltebestand vergleichen kann.
+    letztes_signal = db.get_latest_signal(conn, asset.symbol)
     strategien_aktiv = [s["name"] for s in config_dict["strategien"] if s["aktiv"]]
     price_age_minutes = None
     if price_snap is not None:
@@ -526,6 +531,7 @@ def generate_signal(
         asset, price_snap, holdings.get(asset.symbol), snapshot, confluence, regime_result,
         regime_profile, risk_result, anticyclic_context, strategien_aktiv, price_age_minutes,
         market_context, bitpanda_gelistet, tranchen_erlaubt, cash_reserve_ziel,
+        letztes_signal=letztes_signal,
     )
 
     # R-5.6 Groq-Synthese.

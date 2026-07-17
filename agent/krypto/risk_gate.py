@@ -215,6 +215,23 @@ def pre_check(
             f"RM-4: OK - Cash-Reserve {cash_value_usd:.2f} USD ({cash_reserve_pct_current:.1f}%) "
             f">= erforderlichem Minimum {required_reserve_usd:.2f} USD"
         )
+        # NEU (2026-07-17, Spot-Regelwerk-Konsistenzpruefung): RM-4 war bisher rein
+        # rueckwaertsgerichtet - prueft nur, ob die Reserve JETZT SCHON unter dem
+        # Minimum liegt, nie ob der vorgeschlagene Kauf SELBST die Reserve erst
+        # darunter druecken wuerde (anders als RM-1/RM-2, die beide vorwaerts-
+        # gerichtet eine Obergrenze berechnen). Cash-Reserve-Headroom analog zu
+        # RM-2s Allokations-Headroom (siehe unten) direkt in die Positionsgroessen-
+        # Obergrenze einrechnen, bevor ueberhaupt ein Vorschlag entsteht - ein
+        # einzelner Kauf kann die Reserve dadurch nicht mehr unter das Minimum
+        # druecken, unabhaengig davon, was der Rest des Portfolios vorschlaegt.
+        cash_reserve_headroom_usd = cash_value_usd - required_reserve_usd
+        if max_position_size_usd is not None:
+            max_position_size_usd = min(max_position_size_usd, max(0.0, cash_reserve_headroom_usd))
+            checks.append(
+                f"RM-4: Positionsgrößen-Obergrenze zusätzlich auf Cash-Reserve-Headroom "
+                f"{cash_reserve_headroom_usd:.2f} USD begrenzt (verhindert, dass der Kauf selbst "
+                "die Reserve unter das Minimum drückt)."
+            )
 
     # RM-Bitpanda: nicht auf Bitpanda (der tatsaechlichen Handelsboerse des Nutzers)
     # gelistete Assets koennen nicht gekauft werden - Veto analog RM-1/2/4/5. Bis
@@ -488,6 +505,36 @@ def post_check(parsed: dict, pre_result: RiskPreCheckResult, regime_result, conf
                     f"(Sockel {sockel_anteil * 100:.0f}% bei {min_konfidenz}% Konfidenz, "
                     "100% bei 100% Konfidenz)."
                 )
+
+            # Gegenszenario-Wahrscheinlichkeit (2026-07-17, Regelwerk-Konsistenzpruefung
+            # nach dem Hebel-Fix, analog hebel_risk_gate.py::post_check_hebel()): das
+            # Modell liefert bereits forecast.bear.probability_pct, wurde bisher aber nie
+            # ausgewertet - derselbe blinde Fleck wie beim urspruenglichen Hebel-Fund.
+            # Anders als bei Hebel gibt es hier kein Liquidationsrisiko, daher bewusst
+            # KEIN hartes Veto, sondern eine zusaetzliche multiplikative Deckelung der
+            # ohnehin schon konfidenz-skalierten Obergrenze - konsistent mit der
+            # bestehenden RM-1/RM-2-Korrektur-statt-Veto-Philosophie dieser Funktion.
+            gegenszenario_note = None
+            forecast = result.get("forecast") or {}
+            gegenszenario_pct = (forecast.get("bear") or {}).get("probability_pct")
+            gegenszenario_schwelle = config["risiko"].get("gegenszenario_wahrscheinlichkeit_schwelle_prozent")
+            gegenszenario_deckel_anteil = config["risiko"].get("gegenszenario_positionsgroesse_deckel_anteil")
+            if (
+                gegenszenario_pct is not None
+                and gegenszenario_schwelle is not None
+                and gegenszenario_deckel_anteil is not None
+                and gegenszenario_pct >= gegenszenario_schwelle
+            ):
+                effective_max_usd = effective_max_usd * gegenszenario_deckel_anteil
+                effective_max_eur = (
+                    effective_max_eur * gegenszenario_deckel_anteil if effective_max_eur is not None else None
+                )
+                gegenszenario_note = (
+                    f"Obergrenze wegen hoher Bear-Szenario-Wahrscheinlichkeit "
+                    f"({gegenszenario_pct:.0f}% >= Schwelle {gegenszenario_schwelle:.0f}%) zusaetzlich auf "
+                    f"{gegenszenario_deckel_anteil * 100:.0f}% reduziert (Gegenszenario-Deckel)."
+                )
+
             if proposed_usd is not None and proposed_usd > effective_max_usd:
                 fx = None
                 proposed_eur = position_size.get("eur")
@@ -499,6 +546,8 @@ def post_check(parsed: dict, pre_result: RiskPreCheckResult, regime_result, conf
                 )
                 if konfidenz_scale_note:
                     clamp_note = f"{clamp_note} {konfidenz_scale_note}"
+                if gegenszenario_note:
+                    clamp_note = f"{clamp_note} {gegenszenario_note}"
                 position_size["usd"] = effective_max_usd
                 position_size["eur"] = effective_max_usd * fx if fx is not None else effective_max_eur
                 existing_note = position_size.get("note")

@@ -53,6 +53,22 @@ risiko:
                                         # Obergrenze bekommen. Siehe agent/krypto/risk_gate.py
                                         # ::post_check() fuer die Umsetzung; gilt fuer Krypto
                                         # UND Aktien (teilen sich risk_gate.py).
+  gegenszenario_wahrscheinlichkeit_schwelle_prozent: 35  # Spot/Aktien-Pendant zum Hebel-
+                                        # Gegenszenario-Deckel (2026-07-17, Regelwerk-
+                                        # Konsistenzpruefung nach dem Hebel-Fix): das Modell
+                                        # liefert forecast.bear.probability_pct bei jeder
+                                        # KAUFEN/NACHKAUFEN-Empfehlung, wurde bisher aber nie
+                                        # ausgewertet. Ab diesem Wert greift eine zusaetzliche
+                                        # Positionsgroessen-Deckelung (siehe unten) - kein hartes
+                                        # Veto wie bei Hebel, da Spot/Aktien kein Liquidations-
+                                        # risiko tragen. Unkalibrierter Startwert, identisch zum
+                                        # Hebel-Pendant (risiko.hebel.gegenszenario_wahrscheinlichkeit_
+                                        # schwelle_prozent) - nach echten Betriebsdaten anpassen.
+  gegenszenario_positionsgroesse_deckel_anteil: 0.5  # Positionsgroessen-Obergrenze wird bei
+                                        # ueberschrittener Schwelle zusaetzlich zur Konfidenz-
+                                        # Skalierung (oben) auf diesen Anteil reduziert. Siehe
+                                        # agent/krypto/risk_gate.py::post_check(), gilt fuer
+                                        # Krypto UND Aktien (teilen sich risk_gate.py).
   cash_reserve_min_prozent: 10         # RM-4: bestaetigter Wert (2026-07-17, nicht mehr [OFFEN]) -
                                         # gaengige Hausnummer als Overtrading-Bremse/Liquiditaets-
                                         # puffer, in der Praxis bewaehrt (Nutzer haelt bewusst
@@ -564,18 +580,14 @@ budget_allocator:
   taegliches_budget_gesamt: 15          # B, Groqs realer Tages-Deckel (~15-18 gemessen)
   spot_rotation_reserve: 5              # F, garantiert Grundrotation (bestaetigt 2026-07-13)
   mistral_taegliches_budget: 150         # zweite Fallback-Stufe (2026-07-17, ersetzt Cerebras'
-                                        # bisherige Rolle - Cerebras' Free-Tier endet 2026-08-17,
+                                        # bisherige Rolle vollstaendig - Cerebras 2026-07-17 komplett
+                                        # entfernt statt nur bis 2026-08-17 auslaufen zu lassen,
                                         # siehe Memory project_cerebras_free_tier_aenderung_2026-08-17) -
                                         # konservativer Deckel weit unter der echt im eigenen
                                         # Dashboard verifizierten Kapazitaet (mistral-small-2506:
                                         # 2.250.000 Tokens/Min, 5 Req/Sek ≈ 300/Min)
-  cerebras_taegliches_budget: 60        # NUR NOCH BIS 2026-08-17 (danach Key aus .env entfernen,
-                                        # siehe Memory project_cerebras_free_tier_aenderung_2026-08-17) -
-                                        # eigener Deckel, konservativ unter der echten
-                                        # ~166-Calls/Tag-Grenze (2026-07-14 per API-Headern
-                                        # bestaetigt: 1.000.000 Tokens/Tag / ~6.000 Tokens/Call)
   gemini_taegliches_budget: 200          # letzte, seltenste Fallback-Stufe (2026-07-14, Position
-                                        # 2026-07-17 bestaetigt - Gemini hat von allen vier
+                                        # 2026-07-17 bestaetigt - Gemini hat von allen verbliebenen
                                         # Anbietern die ungueenstigsten Vertragsbedingungen,
                                         # siehe Memory project_cerebras_free_tier_aenderung_2026-08-17) -
                                         # konservativer Deckel weit unter der recherchierten

@@ -11,7 +11,6 @@ from pathlib import Path
 import config
 import database.db as db
 import ui.app as app
-from api.cerebras import CerebrasClient
 from api.coingecko import CoinGeckoClient
 from api.gemini import GeminiClient
 from api.history import backfill_all
@@ -137,28 +136,9 @@ def main() -> None:
         logger.info("Mistral API-Key gefunden - zweite Fallback-Stufe im Budget-Allocator verfügbar.")
     else:
         # P-8: Mistral ist rein additiv (zweite, optionale Fallback-Stufe nach
-        # Groq) - ohne Key bleibt die Kette bei Groq->Cerebras->Gemini wie zuvor.
+        # Groq) - ohne Key bleibt die Kette bei Groq->Gemini wie zuvor.
         mistral_client = None
         logger.info("Kein MISTRAL_API_KEY gesetzt - Mistral-Fallback-Stufe deaktiviert.")
-
-    # Cerebras beendet seinen kostenlosen API-Tier zum 2026-08-17 (siehe Memory
-    # project_cerebras_free_tier_aenderung_2026-08-17.md) - Mistral (oben) hat
-    # dessen Rolle als zweite Fallback-Stufe uebernommen. Cerebras bleibt bis
-    # dahin als DRITTE Stufe aktiv, ist jetzt aber echt optional (Budget-
-    # Allocator/hebel_screening_job() haengen nicht mehr zwingend davon ab,
-    # siehe agent/krypto/budget_allocator.py Modul-Docstring "Nachtrag
-    # (2026-07-17)") - die spaetere Entfernung ist damit nur noch "Key aus
-    # .env loeschen", kein weiterer Code-Eingriff.
-    cerebras_api_key = os.environ.get("CEREBRAS_API_KEY")
-    if cerebras_api_key:
-        cerebras_client = CerebrasClient(api_key=cerebras_api_key)
-        logger.info("Cerebras API-Key gefunden - Budget-Allocator (Phase 5) verfügbar (bis 2026-08-17).")
-    else:
-        # P-8: ohne Cerebras-Key laeuft der Budget-Allocator einfach mit einer
-        # Stufe weniger (Groq->Mistral->Gemini) - alle manuellen Pfade
-        # (Groq-Einzel-Klicks) bleiben unveraendert nutzbar.
-        cerebras_client = None
-        logger.info("Kein CEREBRAS_API_KEY gesetzt - Cerebras-Fallback-Stufe deaktiviert.")
 
     gemini_api_key = os.environ.get("GEMINI_API_KEY")
     if gemini_api_key:
@@ -269,7 +249,6 @@ def main() -> None:
         db_conn_factory=db.get_connection,
         watchlist_provider=lambda: watchlist,
         groq_client=groq_client,
-        cerebras_client=cerebras_client,
         gemini_client=gemini_client,
         fred_api_key=fred_api_key,
         bitpanda_api_key=bitpanda_api_key,
@@ -308,7 +287,6 @@ def main() -> None:
             coingecko_client=coingecko_client,
             kraken_client=kraken_client,
             groq_client=groq_client,
-            cerebras_client=cerebras_client,
             gemini_client=gemini_client,
             fred_api_key=fred_api_key,
             bitpanda_api_key=bitpanda_api_key,
