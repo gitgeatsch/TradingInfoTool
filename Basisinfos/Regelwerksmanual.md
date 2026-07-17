@@ -1917,9 +1917,12 @@ Groq/Cerebras/Gemini). Verdrahtet in `budget_allocator.py`,
 `ui/app.py`/`ui/hebel_view.py`/`ui/signals_view.py`, `remote/server.py`
 (API-Status-Karte). Verifiziert: 8 synthetische Tests (Fallback-Reihenfolge,
 Cerebras-Optionalität, Gate-Bugfix, `llm_model_label()`-Erkennung,
-Tk-Smoke-Test) — der echte Live-API-Testaufruf gegen Mistral steht noch aus
-(Nutzer hat den Key zum Zeitpunkt dieser Änderung noch nicht in die `.env`
-eingetragen).
+Tk-Smoke-Test) plus ein echter Live-API-Testaufruf gegen `api.mistral.ai`
+(2026-07-17, nachdem der Nutzer den Key in die `.env` eingetragen hat):
+einfacher Chat-Call sowie ein Call mit
+`response_format={"type": "json_object"}` (exakt das Format aus
+`analyst.py:656`) beide erfolgreich — Mistral verhält sich formatkompatibel
+zu den anderen drei OpenAI-kompatiblen Anbietern.
 
 ---
 
