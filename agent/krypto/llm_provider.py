@@ -26,6 +26,10 @@ def llm_model_label(llm_client) -> str:
         from api.gemini import DEFAULT_MODEL
 
         return f"gemini:{DEFAULT_MODEL}"
+    if module.endswith("mistral"):
+        from api.mistral import DEFAULT_MODEL
+
+        return f"mistral:{DEFAULT_MODEL}"
     return type(llm_client).__name__
 
 

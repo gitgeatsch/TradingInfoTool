@@ -357,7 +357,7 @@ dieselbe Datenbank — der Unterschied ist nur, ob du selbst klicken musst.
 | `refresh_history` | alle 24 Std. | Tages-Historie (für Indikatoren wie EMA-200) | CoinGecko |
 | `refresh_ohlc` | alle 24 Std. | Echtes OHLC (für ATR/Swing-Highs-Lows) | Kraken |
 | `marktscan` | 2× täglich, fix 04:00 + 16:00 Uhr | Kompletter Marktscan-Lauf (Stufe A-D, Kap. 13) — rein deterministisch, **kein** Groq-Aufruf mehr direkt in diesem Job (seit Phase 5, siehe unten) | CoinGecko + Kraken |
-| `hebel_screening` (+ Budget-Allocator huckepack) | alle 15 Min | Hebel-Screening (Kap. 7) UND die zentrale Tagesbudget-Verteilung über drei Verbraucher: Hebel-Kandidaten (Tier 1), Marktscan-Kaufkandidaten-Begründung (Tier 2), Spot-Rotation für die am längsten überfälligen Krypto-Assets (Tier 3 — ersetzt seit 2026-07-14/Phase 5 den ehemaligen eigenen `signal_batch`-05:00-Cron) | Binance/Bybit/OKX/Kraken (Screening) + Groq→Cerebras→Gemini (je Tier budget-limitiert) |
+| `hebel_screening` (+ Budget-Allocator huckepack) | alle 15 Min | Hebel-Screening (Kap. 7) UND die zentrale Tagesbudget-Verteilung über drei Verbraucher: Hebel-Kandidaten (Tier 1), Marktscan-Kaufkandidaten-Begründung (Tier 2), Spot-Rotation für die am längsten überfälligen Krypto-Assets (Tier 3 — ersetzt seit 2026-07-14/Phase 5 den ehemaligen eigenen `signal_batch`-05:00-Cron) | Binance/Bybit/OKX/Kraken (Screening) + Groq→Mistral→Cerebras→Gemini (je Tier budget-limitiert, Cerebras nur bis 2026-08-17 siehe Kap. 14 Nachtrag) |
 | `backward_tracking` | 1× täglich, fix 06:00 Uhr | Prüft vergangene KAUFEN/NACHKAUFEN-Signale gegen die Kurshistorie — Take-Profit oder Stop-Loss erreicht? | keine (nur bereits vorhandene DB-Daten) |
 | `bitpanda_holdings` | alle 30 Min (nur mit gesetztem `BITPANDA_API_KEY`) | **Seit 2026-07-16 der komplette Bestandsabgleich** (Krypto + Aktien/ETF/Rohstoffe + EUR-Cash) — ursprünglich (2026-07-11) nur der EUR-Fiat-Cash-Anteil, siehe Nachtrag unten | Bitpanda (Wallets + Transaktionshistorie) |
 
@@ -1873,6 +1873,53 @@ analysierte Screening-Kandidaten (optisch abgesetzt, mit einem "Jetzt
 analysieren"-Button für den sofortigen manuellen Einzel-Wunsch), sowie ein
 kompaktes Panel mit deinen aktuell offenen Hebel-Positionen. Damit ist die
 komplette Hebel-Roadmap (alle 6 Phasen) abgeschlossen.
+
+### Nachtrag (2026-07-17): Mistral als neue zweite Fallback-Stufe, Cerebras-Rückbau vorbereitet
+
+**Auslöser:** Cerebras beendet seinen kostenlosen API-Tier zum **2026-08-17**
+(siehe Memory `project_cerebras_free_tier_aenderung_2026-08-17`) — nach dem
+$5-Einmalguthaben ist die API ohne echte Bezahlung nutzlos (harter Stopp,
+kein Auto-Billing, aber auch keine dauerhafte Lösung). Ausgiebige Recherche
+über vier Runden (Cerebras' eigene PayGo-FAQ, NVIDIA NIMs echte Terms of
+Service, Groq/Cerebras/Mistral/Gemini-Vertragsvergleich) führte zu:
+
+- **Mistral** übernimmt Cerebras' bisherige Rolle als zweite Fallback-Stufe —
+  echt im eigenen Kontingent-Dashboard des Nutzers verifiziert:
+  `mistral-small-2506` mit **2.250.000 Tokens/Min, 5 Anfragen/Sek. (≈ 300/Min)**
+  — ca. 20x mehr als Geminis Kapazität. Vertraglich zudem günstiger als
+  Gemini: keine EWR/CH/UK-Sonderklausel, keine Warnung vor vertraulichen/
+  Finanzdaten, Trainings-Nutzung im Free-Tier abwählbar.
+- **Gemini** bleibt integriert, rutscht aber bewusst auf die letzte, seltenste
+  Fallback-Stufe zurück — von allen vier Anbietern vertraglich die
+  ungünstigsten Bedingungen (EWR/CH/UK-Sonderklausel + explizite Warnung vor
+  vertraulichen/Finanzdaten + nicht abwählbare Trainings-Nutzung).
+- **NVIDIA NIM** wurde anhand der echten Terms of Service (PDF-Primärquelle)
+  endgültig abgelehnt — Produktivbetrieb ist ohne kostenpflichtige
+  Enterprise-Lizenz vertraglich verboten, kein Grenzfall für ein Hobby-Projekt.
+- **Neue Ziel-Reihenfolge:** Groq → Mistral → Cerebras (nur noch bis
+  2026-08-17) → Gemini.
+
+**Echter Nebenfund + Bugfix:** Cerebras war bisher an zwei Stellen
+UNBEDINGT vorausgesetzt statt optional (anders als Gemini) —
+`agent/krypto/budget_allocator.py`s drei `calls`-Listen hängten
+`("cerebras", ...)` ohne Existenz-Check an, UND
+`scheduler/background.py::hebel_screening_job()` ließ den kompletten
+Budget-Allocator nur laufen, `if groq_client is not None and cerebras_client
+is not None` — ohne CEREBRAS_API_KEY wäre der gesamte Allocator
+stillgelegt worden, nicht nur die Cerebras-Stufe. Beide Stellen jetzt
+korrigiert (Cerebras ist jetzt genauso optional wie Gemini/Mistral) — die
+Entfernung zum 2026-08-17 ist damit nur noch "Key aus `.env` löschen", kein
+weiterer Code-Eingriff nötig.
+
+**Neu:** `api/mistral.py::MistralClient` (identisches `.chat()`-Interface wie
+Groq/Cerebras/Gemini). Verdrahtet in `budget_allocator.py`,
+`signal_batch.py::run_signal_batch()`, `scheduler/background.py`, `main.py`,
+`ui/app.py`/`ui/hebel_view.py`/`ui/signals_view.py`, `remote/server.py`
+(API-Status-Karte). Verifiziert: 8 synthetische Tests (Fallback-Reihenfolge,
+Cerebras-Optionalität, Gate-Bugfix, `llm_model_label()`-Erkennung,
+Tk-Smoke-Test) — der echte Live-API-Testaufruf gegen Mistral steht noch aus
+(Nutzer hat den Key zum Zeitpunkt dieser Änderung noch nicht in die `.env`
+eingetragen).
 
 ---
 

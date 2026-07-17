@@ -16,6 +16,7 @@ from api.coingecko import CoinGeckoClient
 from api.gemini import GeminiClient
 from api.history import backfill_all
 from api.groq import GroqClient
+from api.mistral import MistralClient
 from api.kraken import KrakenClient
 from api.kraken_history import backfill_all_ohlc
 from api.yfinance_client import YFINANCE_HISTORY_UNRELIABLE_TICKERS
@@ -130,24 +131,42 @@ def main() -> None:
         groq_client = None
         logger.info("Kein GROQ_API_KEY gesetzt - Signalberechnung (Phase 3) deaktiviert.")
 
+    mistral_api_key = os.environ.get("MISTRAL_API_KEY")
+    if mistral_api_key:
+        mistral_client = MistralClient(api_key=mistral_api_key)
+        logger.info("Mistral API-Key gefunden - zweite Fallback-Stufe im Budget-Allocator verfügbar.")
+    else:
+        # P-8: Mistral ist rein additiv (zweite, optionale Fallback-Stufe nach
+        # Groq) - ohne Key bleibt die Kette bei Groq->Cerebras->Gemini wie zuvor.
+        mistral_client = None
+        logger.info("Kein MISTRAL_API_KEY gesetzt - Mistral-Fallback-Stufe deaktiviert.")
+
+    # Cerebras beendet seinen kostenlosen API-Tier zum 2026-08-17 (siehe Memory
+    # project_cerebras_free_tier_aenderung_2026-08-17.md) - Mistral (oben) hat
+    # dessen Rolle als zweite Fallback-Stufe uebernommen. Cerebras bleibt bis
+    # dahin als DRITTE Stufe aktiv, ist jetzt aber echt optional (Budget-
+    # Allocator/hebel_screening_job() haengen nicht mehr zwingend davon ab,
+    # siehe agent/krypto/budget_allocator.py Modul-Docstring "Nachtrag
+    # (2026-07-17)") - die spaetere Entfernung ist damit nur noch "Key aus
+    # .env loeschen", kein weiterer Code-Eingriff.
     cerebras_api_key = os.environ.get("CEREBRAS_API_KEY")
     if cerebras_api_key:
         cerebras_client = CerebrasClient(api_key=cerebras_api_key)
-        logger.info("Cerebras API-Key gefunden - Budget-Allocator (Phase 5) verfügbar.")
+        logger.info("Cerebras API-Key gefunden - Budget-Allocator (Phase 5) verfügbar (bis 2026-08-17).")
     else:
-        # P-8: ohne Cerebras-Key laeuft der Budget-Allocator einfach nicht automatisch
-        # (siehe scheduler/background.py::hebel_screening_job()) - alle manuellen
-        # Pfade (Groq-Einzel-Klicks) bleiben unveraendert nutzbar.
+        # P-8: ohne Cerebras-Key laeuft der Budget-Allocator einfach mit einer
+        # Stufe weniger (Groq->Mistral->Gemini) - alle manuellen Pfade
+        # (Groq-Einzel-Klicks) bleiben unveraendert nutzbar.
         cerebras_client = None
-        logger.info("Kein CEREBRAS_API_KEY gesetzt - automatischer Budget-Allocator (Phase 5) deaktiviert.")
+        logger.info("Kein CEREBRAS_API_KEY gesetzt - Cerebras-Fallback-Stufe deaktiviert.")
 
     gemini_api_key = os.environ.get("GEMINI_API_KEY")
     if gemini_api_key:
         gemini_client = GeminiClient(api_key=gemini_api_key)
-        logger.info("Gemini API-Key gefunden - dritte Fallback-Stufe im Budget-Allocator verfügbar.")
+        logger.info("Gemini API-Key gefunden - letzte Fallback-Stufe im Budget-Allocator verfügbar.")
     else:
-        # P-8: Gemini ist rein additiv (dritte, optionale Fallback-Stufe nach
-        # Groq/Cerebras) - ohne Key bleibt die Kette bei Groq->Cerebras wie zuvor.
+        # P-8: Gemini ist rein additiv (letzte, optionale Fallback-Stufe) - ohne
+        # Key bleibt die Kette entsprechend kuerzer.
         gemini_client = None
         logger.info("Kein GEMINI_API_KEY gesetzt - Gemini-Fallback-Stufe deaktiviert.")
 
@@ -254,6 +273,7 @@ def main() -> None:
         gemini_client=gemini_client,
         fred_api_key=fred_api_key,
         bitpanda_api_key=bitpanda_api_key,
+        mistral_client=mistral_client,
     )
     bg_scheduler.start()
 
@@ -292,6 +312,7 @@ def main() -> None:
             gemini_client=gemini_client,
             fred_api_key=fred_api_key,
             bitpanda_api_key=bitpanda_api_key,
+            mistral_client=mistral_client,
         )
     finally:
         bg_scheduler.shutdown(wait=False)
