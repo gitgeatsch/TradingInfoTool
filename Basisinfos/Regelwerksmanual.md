@@ -67,6 +67,16 @@ erforderlich ist das *Größere* aus 10 % des Portfolios und einem festen Mindes
 hätte bei kleinen Portfolios einen zu dünnen Puffer erlaubt, ein reiner Festbetrag hätte
 bei wachsendem Portfolio nicht mitskaliert.
 
+**Nachtrag (2026-07-17): beide RM-4-Werte bestätigt, nicht mehr `[OFFEN]`.** Nach
+Rücksprache bleiben 10 %/2.000 € unverändert — bewährte Hausnummer als
+Liquiditätspuffer/Overtrading-Bremse, in der Praxis bereits durch einen bewussten
+zusätzlichen Cash-Puffer über dem Minimum bestätigt. **Revisit-Bedingung:** sollten
+diese Werte in der Praxis einmal ein echtes Problem verursachen (zu eng oder zu
+locker), erneut aufgreifen — siehe Memory
+`project_portfolio_vollstaendigkeit_cash_staking.md`. Wichtig: RM-4 bleibt bewusst
+getrennt vom AZ-4-Cash-Reserve-Ziel (Kap. 4) — RM-4 ist der harte Sicherheits-Floor,
+das AZ-4-Ziel eine strategische Zielgröße für eine geplante Nachkaufkampagne.
+
 **Optionaler Live-Abgleich mit Bitpanda (2026-07-10, ERGÄNZT + KORRIGIERT).** Wer
 bereits einen Bitpanda-API-Key besitzt (`BITPANDA_API_KEY` in `.env`), kann über
 "Datei → Bestände von Bitpanda abgleichen" **alle** Bestände (Krypto **und**
@@ -1935,7 +1945,6 @@ Startpunkt, sobald Backward-Tracking/Outcome-Daten vorliegen:
 - RM-2 Core-Allokations-Limit (35 % für BTC/ETH) — nachträglich erhöht, weil die reale
   BTC-Allokation das alte 25%-Limit überschritt; "BTC hat den Lead"-Frage insgesamt
   noch nicht grundsätzlich besprochen.
-- RM-4 Cash-Reserve-Minimum (10 % **und** der neue Festbetrag 2000 €, beide vorläufig)
 - Small-Cap-Budget je Regime (0/4/8/12/15 %)
 - Mindest-Konfidenz je Regime (85/75/65/60/60 %)
 - Die vier Gewichte je Regime (Technik/Fundamental/Momentum/Makro)
