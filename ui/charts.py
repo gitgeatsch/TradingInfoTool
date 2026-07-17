@@ -27,6 +27,18 @@ class ChartWindow(tk.Toplevel):
         self._asset = asset
         self._currency = tk.StringVar(value="eur")
 
+        # Mouseover-Crosshair (2026-07-17, Nutzer-Wunsch): Zustand fuer den
+        # zuletzt gerenderten Chart, den _on_mouse_move() zum schnellen
+        # Nachschlagen braucht - siehe _render_chart()-Ende.
+        self._render_x: np.ndarray | None = None
+        self._render_closes: np.ndarray | None = None
+        self._render_snapshot = None
+        self._render_currency_label = ""
+        self._chart_background = None
+        self._vline_price = None
+        self._vline_rsi = None
+        self._vline_macd = None
+
         self.title(f"{asset.symbol} — {asset.name}")
         self.geometry("1000x820")
 
@@ -49,6 +61,16 @@ class ChartWindow(tk.Toplevel):
         self._staleness_label = ttk.Label(toolbar, text="", foreground=theme.stale_color())
         self._staleness_label.pack(side="left", padx=(16, 0))
 
+        # Mouseover-Crosshair (2026-07-17, Nutzer-Wunsch): zeigt Datum/Preis/
+        # RSI/MACD am Cursor an, siehe _on_mouse_move(). Eigenes Label statt
+        # einer matplotlib-Annotation - bleibt unabhaengig von der Blit-
+        # Aktualisierung des Charts stabil lesbar. Eigene Zeile UNTER der
+        # Toolbar (nicht in ihr) - der volle Text ("Datum: ... | Preis: ... |
+        # RSI: ... | MACD: ...") wuerde neben Waehrungsumschalter+Staleness-
+        # Warnung sonst an der 1000px-Standardbreite abgeschnitten.
+        self._hover_label = ttk.Label(self, text="", foreground=theme.chart_price_line_color())
+        self._hover_label.pack(fill="x", padx=8, pady=(0, 4))
+
     def _build_figure(self) -> None:
         self._figure = Figure(figsize=(9, 7), dpi=100)
         self._ax_price, self._ax_rsi, self._ax_macd = self._figure.subplots(
@@ -56,6 +78,8 @@ class ChartWindow(tk.Toplevel):
         )
         self._canvas = FigureCanvasTkAgg(self._figure, master=self)
         self._canvas.get_tk_widget().pack(fill="both", expand=True, padx=8, pady=(0, 8))
+        self._canvas.mpl_connect("motion_notify_event", self._on_mouse_move)
+        self._canvas.mpl_connect("figure_leave_event", lambda _event: self._hide_hover())
 
         self._volatility_label = ttk.Label(self, text="", foreground=theme.info_color())
         self._volatility_label.pack(fill="x", padx=8)
@@ -84,6 +108,82 @@ class ChartWindow(tk.Toplevel):
             ax.title.set_color(text_color)
             for spine in ax.spines.values():
                 spine.set_color(grid_color)
+
+    def _style_legend(self, legend) -> None:
+        """Nutzer-Fund (2026-07-17): matplotlibs Standard-Legendenbox ist leicht
+        transparent hellgrau, unabhaengig vom Theme - im Dark Mode damit fast
+        unlesbar (weisser Text auf halbtransparentem Hellgrau, der durch die
+        darunterliegenden Kurven noch unruhiger wird). Box bekommt jetzt explizit
+        die echte Chart-Hintergrundfarbe (kaum transparent) + zum Theme passende
+        Textfarbe/Rahmenfarbe."""
+        legend.get_frame().set_facecolor(theme.chart_facecolor())
+        legend.get_frame().set_edgecolor(theme.chart_grid_color())
+        legend.get_frame().set_alpha(0.95)
+        for text in legend.get_texts():
+            text.set_color(theme.chart_price_line_color())
+
+    def _on_mouse_move(self, event) -> None:
+        """Mouseover-Crosshair (2026-07-17, Nutzer-Wunsch): synchronisierte
+        vertikale Linie ueber alle 3 Panels + Datum/Preis/RSI/MACD-Anzeige am
+        naechstgelegenen Datenpunkt. Ueber Blitting (copy_from_bbox/restore_
+        region/draw_artist/blit) statt vollem canvas.draw() - ein kompletter
+        Re-Render inkl. tight_layout() bei jeder Mausbewegung waere auf
+        schwaecherer Hardware (siehe Memory project_dev_setup) spuerbar
+        traege."""
+        if self._render_x is None or event.inaxes not in (self._ax_price, self._ax_rsi, self._ax_macd):
+            self._hide_hover()
+            return
+        if event.xdata is None:
+            return
+
+        idx = int(np.searchsorted(self._render_x, event.xdata))
+        idx = max(0, min(idx, len(self._render_x) - 1))
+        if idx > 0 and abs(self._render_x[idx - 1] - event.xdata) < abs(self._render_x[idx] - event.xdata):
+            idx -= 1
+        xval = self._render_x[idx]
+
+        for vline in (self._vline_price, self._vline_rsi, self._vline_macd):
+            vline.set_xdata([xval, xval])
+            vline.set_visible(True)
+
+        date_str = mdates.num2date(xval).strftime("%Y-%m-%d")
+        parts = [
+            f"Datum: {date_str}",
+            f"Preis: {format_money(self._render_closes[idx])} {self._render_currency_label}",
+        ]
+        rsi_result = self._render_snapshot.rsi
+        if rsi_result.available and not np.isnan(rsi_result.value[idx]):
+            parts.append(f"RSI: {rsi_result.value[idx]:.1f}")
+        macd_result = self._render_snapshot.macd
+        if macd_result.available and not np.isnan(macd_result.value["macd"][idx]):
+            parts.append(f"MACD: {macd_result.value['macd'][idx]:.1f}")
+        self._hover_label.config(text=" | ".join(parts))
+
+        self._blit_hover()
+
+    def _blit_hover(self) -> None:
+        if self._chart_background is None:
+            return
+        self._canvas.restore_region(self._chart_background)
+        for ax, vline in (
+            (self._ax_price, self._vline_price),
+            (self._ax_rsi, self._vline_rsi),
+            (self._ax_macd, self._vline_macd),
+        ):
+            ax.draw_artist(vline)
+        self._canvas.blit(self._figure.bbox)
+
+    def _hide_hover(self) -> None:
+        if self._vline_price is None:
+            return
+        changed = False
+        for vline in (self._vline_price, self._vline_rsi, self._vline_macd):
+            if vline.get_visible():
+                vline.set_visible(False)
+                changed = True
+        if changed:
+            self._blit_hover()
+        self._hover_label.config(text="")
 
     def _reload(self) -> None:
         currency = self._currency.get()
@@ -140,6 +240,12 @@ class ChartWindow(tk.Toplevel):
         self._canvas.draw()
         self._volatility_label.config(text="")
         self._unavailable_label.config(text="")
+        self._render_x = None
+        self._render_closes = None
+        self._render_snapshot = None
+        self._chart_background = None
+        self._vline_price = self._vline_rsi = self._vline_macd = None
+        self._hover_label.config(text="")
 
     def _render_chart(
         self, dates: np.ndarray, closes: np.ndarray, currency: str, ohlc_history: list
@@ -222,7 +328,7 @@ class ChartWindow(tk.Toplevel):
             unavailable_notes.append(f"{swing_indicator_name}: nicht verfügbar ({swing.reason})")
 
         self._ax_price.set_ylabel(f"Preis ({currency_label})")
-        self._ax_price.legend(loc="upper left", fontsize=7, labelcolor=theme.chart_price_line_color())
+        self._style_legend(self._ax_price.legend(loc="upper left", fontsize=8))
         self._ax_price.set_title(f"{self._asset.symbol} — {self._asset.name}")
 
         rsi_result = snapshot.rsi
@@ -240,7 +346,7 @@ class ChartWindow(tk.Toplevel):
             self._ax_macd.plot(x, macd_result.value["macd"], label="MACD", color="tab:blue", linewidth=1)
             self._ax_macd.plot(x, macd_result.value["signal"], label="Signal", color="tab:orange", linewidth=1)
             self._ax_macd.bar(x, macd_result.value["histogram"], color="grey", alpha=0.4, width=0.8)
-            self._ax_macd.legend(loc="upper left", fontsize=7, labelcolor=theme.chart_price_line_color())
+            self._style_legend(self._ax_macd.legend(loc="upper left", fontsize=8))
             self._ax_macd.set_ylabel("MACD")
         else:
             unavailable_notes.append(f"MACD: nicht verfügbar ({macd_result.reason})")
@@ -262,8 +368,27 @@ class ChartWindow(tk.Toplevel):
             self._volatility_label.config(text="")
             unavailable_notes.append(f"{atr_label}: nicht verfügbar ({atr_result.reason})")
 
+        # Mouseover-Crosshair (2026-07-17): eine axvline je Panel, anfangs
+        # unsichtbar - ax.clear() oben entfernt bei jedem Render alle Artists,
+        # daher hier neu angelegt statt einmalig in __init__. Farbe bewusst
+        # neutral (chart_grid_color), damit die Linie auf beiden Themes sichtbar,
+        # aber nicht mit den Kurvenfarben verwechselbar ist.
+        crosshair_color = theme.chart_grid_color()
+        self._vline_price = self._ax_price.axvline(x[0], color=crosshair_color, linewidth=0.8, visible=False)
+        self._vline_rsi = self._ax_rsi.axvline(x[0], color=crosshair_color, linewidth=0.8, visible=False)
+        self._vline_macd = self._ax_macd.axvline(x[0], color=crosshair_color, linewidth=0.8, visible=False)
+
         self._figure.tight_layout()
         self._canvas.draw()
+
+        # Render-Zustand fuer _on_mouse_move() merken + Blit-Hintergrund
+        # cachen (Performance: pro Mausbewegung nur die Crosshair-Linien neu
+        # zeichnen statt des kompletten, teuren tight_layout()-Renders).
+        self._render_x = x
+        self._render_closes = closes
+        self._render_snapshot = snapshot
+        self._render_currency_label = currency_label
+        self._chart_background = self._canvas.copy_from_bbox(self._figure.bbox)
 
         if unavailable_notes:
             self._unavailable_label.config(text="Nicht verfügbar: " + " | ".join(unavailable_notes))
