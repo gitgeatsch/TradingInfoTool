@@ -58,6 +58,11 @@ Basisinfos/Assets.xlsx
 Basisinfos/Assets.xlsx.bak_*
 Basisinfos/Assets_export.xlsx
 
+# Manuelle Einstandspreis-Overrides (2026-07-17, selektiver Desktop<->Notebook-
+# Sync statt volle DB-Kopie, siehe database/db.py::HOLDINGS_MANUAL_OVERRIDES_PATH),
+# echte Portfolio-Zahlen, nicht versionieren
+data/holdings_manual_overrides.json
+
 # Lokale Backups und Checklists
 database/Backup_*.zip
 Upload_Checklist.txt

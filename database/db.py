@@ -1,6 +1,7 @@
 """SQLite Verwaltung: Verbindung, automatische Initialisierung, CRUD."""
 from __future__ import annotations
 
+import json
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
@@ -20,6 +21,19 @@ from database.models import (
 )
 
 DB_PATH = Path(__file__).resolve().parent.parent / "data" / "tradinginfotool.db"
+
+# Selektiver Desktop<->Notebook-Sync (2026-07-17, siehe Memory
+# reference_usb_sync_workflow.md) - NUR fuer die manuellen Einstandspreis-
+# Overrides in holdings.avg_buy_price_manual_eur, NICHT fuer die gesamte DB.
+# Grund: das Notebook laeuft 24/7 und erzeugt laufend selbst Produktivdaten
+# (signals/hebel_*/price_history/macro_snapshot/...) - eine volle DB-Kopie
+# wuerde das jedes Mal ueberschreiben. Diese kleine JSON-Datei wird bei jeder
+# manuellen Einstandspreis-Aenderung automatisch neu geschrieben (siehe
+# set_holding_avg_buy_price_manual()) und bei jedem App-Start automatisch
+# wieder eingelesen (siehe init_db()) - reines Copy-Merge via USB-Stick reicht,
+# kein manueller Zwischenschritt noetig. NICHT in Git (siehe .gitignore),
+# gleiche Sensitivitaet wie Assets.xlsx (echte Portfolio-Zahlen).
+HOLDINGS_MANUAL_OVERRIDES_PATH = DB_PATH.parent / "holdings_manual_overrides.json"
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS holdings (
@@ -334,18 +348,33 @@ _MACRO_SNAPSHOT_NEW_COLUMNS = (
     "eth_boden_zielzone_von", "eth_boden_zielzone_bis",
     "equities_sp500_drawdown_pct", "equities_nasdaq_drawdown_pct",
     "eth_regression_predicted_price", "eth_regression_residual_std",
+    # Regime-Status-Anzeige (2026-07-17) - siehe database/models.py::MacroSnapshot
+    # fuer die Feld-Dokumentation. zyklus_risiko ist REAL, der Rest TEXT (siehe
+    # _MACRO_SNAPSHOT_TEXT_COLUMNS unten).
+    "zyklus_risiko", "zyklus_risiko_begruendung", "liquiditaets_regime",
+    "liquiditaets_regime_begruendung", "btc_trend_label", "regime_reason",
 )
+
+# Erste TEXT-Spalten in dieser bisher rein numerischen Migrationsliste (siehe
+# _migrate_macro_snapshot_columns()) - explizit als Ausnahme markiert, statt
+# alle neuen Spalten pauschal als REAL zu deklarieren (SQLite wuerde Text zwar
+# trotzdem speichern, aber mit irrefuehrender Spaltenaffinitaet).
+_MACRO_SNAPSHOT_TEXT_COLUMNS = {
+    "zyklus_risiko_begruendung", "liquiditaets_regime",
+    "liquiditaets_regime_begruendung", "btc_trend_label", "regime_reason",
+}
 
 
 def _migrate_macro_snapshot_columns(conn: sqlite3.Connection) -> None:
     """Leichtgewichtige Migration: macro_snapshot existierte bereits vor den
     FRED/PBoC-Spalten (Phase 3, 2026-07-08 Folge-Slice) - CREATE TABLE IF NOT EXISTS
     greift bei bereits existierenden Tabellen nicht, daher ALTER TABLE nachziehen.
-    Alle neuen Spalten sind nullable REAL, daher unkritisch fuer Bestandsdaten."""
+    Alle neuen Spalten sind nullable, daher unkritisch fuer Bestandsdaten."""
     existing = {row["name"] for row in conn.execute("PRAGMA table_info(macro_snapshot)")}
     for column in _MACRO_SNAPSHOT_NEW_COLUMNS:
         if column not in existing:
-            conn.execute(f"ALTER TABLE macro_snapshot ADD COLUMN {column} REAL")
+            sql_type = "TEXT" if column in _MACRO_SNAPSHOT_TEXT_COLUMNS else "REAL"
+            conn.execute(f"ALTER TABLE macro_snapshot ADD COLUMN {column} {sql_type}")
     conn.commit()
 
 
@@ -560,6 +589,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_signal_tranchen_columns(conn)
     _migrate_signal_cash_reserve_ziel_columns(conn)
     _migrate_hebel_signal_outcome_columns(conn)
+    import_holdings_manual_overrides(conn)
 
 
 def is_first_run(conn: sqlite3.Connection) -> bool:
@@ -634,6 +664,45 @@ def set_holding_avg_buy_price_manual(conn: sqlite3.Connection, symbol: str, valu
         (value, symbol),
     )
     conn.commit()
+    export_holdings_manual_overrides(conn)
+
+
+def export_holdings_manual_overrides(conn: sqlite3.Connection) -> None:
+    """Schreibt alle aktuellen avg_buy_price_manual_eur-Werte in eine kleine JSON-
+    Datei neben der DB (siehe HOLDINGS_MANUAL_OVERRIDES_PATH) - Grundlage fuer den
+    selektiven Desktop<->Notebook-Sync (nur diese Datei per USB-Stick mitnehmen,
+    NICHT die ganze DB kopieren). Wird automatisch bei jeder Aenderung aufgerufen,
+    kein manueller Export-Schritt noetig."""
+    rows = conn.execute(
+        "SELECT symbol, avg_buy_price_manual_eur FROM holdings WHERE avg_buy_price_manual_eur IS NOT NULL"
+    ).fetchall()
+    overrides = {row["symbol"]: row["avg_buy_price_manual_eur"] for row in rows}
+    HOLDINGS_MANUAL_OVERRIDES_PATH.parent.mkdir(parents=True, exist_ok=True)
+    HOLDINGS_MANUAL_OVERRIDES_PATH.write_text(json.dumps(overrides, indent=2, sort_keys=True), encoding="utf-8")
+
+
+def import_holdings_manual_overrides(conn: sqlite3.Connection) -> list[str]:
+    """Liest HOLDINGS_MANUAL_OVERRIDES_PATH (falls vorhanden) und uebernimmt die
+    Werte in die lokale holdings-Tabelle - nur fuer Symbole, die hier bereits einen
+    holdings-Eintrag haben (kein Anlegen neuer Phantom-Zeilen; die Zeile selbst
+    entsteht ausschliesslich ueber upsert_holding(), also den echten Bitpanda-
+    Bestandsabgleich). Wird automatisch bei jedem App-Start aufgerufen (init_db()),
+    idempotent - mehrfaches Anwenden derselben Datei aendert nichts weiter."""
+    if not HOLDINGS_MANUAL_OVERRIDES_PATH.exists():
+        return []
+    overrides: dict[str, float] = json.loads(HOLDINGS_MANUAL_OVERRIDES_PATH.read_text(encoding="utf-8"))
+    existing_symbols = {row["symbol"] for row in conn.execute("SELECT symbol FROM holdings").fetchall()}
+    applied: list[str] = []
+    for symbol, value in overrides.items():
+        if symbol not in existing_symbols:
+            continue
+        conn.execute(
+            "UPDATE holdings SET avg_buy_price_manual_eur = ? WHERE symbol = ?",
+            (value, symbol),
+        )
+        applied.append(symbol)
+    conn.commit()
+    return applied
 
 
 def get_bitpanda_avg_cost_last_synced_unix(conn: sqlite3.Connection) -> int | None:
@@ -686,6 +755,30 @@ def set_bitpanda_holdings_last_synced_unix(conn: sqlite3.Connection, unix_timest
         "INSERT INTO meta (key, value) VALUES ('bitpanda_holdings_last_synced_unix', ?) "
         "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
         (str(unix_timestamp),),
+    )
+    conn.commit()
+
+
+def get_backward_tracking_last_run_date(conn: sqlite3.Connection) -> str | None:
+    """2026-07-17, Nutzer-Fund: der taegliche 06:00-Cron fuer backward_tracking_job
+    hatte am 07-15 UND 07-16 keinen einzigen Lauf, weil die App zu diesem Zeitpunkt
+    schlicht nicht lief (APScheduler-Cron-Trigger holen einen verpassten festen
+    Zeitpunkt NICHT automatisch nach) - zwei Tage lang wurden dadurch offene
+    Hebel-Signale nie auf ein Ergebnis geprueft, obwohl die Haltedauer (~1,1 Tage
+    im Schnitt) laengst reif dafuer war. Dieses ISO-Datum (Wasserstand statt
+    Unix-Timestamp, da nur Tag-Genauigkeit noetig) ermoeglicht einen Nachhol-Lauf
+    beim naechsten App-Start, falls der heutige 06:00-Termin verpasst wurde."""
+    row = conn.execute(
+        "SELECT value FROM meta WHERE key = 'backward_tracking_last_run_date'"
+    ).fetchone()
+    return row["value"] if row is not None else None
+
+
+def set_backward_tracking_last_run_date(conn: sqlite3.Connection, iso_date: str) -> None:
+    conn.execute(
+        "INSERT INTO meta (key, value) VALUES ('backward_tracking_last_run_date', ?) "
+        "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        (iso_date,),
     )
     conn.commit()
 
@@ -996,6 +1089,21 @@ def get_latest_signal(conn: sqlite3.Connection, symbol: str) -> Signal | None:
         (symbol,),
     ).fetchone()
     return _row_to_signal(row) if row else None
+
+
+def get_latest_regime_from_signals(conn: sqlite3.Connection) -> tuple[str, str, str] | None:
+    """Regime/regime_source sind pro Pipeline-Lauf ueber alle Symbole identisch
+    (agent/krypto/pipeline.py::compute_current_regime() wird einmal je Lauf
+    aufgerufen) - das zuletzt erzeugte Signal, egal welches Symbol, traegt daher
+    den zuletzt bekannten Regime-Stand. Reiner Lesezugriff fuer die passive
+    Regime-Status-Anzeige (2026-07-17), kein neuer Live-Recompute."""
+    row = conn.execute(
+        "SELECT regime, regime_source, created_at FROM signals "
+        "WHERE regime IS NOT NULL ORDER BY created_at DESC LIMIT 1"
+    ).fetchone()
+    if row is None:
+        return None
+    return row["regime"], row["regime_source"], row["created_at"]
 
 
 def get_latest_real_signal_per_symbol(conn: sqlite3.Connection) -> dict[str, Signal]:

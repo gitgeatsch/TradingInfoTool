@@ -57,7 +57,7 @@ def _parse_optional_float(text: str) -> float | None:
 class SignalsView(ttk.Frame):
     def __init__(
         self, parent, db_conn_factory, watchlist, groq_client, coingecko_client, kraken_client,
-        fred_api_key=None, cerebras_client=None, gemini_client=None,
+        fred_api_key=None, cerebras_client=None, gemini_client=None, mistral_client=None,
     ):
         super().__init__(parent)
         self._db_conn_factory = db_conn_factory
@@ -86,10 +86,11 @@ class SignalsView(ttk.Frame):
         self._raw_watchlist = watchlist
         self._groq_client = groq_client
         # 2026-07-14: Einzel-Klick-Button UND Batch-Button teilen sich denselben
-        # Groq-dann-Cerebras-dann-Gemini-Fallback wie ui/hebel_view.py (Batch:
-        # pro Asset einzeln entschieden, siehe agent/krypto/signal_batch.py).
+        # Groq-dann-Mistral-dann-Cerebras-dann-Gemini-Fallback wie ui/hebel_view.py
+        # (Batch: pro Asset einzeln entschieden, siehe agent/krypto/signal_batch.py).
         self._cerebras_client = cerebras_client
         self._gemini_client = gemini_client
+        self._mistral_client = mistral_client
         self._coingecko_client = coingecko_client
         self._kraken_client = kraken_client
         self._fred_api_key = fred_api_key  # optional (P-8) - ohne Key liefert
@@ -179,7 +180,10 @@ class SignalsView(ttk.Frame):
         self.detail_text.pack(fill="both", expand=True)
 
     def _any_llm_client_available(self) -> bool:
-        return self._groq_client is not None or self._cerebras_client is not None or self._gemini_client is not None
+        return (
+            self._groq_client is not None or self._mistral_client is not None
+            or self._cerebras_client is not None or self._gemini_client is not None
+        )
 
     def _asset_by_symbol(self, symbol: str):
         return next((a for a in self._watchlist + self._aktien_watchlist if a.symbol == symbol), None)
@@ -540,7 +544,7 @@ class SignalsView(ttk.Frame):
                 conn.close()
 
         signal, error = None, None
-        for llm_client in (self._groq_client, self._cerebras_client, self._gemini_client):
+        for llm_client in (self._groq_client, self._mistral_client, self._cerebras_client, self._gemini_client):
             if llm_client is None:
                 continue
             try:
@@ -608,7 +612,7 @@ class SignalsView(ttk.Frame):
                 self._db_conn_factory, self._full_watchlist, self._groq_client, self._coingecko_client,
                 self._kraken_client, self._fred_api_key, daily_budget=daily_budget,
                 progress_callback=self._on_batch_progress, cerebras_client=self._cerebras_client,
-                gemini_client=self._gemini_client,
+                gemini_client=self._gemini_client, mistral_client=self._mistral_client,
             )
             error = None
         except Exception as exc:  # noqa: BLE001 - an die UI durchreichen statt den Thread stumm sterben zu lassen

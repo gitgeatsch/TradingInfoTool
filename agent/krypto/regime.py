@@ -455,3 +455,49 @@ def determine_regime(
         equities_baermarkt_aktiv=equities_baermarkt_aktiv,
         equities_baermarkt_begruendung=equities_baermarkt_begruendung,
     )
+
+
+def get_last_known_regime_status(conn) -> dict | None:
+    """Regime-Status-Anzeige (2026-07-17, Remote-Seite + Desktop-Tab "Regime") -
+    rein passiver Lesezugriff auf den zuletzt PERSISTIERTEN Regime-Stand, OHNE
+    determine_regime() erneut aufzurufen (kein Live-Recompute, kein Netzwerk-Call).
+
+    Quellen: `signals.regime`/`regime_source` (identisch fuer alle Symbole
+    eines Laufs, siehe get_latest_regime_from_signals()) + die zuletzt
+    gespeicherte macro_snapshot-Zeile (Fear&Greed/BTC-Dominanz/Zyklus-Risiko/
+    Liquiditaetsregime/Boden-Zielzone). `dominance_trend_label` wird NICHT
+    gespeichert, sondern hier aus der bereits geladenen macro_snapshot-Historie
+    neu berechnet (_dominance_trend_label() ist eine reine Funktion, kein
+    Netzwerk-Call).
+
+    Gibt None zurueck, wenn noch nie ein Signal existiert (frischer Datenbestand).
+    """
+    import database.db as db
+
+    latest = db.get_latest_regime_from_signals(conn)
+    if latest is None:
+        return None
+    regime, regime_source, created_at = latest
+
+    snapshot = db.get_latest_macro_snapshot(conn)
+    dominance_trend_label = _dominance_trend_label(db.get_macro_snapshot_history(conn))
+
+    return {
+        "regime": regime,
+        "regime_source": regime_source,
+        "created_at": created_at,
+        "regime_reason": snapshot.regime_reason if snapshot else None,
+        "btc_trend_label": snapshot.btc_trend_label if snapshot else None,
+        "fear_greed_value": snapshot.fear_greed_value if snapshot else None,
+        "fear_greed_label": snapshot.fear_greed_label if snapshot else None,
+        "btc_dominance_pct": snapshot.btc_dominance_pct if snapshot else None,
+        "dominance_trend_label": dominance_trend_label,
+        "zyklus_risiko": snapshot.zyklus_risiko if snapshot else None,
+        "zyklus_risiko_begruendung": snapshot.zyklus_risiko_begruendung if snapshot else None,
+        "liquiditaets_regime": snapshot.liquiditaets_regime if snapshot else None,
+        "liquiditaets_regime_begruendung": snapshot.liquiditaets_regime_begruendung if snapshot else None,
+        "btc_boden_zielzone_von": snapshot.btc_boden_zielzone_von if snapshot else None,
+        "btc_boden_zielzone_bis": snapshot.btc_boden_zielzone_bis if snapshot else None,
+        "eth_boden_zielzone_von": snapshot.eth_boden_zielzone_von if snapshot else None,
+        "eth_boden_zielzone_bis": snapshot.eth_boden_zielzone_bis if snapshot else None,
+    }

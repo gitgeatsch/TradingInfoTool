@@ -20,6 +20,7 @@ from ui.heading_tooltip import add_heading_tooltips
 from ui.hebel_view import HebelView
 from ui.marktscan_view import MarktscanView
 from ui.portfolio import PortfolioView
+from ui.regime_view import RegimeView
 from ui.row_tooltip import add_row_tooltips
 from ui.signals_view import SignalsView
 from ui.sortable_tree import make_sortable
@@ -72,6 +73,7 @@ class TradingInfoToolApp(tk.Tk):
     def __init__(
         self, db_conn_factory, watchlist, coingecko_client, kraken_client=None, groq_client=None,
         cerebras_client=None, gemini_client=None, fred_api_key=None, bitpanda_api_key=None,
+        mistral_client=None,
     ):
         super().__init__()
         self.title("TradingInfoTool")
@@ -90,6 +92,7 @@ class TradingInfoToolApp(tk.Tk):
         self._groq_client = groq_client
         self._cerebras_client = cerebras_client
         self._gemini_client = gemini_client
+        self._mistral_client = mistral_client
         self._fred_api_key = fred_api_key
         self._bitpanda_api_key = bitpanda_api_key
         self._bitpanda_assets: list | None = None
@@ -109,6 +112,7 @@ class TradingInfoToolApp(tk.Tk):
         self._signals_view = SignalsView(
             notebook, db_conn_factory, watchlist, groq_client, coingecko_client, kraken_client,
             fred_api_key=fred_api_key, cerebras_client=cerebras_client, gemini_client=gemini_client,
+            mistral_client=mistral_client,
         )
         notebook.add(self._signals_view, text="Signale")
 
@@ -121,8 +125,12 @@ class TradingInfoToolApp(tk.Tk):
         self._hebel_view = HebelView(
             notebook, db_conn_factory, watchlist, groq_client, cerebras_client, coingecko_client,
             kraken_client, fred_api_key=fred_api_key, gemini_client=gemini_client,
+            mistral_client=mistral_client,
         )
         notebook.add(self._hebel_view, text="Hebel")
+
+        self._regime_view = RegimeView(notebook, db_conn_factory)
+        notebook.add(self._regime_view, text="Regime")
 
         disclaimer = ttk.Label(
             self, text=DISCLAIMER_TEXT, foreground=theme.info_color(), wraplength=880, justify="center"
@@ -463,6 +471,7 @@ class TradingInfoToolApp(tk.Tk):
         # (Auswahl/Sortierung ueberleben einen Neuaufbau).
         self._signals_view._refresh_list()
         self._marktscan_view._refresh_list()
+        self._regime_view.refresh()
         self.after(UI_POLL_INTERVAL_MS, self._poll_prices)
 
     def _write_heartbeat(self) -> None:
@@ -1083,10 +1092,11 @@ class AssetEditDialog(tk.Toplevel):
 def run_app(
     db_conn_factory, watchlist, coingecko_client, kraken_client=None, groq_client=None,
     cerebras_client=None, gemini_client=None, fred_api_key=None, bitpanda_api_key=None,
+    mistral_client=None,
 ) -> None:
     app = TradingInfoToolApp(
         db_conn_factory, watchlist, coingecko_client, kraken_client, groq_client,
         cerebras_client=cerebras_client, gemini_client=gemini_client, fred_api_key=fred_api_key,
-        bitpanda_api_key=bitpanda_api_key,
+        bitpanda_api_key=bitpanda_api_key, mistral_client=mistral_client,
     )
     app.mainloop()

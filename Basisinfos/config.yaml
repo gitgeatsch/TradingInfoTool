@@ -53,11 +53,19 @@ risiko:
                                         # Obergrenze bekommen. Siehe agent/krypto/risk_gate.py
                                         # ::post_check() fuer die Umsetzung; gilt fuer Krypto
                                         # UND Aktien (teilen sich risk_gate.py).
-  cash_reserve_min_prozent: 10         # RM-4: [OFFEN] Vorschlag
-  cash_reserve_min_fixed_eur: 2000     # RM-4: [OFFEN] Vorschlag - Hybrid-Formel (2026-07-10):
-                                        # erforderlich ist das GROESSERE aus Prozentsatz und
-                                        # diesem Festbetrag (Vorhersehbarkeit bei kleinen
-                                        # Portfolios, skaliert trotzdem bei grossen mit)
+  cash_reserve_min_prozent: 10         # RM-4: bestaetigter Wert (2026-07-17, nicht mehr [OFFEN]) -
+                                        # gaengige Hausnummer als Overtrading-Bremse/Liquiditaets-
+                                        # puffer, in der Praxis bewaehrt (Nutzer haelt bewusst
+                                        # Puffer darueber). Getrennt von AZ-4 cash_reserve_ziel
+                                        # weiter unten zu sehen (andere Frage: Sicherheits-Floor
+                                        # vs. strategische Nachkauf-Zielgroesse).
+  cash_reserve_min_fixed_eur: 2000     # RM-4: bestaetigter Wert (2026-07-17, nicht mehr [OFFEN]) -
+                                        # Hybrid-Formel (2026-07-10): erforderlich ist das GROESSERE
+                                        # aus Prozentsatz und diesem Festbetrag (Vorhersehbarkeit bei
+                                        # kleinen Portfolios, skaliert trotzdem bei grossen mit).
+                                        # Revisit-Bedingung: falls beide Werte in der Praxis mal ein
+                                        # echtes Problem verursachen (zu eng/zu locker), siehe Memory
+                                        # project_portfolio_vollstaendigkeit_cash_staking.md.
   max_allokation_small_cap_prozent: 12 # [OFFEN] Tier-3 Small-Cap-Budget, Vorschlag 10-15 (Kap. 13/14)
   stop_loss_pflicht: true              # RM-5: jede Position braucht einen Stop-Loss
   trailing_stop_erlaubt: true          # RM-6: Gewinnsicherung
@@ -528,10 +536,21 @@ budget_allocator:
   aktiv: true
   taegliches_budget_gesamt: 15          # B, Groqs realer Tages-Deckel (~15-18 gemessen)
   spot_rotation_reserve: 5              # F, garantiert Grundrotation (bestaetigt 2026-07-13)
-  cerebras_taegliches_budget: 60        # eigener Deckel, konservativ unter der echten
+  mistral_taegliches_budget: 150         # zweite Fallback-Stufe (2026-07-17, ersetzt Cerebras'
+                                        # bisherige Rolle - Cerebras' Free-Tier endet 2026-08-17,
+                                        # siehe Memory project_cerebras_free_tier_aenderung_2026-08-17) -
+                                        # konservativer Deckel weit unter der echt im eigenen
+                                        # Dashboard verifizierten Kapazitaet (mistral-small-2506:
+                                        # 2.250.000 Tokens/Min, 5 Req/Sek ≈ 300/Min)
+  cerebras_taegliches_budget: 60        # NUR NOCH BIS 2026-08-17 (danach Key aus .env entfernen,
+                                        # siehe Memory project_cerebras_free_tier_aenderung_2026-08-17) -
+                                        # eigener Deckel, konservativ unter der echten
                                         # ~166-Calls/Tag-Grenze (2026-07-14 per API-Headern
                                         # bestaetigt: 1.000.000 Tokens/Tag / ~6.000 Tokens/Call)
-  gemini_taegliches_budget: 200          # dritte, optionale Fallback-Stufe (2026-07-14) -
+  gemini_taegliches_budget: 200          # letzte, seltenste Fallback-Stufe (2026-07-14, Position
+                                        # 2026-07-17 bestaetigt - Gemini hat von allen vier
+                                        # Anbietern die ungueenstigsten Vertragsbedingungen,
+                                        # siehe Memory project_cerebras_free_tier_aenderung_2026-08-17) -
                                         # konservativer Deckel weit unter der recherchierten
                                         # ~1.000-1.500-Calls/Tag-Kapazitaet (Gemini 3.1 Flash-Lite),
                                         # bewusst am seltensten genutzt (siehe agent/krypto/

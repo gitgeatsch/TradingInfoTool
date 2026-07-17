@@ -356,6 +356,11 @@ def compute_current_regime(conn, coingecko_client, watchlist, fred_api_key: str 
     # innerhalb von determine_regime() laeuft. Reiner Verlaufszweck (Nutzer-Wunsch
     # 2026-07-12: Verschiebung der Zone ueber Zeit nachvollziehbar machen), beeinflusst
     # keine Entscheidung - ein Fehlschlag hier darf die Regime-Berechnung nicht kippen.
+    # 2026-07-17 (Regime-Status-Anzeige): zusaetzlich zyklus_risiko/liquiditaets_regime/
+    # btc_trend_label/regime_reason persistiert - bisher nirgends gespeichert, obwohl
+    # hier bereits fertig berechnet. Reine Persistierungs-Erweiterung, kein neuer
+    # Netzwerk-Call - macht die Werte fuer eine passive "letzter bekannter Stand"-Anzeige
+    # verfuegbar (agent/krypto/regime.py::get_last_known_regime_status()).
     try:
         today = datetime.now(timezone.utc).date().isoformat()
         db.upsert_macro_snapshot(conn, MacroSnapshot(
@@ -365,6 +370,12 @@ def compute_current_regime(conn, coingecko_client, watchlist, fred_api_key: str 
             btc_boden_zielzone_bis=regime_result.btc_boden_zielzone_bis,
             eth_boden_zielzone_von=regime_result.eth_boden_zielzone_von,
             eth_boden_zielzone_bis=regime_result.eth_boden_zielzone_bis,
+            zyklus_risiko=regime_result.zyklus_risiko,
+            zyklus_risiko_begruendung=regime_result.zyklus_risiko_begruendung,
+            liquiditaets_regime=regime_result.liquiditaets_regime,
+            liquiditaets_regime_begruendung=regime_result.liquiditaets_regime_begruendung,
+            btc_trend_label=regime_result.btc_trend_label,
+            regime_reason=regime_result.reason,
         ))
     except Exception:
         logger.exception("Boden-Zielzone-Verlaufs-Persistierung fehlgeschlagen (unkritisch)")

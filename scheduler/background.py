@@ -296,11 +296,37 @@ def backward_tracking_job(conn_factory, watchlist) -> None:
             hebel_result.geprueft_count, hebel_result.resolved_take_profit, hebel_result.resolved_stop_loss,
             hebel_result.resolved_liquidation, hebel_result.expired, hebel_result.still_open,
         )
+        db.set_backward_tracking_last_run_date(conn, datetime.now().date().isoformat())
     except Exception as exc:
         logger.exception("Backward-Tracking fehlgeschlagen")
         _notify_job_failure("backward_tracking", f"Backward-Tracking fehlgeschlagen: {exc}")
     finally:
         conn.close()
+
+
+def backward_tracking_catchup_if_missed(conn_factory, watchlist) -> None:
+    """2026-07-17, Nutzer-Fund: der feste 06:00-Cron holt einen verpassten Termin
+    NICHT automatisch nach, wenn die App zu diesem Zeitpunkt gar nicht lief (an
+    zwei aufeinanderfolgenden Tagen passiert, 07-15 und 07-16 - zwei Tage lang
+    keine einzige Backward-Tracking-Auswertung, obwohl laengst faellig). Beim
+    App-Start einmalig geprueft: wurde der heutige Lauf bereits erledigt? Falls
+    nicht, sofort synchron nachholen (kein Netzwerk-Call, reine DB-Auswertung,
+    siehe backward_tracking_job()-Docstring - unbedenklich, das direkt beim
+    Start zu tun). Verhindert gleichzeitig unnoetige Mehrfach-Laeufe bei
+    mehreren Neustarts am selben Tag, nachdem der heutige Lauf schon glückte."""
+    conn = conn_factory()
+    try:
+        last_run = db.get_backward_tracking_last_run_date(conn)
+    finally:
+        conn.close()
+    heute = datetime.now().date().isoformat()
+    if last_run == heute:
+        return
+    logger.info(
+        "Backward-Tracking: heutiger 06:00-Termin noch nicht erledigt (zuletzt: %s) - hole sofort nach.",
+        last_run or "nie",
+    )
+    backward_tracking_job(conn_factory, watchlist)
 
 
 def refresh_bitpanda_holdings_job(api_key, conn_factory) -> bool:
@@ -729,6 +755,7 @@ def _refresh_hebel_position_liquidation_prices(conn) -> None:
 def hebel_screening_job(
     coingecko_client, kraken_client, conn_factory, watchlist, bitpanda_api_key=None,
     groq_client=None, cerebras_client=None, gemini_client=None, fred_api_key=None,
+    mistral_client=None,
 ) -> bool:
     """Hebel-Screening (2026-07-14, Phase 1, siehe docs/hebel_positionsformel.md)
     - rein deterministisches Zwei-Zweige-Scoring, KEIN Groq-Aufruf. Ergebnis
@@ -742,10 +769,18 @@ def hebel_screening_job(
     Seit Phase 5 (Budget-Allocator, siehe docs/budget_queue_design.md)
     zusaetzlich: der zentrale Allocator laeuft im selben Takt und verteilt das
     gemeinsame Tagesbudget ueber Hebel-Kandidaten (dieses Screening),
-    Marktscan-Kaufkandidaten UND Spot-Rotation (P-8: nur falls sowohl
-    groq_client ALS AUCH cerebras_client gesetzt sind, sonst uebersprungen -
-    ohne mindestens einen echten LLM-Client waere jeder Allocator-Call
-    ohnehin zum Scheitern verurteilt)."""
+    Marktscan-Kaufkandidaten UND Spot-Rotation (P-8: nur falls mindestens
+    groq_client gesetzt ist, sonst uebersprungen - Groq ist die einzige
+    echte Voraussetzung, mistral_client/cerebras_client/gemini_client sind
+    alle optionale Fallback-Stufen).
+
+    **Bugfix (2026-07-17):** die Bedingung verlangte zuvor faelschlich
+    ZUSAETZLICH `cerebras_client is not None` - ohne CEREBRAS_API_KEY waere
+    der komplette Allocator stillgelegt worden, nicht nur die Cerebras-Stufe
+    (echter, bisher unbemerkter Bug, siehe agent/krypto/budget_allocator.py
+    Modul-Docstring "Nachtrag (2026-07-17)"). Wichtig fuer die geplante
+    Cerebras-Entfernung zum 2026-08-17 (Free-Tier-Aenderung, siehe Memory
+    project_cerebras_free_tier_aenderung_2026-08-17)."""
     if not hebel_screening_lock.acquire(blocking=False):
         logger.info("Hebel-Screening: bereits in Ausführung - übersprungen")
         return False
@@ -804,18 +839,20 @@ def hebel_screening_job(
             finally:
                 conn.close()
 
-        if groq_client is not None and cerebras_client is not None:
+        if groq_client is not None:
             from agent.krypto.budget_allocator import run_budget_allocator
 
             allocation = run_budget_allocator(
                 conn_factory, watchlist, groq_client, cerebras_client, coingecko_client, kraken_client,
-                fred_api_key, config_dict, gemini_client=gemini_client,
+                fred_api_key, config_dict, gemini_client=gemini_client, mistral_client=mistral_client,
             )
             logger.info(
                 "Budget-Allocator: Hebel %d, Marktscan %d, Spot %d verarbeitet, %d fehlgeschlagen, "
+                "Mistral-Calls %d, Mistral-Budget erschöpft: %s, "
                 "Cerebras-Calls %d, Cerebras-Budget erschöpft: %s, Gemini-Calls %d, Gemini-Budget erschöpft: %s",
                 len(allocation.hebel_verarbeitet), len(allocation.marktscan_verarbeitet),
                 len(allocation.spot_verarbeitet), len(allocation.fehlgeschlagen),
+                allocation.mistral_calls_verbraucht, allocation.mistral_budget_erschoepft,
                 allocation.cerebras_calls_verbraucht, allocation.cerebras_budget_erschoepft,
                 allocation.gemini_calls_verbraucht, allocation.gemini_budget_erschoepft,
             )
@@ -833,7 +870,7 @@ def hebel_screening_job(
                     elif schluessel.startswith("spot:"):
                         _notify_spot_signal(ergebnis, watchlist, bitpanda_assets)
         else:
-            logger.info("Budget-Allocator übersprungen (kein Groq- und/oder Cerebras-Client konfiguriert)")
+            logger.info("Budget-Allocator übersprungen (kein Groq-Client konfiguriert)")
     except Exception as exc:
         logger.exception("Hebel-Screening fehlgeschlagen")
         _notify_job_failure("hebel_screening", f"Hebel-Screening fehlgeschlagen: {exc}")
@@ -901,6 +938,7 @@ def _ohlc_data_is_stale(conn, watchlist) -> bool:
 def build_scheduler(
     coingecko_client, kraken_client, db_conn_factory, watchlist_provider,
     groq_client=None, cerebras_client=None, gemini_client=None, fred_api_key=None, bitpanda_api_key=None,
+    mistral_client=None,
 ) -> BackgroundScheduler:
     watchlist = watchlist_provider()
     scheduler = BackgroundScheduler()
@@ -980,16 +1018,17 @@ def build_scheduler(
     # Preis-Refresh oben (andere Datenquellen: Binance/Bybit/OKX/Kraken statt
     # CoinGecko/yfinance). Aktiv-Schalter wird IM Job-Body geprueft (identisches
     # Muster wie marktscan_job()), daher immer registriert. Seit Phase 5
-    # traegt derselbe Takt zusaetzlich den Budget-Allocator (Groq/Cerebras-Clients
-    # + fred_api_key durchgereicht, P-8-Grundprinzip: fehlt einer der beiden
-    # LLM-Clients, wird der Allocator-Teil im Job-Body still uebersprungen).
+    # traegt derselbe Takt zusaetzlich den Budget-Allocator (alle LLM-Clients
+    # + fred_api_key durchgereicht, P-8-Grundprinzip: nur Groq ist echte
+    # Voraussetzung, Mistral/Cerebras/Gemini sind optionale Fallback-Stufen,
+    # siehe hebel_screening_job()-Docstring).
     scheduler.add_job(
         hebel_screening_job,
         "interval",
         minutes=HEBEL_SCREENING_INTERVAL_MINUTES,
         args=[
             coingecko_client, kraken_client, db_conn_factory, watchlist, bitpanda_api_key,
-            groq_client, cerebras_client, gemini_client, fred_api_key,
+            groq_client, cerebras_client, gemini_client, fred_api_key, mistral_client,
         ],
         id="hebel_screening",
         next_run_time=datetime.now(),
@@ -1021,6 +1060,13 @@ def build_scheduler(
         args=[db_conn_factory, watchlist],
         id="backward_tracking",
     )
+    # 2026-07-17, Nutzer-Fund: ein fester Cron holt einen verpassten Termin NICHT
+    # automatisch nach, wenn die App zu diesem Zeitpunkt gar nicht lief - an zwei
+    # Tagen in Folge passiert (07-15/07-16), zwei Tage lang keine einzige
+    # Backward-Tracking-Auswertung trotz laengst reifer Hebel-Positionen. Direkter
+    # synchroner Nachhol-Check beim Start (kein Netzwerk-Call, siehe Docstring
+    # dort) - No-Op, falls der heutige Lauf schon glückte.
+    backward_tracking_catchup_if_missed(db_conn_factory, watchlist)
     # Automatischer VOLLER Bestandsabgleich (2026-07-11 als reiner Cash-Sync
     # eingefuehrt, 2026-07-16 auf den kompletten Bestandsabgleich erweitert, siehe
     # refresh_bitpanda_holdings_job()-Docstring) - P-8: nur registriert, wenn ein

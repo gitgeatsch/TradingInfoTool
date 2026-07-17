@@ -118,6 +118,21 @@ def einstufung_color(einstufung: str) -> str:
     }.get(einstufung, p["fg"])
 
 
+def regime_color(regime: str) -> str:
+    """Regime-Status-Anzeige (2026-07-17) - mappt die 5 REGIME_STATES
+    (agent/krypto/regime.py) auf bestehende Paletten-Toene, keine neuen Farben
+    noetig. krise_extrem am gefaehrlichsten (danger), euphorie_extrem als
+    "swap" wiederverwendet (einzige verbleibende, klar unterscheidbare Farbe)."""
+    p = _palette()
+    return {
+        "krise_extrem": p["danger"],
+        "baer": p["warn"],
+        "seitwaerts": p["muted"],
+        "bulle": p["success"],
+        "euphorie_extrem": p["swap"],
+    }.get(regime, p["fg"])
+
+
 def chart_facecolor() -> str:
     """Etwas heller als der Fenster-Hintergrund (wie Treeview/Entry) - hebt die
     Chart-Flaeche im Dark Mode leicht vom Rest des Fensters ab, analog zu

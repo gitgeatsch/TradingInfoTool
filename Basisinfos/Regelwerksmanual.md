@@ -67,6 +67,16 @@ erforderlich ist das *Größere* aus 10 % des Portfolios und einem festen Mindes
 hätte bei kleinen Portfolios einen zu dünnen Puffer erlaubt, ein reiner Festbetrag hätte
 bei wachsendem Portfolio nicht mitskaliert.
 
+**Nachtrag (2026-07-17): beide RM-4-Werte bestätigt, nicht mehr `[OFFEN]`.** Nach
+Rücksprache bleiben 10 %/2.000 € unverändert — bewährte Hausnummer als
+Liquiditätspuffer/Overtrading-Bremse, in der Praxis bereits durch einen bewussten
+zusätzlichen Cash-Puffer über dem Minimum bestätigt. **Revisit-Bedingung:** sollten
+diese Werte in der Praxis einmal ein echtes Problem verursachen (zu eng oder zu
+locker), erneut aufgreifen — siehe Memory
+`project_portfolio_vollstaendigkeit_cash_staking.md`. Wichtig: RM-4 bleibt bewusst
+getrennt vom AZ-4-Cash-Reserve-Ziel (Kap. 4) — RM-4 ist der harte Sicherheits-Floor,
+das AZ-4-Ziel eine strategische Zielgröße für eine geplante Nachkaufkampagne.
+
 **Optionaler Live-Abgleich mit Bitpanda (2026-07-10, ERGÄNZT + KORRIGIERT).** Wer
 bereits einen Bitpanda-API-Key besitzt (`BITPANDA_API_KEY` in `.env`), kann über
 "Datei → Bestände von Bitpanda abgleichen" **alle** Bestände (Krypto **und**
@@ -357,7 +367,7 @@ dieselbe Datenbank — der Unterschied ist nur, ob du selbst klicken musst.
 | `refresh_history` | alle 24 Std. | Tages-Historie (für Indikatoren wie EMA-200) | CoinGecko |
 | `refresh_ohlc` | alle 24 Std. | Echtes OHLC (für ATR/Swing-Highs-Lows) | Kraken |
 | `marktscan` | 2× täglich, fix 04:00 + 16:00 Uhr | Kompletter Marktscan-Lauf (Stufe A-D, Kap. 13) — rein deterministisch, **kein** Groq-Aufruf mehr direkt in diesem Job (seit Phase 5, siehe unten) | CoinGecko + Kraken |
-| `hebel_screening` (+ Budget-Allocator huckepack) | alle 15 Min | Hebel-Screening (Kap. 7) UND die zentrale Tagesbudget-Verteilung über drei Verbraucher: Hebel-Kandidaten (Tier 1), Marktscan-Kaufkandidaten-Begründung (Tier 2), Spot-Rotation für die am längsten überfälligen Krypto-Assets (Tier 3 — ersetzt seit 2026-07-14/Phase 5 den ehemaligen eigenen `signal_batch`-05:00-Cron) | Binance/Bybit/OKX/Kraken (Screening) + Groq→Cerebras→Gemini (je Tier budget-limitiert) |
+| `hebel_screening` (+ Budget-Allocator huckepack) | alle 15 Min | Hebel-Screening (Kap. 7) UND die zentrale Tagesbudget-Verteilung über drei Verbraucher: Hebel-Kandidaten (Tier 1), Marktscan-Kaufkandidaten-Begründung (Tier 2), Spot-Rotation für die am längsten überfälligen Krypto-Assets (Tier 3 — ersetzt seit 2026-07-14/Phase 5 den ehemaligen eigenen `signal_batch`-05:00-Cron) | Binance/Bybit/OKX/Kraken (Screening) + Groq→Mistral→Cerebras→Gemini (je Tier budget-limitiert, Cerebras nur bis 2026-08-17 siehe Kap. 14 Nachtrag) |
 | `backward_tracking` | 1× täglich, fix 06:00 Uhr | Prüft vergangene KAUFEN/NACHKAUFEN-Signale gegen die Kurshistorie — Take-Profit oder Stop-Loss erreicht? | keine (nur bereits vorhandene DB-Daten) |
 | `bitpanda_holdings` | alle 30 Min (nur mit gesetztem `BITPANDA_API_KEY`) | **Seit 2026-07-16 der komplette Bestandsabgleich** (Krypto + Aktien/ETF/Rohstoffe + EUR-Cash) — ursprünglich (2026-07-11) nur der EUR-Fiat-Cash-Anteil, siehe Nachtrag unten | Bitpanda (Wallets + Transaktionshistorie) |
 
@@ -781,6 +791,112 @@ aufgelösten Signale vor (Spot: 2 offene, 0 aufgelöst; Hebel: 2 offene,
 erwartetes Verhalten, kein Fehler — reine Infrastruktur, die erst über die
 kommenden Wochen echte Vergleichswerte ansammelt.
 
+### Nachtrag (2026-07-17): echter Betriebsfehler gefunden — 06:00-Cron zwei Tage in Folge komplett ausgefallen
+
+Beim Versuch, den Datenstand für Schritt 3 (KI-Trimm-Vorschläge) neu zu
+prüfen, fiel auf: die zwei ältesten offenen Hebel-ERÖFFNEN-Signale (AIOZ,
+CAT, beide vom 07-14) hatten `outcome_geprueft_am = null` — nicht nur
+„weiterhin offen", sondern **nie auch nur geprüft**, obwohl die
+durchschnittliche Hebel-Haltedauer (~1,1 Tage) längst eine Auflösung
+erwarten ließe. Log-Abgleich bestätigte die Ursache: der `backward_
+tracking`-Cron (fest auf 6 Uhr) ist an **zwei aufeinanderfolgenden Tagen**
+(07-15 und 07-16) komplett ausgefallen — die App lief zu diesem Zeitpunkt
+schlicht nicht (letzter Log-Eintrag vor der Lücke: 07-14, 06:00 Uhr).
+APScheduler holt einen an einem festen Zeitpunkt verpassten Cron-Termin
+**nicht automatisch nach**, wenn der Prozess zu diesem Zeitpunkt gar nicht
+läuft — anders als bei den 15-Minuten-Intervall-Jobs, die beim nächsten
+Start einfach wieder anlaufen.
+
+**Fix:** neuer Wasserstand `meta.backward_tracking_last_run_date` (ISO-
+Datum, `database/db.py::get/set_backward_tracking_last_run_date()`), von
+`backward_tracking_job()` bei jedem erfolgreichen Lauf aktualisiert. Neue
+Funktion `scheduler/background.py::backward_tracking_catchup_if_missed()`
+prüft beim App-Start synchron (kein Netzwerk-Call nötig, reine DB-
+Auswertung bereits vorhandener Kursdaten — siehe oben), ob der heutige
+Termin bereits erledigt wurde; falls nicht, wird sofort nachgeholt. Kein
+Mehrfach-Lauf bei mehreren Neustarts am selben Tag, da der Wasserstand
+bereits nach dem ersten (Nachhol-)Lauf aktualisiert ist.
+
+**Einordnung:** dasselbe Resilienz-Prinzip wie bereits bei `refresh_
+prices_job`/`refresh_securities_prices_job` (Kap. 12, laufen seit 2026-07-12
+sofort nach jedem Neustart) — dort ging es um Intervall-Jobs, hier um einen
+**festen Cron-Termin**, der beim Verpassen zusätzlich einen Datums-
+Wasserstand braucht, um Mehrfach-Läufe am selben Tag zu vermeiden.
+Verifiziert: 4 synthetische Tests (Rundlauf des Wasserstands, Nachhol-Lauf
+bei verpasstem Termin, kein Lauf bei bereits erledigtem Termin, korrekte
+Persistierung bei echtem `backward_tracking_job()`-Aufruf).
+
+### Nachtrag (2026-07-17): Erfolgsmetrik für Schritt 3 (Regel-Anpassungsvorschläge) festgelegt
+
+**Warum das jetzt schon nötig ist, obwohl die Governance-Frage von Schritt 3
+(automatisch vs. Nutzer-Bestätigung) noch offen ist:** ohne eine vorher
+festgelegte Metrik lässt sich ein späterer KI- oder Nutzer-Vorschlag
+("Regel X mit Wert Y statt Z ist besser kalibriert") nicht objektiv prüfen —
+das gilt unabhängig davon, wer am Ende entscheidet. Diese Festlegung ist
+deshalb eine reine Dokumentations-Ergänzung, keine Verhaltensänderung.
+
+**Primärmetrik: realisiertes CRV** (bereits vorhanden, siehe Abschnitt
+„Die sechs Ergebnis-Felder" oben) — durchschnittlich über alle aufgelösten
+Signale einer Regel-Variante, getrennt nach Spot und Hebel (unterschiedliche
+Positionsgrößen-Logik, siehe Abschnitt „Provider-Performance-Aggregation").
+Begründung: bildet direkt das ursprüngliche Z-2-Versprechen ab (Chance im
+Verhältnis zum Risiko) und ist bereits Teil der bestehenden Datenstruktur —
+keine neue Berechnung nötig.
+
+**Sekundärmetriken** (zur Einordnung, nicht als alleiniger Maßstab, da CRV
+allein z. B. eine niedrige Trefferquote mit wenigen großen Gewinnen
+kaschieren könnte):
+- **Trefferquote** (Anteil Take-Profit an allen entschiedenen Signalen,
+  bereits Teil der Provider-Performance-Karte).
+- **Maximaler Drawdown** einer simulierten/realen Sequenz aufeinanderfolgender
+  Signale — noch nicht berechnet, wird mit der Backtesting-Engine (siehe
+  unten) erstmals verfügbar.
+
+**Mindest-Stichprobe vor jeder Bewertung:** ein einzelner Vorschlag wird erst
+ab **30 aufgelösten Fällen** je Regel-Variante überhaupt in Betracht gezogen
+(siehe Machbarkeits-Analyse-Notiz, Plandatei `swift-napping-muffin`),
+idealerweise geprüft in **zwei nicht-überlappenden Teilzeiträumen** (ein
+Muster muss in beiden auftauchen, um nicht auf eine einzelne Marktphase
+überzufittet zu sein). Diese Schwelle ist bewusst vorläufig — siehe Kap. 15.
+
+### Nachtrag (2026-07-17): Backtesting-Engine — bestehende Regeln rückwirkend gegen historische Kursdaten simulieren
+
+**Warum:** der größte praktische Engpass für Schritt 3 ist nicht fehlendes
+Können, sondern fehlende Zeit — echte KAUFEN/ERÖFFNEN-Signale lösen sich nur
+mit der Geschwindigkeit auf, mit der neue Signale entstehen (für Spot eher
+Wochen, siehe Abschnitt „Aktueller Stand"). Das Projekt verfügt aber bereits
+über eine mehrjährige Kurshistorie (`price_history_ohlc`), die bisher nur für
+Charts und Backward-Tracking genutzt wird, nicht aber, um die AKTUELLEN
+Regeln testweise gegen die Vergangenheit laufen zu lassen.
+
+**Umfang:** rein analytisch, kein Live-Verhalten wird geändert. Nimmt die
+bereits vorhandene, deterministische Regel-Logik (Indikatoren, Regime-
+Klassifikation, Risikomanagement-Schwellenwerte) und wendet sie Tag für Tag
+auf die gespeicherte Kurshistorie an, als wäre jeder Tag ein neuer Lauf in
+der Vergangenheit — erzeugt so synthetische, aber methodisch identische
+Signal-Ergebnisse, die genauso wie echte Signale nach CRV/Trefferquote/
+Drawdown ausgewertet werden können. Der eigentliche KI-Anteil (Prompt an
+Groq/Cerebras/Gemini) ist dabei bewusst AUSSER Betracht — nur der
+deterministische Regel-Teil ist rückwirkend reproduzierbar, ein LLM-Aufruf
+für einen historischen Tag wäre weder reproduzierbar noch budgetneutral.
+
+**Wo im Code:** `agent/krypto/backtesting.py` (siehe Abschnitt 11 für den
+vollständigen Verweis).
+
+**Verifiziert (2026-07-17):** 7 synthetische Tests (Stop-Loss-Priorität bei
+Gleichzeitigkeit, CRV-Berechnung, „Ende der Historie" vs. „Haltefrist
+abgelaufen", CRV exakt auf `CRV_MINIMUM` skaliert, zu kurze Historie ohne
+Crash, Flanken-Trigger verhindert Dutzende korrelierte Trades in einem
+einzigen Trend) + echter Lauf gegen die Produktions-DB (BTC/ETH/SOL/LINK,
+2025-02 bis 2026-07): 12–21 synthetische Trades je Symbol, Trefferquote
+24–33 %, durchschnittliches CRV negativ (−0,03 bis −0,46) in diesem
+Zeitfenster. **Einordnung:** kein Widerspruch zur echten Signalqualität —
+die vereinfachte Konfluenz-Regel ersetzt bewusst NICHT die mehrfaktorielle
+KI-Bewertung (siehe Grenzen oben), das Ergebnis zeigt aber, dass das
+gewählte Zeitfenster für eine reine „Konfluenz-bullish + 2:1-CRV"-Heuristik
+ungünstig war — ein plausibles, nicht offensichtlich falsches Ergebnis,
+kein Hinweis auf einen Fehler in der Engine selbst.
+
 ---
 
 ## 8. Lokale KI-Ebene (P-8) — Architektur vorbereitet, noch nicht aktiv
@@ -926,6 +1042,8 @@ gelöst, siehe Kap. 4.
 - `api/yfinance_client.py` — EUR-Umrechnung für USD-only-Aktien wie PLTR/VST (Abschnitt 14)
 - `indicators/calculations.py::compute_btc_log_regression_risk()`/`compute_eth_log_regression_risk()`, `agent/krypto/regime.py::_boden_zielzone()`, `api/yfinance_history.py` — AZ-4 Baustein 2, Boden-Zielzone (Abschnitt 4)
 - `agent/krypto/risk_gate.py::compute_cash_reserve_ziel()`, `agent/krypto/pipeline.py::_compute_cash_reserve_ziel_context()` — AZ-4 Baustein 3, Cash-Reserve-Ziel (Abschnitt 4)
+- `agent/krypto/backtesting.py` — Backtesting-Engine, deterministische Regeln rückwirkend gegen `price_history_ohlc` (Abschnitt 7, Selbstverifikations-Vision Schritt 3 Vorbereitung)
+- `agent/krypto/regime.py::get_last_known_regime_status()`, `agent/krypto/regelwerk_parameter.py`, `ui/regime_view.py` — Regime-Status + Parameter-Übersicht (Abschnitt 13, Remote-Karte + Desktop-Tab „Regime")
 
 ---
 
@@ -1541,6 +1659,45 @@ GUI-Zugriff unterwegs der einfachere Weg; die Tailscale-Steuer-Seite bleibt
 sinnvoll für einen schnellen Status-Blick oder falls Remote Desktop selbst
 nicht erreichbar ist.
 
+**Regime-Status + Parameter-Übersicht (2026-07-17):** direkter, bewusst
+governance-unabhängiger erster Schritt aus der Selbstverifikations-
+Machbarkeits-Analyse (siehe Memory `project_selbstverifikation_ki_trimmen`)
+— reine Sichtbarkeit bereits vorhandener Werte, keine neue Entscheidungslogik.
+
+- **Regime-Status-Karte:** zeigt den zuletzt bekannten Marktregime-Stand
+  (Zustand farbcodiert, Zeitstempel „Stand: …", Begründung, BTC-Trend, Fear
+  &amp; Greed, BTC-Dominanz-Trend, Zyklus-Risiko, Liquiditätsregime). **Rein
+  passiv** — kein neuer Live-Aufruf von `determine_regime()`, gelesen wird
+  ausschließlich der zuletzt PERSISTIERTE Stand aus `signals.regime`/
+  `regime_source` (identisch für alle Symbole eines Laufs) + der zuletzt
+  gespeicherten `macro_snapshot`-Zeile (`agent/krypto/regime.py::
+  get_last_known_regime_status()`). Ein manueller Regime-Override
+  (RG-8/RG-9) wird deutlich als „⚠ manuell überschrieben" gekennzeichnet,
+  statt mit der automatischen Begründung vermischt zu werden.
+- **Datenlücke behoben:** `zyklus_risiko`, `liquiditaets_regime` (+
+  Begründungen) und `btc_trend_label` wurden bisher bei jedem Pipeline-Lauf
+  frisch berechnet, aber nirgends gespeichert. `agent/krypto/pipeline.py::
+  compute_current_regime()` persistiert sie jetzt zusätzlich über den
+  bereits bestehenden, try/except-geschützten zweiten `macro_snapshot`-
+  Upsert (der bisher nur die Boden-Zielzone nachtrug) — kein neuer
+  Netzwerk-Call, reine Persistierungs-Erweiterung. `dominance_trend_label`
+  wird bewusst NICHT gespeichert, sondern bei jedem passiven Lesezugriff aus
+  der bereits vorhandenen Historie neu berechnet (reine Funktion).
+- **Parameter-Übersicht-Karte:** zeigt alle Kap.-15-Kalibrierungsparameter
+  mit ihrem aktuell konfigurierten Wert, live aus `config.yaml` gelesen
+  (`agent/krypto/regelwerk_parameter.py::build_parameter_overview()`),
+  gruppiert nach der a/b/c-Kategorie aus der Machbarkeits-Analyse. Details
+  (Begründung + „zuletzt geändert am") **über Mouseover** statt permanent
+  sichtbar — Remote-Seite über natives HTML-`title`-Attribut, Desktop-Tab
+  über das bestehende `ui/row_tooltip.py`. Begründung/Änderungsdatum sind
+  aus den config.yaml-Inline-Kommentaren manuell transkribiert (
+  `yaml.safe_load()` liefert keine Kommentare mit) — muss beim inhaltlichen
+  Ändern eines Wertes von Hand nachgezogen werden.
+- **Desktop-Spiegelung:** neuer Tab „Regime" (`ui/regime_view.py`), inhaltlich
+  identisch zur Remote-Karte, nimmt bewusst nur `db_conn_factory` entgegen
+  (kein LLM-/API-Client nötig). Nimmt am bestehenden periodischen
+  3-Sekunden-Refresh teil (`ui/app.py::_poll_prices()`).
+
 ---
 
 ## 14. Portfolio-Vollständigkeit — Cash-Sperren, Staking, Margin-Trading
@@ -1727,6 +1884,91 @@ analysieren"-Button für den sofortigen manuellen Einzel-Wunsch), sowie ein
 kompaktes Panel mit deinen aktuell offenen Hebel-Positionen. Damit ist die
 komplette Hebel-Roadmap (alle 6 Phasen) abgeschlossen.
 
+### Nachtrag (2026-07-17): Mistral als neue zweite Fallback-Stufe, Cerebras-Rückbau vorbereitet
+
+**Auslöser:** Cerebras beendet seinen kostenlosen API-Tier zum **2026-08-17**
+(siehe Memory `project_cerebras_free_tier_aenderung_2026-08-17`) — nach dem
+$5-Einmalguthaben ist die API ohne echte Bezahlung nutzlos (harter Stopp,
+kein Auto-Billing, aber auch keine dauerhafte Lösung). Ausgiebige Recherche
+über vier Runden (Cerebras' eigene PayGo-FAQ, NVIDIA NIMs echte Terms of
+Service, Groq/Cerebras/Mistral/Gemini-Vertragsvergleich) führte zu:
+
+- **Mistral** übernimmt Cerebras' bisherige Rolle als zweite Fallback-Stufe —
+  echt im eigenen Kontingent-Dashboard des Nutzers verifiziert:
+  `mistral-small-2506` mit **2.250.000 Tokens/Min, 5 Anfragen/Sek. (≈ 300/Min)**
+  — ca. 20x mehr als Geminis Kapazität. Vertraglich zudem günstiger als
+  Gemini: keine EWR/CH/UK-Sonderklausel, keine Warnung vor vertraulichen/
+  Finanzdaten, Trainings-Nutzung im Free-Tier abwählbar.
+- **Gemini** bleibt integriert, rutscht aber bewusst auf die letzte, seltenste
+  Fallback-Stufe zurück — von allen vier Anbietern vertraglich die
+  ungünstigsten Bedingungen (EWR/CH/UK-Sonderklausel + explizite Warnung vor
+  vertraulichen/Finanzdaten + nicht abwählbare Trainings-Nutzung).
+- **NVIDIA NIM** wurde anhand der echten Terms of Service (PDF-Primärquelle)
+  endgültig abgelehnt — Produktivbetrieb ist ohne kostenpflichtige
+  Enterprise-Lizenz vertraglich verboten, kein Grenzfall für ein Hobby-Projekt.
+- **Neue Ziel-Reihenfolge:** Groq → Mistral → Cerebras (nur noch bis
+  2026-08-17) → Gemini.
+
+**Echter Nebenfund + Bugfix:** Cerebras war bisher an zwei Stellen
+UNBEDINGT vorausgesetzt statt optional (anders als Gemini) —
+`agent/krypto/budget_allocator.py`s drei `calls`-Listen hängten
+`("cerebras", ...)` ohne Existenz-Check an, UND
+`scheduler/background.py::hebel_screening_job()` ließ den kompletten
+Budget-Allocator nur laufen, `if groq_client is not None and cerebras_client
+is not None` — ohne CEREBRAS_API_KEY wäre der gesamte Allocator
+stillgelegt worden, nicht nur die Cerebras-Stufe. Beide Stellen jetzt
+korrigiert (Cerebras ist jetzt genauso optional wie Gemini/Mistral) — die
+Entfernung zum 2026-08-17 ist damit nur noch "Key aus `.env` löschen", kein
+weiterer Code-Eingriff nötig.
+
+**Neu:** `api/mistral.py::MistralClient` (identisches `.chat()`-Interface wie
+Groq/Cerebras/Gemini). Verdrahtet in `budget_allocator.py`,
+`signal_batch.py::run_signal_batch()`, `scheduler/background.py`, `main.py`,
+`ui/app.py`/`ui/hebel_view.py`/`ui/signals_view.py`, `remote/server.py`
+(API-Status-Karte). Verifiziert: 8 synthetische Tests (Fallback-Reihenfolge,
+Cerebras-Optionalität, Gate-Bugfix, `llm_model_label()`-Erkennung,
+Tk-Smoke-Test) plus ein echter Live-API-Testaufruf gegen `api.mistral.ai`
+(2026-07-17, nachdem der Nutzer den Key in die `.env` eingetragen hat):
+einfacher Chat-Call sowie ein Call mit
+`response_format={"type": "json_object"}` (exakt das Format aus
+`analyst.py:656`) beide erfolgreich — Mistral verhält sich formatkompatibel
+zu den anderen drei OpenAI-kompatiblen Anbietern.
+
+### Nachtrag (2026-07-17): Selektiver Desktop↔Notebook-Sync für manuelle Einstandspreise
+
+**Auslöser:** beim Vervollständigen der Einstandspreise für 13 Bitpanda-
+"Stocks"-Positionen (Aktien/ETF/Rohstoffe — Kostenbasis lässt sich hier NICHT
+automatisch aus Bitpanda-Transaktionen berechnen, da diese Produktklasse im
+`/wallets/transactions`-Feed gar nicht auftaucht, live bestätigt) stellte sich
+die Frage, wie diese manuellen Werte zuverlässig aufs 24/7-Notebook kommen,
+ohne dabei die dortige, laufend selbst erzeugte Produktivdaten-Historie
+(`signals`/`hebel_*`/`price_history*`/`macro_snapshot`/`marktscan_candidates`/
+`api_health_status`) durch eine volle DB-Kopie zu überschreiben.
+
+**Lösung:** `database/db.py::HOLDINGS_MANUAL_OVERRIDES_PATH`
+(`data/holdings_manual_overrides.json`, gitignored wie `Assets.xlsx`) —
+enthält ausschließlich `{symbol: avg_buy_price_manual_eur}` für alle Zeilen
+mit gesetztem Override.
+- `export_holdings_manual_overrides()` schreibt diese Datei automatisch bei
+  jedem Aufruf von `set_holding_avg_buy_price_manual()` neu (egal ob über den
+  Portfolio-Tab-Dialog oder ein Skript) — kein manueller Export-Schritt.
+- `import_holdings_manual_overrides()` liest sie automatisch bei jedem
+  `init_db()`-Durchlauf (also bei jedem App-Start) ein und schreibt die
+  Werte in die lokale `holdings`-Tabelle zurück — NUR für Symbole, die dort
+  bereits eine echte Zeile haben (keine Phantom-Zeilen; die Zeile selbst
+  entsteht ausschließlich über den echten Bitpanda-Bestandsabgleich).
+  Idempotent, berührt keine andere Tabelle.
+
+**Für den USB-Stick-Sync (siehe Memory `reference_usb_sync_workflow.md`)
+bedeutet das:** ab jetzt genügt es, diese eine kleine JSON-Datei mitzunehmen
+statt der gesamten `tradinginfotool.db` — sie wird beim nächsten Start auf
+dem Zielgerät automatisch angewendet, ohne dort laufende Produktivdaten zu
+gefährden. Verifiziert: echter Simulationstest (Kopie der Produktions-DB,
+Overrides zurückgesetzt, `init_db()` komplett durchlaufen lassen — Werte
+korrekt wiederhergestellt) plus Phantom-Symbol-Schutztest (unbekanntes Symbol
+in der JSON legt keine neue `holdings`-Zeile an) plus Regressionstest (frische
+leere DB, `init_db()` läuft fehlerfrei durch).
+
 ---
 
 ## 15. Offene / vorläufige Werte — die naheliegendsten Kandidaten für spätere Anpassung
@@ -1738,7 +1980,6 @@ Startpunkt, sobald Backward-Tracking/Outcome-Daten vorliegen:
 - RM-2 Core-Allokations-Limit (35 % für BTC/ETH) — nachträglich erhöht, weil die reale
   BTC-Allokation das alte 25%-Limit überschritt; "BTC hat den Lead"-Frage insgesamt
   noch nicht grundsätzlich besprochen.
-- RM-4 Cash-Reserve-Minimum (10 % **und** der neue Festbetrag 2000 €, beide vorläufig)
 - Small-Cap-Budget je Regime (0/4/8/12/15 %)
 - Mindest-Konfidenz je Regime (85/75/65/60/60 %)
 - Die vier Gewichte je Regime (Technik/Fundamental/Momentum/Makro)
