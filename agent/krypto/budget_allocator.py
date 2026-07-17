@@ -303,8 +303,19 @@ def run_budget_allocator(
         # Kandidatenquelle mit engerem Cooldown (siehe _offene_positionen_
         # als_kandidaten()-Docstring) - zuerst in die Liste, damit sie im
         # Zweifel vor reinen Trigger-Kandidaten das Tier-1-Budget bekommen.
+        # BUGFIX (2026-07-17): "Nur Long" muss auch hier greifen - bisher
+        # bekamen offene SHORT-Positionen weiterhin unbegrenzt LLM-Neu-
+        # bewertungen (und darüber unnoetige Short-Empfehlungs-E-Mails,
+        # siehe _notify_hebel_signal() in scheduler/background.py), obwohl
+        # die Einstellung laut eigenem Kommentar oben SHORT-Kandidaten
+        # komplett vom LLM fernhalten soll - galt bisher nur fuer frisch
+        # entdeckte Trigger-Kandidaten (hebel_pending oben), nicht fuer
+        # diesen zweiten, unabhaengigen Kandidatenpfad.
+        offene_positionen_roh = _offene_positionen_als_kandidaten(conn)
+        if hebel_richtung_modus == "nur_long":
+            offene_positionen_roh = [c for c in offene_positionen_roh if c.richtung == RICHTUNG_LONG]
         offene_positionen_kandidaten, uebersprungen_position = _filter_hebel_cooldown(
-            conn, _offene_positionen_als_kandidaten(conn), watchlist, hebel_position_cooldown_stunden,
+            conn, offene_positionen_roh, watchlist, hebel_position_cooldown_stunden,
         )
         hebel_kandidaten = _dedupe_hebel_kandidaten(offene_positionen_kandidaten, hebel_trigger_kandidaten)
         result.uebersprungen_cooldown_hebel = uebersprungen_trigger + uebersprungen_position
