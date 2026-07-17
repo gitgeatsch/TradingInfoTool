@@ -140,6 +140,20 @@ class MacroSnapshot:
     # ein gespeichertes Bool wuerde alte Zeilen dann falsch einfrieren.
     equities_sp500_drawdown_pct: float | None = None
     equities_nasdaq_drawdown_pct: float | None = None
+    # Regime-Status-Anzeige (2026-07-17, Regime-Status+Parameter-Uebersicht) -
+    # agent/krypto/regime.py::RegimeResult berechnet diese Felder bei jedem
+    # Pipeline-Lauf frisch, sie wurden bisher aber nirgends gespeichert (nur
+    # regime/regime_source ueberleben in signals). Ergaenzt um sie fuer eine
+    # rein passive "letzter bekannter Stand"-Anzeige verfuegbar zu machen, ohne
+    # dafuer einen neuen Live-Recompute anzustossen. dominance_trend_label wird
+    # bewusst NICHT gespeichert - reine Funktion, jederzeit aus der bereits
+    # vorhandenen Historie neu berechenbar (siehe regime.py::_dominance_trend_label()).
+    zyklus_risiko: float | None = None
+    zyklus_risiko_begruendung: str | None = None
+    liquiditaets_regime: str | None = None
+    liquiditaets_regime_begruendung: str | None = None
+    btc_trend_label: str | None = None
+    regime_reason: str | None = None
 
 
 @dataclass

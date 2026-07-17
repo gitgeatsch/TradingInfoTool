@@ -32,6 +32,8 @@ class RemoteStatus:
     budget_heute: dict | None = None
     provider_performance: dict | None = None
     api_health: dict | None = None
+    regime_status: dict | None = None
+    parameter_overview: list[dict] | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -48,6 +50,8 @@ class RemoteStatus:
             "budget_heute": self.budget_heute,
             "provider_performance": self.provider_performance,
             "api_health": self.api_health,
+            "regime_status": self.regime_status,
+            "parameter_overview": self.parameter_overview,
         }
 
 
@@ -126,6 +130,8 @@ def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, erro
         budget_heute=_get_budget_heute(conn),
         provider_performance=_get_provider_performance(conn),
         api_health=_get_api_health(conn),
+        regime_status=_get_regime_status(conn),
+        parameter_overview=_get_parameter_overview(),
     )
 
 
@@ -144,6 +150,24 @@ def _get_provider_performance(conn: sqlite3.Connection) -> dict:
     from agent.krypto.backward_tracking import compute_provider_performance
 
     return compute_provider_performance(conn)
+
+
+def _get_regime_status(conn: sqlite3.Connection) -> dict | None:
+    """Regime-Status-Karte (2026-07-17) - reiner Lesezugriff auf den zuletzt
+    PERSISTIERTEN Regime-Stand, kein neuer Live-Recompute (siehe
+    agent/krypto/regime.py::get_last_known_regime_status())."""
+    from agent.krypto.regime import get_last_known_regime_status
+
+    return get_last_known_regime_status(conn)
+
+
+def _get_parameter_overview() -> list[dict]:
+    """Parameter-Übersicht-Karte (2026-07-17) - reiner Lesezugriff auf die
+    Kap.-15-Kalibrierungsparameter aus config.yaml (siehe
+    agent/krypto/regelwerk_parameter.py::build_parameter_overview())."""
+    from agent.krypto.regelwerk_parameter import build_parameter_overview
+
+    return build_parameter_overview(config_module.load_config())
 
 
 def _get_budget_heute(conn: sqlite3.Connection) -> dict:

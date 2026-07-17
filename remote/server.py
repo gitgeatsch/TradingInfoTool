@@ -55,6 +55,13 @@ _INDEX_HTML = """<!doctype html>
   .stale { color: #e0a030; }
   .ok { color: #4caf50; }
   .err { color: #e0605a; }
+  .regime-krise_extrem { color: #e0605a; }
+  .regime-baer { color: #e0a030; }
+  .regime-seitwaerts { color: #999; }
+  .regime-bulle { color: #4caf50; }
+  .regime-euphorie_extrem { color: #7a6ee0; }
+  .muted-text { color: #999; font-size: 0.82rem; }
+  .kategorie-header { color: #7a8290; font-size: 0.78rem; text-transform: uppercase; margin-top: 8px; }
   button { width: 100%; padding: 14px; margin-top: 8px; font-size: 1rem; border: none;
            border-radius: 8px; background: #2e5fa3; color: white; }
   button:disabled { background: #3a4048; color: #888; }
@@ -93,6 +100,16 @@ _INDEX_HTML = """<!doctype html>
   <div id="api-health-markt"></div>
   <div class="row"><strong>API-Status: Makro/On-Chain/Derivate</strong></div>
   <div id="api-health-makro"></div>
+</div>
+
+<div class="card" id="regime-status-card" style="display:none">
+  <div class="row"><strong>Regime-Status</strong></div>
+  <div id="regime-status-body"></div>
+</div>
+
+<div class="card" id="parameter-overview-card" style="display:none">
+  <div class="row"><strong>Parameter-Übersicht</strong></div>
+  <div id="parameter-overview-body"></div>
 </div>
 
 <div class="card">
@@ -209,6 +226,61 @@ function renderApiHealthGroup(sourceKeys, apiHealth) {
   }).join("");
 }
 
+const REGIME_LABELS = {
+  krise_extrem: "Krise (extrem)", baer: "Bär", seitwaerts: "Seitwärts",
+  bulle: "Bulle", euphorie_extrem: "Euphorie (extrem)",
+};
+
+function fmtDateTime(iso) {
+  if (!iso) return "-";
+  return new Date(iso).toLocaleString("de-AT", { dateStyle: "medium", timeStyle: "short" });
+}
+
+function renderRegimeStatus(r) {
+  const label = REGIME_LABELS[r.regime] || r.regime;
+  const cls = "regime-" + r.regime;
+  let html = '<div class="row"><span>Stand</span><span>' + fmtDateTime(r.created_at) + '</span></div>';
+  html += '<div class="row"><span>Regime</span><span class="' + cls + '"><strong>' + label + '</strong></span></div>';
+  if (r.regime_source === "manuell") {
+    html += '<div class="row"><span class="muted-text">⚠ manuell überschrieben</span></div>';
+  } else if (r.regime_reason) {
+    html += '<div class="row"><span class="muted-text">' + r.regime_reason + '</span></div>';
+  }
+  const zeilen = [
+    ["BTC-Trend", r.btc_trend_label],
+    ["Fear &amp; Greed", r.fear_greed_label ? r.fear_greed_label + " (" + r.fear_greed_value + ")" : null],
+    ["BTC-Dominanz-Trend", r.dominance_trend_label],
+    ["Zyklus-Risiko", r.zyklus_risiko !== null && r.zyklus_risiko !== undefined
+      ? r.zyklus_risiko.toFixed(2) + (r.zyklus_risiko_begruendung ? " - " + r.zyklus_risiko_begruendung : "") : null],
+    ["Liquiditätsregime", r.liquiditaets_regime
+      ? r.liquiditaets_regime + (r.liquiditaets_regime_begruendung ? " - " + r.liquiditaets_regime_begruendung : "") : null],
+  ];
+  for (const [titel, wert] of zeilen) {
+    if (wert === null || wert === undefined) continue;
+    html += '<div class="row"><span>' + titel + '</span><span>' + wert + '</span></div>';
+  }
+  return html;
+}
+
+function renderParameterOverview(rows) {
+  if (!rows || rows.length === 0) return "";
+  let html = '<table style="width:100%; border-collapse: collapse; font-size: 0.85rem;">';
+  let letzteKategorie = null;
+  for (const p of rows) {
+    if (p.kategorie !== letzteKategorie) {
+      html += '<tr><td colspan="2" class="kategorie-header">' + p.kategorie + '</td></tr>';
+      letzteKategorie = p.kategorie;
+    }
+    const tooltip = (p.begruendung || "") +
+      " (zuletzt geändert: " + (p.geaendert_am || "kein Datum vermerkt") + ")";
+    html += '<tr title="' + tooltip.replace(/"/g, "&quot;") + '">' +
+      '<td style="padding:3px 4px 3px 0">' + p.bezeichnung + '</td>' +
+      '<td style="padding:3px 0; text-align:right">' + p.wert + '</td></tr>';
+  }
+  html += "</table>";
+  return html;
+}
+
 async function refreshStatus() {
   let data;
   try {
@@ -253,6 +325,16 @@ async function refreshStatus() {
     for (const [elementId, sourceKeys] of Object.entries(API_HEALTH_GROUPS)) {
       document.getElementById(elementId).innerHTML = renderApiHealthGroup(sourceKeys, data.api_health);
     }
+  }
+
+  if (data.regime_status) {
+    document.getElementById("regime-status-card").style.display = "block";
+    document.getElementById("regime-status-body").innerHTML = renderRegimeStatus(data.regime_status);
+  }
+
+  if (data.parameter_overview && data.parameter_overview.length > 0) {
+    document.getElementById("parameter-overview-card").style.display = "block";
+    document.getElementById("parameter-overview-body").innerHTML = renderParameterOverview(data.parameter_overview);
   }
 
   for (const [action, jobs] of Object.entries(ACTION_JOBS)) {

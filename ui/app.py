@@ -20,6 +20,7 @@ from ui.heading_tooltip import add_heading_tooltips
 from ui.hebel_view import HebelView
 from ui.marktscan_view import MarktscanView
 from ui.portfolio import PortfolioView
+from ui.regime_view import RegimeView
 from ui.row_tooltip import add_row_tooltips
 from ui.signals_view import SignalsView
 from ui.sortable_tree import make_sortable
@@ -123,6 +124,9 @@ class TradingInfoToolApp(tk.Tk):
             kraken_client, fred_api_key=fred_api_key, gemini_client=gemini_client,
         )
         notebook.add(self._hebel_view, text="Hebel")
+
+        self._regime_view = RegimeView(notebook, db_conn_factory)
+        notebook.add(self._regime_view, text="Regime")
 
         disclaimer = ttk.Label(
             self, text=DISCLAIMER_TEXT, foreground=theme.info_color(), wraplength=880, justify="center"
@@ -463,6 +467,7 @@ class TradingInfoToolApp(tk.Tk):
         # (Auswahl/Sortierung ueberleben einen Neuaufbau).
         self._signals_view._refresh_list()
         self._marktscan_view._refresh_list()
+        self._regime_view.refresh()
         self.after(UI_POLL_INTERVAL_MS, self._poll_prices)
 
     def _write_heartbeat(self) -> None:

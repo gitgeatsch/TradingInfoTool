@@ -334,18 +334,33 @@ _MACRO_SNAPSHOT_NEW_COLUMNS = (
     "eth_boden_zielzone_von", "eth_boden_zielzone_bis",
     "equities_sp500_drawdown_pct", "equities_nasdaq_drawdown_pct",
     "eth_regression_predicted_price", "eth_regression_residual_std",
+    # Regime-Status-Anzeige (2026-07-17) - siehe database/models.py::MacroSnapshot
+    # fuer die Feld-Dokumentation. zyklus_risiko ist REAL, der Rest TEXT (siehe
+    # _MACRO_SNAPSHOT_TEXT_COLUMNS unten).
+    "zyklus_risiko", "zyklus_risiko_begruendung", "liquiditaets_regime",
+    "liquiditaets_regime_begruendung", "btc_trend_label", "regime_reason",
 )
+
+# Erste TEXT-Spalten in dieser bisher rein numerischen Migrationsliste (siehe
+# _migrate_macro_snapshot_columns()) - explizit als Ausnahme markiert, statt
+# alle neuen Spalten pauschal als REAL zu deklarieren (SQLite wuerde Text zwar
+# trotzdem speichern, aber mit irrefuehrender Spaltenaffinitaet).
+_MACRO_SNAPSHOT_TEXT_COLUMNS = {
+    "zyklus_risiko_begruendung", "liquiditaets_regime",
+    "liquiditaets_regime_begruendung", "btc_trend_label", "regime_reason",
+}
 
 
 def _migrate_macro_snapshot_columns(conn: sqlite3.Connection) -> None:
     """Leichtgewichtige Migration: macro_snapshot existierte bereits vor den
     FRED/PBoC-Spalten (Phase 3, 2026-07-08 Folge-Slice) - CREATE TABLE IF NOT EXISTS
     greift bei bereits existierenden Tabellen nicht, daher ALTER TABLE nachziehen.
-    Alle neuen Spalten sind nullable REAL, daher unkritisch fuer Bestandsdaten."""
+    Alle neuen Spalten sind nullable, daher unkritisch fuer Bestandsdaten."""
     existing = {row["name"] for row in conn.execute("PRAGMA table_info(macro_snapshot)")}
     for column in _MACRO_SNAPSHOT_NEW_COLUMNS:
         if column not in existing:
-            conn.execute(f"ALTER TABLE macro_snapshot ADD COLUMN {column} REAL")
+            sql_type = "TEXT" if column in _MACRO_SNAPSHOT_TEXT_COLUMNS else "REAL"
+            conn.execute(f"ALTER TABLE macro_snapshot ADD COLUMN {column} {sql_type}")
     conn.commit()
 
 
@@ -1020,6 +1035,21 @@ def get_latest_signal(conn: sqlite3.Connection, symbol: str) -> Signal | None:
         (symbol,),
     ).fetchone()
     return _row_to_signal(row) if row else None
+
+
+def get_latest_regime_from_signals(conn: sqlite3.Connection) -> tuple[str, str, str] | None:
+    """Regime/regime_source sind pro Pipeline-Lauf ueber alle Symbole identisch
+    (agent/krypto/pipeline.py::compute_current_regime() wird einmal je Lauf
+    aufgerufen) - das zuletzt erzeugte Signal, egal welches Symbol, traegt daher
+    den zuletzt bekannten Regime-Stand. Reiner Lesezugriff fuer die passive
+    Regime-Status-Anzeige (2026-07-17), kein neuer Live-Recompute."""
+    row = conn.execute(
+        "SELECT regime, regime_source, created_at FROM signals "
+        "WHERE regime IS NOT NULL ORDER BY created_at DESC LIMIT 1"
+    ).fetchone()
+    if row is None:
+        return None
+    return row["regime"], row["regime_source"], row["created_at"]
 
 
 def get_latest_real_signal_per_symbol(conn: sqlite3.Connection) -> dict[str, Signal]:

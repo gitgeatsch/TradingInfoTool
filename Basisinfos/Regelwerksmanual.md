@@ -1033,6 +1033,7 @@ gelöst, siehe Kap. 4.
 - `indicators/calculations.py::compute_btc_log_regression_risk()`/`compute_eth_log_regression_risk()`, `agent/krypto/regime.py::_boden_zielzone()`, `api/yfinance_history.py` — AZ-4 Baustein 2, Boden-Zielzone (Abschnitt 4)
 - `agent/krypto/risk_gate.py::compute_cash_reserve_ziel()`, `agent/krypto/pipeline.py::_compute_cash_reserve_ziel_context()` — AZ-4 Baustein 3, Cash-Reserve-Ziel (Abschnitt 4)
 - `agent/krypto/backtesting.py` — Backtesting-Engine, deterministische Regeln rückwirkend gegen `price_history_ohlc` (Abschnitt 7, Selbstverifikations-Vision Schritt 3 Vorbereitung)
+- `agent/krypto/regime.py::get_last_known_regime_status()`, `agent/krypto/regelwerk_parameter.py`, `ui/regime_view.py` — Regime-Status + Parameter-Übersicht (Abschnitt 13, Remote-Karte + Desktop-Tab „Regime")
 
 ---
 
@@ -1647,6 +1648,45 @@ Oberfläche selbst, unabhängig von dieser Steuer-Seite. Für vollen
 GUI-Zugriff unterwegs der einfachere Weg; die Tailscale-Steuer-Seite bleibt
 sinnvoll für einen schnellen Status-Blick oder falls Remote Desktop selbst
 nicht erreichbar ist.
+
+**Regime-Status + Parameter-Übersicht (2026-07-17):** direkter, bewusst
+governance-unabhängiger erster Schritt aus der Selbstverifikations-
+Machbarkeits-Analyse (siehe Memory `project_selbstverifikation_ki_trimmen`)
+— reine Sichtbarkeit bereits vorhandener Werte, keine neue Entscheidungslogik.
+
+- **Regime-Status-Karte:** zeigt den zuletzt bekannten Marktregime-Stand
+  (Zustand farbcodiert, Zeitstempel „Stand: …", Begründung, BTC-Trend, Fear
+  &amp; Greed, BTC-Dominanz-Trend, Zyklus-Risiko, Liquiditätsregime). **Rein
+  passiv** — kein neuer Live-Aufruf von `determine_regime()`, gelesen wird
+  ausschließlich der zuletzt PERSISTIERTE Stand aus `signals.regime`/
+  `regime_source` (identisch für alle Symbole eines Laufs) + der zuletzt
+  gespeicherten `macro_snapshot`-Zeile (`agent/krypto/regime.py::
+  get_last_known_regime_status()`). Ein manueller Regime-Override
+  (RG-8/RG-9) wird deutlich als „⚠ manuell überschrieben" gekennzeichnet,
+  statt mit der automatischen Begründung vermischt zu werden.
+- **Datenlücke behoben:** `zyklus_risiko`, `liquiditaets_regime` (+
+  Begründungen) und `btc_trend_label` wurden bisher bei jedem Pipeline-Lauf
+  frisch berechnet, aber nirgends gespeichert. `agent/krypto/pipeline.py::
+  compute_current_regime()` persistiert sie jetzt zusätzlich über den
+  bereits bestehenden, try/except-geschützten zweiten `macro_snapshot`-
+  Upsert (der bisher nur die Boden-Zielzone nachtrug) — kein neuer
+  Netzwerk-Call, reine Persistierungs-Erweiterung. `dominance_trend_label`
+  wird bewusst NICHT gespeichert, sondern bei jedem passiven Lesezugriff aus
+  der bereits vorhandenen Historie neu berechnet (reine Funktion).
+- **Parameter-Übersicht-Karte:** zeigt alle Kap.-15-Kalibrierungsparameter
+  mit ihrem aktuell konfigurierten Wert, live aus `config.yaml` gelesen
+  (`agent/krypto/regelwerk_parameter.py::build_parameter_overview()`),
+  gruppiert nach der a/b/c-Kategorie aus der Machbarkeits-Analyse. Details
+  (Begründung + „zuletzt geändert am") **über Mouseover** statt permanent
+  sichtbar — Remote-Seite über natives HTML-`title`-Attribut, Desktop-Tab
+  über das bestehende `ui/row_tooltip.py`. Begründung/Änderungsdatum sind
+  aus den config.yaml-Inline-Kommentaren manuell transkribiert (
+  `yaml.safe_load()` liefert keine Kommentare mit) — muss beim inhaltlichen
+  Ändern eines Wertes von Hand nachgezogen werden.
+- **Desktop-Spiegelung:** neuer Tab „Regime" (`ui/regime_view.py`), inhaltlich
+  identisch zur Remote-Karte, nimmt bewusst nur `db_conn_factory` entgegen
+  (kein LLM-/API-Client nötig). Nimmt am bestehenden periodischen
+  3-Sekunden-Refresh teil (`ui/app.py::_poll_prices()`).
 
 ---
 
