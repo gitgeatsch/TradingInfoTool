@@ -1934,6 +1934,41 @@ einfacher Chat-Call sowie ein Call mit
 `analyst.py:656`) beide erfolgreich — Mistral verhält sich formatkompatibel
 zu den anderen drei OpenAI-kompatiblen Anbietern.
 
+### Nachtrag (2026-07-17): Selektiver Desktop↔Notebook-Sync für manuelle Einstandspreise
+
+**Auslöser:** beim Vervollständigen der Einstandspreise für 13 Bitpanda-
+"Stocks"-Positionen (Aktien/ETF/Rohstoffe — Kostenbasis lässt sich hier NICHT
+automatisch aus Bitpanda-Transaktionen berechnen, da diese Produktklasse im
+`/wallets/transactions`-Feed gar nicht auftaucht, live bestätigt) stellte sich
+die Frage, wie diese manuellen Werte zuverlässig aufs 24/7-Notebook kommen,
+ohne dabei die dortige, laufend selbst erzeugte Produktivdaten-Historie
+(`signals`/`hebel_*`/`price_history*`/`macro_snapshot`/`marktscan_candidates`/
+`api_health_status`) durch eine volle DB-Kopie zu überschreiben.
+
+**Lösung:** `database/db.py::HOLDINGS_MANUAL_OVERRIDES_PATH`
+(`data/holdings_manual_overrides.json`, gitignored wie `Assets.xlsx`) —
+enthält ausschließlich `{symbol: avg_buy_price_manual_eur}` für alle Zeilen
+mit gesetztem Override.
+- `export_holdings_manual_overrides()` schreibt diese Datei automatisch bei
+  jedem Aufruf von `set_holding_avg_buy_price_manual()` neu (egal ob über den
+  Portfolio-Tab-Dialog oder ein Skript) — kein manueller Export-Schritt.
+- `import_holdings_manual_overrides()` liest sie automatisch bei jedem
+  `init_db()`-Durchlauf (also bei jedem App-Start) ein und schreibt die
+  Werte in die lokale `holdings`-Tabelle zurück — NUR für Symbole, die dort
+  bereits eine echte Zeile haben (keine Phantom-Zeilen; die Zeile selbst
+  entsteht ausschließlich über den echten Bitpanda-Bestandsabgleich).
+  Idempotent, berührt keine andere Tabelle.
+
+**Für den USB-Stick-Sync (siehe Memory `reference_usb_sync_workflow.md`)
+bedeutet das:** ab jetzt genügt es, diese eine kleine JSON-Datei mitzunehmen
+statt der gesamten `tradinginfotool.db` — sie wird beim nächsten Start auf
+dem Zielgerät automatisch angewendet, ohne dort laufende Produktivdaten zu
+gefährden. Verifiziert: echter Simulationstest (Kopie der Produktions-DB,
+Overrides zurückgesetzt, `init_db()` komplett durchlaufen lassen — Werte
+korrekt wiederhergestellt) plus Phantom-Symbol-Schutztest (unbekanntes Symbol
+in der JSON legt keine neue `holdings`-Zeile an) plus Regressionstest (frische
+leere DB, `init_db()` läuft fehlerfrei durch).
+
 ---
 
 ## 15. Offene / vorläufige Werte — die naheliegendsten Kandidaten für spätere Anpassung

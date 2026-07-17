@@ -1,6 +1,7 @@
 """SQLite Verwaltung: Verbindung, automatische Initialisierung, CRUD."""
 from __future__ import annotations
 
+import json
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
@@ -20,6 +21,19 @@ from database.models import (
 )
 
 DB_PATH = Path(__file__).resolve().parent.parent / "data" / "tradinginfotool.db"
+
+# Selektiver Desktop<->Notebook-Sync (2026-07-17, siehe Memory
+# reference_usb_sync_workflow.md) - NUR fuer die manuellen Einstandspreis-
+# Overrides in holdings.avg_buy_price_manual_eur, NICHT fuer die gesamte DB.
+# Grund: das Notebook laeuft 24/7 und erzeugt laufend selbst Produktivdaten
+# (signals/hebel_*/price_history/macro_snapshot/...) - eine volle DB-Kopie
+# wuerde das jedes Mal ueberschreiben. Diese kleine JSON-Datei wird bei jeder
+# manuellen Einstandspreis-Aenderung automatisch neu geschrieben (siehe
+# set_holding_avg_buy_price_manual()) und bei jedem App-Start automatisch
+# wieder eingelesen (siehe init_db()) - reines Copy-Merge via USB-Stick reicht,
+# kein manueller Zwischenschritt noetig. NICHT in Git (siehe .gitignore),
+# gleiche Sensitivitaet wie Assets.xlsx (echte Portfolio-Zahlen).
+HOLDINGS_MANUAL_OVERRIDES_PATH = DB_PATH.parent / "holdings_manual_overrides.json"
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS holdings (
@@ -575,6 +589,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_signal_tranchen_columns(conn)
     _migrate_signal_cash_reserve_ziel_columns(conn)
     _migrate_hebel_signal_outcome_columns(conn)
+    import_holdings_manual_overrides(conn)
 
 
 def is_first_run(conn: sqlite3.Connection) -> bool:
@@ -649,6 +664,45 @@ def set_holding_avg_buy_price_manual(conn: sqlite3.Connection, symbol: str, valu
         (value, symbol),
     )
     conn.commit()
+    export_holdings_manual_overrides(conn)
+
+
+def export_holdings_manual_overrides(conn: sqlite3.Connection) -> None:
+    """Schreibt alle aktuellen avg_buy_price_manual_eur-Werte in eine kleine JSON-
+    Datei neben der DB (siehe HOLDINGS_MANUAL_OVERRIDES_PATH) - Grundlage fuer den
+    selektiven Desktop<->Notebook-Sync (nur diese Datei per USB-Stick mitnehmen,
+    NICHT die ganze DB kopieren). Wird automatisch bei jeder Aenderung aufgerufen,
+    kein manueller Export-Schritt noetig."""
+    rows = conn.execute(
+        "SELECT symbol, avg_buy_price_manual_eur FROM holdings WHERE avg_buy_price_manual_eur IS NOT NULL"
+    ).fetchall()
+    overrides = {row["symbol"]: row["avg_buy_price_manual_eur"] for row in rows}
+    HOLDINGS_MANUAL_OVERRIDES_PATH.parent.mkdir(parents=True, exist_ok=True)
+    HOLDINGS_MANUAL_OVERRIDES_PATH.write_text(json.dumps(overrides, indent=2, sort_keys=True), encoding="utf-8")
+
+
+def import_holdings_manual_overrides(conn: sqlite3.Connection) -> list[str]:
+    """Liest HOLDINGS_MANUAL_OVERRIDES_PATH (falls vorhanden) und uebernimmt die
+    Werte in die lokale holdings-Tabelle - nur fuer Symbole, die hier bereits einen
+    holdings-Eintrag haben (kein Anlegen neuer Phantom-Zeilen; die Zeile selbst
+    entsteht ausschliesslich ueber upsert_holding(), also den echten Bitpanda-
+    Bestandsabgleich). Wird automatisch bei jedem App-Start aufgerufen (init_db()),
+    idempotent - mehrfaches Anwenden derselben Datei aendert nichts weiter."""
+    if not HOLDINGS_MANUAL_OVERRIDES_PATH.exists():
+        return []
+    overrides: dict[str, float] = json.loads(HOLDINGS_MANUAL_OVERRIDES_PATH.read_text(encoding="utf-8"))
+    existing_symbols = {row["symbol"] for row in conn.execute("SELECT symbol FROM holdings").fetchall()}
+    applied: list[str] = []
+    for symbol, value in overrides.items():
+        if symbol not in existing_symbols:
+            continue
+        conn.execute(
+            "UPDATE holdings SET avg_buy_price_manual_eur = ? WHERE symbol = ?",
+            (value, symbol),
+        )
+        applied.append(symbol)
+    conn.commit()
+    return applied
 
 
 def get_bitpanda_avg_cost_last_synced_unix(conn: sqlite3.Connection) -> int | None:
