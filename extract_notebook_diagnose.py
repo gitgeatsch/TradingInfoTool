@@ -23,7 +23,25 @@ from agent.krypto.backward_tracking import compute_provider_performance
 from agent.krypto.regime import get_last_known_regime_status
 
 DEEP_DIVE_SYMBOL = sys.argv[1] if len(sys.argv) > 1 else "LINK"
-ZIEL_ORDNER = Path("K:/My Drive/Claude_Austauschordner/Notebook_Analysedaten")
+
+
+def _google_drive_wurzel() -> Path:
+    """Der Google-Drive-Laufwerksbuchstabe ist NICHT geraeteuebergreifend
+    gleich (2026-07-17, Notebook-Fund: Desktop hat 'My Drive' unter K:,
+    Notebook unter G:) - deshalb hier automatisch die erste passende
+    Laufwerksbuchstabe-Kandidatin pruefen statt einen Buchstaben
+    hartzucodieren."""
+    for buchstabe in ("G", "K", "H", "E", "F"):
+        kandidat = Path(f"{buchstabe}:/My Drive")
+        if kandidat.exists():
+            return kandidat
+    raise FileNotFoundError(
+        "Kein 'My Drive'-Ordner unter G:/K:/H:/E:/F: gefunden - "
+        "bitte den tatsaechlichen Laufwerksbuchstaben in ZIEL_ORDNER unten manuell eintragen."
+    )
+
+
+ZIEL_ORDNER = _google_drive_wurzel() / "Claude_Austauschordner" / "Notebook_Analysedaten"
 
 # Bewusst schlanke Spaltenauswahl fuer signals/hebel_signals - die langen
 # facts_json/*_raw_response-Felder sind redundant zu den strukturierten
