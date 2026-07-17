@@ -30,13 +30,14 @@ def _google_drive_wurzel() -> Path:
     gleich (2026-07-17, Notebook-Fund: Desktop hat 'My Drive' unter K:,
     Notebook unter G:) - deshalb hier automatisch die erste passende
     Laufwerksbuchstabe-Kandidatin pruefen statt einen Buchstaben
-    hartzucodieren."""
+    hartzucodieren. Sucht beide englischen ('My Drive') und deutschen ('Meine Ablage') Namen."""
     for buchstabe in ("G", "K", "H", "E", "F"):
-        kandidat = Path(f"{buchstabe}:/My Drive")
-        if kandidat.exists():
-            return kandidat
+        for ordnername in ("My Drive", "Meine Ablage"):
+            kandidat = Path(f"{buchstabe}:/{ordnername}")
+            if kandidat.exists():
+                return kandidat
     raise FileNotFoundError(
-        "Kein 'My Drive'-Ordner unter G:/K:/H:/E:/F: gefunden - "
+        "Kein 'My Drive'/'Meine Ablage'-Ordner unter G:/K:/H:/E:/F: gefunden - "
         "bitte den tatsaechlichen Laufwerksbuchstaben in ZIEL_ORDNER unten manuell eintragen."
     )
 
