@@ -3574,3 +3574,69 @@ Kandidat wurde bereits ueber `_notify_marktscan_kaufkandidaten()` beim
 eigentlichen Scan gemeldet, kein Duplikat noetig. Manuelle "Signal
 berechnen"-Klicks (alle Assetklassen) senden bewusst NIE eine E-Mail - nur
 automatische Jobs, konsistent ueber die gesamte App.
+
+
+## Nachtrag (2026-07-18, gleicher Tag): SOL in AZ-4-Tranchen + neuer
+## Hebel-Prüfung-Toggle
+
+**Auslöser:** Nutzer-Wunsch, Solana in die bisher BTC/ETH-exklusive AZ-4-
+Tranchen-Funktion aufzunehmen (mit Verifikationsauftrag), plus ein neuer
+per-Asset-Schalter, ob ein Krypto-Asset überhaupt fürs automatische
+Hebel-Screening berücksichtigt werden soll.
+
+### 1. SOL in AZ-4-Tranchen
+
+Zwei getrennte BTC/ETH-Hardcodierungen identifiziert: `tranchen_erlaubt`
+(gestaffelte Kauf-/Verkaufszonen fürs eigene Signal - einfach erweiterbar)
+und `cash_reserve_ziel` (AZ-4 Baustein 3, ein *portfolioweites* Ziel, das
+BTC+ETH fest zu zwei Gewichten kombiniert - eine echte 3-Wege-Erweiterung
+wäre ein groesserer Umbau der Gewichtungsformel). Bewusst NUR
+`tranchen_erlaubt` um SOL erweitert (`agent/krypto/pipeline.py`,
+`database/db.py::_DCA_ERLAUBT_DEFAULT_SYMBOLS`, alle 5 Text-/Spalten-Stellen
+in `ui/app.py`) - `cash_reserve_ziel` bleibt unverändert BTC/ETH-exklusiv.
+
+**Verifikation:** 5 synthetische `_validate()`-Testfälle (gültige Tranchen,
+Summe≠100, doppelter Rang, von>bis, null) - alle bestätigt korrekt. Echter
+End-to-End-Lauf gegen Kopie der Produktions-DB mit erzwungenem Bär-Regime
+(`dataclasses.replace()` auf ein echtes `RegimeResult`): SOL/BTC/ETH liefen
+alle drei fehlerfrei durch `generate_signal()`. Zusätzlich ein Fake-LLM-
+Client mit einer kanonischen Antwort inkl. echtem 3-Tranchen-Vorschlag durch
+die komplette Pipeline geschickt - `tranchen_json` korrekt serialisiert,
+`entry_usd_von/bis` blieb korrekt die Gesamtspanne (nicht die Tranchen-
+Einzelzonen), aus der DB neu geladen identisch mit dem Original-Objekt -
+genau der Pfad, den `ui/signals_view.py` beim Anzeigen nimmt.
+
+**Nebenfund bei der Verifikation (kein Code-Bug, reines Testartefakt):**
+die Desktop-DB-Kopie hatte für SOL eine veraltete `price_history` (CoinGecko-
+Tabelle, separat von der Kraken-`price_history_ohlc`-Tabelle) - beide Tabellen
+speisen die Staleness-Pruefung in `_load_closes_and_ohlc()` unabhaengig
+voneinander. Kein Fix noetig, nur ein frischer Preis-/Historie-Abruf im
+Testaufbau.
+
+### 2. Neuer Hebel-Prüfung-Toggle
+
+Per-Asset-Schalter (analog zum bestehenden AZ-4-Tranchen-Toggle-Muster,
+`asset_dca_settings`): neue Tabelle `asset_hebel_settings` +
+`get/set_hebel_pruefung_erlaubt()` in `database/db.py`. Default **true**
+für ALLE Krypto-Assets (bewusst anders als der Tranchen-Toggle, dessen
+Default nur für BTC/ETH/SOL an ist) - kein Verhaltenswechsel für bestehende
+Nutzer ohne explizites Abschalten.
+
+Greift in `agent/krypto/hebel_screening.py::run_hebel_screening()` VOR dem
+teuren OI-Abruf (Binance/Bybit/OKX) - ein abgeschaltetes Asset bekommt weder
+neue Trigger noch einen LLM-Call noch einen neuen Kandidaten im Hebel-Tab.
+Bewusst NICHT verdrahtet in `agent/krypto/budget_allocator.py::
+_offene_positionen_als_kandidaten()` - bereits offene Hebel-Positionen
+bleiben unabhängig vom Toggle weiter risikoüberwacht (Nutzer-Bestätigung im
+Vorgespräch).
+
+Neue Spalte "Hebel-Prüfung" im Watchlist-Tab (`ui/app.py`, gilt für alle
+Krypto-Assets, nicht nur eine feste Liste), neuer Toolbar-Button "Hebel-
+Prüfung umschalten" mit Guard-Klausel (nur Krypto ohne Stablecoins).
+
+**Verifikation:** Tk-Smoke-Test gegen Kopie der Produktions-DB (leichtgewichtig
+über `TradingInfoToolApp.__new__()` statt der vollen `__init__` mit allen 5
+Tabs, um unnötige Netzwerk-Aufrufe zu vermeiden) - Spalte korrekt vorhanden,
+Toggle-Klick flippt den Wert korrekt in der DB UND in der Anzeige, Guard-
+Klausel für ein Nicht-Krypto-Asset (VST) löst korrekt nur den Info-Dialog
+aus, OHNE einen DB-Write auszulösen.

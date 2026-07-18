@@ -147,6 +147,16 @@ CREATE TABLE IF NOT EXISTS asset_dca_settings (
     dca_erlaubt     INTEGER NOT NULL
 );
 
+-- Hebel-Pruefung-Toggle (2026-07-18, Budget/Asset-Optimierung) - analog
+-- asset_dca_settings: per Asset umschaltbar, ob agent/krypto/hebel_screening.py
+-- dieses Symbol ueberhaupt fuer neue Hebel-Trigger screent (OI-Abruf,
+-- Trendfolge-/Kontra-Scoring, LLM-Call). Default true (kein Verhaltenswechsel
+-- ohne explizites Abschalten durch den Nutzer), siehe get_hebel_pruefung_erlaubt().
+CREATE TABLE IF NOT EXISTS asset_hebel_settings (
+    symbol                  TEXT PRIMARY KEY,
+    hebel_pruefung_erlaubt  INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS marktscan_candidates (
     id                          INTEGER PRIMARY KEY AUTOINCREMENT,
     coingecko_id                TEXT NOT NULL,
@@ -864,13 +874,14 @@ def set_cash_reserve_fiat_eur(conn: sqlite3.Connection, value_eur: float) -> Non
     conn.commit()
 
 
-_DCA_ERLAUBT_DEFAULT_SYMBOLS = {"BTC", "ETH"}
+_DCA_ERLAUBT_DEFAULT_SYMBOLS = {"BTC", "ETH", "SOL"}
 
 
 def get_dca_erlaubt(conn: sqlite3.Connection, symbol: str) -> bool:
-    """AZ-4-Tranchen-Toggle (2026-07-12) - per Asset umschaltbar, ob der Agent
-    gestaffelte Kauf-/Verkaufszonen vorschlagen darf (zusaetzlich zur Regime-
-    Bedingung in agent/krypto/pipeline.py). Default: an fuer BTC/ETH, sonst aus,
+    """AZ-4-Tranchen-Toggle (2026-07-12, 2026-07-18 um SOL erweitert) - per
+    Asset umschaltbar, ob der Agent gestaffelte Kauf-/Verkaufszonen
+    vorschlagen darf (zusaetzlich zur Regime-Bedingung in
+    agent/krypto/pipeline.py). Default: an fuer BTC/ETH/SOL, sonst aus,
     solange keine explizite Zeile existiert."""
     row = conn.execute(
         "SELECT dca_erlaubt FROM asset_dca_settings WHERE symbol = ?", (symbol,)
@@ -884,6 +895,32 @@ def set_dca_erlaubt(conn: sqlite3.Connection, symbol: str, erlaubt: bool) -> Non
     conn.execute(
         "INSERT INTO asset_dca_settings (symbol, dca_erlaubt) VALUES (?, ?) "
         "ON CONFLICT(symbol) DO UPDATE SET dca_erlaubt = excluded.dca_erlaubt",
+        (symbol, int(erlaubt)),
+    )
+    conn.commit()
+
+
+def get_hebel_pruefung_erlaubt(conn: sqlite3.Connection, symbol: str) -> bool:
+    """Hebel-Pruefung-Toggle (2026-07-18) - per Asset umschaltbar, ob
+    agent/krypto/hebel_screening.py dieses Symbol ueberhaupt fuer neue
+    Hebel-Trigger screent. Default: an fuer ALLE Krypto-Assets (kein
+    Verhaltenswechsel ohne explizites Abschalten), solange keine explizite
+    Zeile existiert - anders als get_dca_erlaubt() (dort ist der Default
+    NUR fuer BTC/ETH/SOL an), da bisher jedes Krypto-Asset gescreent wurde
+    und dieser Toggle rein ein zusaetzliches Opt-out sein soll, keine
+    Verhaltensaenderung fuer bestehende Nutzer."""
+    row = conn.execute(
+        "SELECT hebel_pruefung_erlaubt FROM asset_hebel_settings WHERE symbol = ?", (symbol,)
+    ).fetchone()
+    if row is None:
+        return True
+    return bool(row["hebel_pruefung_erlaubt"])
+
+
+def set_hebel_pruefung_erlaubt(conn: sqlite3.Connection, symbol: str, erlaubt: bool) -> None:
+    conn.execute(
+        "INSERT INTO asset_hebel_settings (symbol, hebel_pruefung_erlaubt) VALUES (?, ?) "
+        "ON CONFLICT(symbol) DO UPDATE SET hebel_pruefung_erlaubt = excluded.hebel_pruefung_erlaubt",
         (symbol, int(erlaubt)),
     )
     conn.commit()

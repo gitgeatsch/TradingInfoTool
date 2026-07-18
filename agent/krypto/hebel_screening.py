@@ -241,9 +241,11 @@ def _determine_kontra_richtung(funding_rate: float | None, long_account_pct: flo
 def run_hebel_screening(
     conn_factory, watchlist: list, kraken_client, coingecko_client, config_dict: dict,
 ) -> list[HebelTrigger]:
-    """Orchestriert das Screening ueber die komplette Krypto-Watchlist (Aktien/
-    ETF/Rohstoffe ausgeschlossen, wie ueberall in der Krypto-Pipeline). Fuer jedes
-    Asset: OI-Snapshot abrufen+speichern, dann bis zu zwei unabhaengige Kandidaten
+    """Orchestriert das Screening ueber die Krypto-Watchlist (Aktien/ETF/
+    Rohstoffe ausgeschlossen, wie ueberall in der Krypto-Pipeline) MINUS
+    Assets mit abgeschaltetem Hebel-Pruefung-Toggle (2026-07-18, siehe
+    db.get_hebel_pruefung_erlaubt()). Fuer jedes verbleibende Asset:
+    OI-Snapshot abrufen+speichern, dann bis zu zwei unabhaengige Kandidaten
     bewerten (Trendfolge- UND Kontra-These koennen gleichzeitig existieren, mit
     potenziell unterschiedlicher Richtung - siehe UNIQUE(symbol, richtung,
     screening_run_id) im Schema)."""
@@ -258,6 +260,14 @@ def run_hebel_screening(
     try:
         latest_prices = db.get_latest_prices(conn)
         krypto_assets = [a for a in watchlist if a.assetklasse == "krypto" and not a.ist_cash_aequivalent]
+        # Hebel-Pruefung-Toggle (2026-07-18, Budget/Asset-Optimierung, siehe
+        # ui/app.py Watchlist-Tab) - VOR dem teuren OI-Abruf gefiltert, spart
+        # auch unnoetige Binance/Bybit/OKX-Calls fuer abgeschaltete Assets.
+        # Beruehrt NUR die Neuentdeckung neuer Trigger - bereits offene Hebel-
+        # Positionen (agent/krypto/budget_allocator.py::_offene_positionen_
+        # als_kandidaten()) sind ein unabhaengiger Kandidatenpfad und bleiben
+        # unabhaengig vom Toggle weiter risikoueberwacht.
+        krypto_assets = [a for a in krypto_assets if db.get_hebel_pruefung_erlaubt(conn, a.symbol)]
         for asset in krypto_assets:
             fetch_and_store_oi_snapshot(conn, asset, kraken_client)
 

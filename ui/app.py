@@ -48,7 +48,14 @@ _WATCHLIST_COLUMN_DESCRIPTIONS = {
     ),
     "tranchen": (
         "AZ-4-Tranchen-Vorschläge (gestaffelte Kauf-/Verkaufszonen) an/aus - "
-        "nur für BTC/ETH verfügbar."
+        "nur für BTC/ETH/SOL verfügbar."
+    ),
+    "hebel_pruefung": (
+        "An = wird beim automatischen 15-Min-Hebel-Screening berücksichtigt (OI-Abruf, "
+        "Trendfolge-/Kontra-Scoring, ggf. LLM-Call). Aus = kein neuer Hebel-Trigger für "
+        "dieses Asset mehr, taucht nicht mehr als neuer Kandidat im Hebel-Tab auf. Bereits "
+        "offene Hebel-Positionen bleiben davon unberührt und weiterhin risikoüberwacht. "
+        "Nur für Krypto-Assets relevant."
     ),
     "price_usd": "Aktueller Marktpreis pro Einheit in US-Dollar.",
     "price_eur": "Aktueller Marktpreis pro Einheit in Euro.",
@@ -243,8 +250,12 @@ class TradingInfoToolApp(tk.Tk):
             side="left"
         )
         ttk.Button(
-            toolbar, text="Tranchen-Vorschläge umschalten (BTC/ETH)",
+            toolbar, text="Tranchen-Vorschläge umschalten (BTC/ETH/SOL)",
             command=self._toggle_dca_erlaubt,
+        ).pack(side="left", padx=(8, 0))
+        ttk.Button(
+            toolbar, text="Hebel-Prüfung umschalten",
+            command=self._toggle_hebel_pruefung_erlaubt,
         ).pack(side="left", padx=(8, 0))
         ttk.Button(
             toolbar, text="Asset hinzufügen…", command=self._open_asset_add_dialog,
@@ -261,6 +272,7 @@ class TradingInfoToolApp(tk.Tk):
             "status",
             "bitpanda",
             "tranchen",
+            "hebel_pruefung",
             "price_usd",
             "price_eur",
             "change_24h",
@@ -274,6 +286,7 @@ class TradingInfoToolApp(tk.Tk):
             "status": "Status",
             "bitpanda": "Bitpanda",
             "tranchen": "AZ-4-Tranchen",
+            "hebel_pruefung": "Hebel-Prüfung",
             "price_usd": "Preis (USD)",
             "price_eur": "Preis (EUR)",
             "change_24h": "24h %",
@@ -283,7 +296,7 @@ class TradingInfoToolApp(tk.Tk):
         for col in columns:
             tree.heading(col, text=headings[col])
             anchor = "w" if col in ("name", "rolle", "assetklasse", "status") else "e"
-            tree.column(col, width=90 if col in ("bitpanda", "tranchen") else 110, anchor=anchor)
+            tree.column(col, width=90 if col in ("bitpanda", "tranchen", "hebel_pruefung") else 110, anchor=anchor)
         tree.tag_configure("stale", foreground=theme.stale_color())
         tree.tag_configure("bitpanda_fehlt", foreground=theme.danger_color())
         frame.reapply_sort = make_sortable(
@@ -302,7 +315,16 @@ class TradingInfoToolApp(tk.Tk):
         try:
             latest_prices = db.get_latest_prices(conn)
             dca_erlaubt_by_symbol = {
-                sym: db.get_dca_erlaubt(conn, sym) for sym in ("BTC", "ETH")
+                sym: db.get_dca_erlaubt(conn, sym) for sym in ("BTC", "ETH", "SOL")
+            }
+            # Hebel-Pruefung-Toggle (2026-07-18) - fuer ALLE Krypto-Assets
+            # relevant (nicht nur BTC/ETH/SOL wie beim Tranchen-Toggle), da
+            # jedes Krypto-Asset per Default vom automatischen Hebel-Screening
+            # erfasst wird (siehe agent/krypto/hebel_screening.py).
+            hebel_pruefung_erlaubt_by_symbol = {
+                a.symbol: db.get_hebel_pruefung_erlaubt(conn, a.symbol)
+                for a in self._watchlist
+                if a.assetklasse == "krypto" and not a.ist_cash_aequivalent
             }
             # Klassifikations-Redesign (2026-07-16): "gehalten" ist kein
             # gespeichertes Feld mehr, sondern wird live aus den echten
@@ -363,12 +385,19 @@ class TradingInfoToolApp(tk.Tk):
             if bitpanda_fehlt:
                 tags.append("bitpanda_fehlt")  # zuletzt hinzugefuegt = hoehere Prioritaet bei ttk-Tag-Kollision
 
-            # AZ-4-Tranchen-Toggle (2026-07-12): nur fuer BTC/ETH relevant (siehe
-            # agent/krypto/pipeline.py::generate_signal() tranchen_erlaubt-Berechnung).
+            # AZ-4-Tranchen-Toggle (2026-07-12, 2026-07-18 um SOL erweitert): nur
+            # fuer BTC/ETH/SOL relevant (siehe agent/krypto/pipeline.py::
+            # generate_signal() tranchen_erlaubt-Berechnung).
             if asset.symbol in dca_erlaubt_by_symbol:
                 tranchen_text = "An" if dca_erlaubt_by_symbol[asset.symbol] else "Aus"
             else:
                 tranchen_text = "-"
+
+            # Hebel-Pruefung-Toggle (2026-07-18) - fuer alle Krypto-Assets.
+            if asset.symbol in hebel_pruefung_erlaubt_by_symbol:
+                hebel_pruefung_text = "An" if hebel_pruefung_erlaubt_by_symbol[asset.symbol] else "Aus"
+            else:
+                hebel_pruefung_text = "-"
 
             if asset.symbol in gehaltene_symbole or asset.symbol in offene_hebel_symbole:
                 status_text = "Gehalten"
@@ -387,6 +416,7 @@ class TradingInfoToolApp(tk.Tk):
                     status_text,
                     bitpanda_text,
                     tranchen_text,
+                    hebel_pruefung_text,
                     price_usd,
                     price_eur,
                     change,
@@ -514,21 +544,22 @@ class TradingInfoToolApp(tk.Tk):
             self._bitpanda_non_crypto_assets = None
 
     def _toggle_dca_erlaubt(self) -> None:
-        """AZ-4-Tranchen-Toggle (2026-07-12) - nur fuer BTC/ETH sinnvoll (siehe
-        agent/krypto/pipeline.py::generate_signal()), operiert auf der aktuell in der
-        Watchlist ausgewaehlten Zeile."""
+        """AZ-4-Tranchen-Toggle (2026-07-12, 2026-07-18 um SOL erweitert) - nur
+        fuer BTC/ETH/SOL sinnvoll (siehe agent/krypto/pipeline.py::
+        generate_signal()), operiert auf der aktuell in der Watchlist
+        ausgewaehlten Zeile."""
         tree = self._watchlist_frame.tree
         selected = tree.selection()
         if not selected:
             messagebox.showinfo(
-                "Tranchen-Vorschläge umschalten", "Bitte zuerst BTC oder ETH in der Watchlist auswählen."
+                "Tranchen-Vorschläge umschalten", "Bitte zuerst BTC, ETH oder SOL in der Watchlist auswählen."
             )
             return
         symbol = tree.item(selected[0], "values")[0]
-        if symbol not in ("BTC", "ETH"):
+        if symbol not in ("BTC", "ETH", "SOL"):
             messagebox.showinfo(
                 "Tranchen-Vorschläge umschalten",
-                "AZ-4-Tranchen sind aktuell nur für BTC und ETH vorgesehen.",
+                "AZ-4-Tranchen sind aktuell nur für BTC, ETH und SOL vorgesehen.",
             )
             return
 
@@ -536,6 +567,38 @@ class TradingInfoToolApp(tk.Tk):
         try:
             neuer_wert = not db.get_dca_erlaubt(conn, symbol)
             db.set_dca_erlaubt(conn, symbol, neuer_wert)
+        finally:
+            conn.close()
+
+        self._refresh_watchlist_from_db()
+
+    def _toggle_hebel_pruefung_erlaubt(self) -> None:
+        """Hebel-Pruefung-Toggle (2026-07-18, Budget/Asset-Optimierung) - fuer
+        alle Krypto-Assets verfuegbar (anders als der Tranchen-Toggle oben),
+        operiert auf der aktuell in der Watchlist ausgewaehlten Zeile. Betrifft
+        NUR die Neuentdeckung neuer Hebel-Trigger (agent/krypto/
+        hebel_screening.py) - bereits offene Hebel-Positionen bleiben
+        unabhaengig vom Toggle weiter risikoueberwacht."""
+        tree = self._watchlist_frame.tree
+        selected = tree.selection()
+        if not selected:
+            messagebox.showinfo(
+                "Hebel-Prüfung umschalten", "Bitte zuerst ein Krypto-Asset in der Watchlist auswählen."
+            )
+            return
+        symbol = tree.item(selected[0], "values")[0]
+        asset = next((a for a in self._watchlist if a.symbol == symbol), None)
+        if asset is None or asset.assetklasse != "krypto" or asset.ist_cash_aequivalent:
+            messagebox.showinfo(
+                "Hebel-Prüfung umschalten",
+                "Die Hebel-Prüfung ist nur für Krypto-Assets (ohne Stablecoins) vorgesehen.",
+            )
+            return
+
+        conn = self._db_conn_factory()
+        try:
+            neuer_wert = not db.get_hebel_pruefung_erlaubt(conn, symbol)
+            db.set_hebel_pruefung_erlaubt(conn, symbol, neuer_wert)
         finally:
             conn.close()
 

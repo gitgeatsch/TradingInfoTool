@@ -524,12 +524,15 @@ def generate_signal(
             fetched = fetched.replace(tzinfo=timezone.utc)
         price_age_minutes = (datetime.now(timezone.utc) - fetched).total_seconds() / 60
 
-    # AZ-4-Tranchen (2026-07-12): nur Regime baer/krise_extrem/seitwaerts + BTC/ETH +
-    # per-Asset-Toggle (ui/app.py Watchlist-Tab, Default an fuer BTC/ETH) - siehe
-    # Regelwerksmanual Kap. 4.
+    # AZ-4-Tranchen (2026-07-12, 2026-07-18 um SOL erweitert): nur Regime
+    # baer/krise_extrem/seitwaerts + BTC/ETH/SOL + per-Asset-Toggle
+    # (ui/app.py Watchlist-Tab, Default an fuer BTC/ETH/SOL) - siehe
+    # Regelwerksmanual Kap. 4. Bewusst weiterhin eine feste Liste statt
+    # "alle core-Assets" - Tranchen sind fuer die groessten, liquidesten
+    # Positionen gedacht, keine pauschale Ausweitung auf jedes core-Asset.
     tranchen_erlaubt = (
         regime_result.regime in ("baer", "krise_extrem", "seitwaerts")
-        and asset.symbol in ("BTC", "ETH")
+        and asset.symbol in ("BTC", "ETH", "SOL")
         and db.get_dca_erlaubt(conn, asset.symbol)
     )
 
