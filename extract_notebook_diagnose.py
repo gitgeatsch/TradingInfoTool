@@ -47,6 +47,22 @@ ZIEL_ORDNER = _google_drive_wurzel() / "Claude_Austauschordner" / "Notebook_Anal
 # Bewusst schlanke Spaltenauswahl fuer signals/hebel_signals - die langen
 # facts_json/*_raw_response-Felder sind redundant zu den strukturierten
 # Feldern und blaehen die Datei unnoetig auf.
+#
+# Nachtrag (2026-07-18, Nutzer-Wunsch "pruef ob die Signale alle gewuenschten
+# und erforderlichen Inhalte haben"): Inhalts-Vollstaendigkeits-Felder ergaenzt
+# (Top-5-Gruende, Key Risks, Forecast Bull/Base/Bear, Halte-Kriterium,
+# Gegenargument) - fehlten bisher komplett in dieser Spaltenauswahl, obwohl
+# das genau die Felder sind, die Regelwerksmanual Kap. 6/7 als Pflichtinhalt
+# jedes Signals vorschreiben.
+_VOLLSTAENDIGKEITS_SPALTEN = (
+    "top_grund_1_kategorie, top_grund_1_text, top_grund_2_kategorie, top_grund_2_text, "
+    "top_grund_3_kategorie, top_grund_3_text, top_grund_4_kategorie, top_grund_4_text, "
+    "top_grund_5_kategorie, top_grund_5_text, key_risks_text, "
+    "forecast_bull_text, forecast_bull_prob_pct, forecast_base_text, forecast_base_prob_pct, "
+    "forecast_bear_text, forecast_bear_prob_pct, "
+    "halte_kriterium_bucket, halte_kriterium_bedingung_text, halte_kriterium_reasoning, "
+    "gegenargument"
+)
 _HEBEL_SIGNAL_SPALTEN = (
     "id, symbol, created_at, richtung, action, hebel_vorschlag, hebel_final, "
     "hebel_korrektur_hinweis, trade_thesis_typ, trigger_zweig, trigger_score, "
@@ -54,14 +70,16 @@ _HEBEL_SIGNAL_SPALTEN = (
     "stop_loss_eur_von, stop_loss_eur_bis, take_profit_eur_von, take_profit_eur_bis, "
     "liquidationspreis_geschaetzt_usd, eigenkapitalbedarf_usd, ausfuehrbarkeit_hinweis, "
     "gate_passed, gate_reason, risk_veto, risk_veto_reason, llm_model, "
-    "outcome_status, outcome_geprueft_am, outcome_realisiertes_crv"
+    "outcome_status, outcome_geprueft_am, outcome_realisiertes_crv, "
+    + _VOLLSTAENDIGKEITS_SPALTEN
 )
 _SPOT_SIGNAL_SPALTEN = (
     "id, symbol, created_at, action, confidence_pct, short_reasoning, "
     "entry_eur_von, entry_eur_bis, stop_loss_eur_von, stop_loss_eur_bis, "
     "take_profit_eur_von, take_profit_eur_bis, regime, gate_passed, gate_reason, "
     "risk_veto, risk_veto_reason, groq_model, outcome_status, outcome_geprueft_am, "
-    "outcome_realisiertes_crv"
+    "outcome_realisiertes_crv, "
+    + _VOLLSTAENDIGKEITS_SPALTEN
 )
 
 
