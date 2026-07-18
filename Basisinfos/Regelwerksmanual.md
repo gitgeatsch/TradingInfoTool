@@ -3120,3 +3120,37 @@ zusätzlich zur bestehenden Aktien-/Krypto-Verzweigung.
 **Bewusst zurückgestellt:** Themen-ETFs (Phase 3) und Discovery (Phase 4) der
 Multi-Asset-Roadmap - eigene, spätere Themen. EIA-Erdgaslager/COMEX-Lagerbestände/
 ETF-Bestandsflüsse als Rohstoff-Datenquellen-Erweiterung (siehe oben).
+
+## Nachtrag (2026-07-18, gleicher Tag): Bugfix Bitpanda-Listing-Spalte fuer Aktien/Rohstoffe/Hedge
+
+Nutzer-Fund: die Watchlist zeigte fuer alle Nicht-Krypto-Assets (Aktien, ETFs,
+Rohstoffe/ETCs) in der "Bitpanda"-Spalte hartkodiert "-", statt eines echten
+✓/✗-Status. Ursache war eine seit 2026-07-09 bestehende, seit dem
+2026-07-16-Ausbau ueberholte Annahme in `ui/app.py::_refresh_watchlist_from_db()`:
+"Bitpanda-Listing-Check ergibt fuer Nicht-Krypto keinen Sinn". Das stimmte zum
+Zeitpunkt des urspruenglichen Kommentars (reines Krypto-Multi-Asset-Tracking),
+war aber seit `api/bitpanda.py::get_listed_non_crypto_assets()` (2026-07-16,
+schliesst die Aktien-Pipeline-Luecke) nicht mehr aktuell: `agent/aktien/pipeline.py`
+und `agent/rohstoff/pipeline.py` berechnen den echten Listing-Status seither
+laengst fuer den Bitpanda-Veto (`risk_gate.py::pre_check()`) - er wurde nur nie
+in der allgemeinen Watchlist-UI angezeigt.
+
+**Fix:** `ui/app.py` laedt jetzt zusaetzlich zum bestehenden Krypto-Katalog
+(`self._bitpanda_assets`) den Nicht-Krypto-Katalog
+(`self._bitpanda_non_crypto_assets`, ueber `get_listed_non_crypto_assets()`,
+gleiches P-10-Fehlschlag-Verhalten: `None` bei Abrufsfehler statt falschem
+Wert). Die Zeilen-Render-Logik waehlt den passenden Katalog nach
+`asset.assetklasse` und nutzt fuer beide denselben `bitpanda_is_listed()`-
+Vergleich - keine getrennte Logik mehr fuer Krypto vs. Nicht-Krypto. Deckt
+damit einheitlich Aktien (`stock`), Rohstoff-ETCs (`etc`) UND die
+Hedge-ETFs DBPK/3QSS (`etf`, `NON_CRYPTO_ASSET_GROUPS` in `api/bitpanda.py`) ab.
+
+**Verifiziert:** Logik-Smoke-Test (Krypto BTC/ETH, Aktie PLTR, Rohstoff-ETC
+OD7H, Hedge-ETF DBPK, unbekanntes Symbol, sowie Katalog-Fehlschlag-Fall) -
+alle 7 Faelle korrekt.
+
+**Nebenfund, noch offen:** `agent/rohstoff/analyst.py::build_facts()` gibt
+`aktien_baermarkt`/`equities_baermarkt` (aus `compute_current_regime()`)
+nicht als LLM-Fakt weiter, obwohl Krypto-, Aktien- und Hedge-Analyst das tun -
+vermutlich ein Versehen beim Bau der Rohstoff-Pipeline, noch nicht behoben
+(siehe Diskussion Aktien-Bärenmarkt-Bestandsaufnahme, selbes Datum).

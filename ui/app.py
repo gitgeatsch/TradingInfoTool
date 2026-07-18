@@ -95,6 +95,7 @@ class TradingInfoToolApp(tk.Tk):
         self._fred_api_key = fred_api_key
         self._bitpanda_api_key = bitpanda_api_key
         self._bitpanda_assets: list | None = None
+        self._bitpanda_non_crypto_assets: list | None = None
         self._refresh_bitpanda_assets()
 
         self._build_menu()
@@ -338,17 +339,18 @@ class TradingInfoToolApp(tk.Tk):
             age_text = format_price_age(fetched_at)
             aktualisiert = f"⚠ {age_text}" if stale else age_text
 
-            if asset.assetklasse != "krypto":
-                # Bitpanda-Listing-Check ist Krypto-spezifisch (vergleicht gegen den
-                # Krypto-Asset-Katalog) - fuer Aktien/ETF/Rohstoffe ergibt "ist es dort
-                # gelistet" keinen Sinn, die liegen ja bereits im Wertpapierdepot des
-                # Nutzers (Multi-Asset-Tracking, 2026-07-09).
-                bitpanda_text = "-"
-                bitpanda_fehlt = False
-            elif self._bitpanda_assets is None:
+            # Bugfix 2026-07-18: fruehere Annahme "Bitpanda-Listing-Check ergibt fuer
+            # Nicht-Krypto keinen Sinn" war seit dem 2026-07-16-Ausbau ueberholt -
+            # agent/aktien/pipeline.py und agent/rohstoff/pipeline.py berechnen den
+            # echten Status laengst (ueber get_listed_non_crypto_assets()), die
+            # Watchlist-Spalte zeigte ihn nur nie an. Krypto und Nicht-Krypto nutzen
+            # jetzt denselben Katalog-abhaengigen Vergleich, nur mit unterschiedlichem
+            # Katalog.
+            katalog = self._bitpanda_assets if asset.assetklasse == "krypto" else self._bitpanda_non_crypto_assets
+            if katalog is None:
                 bitpanda_text = "?"
                 bitpanda_fehlt = False
-            elif bitpanda_is_listed(asset.symbol, self._bitpanda_assets, name=asset.name):
+            elif bitpanda_is_listed(asset.symbol, katalog, name=asset.name):
                 bitpanda_text = "✓"
                 bitpanda_fehlt = False
             else:
@@ -491,13 +493,25 @@ class TradingInfoToolApp(tk.Tk):
         bei manuellem Refresh, NICHT im 3-Sekunden-Preis-Poll (Bitpandas gelistete
         Assets aendern sich nicht minuetlich, ein wiederholter Call (paginiert,
         mehrere Requests) waere verschwendet). P-10: Fehlschlag blockiert den Start
-        nicht, Spalte zeigt dann "?" statt eines falschen Werts."""
-        from api.bitpanda import get_listed_assets
+        nicht, Spalte zeigt dann "?" statt eines falschen Werts.
+
+        Non-Crypto-Katalog (2026-07-18-Fix) separat mitgeladen - die Watchlist-
+        Spalte zeigte fuer Aktien/ETF/Rohstoffe bisher hartkodiert "-", obwohl
+        agent/aktien/pipeline.py und agent/rohstoff/pipeline.py den echten
+        Bitpanda-Listing-Status laengst berechnen (seit 2026-07-16, siehe
+        api/bitpanda.py::get_listed_non_crypto_assets()) - Nachzieh-Luecke, siehe
+        Regelwerksmanual."""
+        from api.bitpanda import get_listed_assets, get_listed_non_crypto_assets
 
         try:
             self._bitpanda_assets = get_listed_assets()
         except Exception:
             self._bitpanda_assets = None
+
+        try:
+            self._bitpanda_non_crypto_assets = get_listed_non_crypto_assets()
+        except Exception:
+            self._bitpanda_non_crypto_assets = None
 
     def _toggle_dca_erlaubt(self) -> None:
         """AZ-4-Tranchen-Toggle (2026-07-12) - nur fuer BTC/ETH sinnvoll (siehe
