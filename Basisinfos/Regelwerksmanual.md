@@ -3277,3 +3277,67 @@ VIX krise/beide/keins/beide unbekannt) - alle korrekt; echter End-to-End-Lauf
 von `compute_current_regime()` gegen Kopie der Produktions-DB (aktueller VIX
 18,77 "ruhig" + `equities_baermarkt_aktiv=False` → Overlay korrekt NICHT
 ausgelöst, keine Regression gegenüber dem bisherigen Verhalten).
+
+
+## Nachtrag (2026-07-18, gleicher Tag): Multi-Asset-Batch - automatische Signal-Erzeugung fuer Aktien/Rohstoffe/Hedge
+
+Nutzer-Fund: das letzte VST-Signal war 3 Tage alt, kein Kaufsignal
+erhalten. Bestandsaufnahme (echte Notebook-Diagnose via
+extract_notebook_diagnose.py, siehe Memory project_multi_asset_batch)
+zeigte: die Krypto-Pipeline lief normal weiter, aber VST/PLTR/OD7N-L/DBPK/
+3QSS hatten seit Erstellung der Rohstoff/Hedge-Pipelines KEINEN einzigen
+automatischen Bewertungsversuch - agent/krypto/budget_allocator.py
+enthaelt keine Referenz auf aktien/assetklasse, diese 8 Assets waren
+ausschliesslich ueber den manuellen "Signal berechnen"-Klick erreichbar.
+
+**Bewusst NICHT in den bestehenden 15-Min-Krypto-Allocator integriert**
+(Nutzer-Auftrag "Job bauen, aber vorher genau durchdenken"):
+- Die strikte Tier-1>2>3-Kaskade (Hebel>Marktscan>Spot,
+  budget_allocator.py::_verteile_budget()) wuerde ein Tier 4 an
+  geschaeftigen Tagen nie erreichen - genau das Problem, das geloest
+  werden soll.
+- Aktien/Rohstoffe/Hedge bewegen sich strukturell langsamer
+  (Boersenzeiten/Wochenenden, 5-Tage-OHLC-Staleness-Schwelle vs. Kryptos
+  2 Tage) - der 15-Min-Takt waere verschwendet.
+- Kein Regressionsrisiko fuer den gut getesteten, kritischen Krypto-Pfad.
+
+**Neues Modul agent/multi_asset_batch.py::run_multi_asset_batch()** -
+eigenstaendige, kleinere Variante desselben Fallback-Musters wie
+budget_allocator.py::_mit_fallback_chain()/_mit_conn() (Groq -> Mistral
+-> Gemini, eigene Connection je Call), bewusst NICHT die private
+Closure aus budget_allocator.py wiederverwendet (Entkopplung von einem
+kritischen, bereits gut funktionierenden Pfad). Nutzt dasselbe geteilte
+Tagesbudget (count_real_llm_calls_today_by_provider() zaehlt bereits
+assetklassen-uebergreifend ueber die signals-Tabelle) - kein separates
+Kontingent noetig.
+
+**Cooldown bewusst nur 2-stufig** (kein drittes "ausgemustert"-Level wie
+bei Krypto, alle 8 Assets sind beobachtungsstatus: beobachtung):
+"gehalten" live aus der holdings-Tabelle abgeleitet (identisches Muster
+wie signal_batch.py), cooldown_stunden_gehalten: 24 /
+cooldown_stunden_beobachtet: 72 (config.yaml multi_asset_batch) -
+deutlich traeger als Kryptos 10h/20h, passend zur langsameren
+Marktdynamik.
+
+**Neuer Job** scheduler/background.py::multi_asset_batch_job(),
+registriert mit MULTI_ASSET_BATCH_INTERVAL_HOURS = 12 - der Job-Takt
+gibt nur Redundanz bei einem verpassten Lauf, der eigentliche Rhythmus
+laeuft ueber die Cooldown-Werte. Eigener Lock (multi_asset_batch_lock),
+P-8-Gate (nur aktiv mit groq_client). Neue
+_notify_multi_asset_signal() (E-Mail bei handlungsrelevanten Signalen,
+NIE bei HALTEN) - wiederverwendet dieselben Formatierungs-Helfer wie
+Spot/Hebel (_formatiere_top_gruende/_formatiere_key_risks/
+_formatiere_halte_kriterium/_formatiere_positionsgroesse_und_tranchen),
+keine Duplikation.
+
+**Verifiziert:** _kandidaten() liefert exakt die erwarteten 8 Assets
+(VST/PLTR/OD7N/OD7H/OD7C/OD7L/DBPK/3QSS), korrekt auf ihre Pipeline
+gemappt. _ist_faellig() gegen 5 synthetische Cooldown-Faelle (gehalten/
+beobachtet, jeweils knapp unter/ueber der Schwelle, kein Vorsignal). Echter
+End-to-End-Lauf gegen Kopie der Produktions-DB: VST-Preis live aktualisiert
+(vorher gate_passed=False, "Preis veraltet" korrekt erkannt), danach
+echter Groq-Call erfolgreich (gate_passed=True, gegenargument befuellt,
+provider_je_symbol={"VST": "groq"}), Cooldown blockierte einen sofortigen
+zweiten Lauf korrekt. Kompletter Job-Wrapper (multi_asset_batch_job())
+inkl. Lock/E-Mail-Pfad fehlerfrei durchgelaufen (kein Versand bei HALTEN,
+wie erwartet).

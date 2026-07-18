@@ -844,3 +844,17 @@ hedge:
                                # Obergrenze, nicht als Zielwert - siehe
                                # SYSTEM_PROMPT-Regel 3 (volle Abdeckung nur bei
                                # baer/krise_extrem gerechtfertigt).
+
+# --- Multi-Asset-Batch (2026-07-18, Nutzer-Fund: Aktien/Rohstoffe/Hedge
+# hatten KEINE automatische Signal-Erzeugung, nur manueller Klick - siehe
+# agent/multi_asset_batch.py Modul-Docstring fuer die volle Begruendung,
+# warum das ein eigener Job statt Tier 4 im Krypto-Budget-Allocator ist) ---
+multi_asset_batch:
+  aktiv: true
+  cooldown_stunden_gehalten: 24    # gehaltene Positionen (live aus holdings
+                                    # abgeleitet, wie bei Krypto) taeglich neu
+                                    # pruefen
+  cooldown_stunden_beobachtet: 72  # reine Beobachtungs-Kandidaten alle 3 Tage -
+                                    # deutlich traeger als Kryptos 10h/20h,
+                                    # passend zur langsameren Marktdynamik
+                                    # (Boersenzeiten/Wochenenden)

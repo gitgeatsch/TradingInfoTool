@@ -41,6 +41,10 @@ signal_batch_lock = threading.Lock()
 # Ausloeser wie bei signal_batch_lock - Lock existiert trotzdem, falls spaeter
 # ein manueller "Jetzt screenen"-Button dazukommt (gleiches Muster).
 hebel_screening_lock = threading.Lock()
+# Multi-Asset-Batch (2026-07-18, siehe agent/multi_asset_batch.py) - eigener
+# Lock analog zu hebel_screening_lock, verhindert einen Doppel-Lauf bei
+# ueberlappenden Intervallen (z.B. nach einem verspaeteten Neustart).
+multi_asset_batch_lock = threading.Lock()
 _JOB_LOCKS = {
     "refresh_prices": refresh_prices_lock,
     "refresh_securities": refresh_securities_lock,
@@ -48,6 +52,7 @@ _JOB_LOCKS = {
     "bitpanda_holdings": bitpanda_holdings_lock,
     "signal_batch": signal_batch_lock,
     "hebel_screening": hebel_screening_lock,
+    "multi_asset_batch": multi_asset_batch_lock,
 }
 _job_started_at: dict[str, float] = {}
 
@@ -76,6 +81,11 @@ HEBEL_SCREENING_INTERVAL_MINUTES = 15  # muss mit config.yaml hebel_screening.
 # ein Python-Konstante, nur der aktiv-Schalter wird dynamisch aus config.yaml gelesen,
 # siehe hebel_screening_job()) - kalibriert auf die reale Ø-Haltedauer echter
 # Hebel-Positionen (1,1 Tage), siehe docs/hebel_positionsformel.md.
+MULTI_ASSET_BATCH_INTERVAL_HOURS = 12  # bewusst deutlich seltener als der
+# 15-Min-Krypto-Takt (siehe agent/multi_asset_batch.py Modul-Docstring) - der
+# eigentliche Rhythmus wird ueber die Cooldown-Werte in config.yaml
+# multi_asset_batch gesteuert, der Job-Takt gibt nur genug Redundanz, falls ein
+# Lauf ausfaellt (gleiches Prinzip wie ueberall sonst in dieser Datei).
 
 # Job-Ausfall-Backoff (2026-07-12, letzter offener Betriebssicherheits-Punkt): Referenz
 # auf die scheduler-Instanz selbst, gesetzt am Ende von build_scheduler() - noetig, damit
@@ -810,6 +820,52 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None) 
         logger.exception("Hebel-Empfehlungs-E-Mail für %s fehlgeschlagen", signal.symbol)
 
 
+def _notify_multi_asset_signal(signal, watchlist: list, bitpanda_assets: list | None) -> None:
+    """Analog _notify_spot_signal() fuer Aktien/Rohstoffe/Hedge (2026-07-18,
+    siehe agent/multi_asset_batch.py) - 4-Aktionen-Vokabular (KAUFEN/VERKAUFEN/
+    HALTEN/NACHKAUFEN, kein TAUSCHEN, siehe REQUIRED_ACTIONS in agent/aktien|
+    rohstoff|hedge/analyst.py, identisch in allen dreien). Hedge-Signale haben
+    KEIN Bitpanda-Veto (agent/hedge/pipeline.py ruft risk_gate.pre_check() nicht
+    auf, siehe dessen Modul-Docstring) - _ist_email_relevantes_asset() bleibt
+    trotzdem unveraendert anwendbar, sie prueft nur den allgemeinen Bitpanda-
+    Katalog, nicht pipelinespezifische Vetos."""
+    if signal.action == "HALTEN":
+        return
+    if not _ist_email_relevantes_asset(signal.symbol, watchlist, bitpanda_assets):
+        return
+    try:
+        import config as config_module
+        from api.email_notify import send_notification_email
+        from ui.formatting import format_money
+
+        email_cfg = config_module.load_config().get("benachrichtigung", {}).get("email", {})
+        if not email_cfg.get("aktiv", False) or not email_cfg.get("empfehlungen_aktiv", False):
+            return
+        empfaenger = email_cfg.get("empfaenger")
+        if not empfaenger:
+            return
+
+        positionsgroesse_text = _formatiere_positionsgroesse_und_tranchen(signal)
+        risiken_text = _formatiere_key_risks(signal)
+        halte_kriterium_text = _formatiere_halte_kriterium(signal)
+        body = (
+            f"Aktion: {signal.action}\n"
+            f"Konfidenz: {signal.confidence_pct}%\n\n"
+            f"{signal.short_reasoning or ''}\n\n"
+            f"Top-Gründe:\n{_formatiere_top_gruende(signal)}\n\n"
+            f"Entry: {format_money(signal.entry_eur_von)}-{format_money(signal.entry_eur_bis)} EUR\n"
+            f"Stop-Loss: {format_money(signal.stop_loss_eur_von)}-{format_money(signal.stop_loss_eur_bis)} EUR\n"
+            f"Take-Profit: {format_money(signal.take_profit_eur_von)}-{format_money(signal.take_profit_eur_bis)} EUR\n\n"
+            + (f"{positionsgroesse_text}\n\n" if positionsgroesse_text else "")
+            + (f"{risiken_text}\n\n" if risiken_text else "")
+            + (f"{halte_kriterium_text}\n\n" if halte_kriterium_text else "")
+            + "Details im Signale-Tab der App. Ausführung manuell über die Bitpanda-App."
+        )
+        send_notification_email(f"TradingInfoTool: {signal.action} {signal.symbol}", body, empfaenger)
+    except Exception:
+        logger.exception("Multi-Asset-Empfehlungs-E-Mail für %s fehlgeschlagen", signal.symbol)
+
+
 def _refresh_hebel_position_liquidation_prices(conn) -> None:
     """Fuer jede aktuell offene Margin-Position den geschaetzten Liquidationspreis
     mit den ECHTEN verstrichenen Tagen neu berechnen (2026-07-14, Phase 3) -
@@ -960,6 +1016,56 @@ def hebel_screening_job(
     finally:
         hebel_screening_lock.release()
         _job_started_at.pop("hebel_screening", None)
+    return True
+
+
+def multi_asset_batch_job(
+    conn_factory, watchlist, coingecko_client, groq_client=None, gemini_client=None, mistral_client=None,
+) -> bool:
+    """Multi-Asset-Batch (2026-07-18, siehe agent/multi_asset_batch.py Modul-
+    Docstring fuer die volle Architektur-Begruendung) - automatische Signal-
+    Erzeugung fuer Aktien/Rohstoffe/Hedge, bisher nur manuell per Klick
+    erreichbar. P-8: nur aktiv, wenn mindestens groq_client gesetzt ist
+    (gleiches Muster wie hebel_screening_job())."""
+    if not multi_asset_batch_lock.acquire(blocking=False):
+        logger.info("Multi-Asset-Batch: bereits in Ausführung - übersprungen")
+        return False
+    _job_started_at["multi_asset_batch"] = time.monotonic()
+    try:
+        if groq_client is None:
+            logger.info("Multi-Asset-Batch übersprungen (kein Groq-Client konfiguriert)")
+            return True
+
+        import config as config_module
+        from agent.multi_asset_batch import run_multi_asset_batch
+
+        config_dict = config_module.load_config()
+        result = run_multi_asset_batch(
+            conn_factory, watchlist, groq_client, coingecko_client, config_dict,
+            gemini_client=gemini_client, mistral_client=mistral_client,
+        )
+        logger.info(
+            "Multi-Asset-Batch: %d verarbeitet, %d fehlgeschlagen, %d Cooldown-uebersprungen, "
+            "Mistral-Calls %d, Gemini-Calls %d",
+            len(result.verarbeitet), len(result.fehlgeschlagen), result.uebersprungen_cooldown,
+            result.mistral_calls_verbraucht, result.gemini_calls_verbraucht,
+        )
+        if result.ergebnis_objekt:
+            try:
+                from api.bitpanda import get_listed_assets
+
+                bitpanda_assets = get_listed_assets()
+            except Exception as exc:
+                bitpanda_assets = None
+                logger.info("Bitpanda-Listing-Abruf für Multi-Asset-Empfehlungs-E-Mails fehlgeschlagen: %s", exc)
+            for signal in result.ergebnis_objekt.values():
+                _notify_multi_asset_signal(signal, watchlist, bitpanda_assets)
+    except Exception as exc:
+        logger.exception("Multi-Asset-Batch fehlgeschlagen")
+        _notify_job_failure("multi_asset_batch", f"Multi-Asset-Batch fehlgeschlagen: {exc}")
+    finally:
+        multi_asset_batch_lock.release()
+        _job_started_at.pop("multi_asset_batch", None)
     return True
 
 
@@ -1114,6 +1220,19 @@ def build_scheduler(
             groq_client, gemini_client, fred_api_key, mistral_client,
         ],
         id="hebel_screening",
+        next_run_time=datetime.now(),
+    )
+    # Multi-Asset-Batch (2026-07-18, siehe agent/multi_asset_batch.py) - eigener,
+    # deutlich selterer Takt als Krypto (der Rhythmus wird ueber config.yaml
+    # multi_asset_batch.cooldown_stunden_* gesteuert, nicht ueber diesen
+    # Job-Takt selbst - next_run_time=jetzt reduziert das Stale-Fenster direkt
+    # nach einem Neustart, gleiches Muster wie hebel_screening oben).
+    scheduler.add_job(
+        multi_asset_batch_job,
+        "interval",
+        hours=MULTI_ASSET_BATCH_INTERVAL_HOURS,
+        args=[db_conn_factory, watchlist, coingecko_client, groq_client, gemini_client, mistral_client],
+        id="multi_asset_batch",
         next_run_time=datetime.now(),
     )
     # MS-3: erster CronTrigger im Projekt (bisherige Jobs nutzen nur "interval") -
