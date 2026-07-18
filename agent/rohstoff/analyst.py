@@ -90,7 +90,11 @@ Standard-Indikatoren (EMA/MACD/RSI/Bollinger).
 8. Beziehe `regime.liquiditaets_regime` (expansiv/restriktiv/gemischt/widerspruechlich/ \
 unbekannt) als ZUSAETZLICHEN Kontext in `long_reasoning.makro` ein - beschreibende \
 Einordnung, keine harte Regel. Bei `unbekannt` (zu wenig Historie) einfach nicht \
-erwaehnen.
+erwaehnen. Beziehe zusaetzlich `regime.aktien_baermarkt.aktiv` ein, falls true - ein \
+Aktien-Baermarkt geht historisch oft mit erhoehter Safe-Haven-Nachfrage nach Gold/ \
+Silber einher (fuer Kupfer/Erdgas dagegen eher neutral bis leicht belastend, da \
+Aktien-Baermaerkte oft mit schwaecherer Industriekonjunktur zusammenfallen) - \
+gewichte je nach `asset.symbol` entsprechend unterschiedlich, wie bei Fakt 9.
 9. `makro_ueberlagerung`-Regel: `realrendite_10j_prozent` (10-Jahres-TIPS-Realrendite) \
 ist historisch der staerkste Preistreiber fuer Gold/Silber - eine STEIGENDE Realrendite \
 ist tendenziell belastend (Opportunitaetskosten des zinslosen Haltens steigen), eine \
@@ -332,6 +336,13 @@ def build_facts(
         "regime": {
             "liquiditaets_regime": regime_result.liquiditaets_regime,
             "liquiditaets_regime_begruendung": regime_result.liquiditaets_regime_begruendung,
+            # Nachtrag 2026-07-18: fehlte urspruenglich (Krypto/Aktien/Hedge geben
+            # diesen Fakt bereits weiter) - fuer Gold/Silber als "Krisen-/Safe-Haven"-
+            # Rohstoffe eine relevante Zusatzeinordnung, siehe SYSTEM_PROMPT Regel 8.
+            "aktien_baermarkt": {
+                "aktiv": regime_result.equities_baermarkt_aktiv,
+                "begruendung": regime_result.equities_baermarkt_begruendung,
+            },
         },
         "risiko_check": {
             "kauf_erlaubt": risk_result.kauf_erlaubt,

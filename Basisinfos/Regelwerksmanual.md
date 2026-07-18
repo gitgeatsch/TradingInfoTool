@@ -3149,8 +3149,13 @@ Hedge-ETFs DBPK/3QSS (`etf`, `NON_CRYPTO_ASSET_GROUPS` in `api/bitpanda.py`) ab.
 OD7H, Hedge-ETF DBPK, unbekanntes Symbol, sowie Katalog-Fehlschlag-Fall) -
 alle 7 Faelle korrekt.
 
-**Nebenfund, noch offen:** `agent/rohstoff/analyst.py::build_facts()` gibt
-`aktien_baermarkt`/`equities_baermarkt` (aus `compute_current_regime()`)
-nicht als LLM-Fakt weiter, obwohl Krypto-, Aktien- und Hedge-Analyst das tun -
-vermutlich ein Versehen beim Bau der Rohstoff-Pipeline, noch nicht behoben
-(siehe Diskussion Aktien-Bärenmarkt-Bestandsaufnahme, selbes Datum).
+**Nebenfund behoben (selbes Datum):** `agent/rohstoff/analyst.py::build_facts()`
+gab `aktien_baermarkt`/`equities_baermarkt` (aus `compute_current_regime()`)
+nicht als LLM-Fakt weiter, obwohl Krypto-, Aktien- und Hedge-Analyst das tun.
+Ergänzt: `regime.aktien_baermarkt.{aktiv,begruendung}` im Facts-Dict + neue
+SYSTEM_PROMPT-Regel-8-Ergänzung (Gold/Silber tendenziell Safe-Haven-Nachfrage
+bei Aktien-Bärenmarkt, Kupfer/Erdgas eher neutral/leicht belastend wegen
+schwächerer Industriekonjunktur) - Gewichtung je `asset.symbol`, analog Fakt 9.
+Syntax- und Feld-Smoke-Test bestanden (`equities_baermarkt_aktiv`/
+`_begruendung` existieren exakt so auf `RegimeResult`, keine Kollision mit
+`_FREMDE_KONTAMINATIONS_BEGRIFFE`).
