@@ -282,6 +282,8 @@ def _boden_zielzone(
     equities_baermarkt_aktiv: bool | None,
     overlay_shift_std: float,
     asset_label: str,
+    vix_wert: float | None = None,
+    vix_label: str = "nicht verfügbar",
 ) -> tuple[float | None, float | None, str]:
     """Boden-Zielzone (AZ-4 Baustein 2, 2026-07-12) - projiziert ein historisches
     Zyklus-Tief-Abweichungsband (siehe indicators/calculations.py::
@@ -303,15 +305,35 @@ def _boden_zielzone(
     Liquiditaetsentzug BTC/ETH zusaetzlich unter die reine Krypto-Zyklus-Zone
     druecken kann (Nutzer-Punkt).
 
+    `vix_wert`/`vix_label` (2026-07-18, Nachtrag nach Detailanalyse - siehe
+    Regelwerksmanual): ZWEITER, unabhaengiger ODER-Trigger fuer denselben Overlay-
+    Effekt. Recherche gegen die 3 echten BTC-Zyklus-Boeden (2015/2018/2022) zeigte:
+    equities_baermarkt_aktiv allein haette nur 1 von 3 mal ausgeloest (2015 und 2018
+    waren Aktien noch NICHT im 20%-Drawdown, obwohl BTC schon -61%/-83% stand).
+    VIX "gestresst"/"krise" (Baender siehe VIX_BANDS oben, branchenueblich, NICHT aus
+    diesen 3 Punkten gefittet - explizit KEIN Overfitting) haette 2018 zusaetzlich
+    erfasst (VIX-Peak 36,1 wenige Tage um den Boden) - realistische Trefferquote
+    dadurch von 1/3 auf ~2/3, 2015 bleibt weiterhin unerreicht (VIX nur ~21,5). Bei
+    n=3 historischen Vergleichspunkten bewusst mit Vorsicht zu behandeln, aber ein
+    echter, nicht erfundener Fortschritt. Nutzt DENSELBEN overlay_shift_std wie der
+    Aktien-Pfad (kein zweiter, unbelegbar feinjustierter Parameter). Beeinflusst NUR
+    diesen Overlay - `regime.aktien_baermarkt`/`equities_baermarkt_aktiv` als
+    eigenstaendiger Fakt (von allen 4 Analysten konsumiert) bleibt unveraendert eng
+    definiert ("Aktienindex im Drawdown"), um dessen etablierte Bedeutung nicht zu
+    verwaessern.
+
     Gibt (zone_von, zone_bis, begruendung) zurueck - (None, None, ...) wenn die
     zugrundeliegende Regression nicht verfuegbar ist (P-10, kein Fallback-Wert)."""
     if log_regression_risk is None:
         return None, None, f"{asset_label}-Log-Regression nicht verfügbar (Historien-Abruf fehlgeschlagen)."
 
+    vix_ueberlagerung_aktiv = vix_label in ("gestresst", "krise")
+    overlay_trigger = bool(equities_baermarkt_aktiv) or vix_ueberlagerung_aktiv
+
     raw_edges = list(deviation_band)
     effective_edges = [edge * (1 - daempfer_staerke) for edge in raw_edges]
     overlay_wirkte = False
-    if equities_baermarkt_aktiv:
+    if overlay_trigger:
         deepest_idx = effective_edges.index(min(effective_edges))
         effective_edges[deepest_idx] -= overlay_shift_std
         overlay_wirkte = True
@@ -328,12 +350,20 @@ def _boden_zielzone(
         f"Reifegrad-gedaempft auf {min(effective_edges):+.2f} bis {max(effective_edges):+.2f} Std.)."
     ]
     if overlay_wirkte:
+        ausloeser = []
+        if equities_baermarkt_aktiv:
+            ausloeser.append("Aktien-Bärenmarkt (S&P500/Nasdaq-Drawdown)")
+        if vix_ueberlagerung_aktiv:
+            vix_text = f"VIX {vix_label}" + (f" ({vix_wert:.1f})" if vix_wert is not None else "")
+            ausloeser.append(vix_text)
         parts.append(
-            f"Aktien-Bärenmarkt-Overlay aktiv: untere Bandkante um zusätzlich "
-            f"{overlay_shift_std:.2f} Std. vertieft (gemeinsamer Liquiditätsentzug)."
+            f"Overlay aktiv ({' + '.join(ausloeser)}): untere Bandkante um zusätzlich "
+            f"{overlay_shift_std:.2f} Std. vertieft (gemeinsamer Liquiditätsentzug/Marktstress)."
         )
+    elif equities_baermarkt_aktiv is None and vix_wert is None:
+        parts.append("Aktien-Bärenmarkt-Status UND VIX nicht verfügbar - Overlay konnte nicht geprüft werden.")
     elif equities_baermarkt_aktiv is None:
-        parts.append("Aktien-Bärenmarkt-Status nicht verfügbar - Overlay konnte nicht geprüft werden.")
+        parts.append("Aktien-Bärenmarkt-Status nicht verfügbar - nur VIX-Pfad konnte geprüft werden (nicht ausgelöst).")
     if asset_label == "ETH":
         parts.append(
             "Niedrige Konfidenz: nur 2 historische ETH-Zyklus-Tiefpunkte verfügbar (statt 3 bei BTC), "
@@ -375,10 +405,12 @@ def determine_regime(
     btc_zielzone_von, btc_zielzone_bis, btc_zielzone_begruendung = _boden_zielzone(
         btc_log_regression_risk, BTC_CYCLE_BOTTOM_DEVIATIONS_STD, boden_zielzone_daempfer_staerke,
         equities_baermarkt_aktiv, boden_zielzone_overlay_shift_std, "BTC",
+        vix_wert=vix_wert, vix_label=vix_label,
     )
     eth_zielzone_von, eth_zielzone_bis, eth_zielzone_begruendung = _boden_zielzone(
         eth_log_regression_risk, ETH_CYCLE_BOTTOM_DEVIATIONS_STD, boden_zielzone_daempfer_staerke,
         equities_baermarkt_aktiv, boden_zielzone_overlay_shift_std, "ETH",
+        vix_wert=vix_wert, vix_label=vix_label,
     )
     ema20 = latest_value(btc_snapshot.ema[20])
     ema50 = latest_value(btc_snapshot.ema[50])

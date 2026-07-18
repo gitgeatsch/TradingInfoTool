@@ -770,15 +770,24 @@ regime:
 # (AZ-4 Baustein 2, 2026-07-12, siehe Basisinfos/Regelwerksmanual.md) ---
 boden_zielzone:
   aktiv: true
-  reifegrad_daempfer_staerke: 0.15          # [OFFEN] 0-1: zieht die historische
-    # Abweichungs-Bandkante Richtung 0 (mildere Korrekturen bei wachsender
+  reifegrad_daempfer_staerke: 0.15          # Schaetzwert, bewusst NICHT weiter kalibrierbar
+    # (Detailanalyse 2026-07-18, siehe Regelwerksmanual): nur 3 historische BTC-Vergleichs-
+    # punkte verfuegbar, jede statistische Trendaussage waere Overfitting. 0-1: zieht die
+    # historische Abweichungs-Bandkante Richtung 0 (mildere Korrekturen bei wachsender
     # Marktkapitalisierung, "diminishing returns"). effective_edge = raw_edge * (1 - Wert)
-  equities_baermarkt_schwelle_prozent: 20   # [OFFEN] Drawdown vom trailing-Lookback-ATH
-  equities_baermarkt_lookback_jahre: 5      # [OFFEN]
+  equities_baermarkt_schwelle_prozent: 20   # Standarddefinition eines Baerenmarkts
+    # (Dow-Theory/Finanzpresse-Konvention), keine Kalibrierung noetig - gilt NUR fuer
+    # S&P500/Nasdaq, NICHT fuer BTC (dessen eigene Zyklus-Boeden liegen historisch bei
+    # 61-83%, siehe BTC_CYCLE_BOTTOM_DEVIATIONS_STD in indicators/calculations.py)
+  equities_baermarkt_lookback_jahre: 5      # Detailanalyse 2026-07-18 (Regelwerksmanual):
+    # Lookback-Aenderung haette an den 3 echten BTC-Boeden (2015/2018/2022) nichts
+    # veraendert - das Problem war die Tiefe (11-15% < 20%), nicht das Zeitfenster
   equities_baermarkt_verknuepfung: entweder # Nutzer-Entscheidung 2026-07-12, fest:
     # "entweder" (S&P 500 ODER Nasdaq reicht) statt "beide gleichzeitig"
-  equities_overlay_shift_std: 0.2           # [OFFEN] zusaetzliche Vertiefung der unteren
-    # Bandkante (Standardabweichungen), wenn der Aktien-Baermarkt aktiv ist
+  equities_overlay_shift_std: 0.2           # Schaetzwert, bewusst NICHT weiter kalibrierbar
+    # (gleicher Grund wie reifegrad_daempfer_staerke oben) - zusaetzliche Vertiefung der
+    # unteren Bandkante (Standardabweichungen), wenn der Overlay ausgeloest wird (Aktien-
+    # Baermarkt ODER VIX gestresst/krise, siehe agent/krypto/regime.py::_boden_zielzone())
 
 # --- Cash-Reserve-Ziel: gewichtete Nachkauf-Reserve fuer BTC/ETH
 # (AZ-4 Baustein 3, 2026-07-12, siehe Basisinfos/Regelwerksmanual.md) ---

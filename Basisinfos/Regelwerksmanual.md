@@ -3209,3 +3209,71 @@ schwächerer Industriekonjunktur) - Gewichtung je `asset.symbol`, analog Fakt 9.
 Syntax- und Feld-Smoke-Test bestanden (`equities_baermarkt_aktiv`/
 `_begruendung` existieren exakt so auf `RegimeResult`, keine Kollision mit
 `_FREMDE_KONTAMINATIONS_BEGRIFFE`).
+
+## Nachtrag (2026-07-18, gleicher Tag): Detailanalyse Bärenmarkt-Schwellenwerte + VIX als zweiter Boden-Zielzone-Trigger
+
+Nutzer bat um eine Detailanalyse der vier `[OFFEN]`-Parameter in
+`boden_zielzone` (`reifegrad_daempfer_staerke`, `equities_baermarkt_
+schwelle_prozent`, `equities_baermarkt_lookback_jahre`,
+`equities_overlay_shift_std`) statt einer schnellen Einschätzung, mit einem
+wichtigen Korrektur-Einwand: die Standard-Bärenmarkt-Definition (20% Drawdown)
+gilt für Aktienindizes, NICHT für BTC — dort sind 50-70%+ historisch die
+Norm. Das führte zu einer echten, datengestützten Analyse statt einer
+Bauchgefühl-Antwort.
+
+**Echte historische BTC-Zyklus-Böden nachgerechnet** (yfinance BTC-USD seit
+2014, laufendes ATH + Drawdown, Phasenerkennung zwischen neuen ATHs):
+2015-01-14 (-61%), 2018-12-15 (-83%), 2022-11-21 (-77%) — normale
+Bullenmarkt-Korrekturen liegen dagegen bei 15-35% und sind deutlich häufiger,
+sollten nicht mit echten Zyklus-Bärenmärkten verwechselt werden.
+
+**Wichtiger Fund:** diese 3 Daten sind EXAKT dieselben, die bereits in
+`indicators/calculations.py::BTC_CYCLE_BOTTOM_DEVIATIONS_STD = (-1.16,
+-0.78, -1.26)` (Kommentar: "2015-01-14, 2018-12-15, 2022-11-21") verwendet
+werden — die BTC-eigene Boden-Zielzone ist also bereits sauber gegen die
+echten historischen Böden kalibriert, nur als Log-Regressions-Abweichung
+(Std.), nicht als rohe %-Zahl. Das war beim ersten Analyse-Durchgang
+übersehen worden.
+
+**Trefferquoten-Analyse:** geprüft, ob `equities_baermarkt_aktiv` (S&P500/
+Nasdaq, 20%/5J) an den 3 echten BTC-Böden aktiv gewesen wäre:
+
+| BTC-Boden | S&P500-DD (5J) | Nasdaq-DD (5J) | VIX (Tag) | VIX-Max ±10 Tage |
+|---|---|---|---|---|
+| 2015-01-14 | -3,2% | -3,0% | 21,5 | 22,4 |
+| 2018-12-15 | -11,3% | -14,8% | 21,6 | **36,1** |
+| 2022-11-21 | -17,3% | -30,6% | 22,4 | 24,5 |
+
+Ergebnis: **1 von 3** (nur 2022, über Nasdaq). `lookback_jahre`-Änderungen
+hätten daran nichts geändert (die Tiefe lag unter 20%, nicht das Zeitfenster
+war das Problem) — `schwelle_prozent` selbst ist Marktkonvention, keine
+projekteigene Erfindung, daher nicht weiter kalibrierbar.
+
+**VIX als zweiter, unabhängiger ODER-Trigger:** nach erneuter Prüfung (erste
+Einschätzung "das wäre dieselbe Overfitting-Falle wie MVRV" war zu pauschal
+- Unterschied: VIX-Bänder 20/30/40 sind branchenübliche CBOE-Konventionen,
+NICHT aus diesen 3 Punkten gefittet) umgesetzt: `_boden_zielzone()` in
+`agent/krypto/regime.py` löst den Overlay jetzt bei
+`equities_baermarkt_aktiv ODER vix_label in (gestresst, krise)` aus, nutzt
+denselben `overlay_shift_std` (kein zweiter, unbelegbarer Parameter).
+2018 wäre damit zeitversetzt erfasst worden (VIX-Peak 36,1 wenige Tage um
+den Boden) → **realistische Verbesserung von 1/3 auf ~2/3**, 2015 bleibt
+weiterhin unerreicht (VIX nur ~21,5, "erhöht" statt "gestresst"). Bei n=3
+bewusst mit Vorsicht zu interpretieren, aber ein echter, nicht erfundener
+Fortschritt.
+
+**Bewusst NICHT geändert:** `equities_baermarkt_aktiv` als eigenständiger
+Fakt (von Krypto-, Aktien-, Rohstoff- und Hedge-Analyst konsumiert) bleibt
+unverändert eng definiert ("Aktienindex im Drawdown") - der neue VIX-Pfad
+wirkt NUR innerhalb des Boden-Zielzone-Overlays, nicht auf diesen Fakt.
+`reifegrad_daempfer_staerke`/`equities_overlay_shift_std` bleiben
+unveränderte Schätzwerte - bei n=3 Vergleichspunkten wäre jede weitere
+Kalibrierung Overfitting, `config.yaml`-Kommentare entsprechend ehrlich
+umformuliert (kein `[OFFEN]` mehr, sondern "bewusst nicht weiter
+kalibrierbar" mit Begründung).
+
+**Verifiziert:** 6 synthetische Testfälle (nur Aktien/nur VIX gestresst/nur
+VIX krise/beide/keins/beide unbekannt) - alle korrekt; echter End-to-End-Lauf
+von `compute_current_regime()` gegen Kopie der Produktions-DB (aktueller VIX
+18,77 "ruhig" + `equities_baermarkt_aktiv=False` → Overlay korrekt NICHT
+ausgelöst, keine Regression gegenüber dem bisherigen Verhalten).
