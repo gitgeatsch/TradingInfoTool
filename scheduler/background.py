@@ -740,10 +740,12 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None) -
         positionsgroesse_text = _formatiere_positionsgroesse_und_tranchen(signal)
         risiken_text = _formatiere_key_risks(signal)
         halte_kriterium_text = _formatiere_halte_kriterium(signal)
+        zeitpunkt_text = signal.created_at[:16].replace("T", " ") if signal.created_at else "-"
         body = (
             f"Aktion: {signal.action}\n"
             f"Konfidenz: {signal.confidence_pct}%\n"
-            f"Regime: {signal.regime or 'unbekannt'}\n\n"
+            f"Regime: {signal.regime or 'unbekannt'}\n"
+            f"Berechnet: {zeitpunkt_text} · Anbieter: {signal.groq_model or '-'}\n\n"
             f"{signal.short_reasoning or ''}\n\n"
             f"Top-Gründe:\n{_formatiere_top_gruende(signal)}\n\n"
             f"Entry: {format_money(signal.entry_eur_von)}-{format_money(signal.entry_eur_bis)} EUR\n"
@@ -796,10 +798,12 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None) 
         )
         risiken_text = _formatiere_key_risks(signal)
         halte_kriterium_text = _formatiere_halte_kriterium(signal)
+        zeitpunkt_text = signal.created_at[:16].replace("T", " ") if signal.created_at else "-"
         body = (
             f"Richtung: {signal.richtung}, Aktion: {signal.action}\n"
             f"Hebel: {signal.hebel_final}x, Konfidenz: {signal.confidence_pct}%\n"
-            f"Regime: {signal.regime or 'unbekannt'}\n\n"
+            f"Regime: {signal.regime or 'unbekannt'}\n"
+            f"Berechnet: {zeitpunkt_text} · Anbieter: {signal.llm_model or '-'}\n\n"
             f"{signal.short_reasoning or ''}\n\n"
             f"Top-Gründe:\n{_formatiere_top_gruende(signal)}\n\n"
             f"Entry: {format_money(signal.entry_eur_von)}-{format_money(signal.entry_eur_bis)} EUR\n"
@@ -848,9 +852,11 @@ def _notify_multi_asset_signal(signal, watchlist: list, bitpanda_assets: list | 
         positionsgroesse_text = _formatiere_positionsgroesse_und_tranchen(signal)
         risiken_text = _formatiere_key_risks(signal)
         halte_kriterium_text = _formatiere_halte_kriterium(signal)
+        zeitpunkt_text = signal.created_at[:16].replace("T", " ") if signal.created_at else "-"
         body = (
             f"Aktion: {signal.action}\n"
-            f"Konfidenz: {signal.confidence_pct}%\n\n"
+            f"Konfidenz: {signal.confidence_pct}%\n"
+            f"Berechnet: {zeitpunkt_text} · Anbieter: {signal.groq_model or '-'}\n\n"
             f"{signal.short_reasoning or ''}\n\n"
             f"Top-Gründe:\n{_formatiere_top_gruende(signal)}\n\n"
             f"Entry: {format_money(signal.entry_eur_von)}-{format_money(signal.entry_eur_bis)} EUR\n"

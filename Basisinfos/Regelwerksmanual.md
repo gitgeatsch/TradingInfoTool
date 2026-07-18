@@ -3640,3 +3640,87 @@ Tabs, um unnötige Netzwerk-Aufrufe zu vermeiden) - Spalte korrekt vorhanden,
 Toggle-Klick flippt den Wert korrekt in der DB UND in der Anzeige, Guard-
 Klausel für ein Nicht-Krypto-Asset (VST) löst korrekt nur den Info-Dialog
 aus, OHNE einen DB-Write auszulösen.
+
+## Nachtrag (2026-07-18, gleicher Tag): LLM-Budget-Neukalibrierung nach
+## Mistral-Einführung + Zeitpunkt/Anbieter-Anzeige + LLM-Anfrage in der Historie
+
+**Auslöser:** Nutzer-Beobachtung ("wir kämpfen um jede Abfrage") anhand der
+Remote-Status-Seite: Groq wirkte ausgelastet, Gemini praktisch ungenutzt (27h
+seit letztem Call), das Tagesbudget zeigte weiterhin "15" an, obwohl seit der
+Mistral-Integration (2026-07-17) eine dritte, deutlich größere Kapazitätsstufe
+existiert. Zusätzlich zwei Wünsche: Zeitpunkt/Anbieter der LLM-Abfrage im
+Info-Fenster und in der E-Mail sichtbar machen, und die zugehörige LLM-Anfrage
+in der Signal-Historie einsehbar machen.
+
+### 1. Budget-Neukalibrierung (`taegliches_budget_gesamt`, B)
+
+Klargestellt: `B` ist **kein** literaler Tages-Deckel für LLM-Calls, sondern
+steuert nur, wie viele Kandidaten pro 15-Minuten-Tick überhaupt einen
+LLM-Versuch bekommen (`agent/krypto/budget_allocator.py::_verteile_budget()`,
+siehe `docs/budget_queue_design.md`) - jeder ausgewählte Kandidat durchläuft
+danach individuell die Groq→Mistral→Gemini-Kaskade. `B` war 1:1 auf Groqs
+eigene Tageskapazität kalibriert (~15-18 Calls, siehe
+`signale_batch.taegliches_budget`), bevor Mistral existierte, und wurde seither
+nie angepasst. Die echte Schutzgrenze ist Mistrals eigenes Tagesbudget
+(`mistral_taegliches_budget`, unverändert 150) - unabhängig von `B`.
+
+**Berechnung (Nutzer-Vorgabe "berechne zuerst die Auswirkungen"):** anhand der
+live über `config.get_watchlist()` abgefragten Watchlist (41 nicht-cash-
+äquivalente Krypto-Assets, davon 13 `rolle=="core"`) wurde der theoretische
+maximale Spot-Rotation-Bedarf je Cooldown-Regime berechnet
+(`asset_anzahl × 24 / cooldown_stunden`). Ergebnis: selbst beim ALTEN Cooldown
+(10h Kern/20h taktisch) lag der Bedarf bei ~65/Tag, weit über dem alten
+`B=15` - die Drosselung war real, kein reines Anzeige-Problem. Beim neuen,
+gelockerten Cooldown (8h/15h, siehe Punkt 2) liegt der Bedarf bei
+13×24/8 + 28×24/15 ≈ 39 + 45 = 84/Tag.
+
+Neu kalibriert: `taegliches_budget_gesamt: 90` (deckt die vollen 84/Tag plus
+Puffer für Hebel-/Marktscan-Aktivität, bleibt deutlich unter Mistrals 150er-
+Deckel - echte Ausreißertage laufen kontrolliert in Gemini als dritte Stufe).
+`spot_rotation_reserve` proportional mitskaliert (5→30, Verhältnis F/B ≈ 33%
+wie ursprünglich 2026-07-13 festgelegt) - Spot-Rotation behält denselben
+relativen Mindestanteil auch an sehr Hebel-/Marktscan-aktiven Tagen.
+
+### 2. Cooldown-Lockerung (Nutzer entschied sich für die moderate Empfehlung)
+
+`spot_cooldown_stunden_kern` (rolle=core ODER gehalten ODER offene Hebel-
+Position): 10h → 8h. `spot_cooldown_stunden` (rein taktische Watchlist-Assets
+ohne Position): 20h → 15h. Beide waren ursprünglich als Bremse gegen die
+knappe Groq-Kapazität gesetzt (2026-07-15/16) - jetzt, wo Mistrals große
+Fallback-Kapazität den Groq-Engpass abfedert, ist die Bremse weniger nötig.
+
+**Verifikation:** 4 synthetische `_verteile_budget()`-Testszenarien (ruhiger
+Tag, normaler Tag, Crash-Tag mit vielen Hebel-Triggern, "nur Spot volle
+Berechnung") - alle bestätigt korrekt: der volle gelockerte Spot-Bedarf
+(84/Tag) läuft jetzt ohne Drosselung durch `B=90`, Crash-Tag-Priorität
+(Hebel > Marktscan > Spot) und Spot-Rotations-Mindestreserve (`F=30`)
+funktionieren weiterhin wie vorgesehen.
+
+### 3. Zeitpunkt + Anbieter in Detail-Panel und E-Mail
+
+`ui/hebel_view.py` zeigte bereits Anbieter+Zeitpunkt im Detail-Panel
+(`meta_label`); `ui/signals_view.py` zeigte nur den Zeitpunkt, ohne Anbieter -
+um `Anbieter: {signal.groq_model}` ergänzt (deckt Spot UND Aktien/Rohstoffe/
+Hedge/Themen-ETF ab, da alle dieselbe `SignalsView`-Klasse und `Signal`-
+Dataclass nutzen). Alle drei E-Mail-Funktionen in `scheduler/background.py`
+(`_notify_spot_signal`, `_notify_hebel_signal`, `_notify_multi_asset_signal`)
+zeigten bisher WEDER Zeitpunkt noch Anbieter - je eine Zeile
+`Berechnet: <Datum Uhrzeit> · Anbieter: <provider:modell>` ergänzt.
+
+### 4. LLM-Anfrage/Antwort in der Signal-Historie
+
+Neue Spalte "Anbieter" in beiden History-Dialogen (`SignalHistoryDialog` in
+`ui/signals_view.py`, `HebelSignalHistoryDialog` in `ui/hebel_view.py`).
+Doppelklick auf eine Historien-Zeile öffnet einen neuen Detail-Dialog
+(`LlmAbfrageDialog` bzw. `HebelLlmAbfrageDialog`) mit den an die KI gesendeten
+Fakten (`facts_json`, JSON-formatiert) und der Roh-Antwort (`groq_raw_response`
+bzw. `groq_raw_response` bei `HebelSignal`) - beide Felder waren bereits in der
+DB gespeichert, reine UI-Sichtbarmachung ohne neuen Netzwerk-Call oder neue
+Datenerfassung.
+
+**Verifikation:** Tk-Smoke-Test gegen Kopie der Produktions-DB - Anbieter-
+Spalte korrekt befüllt (z. B. `gemini:gemini-3.1-flash-lite`,
+`groq:llama-3.3-70b-versatile`), simulierter Doppelklick öffnet den
+Detail-Dialog korrekt für ein echtes Spot-Signal (BTC, 20 Historien-Einträge)
+und ein echtes Hebel-Signal (CAT LONG), `facts_json`/Roh-Antwort werden
+lesbar formatiert angezeigt (mehrere Tausend Zeichen, korrekt eingerückt).

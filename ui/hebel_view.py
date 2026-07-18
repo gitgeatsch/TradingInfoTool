@@ -12,6 +12,7 @@ manueller Klick ist ein expliziter Einzel-Wunsch, analog zu den bestehenden
 manuellen Buttons bei Spot-Signalen/Marktscan."""
 from __future__ import annotations
 
+import json
 import threading
 import tkinter as tk
 from tkinter import ttk
@@ -549,8 +550,18 @@ _HEBEL_SIGNAL_HISTORY_COLUMN_DESCRIPTIONS = {
     "datum": "Zeitpunkt der Analyse.",
     "aktion": "Empfohlene Aktion.",
     "konfidenz": "Von der KI angegebene Konfidenz (0-100%).",
+    "anbieter": "LLM-Anbieter:Modell, der dieses Signal berechnet hat.",
     "outcome": "Ergebnis des Hebel-Backward-Trackings (taeglicher 06:00-Job).",
 }
+
+
+def _format_json_pretty(raw: str | None) -> str:
+    if not raw:
+        return "-"
+    try:
+        return json.dumps(json.loads(raw), indent=2, ensure_ascii=False)
+    except (TypeError, ValueError):
+        return raw
 
 
 class HebelSignalHistoryDialog(tk.Toplevel):
@@ -565,7 +576,7 @@ class HebelSignalHistoryDialog(tk.Toplevel):
         self.resizable(True, True)
         self.transient(parent)
         self.grab_set()
-        self.geometry("720x400")
+        self.geometry("760x420")
 
         frame = ttk.Frame(self, padding=12)
         frame.pack(fill="both", expand=True)
@@ -575,15 +586,19 @@ class HebelSignalHistoryDialog(tk.Toplevel):
             ttk.Button(frame, text="Schließen", command=self.destroy).pack(anchor="e", pady=(10, 0))
             return
 
-        columns = ("datum", "aktion", "konfidenz", "outcome")
+        columns = ("datum", "aktion", "konfidenz", "anbieter", "outcome")
         tree = ttk.Treeview(frame, columns=columns, show="headings", height=14)
-        headings = {"datum": "Datum", "aktion": "Aktion", "konfidenz": "Konfidenz", "outcome": "Ergebnis"}
+        headings = {
+            "datum": "Datum", "aktion": "Aktion", "konfidenz": "Konfidenz",
+            "anbieter": "Anbieter", "outcome": "Ergebnis",
+        }
         for col in columns:
             tree.heading(col, text=headings[col])
-            tree.column(col, width=150 if col != "outcome" else 220, anchor="w")
+            tree.column(col, width=150 if col != "outcome" else 200, anchor="w")
         add_heading_tooltips(tree, _HEBEL_SIGNAL_HISTORY_COLUMN_DESCRIPTIONS)
         tree.pack(fill="both", expand=True)
 
+        self._history_by_item: dict[str, object] = {}
         for signal in history:
             when = signal.created_at[:16].replace("T", " ") if signal.created_at else "-"
             konfidenz = f"{signal.confidence_pct:.0f} %" if signal.confidence_pct is not None else "-"
@@ -592,7 +607,71 @@ class HebelSignalHistoryDialog(tk.Toplevel):
             if status in ("take_profit_erreicht", "stop_loss_erreicht") and signal.outcome_realisiertes_crv is not None:
                 outcome_text += f" (CRV {signal.outcome_realisiertes_crv:.2f})"
             item_id = tree.insert(
-                "", "end", values=(when, signal.action, konfidenz, outcome_text), tags=(status or "none",)
+                "", "end",
+                values=(when, signal.action, konfidenz, signal.llm_model or "-", outcome_text),
+                tags=(status or "none",),
             )
+            self._history_by_item[item_id] = signal
             tree.tag_configure(status or "none", foreground=_hebel_outcome_color(status))
         theme.restripe_treeview(tree)
+        tree.bind("<Double-1>", self._on_row_double_click)
+
+        ttk.Label(
+            frame, text="Doppelklick auf eine Zeile zeigt die zugehörige LLM-Anfrage/Antwort.",
+            foreground=theme.info_color(),
+        ).pack(anchor="w", pady=(6, 0))
+
+        ttk.Button(frame, text="Schließen", command=self.destroy).pack(anchor="e", pady=(10, 0))
+
+    def _on_row_double_click(self, event) -> None:
+        item_id = event.widget.identify_row(event.y)
+        signal = self._history_by_item.get(item_id)
+        if signal is None:
+            return
+        HebelLlmAbfrageDialog(self, signal.symbol, signal)
+
+
+class HebelLlmAbfrageDialog(tk.Toplevel):
+    """Hebel-Pendant zu ui/signals_view.py::LlmAbfrageDialog - zeigt facts_json +
+    Roh-Antwort eines historischen Hebel-Signals (2026-07-18, gleicher Nutzer-Wunsch)."""
+
+    def __init__(self, parent, symbol: str, signal) -> None:
+        super().__init__(parent)
+        self.title(f"LLM-Abfrage — {symbol}")
+        self.resizable(True, True)
+        self.transient(parent)
+        self.grab_set()
+        self.geometry("640x600")
+
+        frame = ttk.Frame(self, padding=12)
+        frame.pack(fill="both", expand=True)
+
+        zeitpunkt = signal.created_at[:16].replace("T", " ") if signal.created_at else "-"
+        ttk.Label(
+            frame, text=f"Anbieter: {signal.llm_model or '-'}   ·   Berechnet: {zeitpunkt}",
+            font=("", 10, "bold"),
+        ).pack(anchor="w", pady=(0, 8))
+
+        ttk.Label(frame, text="Angefragte Fakten (facts_json):").pack(anchor="w")
+        facts_frame = ttk.Frame(frame)
+        facts_frame.pack(fill="both", expand=True, pady=(0, 8))
+        facts_text = tk.Text(facts_frame, height=14, wrap="word")
+        facts_scroll = ttk.Scrollbar(facts_frame, orient="vertical", command=facts_text.yview)
+        facts_text.configure(yscrollcommand=facts_scroll.set)
+        facts_text.pack(side="left", fill="both", expand=True)
+        facts_scroll.pack(side="right", fill="y")
+        facts_text.insert("1.0", _format_json_pretty(signal.facts_json))
+        facts_text.config(state="disabled")
+
+        ttk.Label(frame, text="Roh-Antwort der KI:").pack(anchor="w")
+        response_frame = ttk.Frame(frame)
+        response_frame.pack(fill="both", expand=True)
+        response_text = tk.Text(response_frame, height=14, wrap="word")
+        response_scroll = ttk.Scrollbar(response_frame, orient="vertical", command=response_text.yview)
+        response_text.configure(yscrollcommand=response_scroll.set)
+        response_text.pack(side="left", fill="both", expand=True)
+        response_scroll.pack(side="right", fill="y")
+        response_text.insert("1.0", _format_json_pretty(signal.groq_raw_response))
+        response_text.config(state="disabled")
+
+        ttk.Button(frame, text="Schließen", command=self.destroy).pack(anchor="e", pady=(10, 0))

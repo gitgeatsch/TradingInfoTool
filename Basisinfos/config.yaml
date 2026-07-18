@@ -613,8 +613,37 @@ signale_batch:
 # (Tier 2) + Spot-Rotation (Tier 3), huckepack auf dem 15-Min-Hebel-Screening-Takt.
 budget_allocator:
   aktiv: true
-  taegliches_budget_gesamt: 15          # B, Groqs realer Tages-Deckel (~15-18 gemessen)
-  spot_rotation_reserve: 5              # F, garantiert Grundrotation (bestaetigt 2026-07-13)
+  taegliches_budget_gesamt: 90          # B, NEUKALIBRIERT (2026-07-18, LLM-Budget-
+                                        # Konsistenzpruefung Teil 2 - Nutzer-Fund
+                                        # "wir kaempfen um jede Abfrage"): urspruenglich
+                                        # 1:1 auf Groqs eigene Kapazitaet gesetzt (~15-18/
+                                        # Tag, siehe signale_batch.taegliches_budget oben),
+                                        # aber B steuert nur, wie viele Kandidaten UEBERHAUPT
+                                        # einen LLM-Versuch bekommen (Groq->Mistral->Gemini-
+                                        # Kaskade je Kandidat) - NICHT wie viele Groq-Calls
+                                        # stattfinden. Mistrals eigenes Tagesbudget (150,
+                                        # unten) ist die echte Schutzgrenze, unabhaengig von B.
+                                        # Berechnung: bei den (nach dieser Runde) gelockerten
+                                        # Spot-Cooldowns (8h Kern/15h taktisch, siehe unten)
+                                        # liegt der rein rechnerische Spot-Rotation-Bedarf
+                                        # bei 13 Kern-Assets*24/8 + 28 taktische*24/15 ≈
+                                        # 39 + 45 = 84/Tag (theoretisches Maximum, alle
+                                        # Assets exakt im Cooldown-Takt faellig) - B=90 deckt
+                                        # das plus Puffer fuer normale Hebel-/Marktscan-
+                                        # Aktivitaet, bleibt aber deutlich unter Mistrals
+                                        # 150er-Deckel (echte Ausreissertage - z.B. ein
+                                        # Markt-Crash mit vielen gleichzeitigen Hebel-
+                                        # Triggern - laufen kontrolliert in Gemini als
+                                        # dritte Stufe). Schon beim ALTEN Cooldown (10h/20h)
+                                        # lag der theoretische Spot-Bedarf bei ~65/Tag, also
+                                        # weit ueber dem alten B=15 - die Drosselung war real,
+                                        # nicht nur ein Anzeige-Problem.
+  spot_rotation_reserve: 30             # F, proportional mit B mitskaliert (2026-07-18) -
+                                        # urspruengliches Verhaeltnis F/B ≈ 33% (5/15,
+                                        # 2026-07-13) beibehalten, damit Spot-Rotation auch
+                                        # an sehr Hebel-/Marktscan-aktiven Tagen denselben
+                                        # relativen Mindestanteil behaelt wie vor der
+                                        # Neukalibrierung.
   mistral_taegliches_budget: 150         # zweite Fallback-Stufe (2026-07-17, ersetzt Cerebras'
                                         # bisherige Rolle vollstaendig - Cerebras 2026-07-17 komplett
                                         # entfernt statt nur bis 2026-08-17 auslaufen zu lassen,
@@ -631,18 +660,20 @@ budget_allocator:
                                         # bewusst am seltensten genutzt (siehe agent/krypto/
                                         # budget_allocator.py Modul-Docstring)
   cooldown_stunden: 3.5                 # Mitte der bestaetigten 3-4-Std.-Spanne (2026-07-13)
-  spot_cooldown_stunden: 20             # Fix (2026-07-15, echter Notebook-Vorfall, siehe Memory
-                                        # project_llm_budget_ueberlast_2026-07-15): Tier 3 (Spot)
-                                        # hatte bisher KEINEN Cooldown, rotierte bei ~40 Krypto-
-                                        # Assets alle ~40 Min komplett durch (234 Signale/Tag fuer
-                                        # nur 40 Symbole). <24h, damit die taegliche Rotation nicht
-                                        # durch feste Tick-Zeiten nach hinten driftet. Gilt fuer
-                                        # rein taktische Watchlist-Assets ohne Position (siehe
+  spot_cooldown_stunden: 15             # NEUKALIBRIERT (2026-07-18, LLM-Budget-Konsistenz-
+                                        # pruefung Teil 2, siehe taegliches_budget_gesamt oben) -
+                                        # von urspruenglich 20h (2026-07-15, siehe Memory
+                                        # project_llm_budget_ueberlast_2026-07-15) auf 15h
+                                        # gelockert, jetzt wo Mistrals grosse Fallback-Kapazitaet
+                                        # den Groq-Engpass abfedert, der die urspruengliche 20h-
+                                        # Bremse noetig machte. Gilt fuer rein taktische
+                                        # Watchlist-Assets ohne Position (siehe
                                         # spot_cooldown_stunden_kern).
-  spot_cooldown_stunden_kern: 10         # Zwei-Stufen-Cooldown (2026-07-16, Nutzer-Wunsch nach
-                                        # Gewichtungs-Analyse): kuerzerer Cooldown fuer rolle=core
-                                        # ODER aktuell gehaltene Assets ODER offene Hebel-Position
-                                        # (~2x/Tag statt ~1x/Tag) - echtes Geld/strategische
+  spot_cooldown_stunden_kern: 8          # NEUKALIBRIERT (2026-07-18, wie oben) - von
+                                        # urspruenglich 10h (2026-07-16, Nutzer-Wunsch nach
+                                        # Gewichtungs-Analyse) auf 8h gelockert: kuerzerer
+                                        # Cooldown fuer rolle=core ODER aktuell gehaltene Assets
+                                        # ODER offene Hebel-Position - echtes Geld/strategische
                                         # Kernrolle verdient haeufigere Neubewertung als ein
                                         # unbeobachteter taktischer Watchlist-Kandidat ohne
                                         # Position, siehe agent/krypto/
