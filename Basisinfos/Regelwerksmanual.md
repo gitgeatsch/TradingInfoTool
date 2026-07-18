@@ -3149,6 +3149,56 @@ Hedge-ETFs DBPK/3QSS (`etf`, `NON_CRYPTO_ASSET_GROUPS` in `api/bitpanda.py`) ab.
 OD7H, Hedge-ETF DBPK, unbekanntes Symbol, sowie Katalog-Fehlschlag-Fall) -
 alle 7 Faelle korrekt.
 
+## Nachtrag (2026-07-18, gleicher Tag): VIX-Frühindikator als beschreibender Fakt
+
+Direkt im Anschluss an die Bitpanda-Listing-Bugfix-Bestandsaufnahme fragte der
+Nutzer explizit nach dem "nachlaufenden M2"-Konzept und ob wir bereits für
+den Aktien-Bärenmarkt aufgestellt sind. Antwort: das bestehende
+`equities_baermarkt_aktiv`-Flag ist ein reiner **Drawdown-Schwellenwert**
+(S&P 500/Nasdaq ≥20 % unter 5-Jahres-Hoch, siehe AZ-4 Baustein 2) - NACHLAUFEND.
+VIX (CBOE Volatility Index) ist dagegen ein **VORLAUFENDES** Optionsmarkt-
+Stimmungssignal, im Code bisher komplett ungenutzt (kein einziger Treffer).
+Nutzer bestätigte nach Bestandsaufnahme: erst die kleine Rohstoff-Lücke
+(aktien_baermarkt-Fakt, siehe oben) schließen, dann VIX "mit korrekter
+Implementierung" ergänzen - bewusst NUR als beschreibender LLM-Fakt (KEIN
+deterministischer Deckel), analog `liquiditaets_regime`/`equities_baermarkt`.
+
+**Datenquelle:** `api/yfinance_history.py::get_vix_reading()` - nutzt
+denselben Timeout-geschützten `get_full_price_history("^VIX")` wie
+`get_equities_bear_market_status()`, EIGENER try/except in
+`_fetch_boden_zielzone_context()` (P-10: ein VIX-Ausfall darf die
+Aktien-Bärenmarkt-Fakten nicht mit sich reißen und umgekehrt - zwei
+unabhängige yfinance-Ticker-Abrufe).
+
+**Bänder (branchenübliche CBOE-Praktiker-Konvention, KEIN projekteigener
+Schwellenwert wie bei den equities_baermarkt-[OFFEN]-Werten):** <20 "ruhig",
+20-30 "erhöht", 30-40 "gestresst", >40 "krise" - `agent/krypto/regime.py::
+VIX_BANDS`/`_vix_label()`.
+
+**Caching:** täglich über `macro_snapshot.vix_wert` (neue additive Spalte,
+gleiches COALESCE-Upsert-Muster wie alle anderen Boden-Zielzone-Felder,
+`database/db.py::_MACRO_SNAPSHOT_NEW_COLUMNS`).
+
+**Konsum:** neuer `regime.vix.{wert,label}`-Fakt in ALLEN VIER Analysten
+(Krypto/Aktien/Rohstoff/Hedge) - dasselbe Synergie-Muster wie beim
+Bitpanda-Listing-Fix: EIN Berechnungsort (`compute_current_regime()`) statt
+vier Einzellösungen. Rohstoff-spezifisch: "gestresst"/"krise" verstärkt bei
+Gold/Silber die Safe-Haven-Logik, bei Kupfer/Erdgas eher neutral. Hedge-
+spezifisch: zusätzliches (schwächeres als `aktien_baermarkt.aktiv`) Signal
+FÜR mehr Absicherung, da VIX früher ausschlagen kann als der Drawdown.
+
+**Verifiziert:** `_vix_label()` gegen alle 4 Bandgrenzen (8 Testfälle) +
+echter Live-Abruf gegen `^VIX` (18,77 → "ruhig") + DB-Migrationstest gegen
+Kopie der Produktions-DB (Spalte fehlte vorher, Upsert/Reread danach korrekt)
++ echter End-to-End-Lauf von `compute_current_regime()` gegen die migrierte
+DB-Kopie (liefert echten VIX-Wert + korrektes Label im vollständigen
+Regime-Objekt, inkl. BTC-Regime "baer" parallel korrekt berechnet).
+
+**Bewusst NICHT umgesetzt:** kein deterministischer Deckel (Nutzer-
+Entscheidung), keine Anzeige in `ui/regime_view.py`/Remote-Status-Karte
+(bestehendes `equities_baermarkt` ist dort ebenfalls nicht enthalten -
+konsistent, kein Präzedenzbruch) - beides mögliche spätere Ausbaustufen.
+
 **Nebenfund behoben (selbes Datum):** `agent/rohstoff/analyst.py::build_facts()`
 gab `aktien_baermarkt`/`equities_baermarkt` (aus `compute_current_regime()`)
 nicht als LLM-Fakt weiter, obwohl Krypto-, Aktien- und Hedge-Analyst das tun.

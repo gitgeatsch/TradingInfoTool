@@ -118,7 +118,15 @@ sonst systematisch ignoriert, obwohl sie geliefert werden.
 unbekannt) als ZUSAETZLICHEN Kontext in `long_reasoning.makro` ein - NICHT als harte \
 Regel wie regime.btc_matrix, sondern als beschreibende Einordnung ("globale \
 Liquiditaet expandiert/kontrahiert aktuell laut M2-Trend + Fed-Kurs"). Bei \
-`unbekannt` (zu wenig Historie) einfach nicht erwaehnen, keine Luecke erfinden.
+`unbekannt` (zu wenig Historie) einfach nicht erwaehnen, keine Luecke erfinden. \
+Beziehe zusaetzlich `regime.vix.wert`/`regime.vix.label` (CBOE Volatility Index) \
+ein, falls `label` nicht "nicht verfuegbar" ist - im Gegensatz zu \
+`regime.equities_baermarkt` (nachlaufender Drawdown) ist VIX ein VORLAUFENDES \
+Optionsmarkt-Stimmungssignal (kann schon ausschlagen, bevor/ohne dass ein echter \
+Baermarkt eintritt). "gestresst"/"krise" deutet auf erhoehte Risikoaversion am \
+breiten Markt hin, relevant auch fuer Krypto (historisch oft korreliert, aber \
+NICHT immer - formuliere entsprechend vorsichtig, keine harte Kausalitaet \
+behaupten).
 11. Beziehe `regime.zyklus_risiko` (0-1, hoeher = naeher an einem historischen \
 Bewertungsextrem laut Log-Regression-Modell) UND `regime.zyklus_risiko_begruendung` \
 (enthaelt bereits den MVRV/NUPL-Cross-Check) in `long_reasoning.fundamental` ein - \
@@ -476,6 +484,12 @@ def build_facts(
             "equities_baermarkt": {
                 "aktiv": regime_result.equities_baermarkt_aktiv,
                 "begruendung": regime_result.equities_baermarkt_begruendung,
+            },
+            # VIX-Fruehindikator (2026-07-18) - siehe SYSTEM_PROMPT fuer die
+            # Abgrenzung zum nachlaufenden equities_baermarkt-Flag oben.
+            "vix": {
+                "wert": _native(regime_result.vix_wert),
+                "label": regime_result.vix_label,
             },
             # Cash-Reserve-Ziel (AZ-4 Baustein 3, 2026-07-12) - deterministischer Fakt
             # (wie boden_zielzone_btc/_eth oben), None wenn Regime nicht antizyklisch

@@ -95,7 +95,12 @@ Einordnung ("globale Liquiditaet expandiert/kontrahiert aktuell laut M2-Trend + 
 Fed-Kurs"), keine harte Regel. Bei `unbekannt` (zu wenig Historie) einfach nicht \
 erwaehnen. Beziehe zusaetzlich `regime.aktien_baermarkt.aktiv` ein, falls true - ein \
 breiter Liquiditaetsentzug am Aktienmarkt (S&P500/Nasdaq-Drawdown) ist relevanter \
-Kontext fuer JEDE Einzelaktie, nicht nur ein Zusatzfakt.
+Kontext fuer JEDE Einzelaktie, nicht nur ein Zusatzfakt. Beziehe zusaetzlich \
+`regime.vix.wert`/`regime.vix.label` ein, falls `label` nicht "nicht verfuegbar" ist \
+- im Gegensatz zu `regime.aktien_baermarkt` (nachlaufender Drawdown) ist VIX ein \
+VORLAUFENDES Optionsmarkt-Stimmungssignal. "gestresst"/"krise" deutet auf erhoehte \
+Risikoaversion hin, relevant fuer Timing-Vorsicht - formuliere entsprechend \
+vorsichtig, keine harte Kausalitaet behaupten.
 9. Fundamentaldaten-Bewertungsregel: vergleiche `fundamentaldaten.kgv` (trailing) MIT \
 `fundamentaldaten.forward_kgv` UND den Wachstumsraten `gewinnwachstum_prozent`/ \
 `umsatzwachstum_prozent`, bevor du ein hohes KGV als Risiko einordnest - ein hohes \
@@ -370,6 +375,12 @@ def build_facts(
             "aktien_baermarkt": {
                 "aktiv": regime_result.equities_baermarkt_aktiv,
                 "begruendung": regime_result.equities_baermarkt_begruendung,
+            },
+            # VIX-Fruehindikator (2026-07-18) - siehe SYSTEM_PROMPT fuer die
+            # Abgrenzung zum nachlaufenden aktien_baermarkt-Flag oben.
+            "vix": {
+                "wert": _native(regime_result.vix_wert),
+                "label": regime_result.vix_label,
             },
         },
         "risiko_check": {

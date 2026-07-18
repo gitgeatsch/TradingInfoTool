@@ -376,6 +376,9 @@ _MACRO_SNAPSHOT_NEW_COLUMNS = (
     # _MACRO_SNAPSHOT_TEXT_COLUMNS unten).
     "zyklus_risiko", "zyklus_risiko_begruendung", "liquiditaets_regime",
     "liquiditaets_regime_begruendung", "btc_trend_label", "regime_reason",
+    # VIX-Fruehindikator (2026-07-18) - siehe database/models.py::MacroSnapshot
+    # fuer die Feld-Dokumentation.
+    "vix_wert",
 )
 
 # Erste TEXT-Spalten in dieser bisher rein numerischen Migrationsliste (siehe

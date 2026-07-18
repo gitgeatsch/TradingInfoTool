@@ -157,6 +157,32 @@ def backfill_all_aktien_ohlc(conn, watchlist) -> list[OhlcUpdateResult]:
     return results
 
 
+@dataclass
+class VixReading:
+    """CBOE Volatility Index (^VIX) - impliziter Optionsmarkt-Volatilitaets-
+    Fruehindikator (2026-07-18). Im Gegensatz zu EquitiesBearMarketReading (reiner
+    Kurs-Drawdown, NACHLAUFEND) ist VIX ein VORLAUFENDES Stimmungssignal, kann schon
+    ausschlagen, bevor/ohne dass ein echter Drawdown eintritt. Nur der Rohwert, keine
+    Label-Einordnung (die haengt von Schwellenwerten ab, siehe agent/krypto/regime.py::
+    _vix_label(), analog equities_baermarkt-Split zwischen Rohwert und Schwellenwert-
+    Entscheidung)."""
+    date: str
+    wert: float
+
+
+def get_vix_reading() -> VixReading:
+    """Nutzt denselben Timeout-geschuetzten get_full_price_history() wie
+    get_equities_bear_market_status() (P-10: wirft bei Fehlschlag durch, Aufrufer
+    degradiert einzeln - siehe agent/krypto/pipeline.py::_fetch_boden_zielzone_context(),
+    eigener try/except UNABHAENGIG vom Aktien-Baermarkt-Abruf, damit ein VIX-
+    Ausfall nicht auch den Drawdown-Fakt mit reisst und umgekehrt)."""
+    history = get_full_price_history("^VIX")
+    if not history:
+        raise ValueError("Keine VIX-Historie erhalten (^VIX)")
+    date, wert = history[-1]
+    return VixReading(date=date.date().isoformat(), wert=wert)
+
+
 def get_equities_bear_market_status(lookback_years: float = 5.0) -> EquitiesBearMarketReading:
     """S&P 500 (^GSPC) + Nasdaq Composite (^IXIC) - Drawdown vom Allzeithoch der
     letzten `lookback_years` Jahre. Boden-Zielzone-Overlay (AZ-4 Baustein 2): ein

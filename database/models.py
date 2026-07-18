@@ -154,6 +154,13 @@ class MacroSnapshot:
     liquiditaets_regime_begruendung: str | None = None
     btc_trend_label: str | None = None
     regime_reason: str | None = None
+    # VIX-Fruehindikator (2026-07-18) - im Gegensatz zum nachlaufenden Aktien-
+    # Baermarkt-Drawdown-Status (equities_sp500/nasdaq_drawdown_pct oben) ein
+    # VORLAUFENDES Optionsmarkt-Stimmungssignal (^VIX via yfinance), taeglich
+    # gecacht wie die uebrigen Boden-Zielzone-Werte. Nur der Rohwert gespeichert,
+    # kein Label - Baender koennten sich spaeter aendern (analog zum
+    # equities_baermarkt-Bool-Verzicht oben).
+    vix_wert: float | None = None
 
 
 @dataclass

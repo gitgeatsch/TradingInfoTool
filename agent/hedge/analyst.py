@@ -68,7 +68,13 @@ Halten "auf unbestimmte Zeit ohne aktiven Grund". Nenne den Decay-Effekt explizi
 `haltung` ersichtlich gehalten wird oder bei HALTEN weitergefuehrt werden soll.
 5. `regime.aktien_baermarkt.aktiv` == true (S&P500/Nasdaq-Drawdown-Indikator) ist ein \
 STARKES Signal FUER mehr Absicherung (KAUFEN/NACHKAUFEN). `regime.regime` == "bulle" \
-spricht eher FUER Reduzieren/Halten auf niedrigem Niveau (VERKAUFEN/HALTEN).
+spricht eher FUER Reduzieren/Halten auf niedrigem Niveau (VERKAUFEN/HALTEN). Beziehe \
+zusaetzlich `regime.vix.wert`/`regime.vix.label` ein, falls `label` nicht "nicht \
+verfuegbar" ist - im Gegensatz zu `regime.aktien_baermarkt` (nachlaufender Drawdown) \
+ist VIX ein VORLAUFENDES Optionsmarkt-Stimmungssignal, kann fuer eine Hedge-Position \
+frueher relevant werden als der Drawdown-Indikator. "gestresst"/"krise" ist ein \
+zusaetzliches (schwaecheres als aktien_baermarkt.aktiv) Signal FUER mehr Absicherung \
+- formuliere vorsichtig, keine harte Kausalitaet behaupten.
 6. Ist `historischer_makro_vergleich` NICHT null: eine stark NEGATIVE \
 `spx_median_forward_6m_prozent`/`spx_median_forward_12m_prozent` (historische Analoge \
 mit aehnlicher Makro-Konstellation) ist ein Signal FUER mehr Absicherung. Lies den \
@@ -205,6 +211,13 @@ def build_facts(
             "aktien_baermarkt": {
                 "aktiv": regime_result.equities_baermarkt_aktiv,
                 "begruendung": regime_result.equities_baermarkt_begruendung,
+            },
+            # VIX-Fruehindikator (2026-07-18) - siehe SYSTEM_PROMPT fuer die
+            # Abgrenzung zum nachlaufenden aktien_baermarkt-Flag oben. Fuer die
+            # Hedge-Bewertung besonders relevant (Timing der Abdeckung).
+            "vix": {
+                "wert": _native(regime_result.vix_wert),
+                "label": regime_result.vix_label,
             },
         },
         "historischer_makro_vergleich": historischer_makro_vergleich,

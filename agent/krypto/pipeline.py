@@ -216,7 +216,7 @@ def _fetch_boden_zielzone_context(conn, config_dict: dict) -> dict:
     ungedrosselt. _boden_zielzone() selbst wird trotzdem bei JEDEM Aufruf frisch
     gerechnet (billige Arithmetik, kein Netzwerk) - auch bei einem Cache-Treffer,
     damit eine zwischenzeitliche config.yaml-Aenderung sofort greift."""
-    from api.yfinance_history import get_equities_bear_market_status, get_full_price_history
+    from api.yfinance_history import get_equities_bear_market_status, get_full_price_history, get_vix_reading
     from indicators.calculations import BtcLogRegressionRisk, compute_eth_log_regression_risk
 
     cfg = config_dict.get("boden_zielzone", {})
@@ -226,6 +226,9 @@ def _fetch_boden_zielzone_context(conn, config_dict: dict) -> dict:
         "overlay_shift_std": cfg.get("equities_overlay_shift_std", 0.0),
         "equities_baermarkt_aktiv": None,
         "equities_baermarkt_begruendung": "Aktien-Bärenmarkt-Status nicht verfügbar.",
+        # VIX-Fruehindikator (2026-07-18) - siehe get_vix_reading() Docstring
+        # fuer die Abgrenzung zum nachlaufenden Drawdown-Status oben.
+        "vix_wert": None,
     }
     if not cfg.get("aktiv", True):
         context["equities_baermarkt_begruendung"] = "Boden-Zielzone deaktiviert (config.yaml boden_zielzone.aktiv=false)."
@@ -245,6 +248,7 @@ def _fetch_boden_zielzone_context(conn, config_dict: dict) -> dict:
         )
         sp500_drawdown_pct = cached.equities_sp500_drawdown_pct
         nasdaq_drawdown_pct = cached.equities_nasdaq_drawdown_pct
+        context["vix_wert"] = cached.vix_wert
     else:
         try:
             eth_history = get_full_price_history("ETH-USD")
@@ -259,6 +263,13 @@ def _fetch_boden_zielzone_context(conn, config_dict: dict) -> dict:
             nasdaq_drawdown_pct = equities.nasdaq_drawdown_pct
         except Exception as exc:
             logger.info("Aktien-Bärenmarkt-Status-Abruf fehlgeschlagen: %s", exc)
+        try:
+            # Eigener try/except, UNABHAENGIG vom Aktien-Baermarkt-Abruf oben (P-10) -
+            # ein VIX-Ausfall soll die Drawdown-Fakten nicht mit reissen und umgekehrt,
+            # es sind zwei separate yfinance-Ticker-Abrufe (^VIX vs. ^GSPC/^IXIC).
+            context["vix_wert"] = get_vix_reading().wert
+        except Exception as exc:
+            logger.info("VIX-Abruf fehlgeschlagen: %s", exc)
 
         elr = context["eth_log_regression_risk"]
         db.upsert_macro_snapshot(conn, MacroSnapshot(
@@ -268,6 +279,7 @@ def _fetch_boden_zielzone_context(conn, config_dict: dict) -> dict:
             eth_regression_residual_std=elr.residual_std if elr else None,
             equities_sp500_drawdown_pct=sp500_drawdown_pct,
             equities_nasdaq_drawdown_pct=nasdaq_drawdown_pct,
+            vix_wert=context["vix_wert"],
         ))
 
     # "aktiv"-Entscheidung: config-abhaengiger Schwellenwert-Vergleich, bewusst HIER
@@ -351,6 +363,7 @@ def compute_current_regime(conn, coingecko_client, watchlist, fred_api_key: str 
         equities_baermarkt_aktiv=boden_zielzone_context["equities_baermarkt_aktiv"],
         equities_baermarkt_begruendung=boden_zielzone_context["equities_baermarkt_begruendung"],
         boden_zielzone_overlay_shift_std=boden_zielzone_context["overlay_shift_std"],
+        vix_wert=boden_zielzone_context["vix_wert"],
     )
 
     # Fertige Zone zusaetzlich zu den Cache-Rohwerten persistieren (siehe

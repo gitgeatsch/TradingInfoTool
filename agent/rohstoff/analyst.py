@@ -94,7 +94,12 @@ erwaehnen. Beziehe zusaetzlich `regime.aktien_baermarkt.aktiv` ein, falls true -
 Aktien-Baermarkt geht historisch oft mit erhoehter Safe-Haven-Nachfrage nach Gold/ \
 Silber einher (fuer Kupfer/Erdgas dagegen eher neutral bis leicht belastend, da \
 Aktien-Baermaerkte oft mit schwaecherer Industriekonjunktur zusammenfallen) - \
-gewichte je nach `asset.symbol` entsprechend unterschiedlich, wie bei Fakt 9.
+gewichte je nach `asset.symbol` entsprechend unterschiedlich, wie bei Fakt 9. Beziehe \
+zusaetzlich `regime.vix.wert`/`regime.vix.label` ein, falls `label` nicht "nicht \
+verfuegbar" ist - ein VORLAUFENDES Optionsmarkt-Stimmungssignal (im Gegensatz zum \
+nachlaufenden `aktien_baermarkt`-Drawdown-Flag). "gestresst"/"krise" verstaerkt bei \
+Gold/Silber tendenziell die Safe-Haven-Logik oben, bei Kupfer/Erdgas eher neutral - \
+formuliere vorsichtig, keine harte Kausalitaet behaupten.
 9. `makro_ueberlagerung`-Regel: `realrendite_10j_prozent` (10-Jahres-TIPS-Realrendite) \
 ist historisch der staerkste Preistreiber fuer Gold/Silber - eine STEIGENDE Realrendite \
 ist tendenziell belastend (Opportunitaetskosten des zinslosen Haltens steigen), eine \
@@ -342,6 +347,11 @@ def build_facts(
             "aktien_baermarkt": {
                 "aktiv": regime_result.equities_baermarkt_aktiv,
                 "begruendung": regime_result.equities_baermarkt_begruendung,
+            },
+            # VIX-Fruehindikator (2026-07-18) - siehe SYSTEM_PROMPT Regel 8.
+            "vix": {
+                "wert": _native(regime_result.vix_wert),
+                "label": regime_result.vix_label,
             },
         },
         "risiko_check": {

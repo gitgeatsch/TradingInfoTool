@@ -81,6 +81,18 @@ MVRV_BANDS = (
     (float("inf"), "historisch extrem (Nähe an früheren Zyklus-Toppen)"),
 )
 
+# VIX-Baender (2026-07-18): branchenuebliche CBOE-Praktiker-Konvention (nicht
+# projekteigen erfunden wie z.B. die MVRV-Baender oben) - <20 gilt gemeinhin als
+# ruhige Marktphase, 20-30 als erhoehte Unsicherheit, 30-40 als deutlicher Stress,
+# >40 als Krisen-/Panik-Niveau (historisch nur in echten Crash-Phasen erreicht,
+# z.B. Finanzkrise 2008, Covid-Crash 2020).
+VIX_BANDS = (
+    (20.0, "ruhig"),
+    (30.0, "erhöht"),
+    (40.0, "gestresst"),
+    (float("inf"), "krise"),
+)
+
 
 @dataclass
 class RegimeResult:
@@ -111,6 +123,13 @@ class RegimeResult:
     # Schwelle liegt (Verknuepfung "entweder", Nutzer-Entscheidung 2026-07-12).
     equities_baermarkt_aktiv: bool | None
     equities_baermarkt_begruendung: str
+    # VIX-Fruehindikator (2026-07-18): im Gegensatz zu equities_baermarkt_aktiv
+    # (nachlaufender Drawdown-Schwellenwert) ein VORLAUFENDES Optionsmarkt-
+    # Stimmungssignal - kann schon ausschlagen, bevor/ohne dass ein echter
+    # Drawdown eintritt. Rein beschreibender Fakt (kein deterministischer
+    # Deckel, Nutzer-Entscheidung 2026-07-18), siehe _vix_label() unten.
+    vix_wert: float | None
+    vix_label: str
 
 
 def _btc_change_pct(btc_closes: np.ndarray, days: int = 30) -> float | None:
@@ -212,6 +231,15 @@ def _liquidity_regime(m2_trend: str, fed_direction: str, m2_detail: str) -> tupl
         f"globales M2 {m2_trend} ({m2_detail}), aber Fed {fed_direction} - gegenläufige Signale, keine klare "
         "Einordnung möglich.",
     )
+
+
+def _vix_label(vix_wert: float | None) -> str:
+    if vix_wert is None:
+        return "nicht verfügbar"
+    for threshold, label in VIX_BANDS:
+        if vix_wert < threshold:
+            return label
+    return VIX_BANDS[-1][1]
 
 
 def _mvrv_band(mvrv: float) -> str:
@@ -331,11 +359,13 @@ def determine_regime(
     equities_baermarkt_aktiv: bool | None = None,
     equities_baermarkt_begruendung: str = "Aktien-Bärenmarkt-Status nicht verfügbar.",
     boden_zielzone_overlay_shift_std: float = 0.0,
+    vix_wert: float | None = None,
 ) -> RegimeResult:
     """Boden-Zielzone-Parameter (AZ-4 Baustein 2, 2026-07-12): bewusst als bereits
     aufgeloeste Werte uebergeben (wie `manual_override`) statt hier config.yaml zu
     lesen - regime.py bleibt komplett config-frei, der Schwellenwert-Vergleich fuer
     `equities_baermarkt_aktiv` passiert in pipeline.py."""
+    vix_label = _vix_label(vix_wert)
     m2_trend, m2_detail = _m2_global_trend(
         m2_us_history or [], m2_eurozone_history or [], m2_china_history or []
     )
@@ -430,6 +460,8 @@ def determine_regime(
             eth_boden_zielzone_begruendung=eth_zielzone_begruendung,
             equities_baermarkt_aktiv=equities_baermarkt_aktiv,
             equities_baermarkt_begruendung=equities_baermarkt_begruendung,
+            vix_wert=vix_wert,
+            vix_label=vix_label,
         )
 
     return RegimeResult(
@@ -454,6 +486,8 @@ def determine_regime(
         eth_boden_zielzone_begruendung=eth_zielzone_begruendung,
         equities_baermarkt_aktiv=equities_baermarkt_aktiv,
         equities_baermarkt_begruendung=equities_baermarkt_begruendung,
+        vix_wert=vix_wert,
+        vix_label=vix_label,
     )
 
 
