@@ -549,3 +549,74 @@ def compute_eth_log_regression_risk(
     """Duenner Wrapper um compute_btc_log_regression_risk() mit ETH_GENESIS_DATE -
     siehe dessen Docstring fuer die Modell-Details. Boden-Zielzone (2026-07-12)."""
     return compute_btc_log_regression_risk(history, deviation_std_range, genesis_date=ETH_GENESIS_DATE)
+
+
+@dataclass
+class LogLinearTrendDeviation:
+    date: str
+    price: float
+    predicted_price: float
+    deviation_std: float
+
+
+@dataclass
+class LogLinearTrendDeviationSeries:
+    points: list[LogLinearTrendDeviation]
+    slope: float
+    intercept: float
+    residual_std: float
+
+
+def compute_log_linear_trend_deviation_series(
+    history: list[tuple[Any, float]],
+) -> LogLinearTrendDeviationSeries:
+    """Makro-Konstellationsvergleich (2026-07-18, Ersatz fuer Shiller-CAPE als
+    Bewertungs-/Blasen-Proxy fuer Aktienindizes - CAPE braucht eine fragile externe
+    Legacy-.xls-Datei ohne bestehende Parser-Infrastruktur in diesem Projekt, siehe
+    Memory project_historischer_makro_konstellationsvergleich_idee.md).
+
+    Bewusst EIN EIGENES, von compute_btc_log_regression_risk() UNTERSCHIEDLICHES
+    Modell: Regression von log10(Preis) auf LINEARE Zeit (Jahre seit dem ersten
+    Datenpunkt) statt log10(Tage seit einem Genesis-Datum. Das Power-Law-von-
+    Genesis-Modell ist fuer Adoptions-Kurven-Assets wie BTC/ETH gedacht (siehe
+    dortiger Docstring) - ein Aktienindex wie der S&P 500 folgt eher einem
+    langfristig exponentiellen Wachstumspfad ueber die Zeit, kein Power-Law ab
+    einem Einfuehrungsdatum. Log-linear (statt linear-linear) trotzdem, weil
+    Kursreihen ueber Jahrzehnte selbst exponentiell wachsen (Zinseszins-Effekt) -
+    eine lineare Regression auf den Rohpreis wuerde in den fruehen Jahren winzige,
+    in den spaeten Jahren riesige Residuen erzeugen.
+
+    Anders als compute_btc_log_regression_risk() (nur der LETZTE Punkt wird
+    zurueckgegeben) liefert diese Funktion die GESAMTE Punkte-Serie - fuer den
+    Konstellationsvergleich braucht jeder historische Monat seine EIGENE damalige
+    Abweichung, nicht nur die heutige.
+
+    Wirft ValueError bei zu wenig verwertbaren Datenpunkten statt einen unsicheren
+    Wert zurueckzugeben (P-10)."""
+    dates = np.array([np.datetime64(d.replace(tzinfo=None)) for d, _ in history])
+    prices = np.array([p for _, p in history], dtype=float)
+    valid = prices > 0
+    dates, prices = dates[valid], prices[valid]
+
+    if len(prices) < 30:
+        raise ValueError(f"Zu wenige verwertbare Historiendaten fuer eine Regression: {len(prices)}")
+
+    years_since_start = (dates - dates[0]).astype("timedelta64[D]").astype(float) / 365.25
+    y = np.log10(prices)
+    slope, intercept = np.polyfit(years_since_start, y, 1)
+    predicted_log = slope * years_since_start + intercept
+    residuals = y - predicted_log
+    std = residuals.std()
+
+    points = [
+        LogLinearTrendDeviation(
+            date=str(np.datetime_as_string(dates[i], unit="D")),
+            price=float(prices[i]),
+            predicted_price=float(10 ** predicted_log[i]),
+            deviation_std=float(residuals[i] / std) if std > 0 else 0.0,
+        )
+        for i in range(len(prices))
+    ]
+    return LogLinearTrendDeviationSeries(
+        points=points, slope=float(slope), intercept=float(intercept), residual_std=float(std),
+    )

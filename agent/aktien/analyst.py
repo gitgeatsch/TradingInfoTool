@@ -144,10 +144,35 @@ Schema. Kein Markdown, keine Code-Fences, kein Text ausserhalb des JSON.
 bestehenden Position gegenueber dem echten Anschaffungspreis - niedrig gewichteter \
 Kontext, KEINE harte Regel und KEIN Ersatz fuer die Stop-Loss-/CRV-Pflicht (Regel 3). \
 Bei null: nicht erwaehnen.
+18. Fuelle `gegenargument` IMMER zuerst aus, BEVOR du `confidence_pct` festlegst - formuliere \
+darin das STAERKSTE Argument GEGEN deinen eigenen Vorschlag (nicht ein schwaches \
+Feigenblatt-Gegenargument). Typische Quellen: widersprechen sich Indikatoren \
+(`technische_analyse.confluence.gesamttendenz` == "gemischt")? Ist das Chance-Risiko-\
+Verhaeltnis nur knapp ueber der Pflichtgrenze von 2.0? Beruht `long_reasoning.fundamental` \
+oder `.makro` nur auf allgemeinen, nicht assetspezifischen Aussagen? `confidence_pct` MUSS \
+das dort formulierte Gegenargument widerspiegeln - ein GENUIN starkes Gegenargument darf \
+NICHT mit hoher Konfidenz (>75%) kombiniert werden.
+19. Ist `historische_erfolgsquote` NICHT null, gibt sie die bisherige Trefferquote frueherer \
+Signale wieder (`trefferquote_pct`, `anzahl_ausgewertete_signale`). Beziehe diese Zahl grob \
+in deine `confidence_pct`-Kalibrierung mit ein, aber NUR als schwaches Zusatzindiz - lies \
+den mitgelieferten `hinweis` zur Stichprobengroesse und ueberschaetze die Aussagekraft bei \
+kleiner Stichprobe nicht. Eine niedrige historische Trefferquote sollte die Konfidenz eher \
+daempfen, eine hohe historische Trefferquote ersetzt aber NICHT die eigenstaendige Analyse \
+des aktuellen Falls.
+20. Ist `historischer_makro_vergleich` NICHT null, listet er historische Kalendermonate mit \
+einer AEHNLICHEN Makro-Konstellation (Dollarstaerke, Zinsen, Anleiherenditen, Oelpreis, \
+Aktienbewertung) wie heute samt bekanntem weiteren Verlauf des S&P 500 (`top_analoge`, je \
+Eintrag `spx_forward_6m_prozent`/`spx_forward_12m_prozent`) UND einem Aggregat-Feld \
+(`spx_median_forward_6m_prozent`/`spx_median_forward_12m_prozent`) ueber alle gelisteten \
+Analoge. Dieses Aggregat darf als grobe Orientierung fuer deine `confidence_pct`-\
+Kalibrierung dienen - ist die historische Streuung der einzelnen Analoge aber gross \
+(sehr unterschiedliche `spx_forward_*`-Werte), sollte das die Konfidenz eher daempfen statt \
+falsche Praezision zu suggerieren. Lies den mitgelieferten `hinweis` fuer weitere Details.
 
 SCHEMA:
 {
   "action": "KAUFEN|VERKAUFEN|HALTEN|NACHKAUFEN",
+  "gegenargument": "<das staerkste Argument GEGEN diesen Vorschlag, siehe Regel 18>",
   "confidence_pct": <0-100>,
   "short_reasoning": "<1-2 Saetze>",
   "top_gruende": [
@@ -233,6 +258,8 @@ def build_facts(
     risk_result: RiskPreCheckResult,
     fundamentals,
     price_age_minutes: float | None,
+    historische_erfolgsquote: dict | None = None,
+    historischer_makro_vergleich: dict | None = None,
 ) -> dict:
     macd_val = technical_snapshot.macd
     macd_facts = None
@@ -287,6 +314,8 @@ def build_facts(
             "aktualisiert_vor_min": price_age_minutes,
         },
         "haltung": _build_haltung_facts(holding, latest_price),
+        "historische_erfolgsquote": historische_erfolgsquote,
+        "historischer_makro_vergleich": historischer_makro_vergleich,
         "fundamentaldaten": {
             "kgv": _native(fundamentals.kgv) if fundamentals else None,
             "forward_kgv": _native(fundamentals.forward_kgv) if fundamentals else None,
@@ -367,7 +396,7 @@ def build_facts(
 
 
 REQUIRED_TOP_LEVEL_FIELDS = (
-    "action", "confidence_pct", "short_reasoning", "top_gruende", "long_reasoning",
+    "action", "gegenargument", "confidence_pct", "short_reasoning", "top_gruende", "long_reasoning",
     "position_size", "entry", "stop_loss", "take_profit", "halte_kriterium",
     "key_risks", "forecast",
 )
@@ -422,6 +451,11 @@ def _validate(data: dict) -> dict:
     if action not in REQUIRED_ACTIONS:
         raise AnalystResponseInvalid(f"Ungültige action: {data['action']!r}")
     data["action"] = action
+
+    gegenargument = str(data.get("gegenargument", "")).strip()
+    if len(gegenargument) < 15:
+        raise AnalystResponseInvalid(f"gegenargument fehlt oder zu kurz: {data.get('gegenargument')!r}")
+    data["gegenargument"] = gegenargument
 
     try:
         data["confidence_pct"] = float(data["confidence_pct"])

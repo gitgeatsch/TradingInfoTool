@@ -2754,3 +2754,241 @@ pruefen) - (1) knappe Cash-Reserve (21 % bei 20 % Minimum, nur 100 USD
 Headroom): Obergrenze korrekt auf ~100 USD gedeckelt, obwohl RM-1 rechnerisch
 110.600 USD erlaubt haette; (2) reichlich Cash-Reserve: RM-1/RM-2 bleiben
 weiterhin die bindende (kleinere) Grenze, RM-4 greift nicht faelschlich ein.
+
+## Nachtrag (2026-07-18): Konfidenz-Kalibrierung nach dem echten CAT-Fall (fünf Bausteine A-E)
+
+**Auslöser:** Nutzer teilte ein echtes, per E-Mail zugestelltes Spot-KAUFEN-
+Signal für "CAT — Simon's Cat" (Konfidenz 80 %, Regime baer) zur eigenen
+Experten-Durchsicht. Eigene Bewertung: schwach/kein starker Kauf -
+widersprüchliche technische Konfluenz ("EMA-Ordnung bearish, aber MACD/RSI
+bullish") wurde von der KI zwar in der Begründung erwähnt, aber NICHT in der
+Konfidenz-Zahl (80 %) berücksichtigt; CRV lag nur knapp über der 2.0-
+Pflichtgrenze (~2,08), was das binäre CRV-Gate bisher identisch zu einem
+CRV von 4,0 behandelte. Nutzer bestätigte diese Einschätzung als deutlich
+kritischer/besser als die Systembewertung selbst und beauftragte eine
+umfassende Nachbesserung ("heute müssen wir versuchen umfangreiche
+Verbesserungen einzuführen") - fünf Bausteine A-E, alle am selben Tag
+umgesetzt. Gleichzeitig wurden zwei unabhängige E-Mail-Bugs gefunden und
+behoben (siehe eigener Abschnitt oben: wissenschaftliche Notation bei sehr
+kleinen Preisen, fehlende Regime-/Risiken-/Halte-Kriterium-Felder).
+
+**A — Technischer-Konflikt-Deckel (`risk_gate.py::post_check()` +
+`hebel_risk_gate.py::post_check_hebel()`):** `indicators/calculations.py::
+summarize_confluence()` klassifiziert Indikator-Übereinstimmung bereits
+deterministisch als `"bullish"|"bearish"|"neutral"|"gemischt"` - der
+"gemischt"-Fall (weder bullish noch bearish dominiert) existierte exakt für
+den CAT-Fall, wurde aber nirgends im Risiko-Gate ausgewertet. Jetzt: ist
+`confluence.overall_bias == "gemischt"`, wird die Positionsgrößen-Obergrenze
+(Spot) zusätzlich multiplikativ auf `technischer_konflikt_deckel_anteil`
+(Config, Default 0.6) reduziert, bzw. bei Hebel als zusätzlicher Deckel-
+Kandidat (`technischer_konflikt_hebel_deckel`, Default 3.0x) in die
+bestehende `_hebel_deckel_kandidaten()`/`min()`-Logik eingereiht (Muster aus
+dem Hebel-4-Punkte-Fix vom Vortag, siehe oben). Beide Pfade sind rein
+deterministisch - unabhängig davon, ob das Modell den Widerspruch selbst
+benennt.
+
+**B — CRV-Distanz-abhängige Positionsgrößen-Skalierung ("CRV-Knapp-
+Deckel"):** `CRV_MINIMUM = 2.0` war bisher ein binäres Gate (2,01 und 4,0
+identisch behandelt). Neu: liegt `crv < CRV_MINIMUM * (1 +
+crv_knapp_schwelle_relativ)` (Config, Default 0.2 → Schwelle 2.4), greift
+eine weitere multiplikative Reduktion (`crv_knapp_positionsgroesse_
+deckel_anteil`, Spot Default 0.6) bzw. ein weiterer Hebel-Deckel-Kandidat
+(`crv_knapp_hebel_deckel`, Default 4.0x). Alle vier Spot-Deckel (Konfidenz-
+Skalierung, Gegenszenario, Konflikt, CRV-Knapp) sind Geschwister-Blöcke, die
+sich multiplikativ verketten (verifiziert: alle vier gleichzeitig aktiv
+ergaben korrekt `1000 × 0.5 × 0.5 × 0.6 × 0.6 = 90 USD`); bei Hebel bleibt
+es beim bestehenden `min()`-über-alle-Kandidaten-Prinzip (der kleinste
+Deckel-Wert bindet, kein Produkt).
+
+**C — bereits durch A+B abgedeckt:** die vom Nutzer gewünschte CRV-Distanz-
+abhängige Skalierung ist identisch mit Baustein B (dieselbe Mechanik löst
+beide Anliegen), kein separater Code-Pfad nötig.
+
+**D — Gegenargument-Pflichtfeld statt zweitem LLM-Call (`analyst.py`
+[Krypto+Aktien] + `hebel_analyst.py`):** Nutzer-Frage, ob eine adversariale
+Selbstkritik zwingend zwei getrennte LLM-Calls braucht - Antwort: nein, ein
+neues PFLICHT-Schema-Feld `gegenargument` wurde bewusst VOR `confidence_pct`
+im JSON-Schema platziert. Da LLM-APIs JSON überwiegend sequenziell links-
+nach-rechts erzeugen, "sieht" das Modell sein eigenes, bereits geschriebenes
+Gegenargument, wenn es die Konfidenz-Zahl committet - eine kostengünstige
+Annäherung an Chain-of-Thought-Selbstkorrektur ohne zweiten Aufruf (relevant
+angesichts des knappen ~15-18-Calls/Tag-Groq-Budgets, siehe Memory
+project_batch_signal_berechnung.md). Neue SYSTEM_PROMPT-Regel (22 in
+`agent/krypto/analyst.py`, 18 in `agent/aktien/analyst.py`, 13 in
+`agent/krypto/hebel_analyst.py`) verlangt das STÄRKSTE Gegenargument (nicht
+ein Feigenblatt) und verbietet explizit die Kombination "genuin starkes
+Gegenargument + Konfidenz > 75 %". `_validate()`/`_validate_hebel()`
+erzwingen eine Mindestlänge (15 Zeichen) - ein leeres oder trivial kurzes
+Gegenargument macht die gesamte Antwort ungültig (`AnalystResponseInvalid`).
+Neues additiv migriertes Feld `gegenargument` (TEXT, nullable) auf `Signal`
+und `HebelSignal` (`database/models.py` + `database/db.py::
+_migrate_gegenargument_columns()`).
+
+**E — Historische Trefferquote als Kalibrierungs-Fakt
+(`backward_tracking.py::compute_win_rate_fact()`):** neue, rein lesende
+Funktion aggregiert bereits aufgelöste Signale (`outcome_status` in
+`take_profit_erreicht`/`stop_loss_erreicht`/`liquidation_wahrscheinlich`)
+getrennt für `signals` ("spot" - Krypto UND Aktien zusammen, gleiche
+Vereinfachung wie in `compute_provider_performance()`, Stichprobe zu klein
+für eine weitere Aufspaltung) und `hebel_signals` ("hebel"). Gibt `None`
+zurück, solange keine Signale aufgelöst sind (aktuell der Fall - reine
+Infrastruktur). Unter `_MIN_SAMPLE_FUER_AUSSAGE = 15` Signalen bekommt das
+Modell einen expliziten Ehrlichkeits-Hinweis im Fakt selbst
+(`hinweis`-Feld), der vor Überschätzung einer kleinen Stichprobe warnt -
+bewusst NUR eine grobe Gesamtzahl, kein Per-Asset/Per-Regime-Split. Neuer
+Fakt `historische_erfolgsquote` in `build_facts()` (Krypto + Aktien) und
+`build_hebel_facts()`, mit neuer SYSTEM_PROMPT-Regel (23/19/14), die das
+Modell anweist, die Zahl NUR als schwaches Zusatzindiz zu behandeln.
+
+**Config (`Basisinfos/config.yaml`):**
+```yaml
+# unter risiko: (Spot/Aktien)
+technischer_konflikt_deckel_anteil: 0.6
+crv_knapp_schwelle_relativ: 0.2
+crv_knapp_positionsgroesse_deckel_anteil: 0.6
+
+# unter risiko.hebel:
+technischer_konflikt_hebel_deckel: 3.0
+crv_knapp_schwelle_relativ: 0.2
+crv_knapp_hebel_deckel: 3.0
+```
+Alle Startwerte unkalibriert (analog zu den bereits bestehenden Gegenszenario-
+Deckeln) - nach echten Betriebsdaten anzupassen.
+
+**Verifiziert:** Import-Smoke-Test aller geänderten Pipelines (keine
+Zirkelimporte); synthetische Tests für `compute_win_rate_fact()` (leere DB →
+`None`, kleine Stichprobe → Ehrlichkeits-Hinweis, große Stichprobe → kein
+Hinweis, Hebel-Liquidation zählt als Fehlschlag); `gegenargument`-Validierung
+(gültig akzeptiert, zu kurz/fehlend abgelehnt) für Spot-Krypto UND Hebel;
+Konflikt-Deckel + CRV-Knapp-Deckel-Zusammenspiel bei Spot (multiplikativ,
+alle vier Deckel gleichzeitig korrekt verkettet) und bei Hebel (`min()`-
+Logik, korrekter bindender Grund im Hinweistext); echter Migrations- und
+Kompatibilitätstest gegen eine Kopie der Produktions-DB (76 Spot- +
+5 Hebel-Signale, neue Spalte vorhanden, `Signal(**dict(row))`/
+`HebelSignal(**dict(row))` funktionieren mit `gegenargument=None` für
+Alt-Zeilen, `compute_win_rate_fact()` liefert dort korrekt `None`).
+
+**Bewusst zurückgestellt (eigene, dedizierte Session):** der vom Nutzer als
+Favorit genannte historische Makro-Konstellationsvergleich (DXY/Aktien-
+Blase/Ölpreis/Zinsen gegen historische Perioden mit bekanntem Ausgang) - als
+mögliche zusätzliche Kalibrierungs-Basis für Spot/Hebel/andere Assets neben
+Bär/Bulle/Regime identifiziert, aber bewusst NICHT im selben Aufwasch
+umgesetzt (methodische Komplexität, siehe Memory
+project_historischer_makro_konstellationsvergleich_idee.md). Ebenfalls
+zurückgestellt: Wiederholungs-Erkennung (Punkt 4 der letzten Runde) für
+Aktien nachrüsten - wurde beim Portieren von B+D nach `agent/aktien/
+analyst.py` nicht mit angefragt, bleibt als latenter Punkt vorgemerkt.
+
+## Nachtrag (2026-07-18, gleicher Tag): Historischer Makro-Konstellationsvergleich umgesetzt
+
+**Auslöser:** Nutzer wollte das oben zurückgestellte Thema nicht lange
+aufschieben ("möchte ich nicht zu lange nach hinten schieben - also asap
+angehen") und beauftragte zwei Recherche-Stränge: was lässt sich frei
+verfügbar nutzen, was muss selbst gebaut werden - sowie eine eigenständige
+Krypto-Bewertung statt der Aktien-Methodik 1:1 zu übertragen.
+
+**Recherche-Ergebnis (Build vs. Buy):** kein kostenloses fertiges Tool macht
+"aktuelle Konstellation → historisches Analog → Wahrscheinlichkeit" als
+nutzbaren Service. MacroMicro-API wäre das einzige nahe dran, kostet aber
+5.000 $/Jahr - für dieses Nur-kostenlose-Werkzeuge-Projekt nicht tragbar.
+Also Eigenbau, aber auf Basis bereits vorhandener, bereits integrierter
+kostenloser Datenquellen (FRED, yfinance, blockchain.com) statt neuer
+Abhängigkeiten - reduziert den Bauaufwand erheblich.
+
+**Datenquellen (alle bereits im Projekt integriert, nur neu genutzt):**
+FRED (`api/macro.py::get_fred_history()`) für DXY-Ersatz (`DTWEXBGS`, seit
+2006), Fed Funds Rate (`FEDFUNDS`, seit 1954), 10-Jahres-Rendite (`DGS10`,
+seit 1962), CPI (`CPIAUCSL`, seit 1913, YoY selbst berechnet), Ölpreis WTI
+(`WTISPLC`, monatlich seit 1946 - bewusst länger zurückreichend als das
+sonst im Projekt genutzte `DCOILWTICO`, wichtig für die 1970er-
+Ölschock-Ära); yfinance (`api/yfinance_history.py::get_full_price_history()`)
+für die S&P-500-Vollhistorie (^GSPC, seit 1927); blockchain.com
+(`api/onchain.py::get_btc_full_price_history()`) für die BTC-Vollhistorie
+seit 2009.
+
+**Bewusst KEIN Shiller-CAPE** (methodisch der etabliertere Bewertungs-Proxy,
+aber Yale liefert nur eine fragile Legacy-`.xls`-Datei ohne bestehende
+Parser-Infrastruktur - `openpyxl` kann nur `.xlsx`, kein `xlrd`
+installiert). Stattdessen: eine neue, selbst berechnete log-linear
+Trend-Abweichung des S&P 500 (`indicators/calculations.py::
+compute_log_linear_trend_deviation_series()`) - Regression von
+log10(Preis) auf LINEARE Zeit (Jahre seit erstem Datenpunkt), bewusst
+anders als das bestehende `compute_btc_log_regression_risk()` (log10(Preis)
+auf log10(Tage seit Genesis) - ein Power-Law-Adoptionsmodell, das für einen
+Aktienindex methodisch nicht passt). Synthetisch mit einer
+10%-Jahr-Wachstumskurve gegengeprüft (Regression erkannte die Rate korrekt
+wieder).
+
+**Architektur:** neues Modul `agent/krypto/makro_analog.py` mit zwei neuen
+DB-Tabellen (`makro_historie_monat` - monatliche Zeitreihe der 6
+Konstellations-Dimensionen + SPX-/BTC-Schlusskurse, additiv gemerged wie
+`macro_snapshot`; `makro_analog_ergebnis` - gecachtes Tages-Ergebnis als
+JSON-Blob). Neuer täglicher Scheduler-Job `makro_analog_job()` (06:30, nach
+Backward-Tracking) frischt die Historie auf und berechnet die Top-5
+historischen Analoge neu - die teure Berechnung läuft NICHT pro Signal,
+`build_facts()`/`build_hebel_facts()` lesen nur das gecachte Ergebnis
+(`get_cached_makro_analog_fact()`).
+
+**Ähnlichkeitsmetrik:** Euklidischer Abstand über Z-Score-normalisierte
+Dimensionen, fehlend-Werte-tolerant (fehlt eine Dimension bei Kandidat ODER
+aktuellem Monat, wird sie für DIESEN Vergleich übersprungen, nicht als 0
+angenommen - gleiches Prinzip wie `risk_gate.py::_portfolio_values_usd()`).
+**Live-Fund beim ersten echten Testlauf:** ohne Zusatzregel bestand die
+Top-5-Liste aus fast identischen, nur wenige Monate auseinanderliegenden
+Kandidaten (z. B. Feb/Mär/Mai/Jun/Jul desselben Jahres) - autokorreliertes
+Rauschen statt unabhängiger historischer Vergleichspunkte, weil benachbarte
+Monate fast immer ähnliche Makro-Werte haben. Fix: derselbe
+`mindest_abstand_monate`-Parameter (Default 24) erzwingt jetzt zusätzlich
+einen Mindestabstand ZWISCHEN den ausgewählten Analogen untereinander, nicht
+nur gegenüber "jetzt". Nach dem Fix lieferte derselbe echte Testlauf fünf
+genuin unabhängige Analoge über 20 Jahre verteilt (2006, 2015, 2018, 2022,
+2024) mit einer plausibel breiten Streuung der Forward-Renditen (S&P
+6-Monats-Vorwärtsrendite der Analoge reichte von −20,9 % bis +9,7 %).
+
+**Krypto-Sonderbehandlung (Nutzer-Entscheidung):** BTC hat nur ~3 volle
+Halving-Zyklen mit statistischem Gewicht, und diese 3 Zyklen waren
+makro-mäßig selbst nicht vergleichbar (Nahe-Null-Zinsen 2013-2021 vs.
+heute) - ein aggregiertes "BTC-Forward-Rendite über die Top-N-Analoge"-Feld
+wäre Pseudo-Statistik mit irreführender Präzision. Deshalb liefert
+`summarize_analogs_for_facts()` BTC-Forward-Renditen NUR pro einzelnem
+Analog (null bei Analogen vor BTCs Existenz), aber KEIN aggregiertes Feld -
+das ist STRUKTURELL so (das Feld existiert schlicht nicht im Fakt-Dict),
+nicht nur per Prompt-Anweisung unterdrückt (P-10-Philosophie: das Modell
+wird nie blind vertraut, die Versuchung wird also gar nicht erst als
+fertiger Fakt angeboten). Für den S&P 500 WIRD ein Median-Aggregat über die
+Top-N-Analoge geliefert - dort ist die Stichprobentiefe (Jahrzehnte, viele
+unabhängige Analoge) deutlich größer und methodisch tragfähiger.
+
+**Prompt-Integration:** neuer Fakt `historischer_makro_vergleich` in allen
+drei `build_facts()`/`build_hebel_facts()`-Funktionen (Krypto-Spot, Aktien,
+Hebel), mit je einer neuen SYSTEM_PROMPT-Regel (24 in `agent/krypto/
+analyst.py`; 20 in `agent/aktien/analyst.py`; 15 in `agent/krypto/
+hebel_analyst.py`). Krypto/Hebel-Formulierung verbietet
+explizit, `btc_forward_*`-Werte als belastbare Statistik zu behandeln;
+Aktien-Formulierung erlaubt die Nutzung von `spx_median_forward_*` als
+groben Kalibrierungs-Input, mit Streuungs-Warnhinweis.
+
+**Config (`Basisinfos/config.yaml`, neue Sektion `makro_analog:`):**
+```yaml
+top_n_analoge: 5
+mindest_abstand_monate: 24
+mindest_dimensionen: 3
+```
+
+**Verifiziert:** synthetischer Regressionstest (10%-Jahr-Wachstumskurve
+korrekt zurückgerechnet); Migrations-/CRUD-Test gegen eine Kopie der
+Produktions-DB (Merge-Verhalten, Cache-Schreiben/-Lesen); vollständiger
+echter End-to-End-Lauf gegen FRED (5 Reihen, ~21 s), yfinance (^GSPC-
+Vollhistorie seit 1927) und blockchain.com (BTC seit 2009) - 1.184 Monate
+Historie aufgebaut, Analog-Suche + Fakt-Erzeugung geprüft; Diversitäts-Fix
+gegen dieselben echten Daten erneut verifiziert (alle 5 Analoge ≥ 24 Monate
+auseinander UND ≥ 24 Monate vor "jetzt"); 4 synthetische Edge-Case-Tests
+(leere Historie, ein einzelner Monat, konstante Dimension ohne Streuung,
+zu wenige überlappende Dimensionen) - alle degradieren graceful (`None`/
+leere Liste) statt zu crashen; vollständiger Import-Smoke-Test aller
+geänderten Pipelines nach der Verdrahtung.
+
+**Bewusst zurückgestellt:** kein UI-Element für die Analoge selbst (z. B.
+ein neuer Tab oder eine Karte im Regime-Tab) - der Fakt fließt direkt in
+die LLM-Signale ein, eine separate Visualisierung war nicht Teil des
+heutigen Auftrags und kann bei Bedarf nachgerüstet werden.

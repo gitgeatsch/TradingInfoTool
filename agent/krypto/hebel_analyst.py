@@ -120,11 +120,37 @@ sein.
 bei Spot-Signalen.
 12. Antworte AUSSCHLIESSLICH mit einem einzigen JSON-Objekt gemäß dem vorgegebenen \
 Schema. Kein Markdown, keine Code-Fences, kein Text außerhalb des JSON.
+13. Fülle `gegenargument` IMMER zuerst aus, BEVOR du `confidence_pct` festlegst - formuliere \
+darin das STÄRKSTE Argument GEGEN deinen eigenen Vorschlag (nicht ein schwaches \
+Feigenblatt-Gegenargument). Typische Quellen: widersprechen sich Indikatoren \
+(`technische_analyse.confluence.gesamttendenz` == "gemischt")? Ist das Chance-Risiko-\
+Verhältnis nur knapp über der Pflichtgrenze von 2.0? Widerspricht die Richtung dem \
+aktuellen Regime (`regime.richtungs_konflikt_mit_trigger`)? `confidence_pct` MUSS das \
+dort formulierte Gegenargument widerspiegeln - ein GENUIN starkes Gegenargument darf \
+NICHT mit hoher Konfidenz (>75%) kombiniert werden.
+14. Ist `historische_erfolgsquote` NICHT null, gibt sie die bisherige Trefferquote frueherer \
+Hebel-Signale wieder (`trefferquote_pct`, `anzahl_ausgewertete_signale`). Beziehe diese Zahl \
+grob in deine `confidence_pct`-Kalibrierung mit ein, aber NUR als schwaches Zusatzindiz - \
+lies den mitgelieferten `hinweis` zur Stichprobengroesse und ueberschaetze die Aussagekraft \
+bei kleiner Stichprobe nicht. Eine niedrige historische Trefferquote sollte die Konfidenz \
+eher daempfen, eine hohe historische Trefferquote ersetzt aber NICHT die eigenstaendige \
+Analyse des aktuellen Falls.
+15. Ist `historischer_makro_vergleich` NICHT null, listet er historische Kalendermonate mit \
+einer AEHNLICHEN Makro-Konstellation (Dollarstaerke, Zinsen, Anleiherenditen, Oelpreis, \
+Aktienbewertung) wie heute samt bekanntem weiteren Verlauf (`top_analoge`, je Eintrag \
+`spx_forward_6m_prozent`/`spx_forward_12m_prozent` fuer den S&P 500 UND, wo verfuegbar, \
+`btc_forward_6m_prozent`/`btc_forward_12m_prozent` fuer BTC). WICHTIG: die `btc_forward_*`-\
+Werte sind NUR eine grobe qualitative Orientierung (oft nur wenige Analoge mit ueberhaupt \
+einem BTC-Wert) - verwende sie NIEMALS als belastbare Statistik oder direkte Grundlage \
+fuer `confidence_pct`, das gilt insbesondere fuer Hebel-Positionen (verstaerktes Risiko). \
+`spx_median_forward_*` beschreibt nur die Aktienmarkt-Tendenz, ist fuer eine Hebel-\
+Entscheidung bestenfalls grober Makro-Hintergrund. Lies den mitgelieferten `hinweis`.
 
 SCHEMA:
 {
   "richtung": "LONG|SHORT",
   "action": "ERÖFFNEN|NACHKAUFEN|HEBEL_ERHÖHEN|HEBEL_SENKEN|TEILVERKAUF|SCHLIESSEN|HALTEN",
+  "gegenargument": "<das stärkste Argument GEGEN diesen Vorschlag, siehe Regel 13>",
   "confidence_pct": <0-100>,
   "short_reasoning": "<1-2 Sätze>",
   "hebel_vorschlag": <Zahl oder null bei HALTEN/SCHLIESSEN>,
@@ -252,6 +278,8 @@ def build_hebel_facts(
     price_age_minutes: float | None,
     now_unix: int,
     letztes_signal=None,
+    historische_erfolgsquote: dict | None = None,
+    historischer_makro_vergleich: dict | None = None,
 ) -> dict:
     """Analog agent/krypto/analyst.py::build_facts() - wiederverwendet dieselben
     Bausteine fuer technische_analyse/regime/markt_kontext/antizyklisch 1:1 (siehe
@@ -385,6 +413,8 @@ def build_hebel_facts(
             "kursaenderung_pct_lookback": _native(trigger.kursaenderung_pct_lookback),
         },
         "position_aktuell": _build_position_aktuell_facts(position_aktuell, now_unix, letztes_signal),
+        "historische_erfolgsquote": historische_erfolgsquote,
+        "historischer_makro_vergleich": historischer_makro_vergleich,
         "hebel_kontext": {
             "max_hebel_config": pre_result.config_max_hebel,
             "max_sicherer_hebel_geschaetzt": _native(pre_result.max_sicherer_hebel),
@@ -414,9 +444,9 @@ def build_hebel_facts(
 
 
 REQUIRED_HEBEL_TOP_LEVEL_FIELDS = (
-    "richtung", "action", "confidence_pct", "short_reasoning", "hebel_vorschlag",
-    "trade_thesis_typ", "top_gruende", "long_reasoning", "entry", "stop_loss",
-    "take_profit", "halte_kriterium", "key_risks", "forecast",
+    "richtung", "action", "gegenargument", "confidence_pct", "short_reasoning",
+    "hebel_vorschlag", "trade_thesis_typ", "top_gruende", "long_reasoning", "entry",
+    "stop_loss", "take_profit", "halte_kriterium", "key_risks", "forecast",
 )
 
 TOP_GRUENDE_KATEGORIEN = ("technisch", "fundamental", "makro", "risiko", "antizyklisch")
@@ -481,6 +511,11 @@ def _validate_hebel(data: dict, asset_symbol: str) -> dict:
     if action not in REQUIRED_HEBEL_ACTIONS:
         raise AnalystResponseInvalid(f"Ungültige action: {data['action']!r}")
     data["action"] = action
+
+    gegenargument = str(data.get("gegenargument", "")).strip()
+    if len(gegenargument) < 15:
+        raise AnalystResponseInvalid(f"gegenargument fehlt oder zu kurz: {data.get('gegenargument')!r}")
+    data["gegenargument"] = gegenargument
 
     try:
         data["confidence_pct"] = float(data["confidence_pct"])

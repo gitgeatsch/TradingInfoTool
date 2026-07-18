@@ -16,6 +16,8 @@ import config
 import database.db as db
 from agent.krypto.analyst import AnalystResponseInvalid, build_facts, call_groq_for_signal
 from agent.krypto.anticyclic import assess as assess_anticyclic
+from agent.krypto.backward_tracking import compute_win_rate_fact
+from agent.krypto.makro_analog import get_cached_makro_analog_fact
 from agent.krypto.llm_provider import llm_model_label
 from agent.krypto.regime import determine_regime
 from agent.krypto.risk_gate import CashReserveZielResult, compute_cash_reserve_ziel, pre_check, post_check
@@ -527,11 +529,16 @@ def generate_signal(
         if asset.symbol in ("BTC", "ETH") else None
     )
 
+    historische_erfolgsquote = compute_win_rate_fact(conn, "spot")
+    historischer_makro_vergleich = get_cached_makro_analog_fact(conn)
+
     facts = build_facts(
         asset, price_snap, holdings.get(asset.symbol), snapshot, confluence, regime_result,
         regime_profile, risk_result, anticyclic_context, strategien_aktiv, price_age_minutes,
         market_context, bitpanda_gelistet, tranchen_erlaubt, cash_reserve_ziel,
         letztes_signal=letztes_signal,
+        historische_erfolgsquote=historische_erfolgsquote,
+        historischer_makro_vergleich=historischer_makro_vergleich,
     )
 
     # R-5.6 Groq-Synthese.
@@ -550,7 +557,7 @@ def generate_signal(
 
     # R-5.5 (post) / R-5.9 / R-5.10 - deterministische Nachkontrolle, Modell wird nie
     # blind vertraut.
-    corrected = post_check(parsed, risk_result, regime_result, config_dict)
+    corrected = post_check(parsed, risk_result, regime_result, config_dict, confluence=confluence)
     risk_veto = corrected.pop("_risk_veto")
     risk_veto_reason = corrected.pop("_risk_veto_reason")
 
@@ -623,6 +630,7 @@ def generate_signal(
         cash_reserve_ziel_eth_usd=cash_reserve_ziel.eth_ziel_usd if cash_reserve_ziel else None,
         cash_reserve_ziel_gesamt_usd=cash_reserve_ziel.gesamt_ziel_usd if cash_reserve_ziel else None,
         cash_reserve_ziel_begruendung=cash_reserve_ziel.begruendung if cash_reserve_ziel else None,
+        gegenargument=corrected.get("gegenargument"),
         groq_raw_response=raw_response,
         groq_model=llm_model_label(groq_client),
         **top_grund_fields,

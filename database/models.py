@@ -199,6 +199,11 @@ class Signal:
     risk_veto_reason: str | None = None
     groq_raw_response: str | None = None
     groq_model: str | None = None
+    # Gegenargument-Pflichtfeld (2026-07-18, Regel 22 in analyst.py::SYSTEM_PROMPT,
+    # echter CAT-Fall - Selbstkritik-Schritt in einem einzigen Call statt eines
+    # teuren zweiten LLM-Aufrufs) - das staerkste Argument GEGEN die eigene
+    # Empfehlung, MUSS die Konfidenz beeinflussen.
+    gegenargument: str | None = None
     # Nachtraegliche Umsetzungs-Rueckmeldung (Nutzer-Idee 2026-07-07, umgesetzt
     # 2026-07-09) - None = noch nicht entschieden/nicht abgefragt, sonst True/False.
     # umgesetzt_menge/-preis_usd sind bewusst optional (koennen leer bleiben, auch
@@ -497,6 +502,9 @@ class HebelSignal:
     risk_veto_reason: str | None = None
     groq_raw_response: str | None = None
     llm_model: str | None = None
+    # Gegenargument-Pflichtfeld (2026-07-18, siehe Signal.gegenargument-Docstring,
+    # analoge Regel in hebel_analyst.py::SYSTEM_PROMPT).
+    gegenargument: str | None = None
     # Hebel-Backward-Tracking (2026-07-15, agent/krypto/hebel_backward_tracking.py) -
     # nur fuer ERÖFFNEN/NACHKAUFEN gefuellt, mirror Signal.outcome_* (models.py:204-212).
     # Zusaetzlicher Status "liquidation_wahrscheinlich" gegenueber Spot (siehe dort).
@@ -505,3 +513,37 @@ class HebelSignal:
     outcome_entschieden_am: str | None = None
     outcome_realisiertes_crv: float | None = None
     outcome_datenquelle: str | None = None
+
+
+@dataclass
+class MakroHistorieMonat:
+    """Historischer Makro-Konstellationsvergleich (2026-07-18, Nutzer-Idee, siehe
+    Memory project_historischer_makro_konstellationsvergleich_idee.md). EIN Datenpunkt
+    pro Kalendermonat (Monats-Granularitaet bewusst statt taeglich - fuer einen
+    Jahrzehnte-Vergleich reicht das, reduziert Datenvolumen/Rauschen erheblich).
+    Alle Felder nullable (P-10) - nicht jede Quelle deckt jeden Monat ab (DXY-Proxy
+    z.B. erst ab 2006, siehe agent/krypto/makro_analog.py-Modul-Docstring), fehlende
+    Werte werden in der Aehnlichkeitsberechnung als fehlende Dimension behandelt,
+    NICHT als 0 (gleiches Prinzip wie risk_gate.py::_portfolio_values_usd())."""
+    monat: str  # 'YYYY-MM'
+    dxy_proxy: float | None = None
+    fed_funds_rate: float | None = None
+    rendite_10y: float | None = None
+    cpi_yoy_prozent: float | None = None
+    oel_wti: float | None = None
+    spx_close: float | None = None
+    spx_trend_deviation_std: float | None = None
+    btc_close: float | None = None
+
+
+@dataclass
+class MakroAnalogErgebnis:
+    """Gecachtes Ergebnis des historischen Makro-Konstellationsvergleichs - EIN
+    Row pro Berechnungstag (taeglicher Scheduler-Job, siehe scheduler/background.py::
+    makro_analog_job()), nicht pro Signal neu berechnet (teure Regression + Scan ueber
+    Jahrzehnte). `ergebnis_json` enthaelt die aktuelle Konstellation, die Top-N
+    historischen Analoge samt bekanntem Fortgang (SPX/BTC Forward-Rendite 6/12 Monate)
+    und einen Ehrlichkeits-Hinweis zur Stichprobengroesse/Methodik - siehe
+    agent/krypto/makro_analog.py::summarize_analogs_for_facts()."""
+    berechnet_am: str
+    ergebnis_json: str

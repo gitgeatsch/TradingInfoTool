@@ -69,6 +69,24 @@ risiko:
                                         # Skalierung (oben) auf diesen Anteil reduziert. Siehe
                                         # agent/krypto/risk_gate.py::post_check(), gilt fuer
                                         # Krypto UND Aktien (teilen sich risk_gate.py).
+  technischer_konflikt_deckel_anteil: 0.6  # NEU (2026-07-18, echter CAT-Fall: KAUFEN-
+                                        # Empfehlung mit 80% Konfidenz trotz "EMA-Ordnung
+                                        # bearish, aber MACD/RSI bieten Gegenargumente" -
+                                        # widerspruechliche Technik wurde nirgends deterministisch
+                                        # bewertet). Greift, wenn indicators/calculations.py::
+                                        # summarize_confluence() "gemischt" liefert (weder
+                                        # bullish noch bearish dominiert) - Positionsgroessen-
+                                        # Obergrenze wird zusaetzlich auf diesen Anteil reduziert.
+                                        # Unkalibrierter Startwert, nach echten Betriebsdaten
+                                        # anpassen.
+  crv_knapp_schwelle_relativ: 0.2       # NEU (2026-07-18, gleicher Fund): CRV_MINIMUM (2.0) ist
+                                        # bisher ein binaeres Gate - CRV 2,01 und 4,0 werden
+                                        # identisch behandelt. Ab diesem relativen Abstand ZUR
+                                        # Mindestgrenze (0.2 = CRV < 2.0*1.2 = 2.4) greift die
+                                        # zusaetzliche Deckelung unten. Unkalibrierter Startwert.
+  crv_knapp_positionsgroesse_deckel_anteil: 0.6  # Positionsgroessen-Obergrenze wird bei CRV
+                                        # knapp am Minimum zusaetzlich auf diesen Anteil reduziert.
+                                        # Siehe agent/krypto/risk_gate.py::post_check().
   cash_reserve_min_prozent: 10         # RM-4: bestaetigter Wert (2026-07-17, nicht mehr [OFFEN]) -
                                         # gaengige Hausnummer als Overtrading-Bremse/Liquiditaets-
                                         # puffer, in der Praxis bewaehrt (Nutzer haelt bewusst
@@ -146,6 +164,19 @@ risiko:
                                         # beide Deckel koennen gleichzeitig
                                         # greifen, es zaehlt immer der
                                         # niedrigste bindende Wert.
+    technischer_konflikt_hebel_deckel: 3.0  # NEU (2026-07-18, Spot-Pendant siehe
+                                        # risiko.technischer_konflikt_deckel_anteil) -
+                                        # greift, wenn summarize_confluence() "gemischt"
+                                        # liefert (weder bullish noch bearish dominiert).
+                                        # Wie regime_konflikt_hebel_deckel ein Hebel-
+                                        # Deckel (kein Anteil wie bei Spot), da Hebel
+                                        # ueber min() aus mehreren Deckel-Kandidaten
+                                        # bestimmt wird, siehe hebel_risk_gate.py::
+                                        # _hebel_deckel_kandidaten().
+    crv_knapp_schwelle_relativ: 0.2     # NEU (2026-07-18) - identische Definition wie
+                                        # risiko.crv_knapp_schwelle_relativ (Spot).
+    crv_knapp_hebel_deckel: 3.0         # NEU (2026-07-18) - Hebel-Deckel-Kandidat, wenn
+                                        # das CRV nur knapp ueber CRV_MINIMUM liegt.
 
 # --- Watchlist / Basiswerte (siehe Spezifikation Kap. 4) ---
 # Quelle: Basisinfos/Assets.xlsx (Erstimport Stand 2026-07-01), 41 Assets.
@@ -772,3 +803,18 @@ antizyklisch:
     nur_nach_bestaetigung: true        # AZ-7
     aus_bei_krise_extrem: true         # AZ-7
     aus_bei_strukturrisiko: true       # AZ-7
+
+# --- Historischer Makro-Konstellationsvergleich (2026-07-18, Nutzer-Idee, siehe
+# Memory project_konfidenz_kalibrierung_regelwerk.md + agent/krypto/makro_analog.py
+# Modul-Docstring fuer Methodik/Build-vs-Buy-Recherche) ---
+makro_analog:
+  top_n_analoge: 5              # wie viele historisch aehnlichste Monate werden
+                                 # dem Modell als Vergleichs-Analoge mitgegeben
+  mindest_abstand_monate: 24    # schliesst die juengste Vergangenheit aus - ein
+                                 # Analog aus den letzten 2 Jahren waere keine
+                                 # unabhaengige historische Bestaetigung, nur
+                                 # triviale Selbst-Aehnlichkeit mit "jetzt"
+  mindest_dimensionen: 3        # ein Kandidatenmonat mit weniger als 3 von 6
+                                 # ueberlappenden Dimensionen (siehe
+                                 # KONSTELLATIONS_DIMENSIONEN) wird verworfen -
+                                 # zu duenner Vergleich waere bedeutungslos

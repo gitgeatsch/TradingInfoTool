@@ -304,6 +304,36 @@ def backward_tracking_job(conn_factory, watchlist) -> None:
         conn.close()
 
 
+def makro_analog_job(conn_factory, fred_api_key) -> None:
+    """Historischer Makro-Konstellationsvergleich (2026-07-18, siehe
+    agent/krypto/makro_analog.py Modul-Docstring) - taeglich: Historie
+    (FRED/yfinance/blockchain.com) auffrischen, Top-Analoge neu berechnen,
+    Ergebnis cachen (makro_analog_ergebnis). Baut jeden Lauf auf der bereits
+    gespeicherten Historie additiv auf (COALESCE-Merge, siehe
+    upsert_makro_historie_monat()) - ein einzelner Fehlschlag einer Quelle
+    (z.B. FRED_API_KEY fehlt) blockiert die anderen nicht, siehe
+    run_makro_analog_update()-Docstring."""
+    conn = conn_factory()
+    try:
+        import config as config_module
+        from agent.krypto.makro_analog import run_makro_analog_update
+
+        config_dict = config_module.load_config()
+        fakt = run_makro_analog_update(conn, fred_api_key, config_dict)
+        if fakt is not None:
+            logger.info(
+                "Makro-Analog-Vergleich: %d historische Analoge gefunden (aktueller Monat %s)",
+                fakt["anzahl_analoge"], fakt["aktueller_monat"],
+            )
+        else:
+            logger.info("Makro-Analog-Vergleich: noch keine auswertbare Historie (zu fruehe Datenlage).")
+    except Exception as exc:
+        logger.exception("Makro-Analog-Vergleich fehlgeschlagen")
+        _notify_job_failure("makro_analog", f"Makro-Analog-Vergleich fehlgeschlagen: {exc}")
+    finally:
+        conn.close()
+
+
 def backward_tracking_catchup_if_missed(conn_factory, watchlist) -> None:
     """2026-07-17, Nutzer-Fund: der feste 06:00-Cron holt einen verpassten Termin
     NICHT automatisch nach, wenn die App zu diesem Zeitpunkt gar nicht lief (an
@@ -598,6 +628,35 @@ def _formatiere_top_gruende(signal) -> str:
     return "\n".join(f"- {g}" for g in gruende if g)
 
 
+def _formatiere_key_risks(signal) -> str:
+    """Nachbesserung (2026-07-17, Nutzer-Fund: E-Mail-Inhalt unvollstaendig) -
+    `key_risks` wurde bisher von der KI erzeugt, im Signale-/Hebel-Tab
+    angezeigt, aber nie in die E-Mail uebernommen - genau die Information, die
+    fuer eine Entscheidung von unterwegs am wichtigsten waere."""
+    if not signal.key_risks_text:
+        return ""
+    zeilen = [f"- {z}" for z in signal.key_risks_text.split("\n") if z.strip()]
+    return "Risiken:\n" + "\n".join(zeilen) if zeilen else ""
+
+
+def _formatiere_halte_kriterium(signal) -> str:
+    """Siehe _formatiere_key_risks()-Docstring - gleiche Nachbesserung, gleicher
+    Grund. Nur Felder aufnehmen, die tatsaechlich gesetzt sind (Regel 17 im
+    SYSTEM_PROMPT verlangt nur mindestens EINES der drei Detail-Felder)."""
+    from ui.formatting import format_money
+
+    if not signal.halte_kriterium_bucket:
+        return ""
+    teile = [f"Zeithorizont: {signal.halte_kriterium_bucket}"]
+    if signal.halte_kriterium_ziel_preis_eur is not None:
+        teile.append(f"Zielkurs: {format_money(signal.halte_kriterium_ziel_preis_eur)} EUR")
+    if signal.halte_kriterium_ziel_datum:
+        teile.append(f"Zieldatum: {signal.halte_kriterium_ziel_datum}")
+    if signal.halte_kriterium_bedingung_text:
+        teile.append(f"Bedingung: {signal.halte_kriterium_bedingung_text}")
+    return "Halte-Kriterium: " + " | ".join(teile)
+
+
 def _formatiere_positionsgroesse_und_tranchen(signal) -> str:
     """Nachbesserung (2026-07-16, Nutzer-Audit 'sind alle relevanten Infos in
     der E-Mail enthalten?'): position_size_*/tranchen_json waren im
@@ -653,6 +712,7 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None) -
     try:
         import config as config_module
         from api.email_notify import send_notification_email
+        from ui.formatting import format_money
 
         email_cfg = config_module.load_config().get("benachrichtigung", {}).get("email", {})
         if not email_cfg.get("aktiv", False) or not email_cfg.get("empfehlungen_aktiv", False):
@@ -661,16 +721,27 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None) -
         if not empfaenger:
             return
 
+        # BUGFIX (2026-07-17, Nutzer-Fund): Entry/Stop-Loss/Take-Profit wurden
+        # bisher als rohe Python-Floats interpoliert statt ueber format_money()
+        # (das genau dafuer da ist, siehe dessen Docstring "nie wissenschaftliche
+        # Notation") - bei sehr kleinen Kursen (Micro-/Meme-Coins, z.B. 1.06e-06)
+        # rutschte Python automatisch in wissenschaftliche Notation, unlesbar
+        # fuer eine schnelle Entscheidung von unterwegs.
         positionsgroesse_text = _formatiere_positionsgroesse_und_tranchen(signal)
+        risiken_text = _formatiere_key_risks(signal)
+        halte_kriterium_text = _formatiere_halte_kriterium(signal)
         body = (
             f"Aktion: {signal.action}\n"
-            f"Konfidenz: {signal.confidence_pct}%\n\n"
+            f"Konfidenz: {signal.confidence_pct}%\n"
+            f"Regime: {signal.regime or 'unbekannt'}\n\n"
             f"{signal.short_reasoning or ''}\n\n"
             f"Top-Gründe:\n{_formatiere_top_gruende(signal)}\n\n"
-            f"Entry: {signal.entry_eur_von}-{signal.entry_eur_bis} EUR\n"
-            f"Stop-Loss: {signal.stop_loss_eur_von}-{signal.stop_loss_eur_bis} EUR\n"
-            f"Take-Profit: {signal.take_profit_eur_von}-{signal.take_profit_eur_bis} EUR\n\n"
+            f"Entry: {format_money(signal.entry_eur_von)}-{format_money(signal.entry_eur_bis)} EUR\n"
+            f"Stop-Loss: {format_money(signal.stop_loss_eur_von)}-{format_money(signal.stop_loss_eur_bis)} EUR\n"
+            f"Take-Profit: {format_money(signal.take_profit_eur_von)}-{format_money(signal.take_profit_eur_bis)} EUR\n\n"
             + (f"{positionsgroesse_text}\n\n" if positionsgroesse_text else "")
+            + (f"{risiken_text}\n\n" if risiken_text else "")
+            + (f"{halte_kriterium_text}\n\n" if halte_kriterium_text else "")
             + "Details im Signale-Tab der App. Ausführung manuell über die Bitpanda-App."
         )
         send_notification_email(f"TradingInfoTool: {signal.action} {signal.symbol}", body, empfaenger)
@@ -691,6 +762,7 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None) 
     try:
         import config as config_module
         from api.email_notify import send_notification_email
+        from ui.formatting import format_money
 
         email_cfg = config_module.load_config().get("benachrichtigung", {}).get("email", {})
         if not email_cfg.get("aktiv", False) or not email_cfg.get("empfehlungen_aktiv", False):
@@ -699,28 +771,37 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None) 
         if not empfaenger:
             return
 
+        # BUGFIX + Nachbesserung (2026-07-17, siehe _notify_spot_signal()-
+        # Kommentar): dieselben zwei Probleme (rohe Floats statt format_money(),
+        # fehlende Risiken/Halte-Kriterium) galten hier identisch.
         hinweis = f"\nHinweis: {signal.ausfuehrbarkeit_hinweis}\n" if signal.ausfuehrbarkeit_hinweis else ""
         eigenkapital_zeile = (
-            f"Eigenkapitalbedarf: {signal.eigenkapitalbedarf_usd} USD\n"
+            f"Eigenkapitalbedarf: {format_money(signal.eigenkapitalbedarf_usd)} USD\n"
             if signal.eigenkapitalbedarf_usd is not None else ""
         )
         senkung_zeile = (
-            f"Eigenkapital-Nachschuss für Hebel-Senkung: {signal.hebel_senkung_eigenkapital_nachschuss_eur} EUR\n"
+            f"Eigenkapital-Nachschuss für Hebel-Senkung: "
+            f"{format_money(signal.hebel_senkung_eigenkapital_nachschuss_eur)} EUR\n"
             if signal.hebel_senkung_eigenkapital_nachschuss_eur is not None else ""
         )
+        risiken_text = _formatiere_key_risks(signal)
+        halte_kriterium_text = _formatiere_halte_kriterium(signal)
         body = (
             f"Richtung: {signal.richtung}, Aktion: {signal.action}\n"
-            f"Hebel: {signal.hebel_final}x, Konfidenz: {signal.confidence_pct}%\n\n"
+            f"Hebel: {signal.hebel_final}x, Konfidenz: {signal.confidence_pct}%\n"
+            f"Regime: {signal.regime or 'unbekannt'}\n\n"
             f"{signal.short_reasoning or ''}\n\n"
             f"Top-Gründe:\n{_formatiere_top_gruende(signal)}\n\n"
-            f"Entry: {signal.entry_eur_von}-{signal.entry_eur_bis} EUR\n"
-            f"Stop-Loss: {signal.stop_loss_eur_von}-{signal.stop_loss_eur_bis} EUR\n"
-            f"Take-Profit: {signal.take_profit_eur_von}-{signal.take_profit_eur_bis} EUR\n"
-            f"Geschätzter Liquidationspreis: {signal.liquidationspreis_geschaetzt_usd} USD\n"
+            f"Entry: {format_money(signal.entry_eur_von)}-{format_money(signal.entry_eur_bis)} EUR\n"
+            f"Stop-Loss: {format_money(signal.stop_loss_eur_von)}-{format_money(signal.stop_loss_eur_bis)} EUR\n"
+            f"Take-Profit: {format_money(signal.take_profit_eur_von)}-{format_money(signal.take_profit_eur_bis)} EUR\n"
+            f"Geschätzter Liquidationspreis: {format_money(signal.liquidationspreis_geschaetzt_usd)} USD\n"
             f"{eigenkapital_zeile}"
             f"{senkung_zeile}"
             f"{hinweis}\n"
-            "Details im Hebel-Tab der App. Ausführung manuell über die Bitpanda-App."
+            + (f"{risiken_text}\n\n" if risiken_text else "")
+            + (f"{halte_kriterium_text}\n\n" if halte_kriterium_text else "")
+            + "Details im Hebel-Tab der App. Ausführung manuell über die Bitpanda-App."
         )
         send_notification_email(
             f"TradingInfoTool: Hebel {signal.action} {signal.symbol} ({signal.richtung})", body, empfaenger,
@@ -1061,6 +1142,21 @@ def build_scheduler(
         minute=0,
         args=[db_conn_factory, watchlist],
         id="backward_tracking",
+    )
+    # Makro-Analog-Vergleich (2026-07-18) - taeglich, gestaffelt nach Backward-
+    # Tracking (kein harter Grund, nur um nicht beide teureren Jobs exakt
+    # gleichzeitig zu starten). next_run_time=jetzt: bootstrapt die Historie
+    # sofort nach dem ersten Start dieses Features, statt bis zu 24 Std. auf den
+    # ersten Cron-Takt zu warten (gleiches Muster wie refresh_prices/
+    # hebel_screening oben).
+    scheduler.add_job(
+        makro_analog_job,
+        "cron",
+        hour=6,
+        minute=30,
+        args=[db_conn_factory, fred_api_key],
+        id="makro_analog",
+        next_run_time=datetime.now(),
     )
     # 2026-07-17, Nutzer-Fund: ein fester Cron holt einen verpassten Termin NICHT
     # automatisch nach, wenn die App zu diesem Zeitpunkt gar nicht lief - an zwei

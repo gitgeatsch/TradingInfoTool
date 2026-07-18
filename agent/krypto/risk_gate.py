@@ -413,15 +413,23 @@ def compute_cash_reserve_ziel(
 _BUY_ACTIONS = ("KAUFEN", "NACHKAUFEN")
 
 
-def post_check(parsed: dict, pre_result: RiskPreCheckResult, regime_result, config: dict) -> dict:
+def post_check(
+    parsed: dict, pre_result: RiskPreCheckResult, regime_result, config: dict, confluence=None,
+) -> dict:
     """Nimmt die bereits validierte (siehe agent/analyst.py) Groq-Antwort und erzwingt
     RM-1/-2/-4/-5, Mindest-Konfidenz (R-5.10) und CRV >= 2.0 (Z-2) noch einmal
     deterministisch. Klemmt zusaetzlich eine zu gross vorgeschlagene Positionsgroesse
     auf die RM-1/RM-2-Obergrenze (Korrektur, kein Veto). Gibt die (ggf. korrigierte)
-    Antwort + Veto-Metadaten zurueck."""
+    Antwort + Veto-Metadaten zurueck.
+
+    `confluence` (2026-07-18, Nutzer-Fund am echten CAT-Fall: "Ergebnis ist
+    durchgaengig eher schlecht" trotz 80% Konfidenz) optional - ohne sie faellt
+    nur der neue Konflikt-Deckel unten weg, der Rest der Funktion bleibt
+    unveraendert funktionsfaehig (P-10)."""
     result = dict(parsed)
     risk_veto = False
     risk_veto_reason = None
+    crv = None
 
     action = str(result.get("action", "")).upper()
 
@@ -535,6 +543,52 @@ def post_check(parsed: dict, pre_result: RiskPreCheckResult, regime_result, conf
                     f"{gegenszenario_deckel_anteil * 100:.0f}% reduziert (Gegenszenario-Deckel)."
                 )
 
+            # Technischer Konflikt (2026-07-18, Nutzer-Fund am echten CAT-Fall,
+            # "Ergebnis durchgaengig eher schlecht" trotz 80% Konfidenz):
+            # summarize_confluence() klassifiziert bereits deterministisch
+            # "gemischt" (weder bullish noch bearish dominiert), das wurde bisher
+            # nirgends im Risiko-Gate ausgewertet - genau der Fall, der beim
+            # CAT-Signal vorlag ("EMA-Ordnung ist bearish, aber MACD/RSI bieten
+            # Gegenargumente"). Deterministisch, haengt NICHT davon ab, ob das
+            # Modell den Widerspruch selbst benennt.
+            konflikt_note = None
+            if confluence is not None and confluence.overall_bias == "gemischt":
+                konflikt_deckel_anteil = config["risiko"].get("technischer_konflikt_deckel_anteil")
+                if konflikt_deckel_anteil is not None:
+                    effective_max_usd = effective_max_usd * konflikt_deckel_anteil
+                    effective_max_eur = (
+                        effective_max_eur * konflikt_deckel_anteil if effective_max_eur is not None else None
+                    )
+                    konflikt_note = (
+                        f"Obergrenze wegen widerspruechlicher technischer Konfluenz (weder bullish "
+                        f"noch bearish dominiert) zusaetzlich auf {konflikt_deckel_anteil * 100:.0f}% "
+                        "reduziert (Konflikt-Deckel)."
+                    )
+
+            # CRV knapp am Minimum (2026-07-18, gleicher Fund): CRV_MINIMUM ist
+            # bisher ein binaeres Gate - 2,01 und 4,0 werden identisch behandelt,
+            # obwohl ein CRV knapp ueber der Grenze ein deutlich schwaecheres
+            # Setup ist (beim CAT-Fall lag das CRV bei ca. 2,08). Analog zur
+            # Konfidenz-Skalierung: je naeher am Minimum, desto kleiner die
+            # zulaessige Position.
+            crv_knapp_note = None
+            crv_knapp_schwelle_relativ = config["risiko"].get("crv_knapp_schwelle_relativ")
+            crv_knapp_deckel_anteil = config["risiko"].get("crv_knapp_positionsgroesse_deckel_anteil")
+            if (
+                crv is not None
+                and crv_knapp_schwelle_relativ is not None
+                and crv_knapp_deckel_anteil is not None
+                and crv < CRV_MINIMUM * (1 + crv_knapp_schwelle_relativ)
+            ):
+                effective_max_usd = effective_max_usd * crv_knapp_deckel_anteil
+                effective_max_eur = (
+                    effective_max_eur * crv_knapp_deckel_anteil if effective_max_eur is not None else None
+                )
+                crv_knapp_note = (
+                    f"Obergrenze wegen CRV knapp am Minimum ({crv:.2f}, Minimum {CRV_MINIMUM:.1f}) "
+                    f"zusaetzlich auf {crv_knapp_deckel_anteil * 100:.0f}% reduziert (CRV-Knapp-Deckel)."
+                )
+
             if proposed_usd is not None and proposed_usd > effective_max_usd:
                 fx = None
                 proposed_eur = position_size.get("eur")
@@ -548,6 +602,10 @@ def post_check(parsed: dict, pre_result: RiskPreCheckResult, regime_result, conf
                     clamp_note = f"{clamp_note} {konfidenz_scale_note}"
                 if gegenszenario_note:
                     clamp_note = f"{clamp_note} {gegenszenario_note}"
+                if konflikt_note:
+                    clamp_note = f"{clamp_note} {konflikt_note}"
+                if crv_knapp_note:
+                    clamp_note = f"{clamp_note} {crv_knapp_note}"
                 position_size["usd"] = effective_max_usd
                 position_size["eur"] = effective_max_usd * fx if fx is not None else effective_max_eur
                 existing_note = position_size.get("note")

@@ -290,3 +290,54 @@ def compute_provider_performance(conn) -> dict:
         }
 
     return ergebnis
+
+
+# Historische Trefferquote als Prompt-Fakt (2026-07-18, Item E der Konfidenz-
+# Kalibrierungs-Runde, siehe Memory project_konfidenz_kalibrierung_regelwerk.md) -
+# unter dieser Schwelle bekommt das Modell einen expliziten Ehrlichkeits-Hinweis,
+# damit eine winzige Stichprobe nicht als starkes Signal fehlinterpretiert wird.
+_MIN_SAMPLE_FUER_AUSSAGE = 15
+
+
+def compute_win_rate_fact(conn, tier: str) -> dict | None:
+    """Grobe Gesamt-Trefferquote (2026-07-18, Item E) fuer `build_facts()`/
+    `build_hebel_facts()` - liest bereits aufgeloeste Signale (take_profit_erreicht/
+    stop_loss_erreicht, bei Hebel zusaetzlich liquidation_wahrscheinlich) aus
+    signals ("spot", enthaelt Krypto UND Aktien - gleiche Vereinfachung wie in
+    compute_provider_performance() oben, die Stichprobe ist ohnehin zu klein fuer
+    eine weitere Aufspaltung) bzw. hebel_signals ("hebel"). BEWUSST nur eine
+    einzige Gesamtzahl, kein Per-Asset/Per-Regime-Split (Datenbasis dafuer noch
+    zu duenn) - mit explizitem Ehrlichkeits-Hinweis bei kleiner Stichprobe.
+    Reine Lesefunktion, kein Seiteneffekt. Gibt None zurueck, wenn noch gar keine
+    ausgewerteten Signale vorliegen (Prompt sollte den Fakt dann einfach weglassen)."""
+    table = "signals" if tier == "spot" else "hebel_signals"
+    placeholders = ", ".join("?" for _ in _RESOLVED_OUTCOMES)
+    rows = conn.execute(
+        f"SELECT outcome_status FROM {table} WHERE outcome_status IN ({placeholders})",
+        _RESOLVED_OUTCOMES,
+    ).fetchall()
+    total = len(rows)
+    if total == 0:
+        return None
+
+    treffer = sum(1 for r in rows if r["outcome_status"] == OUTCOME_TAKE_PROFIT)
+    fehlschlaege = total - treffer
+    trefferquote_pct = round(100.0 * treffer / total, 1)
+
+    if total < _MIN_SAMPLE_FUER_AUSSAGE:
+        hinweis = (
+            f"Basiert auf nur {total} bisher ausgewerteten Signalen - statistisch "
+            "NICHT belastbar (Mindeststichprobe fuer eine verlaessliche Aussage: "
+            f"{_MIN_SAMPLE_FUER_AUSSAGE}). Nur als sehr grobe Orientierung "
+            "verwenden, keinesfalls die Konfidenz allein darauf stuetzen."
+        )
+    else:
+        hinweis = f"Basiert auf {total} bisher ausgewerteten Signalen."
+
+    return {
+        "anzahl_ausgewertete_signale": total,
+        "trefferquote_pct": trefferquote_pct,
+        "treffer": treffer,
+        "fehlschlaege": fehlschlaege,
+        "hinweis": hinweis,
+    }

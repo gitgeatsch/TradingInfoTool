@@ -191,10 +191,43 @@ gehalten). Wiederhole die Empfehlung nicht unveraendert, ohne diesen Umstand exp
 Grund, der seit der letzten Empfehlung hinzugekommen ist, oder erklaere ausdruecklich, \
 warum die Empfehlung trotz Nicht-Umsetzung unveraendert bestehen bleibt. Bloss dieselbe \
 Begruendung wortgleich zu wiederholen ist nicht hilfreich fuer den Nutzer.
+22. Fuelle `gegenargument` IMMER zuerst aus, BEVOR du `confidence_pct` festlegst - formuliere \
+darin das STAERKSTE Argument GEGEN deinen eigenen Vorschlag (nicht ein schwaches \
+Feigenblatt-Gegenargument). Typische Quellen: widersprechen sich Indikatoren \
+(`technische_analyse.confluence.gesamttendenz` == "gemischt", z.B. EMA-Trend widerspricht \
+RSI/MACD)? Ist das Chance-Risiko-Verhaeltnis nur knapp ueber der Pflichtgrenze von 2.0? \
+Beruht `long_reasoning.fundamental` oder `.makro` nur auf allgemeinen, nicht assetspezifischen \
+Aussagen (z.B. "globale Liquiditaet expandiert" gilt fast immer fuer fast jedes Asset)? \
+Ist das Handelsvolumen/die Marktkapitalisierung so klein, dass die vorgeschlagene \
+Positionsgroesse am echten Orderbuch schwer ausfuehrbar sein koennte? `confidence_pct` MUSS \
+das dort formulierte Gegenargument widerspiegeln - ein GENUIN starkes Gegenargument (z.B. \
+widerspruechliche Konfluenz UND ein nur knapp ausreichendes CRV gleichzeitig) darf NICHT mit \
+hoher Konfidenz (>75%) kombiniert werden. Ein Beispiel fuer eine zu hoch gegriffene Konfidenz: \
+"EMA-Ordnung bearish, aber RSI/MACD bullish" bei 80% Konfidenz ist inkonsistent - der \
+Widerspruch selbst muss die Konfidenz nach unten ziehen, nicht nur beilaeufig erwaehnt werden.
+23. Ist `historische_erfolgsquote` NICHT null, gibt sie die bisherige Trefferquote frueherer \
+Signale wieder (`trefferquote_pct`, `anzahl_ausgewertete_signale`). Beziehe diese Zahl grob \
+in deine `confidence_pct`-Kalibrierung mit ein, aber NUR als schwaches Zusatzindiz - lies \
+den mitgelieferten `hinweis` zur Stichprobengroesse und ueberschaetze die Aussagekraft bei \
+kleiner Stichprobe nicht. Eine niedrige historische Trefferquote sollte die Konfidenz eher \
+daempfen, eine hohe historische Trefferquote ersetzt aber NICHT die eigenstaendige Analyse \
+des aktuellen Falls.
+24. Ist `historischer_makro_vergleich` NICHT null, listet er historische Kalendermonate mit \
+einer AEHNLICHEN Makro-Konstellation (Dollarstaerke, Zinsen, Anleiherenditen, Oelpreis, \
+Aktienbewertung) wie heute samt bekanntem weiteren Verlauf (`top_analoge`, je Eintrag \
+`spx_forward_6m_prozent`/`spx_forward_12m_prozent` fuer den S&P 500 UND, wo verfuegbar, \
+`btc_forward_6m_prozent`/`btc_forward_12m_prozent` fuer BTC). WICHTIG fuer Krypto-Signale: \
+die `btc_forward_*`-Werte sind NUR eine grobe qualitative Orientierung (oft nur 2-3 Analoge \
+mit ueberhaupt einem BTC-Wert, da BTC erst seit 2009 existiert) - verwende sie NIEMALS als \
+belastbare Statistik oder direkte Grundlage fuer `confidence_pct`. `spx_median_forward_*` \
+(sofern vorhanden) beschreibt nur die Aktienmarkt-Tendenz der Analoge, ist fuer Krypto \
+bestenfalls ein grober Makro-Hintergrund, kein Krypto-Signal. Lies den mitgelieferten \
+`hinweis` fuer die genaue Einordnung.
 
 SCHEMA:
 {
   "action": "KAUFEN|VERKAUFEN|TAUSCHEN|HALTEN|NACHKAUFEN",
+  "gegenargument": "<das staerkste Argument GEGEN diesen Vorschlag, siehe Regel 22>",
   "confidence_pct": <0-100>,
   "short_reasoning": "<1-2 Saetze>",
   "top_gruende": [
@@ -295,6 +328,8 @@ def build_facts(
     tranchen_erlaubt: bool = False,
     cash_reserve_ziel: CashReserveZielResult | None = None,
     letztes_signal=None,
+    historische_erfolgsquote: dict | None = None,
+    historischer_makro_vergleich: dict | None = None,
 ) -> dict:
     macd_val = technical_snapshot.macd
     macd_facts = None
@@ -378,6 +413,8 @@ def build_facts(
         },
         "haltung": _build_haltung_facts(holding, latest_price),
         "vorherige_empfehlung": vorherige_empfehlung_fact,
+        "historische_erfolgsquote": historische_erfolgsquote,
+        "historischer_makro_vergleich": historischer_makro_vergleich,
         "technische_analyse": {
             "ema": {str(p): _native(latest_value(r)) for p, r in technical_snapshot.ema.items()},
             "macd": macd_facts,
@@ -520,7 +557,7 @@ def build_facts(
 
 
 REQUIRED_TOP_LEVEL_FIELDS = (
-    "action", "confidence_pct", "short_reasoning", "top_gruende", "long_reasoning",
+    "action", "gegenargument", "confidence_pct", "short_reasoning", "top_gruende", "long_reasoning",
     "position_size", "entry", "stop_loss", "take_profit", "halte_kriterium",
     "key_risks", "forecast",
 )
@@ -580,6 +617,14 @@ def _validate(data: dict, asset_symbol: str) -> dict:
     if action not in REQUIRED_ACTIONS:
         raise AnalystResponseInvalid(f"Ungültige action: {data['action']!r}")
     data["action"] = action
+
+    # Gegenargument-Pflichtfeld (2026-07-18, Regel 22 - Selbstkritik-Schritt in
+    # einem einzigen Call statt eines teuren zweiten LLM-Aufrufs): muss ein
+    # echter, nicht-trivialer Text sein, keine Ein-Wort-Pflichtuebung.
+    gegenargument = str(data.get("gegenargument", "")).strip()
+    if len(gegenargument) < 15:
+        raise AnalystResponseInvalid(f"gegenargument fehlt oder zu kurz: {data.get('gegenargument')!r}")
+    data["gegenargument"] = gegenargument
 
     try:
         data["confidence_pct"] = float(data["confidence_pct"])

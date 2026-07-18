@@ -18,7 +18,9 @@ from datetime import datetime, timezone
 import database.db as db
 from agent.krypto.analyst import AnalystResponseInvalid
 from agent.krypto.anticyclic import assess as assess_anticyclic
+from agent.krypto.backward_tracking import compute_win_rate_fact
 from agent.krypto.hebel_analyst import build_hebel_facts, call_llm_for_hebel_signal
+from agent.krypto.makro_analog import get_cached_makro_analog_fact
 from agent.krypto.hebel_risk_gate import post_check_hebel, pre_check_hebel
 from agent.krypto.llm_provider import llm_model_label
 from agent.krypto.pipeline import _load_closes_and_ohlc, compute_current_regime, fetch_market_context
@@ -142,10 +144,14 @@ def generate_hebel_signal(
         price_age_minutes = (datetime.now(timezone.utc) - fetched).total_seconds() / 60
 
     now_unix = int(datetime.now(timezone.utc).timestamp())
+    historische_erfolgsquote = compute_win_rate_fact(conn, "hebel")
+    historischer_makro_vergleich = get_cached_makro_analog_fact(conn)
     facts = build_hebel_facts(
         asset, price_snap, snapshot, confluence, regime_result, regime_profile,
         anticyclic_context, market_context, trigger, position_aktuell, pre_result,
         price_age_minutes, now_unix, letztes_signal,
+        historische_erfolgsquote=historische_erfolgsquote,
+        historischer_makro_vergleich=historischer_makro_vergleich,
     )
 
     try:
@@ -161,7 +167,7 @@ def generate_hebel_signal(
 
     raw_response = parsed.pop("_raw_response", None)
 
-    corrected = post_check_hebel(parsed, pre_result, regime_result, config_dict)
+    corrected = post_check_hebel(parsed, pre_result, regime_result, config_dict, confluence=confluence)
     risk_veto = corrected.pop("_risk_veto")
     risk_veto_reason = corrected.pop("_risk_veto_reason")
 
@@ -228,6 +234,7 @@ def generate_hebel_signal(
         hebel_trigger_id=trigger.id,
         trigger_zweig=trigger.trigger_zweig,
         trigger_score=trigger.score_gesamt,
+        gegenargument=corrected.get("gegenargument"),
         confidence_pct=corrected.get("confidence_pct"),
         short_reasoning=corrected.get("short_reasoning"),
         long_reasoning_technisch=long_reasoning.get("technisch"),

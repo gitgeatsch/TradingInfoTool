@@ -28,7 +28,9 @@ from agent.aktien.analyst import (
     build_facts,
     call_llm_for_signal,
 )
+from agent.krypto.backward_tracking import compute_win_rate_fact
 from agent.krypto.llm_provider import llm_model_label
+from agent.krypto.makro_analog import get_cached_makro_analog_fact
 from agent.krypto.pipeline import MIN_GATE_INDICATORS_AVAILABLE, compute_current_regime
 from agent.krypto.risk_gate import post_check, pre_check
 from api.yfinance_client import fetch_fundamentals
@@ -176,9 +178,14 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
             fetched = fetched.replace(tzinfo=timezone.utc)
         price_age_minutes = (datetime.now(timezone.utc) - fetched).total_seconds() / 60
 
+    historische_erfolgsquote = compute_win_rate_fact(conn, "spot")
+    historischer_makro_vergleich = get_cached_makro_analog_fact(conn)
+
     facts = build_facts(
         asset, price_snap, holdings.get(asset.symbol), snapshot, confluence, regime_result,
         risk_result, fundamentals, price_age_minutes,
+        historische_erfolgsquote=historische_erfolgsquote,
+        historischer_makro_vergleich=historischer_makro_vergleich,
     )
 
     try:
@@ -191,7 +198,7 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
 
     raw_response = parsed.pop("_raw_response", None)
 
-    corrected = post_check(parsed, risk_result, regime_result, config_dict)
+    corrected = post_check(parsed, risk_result, regime_result, config_dict, confluence=confluence)
     risk_veto = corrected.pop("_risk_veto")
     risk_veto_reason = corrected.pop("_risk_veto_reason")
 
@@ -255,6 +262,7 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
         forecast_base_prob_pct=forecast.get("base", {}).get("probability_pct"),
         forecast_bear_text=forecast.get("bear", {}).get("scenario"),
         forecast_bear_prob_pct=forecast.get("bear", {}).get("probability_pct"),
+        gegenargument=corrected.get("gegenargument"),
         groq_raw_response=raw_response,
         groq_model=llm_model_label(llm_client),
         **top_grund_fields,

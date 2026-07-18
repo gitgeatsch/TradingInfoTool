@@ -138,7 +138,9 @@ def pre_check_hebel(
     )
 
 
-def post_check_hebel(parsed: dict, pre_result: HebelPreCheckResult, regime_result, config: dict) -> dict:
+def post_check_hebel(
+    parsed: dict, pre_result: HebelPreCheckResult, regime_result, config: dict, confluence=None,
+) -> dict:
     """Nimmt die bereits schema-validierte LLM-Antwort und erzwingt AZ-7/RM-1/
     RM-11/CRV noch einmal deterministisch, analog risk_gate.py::post_check().
     Haengt zusaetzlich die rein deterministisch berechneten Felder an
@@ -152,7 +154,12 @@ def post_check_hebel(parsed: dict, pre_result: HebelPreCheckResult, regime_resul
     Wahrscheinlichkeit (das Modell selbst schaetzt via forecast.bear/bull
     hoch ein, dass sich die Position als falsch herausstellt). Beide rein
     deterministisch, unabhaengig davon ob das Modell das selbst schon
-    beruecksichtigt hat."""
+    beruecksichtigt hat.
+
+    Nachtrag 2026-07-18 (echter CAT-Fall, Spot-Pendant): zwei WEITERE Deckel-
+    Kandidaten - widerspruechliche technische Konfluenz (`confluence`,
+    optional) und CRV knapp am Minimum (`crv`, siehe unten in
+    `_hebel_deckel_kandidaten()`)."""
     result = dict(parsed)
     risk_veto = False
     risk_veto_reason = None
@@ -165,11 +172,12 @@ def post_check_hebel(parsed: dict, pre_result: HebelPreCheckResult, regime_resul
         risk_veto_reason = pre_result.veto_reason
         action = "HALTEN"
 
-    def _hebel_deckel_kandidaten() -> list[tuple[str, float]]:
+    def _hebel_deckel_kandidaten(crv: float | None = None) -> list[tuple[str, float]]:
         """Nachtrag 2026-07-17 (echter LINK-Fall): gemeinsame Deckel-Logik fuer
         beide Faelle, die einen Ziel-Hebel brauchen - ERÖFFNEN/NACHKAUFEN/
         HEBEL_ERHÖHEN (mit CRV-Pflicht) UND HEBEL_SENKEN (ohne, siehe unten,
-        eine Reduktion braucht keine CRV-Rechtfertigung)."""
+        eine Reduktion braucht keine CRV-Rechtfertigung). `crv` optional -
+        HEBEL_SENKEN hat kein CRV-Konzept, uebergibt daher nichts."""
         kandidaten: list[tuple[str, float]] = [("Config-Maximum", pre_result.config_max_hebel)]
         if pre_result.max_sicherer_hebel is not None:
             kandidaten.append(("RM-11 max. sicherer Hebel", pre_result.max_sicherer_hebel))
@@ -192,6 +200,23 @@ def post_check_hebel(parsed: dict, pre_result: HebelPreCheckResult, regime_resul
             kandidaten.append(
                 (f"Gegenszenario-Wahrscheinlichkeit {gegenszenario_pct:.0f}%", hebel_cfg["gegenszenario_hebel_deckel"])
             )
+
+        # Nachtrag 2026-07-18 (echter CAT-Fall, Spot-Pendant siehe risk_gate.py::
+        # post_check()): widerspruechliche technische Konfluenz - deterministisch,
+        # unabhaengig davon ob das Modell den Widerspruch selbst benennt.
+        if confluence is not None and confluence.overall_bias == "gemischt":
+            kandidaten.append(("Widerspruechliche technische Konfluenz", hebel_cfg["technischer_konflikt_hebel_deckel"]))
+
+        # Nachtrag 2026-07-18 (gleicher Fund): CRV knapp am Minimum - CRV_MINIMUM
+        # war bisher ein binaeres Gate, 2,01 und 4,0 wurden identisch behandelt.
+        crv_knapp_schwelle_relativ = hebel_cfg.get("crv_knapp_schwelle_relativ")
+        if (
+            crv is not None
+            and crv_knapp_schwelle_relativ is not None
+            and crv < CRV_MINIMUM * (1 + crv_knapp_schwelle_relativ)
+        ):
+            kandidaten.append((f"CRV knapp am Minimum ({crv:.2f})", hebel_cfg["crv_knapp_hebel_deckel"]))
+
         return kandidaten
 
     if action == "HEBEL_SENKEN" and pre_result.hebel_erlaubt:
@@ -238,7 +263,7 @@ def post_check_hebel(parsed: dict, pre_result: HebelPreCheckResult, regime_resul
                 action = "HALTEN"
             else:
                 hebel_vorschlag = result.get("hebel_vorschlag")
-                deckel_kandidaten = _hebel_deckel_kandidaten()
+                deckel_kandidaten = _hebel_deckel_kandidaten(crv=crv)
                 deckel_werte = [wert for _, wert in deckel_kandidaten]
                 hebel_final = min([hebel_vorschlag] + deckel_werte) if hebel_vorschlag is not None else None
 

@@ -12,6 +12,8 @@ from database.models import (
     HebelTrigger,
     Holding,
     MacroSnapshot,
+    MakroAnalogErgebnis,
+    MakroHistorieMonat,
     MarktscanCandidate,
     OhlcPoint,
     OpenInterestSnapshot,
@@ -323,6 +325,26 @@ CREATE TABLE IF NOT EXISTS api_health_status (
     last_error_type     TEXT,
     last_error_message  TEXT
 );
+
+-- Historischer Makro-Konstellationsvergleich (2026-07-18, siehe Memory
+-- project_konfidenz_kalibrierung_regelwerk.md / makro_analog.py) - monatliche
+-- Zeitreihe mehrerer Makro-Faktoren + gecachtes Vergleichsergebnis.
+CREATE TABLE IF NOT EXISTS makro_historie_monat (
+    monat                   TEXT PRIMARY KEY,
+    dxy_proxy                REAL,
+    fed_funds_rate            REAL,
+    rendite_10y                REAL,
+    cpi_yoy_prozent              REAL,
+    oel_wti                       REAL,
+    spx_close                      REAL,
+    spx_trend_deviation_std         REAL,
+    btc_close                        REAL
+);
+
+CREATE TABLE IF NOT EXISTS makro_analog_ergebnis (
+    berechnet_am    TEXT PRIMARY KEY,
+    ergebnis_json   TEXT NOT NULL
+);
 """
 
 
@@ -497,6 +519,22 @@ def _migrate_hebel_signal_senkung_columns(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+_GEGENARGUMENT_NEW_COLUMN = {"gegenargument": "TEXT"}
+
+
+def _migrate_gegenargument_columns(conn: sqlite3.Connection) -> None:
+    """Nachtrag 2026-07-18 (echter CAT-Fall, siehe Memory
+    project_konfidenz_kalibrierung_regelwerk.md) - Gegenargument-Pflichtfeld
+    (analyst.py/hebel_analyst.py SYSTEM_PROMPT Regel 22) fuer beide Tabellen.
+    Gleiches additive Migrations-Muster wie oben."""
+    for table in ("signals", "hebel_signals"):
+        existing = {row["name"] for row in conn.execute(f"PRAGMA table_info({table})")}
+        for column, sql_type in _GEGENARGUMENT_NEW_COLUMN.items():
+            if column not in existing:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
 _SIGNAL_TRANCHEN_NEW_COLUMNS = {"tranchen_json": "TEXT"}
 
 
@@ -606,6 +644,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_signal_cash_reserve_ziel_columns(conn)
     _migrate_hebel_signal_outcome_columns(conn)
     _migrate_hebel_signal_senkung_columns(conn)
+    _migrate_gegenargument_columns(conn)
     import_holdings_manual_overrides(conn)
 
 
@@ -1053,6 +1092,55 @@ def get_latest_macro_snapshot(conn: sqlite3.Connection) -> MacroSnapshot | None:
     return MacroSnapshot(**dict(row)) if row else None
 
 
+_MAKRO_HISTORIE_MONAT_COLUMNS = (
+    "monat", "dxy_proxy", "fed_funds_rate", "rendite_10y", "cpi_yoy_prozent",
+    "oel_wti", "spx_close", "spx_trend_deviation_std", "btc_close",
+)
+
+
+def upsert_makro_historie_monat(conn: sqlite3.Connection, eintrag: MakroHistorieMonat) -> None:
+    """Gleiches COALESCE-Merge-Muster wie upsert_macro_snapshot() - verschiedene
+    Quellen (FRED/yfinance/blockchain.com) fuellen unterschiedliche Spalten
+    desselben Monats in getrennten Aufrufen (siehe agent/krypto/makro_analog.py),
+    ein NULL aus einer Quelle darf einen bereits gesetzten Wert einer anderen
+    Quelle nicht ueberschreiben."""
+    placeholders = ", ".join("?" for _ in _MAKRO_HISTORIE_MONAT_COLUMNS)
+    update_clause = ", ".join(
+        f"{col} = COALESCE(excluded.{col}, makro_historie_monat.{col})"
+        for col in _MAKRO_HISTORIE_MONAT_COLUMNS
+        if col != "monat"
+    )
+    values = [getattr(eintrag, col) for col in _MAKRO_HISTORIE_MONAT_COLUMNS]
+    conn.execute(
+        f"INSERT INTO makro_historie_monat ({', '.join(_MAKRO_HISTORIE_MONAT_COLUMNS)}) "
+        f"VALUES ({placeholders}) ON CONFLICT(monat) DO UPDATE SET {update_clause}",
+        values,
+    )
+    conn.commit()
+
+
+def get_makro_historie(conn: sqlite3.Connection) -> list[MakroHistorieMonat]:
+    columns = ", ".join(_MAKRO_HISTORIE_MONAT_COLUMNS)
+    rows = conn.execute(f"SELECT {columns} FROM makro_historie_monat ORDER BY monat ASC").fetchall()
+    return [MakroHistorieMonat(**dict(row)) for row in rows]
+
+
+def upsert_makro_analog_ergebnis(conn: sqlite3.Connection, ergebnis: MakroAnalogErgebnis) -> None:
+    conn.execute(
+        "INSERT INTO makro_analog_ergebnis (berechnet_am, ergebnis_json) VALUES (?, ?) "
+        "ON CONFLICT(berechnet_am) DO UPDATE SET ergebnis_json = excluded.ergebnis_json",
+        (ergebnis.berechnet_am, ergebnis.ergebnis_json),
+    )
+    conn.commit()
+
+
+def get_latest_makro_analog_ergebnis(conn: sqlite3.Connection) -> MakroAnalogErgebnis | None:
+    row = conn.execute(
+        "SELECT berechnet_am, ergebnis_json FROM makro_analog_ergebnis ORDER BY berechnet_am DESC LIMIT 1"
+    ).fetchone()
+    return MakroAnalogErgebnis(**dict(row)) if row else None
+
+
 _SIGNAL_COLUMNS = (
     "symbol", "created_at", "pipeline_version", "action", "confidence_pct",
     "short_reasoning", "long_reasoning_technisch", "long_reasoning_fundamental",
@@ -1073,7 +1161,7 @@ _SIGNAL_COLUMNS = (
     "risk_veto", "risk_veto_reason", "facts_json", "groq_raw_response", "groq_model",
     "tranchen_json",
     "cash_reserve_ziel_btc_usd", "cash_reserve_ziel_eth_usd", "cash_reserve_ziel_gesamt_usd",
-    "cash_reserve_ziel_begruendung",
+    "cash_reserve_ziel_begruendung", "gegenargument",
 )
 
 
@@ -1613,7 +1701,7 @@ _HEBEL_SIGNAL_COLUMNS = (
     "liquidationspreis_geschaetzt_usd", "eigenkapitalbedarf_usd",
     "hebel_senkung_eigenkapital_nachschuss_eur", "ausfuehrbarkeit_hinweis",
     "gate_passed", "gate_reason", "risk_veto", "risk_veto_reason", "facts_json",
-    "groq_raw_response", "llm_model",
+    "groq_raw_response", "llm_model", "gegenargument",
 )
 
 
