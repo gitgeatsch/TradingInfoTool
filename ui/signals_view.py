@@ -76,10 +76,19 @@ class SignalsView(ttk.Frame):
         # Non-Krypto-Agent-Pipeline Phase 1 (2026-07-15, agent/aktien/pipeline.py) -
         # eigene, von der Krypto-Portfolio-Summe getrennte Watchlist (analoges
         # Prinzip wie oben: RM-2-Allokations-Prozent soll sich auf den Aktien-Anteil
-        # beziehen, nicht auf das gemischte Gesamtportfolio). ETFs/Rohstoffe folgen
-        # in einer spaeteren Phase (siehe Regelwerksmanual), deshalb hier bewusst nur
+        # beziehen, nicht auf das gemischte Gesamtportfolio). ETFs (Hedge-Instrumente)
+        # folgen als eigene Pipeline (agent/hedge/), deshalb hier bewusst nur
         # "aktien", nicht "assetklasse != 'krypto'".
         self._aktien_watchlist = [a for a in watchlist if a.assetklasse == "aktien"]
+        # Multi-Asset-Roadmap Phase 2 (2026-07-18, agent/rohstoff/pipeline.py) -
+        # gleiches Prinzip wie Aktien: eigene Watchlist-Teilmenge fuer die Anzeige/
+        # Auswahl, generate_signal() dort filtert intern erneut fuer RM-2.
+        self._rohstoff_watchlist = [a for a in watchlist if a.assetklasse == "rohstoffe"]
+        # Portfolio-Hedge-Instrumente (2026-07-18, agent/hedge/pipeline.py) - kein
+        # eigenes assetklasse-Feld (bleiben "etf", siehe SYMBOL_ZU_HEBEL_FAKTOR dort),
+        # daher per Symbol statt per Assetklasse gefiltert.
+        from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR as _hedge_symbole
+        self._hedge_watchlist = [a for a in watchlist if a.symbol in _hedge_symbole]
         # agent/aktien/pipeline.py::generate_signal() braucht die VOLLSTAENDIGE
         # Watchlist (inkl. BTC) fuer compute_current_regime() - filtert intern selbst
         # auf die Aktien-Teilmenge fuer RM-2, siehe dessen Docstring.
@@ -185,10 +194,16 @@ class SignalsView(ttk.Frame):
         )
 
     def _asset_by_symbol(self, symbol: str):
-        return next((a for a in self._watchlist + self._aktien_watchlist if a.symbol == symbol), None)
+        return next(
+            (
+                a for a in self._watchlist + self._aktien_watchlist + self._rohstoff_watchlist + self._hedge_watchlist
+                if a.symbol == symbol
+            ),
+            None,
+        )
 
     def _refresh_list(self) -> None:
-        alle_assets = self._watchlist + self._aktien_watchlist
+        alle_assets = self._watchlist + self._aktien_watchlist + self._rohstoff_watchlist + self._hedge_watchlist
         conn = self._db_conn_factory()
         try:
             latest_by_symbol = {a.symbol: db.get_latest_signal(conn, a.symbol) for a in alle_assets}
@@ -532,6 +547,16 @@ class SignalsView(ttk.Frame):
                     from agent.aktien.pipeline import generate_signal as generate_aktien_signal
 
                     return generate_aktien_signal(asset, self._raw_watchlist, conn, llm_client, self._coingecko_client)
+
+                if asset.assetklasse == "rohstoffe":
+                    from agent.rohstoff.pipeline import generate_signal as generate_rohstoff_signal
+
+                    return generate_rohstoff_signal(asset, self._raw_watchlist, conn, llm_client, self._coingecko_client)
+
+                if asset.symbol in {a.symbol for a in self._hedge_watchlist}:
+                    from agent.hedge.pipeline import generate_signal as generate_hedge_signal
+
+                    return generate_hedge_signal(asset, self._raw_watchlist, conn, llm_client, self._coingecko_client)
 
                 from agent.krypto.pipeline import generate_signal
 

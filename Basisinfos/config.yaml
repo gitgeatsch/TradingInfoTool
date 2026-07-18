@@ -818,3 +818,15 @@ makro_analog:
                                  # ueberlappenden Dimensionen (siehe
                                  # KONSTELLATIONS_DIMENSIONEN) wird verworfen -
                                  # zu duenner Vergleich waere bedeutungslos
+
+# --- Portfolio-Hedge-Instrumente (2026-07-18, Nutzer-Wunsch: "Bitpanda-
+# Sonderkonstellation und Absicherung" - DBPK/3QSS als Kompromiss-Hedge, da
+# Bitpanda keine echten Krypto-Short-Positionen anbietet, siehe
+# agent/hedge/analyst.py Modul-Docstring) ---
+hedge:
+  max_abdeckung_anteil: 1.0   # Ziel-Obergrenze der Gesamt-Hedge-Abdeckung
+                               # relativ zur ungesicherten Long-Exposure (1.0 =
+                               # maximal 100% abgesichert). Bewusst als
+                               # Obergrenze, nicht als Zielwert - siehe
+                               # SYSTEM_PROMPT-Regel 3 (volle Abdeckung nur bei
+                               # baer/krise_extrem gerechtfertigt).

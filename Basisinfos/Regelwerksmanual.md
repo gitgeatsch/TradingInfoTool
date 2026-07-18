@@ -2992,3 +2992,131 @@ geänderten Pipelines nach der Verdrahtung.
 ein neuer Tab oder eine Karte im Regime-Tab) - der Fakt fließt direkt in
 die LLM-Signale ein, eine separate Visualisierung war nicht Teil des
 heutigen Auftrags und kann bei Bedarf nachgerüstet werden.
+
+## Nachtrag (2026-07-18, gleicher Tag): Rohstoff-Pipeline (Phase 2) + Portfolio-Hedge-Logik
+
+**Auslöser:** Nutzer bekräftigte, die Multi-Asset-Roadmap Phase 2-4
+(Rohstoffe/ETF/Discovery, siehe Memory project_multi_asset_erweiterbarkeit.md)
+als nächstes Großthema angehen zu wollen, und ergänzte explizit die
+"Bitpanda-Sonderkonstellation und Absicherung" - da Bitpanda keine echten
+Krypto-Short-Positionen anbietet, sollten die bereits gehaltenen inversen/
+gehebelten Aktienindex-ETFs (DBPK, 3QSS) als praktischer Kompromiss-Hedge
+gegen das GESAMTE Portfolio (nicht nur Aktien) eine eigene Bewertungslogik
+bekommen. Nutzer wählte den vollen Durchstich beider Bausteine am selben Tag.
+
+### Baustein 1: Rohstoff-Pipeline (`agent/rohstoff/`)
+
+Neues, eigenständiges Modul (gleiche Architektur-Entscheidung wie bei Aktien -
+kein verallgemeinertes Framework). Vier ETCs (OD7N Silber, OD7H Gold, OD7C
+Kupfer, OD7L Erdgas, `assetklasse: rohstoffe`). Kein KGV-Äquivalent für
+physische Rohstoffe - stattdessen `makro_ueberlagerung` (10J-TIPS-Realrendite
+DFII10, Dollar-Index DTWEXBGS, Industrieproduktion INDPRO - alle via FRED)
+und `positionierung` (CFTC-COT-Report, "Managed Money"-Netto-Positionierung,
+neues Modul `api/cftc_cot.py`, kostenlose Socrata-API, kein Key nötig).
+
+**Datenquellen-Recherche (Build vs. Buy):** kostenlose, echte APIs identifiziert
+für COT (`publicreporting.cftc.gov`, Dataset `72hh-3qpy`, live verifiziert für
+alle 4 Rohstoffe) und FRED-Realrendite/Dollar/Industrieproduktion. Bewusst
+NICHT einbezogen (dokumentierte Lücke, spätere Erweiterung möglich): EIA-
+Erdgaslager (bräuchte neuen API-Key, nicht heute testbar), COMEX-/LME-
+Lagerbestände (Dateiformat-Risiko, gleiche Kategorie wie das bereits
+verworfene Shiller-CAPE), ETF-Gold-/Silber-Bestandsflüsse (CSV-Format
+ungeprüft).
+
+**Kritischer Live-Fund bei der Verifikation:** die WisdomTree-ETC-
+Börsennotierungen selbst (`asset.yfinance_symbol`) liefern über yfinance
+KEINE `.history()`-Daten - nur `fast_info` (aktueller Kurs) funktioniert,
+dieselbe Einschränkung, die 2026-07-09 bereits für OD7N/3QSS dokumentiert
+wurde (siehe Memory project_multi_asset_yfinance_symbols.md), hier aber
+erstmals fest eingebaut vorausgesetzt und dadurch übersehen. **Fix:**
+technische Analyse (EMA/MACD/RSI/Bollinger/ATR/Fibonacci/S&R) wird stattdessen
+aus dem liquiden, kontinuierlichen Futures-Kontrakt abgeleitet, den das ETC
+nachbildet (GC=F/SI=F/HG=F/NG=F, 25+ Jahre Historie, live verifiziert).
+
+**Zweiter, direkt daraus folgender Fund:** Futures- und ETC-Kurs liegen auf
+VÖLLIG unterschiedlichen absoluten Preisskalen (z. B. Gold-Future ~4.000
+USD/Unze vs. das Bruchteils-ETC bei ~18-20 USD) - ohne Korrektur wären
+EMA/Bollinger/ATR/Support-Resistance/Fibonacci-Level absolute Preis-Level auf
+der FALSCHEN Skala, eine daraus abgeleitete Stop-Loss-Zone wäre um
+Größenordnungen falsch. **Fix:** `_rescale_ohlc_zum_etc_kurs()` skaliert die
+GESAMTE Futures-Historie mit einem einzigen, heute gültigen Faktor (ETC-Kurs
+/ letzter Futures-Kurs) auf die ETC-Größenordnung, bevor sie in
+`build_technical_snapshot()` geht - technische Muster (Trendrichtung,
+Support/Resistance-Abstände in Prozent) bleiben dabei unverändert, nur die
+absolute Preisachse verschiebt sich. Live verifiziert: ATR/Preis-Verhältnis
+nach der Korrektur für alle 4 ETCs plausibel im Bereich 0,018-0,045 (vorher
+absurd, z. B. Gold-ATR von ~40 USD auf einen ~18-USD-Kurs angewendet).
+
+**Dritter Fund (Robustheits-Lücke, ebenfalls behoben):** `price_usd` wird für
+diese EUR-notierten ETCs erst nachträglich aus `price_eur * eur_usd_fx_rate`
+abgeleitet und kann fehlen, wenn beim letzten Preisabruf kein aktueller FX-Kurs
+vorlag - ohne explizites Gate hätte das Fehlen von `price_usd` die Skalierung
+still auf die (falsche) Futures-Skala zurückfallen lassen. Neuer Gate-Check
+VOR der Skalierung: fehlt `price_usd`, wird das Signal als `gate_passed=False`
+mit klarem Grund abgelehnt statt eine falsch skalierte Analyse zu erzeugen.
+
+**Verifiziert:** Live-Test aller 4 ETCs gegen echtes FRED/CFTC/yfinance
+(Fakten-Generierung + Skalierungs-Korrektheit), ein echter End-to-End-Lauf mit
+echtem Groq-Call (OD7H/Gold: HALTEN, 60 % Konfidenz, korrekt begründet mit
+gemischter Konfluenz + belastenden Makro-Faktoren + COT-Positionierung).
+
+### Baustein 2: Portfolio-Hedge-Logik (`agent/hedge/`)
+
+Bewusst ANDERS architektiert als Aktien/Rohstoff: KEINE
+Einzeltitel-Technikanalyse (3QSS hat wie die Rohstoff-ETCs keine
+yfinance-Historie, UND ein Hedge-Instrument sollte ohnehin nicht nach eigener
+technischer Stärke bewertet werden, sondern danach, wie viel ungesichertes
+PORTFOLIO-Risiko es gerade abdeckt). KEIN `risk_gate.pre_check()`/
+`post_check()` (RM-1/2/4/5 + CRV-Pflicht sind für profitorientierte
+Directional-Wetten gebaut, nicht für eine Absicherungs-Position) - eigener,
+einfacherer Deckel.
+
+**Kernmechanik:** `_compute_portfolio_exposure()` berechnet die ungesicherte
+Long-Exposure (Portfolio-Wert ohne Hedge-Instrumente und ohne
+Cash-Äquivalente) sowie die aktuelle Hedge-Abdeckung (Summe über ALLE
+gehaltenen Hedge-Instrumente, je mit ihrem Hebelfaktor multipliziert - 1 USD
+in einem 3x-Short-ETF deckt effektiv 3 USD Long-Exposure ab). Ein
+konfigurierbares Ziel-Maximum (`hedge.max_abdeckung_anteil`, Default 1.0 =
+100 %) begrenzt deterministisch, wie viel zusätzliche Hedge-Position
+vorgeschlagen werden darf.
+
+**Live-Fund während der Verifikation:** `_portfolio_values_usd()` lässt ein
+Symbol ohne bekannten Preis (P-10) einfach aus der Wertesumme weg - ein
+ANDERES, tatsächlich gehaltenes Hedge-Instrument mit fehlendem `price_usd`
+hätte die Gesamt-Abdeckung dadurch STILLSCHWEIGEND unterschätzt (0 statt des
+echten Werts), was einen KAUFEN/NACHKAUFEN-Vorschlag zu einer unbemerkten
+Übersicherung hätte führen können. **Fix:** `fehlende_preise`-Erkennung +
+explizite Warnung im Fakt (`berechnung_unsicher_fehlende_preise`) + das
+verbleibende Hedge-Budget wird in diesem Fall vorsorglich auf 0 gedeckelt
+(VERKAUFEN/HALTEN bleiben davon unberührt, nur ein Hedge-AUFBAU wird
+blockiert). Live gegen das echte Portfolio verifiziert: mit vollständigen
+Preisen korrekt 1.768 USD Gesamt-Abdeckung (1.739 DBPK × 0,163 × 2 + 218
+3QSS × 1,836 × 3 = 12,7 % der 13.936 USD Long-Exposure), ohne einen der
+beiden Preise korrekt auf 0 USD Budget gedeckelt mit klarer Warnung.
+
+**Volatility-Decay-Warnung:** neue SYSTEM_PROMPT-Regel verlangt, gehebelte/
+inverse ETFs NIE als Buy-and-Hold-Position zu behandeln (tägliches
+Rebalancing erzeugt bei Seitwärtsbewegung strukturellen Wertverlust,
+unabhängig von der Richtung des zugrunde liegenden Index) - explizit in
+`key_risks`/`long_reasoning.risiko` zu benennen.
+
+**Verifiziert:** Facts-Generierung + Exposure-Berechnung gegen echtes
+Portfolio (mit und ohne fehlende Preise), ein echter End-to-End-Lauf mit
+echtem Mistral-Call (DBPK: HALTEN, 60 % Konfidenz, korrekt begründet mit
+12,7 % bestehender Abdeckung + inaktivem Aktien-Bärenmarkt-Indikator +
+Decay-Erwägung).
+
+**Config (`Basisinfos/config.yaml`):**
+```yaml
+hedge:
+  max_abdeckung_anteil: 1.0
+```
+
+**UI-Wiring:** `ui/signals_view.py` verzweigt jetzt nach `assetklasse ==
+"rohstoffe"` (→ `agent/rohstoff/pipeline.py`) bzw. Symbol-Zugehörigkeit zu
+`agent.hedge.pipeline.SYMBOL_ZU_HEBEL_FAKTOR` (→ `agent/hedge/pipeline.py`),
+zusätzlich zur bestehenden Aktien-/Krypto-Verzweigung.
+
+**Bewusst zurückgestellt:** Themen-ETFs (Phase 3) und Discovery (Phase 4) der
+Multi-Asset-Roadmap - eigene, spätere Themen. EIA-Erdgaslager/COMEX-Lagerbestände/
+ETF-Bestandsflüsse als Rohstoff-Datenquellen-Erweiterung (siehe oben).
