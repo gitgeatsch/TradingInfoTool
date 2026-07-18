@@ -741,6 +741,14 @@ benachrichtigung:
     job_ausfall_cooldown_minuten: 60   # [OFFEN] Spam-Schutz: derselbe Job meldet
       # sich hoechstens 1x pro Cooldown-Fenster, auch bei einem mehrstuendigen
       # Ausfall (siehe scheduler/background.py::_notify_job_failure())
+    cash_veto_warnung_cooldown_minuten: 360   # 2026-07-18 (Detailanalyse "Anzeige/
+      # Info bei Cash-Block"): RM-4 (Cash-Reserve-Minimum) ist ein PORTFOLIOWEITER
+      # Zustand, nicht pro Asset - ohne Cooldown wuerde bei jedem einzelnen waehrend
+      # der Unterschreitung bewerteten Asset eine eigene Warnmail rausgehen. Gleiches
+      # Cooldown-Muster wie job_ausfall_cooldown_minuten (siehe
+      # scheduler/background.py::_notify_cash_veto_warning()), nur groesszuegiger
+      # (6h statt 1h) - anders als ein Job-Ausfall aendert sich der Cash-Stand nicht
+      # minuetlich.
     # SMTP ist fest auf Gmail verdrahtet (smtp.gmail.com:587, siehe
     # api/email_notify.py) - kein config-seitiger Wert mehr noetig.
     # Zugangsdaten (GMAIL_ABSENDER_ADRESSE/GMAIL_APP_PASSWORT) ausschliesslich in .env.

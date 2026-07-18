@@ -276,6 +276,14 @@ class Signal:
     cash_reserve_ziel_eth_usd: float | None = None
     cash_reserve_ziel_gesamt_usd: float | None = None
     cash_reserve_ziel_begruendung: str | None = None
+    # Cash-Veto (2026-07-18, Detailanalyse "Anzeige/Info bei Cash-Block") -
+    # spiegelt den tatsaechlichen RM-4-Zustand dieser Bewertung, siehe
+    # agent/krypto/risk_gate.py::RiskPreCheckResult.cash_veto-Docstring. Bewusst
+    # getrennt von risk_veto/risk_veto_reason (die nur feuern, wenn das Modell
+    # eine Regel MISSACHTET hat) - cash_veto ist auch bei regelkonformem,
+    # selbst gewaehltem HALTEN gesetzt.
+    cash_veto: bool = False
+    cash_veto_reason: str | None = None
 
 
 @dataclass

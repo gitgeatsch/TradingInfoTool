@@ -3724,3 +3724,84 @@ Spalte korrekt befüllt (z. B. `gemini:gemini-3.1-flash-lite`,
 Detail-Dialog korrekt für ein echtes Spot-Signal (BTC, 20 Historien-Einträge)
 und ein echtes Hebel-Signal (CAT LONG), `facts_json`/Roh-Antwort werden
 lesbar formatiert angezeigt (mehrere Tausend Zeichen, korrekt eingerückt).
+
+## Nachtrag (2026-07-18, gleicher Tag): Cash-Veto-Warnsystem - RM-4-Block
+## sichtbar machen statt stillschweigend zu HALTEN downzugraden
+
+**Auslöser:** Nutzer-Auftrag "prüfe bitte - wichtig Anzeige und Info, wenn
+über einen der Cash-Parameter ein Block oder die weitere Verarbeitung
+verhindert werden - Detailanalyse durchführen". Ergebnis der Analyse: RM-4
+(Cash-Reserve-Minimum, `risk_gate.py::pre_check()`) ist der einzige echte
+Cash-Block (Spot/Aktien/Rohstoffe/Themen-ETF - nicht Hebel/Hedge). Vier
+konkrete Lücken gefunden, alle auf Nutzer-Wunsch ("ja alles umsetzen")
+behoben.
+
+### 1. Der wichtigste Fund: `risk_veto` erfasste den häufigeren Fall gar nicht
+
+Der bestehende `risk_veto`/`risk_veto_reason`-Mechanismus in `post_check()`
+feuert NUR, wenn das Modell die `risiko_check.kauf_erlaubt`-Regel MISSACHTET
+und trotzdem KAUFEN/NACHKAUFEN vorschlägt (deterministischer Backstop). Ein
+regelkonformes Modell, das bei `kauf_erlaubt == false` bereits von sich aus
+HALTEN sagt (der häufigere Fall, da genau das per Prompt-Regel verlangt
+wird), löste bisher GAR KEIN sichtbares Signal aus - der Cash-Block blieb
+komplett unsichtbar, obwohl das System dadurch faktisch beeinträchtigt war.
+
+**Fix:** Neues, unabhängiges Feld `RiskPreCheckResult.cash_veto`/
+`cash_veto_reason` in `risk_gate.py` - wird IMMER gesetzt, wenn RM-4 bei
+dieser Bewertung aktiv war, unabhängig vom tatsächlichen Modellverhalten.
+`post_check()` reicht `_cash_veto`/`_cash_veto_reason` jetzt IMMER durch
+(nicht nur bei einer tatsächlichen Aktions-Überschreibung). Persistiert auf
+`Signal.cash_veto`/`cash_veto_reason` (additive Migration, nur `signals`-
+Tabelle, da RM-4 hebel-/hedge-unabhängig ist) - an allen 4 Pipelines
+verdrahtet (Krypto, Aktien, Rohstoffe, Themen-ETF, alle nutzen dieselbe
+`risk_gate.pre_check()`/`post_check()`).
+
+### 2. WARNUNG-E-Mail statt Stille (Nutzer-Vorgabe: "System beeinträchtigt")
+
+Ein cash-blockiertes Signal endet als HALTEN - HALTEN löst normalerweise NIE
+eine E-Mail aus (bewusstes Design gegen Postfach-Spam). Für `cash_veto`
+wurde das bewusst durchbrochen: neue `_notify_cash_veto_warning()` in
+`scheduler/background.py`, aufgerufen aus `_notify_spot_signal()` und
+`_notify_multi_asset_signal()` VOR deren HALTEN-Guard. Betreff
+`WARNUNG - Cash-Veto (<Symbol>)`, Body erklärt explizit, dass das System
+aktuell durch eine zu geringe Cash-Reserve beeinträchtigt ist und das für
+ALLE Spot-/Aktien-/Rohstoff-/Themen-ETF-Bewertungen gilt, nicht nur das
+eine Asset.
+
+**Cooldown bewusst EIN globaler Zeitstempel, nicht pro Asset/Job**
+(`config.yaml benachrichtigung.email.cash_veto_warnung_cooldown_minuten`,
+Default 360 Min/6h) - RM-4 ist ein PORTFOLIOWEITER Zustand: ohne Cooldown
+würde jedes während der Unterschreitung bewertete Asset eine eigene Mail
+auslösen (potenziell ein Dutzend am Tag). Gleiches Muster wie
+`_notify_job_failure()`, nur mit einem einzelnen statt einem pro-Job-
+Zeitstempel.
+
+### 3. Detail-Panel-Warnung unabhängig vom bestehenden Risiko-Veto
+
+`ui/signals_view.py`: neue Zeile `⚠ WARNUNG - Cash-Veto (System
+beeinträchtigt): <Grund>` im `gate_label`, geprüft über `signal.cash_veto`
+(NICHT über `signal.risk_veto`) - erscheint also auch dann, wenn das Modell
+sich schon regelkonform verhalten hat (der unter Punkt 1 beschriebene,
+häufigere Fall).
+
+### 4. Zwei kleinere Detailfunde ebenfalls behoben
+
+- EURCV-Kurs fehlt → Fiat-Guthaben zählte bisher schon nicht in die
+  Cash-Reserve mit, der Grund dafür landete aber nur in einer nirgends
+  verwendeten `checks`-Liste. Jetzt als Zusatzsatz direkt an
+  `cash_veto_reason` angehängt, sobald es tatsächlich zu einem Veto kam.
+- `db.get_cash_reserve_fiat_eur()`: ein korrupter DB-Wert (`ValueError`)
+  fiel bisher still auf 0.0 zurück, ohne jede Spur. Jetzt `logger.warning()`
+  mit dem kaputten Rohwert.
+
+**Verifikation:** 4 synthetische `pre_check()`/`post_check()`-Szenarien
+gegen eine In-Memory-DB + echte `config.yaml`-Werte (kein Cash → Veto,
+inkl. des bisher unsichtbaren "Modell sagt selbst korrekt HALTEN"-Falls;
+genug Cash → kein Veto; EURCV fehlt → Veto mit Zusatzhinweis; korrupter
+DB-Wert → geloggt) - alle bestätigt korrekt. Migration + Signal-Roundtrip
+gegen echte Kopie der Produktions-DB (ALTER TABLE, alte Zeilen laden
+korrekt mit `cash_veto=False`). Tk-Smoke-Test für die neue Detail-Panel-
+Zeile (erscheint bei `cash_veto=True`, verschwindet bei `False`, keine
+Verwechslung mit der bestehenden Risiko-Veto-Zeile). Cooldown-Logik der
+Warnmail synthetisch getestet (erste Warnung geht raus, zweite wird
+unterdrückt, nach simuliertem Cooldown-Ablauf geht die dritte wieder raus).

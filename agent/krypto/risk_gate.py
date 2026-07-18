@@ -56,6 +56,18 @@ class RiskPreCheckResult:
     rm1_risk_ceiling_usd: float | None = None
     rm2_allocation_headroom_usd: float | None = None
     rm4_required_reserve_usd: float | None = None
+    # Cash-Veto als eigenes, robustes Feld (2026-07-18, Nutzer-Detailanalyse
+    # "wann informiert das System ueber einen Cash-Block") - bewusst UNABHAENGIG
+    # davon, ob `veto_reasons` (und damit `kauf_erlaubt`) am Ende ueberhaupt
+    # etwas enthaelt: das Modell ist per Prompt-Regel angewiesen, bei
+    # `risiko_check.kauf_erlaubt == false` von sich aus schon HALTEN zu sagen -
+    # der bisherige `risk_veto`-Flag in post_check() feuert aber NUR, wenn das
+    # Modell diese Regel MISSACHTET und trotzdem KAUFEN/NACHKAUFEN vorschlaegt.
+    # Im (haeufigeren) Normalfall eines regelkonformen Modells blieb der
+    # Cash-Block damit bisher komplett unsichtbar. cash_veto/cash_veto_reason
+    # spiegeln den tatsaechlichen RM-4-Zustand, unabhaengig vom Modellverhalten.
+    cash_veto: bool = False
+    cash_veto_reason: str | None = None
 
 
 def _portfolio_values_usd(watchlist, holdings, latest_prices) -> tuple[float, dict[str, float]]:
@@ -149,11 +161,20 @@ def pre_check(
 
     fiat_cash_eur = db.get_cash_reserve_fiat_eur(conn)
     fiat_cash_usd = 0.0
+    # Grund fuer den Ausschluss des Fiat-Guthabens (2026-07-18, Detailanalyse
+    # Punkt 3) - bisher landete das nur in `checks` (verworfen, siehe unten),
+    # jetzt zusaetzlich festgehalten, um es bei einem tatsaechlichen RM-4-Veto
+    # als Ursache anzuhaengen, statt den Nutzer raten zu lassen.
+    fiat_cash_excluded_note = None
     if fiat_cash_eur > 0:
         if eur_usd_fx_rate is not None:
             fiat_cash_usd = fiat_cash_eur * eur_usd_fx_rate
             checks.append(f"RM-4: Fiat-Guthaben {fiat_cash_eur:.2f} EUR = {fiat_cash_usd:.2f} USD beruecksichtigt")
         else:
+            fiat_cash_excluded_note = (
+                f"Hinweis: {fiat_cash_eur:.2f} EUR Fiat-Guthaben vorhanden, aber EUR/USD-Kurs "
+                "(EURCV) nicht verfuegbar - NICHT in der Cash-Reserve mitgezaehlt."
+            )
             checks.append("RM-4: Fiat-Guthaben gesetzt, aber EUR/USD-Kurs (EURCV) nicht verfuegbar - nicht mitgezaehlt")
 
     cash_value_usd += fiat_cash_usd
@@ -202,13 +223,19 @@ def pre_check(
         risiko_cfg["cash_reserve_min_fixed_eur"] * eur_usd_fx_rate if eur_usd_fx_rate is not None else 0.0
     )
     required_reserve_usd = max(required_reserve_pct_usd, required_reserve_fixed_usd)
+    cash_veto = False
+    cash_veto_reason = None
     if cash_value_usd < required_reserve_usd:
-        veto_reasons.append(
+        cash_veto = True
+        cash_veto_reason = (
             f"Cash-Reserve {cash_value_usd:.2f} USD ({cash_reserve_pct_current:.1f}%) < "
             f"erforderlichem Minimum {required_reserve_usd:.2f} USD (RM-4: max. von "
             f"{risiko_cfg['cash_reserve_min_prozent']}% oder "
             f"{risiko_cfg['cash_reserve_min_fixed_eur']:.0f} EUR)"
         )
+        if fiat_cash_excluded_note:
+            cash_veto_reason = f"{cash_veto_reason} {fiat_cash_excluded_note}"
+        veto_reasons.append(cash_veto_reason)
         checks.append("RM-4: FEHLGESCHLAGEN - Cash-Reserve unter Minimum")
     else:
         checks.append(
@@ -324,6 +351,8 @@ def pre_check(
         rm1_risk_ceiling_usd=rm1_risk_ceiling_usd,
         rm2_allocation_headroom_usd=rm2_allocation_headroom_usd,
         rm4_required_reserve_usd=required_reserve_usd,
+        cash_veto=cash_veto,
+        cash_veto_reason=cash_veto_reason,
     )
 
 
@@ -620,4 +649,11 @@ def post_check(
     result["action"] = action
     result["_risk_veto"] = risk_veto
     result["_risk_veto_reason"] = risk_veto_reason
+    # Cash-Veto (2026-07-18, Detailanalyse) - bewusst IMMER durchgereicht, nicht
+    # nur bei einer tatsaechlichen Aktions-Ueberschreibung (siehe cash_veto-
+    # Docstring in RiskPreCheckResult): das ist der tatsaechliche RM-4-Zustand
+    # dieser Bewertung, unabhaengig davon, ob das Modell selbst schon
+    # regelkonform HALTEN gesagt hat.
+    result["_cash_veto"] = pre_result.cash_veto
+    result["_cash_veto_reason"] = pre_result.cash_veto_reason
     return result

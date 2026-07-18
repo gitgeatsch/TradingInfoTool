@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 import json
+import logging
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from database.models import (
     HebelPosition,
@@ -548,6 +551,21 @@ def _migrate_gegenargument_columns(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+_CASH_VETO_NEW_COLUMNS = {"cash_veto": "INTEGER", "cash_veto_reason": "TEXT"}
+
+
+def _migrate_cash_veto_columns(conn: sqlite3.Connection) -> None:
+    """Nachtrag 2026-07-18 (Detailanalyse "Anzeige/Info bei Cash-Block") - nur
+    `signals` (RM-4 gilt fuer Spot/Aktien/Rohstoffe/Themen-ETF, nicht Hebel/
+    Hedge, siehe risk_gate.py-Modul-Docstring). Gleiches additive
+    Migrations-Muster wie oben."""
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(signals)")}
+    for column, sql_type in _CASH_VETO_NEW_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE signals ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
 _SIGNAL_TRANCHEN_NEW_COLUMNS = {"tranchen_json": "TEXT"}
 
 
@@ -658,6 +676,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_hebel_signal_outcome_columns(conn)
     _migrate_hebel_signal_senkung_columns(conn)
     _migrate_gegenargument_columns(conn)
+    _migrate_cash_veto_columns(conn)
     import_holdings_manual_overrides(conn)
 
 
@@ -862,6 +881,12 @@ def get_cash_reserve_fiat_eur(conn: sqlite3.Connection) -> float:
     try:
         return float(row["value"])
     except ValueError:
+        # 2026-07-18 (Detailanalyse Punkt 4): bisher stiller Fallback auf 0.0 -
+        # ein korrupter Wert wuerde RM-4 dauerhaft und ohne erkennbaren Grund
+        # verschaerfen (Fiat-Guthaben faellt komplett aus der Cash-Reserve),
+        # bis der naechste erfolgreiche Sync ueberschreibt. Jetzt wenigstens
+        # geloggt, damit das nicht unbemerkt bleibt.
+        logger.warning("cash_reserve_fiat_eur enthaelt einen ungueltigen Wert (%r) - falle auf 0.0 zurueck", row["value"])
         return 0.0
 
 
@@ -1201,14 +1226,14 @@ _SIGNAL_COLUMNS = (
     "risk_veto", "risk_veto_reason", "facts_json", "groq_raw_response", "groq_model",
     "tranchen_json",
     "cash_reserve_ziel_btc_usd", "cash_reserve_ziel_eth_usd", "cash_reserve_ziel_gesamt_usd",
-    "cash_reserve_ziel_begruendung", "gegenargument",
+    "cash_reserve_ziel_begruendung", "gegenargument", "cash_veto", "cash_veto_reason",
 )
 
 
 def insert_signal(conn: sqlite3.Connection, signal: Signal) -> int:
     placeholders = ", ".join("?" for _ in _SIGNAL_COLUMNS)
     values = [
-        int(getattr(signal, col)) if col in ("gate_passed", "risk_veto") else getattr(signal, col)
+        int(getattr(signal, col)) if col in ("gate_passed", "risk_veto", "cash_veto") else getattr(signal, col)
         for col in _SIGNAL_COLUMNS
     ]
     cursor = conn.execute(
@@ -1223,6 +1248,7 @@ def _row_to_signal(row: sqlite3.Row) -> Signal:
     data = dict(row)
     data["gate_passed"] = bool(data["gate_passed"])
     data["risk_veto"] = bool(data["risk_veto"])
+    data["cash_veto"] = bool(data["cash_veto"]) if data.get("cash_veto") is not None else False
     if data["umgesetzt"] is not None:
         data["umgesetzt"] = bool(data["umgesetzt"])
     return Signal(**data)

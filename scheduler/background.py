@@ -553,6 +553,63 @@ def _record_job_success_for_backoff(job_id: str) -> None:
     _consecutive_failures[job_id] = 0
 
 
+# Cash-Veto-Warnmail (2026-07-18, Detailanalyse "Anzeige/Info bei Cash-Block") -
+# EIN globaler Zeitstempel statt pro-Symbol/pro-Job wie _last_failure_email_sent,
+# da RM-4 (Cash-Reserve-Minimum) ein PORTFOLIOWEITER Zustand ist, kein Zustand
+# einzelner Assets - waehrend die Reserve unter dem Minimum liegt, waere
+# `cash_veto` bei JEDEM bewerteten Spot-/Aktien-/Rohstoff-/Themen-ETF-Asset
+# identisch True. Ohne einen gemeinsamen Cooldown wuerde das Postfach geflutet.
+_last_cash_veto_email_sent: float | None = None
+
+
+def _notify_cash_veto_warning(signal) -> None:
+    """WARNUNG-E-Mail, wenn RM-4 (Cash-Reserve-Minimum) einen Kauf blockiert
+    (Nutzer-Vorgabe 2026-07-18: "sollte eher als Warnung betrachtet werden, da
+    das System beeinträchtigt ist" - bewusst NICHT als gewöhnliche
+    Empfehlungs-Mail behandelt, die HALTEN nie versendet). Anders als
+    risk_veto/risk_veto_reason (die nur feuern, wenn das Modell eine Regel
+    missachtet hat) spiegelt signal.cash_veto den tatsächlichen RM-4-Zustand,
+    auch wenn das Modell selbst schon regelkonform HALTEN gesagt hat - genau
+    der bisher unsichtbare Fall (siehe risk_gate.py::RiskPreCheckResult.
+    cash_veto-Docstring).
+
+    Cooldown wie _notify_job_failure() (config.yaml benachrichtigung.email.
+    cash_veto_warnung_cooldown_minuten, Default 360 Min) - siehe Kommentar bei
+    _last_cash_veto_email_sent oben, warum ein einzelner globaler statt ein
+    pro-Job-Zeitstempel hier richtig ist."""
+    global _last_cash_veto_email_sent
+    import config as config_module
+    from api.email_notify import send_notification_email
+
+    config_dict = config_module.load_config()
+    email_cfg = config_dict.get("benachrichtigung", {}).get("email", {})
+    if not email_cfg.get("aktiv", False):
+        return
+    empfaenger = email_cfg.get("empfaenger")
+    if not empfaenger:
+        return
+
+    cooldown_minuten = email_cfg.get("cash_veto_warnung_cooldown_minuten", 360)
+    if (
+        _last_cash_veto_email_sent is not None
+        and time.monotonic() - _last_cash_veto_email_sent < cooldown_minuten * 60
+    ):
+        return
+
+    body = (
+        f"HALTEN wurde durch Cash-Veto (fehlendes Cash) verursacht ({signal.symbol}).\n\n"
+        f"{signal.cash_veto_reason or ''}\n\n"
+        "Das System ist aktuell durch eine zu geringe Cash-Reserve beeinträchtigt: "
+        "mögliche Kaufgelegenheiten können nicht als Empfehlung ausgesprochen werden, "
+        "bis die Reserve wieder über dem RM-4-Minimum liegt (z. B. Cash aufstocken "
+        "oder bestehende Positionen reduzieren). Betrifft ALLE Spot-/Aktien-/"
+        "Rohstoff-/Themen-ETF-Bewertungen, nicht nur dieses Asset.\n\n"
+        f"Weitere Meldungen werden für {cooldown_minuten} Minuten unterdrückt (Spam-Schutz)."
+    )
+    if send_notification_email(f"TradingInfoTool: WARNUNG - Cash-Veto ({signal.symbol})", body, empfaenger):
+        _last_cash_veto_email_sent = time.monotonic()
+
+
 def _notify_marktscan_kaufkandidaten(kaufkandidaten: list) -> None:
     """MS-1b (2026-07-12): eine gebündelte E-Mail pro Scan-Lauf über alle neuen
     Kaufkandidaten, wiederverwendet dieselbe Infrastruktur wie _notify_job_failure()
@@ -715,6 +772,12 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None) -
     als fehlgeschlagen erscheinen lassen."""
     from agent.krypto.analyst import REQUIRED_ACTIONS
 
+    if signal.cash_veto:
+        try:
+            _notify_cash_veto_warning(signal)
+        except Exception:
+            logger.exception("Cash-Veto-Warnmail für %s fehlgeschlagen", signal.symbol)
+
     if signal.action not in REQUIRED_ACTIONS or signal.action == "HALTEN":
         return
     if not _ist_email_relevantes_asset(signal.symbol, watchlist, bitpanda_assets):
@@ -833,6 +896,12 @@ def _notify_multi_asset_signal(signal, watchlist: list, bitpanda_assets: list | 
     auf, siehe dessen Modul-Docstring) - _ist_email_relevantes_asset() bleibt
     trotzdem unveraendert anwendbar, sie prueft nur den allgemeinen Bitpanda-
     Katalog, nicht pipelinespezifische Vetos."""
+    if signal.cash_veto:
+        try:
+            _notify_cash_veto_warning(signal)
+        except Exception:
+            logger.exception("Cash-Veto-Warnmail für %s fehlgeschlagen", signal.symbol)
+
     if signal.action == "HALTEN":
         return
     if not _ist_email_relevantes_asset(signal.symbol, watchlist, bitpanda_assets):

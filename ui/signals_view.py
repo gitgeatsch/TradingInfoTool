@@ -316,6 +316,14 @@ class SignalsView(ttk.Frame):
             gate_notes.append(f"⚠ Datenqualitäts-Gate nicht bestanden: {signal.gate_reason}")
         if signal.risk_veto:
             gate_notes.append(f"⚠ Risiko-Veto: {signal.risk_veto_reason}")
+        # Cash-Veto (2026-07-18, Detailanalyse "Anzeige/Info bei Cash-Block") -
+        # bewusst UNABHAENGIG von signal.risk_veto geprueft: risk_veto feuert nur,
+        # wenn das Modell die kauf_erlaubt-Regel missachtet hat, cash_veto
+        # dagegen IMMER, wenn RM-4 bei dieser Bewertung aktiv war - auch wenn das
+        # Modell selbst schon regelkonform HALTEN gesagt hat (der bisher
+        # unsichtbare Normalfall, siehe risk_gate.py-Docstring).
+        if signal.cash_veto:
+            gate_notes.append(f"⚠ WARNUNG - Cash-Veto (System beeinträchtigt): {signal.cash_veto_reason}")
         self.gate_label.config(text="\n".join(gate_notes))
 
         lines = []
