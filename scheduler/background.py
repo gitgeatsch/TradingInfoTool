@@ -1063,10 +1063,12 @@ def hebel_screening_job(
             )
             logger.info(
                 "Budget-Allocator: Hebel %d, Marktscan %d, Spot %d verarbeitet, %d fehlgeschlagen, "
+                "Groq heute erschöpft: %s, "
                 "Mistral-Calls %d, Mistral-Budget erschöpft: %s, "
                 "Gemini-Calls %d, Gemini-Budget erschöpft: %s",
                 len(allocation.hebel_verarbeitet), len(allocation.marktscan_verarbeitet),
                 len(allocation.spot_verarbeitet), len(allocation.fehlgeschlagen),
+                allocation.groq_erschoepft_erkannt,
                 allocation.mistral_calls_verbraucht, allocation.mistral_budget_erschoepft,
                 allocation.gemini_calls_verbraucht, allocation.gemini_budget_erschoepft,
             )

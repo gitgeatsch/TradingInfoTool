@@ -82,6 +82,60 @@ HEBEL_COOLDOWN_STUNDEN_AUSGEMUSTERT = 120.0  # 5 Tage
 
 logger = logging.getLogger(__name__)
 
+# Groq-Tageserschoepfung erkennen (2026-07-18, Nutzer-Fund: "trotz Erschoepfung
+# wird immer zuerst Groq abgefragt") - bis hierhin hatte Groq bewusst KEIN
+# eigenes Tagesbudget wie Mistral/Gemini (siehe Modul-Docstring: "Groqs reales
+# Tageslimit wirkt extern ueber echte 429s"). Das bedeutete: sobald Groqs
+# echtes taeglisches Token-Limit erreicht war, wurde JEDER weitere Kandidat -
+# in diesem UND allen folgenden 15-Min-Laeufen desselben Tages - trotzdem
+# zuerst erfolglos gegen Groq versucht, bevor Mistral uebernahm. Kein
+# verlorenes Mistral/Gemini-Kontingent (der Fallback funktionierte korrekt),
+# aber unnoetige Latenz pro Kandidat (ein garantiert scheiternder HTTP-Call).
+#
+# In-Memory-Zustand statt DB-Persistenz (gleiches Muster wie
+# scheduler/background.py::_consecutive_failures) - ueberlebt keinen
+# Prozess-Neustart, das ist bewusst akzeptabel: ein Neustart ist selten,
+# und im schlimmsten Fall wird Groq danach einfach frisch neu probiert.
+# Auf Kalendertag-Basis (UTC) statt Zeitfenster, damit es sich taeglich
+# implizit selbst zuruecksetzt (kein expliziter Reset-Code noetig) - passt
+# zur echten Ursache (ein TAGES-Token-Limit).
+_groq_failure_date: str | None = None
+_groq_failure_count: int = 0
+_groq_exhausted_date: str | None = None
+
+
+def _today_iso() -> str:
+    return datetime.now(timezone.utc).date().isoformat()
+
+
+def _is_groq_exhausted_today() -> bool:
+    return _groq_exhausted_date == _today_iso()
+
+
+def _record_groq_failure(schwelle: int) -> None:
+    """Zaehlt Groq-Fehlschlaege NUR innerhalb desselben Kalendertags (UTC) -
+    ein Zaehlerstand von gestern darf nicht in den heutigen Tag durchschlagen,
+    sonst wuerde ein einzelner heutiger Fehlschlag faelschlich sofort als
+    Erschoepfung gewertet."""
+    global _groq_failure_date, _groq_failure_count, _groq_exhausted_date
+    today = _today_iso()
+    if _groq_failure_date != today:
+        _groq_failure_date = today
+        _groq_failure_count = 0
+    _groq_failure_count += 1
+    if _groq_failure_count >= schwelle and _groq_exhausted_date != today:
+        _groq_exhausted_date = today
+        logger.warning(
+            "Groq: %d Fehlschlaege in Folge am %s - wird fuer den Rest des Tages uebersprungen, "
+            "weitere Kandidaten gehen direkt an Mistral/Gemini",
+            _groq_failure_count, today,
+        )
+
+
+def _record_groq_success() -> None:
+    global _groq_failure_count
+    _groq_failure_count = 0
+
 
 @dataclass
 class AllocationResult:
@@ -96,6 +150,10 @@ class AllocationResult:
     mistral_budget_erschoepft: bool = False
     gemini_calls_verbraucht: int = 0
     gemini_budget_erschoepft: bool = False
+    # 2026-07-18 (Groq-Tageserschoepfungs-Erkennung) - True, wenn mindestens
+    # ein Kandidat in diesem Lauf Groq wegen erkannter Tageserschoepfung
+    # uebersprungen hat (siehe _is_groq_exhausted_today()).
+    groq_erschoepft_erkannt: bool = False
     # 2026-07-14 (Empfehlungs-E-Mails): die echten Signal-/HebelSignal-Objekte
     # zu jedem schluessel aus hebel_verarbeitet/spot_verarbeitet - nur befuellt,
     # wenn provider_je_call[schluessel] ebenfalls gesetzt wurde (also ein
@@ -256,6 +314,7 @@ def run_budget_allocator(
     spot_reserve = cfg.get("spot_rotation_reserve", 5)
     mistral_budget = cfg.get("mistral_taegliches_budget", 150)
     gemini_budget = cfg.get("gemini_taegliches_budget", 200)
+    groq_exhaustion_schwelle = cfg.get("groq_exhaustion_schwelle_fehlschlaege", 2)
     cooldown_stunden = cfg.get("cooldown_stunden", 3.5)
     hebel_cooldown_stunden_ausgemustert = cfg.get(
         "hebel_cooldown_stunden_ausgemustert", HEBEL_COOLDOWN_STUNDEN_AUSGEMUSTERT
@@ -355,6 +414,9 @@ def run_budget_allocator(
         docs/budget_queue_design.md geforderte Qualitaets-Tracking)."""
         last_exc: Exception | None = None
         for provider_name, call_fn in calls:
+            if provider_name == "groq" and _is_groq_exhausted_today():
+                result.groq_erschoepft_erkannt = True
+                continue
             if provider_name in tages_budget:
                 if tages_verbraucht[provider_name] >= tages_budget[provider_name]:
                     if provider_name == "mistral":
@@ -365,7 +427,13 @@ def run_budget_allocator(
             try:
                 res = call_fn()
                 if getattr(res, "gate_passed", True) is False:
+                    # Datenqualitaets-Gate hat VOR jedem echten LLM-Call blockiert - kein
+                    # echter Groq-Erfolg, also auch KEIN _record_groq_success() hier (wuerde
+                    # den Fehlschlag-Zaehler faelschlich auf Basis eines gar nicht
+                    # stattgefundenen Calls zuruecksetzen).
                     return True
+                if provider_name == "groq":
+                    _record_groq_success()
                 result.provider_je_call[schluessel] = provider_name
                 result.ergebnis_objekt[schluessel] = res
                 if provider_name in tages_verbraucht:
@@ -376,6 +444,8 @@ def run_budget_allocator(
                         result.gemini_calls_verbraucht = tages_verbraucht["gemini"]
                 return True
             except Exception as exc:
+                if provider_name == "groq":
+                    _record_groq_failure(groq_exhaustion_schwelle)
                 last_exc = exc
                 logger.info("%s-Call für %s fehlgeschlagen (%s)", provider_name, schluessel, exc)
 

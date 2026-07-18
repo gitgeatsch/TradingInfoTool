@@ -3805,3 +3805,58 @@ Zeile (erscheint bei `cash_veto=True`, verschwindet bei `False`, keine
 Verwechslung mit der bestehenden Risiko-Veto-Zeile). Cooldown-Logik der
 Warnmail synthetisch getestet (erste Warnung geht raus, zweite wird
 unterdrückt, nach simuliertem Cooldown-Ablauf geht die dritte wieder raus).
+
+## Nachtrag (2026-07-18, gleicher Tag): Groq-Tageserschöpfung erkennen - kein
+## unnötiger Erschöpfungs-Versuch mehr pro Kandidat
+
+**Auslöser:** Nutzer-Beobachtung: "mir kommt vor, dass trotz Erschöpfung
+immer zuerst Groq abgefragt wird". Bestätigt durch Code-Prüfung: anders als
+Mistral/Gemini (echter, aus der DB gelesener Tageszähler, siehe
+`_mit_fallback_chain()`) hatte Groq **kein** eigenes Tagesbudget - Kommentar
+im Code war explizit: "Groqs reales Tageslimit wirkt extern über echte
+429s". Das bedeutete: sobald Groqs echtes tägliches Token-Limit erreicht
+war, wurde **jeder weitere Kandidat** - in diesem UND allen folgenden
+15-Minuten-Läufen desselben Tages - trotzdem zuerst erfolglos gegen Groq
+versucht, bevor Mistral übernahm. Kein verlorenes Mistral/Gemini-
+Kontingent (der Fallback funktionierte pro Call korrekt), aber unnötige
+Latenz: ein garantiert scheiternder HTTP-Call pro Kandidat, den ganzen
+Resttag über.
+
+**Warum es diesen Zähler bisher nicht gab:** Groqs echte Tagesgrenze ist
+token-basiert, nicht anfrage-basiert - anders als bei Mistral/Gemini gibt
+es keine feste Zahl, die man lokal vorab prüfen könnte. Die ursprüngliche
+Design-Entscheidung war, das der echten API zu überlassen statt zu raten.
+
+**Fix:** neuer In-Memory-Zustand in `agent/krypto/budget_allocator.py`
+(gleiches Muster wie `scheduler/background.py::_consecutive_failures`) -
+`_groq_failure_date`/`_groq_failure_count`/`_groq_exhausted_date`. Ab
+`groq_exhaustion_schwelle_fehlschlaege` (neuer Config-Wert, Default 2)
+aufeinanderfolgenden Groq-Fehlschlägen **am selben Kalendertag (UTC)** wird
+Groq in `_mit_fallback_chain()` für den Rest des Tages direkt übersprungen
+(kein Call-Versuch mehr) - Kandidaten gehen sofort an Mistral/Gemini.
+Schwelle 2 statt 1, damit ein einzelner transienter Netzwerk-Ausrutscher
+nicht sofort fälschlich als Tageserschöpfung gewertet wird. Reset erfolgt
+implizit über den Kalendertag-Vergleich (kein expliziter Reset-Code nötig)
+- passt zur echten Ursache (ein TAGES-Limit). In-Memory statt DB-persistiert
+(wie bei `_consecutive_failures`) - überlebt keinen Prozess-Neustart,
+bewusst akzeptabel (selten, im schlimmsten Fall wird Groq danach einfach
+frisch neu probiert). Ein Datenqualitäts-Gate-Skip (`gate_passed=False`,
+kein echter LLM-Call) zählt bewusst NICHT als Erfolg oder Fehlschlag - der
+Erfolgs-/Fehlschlag-Zähler wird nur bei einem tatsächlich stattgefundenen
+Groq-Call aktualisiert.
+
+Neues `AllocationResult.groq_erschoepft_erkannt`-Feld (Analogie zu
+`mistral_budget_erschoepft`/`gemini_budget_erschoepft`) für Logging/
+Nachvollziehbarkeit, in der bestehenden Budget-Allocator-Log-Zeile in
+`scheduler/background.py` ergänzt.
+
+**Verifikation:** synthetische Tests der Schwellenwert-Logik (1 Fehlschlag
+→ noch nicht erschöpft, 2. Fehlschlag → erschöpft, Erfolg setzt nur den
+Zähler zurück, nicht das Tages-Flag; simulierter Tageswechsel → alter
+Zählerstand wird verworfen, ein einzelner Fehlschlag am neuen Tag erschöpft
+noch nicht). Echter End-to-End-Test über zwei komplette
+`run_budget_allocator()`-Läufe gegen eine echte (Datei-)DB mit 5 Spot-
+Kandidaten und einem Fake-Groq-Client, der immer fehlschlägt: im ersten
+Lauf wird Groq genau 2x versucht (dann Schwelle erreicht), alle 5
+Kandidaten laufen über Mistral; im zweiten Lauf (simuliert den nächsten
+15-Minuten-Takt am selben Tag) wird Groq kein einziges Mal mehr versucht.
