@@ -471,6 +471,11 @@ watchlist:
     beobachtungsstatus: beobachtung
     assetklasse: aktien
     yfinance_symbol: PLTR
+  - symbol: VSN
+    name: Vision
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
+    coingecko_id: vision-3
 
 # --- Strategie-Katalog (siehe Spezifikation Kap. 6) ---
 strategien:
