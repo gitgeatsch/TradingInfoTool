@@ -80,10 +80,11 @@ _INDEX_HTML = """<!doctype html>
 </div>
 
 <div class="card">
-  <div class="row"><span>LLM-Budget heute</span><span id="budget-total">-</span></div>
+  <div class="row"><span>LLM-Budget heute (Krypto)</span><span id="budget-total">-</span></div>
   <div class="row"><span>&nbsp;&nbsp;davon Hebel</span><span id="budget-hebel">-</span></div>
   <div class="row"><span>&nbsp;&nbsp;davon Marktscan</span><span id="budget-marktscan">-</span></div>
   <div class="row"><span>&nbsp;&nbsp;davon Spot-Rotation</span><span id="budget-spot">-</span></div>
+  <div class="row"><span>Multi-Asset heute (Aktien/Rohstoffe/Hedge/ETF, separates Budget)</span><span id="budget-multi-asset">-</span></div>
 </div>
 
 <div class="card">
@@ -195,6 +196,7 @@ const API_HEALTH_GROUPS = {
   "api-health-makro": [
     "fear_greed", "fred", "ecb", "china_pboc_lpr", "china_m2", "japan_boj",
     "coinmetrics", "defillama", "blockchain_com", "binance", "bybit", "okx",
+    "cftc_cot",
   ],
 };
 
@@ -312,6 +314,7 @@ async function refreshStatus() {
     document.getElementById("budget-hebel").textContent = b.hebel;
     document.getElementById("budget-marktscan").textContent = b.marktscan;
     document.getElementById("budget-spot").textContent = b.spot;
+    document.getElementById("budget-multi-asset").textContent = b.multi_asset_heute;
   }
 
   if (data.provider_performance) {

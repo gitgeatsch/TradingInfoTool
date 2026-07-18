@@ -1,10 +1,16 @@
 """Multi-Asset-Batch (2026-07-18) - automatischer Signal-Batch fuer Aktien/
-Rohstoffe/Hedge (VST/PLTR, OD7N/OD7H/OD7C/OD7L, DBPK/3QSS). Bisher NUR ueber
-den manuellen "Signal berechnen"-Klick in ui/signals_view.py erreichbar - im
-Gegensatz zu Krypto (agent/krypto/budget_allocator.py, 15-Min-Takt) gab es
-dafuer KEINE automatische Bewertung (Nutzer-Fund 2026-07-18: das letzte
-VST-Signal war 3 Tage alt, kein einziger automatischer Versuch seit
-Erstellung der Rohstoff/Hedge-Pipelines).
+Rohstoffe/Hedge/Themen-ETFs (VST/PLTR, OD7N/OD7H/OD7C/OD7L, DBPK/3QSS,
+VVMX/X136/EXH3/CEBS/ISOC - 13 Assets). Bisher NUR ueber den manuellen "Signal
+berechnen"-Klick in ui/signals_view.py erreichbar - im Gegensatz zu Krypto
+(agent/krypto/budget_allocator.py, 15-Min-Takt) gab es dafuer KEINE
+automatische Bewertung (Nutzer-Fund 2026-07-18: das letzte VST-Signal war 3
+Tage alt, kein einziger automatischer Versuch seit Erstellung der Rohstoff/
+Hedge-Pipelines).
+
+Nachtrag (gleicher Tag, Multi-Asset-Vollstaendigkeitspruefung): die 5
+Themen-ETFs standen zu diesem Zeitpunkt bereits als Watchlist-Eintraege in
+config.yaml, aber OHNE jede Pipeline (weder manuell noch automatisch) -
+agent/themen_etf/ + diese Erweiterung schliessen die Luecke.
 
 Bewusst EIGENER, separater Job (nicht Tier 4 im bestehenden Budget-
 Allocator, siehe Regelwerksmanual-Nachtrag fuer die volle Begruendung):
@@ -20,12 +26,12 @@ Allocator, siehe Regelwerksmanual-Nachtrag fuer die volle Begruendung):
   Regressionsrisiko fuer einen kritischen, funktionierenden Pfad).
 
 Cooldown bewusst NUR 2-stufig (gehalten/beobachtet), kein drittes
-"ausgemustert"-Level wie bei Krypto - alle 8 Assets sind aktuell
+"ausgemustert"-Level wie bei Krypto - alle 13 Assets sind aktuell
 beobachtungsstatus="beobachtung", ein ausgemustertes Multi-Asset-Symbol
 existiert noch nicht. "Gehalten" wird wie bei Krypto (signal_batch.py)
 live aus der holdings-Tabelle abgeleitet, nicht aus einem statischen Feld.
 
-Keine Marktscan-Aequivalent-Logik - feste, kleine Watchlist (8 Assets),
+Keine Marktscan-Aequivalent-Logik - feste, kleine Watchlist (13 Assets),
 keine Discovery (Multi-Asset-Roadmap Phase 4, bewusst zurueckgestellt)."""
 from __future__ import annotations
 
@@ -55,6 +61,11 @@ def _kandidaten(watchlist: list) -> list:
     return [
         a for a in watchlist
         if a.assetklasse in ("aktien", "rohstoffe") or a.symbol in _hedge_symbole
+        # Themen-ETFs (2026-07-18, Multi-Asset-Vollstaendigkeitspruefung): restliche
+        # assetklasse=="etf"-Assets, die KEINE Hedge-Instrumente sind (VVMX/X136/
+        # EXH3/CEBS/ISOC) - standen bis hierher als einzige Watchlist-Assets ganz
+        # ohne Pipeline da, siehe agent/themen_etf/pipeline.py Modul-Docstring.
+        or (a.assetklasse == "etf" and a.symbol not in _hedge_symbole)
     ]
 
 
@@ -64,6 +75,10 @@ def _pipeline_fuer(asset):
         return generate_signal
     if asset.assetklasse == "rohstoffe":
         from agent.rohstoff.pipeline import generate_signal
+        return generate_signal
+    from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR as _hedge_symbole
+    if asset.assetklasse == "etf" and asset.symbol not in _hedge_symbole:
+        from agent.themen_etf.pipeline import generate_signal
         return generate_signal
     from agent.hedge.pipeline import generate_signal
     return generate_signal

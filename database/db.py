@@ -1237,14 +1237,35 @@ def get_latest_real_signal_per_symbol(conn: sqlite3.Connection) -> dict[str, Sig
     return {row["symbol"]: _row_to_signal(row) for row in rows}
 
 
-def count_real_signals_today(conn: sqlite3.Connection) -> int:
+def count_real_signals_today(conn: sqlite3.Connection, erlaubte_symbole: set[str] | None = None) -> int:
     """Fuer die gemeinsame Tagesbudget-Pruefung der Batch-Signal-Berechnung
     (2026-07-13, siehe agent/krypto/signal_batch.py) - zaehlt echte
     Groq-Analysen seit Mitternacht UTC (gleiche Zeitzone wie created_at
     ueberall in der DB). Zaehlt automatisch AUCH Einzel-Klicks ueber den
     bestehenden "Signal berechnen"-Button mit, da beide Wege in dieselbe
-    signals-Tabelle schreiben - kein separater Zaehler noetig."""
+    signals-Tabelle schreiben - kein separater Zaehler noetig.
+
+    `erlaubte_symbole` (2026-07-18, LLM-Budget-Konsistenzpruefung): diese
+    Funktion war urspruenglich implizit Krypto-only (nur Krypto+gelegentlich
+    manuell geklicktes Aktien schrieb in `signals`), wurde aber seit dem
+    automatischen Multi-Asset-Batch (Aktien/Rohstoffe/Hedge/Themen-ETF, alle
+    12h) STILLSCHWEIGEND durch dessen Signale mitgezaehlt - verfaelscht das
+    Krypto-spezifische Tagesbudget (taegliches_budget_gesamt, kalibriert auf
+    Kryptos Hebel/Marktscan/Spot-System) an allen 3 Aufrufstellen
+    (signal_batch.py, remote/status.py, ui/marktscan_view.py). None (Default)
+    = ungefiltert, wie bisher - fuer Aufrufer, die bewusst weiterhin alle
+    Assetklassen zusammen zaehlen wollen."""
     today_utc_midnight = datetime.now(timezone.utc).strftime("%Y-%m-%dT00:00:00")
+    if erlaubte_symbole is not None:
+        if not erlaubte_symbole:
+            return 0
+        placeholders = ", ".join("?" for _ in erlaubte_symbole)
+        row = conn.execute(
+            f"SELECT COUNT(*) AS n FROM signals WHERE groq_raw_response IS NOT NULL "
+            f"AND created_at >= ? AND symbol IN ({placeholders})",
+            (today_utc_midnight, *erlaubte_symbole),
+        ).fetchone()
+        return row["n"]
     row = conn.execute(
         "SELECT COUNT(*) AS n FROM signals WHERE groq_raw_response IS NOT NULL AND created_at >= ?",
         (today_utc_midnight,),

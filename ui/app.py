@@ -942,6 +942,24 @@ def _validate_new_asset(
         except Exception as exc:
             warnungen.append(f"Bitpanda-Validierung fehlgeschlagen (Netzwerkfehler?): {exc}")
 
+        # 2026-07-18 (Multi-Asset-Vollstaendigkeitspruefung): "etf" deckt ZWEI
+        # verschiedene Pipelines ab, unterschieden nur per Symbol-Zugehoerigkeit
+        # zu agent.hedge.pipeline.SYMBOL_ZU_HEBEL_FAKTOR (kein eigenes Dropdown-
+        # Feld dafuer) - ein neu hinzugefuegtes Hedge-Instrument wuerde sonst
+        # STILLSCHWEIGEND als Themen-ETF behandelt (falsche Sektor-Rotations-
+        # Logik statt Portfolio-Absicherungslogik), bis ein Entwickler es dort
+        # manuell eintraegt (hebel_faktor/referenz_index sind ohnehin
+        # hartkodiert, das laesst sich nicht per UI abbilden).
+        if assetklasse == "etf":
+            from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR as _hedge_symbole
+            if symbol not in _hedge_symbole:
+                warnungen.append(
+                    f"'{symbol}' wird als Themen-/Sektor-ETF behandelt (agent/themen_etf/). "
+                    "Falls stattdessen ein neues Portfolio-Hedge-Instrument gemeint ist: dafür "
+                    "muss zusätzlich SYMBOL_ZU_HEBEL_FAKTOR in agent/hedge/pipeline.py per Code "
+                    "ergänzt werden (hebel_faktor/Referenzindex lassen sich nicht per UI eintragen)."
+                )
+
     return warnungen
 
 

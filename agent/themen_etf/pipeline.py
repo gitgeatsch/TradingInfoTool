@@ -1,18 +1,20 @@
-"""Signal-Pipeline fuer Einzelaktien (2026-07-15, Non-Krypto-Agent-Pipeline Phase 1) -
-mirror des Kontrollflusses von agent/krypto/pipeline.py::generate_signal() (Gate ->
-Regime -> Technik -> Risk-Gate -> Fundamentaldaten -> Facts -> LLM -> Post-Check ->
-Signal), aber eigenstaendig (siehe agent/aktien/analyst.py Modul-Docstring fuer die
-Architektur-Begruendung).
+"""Signal-Pipeline fuer Themen-ETFs (2026-07-18, Multi-Asset-Vollstaendigkeitspruefung) -
+mirror des Kontrollflusses von agent/rohstoff/pipeline.py::generate_signal() (Gate ->
+Regime -> Technik -> Risk-Gate -> Sektor-Rotation -> Facts -> LLM -> Post-Check ->
+Signal), siehe agent/themen_etf/analyst.py Modul-Docstring fuer die
+Architektur-Begruendung.
 
-Wiederverwendet direkt (kein Duplikat): `agent.krypto.risk_gate.pre_check()`/
-`post_check()` (RM-1/RM-2/RM-4/RM-5-Mathematik ist bereits assetklassen-neutral;
-der Bitpanda-Veto war urspruenglich `if asset.assetklasse == "krypto"` bedingt -
-2026-07-16 als echte Luecke erkannt und behoben, siehe `bitpanda_gelistet`-Berechnung
-unten via `api.bitpanda.get_listed_non_crypto_assets()`),
-`agent.krypto.pipeline.compute_current_regime()` (liefert Liquiditaets-Regime +
-Aktien-Baermarkt-Overlay als Nebenprodukt der ohnehin noetigen BTC-Regime-Berechnung -
-kein zweiter Berechnungsweg noetig), `indicators.calculations.build_technical_snapshot()`/
-`summarize_confluence()` (bereits generisch)."""
+Wiederverwendet direkt (kein Duplikat): dieselben Bausteine wie die Rohstoff-Pipeline
+(risk_gate.pre_check()/post_check(), compute_current_regime(),
+build_technical_snapshot()/summarize_confluence(), Bitpanda-Listing-Check).
+
+WICHTIGER UNTERSCHIED zur Rohstoff-Pipeline: KEIN Futures-Proxy fuer die technische
+Historie - anders als die duenn gehandelten WisdomTree-ETCs haben die meisten
+UCITS-Themen-ETFs eine echte, direkt handelbare yfinance-.history() (live verifiziert:
+VVMX/EXH3/CEBS funktionieren). X136 (Boerse Berlin) und teilweise ISOC liefern
+unvollstaendige/veraltete Historie - fuer diese greift schlicht das bestehende
+Staleness-Gate (gate_passed=False), KEIN Workaround gebaut (P-10: sauber degradieren
+statt eine fragile Ersatzloesung erzwingen)."""
 from __future__ import annotations
 
 import json
@@ -23,17 +25,16 @@ import numpy as np
 
 import config
 import database.db as db
-from agent.aktien.analyst import (
-    AnalystResponseInvalid,
-    build_facts,
-    call_llm_for_signal,
-)
 from agent.krypto.backward_tracking import compute_win_rate_fact
 from agent.krypto.llm_provider import llm_model_label
 from agent.krypto.makro_analog import get_cached_makro_analog_fact
 from agent.krypto.pipeline import MIN_GATE_INDICATORS_AVAILABLE, compute_current_regime
 from agent.krypto.risk_gate import post_check, pre_check
-from api.yfinance_client import fetch_fundamentals
+from agent.themen_etf.analyst import (
+    AnalystResponseInvalid,
+    build_facts,
+    call_llm_for_signal,
+)
 from api.yfinance_history import get_full_ohlc_history
 from database.models import Signal
 from indicators.calculations import build_technical_snapshot, summarize_confluence
@@ -43,11 +44,19 @@ logger = logging.getLogger(__name__)
 
 PIPELINE_VERSION = "1"
 
-# Stock-Maerkte schliessen an Wochenenden/Feiertagen (anders als Krypto, 24/7) - der
-# crypto-getunte staleness.HISTORY_STALE_THRESHOLD_DAYS (2 Tage) wuerde an jedem
-# Montag/Feiertag-Dienstag faelschlich "veraltet" ausloesen (Freitagsschluss ist am
-# Sonntag schon 2 Tage alt). Eigener, grosszuegigerer Schwellenwert statt Wiederverwendung.
-_AKTIEN_HISTORY_STALE_THRESHOLD_TAGE = 5
+# Wie bei Aktien/Rohstoffen: Boersenhandelszeiten, kein 24/7-Handel wie Krypto.
+_THEMEN_ETF_HISTORY_STALE_THRESHOLD_TAGE = 5
+
+# Breiter Markt-Benchmark fuer die Sektor-Rotations-Berechnung (siehe
+# agent/themen_etf/analyst.py Regel 9) - SPY statt eines MSCI-World-Proxys, da SPY
+# garantiert liquide/vollstaendige yfinance-Historie hat und als "breiter Markt"-
+# Referenz fuer eine relative Staerke-Betrachtung ausreicht. Gespeichert unter einem
+# synthetischen Symbol, das mit keinem echten Watchlist-Symbol kollidiert.
+_BENCHMARK_TICKER = "SPY"
+_BENCHMARK_SYMBOL = "_THEMEN_ETF_BENCHMARK_SPY"
+
+# Trading-Tage-Fenster fuer die relative Staerke (~1 bzw. ~3 Kalendermonate).
+_ROTATION_FENSTER_TAGE = {"30d": 21, "90d": 63}
 
 
 def _now() -> str:
@@ -67,25 +76,36 @@ def _fixed_signal(symbol: str, action: str, gate_passed: bool, gate_reason: str 
     )
 
 
-def _is_aktien_history_stale(last_date: str | None) -> bool:
+def _is_history_stale(last_date: str | None) -> bool:
     if last_date is None:
         return True
     last = datetime.fromisoformat(last_date).date()
     today = datetime.now(timezone.utc).date()
-    return (today - last).days > _AKTIEN_HISTORY_STALE_THRESHOLD_TAGE
+    return (today - last).days > _THEMEN_ETF_HISTORY_STALE_THRESHOLD_TAGE
 
 
 def _ensure_ohlc_backfilled(conn, asset) -> None:
-    """Holt die volle OHLC-Historie NUR, wenn sie fehlt oder veraltet ist (Freshness-
-    Check ueber db.get_last_ohlc_date()) - vermeidet einen vollen Re-Download bei jedem
-    manuellen Button-Klick (Phase 1 hat noch keinen Scheduler-Automatismus, siehe
-    Modul-Docstring)."""
     last_date = db.get_last_ohlc_date(conn, asset.symbol, "USD")
-    if last_date is not None and not _is_aktien_history_stale(last_date):
+    if last_date is not None and not _is_history_stale(last_date):
+        return
+    if not asset.yfinance_symbol:
+        logger.warning("Kein yfinance-Symbol fuer %s hinterlegt - keine technische Historie moeglich", asset.symbol)
         return
     ohlc_points = get_full_ohlc_history(asset.yfinance_symbol, asset.symbol, "USD")
     if ohlc_points:
         db.upsert_ohlc_points(conn, ohlc_points)
+
+
+def _ensure_benchmark_backfilled(conn) -> None:
+    last_date = db.get_last_ohlc_date(conn, _BENCHMARK_SYMBOL, "USD")
+    if last_date is not None and not _is_history_stale(last_date):
+        return
+    try:
+        ohlc_points = get_full_ohlc_history(_BENCHMARK_TICKER, _BENCHMARK_SYMBOL, "USD")
+        if ohlc_points:
+            db.upsert_ohlc_points(conn, ohlc_points)
+    except Exception as exc:
+        logger.info("Benchmark-Historie (%s) fehlgeschlagen: %s", _BENCHMARK_TICKER, exc)
 
 
 def _load_ohlc(conn, symbol: str):
@@ -96,22 +116,62 @@ def _load_ohlc(conn, symbol: str):
     return dates, closes, ohlc_history, last_date
 
 
-def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Signal:
-    """Analog zu agent/krypto/pipeline.py::generate_signal(), aber fuer Einzelaktien.
-    `watchlist` muss die VOLLSTAENDIGE Watchlist sein (inkl. BTC) - compute_current_regime()
-    braucht zwingend ein BTC-Asset darin (Regime-Bestimmung ist BTC-verankert, siehe
-    agent/krypto/pipeline.py::compute_current_regime()). Fuer pre_check()'s RM-2-
-    Allokations-Berechnung wird intern auf die Aktien-Teilmenge gefiltert (analog zur
-    Krypto-Pipeline, die dafuer eine krypto-only Watchlist nutzt - eine Aktie soll ihre
-    Positionsgroesse relativ zum Aktien-Portfolio sehen, nicht zum gemischten
-    Gesamtportfolio). `coingecko_client` wird NUR fuer compute_current_regime()
-    durchgereicht, nicht fuer irgendetwas Aktien-Spezifisches."""
-    if asset.assetklasse != "aktien":
-        raise ValueError(f"generate_signal() (agent/aktien) erwartet assetklasse=='aktien', bekam {asset.assetklasse!r}")
+def _relative_staerke_pct(etf_closes: np.ndarray, benchmark_closes: np.ndarray, fenster_tage: int) -> float | None:
+    if len(etf_closes) <= fenster_tage or len(benchmark_closes) <= fenster_tage:
+        return None
+    etf_perf = (etf_closes[-1] / etf_closes[-1 - fenster_tage] - 1.0) * 100
+    benchmark_perf = (benchmark_closes[-1] / benchmark_closes[-1 - fenster_tage] - 1.0) * 100
+    return round(etf_perf - benchmark_perf, 2)
 
-    aktien_watchlist = [a for a in watchlist if a.assetklasse == "aktien"]
+
+def _compute_sektor_rotation(conn, symbol: str, etf_closes: np.ndarray) -> dict | None:
+    """Relative Staerke des Themen-ETFs gegenueber SPY ueber 30/90 Handelstage
+    (siehe Modul-Docstring). Gibt None zurueck, wenn die Benchmark-Historie fehlt
+    oder eine der beiden Reihen zu kurz ist (P-10 - der Fakt wird dann im Prompt
+    einfach weggelassen, siehe analyst.py Regel 9)."""
+    _, benchmark_closes, _, _ = _load_ohlc(conn, _BENCHMARK_SYMBOL)
+    if len(benchmark_closes) == 0:
+        return None
+
+    rel_30d = _relative_staerke_pct(etf_closes, benchmark_closes, _ROTATION_FENSTER_TAGE["30d"])
+    rel_90d = _relative_staerke_pct(etf_closes, benchmark_closes, _ROTATION_FENSTER_TAGE["90d"])
+    if rel_30d is None and rel_90d is None:
+        return None
+
+    return {
+        "benchmark": "SPY (S&P 500 ETF, Proxy fuer 'breiter Markt')",
+        "relative_staerke_30d_pct": rel_30d,
+        "relative_staerke_90d_pct": rel_90d,
+        "hinweis": (
+            "Positiv = Outperformance gegenueber dem breiten Markt (Sektor 'in Rotation'), "
+            "negativ = Underperformance. Reines Kurs-Momentum-Indiz, siehe SYSTEM_PROMPT Regel 9."
+        ),
+    }
+
+
+def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Signal:
+    """Analog zu agent/rohstoff/pipeline.py::generate_signal(). `watchlist` muss die
+    VOLLSTAENDIGE Watchlist sein (inkl. BTC) - compute_current_regime() braucht
+    zwingend ein BTC-Asset darin. Fuer pre_check()'s RM-2-Allokations-Berechnung wird
+    intern auf die Themen-ETF-Teilmenge gefiltert (eigenes Mini-Portfolio-Verhaeltnis,
+    analog zur Rohstoff-Pipeline). Die Hedge-Instrumente DBPK/3QSS haben zwar
+    ebenfalls assetklasse=='etf', werden hier aber bewusst NICHT mit hineingezaehlt
+    (eigene Pipeline, eigene Logik, siehe agent/hedge/) - Aufrufer muss ein Symbol
+    ausserhalb von agent.hedge.pipeline.SYMBOL_ZU_HEBEL_FAKTOR uebergeben."""
+    from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR as _hedge_symbole
+
+    if asset.assetklasse != "etf" or asset.symbol in _hedge_symbole:
+        raise ValueError(
+            f"generate_signal() (agent/themen_etf) erwartet ein Themen-ETF (assetklasse=='etf', "
+            f"nicht in SYMBOL_ZU_HEBEL_FAKTOR), bekam {asset.symbol!r} (assetklasse={asset.assetklasse!r})"
+        )
+
+    themen_etf_watchlist = [
+        a for a in watchlist if a.assetklasse == "etf" and a.symbol not in _hedge_symbole
+    ]
 
     _ensure_ohlc_backfilled(conn, asset)
+    _ensure_benchmark_backfilled(conn)
     dates, closes, ohlc_history, last_date = _load_ohlc(conn, asset.symbol)
     latest_prices = db.get_latest_prices(conn)
     price_snap = latest_prices.get(asset.symbol)
@@ -121,14 +181,22 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
         db.insert_signal(conn, signal)
         return signal
 
-    snapshot = build_technical_snapshot(closes, dates, ohlc_history)
-
-    # Datenqualitaets-Gate (P-10), mirror agent/krypto/pipeline.py - VOR jedem LLM-Call.
     gate_problems = []
     if price_snap is None or is_price_stale(price_snap.fetched_at):
         gate_problems.append("Preis veraltet oder nicht vorhanden")
-    if _is_aktien_history_stale(last_date):
+    elif price_snap.price_usd is None:
+        gate_problems.append("USD-Preis nicht verfuegbar (EUR/USD-Kurs fehlte beim letzten Preisabruf)")
+    if _is_history_stale(last_date):
         gate_problems.append(f"Historie veraltet (letzter Tag: {last_date})")
+
+    if gate_problems:
+        gate_reason = "; ".join(gate_problems)
+        signal = _fixed_signal(asset.symbol, "HALTEN", gate_passed=False, gate_reason=gate_reason)
+        db.insert_signal(conn, signal)
+        return signal
+
+    snapshot = build_technical_snapshot(closes, dates, ohlc_history)
+
     for name in MIN_GATE_INDICATORS_AVAILABLE:
         result = getattr(snapshot, name)
         if not result.available:
@@ -141,17 +209,10 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
         return signal
 
     config_dict = config.load_config()
-    # Liefert als Nebenprodukt der BTC-Regime-Berechnung liquiditaets_regime +
-    # equities_baermarkt_aktiv - siehe Modul-Docstring, kein zweiter Berechnungsweg.
     regime_result = compute_current_regime(conn, coingecko_client, watchlist, None, config_dict)
 
     confluence = summarize_confluence(snapshot, closes[-1])
 
-    # Bitpanda-Listing-Check (2026-07-16, Audit-Fund: bisher hartkodiert None -
-    # risk_gate.py::pre_check() konnte den Bitpanda-Veto fuer Aktien nie auslösen,
-    # obwohl Bitpanda auch Aktien/ETFs fuehrt). Gleiches Muster wie
-    # agent/krypto/pipeline.py::generate_signal() - eigener try/except, ein
-    # Fehlschlag degradiert nur auf "unbekannt" (P-10), blockiert nicht die Analyse.
     try:
         from api.bitpanda import get_listed_non_crypto_assets
         from api.bitpanda import is_listed as bitpanda_is_listed
@@ -162,13 +223,9 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
         bitpanda_gelistet = None
         logger.info("Bitpanda-Listing-Abruf fuer %s fehlgeschlagen: %s", asset.symbol, exc)
 
-    risk_result = pre_check(asset, aktien_watchlist, conn, latest_prices, snapshot, regime_result, config_dict, bitpanda_gelistet)
+    risk_result = pre_check(asset, themen_etf_watchlist, conn, latest_prices, snapshot, regime_result, config_dict, bitpanda_gelistet)
 
-    fundamentals = None
-    try:
-        fundamentals = fetch_fundamentals(asset.symbol, asset.yfinance_symbol)
-    except Exception as exc:
-        logger.warning("Fundamentaldaten-Abruf fuer %s fehlgeschlagen (degradiert auf None): %s", asset.symbol, exc)
+    sektor_rotation = _compute_sektor_rotation(conn, asset.symbol, closes)
 
     holdings = {h.symbol: h for h in db.get_all_holdings(conn)}
     price_age_minutes = None
@@ -178,18 +235,17 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
             fetched = fetched.replace(tzinfo=timezone.utc)
         price_age_minutes = (datetime.now(timezone.utc) - fetched).total_seconds() / 60
 
-    # Krypto+Aktien bleiben bewusst gepoolt, siehe agent/krypto/pipeline.py fuer
-    # dieselbe Begruendung + compute_win_rate_fact()-Docstring.
-    _spot_pool_symbole = {a.symbol for a in config.get_watchlist() if a.assetklasse in ("krypto", "aktien")}
-    historische_erfolgsquote = compute_win_rate_fact(conn, "spot", erlaubte_symbole=_spot_pool_symbole)
+    # Eigener Pool statt des Krypto+Aktien-"spot"-Pools (siehe
+    # compute_win_rate_fact()-Docstring) - Themen-ETFs sind qualitativ anders
+    # (langsamer, Sektor-Rotation statt Einzeltitel-/Krypto-Momentum).
+    _themen_etf_symbole = {a.symbol for a in themen_etf_watchlist}
+    historische_erfolgsquote = compute_win_rate_fact(conn, "spot", erlaubte_symbole=_themen_etf_symbole)
     historischer_makro_vergleich = get_cached_makro_analog_fact(conn)
-    # Wiederholungs-Erkennung (2026-07-18, Multi-Asset-Vollstaendigkeitspruefung,
-    # siehe agent/krypto/wiederholungs_erkennung.py) - bisher nur Krypto hatte das.
     letztes_signal = db.get_latest_signal(conn, asset.symbol)
 
     facts = build_facts(
         asset, price_snap, holdings.get(asset.symbol), snapshot, confluence, regime_result,
-        risk_result, fundamentals, price_age_minutes,
+        risk_result, sektor_rotation, price_age_minutes,
         historische_erfolgsquote=historische_erfolgsquote,
         historischer_makro_vergleich=historischer_makro_vergleich,
         letztes_signal=letztes_signal,

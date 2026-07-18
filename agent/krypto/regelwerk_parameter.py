@@ -233,6 +233,41 @@ _PARAMETER: tuple[dict, ...] = (
         "begruendung": "Code-Konstante in agent/krypto/risk_gate.py, nicht in config.yaml - Arbeits-Konvention, nicht spezifikationsseitig vorgegeben.",
         "geaendert_am": None,
     },
+    {
+        "bezeichnung": "Hedge: max. Abdeckungsanteil",
+        "pfad": ("hedge", "max_abdeckung_anteil"),
+        "kategorie": KATEGORIE_B,
+        "begruendung": "Obergrenze relativ zur ungesicherten Long-Exposure, volle Abdeckung nur bei baer/krise_extrem gerechtfertigt.",
+        "geaendert_am": "2026-07-18",
+    },
+    {
+        "bezeichnung": "Hedge: Bull-Wahrscheinlichkeit-Schwelle",
+        "pfad": ("hedge", "bull_wahrscheinlichkeit_schwelle_prozent"),
+        "kategorie": KATEGORIE_A,
+        "begruendung": "Spiegelverkehrtes Pendant zum Gegenszenario-Deckel - Hedge-Risiko ist hohe Bull- statt Bear-Wahrscheinlichkeit (Decay). [OFFEN], unkalibrierter Startwert.",
+        "geaendert_am": "2026-07-18",
+    },
+    {
+        "bezeichnung": "Hedge: Bull-Wahrscheinlichkeit-Deckel-Anteil",
+        "pfad": ("hedge", "bull_wahrscheinlichkeit_deckel_anteil"),
+        "kategorie": KATEGORIE_A,
+        "begruendung": "Positionsgroessen-Reduktion bei ueberschrittener Bull-Schwelle.",
+        "geaendert_am": "2026-07-18",
+    },
+    {
+        "bezeichnung": "Multi-Asset-Batch: Cooldown gehalten (Std.)",
+        "pfad": ("multi_asset_batch", "cooldown_stunden_gehalten"),
+        "kategorie": KATEGORIE_A,
+        "begruendung": "Aktien/Rohstoffe/Hedge/Themen-ETF, gehaltene Positionen - taeglich neu pruefen.",
+        "geaendert_am": "2026-07-18",
+    },
+    {
+        "bezeichnung": "Multi-Asset-Batch: Cooldown beobachtet (Std.)",
+        "pfad": ("multi_asset_batch", "cooldown_stunden_beobachtet"),
+        "kategorie": KATEGORIE_A,
+        "begruendung": "Reine Beobachtungs-Kandidaten, deutlich traeger als Krypto (Boersenzeiten/Wochenenden).",
+        "geaendert_am": "2026-07-18",
+    },
 )
 
 

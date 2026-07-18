@@ -174,18 +174,32 @@ def _get_budget_heute(conn: sqlite3.Connection) -> dict:
     """Budget-Sichtbarkeit fuer alle 3 Tiers des gemeinsamen Tagesbudgets
     (docs/budget_queue_design.md) - reiner Lesezugriff auf bereits vorhandene
     Zaehlfunktionen, keine neue Logik. taegliches_budget_gesamt ist EIN
-    gemeinsamer Deckel ueber Hebel+Marktscan+Spot (kein Budget pro Tier)."""
+    gemeinsamer Deckel ueber Hebel+Marktscan+Spot (kein Budget pro Tier) -
+    war und ist Krypto-spezifisch kalibriert (Hebel/Marktscan haben ohnehin
+    kein Nicht-Krypto-Aequivalent).
+
+    LLM-Budget-Konsistenzpruefung (2026-07-18): `spot` zaehlte bisher
+    STILLSCHWEIGEND auch die automatischen Multi-Asset-Batch-Signale
+    (Aktien/Rohstoffe/Hedge/Themen-ETF) mit, da beide in dieselbe
+    signals-Tabelle schreiben - verzerrte das angezeigte X/taegliches_budget_
+    gesamt-Verhaeltnis nach oben, sobald der 12h-Multi-Asset-Batch lief.
+    `spot` ist jetzt Krypto-only gefiltert, Multi-Asset-Verbrauch wird
+    separat als `multi_asset_heute` ausgewiesen statt unsichtbar
+    eingerechnet."""
     config_dict = config_module.load_config()
     gesamt = config_dict.get("budget_allocator", {}).get("taegliches_budget_gesamt", 15)
+    krypto_symbole = {a.symbol for a in config_module.get_watchlist() if a.assetklasse == "krypto"}
     hebel = db.count_real_hebel_signals_today(conn)
     marktscan = db.count_real_marktscan_writeups_today(conn)
-    spot = db.count_real_signals_today(conn)
+    spot_gesamt = db.count_real_signals_today(conn)
+    spot = db.count_real_signals_today(conn, erlaubte_symbole=krypto_symbole)
     return {
         "hebel": hebel,
         "marktscan": marktscan,
         "spot": spot,
         "verbraucht_gesamt": hebel + marktscan + spot,
         "gesamt": gesamt,
+        "multi_asset_heute": spot_gesamt - spot,
     }
 
 

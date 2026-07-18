@@ -307,14 +307,21 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
             fetched = fetched.replace(tzinfo=timezone.utc)
         price_age_minutes = (datetime.now(timezone.utc) - fetched).total_seconds() / 60
 
-    historische_erfolgsquote = compute_win_rate_fact(conn, "spot")
+    # Eigener Pool statt des Krypto+Aktien-"spot"-Pools (2026-07-18, Multi-Asset-
+    # Vollstaendigkeitspruefung): Rohstoffe bewegen sich strukturell anders
+    # (langsamer, andere Zyklen) - eine geliehene fremde Zahl waere irrefuehrend,
+    # siehe compute_win_rate_fact()-Docstring.
+    _rohstoff_symbole = {a.symbol for a in config.get_watchlist() if a.assetklasse == "rohstoffe"}
+    historische_erfolgsquote = compute_win_rate_fact(conn, "spot", erlaubte_symbole=_rohstoff_symbole)
     historischer_makro_vergleich = get_cached_makro_analog_fact(conn)
+    letztes_signal = db.get_latest_signal(conn, asset.symbol)
 
     facts = build_facts(
         asset, price_snap, holdings.get(asset.symbol), snapshot, confluence, regime_result,
         risk_result, makro_ueberlagerung, positionierung, price_age_minutes,
         historische_erfolgsquote=historische_erfolgsquote,
         historischer_makro_vergleich=historischer_makro_vergleich,
+        letztes_signal=letztes_signal,
     )
 
     try:

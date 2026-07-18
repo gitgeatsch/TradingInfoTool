@@ -542,7 +542,14 @@ def generate_signal(
         if asset.symbol in ("BTC", "ETH") else None
     )
 
-    historische_erfolgsquote = compute_win_rate_fact(conn, "spot")
+    # Krypto+Aktien bleiben bewusst als "spot"-Pool zusammen (aehnliches
+    # Momentum-/CRV-Profil, fruehere dokumentierte Entscheidung) - Rohstoffe/
+    # Hedge/Themen-ETF NICHT mehr stillschweigend mit hineingezogen (2026-07-18,
+    # siehe compute_win_rate_fact()-Docstring). `config.get_watchlist()` statt
+    # dem lokalen (Krypto-gefilterten) `watchlist`-Parameter, da hier auch die
+    # Aktien-Symbole gebraucht werden.
+    _spot_pool_symbole = {a.symbol for a in config.get_watchlist() if a.assetklasse in ("krypto", "aktien")}
+    historische_erfolgsquote = compute_win_rate_fact(conn, "spot", erlaubte_symbole=_spot_pool_symbole)
     historischer_makro_vergleich = get_cached_makro_analog_fact(conn)
 
     facts = build_facts(

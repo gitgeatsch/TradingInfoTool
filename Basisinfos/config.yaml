@@ -844,6 +844,19 @@ hedge:
                                # Obergrenze, nicht als Zielwert - siehe
                                # SYSTEM_PROMPT-Regel 3 (volle Abdeckung nur bei
                                # baer/krise_extrem gerechtfertigt).
+  bull_wahrscheinlichkeit_schwelle_prozent: 35   # NEU (2026-07-18, Multi-Asset-
+                               # Vollstaendigkeitspruefung): Hedge-Pendant zum
+                               # Gegenszenario-Deckel (risiko.gegenszenario_*),
+                               # aber SPIEGELVERKEHRT - fuer ein inverses Hedge-
+                               # Instrument (DBPK/3QSS) ist eine hohe BULL- statt
+                               # Bear-Wahrscheinlichkeit das Risiko-Szenario (die
+                               # Position decayt taeglich ohne Absicherungsnutzen,
+                               # siehe agent/hedge/analyst.py Regel 4). Identischer
+                               # unkalibrierter Startwert wie das Spot/Aktien-Pendant.
+  bull_wahrscheinlichkeit_deckel_anteil: 0.5   # wie risiko.gegenszenario_
+                               # positionsgroesse_deckel_anteil - Positionsgroesse
+                               # wird bei ueberschrittener Schwelle zusaetzlich auf
+                               # diesen Anteil reduziert.
 
 # --- Multi-Asset-Batch (2026-07-18, Nutzer-Fund: Aktien/Rohstoffe/Hedge
 # hatten KEINE automatische Signal-Erzeugung, nur manueller Klick - siehe

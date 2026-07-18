@@ -238,9 +238,17 @@ def run_signal_batch(
     Einzelne Fehlschlaege (z.B. Netzwerk-Hickser bei einem Asset) brechen
     NICHT den ganzen Batch ab - geloggt, in `fehlgeschlagen` gesammelt,
     naechstes Asset wird trotzdem versucht (P-10)."""
+    # LLM-Budget-Konsistenzpruefung (2026-07-18): dieses Tagesbudget ist
+    # Krypto-spezifisch kalibriert - `erlaubte_symbole` verhindert, dass
+    # automatische Multi-Asset-Batch-Signale (Aktien/Rohstoffe/Hedge/
+    # Themen-ETF, siehe agent/multi_asset_batch.py) das verbleibende
+    # Krypto-Budget stillschweigend schrumpfen lassen (dieselbe signals-
+    # Tabelle wird von beiden geschrieben). `watchlist` ist an dieser Stelle
+    # bereits Krypto-gefiltert (siehe ui/signals_view.py::self._full_watchlist).
+    _krypto_symbole = {a.symbol for a in watchlist}
     conn = conn_factory()
     try:
-        bereits_heute = db.count_real_signals_today(conn)
+        bereits_heute = db.count_real_signals_today(conn, erlaubte_symbole=_krypto_symbole)
         verbleibendes_budget = max(0, daily_budget - bereits_heute)
         faellige = select_assets_due_for_signal(conn, watchlist, max_count=verbleibendes_budget)
     finally:
@@ -280,7 +288,7 @@ def run_signal_batch(
     conn = conn_factory()
     try:
         latest_real = db.get_latest_real_signal_per_symbol(conn)
-        bereits_heute_danach = db.count_real_signals_today(conn)
+        bereits_heute_danach = db.count_real_signals_today(conn, erlaubte_symbole=_krypto_symbole)
     finally:
         conn.close()
 

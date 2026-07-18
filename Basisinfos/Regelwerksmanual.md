@@ -41,7 +41,7 @@ Diese vier stehen über allen anderen Regeln — jede andere Regel muss sich dar
 |----|-------|----------------|--------|
 | RM-1 | Risiko pro Trade — wie viel des Portfolios darf bis zum Stop-Loss maximal verloren gehen | **2 %** | AKTIV, seit heute (2026-07-10) hart durchgesetzt: schlägt die KI eine größere Position vor, wird sie automatisch auf diesen Wert gekürzt |
 | RM-2 | Max. Allokation pro Einzelwert | **25 %** (taktische Assets) / **35 %** (Kernwerte BTC/ETH) | AKTIV, siehe RM-1 (gleicher Clamp-Mechanismus) |
-| RM-3 | Max. Allokation pro Assetklasse | Krypto **100 %**, Aktien/ETF/Rohstoffe je **0 %** | Konfiguriert, aber noch nicht aktiv genutzt (nur Krypto im Einsatz) |
+| RM-3 | Max. Allokation pro Assetklasse | Krypto **100 %**, Aktien/ETF/Rohstoffe je **0 %** | **Stand 2026-07-18 veraltet:** Konfigurationswert selbst unveraendert, aber Aktien/Rohstoffe/Hedge/Themen-ETFs sind seit derselben Runde (Multi-Asset-Batch + Themen-ETF-Pipeline) aktiv im Einsatz - der Cross-Klassen-Deckel selbst wird weiterhin NICHT durchgesetzt (jede Pipeline rechnet nur gegen ihre eigene Assetklassen-Teilmenge, siehe RM-2), das ist die eigentliche offene Luecke, nicht die Frage "im Einsatz oder nicht" |
 | RM-4 | Cash-Reserve-Minimum | **Größerer Wert aus 10 %** des Portfolios **oder 2000 €** Festbetrag | AKTIV, seit heute (2026-07-10) Hybrid-Formel — Unterschreitung blockiert weitere Käufe |
 | RM-5 | Pflicht-Stop-Loss | jede Position braucht einen | AKTIV, unantastbar (kein Override erlaubt) |
 | RM-6 | Trailing-Stop | erlaubt | Als Option vorhanden, keine automatische Durchsetzung |
@@ -3341,3 +3341,236 @@ provider_je_symbol={"VST": "groq"}), Cooldown blockierte einen sofortigen
 zweiten Lauf korrekt. Kompletter Job-Wrapper (multi_asset_batch_job())
 inkl. Lock/E-Mail-Pfad fehlerfrei durchgelaufen (kein Versand bei HALTEN,
 wie erwartet).
+
+
+## Nachtrag (2026-07-18, gleicher Tag): Multi-Asset-Vollstaendigkeitspruefung -
+## Themen-ETF-Pipeline + 6 Konsistenz-Fixes
+
+**Ausloeser:** Nutzer-Nachfrage "welche Assetklassen haben wir jetzt konkret
+und wie sind diese unterteilt" fuehrte zur Live-Watchlist-Abfrage (55 Assets:
+42 Krypto, 7 etf, 4 Rohstoffe, 2 Aktien) und dabei zum Fund, dass 5 der 7
+"etf"-Assets (VVMX/X136/EXH3/CEBS/ISOC - Themen-/Sektor-ETFs: Seltene Erden/
+Bioenergie/Food&Bev/Kupferminen/Agribusiness) seit ihrer Ersterfassung in
+config.yaml OHNE JEDE Pipeline dastanden - weder im neuen Multi-Asset-Batch
+(nur aktien/rohstoffe/Hedge-Symbole beruecksichtigt) noch sauber im manuellen
+UI-Klick (fielen dort auf die Krypto-Pipeline durch, die weder CoinGecko-ID
+noch Kraken-Symbol fuer sie kennt).
+
+Nutzer-Auftrag danach: "wir sollten das multiasset Thema jetzt vollinhaltlich
+abschliessen" - vollstaendiger Audit ueber API-Monitoring/Regelwerksuebersicht/
+Marktscan/Feature-Paritaet/Doku-Aktualitaet ueber alle 4 Nicht-Krypto-Pipelines
+(Aktien/Rohstoffe/Hedge + die neue Themen-ETF-Pipeline). Ergab 7 konkrete
+Befunde, alle in dieser Runde abgearbeitet:
+
+### 1. Themen-ETF-Pipeline (agent/themen_etf/)
+
+Neues, eigenstaendiges Modul (gleiche Architektur-Entscheidung wie bei Aktien/
+Rohstoffen - siehe Spezifikation.md "Zielarchitektur fuer Multi-Asset-
+Erweiterbarkeit"), mirror von agent/rohstoff/. Entfernt gegenueber Rohstoff:
+makro_ueberlagerung (kein sauberer Treiber-Bezug) + positionierung
+(CFTC-COT existiert nur fuer Rohstoff-Futures). Neu: sektor_rotation - relative
+Staerke des ETFs gegenueber einem breiten Markt-Benchmark (SPY) ueber 30/90
+Handelstage, berechnet aus bereits vorhandener OHLC-Historie (KEIN neuer
+externer Datenanbieter - Ersatz fuer das fehlende KGV/COT-Aequivalent).
+
+**Live-Fund bei der Verifikation:** anders als die duenn gehandelten
+WisdomTree-Rohstoff-ETCs haben die meisten UCITS-Themen-ETFs eine echte,
+direkt handelbare yfinance-Historie (VVMX/EXH3/CEBS live bestaetigt, 778-4707
+Handelstage) - KEIN Futures-Proxy-Workaround noetig. X136 (Boerse Berlin-
+Notierung) liefert dagegen 0 Punkte ("Period 'max' is invalid"), ISOC hat
+eine seit 2025-09-10 eingefrorene Historie (>10 Monate) - fuer beide greift
+bewusst NUR das bestehende Staleness-Gate (gate_passed=False, sauber
+degradiert), KEIN Ersatz-Ticker gesucht (P-10: sauber degradieren statt eine
+fragile Ersatzloesung erzwingen; kann spaeter nachgeruestet werden, falls
+gewuenscht).
+
+Verdrahtet in ui/signals_view.py (_themen_etf_watchlist, _run_pipeline()-
+Branch, _asset_by_symbol()/_refresh_list()-Listen ergaenzt - waren zunaechst
+uebersehen und haetten die 5 Themen-ETFs sonst weiterhin unsichtbar in der
+Signale-Tab-Liste gelassen) UND in agent/multi_asset_batch.py
+(_kandidaten()/_pipeline_fuer() - Multi-Asset-Batch deckt jetzt 13 statt 8
+Assets ab).
+
+### 2. API-Monitoring-Luecke
+
+api/cftc_cot.py trackt korrekt via @track_api_health("cftc_cot"), tauchte
+aber in remote/server.py::API_HEALTH_GROUPS in KEINER der drei Gruppen auf -
+die API-Status-Karte zeigte CFTC-Gesundheit also nie an, obwohl die Daten in
+der DB vorhanden waren. Ergaenzt zu api-health-makro.
+
+### 3. Regelwerksuebersicht-Luecke
+
+agent/krypto/regelwerk_parameter.py (Parameter-Uebersicht-Tab/-Karte) war
+komplett Krypto-fokussiert - enthielt keinen einzigen Hedge- oder Multi-Asset-
+Batch-Parameter. Ergaenzt: hedge.max_abdeckung_anteil,
+multi_asset_batch.cooldown_stunden_gehalten/beobachtet, sowie (siehe Punkt 6)
+die beiden neuen Hedge-Bull-Deckel-Parameter.
+
+### 4. Wiederholungs-Erkennung: nur Krypto hatte sie
+
+Die "letzte VERKAUFEN/TAUSCHEN-Empfehlung wurde nicht umgesetzt"-Erkennung
+(urspruenglich 2026-07-17 nur in agent/krypto/analyst.py eingebaut) nach
+agent/krypto/wiederholungs_erkennung.py ausgelagert (build_wiederholung_fact(),
+5 synthetische Testfaelle verifiziert) und fuer Aktien/Rohstoffe/Hedge/
+Themen-ETF nachgeruestet (_WIEDERHOLUNG_RELEVANTE_AKTIONEN = ("VERKAUFEN",)
+statt Kryptos ("VERKAUFEN", "TAUSCHEN"), da diese 4 Klassen kein TAUSCHEN
+kennen). Jede Pipeline laedt jetzt letztes_signal vor dem build_facts()-Call
+und reicht es durch, jeder SYSTEM_PROMPT bekam die entsprechende Regel ergaenzt.
+
+### 5. Historische Trefferquote: stillschweigend gepoolt
+
+compute_win_rate_fact(conn, "spot") pool­te FRUEHER ALLE Zeilen aus der
+signals-Tabelle ungefiltert - urspruenglich eine bewusste, dokumentierte
+Krypto+Aktien-Vereinfachung ("Stichprobe zu klein fuer weitere Aufspaltung"),
+aber seit Rohstoff/Hedge/Themen-ETF ebenfalls in dieselbe Tabelle schreiben,
+OHNE dass das je neu entschieden wurde - eine Rohstoff-Trefferquote haette
+z.B. stillschweigend Krypto-Momentum-Ergebnisse mit eingerechnet.
+compute_win_rate_fact() um einen optionalen erlaubte_symbole-Parameter
+erweitert (5 synthetische Testfaelle: Krypto+Aktien-Pool/Rohstoff-Pool/
+Hedge-Pool/leerer Themen-ETF-Pool/ungefiltert - alle bestaetigt exakt).
+Krypto+Aktien bleiben BEWUSST gepoolt (die urspruengliche Begruendung gilt
+weiterhin), Rohstoffe/Hedge/Themen-ETF bekommen je einen EIGENEN Pool (anfangs
+meist None, bis genug eigene Signale ausgewertet sind - ehrlicher als eine
+geliehene fremde Zahl).
+
+### 6. Hedge-Gegenszenario-Frage (SPIEGELVERKEHRT, nicht 1:1 uebernommen)
+
+Kritischer Punkt bei der Konsistenzpruefung: der bestehende Gegenszenario-
+Deckel (risk_gate.py::post_check(), wirkt automatisch fuer Krypto/Aktien/
+Rohstoffe, die post_check() teilen) kappt die Positionsgroesse bei hoher
+forecast.bear.probability_pct - richtig fuer eine normale Long-Position (das
+IST das Risiko-Szenario). Fuer ein inverses Hedge-Instrument (DBPK/3QSS) waere
+ein 1:1 uebernommener Bear-Deckel FUNKTIONAL FALSCHHERUM gewesen: die Position
+GEWINNT bei fallenden Kursen, ihr eigentliches Risiko-Szenario ist eine hohe
+forecast.bull.probability_pct (Volatility-Decay bei anhaltendem Aufwaertstrend
+ohne Absicherungsnutzen, siehe SYSTEM_PROMPT Regel 4). Neu implementiert:
+_post_check_hedge() um einen SPIEGELVERKEHRTEN "Bull-Wahrscheinlichkeits-
+Deckel" erweitert (hedge.bull_wahrscheinlichkeit_schwelle_prozent: 35,
+hedge.bull_wahrscheinlichkeit_deckel_anteil: 0.5 - identische Werte wie das
+Spot/Aktien-Pendant, aber eigene Config-Keys unter hedge:). 4 synthetische
+Testfaelle verifiziert: hohe Bull-WK bei KAUFEN -> gekappt; niedrige Bull-WK ->
+unveraendert; VERKAUFEN -> Deckel greift nicht; hohe BEAR- statt Bull-WK bei
+KAUFEN -> KEIN Deckel (bestaetigt die Spiegelung ist korrekt, kein versehentlich
+uebernommener Bear-Deckel).
+
+### 7. RM-3-Tabelle war stale
+
+Zeile behauptete weiterhin "Aktien/ETF/Rohstoffe je 0%, nur Krypto im Einsatz"
+- seit den Pipelines vom 15./18.07. schlicht falsch. Korrigiert: der
+KONFIGURATIONSWERT ist unveraendert 0%, aber die eigentliche offene Luecke ist,
+dass der Cross-Klassen-Deckel selbst nirgends durchgesetzt wird (jede Pipeline
+rechnet nur gegen ihre eigene Assetklassen-Teilmenge).
+
+**Verifiziert:** _kandidaten()/_pipeline_fuer() liefern exakt 13 Assets,
+korrekt gemappt (Live-Check gegen echte Watchlist). Echter End-to-End-Lauf
+gegen Kopie der Produktions-DB (nach Migration + frischen Preis-Snapshots fuer
+alle 5 Themen-ETFs): VVMX - vollstaendiger echter Groq-Call, HALTEN, 42%
+Konfidenz, sektor_rotation-Fakt korrekt in der Begruendung genutzt ("negative
+Sektor-Rotation gegenueber dem breiten Markt (SPY)"), alle 15 inhaltlichen
+Pflichtfelder befuellt (Top-5-Gruende/Key-Risks/Forecast/Halte-Kriterium/
+Gegenargument - Entry/Stop/Take-Profit bei HALTEN leer, identisches Verhalten
+wie bei bestehenden Aktien-HALTEN-Signalen, kein Regressionsfund). X136 -
+sauberer Gate-Fehlschlag ("keine historischen Daten vorhanden"), kein Absturz.
+Kompletter run_multi_asset_batch()-Lauf gegen alle 13 Kandidaten: korrekte
+Kandidaten-Erkennung, Cooldown-Pruefung, Gate-Handling (mehrere Assets mit
+nicht-aktualisierten Preisen korrekt als gate_passed=False verarbeitet, kein
+Budget verbraucht), 3 echte Groq-Calls liefen tatsaechlich (429-Rate-Limit
+durch die vorangegangenen Testaufrufe in derselben Sitzung erwartungsgemaess
+sauber als "fehlgeschlagen" behandelt, kein Crash - P-10 funktioniert wie
+vorgesehen).
+
+
+### 8. Nachtrag zum Nachtrag: Watchlist-/Portfolio-Asset-Verwaltung geprueft
+
+Nutzer-Hinweis "vergiss auch nicht die Asset-Verwaltung in der Watchlist und
+im Portfolio - manuelle Eingabe und automatische Befuellung" fuehrte zu einem
+gezielten Audit von AssetAddDialog (ui/app.py), Bitpanda-Sync
+(importer/bitpanda_sync.py) und Portfolio-Tab (ui/portfolio.py). Ergebnis:
+Portfolio-Tab und Bitpanda-Sync sind bereits vollstaendig assetklassen-neutral
+(keine Aenderung noetig). EIN echter Fund: das "etf"-Dropdown im
+AssetAddDialog deckt sowohl Themen-ETFs als auch Hedge-Instrumente ab, die
+NUR per Symbol-Zugehoerigkeit zu SYMBOL_ZU_HEBEL_FAKTOR unterschieden werden
+(kein eigenes UI-Feld dafuer) - ein neu hinzugefuegtes Hedge-Instrument waere
+ohne Warnung als Themen-ETF behandelt worden, bis ein Entwickler es zusaetzlich
+im Code eintraegt (hebel_faktor/Referenzindex sind hartkodiert, nicht per UI
+abbildbar). Fix: `_validate_new_asset()` warnt jetzt (P-10, nicht blockierend)
+bei jedem neuen etf-Symbol, das nicht in SYMBOL_ZU_HEBEL_FAKTOR steht, mit
+konkretem Hinweis auf den noetigen Code-Schritt. Synthetisch verifiziert (Nicht-
+Hedge-Symbol -> Warnung, echtes Hedge-Symbol DBPK -> keine Warnung).
+
+Nebenbefund (bewusst NICHT geaendert, vorbestehendes und symmetrisches
+Verhalten ueber alle Assetklassen): ein automatisches Hinzufuegen unbekannter
+Bitpanda-Symbole zur Watchlist existiert nur fuer offene Hebel-/Margin-
+Positionen (auto_add_unknown_hebel_symbols(), importer/bitpanda_margin_
+positions.py). Neue Spot-/Nicht-Krypto-Bestaende fuer noch nicht in der
+Watchlist gefuehrte Symbole werden NICHT automatisch angelegt, sondern per
+result.unmatched_bitpanda_symbols im Sync-Ergebnis-Dialog angezeigt (ui/app.py,
+zwei Stellen) - der Nutzer fuegt sie bei Bedarf manuell ueber AssetAddDialog
+hinzu. Gilt gleichermassen fuer Krypto und Nicht-Krypto, keine Themen-ETF-
+spezifische Luecke.
+
+
+## Nachtrag (2026-07-18, gleicher Tag): LLM-Tagesbudget-Konsistenzpruefung +
+## E-Mail-Versand-Audit
+
+**Ausloeser:** Nutzer bemerkte auf der Remote-Status-Seite ein verdaechtiges
+Bild (Groq "Fehler", "cerebras (2)" in der Hebel-Provider-Performance-Karte,
+angezeigtes LLM-Budget) und bat um eine Pruefung des E-Mail-Versands sowie
+des LLM-Tagesbudgets speziell im Zusammenspiel mit den neuen Multi-Asset-
+LLM-Verbrauchern.
+
+**"cerebras (2)" in der Provider-Performance:** korrekte historische
+Anzeige, kein Bug - diese 2 Hebel-Signale wurden vor der vollstaendigen
+Cerebras-Entfernung erzeugt und sind seither aufgeloest (siehe
+project_cerebras_free_tier_aenderung_2026-08-17.md). Kein Code aendert das
+mehr, es ist reine Vergangenheitsdaten-Anzeige.
+
+**Groq "Fehler (vor 20 Min)":** ebenfalls kein Bug - echter 429-Rate-Limit
+durch die vorangegangenen Verifikations-Testlaeufe dieser Session (mehrere
+echte Groq-Calls kurz hintereinander waehrend der Themen-ETF-Verifikation).
+Selbstheilend.
+
+**Echter Fund: `count_real_signals_today()` war fuer das Krypto-Tagesbudget
+verfaelscht.** Diese Funktion zaehlt Zeilen in der `signals`-Tabelle seit
+Mitternacht UTC, OHNE Assetklassen-Filter. Sie wird an 3 Stellen fuer
+Krypto-spezifische Tagesbudget-Entscheidungen verwendet (das Krypto-Budget-
+System - Hebel/Marktscan/Spot, `taegliches_budget_gesamt: 15` - kalibriert
+auf Groqs reale Token-Kapazitaet fuer Krypto allein):
+
+1. `agent/krypto/signal_batch.py::run_signal_batch()` - der manuelle "Batch
+   berechnen"-Button berechnete sein verbleibendes Tagesbudget als
+   `daily_budget - bereits_heute`. Seit der automatische Multi-Asset-Batch
+   (Aktien/Rohstoffe/Hedge/Themen-ETF, alle 12h) in dieselbe `signals`-
+   Tabelle schreibt, schrumpfte das verbleibende KRYPTO-Budget
+   stillschweigend um jede Multi-Asset-Signal-Erzeugung - eine echte
+   Funktionsbeeintraechtigung, nicht nur eine Anzeige-Ungenauigkeit.
+2. `remote/status.py::_get_budget_heute()` - die "LLM-Budget heute"-Karte
+   (die im Screenshot zu sehende Karte) zeigte ein verzerrtes Verhaeltnis
+   zum 15er-Deckel.
+3. `ui/marktscan_view.py::_run_writeup()` - dieselbe Verzerrung in der
+   Budget-Warnung des manuellen Marktscan-Buttons.
+
+**Fix:** `database/db.py::count_real_signals_today()` um einen optionalen
+`erlaubte_symbole`-Parameter erweitert (identisches Muster wie bereits heute
+bei `compute_win_rate_fact()`). Alle 3 Aufrufstellen filtern jetzt auf
+Krypto-Symbole. `remote/status.py` weist den Multi-Asset-Verbrauch
+zusaetzlich als eigene, sichtbare Zeile (`multi_asset_heute`) aus statt ihn
+unsichtbar zu verschlucken - neue Karten-Zeile in `remote/server.py`.
+
+Synthetisch verifiziert (4 Faelle: ungefiltert/Krypto-only/leeres Set/
+unbekanntes Symbol). Echter Nachweis-Lauf gegen eine Kopie der Produktions-
+DB mit realistischem Mischszenario (8 echte Krypto- + 6 Multi-Asset-Signale
+am selben Tag): ALTE Zaehlweise haette 14/15 (93%) angezeigt - faelschlich
+fast erschoepft; NEUE Zaehlweise zeigt korrekt 8/15 (53%) Krypto-Verbrauch,
+6 separat als Multi-Asset ausgewiesen.
+
+**E-Mail-Versand-Audit (bereits sauber, keine Aenderung noetig):**
+`_notify_spot_signal()`/`_notify_hebel_signal()`/`_notify_multi_asset_signal()`
+decken alle 6 Signal-erzeugenden Pfade ab (Krypto Spot, Hebel, Aktien,
+Rohstoffe, Hedge, Themen-ETF). Marktscan-Tier-2-LLM-Writeups (reine
+Text-Anreicherung eines bereits per Score entdeckten Kandidaten, kein
+eigenstaendiges Signal-Objekt) senden bewusst keine zweite E-Mail - der
+Kandidat wurde bereits ueber `_notify_marktscan_kaufkandidaten()` beim
+eigentlichen Scan gemeldet, kein Duplikat noetig. Manuelle "Signal
+berechnen"-Klicks (alle Assetklassen) senden bewusst NIE eine E-Mail - nur
+automatische Jobs, konsistent ueber die gesamte App.

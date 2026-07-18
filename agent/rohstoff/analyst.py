@@ -24,6 +24,7 @@ import numpy as np
 
 from agent.krypto.regime import RegimeResult
 from agent.krypto.risk_gate import RiskPreCheckResult
+from agent.krypto.wiederholungs_erkennung import build_wiederholung_fact
 from importer.bitpanda_avg_cost import compute_cost_basis_view
 from indicators.calculations import ConfluenceSummary, TechnicalSnapshot, latest_value
 
@@ -31,6 +32,10 @@ logger = logging.getLogger(__name__)
 
 # Kein TAUSCHEN (kein Krypto-Steuervorteil-Aequivalent) - vier Aktionen wie bei Aktien.
 REQUIRED_ACTIONS = ("KAUFEN", "VERKAUFEN", "HALTEN", "NACHKAUFEN")
+
+# Wiederholungs-Erkennung (2026-07-18, Multi-Asset-Vollstaendigkeitspruefung -
+# siehe agent/krypto/wiederholungs_erkennung.py).
+_WIEDERHOLUNG_RELEVANTE_AKTIONEN = ("VERKAUFEN",)
 
 SYSTEM_PROMPT = """Du bist ein Trading-Analyst fuer ein privates Rohstoff-Advisory-Tool \
 (handelbar ueber ETCs - Exchange Traded Commodities, physisch/synthetisch besicherte \
@@ -164,6 +169,12 @@ gilt dasselbe wie fuer Krypto: `spx_median_forward_*` beschreibt nur die Aktienm
 Tendenz der Analoge, ist bestenfalls ein grober Makro-Hintergrund (z.B. ueber die \
 Dollarstaerke-Dimension der Konstellation indirekt relevant fuer Gold/Silber), KEIN \
 direktes Rohstoff-Signal. Lies den mitgelieferten `hinweis`.
+20. Ist `vorherige_empfehlung` NICHT null, wurde die letzte VERKAUFEN-Empfehlung fuer \
+dieses Asset nachweislich nicht umgesetzt (Position wird laut `haltung` weiterhin gehalten). \
+Wiederhole die Empfehlung nicht unveraendert, ohne diesen Umstand explizit in \
+`long_reasoning` oder `key_risks` zu benennen - entweder nenne einen NEUEN, zusaetzlichen \
+Grund, der seit der letzten Empfehlung hinzugekommen ist, oder erklaere ausdruecklich, \
+warum die Empfehlung trotz Nicht-Umsetzung unveraendert bestehen bleibt.
 
 SCHEMA:
 {
@@ -256,6 +267,7 @@ def build_facts(
     price_age_minutes: float | None,
     historische_erfolgsquote: dict | None = None,
     historischer_makro_vergleich: dict | None = None,
+    letztes_signal=None,
 ) -> dict:
     macd_val = technical_snapshot.macd
     macd_facts = None
@@ -292,6 +304,9 @@ def build_facts(
     wird_aktuell_gehalten = bool(
         holding and ((holding.quantity or 0.0) + (holding.staked_quantity or 0.0)) > 0.0
     )
+    vorherige_empfehlung_fact = build_wiederholung_fact(
+        letztes_signal, wird_aktuell_gehalten, relevante_aktionen=_WIEDERHOLUNG_RELEVANTE_AKTIONEN,
+    )
     facts = {
         "asset": {
             "symbol": asset.symbol,
@@ -306,6 +321,7 @@ def build_facts(
             "aktualisiert_vor_min": price_age_minutes,
         },
         "haltung": _build_haltung_facts(holding, latest_price),
+        "vorherige_empfehlung": vorherige_empfehlung_fact,
         "historische_erfolgsquote": historische_erfolgsquote,
         "historischer_makro_vergleich": historischer_makro_vergleich,
         "makro_ueberlagerung": makro_ueberlagerung,

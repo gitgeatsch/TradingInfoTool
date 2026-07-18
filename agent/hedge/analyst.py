@@ -20,9 +20,15 @@ from __future__ import annotations
 import json
 import logging
 
+from agent.krypto.wiederholungs_erkennung import build_wiederholung_fact
+
 logger = logging.getLogger(__name__)
 
 REQUIRED_ACTIONS = ("KAUFEN", "VERKAUFEN", "HALTEN", "NACHKAUFEN")
+
+# Wiederholungs-Erkennung (2026-07-18, Multi-Asset-Vollstaendigkeitspruefung -
+# siehe agent/krypto/wiederholungs_erkennung.py).
+_WIEDERHOLUNG_RELEVANTE_AKTIONEN = ("VERKAUFEN",)
 
 SYSTEM_PROMPT = """Du bist ein Portfolio-Hedge-Analyst fuer ein privates Advisory-Tool. \
 Deine Rolle ist rein beratend (P-7) - du fuehrst NIEMALS einen Trade aus, du gibst nur \
@@ -104,6 +110,17 @@ schwaechste, jede Zahl 1-5 genau einmal). Jeder Eintrag hat `rang` (1-5), `kateg
 "reduzieren, sobald regime.regime wieder auf bulle wechselt").
 12. Antworte AUSSCHLIESSLICH mit einem einzigen JSON-Objekt gemaess dem vorgegebenen \
 Schema. Kein Markdown, keine Code-Fences, kein Text ausserhalb des JSON.
+13. Ist `vorherige_empfehlung` NICHT null, wurde die letzte VERKAUFEN-Empfehlung fuer \
+dieses Hedge-Instrument nachweislich nicht umgesetzt (Position wird laut `haltung` \
+weiterhin gehalten). Wiederhole die Empfehlung nicht unveraendert, ohne diesen Umstand \
+explizit in `long_reasoning` zu benennen - entweder nenne einen NEUEN, zusaetzlichen \
+Grund, der seit der letzten Empfehlung hinzugekommen ist, oder erklaere ausdruecklich, \
+warum die Empfehlung trotz Nicht-Umsetzung unveraendert bestehen bleibt.
+14. Ist `historische_erfolgsquote` NICHT null, gibt sie die bisherige Trefferquote \
+frueherer Hedge-Signale wieder (`trefferquote_pct`, `anzahl_ausgewertete_signale`). \
+Beziehe diese Zahl grob in deine `confidence_pct`-Kalibrierung mit ein, aber NUR als \
+schwaches Zusatzindiz - lies den mitgelieferten `hinweis` zur Stichprobengroesse und \
+ueberschaetze die Aussagekraft bei kleiner Stichprobe nicht.
 
 SCHEMA:
 {
@@ -187,8 +204,13 @@ def build_facts(
     regime_result,
     price_age_minutes: float | None,
     historischer_makro_vergleich: dict | None = None,
+    historische_erfolgsquote: dict | None = None,
+    letztes_signal=None,
 ) -> dict:
     wird_aktuell_gehalten = bool(holding and (holding.quantity or 0.0) > 0.0)
+    vorherige_empfehlung_fact = build_wiederholung_fact(
+        letztes_signal, wird_aktuell_gehalten, relevante_aktionen=_WIEDERHOLUNG_RELEVANTE_AKTIONEN,
+    )
     facts = {
         "hedge_instrument": {
             "symbol": asset.symbol,
@@ -203,6 +225,8 @@ def build_facts(
             "aktualisiert_vor_min": price_age_minutes,
         },
         "haltung": _build_haltung_facts(holding, latest_price),
+        "vorherige_empfehlung": vorherige_empfehlung_fact,
+        "historische_erfolgsquote": historische_erfolgsquote,
         "portfolio_exposure": portfolio_exposure,
         "regime": {
             "regime": regime_result.regime,

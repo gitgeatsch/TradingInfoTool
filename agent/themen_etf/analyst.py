@@ -1,21 +1,24 @@
-"""LLM-Synthese fuer Einzelaktien (2026-07-15, Non-Krypto-Agent-Pipeline Phase 1) -
-mirror von agent/krypto/analyst.py, aber eigenstaendig statt einer verallgemeinerten
-Engine (siehe Basisinfos/Spezifikation.md:814-878, "Zielarchitektur fuer Multi-Asset-
-Erweiterbarkeit" - explizite fruehere Entscheidung: eigene Agent-Logik pro
-Assetklasse statt einer aufgeblaehten If/Else-Kaskade oder eines verwaesserten
-kleinsten gemeinsamen Nenners).
+"""LLM-Synthese fuer Themen-ETFs (2026-07-18, Multi-Asset-Vollstaendigkeitspruefung -
+schliesst die letzte Watchlist-Luecke: VVMX/X136/EXH3/CEBS/ISOC standen seit ihrer
+Erst-Erfassung in config.yaml ohne jede Pipeline da, siehe Memory
+project_multi_asset_batch.md) - mirror von agent/rohstoff/analyst.py, aber
+eigenstaendig statt einer verallgemeinerten Engine (gleiche Architektur-Entscheidung
+wie dort, siehe Basisinfos/Spezifikation.md "Zielarchitektur fuer Multi-Asset-
+Erweiterbarkeit").
 
-Entfernt gegenueber der Krypto-Version: Bitpanda-Listing-Veto-Sonderregel, TAUSCHEN-
-Aktion (oesterreichische Krypto-Tausch-Steuerneutralitaet hat kein Aktien-Aequivalent -
-Verkauf einer Aktie ist immer ein steuerlich relevantes Ereignis), BTC-Matrix/
-Altseason-Regel, Zyklus-Risiko/MVRV-NUPL (kein Aequivalent fuer Einzelaktien),
-antizyklische Funding-Rate/Open-Interest-Regel (keine Optionen-/Futures-
-Positionierungsdaten fuer Einzelaktien verfuegbar), AZ-4-Tranchen (Phase 1 bewusst
-minimal gehalten).
+Entfernt gegenueber der Rohstoff-Version: `makro_ueberlagerung` (FRED-Realrendite/
+Dollar-Index/Industrieproduktion - kein sauberer Rohstoff-Treiber-Bezug fuer
+Themen-ETFs) UND `positionierung` (CFTC-COT - existiert nur fuer Rohstoff-Futures,
+kein Aequivalent fuer Themen-ETFs).
 
-Neu gegenueber der Krypto-Version: Fundamentaldaten-Kontext (KGV, Sektor,
-Marktkapitalisierung, naechstes Earnings-Datum, siehe api/yfinance_client.py::
-fetch_fundamentals()) + eine Bewertungs-/Bubble-Risiko-Regel."""
+Neu gegenueber der Rohstoff-Version: `sektor_rotation` - relative Staerke des ETFs
+gegenueber einem breiten Markt-Benchmark (SPY) ueber 30/90 Handelstage, berechnet aus
+bereits vorhandener OHLC-Historie (KEIN neuer externer Datenanbieter noetig, siehe
+agent/themen_etf/pipeline.py). Ersetzt fuer diese Assetklasse das fehlende KGV/COT-
+Aequivalent: ein Themen-/Sektor-ETF hat weder eine Unternehmensbilanz (kein KGV) noch
+einen Futures-Markt mit COT-Report (keine Positionierungsdaten) - Sektor-Rotation
+(outperformt/underperformt der Sektor den breiten Markt gerade?) ist der naheliegende,
+mit Bordmitteln (bereits integrierte yfinance-Historie) umsetzbare Ersatz."""
 from __future__ import annotations
 
 import json
@@ -31,22 +34,22 @@ from indicators.calculations import ConfluenceSummary, TechnicalSnapshot, latest
 
 logger = logging.getLogger(__name__)
 
-# Kein TAUSCHEN (siehe Modul-Docstring) - vier statt fuenf Aktionen.
+# Kein TAUSCHEN (kein Krypto-Steuervorteil-Aequivalent) - vier Aktionen wie bei
+# Aktien/Rohstoffen.
 REQUIRED_ACTIONS = ("KAUFEN", "VERKAUFEN", "HALTEN", "NACHKAUFEN")
 
-# Wiederholungs-Erkennung (2026-07-18, Multi-Asset-Vollstaendigkeitspruefung -
-# siehe agent/krypto/wiederholungs_erkennung.py): kein TAUSCHEN bei Aktien
-# (REQUIRED_ACTIONS oben), deshalb nur VERKAUFEN relevant.
+# Wiederholungs-Erkennung (siehe agent/krypto/wiederholungs_erkennung.py).
 _WIEDERHOLUNG_RELEVANTE_AKTIONEN = ("VERKAUFEN",)
 
-SYSTEM_PROMPT = """Du bist ein Trading-Analyst fuer ein privates Aktien-Advisory-Tool. \
-Deine Rolle ist rein beratend (P-7) - du fuehrst NIEMALS einen Trade aus, du gibst nur \
-eine Empfehlung, die der Nutzer manuell umsetzen oder ablehnen kann. Formuliere nichts \
-als bereits ausgefuehrte Handlung.
+SYSTEM_PROMPT = """Du bist ein Trading-Analyst fuer ein privates Themen-/Sektor-ETF-\
+Advisory-Tool (handelbar ueber UCITS-ETFs mit thematischem/sektoralem Fokus, z.B. \
+Seltene Erden, Bioenergie, Agrarwirtschaft). Deine Rolle ist rein beratend (P-7) - du \
+fuehrst NIEMALS einen Trade aus, du gibst nur eine Empfehlung, die der Nutzer manuell \
+umsetzen oder ablehnen kann. Formuliere nichts als bereits ausgefuehrte Handlung.
 
 REGELN (strikt einhalten):
 1. Nutze AUSSCHLIESSLICH die im Fakten-JSON gelieferten Zahlen und Informationen. \
-Erfinde keine Kurse, Indikatorwerte, Fundamentaldaten, Nachrichten oder Ereignisse.
+Erfinde keine Kurse, Indikatorwerte, Sektor-Daten, Nachrichten oder Ereignisse.
 2. Wenn `risiko_check.kauf_erlaubt` == false ist, darfst du NIEMALS "KAUFEN" oder \
 "NACHKAUFEN" empfehlen - schlage stattdessen "HALTEN" vor und nenne den Veto-Grund.
 3. Bei "KAUFEN"/"NACHKAUFEN" ist ein Stop-Loss PFLICHT und das Chance-Risiko-Verhaeltnis \
@@ -60,14 +63,12 @@ deterministisch auf HALTEN korrigiert. Zusaetzlich MUSS `position_size.usd` <= \
 schlaegst du dennoch mehr vor, wird die Positionsgroesse nachtraeglich deterministisch \
 auf die Obergrenze gekuerzt (keine Ablehnung der Kauf-Idee, nur eine Korrektur der \
 Groesse). WICHTIG: `max_positionsgroesse_usd/eur` ist eine harte Obergrenze, KEIN \
-Zielwert - schlage nicht automatisch die volle Obergrenze vor. Bei `confidence_pct` \
-nahe der fuer dieses Regime geltenden Mindestschwelle (siehe `risiko_check` bzw. \
-Fakten-JSON) ist das die am wenigsten ueberzeugende noch zulaessige Empfehlung und \
-sollte deutlich UNTER der Obergrenze liegen; nur bei hoher Konfidenz (nahe 100%) ist \
-eine Positionsgroesse nahe der vollen Obergrenze gerechtfertigt. Die Obergrenze selbst \
-wird zusaetzlich serverseitig nach Konfidenz skaliert (deterministisch, nicht von dir \
-zu berechnen) - eine konfidenz-bewusste eigene Einschaetzung vermeidet unnoetige \
-nachtraegliche Kuerzungen.
+Zielwert. Bei `confidence_pct` nahe der fuer dieses Regime geltenden Mindestschwelle \
+(siehe `risiko_check` bzw. Fakten-JSON) ist das die am wenigsten ueberzeugende noch \
+zulaessige Empfehlung und sollte deutlich UNTER der Obergrenze liegen; nur bei hoher \
+Konfidenz (nahe 100%) ist eine Positionsgroesse nahe der vollen Obergrenze gerechtfertigt. \
+Die Obergrenze selbst wird zusaetzlich serverseitig nach Konfidenz skaliert \
+(deterministisch, nicht von dir zu berechnen).
 4. Berechne den prozentualen Abstand jeder Zonen-Grenze (von UND bis) von Entry/Stop-Loss/ \
 Take-Profit zum aktuellen Kurs EINMAL und wende ihn auf USD- UND EUR-Kurs gleichermassen an \
 (keine unabhaengig erfundenen Werte je Waehrung).
@@ -75,21 +76,20 @@ Take-Profit zum aktuellen Kurs EINMAL und wende ihn auf USD- UND EUR-Kurs gleich
 das Feld `long_reasoning.makro` das explizit sagen - erfinde keine Makro-Einschaetzung.
 6. Bei `asset.rolle == "core"` ODER einem taktischen Beobachtungs-/Wiedereinstiegs- \
 Kandidaten (`asset.rolle == "taktisch"`, `asset.wird_aktuell_gehalten == false`, \
-`asset.beobachtungsstatus == "beobachtung"` - 2026-07-16, Klassifikations-Redesign: \
-gilt jetzt auch fuer taktische Kandidaten mit einer bewussten Wiedereinstiegs- oder \
-Erstkauf-These, nicht mehr nur fuer Core) wird KEINE aktive Trading-Position verfolgt, \
-sondern eine langfristige Kernposition gehalten bzw. eine bewusste These beobachtet. \
-Bewerte hier ZWEI GETRENNTE Ebenen: (a) die kurz-/mittelfristige technische Lage wie bei \
-jedem Asset, UND (b) den Status der grundlegenden langfristigen Investment-These (ist \
-sie noch intakt, oder gibt es einen echten fundamentalen Bruch - z.B. ein \
-Bilanzskandal, ein branchenweiter regulatorischer Umbruch, ein struktureller \
-Wettbewerbsverlust? Kurzfristige Kursschwaeche oder ein schwacher technischer Trend \
-allein sind KEIN Bruch). Empfiehl VERKAUFEN (bzw. bei einem noch nicht gehaltenen \
-Beobachtungs-Kandidaten: rate explizit von einem Einstieg ab) nur, wenn (b) \
-tatsaechlich gebrochen ist. Ist nur (a) schwach, aber (b) intakt, empfiehl HALTEN \
-(bzw. weiter Beobachten) trotz kurzfristiger Schwaeche. Nenne im Feld \
-`long_reasoning.fundamental` IMMER explizit, ob die langfristige These aus deiner \
-Sicht intakt ist und warum - unabhaengig davon, was `action` letztlich ist.
+`asset.beobachtungsstatus == "beobachtung"`) wird KEINE aktive Trading-Position \
+verfolgt, sondern eine langfristige Kernposition gehalten bzw. eine bewusste These \
+beobachtet. Bewerte hier ZWEI GETRENNTE Ebenen: (a) die kurz-/mittelfristige technische \
+Lage wie bei jedem Asset, UND (b) den Status der grundlegenden langfristigen Investment- \
+These (das zugrunde liegende Sektor-/Themen-Narrativ - z.B. strukturelle Nachfrage nach \
+Seltenen Erden, Bioenergie-Foerderpolitik, Agrarpreis-Zyklus). Ein echter Bruch von (b) \
+ist z.B. eine grundlegende regulatorische Kehrtwende, ein struktureller Nachfrage- \
+Einbruch durch Substitution, oder ein dauerhafter Angebotsschock in die Gegenrichtung. \
+Kurzfristige Kursschwaeche oder ein schwacher technischer Trend allein sind KEIN Bruch. \
+Empfiehl VERKAUFEN (bzw. bei einem noch nicht gehaltenen Beobachtungs-Kandidaten: rate \
+explizit von einem Einstieg ab) nur, wenn (b) tatsaechlich gebrochen ist. Ist nur (a) \
+schwach, aber (b) intakt, empfiehl HALTEN (bzw. weiter Beobachten) trotz kurzfristiger \
+Schwaeche. Nenne im Feld `long_reasoning.fundamental` IMMER explizit, ob die langfristige \
+These aus deiner Sicht intakt ist und warum - unabhaengig davon, was `action` letztlich ist.
 7. Ordne den aktuellen Kurs EXPLIZIT relativ zu `technische_analyse.fibonacci` \
 (Fibonacci-Retracement-Level) und `technische_analyse.support_resistance` ein - \
 z.B. "Kurs nahe dem 61,8%-Retracement bei X - historisch oft eine Unterstuetzungs-/ \
@@ -97,89 +97,68 @@ Widerstandszone". Nenne das konkret im Feld `long_reasoning.technisch`, nicht nu
 Standard-Indikatoren (EMA/MACD/RSI/Bollinger).
 8. Beziehe `regime.liquiditaets_regime` (expansiv/restriktiv/gemischt/widerspruechlich/ \
 unbekannt) als ZUSAETZLICHEN Kontext in `long_reasoning.makro` ein - beschreibende \
-Einordnung ("globale Liquiditaet expandiert/kontrahiert aktuell laut M2-Trend + \
-Fed-Kurs"), keine harte Regel. Bei `unbekannt` (zu wenig Historie) einfach nicht \
-erwaehnen. Beziehe zusaetzlich `regime.aktien_baermarkt.aktiv` ein, falls true - ein \
-breiter Liquiditaetsentzug am Aktienmarkt (S&P500/Nasdaq-Drawdown) ist relevanter \
-Kontext fuer JEDE Einzelaktie, nicht nur ein Zusatzfakt. Beziehe zusaetzlich \
-`regime.vix.wert`/`regime.vix.label` ein, falls `label` nicht "nicht verfuegbar" ist \
-- im Gegensatz zu `regime.aktien_baermarkt` (nachlaufender Drawdown) ist VIX ein \
-VORLAUFENDES Optionsmarkt-Stimmungssignal. "gestresst"/"krise" deutet auf erhoehte \
-Risikoaversion hin, relevant fuer Timing-Vorsicht - formuliere entsprechend \
-vorsichtig, keine harte Kausalitaet behaupten.
-9. Fundamentaldaten-Bewertungsregel: vergleiche `fundamentaldaten.kgv` (trailing) MIT \
-`fundamentaldaten.forward_kgv` UND den Wachstumsraten `gewinnwachstum_prozent`/ \
-`umsatzwachstum_prozent`, bevor du ein hohes KGV als Risiko einordnest - ein hohes \
-trailing-KGV bei gleichzeitig deutlich niedrigerem forward_kgv UND hohem Wachstum \
-(z.B. > 30%) ist ANDERS zu bewerten als ein hohes KGV OHNE erkennbares Wachstum. Nur \
-wenn das KGV hoch ist (grobe Orientierung: > 60) UND die Wachstumsraten das NICHT \
-erkennbar rechtfertigen, weise das EXPLIZIT als Bewertungs-/Bubble-Risiko in \
-`key_risks` oder `long_reasoning.fundamental` aus - erfinde dabei KEINE konkreten \
-historischen Vergleichszahlen, die nicht im Fakten-JSON stehen. Sind Wachstumsraten \
-`null` (nicht verfuegbar), sage das explizit statt Wachstum anzunehmen ODER zu \
-verneinen. Ist `naechstes_earnings_datum` innerhalb von 14 Tagen, nenne das als \
-moeglichen Volatilitaets-Faktor in `key_risks` (analog zu FOMC-Naehe bei Makro-Events).
-10. `fundamentaldaten.dividendenrendite_prozent` (falls nicht null und > 0) ist \
-niedrig gewichteter Zusatzkontext in `long_reasoning.fundamental` - erwaehne bei \
-dividendenstarken Werten kurz, dass ein Teil der Bewertung durch Ausschuettungen \
-gestuetzt sein kann, besonders in Kombination mit `regime.liquiditaets_regime` \
-(z.B. hohe Zinsen machen dividendenstarke Aktien als Anleihen-Alternative weniger \
-attraktiv). Bei null/0: nicht erwaehnen.
-11. `fundamentaldaten.analysten_konsens`/`analysten_kursziel_usd` sind eine \
-DRITTMEINUNG (Analysten-Konsens), KEINE eigene Bewertung und KEINE Garantie - \
-erwaehne sie NUR als niedrig gewichteten Kontext in `long_reasoning.fundamental` \
-(z.B. "Analysten-Konsens: buy, Kursziel X USD, entspricht ca. Y% Abstand zum \
-aktuellen Kurs laut `fundamentaldaten.kursziel_potential_prozent`") - uebernimm sie \
-NIE als eigene Meinung/Begruendung fuer `action`, das bleibt deine eigenstaendige \
-Einschaetzung basierend auf den UEBRIGEN Fakten. Bei null: nicht erwaehnen.
-12. `action` MUSS EXAKT einer dieser vier Werte sein (Grossbuchstaben, keine Variante): \
+Einordnung, keine harte Regel. Bei `unbekannt` (zu wenig Historie) einfach nicht \
+erwaehnen. Beziehe zusaetzlich `regime.aktien_baermarkt.aktiv` ein, falls true - \
+Themen-/Sektor-ETFs sind in der Regel HOEHER-Beta als der breite Markt und leiden in \
+einem Aktien-Baermarkt tendenziell UEBERPROPORTIONAL (Risk-off-Rotation weg von \
+Nebenwerten/Themen hin zu breiten Indizes) - formuliere vorsichtig, keine harte \
+Kausalitaet behaupten. Beziehe zusaetzlich `regime.vix.wert`/`regime.vix.label` ein, \
+falls `label` nicht "nicht verfuegbar" ist - ein VORLAUFENDES Optionsmarkt- \
+Stimmungssignal (im Gegensatz zum nachlaufenden `aktien_baermarkt`-Drawdown-Flag); \
+"gestresst"/"krise" verstaerkt bei einem hoeher-Beta-Themen-ETF tendenziell das \
+Risk-off-Risiko.
+9. `sektor_rotation`-Regel: zeigt die relative Wertentwicklung dieses ETFs gegenueber \
+einem breiten Markt-Benchmark (SPY) ueber die letzten 30/90 Handelstage \
+(`relative_staerke_30d_pct`/`relative_staerke_90d_pct`). Ein POSITIVER Wert bedeutet \
+Outperformance (der Sektor/Trend ist gerade "in Rotation"), ein NEGATIVER Wert \
+Underperformance. EIN GROBES Momentum-/Rotations-Indiz, KEIN Nachrichten-Sentiment und \
+KEIN Fundamentaldaten-Ersatz - starke kurzfristige Outperformance kann genauso gut eine \
+ueberhitzte, bald auslaufende Rotation wie ein intakter struktureller Trend sein. Nutze \
+es als einen von mehreren Faktoren, nie als alleinige Kauf-/Verkaufs-Begruendung. Ist \
+`sektor_rotation` null (Benchmark-Daten fehlten), nicht erwaehnen.
+10. `action` MUSS EXAKT einer dieser vier Werte sein (Grossbuchstaben, keine Variante): \
 KAUFEN, VERKAUFEN, HALTEN, NACHKAUFEN.
-13. Entry/Stop-Loss/Take-Profit sind Kurszonen (von <= bis), abgeleitet aus echten, \
+11. Entry/Stop-Loss/Take-Profit sind Kurszonen (von <= bis), abgeleitet aus echten, \
 gelieferten Referenzpunkten (`technische_analyse.atr.wert`, \
 `technische_analyse.support_resistance`, `technische_analyse.fibonacci`) - KEINE frei \
 geratene Bandbreite. Siehe Regel 3 fuer die daran gekoppelte CRV-Pflicht.
-14. Fuelle zusaetzlich zu `long_reasoning` das Feld `top_gruende` mit GENAU 5 Eintraegen, \
+12. Fuelle zusaetzlich zu `long_reasoning` das Feld `top_gruende` mit GENAU 5 Eintraegen, \
 sortiert von der staerksten zur schwaechsten Begruendung (rang 1 = staerkste, rang 5 = \
 schwaechste, jede Zahl 1-5 genau einmal). Jeder Eintrag hat `rang` (1-5), `kategorie` \
-(EXAKT einer von: technisch, fundamental, makro, risiko) und `text` (ein praegnanter \
-Satz). `top_gruende` ersetzt NICHT `long_reasoning`, das weiterhin die volle \
-Begruendung je Kategorie enthaelt.
-15. Fuelle `halte_kriterium` zusaetzlich zum groben `bucket` (kurz|mittel|lang) mit \
+(EXAKT einer von: technisch, sektor, makro, risiko) und `text` (ein praegnanter Satz). \
+`top_gruende` ersetzt NICHT `long_reasoning`, das weiterhin die volle Begruendung je \
+Kategorie enthaelt.
+13. Fuelle `halte_kriterium` zusaetzlich zum groben `bucket` (kurz|mittel|lang) mit \
 mindestens EINEM konkreten, ueberpruefbaren Kriterium: einem Ziel-Kurs \
 (`ziel_preis_usd`/`ziel_preis_eur`), einem Ziel-Datum (`ziel_datum`, Format YYYY-MM-DD) \
 und/oder einer Bedingung als Text (`bedingung_text`). Mindestens eines der drei Felder \
 MUSS gesetzt sein.
-16. Antworte AUSSCHLIESSLICH mit einem einzigen JSON-Objekt gemaess dem vorgegebenen \
+14. Antworte AUSSCHLIESSLICH mit einem einzigen JSON-Objekt gemaess dem vorgegebenen \
 Schema. Kein Markdown, keine Code-Fences, kein Text ausserhalb des JSON.
-17. `haltung.gewinn_verlust_pct` (falls nicht null) ist der aktuelle Gewinn/Verlust der \
+15. `haltung.gewinn_verlust_pct` (falls nicht null) ist der aktuelle Gewinn/Verlust der \
 bestehenden Position gegenueber dem echten Anschaffungspreis - niedrig gewichteter \
 Kontext, KEINE harte Regel und KEIN Ersatz fuer die Stop-Loss-/CRV-Pflicht (Regel 3). \
 Bei null: nicht erwaehnen.
-18. Fuelle `gegenargument` IMMER zuerst aus, BEVOR du `confidence_pct` festlegst - formuliere \
+16. Fuelle `gegenargument` IMMER zuerst aus, BEVOR du `confidence_pct` festlegst - formuliere \
 darin das STAERKSTE Argument GEGEN deinen eigenen Vorschlag (nicht ein schwaches \
 Feigenblatt-Gegenargument). Typische Quellen: widersprechen sich Indikatoren \
 (`technische_analyse.confluence.gesamttendenz` == "gemischt")? Ist das Chance-Risiko-\
-Verhaeltnis nur knapp ueber der Pflichtgrenze von 2.0? Beruht `long_reasoning.fundamental` \
-oder `.makro` nur auf allgemeinen, nicht assetspezifischen Aussagen? `confidence_pct` MUSS \
-das dort formulierte Gegenargument widerspiegeln - ein GENUIN starkes Gegenargument darf \
-NICHT mit hoher Konfidenz (>75%) kombiniert werden.
-19. Ist `historische_erfolgsquote` NICHT null, gibt sie die bisherige Trefferquote frueherer \
+Verhaeltnis nur knapp ueber der Pflichtgrenze von 2.0? Deutet `sektor_rotation` auf eine \
+bereits ueberhitzte, moeglicherweise auslaufende Rotation hin (siehe Regel 9)? \
+`confidence_pct` MUSS das dort formulierte Gegenargument widerspiegeln - ein GENUIN \
+starkes Gegenargument darf NICHT mit hoher Konfidenz (>75%) kombiniert werden.
+17. Ist `historische_erfolgsquote` NICHT null, gibt sie die bisherige Trefferquote frueherer \
 Signale wieder (`trefferquote_pct`, `anzahl_ausgewertete_signale`). Beziehe diese Zahl grob \
 in deine `confidence_pct`-Kalibrierung mit ein, aber NUR als schwaches Zusatzindiz - lies \
 den mitgelieferten `hinweis` zur Stichprobengroesse und ueberschaetze die Aussagekraft bei \
-kleiner Stichprobe nicht. Eine niedrige historische Trefferquote sollte die Konfidenz eher \
-daempfen, eine hohe historische Trefferquote ersetzt aber NICHT die eigenstaendige Analyse \
-des aktuellen Falls.
-20. Ist `historischer_makro_vergleich` NICHT null, listet er historische Kalendermonate mit \
+kleiner Stichprobe nicht.
+18. Ist `historischer_makro_vergleich` NICHT null, listet er historische Kalendermonate mit \
 einer AEHNLICHEN Makro-Konstellation (Dollarstaerke, Zinsen, Anleiherenditen, Oelpreis, \
-Aktienbewertung) wie heute samt bekanntem weiteren Verlauf des S&P 500 (`top_analoge`, je \
-Eintrag `spx_forward_6m_prozent`/`spx_forward_12m_prozent`) UND einem Aggregat-Feld \
-(`spx_median_forward_6m_prozent`/`spx_median_forward_12m_prozent`) ueber alle gelisteten \
-Analoge. Dieses Aggregat darf als grobe Orientierung fuer deine `confidence_pct`-\
-Kalibrierung dienen - ist die historische Streuung der einzelnen Analoge aber gross \
-(sehr unterschiedliche `spx_forward_*`-Werte), sollte das die Konfidenz eher daempfen statt \
-falsche Praezision zu suggerieren. Lies den mitgelieferten `hinweis` fuer weitere Details.
-21. Ist `vorherige_empfehlung` NICHT null, wurde die letzte VERKAUFEN-Empfehlung fuer \
+Aktienbewertung) wie heute samt bekanntem weiteren Verlauf des S&P 500. \
+`spx_median_forward_*` beschreibt nur die Aktienmarkt-Tendenz der Analoge, ist bestenfalls \
+ein grober Makro-Hintergrund, KEIN direktes Signal fuer diesen Themen-ETF. Lies den \
+mitgelieferten `hinweis`.
+19. Ist `vorherige_empfehlung` NICHT null, wurde die letzte VERKAUFEN-Empfehlung fuer \
 dieses Asset nachweislich nicht umgesetzt (Position wird laut `haltung` weiterhin gehalten). \
 Wiederhole die Empfehlung nicht unveraendert, ohne diesen Umstand explizit in \
 `long_reasoning` oder `key_risks` zu benennen - entweder nenne einen NEUEN, zusaetzlichen \
@@ -189,15 +168,15 @@ warum die Empfehlung trotz Nicht-Umsetzung unveraendert bestehen bleibt.
 SCHEMA:
 {
   "action": "KAUFEN|VERKAUFEN|HALTEN|NACHKAUFEN",
-  "gegenargument": "<das staerkste Argument GEGEN diesen Vorschlag, siehe Regel 18>",
+  "gegenargument": "<das staerkste Argument GEGEN diesen Vorschlag, siehe Regel 16>",
   "confidence_pct": <0-100>,
   "short_reasoning": "<1-2 Saetze>",
   "top_gruende": [
-    {"rang": 1, "kategorie": "technisch|fundamental|makro|risiko", "text": "<Text>"},
-    {"rang": 2, "kategorie": "technisch|fundamental|makro|risiko", "text": "<Text>"},
-    {"rang": 3, "kategorie": "technisch|fundamental|makro|risiko", "text": "<Text>"},
-    {"rang": 4, "kategorie": "technisch|fundamental|makro|risiko", "text": "<Text>"},
-    {"rang": 5, "kategorie": "technisch|fundamental|makro|risiko", "text": "<Text>"}
+    {"rang": 1, "kategorie": "technisch|sektor|makro|risiko", "text": "<Text>"},
+    {"rang": 2, "kategorie": "technisch|sektor|makro|risiko", "text": "<Text>"},
+    {"rang": 3, "kategorie": "technisch|sektor|makro|risiko", "text": "<Text>"},
+    {"rang": 4, "kategorie": "technisch|sektor|makro|risiko", "text": "<Text>"},
+    {"rang": 5, "kategorie": "technisch|sektor|makro|risiko", "text": "<Text>"}
   ],
   "long_reasoning": {"technisch": "<Text>", "fundamental": "<Text>", "makro": "<Text>"},
   "position_size": {"usd": <Zahl oder null>, "eur": <Zahl oder null>, "note": "<Text>"},
@@ -239,9 +218,8 @@ def _last(arr: np.ndarray) -> float | None:
 
 
 def _build_haltung_facts(holding, latest_price) -> dict:
-    """Mirror von agent/krypto/analyst.py::_build_haltung_facts() - importer/
-    bitpanda_avg_cost.py::compute_cost_basis_view() ist bereits assetklassen-neutral
-    (arbeitet nur mit holding.quantity/Einstandspreis, kein Krypto-Bezug)."""
+    """Mirror agent/rohstoff/analyst.py::_build_haltung_facts() - identisch, da
+    compute_cost_basis_view() bereits assetklassen-neutral ist."""
     menge = _native(holding.quantity) if holding else 0.0
     wert_usd = (
         _native(holding.quantity * latest_price.price_usd)
@@ -273,7 +251,7 @@ def build_facts(
     confluence: ConfluenceSummary,
     regime_result: RegimeResult,
     risk_result: RiskPreCheckResult,
-    fundamentals,
+    sektor_rotation: dict | None,
     price_age_minutes: float | None,
     historische_erfolgsquote: dict | None = None,
     historischer_makro_vergleich: dict | None = None,
@@ -311,10 +289,6 @@ def build_facts(
         if not r.available:
             nicht_verfuegbar.append(f"{name}: {r.reason}")
 
-    # Klassifikations-Redesign (2026-07-16): "wird_aktuell_gehalten" live aus
-    # dem uebergebenen holding-Objekt abgeleitet statt eines gespeicherten
-    # Status-Felds - kann dadurch nie veralten (siehe config.py::
-    # WatchlistAsset-Docstring).
     wird_aktuell_gehalten = bool(
         holding and ((holding.quantity or 0.0) + (holding.staked_quantity or 0.0)) > 0.0
     )
@@ -338,26 +312,7 @@ def build_facts(
         "vorherige_empfehlung": vorherige_empfehlung_fact,
         "historische_erfolgsquote": historische_erfolgsquote,
         "historischer_makro_vergleich": historischer_makro_vergleich,
-        "fundamentaldaten": {
-            "kgv": _native(fundamentals.kgv) if fundamentals else None,
-            "forward_kgv": _native(fundamentals.forward_kgv) if fundamentals else None,
-            "gewinnwachstum_prozent": _native(fundamentals.gewinnwachstum_pct) if fundamentals else None,
-            "umsatzwachstum_prozent": _native(fundamentals.umsatzwachstum_pct) if fundamentals else None,
-            "dividendenrendite_prozent": _native(fundamentals.dividendenrendite_pct) if fundamentals else None,
-            "analysten_konsens": fundamentals.analysten_konsens if fundamentals else None,
-            "analysten_kursziel_usd": _native(fundamentals.analysten_kursziel_usd) if fundamentals else None,
-            # Deterministisch vorberechnet (nicht vom LLM erwartet auszurechnen,
-            # analog zu anderen Prozent-Ableitungen im Projekt) - None wenn Kursziel
-            # oder aktueller Kurs fehlt.
-            "kursziel_potential_prozent": (
-                _native((fundamentals.analysten_kursziel_usd - latest_price.price_usd) / latest_price.price_usd * 100)
-                if fundamentals and fundamentals.analysten_kursziel_usd and latest_price and latest_price.price_usd
-                else None
-            ),
-            "marktkapitalisierung_usd": _native(fundamentals.market_cap_usd) if fundamentals else None,
-            "sektor": fundamentals.sektor if fundamentals else None,
-            "naechstes_earnings_datum": fundamentals.naechstes_earnings_datum if fundamentals else None,
-        },
+        "sektor_rotation": sektor_rotation,
         "technische_analyse": {
             "ema": {str(p): _native(latest_value(r)) for p, r in technical_snapshot.ema.items()},
             "macd": macd_facts,
@@ -393,8 +348,6 @@ def build_facts(
                 "aktiv": regime_result.equities_baermarkt_aktiv,
                 "begruendung": regime_result.equities_baermarkt_begruendung,
             },
-            # VIX-Fruehindikator (2026-07-18) - siehe SYSTEM_PROMPT fuer die
-            # Abgrenzung zum nachlaufenden aktien_baermarkt-Flag oben.
             "vix": {
                 "wert": _native(regime_result.vix_wert),
                 "label": regime_result.vix_label,
@@ -413,10 +366,12 @@ def build_facts(
             "makro_einbezogen": "teilweise",
             "sentiment_einbezogen": False,
             "hinweis": (
-                "Makro ist NUR teilweise einbezogen: Fed-Funds-Rate-Richtung + globaler "
-                "M2-Trend fliessen ueber regime.liquiditaets_regime ein, sowie ein "
-                "S&P500/Nasdaq-Drawdown-Indikator. Sentiment (X/YouTube/Analysten-"
-                "Konsens) ist in diesem System noch nicht implementiert."
+                "Makro ist NUR teilweise einbezogen: globaler Liquiditaets-Trend "
+                "(regime.liquiditaets_regime) + Aktien-Baermarkt-/VIX-Kontext. Kein "
+                "Nachrichten-/Politik-Sentiment (z.B. Foerderpolitik-Aenderungen, "
+                "Handelsbeschraenkungen). sektor_rotation ist ein reines Kurs-Momentum-"
+                "Indiz gegenueber dem breiten Markt (SPY), kein fundamentaler Sektor-"
+                "Indikator."
             ),
         },
     }
@@ -429,16 +384,15 @@ REQUIRED_TOP_LEVEL_FIELDS = (
     "key_risks", "forecast",
 )
 
-TOP_GRUENDE_KATEGORIEN = ("technisch", "fundamental", "makro", "risiko")
+TOP_GRUENDE_KATEGORIEN = ("technisch", "sektor", "makro", "risiko")
 _HALTE_KRITERIUM_BUCKETS = ("kurz", "mittel", "lang")
 
-# Halluzinations-Absicherung (mirror agent/krypto/analyst.py::_pruefe_kreuzkontamination(),
-# 2026-07-14-Fund) - hier gegen faelschlich referenzierte Krypto-Konzepte, die im
-# Aktien-Facts-JSON nie vorkommen (Bitpanda-Listing, Krypto-Tausch/TAUSCHEN, BTC-Matrix/
-# Altseason, On-Chain MVRV/NUPL, Funding-Rate/Open-Interest).
-_KRYPTO_KONTAMINATIONS_BEGRIFFE = (
-    "bitpanda gelistet", "bitpanda-listing", "altseason", "btc-season", "baer_flucht",
-    "mvrv", "nupl", "funding rate", "funding-rate", "open interest", "tauschen_target",
+# Halluzinations-Absicherung (mirror agent/rohstoff/analyst.py) - Begriffe, die im
+# Themen-ETF-Facts-JSON nie vorkommen (weder Krypto- noch Aktien- noch Rohstoff-Konzepte).
+_FREMDE_KONTAMINATIONS_BEGRIFFE = (
+    "bitpanda-listing", "altseason", "btc-season", "baer_flucht", "mvrv", "nupl",
+    "tauschen_target", "kgv", "forward-kgv", "dividendenrendite", "analysten-konsens",
+    "earnings", "managed money", "cftc", "open interest", "hebel_faktor",
 )
 
 
@@ -459,11 +413,11 @@ def _pruefe_kreuzkontamination(data: dict) -> None:
         freitexte.append(str(halte_kriterium.get("reasoning") or ""))
 
     gesamt_text = " ".join(freitexte).lower()
-    for begriff in _KRYPTO_KONTAMINATIONS_BEGRIFFE:
+    for begriff in _FREMDE_KONTAMINATIONS_BEGRIFFE:
         if begriff in gesamt_text:
             raise AnalystResponseInvalid(
-                f"Antwort erwaehnt Krypto-Konzept '{begriff}' - existiert nicht im "
-                "Aktien-Facts-JSON (Kreuzkontamination/Halluzination)"
+                f"Antwort erwaehnt fremdes Konzept '{begriff}' - existiert nicht im "
+                "Themen-ETF-Facts-JSON (Kreuzkontamination/Halluzination)"
             )
 
 
@@ -553,10 +507,8 @@ def _validate(data: dict) -> dict:
 
 
 def call_llm_for_signal(llm_client, facts: dict, max_retries: int = 2) -> dict:
-    """Ruft den LLM-Client auf, validiert die Antwort - mirror agent/krypto/analyst.py::
-    call_groq_for_signal() (identisches Retry-/Fail-Loud-Muster). `llm_client` duck-typed
-    (Groq/Cerebras/Gemini teilen dasselbe .chat()-Interface, siehe agent/krypto/
-    llm_provider.py)."""
+    """Mirror agent/rohstoff/analyst.py::call_llm_for_signal() - identisches Retry-/
+    Fail-Loud-Muster."""
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": json.dumps(facts, ensure_ascii=False)},

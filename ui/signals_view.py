@@ -89,6 +89,13 @@ class SignalsView(ttk.Frame):
         # daher per Symbol statt per Assetklasse gefiltert.
         from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR as _hedge_symbole
         self._hedge_watchlist = [a for a in watchlist if a.symbol in _hedge_symbole]
+        # Themen-ETFs (2026-07-18, agent/themen_etf/pipeline.py) - restliche
+        # assetklasse=="etf"-Assets, die NICHT Hedge-Instrumente sind (VVMX/X136/
+        # EXH3/CEBS/ISOC). Standen bis hierher ohne jede Pipeline in der Watchlist
+        # (Multi-Asset-Vollstaendigkeitspruefung, siehe Memory project_multi_asset_batch.md).
+        self._themen_etf_watchlist = [
+            a for a in watchlist if a.assetklasse == "etf" and a.symbol not in _hedge_symbole
+        ]
         # agent/aktien/pipeline.py::generate_signal() braucht die VOLLSTAENDIGE
         # Watchlist (inkl. BTC) fuer compute_current_regime() - filtert intern selbst
         # auf die Aktien-Teilmenge fuer RM-2, siehe dessen Docstring.
@@ -196,14 +203,18 @@ class SignalsView(ttk.Frame):
     def _asset_by_symbol(self, symbol: str):
         return next(
             (
-                a for a in self._watchlist + self._aktien_watchlist + self._rohstoff_watchlist + self._hedge_watchlist
+                a for a in self._watchlist + self._aktien_watchlist + self._rohstoff_watchlist
+                + self._hedge_watchlist + self._themen_etf_watchlist
                 if a.symbol == symbol
             ),
             None,
         )
 
     def _refresh_list(self) -> None:
-        alle_assets = self._watchlist + self._aktien_watchlist + self._rohstoff_watchlist + self._hedge_watchlist
+        alle_assets = (
+            self._watchlist + self._aktien_watchlist + self._rohstoff_watchlist
+            + self._hedge_watchlist + self._themen_etf_watchlist
+        )
         conn = self._db_conn_factory()
         try:
             latest_by_symbol = {a.symbol: db.get_latest_signal(conn, a.symbol) for a in alle_assets}
@@ -557,6 +568,11 @@ class SignalsView(ttk.Frame):
                     from agent.hedge.pipeline import generate_signal as generate_hedge_signal
 
                     return generate_hedge_signal(asset, self._raw_watchlist, conn, llm_client, self._coingecko_client)
+
+                if asset.symbol in {a.symbol for a in self._themen_etf_watchlist}:
+                    from agent.themen_etf.pipeline import generate_signal as generate_themen_etf_signal
+
+                    return generate_themen_etf_signal(asset, self._raw_watchlist, conn, llm_client, self._coingecko_client)
 
                 from agent.krypto.pipeline import generate_signal
 

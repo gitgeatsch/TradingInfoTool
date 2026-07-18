@@ -22,6 +22,7 @@ from datetime import datetime, timezone
 import config
 import database.db as db
 from agent.hedge.analyst import AnalystResponseInvalid, build_facts, call_llm_for_signal
+from agent.krypto.backward_tracking import compute_win_rate_fact
 from agent.krypto.llm_provider import llm_model_label
 from agent.krypto.makro_analog import get_cached_makro_analog_fact
 from agent.krypto.pipeline import compute_current_regime
@@ -143,12 +144,29 @@ def _compute_portfolio_exposure(asset, watchlist, conn, latest_prices, config_di
     }, verbleibendes_budget_fuer_instrument_usd
 
 
-def _post_check_hedge(parsed: dict, verbleibendes_budget_usd: float, eur_usd_fx_rate: float | None) -> dict:
+def _post_check_hedge(
+    parsed: dict, verbleibendes_budget_usd: float, eur_usd_fx_rate: float | None, config_dict: dict,
+) -> dict:
     """Deterministischer Deckel (P-10, mirror risk_gate.py::post_check()s RM-1/2-
     Klemm-Logik, aber eigenstaendig - siehe analyst.py Modul-Docstring, warum
     risk_gate.post_check() hier NICHT wiederverwendet wird): kuerzt eine zu
     grosse KAUFEN/NACHKAUFEN-Positionsgroesse auf das verbleibende Hedge-Budget,
-    statt die Empfehlung selbst zu verwerfen."""
+    statt die Empfehlung selbst zu verwerfen.
+
+    PLUS Bull-Wahrscheinlichkeits-Deckel (2026-07-18, Multi-Asset-Vollstaendig-
+    keitspruefung): das Hedge-Pendant zum Gegenszenario-Deckel aus
+    risk_gate.py::post_check(), aber bewusst NICHT 1:1 uebernommen, sondern
+    SPIEGELVERKEHRT. Bei einer normalen Directional-Long-Position (Spot/Aktien/
+    Rohstoffe) ist eine hohe forecast.bear.probability_pct das Risiko-Szenario
+    ("die Position koennte gegen mich laufen") - der bestehende Deckel kappt
+    dort folgerichtig die Positionsgroesse. Fuer ein inverses Hedge-Instrument
+    (DBPK/3QSS) ist das Verhaeltnis GENAU UMGEKEHRT: die Position GEWINNT bei
+    fallenden Kursen, ihr Risiko-Szenario ist eine hohe forecast.bull.
+    probability_pct - dann decayt eine grosse, taeglich neu gehebelte Position
+    ohne Absicherungsnutzen zu liefern (Volatility-Decay, siehe SYSTEM_PROMPT
+    Regel 4). Ein naiv wiederverwendeter Bear-Deckel waere hier funktional
+    falschherum gewesen (haette die Positionsgroesse ausgerechnet dann NICHT
+    gekappt, wenn der Decay-Effekt am staerksten drueckt)."""
     result = dict(parsed)
     action = result.get("action")
     if action in ("KAUFEN", "NACHKAUFEN"):
@@ -167,6 +185,32 @@ def _post_check_hedge(parsed: dict, verbleibendes_budget_usd: float, eur_usd_fx_
             existing_note = position_size.get("note")
             position_size["note"] = f"{existing_note} {note}" if existing_note else note
             result["position_size"] = position_size
+
+        hedge_cfg = config_dict.get("hedge", {})
+        bull_pct = ((result.get("forecast") or {}).get("bull") or {}).get("probability_pct")
+        schwelle = hedge_cfg.get("bull_wahrscheinlichkeit_schwelle_prozent")
+        deckel_anteil = hedge_cfg.get("bull_wahrscheinlichkeit_deckel_anteil")
+        if (
+            bull_pct is not None and schwelle is not None and deckel_anteil is not None
+            and bull_pct >= schwelle
+        ):
+            position_size = result.get("position_size") or {}
+            proposed_usd = position_size.get("usd")
+            if proposed_usd is not None:
+                gedeckelt_usd = proposed_usd * deckel_anteil
+                if gedeckelt_usd < proposed_usd:
+                    proposed_eur = position_size.get("eur")
+                    fx = (proposed_usd / proposed_eur) if proposed_eur else eur_usd_fx_rate
+                    note = (
+                        f"Zusaetzlich auf {deckel_anteil * 100:.0f}% reduziert (Bull-Wahrscheinlichkeit "
+                        f"{bull_pct:.0f}% >= Schwelle {schwelle:.0f}% - Decay-Risiko bei anhaltendem "
+                        "Aufwaertstrend, Bull-Wahrscheinlichkeits-Deckel)."
+                    )
+                    position_size["usd"] = gedeckelt_usd
+                    position_size["eur"] = gedeckelt_usd / fx if fx else None
+                    existing_note = position_size.get("note")
+                    position_size["note"] = f"{existing_note} {note}" if existing_note else note
+                    result["position_size"] = position_size
     return result
 
 
@@ -216,11 +260,19 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
     price_age_minutes = (datetime.now(timezone.utc) - fetched).total_seconds() / 60
 
     historischer_makro_vergleich = get_cached_makro_analog_fact(conn)
+    letztes_signal = db.get_latest_signal(conn, asset.symbol)
+    # Eigener Pool (2026-07-18, Multi-Asset-Vollstaendigkeitspruefung): Hedge-
+    # Signale sind qualitativ anders (Absicherung statt Gewinnerwartung) als
+    # Krypto/Aktien - eine geliehene fremde Trefferquote waere irrefuehrend.
+    _hedge_symbole = set(SYMBOL_ZU_HEBEL_FAKTOR.keys())
+    historische_erfolgsquote = compute_win_rate_fact(conn, "spot", erlaubte_symbole=_hedge_symbole)
 
     facts = build_facts(
         asset, price_snap, holdings.get(asset.symbol), SYMBOL_ZU_HEBEL_FAKTOR[asset.symbol],
         SYMBOL_ZU_REFERENZ_INDEX[asset.symbol], portfolio_exposure, regime_result, price_age_minutes,
         historischer_makro_vergleich=historischer_makro_vergleich,
+        historische_erfolgsquote=historische_erfolgsquote,
+        letztes_signal=letztes_signal,
     )
 
     try:
@@ -232,7 +284,7 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
         return signal
 
     raw_response = parsed.pop("_raw_response", None)
-    corrected = _post_check_hedge(parsed, verbleibendes_budget_usd, eur_usd_fx_rate)
+    corrected = _post_check_hedge(parsed, verbleibendes_budget_usd, eur_usd_fx_rate, config_dict)
 
     long_reasoning = corrected.get("long_reasoning", {})
     position_size = corrected.get("position_size", {})

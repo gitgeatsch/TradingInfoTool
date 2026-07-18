@@ -22,6 +22,7 @@ import numpy as np
 from agent.krypto.anticyclic import AnticyclicContext
 from agent.krypto.regime import RegimeResult
 from agent.krypto.risk_gate import CashReserveZielResult, RiskPreCheckResult
+from agent.krypto.wiederholungs_erkennung import build_wiederholung_fact
 from importer.bitpanda_avg_cost import compute_cost_basis_view
 from indicators.calculations import ConfluenceSummary, TechnicalSnapshot, latest_value
 
@@ -30,14 +31,16 @@ logger = logging.getLogger(__name__)
 REQUIRED_ACTIONS = ("KAUFEN", "VERKAUFEN", "TAUSCHEN", "HALTEN", "NACHKAUFEN")
 
 # Wiederholungs-Erkennung (2026-07-17, Regelwerk-Konsistenzpruefung nach dem
-# Hebel-Fix, siehe hebel_analyst.py::_build_position_aktuell_facts()): nur
-# VERKAUFEN/TAUSCHEN sind hier risikorelevant genug, um als "wirkungslos"
-# geflaggt zu werden - eine nicht umgesetzte KAUFEN/NACHKAUFEN-Empfehlung ist
-# neutral (kein eskalierendes Risiko wie bei Hebel/Liquidation, nur eine
-# verpasste Gelegenheit). Mindestabstand bewusst groesszuegiger als Hebels 2
-# Std. (dort 15-Min-Trigger-Takt) - Spot-Signale laufen manuell oder ueber
-# einen mehrstuendigen Cooldown (siehe signal_batch.py), ein zu kurzer Abstand
-# wuerde bei schnellen Wiederholungs-Klicks faelschlich anschlagen.
+# Hebel-Fix, siehe hebel_analyst.py::_build_position_aktuell_facts(); 2026-07-18
+# nach agent/krypto/wiederholungs_erkennung.py ausgelagert, siehe dort fuer die
+# volle Begruendung): nur VERKAUFEN/TAUSCHEN sind hier risikorelevant genug, um
+# als "wirkungslos" geflaggt zu werden - eine nicht umgesetzte KAUFEN/
+# NACHKAUFEN-Empfehlung ist neutral (kein eskalierendes Risiko wie bei Hebel/
+# Liquidation, nur eine verpasste Gelegenheit). Mindestabstand bewusst
+# groesszuegiger als Hebels 2 Std. (dort 15-Min-Trigger-Takt) - Spot-Signale
+# laufen manuell oder ueber einen mehrstuendigen Cooldown (siehe
+# signal_batch.py), ein zu kurzer Abstand wuerde bei schnellen Wiederholungs-
+# Klicks faelschlich anschlagen.
 _WIEDERHOLUNG_RELEVANTE_AKTIONEN = ("VERKAUFEN", "TAUSCHEN")
 _WIEDERHOLUNG_MINDEST_STUNDEN = 4.0
 
@@ -380,30 +383,12 @@ def build_facts(
     )
 
     # Wiederholungs-Erkennung (2026-07-17, siehe Konstanten-Docstring oben) -
-    # rein deterministischer Datumsvergleich, KEIN LLM-Call. Nur relevant, wenn
-    # die letzte Empfehlung VERKAUFEN/TAUSCHEN war UND die Position laut
-    # aktuellem holding-Objekt weiterhin gehalten wird (sonst wurde entweder
-    # nicht verkauft-relevant empfohlen, oder die Empfehlung wurde bereits
-    # umgesetzt).
-    vorherige_empfehlung_fact = None
-    if (
-        letztes_signal is not None
-        and letztes_signal.action in _WIEDERHOLUNG_RELEVANTE_AKTIONEN
-        and wird_aktuell_gehalten
-    ):
-        letzter_zeitpunkt = datetime.fromisoformat(letztes_signal.created_at)
-        if letzter_zeitpunkt.tzinfo is None:
-            letzter_zeitpunkt = letzter_zeitpunkt.replace(tzinfo=timezone.utc)
-        stunden_seit = (datetime.now(timezone.utc) - letzter_zeitpunkt).total_seconds() / 3600
-        if stunden_seit >= _WIEDERHOLUNG_MINDEST_STUNDEN:
-            vorherige_empfehlung_fact = {
-                "letzte_aktion": letztes_signal.action,
-                "vor_stunden": round(stunden_seit, 1),
-                "hinweis": (
-                    f"Vorherige Empfehlung '{letztes_signal.action}' vor {stunden_seit:.1f} Std. "
-                    "nicht umgesetzt - Position wird laut aktuellem Bestand weiterhin gehalten."
-                ),
-            }
+    # rein deterministischer Datumsvergleich, KEIN LLM-Call.
+    vorherige_empfehlung_fact = build_wiederholung_fact(
+        letztes_signal, wird_aktuell_gehalten,
+        relevante_aktionen=_WIEDERHOLUNG_RELEVANTE_AKTIONEN,
+        mindest_stunden=_WIEDERHOLUNG_MINDEST_STUNDEN,
+    )
 
     facts = {
         "asset": {

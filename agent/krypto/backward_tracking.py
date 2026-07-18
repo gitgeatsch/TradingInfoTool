@@ -299,23 +299,35 @@ def compute_provider_performance(conn) -> dict:
 _MIN_SAMPLE_FUER_AUSSAGE = 15
 
 
-def compute_win_rate_fact(conn, tier: str) -> dict | None:
+def compute_win_rate_fact(conn, tier: str, erlaubte_symbole: set[str] | None = None) -> dict | None:
     """Grobe Gesamt-Trefferquote (2026-07-18, Item E) fuer `build_facts()`/
     `build_hebel_facts()` - liest bereits aufgeloeste Signale (take_profit_erreicht/
     stop_loss_erreicht, bei Hebel zusaetzlich liquidation_wahrscheinlich) aus
-    signals ("spot", enthaelt Krypto UND Aktien - gleiche Vereinfachung wie in
-    compute_provider_performance() oben, die Stichprobe ist ohnehin zu klein fuer
-    eine weitere Aufspaltung) bzw. hebel_signals ("hebel"). BEWUSST nur eine
-    einzige Gesamtzahl, kein Per-Asset/Per-Regime-Split (Datenbasis dafuer noch
-    zu duenn) - mit explizitem Ehrlichkeits-Hinweis bei kleiner Stichprobe.
-    Reine Lesefunktion, kein Seiteneffekt. Gibt None zurueck, wenn noch gar keine
-    ausgewerteten Signale vorliegen (Prompt sollte den Fakt dann einfach weglassen)."""
+    signals ("spot") bzw. hebel_signals ("hebel"). BEWUSST nur eine einzige
+    Gesamtzahl, kein Per-Regime-Split (Datenbasis dafuer noch zu duenn) - mit
+    explizitem Ehrlichkeits-Hinweis bei kleiner Stichprobe. Reine Lesefunktion,
+    kein Seiteneffekt. Gibt None zurueck, wenn noch gar keine ausgewerteten
+    Signale (im gefilterten Symbol-Set) vorliegen (Prompt sollte den Fakt dann
+    einfach weglassen).
+
+    `erlaubte_symbole` (2026-07-18, Multi-Asset-Vollstaendigkeitspruefung):
+    urspruenglich pool­te "spot" STILLSCHWEIGEND alle Symbole aus der signals-
+    Tabelle, was nach Einfuehrung von Rohstoff-/Hedge-/Themen-ETF-Pipelines
+    deren strukturell andersartige Signale (langsamer, andere Zyklen) OHNE
+    bewusste Entscheidung in denselben Topf wie Krypto+Aktien warf. Krypto+
+    Aktien bleiben bewusst gepoolt (fruehere, dokumentierte Entscheidung -
+    aehnliches Momentum-/CRV-Profil), jede andere Assetklasse bekommt bei
+    Uebergabe eines eigenen Symbol-Sets ihre EIGENE (anfangs meist leere,
+    also None liefernde) Trefferquote statt einer fremden geliehenen Zahl.
+    None (Default) = ungefiltert, wie bisher."""
     table = "signals" if tier == "spot" else "hebel_signals"
     placeholders = ", ".join("?" for _ in _RESOLVED_OUTCOMES)
     rows = conn.execute(
-        f"SELECT outcome_status FROM {table} WHERE outcome_status IN ({placeholders})",
+        f"SELECT symbol, outcome_status FROM {table} WHERE outcome_status IN ({placeholders})",
         _RESOLVED_OUTCOMES,
     ).fetchall()
+    if erlaubte_symbole is not None:
+        rows = [r for r in rows if r["symbol"] in erlaubte_symbole]
     total = len(rows)
     if total == 0:
         return None

@@ -393,8 +393,14 @@ class MarktscanView(ttk.Frame):
             # KEIN hartes Blockieren: ein bewusster Einzel-Klick ("genau DIESEN
             # Kandidaten will ich jetzt") hat weiterhin Vorrang vor der Automatik.
             budget_gesamt = config_dict.get("budget_allocator", {}).get("taegliches_budget_gesamt", 15)
+            # LLM-Budget-Konsistenzpruefung (2026-07-18): taegliches_budget_gesamt ist
+            # Krypto-spezifisch kalibriert (Hebel/Marktscan haben ohnehin kein
+            # Nicht-Krypto-Aequivalent) - count_real_signals_today() OHNE Filter wuerde
+            # die automatischen Multi-Asset-Batch-Signale (Aktien/Rohstoffe/Hedge/
+            # Themen-ETF) mit einrechnen und die Warnung faelschlich frueher ausloesen.
+            _krypto_symbole = {a.symbol for a in self._watchlist}
             verbraucht_heute = (
-                db.count_real_signals_today(conn)
+                db.count_real_signals_today(conn, erlaubte_symbole=_krypto_symbole)
                 + db.count_real_hebel_signals_today(conn)
                 + db.count_real_marktscan_writeups_today(conn)
             )
