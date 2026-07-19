@@ -339,6 +339,17 @@ def run_hebel_screening(
 
         for trigger in triggers:
             trigger.id = db.insert_hebel_trigger(conn, trigger)
+
+        # Info-Leichen-Fix (2026-07-19, Nutzer-Fund): unanalysierte Kandidaten
+        # verfallen nach cfg["hebel_kandidat_verfall_stunden"], siehe
+        # db.expire_stale_hebel_candidates()-Docstring fuer die Begruendung.
+        verfallen_anzahl = db.expire_stale_hebel_candidates(conn, cfg["hebel_kandidat_verfall_stunden"])
+        if verfallen_anzahl:
+            logger.info(
+                "Hebel-Screening: %d veraltete Kandidaten (status=neu, aelter als %.0fh) "
+                "automatisch auf status=verfallen gesetzt.",
+                verfallen_anzahl, cfg["hebel_kandidat_verfall_stunden"],
+            )
     finally:
         conn.close()
 

@@ -22,6 +22,14 @@ MAX_COOLDOWN_SECONDS = 300  # Deckel fuer den exponentiellen Backoff (5 Min)
 
 
 @dataclass
+class CoinSearchResult:
+    coingecko_id: str
+    symbol: str
+    name: str
+    market_cap_rank: int | None
+
+
+@dataclass
 class TrendingCoin:
     coingecko_id: str
     symbol: str
@@ -117,6 +125,38 @@ class CoinGeckoClient:
         params = {"vs_currency": vs_currency, "days": days}
         return self._get(f"{BASE_URL}/coins/{coingecko_id}/market_chart", params)
 
+    def search_coins(self, query: str) -> list[CoinSearchResult]:
+        """CoinGecko `/search` - fuer die manuelle Symbol->coingecko_id-Aufloesung
+        im "Asset hinzufuegen/bearbeiten"-Dialog (2026-07-19, echter Fund: Symbol
+        allein ist bei CoinGecko NICHT eindeutig - z.B. teilen sich 12
+        verschiedene IDs den Ticker "SOL" (echtes Solana + 11 gebrueckte/
+        gewrappte Varianten), 2.116 von 13.704 Symbolen insgesamt sind
+        mehrdeutig, live per WebFetch/Skript verifiziert). Deshalb bewusst KEINE
+        automatische Zuordnung (z.B. "erstes Ergebnis nehmen") - das koennte
+        still die falsche Coin-Historie laden. Stattdessen zeigt der Dialog dem
+        Nutzer eine sortierte Auswahl, er bestaetigt selbst.
+
+        Ergebnis sortiert: exakte Symbol-Treffer zuerst (Marktkap.-Rang
+        aufsteigend, kein Rang zuletzt), danach die uebrigen (Name-)Treffer in
+        der von CoinGecko gelieferten Relevanz-Reihenfolge - der `/search`-
+        Endpunkt liefert `market_cap_rank` bereits mit, ein zusaetzlicher
+        `/coins/markets`-Call zur Disambiguierung ist nicht noetig."""
+        data = self._get(f"{BASE_URL}/search", {"query": query})
+        results = [
+            CoinSearchResult(
+                coingecko_id=c["id"], symbol=c["symbol"].upper(), name=c["name"],
+                market_cap_rank=c.get("market_cap_rank"),
+            )
+            for c in data.get("coins", [])
+        ]
+        query_upper = query.strip().upper()
+        exakt = sorted(
+            (r for r in results if r.symbol == query_upper),
+            key=lambda r: (r.market_cap_rank is None, r.market_cap_rank or 0),
+        )
+        rest = [r for r in results if r.symbol != query_upper]
+        return exakt + rest
+
     def get_global_data(self) -> dict:
         """Liefert u.a. data.market_cap_percentage.btc (BTC-Dominanz, Kap. 8 R-5.1)."""
         return self._get(f"{BASE_URL}/global", params={})
@@ -203,3 +243,23 @@ class CoinGeckoClient:
                 )
             )
         return snapshots
+
+
+def resolve_coingecko_id_by_name(results: list[CoinSearchResult], expected_name: str) -> str | None:
+    """Loest eine `coingecko_id` automatisch auf, wenn GENAU EIN `search_coins()`-
+    Treffer namentlich mit dem von Bitpanda gelisteten Namen uebereinstimmt
+    (2026-07-19, Nutzer-Vorschlag: Bitpandas eigener, kuratierter Katalog
+    listet nie zwei verschiedene Coins unter demselben Ticker - live
+    verifiziert, z.B. Bitpanda-Name "Solana" fuer Symbol SOL matcht exakt
+    genau EINEN von 25 CoinGecko-Suchtreffern. Der Namensabgleich disambiguiert
+    dadurch zuverlaessig in der ueberwiegenden Mehrheit der Faelle, ohne dass
+    der Nutzer manuell auswaehlen muss). Gibt bewusst None zurueck, wenn KEIN
+    oder MEHR ALS EIN Treffer passt - das ist dann eine echte Inkonsistenz
+    (Bitpanda-Name ohne eindeutiges CoinGecko-Pendant), kein Fall fuer
+    automatisches Raten (siehe CoinSearchDialog-Docstring in ui/app.py fuer
+    den manuellen Rueckfall in genau diesem Fall)."""
+    expected_normalized = expected_name.strip().lower()
+    matches = [r for r in results if r.name.strip().lower() == expected_normalized]
+    if len(matches) == 1:
+        return matches[0].coingecko_id
+    return None

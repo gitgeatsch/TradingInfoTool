@@ -4166,3 +4166,326 @@ Text, leerer Fall ohne Exception). DB-Roundtrip-Test gegen echte
 Produktions-DB-Kopie für beide Tabellen. Gesamt-Import-Check aller 15
 geänderten Module fehlerfrei, `retail_konsens_hebel_deckel` lädt korrekt aus
 `config.yaml`.
+
+## Nachtrag (2026-07-19, gleicher Tag): "Info-Leichen" - automatischer Verfall
+unanalysierter Hebel-Kandidaten
+
+**Auslöser:** Nutzer bemerkte im Hebel-Tab eine lange Liste von Kandidaten
+("Kandidat (wartet auf Analyse)") mit Zeitstempeln bis zu 3 Tage zurück und
+fragte, ob sich diese von selbst ausschleichen. Antwort nach Codeprüfung:
+**nein** - `hebel_triggers` bekommt bei jedem 15-Min-Screening-Tick nur dann
+eine neue Zeile, wenn der Score-Schwellenwert erneut erreicht wird
+(`agent/krypto/hebel_screening.py::run_hebel_screening()`). Sinkt der Score
+später wieder (Marktbedingung nicht mehr gegeben), bleibt die alte
+`status='neu'`-Zeile trotzdem als "neuester Kandidat" bestehen -
+`update_hebel_trigger_status()` wird nur beim tatsächlichen LLM-Verbrauch
+aufgerufen (`agent/krypto/hebel_pipeline.py`), es gab weder eine
+Alters-Ablaufgrenze noch (anders als beim Marktscan-Tab) einen manuellen
+"Ablehnen"-Button.
+
+**Funktional relevant, nicht nur optisch:** `db.get_pending_hebel_candidates()`
+sortiert nach `score_gesamt DESC`, nicht nach Aktualität - sowohl die
+Hebel-Tab-Anzeige als auch der Budget-Allocator (`agent/krypto/
+budget_allocator.py`) übernehmen diese Reihenfolge unverändert. Ein alter,
+hoch bewerteter, aber längst überholter Kandidat konnte damit einen
+frischen, niedriger bewerteten Kandidaten dauerhaft um das knappe
+LLM-Budget verdrängen.
+
+**Fix (Nutzerentscheidung: automatischer Verfall nach X Stunden, kein
+manueller Button):** neue Funktion `database/db.py::
+expire_stale_hebel_candidates(conn, verfall_stunden)` setzt Trigger mit
+`status='neu'` und `screened_at` älter als die Schwelle auf
+`status='verfallen'` (einfaches UPDATE, kein neuer Tabellen-Status-Enum
+nötig, da `hebel_triggers.status` kein CHECK-Constraint hat). Aufgerufen am
+Ende jedes Screening-Laufs (`run_hebel_screening()`, nach dem Insert aller
+neuen Trigger), mit Log-Zeile bei tatsächlichem Verfall. Neuer Config-Wert
+`hebel_screening.hebel_kandidat_verfall_stunden` (48h) - lang genug, um eine
+einzelne budgetknappe Tagesphase zu überstehen, kurz genug, um wochenlanges
+Anwachsen zu verhindern. Da sowohl die UI-Anzeige als auch der Allocator
+`get_pending_hebel_candidates()` nutzen (WHERE `status='neu'`), verschwinden
+verfallene Kandidaten automatisch aus beiden Stellen, ohne dass an der
+Abfrage selbst etwas geändert werden musste.
+
+**Verifiziert:** synthetischer In-Memory-Test (3 Kandidaten - alt/status=neu,
+frisch/status=neu, alt/status=llm_generiert; nach Verfall bleibt nur der
+frische als pending, der bereits verarbeitete bleibt unangetastet,
+zweiter Aufruf ist idempotent/findet nichts mehr). DB-Roundtrip gegen eine
+Kopie der echten Produktions-DB (1 echter Kandidat, FLOKI vom 14.07., korrekt
+als verfallen erkannt und aus der Pending-Liste entfernt) - dabei auffällig:
+die lokale Desktop-DB enthält deutlich weniger Kandidaten als der vom
+Nutzer gezeigte Notebook-Screenshot, konsistent mit der bekannten
+Desktop/Notebook-DB-Trennung (getrennte lokale Datenbanken, siehe Kapitel
+zum USB-Sync-Workflow).
+
+## Nachtrag (2026-07-19, gleicher Tag): Konsistenz-Ausweitung des Verfall-Fixes
+auf Marktscan-Kandidaten
+
+Nutzer bat explizit darum, den gerade gebauten Hebel-Verfall-Fix auf andere
+Bereiche zu prüfen, damit das System konsistent bleibt. Codeweite Suche nach
+allen "Kandidat-wartet-auf-Analyse"-Warteschlangen (Muster: `status='neu'`,
+Selektion via Self-Join auf neuesten Eintrag) ergab genau eine weitere
+Stelle mit derselben Struktur-Schwäche: `marktscan_candidates`
+(`db.get_pending_marktscan_kaufkandidaten()`, ebenfalls
+`score_gesamt DESC` statt aktualitätssortiert). Multi-Asset-Batch (Aktien/
+Rohstoffe/Themen-ETF) und Hedge sind **strukturell nicht betroffen** - sie
+iterieren pro Lauf direkt über die aktuelle Watchlist mit Cooldown-Logik
+(`agent/multi_asset_batch.py::_kandidaten()`), es gibt dort keine separate
+Scoring-Warteschlange, die veralten könnte.
+
+**Fix (identisches Muster wie Hebel):** neue `database/db.py::
+expire_stale_marktscan_candidates(conn, verfall_stunden)`, scoped auf
+`einstufung='kaufkandidat' AND status='neu' AND groq_generiert_am IS NULL`
+(exakt die Bedingungen von `get_pending_marktscan_kaufkandidaten()`). Neuer
+Config-Wert `budget_allocator.marktscan_kandidat_verfall_stunden` (48h).
+**Ein Unterschied zum Hebel-Fix:** der Aufruf sitzt NICHT in der Discovery-
+Funktion (`agent/krypto/marktscan.py::run_scan()`, läuft nur 2x/Tag um
+04:00/16:00), sondern in `agent/krypto/budget_allocator.py::
+run_budget_allocator()` direkt vor dem Abruf der Pending-Kandidaten - der
+Allocator läuft alle 15 Min (huckepack auf `hebel_screening_job`), damit
+bleibt die Warteliste deutlich zeitnaher aktuell als bei einer Kopplung an
+den seltenen Scan-Takt. Ergänzt (ersetzt nicht) den bereits bestehenden
+manuellen "Ablehnen"-Button im Marktscan-Tab (`status=
+'nutzer_verworfen'`) - der deckt nur Kandidaten ab, die der Nutzer aktiv
+sieht und beurteilt, der automatische Verfall greift zusätzlich für alle
+anderen. `ui/marktscan_view.py::STATUS_LABELS` um `"verfallen": "verfallen
+(zu alt)"` ergänzt, damit der neue Status in der allgemeinen
+Kandidatenliste lesbar dargestellt wird (die Pending-Abfrage selbst filtert
+ihn bereits automatisch heraus).
+
+**Verifiziert:** synthetischer In-Memory-Test (4 Kandidaten - alt/
+kaufkandidat/neu, frisch/kaufkandidat/neu, alt/bereits mit
+`groq_generiert_am` versehen, alt/andere Einstufung "beobachten"; nach
+Verfall bleibt nur der frische pending, die anderen drei bleiben
+unangetastet weil außerhalb der Verfall-Bedingung, zweiter Aufruf
+idempotent). Import-Check aller geänderten Module fehlerfrei.
+
+## Nachtrag (2026-07-19, gleicher Tag): echter KAITO-Fund - Geschwisterzeilen
+beim Übernehmen/Verwerfen nicht mitaufgelöst
+
+**Auslöser:** Nutzer hatte zum ersten Mal einen Marktscan-Kandidaten über
+"In Watchlist übernehmen" real in die Watchlist aufgenommen (KAITO), die App
+neu gestartet und danach im Marktscan-Tab immer noch eine KAITO-Zeile mit
+Status "neu" gesehen - obwohl der Coin bereits übernommen war.
+
+**Root Cause (zwei zusammenhängende Stellen):**
+1. `marktscan_candidates` hat `UNIQUE(coingecko_id, scan_run_id)` - jeder
+   neue Scan-Lauf, der denselben Coin erneut findet, legt eine EIGENE Zeile
+   an. Klickt der Nutzer "In Watchlist übernehmen" auf EINER dieser Zeilen,
+   setzte `ui/marktscan_view.py` bisher nur den Status GENAU dieser einen
+   Zeile (`db.update_marktscan_candidate_status(conn, candidate.id, ...)`) -
+   andere, bereits vorher ODER danach entdeckte Zeilen desselben Coins
+   blieben unverändert `status='neu'` und wirkten wie eine "nie aktualisierte"
+   Info-Leiche.
+2. Zusätzlich fand sich beim Nachvollziehen ein zweiter, eigenständiger Bug:
+   `db.get_latest_marktscan_status_by_coingecko_id()` (der Cross-Lauf-
+   Duplikat-Check in `_duplicate_should_skip()`) sortiert nach
+   `discovered_at DESC` - also nach ENTDECKUNGSZEITPUNKT, nicht danach,
+   welche Zeile die tatsächliche Nutzer-ENTSCHEIDUNG trägt. Im KAITO-Fall
+   war die spätere, nie angeklickte Zeile (14 Uhr) chronologisch "neuer" als
+   die tatsächlich übernommene (2 Uhr) - die Funktion hätte fälschlich
+   `'neu'` statt `'nutzer_behalten_manuell_uebernommen'` zurückgegeben, was
+   künftige Scans theoretisch wieder hätte verwirren können (in diesem
+   konkreten Fall zusätzlich durch den bereits vorhandenen
+   Watchlist-Mitgliedschafts-Check in `_duplicate_should_skip()` abgefangen,
+   aber nicht robust).
+
+**Fix:** neue `database/db.py::resolve_marktscan_candidate_siblings(conn,
+coingecko_id, status)` - setzt ALLE noch `status='neu'`-Zeilen desselben
+`coingecko_id` auf den neuen Status. Aufgerufen direkt nach dem bestehenden
+Einzelzeilen-Update in BEIDEN Handlern (`_on_adopt_to_watchlist_clicked()`
+und `_on_reject_clicked()` in `ui/marktscan_view.py`). Löst damit auch
+Punkt 2 auf, ohne die Sortierlogik selbst anfassen zu müssen: sobald alle
+Zeilen eines entschiedenen Coins konsistent denselben Status tragen, ist es
+irrelevant, welche davon `get_latest_marktscan_status_by_coingecko_id()`
+zurückgibt. Nebenbei `_on_reject_clicked()` um ein fehlendes
+`self._refresh_list()` ergänzt (war vorher nicht vorhanden, `_on_adopt_
+to_watchlist_clicked()` hatte es bereits) - sonst wären die aufgelösten
+Geschwisterzeilen zwar in der DB korrekt, aber nicht sofort sichtbar
+gewesen.
+
+**Verifiziert:** synthetischer Test reproduziert den echten KAITO-Fall 1:1
+(zwei Zeilen desselben `coingecko_id`, früh entdeckte übernommen, spät
+entdeckte bleibt `status='neu'`) - bestätigt zunächst den Bug
+(`get_latest_marktscan_status_by_coingecko_id()` liefert fälschlich `'neu'`),
+dann den Fix (nach `resolve_marktscan_candidate_siblings()` liefert dieselbe
+Abfrage korrekt `'nutzer_behalten_manuell_uebernommen'`, die zweite Zeile
+trägt jetzt denselben Status, zweiter Aufruf idempotent). Import-Check
+fehlerfrei.
+
+## Nachtrag (2026-07-19, gleicher Tag): Watchlist-Tab-Konsistenzprüfung -
+fehlende coingecko_id verschwendet dauerhaft Spot-Budget
+
+**Auslöser:** Nutzer bat explizit darum, die Watchlist-Tab-Konsistenz
+ebenfalls zu prüfen (nach den Info-Leichen-Funden bei Hebel/Marktscan).
+Codeprüfung ergab keine Duplikat-/Entfernungs-Lücke (`add_watchlist_entry()`
+prüft bereits zentral auf doppelte Symbole, alle drei Aufrufer -
+Marktscan-Übernehmen, manueller "Asset hinzufügen"-Dialog, Hebel-Auto-Add -
+nutzen dieselbe Funktion; ein "Watchlist entfernen"-Feature existiert
+bewusst nicht, die Datei ist explizit handgepflegt). Stattdessen ein
+eigenständiger, bisher unbemerkter struktureller Bug gefunden.
+
+**Root Cause:** ein per `importer/bitpanda_margin_positions.py::
+auto_add_unknown_hebel_symbols()` automatisch ergänztes Krypto-Asset (offene
+Hebel-Position auf einem noch unbekannten Symbol) bekommt bewusst KEINE
+`coingecko_id` (keine zuverlässige automatische Symbol→ID-Auflösung, siehe
+Docstring dort). `agent/krypto/signal_batch.py::
+select_assets_due_for_signal()` filterte bisher nur nach `assetklasse ==
+"krypto"`, nicht zusätzlich auf eine gesetzte `coingecko_id`. Ohne ID liefert
+`agent/krypto/pipeline.py::generate_signal()` strukturell IMMER sofort ein
+Fixed-HALTEN (`gate_reason='keine historischen Daten vorhanden'`), OHNE
+`groq_raw_response` zu setzen - `db.get_latest_real_signal_per_symbol()`
+(WHERE `groq_raw_response IS NOT NULL`) sieht das Asset dadurch für immer als
+"nie berechnet". Da `select_assets_due_for_signal()` "nie berechnet zuerst"
+sortiert, wäre so ein Asset bei JEDEM 15-Min-Budget-Allocator-Lauf dauerhaft
+an Position 1 der Prioritätsliste gelandet und hätte einen echten
+Spot-Budget-Slot verschwendet - unbegrenzt, ohne jede sichtbare Warnung.
+Aktuell 0 betroffene Symbole in der lokalen Watchlist (noch nicht
+zugeschlagen), aber strukturell jederzeit möglich, sobald eine Hebel-Position
+auf einem neuen, unbekannten Symbol eröffnet wird.
+
+**Fix (zwei Ebenen, gleiches Muster wie beim Info-Leichen-Fix):**
+1. `select_assets_due_for_signal()` filtert jetzt zusätzlich auf
+   `a.coingecko_id` (truthy) - das Asset wird gar nicht erst als Kandidat
+   ausgewählt, verschwendet also keinen Slot mehr.
+2. `ui/app.py::_refresh_watchlist_from_db()` markiert ein betroffenes Asset
+   sichtbar in der Status-Spalte ("⚠ keine CoinGecko-ID", neuer Tag
+   `coingecko_id_fehlt`, `theme.danger_color()` wie beim bestehenden
+   `bitpanda_fehlt`-Muster) UND in der Spalten-Kopfzeilen-Tooltip - der
+   Nutzer sieht so weiterhin, WARUM Spot-Analyse für dieses Symbol inaktiv
+   ist, und kann die ID über den bestehenden "Asset hinzufügen/bearbeiten"-
+   Dialog nachtragen. `ui/signals_view.py`s identisches Filtermuster (manuelle
+   "Signal berechnen"-Auswahl) bewusst NICHT geändert - ein manueller Klick
+   liefert dort bereits eine klare, sofortige Fehlermeldung, kein
+   wiederkehrender stiller Ressourcenverbrauch wie beim automatischen
+   Allocator.
+
+**Verifiziert:** synthetischer Test von `select_assets_due_for_signal()`
+(Asset ohne `coingecko_id` wird korrekt ausgeschlossen, Asset mit ID bleibt
+Kandidat). Tk-Smoke-Test der Watchlist-Tab-Zeile (Asset ohne ID zeigt korrekt
+"⚠ keine CoinGecko-ID" + gesetztes Tag, unbetroffenes Asset bleibt
+unverändert). Echte Watchlist-Prüfung: aktuell 0 betroffene Symbole.
+
+## Nachtrag (2026-07-19, gleicher Tag): CoinGecko-Symbolsuche im
+"Asset hinzufügen/bearbeiten"-Dialog
+
+**Auslöser:** Nutzer fragte direkt nach der obigen Warn-Markierung, warum die
+`coingecko_id` nicht einfach automatisch aus dem Symbol ergänzt werden kann.
+Live gegen die echte CoinGecko-API geprüft, um die Antwort auf Fakten statt
+Vermutung zu stützen: das Symbol (z. B. "SOL") ist bei CoinGecko NICHT
+eindeutig - `coingecko_id` ist der interne eindeutige Schlüssel, das Symbol
+nur der Ticker. Konkret geteilt: **12 verschiedene IDs** tragen den Ticker
+"SOL" (das echte Solana plus 11 gebrückte/gewrappte Varianten über andere
+Chains - Base, Near, Eclipse, Neon, Osmosis, Binance). Insgesamt sind 2.116
+von 13.704 Symbolen bei CoinGecko mehrdeutig. Eine stille automatische
+Zuordnung (z. B. "erstes Ergebnis nehmen") hätte das Risiko, dauerhaft die
+FALSCHE Coin-Historie zu laden, ohne dass es auffällt. Marktkapitalisierung
+disambiguiert aber zuverlässig (bei SOL: echtes Solana Rang 7 / ~44 Mrd. $,
+die Wrapped-Varianten ohne Rang und nur Bruchteile davon) - deshalb Suche
+mit Nutzer-Bestätigung statt automatischer Auswahl.
+
+**Umgesetzt (drei Ebenen):**
+1. Neue `api/coingecko.py::CoinGeckoClient.search_coins(query)` - nutzt
+   CoinGeckos `/search`-Endpunkt (liefert `market_cap_rank` bereits mit, kein
+   zusätzlicher `/coins/markets`-Call nötig), sortiert exakte Symbol-Treffer
+   zuerst nach Rang aufsteigend (kein Rang zuletzt), danach die übrigen
+   Namens-Treffer in CoinGeckos eigener Relevanz-Reihenfolge.
+2. Neuer `ui/app.py::CoinSearchDialog` - zeigt die Treffer in einer Tabelle
+   (Symbol/Name/ID/Rang), Nutzer wählt per Doppelklick oder Button, KEINE
+   automatische Vorauswahl auch bei nur einem Treffer.
+3. Neuer "Suchen …"-Button neben dem CoinGecko-ID-Feld in `AssetAddDialog`
+   UND `AssetEditDialog` - **wichtiger Nebenbefund dabei:** `AssetEditDialog`
+   bot das Feld bisher überhaupt nicht an (Docstring: "Symbol/Name/
+   CoingeckoID etc. bleiben hier unverändert"), es gab also für ein bereits
+   BESTEHENDES Asset (z. B. genau die im vorherigen Nachtrag beschriebenen
+   automatisch ergänzten Hebel-Symbole) gar keinen GUI-Weg, die ID
+   nachzutragen - nur beim Erst-Anlegen über `AssetAddDialog`. Jetzt
+   ergänzt, sichtbar nur für `assetklasse=krypto`, mit derselben
+   Warn-Markierung wie im Watchlist-Tab, falls die ID noch fehlt. Neue
+   `config.py::update_watchlist_coingecko_id()` - eigenständige
+   Implementierung statt Erweiterung von `_update_watchlist_field()` (die
+   kann nur bereits VORHANDENE Feldzeilen aktualisieren, keine neuen
+   einfügen - `add_watchlist_entry()` lässt die Zeile bei `coingecko_id=None`
+   komplett weg). Fügt die Zeile bei Bedarf direkt nach `beobachtungsstatus:`
+   ein (identische Position wie beim Erst-Anlegen), sonst wird die
+   vorhandene Zeile aktualisiert - gleiches Backup+Validierungs+Rollback-
+   Muster wie alle anderen `config.yaml`-Schreibfunktionen.
+
+**Verifiziert:** live gegen die echte CoinGecko-API (Symbolmehrdeutigkeit
+quantifiziert, `search_coins()` liefert für "SOL" korrekt "solana" als
+ersten exakten Treffer). Synthetischer Test von
+`update_watchlist_coingecko_id()` gegen eine Konfigurationskopie (Einfügen
+einer neuen Zeile, Aktualisieren einer vorhandenen, Idempotenz bei
+gleichem Wert, unbekanntes Symbol - alle 4 Fälle korrekt). Tk-Smoke-Test
+der kompletten Kette: `CoinSearchDialog` direkt, `AssetAddDialog` mit
+Suchen-Button, `AssetEditDialog` für ein Krypto-Asset ohne ID (Feld+Warnung
+sichtbar, Suche+Auswahl übernimmt korrekt) und für ein Nicht-Krypto-Asset
+(Feld bleibt korrekt unsichtbar) - sowie ein echter End-to-End-Test des
+kompletten Speicherpfads gegen eine Konfigurationskopie (`_on_submit()`
+persistiert die gewählte ID tatsächlich in `config.yaml`).
+
+## Nachtrag (2026-07-19, gleicher Tag): automatische coingecko_id-Aufloesung
+per Bitpanda-Namensabgleich - Dialog kommt gleich bei der Aufnahme
+
+**Auslöser:** Nutzer stellte zwei zusammenhängende Fragen zur gerade gebauten
+CoinGecko-Symbolsuche: (1) ob der Suchdialog nicht direkt bei der Aufnahme
+in die Watchlist erscheinen sollte statt einen manuellen "Suchen"-Klick zu
+verlangen, (2) ob der bereits vorhandene CoinGecko-Scan-mit-Bitpanda-Prüfung-
+Ablauf (Marktscan-Discovery) das Symbol nicht schon eindeutig machen sollte,
+bevor überhaupt eine manuelle Auswahl nötig wird. Live geprüft: Bitpandas
+kuratierter Katalog listet nie zwei verschiedene Coins unter demselben
+Ticker - der Bitpanda-Name für SOL ("Solana") matcht exakt GENAU EINEN von
+25 CoinGecko-Suchtreffern für "SOL". Diese Kreuzreferenz löst die
+Mehrdeutigkeit in der überwiegenden Mehrheit der Fälle automatisch auf,
+ohne dass der Nutzer manuell auswählen muss - eine echte Mehrdeutigkeit
+(kein oder mehr als ein Namenstreffer) bleibt dabei eine ECHTE Inkonsistenz
+zwischen Bitpanda- und CoinGecko-Katalog, kein Fall für automatisches Raten.
+
+**Umgesetzt (drei Ebenen):**
+1. `api/bitpanda.py::find_listed_asset()` - wie `is_listed()`, gibt aber das
+   tatsächlich gefundene `BitpandaAsset`-Objekt zurück statt nur eines Bool
+   (fürs Namensfeld gebraucht). `is_listed()` selbst ruft die neue Funktion
+   nur noch auf (reiner Refactor, verhaltensidentisch, Regressionstest
+   bestätigt).
+2. `api/coingecko.py::resolve_coingecko_id_by_name(results, expected_name)`
+   - reine Funktion, filtert `search_coins()`-Treffer auf Namensgleichheit,
+   gibt nur bei GENAU EINEM Treffer die ID zurück, sonst `None`.
+3. Neue gemeinsame `ui/app.py::_try_auto_resolve_coingecko_id(symbol,
+   coingecko_client)` - kombiniert beide Bausteine (Bitpanda-Listing prüfen
+   + Namensabgleich), genutzt von:
+   - **`AssetAddDialog._on_submit()`**: bei leerem CoinGecko-ID-Feld und
+     `assetklasse=krypto` wird zuerst still automatisch aufgelöst; schlägt
+     das fehl (nicht bei Bitpanda gelistet ODER echte Mehrdeutigkeit), öffnet
+     sich der `CoinSearchDialog` jetzt AUTOMATISCH (`self.wait_window()`,
+     blockiert bis zur Nutzer-Auswahl/zum Abbrechen) - genau der vom Nutzer
+     gewünschte "kommt gleich bei der Aufnahme"-Ablauf, kein manueller Klick
+     mehr nötig im Regelfall.
+   - **`AssetEditDialog.__init__()`**: still (KEIN Dialog-Popup) versucht,
+     sobald ein Krypto-Asset ohne ID geöffnet wird - deckt genau den Fall ab,
+     der die ganze Erweiterung ausgelöst hat (automatisch aus einer Hebel-
+     Position ergänzte Symbole). Kein Popup beim blossen Öffnen, da der
+     Nutzer den Dialog auch nur für rolle/beobachtungsstatus öffnen könnte -
+     die Warn-Markierung verschwindet automatisch, wenn die stille Auflösung
+     erfolgreich war.
+   - **`importer/bitpanda_margin_positions.py::
+     auto_add_unknown_hebel_symbols()`**: neuer optionaler `coingecko_client`-
+     Parameter (aus `scheduler/background.py::hebel_screening_job()` bereits
+     im Scope durchgereicht) - versucht dieselbe Auflösung, BEVOR der
+     Watchlist-Eintrag geschrieben wird. Der Nutzer-Punkt "in dieser Schleife
+     sollte das Symbol schon eindeutig sein" trifft damit jetzt genau zu -
+     das Bitpanda-Listing wird an dieser Stelle ohnehin schon geprüft
+     (`find_listed_asset()`), der Namensabgleich kostet nur einen
+     zusätzlichen `search_coins()`-Call. `coingecko_client=None` erhält das
+     alte Verhalten (ID bleibt leer) für Aufrufer ohne Netzwerkzugriff.
+
+**Verifiziert:** Regressionstest von `is_listed()` nach dem Refactor
+(identisches Verhalten). Synthetischer Test von
+`resolve_coingecko_id_by_name()` (eindeutig/mehrdeutig/kein Treffer).
+Synthetischer Test von `auto_add_unknown_hebel_symbols()` mit drei Fällen
+(automatische Auflösung erfolgreich, `coingecko_client=None` behält altes
+Verhalten, mehrdeutiger Namenstreffer fällt korrekt auf leer zurück statt
+abzustürzen) gegen eine Konfigurationskopie. Tk-Smoke-Test des kompletten
+`AssetAddDialog`-Submit-Flows (automatische Auflösung UND automatisch
+geöffneter `CoinSearchDialog` bei Mehrdeutigkeit, jeweils bis zum
+tatsächlichen Schreiben in `config.yaml` durchgetestet) sowie von
+`AssetEditDialog` (stille Auflösung beim Öffnen, Warn-Markierung
+verschwindet korrekt bei erfolgreicher Auflösung).

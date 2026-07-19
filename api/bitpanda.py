@@ -100,19 +100,34 @@ def get_listed_non_crypto_assets(session: requests.Session | None = None) -> lis
     return [a for a in _fetch_all_bitpanda_assets(session) if a.group in NON_CRYPTO_ASSET_GROUPS]
 
 
+def find_listed_asset(symbol: str, listed_assets: list[BitpandaAsset], name: str | None = None) -> BitpandaAsset | None:
+    """Wie `is_listed()`, gibt aber das TATSAECHLICH gefundene `BitpandaAsset`
+    zurueck statt nur eines Bool - extrahiert aus `is_listed()` (2026-07-19,
+    Watchlist-Konsistenzpruefung: `resolve_coingecko_id_by_name()` braucht
+    Bitpandas eigenen kuratierten Namen fuer den CoinGecko-Namensabgleich, ein
+    reiner Bool reicht dafuer nicht). Prüft primär per Symbol (unter
+    Berücksichtigung bekannter Ticker-Abweichungen, `BITPANDA_SYMBOL_OVERRIDES`).
+    Fällt bei Fehlschlag automatisch auf einen Namensvergleich zurück, falls
+    `name` mitgegeben wird - deckt damit auch bisher UNBEKANNTE Symbol-
+    Abweichungen ab (wie ursprünglich bei CANTON/CC entdeckt), ohne dass jeder
+    Einzelfall manuell nachgetragen werden muss."""
+    target_symbol = BITPANDA_SYMBOL_OVERRIDES.get(symbol, symbol)
+    match = next((a for a in listed_assets if a.symbol == target_symbol), None)
+    if match is not None:
+        return match
+    if name:
+        name_normalized = name.strip().lower()
+        return next((a for a in listed_assets if a.name.strip().lower() == name_normalized), None)
+    return None
+
+
 def is_listed(symbol: str, listed_assets: list[BitpandaAsset], name: str | None = None) -> bool:
     """Prüft primär per Symbol (unter Berücksichtigung bekannter Ticker-Abweichungen,
     `BITPANDA_SYMBOL_OVERRIDES`). Fällt bei Fehlschlag automatisch auf einen
     Namensvergleich zurück, falls `name` mitgegeben wird - deckt damit auch bisher
     UNBEKANNTE Symbol-Abweichungen ab (wie ursprünglich bei CANTON/CC entdeckt),
     ohne dass jeder Einzelfall manuell nachgetragen werden muss."""
-    target_symbol = BITPANDA_SYMBOL_OVERRIDES.get(symbol, symbol)
-    if any(a.symbol == target_symbol for a in listed_assets):
-        return True
-    if name:
-        name_normalized = name.strip().lower()
-        return any(a.name.strip().lower() == name_normalized for a in listed_assets)
-    return False
+    return find_listed_asset(symbol, listed_assets, name) is not None
 
 
 # ---------------------------------------------------------------------------

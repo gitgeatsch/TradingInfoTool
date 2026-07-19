@@ -31,6 +31,7 @@ STATUS_LABELS = {
     "neu": "neu",
     "nutzer_behalten_manuell_uebernommen": "übernommen",
     "nutzer_verworfen": "verworfen",
+    "verfallen": "verfallen (zu alt)",
 }
 
 _MARKTSCAN_COLUMN_DESCRIPTIONS = {
@@ -493,6 +494,12 @@ class MarktscanView(ttk.Frame):
         conn = self._db_conn_factory()
         try:
             db.update_marktscan_candidate_status(conn, candidate.id, "nutzer_behalten_manuell_uebernommen")
+            # 2026-07-19, echter KAITO-Fund: andere Scan-Laeufe desselben Coins
+            # (status noch 'neu') bleiben sonst als scheinbar nie aktualisierte
+            # Kandidaten haengen, siehe resolve_marktscan_candidate_siblings()-Docstring.
+            db.resolve_marktscan_candidate_siblings(
+                conn, candidate.coingecko_id, "nutzer_behalten_manuell_uebernommen"
+            )
         finally:
             conn.close()
         self._refresh_list()
@@ -504,7 +511,9 @@ class MarktscanView(ttk.Frame):
         conn = self._db_conn_factory()
         try:
             db.update_marktscan_candidate_status(conn, candidate.id, "nutzer_verworfen")
+            db.resolve_marktscan_candidate_siblings(conn, candidate.coingecko_id, "nutzer_verworfen")
         finally:
             conn.close()
         self.reject_button.config(state="disabled")
+        self._refresh_list()
         self._refresh_list()

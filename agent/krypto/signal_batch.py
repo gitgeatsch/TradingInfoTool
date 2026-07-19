@@ -144,9 +144,27 @@ def select_assets_due_for_signal(
     asset.coingecko_id fuer die Kurshistorie, das Aktien/ETF/Rohstoffe nicht
     haben, siehe Spezifikation Kap. 11 "Zielarchitektur fuer Multi-Asset-
     Erweiterbarkeit"). Identisches Filtermuster wie
-    ui/signals_view.py::SignalsView.__init__()."""
+    ui/signals_view.py::SignalsView.__init__().
+
+    Krypto-Assets OHNE coingecko_id (2026-07-19, Konsistenz-Check
+    Watchlist-Tab: z.B. automatisch aus einer Hebel-Position ergaenzt, siehe
+    importer/bitpanda_margin_positions.py::auto_add_unknown_hebel_symbols())
+    ebenfalls ausgeschlossen - echter Fund: generate_signal() kann ohne ID
+    strukturell NIE eine echte Kurshistorie laden und liefert immer sofort
+    ein Fixed-HALTEN mit gate_reason='keine historischen Daten vorhanden'
+    OHNE groq_raw_response zu setzen (siehe pipeline.py::generate_signal()).
+    get_latest_real_signal_per_symbol() (WHERE groq_raw_response IS NOT
+    NULL) sieht dieses Asset dadurch IMMER als 'nie berechnet' - ohne diesen
+    Filter waere es bei jedem Allocator-Lauf permanent an Position 1 der
+    Prioritaet und haette dauerhaft einen Spot-Budget-Slot verschwendet.
+    Bleibt trotzdem in der Watchlist sichtbar (siehe ui/app.py::
+    _refresh_watchlist_from_db(), Warn-Markierung), damit der Nutzer die ID
+    nachtragen kann."""
     latest_real = db.get_latest_real_signal_per_symbol(conn)
-    candidates = [a for a in watchlist if a.assetklasse == "krypto" and not a.ist_cash_aequivalent]
+    candidates = [
+        a for a in watchlist
+        if a.assetklasse == "krypto" and not a.ist_cash_aequivalent and a.coingecko_id
+    ]
 
     kern_symbole: set[str] = set()
     if cooldown_stunden_kern is not None:

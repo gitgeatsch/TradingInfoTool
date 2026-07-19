@@ -1593,6 +1593,55 @@ def update_marktscan_candidate_status(conn: sqlite3.Connection, candidate_id: in
     conn.commit()
 
 
+def resolve_marktscan_candidate_siblings(conn: sqlite3.Connection, coingecko_id: str, status: str) -> int:
+    """Echter Nutzer-Fund (2026-07-19, KAITO-Coin): eine Nutzer-Entscheidung
+    (uebernommen/verworfen) im Marktscan-Tab galt bisher nur fuer die eine
+    angeklickte Zeile (candidate.id) - jeder neue Scan-Lauf legt aber eine
+    NEUE Zeile fuer denselben coingecko_id an (UNIQUE(coingecko_id,
+    scan_run_id)). Aeltere/neuere status='neu'-Geschwisterzeilen desselben
+    Coins blieben dadurch dauerhaft als 'neu' haengen, obwohl der Coin
+    bereits entschieden/uebernommen war - sichtbar als scheinbar nie
+    aktualisierter Kandidat trotz Neustart. Ausserdem indirekt relevant fuer
+    get_latest_marktscan_status_by_coingecko_id() (Cross-Lauf-Duplikat-
+    Check): die sortiert nach discovered_at DESC, nicht nach der zuletzt
+    getroffenen Entscheidung - mit dieser Funktion tragen aber alle Zeilen
+    desselben Coins konsistent denselben Status, wodurch die Sortierreihen-
+    folge dort keine Rolle mehr spielt. Aufgerufen direkt NACH dem Setzen
+    des Status auf der angeklickten Zeile selbst (update_marktscan_
+    candidate_status()) - deckt hier zusaetzlich alle anderen noch
+    status='neu' verbliebenen Zeilen desselben Coins ab. Gibt die Anzahl
+    betroffener Geschwisterzeilen zurueck."""
+    cursor = conn.execute(
+        "UPDATE marktscan_candidates SET status = ?, status_geaendert_am = ? "
+        "WHERE coingecko_id = ? AND status = 'neu'",
+        (status, _now_iso(), coingecko_id),
+    )
+    conn.commit()
+    return cursor.rowcount
+
+
+def expire_stale_marktscan_candidates(conn: sqlite3.Connection, verfall_stunden: float) -> int:
+    """Marktscan-Pendant zu expire_stale_hebel_candidates() (2026-07-19,
+    Konsistenz-Ausweitung desselben "Info-Leichen"-Fixes): setzt
+    Kaufkandidaten (status='neu', noch keine LLM-Begruendung erhalten), die
+    laenger als verfall_stunden unanalysiert sind, auf status='verfallen'.
+    Scoped auf `einstufung='kaufkandidat'` UND `groq_generiert_am IS NULL` -
+    exakt dieselben Bedingungen wie get_pending_marktscan_kaufkandidaten(),
+    damit nur tatsaechlich konkurrierende Kandidaten betroffen sind. Ergaenzt
+    den bereits bestehenden manuellen "Ablehnen"-Button (status=
+    'nutzer_verworfen') um einen automatischen Rueckfall fuer Kandidaten, die
+    der Nutzer nie zu Gesicht bekommt. Gibt die Anzahl verfallener Zeilen zurueck."""
+    grenze = (datetime.now(timezone.utc) - timedelta(hours=verfall_stunden)).isoformat()
+    cursor = conn.execute(
+        "UPDATE marktscan_candidates SET status = 'verfallen', status_geaendert_am = ? "
+        "WHERE einstufung = 'kaufkandidat' AND status = 'neu' AND groq_generiert_am IS NULL "
+        "AND discovered_at < ?",
+        (_now_iso(), grenze),
+    )
+    conn.commit()
+    return cursor.rowcount
+
+
 def update_marktscan_candidate_groq_writeup(
     conn: sqlite3.Connection, candidate_id: int, kurzbegruendung: str | None, langbegruendung_json: str,
     llm_model: str | None = None,
@@ -1730,6 +1779,26 @@ def update_hebel_trigger_status(conn: sqlite3.Connection, trigger_id: int, statu
         (status, _now_iso(), trigger_id),
     )
     conn.commit()
+
+
+def expire_stale_hebel_candidates(conn: sqlite3.Connection, verfall_stunden: float) -> int:
+    """Setzt Trigger-Kandidaten (status='neu'), die laenger als verfall_stunden
+    unanalysiert geblieben sind, auf status='verfallen' - verhindert, dass
+    laengst ueberholte Marktbedingungen dauerhaft in get_pending_hebel_
+    candidates() (UI-Warteliste UND Budget-Allocator-Auswahlpool, beide
+    filtern nur auf status='neu') haengen bleiben. Der Allocator-Pool ist
+    score- statt aktualitaetssortiert - ohne diesen Verfall haette ein alter,
+    hoch bewerteter Kandidat frische Kandidaten dauerhaft um das knappe
+    LLM-Budget verdraengen koennen (2026-07-19, Nutzer-Fund "Info-Leichen" im
+    Hebel-Tab). Gibt die Anzahl der soeben verfallenen Zeilen zurueck."""
+    grenze = (datetime.now(timezone.utc) - timedelta(hours=verfall_stunden)).isoformat()
+    cursor = conn.execute(
+        "UPDATE hebel_triggers SET status = 'verfallen', status_geaendert_am = ? "
+        "WHERE status = 'neu' AND ist_kandidat = 1 AND screened_at < ?",
+        (_now_iso(), grenze),
+    )
+    conn.commit()
+    return cursor.rowcount
 
 
 _HEBEL_POSITION_COLUMNS = (

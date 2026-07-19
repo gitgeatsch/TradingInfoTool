@@ -27,7 +27,7 @@ from datetime import datetime, timezone
 
 import config as config_module
 import database.db as db
-from api.bitpanda import BitpandaAsset, BitpandaTransaction, get_wallet_transactions, is_listed
+from api.bitpanda import BitpandaAsset, BitpandaTransaction, find_listed_asset, get_wallet_transactions, is_listed
 from database.models import HebelPosition
 
 logger = logging.getLogger(__name__)
@@ -237,7 +237,7 @@ def sync_hebel_positions(conn: sqlite3.Connection, api_key: str) -> HebelPositio
 
 
 def auto_add_unknown_hebel_symbols(
-    conn: sqlite3.Connection, watchlist: list, listed_assets: list[BitpandaAsset]
+    conn: sqlite3.Connection, watchlist: list, listed_assets: list[BitpandaAsset], coingecko_client=None
 ) -> list[str]:
     """Automatische Watchlist-Ergaenzung fuer Hebel-Symbole ohne Watchlist-
     Eintrag (2026-07-16, Klassifikations-Redesign, Nutzer-Frage "werden neue
@@ -252,31 +252,58 @@ def auto_add_unknown_hebel_symbols(
     das jederzeit manuell auf "core" aendern), `beobachtungsstatus=
     beobachtung`. Bitpanda-Listing wird trotzdem geprueft (P-10, defensiv -
     sollte fuer eine tatsaechlich bei Bitpanda offene Position immer
-    zutreffen). `coingecko_id` bleibt bewusst leer - anders als bei der
-    manuellen GUI-Ergaenzung gibt es hier keine vom Nutzer angegebene ID und
-    keine zuverlaessige automatische Symbol->ID-Aufloesung (wie bei Aktien/
-    ETF/Rohstoffe auch); Spot-Analyse fuer dieses Symbol bleibt bis zur
-    manuellen Ergaenzung der ID inaktiv, Hebel-Screening/-Signale
-    funktionieren bereits ohne sie. Gibt die Liste tatsaechlich neu
-    hinzugefuegter Symbole zurueck (fuer Logging/Benachrichtigung)."""
+    zutreffen).
+
+    `coingecko_id`-Aufloesung (2026-07-19, Nutzer-Vorschlag "in dieser
+    Schleife sollte das Symbol schon eindeutig sein, sonst gibt's da schon
+    Inkonsistenzen"): da das Bitpanda-Listing hier bereits geprueft wird
+    (`find_listed_asset()`), steht Bitpandas eigener, kuratierter Name fuer
+    dieses Symbol zur Verfuegung - live verifiziert reicht ein Namensabgleich
+    gegen `CoinGeckoClient.search_coins()`-Treffer, um die ID in der
+    ueberwiegenden Mehrheit der Faelle zuverlaessig OHNE Nutzer-Interaktion
+    aufzuloesen (siehe api/coingecko.py::resolve_coingecko_id_by_name()).
+    `coingecko_client=None` erhaelt das alte Verhalten (ID bleibt leer, z.B.
+    fuer Aufrufer ohne Netzwerkzugriff/Tests) - bei gesetztem Client wird die
+    Aufloesung versucht, schlaegt sie fehl (kein/mehrere Namenstreffer -
+    echte Inkonsistenz zwischen Bitpanda- und CoinGecko-Katalog), bleibt
+    `coingecko_id` weiterhin leer und Spot-Analyse fuer dieses Symbol inaktiv
+    bis zur manuellen Ergaenzung (siehe ui/app.py::AssetEditDialog) - Hebel-
+    Screening/-Signale funktionieren bereits ohne sie. Gibt die Liste
+    tatsaechlich neu hinzugefuegter Symbole zurueck (fuer Logging/
+    Benachrichtigung)."""
     watchlist_symbols = {a.symbol for a in watchlist}
     hinzugefuegt: list[str] = []
     for pos in db.get_open_hebel_positions(conn):
         if pos.symbol in watchlist_symbols:
             continue
-        if not is_listed(pos.symbol, listed_assets):
+        bitpanda_asset = find_listed_asset(pos.symbol, listed_assets)
+        if bitpanda_asset is None:
             logger.warning(
                 "Hebel-Position auf %s ohne Watchlist-Eintrag, aber nicht als bei Bitpanda "
                 "gelistet erkannt - kein Auto-Add (unerwartet, da die Position ja existiert)",
                 pos.symbol,
             )
             continue
+
+        coingecko_id = None
+        if coingecko_client is not None:
+            try:
+                from api.coingecko import resolve_coingecko_id_by_name
+
+                search_results = coingecko_client.search_coins(pos.symbol)
+                coingecko_id = resolve_coingecko_id_by_name(search_results, bitpanda_asset.name)
+            except Exception as exc:
+                logger.info("CoinGecko-ID-Aufloesung fuer %s fehlgeschlagen (Netzwerkfehler?): %s", pos.symbol, exc)
+
         try:
             config_module.add_watchlist_entry(
                 symbol=pos.symbol, name=pos.symbol, rolle="taktisch", beobachtungsstatus="beobachtung",
+                coingecko_id=coingecko_id,
             )
             hinzugefuegt.append(pos.symbol)
             watchlist_symbols.add(pos.symbol)
+            if coingecko_id:
+                logger.info("coingecko_id fuer %s automatisch aufgeloest: %s", pos.symbol, coingecko_id)
         except config_module.WatchlistWriteError as exc:
             logger.warning("Automatisches Watchlist-Hinzufuegen fuer Hebel-Symbol %s fehlgeschlagen: %s", pos.symbol, exc)
     return hinzugefuegt

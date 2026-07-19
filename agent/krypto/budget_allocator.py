@@ -316,6 +316,7 @@ def run_budget_allocator(
     gemini_budget = cfg.get("gemini_taegliches_budget", 200)
     groq_exhaustion_schwelle = cfg.get("groq_exhaustion_schwelle_fehlschlaege", 2)
     cooldown_stunden = cfg.get("cooldown_stunden", 3.5)
+    marktscan_kandidat_verfall_stunden = cfg.get("marktscan_kandidat_verfall_stunden", 48.0)
     hebel_cooldown_stunden_ausgemustert = cfg.get(
         "hebel_cooldown_stunden_ausgemustert", HEBEL_COOLDOWN_STUNDEN_AUSGEMUSTERT
     )
@@ -366,6 +367,17 @@ def run_budget_allocator(
         )
         hebel_kandidaten = _dedupe_hebel_kandidaten(offene_positionen_kandidaten, hebel_trigger_kandidaten)
         result.uebersprungen_cooldown_hebel = uebersprungen_trigger + uebersprungen_position
+        # Info-Leichen-Fix (2026-07-19, Konsistenz-Ausweitung des Hebel-Fixes
+        # in hebel_screening.py) - hier statt in marktscan.py::run_scan()
+        # platziert, weil der Allocator alle 15 Min laeuft (Marktscan-Discovery
+        # nur 2x/Tag) und die Pending-Liste so bei jedem Lauf aktuell bleibt.
+        verfallen_marktscan = db.expire_stale_marktscan_candidates(conn, marktscan_kandidat_verfall_stunden)
+        if verfallen_marktscan:
+            logger.info(
+                "Budget-Allocator: %d veraltete Marktscan-Kandidaten (status=neu, aelter als %.0fh) "
+                "automatisch auf status=verfallen gesetzt.",
+                verfallen_marktscan, marktscan_kandidat_verfall_stunden,
+            )
         marktscan_kandidaten, result.uebersprungen_cooldown_marktscan = _filter_marktscan_cooldown(
             conn, db.get_pending_marktscan_kaufkandidaten(conn), cooldown_stunden,
         )

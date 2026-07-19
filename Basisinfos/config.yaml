@@ -693,6 +693,18 @@ budget_allocator:
                                         # transienten Netzwerk-Ausrutscher nicht sofort als
                                         # Tageserschoepfung misszudeuten.
   cooldown_stunden: 3.5                 # Mitte der bestaetigten 3-4-Std.-Spanne (2026-07-13)
+  marktscan_kandidat_verfall_stunden: 48  # NEU (2026-07-19, Konsistenz-Ausweitung des Hebel-
+                                        # "Info-Leichen"-Fixes, siehe hebel_screening oben):
+                                        # marktscan_candidates hat dieselbe Struktur-Schwaeche -
+                                        # get_pending_marktscan_kaufkandidaten() sortiert nach
+                                        # score_gesamt DESC statt Aktualitaet, ein alter nie
+                                        # analysierter Kandidat (status='neu', kein neuer Scan-
+                                        # Lauf entdeckt ihn erneut) haette sonst frische
+                                        # Kandidaten dauerhaft um LLM-Budget verdraengen koennen.
+                                        # 48h = uebersteht 1-2 Scan-Zyklen (Scan laeuft nur 2x/
+                                        # Tag, 04:00+16:00), verhindert aber wochenlanges
+                                        # Anwachsen. Ergaenzt (nicht ersetzt) den bereits
+                                        # bestehenden manuellen "Ablehnen"-Button.
   spot_cooldown_stunden: 15             # NEUKALIBRIERT (2026-07-18, LLM-Budget-Konsistenz-
                                         # pruefung Teil 2, siehe taegliches_budget_gesamt oben) -
                                         # von urspruenglich 20h (2026-07-15, siehe Memory
@@ -754,6 +766,17 @@ hebel_screening:
   oi_abdeckung_warnung_cooldown_stunden: 24  # Spam-Schutz: dieselbe Warnung fuer ein bereits
                                         # bekanntes, weiterhin ungeloestes Symbol hoechstens
                                         # 1x/Tag, nicht bei jedem 15-Min-Lauf erneut.
+  hebel_kandidat_verfall_stunden: 48     # NEU (2026-07-19, Nutzer-Fund "Info-Leichen" im
+                                        # Hebel-Tab): ein Trigger-Kandidat (status='neu'), der
+                                        # laenger als dieses Fenster unanalysiert bleibt, wird
+                                        # automatisch auf status='verfallen' gesetzt und
+                                        # verschwindet damit aus der Warteliste UND dem Budget-
+                                        # Allocator-Auswahlpool (der score- statt aktualitaets-
+                                        # sortiert ist - ein alter hochbewerteter Kandidat haette
+                                        # sonst weiter frische Kandidaten um das knappe LLM-
+                                        # Budget verdraengt). 48h = ueberlebt eine einzelne
+                                        # budgetknappe Tagesphase, verhindert aber wochenlanges
+                                        # Anwachsen laengst ueberholter Marktbedingungen.
   trendfolge:
     oi_aenderung_schwelle_prozent: 3.0       # [OFFEN] Platzhalter, keine OI-Historie zum Kalibrieren vorhanden
     kursaenderung_schwelle_prozent: 2.0       # [OFFEN] angelehnt an Marktscan-Muster

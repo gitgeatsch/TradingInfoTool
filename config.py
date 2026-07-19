@@ -265,6 +265,88 @@ def _update_watchlist_field(symbol: str, field_name: str, new_value: str) -> boo
     return True
 
 
+def update_watchlist_coingecko_id(symbol: str, new_coingecko_id: str) -> bool:
+    """Setzt/ergaenzt `coingecko_id` eines bestehenden Watchlist-Eintrags -
+    manuell vom Nutzer ausgeloest (GUI-Bearbeiten-Dialog, 2026-07-19,
+    Watchlist-Tab-Konsistenzpruefung: automatisch aus einer Hebel-Position
+    ergaenzte Symbole bekommen bewusst KEINE coingecko_id, siehe importer/
+    bitpanda_margin_positions.py::auto_add_unknown_hebel_symbols() -
+    Nachtragen war bisher trotzdem gar nicht moeglich, da AssetEditDialog
+    dieses Feld nicht anbot UND `_update_watchlist_field()` nur bereits
+    VORHANDENE Feldzeilen aktualisieren kann, keine neuen einfuegen kann
+    (add_watchlist_entry() LAESST die Zeile komplett weg, wenn
+    coingecko_id=None uebergeben wurde).
+
+    Eigene Implementierung statt Erweiterung von `_update_watchlist_field()`
+    (die bleibt unveraendert fuer ihre beiden bestehenden, bereits
+    verifizierten Aufrufer) - fuegt die Zeile direkt nach `beobachtungsstatus:`
+    ein, falls sie noch fehlt (identische Position wie in
+    `add_watchlist_entry()`s Feldreihenfolge), sonst wird die vorhandene
+    Zeile aktualisiert. Gleiches Backup+Validierungs+Rollback-Muster wie
+    `add_watchlist_entry()`/`_update_watchlist_field()`."""
+    original_bytes = CONFIG_PATH.read_bytes()
+    newline_style = "\r\n" if b"\r\n" in original_bytes else "\n"
+    original_text = original_bytes.decode("utf-8")
+    lines = original_text.splitlines(keepends=True)
+
+    entry_start = next(
+        (i for i, line in enumerate(lines) if line.strip() == f"- symbol: {symbol}"), None,
+    )
+    if entry_start is None:
+        return False
+
+    entry_end = len(lines)
+    for i in range(entry_start + 1, len(lines)):
+        if lines[i].lstrip().startswith("- symbol:") or not lines[i].startswith(" "):
+            entry_end = i
+            break
+
+    field_line_idx = next(
+        (i for i in range(entry_start, entry_end) if lines[i].strip().startswith("coingecko_id:")), None,
+    )
+
+    if field_line_idx is not None:
+        current_value = lines[field_line_idx].split(":", 1)[1].strip()
+        if current_value == new_coingecko_id:
+            return False
+        indent = lines[field_line_idx][: len(lines[field_line_idx]) - len(lines[field_line_idx].lstrip())]
+        lines[field_line_idx] = f"{indent}coingecko_id: {new_coingecko_id}{newline_style}"
+    else:
+        beobachtungsstatus_idx = next(
+            (i for i in range(entry_start, entry_end) if lines[i].strip().startswith("beobachtungsstatus:")), None,
+        )
+        if beobachtungsstatus_idx is None:
+            return False
+        indent = lines[beobachtungsstatus_idx][
+            : len(lines[beobachtungsstatus_idx]) - len(lines[beobachtungsstatus_idx].lstrip())
+        ]
+        new_line = f"{indent}coingecko_id: {new_coingecko_id}{newline_style}"
+        lines.insert(beobachtungsstatus_idx + 1, new_line)
+
+    new_text = "".join(lines)
+
+    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    backup_path = BACKUP_DIR / f"config.yaml.{timestamp}.bak"
+    shutil.copy2(CONFIG_PATH, backup_path)
+
+    CONFIG_PATH.write_bytes(new_text.encode("utf-8"))
+
+    try:
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+            reparsed = yaml.safe_load(f)
+        matching = next((e for e in reparsed["watchlist"] if e["symbol"] == symbol), None)
+        if matching is None or matching.get("coingecko_id") != new_coingecko_id:
+            raise WatchlistWriteError("Validierung fehlgeschlagen: coingecko_id nicht wie erwartet gesetzt")
+    except Exception as exc:
+        shutil.copy2(backup_path, CONFIG_PATH)
+        raise WatchlistWriteError(f"Schreiben fehlgeschlagen, Backup wiederhergestellt: {exc}") from exc
+
+    global _config_cache
+    _config_cache = None
+    return True
+
+
 def update_watchlist_rolle(symbol: str, new_rolle: str) -> bool:
     """Setzt `rolle` (core|taktisch) eines bestehenden Watchlist-Eintrags -
     ausschliesslich manuell ausgeloest (GUI-Bearbeiten-Dialog), nie
