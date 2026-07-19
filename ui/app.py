@@ -22,6 +22,7 @@ from ui.marktscan_view import MarktscanView
 from ui.portfolio import PortfolioView
 from ui.regime_view import RegimeView
 from ui.row_tooltip import add_row_tooltips
+from ui.screener_view import ScreenerView
 from ui.signals_view import SignalsView
 from ui.sortable_tree import make_sortable
 
@@ -134,6 +135,9 @@ class TradingInfoToolApp(tk.Tk):
             fred_api_key=fred_api_key,
         )
         notebook.add(self._marktscan_view, text="Marktscan")
+
+        self._screener_view = ScreenerView(notebook, db_conn_factory, watchlist)
+        notebook.add(self._screener_view, text="Screener")
 
         self._hebel_view = HebelView(
             notebook, db_conn_factory, watchlist, groq_client, coingecko_client,

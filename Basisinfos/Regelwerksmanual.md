@@ -4923,3 +4923,77 @@ Signatur-Check bestätigt korrekte Parameter-Durchreichung. Damit sind
 JETZT ALLE FÜNF ursprünglich recherchierten Datenquellen-Kandidaten
 (FRED, SEC-EDGAR, EIA, Finnhub, FINRA) vollständig umgesetzt und live
 verifiziert - keine offenen Kandidaten aus dieser Recherche-Runde mehr.
+
+## Nachtrag (2026-07-19, gleicher Tag, Folge 3): Aktien/ETF-Screener + Bitpanda-Sonderthema
+
+**Auslöser:** Nutzer fragte nach dem Stand von "Marktscan-analogen" Mechanismen
+für Aktien/Rohstoffe/ETF. Antwort: es gab bisher KEINE automatische Neu-
+Kandidaten-Entdeckung für diese drei Klassen (nur die 11 manuell in
+`config.yaml` gepflegten Symbole werden per `agent/multi_asset_batch.py`
+regelmäßig neu bewertet, siehe Cooldown-Werte 24h/72h dort) - die
+Bewertung bestehender Positionen lief also schon automatisch, nur die
+Kandidaten-Suche fehlte. Nutzer bat: "bau einen einfachen Aktien/ETF-
+Screener über eine kostenlose Quelle und berücksichtige auch hier das
+Sonderthema - was ist bei Bitpanda davon gelistet und was nicht."
+
+**Wichtiger Fund VOR der Implementierung (direkt relevant für die Bitpanda-
+Frage):** ein Live-Check aller 9 aktuell gehaltenen Rohstoff-/Themen-ETF-
+Positionen (OD7N/OD7H/OD7C/OD7L/VVMX/X136/EXH3/CEBS/ISOC) gegen
+`api.bitpanda.is_listed()` ergab: KEINE davon ist bei Bitpanda gelistet -
+nur die beiden Aktien (VST/PLTR) sind es. Bitpanda führt zwar eigene ETF/
+ETC-"Themenkörbe" (z.B. "COPPERMINE", "NATGAS", 209 Einträge insgesamt),
+das sind aber ANDERE, Bitpanda-eigene Produkte - keine echten UCITS-ETFs/
+WisdomTree-ETCs wie in der Watchlist. Der Nutzer hält diese 9 Positionen
+also nachweislich über einen anderen Broker (die Bestände selbst sind
+über den bestehenden Excel-Import erfasst, nicht über Live-Bitpanda-Sync).
+Diese Erkenntnis hat die Architektur direkt geprägt (siehe unten).
+
+**Datenquelle (kostenlos, kein neuer API-Key):** `yfinance` (bereits im
+Projekt für OHLC/Fundamentaldaten genutzt) Version 1.5.1 hat ein
+eingebautes `yf.screen()`-Feature (Yahoo-Finance-Screener-Backend, live
+verifiziert: `most_actives`/`day_gainers`/`growth_technology_stocks`/
+`undervalued_growth_stocks`/`small_cap_gainers` liefern je 30-325 Treffer
+mit >90 Feldern pro Symbol).
+
+**Bewusst ASYMMETRISCHE Architektur** (`agent/aktien/screener.py`, neu),
+direkt begründet durch den Bitpanda-Fund oben:
+- **Aktien:** `scan_aktien_candidates()` durchsucht 3 Yahoo-Finance-Screens
+  (Momentum + Growth + Value gemischt), filtert Mikro-Caps (<500 Mio. $
+  Marktkap.) und Illiquides (<500k Tagesvolumen) heraus, dedupliziert,
+  schließt bereits gelistete Watchlist-Symbole aus und markiert pro
+  Kandidat `bitpanda_gelistet` via `is_listed()`.
+- **ETF/ETC:** `scan_etf_candidates()` enumeriert NICHT über yfinance,
+  sondern DIREKT Bitpandas eigenen ETF/ETC-Katalog (`get_listed_non_crypto_
+  assets()`, Gruppen `etf`+`etc`) - das IST das bei Bitpanda tatsächlich
+  kaufbare Angebot, während eine echte UCITS-ETF-Discovery über yfinance
+  an Bitpandas Sortiment vorbeigegangen wäre (siehe Fund oben). Kein
+  `yfinance_symbol` ableitbar (Bitpandas Symbole wie "COPPERMINE" sind
+  eigene Produktnamen, keine Börsenticker) - degradiert sauber auf "keine
+  technische Historie" (bereits bestehender Fix, Ticket #319).
+
+**Bewusst EINFACH gehalten** (Nutzer-Wunsch): kein vierstufiges Scoring wie
+beim Krypto-Marktscan (`agent/krypto/marktscan.py`), keine DB-Persistenz,
+kein automatischer LLM-Call - ein manueller "Jetzt scannen"-Klick liefert
+eine frische Kandidatenliste, "In Watchlist übernehmen" nutzt exakt
+dasselbe bereits etablierte Muster wie Marktscan (`config.py::
+add_watchlist_entry()`, Backup + Validierung + Rollback). Die eigentliche
+Bewertung übernommener Kandidaten läuft danach ganz regulär über den
+bereits bestehenden `multi_asset_batch_job` - kein Doppelbau.
+
+**Umgesetzt:** `agent/aktien/screener.py` (neu, `ScreenerCandidate`-
+Dataclass, `scan_aktien_candidates()`, `scan_etf_candidates()`), `ui/
+screener_view.py` (neu, Treeview + Scan-Button + Übernehmen-Button, Muster
+identisch zu `ui/marktscan_view.py`, aber ohne Score-Spalte/Detail-Panel).
+`ui/app.py`: neuer Tab "Screener" zwischen Marktscan und Hebel.
+
+**Verifiziert:** synthetische Tests (`_bereits_in_watchlist()` Groß-/
+Kleinschreibung), echter Live-Lauf gegen beide Quellen (144 Aktien-
+Kandidaten aus 3 Screens, 209 ETF/ETC-Kandidaten aus Bitpandas Katalog,
+u.a. NVDA/TSM/AVGO mit korrektem Bitpanda-Listing-Flag), Tk-Smoke-Test
+der `ScreenerView` isoliert UND als Teil der vollständigen `App`
+(gegen eine Kopie der Produktions-DB, alle 7 Tabs inkl. "Screener"
+korrekt registriert). `config.add_watchlist_entry()` selbst wurde NICHT
+erneut gegen die echte `config.yaml` getestet (bereits durch die
+bestehende Marktscan-Nutzung etabliert/verifiziert, Signatur-Kompatibilität
+per Code-Review bestätigt) - kein ungewolltes Schreiben in die reale Datei
+während der Verifikation.
