@@ -83,6 +83,18 @@ def _ensure_ohlc_backfilled(conn, asset) -> None:
     last_date = db.get_last_ohlc_date(conn, asset.symbol, "USD")
     if last_date is not None and not _is_aktien_history_stale(last_date):
         return
+    # 2026-07-19, Konsistenz-Check ueber alle Assetklassen (Nutzer-Wunsch,
+    # nach dem Krypto-coingecko_id-Fund): Guard fehlte hier bisher, obwohl
+    # agent/themen_etf/pipeline.py::_ensure_ohlc_backfilled() ihn schon hat -
+    # ohne ihn wirft yf.Ticker(None) einen rohen AttributeError (live
+    # bestaetigt), statt sauber in den bereits vorhandenen
+    # len(closes)==0-Faellt-durch-Pfad zu fallen (Fixed-HALTEN mit klarem
+    # gate_reason). Betraf sowohl den automatischen Multi-Asset-Batch als
+    # auch den manuellen "Signal berechnen"-Klick fuer ein Aktien-Asset ohne
+    # yfinance-Symbol (im Add-Dialog als "optional" markiert).
+    if not asset.yfinance_symbol:
+        logger.warning("Kein yfinance-Symbol fuer %s hinterlegt - keine technische Historie moeglich", asset.symbol)
+        return
     ohlc_points = get_full_ohlc_history(asset.yfinance_symbol, asset.symbol, "USD")
     if ohlc_points:
         db.upsert_ohlc_points(conn, ohlc_points)

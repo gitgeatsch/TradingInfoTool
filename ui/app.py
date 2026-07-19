@@ -42,7 +42,8 @@ _WATCHLIST_COLUMN_DESCRIPTIONS = {
         "Gehalten (echter Bestand oder offene Hebel-Position, live abgeleitet) oder - falls nicht gehalten - "
         "Beobachtung (aktive Kandidatur) bzw. Ausgemustert (niedrigste Priorität, aber nicht ausgeschlossen). "
         "⚠ keine CoinGecko-ID = Spot-Analyse für dieses Asset strukturell inaktiv (z. B. automatisch aus einer "
-        "Hebel-Position ergänzt) - ID über 'Asset hinzufügen/bearbeiten' nachtragen."
+        "Hebel-Position ergänzt) - ID über 'Asset hinzufügen/bearbeiten' nachtragen. "
+        "⚠ kein yfinance-Symbol = dieselbe Lücke für Aktien/Themen-ETFs - über 'Asset bearbeiten' nachtragen."
     ),
     "bitpanda": (
         "✓ = auf Bitpanda handelbar, ✗ = nicht gelistet (blockiert Kauf-/Nachkauf-"
@@ -304,7 +305,7 @@ class TradingInfoToolApp(tk.Tk):
             tree.column(col, width=90 if col in ("bitpanda", "tranchen", "hebel_pruefung") else 110, anchor=anchor)
         tree.tag_configure("stale", foreground=theme.stale_color())
         tree.tag_configure("bitpanda_fehlt", foreground=theme.danger_color())
-        tree.tag_configure("coingecko_id_fehlt", foreground=theme.danger_color())
+        tree.tag_configure("externe_id_fehlt", foreground=theme.danger_color())
         frame.reapply_sort = make_sortable(
             tree, numeric_columns=frozenset({"price_usd", "price_eur", "change_24h"})
         )
@@ -439,7 +440,26 @@ class TradingInfoToolApp(tk.Tk):
             )
             if coingecko_id_fehlt:
                 status_text += " ⚠ keine CoinGecko-ID"
-                tags.append("coingecko_id_fehlt")
+                tags.append("externe_id_fehlt")
+
+            # 2026-07-19, Konsistenz-Check ueber alle Assetklassen (Nutzer-
+            # Wunsch, gleiches Muster wie oben): Aktien UND Themen-ETFs
+            # brauchen asset.yfinance_symbol fuer generate_signal() - ohne ID
+            # kam es bisher sogar zu einem rohen Absturz (yf.Ticker(None), live
+            # bestaetigt und in agent/aktien/pipeline.py behoben) statt nur
+            # verschwendeter Budget-Slots. Rohstoffe (hartkodierter Futures-
+            # Ticker) und Hedge-Instrumente (kein OHLC noetig) sind NICHT
+            # betroffen, siehe agent/multi_asset_batch.py::_kandidaten().
+            from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR as _hedge_symbole
+
+            yfinance_symbol_fehlt = (
+                asset.symbol not in _hedge_symbole
+                and (asset.assetklasse == "aktien" or asset.assetklasse == "etf")
+                and not asset.yfinance_symbol
+            )
+            if yfinance_symbol_fehlt:
+                status_text += " ⚠ kein yfinance-Symbol"
+                tags.append("externe_id_fehlt")
 
             tree.insert(
                 "",

@@ -58,7 +58,7 @@ class MultiAssetBatchResult:
 def _kandidaten(watchlist: list) -> list:
     from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR as _hedge_symbole
 
-    return [
+    kandidaten = [
         a for a in watchlist
         if a.assetklasse in ("aktien", "rohstoffe") or a.symbol in _hedge_symbole
         # Themen-ETFs (2026-07-18, Multi-Asset-Vollstaendigkeitspruefung): restliche
@@ -66,6 +66,18 @@ def _kandidaten(watchlist: list) -> list:
         # EXH3/CEBS/ISOC) - standen bis hierher als einzige Watchlist-Assets ganz
         # ohne Pipeline da, siehe agent/themen_etf/pipeline.py Modul-Docstring.
         or (a.assetklasse == "etf" and a.symbol not in _hedge_symbole)
+    ]
+    # 2026-07-19, Konsistenz-Check ueber alle Assetklassen (analog zum Krypto-
+    # coingecko_id-Fix in agent/krypto/signal_batch.py): Aktien UND Themen-
+    # ETFs brauchen asset.yfinance_symbol fuer generate_signal() (siehe dortige
+    # _ensure_ohlc_backfilled()-Guards) - ohne ID waere der Batch-Slot bei
+    # JEDEM Lauf verschwendet worden (Fixed-HALTEN ohne groq_raw_response,
+    # also fuer immer "nie berechnet"). Rohstoffe/Hedge NICHT betroffen -
+    # Rohstoffe nutzen einen hartkodierten Futures-Ticker (SYMBOL_ZU_FUTURES_
+    # TICKER), Hedge braucht ueberhaupt keine OHLC-Historie.
+    return [
+        a for a in kandidaten
+        if a.assetklasse == "rohstoffe" or a.symbol in _hedge_symbole or a.yfinance_symbol
     ]
 
 

@@ -4489,3 +4489,58 @@ geöffneter `CoinSearchDialog` bei Mehrdeutigkeit, jeweils bis zum
 tatsächlichen Schreiben in `config.yaml` durchgetestet) sowie von
 `AssetEditDialog` (stille Auflösung beim Öffnen, Warn-Markierung
 verschwindet korrekt bei erfolgreicher Auflösung).
+
+## Nachtrag (2026-07-19, gleicher Tag): Konsistenzprüfung über ALLE
+Assetklassen - echter Absturz-Fund bei Aktien ohne yfinance-Symbol
+
+**Auslöser:** Nutzer bat explizit darum, die coingecko_id-Konsistenzprüfung
+nicht nur für Krypto/Hebel, sondern für alle Bereiche durchzuführen ("prüfe
+das gegenüber allen Bereichen nicht nur Hebel, Spot, etc."). Systematisch
+alle vier Multi-Asset-Pipelines (Aktien/Rohstoffe/Hedge/Themen-ETF) auf das
+Krypto-Muster (fehlende externe ID → strukturell nie erfolgreiche
+Analyse) geprüft.
+
+**Echter, eigenständiger Fund - Absturz statt nur Budget-Verschwendung:**
+`agent/aktien/pipeline.py::_ensure_ohlc_backfilled()` rief
+`get_full_ohlc_history(asset.yfinance_symbol, ...)` bisher OHNE Guard auf -
+im Gegensatz zum strukturell identischen `agent/themen_etf/pipeline.py`,
+das den Guard (`if not asset.yfinance_symbol: ... return`) bereits hatte.
+Live bestätigt: `yf.Ticker(None)` wirft `AttributeError: 'NoneType' object
+has no attribute 'upper'`. Ein manuell hinzugefügtes Aktien-Asset ohne
+yfinance-Symbol (im "Asset hinzufügen"-Dialog als "optional" markiert)
+hätte damit sowohl im automatischen Multi-Asset-Batch als auch beim
+manuellen "Signal berechnen"-Klick einen rohen, unbehandelten Absturz
+ausgelöst statt einer sauberen HALTEN-Meldung.
+
+**Geprüft und für strukturell unbetroffen befunden:**
+- `agent/rohstoff/pipeline.py`: nutzt einen hartkodierten Futures-Ticker
+  (`SYMBOL_ZU_FUTURES_TICKER`), unabhängig vom Watchlist-Feld - ein neues
+  Rohstoff-Asset bräuchte ohnehin eine Code-Änderung, kein GUI-Feld dafür.
+- `agent/hedge/pipeline.py`: braucht überhaupt keine OHLC-Historie (arbeitet
+  nur mit Live-Preisen + Portfolio-Exposure).
+- **Auto-Add-Mechanismus:** `config.py::add_watchlist_entry()` wird
+  automatisch nur an GENAU EINER Stelle aufgerufen
+  (`auto_add_unknown_hebel_symbols()`) - kein analoges automatisches
+  Hinzufügen für Aktien/Rohstoffe/ETF, die kommen nur über den manuellen
+  "Asset hinzufügen"-Dialog rein.
+
+**Fix (drei Ebenen, gleiches Muster wie beim Krypto-Fund):**
+1. `agent/aktien/pipeline.py::_ensure_ohlc_backfilled()` bekommt denselben
+   Guard wie `themen_etf/pipeline.py` - fällt jetzt sauber in den bereits
+   vorhandenen `len(closes)==0`-Pfad (Fixed-HALTEN mit klarem
+   `gate_reason`) statt abzustürzen.
+2. `agent/multi_asset_batch.py::_kandidaten()` schließt Aktien- UND
+   Themen-ETF-Assets ohne `yfinance_symbol` jetzt aus der automatischen
+   Kandidatenauswahl aus (analog zu `signal_batch.py`s coingecko_id-Filter)
+   - Rohstoffe/Hedge bleiben unberührt (siehe oben).
+3. `ui/app.py::_refresh_watchlist_from_db()` markiert betroffene Aktien-/
+   Themen-ETF-Assets jetzt ebenfalls sichtbar ("⚠ kein yfinance-Symbol").
+   Das bisherige Tag `coingecko_id_fehlt` wurde dafür in `externe_id_fehlt`
+   umbenannt (deckt jetzt beide Fälle ab, gleiche rote Hervorhebung).
+
+**Verifiziert:** synthetischer Regressionstest des Absturz-Fixes (Guard
+verhindert die `AttributeError`, `_load_ohlc()` bleibt korrekt leer).
+Synthetischer Test von `_kandidaten()` mit 6 Fällen (Aktie mit/ohne ID,
+Themen-ETF mit/ohne ID, Rohstoff ohne ID bleibt Kandidat, Hedge-Instrument
+ohne ID bleibt Kandidat). Tk-Smoke-Test der erweiterten Watchlist-Tab-
+Warnung (Aktie/ETF ohne ID markiert, Hedge-Instrument korrekt unmarkiert).
