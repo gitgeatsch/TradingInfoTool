@@ -16,7 +16,8 @@ from datetime import datetime, timezone
 
 import database.db as db
 from agent.krypto.backward_tracking import (
-    DEFAULT_ABGELAUFEN_NACH_TAGEN,
+    DEFAULT_ABGELAUFEN_TAGE_BUCKET,
+    DEFAULT_ABGELAUFEN_TAGE_FALLBACK,
     OUTCOME_ABGELAUFEN,
     OUTCOME_LIQUIDATION,
     OUTCOME_NICHT_ANWENDBAR,
@@ -139,18 +140,47 @@ def check_hebel_signal_outcome(conn, signal, watchlist) -> tuple[str, dict]:
 def _is_superseded(signal, latest_real: dict) -> bool:
     """Mirror backward_tracking.py::_is_superseded(), aber nach (symbol,
     richtung) geschluesselt - ein LONG- und ein SHORT-Signal fuer denselben
-    Coin sind unabhaengige Thesen, eines ueberholt das andere nicht. Rein
-    deterministischer Datums-/ID-Vergleich, KEIN LLM-Call."""
+    Coin sind unabhaengige Thesen, eines ueberholt das andere nicht.
+
+    NACHTRAG (2026-07-19, Backtracking-Aussagekraft-Audit, siehe dortiger
+    Docstring): eine reine HALTEN-Bestaetigung ueberholt die offene
+    ERÖFFNEN-These nicht mehr - live geprueft, dass 60% der offenen Hebel-
+    Signale unter der alten Regel nach durchschnittlich 11,7 Std. ueberholt
+    wurden (hebel_position_cooldown_stunden=3), bevor der Kurs ueberhaupt
+    eine faire Chance hatte, Take-Profit/Stop-Loss zu erreichen.
+
+    Rein deterministischer Datums-/ID-/Aktions-Vergleich, KEIN LLM-Call."""
     latest = latest_real.get((signal.symbol, signal.richtung))
-    return latest is not None and latest.id != signal.id and latest.created_at > signal.created_at
+    return (
+        latest is not None
+        and latest.id != signal.id
+        and latest.created_at > signal.created_at
+        and latest.action != "HALTEN"
+    )
 
 
-def _is_expired(signal, abgelaufen_nach_tagen: int) -> bool:
+def _is_expired(signal, bucket_tage: dict[str, int], fallback_tage: int) -> bool:
+    """Mirror backward_tracking.py::_is_expired() - inhaltsbasierte Ablaufzeit
+    aus halte_kriterium statt einer fixen Frist fuer alle Hebel-Signale."""
     created = datetime.fromisoformat(signal.created_at)
     if created.tzinfo is None:
         created = created.replace(tzinfo=timezone.utc)
-    age_days = (datetime.now(timezone.utc) - created).days
-    return age_days >= abgelaufen_nach_tagen
+    now = datetime.now(timezone.utc)
+
+    ziel_datum = getattr(signal, "halte_kriterium_ziel_datum", None)
+    if ziel_datum:
+        try:
+            deadline = datetime.fromisoformat(ziel_datum)
+            if deadline.tzinfo is None:
+                deadline = deadline.replace(tzinfo=timezone.utc)
+            return now > deadline
+        except ValueError:
+            pass
+
+    bucket = getattr(signal, "halte_kriterium_bucket", None)
+    tage = bucket_tage.get(bucket, fallback_tage) if bucket else fallback_tage
+    age_days = (now - created).days
+    return age_days >= tage
 
 
 def run_hebel_backward_tracking(conn, watchlist, config: dict) -> HebelBackwardTrackingResult:
@@ -160,9 +190,9 @@ def run_hebel_backward_tracking(conn, watchlist, config: dict) -> HebelBackwardT
     Konfiguration wie Spot (config['backward_tracking']) - kein separater Wert noetig,
     gleiche Ablauf-Logik."""
     result = HebelBackwardTrackingResult()
-    abgelaufen_nach_tagen = (
-        config.get("backward_tracking", {}).get("abgelaufen_nach_tagen", DEFAULT_ABGELAUFEN_NACH_TAGEN)
-    )
+    bt_cfg = config.get("backward_tracking", {})
+    bucket_tage = bt_cfg.get("abgelaufen_nach_tagen_bucket", DEFAULT_ABGELAUFEN_TAGE_BUCKET)
+    fallback_tage = bt_cfg.get("abgelaufen_nach_tagen_fallback", DEFAULT_ABGELAUFEN_TAGE_FALLBACK)
     latest_real = db.get_latest_hebel_signal_per_symbol_and_richtung(conn)
 
     rows = conn.execute(
@@ -201,7 +231,7 @@ def run_hebel_backward_tracking(conn, watchlist, config: dict) -> HebelBackwardT
         if _is_superseded(signal, latest_real):
             db.update_hebel_signal_outcome(conn, signal.id, OUTCOME_UEBERHOLT)
             result.superseded += 1
-        elif _is_expired(signal, abgelaufen_nach_tagen):
+        elif _is_expired(signal, bucket_tage, fallback_tage):
             db.update_hebel_signal_outcome(conn, signal.id, OUTCOME_ABGELAUFEN)
             result.expired += 1
         else:

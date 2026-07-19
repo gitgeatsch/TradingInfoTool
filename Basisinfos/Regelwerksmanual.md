@@ -2154,10 +2154,12 @@ Startpunkt, sobald Backward-Tracking/Outcome-Daten vorliegen:
   Std., Kap. 6) — erster plausibler Wert für die kürzere Kern-Cooldown-Stufe
   (core/gehaltene Assets), ebenfalls noch nicht über mehrere Tage echten
   Betrieb verifiziert.
-- **NEU (2026-07-16):** Hebel hat noch keine "Signal-Historie"-Ansicht
-  analog zum Signale-Tab (Kap. 7) — die neue Überholt-Erkennung schreibt den
-  Status zwar korrekt in `hebel_signals.outcome_status`, ist aber im
-  Hebel-Tab aktuell nirgends sichtbar (nur über eine direkte DB-Abfrage).
+- **ERLEDIGT (2026-07-17), war hier gelistet (2026-07-16):** Hebel hatte
+  noch keine "Signal-Historie"-Ansicht analog zum Signale-Tab (Kap. 7) — die
+  Überholt-Erkennung schrieb den Status zwar korrekt in
+  `hebel_signals.outcome_status`, war im Hebel-Tab aber nirgends sichtbar.
+  `ui/hebel_view.py` hat jetzt einen Signal-Historie-Dialog analog zum
+  Spot-Pendant.
 - **NEU (2026-07-16, Klassifikations-Redesign, siehe Kap. 17):**
   `spot_cooldown_stunden_ausgemustert`/`hebel_cooldown_stunden_ausgemustert`
   (je 120 Std. = 5 Tage) und `hebel_position_cooldown_stunden` (3 Std.) sind
@@ -4544,3 +4546,136 @@ Synthetischer Test von `_kandidaten()` mit 6 Fällen (Aktie mit/ohne ID,
 Themen-ETF mit/ohne ID, Rohstoff ohne ID bleibt Kandidat, Hedge-Instrument
 ohne ID bleibt Kandidat). Tk-Smoke-Test der erweiterten Watchlist-Tab-
 Warnung (Aktie/ETF ohne ID markiert, Hedge-Instrument korrekt unmarkiert).
+
+## Nachtrag (2026-07-19, gleicher Tag): Backtracking-Aussagekraft-Audit - Überholt-Erkennung neutralisierte die eigene Ergebnisstatistik
+
+**Auslöser:** Nutzer bat vor der Governance-Diskussion (Selbstverifikations-
+Vision Schritt 3, siehe Kap. 7) darum, sicherzustellen, dass Backward-
+Tracking "sauber funktioniert und auch kurzfristig eine gewisse
+Aussagekraft hat" - erst wenn das gewährleistet ist, soll die Governance-
+Frage angegangen werden.
+
+**Echter, gravierender Fund:** Live gegen den frischesten Notebook-
+Datenexport geprüft (`notebook_diagnose.json`, 2026-07-19), da die lokale
+Desktop-DB seit dem NB-Umzug veraltet ist. Ergebnis: von 9 trackbaren Spot-
+Signalen (KAUFEN/NACHKAUFEN) wurden **alle 9 (100%)** als "überholt"
+markiert, bevor der Kurs jemals gegen Take-Profit/Stop-Loss geprüft werden
+konnte (nach durchschnittlich ~29 Std., Spanne 18-56 Std.) - **kein
+einziges** reales Ergebnis liegt vor. Bei Hebel wurden 21 von 35 ERÖFFNEN-
+Signalen (60%) nach durchschnittlich **11,7 Std.** (Spanne 4,2-22,7 Std.)
+überholt; nur 2 von 35 kamen je zu einem echten Ergebnis (beide Stop-Loss,
+beide aus der inzwischen entfernten Cerebras-Ära - die aktuelle Kette
+Groq/Mistral/Gemini hat bislang null ausgewertete Ergebnisse).
+
+**Root Cause:** `_is_superseded()` (Kap. „Info-Leichen"-Nachtrag oben,
+2026-07-16 eingeführt gegen doppelte/widersprüchliche Anzeigen) markierte
+ein offenes KAUFEN/ERÖFFNEN als überholt, sobald **irgendein** neueres
+reales Signal für dasselbe Symbol vorlag - unabhängig von dessen Aktion.
+Da HALTEN die weit überwiegende Aktion ist (>95%) und gehaltene/offene
+Positionen sehr häufig neu bewertet werden (`hebel_position_cooldown_
+stunden`: 3 Std., `spot_cooldown_stunden_kern`: 8 Std.), wurde praktisch
+jede offene Kauf-These durch eine bloße HALTEN-Bestätigung "überholt" -
+lange bevor ein realistischer mehrtägiger Kursverlauf Take-Profit/Stop-Loss
+überhaupt erreichen konnte. Die Funktion, die Doppel-Anzeigen verhindern
+sollte, hielt dadurch strukturell die Ergebnisstatistik leer, die
+Governance Schritt 3 als Grundlage braucht.
+
+**Fix 1 - Überholt-Erkennung eingeschränkt:** `_is_superseded()` (Spot UND
+Hebel) überholt eine offene These jetzt nur noch bei einer echten neuen
+Aktion (erneutes KAUFEN/NACHKAUFEN/ERÖFFNEN = redundant, oder VERKAUFEN/
+TAUSCHEN/SCHLIESSEN/HEBEL_SENKEN = widersprechend) - eine reine HALTEN-
+Bestätigung widerspricht der offenen These nicht und überholt sie nicht
+mehr. Die ursprüngliche Absicht (Duplikate/Widersprüche ausblenden) bleibt
+dadurch unverändert erhalten.
+
+**Fix 2 - inhaltsbasierte Ablaufzeit statt fixer 90-Tage-Frist:** Nutzer-
+Vorgabe: "der zeitliche Faktor sollte durch den Inhalt bzw. Angabe - wann
+soll ein Zielwert erreicht werden - besser abschätzbar sein". Statt eine
+neue Datenstruktur zu erfinden, wird das bereits bestehende, vom Modell
+zuverlässig gefüllte `halte_kriterium` genutzt (Regel 17 in
+`analyst.py`/`hebel_analyst.py`, bereits vollständig als eigene
+Spalten in `signals`/`hebel_signals` persistiert): `ziel_datum` hat
+Vorrang, wenn gesetzt (in der Praxis fast nie - live geprüft: 0 von 9
+Fällen), sonst der grobe `bucket` (kurz/mittel/lang, in der Praxis
+**zuverlässig** gefüllt - live geprüft: 9 von 9 Fällen). Neue Config-Werte
+`backward_tracking.abgelaufen_nach_tagen_bucket` (kurz: 14, mittel: 45,
+lang: 120 Tage) + `abgelaufen_nach_tagen_fallback` (90 Tage, für ältere
+Signale ohne halte_kriterium) ersetzen den alten einzelnen
+`abgelaufen_nach_tagen`-Wert. Die konkreten Tageswerte sind selbst
+`[OFFEN]`/vorläufig (siehe Kap. 15), erste plausible Startwerte analog dem
+bisherigen 90-Tage-Vorschlag.
+
+**Fix (drei Dateien, identisches Muster fuer Spot und Hebel):**
+1. `agent/krypto/backward_tracking.py`: `_is_superseded()` + `_is_expired()`
+   wie beschrieben geändert, `DEFAULT_ABGELAUFEN_TAGE_BUCKET`/
+   `DEFAULT_ABGELAUFEN_TAGE_FALLBACK` ersetzen `DEFAULT_ABGELAUFEN_NACH_
+   TAGEN`.
+2. `agent/krypto/hebel_backward_tracking.py`: identischer Fix (mirror-
+   Muster), importiert die neuen Konstanten von oben.
+3. `Basisinfos/config.yaml`: `backward_tracking`-Sektion umgestellt.
+
+**Verifiziert:** 14 synthetische Tests (HALTEN überholt nicht mehr/andere
+Aktionen weiterhin doch, für Spot UND Hebel; bucket-Mapping kurz/mittel/
+lang; ziel_datum-Override in beide Richtungen; Fallback bei fehlendem
+bucket; ungültiges ziel_datum fällt korrekt auf bucket zurück). Echter Lauf
+gegen eine Kopie der Produktions-DB: von 51 vorher unverarbeiteten Spot-
+Signalen bleiben danach korrekt nur die 2 tatsächlich noch unentschiedenen
+trackbaren Signale offen (vorher wären sie durch die alte Regel fälschlich
+überholt worden, da fuer beide zwischenzeitlich nur HALTEN-Bestätigungen
+vorlagen), alle anderen korrekt `nicht_anwendbar`.
+
+## Nachtrag (2026-07-19, gleicher Tag): 29× "Auto-Add unbekannter
+Hebel-Symbole fehlgeschlagen" im Notebook-Export - Bug war bereits gefixt,
+keine neue Ursache
+
+**Auftrag:** vollen Traceback zu 29 Vorkommen von "Auto-Add unbekannter
+Hebel-Symbole fehlgeschlagen" im `notebook_diagnose.json`-Export finden,
+Root Cause klären, fixen.
+
+**Ergebnis: kein neuer Fix nötig - der Export zeigt einen bereits
+abgeschlossenen Vorfall.** Vollständiger Traceback aus `log_auszug`
+extrahiert (72h-Fenster, `job_fehlschlaege` listet nur die Kurzmeldung ohne
+Traceback): 28 der 29 Vorkommen sind exakt der `AttributeError: 'str'
+object has no attribute 'get'`-Bug aus `get_listed_assets(bitpanda_api_key)`
+statt `get_listed_assets()` - **derselbe Bug, der bereits am selben Tag
+(2026-07-16, Commit `fe970ef`) live anhand eines FRÜHEREN
+Notebook-Diagnose-Exports gefunden und gefixt wurde** (siehe
+Commit-Nachricht: "Live in den Notebook-Logs gefunden
+(Notebook_Analysedaten-Export)"). Alle 28 Vorkommen liegen zeitlich
+zwischen 2026-07-16 13:10:02 und 2026-07-17 02:52:35 - der Fix wurde um
+15:33 Uhr desselben Tages committet, das Notebook lief bis zum nächsten
+USB-Sync aber noch mit dem alten Code weiter (siehe
+[[reference_usb_sync_workflow]]). Aktueller Code
+(`scheduler/background.py`, `importer/bitpanda_margin_positions.py`,
+`api/bitpanda.py`) wurde geprüft und ruft an allen vier Stellen bereits
+korrekt `get_listed_assets()` ohne Positionsargument auf - keine Änderung
+nötig, per Signatur-Check bestätigt.
+
+Das **29. Vorkommen** (2026-07-17 02:52:35, letztes in der Reihe) ist ein
+eigenständiger `requests.exceptions.ReadTimeout` gegen
+`api.bitpanda.com` (15s-Timeout in `_fetch_all_bitpanda_assets()`,
+paginierter Abruf des gesamten Asset-Katalogs) - eine normale transiente
+Netzwerkstörung, kein Code-Fehler, kein Wiederholungsmuster (kein weiteres
+Vorkommen im restlichen 72h-Fenster bis 2026-07-19 06:03). Konsistent mit
+dem bestehenden Muster anderer transienter API-Fehler in diesem Projekt
+(z. B. FRED-Timeouts), die ebenfalls ohne Sonderbehandlung beim nächsten
+15-Min-Tick automatisch erneut versucht werden - `hebel_screening_job`
+fängt den Fehler ohnehin lokal ab (eigener `try/except` um den Auto-Add-
+Aufruf), sodass weder der restliche Job-Lauf noch die U-8-Job-Ausfall-
+E-Mail-Benachrichtigung betroffen sind.
+
+**Wichtige Korrektur der Auftragsbeschreibung:** der im Auftrag genannte
+"letzter Treffer 2026-07-19 06:03:30" bezieht sich nicht auf diese
+Fehlermeldung - der tatsächlich letzte "Auto-Add..."-Eintrag im Export
+liegt auf 2026-07-17 02:52:35. Der spätere Zeitstempel gehört zu einer
+andersartigen, unabhängigen Meldung ("FRED-Abruf für bok_diskontsatz
+fehlgeschlagen"). Lektion: bei mehrdeutigen/verwechselbaren Log-Zeitstempel-
+Angaben im Auftrag den vollen `job_fehlschlaege`/`log_auszug`-Datensatz
+selbst nachprüfen statt die genannten Eckwerte ungeprüft zu übernehmen.
+
+**Verifiziert:** vollständige Traceback-Extraktion aller 29 Vorkommen aus
+`log_auszug` (Python-Skript, Gruppierung per Zeitstempel-Regex), Diff der
+Exception-Endzeilen (2 eindeutige Cluster: `AttributeError` × 28,
+`ReadTimeout` × 1). Aktueller Code an allen 4 `get_listed_assets()`-
+Aufrufstellen per `grep` + Signatur-Introspektion (`inspect.signature()`)
+gegengeprüft - keine Regression.

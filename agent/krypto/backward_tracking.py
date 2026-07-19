@@ -34,7 +34,17 @@ OUTCOME_LIQUIDATION = "liquidation_wahrscheinlich"
 # Kurshistorie pruefen laesst - HALTEN/VERKAUFEN/TAUSCHEN nicht.
 _TRACKABLE_ACTIONS = {"KAUFEN", "NACHKAUFEN"}
 
-DEFAULT_ABGELAUFEN_NACH_TAGEN = 90
+# Inhaltsbasierte Ablaufzeit (2026-07-19, Backtracking-Aussagekraft-Audit -
+# Nutzer-Wunsch: "der zeitliche Faktor sollte durch den Inhalt bzw. Angabe -
+# wann soll ein Zielwert erreicht werden - besser abschaetzbar sein"). Nutzt
+# das vom Modell BEREITS zuverlaessig gefuellte halte_kriterium.bucket
+# (Regel 17 in analyst.py, live verifiziert: 100% Abdeckung bei allen
+# KAUFEN/NACHKAUFEN-Signalen, waehrend ziel_datum in der Praxis fast nie
+# gesetzt wird) statt einer einzigen fixen Frist fuer JEDES Signal. Werte
+# selbst [OFFEN]/vorlaeufig (noch nicht gegen echte Ergebnisse kalibriert,
+# siehe Regelwerksmanual Kap. 15).
+DEFAULT_ABGELAUFEN_TAGE_BUCKET = {"kurz": 14, "mittel": 45, "lang": 120}
+DEFAULT_ABGELAUFEN_TAGE_FALLBACK = 90
 
 
 @dataclass
@@ -133,24 +143,64 @@ def _is_superseded(signal, latest_real: dict) -> bool:
     'redundante bzw. gegensaetzliche Empfehlungen muessen rausfallen, mit
     oder ohne Benachrichtigung'): ein noch offenes KAUFEN/NACHKAUFEN-Signal
     gilt als ueberholt, sobald fuer dasselbe Symbol bereits eine NEUERE
-    echte Analyse vorliegt - unabhaengig davon, ob die neue Empfehlung
-    zustimmt (redundant - z.B. erneut KAUFEN) oder widerspricht
-    (gegensaetzlich - z.B. jetzt VERKAUFEN/HALTEN). Rein deterministischer
-    Datums-/ID-Vergleich gegen `db.get_latest_real_signal_per_symbol()`
-    (bereits einmal pro Lauf geladen) - KEIN LLM-Call, erhoeht das
-    Tagesbudget nicht."""
+    echte Analyse mit einer tatsaechlich NEUEN Aktion vorliegt - entweder
+    redundant (erneut KAUFEN/NACHKAUFEN) oder gegensaetzlich (VERKAUFEN/
+    TAUSCHEN).
+
+    NACHTRAG (2026-07-19, Backtracking-Aussagekraft-Audit): eine reine
+    HALTEN-Bestaetigung ist KEINE der beiden Faelle - sie widerspricht der
+    offenen Kauf-These nicht und bestaetigt sie auch nicht neu, sie sagt nur
+    "keine Aenderung noetig". Live gegen den Notebook-Datenexport geprueft:
+    unter der alten Regel wurden 100% der trackbaren Spot-Signale und 60%
+    der Hebel-ERÖFFNEN-Signale innerhalb weniger Stunden ueberholt (Spot
+    ⌀29h, Hebel ⌀11,7h) - lange bevor ein realistischer mehrtaegiger
+    Kursverlauf Take-Profit/Stop-Loss ueberhaupt erreichen konnte, weil
+    gehaltene/offene Positionen alle 3-24 Std. neu bewertet werden (siehe
+    config.yaml hebel_position_cooldown_stunden/spot_cooldown_stunden_kern).
+    Das hat die Ergebnisstatistik strukturell leergehalten (0 von 9 Spot-
+    Signalen je real ausgewertet). HALTEN aus dem Ueberholt-Trigger
+    auszuschliessen behebt das, ohne die urspruengliche Absicht (Duplikate/
+    Widersprueche ausblenden) einzuschraenken.
+
+    Rein deterministischer Datums-/ID-/Aktions-Vergleich gegen
+    `db.get_latest_real_signal_per_symbol()` (bereits einmal pro Lauf
+    geladen) - KEIN LLM-Call, erhoeht das Tagesbudget nicht."""
     latest = latest_real.get(signal.symbol)
-    return latest is not None and latest.id != signal.id and latest.created_at > signal.created_at
+    return (
+        latest is not None
+        and latest.id != signal.id
+        and latest.created_at > signal.created_at
+        and latest.action != "HALTEN"
+    )
 
 
-def _is_expired(signal, abgelaufen_nach_tagen: int) -> bool:
+def _is_expired(signal, bucket_tage: dict[str, int], fallback_tage: int) -> bool:
+    """Inhaltsbasierte Ablaufzeit (siehe DEFAULT_ABGELAUFEN_TAGE_BUCKET oben):
+    ein explizites `halte_kriterium_ziel_datum` (vom Modell gesetzt, aber in
+    der Praxis selten) hat Vorrang; sonst der grobe `halte_kriterium_bucket`
+    (kurz/mittel/lang, in der Praxis zuverlaessig gefuellt); sonst der
+    Fallback-Wert (aeltere Signale ohne halte_kriterium-Daten)."""
     from datetime import datetime, timezone
 
     created = datetime.fromisoformat(signal.created_at)
     if created.tzinfo is None:
         created = created.replace(tzinfo=timezone.utc)
-    age_days = (datetime.now(timezone.utc) - created).days
-    return age_days >= abgelaufen_nach_tagen
+    now = datetime.now(timezone.utc)
+
+    ziel_datum = getattr(signal, "halte_kriterium_ziel_datum", None)
+    if ziel_datum:
+        try:
+            deadline = datetime.fromisoformat(ziel_datum)
+            if deadline.tzinfo is None:
+                deadline = deadline.replace(tzinfo=timezone.utc)
+            return now > deadline
+        except ValueError:
+            pass  # ungueltiges Datum vom Modell - auf bucket/Fallback zurueckfallen
+
+    bucket = getattr(signal, "halte_kriterium_bucket", None)
+    tage = bucket_tage.get(bucket, fallback_tage) if bucket else fallback_tage
+    age_days = (now - created).days
+    return age_days >= tage
 
 
 def run_backward_tracking(conn, watchlist, config: dict) -> BackwardTrackingResult:
@@ -163,9 +213,9 @@ def run_backward_tracking(conn, watchlist, config: dict) -> BackwardTrackingResu
     einmal pro Lauf geladen (identisches Muster wie signal_batch.py), damit
     der Vergleich ohne N Zusatz-Queries auskommt."""
     result = BackwardTrackingResult()
-    abgelaufen_nach_tagen = (
-        config.get("backward_tracking", {}).get("abgelaufen_nach_tagen", DEFAULT_ABGELAUFEN_NACH_TAGEN)
-    )
+    bt_cfg = config.get("backward_tracking", {})
+    bucket_tage = bt_cfg.get("abgelaufen_nach_tagen_bucket", DEFAULT_ABGELAUFEN_TAGE_BUCKET)
+    fallback_tage = bt_cfg.get("abgelaufen_nach_tagen_fallback", DEFAULT_ABGELAUFEN_TAGE_FALLBACK)
     latest_real = db.get_latest_real_signal_per_symbol(conn)
 
     rows = conn.execute(
@@ -202,7 +252,7 @@ def run_backward_tracking(conn, watchlist, config: dict) -> BackwardTrackingResu
         if _is_superseded(signal, latest_real):
             db.update_signal_outcome(conn, signal.id, OUTCOME_UEBERHOLT)
             result.superseded += 1
-        elif _is_expired(signal, abgelaufen_nach_tagen):
+        elif _is_expired(signal, bucket_tage, fallback_tage):
             db.update_signal_outcome(conn, signal.id, OUTCOME_ABGELAUFEN)
             result.expired += 1
         else:

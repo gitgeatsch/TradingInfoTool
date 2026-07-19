@@ -906,9 +906,16 @@ cash_reserve_ziel:
 # --- Backward-Tracking (Selbstverifikations-Vision Schritt 2, siehe
 # Basisinfos/Regelwerksmanual.md Kap. 9 / Spezifikation Kap. 16) ---
 backward_tracking:
-  abgelaufen_nach_tagen: 90   # [OFFEN] Vorschlag - ab wann ein unentschiedenes
-                              # KAUFEN/NACHKAUFEN-Signal als "abgelaufen" gilt
-                              # (weder Take-Profit- noch Stop-Loss-Zone erreicht)
+  # NEUKALIBRIERT (2026-07-19, Backtracking-Aussagekraft-Audit): inhaltsbasiert
+  # statt einer einzigen fixen Frist fuer JEDES Signal - nutzt das vom Modell
+  # bereits zuverlaessig gefuellte halte_kriterium.bucket (agent/krypto/
+  # analyst.py Regel 17). [OFFEN]/vorlaeufig, noch nicht gegen echte
+  # Ergebnisse kalibriert (siehe Regelwerksmanual Kap. 15).
+  abgelaufen_nach_tagen_bucket:
+    kurz: 14      # z.B. ereignisgetriebene/kurzfristige These
+    mittel: 45    # bestaetigtes Setup, mehrwoechiger Horizont
+    lang: 120     # langfristige These (z.B. BTC/ETH Kernposition)
+  abgelaufen_nach_tagen_fallback: 90  # falls halte_kriterium fehlt (aeltere Signale)
 
 # --- Antizyklische Kauf-Disziplin (siehe Spezifikation Kap. 15) ---
 antizyklisch:
