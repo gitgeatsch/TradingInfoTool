@@ -30,6 +30,7 @@ from dataclasses import dataclass
 
 import yfinance as yf
 
+import config
 from api.bitpanda import BitpandaAsset, is_listed
 from database.api_health import track_api_health
 
@@ -60,6 +61,8 @@ class ScreenerCandidate:
     aenderung_pct: float | None
     bitpanda_gelistet: bool | None  # None nur wenn kein Bitpanda-Abgleich moeglich war
     hinweis: str | None = None
+    hauptgruppe: str | None = None  # nur bei automatischer Klassifikation ueber kategorien.yaml
+    unterkategorie: str | None = None
 
 
 def _bereits_in_watchlist(symbol: str, watchlist) -> bool:
@@ -136,13 +139,25 @@ def scan_etf_candidates(watchlist, bitpanda_assets: list[BitpandaAsset]) -> list
     wer einen Kandidaten uebernimmt, muss das yfinance-Symbol (falls gewuenscht)
     selbst recherchieren (P-8, `agent/aktien/pipeline.py` degradiert bei
     fehlendem yfinance_symbol bereits sauber auf "keine technische Historie",
-    siehe Ticket #319)."""
+    siehe Ticket #319).
+
+    Jeder Kandidat wird per `config.find_kategorie_fuer_bitpanda_symbol()`
+    automatisch mit Hauptgruppe/Unterkategorie aus `Basisinfos/kategorien.yaml`
+    getaggt (None wenn das Symbol dort nicht gelistet ist - z.B. ganz neue
+    Bitpanda-Produkte, kein Fehler). BEWUSST KEIN "bessere Produkte filtern"-
+    Qualitaetsvergleich hier: Bitpandas eigene ETF/ETC-Themenkoerbe haben
+    keinen echten yfinance-Ticker und damit keine oeffentliche AUM/Kostenquote
+    (siehe `api/asset_quality.py`-Modul-Docstring fuer die volle Begruendung)
+    - ein Vergleich "welches Produkt ist besser" ist fuer diese Kandidaten
+    strukturell nicht moeglich, nur fuer echte Boersen-ETFs (dort gibt es das
+    neue Kompositions-/Qualitaetsmodul bereits, aufrufbar ueber die Watchlist)."""
     candidates: list[ScreenerCandidate] = []
     for asset in bitpanda_assets:
         if asset.group not in ("etf", "etc"):
             continue
         if _bereits_in_watchlist(asset.symbol, watchlist):
             continue
+        kategorie = config.find_kategorie_fuer_bitpanda_symbol(asset.symbol)
         candidates.append(ScreenerCandidate(
             symbol=asset.symbol,
             name=asset.name,
@@ -153,6 +168,8 @@ def scan_etf_candidates(watchlist, bitpanda_assets: list[BitpandaAsset]) -> list
             aenderung_pct=None,
             bitpanda_gelistet=True,
             hinweis="Bitpanda-eigenes Produkt, kein yfinance-Symbol automatisch ableitbar.",
+            hauptgruppe=kategorie[0] if kategorie else None,
+            unterkategorie=kategorie[1] if kategorie else None,
         ))
     candidates.sort(key=lambda c: c.name)
     return candidates

@@ -14,10 +14,12 @@ import yaml
 from dotenv import load_dotenv
 
 CONFIG_PATH = Path(__file__).resolve().parent / "Basisinfos" / "config.yaml"
+KATEGORIEN_PATH = Path(__file__).resolve().parent / "Basisinfos" / "kategorien.yaml"
 ENV_PATH = Path(__file__).resolve().parent / ".env"
 BACKUP_DIR = Path(__file__).resolve().parent / ".claude" / "backups"
 
 _config_cache: dict | None = None
+_kategorien_cache: dict | None = None
 
 
 def load_env() -> None:
@@ -70,14 +72,15 @@ class WatchlistAsset:
     # WisdomTree-ETNs ohne Xetra-Kurzcode bei Yahoo Finance).
     yfinance_symbol: str | None = None
     ist_cash_aequivalent: bool = False
-    # Freitext-Kategorie fuer die inhaltliche/thematische Einordnung (2026-07-19,
-    # Nutzer-Wunsch nach Diversifikations-Ueberblick) - z.B. "Gold", "Silber",
-    # "Kupfer", "Seltene Erden", "Bioenergie", "Agrarwirtschaft", "Energieversorger".
-    # Bewusst freier Text statt fester Enum-Liste - die tatsaechlich sinnvollen
-    # Kategorien haengen vom konkreten Portfolio ab und sollen nicht im Code
-    # vorgegeben werden muessen. Optional, KEIN Pflichtfeld (bestehende/neue
-    # Eintraege ohne Schwerpunkt bleiben gueltig, P-8).
-    schwerpunkt: str | None = None
+    # Strukturierte inhaltliche/thematische Einordnung (2026-07-19, Nutzer-Wunsch
+    # nach Diversifikations-Ueberblick + Marktscan-Schwerpunkten). ERSETZT das
+    # anfaenglich gebaute Freitext-Feld `schwerpunkt` NOCH AM SELBEN TAG - Freitext
+    # kann fuer automatische Prozesse (Kategorie-Gruppierung, Marktscan-Bias) nicht
+    # zuverlaessig verglichen werden. `hauptgruppe`/`unterkategorie` sind IDs aus
+    # Basisinfos/kategorien.yaml (siehe get_kategorien()), validiert beim Schreiben
+    # (siehe update_watchlist_kategorie()). Optional, KEIN Pflichtfeld.
+    hauptgruppe: str | None = None
+    unterkategorie: str | None = None
 
 
 def load_config() -> dict:
@@ -86,6 +89,66 @@ def load_config() -> dict:
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
             _config_cache = yaml.safe_load(f)
     return _config_cache
+
+
+def get_kategorien() -> dict:
+    """Laedt Basisinfos/kategorien.yaml (2026-07-19, Kategorie-Taxonomie-
+    Infrastruktur, siehe WatchlistAsset-Docstring) - `{"hauptgruppen": [{"id":...,
+    "name":..., "unterkategorien": [{"id":..., "name":..., "bitpanda_symbole":
+    [...]}]}]}`. Gecacht analog zu `load_config()`, eigener Cache (unabhaengige
+    Datei, unabhaengiger Aenderungsrhythmus)."""
+    global _kategorien_cache
+    if _kategorien_cache is None:
+        with open(KATEGORIEN_PATH, "r", encoding="utf-8") as f:
+            _kategorien_cache = yaml.safe_load(f)
+    return _kategorien_cache
+
+
+def find_kategorie_fuer_bitpanda_symbol(bitpanda_symbol: str) -> tuple[str, str] | None:
+    """Liefert `(hauptgruppe_id, unterkategorie_id)` fuer ein Bitpanda-Symbol
+    (z.B. aus `agent/aktien/screener.py::scan_etf_candidates()`), oder `None`
+    falls das Symbol in keiner Unterkategorie hinterlegt ist (z.B. ein neues,
+    noch nicht in kategorien.yaml erfasstes Bitpanda-Produkt - kein Fehler,
+    P-8, der Aufrufer zeigt den Kandidaten dann einfach ohne Kategorie an)."""
+    kategorien = get_kategorien()
+    for hauptgruppe in kategorien["hauptgruppen"]:
+        for unterkategorie in hauptgruppe["unterkategorien"]:
+            if bitpanda_symbol in unterkategorie.get("bitpanda_symbole", []):
+                return hauptgruppe["id"], unterkategorie["id"]
+    return None
+
+
+def get_hauptgruppe_name(hauptgruppe_id: str | None) -> str | None:
+    """Nur der Hauptgruppen-Name (ohne Unterkategorie) - fuer die
+    Diversifikations-Uebersicht im Portfolio-Tab (2026-07-19), die bewusst
+    auf Hauptgruppen-Ebene gruppiert statt auf die feinere Unterkategorie-
+    Ebene (72 Unterkategorien waeren als Tabelle unuebersichtlich). `None`
+    bei fehlender/unbekannter ID (P-10, kein Rateergebnis)."""
+    if not hauptgruppe_id:
+        return None
+    kategorien = get_kategorien()
+    hauptgruppe = next((hg for hg in kategorien["hauptgruppen"] if hg["id"] == hauptgruppe_id), None)
+    return hauptgruppe["name"] if hauptgruppe is not None else None
+
+
+def get_kategorie_name(hauptgruppe_id: str | None, unterkategorie_id: str | None) -> str | None:
+    """Menschenlesbarer Anzeigetext `"Hauptgruppe / Unterkategorie"` fuer die
+    GUI (Watchlist-Tab-Spalte, Diversifikations-Tabelle) - `None`, wenn eine der
+    beiden IDs fehlt oder nicht in kategorien.yaml existiert (z.B. bei einem
+    veralteten/geloeschten Kategorie-Eintrag, P-10: lieber leer als falsch
+    anzeigen)."""
+    if not hauptgruppe_id or not unterkategorie_id:
+        return None
+    kategorien = get_kategorien()
+    hauptgruppe = next((hg for hg in kategorien["hauptgruppen"] if hg["id"] == hauptgruppe_id), None)
+    if hauptgruppe is None:
+        return None
+    unterkategorie = next(
+        (uk for uk in hauptgruppe["unterkategorien"] if uk["id"] == unterkategorie_id), None,
+    )
+    if unterkategorie is None:
+        return None
+    return f"{hauptgruppe['name']} / {unterkategorie['name']}"
 
 
 def get_watchlist() -> list[WatchlistAsset]:
@@ -100,7 +163,8 @@ def get_watchlist() -> list[WatchlistAsset]:
             assetklasse=entry.get("assetklasse", "krypto"),
             yfinance_symbol=entry.get("yfinance_symbol"),
             ist_cash_aequivalent=entry.get("ist_cash_aequivalent", False),
-            schwerpunkt=entry.get("schwerpunkt"),
+            hauptgruppe=entry.get("hauptgruppe"),
+            unterkategorie=entry.get("unterkategorie"),
         )
         for entry in config["watchlist"]
     ]
@@ -139,7 +203,8 @@ def add_watchlist_entry(
     assetklasse: str = "krypto",
     yfinance_symbol: str | None = None,
     ist_cash_aequivalent: bool = False,
-    schwerpunkt: str | None = None,
+    hauptgruppe: str | None = None,
+    unterkategorie: str | None = None,
 ) -> None:
     """Fügt einen neuen Eintrag ans Ende des bestehenden `watchlist:`-Blocks in
     Basisinfos/config.yaml an - reine TEXT-Einfügung (keine vollständige YAML-
@@ -185,8 +250,10 @@ def add_watchlist_entry(
         entry_lines.append(f"    yfinance_symbol: {yfinance_symbol}{newline_style}")
     if ist_cash_aequivalent:
         entry_lines.append(f"    ist_cash_aequivalent: true{newline_style}")
-    if schwerpunkt is not None:
-        entry_lines.append(f"    schwerpunkt: {schwerpunkt}{newline_style}")
+    if hauptgruppe is not None:
+        entry_lines.append(f"    hauptgruppe: {hauptgruppe}{newline_style}")
+    if unterkategorie is not None:
+        entry_lines.append(f"    unterkategorie: {unterkategorie}{newline_style}")
     entry_block = "".join(entry_lines)
     new_text = "".join(lines[:insert_at] + [entry_block] + lines[insert_at:])
 
@@ -359,15 +426,52 @@ def update_watchlist_coingecko_id(symbol: str, new_coingecko_id: str) -> bool:
     return True
 
 
-def update_watchlist_schwerpunkt(symbol: str, new_schwerpunkt: str) -> bool:
-    """Setzt/ergaenzt `schwerpunkt` eines bestehenden Watchlist-Eintrags (2026-07-19,
-    Nutzer-Wunsch nach Diversifikations-Ueberblick) - manuell vom Nutzer ausgeloest
-    (GUI-Bearbeiten-Dialog). Gleiches Muster wie `update_watchlist_coingecko_id()`,
-    ABER Einfuegeposition ist bewusst das ENDE des Eintrags-Blocks (nicht direkt
-    nach `beobachtungsstatus:`) - `schwerpunkt` ist das zuletzt hinzugekommene Feld
-    in der Reihenfolge von `add_watchlist_entry()` und soll bestehende Eintraege mit
-    bereits vorhandenen optionalen Feldern (coingecko_id/assetklasse/yfinance_symbol/
-    ist_cash_aequivalent) nicht durcheinanderbringen."""
+def _upsert_field_at_block_end(lines: list[str], entry_start: int, entry_end: int, field_name: str, new_value: str, newline_style: str) -> tuple[list[str], bool]:
+    """Interner Helfer fuer `update_watchlist_kategorie()`: setzt eine Feldzeile
+    INNERHALB eines bereits abgegrenzten Eintrags-Blocks - aktualisiert eine
+    vorhandene Zeile in-place, oder haengt eine neue ans Blockende an (bewahrt
+    damit die Reihenfolge bereits vorhandener optionaler Felder wie coingecko_id/
+    assetklasse/yfinance_symbol/ist_cash_aequivalent, siehe `add_watchlist_entry()`).
+    Gibt (aktualisierte Zeilenliste, ob sich etwas geaendert hat) zurueck - der
+    Aufrufer muss `entry_end` bei mehreren Aufrufen hintereinander selbst
+    nachfuehren (jede Einfuegung verschiebt nachfolgende Indizes um 1)."""
+    field_line_idx = next(
+        (i for i in range(entry_start, entry_end) if lines[i].strip().startswith(f"{field_name}:")), None,
+    )
+    if field_line_idx is not None:
+        current_value = lines[field_line_idx].split(":", 1)[1].strip()
+        if current_value == new_value:
+            return lines, False
+        indent = lines[field_line_idx][: len(lines[field_line_idx]) - len(lines[field_line_idx].lstrip())]
+        lines[field_line_idx] = f"{indent}{field_name}: {new_value}{newline_style}"
+        return lines, True
+    last_field_idx = entry_end - 1
+    indent = lines[last_field_idx][: len(lines[last_field_idx]) - len(lines[last_field_idx].lstrip())]
+    new_line = f"{indent}{field_name}: {new_value}{newline_style}"
+    lines.insert(entry_end, new_line)
+    return lines, True
+
+
+def update_watchlist_kategorie(symbol: str, hauptgruppe: str, unterkategorie: str) -> bool:
+    """Setzt/ergaenzt `hauptgruppe`+`unterkategorie` eines bestehenden Watchlist-
+    Eintrags ATOMAR (beide Felder oder keins) - 2026-07-19, ersetzt das anfaenglich
+    gebaute Freitext-Feld `schwerpunkt` NOCH AM SELBEN TAG (siehe WatchlistAsset-
+    Docstring: Freitext war fuer automatische Prozesse/Kategorie-Gruppierung nicht
+    zuverlaessig genug). Validiert beide IDs GEGEN Basisinfos/kategorien.yaml
+    (`get_kategorien()`) - eine unbekannte ID wirft `WatchlistWriteError`, bevor
+    irgendetwas geschrieben wird (P-10, kein stiller Datenmuell in config.yaml).
+    Manuell vom Nutzer ausgeloest (GUI-Bearbeiten-Dialog). Einfuegeposition ist
+    bewusst das ENDE des Eintrags-Blocks (siehe `_upsert_field_at_block_end()`)."""
+    kategorien = get_kategorien()
+    hauptgruppe_obj = next((hg for hg in kategorien["hauptgruppen"] if hg["id"] == hauptgruppe), None)
+    if hauptgruppe_obj is None:
+        raise WatchlistWriteError(f"Unbekannte Hauptgruppe {hauptgruppe!r} - siehe Basisinfos/kategorien.yaml")
+    if not any(uk["id"] == unterkategorie for uk in hauptgruppe_obj["unterkategorien"]):
+        raise WatchlistWriteError(
+            f"Unbekannte Unterkategorie {unterkategorie!r} fuer Hauptgruppe {hauptgruppe!r} - "
+            "siehe Basisinfos/kategorien.yaml"
+        )
+
     original_bytes = CONFIG_PATH.read_bytes()
     newline_style = "\r\n" if b"\r\n" in original_bytes else "\n"
     original_text = original_bytes.decode("utf-8")
@@ -385,23 +489,21 @@ def update_watchlist_schwerpunkt(symbol: str, new_schwerpunkt: str) -> bool:
             entry_end = i
             break
 
-    field_line_idx = next(
-        (i for i in range(entry_start, entry_end) if lines[i].strip().startswith("schwerpunkt:")), None,
-    )
+    lines, changed_hg = _upsert_field_at_block_end(lines, entry_start, entry_end, "hauptgruppe", hauptgruppe, newline_style)
 
-    if field_line_idx is not None:
-        current_value = lines[field_line_idx].split(":", 1)[1].strip()
-        if current_value == new_schwerpunkt:
-            return False
-        indent = lines[field_line_idx][: len(lines[field_line_idx]) - len(lines[field_line_idx].lstrip())]
-        lines[field_line_idx] = f"{indent}schwerpunkt: {new_schwerpunkt}{newline_style}"
-    else:
-        # Letzte nicht-leere Zeile des Blocks als Einrueckungs-Vorbild nehmen (siehe
-        # Docstring - Anhaengen ans Ende statt an eine feste Feldposition).
-        last_field_idx = entry_end - 1
-        indent = lines[last_field_idx][: len(lines[last_field_idx]) - len(lines[last_field_idx].lstrip())]
-        new_line = f"{indent}schwerpunkt: {new_schwerpunkt}{newline_style}"
-        lines.insert(entry_end, new_line)
+    # Blockende NEU bestimmen (nicht rechnerisch fortschreiben) - eine Einfuegung
+    # durch den ersten Upsert verschiebt alle nachfolgenden Zeilenindizes, ein
+    # unveraendertes Feld (In-Place-Update) tut das nicht. Neu-Suchen ist robuster
+    # als die beiden Faelle einzeln zu unterscheiden.
+    entry_end_nach_hg = len(lines)
+    for i in range(entry_start + 1, len(lines)):
+        if lines[i].lstrip().startswith("- symbol:") or not lines[i].startswith(" "):
+            entry_end_nach_hg = i
+            break
+    lines, changed_uk = _upsert_field_at_block_end(lines, entry_start, entry_end_nach_hg, "unterkategorie", unterkategorie, newline_style)
+
+    if not changed_hg and not changed_uk:
+        return False
 
     new_text = "".join(lines)
 
@@ -416,8 +518,12 @@ def update_watchlist_schwerpunkt(symbol: str, new_schwerpunkt: str) -> bool:
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
             reparsed = yaml.safe_load(f)
         matching = next((e for e in reparsed["watchlist"] if e["symbol"] == symbol), None)
-        if matching is None or matching.get("schwerpunkt") != new_schwerpunkt:
-            raise WatchlistWriteError("Validierung fehlgeschlagen: schwerpunkt nicht wie erwartet gesetzt")
+        if (
+            matching is None
+            or matching.get("hauptgruppe") != hauptgruppe
+            or matching.get("unterkategorie") != unterkategorie
+        ):
+            raise WatchlistWriteError("Validierung fehlgeschlagen: hauptgruppe/unterkategorie nicht wie erwartet gesetzt")
     except Exception as exc:
         shutil.copy2(backup_path, CONFIG_PATH)
         raise WatchlistWriteError(f"Schreiben fehlgeschlagen, Backup wiederhergestellt: {exc}") from exc

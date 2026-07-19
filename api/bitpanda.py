@@ -33,7 +33,10 @@ import requests
 from database.api_health import track_api_health
 
 BITPANDA_ASSETS_URL = "https://api.bitpanda.com/v3/assets"
-BITPANDA_ASSETS_PAGE_SIZE = 500
+# Grosszuegig ueber dem aktuellen total_count (3238, Stand 2026-07-19) - siehe
+# Bugfix 3 in _fetch_all_bitpanda_assets() fuer die Begruendung, warum ALLES in
+# einer einzigen Anfrage abgerufen wird statt ueber mehrere Seiten.
+BITPANDA_ASSETS_PAGE_SIZE = 10_000
 # Gruppen, die tatsaechlich Kryptowaehrungen sind (schliesst stock/etf/etc/metal aus,
 # siehe Modul-Docstring - live per Gruppen-Auszaehlung ermittelt 2026-07-09).
 CRYPTO_ASSET_GROUPS = {"coin", "token", "leveraged_token", "index"}
@@ -65,9 +68,49 @@ def _fetch_all_bitpanda_assets(session: requests.Session | None = None) -> list[
     """Alle Bitpanda-Assets ueber ALLE Anlageklassen, paginiert abgerufen (2026-07-16,
     aus get_listed_assets() extrahiert) - get_listed_assets()/get_listed_non_crypto_
     assets() filtern beide aus demselben Abruf, kein doppelter Netzwerk-Call noetig,
-    wenn beide in derselben Anfrage gebraucht wuerden."""
+    wenn beide in derselben Anfrage gebraucht wuerden.
+
+    BUGFIX 1 (2026-07-19, im Zuge der Kategorie-Taxonomie-Recherche entdeckt): der
+    /v3/assets-Endpunkt liefert ueber Seitengrenzen hinweg NICHT stabil eindeutige
+    Eintraege - live wiederholt gemessen wurden bei `total_count=3238` zwischen 1
+    und 53 Symbole, die auf MEHREREN Seiten gleichzeitig auftauchen (vermutlich
+    server-seitige Sortierung ueber einen sich waehrend der Paginierung leicht
+    veraendernden Datensatz). Das liess `get_listed_non_crypto_assets()` bei
+    wiederholten Aufrufen im selben Moment schwankende Ergebnisse liefern (209/187/
+    228/213 ETF/ETC/Metal-Eintraege live beobachtet, exakt derselbe Datensatz) -
+    betraf ALLE Aufrufer (Bitpanda-Listing-Check in allen Pipelines, Screener,
+    Watchlist-Konsistenzpruefung). Fix: Deduplizierung per Symbol (erstes
+    Vorkommen gewinnt) direkt beim Sammeln - macht das Ergebnis deterministisch,
+    unabhaengig von der Ursache der Server-seitigen Dopplung.
+
+    BUGFIX 2 (WIDERRUFEN, siehe Bugfix 3 unten - im Code-Kommentar belassen, weil
+    er zeigt, dass das naheliegende Abbruchkriterium `len(payload["data"]) <
+    page_size` KEIN verlaesslicher Fix war): urspruenglich wurde vermutet, das
+    Problem liege nur am Abbruchkriterium `page_number * page_size >=
+    total_count` (verlaesst sich auf einen STABILEN `total_count`, der aber laut
+    Bugfix 1 selbst waehrend derselben Paginierung schwankt). Der Ersatz-Fix
+    (Abbruch bei einer Teil-Seite) machte es beim Live-Test aber NICHT robuster,
+    sondern schlimmer (163/173/211 ETF/ETC/Metal-Eintraege ueber 6 Wiederholungen,
+    teils mit fehlendem ZINC) - einzelne Seiten kamen serverseitig manchmal auch
+    OHNE Seitengrenzen-Bezug unvollstaendig zurueck, nicht nur an der letzten Seite.
+
+    BUGFIX 3 (2026-07-19, tatsaechliche Ursache gefunden): das Problem war nie
+    das Abbruchkriterium, sondern MEHRSEITIGE Paginierung an sich - der Datensatz
+    verschiebt sich offenbar leicht zwischen einzelnen Roundtrips (Ursache auf
+    Bitpanda-Seite unbekannt, evtl. instabile Sortierung). Live bestaetigt: ein
+    EINZELNER Request mit `page_size` groesser als `total_count` liefert den
+    KOMPLETTEN Datensatz in einer Antwort (3238 von 3238 Eintraegen, 6/6
+    Wiederholungen exakt stabil, inkl. der 211 realen ETF/ETC/Metal-Symbole) -
+    keine Paginierung noetig, keine Seitengrenzen, kein Zeitfenster fuer
+    serverseitige Verschiebung. Die verbleibende Dedup-Notwendigkeit (Bugfix 1)
+    bleibt: der Datensatz selbst enthaelt ca. 53 echte Symbol-Duplikate (3238
+    Eintraege, nur 3185 eindeutige Symbole) - vermutlich verschiedene interne
+    Assets mit kollidierendem Ticker, keine Paginierungs-Artefakte. Die
+    `while`-Schleife bleibt als Sicherheitsnetz erhalten (falls `total_count`
+    jemals `BITPANDA_ASSETS_PAGE_SIZE` uebersteigt), wird im Normalfall aber nie
+    ein zweites Mal durchlaufen."""
     session = session or requests.Session()
-    assets: list[BitpandaAsset] = []
+    assets_by_symbol: dict[str, BitpandaAsset] = {}
     page = 1
     while True:
         response = session.get(
@@ -77,14 +120,16 @@ def _fetch_all_bitpanda_assets(session: requests.Session | None = None) -> list[
         )
         response.raise_for_status()
         payload = response.json()
-        for entry in payload["data"]:
+        entries = payload["data"]
+        for entry in entries:
             attrs = entry["attributes"]
-            assets.append(BitpandaAsset(symbol=attrs["symbol"], name=attrs["name"], group=attrs["group"]))
-        meta = payload["meta"]
-        if meta["page_number"] * BITPANDA_ASSETS_PAGE_SIZE >= meta["total_count"]:
+            symbol = attrs["symbol"]
+            if symbol not in assets_by_symbol:
+                assets_by_symbol[symbol] = BitpandaAsset(symbol=symbol, name=attrs["name"], group=attrs["group"])
+        if len(entries) < BITPANDA_ASSETS_PAGE_SIZE:
             break
         page += 1
-    return assets
+    return list(assets_by_symbol.values())
 
 
 def get_listed_assets(session: requests.Session | None = None) -> list[BitpandaAsset]:

@@ -6,6 +6,7 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import ttk
 
+import config as config_module
 import database.db as db
 import ui.theme as theme
 from database.models import Holding
@@ -257,7 +258,8 @@ class PortfolioView(ttk.Frame):
             value_eur = (holding.quantity * price_eur) if price_eur is not None else None
             if value_eur is not None:
                 total_value_eur += value_eur
-                schwerpunkt_key = (asset.schwerpunkt if asset else None) or "ohne Schwerpunkt"
+                hauptgruppe_name = config_module.get_hauptgruppe_name(asset.hauptgruppe) if asset else None
+                schwerpunkt_key = hauptgruppe_name or "ohne Schwerpunkt"
                 schwerpunkt_totals[schwerpunkt_key] = schwerpunkt_totals.get(schwerpunkt_key, 0.0) + value_eur
 
             # 2026-07-11, Nutzer-Fund: gestakte Menge ist ueber die normale Wallet-API
@@ -271,7 +273,8 @@ class PortfolioView(ttk.Frame):
                 if price_eur is not None:
                     staked_wert = holding.staked_quantity * price_eur
                     staked_value_eur += staked_wert
-                    schwerpunkt_key = (asset.schwerpunkt if asset else None) or "ohne Schwerpunkt"
+                    hauptgruppe_name = config_module.get_hauptgruppe_name(asset.hauptgruppe) if asset else None
+                    schwerpunkt_key = hauptgruppe_name or "ohne Schwerpunkt"
                     schwerpunkt_totals[schwerpunkt_key] = schwerpunkt_totals.get(schwerpunkt_key, 0.0) + staked_wert
 
             fetched_at = price_snapshot.fetched_at if price_snapshot else None

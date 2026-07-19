@@ -5057,3 +5057,163 @@ voller `TradingInfoToolApp`-Smoke-Test (Watchlist-Tab zeigt die neue
 Spalte korrekt), `AssetEditDialog`/`AssetAddDialog`-Instanziierungstest.
 `git diff Basisinfos/config.yaml` vor dem Commit geprüft - ausschließlich
 13 neue `schwerpunkt:`-Zeilen, keine sonstigen Änderungen.
+
+## Nachtrag (2026-07-19, gleicher Tag, Folge 5): Kategorie-Taxonomie ERSETZT das Freitext-Schwerpunkt-Feld (Release 1)
+
+**Auslöser - Nutzer-Korrektur:** der Freitext-`schwerpunkt` aus Folge 4 war
+ein Missverständnis. Nutzer-Originalzitat: *"du hast mich falsch verstanden
+- nicht ich will etwas manuell befüllen sondern schritt für schritt -
+unabhängig von Krypto - 1. brauche eine Grundmenge an existierenden
+Hauptgruppen - z.B. ETF Gruppen - dann unterkategorien z.B. Energie, KI,
+Software etc, aus denen kann ich dann für den Marktscan und die
+Diversifikation Schwerpunkte selbst gestalten u.U. gestützt durch
+Vorschläge der KI [...] Das kann über einen Bereich komfortabel über die
+GUI und automatischen Prozessen gesteuert werden."* Kernpunkt: Freitext
+kann von automatischen Prozessen (Marktscan-Bias, KI-Vorschläge,
+Gruppierung) strukturell nicht zuverlässig ausgewertet werden - es braucht
+einen kontrollierten Vokabular-Baum. Auf Nachfrage (AskUserQuestion)
+präzisierte der Nutzer zwei weitere Anforderungen: (a) wo verfügbar,
+Detailinformationen zur Asset-Zusammensetzung zeigen (z.B. "wie setzt sich
+ein ETF zusammen"), (b) bei mehreren ähnlichen Bitpanda-Produkten die
+"Besseren" filtern helfen - explizite Motivation: *"damit die Investition
+besser funktioniert und wir nicht wieder Produkte im Portfolio haben welche
+gleich wieder delisted werden oder sind."* Auf die Frage nach der
+Taxonomie-Quelle entschied der Nutzer: *"Erst Bitpanda-Katalog systematisch
+auswerten"* statt einer vom Assistenten vorgeschlagenen Liste.
+
+**Umfang dieser Runde (Release 1):** die Taxonomie-Infrastruktur komplett
+(Kategorien-Datei, Datenmodell, GUI-Migration, Bestandsmigration,
+Kompositions-/Qualitätsmodul, Screener-Integration, Diversifikations-
+Umbau). Die aktive Schwerpunkt-Steuerung selbst (Prioritäten setzen, KI-
+Vorschläge, Marktscan-Bias) ist bewusst als "Release 2" zurückgestellt -
+noch nicht umgesetzt, siehe Ausblick am Ende dieses Nachtrags.
+
+### Zwei echte Bitpanda-API-Bugs gefunden und behoben (betrifft die GESAMTE App, nicht nur dieses Feature)
+
+Bei der Herleitung der Taxonomie aus dem echten `/v3/assets`-Katalog
+(`api/bitpanda.py::_fetch_all_bitpanda_assets()`) fiel auf, dass
+wiederholte Aufrufe im selben Moment gegen denselben Datensatz
+unterschiedliche Ergebnisanzahlen lieferten (209/187/228/213 ETF/ETC/
+Metal-Einträge beobachtet) - das betraf JEDEN bisherigen Aufrufer der
+Funktion (Bitpanda-Listing-Prüfung in allen Signal-Pipelines, Screener,
+Watchlist-Konsistenzprüfung), nicht nur die neue Taxonomie-Arbeit.
+
+- **Bugfix 1 (Duplikate über Seitengrenzen):** derselbe Symbol-Eintrag
+  tauchte teils auf mehreren Paginierungsseiten gleichzeitig auf (bis zu 53
+  Duplikate bei `total_count=3238` gemessen). Erster Fix: Deduplizierung
+  per Symbol beim Sammeln - reichte allein NICHT aus (siehe Bugfix 2/3).
+- **Bugfix 2 (verworfen, aber dokumentiert):** die Vermutung, das
+  ursprüngliche Abbruchkriterium `page_number * page_size >= total_count`
+  sei die Ursache (da `total_count` selbst instabil ist), führte zu einem
+  Ersatz-Abbruchkriterium `len(page_data) < page_size`. Live-Test zeigte:
+  das machte es NICHT robuster, sondern schlimmer (163/173/211 Einträge
+  über 6 Wiederholungen, teils fehlte real ZINC/SXR8/WTI komplett) - auch
+  NICHT-letzte Seiten kamen serverseitig manchmal unvollständig zurück.
+- **Bugfix 3 (tatsächliche Lösung):** das Problem war die MEHRSEITIGE
+  Paginierung selbst - der Datensatz verschiebt sich offenbar leicht
+  zwischen einzelnen Roundtrips (Ursache serverseitig unbekannt). Live
+  bestätigt: ein EINZELNER Request mit `page_size=10000` (deutlich über dem
+  aktuellen `total_count=3238`) liefert den kompletten Datensatz in einer
+  Antwort - 6/6 Wiederholungen exakt stabil (3238 Einträge, 3185 eindeutige
+  Symbole, alle 211 realen ETF/ETC/Metal-Symbole). Die Dedup-Notwendigkeit
+  aus Bugfix 1 bleibt (der Datensatz selbst enthält echte Symbol-Kollisionen,
+  ca. 53 Stück, keine Paginierungs-Artefakte) - die `while`-Schleife bleibt
+  nur noch als Sicherheitsnetz für ein zukünftiges Wachstum über 10.000
+  Einträge hinaus im Code, wird im Normalfall aber nie ein zweites Mal
+  durchlaufen. **Lektion:** bei unzuverlässigen Paginierungs-APIs mit
+  überschaubarer Gesamtgröße ist "alles in einer Anfrage mit großzügigem
+  `page_size`" robuster als Mehrseiten-Konsistenz-Reparaturen.
+
+### `Basisinfos/kategorien.yaml` (neu)
+
+10 Hauptgruppen, 72 Unterkategorien, systematisch aus dem (nach obigen
+Bugfixes) stabilen Bitpanda-ETF/ETC/Edelmetall-Katalog hergeleitet:
+Edelmetalle (Gold/Silber/Platin&Palladium/Diversifiziert), Industriemetalle,
+Energie, Agrarrohstoffe & Nahrungsmittel, Technologie & KI, Absicherung,
+Aktien - Regionen & Länder, Aktien - Sektoren, Anleihen & Geldmarkt,
+Sonstige. Jede Unterkategorie trägt eine `bitpanda_symbole`-Liste zur
+automatischen Vor-Klassifikation neuer Kandidaten. Vollständigkeits-Check
+bestätigt: alle 211 realen Symbole sind genau einer Unterkategorie
+zugeordnet, keine Waisen, keine erfundenen Symbole (per Live-Test gegen den
+echten, jetzt stabilen Katalog reproduzierbar). Eigene Watchlist-Assets
+(auch nicht bei Bitpanda gelistete) speichern ihre Hauptgruppe/
+Unterkategorie direkt am Asset, unabhängig von dieser Datei - die Datei ist
+nur die Vorschlagsquelle für neue Kandidaten.
+
+### `config.py`: strukturelle Migration
+
+`WatchlistAsset.schwerpunkt` (Freitext, Folge 4) ersetzt durch
+`hauptgruppe`/`unterkategorie` (beide `str | None`, IDs aus
+`kategorien.yaml`). Neue Lookup-Funktionen: `get_kategorien()` (gecached),
+`find_kategorie_fuer_bitpanda_symbol()`, `get_hauptgruppe_name()`,
+`get_kategorie_name()`. `update_watchlist_kategorie(symbol, hauptgruppe,
+unterkategorie)` ersetzt `update_watchlist_schwerpunkt()` - schreibt beide
+Felder ATOMAR (beide oder keins), validiert beide IDs gegen
+`kategorien.yaml` VOR jedem Schreibvorgang (Fail-Fast, nie ein ungültiger
+Halbzustand in `config.yaml`). Alle 13 bestehenden Nicht-Krypto-Assets
+wurden auf die neue Struktur migriert, die alten `schwerpunkt:`-Zeilen
+entfernt (`git diff` bestätigt: nur die erwarteten Zeilenänderungen).
+
+### GUI-Migration (`ui/app.py`)
+
+Freitext-Feld in `AssetAddDialog`/`AssetEditDialog` ersetzt durch
+kaskadierende Hauptgruppe→Unterkategorie-Comboboxen
+(`_build_kategorie_selector()`). Watchlist-Tab-Spalte zeigt jetzt
+`config.get_kategorie_name(...)`. Diversifikations-Tabelle
+(`ui/portfolio.py`) gruppiert entsprechend nach Hauptgruppe um (Fix eines
+dabei live gefundenen `AttributeError` durch die Feldumbenennung).
+
+### Asset-Qualitäts-/Kompositionsmodul (`api/asset_quality.py`, neu) - "wie setzt sich zusammen"
+
+`get_asset_quality(yfinance_symbol)` liefert über `yfinance`s
+`Ticker.info`/`Ticker.funds_data` Top-10-Holdings, Sektorgewichtung, AUM
+(`totalAssets`) und Kostenquote (`netExpenseRatio`) für Assets mit echtem
+Börsenticker - live verifiziert (VVMX.DE/EXH3.DE/VST/PLTR). Neuer
+Watchlist-Toolbar-Button "Zusammensetzung anzeigen…" öffnet
+`AssetQualityDialog`. **Bewusste, dokumentierte Grenze (P-10):** Bitpandas
+EIGENE synthetische ETF/ETC-Themenkörbe (z.B. "COPPERMINE") haben KEINEN
+echten Börsenticker und damit strukturell KEINE öffentliche AUM/
+Kostenquote - für diese Kandidaten bleibt `get_asset_quality()` `None`, ein
+"besseres Produkt"-Vergleich ist dort nicht möglich. Die AUM-basierte
+Delisting-Risiko-Einschätzung (kleine Fonds werden häufiger geschlossen)
+funktioniert NUR für echte Fonds mit Ticker.
+
+### Screener-Integration (`agent/aktien/screener.py`, `ui/screener_view.py`)
+
+`ScreenerCandidate` um `hauptgruppe`/`unterkategorie` erweitert.
+`scan_etf_candidates()` taggt jeden Bitpanda-Katalog-Kandidaten automatisch
+per `config.find_kategorie_fuer_bitpanda_symbol()` (204 von 204 aktuellen
+Kandidaten live erfolgreich zugeordnet - alle 211 Katalog-Symbole sind ja
+per Definition in der Taxonomie erfasst). Neue "Kategorie"-Spalte im
+Screener-Tab. Bei "In Watchlist übernehmen" wird die erkannte Kategorie
+gleich mit übernommen, damit der Nutzer sie nicht nochmal manuell setzen
+muss. **Kein Qualitätsvergleich für diese Kandidaten** (siehe Grenze oben,
+dokumentiert im Modul-Docstring mit Querverweis auf `asset_quality.py`) -
+`scan_aktien_candidates()` (Einzelaktien) bewusst NICHT um Kategorie-Tagging
+erweitert, da die Taxonomie nur ETF/ETC/Edelmetall-Gruppen abbildet, keine
+Einzeltitel.
+
+### Verifikation
+
+Synthetisch: `kategorien.yaml`-Vollständigkeit (211=211, 0 Waisen, 0
+erfunden) über 10 Wiederholungen NACH Bugfix 3 stabil (VORHER, mit den
+verworfenen Fixes, war das nicht der Fall - siehe Bugfix-Historie oben).
+Echt: `_fetch_all_bitpanda_assets()`/`get_listed_assets()`/
+`get_listed_non_crypto_assets()` je 5-10x wiederholt gegen die echte API,
+alle stabil (822 Krypto/2363 Nicht-Krypto/3185 eindeutige Symbole gesamt).
+`get_asset_quality()` live gegen mehrere echte Ticker + einen erfundenen
+Ticker (korrektes `None`). Voller `TradingInfoToolApp`-Smoke-Test:
+`PortfolioView.refresh()`, `ScreenerView`-Aufbau, `AssetAddDialog`/
+`AssetEditDialog`-Instanziierung mit echten Produktionsdaten - keine
+Exceptions. `git status`/`git diff` vor dem Commit geprüft.
+
+### Ausblick: Release 2 (noch NICHT umgesetzt, separate Runde)
+
+Schwerpunkte/Thesen-Verwaltung (GUI zum Setzen von Prioritäten/
+Zielgewichtungen pro Kategorie mit Begründung+Datum), ein periodischer
+KI-Vorschläge-Job (Muster wie `makro_analog.py`, schlägt Kategorie-
+Schwerpunkte basierend auf bestehenden Makro-Fakten vor, Nutzer
+akzeptiert/verwirft), sowie Marktscan-/Screener-Bias (Kandidaten aus
+priorisierten Kategorien höher gewichten) - alle drei bewusst
+zurückgestellt, bis die Taxonomie-Infrastruktur (dieser Nachtrag) im
+laufenden Betrieb bestätigt ist.

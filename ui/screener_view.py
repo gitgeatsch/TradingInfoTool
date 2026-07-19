@@ -31,6 +31,7 @@ _SCREENER_COLUMN_DESCRIPTIONS = {
     "marktkap": "Marktkapitalisierung in USD (nur Aktien).",
     "aenderung": "Tagesänderung in % (nur Aktien).",
     "bitpanda": "Ob der Kandidat bei Bitpanda tatsächlich kaufbar ist (✓/✗) - bei ETF/ETC immer ✓, da direkt aus Bitpandas Katalog stammend.",
+    "kategorie": "Hauptgruppe/Unterkategorie aus Basisinfos/kategorien.yaml (nur ETF/ETC, automatisch anhand des Bitpanda-Symbols zugeordnet; '-' wenn nicht zuordenbar oder bei Aktien-Kandidaten).",
 }
 
 
@@ -60,15 +61,16 @@ class ScreenerView(ttk.Frame):
         ), foreground=theme.info_color(), wraplength=900, justify="left")
         self.status_label.pack(anchor="w", padx=8, pady=(0, 8))
 
-        columns = ("symbol", "name", "assetklasse", "quelle", "preis", "marktkap", "aenderung", "bitpanda")
+        columns = ("symbol", "name", "assetklasse", "quelle", "preis", "marktkap", "aenderung", "bitpanda", "kategorie")
         self.tree = ttk.Treeview(self, columns=columns, show="headings", height=24)
         headings = {
             "symbol": "Symbol", "name": "Name", "assetklasse": "Klasse", "quelle": "Quelle",
             "preis": "Preis", "marktkap": "Marktkap.", "aenderung": "Änd. %", "bitpanda": "Bitpanda",
+            "kategorie": "Kategorie",
         }
         widths = {
             "symbol": 70, "name": 240, "assetklasse": 70, "quelle": 170,
-            "preis": 80, "marktkap": 100, "aenderung": 70, "bitpanda": 70,
+            "preis": 80, "marktkap": 100, "aenderung": 70, "bitpanda": 70, "kategorie": 200,
         }
         for col in columns:
             self.tree.heading(col, text=headings[col])
@@ -117,9 +119,10 @@ class ScreenerView(ttk.Frame):
             marktkap_text = f"{c.marktkap_usd / 1e9:.1f} Mrd." if c.marktkap_usd is not None else "-"
             aenderung_text = f"{c.aenderung_pct:+.1f}%" if c.aenderung_pct is not None else "-"
             bitpanda_text = "✓" if c.bitpanda_gelistet else ("✗" if c.bitpanda_gelistet is False else "?")
+            kategorie_text = config_module.get_kategorie_name(c.hauptgruppe, c.unterkategorie) or "-"
             self.tree.insert(
                 "", "end", iid=str(idx),
-                values=(c.symbol, c.name, c.assetklasse, c.quelle, preis_text, marktkap_text, aenderung_text, bitpanda_text),
+                values=(c.symbol, c.name, c.assetklasse, c.quelle, preis_text, marktkap_text, aenderung_text, bitpanda_text, kategorie_text),
                 tags=("nicht_gelistet",) if c.bitpanda_gelistet is False else (),
             )
         self.tree.tag_configure("nicht_gelistet", foreground=theme.danger_color())
@@ -169,6 +172,7 @@ class ScreenerView(ttk.Frame):
                 symbol=candidate.symbol, name=candidate.name, rolle="taktisch",
                 beobachtungsstatus="beobachtung", assetklasse=candidate.assetklasse,
                 yfinance_symbol=yfinance_symbol,
+                hauptgruppe=candidate.hauptgruppe, unterkategorie=candidate.unterkategorie,
             )
         except config_module.WatchlistWriteError as exc:
             messagebox.showerror(
