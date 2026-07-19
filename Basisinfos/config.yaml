@@ -412,78 +412,91 @@ watchlist:
     beobachtungsstatus: beobachtung
     assetklasse: aktien
     yfinance_symbol: VST
+    schwerpunkt: Energieversorger (Strom-/Kraftwerksbetrieb)
   - symbol: OD7N
     name: WisdomTree Silver ETC
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: rohstoffe
     yfinance_symbol: GB00B15KY328.SG
+    schwerpunkt: Silber
   - symbol: VVMX
     name: VanEck Rare Earth and Strategic Metals UCITS ETF
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: etf
     yfinance_symbol: VVMX.DE
+    schwerpunkt: Seltene Erden & strategische Metalle
   - symbol: 3QSS
     name: WisdomTree NASDAQ 100 3x Daily Short
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: etf
     yfinance_symbol: IE00BLRPRJ20.SG
+    schwerpunkt: Absicherung (Nasdaq 100 Short)
   - symbol: DBPK
     name: Xtrackers S&P 500 2x Inverse Daily Swap UCITS ETF
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: etf
     yfinance_symbol: DBPK.DE
+    schwerpunkt: Absicherung (S&P 500 Short)
   - symbol: X136
     name: Amundi Global Bioenergy UCITS ETF
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: etf
     yfinance_symbol: X136.BE
+    schwerpunkt: Bioenergie
   - symbol: EXH3
     name: iShares STOXX Europe 600 Food & Beverage UCITS ETF (DE)
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: etf
     yfinance_symbol: EXH3.DE
+    schwerpunkt: Nahrungsmittel & Getraenke
   - symbol: CEBS
     name: iShares Copper Miners UCITS ETF
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: etf
     yfinance_symbol: CEBS.DE
+    schwerpunkt: Kupferminen (Aktien)
   - symbol: ISOC
     name: iShares Agribusiness UCITS ETF
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: etf
     yfinance_symbol: IS0C.DE
+    schwerpunkt: Agrarwirtschaft
   - symbol: OD7H
     name: WisdomTree Gold
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: rohstoffe
     yfinance_symbol: OD7H.SG
+    schwerpunkt: Gold
   - symbol: OD7C
     name: WisdomTree Copper
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: rohstoffe
     yfinance_symbol: OD7C.SG
+    schwerpunkt: Kupfer
   - symbol: OD7L
     name: WisdomTree Natural Gas
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: rohstoffe
     yfinance_symbol: JE00BN7KB334.SG
+    schwerpunkt: Erdgas / Energie
   - symbol: PLTR
     name: Palantir Technologies Inc.
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: aktien
     yfinance_symbol: PLTR
+    schwerpunkt: Software / KI-Datenanalyse
   - symbol: VSN
     name: Vision
     rolle: taktisch

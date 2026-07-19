@@ -70,6 +70,14 @@ class WatchlistAsset:
     # WisdomTree-ETNs ohne Xetra-Kurzcode bei Yahoo Finance).
     yfinance_symbol: str | None = None
     ist_cash_aequivalent: bool = False
+    # Freitext-Kategorie fuer die inhaltliche/thematische Einordnung (2026-07-19,
+    # Nutzer-Wunsch nach Diversifikations-Ueberblick) - z.B. "Gold", "Silber",
+    # "Kupfer", "Seltene Erden", "Bioenergie", "Agrarwirtschaft", "Energieversorger".
+    # Bewusst freier Text statt fester Enum-Liste - die tatsaechlich sinnvollen
+    # Kategorien haengen vom konkreten Portfolio ab und sollen nicht im Code
+    # vorgegeben werden muessen. Optional, KEIN Pflichtfeld (bestehende/neue
+    # Eintraege ohne Schwerpunkt bleiben gueltig, P-8).
+    schwerpunkt: str | None = None
 
 
 def load_config() -> dict:
@@ -92,6 +100,7 @@ def get_watchlist() -> list[WatchlistAsset]:
             assetklasse=entry.get("assetklasse", "krypto"),
             yfinance_symbol=entry.get("yfinance_symbol"),
             ist_cash_aequivalent=entry.get("ist_cash_aequivalent", False),
+            schwerpunkt=entry.get("schwerpunkt"),
         )
         for entry in config["watchlist"]
     ]
@@ -130,6 +139,7 @@ def add_watchlist_entry(
     assetklasse: str = "krypto",
     yfinance_symbol: str | None = None,
     ist_cash_aequivalent: bool = False,
+    schwerpunkt: str | None = None,
 ) -> None:
     """Fügt einen neuen Eintrag ans Ende des bestehenden `watchlist:`-Blocks in
     Basisinfos/config.yaml an - reine TEXT-Einfügung (keine vollständige YAML-
@@ -175,6 +185,8 @@ def add_watchlist_entry(
         entry_lines.append(f"    yfinance_symbol: {yfinance_symbol}{newline_style}")
     if ist_cash_aequivalent:
         entry_lines.append(f"    ist_cash_aequivalent: true{newline_style}")
+    if schwerpunkt is not None:
+        entry_lines.append(f"    schwerpunkt: {schwerpunkt}{newline_style}")
     entry_block = "".join(entry_lines)
     new_text = "".join(lines[:insert_at] + [entry_block] + lines[insert_at:])
 
@@ -338,6 +350,74 @@ def update_watchlist_coingecko_id(symbol: str, new_coingecko_id: str) -> bool:
         matching = next((e for e in reparsed["watchlist"] if e["symbol"] == symbol), None)
         if matching is None or matching.get("coingecko_id") != new_coingecko_id:
             raise WatchlistWriteError("Validierung fehlgeschlagen: coingecko_id nicht wie erwartet gesetzt")
+    except Exception as exc:
+        shutil.copy2(backup_path, CONFIG_PATH)
+        raise WatchlistWriteError(f"Schreiben fehlgeschlagen, Backup wiederhergestellt: {exc}") from exc
+
+    global _config_cache
+    _config_cache = None
+    return True
+
+
+def update_watchlist_schwerpunkt(symbol: str, new_schwerpunkt: str) -> bool:
+    """Setzt/ergaenzt `schwerpunkt` eines bestehenden Watchlist-Eintrags (2026-07-19,
+    Nutzer-Wunsch nach Diversifikations-Ueberblick) - manuell vom Nutzer ausgeloest
+    (GUI-Bearbeiten-Dialog). Gleiches Muster wie `update_watchlist_coingecko_id()`,
+    ABER Einfuegeposition ist bewusst das ENDE des Eintrags-Blocks (nicht direkt
+    nach `beobachtungsstatus:`) - `schwerpunkt` ist das zuletzt hinzugekommene Feld
+    in der Reihenfolge von `add_watchlist_entry()` und soll bestehende Eintraege mit
+    bereits vorhandenen optionalen Feldern (coingecko_id/assetklasse/yfinance_symbol/
+    ist_cash_aequivalent) nicht durcheinanderbringen."""
+    original_bytes = CONFIG_PATH.read_bytes()
+    newline_style = "\r\n" if b"\r\n" in original_bytes else "\n"
+    original_text = original_bytes.decode("utf-8")
+    lines = original_text.splitlines(keepends=True)
+
+    entry_start = next(
+        (i for i, line in enumerate(lines) if line.strip() == f"- symbol: {symbol}"), None,
+    )
+    if entry_start is None:
+        return False
+
+    entry_end = len(lines)
+    for i in range(entry_start + 1, len(lines)):
+        if lines[i].lstrip().startswith("- symbol:") or not lines[i].startswith(" "):
+            entry_end = i
+            break
+
+    field_line_idx = next(
+        (i for i in range(entry_start, entry_end) if lines[i].strip().startswith("schwerpunkt:")), None,
+    )
+
+    if field_line_idx is not None:
+        current_value = lines[field_line_idx].split(":", 1)[1].strip()
+        if current_value == new_schwerpunkt:
+            return False
+        indent = lines[field_line_idx][: len(lines[field_line_idx]) - len(lines[field_line_idx].lstrip())]
+        lines[field_line_idx] = f"{indent}schwerpunkt: {new_schwerpunkt}{newline_style}"
+    else:
+        # Letzte nicht-leere Zeile des Blocks als Einrueckungs-Vorbild nehmen (siehe
+        # Docstring - Anhaengen ans Ende statt an eine feste Feldposition).
+        last_field_idx = entry_end - 1
+        indent = lines[last_field_idx][: len(lines[last_field_idx]) - len(lines[last_field_idx].lstrip())]
+        new_line = f"{indent}schwerpunkt: {new_schwerpunkt}{newline_style}"
+        lines.insert(entry_end, new_line)
+
+    new_text = "".join(lines)
+
+    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    backup_path = BACKUP_DIR / f"config.yaml.{timestamp}.bak"
+    shutil.copy2(CONFIG_PATH, backup_path)
+
+    CONFIG_PATH.write_bytes(new_text.encode("utf-8"))
+
+    try:
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+            reparsed = yaml.safe_load(f)
+        matching = next((e for e in reparsed["watchlist"] if e["symbol"] == symbol), None)
+        if matching is None or matching.get("schwerpunkt") != new_schwerpunkt:
+            raise WatchlistWriteError("Validierung fehlgeschlagen: schwerpunkt nicht wie erwartet gesetzt")
     except Exception as exc:
         shutil.copy2(backup_path, CONFIG_PATH)
         raise WatchlistWriteError(f"Schreiben fehlgeschlagen, Backup wiederhergestellt: {exc}") from exc

@@ -4997,3 +4997,63 @@ erneut gegen die echte `config.yaml` getestet (bereits durch die
 bestehende Marktscan-Nutzung etabliert/verifiziert, Signatur-Kompatibilität
 per Code-Review bestätigt) - kein ungewolltes Schreiben in die reale Datei
 während der Verifikation.
+
+## Nachtrag (2026-07-19, gleicher Tag, Folge 4): Schwerpunkt-Feld + Diversifikations-Übersicht
+
+**Auslöser:** Nutzer bat um eine "konkrete Einordnung der Assets - z.B.
+Inhalt und Zweck damit wir dies z.B. bei der Diversifikation - Gold,
+Silber, Kupfer, seltene Erden, Güter, Energie korrekt einordnen können"
+und wollte diese Schwerpunkte selbst in der Oberfläche pflegen können.
+
+**Umgesetzt:** neues, optionales Freitext-Feld `schwerpunkt` auf
+`WatchlistAsset` (`config.py`) - bewusst freier Text statt fester
+Enum-Liste, da die sinnvollen Kategorien vom konkreten Portfolio abhängen
+und nicht im Code vorgegeben werden sollen. Neue Funktion
+`update_watchlist_schwerpunkt()` (gleiches Backup+Validierung+Rollback-
+Muster wie `update_watchlist_coingecko_id()`), ABER mit einer bewussten
+Abweichung: Einfügeposition ist das ENDE des Eintrags-Blocks statt einer
+festen Position - `schwerpunkt` ist das zuletzt hinzugekommene optionale
+Feld und soll bestehende Einträge mit bereits vorhandenen optionalen
+Feldern (coingecko_id/assetklasse/yfinance_symbol/ist_cash_aequivalent)
+nicht durcheinanderbringen. `add_watchlist_entry()` um den Parameter
+erweitert (Neuanlage).
+
+**GUI:** `AssetAddDialog`/`AssetEditDialog` (`ui/app.py`) um ein
+"Schwerpunkt"-Textfeld erweitert (analog zum bestehenden coingecko_id-
+Muster im Edit-Dialog). Watchlist-Tab-Treeview um eine neue Spalte
+"Schwerpunkt" ergänzt.
+
+**Diversifikations-Übersicht (`ui/portfolio.py`):** neue kompakte Tabelle
+unterhalb der Bestandsliste, gruppiert den aktuellen Portfoliowert (inkl.
+gestakter Anteile) nach `schwerpunkt` und zeigt EUR-Wert + Anteil-%.
+Assets ohne gesetzten Schwerpunkt fallen in einen Sammel-Eintrag "ohne
+Schwerpunkt", Fiat-Cash in "Cash/Sonstiges" - die Prozentwerte summieren
+sich dadurch sauber auf denselben `Gesamtwert:` wie in der bestehenden
+Anzeige. Bewusst als Tabelle statt Pie-Chart (kein bestehendes
+Chart-Vorbild für Verteilungsdarstellungen, `ui/charts.py` deckt nur
+Kursverlaufs-Liniencharts eines einzelnen Assets ab).
+
+**Direkt befüllt** für alle 13 bestehenden Nicht-Krypto-Watchlist-
+Einträge (Aktien/Rohstoffe/Themen-ETF) über die neue Funktion gegen die
+echte `config.yaml`: VST → Energieversorger, PLTR → Software/KI-
+Datenanalyse, OD7N → Silber, OD7H → Gold, OD7C → Kupfer, OD7L → Erdgas/
+Energie, VVMX → Seltene Erden & strategische Metalle, X136 → Bioenergie,
+EXH3 → Nahrungsmittel & Getränke, CEBS → Kupferminen (Aktien), ISOC →
+Agrarwirtschaft, DBPK/3QSS → Absicherung (S&P 500/Nasdaq 100 Short).
+Krypto-Einträge bewusst NICHT befüllt (außerhalb des ursprünglichen
+Anfrage-Kontexts, kann der Nutzer bei Bedarf selbst über die GUI
+nachtragen).
+
+**Verifiziert:** synthetische Tests für `update_watchlist_schwerpunkt()`
+(neue Zeile einfügen/bestehende Zeile ändern/unveränderter Wert -> kein
+Schreibvorgang/unbekanntes Symbol) - dabei ZUERST versehentlich gegen die
+echte `config.yaml` statt einer Kopie gelaufen (Testskript-Fehler, keine
+Datenverlust, siehe git diff danach leer), sofort per Backup-Restore
+korrigiert, danach sauber gegen eine echte Kopie wiederholt. Tk-Smoke-Test
+`PortfolioView` gegen eine Kopie der Produktions-DB (Diversifikations-
+Tabelle vor UND nach dem Befüllen der 13 Schwerpunkte geprüft - 13
+korrekte Kategorien + "ohne Schwerpunkt"/"Cash/Sonstiges"-Sammeltöpfe),
+voller `TradingInfoToolApp`-Smoke-Test (Watchlist-Tab zeigt die neue
+Spalte korrekt), `AssetEditDialog`/`AssetAddDialog`-Instanziierungstest.
+`git diff Basisinfos/config.yaml` vor dem Commit geprüft - ausschließlich
+13 neue `schwerpunkt:`-Zeilen, keine sonstigen Änderungen.

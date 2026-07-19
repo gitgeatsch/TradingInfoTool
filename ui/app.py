@@ -39,6 +39,11 @@ _WATCHLIST_COLUMN_DESCRIPTIONS = {
     "name": "Vollständiger Name des Assets.",
     "rolle": "Core oder taktisch - strategische Einstufung aus der Watchlist-Konfiguration, unabhängig vom aktuellen Bestand.",
     "assetklasse": "Krypto, Aktie, ETF oder Rohstoff.",
+    "schwerpunkt": (
+        "Freie inhaltliche Einordnung (z. B. \"Gold\", \"Kupfer\", \"Seltene Erden\") - "
+        "über 'Asset hinzufügen/bearbeiten' setzbar, Basis für die Diversifikations-"
+        "Übersicht im Portfolio-Tab."
+    ),
     "status": (
         "Gehalten (echter Bestand oder offene Hebel-Position, live abgeleitet) oder - falls nicht gehalten - "
         "Beobachtung (aktive Kandidatur) bzw. Ausgemustert (niedrigste Priorität, aber nicht ausgeschlossen). "
@@ -279,6 +284,7 @@ class TradingInfoToolApp(tk.Tk):
             "name",
             "rolle",
             "assetklasse",
+            "schwerpunkt",
             "status",
             "bitpanda",
             "tranchen",
@@ -293,6 +299,7 @@ class TradingInfoToolApp(tk.Tk):
             "name": "Name",
             "rolle": "Rolle",
             "assetklasse": "Assetklasse",
+            "schwerpunkt": "Schwerpunkt",
             "status": "Status",
             "bitpanda": "Bitpanda",
             "tranchen": "AZ-4-Tranchen",
@@ -305,7 +312,7 @@ class TradingInfoToolApp(tk.Tk):
         tree = ttk.Treeview(frame, columns=columns, show="headings")
         for col in columns:
             tree.heading(col, text=headings[col])
-            anchor = "w" if col in ("name", "rolle", "assetklasse", "status") else "e"
+            anchor = "w" if col in ("name", "rolle", "assetklasse", "schwerpunkt", "status") else "e"
             tree.column(col, width=90 if col in ("bitpanda", "tranchen", "hebel_pruefung") else 110, anchor=anchor)
         tree.tag_configure("stale", foreground=theme.stale_color())
         tree.tag_configure("bitpanda_fehlt", foreground=theme.danger_color())
@@ -474,6 +481,7 @@ class TradingInfoToolApp(tk.Tk):
                     asset.name,
                     asset.rolle,
                     asset.assetklasse,
+                    asset.schwerpunkt or "-",
                     status_text,
                     bitpanda_text,
                     tranchen_text,
@@ -1233,6 +1241,7 @@ class AssetAddDialog(tk.Toplevel):
         self._beobachtungsstatus_var = tk.StringVar(value="beobachtung")
         self._coingecko_id_var = tk.StringVar()
         self._yfinance_symbol_var = tk.StringVar()
+        self._schwerpunkt_var = tk.StringVar()
 
         fields = [
             ("Symbol", self._symbol_var, None),
@@ -1242,6 +1251,7 @@ class AssetAddDialog(tk.Toplevel):
             ("Beobachtungsstatus", self._beobachtungsstatus_var, ("beobachtung", "ausgemustert")),
             ("CoinGecko-ID (optional)", self._coingecko_id_var, None),
             ("yfinance-Symbol (optional)", self._yfinance_symbol_var, None),
+            ("Schwerpunkt (optional)", self._schwerpunkt_var, None),
         ]
         for row, (label, var, values) in enumerate(fields):
             ttk.Label(frame, text=label).grid(row=row, column=0, sticky="w", pady=2)
@@ -1281,6 +1291,7 @@ class AssetAddDialog(tk.Toplevel):
         assetklasse = self._assetklasse_var.get()
         coingecko_id = self._coingecko_id_var.get().strip() or None
         yfinance_symbol = self._yfinance_symbol_var.get().strip() or None
+        schwerpunkt = self._schwerpunkt_var.get().strip() or None
 
         if not symbol or not name:
             messagebox.showwarning("Asset hinzufügen", "Symbol und Name sind Pflichtfelder.")
@@ -1326,6 +1337,7 @@ class AssetAddDialog(tk.Toplevel):
                 symbol=symbol, name=name, rolle=self._rolle_var.get(),
                 beobachtungsstatus=self._beobachtungsstatus_var.get(),
                 coingecko_id=coingecko_id, assetklasse=assetklasse, yfinance_symbol=yfinance_symbol,
+                schwerpunkt=schwerpunkt,
             )
         except config_module.WatchlistWriteError as exc:
             messagebox.showerror("Asset hinzufügen", f"Fehlgeschlagen: {exc}")
@@ -1370,6 +1382,7 @@ class AssetEditDialog(tk.Toplevel):
 
         self._rolle_var = tk.StringVar(value=asset.rolle)
         self._beobachtungsstatus_var = tk.StringVar(value=asset.beobachtungsstatus)
+        self._schwerpunkt_var = tk.StringVar(value=asset.schwerpunkt or "")
 
         ttk.Label(frame, text="Rolle").grid(row=1, column=0, sticky="w", pady=2)
         ttk.Combobox(
@@ -1386,7 +1399,17 @@ class AssetEditDialog(tk.Toplevel):
             wraplength=280, foreground=theme.stale_color(),
         ).grid(row=3, column=0, columnspan=3, sticky="w", pady=(0, 8))
 
-        next_row = 4
+        ttk.Label(frame, text="Schwerpunkt").grid(row=4, column=0, sticky="w", pady=2)
+        ttk.Entry(frame, textvariable=self._schwerpunkt_var, width=25).grid(
+            row=4, column=1, sticky="w", pady=2, padx=(8, 0)
+        )
+        ttk.Label(
+            frame, text="(freie inhaltliche Einordnung, z.B. \"Gold\", \"Kupfer\", \"Seltene Erden\" -"
+            " für den Diversifikations-Überblick im Portfolio-Tab)",
+            wraplength=280, foreground=theme.info_color(),
+        ).grid(row=5, column=0, columnspan=3, sticky="w", pady=(0, 8))
+
+        next_row = 6
         auto_resolved_id = asset.coingecko_id
         if asset.assetklasse == "krypto" and not asset.ist_cash_aequivalent and not asset.coingecko_id:
             # 2026-07-19, Nutzer-Vorschlag: still versuchen, BEVOR das Feld
@@ -1432,6 +1455,9 @@ class AssetEditDialog(tk.Toplevel):
         try:
             config_module.update_watchlist_rolle(self._asset.symbol, self._rolle_var.get())
             config_module.update_watchlist_beobachtungsstatus(self._asset.symbol, self._beobachtungsstatus_var.get())
+            new_schwerpunkt = self._schwerpunkt_var.get().strip()
+            if new_schwerpunkt and new_schwerpunkt != (self._asset.schwerpunkt or ""):
+                config_module.update_watchlist_schwerpunkt(self._asset.symbol, new_schwerpunkt)
             new_coingecko_id = self._coingecko_id_var.get().strip()
             if new_coingecko_id and new_coingecko_id != (self._asset.coingecko_id or ""):
                 config_module.update_watchlist_coingecko_id(self._asset.symbol, new_coingecko_id)
