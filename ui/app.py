@@ -1063,6 +1063,34 @@ def _validate_new_asset(
     return warnungen
 
 
+def _try_auto_resolve_coingecko_id(symbol: str, coingecko_client) -> str | None:
+    """Automatische `coingecko_id`-Aufloesung via Bitpanda-Namensabgleich
+    (2026-07-19, Nutzer-Vorschlag: "in dieser Schleife sollte das Symbol
+    schon eindeutig sein, sonst gibt's da schon Inkonsistenzen") - gemeinsam
+    genutzt von `AssetAddDialog` (interaktiv, mit automatischem
+    `CoinSearchDialog`-Rueckfall bei Fehlschlag) und `AssetEditDialog`
+    (still, kein Dialog-Popup beim blossen Oeffnen). Prueft zuerst, ob das
+    Symbol ueberhaupt bei Bitpanda gelistet ist (liefert dabei Bitpandas
+    eigenen, kuratierten Namen), sucht dann per CoinGecko `/search` und
+    verlangt EXAKT EINE Namensuebereinstimmung (siehe api/coingecko.py::
+    resolve_coingecko_id_by_name()-Docstring fuer die Begruendung/live-
+    Verifikation). Gibt None zurueck bei fehlendem Bitpanda-Listing, echter
+    Mehrdeutigkeit ODER einem Netzwerkfehler - niemals eine geratene ID."""
+    try:
+        from api.bitpanda import find_listed_asset, get_listed_assets
+        from api.coingecko import resolve_coingecko_id_by_name
+
+        listed_assets = get_listed_assets()
+        bitpanda_asset = find_listed_asset(symbol, listed_assets)
+        if bitpanda_asset is None:
+            return None
+        results = coingecko_client.search_coins(symbol)
+        return resolve_coingecko_id_by_name(results, bitpanda_asset.name)
+    except Exception as exc:
+        logging.getLogger(__name__).info("Automatische CoinGecko-ID-Aufloesung fuer %s fehlgeschlagen: %s", symbol, exc)
+        return None
+
+
 class CoinSearchDialog(tk.Toplevel):
     """CoinGecko-Symbolsuche (2026-07-19, Watchlist-Tab-Konsistenzpruefung -
     Nutzer-Nachfrage "das solltest du doch automatisch ergaenzen koennen").
@@ -1234,6 +1262,29 @@ class AssetAddDialog(tk.Toplevel):
             messagebox.showwarning("Asset hinzufügen", "Symbol und Name sind Pflichtfelder.")
             return
 
+        if assetklasse == "krypto" and not coingecko_id:
+            # 2026-07-19, Nutzer-Vorschlag: der Dialog soll gleich bei der
+            # Aufnahme in die Watchlist kommen, nicht erst auf manuellen
+            # "Suchen"-Klick warten. Erst still per Bitpanda-Namensabgleich
+            # versuchen (siehe _try_auto_resolve_coingecko_id()-Docstring) -
+            # schlaegt das fehl (nicht bei Bitpanda gelistet ODER echte
+            # Mehrdeutigkeit), automatisch CoinSearchDialog OEFFNEN statt
+            # einen Klick vom Nutzer zu verlangen. Abbrechen im Dialog laesst
+            # das Feld leer, identisch zum bisherigen Standardverhalten.
+            coingecko_id = _try_auto_resolve_coingecko_id(symbol, self._parent_app._coingecko_client)
+            if coingecko_id:
+                self._coingecko_id_var.set(coingecko_id)
+            else:
+                picked: list[str] = []
+                dialog = CoinSearchDialog(
+                    self, self._parent_app._coingecko_client, symbol,
+                    on_selected=lambda cid: picked.append(cid),
+                )
+                self.wait_window(dialog)
+                if picked:
+                    coingecko_id = picked[0]
+                    self._coingecko_id_var.set(coingecko_id)
+
         warnungen = _validate_new_asset(
             symbol, name, assetklasse, coingecko_id, self._parent_app._coingecko_client,
         )
@@ -1312,7 +1363,18 @@ class AssetEditDialog(tk.Toplevel):
         ).grid(row=3, column=0, columnspan=3, sticky="w", pady=(0, 8))
 
         next_row = 4
-        self._coingecko_id_var = tk.StringVar(value=asset.coingecko_id or "")
+        auto_resolved_id = asset.coingecko_id
+        if asset.assetklasse == "krypto" and not asset.ist_cash_aequivalent and not asset.coingecko_id:
+            # 2026-07-19, Nutzer-Vorschlag: still versuchen, BEVOR das Feld
+            # angezeigt wird - genau der Fall, der diese Erweiterung
+            # ausgeloest hat (z.B. automatisch aus einer Hebel-Position
+            # ergaenztes Symbol ohne ID). Kein Dialog-Popup beim blossen
+            # Oeffnen dieses Dialogs (der Nutzer koennte hier auch nur
+            # rolle/beobachtungsstatus aendern wollen) - nur bei tatsaechlichem
+            # Speichern-Klick mit weiterhin leerem Feld greift die manuelle
+            # "Suchen"-Option.
+            auto_resolved_id = _try_auto_resolve_coingecko_id(asset.symbol, parent._coingecko_client)
+        self._coingecko_id_var = tk.StringVar(value=auto_resolved_id or "")
         if asset.assetklasse == "krypto" and not asset.ist_cash_aequivalent:
             ttk.Label(frame, text="CoinGecko-ID").grid(row=next_row, column=0, sticky="w", pady=2)
             ttk.Entry(frame, textvariable=self._coingecko_id_var, width=25).grid(
@@ -1322,7 +1384,7 @@ class AssetEditDialog(tk.Toplevel):
                 row=next_row, column=2, sticky="w", pady=2, padx=(6, 0)
             )
             next_row += 1
-            if not asset.coingecko_id:
+            if not auto_resolved_id:
                 ttk.Label(
                     frame, text="⚠ ohne ID keine Spot-Analyse für dieses Asset möglich",
                     wraplength=280, foreground=theme.danger_color(),

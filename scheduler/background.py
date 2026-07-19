@@ -1208,7 +1208,7 @@ def hebel_screening_job(
                     # bitpanda_api_key als Positionsargument loeste bei JEDEM Lauf
                     # "AttributeError: 'str' object has no attribute 'get'" aus.
                     neue_symbole = auto_add_unknown_hebel_symbols(
-                        conn, watchlist, get_listed_assets()
+                        conn, watchlist, get_listed_assets(), coingecko_client=coingecko_client,
                     )
                     if neue_symbole:
                         logger.info(

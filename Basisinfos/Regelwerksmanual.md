@@ -4422,3 +4422,70 @@ sichtbar, Suche+Auswahl übernimmt korrekt) und für ein Nicht-Krypto-Asset
 (Feld bleibt korrekt unsichtbar) - sowie ein echter End-to-End-Test des
 kompletten Speicherpfads gegen eine Konfigurationskopie (`_on_submit()`
 persistiert die gewählte ID tatsächlich in `config.yaml`).
+
+## Nachtrag (2026-07-19, gleicher Tag): automatische coingecko_id-Aufloesung
+per Bitpanda-Namensabgleich - Dialog kommt gleich bei der Aufnahme
+
+**Auslöser:** Nutzer stellte zwei zusammenhängende Fragen zur gerade gebauten
+CoinGecko-Symbolsuche: (1) ob der Suchdialog nicht direkt bei der Aufnahme
+in die Watchlist erscheinen sollte statt einen manuellen "Suchen"-Klick zu
+verlangen, (2) ob der bereits vorhandene CoinGecko-Scan-mit-Bitpanda-Prüfung-
+Ablauf (Marktscan-Discovery) das Symbol nicht schon eindeutig machen sollte,
+bevor überhaupt eine manuelle Auswahl nötig wird. Live geprüft: Bitpandas
+kuratierter Katalog listet nie zwei verschiedene Coins unter demselben
+Ticker - der Bitpanda-Name für SOL ("Solana") matcht exakt GENAU EINEN von
+25 CoinGecko-Suchtreffern für "SOL". Diese Kreuzreferenz löst die
+Mehrdeutigkeit in der überwiegenden Mehrheit der Fälle automatisch auf,
+ohne dass der Nutzer manuell auswählen muss - eine echte Mehrdeutigkeit
+(kein oder mehr als ein Namenstreffer) bleibt dabei eine ECHTE Inkonsistenz
+zwischen Bitpanda- und CoinGecko-Katalog, kein Fall für automatisches Raten.
+
+**Umgesetzt (drei Ebenen):**
+1. `api/bitpanda.py::find_listed_asset()` - wie `is_listed()`, gibt aber das
+   tatsächlich gefundene `BitpandaAsset`-Objekt zurück statt nur eines Bool
+   (fürs Namensfeld gebraucht). `is_listed()` selbst ruft die neue Funktion
+   nur noch auf (reiner Refactor, verhaltensidentisch, Regressionstest
+   bestätigt).
+2. `api/coingecko.py::resolve_coingecko_id_by_name(results, expected_name)`
+   - reine Funktion, filtert `search_coins()`-Treffer auf Namensgleichheit,
+   gibt nur bei GENAU EINEM Treffer die ID zurück, sonst `None`.
+3. Neue gemeinsame `ui/app.py::_try_auto_resolve_coingecko_id(symbol,
+   coingecko_client)` - kombiniert beide Bausteine (Bitpanda-Listing prüfen
+   + Namensabgleich), genutzt von:
+   - **`AssetAddDialog._on_submit()`**: bei leerem CoinGecko-ID-Feld und
+     `assetklasse=krypto` wird zuerst still automatisch aufgelöst; schlägt
+     das fehl (nicht bei Bitpanda gelistet ODER echte Mehrdeutigkeit), öffnet
+     sich der `CoinSearchDialog` jetzt AUTOMATISCH (`self.wait_window()`,
+     blockiert bis zur Nutzer-Auswahl/zum Abbrechen) - genau der vom Nutzer
+     gewünschte "kommt gleich bei der Aufnahme"-Ablauf, kein manueller Klick
+     mehr nötig im Regelfall.
+   - **`AssetEditDialog.__init__()`**: still (KEIN Dialog-Popup) versucht,
+     sobald ein Krypto-Asset ohne ID geöffnet wird - deckt genau den Fall ab,
+     der die ganze Erweiterung ausgelöst hat (automatisch aus einer Hebel-
+     Position ergänzte Symbole). Kein Popup beim blossen Öffnen, da der
+     Nutzer den Dialog auch nur für rolle/beobachtungsstatus öffnen könnte -
+     die Warn-Markierung verschwindet automatisch, wenn die stille Auflösung
+     erfolgreich war.
+   - **`importer/bitpanda_margin_positions.py::
+     auto_add_unknown_hebel_symbols()`**: neuer optionaler `coingecko_client`-
+     Parameter (aus `scheduler/background.py::hebel_screening_job()` bereits
+     im Scope durchgereicht) - versucht dieselbe Auflösung, BEVOR der
+     Watchlist-Eintrag geschrieben wird. Der Nutzer-Punkt "in dieser Schleife
+     sollte das Symbol schon eindeutig sein" trifft damit jetzt genau zu -
+     das Bitpanda-Listing wird an dieser Stelle ohnehin schon geprüft
+     (`find_listed_asset()`), der Namensabgleich kostet nur einen
+     zusätzlichen `search_coins()`-Call. `coingecko_client=None` erhält das
+     alte Verhalten (ID bleibt leer) für Aufrufer ohne Netzwerkzugriff.
+
+**Verifiziert:** Regressionstest von `is_listed()` nach dem Refactor
+(identisches Verhalten). Synthetischer Test von
+`resolve_coingecko_id_by_name()` (eindeutig/mehrdeutig/kein Treffer).
+Synthetischer Test von `auto_add_unknown_hebel_symbols()` mit drei Fällen
+(automatische Auflösung erfolgreich, `coingecko_client=None` behält altes
+Verhalten, mehrdeutiger Namenstreffer fällt korrekt auf leer zurück statt
+abzustürzen) gegen eine Konfigurationskopie. Tk-Smoke-Test des kompletten
+`AssetAddDialog`-Submit-Flows (automatische Auflösung UND automatisch
+geöffneter `CoinSearchDialog` bei Mehrdeutigkeit, jeweils bis zum
+tatsächlichen Schreiben in `config.yaml` durchgetestet) sowie von
+`AssetEditDialog` (stille Auflösung beim Öffnen, Warn-Markierung
+verschwindet korrekt bei erfolgreicher Auflösung).

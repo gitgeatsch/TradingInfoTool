@@ -243,3 +243,23 @@ class CoinGeckoClient:
                 )
             )
         return snapshots
+
+
+def resolve_coingecko_id_by_name(results: list[CoinSearchResult], expected_name: str) -> str | None:
+    """Loest eine `coingecko_id` automatisch auf, wenn GENAU EIN `search_coins()`-
+    Treffer namentlich mit dem von Bitpanda gelisteten Namen uebereinstimmt
+    (2026-07-19, Nutzer-Vorschlag: Bitpandas eigener, kuratierter Katalog
+    listet nie zwei verschiedene Coins unter demselben Ticker - live
+    verifiziert, z.B. Bitpanda-Name "Solana" fuer Symbol SOL matcht exakt
+    genau EINEN von 25 CoinGecko-Suchtreffern. Der Namensabgleich disambiguiert
+    dadurch zuverlaessig in der ueberwiegenden Mehrheit der Faelle, ohne dass
+    der Nutzer manuell auswaehlen muss). Gibt bewusst None zurueck, wenn KEIN
+    oder MEHR ALS EIN Treffer passt - das ist dann eine echte Inkonsistenz
+    (Bitpanda-Name ohne eindeutiges CoinGecko-Pendant), kein Fall fuer
+    automatisches Raten (siehe CoinSearchDialog-Docstring in ui/app.py fuer
+    den manuellen Rueckfall in genau diesem Fall)."""
+    expected_normalized = expected_name.strip().lower()
+    matches = [r for r in results if r.name.strip().lower() == expected_normalized]
+    if len(matches) == 1:
+        return matches[0].coingecko_id
+    return None
