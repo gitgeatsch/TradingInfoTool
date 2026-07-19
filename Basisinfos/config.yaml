@@ -489,6 +489,11 @@ watchlist:
     rolle: taktisch
     beobachtungsstatus: beobachtung
     coingecko_id: vision-3
+  - symbol: KAITO
+    name: KAITO
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
+    coingecko_id: kaito
 
 # --- Strategie-Katalog (siehe Spezifikation Kap. 6) ---
 strategien:
