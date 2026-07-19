@@ -4879,3 +4879,47 @@ sind alle vier vom Nutzer gewählten neuen Datenquellen (FRED, SEC-EDGAR,
 EIA, Finnhub) vollständig umgesetzt UND live verifiziert - nur FINRA Equity
 Short Interest bleibt als letzter, noch nicht angegangener Kandidat aus der
 ursprünglichen Auswahl offen.
+
+## Nachtrag (2026-07-19, gleicher Tag, Folge 2): FINRA Equity Short Interest (Aktien-Pipeline)
+
+**Auslöser:** Nutzer bat "jetzt FINRA Short Interest angehen" - der letzte
+der vier ursprünglich gewählten Datenquellen-Kandidaten.
+
+**Wichtiger Fund:** anders als EIA/Finnhub braucht FINRAs Consolidated-
+Short-Interest-Endpunkt (`api.finra.org/data/group/otcMarket/name/
+ConsolidatedShortInterest`) KEINEN API-Key - live bestätigt oeffentlich
+zugänglich (dieselbe Backend-API, die FINRAs eigene Daten-Browse-
+Oberfläche nutzt). Für VST/PLTR (beide NYSE) echte, plausible Historie
+zurückbekommen (VST: 205 Datenpunkte seit 2017, PLTR: 138 seit 2019).
+Ein Sortierversuch über den Partition-Key `settlementDate` scheitert ohne
+zusätzlichen Datums-Filter (API-Einschränkung) - stattdessen wird die
+komplette Historie mit einem großzügigen `limit` geholt und clientseitig
+sortiert/zugeschnitten. Bei unbekanntem Symbol liefert die API HTTP 204
+mit leerem Body (kein valides JSON) statt einer leeren Liste - live mit
+einem Fantasiesymbol bestätigt, expliziter Check in
+`get_short_interest_history()`.
+
+**Umgesetzt:** neue `api/finra.py` - `get_short_interest_history(symbol,
+n_periods=6)` (letzte 6 zweiwöchentliche Meldeperioden, aufsteigend),
+`summarize_short_interest()` (aktuelle vs. vorherige Periode, analog zum
+Finnhub-Muster). Nur Aktien-Pipeline (`agent/aktien/pipeline.py`,
+`asset.yfinance_symbol` wie bei SEC-EDGAR/Finnhub), neue Regel 24 in
+`agent/aktien/analyst.py`: niedrig gewichteter Zusatzkontext, explizit
+AMBIVALENT markiert (steigende Short-Position + hohes `days_to_cover`
+kann sowohl anhaltenden Abwärtsdruck als auch ein Short-Squeeze-Setup
+bedeuten, je nach technischem Kontext) - Erwähnung nur bei auffälligem
+`days_to_cover` (>3-4 Tage) oder starker Periodenänderung (>15-20%).
+Meldelag (1-3 Wochen, zweiwöchentliche FINRA-Meldung) explizit als "kein
+Echtzeit-Signal" vermerkt. `remote/server.py::API_HEALTH_GROUPS` um
+`finra` ergänzt. Kein `.env`-Eintrag nötig (kein Key).
+
+**Verifiziert:** synthetische Tests für `summarize_short_interest()`
+(leer/1-Eintrag/2-Eintraege), Pipeline-Block-Simulation mit echtem
+API-Aufruf für VST (JSON-serialisierbar), Live-Test für VST/PLTR (echte
+Werte, z. B. VST 2026-06-30: 15.917.274 Short-Aktien, 3,45 Tage
+Eindeckungsdauer, +3,61% ggü. Vorperiode) sowie für ein Fantasiesymbol
+(leere Liste, kein Crash trotz HTTP-204-Sonderfall). `build_facts()`-
+Signatur-Check bestätigt korrekte Parameter-Durchreichung. Damit sind
+JETZT ALLE FÜNF ursprünglich recherchierten Datenquellen-Kandidaten
+(FRED, SEC-EDGAR, EIA, Finnhub, FINRA) vollständig umgesetzt und live
+verifiziert - keine offenen Kandidaten aus dieser Recherche-Runde mehr.

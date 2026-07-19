@@ -196,7 +196,7 @@ const API_HEALTH_GROUPS = {
   "api-health-makro": [
     "fear_greed", "fred", "ecb", "china_pboc_lpr", "china_m2", "japan_boj",
     "coinmetrics", "defillama", "blockchain_com", "binance", "bybit", "okx",
-    "cftc_cot", "sec_edgar", "eia", "finnhub",
+    "cftc_cot", "sec_edgar", "eia", "finnhub", "finra",
   ],
 };
 

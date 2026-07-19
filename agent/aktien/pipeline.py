@@ -214,6 +214,19 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
         except Exception as exc:
             logger.info("Finnhub-Analysten-Trend-Abruf fuer %s fehlgeschlagen (degradiert auf None): %s", asset.symbol, exc)
 
+    # FINRA Consolidated Short Interest (2026-07-19, letzter der vier gewaehlten
+    # Datenquellen-Kandidaten) - oeffentlich, KEIN API-Key noetig (siehe
+    # api/finra.py Modul-Docstring). Eigener try/except, degradiert auf None (P-10).
+    short_interest_finra = None
+    if asset.yfinance_symbol:
+        try:
+            from api.finra import get_short_interest_history, summarize_short_interest
+
+            readings = get_short_interest_history(asset.yfinance_symbol)
+            short_interest_finra = summarize_short_interest(readings)
+        except Exception as exc:
+            logger.info("FINRA-Short-Interest-Abruf fuer %s fehlgeschlagen (degradiert auf None): %s", asset.symbol, exc)
+
     holdings = {h.symbol: h for h in db.get_all_holdings(conn)}
     price_age_minutes = None
     if price_snap is not None:
@@ -239,6 +252,7 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
         letztes_signal=letztes_signal,
         insider_trading=insider_trading,
         analysten_trend_finnhub=analysten_trend_finnhub,
+        short_interest_finra=short_interest_finra,
     )
 
     try:
