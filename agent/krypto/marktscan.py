@@ -504,6 +504,7 @@ def generate_candidate_writeup(
     conn,
     watchlist,
     config_dict: dict,
+    fred_api_key: str | None = None,
 ) -> dict:
     """Baut ein Facts-Objekt analog zu agent/analyst.py::build_facts() aus einem
     bereits gescorten Kandidaten und ruft call_groq_for_signal() UNVERAENDERT auf -
@@ -560,7 +561,7 @@ def generate_candidate_writeup(
         asset, watchlist, conn, latest_prices, snapshot, regime_result, config_dict, bitpanda_gelistet,
     )
     anticyclic_context = assess_anticyclic(asset, kraken_client, closes)
-    market_context = fetch_market_context()
+    market_context = fetch_market_context(fred_api_key)
 
     price_age_minutes = None
     try:

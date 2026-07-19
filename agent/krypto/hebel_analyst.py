@@ -443,6 +443,13 @@ def build_hebel_facts(
             "naechste_fomc_sitzungen": [
                 {"name": e.name, "in_tagen": e.days_until} for e in market_context["upcoming_fomc"]
             ],
+            "naechste_cpi_veroeffentlichung": (
+                {
+                    "datum": market_context["naechste_cpi_veroeffentlichung"].date,
+                    "in_tagen": market_context["naechste_cpi_veroeffentlichung"].days_until,
+                }
+                if market_context.get("naechste_cpi_veroeffentlichung") else None
+            ),
         },
         "disclaimers": {
             "hinweis": (

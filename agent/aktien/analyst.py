@@ -185,6 +185,15 @@ Wiederhole die Empfehlung nicht unveraendert, ohne diesen Umstand explizit in \
 `long_reasoning` oder `key_risks` zu benennen - entweder nenne einen NEUEN, zusaetzlichen \
 Grund, der seit der letzten Empfehlung hinzugekommen ist, oder erklaere ausdruecklich, \
 warum die Empfehlung trotz Nicht-Umsetzung unveraendert bestehen bleibt.
+22. Ist `insider_trading` NICHT null, zeigt es echte Kauf-/Verkaufstransaktionen von \
+Firmeninsidern (Vorstand/Aufsichtsrat) am offenen Markt der letzten 90 Tage (SEC-Pflicht- \
+meldungen, KEINE Optionsausuebungen/Zuteilungen). NIEDRIG gewichteter Zusatzkontext, \
+KEINE harte Regel: `anzahl_kaeufe` > 0 UND `anzahl_verkaeufe` == 0 ist ein schwaches \
+positives Signal (Insider setzen eigenes Geld ein), das Umgekehrte ein schwaches \
+negatives - aber Insider-Verkaeufe sind sehr haeufig routinemaessig (Diversifikation, \
+Steuerplanung, vorab geplante 10b5-1-Programme) und NICHT automatisch ein Warnsignal. \
+Formuliere entsprechend vorsichtig, erwaehne es nur, wenn es die Einschaetzung tatsaechlich \
+stuetzt, keine Ueberinterpretation einzelner Transaktionen.
 
 SCHEMA:
 {
@@ -278,6 +287,7 @@ def build_facts(
     historische_erfolgsquote: dict | None = None,
     historischer_makro_vergleich: dict | None = None,
     letztes_signal=None,
+    insider_trading: dict | None = None,
 ) -> dict:
     macd_val = technical_snapshot.macd
     macd_facts = None
@@ -338,6 +348,7 @@ def build_facts(
         "vorherige_empfehlung": vorherige_empfehlung_fact,
         "historische_erfolgsquote": historische_erfolgsquote,
         "historischer_makro_vergleich": historischer_makro_vergleich,
+        "insider_trading": insider_trading,
         "fundamentaldaten": {
             "kgv": _native(fundamentals.kgv) if fundamentals else None,
             "forward_kgv": _native(fundamentals.forward_kgv) if fundamentals else None,

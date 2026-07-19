@@ -182,6 +182,22 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
     except Exception as exc:
         logger.warning("Fundamentaldaten-Abruf fuer %s fehlgeschlagen (degradiert auf None): %s", asset.symbol, exc)
 
+    # SEC-EDGAR-Insider-Trading (2026-07-19, Datenquellen-Recherche-Nachfolger) -
+    # eigener try/except, ein Fehlschlag degradiert nur auf None (P-10), blockiert
+    # nicht die Analyse. Kostenlos, kein API-Key noetig (siehe api/sec_edgar.py).
+    # asset.yfinance_symbol statt asset.symbol - SEC braucht den echten Boersen-
+    # Ticker, nicht Bitpandas internes Symbol (gleiche Unterscheidung wie bei
+    # fetch_fundamentals() oben).
+    insider_trading = None
+    if asset.yfinance_symbol:
+        try:
+            from api.sec_edgar import get_recent_insider_transactions, summarize_insider_activity
+
+            insider_transactions = get_recent_insider_transactions(asset.yfinance_symbol)
+            insider_trading = summarize_insider_activity(insider_transactions)
+        except Exception as exc:
+            logger.info("SEC-EDGAR-Insider-Trading-Abruf fuer %s fehlgeschlagen (degradiert auf None): %s", asset.symbol, exc)
+
     holdings = {h.symbol: h for h in db.get_all_holdings(conn)}
     price_age_minutes = None
     if price_snap is not None:
@@ -205,6 +221,7 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
         historische_erfolgsquote=historische_erfolgsquote,
         historischer_makro_vergleich=historischer_makro_vergleich,
         letztes_signal=letztes_signal,
+        insider_trading=insider_trading,
     )
 
     try:

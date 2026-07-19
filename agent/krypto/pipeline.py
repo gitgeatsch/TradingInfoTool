@@ -306,12 +306,17 @@ def _fetch_boden_zielzone_context(conn, config_dict: dict) -> dict:
     return context
 
 
-def fetch_market_context() -> dict:
+def fetch_market_context(fred_api_key: str | None = None) -> dict:
     """Reiner Groq-Kontext (Nutzungs-Diskussion, letzter Schritt, 2026-07-08) - KEINE
     neue Regime-Logik, nur zusaetzliche Fakten fuers Facts-Objekt (agent/analyst.py::
     build_facts). P-10: Exchange-Flow/Stablecoin-Supply unabhaengig versucht: FOMC-
     Kalender/Praesidentschaftszyklus sind reine Datumsrechnung (agent/cycles.py),
-    kein Netzwerk-Call, daher kein try/except noetig."""
+    kein Netzwerk-Call, daher kein try/except noetig.
+
+    NACHTRAG (2026-07-19, Datenquellen-Recherche-Nachfolger): naechster FRED-CPI-
+    Veroeffentlichungstermin, analog zum FOMC-Kalender-Muster. `fred_api_key`
+    optional (P-8: Kernfunktionen duerfen nicht zwingend von einem externen Key
+    abhaengen) - ohne Key bleibt das Feld None, kein Fehler."""
     from api.onchain import get_btc_exchange_flows, get_stablecoin_supply
     from agent.cycles import get_presidential_cycle_context, get_upcoming_fomc_meetings
 
@@ -320,6 +325,7 @@ def fetch_market_context() -> dict:
         "stablecoin_supply": None,
         "presidential_cycle": get_presidential_cycle_context(),
         "upcoming_fomc": get_upcoming_fomc_meetings(within_days=30),
+        "naechste_cpi_veroeffentlichung": None,
     }
     try:
         context["exchange_flow"] = get_btc_exchange_flows()
@@ -329,6 +335,13 @@ def fetch_market_context() -> dict:
         context["stablecoin_supply"] = get_stablecoin_supply()
     except Exception as exc:
         logger.info("Stablecoin-Supply-Abruf fehlgeschlagen: %s", exc)
+    if fred_api_key:
+        try:
+            from api.macro import get_next_fred_release
+
+            context["naechste_cpi_veroeffentlichung"] = get_next_fred_release(10, "cpi_headline", fred_api_key)
+        except Exception as exc:
+            logger.info("FRED-CPI-Release-Kalender-Abruf fehlgeschlagen: %s", exc)
     return context
 
 
@@ -508,7 +521,7 @@ def generate_signal(
     # R-5.11 Antizyklik-Heuristik.
     anticyclic_context = assess_anticyclic(asset, kraken_client, closes)
 
-    market_context = fetch_market_context()
+    market_context = fetch_market_context(fred_api_key)
 
     holdings = {h.symbol: h for h in db.get_all_holdings(conn)}
     # Wiederholungs-Erkennung (2026-07-17, siehe analyst.py::build_facts()

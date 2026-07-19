@@ -412,7 +412,7 @@ class MarktscanView(ttk.Frame):
             )
             parsed = generate_candidate_writeup(
                 candidate, regime_result, self._groq_client, self._kraken_client, conn, self._watchlist,
-                config_dict,
+                config_dict, self._fred_api_key,
             )
             db.update_marktscan_candidate_groq_writeup(
                 conn, candidate.id, parsed.get("short_reasoning"),

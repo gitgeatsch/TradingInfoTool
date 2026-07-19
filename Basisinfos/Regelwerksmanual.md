@@ -4679,3 +4679,95 @@ Exception-Endzeilen (2 eindeutige Cluster: `AttributeError` × 28,
 `ReadTimeout` × 1). Aktueller Code an allen 4 `get_listed_assets()`-
 Aufrufstellen per `grep` + Signatur-Introspektion (`inspect.signature()`)
 gegengeprüft - keine Regression.
+
+## Nachtrag (2026-07-19, gleicher Tag): zwei neue Datenquellen - FRED-CPI-Kalender + SEC-EDGAR-Insider-Trading
+
+**Auslöser:** direkter Nachfolger der Backtracking-Aussagekraft-Audit-Runde:
+Nutzer wollte generell, "nicht nur Krypto", zusätzliche Marktdaten-Quellen
+zur Aufwertung der LLM-Abfragen recherchiert haben - mit dem expliziten
+Hinweis, dass X (Twitter) und YouTube bereits als problematisch bekannt sind
+(API-Kosten bzw. ToS-Risiko) und deshalb nicht erneut vertieft werden
+müssen. Ein spezialisierter Recherche-Agent lieferte eine priorisierte
+Top-5-Liste kostenloser, offizieller Quellen; Nutzer entschied sich, mit
+FRED-Release-Kalender + SEC-EDGAR-Insider-Trading zu beginnen.
+
+### FRED-CPI-Veröffentlichungskalender (analog zum bestehenden FOMC-Kalender)
+
+Live gegen die echte FRED-API verifiziert (`/fred/series/release`,
+`/fred/release/dates`): CPI hat `release_id=10`. Bewusst NUR CPI
+aufgenommen, nicht alle bereits genutzten `FRED_SERIES` - H.15 (Fed Funds,
+`release_id=18`) wird taeglich veröffentlicht und wäre als "bevorstehendes
+Ereignis" nie aussagekräftig (immer "morgen"), M2/ISM-Ersatz haben keinen so
+ausgeprägten Markt-Reaktions-Charakter wie der monatliche CPI-Print. Live
+auch bestätigt: FRED veröffentlicht den JEWEILS NÄCHSTEN Termin nicht immer
+im Voraus (kurz nach einem CPI-Print am 2026-07-14 lieferte die API noch
+keinen Eintrag für den nächsten Termin) - kein Fehler, `get_next_fred_release()`
+liefert dann korrekt `None` statt zu raten (P-10).
+
+**Umgesetzt:** `api/macro.py::get_next_fred_release()`/`get_upcoming_fred_releases()`
+(neu, `FRED_RELEASE_IDS`-Konstante). `agent/krypto/pipeline.py::
+fetch_market_context()` bekommt einen neuen optionalen `fred_api_key`-
+Parameter und füllt `naechste_cpi_veroeffentlichung` analog zu
+`upcoming_fomc` (gleiches Footprint wie der bestehende FOMC-Kalender:
+Spot/Hebel/Marktscan - NICHT Aktien/Rohstoffe/Hedge/Themen-ETF, die nutzen
+`fetch_market_context()` bisher nicht). Drei Aufrufstellen entsprechend
+angepasst (`agent/krypto/pipeline.py::generate_signal()`,
+`agent/krypto/hebel_pipeline.py::generate_hebel_signal()`,
+`agent/krypto/marktscan.py::generate_candidate_writeup()` inkl. dessen
+beiden Callern `budget_allocator.py`/`ui/marktscan_view.py`). Neue Regel 13-
+Erweiterung in `agent/krypto/analyst.py` (analog zur bestehenden FOMC-Regel:
+CPI-Print innerhalb von 5 Tagen wird als möglicher kurzfristiger
+Volatilitäts-Faktor in `key_risks` erwähnt), reines Fakten-Feld in
+`agent/krypto/hebel_analyst.py` (kein eigener Regeltext, wie beim FOMC-
+Pendant dort auch).
+
+**Verifiziert:** live gegen die echte FRED-API (Endpunkt-Verhalten,
+inkl. des "noch kein Termin bekannt"-Falls). Synthetischer Test der
+Facts-Zusammenbau-Logik (gesetzter Fakt/None/fehlender Key). Echter
+End-to-End-Lauf von `fetch_market_context()` mit und ohne Key - kein Fehler.
+
+### SEC-EDGAR-Insider-Trading (Form 4, nur Aktien-Pipeline)
+
+Live gegen die echte SEC-EDGAR-API verifiziert (CIK-Auflösung für VST/PLTR,
+echte Form-4-Rohdaten-XML-Struktur): `submissions/CIK##########.json`
+liefert die Filing-Liste inkl. `primaryDocument`-Pfad wie
+"xslF345X06/wk-form4_XXXX.xml" - das ist die XSLT-GERENDERTE HTML-Ansicht,
+NICHT die Rohdaten. Die eigentliche Roh-XML mit den strukturierten
+Transaktionsdaten liegt im selben Verzeichnis OHNE das "xslF345X06/"-
+Präfix (für beide Testfälle bestätigt) - reiner String-Präfix-Strip, kein
+zusätzlicher Index-Abruf nötig. Nur Transaktionscode P (offener Markt-Kauf)
+und S (offener Markt-Verkauf) gelten als echtes Insider-Conviction-Signal -
+A (Zuteilung/Grant), M (Optionsausübung), F (Steuerabzug) etc. sind
+administrativ/vergütungsbedingt und werden bewusst herausgefiltert (P-10:
+keine Fehlinterpretation als Kauf-/Verkaufssignal).
+
+**Umgesetzt:** neue `api/sec_edgar.py` (kein API-Key nötig, nur ein
+Pflicht-User-Agent-Header laut SEC-Vorgabe) -
+`get_cik_for_ticker()` (in-memory gecacht, die ~800KB-Gesamtliste wird
+nur einmal pro App-Lauf geladen), `get_recent_insider_transactions()`
+(max. 5 Filings, 90-Tage-Fenster), `summarize_insider_activity()`
+(Aggregation zu Kauf-/Verkaufszahlen + -Volumen, reine Lesefunktion, keine
+Bewertung). `agent/aktien/analyst.py::build_facts()` bekommt neuen
+`insider_trading`-Parameter, neue Regel 22 (niedrig gewichteter
+Zusatzkontext, explizite Warnung vor Überinterpretation einzelner
+Transaktionen - Insider-Verkäufe sind oft routinemäßig/steuerlich bedingt).
+`agent/aktien/pipeline.py::generate_signal()` ruft den Abruf mit
+`asset.yfinance_symbol` (nicht `asset.symbol` - SEC braucht den echten
+Börsen-Ticker) in einem eigenen try/except auf, degradiert bei Fehlschlag
+auf `None` (P-10). `remote/server.py::API_HEALTH_GROUPS` um `sec_edgar`
+ergänzt.
+
+**Verifiziert:** live gegen die echte SEC-EDGAR-API fuer VST und PLTR
+(reale Insider-Transaktionen korrekt geparst, inkl. Edge-Case unbekannter
+Ticker -> leere Liste statt Fehler). JSON-Serialisierbarkeit geprüft.
+**Echter End-to-End-Signal-Lauf fuer VST gegen eine Kopie der (migrierten)
+Produktions-DB, inklusive echter LLM-Antwort (Mistral):** das Modell hat
+den neuen Fakt tatsächlich in seiner Begründung verwendet ("Die
+Insideraktivitäten sind negativ") - nicht nur strukturell verdrahtet,
+sondern nachweislich wirksam. Ein erster Versuch mit Groq schlug wegen
+bereits ausgeschöpftem Tageskontingent fehl (429), kein Code-Fehler.
+
+**Bewusst nicht umgesetzt (Nutzer-Vorgabe: "Fang mit FRED-Kalender + SEC
+EDGAR an"):** die weiteren drei Top-5-Empfehlungen (EIA-Energiedaten,
+Finnhub Recommendation-Trends/Earnings-Kalender, FINRA Equity Short
+Interest) bleiben als nächste Kandidaten vorgemerkt, sobald gewünscht.
