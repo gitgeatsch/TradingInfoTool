@@ -40,7 +40,9 @@ _WATCHLIST_COLUMN_DESCRIPTIONS = {
     "assetklasse": "Krypto, Aktie, ETF oder Rohstoff.",
     "status": (
         "Gehalten (echter Bestand oder offene Hebel-Position, live abgeleitet) oder - falls nicht gehalten - "
-        "Beobachtung (aktive Kandidatur) bzw. Ausgemustert (niedrigste Priorität, aber nicht ausgeschlossen)."
+        "Beobachtung (aktive Kandidatur) bzw. Ausgemustert (niedrigste Priorität, aber nicht ausgeschlossen). "
+        "⚠ keine CoinGecko-ID = Spot-Analyse für dieses Asset strukturell inaktiv (z. B. automatisch aus einer "
+        "Hebel-Position ergänzt) - ID über 'Asset hinzufügen/bearbeiten' nachtragen."
     ),
     "bitpanda": (
         "✓ = auf Bitpanda handelbar, ✗ = nicht gelistet (blockiert Kauf-/Nachkauf-"
@@ -302,6 +304,7 @@ class TradingInfoToolApp(tk.Tk):
             tree.column(col, width=90 if col in ("bitpanda", "tranchen", "hebel_pruefung") else 110, anchor=anchor)
         tree.tag_configure("stale", foreground=theme.stale_color())
         tree.tag_configure("bitpanda_fehlt", foreground=theme.danger_color())
+        tree.tag_configure("coingecko_id_fehlt", foreground=theme.danger_color())
         frame.reapply_sort = make_sortable(
             tree, numeric_columns=frozenset({"price_usd", "price_eur", "change_24h"})
         )
@@ -418,6 +421,25 @@ class TradingInfoToolApp(tk.Tk):
                 status_text = "Gehalten"
             else:
                 status_text = asset.beobachtungsstatus
+
+            # 2026-07-19, Konsistenz-Check Watchlist-Tab (Nutzer-Wunsch): ein
+            # Krypto-Asset ohne coingecko_id (z.B. automatisch aus einer
+            # Hebel-Position ergaenzt, siehe importer/bitpanda_margin_
+            # positions.py::auto_add_unknown_hebel_symbols()) bekommt bei
+            # select_assets_due_for_signal() als "nie berechnet" IMMER die
+            # hoechste Prioritaet, kann aber generate_signal() strukturell nie
+            # erfolgreich durchlaufen (keine Kurshistorie ohne ID) - ohne
+            # sichtbaren Hinweis wuerde das dauerhaft, unbemerkt einen
+            # Spot-Budget-Slot pro Allocator-Lauf verschwenden. Jetzt zusaetzlich
+            # in signal_batch.py aus der Kandidatenauswahl ausgeschlossen -
+            # diese Markierung bleibt trotzdem, damit der Nutzer den fehlenden
+            # Eintrag findet und ergaenzt (Spot-Analyse ist bis dahin inaktiv).
+            coingecko_id_fehlt = (
+                asset.assetklasse == "krypto" and not asset.ist_cash_aequivalent and not asset.coingecko_id
+            )
+            if coingecko_id_fehlt:
+                status_text += " ⚠ keine CoinGecko-ID"
+                tags.append("coingecko_id_fehlt")
 
             tree.insert(
                 "",
@@ -1041,6 +1063,95 @@ def _validate_new_asset(
     return warnungen
 
 
+class CoinSearchDialog(tk.Toplevel):
+    """CoinGecko-Symbolsuche (2026-07-19, Watchlist-Tab-Konsistenzpruefung -
+    Nutzer-Nachfrage "das solltest du doch automatisch ergaenzen koennen").
+    Bewusst KEINE automatische Auswahl: ein Symbol wie "SOL" hat bei CoinGecko
+    12 verschiedene IDs (echtes Solana + gebrueckte/gewrappte Varianten), live
+    verifiziert - eine stille automatische Wahl haette das Risiko, dauerhaft
+    die falsche Coin-Historie zu laden. Stattdessen zeigt dieser Dialog alle
+    Treffer (exakte Symbol-Treffer zuerst, sortiert nach Marktkap.-Rang -
+    siehe api/coingecko.py::CoinGeckoClient.search_coins()), der Nutzer
+    bestaetigt die Auswahl selbst per Doppelklick oder Button."""
+
+    def __init__(self, parent, coingecko_client, initial_query: str, on_selected) -> None:
+        super().__init__(parent)
+        self._coingecko_client = coingecko_client
+        self._on_selected = on_selected
+        self.title("CoinGecko-ID suchen")
+        self.resizable(False, False)
+        self.transient(parent)
+        self.grab_set()
+
+        frame = ttk.Frame(self, padding=12)
+        frame.pack(fill="both", expand=True)
+
+        search_row = ttk.Frame(frame)
+        search_row.pack(fill="x")
+        self._query_var = tk.StringVar(value=initial_query)
+        ttk.Entry(search_row, textvariable=self._query_var, width=22).pack(side="left")
+        ttk.Button(search_row, text="Suchen", command=self._on_search).pack(side="left", padx=(6, 0))
+
+        self._status_label = ttk.Label(frame, text="", foreground=theme.info_color())
+        self._status_label.pack(anchor="w", pady=(4, 4))
+
+        columns = ("symbol", "name", "coingecko_id", "rang")
+        self._tree = ttk.Treeview(frame, columns=columns, show="headings", height=10, selectmode="browse")
+        headings = {"symbol": "Symbol", "name": "Name", "coingecko_id": "CoinGecko-ID", "rang": "Marktkap.-Rang"}
+        widths = {"symbol": 70, "name": 160, "coingecko_id": 180, "rang": 90}
+        for col in columns:
+            self._tree.heading(col, text=headings[col])
+            self._tree.column(col, width=widths[col], anchor="w")
+        self._tree.pack(fill="both", expand=True)
+        self._tree.bind("<Double-1>", lambda _event: self._on_confirm())
+
+        button_frame = ttk.Frame(frame)
+        button_frame.pack(fill="x", pady=(10, 0))
+        ttk.Button(button_frame, text="Abbrechen", command=self.destroy).pack(side="right", padx=(6, 0))
+        ttk.Button(button_frame, text="Übernehmen", command=self._on_confirm).pack(side="right")
+
+        if initial_query.strip():
+            self._on_search()
+
+    def _on_search(self) -> None:
+        query = self._query_var.get().strip()
+        if not query:
+            return
+        for item in self._tree.get_children():
+            self._tree.delete(item)
+        self._status_label.config(text="Suche läuft …", foreground=theme.info_color())
+        self.update_idletasks()
+        try:
+            results = self._coingecko_client.search_coins(query)
+        except Exception as exc:
+            self._status_label.config(text=f"Suche fehlgeschlagen: {exc}", foreground=theme.danger_color())
+            return
+        if not results:
+            self._status_label.config(text="Keine Treffer.", foreground=theme.stale_color())
+            return
+        query_upper = query.upper()
+        for r in results:
+            rang_text = str(r.market_cap_rank) if r.market_cap_rank is not None else "-"
+            markierung = " (exakt)" if r.symbol == query_upper else ""
+            self._tree.insert(
+                "", "end", iid=r.coingecko_id,
+                values=(r.symbol, r.name + markierung, r.coingecko_id, rang_text),
+            )
+        self._status_label.config(
+            text=f"{len(results)} Treffer - exakte Symbol-Treffer zuerst, sortiert nach Marktkap.-Rang.",
+            foreground=theme.info_color(),
+        )
+
+    def _on_confirm(self) -> None:
+        selected = self._tree.selection()
+        if not selected:
+            messagebox.showinfo("CoinGecko-ID suchen", "Bitte zuerst einen Treffer auswählen.")
+            return
+        coingecko_id = selected[0]
+        self.destroy()
+        self._on_selected(coingecko_id)
+
+
 class AssetAddDialog(tk.Toplevel):
     """Manuelles Hinzufügen eines neuen Watchlist-Assets (2026-07-16,
     Klassifikations-Redesign - Nutzer-Beispiel: ein Symbol wie Solana soll mit
@@ -1090,11 +1201,25 @@ class AssetAddDialog(tk.Toplevel):
                 ttk.Entry(frame, textvariable=var, width=25).grid(
                     row=row, column=1, sticky="w", pady=2, padx=(8, 0)
                 )
+                if var is self._coingecko_id_var:
+                    # 2026-07-19, Watchlist-Tab-Konsistenzpruefung: Symbol ist
+                    # bei CoinGecko nicht eindeutig (siehe CoinSearchDialog-
+                    # Docstring) - Suchen statt Freihandeintrag raten muessen.
+                    ttk.Button(frame, text="Suchen …", command=self._on_search_coingecko_id).grid(
+                        row=row, column=2, sticky="w", pady=2, padx=(6, 0)
+                    )
 
         button_frame = ttk.Frame(frame)
-        button_frame.grid(row=len(fields), column=0, columnspan=2, sticky="e", pady=(10, 0))
+        button_frame.grid(row=len(fields), column=0, columnspan=3, sticky="e", pady=(10, 0))
         ttk.Button(button_frame, text="Abbrechen", command=self.destroy).pack(side="right", padx=(6, 0))
         ttk.Button(button_frame, text="Hinzufügen", command=self._on_submit).pack(side="right")
+
+    def _on_search_coingecko_id(self) -> None:
+        query = self._symbol_var.get().strip()
+        CoinSearchDialog(
+            self, self._parent_app._coingecko_client, query,
+            on_selected=lambda cid: self._coingecko_id_var.set(cid),
+        )
 
     def _on_submit(self) -> None:
         import config as config_module
@@ -1140,12 +1265,20 @@ class AssetEditDialog(tk.Toplevel):
     """Bearbeiten von `rolle`/`beobachtungsstatus` eines bestehenden Watchlist-
     Assets (2026-07-16, Klassifikations-Redesign) - z.B. um ein taktisches
     Asset nach einem Strategiewechsel auf "ausgemustert" zu setzen, oder
-    core/taktisch umzustellen. Symbol/Name/CoingeckoID etc. bleiben hier
-    unveraendert (Symbol-Umbenennung o.ae. ist ein anderer, hier nicht
-    abgedeckter Vorgang)."""
+    core/taktisch umzustellen. Symbol/Name bleiben unveraendert (Symbol-
+    Umbenennung o.ae. ist ein anderer, hier nicht abgedeckter Vorgang).
+
+    2026-07-19 (Watchlist-Tab-Konsistenzpruefung) um `coingecko_id` erweitert
+    - vorher gab es fuer ein BEREITS bestehendes Krypto-Asset ohne ID (z.B.
+    automatisch aus einer Hebel-Position ergaenzt, siehe importer/
+    bitpanda_margin_positions.py::auto_add_unknown_hebel_symbols()) gar
+    keinen GUI-Weg, sie nachzutragen - nur beim Erst-Anlegen ueber
+    AssetAddDialog. Nur fuer assetklasse=krypto sichtbar (Aktien/ETF/
+    Rohstoffe haben kein CoinGecko-Pendant)."""
 
     def __init__(self, parent, asset, on_edited=None) -> None:
         super().__init__(parent)
+        self._parent_app = parent
         self._asset = asset
         self._on_edited = on_edited
         self.title(f"Asset bearbeiten: {asset.symbol}")
@@ -1157,7 +1290,7 @@ class AssetEditDialog(tk.Toplevel):
         frame.pack(fill="both", expand=True)
 
         ttk.Label(frame, text=f"{asset.symbol} — {asset.name}", font=("", 10, "bold")).grid(
-            row=0, column=0, columnspan=2, sticky="w", pady=(0, 8)
+            row=0, column=0, columnspan=3, sticky="w", pady=(0, 8)
         )
 
         self._rolle_var = tk.StringVar(value=asset.rolle)
@@ -1176,12 +1309,36 @@ class AssetEditDialog(tk.Toplevel):
         ttk.Label(
             frame, text="(wirkt nur, solange das Asset nicht gehalten wird - siehe Spalte 'Status')",
             wraplength=280, foreground=theme.stale_color(),
-        ).grid(row=3, column=0, columnspan=2, sticky="w", pady=(0, 8))
+        ).grid(row=3, column=0, columnspan=3, sticky="w", pady=(0, 8))
+
+        next_row = 4
+        self._coingecko_id_var = tk.StringVar(value=asset.coingecko_id or "")
+        if asset.assetklasse == "krypto" and not asset.ist_cash_aequivalent:
+            ttk.Label(frame, text="CoinGecko-ID").grid(row=next_row, column=0, sticky="w", pady=2)
+            ttk.Entry(frame, textvariable=self._coingecko_id_var, width=25).grid(
+                row=next_row, column=1, sticky="w", pady=2, padx=(8, 0)
+            )
+            ttk.Button(frame, text="Suchen …", command=self._on_search_coingecko_id).grid(
+                row=next_row, column=2, sticky="w", pady=2, padx=(6, 0)
+            )
+            next_row += 1
+            if not asset.coingecko_id:
+                ttk.Label(
+                    frame, text="⚠ ohne ID keine Spot-Analyse für dieses Asset möglich",
+                    wraplength=280, foreground=theme.danger_color(),
+                ).grid(row=next_row, column=0, columnspan=3, sticky="w", pady=(0, 8))
+                next_row += 1
 
         button_frame = ttk.Frame(frame)
-        button_frame.grid(row=4, column=0, columnspan=2, sticky="e", pady=(10, 0))
+        button_frame.grid(row=next_row, column=0, columnspan=3, sticky="e", pady=(10, 0))
         ttk.Button(button_frame, text="Abbrechen", command=self.destroy).pack(side="right", padx=(6, 0))
         ttk.Button(button_frame, text="Speichern", command=self._on_submit).pack(side="right")
+
+    def _on_search_coingecko_id(self) -> None:
+        CoinSearchDialog(
+            self, self._parent_app._coingecko_client, self._asset.symbol,
+            on_selected=lambda cid: self._coingecko_id_var.set(cid),
+        )
 
     def _on_submit(self) -> None:
         import config as config_module
@@ -1189,6 +1346,9 @@ class AssetEditDialog(tk.Toplevel):
         try:
             config_module.update_watchlist_rolle(self._asset.symbol, self._rolle_var.get())
             config_module.update_watchlist_beobachtungsstatus(self._asset.symbol, self._beobachtungsstatus_var.get())
+            new_coingecko_id = self._coingecko_id_var.get().strip()
+            if new_coingecko_id and new_coingecko_id != (self._asset.coingecko_id or ""):
+                config_module.update_watchlist_coingecko_id(self._asset.symbol, new_coingecko_id)
         except config_module.WatchlistWriteError as exc:
             messagebox.showerror("Asset bearbeiten", f"Fehlgeschlagen: {exc}")
             return

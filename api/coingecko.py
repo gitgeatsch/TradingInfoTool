@@ -22,6 +22,14 @@ MAX_COOLDOWN_SECONDS = 300  # Deckel fuer den exponentiellen Backoff (5 Min)
 
 
 @dataclass
+class CoinSearchResult:
+    coingecko_id: str
+    symbol: str
+    name: str
+    market_cap_rank: int | None
+
+
+@dataclass
 class TrendingCoin:
     coingecko_id: str
     symbol: str
@@ -116,6 +124,38 @@ class CoinGeckoClient:
     def get_market_chart(self, coingecko_id: str, vs_currency: str, days: int) -> dict:
         params = {"vs_currency": vs_currency, "days": days}
         return self._get(f"{BASE_URL}/coins/{coingecko_id}/market_chart", params)
+
+    def search_coins(self, query: str) -> list[CoinSearchResult]:
+        """CoinGecko `/search` - fuer die manuelle Symbol->coingecko_id-Aufloesung
+        im "Asset hinzufuegen/bearbeiten"-Dialog (2026-07-19, echter Fund: Symbol
+        allein ist bei CoinGecko NICHT eindeutig - z.B. teilen sich 12
+        verschiedene IDs den Ticker "SOL" (echtes Solana + 11 gebrueckte/
+        gewrappte Varianten), 2.116 von 13.704 Symbolen insgesamt sind
+        mehrdeutig, live per WebFetch/Skript verifiziert). Deshalb bewusst KEINE
+        automatische Zuordnung (z.B. "erstes Ergebnis nehmen") - das koennte
+        still die falsche Coin-Historie laden. Stattdessen zeigt der Dialog dem
+        Nutzer eine sortierte Auswahl, er bestaetigt selbst.
+
+        Ergebnis sortiert: exakte Symbol-Treffer zuerst (Marktkap.-Rang
+        aufsteigend, kein Rang zuletzt), danach die uebrigen (Name-)Treffer in
+        der von CoinGecko gelieferten Relevanz-Reihenfolge - der `/search`-
+        Endpunkt liefert `market_cap_rank` bereits mit, ein zusaetzlicher
+        `/coins/markets`-Call zur Disambiguierung ist nicht noetig."""
+        data = self._get(f"{BASE_URL}/search", {"query": query})
+        results = [
+            CoinSearchResult(
+                coingecko_id=c["id"], symbol=c["symbol"].upper(), name=c["name"],
+                market_cap_rank=c.get("market_cap_rank"),
+            )
+            for c in data.get("coins", [])
+        ]
+        query_upper = query.strip().upper()
+        exakt = sorted(
+            (r for r in results if r.symbol == query_upper),
+            key=lambda r: (r.market_cap_rank is None, r.market_cap_rank or 0),
+        )
+        rest = [r for r in results if r.symbol != query_upper]
+        return exakt + rest
 
     def get_global_data(self) -> dict:
         """Liefert u.a. data.market_cap_percentage.btc (BTC-Dominanz, Kap. 8 R-5.1)."""

@@ -4311,3 +4311,114 @@ dann den Fix (nach `resolve_marktscan_candidate_siblings()` liefert dieselbe
 Abfrage korrekt `'nutzer_behalten_manuell_uebernommen'`, die zweite Zeile
 trägt jetzt denselben Status, zweiter Aufruf idempotent). Import-Check
 fehlerfrei.
+
+## Nachtrag (2026-07-19, gleicher Tag): Watchlist-Tab-Konsistenzprüfung -
+fehlende coingecko_id verschwendet dauerhaft Spot-Budget
+
+**Auslöser:** Nutzer bat explizit darum, die Watchlist-Tab-Konsistenz
+ebenfalls zu prüfen (nach den Info-Leichen-Funden bei Hebel/Marktscan).
+Codeprüfung ergab keine Duplikat-/Entfernungs-Lücke (`add_watchlist_entry()`
+prüft bereits zentral auf doppelte Symbole, alle drei Aufrufer -
+Marktscan-Übernehmen, manueller "Asset hinzufügen"-Dialog, Hebel-Auto-Add -
+nutzen dieselbe Funktion; ein "Watchlist entfernen"-Feature existiert
+bewusst nicht, die Datei ist explizit handgepflegt). Stattdessen ein
+eigenständiger, bisher unbemerkter struktureller Bug gefunden.
+
+**Root Cause:** ein per `importer/bitpanda_margin_positions.py::
+auto_add_unknown_hebel_symbols()` automatisch ergänztes Krypto-Asset (offene
+Hebel-Position auf einem noch unbekannten Symbol) bekommt bewusst KEINE
+`coingecko_id` (keine zuverlässige automatische Symbol→ID-Auflösung, siehe
+Docstring dort). `agent/krypto/signal_batch.py::
+select_assets_due_for_signal()` filterte bisher nur nach `assetklasse ==
+"krypto"`, nicht zusätzlich auf eine gesetzte `coingecko_id`. Ohne ID liefert
+`agent/krypto/pipeline.py::generate_signal()` strukturell IMMER sofort ein
+Fixed-HALTEN (`gate_reason='keine historischen Daten vorhanden'`), OHNE
+`groq_raw_response` zu setzen - `db.get_latest_real_signal_per_symbol()`
+(WHERE `groq_raw_response IS NOT NULL`) sieht das Asset dadurch für immer als
+"nie berechnet". Da `select_assets_due_for_signal()` "nie berechnet zuerst"
+sortiert, wäre so ein Asset bei JEDEM 15-Min-Budget-Allocator-Lauf dauerhaft
+an Position 1 der Prioritätsliste gelandet und hätte einen echten
+Spot-Budget-Slot verschwendet - unbegrenzt, ohne jede sichtbare Warnung.
+Aktuell 0 betroffene Symbole in der lokalen Watchlist (noch nicht
+zugeschlagen), aber strukturell jederzeit möglich, sobald eine Hebel-Position
+auf einem neuen, unbekannten Symbol eröffnet wird.
+
+**Fix (zwei Ebenen, gleiches Muster wie beim Info-Leichen-Fix):**
+1. `select_assets_due_for_signal()` filtert jetzt zusätzlich auf
+   `a.coingecko_id` (truthy) - das Asset wird gar nicht erst als Kandidat
+   ausgewählt, verschwendet also keinen Slot mehr.
+2. `ui/app.py::_refresh_watchlist_from_db()` markiert ein betroffenes Asset
+   sichtbar in der Status-Spalte ("⚠ keine CoinGecko-ID", neuer Tag
+   `coingecko_id_fehlt`, `theme.danger_color()` wie beim bestehenden
+   `bitpanda_fehlt`-Muster) UND in der Spalten-Kopfzeilen-Tooltip - der
+   Nutzer sieht so weiterhin, WARUM Spot-Analyse für dieses Symbol inaktiv
+   ist, und kann die ID über den bestehenden "Asset hinzufügen/bearbeiten"-
+   Dialog nachtragen. `ui/signals_view.py`s identisches Filtermuster (manuelle
+   "Signal berechnen"-Auswahl) bewusst NICHT geändert - ein manueller Klick
+   liefert dort bereits eine klare, sofortige Fehlermeldung, kein
+   wiederkehrender stiller Ressourcenverbrauch wie beim automatischen
+   Allocator.
+
+**Verifiziert:** synthetischer Test von `select_assets_due_for_signal()`
+(Asset ohne `coingecko_id` wird korrekt ausgeschlossen, Asset mit ID bleibt
+Kandidat). Tk-Smoke-Test der Watchlist-Tab-Zeile (Asset ohne ID zeigt korrekt
+"⚠ keine CoinGecko-ID" + gesetztes Tag, unbetroffenes Asset bleibt
+unverändert). Echte Watchlist-Prüfung: aktuell 0 betroffene Symbole.
+
+## Nachtrag (2026-07-19, gleicher Tag): CoinGecko-Symbolsuche im
+"Asset hinzufügen/bearbeiten"-Dialog
+
+**Auslöser:** Nutzer fragte direkt nach der obigen Warn-Markierung, warum die
+`coingecko_id` nicht einfach automatisch aus dem Symbol ergänzt werden kann.
+Live gegen die echte CoinGecko-API geprüft, um die Antwort auf Fakten statt
+Vermutung zu stützen: das Symbol (z. B. "SOL") ist bei CoinGecko NICHT
+eindeutig - `coingecko_id` ist der interne eindeutige Schlüssel, das Symbol
+nur der Ticker. Konkret geteilt: **12 verschiedene IDs** tragen den Ticker
+"SOL" (das echte Solana plus 11 gebrückte/gewrappte Varianten über andere
+Chains - Base, Near, Eclipse, Neon, Osmosis, Binance). Insgesamt sind 2.116
+von 13.704 Symbolen bei CoinGecko mehrdeutig. Eine stille automatische
+Zuordnung (z. B. "erstes Ergebnis nehmen") hätte das Risiko, dauerhaft die
+FALSCHE Coin-Historie zu laden, ohne dass es auffällt. Marktkapitalisierung
+disambiguiert aber zuverlässig (bei SOL: echtes Solana Rang 7 / ~44 Mrd. $,
+die Wrapped-Varianten ohne Rang und nur Bruchteile davon) - deshalb Suche
+mit Nutzer-Bestätigung statt automatischer Auswahl.
+
+**Umgesetzt (drei Ebenen):**
+1. Neue `api/coingecko.py::CoinGeckoClient.search_coins(query)` - nutzt
+   CoinGeckos `/search`-Endpunkt (liefert `market_cap_rank` bereits mit, kein
+   zusätzlicher `/coins/markets`-Call nötig), sortiert exakte Symbol-Treffer
+   zuerst nach Rang aufsteigend (kein Rang zuletzt), danach die übrigen
+   Namens-Treffer in CoinGeckos eigener Relevanz-Reihenfolge.
+2. Neuer `ui/app.py::CoinSearchDialog` - zeigt die Treffer in einer Tabelle
+   (Symbol/Name/ID/Rang), Nutzer wählt per Doppelklick oder Button, KEINE
+   automatische Vorauswahl auch bei nur einem Treffer.
+3. Neuer "Suchen …"-Button neben dem CoinGecko-ID-Feld in `AssetAddDialog`
+   UND `AssetEditDialog` - **wichtiger Nebenbefund dabei:** `AssetEditDialog`
+   bot das Feld bisher überhaupt nicht an (Docstring: "Symbol/Name/
+   CoingeckoID etc. bleiben hier unverändert"), es gab also für ein bereits
+   BESTEHENDES Asset (z. B. genau die im vorherigen Nachtrag beschriebenen
+   automatisch ergänzten Hebel-Symbole) gar keinen GUI-Weg, die ID
+   nachzutragen - nur beim Erst-Anlegen über `AssetAddDialog`. Jetzt
+   ergänzt, sichtbar nur für `assetklasse=krypto`, mit derselben
+   Warn-Markierung wie im Watchlist-Tab, falls die ID noch fehlt. Neue
+   `config.py::update_watchlist_coingecko_id()` - eigenständige
+   Implementierung statt Erweiterung von `_update_watchlist_field()` (die
+   kann nur bereits VORHANDENE Feldzeilen aktualisieren, keine neuen
+   einfügen - `add_watchlist_entry()` lässt die Zeile bei `coingecko_id=None`
+   komplett weg). Fügt die Zeile bei Bedarf direkt nach `beobachtungsstatus:`
+   ein (identische Position wie beim Erst-Anlegen), sonst wird die
+   vorhandene Zeile aktualisiert - gleiches Backup+Validierungs+Rollback-
+   Muster wie alle anderen `config.yaml`-Schreibfunktionen.
+
+**Verifiziert:** live gegen die echte CoinGecko-API (Symbolmehrdeutigkeit
+quantifiziert, `search_coins()` liefert für "SOL" korrekt "solana" als
+ersten exakten Treffer). Synthetischer Test von
+`update_watchlist_coingecko_id()` gegen eine Konfigurationskopie (Einfügen
+einer neuen Zeile, Aktualisieren einer vorhandenen, Idempotenz bei
+gleichem Wert, unbekanntes Symbol - alle 4 Fälle korrekt). Tk-Smoke-Test
+der kompletten Kette: `CoinSearchDialog` direkt, `AssetAddDialog` mit
+Suchen-Button, `AssetEditDialog` für ein Krypto-Asset ohne ID (Feld+Warnung
+sichtbar, Suche+Auswahl übernimmt korrekt) und für ein Nicht-Krypto-Asset
+(Feld bleibt korrekt unsichtbar) - sowie ein echter End-to-End-Test des
+kompletten Speicherpfads gegen eine Konfigurationskopie (`_on_submit()`
+persistiert die gewählte ID tatsächlich in `config.yaml`).
