@@ -9,15 +9,11 @@ https://www.eia.gov/opendata/register.php - KEINE erkennbaren restriktiven
 Rate-Limits fuer unseren Nutzungsumfang (eine Handvoll Abfragen pro Aktien-/
 Rohstoff-Signal-Lauf).
 
-WICHTIGER VORBEHALT (P-10, ehrlich kommuniziert statt vorgetaeuscht): die
-konkrete Series-ID unten (`WEEKLY_STORAGE_SERIES_ID`) basiert auf EIAs
-dokumentierter Namenskonvention fuer den woechentlichen "Weekly Natural Gas
-Storage Report" (Lower 48 States, working gas in underground storage), konnte
-aber MANGELS eigenem API-Key noch NICHT live gegen eine echte Antwort
-verifiziert werden - nur die Endpunkt-ROUTE selbst wurde live bestaetigt (403
-API_KEY_MISSING statt 404, d.h. die URL-Struktur existiert). Vor produktivem
-Vertrauen auf die Werte: mit einem echten Key einmal live gegenpruefen (siehe
-TODO-Hinweis in get_natural_gas_storage_history())."""
+LIVE VERIFIZIERT (2026-07-19, echter Nutzer-Key): `WEEKLY_STORAGE_SERIES_ID`
+liefert echte, plausible Wochenwerte (Lower-48-Bestand steigt saisonal
+richtig von 2.483 auf 3.024 Bcf ueber den 8-Wochen-Testzeitraum Ende
+Mai/Anfang Juli 2026, Build in jeder Woche - konsistent mit dem
+US-Sommer-Fuellsaison-Muster). Datenform und Feldnamen bestaetigt korrekt."""
 from __future__ import annotations
 
 import logging
@@ -50,10 +46,7 @@ def get_natural_gas_storage_history(
 ) -> list[NatGasStorageReading]:
     """Letzte `n_weeks` Wochenwerte des Lower-48-Erdgas-Lagerbestands, aufsteigend
     sortiert, inkl. berechneter Woche-zu-Woche-Aenderung (Build = Zunahme,
-    Draw = Abnahme). TODO vor Produktiveinsatz: mit echtem API-Key einmal live
-    gegen den tatsaechlichen aktuellen Wert pruefen (z.B. gegen die oeffentliche
-    EIA-Webseite https://ir.eia.gov/ngs/ngs.html), da die Series-ID bisher nicht
-    live verifiziert werden konnte (siehe Modul-Docstring)."""
+    Draw = Abnahme). Live verifiziert (2026-07-19, siehe Modul-Docstring)."""
     session = session or requests.Session()
     response = session.get(
         EIA_BASE_URL,

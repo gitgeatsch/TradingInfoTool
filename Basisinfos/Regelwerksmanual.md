@@ -4837,6 +4837,45 @@ Registrierungs-Anleitung. `remote/server.py::API_HEALTH_GROUPS` um `eia`/
 Delta-Berechnung, Rohstoff-Symbol-Filter, Finnhub-Trend-Sortierung +
 Zusammenfassung inkl. Ein-Monats-Edge-Case, JSON-Serialisierbarkeit).
 Modul-Imports fehlerfrei. Endpunkt-Routen live gegen die echten Server
-bestätigt (siehe Vorbehalt oben). **Ausstehend:** echte End-to-End-
-Verifikation mit echten Antwortdaten, sobald der Nutzer die beiden
-kostenlosen Keys angelegt hat.
+bestätigt (siehe Vorbehalt oben).
+
+## Nachtrag (2026-07-19, gleicher Tag, Folge): EIA + Finnhub live mit echten Nutzer-Keys verifiziert
+
+Nutzer hat beide kostenlosen Keys angelegt und in `.env` eingetragen. Damit
+konnte die zuvor offene Lücke geschlossen werden - nicht mehr nur die
+Endpunkt-Route, sondern die tatsächliche Datenform der Antworten.
+
+**EIA:** `get_natural_gas_storage_history()` liefert 8 echte Wochenwerte
+(2026-05-22 bis 2026-07-10), Lower-48-Bestand steigt saisonal korrekt von
+2.483 auf 3.024 Bcf (Build in jeder Woche, konsistent mit der
+US-Sommer-Füllsaison). Series-ID, Feldnamen und Delta-Berechnung bestätigt
+korrekt - kein Ratefehler in der ursprünglichen Implementierung.
+`agent/rohstoff/pipeline.py::_fetch_lagerbestaende("OD7L", ...)` direkt
+gegen die echte API getestet, liefert das erwartete Fakten-Dict inkl.
+8-Wochen-Verlauf; für andere Rohstoff-Symbole weiterhin korrekt `None`.
+
+**Finnhub:** `get_recommendation_trends()` liefert für VST und PLTR je 4
+Monatswerte mit den erwarteten Feldern (period/strongBuy/buy/hold/sell/
+strongSell). Konsens plausibel unterschiedlich zwischen beiden Aktien (VST
+fast ausschließlich Buy/Strong-Buy, PLTR mit spürbarem Hold-Anteil) -
+Datenform bestätigt korrekt, `summarize_recommendation_trend()` bildet die
+Monat-zu-Monat-Richtungskomponente wie vorgesehen.
+
+**Rechtliche Einordnung (auf Nutzerfrage hin geprüft):** EIA-Daten sind
+U.S.-Government-Public-Domain (eia.gov/about/copyrights_reuse.php) - jede
+Nutzung erlaubt, keine Einschränkung, Attribution nur optional empfohlen.
+Finnhubs Free-Tier ist vertraglich klar auf "Non-Professional/persönliche,
+nicht-kommerzielle Nutzung" beschränkt (finnhub.io/terms-of-service) und
+verbietet Weitergabe der Daten/Ergebnisse an Dritte - beides passt exakt
+zum tatsächlichen Nutzungsmuster von TradingInfoTool (privates
+Single-User-Tool, Daten fließen nur in lokale LLM-Prompts, keine
+Weiterverteilung). Bei der Finnhub-Registrierung ist die Kontoart aktiv als
+"Non-Professional/Personal" zu wählen - keine reine Formsache, sondern
+deckt sich inhaltlich mit der echten Nutzung.
+
+Modul-Docstrings in `api/eia.py`/`api/finnhub.py` von "wahrscheinlich
+korrekt, noch nicht bestätigt" auf "live verifiziert" aktualisiert. Damit
+sind alle vier vom Nutzer gewählten neuen Datenquellen (FRED, SEC-EDGAR,
+EIA, Finnhub) vollständig umgesetzt UND live verifiziert - nur FINRA Equity
+Short Interest bleibt als letzter, noch nicht angegangener Kandidat aus der
+ursprünglichen Auswahl offen.

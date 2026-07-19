@@ -11,11 +11,11 @@ waeren mehr Verwirrung als Mehrwert (P-10).
 Kostenlos, freier API-Key per Registrierung unter https://finnhub.io/register,
 Free-Tier laut Dokumentation 60 Requests/Minute.
 
-WICHTIGER VORBEHALT (P-10): der Endpunkt `/stock/recommendation` ist ein
-oeffentlich dokumentierter, stabiler Finnhub-Endpunkt (Antwortformat aus der
-offiziellen API-Dokumentation), konnte aber MANGELS eigenem API-Key noch nicht
-live gegen eine echte Antwort verifiziert werden - nur die Endpunkt-ROUTE selbst
-wurde live bestaetigt (401 "Please use an API key" statt 404)."""
+LIVE VERIFIZIERT (2026-07-19, echter Nutzer-Key): `/stock/recommendation`
+liefert fuer VST und PLTR je 4 Monatswerte mit den erwarteten Feldern
+(period/strongBuy/buy/hold/sell/strongSell), Konsens plausibel (VST fast
+ausschliesslich Buy/Strong-Buy, PLTR gemischter mit Hold-Anteil). Datenform
+und Feldnamen bestaetigt korrekt."""
 from __future__ import annotations
 
 import logging
