@@ -1,21 +1,38 @@
 # -*- coding: utf-8 -*-
-"""Einmal-Diagnoseskript (2026-07-17): breiter Gesundheits-/Optimierungs-Export
-seit dem heutigen Notebook-Neustart + Sync (Mistral-Integration, RM-4,
-selektiver Holdings-Sync, Long/Short-Bugfix), PLUS Einzelfall-Tiefenanalyse
-fuer ein Symbol (Standard: LINK, siehe Hebelverhalten-Diskussion).
+"""Diagnoseskript (2026-07-17, erweitert 2026-07-18): breiter Gesundheits-/
+Optimierungs-Export seit dem heutigen Notebook-Neustart + Sync, PLUS
+Einzelfall-Tiefenanalyse fuer ein Symbol (Standard: LINK, siehe
+Hebelverhalten-Diskussion).
 
 Ziel laut Nutzer: primaer Bugs/Fehler identifizieren, sekundaer Ansatzpunkte
 fuer LLM-Budget/Parameter-Optimierung und praezisere Empfehlungen liefern -
 deshalb rohe, aber vollstaendige Daten statt vorgefertigter Schlussfolgerungen,
 die Bewertung passiert danach gemeinsam.
 
-Aufruf am Notebook: python extract_notebook_diagnose.py [SYMBOL]
-  (SYMBOL optional, Default LINK, fuer den Tiefenanalyse-Teil)
+Nachtrag (2026-07-18, Nutzer-Wunsch "besser zu viel als zu wenig"):
+konsolidiert jetzt auch, was zuvor ein getrenntes, nie ins Repo
+zurueckgesyncstes Notebook-Skript (00_Metadaten.json bis
+05_Complete_Log_Export.txt) separat abgedeckt hatte - EIN versioniertes
+Skript statt zwei driftender Kopien. Neu: zeitlich begrenzter Log-Auszug
+(inkl. rotierter .1/.2/.3-Dateien), daraus geparste Job-Fehlschlag-Historie
+(api_health_status haelt nur den JEWEILS LETZTEN Zustand je Quelle, keine
+Historie) und Groq-Tageserschoepfungs-Ereignisse, sowie ein regelbasierter
+Auffaelligkeiten-Filter (KEIN Ersatz fuer die eigentliche inhaltliche
+Bewertung, nur ein Vorfilter fuer offensichtliche strukturelle Widersprueche).
+facts_json/*_raw_response bleiben weiterhin bewusst ausgeschlossen (siehe
+Spaltenauswahl unten) - fuer einen einzelnen Kandidaten im Detail ist der
+neue Doppelklick-Dialog in der App selbst (2026-07-18) der bessere Weg.
+
+Aufruf am Notebook: python extract_notebook_diagnose.py [SYMBOL] [LOG_STUNDEN]
+  (SYMBOL optional, Default LINK, fuer den Tiefenanalyse-Teil;
+   LOG_STUNDEN optional, Default 72, Zeitfenster fuer den Log-Auszug)
 Schreibt nach K:/My Drive/Claude_Austauschordner/Notebook_Analysedaten/
 """
 import json
+import re
 import sys
 from collections import Counter
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import database.db as db
@@ -23,6 +40,7 @@ from agent.krypto.backward_tracking import compute_provider_performance
 from agent.krypto.regime import get_last_known_regime_status
 
 DEEP_DIVE_SYMBOL = sys.argv[1] if len(sys.argv) > 1 else "LINK"
+LOG_FENSTER_STUNDEN = int(sys.argv[2]) if len(sys.argv) > 2 else 72
 
 
 def _google_drive_wurzel() -> Path:
@@ -77,8 +95,8 @@ _SPOT_SIGNAL_SPALTEN = (
     "id, symbol, created_at, action, confidence_pct, short_reasoning, "
     "entry_eur_von, entry_eur_bis, stop_loss_eur_von, stop_loss_eur_bis, "
     "take_profit_eur_von, take_profit_eur_bis, regime, gate_passed, gate_reason, "
-    "risk_veto, risk_veto_reason, groq_model, outcome_status, outcome_geprueft_am, "
-    "outcome_realisiertes_crv, "
+    "risk_veto, risk_veto_reason, cash_veto, cash_veto_reason, groq_model, "
+    "outcome_status, outcome_geprueft_am, outcome_realisiertes_crv, "
     + _VOLLSTAENDIGKEITS_SPALTEN
 )
 
@@ -90,6 +108,105 @@ def row_to_dict(row) -> dict:
 def haeufigkeit(rows, feld: str) -> dict:
     zaehler = Counter(r[feld] for r in rows if r[feld])
     return dict(zaehler.most_common())
+
+
+# --- Log-Auszug (2026-07-18, siehe Modul-Docstring) ---------------------
+# Format aus main.py::logging.basicConfig(): "%(asctime)s %(levelname)s
+# %(name)s: %(message)s" - asctime ist "YYYY-MM-DD HH:MM:SS,mmm".
+_LOG_ZEILEN_MUSTER = re.compile(
+    r"^(?P<zeit>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}),\d{3} (?P<level>\S+) (?P<logger>\S+): (?P<nachricht>.*)$"
+)
+_JOB_FEHLSCHLAG_MUSTER = re.compile(r"(fehlgeschlagen|verpasst \(Misfire\))")
+_GROQ_ERSCHOEPFT_MUSTER = re.compile(r"Groq: \d+ Fehlschlaege in Folge")
+
+
+def _log_dateien(log_pfad: Path) -> list[Path]:
+    """Aelteste zuerst, damit _log_zeilen_im_fenster() den Zeitfortschritt
+    korrekt verfolgen kann - RotatingFileHandler haengt .1/.2/.3 AN (ersetzt
+    nicht die Endung), .3 ist die aelteste Rotation, siehe main.py."""
+    rotierte = [log_pfad.with_name(log_pfad.name + f".{i}") for i in (3, 2, 1)]
+    return [p for p in rotierte if p.exists()] + ([log_pfad] if log_pfad.exists() else [])
+
+
+def _log_zeilen_im_fenster(log_pfad: Path, stunden: int) -> list[str]:
+    """Liest die (ggf. rotierte) Log-Datei und behaelt nur Zeilen (inkl.
+    mehrzeiliger Tracebacks) seit `stunden` Stunden. Reine Textzeilen ohne
+    Zeitstempel-Praefix (Traceback-Fortsetzungszeilen) werden dem zuletzt
+    gesehenen, im Fenster liegenden Log-Eintrag zugerechnet."""
+    grenze = datetime.now() - timedelta(hours=stunden)
+    ergebnis: list[str] = []
+    im_fenster = False
+    for datei in _log_dateien(log_pfad):
+        for zeile in datei.read_text(encoding="utf-8", errors="replace").splitlines():
+            treffer = _LOG_ZEILEN_MUSTER.match(zeile)
+            if treffer:
+                try:
+                    zeitpunkt = datetime.strptime(treffer.group("zeit"), "%Y-%m-%d %H:%M:%S")
+                    im_fenster = zeitpunkt >= grenze
+                except ValueError:
+                    im_fenster = False
+            if im_fenster:
+                ergebnis.append(zeile)
+    return ergebnis
+
+
+def _job_fehlschlaege_aus_log(zeilen: list[str]) -> list[dict]:
+    """Extrahiert nur die eigentliche Fehlermeldungszeile (nicht den vollen
+    Traceback, der bleibt im rohen log_auszug einsehbar) fuer jeden erkannten
+    Job-Fehlschlag/-Ausfall - api_health_status haelt nur den JEWEILS LETZTEN
+    Zustand je Quelle (PRIMARY KEY source), eine Historie ueber die Nacht ist
+    nur ueber das Log rekonstruierbar."""
+    treffer = []
+    for zeile in zeilen:
+        m = _LOG_ZEILEN_MUSTER.match(zeile)
+        if m and m.group("level") in ("ERROR", "WARNING") and _JOB_FEHLSCHLAG_MUSTER.search(m.group("nachricht")):
+            treffer.append({
+                "zeitstempel": m.group("zeit"), "level": m.group("level"),
+                "logger": m.group("logger"), "nachricht": m.group("nachricht"),
+            })
+    return treffer
+
+
+def _groq_erschoepfung_aus_log(zeilen: list[str]) -> list[dict]:
+    """Groq-Tageserschoepfungs-Ereignisse (2026-07-18, siehe
+    agent/krypto/budget_allocator.py::_record_groq_failure()) - reiner
+    In-Memory-Zustand, nirgends in der DB persistiert, nur ueber das Log
+    sichtbar."""
+    treffer = []
+    for zeile in zeilen:
+        m = _LOG_ZEILEN_MUSTER.match(zeile)
+        if m and _GROQ_ERSCHOEPFT_MUSTER.search(m.group("nachricht")):
+            treffer.append({"zeitstempel": m.group("zeit"), "nachricht": m.group("nachricht")})
+    return treffer
+
+
+def _auffaelligkeiten(hebel_rows: list[dict], spot_rows: list[dict]) -> list[dict]:
+    """Leichte, regelbasierte Sanity-Checks (KEIN Ersatz fuer eine echte
+    inhaltliche Bewertung, siehe Modul-Docstring) - filtert Kandidaten vor,
+    bei denen ein Blick lohnt: ein gesetztes Risiko-Veto/nicht bestandenes
+    Gate, das TROTZDEM nicht zu HALTEN gefuehrt hat, waere ein struktureller
+    Bug in risk_gate.py::post_check() (das erzwingt HALTEN deterministisch,
+    siehe dortige Doku) - sollte in der Praxis nie auftreten, ist aber genau
+    der Fall, den ein Vorfilter zuverlaessiger findet als manuelles Scrollen.
+    cash_veto bewusst NICHT geprueft - anders als risk_veto ist cash_veto=True
+    bei bereits regelkonformem HALTEN der Normalfall, kein Hinweis auf einen
+    Bug (siehe risk_gate.py::RiskPreCheckResult.cash_veto-Docstring)."""
+    funde = []
+    for assetklasse, rows in (("spot", spot_rows), ("hebel", hebel_rows)):
+        for zeile in rows:
+            if zeile.get("risk_veto") and zeile.get("action") != "HALTEN":
+                funde.append({
+                    "typ": "risk_veto_ohne_halten", "assetklasse": assetklasse,
+                    "symbol": zeile.get("symbol"), "created_at": zeile.get("created_at"),
+                    "action": zeile.get("action"), "risk_veto_reason": zeile.get("risk_veto_reason"),
+                })
+            if not zeile.get("gate_passed", True) and zeile.get("action") not in ("HALTEN", None):
+                funde.append({
+                    "typ": "gate_nicht_bestanden_ohne_halten", "assetklasse": assetklasse,
+                    "symbol": zeile.get("symbol"), "created_at": zeile.get("created_at"),
+                    "action": zeile.get("action"), "gate_reason": zeile.get("gate_reason"),
+                })
+    return funde
 
 
 def main() -> None:
@@ -160,6 +277,14 @@ def main() -> None:
     hebel_rows = [row_to_dict(r) for r in hebel_signals]
     spot_rows = [row_to_dict(r) for r in spot_signals]
 
+    # 9) Log-Auszug + daraus abgeleitete Auswertungen (2026-07-18, siehe
+    # Modul-Docstring) - reines Datei-I/O, braucht keine DB-Connection mehr.
+    log_pfad = Path(__file__).resolve().parent / "data" / "tradinginfotool.log"
+    log_zeilen = _log_zeilen_im_fenster(log_pfad, LOG_FENSTER_STUNDEN)
+    job_fehlschlaege = _job_fehlschlaege_aus_log(log_zeilen)
+    groq_erschoepfung = _groq_erschoepfung_aus_log(log_zeilen)
+    auffaelligkeiten = _auffaelligkeiten(hebel_rows, spot_rows)
+
     payload = {
         "holdings_check": [row_to_dict(r) for r in holdings],
         "api_health": api_health,
@@ -183,6 +308,11 @@ def main() -> None:
             "hebel_triggers": [row_to_dict(r) for r in deep_trigger],
             "price_history_ohlc": [row_to_dict(r) for r in deep_preis],
         },
+        "log_fenster_stunden": LOG_FENSTER_STUNDEN,
+        "log_auszug": log_zeilen,
+        "job_fehlschlaege": job_fehlschlaege,
+        "groq_erschoepfung_ereignisse": groq_erschoepfung,
+        "auffaelligkeiten": auffaelligkeiten,
     }
 
     ZIEL_ORDNER.mkdir(parents=True, exist_ok=True)
@@ -196,6 +326,9 @@ def main() -> None:
     print(f"  Deep-Dive ({DEEP_DIVE_SYMBOL}): {len(deep_signale)} Signale, "
           f"{len(deep_positionen)} Positionen, {len(deep_trigger)} Trigger, "
           f"{len(deep_preis)} Preispunkte")
+    print(f"  Log-Fenster: {LOG_FENSTER_STUNDEN} Std., {len(log_zeilen)} Zeilen, "
+          f"{len(job_fehlschlaege)} Job-Fehlschlaege, {len(groq_erschoepfung)} Groq-Erschoepfungs-Ereignisse")
+    print(f"  Auffaelligkeiten (regelbasierter Vorfilter): {len(auffaelligkeiten)}")
 
 
 if __name__ == "__main__":
