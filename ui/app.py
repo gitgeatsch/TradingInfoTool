@@ -22,6 +22,7 @@ from ui.marktscan_view import MarktscanView
 from ui.portfolio import PortfolioView
 from ui.regime_view import RegimeView
 from ui.row_tooltip import add_row_tooltips
+from ui.screener_view import ScreenerView
 from ui.signals_view import SignalsView
 from ui.sortable_tree import make_sortable
 
@@ -38,6 +39,11 @@ _WATCHLIST_COLUMN_DESCRIPTIONS = {
     "name": "Vollständiger Name des Assets.",
     "rolle": "Core oder taktisch - strategische Einstufung aus der Watchlist-Konfiguration, unabhängig vom aktuellen Bestand.",
     "assetklasse": "Krypto, Aktie, ETF oder Rohstoff.",
+    "schwerpunkt": (
+        "Hauptgruppe / Unterkategorie (z. B. \"Edelmetalle / Gold\") aus der festen "
+        "Kategorie-Taxonomie (Basisinfos/kategorien.yaml) - über 'Asset hinzufügen/"
+        "bearbeiten' setzbar, Basis für die Diversifikations-Übersicht im Portfolio-Tab."
+    ),
     "status": (
         "Gehalten (echter Bestand oder offene Hebel-Position, live abgeleitet) oder - falls nicht gehalten - "
         "Beobachtung (aktive Kandidatur) bzw. Ausgemustert (niedrigste Priorität, aber nicht ausgeschlossen). "
@@ -134,6 +140,9 @@ class TradingInfoToolApp(tk.Tk):
             fred_api_key=fred_api_key,
         )
         notebook.add(self._marktscan_view, text="Marktscan")
+
+        self._screener_view = ScreenerView(notebook, db_conn_factory, watchlist)
+        notebook.add(self._screener_view, text="Screener")
 
         self._hebel_view = HebelView(
             notebook, db_conn_factory, watchlist, groq_client, coingecko_client,
@@ -269,12 +278,16 @@ class TradingInfoToolApp(tk.Tk):
         ttk.Button(
             toolbar, text="Asset bearbeiten…", command=self._open_asset_edit_dialog,
         ).pack(side="left", padx=(8, 0))
+        ttk.Button(
+            toolbar, text="Zusammensetzung anzeigen…", command=self._open_asset_quality_dialog,
+        ).pack(side="left", padx=(8, 0))
 
         columns = (
             "symbol",
             "name",
             "rolle",
             "assetklasse",
+            "schwerpunkt",
             "status",
             "bitpanda",
             "tranchen",
@@ -289,6 +302,7 @@ class TradingInfoToolApp(tk.Tk):
             "name": "Name",
             "rolle": "Rolle",
             "assetklasse": "Assetklasse",
+            "schwerpunkt": "Schwerpunkt",
             "status": "Status",
             "bitpanda": "Bitpanda",
             "tranchen": "AZ-4-Tranchen",
@@ -301,7 +315,7 @@ class TradingInfoToolApp(tk.Tk):
         tree = ttk.Treeview(frame, columns=columns, show="headings")
         for col in columns:
             tree.heading(col, text=headings[col])
-            anchor = "w" if col in ("name", "rolle", "assetklasse", "status") else "e"
+            anchor = "w" if col in ("name", "rolle", "assetklasse", "schwerpunkt", "status") else "e"
             tree.column(col, width=90 if col in ("bitpanda", "tranchen", "hebel_pruefung") else 110, anchor=anchor)
         tree.tag_configure("stale", foreground=theme.stale_color())
         tree.tag_configure("bitpanda_fehlt", foreground=theme.danger_color())
@@ -318,6 +332,8 @@ class TradingInfoToolApp(tk.Tk):
         return frame
 
     def _refresh_watchlist_from_db(self) -> None:
+        import config as config_module
+
         conn = self._db_conn_factory()
         try:
             latest_prices = db.get_latest_prices(conn)
@@ -470,6 +486,7 @@ class TradingInfoToolApp(tk.Tk):
                     asset.name,
                     asset.rolle,
                     asset.assetklasse,
+                    config_module.get_kategorie_name(asset.hauptgruppe, asset.unterkategorie) or "-",
                     status_text,
                     bitpanda_text,
                     tranchen_text,
@@ -533,6 +550,31 @@ class TradingInfoToolApp(tk.Tk):
         if asset is None:
             return
         AssetEditDialog(self, asset, on_edited=self._on_watchlist_changed)
+
+    def _open_asset_quality_dialog(self) -> None:
+        """2026-07-19, Nutzer-Wunsch: Fonds-Zusammensetzung/-Kennzahlen fuer ein
+        Watchlist-Asset anzeigen (siehe api/asset_quality.py). Nur fuer Assets
+        mit `yfinance_symbol` sinnvoll - bei Krypto/Bitpanda-eigenen ETC-
+        Basketprodukten (kein echter Ticker) meldet der Dialog das klar statt
+        eine leere Tabelle zu zeigen."""
+        tree = self._watchlist_frame.tree
+        selected = tree.selection()
+        if not selected:
+            messagebox.showinfo("Zusammensetzung anzeigen", "Bitte zuerst eine Zeile in der Watchlist auswählen.")
+            return
+        symbol = tree.item(selected[0], "values")[0]
+        asset = next((a for a in self._watchlist if a.symbol == symbol), None)
+        if asset is None:
+            return
+        if not asset.yfinance_symbol:
+            messagebox.showinfo(
+                "Zusammensetzung anzeigen",
+                f"{symbol} hat kein hinterlegtes yfinance-Symbol - Zusammensetzungsdaten "
+                "sind nur für Assets mit echtem Börsenticker verfügbar (nicht für Krypto "
+                "oder Bitpanda-eigene Themenkorb-Produkte).",
+            )
+            return
+        AssetQualityDialog(self, asset)
 
     def _on_watchlist_changed(self) -> None:
         """Nach Hinzufuegen/Bearbeiten: Watchlist-Anzeige aktualisieren. Wirkt
@@ -1083,6 +1125,81 @@ def _validate_new_asset(
     return warnungen
 
 
+_KEIN_SCHWERPUNKT = "(kein Schwerpunkt)"
+
+
+def _build_kategorie_selector(frame, row: int, initial_hauptgruppe: str | None = None, initial_unterkategorie: str | None = None):
+    """Baut zwei kaskadierende Comboboxen (Hauptgruppe -> Unterkategorie, je 1
+    Zeile im `frame`-Grid ab `row`) fuer die strukturierte Kategorie-Zuordnung
+    (2026-07-19, ersetzt das anfaengliche Freitext-Schwerpunkt-Feld NOCH AM
+    SELBEN TAG - siehe config.py::WatchlistAsset-Docstring: Freitext war fuer
+    automatische Prozesse/Kategorie-Gruppierung nicht zuverlaessig genug).
+    Gemeinsam genutzt von `AssetAddDialog`/`AssetEditDialog`. Gibt eine
+    `get_ids()`-Funktion zurueck, die `(hauptgruppe_id, unterkategorie_id)`
+    oder `(None, None)` liefert (Feld ist optional, "(kein Schwerpunkt)" bleibt
+    immer die erste Combobox-Option)."""
+    import config as config_module
+
+    kategorien = config_module.get_kategorien()
+    hauptgruppen = kategorien["hauptgruppen"]
+    hg_name_to_id = {hg["name"]: hg["id"] for hg in hauptgruppen}
+    hg_id_to_obj = {hg["id"]: hg for hg in hauptgruppen}
+
+    hauptgruppe_var = tk.StringVar()
+    unterkategorie_var = tk.StringVar()
+
+    ttk.Label(frame, text="Hauptgruppe").grid(row=row, column=0, sticky="w", pady=2)
+    hg_combo = ttk.Combobox(
+        frame, textvariable=hauptgruppe_var, state="readonly", width=25,
+        values=[_KEIN_SCHWERPUNKT] + [hg["name"] for hg in hauptgruppen],
+    )
+    hg_combo.grid(row=row, column=1, sticky="w", pady=2, padx=(8, 0))
+
+    ttk.Label(frame, text="Unterkategorie").grid(row=row + 1, column=0, sticky="w", pady=2)
+    uk_combo = ttk.Combobox(frame, textvariable=unterkategorie_var, state="readonly", width=25, values=[])
+    uk_combo.grid(row=row + 1, column=1, sticky="w", pady=2, padx=(8, 0))
+
+    def _on_hauptgruppe_changed(event=None) -> None:
+        hg_name = hauptgruppe_var.get()
+        if hg_name == _KEIN_SCHWERPUNKT or not hg_name:
+            uk_combo.config(values=[])
+            unterkategorie_var.set("")
+            return
+        hg_obj = hg_id_to_obj.get(hg_name_to_id.get(hg_name))
+        uk_names = [uk["name"] for uk in hg_obj["unterkategorien"]] if hg_obj else []
+        uk_combo.config(values=uk_names)
+        if unterkategorie_var.get() not in uk_names:
+            unterkategorie_var.set(uk_names[0] if uk_names else "")
+
+    hg_combo.bind("<<ComboboxSelected>>", _on_hauptgruppe_changed)
+
+    # Vorbelegung (Bearbeiten-Dialog) - unbekannte/veraltete IDs (z.B. falls
+    # kategorien.yaml sich seither geaendert hat) degradieren still auf
+    # "kein Schwerpunkt" statt eines Absturzes (P-10).
+    hg_obj = hg_id_to_obj.get(initial_hauptgruppe) if initial_hauptgruppe else None
+    if hg_obj is not None:
+        hauptgruppe_var.set(hg_obj["name"])
+        _on_hauptgruppe_changed()
+        uk_obj = next((uk for uk in hg_obj["unterkategorien"] if uk["id"] == initial_unterkategorie), None)
+        if uk_obj is not None:
+            unterkategorie_var.set(uk_obj["name"])
+    if not hauptgruppe_var.get():
+        hauptgruppe_var.set(_KEIN_SCHWERPUNKT)
+
+    def get_ids() -> tuple[str | None, str | None]:
+        hg_name = hauptgruppe_var.get()
+        if hg_name == _KEIN_SCHWERPUNKT or not hg_name:
+            return None, None
+        hg_id = hg_name_to_id.get(hg_name)
+        hg_obj = hg_id_to_obj.get(hg_id)
+        uk_obj = next((uk for uk in hg_obj["unterkategorien"] if uk["name"] == unterkategorie_var.get()), None) if hg_obj else None
+        if hg_id is None or uk_obj is None:
+            return None, None
+        return hg_id, uk_obj["id"]
+
+    return get_ids
+
+
 def _try_auto_resolve_coingecko_id(symbol: str, coingecko_client) -> str | None:
     """Automatische `coingecko_id`-Aufloesung via Bitpanda-Namensabgleich
     (2026-07-19, Nutzer-Vorschlag: "in dieser Schleife sollte das Symbol
@@ -1257,8 +1374,15 @@ class AssetAddDialog(tk.Toplevel):
                         row=row, column=2, sticky="w", pady=2, padx=(6, 0)
                     )
 
+        # Kategorie-Auswahl (2026-07-19, ersetzt das anfaengliche Freitext-
+        # Schwerpunkt-Feld noch am selben Tag - siehe config.py::WatchlistAsset-
+        # Docstring): zwei kaskadierende Comboboxen statt Freihandeintrag, damit
+        # die Werte fuer Diversifikations-Uebersicht/Marktscan-Bias zuverlaessig
+        # gruppierbar bleiben.
+        self._get_kategorie_ids = _build_kategorie_selector(frame, row=len(fields))
+
         button_frame = ttk.Frame(frame)
-        button_frame.grid(row=len(fields), column=0, columnspan=3, sticky="e", pady=(10, 0))
+        button_frame.grid(row=len(fields) + 2, column=0, columnspan=3, sticky="e", pady=(10, 0))
         ttk.Button(button_frame, text="Abbrechen", command=self.destroy).pack(side="right", padx=(6, 0))
         ttk.Button(button_frame, text="Hinzufügen", command=self._on_submit).pack(side="right")
 
@@ -1277,6 +1401,7 @@ class AssetAddDialog(tk.Toplevel):
         assetklasse = self._assetklasse_var.get()
         coingecko_id = self._coingecko_id_var.get().strip() or None
         yfinance_symbol = self._yfinance_symbol_var.get().strip() or None
+        hauptgruppe, unterkategorie = self._get_kategorie_ids()
 
         if not symbol or not name:
             messagebox.showwarning("Asset hinzufügen", "Symbol und Name sind Pflichtfelder.")
@@ -1322,6 +1447,7 @@ class AssetAddDialog(tk.Toplevel):
                 symbol=symbol, name=name, rolle=self._rolle_var.get(),
                 beobachtungsstatus=self._beobachtungsstatus_var.get(),
                 coingecko_id=coingecko_id, assetklasse=assetklasse, yfinance_symbol=yfinance_symbol,
+                hauptgruppe=hauptgruppe, unterkategorie=unterkategorie,
             )
         except config_module.WatchlistWriteError as exc:
             messagebox.showerror("Asset hinzufügen", f"Fehlgeschlagen: {exc}")
@@ -1382,7 +1508,19 @@ class AssetEditDialog(tk.Toplevel):
             wraplength=280, foreground=theme.stale_color(),
         ).grid(row=3, column=0, columnspan=3, sticky="w", pady=(0, 8))
 
-        next_row = 4
+        # Kategorie-Auswahl (2026-07-19, ersetzt das anfaengliche Freitext-
+        # Schwerpunkt-Feld noch am selben Tag, siehe _build_kategorie_selector()
+        # Docstring) - zwei kaskadierende Comboboxen, vorbelegt mit der
+        # aktuellen Zuordnung des Assets.
+        self._get_kategorie_ids = _build_kategorie_selector(
+            frame, row=4, initial_hauptgruppe=asset.hauptgruppe, initial_unterkategorie=asset.unterkategorie,
+        )
+        ttk.Label(
+            frame, text="(Basis für den Diversifikations-Überblick im Portfolio-Tab)",
+            wraplength=280, foreground=theme.info_color(),
+        ).grid(row=6, column=0, columnspan=3, sticky="w", pady=(0, 8))
+
+        next_row = 7
         auto_resolved_id = asset.coingecko_id
         if asset.assetklasse == "krypto" and not asset.ist_cash_aequivalent and not asset.coingecko_id:
             # 2026-07-19, Nutzer-Vorschlag: still versuchen, BEVOR das Feld
@@ -1428,6 +1566,11 @@ class AssetEditDialog(tk.Toplevel):
         try:
             config_module.update_watchlist_rolle(self._asset.symbol, self._rolle_var.get())
             config_module.update_watchlist_beobachtungsstatus(self._asset.symbol, self._beobachtungsstatus_var.get())
+            new_hauptgruppe, new_unterkategorie = self._get_kategorie_ids()
+            if new_hauptgruppe and new_unterkategorie and (
+                new_hauptgruppe != self._asset.hauptgruppe or new_unterkategorie != self._asset.unterkategorie
+            ):
+                config_module.update_watchlist_kategorie(self._asset.symbol, new_hauptgruppe, new_unterkategorie)
             new_coingecko_id = self._coingecko_id_var.get().strip()
             if new_coingecko_id and new_coingecko_id != (self._asset.coingecko_id or ""):
                 config_module.update_watchlist_coingecko_id(self._asset.symbol, new_coingecko_id)
@@ -1438,6 +1581,113 @@ class AssetEditDialog(tk.Toplevel):
         self.destroy()
         if self._on_edited:
             self._on_edited()
+
+
+class AssetQualityDialog(tk.Toplevel):
+    """Zeigt Fonds-Zusammensetzung/-Kennzahlen fuer ein Watchlist-Asset an
+    (2026-07-19, Nutzer-Wunsch: "wie setzt sich zusammen" - siehe
+    api/asset_quality.py::get_asset_quality()). Laedt im Hintergrund-Thread
+    (Netzwerk-Aufruf, gleiches Muster wie ui/marktscan_view.py/ui/screener_view.py
+    - synchron im Tk-Main-Thread wuerde die UI einfrieren)."""
+
+    def __init__(self, parent, asset) -> None:
+        super().__init__(parent)
+        self._asset = asset
+        self.title(f"Zusammensetzung — {asset.symbol}")
+        self.geometry("520x460")
+        self.transient(parent)
+        self.grab_set()
+
+        frame = ttk.Frame(self, padding=12)
+        frame.pack(fill="both", expand=True)
+
+        ttk.Label(frame, text=f"{asset.symbol} — {asset.name}", font=("", 11, "bold")).pack(anchor="w")
+        ttk.Label(frame, text=f"yfinance-Ticker: {asset.yfinance_symbol}", foreground=theme.info_color()).pack(
+            anchor="w", pady=(0, 8)
+        )
+
+        self.status_label = ttk.Label(frame, text="Lade Daten …", foreground=theme.info_color())
+        self.status_label.pack(anchor="w")
+
+        self.meta_label = ttk.Label(frame, text="", justify="left")
+        self.meta_label.pack(anchor="w", pady=(4, 8))
+
+        ttk.Label(frame, text="Top-Holdings", font=("", 10, "bold")).pack(anchor="w")
+        self.holdings_text = tk.Text(frame, height=10, wrap="word", state="disabled", relief="flat")
+        self.holdings_text.pack(fill="both", expand=True, pady=(2, 8))
+
+        ttk.Label(frame, text="Sektor-Gewichtung", font=("", 10, "bold")).pack(anchor="w")
+        self.sektor_text = tk.Text(frame, height=6, wrap="word", state="disabled", relief="flat")
+        self.sektor_text.pack(fill="both", expand=True, pady=(2, 8))
+
+        ttk.Button(frame, text="Schließen", command=self.destroy).pack(anchor="e")
+
+        thread = threading.Thread(target=self._load, daemon=True)
+        thread.start()
+
+    def _load(self) -> None:
+        from api.asset_quality import get_asset_quality
+
+        try:
+            result = get_asset_quality(self._asset.yfinance_symbol)
+            error = None
+        except Exception as exc:  # noqa: BLE001 - an die UI durchreichen statt den Thread stumm sterben zu lassen
+            result = None
+            error = exc
+        self.after(0, self._on_loaded, result, error)
+
+    def _set_text(self, widget: tk.Text, content: str) -> None:
+        widget.config(state="normal")
+        widget.delete("1.0", "end")
+        widget.insert("1.0", content)
+        widget.config(state="disabled")
+
+    def _on_loaded(self, result, error) -> None:
+        if error is not None:
+            self.status_label.config(text=f"Abruf fehlgeschlagen: {error}", foreground=theme.danger_color())
+            return
+        if result is None:
+            self.status_label.config(
+                text="Keine Daten gefunden (unbekannter Ticker oder Netzwerkfehler).",
+                foreground=theme.danger_color(),
+            )
+            return
+
+        self.status_label.config(text=f"Typ: {result.quote_type or 'unbekannt'}", foreground=theme.info_color())
+
+        if result.quote_type == "EQUITY":
+            self.meta_label.config(text="Einzelaktie - keine Fonds-Kennzahlen (AUM/Kostenquote/Holdings) vorhanden.")
+            self._set_text(self.holdings_text, "(nicht zutreffend für Einzelaktien)")
+            self._set_text(self.sektor_text, "(nicht zutreffend für Einzelaktien)")
+            return
+
+        meta_lines = []
+        if result.fund_family:
+            meta_lines.append(f"Anbieter: {result.fund_family}")
+        if result.aum_usd is not None:
+            meta_lines.append(f"Fondsvolumen (AUM): {result.aum_usd:,.0f} USD")
+        else:
+            meta_lines.append("Fondsvolumen (AUM): nicht verfügbar")
+        if result.expense_ratio_pct is not None:
+            meta_lines.append(f"Kostenquote (TER): {result.expense_ratio_pct:.2f}%")
+        else:
+            meta_lines.append("Kostenquote (TER): nicht verfügbar")
+        self.meta_label.config(text="\n".join(meta_lines))
+
+        if result.top_holdings:
+            holdings_text = "\n".join(f"{pct:5.2f}%  {name}" for name, pct in result.top_holdings)
+        else:
+            holdings_text = "(keine Holdings-Daten verfügbar)"
+        self._set_text(self.holdings_text, holdings_text)
+
+        if result.sektor_gewichtung:
+            sektor_text = "\n".join(
+                f"{pct:5.2f}%  {sektor}"
+                for sektor, pct in sorted(result.sektor_gewichtung.items(), key=lambda kv: kv[1], reverse=True)
+            )
+        else:
+            sektor_text = "(keine Sektor-Daten verfügbar)"
+        self._set_text(self.sektor_text, sektor_text)
 
 
 def run_app(

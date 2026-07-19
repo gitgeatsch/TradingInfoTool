@@ -106,6 +106,80 @@ class RegionalM2Reading:
     unit: str  # Rohe gemeldete Einheit je Quelle, bewusst NICHT umgerechnet/vereinheitlicht
 
 
+@dataclass
+class FredUpcomingRelease:
+    name: str
+    date: str  # YYYY-MM-DD
+    days_until: int
+
+
+# FRED-Release-Kalender (2026-07-19, Backtracking-Aussagekraft-Audit-Nachfolger,
+# Nutzer-Recherche "zusaetzliche Marktdaten-Quellen"): release_id 10 ("Consumer
+# Price Index") live verifiziert ueber /fred/series/release?series_id=CPIAUCSL.
+# Bewusst NUR CPI, nicht alle FRED_SERIES - H.15 (Fed Funds, release_id 18) ist
+# taeglich/woechentlich und damit als "bevorstehendes Ereignis" nicht aussagekraeftig
+# (immer "morgen"), M2/ISM-Ersatz haben keinen so ausgepraegten Markt-Reaktions-
+# Charakter wie der monatliche CPI-Print. Analog zum bestehenden FOMC-Kalender-Muster
+# (agent/cycles.py) - eine feste, kleine Zuordnung statt einer generischen
+# "alle FRED-Releases"-Loesung.
+FRED_RELEASE_IDS = {
+    "cpi_headline": 10,  # "Consumer Price Index"
+}
+
+
+@track_api_health("fred")
+def get_next_fred_release(
+    release_id: int, name: str, api_key: str, session: requests.Session | None = None,
+    today: str | None = None,
+) -> FredUpcomingRelease | None:
+    """Naechster bekannter Veroeffentlichungstermin einer FRED-Release-Serie
+    (`/fred/release/dates`). Gibt None zurueck, wenn FRED den naechsten Termin
+    noch nicht veroeffentlicht hat (live verifiziert 2026-07-19: das kommt
+    tatsaechlich vor - z.B. kurz nach einem CPI-Print ist der naechste Termin
+    oft noch nicht im Kalender, keine Annahme/Schaetzung, P-10) - kein Fehler,
+    einfach noch nicht bekannt."""
+    from datetime import date as _date
+
+    session = session or requests.Session()
+    heute = today or _date.today().isoformat()
+    response = session.get(
+        "https://api.stlouisfed.org/fred/release/dates",
+        params={
+            "release_id": release_id,
+            "api_key": api_key,
+            "file_type": "json",
+            "realtime_start": heute,
+            "sort_order": "asc",
+            "limit": 1,
+            "include_release_dates_with_no_data": "false",
+        },
+        timeout=15,
+    )
+    response.raise_for_status()
+    dates = response.json().get("release_dates", [])
+    if not dates:
+        return None
+    release_date = dates[0]["date"]
+    days_until = (_date.fromisoformat(release_date) - _date.fromisoformat(heute)).days
+    return FredUpcomingRelease(name=name, date=release_date, days_until=days_until)
+
+
+def get_upcoming_fred_releases(
+    api_key: str, session: requests.Session | None = None
+) -> dict[str, FredUpcomingRelease | None]:
+    """P-10: jede Release-Serie einzeln versucht, ein Fehlschlag blockiert nicht
+    die anderen (Muster wie get_all_fred_rates())."""
+    session = session or requests.Session()
+    results: dict[str, FredUpcomingRelease | None] = {}
+    for name, release_id in FRED_RELEASE_IDS.items():
+        try:
+            results[name] = get_next_fred_release(release_id, name, api_key, session)
+        except Exception as exc:  # noqa: BLE001 - eine Release-Serie darf die anderen nicht blockieren
+            logger.warning("FRED-Release-Kalender fuer %s (release_id=%s) fehlgeschlagen: %s", name, release_id, exc)
+            results[name] = None
+    return results
+
+
 def get_btc_dominance(coingecko_client) -> float:
     data = coingecko_client.get_global_data()
     return data["data"]["market_cap_percentage"]["btc"]

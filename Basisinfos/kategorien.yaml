@@ -1,0 +1,474 @@
+# Kategorie-Taxonomie fuer Aktien/ETF/Rohstoffe (2026-07-19, Nutzer-Wunsch nach
+# strukturierten Hauptgruppen/Unterkategorien fuer Diversifikation + Marktscan-
+# Schwerpunkte). Systematisch aus Bitpandas vollstaendigem ETF/ETC/Edelmetall-
+# Katalog (211 reale Produkte, live abgerufen ueber api.bitpanda.py, NACH dem
+# Dedup-Bugfix in _fetch_all_bitpanda_assets() - siehe dort) hergeleitet - jedes
+# reale Bitpanda-Symbol ist genau einer Unterkategorie zugeordnet (siehe
+# Vollstaendigkeits-Check im Bau-Skript). Krypto bewusst NICHT Teil dieser Datei.
+#
+# 'bitpanda_symbole' sind NUR fuer die automatische Vor-Klassifikation neuer
+# Screener-/Marktscan-Kandidaten gedacht (Symbol -> Hauptgruppe/Unterkategorie).
+# Fuer eigene Watchlist-Assets (auch externe, nicht bei Bitpanda gelistete) wird
+# die Hauptgruppe/Unterkategorie direkt am Asset in der Watchlist gespeichert,
+# unabhaengig davon, ob es in dieser Liste vorkommt.
+#
+# BEARBEITEN IN NOTEPAD++ - reine Text-/YAML-Datei, keine Datenbank.
+
+hauptgruppen:
+- id: edelmetalle
+  name: Edelmetalle
+  unterkategorien:
+  - id: gold
+    name: Gold
+    bitpanda_symbole:
+    - XAU
+    - GOLDMINE
+  - id: silber
+    name: Silber
+    bitpanda_symbole:
+    - XAG
+  - id: platin_palladium
+    name: Platin & Palladium
+    bitpanda_symbole:
+    - XPT
+    - XPD
+  - id: edelmetalle_diversifiziert
+    name: Diversifiziert
+    bitpanda_symbole:
+    - PRECIOUS
+- id: industriemetalle
+  name: Industriemetalle
+  unterkategorien:
+  - id: kupfer
+    name: Kupfer
+    bitpanda_symbole:
+    - COPPER
+    - COPPERMINE
+  - id: seltene_erden
+    name: Seltene Erden & strategische Metalle
+    bitpanda_symbole:
+    - RAREEARTH
+  - id: aluminium
+    name: Aluminium
+    bitpanda_symbole:
+    - ALUMINIUM
+  - id: nickel
+    name: Nickel
+    bitpanda_symbole:
+    - NICKEL
+  - id: zink
+    name: Zink
+    bitpanda_symbole:
+    - ZINC
+  - id: blei
+    name: Blei
+    bitpanda_symbole:
+    - LEAD
+  - id: zinn
+    name: Zinn
+    bitpanda_symbole:
+    - TIN
+  - id: industriemetalle_diversifiziert
+    name: Diversifiziert
+    bitpanda_symbole:
+    - INDUSTRIAL
+- id: energie
+  name: Energie
+  unterkategorien:
+  - id: rohoel
+    name: Rohöl
+    bitpanda_symbole:
+    - BRENT
+    - WTI
+    - PETROLEUM
+  - id: erdgas
+    name: Erdgas
+    bitpanda_symbole:
+    - NATGAS
+  - id: benzin_heizoel
+    name: Benzin & Heizöl
+    bitpanda_symbole:
+    - GASOLINE
+    - HEATINGOIL
+  - id: energie_diversifiziert
+    name: Diversifiziert (Energie-Rohstoffe)
+    bitpanda_symbole:
+    - ENERGY
+  - id: erneuerbare
+    name: Erneuerbare & Clean Energy
+    bitpanda_symbole:
+    - CLENERGY
+    - SOLAR
+    - HYDROGEN
+  - id: uran
+    name: Uran / Kernenergie
+    bitpanda_symbole:
+    - URANIUM
+  - id: batterietechnologie
+    name: Batterietechnologie
+    bitpanda_symbole:
+    - BATTERY
+  - id: energieversorger
+    name: Energieversorger (Aktien)
+    bitpanda_symbole:
+    - EUROUTIL
+    - USUTIL
+    - WORLDUTIL
+  - id: energiefoerderer
+    name: Energie-Förderer (Aktien)
+    bitpanda_symbole:
+    - EUROENER
+    - USENER
+    - WORLDENER
+    - JMLP
+- id: agrarrohstoffe
+  name: Agrarrohstoffe & Nahrungsmittel
+  unterkategorien:
+  - id: getreide
+    name: Getreide
+    bitpanda_symbole:
+    - CORN
+    - WHEAT
+    - GRAINS
+  - id: oelsaaten
+    name: Ölsaaten
+    bitpanda_symbole:
+    - SOYBEAN
+    - SOYOIL
+  - id: genussmittel
+    name: Genussmittel
+    bitpanda_symbole:
+    - COFFEE
+    - COCOA
+    - SUGAR
+    - COTTON
+  - id: vieh
+    name: Vieh
+    bitpanda_symbole:
+    - LEANHOG
+    - LIVECATTLE
+    - LIVESTOCK
+  - id: agrar_diversifiziert
+    name: Diversifiziert
+    bitpanda_symbole:
+    - AGRICULTURE
+    - SOFTS
+  - id: forstwirtschaft
+    name: Forstwirtschaft
+    bitpanda_symbole:
+    - TIMBER
+  - id: wasser
+    name: Wasser
+    bitpanda_symbole:
+    - WATER
+  - id: zukunft_nahrungsmittel
+    name: Nahrungsmittel der Zukunft (Aktien)
+    bitpanda_symbole:
+    - FUTFOOD
+- id: technologie_ki
+  name: Technologie & KI
+  unterkategorien:
+  - id: ki
+    name: Künstliche Intelligenz
+    bitpanda_symbole:
+    - ARTINT
+  - id: cybersicherheit
+    name: Cybersicherheit
+    bitpanda_symbole:
+    - CYBERSEC
+  - id: halbleiter
+    name: Halbleiter
+    bitpanda_symbole:
+    - SEMICON
+  - id: robotik
+    name: Robotik & Automatisierung
+    bitpanda_symbole:
+    - ROBOTICS
+  - id: iot
+    name: Internet der Dinge
+    bitpanda_symbole:
+    - IOT
+  - id: blockchain
+    name: Blockchain (Aktien)
+    bitpanda_symbole:
+    - BLOCKCHN
+  - id: fintech
+    name: Fintech
+    bitpanda_symbole:
+    - FINTECH
+  - id: mobilfunk
+    name: 5G / Mobilfunk
+    bitpanda_symbole:
+    - 5GNEXTG
+  - id: digitalwirtschaft
+    name: Digitalwirtschaft
+    bitpanda_symbole:
+    - DIGIECON
+  - id: metaverse
+    name: Metaverse
+    bitpanda_symbole:
+    - METAVERSE
+  - id: gaming
+    name: Gaming & eSports
+    bitpanda_symbole:
+    - VIDEOGAME
+  - id: internet_infrastruktur
+    name: Internet-Infrastruktur
+    bitpanda_symbole:
+    - DATAREIT
+  - id: tech_breit
+    name: Breite Technologie-Indizes
+    bitpanda_symbole:
+    - SXRV
+    - NASDAQ100
+    - TECDAX
+    - CHINA-TECH
+    - EUROTECH
+    - USTECH
+    - WORLDTECH
+  - id: smart_cities
+    name: Smart Cities
+    bitpanda_symbole:
+    - SMARTCIT
+  - id: telemedizin
+    name: Telemedizin
+    bitpanda_symbole:
+    - TELEMED
+  - id: ecommerce
+    name: E-Commerce
+    bitpanda_symbole:
+    - ECOMMERCE
+  - id: biotech
+    name: Biotech
+    bitpanda_symbole:
+    - BIOTECH
+  - id: mobilitaet
+    name: Zukunft der Mobilität
+    bitpanda_symbole:
+    - MOBILITY
+- id: absicherung
+  name: Absicherung / Hedge
+  unterkategorien:
+  - id: aktienmarkt_short
+    name: Aktienmarkt-Short (breit)
+    bitpanda_symbole: []
+  - id: sektor_short
+    name: Sektor-Short
+    bitpanda_symbole: []
+- id: aktien_regionen
+  name: Aktien - Regionen & Länder
+  unterkategorien:
+  - id: global
+    name: Global / Entwickelte Welt
+    bitpanda_symbole:
+    - MSCI-WORLD
+    - WORLD-CLIMATE
+    - WORLD-ESG
+    - MSCI-ACWI
+    - ACWI-ESG
+    - BUYBACKS
+    - GLSCAP
+  - id: emerging_markets
+    name: Emerging Markets (breit)
+    bitpanda_symbole:
+    - MSCI-EM
+    - EM-SMALL
+    - EM-ESG
+    - BRIC
+    - FRONTIER
+  - id: europa
+    name: Europa (breit)
+    bitpanda_symbole:
+    - EURO-MID
+    - EURO-SMALL
+    - EURO-CLIMATE
+    - EUROPE-ESG
+    - EUROEXUK
+    - EUROSTOXX50
+    - EUROCOCO
+    - UK-ESG
+  - id: nordamerika
+    name: Nordamerika (breit)
+    bitpanda_symbole:
+    - NORTHAM
+    - CANADA
+  - id: usa
+    name: USA (breit)
+    bitpanda_symbole:
+    - S&P500
+    - SXR8
+    - RUSSEL
+    - US-CLIMATE
+    - S&P500-ESG
+  - id: asien_pazifik
+    name: Asien-Pazifik (breit)
+    bitpanda_symbole:
+    - ASIAPAC
+    - EMASIA
+    - ASIASCEXJP
+  - id: einzellaender
+    name: Einzelne Länder/Märkte
+    bitpanda_symbole:
+    - AFRICA
+    - AUSTRALIA
+    - BRAZIL
+    - FTSE250
+    - FTSE100
+    - CHINA
+    - ACHINA
+    - CHINA-ESG
+    - HONGKONG
+    - INDIA
+    - INDONESIA
+    - NIKKEI400
+    - JAPAN-CLIMATE
+    - JAPAN-ESG
+    - NIKKEI225
+    - KOREA
+    - MALAYSIA
+    - MEXICO
+    - NORDIC
+    - PAKISTAN
+    - POLAND
+    - SINGAPORE
+    - SAFRICA
+    - SWISS
+    - TAIWAN
+    - THAILAND
+    - TURKEY
+    - VIETNAM
+    - MDAX
+    - SDAX
+    - DAX
+    - CAC40
+    - MIB
+    - AEX25
+    - SPAIN
+    - ATX
+- id: aktien_sektoren
+  name: Aktien - Sektoren
+  unterkategorien:
+  - id: finanzen
+    name: Finanzen
+    bitpanda_symbole:
+    - EUROFINA
+    - USFINA
+    - WORLDFINA
+  - id: gesundheit
+    name: Gesundheit
+    bitpanda_symbole:
+    - EUROHEAL
+    - USHEAL
+    - WORLDHEAL
+  - id: konsum_zyklisch
+    name: Konsum (zyklisch)
+    bitpanda_symbole:
+    - EUROCDIS
+    - USCDIS
+    - WORLDCDIS
+  - id: konsum_basis
+    name: Konsum (Basiskonsumgüter)
+    bitpanda_symbole:
+    - EUROCSTA
+    - USCSTA
+    - WORLDCSTA
+  - id: industrie
+    name: Industrie
+    bitpanda_symbole:
+    - EUROINDU
+    - USINDU
+    - WORLDINDU
+  - id: kommunikation
+    name: Kommunikationsdienste
+    bitpanda_symbole:
+    - EUROCOMM
+    - USCOMM
+    - WORLDCOMM
+  - id: grundstoffe
+    name: Grundstoffe (Aktien)
+    bitpanda_symbole:
+    - EUROMATE
+    - USMATE
+    - WORLDMATE
+  - id: immobilien
+    name: Immobilien
+    bitpanda_symbole:
+    - EUROREAL
+    - ASIAREAL
+- id: anleihen_geldmarkt
+  name: Anleihen & Geldmarkt
+  unterkategorien:
+  - id: staatsanleihen
+    name: Staatsanleihen
+    bitpanda_symbole:
+    - CHINABOND
+    - DEVBANK
+    - EMGOV-ESG
+    - EMGOVHC
+    - EMGOVLC
+    - EUROGOV
+    - GLGOV-ESG
+    - GLOBGOV
+    - JAPGOVIES
+    - USGOVIES
+  - id: unternehmensanleihen
+    name: Unternehmensanleihen
+    bitpanda_symbole:
+    - EMCORP
+    - EUROIG
+    - GLCORPEH
+    - USCORP
+  - id: hochzins
+    name: Hochzinsanleihen
+    bitpanda_symbole:
+    - EUROHY
+    - GLHYEH
+    - USHY
+    - GLOBCOCO
+  - id: inflationsgeschuetzt
+    name: Inflationsgeschützt
+    bitpanda_symbole:
+    - GLINFL
+    - USTIPS
+  - id: geldmarkt
+    name: Geldmarkt
+    bitpanda_symbole:
+    - EUMM
+    - EUMM-ESG
+    - USMM
+  - id: sonstige_anleihen
+    name: Sonstige (Green Bonds, MBS, Aggregate)
+    bitpanda_symbole:
+    - GREENBOND
+    - GLBONDEH
+    - USMBS
+- id: sonstige
+  name: Sonstige
+  unterkategorien:
+  - id: faktor_strategie
+    name: Faktor-/Strategie-ETFs
+    bitpanda_symbole:
+    - EURO-DIV
+    - EURO-MOM
+    - EURO-VALUE
+    - GLDIV-ESG
+    - GLDIVIDEND
+    - SHARIAH
+    - USA-MOM
+    - USA-VALUE
+    - WORLD-MOM
+    - WORLD-QUAL
+    - WORLD-SIZE
+    - WORLD-VALUE
+    - DIVERSE
+  - id: nischenthemen
+    name: Nischenthemen
+    bitpanda_symbole:
+    - LUXURY
+    - TOURISM
+    - HIPSTER
+    - LISTEDPE
+    - COMMODITIES
+    - COMMEXAG
+    - CARBON
+    - AGEING

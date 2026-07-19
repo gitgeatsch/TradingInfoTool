@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from datetime import datetime, timezone
 
 import numpy as np
@@ -182,6 +183,50 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
     except Exception as exc:
         logger.warning("Fundamentaldaten-Abruf fuer %s fehlgeschlagen (degradiert auf None): %s", asset.symbol, exc)
 
+    # SEC-EDGAR-Insider-Trading (2026-07-19, Datenquellen-Recherche-Nachfolger) -
+    # eigener try/except, ein Fehlschlag degradiert nur auf None (P-10), blockiert
+    # nicht die Analyse. Kostenlos, kein API-Key noetig (siehe api/sec_edgar.py).
+    # asset.yfinance_symbol statt asset.symbol - SEC braucht den echten Boersen-
+    # Ticker, nicht Bitpandas internes Symbol (gleiche Unterscheidung wie bei
+    # fetch_fundamentals() oben).
+    insider_trading = None
+    if asset.yfinance_symbol:
+        try:
+            from api.sec_edgar import get_recent_insider_transactions, summarize_insider_activity
+
+            insider_transactions = get_recent_insider_transactions(asset.yfinance_symbol)
+            insider_trading = summarize_insider_activity(insider_transactions)
+        except Exception as exc:
+            logger.info("SEC-EDGAR-Insider-Trading-Abruf fuer %s fehlgeschlagen (degradiert auf None): %s", asset.symbol, exc)
+
+    # Finnhub Analysten-Trend (2026-07-19, Datenquellen-Recherche-Nachfolger) -
+    # ergaenzt fundamentaldaten.analysten_konsens (yfinance-Momentanwert) um eine
+    # Verlaufskomponente (aktuellster vs. Vormonat). Optional (P-8, kein Key ->
+    # None), eigener try/except (P-10).
+    analysten_trend_finnhub = None
+    finnhub_api_key = os.environ.get("FINNHUB_API_KEY")
+    if asset.yfinance_symbol and finnhub_api_key:
+        try:
+            from api.finnhub import get_recommendation_trends, summarize_recommendation_trend
+
+            trends = get_recommendation_trends(asset.yfinance_symbol, finnhub_api_key)
+            analysten_trend_finnhub = summarize_recommendation_trend(trends)
+        except Exception as exc:
+            logger.info("Finnhub-Analysten-Trend-Abruf fuer %s fehlgeschlagen (degradiert auf None): %s", asset.symbol, exc)
+
+    # FINRA Consolidated Short Interest (2026-07-19, letzter der vier gewaehlten
+    # Datenquellen-Kandidaten) - oeffentlich, KEIN API-Key noetig (siehe
+    # api/finra.py Modul-Docstring). Eigener try/except, degradiert auf None (P-10).
+    short_interest_finra = None
+    if asset.yfinance_symbol:
+        try:
+            from api.finra import get_short_interest_history, summarize_short_interest
+
+            readings = get_short_interest_history(asset.yfinance_symbol)
+            short_interest_finra = summarize_short_interest(readings)
+        except Exception as exc:
+            logger.info("FINRA-Short-Interest-Abruf fuer %s fehlgeschlagen (degradiert auf None): %s", asset.symbol, exc)
+
     holdings = {h.symbol: h for h in db.get_all_holdings(conn)}
     price_age_minutes = None
     if price_snap is not None:
@@ -205,6 +250,9 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
         historische_erfolgsquote=historische_erfolgsquote,
         historischer_makro_vergleich=historischer_makro_vergleich,
         letztes_signal=letztes_signal,
+        insider_trading=insider_trading,
+        analysten_trend_finnhub=analysten_trend_finnhub,
+        short_interest_finra=short_interest_finra,
     )
 
     try:

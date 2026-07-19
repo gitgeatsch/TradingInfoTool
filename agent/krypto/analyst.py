@@ -148,7 +148,11 @@ entsprechend vorsichtig ("moeglicherweise", "Hinweis auf", nicht "ist ein Flush"
 richtung). `praesidentschaftszyklus` ist rein deskriptiv - nenne die historische \
 Tendenz NUR mit einem klaren Vorbehalt, dass sie keine Prognose-Garantie ist, falls \
 du sie erwaehnst. Ist ein Eintrag in `naechste_fomc_sitzungen` weniger als 14 Tage \
-entfernt, nenne das als moeglichen Volatilitaets-Faktor in `key_risks`. Erfinde KEINE \
+entfernt, nenne das als moeglichen Volatilitaets-Faktor in `key_risks`. Ist \
+`naechste_cpi_veroeffentlichung` NICHT null und `in_tagen` kleiner als 5, nenne den \
+bevorstehenden CPI-Print ebenfalls als moeglichen kurzfristigen Volatilitaets-Faktor in \
+`key_risks` (historisch oft ueberdurchschnittliche Kursbewegungen am Veroeffentlichungstag, \
+auch bei Krypto ueber die allgemeine Risikoappetit-Korrelation). Erfinde KEINE \
 Werte fuer leere/null Felder, erzwinge auch keine Erwaehnung.
 14. `action` MUSS EXAKT einer dieser fuenf Werte sein (Grossbuchstaben, keine Variante): \
 KAUFEN, VERKAUFEN, TAUSCHEN, HALTEN, NACHKAUFEN.
@@ -542,6 +546,13 @@ def build_facts(
             "naechste_fomc_sitzungen": [
                 {"name": e.name, "in_tagen": e.days_until} for e in market_context["upcoming_fomc"]
             ],
+            "naechste_cpi_veroeffentlichung": (
+                {
+                    "datum": market_context["naechste_cpi_veroeffentlichung"].date,
+                    "in_tagen": market_context["naechste_cpi_veroeffentlichung"].days_until,
+                }
+                if market_context.get("naechste_cpi_veroeffentlichung") else None
+            ),
         },
         "strategien_aktiv": strategien_aktiv,
         "tranchen_erlaubt": tranchen_erlaubt,

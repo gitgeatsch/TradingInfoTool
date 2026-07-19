@@ -6,6 +6,7 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import ttk
 
+import config as config_module
 import database.db as db
 import ui.theme as theme
 from database.models import Holding
@@ -83,6 +84,29 @@ class PortfolioView(ttk.Frame):
         # Watchlist), nur hier fuer den Portfolio-Tab.
         self.tree.bind("<Double-1>", self._on_edit_avg_price)
         self.tree.pack(fill="both", expand=True, padx=8, pady=8)
+
+        # Diversifikations-Uebersicht (2026-07-19, Nutzer-Wunsch): gruppiert
+        # den Portfoliowert nach dem frei vergebbaren `schwerpunkt`-Feld
+        # (config.py::WatchlistAsset, ueber "Asset bearbeiten..." im
+        # Watchlist-Tab setzbar) - z.B. "Gold"/"Kupfer"/"Seltene Erden" statt
+        # nur der groben Assetklasse. Bewusst als eigene, kompakte Tabelle
+        # statt eines Pie-Charts (kein bestehendes Chart-Vorbild fuer
+        # Verteilungsdarstellungen, siehe ui/charts.py - nur Kursverlaeufe).
+        ttk.Label(self, text="Diversifikation nach Schwerpunkt", font=("", 10, "bold")).pack(
+            anchor="w", padx=8, pady=(4, 2)
+        )
+        diversifikation_columns = ("schwerpunkt", "wert_eur", "anteil_pct")
+        self.diversifikation_tree = ttk.Treeview(
+            self, columns=diversifikation_columns, show="headings", height=6,
+        )
+        diversifikation_headings = {"schwerpunkt": "Schwerpunkt", "wert_eur": "Wert (EUR)", "anteil_pct": "Anteil %"}
+        for col in diversifikation_columns:
+            self.diversifikation_tree.heading(col, text=diversifikation_headings[col])
+            self.diversifikation_tree.column(col, width=160, anchor="w" if col == "schwerpunkt" else "e")
+        self._diversifikation_reapply_sort = make_sortable(
+            self.diversifikation_tree, numeric_columns=frozenset({"wert_eur", "anteil_pct"}),
+        )
+        self.diversifikation_tree.pack(fill="x", padx=8, pady=(0, 8))
 
         # 'Letzte Bewertung'-Anzeige (2026-07-16, Klassifikations-Redesign) -
         # zeigt fuer die ausgewaehlte Zeile die letzte echte KI-Analyse
@@ -211,6 +235,7 @@ class PortfolioView(ttk.Frame):
 
         total_value_eur = 0.0
         staked_value_eur = 0.0
+        schwerpunkt_totals: dict[str, float] = {}
         for holding in sorted(holdings, key=lambda h: h.symbol):
             # Nutzer-Wunsch (2026-07-13): Portfolio soll nur zeigen, was
             # tatsaechlich gehalten wird - viele holdings-Zeilen (z.B. durch
@@ -233,6 +258,9 @@ class PortfolioView(ttk.Frame):
             value_eur = (holding.quantity * price_eur) if price_eur is not None else None
             if value_eur is not None:
                 total_value_eur += value_eur
+                hauptgruppe_name = config_module.get_hauptgruppe_name(asset.hauptgruppe) if asset else None
+                schwerpunkt_key = hauptgruppe_name or "ohne Schwerpunkt"
+                schwerpunkt_totals[schwerpunkt_key] = schwerpunkt_totals.get(schwerpunkt_key, 0.0) + value_eur
 
             # 2026-07-11, Nutzer-Fund: gestakte Menge ist ueber die normale Wallet-API
             # unsichtbar (siehe importer/bitpanda_avg_cost.py::compute_staked_quantities()) -
@@ -243,7 +271,11 @@ class PortfolioView(ttk.Frame):
             if has_staked:
                 quantity_text += f" (+{holding.staked_quantity:g} gestakt)"
                 if price_eur is not None:
-                    staked_value_eur += holding.staked_quantity * price_eur
+                    staked_wert = holding.staked_quantity * price_eur
+                    staked_value_eur += staked_wert
+                    hauptgruppe_name = config_module.get_hauptgruppe_name(asset.hauptgruppe) if asset else None
+                    schwerpunkt_key = hauptgruppe_name or "ohne Schwerpunkt"
+                    schwerpunkt_totals[schwerpunkt_key] = schwerpunkt_totals.get(schwerpunkt_key, 0.0) + staked_wert
 
             fetched_at = price_snapshot.fetched_at if price_snapshot else None
             stale = is_price_stale(fetched_at)
@@ -309,10 +341,23 @@ class PortfolioView(ttk.Frame):
         notes = []
         if fiat_cash_eur > 0:
             notes.append(f"{fiat_cash_eur:,.2f} EUR Fiat-Cash")
+            schwerpunkt_totals["Cash/Sonstiges"] = schwerpunkt_totals.get("Cash/Sonstiges", 0.0) + fiat_cash_eur
         if staked_value_eur > 0:
             notes.append(f"{staked_value_eur:,.2f} EUR gestakt (im Regelwerk noch nicht berücksichtigt)")
         note_text = f" (davon {', '.join(notes)})" if notes else ""
         self.total_label.config(text=f"Gesamtwert: {total_value_eur:,.2f} EUR{note_text}")
+
+        self._refresh_diversifikation(schwerpunkt_totals, total_value_eur)
+
+    def _refresh_diversifikation(self, schwerpunkt_totals: dict[str, float], total_value_eur: float) -> None:
+        for item in self.diversifikation_tree.get_children():
+            self.diversifikation_tree.delete(item)
+        for schwerpunkt, wert_eur in sorted(schwerpunkt_totals.items(), key=lambda kv: kv[1], reverse=True):
+            anteil_pct = (wert_eur / total_value_eur * 100) if total_value_eur > 0 else 0.0
+            self.diversifikation_tree.insert(
+                "", "end", values=(schwerpunkt, f"{wert_eur:,.2f}", f"{anteil_pct:.1f}"),
+            )
+        self._diversifikation_reapply_sort()
 
     def _on_edit_avg_price(self, event) -> None:
         selected = self.tree.selection()

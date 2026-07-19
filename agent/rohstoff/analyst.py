@@ -175,6 +175,14 @@ Wiederhole die Empfehlung nicht unveraendert, ohne diesen Umstand explizit in \
 `long_reasoning` oder `key_risks` zu benennen - entweder nenne einen NEUEN, zusaetzlichen \
 Grund, der seit der letzten Empfehlung hinzugekommen ist, oder erklaere ausdruecklich, \
 warum die Empfehlung trotz Nicht-Umsetzung unveraendert bestehen bleibt.
+21. `lagerbestaende` ist NUR fuer Erdgas gesetzt (sonst null - fuer Gold/Silber/Kupfer \
+IMMER ignorieren, kein Erdgas-Aequivalent existiert dort). `letzte_woechentliche_aenderung_bcf` \
+zeigt Build (positiv, tendenziell preisdaempfend) oder Draw (negativ, tendenziell \
+preisstuetzend) - beziehe das NUR als schwachen Zusatzkontext ein, NICHT als \
+alleinige Begruendung: ohne den fehlenden 5-Jahres-Saisonvergleich (siehe `hinweis`) \
+laesst sich aus einem einzelnen Wert allein nicht sicher ableiten, ob eine Aenderung \
+saisonal normal oder ungewoehnlich ist. Nutze bevorzugt den `verlauf_8_wochen`-Trend \
+(z.B. mehrere Draws in Folge trotz Sommer) statt eines Einzelwerts.
 
 SCHEMA:
 {
@@ -268,6 +276,7 @@ def build_facts(
     historische_erfolgsquote: dict | None = None,
     historischer_makro_vergleich: dict | None = None,
     letztes_signal=None,
+    lagerbestaende: dict | None = None,
 ) -> dict:
     macd_val = technical_snapshot.macd
     macd_facts = None
@@ -326,6 +335,7 @@ def build_facts(
         "historischer_makro_vergleich": historischer_makro_vergleich,
         "makro_ueberlagerung": makro_ueberlagerung,
         "positionierung": positionierung,
+        "lagerbestaende": lagerbestaende,
         "technische_analyse": {
             "ema": {str(p): _native(latest_value(r)) for p, r in technical_snapshot.ema.items()},
             "macd": macd_facts,
@@ -387,8 +397,9 @@ def build_facts(
                 "Industrieproduktion (makro_ueberlagerung) + globaler Liquiditaets-Trend "
                 "(regime.liquiditaets_regime). Positionierung (CFTC-COT, woechentlich, "
                 "~3 Tage Verzug) ist ein Sentiment-Proxy, kein Nachrichten-Sentiment. "
-                "Lagerbestaende (LME/COMEX-Vorraete, EIA-Erdgas-Speicher) und ETF-"
-                "Gold-/Silber-Bestandsfluesse sind NOCH NICHT einbezogen (siehe "
+                "Lagerbestaende sind NUR fuer Erdgas einbezogen (EIA Weekly Storage "
+                "Report, siehe lagerbestaende) - LME-/COMEX-Metallvorraete und ETF-"
+                "Gold-/Silber-Bestandsfluesse sind weiterhin NICHT einbezogen (siehe "
                 "Regelwerksmanual-Nachtrag - bewusst zurueckgestellt). WICHTIG: "
                 "technische_analyse basiert auf dem liquiden Futures-Kontrakt, den "
                 "dieses ETC nachbildet (nicht auf der eigenen, duenn gehandelten "

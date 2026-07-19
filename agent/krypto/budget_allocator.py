@@ -511,6 +511,7 @@ def run_budget_allocator(
             try:
                 parsed = generate_candidate_writeup(
                     candidate, regime_result, llm_client, kraken_client, conn, watchlist, config_dict,
+                    fred_api_key,
                 )
                 db.update_marktscan_candidate_groq_writeup(
                     conn, candidate.id, parsed.get("short_reasoning"),

@@ -185,6 +185,35 @@ Wiederhole die Empfehlung nicht unveraendert, ohne diesen Umstand explizit in \
 `long_reasoning` oder `key_risks` zu benennen - entweder nenne einen NEUEN, zusaetzlichen \
 Grund, der seit der letzten Empfehlung hinzugekommen ist, oder erklaere ausdruecklich, \
 warum die Empfehlung trotz Nicht-Umsetzung unveraendert bestehen bleibt.
+22. Ist `insider_trading` NICHT null, zeigt es echte Kauf-/Verkaufstransaktionen von \
+Firmeninsidern (Vorstand/Aufsichtsrat) am offenen Markt der letzten 90 Tage (SEC-Pflicht- \
+meldungen, KEINE Optionsausuebungen/Zuteilungen). NIEDRIG gewichteter Zusatzkontext, \
+KEINE harte Regel: `anzahl_kaeufe` > 0 UND `anzahl_verkaeufe` == 0 ist ein schwaches \
+positives Signal (Insider setzen eigenes Geld ein), das Umgekehrte ein schwaches \
+negatives - aber Insider-Verkaeufe sind sehr haeufig routinemaessig (Diversifikation, \
+Steuerplanung, vorab geplante 10b5-1-Programme) und NICHT automatisch ein Warnsignal. \
+Formuliere entsprechend vorsichtig, erwaehne es nur, wenn es die Einschaetzung tatsaechlich \
+stuetzt, keine Ueberinterpretation einzelner Transaktionen.
+23. Ist `analysten_trend_finnhub` NICHT null, zeigt es die Verteilung der Analysten- \
+Einstufungen (strong_buy/buy/hold/sell/strong_sell) im aktuellsten Monat UND (falls \
+`vormonat` nicht null ist) im Vormonat. Nutze das primaer fuer eine RICHTUNGS-Aussage - \
+wird der Konsens optimistischer (mehr buy/strong_buy, weniger sell/strong_sell im \
+Vergleich zum Vormonat) oder pessimistischer? Das ist NIEDRIG gewichteter \
+Zusatzkontext (analog `fundamentaldaten.analysten_konsens`, ergaenzt diesen nur um die \
+zeitliche Entwicklung) - eine einzelne Monatsverschiebung ist kein starkes Signal.
+24. Ist `short_interest_finra` NICHT null, zeigt es die aktuell gemeldete Short- \
+Position (`aktuell.short_position_qty`), `days_to_cover` (Handelstage, um alle Shorts \
+beim mittleren Tagesvolumen einzudecken) und die Veraenderung ggue. der letzten \
+FINRA-Meldeperiode (zweiwoechentlich, siehe `aktuell.change_percent_ggue_vorperiode`). \
+NIEDRIG gewichteter Zusatzkontext, KEINE harte Regel, und AMBIVALENT zu interpretieren: \
+stark steigende Short-Position + hohes `days_to_cover` KANN entweder echte bearishe \
+Ueberzeugung vieler Marktteilnehmer bedeuten (Fortsetzung des Abwaertsdrucks) ODER bei \
+gleichzeitig starkem/stabilem Kurs ein Short-Squeeze-Setup andeuten (viele muessen bei \
+Kursanstieg eindecken, was den Anstieg verstaerkt) - welche Lesart plausibler ist, haengt \
+vom technischen Kontext (Trend, Momentum) ab, den du bereits kennst. Die Daten sind \
+strukturell 1-3 Wochen alt (FINRA-Meldelag), also KEIN Echtzeit-Signal. Erwaehne es nur, \
+wenn `days_to_cover` auffaellig hoch ist (>3-4 Handelstage) oder sich die Position \
+stark veraendert hat (>15-20% ggue. Vorperiode) - ansonsten ignorieren.
 
 SCHEMA:
 {
@@ -278,6 +307,9 @@ def build_facts(
     historische_erfolgsquote: dict | None = None,
     historischer_makro_vergleich: dict | None = None,
     letztes_signal=None,
+    insider_trading: dict | None = None,
+    analysten_trend_finnhub: dict | None = None,
+    short_interest_finra: dict | None = None,
 ) -> dict:
     macd_val = technical_snapshot.macd
     macd_facts = None
@@ -338,6 +370,9 @@ def build_facts(
         "vorherige_empfehlung": vorherige_empfehlung_fact,
         "historische_erfolgsquote": historische_erfolgsquote,
         "historischer_makro_vergleich": historischer_makro_vergleich,
+        "insider_trading": insider_trading,
+        "analysten_trend_finnhub": analysten_trend_finnhub,
+        "short_interest_finra": short_interest_finra,
         "fundamentaldaten": {
             "kgv": _native(fundamentals.kgv) if fundamentals else None,
             "forward_kgv": _native(fundamentals.forward_kgv) if fundamentals else None,

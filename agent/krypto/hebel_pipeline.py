@@ -124,7 +124,7 @@ def generate_hebel_signal(
     )
 
     anticyclic_context = assess_anticyclic(asset, kraken_client, closes)
-    market_context = fetch_market_context()
+    market_context = fetch_market_context(fred_api_key)
 
     open_positions = db.get_open_hebel_positions(conn, symbol=asset.symbol)
     position_aktuell = open_positions[0] if open_positions else None

@@ -412,78 +412,104 @@ watchlist:
     beobachtungsstatus: beobachtung
     assetklasse: aktien
     yfinance_symbol: VST
+    hauptgruppe: energie
+    unterkategorie: energieversorger
   - symbol: OD7N
     name: WisdomTree Silver ETC
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: rohstoffe
     yfinance_symbol: GB00B15KY328.SG
+    hauptgruppe: edelmetalle
+    unterkategorie: silber
   - symbol: VVMX
     name: VanEck Rare Earth and Strategic Metals UCITS ETF
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: etf
     yfinance_symbol: VVMX.DE
+    hauptgruppe: industriemetalle
+    unterkategorie: seltene_erden
   - symbol: 3QSS
     name: WisdomTree NASDAQ 100 3x Daily Short
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: etf
     yfinance_symbol: IE00BLRPRJ20.SG
+    hauptgruppe: absicherung
+    unterkategorie: sektor_short
   - symbol: DBPK
     name: Xtrackers S&P 500 2x Inverse Daily Swap UCITS ETF
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: etf
     yfinance_symbol: DBPK.DE
+    hauptgruppe: absicherung
+    unterkategorie: aktienmarkt_short
   - symbol: X136
     name: Amundi Global Bioenergy UCITS ETF
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: etf
     yfinance_symbol: X136.BE
+    hauptgruppe: energie
+    unterkategorie: erneuerbare
   - symbol: EXH3
     name: iShares STOXX Europe 600 Food & Beverage UCITS ETF (DE)
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: etf
     yfinance_symbol: EXH3.DE
+    hauptgruppe: aktien_sektoren
+    unterkategorie: konsum_basis
   - symbol: CEBS
     name: iShares Copper Miners UCITS ETF
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: etf
     yfinance_symbol: CEBS.DE
+    hauptgruppe: industriemetalle
+    unterkategorie: kupfer
   - symbol: ISOC
     name: iShares Agribusiness UCITS ETF
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: etf
     yfinance_symbol: IS0C.DE
+    hauptgruppe: agrarrohstoffe
+    unterkategorie: agrar_diversifiziert
   - symbol: OD7H
     name: WisdomTree Gold
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: rohstoffe
     yfinance_symbol: OD7H.SG
+    hauptgruppe: edelmetalle
+    unterkategorie: gold
   - symbol: OD7C
     name: WisdomTree Copper
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: rohstoffe
     yfinance_symbol: OD7C.SG
+    hauptgruppe: industriemetalle
+    unterkategorie: kupfer
   - symbol: OD7L
     name: WisdomTree Natural Gas
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: rohstoffe
     yfinance_symbol: JE00BN7KB334.SG
+    hauptgruppe: energie
+    unterkategorie: erdgas
   - symbol: PLTR
     name: Palantir Technologies Inc.
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: aktien
     yfinance_symbol: PLTR
+    hauptgruppe: technologie_ki
+    unterkategorie: ki
   - symbol: VSN
     name: Vision
     rolle: taktisch
@@ -911,9 +937,16 @@ cash_reserve_ziel:
 # --- Backward-Tracking (Selbstverifikations-Vision Schritt 2, siehe
 # Basisinfos/Regelwerksmanual.md Kap. 9 / Spezifikation Kap. 16) ---
 backward_tracking:
-  abgelaufen_nach_tagen: 90   # [OFFEN] Vorschlag - ab wann ein unentschiedenes
-                              # KAUFEN/NACHKAUFEN-Signal als "abgelaufen" gilt
-                              # (weder Take-Profit- noch Stop-Loss-Zone erreicht)
+  # NEUKALIBRIERT (2026-07-19, Backtracking-Aussagekraft-Audit): inhaltsbasiert
+  # statt einer einzigen fixen Frist fuer JEDES Signal - nutzt das vom Modell
+  # bereits zuverlaessig gefuellte halte_kriterium.bucket (agent/krypto/
+  # analyst.py Regel 17). [OFFEN]/vorlaeufig, noch nicht gegen echte
+  # Ergebnisse kalibriert (siehe Regelwerksmanual Kap. 15).
+  abgelaufen_nach_tagen_bucket:
+    kurz: 14      # z.B. ereignisgetriebene/kurzfristige These
+    mittel: 45    # bestaetigtes Setup, mehrwoechiger Horizont
+    lang: 120     # langfristige These (z.B. BTC/ETH Kernposition)
+  abgelaufen_nach_tagen_fallback: 90  # falls halte_kriterium fehlt (aeltere Signale)
 
 # --- Antizyklische Kauf-Disziplin (siehe Spezifikation Kap. 15) ---
 antizyklisch:

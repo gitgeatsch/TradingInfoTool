@@ -2154,10 +2154,12 @@ Startpunkt, sobald Backward-Tracking/Outcome-Daten vorliegen:
   Std., Kap. 6) — erster plausibler Wert für die kürzere Kern-Cooldown-Stufe
   (core/gehaltene Assets), ebenfalls noch nicht über mehrere Tage echten
   Betrieb verifiziert.
-- **NEU (2026-07-16):** Hebel hat noch keine "Signal-Historie"-Ansicht
-  analog zum Signale-Tab (Kap. 7) — die neue Überholt-Erkennung schreibt den
-  Status zwar korrekt in `hebel_signals.outcome_status`, ist aber im
-  Hebel-Tab aktuell nirgends sichtbar (nur über eine direkte DB-Abfrage).
+- **ERLEDIGT (2026-07-17), war hier gelistet (2026-07-16):** Hebel hatte
+  noch keine "Signal-Historie"-Ansicht analog zum Signale-Tab (Kap. 7) — die
+  Überholt-Erkennung schrieb den Status zwar korrekt in
+  `hebel_signals.outcome_status`, war im Hebel-Tab aber nirgends sichtbar.
+  `ui/hebel_view.py` hat jetzt einen Signal-Historie-Dialog analog zum
+  Spot-Pendant.
 - **NEU (2026-07-16, Klassifikations-Redesign, siehe Kap. 17):**
   `spot_cooldown_stunden_ausgemustert`/`hebel_cooldown_stunden_ausgemustert`
   (je 120 Std. = 5 Tage) und `hebel_position_cooldown_stunden` (3 Std.) sind
@@ -4544,3 +4546,674 @@ Synthetischer Test von `_kandidaten()` mit 6 Fällen (Aktie mit/ohne ID,
 Themen-ETF mit/ohne ID, Rohstoff ohne ID bleibt Kandidat, Hedge-Instrument
 ohne ID bleibt Kandidat). Tk-Smoke-Test der erweiterten Watchlist-Tab-
 Warnung (Aktie/ETF ohne ID markiert, Hedge-Instrument korrekt unmarkiert).
+
+## Nachtrag (2026-07-19, gleicher Tag): Backtracking-Aussagekraft-Audit - Überholt-Erkennung neutralisierte die eigene Ergebnisstatistik
+
+**Auslöser:** Nutzer bat vor der Governance-Diskussion (Selbstverifikations-
+Vision Schritt 3, siehe Kap. 7) darum, sicherzustellen, dass Backward-
+Tracking "sauber funktioniert und auch kurzfristig eine gewisse
+Aussagekraft hat" - erst wenn das gewährleistet ist, soll die Governance-
+Frage angegangen werden.
+
+**Echter, gravierender Fund:** Live gegen den frischesten Notebook-
+Datenexport geprüft (`notebook_diagnose.json`, 2026-07-19), da die lokale
+Desktop-DB seit dem NB-Umzug veraltet ist. Ergebnis: von 9 trackbaren Spot-
+Signalen (KAUFEN/NACHKAUFEN) wurden **alle 9 (100%)** als "überholt"
+markiert, bevor der Kurs jemals gegen Take-Profit/Stop-Loss geprüft werden
+konnte (nach durchschnittlich ~29 Std., Spanne 18-56 Std.) - **kein
+einziges** reales Ergebnis liegt vor. Bei Hebel wurden 21 von 35 ERÖFFNEN-
+Signalen (60%) nach durchschnittlich **11,7 Std.** (Spanne 4,2-22,7 Std.)
+überholt; nur 2 von 35 kamen je zu einem echten Ergebnis (beide Stop-Loss,
+beide aus der inzwischen entfernten Cerebras-Ära - die aktuelle Kette
+Groq/Mistral/Gemini hat bislang null ausgewertete Ergebnisse).
+
+**Root Cause:** `_is_superseded()` (Kap. „Info-Leichen"-Nachtrag oben,
+2026-07-16 eingeführt gegen doppelte/widersprüchliche Anzeigen) markierte
+ein offenes KAUFEN/ERÖFFNEN als überholt, sobald **irgendein** neueres
+reales Signal für dasselbe Symbol vorlag - unabhängig von dessen Aktion.
+Da HALTEN die weit überwiegende Aktion ist (>95%) und gehaltene/offene
+Positionen sehr häufig neu bewertet werden (`hebel_position_cooldown_
+stunden`: 3 Std., `spot_cooldown_stunden_kern`: 8 Std.), wurde praktisch
+jede offene Kauf-These durch eine bloße HALTEN-Bestätigung "überholt" -
+lange bevor ein realistischer mehrtägiger Kursverlauf Take-Profit/Stop-Loss
+überhaupt erreichen konnte. Die Funktion, die Doppel-Anzeigen verhindern
+sollte, hielt dadurch strukturell die Ergebnisstatistik leer, die
+Governance Schritt 3 als Grundlage braucht.
+
+**Fix 1 - Überholt-Erkennung eingeschränkt:** `_is_superseded()` (Spot UND
+Hebel) überholt eine offene These jetzt nur noch bei einer echten neuen
+Aktion (erneutes KAUFEN/NACHKAUFEN/ERÖFFNEN = redundant, oder VERKAUFEN/
+TAUSCHEN/SCHLIESSEN/HEBEL_SENKEN = widersprechend) - eine reine HALTEN-
+Bestätigung widerspricht der offenen These nicht und überholt sie nicht
+mehr. Die ursprüngliche Absicht (Duplikate/Widersprüche ausblenden) bleibt
+dadurch unverändert erhalten.
+
+**Fix 2 - inhaltsbasierte Ablaufzeit statt fixer 90-Tage-Frist:** Nutzer-
+Vorgabe: "der zeitliche Faktor sollte durch den Inhalt bzw. Angabe - wann
+soll ein Zielwert erreicht werden - besser abschätzbar sein". Statt eine
+neue Datenstruktur zu erfinden, wird das bereits bestehende, vom Modell
+zuverlässig gefüllte `halte_kriterium` genutzt (Regel 17 in
+`analyst.py`/`hebel_analyst.py`, bereits vollständig als eigene
+Spalten in `signals`/`hebel_signals` persistiert): `ziel_datum` hat
+Vorrang, wenn gesetzt (in der Praxis fast nie - live geprüft: 0 von 9
+Fällen), sonst der grobe `bucket` (kurz/mittel/lang, in der Praxis
+**zuverlässig** gefüllt - live geprüft: 9 von 9 Fällen). Neue Config-Werte
+`backward_tracking.abgelaufen_nach_tagen_bucket` (kurz: 14, mittel: 45,
+lang: 120 Tage) + `abgelaufen_nach_tagen_fallback` (90 Tage, für ältere
+Signale ohne halte_kriterium) ersetzen den alten einzelnen
+`abgelaufen_nach_tagen`-Wert. Die konkreten Tageswerte sind selbst
+`[OFFEN]`/vorläufig (siehe Kap. 15), erste plausible Startwerte analog dem
+bisherigen 90-Tage-Vorschlag.
+
+**Fix (drei Dateien, identisches Muster fuer Spot und Hebel):**
+1. `agent/krypto/backward_tracking.py`: `_is_superseded()` + `_is_expired()`
+   wie beschrieben geändert, `DEFAULT_ABGELAUFEN_TAGE_BUCKET`/
+   `DEFAULT_ABGELAUFEN_TAGE_FALLBACK` ersetzen `DEFAULT_ABGELAUFEN_NACH_
+   TAGEN`.
+2. `agent/krypto/hebel_backward_tracking.py`: identischer Fix (mirror-
+   Muster), importiert die neuen Konstanten von oben.
+3. `Basisinfos/config.yaml`: `backward_tracking`-Sektion umgestellt.
+
+**Verifiziert:** 14 synthetische Tests (HALTEN überholt nicht mehr/andere
+Aktionen weiterhin doch, für Spot UND Hebel; bucket-Mapping kurz/mittel/
+lang; ziel_datum-Override in beide Richtungen; Fallback bei fehlendem
+bucket; ungültiges ziel_datum fällt korrekt auf bucket zurück). Echter Lauf
+gegen eine Kopie der Produktions-DB: von 51 vorher unverarbeiteten Spot-
+Signalen bleiben danach korrekt nur die 2 tatsächlich noch unentschiedenen
+trackbaren Signale offen (vorher wären sie durch die alte Regel fälschlich
+überholt worden, da fuer beide zwischenzeitlich nur HALTEN-Bestätigungen
+vorlagen), alle anderen korrekt `nicht_anwendbar`.
+
+## Nachtrag (2026-07-19, gleicher Tag): 29× "Auto-Add unbekannter
+Hebel-Symbole fehlgeschlagen" im Notebook-Export - Bug war bereits gefixt,
+keine neue Ursache
+
+**Auftrag:** vollen Traceback zu 29 Vorkommen von "Auto-Add unbekannter
+Hebel-Symbole fehlgeschlagen" im `notebook_diagnose.json`-Export finden,
+Root Cause klären, fixen.
+
+**Ergebnis: kein neuer Fix nötig - der Export zeigt einen bereits
+abgeschlossenen Vorfall.** Vollständiger Traceback aus `log_auszug`
+extrahiert (72h-Fenster, `job_fehlschlaege` listet nur die Kurzmeldung ohne
+Traceback): 28 der 29 Vorkommen sind exakt der `AttributeError: 'str'
+object has no attribute 'get'`-Bug aus `get_listed_assets(bitpanda_api_key)`
+statt `get_listed_assets()` - **derselbe Bug, der bereits am selben Tag
+(2026-07-16, Commit `fe970ef`) live anhand eines FRÜHEREN
+Notebook-Diagnose-Exports gefunden und gefixt wurde** (siehe
+Commit-Nachricht: "Live in den Notebook-Logs gefunden
+(Notebook_Analysedaten-Export)"). Alle 28 Vorkommen liegen zeitlich
+zwischen 2026-07-16 13:10:02 und 2026-07-17 02:52:35 - der Fix wurde um
+15:33 Uhr desselben Tages committet, das Notebook lief bis zum nächsten
+USB-Sync aber noch mit dem alten Code weiter (siehe
+[[reference_usb_sync_workflow]]). Aktueller Code
+(`scheduler/background.py`, `importer/bitpanda_margin_positions.py`,
+`api/bitpanda.py`) wurde geprüft und ruft an allen vier Stellen bereits
+korrekt `get_listed_assets()` ohne Positionsargument auf - keine Änderung
+nötig, per Signatur-Check bestätigt.
+
+Das **29. Vorkommen** (2026-07-17 02:52:35, letztes in der Reihe) ist ein
+eigenständiger `requests.exceptions.ReadTimeout` gegen
+`api.bitpanda.com` (15s-Timeout in `_fetch_all_bitpanda_assets()`,
+paginierter Abruf des gesamten Asset-Katalogs) - eine normale transiente
+Netzwerkstörung, kein Code-Fehler, kein Wiederholungsmuster (kein weiteres
+Vorkommen im restlichen 72h-Fenster bis 2026-07-19 06:03). Konsistent mit
+dem bestehenden Muster anderer transienter API-Fehler in diesem Projekt
+(z. B. FRED-Timeouts), die ebenfalls ohne Sonderbehandlung beim nächsten
+15-Min-Tick automatisch erneut versucht werden - `hebel_screening_job`
+fängt den Fehler ohnehin lokal ab (eigener `try/except` um den Auto-Add-
+Aufruf), sodass weder der restliche Job-Lauf noch die U-8-Job-Ausfall-
+E-Mail-Benachrichtigung betroffen sind.
+
+**Wichtige Korrektur der Auftragsbeschreibung:** der im Auftrag genannte
+"letzter Treffer 2026-07-19 06:03:30" bezieht sich nicht auf diese
+Fehlermeldung - der tatsächlich letzte "Auto-Add..."-Eintrag im Export
+liegt auf 2026-07-17 02:52:35. Der spätere Zeitstempel gehört zu einer
+andersartigen, unabhängigen Meldung ("FRED-Abruf für bok_diskontsatz
+fehlgeschlagen"). Lektion: bei mehrdeutigen/verwechselbaren Log-Zeitstempel-
+Angaben im Auftrag den vollen `job_fehlschlaege`/`log_auszug`-Datensatz
+selbst nachprüfen statt die genannten Eckwerte ungeprüft zu übernehmen.
+
+**Verifiziert:** vollständige Traceback-Extraktion aller 29 Vorkommen aus
+`log_auszug` (Python-Skript, Gruppierung per Zeitstempel-Regex), Diff der
+Exception-Endzeilen (2 eindeutige Cluster: `AttributeError` × 28,
+`ReadTimeout` × 1). Aktueller Code an allen 4 `get_listed_assets()`-
+Aufrufstellen per `grep` + Signatur-Introspektion (`inspect.signature()`)
+gegengeprüft - keine Regression.
+
+## Nachtrag (2026-07-19, gleicher Tag): zwei neue Datenquellen - FRED-CPI-Kalender + SEC-EDGAR-Insider-Trading
+
+**Auslöser:** direkter Nachfolger der Backtracking-Aussagekraft-Audit-Runde:
+Nutzer wollte generell, "nicht nur Krypto", zusätzliche Marktdaten-Quellen
+zur Aufwertung der LLM-Abfragen recherchiert haben - mit dem expliziten
+Hinweis, dass X (Twitter) und YouTube bereits als problematisch bekannt sind
+(API-Kosten bzw. ToS-Risiko) und deshalb nicht erneut vertieft werden
+müssen. Ein spezialisierter Recherche-Agent lieferte eine priorisierte
+Top-5-Liste kostenloser, offizieller Quellen; Nutzer entschied sich, mit
+FRED-Release-Kalender + SEC-EDGAR-Insider-Trading zu beginnen.
+
+### FRED-CPI-Veröffentlichungskalender (analog zum bestehenden FOMC-Kalender)
+
+Live gegen die echte FRED-API verifiziert (`/fred/series/release`,
+`/fred/release/dates`): CPI hat `release_id=10`. Bewusst NUR CPI
+aufgenommen, nicht alle bereits genutzten `FRED_SERIES` - H.15 (Fed Funds,
+`release_id=18`) wird taeglich veröffentlicht und wäre als "bevorstehendes
+Ereignis" nie aussagekräftig (immer "morgen"), M2/ISM-Ersatz haben keinen so
+ausgeprägten Markt-Reaktions-Charakter wie der monatliche CPI-Print. Live
+auch bestätigt: FRED veröffentlicht den JEWEILS NÄCHSTEN Termin nicht immer
+im Voraus (kurz nach einem CPI-Print am 2026-07-14 lieferte die API noch
+keinen Eintrag für den nächsten Termin) - kein Fehler, `get_next_fred_release()`
+liefert dann korrekt `None` statt zu raten (P-10).
+
+**Umgesetzt:** `api/macro.py::get_next_fred_release()`/`get_upcoming_fred_releases()`
+(neu, `FRED_RELEASE_IDS`-Konstante). `agent/krypto/pipeline.py::
+fetch_market_context()` bekommt einen neuen optionalen `fred_api_key`-
+Parameter und füllt `naechste_cpi_veroeffentlichung` analog zu
+`upcoming_fomc` (gleiches Footprint wie der bestehende FOMC-Kalender:
+Spot/Hebel/Marktscan - NICHT Aktien/Rohstoffe/Hedge/Themen-ETF, die nutzen
+`fetch_market_context()` bisher nicht). Drei Aufrufstellen entsprechend
+angepasst (`agent/krypto/pipeline.py::generate_signal()`,
+`agent/krypto/hebel_pipeline.py::generate_hebel_signal()`,
+`agent/krypto/marktscan.py::generate_candidate_writeup()` inkl. dessen
+beiden Callern `budget_allocator.py`/`ui/marktscan_view.py`). Neue Regel 13-
+Erweiterung in `agent/krypto/analyst.py` (analog zur bestehenden FOMC-Regel:
+CPI-Print innerhalb von 5 Tagen wird als möglicher kurzfristiger
+Volatilitäts-Faktor in `key_risks` erwähnt), reines Fakten-Feld in
+`agent/krypto/hebel_analyst.py` (kein eigener Regeltext, wie beim FOMC-
+Pendant dort auch).
+
+**Verifiziert:** live gegen die echte FRED-API (Endpunkt-Verhalten,
+inkl. des "noch kein Termin bekannt"-Falls). Synthetischer Test der
+Facts-Zusammenbau-Logik (gesetzter Fakt/None/fehlender Key). Echter
+End-to-End-Lauf von `fetch_market_context()` mit und ohne Key - kein Fehler.
+
+### SEC-EDGAR-Insider-Trading (Form 4, nur Aktien-Pipeline)
+
+Live gegen die echte SEC-EDGAR-API verifiziert (CIK-Auflösung für VST/PLTR,
+echte Form-4-Rohdaten-XML-Struktur): `submissions/CIK##########.json`
+liefert die Filing-Liste inkl. `primaryDocument`-Pfad wie
+"xslF345X06/wk-form4_XXXX.xml" - das ist die XSLT-GERENDERTE HTML-Ansicht,
+NICHT die Rohdaten. Die eigentliche Roh-XML mit den strukturierten
+Transaktionsdaten liegt im selben Verzeichnis OHNE das "xslF345X06/"-
+Präfix (für beide Testfälle bestätigt) - reiner String-Präfix-Strip, kein
+zusätzlicher Index-Abruf nötig. Nur Transaktionscode P (offener Markt-Kauf)
+und S (offener Markt-Verkauf) gelten als echtes Insider-Conviction-Signal -
+A (Zuteilung/Grant), M (Optionsausübung), F (Steuerabzug) etc. sind
+administrativ/vergütungsbedingt und werden bewusst herausgefiltert (P-10:
+keine Fehlinterpretation als Kauf-/Verkaufssignal).
+
+**Umgesetzt:** neue `api/sec_edgar.py` (kein API-Key nötig, nur ein
+Pflicht-User-Agent-Header laut SEC-Vorgabe) -
+`get_cik_for_ticker()` (in-memory gecacht, die ~800KB-Gesamtliste wird
+nur einmal pro App-Lauf geladen), `get_recent_insider_transactions()`
+(max. 5 Filings, 90-Tage-Fenster), `summarize_insider_activity()`
+(Aggregation zu Kauf-/Verkaufszahlen + -Volumen, reine Lesefunktion, keine
+Bewertung). `agent/aktien/analyst.py::build_facts()` bekommt neuen
+`insider_trading`-Parameter, neue Regel 22 (niedrig gewichteter
+Zusatzkontext, explizite Warnung vor Überinterpretation einzelner
+Transaktionen - Insider-Verkäufe sind oft routinemäßig/steuerlich bedingt).
+`agent/aktien/pipeline.py::generate_signal()` ruft den Abruf mit
+`asset.yfinance_symbol` (nicht `asset.symbol` - SEC braucht den echten
+Börsen-Ticker) in einem eigenen try/except auf, degradiert bei Fehlschlag
+auf `None` (P-10). `remote/server.py::API_HEALTH_GROUPS` um `sec_edgar`
+ergänzt.
+
+**Verifiziert:** live gegen die echte SEC-EDGAR-API fuer VST und PLTR
+(reale Insider-Transaktionen korrekt geparst, inkl. Edge-Case unbekannter
+Ticker -> leere Liste statt Fehler). JSON-Serialisierbarkeit geprüft.
+**Echter End-to-End-Signal-Lauf fuer VST gegen eine Kopie der (migrierten)
+Produktions-DB, inklusive echter LLM-Antwort (Mistral):** das Modell hat
+den neuen Fakt tatsächlich in seiner Begründung verwendet ("Die
+Insideraktivitäten sind negativ") - nicht nur strukturell verdrahtet,
+sondern nachweislich wirksam. Ein erster Versuch mit Groq schlug wegen
+bereits ausgeschöpftem Tageskontingent fehl (429), kein Code-Fehler.
+
+**Bewusst nicht umgesetzt (Nutzer-Vorgabe: "Fang mit FRED-Kalender + SEC
+EDGAR an"):** die weiteren drei Top-5-Empfehlungen (EIA-Energiedaten,
+Finnhub Recommendation-Trends/Earnings-Kalender, FINRA Equity Short
+Interest) bleiben als nächste Kandidaten vorgemerkt, sobald gewünscht.
+
+## Nachtrag (2026-07-19, gleicher Tag): EIA-Erdgas-Lagerbestand + Finnhub-Analysten-Trend
+
+**Auslöser:** direkter Nachfolger obigen Nachtrags - Nutzer bat "Fang mit EIA
+und Finnhub an".
+
+**Wichtiger Unterschied zu FRED/SEC-EDGAR (Ehrlichkeits-Hinweis, P-10):**
+beide neuen Quellen brauchen einen kostenlosen, aber PERSÖNLICHEN API-Key
+(E-Mail-Registrierung), den ich nicht selbst anlegen kann/darf (Accounts
+erstellen ist eine Nutzer-Aktion). Anders als bei FRED/SEC-EDGAR konnte die
+tatsächliche DATEN-Struktur der Antworten deshalb noch NICHT live gegen
+eine echte Antwort verifiziert werden - nur die Endpunkt-ROUTEN selbst
+wurden live bestätigt (EIA: 403 `API_KEY_MISSING` statt 404, Finnhub: 401
+"Please use an API key" statt 404, d.h. beide URLs/Parameter-Strukturen
+existieren tatsächlich). Die konkreten Feld-/Series-Namen basieren auf der
+offiziellen Dokumentation der beiden Anbieter, sind aber bis zur ersten
+echten Antwort als "wahrscheinlich korrekt, noch nicht bestätigt"
+einzustufen - explizit als TODO im jeweiligen Modul-Docstring vermerkt.
+Key-Setup wie gewohnt: `.env.example` + leere Platzhalterzeile in der
+echten `.env` vorbereitet (`EIA_API_KEY`/`FINNHUB_API_KEY`), Nutzer trägt
+den Wert selbst ein (siehe Memory `feedback_key_setup_workflow`).
+
+### EIA-Erdgas-Lagerbestand (nur Rohstoff-Pipeline, nur OD7L)
+
+Schließt die im Rohstoff-Disclaimer bereits dokumentierte Lücke ("EIA-
+Erdgas-Speicher NOCH NICHT einbezogen", siehe Nachtrag "Rohstoff-Pipeline
+Phase 2"). Neue `api/eia.py::get_natural_gas_storage_history()` (Weekly
+Natural Gas Storage Report, Lower 48, Series-ID `NW2_EPG0_SWO_R48_BCF` -
+siehe Vorbehalt oben) liefert die letzten 8 Wochenwerte inkl. Woche-zu-
+Woche-Änderung (Build/Draw). Bewusst KEIN 5-Jahres-Saisonvergleich in
+dieser Runde (würde eine laengere historische Datenbasis + eigene
+Berechnungslogik brauchen) - stattdessen wird dem Modell der 8-Wochen-
+Verlauf mitgegeben und in der neuen Regel 21 (`agent/rohstoff/analyst.py`)
+explizit angewiesen, den Verlaufstrend statt eines Einzelwerts zu nutzen
+und die fehlende Saisonalitäts-Einordnung als Einschränkung zu
+berücksichtigen. `agent/rohstoff/pipeline.py::_fetch_lagerbestaende()` nur
+für `asset.symbol == "OD7L"` aktiv (kein Erdgas-Äquivalent für Gold/
+Silber/Kupfer), Disclaimer-Text in `build_facts()` entsprechend
+aktualisiert.
+
+### Finnhub-Analysten-Trend (nur Aktien-Pipeline)
+
+Bewusst NUR `recommendation-trends` umgesetzt, NICHT der ebenfalls
+empfohlene Earnings-Kalender - wäre redundant mit dem bereits vorhandenen
+`fundamentaldaten.naechstes_earnings_datum` (aus yfinance); zwei
+potenziell abweichende Terminquellen im selben Prompt wären mehr
+Verwirrung als Mehrwert (P-10). Neue `api/finnhub.py::
+get_recommendation_trends()`/`summarize_recommendation_trend()` liefert
+die Analysten-Empfehlungsverteilung (strong_buy/buy/hold/sell/strong_sell)
+des aktuellsten UND des Vormonats - ergänzt den bereits vorhandenen
+`fundamentaldaten.analysten_konsens` (reiner Momentanwert aus yfinance) um
+eine RICHTUNGSKOMPONENTE ("wird der Konsens optimistischer oder
+pessimistischer?"). Neue Regel 23 in `agent/aktien/analyst.py` (niedrig
+gewichtet, analog zu den bestehenden Analysten-Fakten).
+
+**Umgesetzt:** `api/eia.py`, `api/finnhub.py` (neu). `agent/rohstoff/
+pipeline.py`/`agent/rohstoff/analyst.py` (Lagerbestände, Regel 21).
+`agent/aktien/pipeline.py`/`agent/aktien/analyst.py` (Analysten-Trend,
+Regel 23). `.env.example` + `.env`: zwei neue Platzhalter mit
+Registrierungs-Anleitung. `remote/server.py::API_HEALTH_GROUPS` um `eia`/
+`finnhub` ergänzt.
+
+**Verifiziert:** 14 synthetische Tests (EIA-Wochenwerte-Parsing inkl.
+Delta-Berechnung, Rohstoff-Symbol-Filter, Finnhub-Trend-Sortierung +
+Zusammenfassung inkl. Ein-Monats-Edge-Case, JSON-Serialisierbarkeit).
+Modul-Imports fehlerfrei. Endpunkt-Routen live gegen die echten Server
+bestätigt (siehe Vorbehalt oben).
+
+## Nachtrag (2026-07-19, gleicher Tag, Folge): EIA + Finnhub live mit echten Nutzer-Keys verifiziert
+
+Nutzer hat beide kostenlosen Keys angelegt und in `.env` eingetragen. Damit
+konnte die zuvor offene Lücke geschlossen werden - nicht mehr nur die
+Endpunkt-Route, sondern die tatsächliche Datenform der Antworten.
+
+**EIA:** `get_natural_gas_storage_history()` liefert 8 echte Wochenwerte
+(2026-05-22 bis 2026-07-10), Lower-48-Bestand steigt saisonal korrekt von
+2.483 auf 3.024 Bcf (Build in jeder Woche, konsistent mit der
+US-Sommer-Füllsaison). Series-ID, Feldnamen und Delta-Berechnung bestätigt
+korrekt - kein Ratefehler in der ursprünglichen Implementierung.
+`agent/rohstoff/pipeline.py::_fetch_lagerbestaende("OD7L", ...)` direkt
+gegen die echte API getestet, liefert das erwartete Fakten-Dict inkl.
+8-Wochen-Verlauf; für andere Rohstoff-Symbole weiterhin korrekt `None`.
+
+**Finnhub:** `get_recommendation_trends()` liefert für VST und PLTR je 4
+Monatswerte mit den erwarteten Feldern (period/strongBuy/buy/hold/sell/
+strongSell). Konsens plausibel unterschiedlich zwischen beiden Aktien (VST
+fast ausschließlich Buy/Strong-Buy, PLTR mit spürbarem Hold-Anteil) -
+Datenform bestätigt korrekt, `summarize_recommendation_trend()` bildet die
+Monat-zu-Monat-Richtungskomponente wie vorgesehen.
+
+**Rechtliche Einordnung (auf Nutzerfrage hin geprüft):** EIA-Daten sind
+U.S.-Government-Public-Domain (eia.gov/about/copyrights_reuse.php) - jede
+Nutzung erlaubt, keine Einschränkung, Attribution nur optional empfohlen.
+Finnhubs Free-Tier ist vertraglich klar auf "Non-Professional/persönliche,
+nicht-kommerzielle Nutzung" beschränkt (finnhub.io/terms-of-service) und
+verbietet Weitergabe der Daten/Ergebnisse an Dritte - beides passt exakt
+zum tatsächlichen Nutzungsmuster von TradingInfoTool (privates
+Single-User-Tool, Daten fließen nur in lokale LLM-Prompts, keine
+Weiterverteilung). Bei der Finnhub-Registrierung ist die Kontoart aktiv als
+"Non-Professional/Personal" zu wählen - keine reine Formsache, sondern
+deckt sich inhaltlich mit der echten Nutzung.
+
+Modul-Docstrings in `api/eia.py`/`api/finnhub.py` von "wahrscheinlich
+korrekt, noch nicht bestätigt" auf "live verifiziert" aktualisiert. Damit
+sind alle vier vom Nutzer gewählten neuen Datenquellen (FRED, SEC-EDGAR,
+EIA, Finnhub) vollständig umgesetzt UND live verifiziert - nur FINRA Equity
+Short Interest bleibt als letzter, noch nicht angegangener Kandidat aus der
+ursprünglichen Auswahl offen.
+
+## Nachtrag (2026-07-19, gleicher Tag, Folge 2): FINRA Equity Short Interest (Aktien-Pipeline)
+
+**Auslöser:** Nutzer bat "jetzt FINRA Short Interest angehen" - der letzte
+der vier ursprünglich gewählten Datenquellen-Kandidaten.
+
+**Wichtiger Fund:** anders als EIA/Finnhub braucht FINRAs Consolidated-
+Short-Interest-Endpunkt (`api.finra.org/data/group/otcMarket/name/
+ConsolidatedShortInterest`) KEINEN API-Key - live bestätigt oeffentlich
+zugänglich (dieselbe Backend-API, die FINRAs eigene Daten-Browse-
+Oberfläche nutzt). Für VST/PLTR (beide NYSE) echte, plausible Historie
+zurückbekommen (VST: 205 Datenpunkte seit 2017, PLTR: 138 seit 2019).
+Ein Sortierversuch über den Partition-Key `settlementDate` scheitert ohne
+zusätzlichen Datums-Filter (API-Einschränkung) - stattdessen wird die
+komplette Historie mit einem großzügigen `limit` geholt und clientseitig
+sortiert/zugeschnitten. Bei unbekanntem Symbol liefert die API HTTP 204
+mit leerem Body (kein valides JSON) statt einer leeren Liste - live mit
+einem Fantasiesymbol bestätigt, expliziter Check in
+`get_short_interest_history()`.
+
+**Umgesetzt:** neue `api/finra.py` - `get_short_interest_history(symbol,
+n_periods=6)` (letzte 6 zweiwöchentliche Meldeperioden, aufsteigend),
+`summarize_short_interest()` (aktuelle vs. vorherige Periode, analog zum
+Finnhub-Muster). Nur Aktien-Pipeline (`agent/aktien/pipeline.py`,
+`asset.yfinance_symbol` wie bei SEC-EDGAR/Finnhub), neue Regel 24 in
+`agent/aktien/analyst.py`: niedrig gewichteter Zusatzkontext, explizit
+AMBIVALENT markiert (steigende Short-Position + hohes `days_to_cover`
+kann sowohl anhaltenden Abwärtsdruck als auch ein Short-Squeeze-Setup
+bedeuten, je nach technischem Kontext) - Erwähnung nur bei auffälligem
+`days_to_cover` (>3-4 Tage) oder starker Periodenänderung (>15-20%).
+Meldelag (1-3 Wochen, zweiwöchentliche FINRA-Meldung) explizit als "kein
+Echtzeit-Signal" vermerkt. `remote/server.py::API_HEALTH_GROUPS` um
+`finra` ergänzt. Kein `.env`-Eintrag nötig (kein Key).
+
+**Verifiziert:** synthetische Tests für `summarize_short_interest()`
+(leer/1-Eintrag/2-Eintraege), Pipeline-Block-Simulation mit echtem
+API-Aufruf für VST (JSON-serialisierbar), Live-Test für VST/PLTR (echte
+Werte, z. B. VST 2026-06-30: 15.917.274 Short-Aktien, 3,45 Tage
+Eindeckungsdauer, +3,61% ggü. Vorperiode) sowie für ein Fantasiesymbol
+(leere Liste, kein Crash trotz HTTP-204-Sonderfall). `build_facts()`-
+Signatur-Check bestätigt korrekte Parameter-Durchreichung. Damit sind
+JETZT ALLE FÜNF ursprünglich recherchierten Datenquellen-Kandidaten
+(FRED, SEC-EDGAR, EIA, Finnhub, FINRA) vollständig umgesetzt und live
+verifiziert - keine offenen Kandidaten aus dieser Recherche-Runde mehr.
+
+## Nachtrag (2026-07-19, gleicher Tag, Folge 3): Aktien/ETF-Screener + Bitpanda-Sonderthema
+
+**Auslöser:** Nutzer fragte nach dem Stand von "Marktscan-analogen" Mechanismen
+für Aktien/Rohstoffe/ETF. Antwort: es gab bisher KEINE automatische Neu-
+Kandidaten-Entdeckung für diese drei Klassen (nur die 11 manuell in
+`config.yaml` gepflegten Symbole werden per `agent/multi_asset_batch.py`
+regelmäßig neu bewertet, siehe Cooldown-Werte 24h/72h dort) - die
+Bewertung bestehender Positionen lief also schon automatisch, nur die
+Kandidaten-Suche fehlte. Nutzer bat: "bau einen einfachen Aktien/ETF-
+Screener über eine kostenlose Quelle und berücksichtige auch hier das
+Sonderthema - was ist bei Bitpanda davon gelistet und was nicht."
+
+**Wichtiger Fund VOR der Implementierung (direkt relevant für die Bitpanda-
+Frage):** ein Live-Check aller 9 aktuell gehaltenen Rohstoff-/Themen-ETF-
+Positionen (OD7N/OD7H/OD7C/OD7L/VVMX/X136/EXH3/CEBS/ISOC) gegen
+`api.bitpanda.is_listed()` ergab: KEINE davon ist bei Bitpanda gelistet -
+nur die beiden Aktien (VST/PLTR) sind es. Bitpanda führt zwar eigene ETF/
+ETC-"Themenkörbe" (z.B. "COPPERMINE", "NATGAS", 209 Einträge insgesamt),
+das sind aber ANDERE, Bitpanda-eigene Produkte - keine echten UCITS-ETFs/
+WisdomTree-ETCs wie in der Watchlist. Der Nutzer hält diese 9 Positionen
+also nachweislich über einen anderen Broker (die Bestände selbst sind
+über den bestehenden Excel-Import erfasst, nicht über Live-Bitpanda-Sync).
+Diese Erkenntnis hat die Architektur direkt geprägt (siehe unten).
+
+**Datenquelle (kostenlos, kein neuer API-Key):** `yfinance` (bereits im
+Projekt für OHLC/Fundamentaldaten genutzt) Version 1.5.1 hat ein
+eingebautes `yf.screen()`-Feature (Yahoo-Finance-Screener-Backend, live
+verifiziert: `most_actives`/`day_gainers`/`growth_technology_stocks`/
+`undervalued_growth_stocks`/`small_cap_gainers` liefern je 30-325 Treffer
+mit >90 Feldern pro Symbol).
+
+**Bewusst ASYMMETRISCHE Architektur** (`agent/aktien/screener.py`, neu),
+direkt begründet durch den Bitpanda-Fund oben:
+- **Aktien:** `scan_aktien_candidates()` durchsucht 3 Yahoo-Finance-Screens
+  (Momentum + Growth + Value gemischt), filtert Mikro-Caps (<500 Mio. $
+  Marktkap.) und Illiquides (<500k Tagesvolumen) heraus, dedupliziert,
+  schließt bereits gelistete Watchlist-Symbole aus und markiert pro
+  Kandidat `bitpanda_gelistet` via `is_listed()`.
+- **ETF/ETC:** `scan_etf_candidates()` enumeriert NICHT über yfinance,
+  sondern DIREKT Bitpandas eigenen ETF/ETC-Katalog (`get_listed_non_crypto_
+  assets()`, Gruppen `etf`+`etc`) - das IST das bei Bitpanda tatsächlich
+  kaufbare Angebot, während eine echte UCITS-ETF-Discovery über yfinance
+  an Bitpandas Sortiment vorbeigegangen wäre (siehe Fund oben). Kein
+  `yfinance_symbol` ableitbar (Bitpandas Symbole wie "COPPERMINE" sind
+  eigene Produktnamen, keine Börsenticker) - degradiert sauber auf "keine
+  technische Historie" (bereits bestehender Fix, Ticket #319).
+
+**Bewusst EINFACH gehalten** (Nutzer-Wunsch): kein vierstufiges Scoring wie
+beim Krypto-Marktscan (`agent/krypto/marktscan.py`), keine DB-Persistenz,
+kein automatischer LLM-Call - ein manueller "Jetzt scannen"-Klick liefert
+eine frische Kandidatenliste, "In Watchlist übernehmen" nutzt exakt
+dasselbe bereits etablierte Muster wie Marktscan (`config.py::
+add_watchlist_entry()`, Backup + Validierung + Rollback). Die eigentliche
+Bewertung übernommener Kandidaten läuft danach ganz regulär über den
+bereits bestehenden `multi_asset_batch_job` - kein Doppelbau.
+
+**Umgesetzt:** `agent/aktien/screener.py` (neu, `ScreenerCandidate`-
+Dataclass, `scan_aktien_candidates()`, `scan_etf_candidates()`), `ui/
+screener_view.py` (neu, Treeview + Scan-Button + Übernehmen-Button, Muster
+identisch zu `ui/marktscan_view.py`, aber ohne Score-Spalte/Detail-Panel).
+`ui/app.py`: neuer Tab "Screener" zwischen Marktscan und Hebel.
+
+**Verifiziert:** synthetische Tests (`_bereits_in_watchlist()` Groß-/
+Kleinschreibung), echter Live-Lauf gegen beide Quellen (144 Aktien-
+Kandidaten aus 3 Screens, 209 ETF/ETC-Kandidaten aus Bitpandas Katalog,
+u.a. NVDA/TSM/AVGO mit korrektem Bitpanda-Listing-Flag), Tk-Smoke-Test
+der `ScreenerView` isoliert UND als Teil der vollständigen `App`
+(gegen eine Kopie der Produktions-DB, alle 7 Tabs inkl. "Screener"
+korrekt registriert). `config.add_watchlist_entry()` selbst wurde NICHT
+erneut gegen die echte `config.yaml` getestet (bereits durch die
+bestehende Marktscan-Nutzung etabliert/verifiziert, Signatur-Kompatibilität
+per Code-Review bestätigt) - kein ungewolltes Schreiben in die reale Datei
+während der Verifikation.
+
+## Nachtrag (2026-07-19, gleicher Tag, Folge 4): Schwerpunkt-Feld + Diversifikations-Übersicht
+
+**Auslöser:** Nutzer bat um eine "konkrete Einordnung der Assets - z.B.
+Inhalt und Zweck damit wir dies z.B. bei der Diversifikation - Gold,
+Silber, Kupfer, seltene Erden, Güter, Energie korrekt einordnen können"
+und wollte diese Schwerpunkte selbst in der Oberfläche pflegen können.
+
+**Umgesetzt:** neues, optionales Freitext-Feld `schwerpunkt` auf
+`WatchlistAsset` (`config.py`) - bewusst freier Text statt fester
+Enum-Liste, da die sinnvollen Kategorien vom konkreten Portfolio abhängen
+und nicht im Code vorgegeben werden sollen. Neue Funktion
+`update_watchlist_schwerpunkt()` (gleiches Backup+Validierung+Rollback-
+Muster wie `update_watchlist_coingecko_id()`), ABER mit einer bewussten
+Abweichung: Einfügeposition ist das ENDE des Eintrags-Blocks statt einer
+festen Position - `schwerpunkt` ist das zuletzt hinzugekommene optionale
+Feld und soll bestehende Einträge mit bereits vorhandenen optionalen
+Feldern (coingecko_id/assetklasse/yfinance_symbol/ist_cash_aequivalent)
+nicht durcheinanderbringen. `add_watchlist_entry()` um den Parameter
+erweitert (Neuanlage).
+
+**GUI:** `AssetAddDialog`/`AssetEditDialog` (`ui/app.py`) um ein
+"Schwerpunkt"-Textfeld erweitert (analog zum bestehenden coingecko_id-
+Muster im Edit-Dialog). Watchlist-Tab-Treeview um eine neue Spalte
+"Schwerpunkt" ergänzt.
+
+**Diversifikations-Übersicht (`ui/portfolio.py`):** neue kompakte Tabelle
+unterhalb der Bestandsliste, gruppiert den aktuellen Portfoliowert (inkl.
+gestakter Anteile) nach `schwerpunkt` und zeigt EUR-Wert + Anteil-%.
+Assets ohne gesetzten Schwerpunkt fallen in einen Sammel-Eintrag "ohne
+Schwerpunkt", Fiat-Cash in "Cash/Sonstiges" - die Prozentwerte summieren
+sich dadurch sauber auf denselben `Gesamtwert:` wie in der bestehenden
+Anzeige. Bewusst als Tabelle statt Pie-Chart (kein bestehendes
+Chart-Vorbild für Verteilungsdarstellungen, `ui/charts.py` deckt nur
+Kursverlaufs-Liniencharts eines einzelnen Assets ab).
+
+**Direkt befüllt** für alle 13 bestehenden Nicht-Krypto-Watchlist-
+Einträge (Aktien/Rohstoffe/Themen-ETF) über die neue Funktion gegen die
+echte `config.yaml`: VST → Energieversorger, PLTR → Software/KI-
+Datenanalyse, OD7N → Silber, OD7H → Gold, OD7C → Kupfer, OD7L → Erdgas/
+Energie, VVMX → Seltene Erden & strategische Metalle, X136 → Bioenergie,
+EXH3 → Nahrungsmittel & Getränke, CEBS → Kupferminen (Aktien), ISOC →
+Agrarwirtschaft, DBPK/3QSS → Absicherung (S&P 500/Nasdaq 100 Short).
+Krypto-Einträge bewusst NICHT befüllt (außerhalb des ursprünglichen
+Anfrage-Kontexts, kann der Nutzer bei Bedarf selbst über die GUI
+nachtragen).
+
+**Verifiziert:** synthetische Tests für `update_watchlist_schwerpunkt()`
+(neue Zeile einfügen/bestehende Zeile ändern/unveränderter Wert -> kein
+Schreibvorgang/unbekanntes Symbol) - dabei ZUERST versehentlich gegen die
+echte `config.yaml` statt einer Kopie gelaufen (Testskript-Fehler, keine
+Datenverlust, siehe git diff danach leer), sofort per Backup-Restore
+korrigiert, danach sauber gegen eine echte Kopie wiederholt. Tk-Smoke-Test
+`PortfolioView` gegen eine Kopie der Produktions-DB (Diversifikations-
+Tabelle vor UND nach dem Befüllen der 13 Schwerpunkte geprüft - 13
+korrekte Kategorien + "ohne Schwerpunkt"/"Cash/Sonstiges"-Sammeltöpfe),
+voller `TradingInfoToolApp`-Smoke-Test (Watchlist-Tab zeigt die neue
+Spalte korrekt), `AssetEditDialog`/`AssetAddDialog`-Instanziierungstest.
+`git diff Basisinfos/config.yaml` vor dem Commit geprüft - ausschließlich
+13 neue `schwerpunkt:`-Zeilen, keine sonstigen Änderungen.
+
+## Nachtrag (2026-07-19, gleicher Tag, Folge 5): Kategorie-Taxonomie ERSETZT das Freitext-Schwerpunkt-Feld (Release 1)
+
+**Auslöser - Nutzer-Korrektur:** der Freitext-`schwerpunkt` aus Folge 4 war
+ein Missverständnis. Nutzer-Originalzitat: *"du hast mich falsch verstanden
+- nicht ich will etwas manuell befüllen sondern schritt für schritt -
+unabhängig von Krypto - 1. brauche eine Grundmenge an existierenden
+Hauptgruppen - z.B. ETF Gruppen - dann unterkategorien z.B. Energie, KI,
+Software etc, aus denen kann ich dann für den Marktscan und die
+Diversifikation Schwerpunkte selbst gestalten u.U. gestützt durch
+Vorschläge der KI [...] Das kann über einen Bereich komfortabel über die
+GUI und automatischen Prozessen gesteuert werden."* Kernpunkt: Freitext
+kann von automatischen Prozessen (Marktscan-Bias, KI-Vorschläge,
+Gruppierung) strukturell nicht zuverlässig ausgewertet werden - es braucht
+einen kontrollierten Vokabular-Baum. Auf Nachfrage (AskUserQuestion)
+präzisierte der Nutzer zwei weitere Anforderungen: (a) wo verfügbar,
+Detailinformationen zur Asset-Zusammensetzung zeigen (z.B. "wie setzt sich
+ein ETF zusammen"), (b) bei mehreren ähnlichen Bitpanda-Produkten die
+"Besseren" filtern helfen - explizite Motivation: *"damit die Investition
+besser funktioniert und wir nicht wieder Produkte im Portfolio haben welche
+gleich wieder delisted werden oder sind."* Auf die Frage nach der
+Taxonomie-Quelle entschied der Nutzer: *"Erst Bitpanda-Katalog systematisch
+auswerten"* statt einer vom Assistenten vorgeschlagenen Liste.
+
+**Umfang dieser Runde (Release 1):** die Taxonomie-Infrastruktur komplett
+(Kategorien-Datei, Datenmodell, GUI-Migration, Bestandsmigration,
+Kompositions-/Qualitätsmodul, Screener-Integration, Diversifikations-
+Umbau). Die aktive Schwerpunkt-Steuerung selbst (Prioritäten setzen, KI-
+Vorschläge, Marktscan-Bias) ist bewusst als "Release 2" zurückgestellt -
+noch nicht umgesetzt, siehe Ausblick am Ende dieses Nachtrags.
+
+### Zwei echte Bitpanda-API-Bugs gefunden und behoben (betrifft die GESAMTE App, nicht nur dieses Feature)
+
+Bei der Herleitung der Taxonomie aus dem echten `/v3/assets`-Katalog
+(`api/bitpanda.py::_fetch_all_bitpanda_assets()`) fiel auf, dass
+wiederholte Aufrufe im selben Moment gegen denselben Datensatz
+unterschiedliche Ergebnisanzahlen lieferten (209/187/228/213 ETF/ETC/
+Metal-Einträge beobachtet) - das betraf JEDEN bisherigen Aufrufer der
+Funktion (Bitpanda-Listing-Prüfung in allen Signal-Pipelines, Screener,
+Watchlist-Konsistenzprüfung), nicht nur die neue Taxonomie-Arbeit.
+
+- **Bugfix 1 (Duplikate über Seitengrenzen):** derselbe Symbol-Eintrag
+  tauchte teils auf mehreren Paginierungsseiten gleichzeitig auf (bis zu 53
+  Duplikate bei `total_count=3238` gemessen). Erster Fix: Deduplizierung
+  per Symbol beim Sammeln - reichte allein NICHT aus (siehe Bugfix 2/3).
+- **Bugfix 2 (verworfen, aber dokumentiert):** die Vermutung, das
+  ursprüngliche Abbruchkriterium `page_number * page_size >= total_count`
+  sei die Ursache (da `total_count` selbst instabil ist), führte zu einem
+  Ersatz-Abbruchkriterium `len(page_data) < page_size`. Live-Test zeigte:
+  das machte es NICHT robuster, sondern schlimmer (163/173/211 Einträge
+  über 6 Wiederholungen, teils fehlte real ZINC/SXR8/WTI komplett) - auch
+  NICHT-letzte Seiten kamen serverseitig manchmal unvollständig zurück.
+- **Bugfix 3 (tatsächliche Lösung):** das Problem war die MEHRSEITIGE
+  Paginierung selbst - der Datensatz verschiebt sich offenbar leicht
+  zwischen einzelnen Roundtrips (Ursache serverseitig unbekannt). Live
+  bestätigt: ein EINZELNER Request mit `page_size=10000` (deutlich über dem
+  aktuellen `total_count=3238`) liefert den kompletten Datensatz in einer
+  Antwort - 6/6 Wiederholungen exakt stabil (3238 Einträge, 3185 eindeutige
+  Symbole, alle 211 realen ETF/ETC/Metal-Symbole). Die Dedup-Notwendigkeit
+  aus Bugfix 1 bleibt (der Datensatz selbst enthält echte Symbol-Kollisionen,
+  ca. 53 Stück, keine Paginierungs-Artefakte) - die `while`-Schleife bleibt
+  nur noch als Sicherheitsnetz für ein zukünftiges Wachstum über 10.000
+  Einträge hinaus im Code, wird im Normalfall aber nie ein zweites Mal
+  durchlaufen. **Lektion:** bei unzuverlässigen Paginierungs-APIs mit
+  überschaubarer Gesamtgröße ist "alles in einer Anfrage mit großzügigem
+  `page_size`" robuster als Mehrseiten-Konsistenz-Reparaturen.
+
+### `Basisinfos/kategorien.yaml` (neu)
+
+10 Hauptgruppen, 72 Unterkategorien, systematisch aus dem (nach obigen
+Bugfixes) stabilen Bitpanda-ETF/ETC/Edelmetall-Katalog hergeleitet:
+Edelmetalle (Gold/Silber/Platin&Palladium/Diversifiziert), Industriemetalle,
+Energie, Agrarrohstoffe & Nahrungsmittel, Technologie & KI, Absicherung,
+Aktien - Regionen & Länder, Aktien - Sektoren, Anleihen & Geldmarkt,
+Sonstige. Jede Unterkategorie trägt eine `bitpanda_symbole`-Liste zur
+automatischen Vor-Klassifikation neuer Kandidaten. Vollständigkeits-Check
+bestätigt: alle 211 realen Symbole sind genau einer Unterkategorie
+zugeordnet, keine Waisen, keine erfundenen Symbole (per Live-Test gegen den
+echten, jetzt stabilen Katalog reproduzierbar). Eigene Watchlist-Assets
+(auch nicht bei Bitpanda gelistete) speichern ihre Hauptgruppe/
+Unterkategorie direkt am Asset, unabhängig von dieser Datei - die Datei ist
+nur die Vorschlagsquelle für neue Kandidaten.
+
+### `config.py`: strukturelle Migration
+
+`WatchlistAsset.schwerpunkt` (Freitext, Folge 4) ersetzt durch
+`hauptgruppe`/`unterkategorie` (beide `str | None`, IDs aus
+`kategorien.yaml`). Neue Lookup-Funktionen: `get_kategorien()` (gecached),
+`find_kategorie_fuer_bitpanda_symbol()`, `get_hauptgruppe_name()`,
+`get_kategorie_name()`. `update_watchlist_kategorie(symbol, hauptgruppe,
+unterkategorie)` ersetzt `update_watchlist_schwerpunkt()` - schreibt beide
+Felder ATOMAR (beide oder keins), validiert beide IDs gegen
+`kategorien.yaml` VOR jedem Schreibvorgang (Fail-Fast, nie ein ungültiger
+Halbzustand in `config.yaml`). Alle 13 bestehenden Nicht-Krypto-Assets
+wurden auf die neue Struktur migriert, die alten `schwerpunkt:`-Zeilen
+entfernt (`git diff` bestätigt: nur die erwarteten Zeilenänderungen).
+
+### GUI-Migration (`ui/app.py`)
+
+Freitext-Feld in `AssetAddDialog`/`AssetEditDialog` ersetzt durch
+kaskadierende Hauptgruppe→Unterkategorie-Comboboxen
+(`_build_kategorie_selector()`). Watchlist-Tab-Spalte zeigt jetzt
+`config.get_kategorie_name(...)`. Diversifikations-Tabelle
+(`ui/portfolio.py`) gruppiert entsprechend nach Hauptgruppe um (Fix eines
+dabei live gefundenen `AttributeError` durch die Feldumbenennung).
+
+### Asset-Qualitäts-/Kompositionsmodul (`api/asset_quality.py`, neu) - "wie setzt sich zusammen"
+
+`get_asset_quality(yfinance_symbol)` liefert über `yfinance`s
+`Ticker.info`/`Ticker.funds_data` Top-10-Holdings, Sektorgewichtung, AUM
+(`totalAssets`) und Kostenquote (`netExpenseRatio`) für Assets mit echtem
+Börsenticker - live verifiziert (VVMX.DE/EXH3.DE/VST/PLTR). Neuer
+Watchlist-Toolbar-Button "Zusammensetzung anzeigen…" öffnet
+`AssetQualityDialog`. **Bewusste, dokumentierte Grenze (P-10):** Bitpandas
+EIGENE synthetische ETF/ETC-Themenkörbe (z.B. "COPPERMINE") haben KEINEN
+echten Börsenticker und damit strukturell KEINE öffentliche AUM/
+Kostenquote - für diese Kandidaten bleibt `get_asset_quality()` `None`, ein
+"besseres Produkt"-Vergleich ist dort nicht möglich. Die AUM-basierte
+Delisting-Risiko-Einschätzung (kleine Fonds werden häufiger geschlossen)
+funktioniert NUR für echte Fonds mit Ticker.
+
+### Screener-Integration (`agent/aktien/screener.py`, `ui/screener_view.py`)
+
+`ScreenerCandidate` um `hauptgruppe`/`unterkategorie` erweitert.
+`scan_etf_candidates()` taggt jeden Bitpanda-Katalog-Kandidaten automatisch
+per `config.find_kategorie_fuer_bitpanda_symbol()` (204 von 204 aktuellen
+Kandidaten live erfolgreich zugeordnet - alle 211 Katalog-Symbole sind ja
+per Definition in der Taxonomie erfasst). Neue "Kategorie"-Spalte im
+Screener-Tab. Bei "In Watchlist übernehmen" wird die erkannte Kategorie
+gleich mit übernommen, damit der Nutzer sie nicht nochmal manuell setzen
+muss. **Kein Qualitätsvergleich für diese Kandidaten** (siehe Grenze oben,
+dokumentiert im Modul-Docstring mit Querverweis auf `asset_quality.py`) -
+`scan_aktien_candidates()` (Einzelaktien) bewusst NICHT um Kategorie-Tagging
+erweitert, da die Taxonomie nur ETF/ETC/Edelmetall-Gruppen abbildet, keine
+Einzeltitel.
+
+### Verifikation
+
+Synthetisch: `kategorien.yaml`-Vollständigkeit (211=211, 0 Waisen, 0
+erfunden) über 10 Wiederholungen NACH Bugfix 3 stabil (VORHER, mit den
+verworfenen Fixes, war das nicht der Fall - siehe Bugfix-Historie oben).
+Echt: `_fetch_all_bitpanda_assets()`/`get_listed_assets()`/
+`get_listed_non_crypto_assets()` je 5-10x wiederholt gegen die echte API,
+alle stabil (822 Krypto/2363 Nicht-Krypto/3185 eindeutige Symbole gesamt).
+`get_asset_quality()` live gegen mehrere echte Ticker + einen erfundenen
+Ticker (korrektes `None`). Voller `TradingInfoToolApp`-Smoke-Test:
+`PortfolioView.refresh()`, `ScreenerView`-Aufbau, `AssetAddDialog`/
+`AssetEditDialog`-Instanziierung mit echten Produktionsdaten - keine
+Exceptions. `git status`/`git diff` vor dem Commit geprüft.
+
+### Ausblick: Release 2 (noch NICHT umgesetzt, separate Runde)
+
+Schwerpunkte/Thesen-Verwaltung (GUI zum Setzen von Prioritäten/
+Zielgewichtungen pro Kategorie mit Begründung+Datum), ein periodischer
+KI-Vorschläge-Job (Muster wie `makro_analog.py`, schlägt Kategorie-
+Schwerpunkte basierend auf bestehenden Makro-Fakten vor, Nutzer
+akzeptiert/verwirft), sowie Marktscan-/Screener-Bias (Kandidaten aus
+priorisierten Kategorien höher gewichten) - alle drei bewusst
+zurückgestellt, bis die Taxonomie-Infrastruktur (dieser Nachtrag) im
+laufenden Betrieb bestätigt ist.
