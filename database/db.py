@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -358,6 +358,20 @@ CREATE TABLE IF NOT EXISTS makro_analog_ergebnis (
     berechnet_am    TEXT PRIMARY KEY,
     ergebnis_json   TEXT NOT NULL
 );
+
+-- OI-Abdeckungs-Status (2026-07-19, echter Notebook-Fund: KAS/KAIA/FLOKI/
+-- TURBO/CANTON scheiterten wiederholt bei ALLEN drei Boersen) - anders als
+-- api_health_status (ein Zustand je EXTERNE QUELLE) hier ein Zustand je
+-- SYMBOL, weil die Frage "hat DIESES Symbol strukturell keine OI-Daten"
+-- unabhaengig von der einzelnen Boerse beantwortet werden soll (alle drei
+-- muessten gleichzeitig fehlschlagen, damit ein Lauf als Fehlschlag zaehlt,
+-- siehe agent/krypto/hebel_screening.py::fetch_and_store_oi_snapshot()).
+CREATE TABLE IF NOT EXISTS oi_abdeckung_status (
+    symbol                      TEXT PRIMARY KEY,
+    konsekutive_fehlschlaege    INTEGER NOT NULL DEFAULT 0,
+    letzter_erfolg_at           TEXT,
+    zuletzt_gemeldet_at         TEXT
+);
 """
 
 
@@ -551,6 +565,22 @@ def _migrate_gegenargument_columns(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+_RISIKOFAKTOREN_NEW_COLUMN = {"risikofaktoren_json": "TEXT"}
+
+
+def _migrate_risikofaktoren_columns(conn: sqlite3.Connection) -> None:
+    """Nachtrag 2026-07-19 (E-Mail-/App-Neustrukturierung in 3 Abschnitte -
+    Mathematisch berechnet / LLM-Bewertung / Konklusion mit Risikofaktoren,
+    echter AVAX-Hebel-Fund) fuer beide Tabellen. Gleiches additive
+    Migrations-Muster wie _migrate_gegenargument_columns()."""
+    for table in ("signals", "hebel_signals"):
+        existing = {row["name"] for row in conn.execute(f"PRAGMA table_info({table})")}
+        for column, sql_type in _RISIKOFAKTOREN_NEW_COLUMN.items():
+            if column not in existing:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
 _CASH_VETO_NEW_COLUMNS = {"cash_veto": "INTEGER", "cash_veto_reason": "TEXT"}
 
 
@@ -677,6 +707,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_hebel_signal_senkung_columns(conn)
     _migrate_gegenargument_columns(conn)
     _migrate_cash_veto_columns(conn)
+    _migrate_risikofaktoren_columns(conn)
     import_holdings_manual_overrides(conn)
 
 
@@ -1227,6 +1258,7 @@ _SIGNAL_COLUMNS = (
     "tranchen_json",
     "cash_reserve_ziel_btc_usd", "cash_reserve_ziel_eth_usd", "cash_reserve_ziel_gesamt_usd",
     "cash_reserve_ziel_begruendung", "gegenargument", "cash_veto", "cash_veto_reason",
+    "risikofaktoren_json",
 )
 
 
@@ -1788,7 +1820,7 @@ _HEBEL_SIGNAL_COLUMNS = (
     "liquidationspreis_geschaetzt_usd", "eigenkapitalbedarf_usd",
     "hebel_senkung_eigenkapital_nachschuss_eur", "ausfuehrbarkeit_hinweis",
     "gate_passed", "gate_reason", "risk_veto", "risk_veto_reason", "facts_json",
-    "groq_raw_response", "llm_model", "gegenargument",
+    "groq_raw_response", "llm_model", "gegenargument", "risikofaktoren_json",
 )
 
 
@@ -1958,3 +1990,64 @@ def get_api_health_status(conn: sqlite3.Connection) -> dict[str, dict]:
             "last_error_message": row["last_error_message"],
         }
     return ergebnis
+
+
+def record_oi_abdeckung_ergebnis(conn: sqlite3.Connection, symbol: str, erfolg: bool) -> int:
+    """OI-Abdeckungs-Status je Symbol (2026-07-19, siehe Schema-Kommentar) -
+    bei Erfolg wird der Fehlschlag-Zaehler zurueckgesetzt und letzter_erfolg_at
+    aktualisiert; bei Fehlschlag nur der Zaehler erhoeht (letzter_erfolg_at
+    bleibt als "wann zuletzt ok" stehen). Gibt den NEUEN Zaehlerstand zurueck,
+    damit der Aufrufer (hebel_screening.py) ohne zweite Abfrage weiss, ob
+    gerade eine Schwelle ueberschritten wurde."""
+    if erfolg:
+        conn.execute(
+            "INSERT INTO oi_abdeckung_status (symbol, konsekutive_fehlschlaege, letzter_erfolg_at) "
+            "VALUES (?, 0, ?) "
+            "ON CONFLICT(symbol) DO UPDATE SET konsekutive_fehlschlaege = 0, letzter_erfolg_at = excluded.letzter_erfolg_at",
+            (symbol, _now_iso()),
+        )
+        conn.commit()
+        return 0
+    conn.execute(
+        "INSERT INTO oi_abdeckung_status (symbol, konsekutive_fehlschlaege) VALUES (?, 1) "
+        "ON CONFLICT(symbol) DO UPDATE SET konsekutive_fehlschlaege = konsekutive_fehlschlaege + 1",
+        (symbol,),
+    )
+    conn.commit()
+    row = conn.execute(
+        "SELECT konsekutive_fehlschlaege FROM oi_abdeckung_status WHERE symbol = ?", (symbol,)
+    ).fetchone()
+    return row["konsekutive_fehlschlaege"]
+
+
+def get_oi_abdeckung_status(conn: sqlite3.Connection) -> dict[str, dict]:
+    """Fuer die GUI (Watchlist-Tab-Markierung) - kompletter Status aller
+    jemals gescreenten Symbole, keine Filterung nach Schwelle (das entscheidet
+    der Aufrufer/die UI selbst anhand von config.yaml)."""
+    rows = conn.execute("SELECT * FROM oi_abdeckung_status").fetchall()
+    return {row["symbol"]: dict(row) for row in rows}
+
+
+def get_symbole_mit_ueberschrittener_oi_schwelle(
+    conn: sqlite3.Connection, schwelle: int, cooldown_stunden: float,
+) -> list[str]:
+    """Symbole, die die Fehlschlag-Schwelle erreicht/ueberschritten haben UND
+    entweder noch nie gemeldet wurden oder deren letzte Meldung laenger als
+    der Cooldown zurueckliegt (verhindert taegliche Wiederholungs-Mails fuer
+    ein bereits bekanntes, weiterhin ungeloestes Problem, gleiches Prinzip wie
+    scheduler/background.py::_notify_cash_veto_warning())."""
+    grenze = (datetime.now(timezone.utc) - timedelta(hours=cooldown_stunden)).isoformat()
+    rows = conn.execute(
+        "SELECT symbol FROM oi_abdeckung_status WHERE konsekutive_fehlschlaege >= ? "
+        "AND (zuletzt_gemeldet_at IS NULL OR zuletzt_gemeldet_at < ?)",
+        (schwelle, grenze),
+    ).fetchall()
+    return [row["symbol"] for row in rows]
+
+
+def set_oi_abdeckung_gemeldet(conn: sqlite3.Connection, symbol: str) -> None:
+    conn.execute(
+        "UPDATE oi_abdeckung_status SET zuletzt_gemeldet_at = ? WHERE symbol = ?",
+        (_now_iso(), symbol),
+    )
+    conn.commit()

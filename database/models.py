@@ -284,6 +284,14 @@ class Signal:
     # selbst gewaehltem HALTEN gesetzt.
     cash_veto: bool = False
     cash_veto_reason: str | None = None
+    # Risikofaktoren-Liste (2026-07-19, E-Mail-/App-Neustrukturierung in 3
+    # Abschnitte: Mathematisch berechnet / LLM-Bewertung / Konklusion) - JSON-
+    # serialisierte Liste von {"name", "bewertung": positiv|neutral|negativ,
+    # "begruendung"}, deterministisch aus agent/krypto/risk_gate.py::
+    # compute_risikofaktoren() berechnet, siehe dortigen Docstring. NICHT vom
+    # LLM generiert - echter AVAX-Hebel-Fund zeigte, dass das Modell
+    # antizyklische Fakten selbst fehlinterpretieren kann.
+    risikofaktoren_json: str | None = None
 
 
 @dataclass
@@ -528,6 +536,10 @@ class HebelSignal:
     outcome_entschieden_am: str | None = None
     outcome_realisiertes_crv: float | None = None
     outcome_datenquelle: str | None = None
+    # Risikofaktoren-Liste (2026-07-19, siehe Signal.risikofaktoren_json-
+    # Docstring) - deterministisch aus agent/krypto/hebel_risk_gate.py::
+    # compute_risikofaktoren_hebel() berechnet.
+    risikofaktoren_json: str | None = None
 
 
 @dataclass

@@ -442,8 +442,123 @@ def compute_cash_reserve_ziel(
 _BUY_ACTIONS = ("KAUFEN", "NACHKAUFEN")
 
 
+@dataclass
+class Risikofaktor:
+    """2026-07-19 (E-Mail-/App-Neustrukturierung in 3 Abschnitte - Mathematisch
+    berechnet / LLM-Bewertung / Konklusion, echter AVAX-Hebel-Fund). Bewusst
+    eine eigene, identische Definition statt Import aus hebel_risk_gate.py -
+    dieses Modul importiert bereits CRV_MINIMUM VON hebel_risk_gate.py aus der
+    Gegenrichtung, ein Rueckimport wuerde einen Zirkelbezug riskieren (siehe
+    Modul-Docstring oben: bewusst getrennte Module)."""
+    name: str
+    bewertung: str  # "positiv" | "neutral" | "negativ"
+    begruendung: str
+
+
+def compute_risikofaktoren(
+    *, action: str, cash_veto: bool, cash_veto_reason: str | None,
+    risk_veto: bool, risk_veto_reason: str | None, confidence_pct: float | None,
+    crv: float | None, confluence=None,
+    gegenszenario_pct: float | None, gegenszenario_schwelle: float | None,
+    crv_knapp_schwelle_relativ: float | None,
+    retail_long_bias_extreme: bool | None = None, long_account_pct: float | None = None,
+) -> list["Risikofaktor"]:
+    """Spot/Aktien/Rohstoffe/Themen-ETF-Pendant zu hebel_risk_gate.py::
+    compute_risikofaktoren_hebel() - deterministische Zusammenfassung der
+    bereits vorhandenen Deckel-/Veto-Checks in eine kompakte positiv/neutral/
+    negativ-Liste fuer Abschnitt 3 der neuen E-Mail-/App-Struktur. Bewusst
+    NICHT vom LLM generiert. Kein eigenes Regime-Konflikt/These-Widerspruch
+    (die gibt es bei Spot nicht, siehe Modul-Docstring: RM-10/-11 sind
+    hebel-spezifisch) - dafuer cash_veto, das es bei Hebel nicht gibt."""
+    faktoren: list[Risikofaktor] = []
+
+    if cash_veto:
+        faktoren.append(Risikofaktor(
+            "Cash-Veto (RM-4)", "negativ",
+            cash_veto_reason or "Cash-Reserve-Minimum unterschritten - Kauf blockiert.",
+        ))
+
+    if risk_veto:
+        faktoren.append(Risikofaktor("Risiko-Veto", "negativ", risk_veto_reason or "Deterministisches Veto ausgelöst."))
+        return faktoren
+
+    if action not in _BUY_ACTIONS:
+        return faktoren
+
+    if gegenszenario_pct is not None and gegenszenario_schwelle is not None:
+        if gegenszenario_pct >= gegenszenario_schwelle:
+            faktoren.append(Risikofaktor(
+                f"Gegenszenario-Wahrscheinlichkeit {gegenszenario_pct:.0f}%", "negativ",
+                f"Modell schätzt die Wahrscheinlichkeit für das Gegenszenario hoch ein "
+                f"(>= Schwelle {gegenszenario_schwelle:.0f}%).",
+            ))
+        else:
+            faktoren.append(Risikofaktor(
+                f"Gegenszenario-Wahrscheinlichkeit {gegenszenario_pct:.0f}%", "positiv",
+                f"Modell schätzt das Gegenszenario als eher unwahrscheinlich ein "
+                f"(< Schwelle {gegenszenario_schwelle:.0f}%).",
+            ))
+
+    if confluence is not None:
+        if confluence.overall_bias == "gemischt":
+            faktoren.append(Risikofaktor(
+                "Technische Konfluenz", "negativ",
+                "Technische Indikatoren widersprechen sich (weder bullish noch bearish dominiert).",
+            ))
+        else:
+            faktoren.append(Risikofaktor(
+                "Technische Konfluenz", "positiv",
+                f"Technische Indikatoren zeigen eine eindeutige Tendenz ({confluence.overall_bias}).",
+            ))
+
+    if crv is not None:
+        if crv_knapp_schwelle_relativ is not None and crv < CRV_MINIMUM * (1 + crv_knapp_schwelle_relativ):
+            faktoren.append(Risikofaktor(
+                f"CRV {crv:.2f}", "negativ",
+                f"Chance-Risiko-Verhältnis liegt nur knapp über dem Minimum ({CRV_MINIMUM:.1f}).",
+            ))
+        elif crv >= CRV_MINIMUM * 1.5:
+            faktoren.append(Risikofaktor(
+                f"CRV {crv:.2f}", "positiv",
+                f"Chance-Risiko-Verhältnis liegt deutlich über dem Minimum ({CRV_MINIMUM:.1f}).",
+            ))
+        else:
+            faktoren.append(Risikofaktor(
+                f"CRV {crv:.2f}", "neutral", "Solide über dem Minimum, aber nicht herausragend.",
+            ))
+
+    # Retail-Konsens-Risiko (2026-07-19, echter AVAX-Hebel-Fund, Krypto-only -
+    # Aktien/Rohstoffe/Themen-ETF liefern keine antizyklisch-Fakten, dann
+    # bleiben beide Parameter None und dieser Block wird uebersprungen).
+    if retail_long_bias_extreme and action in _BUY_ACTIONS:
+        faktoren.append(Risikofaktor(
+            "Retail-Konsens-Risiko", "negativ",
+            "Empfohlener Kauf stimmt mit der extremen Mehrheitspositionierung der Retail-Trader "
+            "überein - antizyklisch betrachtet ein Kontraindikator, keine Stütze.",
+        ))
+    elif long_account_pct is not None:
+        faktoren.append(Risikofaktor(
+            "Retail-Konsens-Risiko", "positiv",
+            f"Empfehlung steht NICHT im Konsens mit der Retail-Mehrheit "
+            f"({long_account_pct:.0f}% long positioniert).",
+        ))
+
+    if confidence_pct is not None:
+        if confidence_pct < 55:
+            faktoren.append(Risikofaktor(
+                f"Konfidenz {confidence_pct:.0f}%", "negativ", "Niedrige Konfidenz.",
+            ))
+        elif confidence_pct >= 70:
+            faktoren.append(Risikofaktor(f"Konfidenz {confidence_pct:.0f}%", "positiv", "Hohe Konfidenz."))
+        else:
+            faktoren.append(Risikofaktor(f"Konfidenz {confidence_pct:.0f}%", "neutral", "Mittlere Konfidenz."))
+
+    return faktoren
+
+
 def post_check(
     parsed: dict, pre_result: RiskPreCheckResult, regime_result, config: dict, confluence=None,
+    retail_long_bias_extreme: bool | None = None, long_account_pct: float | None = None,
 ) -> dict:
     """Nimmt die bereits validierte (siehe agent/analyst.py) Groq-Antwort und erzwingt
     RM-1/-2/-4/-5, Mindest-Konfidenz (R-5.10) und CRV >= 2.0 (Z-2) noch einmal
@@ -656,4 +771,31 @@ def post_check(
     # regelkonform HALTEN gesagt hat.
     result["_cash_veto"] = pre_result.cash_veto
     result["_cash_veto_reason"] = pre_result.cash_veto_reason
+
+    # Risikofaktoren-Liste (2026-07-19, Abschnitt 3 der neuen E-Mail-/App-
+    # Struktur) - dieselben Werte wie oben in der Positionsgroessen-Deckelung
+    # verwendet, hier bewusst NEU aus `result`/`config` gelesen statt aus den
+    # dortigen (tief verschachtelten) Lokalvariablen exportiert - der
+    # bestehende, bereits verifizierte Deckel-Code bleibt dadurch unveraendert
+    # (kein Regressionsrisiko).
+    forecast = result.get("forecast") or {}
+    gegenszenario_pct = (forecast.get("bear") or {}).get("probability_pct")
+    risikofaktoren = compute_risikofaktoren(
+        action=action,
+        cash_veto=pre_result.cash_veto,
+        cash_veto_reason=pre_result.cash_veto_reason,
+        risk_veto=risk_veto,
+        risk_veto_reason=risk_veto_reason,
+        confidence_pct=result.get("confidence_pct"),
+        crv=crv,
+        confluence=confluence,
+        gegenszenario_pct=gegenszenario_pct,
+        gegenszenario_schwelle=config["risiko"].get("gegenszenario_wahrscheinlichkeit_schwelle_prozent"),
+        crv_knapp_schwelle_relativ=config["risiko"].get("crv_knapp_schwelle_relativ"),
+        retail_long_bias_extreme=retail_long_bias_extreme,
+        long_account_pct=long_account_pct,
+    )
+    result["_risikofaktoren"] = [
+        {"name": f.name, "bewertung": f.bewertung, "begruendung": f.begruendung} for f in risikofaktoren
+    ]
     return result

@@ -167,9 +167,14 @@ def generate_hebel_signal(
 
     raw_response = parsed.pop("_raw_response", None)
 
-    corrected = post_check_hebel(parsed, pre_result, regime_result, config_dict, confluence=confluence)
+    corrected = post_check_hebel(
+        parsed, pre_result, regime_result, config_dict, confluence=confluence,
+        retail_long_bias_extreme=anticyclic_context.retail_long_bias_extreme,
+        long_account_pct=anticyclic_context.long_account_pct,
+    )
     risk_veto = corrected.pop("_risk_veto")
     risk_veto_reason = corrected.pop("_risk_veto_reason")
+    risikofaktoren = corrected.pop("_risikofaktoren", None)
 
     # Nachtrag 2026-07-17 (echter LINK-Fall - Punkt 3A+3B der Regelwerk-
     # Ueberarbeitung, siehe Memory project_hebel_rahmenbedingungen.md):
@@ -273,6 +278,7 @@ def generate_hebel_signal(
         ausfuehrbarkeit_hinweis=corrected.get("ausführbarkeit_hinweis"),
         groq_raw_response=raw_response,
         llm_model=llm_model,
+        risikofaktoren_json=json.dumps(risikofaktoren, ensure_ascii=False) if risikofaktoren else None,
         **top_grund_fields,
     )
     db.insert_hebel_signal(conn, signal)

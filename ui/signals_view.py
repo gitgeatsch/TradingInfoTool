@@ -18,7 +18,7 @@ from tkinter import ttk
 
 import database.db as db
 import ui.theme as theme
-from ui.formatting import format_money
+from ui.formatting import format_money, format_risikofaktoren_lines
 from ui.heading_tooltip import add_heading_tooltips
 from ui.sortable_tree import make_sortable
 
@@ -326,39 +326,16 @@ class SignalsView(ttk.Frame):
             gate_notes.append(f"⚠ WARNUNG - Cash-Veto (System beeinträchtigt): {signal.cash_veto_reason}")
         self.gate_label.config(text="\n".join(gate_notes))
 
-        lines = []
-        top_gruende_pairs = [
-            (getattr(signal, f"top_grund_{i}_kategorie"), getattr(signal, f"top_grund_{i}_text"))
-            for i in range(1, 6)
-        ]
-        top_gruende_pairs = [(k, t) for k, t in top_gruende_pairs if t]
-        if top_gruende_pairs:
-            lines.append("TOP 5 GRÜNDE")
-            for idx, (kategorie, text) in enumerate(top_gruende_pairs, start=1):
-                tag = f"[{kategorie}] " if kategorie else ""
-                lines.append(f"  {idx}. {tag}{text}")
-            lines.append("")
-
-        if signal.short_reasoning:
-            lines.append(f"KURZBEGRÜNDUNG\n{signal.short_reasoning}\n")
-        if signal.long_reasoning_technisch or signal.long_reasoning_fundamental or signal.long_reasoning_makro:
-            lines.append("LANGBEGRÜNDUNG")
-            if signal.long_reasoning_technisch:
-                lines.append(f"Technisch: {signal.long_reasoning_technisch}")
-            if signal.long_reasoning_fundamental:
-                lines.append(f"Fundamental: {signal.long_reasoning_fundamental}")
-            if signal.long_reasoning_makro:
-                lines.append(f"Makro: {signal.long_reasoning_makro}")
-            lines.append("")
-
-        if signal.position_size_usd or signal.position_size_eur or signal.position_size_note:
-            lines.append(
-                f"POSITIONSGRÖSSE\n{format_money(signal.position_size_usd)} USD / "
-                f"{format_money(signal.position_size_eur)} EUR"
-            )
-            if signal.position_size_note:
-                lines.append(signal.position_size_note)
-            lines.append("")
+        # 2026-07-19 (Nutzer-Wunsch nach dem echten AVAX-Hebel-Fund): E-Mail
+        # UND App-Detail-Panel klar in drei Abschnitte getrennt - 1. was ist
+        # deterministisch berechnet, 2. was sagt die LLM-Bewertung, 3. eine
+        # zusammenfassende Konklusion mit positiven/neutralen/negativen
+        # Risikofaktoren (deterministisch, NICHT vom LLM). Drei getrennte
+        # Listen statt einer, damit die Reihenfolge (AZ-4-Bausteine oben,
+        # LLM-Inhalte in der Mitte, Risikofaktoren am Ende) unabhaengig von
+        # der Berechnungsreihenfolge im Code ist.
+        abschnitt_1: list[str] = []
+        abschnitt_2: list[str] = []
 
         # AZ-4-Tranchen (2026-07-12): rein informativ, siehe agent/krypto/analyst.py.
         # entry_usd_von/_bis bleibt bei aktiven Tranchen die Gesamtspanne - Zeile wird
@@ -370,51 +347,8 @@ class SignalsView(ttk.Frame):
             except (ValueError, TypeError):
                 tranchen = None
 
-        if signal.entry_usd_von is not None or signal.stop_loss_usd_von is not None or signal.take_profit_usd_von is not None:
-            lines.append("KAUF-ZONE / STOP-LOSS-ZONE / TAKE-PROFIT-ZONE (USD | EUR)")
-            entry_label = "Gesamt-Zone: " if tranchen else "Kauf-Zone:   "
-            lines.append(
-                f"  {entry_label} {format_money(signal.entry_usd_von)}–{format_money(signal.entry_usd_bis)} | "
-                f"{format_money(signal.entry_eur_von)}–{format_money(signal.entry_eur_bis)}"
-            )
-            lines.append(
-                f"  Stop-Loss:    {format_money(signal.stop_loss_usd_von)}–{format_money(signal.stop_loss_usd_bis)} | "
-                f"{format_money(signal.stop_loss_eur_von)}–{format_money(signal.stop_loss_eur_bis)}"
-            )
-            lines.append(
-                f"  Take-Profit:  {format_money(signal.take_profit_usd_von)}–{format_money(signal.take_profit_usd_bis)} | "
-                f"{format_money(signal.take_profit_eur_von)}–{format_money(signal.take_profit_eur_bis)}"
-            )
-            lines.append("")
-
-            if tranchen:
-                lines.append("AZ-4-TRANCHEN (Info, keine automatische Ausführung)")
-                gesamt_usd = signal.position_size_usd
-                for eintrag in tranchen:
-                    anteil = eintrag.get("anteil_prozent")
-                    zone = eintrag.get("zone", {})
-                    betrag_text = ""
-                    if gesamt_usd and anteil is not None:
-                        betrag_text = f" (~{format_money(gesamt_usd * anteil / 100)} USD)"
-                    lines.append(
-                        f"  Tranche {eintrag.get('rang')}: {anteil:g}%{betrag_text} bei "
-                        f"{format_money(zone.get('usd_von'))}–{format_money(zone.get('usd_bis'))} USD | "
-                        f"{format_money(zone.get('eur_von'))}–{format_money(zone.get('eur_bis'))} EUR"
-                    )
-                    if eintrag.get("trigger_bedingung"):
-                        lines.append(f"    Trigger: {eintrag['trigger_bedingung']}")
-                lines.append("")
-        elif signal.entry_usd or signal.stop_loss_usd or signal.take_profit_usd:
-            lines.append("EINSTIEG / STOP-LOSS / TAKE-PROFIT (USD | EUR)")
-            lines.append(f"  Entry:        {format_money(signal.entry_usd)} | {format_money(signal.entry_eur)}")
-            lines.append(f"  Stop-Loss:    {format_money(signal.stop_loss_usd)} | {format_money(signal.stop_loss_eur)}")
-            lines.append(f"  Take-Profit:  {format_money(signal.take_profit_usd)} | {format_money(signal.take_profit_eur)}")
-            lines.append("")
-
-        # Boden-Zielzone (AZ-4 Baustein 2, 2026-07-12): NICHT signal-gebunden (anders
-        # als tranchen_json oben) - eine taegliche macro_snapshot-Ablesung (siehe
-        # agent/krypto/regime.py::_boden_zielzone()), daher separat aus der DB gelesen
-        # statt ueber das Signal-Objekt. Nur fuer BTC/ETH relevant.
+        # --- Abschnitt 1: Mathematisch berechnet (AZ-4-Bausteine, vollstaendig
+        # deterministisch, NICHT vom LLM) ---
         if asset.symbol in ("BTC", "ETH"):
             conn = self._db_conn_factory()
             try:
@@ -425,10 +359,10 @@ class SignalsView(ttk.Frame):
                 von = macro_snap.btc_boden_zielzone_von if asset.symbol == "BTC" else macro_snap.eth_boden_zielzone_von
                 bis = macro_snap.btc_boden_zielzone_bis if asset.symbol == "BTC" else macro_snap.eth_boden_zielzone_bis
                 if von is not None and bis is not None:
-                    lines.append("BODEN-ZIELZONE (Info, Wahrscheinlichkeits-Zone, kein hartes Kursziel)")
-                    lines.append(f"  {format_money(von)}–{format_money(bis)} USD")
+                    abschnitt_1.append("Boden-Zielzone (Wahrscheinlichkeits-Zone, kein hartes Kursziel):")
+                    abschnitt_1.append(f"  {format_money(von)}–{format_money(bis)} USD")
                     if asset.symbol == "ETH":
-                        lines.append("  ⚠ Niedrige Konfidenz (nur 2 historische ETH-Zyklus-Tiefpunkte)")
+                        abschnitt_1.append("  ⚠ Niedrige Konfidenz (nur 2 historische ETH-Zyklus-Tiefpunkte)")
                     if macro_snap.equities_sp500_drawdown_pct is not None or macro_snap.equities_nasdaq_drawdown_pct is not None:
                         sp500_text = (
                             f"{macro_snap.equities_sp500_drawdown_pct:+.1f}%"
@@ -438,58 +372,150 @@ class SignalsView(ttk.Frame):
                             f"{macro_snap.equities_nasdaq_drawdown_pct:+.1f}%"
                             if macro_snap.equities_nasdaq_drawdown_pct is not None else "n/v"
                         )
-                        lines.append(f"  Aktien-Kontext: S&P 500 {sp500_text}, Nasdaq {nasdaq_text} vom Hoch")
-                    lines.append("")
+                        abschnitt_1.append(f"  Aktien-Kontext: S&P 500 {sp500_text}, Nasdaq {nasdaq_text} vom Hoch")
+                    abschnitt_1.append("")
 
-        # Cash-Reserve-Ziel (AZ-4 Baustein 3, 2026-07-12): signal-gebunden (anders als
-        # Boden-Zielzone oben) - direkt vom Signal-Objekt, kein separater DB-Fetch.
         if asset.symbol in ("BTC", "ETH") and signal.cash_reserve_ziel_gesamt_usd is not None:
-            lines.append("CASH-RESERVE-ZIEL (Info, keine harte Regel - RM-4-Minimum bleibt bindend)")
-            lines.append(f"  Gesamt: {format_money(signal.cash_reserve_ziel_gesamt_usd)} USD")
-            lines.append(
+            abschnitt_1.append("Cash-Reserve-Ziel (Info, keine harte Regel - RM-4-Minimum bleibt bindend):")
+            abschnitt_1.append(f"  Gesamt: {format_money(signal.cash_reserve_ziel_gesamt_usd)} USD")
+            abschnitt_1.append(
                 f"  davon BTC: {format_money(signal.cash_reserve_ziel_btc_usd)} USD, "
                 f"ETH: {format_money(signal.cash_reserve_ziel_eth_usd)} USD"
             )
             if signal.cash_reserve_ziel_begruendung:
-                lines.append(f"  {signal.cash_reserve_ziel_begruendung}")
-            lines.append("")
+                abschnitt_1.append(f"  {signal.cash_reserve_ziel_begruendung}")
+            abschnitt_1.append("")
+
+        # --- Abschnitt 2: LLM-Bewertung (Top-Gruende, Begruendungen, Zonen,
+        # Positionsgroesse/Tranchen, Gegenargument [NEU], Halte-Kriterium,
+        # Risiken, Forecast, Tausch-Ziel - alles vom Modell gewaehlt/erzeugt,
+        # auch wenn aus echten Referenzpunkten abgeleitet) ---
+        top_gruende_pairs = [
+            (getattr(signal, f"top_grund_{i}_kategorie"), getattr(signal, f"top_grund_{i}_text"))
+            for i in range(1, 6)
+        ]
+        top_gruende_pairs = [(k, t) for k, t in top_gruende_pairs if t]
+        if top_gruende_pairs:
+            abschnitt_2.append("Top 5 Gründe:")
+            for idx, (kategorie, text) in enumerate(top_gruende_pairs, start=1):
+                tag = f"[{kategorie}] " if kategorie else ""
+                abschnitt_2.append(f"  {idx}. {tag}{text}")
+            abschnitt_2.append("")
+
+        if signal.short_reasoning:
+            abschnitt_2.append(f"Kurzbegründung:\n{signal.short_reasoning}\n")
+        if signal.long_reasoning_technisch or signal.long_reasoning_fundamental or signal.long_reasoning_makro:
+            abschnitt_2.append("Langbegründung:")
+            if signal.long_reasoning_technisch:
+                abschnitt_2.append(f"  Technisch: {signal.long_reasoning_technisch}")
+            if signal.long_reasoning_fundamental:
+                abschnitt_2.append(f"  Fundamental: {signal.long_reasoning_fundamental}")
+            if signal.long_reasoning_makro:
+                abschnitt_2.append(f"  Makro: {signal.long_reasoning_makro}")
+            abschnitt_2.append("")
+
+        if signal.gegenargument:
+            abschnitt_2.append(f"Gegenargument (stärkster Einwand gegen diese Empfehlung):\n{signal.gegenargument}\n")
+
+        if signal.position_size_usd or signal.position_size_eur or signal.position_size_note:
+            abschnitt_2.append(
+                f"Positionsgröße:\n{format_money(signal.position_size_usd)} USD / "
+                f"{format_money(signal.position_size_eur)} EUR"
+            )
+            if signal.position_size_note:
+                abschnitt_2.append(signal.position_size_note)
+            abschnitt_2.append("")
+
+        if signal.entry_usd_von is not None or signal.stop_loss_usd_von is not None or signal.take_profit_usd_von is not None:
+            abschnitt_2.append("Kauf-Zone / Stop-Loss-Zone / Take-Profit-Zone (USD | EUR):")
+            entry_label = "Gesamt-Zone: " if tranchen else "Kauf-Zone:   "
+            abschnitt_2.append(
+                f"  {entry_label} {format_money(signal.entry_usd_von)}–{format_money(signal.entry_usd_bis)} | "
+                f"{format_money(signal.entry_eur_von)}–{format_money(signal.entry_eur_bis)}"
+            )
+            abschnitt_2.append(
+                f"  Stop-Loss:    {format_money(signal.stop_loss_usd_von)}–{format_money(signal.stop_loss_usd_bis)} | "
+                f"{format_money(signal.stop_loss_eur_von)}–{format_money(signal.stop_loss_eur_bis)}"
+            )
+            abschnitt_2.append(
+                f"  Take-Profit:  {format_money(signal.take_profit_usd_von)}–{format_money(signal.take_profit_usd_bis)} | "
+                f"{format_money(signal.take_profit_eur_von)}–{format_money(signal.take_profit_eur_bis)}"
+            )
+            abschnitt_2.append("")
+
+            if tranchen:
+                abschnitt_2.append("AZ-4-Tranchen (Info, keine automatische Ausführung):")
+                gesamt_usd = signal.position_size_usd
+                for eintrag in tranchen:
+                    anteil = eintrag.get("anteil_prozent")
+                    zone = eintrag.get("zone", {})
+                    betrag_text = ""
+                    if gesamt_usd and anteil is not None:
+                        betrag_text = f" (~{format_money(gesamt_usd * anteil / 100)} USD)"
+                    abschnitt_2.append(
+                        f"  Tranche {eintrag.get('rang')}: {anteil:g}%{betrag_text} bei "
+                        f"{format_money(zone.get('usd_von'))}–{format_money(zone.get('usd_bis'))} USD | "
+                        f"{format_money(zone.get('eur_von'))}–{format_money(zone.get('eur_bis'))} EUR"
+                    )
+                    if eintrag.get("trigger_bedingung"):
+                        abschnitt_2.append(f"    Trigger: {eintrag['trigger_bedingung']}")
+                abschnitt_2.append("")
+        elif signal.entry_usd or signal.stop_loss_usd or signal.take_profit_usd:
+            abschnitt_2.append("Einstieg / Stop-Loss / Take-Profit (USD | EUR):")
+            abschnitt_2.append(f"  Entry:        {format_money(signal.entry_usd)} | {format_money(signal.entry_eur)}")
+            abschnitt_2.append(f"  Stop-Loss:    {format_money(signal.stop_loss_usd)} | {format_money(signal.stop_loss_eur)}")
+            abschnitt_2.append(f"  Take-Profit:  {format_money(signal.take_profit_usd)} | {format_money(signal.take_profit_eur)}")
+            abschnitt_2.append("")
 
         if signal.halte_kriterium_bucket:
-            lines.append("HALTE-KRITERIUM")
-            lines.append(f"  Grobe Einordnung: {signal.halte_kriterium_bucket}")
+            abschnitt_2.append("Halte-Kriterium:")
+            abschnitt_2.append(f"  Grobe Einordnung: {signal.halte_kriterium_bucket}")
             if signal.halte_kriterium_ziel_preis_usd or signal.halte_kriterium_ziel_preis_eur:
-                lines.append(
+                abschnitt_2.append(
                     f"  Ziel-Kurs: {format_money(signal.halte_kriterium_ziel_preis_usd)} USD / "
                     f"{format_money(signal.halte_kriterium_ziel_preis_eur)} EUR"
                 )
             if signal.halte_kriterium_ziel_datum:
-                lines.append(f"  Ziel-Datum: {signal.halte_kriterium_ziel_datum}")
+                abschnitt_2.append(f"  Ziel-Datum: {signal.halte_kriterium_ziel_datum}")
             if signal.halte_kriterium_bedingung_text:
-                lines.append(f"  Bedingung: {signal.halte_kriterium_bedingung_text}")
+                abschnitt_2.append(f"  Bedingung: {signal.halte_kriterium_bedingung_text}")
             if signal.halte_kriterium_reasoning:
-                lines.append(f"  Begründung: {signal.halte_kriterium_reasoning}")
-            lines.append("")
+                abschnitt_2.append(f"  Begründung: {signal.halte_kriterium_reasoning}")
+            abschnitt_2.append("")
         elif signal.holding_duration:
-            lines.append(f"HALTEDAUER\n{signal.holding_duration} — {signal.holding_duration_reason}\n")
+            abschnitt_2.append(f"Haltedauer:\n{signal.holding_duration} — {signal.holding_duration_reason}\n")
 
         if signal.key_risks_text:
-            lines.append("WICHTIGSTE RISIKEN")
+            abschnitt_2.append("Wichtigste Risiken:")
             for risk in signal.key_risks_text.split("\n"):
-                lines.append(f"  • {risk}")
-            lines.append("")
+                abschnitt_2.append(f"  • {risk}")
+            abschnitt_2.append("")
 
         if signal.forecast_bull_text or signal.forecast_base_text or signal.forecast_bear_text:
-            lines.append("FORECAST-SZENARIEN")
+            abschnitt_2.append("Forecast-Szenarien:")
             if signal.forecast_bull_text:
-                lines.append(f"  Bull ({signal.forecast_bull_prob_pct}%): {signal.forecast_bull_text}")
+                abschnitt_2.append(f"  Bull ({signal.forecast_bull_prob_pct}%): {signal.forecast_bull_text}")
             if signal.forecast_base_text:
-                lines.append(f"  Base ({signal.forecast_base_prob_pct}%): {signal.forecast_base_text}")
+                abschnitt_2.append(f"  Base ({signal.forecast_base_prob_pct}%): {signal.forecast_base_text}")
             if signal.forecast_bear_text:
-                lines.append(f"  Bear ({signal.forecast_bear_prob_pct}%): {signal.forecast_bear_text}")
-            lines.append("")
+                abschnitt_2.append(f"  Bear ({signal.forecast_bear_prob_pct}%): {signal.forecast_bear_text}")
+            abschnitt_2.append("")
 
         if signal.tauschen_target_symbol:
-            lines.append(f"TAUSCH-ZIEL\n{signal.tauschen_target_symbol}\n")
+            abschnitt_2.append(f"Tausch-Ziel:\n{signal.tauschen_target_symbol}\n")
+
+        # --- Abschnitt 3: Konklusion (Risikofaktoren, NEU 2026-07-19) -
+        # deterministisch aus agent/krypto/risk_gate.py::compute_risikofaktoren(),
+        # bewusst NICHT vom LLM (siehe dortigen Docstring, echter AVAX-Fund). ---
+        risikofaktoren_lines = format_risikofaktoren_lines(signal.risikofaktoren_json)
+
+        lines = ["--- 1. MATHEMATISCH BERECHNET ---"]
+        lines.extend(abschnitt_1 if abschnitt_1 else ["(keine assetspezifischen Rechenwerte für dieses Symbol)", ""])
+        conf_text_2 = f"{signal.confidence_pct:.0f}%" if signal.confidence_pct is not None else "-"
+        lines.append(f"--- 2. LLM-BEWERTUNG (Konfidenz {conf_text_2}) ---")
+        lines.extend(abschnitt_2)
+        lines.append("--- 3. KONKLUSION (RISIKOFAKTOREN) ---")
+        lines.extend(risikofaktoren_lines if risikofaktoren_lines else ["Keine strukturierten Risikofaktoren verfügbar."])
 
         self._set_detail_text("\n".join(lines))
 

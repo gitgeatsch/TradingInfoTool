@@ -30,8 +30,11 @@ from database.models import FundamentalsSnapshot, PriceSnapshot
 logger = logging.getLogger(__name__)
 
 # Bekannte, bereits live bestaetigte "nur fast_info"-Ticker (2026-07-16, aus
-# Notebook-Log-Analyse: 2.637 ERROR-Zeilen ueber 4 Tage, alle von genau diesen
-# 5 Tickern). yfinance's EIGENER interner Logger meldet bei jedem fast_info-
+# Notebook-Log-Analyse: 2.637 ERROR-Zeilen ueber 4 Tage, ausgangs 5 Tickern;
+# 2026-07-19 um X136.BE/IS0C.DE ergaenzt - Notebook-Nacht-Analyse zeigte 272
+# weitere ERROR-Zeilen je Ticker ueber 72 Std., identisches Muster, Job lief
+# jedes Mal trotzdem erfolgreich durch: "Wertpapier-Preis-Refresh: 13 Assets
+# aktualisiert"). yfinance's EIGENER interner Logger meldet bei jedem fast_info-
 # Zugriff auf diese Ticker "possibly delisted; no price data found" (probiert
 # intern period=1y/5d, beides schlaegt hier erwartungsgemaess fehl - kein
 # Fehler in unserem Code, fast_info liefert trotzdem einen Kurs). Wird in
@@ -45,6 +48,8 @@ YFINANCE_HISTORY_UNRELIABLE_TICKERS = frozenset({
     "JE00BN7KB334.SG",  # OD7L
     "OD7H.SG",
     "OD7C.SG",
+    "X136.BE",  # X136, 2026-07-19 ergaenzt
+    "IS0C.DE",  # ISOC, 2026-07-19 ergaenzt
 })
 
 # 2026-07-11 (Remote-Steuer-Seite-Planung): anders als requests-basierte Clients

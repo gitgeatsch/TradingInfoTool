@@ -118,8 +118,12 @@ _PARAMETER: tuple[dict, ...] = (
         "bezeichnung": "Liquidations-Sicherheitsmarge",
         "pfad": ("risiko", "hebel", "liquidations_sicherheitsmarge_relativ"),
         "kategorie": KATEGORIE_C,
-        "begruendung": "RM-11, Mittelwert der 15-20%-Spanne, [OFFEN].",
-        "geaendert_am": None,
+        "begruendung": (
+            "RM-11, kalibriert aus Bitpandas offizieller Margin-Level-Doku "
+            "(~105-110% Liquidationsschwelle) + 4 echten Liquidationsfaellen "
+            "(LINK/TAO/TAO/SUI, implizierte Marge 6,5-8,4%)."
+        ),
+        "geaendert_am": "2026-07-19",
     },
     {
         "bezeichnung": "Hebel-Trigger: Open-Interest-Änderung",

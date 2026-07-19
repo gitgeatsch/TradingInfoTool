@@ -104,6 +104,7 @@ _BACKOFF_BASE_INTERVAL_MINUTES = {
     "refresh_securities_prices": SECURITIES_REFRESH_INTERVAL_MINUTES,
     "bitpanda_holdings": BITPANDA_HOLDINGS_REFRESH_INTERVAL_MINUTES,
 }
+_IMMEDIATE_START_MISFIRE_GRACE_SECONDS = 300  # siehe build_scheduler()-Kommentar (2026-07-19)
 _BACKOFF_MAX_MINUTES = 240  # Deckel 4 Std. - auch bei einem sehr langen Ausfall soll die
 # App nach spaetestens 4 Std. wieder einen Versuch starten, statt den Job faktisch
 # stillzulegen.
@@ -610,6 +611,76 @@ def _notify_cash_veto_warning(signal) -> None:
         _last_cash_veto_email_sent = time.monotonic()
 
 
+def _notify_oi_abdeckung_warnung(symbol: str, konsekutive_fehlschlaege: int) -> bool:
+    """WARNUNG-E-Mail, wenn ein Symbol wiederholt keine Open-Interest-Daten von
+    KEINER der drei Boersen (Binance/Bybit/OKX) liefert (2026-07-19, echter
+    Notebook-Fund KAS/KAIA/FLOKI/TURBO/CANTON). Anders als die Cash-Veto-Warnung
+    oben (ein globaler Zeitstempel, da RM-4 portfolioweit ist) ist dieser
+    Cooldown pro Symbol DB-persistiert (db.set_oi_abdeckung_gemeldet), nicht
+    in-memory - der Zustand soll einen Neustart ueberleben, da es sich laut
+    Nutzer-Einschaetzung um ein potenziell DAUERHAFTES Problem handelt (nicht
+    nur eine kurze Stoerung wie bei Groq-Erschoepfung).
+
+    Bewusst KEIN automatisches Abschalten der Hebel-Pruefung fuer das Symbol -
+    nur Sichtbarmachung (E-Mail + GUI-Markierung in ui/app.py), die
+    Entscheidung bleibt beim Nutzer ueber den bestehenden Hebel-Pruefung-Toggle.
+
+    Gibt zurueck, ob tatsaechlich eine E-Mail verschickt wurde - der Aufrufer
+    (_pruefe_oi_abdeckung_warnung()) markiert das Symbol NUR bei True als
+    gemeldet (db.set_oi_abdeckung_gemeldet), sonst wuerde bei deaktivierter
+    E-Mail oder einem Versandfehler der Cooldown faelschlich anlaufen und eine
+    spaeter (wieder) aktivierte Benachrichtigung bis zu oi_abdeckung_warnung_
+    cooldown_stunden lang unterdruecken, obwohl nie etwas verschickt wurde."""
+    import config as config_module
+    from api.email_notify import send_notification_email
+
+    config_dict = config_module.load_config()
+    email_cfg = config_dict.get("benachrichtigung", {}).get("email", {})
+    if not email_cfg.get("aktiv", False):
+        return False
+    empfaenger = email_cfg.get("empfaenger")
+    if not empfaenger:
+        return False
+
+    body = (
+        f"Fuer {symbol} liefert seit {konsekutive_fehlschlaege} aufeinanderfolgenden "
+        "Hebel-Screening-Laeufen KEINE der drei Boersen (Binance/Bybit/OKX) "
+        "Open-Interest-Daten.\n\n"
+        "Moegliche Ursachen: das Symbol ist auf keiner dieser Boersen als Perp/Future "
+        "gelistet, oder ein dauerhaftes API-Problem. Die Hebel-Pruefung fuer dieses "
+        "Symbol laeuft technisch weiter, aber ohne OI-/Long-Short-Ratio-Kontext - "
+        "ein Hebel-Signal fuer dieses Symbol sollte entsprechend vorsichtiger "
+        "bewertet werden.\n\n"
+        "Das System schaltet die Hebel-Pruefung NICHT automatisch ab - bei Bedarf "
+        "manuell ueber den Hebel-Pruefung-Schalter in der Watchlist steuern.\n\n"
+        "Weitere Meldungen fuer dieses Symbol werden fuer die konfigurierte "
+        "Cooldown-Dauer unterdrueckt (Spam-Schutz)."
+    )
+    return send_notification_email(f"TradingInfoTool: WARNUNG - keine OI-Daten fuer {symbol}", body, empfaenger)
+
+
+def _pruefe_oi_abdeckung_warnung(conn_factory, config_dict: dict) -> None:
+    """Nach jedem Hebel-Screening-Lauf: prueft, ob ein Symbol die konfigurierte
+    Fehlschlags-Schwelle ueberschritten hat (config.yaml hebel_screening.
+    oi_abdeckung_schwelle_fehlschlaege) und noch nicht innerhalb des
+    Cooldowns (oi_abdeckung_warnung_cooldown_stunden) gemeldet wurde - siehe
+    db.get_symbole_mit_ueberschrittener_oi_schwelle()."""
+    hebel_cfg = config_dict.get("hebel_screening", {})
+    schwelle = hebel_cfg.get("oi_abdeckung_schwelle_fehlschlaege", 8)
+    cooldown_stunden = hebel_cfg.get("oi_abdeckung_warnung_cooldown_stunden", 24)
+
+    conn = conn_factory()
+    try:
+        status = db.get_oi_abdeckung_status(conn)
+        symbole = db.get_symbole_mit_ueberschrittener_oi_schwelle(conn, schwelle, cooldown_stunden)
+        for symbol in symbole:
+            konsekutive_fehlschlaege = status.get(symbol, {}).get("konsekutive_fehlschlaege", schwelle)
+            if _notify_oi_abdeckung_warnung(symbol, konsekutive_fehlschlaege):
+                db.set_oi_abdeckung_gemeldet(conn, symbol)
+    finally:
+        conn.close()
+
+
 def _notify_marktscan_kaufkandidaten(kaufkandidaten: list) -> None:
     """MS-1b (2026-07-12): eine gebündelte E-Mail pro Scan-Lauf über alle neuen
     Kaufkandidaten, wiederverwendet dieselbe Infrastruktur wie _notify_job_failure()
@@ -764,6 +835,73 @@ def _formatiere_positionsgroesse_und_tranchen(signal) -> str:
     return "\n".join(zeilen)
 
 
+def _formatiere_gegenargument(signal) -> str:
+    """2026-07-19 (E-Mail-/App-Neustrukturierung in 3 Abschnitte) - `gegenargument`
+    existiert seit 2026-07-18 als Pflichtfeld (SYSTEM_PROMPT Regel 13/22,
+    staerkstes Argument GEGEN die eigene Empfehlung), fehlte bisher aber
+    komplett in E-Mail und App-Detail-Panel."""
+    if not signal.gegenargument:
+        return ""
+    return f"Gegenargument (stärkste Einwand gegen diese Empfehlung):\n{signal.gegenargument}"
+
+
+def _formatiere_forecast(signal) -> str:
+    """2026-07-19 - Bull/Base/Bear-Szenarien waren bisher nur in der DB, nicht
+    in E-Mail/App sichtbar, obwohl sie ein zentraler Baustein der Gegenszenario-
+    Deckel-Logik sind (hebel_risk_gate.py/risk_gate.py)."""
+    zeilen = []
+    for label, text_attr, prob_attr in (
+        ("Bull", "forecast_bull_text", "forecast_bull_prob_pct"),
+        ("Base", "forecast_base_text", "forecast_base_prob_pct"),
+        ("Bear", "forecast_bear_text", "forecast_bear_prob_pct"),
+    ):
+        text = getattr(signal, text_attr, None)
+        prob = getattr(signal, prob_attr, None)
+        if text:
+            prob_text = f" ({prob:.0f}%)" if prob is not None else ""
+            zeilen.append(f"{label}{prob_text}: {text}")
+    return "Forecast-Szenarien:\n" + "\n".join(zeilen) if zeilen else ""
+
+
+_RISIKOFAKTOR_SYMBOL = {"positiv": "🟢", "neutral": "⚪", "negativ": "🔴"}
+
+
+def _formatiere_risikofaktoren(signal) -> str:
+    """2026-07-19 (Kern von Abschnitt 3 "Konklusion" - Nutzer-Wunsch nach dem
+    echten AVAX-Hebel-Fund: E-Mail/App sollen zwischen 1. mathematisch
+    berechneten Fakten, 2. LLM-Bewertung und 3. einer deterministischen
+    Konklusion mit positiven/neutralen/negativen Risikofaktoren trennen).
+    `risikofaktoren_json` wird deterministisch von agent/krypto/risk_gate.py::
+    compute_risikofaktoren() bzw. hebel_risk_gate.py::
+    compute_risikofaktoren_hebel() erzeugt - bewusst NICHT vom LLM, siehe
+    dortige Docstrings (echter Interpretationsfehler des Modells war der
+    Ausloeser)."""
+    import json
+
+    if not signal.risikofaktoren_json:
+        return ""
+    try:
+        faktoren = json.loads(signal.risikofaktoren_json)
+    except (ValueError, TypeError):
+        return ""
+    if not faktoren:
+        return ""
+
+    gruppen: dict[str, list[dict]] = {"negativ": [], "neutral": [], "positiv": []}
+    for f in faktoren:
+        gruppen.setdefault(f.get("bewertung", "neutral"), []).append(f)
+
+    zeilen = []
+    for bewertung in ("negativ", "neutral", "positiv"):
+        eintraege = gruppen.get(bewertung, [])
+        if not eintraege:
+            continue
+        for f in eintraege:
+            symbol = _RISIKOFAKTOR_SYMBOL.get(bewertung, "⚪")
+            zeilen.append(f"{symbol} {f.get('name', '')}: {f.get('begruendung', '')}")
+    return "\n".join(zeilen)
+
+
 def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None) -> None:
     """E-Mail bei handlungsrelevanter Spot-Empfehlung (2026-07-14, Erweiterung
     von U-8/P-7 - Empfehlungen sollen den Nutzer auch erreichen, wenn er selten
@@ -803,21 +941,29 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None) -
         positionsgroesse_text = _formatiere_positionsgroesse_und_tranchen(signal)
         risiken_text = _formatiere_key_risks(signal)
         halte_kriterium_text = _formatiere_halte_kriterium(signal)
+        gegenargument_text = _formatiere_gegenargument(signal)
+        forecast_text = _formatiere_forecast(signal)
+        risikofaktoren_text = _formatiere_risikofaktoren(signal)
         zeitpunkt_text = signal.created_at[:16].replace("T", " ") if signal.created_at else "-"
         body = (
             f"Aktion: {signal.action}\n"
-            f"Konfidenz: {signal.confidence_pct}%\n"
             f"Regime: {signal.regime or 'unbekannt'}\n"
             f"Berechnet: {zeitpunkt_text} · Anbieter: {signal.groq_model or '-'}\n\n"
-            f"{signal.short_reasoning or ''}\n\n"
-            f"Top-Gründe:\n{_formatiere_top_gruende(signal)}\n\n"
+            f"--- 1. MATHEMATISCH BERECHNET ---\n"
             f"Entry: {format_money(signal.entry_eur_von)}-{format_money(signal.entry_eur_bis)} EUR\n"
             f"Stop-Loss: {format_money(signal.stop_loss_eur_von)}-{format_money(signal.stop_loss_eur_bis)} EUR\n"
-            f"Take-Profit: {format_money(signal.take_profit_eur_von)}-{format_money(signal.take_profit_eur_bis)} EUR\n\n"
-            + (f"{positionsgroesse_text}\n\n" if positionsgroesse_text else "")
+            f"Take-Profit: {format_money(signal.take_profit_eur_von)}-{format_money(signal.take_profit_eur_bis)} EUR\n"
+            + (f"{positionsgroesse_text}\n" if positionsgroesse_text else "")
+            + f"\n--- 2. LLM-BEWERTUNG (Konfidenz {signal.confidence_pct}%) ---\n"
+            f"{signal.short_reasoning or ''}\n\n"
+            f"Top-Gründe:\n{_formatiere_top_gruende(signal)}\n\n"
+            + (f"{gegenargument_text}\n\n" if gegenargument_text else "")
             + (f"{risiken_text}\n\n" if risiken_text else "")
             + (f"{halte_kriterium_text}\n\n" if halte_kriterium_text else "")
-            + "Details im Signale-Tab der App. Ausführung manuell über die Bitpanda-App."
+            + (f"{forecast_text}\n" if forecast_text else "")
+            + "\n--- 3. KONKLUSION (RISIKOFAKTOREN) ---\n"
+            + (risikofaktoren_text if risikofaktoren_text else "Keine strukturierten Risikofaktoren verfügbar.")
+            + "\n\nDetails im Signale-Tab der App. Ausführung manuell über die Bitpanda-App."
         )
         send_notification_email(f"TradingInfoTool: {signal.action} {signal.symbol}", body, empfaenger)
     except Exception:
@@ -849,7 +995,7 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None) 
         # BUGFIX + Nachbesserung (2026-07-17, siehe _notify_spot_signal()-
         # Kommentar): dieselben zwei Probleme (rohe Floats statt format_money(),
         # fehlende Risiken/Halte-Kriterium) galten hier identisch.
-        hinweis = f"\nHinweis: {signal.ausfuehrbarkeit_hinweis}\n" if signal.ausfuehrbarkeit_hinweis else ""
+        hinweis = f"Hinweis: {signal.ausfuehrbarkeit_hinweis}\n" if signal.ausfuehrbarkeit_hinweis else ""
         eigenkapital_zeile = (
             f"Eigenkapitalbedarf: {format_money(signal.eigenkapitalbedarf_usd)} USD\n"
             if signal.eigenkapitalbedarf_usd is not None else ""
@@ -859,26 +1005,37 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None) 
             f"{format_money(signal.hebel_senkung_eigenkapital_nachschuss_eur)} EUR\n"
             if signal.hebel_senkung_eigenkapital_nachschuss_eur is not None else ""
         )
+        korrektur_zeile = f"({signal.hebel_korrektur_hinweis})\n" if signal.hebel_korrektur_hinweis else ""
         risiken_text = _formatiere_key_risks(signal)
         halte_kriterium_text = _formatiere_halte_kriterium(signal)
+        gegenargument_text = _formatiere_gegenargument(signal)
+        forecast_text = _formatiere_forecast(signal)
+        risikofaktoren_text = _formatiere_risikofaktoren(signal)
         zeitpunkt_text = signal.created_at[:16].replace("T", " ") if signal.created_at else "-"
         body = (
             f"Richtung: {signal.richtung}, Aktion: {signal.action}\n"
-            f"Hebel: {signal.hebel_final}x, Konfidenz: {signal.confidence_pct}%\n"
             f"Regime: {signal.regime or 'unbekannt'}\n"
             f"Berechnet: {zeitpunkt_text} · Anbieter: {signal.llm_model or '-'}\n\n"
-            f"{signal.short_reasoning or ''}\n\n"
-            f"Top-Gründe:\n{_formatiere_top_gruende(signal)}\n\n"
+            f"--- 1. MATHEMATISCH BERECHNET ---\n"
+            f"Hebel: {signal.hebel_final}x\n"
+            f"{korrektur_zeile}"
             f"Entry: {format_money(signal.entry_eur_von)}-{format_money(signal.entry_eur_bis)} EUR\n"
             f"Stop-Loss: {format_money(signal.stop_loss_eur_von)}-{format_money(signal.stop_loss_eur_bis)} EUR\n"
             f"Take-Profit: {format_money(signal.take_profit_eur_von)}-{format_money(signal.take_profit_eur_bis)} EUR\n"
             f"Geschätzter Liquidationspreis: {format_money(signal.liquidationspreis_geschaetzt_usd)} USD\n"
             f"{eigenkapital_zeile}"
             f"{senkung_zeile}"
-            f"{hinweis}\n"
+            f"{hinweis}"
+            + f"\n--- 2. LLM-BEWERTUNG (Konfidenz {signal.confidence_pct}%) ---\n"
+            f"{signal.short_reasoning or ''}\n\n"
+            f"Top-Gründe:\n{_formatiere_top_gruende(signal)}\n\n"
+            + (f"{gegenargument_text}\n\n" if gegenargument_text else "")
             + (f"{risiken_text}\n\n" if risiken_text else "")
             + (f"{halte_kriterium_text}\n\n" if halte_kriterium_text else "")
-            + "Details im Hebel-Tab der App. Ausführung manuell über die Bitpanda-App."
+            + (f"{forecast_text}\n" if forecast_text else "")
+            + "\n--- 3. KONKLUSION (RISIKOFAKTOREN) ---\n"
+            + (risikofaktoren_text if risikofaktoren_text else "Keine strukturierten Risikofaktoren verfügbar.")
+            + "\n\nDetails im Hebel-Tab der App. Ausführung manuell über die Bitpanda-App."
         )
         send_notification_email(
             f"TradingInfoTool: Hebel {signal.action} {signal.symbol} ({signal.richtung})", body, empfaenger,
@@ -921,20 +1078,28 @@ def _notify_multi_asset_signal(signal, watchlist: list, bitpanda_assets: list | 
         positionsgroesse_text = _formatiere_positionsgroesse_und_tranchen(signal)
         risiken_text = _formatiere_key_risks(signal)
         halte_kriterium_text = _formatiere_halte_kriterium(signal)
+        gegenargument_text = _formatiere_gegenargument(signal)
+        forecast_text = _formatiere_forecast(signal)
+        risikofaktoren_text = _formatiere_risikofaktoren(signal)
         zeitpunkt_text = signal.created_at[:16].replace("T", " ") if signal.created_at else "-"
         body = (
             f"Aktion: {signal.action}\n"
-            f"Konfidenz: {signal.confidence_pct}%\n"
             f"Berechnet: {zeitpunkt_text} · Anbieter: {signal.groq_model or '-'}\n\n"
-            f"{signal.short_reasoning or ''}\n\n"
-            f"Top-Gründe:\n{_formatiere_top_gruende(signal)}\n\n"
+            f"--- 1. MATHEMATISCH BERECHNET ---\n"
             f"Entry: {format_money(signal.entry_eur_von)}-{format_money(signal.entry_eur_bis)} EUR\n"
             f"Stop-Loss: {format_money(signal.stop_loss_eur_von)}-{format_money(signal.stop_loss_eur_bis)} EUR\n"
-            f"Take-Profit: {format_money(signal.take_profit_eur_von)}-{format_money(signal.take_profit_eur_bis)} EUR\n\n"
-            + (f"{positionsgroesse_text}\n\n" if positionsgroesse_text else "")
+            f"Take-Profit: {format_money(signal.take_profit_eur_von)}-{format_money(signal.take_profit_eur_bis)} EUR\n"
+            + (f"{positionsgroesse_text}\n" if positionsgroesse_text else "")
+            + f"\n--- 2. LLM-BEWERTUNG (Konfidenz {signal.confidence_pct}%) ---\n"
+            f"{signal.short_reasoning or ''}\n\n"
+            f"Top-Gründe:\n{_formatiere_top_gruende(signal)}\n\n"
+            + (f"{gegenargument_text}\n\n" if gegenargument_text else "")
             + (f"{risiken_text}\n\n" if risiken_text else "")
             + (f"{halte_kriterium_text}\n\n" if halte_kriterium_text else "")
-            + "Details im Signale-Tab der App. Ausführung manuell über die Bitpanda-App."
+            + (f"{forecast_text}\n" if forecast_text else "")
+            + "\n--- 3. KONKLUSION (RISIKOFAKTOREN) ---\n"
+            + (risikofaktoren_text if risikofaktoren_text else "Keine strukturierten Risikofaktoren verfügbar.")
+            + "\n\nDetails im Signale-Tab der App. Ausführung manuell über die Bitpanda-App."
         )
         send_notification_email(f"TradingInfoTool: {signal.action} {signal.symbol}", body, empfaenger)
     except Exception:
@@ -1015,6 +1180,7 @@ def hebel_screening_job(
             "Hebel-Screening: %d Assets bewertet, %d Kandidaten (Score >= Schwelle)",
             len(triggers), len(kandidaten),
         )
+        _pruefe_oi_abdeckung_warnung(conn_factory, config_dict)
 
         if bitpanda_api_key:
             from importer.bitpanda_margin_positions import auto_add_unknown_hebel_symbols, sync_hebel_positions
@@ -1212,6 +1378,19 @@ def build_scheduler(
     # einem Neustart (egal wie lange die App vorher offline war) nicht erst nach
     # einem vollen Intervall aktualisiert werden - guenstiger Einzelabruf, immer
     # sinnvoll, analog zum bitpanda_holdings-Job unten.
+    #
+    # BUGFIX (2026-07-19, echter Notebook-Fund - siehe Screenshot-Analyse
+    # "erste Nacht mit dem letzten Release"): APScheduler's misfire_grace_time
+    # ist standardmaessig nur 1 Sekunde. Der Scheduler-Aufbau selbst (mehrere
+    # add_job()-Aufrufe + der synchrone Backward-Tracking-Nachhol-Check davor)
+    # braucht real laenger als das - dadurch war next_run_time=jetzt bereits
+    # >1s "in der Vergangenheit", sobald scheduler.start() tatsaechlich lief,
+    # und ALLE sechs Sofort-Start-Jobs galten faelschlich als Misfire (inkl.
+    # sofortiger "Job X fehlgeschlagen"-Alarmmail) - obwohl sie Sekunden
+    # spaeter beim naechsten reguleaeren Takt ohnehin fehlerfrei liefen.
+    # _IMMEDIATE_START_MISFIRE_GRACE_SECONDS gibt dem Scheduler-Start genug
+    # Luft, ohne echte, mehrstuendige Standby-Ausfaelle (das eigentliche
+    # Misfire-Szenario, siehe _log_job_event()-Docstring) zu verschleiern.
     scheduler.add_job(
         refresh_prices_job,
         "interval",
@@ -1219,6 +1398,7 @@ def build_scheduler(
         args=[coingecko_client, db_conn_factory, watchlist],
         id="refresh_prices",
         next_run_time=datetime.now(),
+        misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
     )
     # Betriebssicherheit (2026-07-12): anders als bei den Preisen oben KEIN
     # bedingungsloses next_run_time=jetzt - ein voller Historie-/OHLC-Refresh ist
@@ -1242,7 +1422,10 @@ def build_scheduler(
     # next_run_time anlegen und er liefe NIE mehr (live geprueft). Das kwarg muss
     # bei "nicht veraltet" deshalb komplett WEGGELASSEN werden, nicht auf None
     # gesetzt werden.
-    history_job_kwargs = {"next_run_time": datetime.now()} if history_stale else {}
+    history_job_kwargs = (
+        {"next_run_time": datetime.now(), "misfire_grace_time": _IMMEDIATE_START_MISFIRE_GRACE_SECONDS}
+        if history_stale else {}
+    )
     scheduler.add_job(
         refresh_history_job,
         "interval",
@@ -1251,7 +1434,10 @@ def build_scheduler(
         id="refresh_history",
         **history_job_kwargs,
     )
-    ohlc_job_kwargs = {"next_run_time": datetime.now()} if ohlc_stale else {}
+    ohlc_job_kwargs = (
+        {"next_run_time": datetime.now(), "misfire_grace_time": _IMMEDIATE_START_MISFIRE_GRACE_SECONDS}
+        if ohlc_stale else {}
+    )
     scheduler.add_job(
         refresh_ohlc_job,
         "interval",
@@ -1267,6 +1453,7 @@ def build_scheduler(
         args=[YFinanceClient(), db_conn_factory, watchlist],
         id="refresh_securities_prices",
         next_run_time=datetime.now(),
+        misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
     )
     # Aktien-OHLC-Refresh (2026-07-16, Asset-Verwaltungs-Audit-Fund, siehe
     # refresh_aktien_ohlc_job()-Docstring) - kein Staleness-Vorab-Check wie bei
@@ -1279,6 +1466,7 @@ def build_scheduler(
         args=[db_conn_factory, watchlist],
         id="refresh_aktien_ohlc",
         next_run_time=datetime.now(),
+        misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
     )
     # Hebel-Screening (2026-07-14, Phase 1) - eigener 15-Min-Takt, unabhaengig vom
     # Preis-Refresh oben (andere Datenquellen: Binance/Bybit/OKX/Kraken statt
@@ -1298,6 +1486,7 @@ def build_scheduler(
         ],
         id="hebel_screening",
         next_run_time=datetime.now(),
+        misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
     )
     # Multi-Asset-Batch (2026-07-18, siehe agent/multi_asset_batch.py) - eigener,
     # deutlich selterer Takt als Krypto (der Rhythmus wird ueber config.yaml
@@ -1311,6 +1500,7 @@ def build_scheduler(
         args=[db_conn_factory, watchlist, coingecko_client, groq_client, gemini_client, mistral_client],
         id="multi_asset_batch",
         next_run_time=datetime.now(),
+        misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
     )
     # MS-3: erster CronTrigger im Projekt (bisherige Jobs nutzen nur "interval") -
     # feste Uhrzeiten statt Intervall, siehe config.yaml marktscan.zeiten.
@@ -1353,6 +1543,7 @@ def build_scheduler(
         args=[db_conn_factory, fred_api_key],
         id="makro_analog",
         next_run_time=datetime.now(),
+        misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
     )
     # 2026-07-17, Nutzer-Fund: ein fester Cron holt einen verpassten Termin NICHT
     # automatisch nach, wenn die App zu diesem Zeitpunkt gar nicht lief - an zwei
@@ -1376,6 +1567,7 @@ def build_scheduler(
             args=[bitpanda_api_key, db_conn_factory],
             id="bitpanda_holdings",
             next_run_time=datetime.now(),
+            misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
         )
     else:
         logger.info("Kein BITPANDA_API_KEY - automatischer Bestandsabgleich deaktiviert (P-8)")

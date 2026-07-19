@@ -580,11 +580,16 @@ def generate_signal(
 
     # R-5.5 (post) / R-5.9 / R-5.10 - deterministische Nachkontrolle, Modell wird nie
     # blind vertraut.
-    corrected = post_check(parsed, risk_result, regime_result, config_dict, confluence=confluence)
+    corrected = post_check(
+        parsed, risk_result, regime_result, config_dict, confluence=confluence,
+        retail_long_bias_extreme=anticyclic_context.retail_long_bias_extreme,
+        long_account_pct=anticyclic_context.long_account_pct,
+    )
     risk_veto = corrected.pop("_risk_veto")
     risk_veto_reason = corrected.pop("_risk_veto_reason")
     cash_veto = corrected.pop("_cash_veto")
     cash_veto_reason = corrected.pop("_cash_veto_reason")
+    risikofaktoren = corrected.pop("_risikofaktoren", None)
 
     long_reasoning = corrected.get("long_reasoning", {})
     position_size = corrected.get("position_size", {})
@@ -611,6 +616,7 @@ def generate_signal(
         risk_veto_reason=risk_veto_reason,
         cash_veto=cash_veto,
         cash_veto_reason=cash_veto_reason,
+        risikofaktoren_json=json.dumps(risikofaktoren, ensure_ascii=False) if risikofaktoren else None,
         facts_json=json.dumps(facts, ensure_ascii=False),
         pipeline_version=PIPELINE_VERSION,
         confidence_pct=corrected.get("confidence_pct"),

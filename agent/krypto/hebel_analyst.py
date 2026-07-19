@@ -107,7 +107,17 @@ Marktreaktion, keine Strategie, und darf hier nicht als Erwartung einfließen.
 `kategorie` EXAKT einer von: technisch, fundamental, makro, risiko, antizyklisch, \
 `text` ein prägnanter Satz) - berücksichtige dabei explizit `trigger_zweig` und die \
 gelieferten Open-Interest-/Funding-Rate-/Long-Short-Ratio-Werte, die zum Trigger \
-geführt haben.
+geführt haben. WICHTIG bei der Kategorie `antizyklisch`: ein extremer Retail-\
+Konten-Anteil in EINE Richtung (`antizyklisch.retail_long_bias_extreme`, bzw. \
+`long_konten_anteil_prozent` sehr niedrig für die Gegenrichtung) ist ein \
+KONTRAINDIKATOR GEGEN diese Richtung, nicht dafür - die Mehrheit einer stark \
+gehebelten Crowd, die bereits in eine Richtung positioniert ist, wird bei einer \
+Gegenbewegung zuerst liquidiert/ausgestoppt. Ein `top_gruende`-Eintrag mit \
+`kategorie: antizyklisch`, der auf Retail-Konsens verweist, darf deshalb NIEMALS \
+dieselbe Richtung wie deine eigene `richtung`-Empfehlung stützen - stützt der \
+Retail-Konsens tatsächlich deine Richtung (z.B. Retail überwiegend short bei \
+deiner SHORT-Empfehlung), ist das KEIN antizyklisches Argument mehr und gehört \
+nicht in diese Kategorie.
 9. `key_risks` MUSS bei ERÖFFNEN/NACHKAUFEN/HEBEL_ERHÖHEN mindestens einen Eintrag \
 zu hebel-spezifischen Risiken enthalten (Liquidationsrisiko bei schnellen \
 Kursbewegungen, laufende Finanzierungsgebühr bei längerer Haltedauer) - das sind \

@@ -3860,3 +3860,309 @@ Kandidaten und einem Fake-Groq-Client, der immer fehlschlägt: im ersten
 Lauf wird Groq genau 2x versucht (dann Schwelle erreicht), alle 5
 Kandidaten laufen über Mistral; im zweiten Lauf (simuliert den nächsten
 15-Minuten-Takt am selben Tag) wird Groq kein einziges Mal mehr versucht.
+
+## Nachtrag (2026-07-19): erste Notebook-Nacht-Analyse - Misfire-Fehlalarm,
+## klare OI-Fehlermeldungen, persistente OI-Abdeckungs-Warnung pro Symbol
+
+**Auslöser:** erster kompletter Notebook-Nachtlauf mit dem neuen Release.
+Der Nutzer schickte einen Screenshot mit mehreren "Job fehlgeschlagen"-
+E-Mails kurz nach Mitternacht und bat um eine Detailanalyse. Dafür wurde
+zunächst `extract_notebook_diagnose.py` um einen Log-Ausschnitt-Export,
+eine Job-Fehlschlag-Historie und eine Groq-Erschöpfungs-Ereignisliste
+erweitert (siehe eigener Abschnitt weiter unten) und gegen die echten
+Notebook-Logs ausgeführt. Ergebnis: drei unabhängige Funde.
+
+### 1. Falscher Alarm: APScheduler-Misfire bei Sofort-Start-Jobs
+
+Der 00:32-E-Mail-Cluster war **kein Absturz** - alle 7 Jobs, die beim
+Scheduler-Start sofort laufen sollen (`next_run_time=datetime.now()`,
+u. a. `refresh_prices`, `hebel_screening`, `multi_asset_batch`), liefen
+tatsächlich korrekt durch. APScheduler meldet aber standardmäßig nach nur
+1 Sekunde (`misfire_grace_time`-Default) ein `EVENT_JOB_MISSED`, wenn der
+Scheduler zwischen `add_job()`-Aufruf und tatsächlichem Start etwas
+beschäftigt ist (mehrere synchrone `add_job()`-Calls + Vorbereitungsarbeit
+beim Start brauchten hier ca. 1,1 Sekunden) - und
+`_log_job_event()`s Misfire-Zweig verschickt dafür unbedingt eine
+"fehlgeschlagen"-E-Mail, obwohl der Job danach ganz normal lief.
+
+**Fix:** neue Konstante `_IMMEDIATE_START_MISFIRE_GRACE_SECONDS = 300` in
+`scheduler/background.py`, als `misfire_grace_time=` an alle 7 betroffenen
+`scheduler.add_job(...)`-Aufrufe ergänzt. 5 Minuten statt 1 Sekunde Toleranz
+- reicht für jede realistische Scheduler-Startverzögerung, ohne einen
+echten, dauerhaft blockierten Job zu verschleiern (der würde nach 5 Minuten
+immer noch als Misfire gemeldet).
+
+### 2. Wiederkehrender Fund: fünf Symbole ohne Open-Interest-Daten
+
+Dieselbe Log-Analyse zeigte ein **echtes, wiederkehrendes** (nicht
+einmaliges) Muster: KAS, KAIA, FLOKI, TURBO und CANTON scheiterten beim
+15-Minuten-Hebel-Screening regelmäßig bei **allen drei** OI-Börsen
+(Binance/Bybit/OKX) mit einem nichtssagenden `IndexError: list index out
+of range`. Ursache: Bybit/OKX antworten bei einem auf der jeweiligen Börse
+nicht gelisteten Symbol mit HTTP 200 und einer **leeren** Liste statt einem
+Fehlerstatus - `liste[0]` warf dafür nur den rohen IndexError statt einer
+erklärenden Meldung. War vorher schon abgefangen (P-10-Isolation, kein
+Crash), aber ohne erkennbaren Grund im Log.
+
+**Fix:** neue `NoOpenInterestDataError`-Exception + `_erstes_element()`-
+Hilfsfunktion in `api/derivatives.py`, ersetzt die drei rohen
+`liste[0]`-Zugriffe (Bybit-OI, OKX-OI, Binance-Long-Short-Ratio). Ändert
+NICHTS am Fehlerverhalten selbst (weiterhin pro Börse einzeln
+abgefangen), macht die Ursache im Log aber sofort erkennbar.
+
+### 3. Nutzer-Vorschlag: sichtbare Warnung bei dauerhaft fehlender OI-Abdeckung
+
+Der Nutzer fragte, ob ein solcher wiederholter Fehlschlag nicht auch ein
+"relativ eindeutiges Zeichen" sei, dass die Hebel-Prüfung für so ein Symbol
+u. U. problematisch sei, und ob das für eine gewisse Zeit in GUI/E-Mail
+sichtbar gemacht werden sollte, gerade weil es sich um ein dauerhaftes (nicht
+nur vorübergehendes) Problem handeln könnte.
+
+**Bewertung:** zugestimmt, mit einer bewussten Einschränkung - **kein
+automatisches Abschalten** der Hebel-Prüfung. Ein fehlender OI-Wert ist ein
+Kontextverlust (das Hebel-Signal wird ohne Positionierungs-Kontext
+bewertet), kein Grund, die Prüfung selbst zu unterbinden - die Entscheidung
+soll beim Nutzer über den bestehenden Hebel-Prüfung-Toggle bleiben, nicht
+beim System automatisch getroffen werden.
+
+**Fix, drei Teile:**
+
+- **Neue Tabelle** `oi_abdeckung_status` (`database/db.py`) - ein Zustand
+  je SYMBOL (nicht je Börse wie bei `api_health_status`), weil erst das
+  gleichzeitige Scheitern bei ALLEN drei Börsen als ein Fehlschlag zählt
+  (siehe `fetch_and_store_oi_snapshot()`-Rückgabewert, jetzt `bool`).
+  4 neue Funktionen: `record_oi_abdeckung_ergebnis()` (Erfolg setzt den
+  Zähler zurück, Fehlschlag erhöht ihn), `get_oi_abdeckung_status()` (für
+  die GUI), `get_symbole_mit_ueberschrittener_oi_schwelle()` (Schwelle +
+  Cooldown-Filter, gleiches Prinzip wie beim Cash-Veto),
+  `set_oi_abdeckung_gemeldet()`. DB-persistiert statt in-memory wie bei der
+  Groq-Erschöpfung oben - bewusst, weil dieser Zustand laut Nutzer-
+  Einschätzung potenziell DAUERHAFT ist und einen Neustart überleben soll,
+  nicht nur eine kurze Störung wie Groq.
+- **E-Mail-Warnung** (`scheduler/background.py::_notify_oi_abdeckung_
+  warnung()` + `_pruefe_oi_abdeckung_warnung()`, aufgerufen direkt nach
+  jedem `run_hebel_screening()`-Lauf) - neue Config-Werte
+  `oi_abdeckung_schwelle_fehlschlaege` (Default 8, also gut 2 Stunden
+  durchgängiger Fehlschlag bei 15-Minuten-Takt) und `oi_abdeckung_warnung_
+  cooldown_stunden` (Default 24) unter `hebel_screening:`. Erklärt in der
+  Mail explizit: keine automatische Abschaltung, Hinweis auf den manuellen
+  Toggle. Die Meldung wird nur bei TATSÄCHLICH verschicktem Mail-Erfolg als
+  "gemeldet" markiert (nicht schon beim bloßen Versuch) - sonst würde eine
+  deaktivierte E-Mail-Benachrichtigung oder ein Versandfehler den Cooldown
+  fälschlich anlaufen lassen und eine später (wieder) aktivierte Warnung
+  bis zu 24 Stunden lang unterdrücken, obwohl nie etwas verschickt wurde
+  (im ersten Entwurf ein echter Bug, beim Testen gefunden und behoben).
+- **GUI-Markierung** (`ui/app.py`, Watchlist-Tab) - ein `⚠`-Zeichen direkt
+  in der bestehenden Hebel-Prüfung-Spalte, wenn `konsekutive_fehlschlaege
+  >= oi_abdeckung_schwelle_fehlschlaege`, mit erklärendem Spalten-Tooltip.
+  Kein neuer Schalter, keine automatische Aktion - reine Sichtbarmachung.
+
+**Verifikation:** 8 synthetische DB-Tests für die neue Tabelle/Funktionen
+(Erfolg setzt zurück, Schwelle wird erkannt, Symbol darunter wird NICHT
+gemeldet, Cooldown unterdrückt eine zweite Meldung, Cooldown=0 hebt das
+sofort wieder auf, Erholung setzt den Zähler zurück). End-to-End-Test von
+`_pruefe_oi_abdeckung_warnung()` mit gemocktem E-Mail-Versand (genau 1 Mail
+für das Symbol über der Schwelle, keine für das Symbol darunter, Cooldown
+verhindert eine zweite Mail, deaktivierte E-Mail verschickt nichts UND
+markiert nichts als gemeldet - deckte den oben beschriebenen Bug auf, der
+noch vor der Verifikation behoben wurde). Tk-Smoke-Test der Watchlist-
+Spalte (Warnzeichen erscheint für das Symbol über der Schwelle, fehlt beim
+Symbol darunter). Migrationstest gegen eine echte Kopie der Produktions-DB
+(`init_db()` legt die neue Tabelle sauber an, bestehende `cash_veto`-Spalten
+weiterhin vorhanden). Regressionstest der `NoOpenInterestDataError`/
+`_erstes_element()`-Fixes sowie aller 7 `misfire_grace_time`-Ergänzungen.
+
+### Erweiterung: `extract_notebook_diagnose.py` konsolidiert Log-Analyse
+
+Im Zuge dieser Analyse wurde außerdem ein zweites, nicht im Repo verwaltetes
+Export-Skript entdeckt (6-Datei-Format, offenbar direkt auf dem Notebook
+entstanden und nie zurücksynchronisiert). Statt es zu pflegen, wurde
+`extract_notebook_diagnose.py` (das bereits bestehende, repo-versionierte
+Skript) erweitert: optionales Log-Zeitfenster (Standard 72 Stunden,
+CLI-Parameter), Log-Zeilen-Auszug inkl. mehrzeiliger Tracebacks,
+extrahierte Job-Fehlschlag-Historie, extrahierte Groq-Erschöpfungs-
+Ereignisse, sowie eine regelbasierte Auffälligkeiten-Liste (u. a.
+`risk_veto=True` bei einer Nicht-HALTEN-Aktion) - deckt jetzt sowohl
+DB-Snapshot als auch Log-Historie in einem einzigen Export ab. Siehe
+Memory `reference_notebook_analyseordner_standard`.
+
+### Nachtrag: zwei weitere yfinance-"nur fast_info"-Ticker in die Unterdrückungsliste aufgenommen
+
+Dieselbe Log-Analyse zeigte 826 yfinance-ERROR-Zeilen ("possibly delisted;
+no price data found") über das 72-Stunden-Fenster. Fünf der betroffenen
+Ticker (OD7N/3QSS/OD7L/OD7H/OD7C) waren bereits seit 2026-07-16 als bekannte,
+unkritische "nur fast_info"-Fälle in `api/yfinance_client.py::
+YFINANCE_HISTORY_UNRELIABLE_TICKERS` erfasst und wurden per Logging-Filter
+in `main.py` unterdrückt. Zwei weitere Ticker - X136.BE und IS0C.DE (X136/
+ISOC) - zeigten das identische Muster (je 272 ERROR-Zeilen über 72 Std.,
+`fast_info` lieferte dabei durchgehend gültige Kurse, "Wertpapier-Preis-
+Refresh: 13 Assets aktualisiert" bei jedem Lauf), waren aber NICHT in der
+Liste enthalten und erzeugten dadurch unnötiges Log-Rauschen.
+
+**Fix:** beide Ticker zur `YFINANCE_HISTORY_UNRELIABLE_TICKERS`-Menge
+ergänzt (jetzt 7 statt 5 Einträge). Kein funktionaler Fehler, reine
+Log-Hygiene - `fast_info` war in allen Fällen erfolgreich, nur `.history()`
+schlägt intern erwartungsgemäß fehl (dünn gehandelte ISIN-/Berlin-Börsen-
+Instrumente, siehe ursprüngliche Data-Quality-Caveats vom 2026-07-09).
+
+**Verifikation:** Filter synthetisch gegen die echten Log-Zeilen getestet -
+X136.BE/IS0C.DE/OD7C.SG werden jetzt unterdrückt, ein unbekanntes Symbol
+(Kontrollfall) bleibt weiterhin sichtbar (P-10-Prinzip unverändert: nur
+bestätigte Fälle werden unterdrückt, kein pauschales Wegfiltern).
+
+## Nachtrag (2026-07-19): Liquidationspreis-Sicherheitsmarge neu kalibriert
+
+**Auslöser:** Nutzer-Beobachtung beim gemeinsamen Durchsehen zweier echter
+Hebel-Empfehlungs-E-Mails (VIRTUAL/AVAX): "den Liquidationspreis müssen wir
+auf ein realistisches Niveau bringen, ist u.U. zu restriktiv." Der bisherige
+Config-Wert `liquidations_sicherheitsmarge_relativ: 0.175` (17,5%) war seit
+seiner Einführung explizit als `[OFFEN]` markiert - laut Kommentar nur ein
+"Mittelwert einer 15-20%-Spanne", **keine echte Quelle**, nicht kalibriert.
+
+**Vorgehen:** zwei unabhängige Kalibrierungsquellen kombiniert.
+
+1. **Bitpandas offizielle Doku** (Bitpanda Helpdesk, "Amplify your trading
+   with Bitpanda Leverage"): Liquidation greift, wenn Margin Level =
+   Positionswert / (Kreditbetrag + Tagesgebühren) unter ~105-110% fällt.
+   Mathematisch übersetzt in unsere Formel (sicherheitsmarge_relativ =
+   1 - 1/Schwelle) ergibt das einen theoretisch plausiblen Bereich von
+   **4,76% bis 9,09%**.
+2. **4 echte, aus der Bitpanda-Transaktionshistorie rekonstruierte
+   Liquidationsfälle** (LINK id=5, TAO id=77, TAO id=87, SUI id=54, alle aus
+   `importer/bitpanda_margin_positions.py`, Status `wahrscheinlich_
+   liquidiert`) gegen die echte tägliche OHLC-Kurshistorie der App geprüft.
+   Bei 2 Fällen (TAO id=87, SUI id=54) verlief der Kurs am Schließungstag
+   ruhig statt in einem Crash-Docht, was eine präzise Rückrechnung erlaubte:
+   implizierte Marge **6,75% (SUI)** bzw. **8,4% (TAO)** - beide innerhalb
+   des Bitpanda-Bereichs. Die beiden anderen Fälle (LINK, TAO id=77) hatten
+   Crash-Dochte weit unterhalb der berechneten Zone, was nicht widerspricht,
+   aber keine präzise Eingrenzung erlaubt. Zusammen mit dem bereits am
+   2026-07-16 live verifizierten LINK-Fall (~6,5%, siehe oben) ergeben sich
+   **drei präzise Datenpunkte im Bereich 6,5%-8,4%**, alle konsistent mit der
+   offiziellen Bitpanda-Spanne.
+
+**Fix:** `liquidations_sicherheitsmarge_relativ` von 0,175 auf **0,09 (9%)**
+gesetzt - knapp über dem höchsten real beobachteten Wert (8,4%), damit
+bewusst weiterhin ein kleiner Sicherheitspuffer, aber keine ~2x-Übertreibung
+mehr. Wirkt an zwei Stellen gleichzeitig (Nutzer-Vorgabe: "Anpassung soll
+generell passieren, auch bei den Signalen und Empfehlungen"):
+- `estimate_liquidation_price()` - der angezeigte "Geschätzte
+  Liquidationspreis" in App/E-Mail liegt jetzt näher an der Realität.
+- `max_safe_hebel()` (RM-11) - der Deckel für den bei neuen Positionen
+  empfohlenen Hebel erlaubt jetzt etwas mehr (bei 15% Stop-Loss-Distanz z. B.
+  6,07x statt vorher 5,50x maximal sicherer Hebel).
+
+**Verifikation:** Reproduktion des LINK-Live-Falls (Entry 7,42 €, Hebel 5x)
+mit dem neuen Wert ergibt 6,52 € gegen den echten Bitpanda-Wert 6,3515 € -
+Abweichung nur noch +2,7% (vorher +13,3% mit 17,5%), UND weiterhin in der
+sicheren Richtung (zeigt Liquidation nicht später an als real). `config.yaml`
+lädt den neuen Wert korrekt, Syntax-/YAML-Validität beider geänderten
+Dateien bestätigt.
+
+## Nachtrag (2026-07-19): Retail-Konsens-Deckel + Risikofaktoren-Liste + 3-Abschnitte-Neustrukturierung (E-Mail/App, alle Assetklassen)
+
+**Auslöser:** gemeinsame Durchsicht zweier echter Hebel-Empfehlungs-E-Mails
+(VIRTUAL, AVAX) deckte zwei Inkonsistenzen auf:
+
+1. **AVAX-Signal** begründete eine LONG-Empfehlung u. a. mit "Retail-Bias
+   extrem long (65,9% Long-Konten), was für eine Gegenbewegung spricht" -
+   eine antizyklische Beobachtung, die logisch GEGEN LONG spricht (eine
+   bereits stark in eine Richtung positionierte Crowd wird bei einer
+   Gegenbewegung zuerst liquidiert/ausgestoppt), aber trotzdem zur Stützung
+   von LONG verwendet wurde.
+2. Beide Signale hatten `trade_thesis_typ: swing_strategie` ("bestätigter,
+   noch nicht ausgereizter Trend") UND gleichzeitig einen erkannten
+   Regime-Konflikt (Position widerspricht dem Regime) - ein innerer
+   Widerspruch in der eigenen Klassifikation.
+
+Der Nutzer bat außerdem darum, E-Mail und App-Detailansicht für **alle**
+Assetklassen einheitlich in drei Abschnitte zu gliedern: 1. was ist
+mathematisch berechnet, 2. was sagt die LLM-Bewertung, 3. eine ausführliche
+Konklusion mit positiven/neutralen/negativen Risikofaktoren.
+
+### 1. Retail-Konsens-Deckel (neu, Hebel) + Prompt-Fix (Hebel UND Spot)
+
+Ursachenanalyse: `build_hebel_facts()`/`build_facts()` liefern dem Modell nur
+Rohzahlen (Long-Konten-Anteil, zwei Extrem-Flags) - **keine** Regel im
+SYSTEM_PROMPT erklärte bisher, wie ein extremer Retail-Konsens richtungsmäßig
+zu interpretieren ist. `agent/krypto/anticyclic.py`s einzige gerichtete Logik
+ist an den Spezialfall "möglicher Flush nach Kursabsturz" gekoppelt, keine
+allgemeingültige Übersetzung.
+
+**Fix, zwei Ebenen (wie überall in diesem System - nie blind auf
+Prompt-Befolgung vertrauen):**
+- **Prompt-Regel** (`hebel_analyst.py` Regel 8, `analyst.py` Regel 15):
+  extremer Retail-Konten-Anteil in eine Richtung ist ein Kontraindikator
+  GEGEN diese Richtung - ein `top_gruende`-Eintrag mit `kategorie:
+  antizyklisch`, der auf Retail-Konsens verweist, darf NIEMALS dieselbe
+  Richtung wie die eigene Empfehlung stützen.
+- **Neuer deterministischer Hebel-Deckel** `retail_konsens_hebel_deckel`
+  (config.yaml, 3.0): `hebel_risk_gate.py::retail_konsens_risiko()` - True,
+  wenn `retail_long_bias_extreme` UND `richtung == LONG` (bzw. symmetrisch
+  `long_account_pct <= 35%` UND `richtung == SHORT`, gleiche 65%-Schwelle wie
+  `anticyclic.py::LONG_BIAS_EXTREME_THRESHOLD_PCT`). Als fünfter Kandidat in
+  `_hebel_deckel_kandidaten()` ergänzt.
+- **These-Regime-Widerspruch** (neu, reine Sichtbarmachung, KEIN Deckel - es
+  gibt keine saubere numerische Dimension dafür): `hebel_risk_gate.py::
+  these_regime_widerspruch()` - True, wenn `trade_thesis_typ == swing_
+  strategie` UND gleichzeitig ein Regime-Konflikt vorliegt.
+- `regime_konflikt_hebel()` als eigene Funktion extrahiert (vorher inline in
+  `_hebel_deckel_kandidaten()`), damit Deckel-Logik UND Risikofaktoren-Liste
+  auf exakt derselben Bedingung basieren.
+
+### 2. Neue Risikofaktoren-Liste (Kern von Abschnitt 3)
+
+`agent/krypto/hebel_risk_gate.py::compute_risikofaktoren_hebel()` und
+`agent/krypto/risk_gate.py::compute_risikofaktoren()` (Spot/Aktien/Rohstoffe/
+Themen-ETF-Pendant) fassen alle bereits vorhandenen Deckel-/Veto-Checks
+deterministisch in eine kompakte 🟢positiv/⚪neutral/🔴negativ-Liste
+zusammen - bewusst NICHT vom LLM generiert (genau das war beim AVAX-Fund das
+Problem). Geprüfte Faktoren: Regime-Konflikt, These-Regime-Widerspruch
+(nur Hebel), Gegenszenario-Wahrscheinlichkeit, technische Konfluenz, CRV-Höhe,
+Retail-Konsens-Risiko, Konfidenz-Niveau, sowie Cash-Veto/Risiko-Veto als
+Kurzschluss-Fälle (Spot). Jeder Check liefert sowohl den negativen ALS AUCH
+den positiven Gegenfall (z. B. "Regime-Ausrichtung: positiv", wenn KEIN
+Konflikt vorliegt) - keine reine Fehlerliste, sondern eine vollständige
+Bilanz.
+
+Neues Feld `risikofaktoren_json` (JSON-serialisierte Liste von `{name,
+bewertung, begruendung}`) auf `Signal` UND `HebelSignal` (additive Migration,
+beide Tabellen), deterministisch am Ende von `post_check()`/
+`post_check_hebel()` berechnet und in der Pipeline persistiert (`hebel_
+pipeline.py` und alle 4 Spot-family-Pipelines).
+
+### 3. 3-Abschnitte-Neustrukturierung (E-Mail + App, alle Assetklassen)
+
+`scheduler/background.py`: alle drei E-Mail-Builder (`_notify_spot_signal()`,
+`_notify_hebel_signal()`, `_notify_multi_asset_signal()`) sowie `ui/hebel_
+view.py`/`ui/signals_view.py`s Detail-Panels zeigen jetzt einheitlich:
+
+- **1. MATHEMATISCH BERECHNET** - bei Hebel: Hebel final, Liquidationspreis,
+  Eigenkapitalbedarf/-Nachschuss, Ausführbarkeit. Bei Spot/Aktien/Rohstoffe/
+  Themen-ETF: Boden-Zielzone, Cash-Reserve-Ziel (beide AZ-4-Bausteine,
+  vollständig deterministisch).
+- **2. LLM-BEWERTUNG (Konfidenz X%)** - Kurz-/Langbegründung, Top-Gründe,
+  **Gegenargument (NEU - existierte seit 2026-07-18 als Pflichtfeld, fehlte
+  aber bisher komplett in E-Mail UND App)**, Entry/SL/TP-Zonen, Positions-
+  größe/Tranchen, Halte-Kriterium, wichtigste Risiken, **Forecast-Szenarien
+  (NEU, waren bisher nur in der DB sichtbar)**.
+- **3. KONKLUSION (RISIKOFAKTOREN)** - die neue deterministische Liste.
+
+Neue gemeinsame Formatierungs-Helper: `scheduler/background.py::
+_formatiere_gegenargument()`/`_formatiere_forecast()`/`_formatiere_
+risikofaktoren()` (E-Mail-Textformat) und `ui/formatting.py::format_
+risikofaktoren_lines()` (App-Textformat, von beiden Detail-Panels
+wiederverwendet).
+
+**Verifikation:** 9 synthetische Testgruppen (Pure-Funktionen isoliert,
+`compute_risikofaktoren_hebel()` reproduziert den echten AVAX-Fall korrekt
+mit 3 negativen Flags, sauberer Gegenfall überwiegend positiv, Kurzschluss-
+Fälle bei `hebel_erlaubt=False`/`cash_veto=True`, `post_check_hebel()`
+End-to-End bestätigt Deckel-Wert UND Risikofaktoren-Liste gleichzeitig
+korrekt). Tk-Smoke-Test beider Detail-Panels (alle 3 Abschnitte + Gegen-
+argument + Risikofaktoren korrekt gerendert, inkl. Sortierung negativ vor
+positiv). E-Mail-Formatierungstest (Gegenargument/Forecast/Risikofaktoren-
+Text, leerer Fall ohne Exception). DB-Roundtrip-Test gegen echte
+Produktions-DB-Kopie für beide Tabellen. Gesamt-Import-Check aller 15
+geänderten Module fehlerfrei, `retail_konsens_hebel_deckel` lädt korrekt aus
+`config.yaml`.

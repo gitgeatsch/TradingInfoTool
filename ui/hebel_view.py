@@ -19,7 +19,7 @@ from tkinter import ttk
 
 import database.db as db
 import ui.theme as theme
-from ui.formatting import format_money
+from ui.formatting import format_money, format_risikofaktoren_lines
 from ui.heading_tooltip import add_heading_tooltips
 from ui.sortable_tree import make_sortable
 
@@ -331,8 +331,40 @@ class HebelView(ttk.Frame):
         if signal.risk_veto:
             lines.append(f"⚠ RISIKO-VETO: {signal.risk_veto_reason}\n")
 
+        # Abschnitt 1 (2026-07-19, Nutzer-Wunsch nach dem echten AVAX-Hebel-
+        # Fund: klare Trennung, was deterministisch berechnet ist vs. was die
+        # KI bewertet hat vs. eine zusammenfassende Konklusion): nur echte
+        # Rechenwerte, nichts vom LLM Erzeugtes.
+        lines.append("--- 1. MATHEMATISCH BERECHNET ---")
+        if signal.hebel_vorschlag is not None or signal.hebel_final is not None:
+            final_text = f"{signal.hebel_final:.2f}x" if signal.hebel_final is not None else "-"
+            lines.append(f"Hebel final (gedeckelt): {final_text}")
+            if signal.hebel_korrektur_hinweis:
+                lines.append(f"  Hinweis: {signal.hebel_korrektur_hinweis}")
+        if signal.liquidationspreis_geschaetzt_usd is not None:
+            lines.append(f"Geschätzter Liquidationspreis: {format_money(signal.liquidationspreis_geschaetzt_usd)} USD")
+        if signal.eigenkapitalbedarf_usd is not None:
+            lines.append(f"Eigenkapitalbedarf: {format_money(signal.eigenkapitalbedarf_usd)} USD")
+        if signal.hebel_senkung_eigenkapital_nachschuss_eur is not None:
+            lines.append(
+                f"Eigenkapital-Nachschuss für Hebel-Senkung: "
+                f"{format_money(signal.hebel_senkung_eigenkapital_nachschuss_eur)} EUR"
+            )
+        if signal.ausfuehrbarkeit_hinweis:
+            lines.append(f"Ausführbarkeit: {signal.ausfuehrbarkeit_hinweis}")
+        lines.append("")
+
+        # Abschnitt 2: alles, was das LLM selbst entschieden/formuliert hat -
+        # inkl. gegenargument (2026-07-19 NEU, fehlte bisher komplett, obwohl
+        # Regel 13 im SYSTEM_PROMPT es zur Pflicht macht) und Entry/SL/TP-
+        # Zonen (vom LLM aus echten Referenzpunkten GEWÄHLT, nicht rein
+        # mathematisch determiniert).
+        conf_text = f"{signal.confidence_pct:.0f}%" if signal.confidence_pct is not None else "-"
+        lines.append(f"--- 2. LLM-BEWERTUNG (Konfidenz {conf_text}) ---")
+        if signal.richtung:
+            lines.append(f"Richtung: {signal.richtung}")
         if signal.trade_thesis_typ:
-            lines.append(f"THESE: {signal.trade_thesis_typ}\n")
+            lines.append(f"These: {signal.trade_thesis_typ}")
 
         top_gruende_pairs = [
             (getattr(signal, f"top_grund_{i}_kategorie"), getattr(signal, f"top_grund_{i}_text"))
@@ -340,40 +372,32 @@ class HebelView(ttk.Frame):
         ]
         top_gruende_pairs = [(k, t) for k, t in top_gruende_pairs if t]
         if top_gruende_pairs:
-            lines.append("TOP 5 GRÜNDE")
+            lines.append("")
+            lines.append("Top 5 Gründe:")
             for idx, (kategorie, text) in enumerate(top_gruende_pairs, start=1):
                 tag = f"[{kategorie}] " if kategorie else ""
                 lines.append(f"  {idx}. {tag}{text}")
-            lines.append("")
 
         if signal.short_reasoning:
-            lines.append(f"KURZBEGRÜNDUNG\n{signal.short_reasoning}\n")
+            lines.append(f"\nKurzbegründung:\n{signal.short_reasoning}")
         if signal.long_reasoning_technisch or signal.long_reasoning_fundamental or signal.long_reasoning_makro:
-            lines.append("LANGBEGRÜNDUNG")
+            lines.append("\nLangbegründung:")
             if signal.long_reasoning_technisch:
-                lines.append(f"Technisch: {signal.long_reasoning_technisch}")
+                lines.append(f"  Technisch: {signal.long_reasoning_technisch}")
             if signal.long_reasoning_fundamental:
-                lines.append(f"Fundamental: {signal.long_reasoning_fundamental}")
+                lines.append(f"  Fundamental: {signal.long_reasoning_fundamental}")
             if signal.long_reasoning_makro:
-                lines.append(f"Makro: {signal.long_reasoning_makro}")
-            lines.append("")
+                lines.append(f"  Makro: {signal.long_reasoning_makro}")
 
-        if signal.hebel_vorschlag is not None or signal.hebel_final is not None:
-            lines.append("HEBEL")
-            vorschlag_text = f"{signal.hebel_vorschlag:.2f}x" if signal.hebel_vorschlag is not None else "-"
-            final_text = f"{signal.hebel_final:.2f}x" if signal.hebel_final is not None else "-"
-            lines.append(f"  Vorschlag (KI): {vorschlag_text}")
-            lines.append(f"  Final (gedeckelt): {final_text}")
-            if signal.hebel_korrektur_hinweis:
-                lines.append(f"  Hinweis: {signal.hebel_korrektur_hinweis}")
-            lines.append("")
+        if signal.gegenargument:
+            lines.append(f"\nGegenargument (stärkster Einwand gegen diese Empfehlung):\n{signal.gegenargument}")
 
         if (
             signal.entry_usd_von is not None
             or signal.stop_loss_usd_von is not None
             or signal.take_profit_usd_von is not None
         ):
-            lines.append("ENTRY / STOP-LOSS / TAKE-PROFIT-ZONE (USD | EUR)")
+            lines.append("\nEntry / Stop-Loss / Take-Profit-Zone (USD | EUR):")
             lines.append(
                 f"  Entry:        {format_money(signal.entry_usd_von)}–{format_money(signal.entry_usd_bis)} | "
                 f"{format_money(signal.entry_eur_von)}–{format_money(signal.entry_eur_bis)}"
@@ -386,32 +410,9 @@ class HebelView(ttk.Frame):
                 f"  Take-Profit:  {format_money(signal.take_profit_usd_von)}–{format_money(signal.take_profit_usd_bis)} | "
                 f"{format_money(signal.take_profit_eur_von)}–{format_money(signal.take_profit_eur_bis)}"
             )
-            lines.append("")
-
-        if (
-            signal.liquidationspreis_geschaetzt_usd is not None
-            or signal.eigenkapitalbedarf_usd is not None
-            or signal.hebel_senkung_eigenkapital_nachschuss_eur is not None
-        ):
-            lines.append("RISIKO-KENNZAHLEN")
-            if signal.liquidationspreis_geschaetzt_usd is not None:
-                lines.append(
-                    f"  Geschätzter Liquidationspreis: {format_money(signal.liquidationspreis_geschaetzt_usd)} USD"
-                )
-            if signal.eigenkapitalbedarf_usd is not None:
-                lines.append(f"  Eigenkapitalbedarf: {format_money(signal.eigenkapitalbedarf_usd)} USD")
-            if signal.hebel_senkung_eigenkapital_nachschuss_eur is not None:
-                lines.append(
-                    f"  Eigenkapital-Nachschuss für Hebel-Senkung: "
-                    f"{format_money(signal.hebel_senkung_eigenkapital_nachschuss_eur)} EUR"
-                )
-            lines.append("")
-
-        if signal.ausfuehrbarkeit_hinweis:
-            lines.append(f"AUSFÜHRBARKEIT\n{signal.ausfuehrbarkeit_hinweis}\n")
 
         if signal.halte_kriterium_bucket:
-            lines.append("HALTE-KRITERIUM")
+            lines.append("\nHalte-Kriterium:")
             lines.append(f"  Grobe Einordnung: {signal.halte_kriterium_bucket}")
             if signal.halte_kriterium_ziel_preis_usd or signal.halte_kriterium_ziel_preis_eur:
                 lines.append(
@@ -424,23 +425,31 @@ class HebelView(ttk.Frame):
                 lines.append(f"  Bedingung: {signal.halte_kriterium_bedingung_text}")
             if signal.halte_kriterium_reasoning:
                 lines.append(f"  Begründung: {signal.halte_kriterium_reasoning}")
-            lines.append("")
 
         if signal.key_risks_text:
-            lines.append("WICHTIGSTE RISIKEN")
+            lines.append("\nWichtigste Risiken:")
             for risk in signal.key_risks_text.split("\n"):
                 lines.append(f"  • {risk}")
-            lines.append("")
 
         if signal.forecast_bull_text or signal.forecast_base_text or signal.forecast_bear_text:
-            lines.append("FORECAST-SZENARIEN")
+            lines.append("\nForecast-Szenarien:")
             if signal.forecast_bull_text:
                 lines.append(f"  Bull ({signal.forecast_bull_prob_pct}%): {signal.forecast_bull_text}")
             if signal.forecast_base_text:
                 lines.append(f"  Base ({signal.forecast_base_prob_pct}%): {signal.forecast_base_text}")
             if signal.forecast_bear_text:
                 lines.append(f"  Bear ({signal.forecast_bear_prob_pct}%): {signal.forecast_bear_text}")
-            lines.append("")
+        lines.append("")
+
+        # Abschnitt 3 (NEU, 2026-07-19): deterministische Risikofaktoren-Liste,
+        # bewusst NICHT vom LLM generiert - siehe agent/krypto/hebel_risk_gate.py::
+        # compute_risikofaktoren_hebel()-Docstring (echter AVAX-Fund als Ausloeser).
+        lines.append("--- 3. KONKLUSION (RISIKOFAKTOREN) ---")
+        risikofaktoren_lines = format_risikofaktoren_lines(signal.risikofaktoren_json)
+        if risikofaktoren_lines:
+            lines.extend(risikofaktoren_lines)
+        else:
+            lines.append("Keine strukturierten Risikofaktoren verfügbar.")
 
         self._set_detail_text("\n".join(lines))
 

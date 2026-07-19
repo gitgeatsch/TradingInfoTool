@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from agent.krypto.anticyclic import LONG_BIAS_EXTREME_THRESHOLD_PCT
 from agent.krypto.risk_gate import CRV_MINIMUM
 
 RICHTUNG_LONG = "LONG"
@@ -25,6 +26,164 @@ RICHTUNG_SHORT = "SHORT"
 ZWEIG_KONTRA = "kontra"
 
 _HEBEL_ACTIONS_MIT_HEBEL = ("ERÖFFNEN", "NACHKAUFEN", "HEBEL_ERHÖHEN")
+
+
+def regime_konflikt_hebel(regime: str, richtung: str) -> bool:
+    """Position widerspricht dem aktuellen Regime (z.B. LONG im baer-Regime).
+    Als eigene Funktion extrahiert (2026-07-19), damit sowohl der Hebel-Deckel
+    als auch die Risikofaktoren-Anzeige (compute_risikofaktoren_hebel()) auf
+    exakt derselben Bedingung basieren - keine zwei Stellen, die driften
+    koennten."""
+    return (regime == "baer" and richtung == RICHTUNG_LONG) or (regime == "bulle" and richtung == RICHTUNG_SHORT)
+
+
+def retail_konsens_risiko(
+    retail_long_bias_extreme: bool | None, long_account_pct: float | None, richtung: str,
+) -> bool:
+    """2026-07-19, echter AVAX-Fund (siehe post_check_hebel()-Docstring):
+    True, wenn die empfohlene Richtung mit der extremen Mehrheits-
+    positionierung der Retail-Trader uebereinstimmt, statt (antizyklisch
+    korrekt) dagegen zu wetten. Symmetrisch zu anticyclic.py::
+    LONG_BIAS_EXTREME_THRESHOLD_PCT (65%) - bei SHORT gilt die Crowd als "im
+    Konsens", wenn <= 35% der Konten long sind (also >= 65% short)."""
+    if retail_long_bias_extreme and richtung == RICHTUNG_LONG:
+        return True
+    if (
+        long_account_pct is not None
+        and long_account_pct <= (100 - LONG_BIAS_EXTREME_THRESHOLD_PCT)
+        and richtung == RICHTUNG_SHORT
+    ):
+        return True
+    return False
+
+
+def these_regime_widerspruch(trade_thesis_typ: str | None, regime_konflikt: bool) -> bool:
+    """2026-07-19, echter VIRTUAL/AVAX-Fund: `trade_thesis_typ == 'swing_strategie'`
+    bedeutet laut SYSTEM_PROMPT ein "bestaetigter, noch nicht ausgereizter
+    Trend" - das widerspricht sich mit einem gleichzeitigen Regime-Konflikt
+    (die Position ist per Definition ein Gegen-Trend-Setup). Reine
+    Sichtbarmachungs-Inkonsistenz, KEIN Hebel-Deckel (es gibt keine saubere
+    numerische Dimension dafuer) - taucht nur in der Risikofaktoren-Liste auf."""
+    return trade_thesis_typ == "swing_strategie" and regime_konflikt
+
+
+@dataclass
+class Risikofaktor:
+    name: str
+    bewertung: str  # "positiv" | "neutral" | "negativ"
+    begruendung: str
+
+
+def compute_risikofaktoren_hebel(
+    *, richtung: str, regime: str, confidence_pct: float | None,
+    crv: float | None, confluence=None,
+    gegenszenario_pct: float | None, gegenszenario_schwelle: float | None,
+    crv_knapp_schwelle_relativ: float | None,
+    retail_long_bias_extreme: bool | None, long_account_pct: float | None,
+    trade_thesis_typ: str | None,
+    hebel_erlaubt: bool = True, veto_reason: str | None = None,
+) -> list["Risikofaktor"]:
+    """2026-07-19 (Nutzer-Wunsch: E-Mail/App-Neustrukturierung in 3 Abschnitte -
+    Mathematisch berechnet / LLM-Bewertung / Konklusion mit Risikofaktoren).
+    Deterministische Zusammenfassung aller bereits vorhandenen Deckel-/
+    Konsistenz-Checks in eine kompakte positiv/neutral/negativ-Liste fuer
+    Abschnitt 3 - bewusst NICHT vom LLM generiert (genau das war beim
+    AVAX-Fund das eigentliche Problem: das Modell selbst hatte einen
+    Interpretationsfehler). Nutzt dieselben Pruef-Funktionen wie die
+    eigentliche Hebel-Deckelung (regime_konflikt_hebel(), retail_konsens_
+    risiko(), these_regime_widerspruch()) - keine zweite, potenziell
+    driftende Implementierung derselben Bedingungen."""
+    faktoren: list[Risikofaktor] = []
+
+    if not hebel_erlaubt:
+        faktoren.append(Risikofaktor("Hebel-Veto", "negativ", veto_reason or "Hebel nicht erlaubt."))
+        return faktoren
+
+    regime_konflikt = regime_konflikt_hebel(regime, richtung)
+    if regime_konflikt:
+        faktoren.append(Risikofaktor(
+            "Regime-Konflikt", "negativ",
+            f"Position ({richtung}) widerspricht dem aktuellen {regime}-Regime.",
+        ))
+    else:
+        faktoren.append(Risikofaktor(
+            "Regime-Ausrichtung", "positiv",
+            f"Position ({richtung}) folgt dem aktuellen {regime}-Regime, kein Gegen-Trend-Setup.",
+        ))
+
+    if these_regime_widerspruch(trade_thesis_typ, regime_konflikt):
+        faktoren.append(Risikofaktor(
+            "These-Regime-Widerspruch", "negativ",
+            "Als 'bestätigter Trend' (swing_strategie) eingestuft, obwohl die Position "
+            "gleichzeitig dem Regime widerspricht - innerer Widerspruch in der Klassifikation.",
+        ))
+
+    if gegenszenario_pct is not None and gegenszenario_schwelle is not None:
+        if gegenszenario_pct >= gegenszenario_schwelle:
+            faktoren.append(Risikofaktor(
+                f"Gegenszenario-Wahrscheinlichkeit {gegenszenario_pct:.0f}%", "negativ",
+                f"Modell schätzt die Wahrscheinlichkeit für das Gegenszenario hoch ein "
+                f"(>= Schwelle {gegenszenario_schwelle:.0f}%).",
+            ))
+        else:
+            faktoren.append(Risikofaktor(
+                f"Gegenszenario-Wahrscheinlichkeit {gegenszenario_pct:.0f}%", "positiv",
+                f"Modell schätzt das Gegenszenario als eher unwahrscheinlich ein "
+                f"(< Schwelle {gegenszenario_schwelle:.0f}%).",
+            ))
+
+    if confluence is not None:
+        if confluence.overall_bias == "gemischt":
+            faktoren.append(Risikofaktor(
+                "Technische Konfluenz", "negativ",
+                "Technische Indikatoren widersprechen sich (weder bullish noch bearish dominiert).",
+            ))
+        else:
+            faktoren.append(Risikofaktor(
+                "Technische Konfluenz", "positiv",
+                f"Technische Indikatoren zeigen eine eindeutige Tendenz ({confluence.overall_bias}).",
+            ))
+
+    if crv is not None:
+        if crv_knapp_schwelle_relativ is not None and crv < CRV_MINIMUM * (1 + crv_knapp_schwelle_relativ):
+            faktoren.append(Risikofaktor(
+                f"CRV {crv:.2f}", "negativ",
+                f"Chance-Risiko-Verhältnis liegt nur knapp über dem Minimum ({CRV_MINIMUM:.1f}).",
+            ))
+        elif crv >= CRV_MINIMUM * 1.5:
+            faktoren.append(Risikofaktor(
+                f"CRV {crv:.2f}", "positiv",
+                f"Chance-Risiko-Verhältnis liegt deutlich über dem Minimum ({CRV_MINIMUM:.1f}).",
+            ))
+        else:
+            faktoren.append(Risikofaktor(
+                f"CRV {crv:.2f}", "neutral", "Solide über dem Minimum, aber nicht herausragend.",
+            ))
+
+    if retail_konsens_risiko(retail_long_bias_extreme, long_account_pct, richtung):
+        faktoren.append(Risikofaktor(
+            "Retail-Konsens-Risiko", "negativ",
+            f"Empfohlene Richtung ({richtung}) stimmt mit der extremen Mehrheitspositionierung "
+            "der Retail-Trader überein - antizyklisch betrachtet ein Kontraindikator, keine Stütze.",
+        ))
+    elif long_account_pct is not None:
+        faktoren.append(Risikofaktor(
+            "Retail-Konsens-Risiko", "positiv",
+            f"Empfohlene Richtung ({richtung}) steht NICHT im Konsens mit der Retail-Mehrheit "
+            f"({long_account_pct:.0f}% long positioniert).",
+        ))
+
+    if confidence_pct is not None:
+        if confidence_pct < 55:
+            faktoren.append(Risikofaktor(
+                f"Konfidenz {confidence_pct:.0f}%", "negativ", "Niedrige Konfidenz für eine gehebelte Position.",
+            ))
+        elif confidence_pct >= 70:
+            faktoren.append(Risikofaktor(f"Konfidenz {confidence_pct:.0f}%", "positiv", "Hohe Konfidenz."))
+        else:
+            faktoren.append(Risikofaktor(f"Konfidenz {confidence_pct:.0f}%", "neutral", "Mittlere Konfidenz."))
+
+    return faktoren
 
 
 def estimate_liquidation_price(
@@ -49,16 +208,29 @@ def estimate_liquidation_price(
     (Long, Tag 0) den echten Bitpanda-Wert fast exakt (6,3505 vs. real 6,3515).
 
     Fix: `sicherheitsmarge_relativ` (config risiko.hebel.liquidations_
-    sicherheitsmarge_relativ, aktuell 0.175 - bisher nur in max_safe_hebel()
-    verwendet) wird jetzt als Naeherung fuer diese Wartungsmarge auch hier
-    eingerechnet, indem der komplette Hebel-Abstand-Term durch (1 -
+    sicherheitsmarge_relativ) wird als Naeherung fuer diese Wartungsmarge auch
+    hier eingerechnet, indem der komplette Hebel-Abstand-Term durch (1 -
     sicherheitsmarge_relativ) geteilt wird (Long) bzw. durch (1 +
     sicherheitsmarge_relativ) (Short) - mathematisch hergeleitet aus Eigen-
     kapital(t)/Positionswert(t) = Wartungsmarge bei Liquidation, nicht nur
-    eine multiplikative Naeherung. Da der konfigurierte Wert (17,5%) groesser
-    ist als die empirisch beobachtete echte Marge (~6,5%), bleibt die Schaetzung
-    bewusst UEBERKONSERVATIV (zeigt Liquidation noch etwas frueher an, als der
-    eine beobachtete Realfall nahelegt) - passend zur dokumentierten Absicht.
+    eine multiplikative Naeherung.
+
+    2026-07-19 NEU KALIBRIERT (Nutzer-Fund: "Liquidationspreis auf ein
+    realistisches Niveau bringen, ist u.U. zu restriktiv"): der bisherige
+    Config-Wert (17,5%, "Mittelwert einer 15-20%-Spanne") hatte KEINE echte
+    Quelle. Jetzt hergeleitet aus Bitpandas offizieller Doku (Bitpanda
+    Helpdesk: Margin Level = Positionswert / Kreditbetrag, Liquidation bei
+    Margin Level < ~105-110% - mathematisch aequivalent zu sicherheitsmarge_
+    relativ = 1 - 1/Schwelle, also 4,76%-9,09%) UND gegen 4 echte rekonstruierte
+    Liquidationsfaelle geprueft (LINK/TAO/TAO/SUI aus der Bitpanda-Transaktions-
+    historie, siehe importer/bitpanda_margin_positions.py) - 2 davon (SUI, TAO
+    id=87) mit ruhigem statt Crash-Kursverlauf am Schliesstag erlaubten eine
+    praezise Rueckrechnung: implizierte Marge 6,75% (SUI) bzw. 8,4% (TAO). Neuer
+    Config-Wert 0.09 liegt knapp ueber dem hoechsten real beobachteten Wert -
+    bewusst weiterhin ein kleiner Sicherheitspuffer, aber kein 2x-Overkill mehr
+    wie die alten 17,5%. Volle Herleitung: Regelwerksmanual.md, Nachtrag
+    2026-07-19 "Liquidationspreis-Sicherheitsmarge neu kalibriert".
+
     Default 0.0 (kein Puffer, altes Verhalten) fuer Rueckwaertskompatibilitaet,
     falls kein Wert uebergeben wird."""
     zeit_faktor = days_held * (funding_rate_daily_pct / 100)
@@ -140,6 +312,7 @@ def pre_check_hebel(
 
 def post_check_hebel(
     parsed: dict, pre_result: HebelPreCheckResult, regime_result, config: dict, confluence=None,
+    retail_long_bias_extreme: bool | None = None, long_account_pct: float | None = None,
 ) -> dict:
     """Nimmt die bereits schema-validierte LLM-Antwort und erzwingt AZ-7/RM-1/
     RM-11/CRV noch einmal deterministisch, analog risk_gate.py::post_check().
@@ -159,10 +332,23 @@ def post_check_hebel(
     Nachtrag 2026-07-18 (echter CAT-Fall, Spot-Pendant): zwei WEITERE Deckel-
     Kandidaten - widerspruechliche technische Konfluenz (`confluence`,
     optional) und CRV knapp am Minimum (`crv`, siehe unten in
-    `_hebel_deckel_kandidaten()`)."""
+    `_hebel_deckel_kandidaten()`).
+
+    Nachtrag 2026-07-19 (echter AVAX-Fund, gemeinsame E-Mail-Durchsicht):
+    `retail_long_bias_extreme`/`long_account_pct` (optional, aus
+    `AnticyclicContext`) - fuenfter Deckel-Kandidat "Retail-Konsens-Risiko".
+    Auslöser: ein Signal begruendete LONG u.a. mit "Retail-Bias extrem long,
+    was fuer eine Gegenbewegung spricht" - eine antizyklische Beobachtung, die
+    LOGISCH GEGEN die empfohlene Richtung spricht (extreme Mehrheitsposition
+    IN einer Richtung ist ein Kontraindikator GEGEN diese Richtung, nicht
+    dafuer), aber trotzdem zur Stuetzung von LONG verwendet wurde. Der
+    SYSTEM_PROMPT (hebel_analyst.py) wurde entsprechend ergaenzt, aber wie bei
+    allen anderen Deckeln gilt: nie blind auf Prompt-Befolgung vertrauen,
+    deshalb zusaetzlich hier deterministisch erzwungen."""
     result = dict(parsed)
     risk_veto = False
     risk_veto_reason = None
+    crv: float | None = None
     action = str(result.get("action", "")).upper()
     richtung = str(result.get("richtung", "")).upper()
     hebel_cfg = config["risiko"]["hebel"]
@@ -182,10 +368,7 @@ def post_check_hebel(
         if pre_result.max_sicherer_hebel is not None:
             kandidaten.append(("RM-11 max. sicherer Hebel", pre_result.max_sicherer_hebel))
 
-        regime_konflikt = (
-            (regime_result.regime == "baer" and richtung == RICHTUNG_LONG)
-            or (regime_result.regime == "bulle" and richtung == RICHTUNG_SHORT)
-        )
+        regime_konflikt = regime_konflikt_hebel(regime_result.regime, richtung)
         if regime_konflikt:
             kandidaten.append(("Regime-Richtungs-Konflikt", hebel_cfg["regime_konflikt_hebel_deckel"]))
 
@@ -216,6 +399,15 @@ def post_check_hebel(
             and crv < CRV_MINIMUM * (1 + crv_knapp_schwelle_relativ)
         ):
             kandidaten.append((f"CRV knapp am Minimum ({crv:.2f})", hebel_cfg["crv_knapp_hebel_deckel"]))
+
+        # Nachtrag 2026-07-19 (echter AVAX-Fund): Retail-Konsens-Risiko - die
+        # empfohlene Richtung stimmt mit der extremen Mehrheitspositionierung
+        # der Retail-Trader ueberein, statt (wie antizyklisch korrekt) dagegen
+        # zu wetten. Symmetrische Schwelle zu anticyclic.py::
+        # LONG_BIAS_EXTREME_THRESHOLD_PCT (65%) - bei SHORT ist die Crowd
+        # "im Konsens", wenn <= 35% der Konten long sind (also >= 65% short).
+        if retail_konsens_risiko(retail_long_bias_extreme, long_account_pct, richtung):
+            kandidaten.append(("Retail-Konsens-Risiko", hebel_cfg["retail_konsens_hebel_deckel"]))
 
         return kandidaten
 
@@ -302,4 +494,33 @@ def post_check_hebel(
     result["action"] = action
     result["_risk_veto"] = risk_veto
     result["_risk_veto_reason"] = risk_veto_reason
+
+    # Risikofaktoren-Liste (2026-07-19, Abschnitt 3 der neuen E-Mail-/App-
+    # Struktur) - dieselben Werte wie oben in _hebel_deckel_kandidaten()
+    # verwendet, hier nur zur Anzeige zusammengefasst statt zur Hebel-
+    # Deckelung. forecast/gegenszenario_pct hier bewusst NEU aus `result`
+    # gelesen statt aus der Closure exportiert - _hebel_deckel_kandidaten()
+    # bleibt dadurch unveraendert (kein Regressionsrisiko fuer die bereits
+    # verifizierte Deckel-Logik).
+    forecast = result.get("forecast") or {}
+    gegenszenario_feld = "bear" if richtung == RICHTUNG_LONG else "bull"
+    gegenszenario_pct = (forecast.get(gegenszenario_feld) or {}).get("probability_pct")
+    risikofaktoren = compute_risikofaktoren_hebel(
+        richtung=richtung,
+        regime=regime_result.regime,
+        confidence_pct=result.get("confidence_pct"),
+        crv=crv,
+        confluence=confluence,
+        gegenszenario_pct=gegenszenario_pct,
+        gegenszenario_schwelle=hebel_cfg.get("gegenszenario_wahrscheinlichkeit_schwelle_prozent"),
+        crv_knapp_schwelle_relativ=hebel_cfg.get("crv_knapp_schwelle_relativ"),
+        retail_long_bias_extreme=retail_long_bias_extreme,
+        long_account_pct=long_account_pct,
+        trade_thesis_typ=result.get("trade_thesis_typ"),
+        hebel_erlaubt=pre_result.hebel_erlaubt,
+        veto_reason=pre_result.veto_reason,
+    )
+    result["_risikofaktoren"] = [
+        {"name": f.name, "bewertung": f.bewertung, "begruendung": f.begruendung} for f in risikofaktoren
+    ]
     return result

@@ -55,7 +55,10 @@ _WATCHLIST_COLUMN_DESCRIPTIONS = {
         "Trendfolge-/Kontra-Scoring, ggf. LLM-Call). Aus = kein neuer Hebel-Trigger für "
         "dieses Asset mehr, taucht nicht mehr als neuer Kandidat im Hebel-Tab auf. Bereits "
         "offene Hebel-Positionen bleiben davon unberührt und weiterhin risikoüberwacht. "
-        "Nur für Krypto-Assets relevant."
+        "Nur für Krypto-Assets relevant. ⚠ = liefert seit mehreren Läufen in Folge von "
+        "keiner der drei Börsen (Binance/Bybit/OKX) Open-Interest-Daten (siehe E-Mail-"
+        "Warnung) - Hebel-Prüfung läuft technisch weiter, aber ohne OI-/Long-Short-"
+        "Kontext; kein automatisches Abschalten."
     ),
     "price_usd": "Aktueller Marktpreis pro Einheit in US-Dollar.",
     "price_eur": "Aktueller Marktpreis pro Einheit in Euro.",
@@ -326,6 +329,15 @@ class TradingInfoToolApp(tk.Tk):
                 for a in self._watchlist
                 if a.assetklasse == "krypto" and not a.ist_cash_aequivalent
             }
+            # OI-Abdeckungs-Warnung (2026-07-19, echter Notebook-Fund KAS/KAIA/
+            # FLOKI/TURBO/CANTON) - sichtbare Markierung, wenn ein Symbol
+            # wiederholt keine Open-Interest-Daten liefert (siehe
+            # scheduler/background.py::_pruefe_oi_abdeckung_warnung()).
+            import config as config_module
+
+            hebel_cfg = config_module.load_config().get("hebel_screening", {})
+            oi_schwelle = hebel_cfg.get("oi_abdeckung_schwelle_fehlschlaege", 8)
+            oi_abdeckung_status = db.get_oi_abdeckung_status(conn)
             # Klassifikations-Redesign (2026-07-16): "gehalten" ist kein
             # gespeichertes Feld mehr, sondern wird live aus den echten
             # Bestaenden (Spot) UND offenen Hebel-Positionen abgeleitet - kann
@@ -396,6 +408,9 @@ class TradingInfoToolApp(tk.Tk):
             # Hebel-Pruefung-Toggle (2026-07-18) - fuer alle Krypto-Assets.
             if asset.symbol in hebel_pruefung_erlaubt_by_symbol:
                 hebel_pruefung_text = "An" if hebel_pruefung_erlaubt_by_symbol[asset.symbol] else "Aus"
+                oi_eintrag = oi_abdeckung_status.get(asset.symbol)
+                if oi_eintrag and oi_eintrag.get("konsekutive_fehlschlaege", 0) >= oi_schwelle:
+                    hebel_pruefung_text += " ⚠"
             else:
                 hebel_pruefung_text = "-"
 

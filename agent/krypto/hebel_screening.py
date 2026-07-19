@@ -49,13 +49,20 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def fetch_and_store_oi_snapshot(conn, asset, kraken_client) -> None:
+def fetch_and_store_oi_snapshot(conn, asset, kraken_client) -> bool:
     """Ruft OI (Binance/Bybit/OKX) + Long-Konten-Anteil (Binance) + Funding-Rate
     (Kraken) fuer ein Asset ab und speichert je Boerse einen Snapshot. Jede Quelle
     einzeln try/except (P-10-Isolation, identisches Muster wie anticyclic.py::
-    assess()) - ein Fehlschlag bei einer Boerse blockiert die anderen nicht."""
+    assess()) - ein Fehlschlag bei einer Boerse blockiert die anderen nicht.
+
+    Gibt zurueck, ob MINDESTENS eine der drei OI-Boersen (Binance/Bybit/OKX)
+    erfolgreich war (2026-07-19, echter Notebook-Fund: KAS/KAIA/FLOKI/TURBO/
+    CANTON scheiterten wiederholt bei ALLEN dreien - der Aufrufer nutzt das,
+    um einen persistenten Fehlschlag-Zaehler je Symbol zu pflegen, siehe
+    db.record_oi_abdeckung_ergebnis())."""
     binance_symbol = f"{asset.symbol}USDT"
     fetched_at = _now_iso()
+    mindestens_eine_boerse_erfolgreich = False
 
     funding_rate = None
     futures_symbol = KRAKEN_FUTURES_SYMBOL_MAP.get(asset.symbol)
@@ -82,6 +89,7 @@ def fetch_and_store_oi_snapshot(conn, asset, kraken_client) -> None:
             open_interest_usd=oi.open_interest_usd, funding_rate=funding_rate,
             long_account_pct=long_account_pct, fetched_at=fetched_at,
         ))
+        mindestens_eine_boerse_erfolgreich = True
     except Exception as exc:
         logger.info("Binance-Open-Interest-Abruf fuer %s fehlgeschlagen: %s", binance_symbol, exc)
 
@@ -92,6 +100,7 @@ def fetch_and_store_oi_snapshot(conn, asset, kraken_client) -> None:
             open_interest_usd=oi.open_interest_usd, funding_rate=funding_rate,
             long_account_pct=long_account_pct, fetched_at=fetched_at,
         ))
+        mindestens_eine_boerse_erfolgreich = True
     except Exception as exc:
         logger.info("Bybit-Open-Interest-Abruf fuer %s fehlgeschlagen: %s", binance_symbol, exc)
 
@@ -102,8 +111,11 @@ def fetch_and_store_oi_snapshot(conn, asset, kraken_client) -> None:
             open_interest_usd=oi.open_interest_usd, funding_rate=funding_rate,
             long_account_pct=long_account_pct, fetched_at=fetched_at,
         ))
+        mindestens_eine_boerse_erfolgreich = True
     except Exception as exc:
         logger.info("OKX-Open-Interest-Abruf fuer %s fehlgeschlagen: %s", asset.symbol, exc)
+
+    return mindestens_eine_boerse_erfolgreich
 
 
 def compute_oi_change_pct(conn, symbol: str, exchange: str, lookback_hours: float) -> float | None:
@@ -269,7 +281,13 @@ def run_hebel_screening(
         # unabhaengig vom Toggle weiter risikoueberwacht.
         krypto_assets = [a for a in krypto_assets if db.get_hebel_pruefung_erlaubt(conn, a.symbol)]
         for asset in krypto_assets:
-            fetch_and_store_oi_snapshot(conn, asset, kraken_client)
+            erfolg = fetch_and_store_oi_snapshot(conn, asset, kraken_client)
+            # OI-Abdeckungs-Tracking (2026-07-19, siehe db.record_oi_abdeckung_
+            # ergebnis()-Docstring) - persistenter Zaehler je Symbol, unabhaengig
+            # von diesem einzelnen Lauf, damit scheduler/background.py::
+            # hebel_screening_job() spaeter erkennen kann, welche Symbole
+            # dauerhaft (nicht nur diesen einen Lauf) betroffen sind.
+            db.record_oi_abdeckung_ergebnis(conn, asset.symbol, erfolg)
 
         for asset in krypto_assets:
             oi_change_pct = compute_oi_change_pct(conn, asset.symbol, "binance", cfg["oi_lookback_stunden"])

@@ -42,8 +42,9 @@ logger = logging.getLogger(__name__)
 class _YfinanceKnownThinTickerFilter(logging.Filter):
     """Unterdrueckt NUR die bereits bestaetigten 'possibly delisted'-Meldungen
     fuer die bekannten duenn gehandelten Ticker (2026-07-16, Notebook-Log-
-    Analyse: 2.637 ERROR-Zeilen ueber 4 Tage, ausschliesslich diese 5 Ticker -
-    siehe api/yfinance_client.py::YFINANCE_HISTORY_UNRELIABLE_TICKERS). Kein
+    Analyse: 2.637 ERROR-Zeilen ueber 4 Tage; 2026-07-19 um X136.BE/IS0C.DE
+    ergaenzt, gleiches Muster - siehe
+    api/yfinance_client.py::YFINANCE_HISTORY_UNRELIABLE_TICKERS). Kein
     Fehler in unserem Code (fast_info liefert trotzdem einen Kurs), aber
     massives Log-Rauschen bei jedem Preis-Refresh-Zyklus. Bewusst NICHT
     pauschal jede 'possibly delisted'-Meldung unterdrueckt (P-10) - ein

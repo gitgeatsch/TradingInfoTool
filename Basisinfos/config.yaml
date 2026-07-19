@@ -123,14 +123,20 @@ risiko:
                                         # docs/hebel_positionsformel.md
     liquidationspreis_ausweisen: true  # RM-11 - nur Schaetzung, Bitpanda-Formel nicht
                                         # oeffentlich, siehe docs/hebel_positionsformel.md
-    liquidations_sicherheitsmarge_relativ: 0.175  # RM-11, Mittelwert 15-20%-Spanne, [OFFEN].
-                                        # Seit 2026-07-16 NICHT mehr nur fuer max_safe_hebel(),
-                                        # sondern auch in estimate_liquidation_price() selbst
-                                        # eingerechnet (echter LINK-Fall zeigte: die Schaetzung
-                                        # war ohne diesen Puffer in die unsichere Richtung
-                                        # verzerrt) - empirisch beobachtete reale Wartungsmarge
-                                        # bei diesem einen Fall war nur ~6,5%, siehe
-                                        # docs/hebel_positionsformel.md.
+    liquidations_sicherheitsmarge_relativ: 0.09  # RM-11 - 2026-07-19 NEU KALIBRIERT (vorher
+                                        # 0.175, ein reiner "Mittelwert einer 15-20%-Spanne"
+                                        # ohne echte Quelle). Jetzt hergeleitet aus Bitpandas
+                                        # offizieller Doku (Margin Level = Positionswert /
+                                        # Kreditbetrag, Liquidation bei ~105-110% -> mathematisch
+                                        # aequivalent zu Marge 4,76%-9,09%) PLUS 4 echten
+                                        # rekonstruierten Liquidationsfaellen (LINK/TAO/TAO/SUI,
+                                        # implizierte Marge 6,5%-8,4%, siehe Regelwerksmanual.md
+                                        # Nachtrag 2026-07-19) - 0.09 liegt knapp ueber dem
+                                        # hoechsten real beobachteten Wert, bewusster kleiner
+                                        # Sicherheitspuffer statt der vorherigen ~2x zu hohen
+                                        # Schaetzung. Wirkt auf estimate_liquidation_price()
+                                        # (angezeigter Wert) UND max_safe_hebel() (RM-11-Deckel
+                                        # fuer empfohlenen Hebel) gleichermassen.
     max_hebel_faellt_regime_krise_extrem_auf_null: true  # AZ-7
     kontra_konservativ_faktor: 0.6  # [OFFEN] AZ-7-Konservativ-Bias NUR fuer Zweig 2
                                     # (Kontra) - daempft max_sicherer_hebel zusaetzlich,
@@ -177,6 +183,13 @@ risiko:
                                         # risiko.crv_knapp_schwelle_relativ (Spot).
     crv_knapp_hebel_deckel: 3.0         # NEU (2026-07-18) - Hebel-Deckel-Kandidat, wenn
                                         # das CRV nur knapp ueber CRV_MINIMUM liegt.
+    retail_konsens_hebel_deckel: 3.0    # NEU (2026-07-19, echter AVAX-Fund) - greift, wenn
+                                        # die empfohlene Richtung mit der extremen Retail-
+                                        # Mehrheitspositionierung uebereinstimmt (>65%/<35%
+                                        # Long-Konten-Anteil, siehe anticyclic.py::
+                                        # LONG_BIAS_EXTREME_THRESHOLD_PCT), statt (antizyklisch
+                                        # korrekt) dagegen zu wetten - siehe hebel_risk_gate.py::
+                                        # retail_konsens_risiko().
 
 # --- Watchlist / Basiswerte (siehe Spezifikation Kap. 4) ---
 # Quelle: Basisinfos/Assets.xlsx (Erstimport Stand 2026-07-01), 41 Assets.
@@ -721,6 +734,21 @@ hebel_screening:
   aktiv: true
   intervall_minuten: 15
   oi_lookback_stunden: 4               # Fenster fuer die OI-%-Aenderung (Trendfolge-Zweig)
+  oi_abdeckung_schwelle_fehlschlaege: 8  # NEU (2026-07-19, echter Notebook-Fund: KAS/KAIA/
+                                        # FLOKI/TURBO/CANTON scheiterten wiederholt bei ALLEN
+                                        # drei Boersen Binance/Bybit/OKX) - ab dieser Anzahl
+                                        # aufeinanderfolgender Laeufe OHNE eine einzige
+                                        # erfolgreiche OI-Abfrage gilt ein Symbol als "OI-Daten
+                                        # dauerhaft nicht verfuegbar" (8 Laeufe a 15 Min ≈ 2 Std,
+                                        # laenger als ein einzelner Netzwerk-Ausrutscher, aber
+                                        # kurz genug, um echte strukturelle Luecken zeitnah zu
+                                        # melden). Fuehrt NICHT zum automatischen Abschalten der
+                                        # Hebel-Pruefung - nur zu einer sichtbaren Warnung
+                                        # (E-Mail + Watchlist-Tab), Entscheidung bleibt beim
+                                        # Nutzer (siehe asset_hebel_settings-Toggle).
+  oi_abdeckung_warnung_cooldown_stunden: 24  # Spam-Schutz: dieselbe Warnung fuer ein bereits
+                                        # bekanntes, weiterhin ungeloestes Symbol hoechstens
+                                        # 1x/Tag, nicht bei jedem 15-Min-Lauf erneut.
   trendfolge:
     oi_aenderung_schwelle_prozent: 3.0       # [OFFEN] Platzhalter, keine OI-Historie zum Kalibrieren vorhanden
     kursaenderung_schwelle_prozent: 2.0       # [OFFEN] angelehnt an Marktscan-Muster

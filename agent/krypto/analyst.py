@@ -159,7 +159,13 @@ schwaechste, jede Zahl 1-5 genau einmal). Jeder Eintrag hat `rang` (1-5), `kateg
 praegnanter Satz). `top_gruende` ist eine RANGIERTE ZUSAMMENFASSUNG der wichtigsten \
 Treiber - sie darf auch fundamentale/makro Gruende enthalten, die nicht Teil der \
 technischen Konfluenz sind. Sie ersetzt NICHT `long_reasoning`, das weiterhin die volle \
-Begruendung je Kategorie enthaelt.
+Begruendung je Kategorie enthaelt. WICHTIG bei der Kategorie `antizyklisch`: ein \
+extremer Retail-Konten-Anteil in EINE Richtung (`antizyklisch.retail_long_bias_extrem`) \
+ist ein KONTRAINDIKATOR GEGEN diese Richtung, nicht dafuer - eine bereits stark in eine \
+Richtung positionierte Mehrheit wird bei einer Gegenbewegung zuerst ausgestoppt. Ein \
+`top_gruende`-Eintrag mit `kategorie: antizyklisch`, der auf Retail-Konsens verweist, \
+darf deshalb NIEMALS dieselbe Richtung wie die eigene `action`-Empfehlung (KAUFEN/\
+NACHKAUFEN) stuetzen.
 16. Entry/Stop-Loss/Take-Profit sind KEINE Einzelkurse mehr, sondern Kurszonen (von <= \
 bis). Leite jede Zone aus echten, gelieferten Referenzpunkten ab \
 (`technische_analyse.atr.wert`, `technische_analyse.support_resistance`, \
