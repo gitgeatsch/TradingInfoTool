@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from datetime import datetime, timezone
 
 import numpy as np
@@ -198,6 +199,21 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
         except Exception as exc:
             logger.info("SEC-EDGAR-Insider-Trading-Abruf fuer %s fehlgeschlagen (degradiert auf None): %s", asset.symbol, exc)
 
+    # Finnhub Analysten-Trend (2026-07-19, Datenquellen-Recherche-Nachfolger) -
+    # ergaenzt fundamentaldaten.analysten_konsens (yfinance-Momentanwert) um eine
+    # Verlaufskomponente (aktuellster vs. Vormonat). Optional (P-8, kein Key ->
+    # None), eigener try/except (P-10).
+    analysten_trend_finnhub = None
+    finnhub_api_key = os.environ.get("FINNHUB_API_KEY")
+    if asset.yfinance_symbol and finnhub_api_key:
+        try:
+            from api.finnhub import get_recommendation_trends, summarize_recommendation_trend
+
+            trends = get_recommendation_trends(asset.yfinance_symbol, finnhub_api_key)
+            analysten_trend_finnhub = summarize_recommendation_trend(trends)
+        except Exception as exc:
+            logger.info("Finnhub-Analysten-Trend-Abruf fuer %s fehlgeschlagen (degradiert auf None): %s", asset.symbol, exc)
+
     holdings = {h.symbol: h for h in db.get_all_holdings(conn)}
     price_age_minutes = None
     if price_snap is not None:
@@ -222,6 +238,7 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
         historischer_makro_vergleich=historischer_makro_vergleich,
         letztes_signal=letztes_signal,
         insider_trading=insider_trading,
+        analysten_trend_finnhub=analysten_trend_finnhub,
     )
 
     try:

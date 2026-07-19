@@ -189,6 +189,42 @@ def _fetch_makro_ueberlagerung(fred_api_key: str | None) -> dict | None:
     return werte
 
 
+def _fetch_lagerbestaende(symbol: str, eia_api_key: str | None) -> dict | None:
+    """EIA-Erdgas-Lagerbestandsdaten (2026-07-19, Datenquellen-Recherche-
+    Nachfolger, siehe Regelwerksmanual-Nachtrag) - NUR fuer OD7L (Erdgas),
+    da EIAs Weekly Natural Gas Storage Report kein Gold-/Silber-/Kupfer-
+    Aequivalent hat. Optional (P-8, kein Key -> None statt Fehler)."""
+    if symbol != "OD7L" or not eia_api_key:
+        return None
+    try:
+        from api.eia import get_natural_gas_storage_history
+
+        readings = get_natural_gas_storage_history(eia_api_key, n_weeks=8)
+    except Exception as exc:
+        logger.info("EIA-Erdgas-Lagerbestand-Abruf fehlgeschlagen: %s", exc)
+        return None
+    if not readings:
+        return None
+    letzter = readings[-1]
+    return {
+        "letzter_wert_bcf": letzter.value_bcf,
+        "letztes_datum": letzter.date,
+        "letzte_woechentliche_aenderung_bcf": letzter.net_change_bcf,
+        "verlauf_8_wochen": [
+            {"datum": r.date, "wert_bcf": r.value_bcf, "aenderung_bcf": r.net_change_bcf} for r in readings
+        ],
+        "hinweis": (
+            "Lower-48-Erdgaslagerbestand (EIA Weekly Natural Gas Storage Report, "
+            "Bcf = Milliarden Kubikfuss). Ein 'Build' (positive Aenderung) staerkt "
+            "das Angebot (tendenziell preisdaempfend), ein 'Draw' (negative "
+            "Aenderung) verknappt es (tendenziell preisstuetzend) - relevant NUR im "
+            "Vergleich zur JAHRESZEITLICHEN Norm (Sommer/Winter-Heizbedarf), nicht "
+            "als absoluter Wert. Kein historischer 5-Jahres-Durchschnitt verfuegbar "
+            "(noch nicht implementiert) - formuliere entsprechend vorsichtig."
+        ),
+    }
+
+
 def _fetch_positionierung(symbol: str) -> dict | None:
     """CFTC-COT-Positionierung (Managed Money) - siehe api/cftc_cot.py. Gibt None
     zurueck bei unbekanntem Symbol oder Abruf-Fehlschlag (P-10)."""
@@ -298,6 +334,8 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
     fred_api_key = os.environ.get("FRED_API_KEY")
     makro_ueberlagerung = _fetch_makro_ueberlagerung(fred_api_key)
     positionierung = _fetch_positionierung(asset.symbol)
+    eia_api_key = os.environ.get("EIA_API_KEY")
+    lagerbestaende = _fetch_lagerbestaende(asset.symbol, eia_api_key)
 
     holdings = {h.symbol: h for h in db.get_all_holdings(conn)}
     price_age_minutes = None
@@ -322,6 +360,7 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
         historische_erfolgsquote=historische_erfolgsquote,
         historischer_makro_vergleich=historischer_makro_vergleich,
         letztes_signal=letztes_signal,
+        lagerbestaende=lagerbestaende,
     )
 
     try:

@@ -194,6 +194,13 @@ negatives - aber Insider-Verkaeufe sind sehr haeufig routinemaessig (Diversifika
 Steuerplanung, vorab geplante 10b5-1-Programme) und NICHT automatisch ein Warnsignal. \
 Formuliere entsprechend vorsichtig, erwaehne es nur, wenn es die Einschaetzung tatsaechlich \
 stuetzt, keine Ueberinterpretation einzelner Transaktionen.
+23. Ist `analysten_trend_finnhub` NICHT null, zeigt es die Verteilung der Analysten- \
+Einstufungen (strong_buy/buy/hold/sell/strong_sell) im aktuellsten Monat UND (falls \
+`vormonat` nicht null ist) im Vormonat. Nutze das primaer fuer eine RICHTUNGS-Aussage - \
+wird der Konsens optimistischer (mehr buy/strong_buy, weniger sell/strong_sell im \
+Vergleich zum Vormonat) oder pessimistischer? Das ist NIEDRIG gewichteter \
+Zusatzkontext (analog `fundamentaldaten.analysten_konsens`, ergaenzt diesen nur um die \
+zeitliche Entwicklung) - eine einzelne Monatsverschiebung ist kein starkes Signal.
 
 SCHEMA:
 {
@@ -288,6 +295,7 @@ def build_facts(
     historischer_makro_vergleich: dict | None = None,
     letztes_signal=None,
     insider_trading: dict | None = None,
+    analysten_trend_finnhub: dict | None = None,
 ) -> dict:
     macd_val = technical_snapshot.macd
     macd_facts = None
@@ -349,6 +357,7 @@ def build_facts(
         "historische_erfolgsquote": historische_erfolgsquote,
         "historischer_makro_vergleich": historischer_makro_vergleich,
         "insider_trading": insider_trading,
+        "analysten_trend_finnhub": analysten_trend_finnhub,
         "fundamentaldaten": {
             "kgv": _native(fundamentals.kgv) if fundamentals else None,
             "forward_kgv": _native(fundamentals.forward_kgv) if fundamentals else None,

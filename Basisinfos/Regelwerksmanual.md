@@ -4771,3 +4771,72 @@ bereits ausgeschöpftem Tageskontingent fehl (429), kein Code-Fehler.
 EDGAR an"):** die weiteren drei Top-5-Empfehlungen (EIA-Energiedaten,
 Finnhub Recommendation-Trends/Earnings-Kalender, FINRA Equity Short
 Interest) bleiben als nächste Kandidaten vorgemerkt, sobald gewünscht.
+
+## Nachtrag (2026-07-19, gleicher Tag): EIA-Erdgas-Lagerbestand + Finnhub-Analysten-Trend
+
+**Auslöser:** direkter Nachfolger obigen Nachtrags - Nutzer bat "Fang mit EIA
+und Finnhub an".
+
+**Wichtiger Unterschied zu FRED/SEC-EDGAR (Ehrlichkeits-Hinweis, P-10):**
+beide neuen Quellen brauchen einen kostenlosen, aber PERSÖNLICHEN API-Key
+(E-Mail-Registrierung), den ich nicht selbst anlegen kann/darf (Accounts
+erstellen ist eine Nutzer-Aktion). Anders als bei FRED/SEC-EDGAR konnte die
+tatsächliche DATEN-Struktur der Antworten deshalb noch NICHT live gegen
+eine echte Antwort verifiziert werden - nur die Endpunkt-ROUTEN selbst
+wurden live bestätigt (EIA: 403 `API_KEY_MISSING` statt 404, Finnhub: 401
+"Please use an API key" statt 404, d.h. beide URLs/Parameter-Strukturen
+existieren tatsächlich). Die konkreten Feld-/Series-Namen basieren auf der
+offiziellen Dokumentation der beiden Anbieter, sind aber bis zur ersten
+echten Antwort als "wahrscheinlich korrekt, noch nicht bestätigt"
+einzustufen - explizit als TODO im jeweiligen Modul-Docstring vermerkt.
+Key-Setup wie gewohnt: `.env.example` + leere Platzhalterzeile in der
+echten `.env` vorbereitet (`EIA_API_KEY`/`FINNHUB_API_KEY`), Nutzer trägt
+den Wert selbst ein (siehe Memory `feedback_key_setup_workflow`).
+
+### EIA-Erdgas-Lagerbestand (nur Rohstoff-Pipeline, nur OD7L)
+
+Schließt die im Rohstoff-Disclaimer bereits dokumentierte Lücke ("EIA-
+Erdgas-Speicher NOCH NICHT einbezogen", siehe Nachtrag "Rohstoff-Pipeline
+Phase 2"). Neue `api/eia.py::get_natural_gas_storage_history()` (Weekly
+Natural Gas Storage Report, Lower 48, Series-ID `NW2_EPG0_SWO_R48_BCF` -
+siehe Vorbehalt oben) liefert die letzten 8 Wochenwerte inkl. Woche-zu-
+Woche-Änderung (Build/Draw). Bewusst KEIN 5-Jahres-Saisonvergleich in
+dieser Runde (würde eine laengere historische Datenbasis + eigene
+Berechnungslogik brauchen) - stattdessen wird dem Modell der 8-Wochen-
+Verlauf mitgegeben und in der neuen Regel 21 (`agent/rohstoff/analyst.py`)
+explizit angewiesen, den Verlaufstrend statt eines Einzelwerts zu nutzen
+und die fehlende Saisonalitäts-Einordnung als Einschränkung zu
+berücksichtigen. `agent/rohstoff/pipeline.py::_fetch_lagerbestaende()` nur
+für `asset.symbol == "OD7L"` aktiv (kein Erdgas-Äquivalent für Gold/
+Silber/Kupfer), Disclaimer-Text in `build_facts()` entsprechend
+aktualisiert.
+
+### Finnhub-Analysten-Trend (nur Aktien-Pipeline)
+
+Bewusst NUR `recommendation-trends` umgesetzt, NICHT der ebenfalls
+empfohlene Earnings-Kalender - wäre redundant mit dem bereits vorhandenen
+`fundamentaldaten.naechstes_earnings_datum` (aus yfinance); zwei
+potenziell abweichende Terminquellen im selben Prompt wären mehr
+Verwirrung als Mehrwert (P-10). Neue `api/finnhub.py::
+get_recommendation_trends()`/`summarize_recommendation_trend()` liefert
+die Analysten-Empfehlungsverteilung (strong_buy/buy/hold/sell/strong_sell)
+des aktuellsten UND des Vormonats - ergänzt den bereits vorhandenen
+`fundamentaldaten.analysten_konsens` (reiner Momentanwert aus yfinance) um
+eine RICHTUNGSKOMPONENTE ("wird der Konsens optimistischer oder
+pessimistischer?"). Neue Regel 23 in `agent/aktien/analyst.py` (niedrig
+gewichtet, analog zu den bestehenden Analysten-Fakten).
+
+**Umgesetzt:** `api/eia.py`, `api/finnhub.py` (neu). `agent/rohstoff/
+pipeline.py`/`agent/rohstoff/analyst.py` (Lagerbestände, Regel 21).
+`agent/aktien/pipeline.py`/`agent/aktien/analyst.py` (Analysten-Trend,
+Regel 23). `.env.example` + `.env`: zwei neue Platzhalter mit
+Registrierungs-Anleitung. `remote/server.py::API_HEALTH_GROUPS` um `eia`/
+`finnhub` ergänzt.
+
+**Verifiziert:** 14 synthetische Tests (EIA-Wochenwerte-Parsing inkl.
+Delta-Berechnung, Rohstoff-Symbol-Filter, Finnhub-Trend-Sortierung +
+Zusammenfassung inkl. Ein-Monats-Edge-Case, JSON-Serialisierbarkeit).
+Modul-Imports fehlerfrei. Endpunkt-Routen live gegen die echten Server
+bestätigt (siehe Vorbehalt oben). **Ausstehend:** echte End-to-End-
+Verifikation mit echten Antwortdaten, sobald der Nutzer die beiden
+kostenlosen Keys angelegt hat.
