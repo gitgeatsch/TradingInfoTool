@@ -16,6 +16,7 @@ from api.gemini import GeminiClient
 from api.history import backfill_all
 from api.groq import GroqClient
 from api.mistral import MistralClient
+from api.zai import ZaiClient
 from api.kraken import KrakenClient
 from api.kraken_history import backfill_all_ohlc
 from api.yfinance_client import YFINANCE_HISTORY_UNRELIABLE_TICKERS
@@ -141,6 +142,20 @@ def main() -> None:
         mistral_client = None
         logger.info("Kein MISTRAL_API_KEY gesetzt - Mistral-Fallback-Stufe deaktiviert.")
 
+    zai_api_key = os.environ.get("ZAI_API_KEY")
+    if zai_api_key:
+        zai_client = ZaiClient(api_key=zai_api_key)
+        logger.info(
+            "Z.ai API-Key gefunden - testweise VOR Mistral eingehaengte Fallback-Stufe im "
+            "Budget-Allocator verfügbar (2026-07-20, unverifizierte Kapazitaet, siehe Memory "
+            "reference_llm_provider_recherche_uebersicht.md)."
+        )
+    else:
+        # P-8: Z.ai ist rein additiv (testweise erste Fallback-Stufe) - ohne Key
+        # bleibt die Kette bei Mistral->Groq->Gemini wie zuvor.
+        zai_client = None
+        logger.info("Kein ZAI_API_KEY gesetzt - Z.ai-Fallback-Stufe deaktiviert.")
+
     gemini_api_key = os.environ.get("GEMINI_API_KEY")
     if gemini_api_key:
         gemini_client = GeminiClient(api_key=gemini_api_key)
@@ -254,6 +269,7 @@ def main() -> None:
         fred_api_key=fred_api_key,
         bitpanda_api_key=bitpanda_api_key,
         mistral_client=mistral_client,
+        zai_client=zai_client,
     )
     bg_scheduler.start()
 
@@ -292,6 +308,7 @@ def main() -> None:
             fred_api_key=fred_api_key,
             bitpanda_api_key=bitpanda_api_key,
             mistral_client=mistral_client,
+            zai_client=zai_client,
         )
     finally:
         bg_scheduler.shutdown(wait=False)

@@ -703,6 +703,17 @@ budget_allocator:
                                         # ~1.000-1.500-Calls/Tag-Kapazitaet (Gemini 3.1 Flash-Lite),
                                         # bewusst am seltensten genutzt (siehe agent/krypto/
                                         # budget_allocator.py Modul-Docstring)
+  zai_taegliches_budget: 300             # NEU (2026-07-20, testweise VOR Mistral eingehaengt -
+                                        # siehe Memory reference_llm_provider_recherche_uebersicht.md).
+                                        # Anders als Mistral/Gemini NICHT aus einem verifizierten
+                                        # Dashboard-Wert abgeleitet - Z.ai veroeffentlicht fuer
+                                        # GLM-4.5-Flash/GLM-4.7-Flash nur ein Concurrency-Limit
+                                        # (2 bzw. 1), keine RPM/TPM/RPD-Zahl. Nutzer-Vorgabe:
+                                        # bewusst kein konservativer Deckel wie bei Mistral -
+                                        # "kein Grund nicht auf ein bestimmtes hoeheres Limit zu
+                                        # gehen, wenn diese Quelle blockiert wird passiert nichts
+                                        # fuer diese eine Nacht" - Wert dient nur als grobe
+                                        # Sicherheitsobergrenze, keine Kapazitaetsschaetzung.
   groq_exhaustion_schwelle_fehlschlaege: 2  # NEU (2026-07-18, Nutzer-Fund "trotz Erschoepfung
                                         # wird immer zuerst Groq abgefragt") - anders als
                                         # Mistral/Gemini hatte Groq nie einen eigenen

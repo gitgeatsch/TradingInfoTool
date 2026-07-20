@@ -5915,3 +5915,61 @@ ausgewiesen, kein gepoolter "spot"-Schluessel mehr vorhanden; (2) ohne
 alle Spot-Signale weiterhin unter einem gemeinsamen "spot"-Schluessel
 gepoolt, exakt wie vor der Aenderung. Syntax-Check aller 3 geaenderten
 Dateien bestanden.
+
+## Nachtrag (2026-07-20): Z.ai (Zhipu AI) testweise als vierte, unverifizierte Fallback-Stufe VOR Mistral eingehaengt
+
+**Ausloeser:** Direkte Fortsetzung der Groq-Alternative-Recherche (siehe
+[[project_groq_alternative_recherche_2026-07-20]] und
+[[reference_llm_provider_recherche_uebersicht]]) - Z.ai/Zhipu GLM-4.5-Flash
+wurde als echtes, dauerhaftes Free-Tier-Modell identifiziert (kein Trial-
+Guthaben, OpenAI-kompatibler Endpunkt, gute Vertragsbedingungen fuer API-
+Kunden: keine Speicherung, keine Trainings-Nutzung). Einzige offene Luecke:
+die exakten Rate-Limits sind oeffentlich nicht dokumentiert (nur ein
+Concurrency-Limit von 2 im Nutzer-Dashboard sichtbar, keine RPM/TPM/RPD-
+Zahl). Nutzer-Entscheidung, trotzdem sofort produktiv zu testen: "kein
+Grund nicht auf ein bestimmtes hoeheres Limit zu gehen, wenn diese Quelle
+blockiert wird passiert auch nichts fuer diese eine Nacht".
+
+**Umgesetzt:**
+- `api/zai.py` (neu) - `ZaiClient`, identisches `.chat()`-Interface wie
+  Groq/Mistral/Gemini (OpenAI-kompatibel, `https://api.z.ai/api/paas/v4/
+  chat/completions`, Modell `glm-4.5-flash`). Bewusst KEIN konservativer
+  Rate-Limiter wie bei Mistral (`RATE_LIMIT_PER_MINUTE = 120` ist nur ein
+  grobes Sicherheitsnetz, keine Kapazitaetsschaetzung) - Nutzer-Vorgabe.
+- `agent/krypto/budget_allocator.py`: neuer optionaler Parameter
+  `zai_client`, eigener Tagesbudget-Zaehler (`zai_taegliches_budget`,
+  Default 300 in `config.yaml`), neue `AllocationResult`-Felder
+  (`zai_calls_verbraucht`/`zai_budget_erschoepft`). Alle 3 Tiers (Hebel/
+  Marktscan/Spot) versuchen jetzt Z.ai VOR Mistral/Groq - testweise, NICHT
+  final, siehe Modul-Docstring.
+- `main.py`: `ZAI_API_KEY` gelesen, `ZaiClient` konstruiert (P-8-optional),
+  an `build_scheduler()`/`app.run_app()` durchgereicht.
+- `scheduler/background.py`: `hebel_screening_job()`/`build_scheduler()`
+  reichen `zai_client` durch.
+- UI-Wiring: `ui/app.py`, `ui/hebel_view.py`, `ui/signals_view.py` - neuer
+  `zai_client`-Parameter, `_any_llm_client_available()` erweitert, die
+  manuellen Einzel-Klick-Fallback-Tupel (Hebel-Tab + Signale-Tab, alle
+  Assetklassen) versuchen Z.ai ebenfalls zuerst.
+- `agent/krypto/llm_provider.py`: neuer `zai`-Zweig in `llm_model_label()`.
+- `remote/server.py`: `"zai"` zu `API_HEALTH_GROUPS["api-health-llm"]`
+  ergaenzt.
+- `.env.example`/`.env`: `ZAI_API_KEY`-Platzhalter mit vollem
+  Recherche-Kontext als Kommentar (gleiches Muster wie Mistral).
+
+**Bewusst NICHT Teil dieser Runde:** `agent/multi_asset_batch.py` (Aktien/
+Rohstoffe/Themen-ETF-Cron) - gleiche Scope-Entscheidung wie beim Groq-
+Erschoepfungs-Fix, Z.ai bleibt vorerst auf die Krypto-Kette beschraenkt.
+
+**Verifikation:** (1) echter Testaufruf gegen die echte Z.ai-API - einfacher
+Chat-Call UND JSON-Mode (`response_format={"type": "json_object"}`) beide
+erfolgreich, bestaetigt volle OpenAI-Kompatibilitaet. (2) Import-/Syntax-
+Check aller 9 geaenderten Dateien fehlerfrei. (3) Synthetischer Test der
+kompletten Fallback-Kette mit Fake-Clients gegen eine echte In-Memory-
+SQLite-Kopie: Z.ai erfolgreich -> Mistral/Groq werden nicht gerufen; Z.ai
+schlaegt fehl -> Fallback auf Mistral korrekt; Z.ai-Tagesbudget erschoepft
+-> wird korrekt uebersprungen, Kette faellt auf Mistral zurueck.
+
+**Offen:** Reihenfolge ist testweise, nicht final - sobald genug echte
+Betriebsdaten (api_health-429-Rate, Provider-Performance) vorliegen, wird
+neu entschieden, ob Z.ai vor Groq bleibt, dahinter wandert, oder bei
+schlechten Ergebnissen wieder entfernt wird.

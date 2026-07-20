@@ -1160,7 +1160,7 @@ def _refresh_hebel_position_liquidation_prices(conn) -> None:
 def hebel_screening_job(
     coingecko_client, kraken_client, conn_factory, watchlist, bitpanda_api_key=None,
     groq_client=None, gemini_client=None, fred_api_key=None,
-    mistral_client=None,
+    mistral_client=None, zai_client=None,
 ) -> bool:
     """Hebel-Screening (2026-07-14, Phase 1, siehe docs/hebel_positionsformel.md)
     - rein deterministisches Zwei-Zweige-Scoring, KEIN Groq-Aufruf. Ergebnis
@@ -1249,15 +1249,18 @@ def hebel_screening_job(
             allocation = run_budget_allocator(
                 conn_factory, watchlist, groq_client, coingecko_client, kraken_client,
                 fred_api_key, config_dict, gemini_client=gemini_client, mistral_client=mistral_client,
+                zai_client=zai_client,
             )
             logger.info(
                 "Budget-Allocator: Hebel %d, Marktscan %d, Spot %d verarbeitet, %d fehlgeschlagen, "
                 "Groq heute erschöpft: %s, "
+                "Zai-Calls %d, Zai-Budget erschöpft: %s, "
                 "Mistral-Calls %d, Mistral-Budget erschöpft: %s, "
                 "Gemini-Calls %d, Gemini-Budget erschöpft: %s",
                 len(allocation.hebel_verarbeitet), len(allocation.marktscan_verarbeitet),
                 len(allocation.spot_verarbeitet), len(allocation.fehlgeschlagen),
                 allocation.groq_erschoepft_erkannt,
+                allocation.zai_calls_verbraucht, allocation.zai_budget_erschoepft,
                 allocation.mistral_calls_verbraucht, allocation.mistral_budget_erschoepft,
                 allocation.gemini_calls_verbraucht, allocation.gemini_budget_erschoepft,
             )
@@ -1393,7 +1396,7 @@ def _ohlc_data_is_stale(conn, watchlist) -> bool:
 def build_scheduler(
     coingecko_client, kraken_client, db_conn_factory, watchlist_provider,
     groq_client=None, gemini_client=None, fred_api_key=None, bitpanda_api_key=None,
-    mistral_client=None,
+    mistral_client=None, zai_client=None,
 ) -> BackgroundScheduler:
     watchlist = watchlist_provider()
     scheduler = BackgroundScheduler()
@@ -1505,7 +1508,7 @@ def build_scheduler(
         minutes=HEBEL_SCREENING_INTERVAL_MINUTES,
         args=[
             coingecko_client, kraken_client, db_conn_factory, watchlist, bitpanda_api_key,
-            groq_client, gemini_client, fred_api_key, mistral_client,
+            groq_client, gemini_client, fred_api_key, mistral_client, zai_client,
         ],
         id="hebel_screening",
         next_run_time=datetime.now(),

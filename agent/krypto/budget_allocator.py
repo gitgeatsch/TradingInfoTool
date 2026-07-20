@@ -14,7 +14,23 @@ Verteilungsformel (1:1 aus docs/budget_queue_design.md):
     rest_fuer_3 = B - tier1_verbraucht - tier2_verbraucht
     tier3_verbraucht = min(anzahl_faelliger_spot_assets, rest_fuer_3)
 
-Fallback-Kette Mistral -> Groq -> Gemini (2026-07-17: Cerebras vollstaendig
+Fallback-Kette (testweise seit 2026-07-20) Z.ai -> Mistral -> Groq -> Gemini
+- Z.ai (Zhipu AI, GLM-4.5-Flash) wurde testweise als NEUE, unverifizierte
+erste Stufe VOR Mistral gehaengt (siehe Memory reference_llm_provider_
+recherche_uebersicht.md und project_groq_alternative_recherche_2026-07-20.md).
+Anders als Mistral/Gemini/Groq ist die reale Kapazitaet NICHT ueber ein
+Nutzer-Dashboard verifiziert - Z.ai veroeffentlicht fuer die kostenlosen
+Modelle nur ein Concurrency-Limit (2), keine RPM/TPM/RPD-Zahl. Nutzer-
+Entscheidung, es dennoch an erster Stelle zu testen: "kein Grund nicht auf
+ein bestimmtes hoeheres Limit zu gehen, wenn diese Quelle blockiert wird
+passiert auch nichts fuer diese eine Nacht" - schlaegt Z.ai fehl (Netzwerk,
+HTTP-Fehler, eigener Tages-Deckel `zai_taegliches_budget` erreicht), faellt
+die Kette sofort auf Mistral zurueck, kein Datenverlust. Reihenfolge ist
+NICHT final - sobald genug echte Betriebsdaten (api_health/Provider-
+Performance) vorliegen, wird neu entschieden, ob Z.ai vor Groq bleibt,
+dahinter wandert, oder (bei schlechten Ergebnissen) wieder entfernt wird.
+
+2026-07-17: Cerebras vollstaendig
 entfernt, siehe Memory project_cerebras_free_tier_aenderung_2026-08-17.md -
 urspruenglich war geplant, Cerebras erst zum Auslaufen seines kostenlosen
 Tiers am 2026-08-17 zu entfernen, der Nutzer hat sich aber bewusst fuer die
@@ -127,6 +143,8 @@ class AllocationResult:
     mistral_budget_erschoepft: bool = False
     gemini_calls_verbraucht: int = 0
     gemini_budget_erschoepft: bool = False
+    zai_calls_verbraucht: int = 0
+    zai_budget_erschoepft: bool = False
     # 2026-07-18 (Groq-Tageserschoepfungs-Erkennung) - True, wenn mindestens
     # ein Kandidat in diesem Lauf Groq wegen erkannter Tageserschoepfung
     # uebersprungen hat (siehe _is_groq_exhausted_today()).
@@ -281,6 +299,7 @@ def run_budget_allocator(
     config_dict: dict,
     gemini_client=None,
     mistral_client=None,
+    zai_client=None,
 ) -> AllocationResult:
     cfg = config_dict.get("budget_allocator", {})
     result = AllocationResult()
@@ -291,6 +310,7 @@ def run_budget_allocator(
     spot_reserve = cfg.get("spot_rotation_reserve", 5)
     mistral_budget = cfg.get("mistral_taegliches_budget", 150)
     gemini_budget = cfg.get("gemini_taegliches_budget", 200)
+    zai_budget = cfg.get("zai_taegliches_budget", 300)
     groq_exhaustion_schwelle = cfg.get("groq_exhaustion_schwelle_fehlschlaege", 2)
     cooldown_stunden = cfg.get("cooldown_stunden", 3.5)
     marktscan_kandidat_verfall_stunden = cfg.get("marktscan_kandidat_verfall_stunden", 48.0)
@@ -369,10 +389,11 @@ def run_budget_allocator(
         tages_verbraucht = {
             "mistral": db.count_real_llm_calls_today_by_provider(conn, "mistral:"),
             "gemini": db.count_real_llm_calls_today_by_provider(conn, "gemini:"),
+            "zai": db.count_real_llm_calls_today_by_provider(conn, "zai:"),
         }
     finally:
         conn.close()
-    tages_budget = {"mistral": mistral_budget, "gemini": gemini_budget}
+    tages_budget = {"mistral": mistral_budget, "gemini": gemini_budget, "zai": zai_budget}
 
     tier1_n, tier2_n, tier3_n = _verteile_budget(
         len(hebel_kandidaten), len(marktscan_kandidaten), len(spot_kandidaten), budget_gesamt, spot_reserve,
@@ -400,7 +421,7 @@ def run_budget_allocator(
     def _mit_fallback_chain(schluessel: str, calls: list[tuple[str, object]]) -> bool:
         """Versucht `calls` (Liste von (provider_name, call_fn)) der Reihe nach.
         "groq" hat kein eigenes Tagesbudget hier (Groqs reales Tageslimit
-        wirkt extern ueber echte 429s). "mistral"/"gemini" werden nur
+        wirkt extern ueber echte 429s). "mistral"/"gemini"/"zai" werden nur
         versucht, wenn ihr echter Tages-Zaehler (`tages_verbraucht`) das
         eigene Budget (`tages_budget`) noch nicht erreicht hat - sonst wird
         diese Stufe uebersprungen (NICHT versucht) und die naechste Stufe
@@ -424,6 +445,8 @@ def run_budget_allocator(
                         result.mistral_budget_erschoepft = True
                     elif provider_name == "gemini":
                         result.gemini_budget_erschoepft = True
+                    elif provider_name == "zai":
+                        result.zai_budget_erschoepft = True
                     continue
             try:
                 res = call_fn()
@@ -443,6 +466,8 @@ def run_budget_allocator(
                         result.mistral_calls_verbraucht = tages_verbraucht["mistral"]
                     elif provider_name == "gemini":
                         result.gemini_calls_verbraucht = tages_verbraucht["gemini"]
+                    elif provider_name == "zai":
+                        result.zai_calls_verbraucht = tages_verbraucht["zai"]
                 return True
             except Exception as exc:
                 if provider_name == "groq":
@@ -461,6 +486,10 @@ def run_budget_allocator(
             continue
         schluessel = f"hebel:{trigger.symbol}:{trigger.richtung}"
         calls = []
+        if zai_client is not None:
+            calls.append(("zai", lambda t=trigger, a=asset: _mit_conn(
+                lambda c: generate_hebel_signal(t, a, watchlist, c, zai_client, coingecko_client, kraken_client, fred_api_key)
+            )))
         if mistral_client is not None:
             calls.append(("mistral", lambda t=trigger, a=asset: _mit_conn(
                 lambda c: generate_hebel_signal(t, a, watchlist, c, mistral_client, coingecko_client, kraken_client, fred_api_key)
@@ -502,6 +531,8 @@ def run_budget_allocator(
         for candidate in marktscan_kandidaten[:tier2_n]:
             schluessel = f"marktscan:{candidate.coingecko_id}"
             calls = []
+            if zai_client is not None:
+                calls.append(("zai", lambda c=candidate: _writeup(c, zai_client)))
             if mistral_client is not None:
                 calls.append(("mistral", lambda c=candidate: _writeup(c, mistral_client)))
             calls.append(("groq", lambda c=candidate: _writeup(c, groq_client)))
@@ -515,6 +546,10 @@ def run_budget_allocator(
     for asset in spot_kandidaten[:tier3_n]:
         schluessel = f"spot:{asset.symbol}"
         calls = []
+        if zai_client is not None:
+            calls.append(("zai", lambda a=asset: _mit_conn(
+                lambda c: generate_signal(a, watchlist, c, zai_client, coingecko_client, kraken_client, fred_api_key)
+            )))
         if mistral_client is not None:
             calls.append(("mistral", lambda a=asset: _mit_conn(
                 lambda c: generate_signal(a, watchlist, c, mistral_client, coingecko_client, kraken_client, fred_api_key)

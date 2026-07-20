@@ -32,6 +32,10 @@ def llm_model_label(llm_client) -> str:
         from api.mistral import DEFAULT_MODEL
 
         return f"mistral:{DEFAULT_MODEL}"
+    if module.endswith("zai"):
+        from api.zai import DEFAULT_MODEL
+
+        return f"zai:{DEFAULT_MODEL}"
     return type(llm_client).__name__
 
 

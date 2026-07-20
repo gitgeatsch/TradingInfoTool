@@ -208,7 +208,7 @@ function renderSpotProviderPerformanceByAssetklasse(perfData) {
 }
 
 const API_HEALTH_GROUPS = {
-  "api-health-llm": ["groq", "mistral", "gemini"],
+  "api-health-llm": ["groq", "mistral", "gemini", "zai"],
   "api-health-markt": ["coingecko", "kraken", "bitpanda", "yfinance"],
   "api-health-makro": [
     "fear_greed", "fred", "ecb", "china_pboc_lpr", "china_m2", "japan_boj",
