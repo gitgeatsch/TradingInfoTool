@@ -128,7 +128,7 @@ def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, erro
         jobs_running=jobs_running,
         jobs_running_seit_minuten=jobs_running_seit_minuten,
         budget_heute=_get_budget_heute(conn),
-        provider_performance=_get_provider_performance(conn),
+        provider_performance=_get_provider_performance(conn, watchlist),
         api_health=_get_api_health(conn),
         regime_status=_get_regime_status(conn),
         parameter_overview=_get_parameter_overview(),
@@ -142,14 +142,17 @@ def _get_api_health(conn: sqlite3.Connection) -> dict:
     return db.get_api_health_status(conn)
 
 
-def _get_provider_performance(conn: sqlite3.Connection) -> dict:
+def _get_provider_performance(conn: sqlite3.Connection, watchlist: list) -> dict:
     """Sichtbarkeit fuer die Backward-Tracking-Provider-Performance (2026-07-15,
     siehe agent/krypto/backward_tracking.py::compute_provider_performance()) -
-    reiner Lesezugriff, keine neue Logik. Erwartet aktuell noch leere/nahezu
-    leere Ergebnisse (reine Infrastruktur, sammelt ab jetzt automatisch Daten)."""
+    reiner Lesezugriff, keine neue Logik.
+
+    `watchlist` seit 2026-07-20 durchgereicht, damit die Spot-Seite nach
+    Assetklasse (krypto/aktien/rohstoffe/etf) statt einem einzigen "spot"-Topf
+    aufgeschluesselt wird - siehe compute_provider_performance()-Docstring."""
     from agent.krypto.backward_tracking import compute_provider_performance
 
-    return compute_provider_performance(conn)
+    return compute_provider_performance(conn, watchlist)
 
 
 def _get_regime_status(conn: sqlite3.Connection) -> dict | None:

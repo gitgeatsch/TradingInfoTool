@@ -5869,3 +5869,49 @@ Aufzeichnung), obwohl es denselben Groq-Rate-Limit-Pool teilt - eine
 natuerliche Erweiterung fuer Konsistenz, aber nicht Teil dieses expliziten
 Nutzer-Auftrags ("ja mach beides" bezog sich nur auf die zwei oben
 genannten Punkte).
+
+## Nachtrag (2026-07-20): Provider-Performance-Karte nach Assetklasse aufgeschluesselt (Krypto/Aktien/Rohstoffe/ETF getrennt statt gepoolter "Spot"-Topf)
+
+**Ausloeser:** Nutzer fragte nach dem Status von Backward-Tracking bei
+Nicht-Krypto-Assetklassen anhand eines Remote-Status-Screenshots ("Provider-
+Performance (Spot): noch keine Daten"). Antwort: Backward-Tracking selbst
+lief fuer Aktien/Rohstoffe/Hedge/Themen-ETF bereits automatisch mit (alle 4
+Spot-family-Pipelines schreiben ueber `db.insert_signal()` in dieselbe
+`signals`-Tabelle, `run_backward_tracking()` liest diese Tabelle OHNE
+Assetklassen-Filter) - das war kein Luecken-Fund. Die eigentliche Luecke:
+`compute_provider_performance()` poolte ALLE Spot-Assetklassen (Krypto,
+Aktien, Rohstoffe, Hedge, Themen-ETF) unter einem einzigen "spot"-
+Schluessel in der Anzeige-Karte, wodurch nicht sichtbar war, ob eine
+spaetere Win-Rate von Krypto oder z.B. Rohstoffen kommt - derselbe
+Pooling-Fehler, der fuer den internen Win-Rate-Prompt-Fakt
+(`compute_win_rate_fact()`) schon am 2026-07-18 behoben worden war, aber
+fuer diese Anzeige-Karte nie nachgezogen wurde.
+
+**Fix:** `agent/krypto/backward_tracking.py::compute_provider_performance()`
+bekommt einen neuen optionalen Parameter `watchlist` (Default `None` = altes
+Verhalten, ein gepoolter "spot"-Schluessel - erhaelt `extract_notebook_
+diagnose.py` unveraendert funktionsfaehig, das ohne Watchlist aufruft). Ist
+`watchlist` gesetzt, wird jedes aufgeloeste Spot-Signal ueber sein Symbol
+der `asset.assetklasse` (krypto/aktien/rohstoffe/etf) zugeordnet statt
+pauschal "spot" - bewusst FEINER als `compute_win_rate_fact()`s Pooling
+(das Krypto+Aktien fuer die Prompt-Kalibrierung bewusst zusammenlegt),
+weil diese Anzeige-Karte dem Nutzer Sichtbarkeit PRO Assetklasse geben
+soll, nicht ein Modell kalibrieren. `remote/status.py::_get_provider_
+performance()` reicht die Watchlist jetzt durch. `remote/server.py`
+rendert die Spot-Seite ueber eine neue Funktion `renderSpotProviderPerformanceByAssetklasse()`
+mit fester Reihenfolge/Beschriftung (Krypto/Aktien/Rohstoffe/ETF -
+Themen-ETF und Hedge teilen sich die Watchlist-Assetklasse "etf" und
+werden hier bewusst nicht weiter unterschieden), damit auch eine noch
+leere Assetklasse sichtbar "noch keine Daten" zeigt statt stillschweigend
+zu fehlen. Die Hebel-Karte bleibt unveraendert (Hebel ist ohnehin
+krypto-exklusiv).
+
+**Verifikation:** synthetischer Test mit 4 synthetischen, ueber den echten
+Schreibpfad (`db.insert_signal()` + `db.update_signal_outcome()`) erzeugten
+Signalen (je eins pro Assetklasse, je ein anderer Provider) bestaetigt:
+(1) mit `watchlist` werden Krypto/Aktien/Rohstoffe/ETF korrekt getrennt
+ausgewiesen, kein gepoolter "spot"-Schluessel mehr vorhanden; (2) ohne
+`watchlist` (Legacy-Aufruf wie in `extract_notebook_diagnose.py`) bleiben
+alle Spot-Signale weiterhin unter einem gemeinsamen "spot"-Schluessel
+gepoolt, exakt wie vor der Aenderung. Syntax-Check aller 3 geaenderten
+Dateien bestanden.

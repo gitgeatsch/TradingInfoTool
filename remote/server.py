@@ -88,7 +88,7 @@ _INDEX_HTML = """<!doctype html>
 </div>
 
 <div class="card">
-  <div class="row"><strong>Provider-Performance (Spot)</strong></div>
+  <div class="row"><strong>Provider-Performance (Spot, nach Assetklasse)</strong></div>
   <div id="provider-performance-spot"></div>
   <div class="row"><strong>Provider-Performance (Hebel)</strong></div>
   <div id="provider-performance-hebel"></div>
@@ -187,6 +187,23 @@ function renderProviderPerformance(tierData) {
       ? d.avg_realisiertes_crv.toFixed(2) : "-";
     return '<div class="row"><span>' + p + ' (' + d.anzahl_resolved + ')</span>' +
       '<span>Win-Rate ' + winRate + ', &oslash; CRV ' + crv + '</span></div>';
+  }).join("");
+}
+
+// Assetklassen-Aufschluesselung (2026-07-20): compute_provider_performance()
+// poolt Spot-Signale seit dem Watchlist-Wiring nicht mehr unter einem
+// einzigen "spot"-Schluessel, sondern nach asset.assetklasse - siehe
+// Docstring in agent/krypto/backward_tracking.py. Feste Reihenfolge/Labels
+// hier, damit auch eine (noch) leere Assetklasse sichtbar bleibt statt
+// stillschweigend zu fehlen.
+const SPOT_ASSETKLASSEN = [
+  ["krypto", "Krypto"], ["aktien", "Aktien"], ["rohstoffe", "Rohstoffe"], ["etf", "ETF (Themen/Hedge)"],
+];
+
+function renderSpotProviderPerformanceByAssetklasse(perfData) {
+  return SPOT_ASSETKLASSEN.map(function([key, label]) {
+    return '<div class="row"><span class="muted-text">' + label + '</span></div>' +
+      renderProviderPerformance(perfData[key] || {});
   }).join("");
 }
 
@@ -319,7 +336,7 @@ async function refreshStatus() {
 
   if (data.provider_performance) {
     document.getElementById("provider-performance-spot").innerHTML =
-      renderProviderPerformance(data.provider_performance.spot || {});
+      renderSpotProviderPerformanceByAssetklasse(data.provider_performance);
     document.getElementById("provider-performance-hebel").innerHTML =
       renderProviderPerformance(data.provider_performance.hebel || {});
   }

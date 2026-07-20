@@ -264,7 +264,7 @@ def run_backward_tracking(conn, watchlist, config: dict) -> BackwardTrackingResu
 _RESOLVED_OUTCOMES = (OUTCOME_TAKE_PROFIT, OUTCOME_STOP_LOSS, OUTCOME_LIQUIDATION)
 
 
-def compute_provider_performance(conn) -> dict:
+def compute_provider_performance(conn, watchlist: list | None = None) -> dict:
     """Provider-Performance-Aggregation (2026-07-15, Nutzer-Wunsch: Groq/Cerebras/
     Gemini nach echter Trefferquote statt nur Kapazitaet vergleichen). Liest ALLE
     bereits aufgeloesten Signale (take_profit_erreicht/stop_loss_erreicht, bei
@@ -273,9 +273,24 @@ def compute_provider_performance(conn) -> dict:
     GETRENNT (unterschiedliche Risikoprofile - RM-1 2% vs. Hebel 1%
     Positionsgroesse, siehe Regelwerksmanual "Positionsgroesse bei Hebel" - eine
     gemeinsame Kennzahl waere irrefuehrend). Reine Lesefunktion, kein
-    Seiteneffekt. Erwartet aktuell (2026-07-15) noch leere/nahezu leere
-    Ergebnisse - reine Infrastruktur, die ab jetzt automatisch Daten sammelt."""
+    Seiteneffekt.
+
+    Assetklassen-Aufschluesselung (2026-07-20, Nutzer-Frage "Wie ist der Status
+    zum Thema Backtracking bei nicht Krypto?"): die `signals`-Tabelle enthaelt
+    seit den Aktien-/Rohstoff-/Hedge-/Themen-ETF-Pipelines (alle nutzen
+    dieselbe `insert_signal()`) laengst auch deren Signale, aber die Anzeige
+    poolte bisher ALLES unter einem einzigen "spot"-Schluessel - Krypto und
+    z.B. Rohstoffe waren in der Provider-Performance-Karte nicht mehr
+    unterscheidbar. `watchlist` (optional, Default None = altes Verhalten mit
+    nur "spot") erlaubt jetzt eine Aufschluesselung nach `asset.assetklasse`
+    (krypto/aktien/rohstoffe/etf) statt einem einzigen Topf - bewusst FEINER
+    als `compute_win_rate_fact()`s Pooling (das Krypto+Aktien fuer den
+    Prompt-Fakt bewusst zusammenlegt, siehe dortiger Docstring), weil diese
+    Anzeige-Karte fuer den Nutzer Sichtbarkeit PRO Assetklasse schaffen soll,
+    nicht die Prompt-Kalibrierung eines Modells. Symbole, die nicht (mehr) in
+    der Watchlist stehen, fallen unter "unbekannt" statt zu verschwinden."""
     gruppen: dict[tuple[str, str], dict] = {}
+    assetklasse_by_symbol = {a.symbol: a.assetklasse for a in watchlist} if watchlist else {}
 
     def _stelle_sicher(tier: str, provider: str) -> dict:
         key = (tier, provider)
@@ -292,12 +307,13 @@ def compute_provider_performance(conn) -> dict:
 
     placeholders = ", ".join("?" for _ in _RESOLVED_OUTCOMES)
     spot_rows = conn.execute(
-        f"SELECT groq_model AS llm_model, outcome_status, outcome_realisiertes_crv "
+        f"SELECT symbol, groq_model AS llm_model, outcome_status, outcome_realisiertes_crv "
         f"FROM signals WHERE outcome_status IN ({placeholders})",
         _RESOLVED_OUTCOMES,
     ).fetchall()
     for row in spot_rows:
-        eintrag = _stelle_sicher("spot", provider_from_label(row["llm_model"]))
+        tier = assetklasse_by_symbol.get(row["symbol"], "unbekannt") if watchlist else "spot"
+        eintrag = _stelle_sicher(tier, provider_from_label(row["llm_model"]))
         eintrag["anzahl_resolved"] += 1
         if row["outcome_status"] == OUTCOME_TAKE_PROFIT:
             eintrag["take_profit_count"] += 1
@@ -325,10 +341,10 @@ def compute_provider_performance(conn) -> dict:
             eintrag["_crv_summe"] += row["outcome_realisiertes_crv"]
             eintrag["_crv_count"] += 1
 
-    ergebnis: dict = {"spot": {}, "hebel": {}}
+    ergebnis: dict = {"hebel": {}} if watchlist else {"spot": {}, "hebel": {}}
     for (tier, provider), eintrag in gruppen.items():
         anzahl = eintrag["anzahl_resolved"]
-        ergebnis[tier][provider] = {
+        ergebnis.setdefault(tier, {})[provider] = {
             "anzahl_resolved": anzahl,
             "take_profit_count": eintrag["take_profit_count"],
             "stop_loss_count": eintrag["stop_loss_count"],
