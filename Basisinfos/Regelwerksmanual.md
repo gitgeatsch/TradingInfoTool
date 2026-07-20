@@ -5814,3 +5814,58 @@ PLTR/VST (Aktien) weiterhin korrekt, die vier Kollisions-Symbole bleiben
 auf der Aktien-Seite ebenfalls korrekt vorhanden (Sun Communities/Bio-Rad/
 Wayfair/Caterpillar), CANTON/CC-Namens-Fallback weiterhin funktionsfaehig;
 Tk-Smoke-Test der Watchlist-Spalte zeigt SUI/W jetzt "✓" statt "✗".
+
+## Nachtrag (2026-07-20): Groq als Primär-LLM abgeloest - Mistral vor Groq + DB-persistente Erschoepfungs-Erkennung
+
+**Ausloeser:** Nutzer bewertete Groq nach Auswertung der heutigen echten
+LLM-Aufrufe als Primär-LLM "relativ unbrauchbar" - reale Zahlen bestaetigten
+das: nur 9 von 79 echten Calls (~11%) liefen ueber Groq, `api_health` zeigte
+echte `429 Too Many Requests`-Fehler. Zusaetzlich bestand seit dem
+2026-07-18-Fund (siehe Nachtrag "Groq-Erschoepfungs-Erkennung") eine offene
+Schwaeche: die In-Memory-Erschoepfungssperre wurde bei jedem App-Neustart
+zurueckgesetzt - in der aktiven Entwicklungsphase (Notebook startet bei
+jedem Git-Pull neu, ~8x/Tag beobachtet) lief Groq dadurch wiederholt binnen
+Minuten erneut in dieselben 429-Fehlschlaege, bevor die Sperre erneut
+greifen konnte.
+
+**Fix 1 - Reihenfolge umgedreht:** `agent/krypto/budget_allocator.py` versucht
+fuer jeden Kandidaten (Hebel/Marktscan/Spot) jetzt zuerst Mistral (falls
+`mistral_client` gesetzt), erst bei dessen Fehlschlag Groq, dann Gemini.
+Mistrals echt verifizierte Kapazitaet (2.250.000 TPM/300 RPM, siehe Nachtrag
+Mistral-Integration) macht es zur zuverlaessigeren ersten Stufe; Groq bleibt
+als kostenlose zweite Stufe erhalten (schlaegt gelegentlich noch erfolgreich
+an), Gemini bleibt bewusst am Ende der Kette (ungueenstigste
+Vertragsbedingungen, siehe Modul-Docstring).
+
+**Fix 2 - DB-persistente Erschoepfungs-Erkennung:** neue Tabelle
+`groq_exhaustion_status` (Einzeilen-Tabelle, `datum`/`fehlschlaege`/
+`erschoepft`) in `database/db.py`, mit `is_groq_exhausted_today(conn)`/
+`record_groq_failure(conn, schwelle)`/`record_groq_success(conn)` - ersetzen
+1:1 die bisherigen modul-globalen In-Memory-Variablen (gleiche
+Kalendertag-Semantik: N Fehlschlaege in Folge am selben Kalendertag ->
+erschoepft, Erfolg setzt zurueck), ueberleben aber jetzt einen App-Neustart,
+da der Zustand direkt aus der DB gelesen/geschrieben wird statt aus einer
+Prozess-Variable. `_mit_fallback_chain()` in `budget_allocator.py` ruft
+diese drei Funktionen ueber eine kurzlebige `conn_factory()`-Verbindung auf
+(gleiches Muster wie der bestehende `_mit_conn()`-Helfer fuer die LLM-Calls
+selbst).
+
+**Verifikation:** synthetischer Test bestaetigt DB-Persistenz (Erschoepfung
+ueberlebt einen simulierten "Neustart", d.h. eine neue Connection auf
+dieselbe DB-Datei, Erfolg setzt korrekt zurueck) sowie die neue
+Fallback-Reihenfolge in `run_budget_allocator()` gegen eine echte
+In-Memory-SQLite-Kopie mit Fake-Clients: (1) Mistral erfolgreich -> Groq
+wird gar nicht erst aufgerufen, (2) Mistral schlaegt fehl -> Fallback auf
+Groq greift korrekt, (3) Groq DB-seitig als erschoepft markiert -> wird bei
+einem Mistral-Fehlschlag korrekt uebersprungen (kein Aufruf, `result.
+groq_erschoepft_erkannt=True`). Import-/Syntax-Check von
+`agent/krypto/budget_allocator.py` und `scheduler/background.py` bestaetigt
+keine verwaisten Referenzen mehr auf die entfernten In-Memory-Funktionen.
+
+**Offen (bewusst nicht Teil dieser Runde):** `agent/multi_asset_batch.py`
+(separater Cron fuer Aktien/Rohstoffe/Themen-ETF) hat weiterhin keinerlei
+Groq-Erschoepfungs-Bewusstsein (kein Skip-Check, keine Erfolg-/Fehlschlag-
+Aufzeichnung), obwohl es denselben Groq-Rate-Limit-Pool teilt - eine
+natuerliche Erweiterung fuer Konsistenz, aber nicht Teil dieses expliziten
+Nutzer-Auftrags ("ja mach beides" bezog sich nur auf die zwei oben
+genannten Punkte).

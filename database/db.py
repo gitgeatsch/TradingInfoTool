@@ -176,6 +176,22 @@ CREATE TABLE IF NOT EXISTS asset_bitpanda_override (
     bitpanda_gelistet_override  INTEGER NOT NULL
 );
 
+-- Groq-Erschoepfungs-Sperre, DB-persistent (2026-07-20) - ersetzt die
+-- urspruengliche In-Memory-Variante in agent/krypto/budget_allocator.py
+-- (dortiger Kommentar: "ein Neustart ist selten, das ist bewusst
+-- akzeptabel"). Echter Notebook-Befund widerlegte das: in der aktiven
+-- Entwicklungsphase (haeufige Pulls) startete die App ~8x/Tag neu, wodurch
+-- die In-Memory-Sperre bei jedem Neustart zurückgesetzt wurde und Groq
+-- wiederholt binnen Minuten erneut in dieselben 429-Fehlschlaege lief.
+-- Einzeilige Tabelle (id=1 erzwungen) - haelt nur den aktuellen Tag,
+-- siehe get/record-Funktionen fuer die Tageswechsel-Logik.
+CREATE TABLE IF NOT EXISTS groq_exhaustion_status (
+    id            INTEGER PRIMARY KEY CHECK (id = 1),
+    datum         TEXT NOT NULL,
+    fehlschlaege  INTEGER NOT NULL,
+    erschoepft    INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS marktscan_candidates (
     id                          INTEGER PRIMARY KEY AUTOINCREMENT,
     coingecko_id                TEXT NOT NULL,
@@ -1038,6 +1054,65 @@ def set_bitpanda_gelistet_override(conn: sqlite3.Connection, symbol: str, aktiv:
         "INSERT INTO asset_bitpanda_override (symbol, bitpanda_gelistet_override) VALUES (?, ?) "
         "ON CONFLICT(symbol) DO UPDATE SET bitpanda_gelistet_override = excluded.bitpanda_gelistet_override",
         (symbol, int(aktiv)),
+    )
+    conn.commit()
+
+
+def _heutiges_datum_utc() -> str:
+    return datetime.now(timezone.utc).date().isoformat()
+
+
+def is_groq_exhausted_today(conn: sqlite3.Connection) -> bool:
+    """DB-persistente Groq-Erschoepfungs-Sperre (2026-07-20) - siehe
+    groq_exhaustion_status-Tabellendocstring. Default: nicht erschoepft,
+    solange keine Zeile fuer den HEUTIGEN Tag existiert - eine Zeile von
+    einem frueheren Tag zaehlt nicht (kein Beibehalten ueber Tagesgrenzen
+    hinweg, identisch zur urspruenglichen In-Memory-Semantik)."""
+    row = conn.execute(
+        "SELECT datum, erschoepft FROM groq_exhaustion_status WHERE id = 1"
+    ).fetchone()
+    if row is None or row["datum"] != _heutiges_datum_utc():
+        return False
+    return bool(row["erschoepft"])
+
+
+def record_groq_failure(conn: sqlite3.Connection, schwelle: int) -> None:
+    """Zaehlt Groq-Fehlschlaege NUR innerhalb desselben Kalendertags (UTC) -
+    ein Zaehlerstand von gestern darf nicht in den heutigen Tag durchschlagen.
+    Setzt `erschoepft`, sobald `schwelle` erreicht ist - bleibt dann fuer den
+    Rest des Tages gesetzt (siehe is_groq_exhausted_today()). Loggt nur beim
+    UEBERGANG auf erschoepft=True (nicht bei jedem weiteren Fehlschlag
+    danach), damit das Log nicht mit Wiederholungen zugespamt wird."""
+    today = _heutiges_datum_utc()
+    row = conn.execute(
+        "SELECT datum, fehlschlaege, erschoepft FROM groq_exhaustion_status WHERE id = 1"
+    ).fetchone()
+    war_schon_erschoepft = row is not None and row["datum"] == today and bool(row["erschoepft"])
+    fehlschlaege = row["fehlschlaege"] + 1 if row is not None and row["datum"] == today else 1
+    erschoepft = fehlschlaege >= schwelle
+    conn.execute(
+        "INSERT INTO groq_exhaustion_status (id, datum, fehlschlaege, erschoepft) VALUES (1, ?, ?, ?) "
+        "ON CONFLICT(id) DO UPDATE SET datum = excluded.datum, fehlschlaege = excluded.fehlschlaege, "
+        "erschoepft = excluded.erschoepft",
+        (today, fehlschlaege, int(erschoepft)),
+    )
+    conn.commit()
+    if erschoepft and not war_schon_erschoepft:
+        logger.warning(
+            "Groq: %d Fehlschlaege in Folge am %s - wird fuer den Rest des Tages uebersprungen, "
+            "weitere Kandidaten gehen direkt an Mistral/Gemini",
+            fehlschlaege, today,
+        )
+
+
+def record_groq_success(conn: sqlite3.Connection) -> None:
+    """Setzt den Fehlschlag-Zaehler fuer heute zurueck (ein erfolgreicher
+    Call widerlegt eine vermutete Erschoepfung)."""
+    today = _heutiges_datum_utc()
+    conn.execute(
+        "INSERT INTO groq_exhaustion_status (id, datum, fehlschlaege, erschoepft) VALUES (1, ?, 0, 0) "
+        "ON CONFLICT(id) DO UPDATE SET datum = excluded.datum, fehlschlaege = 0, erschoepft = 0",
+        (today,),
     )
     conn.commit()
 

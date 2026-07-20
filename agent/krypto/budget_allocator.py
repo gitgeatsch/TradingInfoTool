@@ -14,7 +14,7 @@ Verteilungsformel (1:1 aus docs/budget_queue_design.md):
     rest_fuer_3 = B - tier1_verbraucht - tier2_verbraucht
     tier3_verbraucht = min(anzahl_faelliger_spot_assets, rest_fuer_3)
 
-Fallback-Kette Groq -> Mistral -> Gemini (2026-07-17: Cerebras vollstaendig
+Fallback-Kette Mistral -> Groq -> Gemini (2026-07-17: Cerebras vollstaendig
 entfernt, siehe Memory project_cerebras_free_tier_aenderung_2026-08-17.md -
 urspruenglich war geplant, Cerebras erst zum Auslaufen seines kostenlosen
 Tiers am 2026-08-17 zu entfernen, der Nutzer hat sich aber bewusst fuer die
@@ -24,20 +24,30 @@ Stufe uebernommen (echt verifizierte Kapazitaet weit ueber Cerebras/Gemini,
 saubere Vertragsbedingungen). Der `CEREBRAS_API_KEY` bleibt einzig in `.env`
 als Referenz stehen, jetzt kommentiert als obsolet fuer die Produktion.
 
-Fuer jeden ausgewaehlten Kandidaten wird ZUERST Groq versucht; schlaegt der
-Call fehl (jede Exception - Netzwerk, HTTP-Fehler, Rate-Limit), wird SOFORT
-die naechste Stufe versucht, solange deren eigener Tages-Deckel (config
+REIHENFOLGE Mistral vor Groq seit 2026-07-20 (Nutzer-Fund: Groq lieferte im
+Realbetrieb nur ~11% aller echten LLM-Calls, echte 429-Ratenlimit-Fehler in
+api_health bestaetigt - als PRIMAeR-LLM "relativ unbrauchbar"). Mistrals
+echt verifizierte Kapazitaet (2.250.000 TPM/300 RPM) liegt weit ueber Groqs
+tatsaechlich nutzbarem Tageslimit, ist deshalb jetzt die erste Stufe; Groq
+bleibt als zweite Stufe erhalten (weiterhin kostenlos, gelegentlich
+erfolgreich), Gemini weiterhin bewusst seltenste letzte Ruckfallebene
+(siehe Vertragsgruende unten).
+
+Fuer jeden ausgewaehlten Kandidaten wird ZUERST Mistral versucht (falls
+`mistral_client` gesetzt), sonst/danach Groq; schlaegt der Call fehl (jede
+Exception - Netzwerk, HTTP-Fehler, Rate-Limit), wird SOFORT die naechste
+Stufe versucht, solange deren eigener Tages-Deckel (config
 mistral_taegliches_budget/gemini_taegliches_budget) noch nicht erschoepft
-ist. Reihenfolge nach Reife/Vertrauen UND Vertragsguenstigkeit, NICHT nach
-roher Kapazitaet - Gemini hat zwar mehr Kapazitaet als Mistral noetig waere,
-aber vertraglich die ungueenstigsten Bedingungen aller Anbieter (EWR/CH/UK-
-Sonderklausel, explizite Warnung vor vertraulichen/Finanzdaten, nicht
-abwaehlbare Trainings-Nutzung - siehe Memory), soll deshalb bewusst am
-seltensten drankommen. Kandidaten, die an ALLEN verfuegbaren Stufen
-scheitern, bleiben unverarbeitet - kein Datenverlust (P-10), der naechste
-15-Min-Lauf bewertet sie automatisch neu. `mistral_client`/`gemini_client`
-sind beide optional (P-8) - ohne sie schrumpft die Kette entsprechend, bis
-minimal auf Groq allein.
+ist. Groq hat KEIN eigenes Tagesbudget, wird aber uebersprungen, sobald
+`db.is_groq_exhausted_today()` (siehe unten) eine Tageserschoepfung erkannt
+hat. Gemini bleibt bewusst am Ende der Kette - vertraglich die
+ungueenstigsten Bedingungen aller Anbieter (EWR/CH/UK-Sonderklausel,
+explizite Warnung vor vertraulichen/Finanzdaten, nicht abwaehlbare
+Trainings-Nutzung - siehe Memory), soll deshalb am seltensten drankommen.
+Kandidaten, die an ALLEN verfuegbaren Stufen scheitern, bleiben
+unverarbeitet - kein Datenverlust (P-10), der naechste 15-Min-Lauf bewertet
+sie automatisch neu. `mistral_client`/`gemini_client` sind beide optional
+(P-8) - ohne mistral_client faellt die Kette auf Groq -> Gemini zurueck.
 
 Echte Tages-Zaehler (2026-07-14-Fix): Mistrals/Gemini's Tagesbudget wird zu
 Beginn jedes Laufs EINMAL per db.count_real_llm_calls_today_by_provider()
@@ -92,49 +102,16 @@ logger = logging.getLogger(__name__)
 # verlorenes Mistral/Gemini-Kontingent (der Fallback funktionierte korrekt),
 # aber unnoetige Latenz pro Kandidat (ein garantiert scheiternder HTTP-Call).
 #
-# In-Memory-Zustand statt DB-Persistenz (gleiches Muster wie
-# scheduler/background.py::_consecutive_failures) - ueberlebt keinen
-# Prozess-Neustart, das ist bewusst akzeptabel: ein Neustart ist selten,
-# und im schlimmsten Fall wird Groq danach einfach frisch neu probiert.
-# Auf Kalendertag-Basis (UTC) statt Zeitfenster, damit es sich taeglich
-# implizit selbst zuruecksetzt (kein expliziter Reset-Code noetig) - passt
-# zur echten Ursache (ein TAGES-Token-Limit).
-_groq_failure_date: str | None = None
-_groq_failure_count: int = 0
-_groq_exhausted_date: str | None = None
-
-
-def _today_iso() -> str:
-    return datetime.now(timezone.utc).date().isoformat()
-
-
-def _is_groq_exhausted_today() -> bool:
-    return _groq_exhausted_date == _today_iso()
-
-
-def _record_groq_failure(schwelle: int) -> None:
-    """Zaehlt Groq-Fehlschlaege NUR innerhalb desselben Kalendertags (UTC) -
-    ein Zaehlerstand von gestern darf nicht in den heutigen Tag durchschlagen,
-    sonst wuerde ein einzelner heutiger Fehlschlag faelschlich sofort als
-    Erschoepfung gewertet."""
-    global _groq_failure_date, _groq_failure_count, _groq_exhausted_date
-    today = _today_iso()
-    if _groq_failure_date != today:
-        _groq_failure_date = today
-        _groq_failure_count = 0
-    _groq_failure_count += 1
-    if _groq_failure_count >= schwelle and _groq_exhausted_date != today:
-        _groq_exhausted_date = today
-        logger.warning(
-            "Groq: %d Fehlschlaege in Folge am %s - wird fuer den Rest des Tages uebersprungen, "
-            "weitere Kandidaten gehen direkt an Mistral/Gemini",
-            _groq_failure_count, today,
-        )
-
-
-def _record_groq_success() -> None:
-    global _groq_failure_count
-    _groq_failure_count = 0
+# DB-persistent seit 2026-07-20 (siehe database/db.py::groq_exhaustion_status-
+# Tabellendocstring) - urspruenglich In-Memory (gleiches Muster wie
+# scheduler/background.py::_consecutive_failures), mit der Begruendung "ein
+# Neustart ist selten". Echter Notebook-Befund widerlegte das: in der aktiven
+# Entwicklungsphase (haeufige Pulls) startete die App ~8x/Tag neu, wodurch die
+# In-Memory-Sperre bei jedem Neustart zurueckgesetzt wurde und Groq wiederholt
+# binnen Minuten erneut in dieselben 429-Fehlschlaege lief. `db.is_groq_
+# exhausted_today()`/`record_groq_failure()`/`record_groq_success()` ersetzen
+# die frueheren Modul-globalen Variablen 1:1 (gleiche Kalendertag-Semantik),
+# lesen/schreiben aber ueber eine kurzlebige `conn_factory()`-Verbindung.
 
 
 @dataclass
@@ -408,6 +385,18 @@ def run_budget_allocator(
         budget_gesamt, spot_reserve, result.uebersprungen_cooldown_hebel, result.uebersprungen_cooldown_marktscan,
     )
 
+    def _mit_conn(fn):
+        """Oeffnet/schliesst einen eigenen conn je Aufruf - jeder LLM-Call ist
+        potenziell langsam (Netzwerk), eine gemeinsame lang gehaltene
+        Connection ueber alle Kandidaten waere unnoetig fehleranfaellig.
+        Auch fuer die kurzen Groq-Erschoepfungs-DB-Zugriffe unten
+        wiederverwendet (2026-07-20)."""
+        conn = conn_factory()
+        try:
+            return fn(conn)
+        finally:
+            conn.close()
+
     def _mit_fallback_chain(schluessel: str, calls: list[tuple[str, object]]) -> bool:
         """Versucht `calls` (Liste von (provider_name, call_fn)) der Reihe nach.
         "groq" hat kein eigenes Tagesbudget hier (Groqs reales Tageslimit
@@ -426,7 +415,7 @@ def run_budget_allocator(
         docs/budget_queue_design.md geforderte Qualitaets-Tracking)."""
         last_exc: Exception | None = None
         for provider_name, call_fn in calls:
-            if provider_name == "groq" and _is_groq_exhausted_today():
+            if provider_name == "groq" and _mit_conn(db.is_groq_exhausted_today):
                 result.groq_erschoepft_erkannt = True
                 continue
             if provider_name in tages_budget:
@@ -440,12 +429,12 @@ def run_budget_allocator(
                 res = call_fn()
                 if getattr(res, "gate_passed", True) is False:
                     # Datenqualitaets-Gate hat VOR jedem echten LLM-Call blockiert - kein
-                    # echter Groq-Erfolg, also auch KEIN _record_groq_success() hier (wuerde
+                    # echter Groq-Erfolg, also auch KEIN record_groq_success() hier (wuerde
                     # den Fehlschlag-Zaehler faelschlich auf Basis eines gar nicht
                     # stattgefundenen Calls zuruecksetzen).
                     return True
                 if provider_name == "groq":
-                    _record_groq_success()
+                    _mit_conn(db.record_groq_success)
                 result.provider_je_call[schluessel] = provider_name
                 result.ergebnis_objekt[schluessel] = res
                 if provider_name in tages_verbraucht:
@@ -457,7 +446,7 @@ def run_budget_allocator(
                 return True
             except Exception as exc:
                 if provider_name == "groq":
-                    _record_groq_failure(groq_exhaustion_schwelle)
+                    _mit_conn(lambda c: db.record_groq_failure(c, groq_exhaustion_schwelle))
                 last_exc = exc
                 logger.info("%s-Call für %s fehlgeschlagen (%s)", provider_name, schluessel, exc)
 
@@ -465,31 +454,20 @@ def run_budget_allocator(
         result.fehlgeschlagen.append(schluessel)
         return False
 
-    def _mit_conn(fn):
-        """Oeffnet/schliesst einen eigenen conn je Call - jeder LLM-Call ist
-        potenziell langsam (Netzwerk), eine gemeinsame lang gehaltene
-        Connection ueber alle Kandidaten waere unnoetig fehleranfaellig."""
-        conn = conn_factory()
-        try:
-            return fn(conn)
-        finally:
-            conn.close()
-
     # --- Tier 1: Hebel ---
     for trigger in hebel_kandidaten[:tier1_n]:
         asset = next((a for a in watchlist if a.symbol == trigger.symbol), None)
         if asset is None:
             continue
         schluessel = f"hebel:{trigger.symbol}:{trigger.richtung}"
-        calls = [
-            ("groq", lambda t=trigger, a=asset: _mit_conn(
-                lambda c: generate_hebel_signal(t, a, watchlist, c, groq_client, coingecko_client, kraken_client, fred_api_key)
-            )),
-        ]
+        calls = []
         if mistral_client is not None:
             calls.append(("mistral", lambda t=trigger, a=asset: _mit_conn(
                 lambda c: generate_hebel_signal(t, a, watchlist, c, mistral_client, coingecko_client, kraken_client, fred_api_key)
             )))
+        calls.append(("groq", lambda t=trigger, a=asset: _mit_conn(
+            lambda c: generate_hebel_signal(t, a, watchlist, c, groq_client, coingecko_client, kraken_client, fred_api_key)
+        )))
         if gemini_client is not None:
             calls.append(("gemini", lambda t=trigger, a=asset: _mit_conn(
                 lambda c: generate_hebel_signal(t, a, watchlist, c, gemini_client, coingecko_client, kraken_client, fred_api_key)
@@ -523,11 +501,10 @@ def run_budget_allocator(
 
         for candidate in marktscan_kandidaten[:tier2_n]:
             schluessel = f"marktscan:{candidate.coingecko_id}"
-            calls = [
-                ("groq", lambda c=candidate: _writeup(c, groq_client)),
-            ]
+            calls = []
             if mistral_client is not None:
                 calls.append(("mistral", lambda c=candidate: _writeup(c, mistral_client)))
+            calls.append(("groq", lambda c=candidate: _writeup(c, groq_client)))
             if gemini_client is not None:
                 calls.append(("gemini", lambda c=candidate: _writeup(c, gemini_client)))
             ok = _mit_fallback_chain(schluessel, calls)
@@ -537,15 +514,14 @@ def run_budget_allocator(
     # --- Tier 3: Spot-Rotation ---
     for asset in spot_kandidaten[:tier3_n]:
         schluessel = f"spot:{asset.symbol}"
-        calls = [
-            ("groq", lambda a=asset: _mit_conn(
-                lambda c: generate_signal(a, watchlist, c, groq_client, coingecko_client, kraken_client, fred_api_key)
-            )),
-        ]
+        calls = []
         if mistral_client is not None:
             calls.append(("mistral", lambda a=asset: _mit_conn(
                 lambda c: generate_signal(a, watchlist, c, mistral_client, coingecko_client, kraken_client, fred_api_key)
             )))
+        calls.append(("groq", lambda a=asset: _mit_conn(
+            lambda c: generate_signal(a, watchlist, c, groq_client, coingecko_client, kraken_client, fred_api_key)
+        )))
         if gemini_client is not None:
             calls.append(("gemini", lambda a=asset: _mit_conn(
                 lambda c: generate_signal(a, watchlist, c, gemini_client, coingecko_client, kraken_client, fred_api_key)
