@@ -108,9 +108,26 @@ def _fetch_all_bitpanda_assets(session: requests.Session | None = None) -> list[
     Assets mit kollidierendem Ticker, keine Paginierungs-Artefakte. Die
     `while`-Schleife bleibt als Sicherheitsnetz erhalten (falls `total_count`
     jemals `BITPANDA_ASSETS_PAGE_SIZE` uebersteigt), wird im Normalfall aber nie
-    ein zweites Mal durchlaufen."""
+    ein zweites Mal durchlaufen.
+
+    BUGFIX 4 (2026-07-20, Nutzer-Fund am echten Watchlist-Screenshot: SUI/BIO/W/
+    CAT zeigten ploetzlich alle rot/"nicht gelistet"): Bugfix 1 dedupliziert
+    bisher rein per `symbol` UEBER ALLE Gruppen hinweg - genau die "ca. 53 echten
+    Symbol-Duplikate" aus Bugfix 3 sind aber ueberwiegend harmlose Ticker-
+    Kollisionen ZWISCHEN VERSCHIEDENEN Anlageklassen (z.B. Krypto-Token "SUI" vs.
+    Aktie "Sun Communities", "BIO" vs. "Bio-Rad Laboratories", "W" vs. "Wayfair",
+    "CAT" vs. "Caterpillar" - live im Rohdatensatz bestaetigt: beide Eintraege
+    sind vorhanden, "erstes Vorkommen gewinnt" behielt jeweils die Aktie und
+    verwarf den Krypto-Token stillschweigend). `get_listed_assets()`/
+    `get_listed_non_crypto_assets()` filtern zwar NACH diesem Abruf per Gruppe,
+    aber die faelschlich verworfenen Krypto-Eintraege waren zu diesem Zeitpunkt
+    bereits weg. Fix: Dedup-Schluessel von `symbol` auf `(symbol, group)`
+    geaendert - entfernt weiterhin echte Innerhalb-derselben-Gruppe-Duplikate
+    (der urspruengliche Bugfix-1-Zweck), behaelt aber Eintraege aus
+    unterschiedlichen Gruppen mit zufaellig gleichem Ticker als eigenstaendige
+    Assets."""
     session = session or requests.Session()
-    assets_by_symbol: dict[str, BitpandaAsset] = {}
+    assets_by_key: dict[tuple[str, str], BitpandaAsset] = {}
     page = 1
     while True:
         response = session.get(
@@ -124,12 +141,14 @@ def _fetch_all_bitpanda_assets(session: requests.Session | None = None) -> list[
         for entry in entries:
             attrs = entry["attributes"]
             symbol = attrs["symbol"]
-            if symbol not in assets_by_symbol:
-                assets_by_symbol[symbol] = BitpandaAsset(symbol=symbol, name=attrs["name"], group=attrs["group"])
+            group = attrs["group"]
+            key = (symbol, group)
+            if key not in assets_by_key:
+                assets_by_key[key] = BitpandaAsset(symbol=symbol, name=attrs["name"], group=group)
         if len(entries) < BITPANDA_ASSETS_PAGE_SIZE:
             break
         page += 1
-    return list(assets_by_symbol.values())
+    return list(assets_by_key.values())
 
 
 def get_listed_assets(session: requests.Session | None = None) -> list[BitpandaAsset]:

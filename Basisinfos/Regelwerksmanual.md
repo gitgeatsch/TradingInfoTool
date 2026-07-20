@@ -5775,3 +5775,42 @@ Watchlist-Spalte zeigt vor Override "✗", nach Klick auf den neuen Button
 "✓ (M)", nach erneutem Klick wieder "✗", `get_bitpanda_gelistet_override()`
 spiegelt den DB-Zustand exakt; Import-Check aller 4 Pipelines + `ui/app.py`
 fehlerfrei.
+
+## Nachtrag (2026-07-20): Bitpanda-Katalog-Dedup verwarf Krypto-Token bei Ticker-Kollision mit Aktien
+
+**Ausloeser:** Nutzer bemerkte im Watchlist-Screenshot, dass mehrere Krypto-
+Assets (SUI, W/Wormhole, BIO/Bio Protocol, CAT/Simon's Cat) - darunter SUI
+als `core`-Position - ploetzlich rot/"nicht bei Bitpanda gelistet" zeigten,
+obwohl es sich um bekannte, real gehandelte Token handelt.
+
+**Root Cause (live bestaetigt):** `api/bitpanda.py::_fetch_all_bitpanda_assets()`
+dedupliziert seit dem 2026-07-19-Bugfix ("erstes Vorkommen gewinnt") per
+`symbol` UEBER ALLE Anlageklassen hinweg. Der Rohdatensatz enthaelt aber
+echte Ticker-Kollisionen ZWISCHEN unterschiedlichen Klassen: Krypto-Token
+"SUI" koexistiert mit der Aktie "Sun Communities" (REIT), "BIO" mit
+"Bio-Rad Laboratories", "W" mit "Wayfair", "CAT" mit "Caterpillar" - live
+im Rohdatensatz (vor Dedup) bestaetigt: beide Eintraege sind vorhanden.
+Da die Aktien-Eintraege im Rohdatensatz vor den Krypto-Eintraegen auftraten,
+"gewann" jeweils die Aktie den Dedup-Slot, der echte Krypto-Token wurde
+schon VOR der gruppenspezifischen Filterung (`get_listed_assets()`) still-
+schweigend verworfen. Der urspruengliche Bugfix vom 19.07. hatte diese ca.
+53 "echten Symbol-Duplikate" bereits im eigenen Docstring korrekt als
+"vermutlich verschiedene interne Assets mit kollidierendem Ticker"
+identifiziert - aber trotzdem pauschal dedupliziert, ohne die Assetklassen-
+uebergreifende Konsequenz zu bedenken.
+
+**Fix:** Dedup-Schluessel von `symbol` auf `(symbol, group)` geaendert -
+entfernt weiterhin echte Innerhalb-derselben-Gruppe-Duplikate (der
+urspruengliche Zweck), behaelt aber Eintraege aus unterschiedlichen Gruppen
+mit zufaellig gleichem Ticker als eigenstaendige Assets. Betrifft nur
+`api/bitpanda.py`, keine Aenderung an Aufrufern noetig (`is_listed()`
+bekommt ohnehin schon gruppen-gefilterte Listen).
+
+**Vollstaendigkeits-Check:** alle 56 Watchlist-Symbole gegen den echten
+Katalog geprueft - genau die 4 vom Nutzer gefundenen Symbole betroffen,
+keine weiteren Kollisionen. Verifikation: Live-Check bestaetigt SUI/BIO/W/
+CAT jetzt korrekt als gelistetes Krypto-Asset; Regressionstest bestaetigt
+PLTR/VST (Aktien) weiterhin korrekt, die vier Kollisions-Symbole bleiben
+auf der Aktien-Seite ebenfalls korrekt vorhanden (Sun Communities/Bio-Rad/
+Wayfair/Caterpillar), CANTON/CC-Namens-Fallback weiterhin funktionsfaehig;
+Tk-Smoke-Test der Watchlist-Spalte zeigt SUI/W jetzt "✓" statt "✗".
