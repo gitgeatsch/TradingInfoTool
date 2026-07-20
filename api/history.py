@@ -37,6 +37,16 @@ def _bucket_prices_by_date(raw_prices: list) -> dict[str, float]:
 
 
 def backfill_history(client, conn, asset, days: int = FULL_BACKFILL_DAYS) -> HistoryUpdateResult:
+    # 2026-07-20, echter Notebook-Fund (API-Health-Log: ".../coins/None/market_chart"
+    # 404) - ein Krypto-Asset ohne aufgeloeste coingecko_id (z.B. frisch per Auto-Add
+    # angelegt, Aufloesung noch ausstehend/fehlgeschlagen) loeste hier taeglich zwei
+    # sinnlose CoinGecko-Calls aus, die ohnehin nur per try/except abgefangen wurden.
+    # Klarer Skip statt stillem Fehlschlag (P-10).
+    if not asset.coingecko_id:
+        return HistoryUpdateResult(
+            coingecko_id=asset.coingecko_id, points_upserted=0, degraded=True,
+            reason="Keine coingecko_id vorhanden - Historie-Abruf übersprungen.",
+        )
     last_date = db.get_last_history_date(conn, asset.coingecko_id)
     if last_date is None:
         fetch_days = days

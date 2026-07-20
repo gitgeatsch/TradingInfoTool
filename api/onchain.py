@@ -56,6 +56,28 @@ DEFILLAMA_STABLECOINS_URL = "https://stablecoins.llama.fi/stablecoins"
 # ohnehin das dynamischere Signal (taegliche Bewegung statt trage Bestandsgroesse).
 
 
+class MissingOnChainMetricError(ValueError):
+    """2026-07-20, echter Notebook-Fund: CoinMetrics liefert fuer den neuesten Tag
+    gelegentlich noch KEINEN Wert fuer eine einzelne Metrik (bekannter Lag bei
+    On-Chain-Anbietern - der Tag ist im Feed schon sichtbar, einzelne Metriken
+    werden aber erst zeitversetzt nachgetragen). Der bisherige direkte
+    `float(entry[...])`-Aufruf liess das als nichtssagenden `TypeError: float()
+    argument must be a string or a real number, not 'NoneType'` durchschlagen -
+    gleiche Fehlerklasse wie api/derivatives.py::NoOpenInterestDataError, macht
+    Metrik+Datum sofort im Log erkennbar. AENDERT NICHTS am Fehlerverhalten
+    selbst (P-10 bleibt: fehlende Rohdaten -> Exception, kein geratener Wert) -
+    der Aufrufer faengt ohnehin jede Exception pro Quelle einzeln ab."""
+
+
+def _pflicht_float(entry: dict, feld: str, datum: str) -> float:
+    wert = entry.get(feld)
+    if wert is None:
+        raise MissingOnChainMetricError(
+            f"CoinMetrics: Metrik '{feld}' fehlt fuer {datum} (noch nicht nachgetragen?)"
+        )
+    return float(wert)
+
+
 @dataclass
 class OnChainReading:
     date: str
@@ -93,11 +115,12 @@ def get_btc_onchain_snapshot(session: requests.Session | None = None) -> OnChain
     response.raise_for_status()
     data = response.json()
     entry = data["data"][-1]
+    datum = str(entry.get("time"))
 
-    price = float(entry["PriceUSD"])
-    market_cap = float(entry["CapMrktCurUSD"])
-    supply = float(entry["SplyCur"])
-    mvrv = float(entry["CapMVRVCur"])
+    price = _pflicht_float(entry, "PriceUSD", datum)
+    market_cap = _pflicht_float(entry, "CapMrktCurUSD", datum)
+    supply = _pflicht_float(entry, "SplyCur", datum)
+    mvrv = _pflicht_float(entry, "CapMVRVCur", datum)
 
     realized_cap = market_cap / mvrv
     nupl = 1 - (1 / mvrv)
@@ -143,8 +166,9 @@ def get_btc_exchange_flows(session: requests.Session | None = None) -> ExchangeF
     response.raise_for_status()
     data = response.json()
     entry = data["data"][-1]
-    inflow = float(entry["FlowInExNtv"])
-    outflow = float(entry["FlowOutExNtv"])
+    datum = str(entry.get("time"))
+    inflow = _pflicht_float(entry, "FlowInExNtv", datum)
+    outflow = _pflicht_float(entry, "FlowOutExNtv", datum)
     return ExchangeFlowReading(
         date=str(entry["time"]).split("T")[0], inflow_btc=inflow, outflow_btc=outflow,
         net_flow_btc=inflow - outflow,

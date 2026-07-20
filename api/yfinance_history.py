@@ -26,7 +26,7 @@ import yfinance as yf
 
 import database.db as db
 from api.kraken_history import OhlcUpdateResult
-from api.yfinance_client import run_with_daemon_timeout
+from api.yfinance_client import YFINANCE_HISTORY_UNRELIABLE_TICKERS, run_with_daemon_timeout
 from database.api_health import track_api_health
 from database.models import OhlcPoint
 
@@ -75,7 +75,25 @@ def get_full_ohlc_history(ticker: str, symbol: str, currency: str = "USD") -> li
     internem Symbol.
 
     Wirft bei einem haengenden Aufruf `concurrent.futures.TimeoutError`, sonst die
-    zugrundeliegende yfinance-Exception durch (P-10), analog zu get_full_price_history()."""
+    zugrundeliegende yfinance-Exception durch (P-10), analog zu get_full_price_history().
+
+    Ausnahme (2026-07-20, echter Notebook-Fund): Ticker aus
+    YFINANCE_HISTORY_UNRELIABLE_TICKERS (api/yfinance_client.py, "nur
+    fast_info"-Instrumente wie X136.BE/IS0C.DE) liefern hier KEINEN normalen
+    Fehlschlag, sondern werfen von yfinance selbst eine harte Exception
+    ("Period 'max' is invalid, must be one of: 1d, 5d") - die Liste war bisher
+    nur beim 15-Min-Live-Preis-Pfad (fast_info, per Logging-Filter in main.py)
+    beruecksichtigt, nicht bei diesem taeglichen OHLC-History-Pfad. Statt
+    taeglich denselben bekannten Fehlschlag zu werfen (P-10 gilt fuer ECHTE
+    Unsicherheit, nicht fuer einen bereits bestaetigten Dauerzustand), sauberer
+    Skip mit leerer Liste - identisches Verhalten zum bereits etablierten
+    fehlenden-yfinance_symbol-Guard in agent/aktien/pipeline.py."""
+    if ticker in YFINANCE_HISTORY_UNRELIABLE_TICKERS:
+        logger.info(
+            "OHLC-Historie fuer %s (%s) uebersprungen - bekannter 'nur fast_info'-Ticker, "
+            "period='max' schlaegt dort strukturell fehl.", symbol, ticker,
+        )
+        return []
     return run_with_daemon_timeout(
         lambda: _fetch_ohlc_history(ticker, symbol, currency), _YFINANCE_HISTORY_TIMEOUT_SECONDS
     )
