@@ -469,7 +469,18 @@ def compute_risikofaktoren(
     negativ-Liste fuer Abschnitt 3 der neuen E-Mail-/App-Struktur. Bewusst
     NICHT vom LLM generiert. Kein eigenes Regime-Konflikt/These-Widerspruch
     (die gibt es bei Spot nicht, siehe Modul-Docstring: RM-10/-11 sind
-    hebel-spezifisch) - dafuer cash_veto, das es bei Hebel nicht gibt."""
+    hebel-spezifisch) - dafuer cash_veto, das es bei Hebel nicht gibt.
+
+    `action` erwartet hier bewusst die URSPRUENGLICHE, vom Modell vorgeschlagene
+    Aktion (post_check()'s `original_action`, VOR jeder Veto-Ueberschreibung
+    auf HALTEN) - nicht die finale, angezeigte Aktion. Grund (2026-07-20,
+    Nutzer-Fund am echten KAITO-Fall): bei einem Risiko-Veto (z.B. CRV unter
+    Minimum) hatte der Groq-Aufruf zu diesem Zeitpunkt laengst stattgefunden -
+    Confluence/Gegenszenario-Wahrscheinlichkeit/Retail-Konsens/Konfidenz lagen
+    also bereits vor, wurden aber komplett verworfen und nur der eine
+    Veto-Grund gezeigt. Mit der urspruenglichen Aktion als Gate zeigt die
+    Liste jetzt das VOLLE Bild der (abgelehnten) Kaufidee, waehrend die
+    tatsaechliche Empfehlung (HALTEN) unveraendert bleibt."""
     faktoren: list[Risikofaktor] = []
 
     if cash_veto:
@@ -480,7 +491,6 @@ def compute_risikofaktoren(
 
     if risk_veto:
         faktoren.append(Risikofaktor("Risiko-Veto", "negativ", risk_veto_reason or "Deterministisches Veto ausgelöst."))
-        return faktoren
 
     if action not in _BUY_ACTIONS:
         return faktoren
@@ -576,6 +586,12 @@ def post_check(
     crv = None
 
     action = str(result.get("action", "")).upper()
+    # Unveraendert festgehalten fuer compute_risikofaktoren() (siehe dort,
+    # Nutzer-Fund 2026-07-20: Konklusion zeigte bei einem CRV-Veto nur den
+    # Veto-Grund, obwohl der Groq-Aufruf laengst gelaufen war und Confluence/
+    # Gegenszenario/Retail-Konsens/Konfidenz bereits vorlagen) - `action`
+    # selbst wird unten bei jedem Veto auf "HALTEN" ueberschrieben.
+    original_action = action
 
     if action in _BUY_ACTIONS and not pre_result.kauf_erlaubt:
         risk_veto = True
@@ -781,7 +797,7 @@ def post_check(
     forecast = result.get("forecast") or {}
     gegenszenario_pct = (forecast.get("bear") or {}).get("probability_pct")
     risikofaktoren = compute_risikofaktoren(
-        action=action,
+        action=original_action,
         cash_veto=pre_result.cash_veto,
         cash_veto_reason=pre_result.cash_veto_reason,
         risk_veto=risk_veto,
