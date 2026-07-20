@@ -5452,3 +5452,94 @@ kategorie_thesen`, alle 4 Nicht-Krypto-Pipelines, `main`) - keine Fehler.
 - Absicherung/Hedge-`these_abgleich` bleibt `"nicht_pruefbar"` (Lücke 3 aus
   Folge 6, Bärenmarkt-Overlay-Indikator ist noch keine eigenständig
   aufrufbare Funktion).
+
+## Nachtrag (2026-07-20, Folge 8): Screener-Auto-Scan + Mouseover-Tooltips fuer Tabs/Aktionen
+
+Nutzer-Feedback nach dem ersten Test der Folge-7-Neuerungen: der Screener-Tab
+war leer, weil er ausschliesslich manuell scannt, und die neuen Elemente
+(Schwerpunkte-Tab, Screener-Auto-Scan) hatten keine erklaerenden Tooltips.
+Zwei kleine, in sich abgeschlossene Nachbesserungen.
+
+**Screener-Auto-Scan** (Nutzer-Wunsch "Auto-Screen beim Start bzw.
+regelmaessige Updates", Nutzer-Bestaetigung "60 Minuten passt"): bewusst ein
+GUI-lokaler, selbstverlaengernder `self.after()`-Timer in
+`ui/screener_view.py` (Muster wie `ui/app.py::_poll_prices()`), KEIN neuer
+Scheduler-Job - der Screener persistiert bewusst nichts in die DB (siehe
+Folge-Ur-Docstring "keine DB-Persistenz"), ein Scheduler-Job haette dafuer
+eine neue Tabelle gebraucht, nur damit die GUI sie wieder ausliest. Erster
+Scan kurz nach dem Tab-Aufbau, danach alle `Basisinfos/config.yaml::
+screener.auto_scan_intervall_minuten` (Default 60) Minuten erneut - der
+Folge-Timer wird IMMER ab dem letzten tatsaechlichen Scan neu geplant
+(egal ob manuell oder automatisch ausgeloest), mit Schutz gegen doppelte
+Timer-Ketten (`after_cancel()` vor jedem Neuplanen) und gegen
+ueberlappende Scans (Guard: ein Aufruf waehrend `scan_button` disabled
+ist, wird ignoriert). 60 Minuten bewusst zurueckhaltend gewaehlt: Yahoo-
+Finance-`day_gainers` ist zwar echt intraday-dynamisch, aber Bitpandas
+ETF/ETC-Katalog aendert sich kaum, und das Notebook hatte bereits einen
+echten yfinance-Haenger (siehe Memory
+`project_multi_asset_yfinance_symbols`).
+
+**Mouseover-Tooltips fuer Tabs/Aktionen** (Nutzer-Wunsch: "fuer die
+Primaerseiten - Tabs und Aktionen - eine konkrete Kurzbeschreibung bei
+Mouseover was diese bewirken/nutzung und optional [...] was sie nicht
+koennen"): neues Modul `ui/widget_tooltip.py` - Ergaenzung zu den
+bestehenden `ui/heading_tooltip.py` (Treeview-Spaltenkoepfe) und
+`ui/row_tooltip.py` (Treeview-Zeilen), die beide NICHT auf normale Widgets
+oder Notebook-Tab-Kopfzeilen anwendbar sind. Zwei neue Funktionen:
+`add_widget_tooltip(widget, text)` (statischer Tooltip fuer z.B. einen
+Button) und `add_notebook_tab_tooltips(notebook, {index: text})` (ueber
+`notebook.identify()`/`notebook.index("@x,y")`). Bewusst eingegrenzter
+Scope fuer diese Runde: NUR die beiden Tabs, deren Verhalten sich neu
+geaendert hat (Schwerpunkte: neuer Tab; Screener: neuer Auto-Scan) -
+Tab-Kopf-Tooltip fuer beide (`ui/app.py`) + Aktions-Tooltip fuer jeden
+Button/jede Checkbox im Schwerpunkte-Toolbar (`ui/thesen_view.py`) und im
+Screener-Toolbar (`ui/screener_view.py`), jeweils inkl. explizitem Hinweis
+auf fehlenden Automatismus wo relevant (z.B. "Uebernimmt NICHTS
+automatisch in die Watchlist"). Die uebrigen, bereits laenger bestehenden
+Tabs (Watchlist/Portfolio/Signale/Marktscan/Hebel/Regime) sind bewusst NICHT
+Teil dieser Runde - koennten im selben Muster nachgeruestet werden, falls
+gewuenscht.
+
+**Lesbarkeits-Check der neuen Marker-Farben (▲/▼/●, `these_positiv`/
+`these_negativ`/`these_neutral`):** WCAG-Kontrastverhaeltnis berechnet
+gegen Standard- UND Zebra-Streifen-Hintergrund, beide Modi. Echter,
+bereits VORHANDENER Befund (nicht durch diese Runde neu verursacht - die
+drei Marker-Tags nutzen die laengst etablierten `theme.success_color()`/
+`danger_color()`/`info_color()`, dieselben Farben wie z.B. `pl_positive`/
+`pl_negative` im Portfolio-Tab): im Light Mode liegen alle drei knapp an
+oder leicht unter der WCAG-AA-Schwelle (4,5:1) auf dem Zebra-Streifen
+(4,26-4,82:1); im Dark Mode ist der Kontrast auf normalem Hintergrund gut
+(5,2-6,0:1), faellt aber auf dem dunklen Zebra-Streifen (`#404040`) auf
+3,2-3,7:1 - unter der AA-Schwelle fuer normalen Text. Da dies ein
+projektweites, bereits lange bestehendes Theme-Farbthema betrifft (nicht
+nur die neuen Marker) und eine Korrektur alle Stellen mit `pl_positive`/
+`pl_negative`/`bitpanda_fehlt`/etc. gleichermassen beeinflussen wuerde,
+wurde dem Nutzer der Befund zunaechst nur gemeldet statt am Theme-System
+vorbeizukorrigieren.
+
+**Nachtrag zum Nachtrag, gleicher Tag - Nutzer bestaetigte den Fix nach
+einem echten Screenshot** (Screener-Tab, Dark Mode: die "AGRICULTURE"/
+"SOFTS"-Zeilen kaum lesbar grau auf dunkelgrauem Zebra-Streifen): bewusst
+NICHT die Text-Farben selbst geaendert (haette die etablierte Bedeutung
+von success/danger/warn/swap/info ueberall im Projekt angefasst), sondern
+NUR `theme.py::_LIGHT["zebra_odd"]`/`_DARK["zebra_odd"]` selbst justiert -
+ein einziger, zentraler Wert, den `restripe_treeview()` ohnehin bei jedem
+Aufruf dynamisch nachschlaegt (`_palette()["zebra_odd"]`), also automatisch
+ueberall wirksam ohne weitere Codeaenderung. Dark Mode: `#404040` ->
+`#2d2d2d` (bewusst der bereits etablierte `entry_bg`-Ton wiederverwendet,
+keine neue, ungetestete Farbe) - success/danger/info/muted/warn/swap jetzt
+bei 4,0-6,5:1 (vorher 3,0-4,9:1), die meisten ueber der AA-Schwelle, der
+Rest deutlich naeher dran. Light Mode: `#ebebeb` -> `#f2f2f2` (naeher an
+`bg`) - success/danger/info jetzt bei 4,5-5,1:1 (vorher 4,3-4,8:1), alle
+drei jetzt ueber der Schwelle.
+
+**Verifikation:** synthetischer Tk-Test gegen eine DB-Kopie (kein echter
+Produktivstart) mit gemockten `scan_aktien_candidates()`/
+`scan_etf_candidates()`/`get_listed_non_crypto_assets()` (kein echter
+Netzwerkzugriff im Test) - Auto-Scan-Ausloesung beim Tab-Aufbau, korrekt
+geladenes Intervall aus `config.yaml`, Folge-Timer-Planung nach
+Scan-Abschluss, Doppel-Scan-Guard, doppelter `_schedule_next_auto_scan()`-
+Aufruf ohne Fehler, sowie die Tooltip-Bindung an allen neuen Widgets (2
+Screener-Buttons, 4 Schwerpunkte-Buttons + 1 Checkbox, Notebook-Tab-Helper)
+- alle 9 Testfaelle bestanden. Kombinierter Import-Regressionstest von
+`ui.app` weiterhin fehlerfrei.

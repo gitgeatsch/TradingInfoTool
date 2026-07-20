@@ -27,6 +27,7 @@ from ui.screener_view import ScreenerView
 from ui.signals_view import SignalsView
 from ui.sortable_tree import make_sortable
 from ui.thesen_view import ThesenView
+from ui.widget_tooltip import add_notebook_tab_tooltips
 
 logger = logging.getLogger(__name__)
 
@@ -181,6 +182,33 @@ class TradingInfoToolApp(tk.Tk):
 
         self._thesen_view = ThesenView(notebook, db_conn_factory)
         notebook.add(self._thesen_view, text="Schwerpunkte")
+
+        # Tab-Kopf-Tooltips (2026-07-20, Nutzer-Wunsch: Kurzbeschreibung bei
+        # Mouseover fuer die "Primaerseiten") - bewusst vorerst nur fuer die
+        # beiden Tabs, deren Verhalten sich in dieser Runde geaendert/neu
+        # entstanden ist (Screener: Auto-Scan; Schwerpunkte: neuer Tab); die
+        # uebrigen Tabs koennen bei Bedarf im selben Muster ergaenzt werden.
+        import config as config_module
+
+        screener_intervall_minuten = config_module.load_config().get("screener", {}).get(
+            "auto_scan_intervall_minuten", 60
+        )
+        add_notebook_tab_tooltips(notebook, {
+            4: (
+                f"Screener: sucht automatisch alle {screener_intervall_minuten} Minuten "
+                "(+ jederzeit manuell) neue Aktien-/ETF-Kandidaten, die noch nicht in der "
+                "Watchlist stehen. Kein Automatismus bei der Uebernahme: jede Aufnahme in "
+                "die Watchlist braucht eine manuelle Bestaetigung, keine Bewertung/kein "
+                "Score hier - das passiert erst danach ueber die normale Signal-Pipeline."
+            ),
+            7: (
+                "Schwerpunkte: manuelle Verwaltung von Kategorie-Thesen (Übergewichten/"
+                "Neutral/Meiden je Hauptgruppe/Unterkategorie). Wirkt sich NUR auf "
+                "Hervorhebung/Sortierung in Watchlist, Portfolio und Screener aus "
+                "(▲/▼/●-Marker) - KEIN Einfluss auf KI-Signale/Scores. Kein Automatismus: "
+                "Thesen werden ausschliesslich hier manuell angelegt/bearbeitet."
+            ),
+        })
 
         disclaimer = ttk.Label(
             self, text=DISCLAIMER_TEXT, foreground=theme.info_color(), wraplength=880, justify="center"

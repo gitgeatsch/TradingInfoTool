@@ -1014,3 +1014,16 @@ multi_asset_batch:
                                     # deutlich traeger als Kryptos 10h/20h,
                                     # passend zur langsameren Marktdynamik
                                     # (Boersenzeiten/Wochenenden)
+
+# --- Screener-Tab (2026-07-20, Nutzer-Wunsch "Auto-Screen beim Start bzw.
+# regelmaessige Updates") - rein GUI-lokaler Timer in ui/screener_view.py,
+# KEIN Scheduler-Job (der Screener persistiert bewusst nichts in die DB,
+# siehe agent/aktien/screener.py-Docstring - ein Scheduler-Job haette dafuer
+# eine neue Tabelle gebraucht, nur damit die GUI sie wieder ausliest) ---
+screener:
+  auto_scan_intervall_minuten: 60  # nicht kuerzer: day_gainers ist zwar echt
+                                    # intraday-dynamisch, aber Bitpandas
+                                    # ETF/ETC-Katalog aendert sich kaum, und
+                                    # das Notebook hatte bereits einen echten
+                                    # yfinance-Haenger (siehe Memory) - 60 Min
+                                    # ist ein bewusst zurueckhaltender Wert.

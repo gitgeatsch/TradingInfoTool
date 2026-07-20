@@ -26,6 +26,7 @@ import ui.theme as theme
 from database.models import These
 from ui.row_tooltip import add_row_tooltips
 from ui.sortable_tree import make_sortable
+from ui.widget_tooltip import add_widget_tooltip
 
 _GESAMTE_HAUPTGRUPPE = "(gesamte Hauptgruppe)"
 
@@ -313,17 +314,56 @@ class ThesenView(ttk.Frame):
     def _build_layout(self) -> None:
         toolbar = ttk.Frame(self, padding=8)
         toolbar.pack(fill="x")
-        ttk.Button(toolbar, text="Neue These …", command=self._on_neu).pack(side="left")
-        ttk.Button(toolbar, text="Bearbeiten …", command=self._on_bearbeiten).pack(side="left", padx=(6, 0))
-        ttk.Button(toolbar, text="Als erledigt markieren", command=lambda: self._on_status_wechsel("erledigt")).pack(
-            side="left", padx=(6, 0)
+
+        neu_button = ttk.Button(toolbar, text="Neue These …", command=self._on_neu)
+        neu_button.pack(side="left")
+        add_widget_tooltip(
+            neu_button,
+            "Legt eine neue These an (Hauptgruppe/Unterkategorie, Richtung, Begründung). "
+            "Startet immer mit Status 'Aktiv'. Rein manuell - es gibt (noch) keinen "
+            "automatischen KI-Vorschläge-Job.",
         )
-        ttk.Button(toolbar, text="Verwerfen", command=lambda: self._on_status_wechsel("verworfen")).pack(
-            side="left", padx=(6, 0)
+
+        bearbeiten_button = ttk.Button(toolbar, text="Bearbeiten …", command=self._on_bearbeiten)
+        bearbeiten_button.pack(side="left", padx=(6, 0))
+        add_widget_tooltip(
+            bearbeiten_button,
+            "Bearbeitet die in der Liste ausgewählte These (Richtung/Stärke/Begründung/"
+            "Review-Datum). Ändert NICHT den Status - dafür die beiden Buttons rechts "
+            "daneben.",
         )
-        ttk.Checkbutton(
+
+        erledigt_button = ttk.Button(
+            toolbar, text="Als erledigt markieren", command=lambda: self._on_status_wechsel("erledigt"),
+        )
+        erledigt_button.pack(side="left", padx=(6, 0))
+        add_widget_tooltip(
+            erledigt_button,
+            "Setzt die ausgewählte These auf Status 'Erledigt' - verschwindet danach aus "
+            "der Standardansicht ('Nur aktive anzeigen'), wirkt sich sofort NICHT mehr auf "
+            "Hervorhebung/Sortierung in Watchlist/Portfolio/Screener aus.",
+        )
+
+        verwerfen_button = ttk.Button(
+            toolbar, text="Verwerfen", command=lambda: self._on_status_wechsel("verworfen"),
+        )
+        verwerfen_button.pack(side="left", padx=(6, 0))
+        add_widget_tooltip(
+            verwerfen_button,
+            "Setzt die ausgewählte These auf Status 'Verworfen' (z. B. weil sie sich als "
+            "falsch herausgestellt hat) - gleiche Wirkung wie 'Als erledigt markieren', nur "
+            "anderer Status zur Unterscheidung in der Historie.",
+        )
+
+        nur_aktive_check = ttk.Checkbutton(
             toolbar, text="Nur aktive anzeigen", variable=self._nur_aktive_var, command=self.refresh,
-        ).pack(side="left", padx=(16, 0))
+        )
+        nur_aktive_check.pack(side="left", padx=(16, 0))
+        add_widget_tooltip(
+            nur_aktive_check,
+            "Blendet erledigte/verworfene Thesen aus der Liste aus. Rein eine Anzeige-"
+            "Filterung - löscht nichts, wirkt sich nicht auf gespeicherte Daten aus.",
+        )
 
         tree_frame = ttk.Frame(self, padding=(8, 0, 8, 8))
         tree_frame.pack(fill="both", expand=True)

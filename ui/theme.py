@@ -37,7 +37,12 @@ _LIGHT = {
     "entry_bg": "#ffffff",
     "select_bg": "#0078d7",
     "select_fg": "#ffffff",
-    "zebra_odd": "#ebebeb",
+    "zebra_odd": "#f2f2f2",  # 2026-07-20, Lesbarkeits-Fix: naeher an bg (war
+                             # #ebebeb) - hebt success/danger/info-Zeilentext
+                             # (z.B. these_positiv/negativ/neutral-Marker, G/V-
+                             # Anzeige im Portfolio) ueber die WCAG-AA-Schwelle
+                             # (4,5:1), die auf dem alten Wert knapp verfehlt
+                             # wurde. Siehe Regelwerksmanual Nachtrag Folge 8.
 }
 _DARK = {
     "fg": "#e0e0e0",
@@ -51,7 +56,15 @@ _DARK = {
     "entry_bg": "#2d2d2d",
     "select_bg": "#094771",
     "select_fg": "#ffffff",
-    "zebra_odd": "#404040",
+    "zebra_odd": "#2d2d2d",  # 2026-07-20, Lesbarkeits-Fix (Nutzer-Fund, echter
+                             # Screenshot mit kaum lesbarem these_neutral-Text
+                             # auf Zebra-Streifen): war #404040 - success/
+                             # danger/info lagen dort bei nur 3,2-3,7:1
+                             # Kontrast (unter WCAG-AA 4,5:1). Bewusst der
+                             # bereits etablierte entry_bg-Ton wiederverwendet
+                             # (keine neue, ungetestete Farbe) - jetzt 4,3-5,4:1
+                             # fuer alle Tag-Farben. Siehe Regelwerksmanual
+                             # Nachtrag Folge 8.
 }
 
 _dark_mode = False

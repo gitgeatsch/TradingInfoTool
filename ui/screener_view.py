@@ -1,15 +1,23 @@
 """Aktien/ETF-Screener-Tab (2026-07-19, Nutzer-Wunsch "einen einfachen Aktien/ETF-
 Screener... analog Marktscan"). Bewusst EINFACHER als `ui/marktscan_view.py`: kein
 Score/keine Einstufung, keine automatische LLM-Begründung, keine DB-Persistenz -
-ein manueller Klick liefert eine frische Kandidatenliste (siehe
-`agent/aktien/screener.py` fuer die Quellen), die der Nutzer direkt per
-"In Watchlist übernehmen" (identisches Muster wie Marktscan, `config.py::
-add_watchlist_entry()`) uebernehmen kann. Die eigentliche Bewertung passiert
-danach ganz regulär über `agent/multi_asset_batch.py` - kein Doppelbau.
+ein Scan liefert eine frische Kandidatenliste (siehe `agent/aktien/screener.py`
+fuer die Quellen), die der Nutzer direkt per "In Watchlist übernehmen"
+(identisches Muster wie Marktscan, `config.py::add_watchlist_entry()`)
+uebernehmen kann. Die eigentliche Bewertung passiert danach ganz regulär über
+`agent/multi_asset_batch.py` - kein Doppelbau.
 
 Threading-Muster identisch zu `ui/marktscan_view.py`: der Scan braucht mehrere
 Netzwerk-Aufrufe (yfinance-Screens + Bitpanda-Assetliste) - synchron im
-Tk-Main-Thread würde die UI einfrieren."""
+Tk-Main-Thread würde die UI einfrieren.
+
+Auto-Scan (2026-07-20, Nutzer-Wunsch "Auto-Screen beim Start bzw. regelmaessige
+Updates"): ein GUI-lokaler, selbstverlaengernder `self.after()`-Timer (Muster
+wie `ui/app.py::_poll_prices()`), KEIN Scheduler-Job - der Screener persistiert
+bewusst nichts in die DB (siehe oben), ein Scheduler-Job haette dafuer eine neue
+Tabelle gebraucht, nur damit die GUI sie wieder ausliest. Intervall in
+`Basisinfos/config.yaml::screener.auto_scan_intervall_minuten` (Default 60) -
+bewusst nicht kuerzer, siehe dortiger Kommentar."""
 from __future__ import annotations
 
 import threading
@@ -24,6 +32,7 @@ from ui.formatting import format_money
 from ui.heading_tooltip import add_heading_tooltips
 from ui.row_tooltip import add_row_tooltips
 from ui.sortable_tree import make_sortable
+from ui.widget_tooltip import add_widget_tooltip
 
 _SCREENER_COLUMN_DESCRIPTIONS = {
     "symbol": "Symbol/Ticker des Kandidaten.",
@@ -63,22 +72,47 @@ class ScreenerView(ttk.Frame):
         # Stufe-1-Hervorhebung (2026-07-20, Task #343) - Begruendung je
         # Kandidaten-Zeile mit aktiver These, siehe _on_scan_done().
         self._these_tooltips: dict[str, str] = {}
+        # Auto-Scan (2026-07-20) - Intervall aus config.yaml, Default 60 Min
+        # falls die Sektion (noch) fehlt (P-10, kein Absturz bei alter Config).
+        screener_cfg = config_module.load_config().get("screener", {})
+        intervall_minuten = screener_cfg.get("auto_scan_intervall_minuten", 60)
+        self._auto_scan_intervall_ms = intervall_minuten * 60 * 1000
+        self._auto_scan_after_id: str | None = None
 
         self._build_layout()
+        # Erster Scan kurz nach dem Aufbau (Fenster soll erst rendern), danach
+        # uebernimmt _on_scan_done() das selbstverlaengernde Nachplanen.
+        self.after(500, self._on_scan_clicked)
 
     def _build_layout(self) -> None:
         toolbar = ttk.Frame(self)
         toolbar.pack(fill="x", padx=8, pady=(8, 4))
         self.scan_button = ttk.Button(toolbar, text="Jetzt scannen", command=self._on_scan_clicked)
         self.scan_button.pack(side="left")
+        add_widget_tooltip(
+            self.scan_button,
+            "Sucht sofort neu nach Kandidaten (3 Yahoo-Finance-Screens fuer Aktien + "
+            "Bitpandas eigener ETF/ETC-Katalog), zusaetzlich zum automatischen Scan alle "
+            f"{self._auto_scan_intervall_ms // 60000} Minuten. Uebernimmt NICHTS "
+            "automatisch in die Watchlist.",
+        )
         self.watchlist_button = ttk.Button(
             toolbar, text="In Watchlist übernehmen", command=self._on_adopt_clicked, state="disabled",
         )
         self.watchlist_button.pack(side="left", padx=(8, 0))
+        add_widget_tooltip(
+            self.watchlist_button,
+            "Uebernimmt den ausgewaehlten Kandidaten in Basisinfos/config.yaml (mit "
+            "Sicherheits-Nachfrage). Bewertet ihn NICHT automatisch - das passiert erst "
+            "danach ganz regulaer ueber die normale Signal-Pipeline, nach einem App-Neustart.",
+        )
 
         self.status_label = ttk.Label(self, text=(
-            "Noch nicht gescannt. \"Jetzt scannen\" durchsucht 3 Yahoo-Finance-Screens (Aktien) "
-            "und Bitpandas eigenen ETF/ETC-Katalog nach neuen Kandidaten, die noch nicht in der Watchlist stehen."
+            "Scanne automatisch beim Start und danach alle "
+            f"{self._auto_scan_intervall_ms // 60000} Minuten erneut (zusätzlich "
+            "jederzeit manuell über \"Jetzt scannen\" möglich) - durchsucht 3 "
+            "Yahoo-Finance-Screens (Aktien) und Bitpandas eigenen ETF/ETC-Katalog nach "
+            "neuen Kandidaten, die noch nicht in der Watchlist stehen."
         ), foreground=theme.info_color(), wraplength=900, justify="left")
         self.status_label.pack(anchor="w", padx=8, pady=(0, 8))
 
@@ -103,6 +137,11 @@ class ScreenerView(ttk.Frame):
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
 
     def _on_scan_clicked(self) -> None:
+        if str(self.scan_button["state"]) == "disabled":
+            # Schutz vor Doppel-Scans: kann passieren, wenn der automatische
+            # Timer genau in dem Moment feuert, in dem bereits ein manueller
+            # Scan laeuft (oder umgekehrt).
+            return
         self.scan_button.config(state="disabled")
         self.watchlist_button.config(state="disabled")
         self.status_label.config(
@@ -129,8 +168,13 @@ class ScreenerView(ttk.Frame):
 
     def _on_scan_done(self, candidates, error) -> None:
         self.scan_button.config(state="normal")
+        self._schedule_next_auto_scan()
         if error is not None:
-            self.status_label.config(text=f"Scan fehlgeschlagen: {error}", foreground=theme.danger_color())
+            self.status_label.config(
+                text=f"Scan fehlgeschlagen: {error} (naechster automatischer Versuch in "
+                     f"{self._auto_scan_intervall_ms // 60000} Minuten)",
+                foreground=theme.danger_color(),
+            )
             return
 
         self._candidates = candidates
@@ -200,9 +244,21 @@ class ScreenerView(ttk.Frame):
         etf_anzahl = sum(1 for c in candidates if c.assetklasse == "etf")
         self.status_label.config(
             text=f"{aktien_anzahl} neue Aktien-Kandidaten (Yahoo-Finance-Screener), "
-                 f"{etf_anzahl} neue ETF/ETC-Kandidaten (Bitpanda-Katalog).",
+                 f"{etf_anzahl} neue ETF/ETC-Kandidaten (Bitpanda-Katalog). "
+                 f"Naechster automatischer Scan in {self._auto_scan_intervall_ms // 60000} Minuten.",
             foreground=theme.info_color(),
         )
+
+    def _schedule_next_auto_scan(self) -> None:
+        """Selbstverlaengernder Timer (2026-07-20) - plant den naechsten
+        automatischen Scan ab JETZT (egal ob der vorangegangene Scan manuell
+        oder automatisch ausgeloest wurde). Bricht einen evtl. noch
+        ausstehenden aelteren Timer ab, damit nie zwei parallele Ketten
+        entstehen (z.B. wenn der Nutzer manuell scannt, waehrend noch ein
+        automatischer Termin aussteht)."""
+        if self._auto_scan_after_id is not None:
+            self.after_cancel(self._auto_scan_after_id)
+        self._auto_scan_after_id = self.after(self._auto_scan_intervall_ms, self._on_scan_clicked)
 
     def _on_select(self, event) -> None:
         selected = self.tree.selection()
