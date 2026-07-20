@@ -161,6 +161,21 @@ CREATE TABLE IF NOT EXISTS asset_hebel_settings (
     hebel_pruefung_erlaubt  INTEGER NOT NULL
 );
 
+-- Bitpanda-Gelistet-Override (2026-07-20, Nutzer-Fund: CEBS/EXH3/ISOC/VVMX/
+-- X136/OD7C/OD7H/OD7L/OD7N/DBPK/3QSS werden vom /v3/assets-Endpunkt (api/
+-- bitpanda.py) nicht gefunden, sind laut zwei echten Bitpanda-Screenshots
+-- (S&P 500 2X Inverse=DBPK, iShares Agribusiness=ISOC) aber tatsaechlich
+-- gehalten und aktiv handelbar - der Endpunkt ist fuer Bitpandas "Bitpanda
+-- Stocks"-Fractional-ETF/ETC-Produktlinie offenbar keine vollstaendige
+-- Quelle. Analog asset_hebel_settings: per Asset umschaltbar, ob der Live-
+-- Check uebersteuert und IMMER als gelistet behandelt werden soll. Default
+-- (keine Zeile): kein Override, Live-Check gilt wie bisher - siehe
+-- get_bitpanda_gelistet_override().
+CREATE TABLE IF NOT EXISTS asset_bitpanda_override (
+    symbol                      TEXT PRIMARY KEY,
+    bitpanda_gelistet_override  INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS marktscan_candidates (
     id                          INTEGER PRIMARY KEY AUTOINCREMENT,
     coingecko_id                TEXT NOT NULL,
@@ -1000,6 +1015,29 @@ def set_hebel_pruefung_erlaubt(conn: sqlite3.Connection, symbol: str, erlaubt: b
         "INSERT INTO asset_hebel_settings (symbol, hebel_pruefung_erlaubt) VALUES (?, ?) "
         "ON CONFLICT(symbol) DO UPDATE SET hebel_pruefung_erlaubt = excluded.hebel_pruefung_erlaubt",
         (symbol, int(erlaubt)),
+    )
+    conn.commit()
+
+
+def get_bitpanda_gelistet_override(conn: sqlite3.Connection, symbol: str) -> bool:
+    """Bitpanda-Gelistet-Override (2026-07-20) - siehe asset_bitpanda_override-
+    Tabellendocstring. Default: kein Override (False), solange keine explizite
+    Zeile existiert - der normale Live-Check (api/bitpanda.py::is_listed())
+    gilt dann unveraendert weiter, keine Verhaltensaenderung fuer alle
+    anderen Assets."""
+    row = conn.execute(
+        "SELECT bitpanda_gelistet_override FROM asset_bitpanda_override WHERE symbol = ?", (symbol,)
+    ).fetchone()
+    if row is None:
+        return False
+    return bool(row["bitpanda_gelistet_override"])
+
+
+def set_bitpanda_gelistet_override(conn: sqlite3.Connection, symbol: str, aktiv: bool) -> None:
+    conn.execute(
+        "INSERT INTO asset_bitpanda_override (symbol, bitpanda_gelistet_override) VALUES (?, ?) "
+        "ON CONFLICT(symbol) DO UPDATE SET bitpanda_gelistet_override = excluded.bitpanda_gelistet_override",
+        (symbol, int(aktiv)),
     )
     conn.commit()
 

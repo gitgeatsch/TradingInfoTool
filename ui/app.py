@@ -60,7 +60,11 @@ _WATCHLIST_COLUMN_DESCRIPTIONS = {
     ),
     "bitpanda": (
         "✓ = auf Bitpanda handelbar, ✗ = nicht gelistet (blockiert Kauf-/Nachkauf-"
-        "Signale), ? = noch nicht geprüft, - = nicht zutreffend (Nicht-Krypto-Asset)."
+        "Signale), ? = noch nicht geprüft, - = nicht zutreffend (Nicht-Krypto-Asset). "
+        "✓ (M) = manueller Override aktiv (Nutzer hat bestätigt, dass das Asset trotz "
+        "negativem Live-Check handelbar ist, z. B. weil Bitpandas /v3/assets-Endpunkt "
+        "bestimmte ETF/ETC-Fractional-Produkte nicht vollständig abdeckt) - über "
+        "'Bitpanda-Override umschalten' setzbar."
     ),
     "tranchen": (
         "AZ-4-Tranchen-Vorschläge (gestaffelte Kauf-/Verkaufszonen) an/aus - "
@@ -329,6 +333,10 @@ class TradingInfoToolApp(tk.Tk):
             command=self._toggle_hebel_pruefung_erlaubt,
         ).pack(side="left", padx=(8, 0))
         ttk.Button(
+            toolbar, text="Bitpanda-Override umschalten",
+            command=self._toggle_bitpanda_gelistet_override,
+        ).pack(side="left", padx=(8, 0))
+        ttk.Button(
             toolbar, text="Asset hinzufügen…", command=self._open_asset_add_dialog,
         ).pack(side="left", padx=(8, 0))
         ttk.Button(
@@ -417,6 +425,12 @@ class TradingInfoToolApp(tk.Tk):
             hebel_cfg = config_module.load_config().get("hebel_screening", {})
             oi_schwelle = hebel_cfg.get("oi_abdeckung_schwelle_fehlschlaege", 8)
             oi_abdeckung_status = db.get_oi_abdeckung_status(conn)
+            # Bitpanda-Gelistet-Override (2026-07-20) - fuer ALLE Assets
+            # relevant (nicht nur eine Assetklasse), siehe database/db.py::
+            # asset_bitpanda_override-Tabellendocstring.
+            bitpanda_override_by_symbol = {
+                a.symbol: db.get_bitpanda_gelistet_override(conn, a.symbol) for a in self._watchlist
+            }
             # Klassifikations-Redesign (2026-07-16): "gehalten" ist kein
             # gespeichertes Feld mehr, sondern wird live aus den echten
             # Bestaenden (Spot) UND offenen Hebel-Positionen abgeleitet - kann
@@ -486,6 +500,13 @@ class TradingInfoToolApp(tk.Tk):
                 bitpanda_fehlt = False
             elif bitpanda_is_listed(asset.symbol, katalog, name=asset.name):
                 bitpanda_text = "✓"
+                bitpanda_fehlt = False
+            elif bitpanda_override_by_symbol.get(asset.symbol):
+                # Override (2026-07-20) - Live-Check sagt "nicht gelistet", Nutzer hat aber
+                # manuell bestaetigt, dass das Asset tatsaechlich handelbar ist (siehe
+                # database/db.py::asset_bitpanda_override-Tabellendocstring). Zeigt denselben
+                # effektiven Wert, den die Signal-Pipelines fuer diesen Lauf verwenden.
+                bitpanda_text = "✓ (M)"
                 bitpanda_fehlt = False
             else:
                 bitpanda_text = "✗"
@@ -803,6 +824,33 @@ class TradingInfoToolApp(tk.Tk):
         try:
             neuer_wert = not db.get_hebel_pruefung_erlaubt(conn, symbol)
             db.set_hebel_pruefung_erlaubt(conn, symbol, neuer_wert)
+        finally:
+            conn.close()
+
+        self._refresh_watchlist_from_db()
+
+    def _toggle_bitpanda_gelistet_override(self) -> None:
+        """Bitpanda-Gelistet-Override-Toggle (2026-07-20, Nutzer-Fund: CEBS/
+        EXH3/ISOC/VVMX/X136/OD7C/OD7H/OD7L/OD7N/DBPK/3QSS werden vom /v3/
+        assets-Endpunkt nicht gefunden, sind laut echten Bitpanda-Screenshots
+        - S&P 500 2X Inverse=DBPK, iShares Agribusiness=ISOC - aber real
+        gehalten und aktiv handelbar). Operiert auf der aktuell in der
+        Watchlist ausgewaehlten Zeile, fuer jede Assetklasse verfuegbar (kein
+        Krypto-Sonderfall wie beim Hebel-Toggle) - siehe database/db.py::
+        asset_bitpanda_override-Tabellendocstring fuer die volle Begruendung."""
+        tree = self._watchlist_frame.tree
+        selected = tree.selection()
+        if not selected:
+            messagebox.showinfo(
+                "Bitpanda-Override umschalten", "Bitte zuerst ein Asset in der Watchlist auswählen."
+            )
+            return
+        symbol = tree.item(selected[0], "values")[0]
+
+        conn = self._db_conn_factory()
+        try:
+            neuer_wert = not db.get_bitpanda_gelistet_override(conn, symbol)
+            db.set_bitpanda_gelistet_override(conn, symbol, neuer_wert)
         finally:
             conn.close()
 

@@ -220,6 +220,13 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
 
         bitpanda_assets = get_listed_non_crypto_assets()
         bitpanda_gelistet = bitpanda_is_listed(asset.symbol, bitpanda_assets, name=asset.name)
+        # Bitpanda-Gelistet-Override (2026-07-20, siehe database/db.py::
+        # asset_bitpanda_override-Tabellendocstring): /v3/assets ist fuer
+        # Bitpandas "Bitpanda Stocks"-Fractional-ETF/ETC-Produktlinie keine
+        # vollstaendige Quelle - Nutzer bestaetigt per Override manuell, dass
+        # ein Symbol trotz negativem Live-Check tatsaechlich handelbar ist.
+        if not bitpanda_gelistet and db.get_bitpanda_gelistet_override(conn, asset.symbol):
+            bitpanda_gelistet = True
     except Exception as exc:
         bitpanda_gelistet = None
         logger.info("Bitpanda-Listing-Abruf fuer %s fehlgeschlagen: %s", asset.symbol, exc)

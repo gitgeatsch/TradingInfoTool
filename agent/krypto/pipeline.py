@@ -509,6 +509,10 @@ def generate_signal(
 
         bitpanda_assets = get_listed_assets()
         bitpanda_gelistet = bitpanda_is_listed(asset.symbol, bitpanda_assets, name=asset.name)
+        # Bitpanda-Gelistet-Override (2026-07-20) - siehe database/db.py::
+        # asset_bitpanda_override-Tabellendocstring.
+        if not bitpanda_gelistet and db.get_bitpanda_gelistet_override(conn, asset.symbol):
+            bitpanda_gelistet = True
     except Exception as exc:
         bitpanda_gelistet = None
         logger.info("Bitpanda-Listing-Abruf fehlgeschlagen: %s", exc)

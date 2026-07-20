@@ -5716,3 +5716,62 @@ Dark-Palette-Werte (vorher lieferte die Style-Lookup keinen expliziten
 Override, `clam` nutzte seine Vorgabe); Tk-Smoke-Test baut den echten
 `TheseDialog` fehlerfrei unter Dark Mode auf. Light Mode unveraendert (ruft
 `apply_dark_mode()` gar nicht auf).
+
+## Nachtrag (2026-07-20): Bitpanda-Gelistet-Override fuer Aktien/ETF/Rohstoffe
+
+**Ausloeser:** Nutzer bemerkte im Signale-Detail-Panel und im laufenden
+Notebook, dass mehrere gehaltene Rohstoff-/Themen-ETF-Positionen (CEBS,
+EXH3, ISOC, VVMX, X136, OD7C/H/L/N, DBPK, 3QSS) durchgaengig als "nicht bei
+Bitpanda gelistet" markiert wurden, obwohl er sie real haelt und handeln
+kann - belegt mit zwei echten Bitpanda-Screenshots (DBPK = "S&P 500 2X
+Inverse", ISOC = "iShares Agribusiness"), beide mit aktiven Kaufen/
+Verkaufen/Tauschen-Buttons und real gehaltenen Anteilen.
+
+**Root Cause (live verifiziert):** `api/bitpanda.py`s `/v3/assets`-
+Endpunkt fand fuer keines der genannten Symbole einen Treffer - weder per
+Symbol- noch per Namensvergleich (Volltextsuche nach "Copper Miners"/
+"Food & Beverage"/"Agribusiness" ueber den kompletten Katalog, 3185
+Eintraege inkl. 177 "etf" + 30 "etc", ergab null Treffer). Der Endpunkt ist
+fuer Bitpandas "Bitpanda Stocks"-Fractional-ETF/ETC-Produktlinie offenbar
+keine vollstaendige Quelle - PLTR/VST (echte Aktien) werden dagegen korrekt
+gefunden. Reine Datenquellen-Luecke, kein Logikfehler in `is_listed()`.
+
+**Konkreter Schaden:** `pre_check()` setzt `kauf_erlaubt = len(veto_reasons)
+== 0`, `bitpanda_gelistet is False` landet in `veto_reasons`. In
+`post_check()` erzwingt das bei jedem KAUFEN/NACHKAUFEN-Vorschlag
+automatisch `risk_veto=True` -> `action="HALTEN"` (siehe RM-Bitpanda,
+Kap. 3/Abschnitt 100/101 in diesem Manual). Fuer die betroffenen Assets
+konnte die App also strukturell NIE einen (Nach-)Kauf empfehlen, unabhaengig
+von der eigentlichen Analyse. VERKAUFEN/TAUSCHEN sind nicht betroffen (der
+Veto greift nur bei `_BUY_ACTIONS`).
+
+**Fix: manueller Override statt Abschaltung der Pruefung.** Neue Tabelle
+`asset_bitpanda_override` (`database/db.py`, analog `asset_hebel_settings`)
++ `get_bitpanda_gelistet_override()`/`set_bitpanda_gelistet_override()`.
+Default (keine Zeile): kein Override, der Live-Check gilt unveraendert -
+keine Verhaltensaenderung fuer alle anderen Assets, insbesondere echtes
+Krypto (CANTON/CC-Fall bleibt korrekt erfasst). Alle 4 Spot-family-
+Pipelines (`agent/krypto/pipeline.py`, `agent/aktien/pipeline.py`,
+`agent/rohstoff/pipeline.py`, `agent/themen_etf/pipeline.py`) pruefen den
+Override direkt nach dem Live-Check: `if not bitpanda_gelistet and
+db.get_bitpanda_gelistet_override(conn, asset.symbol): bitpanda_gelistet
+= True`. Neuer Button "Bitpanda-Override umschalten" im Watchlist-Tab
+(gleiches Auswahl-Toggle-Muster wie "Hebel-Pruefung umschalten", aber fuer
+JEDE Assetklasse verfuegbar, nicht nur Krypto). Die Bitpanda-Spalte zeigt
+bei aktivem Override "✓ (M)" statt "✗" - macht den effektiven Wert, den die
+Pipelines tatsaechlich verwenden, transparent sichtbar.
+
+**Nutzer-Vorgabe:** fuer zukuenftige Assets soll der Override manuell in
+der App setzbar sein, nicht nur fuer die aktuell elf identifizierten
+Symbole - deshalb ein generischer Toggle statt einer Hardcoded-Ausnahme-
+liste im Code. Der Nutzer aktiviert den Override selbst am Notebook fuer
+die von ihm bestaetigten Symbole (Desktop darf keine Produktivdaten
+schreiben, siehe `feedback_desktop_kein_produktivstart`).
+
+Verifikation: synthetischer Test von `get_/set_bitpanda_gelistet_override()`
+(Default False, Toggle, ON-CONFLICT-Update ohne Fehler); Tk-Smoke-Test der
+kompletten `TradingInfoToolApp` (In-Memory-DB, synthetisches CEBS-Asset) -
+Watchlist-Spalte zeigt vor Override "✗", nach Klick auf den neuen Button
+"✓ (M)", nach erneutem Klick wieder "✗", `get_bitpanda_gelistet_override()`
+spiegelt den DB-Zustand exakt; Import-Check aller 4 Pipelines + `ui/app.py`
+fehlerfrei.
