@@ -5217,3 +5217,238 @@ akzeptiert/verwirft), sowie Marktscan-/Screener-Bias (Kandidaten aus
 priorisierten Kategorien höher gewichten) - alle drei bewusst
 zurückgestellt, bis die Taxonomie-Infrastruktur (dieser Nachtrag) im
 laufenden Betrieb bestätigt ist.
+
+## Nachtrag (2026-07-19, gleicher Tag, Folge 6): Release 2 (Schwerpunkte/Thesen-Verwaltung) - Konzeptionsrunde
+
+**Status dieses Nachtrags:** reine Konzeption/Entscheidungsfindung, kein
+Code zum Zeitpunkt dieses Eintrags. Vollständige Ausarbeitung liegt in
+`Basisinfos/Kategorie_Basisinformationen_Release2.md`/`.docx` - dieser
+Eintrag hält nur die wichtigsten Entscheidungen und Funde fest, damit sie
+auch ohne die separate Datei nachvollziehbar bleiben. **Umsetzung folgte
+noch am selben Tag, siehe Nachtrag Folge 7 weiter unten** - die
+Konzeptionsrunde und die Implementierungsrunde fielen beide auf den
+2026-07-19/2026-07-20-Übergang.
+
+**Datenmodell einer "These":** `hauptgruppe`/`unterkategorie` (beide Ebenen
+erlaubt, GUI zeigt bei Hauptgruppen-These transparent die darunter
+konsolidierten Unterkategorien), `richtung` (Übergewichten/Neutral/Meiden),
+`staerke`, `begruendung` (Freitext), `pruef_mechanismus` (strukturiert,
+siehe unten), `gesetzt_am`, `review_am`, `status`, `quelle`
+(manuell/KI-Vorschlag). Neue DB-Tabelle, nicht `config.yaml`.
+
+**#334 (Marktscan-/Screener-Bias) zweistufig entschieden - wichtigster
+Punkt dieser Runde:**
+- Stufe 1 (Teil der ersten Umsetzungsrunde): NUR Hervorhebung/Sortierung,
+  KEINE Scoring-Gewichtung. Grund: eine aktive These spiegelt die
+  subjektive, aktuelle Einschätzung des Nutzers - würde sie das Scoring
+  gewichten, entstünde bei trendgetriebenen Themen (Beispiel Technologie &
+  KI) eine prozyklische Verstärkung ("KI ist im Trend" → System zeigt mehr
+  KI-Aktien → verstärkt die Wahrnehmung, obwohl das Thema evtl. bereits
+  überhitzt ist) - direkter Widerspruch zur bestehenden antizyklischen
+  Risikogate-Philosophie im Projekt (Retail-Konsens-Deckel, siehe Nachtrag
+  vom 2026-07-19 weiter oben).
+- Zusatz, Teil der ersten Runde: neuer Fakt `these_abgleich` je Signal -
+  prüft die These NICHT gegen ihre eigene Beliebtheit, sondern gegen
+  unabhängige, bereits im Projekt vorhandene objektive Daten (M2-/
+  Liquiditätsregime für Edelmetalle, CFTC-COT-Positionierung für
+  Industriemetalle/Energie, Zinskurve für Finanzsektor-Aktien,
+  Dollar-Index für Emerging Markets). Kann eine hypebasierte These sogar
+  als "objektiv nicht gestützt" kennzeichnen - das eingebaute Gegenmittel
+  zum Bubble-/Trend-Chasing-Risiko.
+- Stufe 2 (später, vorsichtig): echte Scoring-Gewichtung nur für
+  strukturelle/langsame Kategorien (Edelmetalle, Industriemetalle, Energie,
+  Anleihen), nie für Technologie & KI.
+
+**Acht Kandidaten-Thesen mit Mechanik durchgearbeitet** (Energie,
+Edelmetalle, Industriemetalle/Kupfer, Erneuerbare & Clean Energy, Anleihen/
+TIPS, Aktien-Sektoren/Finanzen, Aktien-Regionen/Emerging Markets,
+Absicherung) - für jede die zugrundeliegende ökonomische Mechanik ("wann
+funktioniert das grundsätzlich") plus echter Live-Datenabgleich (yfinance,
+CFTC COT, FRED M2/Fed Funds, EIA), nicht nur Trainingswissen. Bewusst als
+Mechanik-Erklärung + aktuelle Datenlage kommuniziert, NICHT als
+Kaufempfehlung (siehe Modul-Docstring-Stil im restlichen Projekt).
+
+**Echter Fund dabei (Dollar-Index-Trend):** für die Emerging-Markets-These
+zeigte eine Momentaufnahme des Dollar-Index (100,69) zunächst nichts
+Eindeutiges - erst der 12-Monats-Verlauf (yfinance, monatliche Kerzen)
+zeigte einen klaren Aufwärtstrend seit Jahresbeginn 2026 (96,99 im Januar
+auf Höchststand 101,19 im Juni) - das ist ein Gegenwind für eine
+EM-Übergewichtungs-These, kein Rückenwind, obwohl die Fed erkennbar lockert.
+Lektion: ein einzelner aktueller Wert reicht bei makroökonomischen
+Indikatoren oft nicht, der Trend über mehrere Monate ist aussagekräftiger.
+
+**Lücken-Prüfung (auf Nutzer-Wunsch, sieben Funde, Details in der
+Basisinformationen-Datei):**
+1. CFTC-COT deckt kein Rohöl ab (`COT_MARKET_NAMES` in `api/cftc_cot.py`
+   hat nur Gold/Silber/Kupfer/Erdgas) - Energie-These fehlt damit die
+   Positionierungs-Perspektive für WTI/Brent.
+2. Dollar-Index und Zinskurve (10J vs. kurzfristig) sind NICHT als eigene,
+   `@track_api_health`-überwachte Datenquellen im Projekt vorhanden - für
+   heutige Zwecke ad-hoc direkt über yfinance abgefragt, für einen
+   verlässlichen `these_abgleich`-Fakt müssten das richtige, abgesicherte
+   Funktionen werden.
+3. Absicherung/Hedge passt nicht sauber ins Standard-Datenmodell (Feld
+   `richtung` ergibt bei einer Versicherungs-Logik wenig Sinn) - eigene
+   GUI-Darstellung (Aktiv/Inaktiv) vermutlich nötig.
+4. Krypto ist komplett außen vor (`kategorien.yaml` deckt bewusst keine
+   Kryptowerte ab) - der `these_abgleich`-Fakt erscheint deshalb nie bei
+   Krypto-Signalen, muss in GUI/Doku klar kommuniziert werden.
+5. Kein automatisches Verhalten bei Ablauf von `review_am` definiert.
+6. Keine Verbindung zur Diversifikations-Tabelle (Portfolio-Tab) vorgesehen.
+7. Synergie mit dem Screener (`scan_etf_candidates()` taggt Kandidaten
+   schon heute mit Hauptgruppe/Unterkategorie, Release 1) noch nicht
+   genutzt - Kandidaten aus Kategorien mit aktiver, aber in der Watchlist
+   noch nicht vertretener These könnten hervorgehoben werden.
+
+**Weitere Entscheidungen:** Granularität beide Ebenen erlaubt; 3-6
+gleichzeitig aktive Thesen als weiche Richtgröße, kein Hard-Limit;
+KI-Vorschläge-Job (#333) täglich wie `makro_analog_job` (06:30 Uhr),
+Rhythmus-Optimierung vorgemerkt für später.
+
+**Nachtrag zum Nachtrag, gleicher Tag - drei weitere Punkte auf
+Nutzer-Wunsch ergänzt:**
+- **Haltedauer/Zeithorizont:** die Prüf-Mechanismen haben unterschiedliche
+  natürliche Zeithorizonte (COT wöchentlich → kürzer, M2/Zinskurve/
+  Dollar-Index-Trend brauchen Monate → länger) - der `review_am`-Vorschlag
+  in der GUI orientiert sich daran (z. B. 4 Wochen bei COT-gestützten
+  Thesen, 3 Monate bei M2-gestützten). Ein zusätzlicher Mismatch-Check
+  zwischen dem Zeithorizont der These und der Haltedauer-Empfehlung des
+  konkreten Signals (`holding_duration`/`halte_kriterium_bucket`) war hier
+  angedacht, ist aber bei der Umsetzung (Folge 7) bewusst NICHT eingebaut
+  worden: dieses Feld entsteht erst als LLM-OUTPUT, ein Vorab-Abgleich vor
+  dem LLM-Aufruf ist strukturell nicht möglich - das wäre ein Post-Check
+  nach der Antwort (analog `risk_gate.py::post_check()`), siehe
+  `agent/kategorie_thesen.py::build_these_abgleich_fact()`-Docstring für den
+  dokumentierten, offenen Nachrüstpunkt.
+- **Gehaltene Assets erhalten Priorität:** innerhalb einer Kategorie mit
+  aktiver These werden in der Stufe-1-Hervorhebung zuerst bereits gehaltene
+  Assets (`wird_aktuell_gehalten`) angezeigt, dann neue Watchlist-/
+  Screener-Kandidaten, dann alles Übrige - unterschiedliche Dringlichkeit
+  (echte Entscheidung vs. "einen Blick wert").
+- **Transparenz-Prinzip, ausdrücklicher Nutzer-Wunsch, gilt durchgängig:**
+  jede automatische Wirkung einer These (Sortierung, Hervorhebung,
+  Review-Datum-Vorschlag, `these_abgleich`-Text) muss ihre konkrete
+  Begründung sichtbar mitliefern, minimaler Interpretationsaufwand für den
+  Nutzer - keine stille Umsortierung, kein Badge ohne Klartext-Erklärung.
+
+**Nächster Schritt:** die sieben Lücken-Punkte (plus die drei
+Ergänzungen oben) sind kleinere Ausbau-Entscheidungen, kein Blocker für den
+Start der Umsetzung von #332 - Implementierung kann beginnen, offene
+Punkte während der Umsetzung nach und nach klären.
+
+## Nachtrag (2026-07-20, Folge 7): Release 2 (Schwerpunkte/Thesen-Verwaltung) - Umsetzung #332/#343
+
+Direkte Fortsetzung von Folge 6 (Nutzer-Anweisung "starten wir hier") - die
+komplette Backend- + GUI-Infrastruktur für #332 sowie die Stufe-1-
+Hervorhebung aus #343 wurden implementiert und verifiziert. #333
+(KI-Vorschläge-Job) und die eigentliche Stufe 2 von #334 (Scoring-Gewichtung
+für strukturelle Kategorien) sind bewusst NICHT Teil dieser Runde, siehe
+Folge 6.
+
+**Backend:**
+- `database/models.py::These`-Dataclass + `database/db.py`: `thesen`-Tabelle
+  (2 Indizes) + volles CRUD (`create_these`/`update_these`/
+  `set_these_status`/`get_these`/`get_aktive_thesen`/`get_alle_thesen`/
+  `get_aktive_these_fuer_kategorie()` - Unterkategorie-spezifische These hat
+  Vorrang vor einer Hauptgruppen-weiten, identische Priorität überall wo
+  Thesen nachgeschlagen werden).
+- `config.py::PRUEF_MECHANISMUS_MAPPING`/`get_pruef_mechanismus()` - welcher
+  objektive Check (m2_liquiditaet/cot_positionierung/zinskurve/dollar_index/
+  baerenmarkt_overlay) für welche Hauptgruppe/Unterkategorie gilt, inkl.
+  `review_tage_vorschlag` + `review_begruendung` fürs Transparenz-Prinzip.
+- Lücke 1 (CFTC-COT ohne Rohöl) geschlossen: `api/cftc_cot.py::
+  COT_MARKET_NAMES` um `rohoel_wti`/`rohoel_brent` erweitert (echte
+  Marktnamen live über die CFTC-API mit `LIKE`-Filtern ermittelt, nicht
+  geraten).
+- Lücke 2 (Dollar-Index/Zinskurve ohne überwachte Datenquelle) geschlossen:
+  `api/macro.py::get_zinskurve()`/`get_dollar_index_trend()`, beide
+  `@track_api_health("yfinance")` (kein neuer API_HEALTH_GROUPS-Eintrag
+  nötig, teilen sich den bestehenden yfinance-Block).
+  `get_dollar_index_trend()` liefert IMMER den 12-Monats-Verlauf, nie nur
+  eine Momentaufnahme (siehe der echte DXY-Fund in Folge 6).
+- `agent/kategorie_thesen.py` (neu): `these_abgleich`-Berechnungsmodul.
+  `compute_these_abgleich()` + 4 `_abgleich_*()`-Funktionen (M2/COT/
+  Zinskurve/Dollar-Index) plus `_abgleich_baerenmarkt_overlay()`, die ehrlich
+  `"nicht_pruefbar"` zurückgibt (P-10, Absicherung-Check bleibt bewusst
+  Lücke 3/unimplementiert, siehe Folge 6). `build_these_abgleich_fact()` als
+  gemeinsamer, in allen 4 Nicht-Krypto-Pipelines (Aktien/Rohstoffe/Hedge/
+  Themen-ETF) wiederverwendeter Fact-Baustein (Muster wie
+  `agent.krypto.wiederholungs_erkennung.build_wiederholung_fact()`) - je ein
+  neuer SYSTEM_PROMPT-Regel-Eintrag in den 4 Analysten, der die KI anweist,
+  den Abgleich zu kommentieren, aber NIE die Action über das hinaus zu
+  schieben, was die übrigen Fakten hergeben (Stufe-1-Prinzip: Hervorhebung,
+  kein Scoring-Einfluss).
+- `index_aktive_thesen()`/`lookup_these()` (selbes Modul) - In-Memory-Index
+  für wiederholte Lookups über viele Assets/Kandidaten (Watchlist-Tab,
+  Screener), vermeidet einen SQL-Query pro Zeile, identische
+  Prioritäts-Logik wie `get_aktive_these_fuer_kategorie()`.
+
+**GUI Task #342 - neuer Tab "Schwerpunkte":** `ui/thesen_view.py` (neu).
+Liste aller Thesen (Kategorie/Richtung/Stärke/Prüf-Mechanismus/Status/
+Termine) + Add/Edit-Dialog. Eigener, lokaler Kategorie-Selector (nicht der
+aus `ui.app` wiederverwendet - eine These kann sich auf eine GANZE
+Hauptgruppe beziehen, zeigt dabei live alle darunter konsolidierten
+Unterkategorien, Nutzer-Entscheidung #1 aus Folge 6). Absicherung-Sonderfall
+sauber gelöst: Richtung-Feld zeigt bei `hauptgruppe=absicherung` automatisch
+Aktiv/Inaktiv statt Übergewichten/Neutral/Meiden (schließt Lücke 3 aus
+Folge 6 GUI-seitig). Transparenz-Prinzip live umgesetzt: der
+`review_am`-Vorschlag erscheint direkt neben dem Feld mit konkretem Datum
+UND Begründungstext (z. B. "Vorschlag: 2026-08-17 (heute + 28 Tage) -
+CFTC-COT-Berichte erscheinen wöchentlich..."), nie eine stille Vorbelegung.
+Statuswechsel (aktiv → erledigt/verworfen) über eigene Listen-Buttons, nicht
+im Dialog (eine neue These startet immer aktiv/manuell).
+
+**GUI Task #343 - Stufe-1-Hervorhebung, schließt Lücken 6+7 aus Folge 6:**
+alle drei Stellen nutzen dieselben Marker (▲ Übergewichten/Aktiv, ▼ Meiden,
+● Neutral/Inaktiv) mit denselben drei Farb-Tags (`these_positiv`/
+`these_negativ`/`these_neutral`) und demselben Prinzip: sichtbarer Marker +
+Zeilen-Tooltip mit der konkreten These-Begründung, NIE eine stille
+Umsortierung (Transparenz-Prinzip).
+- **Watchlist-Tab** (`ui/app.py`): Sortier-Priorität nur bei der initialen
+  Einsortierung (Gruppe 0 = gehalten + aktive These, 1 = nicht gehalten +
+  aktive These, 2 = Rest, jeweils alphabetisch), greift NICHT in eine
+  manuelle Spaltensortierung ein (Nutzer-Entscheidung "gehaltene Assets
+  sollten Priorität erhalten" aus Folge 6). Marker an die
+  Schwerpunkt-Spalte angehängt, Zeilen-Tooltip erweitert (zeigt aktive
+  These VOR dem letzten Signal, falls beides vorhanden).
+- **Diversifikations-Tabelle** (`ui/portfolio.py`): Marker je
+  Hauptgruppen-Zeile, wenn irgendeine aktive These (Hauptgruppen-weit ODER
+  eine ihrer Unterkategorien) zutrifft - bei mehreren Treffern bestimmt die
+  "stärkste" Richtung den Marker (Übergewichten/Aktiv vor Meiden vor
+  Neutral), der Tooltip listet trotzdem ALLE Treffer einzeln auf. Bewusst
+  KEIN Eingriff in die bestehende Wert-Sortierung (größte Position bleibt
+  oben - das ist die eigentlich nützliche Ordnung für diese Tabelle), nur
+  der Marker.
+- **Screener-Tab** (`ui/screener_view.py`): Sortier-Priorität (Treffer vor
+  Nicht-Treffer, sonst Scan-Reihenfolge unverändert) - ohne
+  gehalten-Priorität, Screener-Kandidaten sind per Definition noch nicht in
+  der Watchlist. Neu: `add_row_tooltips()` für diesen Tab (gab es vorher
+  nicht).
+
+**Verifikation:** drei synthetische Tk-Smoke-Test-Skripte gegen Kopien der
+Produktions-DB (nie die echte DB) - `ThesenView` (Liste/Filter/Add-Dialog
+inkl. Absicherung-Sonderfall/Edit-Dialog-Vorbelegung/Statuswechsel, alle
+Assertions bestanden), Watchlist-Sortier-/Marker-Logik (isoliert
+nachgebaut, exakt dieselbe `index_aktive_thesen()`/`lookup_these()`-Funktion
+wie im echten Code), Portfolio-Diversifikation + Screener (beide mit echten
+Tk-Widgets, `PortfolioView`/`ScreenerView` direkt instanziiert, Marker/Tags/
+Tooltips/Sortierreihenfolge geprüft). Zusätzlich ein kombinierter
+Import-Regressionstest über alle geänderten/neuen Module (`ui.app`,
+`ui.portfolio`, `ui.screener_view`, `ui.thesen_view`, `agent.
+kategorie_thesen`, alle 4 Nicht-Krypto-Pipelines, `main`) - keine Fehler.
+
+**Verbleibend offen (bewusst nicht Teil dieser Runde):**
+- #333: täglicher KI-Vorschläge-Job für neue Thesen-Kandidaten.
+- #334, Stufe 2: echte Scoring-Gewichtung für strukturelle Kategorien
+  (Edelmetalle, Industriemetalle, Energie, Anleihen) - erst nach einer
+  Beobachtungsphase mit Stufe 1.
+- Lücke 5 aus Folge 6: kein automatisches Verhalten, wenn `review_am` in der
+  Vergangenheit liegt (weder Benachrichtigung noch visuelle Markierung) -
+  bisher rein manuell im Schwerpunkte-Tab einsehbar.
+- Der in Folge 6 angedachte Haltedauer-Mismatch-Check (These-Zeithorizont
+  gegen die Haltedauer-Empfehlung eines konkreten Signals) bleibt aus dem
+  oben genannten strukturellen Grund unimplementiert (`agent/
+  kategorie_thesen.py::build_these_abgleich_fact()`-Docstring).
+- Absicherung/Hedge-`these_abgleich` bleibt `"nicht_pruefbar"` (Lücke 3 aus
+  Folge 6, Bärenmarkt-Overlay-Indikator ist noch keine eigenständig
+  aufrufbare Funktion).

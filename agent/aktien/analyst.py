@@ -214,6 +214,18 @@ vom technischen Kontext (Trend, Momentum) ab, den du bereits kennst. Die Daten s
 strukturell 1-3 Wochen alt (FINRA-Meldelag), also KEIN Echtzeit-Signal. Erwaehne es nur, \
 wenn `days_to_cover` auffaellig hoch ist (>3-4 Handelstage) oder sich die Position \
 stark veraendert hat (>15-20% ggue. Vorperiode) - ansonsten ignorieren.
+25. Ist `these_abgleich` NICHT null, hat der Nutzer fuer die Kategorie dieses Assets \
+(`these_abgleich.kategorie`) bewusst eine These gesetzt (`these_abgleich.richtung` + \
+`these_abgleich.begruendung_nutzer`). `these_abgleich.objektive_einschaetzung` \
+("gestuetzt"/"neutral"/"widerspricht"/"nicht_pruefbar") ist eine UNABHAENGIGE, \
+FAKTENBASIERTE Gegenpruefung dieser These (siehe `objektive_begruendung` fuer die \
+konkreten Rohwerte) - NICHT die Meinung des Nutzers selbst nachgeplappert. Kommentiere \
+in `long_reasoning.makro` explizit, ob das aktuelle Setup die Nutzer-These stuetzt oder \
+ihr widerspricht, basierend auf `objektive_einschaetzung`. WICHTIG: eine aktive These \
+ist NIEMALS ein Grund, `action` staerker in Richtung der These zu verschieben, als es \
+die uebrigen Fakten hergeben - das waere prozyklische Verstaerkung statt Faktencheck \
+(besonders wichtig bei "widerspricht": das ist ein Warnsignal, keine zu ignorierende \
+Nebeninfo).
 
 SCHEMA:
 {
@@ -310,6 +322,7 @@ def build_facts(
     insider_trading: dict | None = None,
     analysten_trend_finnhub: dict | None = None,
     short_interest_finra: dict | None = None,
+    these_abgleich: dict | None = None,
 ) -> dict:
     macd_val = technical_snapshot.macd
     macd_facts = None
@@ -373,6 +386,10 @@ def build_facts(
         "insider_trading": insider_trading,
         "analysten_trend_finnhub": analysten_trend_finnhub,
         "short_interest_finra": short_interest_finra,
+        # Kategorie-These-Abgleich (2026-07-19, Release 2) - nur befuellt, wenn
+        # das Asset zu einer Hauptgruppe/Unterkategorie mit aktiver Nutzer-
+        # These gehoert, siehe agent/kategorie_thesen.py::build_these_abgleich_fact().
+        "these_abgleich": these_abgleich,
         "fundamentaldaten": {
             "kgv": _native(fundamentals.kgv) if fundamentals else None,
             "forward_kgv": _native(fundamentals.forward_kgv) if fundamentals else None,

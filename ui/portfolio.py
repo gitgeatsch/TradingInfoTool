@@ -45,6 +45,9 @@ class PortfolioView(ttk.Frame):
         self._db_conn_factory = db_conn_factory
         self._cost_basis_by_symbol: dict[str, object] = {}
         self._watchlist_by_symbol = {asset.symbol: asset for asset in watchlist}
+        # Stufe-1-Diversifikations-Marker (2026-07-20, Task #343) - Begruendung
+        # je Schwerpunkt-Zeile, siehe _refresh_diversifikation().
+        self._diversifikation_tooltips: dict[str, str] = {}
 
         # Nutzer-Wunsch (2026-07-13): nur noch EUR anzeigen (USD-Spalten waren
         # redundant fuer den EUR-fokussierten Nutzer) - die interne, USD-basierte
@@ -103,9 +106,24 @@ class PortfolioView(ttk.Frame):
         for col in diversifikation_columns:
             self.diversifikation_tree.heading(col, text=diversifikation_headings[col])
             self.diversifikation_tree.column(col, width=160, anchor="w" if col == "schwerpunkt" else "e")
+        self.diversifikation_tree.tag_configure("these_positiv", foreground=theme.success_color())
+        self.diversifikation_tree.tag_configure("these_negativ", foreground=theme.danger_color())
+        self.diversifikation_tree.tag_configure("these_neutral", foreground=theme.info_color())
         self._diversifikation_reapply_sort = make_sortable(
             self.diversifikation_tree, numeric_columns=frozenset({"wert_eur", "anteil_pct"}),
         )
+        # Stufe-1-Diversifikations-Marker (2026-07-20, Task #343): KEIN Eingriff
+        # in die bestehende Wert-Sortierung (die groesste Position bleibt oben -
+        # das ist die eigentlich nuetzliche Ordnung fuer diese Tabelle), nur ein
+        # sichtbarer Marker + Zeilen-Tooltip fuer Hauptgruppen mit aktiver These.
+        add_heading_tooltips(self.diversifikation_tree, {
+            "schwerpunkt": (
+                "Hauptgruppe (oder Cash/Sonstiges/ohne Schwerpunkt). ▲/▼/● = "
+                "aktive These im Schwerpunkte-Tab (▲ Übergewichten/Aktiv, ▼ Meiden, "
+                "● Neutral) - Begründung per Mouseover auf die Zeile."
+            ),
+        })
+        add_row_tooltips(self.diversifikation_tree, lambda iid: self._diversifikation_tooltips.get(iid))
         self.diversifikation_tree.pack(fill="x", padx=8, pady=(0, 8))
 
         # 'Letzte Bewertung'-Anzeige (2026-07-16, Klassifikations-Redesign) -
@@ -216,8 +234,17 @@ class PortfolioView(ttk.Frame):
             holdings = db.get_all_holdings(conn)
             latest_prices = db.get_latest_prices(conn)
             fiat_cash_eur = db.get_cash_reserve_fiat_eur(conn)
+            aktive_thesen = db.get_aktive_thesen(conn)
         finally:
             conn.close()
+
+        # Diversifikations-Marker (2026-07-20, Task #343) - alle aktiven Thesen
+        # je Hauptgruppe gruppiert (nicht per Unterkategorie-spezifischem
+        # Lookup wie in ui/app.py, da diese Tabelle bewusst nur auf
+        # Hauptgruppen-Ebene gruppiert, siehe get_hauptgruppe_name()-Docstring).
+        thesen_by_hauptgruppe: dict[str, list] = {}
+        for these in aktive_thesen:
+            thesen_by_hauptgruppe.setdefault(these.hauptgruppe, []).append(these)
 
         # GUI-Refresh-Fix (2026-07-16, Nutzer-Fund): dieser Refresh laeuft alle
         # 3 Sek. automatisch (ui/app.py::_poll_prices()) - ohne Auswahl-/
@@ -236,6 +263,7 @@ class PortfolioView(ttk.Frame):
         total_value_eur = 0.0
         staked_value_eur = 0.0
         schwerpunkt_totals: dict[str, float] = {}
+        schwerpunkt_hauptgruppe_id: dict[str, str] = {}
         for holding in sorted(holdings, key=lambda h: h.symbol):
             # Nutzer-Wunsch (2026-07-13): Portfolio soll nur zeigen, was
             # tatsaechlich gehalten wird - viele holdings-Zeilen (z.B. durch
@@ -261,6 +289,8 @@ class PortfolioView(ttk.Frame):
                 hauptgruppe_name = config_module.get_hauptgruppe_name(asset.hauptgruppe) if asset else None
                 schwerpunkt_key = hauptgruppe_name or "ohne Schwerpunkt"
                 schwerpunkt_totals[schwerpunkt_key] = schwerpunkt_totals.get(schwerpunkt_key, 0.0) + value_eur
+                if asset and asset.hauptgruppe:
+                    schwerpunkt_hauptgruppe_id.setdefault(schwerpunkt_key, asset.hauptgruppe)
 
             # 2026-07-11, Nutzer-Fund: gestakte Menge ist ueber die normale Wallet-API
             # unsichtbar (siehe importer/bitpanda_avg_cost.py::compute_staked_quantities()) -
@@ -276,6 +306,8 @@ class PortfolioView(ttk.Frame):
                     hauptgruppe_name = config_module.get_hauptgruppe_name(asset.hauptgruppe) if asset else None
                     schwerpunkt_key = hauptgruppe_name or "ohne Schwerpunkt"
                     schwerpunkt_totals[schwerpunkt_key] = schwerpunkt_totals.get(schwerpunkt_key, 0.0) + staked_wert
+                    if asset and asset.hauptgruppe:
+                        schwerpunkt_hauptgruppe_id.setdefault(schwerpunkt_key, asset.hauptgruppe)
 
             fetched_at = price_snapshot.fetched_at if price_snapshot else None
             stale = is_price_stale(fetched_at)
@@ -347,15 +379,50 @@ class PortfolioView(ttk.Frame):
         note_text = f" (davon {', '.join(notes)})" if notes else ""
         self.total_label.config(text=f"Gesamtwert: {total_value_eur:,.2f} EUR{note_text}")
 
-        self._refresh_diversifikation(schwerpunkt_totals, total_value_eur)
+        self._refresh_diversifikation(schwerpunkt_totals, total_value_eur, schwerpunkt_hauptgruppe_id, thesen_by_hauptgruppe)
 
-    def _refresh_diversifikation(self, schwerpunkt_totals: dict[str, float], total_value_eur: float) -> None:
+    def _refresh_diversifikation(
+        self, schwerpunkt_totals: dict[str, float], total_value_eur: float,
+        schwerpunkt_hauptgruppe_id: dict[str, str], thesen_by_hauptgruppe: dict[str, list],
+    ) -> None:
         for item in self.diversifikation_tree.get_children():
             self.diversifikation_tree.delete(item)
-        for schwerpunkt, wert_eur in sorted(schwerpunkt_totals.items(), key=lambda kv: kv[1], reverse=True):
+        self._diversifikation_tooltips.clear()
+        for i, (schwerpunkt, wert_eur) in enumerate(
+            sorted(schwerpunkt_totals.items(), key=lambda kv: kv[1], reverse=True)
+        ):
             anteil_pct = (wert_eur / total_value_eur * 100) if total_value_eur > 0 else 0.0
+            iid = f"schwerpunkt_{i}"
+            hauptgruppe_id = schwerpunkt_hauptgruppe_id.get(schwerpunkt)
+            thesen_treffer = thesen_by_hauptgruppe.get(hauptgruppe_id, []) if hauptgruppe_id else []
+            schwerpunkt_text = schwerpunkt
+            tags = ()
+            if thesen_treffer:
+                # Bei mehreren aktiven Thesen unter derselben Hauptgruppe (z.B.
+                # eine Hauptgruppen-weite + eine Unterkategorie-spezifische)
+                # bestimmt die "staerkste" Richtung den Marker (Uebergewichten/
+                # Meiden vor Neutral) - Transparenz-Prinzip: die Zeilen-Tooltip-
+                # Begruendung listet trotzdem ALLE Treffer einzeln auf.
+                richtungen = [t.richtung for t in thesen_treffer]
+                if any(r in ("uebergewichten", "aktiv") for r in richtungen):
+                    marker, tag = "▲", "these_positiv"
+                elif any(r == "meiden" for r in richtungen):
+                    marker, tag = "▼", "these_negativ"
+                else:
+                    marker, tag = "●", "these_neutral"
+                schwerpunkt_text = f"{schwerpunkt} {marker}"
+                tags = (tag,)
+                richtung_labels = {"uebergewichten": "Übergewichten", "meiden": "Meiden", "neutral": "Neutral",
+                                    "aktiv": "Aktiv", "inaktiv": "Inaktiv"}
+                self._diversifikation_tooltips[iid] = "\n".join(
+                    f"Aktive These ({config_module.get_kategorie_name(t.hauptgruppe, t.unterkategorie) or config_module.get_hauptgruppe_name(t.hauptgruppe)}, "
+                    f"{richtung_labels.get(t.richtung, t.richtung)}): {t.begruendung}"
+                    for t in thesen_treffer
+                )
             self.diversifikation_tree.insert(
-                "", "end", values=(schwerpunkt, f"{wert_eur:,.2f}", f"{anteil_pct:.1f}"),
+                "", "end", iid=iid,
+                values=(schwerpunkt_text, f"{wert_eur:,.2f}", f"{anteil_pct:.1f}"),
+                tags=tags,
             )
         self._diversifikation_reapply_sort()
 

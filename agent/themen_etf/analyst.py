@@ -164,6 +164,13 @@ Wiederhole die Empfehlung nicht unveraendert, ohne diesen Umstand explizit in \
 `long_reasoning` oder `key_risks` zu benennen - entweder nenne einen NEUEN, zusaetzlichen \
 Grund, der seit der letzten Empfehlung hinzugekommen ist, oder erklaere ausdruecklich, \
 warum die Empfehlung trotz Nicht-Umsetzung unveraendert bestehen bleibt.
+20. Ist `these_abgleich` NICHT null, hat der Nutzer fuer die Kategorie/den Sektor dieses \
+Themen-ETF bewusst eine These gesetzt. `these_abgleich.objektive_einschaetzung` ist eine \
+UNABHAENGIGE, FAKTENBASIERTE Gegenpruefung - kommentiere explizit, ob das aktuelle Setup \
+die Nutzer-These stuetzt oder ihr widerspricht. Eine aktive These ist NIEMALS ein Grund, \
+`action` staerker in Richtung der These zu verschieben, als es die uebrigen Fakten \
+hergeben - besonders wichtig bei trendgetriebenen Themen-ETF-Kategorien (z.B. Technologie \
+& KI): "widerspricht" ist ein Warnsignal, keine zu ignorierende Nebeninfo.
 
 SCHEMA:
 {
@@ -256,6 +263,7 @@ def build_facts(
     historische_erfolgsquote: dict | None = None,
     historischer_makro_vergleich: dict | None = None,
     letztes_signal=None,
+    these_abgleich: dict | None = None,
 ) -> dict:
     macd_val = technical_snapshot.macd
     macd_facts = None
@@ -313,6 +321,9 @@ def build_facts(
         "historische_erfolgsquote": historische_erfolgsquote,
         "historischer_makro_vergleich": historischer_makro_vergleich,
         "sektor_rotation": sektor_rotation,
+        # Kategorie-These-Abgleich (2026-07-19, Release 2) - siehe
+        # agent/kategorie_thesen.py::build_these_abgleich_fact().
+        "these_abgleich": these_abgleich,
         "technische_analyse": {
             "ema": {str(p): _native(latest_value(r)) for p, r in technical_snapshot.ema.items()},
             "macd": macd_facts,

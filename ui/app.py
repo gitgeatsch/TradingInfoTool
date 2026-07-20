@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
+import agent.kategorie_thesen as kategorie_thesen
 import database.db as db
 import ui.settings as ui_settings
 import ui.theme as theme
@@ -25,6 +26,7 @@ from ui.row_tooltip import add_row_tooltips
 from ui.screener_view import ScreenerView
 from ui.signals_view import SignalsView
 from ui.sortable_tree import make_sortable
+from ui.thesen_view import ThesenView
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +44,11 @@ _WATCHLIST_COLUMN_DESCRIPTIONS = {
     "schwerpunkt": (
         "Hauptgruppe / Unterkategorie (z. B. \"Edelmetalle / Gold\") aus der festen "
         "Kategorie-Taxonomie (Basisinfos/kategorien.yaml) - über 'Asset hinzufügen/"
-        "bearbeiten' setzbar, Basis für die Diversifikations-Übersicht im Portfolio-Tab."
+        "bearbeiten' setzbar, Basis für die Diversifikations-Übersicht im Portfolio-Tab. "
+        "▲/▼/● = aktive These im Schwerpunkte-Tab (▲ Übergewichten/Aktiv, ▼ Meiden, "
+        "● Neutral) - solche Zeilen stehen zusätzlich weiter oben in der Liste "
+        "(gehaltene Assets vor reinen Beobachtungskandidaten), Begründung per Mouseover "
+        "auf die Zeile."
     ),
     "status": (
         "Gehalten (echter Bestand oder offene Hebel-Position, live abgeleitet) oder - falls nicht gehalten - "
@@ -76,6 +82,21 @@ _WATCHLIST_COLUMN_DESCRIPTIONS = {
         "Wie lange der angezeigte Preis her ist. ⚠ markiert einen veralteten "
         "Preis (kein aktuelles Update erhalten)."
     ),
+}
+
+# Stufe-1-Hervorhebung (2026-07-20, Task #343 - Release 2, Marktscan/Screener-
+# Bias-Vorstufe): rein visuelle Markierung + Sortier-Prioritaet fuer Assets,
+# deren Hauptgruppe/Unterkategorie eine AKTIVE These hat (Basisinfos/
+# Kategorie_Basisinformationen_Release2.md Abschnitt 5, Stufe 1 - explizit KEIN
+# Scoring-Einfluss, siehe agent/kategorie_thesen.py). Transparenz-Prinzip
+# (Nutzer-Vorgabe): jede Zeile, die dadurch bevorzugt einsortiert wird, traegt
+# sichtbar einen der drei Marker - nie eine stille Umsortierung.
+_THESE_MARKER_UND_TAG = {
+    "uebergewichten": ("▲", "these_positiv"),
+    "aktiv": ("▲", "these_positiv"),
+    "meiden": ("▼", "these_negativ"),
+    "neutral": ("●", "these_neutral"),
+    "inaktiv": ("●", "these_neutral"),
 }
 
 # Watchdog-Heartbeat (2026-07-13, siehe monitor/watchdog.py): _poll_prices()
@@ -116,6 +137,10 @@ class TradingInfoToolApp(tk.Tk):
         self._bitpanda_assets: list | None = None
         self._bitpanda_non_crypto_assets: list | None = None
         self._refresh_bitpanda_assets()
+        # Stufe-1-Hervorhebung (2026-07-20, Task #343) - je Symbol die aktive
+        # These, falls eine passt (siehe _refresh_watchlist_from_db()), fuer den
+        # Zeilen-Tooltip (_watchlist_row_tooltip_text()).
+        self._these_by_symbol: dict[str, object] = {}
 
         self._build_menu()
 
@@ -153,6 +178,9 @@ class TradingInfoToolApp(tk.Tk):
 
         self._regime_view = RegimeView(notebook, db_conn_factory)
         notebook.add(self._regime_view, text="Regime")
+
+        self._thesen_view = ThesenView(notebook, db_conn_factory)
+        notebook.add(self._thesen_view, text="Schwerpunkte")
 
         disclaimer = ttk.Label(
             self, text=DISCLAIMER_TEXT, foreground=theme.info_color(), wraplength=880, justify="center"
@@ -320,6 +348,9 @@ class TradingInfoToolApp(tk.Tk):
         tree.tag_configure("stale", foreground=theme.stale_color())
         tree.tag_configure("bitpanda_fehlt", foreground=theme.danger_color())
         tree.tag_configure("externe_id_fehlt", foreground=theme.danger_color())
+        tree.tag_configure("these_positiv", foreground=theme.success_color())
+        tree.tag_configure("these_negativ", foreground=theme.danger_color())
+        tree.tag_configure("these_neutral", foreground=theme.info_color())
         frame.reapply_sort = make_sortable(
             tree, numeric_columns=frozenset({"price_usd", "price_eur", "change_24h"})
         )
@@ -367,6 +398,9 @@ class TradingInfoToolApp(tk.Tk):
                 if (h.quantity or 0.0) + (h.staked_quantity or 0.0) > 0.0
             }
             offene_hebel_symbole = {p.symbol for p in db.get_open_hebel_positions(conn)}
+            # Stufe-1-Hervorhebung (2026-07-20, Task #343) - aktive Thesen
+            # einmal laden, In-Memory-Index statt N Einzel-Queries.
+            these_index = kategorie_thesen.index_aktive_thesen(db.get_aktive_thesen(conn))
         finally:
             conn.close()
 
@@ -381,8 +415,26 @@ class TradingInfoToolApp(tk.Tk):
         vorher_iid = vorher_selected[0] if vorher_selected else None
         for item in tree.get_children():
             tree.delete(item)
+        self._these_by_symbol.clear()
 
-        for asset in sorted(self._watchlist, key=lambda a: a.symbol):
+        # Stufe-1-Sortier-Prioritaet (2026-07-20, Task #343, Nutzer-Entscheidung
+        # "die gehaltenen Assets sollten Prioritaet erhalten"): NUR die initiale
+        # Einsortierung, kein Eingriff in eine manuelle Spaltensortierung durch
+        # den Nutzer (make_sortable()/reapply_sort() greift danach wie gewohnt).
+        # Gruppe 0 = gehalten + aktive These, 1 = nicht gehalten + aktive These,
+        # 2 = Rest - jede bevorzugt einsortierte Zeile traegt sichtbar einen der
+        # drei Marker (siehe _THESE_MARKER_UND_TAG), keine stille Umsortierung.
+        def _these_sort_key(asset):
+            these = kategorie_thesen.lookup_these(these_index, asset.hauptgruppe, asset.unterkategorie)
+            if these is None:
+                return (2, asset.symbol)
+            gehalten = asset.symbol in gehaltene_symbole or asset.symbol in offene_hebel_symbole
+            return (0 if gehalten else 1, asset.symbol)
+
+        for asset in sorted(self._watchlist, key=_these_sort_key):
+            these = kategorie_thesen.lookup_these(these_index, asset.hauptgruppe, asset.unterkategorie)
+            if these is not None:
+                self._these_by_symbol[asset.symbol] = these
             snap = latest_prices.get(asset.symbol)
             price_usd = format_money(snap.price_usd if snap else None)
             price_eur = format_money(snap.price_eur if snap else None)
@@ -414,6 +466,8 @@ class TradingInfoToolApp(tk.Tk):
             tags = []
             if stale:
                 tags.append("stale")
+            if these is not None:
+                tags.append(_THESE_MARKER_UND_TAG.get(these.richtung, ("●", "these_neutral"))[1])
             if bitpanda_fehlt:
                 tags.append("bitpanda_fehlt")  # zuletzt hinzugefuegt = hoehere Prioritaet bei ttk-Tag-Kollision
 
@@ -477,6 +531,11 @@ class TradingInfoToolApp(tk.Tk):
                 status_text += " ⚠ kein yfinance-Symbol"
                 tags.append("externe_id_fehlt")
 
+            schwerpunkt_text = config_module.get_kategorie_name(asset.hauptgruppe, asset.unterkategorie) or "-"
+            if these is not None:
+                marker = _THESE_MARKER_UND_TAG.get(these.richtung, ("●", "these_neutral"))[0]
+                schwerpunkt_text = f"{schwerpunkt_text} {marker}"
+
             tree.insert(
                 "",
                 "end",
@@ -486,7 +545,7 @@ class TradingInfoToolApp(tk.Tk):
                     asset.name,
                     asset.rolle,
                     asset.assetklasse,
-                    config_module.get_kategorie_name(asset.hauptgruppe, asset.unterkategorie) or "-",
+                    schwerpunkt_text,
                     status_text,
                     bitpanda_text,
                     tranchen_text,
@@ -508,16 +567,34 @@ class TradingInfoToolApp(tk.Tk):
         - zeigt die letzte echte Analyse fuer dieses Symbol, ohne in den
         Signale-Tab wechseln zu muessen (2026-07-16, Nutzer-Wunsch: sinnvolle
         Zusatzinfo je Zeile, wo es aktuell kein eigenes Detail-Panel gibt)."""
+        text = ""
+        these = self._these_by_symbol.get(symbol)
+        if these is not None:
+            # Stufe-1-Hervorhebung (2026-07-20, Task #343, Transparenz-Prinzip):
+            # erklaert konkret, WARUM diese Zeile markiert/bevorzugt einsortiert
+            # wurde - siehe _THESE_MARKER_UND_TAG.
+            import config as config_module
+
+            kategorie_name = (
+                config_module.get_kategorie_name(these.hauptgruppe, these.unterkategorie)
+                or config_module.get_hauptgruppe_name(these.hauptgruppe)
+            )
+            richtung_label = {"uebergewichten": "Übergewichten", "meiden": "Meiden", "neutral": "Neutral",
+                               "aktiv": "Aktiv", "inaktiv": "Inaktiv"}.get(these.richtung, these.richtung)
+            text = f"Aktive These ({kategorie_name}, {richtung_label}): {these.begruendung}"
+
         conn = self._db_conn_factory()
         try:
             signal = db.get_latest_signal(conn, symbol)
         finally:
             conn.close()
         if signal is None:
-            return "Noch keine Analyse berechnet."
+            return text or "Noch keine Analyse berechnet."
         when = signal.created_at[:16].replace("T", " ") if signal.created_at else "-"
         conf = f"{signal.confidence_pct:.0f}%" if signal.confidence_pct is not None else "-"
-        text = f"Letztes Signal: {signal.action} ({when}, Konfidenz {conf})"
+        if text:
+            text += "\n\n"
+        text += f"Letztes Signal: {signal.action} ({when}, Konfidenz {conf})"
         if signal.short_reasoning:
             text += f"\n{signal.short_reasoning}"
         return text

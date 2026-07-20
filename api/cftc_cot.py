@@ -38,6 +38,14 @@ COT_MARKET_NAMES = {
     "silber": "SILVER - COMMODITY EXCHANGE INC.",
     "kupfer": "COPPER- #1 - COMMODITY EXCHANGE INC.",
     "erdgas": "NAT GAS NYME - NEW YORK MERCANTILE EXCHANGE",
+    # 2026-07-19 ergaenzt (Release-2-Konzeption Kategorie-Thesen, Luecke aus
+    # Basisinfos/Kategorie_Basisinformationen_Release2.md Abschnitt 8) - live
+    # gegen die echte CFTC-API geprueft (beide Kontrakte real, 2026-07-14er
+    # Bericht, WTI mit ~1,9 Mio. Open Interest der mit Abstand liquideste
+    # Oel-Future, "-PHYSICAL"/"LAST DAY" sind die CFTC-eigenen Bezeichnungen
+    # fuer die jeweiligen Hauptkontrakte, keine Tippfehler).
+    "rohoel_wti": "WTI-PHYSICAL - NEW YORK MERCANTILE EXCHANGE",
+    "rohoel_brent": "BRENT LAST DAY - NEW YORK MERCANTILE EXCHANGE",
 }
 
 
@@ -72,7 +80,7 @@ def _fetch_latest_report(market_name: str, session: requests.Session | None = No
 
 def get_cot_snapshot(rohstoff: str, session: requests.Session | None = None) -> CotSnapshot | None:
     """`rohstoff`: einer der Schluessel in COT_MARKET_NAMES ("gold"/"silber"/
-    "kupfer"/"erdgas"). Gibt None zurueck, wenn der Marktname keine Daten mehr
+    "kupfer"/"erdgas"/"rohoel_wti"/"rohoel_brent"). Gibt None zurueck, wenn der Marktname keine Daten mehr
     liefert (z.B. nach einer erneuten CME-Umbenennung) - P-10: Aufrufer muss mit
     fehlender Positionierung umgehen koennen, kein stiller Fallback auf einen
     veralteten/falschen Wert."""

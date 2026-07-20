@@ -22,6 +22,7 @@ from datetime import datetime, timezone
 
 import numpy as np
 
+import agent.kategorie_thesen as kategorie_thesen
 import config
 import database.db as db
 from agent.aktien.analyst import (
@@ -243,6 +244,9 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
     # Wiederholungs-Erkennung (2026-07-18, Multi-Asset-Vollstaendigkeitspruefung,
     # siehe agent/krypto/wiederholungs_erkennung.py) - bisher nur Krypto hatte das.
     letztes_signal = db.get_latest_signal(conn, asset.symbol)
+    # Kategorie-These-Abgleich (2026-07-19, Release 2) - None wenn keine aktive
+    # These fuer die Hauptgruppe/Unterkategorie dieses Assets existiert (P-8).
+    these_abgleich = kategorie_thesen.build_these_abgleich_fact(conn, asset)
 
     facts = build_facts(
         asset, price_snap, holdings.get(asset.symbol), snapshot, confluence, regime_result,
@@ -253,6 +257,7 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
         insider_trading=insider_trading,
         analysten_trend_finnhub=analysten_trend_finnhub,
         short_interest_finra=short_interest_finra,
+        these_abgleich=these_abgleich,
     )
 
     try:

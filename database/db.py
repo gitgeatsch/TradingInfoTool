@@ -23,6 +23,7 @@ from database.models import (
     PriceHistoryPoint,
     PriceSnapshot,
     Signal,
+    These,
 )
 
 DB_PATH = Path(__file__).resolve().parent.parent / "data" / "tradinginfotool.db"
@@ -358,6 +359,27 @@ CREATE TABLE IF NOT EXISTS makro_analog_ergebnis (
     berechnet_am    TEXT PRIMARY KEY,
     ergebnis_json   TEXT NOT NULL
 );
+
+-- Kategorie-Schwerpunkt-Thesen (2026-07-19, Release 2 der Kategorie-
+-- Taxonomie) - siehe database/models.py::These fuer die volle Begruendung.
+-- Bewusst append-artig ueber status statt Loeschen: 'erledigt'/'verworfen'
+-- bleiben als Historie erhalten (die-Nutzer-Sorge/Begruendung von damals
+-- ist spaeter noch nachvollziehbar, analog signals/hebel_signals).
+CREATE TABLE IF NOT EXISTS thesen (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    hauptgruppe         TEXT NOT NULL,
+    unterkategorie      TEXT,
+    richtung            TEXT NOT NULL,
+    staerke             INTEGER,
+    begruendung         TEXT NOT NULL,
+    pruef_mechanismus   TEXT,
+    gesetzt_am          TEXT NOT NULL,
+    review_am           TEXT,
+    status              TEXT NOT NULL DEFAULT 'aktiv',
+    quelle              TEXT NOT NULL DEFAULT 'manuell'
+);
+CREATE INDEX IF NOT EXISTS idx_thesen_status ON thesen(status);
+CREATE INDEX IF NOT EXISTS idx_thesen_hauptgruppe ON thesen(hauptgruppe, unterkategorie);
 
 -- OI-Abdeckungs-Status (2026-07-19, echter Notebook-Fund: KAS/KAIA/FLOKI/
 -- TURBO/CANTON scheiterten wiederholt bei ALLEN drei Boersen) - anders als
@@ -1235,6 +1257,86 @@ def get_latest_makro_analog_ergebnis(conn: sqlite3.Connection) -> MakroAnalogErg
         "SELECT berechnet_am, ergebnis_json FROM makro_analog_ergebnis ORDER BY berechnet_am DESC LIMIT 1"
     ).fetchone()
     return MakroAnalogErgebnis(**dict(row)) if row else None
+
+
+_THESE_COLUMNS = (
+    "hauptgruppe", "unterkategorie", "richtung", "staerke", "begruendung",
+    "pruef_mechanismus", "gesetzt_am", "review_am", "status", "quelle",
+)
+
+
+def _row_to_these(row: sqlite3.Row) -> These:
+    return These(**dict(row))
+
+
+def create_these(conn: sqlite3.Connection, these: These) -> int:
+    placeholders = ", ".join("?" for _ in _THESE_COLUMNS)
+    values = [getattr(these, col) for col in _THESE_COLUMNS]
+    cursor = conn.execute(
+        f"INSERT INTO thesen ({', '.join(_THESE_COLUMNS)}) VALUES ({placeholders})", values,
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def update_these(conn: sqlite3.Connection, these_id: int, these: These) -> None:
+    set_clause = ", ".join(f"{col} = ?" for col in _THESE_COLUMNS)
+    values = [getattr(these, col) for col in _THESE_COLUMNS] + [these_id]
+    conn.execute(f"UPDATE thesen SET {set_clause} WHERE id = ?", values)
+    conn.commit()
+
+
+def set_these_status(conn: sqlite3.Connection, these_id: int, status: str) -> None:
+    """Status-Uebergang (aktiv -> erledigt/verworfen) - eigene, kleinere Funktion
+    statt immer die komplette These per update_these() neu zu schreiben, analog
+    set_hebel_pruefung_erlaubt()."""
+    conn.execute("UPDATE thesen SET status = ? WHERE id = ?", (status, these_id))
+    conn.commit()
+
+
+def get_these(conn: sqlite3.Connection, these_id: int) -> These | None:
+    columns = ", ".join(("id",) + _THESE_COLUMNS)
+    row = conn.execute(f"SELECT {columns} FROM thesen WHERE id = ?", (these_id,)).fetchone()
+    return _row_to_these(row) if row else None
+
+
+def get_aktive_thesen(conn: sqlite3.Connection) -> list[These]:
+    columns = ", ".join(("id",) + _THESE_COLUMNS)
+    rows = conn.execute(
+        f"SELECT {columns} FROM thesen WHERE status = 'aktiv' ORDER BY gesetzt_am DESC"
+    ).fetchall()
+    return [_row_to_these(row) for row in rows]
+
+
+def get_alle_thesen(conn: sqlite3.Connection) -> list[These]:
+    columns = ", ".join(("id",) + _THESE_COLUMNS)
+    rows = conn.execute(f"SELECT {columns} FROM thesen ORDER BY gesetzt_am DESC").fetchall()
+    return [_row_to_these(row) for row in rows]
+
+
+def get_aktive_these_fuer_kategorie(
+    conn: sqlite3.Connection, hauptgruppe: str, unterkategorie: str | None = None,
+) -> These | None:
+    """Liefert die aktive These fuer ein Asset dieser Hauptgruppe/Unterkategorie -
+    eine Unterkategorie-spezifische These hat Vorrang vor einer allgemeineren
+    Hauptgruppen-These (z.B. eine gezielte These auf 'Halbleiter' vor einer
+    allgemeinen These auf 'ganz Technologie'), falls beide gleichzeitig aktiv
+    waeren. Gibt None zurueck, wenn keine passende aktive These existiert."""
+    columns = ", ".join(("id",) + _THESE_COLUMNS)
+    if unterkategorie is not None:
+        row = conn.execute(
+            f"SELECT {columns} FROM thesen WHERE status = 'aktiv' AND hauptgruppe = ? "
+            "AND unterkategorie = ? ORDER BY gesetzt_am DESC LIMIT 1",
+            (hauptgruppe, unterkategorie),
+        ).fetchone()
+        if row:
+            return _row_to_these(row)
+    row = conn.execute(
+        f"SELECT {columns} FROM thesen WHERE status = 'aktiv' AND hauptgruppe = ? "
+        "AND unterkategorie IS NULL ORDER BY gesetzt_am DESC LIMIT 1",
+        (hauptgruppe,),
+    ).fetchone()
+    return _row_to_these(row) if row else None
 
 
 _SIGNAL_COLUMNS = (

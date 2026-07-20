@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 
 import numpy as np
 
+import agent.kategorie_thesen as kategorie_thesen
 import config
 import database.db as db
 from agent.krypto.backward_tracking import compute_win_rate_fact
@@ -353,6 +354,7 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
     historische_erfolgsquote = compute_win_rate_fact(conn, "spot", erlaubte_symbole=_rohstoff_symbole)
     historischer_makro_vergleich = get_cached_makro_analog_fact(conn)
     letztes_signal = db.get_latest_signal(conn, asset.symbol)
+    these_abgleich = kategorie_thesen.build_these_abgleich_fact(conn, asset)
 
     facts = build_facts(
         asset, price_snap, holdings.get(asset.symbol), snapshot, confluence, regime_result,
@@ -361,6 +363,7 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
         historischer_makro_vergleich=historischer_makro_vergleich,
         letztes_signal=letztes_signal,
         lagerbestaende=lagerbestaende,
+        these_abgleich=these_abgleich,
     )
 
     try:

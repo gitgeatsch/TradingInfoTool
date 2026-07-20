@@ -151,6 +151,69 @@ def get_kategorie_name(hauptgruppe_id: str | None, unterkategorie_id: str | None
     return f"{hauptgruppe['name']} / {unterkategorie['name']}"
 
 
+# Pruef-Mechanismus-Mapping fuer Kategorie-Thesen (2026-07-19, Release 2,
+# siehe Basisinfos/Kategorie_Basisinformationen_Release2.md Abschnitt 7) -
+# welcher objektive Datencheck fuer these_abgleich() bei welcher Hauptgruppe/
+# Unterkategorie anwendbar ist, plus ein Zeithorizont-basierter Vorschlag
+# fuer das review_am-Feld (Transparenz-Prinzip: der Vorschlag kommt IMMER
+# mit einer Begruendung, siehe get_review_am_vorschlag()). Manche Mechanismen
+# gelten nur fuer eine bestimmte Unterkategorie, nicht die ganze Hauptgruppe
+# (z.B. Zinskurve nur fuer "Finanzen", nicht "ganz Aktien-Sektoren") - Schluessel
+# ist deshalb wahlweise "hauptgruppe" ODER "hauptgruppe:unterkategorie", die
+# spezifischere Variante hat Vorrang (siehe get_pruef_mechanismus()).
+PRUEF_MECHANISMUS_MAPPING: dict[str, dict] = {
+    "edelmetalle": {
+        "mechanismus": "m2_liquiditaet",
+        "review_tage_vorschlag": 90,
+        "review_begruendung": "M2-Daten werden nur monatlich veroeffentlicht, ein aussagekraeftiger Trend braucht mehrere Monate.",
+    },
+    "industriemetalle": {
+        "mechanismus": "cot_positionierung",
+        "review_tage_vorschlag": 28,
+        "review_begruendung": "CFTC-COT-Berichte erscheinen woechentlich, die Positionierung kann sich vergleichsweise schnell verschieben.",
+    },
+    "energie": {
+        "mechanismus": "cot_positionierung",
+        "review_tage_vorschlag": 28,
+        "review_begruendung": "CFTC-COT- und EIA-Daten erscheinen woechentlich.",
+    },
+    "anleihen_geldmarkt": {
+        "mechanismus": "m2_liquiditaet",
+        "review_tage_vorschlag": 90,
+        "review_begruendung": "Zinsentscheide sind selten (Fed tagt nur alle paar Wochen), ein kuerzeres Intervall bringt keinen neuen Erkenntnisgewinn.",
+    },
+    "aktien_sektoren:finanzen": {
+        "mechanismus": "zinskurve",
+        "review_tage_vorschlag": 75,
+        "review_begruendung": "Die Zinskurve braucht mehrere Monate Verlauf, um aussagekraeftig zu sein.",
+    },
+    "aktien_regionen:emerging_markets": {
+        "mechanismus": "dollar_index",
+        "review_tage_vorschlag": 75,
+        "review_begruendung": "Eine einzelne Dollar-Index-Momentaufnahme ist wenig aussagekraeftig - der Trend braucht mehrere Monate (siehe Live-Fund vom 2026-07-19: DXY stieg seit Jahresbeginn trotz lockerer Fed).",
+    },
+    "absicherung": {
+        "mechanismus": "baerenmarkt_overlay",
+        "review_tage_vorschlag": None,
+        "review_begruendung": "Absicherung wird situativ (de-)aktiviert, kein festes Wiedervorlage-Intervall sinnvoll.",
+    },
+}
+
+
+def get_pruef_mechanismus(hauptgruppe: str, unterkategorie: str | None) -> dict | None:
+    """Liefert den anwendbaren Pruef-Mechanismus fuer these_abgleich(), oder
+    `None` wenn fuer diese Hauptgruppe/Unterkategorie kein etablierter
+    automatischer Check existiert (z.B. Technologie & KI, Sonstige - dort
+    bleibt es bei reiner Hervorhebung ohne these_abgleich-Text, P-10 ehrlich
+    statt vorgetaeuscht). Unterkategorie-spezifischer Eintrag hat Vorrang vor
+    der Hauptgruppe."""
+    if unterkategorie:
+        spezifisch = PRUEF_MECHANISMUS_MAPPING.get(f"{hauptgruppe}:{unterkategorie}")
+        if spezifisch is not None:
+            return spezifisch
+    return PRUEF_MECHANISMUS_MAPPING.get(hauptgruppe)
+
+
 def get_watchlist() -> list[WatchlistAsset]:
     config = load_config()
     return [

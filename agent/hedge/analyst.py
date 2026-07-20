@@ -121,6 +121,12 @@ frueherer Hedge-Signale wieder (`trefferquote_pct`, `anzahl_ausgewertete_signale
 Beziehe diese Zahl grob in deine `confidence_pct`-Kalibrierung mit ein, aber NUR als \
 schwaches Zusatzindiz - lies den mitgelieferten `hinweis` zur Stichprobengroesse und \
 ueberschaetze die Aussagekraft bei kleiner Stichprobe nicht.
+15. Ist `these_abgleich` NICHT null, hat der Nutzer fuer die Kategorie dieses Assets \
+bewusst eine These gesetzt. `these_abgleich.objektive_einschaetzung` ist eine \
+UNABHAENGIGE, FAKTENBASIERTE Gegenpruefung - kommentiere explizit, ob das aktuelle \
+Setup die Nutzer-These stuetzt oder ihr widerspricht. Eine aktive These ist NIEMALS \
+ein Grund, `action` staerker in Richtung der These zu verschieben, als es die \
+uebrigen Fakten hergeben.
 
 SCHEMA:
 {
@@ -206,6 +212,7 @@ def build_facts(
     historischer_makro_vergleich: dict | None = None,
     historische_erfolgsquote: dict | None = None,
     letztes_signal=None,
+    these_abgleich: dict | None = None,
 ) -> dict:
     wird_aktuell_gehalten = bool(holding and (holding.quantity or 0.0) > 0.0)
     vorherige_empfehlung_fact = build_wiederholung_fact(
@@ -245,6 +252,13 @@ def build_facts(
             },
         },
         "historischer_makro_vergleich": historischer_makro_vergleich,
+        # Kategorie-These-Abgleich (2026-07-19, Release 2) - hier praktisch
+        # immer None, da Hedge-Instrumente zur Hauptgruppe 'absicherung'
+        # gehoeren und dieser Mechanismus dort noch 'nicht_pruefbar' liefert
+        # (siehe agent/kategorie_thesen.py::_abgleich_baerenmarkt_overlay) -
+        # trotzdem konsistent verdrahtet, damit eine spaetere Anbindung ohne
+        # weitere Aenderung an dieser Stelle funktioniert.
+        "these_abgleich": these_abgleich,
         "disclaimers": {
             "hinweis": (
                 "Dieses Instrument wird NICHT nach eigener technischer Staerke bewertet "

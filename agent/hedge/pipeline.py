@@ -19,6 +19,7 @@ import json
 import logging
 from datetime import datetime, timezone
 
+import agent.kategorie_thesen as kategorie_thesen
 import config
 import database.db as db
 from agent.hedge.analyst import AnalystResponseInvalid, build_facts, call_llm_for_signal
@@ -266,6 +267,7 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
     # Krypto/Aktien - eine geliehene fremde Trefferquote waere irrefuehrend.
     _hedge_symbole = set(SYMBOL_ZU_HEBEL_FAKTOR.keys())
     historische_erfolgsquote = compute_win_rate_fact(conn, "spot", erlaubte_symbole=_hedge_symbole)
+    these_abgleich = kategorie_thesen.build_these_abgleich_fact(conn, asset)
 
     facts = build_facts(
         asset, price_snap, holdings.get(asset.symbol), SYMBOL_ZU_HEBEL_FAKTOR[asset.symbol],
@@ -273,6 +275,7 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
         historischer_makro_vergleich=historischer_makro_vergleich,
         historische_erfolgsquote=historische_erfolgsquote,
         letztes_signal=letztes_signal,
+        these_abgleich=these_abgleich,
     )
 
     try:

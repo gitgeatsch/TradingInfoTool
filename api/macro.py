@@ -21,6 +21,7 @@ import re
 from dataclasses import dataclass
 
 import requests
+import yfinance as yf
 
 from database.api_health import track_api_health
 
@@ -104,6 +105,32 @@ class RegionalM2Reading:
     date: str
     value: float
     unit: str  # Rohe gemeldete Einheit je Quelle, bewusst NICHT umgerechnet/vereinheitlicht
+
+
+@dataclass
+class ZinskurveSnapshot:
+    """10-Jahres-Rendite minus kurzfristiger Zins (2026-07-19, Release-2-
+    Konzeption Kategorie-Thesen - schliesst die in Basisinfos/
+    Kategorie_Basisinformationen_Release2.md Abschnitt 8 dokumentierte Luecke:
+    vorher nur ad-hoc per rohem yfinance-Aufruf ohne Health-Tracking geprueft).
+    `spread_pp` positiv = normale/steile Kurve (gut fuer Bankenmargen),
+    negativ = invertierte Kurve (klassisches Rezessionssignal)."""
+    rendite_10j_pct: float
+    rendite_kurzfristig_pct: float
+    spread_pp: float
+
+
+@dataclass
+class DollarIndexTrend:
+    """Dollar-Index (DXY) samt Mehrmonats-Trend (2026-07-19, Release-2-
+    Konzeption) - eine einzelne Momentaufnahme ist bei diesem Indikator wenig
+    aussagekraeftig (live-Fund vom selben Tag: DXY-Momentaufnahme allein
+    haette einen falschen Eindruck vermittelt - erst der 12-Monats-Verlauf
+    zeigte den tatsaechlichen Aufwaertstrend seit Jahresbeginn 2026). Deshalb
+    IMMER mit `monatswerte` liefern, nie nur den aktuellen Wert."""
+    aktueller_wert: float
+    trend: str  # "steigend"|"fallend"|"gleichbleibend"|"unbekannt"
+    monatswerte: list[tuple[str, float]]  # [(YYYY-MM-DD, Wert), ...] aeltester zuerst
 
 
 @dataclass
@@ -437,3 +464,53 @@ def get_all_regional_m2(session: requests.Session | None = None) -> dict[str, Re
             logger.warning("Regionale M2-Abfrage fuer %s fehlgeschlagen: %s", name, exc)
             results[name] = None
     return results
+
+
+# Trend-Schwellenwert fuer den Dollar-Index (2026-07-19) - analog
+# agent/krypto/regime.py::LIQUIDITY_M2_TREND_THRESHOLD_PCT, eigener Wert statt
+# Wiederverwendung, da DXY eine andere typische Schwankungsbreite hat als M2.
+DOLLAR_INDEX_TREND_THRESHOLD_PCT = 1.5
+
+
+@track_api_health("yfinance")
+def get_zinskurve(session: requests.Session | None = None) -> ZinskurveSnapshot | None:
+    """10-Jahres-Rendite (^TNX) minus 13-Wochen-Zins (^IRX) - Standard-Annaeherung
+    an eine Zinskurven-Steilheit ohne FRED-Key-Abhaengigkeit (beide Ticker sind
+    ueber yfinance frei abrufbar). `session`-Parameter nur fuer Signatur-
+    Konsistenz mit den anderen macro.py-Funktionen, yfinance verwaltet eigene
+    Verbindungen. None bei fehlenden Kursdaten (P-10, kein geratener Wert)."""
+    tnx = yf.Ticker("^TNX").fast_info.get("lastPrice")
+    irx = yf.Ticker("^IRX").fast_info.get("lastPrice")
+    if tnx is None or irx is None:
+        return None
+    return ZinskurveSnapshot(
+        rendite_10j_pct=round(tnx, 2),
+        rendite_kurzfristig_pct=round(irx, 2),
+        spread_pp=round(tnx - irx, 2),
+    )
+
+
+@track_api_health("yfinance")
+def get_dollar_index_trend(monate: int = 12, session: requests.Session | None = None) -> DollarIndexTrend | None:
+    """Dollar-Index (DXY) mit Mehrmonats-Verlauf - IMMER den Trend mitliefern,
+    nie nur die Momentaufnahme (siehe Dataclass-Docstring fuer den Live-Fund,
+    der genau das erforderlich machte). Monatliche Kerzen (Muster wie beim
+    Live-Fund vom 2026-07-19: yfinance history(period='1y', interval='1mo')).
+    None wenn keine Historie verfuegbar."""
+    hist = yf.Ticker("DX-Y.NYB").history(period="1y", interval="1mo")
+    if hist.empty:
+        return None
+    monatswerte = [(idx.strftime("%Y-%m-%d"), round(float(row["Close"]), 2)) for idx, row in hist.iterrows()]
+    monatswerte = monatswerte[-monate:]
+    werte = [w for _, w in monatswerte]
+    if len(werte) < 2 or werte[0] == 0:
+        trend = "unbekannt"
+    else:
+        change_pct = (werte[-1] - werte[0]) / werte[0] * 100
+        if change_pct > DOLLAR_INDEX_TREND_THRESHOLD_PCT:
+            trend = "steigend"
+        elif change_pct < -DOLLAR_INDEX_TREND_THRESHOLD_PCT:
+            trend = "fallend"
+        else:
+            trend = "gleichbleibend"
+    return DollarIndexTrend(aktueller_wert=werte[-1], trend=trend, monatswerte=monatswerte)

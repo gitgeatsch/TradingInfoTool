@@ -574,3 +574,43 @@ class MakroAnalogErgebnis:
     agent/krypto/makro_analog.py::summarize_analogs_for_facts()."""
     berechnet_am: str
     ergebnis_json: str
+
+
+@dataclass
+class These:
+    """Kategorie-Schwerpunkt-These (2026-07-19, Release 2 der Kategorie-
+    Taxonomie - siehe Basisinfos/Kategorie_Basisinformationen_Release2.md
+    fuer die volle Konzeption). Bewusst NICHT in config.yaml - das sind sich
+    aendernde, app-verwaltete Daten (Status-Uebergaenge, KI-Vorschlaege),
+    keine statische Konfiguration wie die Watchlist. Bezieht sich auf
+    `hauptgruppe`/`unterkategorie`-IDs aus Basisinfos/kategorien.yaml, nicht
+    auf Krypto (die Taxonomie deckt bewusst kein Krypto ab, siehe
+    kategorien.yaml-Kopfkommentar) - eine These kann sich deshalb nie auf
+    ein Krypto-Asset auswirken.
+
+    `richtung`: 'uebergewichten'|'neutral'|'meiden' fuer normale
+    Hauptgruppen, bei hauptgruppe='absicherung' stattdessen 'aktiv'/
+    'inaktiv' (Versicherungs-Logik statt Richtungswette, siehe Konzept-
+    Dokument Abschnitt 8, Punkt 3 - eine Richtungswette ergibt bei einem
+    Hedge-Instrument keinen Sinn).
+
+    `pruef_mechanismus`: einer von config.PRUEF_MECHANISMUS_PRO_HAUPTGRUPPE
+    (m2_liquiditaet/cot_positionierung/zinskurve/dollar_index/kein_check/
+    baerenmarkt_overlay) - bestimmt, welcher objektive Datencheck fuer
+    these_abgleich() anwendbar ist, None wenn fuer die Hauptgruppe kein
+    automatischer Check existiert.
+
+    `review_am`: Wiedervorlage-Datum, der GUI-Vorschlag dafuer leitet sich
+    vom Zeithorizont des pruef_mechanismus ab (siehe config.py) - reine
+    Vorbelegung, der Nutzer kann frei ueberschreiben."""
+    hauptgruppe: str
+    richtung: str
+    begruendung: str
+    gesetzt_am: str
+    id: int | None = None
+    unterkategorie: str | None = None
+    staerke: int | None = None  # 1-5, wirkt sich in Stufe 1 NUR auf Sortierung/Hervorhebung aus
+    pruef_mechanismus: str | None = None
+    review_am: str | None = None
+    status: str = "aktiv"  # 'aktiv'|'erledigt'|'verworfen'
+    quelle: str = "manuell"  # 'manuell'|'ki_vorschlag'

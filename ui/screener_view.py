@@ -16,10 +16,13 @@ import threading
 import tkinter as tk
 from tkinter import messagebox, ttk
 
+import agent.kategorie_thesen as kategorie_thesen
 import config as config_module
+import database.db as db
 import ui.theme as theme
 from ui.formatting import format_money
 from ui.heading_tooltip import add_heading_tooltips
+from ui.row_tooltip import add_row_tooltips
 from ui.sortable_tree import make_sortable
 
 _SCREENER_COLUMN_DESCRIPTIONS = {
@@ -31,7 +34,22 @@ _SCREENER_COLUMN_DESCRIPTIONS = {
     "marktkap": "Marktkapitalisierung in USD (nur Aktien).",
     "aenderung": "Tagesänderung in % (nur Aktien).",
     "bitpanda": "Ob der Kandidat bei Bitpanda tatsächlich kaufbar ist (✓/✗) - bei ETF/ETC immer ✓, da direkt aus Bitpandas Katalog stammend.",
-    "kategorie": "Hauptgruppe/Unterkategorie aus Basisinfos/kategorien.yaml (nur ETF/ETC, automatisch anhand des Bitpanda-Symbols zugeordnet; '-' wenn nicht zuordenbar oder bei Aktien-Kandidaten).",
+    "kategorie": (
+        "Hauptgruppe/Unterkategorie aus Basisinfos/kategorien.yaml (nur ETF/ETC, "
+        "automatisch anhand des Bitpanda-Symbols zugeordnet; '-' wenn nicht "
+        "zuordenbar oder bei Aktien-Kandidaten). ▲/▼/● = aktive These im "
+        "Schwerpunkte-Tab (▲ Übergewichten/Aktiv, ▼ Meiden, ● Neutral) - solche "
+        "Kandidaten stehen zusätzlich weiter oben in der Liste, Begründung per "
+        "Mouseover auf die Zeile."
+    ),
+}
+
+_THESE_MARKER_UND_TAG = {
+    "uebergewichten": ("▲", "these_positiv"),
+    "aktiv": ("▲", "these_positiv"),
+    "meiden": ("▼", "these_negativ"),
+    "neutral": ("●", "these_neutral"),
+    "inaktiv": ("●", "these_neutral"),
 }
 
 
@@ -42,6 +60,9 @@ class ScreenerView(ttk.Frame):
         self._watchlist = watchlist
         self._candidates: list = []
         self._selected_candidate = None
+        # Stufe-1-Hervorhebung (2026-07-20, Task #343) - Begruendung je
+        # Kandidaten-Zeile mit aktiver These, siehe _on_scan_done().
+        self._these_tooltips: dict[str, str] = {}
 
         self._build_layout()
 
@@ -77,6 +98,7 @@ class ScreenerView(ttk.Frame):
             self.tree.column(col, width=widths[col], anchor="w" if col in ("symbol", "name", "quelle") else "center")
         self._reapply_sort = make_sortable(self.tree, numeric_columns=frozenset({"preis", "marktkap", "aenderung"}))
         add_heading_tooltips(self.tree, _SCREENER_COLUMN_DESCRIPTIONS)
+        add_row_tooltips(self.tree, lambda iid: self._these_tooltips.get(iid))
         self.tree.pack(fill="both", expand=True, padx=8, pady=(0, 8))
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
 
@@ -114,18 +136,63 @@ class ScreenerView(ttk.Frame):
         self._candidates = candidates
         for item in self.tree.get_children():
             self.tree.delete(item)
-        for idx, c in enumerate(candidates):
+        self._these_tooltips.clear()
+
+        # Stufe-1-Hervorhebung (2026-07-20, Task #343) - aktive Thesen einmal
+        # laden, In-Memory-Index statt N Einzel-Queries (Muster wie
+        # ui/app.py::_refresh_watchlist_from_db()).
+        conn = self._db_conn_factory()
+        try:
+            these_index = kategorie_thesen.index_aktive_thesen(db.get_aktive_thesen(conn))
+        finally:
+            conn.close()
+
+        # NUR die initiale Einsortierung (aktive These zuerst) - keine
+        # gehalten-Prioritaet noetig, Screener-Kandidaten sind per Definition
+        # noch nicht in der Watchlist. Nach dem ersten Rendern greift wie
+        # gewohnt eine manuelle Spaltensortierung (make_sortable()).
+        indices_sortiert = sorted(
+            range(len(candidates)),
+            key=lambda i: 0 if kategorie_thesen.lookup_these(
+                these_index, candidates[i].hauptgruppe, candidates[i].unterkategorie
+            ) is not None else 1,
+        )
+
+        for idx in indices_sortiert:
+            c = candidates[idx]
             preis_text = f"{format_money(c.preis_usd)} $" if c.preis_usd is not None else "-"
             marktkap_text = f"{c.marktkap_usd / 1e9:.1f} Mrd." if c.marktkap_usd is not None else "-"
             aenderung_text = f"{c.aenderung_pct:+.1f}%" if c.aenderung_pct is not None else "-"
             bitpanda_text = "✓" if c.bitpanda_gelistet else ("✗" if c.bitpanda_gelistet is False else "?")
             kategorie_text = config_module.get_kategorie_name(c.hauptgruppe, c.unterkategorie) or "-"
+
+            tags = []
+            these = kategorie_thesen.lookup_these(these_index, c.hauptgruppe, c.unterkategorie)
+            if these is not None:
+                marker, tag = _THESE_MARKER_UND_TAG.get(these.richtung, ("●", "these_neutral"))
+                kategorie_text = f"{kategorie_text} {marker}"
+                tags.append(tag)
+                richtung_label = {"uebergewichten": "Übergewichten", "meiden": "Meiden", "neutral": "Neutral",
+                                   "aktiv": "Aktiv", "inaktiv": "Inaktiv"}.get(these.richtung, these.richtung)
+                these_kategorie_name = (
+                    config_module.get_kategorie_name(these.hauptgruppe, these.unterkategorie)
+                    or config_module.get_hauptgruppe_name(these.hauptgruppe)
+                )
+                self._these_tooltips[str(idx)] = (
+                    f"Aktive These ({these_kategorie_name}, {richtung_label}): {these.begruendung}"
+                )
+            if c.bitpanda_gelistet is False:
+                tags.append("nicht_gelistet")  # zuletzt hinzugefuegt = hoehere Prioritaet bei ttk-Tag-Kollision
+
             self.tree.insert(
                 "", "end", iid=str(idx),
                 values=(c.symbol, c.name, c.assetklasse, c.quelle, preis_text, marktkap_text, aenderung_text, bitpanda_text, kategorie_text),
-                tags=("nicht_gelistet",) if c.bitpanda_gelistet is False else (),
+                tags=tuple(tags),
             )
         self.tree.tag_configure("nicht_gelistet", foreground=theme.danger_color())
+        self.tree.tag_configure("these_positiv", foreground=theme.success_color())
+        self.tree.tag_configure("these_negativ", foreground=theme.danger_color())
+        self.tree.tag_configure("these_neutral", foreground=theme.info_color())
         self._reapply_sort()
         theme.restripe_treeview(self.tree)
 
