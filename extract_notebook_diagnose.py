@@ -122,6 +122,7 @@ _HEBEL_SIGNAL_SPALTEN = (
     "stop_loss_eur_von, stop_loss_eur_bis, take_profit_eur_von, take_profit_eur_bis, "
     "liquidationspreis_geschaetzt_usd, eigenkapitalbedarf_usd, "
     "hebel_senkung_eigenkapital_nachschuss_eur, ausfuehrbarkeit_hinweis, "
+    "regime, regime_source, "
     "gate_passed, gate_reason, risk_veto, risk_veto_reason, llm_model, "
     "outcome_status, outcome_geprueft_am, outcome_entschieden_am, "
     "outcome_realisiertes_crv, outcome_datenquelle, "
