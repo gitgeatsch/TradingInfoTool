@@ -146,12 +146,12 @@ def main() -> None:
     if zai_api_key:
         zai_client = ZaiClient(api_key=zai_api_key)
         logger.info(
-            "Z.ai API-Key gefunden - testweise VOR Mistral eingehaengte Fallback-Stufe im "
+            "Z.ai API-Key gefunden - letzte Fallback-Stufe (nach Gemini) im "
             "Budget-Allocator verfügbar (2026-07-20, unverifizierte Kapazitaet, siehe Memory "
             "reference_llm_provider_recherche_uebersicht.md)."
         )
     else:
-        # P-8: Z.ai ist rein additiv (testweise erste Fallback-Stufe) - ohne Key
+        # P-8: Z.ai ist rein additiv (letzte Fallback-Stufe) - ohne Key
         # bleibt die Kette bei Mistral->Groq->Gemini wie zuvor.
         zai_client = None
         logger.info("Kein ZAI_API_KEY gesetzt - Z.ai-Fallback-Stufe deaktiviert.")

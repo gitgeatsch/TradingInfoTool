@@ -657,54 +657,62 @@ signale_batch:
 # (Tier 2) + Spot-Rotation (Tier 3), huckepack auf dem 15-Min-Hebel-Screening-Takt.
 budget_allocator:
   aktiv: true
-  taegliches_budget_gesamt: 90          # B, NEUKALIBRIERT (2026-07-18, LLM-Budget-
-                                        # Konsistenzpruefung Teil 2 - Nutzer-Fund
-                                        # "wir kaempfen um jede Abfrage"): urspruenglich
-                                        # 1:1 auf Groqs eigene Kapazitaet gesetzt (~15-18/
-                                        # Tag, siehe signale_batch.taegliches_budget oben),
-                                        # aber B steuert nur, wie viele Kandidaten UEBERHAUPT
-                                        # einen LLM-Versuch bekommen (Groq->Mistral->Gemini-
-                                        # Kaskade je Kandidat) - NICHT wie viele Groq-Calls
-                                        # stattfinden. Mistrals eigenes Tagesbudget (150,
-                                        # unten) ist die echte Schutzgrenze, unabhaengig von B.
-                                        # Berechnung: bei den (nach dieser Runde) gelockerten
-                                        # Spot-Cooldowns (8h Kern/15h taktisch, siehe unten)
-                                        # liegt der rein rechnerische Spot-Rotation-Bedarf
-                                        # bei 13 Kern-Assets*24/8 + 28 taktische*24/15 ≈
-                                        # 39 + 45 = 84/Tag (theoretisches Maximum, alle
-                                        # Assets exakt im Cooldown-Takt faellig) - B=90 deckt
-                                        # das plus Puffer fuer normale Hebel-/Marktscan-
-                                        # Aktivitaet, bleibt aber deutlich unter Mistrals
-                                        # 150er-Deckel (echte Ausreissertage - z.B. ein
-                                        # Markt-Crash mit vielen gleichzeitigen Hebel-
-                                        # Triggern - laufen kontrolliert in Gemini als
-                                        # dritte Stufe). Schon beim ALTEN Cooldown (10h/20h)
-                                        # lag der theoretische Spot-Bedarf bei ~65/Tag, also
-                                        # weit ueber dem alten B=15 - die Drosselung war real,
-                                        # nicht nur ein Anzeige-Problem.
-  spot_rotation_reserve: 30             # F, proportional mit B mitskaliert (2026-07-18) -
+  taegliches_budget_gesamt: 180          # B, ANGEHOBEN 90->180 (2026-07-20 Nacht, Nutzer-
+                                        # Vorgabe "flachere Budgetkurve/Glaettung, weniger
+                                        # 1h-Leerlaufphasen") - B=90 war zwar schon per
+                                        # 2026-07-18-Neukalibrierung ueber dem rein
+                                        # rechnerischen Spot-Rotation-Bedarf (84/Tag bei
+                                        # 8h/15h-Cooldown, siehe Berechnung unten), aber mit
+                                        # kaum Puffer - an aktiven Tagen (Hebel-Trigger +
+                                        # Marktscan-Kandidaten obendrauf) konnte B schon
+                                        # frueh im Tag erschoepft sein, wonach fuer den Rest
+                                        # des Tages KEIN neuer Kandidat mehr einen LLM-Versuch
+                                        # bekam (Tier-Verteilung liefert dann 0/0/0) - das ist
+                                        # eine plausible Ursache fuer beobachtete "1h-Pausen
+                                        # ohne Aktivitaet". B=180 gibt deutlich mehr Puffer
+                                        # (>2x der 84/Tag-Basislast), bleibt aber weiterhin
+                                        # unter Mistrals neuem 400er-Deckel (siehe unten) -
+                                        # echte Ausreissertage laufen also weiterhin
+                                        # kontrolliert in Gemini/Zai als 3./4. Stufe, statt
+                                        # den ganzen Tag ungebremst durchzuschlagen.
+                                        # Urspruengliche Berechnung (2026-07-18): bei 8h Kern/
+                                        # 15h taktisch liegt der rein rechnerische Spot-
+                                        # Rotation-Bedarf bei 13 Kern-Assets*24/8 + 28
+                                        # taktische*24/15 ≈ 39 + 45 = 84/Tag (theoretisches
+                                        # Maximum, alle Assets exakt im Cooldown-Takt faellig).
+                                        # B steuert nur, wie viele Kandidaten UEBERHAUPT einen
+                                        # LLM-Versuch bekommen (Mistral->Groq->Gemini->Zai-
+                                        # Kaskade je Kandidat) - NICHT wie viele Calls pro
+                                        # Anbieter stattfinden, das regeln die einzelnen
+                                        # *_taegliches_budget-Werte unten unabhaengig von B.
+  spot_rotation_reserve: 60             # F, proportional mit B mitskaliert (2026-07-18,
+                                        # jetzt erneut mit B auf 2026-07-20 mitskaliert) -
                                         # urspruengliches Verhaeltnis F/B ≈ 33% (5/15,
                                         # 2026-07-13) beibehalten, damit Spot-Rotation auch
                                         # an sehr Hebel-/Marktscan-aktiven Tagen denselben
-                                        # relativen Mindestanteil behaelt wie vor der
-                                        # Neukalibrierung.
-  mistral_taegliches_budget: 150         # zweite Fallback-Stufe (2026-07-17, ersetzt Cerebras'
+                                        # relativen Mindestanteil behaelt.
+  mistral_taegliches_budget: 400         # zweite Fallback-Stufe (2026-07-17, ersetzt Cerebras'
                                         # bisherige Rolle vollstaendig - Cerebras 2026-07-17 komplett
                                         # entfernt statt nur bis 2026-08-17 auslaufen zu lassen,
-                                        # siehe Memory project_cerebras_free_tier_aenderung_2026-08-17) -
-                                        # konservativer Deckel weit unter der echt im eigenen
+                                        # siehe Memory project_cerebras_free_tier_aenderung_2026-08-17).
+                                        # ANGEHOBEN von 150 auf 400 (2026-07-20 Nacht, Nutzer-Vorgabe
+                                        # "vernuenftige Last auf die ersten Quellen, dann sehen wir
+                                        # wo wir liegen") - immer noch weit unter der echt im eigenen
                                         # Dashboard verifizierten Kapazitaet (mistral-small-2506:
-                                        # 2.250.000 Tokens/Min, 5 Req/Sek ≈ 300/Min)
-  gemini_taegliches_budget: 200          # letzte, seltenste Fallback-Stufe (2026-07-14, Position
-                                        # 2026-07-17 bestaetigt - Gemini hat von allen verbliebenen
-                                        # Anbietern die ungueenstigsten Vertragsbedingungen,
-                                        # siehe Memory project_cerebras_free_tier_aenderung_2026-08-17) -
-                                        # konservativer Deckel weit unter der recherchierten
-                                        # ~1.000-1.500-Calls/Tag-Kapazitaet (Gemini 3.1 Flash-Lite),
-                                        # bewusst am seltensten genutzt (siehe agent/krypto/
-                                        # budget_allocator.py Modul-Docstring)
-  zai_taegliches_budget: 300             # NEU (2026-07-20, testweise VOR Mistral eingehaengt -
-                                        # siehe Memory reference_llm_provider_recherche_uebersicht.md).
+                                        # 2.250.000 Tokens/Min, 5 Req/Sek ≈ 300/Min), aber deutlich
+                                        # weniger konservativ als zuvor, um die reale Belastungsgrenze
+                                        # ueber echte api_health-429-Raten sichtbar zu machen.
+  gemini_taegliches_budget: 500          # dritte Fallback-Stufe (2026-07-14, Position 2026-07-17
+                                        # bestaetigt - Gemini hat von allen verbliebenen Anbietern
+                                        # die ungueenstigsten Vertragsbedingungen, siehe Memory
+                                        # project_cerebras_free_tier_aenderung_2026-08-17).
+                                        # ANGEHOBEN von 200 auf 500 (2026-07-20 Nacht, gleiche
+                                        # Nutzer-Vorgabe wie bei Mistral) - weiterhin unter der
+                                        # recherchierten ~1.000-1.500-Calls/Tag-Kapazitaet (Gemini
+                                        # 3.1 Flash-Lite), aber deutlich mehr Spielraum als zuvor.
+  zai_taegliches_budget: 300             # NEU (2026-07-20), seit Testnacht LETZTE Stufe (nach
+                                        # Gemini) statt vor Mistral - siehe Memory
+                                        # reference_llm_provider_recherche_uebersicht.md).
                                         # Anders als Mistral/Gemini NICHT aus einem verifizierten
                                         # Dashboard-Wert abgeleitet - Z.ai veroeffentlicht fuer
                                         # GLM-4.5-Flash/GLM-4.7-Flash nur ein Concurrency-Limit

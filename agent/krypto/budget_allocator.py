@@ -14,21 +14,23 @@ Verteilungsformel (1:1 aus docs/budget_queue_design.md):
     rest_fuer_3 = B - tier1_verbraucht - tier2_verbraucht
     tier3_verbraucht = min(anzahl_faelliger_spot_assets, rest_fuer_3)
 
-Fallback-Kette (testweise seit 2026-07-20) Z.ai -> Mistral -> Groq -> Gemini
-- Z.ai (Zhipu AI, GLM-4.5-Flash) wurde testweise als NEUE, unverifizierte
-erste Stufe VOR Mistral gehaengt (siehe Memory reference_llm_provider_
-recherche_uebersicht.md und project_groq_alternative_recherche_2026-07-20.md).
-Anders als Mistral/Gemini/Groq ist die reale Kapazitaet NICHT ueber ein
-Nutzer-Dashboard verifiziert - Z.ai veroeffentlicht fuer die kostenlosen
-Modelle nur ein Concurrency-Limit (2), keine RPM/TPM/RPD-Zahl. Nutzer-
-Entscheidung, es dennoch an erster Stelle zu testen: "kein Grund nicht auf
-ein bestimmtes hoeheres Limit zu gehen, wenn diese Quelle blockiert wird
-passiert auch nichts fuer diese eine Nacht" - schlaegt Z.ai fehl (Netzwerk,
-HTTP-Fehler, eigener Tages-Deckel `zai_taegliches_budget` erreicht), faellt
-die Kette sofort auf Mistral zurueck, kein Datenverlust. Reihenfolge ist
-NICHT final - sobald genug echte Betriebsdaten (api_health/Provider-
-Performance) vorliegen, wird neu entschieden, ob Z.ai vor Groq bleibt,
-dahinter wandert, oder (bei schlechten Ergebnissen) wieder entfernt wird.
+Fallback-Kette (Stand 2026-07-20 Nacht) Mistral -> Groq -> Gemini -> Z.ai
+- Z.ai (Zhipu AI, GLM-4.5-Flash) wurde zunaechst testweise als erste Stufe
+VOR Mistral gehaengt (siehe Memory reference_llm_provider_
+recherche_uebersicht.md und project_groq_alternative_recherche_2026-07-20.md),
+nach der ersten echten Testnacht aber auf die LETZTE Stufe (nach Gemini)
+zurueckgestuft: reproduzierte Live-Tests zeigten, dass GLM-4.5-Flash bei
+realistischer Payload-Groesse (System-Prompt + Fakten-JSON) ca. 109s fuer
+eine Antwort braucht - deutlich zu langsam fuer eine FRUEHE Fallback-Stufe,
+die jeden Kandidaten zusaetzlich verzoegern wuerde (siehe auch Memory
+project_delta_berechnung_llm_abfrage_timing.md). Als LETZTE Stufe faellt die
+zusaetzliche Wartezeit kaum ins Gewicht, da nur genutzt wenn Mistral/Groq/
+Gemini alle drei fehlschlagen. Anders als Mistral/Gemini/Groq ist die reale
+Kapazitaet NICHT ueber ein Nutzer-Dashboard verifiziert - Z.ai veroeffentlicht
+fuer die kostenlosen Modelle nur ein Concurrency-Limit (2), keine RPM/TPM/
+RPD-Zahl. Eigener Tages-Deckel `zai_taegliches_budget` unveraendert aktiv.
+Reihenfolge ist weiterhin nicht zwingend final, aber deutlich wahrscheinlicher
+stabil als die urspruengliche Position - siehe Memory fuer weitere Updates.
 
 2026-07-17: Cerebras vollstaendig
 entfernt, siehe Memory project_cerebras_free_tier_aenderung_2026-08-17.md -
@@ -486,10 +488,6 @@ def run_budget_allocator(
             continue
         schluessel = f"hebel:{trigger.symbol}:{trigger.richtung}"
         calls = []
-        if zai_client is not None:
-            calls.append(("zai", lambda t=trigger, a=asset: _mit_conn(
-                lambda c: generate_hebel_signal(t, a, watchlist, c, zai_client, coingecko_client, kraken_client, fred_api_key)
-            )))
         if mistral_client is not None:
             calls.append(("mistral", lambda t=trigger, a=asset: _mit_conn(
                 lambda c: generate_hebel_signal(t, a, watchlist, c, mistral_client, coingecko_client, kraken_client, fred_api_key)
@@ -500,6 +498,10 @@ def run_budget_allocator(
         if gemini_client is not None:
             calls.append(("gemini", lambda t=trigger, a=asset: _mit_conn(
                 lambda c: generate_hebel_signal(t, a, watchlist, c, gemini_client, coingecko_client, kraken_client, fred_api_key)
+            )))
+        if zai_client is not None:
+            calls.append(("zai", lambda t=trigger, a=asset: _mit_conn(
+                lambda c: generate_hebel_signal(t, a, watchlist, c, zai_client, coingecko_client, kraken_client, fred_api_key)
             )))
         ok = _mit_fallback_chain(schluessel, calls)
         if ok:
@@ -531,13 +533,13 @@ def run_budget_allocator(
         for candidate in marktscan_kandidaten[:tier2_n]:
             schluessel = f"marktscan:{candidate.coingecko_id}"
             calls = []
-            if zai_client is not None:
-                calls.append(("zai", lambda c=candidate: _writeup(c, zai_client)))
             if mistral_client is not None:
                 calls.append(("mistral", lambda c=candidate: _writeup(c, mistral_client)))
             calls.append(("groq", lambda c=candidate: _writeup(c, groq_client)))
             if gemini_client is not None:
                 calls.append(("gemini", lambda c=candidate: _writeup(c, gemini_client)))
+            if zai_client is not None:
+                calls.append(("zai", lambda c=candidate: _writeup(c, zai_client)))
             ok = _mit_fallback_chain(schluessel, calls)
             if ok:
                 result.marktscan_verarbeitet.append(schluessel)
@@ -546,10 +548,6 @@ def run_budget_allocator(
     for asset in spot_kandidaten[:tier3_n]:
         schluessel = f"spot:{asset.symbol}"
         calls = []
-        if zai_client is not None:
-            calls.append(("zai", lambda a=asset: _mit_conn(
-                lambda c: generate_signal(a, watchlist, c, zai_client, coingecko_client, kraken_client, fred_api_key)
-            )))
         if mistral_client is not None:
             calls.append(("mistral", lambda a=asset: _mit_conn(
                 lambda c: generate_signal(a, watchlist, c, mistral_client, coingecko_client, kraken_client, fred_api_key)
@@ -560,6 +558,10 @@ def run_budget_allocator(
         if gemini_client is not None:
             calls.append(("gemini", lambda a=asset: _mit_conn(
                 lambda c: generate_signal(a, watchlist, c, gemini_client, coingecko_client, kraken_client, fred_api_key)
+            )))
+        if zai_client is not None:
+            calls.append(("zai", lambda a=asset: _mit_conn(
+                lambda c: generate_signal(a, watchlist, c, zai_client, coingecko_client, kraken_client, fred_api_key)
             )))
         ok = _mit_fallback_chain(schluessel, calls)
         if ok:

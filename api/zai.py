@@ -1,6 +1,9 @@
-"""Z.ai (Zhipu AI) API Anbindung - vierter, testweise VOR Mistral eingehaengter
-Kandidat (2026-07-20, siehe Memory reference_llm_provider_recherche_uebersicht.md
-und project_groq_alternative_recherche_2026-07-20.md). Anders als bei Mistral/
+"""Z.ai (Zhipu AI) API Anbindung - vierter Kandidat (2026-07-20, siehe Memory
+reference_llm_provider_recherche_uebersicht.md und
+project_groq_alternative_recherche_2026-07-20.md). Zunaechst testweise VOR
+Mistral gehaengt, nach der ersten echten Testnacht (2/2 Timeouts) aber wieder
+auf die LETZTE Fallback-Stufe (nach Gemini) zurueckgestuft - siehe
+REQUEST_TIMEOUT_SECONDS-Docstring unten fuer den Grund. Anders als bei Mistral/
 Gemini/Groq ist die reale Kapazitaet NICHT ueber ein Nutzer-Dashboard verifiziert
 - Z.ai veroeffentlicht fuer die kostenlosen Modelle nur ein "Concurrency limit"
 (GLM-4.5-Flash=2, GLM-4.7-Flash=1), keine RPM/TPM/RPD-Zahl. Nutzer-Entscheidung:
@@ -39,6 +42,16 @@ DEFAULT_MODEL = "glm-4.5-flash"
 # etwaigen Endlosschleifen-Bug, keine Kapazitaetsschaetzung. Die reale
 # Obergrenze ist unbekannt und soll sich im echten Betrieb zeigen.
 RATE_LIMIT_PER_MINUTE = 120
+# REQUEST_TIMEOUT_SECONDS (2026-07-20, Nachbesserung nach der ersten echten
+# Testnacht): urspruenglich 60s, aber reproduzierte Live-Tests (Desktop +
+# Notebook) zeigten, dass glm-4.5-flash bei realistischer Payload-Groesse
+# (System-Prompt + Fakten-JSON wie in der echten Pipeline) ca. 109s fuer
+# eine vollstaendige, valide Antwort braucht - 60s war also strukturell zu
+# knapp, nicht nur ein Ausreisser. glm-4.7-flash schaffte es auch mit 150s
+# nicht (verworfen). Da Zai jetzt als letzte Fallback-Stufe (nach Gemini)
+# haengt statt an erster Stelle, faellt die zusaetzliche Wartezeit kaum
+# noch ins Gewicht - 150s geben glm-4.5-flash realistisch eine echte Chance.
+REQUEST_TIMEOUT_SECONDS = 150
 
 
 class ZaiClient:
@@ -70,7 +83,7 @@ class ZaiClient:
         payload = {"model": model, "messages": messages, "temperature": temperature}
         if response_format is not None:
             payload["response_format"] = response_format
-        response = self._session.post(BASE_URL, json=payload, headers=headers, timeout=60)
+        response = self._session.post(BASE_URL, json=payload, headers=headers, timeout=REQUEST_TIMEOUT_SECONDS)
         response.raise_for_status()
         data = response.json()
         return data["choices"][0]["message"]["content"]

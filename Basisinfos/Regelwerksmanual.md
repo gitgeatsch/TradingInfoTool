@@ -5973,3 +5973,75 @@ schlaegt fehl -> Fallback auf Mistral korrekt; Z.ai-Tagesbudget erschoepft
 Betriebsdaten (api_health-429-Rate, Provider-Performance) vorliegen, wird
 neu entschieden, ob Z.ai vor Groq bleibt, dahinter wandert, oder bei
 schlechten Ergebnissen wieder entfernt wird.
+
+## Nachtrag (2026-07-20, spaet abends): Z.ai auf letzte Fallback-Stufe zurueckgestuft + Budget-Neukalibrierung
+
+**Ausloeser:** Erste echte Testnacht mit Z.ai an erster Stelle (siehe
+Nachtrag oben) lieferte sofort 2/2 `Read timed out`-Fehlschlaege
+(hebel:NEAR:LONG, hebel:SUI:LONG, je nach ~80-100s) auf dem Notebook.
+Root-Cause-Diagnose ueber mehrere Schritte:
+1. Notebook-Log gruendlich durchsucht (`zai-Call für ... fehlgeschlagen`-
+   Zeilen gefunden) - kein Haenger, sondern echte `ReadTimeout`-Exceptions.
+2. Live-Test vom Desktop aus mit trivialem Prompt ("Antworte nur mit OK"):
+   3/3 Erfolge in 4.6-10.2s - Z.ai grundsaetzlich erreichbar und schnell.
+3. Live-Test vom Desktop mit REALISTISCHER Payload (echter `SYSTEM_PROMPT`
+   aus `hebel_analyst.py`, 11.761 Zeichen + synthetisches Facts-JSON,
+   JSON-Mode wie in der echten Pipeline): Timeout nach exakt 60.4s -
+   reproduziert unabhaengig vom Notebook, also ein echtes Kapazitaets-
+   problem der Payload-Groesse, kein Notebook-Netzwerk-/Hardware-Problem.
+4. Vergleichstest beider echter Free-Tier-Modelle mit 150s-Timeout:
+   GLM-4.5-Flash antwortete nach 109.2s korrekt und vollstaendig (valides
+   JSON gemaess Schema) - GLM-4.7-Flash lieferte auch nach vollen 150s
+   keine Antwort (Concurrency-Limit 1 statt 2, damit endgueltig verworfen).
+
+**Fazit:** GLM-4.5-Flash ist nicht kaputt/unerreichbar, sondern schlicht zu
+langsam fuer eine FRUEHE Fallback-Stufe (~110s realistische Antwortzeit,
+der bisherige 60s-Timeout war strukturell zu knapp). Als erste Stufe wuerde
+das jeden einzelnen Kandidaten um bis zu 2 Minuten verzoegern, bevor der
+Fallback ueberhaupt greift - direkt gegensaetzlich zum parallel
+dokumentierten Delta-Thema (siehe [[project_delta_berechnung_llm_abfrage_timing]]).
+
+**Umgesetzt:**
+- `agent/krypto/budget_allocator.py`: alle 3 Tiers (Hebel/Marktscan/Spot)
+  neu geordnet auf Mistral -> Groq -> Gemini -> Z.ai (Z.ai jetzt echte
+  letzte Stufe statt erste).
+- `api/zai.py`: neue Konstante `REQUEST_TIMEOUT_SECONDS = 150` (vorher
+  hart codiert 60s) - als letzte Stufe faellt die laengere Wartezeit kaum
+  ins Gewicht, da nur genutzt wenn Mistral/Groq/Gemini alle drei
+  fehlschlagen.
+- Docstrings/Log-Zeilen in `main.py`, `budget_allocator.py`, `api/zai.py`,
+  `config.yaml` auf die neue Reihenfolge korrigiert (vorher ueberall
+  "testweise VOR Mistral").
+- **Budget-Neukalibrierung** (Nutzer-Vorgabe: "flachere Budgetkurve,
+  Glaettung, vernuenftige Last auf die ersten Quellen, dann sehen wir wo
+  wir liegen" - Ziel: reale Kapazitaetsgrenzen von Mistral/Groq/Gemini
+  ueber echte Nutzung sichtbar machen, UND beobachtete "1h-Leerlaufphasen"
+  reduzieren, bei denen das Tagesbudget B schon frueh erschoepft war und
+  fuer den Rest des Tages kein neuer Kandidat mehr einen LLM-Versuch
+  bekam):
+  - `mistral_taegliches_budget`: 150 -> 400 (weiterhin klar unter der
+    echt verifizierten ~300/Min-Kapazitaet).
+  - `gemini_taegliches_budget`: 200 -> 500 (weiterhin unter der
+    recherchierten ~1.000-1.500/Tag-Kapazitaet).
+  - `taegliches_budget_gesamt` (B): 90 -> 180 - deutlich mehr Puffer
+    ueber dem rein rechnerischen Spot-Rotation-Bedarf (84/Tag bei 8h/15h-
+    Cooldown), bleibt aber weiterhin unter Mistrals neuem 400er-Deckel,
+    damit echte Ausreissertage kontrolliert in Gemini/Zai ueberlaufen
+    statt den ganzen Tag ungebremst durchzuschlagen.
+  - `spot_rotation_reserve` (F): 30 -> 60 (Verhaeltnis F/B ≈ 33%
+    beibehalten).
+  - Groq hat weiterhin keinen Tages-Deckel (nur echte 429-
+    Erschoepfungserkennung) - laeuft also bereits "unter Last".
+
+**Verifikation:** Reihenfolge-Aenderung per `grep` in allen 3 Tiers
+bestaetigt (Mistral->Groq->Gemini->Zai). Syntax-Check aller 4 geaenderten
+Python-/YAML-Dateien fehlerfrei. `_verteile_budget()` mit einem
+synthetischen Ausreissertag getestet (20 Hebel + 15 Marktscan + 84 faellige
+Spot-Kandidaten = 119 gesamt): mit dem alten B=90 waeren Spot-Kandidaten
+auf 55 gekappt worden, mit B=180 bekommen alle 119 einen LLM-Versuch.
+
+**Offen:** Erst nach einem echten Notebook-Neustart (config.yaml wird nur
+einmal pro Prozess gelesen) wirksam. Weiterhin zu beobachten: ob die neuen,
+grosszuegigeren Budgets zu mehr echten 429-Fehlern bei Mistral/Gemini
+fuehren (dann waere die reale Kapazitaetsgrenze gefunden), und ob die
+"1h-Leerlaufphasen" durch B=180 tatsaechlich seltener werden.
