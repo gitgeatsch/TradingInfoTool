@@ -39,19 +39,50 @@ _SCREENER_COLUMN_DESCRIPTIONS = {
     "name": "Name des Unternehmens/Produkts.",
     "assetklasse": "Aktien (yfinance-Screener) oder ETF/ETC (direkt aus Bitpandas eigenem Katalog).",
     "quelle": "Herkunft: Yahoo-Finance-Screen-Name oder 'bitpanda_katalog'.",
-    "preis": "Aktueller Preis in USD (nur Aktien - Bitpanda-Katalog liefert keine Preise).",
+    "preis": (
+        "Aktueller Preis in USD (nur Aktien - Bitpandas eigener ETF/ETC-Katalog liefert "
+        "strukturell keine Preise, live gegenprüft: weder öffentlich noch mit API-Key. "
+        "Grund per Mouseover auf die Zeile."
+    ),
     "marktkap": "Marktkapitalisierung in USD (nur Aktien).",
     "aenderung": "Tagesänderung in % (nur Aktien).",
     "bitpanda": "Ob der Kandidat bei Bitpanda tatsächlich kaufbar ist (✓/✗) - bei ETF/ETC immer ✓, da direkt aus Bitpandas Katalog stammend.",
     "kategorie": (
         "Hauptgruppe/Unterkategorie aus Basisinfos/kategorien.yaml (nur ETF/ETC, "
-        "automatisch anhand des Bitpanda-Symbols zugeordnet; '-' wenn nicht "
-        "zuordenbar oder bei Aktien-Kandidaten). ▲/▼/● = aktive These im "
-        "Schwerpunkte-Tab (▲ Übergewichten/Aktiv, ▼ Meiden, ● Neutral) - solche "
-        "Kandidaten stehen zusätzlich weiter oben in der Liste, Begründung per "
-        "Mouseover auf die Zeile."
+        "automatisch anhand des Bitpanda-Symbols zugeordnet; '-' bei Aktien-Kandidaten, "
+        "Grund per Mouseover auf die Zeile). ▲/▼/● = aktive These im Schwerpunkte-Tab "
+        "(▲ Übergewichten/Aktiv, ▼ Meiden, ● Neutral) - solche Kandidaten stehen "
+        "zusätzlich weiter oben in der Liste, Begründung ebenfalls per Mouseover."
     ),
 }
+
+_ERKLAERUNG_BITPANDA_KATALOG = (
+    "Kein Preis verfügbar: Bitpanda-eigenes ETF/ETC-Produkt, keine öffentliche "
+    "Kursquelle - live geprüft, weder Bitpandas Katalog-Endpunkt noch (mit API-Key) "
+    "die Wallet-/Transaktions-Endpunkte liefern einen Preis dafür. Manche dieser "
+    "Produkte sind zwar durch echte Rohstoff-Futures abgesichert (z.B. Bitpandas "
+    "'Grains' durch Mais-/Weizen-/Sojabohnen-Futures), aber Bitpandas eigene "
+    "Gewichtung ist extern nicht einsehbar."
+)
+_ERKLAERUNG_AKTIE_OHNE_KATEGORIE = (
+    "Keine Kategorie: der Yahoo-Finance-Screener liefert keine Sektor-/Branchendaten "
+    "in der Kandidatenliste selbst - eine automatische Zuordnung bräuchte einen "
+    "zusätzlichen Einzelabruf pro Aktie (bei 150-200 Kandidaten pro Scan bewusst "
+    "nicht eingebaut, siehe Basisinfos/Regelwerksmanual.md)."
+)
+
+
+def _erklaerung_fehlende_daten(c) -> str | None:
+    """Transparenz-Prinzip (2026-07-20, Nutzer-Nachfrage 'warum sind die Assets
+    nicht durchgängig kategorisiert bzw. haben keinen Preis'): live geprüfte,
+    strukturelle Lücken - keine geratenen/automatisch angereicherten Werte (siehe
+    Regelwerksmanual: yfinance-Namenssuche wurde bewusst NICHT automatisiert, da
+    sie live nachweislich auch falsche Treffer liefert)."""
+    if c.quelle == "bitpanda_katalog":
+        return _ERKLAERUNG_BITPANDA_KATALOG
+    if c.assetklasse == "aktien" and c.hauptgruppe is None:
+        return _ERKLAERUNG_AKTIE_OHNE_KATEGORIE
+    return None
 
 _THESE_MARKER_UND_TAG = {
     "uebergewichten": ("▲", "these_positiv"),
@@ -69,9 +100,10 @@ class ScreenerView(ttk.Frame):
         self._watchlist = watchlist
         self._candidates: list = []
         self._selected_candidate = None
-        # Stufe-1-Hervorhebung (2026-07-20, Task #343) - Begruendung je
-        # Kandidaten-Zeile mit aktiver These, siehe _on_scan_done().
-        self._these_tooltips: dict[str, str] = {}
+        # Zeilen-Tooltips (2026-07-20) - kombiniert die Stufe-1-These-Begruendung
+        # (Task #343) MIT der Erklaerung fuer fehlenden Preis/Kategorie
+        # (_erklaerung_fehlende_daten()), siehe _on_scan_done().
+        self._row_tooltips: dict[str, str] = {}
         # Auto-Scan (2026-07-20) - Intervall aus config.yaml, Default 60 Min
         # falls die Sektion (noch) fehlt (P-10, kein Absturz bei alter Config).
         screener_cfg = config_module.load_config().get("screener", {})
@@ -132,7 +164,7 @@ class ScreenerView(ttk.Frame):
             self.tree.column(col, width=widths[col], anchor="w" if col in ("symbol", "name", "quelle") else "center")
         self._reapply_sort = make_sortable(self.tree, numeric_columns=frozenset({"preis", "marktkap", "aenderung"}))
         add_heading_tooltips(self.tree, _SCREENER_COLUMN_DESCRIPTIONS)
-        add_row_tooltips(self.tree, lambda iid: self._these_tooltips.get(iid))
+        add_row_tooltips(self.tree, lambda iid: self._row_tooltips.get(iid))
         self.tree.pack(fill="both", expand=True, padx=8, pady=(0, 8))
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
 
@@ -180,7 +212,7 @@ class ScreenerView(ttk.Frame):
         self._candidates = candidates
         for item in self.tree.get_children():
             self.tree.delete(item)
-        self._these_tooltips.clear()
+        self._row_tooltips.clear()
 
         # Stufe-1-Hervorhebung (2026-07-20, Task #343) - aktive Thesen einmal
         # laden, In-Memory-Index statt N Einzel-Queries (Muster wie
@@ -211,6 +243,7 @@ class ScreenerView(ttk.Frame):
             kategorie_text = config_module.get_kategorie_name(c.hauptgruppe, c.unterkategorie) or "-"
 
             tags = []
+            tooltip_teile = []
             these = kategorie_thesen.lookup_these(these_index, c.hauptgruppe, c.unterkategorie)
             if these is not None:
                 marker, tag = _THESE_MARKER_UND_TAG.get(these.richtung, ("●", "these_neutral"))
@@ -222,9 +255,14 @@ class ScreenerView(ttk.Frame):
                     config_module.get_kategorie_name(these.hauptgruppe, these.unterkategorie)
                     or config_module.get_hauptgruppe_name(these.hauptgruppe)
                 )
-                self._these_tooltips[str(idx)] = (
+                tooltip_teile.append(
                     f"Aktive These ({these_kategorie_name}, {richtung_label}): {these.begruendung}"
                 )
+            erklaerung = _erklaerung_fehlende_daten(c)
+            if erklaerung is not None:
+                tooltip_teile.append(erklaerung)
+            if tooltip_teile:
+                self._row_tooltips[str(idx)] = "\n\n".join(tooltip_teile)
             if c.bitpanda_gelistet is False:
                 tags.append("nicht_gelistet")  # zuletzt hinzugefuegt = hoehere Prioritaet bei ttk-Tag-Kollision
 
