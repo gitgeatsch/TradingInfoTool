@@ -18,7 +18,7 @@ from tkinter import ttk
 
 import database.db as db
 import ui.theme as theme
-from ui.formatting import format_money, format_risikofaktoren_lines
+from ui.formatting import RISIKOFAKTOREN_LEGENDE, format_money, format_risikofaktoren_lines
 from ui.heading_tooltip import add_heading_tooltips
 from ui.sortable_tree import make_sortable
 
@@ -515,6 +515,7 @@ class SignalsView(ttk.Frame):
         lines.append(f"--- 2. LLM-BEWERTUNG (Konfidenz {conf_text_2}) ---")
         lines.extend(abschnitt_2)
         lines.append("--- 3. KONKLUSION (RISIKOFAKTOREN) ---")
+        lines.append(RISIKOFAKTOREN_LEGENDE)
         lines.extend(risikofaktoren_lines if risikofaktoren_lines else ["Keine strukturierten Risikofaktoren verfügbar."])
 
         self._set_detail_text("\n".join(lines))

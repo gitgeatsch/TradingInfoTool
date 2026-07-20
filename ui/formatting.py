@@ -7,7 +7,7 @@ from staleness import format_price_age, is_history_stale, is_price_stale
 
 __all__ = [
     "format_money", "format_price_age", "is_history_stale", "is_price_stale",
-    "format_risikofaktoren_lines",
+    "format_risikofaktoren_lines", "RISIKOFAKTOREN_LEGENDE",
 ]
 
 
@@ -20,6 +20,13 @@ def format_money(value: float | None) -> str:
 
 
 _RISIKOFAKTOR_SYMBOL = {"positiv": "🟢", "neutral": "⚪", "negativ": "🔴"}
+
+# 2026-07-20, Nutzer-Wunsch nach einem echten Screenshot-Vergleich (E-Mail-
+# Darstellung von ⚪ wirkte je nach Client blass-lila statt eindeutig grau,
+# Nutzer vermutete deshalb zunaechst eine vertauschte Farblogik). Einzeilige
+# Legende statt neuer Tooltip-Infrastruktur - reicht, um die Bedeutung robust
+# gegen Emoji-Rendering-Unterschiede zu machen.
+RISIKOFAKTOREN_LEGENDE = "(🟢 unterstützt die Empfehlung · ⚪ neutral · 🔴 Warnsignal/Risiko)"
 
 
 def format_risikofaktoren_lines(risikofaktoren_json: str | None) -> list[str]:

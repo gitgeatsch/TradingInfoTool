@@ -19,7 +19,7 @@ from tkinter import ttk
 
 import database.db as db
 import ui.theme as theme
-from ui.formatting import format_money, format_risikofaktoren_lines
+from ui.formatting import RISIKOFAKTOREN_LEGENDE, format_money, format_risikofaktoren_lines
 from ui.heading_tooltip import add_heading_tooltips
 from ui.sortable_tree import make_sortable
 
@@ -445,6 +445,7 @@ class HebelView(ttk.Frame):
         # bewusst NICHT vom LLM generiert - siehe agent/krypto/hebel_risk_gate.py::
         # compute_risikofaktoren_hebel()-Docstring (echter AVAX-Fund als Ausloeser).
         lines.append("--- 3. KONKLUSION (RISIKOFAKTOREN) ---")
+        lines.append(RISIKOFAKTOREN_LEGENDE)
         risikofaktoren_lines = format_risikofaktoren_lines(signal.risikofaktoren_json)
         if risikofaktoren_lines:
             lines.extend(risikofaktoren_lines)

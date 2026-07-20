@@ -872,6 +872,12 @@ def _formatiere_forecast(signal) -> str:
 
 
 _RISIKOFAKTOR_SYMBOL = {"positiv": "🟢", "neutral": "⚪", "negativ": "🔴"}
+# 2026-07-20, Nutzer-Fund per Screenshot: das weisse ⚪-Emoji wird in manchen
+# E-Mail-Clients (z.B. Gmail-Web) blass-lila statt eindeutig grau gerendert -
+# fuehrte zu einer falschen Vermutung ueber die Farblogik. Eigene Kopie wie
+# ui/formatting.py::RISIKOFAKTOREN_LEGENDE (dort fuer den App-Kontext),
+# bewusst getrennt gehalten (siehe _formatiere_risikofaktoren()-Docstring).
+_RISIKOFAKTOREN_LEGENDE = "(🟢 unterstützt die Empfehlung · ⚪ neutral · 🔴 Warnsignal/Risiko)"
 
 
 def _formatiere_risikofaktoren(signal) -> str:
@@ -970,6 +976,7 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None) -
             + (f"{halte_kriterium_text}\n\n" if halte_kriterium_text else "")
             + (f"{forecast_text}\n" if forecast_text else "")
             + "\n--- 3. KONKLUSION (RISIKOFAKTOREN) ---\n"
+            + f"{_RISIKOFAKTOREN_LEGENDE}\n"
             + (risikofaktoren_text if risikofaktoren_text else "Keine strukturierten Risikofaktoren verfügbar.")
             + "\n\nDetails im Signale-Tab der App. Ausführung manuell über die Bitpanda-App."
         )
@@ -1042,6 +1049,7 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None) 
             + (f"{halte_kriterium_text}\n\n" if halte_kriterium_text else "")
             + (f"{forecast_text}\n" if forecast_text else "")
             + "\n--- 3. KONKLUSION (RISIKOFAKTOREN) ---\n"
+            + f"{_RISIKOFAKTOREN_LEGENDE}\n"
             + (risikofaktoren_text if risikofaktoren_text else "Keine strukturierten Risikofaktoren verfügbar.")
             + "\n\nDetails im Hebel-Tab der App. Ausführung manuell über die Bitpanda-App."
         )
@@ -1106,6 +1114,7 @@ def _notify_multi_asset_signal(signal, watchlist: list, bitpanda_assets: list | 
             + (f"{halte_kriterium_text}\n\n" if halte_kriterium_text else "")
             + (f"{forecast_text}\n" if forecast_text else "")
             + "\n--- 3. KONKLUSION (RISIKOFAKTOREN) ---\n"
+            + f"{_RISIKOFAKTOREN_LEGENDE}\n"
             + (risikofaktoren_text if risikofaktoren_text else "Keine strukturierten Risikofaktoren verfügbar.")
             + "\n\nDetails im Signale-Tab der App. Ausführung manuell über die Bitpanda-App."
         )
