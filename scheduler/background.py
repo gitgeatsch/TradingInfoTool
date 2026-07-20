@@ -871,13 +871,19 @@ def _formatiere_forecast(signal) -> str:
     return "Forecast-Szenarien:\n" + "\n".join(zeilen) if zeilen else ""
 
 
-_RISIKOFAKTOR_SYMBOL = {"positiv": "🟢", "neutral": "⚪", "negativ": "🔴"}
-# 2026-07-20, Nutzer-Fund per Screenshot: das weisse ⚪-Emoji wird in manchen
-# E-Mail-Clients (z.B. Gmail-Web) blass-lila statt eindeutig grau gerendert -
-# fuehrte zu einer falschen Vermutung ueber die Farblogik. Eigene Kopie wie
-# ui/formatting.py::RISIKOFAKTOREN_LEGENDE (dort fuer den App-Kontext),
-# bewusst getrennt gehalten (siehe _formatiere_risikofaktoren()-Docstring).
-_RISIKOFAKTOREN_LEGENDE = "(🟢 unterstützt die Empfehlung · ⚪ neutral · 🔴 Warnsignal/Risiko)"
+_RISIKOFAKTOR_SYMBOL = {"positiv": "▲", "neutral": "●", "negativ": "▼"}
+# 2026-07-20: urspruenglich farbige Kreis-Emoji (🟢/⚪/🔴) - Nutzer-Screenshot
+# vom echten Notebook-App-Detail-Panel zeigte, dass die Farbunterscheidung dort
+# komplett verloren ging (Tkinter-Fontfallback), ausserdem wurde bereits zuvor
+# ⚪ in manchen E-Mail-Clients (z.B. Gmail-Web) blass-lila statt eindeutig grau
+# dargestellt. Wechsel auf die bereits im Projekt etablierten Form-Marker
+# ▲/●/▼ (siehe ui/app.py/portfolio.py/screener_view.py: These-Marker, gleiche
+# Semantik positiv/neutral/negativ) - Form statt Farbe ist robust gegen
+# Emoji-Rendering-Unterschiede, sowohl in der App als auch im E-Mail-Text.
+# Eigene Kopie wie ui/formatting.py::RISIKOFAKTOREN_LEGENDE (dort fuer den
+# App-Kontext), bewusst getrennt gehalten (siehe _formatiere_risikofaktoren()-
+# Docstring).
+_RISIKOFAKTOREN_LEGENDE = "(▲ unterstützt die Empfehlung · ● neutral · ▼ Warnsignal/Risiko)"
 
 
 def _formatiere_risikofaktoren(signal) -> str:
@@ -911,7 +917,7 @@ def _formatiere_risikofaktoren(signal) -> str:
         if not eintraege:
             continue
         for f in eintraege:
-            symbol = _RISIKOFAKTOR_SYMBOL.get(bewertung, "⚪")
+            symbol = _RISIKOFAKTOR_SYMBOL.get(bewertung, "●")
             zeilen.append(f"{symbol} {f.get('name', '')}: {f.get('begruendung', '')}")
     return "\n".join(zeilen)
 

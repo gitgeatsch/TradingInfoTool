@@ -5650,3 +5650,37 @@ Detail-Panel UND allen drei E-Mail-Vorlagen (Spot/Hebel/Multi-Asset).
 
 Alle drei per synthetischem Test verifiziert (kein echter API-Call noetig,
 da jeweils reines Verhalten bei fehlenden/fehlerhaften Rohdaten getestet).
+
+## Nachtrag (2026-07-20): Risikofaktoren-Symbole von farbigen Emoji auf Form-Marker umgestellt
+
+Fortsetzung des obigen Legende-Fixes - Nutzer schickte einen Screenshot des
+LIVE laufenden Detail-Panels am Notebook (12:30 Uhr, Hebel-Tab): die
+farbigen Kreis-Emoji (🟢/🔴) rendern in Tkinters Standardfont unter Windows
+NICHT farblich unterscheidbar - beide fallen auf denselben Ersatzglyph
+("⊘") zurueck, nur das weisse Neutral-Emoji (⚪) blieb als "○" sichtbar
+unterscheidbar. Damit beschrieb die gerade erst hinzugefuegte
+`RISIKOFAKTOREN_LEGENDE` eine Farbunterscheidung, die auf dem Bildschirm gar
+nicht existierte - Ursache: `_set_detail_text()` (`ui/hebel_view.py`,
+`ui/signals_view.py`) ist ein reiner `tk.Text.insert()`-Aufruf ohne jedes
+`tag_configure(foreground=...)`, die Farbwirkung haengt komplett vom
+(nicht vorhandenen) Emoji-Farb-Support des Fonts ab.
+
+**Fix:** `_RISIKOFAKTOR_SYMBOL` in `ui/formatting.py` UND der parallelen
+Kopie in `scheduler/background.py` von `{"positiv": "🟢", "neutral": "⚪",
+"negativ": "🔴"}` auf `{"positiv": "▲", "neutral": "●", "negativ": "▼"}`
+umgestellt - dieselben Form-Marker (unterschiedliche Glyphen, nicht nur
+unterschiedliche Farbe), die bereits fuer die These-Marker im Schwerpunkte-
+Tab etabliert sind (`ui/app.py`/`portfolio.py`/`screener_view.py`, gleiche
+Semantik: ▲ positiv/unterstuetzend, ▼ negativ/Warnung, ● neutral). Form
+statt Farbe macht die Unterscheidung robust sowohl gegen Tkinter-
+Emoji-Rendering (App) als auch gegen E-Mail-Client-Eigenheiten (bereits der
+Ausloeser des vorherigen Legende-Fixes). `RISIKOFAKTOREN_LEGENDE`-Text in
+beiden Dateien entsprechend angepasst. Bewusst KEINE echten Tk-Farb-Tags
+zusaetzlich eingefuehrt (haette eine Restrukturierung von `_set_detail_text()`
+auf zeilenweises Einfuegen mit Tags erfordert) - die Form-Marker loesen das
+gemeldete Problem bereits vollstaendig und bleiben minimal-invasiv.
+
+Verifikation: synthetischer Test der Beispielszenerie aus dem Nutzer-
+Screenshot (Regime-Konflikt=negativ, Retail-Konsens-Risiko=positiv) gegen
+beide Formatierungsfunktionen, Tk-Smoke-Test bestaetigt, dass `tk.Text`
+die drei Zeichen (U+25B2/U+25CF/U+25BC) unveraendert speichert/liefert.

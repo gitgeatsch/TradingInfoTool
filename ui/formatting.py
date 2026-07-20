@@ -19,14 +19,18 @@ def format_money(value: float | None) -> str:
     return f"{value:,.8f}"
 
 
-_RISIKOFAKTOR_SYMBOL = {"positiv": "🟢", "neutral": "⚪", "negativ": "🔴"}
+_RISIKOFAKTOR_SYMBOL = {"positiv": "▲", "neutral": "●", "negativ": "▼"}
 
-# 2026-07-20, Nutzer-Wunsch nach einem echten Screenshot-Vergleich (E-Mail-
-# Darstellung von ⚪ wirkte je nach Client blass-lila statt eindeutig grau,
-# Nutzer vermutete deshalb zunaechst eine vertauschte Farblogik). Einzeilige
-# Legende statt neuer Tooltip-Infrastruktur - reicht, um die Bedeutung robust
-# gegen Emoji-Rendering-Unterschiede zu machen.
-RISIKOFAKTOREN_LEGENDE = "(🟢 unterstützt die Empfehlung · ⚪ neutral · 🔴 Warnsignal/Risiko)"
+# 2026-07-20: urspruenglich farbige Kreis-Emoji (🟢/⚪/🔴) - Nutzer-Screenshot
+# vom echten Notebook-App-Detail-Panel zeigte, dass Tkinters Standardfont
+# (Windows) fuer 🟢/🔴 (ausserhalb der Basic Multilingual Plane) auf denselben
+# Ersatzglyph zurueckfaellt, wodurch die Farbunterscheidung im laufenden
+# Betrieb komplett verloren ging (nur ⚪ blieb sichtbar unterscheidbar). Wechsel
+# auf die bereits im Projekt etablierten Form-Marker ▲/●/▼ (siehe
+# ui/app.py/portfolio.py/screener_view.py: These-Marker, gleiche Semantik
+# positiv/neutral/negativ) - Form statt Farbe macht die Unterscheidung robust
+# gegen Emoji-Rendering, sowohl in der App als auch im reinen Text der E-Mail.
+RISIKOFAKTOREN_LEGENDE = "(▲ unterstützt die Empfehlung · ● neutral · ▼ Warnsignal/Risiko)"
 
 
 def format_risikofaktoren_lines(risikofaktoren_json: str | None) -> list[str]:
@@ -55,6 +59,6 @@ def format_risikofaktoren_lines(risikofaktoren_json: str | None) -> list[str]:
     zeilen = []
     for bewertung in ("negativ", "neutral", "positiv"):
         for f in gruppen.get(bewertung, []):
-            symbol = _RISIKOFAKTOR_SYMBOL.get(bewertung, "⚪")
+            symbol = _RISIKOFAKTOR_SYMBOL.get(bewertung, "●")
             zeilen.append(f"{symbol} {f.get('name', '')}: {f.get('begruendung', '')}")
     return zeilen
