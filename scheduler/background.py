@@ -81,11 +81,19 @@ HEBEL_SCREENING_INTERVAL_MINUTES = 15  # muss mit config.yaml hebel_screening.
 # ein Python-Konstante, nur der aktiv-Schalter wird dynamisch aus config.yaml gelesen,
 # siehe hebel_screening_job()) - kalibriert auf die reale Ø-Haltedauer echter
 # Hebel-Positionen (1,1 Tage), siehe docs/hebel_positionsformel.md.
-MULTI_ASSET_BATCH_INTERVAL_HOURS = 12  # bewusst deutlich seltener als der
-# 15-Min-Krypto-Takt (siehe agent/multi_asset_batch.py Modul-Docstring) - der
-# eigentliche Rhythmus wird ueber die Cooldown-Werte in config.yaml
-# multi_asset_batch gesteuert, der Job-Takt gibt nur genug Redundanz, falls ein
-# Lauf ausfaellt (gleiches Prinzip wie ueberall sonst in dieser Datei).
+MULTI_ASSET_BATCH_CRON_HOURS = "9,19"  # 2026-07-20, Quotrix-Handelsfenster-Fix (siehe
+# Memory project_bitpanda_exchange: Bitpanda-Aktien/ETFs/ETCs laufen seit 2026 ueber
+# die Quotrix-Boerse, Handelszeiten Mo-Fr 07:30-23:00 CET, NICHT 24/7 wie Krypto).
+# Vorher: reines "interval" alle MULTI_ASSET_BATCH_INTERVAL_HOURS=12 Std. MIT
+# next_run_time=jetzt bei jedem Neustart - das konnte zu jeder Uhrzeit (auch
+# nachts) ein Signal mit Kurszonen erzeugen, die auf einem Stunden/Tage alten
+# Schlusskurs basierten UND vom Nutzer erst zum naechsten Handelsstart ueberhaupt
+# umsetzbar waren. 09:00/19:00 CET liegen sicher im Handelsfenster (nach
+# Handelsstart, deutlich vor Handelsschluss) UND nur an Handelstagen (day_of_week=
+# mon-fri) - kein next_run_time-Sofortstart mehr, ein Neustart wartet bewusst bis
+# zum naechsten reguleaeren Takt. Der eigentliche Re-Bewertungs-Rhythmus je Asset
+# bleibt weiterhin ueber die Cooldown-Werte in config.yaml multi_asset_batch
+# gesteuert, dieser Cron-Takt gibt nur den technischen Lauf-Rahmen vor.
 
 # Job-Ausfall-Backoff (2026-07-12, letzter offener Betriebssicherheits-Punkt): Referenz
 # auf die scheduler-Instanz selbst, gesetzt am Ende von build_scheduler() - noetig, damit
@@ -1491,16 +1499,19 @@ def build_scheduler(
     # Multi-Asset-Batch (2026-07-18, siehe agent/multi_asset_batch.py) - eigener,
     # deutlich selterer Takt als Krypto (der Rhythmus wird ueber config.yaml
     # multi_asset_batch.cooldown_stunden_* gesteuert, nicht ueber diesen
-    # Job-Takt selbst - next_run_time=jetzt reduziert das Stale-Fenster direkt
-    # nach einem Neustart, gleiches Muster wie hebel_screening oben).
+    # Job-Takt selbst). Seit 2026-07-20 fester Cron statt Intervall, an Bitpandas
+    # Quotrix-Handelsfenster gekoppelt - siehe MULTI_ASSET_BATCH_CRON_HOURS oben.
+    # Bewusst KEIN next_run_time=jetzt mehr (anders als bei den Krypto-Jobs) - ein
+    # sofortiger Lauf direkt nach Neustart koennte ausserhalb der Handelszeiten
+    # liegen, genau das Problem, das dieser Fix beheben soll.
     scheduler.add_job(
         multi_asset_batch_job,
-        "interval",
-        hours=MULTI_ASSET_BATCH_INTERVAL_HOURS,
+        "cron",
+        hour=MULTI_ASSET_BATCH_CRON_HOURS,
+        minute=0,
+        day_of_week="mon-fri",
         args=[db_conn_factory, watchlist, coingecko_client, groq_client, gemini_client, mistral_client],
         id="multi_asset_batch",
-        next_run_time=datetime.now(),
-        misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
     )
     # MS-3: erster CronTrigger im Projekt (bisherige Jobs nutzen nur "interval") -
     # feste Uhrzeiten statt Intervall, siehe config.yaml marktscan.zeiten.

@@ -3322,15 +3322,47 @@ deutlich traeger als Kryptos 10h/20h, passend zur langsameren
 Marktdynamik.
 
 **Neuer Job** scheduler/background.py::multi_asset_batch_job(),
-registriert mit MULTI_ASSET_BATCH_INTERVAL_HOURS = 12 - der Job-Takt
-gibt nur Redundanz bei einem verpassten Lauf, der eigentliche Rhythmus
-laeuft ueber die Cooldown-Werte. Eigener Lock (multi_asset_batch_lock),
-P-8-Gate (nur aktiv mit groq_client). Neue
+ursprünglich registriert mit MULTI_ASSET_BATCH_INTERVAL_HOURS = 12
+(reines Intervall + next_run_time=jetzt bei jedem Neustart) - der
+Job-Takt gab nur Redundanz bei einem verpassten Lauf, der eigentliche
+Rhythmus lief ueber die Cooldown-Werte. Eigener Lock
+(multi_asset_batch_lock), P-8-Gate (nur aktiv mit groq_client). Neue
 _notify_multi_asset_signal() (E-Mail bei handlungsrelevanten Signalen,
 NIE bei HALTEN) - wiederverwendet dieselben Formatierungs-Helfer wie
 Spot/Hebel (_formatiere_top_gruende/_formatiere_key_risks/
 _formatiere_halte_kriterium/_formatiere_positionsgroesse_und_tranchen),
 keine Duplikation.
+
+**Nachtrag (2026-07-20): Quotrix-Handelsfenster-Fix.** Bitpandas Aktien/
+ETFs/ETCs laufen seit 2026 ueber die Quotrix-Boerse (Duesseldorf), mit
+echten, begrenzten Handelszeiten (Mo-Fr 07:30-23:00 CET), NICHT 24/7 wie
+Krypto (siehe Memory project_bitpanda_exchange - erst bei der Recherche
+zur Eigentumsstruktur/Real-Securities-Frage entdeckt). Das alte reine
+Intervall mit next_run_time=jetzt bei jedem Neustart konnte zu jeder
+Uhrzeit (auch nachts) ein Signal mit Kurszonen erzeugen, die auf einem
+Stunden/Tage alten Schlusskurs basierten UND vom Nutzer erst zum
+naechsten Handelsstart ueberhaupt umsetzbar waren. Jetzt fester Cron
+(MULTI_ASSET_BATCH_CRON_HOURS = "9,19", nur Mo-Fr) statt Intervall, kein
+next_run_time-Sofortstart mehr - ein Neustart wartet bewusst bis zum
+naechsten reguleaeren Takt.
+
+**Nachtrag (2026-07-20): OI-Abdeckungs-Warnung respektiert jetzt den
+Hebel-Pruefung-Toggle.** Echter Nutzer-Fund: CANTON wurde ueber den
+Hebel-Pruefung-Toggle abgeschaltet (siehe Kap. "SOL-Tranchen + Hebel-
+Pruefung-Toggle"), meldete aber ueber die persistente OI-Abdeckungs-
+Warnung (siehe Kap. "Persistente OI-Abdeckungs-Warnung") weiterhin per
+E-Mail "seit 9 aufeinanderfolgenden Laeufen keine OI-Daten" - obwohl
+laengst keine neuen Laeufe mehr fuer dieses Symbol stattfanden. Ursache:
+`oi_abdeckung_status.konsekutive_fehlschlaege` wird ausschliesslich beim
+tatsaechlichen Screening-Lauf aktualisiert - ein per Toggle
+abgeschaltetes Symbol friert einfach beim letzten Stand ein, der aber
+weiterhin >= Schwelle blieb und nach jedem Cooldown-Ablauf erneut eine
+(inhaltlich falsche) Warnmail ausloeste.
+db.py::get_symbole_mit_ueberschrittener_oi_schwelle() prueft jetzt per
+LEFT JOIN gegen asset_hebel_settings zusaetzlich den Toggle-Status
+(COALESCE-Default 1/erlaubt, wenn keine Zeile existiert) - abgeschaltete
+Symbole werden von der Warnung ausgenommen, unabhaengig vom eingefrorenen
+Zaehlerstand.
 
 **Verifiziert:** _kandidaten() liefert exakt die erwarteten 8 Assets
 (VST/PLTR/OD7N/OD7H/OD7C/OD7L/DBPK/3QSS), korrekt auf ihre Pipeline

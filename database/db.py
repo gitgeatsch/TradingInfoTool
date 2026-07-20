@@ -2206,11 +2206,28 @@ def get_symbole_mit_ueberschrittener_oi_schwelle(
     entweder noch nie gemeldet wurden oder deren letzte Meldung laenger als
     der Cooldown zurueckliegt (verhindert taegliche Wiederholungs-Mails fuer
     ein bereits bekanntes, weiterhin ungeloestes Problem, gleiches Prinzip wie
-    scheduler/background.py::_notify_cash_veto_warning())."""
+    scheduler/background.py::_notify_cash_veto_warning()).
+
+    BUGFIX (2026-07-20, echter Nutzer-Fund: CANTON wurde ueber den Hebel-
+    Pruefung-Toggle abgeschaltet, meldete aber weiter per E-Mail). Grund:
+    `oi_abdeckung_status.konsekutive_fehlschlaege` wird ausschliesslich in
+    hebel_screening.py::run_hebel_screening() erhoeht/zurueckgesetzt - sobald
+    ein Symbol per Toggle aus der Neuentdeckung ausgeschlossen ist (siehe
+    dortiger Docstring), laeuft fuer dieses Symbol schlicht kein Lauf mehr,
+    der Zaehler bleibt fuer immer auf dem letzten Stand eingefroren. Ohne
+    diesen JOIN blieb ein einmal ueber der Schwelle liegender, dann
+    abgeschalteter Zaehler trotzdem dauerhaft >= schwelle und loeste nach
+    jedem Cooldown-Ablauf eine neue, inhaltlich falsche "seit N Laeufen"-
+    Warnmail aus, obwohl laengst keine neuen Laeufe mehr stattfanden.
+    COALESCE-Default 1 (erlaubt), da fehlende asset_hebel_settings-Zeile
+    laut get_hebel_pruefung_erlaubt() ebenfalls "erlaubt" bedeutet."""
     grenze = (datetime.now(timezone.utc) - timedelta(hours=cooldown_stunden)).isoformat()
     rows = conn.execute(
-        "SELECT symbol FROM oi_abdeckung_status WHERE konsekutive_fehlschlaege >= ? "
-        "AND (zuletzt_gemeldet_at IS NULL OR zuletzt_gemeldet_at < ?)",
+        "SELECT o.symbol FROM oi_abdeckung_status o "
+        "LEFT JOIN asset_hebel_settings s ON s.symbol = o.symbol "
+        "WHERE o.konsekutive_fehlschlaege >= ? "
+        "AND (o.zuletzt_gemeldet_at IS NULL OR o.zuletzt_gemeldet_at < ?) "
+        "AND COALESCE(s.hebel_pruefung_erlaubt, 1) = 1",
         (schwelle, grenze),
     ).fetchall()
     return [row["symbol"] for row in rows]
