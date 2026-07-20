@@ -245,6 +245,14 @@ def apply_dark_mode(root: tk.Tk) -> None:
     root.option_add("*selectBackground", p["select_bg"])
     root.option_add("*selectForeground", p["select_fg"])
     root.option_add("*insertBackground", p["fg"])  # Cursor in Entry/Text
+    # 2026-07-20, Nutzer-Screenshot (These-Dialog im Schwerpunkte-Tab): das
+    # Popdown-Listbox einer ttk.Combobox ist intern ein klassisches Tk-Listbox-
+    # Widget, das ttk.Style nicht erreicht - ohne diese option_add-Zeilen zeigt
+    # der aufgeklappte Dropdown weiterhin die helle System-Standardfarbe.
+    root.option_add("*TCombobox*Listbox.background", p["entry_bg"])
+    root.option_add("*TCombobox*Listbox.foreground", p["fg"])
+    root.option_add("*TCombobox*Listbox.selectBackground", p["select_bg"])
+    root.option_add("*TCombobox*Listbox.selectForeground", p["select_fg"])
 
     style = ttk.Style(root)
     style.theme_use("clam")
@@ -254,6 +262,21 @@ def apply_dark_mode(root: tk.Tk) -> None:
         "TNotebook", "TNotebook.Tab", "TEntry", "TCombobox",
     ):
         style.configure(widget_class, background=p["bg"], foreground=p["fg"])
+    # 2026-07-20, Nutzer-Screenshot (These-Dialog): die readonly-Comboboxen
+    # (Hauptgruppe/Unterkategorie/Richtung/Staerke - state="readonly" ist der
+    # Standard fuer feste Auswahllisten im ganzen Projekt) blieben im geschlossenen
+    # Zustand hell/kaum lesbar, weil 'clam' das Feld dort ueber 'fieldbackground'
+    # UND einen eigenen readonly-State-Farbwert steuert - die obige generische
+    # style.configure()-Zeile setzt keine fieldbackground und keinen State-Map,
+    # 'clam' fiel dadurch auf seine eingebaute helle Vorgabe zurueck.
+    style.configure("TCombobox", fieldbackground=p["entry_bg"], arrowcolor=p["fg"])
+    style.map(
+        "TCombobox",
+        fieldbackground=[("readonly", p["entry_bg"]), ("disabled", p["bg"])],
+        foreground=[("readonly", p["fg"]), ("disabled", p["muted"])],
+        selectbackground=[("readonly", p["entry_bg"])],
+        selectforeground=[("readonly", p["fg"])],
+    )
     style.map(
         "TNotebook.Tab",
         background=[("selected", p["entry_bg"])],

@@ -5684,3 +5684,35 @@ Verifikation: synthetischer Test der Beispielszenerie aus dem Nutzer-
 Screenshot (Regime-Konflikt=negativ, Retail-Konsens-Risiko=positiv) gegen
 beide Formatierungsfunktionen, Tk-Smoke-Test bestaetigt, dass `tk.Text`
 die drei Zeichen (U+25B2/U+25CF/U+25BC) unveraendert speichert/liefert.
+
+## Nachtrag (2026-07-20): Dark-Mode-Comboboxen kaum lesbar (TCombobox-Styling-Luecke)
+
+Nutzer-Screenshot vom "These bearbeiten"-Dialog (Schwerpunkte-Tab, live am
+Notebook): alle vier readonly-Comboboxen (Hauptgruppe, Unterkategorie,
+Richtung, Staerke) erschienen hell/kaum lesbar - sahen aus wie deaktivierte
+Felder, obwohl `state="readonly"` (der Standard-Zustand fuer feste
+Auswahllisten im gesamten Projekt) korrekt und normal editierbar ist.
+
+Root Cause: `ui/theme.py::apply_dark_mode()` konfigurierte `TCombobox` nur
+generisch mit `background`/`foreground`, setzte aber nie `fieldbackground`
+(die eigentliche Textfeld-Flaeche im 'clam'-Theme, getrennt von
+`background`) und keinen `style.map()` fuer den `readonly`-Zustand -
+'clam' fiel dadurch im geschlossenen Zustand auf seine eingebaute helle
+Systemfarbe zurueck. Zusaetzlich ist das aufklappende Popdown einer
+ttk.Combobox intern ein klassisches Tk-Listbox-Widget, das `ttk.Style`
+gar nicht erreicht und eigene `option_add()`-Zeilen braucht.
+
+**Fix:** `style.configure("TCombobox", fieldbackground=..., arrowcolor=...)`
++ `style.map("TCombobox", fieldbackground=[("readonly", ...), ("disabled",
+...)], foreground=[("readonly", ...), ("disabled", ...)], ...)` sowie vier
+neue `root.option_add("*TCombobox*Listbox...")`-Zeilen fuer das Popdown.
+Betrifft alle Comboboxen im Dark Mode projektweit (nicht nur den
+Schwerpunkte-Tab) - reiner Style-Fix in der zentralen Theme-Datei, keine
+Aenderung an einzelnen Dialogen noetig.
+
+Verifikation: `ttk.Style.lookup("TCombobox", "fieldbackground"/"foreground",
+state=["readonly"])` nach `apply_dark_mode()` liefert die erwarteten
+Dark-Palette-Werte (vorher lieferte die Style-Lookup keinen expliziten
+Override, `clam` nutzte seine Vorgabe); Tk-Smoke-Test baut den echten
+`TheseDialog` fehlerfrei unter Dark Mode auf. Light Mode unveraendert (ruft
+`apply_dark_mode()` gar nicht auf).
