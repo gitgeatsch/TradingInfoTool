@@ -5575,3 +5575,78 @@ Aufruf ohne Fehler, sowie die Tooltip-Bindung an allen neuen Widgets (2
 Screener-Buttons, 4 Schwerpunkte-Buttons + 1 Checkbox, Notebook-Tab-Helper)
 - alle 9 Testfaelle bestanden. Kombinierter Import-Regressionstest von
 `ui.app` weiterhin fehlerfrei.
+
+## Nachtrag (2026-07-20): `key_risks` bei Hebel-Signalen wurde bei
+gleichem Regime/gleicher Aktion praktisch wortgleich wiederholt
+
+**Auslöser:** Nutzer verglich zwei echte Hebel-ERÖFFNEN-E-Mails (ONDO,
+KAIA) und bemerkte, dass die "Risiken:"-Liste vor dem Halte-Kriterium bei
+beiden fast wortidentisch war ("Liquidationsrisiko bei schnellen
+Kursbewegungen", "laufende Finanzierungsgebühr bei längerer Haltedauer",
+"Gegen-Trend-Position ... Bärenregime").
+
+**Root Cause:** anders als bei den Top-5-Gründen (Regel 8, verweist
+explizit auf konkrete Indikatorwerte) gab Regel 9 dem Modell fuer
+`key_risks` bisher fast woertlich die Zielformulierung als Beispiel vor
+("Liquidationsrisiko bei schnellen Kursbewegungen, laufende
+Finanzierungsgebühr bei längerer Haltedauer") - das Modell übernahm diese
+Beispielsätze praktisch unveraendert statt sie nur als Kategorie-Vorgabe
+zu behandeln. Der dritte, ebenfalls wiederkehrende Punkt stammt aus einer
+strukturell identischen Formulierung in der Regime-Konflikt-Anweisung
+(Regel 2, `regime.richtungs_konflikt_mit_trigger`).
+
+**Fix (Nutzer-Entscheidung: Textbausteine behalten, aber um Zahlen
+ergaenzen - minimal-invasiv statt Neuformulierung):** beide Prompt-Stellen
+in `agent/krypto/hebel_analyst.py` fordern jetzt explizit, die
+Beispielformulierungen mit den KONKRETEN Werten dieses Signals zu
+ergaenzen - bei `key_risks` der eigene `hebel_vorschlag`-Wert (je hoeher,
+desto groesser das Liquidationsrisiko bei gleicher Kursbewegung) sowie die
+aktuelle `funding_rate_aktuell` aus den Fakten; beim Regime-Konflikt-Punkt
+das konkrete `regime.regime` und die eigene Gegenszenario-Wahrscheinlichkeit
+aus `forecast`. Eine reine Wortwiederholung ohne Zahlen ist damit explizit
+als nicht ausreichend markiert.
+
+**Bewusst NICHT angefasst:** die deterministische Risikofaktoren-Liste
+("3. KONKLUSION", farbige Punkte) ist von diesem Fund nicht betroffen -
+die wird NICHT vom LLM generiert (siehe `hebel_risk_gate.py::
+compute_risikofaktoren_hebel()`-Docstring), sondern rein regelbasiert
+berechnet.
+
+**Verifikation:** reine Prompt-Textaenderung, keine Schema-/Code-Logik-
+Aenderung - per Syntax-/Import-Check sowie manueller Sichtpruefung des
+zusammengesetzten `SYSTEM_PROMPT`-Strings verifiziert. Kein echter
+LLM-Testaufruf in dieser Runde (Wirkung zeigt sich erst am naechsten
+echten Hebel-ERÖFFNEN-Signal auf dem Notebook).
+
+## Nachtrag (2026-07-20): Risikofaktoren-Legende + drei kleine Bugfixes
+aus der Notebook-Nachtanalyse
+
+**Risikofaktoren-Legende:** Nutzer-Fund per Screenshot - das weisse
+Neutral-Emoji (`_RISIKOFAKTOR_SYMBOL["neutral"]`) wird in manchen
+E-Mail-Clients (Gmail-Web) blass-lila statt eindeutig grau gerendert, was
+zu einer falschen Vermutung ueber die Farblogik fuehrte (tatsaechlich:
+gruen = unterstuetzt die Empfehlung, rot = Warnsignal/Risiko). Neue
+`RISIKOFAKTOREN_LEGENDE`-Konstante (`ui/formatting.py` fuer App-Kontext,
+eigene Kopie in `scheduler/background.py` fuer E-Mail-Kontext, gleiches
+Muster wie `_formatiere_risikofaktoren()`) direkt ueber der Liste in
+Detail-Panel UND allen drei E-Mail-Vorlagen (Spot/Hebel/Multi-Asset).
+
+**Drei kleine Bugfixes**, alle aus derselben Notebook-Diagnose-Auswertung:
+
+1. `api/history.py::backfill_history()` - Guard fuer fehlende
+   `coingecko_id` (verursachte taeglich einen sinnlosen
+   `.../coins/None/market_chart`-404, im API-Health-Log sichtbar).
+2. `api/yfinance_history.py::get_full_ohlc_history()` - bekannte "nur
+   fast_info"-Ticker (`YFINANCE_HISTORY_UNRELIABLE_TICKERS`, z.B.
+   X136.BE/IS0C.DE) wurden im taeglichen OHLC-Job bisher nicht
+   beruecksichtigt (nur im 15-Min-Live-Preis-Pfad) - yfinance wirft dort
+   hart "Period 'max' is invalid, must be one of: 1d, 5d" statt nur zu
+   loggen. Jetzt zentraler Skip vor dem Call.
+3. `api/onchain.py` - neue `MissingOnChainMetricError` statt rohem
+   `TypeError: float() argument ... not 'NoneType'`, wenn CoinMetrics fuer
+   den neuesten Tag eine einzelne Metrik noch nicht nachgetragen hat
+   (bekannter Anbieter-Lag). Muster identisch zu
+   `api/derivatives.py::NoOpenInterestDataError`.
+
+Alle drei per synthetischem Test verifiziert (kein echter API-Call noetig,
+da jeweils reines Verhalten bei fehlenden/fehlerhaften Rohdaten getestet).

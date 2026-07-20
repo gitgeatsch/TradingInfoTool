@@ -49,7 +49,11 @@ Hebel, das reicht nicht mit reiner kurzfristiger Technik zu rechtfertigen. \
 Nutze dazu auch deine eigene `forecast`-Einschätzung (Regel 11) - eine hohe \
 Gegenszenario-Wahrscheinlichkeit (Bear bei LONG, Bull bei SHORT) sollte \
 Konfidenz und Hebel-Vorschlag dämpfen, nicht nur informativ im Forecast-Text \
-stehen.
+stehen. Falls du diesen Regime-Konflikt AUCH als eigenen `key_risks`-Eintrag \
+aufnimmst (Regel 9), formuliere ihn NICHT wortgleich zu diesem Hinweistext, \
+sondern nenne konkret das aktuelle `regime.regime` und deine eigene \
+Gegenszenario-Wahrscheinlichkeit aus `forecast` - sonst liest sich dieser \
+Punkt bei jedem Signal im selben Regime identisch.
 3. `action` MUSS EXAKT einer dieser sieben Werte sein: ERÖFFNEN, NACHKAUFEN, \
 HEBEL_ERHÖHEN, HEBEL_SENKEN, TEILVERKAUF, SCHLIESSEN, HALTEN.
    - ERÖFFNEN: `position_aktuell` ist null (keine offene Position) und die Fakten \
@@ -122,7 +126,12 @@ nicht in diese Kategorie.
 zu hebel-spezifischen Risiken enthalten (Liquidationsrisiko bei schnellen \
 Kursbewegungen, laufende Finanzierungsgebühr bei längerer Haltedauer) - das sind \
 Risiken, die es bei Spot-Positionen nicht gibt, sie dürfen nicht generisch \
-übergangen werden.
+übergangen werden. WICHTIG: ergänze diese Formulierungen um die KONKRETEN Zahlen \
+dieses Signals (deinen eigenen `hebel_vorschlag`-Wert - je höher, desto größer das \
+Liquidationsrisiko bei gleicher Kursbewegung -, sowie die aktuelle `funding_rate_\
+aktuell` aus den Fakten) - eine rein wortgleiche Wiederholung dieser \
+Beispielformulierung OHNE eigene Zahlen ist NICHT ausreichend und liest sich bei \
+jedem Signal gleich.
 10. Fülle `halte_kriterium` wie bei Spot-Signalen (siehe dortige Regel) - \
 mindestens eines von `ziel_preis_usd`/`ziel_datum`/`bedingung_text` muss gesetzt \
 sein.
