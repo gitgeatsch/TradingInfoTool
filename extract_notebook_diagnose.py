@@ -23,11 +23,44 @@ facts_json/*_raw_response bleiben weiterhin bewusst ausgeschlossen (siehe
 Spaltenauswahl unten) - fuer einen einzelnen Kandidaten im Detail ist der
 neue Doppelklick-Dialog in der App selbst (2026-07-18) der bessere Weg.
 
+Nachtrag (2026-07-20, Nutzer-Wunsch "auf neue Features pruefen, damit wir
+nichts vergessen"): seit dem letzten Update dieses Skripts (2026-07-18,
+Commit 9bc950a) kamen mehrere Features hinzu, die hier bisher unsichtbar
+waren - nachgezogen:
+- `risikofaktoren_json` (3-Abschnitte-Neustrukturierung, 2026-07-19) fehlte
+  komplett in der Spaltenauswahl fuer signals/hebel_signals.
+- `halte_kriterium_ziel_preis_usd/eur`+`ziel_datum` fehlten (nur
+  bedingung_text/reasoning/bucket waren erfasst - das eigentliche Ziel
+  selbst nicht).
+- `outcome_entschieden_am`/`outcome_datenquelle` fehlten (nur status/
+  geprueft_am/realisiertes_crv waren erfasst).
+- Spot-spezifische Felder `tranchen_json` (AZ-4), `cash_reserve_ziel_*`
+  (RM-4) und `umgesetzt*` (hat der Nutzer die Empfehlung tatsaechlich
+  ausgefuehrt?) fehlten komplett.
+- Drei neue Tabellen waren gar nicht exportiert: `thesen` (Schwerpunkte-
+  Tab, Release 2, steuert these_abgleich-Bias), `oi_abdeckung_status`
+  (2026-07-19, direkt relevant fuer den CANTON-Warnungs-Bugfix vom
+  2026-07-20) und `asset_hebel_settings` (Hebel-Pruefung-Toggle je
+  Symbol) - alle drei jetzt als eigene Payload-Sektionen ergaenzt.
+- Warteschlangen-Status (`hebel_triggers`/`marktscan_candidates` nach
+  `status` gruppiert) ergaenzt, um zu sehen, ob der "Info-Leichen"-
+  Verfall-Fix (2026-07-19) die Kandidatenliste tatsaechlich begrenzt hat.
+- `llm_calls_heute["cerebras"]` entfernt - `api/cerebras.py` wurde
+  vollstaendig geloescht, der Zaehler war seither dauerhaft 0 und damit
+  irrefuehrende Alt-Referenz.
+- `db.init_db(conn)` wird jetzt zu Beginn aufgerufen (rein additive,
+  idempotente Migrationen, identisch zum Verhalten bei jedem main.py-
+  Start) - stellt sicher, dass alle oben genannten neuen Tabellen/Spalten
+  tatsaechlich existieren, auch falls das Skript einmal gegen eine
+  Datenbank laeuft, die seit einem der letzten Feature-Commits nicht mehr
+  neu gestartet wurde.
+
 Aufruf am Notebook: python extract_notebook_diagnose.py [SYMBOL] [LOG_STUNDEN]
   (SYMBOL optional, Default LINK, fuer den Tiefenanalyse-Teil;
    LOG_STUNDEN optional, Default 72, Zeitfenster fuer den Log-Auszug)
 Schreibt nach K:/My Drive/Claude_Austauschordner/Notebook_Analysedaten/
 """
+import dataclasses
 import json
 import re
 import sys
@@ -79,16 +112,19 @@ _VOLLSTAENDIGKEITS_SPALTEN = (
     "forecast_bull_text, forecast_bull_prob_pct, forecast_base_text, forecast_base_prob_pct, "
     "forecast_bear_text, forecast_bear_prob_pct, "
     "halte_kriterium_bucket, halte_kriterium_bedingung_text, halte_kriterium_reasoning, "
-    "gegenargument"
+    "halte_kriterium_ziel_preis_usd, halte_kriterium_ziel_preis_eur, halte_kriterium_ziel_datum, "
+    "gegenargument, risikofaktoren_json"
 )
 _HEBEL_SIGNAL_SPALTEN = (
     "id, symbol, created_at, richtung, action, hebel_vorschlag, hebel_final, "
     "hebel_korrektur_hinweis, trade_thesis_typ, trigger_zweig, trigger_score, "
     "confidence_pct, short_reasoning, entry_eur_von, entry_eur_bis, "
     "stop_loss_eur_von, stop_loss_eur_bis, take_profit_eur_von, take_profit_eur_bis, "
-    "liquidationspreis_geschaetzt_usd, eigenkapitalbedarf_usd, ausfuehrbarkeit_hinweis, "
+    "liquidationspreis_geschaetzt_usd, eigenkapitalbedarf_usd, "
+    "hebel_senkung_eigenkapital_nachschuss_eur, ausfuehrbarkeit_hinweis, "
     "gate_passed, gate_reason, risk_veto, risk_veto_reason, llm_model, "
-    "outcome_status, outcome_geprueft_am, outcome_realisiertes_crv, "
+    "outcome_status, outcome_geprueft_am, outcome_entschieden_am, "
+    "outcome_realisiertes_crv, outcome_datenquelle, "
     + _VOLLSTAENDIGKEITS_SPALTEN
 )
 _SPOT_SIGNAL_SPALTEN = (
@@ -96,7 +132,11 @@ _SPOT_SIGNAL_SPALTEN = (
     "entry_eur_von, entry_eur_bis, stop_loss_eur_von, stop_loss_eur_bis, "
     "take_profit_eur_von, take_profit_eur_bis, regime, gate_passed, gate_reason, "
     "risk_veto, risk_veto_reason, cash_veto, cash_veto_reason, groq_model, "
-    "outcome_status, outcome_geprueft_am, outcome_realisiertes_crv, "
+    "outcome_status, outcome_geprueft_am, outcome_entschieden_am, "
+    "outcome_realisiertes_crv, outcome_datenquelle, "
+    "tranchen_json, cash_reserve_ziel_btc_usd, cash_reserve_ziel_eth_usd, "
+    "cash_reserve_ziel_gesamt_usd, cash_reserve_ziel_begruendung, "
+    "umgesetzt, umgesetzt_am, umgesetzt_menge, umgesetzt_preis_usd, "
     + _VOLLSTAENDIGKEITS_SPALTEN
 )
 
@@ -212,6 +252,14 @@ def _auffaelligkeiten(hebel_rows: list[dict], spot_rows: list[dict]) -> list[dic
 def main() -> None:
     conn = db.get_connection()
     try:
+        # 0) Schema aktuell halten (2026-07-20) - rein additive, idempotente
+        # Migrationen (identisch zu main.py-Start), stellt sicher, dass neu
+        # hinzugekommene Tabellen/Spalten (thesen, oi_abdeckung_status,
+        # risikofaktoren_json, ...) existieren, auch falls dieses Skript
+        # gegen eine DB laeuft, die seit einem der letzten Feature-Commits
+        # nicht mehr neu gestartet wurde.
+        db.init_db(conn)
+
         # 1) Holdings-Check: hat der selektive Sync die Einstandspreise
         # korrekt uebernommen?
         holdings = conn.execute(
@@ -221,17 +269,42 @@ def main() -> None:
         # 2) API-Gesundheit aller Quellen
         api_health = db.get_api_health_status(conn)
 
-        # 3) Echte LLM-Aufrufe heute je Anbieter + Gesamtvolumen je Tier
+        # 3) Echte LLM-Aufrufe heute je Anbieter + Gesamtvolumen je Tier.
+        # "cerebras" bewusst entfernt (2026-07-20) - api/cerebras.py wurde
+        # geloescht, der Zaehler war seither dauerhaft 0 und eine
+        # irrefuehrende Alt-Referenz.
         llm_calls_heute = {
             "groq": db.count_real_llm_calls_today_by_provider(conn, "groq:"),
             "mistral": db.count_real_llm_calls_today_by_provider(conn, "mistral:"),
-            "cerebras": db.count_real_llm_calls_today_by_provider(conn, "cerebras:"),
             "gemini": db.count_real_llm_calls_today_by_provider(conn, "gemini:"),
         }
         signal_volumen_heute = {
             "spot": db.count_real_signals_today(conn),
             "hebel": db.count_real_hebel_signals_today(conn),
             "marktscan_writeups": db.count_real_marktscan_writeups_today(conn),
+        }
+
+        # 3b) Neue Tabellen seit 2026-07-18/19/20, bisher unsichtbar im Export
+        # (siehe Modul-Docstring, Nachtrag 2026-07-20):
+        thesen_alle = [dataclasses.asdict(t) for t in db.get_alle_thesen(conn)]
+        oi_abdeckung_status_alle = db.get_oi_abdeckung_status(conn)
+        hebel_pruefung_toggles = [
+            row_to_dict(r) for r in conn.execute("SELECT * FROM asset_hebel_settings").fetchall()
+        ]
+        # Warteschlangen-Status (2026-07-20) - Gegenprobe fuer den "Info-
+        # Leichen"-Verfall-Fix (2026-07-19): waechst 'neu' unbegrenzt, oder
+        # greift der automatische Verfall wie gedacht?
+        kandidaten_warteschlangen_status = {
+            "hebel_triggers": haeufigkeit(
+                [row_to_dict(r) for r in conn.execute(
+                    "SELECT status FROM hebel_triggers"
+                ).fetchall()], "status",
+            ),
+            "marktscan_candidates": haeufigkeit(
+                [row_to_dict(r) for r in conn.execute(
+                    "SELECT status FROM marktscan_candidates"
+                ).fetchall()], "status",
+            ),
         }
 
         # 4) Provider-Performance (Win-Rate/CRV je Anbieter, Spot+Hebel getrennt)
@@ -301,6 +374,10 @@ def main() -> None:
             "spot_risk_veto_reason": haeufigkeit(spot_rows, "risk_veto_reason"),
         },
         "regime_status": regime_status,
+        "thesen_alle": thesen_alle,
+        "oi_abdeckung_status_alle": oi_abdeckung_status_alle,
+        "hebel_pruefung_toggles": hebel_pruefung_toggles,
+        "kandidaten_warteschlangen_status": kandidaten_warteschlangen_status,
         "deep_dive": {
             "symbol": DEEP_DIVE_SYMBOL,
             "hebel_signals": [row_to_dict(r) for r in deep_signale],
@@ -329,6 +406,9 @@ def main() -> None:
     print(f"  Log-Fenster: {LOG_FENSTER_STUNDEN} Std., {len(log_zeilen)} Zeilen, "
           f"{len(job_fehlschlaege)} Job-Fehlschlaege, {len(groq_erschoepfung)} Groq-Erschoepfungs-Ereignisse")
     print(f"  Auffaelligkeiten (regelbasierter Vorfilter): {len(auffaelligkeiten)}")
+    print(f"  Thesen: {len(thesen_alle)}, OI-Abdeckungs-Status-Eintraege: {len(oi_abdeckung_status_alle)}, "
+          f"Hebel-Pruefung-Toggles: {len(hebel_pruefung_toggles)}")
+    print(f"  Warteschlangen-Status: {kandidaten_warteschlangen_status}")
 
 
 if __name__ == "__main__":
