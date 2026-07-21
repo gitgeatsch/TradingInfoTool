@@ -6298,3 +6298,42 @@ End-to-End-Trockenlauf gegen die echte Desktop-DB-Kopie (alle LLM-/
 Netzwerk-Clients=None, garantiert kein echter Call) - kompletter Durchlauf
 ohne Exception, neue Log-Zeile zeigt korrekt "ueberfaellig=1" fuer den
 einzigen vorhandenen Hebel-Kandidaten (FLOKI SHORT).
+
+**Methodik dieser Runde (als Vorgehens-Standard fuer kuenftige aehnliche
+Faelle festgehalten):**
+
+1. **Harte Garantie statt Soft-Boost bei systemischen Verzoegerungs-/
+   Fairness-Problemen.** Ein "Prioritaet nach Wartezeit leicht erhoehen"-
+   Vorschlag wurde vom Nutzer explizit verworfen, weil er das Problem nur
+   abschwaecht, nicht strukturell begrenzt (weiterhin von noch hoeher
+   gescorten/frischeren Kandidaten verdraengbar). Stattdessen: die
+   Kandidatenliste strukturell in "ueberfaellig" (immer zuerst, FIFO
+   untereinander) und "normal" (unveraenderte Reihenfolge) teilen - das
+   ist eine echte Obergrenze, kein Wahrscheinlichkeits-Vorteil. Gilt als
+   Leitplanke fuer jede kuenftige Priorisierungs-/Scheduling-Aenderung in
+   diesem Projekt: bei einer echten Deadline-/Fairness-Anforderung ein
+   strukturelles Zwei-Klassen-Modell pruefen, bevor ein Score-Zuschlag
+   vorgeschlagen wird.
+2. **Historischer Backtest gegen echte Produktionsdaten ist ein
+   verpflichtendes Gate VOR jeder Aenderung an produktivem Entscheidungs-
+   code** (Budget-Allocator, Risk-Gate, Scoring o.ae.) - nicht optional
+   und nicht nachtraeglich. Erst nach Ruecksprache zu den Backtest-
+   Ergebnissen wurde ueberhaupt mit der eigentlichen Code-Aenderung
+   begonnen (siehe Ablauf im Plan `swift-napping-muffin.md`).
+3. **Eine einzige Quelle der Wahrheit fuer Backtest und Live-Betrieb**:
+   die neuen Wartezeit-Funktionen (`get_hebel_wartezeit_stunden_je_paar()`/
+   `get_marktscan_wartezeit_stunden_je_coin()`) bekamen einen optionalen
+   `as_of`-Parameter, damit der Backtest exakt dieselbe Produktionslogik
+   mit einem Zeitpunkt aus der Vergangenheit aufruft - kein separat
+   gepflegter Simulations-Nachbau derselben Regel, der unbemerkt
+   auseinanderlaufen koennte.
+4. **Nutzer-Skepsis gegenueber einer "harmlosen" Erklaerung ernst nehmen
+   und tiefer graben, statt sie als Datensparsamkeit abzutun.** Die
+   Beobachtung "immer dieselben Coins (APE/EIGEN)" wurde zunaechst als
+   plausible Folge duenner Marktscan-Historie eingeordnet - der Nutzer
+   wies das explizit als "eher negativ als positiv" zurueck und verlangte
+   eine echte Mechanik-Pruefung. Das deckte den zweiten, unabhaengigen
+   Dedup-Bug auf (siehe eigener Nachtrag oben). Bestaetigt/erweitert
+   [[feedback_thorough_diagnosis_before_conclusion]]: gilt auch, wenn die
+   erste Erklaerung technisch plausibel klingt, aber der Nutzer aus
+   Erfahrung/Beobachtung widerspricht.
