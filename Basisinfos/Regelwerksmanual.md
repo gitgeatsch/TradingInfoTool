@@ -6337,3 +6337,46 @@ Faelle festgehalten):**
    [[feedback_thorough_diagnosis_before_conclusion]]: gilt auch, wenn die
    erste Erklaerung technisch plausibel klingt, aber der Nutzer aus
    Erfahrung/Beobachtung widerspricht.
+
+## Nachtrag (2026-07-21): Abschnitt 4 - Wartezeit-Transparenz in UI + E-Mail
+
+Letzter Baustein des Plans (`swift-napping-muffin.md`): der Nutzer soll die
+neue SLA-Logik nicht nur an weniger Verzoegerung erkennen, sondern die
+wahre Wartezeit auch direkt einsehen koennen - konsistent mit dem bereits
+etablierten Anzeige-Prinzip (`_formatiere_zeitpunkt_lokal()`): reine
+Anzeige, nie ein neuer LLM-Fakt.
+
+- `ui/hebel_view.py`/`ui/marktscan_view.py`: Mouseover-Tooltip (nicht neue
+  Spalte, `ui/row_tooltip.py`-Muster wie in `regime_view.py`/`thesen_view.py`)
+  auf noch unbearbeiteten Kandidaten-Zeilen, live berechnet bei jedem
+  `refresh()`/`_refresh_list()` ueber `get_hebel_wartezeit_stunden_je_paar()`/
+  `get_marktscan_wartezeit_stunden_je_coin()` - kein neues DB-Feld.
+- `scheduler/background.py::_notify_hebel_signal()`: neuer optionaler
+  `conn_factory`-Parameter, Zeile "· Wartezeit seit Erstkandidatur: Xh"
+  neben "Berechnet: ... · Anbieter: ...". **Bewusst NICHT** in
+  `_notify_spot_signal()` ergaenzt (Abweichung von der urspruenglichen
+  Plan-Formulierung, nach Code-Pruefung korrigiert): Tier 3 (Spot-Rotation)
+  hat keine Kandidatur-Historie wie Hebel/Marktscan (keine wiederholt
+  eingefuegten "ist_kandidat"-Zeilen, nur Cooldown-Intervalle) - eine
+  Wartezeit-seit-Erstkandidatur ist dort konzeptionell nicht definiert.
+  Marktscan-Kaufkandidaten (Tier 2) erzeugen ohnehin kein Signal-Objekt
+  (nur eine Kurzbegruendung/"Writeup", siehe `budget_allocator.py`s
+  `marktscan:`-Zweig) und werden daher schon bisher gar nicht per E-Mail
+  benachrichtigt - unveraendert, kein Teil dieser Aenderung.
+
+**Verifikation:** Tk-Smoke-Test beider Views gegen eine echte DB-Kopie
+(FLOKI/SHORT-Tooltip zeigt korrekt 177,8h, identisch zum direkt per
+`db.py`-Funktion berechneten Wert) + synthetischer E-Mail-Test
+(`_notify_hebel_signal()` mit echtem CAT/SHORT-Wartezeitwert, Zeile
+erscheint korrekt im Mail-Body).
+
+**Nebenbefund waehrend der Verifikation:** der End-to-End-Trockenlauf aus
+Abschnitt 2+3 (`test_budget_allocator_dry_run.py`) hatte `db.DB_PATH` nie
+auf eine Kopie umgebogen und dadurch versehentlich einen echten
+Gate-Fail-HALTEN-Datensatz (FLOKI/SHORT, "Preis veraltet oder nicht
+vorhanden", kein LLM-Call/keine Kosten) in die echte lokale Desktop-DB
+geschrieben - dasselbe Muster wie bei den Desktop-Produktivstart-Vorfaellen
+zuvor, diesmal durch ein Test-Skript statt die App selbst. Nutzer
+entschied sich fuer Bereinigung, Zeile wurde nach Bestaetigung geloescht.
+Lehre: Verifikationsskripte gegen Produktivdaten IMMER `db.DB_PATH` explizit
+auf eine Kopie umbiegen, nie den Default-Pfad implizit verwenden.

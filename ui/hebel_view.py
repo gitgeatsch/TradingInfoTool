@@ -17,10 +17,12 @@ import threading
 import tkinter as tk
 from tkinter import ttk
 
+import config as config_module
 import database.db as db
 import ui.theme as theme
 from ui.formatting import RISIKOFAKTOREN_LEGENDE, format_money, format_risikofaktoren_lines
 from ui.heading_tooltip import add_heading_tooltips
+from ui.row_tooltip import add_row_tooltips
 from ui.sortable_tree import make_sortable
 
 _LIST_COLUMN_DESCRIPTIONS = {
@@ -71,6 +73,10 @@ class HebelView(ttk.Frame):
         # iid -> ("signal", HebelSignal) oder ("kandidat", HebelTrigger)
         self._rows: dict[str, tuple[str, object]] = {}
         self._selected_row: tuple[str, object] | None = None
+        # iid -> Tooltip-Text mit der wahren Wartezeit seit Erstkandidatur
+        # (2026-07-21, SLA-Redesign-Transparenz) - live berechnet, kein
+        # neues DB-Feld.
+        self._wartezeit_tooltips: dict[str, str] = {}
         # GUI-Refresh-Fix Teil 2 (2026-07-16) - siehe ui/signals_view.py fuer die
         # volle Begruendung: unterdrueckt das durch die periodische selection_set()-
         # Wiederherstellung ausgeloeste <<TreeviewSelect>>, das sonst das rechte
@@ -105,6 +111,7 @@ class HebelView(ttk.Frame):
         self.tree.tag_configure("kandidat", foreground=theme.info_color())
         self._reapply_sort = make_sortable(self.tree)
         add_heading_tooltips(self.tree, _LIST_COLUMN_DESCRIPTIONS)
+        add_row_tooltips(self.tree, lambda iid: self._wartezeit_tooltips.get(iid))
         self.tree.pack(fill="both", expand=True)
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
 
@@ -165,6 +172,15 @@ class HebelView(ttk.Frame):
             signals = db.get_latest_hebel_signal_per_symbol_and_richtung(conn)
             kandidaten = db.get_pending_hebel_candidates(conn)
             positions = db.get_open_hebel_positions(conn)
+            # SLA-Redesign-Transparenz (2026-07-21): dieselbe Wartezeit-Funktion
+            # wie im Budget-Allocator, hier nur zur Anzeige (nie an das LLM
+            # weitergereicht - Anzeige-Muster wie _formatiere_zeitpunkt_lokal()).
+            cfg_hebel_screening = config_module.load_config().get("hebel_screening", {})
+            wartezeiten = db.get_hebel_wartezeit_stunden_je_paar(
+                conn,
+                cfg_hebel_screening.get("hebel_wartezeit_lookback_tage_cap", 14.0),
+                cfg_hebel_screening.get("hebel_kandidat_luecken_toleranz_stunden", 1.5),
+            )
         finally:
             conn.close()
 
@@ -174,6 +190,7 @@ class HebelView(ttk.Frame):
         for item in self.tree.get_children():
             self.tree.delete(item)
         self._rows = {}
+        self._wartezeit_tooltips = {}
 
         covered = {(s.symbol, s.richtung) for s in signals.values()}
         for sig in sorted(signals.values(), key=lambda s: s.created_at, reverse=True):
@@ -204,6 +221,11 @@ class HebelView(ttk.Frame):
                 values=(trig.symbol, trig.richtung, "Kandidat (wartet auf Analyse)", score_text, "-", zeit),
                 tags=("kandidat",),
             )
+            wartestunden = wartezeiten.get((trig.symbol, trig.richtung))
+            if wartestunden is not None:
+                self._wartezeit_tooltips[iid] = (
+                    f"Wartezeit seit Erstkandidatur: {wartestunden:.1f}h"
+                )
 
         self._reapply_sort()
         theme.restripe_treeview(self.tree)

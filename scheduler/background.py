@@ -1010,10 +1010,17 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None) -
         logger.exception("Spot-Empfehlungs-E-Mail für %s fehlgeschlagen", signal.symbol)
 
 
-def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None) -> None:
+def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None, conn_factory=None) -> None:
     """Analog _notify_spot_signal() fuer Hebel-Empfehlungen (7-Aktionen-
     Vokabular statt 5, siehe agent/krypto/hebel_analyst.REQUIRED_HEBEL_
-    ACTIONS)."""
+    ACTIONS).
+
+    `conn_factory` (2026-07-21, SLA-Redesign-Transparenz, optional damit
+    bestehende Aufrufer/Tests ohne DB-Zugriff nicht brechen) erlaubt die
+    Anzeige der wahren Wartezeit seit Erstkandidatur in der E-Mail - NUR
+    fuer Hebel sinnvoll (Tier 3 Spot-Rotation hat keine vergleichbare
+    Kandidatur-Historie, siehe database/db.py::
+    get_hebel_wartezeit_stunden_je_paar())."""
     from agent.krypto.hebel_analyst import REQUIRED_HEBEL_ACTIONS
 
     if signal.action not in REQUIRED_HEBEL_ACTIONS or signal.action == "HALTEN":
@@ -1052,10 +1059,23 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None) 
         forecast_text = _formatiere_forecast(signal)
         risikofaktoren_text = _formatiere_risikofaktoren(signal)
         zeitpunkt_text = _formatiere_zeitpunkt_lokal(signal.created_at)
+        wartezeit_text = ""
+        if conn_factory is not None:
+            try:
+                conn = conn_factory()
+                try:
+                    wartezeiten = db.get_hebel_wartezeit_stunden_je_paar(conn)
+                finally:
+                    conn.close()
+                stunden = wartezeiten.get((signal.symbol, signal.richtung))
+                if stunden is not None:
+                    wartezeit_text = f" · Wartezeit seit Erstkandidatur: {stunden:.1f}h"
+            except Exception:
+                logger.exception("Wartezeit-Berechnung fuer Hebel-E-Mail (%s) fehlgeschlagen", signal.symbol)
         body = (
             f"Richtung: {signal.richtung}, Aktion: {signal.action}\n"
             f"Regime: {signal.regime or 'unbekannt'}\n"
-            f"Berechnet: {zeitpunkt_text} · Anbieter: {signal.llm_model or '-'}\n\n"
+            f"Berechnet: {zeitpunkt_text} · Anbieter: {signal.llm_model or '-'}{wartezeit_text}\n\n"
             f"--- 1. MATHEMATISCH BERECHNET ---\n"
             f"Hebel: {signal.hebel_final}x\n"
             f"{korrektur_zeile}"
@@ -1293,7 +1313,7 @@ def hebel_screening_job(
                     logger.info("Bitpanda-Listing-Abruf für Empfehlungs-E-Mails fehlgeschlagen: %s", exc)
                 for schluessel, ergebnis in allocation.ergebnis_objekt.items():
                     if schluessel.startswith("hebel:"):
-                        _notify_hebel_signal(ergebnis, watchlist, bitpanda_assets)
+                        _notify_hebel_signal(ergebnis, watchlist, bitpanda_assets, conn_factory)
                     elif schluessel.startswith("spot:"):
                         _notify_spot_signal(ergebnis, watchlist, bitpanda_assets)
         else:

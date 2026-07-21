@@ -25,6 +25,7 @@ import database.db as db
 import ui.theme as theme
 from ui.formatting import format_money
 from ui.heading_tooltip import add_heading_tooltips
+from ui.row_tooltip import add_row_tooltips
 from ui.sortable_tree import make_sortable
 
 STATUS_LABELS = {
@@ -100,6 +101,9 @@ class MarktscanView(ttk.Frame):
         self._fred_api_key = fred_api_key
         self._selected_candidate = None
         self._show_alle = tk.BooleanVar(value=False)
+        # iid -> Tooltip-Text mit der wahren Wartezeit seit Erstkandidatur
+        # (2026-07-21, SLA-Redesign-Transparenz), analog ui/hebel_view.py.
+        self._wartezeit_tooltips: dict[str, str] = {}
         # GUI-Refresh-Fix Teil 2 (2026-07-16) - siehe ui/signals_view.py fuer die
         # volle Begruendung: unterdrueckt das durch die periodische selection_set()-
         # Wiederherstellung ausgeloeste <<TreeviewSelect>>, das sonst das rechte
@@ -134,6 +138,7 @@ class MarktscanView(ttk.Frame):
             self.tree.column(col, width=90, anchor="w" if col == "symbol" else "center")
         self._reapply_sort = make_sortable(self.tree, numeric_columns=frozenset({"score"}))
         add_heading_tooltips(self.tree, _MARKTSCAN_COLUMN_DESCRIPTIONS)
+        add_row_tooltips(self.tree, lambda iid: self._wartezeit_tooltips.get(iid))
         self.tree.pack(fill="both", expand=True)
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
 
@@ -180,6 +185,15 @@ class MarktscanView(ttk.Frame):
         conn = self._db_conn_factory()
         try:
             candidates = db.get_marktscan_candidates(conn)
+            # SLA-Redesign-Transparenz (2026-07-21): dieselbe Wartezeit-Funktion
+            # wie im Budget-Allocator, hier nur zur Anzeige (nie an das LLM
+            # weitergereicht).
+            cfg_budget_allocator = config_module.load_config().get("budget_allocator", {})
+            wartezeiten = db.get_marktscan_wartezeit_stunden_je_coin(
+                conn,
+                cfg_budget_allocator.get("marktscan_wartezeit_lookback_tage_cap", 14.0),
+                cfg_budget_allocator.get("marktscan_kandidat_luecken_toleranz_stunden", 20.0),
+            )
         finally:
             conn.close()
 
@@ -195,6 +209,7 @@ class MarktscanView(ttk.Frame):
             self.tree.delete(item)
 
         self._candidates_by_id: dict[int, object] = {}
+        self._wartezeit_tooltips = {}
         for c in candidates:
             self._candidates_by_id[c.id] = c
             score_text = f"{c.score_gesamt:.1f}" if c.score_gesamt is not None else "-"
@@ -211,6 +226,14 @@ class MarktscanView(ttk.Frame):
                         entdeckt_text, STATUS_LABELS.get(c.status, c.status)),
                 tags=("nicht_gelistet",) if c.bitpanda_gelistet is False else (),
             )
+            # Nur fuer noch unbearbeitete Kaufkandidaten sinnvoll (die auf die
+            # LLM-Bewertung durch den Budget-Allocator warten).
+            if c.status == "neu" and c.einstufung == "kaufkandidat":
+                wartestunden = wartezeiten.get(c.coingecko_id)
+                if wartestunden is not None:
+                    self._wartezeit_tooltips[str(c.id)] = (
+                        f"Wartezeit seit Erstkandidatur: {wartestunden:.1f}h"
+                    )
         self.tree.tag_configure("nicht_gelistet", foreground=theme.danger_color())
         self._reapply_sort()
         theme.restripe_treeview(self.tree)
