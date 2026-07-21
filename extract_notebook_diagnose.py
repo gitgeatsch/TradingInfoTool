@@ -55,6 +55,13 @@ waren - nachgezogen:
   Datenbank laeuft, die seit einem der letzten Feature-Commits nicht mehr
   neu gestartet wurde.
 
+Nachtrag (2026-07-21, Nutzer-Fund "Discovery 16:00 Uhr, Signal erst 19:30
+Uhr"): neue Sektion `marktscan_discovery_llm_delta` - Delta in Minuten
+zwischen `discovered_at` und `groq_generiert_am` je Kandidat plus Min/Max/
+Median/Durchschnitt, um zu pruefen ob die beobachtete Luecke systematisch
+(Budget-Allocator-Aufschub) oder ein Einzelfall war. Siehe Memory
+project_delta_berechnung_llm_abfrage_timing.md.
+
 Aufruf am Notebook: python extract_notebook_diagnose.py [SYMBOL] [LOG_STUNDEN]
   (SYMBOL optional, Default LINK, fuer den Tiefenanalyse-Teil;
    LOG_STUNDEN optional, Default 72, Zeitfenster fuer den Log-Auszug)
@@ -149,6 +156,44 @@ def row_to_dict(row) -> dict:
 def haeufigkeit(rows, feld: str) -> dict:
     zaehler = Counter(r[feld] for r in rows if r[feld])
     return dict(zaehler.most_common())
+
+
+def _marktscan_discovery_llm_delta(conn) -> dict:
+    """Neu (2026-07-21, Nutzer-Fund): Delta zwischen Kandidaten-Discovery
+    (discovered_at, deterministischer Marktscan-Lauf) und tatsaechlicher
+    LLM-Begruendung (groq_generiert_am, Tier-2 im Budget-Allocator) - Beispiel
+    des Nutzers war 16:00 Uhr Discovery vs. 19:30 Uhr Signal, 3,5h Delta.
+    Siehe Memory project_delta_berechnung_llm_abfrage_timing.md. Rein
+    deskriptiv (Min/Max/Median/Durchschnitt je Symbol) - keine Bewertung
+    hier, das passiert gemeinsam anhand dieser Rohdaten."""
+    rows = conn.execute(
+        "SELECT symbol, discovered_at, groq_generiert_am FROM marktscan_candidates "
+        "WHERE groq_generiert_am IS NOT NULL ORDER BY discovered_at ASC"
+    ).fetchall()
+    eintraege = []
+    deltas_minuten = []
+    for r in rows:
+        try:
+            entdeckt = datetime.fromisoformat(r["discovered_at"])
+            generiert = datetime.fromisoformat(r["groq_generiert_am"])
+        except ValueError:
+            continue
+        delta_min = (generiert - entdeckt).total_seconds() / 60
+        deltas_minuten.append(delta_min)
+        eintraege.append({
+            "symbol": r["symbol"], "discovered_at": r["discovered_at"],
+            "groq_generiert_am": r["groq_generiert_am"], "delta_minuten": round(delta_min, 1),
+        })
+    deltas_sortiert = sorted(deltas_minuten)
+    n = len(deltas_sortiert)
+    statistik = {
+        "anzahl": n,
+        "min_minuten": round(deltas_sortiert[0], 1) if n else None,
+        "max_minuten": round(deltas_sortiert[-1], 1) if n else None,
+        "median_minuten": round(deltas_sortiert[n // 2], 1) if n else None,
+        "durchschnitt_minuten": round(sum(deltas_sortiert) / n, 1) if n else None,
+    }
+    return {"statistik": statistik, "eintraege": eintraege}
 
 
 # --- Log-Auszug (2026-07-18, siehe Modul-Docstring) ---------------------
@@ -308,6 +353,11 @@ def main() -> None:
             ),
         }
 
+        # 3c) Delta Discovery -> LLM-Begruendung (2026-07-21, Nutzer-Fund
+        # "16:00 Discovery vs. 19:30 Signal") - siehe Modul-Docstring-Nachtrag
+        # unten und project_delta_berechnung_llm_abfrage_timing.md.
+        marktscan_discovery_llm_delta = _marktscan_discovery_llm_delta(conn)
+
         # 4) Provider-Performance (Win-Rate/CRV je Anbieter, Spot+Hebel getrennt)
         provider_performance = compute_provider_performance(conn)
 
@@ -379,6 +429,7 @@ def main() -> None:
         "oi_abdeckung_status_alle": oi_abdeckung_status_alle,
         "hebel_pruefung_toggles": hebel_pruefung_toggles,
         "kandidaten_warteschlangen_status": kandidaten_warteschlangen_status,
+        "marktscan_discovery_llm_delta": marktscan_discovery_llm_delta,
         "deep_dive": {
             "symbol": DEEP_DIVE_SYMBOL,
             "hebel_signals": [row_to_dict(r) for r in deep_signale],
@@ -410,6 +461,7 @@ def main() -> None:
     print(f"  Thesen: {len(thesen_alle)}, OI-Abdeckungs-Status-Eintraege: {len(oi_abdeckung_status_alle)}, "
           f"Hebel-Pruefung-Toggles: {len(hebel_pruefung_toggles)}")
     print(f"  Warteschlangen-Status: {kandidaten_warteschlangen_status}")
+    print(f"  Discovery->LLM-Delta (Marktscan): {marktscan_discovery_llm_delta['statistik']}")
 
 
 if __name__ == "__main__":
