@@ -62,6 +62,14 @@ Median/Durchschnitt, um zu pruefen ob die beobachtete Luecke systematisch
 (Budget-Allocator-Aufschub) oder ein Einzelfall war. Siehe Memory
 project_delta_berechnung_llm_abfrage_timing.md.
 
+Nachtrag (2026-07-21, Nutzer-Fund ETH LONG "Einstieg haette gestern
+passieren muessen"): analoge neue Sektion `hebel_erstmalige_erkennung_delta`
+- bei Hebel-Triggern (anders als Marktscan) legt jeder 15-Min-Screening-Tick
+eine NEUE Zeile an, das per hebel_trigger_id verknuepfte Objekt ist deshalb
+immer der neueste Tick und verschleiert eine laenger bestehende Kandidatur -
+diese Sektion sucht stattdessen den fruehesten ist_kandidat=1-Zeitpunkt seit
+dem vorherigen Signal fuer dasselbe Symbol/Richtung-Paar.
+
 Aufruf am Notebook: python extract_notebook_diagnose.py [SYMBOL] [LOG_STUNDEN]
   (SYMBOL optional, Default LINK, fuer den Tiefenanalyse-Teil;
    LOG_STUNDEN optional, Default 72, Zeitfenster fuer den Log-Auszug)
@@ -192,6 +200,78 @@ def _marktscan_discovery_llm_delta(conn) -> dict:
         "max_minuten": round(deltas_sortiert[-1], 1) if n else None,
         "median_minuten": round(deltas_sortiert[n // 2], 1) if n else None,
         "durchschnitt_minuten": round(sum(deltas_sortiert) / n, 1) if n else None,
+    }
+    return {"statistik": statistik, "eintraege": eintraege}
+
+
+def _hebel_erstmalige_erkennung_delta(conn) -> dict:
+    """Neu (2026-07-21, Nutzer-Fund ETH LONG): anders als bei Marktscan-
+    Kandidaten (ein Discovery-Lauf, danach fix) wird bei hebel_triggers JEDEN
+    15-Min-Screening-Tick eine NEUE Zeile eingefuegt, solange ein Symbol/
+    Richtung-Paar weiter als Kandidat qualifiziert (kein Upsert, siehe
+    db.py::insert_hebel_trigger()-Docstring). Das per hebel_trigger_id
+    verknuepfte 'gewaehlte' Trigger-Objekt eines Signals ist deshalb IMMER
+    der neueste Tick (get_pending_hebel_kandidaten() waehlt MAX(screened_at))
+    - das Delta Trigger->Signal ist dadurch strukturell fast immer klein und
+    verschleiert, seit wann das Setup TATSAECHLICH schon bestand.
+    Nutzer-Beispiel: ETH LONG-Signal heute 09:58 berechnet (Entry ~1.590 EUR),
+    Kurs stand aber schon gestern in aehnlicher Hoehe - "der Einstieg haette
+    gestern passieren muessen". Berechnet deshalb stattdessen: fuer jedes
+    Symbol/Richtung-Paar mit einem echten Signal (hebel_trigger_id gesetzt),
+    den FRUEHESTEN screened_at unter allen ist_kandidat=1-Zeilen seit dem
+    vorherigen Signal fuer dasselbe Paar (oder max. 14 Tage zurueck, falls
+    keins existiert) - das zeigt, wie lange die aktuelle Kandidatur schon
+    bestand, bevor sie tatsaechlich bewertet wurde."""
+    signale = conn.execute(
+        "SELECT id, symbol, richtung, created_at, hebel_trigger_id FROM hebel_signals "
+        "WHERE hebel_trigger_id IS NOT NULL ORDER BY created_at ASC"
+    ).fetchall()
+    trigger_rows = conn.execute(
+        "SELECT symbol, richtung, screened_at FROM hebel_triggers "
+        "WHERE ist_kandidat = 1 ORDER BY screened_at ASC"
+    ).fetchall()
+
+    trigger_nach_paar: dict[tuple[str, str], list[str]] = {}
+    for t in trigger_rows:
+        trigger_nach_paar.setdefault((t["symbol"], t["richtung"]), []).append(t["screened_at"])
+
+    vorheriges_signal_am: dict[tuple[str, str], str] = {}
+    eintraege = []
+    deltas_stunden = []
+    for s in signale:
+        paar = (s["symbol"], s["richtung"])
+        try:
+            signal_zeit = datetime.fromisoformat(s["created_at"])
+        except ValueError:
+            continue
+        untere_grenze = vorheriges_signal_am.get(paar)
+        untere_grenze_dt = (
+            datetime.fromisoformat(untere_grenze) if untere_grenze
+            else signal_zeit - timedelta(days=14)
+        )
+        kandidaten_im_fenster = [
+            zeit for zeit in trigger_nach_paar.get(paar, [])
+            if untere_grenze_dt < datetime.fromisoformat(zeit) <= signal_zeit
+        ]
+        if kandidaten_im_fenster:
+            erstmalig = min(kandidaten_im_fenster)
+            delta_std = (signal_zeit - datetime.fromisoformat(erstmalig)).total_seconds() / 3600
+            deltas_stunden.append(delta_std)
+            eintraege.append({
+                "symbol": s["symbol"], "richtung": s["richtung"],
+                "signal_created_at": s["created_at"], "erstmalig_erkannt_am": erstmalig,
+                "delta_stunden": round(delta_std, 1),
+            })
+        vorheriges_signal_am[paar] = s["created_at"]
+
+    deltas_sortiert = sorted(deltas_stunden)
+    n = len(deltas_sortiert)
+    statistik = {
+        "anzahl": n,
+        "min_stunden": round(deltas_sortiert[0], 1) if n else None,
+        "max_stunden": round(deltas_sortiert[-1], 1) if n else None,
+        "median_stunden": round(deltas_sortiert[n // 2], 1) if n else None,
+        "durchschnitt_stunden": round(sum(deltas_sortiert) / n, 1) if n else None,
     }
     return {"statistik": statistik, "eintraege": eintraege}
 
@@ -357,6 +437,7 @@ def main() -> None:
         # "16:00 Discovery vs. 19:30 Signal") - siehe Modul-Docstring-Nachtrag
         # unten und project_delta_berechnung_llm_abfrage_timing.md.
         marktscan_discovery_llm_delta = _marktscan_discovery_llm_delta(conn)
+        hebel_erstmalige_erkennung_delta = _hebel_erstmalige_erkennung_delta(conn)
 
         # 4) Provider-Performance (Win-Rate/CRV je Anbieter, Spot+Hebel getrennt)
         provider_performance = compute_provider_performance(conn)
@@ -430,6 +511,7 @@ def main() -> None:
         "hebel_pruefung_toggles": hebel_pruefung_toggles,
         "kandidaten_warteschlangen_status": kandidaten_warteschlangen_status,
         "marktscan_discovery_llm_delta": marktscan_discovery_llm_delta,
+        "hebel_erstmalige_erkennung_delta": hebel_erstmalige_erkennung_delta,
         "deep_dive": {
             "symbol": DEEP_DIVE_SYMBOL,
             "hebel_signals": [row_to_dict(r) for r in deep_signale],
@@ -462,6 +544,7 @@ def main() -> None:
           f"Hebel-Pruefung-Toggles: {len(hebel_pruefung_toggles)}")
     print(f"  Warteschlangen-Status: {kandidaten_warteschlangen_status}")
     print(f"  Discovery->LLM-Delta (Marktscan): {marktscan_discovery_llm_delta['statistik']}")
+    print(f"  Erstmalige-Erkennung->Signal-Delta (Hebel): {hebel_erstmalige_erkennung_delta['statistik']}")
 
 
 if __name__ == "__main__":
