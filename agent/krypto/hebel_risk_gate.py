@@ -82,6 +82,8 @@ def compute_risikofaktoren_hebel(
     retail_long_bias_extreme: bool | None, long_account_pct: float | None,
     trade_thesis_typ: str | None,
     hebel_erlaubt: bool = True, veto_reason: str | None = None,
+    historische_erfolgsquote: dict | None = None,
+    min_sample_fuer_aussage: int = 15,
 ) -> list["Risikofaktor"]:
     """2026-07-19 (Nutzer-Wunsch: E-Mail/App-Neustrukturierung in 3 Abschnitte -
     Mathematisch berechnet / LLM-Bewertung / Konklusion mit Risikofaktoren).
@@ -182,6 +184,34 @@ def compute_risikofaktoren_hebel(
             faktoren.append(Risikofaktor(f"Konfidenz {confidence_pct:.0f}%", "positiv", "Hohe Konfidenz."))
         else:
             faktoren.append(Risikofaktor(f"Konfidenz {confidence_pct:.0f}%", "neutral", "Mittlere Konfidenz."))
+
+    # 2026-07-21, echter BTC-Fund: SYSTEM_PROMPT weist das Modell bereits an, den
+    # mitgelieferten Stichprobengroessen-Hinweis von compute_win_rate_fact() zu
+    # lesen und bei kleiner Stichprobe nicht zu ueberschaetzen - im echten Fall
+    # (n=5) landete dieser Hinweis aber NICHT im freien Gegenargument-Text, nur
+    # die nackte 0%-Zahl. Genau das gleiche Prinzip wie bei den uebrigen
+    # Risikofaktoren oben (bewusst NICHT vom LLM generiert, siehe Modul-Docstring
+    # zum AVAX-Fund): die Stichproben-Warnung gehoert deterministisch in Abschnitt
+    # 3, nicht ins Ermessen des jeweiligen LLM-Laufs.
+    if historische_erfolgsquote is not None:
+        anzahl = historische_erfolgsquote.get("anzahl_ausgewertete_signale")
+        quote = historische_erfolgsquote.get("trefferquote_pct")
+        if anzahl is not None and anzahl < min_sample_fuer_aussage:
+            faktoren.append(Risikofaktor(
+                f"Historische Trefferquote {quote:.0f}% (n={anzahl})", "neutral",
+                f"Basiert auf nur {anzahl} bisher ausgewerteten Hebel-Signalen - "
+                f"statistisch NICHT belastbar (Mindeststichprobe fuer eine "
+                f"verlaessliche Aussage: {min_sample_fuer_aussage}). Ernst nehmen, "
+                "aber nicht als robusten Beweis werten - gilt zudem fuer den "
+                "gesamten Hebel-Track-Record, nicht spezifisch fuer dieses Symbol.",
+            ))
+        elif quote is not None:
+            bewertung = "negativ" if quote < 30 else ("positiv" if quote >= 60 else "neutral")
+            faktoren.append(Risikofaktor(
+                f"Historische Trefferquote {quote:.0f}% (n={anzahl})", bewertung,
+                f"Basiert auf {anzahl} bisher ausgewerteten Hebel-Signalen (gesamter "
+                "Track-Record, nicht symbolspezifisch).",
+            ))
 
     return faktoren
 
@@ -313,6 +343,7 @@ def pre_check_hebel(
 def post_check_hebel(
     parsed: dict, pre_result: HebelPreCheckResult, regime_result, config: dict, confluence=None,
     retail_long_bias_extreme: bool | None = None, long_account_pct: float | None = None,
+    historische_erfolgsquote: dict | None = None,
 ) -> dict:
     """Nimmt die bereits schema-validierte LLM-Antwort und erzwingt AZ-7/RM-1/
     RM-11/CRV noch einmal deterministisch, analog risk_gate.py::post_check().
@@ -519,6 +550,7 @@ def post_check_hebel(
         trade_thesis_typ=result.get("trade_thesis_typ"),
         hebel_erlaubt=pre_result.hebel_erlaubt,
         veto_reason=pre_result.veto_reason,
+        historische_erfolgsquote=historische_erfolgsquote,
     )
     result["_risikofaktoren"] = [
         {"name": f.name, "bewertung": f.bewertung, "begruendung": f.begruendung} for f in risikofaktoren

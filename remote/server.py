@@ -89,8 +89,13 @@ _INDEX_HTML = """<!doctype html>
 
 <div class="card">
   <div class="row"><strong>Provider-Performance (Spot, nach Assetklasse)</strong></div>
+  <div class="row"><span class="muted-text">Je LLM-Anbieter: wie viele SEINER Spot-Empfehlungen bereits abschliessend
+  entschieden sind (Kurs erreichte Take-Profit oder Stop-Loss) - je Assetklasse getrennt, weil unterschiedliche
+  Risikoprofile. Zeigt NUR reale, aufgeloeste Ergebnisse, kein Backtest.</span></div>
   <div id="provider-performance-spot"></div>
   <div class="row"><strong>Provider-Performance (Hebel)</strong></div>
+  <div class="row"><span class="muted-text">Gleiches Prinzip fuer Hebel-Positionen (zusaetzlich: Liquidation als
+  drittes moegliches Ergebnis). Angaben unter 15 aufgeloesten Signalen sind statistisch noch nicht belastbar.</span></div>
   <div id="provider-performance-hebel"></div>
 </div>
 
@@ -174,10 +179,20 @@ function fmtMoney(value) {
   return value.toLocaleString("de-AT", { maximumFractionDigits: 2 }) + " EUR";
 }
 
+// Mindeststichprobe fuer eine belastbare Aussage - identisch zu
+// agent/krypto/backward_tracking.py::_MIN_SAMPLE_FUER_AUSSAGE, hier nur zur
+// Anzeige eines Hinweises, keine eigene Schwellenwert-Logik.
+const PROVIDER_PERF_MIN_SAMPLE = 15;
+
 function renderProviderPerformance(tierData) {
   const providers = Object.keys(tierData);
   if (providers.length === 0) {
-    return '<div class="row"><span>noch keine Daten</span></div>';
+    // 2026-07-21, Nutzer-Fund: "noch keine Daten" ohne Begruendung war nicht
+    // nachvollziehbar - erklaeren WARUM (keine aufgeloesten Signale, nicht:
+    // Feature kaputt/kein Tracking) statt nur den leeren Zustand zu melden.
+    return '<div class="row"><span class="muted-text">Noch keine abgeschlossenen Signale in dieser Kategorie ' +
+      '(Kurs hat bei keinem bisherigen Signal Take-Profit oder Stop-Loss erreicht) - kann je nach Marktlage ' +
+      'Tage bis Wochen dauern.</span></div>';
   }
   return providers.map(function(p) {
     const d = tierData[p];
@@ -185,7 +200,9 @@ function renderProviderPerformance(tierData) {
       ? Math.round(d.win_rate * 100) + "%" : "-";
     const crv = d.avg_realisiertes_crv !== null && d.avg_realisiertes_crv !== undefined
       ? d.avg_realisiertes_crv.toFixed(2) : "-";
-    return '<div class="row"><span>' + p + ' (' + d.anzahl_resolved + ')</span>' +
+    const kleineStichprobe = d.anzahl_resolved < PROVIDER_PERF_MIN_SAMPLE
+      ? ' <span class="muted-text">(n&lt;' + PROVIDER_PERF_MIN_SAMPLE + ', noch nicht belastbar)</span>' : '';
+    return '<div class="row"><span>' + p + ' (' + d.anzahl_resolved + ')' + kleineStichprobe + '</span>' +
       '<span>Win-Rate ' + winRate + ', &oslash; CRV ' + crv + '</span></div>';
   }).join("");
 }

@@ -171,6 +171,7 @@ def generate_hebel_signal(
         parsed, pre_result, regime_result, config_dict, confluence=confluence,
         retail_long_bias_extreme=anticyclic_context.retail_long_bias_extreme,
         long_account_pct=anticyclic_context.long_account_pct,
+        historische_erfolgsquote=historische_erfolgsquote,
     )
     risk_veto = corrected.pop("_risk_veto")
     risk_veto_reason = corrected.pop("_risk_veto_reason")

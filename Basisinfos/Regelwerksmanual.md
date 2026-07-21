@@ -6380,3 +6380,38 @@ zuvor, diesmal durch ein Test-Skript statt die App selbst. Nutzer
 entschied sich fuer Bereinigung, Zeile wurde nach Bestaetigung geloescht.
 Lehre: Verifikationsskripte gegen Produktivdaten IMMER `db.DB_PATH` explizit
 auf eine Kopie umbiegen, nie den Default-Pfad implizit verwenden.
+
+## Nachtrag (2026-07-21): Historische-Trefferquote-Risikofaktor + Provider-Performance-Karte verstaendlicher
+
+Echter Anlass: erstes BTC-LONG-Hebel-Signal, dessen Gegenargument die
+historische Erfolgsquote (0%) nannte, aber den mitgelieferten
+Stichprobengroessen-Hinweis (nur 5 aufgeloeste Hebel-Signale bisher, alle 5
+Stop-Loss) NICHT erwaehnte - obwohl `hebel_analyst.py`s SYSTEM_PROMPT Regel
+14 das Modell explizit dazu anweist. Genau das gleiche Prinzip wie beim
+AVAX-Fund (Modell-Interpretationsfehler nicht dem Modell ueberlassen):
+
+- `hebel_risk_gate.py::compute_risikofaktoren_hebel()`: neuer Parameter
+  `historische_erfolgsquote` (+ `min_sample_fuer_aussage`, Default 15,
+  identisch zu `backward_tracking.py::_MIN_SAMPLE_FUER_AUSSAGE`). Bei
+  `anzahl_ausgewertete_signale < 15` erscheint IMMER ein neutraler
+  Risikofaktor "Historische Trefferquote X% (n=Y)" mit explizitem
+  Stichproben-Hinweis - unabhaengig davon, ob das LLM es im freien
+  Gegenargument-Text erwaehnt. Bei ausreichender Stichprobe wird die Quote
+  stattdessen als positiv/neutral/negativ bewertet (Schwellen 30%/60%).
+  `post_check_hebel()` reicht den bereits in `hebel_pipeline.py` berechneten
+  `historische_erfolgsquote`-Fakt einfach durch (keine zweite DB-Abfrage).
+- Verifiziert per 3 synthetischen Faellen: kleine Stichprobe (n=5, neutral +
+  Hinweistext), grosse Stichprobe mit schlechter Quote (n=20/20%, negativ),
+  kein Fakt vorhanden (kein Risikofaktor-Eintrag).
+
+**Provider-Performance-Karte auf der Remote-Seite** (`remote/server.py`):
+Nutzer-Fund - "keine Daten" ohne Begruendung war nicht nachvollziehbar. Fix:
+- Erklaerender Untertitel unter beiden Karten-Ueberschriften (Spot/Hebel),
+  was die Kennzahl bedeutet (nur ECHTE, bereits aufgeloeste Signale, kein
+  Backtest) und warum sie je Assetklasse/Tier getrennt ist.
+- Leerer Zustand nennt jetzt den Grund ("noch keine abgeschlossenen Signale
+  ... kann Tage bis Wochen dauern") statt nur "noch keine Daten" zu meiden.
+- Jede Provider-Zeile mit `anzahl_resolved < 15` bekommt denselben
+  Stichproben-Hinweis wie oben ("noch nicht belastbar") direkt neben der
+  Zahl - dieselbe Schwelle wie im neuen Hebel-Risikofaktor, konsistent
+  sichtbar an beiden Stellen.
