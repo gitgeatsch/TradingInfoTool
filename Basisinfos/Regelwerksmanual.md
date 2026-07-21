@@ -6092,3 +6092,40 @@ selten erreichte Stufe zu fuehren.
 (UTC `2026-07-21T01:17:44...+00:00` -> lokal `2026-07-21 03:17`, `None` ->
 `"-"`, kaputter String -> Fallback auf alte Slicing-Logik). Syntax-Check
 von `scheduler/background.py` fehlerfrei.
+
+## Nachtrag (2026-07-21): Groq-Alternative-Recherche Runde 3+4 abgeschlossen - 32 Kandidaten insgesamt verworfen, Suche vorerst beendet
+
+Ausgeloest durch Zais enttaeuschende erste Nacht, vom Nutzer bewusst NICHT
+nach dem ersten Fehlschlag abgebrochen ("Runde nicht vorbei, nur durch
+Fehlschlag unterbrochen"), spaeter fortgesetzt bis zu einem selbst gesetzten
+Budget ("noch ca. 5 Kandidaten, dann Schluss fuer heute"). Runde 3 (7
+Kandidaten: Vercel AI Gateway, OpenCode Zen, OVHcloud AI Endpoints,
+SambaNova-Re-Check, Moonshot/Kimi, MiniMax, SiliconFlow) und Runde 4 (10
+Kandidaten: xAI-Re-Check, Scaleway, AI21 Labs, Fireworks AI, Nebius AI
+Studio, StepFun, 01.AI/Yi, Poe API, Reka AI, Baidu Qianfan/ERNIE) - alle
+Details in Memory [[project_groq_alternative_recherche_2026-07-20]].
+
+**Bemerkenswertester Fund: Nebius AI Studio** (Nebius B.V., Amsterdam,
+Nasdaq-gelistet) - qualitativ die besten Vertragsbedingungen der gesamten
+Recherche: automatische Rate-Limit-Skalierung basierend auf echter Nutzung
+statt Bezahlung (Dokumentation: "wenn Nutzung in einem 15-Min-Fenster
+>=80% des Limits erreicht, steigt das Limit um 20%"), GDPR-nativ, ToS
+woertlich "Nebius will not use Customer Content to train Nebius Models".
+Scheiterte trotzdem am selben harten Ausschlusskriterium wie fast alle
+anderen Kandidaten dieser beiden Runden: eine Kreditkarte ist fuer den
+Signup zwingend ("$0 authorization to verify the card"). Nutzer hat den
+Schritt bewusst abgebrochen, keine Kartendaten eingegeben.
+
+**Durchgaengiges Muster ueber beide Runden:** praktisch jeder gepruefte
+Kandidat gehoert zu einer von drei Kategorien - (1) reiner Einmal-Trial
+statt dauerhaftem Free-Tier (Scaleway, AI21, Fireworks, StepFun, Reka,
+Moonshot), (2) Kreditkarte/Zahlungsmethode zwingend fuer brauchbare Limits
+(Vercel, OVHcloud, SiliconFlow, Nebius), oder (3) struktureller Zugangs-
+Ausschluss (Baidu: chinesische Mobilfunknummer noetig, wie schon Alibaba/
+Qwen in Runde 2).
+
+**Status:** Kette bleibt Mistral -> Groq -> Gemini -> Z.ai. Suche fuer
+diese Session auf Nutzer-Wunsch beendet. Revisit-Bedingung siehe Memory:
+entweder ein Anbieter mit echtem Dauer-Free-Tier ohne Kreditkarte/China-
+Telefon/Umsatzschwelle taucht auf, oder Nebius bietet irgendwann einen
+Signup-Pfad ohne Kreditkarten-Pflicht an.
