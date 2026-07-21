@@ -774,6 +774,25 @@ def _formatiere_top_gruende(signal) -> str:
     return "\n".join(f"- {g}" for g in gruende if g)
 
 
+def _formatiere_zeitpunkt_lokal(iso_timestamp: str | None) -> str:
+    """BUGFIX (2026-07-21, Nutzer-Fund): 'Berechnet: ...' in den Signal-E-Mails
+    zeigte bisher den rohen UTC-Zeitstempel aus der DB (`signal.created_at`)
+    OHNE Umrechnung auf lokale Zeit, waehrend der E-Mail-Client (Gmail) den
+    Empfangszeitpunkt ganz normal lokal anzeigt - das erweckte den falschen
+    Eindruck einer ~2-Stunden-Verzoegerung zwischen Berechnung und Versand
+    (CEST = UTC+2), obwohl beide Zeitpunkte nur Sekunden auseinanderlagen.
+    `astimezone()` ohne Argument konvertiert auf die lokale Systemzeitzone."""
+    if not iso_timestamp:
+        return "-"
+    try:
+        dt = datetime.fromisoformat(iso_timestamp)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone().strftime("%Y-%m-%d %H:%M")
+    except ValueError:
+        return iso_timestamp[:16].replace("T", " ")
+
+
 def _formatiere_key_risks(signal) -> str:
     """Nachbesserung (2026-07-17, Nutzer-Fund: E-Mail-Inhalt unvollstaendig) -
     `key_risks` wurde bisher von der KI erzeugt, im Signale-/Hebel-Tab
@@ -964,7 +983,7 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None) -
         gegenargument_text = _formatiere_gegenargument(signal)
         forecast_text = _formatiere_forecast(signal)
         risikofaktoren_text = _formatiere_risikofaktoren(signal)
-        zeitpunkt_text = signal.created_at[:16].replace("T", " ") if signal.created_at else "-"
+        zeitpunkt_text = _formatiere_zeitpunkt_lokal(signal.created_at)
         body = (
             f"Aktion: {signal.action}\n"
             f"Regime: {signal.regime or 'unbekannt'}\n"
@@ -1032,7 +1051,7 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None) 
         gegenargument_text = _formatiere_gegenargument(signal)
         forecast_text = _formatiere_forecast(signal)
         risikofaktoren_text = _formatiere_risikofaktoren(signal)
-        zeitpunkt_text = signal.created_at[:16].replace("T", " ") if signal.created_at else "-"
+        zeitpunkt_text = _formatiere_zeitpunkt_lokal(signal.created_at)
         body = (
             f"Richtung: {signal.richtung}, Aktion: {signal.action}\n"
             f"Regime: {signal.regime or 'unbekannt'}\n"
@@ -1103,7 +1122,7 @@ def _notify_multi_asset_signal(signal, watchlist: list, bitpanda_assets: list | 
         gegenargument_text = _formatiere_gegenargument(signal)
         forecast_text = _formatiere_forecast(signal)
         risikofaktoren_text = _formatiere_risikofaktoren(signal)
-        zeitpunkt_text = signal.created_at[:16].replace("T", " ") if signal.created_at else "-"
+        zeitpunkt_text = _formatiere_zeitpunkt_lokal(signal.created_at)
         body = (
             f"Aktion: {signal.action}\n"
             f"Berechnet: {zeitpunkt_text} · Anbieter: {signal.groq_model or '-'}\n\n"

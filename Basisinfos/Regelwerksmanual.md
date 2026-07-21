@@ -6045,3 +6045,50 @@ einmal pro Prozess gelesen) wirksam. Weiterhin zu beobachten: ob die neuen,
 grosszuegigeren Budgets zu mehr echten 429-Fehlern bei Mistral/Gemini
 fuehren (dann waere die reale Kapazitaetsgrenze gefunden), und ob die
 "1h-Leerlaufphasen" durch B=180 tatsaechlich seltener werden.
+
+## Nachtrag (2026-07-21, Vormittag): Erste Nacht-Auswertung + BUGFIX Zeitzonen-Anzeige in Signal-E-Mails + zweiter Zai-Datenpunkt
+
+**Nacht-Auswertung (frischer `extract_notebook_diagnose.py`-Export, ca.
+9,5 Std. nach dem Neustart, Fokus letzte 6 Std.):** Die Umstellung wirkt
+wie gedacht. Letzter `zai-Call`-Fehlschlag im gesamten Log war um 21:57 Uhr
+- noch mit dem ALTEN Code (Timeout=60, Zai zuerst). Danach: kein einziger
+Zai-Versuch mehr trotz durchgehender Aktivitaet, weil Zai jetzt hinten
+steht und Mistral seither JEDEN Kandidaten sofort erfolgreich bedient
+(alle stichprobenartig geprueften Hebel-/Spot-Signale der letzten 6 Std.
+zeigen `llm_model: mistral:mistral-small-2506`, keine Mistral-Fehlschlaege,
+kein 429, Tageszaehler von 3 - nach UTC-Mitternachts-Reset - auf 25 bis
+06:18 Uhr, deutlich unter dem neuen 400er-Deckel). Groq/Gemini: 0 Calls,
+nicht wegen Erschoepfung sondern weil Mistral nie fehlschlaegt. Keine
+1h-Leerlaufphasen mehr sichtbar - alle `Budget-Allocator:`-Zusammenfassungs-
+zeilen liegen durchgehend ~15 Minuten auseinander.
+
+**BUGFIX - Zeitzonen-Anzeige in Signal-E-Mails (Nutzer-Fund):** eine
+Hebel-E-Mail (KAIA ERÖFFNEN) zeigte `"Berechnet: 2026-07-21 01:17"` im
+Mail-Body, waehrend der Gmail-Header den Empfang um `03:18 Uhr` (lokale
+Zeit) auswies - wirkte wie eine 2-Stunden-Verzoegerung zwischen Berechnung
+und Versand. Tatsaechlich war `signal.created_at` in der DB korrekt als
+UTC gespeichert (`01:17:44+00:00` = `03:17:44` lokal, CEST = UTC+2) - der
+Mail-Text zeigte aber den rohen UTC-String OHNE Umrechnung
+(`signal.created_at[:16].replace("T", " ")`, an 3 Stellen in
+`scheduler/background.py` identisch). Kein echtes Latenzproblem, reiner
+Anzeige-Bug. **Fix:** neue Funktion `_formatiere_zeitpunkt_lokal()`
+(`datetime.fromisoformat(...).astimezone().strftime(...)`, konvertiert auf
+die lokale Systemzeitzone) ersetzt alle 3 Vorkommen. Wichtig: dieser Fund
+betrifft NICHT die andere, echte Beobachtung vom Vorabend (Marktscan-
+Discovery 16:00 Uhr vs. Signal 19:30 Uhr, siehe
+[[project_delta_berechnung_llm_abfrage_timing]]) - das ist ein separater,
+weiterhin ungeloester Mechanismus (Warteschlange im Budget-Allocator),
+kein Zeitzonen-Darstellungsfehler.
+
+**Zweiter Zai-Realdaten-Punkt (Desktop-Live-Test, gleiche realistische
+Payload wie am Vorabend):** GLM-4.5-Flash, das am Vorabend noch nach
+109,2s erfolgreich geantwortet hatte, schaffte es diesmal NICHT innerhalb
+von 150s (`ReadTimeout` nach 150,8s). GLM-4.7-Flash ebenfalls Timeout nach
+150,6s. Die Antwortzeiten sind also nicht stabiler/schneller geworden,
+eher volatiler - bestaetigt die Entscheidung, Zai nur noch als letzte,
+selten erreichte Stufe zu fuehren.
+
+**Verifikation:** `_formatiere_zeitpunkt_lokal()` funktional getestet
+(UTC `2026-07-21T01:17:44...+00:00` -> lokal `2026-07-21 03:17`, `None` ->
+`"-"`, kaputter String -> Fallback auf alte Slicing-Logik). Syntax-Check
+von `scheduler/background.py` fehlerfrei.
