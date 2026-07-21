@@ -70,6 +70,12 @@ immer der neueste Tick und verschleiert eine laenger bestehende Kandidatur -
 diese Sektion sucht stattdessen den fruehesten ist_kandidat=1-Zeitpunkt seit
 dem vorherigen Signal fuer dasselbe Symbol/Richtung-Paar.
 
+Nachtrag (2026-07-21, Nutzer-Vorgabe "umfangreich testen vor finaler
+Umsetzung"): neue Sektion `rohdaten_fuer_backtest` - schlanker Export ALLER
+ist_kandidat=1-/kaufkandidat-Zeilen (nicht nur der zuletzt gewaehlten) als
+Grundlage fuer backtest_budget_allocator_sla.py, das den neuen SLA-Algorithmus
+gegen die echte Historie nachspielt, bevor Produktivcode geaendert wird.
+
 Aufruf am Notebook: python extract_notebook_diagnose.py [SYMBOL] [LOG_STUNDEN]
   (SYMBOL optional, Default LINK, fuer den Tiefenanalyse-Teil;
    LOG_STUNDEN optional, Default 72, Zeitfenster fuer den Log-Auszug)
@@ -276,6 +282,39 @@ def _hebel_erstmalige_erkennung_delta(conn) -> dict:
     return {"statistik": statistik, "eintraege": eintraege}
 
 
+def _rohdaten_fuer_backtest(conn) -> dict:
+    """Neu (2026-07-21, Nutzer-Vorgabe "umfangreich testen vor finaler
+    Umsetzung"): schlanker Rohdaten-Export ALLER (nicht nur der zuletzt
+    ausgewaehlten) Kandidaten-Zeilen - Grundlage fuer
+    backtest_budget_allocator_sla.py, das den neuen SLA-basierten
+    Auswahlalgorithmus gegen die echte Historie nachspielt, BEVOR
+    Produktivcode geaendert wird (siehe Plan-Datei). Die bisherigen Delta-
+    Sektionen oben liefern nur aggregierte Werte/die jeweils gewaehlte
+    Kandidatenzeile - fuer eine echte Zyklus-fuer-Zyklus-Simulation werden
+    ALLE ist_kandidat=1-/kaufkandidat-Zeilen gebraucht, nicht nur die am
+    Ende verwendete. Bewusst schlanke Spaltenauswahl (keine JSON-Blob-
+    Spalten wie score_details_json) - das Backtest-Skript baut daraus eine
+    In-Memory-SQLite-DB und ruft dieselben database/db.py-Funktionen auf
+    wie der Live-Allocator (db.get_hebel_wartezeit_stunden_je_paar() etc.,
+    ueber deren as_of-Parameter)."""
+    hebel_triggers_kandidaten = [
+        row_to_dict(r) for r in conn.execute(
+            "SELECT id, symbol, richtung, screened_at, score_gesamt, status "
+            "FROM hebel_triggers WHERE ist_kandidat = 1 ORDER BY screened_at ASC"
+        ).fetchall()
+    ]
+    marktscan_kaufkandidaten = [
+        row_to_dict(r) for r in conn.execute(
+            "SELECT id, coingecko_id, symbol, discovered_at, score_gesamt, status, groq_generiert_am "
+            "FROM marktscan_candidates WHERE einstufung = 'kaufkandidat' ORDER BY discovered_at ASC"
+        ).fetchall()
+    ]
+    return {
+        "hebel_triggers_kandidaten": hebel_triggers_kandidaten,
+        "marktscan_kaufkandidaten": marktscan_kaufkandidaten,
+    }
+
+
 # --- Log-Auszug (2026-07-18, siehe Modul-Docstring) ---------------------
 # Format aus main.py::logging.basicConfig(): "%(asctime)s %(levelname)s
 # %(name)s: %(message)s" - asctime ist "YYYY-MM-DD HH:MM:SS,mmm".
@@ -438,6 +477,7 @@ def main() -> None:
         # unten und project_delta_berechnung_llm_abfrage_timing.md.
         marktscan_discovery_llm_delta = _marktscan_discovery_llm_delta(conn)
         hebel_erstmalige_erkennung_delta = _hebel_erstmalige_erkennung_delta(conn)
+        rohdaten_fuer_backtest = _rohdaten_fuer_backtest(conn)
 
         # 4) Provider-Performance (Win-Rate/CRV je Anbieter, Spot+Hebel getrennt)
         provider_performance = compute_provider_performance(conn)
@@ -512,6 +552,7 @@ def main() -> None:
         "kandidaten_warteschlangen_status": kandidaten_warteschlangen_status,
         "marktscan_discovery_llm_delta": marktscan_discovery_llm_delta,
         "hebel_erstmalige_erkennung_delta": hebel_erstmalige_erkennung_delta,
+        "rohdaten_fuer_backtest": rohdaten_fuer_backtest,
         "deep_dive": {
             "symbol": DEEP_DIVE_SYMBOL,
             "hebel_signals": [row_to_dict(r) for r in deep_signale],
@@ -545,6 +586,8 @@ def main() -> None:
     print(f"  Warteschlangen-Status: {kandidaten_warteschlangen_status}")
     print(f"  Discovery->LLM-Delta (Marktscan): {marktscan_discovery_llm_delta['statistik']}")
     print(f"  Erstmalige-Erkennung->Signal-Delta (Hebel): {hebel_erstmalige_erkennung_delta['statistik']}")
+    print(f"  Rohdaten fuer Backtest: {len(rohdaten_fuer_backtest['hebel_triggers_kandidaten'])} Hebel-Trigger-"
+          f"Kandidaten, {len(rohdaten_fuer_backtest['marktscan_kaufkandidaten'])} Marktscan-Kaufkandidaten")
 
 
 if __name__ == "__main__":

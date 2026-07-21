@@ -1835,26 +1835,45 @@ def resolve_marktscan_candidate_siblings(conn: sqlite3.Connection, coingecko_id:
     return cursor.rowcount
 
 
-def expire_stale_marktscan_candidates(conn: sqlite3.Connection, verfall_stunden: float) -> int:
+def expire_stale_marktscan_candidates(
+    conn: sqlite3.Connection,
+    verfall_stunden: float,
+    lookback_tage_cap: float = 14.0,
+    luecken_toleranz_stunden: float = 20.0,
+) -> int:
     """Marktscan-Pendant zu expire_stale_hebel_candidates() (2026-07-19,
     Konsistenz-Ausweitung desselben "Info-Leichen"-Fixes): setzt
-    Kaufkandidaten (status='neu', noch keine LLM-Begruendung erhalten), die
-    laenger als verfall_stunden unanalysiert sind, auf status='verfallen'.
-    Scoped auf `einstufung='kaufkandidat'` UND `groq_generiert_am IS NULL` -
-    exakt dieselben Bedingungen wie get_pending_marktscan_kaufkandidaten(),
-    damit nur tatsaechlich konkurrierende Kandidaten betroffen sind. Ergaenzt
-    den bereits bestehenden manuellen "Ablehnen"-Button (status=
-    'nutzer_verworfen') um einen automatischen Rueckfall fuer Kandidaten, die
-    der Nutzer nie zu Gesicht bekommt. Gibt die Anzahl verfallener Zeilen zurueck."""
-    grenze = (datetime.now(timezone.utc) - timedelta(hours=verfall_stunden)).isoformat()
-    cursor = conn.execute(
-        "UPDATE marktscan_candidates SET status = 'verfallen', status_geaendert_am = ? "
-        "WHERE einstufung = 'kaufkandidat' AND status = 'neu' AND groq_generiert_am IS NULL "
-        "AND discovered_at < ?",
-        (_now_iso(), grenze),
-    )
+    Kaufkandidaten (status='neu', noch keine LLM-Begruendung erhalten),
+    deren WAHRE Wartezeit seit Erstkandidatur
+    (get_marktscan_wartezeit_stunden_je_coin(), nicht das Alter der
+    einzelnen Zeile) verfall_stunden uebersteigt, auf status='verfallen'.
+
+    BUGFIX (2026-07-21, Nutzer-Fund Marktscan-Median 137h trotz 48h-Verfall):
+    die urspruengliche Fassung (2026-07-19) prüfte nur `discovered_at` der
+    jeweils EINZELNEN Zeile - da jeder der zwei taeglichen Scan-Laeufe eine
+    neue Zeile pro Coin anlegt (UNIQUE(coingecko_id, scan_run_id), siehe
+    upsert_marktscan_candidate()), ist die neueste Zeile eines weiterhin
+    entdeckten Coins IMMER frisch und verfiel dadurch NIE. Jetzt wird die
+    WAHRE durchgehende Kandidatur-Dauer geprueft und - falls ueberfaellig -
+    die aktuell existierende status='neu'-Zeile fuer diesen Coin verfallen
+    lassen. Ergaenzt weiterhin den bereits bestehenden manuellen "Ablehnen"-
+    Button (status='nutzer_verworfen') um einen automatischen Rueckfall fuer
+    Kandidaten, die der Nutzer nie zu Gesicht bekommt. Gibt die Anzahl
+    verfallener Zeilen zurueck."""
+    wartezeiten = get_marktscan_wartezeit_stunden_je_coin(conn, lookback_tage_cap, luecken_toleranz_stunden)
+    betroffen = 0
+    for coingecko_id, stunden in wartezeiten.items():
+        if stunden < verfall_stunden:
+            continue
+        cursor = conn.execute(
+            "UPDATE marktscan_candidates SET status = 'verfallen', status_geaendert_am = ? "
+            "WHERE coingecko_id = ? AND einstufung = 'kaufkandidat' AND status = 'neu' "
+            "AND groq_generiert_am IS NULL",
+            (_now_iso(), coingecko_id),
+        )
+        betroffen += cursor.rowcount
     conn.commit()
-    return cursor.rowcount
+    return betroffen
 
 
 def update_marktscan_candidate_groq_writeup(
@@ -1988,6 +2007,192 @@ def get_pending_hebel_candidates(conn: sqlite3.Connection) -> list[HebelTrigger]
     return [_row_to_hebel_trigger(row) for row in rows]
 
 
+def get_hebel_wartezeit_stunden_je_paar(
+    conn: sqlite3.Connection,
+    lookback_tage_cap: float = 14.0,
+    luecken_toleranz_stunden: float = 1.5,
+    as_of: str | None = None,
+) -> dict[tuple[str, str], float]:
+    """Wahre Wartezeit seit ERSTMALIGER Kandidatur je (symbol, richtung) - NICHT
+    das Alter der neuesten hebel_triggers-Zeile (die ist bei fortlaufender
+    Requalifizierung IMMER frisch, da run_hebel_screening() bei jedem
+    15-Min-Tick eine neue Zeile einfuegt statt zu upserten, siehe
+    insert_hebel_trigger()-Docstring). Loest damit genau die Verschleierung,
+    die die reine score_gesamt-DESC-Sortierung in get_pending_hebel_
+    candidates() erzeugt: ein Paar kann zyklenlang von frischeren/hoeher
+    gescorten Konkurrenten verdraengt werden, waehrend seine eigentliche
+    Wartezeit unbemerkt weiterwaechst (2026-07-21, echter Fund: HYPE LONG
+    116h, BTC LONG 101h, SUI SHORT 84h trotz taeglichem Neu-Screening -
+    siehe extract_notebook_diagnose.py::_hebel_erstmalige_erkennung_delta(),
+    die urspruengliche einmalige Diagnose-Fassung dieser Logik).
+
+    Ermittelt je Paar die juengste durchgehende Kandidatur-Serie: von der
+    neuesten zur aeltesten screened_at-Zeile laufen, Serie abbrechen sobald
+    entweder die Luecke zwischen zwei aufeinanderfolgenden Treffern
+    luecken_toleranz_stunden uebersteigt (ein kurzer Ausfall, z.B. ein
+    OI-Abruf-Fehlschlag, soll die Kandidatur nicht faelschlich als neu
+    begonnen zaehlen lassen - Korrektur gegenueber der Diagnose-Erstfassung,
+    die noch keine Luecken-Toleranz hatte) oder die Grenze durch das letzte
+    echte Signal fuer dieses Paar erreicht wird. Als "letztes echtes Signal"
+    zaehlt JEDE Bewertung mit hebel_trigger_id IS NOT NULL - bewusst NICHT
+    das strengere groq_raw_response IS NOT NULL aus
+    get_latest_hebel_signal_per_symbol() - auch ein Gate-Fail-HALTEN hat das
+    Paar tatsaechlich angeschaut und darf die Wartezeit-Uhr zuruecksetzen.
+    Ohne vorheriges Signal begrenzt lookback_tage_cap den Rueckblick.
+
+    as_of (optional, Default: jetzt) macht dieselbe Funktion fuer den
+    historischen Backtest (backtest_budget_allocator_sla.py) wiederverwendbar
+    - eine Quelle der Wahrheit fuer Live-Betrieb UND Backtest, kein
+    Doppelcode. Gibt nur Paare zurueck, die seit der jeweiligen Grenze
+    tatsaechlich (noch) kandidieren."""
+    referenz = datetime.fromisoformat(as_of) if as_of else datetime.now(timezone.utc)
+    referenz_iso = referenz.isoformat()
+
+    letztes_signal_am: dict[tuple[str, str], str] = {}
+    for row in conn.execute(
+        "SELECT symbol, richtung, MAX(created_at) AS letzter FROM hebel_signals "
+        "WHERE hebel_trigger_id IS NOT NULL AND created_at <= ? GROUP BY symbol, richtung",
+        (referenz_iso,),
+    ):
+        letztes_signal_am[(row["symbol"], row["richtung"])] = row["letzter"]
+
+    zeiten_je_paar: dict[tuple[str, str], list[datetime]] = {}
+    for row in conn.execute(
+        "SELECT symbol, richtung, screened_at FROM hebel_triggers "
+        "WHERE ist_kandidat = 1 AND screened_at <= ? ORDER BY symbol, richtung, screened_at DESC",
+        (referenz_iso,),
+    ):
+        paar = (row["symbol"], row["richtung"])
+        zeiten_je_paar.setdefault(paar, []).append(datetime.fromisoformat(row["screened_at"]))
+
+    ergebnis: dict[tuple[str, str], float] = {}
+    for paar, zeiten in zeiten_je_paar.items():
+        grenze_str = letztes_signal_am.get(paar)
+        grenze = (
+            datetime.fromisoformat(grenze_str) if grenze_str
+            else referenz - timedelta(days=lookback_tage_cap)
+        )
+        if zeiten[0] <= grenze:
+            continue
+        streak_start = zeiten[0]
+        vorheriger = zeiten[0]
+        for zeitpunkt in zeiten[1:]:
+            if zeitpunkt <= grenze:
+                break
+            luecke_stunden = (vorheriger - zeitpunkt).total_seconds() / 3600
+            if luecke_stunden > luecken_toleranz_stunden:
+                break
+            streak_start = zeitpunkt
+            vorheriger = zeitpunkt
+        ergebnis[paar] = (referenz - streak_start).total_seconds() / 3600
+    return ergebnis
+
+
+def get_marktscan_wartezeit_stunden_je_coin(
+    conn: sqlite3.Connection,
+    lookback_tage_cap: float = 14.0,
+    luecken_toleranz_stunden: float = 20.0,
+    as_of: str | None = None,
+) -> dict[str, float]:
+    """Marktscan-Pendant zu get_hebel_wartezeit_stunden_je_paar() - siehe
+    dortige Docstring fuer die volle Begruendung. Unterschied: marktscan_
+    candidates bekommt nur 2x/Tag (04:00/16:00) eine neue Zeile pro Coin
+    (statt alle 15 Min), daher die groebere Standard-Luecken-Toleranz (20h
+    statt 1.5h - uebersteht das Fehlen EINES der beiden taeglichen Scans,
+    nicht zweier). Gruppiert nach coingecko_id statt (symbol, richtung), da
+    Marktscan-Kandidaten keine Long/Short-Richtung kennen."""
+    referenz = datetime.fromisoformat(as_of) if as_of else datetime.now(timezone.utc)
+    referenz_iso = referenz.isoformat()
+
+    letzte_bewertung_am: dict[str, str] = {}
+    for row in conn.execute(
+        "SELECT coingecko_id, MAX(groq_generiert_am) AS letzter FROM marktscan_candidates "
+        "WHERE groq_generiert_am IS NOT NULL AND groq_generiert_am <= ? GROUP BY coingecko_id",
+        (referenz_iso,),
+    ):
+        letzte_bewertung_am[row["coingecko_id"]] = row["letzter"]
+
+    zeiten_je_coin: dict[str, list[datetime]] = {}
+    for row in conn.execute(
+        "SELECT coingecko_id, discovered_at FROM marktscan_candidates "
+        "WHERE einstufung = 'kaufkandidat' AND discovered_at <= ? "
+        "ORDER BY coingecko_id, discovered_at DESC",
+        (referenz_iso,),
+    ):
+        zeiten_je_coin.setdefault(row["coingecko_id"], []).append(
+            datetime.fromisoformat(row["discovered_at"])
+        )
+
+    ergebnis: dict[str, float] = {}
+    for coin, zeiten in zeiten_je_coin.items():
+        grenze_str = letzte_bewertung_am.get(coin)
+        grenze = (
+            datetime.fromisoformat(grenze_str) if grenze_str
+            else referenz - timedelta(days=lookback_tage_cap)
+        )
+        if zeiten[0] <= grenze:
+            continue
+        streak_start = zeiten[0]
+        vorheriger = zeiten[0]
+        for zeitpunkt in zeiten[1:]:
+            if zeitpunkt <= grenze:
+                break
+            luecke_stunden = (vorheriger - zeitpunkt).total_seconds() / 3600
+            if luecke_stunden > luecken_toleranz_stunden:
+                break
+            streak_start = zeitpunkt
+            vorheriger = zeitpunkt
+        ergebnis[coin] = (referenz - streak_start).total_seconds() / 3600
+    return ergebnis
+
+
+def get_portfolio_prioritaets_bonus_je_symbol(
+    conn: sqlite3.Connection,
+    watchlist: list,
+    bonus_gehalten_stunden: float = 12.0,
+    bonus_kern_rolle_stunden: float = 6.0,
+) -> dict[str, float]:
+    """Portfolio-Bezug fuer die SLA-Priorisierung im Budget-Allocator
+    (2026-07-21, Nutzer-Vorgabe "Gesamtportfolio statt punktuell
+    optimieren"): reduziert die effektive SLA-Schwelle eines Kandidaten, je
+    relevanter das Symbol fuer das bestehende Portfolio ist - macht das
+    NICHT zu einer weiteren unabhaengigen Sortierdimension (ein reiner
+    Score-Boost war vom Nutzer explizit abgelehnt worden: "Prio erhoeht aber
+    Delta kann weiterhin massiv sein").
+
+    Zwei Boni, je Symbol addiert:
+    - bonus_gehalten_stunden: Symbol wird bereits gehalten (Spot-Holding
+      ODER offene Hebel-Position) - Wiederbewertung von bestehendem Risiko
+      ist dringlicher als eine neue, noch nicht eingegangene Chance.
+      Identisches Muster wie remote/status.py::build_status() (dortige
+      gehaltene_symbole/offene_hebel_symbole-Sets).
+    - bonus_kern_rolle_stunden: WatchlistAsset.rolle == 'core' - rein
+      manuelles, strategisches Signal, UNABHAENGIG vom aktuellen Bestand
+      (siehe config.py::WatchlistAsset-Docstring: "ein core-Asset kann z.B.
+      noch nie gehalten worden sein - bewusster Erstkauf-Kandidat").
+      Urspruenglich war hier eine These-basierte Diversifikations-Kopplung
+      geplant, die aber fuer Krypto (Hebel/Marktscan sind reine Krypto-
+      Tiers) NIE gegriffen haette - Basisinfos/kategorien.yaml schliesst
+      Krypto bewusst aus (siehe Kopfkommentar), database/models.py::
+      These-Docstring haelt das explizit fest."""
+    gehaltene_symbole = {
+        h.symbol for h in get_all_holdings(conn)
+        if (h.quantity or 0.0) + (h.staked_quantity or 0.0) > 0.0
+    }
+    offene_hebel_symbole = {p.symbol for p in get_open_hebel_positions(conn)}
+
+    ergebnis: dict[str, float] = {}
+    for asset in watchlist:
+        bonus = 0.0
+        if asset.symbol in gehaltene_symbole or asset.symbol in offene_hebel_symbole:
+            bonus += bonus_gehalten_stunden
+        if getattr(asset, "rolle", None) == "core":
+            bonus += bonus_kern_rolle_stunden
+        if bonus:
+            ergebnis[asset.symbol] = bonus
+    return ergebnis
+
+
 def update_hebel_trigger_status(conn: sqlite3.Connection, trigger_id: int, status: str) -> None:
     conn.execute(
         "UPDATE hebel_triggers SET status = ?, status_geaendert_am = ? WHERE id = ?",
@@ -1996,24 +2201,42 @@ def update_hebel_trigger_status(conn: sqlite3.Connection, trigger_id: int, statu
     conn.commit()
 
 
-def expire_stale_hebel_candidates(conn: sqlite3.Connection, verfall_stunden: float) -> int:
-    """Setzt Trigger-Kandidaten (status='neu'), die laenger als verfall_stunden
-    unanalysiert geblieben sind, auf status='verfallen' - verhindert, dass
-    laengst ueberholte Marktbedingungen dauerhaft in get_pending_hebel_
-    candidates() (UI-Warteliste UND Budget-Allocator-Auswahlpool, beide
-    filtern nur auf status='neu') haengen bleiben. Der Allocator-Pool ist
-    score- statt aktualitaetssortiert - ohne diesen Verfall haette ein alter,
-    hoch bewerteter Kandidat frische Kandidaten dauerhaft um das knappe
-    LLM-Budget verdraengen koennen (2026-07-19, Nutzer-Fund "Info-Leichen" im
-    Hebel-Tab). Gibt die Anzahl der soeben verfallenen Zeilen zurueck."""
-    grenze = (datetime.now(timezone.utc) - timedelta(hours=verfall_stunden)).isoformat()
-    cursor = conn.execute(
-        "UPDATE hebel_triggers SET status = 'verfallen', status_geaendert_am = ? "
-        "WHERE status = 'neu' AND ist_kandidat = 1 AND screened_at < ?",
-        (_now_iso(), grenze),
-    )
+def expire_stale_hebel_candidates(
+    conn: sqlite3.Connection,
+    verfall_stunden: float,
+    lookback_tage_cap: float = 14.0,
+    luecken_toleranz_stunden: float = 1.5,
+) -> int:
+    """Setzt Trigger-Kandidaten (status='neu'), deren WAHRE Wartezeit seit
+    Erstkandidatur (get_hebel_wartezeit_stunden_je_paar(), nicht das Alter
+    der einzelnen Zeile) verfall_stunden uebersteigt, auf status='verfallen'
+    - verhindert, dass laengst ueberholte Marktbedingungen dauerhaft in
+    get_pending_hebel_candidates() (UI-Warteliste UND Budget-Allocator-
+    Auswahlpool, beide filtern nur auf status='neu') haengen bleiben.
+
+    BUGFIX (2026-07-21, Nutzer-Fund HYPE LONG 116h/BTC LONG 101h trotz 48h-
+    Verfall): die urspruengliche Fassung (2026-07-19) prüfte nur
+    `screened_at` der jeweils EINZELNEN Zeile - bei fortlaufender
+    Requalifizierung (jeder 15-Min-Tick legt eine neue Zeile an, siehe
+    insert_hebel_trigger()) ist die neueste Zeile IMMER frisch und verfiel
+    dadurch NIE, egal wie lange das Paar tatsaechlich schon wartete. Jetzt
+    wird die WAHRE durchgehende Kandidatur-Dauer geprueft und - falls
+    ueberfaellig - die aktuell existierende status='neu'-Zeile fuer dieses
+    Paar verfallen lassen (nicht mehr zeilenweise per WHERE-Vergleich).
+    Gibt die Anzahl der soeben verfallenen Zeilen zurueck."""
+    wartezeiten = get_hebel_wartezeit_stunden_je_paar(conn, lookback_tage_cap, luecken_toleranz_stunden)
+    betroffen = 0
+    for (symbol, richtung), stunden in wartezeiten.items():
+        if stunden < verfall_stunden:
+            continue
+        cursor = conn.execute(
+            "UPDATE hebel_triggers SET status = 'verfallen', status_geaendert_am = ? "
+            "WHERE symbol = ? AND richtung = ? AND status = 'neu' AND ist_kandidat = 1",
+            (_now_iso(), symbol, richtung),
+        )
+        betroffen += cursor.rowcount
     conn.commit()
-    return cursor.rowcount
+    return betroffen
 
 
 _HEBEL_POSITION_COLUMNS = (
