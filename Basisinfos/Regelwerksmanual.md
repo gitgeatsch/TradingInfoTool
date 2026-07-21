@@ -6129,3 +6129,77 @@ diese Session auf Nutzer-Wunsch beendet. Revisit-Bedingung siehe Memory:
 entweder ein Anbieter mit echtem Dauer-Free-Tier ohne Kreditkarte/China-
 Telefon/Umsatzschwelle taucht auf, oder Nebius bietet irgendwann einen
 Signup-Pfad ohne Kreditkarten-Pflicht an.
+
+## Nachtrag (2026-07-21, Nachmittag): Zai-Root-Cause endgueltig geklaert - Kontextlaengen-Drosselung >8K Token
+
+Nutzer entdeckte auf der Z.ai-"Rate Limits"-Dashboardseite einen bisher
+uebersehenen Erklaerungstext: "To ensure stable access to GLM-4-Flash
+during the free trial, requests with context lengths over 8K will be
+throttled to 1% of the standard concurrency limit." Das erklaert die seit
+zwei Tagen beobachteten Zai-Probleme (2/2 Timeouts erste Nacht, 109,2s-
+Erfolg vs. 150s-Doppel-Timeout am naechsten Vormittag) potenziell vollstaendig
+- keine allgemeine Modell-Langsamkeit, sondern eine gezielte Drosselung ab
+einer bestimmten Kontextgroesse.
+
+**Gezielter Vergleichstest** (`test_zai_context_length_hypothesis.py`,
+identischer echter `SYSTEM_PROMPT` aus `hebel_analyst.py`, einmal mit
+kleinem, einmal mit auf >8K Token aufgeblaehtem Facts-Payload, glm-4.5-flash,
+150s Timeout) bestaetigt die These eindeutig:
+- Klein (echte 3.910 Prompt-Tokens laut API-`usage`-Feld, unter 8K): Erfolg
+  nach 105,9s (2.184 Zeichen Antwort, 3.387 Completion-Tokens) - deckt sich
+  mit dem 109,2s-Erfolgswert vom Vorabend.
+- Gross (>8K Token): kompletter `ReadTimeout` nach den vollen 150s, keine
+  Antwort.
+
+**Praktische Einordnung:** Unser Hebel-`SYSTEM_PROMPT` allein ist bereits
+~11.761 Zeichen (~3.360 Token geschaetzt), der Spot-`SYSTEM_PROMPT` sogar
+~18.119 Zeichen (~5.177 Token geschaetzt) - bei echten (nicht synthetischen)
+Facts-Payloads mit vollem Kontext (Historie, Risikofaktoren, Makro-Analog-
+Vergleich) rutscht man damit speziell bei Spot- und bei umfangreicheren
+Hebel-Signalen plausibel regelmaessig ueber die 8K-Grenze.
+
+**Entscheidung:** keine Code-Aenderung. Ein Zai-spezifischer gekuerzter
+Prompt wuerde den Aufwand nicht rechtfertigen, da Zai ohnehin nur die
+seltenste letzte Rueckfallstufe ist (Mistral bedient real praktisch die
+gesamte Last). Root-Cause-Recherche hiermit abgeschlossen.
+
+**Nebenbefund - Dashboard-Anomalie "Last used: Not used" geklaert:** Der
+API-Key ("TIT") zeigte durchgehend "Last used: Not used", obwohl mehrfach
+echte, erfolgreich abgeschlossene Testcalls liefen (inkl. des obigen
+Kleinpayload-Calls mit echten `usage`-Daten in der Antwort). Komplette
+Dashboard-Seitenleiste durchgeprueft (Account, Rate Limits, GLM Coding
+Plan/My Plan/Usage, API Keys, Billing) plus oberer "API"-Navigationspunkt -
+"My Plan"/"Usage" gehoeren nachweislich zu einem anderen Produkt (GLM Coding
+Plan, IDE-Abo, "You don't have any subscription"), "Billing" zeigt nur
+$0-Bilanz. Auch nach dem definitiv erfolgreichen Testcall weiterhin "Not
+used" - damit endgueltig als kosmetische Z.ai-Dashboard-Einschraenkung
+eingeordnet (vermutlich rein Billing-Event-basierte Anzeige, die fuer
+kostenlose Flash-Modell-Calls ohne Zahlungsereignis nie aktualisiert wird),
+OHNE Auswirkung auf unser eigenes (DB-basiertes) Budget-Tracking.
+Investigation abgeschlossen.
+
+**Nachtrag - Isolationstest bestaetigt zweite, unabhaengige Bremse:
+Generierungsgeschwindigkeit selbst.** Nutzer hinterfragte zurecht, warum
+selbst der erfolgreiche Kleinpayload-Call (unter 8K) noch 105,9s brauchte.
+Gezielter Isolationstest (`test_zai_speed_isolation.py`, identischer Prompt
+~3.866 Token, aber `max_tokens=20` erzwungen statt voller Antwort): Erfolg
+nach nur 5,1s. Damit klar getrennt: Prompt-Verarbeitung/Warteschlange ist
+schnell (~5s fuer ~3.900 Token Input), die reine Text-Generierung ist der
+Flaschenhals (~34-35 Tokens/Sekunde). Das heisst: selbst ein perfekt unter
+8K gehaltener Prompt waere bei uns real weiterhin ~100s+ langsam, weil
+unser Signal-Schema lange strukturierte JSON-Antworten verlangt - die
+Langsamkeit ist NICHT nur kontextlaengenabhaengig, sondern eine zweite,
+unabhaengige Bremse der Generierungsgeschwindigkeit auf dem kostenlosen
+Tier. Bestaetigt die Entscheidung (Zai bleibt letzte, selten gebrauchte
+Rueckfallstufe) noch eindeutiger - Prompt-Kuerzung allein wuerde das
+Problem nicht loesen.
+
+**Bestaetigung durch offizielle Z.ai-FAQ** (docs.z.ai/help/faq), Frage "Why
+hasn't my account balance changed after I used the API?": "The billing
+history reflect daily consumption records, and therefore display the
+billing status from the previous day (n-1). Current day consumption will
+not be immediately visible in the billing details" (zusaetzlich: "there is
+currently a processing delay in our billing system"). Offizielle
+Bestaetigung einer generellen n-1-Verzoegerung im gesamten Billing-/
+Nutzungssystem - unser Key wurde erst 2026-07-20 abends angelegt, "Not
+used" ist damit die dokumentierte Verzoegerung, kein Fehler.
