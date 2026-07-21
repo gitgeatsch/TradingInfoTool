@@ -133,6 +133,44 @@ Kandidaten, die an einem Tag nicht mehr drankommen, werden NICHT als
 - **Spot-Rotation:** bleibt schlicht überfällig, rutscht beim nächsten Lauf
   automatisch nach oben (bestehendes Verhalten, unverändert)
 
+## Nachtrag (2026-07-21): Revision - "keine eingefrorene Warteschlange" war ein Trugschluss
+
+Die obige Design-Entscheidung (2026-07-13, vor jeder echten Produktionsdatenlage
+getroffen) ging implizit davon aus, dass ein re-bewerteter Kandidat "einfach
+wieder vorgeschlagen wird" und das reicht. Echte Produktionsdaten (2026-07-21,
+Budget-Allocator-Neuplanung, siehe Plan-Datei swift-napping-muffin.md)
+widerlegen das: reines `score_gesamt`-DESC-Ranking OHNE jede Wartezeit-
+Erinnerung fuehrte zu bis zu 116h (Hebel) bzw. 5,7 Tagen Median (Marktscan)
+Wartezeit, weil ein Kandidat von frischeren/hoeher gescorten Konkurrenten
+zyklenlang verdraengt werden konnte - der bestehende 48h-Verfall-Backstop
+(oben, "Cooldown pro Kandidat") griff dabei nachweislich NIE, weil er nur das
+Alter der jeweils neuesten (bei fortlaufender Requalifizierung immer frischen)
+Zeile pruefte.
+
+**Fix (implementiert):** `agent/krypto/budget_allocator.py::
+_priorisiere_nach_wartezeit()` teilt jede Kandidatenliste in "ueberfaellig"
+(wahre Wartezeit seit Erstkandidatur >= `hebel_kandidat_sla_stunden`/
+`marktscan_kandidat_sla_stunden`, konfigurierbar) und "normal" - Ueberfaellige
+werden IMMER zuerst eingereiht (FIFO unter sich), unabhaengig vom Score. Der
+bestehende `[:tier_n]`-Deckel aus `_verteile_budget()` bleibt unveraendert -
+das aendert nur die Reihenfolge, nicht die Kapazitaet. Zusaetzlich per
+Portfolio-Bonus (bereits gehalten/`rolle=='core'`) individuell verkuerzbar,
+siehe `database/db.py::get_portfolio_prioritaets_bonus_je_symbol()`.
+
+**Historischer Backtest** (`backtest_budget_allocator_sla.py`, gegen echte
+Notebook-Historie): Hebel-Maximum 116,1h -> 52,5h (-55%), Marktscan-Median
+137h -> 0,1h (Marktscan-Zahlen wegen duenner Historie - nur 8 Coins/12 Tage -
+weniger belastbar als Hebel, Richtung aber konsistent). Median/Durchschnitt
+bei Hebel leicht gestiegen (3,3h->6,7h) - der erwartete, akzeptierte
+Kompromiss einer echten Fairness-Garantie gegenueber einem reinen Greedy-
+Score-Ranking.
+
+Diese Design-Entscheidung ("keine eingefrorene Warteschlange") gilt damit als
+**revidiert**, nicht als fehlerhaft implementiert - der urspruengliche
+2026-07-13-Gedanke war vernuenftig, bevor echte Mehrwochen-Produktionsdaten
+zeigten, dass er ohne Wartezeit-Gedaechtnis zu unbegrenzter Verdraengung
+fuehren kann.
+
 ## Architektur-Konsequenz für bestehenden Code
 
 **Entschieden (2026-07-13): Option A — zentralisieren, UND der manuelle

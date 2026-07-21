@@ -802,6 +802,41 @@ budget_allocator:
                                         # Cooldown), aber budgetvertraeglich (siehe Diskussion:
                                         # 15 Min haette bei nur 1 offener Position mehr Budget
                                         # verbraucht als der gesamte Tagesdeckel).
+  # --- SLA-Reservierung + Portfolio-Bezug (2026-07-21, Budget-Allocator-Neuplanung,
+  # siehe Plan-Datei swift-napping-muffin.md und Regelwerksmanual-Nachtrag) - loest
+  # das echte Problem, dass reines score_gesamt-DESC-Ranking Kandidaten
+  # zyklenlang/potenziell unbegrenzt verdraengen konnte (HYPE LONG 116h, Marktscan-
+  # Median 137h trotz 48h-Verfall, weil requalifizierende Kandidaten immer eine
+  # frische Zeile bekommen - siehe database/db.py::get_hebel_wartezeit_stunden_
+  # je_paar()-Docstring). Kandidaten, deren WAHRE Wartezeit seit Erstkandidatur die
+  # SLA-Schwelle erreicht, werden VOR allen normalen (score-sortierten) Kandidaten
+  # eingereiht (FIFO unter den Ueberfaelligen) - der bestehende [:tier_n]-Deckel
+  # bleibt unveraendert, nur die Reihenfolge aendert sich. Echte Garantie statt
+  # Soft-Boost (Nutzer-Vorgabe: "Prio erhoeht aber Delta kann weiterhin massiv
+  # sein - kein Boost, sondern eine echte Garantie").
+  hebel_kandidat_sla_stunden: 6          # Deutlich ueber cooldown_stunden (3.5h), damit ein
+                                        # Kandidat mind. 1-2 echte Ranking-Chancen hat, bevor
+                                        # er als uebergangen gilt.
+  marktscan_kandidat_sla_stunden: 30     # Ueber 24h (1 voller Scan-Zyklus, Scan laeuft nur
+                                        # 2x/Tag), klar unter dem 48h-Verfall.
+  bonus_gehalten_stunden: 12             # Portfolio-Bezug: Symbol wird bereits gehalten (Spot
+                                        # ODER offene Hebel-Position) - reduziert die effektive
+                                        # SLA (wird schneller "ueberfaellig"). Startwert, spaeter
+                                        # anhand echter Daten kalibrierbar.
+  bonus_kern_rolle_stunden: 6            # Analog - WatchlistAsset.rolle=='core' (rein manuell/
+                                        # strategisch, unabhaengig vom Bestand - deckt den Fall
+                                        # "noch nie gehalten, aber bewusster Erstkauf-Kandidat"
+                                        # ab, den bonus_gehalten_stunden NICHT abdeckt). Bewusst
+                                        # NICHT These-basiert - Basisinfos/kategorien.yaml
+                                        # schliesst Krypto aus, eine These kann sich nie auf ein
+                                        # Krypto-Asset auswirken (siehe database/models.py::
+                                        # These-Docstring).
+  marktscan_kandidat_luecken_toleranz_stunden: 20  # Streak-Unterbrechungs-Toleranz fuer
+                                        # get_marktscan_wartezeit_stunden_je_coin() - groeber
+                                        # als bei Hebel, da Marktscan nur 2x/Tag scannt (muss
+                                        # das Fehlen EINES Scans ueberstehen, nicht zweier).
+  marktscan_wartezeit_lookback_tage_cap: 14  # Obergrenze fuer den Rueckblick, falls fuer einen
+                                        # Coin noch NIE ein echtes Signal existiert.
 
 # --- Hebel-Screening (2026-07-14, Phase 1, siehe docs/hebel_positionsformel.md) ---
 # Deterministisches Zwei-Zweige-Scoring (Trendfolge + Kontra), KEIN Groq-Aufruf hier -
@@ -836,6 +871,21 @@ hebel_screening:
                                         # Budget verdraengt). 48h = ueberlebt eine einzelne
                                         # budgetknappe Tagesphase, verhindert aber wochenlanges
                                         # Anwachsen laengst ueberholter Marktbedingungen.
+                                        # BUGFIX (2026-07-21): pruefte bisher nur screened_at
+                                        # der EINZELNEN Zeile - bei fortlaufender Requalifizierung
+                                        # (jeder Tick legt eine neue Zeile an) war die neueste
+                                        # Zeile IMMER frisch und verfiel dadurch NIE (echter Fund:
+                                        # HYPE LONG 116h trotz dieser 48h-Grenze). Prueft jetzt
+                                        # stattdessen die WAHRE Wartezeit seit Erstkandidatur,
+                                        # siehe database/db.py::get_hebel_wartezeit_stunden_je_paar().
+  hebel_kandidat_luecken_toleranz_stunden: 1.5   # Streak-Unterbrechungs-Toleranz fuer die
+                                        # Wartezeit-Berechnung (siehe db.py::
+                                        # get_hebel_wartezeit_stunden_je_paar()) - ein kurzer
+                                        # Ausfall (z.B. OI-Abruf-Fehlschlag) soll die Kandidatur
+                                        # nicht faelschlich als neu begonnen zaehlen lassen.
+  hebel_wartezeit_lookback_tage_cap: 14  # Obergrenze fuer den Rueckblick, falls fuer ein Paar
+                                        # noch NIE ein echtes Signal existiert (verhindert
+                                        # unbegrenztes Zurueckschauen bei neuen Watchlist-Assets).
   trendfolge:
     oi_aenderung_schwelle_prozent: 3.0       # [OFFEN] Platzhalter, keine OI-Historie zum Kalibrieren vorhanden
     kursaenderung_schwelle_prozent: 2.0       # [OFFEN] angelehnt an Marktscan-Muster

@@ -343,7 +343,14 @@ def run_hebel_screening(
         # Info-Leichen-Fix (2026-07-19, Nutzer-Fund): unanalysierte Kandidaten
         # verfallen nach cfg["hebel_kandidat_verfall_stunden"], siehe
         # db.expire_stale_hebel_candidates()-Docstring fuer die Begruendung.
-        verfallen_anzahl = db.expire_stale_hebel_candidates(conn, cfg["hebel_kandidat_verfall_stunden"])
+        # BUGFIX (2026-07-21): prueft jetzt die WAHRE Wartezeit seit
+        # Erstkandidatur statt des Alters der einzelnen (immer frischen)
+        # Zeile - siehe db.get_hebel_wartezeit_stunden_je_paar()-Docstring.
+        verfallen_anzahl = db.expire_stale_hebel_candidates(
+            conn, cfg["hebel_kandidat_verfall_stunden"],
+            cfg.get("hebel_wartezeit_lookback_tage_cap", 14.0),
+            cfg.get("hebel_kandidat_luecken_toleranz_stunden", 1.5),
+        )
         if verfallen_anzahl:
             logger.info(
                 "Hebel-Screening: %d veraltete Kandidaten (status=neu, aelter als %.0fh) "

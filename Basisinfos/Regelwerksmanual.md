@@ -6251,3 +6251,50 @@ kuerzlich verfallen, lange verfallen, nutzer_verworfen, nie gesehener Coin)
 - alle bestanden. Smoke-Test gegen die lokale Desktop-DB reproduziert den
 echten APE-Fall (`has_pending_marktscan_kaufkandidat` liefert korrekt
 `True`).
+
+## Nachtrag (2026-07-21): Budget-Allocator neu gedacht - SLA-Reservierung statt Score-Ranking (Abschnitt 2+3 umgesetzt)
+
+Umsetzung der in `docs/budget_queue_design.md` (Nachtrag) revidierten
+Design-Entscheidung, nach vollstaendiger Genehmigung des Plans
+(swift-napping-muffin.md) inkl. historischem Backtest VOR jeder Code-
+Aenderung (siehe eigener Nachtrag oben zu "Wahre Wartezeit-Erkennung").
+
+**Kernaenderung:** `agent/krypto/budget_allocator.py::_priorisiere_nach_
+wartezeit()` teilt jede Kandidatenliste (Hebel-Trigger, Marktscan-
+Kaufkandidaten - beide bereits DB-seitig `score_gesamt DESC` sortiert) in
+"ueberfaellig" (wahre Wartezeit seit Erstkandidatur >= effektiver SLA-
+Schwelle) und "normal". Ueberfaellige werden IMMER zuerst eingereiht (FIFO
+untereinander, nach Wartezeit absteigend), Normale behalten die
+bestehende Score-Reihenfolge. Der bestehende `[:tier_n]`-Deckel aus
+`_verteile_budget()` bleibt unveraendert - echte Garantie statt Soft-Boost,
+wie vom Nutzer gefordert.
+
+**Portfolio-Bezug** (`database/db.py::get_portfolio_prioritaets_bonus_
+je_symbol()`): die effektive SLA-Schwelle wird pro Symbol reduziert, wenn
+es bereits gehalten wird (Spot ODER offene Hebel-Position, 12h Bonus) oder
+`WatchlistAsset.rolle=='core'` ist (6h Bonus - deckt den Fall "noch nie
+gehalten, aber bewusster Erstkauf-Kandidat" ab). Bewusst NICHT These-
+basiert - Krypto ist von der Kategorie-Taxonomie ausgeschlossen (siehe
+Marktscan-Dedup-Nachtrag oben).
+
+**Neue config.yaml-Schluessel:** `budget_allocator.hebel_kandidat_sla_
+stunden` (6), `marktscan_kandidat_sla_stunden` (30), `bonus_gehalten_
+stunden` (12), `bonus_kern_rolle_stunden` (6), `marktscan_kandidat_
+luecken_toleranz_stunden` (20), `marktscan_wartezeit_lookback_tage_cap`
+(14); `hebel_screening.hebel_kandidat_luecken_toleranz_stunden` (1.5),
+`hebel_wartezeit_lookback_tage_cap` (14).
+
+**Verfall-Backstop korrigiert:** `expire_stale_hebel_candidates()`/
+`expire_stale_marktscan_candidates()` pruefen jetzt die wahre Kandidatur-
+Dauer statt des Alters der (immer frischen) einzelnen Zeile - der 48h-
+Verfall wirkt damit erstmals tatsaechlich als Backstop (siehe eigener
+Nachtrag oben).
+
+**Verifikation:** Unit-Test `_priorisiere_nach_wartezeit()` (Ueberfaellige
+zuerst, Normale behalten Reihenfolge, keine Kandidaten verloren). Info-
+Leichen-Regressionstest (Paar mit 60h durchgehender Requalifizierung, 241
+Zeilen) - verfaellt jetzt korrekt, waere mit der alten Logik nie verfallen.
+End-to-End-Trockenlauf gegen die echte Desktop-DB-Kopie (alle LLM-/
+Netzwerk-Clients=None, garantiert kein echter Call) - kompletter Durchlauf
+ohne Exception, neue Log-Zeile zeigt korrekt "ueberfaellig=1" fuer den
+einzigen vorhandenen Hebel-Kandidaten (FLOKI SHORT).

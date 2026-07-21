@@ -291,6 +291,49 @@ def _verteile_budget(
     return tier1_verbraucht, tier2_verbraucht, tier3_verbraucht
 
 
+def _priorisiere_nach_wartezeit(
+    kandidaten: list, wartezeiten: dict, effektive_sla_je_schluessel: dict, schluessel_fn,
+) -> list:
+    """SLA-Reservierung statt Soft-Boost (2026-07-21, Budget-Allocator-
+    Neuplanung, siehe Plan-Datei swift-napping-muffin.md): teilt
+    `kandidaten` (bereits DB-seitig nach score_gesamt DESC sortiert) in
+    ueberfaellig (wahre Wartezeit >= effektive SLA-Schwelle des jeweiligen
+    Kandidaten) und normal. Ueberfaellig wird nach Wartezeit DESC sortiert
+    (echtes FIFO: am laengsten wartender zuerst), normal behaelt die
+    score_gesamt-DESC-Reihenfolge unveraendert bei (stabiler Filter, kein
+    Re-Sort noetig). Der bestehende `[:tier_n]`-Deckel aus
+    `_verteile_budget()` bleibt unveraendert der einzige Kappungsmechanismus
+    - diese Funktion aendert nur die REIHENFOLGE innerhalb des gleichen
+    Budgets, nicht die Anzahl.
+
+    Der Nutzer hat einen reinen Score-Boost je Wartezeit explizit
+    abgelehnt ("Prio erhoeht aber Delta kann weiterhin massiv sein - kein
+    Boost, sondern eine echte Garantie"): mit einer einfachen Zusatz-
+    Gewichtung haette ein noch hoeher gescorter/frischerer Konkurrent einen
+    ueberfaelligen Kandidaten weiterhin verdraengen koennen. Die harte
+    Zwei-Gruppen-Reservierung hier garantiert dagegen, dass ein
+    ueberfaelliger Kandidat NIE von einem normalen verdraengt wird -
+    solange die Kapazitaet pro Zyklus die Zahl neu-ueberfaellig-werdender
+    Kandidaten nicht uebersteigt (siehe Backtest-Verifikation), konvergiert
+    die maximale Wartezeit damit gegen SLA + wenige Zyklen, nicht gegen
+    Tage.
+
+    `effektive_sla_je_schluessel` erlaubt eine PRO KANDIDAT unterschiedliche
+    Schwelle (Portfolio-Bonus, siehe db.get_portfolio_prioritaets_bonus_
+    je_symbol() - ein bereits gehaltenes/rolle=core-Symbol wird schneller
+    "ueberfaellig") - fehlt ein Schluessel darin, gilt effektiv 0.0 (sofort
+    ueberfaellig), das kommt hier praktisch nie vor, da die Aufrufer stets
+    fuer alle `kandidaten` einen Eintrag befuellen."""
+    def ist_ueberfaellig(kandidat) -> bool:
+        schluessel = schluessel_fn(kandidat)
+        return wartezeiten.get(schluessel, 0.0) >= effektive_sla_je_schluessel.get(schluessel, 0.0)
+
+    ueberfaellig = [k for k in kandidaten if ist_ueberfaellig(k)]
+    normal = [k for k in kandidaten if not ist_ueberfaellig(k)]
+    ueberfaellig.sort(key=lambda k: wartezeiten.get(schluessel_fn(k), 0.0), reverse=True)
+    return ueberfaellig + normal
+
+
 def run_budget_allocator(
     conn_factory,
     watchlist: list,
@@ -346,6 +389,34 @@ def run_budget_allocator(
             conn, hebel_pending, watchlist, cooldown_stunden,
             cooldown_stunden_ausgemustert=hebel_cooldown_stunden_ausgemustert,
         )
+        # SLA-Reservierung (2026-07-21, Budget-Allocator-Neuplanung, siehe
+        # _priorisiere_nach_wartezeit()-Docstring + Plan-Datei) - Portfolio-
+        # Bonus einmal pro Zyklus berechnen, fuer Hebel UND Marktscan
+        # wiederverwendet (keine doppelte DB-Abfrage). Bewusst NUR auf
+        # hebel_trigger_kandidaten angewandt, NICHT auf
+        # offene_positionen_kandidaten - letztere haben kein
+        # hebel_trigger_id/keine ist_kandidat=1-Historie (siehe
+        # _offene_positionen_als_kandidaten()) und werden von
+        # _dedupe_hebel_kandidaten() ohnehin schon immer zuerst
+        # eingereiht, brauchen also keine SLA-Sonderbehandlung.
+        cfg_hebel_screening = config_dict.get("hebel_screening", {})
+        portfolio_bonus = db.get_portfolio_prioritaets_bonus_je_symbol(
+            conn, watchlist, cfg.get("bonus_gehalten_stunden", 12.0),
+            cfg.get("bonus_kern_rolle_stunden", 6.0),
+        )
+        hebel_wartezeiten = db.get_hebel_wartezeit_stunden_je_paar(
+            conn, cfg_hebel_screening.get("hebel_wartezeit_lookback_tage_cap", 14.0),
+            cfg_hebel_screening.get("hebel_kandidat_luecken_toleranz_stunden", 1.5),
+        )
+        basis_sla_hebel = cfg.get("hebel_kandidat_sla_stunden", 6.0)
+        effektive_sla_hebel = {
+            (t.symbol, t.richtung): max(0.0, basis_sla_hebel - portfolio_bonus.get(t.symbol, 0.0))
+            for t in hebel_trigger_kandidaten
+        }
+        hebel_trigger_kandidaten = _priorisiere_nach_wartezeit(
+            hebel_trigger_kandidaten, hebel_wartezeiten, effektive_sla_hebel,
+            lambda t: (t.symbol, t.richtung),
+        )
         # Offene Hebel-Positionen: eigene, vom Trigger-Screening unabhaengige
         # Kandidatenquelle mit engerem Cooldown (siehe _offene_positionen_
         # als_kandidaten()-Docstring) - zuerst in die Liste, damit sie im
@@ -370,7 +441,12 @@ def run_budget_allocator(
         # in hebel_screening.py) - hier statt in marktscan.py::run_scan()
         # platziert, weil der Allocator alle 15 Min laeuft (Marktscan-Discovery
         # nur 2x/Tag) und die Pending-Liste so bei jedem Lauf aktuell bleibt.
-        verfallen_marktscan = db.expire_stale_marktscan_candidates(conn, marktscan_kandidat_verfall_stunden)
+        marktscan_kandidat_luecken_toleranz_stunden = cfg.get("marktscan_kandidat_luecken_toleranz_stunden", 20.0)
+        marktscan_wartezeit_lookback_tage_cap = cfg.get("marktscan_wartezeit_lookback_tage_cap", 14.0)
+        verfallen_marktscan = db.expire_stale_marktscan_candidates(
+            conn, marktscan_kandidat_verfall_stunden,
+            marktscan_wartezeit_lookback_tage_cap, marktscan_kandidat_luecken_toleranz_stunden,
+        )
         if verfallen_marktscan:
             logger.info(
                 "Budget-Allocator: %d veraltete Marktscan-Kandidaten (status=neu, aelter als %.0fh) "
@@ -379,6 +455,23 @@ def run_budget_allocator(
             )
         marktscan_kandidaten, result.uebersprungen_cooldown_marktscan = _filter_marktscan_cooldown(
             conn, db.get_pending_marktscan_kaufkandidaten(conn), cooldown_stunden,
+        )
+        # SLA-Reservierung, analog Hebel oben (siehe _priorisiere_nach_
+        # wartezeit()-Docstring) - portfolio_bonus wurde bereits oben
+        # einmal berechnet, hier ueber c.symbol wiederverwendet (Bonus ist
+        # je Symbol, get_marktscan_wartezeit_stunden_je_coin() schluesselt
+        # dagegen ueber coingecko_id - Zuordnung ueber die Kandidatenliste).
+        marktscan_wartezeiten = db.get_marktscan_wartezeit_stunden_je_coin(
+            conn, marktscan_wartezeit_lookback_tage_cap, marktscan_kandidat_luecken_toleranz_stunden,
+        )
+        basis_sla_marktscan = cfg.get("marktscan_kandidat_sla_stunden", 30.0)
+        effektive_sla_marktscan = {
+            c.coingecko_id: max(0.0, basis_sla_marktscan - portfolio_bonus.get(c.symbol, 0.0))
+            for c in marktscan_kandidaten
+        }
+        marktscan_kandidaten = _priorisiere_nach_wartezeit(
+            marktscan_kandidaten, marktscan_wartezeiten, effektive_sla_marktscan,
+            lambda c: c.coingecko_id,
         )
         spot_kandidaten = select_assets_due_for_signal(
             conn, watchlist, max_count=budget_gesamt, cooldown_stunden=spot_cooldown_stunden,
@@ -400,10 +493,21 @@ def run_budget_allocator(
     tier1_n, tier2_n, tier3_n = _verteile_budget(
         len(hebel_kandidaten), len(marktscan_kandidaten), len(spot_kandidaten), budget_gesamt, spot_reserve,
     )
+    # SLA-Ueberfaellig-Zaehler fuers Log (2026-07-21) - Verlaufskontrolle, ob die
+    # neue Reservierung greift (Zaehler sollte gegen 0 tendieren, nicht wachsen).
+    hebel_ueberfaellig_n = sum(
+        1 for t in hebel_trigger_kandidaten
+        if hebel_wartezeiten.get((t.symbol, t.richtung), 0.0) >= effektive_sla_hebel.get((t.symbol, t.richtung), 0.0)
+    )
+    marktscan_ueberfaellig_n = sum(
+        1 for c in marktscan_kandidaten
+        if marktscan_wartezeiten.get(c.coingecko_id, 0.0) >= effektive_sla_marktscan.get(c.coingecko_id, 0.0)
+    )
     logger.info(
-        "Budget-Allocator: Hebel %d/%d (Richtung=%s), Marktscan %d/%d, Spot %d/%d ausgewaehlt (B=%d, F=%d), "
-        "Cooldown uebersprungen: Hebel %d, Marktscan %d",
-        tier1_n, len(hebel_kandidaten), hebel_richtung_modus, tier2_n, len(marktscan_kandidaten),
+        "Budget-Allocator: Hebel %d/%d (Richtung=%s, ueberfaellig=%d), Marktscan %d/%d (ueberfaellig=%d), "
+        "Spot %d/%d ausgewaehlt (B=%d, F=%d), Cooldown uebersprungen: Hebel %d, Marktscan %d",
+        tier1_n, len(hebel_kandidaten), hebel_richtung_modus, hebel_ueberfaellig_n,
+        tier2_n, len(marktscan_kandidaten), marktscan_ueberfaellig_n,
         tier3_n, len(spot_kandidaten),
         budget_gesamt, spot_reserve, result.uebersprungen_cooldown_hebel, result.uebersprungen_cooldown_marktscan,
     )
