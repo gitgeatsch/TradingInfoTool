@@ -1800,6 +1800,41 @@ def get_latest_marktscan_status_by_coingecko_id(conn: sqlite3.Connection, coinge
     return row["status"] if row else None
 
 
+def has_pending_marktscan_kaufkandidat(conn: sqlite3.Connection, coingecko_id: str) -> bool:
+    """BUGFIX (2026-07-21, Nutzer-Fund "immer dieselben Coins" - APE/EIGEN
+    bekamen am 2026-07-09 8 frische 'neu'-Zeilen innerhalb weniger Stunden,
+    bevor der Nutzer reagierte): existenzielle Pruefung, ob fuer diesen Coin
+    IRGENDWO in der Historie bereits eine unbearbeitete Kaufkandidat-Zeile
+    (status='neu', einstufung='kaufkandidat') liegt - unabhaengig davon, ob
+    das die zeitlich neueste Zeile ist (ein spaeterer Scan kann denselben
+    Coin z.B. als 'kein_treffer' neu bewerten, waehrend die AELTERE
+    Kaufkandidat-Zeile immer noch unbearbeitet wartet). Fuer
+    marktscan.py::_duplicate_should_skip() - verhindert, dass derselbe,
+    laengst entdeckte Coin bei jedem der zwei taeglichen Scan-Laeufe erneut
+    dupliziert wird, waehrend die bestehende Zeile in Ruhe weiterwartet."""
+    row = conn.execute(
+        "SELECT 1 FROM marktscan_candidates WHERE coingecko_id = ? "
+        "AND status = 'neu' AND einstufung = 'kaufkandidat' LIMIT 1",
+        (coingecko_id,),
+    ).fetchone()
+    return row is not None
+
+
+def get_letzter_marktscan_verfall_am(conn: sqlite3.Connection, coingecko_id: str) -> str | None:
+    """Ergaenzung zum obigen Fix: der juengste Zeitpunkt, zu dem eine
+    Kaufkandidat-Zeile dieses Coins verfallen ist (status='verfallen') -
+    fuer eine kurze Abklingzeit (siehe marktscan.py::_duplicate_should_skip()),
+    damit ein gerade erst verfallener Coin nicht sofort beim naechsten
+    Scan-Lauf wieder auftaucht, aber nach Ablauf der Abklingzeit eine neue
+    Chance bekommt (Marktlage kann sich geaendert haben)."""
+    row = conn.execute(
+        "SELECT MAX(status_geaendert_am) AS letzter FROM marktscan_candidates "
+        "WHERE coingecko_id = ? AND status = 'verfallen' AND einstufung = 'kaufkandidat'",
+        (coingecko_id,),
+    ).fetchone()
+    return row["letzter"] if row and row["letzter"] else None
+
+
 def update_marktscan_candidate_status(conn: sqlite3.Connection, candidate_id: int, status: str) -> None:
     conn.execute(
         "UPDATE marktscan_candidates SET status = ?, status_geaendert_am = ? WHERE id = ?",

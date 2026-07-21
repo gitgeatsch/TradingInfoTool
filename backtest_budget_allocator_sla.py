@@ -45,6 +45,15 @@ Reservierung/FIFO unter Ueberfaelligen) - der Bonus wuerde reale Kandidaten
 nur noch STAERKER in Richtung "schneller dran" verschieben, nie schwaecher
 als hier simuliert.
 
+Nachtrag (2026-07-21, Nutzer-Vorgabe "Marktscan-Kapazitaetsmodell
+nachbessern"): Kapazitaets-Uebertrag ergaenzt (siehe _simuliere_hebel()/
+_simuliere_marktscan()-Docstrings) - ungenutzte Kapazitaet eines Zyklus
+(z.B. weil zu diesem exakten 15-Min-Tick gerade kein Kandidat wartet) wird
+in den naechsten Zyklus mitgenommen statt verworfen. Besonders relevant bei
+Marktscan (nur ~29 Rohdaten-Zeilen ueber 12 Tage, viel duenner als Hebels
+2418 Zeilen) - ohne Uebertrag wurden nur 15 von 28 realen Verarbeitungen
+nachgebildet, mit Uebertrag deutlich mehr (siehe Ausgabe beim Lauf).
+
 Aufruf: python backtest_budget_allocator_sla.py [HEBEL_SLA_STUNDEN] [MARKTSCAN_SLA_STUNDEN]
   (beide optional, Default 6 / 30 - siehe config.yaml::budget_allocator)
 """
@@ -105,12 +114,19 @@ def _baue_simulations_db(rohdaten: dict) -> sqlite3.Connection:
             (row["id"], row["symbol"], row["richtung"], row["screened_at"], row["score_gesamt"], row["status"]),
         )
     for row in rohdaten["marktscan_kaufkandidaten"]:
+        # BUGFIX: groq_generiert_am MUSS beim Aufbau leer bleiben (NULL) -
+        # genau wie hebel_signals bewusst leer bleibt (siehe oben). Die
+        # echten historischen groq_generiert_am-Werte hier zu uebernehmen
+        # wuerde fast jeden Kandidaten von Zyklus 0 an als "bereits real
+        # verarbeitet" erscheinen lassen (get_marktscan_wartezeit_stunden_
+        # je_coin() wuerde dessen ECHTEN Zeitpunkt als Grenze nehmen) - die
+        # Simulation koennte dann nie eine FRUEHERE Verarbeitung testen.
         conn.execute(
             "INSERT INTO marktscan_candidates "
             "(id, coingecko_id, symbol, discovered_at, score_gesamt, status, einstufung, groq_generiert_am) "
-            "VALUES (?, ?, ?, ?, ?, ?, 'kaufkandidat', ?)",
+            "VALUES (?, ?, ?, ?, ?, ?, 'kaufkandidat', NULL)",
             (row["id"], row["coingecko_id"], row["symbol"], row["discovered_at"],
-             row["score_gesamt"], row["status"], row["groq_generiert_am"]),
+             row["score_gesamt"], row["status"]),
         )
     conn.commit()
     return conn
@@ -121,12 +137,19 @@ def _kapazitaet_je_zyklus(zeitpunkte: list[str], zyklen: list[str]) -> dict[str,
     (>=) Zyklus zugerechnet werden - reale Kapazitaet nachgebildet statt neu
     erfunden. ISO-8601-Strings mit fixem UTC-Offset sind lexikographisch
     chronologisch sortierbar - bisect auf Strings direkt, kein Parsing
-    noetig (schnell genug fuer mehrere tausend Zyklen/Zeitpunkte)."""
+    noetig (schnell genug fuer mehrere tausend Zyklen/Zeitpunkte).
+
+    BUGFIX: Zeitpunkte NACH dem letzten Zyklus (z.B. Marktscan-Bewertungen
+    aus einem Zeitraum, in dem noch keine/keine Hebel-Screening-Zyklen mehr
+    exportiert wurden) wurden bisher stillschweigend VERWORFEN (idx ==
+    len(zyklen)) statt gezaehlt - das liess reale Kapazitaet unbemerkt
+    verschwinden. Jetzt wird auf den letzten Zyklus geklemmt, statt zu
+    verwerfen - keine reale Verarbeitung geht mehr verloren."""
     kapazitaet = {z: 0 for z in zyklen}
     for zp in zeitpunkte:
         idx = bisect.bisect_left(zyklen, zp)
-        if idx < len(zyklen):
-            kapazitaet[zyklen[idx]] += 1
+        ziel = zyklen[idx] if idx < len(zyklen) else zyklen[-1]
+        kapazitaet[ziel] += 1
     return kapazitaet
 
 
@@ -145,11 +168,19 @@ def _priorisiere(kandidaten_mit_score: list[tuple], wartezeiten: dict, sla_stund
 
 
 def _simuliere_hebel(sim_conn: sqlite3.Connection, zyklen: list[str], kapazitaet: dict[str, int]) -> list[dict]:
+    """Kapazitaets-Uebertrag (siehe Modul-Docstring-Nachtrag "Kapazitaets-
+    Uebertrag"): ungenutzte Kapazitaet eines Zyklus (z.B. weil zu diesem
+    exakten Zeitpunkt gerade kein Kandidat wartet) wird NICHT verworfen,
+    sondern in den naechsten Zyklus mitgenommen - sonst wuerde reale
+    Kapazitaet allein durch die (etwas willkuerliche) Zuordnung auf einen
+    exakten 15-Min-Tick verloren gehen."""
     ergebnisse = []
+    uebertrag = 0
     for zyklus in zyklen:
         wartezeiten = db.get_hebel_wartezeit_stunden_je_paar(sim_conn, as_of=zyklus)
-        n = kapazitaet.get(zyklus, 0)
+        n = kapazitaet.get(zyklus, 0) + uebertrag
         if not wartezeiten or n == 0:
+            uebertrag = n
             continue
         kandidaten = []
         for paar in wartezeiten:
@@ -160,7 +191,8 @@ def _simuliere_hebel(sim_conn: sqlite3.Connection, zyklen: list[str], kapazitaet
                 (symbol, richtung, zyklus),
             ).fetchone()
             kandidaten.append((paar, row["score_gesamt"] if row else 0.0))
-        for (symbol, richtung), _score in _priorisiere(kandidaten, wartezeiten, HEBEL_SLA_STUNDEN)[:n]:
+        ausgewaehlt = _priorisiere(kandidaten, wartezeiten, HEBEL_SLA_STUNDEN)[:n]
+        for (symbol, richtung), _score in ausgewaehlt:
             ergebnisse.append({
                 "symbol": symbol, "richtung": richtung, "simulierter_verarbeitungszeitpunkt": zyklus,
                 "simulierte_wartezeit_stunden": round(wartezeiten[(symbol, richtung)], 1),
@@ -170,15 +202,25 @@ def _simuliere_hebel(sim_conn: sqlite3.Connection, zyklen: list[str], kapazitaet
                 (symbol, richtung, zyklus),
             )
         sim_conn.commit()
+        uebertrag = n - len(ausgewaehlt)
     return ergebnisse
 
 
 def _simuliere_marktscan(sim_conn: sqlite3.Connection, zyklen: list[str], kapazitaet: dict[str, int]) -> list[dict]:
+    """Kapazitaets-Uebertrag - siehe _simuliere_hebel()-Docstring. Bei
+    Marktscan besonders relevant: nur 29 Rohdaten-Zeilen ueber ~12 Tage
+    (viel duennere Kandidatendichte als Hebel mit 2418 Zeilen) - ohne
+    Uebertrag ging ein Grossteil der realen Kapazitaet an Zyklen verloren,
+    zu denen gerade zufaellig kein Kandidat wartete (2026-07-21, echter
+    Fund: nur 15 von 28 realen Verarbeitungen wurden ohne Uebertrag
+    nachgebildet)."""
     ergebnisse = []
+    uebertrag = 0
     for zyklus in zyklen:
         wartezeiten = db.get_marktscan_wartezeit_stunden_je_coin(sim_conn, as_of=zyklus)
-        n = kapazitaet.get(zyklus, 0)
+        n = kapazitaet.get(zyklus, 0) + uebertrag
         if not wartezeiten or n == 0:
+            uebertrag = n
             continue
         kandidaten = []
         symbol_je_coin = {}
@@ -190,7 +232,8 @@ def _simuliere_marktscan(sim_conn: sqlite3.Connection, zyklen: list[str], kapazi
             ).fetchone()
             kandidaten.append((coingecko_id, row["score_gesamt"] if row else 0.0))
             symbol_je_coin[coingecko_id] = row["symbol"] if row else coingecko_id
-        for coingecko_id, _score in _priorisiere(kandidaten, wartezeiten, MARKTSCAN_SLA_STUNDEN)[:n]:
+        ausgewaehlt = _priorisiere(kandidaten, wartezeiten, MARKTSCAN_SLA_STUNDEN)[:n]
+        for coingecko_id, _score in ausgewaehlt:
             ergebnisse.append({
                 "coingecko_id": coingecko_id, "symbol": symbol_je_coin.get(coingecko_id),
                 "simulierter_verarbeitungszeitpunkt": zyklus,
@@ -202,6 +245,7 @@ def _simuliere_marktscan(sim_conn: sqlite3.Connection, zyklen: list[str], kapazi
                 (zyklus, coingecko_id, zyklus),
             )
         sim_conn.commit()
+        uebertrag = n - len(ausgewaehlt)
     return ergebnisse
 
 
@@ -227,8 +271,14 @@ def main() -> None:
 
     rohdaten = export["rohdaten_fuer_backtest"]
     hebel_zyklen = sorted({r["screened_at"] for r in rohdaten["hebel_triggers_kandidaten"]})
+    # BUGFIX: export["hebel_signals"] enthaelt KEIN hebel_trigger_id-Feld
+    # (siehe _HEBEL_SIGNAL_SPALTEN in extract_notebook_diagnose.py - fehlt
+    # dort in der Spaltenauswahl). hebel_erstmalige_erkennung_delta()
+    # ermittelt die echten Verarbeitungszeitpunkte bereits per eigener SQL-
+    # Abfrage (WHERE hebel_trigger_id IS NOT NULL) - dessen "eintraege"
+    # direkt wiederverwenden statt denselben Fehler zu wiederholen.
     echte_hebel_zeitpunkte = sorted(
-        s["created_at"] for s in export["hebel_signals"] if s.get("hebel_trigger_id") is not None
+        e["signal_created_at"] for e in export.get("hebel_erstmalige_erkennung_delta", {}).get("eintraege", [])
     )
     echte_marktscan_zeitpunkte = sorted(
         row["groq_generiert_am"] for row in rohdaten["marktscan_kaufkandidaten"] if row.get("groq_generiert_am")

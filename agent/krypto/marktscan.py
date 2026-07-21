@@ -334,13 +334,42 @@ def _try_backfill_snapshot(
         return None
 
 
-def _duplicate_should_skip(conn, coingecko_id: str, watchlist) -> bool:
+def _duplicate_should_skip(
+    conn, coingecko_id: str, watchlist, verfallen_abklingzeit_stunden: float = 24.0,
+) -> bool:
     """A(MS)-3 Duplikat-Check: nichts bereits auf der echten Watchlist oder bereits
-    vom Nutzer entschiedenes (verworfen/uebernommen) erneut anzeigen."""
+    vom Nutzer entschiedenes (verworfen/uebernommen) erneut anzeigen.
+
+    BUGFIX (2026-07-21, Nutzer-Fund "immer dieselben Coins" - APE/EIGEN
+    dominierten auch noch zwei Wochen nach ihrer allerersten Entdeckung
+    jede Stichprobe): bisher wurde ein Coin mit Status 'neu' (noch
+    unbearbeitete Kaufkandidat-Zeile) oder 'verfallen' NICHT uebersprungen -
+    jeder der zwei taeglichen Scan-Laeufe legte trotzdem eine komplett neue
+    Zeile an (eigene scan_run_id), was denselben, laengst entdeckten Coin
+    immer wieder dieselben knappen Kaufkandidat-Plaetze belegen liess (echter
+    Beleg: APE/EIGEN bekamen am 2026-07-09 acht frische 'neu'-Zeilen
+    innerhalb weniger Stunden), waehrend echte neue Tages-Kandidaten
+    seltener eine Chance bekamen. Jetzt wird zusaetzlich uebersprungen,
+    wenn (a) bereits eine unbearbeitete Kaufkandidat-Zeile existiert - die
+    wartet dann in Ruhe weiter statt dupliziert zu werden -, oder (b) der
+    Coin erst vor kurzem (< verfallen_abklingzeit_stunden) verfallen ist -
+    verhindert sofortiges Wiederauftauchen direkt nach Verfall, gibt der
+    Marktlage aber nach einer Abklingzeit eine neue Chance."""
     if any(a.coingecko_id == coingecko_id for a in watchlist):
         return True
     status = db.get_latest_marktscan_status_by_coingecko_id(conn, coingecko_id)
-    return status in ("nutzer_verworfen", "nutzer_behalten_manuell_uebernommen")
+    if status in ("nutzer_verworfen", "nutzer_behalten_manuell_uebernommen"):
+        return True
+    if db.has_pending_marktscan_kaufkandidat(conn, coingecko_id):
+        return True
+    verfallen_am = db.get_letzter_marktscan_verfall_am(conn, coingecko_id)
+    if verfallen_am:
+        verfallen_seit_stunden = (
+            datetime.now(timezone.utc) - datetime.fromisoformat(verfallen_am)
+        ).total_seconds() / 3600
+        if verfallen_seit_stunden < verfallen_abklingzeit_stunden:
+            return True
+    return False
 
 
 def _collect_raw_candidates(coingecko_client: CoinGeckoClient) -> dict[str, dict]:
@@ -415,9 +444,10 @@ def run_scan(
     holdings = db.get_all_holdings(conn)
     latest_prices = db.get_latest_prices(conn)
 
+    verfallen_abklingzeit_stunden = marktscan_cfg.get("verfallen_abklingzeit_stunden", 24.0)
     candidates: list[MarktscanCandidate] = []
     for coingecko_id, entry in raw.items():
-        if _duplicate_should_skip(conn, coingecko_id, watchlist):
+        if _duplicate_should_skip(conn, coingecko_id, watchlist, verfallen_abklingzeit_stunden):
             continue
         coin: MarketCoin = entry["coin"]
         stufe_a = apply_stufe_a_filters(coin, marktscan_cfg)

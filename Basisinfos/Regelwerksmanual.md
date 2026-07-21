@@ -6203,3 +6203,51 @@ currently a processing delay in our billing system"). Offizielle
 Bestaetigung einer generellen n-1-Verzoegerung im gesamten Billing-/
 Nutzungssystem - unser Key wurde erst 2026-07-20 abends angelegt, "Not
 used" ist damit die dokumentierte Verzoegerung, kein Fehler.
+
+## Nachtrag (2026-07-21): Marktscan-Dedup-Bug behoben - "immer dieselben Coins" (APE/EIGEN)
+
+Im Rahmen der Budget-Allocator-Neuplanung (siehe Plan-Datei
+swift-napping-muffin.md) fiel beim historischen Backtest auf, dass ueber
+12 Tage/24 Scan-Laeufe nur 8 verschiedene Coins je als `kaufkandidat`
+auftauchten. Nutzer-Skepsis ("immer dieselben Ergebnisse sehe ich eher
+negativ als positiv") war berechtigt und deckte einen echten, eigenstaendigen
+Bug auf - getrennt vom SLA-/Warteschlangen-Thema.
+
+**Root Cause:** `agent/krypto/marktscan.py::_duplicate_should_skip()` prueft
+bisher nur, ob ein Coin bereits auf der echten Watchlist ist oder final
+entschieden wurde (`nutzer_verworfen`/`nutzer_behalten_manuell_
+uebernommen`). Ein Coin mit Status `neu` (unbearbeitete Kaufkandidat-Zeile)
+oder `verfallen` wurde NICHT uebersprungen - da jeder der zwei taeglichen
+Scan-Laeufe eine komplett neue Zeile anlegt (eigene `scan_run_id`,
+`UNIQUE(coingecko_id, scan_run_id)`), wurde derselbe, laengst entdeckte
+Coin bei jedem Lauf erneut dupliziert. Historischer Beleg aus der lokalen
+DB: APE und EIGEN bekamen am 2026-07-09 acht frische 'neu'-Zeilen innerhalb
+weniger Stunden, bevor der Nutzer reagierte - dieselben zwei Coins
+dominierten zwei Wochen spaeter noch immer die Stichprobe.
+
+**Einordnung:** Zwei getrennte Effekte. (1) Beabsichtigt/gesund: die
+Kaufkandidat-Schwelle (Score >=70) ist bewusst eng - von 468 historischen
+Rohkandidaten-Zeilen erreichten nur 3,8% je "kaufkandidat", 84 verschiedene
+Coins wurden aber roh entdeckt (Filter A filtert 86% vorher raus, siehe
+`apply_stufe_a_filters()`). (2) Echter Bug obendrauf: das fehlende Dedup
+liess denselben Coin immer wieder dieselben knappen Plaetze belegen, statt
+echten neuen Tages-Kandidaten eine faire Chance zu geben.
+
+**Fix:**
+- `database/db.py`: `has_pending_marktscan_kaufkandidat()` (existenzielle
+  Pruefung: gibt es IRGENDWO in der Historie eine unbearbeitete
+  Kaufkandidat-Zeile fuer diesen Coin?) + `get_letzter_marktscan_verfall_am()`
+  (juengster Verfallszeitpunkt fuer die Abklingzeit-Pruefung).
+- `_duplicate_should_skip()` erweitert: ueberspringt jetzt zusaetzlich (a)
+  Coins mit bereits unbearbeiteter Kaufkandidat-Zeile (unabhaengig von
+  einer Zeitschwelle - die bestehende Zeile wartet einfach in Ruhe weiter)
+  und (b) kuerzlich (< `verfallen_abklingzeit_stunden`) verfallene Coins
+  (verhindert sofortiges Wiederauftauchen, gibt der Marktlage aber nach
+  einer Abklingzeit eine neue Chance).
+- `config.yaml::marktscan.verfallen_abklingzeit_stunden` (neu, Default 24h).
+
+**Verifikation:** 5 synthetische Testfaelle (unbearbeiteter Kaufkandidat,
+kuerzlich verfallen, lange verfallen, nutzer_verworfen, nie gesehener Coin)
+- alle bestanden. Smoke-Test gegen die lokale Desktop-DB reproduziert den
+echten APE-Fall (`has_pending_marktscan_kaufkandidat` liefert korrekt
+`True`).

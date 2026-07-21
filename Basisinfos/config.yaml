@@ -638,6 +638,20 @@ marktscan:
   # `groq_automatisch_kaufkandidaten` (2026-07-09) entfernt (2026-07-14, Phase 5) -
   # der automatische Groq-Zweig ist in den zentralen budget_allocator (oben)
   # umgezogen, der manuelle UI-Klick bleibt weiterhin unveraendert verfuegbar.
+  verfallen_abklingzeit_stunden: 24     # NEU (2026-07-21, BUGFIX "immer dieselben Coins" -
+                                        # APE/EIGEN dominierten noch zwei Wochen nach ihrer
+                                        # ersten Entdeckung jede Stichprobe, weil
+                                        # _duplicate_should_skip() Coins mit Status 'neu'
+                                        # oder 'verfallen' bisher NICHT uebersprang und jeder
+                                        # der zwei taeglichen Scan-Laeufe eine komplett neue
+                                        # Zeile anlegte): nach Verfall braucht ein Coin diese
+                                        # Abklingzeit, bevor er erneut als Kaufkandidat
+                                        # auftauchen darf - verhindert sofortiges
+                                        # Wiederauftauchen direkt nach Verfall, gibt der
+                                        # Marktlage aber nach einer Pause eine neue Chance.
+                                        # Ein Coin mit bereits UNBEARBEITETER Kaufkandidat-
+                                        # Zeile (status='neu') wird unabhaengig davon immer
+                                        # uebersprungen (kein Zeitfenster noetig).
 
 # --- Batch-Signal-Berechnung (2026-07-13, siehe Regelwerksmanual.md Kap. 5/12) ---
 # Signal-Berechnung kostet pro Asset einen echten Groq-Aufruf (~5.600-6.000 Tokens
