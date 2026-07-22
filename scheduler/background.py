@@ -740,7 +740,9 @@ def _notify_marktscan_kaufkandidaten(kaufkandidaten: list) -> None:
         logger.exception("Marktscan-Kaufkandidaten-E-Mail fehlgeschlagen")
 
 
-def _ist_email_relevantes_asset(symbol: str, watchlist: list, bitpanda_assets: list | None) -> bool:
+def _ist_email_relevantes_asset(
+    symbol: str, watchlist: list, bitpanda_assets: list | None, conn_factory=None,
+) -> bool:
     """Bitpanda-Listing-Filter (2026-07-14, In-App-Schalter, siehe ui/app.py::
     _toggle_email_nur_bitpanda(), Standard AN) - Umsetzung erfolgt manuell ueber
     die Bitpanda-App, eine Empfehlung fuer ein dort nicht gelistetes Asset waere
@@ -751,7 +753,21 @@ def _ist_email_relevantes_asset(symbol: str, watchlist: list, bitpanda_assets: l
     Signal-Lauf frisch per API abgefragt, siehe agent/krypto/pipeline.py::
     generate_signal()) - bitpanda_assets wird deshalb einmal pro Job-Lauf vom
     Aufrufer (hebel_screening_job()) geholt und hier durchgereicht, statt es
-    pro Signal erneut abzufragen."""
+    pro Signal erneut abzufragen.
+
+    Nachtrag (2026-07-22, echter Fund: DBPK/3QSS-Hedge-Signale bekamen trotz
+    bestaetigtem manuellem Override nie eine E-Mail): der `/v3/assets`-Live-
+    Check deckt Bitpandas "Bitpanda Stocks"-Fractional-ETF/ETC-Produktlinie
+    nachweislich NICHT vollstaendig ab (echte Bitpanda-App-Screenshots hatten
+    das am 2026-07-20 bewiesen, siehe database/db.py::asset_bitpanda_override-
+    Tabellendocstring) - deshalb existiert der manuelle Override-Toggle im
+    Watchlist-Tab. Alle 4 Spot-family-Pipelines (agent/krypto|aktien|rohstoff|
+    themen_etf/pipeline.py) fragen db.get_bitpanda_gelistet_override() bereits
+    nach einem negativen Live-Check ab - dieses E-Mail-Gate war die einzige
+    Stelle, die den Override noch NICHT respektierte. `conn_factory` optional
+    (Standard None) fuer Rueckwaertskompatibilitaet bestehender Aufrufer/Tests
+    ohne DB-Zugriff - ohne conn_factory bleibt das alte Verhalten (nur Live-
+    Check) unveraendert."""
     import ui.settings as ui_settings
 
     settings = ui_settings.load_settings()
@@ -766,7 +782,19 @@ def _ist_email_relevantes_asset(symbol: str, watchlist: list, bitpanda_assets: l
         return True
     from api.bitpanda import is_listed
 
-    return is_listed(symbol, bitpanda_assets, name=asset.name)
+    if is_listed(symbol, bitpanda_assets, name=asset.name):
+        return True
+    if conn_factory is not None:
+        try:
+            conn = conn_factory()
+            try:
+                if db.get_bitpanda_gelistet_override(conn, symbol):
+                    return True
+            finally:
+                conn.close()
+        except Exception:
+            logger.exception("Bitpanda-Override-Abfrage fuer %s fehlgeschlagen", symbol)
+    return False
 
 
 def _formatiere_top_gruende(signal) -> str:
@@ -947,7 +975,7 @@ def _formatiere_risikofaktoren(signal) -> str:
     return "\n\n".join(zeilen)
 
 
-def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None) -> None:
+def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None, conn_factory=None) -> None:
     """E-Mail bei handlungsrelevanter Spot-Empfehlung (2026-07-14, Erweiterung
     von U-8/P-7 - Empfehlungen sollen den Nutzer auch erreichen, wenn er selten
     am Notebook ist). HALTEN loest bewusst NIE eine Mail aus. Eigener try/except
@@ -963,7 +991,7 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None) -
 
     if signal.action not in REQUIRED_ACTIONS or signal.action == "HALTEN":
         return
-    if not _ist_email_relevantes_asset(signal.symbol, watchlist, bitpanda_assets):
+    if not _ist_email_relevantes_asset(signal.symbol, watchlist, bitpanda_assets, conn_factory):
         return
     try:
         import config as config_module
@@ -1031,7 +1059,7 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None, 
 
     if signal.action not in REQUIRED_HEBEL_ACTIONS or signal.action == "HALTEN":
         return
-    if not _ist_email_relevantes_asset(signal.symbol, watchlist, bitpanda_assets):
+    if not _ist_email_relevantes_asset(signal.symbol, watchlist, bitpanda_assets, conn_factory):
         return
     try:
         import config as config_module
@@ -1111,7 +1139,7 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None, 
         logger.exception("Hebel-Empfehlungs-E-Mail für %s fehlgeschlagen", signal.symbol)
 
 
-def _notify_multi_asset_signal(signal, watchlist: list, bitpanda_assets: list | None) -> None:
+def _notify_multi_asset_signal(signal, watchlist: list, bitpanda_assets: list | None, conn_factory=None) -> None:
     """Analog _notify_spot_signal() fuer Aktien/Rohstoffe/Hedge (2026-07-18,
     siehe agent/multi_asset_batch.py) - 4-Aktionen-Vokabular (KAUFEN/VERKAUFEN/
     HALTEN/NACHKAUFEN, kein TAUSCHEN, siehe REQUIRED_ACTIONS in agent/aktien|
@@ -1119,7 +1147,11 @@ def _notify_multi_asset_signal(signal, watchlist: list, bitpanda_assets: list | 
     KEIN Bitpanda-Veto (agent/hedge/pipeline.py ruft risk_gate.pre_check() nicht
     auf, siehe dessen Modul-Docstring) - _ist_email_relevantes_asset() bleibt
     trotzdem unveraendert anwendbar, sie prueft nur den allgemeinen Bitpanda-
-    Katalog, nicht pipelinespezifische Vetos."""
+    Katalog, nicht pipelinespezifische Vetos.
+
+    `conn_factory` (2026-07-22, echter Fund: DBPK/3QSS trotz Override nie
+    gemailt) - siehe _ist_email_relevantes_asset()-Docstring fuer den vollen
+    Root-Cause."""
     if signal.cash_veto:
         try:
             _notify_cash_veto_warning(signal)
@@ -1128,7 +1160,7 @@ def _notify_multi_asset_signal(signal, watchlist: list, bitpanda_assets: list | 
 
     if signal.action == "HALTEN":
         return
-    if not _ist_email_relevantes_asset(signal.symbol, watchlist, bitpanda_assets):
+    if not _ist_email_relevantes_asset(signal.symbol, watchlist, bitpanda_assets, conn_factory):
         return
     try:
         import config as config_module
@@ -1321,7 +1353,7 @@ def hebel_screening_job(
                     if schluessel.startswith("hebel:"):
                         _notify_hebel_signal(ergebnis, watchlist, bitpanda_assets, conn_factory)
                     elif schluessel.startswith("spot:"):
-                        _notify_spot_signal(ergebnis, watchlist, bitpanda_assets)
+                        _notify_spot_signal(ergebnis, watchlist, bitpanda_assets, conn_factory)
         else:
             logger.info("Budget-Allocator übersprungen (kein Groq-Client konfiguriert)")
     except Exception as exc:
@@ -1373,7 +1405,7 @@ def multi_asset_batch_job(
                 bitpanda_assets = None
                 logger.info("Bitpanda-Listing-Abruf für Multi-Asset-Empfehlungs-E-Mails fehlgeschlagen: %s", exc)
             for signal in result.ergebnis_objekt.values():
-                _notify_multi_asset_signal(signal, watchlist, bitpanda_assets)
+                _notify_multi_asset_signal(signal, watchlist, bitpanda_assets, conn_factory)
     except Exception as exc:
         logger.exception("Multi-Asset-Batch fehlgeschlagen")
         _notify_job_failure("multi_asset_batch", f"Multi-Asset-Batch fehlgeschlagen: {exc}")

@@ -6667,3 +6667,84 @@ Reflow-Problematik) blieb unveraendert.
 **Verifikation:** synthetischer Test bestaetigt echte Leerzeilen zwischen
 allen Risikofaktor-Zeilen sowie zwischen Legende und erstem Faktor;
 bestehender Regressionstest der Risikofaktor-Symbole weiterhin gruen.
+
+## Nachtrag (2026-07-22): Zwei Hedge-Funde - Bitpanda-Override im E-Mail-Gate + Batch-Budget-Bewusstsein
+
+Ausloeser: echte Hedge-Signale (DBPK/3QSS, beide NACHKAUFEN im selben Lauf
+07:01) aus dem Signale-Tab. Nutzer fragte, warum keine E-Mail dafuer
+ankam, und bat um eine fachliche Bewertung der beiden Empfehlungen.
+
+**Fund 1: Bitpanda-Override wurde vom E-Mail-Gate ignoriert.** Erste
+(falsche) Vermutung: DBPK/3QSS seien schlicht nicht bei Bitpanda gelistet -
+vom Nutzer korrigiert unter Verweis auf einen bereits bestehenden
+Mechanismus. Tatsaechlicher Stand (siehe `asset_bitpanda_override`-
+Tabellendocstring, 2026-07-20, Commit `1ae800c`): der oeffentliche
+`/v3/assets`-Endpunkt deckt Bitpandas "Bitpanda Stocks"-Fractional-ETF/ETC-
+Produktlinie nachweislich NICHT vollstaendig ab - echte Bitpanda-App-
+Screenshots hatten das damals bewiesen (DBPK/ISOC dort real gehalten,
+aktive Kaufen/Verkaufen-Buttons). Deshalb existiert der manuelle
+"Bitpanda-Override umschalten"-Button im Watchlist-Tab. Alle 4 Spot-
+family-Pipelines (`agent/krypto|aktien|rohstoff|themen_etf/pipeline.py`)
+fragen `db.get_bitpanda_gelistet_override()` bereits nach einem negativen
+Live-Check ab - `scheduler/background.py::_ist_email_relevantes_asset()`
+(das E-Mail-Gate) war die einzige Stelle, die den Override noch NICHT
+respektierte, obwohl fuer DBPK/3QSS bereits ein bestaetigter Override-
+Eintrag existierte.
+
+**Fix 1:** `_ist_email_relevantes_asset()` bekommt einen optionalen
+`conn_factory`-Parameter (Standard `None`, rueckwaertskompatibel) - nach
+einem negativen Live-Check wird jetzt zusaetzlich der Override abgefragt,
+identisches Muster wie die 4 Pipelines. `conn_factory` wird an allen 3
+Aufrufstellen (`_notify_spot_signal()`, `_notify_hebel_signal()` [hatte es
+bereits fuer die Wartezeit-Anzeige], `_notify_multi_asset_signal()`)
+durchgereicht - beide Jobs (`hebel_screening_job()`, `multi_asset_batch_
+job()`) haben `conn_factory` bereits im Scope.
+
+**Fund 2: zwei Hedge-Instrumente im selben Batch-Lauf kannten sich
+nicht.** `agent/hedge/pipeline.py::_compute_portfolio_exposure()` liest
+`verbleibendes_hedge_budget_usd` unabhaengig aus dem tatsaechlichen
+DB-Bestand - da nichts real ausgefuehrt wird (rein advisory), sehen zwei im
+selben Lauf verarbeitete Hedge-Kandidaten (hier: 3QSS dann DBPK)
+denselben, noch unveraenderten Ausgangsbestand. Setzt der Nutzer beide
+Vorschlaege manuell um, kann die tatsaechliche Gesamt-Abdeckung ueber
+`ziel_hedge_abdeckung_max_prozent` hinausschiessen, ohne dass eine der
+beiden Empfehlungen davon wissen konnte.
+
+**Fix 2 (Nutzer-Entscheidung: strukturelle Loesung statt reinem Hinweis):**
+- `_compute_portfolio_exposure()` bekommt einen neuen Parameter
+  `bereits_vorgeschlagen_effektiv_usd` (Standard 0.0, kein
+  Verhaltensunterschied bei Einzelaufruf) - wird zusaetzlich von der
+  aktuellen Hedge-Abdeckung abgezogen, BEVOR das verbleibende Budget durch
+  den `hebel_faktor` DIESES Instruments geteilt wird. Der `hinweis`-Text
+  erklaert den Abzug explizit, wenn er greift.
+- `generate_signal()` reicht den (keyword-only) Parameter
+  `bereits_vorgeschlagen_effektiv_usd` durch.
+- `agent/multi_asset_batch.py::run_multi_asset_batch()`: neuer lokaler
+  Akkumulator `hedge_effektiv_vorgeschlagen_usd` (nur fuer Hedge-Symbole
+  relevant, bleibt bei 0.0 fuer Aktien/Rohstoffe/Themen-ETF - kein
+  zusaetzliches kwarg fuer diese Pipelines, kein Regressionsrisiko). Nach
+  jedem erfolgreichen KAUFEN/NACHKAUFEN-Signal eines Hedge-Instruments wird
+  `position_size_usd * hebel_faktor` (leverage-adjustiert) zum Akkumulator
+  addiert, bevor der naechste Hedge-Kandidat im selben Lauf verarbeitet
+  wird - macht den Deckel ueber den ganzen Batch hinweg real konsistent.
+
+**Verifikation:** synthetischer Test bestaetigt (a) E-Mail-Gate respektiert
+den Override jetzt (mit `conn_factory`), bleibt ohne `conn_factory`
+rueckwaertskompatibel beim alten (strengeren) Verhalten; (b)
+`_compute_portfolio_exposure()` reduziert das verbleibende Budget korrekt
+um den uebergebenen Wert, deckelt nie unter 0; (c) echter Integrationstest
+von `run_multi_asset_batch()` mit zwei gestubbten Hedge-Signalen bestaetigt,
+dass das ZWEITE Instrument im Lauf tatsaechlich die vom ERSTEN vorgeschlagene,
+leverage-adjustierte Summe als Ausgangswert erhaelt.
+
+**Fachliche Bewertung der beiden echten Signale (zur Nutzer-Frage):** beide
+Empfehlungen entsprechen dem Hedge-Regelwerk (`agent/hedge/analyst.py`) -
+korrekte `exposure/makro/risiko/timing`-Kategorien (Regel 10, NICHT die
+Spot-Taxonomie), Decay-Warnung explizit genannt (Regel 4), rein
+exposure-/regimebasierte Begruendung (Regel 3), `aktien_baermarkt.aktiv`
+korrekt als noch nicht aktiv benannt, aber `regime=='baer'` allein reicht
+laut der ODER-Verknuepfung in Regel 3. Die fehlenden strukturierten
+Risikofaktoren ("Keine strukturierten Risikofaktoren verfügbar") in
+Abschnitt 3 sind KEIN Bug, sondern bewusste Architektur (Hedge durchlaeuft
+laut Modul-Docstring absichtlich NICHT `risk_gate.pre_check()/post_check()`
+- CRV-Pflicht etc. passen nicht auf eine Absicherungsposition).

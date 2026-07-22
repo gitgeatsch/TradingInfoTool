@@ -166,21 +166,38 @@ def run_multi_asset_batch(
         finally:
             c.close()
 
+    # 2026-07-22, echter Fund (DBPK+3QSS im selben Lauf beide NACHKAUFEN-
+    # empfohlen, siehe agent/hedge/pipeline.py::_compute_portfolio_exposure()-
+    # Docstring): Hedge-Kandidaten werden hier sequenziell verarbeitet, aber
+    # jeder Aufruf liest den tatsaechlichen DB-Bestand unabhaengig - ohne
+    # diesen Akkumulator wuerden zwei Hedge-Instrumente im selben Lauf
+    # denselben (noch nicht durch eine echte Ausfuehrung veraenderten)
+    # Ausgangsbestand sehen und in Summe ueber das Ziel-Maximum hinaus
+    # vorschlagen koennen. Nur fuer Hedge-Symbole relevant, bleibt fuer
+    # Aktien/Rohstoffe/Themen-ETF bei 0.0 (kein Effekt, kein extra kwarg).
+    from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR as _hedge_hebel_faktoren
+
+    hedge_effektiv_vorgeschlagen_usd = 0.0
+
     for asset in faellige:
         pipeline_fn = _pipeline_fuer(asset)
         schluessel = asset.symbol
+        ist_hedge = asset.symbol in _hedge_hebel_faktoren
+        extra_kwargs = (
+            {"bereits_vorgeschlagen_effektiv_usd": hedge_effektiv_vorgeschlagen_usd} if ist_hedge else {}
+        )
         calls = [
-            ("groq", lambda a=asset, fn=pipeline_fn: _mit_conn(
-                lambda c: fn(a, watchlist, c, groq_client, coingecko_client)
+            ("groq", lambda a=asset, fn=pipeline_fn, kw=extra_kwargs: _mit_conn(
+                lambda c: fn(a, watchlist, c, groq_client, coingecko_client, **kw)
             )),
         ]
         if mistral_client is not None:
-            calls.append(("mistral", lambda a=asset, fn=pipeline_fn: _mit_conn(
-                lambda c: fn(a, watchlist, c, mistral_client, coingecko_client)
+            calls.append(("mistral", lambda a=asset, fn=pipeline_fn, kw=extra_kwargs: _mit_conn(
+                lambda c: fn(a, watchlist, c, mistral_client, coingecko_client, **kw)
             )))
         if gemini_client is not None:
-            calls.append(("gemini", lambda a=asset, fn=pipeline_fn: _mit_conn(
-                lambda c: fn(a, watchlist, c, gemini_client, coingecko_client)
+            calls.append(("gemini", lambda a=asset, fn=pipeline_fn, kw=extra_kwargs: _mit_conn(
+                lambda c: fn(a, watchlist, c, gemini_client, coingecko_client, **kw)
             )))
 
         ok = False
@@ -208,6 +225,16 @@ def run_multi_asset_batch(
                 continue
         if ok:
             result.verarbeitet.append(schluessel)
+            if ist_hedge:
+                erzeugtes_signal = result.ergebnis_objekt.get(schluessel)
+                if (
+                    erzeugtes_signal is not None
+                    and getattr(erzeugtes_signal, "action", None) in ("KAUFEN", "NACHKAUFEN")
+                    and erzeugtes_signal.position_size_usd
+                ):
+                    hedge_effektiv_vorgeschlagen_usd += (
+                        erzeugtes_signal.position_size_usd * _hedge_hebel_faktoren[asset.symbol]
+                    )
         else:
             logger.warning("Multi-Asset-Batch: alle Provider fuer %s fehlgeschlagen (letzter Fehler: %s)", schluessel, last_exc)
             result.fehlgeschlagen.append(schluessel)

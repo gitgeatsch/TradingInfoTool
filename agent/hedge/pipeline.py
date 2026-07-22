@@ -65,7 +65,9 @@ def _fixed_signal(symbol: str, action: str, gate_passed: bool, gate_reason: str 
     )
 
 
-def _compute_portfolio_exposure(asset, watchlist, conn, latest_prices, config_dict) -> dict:
+def _compute_portfolio_exposure(
+    asset, watchlist, conn, latest_prices, config_dict, bereits_vorgeschlagen_effektiv_usd: float = 0.0,
+) -> dict:
     """Long-Exposure = Portfolio-Wert OHNE die Hedge-Instrumente selbst und OHNE
     Cash-Aequivalente (Stablecoins) - das ist das Risiko, das potenziell
     abgesichert werden muss. Hedge-Abdeckung = Summe ueber ALLE aktuell
@@ -73,7 +75,20 @@ def _compute_portfolio_exposure(asset, watchlist, conn, latest_prices, config_di
     in einem 3x-Short-ETF deckt effektiv 3 USD Long-Exposure ab). Das
     verbleibende Budget wird bereits durch DIESES Instruments hebel_faktor
     geteilt - der LLM-Vorschlag (`position_size.usd`) ist der NOTIONAL-Wert
-    dieses Instruments, nicht die effektive Abdeckung."""
+    dieses Instruments, nicht die effektive Abdeckung.
+
+    Nachtrag (2026-07-22, echter Fund: DBPK+3QSS im selben Batch-Lauf beide
+    NACHKAUFEN-empfohlen): `bereits_vorgeschlagen_effektiv_usd` (optional,
+    Standard 0.0 - kein Verhaltensunterschied bei einem einzelnen Aufruf) ist
+    die leverage-adjustierte Summe, die ANDERE Hedge-Instrumente im SELBEN
+    Batch-Lauf bereits vorgeschlagen haben (siehe agent/multi_asset_batch.py::
+    run_multi_asset_batch()). Wird zusaetzlich von aktuelle_hedge_abdeckung_usd
+    abgezogen, BEVOR das verbleibende Budget durch diesen Instruments
+    hebel_faktor geteilt wird. Ohne das wuerden zwei im selben Lauf verarbeitete
+    Hedge-Kandidaten denselben (noch nicht durch eine echte Ausfuehrung
+    veraenderten) DB-Bestand als Ausgangspunkt sehen und in Summe ueber
+    ziel_hedge_abdeckung_max_prozent hinaus vorschlagen koennen, ohne dass eine
+    der beiden Empfehlungen von der anderen wissen konnte."""
     holdings = db.get_all_holdings(conn)
     holdings_by_symbol = {h.symbol: h for h in holdings}
     total_value_usd, values_by_symbol = _portfolio_values_usd(watchlist, holdings, latest_prices)
@@ -107,7 +122,10 @@ def _compute_portfolio_exposure(asset, watchlist, conn, latest_prices, config_di
     hedge_cfg = config_dict.get("hedge", {})
     max_abdeckung_anteil = hedge_cfg.get("max_abdeckung_anteil", 1.0)
     max_hedge_abdeckung_usd = long_exposure_usd * max_abdeckung_anteil
-    verbleibendes_budget_usd = max(0.0, max_hedge_abdeckung_usd - aktuelle_hedge_abdeckung_usd)
+    verbleibendes_budget_usd = max(
+        0.0,
+        max_hedge_abdeckung_usd - aktuelle_hedge_abdeckung_usd - bereits_vorgeschlagen_effektiv_usd,
+    )
 
     hebel_faktor = SYMBOL_ZU_HEBEL_FAKTOR[asset.symbol]
     verbleibendes_budget_fuer_instrument_usd = verbleibendes_budget_usd / hebel_faktor
@@ -122,6 +140,14 @@ def _compute_portfolio_exposure(asset, watchlist, conn, latest_prices, config_di
         "eine KAUFEN/NACHKAUFEN-Empfehlung fuer DIESES Instrument haben darf, "
         "ohne ziel_hedge_abdeckung_max_prozent zu ueberschreiten."
     )
+    if bereits_vorgeschlagen_effektiv_usd > 0:
+        hinweis += (
+            f" Zusaetzlich wurden in diesem Batch-Lauf bereits "
+            f"{bereits_vorgeschlagen_effektiv_usd:.2f} USD effektive Abdeckung durch "
+            "ANDERE Hedge-Instrumente vorgeschlagen (noch nicht ausgefuehrt) - "
+            "bereits von verbleibendes_hedge_budget_usd abgezogen, damit die "
+            "Summe beider Vorschlaege das Ziel-Maximum nicht ueberschreitet."
+        )
     if fehlende_preise:
         hinweis += (
             f" WARNUNG: fuer {', '.join(fehlende_preise)} (ebenfalls gehalten) fehlt "
@@ -215,12 +241,17 @@ def _post_check_hedge(
     return result
 
 
-def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Signal:
+def generate_signal(
+    asset, watchlist, conn, llm_client, coingecko_client, *, bereits_vorgeschlagen_effektiv_usd: float = 0.0,
+) -> Signal:
     """`asset.symbol` muss in SYMBOL_ZU_HEBEL_FAKTOR stehen. `watchlist` muss die
     VOLLSTAENDIGE Watchlist sein (fuer compute_current_regime() UND fuer die
     Portfolio-Exposure-Berechnung ueber alle Assetklassen hinweg - anders als
     bei Aktien/Rohstoff wird hier bewusst NICHT auf eine Assetklassen-Teilmenge
-    gefiltert, das Hedge-Instrument sichert das GESAMTE Portfolio ab)."""
+    gefiltert, das Hedge-Instrument sichert das GESAMTE Portfolio ab).
+
+    `bereits_vorgeschlagen_effektiv_usd` (keyword-only, 2026-07-22, siehe
+    _compute_portfolio_exposure()-Docstring) - optional, Standard 0.0."""
     if asset.symbol not in SYMBOL_ZU_HEBEL_FAKTOR:
         raise ValueError(f"generate_signal() (agent/hedge) erwartet ein bekanntes Hedge-Symbol, bekam {asset.symbol!r}")
 
@@ -243,7 +274,7 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
     regime_result = compute_current_regime(conn, coingecko_client, watchlist, None, config_dict)
 
     portfolio_exposure, verbleibendes_budget_usd = _compute_portfolio_exposure(
-        asset, watchlist, conn, latest_prices, config_dict
+        asset, watchlist, conn, latest_prices, config_dict, bereits_vorgeschlagen_effektiv_usd,
     )
 
     eurcv_snap = latest_prices.get("EURCV")
