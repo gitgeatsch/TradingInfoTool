@@ -121,7 +121,16 @@ Gegenbewegung zuerst liquidiert/ausgestoppt. Ein `top_gruende`-Eintrag mit \
 dieselbe Richtung wie deine eigene `richtung`-Empfehlung stützen - stützt der \
 Retail-Konsens tatsächlich deine Richtung (z.B. Retail überwiegend short bei \
 deiner SHORT-Empfehlung), ist das KEIN antizyklisches Argument mehr und gehört \
-nicht in diese Kategorie.
+nicht in diese Kategorie. Das gilt AUCH bei einer nur MODERATEN (nicht extremen) \
+Mehrheit in deine Richtung: ein echter Fund war die Formulierung "Long-Konten-\
+Anteil von 63,5% zeigt eine moderate Positionierung, was Raum für eine Erholung \
+lässt" als Stütze für eine LONG-Empfehlung - das ist FALSCH, weil 63,5% bereits \
+eine Mehrheit IN DERSELBEN Richtung ist (auch wenn nicht extrem), also bestenfalls \
+neutral zu werten, niemals als unterstützendes Argument. "Noch nicht extrem, also \
+ist noch Luft nach oben" ist derselbe Fehler nur anders formuliert - nutze für \
+einen nicht-extremen, aber gleichgerichteten Retail-Konsens gar keinen \
+`top_gruende`-Eintrag mit `kategorie: antizyklisch`, sondern eine andere Kategorie \
+oder lass diesen Fakt in `top_gruende` schlicht weg.
 9. `key_risks` MUSS bei ERÖFFNEN/NACHKAUFEN/HEBEL_ERHÖHEN mindestens einen Eintrag \
 zu hebel-spezifischen Risiken enthalten (Liquidationsrisiko bei schnellen \
 Kursbewegungen, laufende Finanzierungsgebühr bei längerer Haltedauer) - das sind \
@@ -129,9 +138,10 @@ Risiken, die es bei Spot-Positionen nicht gibt, sie dürfen nicht generisch \
 übergangen werden. WICHTIG: ergänze diese Formulierungen um die KONKRETEN Zahlen \
 dieses Signals (deinen eigenen `hebel_vorschlag`-Wert - je höher, desto größer das \
 Liquidationsrisiko bei gleicher Kursbewegung -, sowie die aktuelle `funding_rate_\
-aktuell` aus den Fakten) - eine rein wortgleiche Wiederholung dieser \
-Beispielformulierung OHNE eigene Zahlen ist NICHT ausreichend und liest sich bei \
-jedem Signal gleich.
+aktuell_prozent_pro_stunde` aus den Fakten INKLUSIVE der Einheit "% pro Stunde" - \
+nenne NIEMALS nur eine nackte Zahl ohne Einheit) - eine rein wortgleiche \
+Wiederholung dieser Beispielformulierung OHNE eigene Zahlen ist NICHT ausreichend \
+und liest sich bei jedem Signal gleich.
 10. Fülle `halte_kriterium` wie bei Spot-Signalen (siehe dortige Regel) - \
 mindestens eines von `ziel_preis_usd`/`ziel_datum`/`bedingung_text` muss gesetzt \
 sein.
@@ -413,7 +423,22 @@ def build_hebel_facts(
         },
         "regime_profil": regime_profile,
         "antizyklisch": {
-            "funding_rate_aktuell": _native(anticyclic_context.funding_rate_current),
+            # BUGFIX (2026-07-22, echter LINK-Fund): der rohe Float (typischerweise
+            # eine winzige Bruchzahl wie 0.0000026) wurde bisher unformatiert an
+            # das LLM gereicht - dieses hat ihn gemaess Regel 9 unveraendert in
+            # den Risiken-Text kopiert, was dort als haessliche wissenschaftliche
+            # Notation ("2.624963888888792e-06") beim Nutzer ankam. Jetzt als
+            # lesbarer Prozentsatz MIT Zeiteinheit (die Kraken-Funding-Rate ist
+            # eine ueber die letzten 24 Stunden gemittelte STUNDEN-Rate, siehe
+            # hebel_screening.py::_hole_marktdaten() `rates[-24:]`) - der
+            # deterministische Funding-Kosten-Risikofaktor in Abschnitt 3
+            # (hebel_risk_gate.py::compute_risikofaktoren_hebel()) liefert
+            # zusaetzlich den konkreten USD/Tag-Betrag bei der tatsaechlichen
+            # Positionsgroesse, das muss das LLM hier nicht selbst rechnen.
+            "funding_rate_aktuell_prozent_pro_stunde": (
+                round(anticyclic_context.funding_rate_current * 100, 5)
+                if anticyclic_context.funding_rate_current is not None else None
+            ),
             "funding_rate_extrem": anticyclic_context.funding_rate_extreme,
             "kursaenderung_letzte_tage_prozent": _native(anticyclic_context.recent_drop_pct),
             "moeglicher_flush": anticyclic_context.possible_flush,

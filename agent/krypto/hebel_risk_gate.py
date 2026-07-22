@@ -86,6 +86,9 @@ def compute_risikofaktoren_hebel(
     min_sample_fuer_aussage: int = 15,
     sl_abstand_relativ: float | None = None,
     sl_abstand_eng_schwelle_relativ: float | None = None,
+    funding_rate_stunde: float | None = None,
+    funding_kosten_usd_pro_tag: float | None = None,
+    funding_rate_hoch_schwelle_relativ_stunde: float | None = None,
 ) -> list["Risikofaktor"]:
     """2026-07-19 (Nutzer-Wunsch: E-Mail/App-Neustrukturierung in 3 Abschnitte -
     Mathematisch berechnet / LLM-Bewertung / Konklusion mit Risikofaktoren).
@@ -268,6 +271,29 @@ def compute_risikofaktoren_hebel(
                 "Track-Record, nicht symbolspezifisch).",
             ))
 
+    # 2026-07-22, echter LINK-Fund (Nutzer-Screenshot): der rohe Funding-Rate-
+    # Float wurde bisher unformatiert vom LLM in den Risiken-Text kopiert
+    # ("2.624963888888792e-06") - siehe hebel_analyst.py-Fix fuer den
+    # LLM-Fakt selbst. Hier zusaetzlich (Fakt zuerst, Wertung danach, gleiches
+    # Prinzip wie CRV/Enger-Stop-Loss oben): die Rate MIT Zeiteinheit (Kraken
+    # veroeffentlicht Funding stuendlich, siehe hebel_screening.py) UND ein
+    # konkreter USD/Tag-Betrag bei der tatsaechlichen Positionsgroesse -
+    # letzteres kann/soll das LLM nicht selbst ausrechnen (kein verlaesslicher
+    # Taschenrechner), deshalb komplett deterministisch.
+    if funding_rate_stunde is not None:
+        fakt = f"Ø {funding_rate_stunde * 100:.5f}%/Stunde (Mittelwert letzte 24h)"
+        if funding_kosten_usd_pro_tag is not None:
+            richtung_hinweis = "zulasten" if funding_kosten_usd_pro_tag >= 0 else "zugunsten"
+            fakt += (
+                f" - bei aktueller Positionsgröße ca. {abs(funding_kosten_usd_pro_tag):.2f} USD/Tag "
+                f"{richtung_hinweis} der Position (schwankt mit dem Satz, keine feste Kostenzusage)."
+            )
+        ist_hoch = (
+            funding_rate_hoch_schwelle_relativ_stunde is not None
+            and abs(funding_rate_stunde) >= funding_rate_hoch_schwelle_relativ_stunde
+        )
+        faktoren.append(Risikofaktor("Funding-Kosten", "negativ" if ist_hoch else "neutral", fakt))
+
     return faktoren
 
 
@@ -398,7 +424,7 @@ def pre_check_hebel(
 def post_check_hebel(
     parsed: dict, pre_result: HebelPreCheckResult, regime_result, config: dict, confluence=None,
     retail_long_bias_extreme: bool | None = None, long_account_pct: float | None = None,
-    historische_erfolgsquote: dict | None = None,
+    historische_erfolgsquote: dict | None = None, funding_rate_stunde: float | None = None,
 ) -> dict:
     """Nimmt die bereits schema-validierte LLM-Antwort und erzwingt AZ-7/RM-1/
     RM-11/CRV noch einmal deterministisch, analog risk_gate.py::post_check().
@@ -436,6 +462,7 @@ def post_check_hebel(
     risk_veto_reason = None
     crv: float | None = None
     sl_abstand_relativ: float | None = None
+    positionsgroesse_usd: float | None = None
     action = str(result.get("action", "")).upper()
     richtung = str(result.get("richtung", "")).upper()
     hebel_cfg = config["risiko"]["hebel"]
@@ -563,11 +590,11 @@ def post_check_hebel(
                         entry_mid, hebel_final, richtung,
                         sicherheitsmarge_relativ=config["risiko"]["hebel"]["liquidations_sicherheitsmarge_relativ"],
                     )
-                    positionsgroesse = pre_result.risikobetrag_usd / (
+                    positionsgroesse_usd = pre_result.risikobetrag_usd / (
                         abs(entry_mid - stop_von) / entry_mid
                     ) if pre_result.risikobetrag_usd and entry_mid != stop_von else None
                     result["eigenkapitalbedarf"] = (
-                        positionsgroesse / hebel_final if positionsgroesse is not None else None
+                        positionsgroesse_usd / hebel_final if positionsgroesse_usd is not None else None
                     )
         else:
             risk_veto = True
@@ -594,6 +621,16 @@ def post_check_hebel(
     forecast = result.get("forecast") or {}
     gegenszenario_feld = "bear" if richtung == RICHTUNG_LONG else "bull"
     gegenszenario_pct = (forecast.get(gegenszenario_feld) or {}).get("probability_pct")
+
+    # 2026-07-22, echter LINK-Fund: konkreter USD/Tag-Betrag aus der bereits
+    # oben berechneten Positionsgroesse (positionsgroesse_usd) - Kraken
+    # veroeffentlicht Funding stuendlich (siehe hebel_screening.py), daher
+    # *24 fuer den Tagessatz. None, falls Positionsgroesse oder Rate fehlen
+    # (z.B. HALTEN/HEBEL_SENKEN ohne neue Positionsgroesse).
+    funding_kosten_usd_pro_tag = (
+        positionsgroesse_usd * funding_rate_stunde * 24
+        if positionsgroesse_usd is not None and funding_rate_stunde is not None else None
+    )
     risikofaktoren = compute_risikofaktoren_hebel(
         richtung=richtung,
         regime=regime_result.regime,
@@ -611,6 +648,9 @@ def post_check_hebel(
         historische_erfolgsquote=historische_erfolgsquote,
         sl_abstand_relativ=sl_abstand_relativ,
         sl_abstand_eng_schwelle_relativ=hebel_cfg.get("sl_abstand_eng_schwelle_relativ"),
+        funding_rate_stunde=funding_rate_stunde,
+        funding_kosten_usd_pro_tag=funding_kosten_usd_pro_tag,
+        funding_rate_hoch_schwelle_relativ_stunde=hebel_cfg.get("funding_rate_hoch_schwelle_relativ_stunde"),
     )
     result["_risikofaktoren"] = [
         {"name": f.name, "bewertung": f.bewertung, "begruendung": f.begruendung} for f in risikofaktoren

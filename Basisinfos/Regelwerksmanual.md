@@ -6524,3 +6524,65 @@ artig gerettet, VIRTUAL-artig weiterhin ueberholt, KAS `einmal_trade`-
 Override, Spot-Gegenrichtung, HALTEN-Regression) sowie ein echter
 End-to-End-Lauf von `run_backward_tracking()`/`run_hebel_backward_
 tracking()` gegen eine Kopie der Desktop-DB.
+
+## Nachtrag (2026-07-22): Zwei weitere echte Funde aus einem LINK-Hebel-Signal (Antizyklisch-Regelverstoss + Funding-Rate-Rohfloat)
+
+Ausloeser: Nutzer teilte einen echten LINK LONG ERÖFFNEN-Vorschlag (16:09
+Uhr, Mistral) zur fachlichen Begutachtung. Zwei zusaetzliche, unabhaengige
+Funde neben der eigentlichen inhaltlichen Bewertung (fuenf ▼-Warnsignale
+gegen nur ein ▲, u.a. Bear-Forecast 50% > Bull-Forecast 25% trotz LONG-
+Empfehlung, Regime-Konflikt, niedrige Konfidenz 50%):
+
+**1. Antizyklisch-Regelverstoss trotz bestehender Regel (Regel 8,
+`hebel_analyst.py`):** Top-Grund #5 des Signals lautete "Long-Konten-Anteil
+von 63,5% zeigt eine moderate Positionierung, was Raum für eine Erholung
+lässt" - als Stuetze fuer die eigene LONG-Empfehlung formuliert, obwohl
+63,5% bereits eine (nicht-extreme) Mehrheit IN DERSELBEN Richtung ist. Die
+bestehende Regel 8 verbietet das explizit fuer EXTREME Retail-Mehrheiten -
+ein frueheres Signal desselben Tages (02:49 Uhr, HALTEN) formulierte
+denselben Fakt korrekt neutral ("zeigt keine extreme Positionierung"),
+zeigt also, dass die Regel grundsaetzlich befolgt werden KANN, nur nicht
+zuverlaessig wird. Fix: Regel 8 um ein konkretes Gegenbeispiel ergaenzt,
+das explizit auch den MODERATEN (nicht-extremen), gleichgerichteten Fall
+verbietet - "noch nicht extrem, also ist noch Luft nach oben" als
+derselbe Fehler nur anders formuliert benannt. Reine Prompt-Verschaerfung
+(kein deterministischer Filter moeglich/sinnvoll fuer freien Fliesstext,
+anders als bei den folgenden zwei Punkten) - die bereits bestehende
+deterministische Retail-Konsens-Bewertung in Abschnitt 3 bleibt die
+verlaessliche Quelle, unabhaengig davon, was das LLM im freien Text
+formuliert.
+
+**2. Funding-Rate als unformatierter Rohfloat im Risiken-Text:** "Laufende
+Finanzierungsgebühr bei längerer Haltedauer, aktuell bei
+2.624963888888792e-06." - der rohe Python-Float wurde unformatiert an das
+LLM gereicht (`hebel_analyst.py`, `funding_rate_aktuell`) und von diesem
+gemaess Regel 9 unveraendert in den Text kopiert. Fix in zwei Teilen:
+- `hebel_analyst.py`: der LLM-Fakt heisst jetzt
+  `funding_rate_aktuell_prozent_pro_stunde` und ist bereits als gerundeter
+  Prozentwert formatiert (z.B. `0.00026` statt `2.624963888888792e-06`) -
+  Regel 9 verlangt zusaetzlich explizit die Einheit "% pro Stunde" im Text.
+- **Nutzer-Nachfrage:** macht eine reine Prozentzahl ohne Kontext ueberhaupt
+  Sinn, oder waere ein EUR/Zeiteinheit-Betrag sinnvoller? Antwort: beides,
+  nach demselben "Fakt zuerst, Wertung danach"-Prinzip wie Retail-Konsens/
+  CRV - die Rate selbst MIT Zeiteinheit (Kraken veroeffentlicht Funding
+  stuendlich, `rates[-24:]` in `hebel_screening.py` = 24h-Durchschnitt der
+  Stundenrate) als Fakt, plus ein neuer deterministischer Risikofaktor
+  "Funding-Kosten" (`hebel_risk_gate.py::compute_risikofaktoren_hebel()`)
+  mit einem konkreten USD/Tag-Betrag bei der TATSAECHLICHEN Positionsgroesse
+  (`positionsgroesse_usd * funding_rate_stunde * 24`, aus der bereits
+  vorhandenen Positionsgroessen-Berechnung in `post_check_hebel()`) - klar
+  benannt als Momentaufnahme ("schwankt mit dem Satz, keine feste
+  Kostenzusage"), nicht als LLM-Rechnung (LLMs sind kein verlaesslicher
+  Taschenrechner). Neue Schwelle
+  `risiko.hebel.funding_rate_hoch_schwelle_relativ_stunde` (0.0001, identisch
+  zum bereits kalibrierten `hebel_screening.kontra.funding_rate_extrem_
+  schwelle`, aber als eigener Schluessel fuer ein unabhaengiges Konzept)
+  faerbt den Faktor ab dieser Rate "negativ" statt "neutral".
+
+**Verifikation:** synthetischer Test bestaetigt: (a) niemals mehr
+wissenschaftliche Notation im Text, (b) korrekte USD/Tag-Berechnung fuer
+den echten Screenshot-Wert (≈0,13 USD/Tag bei einer Beispiel-Positionsgroesse),
+(c) Schwellenwert-Verhalten (neutral/negativ), (d) kein Faktor ohne
+vorhandenen Fakt, (e) echter End-to-End-Lauf von `post_check_hebel()` mit
+einem LINK-aehnlichen Szenario, (f) Regressionstest der vorherigen Retail-
+Konsens-/CRV-Fixes weiterhin gruen.
