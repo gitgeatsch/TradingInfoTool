@@ -27,6 +27,16 @@ ZWEIG_KONTRA = "kontra"
 
 _HEBEL_ACTIONS_MIT_HEBEL = ("ERÖFFNEN", "NACHKAUFEN", "HEBEL_ERHÖHEN")
 
+# 2026-07-22, echter VIRTUAL-Fund: LONG-Signal fuer einen Alt-Coin waehrend
+# `btc_matrix == "baer_flucht"` (BTC faellt, Dominanz steigt) - das LLM nannte
+# das Regime im Gegenargument korrekt als staerksten Einwand, aber NUR weil es
+# das nackte Label selbst richtig interpretiert hat, nicht weil das System es
+# ihm erklaert oder deterministisch gedeckelt haette (agent/krypto/regime.py::
+# BTC_MATRIX dokumentiert explizit "Alt-Ausbrueche meist Fallen" fuer genau
+# diese beiden Zustaende - Spot-Pipeline (analyst.py Regel 8) kennt diese Regel
+# bereits, Hebel bisher nicht).
+_ALT_LONG_SKEPSIS_BTC_MATRIX_STATES = ("btc_season", "baer_flucht")
+
 
 def regime_konflikt_hebel(regime: str, richtung: str) -> bool:
     """Position widerspricht dem aktuellen Regime (z.B. LONG im baer-Regime).
@@ -89,6 +99,9 @@ def compute_risikofaktoren_hebel(
     funding_rate_stunde: float | None = None,
     funding_kosten_usd_pro_tag: float | None = None,
     funding_rate_hoch_schwelle_relativ_stunde: float | None = None,
+    ist_core_asset: bool = False,
+    btc_matrix_state: str | None = None,
+    btc_matrix_hinweis: str | None = None,
 ) -> list["Risikofaktor"]:
     """2026-07-19 (Nutzer-Wunsch: E-Mail/App-Neustrukturierung in 3 Abschnitte -
     Mathematisch berechnet / LLM-Bewertung / Konklusion mit Risikofaktoren).
@@ -124,6 +137,22 @@ def compute_risikofaktoren_hebel(
             "Als 'bestätigter Trend' (swing_strategie) eingestuft, obwohl die Position "
             "gleichzeitig dem Regime widerspricht - innerer Widerspruch in der Klassifikation.",
         ))
+
+    # 2026-07-22, echter VIRTUAL-Fund (siehe Konstanten-Kommentar oben): eigene,
+    # von `regime_konflikt_hebel()` UNABHAENGIGE Dimension - die BTC-Dominanz-
+    # Matrix warnt speziell vor Alt-Coin-LONG-Ausbruechen, unabhaengig vom
+    # generischen baer/bulle-Regime (ein Alt-LONG kann z.B. auch bei Regime
+    # "seitwaerts" in "baer_flucht" liegen). Text wird bewusst 1:1 aus
+    # `btc_matrix_beschreibung` uebernommen (bereits ein vollstaendiger,
+    # verstaendlicher Satz aus regime.py::BTC_MATRIX) statt neu formuliert -
+    # eine Quelle der Wahrheit, kein driftender Zweittext.
+    if (
+        richtung == RICHTUNG_LONG
+        and not ist_core_asset
+        and btc_matrix_state in _ALT_LONG_SKEPSIS_BTC_MATRIX_STATES
+        and btc_matrix_hinweis
+    ):
+        faktoren.append(Risikofaktor("Alt-Coin-Marktphase", "negativ", btc_matrix_hinweis))
 
     if gegenszenario_pct is not None and gegenszenario_schwelle is not None:
         if gegenszenario_pct >= gegenszenario_schwelle:
@@ -425,6 +454,7 @@ def post_check_hebel(
     parsed: dict, pre_result: HebelPreCheckResult, regime_result, config: dict, confluence=None,
     retail_long_bias_extreme: bool | None = None, long_account_pct: float | None = None,
     historische_erfolgsquote: dict | None = None, funding_rate_stunde: float | None = None,
+    asset_rolle: str | None = None,
 ) -> dict:
     """Nimmt die bereits schema-validierte LLM-Antwort und erzwingt AZ-7/RM-1/
     RM-11/CRV noch einmal deterministisch, analog risk_gate.py::post_check().
@@ -456,7 +486,13 @@ def post_check_hebel(
     dafuer), aber trotzdem zur Stuetzung von LONG verwendet wurde. Der
     SYSTEM_PROMPT (hebel_analyst.py) wurde entsprechend ergaenzt, aber wie bei
     allen anderen Deckeln gilt: nie blind auf Prompt-Befolgung vertrauen,
-    deshalb zusaetzlich hier deterministisch erzwungen."""
+    deshalb zusaetzlich hier deterministisch erzwungen.
+
+    Nachtrag 2026-07-22 (echter VIRTUAL-Fund): `asset_rolle` (aus
+    `WatchlistAsset.rolle`, "core" fuer BTC/ETH) wird nur fuer den neuen
+    "Alt-Coin-Marktphase"-Risikofaktor benoetigt (siehe compute_risikofaktoren_
+    hebel()) - `regime_result.btc_matrix_state`/`btc_matrix_beschreibung`
+    werden direkt aus `regime_result` gelesen, kein separater Parameter noetig."""
     result = dict(parsed)
     risk_veto = False
     risk_veto_reason = None
@@ -651,6 +687,9 @@ def post_check_hebel(
         funding_rate_stunde=funding_rate_stunde,
         funding_kosten_usd_pro_tag=funding_kosten_usd_pro_tag,
         funding_rate_hoch_schwelle_relativ_stunde=hebel_cfg.get("funding_rate_hoch_schwelle_relativ_stunde"),
+        ist_core_asset=(asset_rolle == "core"),
+        btc_matrix_state=regime_result.btc_matrix_state,
+        btc_matrix_hinweis=regime_result.btc_matrix_beschreibung,
     )
     result["_risikofaktoren"] = [
         {"name": f.name, "bewertung": f.bewertung, "begruendung": f.begruendung} for f in risikofaktoren

@@ -174,6 +174,18 @@ einem BTC-Wert) - verwende sie NIEMALS als belastbare Statistik oder direkte Gru
 fuer `confidence_pct`, das gilt insbesondere fuer Hebel-Positionen (verstaerktes Risiko). \
 `spx_median_forward_*` beschreibt nur die Aktienmarkt-Tendenz, ist fuer eine Hebel-\
 Entscheidung bestenfalls grober Makro-Hintergrund. Lies den mitgelieferten `hinweis`.
+16. Bei `asset.rolle != "core"` (nicht BTC/ETH) UND `richtung == LONG` beachte \
+`regime.btc_matrix`/`regime.btc_matrix_hinweis`: bei `btc_season` oder `baer_flucht` \
+sind Alt-Kaufsignale (Ausbrueche, bullische Konfluenz) mit erhoehter Skepsis zu \
+behandeln, auch wenn die kurzfristige Technik fuer sich genommen positiv aussieht - bei \
+einer GEHEBELTEN Position verstaerkt sich dieses Risiko zusaetzlich (2026-07-22, echter \
+VIRTUAL-Fund: `baer_flucht` wurde nur als nacktes Label ohne Erklaerung mitgeliefert, \
+diese Regel gab es bisher NICHT im Hebel-Prompt, obwohl Spot-Signale sie schon seit \
+laengerem befolgen). Nenne das explizit in `long_reasoning.technisch`, wenn zutreffend. \
+Bei `altseason` duerfen bullische Alt-Signale normal/hoeher gewichtet werden. Bei \
+`nicht_verfuegbar` ignoriere diesen Punkt. Diese Konstellation erscheint zusaetzlich als \
+eigener deterministischer Risikofaktor in Abschnitt 3 - unabhaengig davon, ob du sie \
+selbst erwaehnst.
 
 SCHEMA:
 {
@@ -361,6 +373,7 @@ def build_hebel_facts(
         "asset": {
             "symbol": asset.symbol,
             "name": asset.name,
+            "rolle": asset.rolle,
         },
         "preis": {
             "usd": _native(latest_price.price_usd) if latest_price else None,
@@ -406,6 +419,7 @@ def build_hebel_facts(
                 "einstufung": regime_result.fear_greed_label,
             },
             "btc_matrix": regime_result.btc_matrix_state,
+            "btc_matrix_hinweis": regime_result.btc_matrix_beschreibung,
             "liquiditaets_regime": regime_result.liquiditaets_regime,
             "zyklus_risiko": _native(regime_result.zyklus_risiko),
             "richtungs_konflikt_mit_trigger": (

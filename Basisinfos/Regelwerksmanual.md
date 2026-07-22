@@ -6586,3 +6586,55 @@ den echten Screenshot-Wert (≈0,13 USD/Tag bei einer Beispiel-Positionsgroesse)
 vorhandenen Fakt, (e) echter End-to-End-Lauf von `post_check_hebel()` mit
 einem LINK-aehnlichen Szenario, (f) Regressionstest der vorherigen Retail-
 Konsens-/CRV-Fixes weiterhin gruen.
+
+## Nachtrag (2026-07-22): Alt-Coin-Marktphase fehlte im Hebel-Regelwerk (echter VIRTUAL-Fund)
+
+Ausloeser: ein weiteres echtes Signal (VIRTUAL LONG ERÖFFNEN, Mistral,
+15:40 Uhr) zur fachlichen Begutachtung. Gegenargument des LLM nannte
+korrekt "Regime (baer_flucht)" als staerksten Einwand - Nachforschung
+ergab: `baer_flucht` ist KEIN Wert des einfachen Baer/Bulle-Regimes
+(`regime.regime`), sondern ein separates Label der BTC-Dominanz-Matrix
+(`agent/krypto/regime.py::BTC_MATRIX`), das explizit dokumentiert "Alt-
+Ausbrueche meist Fallen - erhoehte Vorsicht bei Alt-Kaufsignalen". VIRTUAL
+ist ein Alt-Coin, also genau der Fall, fuer den diese Warnung gedacht ist.
+
+**Fund:** Die Spot-Pipeline (`analyst.py` Regel 8) kennt diese Regel
+bereits seit laengerem UND uebergibt sowohl das Label (`btc_matrix`) als
+auch die erklaerende Beschreibung (`btc_matrix_hinweis`) als Fakt. Die
+Hebel-Pipeline (`hebel_analyst.py`) uebergab bisher NUR das nackte Label
+ohne Erklaerung und hatte KEINE SYSTEM_PROMPT-Regel dazu - das LLM hat den
+Zusammenhang diesmal aus eigenem Wissen richtig hergestellt, aber ohne
+System-Vorgabe (gleiches Muster wie beim Antizyklisch-Regel-8-Fund: "hat
+diesmal zufaellig richtig geraten" ist keine verlaessliche Grundlage,
+gerade fuer die risikoreichere Hebel-Pipeline).
+
+**Fix:**
+- `hebel_analyst.py`: `asset.rolle` und `btc_matrix_hinweis` (=
+  `regime_result.btc_matrix_beschreibung`) neu ins Fakten-JSON aufgenommen
+  (identische Feldnamen wie bei Spot). Neue Regel 16 im SYSTEM_PROMPT,
+  wortgleich zum Spot-Muster: bei `asset.rolle != "core"` (nicht BTC/ETH)
+  UND `richtung == LONG` soll bei `btc_season`/`baer_flucht` erhoehte
+  Skepsis gegenueber Alt-Kaufsignalen gelten, bei `altseason` normal/hoeher
+  gewichtet werden.
+- `hebel_risk_gate.py`: neuer deterministischer Risikofaktor "Alt-Coin-
+  Marktphase" (`compute_risikofaktoren_hebel()`) - erscheint nur bei
+  `richtung == LONG`, `ist_core_asset == False` und
+  `btc_matrix_state in ("btc_season", "baer_flucht")`. Text wird bewusst
+  1:1 aus `btc_matrix_hinweis` uebernommen (bereits ein vollstaendiger,
+  verstaendlicher Satz aus `regime.py::BTC_MATRIX`) statt neu formuliert -
+  eine Quelle der Wahrheit, kein driftender Zweittext, und direkt die vom
+  Nutzer gewuenschte "sinnvolle Beschreibung fuer den User" ohne
+  zusaetzliche Uebersetzungsarbeit.
+- `hebel_pipeline.py`: `asset.rolle` an `post_check_hebel()` durchgereicht;
+  `btc_matrix_state`/`btc_matrix_beschreibung` werden dort direkt aus dem
+  bereits vorhandenen `regime_result` gelesen (kein zusaetzlicher
+  Parameter noetig).
+
+**Verifikation:** synthetischer Test bestaetigt: (a) Faktor erscheint fuer
+Alt-Coin+LONG+`baer_flucht`/`btc_season` mit korrektem, unveraendertem
+Hinweistext, (b) kein Faktor fuer BTC/ETH (`asset.rolle == "core"`), (c)
+kein Faktor fuer SHORT (Regel betrifft nur Alt-Kaufsignale), (d) kein
+Faktor bei `altseason`/`unklar_defensiv`/fehlendem Zustand, (e) echter
+End-to-End-Lauf von `post_check_hebel()` mit einem VIRTUAL-aehnlichen
+Szenario, (f) Regressionstest der Funding-Kosten-/Retail-Konsens-/CRV-Fixes
+weiterhin gruen.
