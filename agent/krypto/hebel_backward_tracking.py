@@ -12,12 +12,15 @@ Zonen, gewinnt Stop-Loss" in backward_tracking.py). Rein beobachtend (P-7 Adviso
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import database.db as db
 from agent.krypto.backward_tracking import (
     DEFAULT_ABGELAUFEN_TAGE_BUCKET,
     DEFAULT_ABGELAUFEN_TAGE_FALLBACK,
+    DEFAULT_MINDESTBEOBACHTUNG_TAGE_BUCKET,
+    DEFAULT_MINDESTBEOBACHTUNG_TAGE_FALLBACK,
+    DEFAULT_ZONEN_REAFFIRMATION_TOLERANZ_RELATIV,
     OUTCOME_ABGELAUFEN,
     OUTCOME_LIQUIDATION,
     OUTCOME_NICHT_ANWENDBAR,
@@ -26,6 +29,19 @@ from agent.krypto.backward_tracking import (
     OUTCOME_TAKE_PROFIT,
     OUTCOME_UEBERHOLT,
 )
+
+# Hebel-spezifischer Override (2026-07-22, siehe Plan-Datei "Ueberholt-
+# Erkennung reparieren"): trade_thesis_typ ist ein praeziseres Signal fuer
+# die erwartete Haltedauer als der generische halte_kriterium_bucket -
+# existiert nur bei Hebel (hebel_analyst.py, Werte einmal_trade/
+# swing_strategie). 'einmal_trade' (kurzlebige Squeeze-Gegenbewegung)
+# bekommt eine kuerzere Stunden-Schwelle statt der Tage-Bucket-Logik -
+# deutlich ueber dem Hebel-Cooldown (3,5-7h), aber kurz genug fuer eine
+# wirklich kurzlebige Gegenbewegungs-These. 'swing_strategie' faellt auf die
+# normale Bucket-Logik zurueck (gleiche Werte wie Spot). Default, ueber
+# config.yaml::backward_tracking.hebel_mindestbeobachtung_stunden_einmal_trade
+# ueberschreibbar.
+DEFAULT_HEBEL_MINDESTBEOBACHTUNG_STUNDEN_EINMAL_TRADE = 18
 
 # ERÖFFNEN/NACHKAUFEN sind die einzigen Aktionen mit Entry/Stop-Pflicht + CRV>=2.0-
 # Vorgabe (siehe hebel_analyst.py:25-28,67) - HEBEL_ERHÖHEN/HEBEL_SENKEN/TEILVERKAUF/
@@ -51,6 +67,58 @@ def _entry_mid(signal) -> float | None:
     if von is not None and bis is not None:
         return (von + bis) / 2
     return von
+
+
+def _mittelwert(von: float | None, bis: float | None) -> float | None:
+    """Mirror backward_tracking.py::_mittelwert() - HebelSignal hat keine
+    Punktwert-Felder (immer mit Zonen eingefuehrt), deshalb kein Punktwert-
+    Fallback-Parameter noetig."""
+    if von is not None and bis is not None:
+        return (von + bis) / 2
+    return von
+
+
+def _zonen_mittel(signal) -> tuple[float | None, float | None, float | None]:
+    """Mirror backward_tracking.py::_zonen_mittel() - Grundlage fuer
+    _ist_zonen_reaffirmation()."""
+    return (
+        _entry_mid(signal),
+        _mittelwert(signal.stop_loss_usd_von, signal.stop_loss_usd_bis),
+        _mittelwert(signal.take_profit_usd_von, signal.take_profit_usd_bis),
+    )
+
+
+def _ist_zonen_reaffirmation(signal, latest, toleranz_relativ: float) -> bool:
+    """Mirror backward_tracking.py::_ist_zonen_reaffirmation() - siehe dort
+    fuer die vollstaendige Begruendung. Konservativ: fehlt einer der drei
+    Werte, gilt das NICHT als Reaffirmation."""
+    paare = list(zip(_zonen_mittel(signal), _zonen_mittel(latest)))
+    if any(a is None or b is None for a, b in paare):
+        return False
+    return all(abs(a - b) <= toleranz_relativ * abs(a) for a, b in paare if a)
+
+
+def _parse_dt(ts: str) -> datetime:
+    dt = datetime.fromisoformat(ts)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
+def _mindestbeobachtung_erreicht(
+    signal, latest, bucket_tage: dict[str, int], fallback_tage: int,
+    einmal_trade_stunden: float = DEFAULT_HEBEL_MINDESTBEOBACHTUNG_STUNDEN_EINMAL_TRADE,
+) -> bool:
+    """Mirror backward_tracking.py::_mindestbeobachtung_erreicht(), PLUS
+    Hebel-spezifischer Override: trade_thesis_typ == 'einmal_trade' nutzt
+    `einmal_trade_stunden` statt der Tage-Bucket-Logik (siehe Konstanten-
+    Docstring oben)."""
+    alter = _parse_dt(latest.created_at) - _parse_dt(signal.created_at)
+    if signal.trade_thesis_typ == "einmal_trade":
+        return alter >= timedelta(hours=einmal_trade_stunden)
+    bucket = signal.halte_kriterium_bucket
+    mindest_tage = bucket_tage.get(bucket, fallback_tage) if bucket else fallback_tage
+    return alter >= timedelta(days=mindest_tage)
 
 
 def check_hebel_signal_outcome(conn, signal, watchlist) -> tuple[str, dict]:
@@ -137,10 +205,18 @@ def check_hebel_signal_outcome(conn, signal, watchlist) -> tuple[str, dict]:
     return OUTCOME_OFFEN, {}
 
 
-def _is_superseded(signal, latest_real: dict) -> bool:
+def _is_superseded(
+    signal, latest_real: dict, mindestbeob_bucket: dict[str, int],
+    mindestbeob_fallback: int, zonen_toleranz_relativ: float,
+    einmal_trade_stunden: float = DEFAULT_HEBEL_MINDESTBEOBACHTUNG_STUNDEN_EINMAL_TRADE,
+) -> bool:
     """Mirror backward_tracking.py::_is_superseded(), aber nach (symbol,
     richtung) geschluesselt - ein LONG- und ein SHORT-Signal fuer denselben
-    Coin sind unabhaengige Thesen, eines ueberholt das andere nicht.
+    Coin sind unabhaengige Thesen, eines ueberholt das andere nicht (das
+    heisst: JEDE Ueberholung hier ist strukturell bereits ein "gleiche
+    Richtung, neue/erneute These"-Fall - eine echte Gegenrichtung wie bei
+    Spot VERKAUFEN/TAUSCHEN gibt es unter diesem Schluessel nicht, sie liefe
+    ueber den jeweils anderen (symbol, richtung)-Schluessel).
 
     NACHTRAG (2026-07-19, Backtracking-Aussagekraft-Audit, siehe dortiger
     Docstring): eine reine HALTEN-Bestaetigung ueberholt die offene
@@ -149,14 +225,29 @@ def _is_superseded(signal, latest_real: dict) -> bool:
     wurden (hebel_position_cooldown_stunden=3), bevor der Kurs ueberhaupt
     eine faire Chance hatte, Take-Profit/Stop-Loss zu erreichen.
 
-    Rein deterministischer Datums-/ID-/Aktions-Vergleich, KEIN LLM-Call."""
+    NACHTRAG 2 (2026-07-22, siehe backward_tracking.py::_is_superseded()
+    NACHTRAG 2 fuer die vollstaendige Begruendung/Backtest-Zahlen): ein
+    erneutes ERÖFFNEN ueberholt jetzt nur noch, wenn zwei zusaetzliche Gates
+    erfuellt sind - Mindestbeobachtung erreicht (inkl. trade_thesis_typ-
+    Override) UND keine Zonen-Reaffirmation. Backtest gegen echte Notebook-
+    Daten: 24 von 27 (89%) historisch ueberholten Hebel-Signalen waeren
+    unter diesen Gates gerettet worden, darunter mind. 4 mit einem echten
+    TP/SL-Ergebnis statt spurlosem Verschwinden.
+
+    Rein deterministischer Datums-/ID-/Aktions-/Zonen-Vergleich, KEIN
+    LLM-Call."""
     latest = latest_real.get((signal.symbol, signal.richtung))
-    return (
-        latest is not None
-        and latest.id != signal.id
-        and latest.created_at > signal.created_at
-        and latest.action != "HALTEN"
-    )
+    if latest is None or latest.id == signal.id or latest.created_at <= signal.created_at:
+        return False
+    if latest.action == "HALTEN":
+        return False
+    if not _mindestbeobachtung_erreicht(
+        signal, latest, mindestbeob_bucket, mindestbeob_fallback, einmal_trade_stunden,
+    ):
+        return False
+    if _ist_zonen_reaffirmation(signal, latest, zonen_toleranz_relativ):
+        return False
+    return True
 
 
 def _is_expired(signal, bucket_tage: dict[str, int], fallback_tage: int) -> bool:
@@ -193,6 +284,14 @@ def run_hebel_backward_tracking(conn, watchlist, config: dict) -> HebelBackwardT
     bt_cfg = config.get("backward_tracking", {})
     bucket_tage = bt_cfg.get("abgelaufen_nach_tagen_bucket", DEFAULT_ABGELAUFEN_TAGE_BUCKET)
     fallback_tage = bt_cfg.get("abgelaufen_nach_tagen_fallback", DEFAULT_ABGELAUFEN_TAGE_FALLBACK)
+    mindestbeob_bucket = bt_cfg.get("mindestbeobachtung_tage_bucket", DEFAULT_MINDESTBEOBACHTUNG_TAGE_BUCKET)
+    mindestbeob_fallback = bt_cfg.get("mindestbeobachtung_tage_fallback", DEFAULT_MINDESTBEOBACHTUNG_TAGE_FALLBACK)
+    zonen_toleranz = bt_cfg.get(
+        "zonen_reaffirmation_toleranz_relativ", DEFAULT_ZONEN_REAFFIRMATION_TOLERANZ_RELATIV,
+    )
+    einmal_trade_stunden = bt_cfg.get(
+        "hebel_mindestbeobachtung_stunden_einmal_trade", DEFAULT_HEBEL_MINDESTBEOBACHTUNG_STUNDEN_EINMAL_TRADE,
+    )
     latest_real = db.get_latest_hebel_signal_per_symbol_and_richtung(conn)
 
     rows = conn.execute(
@@ -228,7 +327,9 @@ def run_hebel_backward_tracking(conn, watchlist, config: dict) -> HebelBackwardT
             continue
 
         # status == OUTCOME_OFFEN: erst Ueberholt-Check, dann Ablauf-Check.
-        if _is_superseded(signal, latest_real):
+        if _is_superseded(
+            signal, latest_real, mindestbeob_bucket, mindestbeob_fallback, zonen_toleranz, einmal_trade_stunden,
+        ):
             db.update_hebel_signal_outcome(conn, signal.id, OUTCOME_UEBERHOLT)
             result.superseded += 1
         elif _is_expired(signal, bucket_tage, fallback_tage):

@@ -12,6 +12,7 @@ Ist-Ergebnisse kann nichts verglichen werden."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 
 import database.db as db
 from agent.krypto.llm_provider import provider_from_label
@@ -46,6 +47,20 @@ _TRACKABLE_ACTIONS = {"KAUFEN", "NACHKAUFEN"}
 DEFAULT_ABGELAUFEN_TAGE_BUCKET = {"kurz": 14, "mittel": 45, "lang": 120}
 DEFAULT_ABGELAUFEN_TAGE_FALLBACK = 90
 
+# Mindestbeobachtung + Zonen-Reaffirmation (2026-07-22, Nutzer-Frage "funktioniert
+# das System auf Glueck?" - siehe Plan-Datei "Ueberholt-Erkennung reparieren").
+# Backtest gegen echte Notebook-Daten (backtest_ueberholt_erkennung.py) zeigte:
+# 24 von 27 historisch ueberholten Hebel-Signalen (89%) haetten unter diesen
+# beiden zusaetzlichen Gates weiter offen bleiben sollen - darunter mind. 4, die
+# seither TATSAECHLICH Take-Profit/Stop-Loss erreicht haetten, aber durch die
+# alte, zeit-/inhaltsblinde Ueberholt-Erkennung spurlos verschwanden. Deutlich
+# unter den bestehenden Abgelaufen-Schwellen (14/45/120/90 Tage) - es bleibt
+# immer ein Fenster, in dem ein Signal weder zu jung fuer eine Ueberholung noch
+# bereits abgelaufen ist.
+DEFAULT_MINDESTBEOBACHTUNG_TAGE_BUCKET = {"kurz": 2, "mittel": 5, "lang": 10}
+DEFAULT_MINDESTBEOBACHTUNG_TAGE_FALLBACK = 3
+DEFAULT_ZONEN_REAFFIRMATION_TOLERANZ_RELATIV = 0.03
+
 
 @dataclass
 class BackwardTrackingResult:
@@ -72,6 +87,75 @@ def _entry_mid(signal) -> float | None:
     if von is not None:
         return von
     return signal.entry_usd
+
+
+def _mittelwert(von: float | None, bis: float | None, punkt: float | None = None) -> float | None:
+    """Generischer Zonen-Mittelwert (Von/Bis bevorzugt, optionaler Punktwert-
+    Fallback fuer Alt-Signale ohne Zonen-Slice) - separat von _entry_mid()
+    (nur fuer die TP/SL-Aufloesung genutzt), da HebelSignal keine Punktwert-
+    Felder besitzt (wurde immer schon mit Zonen eingefuehrt)."""
+    if von is not None and bis is not None:
+        return (von + bis) / 2
+    if von is not None:
+        return von
+    return punkt
+
+
+def _zonen_mittel(signal) -> tuple[float | None, float | None, float | None]:
+    """Entry-/Stop-Loss-/Take-Profit-Mittelwert (USD) - Grundlage fuer
+    _ist_zonen_reaffirmation(). Nutzt getattr() mit None-Default statt
+    direktem Attributzugriff, damit dieselbe Funktion unveraendert auch fuer
+    HebelSignal-Objekte funktioniert (siehe hebel_backward_tracking.py)."""
+    return (
+        _mittelwert(
+            getattr(signal, "entry_usd_von", None), getattr(signal, "entry_usd_bis", None),
+            getattr(signal, "entry_usd", None),
+        ),
+        _mittelwert(
+            getattr(signal, "stop_loss_usd_von", None), getattr(signal, "stop_loss_usd_bis", None),
+            getattr(signal, "stop_loss_usd", None),
+        ),
+        _mittelwert(
+            getattr(signal, "take_profit_usd_von", None), getattr(signal, "take_profit_usd_bis", None),
+            getattr(signal, "take_profit_usd", None),
+        ),
+    )
+
+
+def _ist_zonen_reaffirmation(signal, latest, toleranz_relativ: float) -> bool:
+    """True, wenn Entry-, Stop-Loss- UND Take-Profit-Mittelwert von `latest`
+    alle innerhalb der Toleranz um die Werte von `signal` liegen - dann ist
+    `latest` inhaltlich eine Bestaetigung derselben These, keine neue
+    Information (siehe Plan-Datei "Ueberholt-Erkennung reparieren", Gate 2).
+    Konservativ: fehlt einer der drei Werte bei einem der beiden Signale,
+    gilt das NICHT als Reaffirmation - die normale Ueberholung greift dann
+    weiter, kein stiller Sonderfall."""
+    paare = list(zip(_zonen_mittel(signal), _zonen_mittel(latest)))
+    if any(a is None or b is None for a, b in paare):
+        return False
+    return all(abs(a - b) <= toleranz_relativ * abs(a) for a, b in paare if a)
+
+
+def _parse_dt(ts: str) -> datetime:
+    dt = datetime.fromisoformat(ts)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
+def _mindestbeobachtung_erreicht(
+    signal, latest, bucket_tage: dict[str, int], fallback_tage: int,
+) -> bool:
+    """Mindestbeobachtungsfenster (Untergrenze, spiegelbildlich zu
+    _is_expired()'s Obergrenze) - ein Signal darf erst als ueberholt gelten,
+    nachdem seit seiner Erstellung mindestens diese Zeit vergangen ist,
+    abgeleitet aus derselben Content-Angabe (halte_kriterium_bucket) wie die
+    Ablauf-Berechnung (siehe Plan-Datei "Ueberholt-Erkennung reparieren",
+    Gate 1)."""
+    bucket = getattr(signal, "halte_kriterium_bucket", None)
+    mindest_tage = bucket_tage.get(bucket, fallback_tage) if bucket else fallback_tage
+    alter = _parse_dt(latest.created_at) - _parse_dt(signal.created_at)
+    return alter >= timedelta(days=mindest_tage)
 
 
 def check_signal_outcome(conn, signal, watchlist) -> tuple[str, dict]:
@@ -138,7 +222,13 @@ def check_signal_outcome(conn, signal, watchlist) -> tuple[str, dict]:
     return OUTCOME_OFFEN, {}
 
 
-def _is_superseded(signal, latest_real: dict) -> bool:
+_GEGENRICHTUNG_AKTIONEN = ("VERKAUFEN", "TAUSCHEN")
+
+
+def _is_superseded(
+    signal, latest_real: dict, mindestbeob_bucket: dict[str, int],
+    mindestbeob_fallback: int, zonen_toleranz_relativ: float,
+) -> bool:
     """2026-07-16 (Nutzer-Wunsch nach der Backward-Tracking-Diskussion:
     'redundante bzw. gegensaetzliche Empfehlungen muessen rausfallen, mit
     oder ohne Benachrichtigung'): ein noch offenes KAUFEN/NACHKAUFEN-Signal
@@ -162,16 +252,35 @@ def _is_superseded(signal, latest_real: dict) -> bool:
     auszuschliessen behebt das, ohne die urspruengliche Absicht (Duplikate/
     Widersprueche ausblenden) einzuschraenken.
 
-    Rein deterministischer Datums-/ID-/Aktions-Vergleich gegen
+    NACHTRAG 2 (2026-07-22, Nutzer-Frage "funktioniert das System auf
+    Glueck?" - Backtest gegen echte Daten zeigte 89% (24/27) faelschlich
+    ueberholte Hebel-Signale, siehe DEFAULT_MINDESTBEOBACHTUNG_*-Konstanten
+    oben): ein erneutes KAUFEN/NACHKAUFEN (gleiche Richtung/Aktionskategorie
+    wie das offene Signal) ueberholt jetzt NUR NOCH, wenn zwei zusaetzliche
+    Gates erfuellt sind - (1) Mindestbeobachtung erreicht (das Signal hatte
+    ueberhaupt Zeit, seine eigene These zu bestaetigen) UND (2) keine
+    Zonen-Reaffirmation (die neue Analyse ist inhaltlich tatsaechlich eine
+    andere These, nicht nur dieselbe mit fast identischen Zonen erneut
+    bestaetigt). Eine echte Gegenrichtung (VERKAUFEN/TAUSCHEN nach KAUFEN)
+    bleibt UNVERAENDERT sofort ueberholend - das war 2026-07-16 der
+    urspruengliche, korrekte Zweck dieser Funktion und wird durch die
+    beiden neuen Gates nicht angetastet.
+
+    Rein deterministischer Datums-/ID-/Aktions-/Zonen-Vergleich gegen
     `db.get_latest_real_signal_per_symbol()` (bereits einmal pro Lauf
     geladen) - KEIN LLM-Call, erhoeht das Tagesbudget nicht."""
     latest = latest_real.get(signal.symbol)
-    return (
-        latest is not None
-        and latest.id != signal.id
-        and latest.created_at > signal.created_at
-        and latest.action != "HALTEN"
-    )
+    if latest is None or latest.id == signal.id or latest.created_at <= signal.created_at:
+        return False
+    if latest.action == "HALTEN":
+        return False
+    if latest.action in _GEGENRICHTUNG_AKTIONEN:
+        return True
+    if not _mindestbeobachtung_erreicht(signal, latest, mindestbeob_bucket, mindestbeob_fallback):
+        return False
+    if _ist_zonen_reaffirmation(signal, latest, zonen_toleranz_relativ):
+        return False
+    return True
 
 
 def _is_expired(signal, bucket_tage: dict[str, int], fallback_tage: int) -> bool:
@@ -216,6 +325,11 @@ def run_backward_tracking(conn, watchlist, config: dict) -> BackwardTrackingResu
     bt_cfg = config.get("backward_tracking", {})
     bucket_tage = bt_cfg.get("abgelaufen_nach_tagen_bucket", DEFAULT_ABGELAUFEN_TAGE_BUCKET)
     fallback_tage = bt_cfg.get("abgelaufen_nach_tagen_fallback", DEFAULT_ABGELAUFEN_TAGE_FALLBACK)
+    mindestbeob_bucket = bt_cfg.get("mindestbeobachtung_tage_bucket", DEFAULT_MINDESTBEOBACHTUNG_TAGE_BUCKET)
+    mindestbeob_fallback = bt_cfg.get("mindestbeobachtung_tage_fallback", DEFAULT_MINDESTBEOBACHTUNG_TAGE_FALLBACK)
+    zonen_toleranz = bt_cfg.get(
+        "zonen_reaffirmation_toleranz_relativ", DEFAULT_ZONEN_REAFFIRMATION_TOLERANZ_RELATIV,
+    )
     latest_real = db.get_latest_real_signal_per_symbol(conn)
 
     rows = conn.execute(
@@ -249,7 +363,7 @@ def run_backward_tracking(conn, watchlist, config: dict) -> BackwardTrackingResu
             continue
 
         # status == OUTCOME_OFFEN: erst Ueberholt-Check, dann Ablauf-Check.
-        if _is_superseded(signal, latest_real):
+        if _is_superseded(signal, latest_real, mindestbeob_bucket, mindestbeob_fallback, zonen_toleranz):
             db.update_signal_outcome(conn, signal.id, OUTCOME_UEBERHOLT)
             result.superseded += 1
         elif _is_expired(signal, bucket_tage, fallback_tage):

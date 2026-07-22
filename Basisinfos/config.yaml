@@ -1040,6 +1040,29 @@ backward_tracking:
     lang: 120     # langfristige These (z.B. BTC/ETH Kernposition)
   abgelaufen_nach_tagen_fallback: 90  # falls halte_kriterium fehlt (aeltere Signale)
 
+  # NEU (2026-07-22, Nutzer-Frage "funktioniert das System auf Glueck?"):
+  # Mindestbeobachtungsfenster VOR einer Ueberholung (Gate 1) - deutlich unter
+  # den Abgelaufen-Schwellen oben, damit immer ein Fenster bleibt, in dem ein
+  # Signal weder zu jung fuer eine Ueberholung noch bereits abgelaufen ist.
+  # Backtest gegen echte Notebook-Daten (backtest_ueberholt_erkennung.py):
+  # 24 von 27 (89%) historisch ueberholten Hebel-Signalen waeren mit diesen
+  # Werten gerettet worden, darunter mind. 4 mit einem echten TP/SL-Ergebnis.
+  mindestbeobachtung_tage_bucket:
+    kurz: 2
+    mittel: 5
+    lang: 10
+  mindestbeobachtung_tage_fallback: 3
+  # Gate 2: liegen Entry-/Stop-Loss-/Take-Profit-Mittelwert eines neuen
+  # gleichgerichteten Signals alle innerhalb dieser relativen Toleranz um
+  # die Werte des offenen Signals, gilt das als reine Bestaetigung derselben
+  # These (keine Ueberholung), nicht als neue Information.
+  zonen_reaffirmation_toleranz_relativ: 0.03
+  # Hebel-spezifischer Override von Gate 1 fuer trade_thesis_typ='einmal_trade'
+  # (kurzlebige Squeeze-Gegenbewegung, hebel_analyst.py) - deutlich ueber dem
+  # Hebel-Cooldown (3,5-7h), aber kurz genug fuer eine wirklich kurzlebige
+  # Gegenbewegungs-These. 'swing_strategie' nutzt die Tage-Bucket-Logik oben.
+  hebel_mindestbeobachtung_stunden_einmal_trade: 18
+
 # --- Antizyklische Kauf-Disziplin (siehe Spezifikation Kap. 15) ---
 antizyklisch:
   aktiv: true

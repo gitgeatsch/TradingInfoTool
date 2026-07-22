@@ -6456,3 +6456,71 @@ nicht. Fix:
 (Retail-Konsens 51-70%, CRV/SL-Kombinationen BTC/XLM) sowie einen echten
 End-to-End-Aufruf von `post_check_hebel()` mit einem BTC-aehnlichen
 Szenario - alle Ergebnisse decken sich mit der Handanalyse.
+
+## Nachtrag (2026-07-22): Ueberholt-Erkennung repariert - Mindestbeobachtung + Zonen-Reaffirmation (Hebel+Spot)
+
+Ausloeser: Nutzer-Frage nach der ersten inhaltlichen BTC-Signal-Review "so
+wie ich es verstehe funktioniert das aktuelle System auf Glueck bzw.
+Zufall?" - konkret ausgeloest durch die Beobachtung "es kommen genuegend
+LONG-Signale rein, aber es gibt kaum echte Ergebnisse (Take-Profit/
+Stop-Loss)".
+
+**Root Cause:** Die Ueberholt-Erkennung (siehe Abschnitt 7, Punkt 6 oben,
+2026-07-16/07-19) markierte ein offenes Signal sofort als ueberholt, sobald
+IRGENDEINE neuere Nicht-HALTEN-Aktion fuer denselben Schluessel existierte -
+unabhaengig vom Alter und unabhaengig davon, ob die neue These inhaltlich
+ueberhaupt etwas anderes sagte (z. B. ein erneutes ERÖFFNEN mit praktisch
+identischen Entry-/Stop-/Take-Profit-Zonen). Da das SLA-reservierte
+Screening (Nachtrag 2026-07-21 oben) Hebel-Kandidaten alle ~3,5-7h und Spot
+alle 8-15h neu bewertet - weit unter der Zeit, die eine 10-30% entfernte
+Zielzone realistischerweise braucht -, verschwand die grosse Mehrheit der
+Signale spurlos als "ueberholt", bevor der Kurs eine faire Chance hatte.
+Die "historische Trefferquote" (n=5 fuer Hebel) war dadurch nicht nur
+klein, sondern strukturell survivorship-verzerrt.
+
+**Fix - zwei zusaetzliche Gates vor einer Ueberholung** (nur fuer den
+"gleiche Richtung/erneute These"-Fall - eine echte Gegenrichtung bei Spot,
+VERKAUFEN/TAUSCHEN nach KAUFEN, ueberholt weiterhin SOFORT, unveraendert
+seit 2026-07-16):
+1. **Mindestbeobachtung:** ein Signal darf erst ueberholt werden, nachdem
+   seit seiner Erstellung mindestens eine Mindestzeit vergangen ist -
+   abgeleitet aus `halte_kriterium_bucket` (`backward_tracking.
+   mindestbeobachtung_tage_bucket`: kurz=2/mittel=5/lang=10 Tage, deutlich
+   unter den bestehenden Abgelaufen-Schwellen 14/45/120). Bei Hebel
+   zusaetzlich ein praeziserer Override ueber `trade_thesis_typ`:
+   `einmal_trade` (kurzlebige Squeeze-Gegenbewegung) nutzt eine kuerzere
+   Stunden-Schwelle (`hebel_mindestbeobachtung_stunden_einmal_trade`, 18h)
+   statt der Tage-Bucket-Logik.
+2. **Zonen-Reaffirmation:** liegen Entry-/Stop-Loss-/Take-Profit-
+   Mittelwert des neuen Signals alle innerhalb einer relativen Toleranz
+   (`zonen_reaffirmation_toleranz_relativ`, 3%) um die Werte des offenen
+   Signals, gilt das als reine Bestaetigung derselben These, keine neue
+   Information - keine Ueberholung. Konservativ: fehlt einer der drei
+   Werte bei einem der beiden Signale, gilt das NICHT als Reaffirmation.
+
+Beide Gates muessen die Ueberholung ERLAUBEN (Mindestbeobachtung erreicht
+UND keine Zonen-Reaffirmation), sonst bleibt das Signal offen. Implementiert
+in `agent/krypto/backward_tracking.py`/`hebel_backward_tracking.py::
+_is_superseded()`, neue Config-Schluessel unter `backward_tracking:`.
+
+**Backtest VOR Live-Umstellung** (gleicher Standard wie beim
+Budget-Allocator-SLA-Fix, Nachtrag 2026-07-21 oben): neues Skript
+`backtest_ueberholt_erkennung.py` spielte die beiden neuen Gates gegen ALLE
+historisch echt "ueberholten" Hebel-/Spot-Signale nach (Rohdaten aus
+`extract_notebook_diagnose.py`, neu ergaenzte Preishistorie-Sektion) -
+Ergebnis: **24 von 27 (89%) historisch ueberholten Hebel-Signalen waeren
+gerettet worden** (weiter offen geblieben statt zu verschwinden), darunter
+mind. 1 Take-Profit- und 3 Stop-Loss-Treffer, die die historische
+Trefferquote von n=5 auf n=9 erweitert haetten. Bei Spot (nur 2 historische
+Faelle) blieb die echte Gegenrichtung (KAS) korrekt sofort ueberholt, der
+zweite Fall (CAT) wurde gerettet. Ein besonders anschauliches Beispiel:
+VIRTUAL LONG lief vom 16.07. bis 21.07. (5 Tage) als praktisch dieselbe
+These durchgehend weiter, wurde aber unter der alten Regel 8-mal
+hintereinander als "ueberholt" markiert.
+
+**Verifikation:** synthetischer Test gegen die ECHTEN Produktivfunktionen
+(nicht nur die Backtest-Kopien) reproduziert die zentralen Faelle (BTC-
+artig gerettet, VIRTUAL-artig weiterhin ueberholt, KAS `einmal_trade`-
+Override, Spot-Gegenrichtung, HALTEN-Regression) sowie ein echter
+End-to-End-Lauf von `run_backward_tracking()`/`run_hebel_backward_
+tracking()` gegen eine Kopie der Desktop-DB.
