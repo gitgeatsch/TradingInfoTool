@@ -6638,3 +6638,32 @@ Faktor bei `altseason`/`unklar_defensiv`/fehlendem Zustand, (e) echter
 End-to-End-Lauf von `post_check_hebel()` mit einem VIRTUAL-aehnlichen
 Szenario, (f) Regressionstest der Funding-Kosten-/Retail-Konsens-/CRV-Fixes
 weiterhin gruen.
+
+## Nachtrag (2026-07-22): Abschnitt 3 (Konklusion) verschmolz in Outlook zu einem Fliesstext
+
+Nutzer-Fund (Screenshot derselben VIRTUAL-E-Mail): die Legende
+"(▲ unterstützt die Empfehlung · ● neutral · ▼ Warnsignal/Risiko)" und der
+erste Risikofaktor erschienen in Outlook Web als EIN zusammenhaengender
+Fliesstext statt als zwei Zeilen - Outlook zeigte dabei den Hinweis "Wir
+haben zusätzliche Zeilenumbrüche aus dieser Nachricht entfernt". Root
+Cause: `scheduler/background.py::_formatiere_risikofaktoren()` trennte
+Risikofaktoren-Zeilen bisher nur mit einfachem `\n`, und auch der Uebergang
+Legende -> erster Faktor nutzte nur ein einfaches `\n` - Outlook Web
+entfernt offenbar genau solche einzelnen Zeilenumbrueche beim Anzeigen
+(vermutlich ein Reflow-Mechanismus, der einzelne "\n" als reinen
+Wortumbruch interpretiert). Alle ANDEREN Abschnitte der E-Mail trennen
+Bloecke bereits durchgehend mit `\n\n` (echte Leerzeile) und rendern
+deshalb zuverlaessig als eigene Absaetze - genau dieses Muster fehlte hier.
+
+**Fix:** `_formatiere_risikofaktoren()` verbindet die einzelnen
+Risikofaktor-Zeilen jetzt mit `"\n\n"` statt `"\n"`, und alle drei
+Aufrufstellen (Spot-, Hebel-, Multi-Asset-E-Mail) trennen die Legende vom
+ersten Faktor ebenfalls mit `"\n\n"` statt `"\n"` - konsistent mit dem
+bereits etablierten Absatz-Trenn-Muster der uebrigen E-Mail-Abschnitte.
+Rein die E-Mail-Formatierung betroffen - `ui/formatting.py::
+format_risikofaktoren_lines()` fuer die App-Anzeige (Tkinter, keine
+Reflow-Problematik) blieb unveraendert.
+
+**Verifikation:** synthetischer Test bestaetigt echte Leerzeilen zwischen
+allen Risikofaktor-Zeilen sowie zwischen Legende und erstem Faktor;
+bestehender Regressionstest der Risikofaktor-Symbole weiterhin gruen.

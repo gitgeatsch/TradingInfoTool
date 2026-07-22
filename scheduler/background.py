@@ -938,7 +938,13 @@ def _formatiere_risikofaktoren(signal) -> str:
         for f in eintraege:
             symbol = _RISIKOFAKTOR_SYMBOL.get(bewertung, "●")
             zeilen.append(f"{symbol} {f.get('name', '')}: {f.get('begruendung', '')}")
-    return "\n".join(zeilen)
+    # 2026-07-22, Nutzer-Fund: Outlook Web entfernt einzelne "\n" beim Anzeigen
+    # ("Wir haben zusätzliche Zeilenumbrüche aus dieser Nachricht entfernt") und
+    # verschmilzt dadurch Legende + ersten Risikofaktor zu einem Fliesstext.
+    # Andere Abschnitte dieser E-Mail trennen Bloecke bereits mit "\n\n" und
+    # rendern deshalb zuverlaessig als eigene Absaetze - hier genauso: jede
+    # Risikofaktor-Zeile bekommt eine echte Leerzeile als Absatztrenner.
+    return "\n\n".join(zeilen)
 
 
 def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None) -> None:
@@ -1001,7 +1007,7 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None) -
             + (f"{halte_kriterium_text}\n\n" if halte_kriterium_text else "")
             + (f"{forecast_text}\n" if forecast_text else "")
             + "\n--- 3. KONKLUSION (RISIKOFAKTOREN) ---\n"
-            + f"{_RISIKOFAKTOREN_LEGENDE}\n"
+            + f"{_RISIKOFAKTOREN_LEGENDE}\n\n"
             + (risikofaktoren_text if risikofaktoren_text else "Keine strukturierten Risikofaktoren verfügbar.")
             + "\n\nDetails im Signale-Tab der App. Ausführung manuell über die Bitpanda-App."
         )
@@ -1094,7 +1100,7 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None, 
             + (f"{halte_kriterium_text}\n\n" if halte_kriterium_text else "")
             + (f"{forecast_text}\n" if forecast_text else "")
             + "\n--- 3. KONKLUSION (RISIKOFAKTOREN) ---\n"
-            + f"{_RISIKOFAKTOREN_LEGENDE}\n"
+            + f"{_RISIKOFAKTOREN_LEGENDE}\n\n"
             + (risikofaktoren_text if risikofaktoren_text else "Keine strukturierten Risikofaktoren verfügbar.")
             + "\n\nDetails im Hebel-Tab der App. Ausführung manuell über die Bitpanda-App."
         )
@@ -1159,7 +1165,7 @@ def _notify_multi_asset_signal(signal, watchlist: list, bitpanda_assets: list | 
             + (f"{halte_kriterium_text}\n\n" if halte_kriterium_text else "")
             + (f"{forecast_text}\n" if forecast_text else "")
             + "\n--- 3. KONKLUSION (RISIKOFAKTOREN) ---\n"
-            + f"{_RISIKOFAKTOREN_LEGENDE}\n"
+            + f"{_RISIKOFAKTOREN_LEGENDE}\n\n"
             + (risikofaktoren_text if risikofaktoren_text else "Keine strukturierten Risikofaktoren verfügbar.")
             + "\n\nDetails im Signale-Tab der App. Ausführung manuell über die Bitpanda-App."
         )
