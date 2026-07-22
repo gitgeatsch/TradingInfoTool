@@ -6415,3 +6415,44 @@ Nutzer-Fund - "keine Daten" ohne Begruendung war nicht nachvollziehbar. Fix:
   Stichproben-Hinweis wie oben ("noch nicht belastbar") direkt neben der
   Zahl - dieselbe Schwelle wie im neuen Hebel-Risikofaktor, konsistent
   sichtbar an beiden Stellen.
+
+## Nachtrag (2026-07-22): Retail-Konsens + CRV/Stop-Loss - "Fakt zuerst, Wertung danach"
+
+Ausloeser: Nutzer wertete alle 9 ERÖFFNEN-Empfehlungen einer Nacht (7
+Symbole, LONG, Regime baer) im Detail aus und fand zwei echte, wiederholt
+auftretende Probleme - beide vom selben Muster ("eine abgeleitete
+Kennzahl/binaere Phrase versteckt den eigentlich relevanten Rohwert").
+
+**1. Retail-Konsens-Risiko (5 von 7 Signalen mit Wert betroffen, ~71%):**
+Die alte Version pruefte nur "ist die Mehrheit EXTREM (>65%)?" und
+beschriftete JEDEN Nicht-Extremfall pauschal als "positiv"/"steht NICHT im
+Konsens" - auch bei 51-64% long UND einer LONG-Empfehlung, was tatsaechlich
+DIESELBE Richtung wie die (nicht-extreme) Mehrheit ist. Fix in
+`hebel_risk_gate.py::compute_risikofaktoren_hebel()`: der Text nennt jetzt
+IMMER explizit den Prozentsatz und ob die empfohlene Richtung mit der
+Mehrheit uebereinstimmt oder nicht ("Fakt zuerst") - die Bewertung wird
+danach in drei Stufen abgeleitet: negativ (extreme gleiche Richtung,
+unveraendert), **neutral (NEU - moderate gleiche Richtung, weder klarer
+Kontraindikator noch antizyklischer Pluspunkt)**, positiv (nur noch bei
+echter Gegenrichtung zur Mehrheit).
+
+**2. CRV kann durch einen unrealistisch engen Stop-Loss aufgeblaeht werden:**
+Ein echtes BTC-Signal (21:35 derselben Nacht) hatte einen Stop-Loss nur
+1,12% vom Entry entfernt - bei 3x Hebel reicht normales Kursrauschen (kein
+Krisenereignis) zum Ausloesen - wurde aber wegen der dadurch aufgeblaehten
+CRV (16,41) als "deutlich ueber Minimum, positiv" bewertet. Zum Vergleich:
+XLM hatte eine aehnlich hohe CRV (4,20) bei einem soliden 7,72%-Stop - die
+reine CRV-Zahl unterscheidet diese sehr unterschiedlichen Risikoprofile
+nicht. Fix:
+- CRV-Risikofaktor-Text nennt jetzt immer den Stop-Loss-Abstand in % mit.
+- Neuer eigener Risikofaktor "Enger Stop-Loss (X%)" (negativ), wenn der
+  Abstand unter `risiko.hebel.sl_abstand_eng_schwelle_relativ` (NEU, 2%)
+  liegt - unabhaengig von einer gleichzeitig hohen CRV.
+- `post_check_hebel()` berechnet `sl_abstand_relativ` aus den bereits
+  vorhandenen `entry_mid`/`stop_von`-Werten (keine neue Berechnung, nur
+  zusaetzlich exportiert).
+
+**Verifikation:** synthetischer Test reproduziert alle 9 echten Nacht-Werte
+(Retail-Konsens 51-70%, CRV/SL-Kombinationen BTC/XLM) sowie einen echten
+End-to-End-Aufruf von `post_check_hebel()` mit einem BTC-aehnlichen
+Szenario - alle Ergebnisse decken sich mit der Handanalyse.

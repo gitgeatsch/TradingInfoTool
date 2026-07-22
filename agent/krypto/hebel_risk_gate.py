@@ -84,6 +84,8 @@ def compute_risikofaktoren_hebel(
     hebel_erlaubt: bool = True, veto_reason: str | None = None,
     historische_erfolgsquote: dict | None = None,
     min_sample_fuer_aussage: int = 15,
+    sl_abstand_relativ: float | None = None,
+    sl_abstand_eng_schwelle_relativ: float | None = None,
 ) -> list["Risikofaktor"]:
     """2026-07-19 (Nutzer-Wunsch: E-Mail/App-Neustrukturierung in 3 Abschnitte -
     Mathematisch berechnet / LLM-Bewertung / Konklusion mit Risikofaktoren).
@@ -146,34 +148,87 @@ def compute_risikofaktoren_hebel(
                 f"Technische Indikatoren zeigen eine eindeutige Tendenz ({confluence.overall_bias}).",
             ))
 
+    # 2026-07-22, echter Fund (BTC-Signal 21:35 in derselben Nacht): eine hohe
+    # CRV kann aus einem sehr weiten Take-Profit ODER aus einem sehr ENGEN
+    # Stop-Loss entstehen - die reine Verhaeltniszahl unterscheidet das nicht.
+    # Ein 1,12%-Stop bei 3x Hebel wurde als "CRV deutlich ueber Minimum,
+    # positiv" gewertet, obwohl normales Kursrauschen (kein Krisenereignis
+    # noetig) den Stop ausloesen kann - der SL-Abstand gehoert deshalb IMMER
+    # mit in den Text (Fakt zuerst, wie beim Retail-Konsens-Fix oben).
+    sl_abstand_text = (
+        f" Stop-Loss-Abstand vom Entry: {sl_abstand_relativ * 100:.1f}%."
+        if sl_abstand_relativ is not None else ""
+    )
     if crv is not None:
         if crv_knapp_schwelle_relativ is not None and crv < CRV_MINIMUM * (1 + crv_knapp_schwelle_relativ):
             faktoren.append(Risikofaktor(
                 f"CRV {crv:.2f}", "negativ",
-                f"Chance-Risiko-Verhältnis liegt nur knapp über dem Minimum ({CRV_MINIMUM:.1f}).",
+                f"Chance-Risiko-Verhältnis liegt nur knapp über dem Minimum ({CRV_MINIMUM:.1f})."
+                f"{sl_abstand_text}",
             ))
         elif crv >= CRV_MINIMUM * 1.5:
             faktoren.append(Risikofaktor(
                 f"CRV {crv:.2f}", "positiv",
-                f"Chance-Risiko-Verhältnis liegt deutlich über dem Minimum ({CRV_MINIMUM:.1f}).",
+                f"Chance-Risiko-Verhältnis liegt deutlich über dem Minimum ({CRV_MINIMUM:.1f})."
+                f"{sl_abstand_text}",
             ))
         else:
             faktoren.append(Risikofaktor(
-                f"CRV {crv:.2f}", "neutral", "Solide über dem Minimum, aber nicht herausragend.",
+                f"CRV {crv:.2f}", "neutral",
+                f"Solide über dem Minimum, aber nicht herausragend.{sl_abstand_text}",
             ))
 
-    if retail_konsens_risiko(retail_long_bias_extreme, long_account_pct, richtung):
+    if (
+        sl_abstand_relativ is not None
+        and sl_abstand_eng_schwelle_relativ is not None
+        and sl_abstand_relativ < sl_abstand_eng_schwelle_relativ
+    ):
         faktoren.append(Risikofaktor(
-            "Retail-Konsens-Risiko", "negativ",
-            f"Empfohlene Richtung ({richtung}) stimmt mit der extremen Mehrheitspositionierung "
-            "der Retail-Trader überein - antizyklisch betrachtet ein Kontraindikator, keine Stütze.",
+            f"Enger Stop-Loss ({sl_abstand_relativ * 100:.1f}%)", "negativ",
+            f"Stop-Loss liegt nur {sl_abstand_relativ * 100:.1f}% vom Entry entfernt (Schwelle: "
+            f"{sl_abstand_eng_schwelle_relativ * 100:.1f}%) - kann bei gehebelter Position bereits "
+            "durch normales Kursrauschen ausgelöst werden, unabhängig von einer hohen CRV.",
         ))
-    elif long_account_pct is not None:
-        faktoren.append(Risikofaktor(
-            "Retail-Konsens-Risiko", "positiv",
-            f"Empfohlene Richtung ({richtung}) steht NICHT im Konsens mit der Retail-Mehrheit "
-            f"({long_account_pct:.0f}% long positioniert).",
-        ))
+
+    # 2026-07-22, echter Fund (mehrfach in derselben Nacht: BTC/ONDO/HYPE/XLM/
+    # INJ bei 51-64% long): die alte Version pruefte NUR "ist es extrem?" und
+    # beschriftete JEDEN Nicht-Extremfall pauschal als "positiv"/"steht NICHT
+    # im Konsens" - auch wenn 51-64% long UND die Empfehlung LONG war, also
+    # tatsaechlich DIESELBE Richtung wie die (nicht-extreme) Mehrheit. Fix:
+    # "Fakt zuerst" - der Text nennt IMMER explizit die Mehrheit und ob die
+    # empfohlene Richtung damit uebereinstimmt oder nicht, die Bewertung wird
+    # ERST DANACH aus diesem eindeutigen Vergleich abgeleitet (3 Stufen statt
+    # einer binären Ja/Nein-Phrase, die falsch sein konnte).
+    if long_account_pct is not None:
+        mehrheit_ist_long = long_account_pct > 50.0
+        richtung_folgt_mehrheit = (
+            (richtung == RICHTUNG_LONG and mehrheit_ist_long)
+            or (richtung == RICHTUNG_SHORT and not mehrheit_ist_long)
+        )
+        mehrheits_pct = long_account_pct if mehrheit_ist_long else (100.0 - long_account_pct)
+        mehrheits_richtung = "long" if mehrheit_ist_long else "short"
+        fakt = (
+            f"{long_account_pct:.0f}% der Retail-Konten sind long positioniert "
+            f"({mehrheits_pct:.0f}% Mehrheit {mehrheits_richtung}) - Empfehlung ({richtung}) liegt "
+            f"{'in derselben Richtung wie' if richtung_folgt_mehrheit else 'entgegen'} der Mehrheit."
+        )
+        if richtung_folgt_mehrheit and retail_konsens_risiko(retail_long_bias_extreme, long_account_pct, richtung):
+            faktoren.append(Risikofaktor(
+                f"Retail-Konsens ({long_account_pct:.0f}% long)", "negativ",
+                f"{fakt} Extreme Mehrheitspositionierung in dieselbe Richtung - antizyklisch "
+                "betrachtet ein Kontraindikator, keine Stütze.",
+            ))
+        elif richtung_folgt_mehrheit:
+            faktoren.append(Risikofaktor(
+                f"Retail-Konsens ({long_account_pct:.0f}% long)", "neutral",
+                f"{fakt} Nicht extrem genug für einen klaren Kontraindikator, aber auch kein "
+                "antizyklischer Pluspunkt.",
+            ))
+        else:
+            faktoren.append(Risikofaktor(
+                f"Retail-Konsens ({long_account_pct:.0f}% long)", "positiv",
+                f"{fakt} Antizyklisch betrachtet ein unterstützendes Signal.",
+            ))
 
     if confidence_pct is not None:
         if confidence_pct < 55:
@@ -380,6 +435,7 @@ def post_check_hebel(
     risk_veto = False
     risk_veto_reason = None
     crv: float | None = None
+    sl_abstand_relativ: float | None = None
     action = str(result.get("action", "")).upper()
     richtung = str(result.get("richtung", "")).upper()
     hebel_cfg = config["risiko"]["hebel"]
@@ -476,8 +532,10 @@ def post_check_hebel(
             # CRV unveraendert 2.0 (Nutzer-Entscheidung 2026-07-14) - Short spiegelbildlich
             if richtung == RICHTUNG_SHORT:
                 crv = (entry_mid - take_bis) / (stop_bis - entry_mid) if stop_bis > entry_mid else None
+                sl_abstand_relativ = abs(stop_bis - entry_mid) / entry_mid if entry_mid > 0 else None
             else:
                 crv = (take_von - entry_mid) / (entry_mid - stop_von) if entry_mid > stop_von else None
+                sl_abstand_relativ = abs(entry_mid - stop_von) / entry_mid if entry_mid > 0 else None
 
             if crv is None or crv < CRV_MINIMUM:
                 risk_veto = True
@@ -551,6 +609,8 @@ def post_check_hebel(
         hebel_erlaubt=pre_result.hebel_erlaubt,
         veto_reason=pre_result.veto_reason,
         historische_erfolgsquote=historische_erfolgsquote,
+        sl_abstand_relativ=sl_abstand_relativ,
+        sl_abstand_eng_schwelle_relativ=hebel_cfg.get("sl_abstand_eng_schwelle_relativ"),
     )
     result["_risikofaktoren"] = [
         {"name": f.name, "bewertung": f.bewertung, "begruendung": f.begruendung} for f in risikofaktoren

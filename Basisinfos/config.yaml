@@ -190,6 +190,15 @@ risiko:
                                         # LONG_BIAS_EXTREME_THRESHOLD_PCT), statt (antizyklisch
                                         # korrekt) dagegen zu wetten - siehe hebel_risk_gate.py::
                                         # retail_konsens_risiko().
+    sl_abstand_eng_schwelle_relativ: 0.02  # NEU (2026-07-22, echter BTC-Fund: 1,12%-Stop bei
+                                        # 3x Hebel wurde als "CRV deutlich ueber Minimum,
+                                        # positiv" gewertet, obwohl normales Kursrauschen
+                                        # (kein Krisenereignis noetig) den Stop ausloesen
+                                        # kann) - unter dieser Schwelle (2% Abstand Entry zu
+                                        # Stop-Loss) erscheint ein eigener "Enger Stop-Loss"-
+                                        # Risikofaktor, unabhaengig von einer hohen CRV, die
+                                        # das allein nicht sichtbar macht - siehe
+                                        # hebel_risk_gate.py::compute_risikofaktoren_hebel().
 
 # --- Watchlist / Basiswerte (siehe Spezifikation Kap. 4) ---
 # Quelle: Basisinfos/Assets.xlsx (Erstimport Stand 2026-07-01), 41 Assets.
