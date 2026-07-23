@@ -31,6 +31,18 @@ _FARBE_PREIS = "#2c2c2a"
 # Eigene, von Buy-/Sell-Side/Preis-Linie klar unterscheidbare Akzentfarbe.
 _FARBE_KURSVERLAUF = "#9c1458"
 
+# 2026-07-23, Nutzer-Wunsch: statischer, IMMER GLEICHER Erklaersatz (keine
+# Signal-spezifische Interpretation - die uebernimmt bereits das LLM in der
+# eigenen Kurz-/Langbegruendung, siehe hebel_analyst.py Regel 17). Erklaert
+# nur die Begrifflichkeit ("Beruehrungen"/"gefegt"/"ungefegt"), bewusst ohne
+# jede Wertung zur aktuellen Situation - bleibt damit neutral im Sinne des
+# Stufe-1-Designs (reine Transparenz, kein Deckel).
+_ERKLAERUNG = (
+    "Berührungen = frühere Kursreaktionen an dieser Zone · gefegt = bereits "
+    "durchbrochen (kein akutes Warnsignal mehr) · ungefegt = noch aktiv "
+    "(möglicher Stop-Hunt vor einer Bewegung)"
+)
+
 
 def _zeile(preis: float, waehrung: str, abstand_prozent: float, vorzeichen: str,
            touches: int, datum: str, bereits_gefegt: bool) -> str:
@@ -71,7 +83,7 @@ def render_liquiditaetszonen_chart(
     # jedem ambienten matplotlib-rcParams-Zustand des aufrufenden Prozesses
     # (Notebook-Scheduler-Thread vs. App-Hauptthread), niemals implizit vom
     # Default abhaengig.
-    fig = Figure(figsize=(5.6, 2.8), dpi=100, facecolor="white")
+    fig = Figure(figsize=(5.6, 3.0), dpi=100, facecolor="white")
     ax = fig.add_subplot(111, facecolor="white")
     ax.set_axis_off()
 
@@ -140,7 +152,10 @@ def render_liquiditaetszonen_chart(
             linewidth=2.2, solid_capstyle="round", solid_joinstyle="round", zorder=5,
         )
 
-    fig.tight_layout()
+    fig.text(0.015, 0.015, _ERKLAERUNG, fontsize=6.5, color=_FARBE_GEFEGT,
+              ha="left", va="bottom", wrap=True)
+
+    fig.tight_layout(rect=(0, 0.07, 1, 1))
     canvas = FigureCanvasAgg(fig)
     buf = io.BytesIO()
     canvas.print_png(buf)

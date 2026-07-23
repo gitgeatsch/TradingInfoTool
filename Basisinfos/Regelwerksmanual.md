@@ -7338,4 +7338,15 @@ Kursverlauf) visuell geprüft; echter Tk-Smoke-Test mit einer realen
 `HebelView`-Instanz und einem Signal MIT eingebettetem Kursverlauf bestätigt
 fehlerfreie Einbettung; volle Regressionssuite (E-Mail-MIME-Test,
 Pipeline-Imports) erneut gelaufen.
+
+**Zusatz (gleicher Tag):** ein statischer, immer gleicher Erklärsatz direkt
+im Bild ("Berührungen = frühere Kursreaktionen an dieser Zone · gefegt =
+bereits durchbrochen (kein akutes Warnsignal mehr) · ungefegt = noch aktiv
+(möglicher Stop-Hunt vor einer Bewegung)") - erklärt nur die Begrifflichkeit,
+bewusst OHNE jede Signal-spezifische Wertung (das übernimmt weiterhin
+ausschließlich die LLM in der eigenen Kurz-/Langbegründung, siehe
+`hebel_analyst.py` Regel 17). Bleibt damit neutral im Sinne des
+Stufe-1-Designs (reine Transparenz, kein Deckel, keine zweite
+Interpretationsebene neben der KI). In beiden Chart-Varianten (mit/ohne
+Kursverlauf) visuell geprüft, volle Regressionssuite erneut gelaufen.
 Umbau) in allen drei Dateien fehlerfrei greift.
