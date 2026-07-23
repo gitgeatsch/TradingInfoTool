@@ -18,6 +18,8 @@ from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+from ui.formatting import render_detail_html
+
 logger = logging.getLogger(__name__)
 
 SMTP_HOST = "smtp.gmail.com"
@@ -43,7 +45,18 @@ def send_notification_email(
     Regressionsrisiko fuer Job-Ausfall-/Cash-Veto-Mails etc., die kein Bild
     mitgeben). Ist ein PNG uebergeben, wird eine multipart/related-Mail mit
     Text-Alternative (Fallback fuer Clients ohne HTML/Bilder) UND eingebettetem
-    Inline-Bild gebaut - kein Anhang, direkt im Mailtext sichtbar."""
+    Inline-Bild gebaut - kein Anhang, direkt im Mailtext sichtbar.
+
+    Echter Nutzer-Fund (2026-07-23): Gmails automatisches Dark-Mode-Farb-
+    Invertieren griff sowohl den eingebetteten Chart (macht ein fast-weisses
+    Diagramm mit dezenten Grautoenen praktisch unlesbar) als auch den reinen,
+    unformatierten <pre>-Text an (keine Hervorhebung wie im App-Detail-Panel).
+    Fix: `color-scheme`/`supported-color-schemes`-Meta-Tags erzwingen fuer
+    DIESE Mail immer Light-Mode-Darstellung (unterdrueckt Gmails Invertierung
+    komplett), das Bild bekommt zusaetzlich einen expliziten weissen
+    Hintergrund+Rahmen (verhindert ein nahtloses Verschmelzen mit dunklem
+    Mail-Chrome), und der Text nutzt dieselbe Zeilen-Hervorhebung
+    (render_detail_html(), siehe ui/formatting.py) wie das App-Detail-Panel."""
     absender = os.environ.get("GMAIL_ABSENDER_ADRESSE")
     app_passwort = os.environ.get("GMAIL_APP_PASSWORT")
     if not absender or not app_passwort:
@@ -57,9 +70,16 @@ def send_notification_email(
             msg = MIMEMultipart("related")
             alternative = MIMEMultipart("alternative")
             alternative.attach(MIMEText(body, "plain", "utf-8"))
-            html_body = "<pre style=\"font-family: monospace;\">" + (
-                body.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-            ) + f"</pre><img src=\"cid:{_INLINE_IMAGE_CID}\" alt=\"Liquiditätszonen-Grafik\">"
+            html_body = (
+                "<html><head>"
+                "<meta name=\"color-scheme\" content=\"light\">"
+                "<meta name=\"supported-color-schemes\" content=\"light\">"
+                "</head><body style=\"background:#ffffff;color:#1a1a1a;margin:0;padding:12px;\">"
+                + render_detail_html(body)
+                + f"<img src=\"cid:{_INLINE_IMAGE_CID}\" alt=\"Liquiditätszonen-Grafik\" "
+                "style=\"background:#ffffff;border:1px solid #dddddd;padding:8px;margin-top:12px;display:block;\">"
+                "</body></html>"
+            )
             alternative.attach(MIMEText(html_body, "html", "utf-8"))
             msg.attach(alternative)
             bild = MIMEImage(inline_image_png, "png")

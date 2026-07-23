@@ -19,8 +19,17 @@ from ui.formatting import format_money
 
 _FARBE_BUYSIDE = "#378ADD"
 _FARBE_SELLSIDE = "#D85A30"
-_FARBE_GEFEGT = "#9a9a95"
+# 2026-07-23, Nutzer-Fund: war "#9a9a95" (Kontrast nur ~2,7:1 auf Weiss) - bei
+# realer Browser-/E-Mail-Client-Darstellung (Skalierung, Client-Rendering)
+# praktisch unsichtbar, obwohl in einer isolierten PNG-Ansicht noch erkennbar.
+# Nachgedunkelt auf WCAG-AA-Kontrast (~4,6:1), bleibt gegenueber den aktiven
+# Buy-/Sell-Side-Farben weiterhin sichtbar "gedaempft".
+_FARBE_GEFEGT = "#6e6e69"
 _FARBE_PREIS = "#2c2c2a"
+# 2026-07-23, Nutzer-Wunsch: echte Kursverlauf-Linie statt nur der beiden
+# Zonen-Referenzlinien ("ich rede von... was eine Chartlinie zu sehen").
+# Eigene, von Buy-/Sell-Side/Preis-Linie klar unterscheidbare Akzentfarbe.
+_FARBE_KURSVERLAUF = "#9c1458"
 
 
 def _zeile(preis: float, waehrung: str, abstand_prozent: float, vorzeichen: str,
@@ -35,39 +44,79 @@ def _zeile(preis: float, waehrung: str, abstand_prozent: float, vorzeichen: str,
 def render_liquiditaetszonen_chart(
     liquiditaetszonen: dict, latest_price: float, waehrung: str = "EUR",
 ) -> bytes | None:
-    """Baut eine kompakte PNG-Grafik (~560x260px) mit dem aktuellen Kurs und
-    der nächsten Buy-/Sell-Side-Liquiditätszone, inkl. konkreter Zahlen
-    (Preis+Einheit, Abstand in %, Berührungen, Datum der letzten Berührung)
-    direkt als Text im Bild - kein reines Linienbild ohne Kontext. Gibt
+    """Baut eine kompakte PNG-Grafik (~560x280px) mit dem aktuellen Kurs, der
+    nächsten Buy-/Sell-Side-Liquiditätszone (inkl. konkreter Zahlen: Preis+
+    Einheit, Abstand in %, Berührungen, Datum der letzten Berührung direkt als
+    Text im Bild) UND - wenn im Fakt vorhanden (`kursverlauf`, 2026-07-23,
+    Nutzer-Wunsch nach einer echten Chart-Linie statt nur der beiden
+    Zonen-Referenzlinien) - dem tatsächlichen Kursverlauf als Linie. Gibt
     `None` zurück, wenn keine der beiden Zonen vorhanden ist (nichts
-    Sinnvolles darzustellen, z.B. zu wenig Swing-Historie)."""
+    Sinnvolles darzustellen, z.B. zu wenig Swing-Historie).
+
+    Rückwärtskompatibel: bereits VOR diesem Nachtrag erzeugte Signale haben
+    kein `kursverlauf` im gespeicherten `facts_json` - in dem Fall bleibt die
+    Grafik exakt beim alten schematischen Layout (Referenzlinien nur über die
+    linke Hälfte), kein Fehler, keine leere/kaputte Grafik."""
     buyside = liquiditaetszonen.get("naechste_buyside_zone")
     sellside = liquiditaetszonen.get("naechste_sellside_zone")
     if buyside is None and sellside is None:
         return None
 
-    fig = Figure(figsize=(5.6, 2.6), dpi=100)
-    ax = fig.add_subplot(111)
+    kursverlauf = liquiditaetszonen.get("kursverlauf") or []
+    kurs_preise = [p["preis"] for p in kursverlauf]
+    hat_kursverlauf = len(kurs_preise) >= 2
+
+    # Hintergrund explizit weiss+opak fixieren (2026-07-23, Nutzer-Fund: in der
+    # E-Mail wirkte die Grafik "ohne Linien/Beschriftung") - unabhaengig von
+    # jedem ambienten matplotlib-rcParams-Zustand des aufrufenden Prozesses
+    # (Notebook-Scheduler-Thread vs. App-Hauptthread), niemals implizit vom
+    # Default abhaengig.
+    fig = Figure(figsize=(5.6, 2.8), dpi=100, facecolor="white")
+    ax = fig.add_subplot(111, facecolor="white")
     ax.set_axis_off()
 
-    preise = [latest_price] + [z["preis"] for z in (buyside, sellside) if z is not None]
+    preise = [latest_price] + [z["preis"] for z in (buyside, sellside) if z is not None] + kurs_preise
     y_min, y_max = min(preise), max(preise)
     spanne = (y_max - y_min) or (abs(latest_price) * 0.02 or 1.0)
     y_min -= spanne * 0.2
     y_max += spanne * 0.2
     ax.set_ylim(y_min, y_max)
-    ax.set_xlim(0, 10)
 
-    ax.axhline(latest_price, color=_FARBE_PREIS, linewidth=2, xmax=0.5)
-    ax.text(0.2, latest_price, f"Aktueller Kurs: {format_money(latest_price)} {waehrung}",
+    # Referenzlinien liefen bisher nur ueber die linke Haelfte (xmax=0.5,
+    # Achsen-Bruchteil, unabhaengig von den Datenkoordinaten) - mit einer
+    # echten Kursverlauf-Linie sollen sie wie in einem echten Chart ueber die
+    # VOLLE Breite laufen. Ohne Kursverlauf (Rueckwaertskompatibilitaet)
+    # bleibt das alte schematische 0-10-Layout mit Halbbreite unveraendert.
+    if hat_kursverlauf:
+        x_max_data = len(kurs_preise) - 1
+        ax.set_xlim(0, x_max_data)
+        linien_xmax = 1.0
+    else:
+        ax.set_xlim(0, 10)
+        linien_xmax = 0.5
+
+    # Kleiner vertikaler Puffer (2026-07-23, Nutzer-Fund: Sell-Side-Label
+    # ueberlappte seine eigene gestrichelte/gepunktete Linie, weil va="top"
+    # den Text OHNE Abstand direkt an der Linie verankerte - anders als
+    # Buy-Side/Kurs mit va="bottom", die dadurch schon einen natuerlichen
+    # Abstand hatten). Schiebt Buy-Side-/Kurs-Text nach oben, Sell-Side-Text
+    # nach unten weg von der jeweiligen Linie.
+    puffer = spanne * 0.04
+
+    ax.axhline(latest_price, color=_FARBE_PREIS, linewidth=2, xmax=linien_xmax)
+    ax.text(0.2, latest_price + puffer, f"Aktueller Kurs: {format_money(latest_price)} {waehrung}",
             fontsize=9.5, color=_FARBE_PREIS, va="bottom", ha="left", fontweight="bold")
 
     if buyside is not None:
         gefegt = buyside["bereits_gefegt"]
         farbe = _FARBE_GEFEGT if gefegt else _FARBE_BUYSIDE
-        ax.axhline(buyside["preis"], color=farbe, linewidth=1.6, linestyle=(":" if gefegt else "--"), xmax=0.5)
+        # Gepunktete Linien (gefegt) brauchen etwas mehr Strichbreite als
+        # gestrichelte/durchgezogene, da ein Punktmuster pro Laengeneinheit
+        # weniger sichtbare "Tinte" traegt (sonst bei Skalierung kaum sichtbar).
+        ax.axhline(buyside["preis"], color=farbe, linewidth=(2.2 if gefegt else 1.6),
+                   linestyle=(":" if gefegt else "--"), xmax=linien_xmax)
         ax.text(
-            0.2, buyside["preis"],
+            0.2, buyside["preis"] + puffer,
             "Buy-Side-Zone: " + _zeile(buyside["preis"], waehrung, buyside["abstand_prozent"], "+",
                                         buyside["touches"], buyside["letzte_beruehrung_datum"], gefegt),
             fontsize=8.5, color=farbe, va="bottom", ha="left",
@@ -76,12 +125,19 @@ def render_liquiditaetszonen_chart(
     if sellside is not None:
         gefegt = sellside["bereits_gefegt"]
         farbe = _FARBE_GEFEGT if gefegt else _FARBE_SELLSIDE
-        ax.axhline(sellside["preis"], color=farbe, linewidth=1.6, linestyle=(":" if gefegt else "-"), xmax=0.5)
+        ax.axhline(sellside["preis"], color=farbe, linewidth=(2.2 if gefegt else 1.6),
+                   linestyle=(":" if gefegt else "-"), xmax=linien_xmax)
         ax.text(
-            0.2, sellside["preis"],
+            0.2, sellside["preis"] - puffer,
             "Sell-Side-Zone: " + _zeile(sellside["preis"], waehrung, sellside["abstand_prozent"], "-",
                                          sellside["touches"], sellside["letzte_beruehrung_datum"], gefegt),
             fontsize=8.5, color=farbe, va="top", ha="left",
+        )
+
+    if hat_kursverlauf:
+        ax.plot(
+            range(len(kurs_preise)), kurs_preise, color=_FARBE_KURSVERLAUF,
+            linewidth=2.2, solid_capstyle="round", solid_joinstyle="round", zorder=5,
         )
 
     fig.tight_layout()

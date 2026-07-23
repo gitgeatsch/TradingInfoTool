@@ -158,7 +158,7 @@ def generate_hebel_signal(
     historischer_makro_vergleich = get_cached_makro_analog_fact(conn)
     # Liquiditaetszonen (Marketmaker-Konzept, Stufe 1, 2026-07-23) - rein
     # informativ, siehe agent/krypto/liquidity_zones.py Modul-Docstring.
-    liquiditaetszonen = liquiditaetszonen_fakt(snapshot, current_price_usd, config_dict)
+    liquiditaetszonen = liquiditaetszonen_fakt(snapshot, current_price_usd, config_dict, dates, closes)
     facts = build_hebel_facts(
         asset, price_snap, snapshot, confluence, regime_result, regime_profile,
         anticyclic_context, market_context, trigger, position_aktuell, pre_result,

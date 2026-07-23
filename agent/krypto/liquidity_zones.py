@@ -14,15 +14,29 @@ from __future__ import annotations
 
 from indicators.calculations import TechnicalSnapshot
 
+# Trailing-Fenster fuer die im Fakt eingebettete Kursverlauf-Reihe (2026-07-23,
+# Nutzer-Wunsch nach einer echten Preislinie in der Liquiditaetszonen-Grafik,
+# nicht nur den beiden Zonen-Referenzlinien). Bewusst NICHT die volle
+# OHLC-Historie - haelt facts_json/E-Mail-Groesse klein und die Grafik lesbar.
+_KURSVERLAUF_MAX_PUNKTE = 90
+
 
 def liquiditaetszonen_fakt(
     snapshot: TechnicalSnapshot, latest_price: float | None, config: dict | None,
+    dates=None, closes=None,
 ) -> dict | None:
     """Baut den Fakt fuer build_facts()/build_hebel_facts(): naechste Buy-/
     Sell-Side-Zone samt Abstand in %, ob latest_price innerhalb der Naehe-
     Warnschwelle einer noch nicht gefegten Zone liegt. None, wenn das Feature
     per config deaktiviert ist, keine Zonen berechnet werden konnten (z.B. zu
-    wenig Swing-Historie) oder kein aktueller Preis vorliegt."""
+    wenig Swing-Historie) oder kein aktueller Preis vorliegt.
+
+    `dates`/`closes` (optional, 2026-07-23): dieselbe Preisreihe, die der
+    Aufrufer bereits an build_technical_snapshot() uebergeben hat - wird als
+    kompakte "kursverlauf"-Liste (trailing Fenster) mit in den Fakt eingebettet,
+    damit ui/liquidity_chart.py spaeter (App-Detail-Panel UND E-Mail) eine
+    echte Preislinie zeichnen kann, ohne die Historie erneut abrufen zu
+    muessen - eine Quelle der Wahrheit, kein zweiter Netzwerk-Call."""
     cfg = (config or {}).get("liquiditaetszonen", {})
     if not cfg.get("aktiv", True):
         return None
@@ -76,9 +90,18 @@ def liquiditaetszonen_fakt(
         in_naehe_ungefegter_zone = True
         seite = "sellside"
 
+    kursverlauf = None
+    if dates is not None and closes is not None and len(dates) > 0 and len(closes) > 0:
+        n = min(len(dates), len(closes), _KURSVERLAUF_MAX_PUNKTE)
+        kursverlauf = [
+            {"datum": str(d), "preis": float(c)}
+            for d, c in zip(dates[-n:], closes[-n:])
+        ]
+
     return {
         "naechste_buyside_zone": buyside_dict,
         "naechste_sellside_zone": sellside_dict,
         "in_naehe_ungefegter_zone": in_naehe_ungefegter_zone,
         "seite": seite,
+        "kursverlauf": kursverlauf,
     }

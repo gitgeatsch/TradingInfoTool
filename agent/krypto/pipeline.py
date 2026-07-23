@@ -576,7 +576,9 @@ def generate_signal(
     # informativ, Krypto-only (siehe agent/krypto/liquidity_zones.py
     # Modul-Docstring) - generate_signal() hier ist ausschliesslich die
     # Krypto-Pipeline, Aktien laufen ueber agent/aktien/pipeline.py.
-    liquiditaetszonen = liquiditaetszonen_fakt(snapshot, price_snap.price_usd if price_snap else None, config_dict)
+    liquiditaetszonen = liquiditaetszonen_fakt(
+        snapshot, price_snap.price_usd if price_snap else None, config_dict, dates, closes,
+    )
 
     facts = build_facts(
         asset, price_snap, holdings.get(asset.symbol), snapshot, confluence, regime_result,

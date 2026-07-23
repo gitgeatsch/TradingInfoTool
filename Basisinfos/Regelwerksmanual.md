@@ -7247,4 +7247,95 @@ Risikofaktoren) bestätigt korrekte Tag-Zuordnung UND korrekte Farbe/Fett-
 Schrift der Section-Header-Tags; Konstruktions-Smoke-Test für
 `SignalsView`/`MarktscanView` mit leerer Watchlist bestätigt, dass die
 Verdrahtung (Import + `configure_tags()`-Aufruf + `_set_detail_text()`-
+
+## Nachtrag (2026-07-23): E-Mail bekam keine Hervorhebung + Liquiditätszonen-Grafik in echten Clients kaum lesbar
+
+**Zwei echte Nutzer-Funde anhand eines echten Screenshots (NEAR-SHORT-Mail):**
+
+1. **E-Mail-Text ohne jede Hervorhebung.** Die Hervorhebung oben betraf nur
+   das App-Detail-Panel (`tk.Text`-Tags) - die E-Mail (`api/email_notify.py`)
+   baute weiterhin einen reinen, unformatierten `<pre>`-Block. Fix: die
+   Zeilen-Klassifikation (`_classify()`) wurde aus `ui/detail_panel.py`
+   (Tk-abhängig) nach `ui/formatting.py` (Tk-frei) verschoben und in
+   `classify_detail_line()` umbenannt - jetzt von BEIDEN Stellen nutzbar,
+   ohne dass der Scheduler/E-Mail-Pfad tkinter importieren muss. Neue
+   Funktion `render_detail_html()` (ebenfalls in `ui/formatting.py`) baut
+   aus demselben Text ein `<pre>`-HTML-Fragment mit Inline-Styles (feste
+   Light-Mode-Farben, unabhängig vom App-Dark-Mode) - `send_notification_email()`
+   nutzt das jetzt statt des rohen Escape-Wraps.
+2. **Gmails automatische Dark-Mode-Invertierung** griff sowohl den
+   eingebetteten Chart als auch den (damals noch unformatierten) Text an -
+   ein fast-weisses Diagramm mit dezenten Grautönen wurde dadurch praktisch
+   unlesbar (nur der dunkelste Text blieb nach der Invertierung sichtbar).
+   Fix: `<meta name="color-scheme" content="light">` +
+   `<meta name="supported-color-schemes" content="light">` im `<head>` der
+   HTML-Mail erzwingen für DIESE Mail immer Light-Mode-Darstellung
+   (unterdrückt die automatische Invertierung komplett); das `<img>` bekommt
+   zusätzlich einen expliziten weissen Hintergrund + Rahmen (verhindert ein
+   nahtloses Verschmelzen mit dunklem Mail-Chrome, verbessert die
+   Sichtbarkeit unabhängig vom Invertierungs-Fix).
+3. **Chart-Hintergrund war implizit, nicht explizit weiss.** `ui/liquidity_chart.py`
+   erzeugte die `Figure`/`Axes` ohne explizites `facecolor` - anfällig für
+   jeden ambienten matplotlib-rcParams-Zustand des aufrufenden Prozesses
+   (Notebook-Scheduler-Thread vs. App-Hauptthread). Fix: `facecolor="white"`
+   jetzt explizit auf beiden gesetzt, unabhängig von jedem globalen Zustand.
+4. **Kontrast der "bereits gefegt"-Zonenlinien zu schwach fürs echte Rendering.**
+   `_FARBE_GEFEGT` war `#9a9a95` (Kontrast nur ~2,7:1 auf Weiss) mit dünner
+   gepunkteter Linie (1.6px) - in einer isolierten PNG-Ansicht noch gerade
+   erkennbar, in echten Browsern/E-Mail-Clients (Skalierung, Rendering)
+   praktisch unsichtbar ("wirkt wie eine Grafik ohne Linien", echtes
+   Nutzer-Zitat). Fix: Farbe auf `#6e6e69` nachgedunkelt (WCAG-AA-Kontrast
+   ~4,6:1) und Strichbreite fuer gepunktete (gefegte) Linien auf 2.2px erhöht
+   (gepunktete Muster tragen pro Längeneinheit weniger sichtbare "Tinte" als
+   durchgezogene/gestrichelte bei gleicher Breite).
+
+**Verifikation:** Vollständige Regressionssuite erneut gelaufen (Klassifikations-
+Heuristik, echter Tk-Smoke-Test HebelView, Konstruktions-Smoke-Test
+SignalsView/MarktscanView, E-Mail-MIME-Test) - alle bestanden. Chart visuell
+vor/nach dem Kontrast-Fix verglichen (deutlich sichtbarer Unterschied bei
+gleicher "gefegt"-Zonenkonstellation wie im echten Nutzer-Screenshot).
+HTML-E-Mail-Fragment mit echtem Signal-Text erzeugt und auf vorhandene
+Meta-Tags + korrekte Eskapierung geprüft.
+
+Verdrahtung 3 (App-Dark-Mode-Unabhängigkeit der E-Mail-Farben) ist bewusst so
+gewählt, dass ein Umschalten des App-Themes (Light/Dark) die E-Mail-Optik nie
+beeinflusst - E-Mail-Clients haben ihr eigenes, unabhängiges Farbschema-Konzept.
+
+## Nachtrag (2026-07-23): echte Kursverlauf-Linie in der Liquiditätszonen-Grafik
+
+**Nutzer-Klarstellung** (nach den obigen Kontrast-Fixes, per hand-gezeichnetem
+Beispiel): die Grafik zeigte bisher nur die beiden Zonen-Referenzlinien + die
+Kurslinie als drei flache horizontale Striche - der Nutzer wollte den
+tatsächlichen historischen Kursverlauf als echte Chart-Linie sehen, wie in
+einem normalen Trading-Chart.
+
+**Umsetzung** (single-source-of-truth, kein zusätzlicher Netzwerk-Call):
+- `agent/krypto/liquidity_zones.py::liquiditaetszonen_fakt()` bekommt zwei
+  neue optionale Parameter `dates`/`closes` - dieselbe Preisreihe, die der
+  Aufrufer ohnehin schon an `build_technical_snapshot()` übergeben hat (in
+  `hebel_pipeline.py`/`pipeline.py` bereits im Scope). Bettet ein Trailing-
+  Fenster (max. 90 Punkte, `_KURSVERLAUF_MAX_PUNKTE`) als
+  `"kursverlauf": [{"datum": ..., "preis": ...}, ...]` direkt in den Fakt
+  ein - landet damit automatisch in `facts_json` und ist später (App-Anzeige,
+  E-Mail-Versand) ohne erneuten API-Call verfügbar.
+- `ui/liquidity_chart.py::render_liquiditaetszonen_chart()`: wenn
+  `kursverlauf` mit ≥2 Punkten vorhanden ist, läuft der x-Achsen-Bereich über
+  die echte Punktzahl (statt des alten schematischen 0-10-Platzhalters) und
+  alle Referenzlinien (Zonen + aktueller Kurs) laufen über die VOLLE Breite
+  (Achsen-Bruchteil `xmax=1.0` statt `0.5`) - die tatsächliche Kursverlauf-
+  Linie wird zusätzlich in einer eigenen, klar unterscheidbaren Akzentfarbe
+  (`#9c1458`) darübergezeichnet.
+- **Rückwärtskompatibel:** bereits vor diesem Nachtrag erzeugte Signale haben
+  kein `kursverlauf` im gespeicherten `facts_json` - für diese bleibt das
+  alte schematische Halbbreite-Layout unverändert erhalten (kein Fehler,
+  keine kaputte/leere Grafik).
+
+**Verifikation:** `liquiditaetszonen_fakt()` synthetisch getestet (Kursverlauf
+korrekt eingebettet, 90-Punkte-Cap greift korrekt auf die neuesten Punkte,
+Regressionscheck ohne `dates`/`closes` liefert weiterhin `kursverlauf: None`
+bei unveränderten Zonen-Feldern); beide Chart-Varianten (mit/ohne
+Kursverlauf) visuell geprüft; echter Tk-Smoke-Test mit einer realen
+`HebelView`-Instanz und einem Signal MIT eingebettetem Kursverlauf bestätigt
+fehlerfreie Einbettung; volle Regressionssuite (E-Mail-MIME-Test,
+Pipeline-Imports) erneut gelaufen.
 Umbau) in allen drei Dateien fehlerfrei greift.
