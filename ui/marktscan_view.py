@@ -23,6 +23,7 @@ from tkinter import messagebox, ttk
 import config as config_module
 import database.db as db
 import ui.theme as theme
+from ui.detail_panel import configure_tags, render_detail_text
 from ui.formatting import format_money
 from ui.heading_tooltip import add_heading_tooltips
 from ui.row_tooltip import add_row_tooltips
@@ -180,6 +181,7 @@ class MarktscanView(ttk.Frame):
 
         self.detail_text = tk.Text(right, height=26, wrap="word", state="disabled", relief="flat")
         self.detail_text.pack(fill="both", expand=True)
+        configure_tags(self.detail_text)
 
     def _refresh_list(self) -> None:
         conn = self._db_conn_factory()
@@ -350,10 +352,7 @@ class MarktscanView(ttk.Frame):
         self._set_detail_text("\n".join(lines))
 
     def _set_detail_text(self, text: str) -> None:
-        self.detail_text.config(state="normal")
-        self.detail_text.delete("1.0", "end")
-        self.detail_text.insert("1.0", text)
-        self.detail_text.config(state="disabled")
+        render_detail_text(self.detail_text, text)
 
     def _on_scan_clicked(self) -> None:
         self.scan_button.config(state="disabled")

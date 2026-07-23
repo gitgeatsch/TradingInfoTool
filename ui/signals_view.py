@@ -18,6 +18,7 @@ from tkinter import ttk
 
 import database.db as db
 import ui.theme as theme
+from ui.detail_panel import configure_tags, render_detail_text
 from ui.formatting import RISIKOFAKTOREN_LEGENDE, format_money, format_risikofaktoren_lines
 from ui.heading_tooltip import add_heading_tooltips
 from ui.sortable_tree import make_sortable
@@ -204,6 +205,7 @@ class SignalsView(ttk.Frame):
 
         self.detail_text = tk.Text(right, height=28, wrap="word", state="disabled", relief="flat")
         self.detail_text.pack(fill="both", expand=True)
+        configure_tags(self.detail_text)
 
     def _any_llm_client_available(self) -> bool:
         return (
@@ -522,10 +524,7 @@ class SignalsView(ttk.Frame):
         self._set_detail_text("\n".join(lines))
 
     def _set_detail_text(self, text: str) -> None:
-        self.detail_text.config(state="normal")
-        self.detail_text.delete("1.0", "end")
-        self.detail_text.insert("1.0", text)
-        self.detail_text.config(state="disabled")
+        render_detail_text(self.detail_text, text)
 
     def _render_umsetzung_status(self, signal) -> None:
         if signal is None:

@@ -7209,3 +7209,42 @@ Einbettung im Detail-Panel inkl. Regressionscheck für ein Signal ohne
 Liquiditätszonen-Fakt (keine Grafik, kein Crash); Scheduler-Glue-Logik
 (facts_json → aktueller Preis → Renderer) isoliert nachgestellt und
 verifiziert.
+
+## Nachtrag (2026-07-23): Hervorhebung in den Signal-Detail-Panels (Hebel/Spot-Familie/Marktscan)
+
+**Nutzer-Fund:** "Text und GUI ist alles schwarz weiss" — die drei
+Signal-Detail-Panels (`ui/hebel_view.py`, `ui/signals_view.py`,
+`ui/marktscan_view.py`) übergaben ihre komplette Zeilen-Liste bisher als
+einen einzigen unformatierten Textblock an `tk.Text`, ohne jede
+Hervorhebung von Abschnitts-Überschriften, Unter-Überschriften, Warnungen
+oder den ▲/●/▼-Risikofaktor-Markern.
+
+**Lösung:** neues gemeinsames Modul `ui/detail_panel.py` — erkennt bekannte
+Zeilenmuster rein per Text-Pattern (keine Änderung an den drei
+Zeilen-Bau-Funktionen selbst nötig):
+- Abschnitts-Kopfzeilen (`--- 1. ... ---` etc.): fett, größer, neue
+  Akzentfarbe `theme.header_color()` (Light `#0056b3`, Dark `#5b9bd5`,
+  eigener Palette-Eintrag, absichtlich nicht `select_bg` wiederverwendet,
+  das fuer Auswahl-Hintergruende reserviert bleiben soll).
+- Unter-Überschriften (z. B. "Top 5 Gründe:", "Halte-Kriterium:",
+  "MARKTDATEN", "EINSTUFUNG: KAUFKANDIDAT"): fett, normale Textfarbe.
+- Warnzeilen (`⚠ ...`): fett + `theme.danger_color()`.
+- Risikofaktor-Zeilen (▲/●/▼, aus `ui/formatting.py::
+  format_risikofaktoren_lines()`): eingefärbt mit denselben
+  success/info/danger-Farben, die im übrigen Programm bereits fuer
+  positiv/neutral/negativ-Marker verwendet werden (Konsistenz mit
+  Portfolio-/Screener-Ansicht).
+
+Die Liquiditätszonen-Grafik (siehe Abschnitt oben) bleibt davon unberührt —
+sie ist ein eigenständiges, bereits vollfarbiges PNG (matplotlib), komplett
+unabhängig vom Text-Hervorhebungssystem.
+
+**Verifikation:** Klassifikations-Heuristik pur an 17 synthetischen
+Testzeilen geprüft (alle bekannten Muster aus allen drei Dateien plus
+Negativ-Fälle wie eingerückte Detailzeilen); echter Tk-Smoke-Test mit einer
+realen `HebelView`-Instanz (reale SQLite-DB, reales Signal mit 3
+Risikofaktoren) bestätigt korrekte Tag-Zuordnung UND korrekte Farbe/Fett-
+Schrift der Section-Header-Tags; Konstruktions-Smoke-Test für
+`SignalsView`/`MarktscanView` mit leerer Watchlist bestätigt, dass die
+Verdrahtung (Import + `configure_tags()`-Aufruf + `_set_detail_text()`-
+Umbau) in allen drei Dateien fehlerfrei greift.

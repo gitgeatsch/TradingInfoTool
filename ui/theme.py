@@ -33,6 +33,11 @@ _LIGHT = {
     "danger": "#c0392b",
     "success": "#1a7f37",
     "swap": "#8a5a00",
+    "header": "#0056b3",  # 2026-07-23: Abschnitts-Ueberschriften in den Signal-
+                          # Detail-Panels (Nutzer-Fund "Text und GUI ist alles
+                          # schwarz weiss") - eigener Blauton statt select_bg
+                          # wiederzuverwenden, da select_bg fuer Auswahl-
+                          # Hintergruende reserviert bleiben soll.
     "bg": "#f0f0f0",
     "entry_bg": "#ffffff",
     "select_bg": "#0078d7",
@@ -52,6 +57,8 @@ _DARK = {
     "danger": "#e06c75",
     "success": "#4caf50",
     "swap": "#d7ab5f",
+    "header": "#5b9bd5",  # helleres Blau als im Light-Theme, damit es auf dunklem
+                          # Hintergrund ausreichend Kontrast behaelt.
     "bg": "#1e1e1e",
     "entry_bg": "#2d2d2d",
     "select_bg": "#094771",
@@ -171,6 +178,10 @@ def tooltip_colors() -> tuple[str, str]:
 
 def success_color() -> str:
     return _palette()["success"]
+
+
+def header_color() -> str:
+    return _palette()["header"]
 
 
 def umgesetzt_color() -> str:
