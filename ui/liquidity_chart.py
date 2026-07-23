@@ -116,8 +116,17 @@ def render_liquiditaetszonen_chart(
     puffer = spanne * 0.04
 
     ax.axhline(latest_price, color=_FARBE_PREIS, linewidth=2, xmax=linien_xmax)
-    ax.text(0.2, latest_price + puffer, f"Aktueller Kurs: {format_money(latest_price)} {waehrung}",
-            fontsize=9.5, color=_FARBE_PREIS, va="bottom", ha="left", fontweight="bold")
+    # 2026-07-23, Nutzer-Fund: bei eng beieinander liegenden Zonen/Kurs
+    # ueberlappte das "Aktueller Kurs"-Label mit den Zonen-Labels, da alle
+    # drei auf derselben linken Seite (x=0.2) standen und sich bei geringem
+    # Preisabstand vertikal nicht mehr trennen liessen. Rechts einordnen
+    # (ueber eine "Blend"-Transform: x als Achsen-Bruchteil unabhaengig vom
+    # Datenbereich, y weiterhin am echten Kurswert) trennt es raeumlich von
+    # den links stehenden Zonen-Labels, auch wenn die Preise nahe beieinander
+    # liegen.
+    ax.text(0.98, latest_price + puffer, f"Aktueller Kurs: {format_money(latest_price)} {waehrung}",
+            fontsize=9.5, color=_FARBE_PREIS, va="bottom", ha="right", fontweight="bold",
+            transform=ax.get_yaxis_transform())
 
     if buyside is not None:
         gefegt = buyside["bereits_gefegt"]
@@ -149,7 +158,7 @@ def render_liquiditaetszonen_chart(
     if hat_kursverlauf:
         ax.plot(
             range(len(kurs_preise)), kurs_preise, color=_FARBE_KURSVERLAUF,
-            linewidth=2.2, solid_capstyle="round", solid_joinstyle="round", zorder=5,
+            linewidth=1.4, solid_capstyle="round", solid_joinstyle="round", zorder=5,
         )
 
     fig.text(0.015, 0.015, _ERKLAERUNG, fontsize=6.5, color=_FARBE_GEFEGT,

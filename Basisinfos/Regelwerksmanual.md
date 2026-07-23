@@ -7349,4 +7349,16 @@ ausschließlich die LLM in der eigenen Kurz-/Langbegründung, siehe
 Stufe-1-Designs (reine Transparenz, kein Deckel, keine zweite
 Interpretationsebene neben der KI). In beiden Chart-Varianten (mit/ohne
 Kursverlauf) visuell geprüft, volle Regressionssuite erneut gelaufen.
+
+**Weiterer Zusatz (gleicher Tag, echter Screenshot mit eng beieinander
+liegenden Zonen):** das "Aktueller Kurs"-Label stand bislang wie die
+Zonen-Labels links (`x=0.2`) - lagen Zonen/Kurs preislich nahe beieinander,
+überlappten sich die Textblöcke trotz vertikalem Puffer. Fix: das
+"Aktueller Kurs"-Label steht jetzt rechts (`ha="right"`, via
+"Blend"-Transform - x als Achsen-Bruchteil unabhängig vom Datenbereich, y
+weiterhin am echten Kurswert), die Zonen-Labels bleiben links - räumliche
+statt nur vertikale Trennung, funktioniert auch bei sehr nahe beieinander
+liegenden Preisen. Zusätzlich die Kursverlauf-Linie von 2.2px auf 1.4px
+verschlankt (Nutzer-Wunsch). Beide Szenarien (eng beieinander/gut getrennt)
+visuell geprüft, volle Regressionssuite erneut gelaufen.
 Umbau) in allen drei Dateien fehlerfrei greift.
