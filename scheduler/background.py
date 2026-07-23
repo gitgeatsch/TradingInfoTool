@@ -76,6 +76,20 @@ BITPANDA_HOLDINGS_REFRESH_INTERVAL_MINUTES = 30  # 2026-07-11: seltener als der
 # Modul-Docstring) deckt derselbe Takt den KOMPLETTEN Bestandsabgleich ab
 # (sync_from_bitpanda() macht Cash intern automatisch mit, kein separater Job
 # mehr noetig).
+STALENESS_RECHECK_INTERVAL_MINUTES = 15  # 2026-07-23, echter Fund: _history_data_is_
+# stale()/_ohlc_data_is_stale() liefen bisher NUR einmalig beim App-Start (siehe
+# build_scheduler() unten). Landete der letzte Neustart zufaellig knapp VOR dem
+# Ueberschreiten der 2-Tage-Schwelle (echter Fall: Neustart 07-22 23:26, Schwelle
+# noch nicht ueberschritten) und lief die App danach durchgehend weiter (ueber
+# Mitternacht hinweg), wurde das Ueberschreiten der Schwelle nie bemerkt - die
+# Krypto-Kurshistorie blieb bis mind. 06:14 auf dem Stand 07-20 stehen, ALLE
+# Hebel-/Spot-Kandidaten scheiterten die ganze Nacht (00:11-04:15, 390 Signale)
+# am P-10-Gate, ohne dass je ein echter LLM-Call stattfand. Backtest gegen die
+# echte Log-Timeline (backtest_staleness_watchdog.py): ein periodischer Recheck
+# im 15-Min-Takt haette 389/390 dieser Signale gerettet (nur das allererste um
+# 00:11 waere knapp vor dem ersten Tick noch verpasst worden). Gleicher Takt wie
+# REFRESH_INTERVAL_MINUTES/HEBEL_SCREENING_INTERVAL_MINUTES - keine neue
+# Kadenz-Klasse noetig.
 HEBEL_SCREENING_INTERVAL_MINUTES = 15  # muss mit config.yaml hebel_screening.
 # intervall_minuten uebereinstimmen (wie bei allen anderen Jobs ist die Taktung selbst
 # ein Python-Konstante, nur der aktiv-Schalter wird dynamisch aus config.yaml gelesen,
@@ -1470,6 +1484,44 @@ def _ohlc_data_is_stale(conn, watchlist) -> bool:
         return False
 
 
+def staleness_watchdog_job(conn_factory, watchlist) -> None:
+    """Periodischer Nachhol-Check (2026-07-23, siehe STALENESS_RECHECK_INTERVAL_
+    MINUTES-Kommentar oben): _history_data_is_stale()/_ohlc_data_is_stale() liefen
+    bisher nur beim App-Start - lief die App danach lange genug durch, konnte die
+    2-Tage-Schwelle mitten im Betrieb unbemerkt ueberschritten werden. Erzwingt bei
+    Bedarf einen sofortigen Lauf des jeweiligen Jobs UEBER DEN SCHEDULER selbst
+    (modify_job, gleiches Muster wie _record_job_failure_for_backoff()) statt
+    eines direkten Funktionsaufrufs - damit APScheduler's eigene
+    Lauf-Serialisierung je job_id weiterhin greift (kein Doppel-Lauf-Risiko, falls
+    der reguläre 24h-Takt zufaellig zeitgleich feuert)."""
+    if _scheduler_ref is None:
+        return
+    conn = conn_factory()
+    try:
+        history_stale = _history_data_is_stale(conn, watchlist)
+        ohlc_stale = _ohlc_data_is_stale(conn, watchlist)
+    finally:
+        conn.close()
+    if history_stale:
+        logger.info(
+            "Staleness-Watchdog: Kurs-Historie waehrend laufendem Betrieb veraltet "
+            "- sofortiger Nachhol-Lauf ausgeloest"
+        )
+        try:
+            _scheduler_ref.modify_job("refresh_history", next_run_time=datetime.now())
+        except Exception:
+            logger.exception("Staleness-Watchdog: Nachhol-Lauf fuer refresh_history konnte nicht ausgeloest werden")
+    if ohlc_stale:
+        logger.info(
+            "Staleness-Watchdog: Kraken-OHLC-Historie waehrend laufendem Betrieb veraltet "
+            "- sofortiger Nachhol-Lauf ausgeloest"
+        )
+        try:
+            _scheduler_ref.modify_job("refresh_ohlc", next_run_time=datetime.now())
+        except Exception:
+            logger.exception("Staleness-Watchdog: Nachhol-Lauf fuer refresh_ohlc konnte nicht ausgeloest werden")
+
+
 def build_scheduler(
     coingecko_client, kraken_client, db_conn_factory, watchlist_provider,
     groq_client=None, gemini_client=None, fred_api_key=None, bitpanda_api_key=None,
@@ -1548,6 +1600,19 @@ def build_scheduler(
         args=[kraken_client, db_conn_factory, watchlist],
         id="refresh_ohlc",
         **ohlc_job_kwargs,
+    )
+    # Staleness-Watchdog (2026-07-23, siehe STALENESS_RECHECK_INTERVAL_MINUTES-
+    # Kommentar oben): wiederholt denselben Check waehrend des laufenden Betriebs,
+    # nicht nur einmalig beim Start wie oben. Bewusst KEIN next_run_time=jetzt -
+    # der Start-Fall ist durch history_stale/ohlc_stale oben bereits abgedeckt,
+    # der erste Watchdog-Tick darf reguleaer nach STALENESS_RECHECK_INTERVAL_
+    # MINUTES kommen.
+    scheduler.add_job(
+        staleness_watchdog_job,
+        "interval",
+        minutes=STALENESS_RECHECK_INTERVAL_MINUTES,
+        args=[db_conn_factory, watchlist],
+        id="staleness_watchdog",
     )
     scheduler.add_job(
         refresh_securities_prices_job,

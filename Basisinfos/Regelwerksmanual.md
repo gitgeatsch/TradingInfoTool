@@ -6748,3 +6748,121 @@ Risikofaktoren ("Keine strukturierten Risikofaktoren verfügbar") in
 Abschnitt 3 sind KEIN Bug, sondern bewusste Architektur (Hedge durchlaeuft
 laut Modul-Docstring absichtlich NICHT `risk_gate.pre_check()/post_check()`
 - CRV-Pflicht etc. passen nicht auf eine Absicherungsposition).
+
+## Nachtrag (2026-07-23): Ueberholt-Erkennung - erste Live-Verifikation auf dem Notebook
+
+Der 06:00-Cron-Lauf (04:00 UTC) am 07-23 war der erste echte Lauf unter den am
+07-22 eingefuehrten Gates (Mindestbeobachtung + Zonen-Reaffirmation, siehe
+Nachtrag oben "Ueberholt-Erkennung repariert"). Ausgewertet ueber den
+`extract_notebook_diagnose.py`-Export (Rohzeilen `hebel_signals`/
+`spot_signals`, gefiltert auf `outcome_geprueft_am` vom 07-23):
+
+- **Hebel:** 172 geprueft -> 162 `nicht_anwendbar`, 4 `stop_loss_erreicht`,
+  4 `take_profit_erreicht`, **nur 1x `ueberholt_durch_neuere_analyse`**
+  (KAIA LONG vom 07-21 08:38, `trade_thesis_typ=einmal_trade` - mit 43h Alter
+  weit ueber der 18h-Schwelle fuer Einmal-Trades, also ein legitimer Fall,
+  kein Fehl-Rescue).
+- **Spot:** 328 geprueft -> alle 328 `nicht_anwendbar`, **0x ueberholt**.
+- Die zuvor identifizierten Sorgenkinder BTC/HYPE/SUI LONG (9-13
+  Wiederholungs-Instanzen je Symbol seit 07-22) blieben durchgehend
+  `nicht_anwendbar` - keines davon wurde vorzeitig ueberholt.
+
+Im Vergleich zur vorherigen Baseline (Backtest hatte ~89%, 24/27, der
+historischen Hebel-Ueberholungen als Fehl-Rescues identifiziert) ist das eine
+sehr deutliche Bestaetigung: von geschaetzt ~89% Fehl-Rescues auf 1/172
+(0,6%) bei Hebel und 0/328 bei Spot im ersten echten Live-Tag - und die
+4+4 echten TP/SL-Treffer zeigen, dass Signale jetzt tatsaechlich bis zu einem
+echten Ergebnis ueberleben statt vorzeitig weggewischt zu werden. Kein
+Live-Code-Fix noetig, reine Bestaetigung.
+
+**Offener Punkt (nicht behoben, nur dokumentiert):** `BackwardTrackingResult.
+superseded` existiert im Code, wird aber in der Log-Zeile von
+`backward_tracking_job()`/`hebel_backward_tracking_job()` (`scheduler/
+background.py`) nicht mitgeloggt - eine schnelle Log-basierte Pruefung war
+deshalb nicht moeglich, die obige Auswertung musste direkt gegen die
+Rohzeilen des Diagnose-Exports laufen. Waere ein guenstiger kuenftiger
+Zusatz fuer die Log-Zeile selbst, aber kein Bug und nicht Teil dieser Runde.
+
+## Nachtrag (2026-07-23): Staleness-Watchdog - Krypto-Kurshistorie blieb ueber Nacht auf altem Stand, 390 Signale blockiert
+
+**Ausloeser:** Nutzer meldete Fehler im Notebook-Log + fragte nach dem
+Backward-Tracking-Job-Takt. Bei der Diagnose ueber
+`extract_notebook_diagnose.py` fiel auf: `llm_calls_heute`/
+`signal_volumen_heute` standen bei 0/180 fuer ALLE Kategorien, obwohl das Log
+"Hebel 12, Spot 23 verarbeitet, 0 fehlgeschlagen" zeigte - "verarbeitet"
+zaehlt laut `budget_allocator.py` nur "Pipeline-Aufruf ist nicht
+gecrasht", nicht "hat wirklich einen LLM aufgerufen". Filterung der
+`hebel_signals`/`spot_signals`-Rohzeilen des Exports auf `created_at` vom
+07-23 ergab: **alle 116 Hebel- und alle 274 Spot-Kandidaten** (116+274=390,
+darunter auch BTC/ETH) scheiterten von 00:11 bis mind. 04:15 Uhr am
+P-10-Gate mit identischem `gate_reason`: `"Historie veraltet (letzter Tag:
+2026-07-20)"` - Fixed-HALTEN ohne jeden echten LLM-Call.
+
+**Root Cause (per Log-Timeline zweifelsfrei belegt, KEINE Vermutung):** die
+zeitgleiche yfinance-Kaskade um 05:41 Uhr (13 haengende Multi-Asset-Threads,
+siehe `YFINANCE_HISTORY_UNRELIABLE_TICKERS`-Doku) war eine falsche Spur -
+sie betrifft eine komplett andere Datenquelle/Tabelle und begann erst NACH
+dem ersten blockierten Signal (00:11). Die echte Ursache:
+
+- `refresh_history_job()` (CoinGecko-basierte taegliche Krypto-Kurshistorie,
+  genau die Quelle hinter `get_last_history_date()`/dem P-10-Gate) lief im
+  gesamten sichtbaren 72h-Fenster **genau einmal** erfolgreich durch: 07-20
+  08:44:57 ("43/56 Assets aktualisiert").
+- Der Job hat einen Nachhol-Mechanismus (`_history_data_is_stale()`), der
+  aber bisher **nur einmalig beim App-Start** in `build_scheduler()` prueft
+  und bei Bedarf `next_run_time=jetzt` setzt - analog zu
+  `_ohlc_data_is_stale()` fuer den Kraken-OHLC-Job.
+- Die App wurde zwischen 07-20 und 07-22 ca. 28x neu gestartet (jedes Mal ein
+  frisches "Added job..."-Log). Der **letzte Neustart in diesem Fenster war
+  07-22 23:26:04** - zu diesem exakten Zeitpunkt lag die Historie erst *2,0*
+  Kalendertage zurueck (`is_history_stale()` vergleicht Kalendertage,
+  Schwelle `> 2 Tage`), der Start-Check schlug also korrekt "noch nicht
+  stale" vor.
+- Danach lief die App **durchgehend weiter, ohne weiteren Neustart**, ueber
+  Mitternacht hinweg. Um 00:00 Uhr am 07-23 kippte die Historie auf "3 Tage
+  alt" - aber der Staleness-Check laeuft NUR beim Start, nie waehrend des
+  laufenden Betriebs. Niemand hat das Ueberschreiten der Schwelle bemerkt,
+  `refresh_history_job` blieb auf seinen bei 23:26 fest einprogrammierten
+  24h-Slot gepinnt.
+
+Das ist ein struktureller, kein transienter Bug: er kann sich jederzeit
+wiederholen, wenn ein Neustart zufaellig knapp unter der 2-Tage-Schwelle
+landet und die App danach lange genug durchlaeuft (was durch den
+Watchdog/Tray-Monitor sogar der Normalfall sein soll).
+
+**Fix:** neuer periodischer Job `staleness_watchdog_job()` (`scheduler/
+background.py`), Takt `STALENESS_RECHECK_INTERVAL_MINUTES = 15` (gleicher
+Takt wie `refresh_prices`/`hebel_screening`). Wiederholt denselben Check
+(`_history_data_is_stale()`/`_ohlc_data_is_stale()`) waehrend des laufenden
+Betriebs und loest bei Bedarf ueber `scheduler.modify_job(job_id,
+next_run_time=jetzt)` einen sofortigen Nachhol-Lauf von `refresh_history`/
+`refresh_ohlc` aus - bewusst KEIN direkter Funktionsaufruf, damit
+APScheduler's eigene Lauf-Serialisierung je `job_id` weiterhin greift (kein
+Doppel-Lauf-Risiko, falls der reguläre 24h-Takt zufaellig zeitgleich
+feuert). Gleiches `modify_job()`-Muster wie der bestehende
+Job-Ausfall-Backoff (`_record_job_failure_for_backoff()`).
+
+**Backtest gegen die echte Log-Timeline** (`backtest_staleness_watchdog.py`,
+Nutzer-Vorgabe: Backtest vor jeder Live-Aenderung, gleiche Methodik wie beim
+Budget-Allocator-SLA-/Ueberholt-Erkennungs-Fix): simuliert, wie viele der 390
+real blockierten Signale ein periodischer Watchdog (angesetzt am echten
+letzten Neustart-Zeitpunkt 07-22 23:26:04) gerettet haette:
+
+| Watchdog-Takt | Erster Erkennungs-Tick | Gerettete Signale |
+|---|---|---|
+| 15 Min | 00:11 Uhr | **389 / 390** |
+| 30 Min | 00:26 Uhr | 388 / 390 |
+| 60 Min | 00:26 Uhr | 388 / 390 |
+| 120 Min | 01:26 Uhr | 320 / 390 |
+
+15 Minuten gewaehlt - rettet praktisch alle Signale (nur das allererste um
+00:11 waere knapp vor dem ersten Tick noch verpasst worden, da die Historie
+exakt um Mitternacht kippt) und passt zum bestehenden Takt anderer haeufiger
+Jobs.
+
+**Verifikation:** synthetischer Test (`test_staleness_watchdog.py`)
+bestaetigt: (a) beide Jobs stale -> beide ueber `modify_job(next_run_time=
+jetzt)` nachgetriggert; (b) nichts stale -> kein Aufruf; (c) nur eine
+Quelle stale -> nur der betroffene Job nachgetriggert; (d)
+`_scheduler_ref is None` (z.B. in einem Testkontext ohne echten Scheduler)
+-> sauberer No-Op, kein Absturz.
