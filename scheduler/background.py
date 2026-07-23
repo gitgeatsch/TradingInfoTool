@@ -1110,8 +1110,12 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None, 
         # Kommentar): dieselben zwei Probleme (rohe Floats statt format_money(),
         # fehlende Risiken/Halte-Kriterium) galten hier identisch.
         hinweis = f"Hinweis: {signal.ausfuehrbarkeit_hinweis}\n" if signal.ausfuehrbarkeit_hinweis else ""
+        eigenkapital_eur_text = (
+            f" ({format_money(signal.eigenkapitalbedarf_eur)} EUR)"
+            if signal.eigenkapitalbedarf_eur is not None else ""
+        )
         eigenkapital_zeile = (
-            f"Eigenkapitalbedarf: {format_money(signal.eigenkapitalbedarf_usd)} USD\n"
+            f"Eigenkapitalbedarf: {format_money(signal.eigenkapitalbedarf_usd)} USD{eigenkapital_eur_text}\n"
             if signal.eigenkapitalbedarf_usd is not None else ""
         )
         senkung_zeile = (
@@ -1149,7 +1153,8 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None, 
             f"Entry: {format_money(signal.entry_eur_von)}-{format_money(signal.entry_eur_bis)} EUR\n"
             f"Stop-Loss: {format_money(signal.stop_loss_eur_von)}-{format_money(signal.stop_loss_eur_bis)} EUR\n"
             f"Take-Profit: {format_money(signal.take_profit_eur_von)}-{format_money(signal.take_profit_eur_bis)} EUR\n"
-            f"Geschätzter Liquidationspreis: {format_money(signal.liquidationspreis_geschaetzt_usd)} USD\n"
+            f"Geschätzter Liquidationspreis: {format_money(signal.liquidationspreis_geschaetzt_usd)} USD"
+            f"{' (' + format_money(signal.liquidationspreis_geschaetzt_eur) + ' EUR)' if signal.liquidationspreis_geschaetzt_eur is not None else ''}\n"
             f"{eigenkapital_zeile}"
             f"{senkung_zeile}"
             f"{hinweis}"
@@ -1165,8 +1170,35 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None, 
             + (risikofaktoren_text if risikofaktoren_text else "Keine strukturierten Risikofaktoren verfügbar.")
             + "\n\nDetails im Hebel-Tab der App. Ausführung manuell über die Bitpanda-App."
         )
+        # Liquiditätszonen-Grafik (2026-07-23, Nutzer-Wunsch: nicht nur in der
+        # App, auch in der E-Mail) - derselbe Renderer wie ui/hebel_view.py,
+        # baut aus dem bereits im Signal gespeicherten Fakt (facts_json) ein
+        # PNG mit konkreten Zahlen/Einheiten. None, wenn keine Zone vorliegt
+        # oder der aktuelle Kurs nicht ermittelt werden konnte - Mail geht
+        # dann ganz normal ohne Bild raus (kein Hard-Fail wegen der Grafik).
+        chart_png = None
+        try:
+            import json as _json
+            from ui.liquidity_chart import render_liquiditaetszonen_chart
+
+            facts = _json.loads(signal.facts_json)
+            liquiditaetszonen = facts.get("liquiditaetszonen")
+            if liquiditaetszonen and conn_factory is not None:
+                conn = conn_factory()
+                try:
+                    price_snap = db.get_latest_prices(conn).get(signal.symbol)
+                finally:
+                    conn.close()
+                if price_snap is not None and price_snap.price_eur:
+                    chart_png = render_liquiditaetszonen_chart(
+                        liquiditaetszonen, price_snap.price_eur, "EUR",
+                    )
+        except Exception:
+            logger.exception("Liquiditätszonen-Grafik für %s fehlgeschlagen", signal.symbol)
+
         send_notification_email(
             f"TradingInfoTool: Hebel {signal.action} {signal.symbol} ({signal.richtung})", body, empfaenger,
+            inline_image_png=chart_png,
         )
     except Exception:
         logger.exception("Hebel-Empfehlungs-E-Mail für %s fehlgeschlagen", signal.symbol)

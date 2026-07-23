@@ -255,6 +255,7 @@ class TechnicalSnapshot:
     atr: IndicatorResult
     atr_label: str
     atr_source: str  # "real" | "proxy"
+    liquidity_zones: IndicatorResult
 
 
 def build_technical_snapshot(
@@ -278,6 +279,10 @@ def build_technical_snapshot(
         atr_result = atr_wilder(ohlc_highs, ohlc_lows, ohlc_closes)
         atr_label = "ATR-14 (echt, Kraken)"
         atr_source = "real"
+        # Liquiditaetszonen muessen aus DERSELBEN Datumsreihe wie `swing`
+        # abgeleitet werden (sonst vergleicht liquidity_pools()'s 'bereits
+        # gefegt'-Check Datumswerte aus zwei unterschiedlichen Serien).
+        swing_dates, swing_closes = ohlc_dates, ohlc_closes
     else:
         swing = swing_highs_lows_close_proxy(closes, dates)
         swing_label = "Swing-Punkte (Näherung, Schlusskurs-basiert)"
@@ -286,6 +291,7 @@ def build_technical_snapshot(
         atr_result = atr_close_to_close_proxy(closes)
         atr_label = "Volatilitäts-Näherung (kein ATR)"
         atr_source = "proxy"
+        swing_dates, swing_closes = dates, closes
 
     ema_results = {period: ema(closes, period) for period in ema_periods}
 
@@ -310,6 +316,7 @@ def build_technical_snapshot(
         atr=atr_result,
         atr_label=atr_label,
         atr_source=atr_source,
+        liquidity_zones=liquidity_pools(swing, swing_dates, swing_closes),
     )
 
 
@@ -444,6 +451,75 @@ def support_resistance_levels(
         {"price": float(np.mean(cluster)), "touches": len(cluster)} for cluster in clusters
     ]
     return IndicatorResult(levels, True)
+
+
+@dataclass
+class LiquidityZone:
+    """Ein Liquiditaets-Pool (Marketmaker-Konzept, Stufe 1, 2026-07-23): an
+    Swing-Extrema clustern typischerweise Stop-Loss-/Pending-Orders, die der
+    Kurs oft gezielt 'abholt' (Liquidity Sweep), bevor er dreht."""
+    price: float
+    seite: str  # "buyside" (aus Swing-Highs, oberhalb) | "sellside" (aus Swing-Lows, unterhalb)
+    touches: int
+    letzte_beruehrung_datum: str
+    bereits_gefegt: bool  # Kurs hat die Zone NACH ihrer letzten Beruehrung mind. einmal durchbrochen
+
+
+def liquidity_pools(
+    swing_result: IndicatorResult, dates: np.ndarray, closes: np.ndarray, tolerance_pct: float = 0.005,
+) -> IndicatorResult:
+    """Clustert Swing-Highs (Buy-Side, oberhalb) und Swing-Lows (Sell-Side,
+    unterhalb) GETRENNT NACH RICHTUNG zu Liquiditaets-Pools - anders als
+    support_resistance_levels(), das beide Richtungen mischt (dort ist die
+    Richtung irrelevant, hier ist sie der ganze Punkt: eine Buy-Side-Zone
+    liegt ueber dem aktuellen Kurs, eine Sell-Side-Zone darunter). Engere
+    Standard-Toleranz (0.5%) als support_resistance_levels() (2%), da
+    Stop-Cluster typischerweise praeziser um exakte Swing-Extrema liegen als
+    klassische Support/Resistance-Zonen. Erbt die Naeherungs-/Echt-
+    Einschraenkung der zugrundeliegenden Swing-Erkennung (swing_highs_lows_
+    fractal bei echten Kraken-OHLC-Daten, sonst swing_highs_lows_close_proxy).
+
+    `dates`/`closes` muessen dieselbe (chronologisch sortierte) Preisreihe
+    sein, aus der `swing_result` abgeleitet wurde - dient hier nur der
+    'bereits gefegt'-Erkennung (gab es NACH der letzten Beruehrung des
+    Clusters einen Schlusskurs jenseits der Zone?)."""
+    if not swing_result.available:
+        return IndicatorResult(None, False, swing_result.reason)
+
+    def _ist_gefegt(zone_price: float, seite: str, letzte_beruehrung) -> bool:
+        nachfolgende = closes[dates > letzte_beruehrung]
+        if len(nachfolgende) == 0:
+            return False
+        if seite == "buyside":
+            return bool(np.any(nachfolgende > zone_price))
+        return bool(np.any(nachfolgende < zone_price))
+
+    def _cluster(points: list, seite: str) -> list[LiquidityZone]:
+        if not points:
+            return []
+        sorted_points = sorted(points, key=lambda p: p[1])
+        clusters: list[list] = []
+        for date, price in sorted_points:
+            if clusters and abs(price - clusters[-1][-1][1]) / clusters[-1][-1][1] <= tolerance_pct:
+                clusters[-1].append((date, price))
+            else:
+                clusters.append([(date, price)])
+        zones = []
+        for cluster in clusters:
+            zone_price = float(np.mean([p for _, p in cluster]))
+            letzte_beruehrung = max(d for d, _ in cluster)
+            zones.append(LiquidityZone(
+                price=zone_price,
+                seite=seite,
+                touches=len(cluster),
+                letzte_beruehrung_datum=str(letzte_beruehrung),
+                bereits_gefegt=_ist_gefegt(zone_price, seite, letzte_beruehrung),
+            ))
+        return zones
+
+    buyside = _cluster(swing_result.value["highs"], "buyside")
+    sellside = _cluster(swing_result.value["lows"], "sellside")
+    return IndicatorResult({"buyside": buyside, "sellside": sellside}, True)
 
 
 BTC_GENESIS_DATE = np.datetime64("2009-01-03")

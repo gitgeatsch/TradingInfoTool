@@ -462,6 +462,7 @@ def compute_risikofaktoren(
     gegenszenario_pct: float | None, gegenszenario_schwelle: float | None,
     crv_knapp_schwelle_relativ: float | None,
     retail_long_bias_extreme: bool | None = None, long_account_pct: float | None = None,
+    liquiditaetszonen: dict | None = None,
 ) -> list["Risikofaktor"]:
     """Spot/Aktien/Rohstoffe/Themen-ETF-Pendant zu hebel_risk_gate.py::
     compute_risikofaktoren_hebel() - deterministische Zusammenfassung der
@@ -563,12 +564,30 @@ def compute_risikofaktoren(
         else:
             faktoren.append(Risikofaktor(f"Konfidenz {confidence_pct:.0f}%", "neutral", "Mittlere Konfidenz."))
 
+    # Liquiditaetszonen (Marketmaker-Konzept, Stufe 1, 2026-07-23, Krypto-only
+    # - siehe agent/krypto/liquidity_zones.py Modul-Docstring): rein
+    # informativ/neutral, KEIN Deckel. Aktien/Rohstoffe/Themen-ETF reichen
+    # dieses Feld nie durch (bleibt None), Block wird dort uebersprungen.
+    if liquiditaetszonen is not None and liquiditaetszonen.get("in_naehe_ungefegter_zone"):
+        seite = liquiditaetszonen.get("seite")
+        zone = liquiditaetszonen.get(
+            "naechste_buyside_zone" if seite == "buyside" else "naechste_sellside_zone"
+        ) or {}
+        faktoren.append(Risikofaktor(
+            f"Nähe zu Liquiditätszone ({seite})", "neutral",
+            f"Kurs liegt {zone.get('abstand_prozent')}% von einer noch nicht gefegten "
+            f"{'Buy-Side' if seite == 'buyside' else 'Sell-Side'}-Zone entfernt "
+            f"({zone.get('touches')} Beruehrungen, zuletzt {zone.get('letzte_beruehrung_datum')}) - "
+            "moegliches Stop-Hunt-Risiko vor der eigentlichen Bewegung, kein Richtungsurteil.",
+        ))
+
     return faktoren
 
 
 def post_check(
     parsed: dict, pre_result: RiskPreCheckResult, regime_result, config: dict, confluence=None,
     retail_long_bias_extreme: bool | None = None, long_account_pct: float | None = None,
+    liquiditaetszonen: dict | None = None,
 ) -> dict:
     """Nimmt die bereits validierte (siehe agent/analyst.py) Groq-Antwort und erzwingt
     RM-1/-2/-4/-5, Mindest-Konfidenz (R-5.10) und CRV >= 2.0 (Z-2) noch einmal
@@ -810,6 +829,7 @@ def post_check(
         crv_knapp_schwelle_relativ=config["risiko"].get("crv_knapp_schwelle_relativ"),
         retail_long_bias_extreme=retail_long_bias_extreme,
         long_account_pct=long_account_pct,
+        liquiditaetszonen=liquiditaetszonen,
     )
     result["_risikofaktoren"] = [
         {"name": f.name, "bewertung": f.bewertung, "begruendung": f.begruendung} for f in risikofaktoren

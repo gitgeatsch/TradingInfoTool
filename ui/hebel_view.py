@@ -13,6 +13,7 @@ manuellen Buttons bei Spot-Signalen/Marktscan."""
 from __future__ import annotations
 
 import json
+import logging
 import threading
 import tkinter as tk
 from tkinter import ttk
@@ -24,6 +25,8 @@ from ui.formatting import RISIKOFAKTOREN_LEGENDE, format_money, format_risikofak
 from ui.heading_tooltip import add_heading_tooltips
 from ui.row_tooltip import add_row_tooltips
 from ui.sortable_tree import make_sortable
+
+logger = logging.getLogger(__name__)
 
 _LIST_COLUMN_DESCRIPTIONS = {
     "symbol": "Kurzzeichen des Assets.",
@@ -365,9 +368,19 @@ class HebelView(ttk.Frame):
             if signal.hebel_korrektur_hinweis:
                 lines.append(f"  Hinweis: {signal.hebel_korrektur_hinweis}")
         if signal.liquidationspreis_geschaetzt_usd is not None:
-            lines.append(f"Geschätzter Liquidationspreis: {format_money(signal.liquidationspreis_geschaetzt_usd)} USD")
+            eur_text = (
+                f" ({format_money(signal.liquidationspreis_geschaetzt_eur)} EUR)"
+                if signal.liquidationspreis_geschaetzt_eur is not None else ""
+            )
+            lines.append(
+                f"Geschätzter Liquidationspreis: {format_money(signal.liquidationspreis_geschaetzt_usd)} USD{eur_text}"
+            )
         if signal.eigenkapitalbedarf_usd is not None:
-            lines.append(f"Eigenkapitalbedarf: {format_money(signal.eigenkapitalbedarf_usd)} USD")
+            eur_text = (
+                f" ({format_money(signal.eigenkapitalbedarf_eur)} EUR)"
+                if signal.eigenkapitalbedarf_eur is not None else ""
+            )
+            lines.append(f"Eigenkapitalbedarf: {format_money(signal.eigenkapitalbedarf_usd)} USD{eur_text}")
         if signal.hebel_senkung_eigenkapital_nachschuss_eur is not None:
             lines.append(
                 f"Eigenkapital-Nachschuss für Hebel-Senkung: "
@@ -476,6 +489,40 @@ class HebelView(ttk.Frame):
             lines.append("Keine strukturierten Risikofaktoren verfügbar.")
 
         self._set_detail_text("\n".join(lines))
+        self._render_liquiditaetszonen_chart(signal)
+
+    def _render_liquiditaetszonen_chart(self, signal) -> None:
+        """Bettet dieselbe Liquiditätszonen-Grafik wie die Hebel-E-Mail
+        (ui/liquidity_chart.py) unten im Detail-Panel ein (2026-07-23,
+        Nutzer-Wunsch: nicht nur in der E-Mail, auch in der App). `self.
+        _detail_chart_image` haelt die tk.PhotoImage-Referenz am Leben -
+        ohne diese Referenz wuerde Tk das Bild sofort nach dem Verlassen
+        dieser Methode wieder freigeben (bekannte Tkinter-Falle)."""
+        self._detail_chart_image = None
+        try:
+            facts = json.loads(signal.facts_json)
+            liquiditaetszonen = facts.get("liquiditaetszonen")
+            if not liquiditaetszonen:
+                return
+            conn = self._db_conn_factory()
+            try:
+                price_snap = db.get_latest_prices(conn).get(signal.symbol)
+            finally:
+                conn.close()
+            if price_snap is None or not price_snap.price_eur:
+                return
+            from ui.liquidity_chart import render_liquiditaetszonen_chart
+
+            png = render_liquiditaetszonen_chart(liquiditaetszonen, price_snap.price_eur, "EUR")
+            if png is None:
+                return
+            self._detail_chart_image = tk.PhotoImage(data=png)
+            self.detail_text.config(state="normal")
+            self.detail_text.insert("end", "\n")
+            self.detail_text.image_create("end", image=self._detail_chart_image)
+            self.detail_text.config(state="disabled")
+        except Exception:
+            logger.exception("Liquiditätszonen-Grafik im Detail-Panel für %s fehlgeschlagen", signal.symbol)
 
     def _set_detail_text(self, text: str) -> None:
         self.detail_text.config(state="normal")

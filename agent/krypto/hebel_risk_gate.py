@@ -102,6 +102,7 @@ def compute_risikofaktoren_hebel(
     ist_core_asset: bool = False,
     btc_matrix_state: str | None = None,
     btc_matrix_hinweis: str | None = None,
+    liquiditaetszonen: dict | None = None,
 ) -> list["Risikofaktor"]:
     """2026-07-19 (Nutzer-Wunsch: E-Mail/App-Neustrukturierung in 3 Abschnitte -
     Mathematisch berechnet / LLM-Bewertung / Konklusion mit Risikofaktoren).
@@ -323,6 +324,24 @@ def compute_risikofaktoren_hebel(
         )
         faktoren.append(Risikofaktor("Funding-Kosten", "negativ" if ist_hoch else "neutral", fakt))
 
+    # Liquiditaetszonen (Marketmaker-Konzept, Stufe 1, 2026-07-23) - rein
+    # informativ/neutral, KEIN Deckel (siehe agent/krypto/liquidity_zones.py
+    # Modul-Docstring): das Konzept sagt NICHT zwingend "schlecht", sondern
+    # "Timing-Vorsicht/moegliches Stop-Hunt-Risiko vor der Bewegung" - deshalb
+    # bewusst nie "negativ", unabhaengig von Richtung/Seite.
+    if liquiditaetszonen is not None and liquiditaetszonen.get("in_naehe_ungefegter_zone"):
+        seite = liquiditaetszonen.get("seite")
+        zone = liquiditaetszonen.get(
+            "naechste_buyside_zone" if seite == "buyside" else "naechste_sellside_zone"
+        ) or {}
+        faktoren.append(Risikofaktor(
+            f"Nähe zu Liquiditätszone ({seite})", "neutral",
+            f"Kurs liegt {zone.get('abstand_prozent')}% von einer noch nicht gefegten "
+            f"{'Buy-Side' if seite == 'buyside' else 'Sell-Side'}-Zone entfernt "
+            f"({zone.get('touches')} Beruehrungen, zuletzt {zone.get('letzte_beruehrung_datum')}) - "
+            "moegliches Stop-Hunt-Risiko vor der eigentlichen Bewegung, kein Richtungsurteil.",
+        ))
+
     return faktoren
 
 
@@ -454,7 +473,8 @@ def post_check_hebel(
     parsed: dict, pre_result: HebelPreCheckResult, regime_result, config: dict, confluence=None,
     retail_long_bias_extreme: bool | None = None, long_account_pct: float | None = None,
     historische_erfolgsquote: dict | None = None, funding_rate_stunde: float | None = None,
-    asset_rolle: str | None = None,
+    asset_rolle: str | None = None, liquiditaetszonen: dict | None = None,
+    eur_usd_fx_rate: float | None = None,
 ) -> dict:
     """Nimmt die bereits schema-validierte LLM-Antwort und erzwingt AZ-7/RM-1/
     RM-11/CRV noch einmal deterministisch, analog risk_gate.py::post_check().
@@ -632,6 +652,21 @@ def post_check_hebel(
                     result["eigenkapitalbedarf"] = (
                         positionsgroesse_usd / hebel_final if positionsgroesse_usd is not None else None
                     )
+                    # Nachtrag 2026-07-23 (Nutzer-Fund am Signal-Detail-Panel):
+                    # Entry/Stop-Loss/Take-Profit werden im selben Panel bereits
+                    # in EUR gezeigt - Liquidationspreis/Eigenkapitalbedarf bisher
+                    # nur in USD, erzwang eine stille Kopfrechnung. eur_usd_fx_rate
+                    # (USD pro EUR, siehe risk_gate.py::pre_check() fuer dieselbe
+                    # EURCV-Ableitung) macht die Umrechnung ohne zusaetzlichen
+                    # API-Call moeglich.
+                    if eur_usd_fx_rate:
+                        result["liquidationspreis_geschätzt_eur"] = (
+                            result["liquidationspreis_geschätzt"] / eur_usd_fx_rate
+                        )
+                        result["eigenkapitalbedarf_eur"] = (
+                            result["eigenkapitalbedarf"] / eur_usd_fx_rate
+                            if result["eigenkapitalbedarf"] is not None else None
+                        )
         else:
             risk_veto = True
             reason = "Zonen unvollständig - Hebel-Empfehlung kann nicht sicher berechnet werden"
@@ -690,6 +725,7 @@ def post_check_hebel(
         ist_core_asset=(asset_rolle == "core"),
         btc_matrix_state=regime_result.btc_matrix_state,
         btc_matrix_hinweis=regime_result.btc_matrix_beschreibung,
+        liquiditaetszonen=liquiditaetszonen,
     )
     result["_risikofaktoren"] = [
         {"name": f.name, "bewertung": f.bewertung, "begruendung": f.begruendung} for f in risikofaktoren
