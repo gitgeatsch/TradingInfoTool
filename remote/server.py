@@ -422,7 +422,7 @@ def create_app(
     kraken_client,
     groq_client,
     conn_factory,
-    watchlist,
+    watchlist_provider,
     fred_api_key,
     access_token: str,
     log_path: Path,
@@ -432,6 +432,11 @@ def create_app(
     # GET / (Query-Param, siehe Modul-Docstring in remote/server.py) im
     # Klartext in data/tradinginfotool.log landen.
     logging.getLogger("werkzeug").setLevel(logging.WARNING)
+    # Restart-Fix (2026-07-23, siehe Memory project_watchlist_live_reload_fix):
+    # `watchlist_provider` (config.get_watchlist selbst, siehe main.py) statt
+    # einer beim Server-Start eingefrorenen Liste - jede Route ruft sie bei
+    # jedem Request frisch auf, damit ein neuer Watchlist-Eintrag (z.B. per
+    # "In Watchlist uebernehmen") auch hier ohne App-Neustart sichtbar wird.
 
     app = Flask(__name__)
 
@@ -455,7 +460,7 @@ def create_app(
     def api_status():
         conn = conn_factory()
         try:
-            status = build_status(conn, watchlist, log_path)
+            status = build_status(conn, watchlist_provider(), log_path)
         finally:
             conn.close()
         return jsonify(status.to_dict())
@@ -472,8 +477,8 @@ def create_app(
             return jsonify({"error": "already_running"}), 409
 
         def _run():
-            background.refresh_prices_job(coingecko_client, conn_factory, watchlist)
-            background.refresh_securities_prices_job(YFinanceClient(), conn_factory, watchlist)
+            background.refresh_prices_job(coingecko_client, conn_factory, watchlist_provider)
+            background.refresh_securities_prices_job(YFinanceClient(), conn_factory, watchlist_provider)
 
         threading.Thread(target=_run, daemon=True).start()
         return jsonify({"started": True}), 202
@@ -485,7 +490,7 @@ def create_app(
 
         threading.Thread(
             target=background.marktscan_job,
-            args=(coingecko_client, kraken_client, conn_factory, watchlist, fred_api_key),
+            args=(coingecko_client, kraken_client, conn_factory, watchlist_provider, fred_api_key),
             daemon=True,
         ).start()
         return jsonify({"started": True}), 202

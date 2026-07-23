@@ -263,7 +263,12 @@ def main() -> None:
         coingecko_client=coingecko_client,
         kraken_client=kraken_client,
         db_conn_factory=db.get_connection,
-        watchlist_provider=lambda: watchlist,
+        # 2026-07-23, Restart-Fix (siehe Memory project_watchlist_live_reload_fix):
+        # echte Funktionsreferenz statt Lambda um die beim Start eingefrorene
+        # `watchlist`-Variable - config.get_watchlist() liest bei JEDEM Aufruf
+        # frisch aus config.yaml, jeder Scheduler-Job ruft sie jetzt selbst zu
+        # Beginn seines eigenen Laufs auf (siehe scheduler/background.py).
+        watchlist_provider=config.get_watchlist,
         groq_client=groq_client,
         gemini_client=gemini_client,
         fred_api_key=fred_api_key,
@@ -287,7 +292,7 @@ def main() -> None:
             kraken_client=kraken_client,
             groq_client=groq_client,
             conn_factory=db.get_connection,
-            watchlist=watchlist,
+            watchlist_provider=config.get_watchlist,
             fred_api_key=fred_api_key,
             access_token=remote_access_token,
             log_path=LOG_PATH,

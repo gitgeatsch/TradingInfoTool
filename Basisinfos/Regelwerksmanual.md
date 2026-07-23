@@ -6939,3 +6939,110 @@ bleibt rueckwaertskompatibel, `ergebnis_objekt` weiterhin befuellt; (c)
 eine Exception im Callback selbst stoppt die Signal-Verarbeitung nicht
 (P-10) - der Kandidat wird trotzdem korrekt in `ergebnis_objekt`/
 `hebel_verarbeitet` gefuehrt.
+
+## Nachtrag (2026-07-23): Watchlist-Aenderungen wirkten nur nach App-Neustart - in 3 Phasen behoben
+
+**Ausloeser:** Nutzer fuegte XNO (echter Marktscan-Kaufkandidat, echter Kauf
+umgesetzt) ueber "In Watchlist uebernehmen" hinzu und stellte fest, dass ein
+App-Neustart noetig war, damit der neue Eintrag irgendwo wirkt - Nutzer-
+Einschaetzung: das sollte auch ohne Neustart moeglich sein. Vollstaendige
+Analyse ergab: **kein neuer Bug, sondern eine seit 2026-07-16 bewusst
+dokumentierte, aber nie hinterfragte Einschraenkung** (`ui/app.py::
+_on_watchlist_changed()` warnte davor explizit).
+
+**Root Cause (identisch an 3 Stellen, ein einziger Ursprung):**
+`main.py:186` laedt `watchlist = config.get_watchlist()` EINMALIG beim
+App-Start. Diese eine Variable wird an drei Subsysteme weitergereicht, die
+sie NIE wieder aktualisieren:
+1. **Scheduler-Jobs** (`build_scheduler(watchlist_provider=lambda:
+   watchlist)` - die Lambda liefert immer denselben eingefrorenen Wert,
+   egal wie oft sie aufgerufen wird, UND `watchlist_provider()` selbst
+   wurde in `build_scheduler()` nur einmal aufgerufen, das Ergebnis dann an
+   alle 10 Jobs als fixer Parameter durchgereicht).
+2. **Haupt-GUI** (`ui/app.py::TradingInfoToolApp.__init__(): self.
+   _watchlist = watchlist` - alle 5 Tabs lesen dieselbe, nie aktualisierte
+   Liste).
+3. **Remote-Steuer-Seite** (`remote/server.py::create_app()` - `watchlist`
+   als Flask-Closure erfasst, nie erneut abgefragt).
+
+`config.get_watchlist()` selbst liest bei JEDEM Aufruf frisch aus
+`config.yaml` (kein Caching) - das Problem lag ausschliesslich darin, WANN/
+WIE OFT diese Funktion aufgerufen wurde, nicht in ihr selbst.
+
+**Nutzer-Vorgabe vor der Umsetzung:** "genau analysieren und bewerten...
+bitte auch fuer zukuenftige Aenderungen unser Standardschema inkl. Doku
+verfolgen bevor wir umsetzen" - vollstaendige Bestandsaufnahme aller 3
+betroffenen Stellen VOR jeder Code-Aenderung, dann Umsetzung in 3 klar
+abgegrenzten, einzeln verifizierten Phasen.
+
+### Phase 1: Scheduler-Jobs (`scheduler/background.py`, `main.py`)
+
+Alle 10 Job-Funktionen (`refresh_prices_job`, `refresh_securities_prices_
+job`, `refresh_history_job`, `refresh_ohlc_job`, `refresh_aktien_ohlc_job`,
+`marktscan_job`, `backward_tracking_job`, `staleness_watchdog_job`,
+`hebel_screening_job`, `multi_asset_batch_job`) bekommen statt des
+Parameters `watchlist` den Parameter `watchlist_provider` (Callable) - als
+allererste Zeile jeder Funktion `watchlist = watchlist_provider()`, Rest
+der Funktion unveraendert. `build_scheduler()`s `scheduler.add_job(...)`-
+Aufrufe reichen `watchlist_provider` statt der eingefrorenen Liste durch.
+`main.py` uebergibt `config.get_watchlist` DIREKT (echte Funktionsreferenz)
+statt `lambda: watchlist`.
+
+### Phase 2: Haupt-GUI (`ui/app.py`)
+
+`_refresh_watchlist_from_db()` (laeuft bereits alle 3 Sek. per
+`_poll_prices()`) aktualisiert `self._watchlist` jetzt IN-PLACE
+(`self._watchlist[:] = config_module.get_watchlist()`, nicht
+Neuzuweisung) - dieselbe Listeninstanz bleibt bestehen, alle 5 Tabs (die
+sie referenzieren) sehen die Aenderung automatisch mit, ohne selbst
+angepasst werden zu muessen. Nutzt die bestehende, bereits bewaehrte
+Sortierungs-/Auswahl-Erhaltung (Task #139) unveraendert weiter - kein
+Eingriff in diese Logik noetig.
+
+`_on_watchlist_changed()`-Meldung entsprechend aktualisiert: kein "Neustart
+noetig" mehr, sondern "Anzeige aktualisiert sich automatisch, Signale/
+Cooldown beim naechsten Job-Takt".
+
+**Echter Fund waehrend der Verifikation:** `_manual_refresh()` (manueller
+"Preis-Refresh"-Button) rief `refresh_prices_job()` bisher DIREKT mit der
+rohen `self._watchlist`-Liste auf - nach der Phase-1-Signaturaenderung
+haette das mit `TypeError: 'list' object is not callable` gecrasht. Auf
+`lambda: self._watchlist` umgestellt.
+
+### Phase 3: Remote-Steuer-Seite (`remote/server.py`, `main.py`)
+
+`create_app()` bekommt `watchlist_provider` statt `watchlist`. `/api/
+status` ruft `watchlist_provider()` bei jedem Request frisch auf.
+
+**Zweiter echter Fund waehrend der Analyse:** `/api/refresh-prices` und
+`/api/marktscan` riefen `refresh_prices_job()`/`refresh_securities_prices_
+job()`/`marktscan_job()` ebenfalls DIREKT auf (nicht nur ueber den
+Scheduler) - beide Routen mussten ebenfalls auf `watchlist_provider`
+umgestellt werden, sonst waeren die manuellen Remote-Buttons durch die
+Phase-1-Signaturaenderung gebrochen.
+
+### Verifikation (3 separate Testdateien, wie vom Nutzer verlangt "moeglichst gut testen")
+
+- **Phase 1** (`test_watchlist_live_reload_scheduler.py`): strukturelle
+  Pruefung aller 10 Signaturen; funktionale Probe (`refresh_prices_job`
+  sieht eine zwischen zwei Laeufen geaenderte Watchlist ohne Neustart);
+  `main.py` uebergibt die echte Funktionsreferenz.
+- **Phase 2** (`test_watchlist_live_reload_gui.py`, echter Tk-Smoke-Test
+  mit realer `TradingInfoToolApp`-Instanz): Ausgangszustand korrekt;
+  XNO erscheint nach simulierter Watchlist-Aenderung OHNE Neustart;
+  **Zeilenauswahl bleibt ueber den Refresh hinweg erhalten** (Task #139
+  nicht gebrochen); `self._watchlist` bleibt dieselbe Listeninstanz
+  (in-place, keine Neuzuweisung); wiederholter Refresh bleibt stabil.
+- **Phase 3** (`test_watchlist_live_reload_remote.py`, echte Flask-Test-
+  Client-Requests): `/api/status` ruft `watchlist_provider()` pro Request
+  frisch auf; sieht eine Aenderung sofort; `/api/refresh-prices` reicht
+  das Callable korrekt an beide Preis-Jobs durch (Regressionscheck fuer
+  den zweiten Fund).
+- **Zusaetzliche Regressionsprobe** fuer den ersten Fund (`_manual_
+  refresh()`): echte `TradingInfoToolApp`-Instanz, bestaetigt dass der
+  manuelle Preis-Button ein gueltiges Callable uebergibt statt der jetzt
+  inkompatiblen rohen Liste.
+
+Insgesamt 4 Testdateien, alle grün, inklusive zweier echter, sonst erst im
+Betrieb aufgefallener Regressionen (manueller GUI-Preis-Button, beide
+manuellen Remote-Buttons).

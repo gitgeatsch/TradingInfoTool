@@ -402,6 +402,22 @@ class TradingInfoToolApp(tk.Tk):
     def _refresh_watchlist_from_db(self) -> None:
         import config as config_module
 
+        # Restart-Fix (2026-07-23, siehe Memory project_watchlist_live_reload_fix):
+        # self._watchlist wurde bisher NUR beim App-Start aus config.yaml
+        # geladen und danach nie wieder aktualisiert - ein neuer/geaenderter
+        # Watchlist-Eintrag (z.B. per "In Watchlist uebernehmen") blieb in
+        # ALLEN Tabs unsichtbar, bis die App neu gestartet wurde (dieselbe
+        # Liste wird von Watchlist/Portfolio/Signale/Hebel/Marktscan-Tab
+        # gemeinsam referenziert). In-Place-Aktualisierung (list[:] = ...,
+        # nicht Neuzuweisung) - dieselbe Listeninstanz bleibt bestehen, jede
+        # andere Stelle, die self._watchlist haelt, sieht die Aenderung
+        # automatisch mit, ohne selbst angepasst werden zu muessen. Laeuft
+        # hier, weil _refresh_watchlist_from_db() bereits alle 3 Sek. per
+        # _poll_prices() aufgerufen wird UND die bestehende Sortierung/
+        # Auswahl-Erhaltung (Task #139) unveraendert weiterverwendet -
+        # kein Extra-Code, keine neue Fehlerquelle.
+        self._watchlist[:] = config_module.get_watchlist()
+
         conn = self._db_conn_factory()
         try:
             latest_prices = db.get_latest_prices(conn)
@@ -704,14 +720,27 @@ class TradingInfoToolApp(tk.Tk):
         AssetQualityDialog(self, asset)
 
     def _on_watchlist_changed(self) -> None:
-        """Nach Hinzufuegen/Bearbeiten: Watchlist-Anzeige aktualisieren. Wirkt
-        NUR auf die Anzeige (self._watchlist selbst wird erst mit einem
-        Neustart neu aus config.yaml geladen, gleiche Einschraenkung wie bei
-        add_watchlist_entry()/update_watchlist_rolle() schon immer)."""
+        """Nach Hinzufuegen/Bearbeiten: Watchlist-Anzeige aktualisieren.
+
+        Restart-Fix (2026-07-23, siehe Memory project_watchlist_live_reload_fix):
+        bis dahin wirkte eine Aenderung NUR auf die naechste Anzeige, self.
+        _watchlist selbst (und alle Hintergrund-Jobs) sahen sie erst nach
+        einem App-Neustart - das galt seit add_watchlist_entry()/
+        update_watchlist_rolle() schon immer. Jetzt: self._watchlist wird
+        von _refresh_watchlist_from_db() bei jedem der alle-3-Sek.-Polls live
+        aus config.yaml aktualisiert (in-place, dieselbe Listeninstanz - alle
+        Tabs sehen es automatisch mit), und jeder Scheduler-Hintergrundjob
+        liest die Watchlist seit demselben Fix ueber watchlist_provider() bei
+        jedem eigenen Lauf frisch (siehe scheduler/background.py) - kein
+        Neustart mehr noetig, nur der naechste reguelaere Job-Takt (meist
+        15 Min, max. 24 Std. bei den taeglichen Jobs)."""
         messagebox.showinfo(
             "Watchlist geändert",
-            "Änderung gespeichert. Für volle Wirkung (Signale/Facts/Cooldown-Einstufung) "
-            "ist ein Neustart der App nötig.",
+            "Änderung gespeichert. Die Anzeige aktualisiert sich automatisch "
+            "innerhalb weniger Sekunden. Signale/Facts/Cooldown-Einstufung "
+            "berücksichtigen die Änderung spätestens beim nächsten regulären "
+            "Job-Takt (meist 15 Min, bei einigen täglichen Jobs bis zu 24 Std.) "
+            "- ein Neustart der App ist dafür nicht mehr nötig.",
         )
 
     def _poll_prices(self) -> None:
@@ -860,7 +889,12 @@ class TradingInfoToolApp(tk.Tk):
     def _manual_refresh(self) -> None:
         from scheduler.background import refresh_prices_job
 
-        refresh_prices_job(self._coingecko_client, self._db_conn_factory, self._watchlist)
+        # Restart-Fix (2026-07-23, siehe Memory project_watchlist_live_reload_fix):
+        # refresh_prices_job() erwartet seit Phase 1 einen watchlist_provider
+        # (Callable), keine rohe Liste mehr - lambda: self._watchlist reicht
+        # die bereits live gehaltene Liste (siehe _refresh_watchlist_from_db())
+        # weiter, ohne sie hier zusaetzlich neu zu laden.
+        refresh_prices_job(self._coingecko_client, self._db_conn_factory, lambda: self._watchlist)
         self._refresh_bitpanda_assets()
         self._refresh_watchlist_from_db()
         self._portfolio_view.refresh()

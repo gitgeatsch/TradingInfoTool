@@ -132,13 +132,20 @@ _BACKOFF_MAX_MINUTES = 240  # Deckel 4 Std. - auch bei einem sehr langen Ausfall
 # stillzulegen.
 
 
-def refresh_prices_job(client, conn_factory, watchlist) -> bool:
+def refresh_prices_job(client, conn_factory, watchlist_provider) -> bool:
     """Rueckgabe: True = tatsaechlich gelaufen, False = uebersprungen (Lock
     bereits belegt - laeuft schon ein anderer Aufruf desselben Jobs, egal ob
-    durch den Scheduler-Takt oder einen manuellen Remote-Trigger)."""
+    durch den Scheduler-Takt oder einen manuellen Remote-Trigger).
+
+    `watchlist_provider` (2026-07-23, Restart-Fix - siehe Memory project_
+    watchlist_live_reload_fix): Callable statt fertiger Liste, wird HIER bei
+    jedem Lauf frisch aufgerufen (config.get_watchlist() liest config.yaml
+    ohne Caching) - eine neu hinzugefuegte Watchlist-Asset wird so spaetestens
+    beim naechsten Takt beruecksichtigt, ohne App-Neustart."""
     if not refresh_prices_lock.acquire(blocking=False):
         logger.info("Preis-Refresh: bereits in Ausführung - übersprungen")
         return False
+    watchlist = watchlist_provider()
     _job_started_at["refresh_prices"] = time.monotonic()
     conn = conn_factory()
     try:
@@ -158,14 +165,16 @@ def refresh_prices_job(client, conn_factory, watchlist) -> bool:
     return True
 
 
-def refresh_securities_prices_job(client, conn_factory, watchlist) -> bool:
+def refresh_securities_prices_job(client, conn_factory, watchlist_provider) -> bool:
     """Multi-Asset-Tracking (Nutzer-Idee 2026-07-09): Preis-Refresh fuer Aktien/ETF/
     Rohstoffe ueber yfinance, analog zu refresh_prices_job() fuer Krypto. Assets mit
     assetklasse == 'krypto' werden von YFinanceClient.fetch_price_snapshots() selbst
-    uebersprungen, kein Vorfiltern hier noetig. Rueckgabewert wie refresh_prices_job()."""
+    uebersprungen, kein Vorfiltern hier noetig. Rueckgabewert wie refresh_prices_job().
+    `watchlist_provider` siehe refresh_prices_job()-Docstring (2026-07-23)."""
     if not refresh_securities_lock.acquire(blocking=False):
         logger.info("Wertpapier-Preis-Refresh: bereits in Ausführung - übersprungen")
         return False
+    watchlist = watchlist_provider()
     _job_started_at["refresh_securities"] = time.monotonic()
     conn = conn_factory()
     try:
@@ -196,7 +205,9 @@ def refresh_securities_prices_job(client, conn_factory, watchlist) -> bool:
     return True
 
 
-def refresh_history_job(client, conn_factory, watchlist) -> None:
+def refresh_history_job(client, conn_factory, watchlist_provider) -> None:
+    """`watchlist_provider` siehe refresh_prices_job()-Docstring (2026-07-23)."""
+    watchlist = watchlist_provider()
     conn = conn_factory()
     try:
         results = backfill_all(client, conn, watchlist)
@@ -214,7 +225,9 @@ def refresh_history_job(client, conn_factory, watchlist) -> None:
         conn.close()
 
 
-def refresh_ohlc_job(client, conn_factory, watchlist) -> None:
+def refresh_ohlc_job(client, conn_factory, watchlist_provider) -> None:
+    """`watchlist_provider` siehe refresh_prices_job()-Docstring (2026-07-23)."""
+    watchlist = watchlist_provider()
     conn = conn_factory()
     try:
         results = backfill_all_ohlc(client, conn, watchlist)
@@ -234,13 +247,15 @@ def refresh_ohlc_job(client, conn_factory, watchlist) -> None:
         conn.close()
 
 
-def refresh_aktien_ohlc_job(conn_factory, watchlist) -> None:
+def refresh_aktien_ohlc_job(conn_factory, watchlist_provider) -> None:
     """Automatischer taeglicher OHLC-Refresh fuer Einzelaktien (2026-07-16, siehe
     api/yfinance_history.py::backfill_all_aktien_ohlc() Docstring fuer den vollen
     Kontext - schliesst eine Luecke aus dem Asset-Verwaltungs-Audit: ohne diesen Job
     haette der taegliche Backward-Tracking-Job offene Aktien-Signale zunehmend gegen
     veraltete Kursdaten geprueft, da Phase 1 der Aktien-Pipeline OHLC bisher nur bei
-    manuellem Signal-Klick aktualisierte)."""
+    manuellem Signal-Klick aktualisierte). `watchlist_provider` siehe
+    refresh_prices_job()-Docstring (2026-07-23)."""
+    watchlist = watchlist_provider()
     conn = conn_factory()
     try:
         results = backfill_all_aktien_ohlc(conn, watchlist)
@@ -256,7 +271,7 @@ def refresh_aktien_ohlc_job(conn_factory, watchlist) -> None:
         conn.close()
 
 
-def marktscan_job(coingecko_client, kraken_client, conn_factory, watchlist, fred_api_key) -> bool:
+def marktscan_job(coingecko_client, kraken_client, conn_factory, watchlist_provider, fred_api_key) -> bool:
     """MS-3: 2x taeglich (04:00/16:00, siehe build_scheduler()) - kompletter
     Marktscan-Lauf (Stufe A-D, agent/krypto/marktscan.py). Braucht ein aktuelles Regime
     (R-5.1 + Liquiditaets-Regime + Zyklus-Risiko) fuer Stufe C/D, dafuer dieselbe
@@ -264,10 +279,12 @@ def marktscan_job(coingecko_client, kraken_client, conn_factory, watchlist, fred
     dupliziert). Seit Phase 5 (2026-07-14) macht `run_scan()` selbst KEINE Groq-Calls
     mehr (siehe agent/krypto/marktscan.py) - der Budget-Allocator generiert
     Kaufkandidaten-Begruendungen zentral im 15-Min-Takt. Rueckgabewert wie
-    refresh_prices_job() (Lock-Status)."""
+    refresh_prices_job() (Lock-Status). `watchlist_provider` siehe
+    refresh_prices_job()-Docstring (2026-07-23)."""
     if not marktscan_lock.acquire(blocking=False):
         logger.info("Marktscan: bereits in Ausführung - übersprungen")
         return False
+    watchlist = watchlist_provider()
     _job_started_at["marktscan"] = time.monotonic()
     conn = conn_factory()
     try:
@@ -299,7 +316,7 @@ def marktscan_job(coingecko_client, kraken_client, conn_factory, watchlist, fred
     return True
 
 
-def backward_tracking_job(conn_factory, watchlist) -> None:
+def backward_tracking_job(conn_factory, watchlist_provider) -> None:
     """Selbstverifikations-Vision Schritt 2 (2026-07-10, siehe
     agent/krypto/backward_tracking.py) - taeglich, feste Uhrzeit (siehe
     build_scheduler()): prueft vergangene KAUFEN/NACHKAUFEN-Signale gegen die
@@ -308,7 +325,9 @@ def backward_tracking_job(conn_factory, watchlist) -> None:
 
     2026-07-15 um Hebel-Signale erweitert (agent/krypto/hebel_backward_tracking.py) -
     derselbe taegliche Lauf, dieselbe Fehlerbehandlung, kein zweiter Scheduler-
-    Eintrag noetig (identisches Timing, identische Konfiguration)."""
+    Eintrag noetig (identisches Timing, identische Konfiguration).
+    `watchlist_provider` siehe refresh_prices_job()-Docstring (2026-07-23)."""
+    watchlist = watchlist_provider()
     conn = conn_factory()
     try:
         import config as config_module
@@ -1249,11 +1268,13 @@ def _refresh_hebel_position_liquidation_prices(conn) -> None:
 
 
 def hebel_screening_job(
-    coingecko_client, kraken_client, conn_factory, watchlist, bitpanda_api_key=None,
+    coingecko_client, kraken_client, conn_factory, watchlist_provider, bitpanda_api_key=None,
     groq_client=None, gemini_client=None, fred_api_key=None,
     mistral_client=None, zai_client=None,
 ) -> bool:
-    """Hebel-Screening (2026-07-14, Phase 1, siehe docs/hebel_positionsformel.md)
+    """`watchlist_provider` siehe refresh_prices_job()-Docstring (2026-07-23).
+
+    Hebel-Screening (2026-07-14, Phase 1, siehe docs/hebel_positionsformel.md)
     - rein deterministisches Zwei-Zweige-Scoring, KEIN Groq-Aufruf. Ergebnis
     landet in hebel_triggers.
 
@@ -1278,6 +1299,7 @@ def hebel_screening_job(
     if not hebel_screening_lock.acquire(blocking=False):
         logger.info("Hebel-Screening: bereits in Ausführung - übersprungen")
         return False
+    watchlist = watchlist_provider()
     _job_started_at["hebel_screening"] = time.monotonic()
     try:
         import config as config_module
@@ -1396,16 +1418,18 @@ def hebel_screening_job(
 
 
 def multi_asset_batch_job(
-    conn_factory, watchlist, coingecko_client, groq_client=None, gemini_client=None, mistral_client=None,
+    conn_factory, watchlist_provider, coingecko_client, groq_client=None, gemini_client=None, mistral_client=None,
 ) -> bool:
     """Multi-Asset-Batch (2026-07-18, siehe agent/multi_asset_batch.py Modul-
     Docstring fuer die volle Architektur-Begruendung) - automatische Signal-
     Erzeugung fuer Aktien/Rohstoffe/Hedge, bisher nur manuell per Klick
     erreichbar. P-8: nur aktiv, wenn mindestens groq_client gesetzt ist
-    (gleiches Muster wie hebel_screening_job())."""
+    (gleiches Muster wie hebel_screening_job()). `watchlist_provider` siehe
+    refresh_prices_job()-Docstring (2026-07-23)."""
     if not multi_asset_batch_lock.acquire(blocking=False):
         logger.info("Multi-Asset-Batch: bereits in Ausführung - übersprungen")
         return False
+    watchlist = watchlist_provider()
     _job_started_at["multi_asset_batch"] = time.monotonic()
     try:
         if groq_client is None:
@@ -1500,7 +1524,7 @@ def _ohlc_data_is_stale(conn, watchlist) -> bool:
         return False
 
 
-def staleness_watchdog_job(conn_factory, watchlist) -> None:
+def staleness_watchdog_job(conn_factory, watchlist_provider) -> None:
     """Periodischer Nachhol-Check (2026-07-23, siehe STALENESS_RECHECK_INTERVAL_
     MINUTES-Kommentar oben): _history_data_is_stale()/_ohlc_data_is_stale() liefen
     bisher nur beim App-Start - lief die App danach lange genug durch, konnte die
@@ -1509,9 +1533,11 @@ def staleness_watchdog_job(conn_factory, watchlist) -> None:
     (modify_job, gleiches Muster wie _record_job_failure_for_backoff()) statt
     eines direkten Funktionsaufrufs - damit APScheduler's eigene
     Lauf-Serialisierung je job_id weiterhin greift (kein Doppel-Lauf-Risiko, falls
-    der reguläre 24h-Takt zufaellig zeitgleich feuert)."""
+    der reguläre 24h-Takt zufaellig zeitgleich feuert). `watchlist_provider` siehe
+    refresh_prices_job()-Docstring (2026-07-23)."""
     if _scheduler_ref is None:
         return
+    watchlist = watchlist_provider()
     conn = conn_factory()
     try:
         history_stale = _history_data_is_stale(conn, watchlist)
@@ -1566,7 +1592,7 @@ def build_scheduler(
         refresh_prices_job,
         "interval",
         minutes=REFRESH_INTERVAL_MINUTES,
-        args=[coingecko_client, db_conn_factory, watchlist],
+        args=[coingecko_client, db_conn_factory, watchlist_provider],
         id="refresh_prices",
         next_run_time=datetime.now(),
         misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
@@ -1601,7 +1627,7 @@ def build_scheduler(
         refresh_history_job,
         "interval",
         hours=HISTORY_REFRESH_INTERVAL_HOURS,
-        args=[coingecko_client, db_conn_factory, watchlist],
+        args=[coingecko_client, db_conn_factory, watchlist_provider],
         id="refresh_history",
         **history_job_kwargs,
     )
@@ -1613,7 +1639,7 @@ def build_scheduler(
         refresh_ohlc_job,
         "interval",
         hours=OHLC_REFRESH_INTERVAL_HOURS,
-        args=[kraken_client, db_conn_factory, watchlist],
+        args=[kraken_client, db_conn_factory, watchlist_provider],
         id="refresh_ohlc",
         **ohlc_job_kwargs,
     )
@@ -1627,14 +1653,14 @@ def build_scheduler(
         staleness_watchdog_job,
         "interval",
         minutes=STALENESS_RECHECK_INTERVAL_MINUTES,
-        args=[db_conn_factory, watchlist],
+        args=[db_conn_factory, watchlist_provider],
         id="staleness_watchdog",
     )
     scheduler.add_job(
         refresh_securities_prices_job,
         "interval",
         minutes=SECURITIES_REFRESH_INTERVAL_MINUTES,
-        args=[YFinanceClient(), db_conn_factory, watchlist],
+        args=[YFinanceClient(), db_conn_factory, watchlist_provider],
         id="refresh_securities_prices",
         next_run_time=datetime.now(),
         misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
@@ -1647,7 +1673,7 @@ def build_scheduler(
         refresh_aktien_ohlc_job,
         "interval",
         hours=OHLC_REFRESH_INTERVAL_HOURS,
-        args=[db_conn_factory, watchlist],
+        args=[db_conn_factory, watchlist_provider],
         id="refresh_aktien_ohlc",
         next_run_time=datetime.now(),
         misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
@@ -1665,7 +1691,7 @@ def build_scheduler(
         "interval",
         minutes=HEBEL_SCREENING_INTERVAL_MINUTES,
         args=[
-            coingecko_client, kraken_client, db_conn_factory, watchlist, bitpanda_api_key,
+            coingecko_client, kraken_client, db_conn_factory, watchlist_provider, bitpanda_api_key,
             groq_client, gemini_client, fred_api_key, mistral_client, zai_client,
         ],
         id="hebel_screening",
@@ -1686,7 +1712,7 @@ def build_scheduler(
         hour=MULTI_ASSET_BATCH_CRON_HOURS,
         minute=0,
         day_of_week="mon-fri",
-        args=[db_conn_factory, watchlist, coingecko_client, groq_client, gemini_client, mistral_client],
+        args=[db_conn_factory, watchlist_provider, coingecko_client, groq_client, gemini_client, mistral_client],
         id="multi_asset_batch",
     )
     # MS-3: erster CronTrigger im Projekt (bisherige Jobs nutzen nur "interval") -
@@ -1696,7 +1722,7 @@ def build_scheduler(
         "cron",
         hour="4,16",
         minute=0,
-        args=[coingecko_client, kraken_client, db_conn_factory, watchlist, fred_api_key],
+        args=[coingecko_client, kraken_client, db_conn_factory, watchlist_provider, fred_api_key],
         id="marktscan",
     )
     # Batch-Signal-Berechnung (2026-07-13): fixer 05:00-Cron entfernt (2026-07-14,
@@ -1713,7 +1739,7 @@ def build_scheduler(
         "cron",
         hour=6,
         minute=0,
-        args=[db_conn_factory, watchlist],
+        args=[db_conn_factory, watchlist_provider],
         id="backward_tracking",
     )
     # Makro-Analog-Vergleich (2026-07-18) - taeglich, gestaffelt nach Backward-
