@@ -1337,10 +1337,39 @@ def hebel_screening_job(
         if groq_client is not None:
             from agent.krypto.budget_allocator import run_budget_allocator
 
+            # E-Mail-Latenz-Fix (2026-07-23, echter Fund: ein einzelner Batch mit
+            # 38 Kandidaten hing 18+ Minuten an langsamen/timeoutenden externen
+            # Abrufen fest - da die Benachrichtigung bisher erst NACH vollstaendigem
+            # Abschluss von run_budget_allocator() ausgeloest wurde, blieben laengst
+            # fertige echte Signale (NEAR/SUI/VIRTUAL) ohne jede E-Mail haengen).
+            # bitpanda_assets wird bewusst NICHT vorab, sondern lazy beim ersten
+            # tatsaechlichen Signal geholt (haeufigster Fall: ein ganzer Zyklus
+            # erzeugt gar kein echtes Signal, dann entfaellt der API-Call komplett -
+            # identisches Verhalten wie vorher, nur zeitlich vorgezogen) und dann
+            # fuer den Rest DIESES Laufs wiederverwendet (kein Mehrfach-Abruf je
+            # Kandidat).
+            bitpanda_assets_state = {"geholt": False, "wert": None}
+
+            def _on_signal_ready(schluessel: str, ergebnis) -> None:
+                if not bitpanda_assets_state["geholt"]:
+                    try:
+                        from api.bitpanda import get_listed_assets
+
+                        bitpanda_assets_state["wert"] = get_listed_assets()
+                    except Exception as exc:
+                        bitpanda_assets_state["wert"] = None
+                        logger.info("Bitpanda-Listing-Abruf für Empfehlungs-E-Mails fehlgeschlagen: %s", exc)
+                    bitpanda_assets_state["geholt"] = True
+                bitpanda_assets = bitpanda_assets_state["wert"]
+                if schluessel.startswith("hebel:"):
+                    _notify_hebel_signal(ergebnis, watchlist, bitpanda_assets, conn_factory)
+                elif schluessel.startswith("spot:"):
+                    _notify_spot_signal(ergebnis, watchlist, bitpanda_assets, conn_factory)
+
             allocation = run_budget_allocator(
                 conn_factory, watchlist, groq_client, coingecko_client, kraken_client,
                 fred_api_key, config_dict, gemini_client=gemini_client, mistral_client=mistral_client,
-                zai_client=zai_client,
+                zai_client=zai_client, on_signal_ready=_on_signal_ready,
             )
             logger.info(
                 "Budget-Allocator: Hebel %d, Marktscan %d, Spot %d verarbeitet, %d fehlgeschlagen, "
@@ -1355,19 +1384,6 @@ def hebel_screening_job(
                 allocation.mistral_calls_verbraucht, allocation.mistral_budget_erschoepft,
                 allocation.gemini_calls_verbraucht, allocation.gemini_budget_erschoepft,
             )
-            if allocation.ergebnis_objekt:
-                try:
-                    from api.bitpanda import get_listed_assets
-
-                    bitpanda_assets = get_listed_assets()
-                except Exception as exc:
-                    bitpanda_assets = None
-                    logger.info("Bitpanda-Listing-Abruf für Empfehlungs-E-Mails fehlgeschlagen: %s", exc)
-                for schluessel, ergebnis in allocation.ergebnis_objekt.items():
-                    if schluessel.startswith("hebel:"):
-                        _notify_hebel_signal(ergebnis, watchlist, bitpanda_assets, conn_factory)
-                    elif schluessel.startswith("spot:"):
-                        _notify_spot_signal(ergebnis, watchlist, bitpanda_assets, conn_factory)
         else:
             logger.info("Budget-Allocator übersprungen (kein Groq-Client konfiguriert)")
     except Exception as exc:

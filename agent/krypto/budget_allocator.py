@@ -345,6 +345,7 @@ def run_budget_allocator(
     gemini_client=None,
     mistral_client=None,
     zai_client=None,
+    on_signal_ready=None,
 ) -> AllocationResult:
     cfg = config_dict.get("budget_allocator", {})
     result = AllocationResult()
@@ -566,6 +567,19 @@ def run_budget_allocator(
                     _mit_conn(db.record_groq_success)
                 result.provider_je_call[schluessel] = provider_name
                 result.ergebnis_objekt[schluessel] = res
+                # E-Mail-Latenz-Fix (2026-07-23, echter Fund: ein einzelner Batch-Lauf
+                # mit 38 Kandidaten hing 18+ Minuten an langsamen/timeoutenden externen
+                # Abrufen fest - da die Benachrichtigung bisher erst NACH vollstaendigem
+                # Abschluss von run_budget_allocator() ausgeloest wurde (siehe scheduler/
+                # background.py::hebel_screening_job()), blieben laengst fertige echte
+                # Signale (NEAR/SUI/VIRTUAL) ohne jede E-Mail haengen. on_signal_ready()
+                # feuert stattdessen SOFORT hier, pro Kandidat - Fehler darin duerfen die
+                # Allocator-Schleife selbst nie stoppen (P-10), daher eigenes try/except.
+                if on_signal_ready is not None:
+                    try:
+                        on_signal_ready(schluessel, res)
+                    except Exception:
+                        logger.exception("on_signal_ready-Callback fuer %s fehlgeschlagen", schluessel)
                 if provider_name in tages_verbraucht:
                     tages_verbraucht[provider_name] += 1
                     if provider_name == "mistral":

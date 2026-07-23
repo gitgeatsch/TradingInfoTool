@@ -6866,3 +6866,76 @@ jetzt)` nachgetriggert; (b) nichts stale -> kein Aufruf; (c) nur eine
 Quelle stale -> nur der betroffene Job nachgetriggert; (d)
 `_scheduler_ref is None` (z.B. in einem Testkontext ohne echten Scheduler)
 -> sauberer No-Op, kein Absturz.
+
+## Nachtrag (2026-07-23): E-Mail-Latenz-Fix - Benachrichtigungen hingen 18+ Minuten am Ende des Gesamt-Batches fest
+
+**Ausloeser:** Nutzer sah im Hebel-Tab drei echte ERÖFFNEN-Signale (NEAR
+SHORT, SUI LONG, VIRTUAL LONG, alle kurz nach dem Neustart 06:57 Uhr
+erzeugt), aber keine einzige E-Mail kam an. Diagnose per
+`extract_notebook_diagnose.py` (zwei Exporte im Abstand von 16 Minuten,
+Nutzer-Korrektur: kein Ad-hoc-SQL, sondern der etablierte Diagnose-Prozess).
+
+**Root Cause (per Log-Timeline zweifelsfrei belegt):** In `scheduler/
+background.py::hebel_screening_job()` lief das bisher so ab:
+```python
+allocation = run_budget_allocator(...)   # EIN blockierender Aufruf fuer ALLE Kandidaten
+logger.info("Budget-Allocator: ...")     # erst NACH vollstaendigem Abschluss
+for schluessel, ergebnis in allocation.ergebnis_objekt.items():
+    _notify_hebel_signal(...)            # E-Mail-Versand erst HIER, fuer den GANZEN Batch
+```
+Die Benachrichtigungs-E-Mails wurden also erst verschickt, wenn der
+komplette Batch (an diesem Tag: 12 Hebel- + 26 Spot-Kandidaten = 38) fertig
+durchgelaufen war - nicht einzeln, sobald ein Signal feststand. Dieser
+Batch brauchte ungewoehnlich lange, weil mehrere externe Abrufe haengen/
+timeouten (Eastmoney China-M2/PBoC-LPR mit 15s-Timeout, wiederholte
+OKX-Open-Interest-Fehlschlaege) - jeder einzelne davon summiert sich
+sequenziell auf. Log-Beleg: der naechste planmaessige 15-Min-Takt (07:12:01)
+musste uebersprungen werden ("maximum number of running instances reached
+(1)"), der Batch lief laut zweitem Export noch bei 07:16:38 - ueber 18
+Minuten nach Start, ohne Ende in Sicht.
+
+NEAR (fertig 06:58:19), SUI (07:02:52) und VIRTUAL (07:04:56) standen damit
+zwar laengst in DB und GUI, ihre E-Mails hingen aber fest, bis der GANZE
+Batch durch ist - ein strukturelles Problem, kein Zufall: es kann sich
+wiederholen, sobald irgendein externer Abruf im Batch haengt.
+
+**Fix:** `run_budget_allocator()` (`agent/krypto/budget_allocator.py`)
+bekommt einen neuen optionalen Parameter `on_signal_ready(schluessel,
+ergebnis)`, der DIREKT in `_mit_fallback_chain()` aufgerufen wird - im
+selben Moment, in dem `result.ergebnis_objekt[schluessel] = res` gesetzt
+wird, nicht erst nachdem die gesamte Funktion zurueckkehrt. Ein Fehler im
+Callback selbst darf die Allocator-Schleife nicht stoppen (P-10, eigenes
+try/except mit Logging).
+
+`scheduler/background.py::hebel_screening_job()` baut die Benachrichtigungs-
+Logik jetzt VOR dem `run_budget_allocator()`-Aufruf als Closure
+(`_on_signal_ready()`) und reicht sie als `on_signal_ready` durch - der
+alte Nachlauf (`for schluessel, ergebnis in allocation.ergebnis_objekt.
+items(): ...`) entfaellt komplett, sonst wuerde doppelt gemailt. Der
+Bitpanda-Listing-Abruf (`get_listed_assets()`) bleibt bewusst LAZY beim
+ERSTEN echten Signal dieses Laufs (nicht vorab unbedingt) und wird
+innerhalb des Laufs zwischengespeichert - identisches Verhalten wie vorher
+(kein API-Call bei einem Zyklus ohne echtes Signal), nur zeitlich
+vorgezogen statt an den Batch-Abschluss gekoppelt.
+
+**Backtest gegen den echten Vorfall:** mit den echten Zeitstempeln von
+heute (Batch-Start 06:57:50, Log lief zum Export-Zeitpunkt 07:16:38 noch
+ohne Abschluss):
+
+| Signal | Fertig um | ALT (gebuendelt) | NEU (sofort) |
+|---|---|---|---|
+| NEAR SHORT | 06:58:19 | mind. 18,3 Min Wartezeit | ~0 Min |
+| SUI LONG | 07:02:52 | mind. 13,8 Min Wartezeit | ~0 Min |
+| VIRTUAL LONG | 07:04:56 | mind. 11,7 Min Wartezeit | ~0 Min |
+
+Die "ALT"-Werte sind Untergrenzen (der Batch war zum Exportzeitpunkt
+immer noch nicht fertig) - der tatsaechliche alte Verzug waere je nach
+Batch-Laufzeit noch groesser gewesen.
+
+**Verifikation:** `test_email_latenz_fix.py` bestaetigt (a) `on_signal_
+ready()` feuert SOFORT nach dem LLM-Call, nicht erst am Ende des Batches
+(Aufrufreihenfolge protokolliert); (b) `on_signal_ready=None` (Default)
+bleibt rueckwaertskompatibel, `ergebnis_objekt` weiterhin befuellt; (c)
+eine Exception im Callback selbst stoppt die Signal-Verarbeitung nicht
+(P-10) - der Kandidat wird trotzdem korrekt in `ergebnis_objekt`/
+`hebel_verarbeitet` gefuehrt.
