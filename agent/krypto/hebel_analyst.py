@@ -186,6 +186,18 @@ Bei `altseason` duerfen bullische Alt-Signale normal/hoeher gewichtet werden. Be
 `nicht_verfuegbar` ignoriere diesen Punkt. Diese Konstellation erscheint zusaetzlich als \
 eigener deterministischer Risikofaktor in Abschnitt 3 - unabhaengig davon, ob du sie \
 selbst erwaehnst.
+17. Ist `liquiditaetszonen` NICHT null (Marketmaker-Konzept, Stufe 1 - rein \
+informativ, KEIN Deckel): `naechste_buyside_zone`/`naechste_sellside_zone` \
+zeigen die naechste Swing-Extrema-Zone ueber/unter dem aktuellen Kurs, an der \
+sich typischerweise Stop-Loss-/Pending-Orders haeufen (Liquidity Pool). Ist \
+`in_naehe_ungefegter_zone` true, liegt der Kurs nahe einer noch NICHT \
+durchbrochenen Zone - das ist ein reiner TIMING-Hinweis (moegliches Stop-Hunt-\
+Risiko vor der eigentlichen Bewegung), sagt NICHTS darueber aus, ob die \
+Richtung selbst richtig ist. Nutze es hoechstens zur Nuancierung von \
+`short_reasoning`/`gegenargument` (z.B. "Entry liegt nahe einer ungefegten \
+Sell-Side-Zone, ein kurzer Spike unter den Stop ist nicht auszuschliessen") - \
+verschiebe NIEMALS deine Entry-/Stop-Loss-/Take-Profit-Zonen allein aufgrund \
+dieses Fakts, das bleibt deiner eigenstaendigen technischen Analyse ueberlassen.
 
 SCHEMA:
 {
@@ -321,6 +333,7 @@ def build_hebel_facts(
     letztes_signal=None,
     historische_erfolgsquote: dict | None = None,
     historischer_makro_vergleich: dict | None = None,
+    liquiditaetszonen: dict | None = None,
 ) -> dict:
     """Analog agent/krypto/analyst.py::build_facts() - wiederverwendet dieselben
     Bausteine fuer technische_analyse/regime/markt_kontext/antizyklisch 1:1 (siehe
@@ -473,6 +486,7 @@ def build_hebel_facts(
         "position_aktuell": _build_position_aktuell_facts(position_aktuell, now_unix, letztes_signal),
         "historische_erfolgsquote": historische_erfolgsquote,
         "historischer_makro_vergleich": historischer_makro_vergleich,
+        "liquiditaetszonen": liquiditaetszonen,
         "hebel_kontext": {
             "max_hebel_config": pre_result.config_max_hebel,
             "max_sicherer_hebel_geschaetzt": _native(pre_result.max_sicherer_hebel),

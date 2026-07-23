@@ -1041,6 +1041,18 @@ cash_reserve_ziel:
     # Kapital). Muss auf 100 summieren. Reine Zusatz-Information, kein neues
     # Veto - RM-4 (oben) bleibt der harte Minimum-Floor.
 
+# --- Liquiditaetszonen (Marketmaker-Konzept, Stufe 1, 2026-07-23, siehe
+# agent/krypto/liquidity_zones.py) - Krypto Spot+Hebel only, rein informativ/
+# Kontext, KEIN aktiver Deckel (kein automatisches Verschieben von Entry/CRV/
+# Hebel basierend auf Zonen). Stufe 2 (Order Blocks/Fair Value Gaps) bewusst
+# noch nicht gebaut. ---
+liquiditaetszonen:
+  aktiv: true
+  min_beruehrungen: 2                    # mind. 2 Swing-Punkte im selben Cluster,
+    # damit eine Zone als "echter" Liquidity Pool zaehlt (kein einzelner Ausreisser).
+  naehe_warnschwelle_relativ: 0.01       # 1% - ab wann der aktuelle Kurs als "nahe
+    # an einer Zone" fuer den Risikofaktor/Fakt gilt.
+
 # --- Backward-Tracking (Selbstverifikations-Vision Schritt 2, siehe
 # Basisinfos/Regelwerksmanual.md Kap. 9 / Spezifikation Kap. 16) ---
 backward_tracking:

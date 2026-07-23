@@ -515,6 +515,16 @@ class HebelSignal:
     forecast_bear_prob_pct: float | None = None
     liquidationspreis_geschaetzt_usd: float | None = None
     eigenkapitalbedarf_usd: float | None = None
+    # Nachtrag 2026-07-23 (Nutzer-Fund am Signal-Detail-Panel): Entry/Stop-Loss/
+    # Take-Profit werden bereits zusaetzlich in EUR angezeigt, Liquidationspreis/
+    # Eigenkapitalbedarf bisher NUR in USD - erzwingt eine stille Kopfrechnung,
+    # um z.B. zu pruefen ob die Liquidation unter dem (EUR-)Stop-Loss liegt.
+    # Analog zu HebelPosition.liquidationspreis_geschaetzt_eur (dort bewusst
+    # EUR, da Bitpanda-Margin-Trades EUR-denominiert sind) - hier zusaetzlich
+    # zum USD-Wert, nicht als Ersatz (agent/krypto/hebel_risk_gate.py::
+    # post_check_hebel() berechnet beide aus demselben deterministischen Wert).
+    liquidationspreis_geschaetzt_eur: float | None = None
+    eigenkapitalbedarf_eur: float | None = None
     # Nachtrag 2026-07-17 (echter LINK-Fall): bei action == HEBEL_SENKEN der
     # konkrete, deterministisch berechnete EUR-Betrag, der ins Eigenkapital
     # der Position nachgeschossen werden muesste, um den empfohlenen

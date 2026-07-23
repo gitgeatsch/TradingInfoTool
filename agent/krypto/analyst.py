@@ -244,6 +244,16 @@ belastbare Statistik oder direkte Grundlage fuer `confidence_pct`. `spx_median_f
 (sofern vorhanden) beschreibt nur die Aktienmarkt-Tendenz der Analoge, ist fuer Krypto \
 bestenfalls ein grober Makro-Hintergrund, kein Krypto-Signal. Lies den mitgelieferten \
 `hinweis` fuer die genaue Einordnung.
+25. Ist `liquiditaetszonen` NICHT null (Marketmaker-Konzept, Stufe 1 - rein \
+informativ, KEIN Deckel): `naechste_buyside_zone`/`naechste_sellside_zone` \
+zeigen die naechste Swing-Extrema-Zone ueber/unter dem aktuellen Kurs, an der \
+sich typischerweise Stop-Loss-/Pending-Orders haeufen (Liquidity Pool). Ist \
+`in_naehe_ungefegter_zone` true, liegt der Kurs nahe einer noch NICHT \
+durchbrochenen Zone - das ist ein reiner TIMING-Hinweis (moegliches Stop-Hunt-\
+Risiko vor der eigentlichen Bewegung), sagt NICHTS darueber aus, ob die \
+Richtung selbst richtig ist. Nutze es hoechstens zur Nuancierung von \
+`short_reasoning`/`gegenargument` - verschiebe NIEMALS deine Entry-/Stop-Loss-/\
+Take-Profit-Zonen allein aufgrund dieses Fakts.
 
 SCHEMA:
 {
@@ -351,6 +361,7 @@ def build_facts(
     letztes_signal=None,
     historische_erfolgsquote: dict | None = None,
     historischer_makro_vergleich: dict | None = None,
+    liquiditaetszonen: dict | None = None,
 ) -> dict:
     macd_val = technical_snapshot.macd
     macd_facts = None
@@ -418,6 +429,7 @@ def build_facts(
         "vorherige_empfehlung": vorherige_empfehlung_fact,
         "historische_erfolgsquote": historische_erfolgsquote,
         "historischer_makro_vergleich": historischer_makro_vergleich,
+        "liquiditaetszonen": liquiditaetszonen,
         "technische_analyse": {
             "ema": {str(p): _native(latest_value(r)) for p, r in technical_snapshot.ema.items()},
             "macd": macd_facts,

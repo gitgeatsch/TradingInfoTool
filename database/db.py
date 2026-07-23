@@ -634,6 +634,23 @@ def _migrate_risikofaktoren_columns(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+_HEBEL_SIGNAL_EUR_NEW_COLUMNS = {
+    "liquidationspreis_geschaetzt_eur": "REAL", "eigenkapitalbedarf_eur": "REAL",
+}
+
+
+def _migrate_hebel_signal_eur_columns(conn: sqlite3.Connection) -> None:
+    """Nachtrag 2026-07-23 (Nutzer-Fund am Signal-Detail-Panel): Liquidationspreis/
+    Eigenkapitalbedarf standen bisher nur in USD, waehrend Entry/Stop-Loss/Take-
+    Profit im selben Panel auch in EUR gezeigt werden. Gleiches additive
+    Migrations-Muster wie _migrate_hebel_signal_senkung_columns()."""
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(hebel_signals)")}
+    for column, sql_type in _HEBEL_SIGNAL_EUR_NEW_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE hebel_signals ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
 _CASH_VETO_NEW_COLUMNS = {"cash_veto": "INTEGER", "cash_veto_reason": "TEXT"}
 
 
@@ -761,6 +778,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_gegenargument_columns(conn)
     _migrate_cash_veto_columns(conn)
     _migrate_risikofaktoren_columns(conn)
+    _migrate_hebel_signal_eur_columns(conn)
     import_holdings_manual_overrides(conn)
 
 
@@ -2360,6 +2378,7 @@ _HEBEL_SIGNAL_COLUMNS = (
     "key_risks_text", "regime", "regime_source", "forecast_bull_text", "forecast_bull_prob_pct",
     "forecast_base_text", "forecast_base_prob_pct", "forecast_bear_text", "forecast_bear_prob_pct",
     "liquidationspreis_geschaetzt_usd", "eigenkapitalbedarf_usd",
+    "liquidationspreis_geschaetzt_eur", "eigenkapitalbedarf_eur",
     "hebel_senkung_eigenkapital_nachschuss_eur", "ausfuehrbarkeit_hinweis",
     "gate_passed", "gate_reason", "risk_veto", "risk_veto_reason", "facts_json",
     "groq_raw_response", "llm_model", "gegenargument", "risikofaktoren_json",

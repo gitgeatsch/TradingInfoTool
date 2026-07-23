@@ -7046,3 +7046,166 @@ Phase-1-Signaturaenderung gebrochen.
 Insgesamt 4 Testdateien, alle grün, inklusive zweier echter, sonst erst im
 Betrieb aufgefallener Regressionen (manueller GUI-Preis-Button, beide
 manuellen Remote-Buttons).
+
+## Nachtrag (2026-07-23): Liquiditätszonen (Marketmaker-Konzept), Stufe 1
+
+Umsetzung des seit 2026-07-21 offenen Punkts "Marketmaker-Trading" (siehe
+Task-Backlog): Kurse laufen oft gezielt zu Punkten, an denen viele Stop-
+Loss-/Pending-Orders clustern (typischerweise an markanten Swing-Hochs/
+-Tiefs = "Liquidity Pools"), holen dort die Liquidität ab ("Stop-Hunt"/
+"Liquidity Sweep") und drehen erst danach in die eigentliche Richtung.
+
+**Scope-Entscheidung (Nutzer-Rückfrage):** Krypto Spot + Hebel only (24/7-
+Markt + hoher Retail-/Hebel-Anteil, klassische Marketmaker-Dynamik-
+Annahme) - nicht für Aktien/Rohstoffe/Hedge/Themen-ETF verdrahtet. Stufe 1
+= nur Liquidity Pools (Swing-Hoch/-Tief-Cluster), bewusst **rein
+Transparenz/Kontext, kein aktiver Deckel** - kein automatisches Verschieben
+von Entry/CRV/Hebel basierend auf Zonen. Order Blocks/Fair Value Gaps
+(Stufe 2) bewusst noch nicht gebaut. Was bewusst NICHT abgedeckt ist (nicht
+kostenfrei verfügbar): echte Order-Book-Tiefe (Bitpanda hat keine
+öffentliche API dafür), Liquidations-Heatmaps (kostenpflichtig).
+
+**Architektur** (folgt dem bestehenden Fibonacci/Support-Resistance-
+Muster):
+1. `indicators/calculations.py::liquidity_pools()` - neue Berechnungs-
+   funktion, analog `support_resistance_levels()`, aber Swing-Highs (Buy-
+   Side, oberhalb) und Swing-Lows (Sell-Side, unterhalb) GETRENNT NACH
+   RICHTUNG geclustert (0,5% Toleranz statt der 2% bei Support/Resistance -
+   Stop-Cluster liegen praeziser um exakte Swing-Extrema) + "bereits
+   gefegt"-Erkennung (Kurs hat die Zone nach ihrer letzten Beruehrung
+   mind. einmal durchbrochen). Neues `TechnicalSnapshot.liquidity_zones`-
+   Feld, in `build_technical_snapshot()` berechnet - wiederverwendet exakt
+   den bereits vorhandenen `swing`-Wert (keine doppelte Swing-Erkennung),
+   nutzt bei echten Kraken-OHLC-Daten die passende Datumsreihe (`ohlc_dates`/
+   `ohlc_closes`), sonst die Proxy-Reihe (`dates`/`closes`) - eine reine
+   Mischung beider Serien haette die 'bereits gefegt'-Datumsvergleiche
+   verfälscht.
+2. `agent/krypto/liquidity_zones.py::liquiditaetszonen_fakt()` (neu) -
+   Interpretations-Layer: findet die naechste Buy-/Sell-Side-Zone relativ
+   zum aktuellen Kurs (gefiltert nach `min_beruehrungen`), meldet
+   `in_naehe_ungefegter_zone` + `seite`, wenn der Kurs innerhalb der
+   `naehe_warnschwelle_relativ` einer noch nicht durchbrochenen Zone liegt.
+3. Facts-Integration: neuer `liquiditaetszonen`-Fakt in `build_facts()`
+   (Spot) und `build_hebel_facts()` (Hebel), neue SYSTEM_PROMPT-Regel in
+   beiden Analysten (Regel 25 Spot / Regel 17 Hebel) - beschreibt den Fakt
+   als reinen TIMING-Hinweis, verbietet dem Modell ausdrücklich, Entry-/
+   Stop-Loss-/Take-Profit-Zonen allein deswegen zu verschieben.
+4. Pipeline-Verdrahtung: `agent/krypto/pipeline.py::generate_signal()` und
+   `agent/krypto/hebel_pipeline.py::generate_hebel_signal()` berechnen den
+   Fakt vor dem jeweiligen `build_*_facts()`-Aufruf und reichen ihn
+   zusätzlich an `post_check()`/`post_check_hebel()` durch.
+5. Neuer deterministischer Risikofaktor (Abschnitt 3, gleiches Muster wie
+   Retail-Konsens/Funding-Kosten): `hebel_risk_gate.py::
+   compute_risikofaktoren_hebel()` und `risk_gate.py::compute_risikofaktoren()`
+   fügen bei `in_naehe_ungefegter_zone=True` einen Faktor "Nähe zu
+   Liquiditätszone (buyside/sellside)" hinzu - bewusst IMMER `neutral`
+   (nie negativ), da das Konzept nicht "schlecht" bedeutet, sondern reine
+   Timing-Vorsicht. `risk_gate.py`s Version bekommt den Parameter nur von
+   der Krypto-Spot-Pipeline gereicht - Aktien/Rohstoffe/Themen-ETF lassen
+   ihn auf `None` (Default), der Block wird dort automatisch übersprungen,
+   ohne dass die 4 Pipelines selbst geändert werden mussten.
+6. `Basisinfos/config.yaml`, neue Sektion `liquiditaetszonen:` (`aktiv`,
+   `min_beruehrungen: 2`, `naehe_warnschwelle_relativ: 0.01`).
+
+**Verifikation:**
+- Synthetisch: `liquidity_pools()`-Clustering + "bereits gefegt"-Erkennung
+  mit konstruierten Swing-Punkten; `liquiditaetszonen_fakt()` inkl. Naehe-
+  Warnung nur für ungefegte Zonen, `min_beruehrungen`-Filter, `aktiv=false`-
+  Abschaltung; beide `compute_risikofaktoren*()`-Funktionen erzeugen den
+  neuen Faktor korrekt (immer neutral) bzw. lassen ihn bei `None`/HALTEN
+  korrekt weg (Regressionscheck).
+- Echter Lauf gegen eine Kopie der Produktions-DB (BTC + ETH, echte Kraken-
+  OHLC-Historie): plausible Zonen-Anzahl (BTC 49 Buy-/57 Sell-Side-Zonen,
+  ETH 57/63), Naehe-/Sweep-Logik verhielt sich korrekt (naechste BTC-Buy-
+  Side-Zone war bereits gefegt, daher keine Naehe-Warnung trotz 0,59%
+  Abstand - die weiter entfernte, noch ungefegte Sell-Side-Zone lag mit
+  2,88% über der 1%-Schwelle).
+- Regressionscheck: `support_resistance_levels()`/`ui/charts.py` bleiben
+  unverändert nutzbar (eigene neue Funktion, kein Umbau der bestehenden);
+  alle 4 Aktien/Rohstoffe/Hedge/Themen-ETF-Pipelines importieren weiterhin
+  fehlerfrei (das neue `liquiditaetszonen`-Kwarg in `post_check()`/
+  `compute_risikofaktoren()` ist optional mit Default `None`).
+
+Noch offen (bewusst nicht Teil dieser Runde): Stufe 2 (Order Blocks/Fair
+Value Gaps), Backtest der Naehe-Warnung gegen echte Signal-Ausgänge (erst
+sinnvoll mit ausreichend Live-Daten).
+
+## Nachtrag (2026-07-23): Liquidationspreis/Eigenkapitalbedarf zusätzlich in EUR (Hebel-Signal-Detail-Panel)
+
+Nutzer-Fund am Signal-Detail-Panel (Screenshot "1. MATHEMATISCH BERECHNET"):
+Entry/Stop-Loss/Take-Profit werden in EUR angezeigt, Liquidationspreis und
+Eigenkapitalbedarf standen direkt darunter nur in USD - erzwang eine stille
+Kopfrechnung, um z.B. zu prüfen, ob die Liquidation unter dem (EUR-)Stop-Loss
+liegt. Bereits für offene Positionen (`HebelPosition.liquidationspreis_
+geschaetzt_eur`) war EUR bewusst gewählt worden (Bitpanda-Margin-Trades sind
+EUR-denominiert) - für Signale fehlte dieselbe Konsequenz.
+
+**Fix:** `HebelSignal` bekommt zwei neue, additive Felder
+(`liquidationspreis_geschaetzt_eur`, `eigenkapitalbedarf_eur`, additive
+DB-Migration `_migrate_hebel_signal_eur_columns()`, gleiches Muster wie alle
+vorherigen additiven Migrationen dieser Tabelle). `agent/krypto/hebel_
+pipeline.py::generate_hebel_signal()` leitet `eur_usd_fx_rate` kostenlos aus
+dem EURCV-Preis-Snapshot ab (`eurcv.price_usd / eurcv.price_eur`, exakt
+dasselbe Muster wie `risk_gate.py::pre_check()` für den Spot-Cash-Reserve-
+Vergleich - kein neuer API-Call nötig) und reicht ihn an `hebel_risk_gate.py
+::post_check_hebel()` durch, das die bereits deterministisch berechneten
+USD-Werte einfach durch den Kurs teilt. Fehlt der EURCV-Snapshot einmal
+(P-10), bleiben die EUR-Felder `None` statt eines falschen 1:1-Werts.
+`ui/hebel_view.py` (Detail-Panel) und `scheduler/background.py`
+(E-Mail-Template) zeigen den EUR-Wert jetzt in Klammern hinter dem
+bestehenden USD-Wert.
+
+**Verifikation:** synthetisch (`post_check_hebel()` mit/ohne `eur_usd_fx_rate`,
+korrekte Umrechnung + Regressionscheck ohne Kurs), DB-Migration + Insert/
+Read-Roundtrip gegen `:memory:`-DB, Migration zusätzlich gegen eine Kopie
+der echten Produktions-DB (bestehende Zeilen bleiben unverändert lesbar, neue
+Spalten `NULL`), Textbaustein-Logik für beide UI-/E-Mail-Stellen.
+
+## Nachtrag (2026-07-23): Liquiditätszonen-Grafik in App-Detail-Panel UND E-Mail
+
+Nutzer-Wunsch nach dem ersten Textbeispiel des Liquiditätszonen-Risikofaktors:
+"Berührungen"/Datum ohne Erklärung waren nicht selbsterklärend, zusätzlich
+sollte eine kleine Grafik mit konkreten Zahlen/Einheiten sowohl in der App
+als auch in der E-Mail erscheinen (bisher waren E-Mails reiner Text, keine
+Bilder).
+
+**Ein gemeinsamer Renderer für beide Stellen** (`ui/liquidity_chart.py::
+render_liquiditaetszonen_chart()`) - nutzt `matplotlib.figure.Figure` direkt
+(wie `ui/charts.py`, nicht `pyplot`) und ist damit sowohl aus dem Tk-Main-
+Thread (App) als auch aus einem Scheduler-Hintergrund-Thread (E-Mail-Versand)
+sicher aufrufbar. Baut aus demselben `liquiditaetszonen`-Fakt (bereits in
+`facts_json` gespeichert) ein kompaktes PNG (~560×260px) mit dem aktuellen
+Kurs und der nächsten Buy-/Sell-Side-Zone, inkl. Preis+Einheit, Abstand in %,
+Anzahl Berührungen und Datum der letzten Berührung DIREKT als Text im Bild -
+kein reines Linienbild ohne Kontext. Farb-/Stilkonvention: blau gestrichelt
+= aktive Buy-Side-Zone, orange durchgezogen = aktive Sell-Side-Zone, blass-
+grau gepunktet = bereits gefegte Zone (deckt sich mit dem zuvor mit dem
+Nutzer abgestimmten SVG-Mockup). `None`, wenn keine der beiden Zonen
+vorhanden ist (nichts Sinnvolles darzustellen).
+
+**E-Mail:** `api/email_notify.py::send_notification_email()` bekommt einen
+neuen optionalen Parameter `inline_image_png` - `None` (Default) belässt
+JEDEN bestehenden Aufrufer (Job-Ausfall-/Cash-Veto-Mails etc.) unverändert
+bei einer reinen `text/plain`-Mail (kein Regressionsrisiko). Ist ein PNG
+übergeben, wird eine `multipart/related`-Mail gebaut: `multipart/alternative`
+mit Text- UND HTML-Variante (Fallback für Clients ohne Bilder) plus das PNG
+als eingebettetes Inline-Bild (Content-ID, kein Anhang). `scheduler/
+background.py::_notify_hebel_signal()` liest den Fakt aus `signal.
+facts_json`, holt den aktuellen EUR-Preis frisch aus der DB und übergibt das
+gerenderte PNG.
+
+**App:** `ui/hebel_view.py::_render_signal()` bettet dieselbe Grafik direkt
+im `tk.Text`-Detail-Panel ein (`image_create()`), die `tk.PhotoImage`-
+Referenz wird auf `self._detail_chart_image` gehalten (ohne diese Referenz
+gibt Tk das Bild sofort wieder frei - bekannte Tkinter-Falle).
+
+**Verifikation:** Chart-Renderer visuell geprüft (mehrere Beispiel-PNGs,
+inkl. Buy-Side+Sell-Side gleichzeitig, nur Sell-Side, gefegt vs. ungefegt);
+E-Mail-MIME-Struktur synthetisch geprüft (multipart/related mit beiden
+Alternativen + korrekt referenziertem Content-ID, UND Regressionscheck dass
+der bestehende reine Text-Pfad ohne Bild unverändert bleibt); echter
+Tk-Smoke-Test (reale `HebelView`-Instanz, reale SQLite-DB) bestätigt die
+Einbettung im Detail-Panel inkl. Regressionscheck für ein Signal ohne
+Liquiditätszonen-Fakt (keine Grafik, kein Crash); Scheduler-Glue-Logik
+(facts_json → aktueller Preis → Renderer) isoliert nachgestellt und
+verifiziert.

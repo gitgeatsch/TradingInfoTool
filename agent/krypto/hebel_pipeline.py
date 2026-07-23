@@ -20,6 +20,7 @@ from agent.krypto.analyst import AnalystResponseInvalid
 from agent.krypto.anticyclic import assess as assess_anticyclic
 from agent.krypto.backward_tracking import compute_win_rate_fact
 from agent.krypto.hebel_analyst import build_hebel_facts, call_llm_for_hebel_signal
+from agent.krypto.liquidity_zones import liquiditaetszonen_fakt
 from agent.krypto.makro_analog import get_cached_makro_analog_fact
 from agent.krypto.hebel_risk_gate import post_check_hebel, pre_check_hebel
 from agent.krypto.llm_provider import llm_model_label
@@ -71,6 +72,15 @@ def generate_hebel_signal(
     dates, closes, ohlc_history, last_date = _load_closes_and_ohlc(conn, asset.symbol, asset.coingecko_id)
     latest_prices = db.get_latest_prices(conn)
     price_snap = latest_prices.get(asset.symbol)
+    # Nachtrag 2026-07-23 (Nutzer-Fund am Signal-Detail-Panel): gleiche
+    # kostenlose EURCV-Ableitung wie risk_gate.py::pre_check() - macht
+    # Liquidationspreis/Eigenkapitalbedarf zusaetzlich in EUR berechenbar,
+    # ohne einen neuen API-Call.
+    eurcv_snap = latest_prices.get("EURCV")
+    eur_usd_fx_rate = (
+        eurcv_snap.price_usd / eurcv_snap.price_eur
+        if eurcv_snap and eurcv_snap.price_usd and eurcv_snap.price_eur else None
+    )
 
     if len(closes) == 0:
         signal = _fixed_hebel_signal(
@@ -146,12 +156,16 @@ def generate_hebel_signal(
     now_unix = int(datetime.now(timezone.utc).timestamp())
     historische_erfolgsquote = compute_win_rate_fact(conn, "hebel")
     historischer_makro_vergleich = get_cached_makro_analog_fact(conn)
+    # Liquiditaetszonen (Marketmaker-Konzept, Stufe 1, 2026-07-23) - rein
+    # informativ, siehe agent/krypto/liquidity_zones.py Modul-Docstring.
+    liquiditaetszonen = liquiditaetszonen_fakt(snapshot, current_price_usd, config_dict)
     facts = build_hebel_facts(
         asset, price_snap, snapshot, confluence, regime_result, regime_profile,
         anticyclic_context, market_context, trigger, position_aktuell, pre_result,
         price_age_minutes, now_unix, letztes_signal,
         historische_erfolgsquote=historische_erfolgsquote,
         historischer_makro_vergleich=historischer_makro_vergleich,
+        liquiditaetszonen=liquiditaetszonen,
     )
 
     try:
@@ -174,6 +188,8 @@ def generate_hebel_signal(
         historische_erfolgsquote=historische_erfolgsquote,
         funding_rate_stunde=anticyclic_context.funding_rate_current,
         asset_rolle=asset.rolle,
+        liquiditaetszonen=liquiditaetszonen,
+        eur_usd_fx_rate=eur_usd_fx_rate,
     )
     risk_veto = corrected.pop("_risk_veto")
     risk_veto_reason = corrected.pop("_risk_veto_reason")
@@ -277,6 +293,8 @@ def generate_hebel_signal(
         forecast_bear_prob_pct=forecast.get("bear", {}).get("probability_pct"),
         liquidationspreis_geschaetzt_usd=corrected.get("liquidationspreis_geschätzt"),
         eigenkapitalbedarf_usd=corrected.get("eigenkapitalbedarf"),
+        liquidationspreis_geschaetzt_eur=corrected.get("liquidationspreis_geschätzt_eur"),
+        eigenkapitalbedarf_eur=corrected.get("eigenkapitalbedarf_eur"),
         hebel_senkung_eigenkapital_nachschuss_eur=senkung_nachschuss_eur,
         ausfuehrbarkeit_hinweis=corrected.get("ausführbarkeit_hinweis"),
         groq_raw_response=raw_response,
