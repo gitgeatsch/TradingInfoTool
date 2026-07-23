@@ -539,6 +539,11 @@ watchlist:
     rolle: taktisch
     beobachtungsstatus: beobachtung
     coingecko_id: kaito
+  - symbol: XNO
+    name: Nano
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
+    coingecko_id: nano
 
 # --- Strategie-Katalog (siehe Spezifikation Kap. 6) ---
 strategien:
