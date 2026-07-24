@@ -7554,3 +7554,26 @@ Symbolanzahl), Zeitraum ist ein einzelner ~2-Jahres-Marktzyklus - ein
 Nullergebnis heißt "kein großer Effekt in diesem Zeitraum gefunden", nicht
 "für alle Zeit widerlegt". Skript bleibt im Repo für eine mögliche
 spätere Wiederholung mit mehr/anderer Historie.
+
+**Nachtrag (gleicher Tag): BTC/ETH-Teilmenge separat geprüft, längere
+Historie bewusst NICHT nachgeladen.** Nutzer-Hypothese: BTC/ETH als
+liquideste, "smart-money-nahe" Assets könnten eine sauberere Kante zeigen
+als das durch Alt-Coin-Rauschen (News-Pumps, dünne Orderbücher, kurzlebiger
+Hype) verwässerte Gesamtbild. Isolierter Test (BTC+ETH, dieselbe Methodik):
+Treatment 15/31 (48,4%) vs. Control 20/31 (64,5%), z=-1,28, p=0,20 - auch
+hier keine Kante, Punktschätzer sogar in die Gegenrichtung. Bei n=31 je
+Gruppe zu klein für eine belastbare Aussage in beide Richtungen.
+
+Vorschlag, mehrjährige BTC/ETH-Historie nachzuladen (beide seit Jahren frei
+verfügbar, anders als die meisten Alt-Coins) wurde geprüft und bewusst
+verworfen: die Liquiditätszonen-/Stop-Hunt-These setzt strukturell eine
+Marktphase mit breiter Verfügbarkeit gehebelter Perpetual-Futures-Positionen
+voraus, die sich erst ab ca. 2019/2020 in großem Maßstab etabliert hat.
+Ältere BTC/ETH-Daten (z.B. 2015-2018) stammen aus einer strukturell anderen
+Marktphase (kaum Institutionelle, andere Derivate-Tiefe/Liquidationsdynamik)
+- das wäre keine echte Erhöhung der Stichprobenpower für die Frage "gilt das
+HEUTE", sondern eine Vermischung zweier nicht vergleichbarer Marktregime
+(Nicht-Stationarität). Die vorhandenen ~2 Jahre sind der tatsächlich
+relevante, vergleichbare Zeitraum - eine bessere Antwort gäbe es nur durch
+organisches Warten auf mehr Daten AUS DERSELBEN Marktphase, nicht durch
+Rückgriff auf eine andere Ära. Untersuchung damit für jetzt abgeschlossen.
