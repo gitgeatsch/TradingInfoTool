@@ -1,19 +1,35 @@
 # Memory & CLAUDE.md Sync Strategy
 
-## Drei Sync-Ebenen (Stand 2026-07-16 — korrigiert/vereinheitlicht)
+## Drei Sync-Ebenen (Stand 2026-07-16, Priorität aktualisiert 2026-07-24)
 
 Der Desktop↔Notebook-Sync läuft je nach Situation über einen von drei
 unterschiedlichen Wegen, mit unterschiedlichem Umfang. Diese drei Ebenen
 lösen den ursprünglichen, inzwischen überholten "immer Drive"-Ansatz weiter
-unten ab:
+unten ab.
 
-1. **USB-Stick, vor Ort (bevorzugt, voller Umfang).** Wenn beide Geräte
-   physisch zusammen sind: **alles** — `.env`, `Basisinfos/Assets.xlsx`,
-   die SQLite-Datenbank, die Claude-Code-Memory UND beide `CLAUDE.md`-Dateien
-   (Projekt + global). Vermeidet jede Cloud-Exposition von Secrets/
-   persönlichen Finanzdaten. Voller Ablauf, Ordnerstruktur (`claudesync`)
-   und Reihenfolge-Regeln: siehe Memory `reference_usb_sync_workflow.md`
-   (liegt nicht im Repo, ist Claude-Code-Memory).
+**Nachtrag (2026-07-24, Nutzer-Klarstellung):** die Häufigkeits-Reihenfolge
+hat sich seit 2026-07-16 verschoben — nicht die Ebenen selbst, nur wie oft
+welche in der Praxis greift:
+- **Primär/am häufigsten: Git** (Ebene 3 unten) — reiner Code-Sync, deckt
+  inzwischen den Löwenanteil ab.
+- **Einzeldateien/temporäre Analysen: Google Drive** (Ebene 2 unten) — z.B.
+  die `.md`-Dateien dieser Sync-Strategie selbst, oder der laufend genutzte
+  `Notebook_Analysedaten`-Ordner (siehe `reference_notebook_analyseordner_standard.md`).
+- **USB (Ebene 1 unten) ist NICHT obsolet**, aber nur noch selten nötig —
+  bleibt der richtige Weg für einen vollen Sync bzw. eine sichere Übertragung
+  von Secrets/DB, wenn beide Geräte physisch zusammen sind (siehe Ebene 1
+  unten für den genauen Umfang). Kommt in der Praxis kaum noch vor, weil die
+  meisten laufenden Anlässe (Einzeldatei-Korrekturen, Code-Änderungen) über
+  Git oder Drive abgedeckt sind.
+
+1. **USB-Stick, vor Ort (voller Umfang, für seltene Fälle — Full-Sync/sichere
+   Übertragung).** Wenn beide Geräte physisch zusammen sind: **alles** —
+   `.env`, `Basisinfos/Assets.xlsx`, die SQLite-Datenbank, die Claude-Code-
+   Memory UND beide `CLAUDE.md`-Dateien (Projekt + global). Vermeidet jede
+   Cloud-Exposition von Secrets/persönlichen Finanzdaten. Voller Ablauf,
+   Ordnerstruktur (`claudesync`) und Reihenfolge-Regeln: siehe Memory
+   `reference_usb_sync_workflow.md` (liegt nicht im Repo, ist Claude-Code-
+   Memory).
 
    **Wichtige Ausnahme seit 2026-07-17 — manuelle Einstandspreis-Korrekturen
    brauchen KEINE volle DB-Kopie mehr:** das Notebook läuft 24/7 und erzeugt

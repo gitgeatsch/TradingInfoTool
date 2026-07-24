@@ -7577,3 +7577,60 @@ HEUTE", sondern eine Vermischung zweier nicht vergleichbarer Marktregime
 relevante, vergleichbare Zeitraum - eine bessere Antwort gäbe es nur durch
 organisches Warten auf mehr Daten AUS DERSELBEN Marktphase, nicht durch
 Rückgriff auf eine andere Ära. Untersuchung damit für jetzt abgeschlossen.
+
+## Nachtrag (2026-07-24): Provider-Performance zeigt jetzt auch offene/laufende Signale, nicht nur Abschlüsse
+
+Nutzer-Beobachtung nach Sichtung der Remote-Seite: für Spot (alle 4
+Assetklassen) stand durchgehend "Noch keine abgeschlossenen Signale" - ohne
+jeden Hinweis, ob überhaupt Fortschritt passiert oder das Tracking
+stillsteht. Analyse per `extract_notebook_diagnose.py`-Export ergab: über die
+gesamte Projektlaufzeit gab es nur **11 echte trackbare Spot-Signale**
+(KAUFEN/NACHKAUFEN - HALTEN/TAUSCHEN werden nicht getrackt). 9 davon
+(07-14 bis 07-18) fielen dem am 07-22 gefixten Überholt-Bug zum Opfer
+(siehe [[project_ueberholt_erkennung_mindestbeobachtung_fix]]) und können
+rückwirkend nicht mehr aufgelöst werden. **2 Signale seit dem Fix** (3QSS
+und DBPK, beide NACHKAUFEN vom 2026-07-22, beides Absicherungspositionen -
+`hauptgruppe: absicherung`, `assetklasse: etf`) laufen unauffällig weiter,
+ohne vorzeitig als "überholt" markiert zu werden - ein gutes Zeichen für den
+Fix, aber in der alten Kartendarstellung unsichtbar.
+
+**Root Cause der Anzeige-Lücke:** `compute_provider_performance()`
+(`agent/krypto/backward_tracking.py`) fragt ausschließlich bereits
+AUFGELÖSTE Signale ab (`outcome_status IN (take_profit_erreicht,
+stop_loss_erreicht, liquidation_wahrscheinlich)`) - es gab keine Abfrage für
+"wie viele Signale laufen gerade offen mit".
+
+**Fix:** neue Funktion `compute_offene_signale_uebersicht()` (gleiche Datei,
+direkt nach `compute_provider_performance()`) - liest `outcome_status IS
+NULL` UND eine echte trackbare Aktion (`KAUFEN`/`NACHKAUFEN` bei Spot,
+`ERÖFFNEN`/`NACHKAUFEN` bei Hebel), gruppiert nach derselben Tier-Logik
+(Spot nach Assetklasse, Hebel gesondert), aber OHNE Provider-Aufschlüsselung
+(ein offenes Signal hat noch kein Ergebnis). Rückgabe je Tier: Anzahl +
+ältestes `created_at`. `remote/status.py::build_status()` reicht das Ergebnis
+als neues Feld `offene_signale` durch (`_get_offene_signale_uebersicht()`,
+reiner Lesezugriff). `remote/server.py`: neue Funktion
+`renderOffeneSignaleHinweis()` haengt bei jeder Tier-Zeile (auch wenn
+bereits aufgelöste Signale vorhanden sind) einen Zusatzsatz an, z.B. "2
+offene Signale in Beobachtung (ältestes seit 2 Tagen)" - nutzt die bereits
+bestehende `fmtRelativeTime()`.
+
+Verifiziert: synthetischer Test gegen eine temporäre DB (gemischte
+offene/aufgelöste/HALTEN-Signale über mehrere Assetklassen + Hebel, mit UND
+ohne `watchlist`-Parameter) + End-to-End-Lauf von `build_status()` gegen
+dieselbe DB, `to_dict()`-Ausgabe geprüft.
+
+**Nebenbefund (gleicher Anlass): Einstandspreis-Lücke bei VSN/XNO.** Zwei
+kürzlich gekaufte Krypto-Assets (`beobachtungsstatus: beobachtung`) zeigten
+`avg_buy_price_eur` UND `avg_buy_price_manual_eur` beide `null` im
+Notebook-Export. Kein Bug - die automatische Einstandspreis-Berechnung
+(`importer/bitpanda_avg_cost.py::sync_avg_buy_prices()`) ist bewusst ein
+eigener manueller Menüpunkt ("Einstandspreise von Bitpanda berechnen",
+`ui/app.py`), der seit dem Kauf nicht erneut ausgelöst wurde. Nutzer hat die
+von Bitpanda selbst angezeigten Durchschnittspreise geliefert (VSN 0,1273 €,
+XNO 0,6279 €) - manuell über `db.set_holding_avg_buy_price_manual()`
+gesetzt (VSN: Zeile existierte lokal) bzw. direkt in
+`data/holdings_manual_overrides.json` ergänzt (XNO: hatte auf diesem Gerät
+noch keine `holdings`-Zeile, `import_holdings_manual_overrides()` überspringt
+das gefahrlos, bis die Zeile - z.B. auf dem Notebook, wo sie bereits
+existiert - auftaucht). Kein Anlegen einer Phantom-Zeile, bestehendes
+Invariant respektiert.

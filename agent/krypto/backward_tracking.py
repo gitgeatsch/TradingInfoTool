@@ -472,6 +472,55 @@ def compute_provider_performance(conn, watchlist: list | None = None) -> dict:
     return ergebnis
 
 
+# Trackbare Hebel-Aktionen fuer die Offen-Uebersicht (2026-07-24) - identisch zu
+# _TRACKABLE_HEBEL_ACTIONS in hebel_backward_tracking.py, hier bewusst dupliziert
+# statt importiert: hebel_backward_tracking.py importiert bereits von diesem Modul
+# (OUTCOME_*-Konstanten), ein Rueckimport wuerde einen Zirkelimport erzeugen.
+_HEBEL_TRACKABLE_ACTIONS_FUER_UEBERSICHT = ("ERÖFFNEN", "NACHKAUFEN")
+
+
+def compute_offene_signale_uebersicht(conn, watchlist: list | None = None) -> dict:
+    """Ergaenzt compute_provider_performance() um Sichtbarkeit fuer noch NICHT
+    aufgeloeste, aber bereits trackbare Signale (outcome_status IS NULL, echte
+    Kauf-/Nachkauf-/Eroeffnen-Aktion) - Nutzer-Fund (2026-07-24, Remote-Seite
+    zeigte bei 0 abgeschlossenen Spot-Signalen keinerlei Hinweis, ob ueberhaupt
+    Fortschritt passiert oder das Tracking schlicht stillsteht). Gleiche
+    Tier-Aufschluesselung wie compute_provider_performance() (Spot nach
+    Assetklasse, Hebel gesondert), aber OHNE Provider-Aufschluesselung - ein
+    offenes Signal hat noch kein Ergebnis, das waere irrefuehrend.
+
+    Rueckgabe je Tier: {"anzahl": int, "aeltestes_erstellt_am": str | None}."""
+    assetklasse_by_symbol = {a.symbol: a.assetklasse for a in watchlist} if watchlist else {}
+    ergebnis: dict = {"hebel": {"anzahl": 0, "aeltestes_erstellt_am": None}}
+    if not watchlist:
+        ergebnis["spot"] = {"anzahl": 0, "aeltestes_erstellt_am": None}
+
+    def _erfasse(tier: str, created_at: str) -> None:
+        eintrag = ergebnis.setdefault(tier, {"anzahl": 0, "aeltestes_erstellt_am": None})
+        eintrag["anzahl"] += 1
+        if eintrag["aeltestes_erstellt_am"] is None or created_at < eintrag["aeltestes_erstellt_am"]:
+            eintrag["aeltestes_erstellt_am"] = created_at
+
+    placeholders = ", ".join("?" for _ in _TRACKABLE_ACTIONS)
+    spot_rows = conn.execute(
+        f"SELECT symbol, created_at FROM signals WHERE outcome_status IS NULL AND action IN ({placeholders})",
+        tuple(_TRACKABLE_ACTIONS),
+    ).fetchall()
+    for row in spot_rows:
+        tier = assetklasse_by_symbol.get(row["symbol"], "unbekannt") if watchlist else "spot"
+        _erfasse(tier, row["created_at"])
+
+    hebel_placeholders = ", ".join("?" for _ in _HEBEL_TRACKABLE_ACTIONS_FUER_UEBERSICHT)
+    hebel_rows = conn.execute(
+        f"SELECT created_at FROM hebel_signals WHERE outcome_status IS NULL AND action IN ({hebel_placeholders})",
+        _HEBEL_TRACKABLE_ACTIONS_FUER_UEBERSICHT,
+    ).fetchall()
+    for row in hebel_rows:
+        _erfasse("hebel", row["created_at"])
+
+    return ergebnis
+
+
 # Historische Trefferquote als Prompt-Fakt (2026-07-18, Item E der Konfidenz-
 # Kalibrierungs-Runde, siehe Memory project_konfidenz_kalibrierung_regelwerk.md) -
 # unter dieser Schwelle bekommt das Modell einen expliziten Ehrlichkeits-Hinweis,

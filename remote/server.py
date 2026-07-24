@@ -184,7 +184,20 @@ function fmtMoney(value) {
 // Anzeige eines Hinweises, keine eigene Schwellenwert-Logik.
 const PROVIDER_PERF_MIN_SAMPLE = 15;
 
-function renderProviderPerformance(tierData) {
+// Fortschritts-Hinweis, sobald mind. 1 offenes (noch nicht aufgeloestes)
+// trackbares Signal existiert - 2026-07-24, Nutzer-Fund: die reine
+// "0 abgeschlossen"-Meldung liess nicht erkennen, ob ueberhaupt Fortschritt
+// passiert (laufende offene Positionen) oder das Tracking stillsteht.
+function renderOffeneSignaleHinweis(offenInfo) {
+  if (!offenInfo || !offenInfo.anzahl) return '';
+  const alterText = offenInfo.aeltestes_erstellt_am
+    ? ' (aeltestes seit ' + fmtRelativeTime(offenInfo.aeltestes_erstellt_am) + ')' : '';
+  return '<div class="row"><span class="muted-text">' + offenInfo.anzahl +
+    ' offene' + (offenInfo.anzahl === 1 ? 's' : '') + ' Signal' + (offenInfo.anzahl === 1 ? '' : 'e') +
+    ' in Beobachtung' + alterText + '</span></div>';
+}
+
+function renderProviderPerformance(tierData, offenInfo) {
   const providers = Object.keys(tierData);
   if (providers.length === 0) {
     // 2026-07-21, Nutzer-Fund: "noch keine Daten" ohne Begruendung war nicht
@@ -192,7 +205,7 @@ function renderProviderPerformance(tierData) {
     // Feature kaputt/kein Tracking) statt nur den leeren Zustand zu melden.
     return '<div class="row"><span class="muted-text">Noch keine abgeschlossenen Signale in dieser Kategorie ' +
       '(Kurs hat bei keinem bisherigen Signal Take-Profit oder Stop-Loss erreicht) - kann je nach Marktlage ' +
-      'Tage bis Wochen dauern.</span></div>';
+      'Tage bis Wochen dauern.</span></div>' + renderOffeneSignaleHinweis(offenInfo);
   }
   return providers.map(function(p) {
     const d = tierData[p];
@@ -204,7 +217,7 @@ function renderProviderPerformance(tierData) {
       ? ' <span class="muted-text">(n&lt;' + PROVIDER_PERF_MIN_SAMPLE + ', noch nicht belastbar)</span>' : '';
     return '<div class="row"><span>' + p + ' (' + d.anzahl_resolved + ')' + kleineStichprobe + '</span>' +
       '<span>Win-Rate ' + winRate + ', &oslash; CRV ' + crv + '</span></div>';
-  }).join("");
+  }).join("") + renderOffeneSignaleHinweis(offenInfo);
 }
 
 // Assetklassen-Aufschluesselung (2026-07-20): compute_provider_performance()
@@ -217,10 +230,10 @@ const SPOT_ASSETKLASSEN = [
   ["krypto", "Krypto"], ["aktien", "Aktien"], ["rohstoffe", "Rohstoffe"], ["etf", "ETF (Themen/Hedge)"],
 ];
 
-function renderSpotProviderPerformanceByAssetklasse(perfData) {
+function renderSpotProviderPerformanceByAssetklasse(perfData, offeneData) {
   return SPOT_ASSETKLASSEN.map(function([key, label]) {
     return '<div class="row"><span class="muted-text">' + label + '</span></div>' +
-      renderProviderPerformance(perfData[key] || {});
+      renderProviderPerformance(perfData[key] || {}, (offeneData || {})[key]);
   }).join("");
 }
 
@@ -352,10 +365,11 @@ async function refreshStatus() {
   }
 
   if (data.provider_performance) {
+    const offen = data.offene_signale || {};
     document.getElementById("provider-performance-spot").innerHTML =
-      renderSpotProviderPerformanceByAssetklasse(data.provider_performance);
+      renderSpotProviderPerformanceByAssetklasse(data.provider_performance, offen);
     document.getElementById("provider-performance-hebel").innerHTML =
-      renderProviderPerformance(data.provider_performance.hebel || {});
+      renderProviderPerformance(data.provider_performance.hebel || {}, offen.hebel);
   }
 
   if (data.api_health) {

@@ -31,6 +31,7 @@ class RemoteStatus:
     jobs_running_seit_minuten: dict[str, float | None] = field(default_factory=dict)
     budget_heute: dict | None = None
     provider_performance: dict | None = None
+    offene_signale: dict | None = None
     api_health: dict | None = None
     regime_status: dict | None = None
     parameter_overview: list[dict] | None = None
@@ -49,6 +50,7 @@ class RemoteStatus:
             "jobs_running_seit_minuten": self.jobs_running_seit_minuten,
             "budget_heute": self.budget_heute,
             "provider_performance": self.provider_performance,
+            "offene_signale": self.offene_signale,
             "api_health": self.api_health,
             "regime_status": self.regime_status,
             "parameter_overview": self.parameter_overview,
@@ -129,6 +131,7 @@ def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, erro
         jobs_running_seit_minuten=jobs_running_seit_minuten,
         budget_heute=_get_budget_heute(conn),
         provider_performance=_get_provider_performance(conn, watchlist),
+        offene_signale=_get_offene_signale_uebersicht(conn, watchlist),
         api_health=_get_api_health(conn),
         regime_status=_get_regime_status(conn),
         parameter_overview=_get_parameter_overview(),
@@ -153,6 +156,17 @@ def _get_provider_performance(conn: sqlite3.Connection, watchlist: list) -> dict
     from agent.krypto.backward_tracking import compute_provider_performance
 
     return compute_provider_performance(conn, watchlist)
+
+
+def _get_offene_signale_uebersicht(conn: sqlite3.Connection, watchlist: list) -> dict:
+    """Ergaenzt _get_provider_performance() um Sichtbarkeit fuer noch nicht
+    aufgeloeste, aber bereits trackbare Signale (2026-07-24, Nutzer-Fund: die
+    reine "0 abgeschlossen"-Anzeige zeigte keinen Fortschritt an) - reiner
+    Lesezugriff, siehe agent/krypto/backward_tracking.py::
+    compute_offene_signale_uebersicht()."""
+    from agent.krypto.backward_tracking import compute_offene_signale_uebersicht
+
+    return compute_offene_signale_uebersicht(conn, watchlist)
 
 
 def _get_regime_status(conn: sqlite3.Connection) -> dict | None:
