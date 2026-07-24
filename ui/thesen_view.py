@@ -16,8 +16,9 @@ eine Wiederverwendung wuerde ohnehin einen Zirkel-Import ui.app <-> ui.thesen_vi
 erzeugen (ui.app importiert die Tabs, nicht umgekehrt)."""
 from __future__ import annotations
 
+import dataclasses
 import tkinter as tk
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from tkinter import messagebox, ttk
 
 import config as config_module
@@ -51,9 +52,13 @@ def _richtung_optionen(hauptgruppe_id: str | None) -> dict[str, str]:
 
 
 def _mechanismus_label(mechanismus: str | None) -> str:
+    """Nimmt einen (moeglicherweise komma-getrennten, 2026-07-24 #333 Multi-
+    Indikator-Design) Mechanismus-String entgegen - `These.pruef_mechanismus`
+    speichert mehrere Mechanismen als "m2_liquiditaet,cot_positionierung"."""
     if not mechanismus:
         return "kein automatischer Check"
-    return _MECHANISMUS_LABELS.get(mechanismus, mechanismus)
+    teile = [t.strip() for t in mechanismus.split(",") if t.strip()]
+    return " + ".join(_MECHANISMUS_LABELS.get(t, t) for t in teile)
 
 
 def _kategorie_anzeige(hauptgruppe_name: str, unterkategorie_name: str | None) -> str:
@@ -236,7 +241,7 @@ class TheseDialog(tk.Toplevel):
                 text="Kein automatischer Vorschlag für diese Kategorie - review_am bleibt frei wählbar."
             )
         else:
-            self._mechanismus_label.config(text=_mechanismus_label(mechanismus_info["mechanismus"]))
+            self._mechanismus_label.config(text=_mechanismus_label(",".join(mechanismus_info["mechanismen"])))
             tage = mechanismus_info["review_tage_vorschlag"]
             begruendung = mechanismus_info["review_begruendung"]
             if tage is None:
@@ -279,7 +284,7 @@ class TheseDialog(tk.Toplevel):
                 return
 
         mechanismus_info = config_module.get_pruef_mechanismus(hg_id, uk_id)
-        pruef_mechanismus = mechanismus_info["mechanismus"] if mechanismus_info else None
+        pruef_mechanismus = ",".join(mechanismus_info["mechanismen"]) if mechanismus_info else None
 
         these = These(
             hauptgruppe=hg_id,
@@ -306,6 +311,7 @@ class ThesenView(ttk.Frame):
         super().__init__(parent)
         self._db_conn_factory = db_conn_factory
         self._begruendung_tooltips: dict[str, str] = {}
+        self._vorschlag_tooltips: dict[str, str] = {}
         self._nur_aktive_var = tk.BooleanVar(value=True)
 
         self._build_layout()
@@ -392,13 +398,135 @@ class ThesenView(ttk.Frame):
         self._reapply_sort = make_sortable(self.tree)
         add_row_tooltips(self.tree, lambda iid: self._begruendung_tooltips.get(iid))
 
+        # 2026-07-24, #333 Punkt 17 (Transparenz-Anforderung) - Fall-B-
+        # Aenderungsaufforderungen (agent/kategorie_vorschlaege.py) haben
+        # sonst KEINE GUI-Oberflaeche: sie liegen sonst unsichtbar in
+        # these_aenderungsvorschlaege, ohne Weg zum Uebernehmen/Ablehnen.
+        vorschlag_label_frame = ttk.Frame(self, padding=(8, 0, 8, 4))
+        vorschlag_label_frame.pack(fill="x")
+        ttk.Label(
+            vorschlag_label_frame, text="Offene Änderungsaufforderungen (KI-Vorschläge-Job)",
+            font=("TkDefaultFont", 10, "bold"),
+        ).pack(side="left")
+
+        vorschlag_frame = ttk.Frame(self, padding=(8, 0, 8, 8))
+        vorschlag_frame.pack(fill="x")
+
+        vorschlag_columns = ("kategorie", "aktuell", "vorschlag", "mechanismus", "erkannt_am")
+        self.vorschlag_tree = ttk.Treeview(
+            vorschlag_frame, columns=vorschlag_columns, show="headings", height=5, selectmode="browse",
+        )
+        vorschlag_headings = {
+            "kategorie": "Kategorie", "aktuell": "Aktuelle Richtung", "vorschlag": "Vorgeschlagene Richtung",
+            "mechanismus": "Prüf-Mechanismus", "erkannt_am": "Erkannt am",
+        }
+        vorschlag_widths = {"kategorie": 260, "aktuell": 130, "vorschlag": 150, "mechanismus": 180, "erkannt_am": 140}
+        for col in vorschlag_columns:
+            self.vorschlag_tree.heading(col, text=vorschlag_headings[col])
+            self.vorschlag_tree.column(col, width=vorschlag_widths[col], anchor="w")
+        self.vorschlag_tree.pack(fill="x", side="left", expand=True)
+        add_row_tooltips(self.vorschlag_tree, lambda iid: self._vorschlag_tooltips.get(iid))
+
+        vorschlag_button_frame = ttk.Frame(vorschlag_frame)
+        vorschlag_button_frame.pack(side="left", padx=(8, 0))
+        uebernehmen_button = ttk.Button(vorschlag_button_frame, text="Übernehmen", command=self._on_vorschlag_uebernehmen)
+        uebernehmen_button.pack(fill="x", pady=(0, 4))
+        add_widget_tooltip(
+            uebernehmen_button,
+            "Übernimmt die vorgeschlagene Richtung in die bestehende These (per Update) "
+            "und schließt die Änderungsaufforderung als 'übernommen' ab.",
+        )
+        ablehnen_button = ttk.Button(vorschlag_button_frame, text="Ablehnen", command=self._on_vorschlag_ablehnen)
+        ablehnen_button.pack(fill="x")
+        add_widget_tooltip(
+            ablehnen_button,
+            "Lehnt den Vorschlag ab - die bestehende These bleibt unverändert. Für dieselbe "
+            "Richtung gilt danach 30 Tage Cooldown, bevor sie erneut vorgeschlagen werden kann "
+            "(eine gegenläufige Richtung ist davon nicht betroffen).",
+        )
+
     def refresh(self) -> None:
         conn = self._db_conn_factory()
         try:
             thesen = db.get_aktive_thesen(conn) if self._nur_aktive_var.get() else db.get_alle_thesen(conn)
+            offene_vorschlaege = db.get_offene_aenderungsvorschlaege(conn)
         finally:
             conn.close()
         self._render(thesen)
+        self._render_vorschlaege(offene_vorschlaege)
+
+    def _render_vorschlaege(self, vorschlaege: list) -> None:
+        selected = self.vorschlag_tree.selection()
+        selected_id = selected[0] if selected else None
+
+        self.vorschlag_tree.delete(*self.vorschlag_tree.get_children())
+        self._vorschlag_tooltips.clear()
+
+        conn = self._db_conn_factory()
+        try:
+            for vorschlag in vorschlaege:
+                these = db.get_these(conn, vorschlag.these_id) if vorschlag.these_id else None
+                if these is None:
+                    continue
+                hg_name, uk_name = self._kategorie_namen(these)
+                kategorie_text = _kategorie_anzeige(hg_name, uk_name)
+                richtung_optionen = _richtung_optionen(these.hauptgruppe)
+                aktuell_label = richtung_optionen.get(these.richtung, these.richtung)
+                vorschlag_label = richtung_optionen.get(vorschlag.vorgeschlagene_richtung, vorschlag.vorgeschlagene_richtung)
+                iid = str(vorschlag.id)
+                self.vorschlag_tree.insert(
+                    "", "end", iid=iid,
+                    values=(
+                        kategorie_text, aktuell_label, vorschlag_label,
+                        _mechanismus_label(vorschlag.mechanismus_typ), vorschlag.erkannt_am or "-",
+                    ),
+                )
+                tooltip = vorschlag.begruendung
+                if vorschlag.datenstand:
+                    tooltip += f"\n\nDatenstand: {vorschlag.datenstand}"
+                self._vorschlag_tooltips[iid] = tooltip
+        finally:
+            conn.close()
+
+        theme.restripe_treeview(self.vorschlag_tree)
+        if selected_id and self.vorschlag_tree.exists(selected_id):
+            self.vorschlag_tree.selection_set(selected_id)
+
+    def _on_vorschlag_uebernehmen(self) -> None:
+        selected = self.vorschlag_tree.selection()
+        if not selected:
+            messagebox.showinfo("Übernehmen", "Bitte zuerst eine Änderungsaufforderung auswählen.")
+            return
+        vorschlag_id = int(selected[0])
+        jetzt_iso = datetime.now(timezone.utc).isoformat()
+        conn = self._db_conn_factory()
+        try:
+            vorschlag = db.get_these_aenderungsvorschlag(conn, vorschlag_id)
+            if vorschlag is None or vorschlag.these_id is None:
+                return
+            these = db.get_these(conn, vorschlag.these_id)
+            if these is None:
+                return
+            aktualisierte_these = dataclasses.replace(these, richtung=vorschlag.vorgeschlagene_richtung)
+            db.update_these(conn, these.id, aktualisierte_these)
+            db.set_these_aenderungsvorschlag_status(conn, vorschlag_id, "uebernommen", jetzt_iso)
+        finally:
+            conn.close()
+        self.refresh()
+
+    def _on_vorschlag_ablehnen(self) -> None:
+        selected = self.vorschlag_tree.selection()
+        if not selected:
+            messagebox.showinfo("Ablehnen", "Bitte zuerst eine Änderungsaufforderung auswählen.")
+            return
+        vorschlag_id = int(selected[0])
+        jetzt_iso = datetime.now(timezone.utc).isoformat()
+        conn = self._db_conn_factory()
+        try:
+            db.set_these_aenderungsvorschlag_status(conn, vorschlag_id, "abgelehnt", jetzt_iso)
+        finally:
+            conn.close()
+        self.refresh()
 
     def _render(self, thesen: list[These]) -> None:
         selected = self.tree.selection()
@@ -412,6 +540,16 @@ class ThesenView(ttk.Frame):
             kategorie_text = _kategorie_anzeige(hg_name, uk_name)
             richtung_label = _richtung_optionen(these.hauptgruppe).get(these.richtung, these.richtung)
             iid = str(these.id)
+            # 2026-07-24, #333 Punkt 15 (review_am-Ablauf-Verhalten, reiner
+            # Kalender-Hinweis, kein Aenderungsvorschlag/keine E-Mail, siehe
+            # Kategorie_Basisinformationen_Release2.md Abschnitt 11 Punkt 15).
+            review_faellig = False
+            if these.review_am:
+                try:
+                    review_faellig = date.fromisoformat(these.review_am) < date.today()
+                except ValueError:
+                    pass
+            review_anzeige = f"⚠ {these.review_am}" if review_faellig else (these.review_am or "-")
             self.tree.insert(
                 "", "end", iid=iid,
                 values=(
@@ -421,11 +559,14 @@ class ThesenView(ttk.Frame):
                     _mechanismus_label(these.pruef_mechanismus),
                     _STATUS_LABELS.get(these.status, these.status),
                     these.gesetzt_am,
-                    these.review_am or "-",
+                    review_anzeige,
                 ),
                 tags=(self._richtung_tag(these),),
             )
-            self._begruendung_tooltips[iid] = these.begruendung
+            begruendung_tooltip = these.begruendung
+            if review_faellig:
+                begruendung_tooltip += f"\n\n⚠ Wiedervorlage fällig seit {these.review_am}."
+            self._begruendung_tooltips[iid] = begruendung_tooltip
 
         self.tree.tag_configure("richtung_positiv", foreground=theme.info_color())
         self.tree.tag_configure("richtung_negativ", foreground=theme.danger_color())

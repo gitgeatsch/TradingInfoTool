@@ -636,3 +636,58 @@ class These:
     review_am: str | None = None
     status: str = "aktiv"  # 'aktiv'|'erledigt'|'verworfen'
     quelle: str = "manuell"  # 'manuell'|'ki_vorschlag'
+
+
+@dataclass
+class TheseAenderungsvorschlag:
+    """Interner Persistenz-Tracker fuer #333 (KI-Vorschlaege-Job) - deckt ZWEI
+    Faelle ab (siehe Basisinfos/Kategorie_Basisinformationen_Release2.md
+    Abschnitt 15/#333-Statustabelle):
+
+    - **Fall A** (`these_id IS NULL`, `hauptgruppe`/`unterkategorie` gesetzt):
+      keine aktive These fuer diese Kategorie - bei Erreichen der
+      Persistenzschwelle wird DIREKT eine neue `These` angelegt
+      (`quelle='ki_vorschlag'`, `status='aktiv'`), dieser Tracker-Eintrag geht
+      automatisch auf 'uebernommen' (kein separater Nutzer-Klick noetig - die
+      neue These ist sofort ueber die bestehende ThesenView bearbeitbar).
+    - **Fall B** (`these_id` gesetzt): eine aktive These existiert bereits,
+      wird aber vom Mechanismus widersprochen - bei Erreichen der
+      Persistenzschwelle wird der Eintrag auf 'offen' gehoben (fuer den
+      Nutzer sichtbar, wartet auf Uebernehmen/Ablehnen ueber die GUI). Die
+      bestehende These bleibt bis dahin unveraendert - autoritative Nutzer-
+      Entscheidung, kein stilles Ueberschreiben.
+
+    Beide Faelle nutzen dieselbe Persistenz-Logik: ein einzelner verrauschter
+    Ausschlag darf keine Wirkung entfalten, der Mechanismus muss ueber die
+    mechanismus-spezifische Persistenzdauer hinweg durchgaengig dieselbe
+    Richtung zeigen (gleiches Prinzip wie die Kontrathese-Zeitfenster-
+    Bestaetigung bei Hebel-Positionen).
+
+    `status`:
+    - 'beobachtung': Serie laeuft, Persistenzschwelle noch nicht erreicht -
+      fuer den Nutzer NICHT sichtbar, reiner interner Zwischenstand (gilt
+      fuer Fall A UND Fall B gleichermassen).
+    - 'offen': NUR Fall B - Persistenzschwelle erreicht, sichtbar
+      (Schwerpunkte-Tab), wartet auf Uebernehmen/Ablehnen.
+    - 'uebernommen': Fall A automatisch bei Promotion; Fall B wenn der
+      Nutzer die vorgeschlagene Richtung uebernommen hat (These per
+      update_these() geaendert).
+    - 'abgelehnt': NUR Fall B - Nutzer hat abgelehnt, Cooldown/Reversal-Regel
+      (Abschnitt 15) verhindert sofortiges erneutes Vorschlagen.
+
+    `beobachtung_seit`: Zeitpunkt, seit dem die aktuelle Serie durchgaengig
+    laeuft - bricht sie ab (Mechanismus dreht wieder oder wird neutral), wird
+    der Entwurf verworfen (kein Datensatz-Ueberleben, ein neuer Entwurf
+    startet bei erneutem Signal neu bei `beobachtung_seit` = jetzt)."""
+    mechanismus_typ: str
+    vorgeschlagene_richtung: str
+    begruendung: str
+    beobachtung_seit: str
+    id: int | None = None
+    these_id: int | None = None  # Fall B; None = Fall A (siehe hauptgruppe/unterkategorie)
+    hauptgruppe: str | None = None  # nur Fall A
+    unterkategorie: str | None = None  # nur Fall A
+    datenstand: str | None = None
+    erkannt_am: str | None = None
+    status: str = "beobachtung"
+    entschieden_am: str | None = None

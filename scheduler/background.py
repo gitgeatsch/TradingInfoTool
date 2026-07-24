@@ -386,6 +386,28 @@ def makro_analog_job(conn_factory, fred_api_key) -> None:
         conn.close()
 
 
+def kategorie_vorschlaege_job(conn_factory) -> None:
+    """#333 KI-Vorschlaege-Job fuer Kategorie-Schwerpunkte (2026-07-24, siehe
+    agent/kategorie_vorschlaege.py Modul-Docstring) - taeglich: prueft alle
+    Hauptgruppe/Unterkategorie-Schluessel aus config.PRUEF_MECHANISMUS_MAPPING,
+    legt bei anhaltendem Signal automatisch neue Thesen an (Fall A) oder hebt
+    Aenderungsaufforderungen gegen bestehende Thesen auf 'offen' (Fall B).
+    Rein deterministisch, kein LLM-Call (Schicht 2 - ein taeglicher LLM-
+    Synthese-Call ueber alle Kategorien - ist noch nicht gebaut, siehe Punkt 2
+    der #333-Statustabelle in Kategorie_Basisinformationen_Release2.md)."""
+    conn = conn_factory()
+    try:
+        from agent.kategorie_vorschlaege import run_kategorie_vorschlaege_job
+
+        run_kategorie_vorschlaege_job(conn)
+        logger.info("Kategorie-Vorschlaege-Job (#333) durchgelaufen.")
+    except Exception as exc:
+        logger.exception("Kategorie-Vorschlaege-Job (#333) fehlgeschlagen")
+        _notify_job_failure("kategorie_vorschlaege", f"Kategorie-Vorschlaege-Job fehlgeschlagen: {exc}")
+    finally:
+        conn.close()
+
+
 def backward_tracking_catchup_if_missed(conn_factory, watchlist) -> None:
     """2026-07-17, Nutzer-Fund: der feste 06:00-Cron holt einen verpassten Termin
     NICHT automatisch nach, wenn die App zu diesem Zeitpunkt gar nicht lief (an
@@ -1824,6 +1846,18 @@ def build_scheduler(
         minute=30,
         args=[db_conn_factory, fred_api_key],
         id="makro_analog",
+        next_run_time=datetime.now(),
+        misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
+    )
+    # #333 KI-Vorschlaege-Job (2026-07-24) - gleiches Muster wie makro_analog
+    # (taeglich 06:30, rein deterministisch, sofortiger Erststart).
+    scheduler.add_job(
+        kategorie_vorschlaege_job,
+        "cron",
+        hour=6,
+        minute=30,
+        args=[db_conn_factory],
+        id="kategorie_vorschlaege",
         next_run_time=datetime.now(),
         misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
     )

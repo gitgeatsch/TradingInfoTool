@@ -88,6 +88,13 @@ siehe Plan-Datei) "gerettetes" Signal tatsaechlich Take-Profit/Stop-Loss
 erreicht haette. Bewusst nur fuer betroffene Symbole (nicht die gesamte
 price_history_ohlc-Tabelle) - haelt den Export schlank.
 
+Nachtrag (2026-07-24, NB-Analyse-Fund): `kontrathese_zu_position`/
+`kontrathese_llm_richtung` (heutiges Kontrathese-Uebersetzung-Feature,
+siehe HebelSignal-Docstring) fehlten in `_HEBEL_SIGNAL_SPALTEN` - die
+Produktions-DB war korrekt befuellt, nur dieser Export sah die beiden
+Spalten nicht (kein Live-Bug, reine Export-Luecke, analog den fruaeheren
+Nachzieh-Eintraegen oben).
+
 Aufruf am Notebook: python extract_notebook_diagnose.py [SYMBOL] [LOG_STUNDEN]
   (SYMBOL optional, Default LINK, fuer den Tiefenanalyse-Teil;
    LOG_STUNDEN optional, Default 72, Zeitfenster fuer den Log-Auszug)
@@ -159,6 +166,7 @@ _HEBEL_SIGNAL_SPALTEN = (
     "gate_passed, gate_reason, risk_veto, risk_veto_reason, llm_model, "
     "outcome_status, outcome_geprueft_am, outcome_entschieden_am, "
     "outcome_realisiertes_crv, outcome_datenquelle, "
+    "kontrathese_zu_position, kontrathese_llm_richtung, "
     + _VOLLSTAENDIGKEITS_SPALTEN
 )
 _SPOT_SIGNAL_SPALTEN = (

@@ -161,39 +161,60 @@ def get_kategorie_name(hauptgruppe_id: str | None, unterkategorie_id: str | None
 # (z.B. Zinskurve nur fuer "Finanzen", nicht "ganz Aktien-Sektoren") - Schluessel
 # ist deshalb wahlweise "hauptgruppe" ODER "hauptgruppe:unterkategorie", die
 # spezifischere Variante hat Vorrang (siehe get_pruef_mechanismus()).
+#
+# "mechanismen" (2026-07-24, #333 Multi-Indikator-Design - vorher "mechanismus",
+# ein einzelner String): eine Kategorie kann jetzt MEHRERE Mechanismen gleich-
+# zeitig haben (z.B. Edelmetalle: M2-Liquiditaet UND COT-Positionierung Gold/
+# Silber) - agent/kategorie_thesen.py::compute_these_abgleich() ruft alle auf
+# und kombiniert sie ueber eine Einigkeitsregel (_kombiniere_abgleiche()):
+# nur wenn ALLE verfuegbaren Mechanismen uebereinstimmen, gilt das Ergebnis als
+# "gestuetzt"/"widerspricht", sonst "neutral" - ein einzelnes Signal darf keine
+# gemischte Lage als eindeutig ausgeben.
 PRUEF_MECHANISMUS_MAPPING: dict[str, dict] = {
     "edelmetalle": {
-        "mechanismus": "m2_liquiditaet",
-        "review_tage_vorschlag": 90,
-        "review_begruendung": "M2-Daten werden nur monatlich veroeffentlicht, ein aussagekraeftiger Trend braucht mehrere Monate.",
+        "mechanismen": ["m2_liquiditaet", "cot_positionierung"],
+        "review_tage_vorschlag": 28,
+        "review_begruendung": "COT-Berichte (Gold/Silber) erscheinen woechentlich und sind damit der schnellere der beiden Mechanismen - M2 bleibt als langsamere Bestaetigung im Begruendungstext sichtbar.",
     },
     "industriemetalle": {
-        "mechanismus": "cot_positionierung",
+        "mechanismen": ["cot_positionierung"],
         "review_tage_vorschlag": 28,
         "review_begruendung": "CFTC-COT-Berichte erscheinen woechentlich, die Positionierung kann sich vergleichsweise schnell verschieben.",
     },
     "energie": {
-        "mechanismus": "cot_positionierung",
+        "mechanismen": ["cot_positionierung"],
         "review_tage_vorschlag": 28,
         "review_begruendung": "CFTC-COT- und EIA-Daten erscheinen woechentlich.",
     },
     "anleihen_geldmarkt": {
-        "mechanismus": "m2_liquiditaet",
+        "mechanismen": ["m2_liquiditaet"],
         "review_tage_vorschlag": 90,
         "review_begruendung": "Zinsentscheide sind selten (Fed tagt nur alle paar Wochen), ein kuerzeres Intervall bringt keinen neuen Erkenntnisgewinn.",
     },
     "aktien_sektoren:finanzen": {
-        "mechanismus": "zinskurve",
+        "mechanismen": ["zinskurve"],
         "review_tage_vorschlag": 75,
         "review_begruendung": "Die Zinskurve braucht mehrere Monate Verlauf, um aussagekraeftig zu sein.",
     },
     "aktien_regionen:emerging_markets": {
-        "mechanismus": "dollar_index",
-        "review_tage_vorschlag": 75,
-        "review_begruendung": "Eine einzelne Dollar-Index-Momentaufnahme ist wenig aussagekraeftig - der Trend braucht mehrere Monate (siehe Live-Fund vom 2026-07-19: DXY stieg seit Jahresbeginn trotz lockerer Fed).",
+        "mechanismen": ["dollar_index", "baerenmarkt_overlay"],
+        "review_tage_vorschlag": 30,
+        "review_begruendung": "Baerenmarkt-/VIX-Signal (schneller der beiden, siehe 'aktien_regionen') ist jetzt der bindende Takt - Dollar-Index bleibt als langsamere Bestaetigung im Begruendungstext sichtbar.",
+    },
+    # 2026-07-24, #333 Punkt 14: gleicher Mechanismus wie Absicherung, aber
+    # umgekehrte Polaritaet (Risk-off ist ein allgemeiner Gegenwind fuer
+    # Aktien, kein Grund fuer eine Versicherung - siehe agent/kategorie_
+    # thesen.py::_abgleich_baerenmarkt_overlay() Docstring). Hauptgruppen-
+    # weiter Fallback fuer alle Regionen OHNE eigenen spezifischeren Eintrag
+    # (Global/Europa/Nordamerika/USA/Asien-Pazifik/Einzellaender) - Emerging
+    # Markets hat oben bereits einen spezifischeren Eintrag, der Vorrang hat.
+    "aktien_regionen": {
+        "mechanismen": ["baerenmarkt_overlay"],
+        "review_tage_vorschlag": 30,
+        "review_begruendung": "VIX/Baerenmarkt-Status kann sich innerhalb weniger Wochen deutlich verschieben.",
     },
     "absicherung": {
-        "mechanismus": "baerenmarkt_overlay",
+        "mechanismen": ["baerenmarkt_overlay"],
         "review_tage_vorschlag": None,
         "review_begruendung": "Absicherung wird situativ (de-)aktiviert, kein festes Wiedervorlage-Intervall sinnvoll.",
     },
@@ -201,12 +222,13 @@ PRUEF_MECHANISMUS_MAPPING: dict[str, dict] = {
 
 
 def get_pruef_mechanismus(hauptgruppe: str, unterkategorie: str | None) -> dict | None:
-    """Liefert den anwendbaren Pruef-Mechanismus fuer these_abgleich(), oder
-    `None` wenn fuer diese Hauptgruppe/Unterkategorie kein etablierter
-    automatischer Check existiert (z.B. Technologie & KI, Sonstige - dort
-    bleibt es bei reiner Hervorhebung ohne these_abgleich-Text, P-10 ehrlich
-    statt vorgetaeuscht). Unterkategorie-spezifischer Eintrag hat Vorrang vor
-    der Hauptgruppe."""
+    """Liefert die anwendbaren Pruef-Mechanismen fuer these_abgleich() als Dict
+    mit Schluessel "mechanismen" (Liste, meist ein Element, Edelmetalle hat
+    zwei), oder `None` wenn fuer diese Hauptgruppe/Unterkategorie kein
+    etablierter automatischer Check existiert (z.B. Technologie & KI, Sonstige
+    - dort bleibt es bei reiner Hervorhebung ohne these_abgleich-Text, P-10
+    ehrlich statt vorgetaeuscht). Unterkategorie-spezifischer Eintrag hat
+    Vorrang vor der Hauptgruppe."""
     if unterkategorie:
         spezifisch = PRUEF_MECHANISMUS_MAPPING.get(f"{hauptgruppe}:{unterkategorie}")
         if spezifisch is not None:

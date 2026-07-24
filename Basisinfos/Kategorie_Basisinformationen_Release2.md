@@ -332,3 +332,248 @@ Spaltensortierung.
 
 Bewusst nicht Teil dieser Runde: #333 (KI-Vorschläge-Job) und #334 Stufe 2
 (echte Scoring-Gewichtung) — siehe Abschnitt 5, Punkt 2.
+
+---
+
+## 11. #333-Konzeption: Fortschritt und Status (laufende Diskussion, Stand 2026-07-24)
+
+**Zweck dieses Abschnitts:** #333 wird in mehreren Gesprächsrunden Punkt für
+Punkt konzipiert, bevor eine Zeile Code geschrieben wird (gleiche Methodik
+wie bei #332). Damit kein Zwischenstand fälschlich als "fertig" gilt oder
+übersehen wird, führt jeder entschiedene ODER noch offene Punkt hier einen
+klaren Status. Nichts in diesem Abschnitt ist implementiert — das passiert
+erst nach vollständigem Konzept, dann wandert es (wie bei #332) ins
+`Regelwerksmanual.md`/`.docx` als Umsetzungsstand.
+
+**Status-Legende:**
+- **[ENTSCHIEDEN — NICHT GEBAUT]**: Design/Wert steht fest, aber noch keine
+  Code-Zeile geschrieben.
+- **[BAUSTEIN VORHANDEN, NICHT VERDRAHTET]**: die zugrunde liegende
+  Funktion/Datenquelle existiert bereits im Code (für einen anderen Zweck),
+  muss aber noch an die #333-Logik angeschlossen werden.
+- **[GEBAUT]**: implementiert UND synthetisch verifiziert (nicht nur
+  geschrieben) — Code lebt bereits in den Produktivdateien, aber noch nicht
+  auf dem Notebook deployed/committed.
+- **[OFFEN]**: noch keine Entscheidung getroffen, nächster
+  Diskussionspunkt oder zurückgestellt.
+
+| # | Punkt | Status | Detail |
+|---|---|---|---|
+| 1 | Grundsatz-Reihenfolge: #333 vor #334 Stufe 2 | [ENTSCHIEDEN — NICHT GEBAUT] | #334 Stufe 2 fehlt die Screener-Scoring-Infrastruktur (`agent/aktien/screener.py` sortiert nur nach Marktkapitalisierung) — eigenes, größeres Vorprojekt, zurückgestellt |
+| 2 | Zweischichtiges Design (Schicht 1 deterministisch pro Kategorie, Schicht 2 EIN täglicher LLM-Synthese-Call über alle Kategorien) | Schicht 1 (Mehrfach-Mechanismus-Kombination) [GEBAUT], Schicht 2 (LLM-Synthese-Call) [ENTSCHIEDEN — NICHT GEBAUT] | `config.get_pruef_mechanismus()` liefert jetzt Listen, `agent/kategorie_thesen.py::_kombiniere_abgleiche()` kombiniert per Einigkeitsregel (alle verfügbaren Mechanismen müssen übereinstimmen, sonst neutral) — 8 synthetische Tests + 2 End-to-End-Tests bestanden. Schicht 2 (Prompt/Job) weiterhin offen |
+| 3 | Fall A (keine aktive These → neuer `These`-Vorschlag, `quelle='ki_vorschlag'`) | [GEBAUT] | `agent/kategorie_vorschlaege.py::run_kategorie_vorschlaege_job()` — Sonde-These ermittelt Rohsignal, bei Persistenz automatische `These`-Anlage. Echter Lauf gegen alle 8 Kategorien: Edelmetalle/Industriemetalle/Anleihen/Finanzen/Aktien-Regionen → uebergewichten, Absicherung → inaktiv, Energie/Emerging-Markets korrekt neutral (widersprüchliche Signale) |
+| 4 | Fall B (aktive These wird widersprochen → separate Änderungsaufforderung statt stiller Überschreibung) | [GEBAUT] | Gleiche Funktion, zweiter Zweig — bestehende These bleibt bis zum Nutzer-Klick unverändert, Tracker wird auf 'offen' gehoben. 3 synthetische Tests (Persistenz erreicht/Abbruch bei Signalwechsel/Cooldown nach Ablehnung) bestanden |
+| 5 | Persistenz-Anforderung vor Fall B (analog Kontrathese-Zeitfenster) + Cooldown nach Ablehnung — konkrete Werte je Mechanismus-Typ | [ENTSCHIEDEN — NICHT GEBAUT] | Siehe Abschnitt 15 für die vollständige Tabelle je Mechanismus-Typ + Cooldown-Regel |
+| 6 | Materialitätsschwelle COT-Positionierung: Dreizonen-Modell (<10% Rauschen / 10–25% Signal / >25% Signal+Rücksetzer-Hinweis) | [GEBAUT] | `_abgleich_cot_positionierung()` nutzt jetzt Netto-Position als % des kombinierten Open Interest statt roher Kontrakt-Summe — 3 synthetische Szenarien (Rauschen/moderat/gedrängt) bestanden |
+| 7 | Materialitätsschwelle Zinskurve: Totzone ±0,25 Prozentpunkte | [GEBAUT] | `_abgleich_zinskurve()` erweitert — 3 synthetische Szenarien (normal/Totzone/invertiert) bestanden |
+| 8 | Materialitätsschwelle VIX | [GEBAUT] | Korrigiert beim Bauen: nicht die ursprünglich vorgeschlagene neue <15/15–25/>25-Schwelle, sondern die bereits bestehende `agent/krypto/regime.py::VIX_BANDS` (20/"ruhig", 30/"erhöht", 40/"gestresst", "krise") wiederverwendet — "ruhig" = Risk-on, "gestresst"/"krise" = Risk-off (exakt dieselbe Schwelle wie der etablierte Boden-Zielzone-Trigger, Task #245), "erhöht" bewusst neutral |
+| 9 | Materialitätsschwelle EIA-Erdgas-Lagerbestand: 5-Jahres-Saisonvergleich, ±5%-Schwelle | [ENTSCHIEDEN — NICHT GEBAUT] | Doch machbar (Korrektur einer zu vorschnellen früheren Einschätzung) — siehe Abschnitt 14 für Details + Kombinationsregel mit COT-Erdgas |
+| 10 | Grundsatz-Korrektur: keine Kategorie wird strukturell ausgeschlossen (auch Technologie & KI, Sonstige) | [ENTSCHIEDEN — NICHT GEBAUT] | Ersetzt die frühere, zu pauschale Annahme "nur 6 Kategorien qualifizieren" |
+| 11 | Sentiment-Mechanismus für Technologie & KI + übrige Aktien-Sektoren (Finnhub-Analystentrend + SEC-EDGAR-Insider + FINRA-Short-Interest) | [ENTSCHIEDEN — NICHT GEBAUT] | Manuell kuratierte Bellwether-Ticker pro Unterkategorie (kein automatisches Ableiten möglich, siehe Abschnitt 12 für die vollständige Tabelle + Aggregationsregel + Abgrenzung zu ähnlich klingenden Kategorien wie Grundstoffe/Industriemetalle) |
+| 12 | Gold/Silber-COT-Zuordnung zu Edelmetalle | [GEBAUT] | `_COT_ROHSTOFF_FUER_KATEGORIE["edelmetalle"] = ["gold", "silber"]` + spezifische Unterkategorie-Overrides; kombiniert mit M2 über die neue Mehrfach-Mechanismus-Logik (Punkt 2) |
+| 13 | Absicherung-Mechanismus (VIX + Aktien-Bärenmarkt) | [GEBAUT] | `_abgleich_baerenmarkt_overlay()` implementiert (ODER-Verknüpfung, VIX-Schwelle korrigiert auf die bereits bestehenden `VIX_BANDS`/"gestresst"+"krise" statt einer neu erfundenen Schwelle, siehe Punkt 8) — 6 synthetische Szenarien bestanden |
+| 14 | Gleicher VIX/Bärenmarkt-Mechanismus für alle Aktien-Regionen (nicht nur Emerging Markets) | [GEBAUT] | Neuer Hauptgruppen-Eintrag `"aktien_regionen"` (Fallback für Global/Europa/Nordamerika/USA/Asien-Pazifik/Einzelländer), Emerging Markets kombiniert jetzt Dollar-Index + Bärenmarkt-Overlay. `_abgleich_baerenmarkt_overlay()` hat jetzt zwei Richtungs-Zweige (Absicherung-Sonderfall unverändert, normale Kategorien mit umgekehrter Polarität — Risk-off ist Gegenwind statt Auslöser). 5 synthetische Tests + 2 End-to-End-Tests bestanden, Absicherung-Regression bestätigt unverändert |
+| 15 | `review_am`-Ablauf-Verhalten | [GEBAUT] | `ui/thesen_view.py::refresh()` markiert überfällige `review_am`-Daten mit ⚠-Präfix in der Spalte + erweitertem Tooltip "Wiedervorlage fällig seit TT.MM.JJJJ" — kein Änderungsvorschlag, keine E-Mail, reiner Kalender-Hinweis. Löst gleichzeitig den ursprünglich offenen Punkt 4 aus Abschnitt 10 |
+| 16 | Job-Struktur (täglich 06:30, Muster `makro_analog_job`) | [GEBAUT] | `scheduler/background.py::kategorie_vorschlaege_job()` registriert (cron 06:30 + sofortiger Erststart, `misfire_grace_time` wie bei `makro_analog`) — noch NICHT auf dem Notebook deployed |
+| 17 | Transparenz-Anforderung: jede #333-Wirkung (KI-Vorschlag, Änderungsaufforderung, Bellwether-/Mechanismus-Begründung) braucht Mouseover/Tooltip in GUI + Klartext in E-Mail | [GEBAUT] | Fall-B-GUI in `ui/thesen_view.py` fertig: neuer Bereich "Offene Änderungsaufforderungen" im Schwerpunkte-Tab (`vorschlag_tree` + `_render_vorschlaege()`), Zeilen-Tooltip zeigt Begründung+Datenstand, Buttons "Übernehmen"/"Ablehnen" mit erklärendem Tooltip. `_on_vorschlag_uebernehmen()` aktualisiert die verlinkte These direkt (`dataclasses.replace()`+`db.update_these()`) und schließt den Tracker als 'uebernommen', `_on_vorschlag_ablehnen()` lässt die These unverändert und löst die 30-Tage-Cooldown-Regel aus. Synthetischer Test (temp-DB, kompletter Übernehmen+Ablehnen-Flow inkl. Sichtbarkeits-Check über `get_offene_aenderungsvorschlaege()`) bestanden. Fall-A-Anzeige braucht keine eigene GUI (neue These landet automatisch in der bestehenden ThesenView). E-Mail-Anbindung (#333-Job selbst versendet noch keine Mail, nur GUI) bewusst zurückgestellt — Job ist rein deterministisch und läuft still im Hintergrund, erst eine Änderungsaufforderung im Status 'offen' braucht Nutzer-Aufmerksamkeit, die die GUI jetzt abdeckt |
+| 18 | M2-Mechanismus-Nachbesserung: Net-Liquidity-Proxy (WALCL−TGA−RRP, wöchentlich) als primäres Tempo-Signal, M2-Liquiditätsregime als sekundäre Bestätigung | [GEBAUT] | FRED-Serien-IDs live verifiziert (WALCL 6.747 Mrd, WTREGEN 830 Mrd, RRPONTSYD 0,9 Mrd — plausibel). `agent/kategorie_thesen.py::_net_liquidity_trend()` neu, unabhängig von der Krypto-Regime-Pipeline (bewusst NICHT in `agent/krypto/regime.py` verdrahtet, siehe Docstring). Live-Test: Net Liquidity aktuell ~5.917 Mrd. USD, Trend "steigend" (26 abgeglichene Wochenwerte). Fallback auf reines M2 bei fehlendem `FRED_API_KEY`/Abruf-Fehler getestet. ECB-M3-Ergänzung nicht umgesetzt (optional, zurückgestellt) |
+| 19 | Japan-M2 fehlt im Trend-Mehrheitsentscheid (nur aktueller Wert, keine Historie über `get_japan_m2()`) | **[OFFEN, vorgemerkt]** | Eigenständiges, kleineres Thema — bräuchte eine neue historische Japan-M2-Quelle, nicht Teil dieser #333-Runde |
+
+**Konzeptphase abgeschlossen (2026-07-24):** alle 19 Punkte sind entweder
+entschieden (16), bereits vorhandener Baustein (2, nur Verdrahtung offen)
+oder bewusst vorgemerkt/kein Blocker (1, Punkt 19 Japan-Lücke). Umsetzung
+beginnt jetzt — Fortschritt wird ab hier direkt an den einzelnen Punkten in
+der Tabelle oben nachgeführt (Status wechselt auf `[GEBAUT]`/`[VERDRAHTET]`
+sobald der jeweilige Code steht), bevor der Gesamtstand ins
+`Regelwerksmanual.md`/`.docx` übertragen wird.
+
+---
+
+## 12. Bellwether-Ticker + Kategorie-Abgrenzung (Detail zu Punkt 11)
+
+**Wichtige Einschränkung (ehrlich, P-10):** Bitpandas eigene Themenkorb-Symbole
+(z. B. `SEMICON`, `ARTINT`, `CYBERSEC` — gleiche Produktkategorie wie
+`COPPERMINE`) sind **Produktnamen, keine Börsenticker**
+(`agent/aktien/screener.py:137-142`) — es gibt keinen yfinance-Ticker, über
+den sich echte ETF-Top-Holdings automatisch ableiten ließen (das hätte
+`api/asset_quality.py::get_asset_quality()` sonst geleistet). Die
+Bellwether-Zuordnung ist deshalb eine **manuell kuratierte, statische
+Tabelle** (gleiche Art Datenstruktur wie `kategorien.yaml` oder
+`COT_MARKET_NAMES` selbst), kein automatisch abgeleiteter Mechanismus.
+
+Nicht alle 18 Technologie-&-KI-Unterkategorien werden vorbereitet (bei
+3-6 gleichzeitig aktiven Thesen insgesamt unnötig) — Start mit den
+wahrscheinlichsten Kandidaten, Rest bei Bedarf später ergänzbar
+(config-getrieben, kein Rewrite nötig).
+
+| Kategorie | Scope/Definition | Abgrenzung zu ähnlich klingenden Kategorien | Bellwether |
+|---|---|---|---|
+| Halbleiter (Technologie & KI) | Chip-Designer/-Hersteller als Unternehmen | Nicht Seltene Erden/strategische Metalle (Industriemetalle — Rohstoff-Vorstufe) | NVDA, AMD (TSM bewusst nicht: Foreign Private Issuer, keine Section-16-Insider-Meldepflicht) |
+| Künstliche Intelligenz (Technologie & KI) | Unternehmen mit KI als Kerngeschäft/-Strategie | Bewusst ohne NVDA (läuft unter Halbleiter) — kein Titel in zwei Körben | MSFT, PLTR |
+| Cybersicherheit (Technologie & KI) | Reine Security-Software-Unternehmen | Abgegrenzt von allgemeiner Software/Tech | CRWD, PANW |
+| Biotech (liegt unter Technologie & KI, NICHT unter Gesundheit!) | Forschungsgetriebene, oft kleinere/spekulativere Firmen, klinische Studien/Zulassungen als Treiber | Bewusst getrennt von "Gesundheit" — Innovationszyklus statt Konjunktur-Rotation | AMGN, VRTX (bewusst diversifiziert, keine Einzelwirkstoff-Biotechs — Klumpenrisiko einer einzelnen Zulassung) |
+| Gesundheit (Aktien-Sektoren) | Breiter, defensiverer Sektor: Krankenversicherer, Pharma-Großkonzerne, Medizintechnik | Siehe Biotech-Abgrenzung oben | UNH, JNJ |
+| Konsum (zyklisch) (Aktien-Sektoren) | Einzelhandel, Reisen, Automobile | Nicht Agrarrohstoffe (das sind die Rohwaren, nicht die verkaufenden Unternehmen) | AMZN, HD |
+| Konsum (Basiskonsumgüter) (Aktien-Sektoren) | Lebensmittel-/Hygieneartikel-Hersteller | Gleiche Abgrenzung — Hersteller, keine Agrar-Rohstoff-Wette | PG, KO |
+| Industrie (Aktien-Sektoren) | Maschinenbau, Luft-/Raumfahrt, Verteidigung, Transport, Baugewerbe | Nicht Industriemetalle (eigene Hauptgruppe, Kupfer/Aluminium als Rohstoff) — trotz ähnlichem Namen komplett andere Kategorie | HON, CAT |
+| Kommunikationsdienste (Aktien-Sektoren) | Meta, Alphabet, Telekom-/Medienkonzerne | Überschneidet sich inhaltlich mit Technologie & KI (Big Tech) — bewusst offen benannt, kein verstecktes Doppelsignal | GOOGL, META |
+| Grundstoffe (Aktien-Sektoren) | GICS-"Materials": Chemiekonzerne, Bergbau-/Minenunternehmen, Verpackung, Forst-/Papier — die **Unternehmen** | Nicht Industriemetalle (Rohstoff-Future/ETC, die reine Ware) und nicht Agrarrohstoffe (Getreide/Genussmittel als Ware) — Grundstoffe = die Firmen, die Rohstoffe verarbeiten/fördern | LIN, DOW |
+
+**Kernregel gegen Verwechslung:** überall wo eine Hauptgruppe eine reine
+Rohstoff-/Warenkategorie ist (Industriemetalle, Energie, Agrarrohstoffe,
+Edelmetalle), geht es um die physische Ware/das Future. Überall wo es eine
+Aktien-Sektoren- oder Technologie-&-KI-Unterkategorie ist, geht es um die
+Unternehmen, die damit handeln/es herstellen/davon profitieren.
+
+**Aggregationsregel (2 Bellwether-Titel × 3 Signaltypen):**
+- Analystentrend (Finnhub): Durchschnitt Buy+StrongBuy-Anteil über den Korb,
+  aktuell vs. Vormonat, Richtung nur bei Verschiebung > 5 Prozentpunkte
+  gewertet.
+- Insider-Aktivität (SEC EDGAR): **Anzahl** Käufer vs. Verkäufer im Korb
+  (bewusst nicht Dollar-Volumen — ein einzelner Großverkauf würde sonst
+  alles dominieren).
+- Short-Interest-Trend (FINRA): Days-to-Cover-Richtung letzte vs. vorletzte
+  Meldeperiode, gemittelt über den Korb.
+- Kombinationsregel: mindestens 2 von 3 Signalen müssen in dieselbe Richtung
+  zeigen, sonst "gemischt/neutral" — verhindert, dass ein einzelnes
+  verrauschtes Signal (z. B. ein steuerlich bedingter Insider-Verkauf)
+  allein die Kategorie-Einschätzung kippt.
+
+---
+
+## 13. Transparenz-Anforderung für #333 (Detail zu Punkt 17)
+
+Jede automatische Wirkung von #333 — neuer KI-Vorschlag, Änderungsaufforderung
+gegen eine bestehende These, Bellwether-/Mechanismus-Begründung — muss ihre
+konkrete Grundlage sichtbar mitliefern, exakt nach dem bereits etablierten
+Transparenz-Prinzip (Abschnitt 5, Punkt 7). Kein Badge/keine Umsortierung
+ohne erkennbaren Grund.
+
+Wiederverwendung bestehender, bereits bewährter Bausteine statt Neubau:
+- **GUI (Schwerpunkte-Tab/`ui/thesen_view.py`):** Mouseover-Tooltip mit den
+  konkreten Rohwerten (z. B. "COT Kupfer: Managed-Money netto long 29,8% des
+  Open Interest, Bericht vom TT.MM.JJJJ") — gleicher Baustein wie
+  `ui/widget_tooltip.py`/`ui/row_tooltip.py`, bereits an mehreren Stellen im
+  Projekt im Einsatz (Diversifikations-Tabelle, Screener-Marker).
+- **Signal-Detail-Panels (`ui/signals_view.py`/`ui/hebel_view.py`):** der
+  `these_abgleich`-Text erscheint dort bereits heute (Fakt im Prompt) — bei
+  einer Bellwether-basierten Kategorie zusätzlich die konkreten Bellwether-
+  Ticker + deren Einzelwerte in der Begründung nennen, nicht nur das
+  Aggregat-Urteil.
+- **E-Mail:** gleiches 3-Abschnitte-Template (`scheduler/background.py`) wie
+  bei Risikofaktoren/Kontrathese — Klartext statt Badge, da E-Mail kein
+  Mouseover kennt.
+
+---
+
+## 14. EIA-Erdgas-Materialitätsschwelle (Detail zu Punkt 9)
+
+**Korrektur einer zu vorschnellen früheren Einschätzung:** ursprünglich als
+"nicht datentechnisch möglich" eingestuft, weil `get_natural_gas_storage_
+history()` bisher nur mit `n_weeks=8` genutzt wurde. Bei genauerem Hinsehen
+unterstützt die Funktion bereits einen beliebigen `n_weeks`-Parameter (reine
+API-`length`-Angabe) — ein Aufruf mit `n_weeks=260` (5 Jahre) liefert
+dieselben Daten, nur mehr davon. Die EIA-Wochenreihe existiert durchgängig
+seit den 1990ern, 5 Jahre Historie sind real verfügbar. Kein neuer
+Datenzugriff nötig, nur ein größerer Parameterwert + eine neue
+Aggregationsfunktion.
+
+**Berechnung:** aus den 260 Wochenwerten für die aktuelle Kalenderwoche
+(± wenige Tage Toleranz wegen Schaltjahren) den Durchschnitt der letzten 5
+Jahre bilden, dann `(aktueller_wert - 5j_durchschnitt) / 5j_durchschnitt`
+berechnen. Kalenderwochen-Zuordnung über Datum ± Toleranz, nicht über einen
+starren Wochenindex (sonst Drift durch Schaltjahre).
+
+**Materialitätsschwelle: ±5%** vom 5-Jahres-Durchschnitt — Abweichungen
+darunter gelten als "im saisonalen Rahmen", darüber als auffällig (gängige
+Einordnung in der Energie-Berichterstattung, gleiche Größenordnungs-Logik
+wie die anderen Schwellen in diesem Abschnitt).
+
+**Richtungslogik:** Lagerbestand über dem 5-Jahres-Schnitt = reichliches
+Angebot = bearish für Erdgaspreis (gegen "Energie übergewichten"). Unter dem
+Schnitt = knapperer Markt = bullish.
+
+**Kombination mit COT-Erdgas (Energie hat damit 2 Indikatoren):** beide
+müssen übereinstimmen für eine gewertete Richtung, sonst "gemischt/neutral"
+— kodifiziert die bereits im Konzeptdokument (Abschnitt 6, Beispiel 1)
+korrekt, aber nur verbal getroffene Einordnung ("Speicher baut saisonal
+weiter auf, ABER Managed-Money ist netto SHORT — gemischtes Bild") als feste
+Regel, dieselbe 2-von-2-Logik wie beim Bellwether-Modell (Abschnitt 12), nur
+mit 2 statt 3 Signalen.
+
+---
+
+## 15. Persistenz-Anforderung, Cooldown + M2-Mechanismus-Nachbesserung (Detail zu Punkt 5 + 18)
+
+### Persistenz-Anforderung vor einer Änderungsaufforderung (Fall B)
+
+Nicht ein einheitlicher Wert — an die `review_am`-Buckets aus Abschnitt 7
+angelehnt, je nach natürlichem Datentakt des Mechanismus. Grund: ein zu
+kurzes Fenster bei wöchentlichen Daten würde nur denselben Bericht mehrfach
+zählen, keine echte unabhängige Bestätigung (gleiches Prinzip wie die
+Mindestbeobachtung im Backward-Tracking).
+
+| Mechanismus-Typ | Natürlicher Datentakt | Persistenz-Anforderung | Warum |
+|---|---|---|---|
+| COT-Positionierung (Kupfer/Erdgas/Rohöl, künftig Gold/Silber) | wöchentlich | 14 Tage (≥2 Berichtszyklen) | Ein einzelner Bericht darf nicht reichen |
+| EIA-Erdgas-Saisonvergleich | wöchentlich | 14 Tage | Gleiche Begründung |
+| Bellwether-Sentiment (Finnhub/SEC-EDGAR/FINRA) | gemischt, FINRA bindend (2×/Monat) | 14 Tage | Am langsamsten Baustein orientiert |
+| **Liquiditätsregime — Net-Liquidity-Anteil** (neu, siehe unten) | wöchentlich | 14 Tage | Jetzt gleiche schnelle Schiene wie COT/EIA statt 60 Tage |
+| Liquiditätsregime — Global-M2-Anteil (Kontext, nicht mehr alleiniger Gate) | monatlich | (keine eigene Gate-Funktion mehr, nur Begründungstext) | Bleibt als langsamere Bestätigung sichtbar, blockiert aber nichts mehr allein |
+| Zinskurve, Dollar-Index | bereits mehrmonatiger Trend | 30 Tage zusätzlich | Trendlogik glättet schon selbst |
+| VIX/Bärenmarkt (Absicherung) | ereignisgetrieben, Versicherungslogik | 7 Tage | Portfolio-Schutz soll schneller reagieren können |
+
+**Cooldown nach Ablehnung:** einheitlich 30 Tage ODER bis das Signal
+zwischenzeitlich wieder zur bestehenden These zurückgedreht UND erneut
+dagegen gelaufen ist (je nachdem was zuerst eintritt) — verhindert sowohl
+sofortiges Nerven direkt nach dem Ablehnen als auch endloses Ignorieren
+eines sich tatsächlich verfestigenden Trends.
+
+**Technische Konsequenz:** COT/EIA/etc. speichern keine eigene Historie
+(reine Momentaufnahmen) — der #333-Job muss deshalb selbst kleinen Zustand
+mitführen ("seit wann läuft die aktuelle Widerspruchs-Serie für diese
+These"), z. B. als `beobachtung`-Zwischenstatus auf dem
+`these_aenderungsvorschlaege`-Eintrag, der erst nach Ablauf der
+Persistenzfrist auf `offen` (für den Nutzer sichtbar) hochgestuft wird.
+Bricht die Widerspruchs-Serie vorzeitig ab, wird der Entwurf verworfen
+(Reset) — gleiches Prinzip wie bei der Kontrathese-Zeitfenster-Bestätigung.
+
+### M2-Mechanismus-Nachbesserung (Punkt 18)
+
+**Ausgangsproblem:** M2 wird von der Fed nur noch monatlich veröffentlicht
+(die frühere wöchentliche Reihe wurde eingestellt) — eine echte
+Datengrenze, keine Implementierungsschwäche. Eine 60-Tage-Persistenz allein
+auf M2-Basis wäre für die einzigen beiden darauf angewiesenen Kategorien
+(Edelmetalle, Anleihen & Geldmarkt) zu träge.
+
+**Bereits vorhandene Basis (Prüfung ergab: mehr als zunächst angenommen):**
+`agent/krypto/regime.py::_m2_global_trend()` ist bereits ein
+**Mehrheitsentscheid über USA (FRED) + Eurozone (EZB) + China
+(Eastmoney)**, kein reiner US-Wert. Reale Lücke: Japan fließt nur mit dem
+aktuellen Wert ein, nicht in den Trend (keine historische Quelle über
+`get_japan_m2()` — HTML-Scraping-Fallback liefert nur eine Momentaufnahme).
+Bewusst als eigenständiges, kleineres Thema zurückgestellt (Punkt 19), nicht
+Teil dieser #333-Runde.
+
+**Neue Komponente — Net Liquidity** (wöchentlich, löst das Tempo-Problem):
+`Netto-Liquidität = Fed-Bilanzsumme (WALCL) − Treasury General Account
+(WTREGEN) − Reverse-Repo-Nutzung (RRPONTSYD)`, alle drei Serien über
+denselben FRED-Zugang wie die bereits vorhandenen `FRED_SERIES`-Einträge
+(`api/macro.py`) beziehbar — keine neue API-Anbindungsart nötig, nur neue
+Serien-IDs. **Wichtig:** Serien-IDs stammen aus Fachwissen, nicht live
+verifiziert — vor Umsetzung genauso zu prüfen wie seinerzeit
+`ism_ersatz_philly_fed`.
+
+**Neue Aufteilung:** Net-Liquidity wird das **primäre, persistenz-gatende
+Signal** (14-Tage-Bucket, wie COT/EIA). Der bestehende
+Global-M2-Mehrheitsentscheid (ggf. um ECB-M3 ergänzt — einzige Region, die
+M3 tatsächlich noch als Referenzgröße veröffentlicht; USA hat M3 2006
+eingestellt, China hat kein vergleichbares Aggregat) bleibt als
+**sekundäre, langsamere Bestätigung** im Begründungstext sichtbar, ist aber
+nicht mehr alleiniger Blocker. Betroffen: Edelmetalle, Anleihen & Geldmarkt
+(die einzigen beiden Kategorien, die aktuell nur auf `m2_liquiditaet`
+sitzen).
+
+**Nächster offener Diskussionspunkt:** #11 (Bellwether-Ticker-Auswahl für
+Technologie & KI + übrige Aktien-Sektoren) oder #9 (EIA-Materialität) —
+beide noch unentschieden.

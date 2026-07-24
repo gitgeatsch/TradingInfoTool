@@ -24,6 +24,7 @@ from database.models import (
     PriceSnapshot,
     Signal,
     These,
+    TheseAenderungsvorschlag,
 )
 
 DB_PATH = Path(__file__).resolve().parent.parent / "data" / "tradinginfotool.db"
@@ -411,6 +412,31 @@ CREATE TABLE IF NOT EXISTS thesen (
 );
 CREATE INDEX IF NOT EXISTS idx_thesen_status ON thesen(status);
 CREATE INDEX IF NOT EXISTS idx_thesen_hauptgruppe ON thesen(hauptgruppe, unterkategorie);
+
+-- Persistenz-Tracker fuer #333 (KI-Vorschlaege-Job, Fall A + Fall B - siehe
+-- database/models.py::TheseAenderungsvorschlag). Fall A (these_id NULL):
+-- neue These-Kandidatur ohne bestehende aktive These (hauptgruppe/
+-- unterkategorie gesetzt). Fall B (these_id gesetzt): Aenderungsaufforderung
+-- gegen eine bestehende aktive These - eigene Tabelle statt direkter
+-- Veraenderung von thesen.richtung, die These bleibt autoritative Nutzer-
+-- Entscheidung, bis der Nutzer selbst reagiert.
+CREATE TABLE IF NOT EXISTS these_aenderungsvorschlaege (
+    id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+    mechanismus_typ         TEXT NOT NULL,
+    vorgeschlagene_richtung TEXT NOT NULL,
+    begruendung             TEXT NOT NULL,
+    beobachtung_seit        TEXT NOT NULL,
+    these_id                INTEGER REFERENCES thesen(id),
+    hauptgruppe             TEXT,
+    unterkategorie          TEXT,
+    datenstand              TEXT,
+    erkannt_am              TEXT,
+    status                  TEXT NOT NULL DEFAULT 'beobachtung',
+    entschieden_am          TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_these_aenderungsvorschlaege_these_id ON these_aenderungsvorschlaege(these_id);
+CREATE INDEX IF NOT EXISTS idx_these_aenderungsvorschlaege_status ON these_aenderungsvorschlaege(status);
+CREATE INDEX IF NOT EXISTS idx_these_aenderungsvorschlaege_kategorie ON these_aenderungsvorschlaege(hauptgruppe, unterkategorie);
 
 -- OI-Abdeckungs-Status (2026-07-19, echter Notebook-Fund: KAS/KAIA/FLOKI/
 -- TURBO/CANTON scheiterten wiederholt bei ALLEN drei Boersen) - anders als
@@ -1485,6 +1511,151 @@ def get_aktive_these_fuer_kategorie(
         (hauptgruppe,),
     ).fetchone()
     return _row_to_these(row) if row else None
+
+
+_THESE_AENDERUNGSVORSCHLAG_COLUMNS = (
+    "these_id", "hauptgruppe", "unterkategorie", "mechanismus_typ", "vorgeschlagene_richtung",
+    "begruendung", "datenstand", "beobachtung_seit", "erkannt_am", "status", "entschieden_am",
+)
+
+
+def _row_to_these_aenderungsvorschlag(row: sqlite3.Row) -> TheseAenderungsvorschlag:
+    return TheseAenderungsvorschlag(**dict(row))
+
+
+def create_these_aenderungsvorschlag(conn: sqlite3.Connection, vorschlag: TheseAenderungsvorschlag) -> int:
+    placeholders = ", ".join("?" for _ in _THESE_AENDERUNGSVORSCHLAG_COLUMNS)
+    values = [getattr(vorschlag, col) for col in _THESE_AENDERUNGSVORSCHLAG_COLUMNS]
+    cursor = conn.execute(
+        f"INSERT INTO these_aenderungsvorschlaege ({', '.join(_THESE_AENDERUNGSVORSCHLAG_COLUMNS)}) "
+        f"VALUES ({placeholders})", values,
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def update_these_aenderungsvorschlag(conn: sqlite3.Connection, vorschlag_id: int, vorschlag: TheseAenderungsvorschlag) -> None:
+    """Aktualisiert den kompletten Datensatz - genutzt vom taeglichen #333-Job,
+    um `beobachtung_seit` unveraendert zu lassen, aber z.B. `begruendung`/
+    `datenstand` mit dem neuesten Mechanismus-Stand zu aktualisieren, solange
+    die Widerspruchs-Serie noch im Status 'beobachtung' laeuft."""
+    set_clause = ", ".join(f"{col} = ?" for col in _THESE_AENDERUNGSVORSCHLAG_COLUMNS)
+    values = [getattr(vorschlag, col) for col in _THESE_AENDERUNGSVORSCHLAG_COLUMNS] + [vorschlag_id]
+    conn.execute(f"UPDATE these_aenderungsvorschlaege SET {set_clause} WHERE id = ?", values)
+    conn.commit()
+
+
+def set_these_aenderungsvorschlag_status(
+    conn: sqlite3.Connection, vorschlag_id: int, status: str, entschieden_am: str | None = None,
+) -> None:
+    """Status-Uebergang (beobachtung -> offen -> uebernommen/abgelehnt) - eigene,
+    kleinere Funktion statt immer den kompletten Vorschlag per
+    update_these_aenderungsvorschlag() neu zu schreiben, analog set_these_status()."""
+    conn.execute(
+        "UPDATE these_aenderungsvorschlaege SET status = ?, entschieden_am = ? WHERE id = ?",
+        (status, entschieden_am, vorschlag_id),
+    )
+    conn.commit()
+
+
+def get_these_aenderungsvorschlag(conn: sqlite3.Connection, vorschlag_id: int) -> TheseAenderungsvorschlag | None:
+    columns = ", ".join(("id",) + _THESE_AENDERUNGSVORSCHLAG_COLUMNS)
+    row = conn.execute(
+        f"SELECT {columns} FROM these_aenderungsvorschlaege WHERE id = ?", (vorschlag_id,),
+    ).fetchone()
+    return _row_to_these_aenderungsvorschlag(row) if row else None
+
+
+def get_aenderungsvorschlag_in_beobachtung(
+    conn: sqlite3.Connection, these_id: int,
+) -> TheseAenderungsvorschlag | None:
+    """Findet den laufenden 'beobachtung'-Entwurf fuer eine These, falls
+    vorhanden - der taegliche #333-Job braucht das, um zu entscheiden, ob er
+    einen bestehenden Entwurf fortschreibt oder einen neuen anlegt (siehe
+    TheseAenderungsvorschlag-Docstring, `beobachtung_seit`). Hoechstens ein
+    'beobachtung'-Entwurf gleichzeitig pro These (Aufrufer-Verantwortung)."""
+    columns = ", ".join(("id",) + _THESE_AENDERUNGSVORSCHLAG_COLUMNS)
+    row = conn.execute(
+        f"SELECT {columns} FROM these_aenderungsvorschlaege "
+        "WHERE these_id = ? AND status = 'beobachtung' ORDER BY id DESC LIMIT 1",
+        (these_id,),
+    ).fetchone()
+    return _row_to_these_aenderungsvorschlag(row) if row else None
+
+
+def get_kandidat_in_beobachtung(
+    conn: sqlite3.Connection, hauptgruppe: str, unterkategorie: str | None,
+) -> TheseAenderungsvorschlag | None:
+    """Fall-A-Pendant zu get_aenderungsvorschlag_in_beobachtung() - findet den
+    laufenden 'beobachtung'-Entwurf fuer eine Kategorie OHNE bestehende
+    aktive These (these_id IS NULL), keyed nach hauptgruppe/unterkategorie
+    statt these_id."""
+    columns = ", ".join(("id",) + _THESE_AENDERUNGSVORSCHLAG_COLUMNS)
+    if unterkategorie is not None:
+        row = conn.execute(
+            f"SELECT {columns} FROM these_aenderungsvorschlaege WHERE these_id IS NULL AND status = 'beobachtung' "
+            "AND hauptgruppe = ? AND unterkategorie = ? ORDER BY id DESC LIMIT 1",
+            (hauptgruppe, unterkategorie),
+        ).fetchone()
+    else:
+        row = conn.execute(
+            f"SELECT {columns} FROM these_aenderungsvorschlaege WHERE these_id IS NULL AND status = 'beobachtung' "
+            "AND hauptgruppe = ? AND unterkategorie IS NULL ORDER BY id DESC LIMIT 1",
+            (hauptgruppe,),
+        ).fetchone()
+    return _row_to_these_aenderungsvorschlag(row) if row else None
+
+
+def get_letzter_entschiedener_vorschlag(
+    conn: sqlite3.Connection, these_id: int | None, hauptgruppe: str, unterkategorie: str | None,
+) -> TheseAenderungsvorschlag | None:
+    """Findet den zuletzt entschiedenen (uebernommen/abgelehnt) Vorschlag - fuer
+    die Cooldown-Regel nach einer Ablehnung (Kategorie_Basisinformationen_
+    Release2.md Abschnitt 15, siehe agent/kategorie_vorschlaege.py)."""
+    columns = ", ".join(("id",) + _THESE_AENDERUNGSVORSCHLAG_COLUMNS)
+    if these_id is not None:
+        row = conn.execute(
+            f"SELECT {columns} FROM these_aenderungsvorschlaege WHERE these_id = ? "
+            "AND status IN ('uebernommen', 'abgelehnt') ORDER BY entschieden_am DESC LIMIT 1",
+            (these_id,),
+        ).fetchone()
+    elif unterkategorie is not None:
+        row = conn.execute(
+            f"SELECT {columns} FROM these_aenderungsvorschlaege WHERE these_id IS NULL "
+            "AND hauptgruppe = ? AND unterkategorie = ? AND status IN ('uebernommen', 'abgelehnt') "
+            "ORDER BY entschieden_am DESC LIMIT 1",
+            (hauptgruppe, unterkategorie),
+        ).fetchone()
+    else:
+        row = conn.execute(
+            f"SELECT {columns} FROM these_aenderungsvorschlaege WHERE these_id IS NULL "
+            "AND hauptgruppe = ? AND unterkategorie IS NULL AND status IN ('uebernommen', 'abgelehnt') "
+            "ORDER BY entschieden_am DESC LIMIT 1",
+            (hauptgruppe,),
+        ).fetchone()
+    return _row_to_these_aenderungsvorschlag(row) if row else None
+
+
+def get_offene_aenderungsvorschlaege(conn: sqlite3.Connection) -> list[TheseAenderungsvorschlag]:
+    """Fuer die Schwerpunkte-Tab-Anzeige (Transparenz-Prinzip, Abschnitt 13) -
+    nur Vorschlaege, die die Persistenzschwelle bereits erreicht haben und auf
+    eine Nutzer-Entscheidung warten."""
+    columns = ", ".join(("id",) + _THESE_AENDERUNGSVORSCHLAG_COLUMNS)
+    rows = conn.execute(
+        f"SELECT {columns} FROM these_aenderungsvorschlaege WHERE status = 'offen' ORDER BY erkannt_am DESC"
+    ).fetchall()
+    return [_row_to_these_aenderungsvorschlag(row) for row in rows]
+
+
+def delete_these_aenderungsvorschlag(conn: sqlite3.Connection, vorschlag_id: int) -> None:
+    """Bricht eine 'beobachtung'-Serie vorzeitig ab (Mechanismus stuetzt die
+    These wieder oder wird neutral) - echtes Loeschen statt Status-Uebergang,
+    da ein abgebrochener Beobachtungs-Entwurf kein Audit-Wert hat (im
+    Unterschied zu 'offen'/'uebernommen'/'abgelehnt', die als Historie
+    bleiben) - ein neuer Entwurf startet bei erneutem Widerspruch neu bei
+    `beobachtung_seit` = jetzt."""
+    conn.execute("DELETE FROM these_aenderungsvorschlaege WHERE id = ?", (vorschlag_id,))
+    conn.commit()
 
 
 _SIGNAL_COLUMNS = (
