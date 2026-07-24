@@ -7703,3 +7703,63 @@ Status-Tabelle (Kategorie_Basisinformationen_Release2.md Abschnitt 11, Punkte
 9+11) auf `[GEBAUT]` aktualisiert - damit sind alle #333-Punkte entweder
 gebaut oder bewusst zurückgestellt (Schicht 2), keine offenen Design-Lücken
 mehr in Schicht 1.
+
+## Nachtrag (2026-07-24): Spot-Positionsgrößen-Deckel von Multiplikation auf min() umgestellt (Überstrenge-Prüfung)
+
+**Auslöser:** Nutzer-Auftrag, nach dem #333-Push zur Sicherheit zu prüfen, ob
+die Spot-Regeln/-Gates/-Berechnungen sich durch Akkumulation zu streng
+auswirken. Befund: `risk_gate.py::post_check()` verkettete die vier
+Positionsgrößen-Deckel (Konfidenz-Skalierung, Gegenszenario, technischer
+Konflikt, CRV-knapp) bisher **multiplikativ** — bereits am 18.07. bewusst so
+gebaut und verifiziert (siehe Nachtrag oben: "alle vier gleichzeitig aktiv
+ergaben korrekt 1000 × 0,5 × 0,5 × 0,6 × 0,6 = 90 USD"). Das war zum
+Zeitpunkt des Baus eine korrekt umgesetzte Designentscheidung, aber bei
+genauerer Prüfung problematisch, weil:
+1. Die vier Faktoren sind inhaltlich NICHT unabhängig voneinander (gemischte
+   Konfluenz und eine hohe Bear-Wahrscheinlichkeit treten oft gemeinsam auf,
+   beides sind Symptome derselben unklaren Marktlage) - eine Multiplikation
+   unterstellt aber unabhängige Beweise und überschätzt dadurch systematisch,
+   wie schlecht das Setup wirklich ist.
+2. Die Risikorichtung war verkehrt herum: `hebel_risk_gate.py` (das
+   strukturell risikoreichere Instrument, Liquidationsgefahr) nutzt bei
+   denselben vier Deckel-Kandidaten bereits die mildere `min()`-über-
+   Kandidaten-Logik (`_hebel_deckel_kandidaten()`, seit 2026-07-18) - Spot
+   (kein Hebel-/Liquidationsrisiko) verkettete dagegen strenger.
+3. RM-1 begrenzt den maximalen Verlust bereits über die Stop-Loss-Distanz auf
+   `risiko_pro_trade_prozent` (2%) - die vier Deckel sind als zusätzliche,
+   FEINERE Konviktions-Skalierung gedacht, nicht als zweite vollwertige
+   Risikoprüfung. Multiplikative Verkettung behandelt sie aber genau so.
+
+**Fix:** `risk_gate.py::post_check()` sammelt jetzt vier Deckel-Kandidaten
+(je ein `(Grund, USD-Obergrenze)`-Paar, nur falls die jeweilige Bedingung
+tatsächlich zutrifft) und nimmt `min()` darüber - identisches Prinzip wie
+bereits bei `hebel_risk_gate.py::_hebel_deckel_kandidaten()` etabliert,
+inklusive derselben "bindender Grund"-Formulierung in der Positions-Notiz.
+Eigene Config-Werte bleiben komplett getrennt von Hebels eigenen (nur die
+Verknüpfungslogik wird angeglichen, keine Werte geteilt).
+
+Beispiel (identischer Testfall wie beim ursprünglichen Bau): Konfidenz genau
+an der Regime-Mindestschwelle (75% im Bärenmarkt, Skalierung 50%),
+Gegenszenario 40% (Deckel 50%), gemischte Konfluenz (Deckel 60%), CRV 2,1
+(Deckel 60%) - alle vier gleichzeitig aktiv. **Vorher:** 1000 × 0,5 × 0,5 ×
+0,6 × 0,6 = 90 USD (9% der Obergrenze). **Jetzt:** `min(500, 500, 600, 600)`
+= 500 USD (50%, gebunden durch die Konfidenz-Skalierung als strengsten
+Einzelgrund).
+
+**Zusätzlicher, separat dokumentierter Befund derselben Prüfung (nicht
+Bestandteil dieses Fixes):** die regimeabhängige Mindestkonfidenz
+(`min_konfidenz_prozent`, aktuell 75% im Bärenmarkt-Regime, siehe
+`config.yaml risiko.regime.profile`) bleibt ein hartes Veto, unverändert -
+das ist vermutlich der Hauptgrund für die beobachtete Flaute an echten
+Spot-KAUFEN-Signalen (0 neue seit 18.07., siehe Provider-Performance-
+Analyse weiter oben), nicht die jetzt gefixte Positionsgrößen-Kumulation.
+Ob diese Schwelle selbst nachjustiert werden sollte, ist ein bewusst
+zurückgestellter, separater Prüfpunkt - vom Nutzer als "wieder relevant
+geworden" markiert, noch nicht bearbeitet.
+
+**Verifiziert:** synthetische Tests gegen die echte `post_check()`-Funktion -
+(a) alle vier Trigger gleichzeitig aktiv → 500 USD statt der alten 90 USD,
+(b) kein Trigger aktiv → keine Reduktion, (c) nur ein einzelner Trigger (CRV-
+knapp) → exakt dessen Faktor (600 USD), (d) vorgeschlagene Positionsgröße
+bereits unter der Obergrenze → unverändert, kein Clamp. Import-Smoke-Test
+aller abhängigen Pipelines (keine Regression).

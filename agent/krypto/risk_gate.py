@@ -680,14 +680,41 @@ def post_check(
         max_usd = pre_result.max_position_size_usd
         max_eur = pre_result.max_position_size_eur
         if max_usd is not None:
-            effective_max_usd = max_usd
-            effective_max_eur = max_eur
-            konfidenz_scale_note = None
+            # Vier Deckel-Kandidaten fuer die Positionsgroessen-Obergrenze
+            # (Konfidenz-Skalierung, Gegenszenario, technischer Konflikt,
+            # CRV-knapp) - bis 2026-07-24 wurden diese multiplikativ verkettet
+            # (z.B. 0,5 x 0,5 x 0,6 x 0,6 = 9% der urspruenglichen Obergrenze,
+            # wenn alle vier gleichzeitig griffen). Nutzer-Fund (Ueberstrenge-
+            # Pruefung nach #333): die vier Faktoren sind inhaltlich NICHT
+            # unabhaengig voneinander (gemischte Konfluenz und eine hohe
+            # Bear-Wahrscheinlichkeit treten oft gemeinsam auf, da beide
+            # Symptome derselben unklaren Marktlage sind) - eine Multiplikation
+            # unterstellt aber unabhaengige Beweise und ueberschaetzt dadurch
+            # systematisch, wie schlecht das Setup wirklich ist. Ausserdem war
+            # die Risikorichtung verkehrt: Hebel (das strukturell risikoreichere
+            # Instrument, Liquidationsgefahr) nutzte bereits die mildere
+            # min()-ueber-Kandidaten-Logik (siehe hebel_risk_gate.py::
+            # _hebel_deckel_kandidaten()), waehrend Spot (kein Hebel-/
+            # Liquidationsrisiko) staerker verkettete. Jetzt identisches
+            # Prinzip: min() ueber alle AUSGELOESTEN Kandidaten - der staerkste
+            # einzelne Grund bindet, ueberlappende Warnsignale addieren sich
+            # nicht mehr kuenstlich auf. Eigene Config-Werte bleiben getrennt
+            # von Hebels eigenen (nur die Verknuepfungslogik wird angeglichen).
             sockel_anteil = config["risiko"].get("konfidenz_positionsgroesse_sockel_anteil")
             min_konfidenz = (
                 config["regime"]["profile"].get(regime_result.regime, {}).get("min_konfidenz_prozent")
             )
             confidence = result.get("confidence_pct")
+            forecast = result.get("forecast") or {}
+            gegenszenario_pct = (forecast.get("bear") or {}).get("probability_pct")
+            gegenszenario_schwelle = config["risiko"].get("gegenszenario_wahrscheinlichkeit_schwelle_prozent")
+            gegenszenario_deckel_anteil = config["risiko"].get("gegenszenario_positionsgroesse_deckel_anteil")
+            konflikt_deckel_anteil = config["risiko"].get("technischer_konflikt_deckel_anteil")
+            crv_knapp_schwelle_relativ = config["risiko"].get("crv_knapp_schwelle_relativ")
+            crv_knapp_deckel_anteil = config["risiko"].get("crv_knapp_positionsgroesse_deckel_anteil")
+
+            deckel_kandidaten: list[tuple[str, float]] = []
+
             if (
                 sockel_anteil is not None
                 and min_konfidenz is not None
@@ -696,88 +723,49 @@ def post_check(
             ):
                 spanne = max(0.0, min(1.0, (confidence - min_konfidenz) / (100 - min_konfidenz)))
                 scale = sockel_anteil + (1 - sockel_anteil) * spanne
-                effective_max_usd = max_usd * scale
-                effective_max_eur = max_eur * scale if max_eur is not None else None
-                konfidenz_scale_note = (
-                    f"Obergrenze bei Konfidenz {confidence}% auf {scale * 100:.0f}% skaliert "
-                    f"(Sockel {sockel_anteil * 100:.0f}% bei {min_konfidenz}% Konfidenz, "
-                    "100% bei 100% Konfidenz)."
-                )
+                deckel_kandidaten.append((
+                    f"Konfidenz-Skalierung ({confidence}%, Sockel {sockel_anteil * 100:.0f}% "
+                    f"bei {min_konfidenz}% Konfidenz)",
+                    max_usd * scale,
+                ))
 
-            # Gegenszenario-Wahrscheinlichkeit (2026-07-17, Regelwerk-Konsistenzpruefung
-            # nach dem Hebel-Fix, analog hebel_risk_gate.py::post_check_hebel()): das
-            # Modell liefert bereits forecast.bear.probability_pct, wurde bisher aber nie
-            # ausgewertet - derselbe blinde Fleck wie beim urspruenglichen Hebel-Fund.
-            # Anders als bei Hebel gibt es hier kein Liquidationsrisiko, daher bewusst
-            # KEIN hartes Veto, sondern eine zusaetzliche multiplikative Deckelung der
-            # ohnehin schon konfidenz-skalierten Obergrenze - konsistent mit der
-            # bestehenden RM-1/RM-2-Korrektur-statt-Veto-Philosophie dieser Funktion.
-            gegenszenario_note = None
-            forecast = result.get("forecast") or {}
-            gegenszenario_pct = (forecast.get("bear") or {}).get("probability_pct")
-            gegenszenario_schwelle = config["risiko"].get("gegenszenario_wahrscheinlichkeit_schwelle_prozent")
-            gegenszenario_deckel_anteil = config["risiko"].get("gegenszenario_positionsgroesse_deckel_anteil")
             if (
                 gegenszenario_pct is not None
                 and gegenszenario_schwelle is not None
                 and gegenszenario_deckel_anteil is not None
                 and gegenszenario_pct >= gegenszenario_schwelle
             ):
-                effective_max_usd = effective_max_usd * gegenszenario_deckel_anteil
-                effective_max_eur = (
-                    effective_max_eur * gegenszenario_deckel_anteil if effective_max_eur is not None else None
-                )
-                gegenszenario_note = (
-                    f"Obergrenze wegen hoher Bear-Szenario-Wahrscheinlichkeit "
-                    f"({gegenszenario_pct:.0f}% >= Schwelle {gegenszenario_schwelle:.0f}%) zusaetzlich auf "
-                    f"{gegenszenario_deckel_anteil * 100:.0f}% reduziert (Gegenszenario-Deckel)."
-                )
+                deckel_kandidaten.append((
+                    f"hohe Bear-Szenario-Wahrscheinlichkeit ({gegenszenario_pct:.0f}% >= "
+                    f"Schwelle {gegenszenario_schwelle:.0f}%)",
+                    max_usd * gegenszenario_deckel_anteil,
+                ))
 
-            # Technischer Konflikt (2026-07-18, Nutzer-Fund am echten CAT-Fall,
-            # "Ergebnis durchgaengig eher schlecht" trotz 80% Konfidenz):
-            # summarize_confluence() klassifiziert bereits deterministisch
-            # "gemischt" (weder bullish noch bearish dominiert), das wurde bisher
-            # nirgends im Risiko-Gate ausgewertet - genau der Fall, der beim
-            # CAT-Signal vorlag ("EMA-Ordnung ist bearish, aber MACD/RSI bieten
-            # Gegenargumente"). Deterministisch, haengt NICHT davon ab, ob das
-            # Modell den Widerspruch selbst benennt.
-            konflikt_note = None
-            if confluence is not None and confluence.overall_bias == "gemischt":
-                konflikt_deckel_anteil = config["risiko"].get("technischer_konflikt_deckel_anteil")
-                if konflikt_deckel_anteil is not None:
-                    effective_max_usd = effective_max_usd * konflikt_deckel_anteil
-                    effective_max_eur = (
-                        effective_max_eur * konflikt_deckel_anteil if effective_max_eur is not None else None
-                    )
-                    konflikt_note = (
-                        f"Obergrenze wegen widerspruechlicher technischer Konfluenz (weder bullish "
-                        f"noch bearish dominiert) zusaetzlich auf {konflikt_deckel_anteil * 100:.0f}% "
-                        "reduziert (Konflikt-Deckel)."
-                    )
+            if confluence is not None and confluence.overall_bias == "gemischt" and konflikt_deckel_anteil is not None:
+                deckel_kandidaten.append((
+                    "widerspruechliche technische Konfluenz (weder bullish noch bearish dominiert)",
+                    max_usd * konflikt_deckel_anteil,
+                ))
 
-            # CRV knapp am Minimum (2026-07-18, gleicher Fund): CRV_MINIMUM ist
-            # bisher ein binaeres Gate - 2,01 und 4,0 werden identisch behandelt,
-            # obwohl ein CRV knapp ueber der Grenze ein deutlich schwaecheres
-            # Setup ist (beim CAT-Fall lag das CRV bei ca. 2,08). Analog zur
-            # Konfidenz-Skalierung: je naeher am Minimum, desto kleiner die
-            # zulaessige Position.
-            crv_knapp_note = None
-            crv_knapp_schwelle_relativ = config["risiko"].get("crv_knapp_schwelle_relativ")
-            crv_knapp_deckel_anteil = config["risiko"].get("crv_knapp_positionsgroesse_deckel_anteil")
             if (
                 crv is not None
                 and crv_knapp_schwelle_relativ is not None
                 and crv_knapp_deckel_anteil is not None
                 and crv < CRV_MINIMUM * (1 + crv_knapp_schwelle_relativ)
             ):
-                effective_max_usd = effective_max_usd * crv_knapp_deckel_anteil
-                effective_max_eur = (
-                    effective_max_eur * crv_knapp_deckel_anteil if effective_max_eur is not None else None
-                )
-                crv_knapp_note = (
-                    f"Obergrenze wegen CRV knapp am Minimum ({crv:.2f}, Minimum {CRV_MINIMUM:.1f}) "
-                    f"zusaetzlich auf {crv_knapp_deckel_anteil * 100:.0f}% reduziert (CRV-Knapp-Deckel)."
-                )
+                deckel_kandidaten.append((
+                    f"CRV knapp am Minimum ({crv:.2f}, Minimum {CRV_MINIMUM:.1f})",
+                    max_usd * crv_knapp_deckel_anteil,
+                ))
+
+            if deckel_kandidaten:
+                bindender_grund, effective_max_usd = min(deckel_kandidaten, key=lambda paar: paar[1])
+                scale_ratio = effective_max_usd / max_usd if max_usd else 1.0
+                effective_max_eur = max_eur * scale_ratio if max_eur is not None else None
+            else:
+                bindender_grund = None
+                effective_max_usd = max_usd
+                effective_max_eur = max_eur
 
             if proposed_usd is not None and proposed_usd > effective_max_usd:
                 fx = None
@@ -788,14 +776,8 @@ def post_check(
                     f"Von {proposed_usd:.2f} USD auf Risiko-Obergrenze {effective_max_usd:.2f} USD "
                     "gekürzt (RM-1/RM-2, deterministisch erzwungen)."
                 )
-                if konfidenz_scale_note:
-                    clamp_note = f"{clamp_note} {konfidenz_scale_note}"
-                if gegenszenario_note:
-                    clamp_note = f"{clamp_note} {gegenszenario_note}"
-                if konflikt_note:
-                    clamp_note = f"{clamp_note} {konflikt_note}"
-                if crv_knapp_note:
-                    clamp_note = f"{clamp_note} {crv_knapp_note}"
+                if bindender_grund:
+                    clamp_note = f"{clamp_note} Bindender Grund: {bindender_grund}."
                 position_size["usd"] = effective_max_usd
                 position_size["eur"] = effective_max_usd * fx if fx is not None else effective_max_eur
                 existing_note = position_size.get("note")
