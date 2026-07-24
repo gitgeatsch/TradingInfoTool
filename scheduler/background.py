@@ -1124,6 +1124,20 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None, 
             if signal.hebel_senkung_eigenkapital_nachschuss_eur is not None else ""
         )
         korrektur_zeile = f"({signal.hebel_korrektur_hinweis})\n" if signal.hebel_korrektur_hinweis else ""
+        # BUGFIX (2026-07-24, aufgefallen bei der Kontrathese-Uebersetzung, aber
+        # unabhaengig davon bestehend): hebel_final ist None bei SCHLIESSEN/
+        # TEILVERKAUF/HALTEN - ohne Schutz stand hier woertlich "Hebel: Nonex".
+        hebel_zeile = f"{signal.hebel_final:.2f}x" if signal.hebel_final is not None else "-"
+        # Kontrathese-Uebersetzung (2026-07-24): Zonen bleiben unveraendert aus
+        # dem Original-LLM-Vorschlag (siehe HebelSignal.kontrathese_zu_position-
+        # Docstring), aber anders beschriftet - kein neuer Einstieg auf die
+        # bestehende Position, sondern der nie ausgefuehrte Gegenrichtungs-
+        # Vorschlag, der zur Uebersetzung fuehrte.
+        zonen_titel = (
+            f"Referenzzonen der Kontrathese (ursprünglicher {signal.kontrathese_llm_richtung}-Vorschlag, "
+            "kein neuer Einstieg):"
+            if signal.kontrathese_zu_position else "Entry/Stop-Loss/Take-Profit:"
+        )
         risiken_text = _formatiere_key_risks(signal)
         halte_kriterium_text = _formatiere_halte_kriterium(signal)
         gegenargument_text = _formatiere_gegenargument(signal)
@@ -1148,8 +1162,9 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None, 
             f"Regime: {signal.regime or 'unbekannt'}\n"
             f"Berechnet: {zeitpunkt_text} · Anbieter: {signal.llm_model or '-'}{wartezeit_text}\n\n"
             f"--- 1. MATHEMATISCH BERECHNET ---\n"
-            f"Hebel: {signal.hebel_final}x\n"
+            f"Hebel: {hebel_zeile}\n"
             f"{korrektur_zeile}"
+            f"{zonen_titel}\n"
             f"Entry: {format_money(signal.entry_eur_von)}-{format_money(signal.entry_eur_bis)} EUR\n"
             f"Stop-Loss: {format_money(signal.stop_loss_eur_von)}-{format_money(signal.stop_loss_eur_bis)} EUR\n"
             f"Take-Profit: {format_money(signal.take_profit_eur_von)}-{format_money(signal.take_profit_eur_bis)} EUR\n"
@@ -1183,16 +1198,38 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None, 
 
             facts = _json.loads(signal.facts_json)
             liquiditaetszonen = facts.get("liquiditaetszonen")
-            if liquiditaetszonen and conn_factory is not None:
-                conn = conn_factory()
-                try:
-                    price_snap = db.get_latest_prices(conn).get(signal.symbol)
-                finally:
-                    conn.close()
-                if price_snap is not None and price_snap.price_eur:
-                    chart_png = render_liquiditaetszonen_chart(
-                        liquiditaetszonen, price_snap.price_eur, "EUR",
-                    )
+            # BUGFIX (2026-07-24, siehe ui/hebel_view.py::_render_liquiditaetszonen_
+            # chart()-Kommentar fuer den vollen Root-Cause): denselben Preis wie
+            # `kursverlauf` verwenden (facts.preis.eur, zum Erstellungszeitpunkt
+            # dieses Signals eingebettet) statt einer separat nachgeladenen
+            # Live-Notierung - verhindert eine "Aktueller Kurs"-Linie, die nicht
+            # zum Ende der Kursverlauf-Linie passt, spart ausserdem den
+            # DB-Zugriff hier komplett ein.
+            preis_eur = (facts.get("preis") or {}).get("eur")
+            if liquiditaetszonen and preis_eur:
+                # Kombianzeige (2026-07-24, Nutzer-Wunsch): zusaetzlich zum
+                # Analysezeitpunkt-Preis den LIVE-Preis nachladen (macht bei
+                # der E-Mail meist keinen grossen Unterschied, da sie kurz
+                # nach der Signal-Erstellung verschickt wird - aber dieselbe
+                # Grafik-Funktion wie die App nutzt, daher konsistent
+                # mitgegeben). Schlaegt der Abruf fehl, bleibt live_preis_eur
+                # None - Chart faellt automatisch auf die reine
+                # Analysezeitpunkt-Ansicht zurueck.
+                live_preis_eur = None
+                if conn_factory is not None:
+                    try:
+                        conn = conn_factory()
+                        try:
+                            live_snap = db.get_latest_prices(conn).get(signal.symbol)
+                        finally:
+                            conn.close()
+                        if live_snap is not None:
+                            live_preis_eur = live_snap.price_eur
+                    except Exception:
+                        logger.exception("Live-Kurs-Nachladung für Kombianzeige (%s) fehlgeschlagen", signal.symbol)
+                chart_png = render_liquiditaetszonen_chart(
+                    liquiditaetszonen, preis_eur, "EUR", live_preis=live_preis_eur,
+                )
         except Exception:
             logger.exception("Liquiditätszonen-Grafik für %s fehlgeschlagen", signal.symbol)
 

@@ -651,6 +651,22 @@ def _migrate_hebel_signal_eur_columns(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+_KONTRATHESE_NEW_COLUMNS = {"kontrathese_zu_position": "INTEGER", "kontrathese_llm_richtung": "TEXT"}
+
+
+def _migrate_kontrathese_columns(conn: sqlite3.Connection) -> None:
+    """Nachtrag 2026-07-24 (echter NEAR/HYPE-Fund, siehe HebelSignal.
+    kontrathese_zu_position-Docstring) - rein auditierend, macht sichtbar/
+    dauerhaft nachvollziehbar, dass post_check_hebel() eine LLM-Gegenrichtung
+    auf die bestehende Position uebersetzt hat. Gleiches additive
+    Migrations-Muster wie _migrate_hebel_signal_eur_columns()."""
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(hebel_signals)")}
+    for column, sql_type in _KONTRATHESE_NEW_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE hebel_signals ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
 _CASH_VETO_NEW_COLUMNS = {"cash_veto": "INTEGER", "cash_veto_reason": "TEXT"}
 
 
@@ -779,6 +795,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_cash_veto_columns(conn)
     _migrate_risikofaktoren_columns(conn)
     _migrate_hebel_signal_eur_columns(conn)
+    _migrate_kontrathese_columns(conn)
     import_holdings_manual_overrides(conn)
 
 
@@ -2382,6 +2399,7 @@ _HEBEL_SIGNAL_COLUMNS = (
     "hebel_senkung_eigenkapital_nachschuss_eur", "ausfuehrbarkeit_hinweis",
     "gate_passed", "gate_reason", "risk_veto", "risk_veto_reason", "facts_json",
     "groq_raw_response", "llm_model", "gegenargument", "risikofaktoren_json",
+    "kontrathese_zu_position", "kontrathese_llm_richtung",
 )
 
 
@@ -2390,7 +2408,8 @@ def insert_hebel_signal(conn: sqlite3.Connection, signal: HebelSignal) -> int:
     Zeile, kein Upsert."""
     placeholders = ", ".join("?" for _ in _HEBEL_SIGNAL_COLUMNS)
     values = [
-        int(getattr(signal, col)) if col in ("gate_passed", "risk_veto") else getattr(signal, col)
+        int(getattr(signal, col)) if col in ("gate_passed", "risk_veto", "kontrathese_zu_position")
+        else getattr(signal, col)
         for col in _HEBEL_SIGNAL_COLUMNS
     ]
     cursor = conn.execute(
@@ -2405,6 +2424,7 @@ def _row_to_hebel_signal(row: sqlite3.Row) -> HebelSignal:
     data = dict(row)
     data["gate_passed"] = bool(data["gate_passed"])
     data["risk_veto"] = bool(data["risk_veto"])
+    data["kontrathese_zu_position"] = bool(data.get("kontrathese_zu_position") or False)
     return HebelSignal(**data)
 
 

@@ -550,6 +550,18 @@ class HebelSignal:
     # Docstring) - deterministisch aus agent/krypto/hebel_risk_gate.py::
     # compute_risikofaktoren_hebel() berechnet.
     risikofaktoren_json: str | None = None
+    # Kontrathese-Uebersetzung (2026-07-24, echter NEAR/HYPE-Fund: LLM durfte
+    # laut SYSTEM_PROMPT Regel 2 fuer eine offene Position frei eine Gegen-
+    # richtung vorschlagen ("ERÖFFNEN SHORT" trotz offener LONG-Position) -
+    # auf Bitpanda nie als echte Gegenposition ausfuehrbar, deshalb deter-
+    # ministisch in hebel_risk_gate.py::post_check_hebel() in eine Aktion auf
+    # die BESTEHENDE Position uebersetzt (SCHLIESSEN/TEILVERKAUF/HALTEN).
+    # Beide Felder rein informativ/auditierbar - `action`/`richtung` selbst
+    # tragen bereits das uebersetzte Ergebnis, diese zwei Felder machen nur
+    # sichtbar/dauerhaft nachvollziehbar, DASS und WOHIN uebersetzt wurde,
+    # statt die urspruengliche LLM-Ausgabe stillschweigend zu ueberschreiben.
+    kontrathese_zu_position: bool = False
+    kontrathese_llm_richtung: str | None = None
 
 
 @dataclass

@@ -7362,3 +7362,145 @@ liegenden Preisen. Zusätzlich die Kursverlauf-Linie von 2.2px auf 1.4px
 verschlankt (Nutzer-Wunsch). Beide Szenarien (eng beieinander/gut getrennt)
 visuell geprüft, volle Regressionssuite erneut gelaufen.
 Umbau) in allen drei Dateien fehlerfrei greift.
+
+## Nachtrag (2026-07-24): Kontrathese-Übersetzung für offene Hebel-Positionen
+
+**Echter Fund:** NEAR und HYPE (beide mit offener LONG-Hebel-Position)
+produzierten über mehrere Tage wiederholte "Hebel ERÖFFNEN (SHORT)"-E-Mails
+im 15-Minuten-Takt der Positions-Überwachung, obwohl die Einstellung "Nur
+Long" durchgehend aktiv war und kein anderes Symbol im selben Zeitraum ein
+SHORT-Signal erzeugte. Root Cause (Analyse siehe Session-Verlauf, vollständig
+im Code dokumentiert): `hebel_analyst.py` SYSTEM_PROMPT Regel 2 erlaubt dem
+Modell explizit, für ein Symbol mit offener Position frei eine Gegenrichtung
+vorzuschlagen ("Short aktuell nicht über Bitpanda ausführbar ... KEINE
+Einschränkung deiner Bewertung"). Der GUI-Schalter `hebel_richtung_modus`
+filtert nur die Kandidaten-Richtung VOR dem LLM-Call - bei einer offenen
+Position ist diese Kandidaten-Richtung strukturell immer die Positions-
+Richtung selbst (LONG), der Filter also für diesen Pfad wirkungslos, während
+das Modell hinterher trotzdem frei SHORT ausgeben durfte. Ein reines Veto auf
+HALTEN hätte die eigentliche Information (das Modell sieht erhöhtes Risiko
+für die bestehende Position) weggeworfen.
+
+**Lösung - Kontrathese-Übersetzung statt Veto** (`hebel_risk_gate.py::
+post_check_hebel()`, neu VOR dem CRV-Gate/HEBEL_SENKEN-Zweig): schlägt das
+Modell `ERÖFFNEN` in der Gegenrichtung zur bestehenden Position vor, wird
+das deterministisch in eine Aktion AUF die bestehende Position übersetzt,
+`richtung` wird auf die Positions-Richtung zurückgesetzt:
+
+- Konfidenz ≥ 70% (`KONFIDENZ_SCHWELLE_HOCH`, bereits bestehende, dem Nutzer
+  aus jedem Signal bekannte Einstufung, jetzt als benannte Konstante in
+  `risk_gate.py` gemeinsam mit `hebel_risk_gate.py` genutzt) → sofort
+  `SCHLIESSEN`, kein Zeitfenster nötig (eindeutiger Alarm).
+- Konfidenz 55-70% → `TEILVERKAUF`, aber nur wenn die Kontrathese über ein
+  Zeitfenster (`kontrathese_bestaetigung_stunden`, Standard 2h) DURCHGEHEND
+  bestanden hat (`_kontrathese_bestaetigt_seit_stunden()`, läuft die
+  bisherige Positions-Historie rückwärts, bis der erste nicht-passende
+  Eintrag auftaucht). Vor Ablauf des Zeitfensters bleibt es bei `HALTEN`.
+- Konfidenz < 55% → immer `HALTEN`.
+- In allen drei Fällen bleibt die Kontrathese als eigener, immer zuerst
+  gelisteter Risikofaktor "Kontrathese zur offenen Position" sichtbar (auch
+  im HALTEN-Fall, damit die Information nicht verloren geht, nur eben ohne
+  E-Mail, da HALTEN wie bisher keine E-Mail auslöst).
+
+**Bewusst zeitfenster- statt zyklusbasiert:** die Positions-Überwachung
+selbst bleibt unverändert häufig (kein gedrosseltes Monitoring - erhöhtes
+Risiko soll weiterhin engmaschig beobachtet werden), nur das tatsächliche
+AUSLÖSEN einer Aktion wird gedämpft. Ein echter Export der Notebook-Signal-
+Historie (07-24) bestätigte den Bedarf: die real beobachteten SHORT-Ausschläge
+lagen durchgehend bei 40-65% Konfidenz und kehrten binnen 15-30 Minuten
+wieder auf LONG zurück - eine reine "letzte Bewertung stimmt zu"-Prüfung
+wäre bei diesem Takt wirkungslos gegen Rauschen gewesen.
+
+**Bewusst NICHT genullt:** Entry-/Stop-Loss-/Take-Profit-Zonen aus dem
+Original-Vorschlag bleiben unverändert erhalten (Nutzer-Entscheidung: eine
+stille Löschung wäre ein vergessbarer Sondereingriff) - Anzeige (App +
+E-Mail) beschriftet sie bei einer Kontrathese-Übersetzung um
+("Referenzzonen der Kontrathese ... kein neuer Einstieg") statt sie zu
+verstecken. Zwei neue, rein auditierende Felder (`HebelSignal.
+kontrathese_zu_position`/`kontrathese_llm_richtung`) machen die Übersetzung
+dauerhaft nachvollziehbar, statt sie stillschweigend in `action`/`richtung`
+verschwinden zu lassen.
+
+**Zusätzlicher, unabhängig gerechtfertigter Cooldown-Fix:** `budget_
+allocator.py::_filter_hebel_cooldown()` nutzte für ALLE Kandidaten (auch
+Positions-Überwachung) die richtungsblinde `get_latest_hebel_signal_per_
+symbol()` statt der bereits existierenden `get_latest_hebel_signal_per_
+symbol_and_richtung()` - ein gespeichertes SHORT-Signal liess den 3h-
+Positions-Cooldown für den nächsten LONG-Kandidaten leerlaufen (`sig.
+richtung == c.richtung` war nie erfüllt). Realer Export bestätigte die
+Auswirkung: Positions-Neubewertung lief dadurch alle ~15 Min. statt der
+vorgesehenen 3h. Durch die Kontrathese-Übersetzung (richtung wird immer auf
+die Positions-Richtung zurückgesetzt) trägt dieser Pfad künftig ohnehin nie
+mehr eine abweichende Richtung, der Cooldown-Fix bleibt aber unabhängig
+korrekt (schützt z.B. echte parallele LONG-/SHORT-Thesen desselben Symbols
+voreinander) und wurde mit umgesetzt.
+
+**Interaktion mit Ueberholt-Erkennung geprüft** (`hebel_backward_tracking.py::
+_is_superseded()`, auf Nutzer-Nachfrage explizit analysiert): das bestehende
+Zonen-Reaffirmation-Gate (2026-07-22) vergleicht Entry-/Stop-Loss-/Take-
+Profit-Mittelwerte zwischen einem alten und einem neuen Signal, um eine
+echte neue These von einer blossen Wiederholung zu unterscheiden - bei einem
+Kontrathese-Signal sind die (bewusst nicht genullten) Zonen aber der
+Original-Vorschlag für die NIE ausgeführte Gegenrichtung, nicht vergleichbar
+mit der echten Position. Ein zufälliger Zahlenabgleich wäre weder eine echte
+Reaffirmation noch ein echter Widerspruch. Fix: das Zonen-Gate wird
+übersprungen, wenn das neuere Signal `kontrathese_zu_position` trägt - das
+Mindestbeobachtung-Gate bleibt unverändert in Kraft (schützt weiterhin vor
+zu früher Überholung eines gerade erst eröffneten Signals).
+`check_hebel_signal_outcome()` selbst ist nicht betroffen - filtert bereits
+vorher auf `_TRACKABLE_HEBEL_ACTIONS` (nur ERÖFFNEN/NACHKAUFEN), SCHLIESSEN/
+TEILVERKAUF/HALTEN werden dort unverändert übersprungen.
+
+**Verifikation:** 24 synthetische Checks (Zeitfenster-Logik pur, alle drei
+Konfidenz-Buckets End-to-End, Regressionstest ohne offene Position/bei
+gleicher Richtung/für HEBEL_SENKEN, Zonen-Reaffirmation-Bypass in
+`_is_superseded()` inkl. Gegenprobe dass das Gate für normale Signale
+weiterhin aktiv bleibt) - alle bestanden. Echter Nachvollzug: die komplette
+reale NEAR/HYPE-Signalhistorie (Notebook-Export 2026-07-24) durch die neue
+Logik laufen lassen - jeder historisch tatsächlich versendete "ERÖFFNEN
+SHORT"-Ausschlag wäre unter der neuen Logik `HALTEN` (keine E-Mail)
+geblieben, da die Konfidenz nie durchgehend 2h über der Schwelle blieb
+(maximal beobachtet: 0,5h vor Rückkehr auf LONG).
+
+**Nachtrag (gleicher Tag): Liquiditätszonen-Chart-Konsistenz + Kombianzeige.**
+Nutzer-Fund an einem echten Screenshot: die "Aktueller Kurs"-Linie nutzte
+einen LIVE nachgeladenen Preis, während `kursverlauf`/Zonen-"gefegt"-Flags
+zum Signal-Erstellungszeitpunkt eingefroren sind - bei einem älteren, erneut
+geöffneten Signal lief das sichtbar auseinander. Root Cause NICHT nur ein
+Anzeigefehler: der gesamte Liquiditätszonen-Fakt ist wie jeder Fakt eines
+Signals eine Zeitpunkt-Momentaufnahme, keine Live-Prognose.
+
+Lösung - Kombianzeige statt reinem Umbenennen: `render_liquiditaetszonen_
+chart()` zeigt jetzt BEIDE Preise - "Kurs zum Analysezeitpunkt" (aus
+`facts["preis"]["eur"]`, konsistent mit `kursverlauf`) UND optional
+"Aktueller Kurs (jetzt)" (live nachgeladen, eigene Farbe/gestrichelt, nur
+gezeichnet bei spürbarem Unterschied). Automatischer Hinweis je Zone, wenn
+der Live-Preis eine noch "nicht gefegte" Zone seit der Analyse bereits
+erreicht/durchbrochen hat - der eingefrorene historische Status selbst wird
+NICHT überschrieben (Audit-Prinzip). Beide Aufrufer laden den Live-Preis
+zusätzlich, mit Fallback auf die reine Analysezeitpunkt-Ansicht bei
+Abruffehler.
+
+Konzeptionelle Klarstellung (Nutzer-Diskussion): der Chart liefert und
+lieferte nie einen "Blick in die Zukunft" - rein deskriptiv, analog zu
+jedem anderen Fakt (RSI, Regime). Die tatsächliche Forecast-Einschätzung
+liefert ausschließlich das LLM selbst (Bull/Base/Bear-Abschnitt). Eine
+echte Verbesserung der Vorhersagekraft (Stufe 2: Order Blocks/Fair Value
+Gaps) würde eine Validierung gegen echte historische Preisdaten erfordern
+(`agent/krypto/backtesting.py`, bereits vorhanden) - bewusst NICHT
+ungeprüft ergänzt, siehe [[feedback_backtest_first_hard_guarantee]].
+
+**Nachtrag (gleicher Tag): Provider-Performance-Verwässerung durch
+Kontrathese-Phantome.** Nutzer-Beobachtung: Provider-Performance (Hebel)
+zeigte seit einem Tag keine Veränderung. Echte Logs bestätigten: der
+tägliche `backward_tracking_job` läuft korrekt (9 echte Auflösungen am
+23.07.) - kein Stillstand. Der "weiterhin offen"-Pool wuchs aber auffällig
+(38→41→62), weil jedes wiederholte Kontrathese-"ERÖFFNEN SHORT"-Phantom für
+NEAR/HYPE selbst ein trackbares Hebel-Signal ist (erfüllt
+`_TRACKABLE_HEBEL_ACTIONS`) - mit Zonen einer nie echten These, die nie
+sauber auflösen. Strukturell ab sofort durch die Kontrathese-Übersetzung
+selbst behoben (action wird zu SCHLIESSEN/TEILVERKAUF/HALTEN). Für bereits
+entstandene Alt-Einträge: einmaliges Skript `bereinigung_kontrathese_
+phantome.py` (Dry-Run per Default, `--apply` zum Anwenden) markiert sie
+retroaktiv als `outcome_status = "nicht_anwendbar"` - keine Löschung,
+volle Audit-Spur erhalten.

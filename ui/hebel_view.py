@@ -364,7 +364,13 @@ class HebelView(ttk.Frame):
         # KI bewertet hat vs. eine zusammenfassende Konklusion): nur echte
         # Rechenwerte, nichts vom LLM Erzeugtes.
         lines.append("--- 1. MATHEMATISCH BERECHNET ---")
-        if signal.hebel_vorschlag is not None or signal.hebel_final is not None:
+        # Kontrathese-Uebersetzung (2026-07-24): hebel_vorschlag/hebel_final
+        # sind hier bedeutungslos (LLM-Vorschlag fuer die nie ausgefuehrte
+        # Gegenrichtung, kein neuer Hebel wird gesetzt) - Zeile unterdruecken
+        # statt verwirrend "Hebel final (gedeckelt): -" zu zeigen.
+        if not signal.kontrathese_zu_position and (
+            signal.hebel_vorschlag is not None or signal.hebel_final is not None
+        ):
             final_text = f"{signal.hebel_final:.2f}x" if signal.hebel_final is not None else "-"
             lines.append(f"Hebel final (gedeckelt): {final_text}")
             if signal.hebel_korrektur_hinweis:
@@ -435,7 +441,19 @@ class HebelView(ttk.Frame):
             or signal.stop_loss_usd_von is not None
             or signal.take_profit_usd_von is not None
         ):
-            lines.append("\nEntry / Stop-Loss / Take-Profit-Zone (USD | EUR):")
+            # Kontrathese-Uebersetzung (2026-07-24): Zonen bleiben unveraendert
+            # aus dem Original-LLM-Vorschlag stehen (siehe HebelSignal.
+            # kontrathese_zu_position-Docstring - bewusst NICHT genullt), aber
+            # anders beschriftet, da sie einen nie ausgefuehrten Einstieg in
+            # der Gegenrichtung zeigen, keinen neuen Trade auf die bestehende
+            # Position.
+            zonen_titel = (
+                "\nReferenzzonen der Kontrathese (ursprünglicher "
+                f"{signal.kontrathese_llm_richtung}-Vorschlag, kein neuer Einstieg, USD | EUR):"
+                if signal.kontrathese_zu_position
+                else "\nEntry / Stop-Loss / Take-Profit-Zone (USD | EUR):"
+            )
+            lines.append(zonen_titel)
             lines.append(
                 f"  Entry:        {format_money(signal.entry_usd_von)}–{format_money(signal.entry_usd_bis)} | "
                 f"{format_money(signal.entry_eur_von)}–{format_money(signal.entry_eur_bis)}"
@@ -506,16 +524,41 @@ class HebelView(ttk.Frame):
             liquiditaetszonen = facts.get("liquiditaetszonen")
             if not liquiditaetszonen:
                 return
-            conn = self._db_conn_factory()
-            try:
-                price_snap = db.get_latest_prices(conn).get(signal.symbol)
-            finally:
-                conn.close()
-            if price_snap is None or not price_snap.price_eur:
+            # BUGFIX (2026-07-24, Nutzer-Fund am Screenshot: Kursverlauf-Linie
+            # endete sichtbar oberhalb der "Aktueller Kurs"-Linie): bisher wurde
+            # hier eine LIVE nachgeladene Preisnotierung genutzt (db.get_latest_
+            # prices() zum Anzeige-Zeitpunkt) - bei einem aelteren, erneut
+            # geoeffneten Signal kann sich der Live-Kurs laengst deutlich von
+            # der zum Erstellungszeitpunkt eingebetteten `kursverlauf`-Reihe
+            # entfernt haben, wodurch die "Aktueller Kurs"-Linie sichtbar nicht
+            # zum Ende der Kurslinie passte. Fix: denselben Preis verwenden,
+            # der bereits im Fakten-Snapshot dieses Signals steckt (facts.preis.eur,
+            # siehe hebel_analyst.py::build_hebel_facts()) - exakt derselbe
+            # Zeitpunkt wie `kursverlauf`, kein zusaetzlicher DB-Zugriff noetig.
+            preis_eur = (facts.get("preis") or {}).get("eur")
+            if not preis_eur:
                 return
+            # Kombianzeige (2026-07-24, Nutzer-Wunsch): zusaetzlich zum
+            # Analysezeitpunkt-Preis den LIVE-Preis nachladen - macht sichtbar,
+            # ob/wie weit sich der Kurs seit der Analyse bewegt hat, ohne den
+            # historischen Analysezeitpunkt-Preis zu ersetzen (siehe render_
+            # liquiditaetszonen_chart()-Docstring). Schlaegt der Live-Abruf
+            # fehl, bleibt live_preis None - Chart faellt dann automatisch auf
+            # die reine Analysezeitpunkt-Ansicht zurueck (kein Absturz).
+            live_preis_eur = None
+            try:
+                conn = self._db_conn_factory()
+                try:
+                    live_snap = db.get_latest_prices(conn).get(signal.symbol)
+                finally:
+                    conn.close()
+                if live_snap is not None:
+                    live_preis_eur = live_snap.price_eur
+            except Exception:
+                logger.exception("Live-Kurs-Nachladung für Kombianzeige (%s) fehlgeschlagen", signal.symbol)
             from ui.liquidity_chart import render_liquiditaetszonen_chart
 
-            png = render_liquiditaetszonen_chart(liquiditaetszonen, price_snap.price_eur, "EUR")
+            png = render_liquiditaetszonen_chart(liquiditaetszonen, preis_eur, "EUR", live_preis=live_preis_eur)
             if png is None:
                 return
             self._detail_chart_image = tk.PhotoImage(data=png)

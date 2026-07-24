@@ -27,6 +27,17 @@ from indicators.calculations import TechnicalSnapshot, latest_value
 STOP_LOSS_ATR_MULTIPLE = 2.0  # Arbeits-Konvention, nicht spezifikationsseitig vorgegeben
 CRV_MINIMUM = 2.0  # Z-2
 
+# Konfidenz-Einstufung (2026-07-19/20, ohne benannte Konstante an dieser UND an
+# hebel_risk_gate.py::compute_risikofaktoren_hebel() dupliziert) - hier als
+# EINZIGE Quelle der Wahrheit benannt, hebel_risk_gate.py importiert von hier
+# (dasselbe Muster wie bereits bei CRV_MINIMUM). Zusaetzlich seit 2026-07-24
+# von hebel_risk_gate.py::post_check_hebel() fuer die Kontrathese-Uebersetzung
+# wiederverwendet (SCHLIESSEN ab KONFIDENZ_SCHWELLE_HOCH, TEILVERKAUF ab
+# KONFIDENZ_SCHWELLE_NIEDRIG) - dieselben, dem Nutzer bereits aus jedem
+# Signal-Risikofaktor bekannten Grenzen, keine neu erfundene Zahl.
+KONFIDENZ_SCHWELLE_NIEDRIG = 55.0
+KONFIDENZ_SCHWELLE_HOCH = 70.0
+
 # Symbole, deren gestakter Anteil NICHT in die Risikoberechnung einfliesst
 # (konservativ, Z-1): Un-/Restaking dort bisher nicht instant moeglich.
 # Stand 2026-07-11 (Nutzer-Erfahrung): nur ETH betroffen, alle anderen
@@ -555,11 +566,11 @@ def compute_risikofaktoren(
         ))
 
     if confidence_pct is not None:
-        if confidence_pct < 55:
+        if confidence_pct < KONFIDENZ_SCHWELLE_NIEDRIG:
             faktoren.append(Risikofaktor(
                 f"Konfidenz {confidence_pct:.0f}%", "negativ", "Niedrige Konfidenz.",
             ))
-        elif confidence_pct >= 70:
+        elif confidence_pct >= KONFIDENZ_SCHWELLE_HOCH:
             faktoren.append(Risikofaktor(f"Konfidenz {confidence_pct:.0f}%", "positiv", "Hohe Konfidenz."))
         else:
             faktoren.append(Risikofaktor(f"Konfidenz {confidence_pct:.0f}%", "neutral", "Mittlere Konfidenz."))

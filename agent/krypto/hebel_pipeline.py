@@ -146,6 +146,15 @@ def generate_hebel_signal(
     letztes_signal_liste = db.get_hebel_signal_history(conn, asset.symbol, trigger.richtung, limit=1)
     letztes_signal = letztes_signal_liste[0] if letztes_signal_liste else None
 
+    # Kontrathese-Zeitfenster-Bestaetigung (2026-07-24, siehe hebel_risk_gate.py::
+    # _kontrathese_bestaetigt_seit_stunden()) - nur relevant, wenn eine offene
+    # Position existiert; 30 Eintraege bei 15-Min-Screening-Takt decken ca. 7,5h
+    # ab, komfortabel ueber der Standard-Bestaetigungsschwelle (2h).
+    kontrathese_verlauf = (
+        db.get_hebel_signal_history(conn, asset.symbol, position_aktuell.richtung, limit=30)
+        if position_aktuell is not None else []
+    )
+
     price_age_minutes = None
     if price_snap is not None:
         fetched = datetime.fromisoformat(price_snap.fetched_at)
@@ -190,6 +199,9 @@ def generate_hebel_signal(
         asset_rolle=asset.rolle,
         liquiditaetszonen=liquiditaetszonen,
         eur_usd_fx_rate=eur_usd_fx_rate,
+        position_aktuell=position_aktuell,
+        kontrathese_verlauf=kontrathese_verlauf,
+        now_unix=now_unix,
     )
     risk_veto = corrected.pop("_risk_veto")
     risk_veto_reason = corrected.pop("_risk_veto_reason")
@@ -300,6 +312,8 @@ def generate_hebel_signal(
         groq_raw_response=raw_response,
         llm_model=llm_model,
         risikofaktoren_json=json.dumps(risikofaktoren, ensure_ascii=False) if risikofaktoren else None,
+        kontrathese_zu_position=corrected.get("kontrathese_zu_position", False),
+        kontrathese_llm_richtung=corrected.get("kontrathese_llm_richtung"),
         **top_grund_fields,
     )
     db.insert_hebel_signal(conn, signal)

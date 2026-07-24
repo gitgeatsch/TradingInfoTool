@@ -17,9 +17,10 @@ dieselben Regeln nochmal deterministisch - das Modell wird nie blind vertraut.""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 
 from agent.krypto.anticyclic import LONG_BIAS_EXTREME_THRESHOLD_PCT
-from agent.krypto.risk_gate import CRV_MINIMUM
+from agent.krypto.risk_gate import CRV_MINIMUM, KONFIDENZ_SCHWELLE_HOCH, KONFIDENZ_SCHWELLE_NIEDRIG
 
 RICHTUNG_LONG = "LONG"
 RICHTUNG_SHORT = "SHORT"
@@ -84,6 +85,33 @@ class Risikofaktor:
     begruendung: str
 
 
+def _kontrathese_bestaetigt_seit_stunden(
+    verlauf: list, aktuelle_llm_richtung: str, now_unix: int,
+) -> float:
+    """Kontrathese-Uebersetzung (2026-07-24, echter NEAR/HYPE-Fund): wie lange
+    (in Stunden) liegt bereits eine DURCHGEHENDE Kontrathese in dieselbe
+    Richtung vor - laeuft von JETZT rueckwaerts durch `verlauf` (bereits
+    neueste-zuerst sortiert, siehe db.get_hebel_signal_history()), bis der
+    erste Eintrag OHNE passende Kontrathese auftaucht. Gibt 0.0 zurueck, wenn
+    schon der letzte Eintrag nicht passt - dann beginnt der Streak jetzt neu.
+
+    Bewusst zeitfenster- statt zyklusbasiert (siehe Nutzer-Diskussion,
+    echter Export 2026-07-24): eine reine "letzte Bewertung stimmt auch
+    schon zu"-Pruefung waere bei einem 15-Minuten-Screening-Takt praktisch
+    wirkungslos gegen Rauschen (echte Daten zeigten 65%->60%->zurueck auf
+    LONG binnen 30 Minuten) - das Zeitfenster bleibt unabhaengig davon, wie
+    oft tatsaechlich neu bewertet wird, und erlaubt trotzdem weiterhin
+    beliebig haeufiges Monitoring (bewusst NICHT ueber den Cooldown
+    gedrosselt - haeufiges Hinschauen bei erhoehtem Risiko ist erwuenscht,
+    nur das vorschnelle HANDELN darauf soll gedaempft werden)."""
+    streak_start_unix = now_unix
+    for sig in verlauf:
+        if not sig.kontrathese_zu_position or sig.kontrathese_llm_richtung != aktuelle_llm_richtung:
+            break
+        streak_start_unix = int(datetime.fromisoformat(sig.created_at).timestamp())
+    return max(0.0, (now_unix - streak_start_unix) / 3600)
+
+
 def compute_risikofaktoren_hebel(
     *, richtung: str, regime: str, confidence_pct: float | None,
     crv: float | None, confluence=None,
@@ -103,6 +131,10 @@ def compute_risikofaktoren_hebel(
     btc_matrix_state: str | None = None,
     btc_matrix_hinweis: str | None = None,
     liquiditaetszonen: dict | None = None,
+    kontrathese_zu_position: bool = False,
+    kontrathese_llm_richtung: str | None = None,
+    kontrathese_bestaetigt: bool = False,
+    kontrathese_bestaetigt_seit_stunden: float | None = None,
 ) -> list["Risikofaktor"]:
     """2026-07-19 (Nutzer-Wunsch: E-Mail/App-Neustrukturierung in 3 Abschnitte -
     Mathematisch berechnet / LLM-Bewertung / Konklusion mit Risikofaktoren).
@@ -119,6 +151,29 @@ def compute_risikofaktoren_hebel(
     if not hebel_erlaubt:
         faktoren.append(Risikofaktor("Hebel-Veto", "negativ", veto_reason or "Hebel nicht erlaubt."))
         return faktoren
+
+    # Kontrathese-Uebersetzung (2026-07-24, siehe HebelSignal.kontrathese_zu_
+    # position-Docstring + post_check_hebel()) - IMMER als erster, am meisten
+    # herausgehobener Faktor, da action/richtung an dieser Stelle bereits das
+    # UEBERSETZTE Ergebnis tragen und ohne diesen Hinweis nicht nachvollziehbar
+    # waeren, warum z.B. ploetzlich TEILVERKAUF/SCHLIESSEN statt der gewohnten
+    # Positions-Ueberwachung erscheint.
+    if kontrathese_zu_position:
+        konf_text = f" (Konfidenz {confidence_pct:.0f}%)" if confidence_pct is not None else ""
+        if kontrathese_bestaetigt:
+            status_text = (
+                f"über ca. {kontrathese_bestaetigt_seit_stunden:.1f}h bestätigt"
+                if kontrathese_bestaetigt_seit_stunden is not None
+                else "eindeutiger Alarm (hohe Konfidenz), sofort ausgelöst"
+            )
+        else:
+            status_text = "erstmalige Erkennung, noch nicht bestätigt - deshalb noch keine Aktion ausgelöst"
+        faktoren.append(Risikofaktor(
+            "Kontrathese zur offenen Position", "negativ",
+            f"Modell sieht aktuell ein {kontrathese_llm_richtung}-Signal{konf_text}, obwohl eine "
+            f"offene {richtung}-Position besteht (auf Bitpanda nicht als echte Gegenposition "
+            f"ausführbar) - {status_text}.",
+        ))
 
     regime_konflikt = regime_konflikt_hebel(regime, richtung)
     if regime_konflikt:
@@ -264,11 +319,11 @@ def compute_risikofaktoren_hebel(
             ))
 
     if confidence_pct is not None:
-        if confidence_pct < 55:
+        if confidence_pct < KONFIDENZ_SCHWELLE_NIEDRIG:
             faktoren.append(Risikofaktor(
                 f"Konfidenz {confidence_pct:.0f}%", "negativ", "Niedrige Konfidenz für eine gehebelte Position.",
             ))
-        elif confidence_pct >= 70:
+        elif confidence_pct >= KONFIDENZ_SCHWELLE_HOCH:
             faktoren.append(Risikofaktor(f"Konfidenz {confidence_pct:.0f}%", "positiv", "Hohe Konfidenz."))
         else:
             faktoren.append(Risikofaktor(f"Konfidenz {confidence_pct:.0f}%", "neutral", "Mittlere Konfidenz."))
@@ -475,6 +530,7 @@ def post_check_hebel(
     historische_erfolgsquote: dict | None = None, funding_rate_stunde: float | None = None,
     asset_rolle: str | None = None, liquiditaetszonen: dict | None = None,
     eur_usd_fx_rate: float | None = None,
+    position_aktuell=None, kontrathese_verlauf: list | None = None, now_unix: int | None = None,
 ) -> dict:
     """Nimmt die bereits schema-validierte LLM-Antwort und erzwingt AZ-7/RM-1/
     RM-11/CRV noch einmal deterministisch, analog risk_gate.py::post_check().
@@ -512,7 +568,22 @@ def post_check_hebel(
     `WatchlistAsset.rolle`, "core" fuer BTC/ETH) wird nur fuer den neuen
     "Alt-Coin-Marktphase"-Risikofaktor benoetigt (siehe compute_risikofaktoren_
     hebel()) - `regime_result.btc_matrix_state`/`btc_matrix_beschreibung`
-    werden direkt aus `regime_result` gelesen, kein separater Parameter noetig."""
+    werden direkt aus `regime_result` gelesen, kein separater Parameter noetig.
+
+    Nachtrag 2026-07-24 (echter NEAR/HYPE-Fund, siehe HebelSignal.
+    kontrathese_zu_position-Docstring fuer den vollen Root-Cause): SYSTEM_PROMPT
+    Regel 2 (hebel_analyst.py) erlaubt dem LLM bewusst, fuer eine offene
+    Position eine Gegenrichtung vorzuschlagen ("ERÖFFNEN SHORT" trotz offener
+    LONG-Position) - auf Bitpanda nie als echte Gegenposition ausfuehrbar.
+    `position_aktuell` (optional, `database.models.HebelPosition`) macht diesen
+    Fall erkennbar; `kontrathese_verlauf` (optional, bereits neueste-zuerst
+    sortierte Liste vergangener HebelSignal-Objekte fuer dieselbe Position,
+    siehe hebel_pipeline.py) plus `now_unix` erlauben die Zeitfenster-
+    Bestaetigung (siehe _kontrathese_bestaetigt_seit_stunden()) - verhindert,
+    dass ein einzelner verrauschter 15-Minuten-Ausschlag sofort einen echten
+    Trade (TEILVERKAUF/SCHLIESSEN) ausloest. Alle drei Parameter optional und
+    wirkungslos, wenn `position_aktuell` None ist (reiner ERÖFFNEN-Fall ohne
+    bestehende Position, unveraendertes Verhalten)."""
     result = dict(parsed)
     risk_veto = False
     risk_veto_reason = None
@@ -522,11 +593,49 @@ def post_check_hebel(
     action = str(result.get("action", "")).upper()
     richtung = str(result.get("richtung", "")).upper()
     hebel_cfg = config["risiko"]["hebel"]
+    kontrathese_zu_position = False
+    kontrathese_llm_richtung: str | None = None
+    kontrathese_bestaetigt = False
+    kontrathese_bestaetigt_seit_stunden: float | None = None
 
     if not pre_result.hebel_erlaubt:
         risk_veto = True
         risk_veto_reason = pre_result.veto_reason
         action = "HALTEN"
+    elif (
+        action == "ERÖFFNEN"
+        and position_aktuell is not None
+        and richtung != str(position_aktuell.richtung).upper()
+    ):
+        # Kontrathese-Uebersetzung (2026-07-24) - VOR dem CRV-Gate/HEBEL_SENKEN
+        # unten, damit eine (fuer die hypothetische Gegenposition ohnehin
+        # irrelevante) zu knappe CRV das Remapping nicht ueberschreibt. Greift
+        # NUR bei ERÖFFNEN in GENAU der Gegenrichtung zur bestehenden Position -
+        # eine echte Kurswende liefe ueber den jeweils ANDEREN (symbol,
+        # richtung)-Schluessel und ist hiervon unberuehrt.
+        kontrathese_zu_position = True
+        kontrathese_llm_richtung = richtung
+        confidence_pct = result.get("confidence_pct")
+        if confidence_pct is not None and confidence_pct >= KONFIDENZ_SCHWELLE_HOCH:
+            # Eindeutiger Alarm - keine Wartezeit, sofortige Reaktion auf die Position.
+            action = "SCHLIESSEN"
+            kontrathese_bestaetigt = True
+        else:
+            now_unix_effektiv = now_unix if now_unix is not None else int(datetime.now(timezone.utc).timestamp())
+            kontrathese_bestaetigt_seit_stunden = _kontrathese_bestaetigt_seit_stunden(
+                kontrathese_verlauf or [], kontrathese_llm_richtung, now_unix_effektiv,
+            )
+            schwelle_stunden = hebel_cfg.get("kontrathese_bestaetigung_stunden", 2.0)
+            if (
+                confidence_pct is not None and confidence_pct >= KONFIDENZ_SCHWELLE_NIEDRIG
+                and kontrathese_bestaetigt_seit_stunden >= schwelle_stunden
+            ):
+                action = "TEILVERKAUF"
+                kontrathese_bestaetigt = True
+            else:
+                action = "HALTEN"
+        richtung = str(position_aktuell.richtung).upper()
+        result["richtung"] = richtung
 
     def _hebel_deckel_kandidaten(crv: float | None = None) -> list[tuple[str, float]]:
         """Nachtrag 2026-07-17 (echter LINK-Fall): gemeinsame Deckel-Logik fuer
@@ -681,6 +790,8 @@ def post_check_hebel(
     result["action"] = action
     result["_risk_veto"] = risk_veto
     result["_risk_veto_reason"] = risk_veto_reason
+    result["kontrathese_zu_position"] = kontrathese_zu_position
+    result["kontrathese_llm_richtung"] = kontrathese_llm_richtung
 
     # Risikofaktoren-Liste (2026-07-19, Abschnitt 3 der neuen E-Mail-/App-
     # Struktur) - dieselben Werte wie oben in _hebel_deckel_kandidaten()
@@ -726,6 +837,10 @@ def post_check_hebel(
         btc_matrix_state=regime_result.btc_matrix_state,
         btc_matrix_hinweis=regime_result.btc_matrix_beschreibung,
         liquiditaetszonen=liquiditaetszonen,
+        kontrathese_zu_position=kontrathese_zu_position,
+        kontrathese_llm_richtung=kontrathese_llm_richtung,
+        kontrathese_bestaetigt=kontrathese_bestaetigt,
+        kontrathese_bestaetigt_seit_stunden=kontrathese_bestaetigt_seit_stunden,
     )
     result["_risikofaktoren"] = [
         {"name": f.name, "bewertung": f.bewertung, "begruendung": f.begruendung} for f in risikofaktoren

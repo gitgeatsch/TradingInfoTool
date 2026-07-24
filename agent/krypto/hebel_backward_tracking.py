@@ -234,6 +234,21 @@ def _is_superseded(
     unter diesen Gates gerettet worden, darunter mind. 4 mit einem echten
     TP/SL-Ergebnis statt spurlosem Verschwinden.
 
+    NACHTRAG 3 (2026-07-24, Nutzer-Nachfrage "wirkt sich die Kontrathese-
+    Uebersetzung negativ auf das Backward-Tracking aus?"): ist `latest`
+    ein `kontrathese_zu_position`-Signal (SCHLIESSEN/TEILVERKAUF, siehe
+    hebel_risk_gate.py::post_check_hebel()), wird das Zonen-Reaffirmation-
+    Gate bewusst UEBERSPRUNGEN - seine Entry-/Stop-Loss-/Take-Profit-Felder
+    stammen unveraendert aus dem ORIGINAL-LLM-Vorschlag fuer die (nie
+    ausgefuehrte) Gegenrichtung, nicht aus der bestehenden Position, und
+    sind deshalb mit `signal`s echten Zonen nicht sinnvoll vergleichbar -
+    ein zufaelliger Zahlenabgleich waere weder eine echte Reaffirmation
+    noch ein echter Widerspruch, sondern bedeutungslos. Ein bestaetigtes
+    SCHLIESSEN/TEILVERKAUF ist inhaltlich immer eine echte neue Information
+    ueber die bestehende Position - das Mindestbeobachtung-Gate bleibt
+    trotzdem in Kraft (schuetzt weiterhin vor einer zu fruehen Ueberholung
+    eines gerade erst eroeffneten Signals).
+
     Rein deterministischer Datums-/ID-/Aktions-/Zonen-Vergleich, KEIN
     LLM-Call."""
     latest = latest_real.get((signal.symbol, signal.richtung))
@@ -245,7 +260,9 @@ def _is_superseded(
         signal, latest, mindestbeob_bucket, mindestbeob_fallback, einmal_trade_stunden,
     ):
         return False
-    if _ist_zonen_reaffirmation(signal, latest, zonen_toleranz_relativ):
+    if not getattr(latest, "kontrathese_zu_position", False) and _ist_zonen_reaffirmation(
+        signal, latest, zonen_toleranz_relativ,
+    ):
         return False
     return True
 

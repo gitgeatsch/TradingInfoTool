@@ -209,6 +209,21 @@ risiko:
                                         # Trigger-Scoring, hier Risikofaktor-Anzeige). Ab dieser
                                         # Stundenrate gilt der neue "Funding-Kosten"-Risikofaktor
                                         # als "negativ" statt "neutral".
+    kontrathese_bestaetigung_stunden: 2.0  # NEU (2026-07-24, echter NEAR/HYPE-Fund) - eine vom
+                                        # LLM fuer eine offene Position vorgeschlagene Gegen-
+                                        # richtung (siehe HebelSignal.kontrathese_zu_position)
+                                        # muss ueber mindestens diese Zeitspanne DURCHGEHEND
+                                        # bestehen, bevor TEILVERKAUF ausgeloest wird (siehe
+                                        # hebel_risk_gate.py::_kontrathese_bestaetigt_seit_
+                                        # stunden()) - verhindert, dass ein einzelner
+                                        # verrauschter 15-Minuten-Ausschlag sofort einen echten
+                                        # Trade ausloest (echte Exportdaten zeigten 65%->60%->
+                                        # zurueck auf LONG binnen 30 Minuten). Bewusst NICHT die
+                                        # Monitoring-Frequenz selbst gedaempft - haeufiges
+                                        # Hinschauen bleibt bei erhoehtem Risiko erwuenscht, nur
+                                        # das vorschnelle Handeln wird gebremst. Konfidenz
+                                        # >= KONFIDENZ_SCHWELLE_HOCH (70%) umgeht diese Wartezeit
+                                        # und loest sofort SCHLIESSEN aus (eindeutiger Alarm).
 
 # --- Watchlist / Basiswerte (siehe Spezifikation Kap. 4) ---
 # Quelle: Basisinfos/Assets.xlsx (Erstimport Stand 2026-07-01), 41 Assets.

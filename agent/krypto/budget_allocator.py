@@ -206,7 +206,19 @@ def _filter_hebel_cooldown(
     watchlist_by_symbol = {a.symbol: a for a in watchlist}
     kern_symbole = _kern_symbole_hebel(conn, watchlist) if grenze_ausgemustert is not None else set()
 
-    latest = db.get_latest_hebel_signal_per_symbol(conn)
+    # BUGFIX (2026-07-24, echter NEAR/HYPE-Fund): war bisher die richtungsblinde
+    # get_latest_hebel_signal_per_symbol() (GROUP BY symbol) - ein SHORT-Signal
+    # fuer dasselbe Symbol liess `sig.richtung == c.richtung` fuer einen LONG-
+    # Kandidaten fehlschlagen und den Cooldown damit komplett wirkungslos werden
+    # (bestaetigt an echten Exportdaten: Positions-Ueberwachung lief dadurch alle
+    # ~15 Min. statt der vorgesehenen hebel_position_cooldown_stunden). Die
+    # richtungsabhaengige Variante existierte bereits (siehe deren eigener
+    # Docstring, genutzt in hebel_backward_tracking.py), war aber an dieser
+    # Cooldown-Pruefung noch nie verdrahtet. Unabhaengig von der Kontrathese-
+    # Uebersetzung in hebel_risk_gate.py::post_check_hebel() richtig - schuetzt
+    # z.B. auch zwei echte, unabhaengige LONG-/SHORT-Thesen fuer dasselbe Symbol
+    # davor, sich gegenseitig den Cooldown zurueckzusetzen.
+    latest = db.get_latest_hebel_signal_per_symbol_and_richtung(conn)
     gefiltert, uebersprungen = [], 0
     for c in candidates:
         asset = watchlist_by_symbol.get(c.symbol)
@@ -217,8 +229,8 @@ def _filter_hebel_cooldown(
             grenze = grenze_ausgemustert
         else:
             grenze = grenze_standard
-        sig = latest.get(c.symbol)
-        if sig is not None and sig.richtung == c.richtung and sig.created_at >= grenze:
+        sig = latest.get((c.symbol, c.richtung))
+        if sig is not None and sig.created_at >= grenze:
             uebersprungen += 1
             continue
         gefiltert.append(c)
