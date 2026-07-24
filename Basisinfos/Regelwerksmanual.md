@@ -7504,3 +7504,53 @@ entstandene Alt-Einträge: einmaliges Skript `bereinigung_kontrathese_
 phantome.py` (Dry-Run per Default, `--apply` zum Anwenden) markiert sie
 retroaktiv als `outcome_status = "nicht_anwendbar"` - keine Löschung,
 volle Audit-Spur erhalten.
+
+## Nachtrag (2026-07-24): Liquiditätszonen Phase A - Backtest ohne Kante gefunden, Stufe 2 bewusst nicht gebaut
+
+**Fragestellung:** sagt die Nähe zu einer noch nicht gefegten Liquiditätszone
+(Stufe 1, Marketmaker-/Smart-Money-These) eine echte Kursbewegung in die
+erwartete Richtung voraus, oder ist eine beobachtete Trefferquote nicht
+besser als eine Zufalls-Baseline? Reine Erkenntnisphase (Nutzer-Vorgabe:
+offenes Ergebnis, keine Vorentscheidung für Stufe 2/Order Blocks/Fair Value
+Gaps), explizit um kein unbelegtes Konzept ("totes Pferd") weiterzubauen.
+
+**Methodik** (`backtest_liquiditaetszonen.py`, neues eigenständiges Skript,
+kein Live-Seiteneffekt): ereignisbasiert statt tagesbasiert (Flanken-Trigger
+wie in `backtesting.py` - nur der erste Tag der Zonen-Nähe zählt, sonst
+blähen Folgetage an derselben Zone die Stichprobe künstlich auf) MIT
+Kontrollgruppe (Gegenflanke "nicht mehr nahe irgendeiner Zone", Richtung
+per fixem Zufalls-Seed zugeordnet - simuliert die Nullhypothese). Kein
+Lookahead-Bias (identische Tag-für-Tag-Slices, dieselbe
+`build_technical_snapshot()`/`liquiditaetszonen_fakt()`-Logik wie live -
+eine Quelle der Wahrheit). Ein einziger vorab festgelegter Test (3%-
+Bewegungsschwelle, 10-Tage-Fenster), keine Parameter-Variation im
+Nachhinein.
+
+**Ergebnis:** 16 Krypto-Symbole, ~2 Jahre echte Kursdaten (2024-07 bis
+2026-07), 130 Ereignisse je Gruppe. Treatment (nahe ungefegter Zone):
+76/130 (58,5%). Control (Zufalls-Baseline): 81/130 (62,3%) - Treatment liegt
+sogar leicht UNTER der Kontrollgruppe. Zwei-Proportionen-Z-Test: p=0,53,
+kein statistisch signifikanter Unterschied. Explorative Randnotiz (kein
+eigener vorregistrierter Test, nicht belastbar): Buy-Side 67,3% (n=49) vs.
+Sell-Side 53,1% (n=81).
+
+**Entscheidung: Stufe 2 (Order Blocks/Fair Value Gaps) wird NICHT gebaut.**
+Beide Konzepte beruhen auf derselben unbestätigten Smart-Money-Prämisse -
+kein Grund zur Annahme, dass sie sich anders verhalten würden als die hier
+getestete Kernthese.
+
+**Wichtige Abgrenzung:** widerlegt ist die VORHERSAGE-These ("Zonen-Nähe
+sagt Richtung voraus"), NICHT die reine Existenz der Zonen selbst (Swing-
+Extrema mit historischen Berührungen sind eine deterministische Beobachtung,
+keine falsifizierbare These). Stufe 1 bleibt unverändert - sie hat von
+Anfang an bewusst NUR die unstrittige Beobachtung gezeigt ("Zone, N
+Berührungen, gefegt/ungefegt"), nie eine Richtungsaussage (siehe der
+statische Erklärsatz "kein Richtungsurteil"). Das heutige Ergebnis
+bestätigt nachträglich, dass diese Zurückhaltung richtig war.
+
+**Bekannte Grenzen:** Krypto-Symbole sind untereinander stark korreliert
+(kein voll unabhängiges Stichproben-Multiplikatorargument über die
+Symbolanzahl), Zeitraum ist ein einzelner ~2-Jahres-Marktzyklus - ein
+Nullergebnis heißt "kein großer Effekt in diesem Zeitraum gefunden", nicht
+"für alle Zeit widerlegt". Skript bleibt im Repo für eine mögliche
+spätere Wiederholung mit mehr/anderer Historie.
