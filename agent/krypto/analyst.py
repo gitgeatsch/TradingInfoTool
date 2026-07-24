@@ -221,11 +221,19 @@ Beruht `long_reasoning.fundamental` oder `.makro` nur auf allgemeinen, nicht ass
 Aussagen (z.B. "globale Liquiditaet expandiert" gilt fast immer fuer fast jedes Asset)? \
 Ist das Handelsvolumen/die Marktkapitalisierung so klein, dass die vorgeschlagene \
 Positionsgroesse am echten Orderbuch schwer ausfuehrbar sein koennte? `confidence_pct` MUSS \
-das dort formulierte Gegenargument widerspiegeln - ein GENUIN starkes Gegenargument (z.B. \
-widerspruechliche Konfluenz UND ein nur knapp ausreichendes CRV gleichzeitig) darf NICHT mit \
-hoher Konfidenz (>75%) kombiniert werden. Ein Beispiel fuer eine zu hoch gegriffene Konfidenz: \
-"EMA-Ordnung bearish, aber RSI/MACD bullish" bei 80% Konfidenz ist inkonsistent - der \
-Widerspruch selbst muss die Konfidenz nach unten ziehen, nicht nur beilaeufig erwaehnt werden.
+das dort formulierte Gegenargument widerspiegeln, aber GRADUELL, nicht binaer: JEDES reale \
+Setup hat IRGENDEIN Gegenargument - dessen bloße Existenz allein ist KEIN Grund fuer eine \
+pauschale Abwertung. Ein EINZELNER, isolierter Schwachpunkt (z.B. NUR widerspruechliche \
+Konfluenz ODER NUR ein knapp ausreichendes CRV, aber nicht beides) rechtfertigt lediglich eine \
+moderate Abwertung, keinen Fall unter 75%. Erst ein GENUIN starkes Gegenargument, bei dem \
+MEHRERE dieser Schwachpunkte gleichzeitig zutreffen (z.B. widerspruechliche Konfluenz UND ein \
+nur knapp ausreichendes CRV gleichzeitig), darf nicht mit hoher Konfidenz (>75%) kombiniert \
+werden. Beispiel: "EMA-Ordnung bearish, aber RSI/MACD bullish UND CRV nur bei 2,08" bei 80% \
+Konfidenz ist inkonsistent - der DOPPELTE Widerspruch muss die Konfidenz nach unten ziehen. \
+Nutze dabei die volle Bandbreite von `confidence_pct` (0-100%), auch Werte deutlich ueber 75%, \
+wenn das Gegenargument tatsaechlich schwach ist - eine Konfidenz, die praktisch immer im \
+selben schmalen Band (z.B. 60-70%) landet, ist selbst ein Kalibrierungsfehler und schadet der \
+Aussagekraft der Zahl.
 23. Ist `historische_erfolgsquote` NICHT null, gibt sie die bisherige Trefferquote frueherer \
 Signale wieder (`trefferquote_pct`, `anzahl_ausgewertete_signale`). Beziehe diese Zahl grob \
 in deine `confidence_pct`-Kalibrierung mit ein, aber NUR als schwaches Zusatzindiz - lies \

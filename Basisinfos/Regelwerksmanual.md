@@ -7763,3 +7763,72 @@ geworden" markiert, noch nicht bearbeitet.
 knapp) → exakt dessen Faktor (600 USD), (d) vorgeschlagene Positionsgröße
 bereits unter der Obergrenze → unverändert, kein Clamp. Import-Smoke-Test
 aller abhängigen Pipelines (keine Regression).
+
+## Nachtrag (2026-07-24, gleicher Tag): Gates-Kalibrierung — echte Ursache gefunden, Prompt-Anker statt Zahlenwerte korrigiert
+
+**Auslöser:** Nutzer-Auftrag, im Anschluss an den Deckel-Fix oben zu prüfen, ob
+die harten Gates selbst (`min_konfidenz_prozent` je Regime, `CRV_MINIMUM`)
+nachjustiert werden sollten - explizit als Folgepunkt aus der Deckel-Prüfung
+markiert.
+
+**Befund (Auswertung von `notebook_diagnose.json`, 2026-07-24 19:32 exportiert,
+1236 Spot- + 713 Hebel-Signale der echten Produktion):** Die Gates selbst waren
+NICHT die Ursache. Von allen Spot-Risiko-Vetos der letzten 10 Tage kamen 200
+vom Konfidenz-Gate (`min_konfidenz_prozent`=75% im Bär-Regime), nur 19 vom
+CRV-Gate - aber der eigentliche Befund liegt tiefer: die Konfidenz-AUSGABE der
+KI selbst ist am 18./19.07. abrupt kollabiert, exakt am Tag der "5-Bausteine-
+A-E"-Nachbesserung (siehe Nachtrag weiter oben, 2026-07-18):
+
+| Zeitraum | Anteil Signale ≥75% Konfidenz | Ø Konfidenz (Spot) | Ø Konfidenz (Hebel) |
+|---|---|---|---|
+| vor 07-19 | 28-79%/Tag | 72,8% | 64,6% (37,4% ≥75%) |
+| ab 07-19 | 0-2%/Tag | 63,4% | 49,0% (**0,0%** ≥75%, Maximum je 65%) |
+
+Zwei naheliegende Alternativerklärungen wurden geprüft und ausgeschlossen:
+Provider-Wechsel (Bruch bleibt exakt am selben Datum bestehen, isoliert nur
+auf `mistral:mistral-small-2506`-Zeilen: 69,0% → 63,4%), sowie die
+Historische-Trefferquote (Baustein E) - strukturell fast immer `null`, da
+0 von 1236 Spot-Signalen je ein reales TP/SL-Ergebnis haben.
+
+**Wahre Ursache:** Regel 22 (`analyst.py`) bzw. Regel 13 (`hebel_analyst.py`),
+beide am 18.07. eingeführt (Pflichtfeld `gegenargument` vor `confidence_pct`,
+mit hartem Anker "ein GENUIN starkes Gegenargument darf NICHT mit hoher
+Konfidenz (>75%) kombiniert werden"). Dabei ein echter Autoren-Widerspruch
+gefunden: der Fließtext verlangte für "genuin stark" bereits ZWEI gleichzeitig
+zutreffende Schwachpunkte (Konfluenz gemischt UND CRV knapp), das direkt
+folgende Beispiel zeigte aber nur EINEN Schwachpunkt (Konfluenz gemischt
+allein) als bereits disqualifizierend für 80% Konfidenz - ein einzelner,
+häufig auftretender Faktor wurde damit faktisch zum generellen Deckel, obwohl
+die Regel das gar nicht so meinte.
+
+**Fix:** In beiden Dateien wurde NICHT die Zahl (75%) geändert, sondern die
+Gradierung präzisiert: ein einzelner, isolierter Schwachpunkt rechtfertigt nur
+eine moderate Abwertung (kein Fall unter 75%), erst mehrere gleichzeitig
+zutreffende Schwachpunkte rechtfertigen eine deutliche Abwertung (>75% dann
+nicht mehr angemessen). Das widersprüchliche Beispiel wurde korrigiert (zeigt
+jetzt den echten CAT-Fall mit BEIDEN Faktoren gleichzeitig). Zusätzlich ein
+expliziter Hinweis, die volle Bandbreite 0-100% zu nutzen - eine Konfidenz,
+die praktisch immer im selben schmalen Band landet, sei selbst ein
+Kalibrierungsfehler.
+
+**Verifiziert (echte Mistral-API-Calls, A/B-Vergleich mit identischen Fakten,
+alter vs. neuer Prompt):**
+- Spot, EIN isolierter Schwachpunkt (nur Konfluenz gemischt, CRV komfortabel
+  über 2.4): ALT 70% (unter dem Gate) → NEU 80% (klar über dem Gate).
+- Spot, sauberes Setup ohne Einwand: ALT 70% → NEU 75%.
+- Spot, ECHTER CAT-Fall-Nachbau (Konfluenz gemischt UND CRV knapp
+  gleichzeitig): ALT ~70-75% → NEU ~75% - bewusst weiterhin gedämpft, der Fix
+  wertet also nicht pauschal alles auf.
+- Hebel, EIN isolierter Schwachpunkt: ALT sogar `action=HALTEN` bei 40%
+  Konfidenz (keine Positions-Eröffnung vorgeschlagen!) → NEU `action=ERÖFFNEN`
+  bei 70%.
+
+**Bewertung zur ursprünglichen Frage (Gates nachjustieren?):** Noch NICHT
+nötig. Der Prompt-Fix hebt die Konfidenz-Decke im entscheidenden Einzelfall-
+Szenario bereits über die bestehende 75%-Schwelle (80% statt 70%), ohne die
+Unterscheidungsfähigkeit für echte Mehrfach-Warnsignale zu verlieren (CAT-Fall
+bleibt korrekt gedämpft). Variante B (Gates absenken) bleibt eine Option,
+falls sich nach einigen Tagen echtem Produktionsbetrieb zeigt, dass die
+Konfidenz-Verteilung trotz Fix weiterhin zu eng um 70-75% clustert -
+Beobachtungszeitraum vom Nutzer explizit vereinbart, keine Live-Umstellung der
+Zahlenwerte ohne diesen Zwischen-Check.

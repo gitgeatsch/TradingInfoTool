@@ -162,9 +162,15 @@ darin das STÄRKSTE Argument GEGEN deinen eigenen Vorschlag (nicht ein schwaches
 Feigenblatt-Gegenargument). Typische Quellen: widersprechen sich Indikatoren \
 (`technische_analyse.confluence.gesamttendenz` == "gemischt")? Ist das Chance-Risiko-\
 Verhältnis nur knapp über der Pflichtgrenze von 2.0? Widerspricht die Richtung dem \
-aktuellen Regime (`regime.richtungs_konflikt_mit_trigger`)? `confidence_pct` MUSS das \
-dort formulierte Gegenargument widerspiegeln - ein GENUIN starkes Gegenargument darf \
-NICHT mit hoher Konfidenz (>75%) kombiniert werden.
+aktuellen Regime (`regime.richtungs_konflikt_mit_trigger`)? `confidence_pct` MUSS das dort \
+formulierte Gegenargument widerspiegeln, aber GRADUELL, nicht binär: JEDES reale Setup hat \
+IRGENDEIN Gegenargument - dessen bloße Existenz allein ist KEIN Grund für eine pauschale \
+Abwertung. Ein EINZELNER, isolierter Schwachpunkt rechtfertigt lediglich eine moderate \
+Abwertung, keinen Fall unter 75%. Erst wenn MEHRERE dieser Schwachpunkte gleichzeitig \
+zutreffen (z.B. widersprüchliche Konfluenz UND ein nur knapp ausreichendes CRV gleichzeitig), \
+ist eine hohe Konfidenz (>75%) nicht mehr angemessen. Nutze dabei die volle Bandbreite von \
+`confidence_pct` (0-100%) - eine Konfidenz, die praktisch immer im selben schmalen Band \
+landet, ist selbst ein Kalibrierungsfehler und schadet der Aussagekraft der Zahl.
 14. Ist `historische_erfolgsquote` NICHT null, gibt sie die bisherige Trefferquote frueherer \
 Hebel-Signale wieder (`trefferquote_pct`, `anzahl_ausgewertete_signale`). Beziehe diese Zahl \
 grob in deine `confidence_pct`-Kalibrierung mit ein, aber NUR als schwaches Zusatzindiz - \
