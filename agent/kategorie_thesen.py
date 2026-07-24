@@ -350,12 +350,257 @@ def _abgleich_baerenmarkt_overlay(these: These) -> TheseAbgleich:
     return TheseAbgleich(einschaetzung, begruendung, None)
 
 
+# EIA-Erdgas-5-Jahres-Saisonvergleich (2026-07-24, #333 Punkt 9, siehe
+# Kategorie_Basisinformationen_Release2.md Abschnitt 14) - Korrektur einer zu
+# vorschnellen frueheren Einschaetzung: get_natural_gas_storage_history()
+# (api/eia.py) unterstuetzt bereits beliebige n_weeks, ein 5-Jahres-Vergleich
+# war also schon immer machbar, nur bisher nicht genutzt (agent/rohstoff/
+# pipeline.py ruft dieselbe Funktion nur mit n_weeks=8 fuer die reine
+# Lagerbestands-Anzeige auf - eigener, groesserer Aufruf hier, kein Umbau dort).
+_EIA_ERDGAS_LOOKBACK_JAHRE = 5
+_EIA_ERDGAS_LOOKBACK_WOCHEN = 270  # 5 Jahre + Puffer fuer Kalenderwochen-Drift
+_EIA_ERDGAS_MATERIALITAETSSCHWELLE_PROZENT = 5.0
+_EIA_ERDGAS_KALENDERTAG_TOLERANZ = 4  # Toleranz beim Datumsabgleich je Vorjahr (Schaltjahre/Wochentag-Drift)
+_EIA_ERDGAS_MIN_VORJAHRESWERTE = 3  # von 5 - darunter zu duenn fuer einen belastbaren Schnitt
+
+
+def _abgleich_eia_erdgas(these: These) -> TheseAbgleich:
+    """5-Jahres-Saisonvergleich des EIA-Erdgas-Lagerbestands (Lower-48,
+    woechentlich) - siehe Kategorie_Basisinformationen_Release2.md Abschnitt
+    14 fuer die volle Herleitung. Lagerbestand ueber dem 5-Jahres-Schnitt =
+    reichliches Angebot = bearish fuer den Erdgaspreis (gegen 'uebergewichten'),
+    darunter = knapperer Markt = bullisch. In config.py NUR fuer
+    'energie:erdgas' mit cot_positionierung kombiniert (2-von-2), NICHT fuer
+    die Energie-Hauptgruppe insgesamt (die poolt Erdgas+Rohoel im COT-Check,
+    der EIA-Lagerbestand betrifft aber nur Erdgas)."""
+    import os
+    from datetime import datetime
+
+    eia_api_key = os.environ.get("EIA_API_KEY")
+    if not eia_api_key:
+        return TheseAbgleich("nicht_pruefbar", "Kein EIA_API_KEY gesetzt.", None)
+
+    from api.eia import get_natural_gas_storage_history
+
+    try:
+        readings = get_natural_gas_storage_history(eia_api_key, n_weeks=_EIA_ERDGAS_LOOKBACK_WOCHEN)
+    except Exception as exc:  # noqa: BLE001 - P-10, sauberer nicht_pruefbar statt Absturz
+        return TheseAbgleich("nicht_pruefbar", f"EIA-Abruf fehlgeschlagen: {exc}", None)
+    if not readings:
+        return TheseAbgleich("nicht_pruefbar", "EIA-Erdgas-Abruf lieferte keine Daten.", None)
+
+    aktueller = readings[-1]
+    aktuelles_datum = datetime.fromisoformat(aktueller.date)
+
+    vergleichswerte: list[float] = []
+    for jahre_zurueck in range(1, _EIA_ERDGAS_LOOKBACK_JAHRE + 1):
+        try:
+            ziel_datum = aktuelles_datum.replace(year=aktuelles_datum.year - jahre_zurueck)
+        except ValueError:
+            # 29. Februar existiert im Zieljahr nicht - auf den 28. ausweichen.
+            ziel_datum = aktuelles_datum.replace(year=aktuelles_datum.year - jahre_zurueck, day=28)
+        naechster = min(readings, key=lambda r: abs((datetime.fromisoformat(r.date) - ziel_datum).days))
+        abstand_tage = abs((datetime.fromisoformat(naechster.date) - ziel_datum).days)
+        if abstand_tage <= _EIA_ERDGAS_KALENDERTAG_TOLERANZ:
+            vergleichswerte.append(naechster.value_bcf)
+
+    if len(vergleichswerte) < _EIA_ERDGAS_MIN_VORJAHRESWERTE:
+        return TheseAbgleich(
+            "nicht_pruefbar",
+            f"Nur {len(vergleichswerte)} von {_EIA_ERDGAS_LOOKBACK_JAHRE} Vorjahreswerten innerhalb der "
+            f"Toleranz (±{_EIA_ERDGAS_KALENDERTAG_TOLERANZ} Tage) gefunden - zu duenn fuer einen belastbaren Schnitt.",
+            aktueller.date,
+        )
+
+    durchschnitt = sum(vergleichswerte) / len(vergleichswerte)
+    abweichung_prozent = (aktueller.value_bcf - durchschnitt) / durchschnitt * 100 if durchschnitt else 0.0
+    begruendung = (
+        f"Erdgas-Lagerbestand (Lower-48) {aktueller.value_bcf:.0f} Bcf am {aktueller.date} vs. "
+        f"{len(vergleichswerte)}-Jahres-Schnitt {durchschnitt:.0f} Bcf ({abweichung_prozent:+.1f}%)."
+    )
+
+    if abs(abweichung_prozent) < _EIA_ERDGAS_MATERIALITAETSSCHWELLE_PROZENT:
+        begruendung += f" Innerhalb des saisonalen Rahmens (< {_EIA_ERDGAS_MATERIALITAETSSCHWELLE_PROZENT:.0f}%)."
+        return TheseAbgleich("neutral", begruendung, aktueller.date)
+
+    # Ueberschuss (ueber dem Schnitt) = reichliches Angebot = bearish fuer den
+    # Erdgaspreis; Unterschuss = knapper = bullisch.
+    bullisch = abweichung_prozent < 0
+    return TheseAbgleich(_einschaetzung_aus_richtung(bullisch, these.richtung), begruendung, aktueller.date)
+
+
+# Bellwether-Sentiment (2026-07-24, #333 Punkt 11, siehe Kategorie_
+# Basisinformationen_Release2.md Abschnitt 12) - manuell kuratierte Ticker-
+# Koerbe (kein automatisches Ableiten moeglich, Bitpandas Themenkorb-Symbole
+# sind Produktnamen, keine Boersenticker, siehe agent/aktien/screener.py).
+# Nicht alle 18 Technologie-&-KI-Unterkategorien vorbereitet, nur die
+# wahrscheinlichsten Kandidaten - Rest bei Bedarf spaeter ergaenzbar.
+_BELLWETHER_TICKER: dict[str, list[str]] = {
+    "technologie_ki:halbleiter": ["NVDA", "AMD"],
+    "technologie_ki:ki": ["MSFT", "PLTR"],
+    "technologie_ki:cybersicherheit": ["CRWD", "PANW"],
+    "technologie_ki:biotech": ["AMGN", "VRTX"],
+    "aktien_sektoren:gesundheit": ["UNH", "JNJ"],
+    "aktien_sektoren:konsum_zyklisch": ["AMZN", "HD"],
+    "aktien_sektoren:konsum_basis": ["PG", "KO"],
+    "aktien_sektoren:industrie": ["HON", "CAT"],
+    "aktien_sektoren:kommunikation": ["GOOGL", "META"],
+    "aktien_sektoren:grundstoffe": ["LIN", "DOW"],
+}
+
+_BELLWETHER_ANALYSTENTREND_SCHWELLE_PP = 5.0
+
+
+def _bellwether_analystentrend(ticker_korb: list[str], finnhub_api_key: str) -> tuple[bool | None, str]:
+    """Durchschnitt Buy+StrongBuy-Anteil ueber den Korb, aktuell vs. Vormonat -
+    Richtung nur bei Verschiebung > 5 Prozentpunkte gewertet (Abschnitt 12)."""
+    from api.finnhub import get_recommendation_trends, summarize_recommendation_trend
+
+    def buy_anteil(d: dict) -> float | None:
+        total = d["strong_buy"] + d["buy"] + d["hold"] + d["sell"] + d["strong_sell"]
+        return (d["strong_buy"] + d["buy"]) / total * 100 if total else None
+
+    aktuell_werte, vormonat_werte = [], []
+    for ticker in ticker_korb:
+        try:
+            trends = get_recommendation_trends(ticker, finnhub_api_key)
+            summary = summarize_recommendation_trend(trends)
+        except Exception:  # noqa: BLE001 - P-8, ein fehlgeschlagener Ticker blockiert nicht die anderen
+            summary = None
+        if not summary or not summary.get("vormonat"):
+            continue
+        aktuell_pct = buy_anteil(summary["aktuell"])
+        vormonat_pct = buy_anteil(summary["vormonat"])
+        if aktuell_pct is not None and vormonat_pct is not None:
+            aktuell_werte.append(aktuell_pct)
+            vormonat_werte.append(vormonat_pct)
+
+    if not aktuell_werte:
+        return None, f"Analystentrend (Finnhub, {', '.join(ticker_korb)}): keine auswertbaren Daten."
+
+    aktuell_schnitt = sum(aktuell_werte) / len(aktuell_werte)
+    vormonat_schnitt = sum(vormonat_werte) / len(vormonat_werte)
+    delta = aktuell_schnitt - vormonat_schnitt
+    text = (
+        f"Analystentrend (Finnhub, {', '.join(ticker_korb)}): Buy+StrongBuy-Anteil {aktuell_schnitt:.0f}% "
+        f"vs. Vormonat {vormonat_schnitt:.0f}% ({delta:+.1f}pp)."
+    )
+    if abs(delta) < _BELLWETHER_ANALYSTENTREND_SCHWELLE_PP:
+        return None, text + f" Unter der {_BELLWETHER_ANALYSTENTREND_SCHWELLE_PP:.0f}pp-Schwelle, kein Signal."
+    return delta > 0, text
+
+
+def _bellwether_insider(ticker_korb: list[str]) -> tuple[bool | None, str]:
+    """Anzahl Kaeufer vs. Verkaeufer im Korb (bewusst nicht Dollar-Volumen -
+    ein einzelner Grossverkauf wuerde sonst alles dominieren, Abschnitt 12)."""
+    from api.sec_edgar import get_recent_insider_transactions, summarize_insider_activity
+
+    kaeufe_gesamt = 0
+    verkaeufe_gesamt = 0
+    irgendeine_daten = False
+    for ticker in ticker_korb:
+        try:
+            transactions = get_recent_insider_transactions(ticker)
+            summary = summarize_insider_activity(transactions)
+        except Exception:  # noqa: BLE001
+            summary = None
+        if summary:
+            irgendeine_daten = True
+            kaeufe_gesamt += summary["anzahl_kaeufe"]
+            verkaeufe_gesamt += summary["anzahl_verkaeufe"]
+
+    if not irgendeine_daten:
+        return None, f"Insider-Aktivitaet (SEC EDGAR, {', '.join(ticker_korb)}): keine Form-4-Transaktionen gefunden."
+
+    text = (
+        f"Insider-Aktivitaet (SEC EDGAR, {', '.join(ticker_korb)}): {kaeufe_gesamt} Kaeufer vs. "
+        f"{verkaeufe_gesamt} Verkaeufer."
+    )
+    if kaeufe_gesamt == verkaeufe_gesamt:
+        return None, text + " Ausgeglichen, kein Signal."
+    return kaeufe_gesamt > verkaeufe_gesamt, text
+
+
+def _bellwether_short_interest(ticker_korb: list[str]) -> tuple[bool | None, str]:
+    """Days-to-Cover-Richtung letzte vs. vorletzte Meldeperiode, gemittelt
+    ueber den Korb (Abschnitt 12). Steigende Days-to-Cover = wachsende
+    bearishe Wetten = bearish; fallende = Eindeckung = bullisch."""
+    from api.finra import get_short_interest_history, summarize_short_interest
+
+    deltas: list[float] = []
+    for ticker in ticker_korb:
+        try:
+            readings = get_short_interest_history(ticker)
+            summary = summarize_short_interest(readings)
+        except Exception:  # noqa: BLE001
+            summary = None
+        if not summary or not summary.get("vorperiode"):
+            continue
+        aktuell_dtc = summary["aktuell"].get("days_to_cover")
+        vorperiode_dtc = summary["vorperiode"].get("days_to_cover")
+        if aktuell_dtc is not None and vorperiode_dtc is not None:
+            deltas.append(aktuell_dtc - vorperiode_dtc)
+
+    if not deltas:
+        return None, f"Short-Interest-Trend (FINRA, {', '.join(ticker_korb)}): keine auswertbaren Days-to-Cover-Daten."
+
+    delta_schnitt = sum(deltas) / len(deltas)
+    text = (
+        f"Short-Interest-Trend (FINRA, {', '.join(ticker_korb)}): Days-to-Cover-Aenderung "
+        f"{delta_schnitt:+.2f} Handelstage ggue. Vorperiode."
+    )
+    if delta_schnitt == 0:
+        return None, text + " Keine Veraenderung, kein Signal."
+    return delta_schnitt < 0, text
+
+
+def _abgleich_bellwether(these: These) -> TheseAbgleich:
+    """Kombiniert die 3 Bellwether-Signale (Abschnitt 12): mindestens 2 von 3
+    muessen in dieselbe Richtung zeigen, sonst 'gemischt/neutral' - verhindert,
+    dass ein einzelnes verrauschtes Signal (z.B. ein steuerlich bedingter
+    Insider-Verkauf) allein die Kategorie-Einschaetzung kippt."""
+    import os
+
+    key = f"{these.hauptgruppe}:{these.unterkategorie}" if these.unterkategorie else these.hauptgruppe
+    ticker_korb = _BELLWETHER_TICKER.get(key)
+    if not ticker_korb:
+        return TheseAbgleich("nicht_pruefbar", "Keine Bellwether-Ticker fuer diese Kategorie hinterlegt.", None)
+
+    signale: list[tuple[bool | None, str]] = []
+
+    finnhub_api_key = os.environ.get("FINNHUB_API_KEY")
+    if finnhub_api_key:
+        signale.append(_bellwether_analystentrend(ticker_korb, finnhub_api_key))
+    else:
+        signale.append((None, "Analystentrend (Finnhub): kein FINNHUB_API_KEY gesetzt."))
+
+    signale.append(_bellwether_insider(ticker_korb))
+    signale.append(_bellwether_short_interest(ticker_korb))
+
+    begruendung = " | ".join(text for _, text in signale)
+    auswertbare = [richtung for richtung, _ in signale if richtung is not None]
+    bullische = sum(1 for r in auswertbare if r)
+    bearische = sum(1 for r in auswertbare if not r)
+
+    if bullische >= 2:
+        bullisch = True
+    elif bearische >= 2:
+        bullisch = False
+    else:
+        bullisch = None
+        begruendung += " - keine 2-von-3-Uebereinstimmung, gemischtes Bild."
+
+    return TheseAbgleich(_einschaetzung_aus_richtung(bullisch, these.richtung), begruendung, None)
+
+
 _ABGLEICH_FUNKTIONEN = {
     "m2_liquiditaet": _abgleich_m2_liquiditaet,
     "cot_positionierung": lambda conn, these: _abgleich_cot_positionierung(these),
     "zinskurve": lambda conn, these: _abgleich_zinskurve(these),
     "dollar_index": lambda conn, these: _abgleich_dollar_index(these),
     "baerenmarkt_overlay": lambda conn, these: _abgleich_baerenmarkt_overlay(these),
+    "eia_erdgas": lambda conn, these: _abgleich_eia_erdgas(these),
+    "bellwether_sentiment": lambda conn, these: _abgleich_bellwether(these),
 }
 
 

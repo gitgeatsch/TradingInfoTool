@@ -186,6 +186,15 @@ PRUEF_MECHANISMUS_MAPPING: dict[str, dict] = {
         "review_tage_vorschlag": 28,
         "review_begruendung": "CFTC-COT- und EIA-Daten erscheinen woechentlich.",
     },
+    # 2026-07-24, #333 Punkt 9: EIA-Erdgas-5-Jahres-Saisonvergleich betrifft nur
+    # Erdgas, nicht Rohoel (anders als der Hauptgruppen-weite COT-Check oben, der
+    # beide Rohstoffe poolt) - deshalb eigener, spezifischerer Eintrag statt
+    # Erweiterung von "energie".
+    "energie:erdgas": {
+        "mechanismen": ["cot_positionierung", "eia_erdgas"],
+        "review_tage_vorschlag": 28,
+        "review_begruendung": "CFTC-COT- und EIA-Lagerbestandsdaten erscheinen beide woechentlich.",
+    },
     "anleihen_geldmarkt": {
         "mechanismen": ["m2_liquiditaet"],
         "review_tage_vorschlag": 90,
@@ -217,6 +226,61 @@ PRUEF_MECHANISMUS_MAPPING: dict[str, dict] = {
         "mechanismen": ["baerenmarkt_overlay"],
         "review_tage_vorschlag": None,
         "review_begruendung": "Absicherung wird situativ (de-)aktiviert, kein festes Wiedervorlage-Intervall sinnvoll.",
+    },
+    # 2026-07-24, #333 Punkt 11: Bellwether-Sentiment (manuell kuratierte
+    # Ticker-Koerbe, siehe agent/kategorie_thesen.py::_BELLWETHER_TICKER und
+    # Kategorie_Basisinformationen_Release2.md Abschnitt 12). review_tage an
+    # der langsamsten der drei Quellen orientiert (FINRA meldet nur zweimal
+    # monatlich, Finnhub/SEC EDGAR sind schneller).
+    "technologie_ki:halbleiter": {
+        "mechanismen": ["bellwether_sentiment"],
+        "review_tage_vorschlag": 45,
+        "review_begruendung": "FINRA-Short-Interest-Meldungen (langsamste der drei Bellwether-Quellen) erscheinen nur zweimal monatlich.",
+    },
+    "technologie_ki:ki": {
+        "mechanismen": ["bellwether_sentiment"],
+        "review_tage_vorschlag": 45,
+        "review_begruendung": "FINRA-Short-Interest-Meldungen (langsamste der drei Bellwether-Quellen) erscheinen nur zweimal monatlich.",
+    },
+    "technologie_ki:cybersicherheit": {
+        "mechanismen": ["bellwether_sentiment"],
+        "review_tage_vorschlag": 45,
+        "review_begruendung": "FINRA-Short-Interest-Meldungen (langsamste der drei Bellwether-Quellen) erscheinen nur zweimal monatlich.",
+    },
+    "technologie_ki:biotech": {
+        "mechanismen": ["bellwether_sentiment"],
+        "review_tage_vorschlag": 45,
+        "review_begruendung": "FINRA-Short-Interest-Meldungen (langsamste der drei Bellwether-Quellen) erscheinen nur zweimal monatlich.",
+    },
+    "aktien_sektoren:gesundheit": {
+        "mechanismen": ["bellwether_sentiment"],
+        "review_tage_vorschlag": 45,
+        "review_begruendung": "FINRA-Short-Interest-Meldungen (langsamste der drei Bellwether-Quellen) erscheinen nur zweimal monatlich.",
+    },
+    "aktien_sektoren:konsum_zyklisch": {
+        "mechanismen": ["bellwether_sentiment"],
+        "review_tage_vorschlag": 45,
+        "review_begruendung": "FINRA-Short-Interest-Meldungen (langsamste der drei Bellwether-Quellen) erscheinen nur zweimal monatlich.",
+    },
+    "aktien_sektoren:konsum_basis": {
+        "mechanismen": ["bellwether_sentiment"],
+        "review_tage_vorschlag": 45,
+        "review_begruendung": "FINRA-Short-Interest-Meldungen (langsamste der drei Bellwether-Quellen) erscheinen nur zweimal monatlich.",
+    },
+    "aktien_sektoren:industrie": {
+        "mechanismen": ["bellwether_sentiment"],
+        "review_tage_vorschlag": 45,
+        "review_begruendung": "FINRA-Short-Interest-Meldungen (langsamste der drei Bellwether-Quellen) erscheinen nur zweimal monatlich.",
+    },
+    "aktien_sektoren:kommunikation": {
+        "mechanismen": ["bellwether_sentiment"],
+        "review_tage_vorschlag": 45,
+        "review_begruendung": "FINRA-Short-Interest-Meldungen (langsamste der drei Bellwether-Quellen) erscheinen nur zweimal monatlich.",
+    },
+    "aktien_sektoren:grundstoffe": {
+        "mechanismen": ["bellwether_sentiment"],
+        "review_tage_vorschlag": 45,
+        "review_begruendung": "FINRA-Short-Interest-Meldungen (langsamste der drei Bellwether-Quellen) erscheinen nur zweimal monatlich.",
     },
 }
 

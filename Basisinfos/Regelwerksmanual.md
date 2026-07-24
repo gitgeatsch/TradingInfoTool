@@ -7634,3 +7634,72 @@ noch keine `holdings`-Zeile, `import_holdings_manual_overrides()` überspringt
 das gefahrlos, bis die Zeile - z.B. auf dem Notebook, wo sie bereits
 existiert - auftaucht). Kein Anlegen einer Phantom-Zeile, bestehendes
 Invariant respektiert.
+
+## Nachtrag (2026-07-24): #333 letzte zwei offene Mechanismen gebaut (EIA-Erdgas + Bellwether-Sentiment)
+
+Die beiden zuvor nur entschiedenen, aber nicht gebauten Design-Punkte der
+#333-Statustabelle (siehe Kategorie_Basisinformationen_Release2.md Abschnitt
+11, Punkte 9+11) sind jetzt vollständig implementiert - damit ist Schicht 1
+von #333 (deterministische Mechanismen) komplett, offen bleibt nur noch
+Schicht 2 (tägliche LLM-Synthese über alle Kategorien, bewusst
+zurückgestellt).
+
+**EIA-Erdgas-5-Jahres-Saisonvergleich** (`agent/kategorie_thesen.py::
+_abgleich_eia_erdgas()`): ruft `get_natural_gas_storage_history()`
+(`api/eia.py`, unverändert) mit `n_weeks=270` statt der bisherigen 8 auf,
+gleicht den aktuellsten Wert gegen die letzten 5 Kalenderjahre am selben Tag
+(±4 Tage Toleranz, Schaltjahr-sicher über `try/except ValueError` bei
+29. Februar) ab. Materialitätsschwelle ±5% vom 5-Jahres-Schnitt. Wichtige
+Abgrenzung: in `config.py` NUR unter der spezifischeren Kategorie
+`energie:erdgas` mit `cot_positionierung` kombiniert (2-von-2), NICHT unter
+der Energie-Hauptgruppe insgesamt - die poolt COT-seitig Erdgas UND Rohöl,
+der EIA-Lagerbestand betrifft aber ausschließlich Erdgas. Live-Test (2026-07-24):
+3.056 Bcf vs. 5-Jahres-Schnitt 2.871 Bcf (+6,4%) → widerspricht einer
+"übergewichten"-These (reichliches Angebot = bearish für Erdgaspreis).
+
+**Bellwether-Sentiment** (`agent/kategorie_thesen.py::_abgleich_bellwether()`
++ `_BELLWETHER_TICKER`): manuell kuratierte 2-Ticker-Körbe für 10
+Unterkategorien (Halbleiter NVDA/AMD, KI MSFT/PLTR, Cybersicherheit CRWD/PANW,
+Biotech AMGN/VRTX unter Technologie & KI; Gesundheit UNH/JNJ, Konsum-zyklisch
+AMZN/HD, Konsum-Basis PG/KO, Industrie HON/CAT, Kommunikation GOOGL/META,
+Grundstoffe LIN/DOW unter Aktien-Sektoren) - kein automatisches Ableiten
+möglich, da Bitpandas Themenkorb-Symbole Produktnamen statt Börsenticker sind
+(`agent/aktien/screener.py`). Drei Signale je Korb:
+- Analystentrend (Finnhub `get_recommendation_trends()`): Buy+StrongBuy-Anteil
+  aktuell vs. Vormonat, gemittelt über den Korb, nur bei Verschiebung > 5
+  Prozentpunkte gewertet.
+- Insider-Aktivität (SEC EDGAR `get_recent_insider_transactions()`): Anzahl
+  Käufer vs. Verkäufer im Korb (bewusst nicht Dollar-Volumen).
+- Short-Interest-Trend (FINRA `get_short_interest_history()`): Days-to-Cover-
+  Änderung ggü. Vorperiode, gemittelt über den Korb.
+
+Kombinationsregel: mindestens 2 von 3 auswertbare Signale müssen in
+dieselbe Richtung zeigen, sonst "gemischt/neutral". 5 synthetische Tests
+(alle 3 bullisch, 2 von 3 bearisch, gemischt ohne Mehrheit, unbekannte
+Kategorie, fehlender Finnhub-Key mit noch 2 verbleibenden Signalen)
+bestanden. Echter Live-Lauf (Halbleiter-Korb NVDA/AMD): Analystentrend +1,8pp
+(unter der Schwelle, kein Signal), Insider 0 Käufer vs. 29 Verkäufer
+(bearisch), Short-Interest Days-to-Cover +0,01 (bearisch) → 2 von 3 bearisch
+→ widerspricht einer "übergewichten"-These.
+
+**Bekannte Design-Lücke (nicht selbstständig nachgeschärft, da nicht Teil
+des dokumentierten Auftrags):** die 5-Prozentpunkte-Materialitätsschwelle aus
+Abschnitt 12 gilt laut Konzept-Dokument nur für den Analystentrend - für
+Insider-Aktivität und Short-Interest-Trend ist dort keine Mindestgröße
+spezifiziert. Der echte Live-Test zeigte das: eine Days-to-Cover-Änderung von
+nur +0,01 Handelstagen (praktisch Rauschen) zählte bereits als vollwertiges
+bearishes Signal. Sollte sich das im laufenden Betrieb als zu sensibel
+erweisen, wäre eine analoge Mindestschwelle für Short-Interest (z.B. > 0,1
+Handelstage) ein naheliegender Nachbesserungspunkt - bewusst nicht
+eigenmächtig ergänzt, da das Konzept-Dokument hier explizit keine Schwelle
+vorsah.
+
+Config-Wiring (`config.py::PRUEF_MECHANISMUS_MAPPING`): `energie:erdgas`
+sowie alle 10 Bellwether-Unterkategorien neu, `review_tage_vorschlag=45`
+für Bellwether (an FINRAs zweimal-monatlicher Meldefrequenz orientiert, der
+langsamsten der drei Quellen).
+
+Status-Tabelle (Kategorie_Basisinformationen_Release2.md Abschnitt 11, Punkte
+9+11) auf `[GEBAUT]` aktualisiert - damit sind alle #333-Punkte entweder
+gebaut oder bewusst zurückgestellt (Schicht 2), keine offenen Design-Lücken
+mehr in Schicht 1.
