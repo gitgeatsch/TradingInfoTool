@@ -1094,7 +1094,45 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None, c
             + (risikofaktoren_text if risikofaktoren_text else "Keine strukturierten Risikofaktoren verfügbar.")
             + "\n\nDetails im Signale-Tab der App. Ausführung manuell über die Bitpanda-App."
         )
-        send_notification_email(f"TradingInfoTool: {signal.action} {signal.symbol}", body, empfaenger)
+        # Liquiditätszonen-Grafik (2026-07-25, von Hebel nachgezogen - siehe
+        # _notify_hebel_signal() fuer das Original vom 2026-07-23): derselbe
+        # Renderer, baut aus dem bereits im Signal gespeicherten Fakt
+        # (facts_json) ein PNG mit konkreten Zahlen/Einheiten. None, wenn keine
+        # Zone vorliegt oder der aktuelle Kurs nicht ermittelt werden konnte -
+        # Mail geht dann ganz normal ohne Bild raus (kein Hard-Fail wegen der
+        # Grafik).
+        chart_png = None
+        try:
+            import json as _json
+
+            from ui.liquidity_chart import render_liquiditaetszonen_chart
+
+            facts = _json.loads(signal.facts_json)
+            liquiditaetszonen = facts.get("liquiditaetszonen")
+            preis_eur = (facts.get("preis") or {}).get("eur")
+            if liquiditaetszonen and preis_eur:
+                live_preis_eur = None
+                if conn_factory is not None:
+                    try:
+                        conn = conn_factory()
+                        try:
+                            live_snap = db.get_latest_prices(conn).get(signal.symbol)
+                        finally:
+                            conn.close()
+                        if live_snap is not None:
+                            live_preis_eur = live_snap.price_eur
+                    except Exception:
+                        logger.exception("Live-Kurs-Nachladung für Kombianzeige (%s) fehlgeschlagen", signal.symbol)
+                chart_png = render_liquiditaetszonen_chart(
+                    liquiditaetszonen, preis_eur, "EUR", live_preis=live_preis_eur,
+                )
+        except Exception:
+            logger.exception("Liquiditätszonen-Grafik für %s fehlgeschlagen", signal.symbol)
+
+        send_notification_email(
+            f"TradingInfoTool: {signal.action} {signal.symbol}", body, empfaenger,
+            inline_image_png=chart_png,
+        )
     except Exception:
         logger.exception("Spot-Empfehlungs-E-Mail für %s fehlgeschlagen", signal.symbol)
 

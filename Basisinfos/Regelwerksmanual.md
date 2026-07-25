@@ -7832,3 +7832,63 @@ falls sich nach einigen Tagen echtem Produktionsbetrieb zeigt, dass die
 Konfidenz-Verteilung trotz Fix weiterhin zu eng um 70-75% clustert -
 Beobachtungszeitraum vom Nutzer explizit vereinbart, keine Live-Umstellung der
 Zahlenwerte ohne diesen Zwischen-Check.
+
+## Nachtrag (2026-07-25): Liquiditätszonen-Grafik für Spot nachgezogen (Hebel-only-Lücke geschlossen)
+
+**Auslöser:** Nutzer-Frage anhand eines echten Spot-Signal-Screenshots, warum
+die am 2026-07-23 gebauten Verbesserungen (Detail-Panel-Farben/Überschriften,
+Liquiditätszonen-Grafik) nicht überall gleich ankommen. Prüfung ergab zwei
+getrennte Befunde:
+
+1. **Farben/Überschriften: kein Fund, bereits korrekt.** `ui/signals_view.py`,
+   `ui/marktscan_view.py` und `ui/hebel_view.py` rufen alle drei ausschließlich
+   `ui/detail_panel.py::configure_tags()`/`render_detail_text()` auf - die
+   einzige Stelle, die Tk-Tags vergibt. Alle drei bauen zudem identische
+   Zeilenmuster (`--- N. ... ---`-Überschriften, `▲/●/▼`-Risikofaktor-Marker
+   über das gemeinsame `ui/formatting.py::format_risikofaktoren_lines()`) -
+   es gibt keine Möglichkeit, dass Spot/Marktscan/Hebel hier auseinanderlaufen.
+
+2. **Liquiditätszonen-GRAFIK (PNG-Chart): echter Fund, nur Hebel.** Der
+   zugrunde liegende Fakt + Text-Risikofaktor (Abschnitt 3) läuft korrekt auch
+   für Spot-Krypto (bewusste, dokumentierte Scope-Entscheidung: Krypto Spot +
+   Hebel, NICHT Aktien/Rohstoffe/Hedge/Themen-ETF, siehe Nachtrag "Liquiditäts­
+   zonen (Marketmaker-Konzept)" weiter oben). Die VISUELLE Grafik
+   (`ui/liquidity_chart.py::render_liquiditaetszonen_chart()`) wurde beim Bau
+   am 2026-07-23 aber ausschließlich in `ui/hebel_view.py` und
+   `scheduler/background.py::_notify_hebel_signal()` verdrahtet - nie in das
+   parallele Spot-Pendant (`ui/signals_view.py`, `_notify_spot_signal()`)
+   übertragen. Anders als bei der Aktien/Rohstoffe/Hedge/Themen-ETF-Abgrenzung
+   war das keine bewusste Entscheidung, sondern schlicht nicht mitgezogen -
+   die Session war durch einen konkreten Hebel-Screenshot ausgelöst und direkt
+   gegen den bereits offenen Hebel-Code-Pfad gebaut.
+
+**Fix:** `ui/signals_view.py` bekommt eine neue `_render_liquiditaetszonen_
+chart()`, 1:1 aus `ui/hebel_view.py` gespiegelt (gleicher Renderer, gleiche
+Live-Preis-Kombianzeige aus `db.get_latest_prices()`, gleiche Fehlerbehandlung
+- kein Hard-Fail, wenn keine Zone/kein Preis vorliegt). `scheduler/
+background.py::_notify_spot_signal()` bekommt denselben Chart-Rendering-Block
+wie `_notify_hebel_signal()`, `inline_image_png` wird jetzt an `send_
+notification_email()` durchgereicht.
+
+**Zweiter, separat identifizierter Fund derselben Prüfung (NICHT Teil dieses
+Fixes, bewusst zurückgestellt bis nach Datenanalyse):** die "Retail-Konsens-
+Risiko auf Fakt-zuerst umbauen"-Nachbesserung vom 2026-07-22 (siehe
+`hebel_risk_gate.py::retail_konsens_risiko()`, 3-stufige Bewertung statt
+binärer Ja/Nein-Phrase) wurde ebenfalls nur in `hebel_risk_gate.py`
+umgesetzt, nie nach `risk_gate.py` (Spot) gespiegelt - Spot nutzt dort
+weiterhin die alte binäre Logik (nur "extrem" vs. "positiv", kein neutraler
+Mittelbereich). Nutzer bat ausdrücklich um sorgfältige Datenanalyse vor einer
+Änderung an dieser Stelle, da erst kürzlich mehrere Spot-Gates/-Parameter
+angepasst wurden (siehe beide Nachträge oben) - Fix bewusst noch nicht
+umgesetzt.
+
+**Verifiziert:**
+- Echter Tk-Smoke-Test von `SignalsView._render_liquiditaetszonen_chart()`
+  (3 Fälle: mit echten Zonen inkl. Kursverlauf → Bild korrekt eingebettet,
+  ohne Zonen → sauber übersprungen kein Absturz, kaputtes JSON → abgefangen).
+- Echter Funktionstest von `_notify_spot_signal()` mit gemockter `send_
+  notification_email()`/`config_module.load_config()`: Chart-PNG kommt jetzt
+  tatsächlich als `inline_image_png` in der Spot-Benachrichtigungsmail an.
+- Import-Sanity-Check über alle betroffenen Module (`ui.signals_view`,
+  `ui.hebel_view`, `scheduler.background`, `agent.krypto.pipeline`,
+  `agent.krypto.risk_gate`) - keine Regression.
