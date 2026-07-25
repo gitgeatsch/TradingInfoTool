@@ -142,6 +142,20 @@ def generate_hebel_signal(
 
     open_positions = db.get_open_hebel_positions(conn, symbol=asset.symbol)
     position_aktuell = open_positions[0] if open_positions else None
+    # TEMPORAER (2026-07-25, Diagnose fuer den HYPE-Fund vom selben Tag - siehe
+    # project_hebel_kontrathese_uebersetzung.md): zwei nicht reproduzierbare
+    # Faelle, in denen die Kontrathese-Uebersetzung trotz offener Position nicht
+    # gefeuert hat. Vergleicht diesen Fetch mit dem Log in hebel_risk_gate.py::
+    # post_check_hebel() - divergieren beide, ist es ein Durchreiche-Bug,
+    # stimmen sie ueberein und die Uebersetzung feuert trotzdem nicht, liegt es
+    # an der Bedingung selbst. Nach Reproduktion/Diagnose wieder entfernen.
+    if position_aktuell is not None:
+        logger.info(
+            "Kontrathese-Debug hebel_pipeline %s: angeforderte Trigger-Richtung=%s, "
+            "gefundene offene Positionen=%d, position_aktuell.richtung=%s, position_aktuell.status=%s",
+            asset.symbol, trigger.richtung, len(open_positions),
+            position_aktuell.richtung, position_aktuell.status,
+        )
 
     # Nachtrag 2026-07-17 (echter LINK-Fall, siehe Memory
     # project_hebel_rahmenbedingungen.md): letztes Signal fuer dasselbe

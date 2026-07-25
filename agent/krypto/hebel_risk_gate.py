@@ -16,6 +16,7 @@ LLM-Call (harte Obergrenze als Fakt), post_check_hebel() erzwingt danach
 dieselben Regeln nochmal deterministisch - das Modell wird nie blind vertraut."""
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
@@ -24,6 +25,8 @@ from agent.krypto.risk_gate import (
     CRV_MINIMUM, DEFAULT_FAZIT_KONSISTENZ_SCHWELLE_HOCH, DEFAULT_FAZIT_KONSISTENZ_SCHWELLE_NIEDRIG,
     KONFIDENZ_SCHWELLE_HOCH, KONFIDENZ_SCHWELLE_NIEDRIG, _fazit_konsistenz_hinweis,
 )
+
+logger = logging.getLogger(__name__)
 
 RICHTUNG_LONG = "LONG"
 RICHTUNG_SHORT = "SHORT"
@@ -645,6 +648,22 @@ def post_check_hebel(
     kontrathese_llm_richtung: str | None = None
     kontrathese_bestaetigt = False
     kontrathese_bestaetigt_seit_stunden: float | None = None
+
+    # TEMPORAER (2026-07-25, Diagnose fuer den HYPE-Fund vom selben Tag - siehe
+    # project_hebel_kontrathese_uebersetzung.md): erfasst die Werte GENAU an der
+    # Stelle, an der die Uebersetzungs-Bedingung unten ausgewertet wird - zwei
+    # HYPE-Faelle (07:50/08:05 Uhr) haben trotz offener Position nicht
+    # uebersetzt. Vergleich mit dem Log in hebel_pipeline.py zeigt, ob
+    # position_aktuell hier unveraendert ankommt oder ob es an der Bedingung
+    # selbst liegt. Nach Reproduktion/Diagnose wieder entfernen.
+    if position_aktuell is not None:
+        logger.info(
+            "Kontrathese-Debug post_check_hebel %s: LLM-richtung=%s, LLM-action=%s, "
+            "position_aktuell.richtung=%s, position_aktuell.status=%s, mismatch=%s",
+            position_aktuell.symbol, richtung, action,
+            str(position_aktuell.richtung).upper(), position_aktuell.status,
+            richtung != str(position_aktuell.richtung).upper(),
+        )
 
     if not pre_result.hebel_erlaubt:
         risk_veto = True
