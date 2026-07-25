@@ -153,7 +153,13 @@ _VOLLSTAENDIGKEITS_SPALTEN = (
     "forecast_bear_text, forecast_bear_prob_pct, "
     "halte_kriterium_bucket, halte_kriterium_bedingung_text, halte_kriterium_reasoning, "
     "halte_kriterium_ziel_preis_usd, halte_kriterium_ziel_preis_eur, halte_kriterium_ziel_datum, "
-    "gegenargument, risikofaktoren_json"
+    "gegenargument, risikofaktoren_json, "
+    # 2026-07-25 (Signal-Fazit / eigene_einschaetzung, siehe
+    # project_signal_fazit_umsetzung.md): fehlte hier, obwohl es exakt wie
+    # gegenargument/risikofaktoren_json Pflicht-Inhalt jedes Signals ist -
+    # deckt ueber die geteilte signals-Tabelle automatisch auch Aktien/
+    # Rohstoffe/Themen-ETF/Hedge mit ab, nicht nur Krypto Spot/Hebel.
+    "fazit_folgen, fazit_kurzfazit, fazit_konsistenz_hinweis"
 )
 _HEBEL_SIGNAL_SPALTEN = (
     "id, symbol, created_at, richtung, action, hebel_vorschlag, hebel_final, "
