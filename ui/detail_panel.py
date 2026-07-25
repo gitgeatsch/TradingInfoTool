@@ -26,6 +26,11 @@ def configure_tags(text_widget: tk.Text) -> None:
     header_font.configure(weight="bold", size=base.cget("size") + 1)
     bold_font = tkfont.Font(font=base)
     bold_font.configure(weight="bold")
+    # 2026-07-25 (Nutzer-Wunsch "Fazit-Label deutlicher"): eigene Fett+
+    # Unterstrichen-Variante nur fuer die Fazit-Zeile, siehe
+    # ui/formatting.py::_FAZIT_TAG_BY_SYMBOL.
+    bold_underline_font = tkfont.Font(font=base)
+    bold_underline_font.configure(weight="bold", underline=True)
 
     text_widget.tag_configure("section_header", font=header_font, foreground=theme.header_color())
     text_widget.tag_configure("sub_header", font=bold_font, foreground=theme.default_text_color())
@@ -33,6 +38,9 @@ def configure_tags(text_widget: tk.Text) -> None:
     text_widget.tag_configure("risk_positiv", foreground=theme.success_color())
     text_widget.tag_configure("risk_neutral", foreground=theme.info_color())
     text_widget.tag_configure("risk_negativ", foreground=theme.danger_color())
+    text_widget.tag_configure("fazit_positiv", font=bold_underline_font, foreground=theme.success_color())
+    text_widget.tag_configure("fazit_neutral", font=bold_underline_font, foreground=theme.info_color())
+    text_widget.tag_configure("fazit_negativ", font=bold_underline_font, foreground=theme.danger_color())
     text_widget.tag_configure("legend", foreground=theme.info_color())
 
 

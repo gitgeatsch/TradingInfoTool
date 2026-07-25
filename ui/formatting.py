@@ -98,14 +98,20 @@ def format_fazit_lines(
 # (importiert tkinter) - der Scheduler/E-Mail-Pfad soll kein Tkinter brauchen.
 _SUBHEADER_MAX_LEN = 70
 _RISK_TAG_BY_SYMBOL = {"▲": "risk_positiv", "●": "risk_neutral", "▼": "risk_negativ"}
+# 2026-07-25 (Nutzer-Wunsch "Fazit-Label deutlicher"): eigene, farblich
+# identische Tag-Variante nur fuer die Fazit-Zeile (erkennbar am "Fazit:"-
+# Praefix direkt nach dem Symbol) - Fett+Unterstrichen in App UND E-Mail,
+# OHNE die Farbsemantik/Optik der normalen Risikofaktoren-Zeilen anzutasten.
+_FAZIT_TAG_BY_SYMBOL = {"▲": "fazit_positiv", "●": "fazit_neutral", "▼": "fazit_negativ"}
 
 
 def classify_detail_line(line: str) -> str | None:
     """Erkennt bekannte Zeilenmuster in den Signal-Detail-Textbloecken rein per
     Text-Pattern (keine Aenderung an den Zeilen-Bau-Funktionen selbst noetig):
     Abschnitts-Kopfzeilen ("--- N. ... ---"), Unter-Kopfzeilen, Warnungen (⚠),
-    Risikofaktor-Marker (▲/●/▼) und die zugehoerige Legendenzeile. Gibt None
-    zurueck, wenn die Zeile keinem bekannten Muster entspricht (normaler
+    Risikofaktor-Marker (▲/●/▼), die Fazit-Zeile (gleiche Symbole, eigener
+    Tag - siehe _FAZIT_TAG_BY_SYMBOL) und die zugehoerige Legendenzeile. Gibt
+    None zurueck, wenn die Zeile keinem bekannten Muster entspricht (normaler
     Fliesstext/eingerueckte Detailzeilen)."""
     stripped = line.strip()
     if not stripped:
@@ -113,6 +119,9 @@ def classify_detail_line(line: str) -> str | None:
     if stripped[0] in "⚠":
         return "warning"
     if stripped[0] in _RISK_TAG_BY_SYMBOL:
+        rest = stripped[1:].strip()
+        if rest.startswith("Fazit:"):
+            return _FAZIT_TAG_BY_SYMBOL[stripped[0]]
         return _RISK_TAG_BY_SYMBOL[stripped[0]]
     if stripped.startswith("(") and stripped.endswith(")") and "Warnsignal" in stripped:
         return "legend"
@@ -141,6 +150,9 @@ _HTML_STYLE_BY_TAG = {
     "risk_positiv": "color:#1a7f37;",
     "risk_neutral": "color:#666666;",
     "risk_negativ": "color:#c0392b;",
+    "fazit_positiv": "font-weight:bold;text-decoration:underline;color:#1a7f37;",
+    "fazit_neutral": "font-weight:bold;text-decoration:underline;color:#666666;",
+    "fazit_negativ": "font-weight:bold;text-decoration:underline;color:#c0392b;",
     "legend": "color:#666666;font-style:italic;",
 }
 
