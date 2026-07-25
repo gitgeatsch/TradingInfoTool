@@ -408,7 +408,7 @@ def kategorie_vorschlaege_job(conn_factory) -> None:
         conn.close()
 
 
-def backward_tracking_catchup_if_missed(conn_factory, watchlist) -> None:
+def backward_tracking_catchup_if_missed(conn_factory, watchlist_provider) -> None:
     """2026-07-17, Nutzer-Fund: der feste 06:00-Cron holt einen verpassten Termin
     NICHT automatisch nach, wenn die App zu diesem Zeitpunkt gar nicht lief (an
     zwei aufeinanderfolgenden Tagen passiert, 07-15 und 07-16 - zwei Tage lang
@@ -417,7 +417,14 @@ def backward_tracking_catchup_if_missed(conn_factory, watchlist) -> None:
     nicht, sofort synchron nachholen (kein Netzwerk-Call, reine DB-Auswertung,
     siehe backward_tracking_job()-Docstring - unbedenklich, das direkt beim
     Start zu tun). Verhindert gleichzeitig unnoetige Mehrfach-Laeufe bei
-    mehreren Neustarts am selben Tag, nachdem der heutige Lauf schon glückte."""
+    mehreren Neustarts am selben Tag, nachdem der heutige Lauf schon glückte.
+
+    `watchlist_provider` siehe refresh_prices_job()-Docstring (2026-07-23) -
+    MUSS der Provider sein, nicht eine bereits aufgeloeste Liste (BUGFIX
+    2026-07-25: der Call in build_scheduler() gab hier faelschlich die lokal
+    aufgeloeste `watchlist`-Liste weiter, backward_tracking_job() ruft ihren
+    zweiten Parameter aber als Funktion auf - Absturz direkt beim App-Start,
+    TypeError: 'list' object is not callable)."""
     conn = conn_factory()
     try:
         last_run = db.get_backward_tracking_last_run_date(conn)
@@ -430,7 +437,7 @@ def backward_tracking_catchup_if_missed(conn_factory, watchlist) -> None:
         "Backward-Tracking: heutiger 06:00-Termin noch nicht erledigt (zuletzt: %s) - hole sofort nach.",
         last_run or "nie",
     )
-    backward_tracking_job(conn_factory, watchlist)
+    backward_tracking_job(conn_factory, watchlist_provider)
 
 
 def refresh_bitpanda_holdings_job(api_key, conn_factory) -> bool:
@@ -1905,7 +1912,7 @@ def build_scheduler(
     # Backward-Tracking-Auswertung trotz laengst reifer Hebel-Positionen. Direkter
     # synchroner Nachhol-Check beim Start (kein Netzwerk-Call, siehe Docstring
     # dort) - No-Op, falls der heutige Lauf schon glückte.
-    backward_tracking_catchup_if_missed(db_conn_factory, watchlist)
+    backward_tracking_catchup_if_missed(db_conn_factory, watchlist_provider)
     # Automatischer VOLLER Bestandsabgleich (2026-07-11 als reiner Cash-Sync
     # eingefuehrt, 2026-07-16 auf den kompletten Bestandsabgleich erweitert, siehe
     # refresh_bitpanda_holdings_job()-Docstring) - P-8: nur registriert, wenn ein
