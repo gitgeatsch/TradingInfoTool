@@ -29,6 +29,7 @@ Mechanismen fuer eine Kategorie gilt die KUERZESTE (der schnellere Mechanismus
 bestimmt den Takt, gleiches Prinzip wie bei den review_am-Vorschlaegen)."""
 from __future__ import annotations
 
+import json
 import logging
 from datetime import datetime, timezone
 
@@ -101,10 +102,89 @@ def _war_kuerzlich_abgelehnt(conn, these_id: int | None, hauptgruppe: str, unter
     return (jetzt - entschieden).days < COOLDOWN_TAGE_NACH_ABLEHNUNG
 
 
+def _lade_heutiges_schicht2_ergebnis(conn, jetzt: datetime) -> dict[tuple[str, str | None], dict] | None:
+    """Laedt die #333-Schicht-2-Kategorie-Eintraege (agent/kategorie_synthese.py),
+    falls fuer HEUTE (gleicher UTC-Kalendertag) vorhanden - sonst None (P-8,
+    beide Aufrufer unten fallen dann auf unmoderiertes/unbeschleunigtes
+    Verhalten zurueck, identisch zum Stand vor Schicht 2)."""
+    ergebnis = db.get_latest_kategorie_synthese_ergebnis(conn)
+    if ergebnis is None:
+        return None
+    erstellt = datetime.fromisoformat(ergebnis.erstellt_am)
+    if erstellt.tzinfo is None:
+        erstellt = erstellt.replace(tzinfo=timezone.utc)
+    if erstellt.date() != jetzt.date():
+        return None
+    kategorien = json.loads(ergebnis.kategorie_ergebnisse_json)
+    return {(e.get("hauptgruppe"), e.get("unterkategorie")): e for e in kategorien}
+
+
+def _reife_fall_a_kandidaten(conn, jetzt: datetime) -> list[tuple[str, str | None]]:
+    """Kandidaten, die HEUTE - vor diesem Lauf, also auf Basis des
+    Tracker-Stands von gestern Abend - die Fall-A-Persistenzschwelle bereits
+    erreicht haben. Identische Grundlage wie agent/kategorie_synthese.py::
+    _build_kategorie_fakten()s `ist_heute_fall_a_reif` - deshalb muss Schicht 2
+    zeitlich VOR diesem Job laufen (siehe scheduler/background.py::
+    build_scheduler())."""
+    kandidaten = []
+    for hauptgruppe, unterkategorie in _alle_kategorie_schluessel():
+        if db.get_aktive_these_fuer_kategorie(conn, hauptgruppe, unterkategorie) is not None:
+            continue
+        tracker = db.get_kandidat_in_beobachtung(conn, hauptgruppe, unterkategorie)
+        if tracker is None:
+            continue
+        mechanismus_info = config.get_pruef_mechanismus(hauptgruppe, unterkategorie)
+        if mechanismus_info is None:
+            continue
+        persistenz_tage = _persistenz_tage_fuer_mechanismen(mechanismus_info["mechanismen"])
+        seit = datetime.fromisoformat(tracker.beobachtung_seit)
+        if seit.tzinfo is None:
+            seit = seit.replace(tzinfo=timezone.utc)
+        tage_beobachtet = (jetzt - seit).total_seconds() / 86400
+        if tage_beobachtet >= persistenz_tage:
+            kandidaten.append((hauptgruppe, unterkategorie))
+    return kandidaten
+
+
+def _bestimme_gesperrte_fall_a_kandidaten(
+    conn, jetzt: datetime, richtgroesse_max: int, schicht2: dict[tuple[str, str | None], dict] | None,
+) -> set[tuple[str, str | None]]:
+    """Gleichzeitigkeits-Moderation (#333 Schicht 2, 2026-07-25): werden HEUTE
+    mehr Fall-A-Kandidaten reif, als innerhalb der Richtgroesse (3-6 aktive
+    Thesen) noch Platz haben, entscheidet die Schicht-2-Prioritaetsrangfolge,
+    welche automatisch uebernommen werden - der Rest wird stattdessen als
+    'offen' (manuelle Bestaetigung, siehe ui/thesen_view.py) zurueckgestellt,
+    statt unkoordiniert alle gleichzeitig anzulegen. Liegt kein aktuelles
+    Schicht-2-Ergebnis vor, bleibt das Verhalten unmoderiert (P-8)."""
+    reife = _reife_fall_a_kandidaten(conn, jetzt)
+    if not reife:
+        return set()
+    aktuelle_anzahl = len(db.get_aktive_thesen(conn))
+    budget = max(0, richtgroesse_max - aktuelle_anzahl)
+    if len(reife) <= budget:
+        return set()
+    if schicht2 is None:
+        logger.info(
+            "Kategorie-Vorschlaege: %d Fall-A-Kandidaten reif, Richtgroesse (%d) wuerde ueberschritten, "
+            "aber kein aktuelles Schicht-2-Ergebnis vorhanden - unmoderiert (P-8).",
+            len(reife), richtgroesse_max,
+        )
+        return set()
+    reife_sortiert = sorted(reife, key=lambda k: (schicht2.get(k) or {}).get("prioritaet_rang") or 10_000)
+    gesperrte = set(reife_sortiert[budget:])
+    logger.info(
+        "Kategorie-Vorschlaege: Gleichzeitigkeits-Moderation aktiv - %d von %d Fall-A-Kandidaten werden "
+        "diese Runde zurueckgestellt (Richtgroesse %d, aktuell %d aktiv).",
+        len(gesperrte), len(reife), richtgroesse_max, aktuelle_anzahl,
+    )
+    return gesperrte
+
+
 def _verarbeite_signal(
     conn, *, these_id: int | None, hauptgruppe: str, unterkategorie: str | None,
     mechanismus_typ: str, vorgeschlagene_richtung: str, begruendung: str, datenstand: str | None,
     persistenz_tage: int, jetzt: datetime,
+    automatische_uebernahme_gesperrt: bool = False, schneller_wechsel: bool = False,
 ) -> None:
     jetzt_iso = jetzt.isoformat()
     if these_id is not None:
@@ -135,7 +215,12 @@ def _verarbeite_signal(
         seit = seit.replace(tzinfo=timezone.utc)
     tage_beobachtet = (jetzt - seit).total_seconds() / 86400
 
-    if tage_beobachtet < persistenz_tage:
+    # Schnell-Pfad (#333 Schicht 2, 2026-07-25, NUR Fall B): ein von Schicht 2
+    # als akut eingestufter Wechsel ueberspringt die normale Persistenzfrist -
+    # spiegelt das Hebel-Kontrathese-Hochkonfidenz-Muster (hebel_risk_gate.py::
+    # KONFIDENZ_SCHWELLE_HOCH, sofortige Reaktion statt Zeitfenster-Wartezeit).
+    schnell_pfad_ausgeloest = schneller_wechsel and these_id is not None and tage_beobachtet < persistenz_tage
+    if tage_beobachtet < persistenz_tage and not schnell_pfad_ausgeloest:
         aktualisiert = TheseAenderungsvorschlag(
             these_id=bestehender.these_id, hauptgruppe=bestehender.hauptgruppe,
             unterkategorie=bestehender.unterkategorie, mechanismus_typ=mechanismus_typ,
@@ -146,17 +231,35 @@ def _verarbeite_signal(
         db.update_these_aenderungsvorschlag(conn, bestehender.id, aktualisiert)
         return
 
-    # Persistenzschwelle erreicht.
+    # Persistenzschwelle erreicht ODER Schnell-Pfad ausgeloest.
     if these_id is None:
-        pruef_mechanismus = ",".join(config.get_pruef_mechanismus(hauptgruppe, unterkategorie)["mechanismen"])
-        neue_these = These(
-            hauptgruppe=hauptgruppe, unterkategorie=unterkategorie, richtung=vorgeschlagene_richtung,
-            begruendung=begruendung, gesetzt_am=jetzt_iso, pruef_mechanismus=pruef_mechanismus,
-            quelle="ki_vorschlag",
-        )
-        db.create_these(conn, neue_these)
-        db.set_these_aenderungsvorschlag_status(conn, bestehender.id, "uebernommen", jetzt_iso)
-        logger.info("Kategorie-Vorschlag: neue These automatisch angelegt (%s/%s, %s)", hauptgruppe, unterkategorie, vorgeschlagene_richtung)
+        if automatische_uebernahme_gesperrt:
+            # Gleichzeitigkeits-Moderation (#333 Schicht 2): reif, aber durch
+            # die Richtgroesse zurueckgestellt - landet als 'offen' zur
+            # manuellen Bestaetigung statt automatischer Anlage (siehe
+            # ui/thesen_view.py, Fall-A-Zweig im Vorschlags-Panel).
+            aktualisiert = TheseAenderungsvorschlag(
+                these_id=None, hauptgruppe=hauptgruppe, unterkategorie=unterkategorie,
+                mechanismus_typ=mechanismus_typ, vorgeschlagene_richtung=vorgeschlagene_richtung,
+                begruendung=begruendung, datenstand=datenstand,
+                beobachtung_seit=bestehender.beobachtung_seit, erkannt_am=jetzt_iso,
+                status="offen", entschieden_am=None,
+            )
+            db.update_these_aenderungsvorschlag(conn, bestehender.id, aktualisiert)
+            logger.info(
+                "Kategorie-Vorschlag: Fall-A-Kandidat reif, aber wegen Gleichzeitigkeits-Moderation "
+                "zurueckgestellt (%s/%s, %s)", hauptgruppe, unterkategorie, vorgeschlagene_richtung,
+            )
+        else:
+            pruef_mechanismus = ",".join(config.get_pruef_mechanismus(hauptgruppe, unterkategorie)["mechanismen"])
+            neue_these = These(
+                hauptgruppe=hauptgruppe, unterkategorie=unterkategorie, richtung=vorgeschlagene_richtung,
+                begruendung=begruendung, gesetzt_am=jetzt_iso, pruef_mechanismus=pruef_mechanismus,
+                quelle="ki_vorschlag",
+            )
+            db.create_these(conn, neue_these)
+            db.set_these_aenderungsvorschlag_status(conn, bestehender.id, "uebernommen", jetzt_iso)
+            logger.info("Kategorie-Vorschlag: neue These automatisch angelegt (%s/%s, %s)", hauptgruppe, unterkategorie, vorgeschlagene_richtung)
     else:
         aktualisiert = TheseAenderungsvorschlag(
             these_id=these_id, hauptgruppe=None, unterkategorie=None, mechanismus_typ=mechanismus_typ,
@@ -164,11 +267,23 @@ def _verarbeite_signal(
             beobachtung_seit=bestehender.beobachtung_seit, erkannt_am=jetzt_iso, status="offen", entschieden_am=None,
         )
         db.update_these_aenderungsvorschlag(conn, bestehender.id, aktualisiert)
-        logger.info("Kategorie-Vorschlag: Aenderungsaufforderung auf 'offen' gehoben (these_id=%s)", these_id)
+        if schnell_pfad_ausgeloest:
+            logger.info(
+                "Kategorie-Vorschlag: Schnell-Pfad ausgeloest, Persistenzfrist uebersprungen "
+                "(these_id=%s, %.1f/%d Tage)", these_id, tage_beobachtet, persistenz_tage,
+            )
+        else:
+            logger.info("Kategorie-Vorschlag: Aenderungsaufforderung auf 'offen' gehoben (these_id=%s)", these_id)
 
 
 def run_kategorie_vorschlaege_job(conn) -> None:
     jetzt = datetime.now(timezone.utc)
+    richtgroesse_max = config.load_config().get("kategorie_vorschlaege", {}).get(
+        "richtgroesse_max_aktive_thesen", 6,
+    )
+    schicht2 = _lade_heutiges_schicht2_ergebnis(conn, jetzt)
+    gesperrte_kategorien = _bestimme_gesperrte_fall_a_kandidaten(conn, jetzt, richtgroesse_max, schicht2)
+
     for hauptgruppe, unterkategorie in _alle_kategorie_schluessel():
         mechanismus_info = config.get_pruef_mechanismus(hauptgruppe, unterkategorie)
         if mechanismus_info is None:
@@ -189,11 +304,15 @@ def run_kategorie_vorschlaege_job(conn) -> None:
                         db.delete_these_aenderungsvorschlag(conn, laufender.id)
                     continue
                 vorgeschlagene_richtung = _gegenteil_richtung(aktive_these.richtung)
+                schneller_wechsel = bool(
+                    schicht2 and (schicht2.get((hauptgruppe, unterkategorie)) or {}).get("phase_charakter")
+                    == "schneller_wechsel"
+                )
                 _verarbeite_signal(
                     conn, these_id=aktive_these.id, hauptgruppe=hauptgruppe, unterkategorie=unterkategorie,
                     mechanismus_typ=mechanismus_typ, vorgeschlagene_richtung=vorgeschlagene_richtung,
                     begruendung=abgleich.begruendung, datenstand=abgleich.datenstand,
-                    persistenz_tage=persistenz_tage, jetzt=jetzt,
+                    persistenz_tage=persistenz_tage, jetzt=jetzt, schneller_wechsel=schneller_wechsel,
                 )
             else:
                 sonde_richtung = _sonden_richtung(hauptgruppe)
@@ -215,6 +334,7 @@ def run_kategorie_vorschlaege_job(conn) -> None:
                     mechanismus_typ=mechanismus_typ, vorgeschlagene_richtung=vorgeschlagene_richtung,
                     begruendung=abgleich.begruendung, datenstand=abgleich.datenstand,
                     persistenz_tage=persistenz_tage, jetzt=jetzt,
+                    automatische_uebernahme_gesperrt=(hauptgruppe, unterkategorie) in gesperrte_kategorien,
                 )
         except Exception as exc:  # noqa: BLE001 - P-8, eine fehlgeschlagene Kategorie blockiert nicht die anderen
             logger.warning("Kategorie-Vorschlaege-Job: Fehler bei %s/%s: %s", hauptgruppe, unterkategorie, exc)

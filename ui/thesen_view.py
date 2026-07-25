@@ -44,6 +44,16 @@ _MECHANISMUS_LABELS = {
 
 _STATUS_LABELS = {"aktiv": "Aktiv", "erledigt": "Erledigt", "verworfen": "Verworfen"}
 
+# #333 Schicht 2 (2026-07-25) - Phasen-Badges fuer die Tages-Synthese, gleiches
+# Farbtag-Muster wie die bestehenden ▲/▼/●-These-Marker (Screener/Watchlist):
+# "schneller_wechsel" nutzt bewusst warn_color() (Aufmerksamkeit, akut), NICHT
+# danger_color() - ist ein Hinweis, kein Fehler/Risiko-Alarm.
+_PHASE_MARKER_UND_TAG = {
+    "schneller_wechsel": ("⚡ Schneller Wechsel", "these_negativ"),
+    "sanfter_uebergang": ("» Sanfter Übergang", "these_positiv"),
+    "stabil": ("● Stabil", "these_neutral"),
+}
+
 
 def _richtung_optionen(hauptgruppe_id: str | None) -> dict[str, str]:
     if hauptgruppe_id == "absicherung":
@@ -312,6 +322,7 @@ class ThesenView(ttk.Frame):
         self._db_conn_factory = db_conn_factory
         self._begruendung_tooltips: dict[str, str] = {}
         self._vorschlag_tooltips: dict[str, str] = {}
+        self._synthese_tooltips: dict[str, str] = {}
         self._nur_aktive_var = tk.BooleanVar(value=True)
 
         self._build_layout()
@@ -445,17 +456,55 @@ class ThesenView(ttk.Frame):
             "(eine gegenläufige Richtung ist davon nicht betroffen).",
         )
 
+        # Tages-Synthese (2026-07-25, #333 Schicht 2) - kategorienuebergreifende
+        # LLM-Einordnung (agent/kategorie_synthese.py), reine Anzeige, kein
+        # eigener Aktions-Button - Ranking/Phase wirken bereits automatisch auf
+        # die Gleichzeitigkeits-Moderation/den Schnell-Pfad oben.
+        self._synthese_label_frame = ttk.Frame(self, padding=(8, 4, 8, 4))
+        self._synthese_label_frame.pack(fill="x")
+        self._synthese_label = ttk.Label(
+            self._synthese_label_frame, text="Tages-Synthese (KI, Schicht 2)",
+            font=("TkDefaultFont", 10, "bold"),
+        )
+        self._synthese_label.pack(side="left")
+
+        synthese_frame = ttk.Frame(self, padding=(8, 0, 8, 8))
+        synthese_frame.pack(fill="x")
+
+        synthese_columns = ("kategorie", "phase", "rang", "begruendung")
+        self.synthese_tree = ttk.Treeview(
+            synthese_frame, columns=synthese_columns, show="headings", height=5, selectmode="browse",
+        )
+        synthese_headings = {
+            "kategorie": "Kategorie", "phase": "Phase", "rang": "Priorität heute",
+            "begruendung": "Kurzbegründung",
+        }
+        synthese_widths = {"kategorie": 220, "phase": 130, "rang": 110, "begruendung": 400}
+        for col in synthese_columns:
+            self.synthese_tree.heading(col, text=synthese_headings[col])
+            self.synthese_tree.column(col, width=synthese_widths[col], anchor="w")
+        self.synthese_tree.pack(fill="x", expand=True)
+        add_row_tooltips(self.synthese_tree, lambda iid: self._synthese_tooltips.get(iid))
+
     def refresh(self) -> None:
         conn = self._db_conn_factory()
         try:
             thesen = db.get_aktive_thesen(conn) if self._nur_aktive_var.get() else db.get_alle_thesen(conn)
             offene_vorschlaege = db.get_offene_aenderungsvorschlaege(conn)
+            synthese_ergebnis = db.get_latest_kategorie_synthese_ergebnis(conn)
         finally:
             conn.close()
         self._render(thesen)
         self._render_vorschlaege(offene_vorschlaege)
+        self._render_synthese(synthese_ergebnis)
 
     def _render_vorschlaege(self, vorschlaege: list) -> None:
+        """Fall B (these_id gesetzt) UND Fall A (these_id=None, hauptgruppe/
+        unterkategorie gesetzt - #333 Schicht 2 Gleichzeitigkeits-Moderation,
+        2026-07-25) landen HIER gemeinsam im selben Panel: ein Fall-A-Vorschlag
+        erreicht status='offen' nur, wenn die Richtgroesse (3-6 aktive Thesen)
+        eine automatische Uebernahme diese Runde verhindert hat - der Nutzer
+        entscheidet dann manuell (siehe _on_vorschlag_uebernehmen())."""
         selected = self.vorschlag_tree.selection()
         selected_id = selected[0] if selected else None
 
@@ -465,13 +514,21 @@ class ThesenView(ttk.Frame):
         conn = self._db_conn_factory()
         try:
             for vorschlag in vorschlaege:
-                these = db.get_these(conn, vorschlag.these_id) if vorschlag.these_id else None
-                if these is None:
-                    continue
-                hg_name, uk_name = self._kategorie_namen(these)
-                kategorie_text = _kategorie_anzeige(hg_name, uk_name)
-                richtung_optionen = _richtung_optionen(these.hauptgruppe)
-                aktuell_label = richtung_optionen.get(these.richtung, these.richtung)
+                if vorschlag.these_id is not None:
+                    these = db.get_these(conn, vorschlag.these_id)
+                    if these is None:
+                        continue
+                    hg_name, uk_name = self._kategorie_namen(these)
+                    kategorie_text = _kategorie_anzeige(hg_name, uk_name)
+                    richtung_optionen = _richtung_optionen(these.hauptgruppe)
+                    aktuell_label = richtung_optionen.get(these.richtung, these.richtung)
+                else:
+                    kategorien = config_module.get_kategorien()
+                    hg_obj = next((hg for hg in kategorien["hauptgruppen"] if hg["id"] == vorschlag.hauptgruppe), None)
+                    hg_name = hg_obj["name"] if hg_obj else vorschlag.hauptgruppe
+                    kategorie_text = _kategorie_anzeige(hg_name, None)
+                    richtung_optionen = _richtung_optionen(vorschlag.hauptgruppe)
+                    aktuell_label = "— (neue These)"
                 vorschlag_label = richtung_optionen.get(vorschlag.vorgeschlagene_richtung, vorschlag.vorgeschlagene_richtung)
                 iid = str(vorschlag.id)
                 self.vorschlag_tree.insert(
@@ -484,6 +541,12 @@ class ThesenView(ttk.Frame):
                 tooltip = vorschlag.begruendung
                 if vorschlag.datenstand:
                     tooltip += f"\n\nDatenstand: {vorschlag.datenstand}"
+                if vorschlag.these_id is None:
+                    tooltip += (
+                        "\n\nFall A: reif fuer eine neue These, aber wegen der Richtgroesse "
+                        "(3-6 aktive Thesen) diese Runde nicht automatisch angelegt - "
+                        "Übernehmen legt sie jetzt manuell an."
+                    )
                 self._vorschlag_tooltips[iid] = tooltip
         finally:
             conn.close()
@@ -491,6 +554,55 @@ class ThesenView(ttk.Frame):
         theme.restripe_treeview(self.vorschlag_tree)
         if selected_id and self.vorschlag_tree.exists(selected_id):
             self.vorschlag_tree.selection_set(selected_id)
+
+    def _render_synthese(self, ergebnis) -> None:
+        """#333 Schicht 2 (2026-07-25) - reine Anzeige der letzten
+        kategorienuebergreifenden LLM-Synthese (agent/kategorie_synthese.py).
+        `ergebnis` ist None, solange der Job noch nie gelaufen ist (P-8)."""
+        import json
+
+        self.synthese_tree.delete(*self.synthese_tree.get_children())
+        self._synthese_tooltips.clear()
+
+        if ergebnis is None:
+            self._synthese_label.config(text="Tages-Synthese (KI, Schicht 2) - noch kein Ergebnis vorhanden")
+            return
+
+        erstellt = datetime.fromisoformat(ergebnis.erstellt_am)
+        heute = erstellt.date() == datetime.now(timezone.utc).date()
+        stand_text = "heute" if heute else erstellt.strftime("%d.%m.%Y %H:%M")
+        self._synthese_label.config(text=f"Tages-Synthese (KI, Schicht 2) - Stand: {stand_text}")
+
+        kategorien = json.loads(ergebnis.kategorie_ergebnisse_json)
+        kategorien_sortiert = sorted(
+            kategorien, key=lambda e: e.get("prioritaet_rang") if e.get("prioritaet_rang") is not None else 10_000,
+        )
+        for idx, eintrag in enumerate(kategorien_sortiert):
+            kategorien_config = config_module.get_kategorien()
+            hg_obj = next((hg for hg in kategorien_config["hauptgruppen"] if hg["id"] == eintrag.get("hauptgruppe")), None)
+            hg_name = hg_obj["name"] if hg_obj else eintrag.get("hauptgruppe")
+            uk_name = None
+            if hg_obj and eintrag.get("unterkategorie"):
+                uk_obj = next((uk for uk in hg_obj["unterkategorien"] if uk["id"] == eintrag["unterkategorie"]), None)
+                uk_name = uk_obj["name"] if uk_obj else eintrag["unterkategorie"]
+            kategorie_text = _kategorie_anzeige(hg_name, uk_name)
+
+            phase_label, tag = _PHASE_MARKER_UND_TAG.get(eintrag.get("phase_charakter"), ("●", "these_neutral"))
+            rang = eintrag.get("prioritaet_rang")
+            rang_text = str(rang) if rang is not None else "-"
+
+            iid = f"synthese_{idx}"
+            self.synthese_tree.insert(
+                "", "end", iid=iid,
+                values=(kategorie_text, phase_label, rang_text, eintrag.get("kurzbegruendung", "")),
+                tags=(tag,),
+            )
+            self._synthese_tooltips[iid] = eintrag.get("kurzbegruendung", "")
+
+        self.synthese_tree.tag_configure("these_positiv", foreground=theme.success_color())
+        self.synthese_tree.tag_configure("these_negativ", foreground=theme.warn_color())
+        self.synthese_tree.tag_configure("these_neutral", foreground=theme.info_color())
+        theme.restripe_treeview(self.synthese_tree)
 
     def _on_vorschlag_uebernehmen(self) -> None:
         selected = self.vorschlag_tree.selection()
@@ -502,13 +614,27 @@ class ThesenView(ttk.Frame):
         conn = self._db_conn_factory()
         try:
             vorschlag = db.get_these_aenderungsvorschlag(conn, vorschlag_id)
-            if vorschlag is None or vorschlag.these_id is None:
+            if vorschlag is None:
                 return
-            these = db.get_these(conn, vorschlag.these_id)
-            if these is None:
-                return
-            aktualisierte_these = dataclasses.replace(these, richtung=vorschlag.vorgeschlagene_richtung)
-            db.update_these(conn, these.id, aktualisierte_these)
+            if vorschlag.these_id is not None:
+                these = db.get_these(conn, vorschlag.these_id)
+                if these is None:
+                    return
+                aktualisierte_these = dataclasses.replace(these, richtung=vorschlag.vorgeschlagene_richtung)
+                db.update_these(conn, these.id, aktualisierte_these)
+            else:
+                # Fall A (Gleichzeitigkeits-Moderation, 2026-07-25): legt die
+                # bisher zurueckgestellte These jetzt manuell an - identisches
+                # Muster wie der unmoderierte Automatik-Zweig in
+                # agent/kategorie_vorschlaege.py::_verarbeite_signal().
+                if vorschlag.hauptgruppe is None:
+                    return
+                neue_these = These(
+                    hauptgruppe=vorschlag.hauptgruppe, unterkategorie=vorschlag.unterkategorie,
+                    richtung=vorschlag.vorgeschlagene_richtung, begruendung=vorschlag.begruendung,
+                    gesetzt_am=jetzt_iso, pruef_mechanismus=vorschlag.mechanismus_typ, quelle="ki_vorschlag",
+                )
+                db.create_these(conn, neue_these)
             db.set_these_aenderungsvorschlag_status(conn, vorschlag_id, "uebernommen", jetzt_iso)
         finally:
             conn.close()

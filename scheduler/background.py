@@ -408,6 +408,38 @@ def kategorie_vorschlaege_job(conn_factory) -> None:
         conn.close()
 
 
+def kategorie_synthese_job(conn_factory, mistral_client=None, groq_client=None, gemini_client=None) -> None:
+    """#333 Schicht 2 (2026-07-25) - kategorienuebergreifender LLM-Synthese-
+    Call, siehe agent/kategorie_synthese.py Modul-Docstring. Laeuft 15 Min VOR
+    kategorie_vorschlaege_job (06:15 vs. 06:30) - Schicht 1 liest das
+    Tagesergebnis fuer die Gleichzeitigkeits-Moderation, das muss deshalb VOR
+    Schicht 1 vorliegen (siehe build_scheduler()-Kommentar an der
+    Registrierungsstelle fuer die volle Begruendung). P-8: ohne mindestens
+    einen gesetzten Client wird der Lauf uebersprungen (kein Fehler) - ebenso,
+    wenn alle Provider fehlschlagen (run_kategorie_synthese() gibt dann None
+    zurueck, alle Konsumenten (Fall-A/B-Moderation, Screener-Score-Bonus)
+    degradieren auf ihr Vor-Schicht-2-Verhalten)."""
+    llm_clients = [("mistral", mistral_client), ("groq", groq_client), ("gemini", gemini_client)]
+    if not any(client is not None for _, client in llm_clients):
+        logger.info("Kategorie-Synthese: kein LLM-Client konfiguriert, uebersprungen.")
+        return
+    conn = conn_factory()
+    try:
+        import json
+
+        from agent.kategorie_synthese import run_kategorie_synthese
+
+        ergebnis = run_kategorie_synthese(conn, llm_clients)
+        if ergebnis is not None:
+            logger.info("Kategorie-Synthese-Job (#333 Schicht 2) durchgelaufen.")
+            _notify_schneller_wechsel(json.loads(ergebnis.kategorie_ergebnisse_json))
+    except Exception as exc:
+        logger.exception("Kategorie-Synthese-Job (#333 Schicht 2) fehlgeschlagen")
+        _notify_job_failure("kategorie_synthese", f"Kategorie-Synthese-Job fehlgeschlagen: {exc}")
+    finally:
+        conn.close()
+
+
 def backward_tracking_catchup_if_missed(conn_factory, watchlist_provider) -> None:
     """2026-07-17, Nutzer-Fund: der feste 06:00-Cron holt einen verpassten Termin
     NICHT automatisch nach, wenn die App zu diesem Zeitpunkt gar nicht lief (an
@@ -679,6 +711,69 @@ def _notify_cash_veto_warning(signal) -> None:
     )
     if send_notification_email(f"TradingInfoTool: WARNUNG - Cash-Veto ({signal.symbol})", body, empfaenger):
         _last_cash_veto_email_sent = time.monotonic()
+
+
+# Schnelle-Wechsel-Warnmail (#333 Schicht 2, 2026-07-25) - EIN globaler
+# Zeitstempel, gleiches Prinzip wie _last_cash_veto_email_sent: der Job selbst
+# laeuft nur 1x/Tag (06:15), der eigentliche Spam-Risiko-Fall ist ein Neustart
+# waehrend des Tages (next_run_time=jetzt bootstrappt den Job bei JEDEM
+# App-Start sofort erneut, siehe build_scheduler()).
+_last_schneller_wechsel_email_sent: float | None = None
+
+
+def _notify_schneller_wechsel(kategorien: list[dict]) -> None:
+    """WARNUNG-E-Mail fuer Kategorien, die #333 Schicht 2 heute als
+    'schneller_wechsel' (akuter Regime-Umschwung) eingestuft hat - Nutzer-
+    Entscheidung 2026-07-25 ("bei schnellen Wechseln rasch reagieren"), im
+    Gegensatz zu 'sanfter_uebergang'/'stabil', die rein passiv im
+    Schwerpunkte-Tab sichtbar bleiben (kein E-Mail-Spam bei jedem gewoehnlichen
+    Trend)."""
+    global _last_schneller_wechsel_email_sent
+    import config as config_module
+    from api.email_notify import send_notification_email
+
+    schnelle = [k for k in kategorien if k.get("phase_charakter") == "schneller_wechsel"]
+    if not schnelle:
+        return
+
+    config_dict = config_module.load_config()
+    email_cfg = config_dict.get("benachrichtigung", {}).get("email", {})
+    if not email_cfg.get("aktiv", False):
+        return
+    empfaenger = email_cfg.get("empfaenger")
+    if not empfaenger:
+        return
+
+    cooldown_minuten = email_cfg.get("schneller_wechsel_email_cooldown_minuten", 360)
+    if (
+        _last_schneller_wechsel_email_sent is not None
+        and time.monotonic() - _last_schneller_wechsel_email_sent < cooldown_minuten * 60
+    ):
+        logger.info(
+            "Kategorie-Synthese: %d 'schneller_wechsel'-Kategorie(n) erkannt, E-Mail wegen "
+            "Cooldown unterdrueckt (%s).",
+            len(schnelle), [k.get("hauptgruppe") for k in schnelle],
+        )
+        return
+
+    logger.info(
+        "Kategorie-Synthese: 'schneller_wechsel' erkannt, sende Warnmail (%s).",
+        [k.get("hauptgruppe") for k in schnelle],
+    )
+    zeilen = []
+    for eintrag in schnelle:
+        hauptgruppe, unterkategorie = eintrag.get("hauptgruppe"), eintrag.get("unterkategorie")
+        kategorie_text = hauptgruppe if not unterkategorie else f"{hauptgruppe}: {unterkategorie}"
+        zeilen.append(f"- {kategorie_text}: {eintrag.get('kurzbegruendung', '')}")
+
+    body = (
+        f"#333 Schicht 2 hat heute {len(schnelle)} Kategorie(n) als akuten, schnellen Wechsel "
+        "eingestuft (siehe Schwerpunkte-Tab, Tages-Synthese):\n\n"
+        + "\n".join(zeilen)
+        + f"\n\nWeitere Meldungen werden fuer {cooldown_minuten} Minuten unterdrueckt (Spam-Schutz)."
+    )
+    if send_notification_email("TradingInfoTool: Schneller Kategorie-Wechsel erkannt", body, empfaenger):
+        _last_schneller_wechsel_email_sent = time.monotonic()
 
 
 def _notify_oi_abdeckung_warnung(symbol: str, konsekutive_fehlschlaege: int) -> bool:
@@ -1984,6 +2079,27 @@ def build_scheduler(
         minute=30,
         args=[db_conn_factory],
         id="kategorie_vorschlaege",
+        next_run_time=datetime.now(),
+        misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
+    )
+    # #333 Schicht 2 (2026-07-25) - BEWUSST VOR kategorie_vorschlaege_job
+    # (06:15, 15 Min VOR Schicht 1 um 06:30): Schicht 2 liefert je Kategorie
+    # eine Prioritaets-Rangfolge unter den heute Fall-A-reifen Kandidaten, die
+    # Schicht 1 direkt im selben Lauf fuer die Gleichzeitigkeits-Moderation
+    # braucht (agent/kategorie_vorschlaege.py) - dafuer muss das Ergebnis VOR
+    # Schicht 1 vorliegen. Die Tracker-/These-Sicht, die Schicht 2 dabei
+    # verwendet, ist automatisch "Stand von gestern Abend" (Schicht 1 hat
+    # heute noch nicht gelaufen) - das ist fuer die Prognose "was wird HEUTE
+    # reif" korrekt, nicht veraltet. Gleiche P-8-Fallback-Kette wie
+    # hebel_screening (Mistral->Groq->Gemini), aber ohne bitpanda_api_key/
+    # kraken_client/zai_client - reiner Text-Synthese-Call.
+    scheduler.add_job(
+        kategorie_synthese_job,
+        "cron",
+        hour=6,
+        minute=15,
+        args=[db_conn_factory, mistral_client, groq_client, gemini_client],
+        id="kategorie_synthese",
         next_run_time=datetime.now(),
         misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
     )

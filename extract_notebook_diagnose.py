@@ -508,6 +508,23 @@ def main() -> None:
         # 3b) Neue Tabellen seit 2026-07-18/19/20, bisher unsichtbar im Export
         # (siehe Modul-Docstring, Nachtrag 2026-07-20):
         thesen_alle = [dataclasses.asdict(t) for t in db.get_alle_thesen(conn)]
+        # #333 Schicht 2 + #334 Stufe 2 (2026-07-25, siehe agent/kategorie_synthese.py) -
+        # ALLE Aenderungsvorschlaege (nicht nur status='offen' wie
+        # get_offene_aenderungsvorschlaege(), das GUI nutzt) fuer die volle
+        # Fall-A/B-Zustandshistorie (inkl. 'beobachtung'/'uebernommen'/
+        # 'abgelehnt' - zeigt z.B., ob die Gleichzeitigkeits-Moderation
+        # tatsaechlich greift: these_id=None + status='offen' waere sonst nie
+        # aufgetreten, bevor Schicht 2 existierte).
+        these_aenderungsvorschlaege_alle = [
+            row_to_dict(r) for r in conn.execute(
+                "SELECT * FROM these_aenderungsvorschlaege ORDER BY beobachtung_seit ASC"
+            ).fetchall()
+        ]
+        kategorie_synthese_ergebnisse_alle = [
+            row_to_dict(r) for r in conn.execute(
+                "SELECT * FROM kategorie_synthese_ergebnis ORDER BY erstellt_am ASC"
+            ).fetchall()
+        ]
         oi_abdeckung_status_alle = db.get_oi_abdeckung_status(conn)
         hebel_pruefung_toggles = [
             row_to_dict(r) for r in conn.execute("SELECT * FROM asset_hebel_settings").fetchall()
@@ -604,6 +621,8 @@ def main() -> None:
         },
         "regime_status": regime_status,
         "thesen_alle": thesen_alle,
+        "these_aenderungsvorschlaege_alle": these_aenderungsvorschlaege_alle,
+        "kategorie_synthese_ergebnisse_alle": kategorie_synthese_ergebnisse_alle,
         "oi_abdeckung_status_alle": oi_abdeckung_status_alle,
         "hebel_pruefung_toggles": hebel_pruefung_toggles,
         "kandidaten_warteschlangen_status": kandidaten_warteschlangen_status,
@@ -641,6 +660,9 @@ def main() -> None:
     print(f"  Auffaelligkeiten (regelbasierter Vorfilter): {len(auffaelligkeiten)}")
     print(f"  Thesen: {len(thesen_alle)}, OI-Abdeckungs-Status-Eintraege: {len(oi_abdeckung_status_alle)}, "
           f"Hebel-Pruefung-Toggles: {len(hebel_pruefung_toggles)}")
+    print(f"  #333 Schicht 2: {len(kategorie_synthese_ergebnisse_alle)} Tages-Synthese-Ergebnisse, "
+          f"{len(these_aenderungsvorschlaege_alle)} Aenderungsvorschlaege gesamt "
+          f"({haeufigkeit(these_aenderungsvorschlaege_alle, 'status')})")
     print(f"  Warteschlangen-Status: {kandidaten_warteschlangen_status}")
     print(f"  Discovery->LLM-Delta (Marktscan): {marktscan_discovery_llm_delta['statistik']}")
     print(f"  Erstmalige-Erkennung->Signal-Delta (Hebel): {hebel_erstmalige_erkennung_delta['statistik']}")

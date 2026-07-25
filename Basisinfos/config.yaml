@@ -968,9 +968,36 @@ benachrichtigung:
       # scheduler/background.py::_notify_cash_veto_warning()), nur groesszuegiger
       # (6h statt 1h) - anders als ein Job-Ausfall aendert sich der Cash-Stand nicht
       # minuetlich.
+    schneller_wechsel_email_cooldown_minuten: 360   # NEU (2026-07-25, #333 Schicht 2):
+      # gleiches Cooldown-Muster wie cash_veto_warnung_cooldown_minuten - der Job
+      # selbst laeuft nur 1x/Tag (06:15), der eigentliche Spam-Risiko-Fall ist ein
+      # App-Neustart waehrend des Tages (Sofortstart-Bootstrap), siehe
+      # scheduler/background.py::_notify_schneller_wechsel().
     # SMTP ist fest auf Gmail verdrahtet (smtp.gmail.com:587, siehe
     # api/email_notify.py) - kein config-seitiger Wert mehr noetig.
     # Zugangsdaten (GMAIL_ABSENDER_ADRESSE/GMAIL_APP_PASSWORT) ausschliesslich in .env.
+
+# --- #333 Schicht 2 Gleichzeitigkeits-Moderation (2026-07-25) ---
+kategorie_vorschlaege:
+  richtgroesse_max_aktive_thesen: 6   # siehe Kategorie_Basisinformationen_Release2.md
+    # Abschnitt 5, Punkt 3 ("Richtgroesse 3-6 gleichzeitig aktive Thesen") - werden an
+    # einem Tag mehr Fall-A-Kandidaten reif, als hier noch Platz ist, entscheidet die
+    # Schicht-2-Prioritaetsrangfolge, welche automatisch uebernommen werden
+    # (agent/kategorie_vorschlaege.py::_bestimme_gesperrte_fall_a_kandidaten()).
+
+# --- #334 Stufe 2 Screener-Score-Gewichtung (2026-07-25) - objektiv gegatet ueber
+# compute_these_abgleich(), NICHT ueber Trend/Beliebtheit (siehe 2026-07-21-Korrektur,
+# project_schwerpunkt_diversifikation.md) ---
+kategorie_score_gewichtung:
+  aktiv: true
+  bonus_gestuetzt: 5.0     # moderater Bonus fuer ETF-Kandidaten aus Kategorien mit
+    # objektiv "gestuetzter" aktiver These - bewusst klein (vorsichtig, analog der
+    # urspruenglichen 2026-07-19-Entscheidung "Stufe 2 nur vorsichtig")
+  malus_widerspricht: 5.0  # symmetrischer Malus bei "widerspricht" - schliesst die
+    # Luecke, dass Stufe 1 die objektive Einschaetzung bisher komplett ignoriert hat
+  schnell_wechsel_multiplikator: 2.0   # verstaerkt Bonus/Malus bei #333-Schicht-2-
+    # Einstufung "schneller_wechsel" - Screener-Neusortierung ist risikoarm/reversibel,
+    # darf deshalb staerker/schneller reagieren als eine echte These-Aenderung
 
 # --- Regime-Steuerung: marktabhaengiges Verhalten (siehe Spezifikation Kap. 14) ---
 regime:

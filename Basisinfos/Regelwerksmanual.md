@@ -8412,3 +8412,136 @@ Werte); echter Tk-Smoke-Test mit exakt der gemeldeten Mischung (Signal
 Spalten; Regressionstest bestätigt `ui/marktscan_view.py` (`score`) und
 `ui/screener_view.py` (`preis`/`marktkap`/`aenderung`) unverändert korrekt
 (kein "x" in deren Werten, von der `_STRIP_RE`-Erweiterung nicht betroffen).
+
+## Nachtrag (2026-07-25): #333 Schicht 2 + #334 Stufe 2 - kategorienübergreifende LLM-Synthese und objektiv gegatete Screener-Gewichtung
+
+**Auslöser:** Schicht 1 von #333 (deterministische Mehrfach-Mechanismus-
+Kombination je Kategorie, siehe Nachtrag vom 2026-07-24) betrachtet jede
+Kategorie IMMER isoliert - nie im Vergleich zu den anderen. Nutzer-Wunsch:
+ein täglicher LLM-Call soll ALLE Kategorien gemeinsam betrachten und
+signalisieren, welche Assetklassen je nach Marktphase gerade Rückenwind/
+Gegenwind bekommen, mit sanftem Ein-/Ausschleichen bei graduellen
+Verschiebungen, aber schneller Reaktion bei abrupten Wechseln. In derselben
+Runde wurde zusätzlich #334 Stufe 2 (bisher bewusst zurückgestellte
+Screener-Score-Gewichtung) umgesetzt, weil beide Bausteine laut Nutzer
+"zusammenpassen" mussten.
+
+**Tragendes Prinzip (löst die ursprüngliche 2026-07-21-Prozyklik-Sorge
+strukturell, siehe [[project_schwerpunkt_diversifikation]]):** die frühere
+Idee, Stufe 2 nur für "unverdächtige" Kategorien zu bauen und Technologie &
+KI kategorisch auszuschließen, wurde damals explizit verworfen zugunsten
+eines einzigen, universell auf ALLE Hauptgruppen angewendeten objektiven
+Prüf-Mechanismus (`compute_these_abgleich()`, bereits seit Schicht 1
+vorhanden). Beide neuen Bausteine dieser Runde bauen ausschließlich auf
+dieser bereits vorhandenen Funktion auf - keine neue Datenquelle, keine
+Trend-/Popularitäts-Gewichtung.
+
+### #333 Schicht 2 - `agent/kategorie_synthese.py` (neu)
+
+Neuer täglicher Job `kategorie_synthese_job` (`scheduler/background.py`,
+Cron **06:15, bewusst VOR** `kategorie_vorschlaege_job` um 06:30 - Schicht 1
+liest das Tagesergebnis für die Gleichzeitigkeits-Moderation unten, das muss
+deshalb vorliegen, BEVOR Schicht 1 läuft). Baut je prüfbarer Kategorie einen
+Fakten-Block (aktuelle These, objektive Einschätzung, Tracker-Alter,
+Persistenzziel, `ist_heute_fall_a_reif`) und lässt EIN LLM (Mistral→Groq→
+Gemini-Fallback-Kette, gleiche Philosophie wie `budget_allocator.py`, hier
+als einfache sequentielle Kette ohne Tagesbudget-Buchhaltung) je Kategorie
+zwei zusätzliche Einordnungen liefern:
+
+- `phase_charakter`: `sanfter_uebergang` | `schneller_wechsel` | `stabil` -
+  Letzteres NUR bei einem in diesem Zyklus neu erreichten, klar akuten
+  Schwellenwert (z. B. VIX-Sprung, COT neu "gedrängt"), nicht für "der Trend
+  hält an".
+- `prioritaet_rang`: nur unter den heute Fall-A-reifen Kandidaten vergeben.
+
+Validierung über `_validate_kategorie_synthese()` (gleiches Muster wie
+`_validate_hebel()`: Enum-Prüfung, Mindestlänge, eindeutige Ränge, harte
+Pflicht, dass JEDE Fall-A-reife Kategorie einen Rang bekommt). Ergebnis
+gecacht in neuer Tabelle `kategorie_synthese_ergebnis` (ein Datensatz/Tag,
+gleiches Cache-Prinzip wie `makro_analog_ergebnis`).
+
+**Wirkung auf Fall A/B (macht Schicht 2 nicht-passiv, statt #334 Stufe 2
+vorzuziehen):**
+- **Gleichzeitigkeits-Moderation** (`agent/kategorie_vorschlaege.py::
+  _bestimme_gesperrte_fall_a_kandidaten()`): werden an einem Tag mehr
+  Fall-A-Kandidaten reif, als innerhalb der Richtgröße (`kategorie_
+  vorschlaege.richtgroesse_max_aktive_thesen`, Default 6) noch Platz haben,
+  entscheidet die Schicht-2-Rangfolge, welche automatisch übernommen werden
+  - der Rest landet als offener Vorschlag (`these_id=None`, `status='offen'`)
+  zur manuellen Bestätigung statt automatischer Anlage.
+- **Schnell-Pfad** (`_verarbeite_signal()`, NUR Fall B): eine als
+  `schneller_wechsel` markierte Kategorie überspringt die normale
+  Persistenzfrist - spiegelt exakt das bereits etablierte Hebel-Kontrathese-
+  Hochkonfidenz-Muster (`hebel_risk_gate.py::KONFIDENZ_SCHWELLE_HOCH`,
+  sofortige Reaktion statt Zeitfenster-Bestätigung).
+- **Aktive Benachrichtigung** (`scheduler/background.py::
+  _notify_schneller_wechsel()`): E-Mail NUR für `schneller_wechsel`-
+  Einträge, Cooldown-geschützt (`benachrichtigung.email.schneller_wechsel_
+  email_cooldown_minuten`, Default 360 Min - der eigentliche Spam-Risiko-Fall
+  ist ein App-Neustart während des Tages, nicht der Job selbst, der nur 1x/
+  Tag läuft).
+- **GUI**: neues Panel "Tages-Synthese (KI, Schicht 2)" im Schwerpunkte-Tab
+  (`ui/thesen_view.py`), Rangliste mit Phasen-Badge (⚡/»/●) + Tooltip. Das
+  bestehende "Offene Änderungsaufforderungen"-Panel zeigt jetzt Fall A UND
+  Fall B gemeinsam (vorher zeigte es Fall-A-Einträge gar nicht an - ein
+  echter, durch diese Änderung erstmals relevanter Gap, da Fall A bisher
+  IMMER sofort automatisch anlegte und nie `status='offen'` erreichte).
+
+**P-8 durchgängig:** liegt für den aktuellen Tag kein Schicht-2-Ergebnis vor
+(Job noch nicht gelaufen/fehlgeschlagen/kein LLM-Client konfiguriert),
+verhalten sich Fall A/B und der Screener exakt wie vor dieser Änderung - kein
+harter Block irgendwo.
+
+### #334 Stufe 2 - objektiv gegatete Screener-Score-Gewichtung
+
+`agent/aktien/screener.py::_kategorie_score_bonus()` - NUR für ETF-
+Kandidaten (`scan_etf_candidates()`, tragen bereits Kategorie-Tags; Einzel-
+aktien bleiben bewusst außen vor, da yfinance-Screens keine Kategorie-Daten
+liefern, keine erfundenen Kategorien). Bonus/Malus hängt AUSSCHLIESSLICH an
+`compute_these_abgleich()`s objektiver Einschätzung, NICHT an der bloßen
+Existenz einer aktiven These (das bleibt Stufe 1, unverändert) und NICHT an
+Trend/Beliebtheit:
+
+- `gestuetzt` → moderater Bonus (`kategorie_score_gewichtung.bonus_
+  gestuetzt`, Default 5.0).
+- `widerspricht` → moderater Malus (`malus_widerspricht`, Default 5.0) -
+  schließt eine echte Lücke: die bestehende Stufe-1-Hervorhebung (Watchlist/
+  Diversifikation/Screener) ignoriert `richtung`/die objektive Einschätzung
+  bis dahin komplett - eine objektiv widerlegte These wurde genauso
+  hervorgehoben wie eine gestützte.
+- `neutral`/`nicht_pruefbar`/keine These → keine Anpassung.
+- Schicht-2-`schneller_wechsel` verstärkt Bonus/Malus (`schnell_wechsel_
+  multiplikator`, Default 2.0) - Screener-Neusortierung ist risikoarm/
+  reversibel, darf deshalb schneller/stärker reagieren als eine echte
+  These-Änderung.
+
+Wirkt als sekundärer Sortierschlüssel INNERHALB der bestehenden Stufe-1-
+Partition (`ui/screener_view.py::_on_scan_done()`, unverändert die äußere
+Sortierebene) - Ergänzung, keine Ablösung der bisherigen UX. Zeilen-Tooltip
+zeigt die konkrete Begründung.
+
+**Bereits vorhandene Infrastruktur (nicht neu gebaut):** Stufe-1-
+Hervorhebung (#343) verbindet jede aktive These bereits automatisch mit
+Watchlist-Sortierpriorität, Diversifikations-Marker UND Screener-
+Vornesortierung (auch für Kandidaten, die noch nicht in der Watchlist sind).
+Screener läuft bereits automatisch alle 60 Min (#346/#347). Jede Fall-A/B-
+Änderung wirkt dadurch bereits "zeitgerecht" weiter, ohne neuen
+Verdrahtungscode - das war die Antwort auf die Nutzer-Nachfrage "wirkt sich
+das auch auf bestehende Assets und den Screener aus, sonst ist es nur
+passiv?".
+
+**Verifiziert:** 20 synthetische Checks (Validator-Fehlerfälle inkl. der
+harten Fall-A-Rang-Pflicht, Gleichzeitigkeits-Moderation mit knappem Budget,
+Schnell-Pfad-Bypass vs. normale Persistenz, Score-Bonus für alle 4
+Einschätzungswerte + Multiplikator + deaktiviert + kategorielose Aktie,
+P-8-Regression ohne/mit veraltetem Schicht-2-Ergebnis, Import-Regression) -
+alle bestanden. Echter Mistral-Lauf gegen eine Kopie der Produktions-DB:
+19 Kategorien korrekt eingeordnet, Begründungen nennen durchgängig konkrete
+Rohwerte aus dem Fakten-JSON (COT-%, DXY, VIX, S&P500-Drawdown,
+Analystentrend, Insider-Aktivität) - keine Halluzination in der Stichprobe.
+Echter Screener-Scan gegen dieselbe Kopie: 209 reale ETF-Kandidaten, Bonus
+korrekt 0.0 für alle (aktuell keine aktiven Thesen im System), Fallback auf
+die bisherige alphabetische Sortierung funktioniert wie vorgesehen (P-8 mit
+echten Daten bestätigt). Tk-Smoke-Test für das neue GUI-Panel (Fall A + Fall
+B gemeinsam gerendert, Übernehmen/Ablehnen für beide Fälle, Tages-Synthese-
+Rangliste inkl. Phasen-Badges).

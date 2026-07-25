@@ -706,3 +706,23 @@ class TheseAenderungsvorschlag:
     erkannt_am: str | None = None
     status: str = "beobachtung"
     entschieden_am: str | None = None
+
+
+@dataclass
+class KategorieSyntheseErgebnis:
+    """Gecachtes Ergebnis des taeglichen #333-Schicht-2-LLM-Synthese-Calls
+    (2026-07-25, siehe agent\\kategorie_synthese.py) - EIN Row pro Tag, gleiches
+    Cache-Prinzip wie MakroAnalogErgebnis (teurer Call, nicht pro Signal neu
+    berechnet). `kategorie_ergebnisse_json` ist eine Liste je Kategorie mit
+    `hauptgruppe`/`unterkategorie`/`phase_charakter` ('sanfter_uebergang'|
+    'schneller_wechsel'|'stabil')/`prioritaet_rang` (nur unter den heute
+    Fall-A-reifen Kandidaten vergeben, sonst None)/`kurzbegruendung` - siehe
+    agent\\kategorie_synthese.py::_validate_kategorie_synthese() fuer das volle
+    Schema. Wird von kategorie_vorschlaege.py (Gleichzeitigkeits-Moderation +
+    Schnell-Pfad) UND agent\\aktien\\screener.py (Score-Bonus) gelesen - beide
+    degradieren graziös (P-8) auf das Vor-Schicht-2-Verhalten, wenn fuer den
+    aktuellen Tag noch kein/ein veraltetes Ergebnis vorliegt."""
+    erstellt_am: str
+    kategorie_ergebnisse_json: str
+    llm_model: str
+    id: int | None = None

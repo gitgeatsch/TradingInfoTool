@@ -30,7 +30,9 @@ from dataclasses import dataclass
 
 import yfinance as yf
 
+import agent.kategorie_thesen as kategorie_thesen
 import config
+import database.db as db
 from api.bitpanda import BitpandaAsset, is_listed
 from database.api_health import track_api_health
 
@@ -63,6 +65,9 @@ class ScreenerCandidate:
     hinweis: str | None = None
     hauptgruppe: str | None = None  # nur bei automatischer Klassifikation ueber kategorien.yaml
     unterkategorie: str | None = None
+    kategorie_score_bonus: float = 0.0  # #334 Stufe 2 (2026-07-25), nur ETF-Kandidaten - siehe
+        # _kategorie_score_bonus(). 0.0 = keine Anpassung (kein conn beim Scan, keine
+        # aktive These, oder objektive Einschaetzung neutral/nicht_pruefbar).
 
 
 def _bereits_in_watchlist(symbol: str, watchlist) -> bool:
@@ -128,7 +133,38 @@ def scan_aktien_candidates(
     return candidates
 
 
-def scan_etf_candidates(watchlist, bitpanda_assets: list[BitpandaAsset]) -> list[ScreenerCandidate]:
+def _kategorie_score_bonus(
+    conn, kandidat: ScreenerCandidate, these_index: dict, schicht2: dict | None, cfg: dict,
+) -> float:
+    """Objektiv gegatete Score-Anpassung (#334 Stufe 2, 2026-07-25) - haengt
+    AUSSCHLIESSLICH an der objektiven `compute_these_abgleich()`-Einschaetzung
+    (gestuetzt/widerspricht), NICHT an Trend/Beliebtheit oder der blossen
+    Existenz einer aktiven These (das bleibt Stufe 1, unveraendert) - siehe
+    2026-07-21-Korrektur (project_schwerpunkt_diversifikation.md): keine
+    Ausschlussliste einzelner Kategorien, derselbe objektive Check gilt fuer
+    ALLE Hauptgruppen gleichermassen. Bewusst klein/vorsichtig (Config-Werte),
+    schliesst die Luecke, dass die bestehende Stufe-1-Hervorhebung `richtung`/
+    die objektive Einschaetzung bisher komplett ignoriert (jede aktive These
+    wurde gleich behandelt, egal ob objektiv gestuetzt oder widerlegt)."""
+    if not cfg.get("aktiv", True) or kandidat.hauptgruppe is None:
+        return 0.0
+    these = kategorie_thesen.lookup_these(these_index, kandidat.hauptgruppe, kandidat.unterkategorie)
+    if these is None:
+        return 0.0
+    abgleich = kategorie_thesen.compute_these_abgleich(conn, these)
+    if abgleich is None or abgleich.einschaetzung not in ("gestuetzt", "widerspricht"):
+        return 0.0
+    basis = (
+        cfg.get("bonus_gestuetzt", 5.0) if abgleich.einschaetzung == "gestuetzt"
+        else -cfg.get("malus_widerspricht", 5.0)
+    )
+    eintrag = (schicht2 or {}).get((kandidat.hauptgruppe, kandidat.unterkategorie))
+    if eintrag and eintrag.get("phase_charakter") == "schneller_wechsel":
+        basis *= cfg.get("schnell_wechsel_multiplikator", 2.0)
+    return basis
+
+
+def scan_etf_candidates(watchlist, bitpanda_assets: list[BitpandaAsset], conn=None) -> list[ScreenerCandidate]:
     """Enumeriert Bitpandas EIGENEN ETF/ETC-Themenkorb-Katalog direkt (KEIN
     yfinance-Screen) - siehe Modul-Docstring fuer die Begruendung: dies IST das
     tatsaechlich bei Bitpanda kaufbare ETF/ETC-Angebot, waehrend eine echte
@@ -150,7 +186,14 @@ def scan_etf_candidates(watchlist, bitpanda_assets: list[BitpandaAsset]) -> list
     (siehe `api/asset_quality.py`-Modul-Docstring fuer die volle Begruendung)
     - ein Vergleich "welches Produkt ist besser" ist fuer diese Kandidaten
     strukturell nicht moeglich, nur fuer echte Boersen-ETFs (dort gibt es das
-    neue Kompositions-/Qualitaetsmodul bereits, aufrufbar ueber die Watchlist)."""
+    neue Kompositions-/Qualitaetsmodul bereits, aufrufbar ueber die Watchlist).
+
+    `conn` (2026-07-25, #334 Stufe 2, optional): wird die objektiv gegatete
+    Score-Gewichtung (_kategorie_score_bonus(), siehe dort) als primaerer
+    Sortierschluessel VOR dem bisherigen alphabetischen Namen angewendet - der
+    Name bleibt unveraendert der Tie-Breaker. Ohne `conn` (z.B. Alt-Aufrufer,
+    synthetische Tests) bleibt die Sortierung rein alphabetisch wie bisher
+    (P-8, kein Absturz/Verhaltensbruch)."""
     candidates: list[ScreenerCandidate] = []
     for asset in bitpanda_assets:
         if asset.group not in ("etf", "etc"):
@@ -171,5 +214,19 @@ def scan_etf_candidates(watchlist, bitpanda_assets: list[BitpandaAsset]) -> list
             hauptgruppe=kategorie[0] if kategorie else None,
             unterkategorie=kategorie[1] if kategorie else None,
         ))
-    candidates.sort(key=lambda c: c.name)
+
+    if conn is None:
+        candidates.sort(key=lambda c: c.name)
+        return candidates
+
+    from datetime import datetime, timezone
+
+    from agent.kategorie_vorschlaege import _lade_heutiges_schicht2_ergebnis
+
+    cfg = config.load_config().get("kategorie_score_gewichtung", {})
+    these_index = kategorie_thesen.index_aktive_thesen(db.get_aktive_thesen(conn))
+    schicht2 = _lade_heutiges_schicht2_ergebnis(conn, datetime.now(timezone.utc))
+    for c in candidates:
+        c.kategorie_score_bonus = _kategorie_score_bonus(conn, c, these_index, schicht2, cfg)
+    candidates.sort(key=lambda c: (-c.kategorie_score_bonus, c.name))
     return candidates

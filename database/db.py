@@ -14,6 +14,7 @@ from database.models import (
     HebelSignal,
     HebelTrigger,
     Holding,
+    KategorieSyntheseErgebnis,
     MacroSnapshot,
     MakroAnalogErgebnis,
     MakroHistorieMonat,
@@ -437,6 +438,15 @@ CREATE TABLE IF NOT EXISTS these_aenderungsvorschlaege (
 CREATE INDEX IF NOT EXISTS idx_these_aenderungsvorschlaege_these_id ON these_aenderungsvorschlaege(these_id);
 CREATE INDEX IF NOT EXISTS idx_these_aenderungsvorschlaege_status ON these_aenderungsvorschlaege(status);
 CREATE INDEX IF NOT EXISTS idx_these_aenderungsvorschlaege_kategorie ON these_aenderungsvorschlaege(hauptgruppe, unterkategorie);
+
+-- #333 Schicht 2 (2026-07-25) - gecachtes taegliches LLM-Synthese-Ergebnis
+-- ueber ALLE Kategorien hinweg, siehe database/models.py::
+-- KategorieSyntheseErgebnis. Gleiches Cache-Prinzip wie makro_analog_ergebnis.
+CREATE TABLE IF NOT EXISTS kategorie_synthese_ergebnis (
+    erstellt_am               TEXT PRIMARY KEY,
+    kategorie_ergebnisse_json TEXT NOT NULL,
+    llm_model                 TEXT NOT NULL
+);
 
 -- OI-Abdeckungs-Status (2026-07-19, echter Notebook-Fund: KAS/KAIA/FLOKI/
 -- TURBO/CANTON scheiterten wiederholt bei ALLEN drei Boersen) - anders als
@@ -1449,6 +1459,24 @@ def get_latest_makro_analog_ergebnis(conn: sqlite3.Connection) -> MakroAnalogErg
         "SELECT berechnet_am, ergebnis_json FROM makro_analog_ergebnis ORDER BY berechnet_am DESC LIMIT 1"
     ).fetchone()
     return MakroAnalogErgebnis(**dict(row)) if row else None
+
+
+def upsert_kategorie_synthese_ergebnis(conn: sqlite3.Connection, ergebnis: KategorieSyntheseErgebnis) -> None:
+    conn.execute(
+        "INSERT INTO kategorie_synthese_ergebnis (erstellt_am, kategorie_ergebnisse_json, llm_model) "
+        "VALUES (?, ?, ?) ON CONFLICT(erstellt_am) DO UPDATE SET "
+        "kategorie_ergebnisse_json = excluded.kategorie_ergebnisse_json, llm_model = excluded.llm_model",
+        (ergebnis.erstellt_am, ergebnis.kategorie_ergebnisse_json, ergebnis.llm_model),
+    )
+    conn.commit()
+
+
+def get_latest_kategorie_synthese_ergebnis(conn: sqlite3.Connection) -> KategorieSyntheseErgebnis | None:
+    row = conn.execute(
+        "SELECT erstellt_am, kategorie_ergebnisse_json, llm_model FROM kategorie_synthese_ergebnis "
+        "ORDER BY erstellt_am DESC LIMIT 1"
+    ).fetchone()
+    return KategorieSyntheseErgebnis(**dict(row)) if row else None
 
 
 _THESE_COLUMNS = (

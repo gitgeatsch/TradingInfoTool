@@ -189,7 +189,11 @@ class ScreenerView(ttk.Frame):
         try:
             bitpanda_assets = get_listed_non_crypto_assets()
             aktien_candidates = scan_aktien_candidates(self._watchlist, bitpanda_assets)
-            etf_candidates = scan_etf_candidates(self._watchlist, bitpanda_assets)
+            conn = self._db_conn_factory()
+            try:
+                etf_candidates = scan_etf_candidates(self._watchlist, bitpanda_assets, conn=conn)
+            finally:
+                conn.close()
             candidates = aktien_candidates + etf_candidates
             error = None
         except Exception as exc:  # noqa: BLE001 - an die UI durchreichen statt den Thread stumm sterben zu lassen
@@ -257,6 +261,13 @@ class ScreenerView(ttk.Frame):
                 )
                 tooltip_teile.append(
                     f"Aktive These ({these_kategorie_name}, {richtung_label}): {these.begruendung}"
+                )
+            if c.kategorie_score_bonus != 0.0:
+                richtung_wort = "Bonus" if c.kategorie_score_bonus > 0 else "Malus"
+                tooltip_teile.append(
+                    f"Kategorie-Score-{richtung_wort} ({c.kategorie_score_bonus:+.1f}): objektive Einschaetzung "
+                    "der aktiven These durch unabhaengige Marktdaten "
+                    f"({'gestuetzt' if c.kategorie_score_bonus > 0 else 'widerlegt'})."
                 )
             erklaerung = _erklaerung_fehlende_daten(c)
             if erklaerung is not None:
