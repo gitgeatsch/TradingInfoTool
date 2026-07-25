@@ -1068,6 +1068,35 @@ liquiditaetszonen:
   naehe_warnschwelle_relativ: 0.01       # 1% - ab wann der aktuelle Kurs als "nahe
     # an einer Zone" fuer den Risikofaktor/Fakt gilt.
 
+# --- Signal-Stabilitaet (2026-07-25, echter NEAR/LINK-Fund, siehe
+# agent/krypto/signal_stabilitaet.py) - Krypto Spot+Hebel, macht sichtbar ob
+# ein Signal ueber mehrere Bewertungszyklen KONSISTENT war oder an der
+# Gate-Schwelle oszilliert. Echter Warncharakter (nicht nur neutral wie
+# Liquiditaetszonen), beeinflusst aber NIE die eigene Konfidenz-Berechnung
+# des aktuellen Laufs (waere zirkulaer). ---
+signal_stabilitaet:
+  aktiv: true
+  anzahl_zyklen: 6                       # wie viele der letzten Bewertungen (VOR
+    # dem aktuellen Lauf) betrachtet werden - bei Hebel (15-Min-Screening-Takt)
+    # deckt das ca. 24-48h ab, je nach Kandidatur-Kadenz.
+  spannweite_schwelle_pct: 10            # ab dieser Konfidenz-Spannweite (Max-Min)
+    # ueber die letzten Zyklen gilt ein Signal als instabil (zusaetzlich zur
+    # Aktionswechsel-Pruefung, siehe unten).
+
+# --- Volatilitaets-Perzentil (2026-07-25, siehe indicators/calculations.py::
+# atr_percentile()) - Krypto Spot+Hebel, zeigt ob die AKTUELLE Volatilitaet
+# fuer GENAU DIESEN Coin historisch hoch oder niedrig ist. Reiner Risiko-/
+# Positionsgroessen-Kontext, KEINE Richtungsaussage. Nutzt die bereits
+# berechnete ATR-Zeitreihe wieder (keine eigene atr_periode/lookback_tage-
+# Konfiguration - waere ungenutzter, irrefuehrender Konfig-Wert, da die
+# zugrundeliegende Historientiefe bereits durch die bestehenden Backfill-
+# Grenzen (365 Tage CoinGecko / bis zu 720 Tage Kraken) gesetzt ist). ---
+volatilitaets_perzentil:
+  aktiv: true
+  hoch_schwelle_perzentil: 85            # ab diesem Perzentil gilt die Volatilitaet
+    # als ungewoehnlich hoch fuer diesen Coin -> Risikofaktor "negativ"
+    # (Positionsgroesse/Stop konservativer waehlen), sonst "neutral".
+
 # --- Backward-Tracking (Selbstverifikations-Vision Schritt 2, siehe
 # Basisinfos/Regelwerksmanual.md Kap. 9 / Spezifikation Kap. 16) ---
 backward_tracking:

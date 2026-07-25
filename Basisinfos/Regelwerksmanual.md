@@ -7982,3 +7982,93 @@ Hebel, Multi-Asset (Aktien/Rohstoffe/Themen-ETF) UND Absicherungspositionen
 (Hedge) - nicht nur die zuerst gefundene. Heute war das bereits der dritte
 Fund dieses Musters am selben Tag (Liquiditätszonen-Grafik nur Hebel,
 Retail-Konsens nur Hebel, jetzt Konfidenz-Prompt nur Spot/Hebel).
+
+---
+
+## Nachtrag (2026-07-25): echter BTC-Hebel-Signal-Review - Antizyklisch-Kategorie-Loophole + Liquiditätszonen-Währungs-Bug
+
+Nutzer bat um eine Experten-Bewertung eines real eingetroffenen BTC-Hebel-
+ERÖFFNEN-LONG-Signals (Screenshots). Zwei inhaltliche Funde, beide nach der
+"alle Varianten prüfen"-Vorgabe auf Spot+Hebel bzw. Spot+Hebel+App+E-Mail
+ausgeweitet:
+
+### 1. Antizyklisch-Regel-8-Loophole (Hebel) + fehlende Absicherung (Spot)
+
+Die bestehende Regel 8 (`hebel_analyst.py`, siehe Nachtrag 2026-07-22 oben)
+verbot bereits, einen gleichgerichteten Retail-/Long-Konten-Konsens unter
+`kategorie: antizyklisch` als Stütze zu formulieren - erlaubte aber
+ausdrücklich, denselben Inhalt unter "eine andere Kategorie" zu verschieben.
+Genau das geschah im echten Signal: Long-Konten-Anteil 65,2% wurde zweimal
+als bullisher "Top-Grund" verwendet (einmal vermutlich unter einer anderen
+Kategorie als `antizyklisch`), obwohl Abschnitt 3 (deterministischer
+Risikofaktor) die Lage korrekt als Warnsignal einordnete - ein innerer
+Widerspruch im selben Signal.
+
+**Fix:** Regel 8 (Hebel) um einen expliziten Satz ergänzt: das Verbot gilt
+für den INHALT, nicht nur für das Label `kategorie: antizyklisch` - unter
+KEINER Kategorie (auch nicht technisch/fundamental/makro) darf ein
+gleichgerichteter Retail-Konsens als Stütze formuliert werden, das
+Umbenennen der Kategorie umgeht das Verbot nicht.
+
+**Spot (`analyst.py`, Regel 15) hatte zusätzlich eine ältere, größere
+Lücke:** dort stand bisher NUR der Extremfall-Satz (`retail_long_bias_
+extrem`), die 2026-07-22 nachgezogene Moderat-Fall-Absicherung ("auch bei
+NUR moderater Mehrheit") und die Kategorie-Loophole-Schließung fehlten
+komplett. Beide beim heutigen Fix nachgezogen - Spot-Regel 15 ist jetzt
+inhaltlich identisch zu Hebel-Regel 8 (angepasst auf `action`-Werte
+KAUFEN/NACHKAUFEN statt `richtung`).
+
+**Scope-Prüfung (Nutzer-Vorgabe):** `long_account_pct`/Retail-Konsens-Daten
+existieren nur in Krypto Spot+Hebel (`anticyclic.py`), nicht in Aktien/
+Rohstoffe/Themen-ETF/Hedge - dort ist kein Fix nötig, per Grep bestätigt.
+
+### 2. Liquiditätszonen-Grafik: USD/EUR-Verwechslung (Spot+Hebel, App+E-Mail)
+
+Zweiter, unabhängiger Fund aus demselben Signal: die Liquiditätszonen-
+Grafik zeigte Funding-Kosten-Nachbarschaft im falschen Referenzsystem.
+Root Cause: `liquiditaetszonen_fakt()` (`agent/krypto/liquidity_zones.py`)
+wird in `pipeline.py`/`hebel_pipeline.py` mit `price_snap.price_usd` bzw.
+USD-denominierten `closes` aufgerufen (aus `db.get_price_history()`) - die
+gespeicherten Zonen-Preise UND die eingebettete `kursverlauf`-Reihe sind
+also faktisch USD-Werte. Alle vier Aufrufstellen von
+`render_liquiditaetszonen_chart()` (`ui/signals_view.py`, `ui/hebel_view.py`,
+`scheduler/background.py` x2 für Spot-/Hebel-E-Mail) lasen jedoch
+`facts["preis"]["eur"]` als Referenzpreis und beschrifteten den Chart als
+"EUR" - eine EUR-Referenzlinie wurde mit USD-Zonenlinien und einer USD-
+Kursverlaufslinie gemischt und falsch beschriftet. Betraf sowohl die
+Achsen-Skalierung (Y-Range gebaut aus gemischten EUR+USD-Werten) als auch
+jede angezeigte Zahl.
+
+Der LLM-Prompt selbst (Regel 17 Hebel / Regel 16 Spot) ist NICHT betroffen -
+dort wird nur mit `abstand_prozent` (währungsneutral) argumentiert, nie
+mit einer absoluten Preis-Einheit.
+
+**Fix:** alle vier Aufrufstellen auf `facts["preis"]["usd"]` bzw.
+`live_snap.price_usd` und Label `"USD"` umgestellt - konsistent mit der
+Datengrundlage, keine Änderung an der Berechnungslogik nötig (nur
+Anzeigeschicht). Alternative (historische EUR-Umrechnung der Zonen-Preise)
+wurde verworfen, da keine historischen Tages-FX-Kurse verfügbar sind -
+gleiche Pragmatik wie beim Funding-Kosten-EUR-Fix (aktueller `eur_usd_fx_
+rate`, keine rückwirkende Umrechnung).
+
+### 3. Funding-Kosten jetzt auch in EUR (Hebel)
+
+Dritter, kleinerer Fund: der Funding-Kosten-Risikofaktor
+(`hebel_risk_gate.py::compute_risikofaktoren_hebel()`) zeigte den USD-
+Betrag pro Tag, aber (anders als Liquidationspreis/Eigenkapitalbedarf seit
+Task #401) keine EUR-Entsprechung. Fix: `eur_usd_fx_rate`-Parameter
+ergänzt, gleiche `wert_eur = wert_usd / eur_usd_fx_rate`-Formel wie bei
+Liquidationspreis - Ergebnis z. B. "2,66 USD/Tag (2,32 EUR/Tag) zulasten
+der Position". Reiner Hebel-Fund (Funding-Kosten existieren nur bei
+gehebelten Positionen, kein Spot-Pendant nötig - per Scope-Prüfung
+bestätigt).
+
+**Verifiziert:** Syntax-/Import-Check aller sieben geänderten Dateien
+(`hebel_analyst.py`, `analyst.py`, `ui/signals_view.py`, `ui/hebel_view.py`,
+`scheduler/background.py`, `hebel_risk_gate.py`), synthetischer Funktionstest
+für die EUR-Umrechnung (mit/ohne `fx_rate`), synthetischer Rendering-Test
+für `render_liquiditaetszonen_chart()` mit USD-Daten (kein Absturz, PNG
+> 1000 Bytes). Kein Mistral-A/B-Test für die Regel-8/15-Textänderung in
+dieser Runde (reine Präzisierung eines bereits bestehenden Verbots, kein
+neuer Schwellenwert/Gate - anders als die Konfidenz-Prompt-Fixes, die
+tatsächlich das Konfidenz-Niveau verschieben).

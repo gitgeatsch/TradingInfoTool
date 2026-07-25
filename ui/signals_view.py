@@ -526,6 +526,7 @@ class SignalsView(ttk.Frame):
 
         self._set_detail_text("\n".join(lines))
         self._render_liquiditaetszonen_chart(signal)
+        self._render_signal_stabilitaet_chart(signal)
 
     def _render_liquiditaetszonen_chart(self, signal) -> None:
         """Bettet dieselbe Liquiditätszonen-Grafik wie ui/hebel_view.py unten im
@@ -540,10 +541,16 @@ class SignalsView(ttk.Frame):
             liquiditaetszonen = facts.get("liquiditaetszonen")
             if not liquiditaetszonen:
                 return
-            preis_eur = (facts.get("preis") or {}).get("eur")
-            if not preis_eur:
+            # BUGFIX (2026-07-25, echter Nutzer-Fund am BTC-Hebel-Signal, gilt
+            # identisch fuer Spot): die Zonen-/Kursverlauf-Preise im Fakt sind
+            # USD-denominiert (liquiditaetszonen_fakt() bekommt price_snap.
+            # price_usd/closes-USD, siehe pipeline.py), wurden hier aber mit
+            # einem EUR-Referenzpreis gemischt und als "EUR" beschriftet -
+            # falsche Einheit UND verzerrte Chart-Skalierung. USD durchgaengig.
+            preis_usd = (facts.get("preis") or {}).get("usd")
+            if not preis_usd:
                 return
-            live_preis_eur = None
+            live_preis_usd = None
             try:
                 conn = self._db_conn_factory()
                 try:
@@ -551,12 +558,12 @@ class SignalsView(ttk.Frame):
                 finally:
                     conn.close()
                 if live_snap is not None:
-                    live_preis_eur = live_snap.price_eur
+                    live_preis_usd = live_snap.price_usd
             except Exception:
                 logger.exception("Live-Kurs-Nachladung für Kombianzeige (%s) fehlgeschlagen", signal.symbol)
             from ui.liquidity_chart import render_liquiditaetszonen_chart
 
-            png = render_liquiditaetszonen_chart(liquiditaetszonen, preis_eur, "EUR", live_preis=live_preis_eur)
+            png = render_liquiditaetszonen_chart(liquiditaetszonen, preis_usd, "USD", live_preis=live_preis_usd)
             if png is None:
                 return
             self._detail_chart_image = tk.PhotoImage(data=png)
@@ -566,6 +573,31 @@ class SignalsView(ttk.Frame):
             self.detail_text.config(state="disabled")
         except Exception:
             logger.exception("Liquiditätszonen-Grafik im Detail-Panel für %s fehlgeschlagen", signal.symbol)
+
+    def _render_signal_stabilitaet_chart(self, signal) -> None:
+        """Bettet dieselbe Signal-Stabilitaets-Grafik wie ui/hebel_view.py
+        unten im Detail-Panel ein (2026-07-25, echter NEAR/LINK-Fund). Eigenes
+        `self._detail_chart_image_stabilitaet`-Attribut (nicht `self.
+        _detail_chart_image` wiederverwendet), siehe hebel_view.py fuer die
+        volle Herleitung dieser Tkinter-Falle."""
+        self._detail_chart_image_stabilitaet = None
+        try:
+            facts = json.loads(signal.facts_json)
+            signal_stabilitaet = facts.get("signal_stabilitaet")
+            if not signal_stabilitaet:
+                return
+            from ui.signal_stabilitaet_chart import render_signal_stabilitaet_chart
+
+            png = render_signal_stabilitaet_chart(signal_stabilitaet)
+            if png is None:
+                return
+            self._detail_chart_image_stabilitaet = tk.PhotoImage(data=png)
+            self.detail_text.config(state="normal")
+            self.detail_text.insert("end", "\n")
+            self.detail_text.image_create("end", image=self._detail_chart_image_stabilitaet)
+            self.detail_text.config(state="disabled")
+        except Exception:
+            logger.exception("Signal-Stabilitaets-Grafik im Detail-Panel für %s fehlgeschlagen", signal.symbol)
 
     def _set_detail_text(self, text: str) -> None:
         render_detail_text(self.detail_text, text)

@@ -1116,9 +1116,14 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None, c
 
             facts = _json.loads(signal.facts_json)
             liquiditaetszonen = facts.get("liquiditaetszonen")
-            preis_eur = (facts.get("preis") or {}).get("eur")
-            if liquiditaetszonen and preis_eur:
-                live_preis_eur = None
+            # BUGFIX (2026-07-25, echter Nutzer-Fund am BTC-Hebel-Signal, gilt
+            # identisch fuer Spot): Zonen-/Kursverlauf-Preise im Fakt sind USD-
+            # denominiert (liquiditaetszonen_fakt() bekommt price_snap.price_usd/
+            # closes-USD), wurden hier aber mit einem EUR-Referenzpreis gemischt
+            # und als "EUR" beschriftet - falsche Einheit UND verzerrte Skalierung.
+            preis_usd = (facts.get("preis") or {}).get("usd")
+            if liquiditaetszonen and preis_usd:
+                live_preis_usd = None
                 if conn_factory is not None:
                     try:
                         conn = conn_factory()
@@ -1127,18 +1132,40 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None, c
                         finally:
                             conn.close()
                         if live_snap is not None:
-                            live_preis_eur = live_snap.price_eur
+                            live_preis_usd = live_snap.price_usd
                     except Exception:
                         logger.exception("Live-Kurs-Nachladung für Kombianzeige (%s) fehlgeschlagen", signal.symbol)
                 chart_png = render_liquiditaetszonen_chart(
-                    liquiditaetszonen, preis_eur, "EUR", live_preis=live_preis_eur,
+                    liquiditaetszonen, preis_usd, "USD", live_preis=live_preis_usd,
                 )
         except Exception:
             logger.exception("Liquiditätszonen-Grafik für %s fehlgeschlagen", signal.symbol)
 
+        # Signal-Stabilitaets-Grafik (2026-07-25, echter NEAR/LINK-Fund) -
+        # gleiches Muster wie die Liquiditaetszonen-Grafik oben, eigenstaendiger
+        # zweiter Fakt/Renderer. None, wenn keine ausreichende Historie vorlag.
+        stabilitaet_png = None
+        try:
+            import json as _json
+
+            from ui.signal_stabilitaet_chart import render_signal_stabilitaet_chart
+
+            facts = _json.loads(signal.facts_json)
+            signal_stabilitaet = facts.get("signal_stabilitaet")
+            if signal_stabilitaet:
+                stabilitaet_png = render_signal_stabilitaet_chart(signal_stabilitaet)
+        except Exception:
+            logger.exception("Signal-Stabilitaets-Grafik für %s fehlgeschlagen", signal.symbol)
+
+        inline_images = []
+        if chart_png:
+            inline_images.append({"png": chart_png, "alt": "Liquiditätszonen-Grafik", "filename": "liquiditaetszonen.png"})
+        if stabilitaet_png:
+            inline_images.append({"png": stabilitaet_png, "alt": "Signal-Stabilitäts-Grafik", "filename": "signal_stabilitaet.png"})
+
         send_notification_email(
             f"TradingInfoTool: {signal.action} {signal.symbol}", body, empfaenger,
-            inline_image_png=chart_png,
+            inline_images=inline_images or None,
         )
     except Exception:
         logger.exception("Spot-Empfehlungs-E-Mail für %s fehlgeschlagen", signal.symbol)
@@ -1267,22 +1294,28 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None, 
             liquiditaetszonen = facts.get("liquiditaetszonen")
             # BUGFIX (2026-07-24, siehe ui/hebel_view.py::_render_liquiditaetszonen_
             # chart()-Kommentar fuer den vollen Root-Cause): denselben Preis wie
-            # `kursverlauf` verwenden (facts.preis.eur, zum Erstellungszeitpunkt
-            # dieses Signals eingebettet) statt einer separat nachgeladenen
-            # Live-Notierung - verhindert eine "Aktueller Kurs"-Linie, die nicht
-            # zum Ende der Kursverlauf-Linie passt, spart ausserdem den
-            # DB-Zugriff hier komplett ein.
-            preis_eur = (facts.get("preis") or {}).get("eur")
-            if liquiditaetszonen and preis_eur:
+            # `kursverlauf` verwenden (zum Erstellungszeitpunkt dieses Signals
+            # eingebettet) statt einer separat nachgeladenen Live-Notierung -
+            # verhindert eine "Aktueller Kurs"-Linie, die nicht zum Ende der
+            # Kursverlauf-Linie passt, spart ausserdem den DB-Zugriff hier
+            # komplett ein.
+            # BUGFIX (2026-07-25, echter Nutzer-Fund am BTC-Hebel-Signal): die
+            # Zonen-/Kursverlauf-Preise im Fakt sind USD-denominiert
+            # (liquiditaetszonen_fakt() bekommt price_usd/closes-USD, siehe
+            # hebel_pipeline.py), wurden hier aber mit einem EUR-Referenzpreis
+            # gemischt und als "EUR" beschriftet - falsche Einheit UND
+            # verzerrte Chart-Skalierung. USD durchgaengig statt EUR.
+            preis_usd = (facts.get("preis") or {}).get("usd")
+            if liquiditaetszonen and preis_usd:
                 # Kombianzeige (2026-07-24, Nutzer-Wunsch): zusaetzlich zum
                 # Analysezeitpunkt-Preis den LIVE-Preis nachladen (macht bei
                 # der E-Mail meist keinen grossen Unterschied, da sie kurz
                 # nach der Signal-Erstellung verschickt wird - aber dieselbe
                 # Grafik-Funktion wie die App nutzt, daher konsistent
-                # mitgegeben). Schlaegt der Abruf fehl, bleibt live_preis_eur
+                # mitgegeben). Schlaegt der Abruf fehl, bleibt live_preis_usd
                 # None - Chart faellt automatisch auf die reine
                 # Analysezeitpunkt-Ansicht zurueck.
-                live_preis_eur = None
+                live_preis_usd = None
                 if conn_factory is not None:
                     try:
                         conn = conn_factory()
@@ -1291,18 +1324,40 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None, 
                         finally:
                             conn.close()
                         if live_snap is not None:
-                            live_preis_eur = live_snap.price_eur
+                            live_preis_usd = live_snap.price_usd
                     except Exception:
                         logger.exception("Live-Kurs-Nachladung für Kombianzeige (%s) fehlgeschlagen", signal.symbol)
                 chart_png = render_liquiditaetszonen_chart(
-                    liquiditaetszonen, preis_eur, "EUR", live_preis=live_preis_eur,
+                    liquiditaetszonen, preis_usd, "USD", live_preis=live_preis_usd,
                 )
         except Exception:
             logger.exception("Liquiditätszonen-Grafik für %s fehlgeschlagen", signal.symbol)
 
+        # Signal-Stabilitaets-Grafik (2026-07-25, echter NEAR/LINK-Fund) -
+        # gleiches Muster wie die Liquiditaetszonen-Grafik oben, eigenstaendiger
+        # zweiter Fakt/Renderer. None, wenn keine ausreichende Historie vorlag.
+        stabilitaet_png = None
+        try:
+            import json as _json
+
+            from ui.signal_stabilitaet_chart import render_signal_stabilitaet_chart
+
+            facts = _json.loads(signal.facts_json)
+            signal_stabilitaet = facts.get("signal_stabilitaet")
+            if signal_stabilitaet:
+                stabilitaet_png = render_signal_stabilitaet_chart(signal_stabilitaet)
+        except Exception:
+            logger.exception("Signal-Stabilitaets-Grafik für %s fehlgeschlagen", signal.symbol)
+
+        inline_images = []
+        if chart_png:
+            inline_images.append({"png": chart_png, "alt": "Liquiditätszonen-Grafik", "filename": "liquiditaetszonen.png"})
+        if stabilitaet_png:
+            inline_images.append({"png": stabilitaet_png, "alt": "Signal-Stabilitäts-Grafik", "filename": "signal_stabilitaet.png"})
+
         send_notification_email(
             f"TradingInfoTool: Hebel {signal.action} {signal.symbol} ({signal.richtung})", body, empfaenger,
-            inline_image_png=chart_png,
+            inline_images=inline_images or None,
         )
     except Exception:
         logger.exception("Hebel-Empfehlungs-E-Mail für %s fehlgeschlagen", signal.symbol)

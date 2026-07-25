@@ -126,11 +126,15 @@ def compute_risikofaktoren_hebel(
     sl_abstand_eng_schwelle_relativ: float | None = None,
     funding_rate_stunde: float | None = None,
     funding_kosten_usd_pro_tag: float | None = None,
+    eur_usd_fx_rate: float | None = None,
     funding_rate_hoch_schwelle_relativ_stunde: float | None = None,
     ist_core_asset: bool = False,
     btc_matrix_state: str | None = None,
     btc_matrix_hinweis: str | None = None,
     liquiditaetszonen: dict | None = None,
+    signal_stabilitaet: dict | None = None,
+    atr_perzentil: float | None = None,
+    atr_perzentil_hoch_schwelle: float | None = None,
     kontrathese_zu_position: bool = False,
     kontrathese_llm_richtung: str | None = None,
     kontrathese_bestaetigt: bool = False,
@@ -369,9 +373,18 @@ def compute_risikofaktoren_hebel(
         fakt = f"Ø {funding_rate_stunde * 100:.5f}%/Stunde (Mittelwert letzte 24h)"
         if funding_kosten_usd_pro_tag is not None:
             richtung_hinweis = "zulasten" if funding_kosten_usd_pro_tag >= 0 else "zugunsten"
+            # EUR-Zusatzanzeige (2026-07-25, echter BTC-Fund: Panel zeigt sonst
+            # durchgaengig EUR - Entry/SL/TP nativ, Liquidationspreis/
+            # Eigenkapitalbedarf seit 7e54048 zusaetzlich in EUR - Funding-Kosten
+            # war die einzige verbliebene reine USD-Angabe). Gleiches Muster wie
+            # dort: wert_eur = wert_usd / eur_usd_fx_rate.
+            eur_teil = ""
+            if eur_usd_fx_rate:
+                funding_kosten_eur_pro_tag = abs(funding_kosten_usd_pro_tag) / eur_usd_fx_rate
+                eur_teil = f" ({funding_kosten_eur_pro_tag:.2f} EUR/Tag)"
             fakt += (
-                f" - bei aktueller Positionsgröße ca. {abs(funding_kosten_usd_pro_tag):.2f} USD/Tag "
-                f"{richtung_hinweis} der Position (schwankt mit dem Satz, keine feste Kostenzusage)."
+                f" - bei aktueller Positionsgröße ca. {abs(funding_kosten_usd_pro_tag):.2f} USD/Tag"
+                f"{eur_teil} {richtung_hinweis} der Position (schwankt mit dem Satz, keine feste Kostenzusage)."
             )
         ist_hoch = (
             funding_rate_hoch_schwelle_relativ_stunde is not None
@@ -395,6 +408,36 @@ def compute_risikofaktoren_hebel(
             f"{'Buy-Side' if seite == 'buyside' else 'Sell-Side'}-Zone entfernt "
             f"({zone.get('touches')} Beruehrungen, zuletzt {zone.get('letzte_beruehrung_datum')}) - "
             "moegliches Stop-Hunt-Risiko vor der eigentlichen Bewegung, kein Richtungsurteil.",
+        ))
+
+    # Signal-Stabilitaet (2026-07-25, echter NEAR/LINK-Fund) - anders als
+    # Liquiditaetszonen ECHTER Warncharakter (nicht nur neutral): eine ueber
+    # mehrere Zyklen an der Gate-Schwelle oszillierende Konfidenz ist eine
+    # tatsaechlich geringere Verlaesslichkeit, kein reiner Kontext-Hinweis.
+    if signal_stabilitaet is not None:
+        faktoren.append(Risikofaktor(
+            "Signal-Stabilität", "negativ" if not signal_stabilitaet["stabil"] else "positiv",
+            signal_stabilitaet["einordnung"],
+        ))
+
+    # Volatilitaets-Perzentil (2026-07-25, Baustein 2) - reiner Risiko-/
+    # Positionsgroessen-Kontext, KEIN Richtungsurteil (siehe indicators/
+    # calculations.py::atr_percentile() Docstring) - deshalb nur "negativ" ab
+    # der konfigurierten Hoch-Schwelle (Vorsicht bei Positionsgroesse/Stop),
+    # sonst "neutral", NIE "positiv" (ein niedriges Perzentil ist keine
+    # Kaufbestaetigung).
+    if atr_perzentil is not None:
+        ist_hoch = (
+            atr_perzentil_hoch_schwelle is not None and atr_perzentil >= atr_perzentil_hoch_schwelle
+        )
+        faktoren.append(Risikofaktor(
+            f"Volatilitäts-Perzentil {atr_perzentil:.0f}", "negativ" if ist_hoch else "neutral",
+            (
+                f"{atr_perzentil:.0f}. Perzentil - "
+                + ("ungewöhnlich hohe" if ist_hoch else "normale bis moderate")
+                + " Volatilität für diesen Coin im Vergleich zur eigenen Historie"
+                + (" - Positionsgröße/Stop entsprechend konservativer wählen." if ist_hoch else ".")
+            ),
         ))
 
     return faktoren
@@ -529,6 +572,8 @@ def post_check_hebel(
     retail_long_bias_extreme: bool | None = None, long_account_pct: float | None = None,
     historische_erfolgsquote: dict | None = None, funding_rate_stunde: float | None = None,
     asset_rolle: str | None = None, liquiditaetszonen: dict | None = None,
+    signal_stabilitaet: dict | None = None,
+    atr_perzentil: float | None = None,
     eur_usd_fx_rate: float | None = None,
     position_aktuell=None, kontrathese_verlauf: list | None = None, now_unix: int | None = None,
 ) -> dict:
@@ -832,11 +877,15 @@ def post_check_hebel(
         sl_abstand_eng_schwelle_relativ=hebel_cfg.get("sl_abstand_eng_schwelle_relativ"),
         funding_rate_stunde=funding_rate_stunde,
         funding_kosten_usd_pro_tag=funding_kosten_usd_pro_tag,
+        eur_usd_fx_rate=eur_usd_fx_rate,
         funding_rate_hoch_schwelle_relativ_stunde=hebel_cfg.get("funding_rate_hoch_schwelle_relativ_stunde"),
         ist_core_asset=(asset_rolle == "core"),
         btc_matrix_state=regime_result.btc_matrix_state,
         btc_matrix_hinweis=regime_result.btc_matrix_beschreibung,
         liquiditaetszonen=liquiditaetszonen,
+        signal_stabilitaet=signal_stabilitaet,
+        atr_perzentil=atr_perzentil,
+        atr_perzentil_hoch_schwelle=config.get("volatilitaets_perzentil", {}).get("hoch_schwelle_perzentil"),
         kontrathese_zu_position=kontrathese_zu_position,
         kontrathese_llm_richtung=kontrathese_llm_richtung,
         kontrathese_bestaetigt=kontrathese_bestaetigt,

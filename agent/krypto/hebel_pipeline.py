@@ -22,6 +22,7 @@ from agent.krypto.backward_tracking import compute_win_rate_fact
 from agent.krypto.hebel_analyst import build_hebel_facts, call_llm_for_hebel_signal
 from agent.krypto.liquidity_zones import liquiditaetszonen_fakt
 from agent.krypto.makro_analog import get_cached_makro_analog_fact
+from agent.krypto.signal_stabilitaet import DEFAULT_ANZAHL_ZYKLEN, signal_stabilitaet_fakt
 from agent.krypto.hebel_risk_gate import post_check_hebel, pre_check_hebel
 from agent.krypto.llm_provider import llm_model_label
 from agent.krypto.pipeline import _load_closes_and_ohlc, compute_current_regime, fetch_market_context
@@ -168,6 +169,23 @@ def generate_hebel_signal(
     # Liquiditaetszonen (Marketmaker-Konzept, Stufe 1, 2026-07-23) - rein
     # informativ, siehe agent/krypto/liquidity_zones.py Modul-Docstring.
     liquiditaetszonen = liquiditaetszonen_fakt(snapshot, current_price_usd, config_dict, dates, closes)
+    # Signal-Stabilitaet (2026-07-25, echter NEAR/LINK-Fund) - letzte Bewertungen
+    # VOR diesem Lauf fuer dasselbe (Symbol, Richtung), siehe agent/krypto/
+    # signal_stabilitaet.py Modul-Docstring. Zyklenzahl konfigurierbar, Default
+    # ueber DEFAULT_ANZAHL_ZYKLEN, damit dieselbe Zahl fuer Query-Limit UND
+    # Auswertung gilt (kein stiller Mismatch zwischen beiden).
+    signal_stabilitaet_verlauf = db.get_hebel_signal_history(
+        conn, asset.symbol, trigger.richtung,
+        limit=config_dict.get("signal_stabilitaet", {}).get("anzahl_zyklen", DEFAULT_ANZAHL_ZYKLEN),
+    )
+    signal_stabilitaet = signal_stabilitaet_fakt(signal_stabilitaet_verlauf, config_dict)
+    # Volatilitaets-Perzentil (2026-07-25, Baustein 2) - snapshot.atr_percentile
+    # ist bereits Teil von build_technical_snapshot() (indicators/calculations.py),
+    # hier nur der konfigurierbare aktiv-Toggle (kein eigenes Modul noetig).
+    atr_perzentil = (
+        latest_value(snapshot.atr_percentile)
+        if config_dict.get("volatilitaets_perzentil", {}).get("aktiv", True) else None
+    )
     facts = build_hebel_facts(
         asset, price_snap, snapshot, confluence, regime_result, regime_profile,
         anticyclic_context, market_context, trigger, position_aktuell, pre_result,
@@ -175,6 +193,7 @@ def generate_hebel_signal(
         historische_erfolgsquote=historische_erfolgsquote,
         historischer_makro_vergleich=historischer_makro_vergleich,
         liquiditaetszonen=liquiditaetszonen,
+        signal_stabilitaet=signal_stabilitaet,
     )
 
     try:
@@ -198,6 +217,8 @@ def generate_hebel_signal(
         funding_rate_stunde=anticyclic_context.funding_rate_current,
         asset_rolle=asset.rolle,
         liquiditaetszonen=liquiditaetszonen,
+        signal_stabilitaet=signal_stabilitaet,
+        atr_perzentil=atr_perzentil,
         eur_usd_fx_rate=eur_usd_fx_rate,
         position_aktuell=position_aktuell,
         kontrathese_verlauf=kontrathese_verlauf,

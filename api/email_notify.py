@@ -30,7 +30,7 @@ _INLINE_IMAGE_CID = "liquiditaetszonen-chart"
 
 
 def send_notification_email(
-    subject: str, body: str, empfaenger: str, inline_image_png: bytes | None = None,
+    subject: str, body: str, empfaenger: str, inline_images: list[dict] | None = None,
 ) -> bool:
     """Best-effort - faengt JEDE Exception selbst ab (P-10: ein E-Mail-Fehlschlag
     darf niemals den eigentlichen Fehlerpfad ueberdecken oder die App zum Absturz
@@ -39,13 +39,16 @@ def send_notification_email(
     geklappt hat - Aufrufer koennen das fuer eigene Zwecke nutzen (z.B. Cooldown-
     Zeitstempel nur bei Erfolg aktualisieren), muessen es aber nicht auswerten.
 
-    `inline_image_png` (2026-07-23, Nutzer-Wunsch: Liquiditaetszonen-Grafik auch
-    in der E-Mail, nicht nur in der App) - optional, None bewahrt fuer alle
-    bestehenden Aufrufer den bisherigen reinen Text-Pfad unveraendert (kein
-    Regressionsrisiko fuer Job-Ausfall-/Cash-Veto-Mails etc., die kein Bild
-    mitgeben). Ist ein PNG uebergeben, wird eine multipart/related-Mail mit
-    Text-Alternative (Fallback fuer Clients ohne HTML/Bilder) UND eingebettetem
-    Inline-Bild gebaut - kein Anhang, direkt im Mailtext sichtbar.
+    `inline_images` (2026-07-23, Nutzer-Wunsch: Liquiditaetszonen-Grafik auch in
+    der E-Mail, nicht nur in der App; 2026-07-25 auf eine Liste umgestellt, um
+    zusaetzlich die Signal-Stabilitaets-Grafik in derselben Mail unterzubringen)
+    - optional Liste von `{"png": bytes, "alt": str, "filename": str}`-Dicts,
+    `None`/leere Liste bewahrt fuer alle bestehenden Aufrufer den bisherigen
+    reinen Text-Pfad unveraendert (kein Regressionsrisiko fuer Job-Ausfall-/
+    Cash-Veto-Mails etc., die kein Bild mitgeben). Sind Bilder uebergeben, wird
+    eine multipart/related-Mail mit Text-Alternative (Fallback fuer Clients ohne
+    HTML/Bilder) UND je einem eingebetteten Inline-Bild gebaut - kein Anhang,
+    direkt im Mailtext sichtbar, in der uebergebenen Reihenfolge.
 
     Echter Nutzer-Fund (2026-07-23): Gmails automatisches Dark-Mode-Farb-
     Invertieren griff sowohl den eingebetteten Chart (macht ein fast-weisses
@@ -64,28 +67,35 @@ def send_notification_email(
         return False
 
     try:
-        if inline_image_png is None:
+        if not inline_images:
             msg = MIMEText(body, "plain", "utf-8")
         else:
             msg = MIMEMultipart("related")
             alternative = MIMEMultipart("alternative")
             alternative.attach(MIMEText(body, "plain", "utf-8"))
+            bild_tags = "".join(
+                f"<img src=\"cid:{_INLINE_IMAGE_CID}-{i}\" alt=\"{bild.get('alt', '')}\" "
+                "style=\"background:#ffffff;border:1px solid #dddddd;padding:8px;margin-top:12px;display:block;\">"
+                for i, bild in enumerate(inline_images)
+            )
             html_body = (
                 "<html><head>"
                 "<meta name=\"color-scheme\" content=\"light\">"
                 "<meta name=\"supported-color-schemes\" content=\"light\">"
                 "</head><body style=\"background:#ffffff;color:#1a1a1a;margin:0;padding:12px;\">"
-                + render_detail_html(body)
-                + f"<img src=\"cid:{_INLINE_IMAGE_CID}\" alt=\"Liquiditätszonen-Grafik\" "
-                "style=\"background:#ffffff;border:1px solid #dddddd;padding:8px;margin-top:12px;display:block;\">"
+                + render_detail_html(body) + bild_tags +
                 "</body></html>"
             )
             alternative.attach(MIMEText(html_body, "html", "utf-8"))
             msg.attach(alternative)
-            bild = MIMEImage(inline_image_png, "png")
-            bild.add_header("Content-ID", f"<{_INLINE_IMAGE_CID}>")
-            bild.add_header("Content-Disposition", "inline", filename="liquiditaetszonen.png")
-            msg.attach(bild)
+            for i, bild in enumerate(inline_images):
+                mime_bild = MIMEImage(bild["png"], "png")
+                mime_bild.add_header("Content-ID", f"<{_INLINE_IMAGE_CID}-{i}>")
+                mime_bild.add_header(
+                    "Content-Disposition", "inline",
+                    filename=bild.get("filename", f"grafik-{i}.png"),
+                )
+                msg.attach(mime_bild)
         msg["Subject"] = subject
         msg["From"] = absender
         msg["To"] = empfaenger

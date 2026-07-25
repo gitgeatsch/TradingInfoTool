@@ -164,12 +164,29 @@ praegnanter Satz). `top_gruende` ist eine RANGIERTE ZUSAMMENFASSUNG der wichtigs
 Treiber - sie darf auch fundamentale/makro Gruende enthalten, die nicht Teil der \
 technischen Konfluenz sind. Sie ersetzt NICHT `long_reasoning`, das weiterhin die volle \
 Begruendung je Kategorie enthaelt. WICHTIG bei der Kategorie `antizyklisch`: ein \
-extremer Retail-Konten-Anteil in EINE Richtung (`antizyklisch.retail_long_bias_extrem`) \
-ist ein KONTRAINDIKATOR GEGEN diese Richtung, nicht dafuer - eine bereits stark in eine \
+extremer Retail-Konten-Anteil in EINE Richtung (`antizyklisch.retail_long_bias_extrem`, \
+bzw. `long_konten_anteil_prozent` sehr niedrig fuer die Gegenrichtung) ist ein \
+KONTRAINDIKATOR GEGEN diese Richtung, nicht dafuer - eine bereits stark in eine \
 Richtung positionierte Mehrheit wird bei einer Gegenbewegung zuerst ausgestoppt. Ein \
 `top_gruende`-Eintrag mit `kategorie: antizyklisch`, der auf Retail-Konsens verweist, \
 darf deshalb NIEMALS dieselbe Richtung wie die eigene `action`-Empfehlung (KAUFEN/\
-NACHKAUFEN) stuetzen.
+NACHKAUFEN) stuetzen - stuetzt der Retail-Konsens tatsaechlich deine Richtung (z.B. \
+Retail ueberwiegend long bei einer KAUFEN-Empfehlung), ist das KEIN antizyklisches \
+Argument mehr und gehoert nicht in diese Kategorie. Das gilt AUCH bei einer nur \
+MODERATEN (nicht extremen) Mehrheit in deine Richtung: eine Formulierung wie "Long-\
+Konten-Anteil von 63,5% zeigt eine moderate Positionierung, was Raum fuer eine \
+Erholung laesst" als Stuetze fuer eine KAUFEN-Empfehlung ist FALSCH, weil 63,5% \
+bereits eine Mehrheit IN DERSELBEN Richtung ist (auch wenn nicht extrem), also \
+bestenfalls neutral zu werten, niemals als unterstuetzendes Argument. "Noch nicht \
+extrem, also ist noch Luft nach oben" ist derselbe Fehler nur anders formuliert. \
+WICHTIG (2026-07-25, echter BTC-Hebel-Fund, gilt identisch fuer Spot): dieses Verbot \
+gilt fuer den INHALT, NICHT nur fuer das Label `kategorie: antizyklisch` - ein \
+gleichgerichteter Retail-/Long-Konten-Konsens (extrem oder moderat) darf UNTER KEINER \
+Kategorie (auch nicht technisch/fundamental/makro) als Stuetze fuer deine Richtung \
+formuliert werden, das Umbenennen der Kategorie umgeht das Verbot nicht. Nutze diesen \
+Fakt in `top_gruende` entweder gar nicht, oder ausschliesslich als neutralen/warnenden \
+Hinweis - niemals mit einer stuetzenden Formulierung wie "Raum fuer Erholung", \
+"unterstuetzt Gegenbewegung" o.ae.
 16. Entry/Stop-Loss/Take-Profit sind KEINE Einzelkurse mehr, sondern Kurszonen (von <= \
 bis). Leite jede Zone aus echten, gelieferten Referenzpunkten ab \
 (`technische_analyse.atr.wert`, `technische_analyse.support_resistance`, \
@@ -262,6 +279,17 @@ Risiko vor der eigentlichen Bewegung), sagt NICHTS darueber aus, ob die \
 Richtung selbst richtig ist. Nutze es hoechstens zur Nuancierung von \
 `short_reasoning`/`gegenargument` - verschiebe NIEMALS deine Entry-/Stop-Loss-/\
 Take-Profit-Zonen allein aufgrund dieses Fakts.
+26. Ist `signal_stabilitaet` NICHT null: zeigt, wie stabil die Konfidenz/Aktion \
+fuer dieses Symbol ueber die letzten Bewertungszyklen VOR diesem Lauf war \
+(`stabil` false = Konfidenz schwankte deutlich und/oder die Aktion wechselte \
+mehrfach). Reine TRANSPARENZ-Information, KEIN Eingabewert fuer deine eigene \
+`confidence_pct`-Berechnung (das waere zirkulaer). Du darfst `signal_\
+stabilitaet.einordnung` hoechstens im `short_reasoning` erwaehnen, niemals um \
+deine eigene Konfidenz nach oben oder unten zu korrigieren.
+27. `atr.perzentil` (0-100, falls verfuegbar) zeigt, ob die AKTUELLE Volatilitaet \
+fuer GENAU DIESEN Coin historisch hoch oder niedrig ist. Reiner RISIKO-/\
+Positionsgroessen-Kontext, KEINE Richtungsaussage. Nutze es hoechstens zur \
+Einordnung von Stop-Loss-Abstand/Positionsgroesse in `short_reasoning`.
 
 SCHEMA:
 {
@@ -370,6 +398,7 @@ def build_facts(
     historische_erfolgsquote: dict | None = None,
     historischer_makro_vergleich: dict | None = None,
     liquiditaetszonen: dict | None = None,
+    signal_stabilitaet: dict | None = None,
 ) -> dict:
     macd_val = technical_snapshot.macd
     macd_facts = None
@@ -438,6 +467,7 @@ def build_facts(
         "historische_erfolgsquote": historische_erfolgsquote,
         "historischer_makro_vergleich": historischer_makro_vergleich,
         "liquiditaetszonen": liquiditaetszonen,
+        "signal_stabilitaet": signal_stabilitaet,
         "technische_analyse": {
             "ema": {str(p): _native(latest_value(r)) for p, r in technical_snapshot.ema.items()},
             "macd": macd_facts,
@@ -447,6 +477,7 @@ def build_facts(
                 "wert": _native(latest_value(technical_snapshot.atr)),
                 "label": technical_snapshot.atr_label,
                 "quelle": technical_snapshot.atr_source,
+                "perzentil": _native(latest_value(technical_snapshot.atr_percentile)),
             },
             "support_resistance": technical_snapshot.support_resistance.value
             if technical_snapshot.support_resistance.available

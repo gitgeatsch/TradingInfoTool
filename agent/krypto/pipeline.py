@@ -19,11 +19,12 @@ from agent.krypto.anticyclic import assess as assess_anticyclic
 from agent.krypto.backward_tracking import compute_win_rate_fact
 from agent.krypto.liquidity_zones import liquiditaetszonen_fakt
 from agent.krypto.makro_analog import get_cached_makro_analog_fact
+from agent.krypto.signal_stabilitaet import DEFAULT_ANZAHL_ZYKLEN, signal_stabilitaet_fakt
 from agent.krypto.llm_provider import llm_model_label
 from agent.krypto.regime import determine_regime
 from agent.krypto.risk_gate import CashReserveZielResult, compute_cash_reserve_ziel, pre_check, post_check
 from database.models import MacroSnapshot, Signal
-from indicators.calculations import build_technical_snapshot, summarize_confluence
+from indicators.calculations import build_technical_snapshot, latest_value, summarize_confluence
 from staleness import is_history_stale, is_price_stale
 
 logger = logging.getLogger(__name__)
@@ -579,6 +580,21 @@ def generate_signal(
     liquiditaetszonen = liquiditaetszonen_fakt(
         snapshot, price_snap.price_usd if price_snap else None, config_dict, dates, closes,
     )
+    # Signal-Stabilitaet (2026-07-25, echter NEAR/LINK-Fund) - letzte Bewertungen
+    # VOR diesem Lauf fuer dasselbe Symbol, siehe agent/krypto/
+    # signal_stabilitaet.py Modul-Docstring.
+    signal_stabilitaet_verlauf = db.get_signal_history(
+        conn, asset.symbol,
+        limit=config_dict.get("signal_stabilitaet", {}).get("anzahl_zyklen", DEFAULT_ANZAHL_ZYKLEN),
+    )
+    signal_stabilitaet = signal_stabilitaet_fakt(signal_stabilitaet_verlauf, config_dict)
+    # Volatilitaets-Perzentil (2026-07-25, Baustein 2) - snapshot.atr_percentile
+    # ist bereits Teil von build_technical_snapshot(), hier nur der
+    # konfigurierbare aktiv-Toggle (kein eigenes Modul noetig).
+    atr_perzentil = (
+        latest_value(snapshot.atr_percentile)
+        if config_dict.get("volatilitaets_perzentil", {}).get("aktiv", True) else None
+    )
 
     facts = build_facts(
         asset, price_snap, holdings.get(asset.symbol), snapshot, confluence, regime_result,
@@ -588,6 +604,7 @@ def generate_signal(
         historische_erfolgsquote=historische_erfolgsquote,
         historischer_makro_vergleich=historischer_makro_vergleich,
         liquiditaetszonen=liquiditaetszonen,
+        signal_stabilitaet=signal_stabilitaet,
     )
 
     # R-5.6 Groq-Synthese.
@@ -611,6 +628,8 @@ def generate_signal(
         retail_long_bias_extreme=anticyclic_context.retail_long_bias_extreme,
         long_account_pct=anticyclic_context.long_account_pct,
         liquiditaetszonen=liquiditaetszonen,
+        signal_stabilitaet=signal_stabilitaet,
+        atr_perzentil=atr_perzentil,
     )
     risk_veto = corrected.pop("_risk_veto")
     risk_veto_reason = corrected.pop("_risk_veto_reason")

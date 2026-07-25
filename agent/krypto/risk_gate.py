@@ -474,6 +474,9 @@ def compute_risikofaktoren(
     crv_knapp_schwelle_relativ: float | None,
     retail_long_bias_extreme: bool | None = None, long_account_pct: float | None = None,
     liquiditaetszonen: dict | None = None,
+    signal_stabilitaet: dict | None = None,
+    atr_perzentil: float | None = None,
+    atr_perzentil_hoch_schwelle: float | None = None,
 ) -> list["Risikofaktor"]:
     """Spot/Aktien/Rohstoffe/Themen-ETF-Pendant zu hebel_risk_gate.py::
     compute_risikofaktoren_hebel() - deterministische Zusammenfassung der
@@ -619,6 +622,34 @@ def compute_risikofaktoren(
             "moegliches Stop-Hunt-Risiko vor der eigentlichen Bewegung, kein Richtungsurteil.",
         ))
 
+    # Signal-Stabilitaet (2026-07-25, echter NEAR/LINK-Fund, Krypto-only wie
+    # Liquiditaetszonen - Aktien/Rohstoffe/Themen-ETF reichen dieses Feld nie
+    # durch): echter Warncharakter, nicht nur neutral - eine ueber mehrere
+    # Zyklen an der Gate-Schwelle oszillierende Konfidenz ist eine
+    # tatsaechlich geringere Verlaesslichkeit.
+    if signal_stabilitaet is not None:
+        faktoren.append(Risikofaktor(
+            "Signal-Stabilität", "negativ" if not signal_stabilitaet["stabil"] else "positiv",
+            signal_stabilitaet["einordnung"],
+        ))
+
+    # Volatilitaets-Perzentil (2026-07-25, Baustein 2, Krypto-only wie
+    # Liquiditaetszonen/Signal-Stabilitaet) - reiner Risiko-/Positionsgroessen-
+    # Kontext, KEIN Richtungsurteil, deshalb nie "positiv".
+    if atr_perzentil is not None:
+        ist_hoch = (
+            atr_perzentil_hoch_schwelle is not None and atr_perzentil >= atr_perzentil_hoch_schwelle
+        )
+        faktoren.append(Risikofaktor(
+            f"Volatilitäts-Perzentil {atr_perzentil:.0f}", "negativ" if ist_hoch else "neutral",
+            (
+                f"{atr_perzentil:.0f}. Perzentil - "
+                + ("ungewöhnlich hohe" if ist_hoch else "normale bis moderate")
+                + " Volatilität für diesen Coin im Vergleich zur eigenen Historie"
+                + (" - Positionsgröße/Stop entsprechend konservativer wählen." if ist_hoch else ".")
+            ),
+        ))
+
     return faktoren
 
 
@@ -626,6 +657,8 @@ def post_check(
     parsed: dict, pre_result: RiskPreCheckResult, regime_result, config: dict, confluence=None,
     retail_long_bias_extreme: bool | None = None, long_account_pct: float | None = None,
     liquiditaetszonen: dict | None = None,
+    signal_stabilitaet: dict | None = None,
+    atr_perzentil: float | None = None,
 ) -> dict:
     """Nimmt die bereits validierte (siehe agent/analyst.py) Groq-Antwort und erzwingt
     RM-1/-2/-4/-5, Mindest-Konfidenz (R-5.10) und CRV >= 2.0 (Z-2) noch einmal
@@ -850,6 +883,9 @@ def post_check(
         retail_long_bias_extreme=retail_long_bias_extreme,
         long_account_pct=long_account_pct,
         liquiditaetszonen=liquiditaetszonen,
+        signal_stabilitaet=signal_stabilitaet,
+        atr_perzentil=atr_perzentil,
+        atr_perzentil_hoch_schwelle=config.get("volatilitaets_perzentil", {}).get("hoch_schwelle_perzentil"),
     )
     result["_risikofaktoren"] = [
         {"name": f.name, "bewertung": f.bewertung, "begruendung": f.begruendung} for f in risikofaktoren

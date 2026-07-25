@@ -235,6 +235,37 @@ def latest_value(result: IndicatorResult) -> float | int | None:
     return _last_valid(np.asarray(result.value, dtype=float))
 
 
+MIN_ATR_PERZENTIL_PUNKTE = 30
+
+
+def atr_percentile(atr_result: IndicatorResult) -> IndicatorResult:
+    """Perzentilrang des aktuellsten ATR-/Volatilitaets-Naeherungswerts
+    innerhalb der EIGENEN historischen Verteilung (2026-07-25, Baustein 2 -
+    siehe Memory/Regelwerksmanual "Krypto-Relativwert-Bausteine"): zeigt, ob
+    die AKTUELLE Schwankungsbreite fuer GENAU DIESEN Coin historisch hoch
+    oder niedrig ist - reiner Risiko-/Positionsgroessen-Kontext, KEINE
+    Richtungsaussage. Wiederverwendet die bereits berechnete ATR-Zeitreihe
+    (`atr_wilder()`/`atr_close_to_close_proxy()`, ueber
+    `build_technical_snapshot()`'s Real-OHLC-vs-Proxy-Weiche) - keine zweite
+    Berechnung, keine zusaetzliche Datenquelle. P-10: mind.
+    MIN_ATR_PERZENTIL_PUNKTE gueltige historische Werte noetig, sonst
+    `unavailable` (ein Perzentil aus zu wenigen Punkten waere irrefuehrend
+    praezise)."""
+    if not atr_result.available or atr_result.value is None:
+        return IndicatorResult(None, False, "ATR-/Volatilitätswert selbst nicht verfügbar")
+
+    werte = np.asarray(atr_result.value, dtype=float)
+    gueltige = werte[~np.isnan(werte)]
+    if len(gueltige) < MIN_ATR_PERZENTIL_PUNKTE:
+        reason = f"benötigt mind. {MIN_ATR_PERZENTIL_PUNKTE} gültige ATR-Werte, nur {len(gueltige)} vorhanden"
+        _log_unavailable("ATR-Perzentil", reason)
+        return IndicatorResult(None, False, reason)
+
+    aktuell = gueltige[-1]
+    rang = float((gueltige < aktuell).sum()) / len(gueltige) * 100
+    return IndicatorResult(round(rang, 1), True)
+
+
 @dataclass
 class TechnicalSnapshot:
     """Buendelt alle Chart-/Agent-Indikatoren fuer eine Preisreihe, inkl. der
@@ -255,6 +286,7 @@ class TechnicalSnapshot:
     atr: IndicatorResult
     atr_label: str
     atr_source: str  # "real" | "proxy"
+    atr_percentile: IndicatorResult
     liquidity_zones: IndicatorResult
 
 
@@ -316,6 +348,7 @@ def build_technical_snapshot(
         atr=atr_result,
         atr_label=atr_label,
         atr_source=atr_source,
+        atr_percentile=atr_percentile(atr_result),
         liquidity_zones=liquidity_pools(swing, swing_dates, swing_closes),
     )
 

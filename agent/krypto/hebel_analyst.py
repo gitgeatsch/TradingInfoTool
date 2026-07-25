@@ -135,10 +135,14 @@ Anteil von 63,5% zeigt eine moderate Positionierung, was Raum für eine Erholung
 lässt" als Stütze für eine LONG-Empfehlung - das ist FALSCH, weil 63,5% bereits \
 eine Mehrheit IN DERSELBEN Richtung ist (auch wenn nicht extrem), also bestenfalls \
 neutral zu werten, niemals als unterstützendes Argument. "Noch nicht extrem, also \
-ist noch Luft nach oben" ist derselbe Fehler nur anders formuliert - nutze für \
-einen nicht-extremen, aber gleichgerichteten Retail-Konsens gar keinen \
-`top_gruende`-Eintrag mit `kategorie: antizyklisch`, sondern eine andere Kategorie \
-oder lass diesen Fakt in `top_gruende` schlicht weg.
+ist noch Luft nach oben" ist derselbe Fehler nur anders formuliert. WICHTIG \
+(2026-07-25, echter BTC-Fund): dieses Verbot gilt für den INHALT, NICHT nur für \
+das Label `kategorie: antizyklisch` - ein gleichgerichteter Retail-/Long-Konten-\
+Konsens (extrem oder moderat) darf UNTER KEINER Kategorie (auch nicht technisch/\
+fundamental/makro) als Stütze für deine Richtung formuliert werden, das Umbenennen \
+der Kategorie umgeht das Verbot nicht. Nutze diesen Fakt in `top_gruende` entweder \
+gar nicht, oder ausschließlich als neutralen/warnenden Hinweis - niemals mit einer \
+stützenden Formulierung wie "Raum für Erholung", "unterstützt Gegenbewegung" o.ä.
 9. `key_risks` MUSS bei ERÖFFNEN/NACHKAUFEN/HEBEL_ERHÖHEN mindestens einen Eintrag \
 zu hebel-spezifischen Risiken enthalten (Liquidationsrisiko bei schnellen \
 Kursbewegungen, laufende Finanzierungsgebühr bei längerer Haltedauer) - das sind \
@@ -212,6 +216,22 @@ Richtung selbst richtig ist. Nutze es hoechstens zur Nuancierung von \
 Sell-Side-Zone, ein kurzer Spike unter den Stop ist nicht auszuschliessen") - \
 verschiebe NIEMALS deine Entry-/Stop-Loss-/Take-Profit-Zonen allein aufgrund \
 dieses Fakts, das bleibt deiner eigenstaendigen technischen Analyse ueberlassen.
+18. Ist `signal_stabilitaet` NICHT null: zeigt, wie stabil die Konfidenz/Aktion \
+fuer dieses (Symbol, Richtung)-Paar ueber die letzten Bewertungszyklen VOR \
+diesem Lauf war (`stabil` false = Konfidenz schwankte deutlich und/oder die \
+Aktion wechselte mehrfach). Das ist eine reine TRANSPARENZ-Information fuer den \
+Nutzer, KEIN Eingabewert fuer deine eigene `confidence_pct`-Berechnung (das \
+waere zirkulaer - deine Bewertung MUSS unabhaengig aus den aktuellen Fakten \
+entstehen). Du darfst `signal_stabilitaet.einordnung` hoechstens im `short_\
+reasoning` erwaehnen, um dem Nutzer Kontext zu geben, niemals um deine eigene \
+Konfidenz nach oben oder unten zu korrigieren.
+19. `atr.perzentil` (0-100, falls verfuegbar) zeigt, ob die AKTUELLE Volatilitaet \
+fuer GENAU DIESEN Coin historisch hoch oder niedrig ist (100 = hoechste je \
+gesehene Schwankungsbreite, 0 = niedrigste). Reiner RISIKO-/Positionsgroessen-\
+Kontext, KEINE Richtungsaussage - ein hohes Perzentil sagt nichts darueber aus, \
+ob der Kurs steigt oder faellt, nur dass Bewegungen aktuell ungewoehnlich gross \
+ausfallen koennen. Nutze es hoechstens zur Einordnung von Stop-Loss-Abstand/\
+Hebelwahl in `short_reasoning`.
 
 SCHEMA:
 {
@@ -348,6 +368,7 @@ def build_hebel_facts(
     historische_erfolgsquote: dict | None = None,
     historischer_makro_vergleich: dict | None = None,
     liquiditaetszonen: dict | None = None,
+    signal_stabilitaet: dict | None = None,
 ) -> dict:
     """Analog agent/krypto/analyst.py::build_facts() - wiederverwendet dieselben
     Bausteine fuer technische_analyse/regime/markt_kontext/antizyklisch 1:1 (siehe
@@ -416,6 +437,7 @@ def build_hebel_facts(
                 "wert": _native(latest_value(technical_snapshot.atr)),
                 "label": technical_snapshot.atr_label,
                 "quelle": technical_snapshot.atr_source,
+                "perzentil": _native(latest_value(technical_snapshot.atr_percentile)),
             },
             "support_resistance": technical_snapshot.support_resistance.value
             if technical_snapshot.support_resistance.available
@@ -501,6 +523,7 @@ def build_hebel_facts(
         "historische_erfolgsquote": historische_erfolgsquote,
         "historischer_makro_vergleich": historischer_makro_vergleich,
         "liquiditaetszonen": liquiditaetszonen,
+        "signal_stabilitaet": signal_stabilitaet,
         "hebel_kontext": {
             "max_hebel_config": pre_result.config_max_hebel,
             "max_sicherer_hebel_geschaetzt": _native(pre_result.max_sicherer_hebel),
