@@ -115,7 +115,15 @@ class HebelView(ttk.Frame):
             self.tree.heading(col, text=headings[col])
             self.tree.column(col, width=110, anchor="w" if col in ("symbol", "status") else "center")
         self.tree.tag_configure("kandidat", foreground=theme.info_color())
-        self._reapply_sort = make_sortable(self.tree)
+        # 2026-07-25 (Nutzer-Fund "Vermischung beim Sortieren"): "hebel_score"
+        # zeigt je nach Zeilentyp entweder den Hebel-Multiplikator ("5.0x",
+        # echtes Signal) oder den rohen Kandidaten-Score ("78", noch nicht
+        # bewertet) - beides muss numerisch, nicht alphabetisch sortiert
+        # werden. "zeitpunkt" ist eine Datumsspalte (siehe date_columns-
+        # Docstring in sortable_tree.py).
+        self._reapply_sort = make_sortable(
+            self.tree, numeric_columns=frozenset({"hebel_score"}), date_columns=frozenset({"zeitpunkt"}),
+        )
         add_heading_tooltips(self.tree, _LIST_COLUMN_DESCRIPTIONS)
         add_row_tooltips(self.tree, lambda iid: self._wartezeit_tooltips.get(iid))
         self.tree.pack(fill="both", expand=True)

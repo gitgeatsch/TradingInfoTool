@@ -153,7 +153,7 @@ class SignalsView(ttk.Frame):
         for col in columns:
             self.tree.heading(col, text=headings[col])
             self.tree.column(col, width=110, anchor="w" if col in ("symbol", "name") else "center")
-        self._reapply_sort = make_sortable(self.tree)
+        self._reapply_sort = make_sortable(self.tree, date_columns=frozenset({"berechnet"}))
         add_heading_tooltips(self.tree, _SIGNAL_LIST_COLUMN_DESCRIPTIONS)
         self.tree.pack(fill="both", expand=True)
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
@@ -247,7 +247,15 @@ class SignalsView(ttk.Frame):
         for item in self.tree.get_children():
             self.tree.delete(item)
 
-        for asset in sorted(alle_assets, key=lambda a: a.symbol):
+        # 2026-07-25 (Nutzer-Wunsch): Standard-Reihenfolge beim Start/Refresh ist
+        # jetzt neuestes Signal zuerst (wie im Hebel-Tab, siehe dortiges refresh())
+        # statt alphabetisch nach Symbol. Assets ganz ohne Signal (sig is None,
+        # created_at="") sortieren automatisch ans Ende (leerer String < jedes
+        # echte Datum).
+        for asset in sorted(
+            alle_assets, key=lambda a: (latest_by_symbol.get(a.symbol).created_at if latest_by_symbol.get(a.symbol) else ""),
+            reverse=True,
+        ):
             sig = latest_by_symbol.get(asset.symbol)
             action_text = sig.action if sig else "-"
             created_text = sig.created_at[:16].replace("T", " ") if sig else "-"

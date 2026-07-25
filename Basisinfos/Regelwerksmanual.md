@@ -8363,3 +8363,52 @@ Fälle erweitert (alle 5 vormals unabgefangenen Aktionen bei
 Richtungs-Mismatch, der reale HYPE-Fall exakt nachgestellt, HALTEN-Mismatch
 bleibt unberührt) - 39/39 Checks bestehen, inkl. aller 24 bereits
 bestehenden Regressionsfälle unverändert grün.
+
+## Nachtrag (2026-07-25, gleicher Tag): Signale-/Hebel-Tab-Sortierung - Standard-Reihenfolge + gemischte Wertetypen beim Klick-Sortieren
+
+Nutzer-Nachfrage zur aktuellen Standard-Sortierung beider Tabellen deckte
+zwei getrennte Punkte auf.
+
+### 1. Standard-Reihenfolge beim Start/Refresh
+
+Empirisch gegen eine echte DB-Kopie geprüft (nicht nur am Code): Hebel-Tab
+war bereits korrekt (`created_at` absteigend, neuestes zuerst,
+`ui/hebel_view.py::refresh()`). Signale-Tab war dagegen alphabetisch nach
+Symbol sortiert (`ui/signals_view.py::_refresh_list()`), nicht chronologisch
+- Nutzer-Wunsch: beide Tabellen sollen beim Start die aktuellsten Einträge
+oben zeigen. Fix: Signale-Tab sortiert jetzt ebenfalls nach `created_at`
+absteigend; Assets ganz ohne Signal fallen automatisch ans Ende (leerer
+String als Sortierschlüssel).
+
+### 2. Klick-Sortierung mischte Wertetypen (echter Nutzer-Fund)
+
+`make_sortable()` (`ui/sortable_tree.py`) sortierte bisher JEDE Spalte ohne
+`numeric_columns`-Angabe rein alphabetisch als String - betraf beide
+Tabellen komplett, da keine von beiden `numeric_columns` gesetzt hatte.
+Konkret gefundener Fall: die Hebel-Tab-Spalte "Hebel/Score" zeigt je nach
+Zeilentyp ENTWEDER den Hebel-Multiplikator eines echten Signals ("5.0x")
+ODER den rohen Score eines noch unbewerteten Kandidaten ("78", ohne "x") -
+beim reinen String-Vergleich landete "10.0x" durch die Ziffer "1" VOR
+"5.0x", und Werte wie "78" wurden komplett falsch zwischen den "x"-Werten
+einsortiert ("Vermischung").
+
+**Fix** (`ui/sortable_tree.py`):
+- `_STRIP_RE` entfernt jetzt zusätzlich das "x"-Suffix, sodass
+  `_numeric_key()` "5.0x" korrekt als 5.0 parst (bisheriges Verhalten für
+  alle anderen `numeric_columns` unverändert - per Regressionstest
+  bestätigt, siehe unten).
+- Neue Funktion `_date_key()` + neuer `date_columns`-Parameter für
+  `make_sortable()`: Datumsspalten ("YYYY-MM-DD HH:MM") sortierten für sich
+  genommen zwar bereits korrekt chronologisch als String, aber '-' (kein
+  Wert) landete je nach Sortierrichtung inkonsistent mal vorne, mal hinten
+  (ASCII: '-' < Ziffern) statt wie bei Zahlen IMMER ans Ende.
+- `ui/hebel_view.py`: `numeric_columns={"hebel_score"}`,
+  `date_columns={"zeitpunkt"}`.
+- `ui/signals_view.py`: `date_columns={"berechnet"}`.
+
+**Verifiziert:** `_numeric_key()`/`_date_key()` pur (Hebel-Suffix, fehlende
+Werte); echter Tk-Smoke-Test mit exakt der gemeldeten Mischung (Signal
+"5.0x"/"10.0x"/"-", Kandidat "78") - auf-/absteigend korrekt für beide neuen
+Spalten; Regressionstest bestätigt `ui/marktscan_view.py` (`score`) und
+`ui/screener_view.py` (`preis`/`marktkap`/`aenderung`) unverändert korrekt
+(kein "x" in deren Werten, von der `_STRIP_RE`-Erweiterung nicht betroffen).
