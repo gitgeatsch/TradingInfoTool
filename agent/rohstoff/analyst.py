@@ -210,10 +210,15 @@ fertiggestellt hast - das ist ein ABSCHLIESSENDER, GANZHEITLICHER Rueckblick \
 auf deine eigene bereits fertige Analyse, keine Wiederholung/Formalitaet. \
 Stelle dir konkret die Frage: "Wuerde ich selbst - auf Basis ALLER vorliegenden \
 Daten - dieser Empfehlung folgen?" `folgen` ist EXAKT einer von "ja"/"nein"/\
-"mit_vorbehalt" - "mit_vorbehalt" ist eine echte, eigenstaendige Antwort fuer \
-den Fall "Setup ist plausibel, aber etwas macht mich vorsichtig", kein Zwang \
-zu einem binaeren Ja/Nein. `kurzfazit` ist EIN Satz, der die Antwort konkret \
-begruendet (nicht nur `short_reasoning` wiederholen). WICHTIG: es gibt hierfuer \
+"mit_vorbehalt" - "mit_vorbehalt" ist eine echte, eigenstaendige Antwort, kein \
+Zwang zu einem binaeren Ja/Nein, aber auch KEIN bequemer Standardfall: waehle \
+es nur, wenn die Abwaegung tatsaechlich knapp ist, nicht routinemaessig fuer \
+jedes Signal - "ja" und "nein" sind gleichwertige, vollstaendige Antworten, \
+nutze sie, wenn die Datenlage eindeutig genug ist. `kurzfazit` ist EIN Satz, \
+der die Antwort MIT KONKRETEN, signalspezifischen Zahlen/Fakten begruendet \
+(nicht nur `short_reasoning` wiederholen, und KEINE generische Floskel wie \
+"das Setup ist plausibel, aber X macht vorsichtig" - jedes `kurzfazit` muss \
+anders klingen, weil jedes Signal andere Daten hat). WICHTIG: es gibt hierfuer \
 KEINE feste Regel/Formel - du musst selbst gewichten, wie stark die einzelnen \
 Faktoren zaehlen.
 

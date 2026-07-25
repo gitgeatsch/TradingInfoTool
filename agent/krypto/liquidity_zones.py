@@ -23,7 +23,7 @@ _KURSVERLAUF_MAX_PUNKTE = 90
 
 def liquiditaetszonen_fakt(
     snapshot: TechnicalSnapshot, latest_price: float | None, config: dict | None,
-    dates=None, closes=None,
+    dates=None, closes=None, eur_usd_fx_rate: float | None = None,
 ) -> dict | None:
     """Baut den Fakt fuer build_facts()/build_hebel_facts(): naechste Buy-/
     Sell-Side-Zone samt Abstand in %, ob latest_price innerhalb der Naehe-
@@ -36,7 +36,19 @@ def liquiditaetszonen_fakt(
     kompakte "kursverlauf"-Liste (trailing Fenster) mit in den Fakt eingebettet,
     damit ui/liquidity_chart.py spaeter (App-Detail-Panel UND E-Mail) eine
     echte Preislinie zeichnen kann, ohne die Historie erneut abrufen zu
-    muessen - eine Quelle der Wahrheit, kein zweiter Netzwerk-Call."""
+    muessen - eine Quelle der Wahrheit, kein zweiter Netzwerk-Call.
+
+    `eur_usd_fx_rate` (optional, 2026-07-25, echte Nutzer-Diskussion nach
+    einem KAIA-Signal): derselbe zum Signal-Erstellungszeitpunkt bereits
+    berechnete Kurs, der auch fuer Liquidationspreis/Eigenkapitalbedarf/
+    Funding-Kosten in EUR verwendet wird (siehe hebel_pipeline.py/pipeline.py).
+    Wird hier NUR mit im Fakt gespeichert (keine eigene Umrechnung an dieser
+    Stelle) - ui/liquidity_chart.py liest ihn beim Rendern und rechnet dann
+    um, damit App (auch Tage spaeter erneut geoeffnet) und die bereits
+    verschickte E-Mail immer denselben, konsistenten EUR-Wert zeigen statt
+    eines live nachgeschlagenen, driftenden Kurses. Fehlt er (aeltere Signale
+    vor diesem Nachtrag, oder EURCV-Abruf schlug fehl), bleibt die Grafik bei
+    USD (P-8, keine harte Abhaengigkeit)."""
     cfg = (config or {}).get("liquiditaetszonen", {})
     if not cfg.get("aktiv", True):
         return None
@@ -104,4 +116,5 @@ def liquiditaetszonen_fakt(
         "in_naehe_ungefegter_zone": in_naehe_ungefegter_zone,
         "seite": seite,
         "kursverlauf": kursverlauf,
+        "eur_usd_fx_rate": eur_usd_fx_rate,
     }

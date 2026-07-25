@@ -557,7 +557,12 @@ class HebelView(ttk.Frame):
             # (liquiditaetszonen_fakt() bekommt price_usd/closes-USD, siehe
             # hebel_pipeline.py), wurden hier aber mit einem EUR-Referenzpreis
             # gemischt und als "EUR" beschriftet - falsche Einheit UND
-            # verzerrte Chart-Skalierung. USD durchgaengig statt EUR.
+            # verzerrte Chart-Skalierung. Fix damals: USD durchgaengig statt EUR.
+            # NACHTRAG (2026-07-25, echter KAIA-Fund): render_liquiditaetszonen_
+            # chart() rechnet jetzt selbst konsistent auf EUR um, sofern
+            # liquiditaetszonen einen eingefrorenen eur_usd_fx_rate traegt (siehe
+            # dortiger Docstring) - die USD-Uebergabe hier bleibt bewusst
+            # unveraendert (Quelldaten), nur die Anzeige wird ggf. umgerechnet.
             preis_usd = (facts.get("preis") or {}).get("usd")
             if not preis_usd:
                 return

@@ -8545,3 +8545,119 @@ die bisherige alphabetische Sortierung funktioniert wie vorgesehen (P-8 mit
 echten Daten bestätigt). Tk-Smoke-Test für das neue GUI-Panel (Fall A + Fall
 B gemeinsam gerendert, Übernehmen/Ablehnen für beide Fälle, Tages-Synthese-
 Rangliste inkl. Phasen-Badges).
+
+## Nachtrag 2026-07-25: Echter KAIA-Hebel-Signal-Review (7 Funde) + INJ-Signal-Stabilität-Diskussion
+
+Nutzer bat um Expertenreview eines real eingetroffenen KAIA-Hebel-ERÖFFNEN-
+LONG-Signals (Screenshots) sowie eine anschließende Grundsatzdiskussion zur
+Signal-Stabilität anhand eines INJ-Falls. Ergab 8 unabhängige Änderungen,
+nach der Standard-Vorgabe (siehe `feedback_alle_asset_varianten_
+konsistenzpruefung`) auf alle betroffenen Varianten (Hebel UND Spot/Aktien/
+Rohstoffe/Themen-ETF, wo zutreffend) geprüft.
+
+**1. Technische Konfluenz ignorierte die Richtung (hoch, hebel_risk_gate.py
++ risk_gate.py).** Eine "eindeutige Tendenz" wurde bisher IMMER als positiv
+gewertet, egal ob sie der Position widerspricht - bearish-Konfluenz bei
+einem LONG wurde fälschlich als ▲ ("unterstützt die Empfehlung") gezeigt.
+Fix: Vergleich gegen `richtung` (Hebel: bullish stützt LONG/bearish stützt
+SHORT und umgekehrt; Spot-Familie: nur BUY-Aktionen betroffen, erwartete
+Tendenz ist dort immer bullish).
+
+**2. Funding-Kosten-Symbol ignorierte zulasten/zugunsten (mittel,
+hebel_risk_gate.py).** Das Icon hing bisher nur an der Betragshöhe, nicht
+daran, ob der Satz der Position nützt oder schadet - ein hoher Satz
+"zugunsten" (z.B. negative Rate bei LONG) wurde faelschlich als Warnsignal
+(▼) markiert. Fix: `positiv` bei zugunsten, `negativ` nur bei zulasten UND
+hoher Betragshöhe, sonst `neutral`. Zusätzlich: das Vorzeichen der
+zulasten/zugunsten-Berechnung selbst berücksichtigte `richtung` nicht (nur
+für LONG korrekt, bei SHORT invertiert falsch) - jetzt mit
+`funding_richtungs_vorzeichen` korrigiert.
+
+**3. LLM zitierte Funding-Kosten in kaum interpretierbarer Einheit
+(hebel_analyst.py).** Regel 9 verlangte bisher die stündliche Rate
+("-0,02411% pro Stunde") in `key_risks` - für einen Menschen kaum
+einzuordnen. Neuer Fakt `funding_rate_aktuell_prozent_pro_tag` (dieselbe
+Rohrate ×24, kein neuer Datenpunkt), Regel 9 zitiert jetzt ausschließlich
+diesen Tagessatz und verweist auf den bereits vorhandenen EUR/Tag-Betrag in
+Abschnitt 3 (Konklusion), statt ihn zu duplizieren.
+
+**4. Fazit-Prompt-Anker kollabierte auf einen Stehsatz (hoch, alle 6
+Analyst-Dateien: Krypto Spot+Hebel, Aktien, Rohstoffe, Hedge, Themen-ETF).**
+Echte Daten zeigten: 15/15 aktuelle Hebel-Signale mit Fazit waren
+"mit_vorbehalt" (nie "ja"/"nein"), 5 davon nutzten fast wortgleich die im
+Prompt gegebene Beispielformulierung "Setup ist plausibel, aber etwas macht
+mich vorsichtig" - klassischer Prompt-Anker-Effekt (gleiches Muster wie der
+Konfidenz-Anker-Fund vom 24.07.). Fix: das wörtliche Beispiel aus der Regel
+entfernt, stattdessen explizite Anweisung, dass "mit_vorbehalt" kein
+bequemer Standardfall ist und `kurzfazit` mit konkreten, signalspezifischen
+Zahlen begründet werden muss statt einer Floskel.
+
+**5. Signal-Stabilität: Kategoriewechsel-Zählung erzeugte einen
+strukturellen Fehlalarm (hoch, agent/krypto/signal_stabilitaet.py, echter
+INJ-Fund, Nutzer-Grundsatzdiskussion).** Die alte Logik zählte JEDEN rohen
+Übergang - ein einzelner Ausflug in eine aktive Kategorie, umrahmt von
+Neutral (der normale Lebenszyklus "abwarten → einmal handeln →
+beobachten"), erzeugte dabei IMMER genau 2 Übergänge und wurde damit
+fälschlich als instabil gewertet, obwohl nur eine einzige Entscheidung
+getroffen wurde - bei jedem Signal, das irgendwann aktiv wird, praktisch der
+Regelfall statt der Ausnahme. Neue Funktion `_aktive_kategorie_wiederholt()`:
+komprimiert die Kategoriefolge zu "Runs" und prüft, ob Aufbau ODER Abbau in
+MEHR ALS EINEM getrennten, unterbrochenen Abschnitt auftaucht - nur DAS ist
+echtes Hin-und-Her (ursprüngliches LINK-Vorbild: wiederholtes
+Eröffnen/Zurückziehen). Verifiziert: INJ-Fall jetzt korrekt stabil, LINK-
+Flip-Flop weiterhin korrekt instabil, ein normaler Trade-Zyklus
+(Eröffnen→Teilverkauf→Halten, keine Neutral-Umrahmung) ebenfalls korrekt
+stabil.
+
+**6. Neuer Risikofaktor "Richtungswende" (hebel_risk_gate.py + risk_gate.py,
+agent/krypto/signal_stabilitaet.py::juengste_richtungswende()).** Aus der
+INJ-Diskussion hervorgegangen: eine ECHTE Richtungswende (Aufbau↔Abbau) ist
+immer bemerkenswert, unabhängig vom Signal-Stabilität-Gesamturteil - jetzt
+ein eigener, eigenständiger Faktor statt Nebensatz. Bewusst KEINE
+Uhrzeit-Schwelle (Nutzer-Diskussion: Krypto handelt 24/7, Volatilität ist
+pro Coin sehr unterschiedlich, ein fixer Zeitwert wäre geraten) - stattdessen
+ATR-relative Kursbewegung seit der vorherigen aktiven Kategorie
+(`richtungswende_atr_schwelle_relativ`, Startwert 0.5, noch nicht an echten
+Fällen kalibriert): ▼ wenn die Bewegung darunter bleibt (Wende vermutlich
+noch Rauschen), ● wenn bestätigt. Preis-Rekonstruktion über die bereits
+vorhandene Tages-Kurshistorie (`_preis_am_datum()`), kein neuer API-Call.
+
+**7. Liquiditätszonen-Chart: USD/EUR-Entscheidung neu durchdacht
+(agent/krypto/liquidity_zones.py, ui/liquidity_chart.py, hebel_pipeline.py,
+pipeline.py).** Der Chart zeigte bisher bewusst USD (Entscheidung vom
+25.07. selbst, Commit f4e9c0e: keine historischen Tages-FX-Kurse
+verfügbar). Nutzer-Nachfrage deckte eine elegantere Lösung auf: derselbe
+`eur_usd_fx_rate`, der bereits für Liquidationspreis/Eigenkapitalbedarf/
+Funding-Kosten in EUR verwendet wird, wird jetzt zusätzlich EINMALIG zum
+Signal-Erstellungszeitpunkt im `liquiditaetszonen`-Fakt selbst eingefroren
+(`liquiditaetszonen_fakt(..., eur_usd_fx_rate=...)`). `render_
+liquiditaetszonen_chart()` rechnet damit intern konsistent auf EUR um
+(Zonen, Kursverlauf, beide Preislinien) - App (auch Tage später erneut
+geöffnet) und die bereits verschickte E-Mail zeigen dadurch immer denselben
+EUR-Wert, kein Live-Nachschlagen/Drift. Ohne eingefrorenen Kurs (ältere
+Signale, EURCV-Abruf fehlgeschlagen) bleibt der Chart bei USD (P-8).
+
+**8. E-Mail-Graufarbe nachgedunkelt (ui/formatting.py).** Der neutrale
+Grauton (`risk_neutral`/`fazit_neutral`/`legend`) war mit `#666666` in der
+echten Gmail-Darstellung teils schwer lesbar - auf `#4a4a4a` nachgedunkelt
+(Kontrast zu Weiß steigt von ~5,7:1 auf ~8,4:1). Betrifft ausschließlich die
+E-Mail-HTML-Variante, nicht das App-Detail-Panel (eigenes, Theme-
+abhängiges Tk-Tag-System).
+
+**Zusätzlich (kleinere UI-Nachbesserungen, aus derselben Runde):**
+Konfidenzwerte werden jetzt direkt über jedem Punkt im Signal-Stabilität-
+Sparkline-Chart angezeigt (`ui/signal_stabilitaet_chart.py`).
+
+**Verifiziert:** Compile-Check aller 17 geänderten Dateien, konsolidierter
+Regressionstest (INJ stabil, LINK-Flip-Flop weiterhin instabil, Technische
+Konfluenz bearish/LONG=negativ, Funding-Kosten zugunsten=positiv,
+Richtungswende-Erkennung, Liquiditätszonen-Chart mit/ohne eingefrorenem
+Kurs) - alle bestanden. Import-Regressionscheck über alle betroffenen
+Module (Hebel+Spot-Pipelines, alle 6 Analyst-Module, beide Chart-Renderer).
+
+**Warum:** ausgelöst durch einen einzelnen, vom Nutzer als Experte
+angeforderten Signal-Review (KAIA) plus eine daran anschließende, bewusst
+in mehreren Runden geführte Grundsatzdiskussion (INJ) - kein einzelner
+Fund, sondern ein methodisches Vorgehen (Diskussion vor Umsetzung, siehe
+Punkte 5-7 oben, wo der Nutzer explizit auf "das ist mir zu schnell/
+ungenau" bestand, bevor Code geändert wurde).

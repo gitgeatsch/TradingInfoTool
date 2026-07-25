@@ -20,7 +20,9 @@ from agent.krypto.backward_tracking import compute_win_rate_fact
 from agent.krypto.btc_relativwert import btc_relativwert_fakt
 from agent.krypto.liquidity_zones import liquiditaetszonen_fakt
 from agent.krypto.makro_analog import get_cached_makro_analog_fact
-from agent.krypto.signal_stabilitaet import DEFAULT_ANZAHL_ZYKLEN, signal_stabilitaet_fakt
+from agent.krypto.signal_stabilitaet import (
+    DEFAULT_ANZAHL_ZYKLEN, juengste_richtungswende, signal_stabilitaet_fakt,
+)
 from agent.krypto.llm_provider import llm_model_label
 from agent.krypto.regime import determine_regime
 from agent.krypto.risk_gate import CashReserveZielResult, compute_cash_reserve_ziel, pre_check, post_check
@@ -580,8 +582,18 @@ def generate_signal(
     # informativ, Krypto-only (siehe agent/krypto/liquidity_zones.py
     # Modul-Docstring) - generate_signal() hier ist ausschliesslich die
     # Krypto-Pipeline, Aktien laufen ueber agent/aktien/pipeline.py.
+    # 2026-07-25, Nutzer-Diskussion (echter KAIA-Fund): gleiche kostenlose
+    # EURCV-Ableitung wie hebel_pipeline.py/risk_gate.py::pre_check() - macht
+    # die Liquiditaetszonen-Grafik EUR-faehig (siehe liquiditaetszonen_fakt()
+    # Docstring), ohne einen neuen API-Call.
+    eurcv_snap = latest_prices.get("EURCV")
+    eur_usd_fx_rate = (
+        eurcv_snap.price_usd / eurcv_snap.price_eur
+        if eurcv_snap and eurcv_snap.price_usd and eurcv_snap.price_eur else None
+    )
     liquiditaetszonen = liquiditaetszonen_fakt(
         snapshot, price_snap.price_usd if price_snap else None, config_dict, dates, closes,
+        eur_usd_fx_rate=eur_usd_fx_rate,
     )
     # Signal-Stabilitaet (2026-07-25, echter NEAR/LINK-Fund) - letzte Bewertungen
     # VOR diesem Lauf fuer dasselbe Symbol, siehe agent/krypto/
@@ -591,6 +603,12 @@ def generate_signal(
         limit=config_dict.get("signal_stabilitaet", {}).get("anzahl_zyklen", DEFAULT_ANZAHL_ZYKLEN),
     )
     signal_stabilitaet = signal_stabilitaet_fakt(signal_stabilitaet_verlauf, config_dict)
+    # Richtungswende (2026-07-25, echter INJ-Fund) - eigener Risikofaktor statt
+    # Teil der Signal-Stabilitaet, siehe risk_gate.py::richtungswende_risikofaktor()
+    # Docstring. Nutzt denselben Verlauf wie oben; atr_value hier frisch aus dem
+    # bereits vorliegenden snapshot (kein eigener Pipeline-Wert wie bei Hebel).
+    richtungswende = juengste_richtungswende(signal_stabilitaet_verlauf)
+    atr_value = latest_value(snapshot.atr)
     # Volatilitaets-Perzentil (2026-07-25, Baustein 2) - snapshot.atr_percentile
     # ist bereits Teil von build_technical_snapshot(), hier nur der
     # konfigurierbare aktiv-Toggle (kein eigenes Modul noetig).
@@ -649,6 +667,11 @@ def generate_signal(
         liquiditaetszonen=liquiditaetszonen,
         signal_stabilitaet=signal_stabilitaet,
         atr_perzentil=atr_perzentil,
+        richtungswende=richtungswende,
+        current_price=price_snap.price_usd if price_snap else None,
+        atr_value=atr_value,
+        dates=dates,
+        closes=closes,
     )
     risk_veto = corrected.pop("_risk_veto")
     risk_veto_reason = corrected.pop("_risk_veto_reason")

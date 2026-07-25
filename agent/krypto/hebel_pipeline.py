@@ -23,7 +23,9 @@ from agent.krypto.btc_relativwert import btc_relativwert_fakt
 from agent.krypto.hebel_analyst import build_hebel_facts, call_llm_for_hebel_signal
 from agent.krypto.liquidity_zones import liquiditaetszonen_fakt
 from agent.krypto.makro_analog import get_cached_makro_analog_fact
-from agent.krypto.signal_stabilitaet import DEFAULT_ANZAHL_ZYKLEN, signal_stabilitaet_fakt
+from agent.krypto.signal_stabilitaet import (
+    DEFAULT_ANZAHL_ZYKLEN, juengste_richtungswende, signal_stabilitaet_fakt,
+)
 from agent.krypto.hebel_risk_gate import post_check_hebel, pre_check_hebel
 from agent.krypto.llm_provider import llm_model_label
 from agent.krypto.pipeline import _load_closes_and_ohlc, compute_current_regime, fetch_market_context
@@ -185,7 +187,9 @@ def generate_hebel_signal(
     historischer_makro_vergleich = get_cached_makro_analog_fact(conn)
     # Liquiditaetszonen (Marketmaker-Konzept, Stufe 1, 2026-07-23) - rein
     # informativ, siehe agent/krypto/liquidity_zones.py Modul-Docstring.
-    liquiditaetszonen = liquiditaetszonen_fakt(snapshot, current_price_usd, config_dict, dates, closes)
+    liquiditaetszonen = liquiditaetszonen_fakt(
+        snapshot, current_price_usd, config_dict, dates, closes, eur_usd_fx_rate=eur_usd_fx_rate,
+    )
     # Signal-Stabilitaet (2026-07-25, echter NEAR/LINK-Fund) - letzte Bewertungen
     # VOR diesem Lauf fuer dasselbe (Symbol, Richtung), siehe agent/krypto/
     # signal_stabilitaet.py Modul-Docstring. Zyklenzahl konfigurierbar, Default
@@ -196,6 +200,10 @@ def generate_hebel_signal(
         limit=config_dict.get("signal_stabilitaet", {}).get("anzahl_zyklen", DEFAULT_ANZAHL_ZYKLEN),
     )
     signal_stabilitaet = signal_stabilitaet_fakt(signal_stabilitaet_verlauf, config_dict)
+    # Richtungswende (2026-07-25, echter INJ-Fund) - eigener Risikofaktor statt
+    # Teil der Signal-Stabilitaet, siehe hebel_risk_gate.py::
+    # richtungswende_risikofaktor() Docstring. Nutzt denselben Verlauf wie oben.
+    richtungswende = juengste_richtungswende(signal_stabilitaet_verlauf)
     # Volatilitaets-Perzentil (2026-07-25, Baustein 2) - snapshot.atr_percentile
     # ist bereits Teil von build_technical_snapshot() (indicators/calculations.py),
     # hier nur der konfigurierbare aktiv-Toggle (kein eigenes Modul noetig).
@@ -253,6 +261,11 @@ def generate_hebel_signal(
         position_aktuell=position_aktuell,
         kontrathese_verlauf=kontrathese_verlauf,
         now_unix=now_unix,
+        richtungswende=richtungswende,
+        current_price=current_price_usd,
+        atr_value=atr_value,
+        dates=dates,
+        closes=closes,
     )
     risk_veto = corrected.pop("_risk_veto")
     risk_veto_reason = corrected.pop("_risk_veto_reason")

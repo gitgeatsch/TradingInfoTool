@@ -67,6 +67,13 @@ def render_signal_stabilitaet_chart(signal_stabilitaet: dict) -> bytes | None:
         x, konfidenzen, color=farbe, linewidth=1.8, marker="o", markersize=4,
         solid_capstyle="round", solid_joinstyle="round", zorder=5,
     )
+    # 2026-07-25, Nutzer-Wunsch: konkreter %-Wert direkt über jedem Punkt,
+    # damit man den Verlauf nicht erst aus der Y-Achse ablesen muss.
+    for xi, yi in zip(x, konfidenzen):
+        ax.annotate(
+            f"{yi:.0f}", (xi, yi), textcoords="offset points", xytext=(0, 7),
+            ha="center", fontsize=7, color=_FARBE_TEXT, zorder=6,
+        )
 
     for i in range(1, len(kategorien)):
         if kategorien[i] is None or kategorien[i - 1] is None:

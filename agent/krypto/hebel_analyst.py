@@ -157,10 +157,15 @@ Risiken, die es bei Spot-Positionen nicht gibt, sie dürfen nicht generisch \
 übergangen werden. WICHTIG: ergänze diese Formulierungen um die KONKRETEN Zahlen \
 dieses Signals (deinen eigenen `hebel_vorschlag`-Wert - je höher, desto größer das \
 Liquidationsrisiko bei gleicher Kursbewegung -, sowie die aktuelle `funding_rate_\
-aktuell_prozent_pro_stunde` aus den Fakten INKLUSIVE der Einheit "% pro Stunde" - \
-nenne NIEMALS nur eine nackte Zahl ohne Einheit) - eine rein wortgleiche \
-Wiederholung dieser Beispielformulierung OHNE eigene Zahlen ist NICHT ausreichend \
-und liest sich bei jedem Signal gleich.
+aktuell_prozent_pro_tag` aus den Fakten INKLUSIVE der Einheit "% pro Tag" - \
+NIEMALS die stündliche Rate `funding_rate_aktuell_prozent_pro_stunde` hier zitieren, \
+sie ist für einen Menschen kaum einzuordnen; nenne NIEMALS nur eine nackte Zahl \
+ohne Einheit) - eine rein wortgleiche Wiederholung dieser Beispielformulierung OHNE \
+eigene Zahlen ist NICHT ausreichend und liest sich bei jedem Signal gleich. Der \
+konkrete EUR/Tag-Betrag bei der tatsächlichen Positionsgröße steht bereits \
+deterministisch in Abschnitt 3 ("Konklusion") - wiederhole ihn hier nicht, er ist \
+zum Zeitpunkt deiner Antwort noch nicht bekannt (hängt von deinem eigenen, hier \
+erst zu vergebenden `hebel_vorschlag` ab).
 10. Fülle `halte_kriterium` wie bei Spot-Signalen (siehe dortige Regel) - \
 mindestens eines von `ziel_preis_usd`/`ziel_datum`/`bedingung_text` muss gesetzt \
 sein.
@@ -260,11 +265,17 @@ vorliegenden Daten inklusive der bereits erwaehnten Risikofaktoren \
 (Retail-Konsens, Funding-Kosten, Liquiditaetszonen, Signal-Stabilitaet, \
 Volatilitaets-Perzentil, Gegenargument) - dieser Hebel-Empfehlung folgen?" \
 `folgen` ist EXAKT einer von "ja"/"nein"/"mit_vorbehalt" - "mit_vorbehalt" \
-ist eine echte, eigenstaendige Antwort fuer den Fall "Setup ist plausibel, \
-aber etwas macht mich vorsichtig", kein Zwang zu einem binaeren Ja/Nein. \
-`kurzfazit` ist EIN Satz, der die Antwort konkret begruendet (nicht nur \
-`short_reasoning` wiederholen). WICHTIG: es gibt hierfuer KEINE feste Regel/\
-Formel - du musst selbst gewichten, wie stark die einzelnen Faktoren zaehlen. \
+ist eine echte, eigenstaendige Antwort, kein Zwang zu einem binaeren Ja/Nein, \
+aber auch KEIN bequemer Standardfall: waehle es nur, wenn die Abwaegung \
+tatsaechlich knapp ist, nicht routinemaessig fuer jedes Signal - "ja" und \
+"nein" sind gleichwertige, vollstaendige Antworten, nutze sie, wenn die \
+Datenlage eindeutig genug ist. `kurzfazit` ist EIN Satz, der die Antwort MIT \
+KONKRETEN, signalspezifischen Zahlen/Fakten begruendet (nicht nur \
+`short_reasoning` wiederholen, und KEINE generische Floskel wie "das Setup \
+ist plausibel, aber X macht vorsichtig" - jedes `kurzfazit` muss anders \
+klingen, weil jedes Signal andere Daten hat). WICHTIG: es gibt hierfuer KEINE \
+feste Regel/Formel - du musst selbst gewichten, wie stark die einzelnen \
+Faktoren zaehlen. \
 Mehrere negative Signale muessen NICHT zwingend zu "nein" fuehren, wenn \
 andere Faktoren (z.B. eine sehr klare technische Konfluenz) nach deiner \
 eigenen Einschaetzung staerker wiegen - und umgekehrt kann ein einzelner \
@@ -540,6 +551,14 @@ def build_hebel_facts(
             # Positionsgroesse, das muss das LLM hier nicht selbst rechnen.
             "funding_rate_aktuell_prozent_pro_stunde": (
                 round(anticyclic_context.funding_rate_current * 100, 5)
+                if anticyclic_context.funding_rate_current is not None else None
+            ),
+            # 2026-07-25, echter KAIA-Fund: die stuendliche Rate ist fuer einen
+            # Menschen kaum einzuordnen ("-0,02411% pro Stunde") - Regel 9 zitiert
+            # jetzt ausschliesslich diesen bereits umgerechneten Tagessatz
+            # (*24, gleiche Rohrate, andere Zeiteinheit - kein eigener Datenpunkt).
+            "funding_rate_aktuell_prozent_pro_tag": (
+                round(anticyclic_context.funding_rate_current * 100 * 24, 4)
                 if anticyclic_context.funding_rate_current is not None else None
             ),
             "funding_rate_extrem": anticyclic_context.funding_rate_extreme,

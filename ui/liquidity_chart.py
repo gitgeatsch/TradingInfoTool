@@ -116,14 +116,40 @@ def render_liquiditaetszonen_chart(
     Rückwärtskompatibel: bereits VOR diesem Nachtrag erzeugte Signale haben
     kein `kursverlauf` im gespeicherten `facts_json` - in dem Fall bleibt die
     Grafik exakt beim alten schematischen Layout (Referenzlinien nur über die
-    linke Hälfte), kein Fehler, keine leere/kaputte Grafik."""
+    linke Hälfte), kein Fehler, keine leere/kaputte Grafik.
+
+    `waehrung`/`latest_price`/`live_preis` werden bewusst weiterhin USD-
+    Werte vom Aufrufer erwartet (2026-07-25, Nutzer-Diskussion, echter KAIA-
+    Fund): `liquiditaetszonen` traegt jetzt zusaetzlich einen zum Signal-
+    Erstellungszeitpunkt EINGEFRORENEN `eur_usd_fx_rate` (siehe
+    agent/krypto/liquidity_zones.py::liquiditaetszonen_fakt() Docstring) -
+    ist er vorhanden, rechnet DIESE Funktion intern konsequent auf EUR um
+    (Zonen, Kursverlauf, beide Preislinien) und ueberschreibt `waehrung`
+    selbst auf "EUR", damit App (auch Tage spaeter erneut geoeffnet) und die
+    bereits verschickte E-Mail immer denselben EUR-Wert zeigen statt eines
+    live nachgeschlagenen, driftenden Kurses. Fehlt der eingefrorene Kurs
+    (aeltere Signale, oder EURCV-Abruf schlug fehl), bleibt es bei USD (P-8)."""
     buyside = liquiditaetszonen.get("naechste_buyside_zone")
     sellside = liquiditaetszonen.get("naechste_sellside_zone")
     if buyside is None and sellside is None:
         return None
 
+    fx_rate = liquiditaetszonen.get("eur_usd_fx_rate")
+    if fx_rate:
+        def _eur(usd_wert):
+            return usd_wert / fx_rate if usd_wert is not None else None
+        waehrung = "EUR"
+        latest_price = _eur(latest_price)
+        live_preis = _eur(live_preis)
+        if buyside is not None:
+            buyside = {**buyside, "preis": _eur(buyside["preis"])}
+        if sellside is not None:
+            sellside = {**sellside, "preis": _eur(sellside["preis"])}
+
     kursverlauf = liquiditaetszonen.get("kursverlauf") or []
-    kurs_preise = [p["preis"] for p in kursverlauf]
+    kurs_preise = [
+        (p["preis"] / fx_rate if fx_rate else p["preis"]) for p in kursverlauf
+    ]
     hat_kursverlauf = len(kurs_preise) >= 2
 
     # Hintergrund explizit weiss+opak fixieren (2026-07-23, Nutzer-Fund: in der

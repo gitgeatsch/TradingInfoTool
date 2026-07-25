@@ -20,6 +20,8 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
+import numpy as np
+
 from agent.krypto.anticyclic import LONG_BIAS_EXTREME_THRESHOLD_PCT
 from agent.krypto.risk_gate import (
     CRV_MINIMUM, DEFAULT_FAZIT_KONSISTENZ_SCHWELLE_HOCH, DEFAULT_FAZIT_KONSISTENZ_SCHWELLE_NIEDRIG,
@@ -27,6 +29,15 @@ from agent.krypto.risk_gate import (
 )
 
 logger = logging.getLogger(__name__)
+
+# 2026-07-25, Nutzer-Diskussion (echter INJ-Fund): bewusst KEINE Uhrzeit-
+# Schwelle fuer "wie schnell ist eine Richtungswende glaubwuerdig" (24/7-Markt,
+# Volatilitaet ist pro Coin sehr unterschiedlich - ein fixer Zeitwert waere
+# geraten, siehe Diskussion zu Timeframe-Kongruenz/Tages-Kerzen). Stattdessen
+# ATR-relative Kursbewegung: 0.5x ATR als vorlaeufiger Startwert (spaeter an
+# echten Faellen kalibrieren, gleiches Vorgehen wie bei anderen Schwellen in
+# diesem Modul).
+DEFAULT_RICHTUNGSWENDE_ATR_SCHWELLE = 0.5
 
 RICHTUNG_LONG = "LONG"
 RICHTUNG_SHORT = "SHORT"
@@ -91,6 +102,73 @@ class Risikofaktor:
     begruendung: str
 
 
+def _preis_am_datum(iso_zeitpunkt: str, dates, closes) -> float | None:
+    """Findet den Tages-Schlusskurs (aus `dates`/`closes`, siehe
+    _load_closes_and_ohlc() in hebel_pipeline.py - `dates` sind aufsteigend
+    sortierte ISO-Datumsstrings 'YYYY-MM-DD') fuer den Tag eines vergangenen
+    Bewertungs-Zeitpunkts. `iso_zeitpunkt` traegt Uhrzeit/Zeitzone
+    (`HebelSignal.created_at`), nur der Datumsanteil wird verglichen (unsere
+    Kurshistorie ist taeglich, keine Intraday-Aufloesung). Waehlt bei
+    fehlendem exaktem Treffer das naeheste verfuegbare Datum."""
+    if dates is None or closes is None or len(dates) == 0:
+        return None
+    try:
+        ziel = datetime.fromisoformat(iso_zeitpunkt[:10]).date()
+    except ValueError:
+        return None
+    ziel_str = ziel.isoformat()
+    idx = int(np.searchsorted(dates, ziel_str))
+    idx = min(idx, len(dates) - 1)
+    if idx > 0:
+        try:
+            aktuell = abs((datetime.fromisoformat(str(dates[idx])).date() - ziel).days)
+            vorherig = abs((datetime.fromisoformat(str(dates[idx - 1])).date() - ziel).days)
+            if vorherig < aktuell:
+                idx -= 1
+        except ValueError:
+            pass
+    return float(closes[idx])
+
+
+def richtungswende_risikofaktor(
+    richtungswende: dict | None, current_price: float | None, atr_value: float | None,
+    dates=None, closes=None, atr_schwelle_relativ: float | None = None,
+) -> "Risikofaktor | None":
+    """2026-07-25, Nutzer-Diskussion (echter INJ-Fund): eine ECHTE Richtungswende
+    (Aufbau<->Abbau, siehe agent/krypto/signal_stabilitaet.py::
+    juengste_richtungswende()) ist immer bemerkenswert - eigener,
+    eigenstaendiger Risikofaktor statt Nebensatz in der Signal-Stabilitaets-
+    Grafik, erscheint UNABHAENGIG vom dortigen stabil/instabil-Urteil. Die
+    ATR-relative Kursbewegung seit der vorherigen aktiven Kategorie liefert
+    die Einordnung (Kontext, kein Ja/Nein-Filter): kaum Bewegung seitdem
+    deutet auf Rauschen statt eines neuen, kursseitig gestuetzten Bildes hin."""
+    if richtungswende is None or current_price is None or atr_value is None or atr_value <= 0:
+        return None
+    basis_text = (
+        f"Wechselte von {richtungswende['alte_kategorie']} ({richtungswende['alte_aktion']}) zu "
+        f"{richtungswende['neue_kategorie']} ({richtungswende['neue_aktion']})"
+    )
+    alter_preis = _preis_am_datum(richtungswende["alter_zeitpunkt"], dates, closes)
+    if alter_preis is None:
+        return Risikofaktor(
+            "Richtungswende", "neutral",
+            f"{basis_text} - Kursbewegung seither nicht ermittelbar (keine Historie für den Zeitpunkt).",
+        )
+    bewegung_atr = abs(current_price - alter_preis) / atr_value
+    schwelle = (
+        atr_schwelle_relativ if atr_schwelle_relativ is not None else DEFAULT_RICHTUNGSWENDE_ATR_SCHWELLE
+    )
+    bestaetigt = bewegung_atr >= schwelle
+    if bestaetigt:
+        text = f"{basis_text} - bestätigt durch eine Kursbewegung von {bewegung_atr:.1f}× ATR seither."
+    else:
+        text = (
+            f"{basis_text} - Kurs bewegte sich seither nur {bewegung_atr:.1f}× ATR (Schwelle "
+            f"{schwelle:.1f}×) - die Wende ist noch nicht durch eine deutliche Kursbewegung bestätigt."
+        )
+    return Risikofaktor("Richtungswende", "neutral" if bestaetigt else "negativ", text)
+
+
 def _kontrathese_bestaetigt_seit_stunden(
     verlauf: list, aktuelle_llm_richtung: str, now_unix: int,
 ) -> float:
@@ -145,6 +223,12 @@ def compute_risikofaktoren_hebel(
     kontrathese_llm_richtung: str | None = None,
     kontrathese_bestaetigt: bool = False,
     kontrathese_bestaetigt_seit_stunden: float | None = None,
+    richtungswende: dict | None = None,
+    current_price: float | None = None,
+    atr_value: float | None = None,
+    dates=None,
+    closes=None,
+    richtungswende_atr_schwelle: float | None = None,
 ) -> list["Risikofaktor"]:
     """2026-07-19 (Nutzer-Wunsch: E-Mail/App-Neustrukturierung in 3 Abschnitte -
     Mathematisch berechnet / LLM-Bewertung / Konklusion mit Risikofaktoren).
@@ -241,9 +325,22 @@ def compute_risikofaktoren_hebel(
                 "Technische Indikatoren widersprechen sich (weder bullish noch bearish dominiert).",
             ))
         else:
+            # 2026-07-25, echter KAIA-Fund: eine "eindeutige Tendenz" wurde bisher
+            # IMMER als "positiv" gewertet, auch wenn sie der Richtung der Position
+            # widerspricht (z.B. bearish-Konfluenz bei einem LONG) - die Richtung
+            # wurde nie mit `richtung` abgeglichen, anders als bei den uebrigen
+            # richtungsabhaengigen Faktoren hier (z.B. Gegenszenario-Wahrscheinlichkeit
+            # oben). Bullish stuetzt LONG/widerspricht SHORT und umgekehrt.
+            erwartete_tendenz = "bullish" if richtung == RICHTUNG_LONG else "bearish"
+            stuetzt_richtung = confluence.overall_bias == erwartete_tendenz
             faktoren.append(Risikofaktor(
-                "Technische Konfluenz", "positiv",
-                f"Technische Indikatoren zeigen eine eindeutige Tendenz ({confluence.overall_bias}).",
+                "Technische Konfluenz", "positiv" if stuetzt_richtung else "negativ",
+                f"Technische Indikatoren zeigen eine eindeutige Tendenz ({confluence.overall_bias}) - "
+                + (
+                    f"stützt die {richtung}-Position."
+                    if stuetzt_richtung
+                    else f"widerspricht der {richtung}-Position."
+                ),
             ))
 
     # 2026-07-22, echter Fund (BTC-Signal 21:35 in derselben Nacht): eine hohe
@@ -396,7 +493,19 @@ def compute_risikofaktoren_hebel(
             funding_rate_hoch_schwelle_relativ_stunde is not None
             and abs(funding_rate_stunde) >= funding_rate_hoch_schwelle_relativ_stunde
         )
-        faktoren.append(Risikofaktor("Funding-Kosten", "negativ" if ist_hoch else "neutral", fakt))
+        # 2026-07-25, echter KAIA-Fund: das Symbol haengte bisher NUR an der
+        # Betragshoehe, ignorierte aber, ob der Satz "zulasten" oder "zugunsten"
+        # der Position laeuft (derselbe Text oben) - ein hoher Satz "zugunsten"
+        # (z.B. LONG bei stark negativer Rate) wurde faelschlich als Warnsignal
+        # (▼) markiert, obwohl er eine echte Einnahme ist. Ohne Positionsgroesse
+        # (funding_kosten_usd_pro_tag is None) bleibt die alte, rein
+        # betragsbasierte Einordnung als Fallback (Richtung dann unbekannt).
+        if funding_kosten_usd_pro_tag is not None:
+            ist_zugunsten = funding_kosten_usd_pro_tag < 0
+            bewertung = "positiv" if ist_zugunsten else ("negativ" if ist_hoch else "neutral")
+        else:
+            bewertung = "negativ" if ist_hoch else "neutral"
+        faktoren.append(Risikofaktor("Funding-Kosten", bewertung, fakt))
 
     # Liquiditaetszonen (Marketmaker-Konzept, Stufe 1, 2026-07-23) - rein
     # informativ/neutral, KEIN Deckel (siehe agent/krypto/liquidity_zones.py
@@ -425,6 +534,14 @@ def compute_risikofaktoren_hebel(
             "Signal-Stabilität", "negativ" if not signal_stabilitaet["stabil"] else "positiv",
             signal_stabilitaet["einordnung"],
         ))
+
+    # Richtungswende (2026-07-25, echter INJ-Fund, eigener Faktor statt Teil
+    # von Signal-Stabilitaet oben - siehe richtungswende_risikofaktor()-Docstring).
+    rw_faktor = richtungswende_risikofaktor(
+        richtungswende, current_price, atr_value, dates, closes, richtungswende_atr_schwelle,
+    )
+    if rw_faktor is not None:
+        faktoren.append(rw_faktor)
 
     # Volatilitaets-Perzentil (2026-07-25, Baustein 2) - reiner Risiko-/
     # Positionsgroessen-Kontext, KEIN Richtungsurteil (siehe indicators/
@@ -582,6 +699,9 @@ def post_check_hebel(
     atr_perzentil: float | None = None,
     eur_usd_fx_rate: float | None = None,
     position_aktuell=None, kontrathese_verlauf: list | None = None, now_unix: int | None = None,
+    richtungswende: dict | None = None, current_price: float | None = None,
+    atr_value: float | None = None, dates=None, closes=None,
+    richtungswende_atr_schwelle: float | None = None,
 ) -> dict:
     """Nimmt die bereits schema-validierte LLM-Antwort und erzwingt AZ-7/RM-1/
     RM-11/CRV noch einmal deterministisch, analog risk_gate.py::post_check().
@@ -886,8 +1006,14 @@ def post_check_hebel(
     # veroeffentlicht Funding stuendlich (siehe hebel_screening.py), daher
     # *24 fuer den Tagessatz. None, falls Positionsgroesse oder Rate fehlen
     # (z.B. HALTEN/HEBEL_SENKEN ohne neue Positionsgroesse).
+    # 2026-07-25, echter KAIA-Fund: die Boersen-Konvention (positive Rate =
+    # LONGS zahlen SHORTS) stimmt nur fuer LONG direkt - bei SHORT muss das
+    # Vorzeichen gedreht werden, sonst zeigt "zulasten"/"zugunsten" bei SHORT
+    # das Gegenteil der Realitaet. `richtung` ist hier bereits der finale
+    # Wert (nach evtl. Kontrathese-Uebersetzung, siehe oben).
+    funding_richtungs_vorzeichen = 1 if richtung == RICHTUNG_LONG else -1
     funding_kosten_usd_pro_tag = (
-        positionsgroesse_usd * funding_rate_stunde * 24
+        funding_richtungs_vorzeichen * positionsgroesse_usd * funding_rate_stunde * 24
         if positionsgroesse_usd is not None and funding_rate_stunde is not None else None
     )
     risikofaktoren = compute_risikofaktoren_hebel(
@@ -922,6 +1048,16 @@ def post_check_hebel(
         kontrathese_llm_richtung=kontrathese_llm_richtung,
         kontrathese_bestaetigt=kontrathese_bestaetigt,
         kontrathese_bestaetigt_seit_stunden=kontrathese_bestaetigt_seit_stunden,
+        richtungswende=richtungswende,
+        current_price=current_price,
+        atr_value=atr_value,
+        dates=dates,
+        closes=closes,
+        richtungswende_atr_schwelle=(
+            richtungswende_atr_schwelle
+            if richtungswende_atr_schwelle is not None
+            else hebel_cfg.get("richtungswende_atr_schwelle_relativ")
+        ),
     )
     result["_risikofaktoren"] = [
         {"name": f.name, "bewertung": f.bewertung, "begruendung": f.begruendung} for f in risikofaktoren

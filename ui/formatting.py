@@ -143,17 +143,20 @@ def classify_detail_line(line: str) -> str | None:
 # E-Mail unabhaengig vom aktuellen App-Theme immer gleich (und immer lesbar)
 # aussieht - siehe auch die color-scheme-Meta-Tags in api/email_notify.py, die
 # Gmails automatische Dark-Mode-Invertierung fuer die ganze Mail unterdruecken.
+# 2026-07-25, Nutzer-Fund: der neutrale Grauton (risk_neutral/fazit_neutral/
+# legend) war mit #666666 in der echten Gmail-Darstellung teils schwer lesbar
+# - auf #4a4a4a nachgedunkelt (Kontrast zu Weiss steigt von ~5,7:1 auf ~8,4:1).
 _HTML_STYLE_BY_TAG = {
     "section_header": "font-weight:bold;font-size:1.05em;color:#0056b3;",
     "sub_header": "font-weight:bold;color:#000000;",
     "warning": "font-weight:bold;color:#c0392b;",
     "risk_positiv": "color:#1a7f37;",
-    "risk_neutral": "color:#666666;",
+    "risk_neutral": "color:#4a4a4a;",
     "risk_negativ": "color:#c0392b;",
     "fazit_positiv": "font-weight:bold;text-decoration:underline;color:#1a7f37;",
-    "fazit_neutral": "font-weight:bold;text-decoration:underline;color:#666666;",
+    "fazit_neutral": "font-weight:bold;text-decoration:underline;color:#4a4a4a;",
     "fazit_negativ": "font-weight:bold;text-decoration:underline;color:#c0392b;",
-    "legend": "color:#666666;font-style:italic;",
+    "legend": "color:#4a4a4a;font-style:italic;",
 }
 
 

@@ -20,9 +20,16 @@ dupliziert.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime
+
+import numpy as np
 
 import database.db as db
 from indicators.calculations import TechnicalSnapshot, latest_value
+
+# 2026-07-25, Nutzer-Diskussion (echter INJ-Fund, hebel_risk_gate.py-Pendant) -
+# bewusst KEINE Uhrzeit-Schwelle, siehe dortiger Docstring.
+DEFAULT_RICHTUNGSWENDE_ATR_SCHWELLE = 0.5
 
 STOP_LOSS_ATR_MULTIPLE = 2.0  # Arbeits-Konvention, nicht spezifikationsseitig vorgegeben
 CRV_MINIMUM = 2.0  # Z-2
@@ -466,6 +473,65 @@ class Risikofaktor:
     begruendung: str
 
 
+def _preis_am_datum(iso_zeitpunkt: str, dates, closes) -> float | None:
+    """Eigene Kopie von hebel_risk_gate.py::_preis_am_datum() (siehe dortiger
+    Docstring) - gleicher Zirkelbezug-Grund wie bei Risikofaktor oben."""
+    if dates is None or closes is None or len(dates) == 0:
+        return None
+    try:
+        ziel = datetime.fromisoformat(iso_zeitpunkt[:10]).date()
+    except ValueError:
+        return None
+    ziel_str = ziel.isoformat()
+    idx = int(np.searchsorted(dates, ziel_str))
+    idx = min(idx, len(dates) - 1)
+    if idx > 0:
+        try:
+            aktuell = abs((datetime.fromisoformat(str(dates[idx])).date() - ziel).days)
+            vorherig = abs((datetime.fromisoformat(str(dates[idx - 1])).date() - ziel).days)
+            if vorherig < aktuell:
+                idx -= 1
+        except ValueError:
+            pass
+    return float(closes[idx])
+
+
+def richtungswende_risikofaktor(
+    richtungswende: dict | None, current_price: float | None, atr_value: float | None,
+    dates=None, closes=None, atr_schwelle_relativ: float | None = None,
+) -> "Risikofaktor | None":
+    """Eigene Kopie von hebel_risk_gate.py::richtungswende_risikofaktor() -
+    identische Logik, Spot/Aktien/Rohstoffe/Themen-ETF-Pendant (Aufbau=KAUFEN/
+    NACHKAUFEN, Abbau=VERKAUFEN/TAUSCHEN, siehe agent/krypto/
+    signal_stabilitaet.py::juengste_richtungswende(), asset-klassen-neutral,
+    keine eigene Kopie noetig)."""
+    if richtungswende is None or current_price is None or atr_value is None or atr_value <= 0:
+        return None
+    basis_text = (
+        f"Wechselte von {richtungswende['alte_kategorie']} ({richtungswende['alte_aktion']}) zu "
+        f"{richtungswende['neue_kategorie']} ({richtungswende['neue_aktion']})"
+    )
+    alter_preis = _preis_am_datum(richtungswende["alter_zeitpunkt"], dates, closes)
+    if alter_preis is None:
+        return Risikofaktor(
+            "Richtungswende", "neutral",
+            f"{basis_text} - Kursbewegung seither nicht ermittelbar (keine Historie für den Zeitpunkt).",
+        )
+    bewegung_atr = abs(current_price - alter_preis) / atr_value
+    schwelle = (
+        atr_schwelle_relativ if atr_schwelle_relativ is not None else DEFAULT_RICHTUNGSWENDE_ATR_SCHWELLE
+    )
+    bestaetigt = bewegung_atr >= schwelle
+    if bestaetigt:
+        text = f"{basis_text} - bestätigt durch eine Kursbewegung von {bewegung_atr:.1f}× ATR seither."
+    else:
+        text = (
+            f"{basis_text} - Kurs bewegte sich seither nur {bewegung_atr:.1f}× ATR (Schwelle "
+            f"{schwelle:.1f}×) - die Wende ist noch nicht durch eine deutliche Kursbewegung bestätigt."
+        )
+    return Risikofaktor("Richtungswende", "neutral" if bestaetigt else "negativ", text)
+
+
 def compute_risikofaktoren(
     *, action: str, cash_veto: bool, cash_veto_reason: str | None,
     risk_veto: bool, risk_veto_reason: str | None, confidence_pct: float | None,
@@ -477,6 +543,12 @@ def compute_risikofaktoren(
     signal_stabilitaet: dict | None = None,
     atr_perzentil: float | None = None,
     atr_perzentil_hoch_schwelle: float | None = None,
+    richtungswende: dict | None = None,
+    current_price: float | None = None,
+    atr_value: float | None = None,
+    dates=None,
+    closes=None,
+    richtungswende_atr_schwelle: float | None = None,
 ) -> list["Risikofaktor"]:
     """Spot/Aktien/Rohstoffe/Themen-ETF-Pendant zu hebel_risk_gate.py::
     compute_risikofaktoren_hebel() - deterministische Zusammenfassung der
@@ -531,9 +603,15 @@ def compute_risikofaktoren(
                 "Technische Indikatoren widersprechen sich (weder bullish noch bearish dominiert).",
             ))
         else:
+            # 2026-07-25, echter KAIA-Fund (hebel_risk_gate.py, hier gespiegelt):
+            # eine "eindeutige Tendenz" wurde bisher IMMER als "positiv" gewertet,
+            # selbst bearish - dieser Block laeuft nur fuer _BUY_ACTIONS (siehe
+            # Zeile oben), die erwartete Tendenz ist hier deshalb immer bullish.
+            stuetzt_kauf = confluence.overall_bias == "bullish"
             faktoren.append(Risikofaktor(
-                "Technische Konfluenz", "positiv",
-                f"Technische Indikatoren zeigen eine eindeutige Tendenz ({confluence.overall_bias}).",
+                "Technische Konfluenz", "positiv" if stuetzt_kauf else "negativ",
+                f"Technische Indikatoren zeigen eine eindeutige Tendenz ({confluence.overall_bias}) - "
+                + ("stützt den Kauf." if stuetzt_kauf else "widerspricht dem Kauf."),
             ))
 
     if crv is not None:
@@ -633,6 +711,15 @@ def compute_risikofaktoren(
             signal_stabilitaet["einordnung"],
         ))
 
+    # Richtungswende (2026-07-25, echter INJ-Fund, Krypto-only wie oben) -
+    # eigener Faktor statt Teil von Signal-Stabilitaet, siehe
+    # richtungswende_risikofaktor()-Docstring.
+    rw_faktor = richtungswende_risikofaktor(
+        richtungswende, current_price, atr_value, dates, closes, richtungswende_atr_schwelle,
+    )
+    if rw_faktor is not None:
+        faktoren.append(rw_faktor)
+
     # Volatilitaets-Perzentil (2026-07-25, Baustein 2, Krypto-only wie
     # Liquiditaetszonen/Signal-Stabilitaet) - reiner Risiko-/Positionsgroessen-
     # Kontext, KEIN Richtungsurteil, deshalb nie "positiv".
@@ -685,6 +772,12 @@ def post_check(
     liquiditaetszonen: dict | None = None,
     signal_stabilitaet: dict | None = None,
     atr_perzentil: float | None = None,
+    richtungswende: dict | None = None,
+    current_price: float | None = None,
+    atr_value: float | None = None,
+    dates=None,
+    closes=None,
+    richtungswende_atr_schwelle: float | None = None,
 ) -> dict:
     """Nimmt die bereits validierte (siehe agent/analyst.py) Groq-Antwort und erzwingt
     RM-1/-2/-4/-5, Mindest-Konfidenz (R-5.10) und CRV >= 2.0 (Z-2) noch einmal
@@ -912,6 +1005,16 @@ def post_check(
         signal_stabilitaet=signal_stabilitaet,
         atr_perzentil=atr_perzentil,
         atr_perzentil_hoch_schwelle=config.get("volatilitaets_perzentil", {}).get("hoch_schwelle_perzentil"),
+        richtungswende=richtungswende,
+        current_price=current_price,
+        atr_value=atr_value,
+        dates=dates,
+        closes=closes,
+        richtungswende_atr_schwelle=(
+            richtungswende_atr_schwelle
+            if richtungswende_atr_schwelle is not None
+            else config.get("signal_stabilitaet", {}).get("richtungswende_atr_schwelle_relativ")
+        ),
     )
     result["_risikofaktoren"] = [
         {"name": f.name, "bewertung": f.bewertung, "begruendung": f.begruendung} for f in risikofaktoren

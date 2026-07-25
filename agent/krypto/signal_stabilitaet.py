@@ -57,6 +57,58 @@ def _kategorie(action: str) -> str:
     return _AKTIONS_KATEGORIE.get(action, _KATEGORIE_NEUTRAL)
 
 
+def _aktive_kategorie_wiederholt(kategorien: list) -> str | None:
+    """2026-07-25, echter INJ-Fund (Nutzer-Diskussion): die alte Logik zaehlte
+    JEDEN rohen Uebergang (a != b) - ein einzelner Ausflug in eine aktive
+    Kategorie, umrahmt von Neutral (z.B. Neutral-Neutral-Eroeffnen-Neutral-
+    Neutral, der normale Lebenszyklus "abwarten -> einmal handeln ->
+    beobachten"), erzeugt dabei IMMER genau 2 Uebergaenge und wurde damit
+    faelschlich als instabil gewertet, obwohl nur eine einzige Entscheidung
+    getroffen wurde. Echte Instabilitaet (das urspruengliche LINK-Vorbild:
+    wiederholtes Eroeffnen/Zurueckziehen) zeigt sich NICHT an der Zahl der
+    Uebergaenge, sondern daran, dass dieselbe aktive Kategorie in MEHR ALS
+    EINEM getrennten, durch etwas anderes unterbrochenen Abschnitt auftaucht.
+    Komprimiert die Folge zu 'Runs' (aufeinanderfolgende gleiche Werte = ein
+    Ereignis) und gibt die zuerst wiederkehrende aktive Kategorie zurueck
+    (None, wenn keine wiederkehrt)."""
+    runs = []
+    for k in kategorien:
+        if not runs or runs[-1] != k:
+            runs.append(k)
+    if runs.count(_KATEGORIE_AUFBAU) > 1:
+        return _KATEGORIE_AUFBAU
+    if runs.count(_KATEGORIE_ABBAU) > 1:
+        return _KATEGORIE_ABBAU
+    return None
+
+
+def juengste_richtungswende(verlauf: list) -> dict | None:
+    """2026-07-25, Nutzer-Diskussion (echter INJ-Fund): eine echte Richtungswende
+    (Aufbau<->Abbau) ist IMMER bemerkenswert, unabhaengig vom Signal-
+    Stabilitaets-Gesamturteil oben - eigener Risikofaktor statt Nebensatz
+    (siehe hebel_risk_gate.py::richtungswende_risikofaktor()). `verlauf` ist
+    neueste-zuerst sortiert (wie signal_stabilitaet_fakt() es bekommt).
+    Neutral-Eintraege werden uebersprungen (nur die beiden zuletzt
+    eingenommenen AKTIVEN Kategorien zaehlen als Vergleich) - Aufbau-Neutral-
+    Abbau gilt also ebenfalls als Wende, nicht nur ein direkter Aufbau-Abbau-
+    Uebergang. None, wenn keine zwei aktiven Eintraege vorliegen oder die
+    juengste aktive Kategorie mit der davor uebereinstimmt (keine Wende)."""
+    aktive = [
+        (s.created_at, _kategorie(s.action), s.action)
+        for s in verlauf if _kategorie(s.action) != _KATEGORIE_NEUTRAL
+    ]
+    if len(aktive) < 2:
+        return None
+    neu_zeit, neu_kat, neu_aktion = aktive[0]
+    alt_zeit, alt_kat, alt_aktion = aktive[1]
+    if neu_kat == alt_kat:
+        return None
+    return {
+        "neue_kategorie": neu_kat, "neue_aktion": neu_aktion, "neuer_zeitpunkt": neu_zeit,
+        "alte_kategorie": alt_kat, "alte_aktion": alt_aktion, "alter_zeitpunkt": alt_zeit,
+    }
+
+
 def signal_stabilitaet_fakt(verlauf: list, config: dict | None) -> dict | None:
     """Baut den Fakt fuer build_facts()/build_hebel_facts(). `verlauf` sind die
     letzten Bewertungen desselben (symbol[, richtung]) VOR dem aktuellen Lauf,
@@ -93,7 +145,8 @@ def signal_stabilitaet_fakt(verlauf: list, config: dict | None) -> dict | None:
 
     schwelle = cfg.get("spannweite_schwelle_pct", DEFAULT_SPANNWEITE_SCHWELLE_PCT)
     konfidenz_schwankt = spannweite >= schwelle
-    zu_viele_kategoriewechsel = anzahl_kategoriewechsel > 1
+    wiederkehrende_kategorie = _aktive_kategorie_wiederholt(kategorien)
+    zu_viele_kategoriewechsel = wiederkehrende_kategorie is not None
     stabil = not konfidenz_schwankt and not zu_viele_kategoriewechsel
 
     tier_hinweis = (
@@ -124,8 +177,8 @@ def signal_stabilitaet_fakt(verlauf: list, config: dict | None) -> dict | None:
             )
         if zu_viele_kategoriewechsel:
             gruende.append(
-                f"Aktion wechselte {anzahl_kategoriewechsel}x zwischen grundverschiedenen Kategorien "
-                f"(Aufbau/Abbau/Neutral){tier_hinweis}"
+                f"Aktion kehrte mehrfach, mit Unterbrechung dazwischen, zu '{wiederkehrende_kategorie}' "
+                f"zurück (statt einer einmaligen, durchgehenden Entscheidung){tier_hinweis}"
             )
         einordnung = (
             f"Instabil über die letzten {len(zyklen)} Bewertungen: {' UND '.join(gruende)} - "
