@@ -145,8 +145,19 @@ Feigenblatt-Gegenargument). Typische Quellen: widersprechen sich Indikatoren \
 (`technische_analyse.confluence.gesamttendenz` == "gemischt")? Ist das Chance-Risiko-\
 Verhaeltnis nur knapp ueber der Pflichtgrenze von 2.0? Deutet `sektor_rotation` auf eine \
 bereits ueberhitzte, moeglicherweise auslaufende Rotation hin (siehe Regel 9)? \
-`confidence_pct` MUSS das dort formulierte Gegenargument widerspiegeln - ein GENUIN \
-starkes Gegenargument darf NICHT mit hoher Konfidenz (>75%) kombiniert werden.
+`confidence_pct` MUSS das dort formulierte Gegenargument widerspiegeln, aber GRADUELL, \
+nicht binaer: JEDES reale Setup hat IRGENDEIN Gegenargument - dessen bloße Existenz allein \
+ist KEIN Grund fuer eine pauschale Abwertung. Ein EINZELNER, isolierter Schwachpunkt (z.B. \
+NUR widerspruechliche Konfluenz ODER NUR ein knapp ausreichendes CRV, aber nicht beides) \
+rechtfertigt lediglich eine moderate Abwertung, keinen Fall unter 75%. Erst ein GENUIN \
+starkes Gegenargument, bei dem MEHRERE dieser Schwachpunkte gleichzeitig zutreffen (z.B. \
+widerspruechliche Konfluenz UND ein nur knapp ausreichendes CRV gleichzeitig), darf nicht \
+mit hoher Konfidenz (>75%) kombiniert werden. Beispiel: "EMA-Ordnung bearish, aber RSI/MACD \
+bullish UND CRV nur bei 2,08" bei 80% Konfidenz ist inkonsistent - der DOPPELTE Widerspruch \
+muss die Konfidenz nach unten ziehen. Nutze dabei die volle Bandbreite von `confidence_pct` \
+(0-100%), auch Werte deutlich ueber 75%, wenn das Gegenargument tatsaechlich schwach ist - \
+eine Konfidenz, die praktisch immer im selben schmalen Band landet, ist selbst ein \
+Kalibrierungsfehler.
 17. Ist `historische_erfolgsquote` NICHT null, gibt sie die bisherige Trefferquote frueherer \
 Signale wieder (`trefferquote_pct`, `anzahl_ausgewertete_signale`). Beziehe diese Zahl grob \
 in deine `confidence_pct`-Kalibrierung mit ein, aber NUR als schwaches Zusatzindiz - lies \

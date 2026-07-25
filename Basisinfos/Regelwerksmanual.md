@@ -7941,3 +7941,44 @@ erkannt und entfernt.
   unverändert korrekte Werte.
 - Import-Sanity-Check über alle 5 Spot-family-Pipelines (Krypto/Aktien/
   Rohstoffe/Hedge/Themen-ETF), die `risk_gate.py` gemeinsam nutzen.
+
+## Nachtrag (2026-07-25, gleicher Tag): Konfidenz-Prompt-Fix auf Aktien/Rohstoffe/Themen-ETF ausgeweitet
+
+**Auslöser:** Nutzer-Frage, ob die gestrigen Multi-Asset-Signal-Pipelines
+(gebaut 2026-07-18) vom Konfidenz-Prompt-Fix (siehe Nachtrag oben,
+"Konfidenz-Kollaps behoben") überhaupt erfasst wurden. Prüfung ergab: NEIN -
+`agent/aktien/analyst.py`, `agent/rohstoff/analyst.py`,
+`agent/themen_etf/analyst.py` haben jeweils ihre EIGENE, unabhängige Kopie
+der Gegenargument-Regel (Regel 18/17/16) - der gestrige Fix wurde nur in
+`agent/krypto/analyst.py` und `agent/krypto/hebel_analyst.py` gemacht, nie
+hierher gespiegelt. Alle drei hatten denselben unkorrigierten harten Anker
+("…darf NICHT mit hoher Konfidenz (>75%) kombiniert werden", ohne
+Gradierung). `agent/hedge/analyst.py` (Regel 7) ist NICHT betroffen -
+deutlich einfachere, ältere Formulierung ohne harten >75%-Anker.
+
+**Empirisch bestätigt:** 58 historische Multi-Asset-Signale (PLTR, VST,
+DBPK, 3QSS, OD7H, VVMX, X136, EXH3, CEBS, ISOC) zeigen dasselbe
+Clustering-Muster wie Spot vor dem Fix (überwiegend 50-72% Konfidenz, kaum
+je ≥75%).
+
+**Fix:** identische Gradierungs-Logik wie gestern (einzelner Schwachpunkt =
+moderate Abwertung, erst mehrere gleichzeitig = deutliche Abwertung,
+korrigiertes Zwei-Faktor-Beispiel, expliziter Hinweis auf volle Bandbreite
+0-100%) in allen drei Dateien nachgezogen, jeweils an die dortige
+Faktoren-Liste angepasst (Aktien: Konfluenz/CRV/Fundamental-Allgemeinheit;
+Rohstoffe: Konfluenz/CRV/Managed-Money-Positionierung; Themen-ETF:
+Konfluenz/CRV/Sektor-Rotation).
+
+**Verifiziert:** echter Mistral-A/B-Test für `agent/aktien/analyst.py`
+(identisches Muster wie gestern bei Spot/Hebel, stellvertretend für alle
+drei - gleicher Mechanismus, gleiches Modell): einzelner Schwachpunkt
+(Konfluenz gemischt, CRV komfortabel über 2.4) - ALT 65% (beide Läufe) →
+NEU 70-75%. Syntax-Check + Import-Sanity-Check über alle vier Multi-Asset-
+Pipelines (Aktien/Rohstoffe/Hedge/Themen-ETF) bestanden.
+
+**Übergreifende Lektion für künftige Analysen (Nutzer-Vorgabe):** bei
+Prompt-/Regelwerk-Funden künftig IMMER alle Varianten durchprüfen - Spot,
+Hebel, Multi-Asset (Aktien/Rohstoffe/Themen-ETF) UND Absicherungspositionen
+(Hedge) - nicht nur die zuerst gefundene. Heute war das bereits der dritte
+Fund dieses Musters am selben Tag (Liquiditätszonen-Grafik nur Hebel,
+Retail-Konsens nur Hebel, jetzt Konfidenz-Prompt nur Spot/Hebel).
