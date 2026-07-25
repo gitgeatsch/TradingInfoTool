@@ -552,18 +552,45 @@ def compute_risikofaktoren(
     # Retail-Konsens-Risiko (2026-07-19, echter AVAX-Hebel-Fund, Krypto-only -
     # Aktien/Rohstoffe/Themen-ETF liefern keine antizyklisch-Fakten, dann
     # bleiben beide Parameter None und dieser Block wird uebersprungen).
-    if retail_long_bias_extreme and action in _BUY_ACTIONS:
-        faktoren.append(Risikofaktor(
-            "Retail-Konsens-Risiko", "negativ",
-            "Empfohlener Kauf stimmt mit der extremen Mehrheitspositionierung der Retail-Trader "
-            "überein - antizyklisch betrachtet ein Kontraindikator, keine Stütze.",
-        ))
-    elif long_account_pct is not None:
-        faktoren.append(Risikofaktor(
-            "Retail-Konsens-Risiko", "positiv",
-            f"Empfehlung steht NICHT im Konsens mit der Retail-Mehrheit "
-            f"({long_account_pct:.0f}% long positioniert).",
-        ))
+    # 2026-07-25, Fakt-zuerst-Fix aus hebel_risk_gate.py nachgezogen (dort seit
+    # 2026-07-22, echter Fund: nicht-extreme Mehrheiten in dieselbe Richtung
+    # wurden pauschal als "positiv/antizyklisch" gelabelt, auch wenn die
+    # Empfehlung tatsaechlich mit der Mehrheit mitlief). Live per Datenanalyse
+    # bestaetigt: von 98 bisherigen "positiv"-Faellen betrafen 79 tatsaechlich
+    # eine nicht-extreme long-Mehrheit bei gleichzeitiger Kauf-Empfehlung -
+    # haetten "neutral" statt "positiv" sein muessen. "Fakt zuerst": der Text
+    # nennt IMMER explizit die Mehrheit, die Bewertung wird ERST DANACH
+    # abgeleitet (3 Stufen statt binaerer Ja/Nein-Phrase). `action` ist an
+    # dieser Stelle durch den fruehen Return oben immer KAUFEN/NACHKAUFEN -
+    # anders als bei Hebel (LONG/SHORT) gibt es bei Spot keine "short-seitige"
+    # Gegenrichtung zu pruefen, die Kauf-Empfehlung "folgt der Mehrheit" also
+    # genau dann, wenn die Mehrheit selbst long ist.
+    if long_account_pct is not None:
+        mehrheit_ist_long = long_account_pct > 50.0
+        mehrheits_pct = long_account_pct if mehrheit_ist_long else (100.0 - long_account_pct)
+        mehrheits_richtung = "long" if mehrheit_ist_long else "short"
+        fakt = (
+            f"{long_account_pct:.0f}% der Retail-Konten sind long positioniert "
+            f"({mehrheits_pct:.0f}% Mehrheit {mehrheits_richtung}) - die Kauf-Empfehlung liegt "
+            f"{'in derselben Richtung wie' if mehrheit_ist_long else 'entgegen'} der Mehrheit."
+        )
+        if mehrheit_ist_long and retail_long_bias_extreme:
+            faktoren.append(Risikofaktor(
+                "Retail-Konsens-Risiko", "negativ",
+                f"{fakt} Extreme Mehrheitspositionierung in dieselbe Richtung - antizyklisch "
+                "betrachtet ein Kontraindikator, keine Stütze.",
+            ))
+        elif mehrheit_ist_long:
+            faktoren.append(Risikofaktor(
+                "Retail-Konsens-Risiko", "neutral",
+                f"{fakt} Nicht extrem genug für einen klaren Kontraindikator, aber auch kein "
+                "antizyklischer Pluspunkt.",
+            ))
+        else:
+            faktoren.append(Risikofaktor(
+                "Retail-Konsens-Risiko", "positiv",
+                f"{fakt} Antizyklisch betrachtet ein unterstützendes Signal.",
+            ))
 
     if confidence_pct is not None:
         if confidence_pct < KONFIDENZ_SCHWELLE_NIEDRIG:

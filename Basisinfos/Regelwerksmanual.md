@@ -7892,3 +7892,52 @@ umgesetzt.
 - Import-Sanity-Check über alle betroffenen Module (`ui.signals_view`,
   `ui.hebel_view`, `scheduler.background`, `agent.krypto.pipeline`,
   `agent.krypto.risk_gate`) - keine Regression.
+
+## Nachtrag (2026-07-25, gleicher Tag): Retail-Konsens-Risiko Fakt-zuerst-Fix für Spot umgesetzt (Datenanalyse vorgeschaltet)
+
+**Auslöser:** Fortsetzung des Nachtrags oben - Nutzer bat um sorgfältige
+Datenanalyse (frischer `notebook_diagnose.json`-Export, 1266 Spot-Signale)
+vor jeder Änderung, da erst kürzlich mehrere Spot-Gates/-Parameter angepasst
+wurden.
+
+**Datenanalyse (wichtige Korrektur der ersten Einschätzung):** `compute_
+risikofaktoren()` hat bereits eine frühe Rückgabe (`if action not in
+_BUY_ACTIONS: return faktoren`) - der Retail-Konsens-Block läuft also NUR,
+wenn die ursprüngliche (Pre-Veto-)Aktion KAUFEN/NACHKAUFEN war, unabhängig
+davon, was `risikofaktoren_json` als finale Aktion zeigt (z.B. nach einem
+Konfidenz-Veto auf HALTEN). Die erste Zählung anhand der finalen Aktion war
+dadurch fehlerhaft (nur 1 falsch gelabelter Fall gefunden). Korrekte
+Auswertung: von 98 historischen "positiv"-Fällen betrafen tatsächlich alle
+98 eine originale Kauf-Empfehlung - 79 davon bei einer NICHT-extremen
+long-Mehrheit (50-65%), also fälschlich als "positiv/antizyklisch" gelabelt,
+obwohl die Kauf-Empfehlung tatsächlich mit der Mehrheit mitlief. Nur 19 waren
+tatsächlich korrekt (Kauf gegen eine Short-Mehrheit).
+
+**Fix:** `agent/krypto/risk_gate.py::compute_risikofaktoren()` - Retail-
+Konsens-Block auf dieselbe 3-Stufen-Fakt-zuerst-Logik wie `hebel_risk_
+gate.py` umgestellt. Bewusst VEREINFACHT gegenüber Hebel: da `action` an
+dieser Stelle durch die bereits bestehende frühe Rückgabe (Zeile ~512)
+immer KAUFEN/NACHKAUFEN ist, gibt es - anders als bei Hebel (LONG/SHORT) -
+keine "short-seitige" Gegenrichtung zu prüfen; "folgt die Empfehlung der
+Mehrheit" reduziert sich auf "ist die Mehrheit selbst long". Kein
+`_SELL_ACTIONS`-Zweig und keine symmetrische Extrem-Schwellen-Prüfung
+nötig (beide wären an dieser Stelle toter Code) - erste Entwurfsversion
+hatte das noch 1:1 aus Hebel übernommen, beim Review als unerreichbar
+erkannt und entfernt.
+
+**Verifiziert:**
+- Historische Redistribution simuliert (98 alte "positiv"-Fälle durch die
+  neue Logik gejagt): 79 → korrekt "neutral", 19 → weiterhin korrekt
+  "positiv", 0 → "negativ" (erwartungsgemäß, da kein historischer Fall über
+  der Extrem-Schwelle lag).
+- Echter Funktionstest gegen `compute_risikofaktoren()` (5 Fälle): echter
+  ALGO-Fall (KAUFEN, 60% long, nicht extrem) → jetzt korrekt "neutral";
+  extreme Mehrheit (80% long) → weiterhin "negativ"; Kauf gegen die
+  Mehrheit (30% long) → weiterhin "positiv"; Grenzfall exakt 50% →
+  "positiv" (dokumentiertes Verhalten); HALTEN → früher Return, gar kein
+  Faktor (unverändert).
+- Regressionscheck: alle anderen Blöcke derselben Funktion (Gegenszenario/
+  Konfluenz/CRV/Konfidenz) liefern bei gleichzeitiger Auswertung
+  unverändert korrekte Werte.
+- Import-Sanity-Check über alle 5 Spot-family-Pipelines (Krypto/Aktien/
+  Rohstoffe/Hedge/Themen-ETF), die `risk_gate.py` gemeinsam nutzen.
