@@ -292,6 +292,16 @@ class Signal:
     # LLM generiert - echter AVAX-Hebel-Fund zeigte, dass das Modell
     # antizyklische Fakten selbst fehlinterpretieren kann.
     risikofaktoren_json: str | None = None
+    # Signal-Fazit (2026-07-25, Regel 29 in analyst.py::SYSTEM_PROMPT, Memory
+    # feedback_llm_synthese_kein_deterministischer_override.md) - abschliessendes
+    # LLM-Synthese-Verdikt ueber die eigene, bereits fertige Analyse. Bewusst
+    # KEIN deterministischer Override von fazit_folgen/fazit_kurzfazit - nur
+    # fazit_konsistenz_hinweis (rein diagnostisch, agent/krypto/risk_gate.py::
+    # _fazit_konsistenz_hinweis()) vergleicht das Fazit mit der EIGENEN
+    # confidence_pct desselben Laufs, ohne den Fazit-Wert selbst zu aendern.
+    fazit_folgen: str | None = None  # 'ja'|'nein'|'mit_vorbehalt'
+    fazit_kurzfazit: str | None = None
+    fazit_konsistenz_hinweis: str | None = None
 
 
 @dataclass
@@ -562,6 +572,11 @@ class HebelSignal:
     # statt die urspruengliche LLM-Ausgabe stillschweigend zu ueberschreiben.
     kontrathese_zu_position: bool = False
     kontrathese_llm_richtung: str | None = None
+    # Signal-Fazit (2026-07-25, siehe Signal.fazit_folgen-Docstring fuer die
+    # volle Herleitung, Regel 21 in hebel_analyst.py::SYSTEM_PROMPT).
+    fazit_folgen: str | None = None  # 'ja'|'nein'|'mit_vorbehalt'
+    fazit_kurzfazit: str | None = None
+    fazit_konsistenz_hinweis: str | None = None
 
 
 @dataclass

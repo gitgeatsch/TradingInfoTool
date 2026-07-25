@@ -1113,6 +1113,18 @@ btc_relativwert:
     # (~1 Monat, passt zur typischen swing_strategie-Haltedauer) - zeigt, ob
     # GERADE Kapital in diesen Coin oder zurueck zu BTC rotiert.
 
+# --- Signal-Fazit (2026-07-25, agent/krypto/risk_gate.py::_fazit_konsistenz_
+# hinweis()) - abschliessendes LLM-Synthese-Verdikt (eigene_einschaetzung).
+# BEWUSST KEIN deterministischer Override von folgen/kurzfazit (siehe Memory
+# feedback_llm_synthese_kein_deterministischer_override.md) - die beiden
+# Schwellen hier steuern NUR einen rein diagnostischen Konsistenz-Hinweis
+# (Fazit vs. eigene Konfidenz desselben Laufs), der nichts am Fazit selbst
+# aendert. Krypto Spot+Hebel (agent/krypto/analyst.py Regel 29 / hebel_
+# analyst.py Regel 21).
+signal_fazit:
+  konsistenz_schwelle_niedrig: 55        # Fazit "ja" unter dieser Konfidenz -> Hinweis.
+  konsistenz_schwelle_hoch: 65           # Fazit "nein" ueber dieser Konfidenz -> Hinweis.
+
 # --- Backward-Tracking (Selbstverifikations-Vision Schritt 2, siehe
 # Basisinfos/Regelwerksmanual.md Kap. 9 / Spezifikation Kap. 16) ---
 backward_tracking:

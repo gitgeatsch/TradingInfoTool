@@ -653,6 +653,32 @@ def compute_risikofaktoren(
     return faktoren
 
 
+DEFAULT_FAZIT_KONSISTENZ_SCHWELLE_NIEDRIG = 55.0
+DEFAULT_FAZIT_KONSISTENZ_SCHWELLE_HOCH = 65.0
+
+
+def _fazit_konsistenz_hinweis(
+    folgen: str | None, confidence_pct: float | None,
+    schwelle_niedrig: float = DEFAULT_FAZIT_KONSISTENZ_SCHWELLE_NIEDRIG,
+    schwelle_hoch: float = DEFAULT_FAZIT_KONSISTENZ_SCHWELLE_HOCH,
+) -> str | None:
+    """Signal-Fazit (2026-07-25, siehe Signal.fazit_folgen-Docstring) - REIN
+    DIAGNOSTISCH, aendert NIE `folgen`/`kurzfazit` selbst (siehe Memory
+    feedback_llm_synthese_kein_deterministischer_override.md). Vergleicht das
+    Fazit AUSSCHLIESSLICH mit der EIGENEN `confidence_pct` desselben Laufs -
+    nicht mit einer separat berechneten Risikofaktoren-Anzahl, das waere
+    bereits eine zweite, primitivere Bewertung und genau das, was hier
+    vermieden werden soll. `mit_vorbehalt` wird NIE geflaggt - das ist
+    bereits die explizite Zwischenposition."""
+    if folgen is None or confidence_pct is None:
+        return None
+    if folgen == "ja" and confidence_pct < schwelle_niedrig:
+        return "Fazit 'ja' bei vergleichsweise niedriger eigener Konfidenz - ggf. genauer prüfen."
+    if folgen == "nein" and confidence_pct > schwelle_hoch:
+        return "Fazit 'nein' trotz vergleichsweise hoher eigener Konfidenz - ggf. genauer prüfen."
+    return None
+
+
 def post_check(
     parsed: dict, pre_result: RiskPreCheckResult, regime_result, config: dict, confluence=None,
     retail_long_bias_extreme: bool | None = None, long_account_pct: float | None = None,
@@ -890,4 +916,15 @@ def post_check(
     result["_risikofaktoren"] = [
         {"name": f.name, "bewertung": f.bewertung, "begruendung": f.begruendung} for f in risikofaktoren
     ]
+
+    # Signal-Fazit Konsistenz-Hinweis (2026-07-25) - rein diagnostisch, siehe
+    # _fazit_konsistenz_hinweis()-Docstring.
+    eigene_einschaetzung = result.get("eigene_einschaetzung") or {}
+    fazit_cfg = config.get("signal_fazit", {})
+    result["_fazit_konsistenz_hinweis"] = _fazit_konsistenz_hinweis(
+        eigene_einschaetzung.get("folgen"),
+        result.get("confidence_pct"),
+        fazit_cfg.get("konsistenz_schwelle_niedrig", DEFAULT_FAZIT_KONSISTENZ_SCHWELLE_NIEDRIG),
+        fazit_cfg.get("konsistenz_schwelle_hoch", DEFAULT_FAZIT_KONSISTENZ_SCHWELLE_HOCH),
+    )
     return result

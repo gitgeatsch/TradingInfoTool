@@ -1037,6 +1037,26 @@ def _formatiere_risikofaktoren(signal) -> str:
     return "\n\n".join(zeilen)
 
 
+_FAZIT_SYMBOL = {"ja": "▲", "mit_vorbehalt": "●", "nein": "▼"}
+
+
+def _formatiere_fazit(signal) -> str:
+    """Signal-Fazit (2026-07-25, abschliessendes LLM-Synthese-Verdikt, siehe
+    Signal.fazit_folgen-Docstring und Memory feedback_llm_synthese_kein_
+    deterministischer_override.md) - eigene Kopie wie _formatiere_risiko-
+    faktoren() (E-Mail-Textkontext, getrennt von ui/formatting.py::
+    format_fazit_lines() fuer die App). Wiederverwendet dieselben ▲/●/▼-
+    Symbole wie die Risikofaktoren-Liste, damit dieselbe classify_detail_
+    line()/render_detail_html()-Faerbung automatisch greift."""
+    if not signal.fazit_folgen:
+        return ""
+    symbol = _FAZIT_SYMBOL.get(signal.fazit_folgen, "●")
+    zeile = f"{symbol} Fazit: {signal.fazit_folgen.replace('_', ' ')} - {signal.fazit_kurzfazit or ''}"
+    if signal.fazit_konsistenz_hinweis:
+        zeile += f"\n\n⚠ {signal.fazit_konsistenz_hinweis}"
+    return zeile
+
+
 def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None, conn_factory=None) -> None:
     """E-Mail bei handlungsrelevanter Spot-Empfehlung (2026-07-14, Erweiterung
     von U-8/P-7 - Empfehlungen sollen den Nutzer auch erreichen, wenn er selten
@@ -1079,6 +1099,7 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None, c
         gegenargument_text = _formatiere_gegenargument(signal)
         forecast_text = _formatiere_forecast(signal)
         risikofaktoren_text = _formatiere_risikofaktoren(signal)
+        fazit_text = _formatiere_fazit(signal)
         zeitpunkt_text = _formatiere_zeitpunkt_lokal(signal.created_at)
         body = (
             f"Aktion: {signal.action}\n"
@@ -1099,6 +1120,7 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None, c
             + "\n--- 3. KONKLUSION (RISIKOFAKTOREN) ---\n"
             + f"{_RISIKOFAKTOREN_LEGENDE}\n\n"
             + (risikofaktoren_text if risikofaktoren_text else "Keine strukturierten Risikofaktoren verfügbar.")
+            + (f"\n\n{fazit_text}" if fazit_text else "")
             + "\n\nDetails im Signale-Tab der App. Ausführung manuell über die Bitpanda-App."
         )
         # Liquiditätszonen-Grafik (2026-07-25, von Hebel nachgezogen - siehe
@@ -1237,6 +1259,7 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None, 
         gegenargument_text = _formatiere_gegenargument(signal)
         forecast_text = _formatiere_forecast(signal)
         risikofaktoren_text = _formatiere_risikofaktoren(signal)
+        fazit_text = _formatiere_fazit(signal)
         zeitpunkt_text = _formatiere_zeitpunkt_lokal(signal.created_at)
         wartezeit_text = ""
         if conn_factory is not None:
@@ -1277,6 +1300,7 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None, 
             + "\n--- 3. KONKLUSION (RISIKOFAKTOREN) ---\n"
             + f"{_RISIKOFAKTOREN_LEGENDE}\n\n"
             + (risikofaktoren_text if risikofaktoren_text else "Keine strukturierten Risikofaktoren verfügbar.")
+            + (f"\n\n{fazit_text}" if fazit_text else "")
             + "\n\nDetails im Hebel-Tab der App. Ausführung manuell über die Bitpanda-App."
         )
         # Liquiditätszonen-Grafik (2026-07-23, Nutzer-Wunsch: nicht nur in der
@@ -1404,6 +1428,7 @@ def _notify_multi_asset_signal(signal, watchlist: list, bitpanda_assets: list | 
         gegenargument_text = _formatiere_gegenargument(signal)
         forecast_text = _formatiere_forecast(signal)
         risikofaktoren_text = _formatiere_risikofaktoren(signal)
+        fazit_text = _formatiere_fazit(signal)
         zeitpunkt_text = _formatiere_zeitpunkt_lokal(signal.created_at)
         body = (
             f"Aktion: {signal.action}\n"
@@ -1423,6 +1448,7 @@ def _notify_multi_asset_signal(signal, watchlist: list, bitpanda_assets: list | 
             + "\n--- 3. KONKLUSION (RISIKOFAKTOREN) ---\n"
             + f"{_RISIKOFAKTOREN_LEGENDE}\n\n"
             + (risikofaktoren_text if risikofaktoren_text else "Keine strukturierten Risikofaktoren verfügbar.")
+            + (f"\n\n{fazit_text}" if fazit_text else "")
             + "\n\nDetails im Signale-Tab der App. Ausführung manuell über die Bitpanda-App."
         )
         send_notification_email(f"TradingInfoTool: {signal.action} {signal.symbol}", body, empfaenger)

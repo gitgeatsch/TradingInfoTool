@@ -20,7 +20,9 @@ from tkinter import ttk
 import database.db as db
 import ui.theme as theme
 from ui.detail_panel import configure_tags, render_detail_text
-from ui.formatting import RISIKOFAKTOREN_LEGENDE, format_money, format_risikofaktoren_lines
+from ui.formatting import (
+    RISIKOFAKTOREN_LEGENDE, format_fazit_lines, format_money, format_risikofaktoren_lines,
+)
 from ui.heading_tooltip import add_heading_tooltips
 from ui.sortable_tree import make_sortable
 
@@ -523,6 +525,12 @@ class SignalsView(ttk.Frame):
         lines.append("--- 3. KONKLUSION (RISIKOFAKTOREN) ---")
         lines.append(RISIKOFAKTOREN_LEGENDE)
         lines.extend(risikofaktoren_lines if risikofaktoren_lines else ["Keine strukturierten Risikofaktoren verfügbar."])
+        fazit_lines = format_fazit_lines(
+            signal.fazit_folgen, signal.fazit_kurzfazit, signal.fazit_konsistenz_hinweis,
+        )
+        if fazit_lines:
+            lines.append("")
+            lines.extend(fazit_lines)
 
         self._set_detail_text("\n".join(lines))
         self._render_liquiditaetszonen_chart(signal)

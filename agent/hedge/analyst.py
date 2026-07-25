@@ -127,6 +127,18 @@ UNABHAENGIGE, FAKTENBASIERTE Gegenpruefung - kommentiere explizit, ob das aktuel
 Setup die Nutzer-These stuetzt oder ihr widerspricht. Eine aktive These ist NIEMALS \
 ein Grund, `action` staerker in Richtung der These zu verschieben, als es die \
 uebrigen Fakten hergeben.
+16. Fuelle `eigene_einschaetzung` GANZ ZULETZT aus, NACHDEM du `action`, \
+`confidence_pct`, `gegenargument`, `top_gruende` und `long_reasoning` bereits \
+fertiggestellt hast - das ist ein ABSCHLIESSENDER, GANZHEITLICHER Rueckblick \
+auf deine eigene bereits fertige Analyse, keine Wiederholung/Formalitaet. \
+Stelle dir konkret die Frage: "Wuerde ich selbst - auf Basis ALLER vorliegenden \
+Daten - dieser Absicherungs-Empfehlung folgen?" `folgen` ist EXAKT einer von \
+"ja"/"nein"/"mit_vorbehalt" - "mit_vorbehalt" ist eine echte, eigenstaendige \
+Antwort fuer den Fall "Setup ist plausibel, aber etwas macht mich vorsichtig", \
+kein Zwang zu einem binaeren Ja/Nein. `kurzfazit` ist EIN Satz, der die Antwort \
+konkret begruendet (nicht nur `short_reasoning` wiederholen). WICHTIG: es gibt \
+hierfuer KEINE feste Regel/Formel - du musst selbst gewichten, wie stark die \
+einzelnen Faktoren zaehlen.
 
 SCHEMA:
 {
@@ -159,7 +171,8 @@ SCHEMA:
     "bull": {"scenario": "<Text>", "probability_pct": <0-100>},
     "base": {"scenario": "<Text>", "probability_pct": <0-100>},
     "bear": {"scenario": "<Text>", "probability_pct": <0-100>}
-  }
+  },
+  "eigene_einschaetzung": {"folgen": "ja|nein|mit_vorbehalt", "kurzfazit": "<1 Satz, siehe Regel 16>"}
 }"""
 
 
@@ -275,11 +288,12 @@ def build_facts(
 REQUIRED_TOP_LEVEL_FIELDS = (
     "action", "gegenargument", "confidence_pct", "short_reasoning", "top_gruende", "long_reasoning",
     "position_size", "entry", "stop_loss", "take_profit", "halte_kriterium",
-    "key_risks", "forecast",
+    "key_risks", "forecast", "eigene_einschaetzung",
 )
 
 TOP_GRUENDE_KATEGORIEN = ("exposure", "makro", "risiko", "timing")
 _HALTE_KRITERIUM_BUCKETS = ("kurz", "mittel", "lang")
+_EIGENE_EINSCHAETZUNG_FOLGEN_WERTE = ("ja", "nein", "mit_vorbehalt")
 
 
 def _validate(data: dict) -> dict:
@@ -299,6 +313,19 @@ def _validate(data: dict) -> dict:
     if len(gegenargument) < 15:
         raise AnalystResponseInvalid(f"gegenargument fehlt oder zu kurz: {data.get('gegenargument')!r}")
     data["gegenargument"] = gegenargument
+
+    eigene_einschaetzung = data.get("eigene_einschaetzung")
+    if not isinstance(eigene_einschaetzung, dict):
+        raise AnalystResponseInvalid(f"eigene_einschaetzung ist kein Objekt: {eigene_einschaetzung!r}")
+    folgen = str(eigene_einschaetzung.get("folgen", "")).strip().lower()
+    if folgen not in _EIGENE_EINSCHAETZUNG_FOLGEN_WERTE:
+        raise AnalystResponseInvalid(f"eigene_einschaetzung.folgen ungültig: {eigene_einschaetzung.get('folgen')!r}")
+    kurzfazit = str(eigene_einschaetzung.get("kurzfazit", "")).strip()
+    if len(kurzfazit) < 15:
+        raise AnalystResponseInvalid(
+            f"eigene_einschaetzung.kurzfazit fehlt oder zu kurz: {eigene_einschaetzung.get('kurzfazit')!r}"
+        )
+    data["eigene_einschaetzung"] = {"folgen": folgen, "kurzfazit": kurzfazit}
 
     try:
         data["confidence_pct"] = float(data["confidence_pct"])

@@ -20,7 +20,10 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
 from agent.krypto.anticyclic import LONG_BIAS_EXTREME_THRESHOLD_PCT
-from agent.krypto.risk_gate import CRV_MINIMUM, KONFIDENZ_SCHWELLE_HOCH, KONFIDENZ_SCHWELLE_NIEDRIG
+from agent.krypto.risk_gate import (
+    CRV_MINIMUM, DEFAULT_FAZIT_KONSISTENZ_SCHWELLE_HOCH, DEFAULT_FAZIT_KONSISTENZ_SCHWELLE_NIEDRIG,
+    KONFIDENZ_SCHWELLE_HOCH, KONFIDENZ_SCHWELLE_NIEDRIG, _fazit_konsistenz_hinweis,
+)
 
 RICHTUNG_LONG = "LONG"
 RICHTUNG_SHORT = "SHORT"
@@ -894,4 +897,15 @@ def post_check_hebel(
     result["_risikofaktoren"] = [
         {"name": f.name, "bewertung": f.bewertung, "begruendung": f.begruendung} for f in risikofaktoren
     ]
+
+    # Signal-Fazit Konsistenz-Hinweis (2026-07-25) - rein diagnostisch, siehe
+    # agent/krypto/risk_gate.py::_fazit_konsistenz_hinweis()-Docstring.
+    eigene_einschaetzung = result.get("eigene_einschaetzung") or {}
+    fazit_cfg = config.get("signal_fazit", {})
+    result["_fazit_konsistenz_hinweis"] = _fazit_konsistenz_hinweis(
+        eigene_einschaetzung.get("folgen"),
+        result.get("confidence_pct"),
+        fazit_cfg.get("konsistenz_schwelle_niedrig", DEFAULT_FAZIT_KONSISTENZ_SCHWELLE_NIEDRIG),
+        fazit_cfg.get("konsistenz_schwelle_hoch", DEFAULT_FAZIT_KONSISTENZ_SCHWELLE_HOCH),
+    )
     return result

@@ -660,6 +660,23 @@ def _migrate_risikofaktoren_columns(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+_SIGNAL_FAZIT_NEW_COLUMNS = {
+    "fazit_folgen": "TEXT", "fazit_kurzfazit": "TEXT", "fazit_konsistenz_hinweis": "TEXT",
+}
+
+
+def _migrate_signal_fazit_columns(conn: sqlite3.Connection) -> None:
+    """Nachtrag 2026-07-25 (Signal-Fazit, siehe Signal.fazit_folgen-Docstring
+    fuer die volle Herleitung) fuer beide Tabellen. Gleiches additive
+    Migrations-Muster wie _migrate_risikofaktoren_columns()."""
+    for table in ("signals", "hebel_signals"):
+        existing = {row["name"] for row in conn.execute(f"PRAGMA table_info({table})")}
+        for column, sql_type in _SIGNAL_FAZIT_NEW_COLUMNS.items():
+            if column not in existing:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
 _HEBEL_SIGNAL_EUR_NEW_COLUMNS = {
     "liquidationspreis_geschaetzt_eur": "REAL", "eigenkapitalbedarf_eur": "REAL",
 }
@@ -822,6 +839,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_risikofaktoren_columns(conn)
     _migrate_hebel_signal_eur_columns(conn)
     _migrate_kontrathese_columns(conn)
+    _migrate_signal_fazit_columns(conn)
     import_holdings_manual_overrides(conn)
 
 
@@ -1679,7 +1697,7 @@ _SIGNAL_COLUMNS = (
     "tranchen_json",
     "cash_reserve_ziel_btc_usd", "cash_reserve_ziel_eth_usd", "cash_reserve_ziel_gesamt_usd",
     "cash_reserve_ziel_begruendung", "gegenargument", "cash_veto", "cash_veto_reason",
-    "risikofaktoren_json",
+    "risikofaktoren_json", "fazit_folgen", "fazit_kurzfazit", "fazit_konsistenz_hinweis",
 )
 
 
@@ -2571,6 +2589,7 @@ _HEBEL_SIGNAL_COLUMNS = (
     "gate_passed", "gate_reason", "risk_veto", "risk_veto_reason", "facts_json",
     "groq_raw_response", "llm_model", "gegenargument", "risikofaktoren_json",
     "kontrathese_zu_position", "kontrathese_llm_richtung",
+    "fazit_folgen", "fazit_kurzfazit", "fazit_konsistenz_hinweis",
 )
 
 

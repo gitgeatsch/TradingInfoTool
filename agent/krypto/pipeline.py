@@ -655,6 +655,8 @@ def generate_signal(
     cash_veto = corrected.pop("_cash_veto")
     cash_veto_reason = corrected.pop("_cash_veto_reason")
     risikofaktoren = corrected.pop("_risikofaktoren", None)
+    fazit_konsistenz_hinweis = corrected.pop("_fazit_konsistenz_hinweis", None)
+    eigene_einschaetzung = corrected.get("eigene_einschaetzung") or {}
 
     long_reasoning = corrected.get("long_reasoning", {})
     position_size = corrected.get("position_size", {})
@@ -729,6 +731,9 @@ def generate_signal(
         cash_reserve_ziel_gesamt_usd=cash_reserve_ziel.gesamt_ziel_usd if cash_reserve_ziel else None,
         cash_reserve_ziel_begruendung=cash_reserve_ziel.begruendung if cash_reserve_ziel else None,
         gegenargument=corrected.get("gegenargument"),
+        fazit_folgen=eigene_einschaetzung.get("folgen"),
+        fazit_kurzfazit=eigene_einschaetzung.get("kurzfazit"),
+        fazit_konsistenz_hinweis=fazit_konsistenz_hinweis,
         groq_raw_response=raw_response,
         groq_model=llm_model_label(groq_client),
         **top_grund_fields,

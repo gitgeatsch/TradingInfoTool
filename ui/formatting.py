@@ -8,6 +8,7 @@ from staleness import format_price_age, is_history_stale, is_price_stale
 __all__ = [
     "format_money", "format_price_age", "is_history_stale", "is_price_stale",
     "format_risikofaktoren_lines", "RISIKOFAKTOREN_LEGENDE",
+    "format_fazit_lines",
     "classify_detail_line", "render_detail_html",
 ]
 
@@ -62,6 +63,30 @@ def format_risikofaktoren_lines(risikofaktoren_json: str | None) -> list[str]:
         for f in gruppen.get(bewertung, []):
             symbol = _RISIKOFAKTOR_SYMBOL.get(bewertung, "●")
             zeilen.append(f"{symbol} {f.get('name', '')}: {f.get('begruendung', '')}")
+    return zeilen
+
+
+_FAZIT_SYMBOL = {"ja": "▲", "mit_vorbehalt": "●", "nein": "▼"}
+
+
+def format_fazit_lines(
+    fazit_folgen: str | None, fazit_kurzfazit: str | None, fazit_konsistenz_hinweis: str | None,
+) -> list[str]:
+    """Signal-Fazit (2026-07-25, abschliessendes LLM-Synthese-Verdikt, siehe
+    Signal.fazit_folgen-Docstring und Memory feedback_llm_synthese_kein_
+    deterministischer_override.md) - gemeinsame Anzeigelogik fuer
+    ui/hebel_view.py + ui/signals_view.py, direkt nach der Risikofaktoren-
+    Liste (Abschnitt 3). Wiederverwendet BEWUSST dieselben ▲/●/▼-Symbole wie
+    format_risikofaktoren_lines() (ja=gruen/unterstuetzend, mit_vorbehalt=
+    neutral, nein=rot/warnend) - dadurch greift classify_detail_line() unten
+    automatisch, ohne eigene Tag-Definition. Leere Liste, wenn kein Fazit
+    vorliegt (aeltere Signale vor diesem Feature)."""
+    if not fazit_folgen:
+        return []
+    symbol = _FAZIT_SYMBOL.get(fazit_folgen, "●")
+    zeilen = [f"{symbol} Fazit: {fazit_folgen.replace('_', ' ')} - {fazit_kurzfazit or ''}"]
+    if fazit_konsistenz_hinweis:
+        zeilen.append(f"⚠ {fazit_konsistenz_hinweis}")
     return zeilen
 
 

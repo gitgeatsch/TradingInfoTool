@@ -244,6 +244,25 @@ hoechstens, um eine bereits vorliegende BTC-/Makro-Einschaetzung (z.B. \
 bewegt sich mit Beta 1.9 historisch fast doppelt so stark - waere bei einer \
 BTC-Schwaeche ueberproportional betroffen". Erwaehne es hoechstens im \
 `long_reasoning.makro`, nie als eigenstaendigen Grund fuer `action`/`richtung`.
+21. Fuelle `eigene_einschaetzung` GANZ ZULETZT aus, NACHDEM du `action`, \
+`confidence_pct`, `gegenargument`, `top_gruende` und `long_reasoning` bereits \
+fertiggestellt hast - das ist ein ABSCHLIESSENDER, GANZHEITLICHER Rueckblick \
+auf deine eigene bereits fertige Analyse, keine Wiederholung/Formalitaet. \
+Stelle dir konkret die Frage: "Wuerde ich selbst - auf Basis ALLER \
+vorliegenden Daten inklusive der bereits erwaehnten Risikofaktoren \
+(Retail-Konsens, Funding-Kosten, Liquiditaetszonen, Signal-Stabilitaet, \
+Volatilitaets-Perzentil, Gegenargument) - dieser Hebel-Empfehlung folgen?" \
+`folgen` ist EXAKT einer von "ja"/"nein"/"mit_vorbehalt" - "mit_vorbehalt" \
+ist eine echte, eigenstaendige Antwort fuer den Fall "Setup ist plausibel, \
+aber etwas macht mich vorsichtig", kein Zwang zu einem binaeren Ja/Nein. \
+`kurzfazit` ist EIN Satz, der die Antwort konkret begruendet (nicht nur \
+`short_reasoning` wiederholen). WICHTIG: es gibt hierfuer KEINE feste Regel/\
+Formel - du musst selbst gewichten, wie stark die einzelnen Faktoren zaehlen. \
+Mehrere negative Signale muessen NICHT zwingend zu "nein" fuehren, wenn \
+andere Faktoren (z.B. eine sehr klare technische Konfluenz) nach deiner \
+eigenen Einschaetzung staerker wiegen - und umgekehrt kann ein einzelner \
+schwerwiegender Punkt (z.B. ein starkes Gegenargument oder ein bereits \
+laufender Regime-Konflikt) ausreichen, selbst wenn `confidence_pct` hoch ist.
 
 SCHEMA:
 {
@@ -278,7 +297,8 @@ SCHEMA:
     "bull": {"scenario": "<Text>", "probability_pct": <0-100>},
     "base": {"scenario": "<Text>", "probability_pct": <0-100>},
     "bear": {"scenario": "<Text>", "probability_pct": <0-100>}
-  }
+  },
+  "eigene_einschaetzung": {"folgen": "ja|nein|mit_vorbehalt", "kurzfazit": "<1 Satz, siehe Regel 21>"}
 }"""
 
 
@@ -577,11 +597,16 @@ REQUIRED_HEBEL_TOP_LEVEL_FIELDS = (
     "richtung", "action", "gegenargument", "confidence_pct", "short_reasoning",
     "hebel_vorschlag", "trade_thesis_typ", "top_gruende", "long_reasoning", "entry",
     "stop_loss", "take_profit", "halte_kriterium", "key_risks", "forecast",
+    "eigene_einschaetzung",
 )
 
 TOP_GRUENDE_KATEGORIEN = ("technisch", "fundamental", "makro", "risiko", "antizyklisch")
 _HALTE_KRITERIUM_BUCKETS = ("kurz", "mittel", "lang")
 _HALTEN_AEHNLICHE_ACTIONS = ("HALTEN", "SCHLIESSEN")
+# Signal-Fazit (2026-07-25, siehe Regel 21 / Memory feedback_llm_synthese_
+# kein_deterministischer_override.md) - bewusst KEIN deterministischer
+# Override des Werturteils, nur Format-/Vollstaendigkeits-Validierung hier.
+_EIGENE_EINSCHAETZUNG_FOLGEN_WERTE = ("ja", "nein", "mit_vorbehalt")
 
 
 # 2026-07-14: identischer Halluzinations-Check wie agent/krypto/analyst.py::
@@ -646,6 +671,22 @@ def _validate_hebel(data: dict, asset_symbol: str) -> dict:
     if len(gegenargument) < 15:
         raise AnalystResponseInvalid(f"gegenargument fehlt oder zu kurz: {data.get('gegenargument')!r}")
     data["gegenargument"] = gegenargument
+
+    # Signal-Fazit (2026-07-25, Regel 21) - reine Format-/Vollstaendigkeits-
+    # pruefung, bewusst KEINE inhaltliche Korrektur von `folgen`/`kurzfazit`
+    # (siehe Memory feedback_llm_synthese_kein_deterministischer_override.md).
+    eigene_einschaetzung = data.get("eigene_einschaetzung")
+    if not isinstance(eigene_einschaetzung, dict):
+        raise AnalystResponseInvalid(f"eigene_einschaetzung ist kein Objekt: {eigene_einschaetzung!r}")
+    folgen = str(eigene_einschaetzung.get("folgen", "")).strip().lower()
+    if folgen not in _EIGENE_EINSCHAETZUNG_FOLGEN_WERTE:
+        raise AnalystResponseInvalid(f"eigene_einschaetzung.folgen ungültig: {eigene_einschaetzung.get('folgen')!r}")
+    kurzfazit = str(eigene_einschaetzung.get("kurzfazit", "")).strip()
+    if len(kurzfazit) < 15:
+        raise AnalystResponseInvalid(
+            f"eigene_einschaetzung.kurzfazit fehlt oder zu kurz: {eigene_einschaetzung.get('kurzfazit')!r}"
+        )
+    data["eigene_einschaetzung"] = {"folgen": folgen, "kurzfazit": kurzfazit}
 
     try:
         data["confidence_pct"] = float(data["confidence_pct"])

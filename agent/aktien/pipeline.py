@@ -280,6 +280,8 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
     cash_veto = corrected.pop("_cash_veto")
     cash_veto_reason = corrected.pop("_cash_veto_reason")
     risikofaktoren = corrected.pop("_risikofaktoren", None)
+    fazit_konsistenz_hinweis = corrected.pop("_fazit_konsistenz_hinweis", None)
+    eigene_einschaetzung = corrected.get("eigene_einschaetzung") or {}
 
     long_reasoning = corrected.get("long_reasoning", {})
     position_size = corrected.get("position_size", {})
@@ -345,6 +347,9 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
         forecast_bear_text=forecast.get("bear", {}).get("scenario"),
         forecast_bear_prob_pct=forecast.get("bear", {}).get("probability_pct"),
         gegenargument=corrected.get("gegenargument"),
+        fazit_folgen=eigene_einschaetzung.get("folgen"),
+        fazit_kurzfazit=eigene_einschaetzung.get("kurzfazit"),
+        fazit_konsistenz_hinweis=fazit_konsistenz_hinweis,
         groq_raw_response=raw_response,
         groq_model=llm_model_label(llm_client),
         **top_grund_fields,

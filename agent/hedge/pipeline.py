@@ -27,7 +27,10 @@ from agent.krypto.backward_tracking import compute_win_rate_fact
 from agent.krypto.llm_provider import llm_model_label
 from agent.krypto.makro_analog import get_cached_makro_analog_fact
 from agent.krypto.pipeline import compute_current_regime
-from agent.krypto.risk_gate import _portfolio_values_usd
+from agent.krypto.risk_gate import (
+    DEFAULT_FAZIT_KONSISTENZ_SCHWELLE_HOCH, DEFAULT_FAZIT_KONSISTENZ_SCHWELLE_NIEDRIG,
+    _fazit_konsistenz_hinweis, _portfolio_values_usd,
+)
 from database.models import Signal
 from staleness import is_price_stale
 
@@ -238,6 +241,17 @@ def _post_check_hedge(
                     existing_note = position_size.get("note")
                     position_size["note"] = f"{existing_note} {note}" if existing_note else note
                     result["position_size"] = position_size
+
+    # Signal-Fazit Konsistenz-Hinweis (2026-07-25) - rein diagnostisch, siehe
+    # agent/krypto/risk_gate.py::_fazit_konsistenz_hinweis()-Docstring.
+    eigene_einschaetzung = result.get("eigene_einschaetzung") or {}
+    fazit_cfg = config_dict.get("signal_fazit", {})
+    result["_fazit_konsistenz_hinweis"] = _fazit_konsistenz_hinweis(
+        eigene_einschaetzung.get("folgen"),
+        result.get("confidence_pct"),
+        fazit_cfg.get("konsistenz_schwelle_niedrig", DEFAULT_FAZIT_KONSISTENZ_SCHWELLE_NIEDRIG),
+        fazit_cfg.get("konsistenz_schwelle_hoch", DEFAULT_FAZIT_KONSISTENZ_SCHWELLE_HOCH),
+    )
     return result
 
 
@@ -319,6 +333,8 @@ def generate_signal(
 
     raw_response = parsed.pop("_raw_response", None)
     corrected = _post_check_hedge(parsed, verbleibendes_budget_usd, eur_usd_fx_rate, config_dict)
+    fazit_konsistenz_hinweis = corrected.pop("_fazit_konsistenz_hinweis", None)
+    eigene_einschaetzung = corrected.get("eigene_einschaetzung") or {}
 
     long_reasoning = corrected.get("long_reasoning", {})
     position_size = corrected.get("position_size", {})
@@ -381,6 +397,9 @@ def generate_signal(
         forecast_bear_text=forecast.get("bear", {}).get("scenario"),
         forecast_bear_prob_pct=forecast.get("bear", {}).get("probability_pct"),
         gegenargument=corrected.get("gegenargument"),
+        fazit_folgen=eigene_einschaetzung.get("folgen"),
+        fazit_kurzfazit=eigene_einschaetzung.get("kurzfazit"),
+        fazit_konsistenz_hinweis=fazit_konsistenz_hinweis,
         groq_raw_response=raw_response,
         groq_model=llm_model_label(llm_client),
         **top_grund_fields,

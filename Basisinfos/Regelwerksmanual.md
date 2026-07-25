@@ -8142,3 +8142,142 @@ verifiziert.** Offen bleibt laut ursprünglicher Nutzer-Vorgabe (Design-
 Entscheidung 3) eine mehrtägige Beobachtung im echten Betrieb, bevor das
 Feature endgültig als abgeschlossen gilt - siehe `extract_notebook_
 diagnose.py`-Auswertung als nächster Schritt nach einigen Tagen Laufzeit.
+
+## Nachtrag (2026-07-25, gleicher Tag): Signal-Fazit (`eigene_einschaetzung`) - abschließendes LLM-Synthese-Verdikt, alle 6 Assetklassen mit LLM-Bewertung
+
+Direkt im Anschluss an die Krypto-Relativwert-Bausteine entstandene Idee:
+unter der Risikofaktoren-Liste steht jetzt ein zusammenfassendes Fazit -
+genau die Frage, die man einem Analysten im Gespräch stellen würde ("würdest
+du dieser Empfehlung selbst folgen?"), als eigenes strukturiertes Feld im
+Signal. Umgesetzt für ALLE Assetklassen mit LLM-Bewertung: Krypto Spot,
+Krypto Hebel, Aktien, Rohstoffe, Themen-ETF, Hedge.
+
+### Design-Grundsatz: keine deterministische Nachkorrektur
+
+Explizite Nutzer-Vorgabe (Zitat, gekürzt): "sollte dies nur LLM sein - wenn
+wir hier wieder 'eingreifen' müssen wäre das für mich der Hinweis, dass der
+Einsatz der LLM-Abfragen nicht sinnvoll bzw. unsicher ist [...] mehrere
+negative Faktoren müssen nicht zwingend das gleiche Ergebnis bringen [...]
+die einzelnen Punkte und Gewichtungen soll das LLM selbst durchführen." Das
+deckt sich mit der Lehre aus dem Konfidenz-Kollaps (siehe Nachtrag
+2026-07-24 oben, `project_konfidenz_prompt_anker_fix.md`): eine starre
+Zähl-/Schwellenregel hatte dort genau die granulare Abwägung zerstört, die
+eigentlich gewollt war (siehe auch Memory `feedback_llm_synthese_kein_
+deterministischer_override.md`). Deshalb gilt für dieses Feld, im
+Unterschied zu harten deterministischen Gates wie RM-4/Cash-Veto/CRV-Floor:
+**das Werturteil selbst (`folgen`/`kurzfazit`) wird NIE nachträglich
+überschrieben oder gedeckelt.** Erlaubt bleibt ausschließlich reine
+Daten-INTEGRITÄTS-Validierung (Enum-Wert korrekt, Mindestlänge) - exakt
+dasselbe Muster wie beim bestehenden `gegenargument`-Feld.
+
+### Schema und Befüllungs-Reihenfolge
+
+Neues Feld `eigene_einschaetzung` in der JSON-Antwort jedes der 6
+Analysten (`agent/krypto/analyst.py` Regel 29, `hebel_analyst.py` Regel 21,
+`agent/aktien/analyst.py` Regel 26, `agent/rohstoff/analyst.py` Regel 19,
+`agent/themen_etf/analyst.py` Regel 21, `agent/hedge/analyst.py` Regel 16):
+```json
+"eigene_einschaetzung": {"folgen": "ja|nein|mit_vorbehalt", "kurzfazit": "<1 Satz>"}
+```
+`mit_vorbehalt` ist bewusst eine echte dritte Option (kein erzwungenes
+Binär) - deckt "Setup ist plausibel, aber X macht mich vorsichtig" ab. Das
+Feld wird laut Prompt-Regel GANZ ZULETZT ausgefüllt, nachdem `action`,
+`confidence_pct`, `gegenargument`, `top_gruende` und `long_reasoning`
+bereits feststehen - ein echter Rückblick auf die fertige eigene Analyse
+("würde ich selbst dieser Empfehlung folgen?"), keine Wiederholung.
+
+### Validierung (reine Formatintegrität)
+
+`_validate()` in jedem Analysten (gleiche Stelle wie der bestehende
+`gegenargument`-Check): `folgen` muss exakt einer von
+`("ja", "nein", "mit_vorbehalt")` sein (case-insensitiv, wird normalisiert),
+`kurzfazit` muss nach dem Trimmen mindestens 15 Zeichen haben - sonst
+`AnalystResponseInvalid`. Kein inhaltlicher Eingriff.
+
+### Diagnostischer Konsistenz-Hinweis (kein Deckel)
+
+Neue reine Funktion `_fazit_konsistenz_hinweis()` in
+`agent/krypto/risk_gate.py` (von `hebel_risk_gate.py` und
+`agent/hedge/pipeline.py` importiert - Aktien/Rohstoffe/Themen-ETF nutzen
+`risk_gate.py::post_check()` bereits direkt und bekommen die Wiring damit
+automatisch):
+```python
+def _fazit_konsistenz_hinweis(folgen, confidence_pct, schwelle_niedrig=55.0, schwelle_hoch=65.0) -> str | None:
+    if folgen == "ja" and confidence_pct < schwelle_niedrig:
+        return "Fazit 'ja' bei vergleichsweise niedriger eigener Konfidenz - ggf. genauer prüfen."
+    if folgen == "nein" and confidence_pct > schwelle_hoch:
+        return "Fazit 'nein' trotz vergleichsweise hoher eigener Konfidenz - ggf. genauer prüfen."
+    return None  # mit_vorbehalt wird NIE geflaggt - das ist bereits die Zwischenposition.
+```
+Vergleicht bewusst NUR mit der eigenen `confidence_pct` DESSELBEN Laufs -
+nicht mit einer separat gezählten Risikofaktoren-Anzahl, das wäre bereits
+eine zweite, primitivere Bewertung. Das Ergebnis landet als reiner
+Anzeige-Zusatz (`fazit_konsistenz_hinweis`), ändert `folgen`/`kurzfazit`
+nie. Schwellen konfigurierbar über `config.yaml::signal_fazit` (Default
+55/65, gemeinsam für alle 6 Assetklassen).
+
+### Persistenz
+
+`database/models.py`: `Signal` und `HebelSignal` je um drei Felder
+erweitert (`fazit_folgen`, `fazit_kurzfazit`, `fazit_konsistenz_hinweis`).
+`database/db.py::_migrate_signal_fazit_columns()`: additive `ALTER TABLE`
+auf `signals` UND `hebel_signals` (gleiches Guard-Muster wie die
+Kontrathese-Migration), bestehende Zeilen bleiben unangetastet (NULL in den
+drei neuen Spalten). Alle 6 Pipelines (`agent/krypto/pipeline.py`,
+`hebel_pipeline.py`, `agent/aktien/pipeline.py`, `agent/rohstoff/pipeline.py`,
+`agent/themen_etf/pipeline.py`, `agent/hedge/pipeline.py`) lesen
+`eigene_einschaetzung` aus dem validierten LLM-Ergebnis und den gepoppten
+`_fazit_konsistenz_hinweis` und reichen alle drei Felder in den jeweiligen
+`Signal(...)`/`HebelSignal(...)`-Konstruktor durch.
+
+### Anzeige (App + E-Mail, alle 6 Assetklassen)
+
+Neuer Block direkt unter der Risikofaktoren-Liste (Abschnitt 3), sowohl im
+App-Detail-Panel als auch in der E-Mail. Wiederverwendet BEWUSST dieselben
+▲/●/▼-Symbole wie die bestehenden Risikofaktoren
+(`_FAZIT_SYMBOL = {"ja": "▲", "mit_vorbehalt": "●", "nein": "▼"}`,
+`ui/formatting.py::format_fazit_lines()`) - dadurch färbt die bereits
+bestehende `classify_detail_line()`/`render_detail_html()`-Pipeline die
+neuen Zeilen automatisch korrekt ein, sowohl in der App (Tk-Tags,
+`ui/detail_panel.py`) als auch in der E-Mail (HTML-Inline-Styles), ohne
+neue Farb-/Tag-Infrastruktur. `ui/signals_view.py` ist die gemeinsame
+Detail-Ansicht für Spot UND Aktien/Rohstoffe/Themen-ETF/Hedge - eine Edit
+deckt alle vier ab. `ui/hebel_view.py` bekam den identischen Block separat.
+E-Mail-seitig analog in `scheduler/background.py::_formatiere_fazit()`,
+verdrahtet in `_notify_spot_signal()`, `_notify_hebel_signal()` und
+`_notify_multi_asset_signal()` (letztere deckt wieder Aktien/Rohstoffe/
+Themen-ETF/Hedge gemeinsam ab).
+
+**Verifiziert:**
+1. `_fazit_konsistenz_hinweis()` pur: alle Kombinationen aus `folgen` und
+   Konfidenz über/unter beiden Schwellen (inkl. exakter Grenzwerte 55/65,
+   die korrekt NICHT auslösen) - Hinweis nur in den beiden echten
+   Widerspruchsfällen, `mit_vorbehalt` nie geflaggt, `None`-Eingaben sicher.
+2. `_validate()`-Formatintegrität (Krypto-Spot-Analyst stellvertretend
+   geprüft, identisches Muster in allen 6 Dateien): fehlendes Feld,
+   ungültiger Enum-Wert, zu kurzes `kurzfazit` lösen jeweils
+   `AnalystResponseInvalid` mit der korrekten, feldspezifischen Meldung
+   aus; gültige Eingabe wird normalisiert (`folgen` klein/getrimmt,
+   `kurzfazit` getrimmt).
+3. DB-Migrationstest gegen eine Kopie der Produktions-DB (118 Spot- + 5
+   Hebel-Signale): additive Migration idempotent, Zeilenzahl unverändert,
+   bestehende Zeilen bleiben NULL, neue Werte schreiben/lesen sich über
+   `_row_to_signal()`/`_row_to_hebel_signal()` korrekt zurück.
+4. Anzeige-Regressionstest: `format_fazit_lines()`/`_formatiere_fazit()`
+   liefern für alle drei `folgen`-Werte + optionalen Konsistenz-Hinweis das
+   erwartete Symbol/den erwarteten Text; `classify_detail_line()`/
+   `render_detail_html()` färben die neuen Zeilen korrekt ein (▲ grün, ●
+   grau, ▼ rot, ⚠-Hinweiszeile als Warnung), bestehende Risikofaktoren-
+   Legende und -Zeilen unverändert (keine Regression).
+5. Gesamt-Import-Check: alle 6 Analysten, alle 6 Pipelines, `risk_gate.py`,
+   `hebel_risk_gate.py`, `database/models.py`, `database/db.py`,
+   `ui/formatting.py`, `ui/signals_view.py`, `ui/hebel_view.py`,
+   `scheduler/background.py` - keine Fehler.
+6. `config.yaml::signal_fazit` lädt korrekt (`konsistenz_schwelle_niedrig:
+   55`, `konsistenz_schwelle_hoch: 65`).
+
+Echte Betriebsdaten (füllt sich erst mit den nächsten LLM-Läufen) noch
+nicht ausgewertet - analog zu den Krypto-Relativwert-Bausteinen ist eine
+spätere Durchsicht sinnvoll, ob das LLM tatsächlich differenzierte Fazits
+liefert (nicht immer "ja"/reine Kopie von `action`) und ob der
+Konsistenz-Hinweis in der Praxis selten/oft auftritt.
