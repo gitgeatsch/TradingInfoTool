@@ -8072,3 +8072,73 @@ für `render_liquiditaetszonen_chart()` mit USD-Daten (kein Absturz, PNG
 dieser Runde (reine Präzisierung eines bereits bestehenden Verbots, kein
 neuer Schwellenwert/Gate - anders als die Konfidenz-Prompt-Fixes, die
 tatsächlich das Konfidenz-Niveau verschieben).
+
+---
+
+## Nachtrag (2026-07-25): Baustein 1 - BTC-Relativwert (Korrelation/Beta/Relativstärke), Krypto-Relativwert-Bausteine komplett
+
+Letzter der drei geplanten "Krypto-Relativwert-Bausteine" (siehe Plan-Datei
+swift-napping-muffin.md, ursprünglich aus der NEAR/HYPE-Hebel-Diskussion
+entstanden) - übersetzt eine BTC-/Makro-Ebene-Einschätzung (z.B. den bereits
+vorhandenen `historischer_makro_vergleich`, der nur SPX/BTC-Werte liefert)
+in eine coinspezifische Größenordnung.
+
+**Berechnung** (`indicators/calculations.py::compute_btc_relativwert()`,
+neue `BtcRelativwert`-Dataclass): richtet die Preisreihe des Coins und von
+BTC auf gemeinsame Handelstage aus (inner join, beide Reihen können
+unterschiedliche Lücken haben), berechnet dann über ein 90-Tage-Fenster
+(`fenster_tage_beta`) Korrelation und Beta aus den täglichen Returns
+(`np.corrcoef`/`np.cov`/`np.var`, keine externe Statistik-Bibliothek nötig)
+sowie über ein kürzeres 30-Tage-Fenster (`fenster_tage_relativstaerke`,
+passend zur typischen `swing_strategie`-Haltedauer) die Relativstärke
+(Coin-Rendite minus BTC-Rendite in Prozentpunkten). P-10 (Fail-Loud): unter
+`fenster_tage_beta + 1` gemeinsamen Handelstagen gibt es KEIN Ergebnis
+(`None`) statt einer instabilen Schätzung aus zu wenigen Punkten; ebenso bei
+Nullvarianz in einer der beiden Reihen (degenerierter Fall).
+
+**Einordnung** (neues Modul `agent/krypto/btc_relativwert.py::
+btc_relativwert_fakt()`): reine Formatierungs-/Einordnungsschicht (Beta
+<0,7/0,7-1,3/>1,3 → unter-/gleich-/überdurchschnittlich, Korrelation
+<0,3/0,3-0,7/>0,7 → kaum/moderat/stark korreliert, Relativstärke außerhalb
+±3 Prozentpunkte → Tailwind/Headwind), liefert immer eine klassifizierende
+`einordnung`-Aussage statt roher Zahlen (Design-Entscheidung 1 der
+Bausteine-Planung).
+
+**Self-Comparison-Guard:** BTC selbst braucht keinen Vergleich zu sich
+selbst - `pipeline.py`/`hebel_pipeline.py` überspringen die Berechnung komplett,
+wenn `asset.symbol == "BTC"` ist (kein unnötiger zweiter DB-Read).
+
+**Zeithorizont-Caveat (wichtigster Designpunkt, siehe Regel 28 Spot / Regel 20
+Hebel):** Beta/Korrelation sind ein MEHRMONATIGER Kontext-Wert, KEINE Aussage
+über die nächsten Tage - der Prompt verbietet explizit, den Fakt als
+eigenständigen Grund für `action`/`richtung` zu nutzen, er darf höchstens
+eine bereits vorliegende BTC-/Makro-Einschätzung auf den Coin übersetzen.
+Bewusst KEIN Risikofaktor in `risk_gate.py`/`hebel_risk_gate.py` - eine feste
+Schwelle (z.B. "Beta > 2 = riskant") wäre ohne echte Backtests unbegründet,
+gleiche Zurückhaltung wie bei `historischer_makro_vergleich`.
+
+**Verifiziert:**
+1. Synthetischer Test von `compute_btc_relativwert()`: konstruierte Reihe mit
+   bekanntem Beta (~2,0 eingebaut, Ergebnis 1,89 durch beigemischtes
+   Rauschen - plausibel), Korrelation 0,98; Grenzfall zu wenig gemeinsame
+   Punkte (50 von nötigen 91) → `None`; Grenzfall disjunkte Datumsreihen
+   (keine Überschneidung) → `None`.
+2. Synthetischer Test von `btc_relativwert_fakt()`: Toggle aus → `None`,
+   `ergebnis=None` (z.B. BTC selbst) → `None`, Normalfall liefert
+   klassifizierende `einordnung`.
+3. **Echter Lauf gegen eine Kopie der Produktions-DB** (378 Tage BTC-Historie):
+   ETH (Beta 1,26, Korrelation 0,88 - stark korreliert, leicht
+   überdurchschnittlich), SOL (Beta 1,23, Korrelation 0,82), NEAR (Beta 0,94,
+   Korrelation NUR 0,30 - plausibel, NEAR gilt in dieser Session bereits
+   mehrfach als auffällig eigenständig/volatil), LINK, APT, AVAX, BNB -
+   alle Werte plausibel im erwarteten Bereich, keine Ausreißer/Artefakte.
+4. Gesamt-Regressionscheck: Import aller Krypto- (Spot/Hebel), Aktien-,
+   Rohstoff-, Hedge-, Themen-ETF-Pipelines sowie `ui/hebel_view.py`,
+   `ui/signals_view.py`, `scheduler/background.py` - keine Fehler.
+
+**Damit sind alle drei Krypto-Relativwert-Bausteine (Signal-Stabilität,
+Volatilitäts-Perzentil, BTC-Relativwert) vollständig implementiert und
+verifiziert.** Offen bleibt laut ursprünglicher Nutzer-Vorgabe (Design-
+Entscheidung 3) eine mehrtägige Beobachtung im echten Betrieb, bevor das
+Feature endgültig als abgeschlossen gilt - siehe `extract_notebook_
+diagnose.py`-Auswertung als nächster Schritt nach einigen Tagen Laufzeit.

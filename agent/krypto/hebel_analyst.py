@@ -232,6 +232,18 @@ Kontext, KEINE Richtungsaussage - ein hohes Perzentil sagt nichts darueber aus, 
 ob der Kurs steigt oder faellt, nur dass Bewegungen aktuell ungewoehnlich gross \
 ausfallen koennen. Nutze es hoechstens zur Einordnung von Stop-Loss-Abstand/\
 Hebelwahl in `short_reasoning`.
+20. Ist `btc_relativwert` NICHT null: zeigt Korrelation/Beta zu BTC (ueber ein \
+mehrmonatiges Fenster, `fenster_tage_beta` Tage) sowie die Relativstaerke der \
+letzten `fenster_tage_relativstaerke` Tage ggue. BTC. Beta > 1 heisst, der Coin \
+bewegt sich historisch STAERKER als BTC (in beide Richtungen), Beta < 1 SCHWAECHER. \
+Das ist ein MEHRMONATIGER HINTERGRUND-Wert, NIEMALS Grundlage fuer eine \
+kurzfristige Entscheidung (Eroeffnen/Teilverkauf/Schliessen) - nutze ihn \
+hoechstens, um eine bereits vorliegende BTC-/Makro-Einschaetzung (z.B. \
+`historischer_makro_vergleich`) auf diesen Coin zu uebersetzen, z.B. \
+"BTC zeigt laut Makro-Analog eher Seitwaerts-/Abwaertsrisiko, dieser Coin \
+bewegt sich mit Beta 1.9 historisch fast doppelt so stark - waere bei einer \
+BTC-Schwaeche ueberproportional betroffen". Erwaehne es hoechstens im \
+`long_reasoning.makro`, nie als eigenstaendigen Grund fuer `action`/`richtung`.
 
 SCHEMA:
 {
@@ -369,6 +381,7 @@ def build_hebel_facts(
     historischer_makro_vergleich: dict | None = None,
     liquiditaetszonen: dict | None = None,
     signal_stabilitaet: dict | None = None,
+    btc_relativwert: dict | None = None,
 ) -> dict:
     """Analog agent/krypto/analyst.py::build_facts() - wiederverwendet dieselben
     Bausteine fuer technische_analyse/regime/markt_kontext/antizyklisch 1:1 (siehe
@@ -524,6 +537,7 @@ def build_hebel_facts(
         "historischer_makro_vergleich": historischer_makro_vergleich,
         "liquiditaetszonen": liquiditaetszonen,
         "signal_stabilitaet": signal_stabilitaet,
+        "btc_relativwert": btc_relativwert,
         "hebel_kontext": {
             "max_hebel_config": pre_result.config_max_hebel,
             "max_sicherer_hebel_geschaetzt": _native(pre_result.max_sicherer_hebel),

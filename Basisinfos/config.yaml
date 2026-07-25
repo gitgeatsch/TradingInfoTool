@@ -1097,6 +1097,22 @@ volatilitaets_perzentil:
     # als ungewoehnlich hoch fuer diesen Coin -> Risikofaktor "negativ"
     # (Positionsgroesse/Stop konservativer waehlen), sonst "neutral".
 
+# --- BTC-Relativwert (2026-07-25, Baustein 1, agent/krypto/btc_relativwert.py) ---
+# Rollierende Korrelation+Beta+Relativstaerke ggue. BTC - reiner MEHRMONATIGER
+# Hintergrund-Fakt (SYSTEM_PROMPT-Regel), KEIN Risikofaktor/Deckel - eine feste
+# Schwelle (z.B. "Beta > 2 = riskant") waere ohne echte Backtests unbegruendet,
+# gleiche Zurueckhaltung wie bei historischer_makro_vergleich. Krypto Spot+Hebel,
+# NICHT fuer BTC selbst (Self-Comparison-Guard in pipeline.py/hebel_pipeline.py).
+btc_relativwert:
+  aktiv: true
+  fenster_tage_beta: 90                  # mehrmonatiges Fenster fuer eine stabile
+    # Beta-/Korrelations-Schaetzung - unter dieser Anzahl gemeinsamer Handelstage
+    # gibt es KEIN Ergebnis (P-10), statt einer instabilen Schaetzung aus zu
+    # wenigen Punkten.
+  fenster_tage_relativstaerke: 30        # kuerzeres Fenster fuer die Relativstaerke
+    # (~1 Monat, passt zur typischen swing_strategie-Haltedauer) - zeigt, ob
+    # GERADE Kapital in diesen Coin oder zurueck zu BTC rotiert.
+
 # --- Backward-Tracking (Selbstverifikations-Vision Schritt 2, siehe
 # Basisinfos/Regelwerksmanual.md Kap. 9 / Spezifikation Kap. 16) ---
 backward_tracking:

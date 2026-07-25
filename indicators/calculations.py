@@ -729,3 +729,82 @@ def compute_log_linear_trend_deviation_series(
     return LogLinearTrendDeviationSeries(
         points=points, slope=float(slope), intercept=float(intercept), residual_std=float(std),
     )
+
+
+MIN_BTC_RELATIVWERT_FENSTER_TAGE_BETA = 90
+DEFAULT_BTC_RELATIVWERT_FENSTER_TAGE_RELATIVSTAERKE = 30
+
+
+@dataclass
+class BtcRelativwert:
+    korrelation: float
+    beta: float
+    relativstaerke_pct: float | None
+    fenster_tage_beta: int
+    fenster_tage_relativstaerke: int
+    n_datenpunkte: int
+
+
+def compute_btc_relativwert(
+    coin_dates: np.ndarray, coin_closes: np.ndarray,
+    btc_dates: np.ndarray, btc_closes: np.ndarray,
+    fenster_tage_beta: int = MIN_BTC_RELATIVWERT_FENSTER_TAGE_BETA,
+    fenster_tage_relativstaerke: int = DEFAULT_BTC_RELATIVWERT_FENSTER_TAGE_RELATIVSTAERKE,
+) -> BtcRelativwert | None:
+    """Baustein 1 (2026-07-25, siehe Regelwerksmanual "Krypto-Relativwert-
+    Bausteine"): rollierende Korrelation + Beta + Relativstaerke eines Coins
+    gegenueber BTC - uebersetzt eine BTC-/Makro-Ebene-Einschaetzung in eine
+    coinspezifische Groessenordnung. MEHRMONATIGER Kontext-Wert (Beta/
+    Korrelation ueber `fenster_tage_beta`), KEINE Aussage ueber die naechsten
+    Tage - das muss der Aufrufer (Prompt-Regel) explizit kennzeichnen.
+
+    Richtet coin_dates/btc_dates auf gemeinsame Handelstage aus (inner join,
+    beide Reihen kommen aus `db.get_price_history()` mit potenziell
+    unterschiedlichen Luecken). P-10: mind. `fenster_tage_beta + 1` gemeinsame
+    Punkte noetig (Beta/Korrelation aus taeglichen Returns, ein Fenster von n
+    Returns braucht n+1 Preise) - sonst None statt eines instabilen Schaetzers
+    aus zu wenigen Punkten. Degenerierte Faelle (Nullvarianz in einer Reihe,
+    z. B. bei einem eingefrorenen Stablecoin-artigen Kurs) ebenfalls None."""
+    coin_map = {d: c for d, c in zip(coin_dates, coin_closes)}
+    btc_map = {d: c for d, c in zip(btc_dates, btc_closes)}
+    common_dates = sorted(set(coin_map) & set(btc_map))
+
+    if len(common_dates) < fenster_tage_beta + 1:
+        _log_unavailable(
+            "BTC-Relativwert",
+            f"benötigt mind. {fenster_tage_beta + 1} gemeinsame Handelstage, "
+            f"nur {len(common_dates)} vorhanden",
+        )
+        return None
+
+    coin_series = np.array([coin_map[d] for d in common_dates], dtype=float)
+    btc_series = np.array([btc_map[d] for d in common_dates], dtype=float)
+
+    fenster_coin = coin_series[-(fenster_tage_beta + 1):]
+    fenster_btc = btc_series[-(fenster_tage_beta + 1):]
+    coin_returns = np.diff(fenster_coin) / fenster_coin[:-1]
+    btc_returns = np.diff(fenster_btc) / fenster_btc[:-1]
+
+    if np.std(btc_returns) == 0 or np.std(coin_returns) == 0:
+        _log_unavailable("BTC-Relativwert", "Nullvarianz in Coin- oder BTC-Returns")
+        return None
+
+    korrelation = float(np.corrcoef(coin_returns, btc_returns)[0, 1])
+    beta = float(np.cov(coin_returns, btc_returns)[0, 1] / np.var(btc_returns))
+
+    relativstaerke_pct = None
+    if len(common_dates) >= fenster_tage_relativstaerke + 1:
+        rs_coin = coin_series[-(fenster_tage_relativstaerke + 1):]
+        rs_btc = btc_series[-(fenster_tage_relativstaerke + 1):]
+        coin_return_pct = (rs_coin[-1] / rs_coin[0] - 1) * 100
+        btc_return_pct = (rs_btc[-1] / rs_btc[0] - 1) * 100
+        relativstaerke_pct = round(float(coin_return_pct - btc_return_pct), 1)
+
+    return BtcRelativwert(
+        korrelation=round(korrelation, 2),
+        beta=round(beta, 2),
+        relativstaerke_pct=relativstaerke_pct,
+        fenster_tage_beta=fenster_tage_beta,
+        fenster_tage_relativstaerke=fenster_tage_relativstaerke,
+        n_datenpunkte=len(common_dates),
+    )

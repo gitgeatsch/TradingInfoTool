@@ -290,6 +290,15 @@ deine eigene Konfidenz nach oben oder unten zu korrigieren.
 fuer GENAU DIESEN Coin historisch hoch oder niedrig ist. Reiner RISIKO-/\
 Positionsgroessen-Kontext, KEINE Richtungsaussage. Nutze es hoechstens zur \
 Einordnung von Stop-Loss-Abstand/Positionsgroesse in `short_reasoning`.
+28. Ist `btc_relativwert` NICHT null: zeigt Korrelation/Beta zu BTC (ueber ein \
+mehrmonatiges Fenster, `fenster_tage_beta` Tage) sowie die Relativstaerke der \
+letzten `fenster_tage_relativstaerke` Tage ggue. BTC. Beta > 1 heisst, der Coin \
+bewegt sich historisch STAERKER als BTC (in beide Richtungen), Beta < 1 SCHWAECHER. \
+Das ist ein MEHRMONATIGER HINTERGRUND-Wert, NIEMALS Grundlage fuer eine \
+kurzfristige Kauf-/Verkaufsentscheidung - nutze ihn hoechstens, um eine bereits \
+vorliegende BTC-/Makro-Einschaetzung (z.B. `historischer_makro_vergleich`) auf \
+diesen Coin zu uebersetzen. Erwaehne es hoechstens im `long_reasoning.makro`, \
+nie als eigenstaendigen Grund fuer `action`.
 
 SCHEMA:
 {
@@ -399,6 +408,7 @@ def build_facts(
     historischer_makro_vergleich: dict | None = None,
     liquiditaetszonen: dict | None = None,
     signal_stabilitaet: dict | None = None,
+    btc_relativwert: dict | None = None,
 ) -> dict:
     macd_val = technical_snapshot.macd
     macd_facts = None
@@ -468,6 +478,7 @@ def build_facts(
         "historischer_makro_vergleich": historischer_makro_vergleich,
         "liquiditaetszonen": liquiditaetszonen,
         "signal_stabilitaet": signal_stabilitaet,
+        "btc_relativwert": btc_relativwert,
         "technische_analyse": {
             "ema": {str(p): _native(latest_value(r)) for p, r in technical_snapshot.ema.items()},
             "macd": macd_facts,

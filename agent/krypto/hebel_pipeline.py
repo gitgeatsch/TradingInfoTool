@@ -19,6 +19,7 @@ import database.db as db
 from agent.krypto.analyst import AnalystResponseInvalid
 from agent.krypto.anticyclic import assess as assess_anticyclic
 from agent.krypto.backward_tracking import compute_win_rate_fact
+from agent.krypto.btc_relativwert import btc_relativwert_fakt
 from agent.krypto.hebel_analyst import build_hebel_facts, call_llm_for_hebel_signal
 from agent.krypto.liquidity_zones import liquiditaetszonen_fakt
 from agent.krypto.makro_analog import get_cached_makro_analog_fact
@@ -28,7 +29,9 @@ from agent.krypto.llm_provider import llm_model_label
 from agent.krypto.pipeline import _load_closes_and_ohlc, compute_current_regime, fetch_market_context
 from agent.krypto.risk_gate import STOP_LOSS_ATR_MULTIPLE, _portfolio_values_usd
 from database.models import HebelSignal, HebelTrigger
-from indicators.calculations import build_technical_snapshot, latest_value, summarize_confluence
+from indicators.calculations import (
+    build_technical_snapshot, compute_btc_relativwert, latest_value, summarize_confluence,
+)
 from staleness import is_history_stale, is_price_stale
 
 logger = logging.getLogger(__name__)
@@ -186,6 +189,18 @@ def generate_hebel_signal(
         latest_value(snapshot.atr_percentile)
         if config_dict.get("volatilitaets_perzentil", {}).get("aktiv", True) else None
     )
+    # BTC-Relativwert (Baustein 1, 2026-07-25) - Self-Comparison-Guard: BTC
+    # braucht keinen Vergleich zu sich selbst. Siehe agent/krypto/pipeline.py
+    # (Spot-Pendant) fuer die identische Herleitung.
+    btc_relativwert = None
+    if asset.symbol != "BTC" and config_dict.get("btc_relativwert", {}).get("aktiv", True):
+        btc_asset = next((a for a in watchlist if a.symbol == "BTC"), None)
+        if btc_asset is not None:
+            btc_dates, btc_closes, _btc_ohlc, _btc_last_date = _load_closes_and_ohlc(
+                conn, "BTC", btc_asset.coingecko_id,
+            )
+            btc_relativwert_ergebnis = compute_btc_relativwert(dates, closes, btc_dates, btc_closes)
+            btc_relativwert = btc_relativwert_fakt(btc_relativwert_ergebnis, config_dict)
     facts = build_hebel_facts(
         asset, price_snap, snapshot, confluence, regime_result, regime_profile,
         anticyclic_context, market_context, trigger, position_aktuell, pre_result,
@@ -194,6 +209,7 @@ def generate_hebel_signal(
         historischer_makro_vergleich=historischer_makro_vergleich,
         liquiditaetszonen=liquiditaetszonen,
         signal_stabilitaet=signal_stabilitaet,
+        btc_relativwert=btc_relativwert,
     )
 
     try:
