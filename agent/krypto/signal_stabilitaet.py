@@ -92,24 +92,44 @@ def signal_stabilitaet_fakt(verlauf: list, config: dict | None) -> dict | None:
     )
 
     schwelle = cfg.get("spannweite_schwelle_pct", DEFAULT_SPANNWEITE_SCHWELLE_PCT)
-    stabil = spannweite < schwelle and anzahl_kategoriewechsel <= 1
+    konfidenz_schwankt = spannweite >= schwelle
+    zu_viele_kategoriewechsel = anzahl_kategoriewechsel > 1
+    stabil = not konfidenz_schwankt and not zu_viele_kategoriewechsel
 
     tier_hinweis = (
         f" (davon {anzahl_tier_wechsel}x reine Tier-Feinjustierung innerhalb derselben "
         "Kategorie, z.B. Teilverkauf/Schliessen)" if anzahl_tier_wechsel else ""
     )
+    konfidenz_text = (
+        f"zwischen {konfidenz_min:.0f}% und {konfidenz_max:.0f}%" if konfidenz_min != konfidenz_max
+        else f"durchgehend bei {konfidenz_min:.0f}%"
+    )
     if stabil:
         einordnung = (
-            f"Konfidenz blieb über die letzten {len(zyklen)} Bewertungen stabil zwischen "
-            f"{konfidenz_min:.0f}% und {konfidenz_max:.0f}% ({anzahl_kategoriewechsel} echte(r) "
-            f"Kategoriewechsel{tier_hinweis}) - verlässlicheres, durchgehend bestätigtes Signal."
+            f"Konfidenz blieb über die letzten {len(zyklen)} Bewertungen stabil ({konfidenz_text}, "
+            f"{anzahl_kategoriewechsel} echte(r) Kategoriewechsel{tier_hinweis}) - verlässlicheres, "
+            "durchgehend bestätigtes Signal."
         )
     else:
+        # 2026-07-25, echter LINK-Fund: die alte Formulierung behauptete IMMER
+        # "Konfidenz schwankte zwischen X% und Y%", selbst wenn X==Y (Instabilitaet
+        # kann rein aus Kategoriewechseln kommen, ohne jede Konfidenz-Schwankung) -
+        # fuer den Nutzer nicht nachvollziehbar/widerspruechlich wirkende Meldung.
+        # Jetzt wird nur noch der tatsaechlich zutreffende Grund genannt.
+        gruende = []
+        if konfidenz_schwankt:
+            gruende.append(
+                f"Konfidenz schwankte {konfidenz_text} (Spannweite {spannweite:.0f} Prozentpunkte, "
+                f"Schwelle {schwelle:.0f})"
+            )
+        if zu_viele_kategoriewechsel:
+            gruende.append(
+                f"Aktion wechselte {anzahl_kategoriewechsel}x zwischen grundverschiedenen Kategorien "
+                f"(Aufbau/Abbau/Neutral){tier_hinweis}"
+            )
         einordnung = (
-            f"Konfidenz schwankte über die letzten {len(zyklen)} Bewertungen zwischen "
-            f"{konfidenz_min:.0f}% und {konfidenz_max:.0f}% ({anzahl_kategoriewechsel}x echter "
-            f"Kategoriewechsel{tier_hinweis}) - instabiler als ein durchgehend bestätigtes Signal, "
-            "geringere Verlässlichkeit."
+            f"Instabil über die letzten {len(zyklen)} Bewertungen: {' UND '.join(gruende)} - "
+            "geringere Verlässlichkeit als ein durchgehend bestätigtes Signal."
         )
 
     return {

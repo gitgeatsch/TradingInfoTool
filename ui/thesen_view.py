@@ -382,7 +382,30 @@ class ThesenView(ttk.Frame):
             "Filterung - löscht nichts, wirkt sich nicht auf gespeicherte Daten aus.",
         )
 
-        tree_frame = ttk.Frame(self, padding=(8, 0, 8, 8))
+        # 2026-07-25, Nutzer-Fund (Screenshot: unterer Bereich "sehr sehr eng
+        # dimensioniert") - vorher waren Thesen-Liste/Vorschlaege/Synthese alle
+        # direkt in `self` gepackt, aber NUR die Thesen-Liste hatte
+        # `expand=True` -> sie fraß den gesamten verfuegbaren Platz, die beiden
+        # unteren Bereiche blieben immer auf ihre feste Treeview-Hoehe (5 Zeilen)
+        # gequetscht, egal wie gross das Fenster ist. PanedWindow mit
+        # verschiebbarem Trenner statt starrem 50/50-Wert - der Nutzer kann den
+        # Bereich live nach Bedarf vergroessern/verkleinern, Startaufteilung
+        # ca. 50/50 (siehe sashpos-Aufruf unten).
+        paned = ttk.PanedWindow(self, orient=tk.VERTICAL)
+        paned.pack(fill="both", expand=True)
+
+        oben_frame = ttk.Frame(paned)
+        unten_frame = ttk.Frame(paned)
+        paned.add(oben_frame, weight=1)
+        paned.add(unten_frame, weight=1)
+
+        def _initiale_aufteilung(event=None) -> None:
+            paned.sashpos(0, paned.winfo_height() // 2)
+            paned.unbind("<Configure>")
+
+        paned.bind("<Configure>", _initiale_aufteilung)
+
+        tree_frame = ttk.Frame(oben_frame, padding=(8, 0, 8, 8))
         tree_frame.pack(fill="both", expand=True)
 
         columns = ("kategorie", "richtung", "staerke", "mechanismus", "status", "gesetzt_am", "review_am")
@@ -413,15 +436,15 @@ class ThesenView(ttk.Frame):
         # Aenderungsaufforderungen (agent/kategorie_vorschlaege.py) haben
         # sonst KEINE GUI-Oberflaeche: sie liegen sonst unsichtbar in
         # these_aenderungsvorschlaege, ohne Weg zum Uebernehmen/Ablehnen.
-        vorschlag_label_frame = ttk.Frame(self, padding=(8, 0, 8, 4))
+        vorschlag_label_frame = ttk.Frame(unten_frame, padding=(8, 8, 8, 4))
         vorschlag_label_frame.pack(fill="x")
         ttk.Label(
             vorschlag_label_frame, text="Offene Änderungsaufforderungen (KI-Vorschläge-Job)",
             font=("TkDefaultFont", 10, "bold"),
         ).pack(side="left")
 
-        vorschlag_frame = ttk.Frame(self, padding=(8, 0, 8, 8))
-        vorschlag_frame.pack(fill="x")
+        vorschlag_frame = ttk.Frame(unten_frame, padding=(8, 0, 8, 8))
+        vorschlag_frame.pack(fill="both", expand=True)
 
         vorschlag_columns = ("kategorie", "aktuell", "vorschlag", "mechanismus", "erkannt_am")
         self.vorschlag_tree = ttk.Treeview(
@@ -435,7 +458,7 @@ class ThesenView(ttk.Frame):
         for col in vorschlag_columns:
             self.vorschlag_tree.heading(col, text=vorschlag_headings[col])
             self.vorschlag_tree.column(col, width=vorschlag_widths[col], anchor="w")
-        self.vorschlag_tree.pack(fill="x", side="left", expand=True)
+        self.vorschlag_tree.pack(fill="both", side="left", expand=True)
         add_row_tooltips(self.vorschlag_tree, lambda iid: self._vorschlag_tooltips.get(iid))
 
         vorschlag_button_frame = ttk.Frame(vorschlag_frame)
@@ -460,7 +483,7 @@ class ThesenView(ttk.Frame):
         # LLM-Einordnung (agent/kategorie_synthese.py), reine Anzeige, kein
         # eigener Aktions-Button - Ranking/Phase wirken bereits automatisch auf
         # die Gleichzeitigkeits-Moderation/den Schnell-Pfad oben.
-        self._synthese_label_frame = ttk.Frame(self, padding=(8, 4, 8, 4))
+        self._synthese_label_frame = ttk.Frame(unten_frame, padding=(8, 4, 8, 4))
         self._synthese_label_frame.pack(fill="x")
         self._synthese_label = ttk.Label(
             self._synthese_label_frame, text="Tages-Synthese (KI, Schicht 2)",
@@ -468,8 +491,8 @@ class ThesenView(ttk.Frame):
         )
         self._synthese_label.pack(side="left")
 
-        synthese_frame = ttk.Frame(self, padding=(8, 0, 8, 8))
-        synthese_frame.pack(fill="x")
+        synthese_frame = ttk.Frame(unten_frame, padding=(8, 0, 8, 8))
+        synthese_frame.pack(fill="both", expand=True)
 
         synthese_columns = ("kategorie", "phase", "rang", "begruendung")
         self.synthese_tree = ttk.Treeview(
@@ -483,7 +506,7 @@ class ThesenView(ttk.Frame):
         for col in synthese_columns:
             self.synthese_tree.heading(col, text=synthese_headings[col])
             self.synthese_tree.column(col, width=synthese_widths[col], anchor="w")
-        self.synthese_tree.pack(fill="x", expand=True)
+        self.synthese_tree.pack(fill="both", expand=True)
         add_row_tooltips(self.synthese_tree, lambda iid: self._synthese_tooltips.get(iid))
 
     def refresh(self) -> None:
