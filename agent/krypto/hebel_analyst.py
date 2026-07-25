@@ -82,14 +82,21 @@ Teilgewinn sichern), Position bleibt danach offen.
    - HALTEN: keine Aktion angebracht - auch der korrekte Wert, wenn \
 `regime.wert == "krise_extrem"` ist (dann IMMER HALTEN, unabhängig von anderen \
 Fakten - nenne das explizit als Grund).
-   - Hinweis zu ERÖFFNEN bei bestehender Position in der GEGENRICHTUNG (`position_aktuell` \
-gesetzt, deine `richtung` weicht davon ab): wähle trotzdem die Aktion/Richtung, die die \
-Fakten deiner Meinung nach stützen (Regel 2 gilt unverändert) - eine echte Gegenposition \
-ist auf Bitpanda ohnehin nie ausführbar. Das System übersetzt deine Einschätzung \
-NACHTRÄGLICH deterministisch in eine Aktion auf die bestehende Position (SCHLIESSEN/ \
-TEILVERKAUF/HALTEN, abhängig von Konfidenz und zeitlicher Bestätigung über mehrere \
-Zyklen - siehe hebel_risk_gate.py::post_check_hebel()) - du musst diese Übersetzung \
-nicht selbst vornehmen oder antizipieren, formuliere einfach deine eigenständige Analyse.
+   - WICHTIG bei bestehender Position in der GEGENRICHTUNG (`position_aktuell` gesetzt, \
+deine `richtung` weicht davon ab): die Beschreibungen oben fuer NACHKAUFEN/HEBEL_ERHÖHEN/ \
+HEBEL_SENKEN/TEILVERKAUF/SCHLIESSEN ("Position existiert bereits") gelten NUR, wenn deine \
+eigene `richtung` MIT `position_aktuell.richtung` uebereinstimmt. Weicht deine `richtung` \
+davon ab, behandle `position_aktuell` fuer die Aktionswahl so, als waere es null - dein \
+`action` ist dann EXAKT ERÖFFNEN (Fakten sprechen für einen Einstieg) oder HALTEN (Fakten \
+sprechen nicht dafür), NIEMALS TEILVERKAUF/NACHKAUFEN/HEBEL_ERHÖHEN/HEBEL_SENKEN/ \
+SCHLIESSEN - eine echte Gegenposition ist auf Bitpanda ohnehin nie ausführbar, und diese \
+vier Aktionen wären auf eine nicht-existierende Position in deiner Richtung sinnlos. Wähle \
+trotzdem die Richtung, die die Fakten deiner Meinung nach stützen (Regel 2 gilt \
+unverändert). Das System übersetzt deine ERÖFFNEN/HALTEN-Einschätzung NACHTRÄGLICH \
+deterministisch in eine Aktion auf die bestehende Position (SCHLIESSEN/TEILVERKAUF/HALTEN, \
+abhängig von Konfidenz und zeitlicher Bestätigung über mehrere Zyklen - siehe \
+hebel_risk_gate.py::post_check_hebel()) - du musst diese Übersetzung nicht selbst \
+vornehmen oder antizipieren, formuliere einfach deine eigenständige Analyse.
 4. `hebel_vorschlag`: schlage einen realistischen Hebel vor (Bitpanda bietet \
 praktisch 2x/3x/5x/10x als Stufen an, letztere nur für liquide Top-Tier-Assets). \
 Dein Vorschlag wird NACHTRÄGLICH von einer deterministischen Formel geprüft und \

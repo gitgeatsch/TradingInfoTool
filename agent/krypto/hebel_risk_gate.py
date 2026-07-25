@@ -651,16 +651,26 @@ def post_check_hebel(
         risk_veto_reason = pre_result.veto_reason
         action = "HALTEN"
     elif (
-        action == "ERÖFFNEN"
+        action != "HALTEN"
         and position_aktuell is not None
         and richtung != str(position_aktuell.richtung).upper()
     ):
-        # Kontrathese-Uebersetzung (2026-07-24) - VOR dem CRV-Gate/HEBEL_SENKEN
-        # unten, damit eine (fuer die hypothetische Gegenposition ohnehin
-        # irrelevante) zu knappe CRV das Remapping nicht ueberschreibt. Greift
-        # NUR bei ERÖFFNEN in GENAU der Gegenrichtung zur bestehenden Position -
-        # eine echte Kurswende liefe ueber den jeweils ANDEREN (symbol,
-        # richtung)-Schluessel und ist hiervon unberuehrt.
+        # Kontrathese-Uebersetzung (2026-07-24, NACHBESSERUNG 2026-07-25 - echter
+        # HYPE-Fund): VOR dem CRV-Gate/HEBEL_SENKEN unten, damit eine (fuer die
+        # hypothetische Gegenposition ohnehin irrelevante) zu knappe CRV das
+        # Remapping nicht ueberschreibt. Greift bei JEDER Aktion in GENAU der
+        # Gegenrichtung zur bestehenden Position - NICHT nur bei ERÖFFNEN.
+        # Root Cause des Funds: das LLM sieht `position_aktuell` (gesetzt, da
+        # `hebel_pipeline.py` nur nach Symbol filtert, nicht nach Richtung) und
+        # waehlt bei einer inhaltlich SHORT-Analyse trotz offener LONG-Position
+        # manchmal direkt `action=TEILVERKAUF`/NACHKAUFEN/etc. statt ERÖFFNEN
+        # (Regel 3 listet "Position existiert bereits" generisch fuer alle
+        # Nicht-ERÖFFNEN-Aktionen, ohne dort explizit auf Richtungs-Gleichheit
+        # zu bestehen) - das alte, auf ERÖFFNEN beschraenkte Gate liess diesen
+        # Fall unuebersetzt durch (nicht ausfuehrbares Signal: "TEILVERKAUF
+        # HYPE (SHORT)" ohne jede offene SHORT-Position). Eine echte Kurswende
+        # liefe ohnehin ueber den jeweils ANDEREN (symbol, richtung)-Schluessel
+        # und ist von dieser Erweiterung unberuehrt.
         kontrathese_zu_position = True
         kontrathese_llm_richtung = richtung
         confidence_pct = result.get("confidence_pct")

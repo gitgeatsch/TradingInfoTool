@@ -8281,3 +8281,85 @@ nicht ausgewertet - analog zu den Krypto-Relativwert-Bausteinen ist eine
 spätere Durchsicht sinnvoll, ob das LLM tatsächlich differenzierte Fazits
 liefert (nicht immer "ja"/reine Kopie von `action`) und ob der
 Konsistenz-Hinweis in der Praxis selten/oft auftritt.
+
+## Nachtrag (2026-07-25, gleicher Tag): Kontrathese-Übersetzung Lücke geschlossen - echter HYPE-Fund
+
+Echte E-Mail traf ein: "Hebel TEILVERKAUF HYPE (SHORT)" - für HYPE existierte
+zu diesem Zeitpunkt aber NUR eine offene LONG-Position, keine SHORT-Position.
+Das Signal war folglich nicht ausführbar (die Mail selbst bestätigte das:
+"Short-Positionen werden auf Bitpanda noch nicht unterstützt").
+
+### Root Cause
+
+Die Kontrathese-Übersetzung (siehe Nachtrag 2026-07-24 weiter oben,
+`HebelSignal.kontrathese_zu_position`) übersetzt genau diesen Fall - ein
+LLM-Vorschlag in der Gegenrichtung zu einer bestehenden Position - in eine
+Aktion auf die TATSÄCHLICHE Position. Das Gate dafür
+(`hebel_risk_gate.py::post_check_hebel()`) griff bisher aber NUR, wenn das
+LLM selbst `action == "ERÖFFNEN"` gewählt hatte:
+```python
+elif (
+    action == "ERÖFFNEN"
+    and position_aktuell is not None
+    and richtung != str(position_aktuell.richtung).upper()
+):
+```
+`hebel_pipeline.py::generate_hebel_signal()` lädt `position_aktuell` NUR
+nach Symbol (`db.get_open_hebel_positions(conn, symbol=asset.symbol)`),
+nicht nach Richtung - das LLM sieht also bei jeder Bewertung eines
+SHORT-Triggers für HYPE trotzdem die bestehende LONG-Position in den
+Fakten. `hebel_analyst.py` Regel 3 listet "Position existiert bereits" als
+generische Voraussetzung für NACHKAUFEN/HEBEL_ERHÖHEN/HEBEL_SENKEN/
+TEILVERKAUF/SCHLIESSEN, ohne dort explizit auf Richtungs-Gleichheit zu
+bestehen - das Modell wählte hier direkt `action="TEILVERKAUF"` (nicht
+`ERÖFFNEN`), wodurch der Fall am alten Gate komplett vorbeirutschte und
+unübersetzt versendet wurde.
+
+### Fix (zwei Ebenen, wie im Projekt üblich)
+
+1. **Deterministisches Gate erweitert** (`hebel_risk_gate.py:653`): die
+   Bedingung prüft jetzt `action != "HALTEN"` statt `action == "ERÖFFNEN"` -
+   greift bei JEDER Nicht-HALTEN-Aktion mit Richtungs-Mismatch, nicht nur
+   bei ERÖFFNEN. `HALTEN` bleibt bewusst ausgenommen (das LLM sagt bereits
+   "keine Aktion", keine Übersetzung nötig).
+2. **Prompt-Regel 3 präzisiert** (`hebel_analyst.py`): stellt jetzt
+   explizit klar, dass die "Position existiert bereits"-Beschreibungen NUR
+   gelten, wenn die eigene `richtung` mit `position_aktuell.richtung`
+   übereinstimmt - weicht sie ab, ist die Aktionswahl auf ERÖFFNEN/HALTEN
+   beschränkt (Regel 2 gilt unverändert für die Richtungswahl selbst).
+
+### Sorgfalts-Check: keine korrekten Bewertungen gehen verloren
+
+Nutzer-Einwand vor Umsetzung: "das deine Gate-Änderung nicht korrekte
+Bewertungen u.U. wegschmeisst". Geprüft und verifiziert:
+- Bei ÜBEREINSTIMMENDER Richtung (`richtung == position_aktuell.richtung`,
+  der Normalfall) greift die Bedingung unverändert NICHT - kein Einfluss
+  auf reguläre NACHKAUFEN/TEILVERKAUF/HEBEL_SENKEN/SCHLIESSEN-Signale.
+- Jede vom erweiterten Gate NEU abgefangene Aktion war bei
+  Richtungs-Mismatch strukturell NIE ausführbar (keine Position in der
+  vom LLM gewählten Richtung vorhanden) - es geht also keine gültige,
+  ausführbare Bewertung verloren, sondern ein bereits kaputtes Signal wird
+  repariert. Die volle LLM-Analyse (Konfidenz, Begründung, Top-Gründe,
+  Gegenargument, Risikofaktoren, Fazit) bleibt unverändert erhalten - nur
+  `action`/`richtung` werden nach derselben, bereits am 2026-07-24
+  verifizierten Konfidenz-/Zeitfenster-Logik neu berechnet.
+- Theoretisches Risiko einer Mehrfach-Positions-Verwechslung
+  (`get_open_hebel_positions()` gibt bei mehreren offenen Positionen
+  desselben Symbols nur die erste zurück) empirisch geprüft: aktuell hat
+  kein Symbol mehrere gleichzeitig offene Positionen, alle 188 historischen
+  Positionen sind LONG (Bitpanda unterstützt SHORT-Ausführung derzeit
+  ohnehin nicht) - der Fall kann aktuell nicht auftreten.
+
+### Scope-Prüfung (Nutzer-Vorgabe "alle Varianten/Assetklassen")
+
+Per Grep bestätigt: `position_aktuell`/`kontrathese_zu_position` existieren
+ausschließlich in `hebel_risk_gate.py`/`hebel_pipeline.py` - kein anderer
+Assetklassen-Pfad (Spot/Aktien/Rohstoffe/Themen-ETF/Hedge) hat ein
+Richtungskonzept (LONG/SHORT), der Bug kann dort strukturell nicht
+auftreten. Kein weiterer Anpassungsbedarf.
+
+**Verifiziert:** bestehendes Testskript `test_kontrathese.py` um 15 neue
+Fälle erweitert (alle 5 vormals unabgefangenen Aktionen bei
+Richtungs-Mismatch, der reale HYPE-Fall exakt nachgestellt, HALTEN-Mismatch
+bleibt unberührt) - 39/39 Checks bestehen, inkl. aller 24 bereits
+bestehenden Regressionsfälle unverändert grün.
