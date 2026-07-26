@@ -93,10 +93,12 @@ def main() -> None:
     else:
         logger.info("Kein CoinGecko API-Key gesetzt - anonymer Zugriff (30 Req/Min).")
 
-    # KI-Ebene: config.yaml agent.ai_provider waehlt zwischen "groq" (aktiv) und
-    # "lokal" (Architektur-Seam vorbereitet, siehe api/local_model.py - noch nicht
-    # implementiert, wirft bei tatsaechlicher Nutzung bewusst NotImplementedError
-    # statt still zu scheitern, P-10).
+    # KI-Ebene: config.yaml agent.ai_provider waehlt zwischen "lokal" (Architektur-
+    # Seam vorbereitet, siehe api/local_model.py - noch nicht implementiert, wirft
+    # bei tatsaechlicher Nutzung bewusst NotImplementedError statt still zu
+    # scheitern, P-10) und jedem anderen Wert (= remote, echter Groq-Client falls
+    # GROQ_API_KEY gesetzt ist - siehe unten fuer den eingeschraenkten Einsatzzweck
+    # seit 2026-07-26).
     try:
         ai_provider = config.load_config().get("agent", {}).get("ai_provider", "groq")
     except Exception as exc:
@@ -116,6 +118,17 @@ def main() -> None:
     email_cfg = config.load_config().get("benachrichtigung", {}).get("email", {})
     email_empfaenger = email_cfg.get("empfaenger") if email_cfg.get("aktiv", False) else None
 
+    # Groq (2026-07-26, Nutzer-Entscheidung): aus der AUTOMATISCHEN Produktions-
+    # Fallback-Kette entfernt (siehe agent/krypto/budget_allocator.py) -
+    # reproduzierter Test zeigte "413 Payload Too Large" bei 2 von 3 echten
+    # Signal-Payloads (Free-Tier-Kontextlimit reicht fuer den inzwischen stark
+    # gewachsenen Fakten-Umfang pro Signal nicht mehr aus), plus 0 jemals
+    # aufgeloeste Signale in provider_performance seit Mistral Prio-1 wurde.
+    # Der Client selbst bleibt aber verfuegbar (bewusst NICHT wie Cerebras
+    # geloescht) - fuer manuelle Einzelklick-Analysen (ui/hebel_view.py/
+    # ui/signals_view.py, niedriges Volumen, beaufsichtigt) und fuer
+    # Qualitaets-/Vergleichstests bleibt Groq ein nuetzlicher, kostenloser
+    # vierter Datenpunkt neben Mistral/Gemini/Z.ai.
     groq_api_key = os.environ.get("GROQ_API_KEY")
     if ai_provider == "lokal":
         from api.local_model import LocalModelClient
@@ -124,21 +137,21 @@ def main() -> None:
         logger.info("KI-Ebene: lokal (config.yaml agent.ai_provider) - Architektur-Seam, noch nicht implementiert.")
     elif groq_api_key:
         groq_client = GroqClient(api_key=groq_api_key)
-        logger.info("Groq API-Key gefunden - Signal-Pipeline (Phase 3) verfügbar.")
+        logger.info(
+            "Groq API-Key gefunden - nur fuer manuelle Einzelklick-Analysen/Qualitaetsvergleiche "
+            "verfuegbar, nicht mehr Teil der automatischen Budget-Allocator-Kette."
+        )
     else:
-        # P-8: Kernfunktionen duerfen nie zwingend von einem KI-Key abhaengen - ohne
-        # GROQ_API_KEY bleibt der Signale-Tab nutzbar, nur die Berechnung ist deaktiviert
-        # (siehe ui/signals_view.py).
         groq_client = None
-        logger.info("Kein GROQ_API_KEY gesetzt - Signalberechnung (Phase 3) deaktiviert.")
+        logger.info("Kein GROQ_API_KEY gesetzt - manuelle Groq-Einzelklick-Analyse deaktiviert.")
 
     mistral_api_key = os.environ.get("MISTRAL_API_KEY")
     if mistral_api_key:
         mistral_client = MistralClient(api_key=mistral_api_key)
         logger.info("Mistral API-Key gefunden - zweite Fallback-Stufe im Budget-Allocator verfügbar.")
     else:
-        # P-8: Mistral ist rein additiv (zweite, optionale Fallback-Stufe nach
-        # Groq) - ohne Key bleibt die Kette bei Groq->Gemini wie zuvor.
+        # P-8: Mistral ist rein additiv (erste, optionale Fallback-Stufe) -
+        # ohne Key bleibt die Kette bei Gemini/Z.ai wie zuvor.
         mistral_client = None
         logger.info("Kein MISTRAL_API_KEY gesetzt - Mistral-Fallback-Stufe deaktiviert.")
 
@@ -152,7 +165,7 @@ def main() -> None:
         )
     else:
         # P-8: Z.ai ist rein additiv (letzte Fallback-Stufe) - ohne Key
-        # bleibt die Kette bei Mistral->Groq->Gemini wie zuvor.
+        # bleibt die Kette bei Mistral->Gemini wie zuvor.
         zai_client = None
         logger.info("Kein ZAI_API_KEY gesetzt - Z.ai-Fallback-Stufe deaktiviert.")
 

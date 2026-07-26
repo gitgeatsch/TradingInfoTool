@@ -14,8 +14,20 @@ Verteilungsformel (1:1 aus docs/budget_queue_design.md):
     rest_fuer_3 = B - tier1_verbraucht - tier2_verbraucht
     tier3_verbraucht = min(anzahl_faelliger_spot_assets, rest_fuer_3)
 
-Fallback-Kette (Stand 2026-07-20 Nacht) Mistral -> Groq -> Gemini -> Z.ai
-- Z.ai (Zhipu AI, GLM-4.5-Flash) wurde zunaechst testweise als erste Stufe
+Fallback-Kette (Stand 2026-07-26) Mistral -> Gemini -> Z.ai - Groq wurde
+2026-07-26 vollstaendig aus dieser AUTOMATISCHEN Kette entfernt (siehe
+Memory project_groq_entfernung_2026-07-26.md): ein reproduzierter
+Vergleichstest zeigte "413 Payload Too Large" bei 2 von 3 echten Signal-
+Payloads (Free-Tier-Kontextlimit reicht fuer den inzwischen stark
+gewachsenen Fakten-Umfang pro Signal nicht mehr aus), plus 0 jemals
+aufgeloeste Signale in provider_performance seit Mistral Prio-1 wurde. Der
+GroqClient bleibt trotzdem im Projekt (main.py, api/groq.py) - fuer manuelle
+Einzelklick-Analysen (ui/hebel_view.py/ui/signals_view.py, niedriges
+Volumen, beaufsichtigt) und Qualitaets-/Prompt-Vergleichstests bleibt er ein
+nuetzlicher, kostenloser vierter Datenpunkt, nur eben nicht mehr Teil des
+unbeaufsichtigten 15-Min-Takts.
+
+Z.ai (Zhipu AI, GLM-4.5-Flash) wurde zunaechst testweise als erste Stufe
 VOR Mistral gehaengt (siehe Memory reference_llm_provider_
 recherche_uebersicht.md und project_groq_alternative_recherche_2026-07-20.md),
 nach der ersten echten Testnacht aber auf die LETZTE Stufe (nach Gemini)
@@ -24,11 +36,11 @@ realistischer Payload-Groesse (System-Prompt + Fakten-JSON) ca. 109s fuer
 eine Antwort braucht - deutlich zu langsam fuer eine FRUEHE Fallback-Stufe,
 die jeden Kandidaten zusaetzlich verzoegern wuerde (siehe auch Memory
 project_delta_berechnung_llm_abfrage_timing.md). Als LETZTE Stufe faellt die
-zusaetzliche Wartezeit kaum ins Gewicht, da nur genutzt wenn Mistral/Groq/
-Gemini alle drei fehlschlagen. Anders als Mistral/Gemini/Groq ist die reale
-Kapazitaet NICHT ueber ein Nutzer-Dashboard verifiziert - Z.ai veroeffentlicht
-fuer die kostenlosen Modelle nur ein Concurrency-Limit (2), keine RPM/TPM/
-RPD-Zahl. Eigener Tages-Deckel `zai_taegliches_budget` unveraendert aktiv.
+zusaetzliche Wartezeit kaum ins Gewicht, da nur genutzt wenn Mistral/Gemini
+beide fehlschlagen. Anders als Mistral/Gemini ist die reale Kapazitaet
+NICHT ueber ein Nutzer-Dashboard verifiziert - Z.ai veroeffentlicht fuer die
+kostenlosen Modelle nur ein Concurrency-Limit (2), keine RPM/TPM/RPD-Zahl.
+Eigener Tages-Deckel `zai_taegliches_budget` unveraendert aktiv.
 Reihenfolge ist weiterhin nicht zwingend final, aber deutlich wahrscheinlicher
 stabil als die urspruengliche Position - siehe Memory fuer weitere Updates.
 
@@ -42,30 +54,19 @@ Stufe uebernommen (echt verifizierte Kapazitaet weit ueber Cerebras/Gemini,
 saubere Vertragsbedingungen). Der `CEREBRAS_API_KEY` bleibt einzig in `.env`
 als Referenz stehen, jetzt kommentiert als obsolet fuer die Produktion.
 
-REIHENFOLGE Mistral vor Groq seit 2026-07-20 (Nutzer-Fund: Groq lieferte im
-Realbetrieb nur ~11% aller echten LLM-Calls, echte 429-Ratenlimit-Fehler in
-api_health bestaetigt - als PRIMAeR-LLM "relativ unbrauchbar"). Mistrals
-echt verifizierte Kapazitaet (2.250.000 TPM/300 RPM) liegt weit ueber Groqs
-tatsaechlich nutzbarem Tageslimit, ist deshalb jetzt die erste Stufe; Groq
-bleibt als zweite Stufe erhalten (weiterhin kostenlos, gelegentlich
-erfolgreich), Gemini weiterhin bewusst seltenste letzte Ruckfallebene
-(siehe Vertragsgruende unten).
-
 Fuer jeden ausgewaehlten Kandidaten wird ZUERST Mistral versucht (falls
-`mistral_client` gesetzt), sonst/danach Groq; schlaegt der Call fehl (jede
-Exception - Netzwerk, HTTP-Fehler, Rate-Limit), wird SOFORT die naechste
-Stufe versucht, solange deren eigener Tages-Deckel (config
-mistral_taegliches_budget/gemini_taegliches_budget) noch nicht erschoepft
-ist. Groq hat KEIN eigenes Tagesbudget, wird aber uebersprungen, sobald
-`db.is_groq_exhausted_today()` (siehe unten) eine Tageserschoepfung erkannt
-hat. Gemini bleibt bewusst am Ende der Kette - vertraglich die
-ungueenstigsten Bedingungen aller Anbieter (EWR/CH/UK-Sonderklausel,
-explizite Warnung vor vertraulichen/Finanzdaten, nicht abwaehlbare
-Trainings-Nutzung - siehe Memory), soll deshalb am seltensten drankommen.
-Kandidaten, die an ALLEN verfuegbaren Stufen scheitern, bleiben
+`mistral_client` gesetzt); schlaegt der Call fehl (jede Exception -
+Netzwerk, HTTP-Fehler, Rate-Limit), wird SOFORT die naechste Stufe
+versucht, solange deren eigener Tages-Deckel (config
+mistral_taegliches_budget/gemini_taegliches_budget/zai_taegliches_budget)
+noch nicht erschoepft ist. Gemini bleibt bewusst nahe am Ende der Kette -
+vertraglich die ungueenstigsten Bedingungen aller Anbieter (EWR/CH/UK-
+Sonderklausel, explizite Warnung vor vertraulichen/Finanzdaten, nicht
+abwaehlbare Trainings-Nutzung - siehe Memory), soll deshalb am seltensten
+drankommen. Kandidaten, die an ALLEN verfuegbaren Stufen scheitern, bleiben
 unverarbeitet - kein Datenverlust (P-10), der naechste 15-Min-Lauf bewertet
-sie automatisch neu. `mistral_client`/`gemini_client` sind beide optional
-(P-8) - ohne mistral_client faellt die Kette auf Groq -> Gemini zurueck.
+sie automatisch neu. `mistral_client`/`gemini_client`/`zai_client` sind alle
+optional (P-8).
 
 Echte Tages-Zaehler (2026-07-14-Fix): Mistrals/Gemini's Tagesbudget wird zu
 Beginn jedes Laufs EINMAL per db.count_real_llm_calls_today_by_provider()
@@ -110,27 +111,6 @@ HEBEL_COOLDOWN_STUNDEN_AUSGEMUSTERT = 120.0  # 5 Tage
 
 logger = logging.getLogger(__name__)
 
-# Groq-Tageserschoepfung erkennen (2026-07-18, Nutzer-Fund: "trotz Erschoepfung
-# wird immer zuerst Groq abgefragt") - bis hierhin hatte Groq bewusst KEIN
-# eigenes Tagesbudget wie Mistral/Gemini (siehe Modul-Docstring: "Groqs reales
-# Tageslimit wirkt extern ueber echte 429s"). Das bedeutete: sobald Groqs
-# echtes taeglisches Token-Limit erreicht war, wurde JEDER weitere Kandidat -
-# in diesem UND allen folgenden 15-Min-Laeufen desselben Tages - trotzdem
-# zuerst erfolglos gegen Groq versucht, bevor Mistral uebernahm. Kein
-# verlorenes Mistral/Gemini-Kontingent (der Fallback funktionierte korrekt),
-# aber unnoetige Latenz pro Kandidat (ein garantiert scheiternder HTTP-Call).
-#
-# DB-persistent seit 2026-07-20 (siehe database/db.py::groq_exhaustion_status-
-# Tabellendocstring) - urspruenglich In-Memory (gleiches Muster wie
-# scheduler/background.py::_consecutive_failures), mit der Begruendung "ein
-# Neustart ist selten". Echter Notebook-Befund widerlegte das: in der aktiven
-# Entwicklungsphase (haeufige Pulls) startete die App ~8x/Tag neu, wodurch die
-# In-Memory-Sperre bei jedem Neustart zurueckgesetzt wurde und Groq wiederholt
-# binnen Minuten erneut in dieselben 429-Fehlschlaege lief. `db.is_groq_
-# exhausted_today()`/`record_groq_failure()`/`record_groq_success()` ersetzen
-# die frueheren Modul-globalen Variablen 1:1 (gleiche Kalendertag-Semantik),
-# lesen/schreiben aber ueber eine kurzlebige `conn_factory()`-Verbindung.
-
 
 @dataclass
 class AllocationResult:
@@ -147,10 +127,6 @@ class AllocationResult:
     gemini_budget_erschoepft: bool = False
     zai_calls_verbraucht: int = 0
     zai_budget_erschoepft: bool = False
-    # 2026-07-18 (Groq-Tageserschoepfungs-Erkennung) - True, wenn mindestens
-    # ein Kandidat in diesem Lauf Groq wegen erkannter Tageserschoepfung
-    # uebersprungen hat (siehe _is_groq_exhausted_today()).
-    groq_erschoepft_erkannt: bool = False
     # 2026-07-14 (Empfehlungs-E-Mails): die echten Signal-/HebelSignal-Objekte
     # zu jedem schluessel aus hebel_verarbeitet/spot_verarbeitet - nur befuellt,
     # wenn provider_je_call[schluessel] ebenfalls gesetzt wurde (also ein
@@ -349,7 +325,6 @@ def _priorisiere_nach_wartezeit(
 def run_budget_allocator(
     conn_factory,
     watchlist: list,
-    groq_client,
     coingecko_client,
     kraken_client,
     fred_api_key: str | None,
@@ -369,7 +344,6 @@ def run_budget_allocator(
     mistral_budget = cfg.get("mistral_taegliches_budget", 150)
     gemini_budget = cfg.get("gemini_taegliches_budget", 200)
     zai_budget = cfg.get("zai_taegliches_budget", 300)
-    groq_exhaustion_schwelle = cfg.get("groq_exhaustion_schwelle_fehlschlaege", 2)
     cooldown_stunden = cfg.get("cooldown_stunden", 3.5)
     marktscan_kandidat_verfall_stunden = cfg.get("marktscan_kandidat_verfall_stunden", 48.0)
     hebel_cooldown_stunden_ausgemustert = cfg.get(
@@ -539,12 +513,10 @@ def run_budget_allocator(
 
     def _mit_fallback_chain(schluessel: str, calls: list[tuple[str, object]]) -> bool:
         """Versucht `calls` (Liste von (provider_name, call_fn)) der Reihe nach.
-        "groq" hat kein eigenes Tagesbudget hier (Groqs reales Tageslimit
-        wirkt extern ueber echte 429s). "mistral"/"gemini"/"zai" werden nur
-        versucht, wenn ihr echter Tages-Zaehler (`tages_verbraucht`) das
-        eigene Budget (`tages_budget`) noch nicht erreicht hat - sonst wird
-        diese Stufe uebersprungen (NICHT versucht) und die naechste Stufe
-        an der Reihe.
+        "mistral"/"gemini"/"zai" werden nur versucht, wenn ihr echter Tages-
+        Zaehler (`tages_verbraucht`) das eigene Budget (`tages_budget`) noch
+        nicht erreicht hat - sonst wird diese Stufe uebersprungen (NICHT
+        versucht) und die naechste Stufe an der Reihe.
 
         Wichtig: ein Datenqualitaets-Gate (Signal.gate_passed/HebelSignal.
         gate_passed == False, z.B. veralteter Preis) schlaegt VOR jedem echten
@@ -555,9 +527,6 @@ def run_budget_allocator(
         docs/budget_queue_design.md geforderte Qualitaets-Tracking)."""
         last_exc: Exception | None = None
         for provider_name, call_fn in calls:
-            if provider_name == "groq" and _mit_conn(db.is_groq_exhausted_today):
-                result.groq_erschoepft_erkannt = True
-                continue
             if provider_name in tages_budget:
                 if tages_verbraucht[provider_name] >= tages_budget[provider_name]:
                     if provider_name == "mistral":
@@ -575,8 +544,6 @@ def run_budget_allocator(
                     # den Fehlschlag-Zaehler faelschlich auf Basis eines gar nicht
                     # stattgefundenen Calls zuruecksetzen).
                     return True
-                if provider_name == "groq":
-                    _mit_conn(db.record_groq_success)
                 result.provider_je_call[schluessel] = provider_name
                 result.ergebnis_objekt[schluessel] = res
                 # E-Mail-Latenz-Fix (2026-07-23, echter Fund: ein einzelner Batch-Lauf
@@ -602,8 +569,6 @@ def run_budget_allocator(
                         result.zai_calls_verbraucht = tages_verbraucht["zai"]
                 return True
             except Exception as exc:
-                if provider_name == "groq":
-                    _mit_conn(lambda c: db.record_groq_failure(c, groq_exhaustion_schwelle))
                 last_exc = exc
                 logger.info("%s-Call für %s fehlgeschlagen (%s)", provider_name, schluessel, exc)
 
@@ -622,9 +587,6 @@ def run_budget_allocator(
             calls.append(("mistral", lambda t=trigger, a=asset: _mit_conn(
                 lambda c: generate_hebel_signal(t, a, watchlist, c, mistral_client, coingecko_client, kraken_client, fred_api_key)
             )))
-        calls.append(("groq", lambda t=trigger, a=asset: _mit_conn(
-            lambda c: generate_hebel_signal(t, a, watchlist, c, groq_client, coingecko_client, kraken_client, fred_api_key)
-        )))
         if gemini_client is not None:
             calls.append(("gemini", lambda t=trigger, a=asset: _mit_conn(
                 lambda c: generate_hebel_signal(t, a, watchlist, c, gemini_client, coingecko_client, kraken_client, fred_api_key)
@@ -665,7 +627,6 @@ def run_budget_allocator(
             calls = []
             if mistral_client is not None:
                 calls.append(("mistral", lambda c=candidate: _writeup(c, mistral_client)))
-            calls.append(("groq", lambda c=candidate: _writeup(c, groq_client)))
             if gemini_client is not None:
                 calls.append(("gemini", lambda c=candidate: _writeup(c, gemini_client)))
             if zai_client is not None:
@@ -682,9 +643,6 @@ def run_budget_allocator(
             calls.append(("mistral", lambda a=asset: _mit_conn(
                 lambda c: generate_signal(a, watchlist, c, mistral_client, coingecko_client, kraken_client, fred_api_key)
             )))
-        calls.append(("groq", lambda a=asset: _mit_conn(
-            lambda c: generate_signal(a, watchlist, c, groq_client, coingecko_client, kraken_client, fred_api_key)
-        )))
         if gemini_client is not None:
             calls.append(("gemini", lambda a=asset: _mit_conn(
                 lambda c: generate_signal(a, watchlist, c, gemini_client, coingecko_client, kraken_client, fred_api_key)

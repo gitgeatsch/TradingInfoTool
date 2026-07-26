@@ -419,7 +419,7 @@ def kategorie_synthese_job(conn_factory, mistral_client=None, groq_client=None, 
     wenn alle Provider fehlschlagen (run_kategorie_synthese() gibt dann None
     zurueck, alle Konsumenten (Fall-A/B-Moderation, Screener-Score-Bonus)
     degradieren auf ihr Vor-Schicht-2-Verhalten)."""
-    llm_clients = [("mistral", mistral_client), ("groq", groq_client), ("gemini", gemini_client)]
+    llm_clients = [("mistral", mistral_client), ("gemini", gemini_client)]
     if not any(client is not None for _, client in llm_clients):
         logger.info("Kategorie-Synthese: kein LLM-Client konfiguriert, uebersprungen.")
         return
@@ -1599,15 +1599,21 @@ def hebel_screening_job(
     zusaetzlich: der zentrale Allocator laeuft im selben Takt und verteilt das
     gemeinsame Tagesbudget ueber Hebel-Kandidaten (dieses Screening),
     Marktscan-Kaufkandidaten UND Spot-Rotation (P-8: nur falls mindestens
-    groq_client gesetzt ist, sonst uebersprungen - Groq ist die einzige
-    echte Voraussetzung, mistral_client/gemini_client sind optionale
-    Fallback-Stufen).
+    einer von mistral_client/gemini_client/zai_client gesetzt ist, sonst
+    uebersprungen).
 
     **2026-07-17:** Cerebras vollstaendig aus der Fallback-Kette entfernt
     (Mistral hat dessen Rolle uebernommen, siehe Memory
     project_cerebras_free_tier_aenderung_2026-08-17.md - urspruenglich war
     nur die Entfernung zum 2026-08-17 geplant, der Nutzer hat sich aber
-    bewusst fuer die sofortige vollstaendige Entfernung entschieden)."""
+    bewusst fuer die sofortige vollstaendige Entfernung entschieden).
+
+    **2026-07-26:** Groq ebenfalls vollstaendig entfernt (reproduzierter Test
+    zeigte "413 Payload Too Large" bei 2/3 echten Signal-Payloads - Free-Tier-
+    Kontextlimit reicht fuer den inzwischen stark gewachsenen Fakten-Umfang
+    pro Signal nicht mehr aus, zudem 0 jemals aufgeloeste Signale in
+    provider_performance seit Mistral Prio-1 ist). Mistral/Gemini/Z.ai decken
+    die Kette jetzt allein ab."""
     if not hebel_screening_lock.acquire(blocking=False):
         logger.info("Hebel-Screening: bereits in Ausführung - übersprungen")
         return False
@@ -1668,7 +1674,11 @@ def hebel_screening_job(
             finally:
                 conn.close()
 
-        if groq_client is not None:
+        # 2026-07-26 (Groq-Entfernung): frueher an "groq_client is not None"
+        # gegated, weil Groq urspruenglich die einzige zwingende Voraussetzung
+        # war. Jetzt gilt Mistral/Gemini/Zai als Basis (mind. einer muss
+        # gesetzt sein) - Groq ist komplett aus der Kette entfernt.
+        if any(c is not None for c in (mistral_client, gemini_client, zai_client)):
             from agent.krypto.budget_allocator import run_budget_allocator
 
             # E-Mail-Latenz-Fix (2026-07-23, echter Fund: ein einzelner Batch mit
@@ -1701,25 +1711,23 @@ def hebel_screening_job(
                     _notify_spot_signal(ergebnis, watchlist, bitpanda_assets, conn_factory)
 
             allocation = run_budget_allocator(
-                conn_factory, watchlist, groq_client, coingecko_client, kraken_client,
+                conn_factory, watchlist, coingecko_client, kraken_client,
                 fred_api_key, config_dict, gemini_client=gemini_client, mistral_client=mistral_client,
                 zai_client=zai_client, on_signal_ready=_on_signal_ready,
             )
             logger.info(
                 "Budget-Allocator: Hebel %d, Marktscan %d, Spot %d verarbeitet, %d fehlgeschlagen, "
-                "Groq heute erschöpft: %s, "
                 "Zai-Calls %d, Zai-Budget erschöpft: %s, "
                 "Mistral-Calls %d, Mistral-Budget erschöpft: %s, "
                 "Gemini-Calls %d, Gemini-Budget erschöpft: %s",
                 len(allocation.hebel_verarbeitet), len(allocation.marktscan_verarbeitet),
                 len(allocation.spot_verarbeitet), len(allocation.fehlgeschlagen),
-                allocation.groq_erschoepft_erkannt,
                 allocation.zai_calls_verbraucht, allocation.zai_budget_erschoepft,
                 allocation.mistral_calls_verbraucht, allocation.mistral_budget_erschoepft,
                 allocation.gemini_calls_verbraucht, allocation.gemini_budget_erschoepft,
             )
         else:
-            logger.info("Budget-Allocator übersprungen (kein Groq-Client konfiguriert)")
+            logger.info("Budget-Allocator übersprungen (kein Mistral-/Gemini-/Z.ai-Client konfiguriert)")
     except Exception as exc:
         logger.exception("Hebel-Screening fehlgeschlagen")
         _notify_job_failure("hebel_screening", f"Hebel-Screening fehlgeschlagen: {exc}")
@@ -1730,22 +1738,23 @@ def hebel_screening_job(
 
 
 def multi_asset_batch_job(
-    conn_factory, watchlist_provider, coingecko_client, groq_client=None, gemini_client=None, mistral_client=None,
+    conn_factory, watchlist_provider, coingecko_client, gemini_client=None, mistral_client=None,
 ) -> bool:
     """Multi-Asset-Batch (2026-07-18, siehe agent/multi_asset_batch.py Modul-
     Docstring fuer die volle Architektur-Begruendung) - automatische Signal-
     Erzeugung fuer Aktien/Rohstoffe/Hedge, bisher nur manuell per Klick
-    erreichbar. P-8: nur aktiv, wenn mindestens groq_client gesetzt ist
-    (gleiches Muster wie hebel_screening_job()). `watchlist_provider` siehe
-    refresh_prices_job()-Docstring (2026-07-23)."""
+    erreichbar. P-8: nur aktiv, wenn mindestens einer von mistral_client/
+    gemini_client gesetzt ist (gleiches Muster wie hebel_screening_job();
+    Groq 2026-07-26 vollstaendig entfernt, siehe dortige Begruendung).
+    `watchlist_provider` siehe refresh_prices_job()-Docstring (2026-07-23)."""
     if not multi_asset_batch_lock.acquire(blocking=False):
         logger.info("Multi-Asset-Batch: bereits in Ausführung - übersprungen")
         return False
     watchlist = watchlist_provider()
     _job_started_at["multi_asset_batch"] = time.monotonic()
     try:
-        if groq_client is None:
-            logger.info("Multi-Asset-Batch übersprungen (kein Groq-Client konfiguriert)")
+        if mistral_client is None and gemini_client is None:
+            logger.info("Multi-Asset-Batch übersprungen (kein Mistral-/Gemini-Client konfiguriert)")
             return True
 
         import config as config_module
@@ -1753,7 +1762,7 @@ def multi_asset_batch_job(
 
         config_dict = config_module.load_config()
         result = run_multi_asset_batch(
-            conn_factory, watchlist, groq_client, coingecko_client, config_dict,
+            conn_factory, watchlist, coingecko_client, config_dict,
             gemini_client=gemini_client, mistral_client=mistral_client,
         )
         logger.info(

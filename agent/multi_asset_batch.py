@@ -112,7 +112,6 @@ def _ist_faellig(
 def run_multi_asset_batch(
     conn_factory,
     watchlist: list,
-    groq_client,
     coingecko_client,
     config_dict: dict,
     gemini_client=None,
@@ -186,11 +185,7 @@ def run_multi_asset_batch(
         extra_kwargs = (
             {"bereits_vorgeschlagen_effektiv_usd": hedge_effektiv_vorgeschlagen_usd} if ist_hedge else {}
         )
-        calls = [
-            ("groq", lambda a=asset, fn=pipeline_fn, kw=extra_kwargs: _mit_conn(
-                lambda c: fn(a, watchlist, c, groq_client, coingecko_client, **kw)
-            )),
-        ]
+        calls = []
         if mistral_client is not None:
             calls.append(("mistral", lambda a=asset, fn=pipeline_fn, kw=extra_kwargs: _mit_conn(
                 lambda c: fn(a, watchlist, c, mistral_client, coingecko_client, **kw)
