@@ -459,7 +459,7 @@ def generate_hebel_signal(
     # ohnehin aus der DB, nicht aus diesem Rueckgabewert.
     if zai_client is not None:
         ema_ordnung_item = next(
-            (item for item in confluence.items if item.name == "EMA-Ordnung"), None,
+            (item for item in confluence.items if item.indicator == "EMA-Ordnung"), None,
         )
         zai_fakten = baue_zai_fakten(
             symbol=asset.symbol,
