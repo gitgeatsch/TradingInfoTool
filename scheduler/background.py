@@ -2033,7 +2033,7 @@ def build_scheduler(
         hour=MULTI_ASSET_BATCH_CRON_HOURS,
         minute=0,
         day_of_week="mon-fri",
-        args=[db_conn_factory, watchlist_provider, coingecko_client, groq_client, gemini_client, mistral_client],
+        args=[db_conn_factory, watchlist_provider, coingecko_client, gemini_client, mistral_client],
         id="multi_asset_batch",
     )
     # MS-3: erster CronTrigger im Projekt (bisherige Jobs nutzen nur "interval") -
