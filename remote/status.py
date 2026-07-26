@@ -32,6 +32,7 @@ class RemoteStatus:
     budget_heute: dict | None = None
     provider_performance: dict | None = None
     offene_signale: dict | None = None
+    konfidenz_kalibrierung: dict | None = None
     api_health: dict | None = None
     regime_status: dict | None = None
     parameter_overview: list[dict] | None = None
@@ -51,6 +52,7 @@ class RemoteStatus:
             "budget_heute": self.budget_heute,
             "provider_performance": self.provider_performance,
             "offene_signale": self.offene_signale,
+            "konfidenz_kalibrierung": self.konfidenz_kalibrierung,
             "api_health": self.api_health,
             "regime_status": self.regime_status,
             "parameter_overview": self.parameter_overview,
@@ -132,6 +134,7 @@ def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, erro
         budget_heute=_get_budget_heute(conn),
         provider_performance=_get_provider_performance(conn, watchlist),
         offene_signale=_get_offene_signale_uebersicht(conn, watchlist),
+        konfidenz_kalibrierung=_get_konfidenz_kalibrierung(conn, watchlist),
         api_health=_get_api_health(conn),
         regime_status=_get_regime_status(conn),
         parameter_overview=_get_parameter_overview(),
@@ -167,6 +170,16 @@ def _get_offene_signale_uebersicht(conn: sqlite3.Connection, watchlist: list) ->
     from agent.krypto.backward_tracking import compute_offene_signale_uebersicht
 
     return compute_offene_signale_uebersicht(conn, watchlist)
+
+
+def _get_konfidenz_kalibrierung(conn: sqlite3.Connection, watchlist: list) -> dict:
+    """Konfidenz-Kalibrierungskurve (2026-07-26, Punkt 3 des Regime-Persistenz-
+    Folge-Vorschlags) - reiner Lesezugriff, siehe agent/krypto/
+    backward_tracking.py::compute_konfidenz_kalibrierung() fuer die Frage,
+    die diese Karte beantwortet (haelt confidence_pct, was es verspricht?)."""
+    from agent.krypto.backward_tracking import compute_konfidenz_kalibrierung
+
+    return compute_konfidenz_kalibrierung(conn, watchlist)
 
 
 def _get_regime_status(conn: sqlite3.Connection) -> dict | None:

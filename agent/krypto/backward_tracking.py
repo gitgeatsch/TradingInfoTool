@@ -16,6 +16,7 @@ from datetime import datetime, timedelta, timezone
 
 import database.db as db
 from agent.krypto.llm_provider import provider_from_label
+from agent.krypto.risk_gate import KONFIDENZ_SCHWELLE_HOCH, KONFIDENZ_SCHWELLE_NIEDRIG
 
 OUTCOME_OFFEN = "offen"
 OUTCOME_TAKE_PROFIT = "take_profit_erreicht"
@@ -582,3 +583,97 @@ def compute_win_rate_fact(conn, tier: str, erlaubte_symbole: set[str] | None = N
         "fehlschlaege": fehlschlaege,
         "hinweis": hinweis,
     }
+
+
+def _konfidenz_bucket(confidence_pct: float) -> str:
+    """Bucket-Grenzen bewusst identisch zu den bereits operativ genutzten
+    Schwellen in risk_gate.py::post_check() (dort seit Item E fuer den
+    "Konfidenz X%"-Risikofaktor in niedrig/mittel/hoch verwendet) - keine
+    neu erfundenen Kalibrierungs-Baender, siehe Docstring von
+    compute_konfidenz_kalibrierung()."""
+    if confidence_pct < KONFIDENZ_SCHWELLE_NIEDRIG:
+        return "niedrig"
+    if confidence_pct >= KONFIDENZ_SCHWELLE_HOCH:
+        return "hoch"
+    return "mittel"
+
+
+def compute_konfidenz_kalibrierung(conn, watchlist: list | None = None) -> dict:
+    """Konfidenz-Kalibrierungskurve (2026-07-26, Punkt 3 des Regime-Persistenz-
+    Folge-Vorschlags - siehe Memory project_regime_konflikt_makro_kennzahl.md).
+    Beantwortet die Kernfrage der 2026er-LLM-Forecasting-Recherche dieser
+    Session ("ist confidence_pct ueberhaupt kalibriert?") OHNE jede neue
+    externe Datenquelle - nur bereits vorhandene, laengst gespeicherte Werte
+    (confidence_pct zum Signalzeitpunkt + der spaeter tatsaechlich
+    eingetretene Ausgang aus dem Backward-Tracking).
+
+    Gruppiert alle bereits aufgeloesten Signale (_RESOLVED_OUTCOMES, wie
+    compute_provider_performance()) nach (tier, konfidenz_bucket) und
+    vergleicht je Bucket die durchschnittlich VORHERGESAGTE Konfidenz mit der
+    tatsaechlichen Trefferquote (take_profit_count/anzahl - Liquidation zaehlt
+    bei Hebel wie ueberall sonst im Projekt als Fehlschlag, nicht als Erfolg).
+    Eine gute Kalibrierung zeigt sich darin, dass beide Werte je Bucket nahe
+    beieinanderliegen (z. B. "hoch"-Bucket ~70-80% vorhergesagt UND ~70-80%
+    tatsaechlich getroffen) - eine grosse `differenz_prozentpunkte` (vorher-
+    gesagt minus tatsaechlich, positiv = Ueberschaetzung) waere ein Hinweis,
+    dass die Prompt-Konfidenz nicht das haelt, was sie verspricht.
+
+    Tier-Aufschluesselung identisch zu compute_provider_performance() (Spot
+    optional nach Assetklasse via `watchlist`, Hebel immer gesondert - siehe
+    dortiger Docstring fuer die Begruendung). Bucket-Grenzen siehe
+    _konfidenz_bucket(). `ausreichend_stichprobe` je Bucket nutzt dieselbe
+    _MIN_SAMPLE_FUER_AUSSAGE-Schwelle wie compute_win_rate_fact() - die
+    Anzeige-Schicht soll Buckets darunter erkennbar als vorlaeufig markieren,
+    nicht verschweigen (P-8: Transparenz statt stiller Fehlinterpretation).
+
+    Reine Lesefunktion, kein Seiteneffekt."""
+    gruppen: dict[tuple[str, str], dict] = {}
+    assetklasse_by_symbol = {a.symbol: a.assetklasse for a in watchlist} if watchlist else {}
+
+    def _stelle_sicher(tier: str, bucket: str) -> dict:
+        key = (tier, bucket)
+        if key not in gruppen:
+            gruppen[key] = {"anzahl": 0, "take_profit_count": 0, "_konfidenz_summe": 0.0}
+        return gruppen[key]
+
+    placeholders = ", ".join("?" for _ in _RESOLVED_OUTCOMES)
+    spot_rows = conn.execute(
+        f"SELECT symbol, confidence_pct, outcome_status FROM signals "
+        f"WHERE outcome_status IN ({placeholders}) AND confidence_pct IS NOT NULL",
+        _RESOLVED_OUTCOMES,
+    ).fetchall()
+    for row in spot_rows:
+        tier = assetklasse_by_symbol.get(row["symbol"], "unbekannt") if watchlist else "spot"
+        eintrag = _stelle_sicher(tier, _konfidenz_bucket(row["confidence_pct"]))
+        eintrag["anzahl"] += 1
+        if row["outcome_status"] == OUTCOME_TAKE_PROFIT:
+            eintrag["take_profit_count"] += 1
+        eintrag["_konfidenz_summe"] += row["confidence_pct"]
+
+    hebel_rows = conn.execute(
+        f"SELECT confidence_pct, outcome_status FROM hebel_signals "
+        f"WHERE outcome_status IN ({placeholders}) AND confidence_pct IS NOT NULL",
+        _RESOLVED_OUTCOMES,
+    ).fetchall()
+    for row in hebel_rows:
+        eintrag = _stelle_sicher("hebel", _konfidenz_bucket(row["confidence_pct"]))
+        eintrag["anzahl"] += 1
+        if row["outcome_status"] == OUTCOME_TAKE_PROFIT:
+            eintrag["take_profit_count"] += 1
+        eintrag["_konfidenz_summe"] += row["confidence_pct"]
+
+    ergebnis: dict = {"hebel": {}} if watchlist else {"spot": {}, "hebel": {}}
+    for (tier, bucket), eintrag in gruppen.items():
+        anzahl = eintrag["anzahl"]
+        avg_konfidenz = round(eintrag["_konfidenz_summe"] / anzahl, 1)
+        tatsaechliche_trefferquote_pct = round(100.0 * eintrag["take_profit_count"] / anzahl, 1)
+        ergebnis.setdefault(tier, {})[bucket] = {
+            "anzahl": anzahl,
+            "take_profit_count": eintrag["take_profit_count"],
+            "avg_vorhergesagte_konfidenz_pct": avg_konfidenz,
+            "tatsaechliche_trefferquote_pct": tatsaechliche_trefferquote_pct,
+            "differenz_prozentpunkte": round(avg_konfidenz - tatsaechliche_trefferquote_pct, 1),
+            "ausreichend_stichprobe": anzahl >= _MIN_SAMPLE_FUER_AUSSAGE,
+        }
+
+    return ergebnis

@@ -1752,6 +1752,50 @@ beschreibender Fakt — gleiches Prinzip wie Fear&Greed oder VIX, sofort
 nutzbar ohne historische Fallzahlen. Sichtbar im Regime-Tab und in der
 Remote-Karte („X von Y aktiven Kandidaten").
 
+**Konfidenz-Kalibrierungskurve (2026-07-26, dritter der drei ursprünglich
+vorgeschlagenen Bausteine, hier als „Punkt 3" bewusst zuerst umgesetzt — siehe
+Begründung unten):** `agent/krypto/backward_tracking.py::
+compute_konfidenz_kalibrierung()` beantwortet die Kernfrage der 2026er-LLM-
+Forecasting-Recherche dieser Session — „hält `confidence_pct` überhaupt, was
+es verspricht?" — komplett aus bereits vorhandenen Daten, ohne jede neue
+externe Datenquelle. Gruppiert alle bereits aufgelösten Signale (gleiche
+`_RESOLVED_OUTCOMES`-Menge wie `compute_provider_performance()`) nach
+Konfidenz-Band und vergleicht je Band die durchschnittlich VORHERGESAGTE
+Konfidenz mit der tatsächlichen Trefferquote (Take-Profit-Anteil; Liquidation
+zählt bei Hebel wie überall sonst als Fehlschlag).
+
+- **Bucket-Grenzen bewusst wiederverwendet, nicht neu erfunden:** identisch zu
+  `risk_gate.py::KONFIDENZ_SCHWELLE_NIEDRIG` (55) / `KONFIDENZ_SCHWELLE_HOCH`
+  (70) — denselben Grenzen, die der bestehende „Konfidenz X%"-Risikofaktor
+  seit Item E der ersten Konfidenz-Kalibrierungs-Runde operativ nutzt. Eine
+  gut kalibrierte Konfidenz zeigt sich darin, dass beide Werte je Band nahe
+  beieinanderliegen; eine grosse `differenz_prozentpunkte` (vorhergesagt
+  minus tatsächlich) wäre ein konkreter Hinweis auf eine Prompt-Konfidenz, die
+  systematisch über- oder unterschätzt.
+- **Tier-Aufschlüsselung identisch zu `compute_provider_performance()`:** Spot
+  optional nach Assetklasse (`watchlist`-Parameter), Hebel immer gesondert
+  (unterschiedliche Risikoprofile/Positionsgrößen).
+- **Mindeststichprobe:** `ausreichend_stichprobe` je Band nutzt dieselbe
+  `_MIN_SAMPLE_FUER_AUSSAGE = 15`-Schwelle wie `compute_win_rate_fact()` —
+  Bänder darunter werden in der Anzeige als „noch nicht belastbar" markiert,
+  nicht verschwiegen (P-8).
+- **Anzeige:** neue Remote-Karte „Konfidenz-Kalibrierung" (`remote/status.py`
+  liefert `konfidenz_kalibrierung`, `remote/server.py` rendert je Band
+  „vorhergesagt ⌀ X% / tatsächlich Y%", grosse Abweichungen (≥15 Prozentpunkte
+  — rein optische Hervorhebung, kein neuer Deckel) orange).
+- **Warum Backtest-first hier NICHT gilt:** wie schon bei der Makro-Kennzahl
+  oben ist dies ein rein BESCHREIBENDER Fakt, kein neuer Deckel/keine neue
+  Vorhersage-Regel — verändert kein System-Verhalten, nur eine zusätzliche
+  Transparenz-Anzeige.
+- **Reale Datenlage (2026-07-26, Desktop-DB-Kopie geprüft):** aktuell 0
+  aufgelöste Signale mit `confidence_pct` sowohl bei Spot als auch Hebel — die
+  geprüfte Desktop-DB ist bekanntermaßen seit 2026-07-10 nicht mehr
+  Live-Quelle (siehe Abschnitt „Portfolio-Vollständigkeit"/Holdings-Sync-
+  Lücke), die echten Produktionsdaten liegen auf dem Notebook. Die Karte
+  zeigt in diesem Fall korrekt den „noch keine Daten"-Zustand — kein Bug,
+  reale Aussagekraft entsteht erst nach Prüfung gegen einen aktuellen
+  Notebook-Export.
+
 ---
 
 ## 14. Portfolio-Vollständigkeit — Cash-Sperren, Staking, Margin-Trading

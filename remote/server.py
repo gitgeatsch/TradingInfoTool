@@ -100,6 +100,17 @@ _INDEX_HTML = """<!doctype html>
 </div>
 
 <div class="card">
+  <div class="row"><strong>Konfidenz-Kalibrierung (Spot, nach Assetklasse)</strong></div>
+  <div class="row"><span class="muted-text">Vergleicht je Konfidenz-Band (niedrig/mittel/hoch, gleiche Grenzen
+  wie der "Konfidenz X%"-Risikofaktor) die durchschnittlich VORHERGESAGTE Konfidenz mit der tatsaechlich
+  eingetretenen Trefferquote bereits abgeschlossener Signale - grosse Abweichungen (orange) deuten auf eine
+  nicht gut kalibrierte Konfidenzangabe hin.</span></div>
+  <div id="konfidenz-kalibrierung-spot"></div>
+  <div class="row"><strong>Konfidenz-Kalibrierung (Hebel)</strong></div>
+  <div id="konfidenz-kalibrierung-hebel"></div>
+</div>
+
+<div class="card">
   <div class="row"><strong>API-Status: LLM-Anbieter</strong></div>
   <div id="api-health-llm"></div>
   <div class="row"><strong>API-Status: Markt-/Preisdaten</strong></div>
@@ -234,6 +245,45 @@ function renderSpotProviderPerformanceByAssetklasse(perfData, offeneData) {
   return SPOT_ASSETKLASSEN.map(function([key, label]) {
     return '<div class="row"><span class="muted-text">' + label + '</span></div>' +
       renderProviderPerformance(perfData[key] || {}, (offeneData || {})[key]);
+  }).join("");
+}
+
+// Konfidenz-Kalibrierungskurve (2026-07-26, Punkt 3 des Regime-Persistenz-
+// Folge-Vorschlags - siehe agent/krypto/backward_tracking.py::
+// compute_konfidenz_kalibrierung()). Bucket-Grenzen/Reihenfolge fest, damit
+// ein (noch) leeres Band sichtbar bleibt statt stillschweigend zu fehlen -
+// gleiches Prinzip wie SPOT_ASSETKLASSEN oben.
+const KONFIDENZ_BUCKET_ORDER = [
+  ["niedrig", "Niedrig (<55%)"], ["mittel", "Mittel (55-70%)"], ["hoch", "Hoch (≥70%)"],
+];
+// Rein optische Hervorhebung grosser Abweichungen (nicht: neuer Deckel/neue
+// Regel) - 15 Prozentpunkte ist keine backtestete Schwelle, nur ein grober
+// Blickfang fuer "hier lohnt ein genauerer Blick".
+const KONFIDENZ_DIFFERENZ_AUFFAELLIG_PP = 15;
+
+function renderKonfidenzKalibrierungTier(tierData) {
+  if (!tierData || Object.keys(tierData).length === 0) {
+    return '<div class="row"><span class="muted-text">Noch keine abgeschlossenen Signale mit Konfidenzwert ' +
+      'in dieser Kategorie.</span></div>';
+  }
+  return KONFIDENZ_BUCKET_ORDER.map(function([key, label]) {
+    const b = tierData[key];
+    if (!b) return "";
+    const stichprobeHinweis = !b.ausreichend_stichprobe
+      ? ' <span class="muted-text">(n=' + b.anzahl + ', noch nicht belastbar)</span>'
+      : ' <span class="muted-text">(n=' + b.anzahl + ')</span>';
+    const auffaellig = Math.abs(b.differenz_prozentpunkte) >= KONFIDENZ_DIFFERENZ_AUFFAELLIG_PP;
+    return '<div class="row"><span>' + label + stichprobeHinweis + '</span>' +
+      '<span class="' + (auffaellig ? "stale" : "") + '">vorhergesagt &oslash; ' +
+      b.avg_vorhergesagte_konfidenz_pct.toFixed(1) + '% / tatsächlich ' +
+      b.tatsaechliche_trefferquote_pct.toFixed(1) + '%</span></div>';
+  }).join("");
+}
+
+function renderKonfidenzKalibrierungByAssetklasse(kalibData) {
+  return SPOT_ASSETKLASSEN.map(function([key, label]) {
+    return '<div class="row"><span class="muted-text">' + label + '</span></div>' +
+      renderKonfidenzKalibrierungTier(kalibData[key] || {});
   }).join("");
 }
 
@@ -379,6 +429,13 @@ async function refreshStatus() {
       renderSpotProviderPerformanceByAssetklasse(data.provider_performance, offen);
     document.getElementById("provider-performance-hebel").innerHTML =
       renderProviderPerformance(data.provider_performance.hebel || {}, offen.hebel);
+  }
+
+  if (data.konfidenz_kalibrierung) {
+    document.getElementById("konfidenz-kalibrierung-spot").innerHTML =
+      renderKonfidenzKalibrierungByAssetklasse(data.konfidenz_kalibrierung);
+    document.getElementById("konfidenz-kalibrierung-hebel").innerHTML =
+      renderKonfidenzKalibrierungTier(data.konfidenz_kalibrierung.hebel || {});
   }
 
   if (data.api_health) {
