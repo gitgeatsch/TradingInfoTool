@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import logging
+import threading
 from datetime import datetime, timezone
 
 import database.db as db
@@ -20,6 +21,7 @@ from agent.krypto.analyst import AnalystResponseInvalid
 from agent.krypto.anticyclic import assess as assess_anticyclic
 from agent.krypto.backward_tracking import compute_win_rate_fact
 from agent.krypto.btc_relativwert import btc_relativwert_fakt
+from agent.krypto.gegenpruefung import baue_fakten as baue_zai_fakten, pruefe_konsistenz as zai_pruefe_konsistenz
 from agent.krypto.hebel_analyst import build_hebel_facts, call_llm_for_hebel_signal
 from agent.krypto.liquidity_zones import liquiditaetszonen_fakt
 from agent.krypto.makro_analog import get_cached_makro_analog_fact
@@ -46,6 +48,43 @@ MIN_GATE_INDICATORS_AVAILABLE = ("rsi", "macd", "bollinger")
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _zai_gegenpruefung_im_hintergrund(
+    hebel_signal_id: int, fakten: dict, begruendungstext: str | None, zai_client,
+) -> None:
+    """Laeuft in einem eigenen Thread (siehe Aufrufstelle in
+    generate_hebel_signal()) - GENUINE Entkopplung von der eigentlichen
+    Signal-Erstellung, nicht nur eine spaetere Aufrufreihenfolge innerhalb
+    derselben Funktion: Z.ai hat einen 150s-Timeout (api/zai.py::
+    REQUEST_TIMEOUT_SECONDS), ein synchroner Call VOR dem `return signal`
+    wuerde `generate_hebel_signal()` selbst um bis zu 150s verzoegern - und
+    damit auch den `on_signal_ready`-E-Mail-Callback in budget_allocator.py,
+    der erst NACH der Rueckkehr dieser Funktion feuert (siehe project_email_
+    latenz_fix_batch_notification.md fuer den Vorfall, der genau diese Art
+    Latenz bereits einmal behoben hat - ein Nachtraeglich-statt-Vorher-
+    Aufruf innerhalb derselben Funktion haette daran nichts geaendert).
+    Eigene DB-Connection (sqlite3-Connections sind nicht thread-uebergreifend
+    teilbar) statt der von der aufrufenden Funktion verwendeten - jene wird
+    vom Aufrufer ggf. bereits geschlossen, sobald generate_hebel_signal()
+    zurueckkehrt. Fehler bleiben komplett folgenlos (P-8, doppelt abgesichert:
+    pruefe_konsistenz() faengt bereits selbst ab, hier zusaetzlich fuer den
+    Thread-Kontext selbst, z.B. falls die neue DB-Connection scheitert)."""
+    try:
+        ergebnis = zai_pruefe_konsistenz(zai_client, fakten, begruendungstext)
+        if ergebnis is None:
+            return
+        thread_conn = db.get_connection()
+        try:
+            db.update_hebel_signal_zai_gegenpruefung(
+                thread_conn, hebel_signal_id, ergebnis.get("urteil"), ergebnis.get("kurzbegruendung"),
+            )
+        finally:
+            thread_conn.close()
+    except Exception:
+        logger.exception(
+            "Z.ai-Gegenpruefung im Hintergrund-Thread fehlgeschlagen (hebel_signal_id=%s)", hebel_signal_id,
+        )
 
 
 def _fixed_hebel_signal(
@@ -76,6 +115,7 @@ def generate_hebel_signal(
     coingecko_client,
     kraken_client,
     fred_api_key: str | None = None,
+    zai_client=None,
 ) -> HebelSignal:
     dates, closes, ohlc_history, last_date = _load_closes_and_ohlc(conn, asset.symbol, asset.coingecko_id)
     latest_prices = db.get_latest_prices(conn)
@@ -405,6 +445,40 @@ def generate_hebel_signal(
         fazit_konsistenz_hinweis=fazit_konsistenz_hinweis,
         **top_grund_fields,
     )
-    db.insert_hebel_signal(conn, signal)
+    new_id = db.insert_hebel_signal(conn, signal)
     db.update_hebel_trigger_status(conn, trigger.id, "llm_generiert")
+
+    # Z.ai-Gegenpruefung (2026-07-26, siehe agent/krypto/gegenpruefung.py) -
+    # laeuft in einem eigenen Hintergrund-Thread (siehe
+    # _zai_gegenpruefung_im_hintergrund()-Docstring fuer die Begruendung,
+    # warum ein einfacher Aufruf NACH dem Insert - aber noch innerhalb dieser
+    # Funktion - die on_signal_ready-E-Mail-Latenz NICHT geloest haette).
+    # Rein beobachtend: das zurueckgegebene `signal`-Objekt traegt die beiden
+    # Felder bewusst noch nicht (der Thread laeuft ja gerade erst los) - der
+    # spaetere DB-Update ist die alleinige Quelle, GUI/Notebook-Export lesen
+    # ohnehin aus der DB, nicht aus diesem Rueckgabewert.
+    if zai_client is not None:
+        ema_ordnung_item = next(
+            (item for item in confluence.items if item.name == "EMA-Ordnung"), None,
+        )
+        zai_fakten = baue_zai_fakten(
+            symbol=asset.symbol,
+            richtung=corrected.get("richtung"),
+            action=corrected.get("action"),
+            confidence_pct=corrected.get("confidence_pct"),
+            rsi=latest_value(snapshot.rsi),
+            trend_label=ema_ordnung_item.detail if ema_ordnung_item else None,
+            regime=regime_result.regime,
+            funding_rate_stunde=anticyclic_context.funding_rate_current,
+            confluence_bullish=confluence.bullish_count,
+            confluence_bearish=confluence.bearish_count,
+            confluence_neutral=confluence.neutral_count,
+            optionsmarkt_skew=(optionsmarkt or {}).get("skew_prozentpunkte"),
+        )
+        threading.Thread(
+            target=_zai_gegenpruefung_im_hintergrund,
+            args=(new_id, zai_fakten, corrected.get("short_reasoning"), zai_client),
+            daemon=True,
+        ).start()
+
     return signal

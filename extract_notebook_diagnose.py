@@ -110,6 +110,15 @@ Logging/DB-Extrakte?"): zwei Luecken geschlossen.
   der Deribit-Cross-Check ueberhaupt etwas bewirkt hat (Deribit selbst hat
   keine historischen Options-Skew-Snapshots nach Verfall).
 
+Nachtrag (2026-07-26, Z.ai-Gegenpruefungslogik, siehe
+project_zai_gegenpruefungslogik.md): `zai_gegenpruefung_urteil`/
+`zai_gegenpruefung_kurzbegruendung` zu `_HEBEL_SIGNAL_SPALTEN` ergaenzt
+(echte persistente Spalten, anders als der transiente Deribit-Fakt) plus
+neue Aggregat-Sektion `zai_gegenpruefung_verlauf` (siehe
+_zai_gegenpruefung_verlauf() unten) fuer dieselbe Korrelations-Frage wie
+beim Deribit-Cross-Check: haelt sich das Urteil ('konsistent'/
+'widerspruch') mit dem tatsaechlichen Signal-Ausgang?
+
 Aufruf am Notebook: python extract_notebook_diagnose.py [SYMBOL] [LOG_STUNDEN]
   (SYMBOL optional, Default LINK, fuer den Tiefenanalyse-Teil;
    LOG_STUNDEN optional, Default 72, Zeitfenster fuer den Log-Auszug)
@@ -188,6 +197,7 @@ _HEBEL_SIGNAL_SPALTEN = (
     "outcome_status, outcome_geprueft_am, outcome_entschieden_am, "
     "outcome_realisiertes_crv, outcome_datenquelle, "
     "kontrathese_zu_position, kontrathese_llm_richtung, "
+    "zai_gegenpruefung_urteil, zai_gegenpruefung_kurzbegruendung, "
     + _VOLLSTAENDIGKEITS_SPALTEN
 )
 _SPOT_SIGNAL_SPALTEN = (
@@ -440,6 +450,34 @@ def _deribit_cross_check_verlauf(conn) -> dict:
     }
 
 
+def _zai_gegenpruefung_verlauf(conn) -> dict:
+    """Neu (2026-07-26, Z.ai-Gegenpruefungslogik, siehe
+    project_zai_gegenpruefungslogik.md) - anders als der Deribit-Cross-Check
+    oben sind `zai_gegenpruefung_urteil`/`zai_gegenpruefung_kurzbegruendung`
+    bereits als eigene Spalten in `_HEBEL_SIGNAL_SPALTEN` erfasst (echte
+    persistente Felder, kein transienter facts_json-Wert) - diese Sektion ist
+    deshalb reine Aggregations-Bequemlichkeit (analog konfidenz_kalibrierung/
+    provider_performance), damit die zentrale Beobachtungsfrage ('wie oft
+    widerspricht Z.ai der eigenen Begruendung, und korreliert das mit dem
+    tatsaechlichen Signal-Ausgang?') nicht bei jeder Analyse neu aus den
+    Rohspalten rekonstruiert werden muss. Phase 1 bleibt rein beobachtend
+    (kein Gate) - siehe reference_offene_zeitbasierte_beobachtungspunkte.md."""
+    rows = conn.execute(
+        "SELECT symbol, richtung, action, created_at, confidence_pct, "
+        "zai_gegenpruefung_urteil, zai_gegenpruefung_kurzbegruendung, "
+        "outcome_status, outcome_realisiertes_crv "
+        "FROM hebel_signals WHERE zai_gegenpruefung_urteil IS NOT NULL "
+        "ORDER BY created_at ASC"
+    ).fetchall()
+    eintraege = [row_to_dict(r) for r in rows]
+    return {
+        "anzahl_gesamt": len(eintraege),
+        "anzahl_konsistent": sum(1 for e in eintraege if e["zai_gegenpruefung_urteil"] == "konsistent"),
+        "anzahl_widerspruch": sum(1 for e in eintraege if e["zai_gegenpruefung_urteil"] == "widerspruch"),
+        "eintraege": eintraege,
+    }
+
+
 def _log_dateien(log_pfad: Path) -> list[Path]:
     """Aelteste zuerst, damit _log_zeilen_im_fenster() den Zeitfortschritt
     korrekt verfolgen kann - RotatingFileHandler haengt .1/.2/.3 AN (ersetzt
@@ -612,6 +650,7 @@ def main() -> None:
         rohdaten_fuer_backtest = _rohdaten_fuer_backtest(conn)
         preishistorie_ueberholte_symbole = _preishistorie_ueberholte_symbole(conn)
         deribit_cross_check_verlauf = _deribit_cross_check_verlauf(conn)
+        zai_gegenpruefung_verlauf = _zai_gegenpruefung_verlauf(conn)
 
         # 4) Provider-Performance (Win-Rate/CRV je Anbieter, Spot+Hebel getrennt)
         provider_performance = compute_provider_performance(conn)
@@ -700,6 +739,7 @@ def main() -> None:
         "rohdaten_fuer_backtest": rohdaten_fuer_backtest,
         "preishistorie_ueberholte_symbole": preishistorie_ueberholte_symbole,
         "deribit_cross_check_verlauf": deribit_cross_check_verlauf,
+        "zai_gegenpruefung_verlauf": zai_gegenpruefung_verlauf,
         "deep_dive": {
             "symbol": DEEP_DIVE_SYMBOL,
             "hebel_signals": [row_to_dict(r) for r in deep_signale],
@@ -743,6 +783,9 @@ def main() -> None:
     print(f"  Konfidenz-Kalibrierung: {konfidenz_kalibrierung}")
     print(f"  Deribit-Cross-Check: {deribit_cross_check_verlauf['anzahl_mit_optionsmarkt_fakt']} Signale mit "
           f"Optionsmarkt-Fakt, davon {deribit_cross_check_verlauf['anzahl_mit_gegenargument']} mit gegenargument")
+    print(f"  Z.ai-Gegenpruefung: {zai_gegenpruefung_verlauf['anzahl_gesamt']} Signale mit Urteil "
+          f"({zai_gegenpruefung_verlauf['anzahl_konsistent']} konsistent, "
+          f"{zai_gegenpruefung_verlauf['anzahl_widerspruch']} widerspruch)")
 
 
 if __name__ == "__main__":

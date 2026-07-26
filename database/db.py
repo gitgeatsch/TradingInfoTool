@@ -720,6 +720,22 @@ def _migrate_kontrathese_columns(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+_ZAI_GEGENPRUEFUNG_NEW_COLUMNS = {
+    "zai_gegenpruefung_urteil": "TEXT", "zai_gegenpruefung_kurzbegruendung": "TEXT",
+}
+
+
+def _migrate_zai_gegenpruefung_columns(conn: sqlite3.Connection) -> None:
+    """Nachtrag 2026-07-26 (Z.ai-Gegenpruefungslogik, siehe
+    agent/krypto/gegenpruefung.py) - nur hebel_signals (Scope v1). Gleiches
+    additive Migrations-Muster wie _migrate_kontrathese_columns()."""
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(hebel_signals)")}
+    for column, sql_type in _ZAI_GEGENPRUEFUNG_NEW_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE hebel_signals ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
 _CASH_VETO_NEW_COLUMNS = {"cash_veto": "INTEGER", "cash_veto_reason": "TEXT"}
 
 
@@ -850,6 +866,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_hebel_signal_eur_columns(conn)
     _migrate_kontrathese_columns(conn)
     _migrate_signal_fazit_columns(conn)
+    _migrate_zai_gegenpruefung_columns(conn)
     import_holdings_manual_overrides(conn)
 
 
@@ -2622,6 +2639,7 @@ _HEBEL_SIGNAL_COLUMNS = (
     "groq_raw_response", "llm_model", "gegenargument", "risikofaktoren_json",
     "kontrathese_zu_position", "kontrathese_llm_richtung",
     "fazit_folgen", "fazit_kurzfazit", "fazit_konsistenz_hinweis",
+    "zai_gegenpruefung_urteil", "zai_gegenpruefung_kurzbegruendung",
 )
 
 
@@ -2761,6 +2779,27 @@ def update_hebel_signal_outcome(
         "outcome_entschieden_am = ?, outcome_realisiertes_crv = ?, "
         "outcome_datenquelle = ? WHERE id = ?",
         (status, _now_iso(), entschieden_am, realisiertes_crv, datenquelle, hebel_signal_id),
+    )
+    conn.commit()
+
+
+def update_hebel_signal_zai_gegenpruefung(
+    conn: sqlite3.Connection, hebel_signal_id: int, urteil: str | None, kurzbegruendung: str | None,
+) -> None:
+    """Nachtrag 2026-07-26 (Z.ai-Gegenpruefungslogik, siehe agent/krypto/
+    gegenpruefung.py) - bewusst NACHTRAEGLICHES Update statt Teil des initialen
+    insert_hebel_signal()-Inserts: Z.ai hat einen 150s-Timeout
+    (api/zai.py::REQUEST_TIMEOUT_SECONDS), die eigentliche Signal-Erstellung +
+    E-Mail-Versand (on_signal_ready-Callback, siehe budget_allocator.py) soll
+    davon NICHT verzoegert werden (siehe project_email_latenz_fix_batch_
+    notification.md - genau diese Latenz wurde dort bereits einmal behoben,
+    ein synchroner Call vor dem Insert haette sie wieder eingefuehrt). Die
+    Gegenpruefung laeuft deshalb NACH insert_hebel_signal(), aktualisiert die
+    bereits gespeicherte Zeile per id."""
+    conn.execute(
+        "UPDATE hebel_signals SET zai_gegenpruefung_urteil = ?, "
+        "zai_gegenpruefung_kurzbegruendung = ? WHERE id = ?",
+        (urteil, kurzbegruendung, hebel_signal_id),
     )
     conn.commit()
 

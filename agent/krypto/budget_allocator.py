@@ -68,6 +68,18 @@ unverarbeitet - kein Datenverlust (P-10), der naechste 15-Min-Lauf bewertet
 sie automatisch neu. `mistral_client`/`gemini_client`/`zai_client` sind alle
 optional (P-8).
 
+Nachtrag (2026-07-26, Z.ai-Gegenpruefungslogik, siehe agent/krypto/
+gegenpruefung.py): Z.ai ist NICHT mehr Teil dieser Fallback-Kette (weder
+Hebel noch Marktscan noch Spot) - dediziert fuer eine neue, kleine
+Konsistenz-Gegenpruefung freigehalten (kleine Ein-/Ausgabe = schnell, siehe
+Modul-Docstring dort). `zai_client` wird stattdessen direkt an
+generate_hebel_signal() durchgereicht. Die bestehende Zai-Budget-
+Buchhaltung (`zai_taegliches_budget`, `zai_calls_verbraucht`,
+`zai_budget_erschoepft`) bleibt technisch bestehen, zeigt fuer die
+Primaer-Generierung aber dauerhaft 0 - bewusst nicht entfernt (kein
+funktionaler Schaden, Aufraeumen waere ein separates, hier nicht noetiges
+Refactoring).
+
 Echte Tages-Zaehler (2026-07-14-Fix): Mistrals/Gemini's Tagesbudget wird zu
 Beginn jedes Laufs EINMAL per db.count_real_llm_calls_today_by_provider()
 aus der DB gelesen (nicht mehr nur eine lokale, bei jedem 15-Min-Lauf
@@ -585,16 +597,21 @@ def run_budget_allocator(
         calls = []
         if mistral_client is not None:
             calls.append(("mistral", lambda t=trigger, a=asset: _mit_conn(
-                lambda c: generate_hebel_signal(t, a, watchlist, c, mistral_client, coingecko_client, kraken_client, fred_api_key)
+                lambda c: generate_hebel_signal(
+                    t, a, watchlist, c, mistral_client, coingecko_client, kraken_client, fred_api_key,
+                    zai_client=zai_client,
+                )
             )))
         if gemini_client is not None:
             calls.append(("gemini", lambda t=trigger, a=asset: _mit_conn(
-                lambda c: generate_hebel_signal(t, a, watchlist, c, gemini_client, coingecko_client, kraken_client, fred_api_key)
+                lambda c: generate_hebel_signal(
+                    t, a, watchlist, c, gemini_client, coingecko_client, kraken_client, fred_api_key,
+                    zai_client=zai_client,
+                )
             )))
-        if zai_client is not None:
-            calls.append(("zai", lambda t=trigger, a=asset: _mit_conn(
-                lambda c: generate_hebel_signal(t, a, watchlist, c, zai_client, coingecko_client, kraken_client, fred_api_key)
-            )))
+        # Z.ai (2026-07-26, siehe agent/krypto/gegenpruefung.py) NICHT mehr Teil
+        # dieser Fallback-Kette - dediziert fuer die Gegenpruefungslogik
+        # freigehalten, wird oben bereits als zai_client durchgereicht.
         ok = _mit_fallback_chain(schluessel, calls)
         if ok:
             result.hebel_verarbeitet.append(schluessel)
@@ -629,8 +646,8 @@ def run_budget_allocator(
                 calls.append(("mistral", lambda c=candidate: _writeup(c, mistral_client)))
             if gemini_client is not None:
                 calls.append(("gemini", lambda c=candidate: _writeup(c, gemini_client)))
-            if zai_client is not None:
-                calls.append(("zai", lambda c=candidate: _writeup(c, zai_client)))
+            # Z.ai (2026-07-26) NICHT mehr Teil dieser Fallback-Kette - siehe
+            # Hebel-Kandidatenschleife oben fuer die Begruendung.
             ok = _mit_fallback_chain(schluessel, calls)
             if ok:
                 result.marktscan_verarbeitet.append(schluessel)
@@ -647,10 +664,8 @@ def run_budget_allocator(
             calls.append(("gemini", lambda a=asset: _mit_conn(
                 lambda c: generate_signal(a, watchlist, c, gemini_client, coingecko_client, kraken_client, fred_api_key)
             )))
-        if zai_client is not None:
-            calls.append(("zai", lambda a=asset: _mit_conn(
-                lambda c: generate_signal(a, watchlist, c, zai_client, coingecko_client, kraken_client, fred_api_key)
-            )))
+        # Z.ai (2026-07-26) NICHT mehr Teil dieser Fallback-Kette - siehe
+        # Hebel-Kandidatenschleife oben fuer die Begruendung.
         ok = _mit_fallback_chain(schluessel, calls)
         if ok:
             result.spot_verarbeitet.append(schluessel)

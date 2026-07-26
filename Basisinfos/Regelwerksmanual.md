@@ -8821,3 +8821,125 @@ in mehreren Runden geführte Grundsatzdiskussion (INJ) - kein einzelner
 Fund, sondern ein methodisches Vorgehen (Diskussion vor Umsetzung, siehe
 Punkte 5-7 oben, wo der Nutzer explizit auf "das ist mir zu schnell/
 ungenau" bestand, bevor Code geändert wurde).
+
+## Nachtrag (2026-07-26): Z.ai-Gegenprüfungslogik - unabhängiger Konsistenz-Check (Hard Facts vs. eigene Begründung), Hebel-only, rein beobachtend
+
+Nutzer-Idee: Z.ai (bisher Teil der automatischen Fallback-Kette in
+`budget_allocator.py`, aber praktisch selten genutzt, da Mistral/Groq/Gemini
+meist ausreichen) aus dieser Rolle lösen und stattdessen für eine kleine,
+dedizierte zweite Aufgabe verwenden - eine unabhängige Gegenprüfung, ob die
+vom Primär-Modell selbst gelieferte Kurzbegründung (`short_reasoning`) den
+harten, deterministisch berechneten Fakten widerspricht.
+
+### Design-Grundsatz: keine zweite Handelsentscheidung, keine externe "Meinung"
+
+Der Nutzer schlug zunächst vor, Z.ai zusätzlich zu den Hard Facts auch sein
+eigenes "Wissen" (z.B. Nachrichtenlage, "neuer Investor bei Asset X")
+einbeziehen zu lassen, um der teils deterministisch wirkenden Antwortqualität
+mehr Tiefe zu geben. Nach Rückfrage/Abwägung: verworfen wegen Halluzinations-
+Risiko (Z.ai hat keinen echten, aktuellen Nachrichtenzugriff, würde also
+plausibel klingende, aber ggf. erfundene "Fakten" einbringen). Stattdessen
+umgesetzt: ein reiner Konsistenz-Check zwischen der eigenen Begründung des
+Primär-Modells und den bereits vorhandenen harten Fakten - Z.ai bekommt keine
+Rolle als zweiter Entscheider, sondern rein als Prüfinstanz für innere
+Widerspruchsfreiheit. Diese Umformulierung wurde vom Nutzer ausdrücklich
+bestätigt ("trifft es genau"), mit der zusätzlichen Vorgabe, bekannte
+LLM-Bias-/Anker-Probleme von vornherein einzukalkulieren.
+
+### Live-Kalibrierung gegen die echte Z.ai-API (nicht nur angenommen)
+
+1. `response_format={"type": "json_object"}` ist Pflicht - ohne dieses Feld
+   verpackt Z.ai die Antwort gelegentlich in Markdown-Codefences statt reinem
+   JSON (Parse-Fehler in 1 von 3 Testläufen ohne das Feld, danach 3/3 sauber
+   mit dem Feld).
+2. Sykophantie-/Überzeugungs-Bias getestet: ein bewusst überzeugend
+   formuliert, aber inhaltlich falscher Begründungstext wurde trotzdem korrekt
+   als Widerspruch erkannt.
+3. Fehlender-Kontext-Fehlalarm getestet: ein Begründungstext mit Bezug auf
+   Informationen außerhalb der gegebenen Fakten wurde korrekt NICHT als
+   Widerspruch gewertet.
+4. Antizyklik-Verträglichkeit getestet: ein Begründungstext, der gegenläufige
+   Fakten offen benennt und bewusst dagegen argumentiert (Kernprinzip der
+   projekteigenen Antizyklisch-Regeln), wurde korrekt als konsistent gewertet.
+5. Persona-Framing verworfen: eine Testvariante mit expliziter
+   "Risikomanager mit Fokus auf Selbstüberschätzung"-Rolle lieferte in beiden
+   Testfällen (sauber/überzogen) IDENTISCHE Urteile wie die neutrale Formulierung,
+   war aber messbar langsamer (47-50s vs. 26-35s) - kein Erkennungsvorteil,
+   echter Latenzverlust. Entscheidung: neutrale Rahmung ohne Persona.
+6. Kein im Prompt eingebettetes Beispiel - bewusst zur Vermeidung des bereits
+   dokumentierten Anker-Kollaps-Fehlers (Regel 22/13, siehe Nachtrag
+   2026-07-24 "Gates-Kalibrierung").
+
+Typische Antwortzeit: 12-25s (eine reichere Faktenmenge kostet live verifiziert
+keine zusätzliche Zeit gegenüber einer minimalen Menge).
+
+### Architektur-Falle erkannt und korrigiert: echte Entkopplung statt bloßer Umordnung
+
+Erster Entwurf platzierte den Z.ai-Call synchron innerhalb von
+`generate_hebel_signal()`, nach dem DB-Insert, aber noch vor `return signal`.
+Bei genauerer Prüfung (ausgelöst durch Nutzer-Hinweis auf den Z.ai-Timeout):
+der `on_signal_ready`-E-Mail-Callback (`budget_allocator.py`, siehe
+`project_email_latenz_fix_batch_notification.md`) feuert erst, NACHDEM
+`generate_hebel_signal()` tatsächlich zurückkehrt - eine Platzierung "nach dem
+Insert, aber noch in der Funktion" hätte die Rückgabe der Funktion und damit
+den E-Mail-Versand um bis zu 150s (`api/zai.py::REQUEST_TIMEOUT_SECONDS`)
+verzögert und genau die Latenz-Regression wieder eingeführt, die dieser Fix
+bereits einmal behoben hatte. Korrektur: echte Entkopplung über einen
+Hintergrund-Thread (`threading.Thread(daemon=True)`) mit eigener,
+frisch geöffneter DB-Verbindung (`db.get_connection()` - sqlite3-Verbindungen
+sind nicht Thread-sicher teilbar, analog zum bestehenden `ThreadPoolExecutor`-
+Muster aus dem yfinance-Fix). `generate_hebel_signal()` kehrt jetzt exakt so
+schnell zurück wie vor dieser Änderung; die Konsistenzprüfung und der
+DB-Update laufen vollständig asynchron danach ab, begrenzt nur durch Z.ais
+eigenen 150s-Timeout.
+
+### Umsetzung
+
+- `agent/krypto/gegenpruefung.py` (neu): `baue_fakten()` (schmale Faktenmenge:
+  symbol/richtung/action/confidence_pct/rsi/trend/regime/funding-Vorzeichen/
+  technische Konfluenz/Optionsmarkt-Skew), `pruefe_konsistenz()` (P-8, fängt
+  Netzwerkfehler und ungültige Antworten ab, gibt `None` zurück statt zu
+  werfen).
+- `database/models.py` + `database/db.py`: zwei neue Felder auf `HebelSignal`
+  (`zai_gegenpruefung_urteil`, `zai_gegenpruefung_kurzbegruendung`), additive
+  Migration, neue Funktion `update_hebel_signal_zai_gegenpruefung()` (Post-
+  Insert-Update, da der Wert erst nach dem asynchronen Z.ai-Call vorliegt).
+- `agent/krypto/hebel_pipeline.py`: `_zai_gegenpruefung_im_hintergrund()`
+  (Hintergrund-Thread-Ziel, eigene DB-Verbindung, P-8 doppelt abgesichert),
+  Dispatch am Ende von `generate_hebel_signal()` nur wenn `zai_client is not
+  None`.
+- `agent/krypto/budget_allocator.py`: Z.ai aus allen 3 automatischen
+  Fallback-Ketten (Hebel-Kandidaten, Marktscan-Writeup, Spot-Rotation)
+  entfernt, stattdessen als `zai_client`-Parameter an `generate_hebel_signal()`
+  durchgereicht (Mistral- und Gemini-Zweig). Die bestehende Z.ai-Budget-
+  Tracking-Maschinerie (`zai_taegliches_budget` etc.) ist dadurch vestigial
+  (meldet dauerhaft 0/False für die Primär-Generierung) - bewusst nicht
+  entfernt, um diese Änderung im Scope zu halten (dokumentierter, niedrig
+  priorisierter loser Faden).
+
+### Phase 1 (aktueller Stand): rein beobachtend
+
+`urteil`/`kurzbegruendung` werden gespeichert, aber nicht als Risikofaktor
+angezeigt, nicht als Gate verwendet, beeinflussen `action`/`richtung`/
+`confidence_pct` in keiner Weise (siehe `feedback_llm_synthese_kein_
+deterministischer_override`). Ob ein Gate jemals sinnvoll wäre, hängt davon
+ab, ob sich diese Gegenprüfung über Zeit als tatsächlich treffsicher erweist
+(Nutzer-Position: "eher zu bezweifeln, es sei denn die Gegenprüfung ist so
+erfolgreich, dass dies tatsächlich als Modell dienen kann").
+
+Scope v1: nur Hebel (analog zur Deribit-Optionsmarkt-Anreicherung).
+
+**Verifiziert:** Compile-Check, voller Import-Regressionscheck (`main.py`,
+`scheduler/background.py`, `budget_allocator.py`, `hebel_pipeline.py`),
+additive DB-Migration gegen echte Produktions-DB angewendet, End-to-End-
+Synthesetest (echter DB-Insert, simulierter langsamer Z.ai-Call via
+Hintergrund-Thread, Dispatch bestätigt nicht-blockierend in <1ms, DB-Update
+nach Thread-Abschluss verifiziert).
+
+**Notebook-Analyse ergänzt** (`extract_notebook_diagnose.py`):
+`zai_gegenpruefung_urteil`/`zai_gegenpruefung_kurzbegruendung` zu
+`_HEBEL_SIGNAL_SPALTEN` ergänzt sowie neue Aggregat-Sektion
+`zai_gegenpruefung_verlauf` (Zählung konsistent/widerspruch samt
+Begleitwerten für spätere Korrelation mit dem tatsächlichen Signal-Ausgang,
+analog zum Deribit-Cross-Check) - echter Lauf gegen die Produktions-DB
+bestätigt (aktuell 0 Einträge, da das Feature gerade erst gebaut wurde).

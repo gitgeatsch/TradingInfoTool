@@ -577,6 +577,14 @@ class HebelSignal:
     fazit_folgen: str | None = None  # 'ja'|'nein'|'mit_vorbehalt'
     fazit_kurzfazit: str | None = None
     fazit_konsistenz_hinweis: str | None = None
+    # Z.ai-Gegenpruefung (2026-07-26, siehe agent/krypto/gegenpruefung.py) -
+    # unabhaengige Konsistenzpruefung (passt die eigene Begruendung zu den
+    # harten Fakten?) durch ein separates, kleines LLM. Rein beobachtend
+    # (Phase 1, siehe Modul-Docstring dort) - KEIN Gate, keine Auswirkung auf
+    # action/richtung/confidence_pct. None, wenn zai_client nicht konfiguriert
+    # oder der Call fehlgeschlagen ist (P-8).
+    zai_gegenpruefung_urteil: str | None = None  # 'konsistent'|'widerspruch'
+    zai_gegenpruefung_kurzbegruendung: str | None = None
 
 
 @dataclass
