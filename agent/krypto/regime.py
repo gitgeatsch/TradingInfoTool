@@ -523,6 +523,45 @@ def determine_regime(
     )
 
 
+def regime_persistenz_tage(conn, aktuelles_regime: str) -> int:
+    """Regime-Persistenz (2026-07-26, Baustein zur Anreicherung des Regime-
+    Konflikt/-Ausrichtung-Risikofaktors in hebel_risk_gate.py). Zaehlt, seit
+    wie vielen aufeinanderfolgenden Tagen (rueckwaerts ab heute) dasselbe
+    REGELBASIERTE Regime gilt - nutzt die bereits als Nebenprodukt seit
+    2026-07-14 in hebel_signals befuellten Spalten (siehe
+    database.db.get_hebel_regime_tageshistorie()), KEINE neue Tabelle/
+    Migration noetig.
+
+    Bricht bei jedem Tag ab, dessen Regime von `aktuelles_regime` abweicht
+    ODER dessen regime_source == "manuell" ist - ein manueller Override
+    unterbricht die Zaehlkette auch dann, wenn er zufaellig denselben
+    Regime-Namen traegt (die Kette der REGELBASIERTEN Bestaetigung ist an
+    dieser Stelle unterbrochen, selbst wenn das zugrunde liegende Regelwerk
+    intern unveraendert waere - das wird hier bewusst nicht rekonstruiert).
+
+    Nur sinnvoll aufzurufen, wenn regime_result.source == "regelbasiert" ist
+    (sonst ist `aktuelles_regime` selbst schon ein manueller Wert und eine
+    Persistenzzaehlung waere irrefuehrend) - Aufrufer (hebel_pipeline.py)
+    stellt das sicher.
+
+    Zaehlt den heutigen Tag mit, falls die juengste Historie-Zeile nicht
+    schon von heute stammt (erster Lauf des Tages bestaetigt das aktuelle
+    Regime ja gerade erst durch den Aufruf selbst)."""
+    import database.db as db
+
+    historie = db.get_hebel_regime_tageshistorie(conn)
+    tage = 0
+    juengster_tag_ist_heute = bool(historie) and historie[0]["tag"] == db.heutiges_datum_utc()
+    for eintrag in historie:
+        if eintrag["regime"] == aktuelles_regime and eintrag["regime_source"] == "regelbasiert":
+            tage += 1
+        else:
+            break
+    if not juengster_tag_ist_heute:
+        tage += 1
+    return tage
+
+
 def get_last_known_regime_status(conn) -> dict | None:
     """Regime-Status-Anzeige (2026-07-17, Remote-Seite + Desktop-Tab "Regime") -
     rein passiver Lesezugriff auf den zuletzt PERSISTIERTEN Regime-Stand, OHNE
@@ -547,11 +586,13 @@ def get_last_known_regime_status(conn) -> dict | None:
 
     snapshot = db.get_latest_macro_snapshot(conn)
     dominance_trend_label = _dominance_trend_label(db.get_macro_snapshot_history(conn))
+    regime_persistenz = regime_persistenz_tage(conn, regime) if regime_source == "regelbasiert" else None
 
     return {
         "regime": regime,
         "regime_source": regime_source,
         "created_at": created_at,
+        "regime_persistenz_tage": regime_persistenz,
         "regime_reason": snapshot.regime_reason if snapshot else None,
         "btc_trend_label": snapshot.btc_trend_label if snapshot else None,
         "fear_greed_value": snapshot.fear_greed_value if snapshot else None,

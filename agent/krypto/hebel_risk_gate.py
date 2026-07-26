@@ -229,6 +229,8 @@ def compute_risikofaktoren_hebel(
     dates=None,
     closes=None,
     richtungswende_atr_schwelle: float | None = None,
+    regime_persistenz_tage: int | None = None,
+    btc_relativwert: dict | None = None,
 ) -> list["Risikofaktor"]:
     """2026-07-19 (Nutzer-Wunsch: E-Mail/App-Neustrukturierung in 3 Abschnitte -
     Mathematisch berechnet / LLM-Bewertung / Konklusion mit Risikofaktoren).
@@ -239,7 +241,20 @@ def compute_risikofaktoren_hebel(
     Interpretationsfehler). Nutzt dieselben Pruef-Funktionen wie die
     eigentliche Hebel-Deckelung (regime_konflikt_hebel(), retail_konsens_
     risiko(), these_regime_widerspruch()) - keine zweite, potenziell
-    driftende Implementierung derselben Bedingungen."""
+    driftende Implementierung derselben Bedingungen.
+
+    Nachtrag 2026-07-26 (Regime-Persistenz + BTC-Relativwert-Kopplung):
+    `regime_persistenz_tage` (optional, siehe regime.py::regime_persistenz_
+    tage()) haengt an Regime-Konflikt/-Ausrichtung einen Satz zur bereits
+    verstrichenen Bestaetigungsdauer an - ein seit vielen Tagen bestaetigtes
+    Regime macht einen Konflikt schwerwiegender und eine Ausrichtung
+    verlaesslicher. `btc_relativwert` (optional, bereits vorhandener Fakt aus
+    btc_relativwert.py) mildert einen Regime-Konflikt-Text NUR TEXTUELL ab
+    (keine Aenderung der positiv/negativ-Einstufung), wenn der Coin schwach
+    mit BTC korreliert (Korrelation < 0.7) oder gerade spuerbaren Tailwind
+    gegen das generische BTC-Regime zeigt (Relativstaerke > +3pp fuer LONG /
+    < -3pp fuer SHORT) - dieselben Schwellenwerte wie in btc_relativwert.py
+    selbst, keine neu erfundenen Werte (Backtest-first-Prinzip)."""
     faktoren: list[Risikofaktor] = []
 
     if not hebel_erlaubt:
@@ -270,15 +285,38 @@ def compute_risikofaktoren_hebel(
         ))
 
     regime_konflikt = regime_konflikt_hebel(regime, richtung)
+    persistenz_text = (
+        f" Regime seit {regime_persistenz_tage} Tag(en) regelbasiert bestätigt."
+        if regime_persistenz_tage is not None and regime_persistenz_tage > 0 else ""
+    )
     if regime_konflikt:
+        gegen_note = ""
+        if btc_relativwert is not None:
+            korrelation = btc_relativwert.get("korrelation")
+            relativstaerke_pct = btc_relativwert.get("relativstaerke_pct")
+            schwach_korreliert = korrelation is not None and korrelation < 0.7
+            tailwind = relativstaerke_pct is not None and (
+                (richtung == RICHTUNG_LONG and relativstaerke_pct > 3)
+                or (richtung == RICHTUNG_SHORT and relativstaerke_pct < -3)
+            )
+            if schwach_korreliert or tailwind:
+                gruende = []
+                if schwach_korreliert:
+                    gruende.append(f"Korrelation zu BTC nur {korrelation:.2f}")
+                if tailwind:
+                    gruende.append(f"Relativstärke {relativstaerke_pct:+.1f} Prozentpunkte ggü. BTC")
+                gegen_note = (
+                    f" Hinweis (mildert den Konflikt leicht, hebt ihn nicht auf): {', '.join(gruende)} - "
+                    "das generische BTC-Regime ist für diesen Coin dadurch tendenziell weniger bindend."
+                )
         faktoren.append(Risikofaktor(
             "Regime-Konflikt", "negativ",
-            f"Position ({richtung}) widerspricht dem aktuellen {regime}-Regime.",
+            f"Position ({richtung}) widerspricht dem aktuellen {regime}-Regime.{persistenz_text}{gegen_note}",
         ))
     else:
         faktoren.append(Risikofaktor(
             "Regime-Ausrichtung", "positiv",
-            f"Position ({richtung}) folgt dem aktuellen {regime}-Regime, kein Gegen-Trend-Setup.",
+            f"Position ({richtung}) folgt dem aktuellen {regime}-Regime, kein Gegen-Trend-Setup.{persistenz_text}",
         ))
 
     if these_regime_widerspruch(trade_thesis_typ, regime_konflikt):
@@ -702,6 +740,8 @@ def post_check_hebel(
     richtungswende: dict | None = None, current_price: float | None = None,
     atr_value: float | None = None, dates=None, closes=None,
     richtungswende_atr_schwelle: float | None = None,
+    regime_persistenz_tage: int | None = None,
+    btc_relativwert: dict | None = None,
 ) -> dict:
     """Nimmt die bereits schema-validierte LLM-Antwort und erzwingt AZ-7/RM-1/
     RM-11/CRV noch einmal deterministisch, analog risk_gate.py::post_check().
@@ -754,7 +794,11 @@ def post_check_hebel(
     dass ein einzelner verrauschter 15-Minuten-Ausschlag sofort einen echten
     Trade (TEILVERKAUF/SCHLIESSEN) ausloest. Alle drei Parameter optional und
     wirkungslos, wenn `position_aktuell` None ist (reiner ERÖFFNEN-Fall ohne
-    bestehende Position, unveraendertes Verhalten)."""
+    bestehende Position, unveraendertes Verhalten).
+
+    Nachtrag 2026-07-26 (Regime-Persistenz + BTC-Relativwert-Kopplung):
+    `regime_persistenz_tage`/`btc_relativwert` werden nur durchgereicht, siehe
+    compute_risikofaktoren_hebel()-Docstring fuer die eigentliche Logik."""
     result = dict(parsed)
     risk_veto = False
     risk_veto_reason = None
@@ -1058,6 +1102,8 @@ def post_check_hebel(
             if richtungswende_atr_schwelle is not None
             else hebel_cfg.get("richtungswende_atr_schwelle_relativ")
         ),
+        regime_persistenz_tage=regime_persistenz_tage,
+        btc_relativwert=btc_relativwert,
     )
     result["_risikofaktoren"] = [
         {"name": f.name, "bewertung": f.bewertung, "begruendung": f.begruendung} for f in risikofaktoren

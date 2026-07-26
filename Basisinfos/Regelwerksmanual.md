@@ -1672,8 +1672,13 @@ Machbarkeits-Analyse (siehe Memory `project_selbstverifikation_ki_trimmen`)
   `regime_source` (identisch für alle Symbole eines Laufs) + der zuletzt
   gespeicherten `macro_snapshot`-Zeile (`agent/krypto/regime.py::
   get_last_known_regime_status()`). Ein manueller Regime-Override
-  (RG-8/RG-9) wird deutlich als „⚠ manuell überschrieben" gekennzeichnet,
-  statt mit der automatischen Begründung vermischt zu werden.
+  (RG-8/RG-9) wird mit einem „⚠"-Präfix gekennzeichnet — **Korrektur
+  2026-07-26:** vorher wurde bei aktivem Override die eigentlich informative
+  `regime_reason` (die bereits den vollständigen Text „Manueller Override (X)
+  - regelbasiert wäre 'Y' gewesen: ..." enthält, siehe `determine_regime()`)
+  komplett durch den generischen Hinweistext ersetzt und damit verschluckt.
+  Jetzt wird dieser Text immer vollständig angezeigt (Desktop-Tab +
+  Remote-Karte), nur mit dem ⚠-Präfix ergänzt.
 - **Datenlücke behoben:** `zyklus_risiko`, `liquiditaets_regime` (+
   Begründungen) und `btc_trend_label` wurden bisher bei jedem Pipeline-Lauf
   frisch berechnet, aber nirgends gespeichert. `agent/krypto/pipeline.py::
@@ -1697,6 +1702,42 @@ Machbarkeits-Analyse (siehe Memory `project_selbstverifikation_ki_trimmen`)
   identisch zur Remote-Karte, nimmt bewusst nur `db_conn_factory` entgegen
   (kein LLM-/API-Client nötig). Nimmt am bestehenden periodischen
   3-Sekunden-Refresh teil (`ui/app.py::_poll_prices()`).
+
+**Regime-Persistenz + manueller Override als GUI-Setting (2026-07-26):**
+
+- **Regime-Persistenz (Hebel-Risikofaktor „Regime-Konflikt"/„Regime-
+  Ausrichtung"):** `agent/krypto/regime.py::regime_persistenz_tage()` zählt,
+  seit wie vielen aufeinanderfolgenden Tagen (rückwärts ab heute) dasselbe
+  REGELBASIERTE Regime gilt — nutzt dafür die bereits seit 2026-07-14 als
+  Nebenprodukt in `hebel_signals.regime`/`regime_source`/`created_at`
+  befüllten Spalten (`database/db.py::get_hebel_regime_tageshistorie()`),
+  keine neue Tabelle/Migration nötig. Bricht bei jedem Tag ab, dessen Regime
+  abweicht ODER dessen `regime_source == "manuell"` ist — ein manueller
+  Override unterbricht die Zählkette auch dann, wenn er zufällig denselben
+  Regime-Namen trägt. Nur aufgerufen, wenn `regime_result.source ==
+  "regelbasiert"` ist (`agent/krypto/hebel_pipeline.py`) — bei aktivem
+  Override bleibt der Wert `None` (P-8, kein harter Block). Der Text „Regime
+  seit X Tag(en) regelbasiert bestätigt." erscheint sowohl im Hebel-
+  Risikofaktor-Text als auch im Regime-Tab/der Remote-Karte.
+- **BTC-Relativwert-Kopplung:** wenn ein Regime-Konflikt vorliegt (Position
+  widerspricht dem Regime), aber der Coin schwach mit BTC korreliert
+  (Korrelation < 0,7) oder gerade spürbaren Tailwind gegen das generische
+  BTC-Regime zeigt (Relativstärke > +3 Prozentpunkte für LONG / < -3 für
+  SHORT — dieselben Schwellenwerte wie in `btc_relativwert.py` selbst, keine
+  neu erfundenen Werte), hängt `compute_risikofaktoren_hebel()` einen
+  textlichen Gegen-Hinweis an. Ändert NICHT die positiv/negativ-Einstufung,
+  mildert den Konflikt nur textlich ab („mildert den Konflikt leicht, hebt
+  ihn nicht auf").
+- **Manueller Override als sichtbares GUI-Setting (vorher ein reines
+  „Uboot", nur per Hand in `config.yaml` editierbar):** `config.py::
+  set_regime_manueller_override()` schreibt den Top-Level-Skalar
+  `regime.manueller_override` (RG-8) nach demselben Backup-/Schreib-/
+  Reparse-/Rollback-Muster wie `_update_watchlist_field()`, erhält dabei den
+  Inline-Kommentar in der Zeile. Neues Combobox-Control im Regime-Tab
+  (`ui/regime_view.py`) mit den 6 gültigen Werten (`none` + den 5
+  `REGIME_STATES`) + „Anwenden"-Button, plus Hinweistext, dass die Regime-
+  Persistenz-Zählung während eines aktiven Overrides pausiert. Wirkt ab dem
+  nächsten Pipeline-Lauf, kein Neustart nötig.
 
 ---
 

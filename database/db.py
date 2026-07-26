@@ -1147,7 +1147,11 @@ def set_bitpanda_gelistet_override(conn: sqlite3.Connection, symbol: str, aktiv:
     conn.commit()
 
 
-def _heutiges_datum_utc() -> str:
+def heutiges_datum_utc() -> str:
+    """Oeffentlich (2026-07-26, Regime-Persistenz-Feature) - vorher `_heutiges_
+    datum_utc`, nur innerhalb dieser Datei verwendet. agent/krypto/pipeline.py
+    hatte dieselbe UTC-Datumsbildung 3x inline dupliziert; regime.py::
+    regime_persistenz_tage() braucht sie ebenfalls."""
     return datetime.now(timezone.utc).date().isoformat()
 
 
@@ -1160,7 +1164,7 @@ def is_groq_exhausted_today(conn: sqlite3.Connection) -> bool:
     row = conn.execute(
         "SELECT datum, erschoepft FROM groq_exhaustion_status WHERE id = 1"
     ).fetchone()
-    if row is None or row["datum"] != _heutiges_datum_utc():
+    if row is None or row["datum"] != heutiges_datum_utc():
         return False
     return bool(row["erschoepft"])
 
@@ -1172,7 +1176,7 @@ def record_groq_failure(conn: sqlite3.Connection, schwelle: int) -> None:
     Rest des Tages gesetzt (siehe is_groq_exhausted_today()). Loggt nur beim
     UEBERGANG auf erschoepft=True (nicht bei jedem weiteren Fehlschlag
     danach), damit das Log nicht mit Wiederholungen zugespamt wird."""
-    today = _heutiges_datum_utc()
+    today = heutiges_datum_utc()
     row = conn.execute(
         "SELECT datum, fehlschlaege, erschoepft FROM groq_exhaustion_status WHERE id = 1"
     ).fetchone()
@@ -1197,7 +1201,7 @@ def record_groq_failure(conn: sqlite3.Connection, schwelle: int) -> None:
 def record_groq_success(conn: sqlite3.Connection) -> None:
     """Setzt den Fehlschlag-Zaehler fuer heute zurueck (ein erfolgreicher
     Call widerlegt eine vermutete Erschoepfung)."""
-    today = _heutiges_datum_utc()
+    today = heutiges_datum_utc()
     conn.execute(
         "INSERT INTO groq_exhaustion_status (id, datum, fehlschlaege, erschoepft) VALUES (1, ?, 0, 0) "
         "ON CONFLICT(id) DO UPDATE SET datum = excluded.datum, fehlschlaege = 0, erschoepft = 0",
@@ -2714,6 +2718,32 @@ def count_real_hebel_signals_today(conn: sqlite3.Connection) -> int:
 def get_hebel_signal_by_id(conn: sqlite3.Connection, hebel_signal_id: int) -> HebelSignal | None:
     row = conn.execute("SELECT * FROM hebel_signals WHERE id = ?", (hebel_signal_id,)).fetchone()
     return _row_to_hebel_signal(row) if row else None
+
+
+def get_hebel_regime_tageshistorie(conn: sqlite3.Connection, limit_tage: int = 90) -> list[dict]:
+    """Regime-Persistenz (2026-07-26): ein Eintrag pro Kalendertag (UTC), neuster
+    zuerst - (regime, regime_source) des jeweils LETZTEN Laufs an diesem Tag.
+    Nutzt bewusst die bereits als Nebenprodukt seit 2026-07-14 befuellten Spalten
+    `hebel_signals.regime`/`regime_source`/`created_at` (identisch fuer alle
+    Symbole eines Laufs, siehe get_latest_regime_from_signals()) statt einer
+    neuen Tabelle/Migration - regime_persistenz_tage() in agent/krypto/
+    regime.py ist der einzige Aufrufer."""
+    rows = conn.execute(
+        """
+        SELECT date(h.created_at) AS tag, h.regime AS regime, h.regime_source AS regime_source
+        FROM hebel_signals h
+        INNER JOIN (
+            SELECT date(created_at) AS tag, MAX(created_at) AS max_created_at
+            FROM hebel_signals
+            WHERE regime IS NOT NULL
+            GROUP BY date(created_at)
+        ) letzter ON date(h.created_at) = letzter.tag AND h.created_at = letzter.max_created_at
+        ORDER BY tag DESC
+        LIMIT ?
+        """,
+        (limit_tage,),
+    ).fetchall()
+    return [{"tag": row["tag"], "regime": row["regime"], "regime_source": row["regime_source"]} for row in rows]
 
 
 def update_hebel_signal_outcome(

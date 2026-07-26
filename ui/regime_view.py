@@ -6,12 +6,13 @@ Entscheidungslogik (P-7 Advisory-only-Prinzip). Konstruktor nimmt bewusst
 NUR `db_conn_factory` entgegen, kein LLM-/API-Client noetig."""
 from __future__ import annotations
 
-from tkinter import ttk
+import tkinter as tk
+from tkinter import messagebox, ttk
 
 import config as config_module
 import ui.theme as theme
 from agent.krypto.regelwerk_parameter import build_parameter_overview
-from agent.krypto.regime import get_last_known_regime_status
+from agent.krypto.regime import REGIME_STATES, get_last_known_regime_status
 from ui.row_tooltip import add_row_tooltips
 from ui.sortable_tree import make_sortable
 
@@ -22,6 +23,13 @@ _REGIME_LABELS = {
     "bulle": "Bulle",
     "euphorie_extrem": "Euphorie (extrem)",
 }
+
+# Override-GUI (2026-07-26, Nutzer-Wunsch - vorher nur per Hand in config.yaml
+# editierbar, ein "Uboot" ohne sichtbaren GUI-Zugang). "none" = kein Override
+# (automatisch/regelbasiert), zusaetzlich zu den 5 REGIME_STATES.
+_OVERRIDE_LABELS = {"none": "Kein Override (automatisch)", **_REGIME_LABELS}
+_OVERRIDE_VALUES_BY_LABEL = {label: value for value, label in _OVERRIDE_LABELS.items()}
+_OVERRIDE_COMBO_VALUES = [_OVERRIDE_LABELS[v] for v in ("none",) + REGIME_STATES]
 
 
 class RegimeView(ttk.Frame):
@@ -49,6 +57,30 @@ class RegimeView(ttk.Frame):
             lbl = ttk.Label(status_frame, text="", wraplength=760, justify="left")
             lbl.pack(anchor="w")
             self._detail_labels[key] = lbl
+
+        ttk.Separator(self, orient="horizontal").pack(fill="x", padx=8, pady=6)
+
+        override_frame = ttk.Frame(self, padding=8)
+        override_frame.pack(fill="x")
+        ttk.Label(
+            override_frame, text="Manueller Override (RG-8)", font=("", 9, "bold"),
+        ).pack(anchor="w")
+        override_row = ttk.Frame(override_frame)
+        override_row.pack(anchor="w", pady=(2, 0))
+        self._override_var = tk.StringVar()
+        self._override_combo = ttk.Combobox(
+            override_row, textvariable=self._override_var, state="readonly",
+            values=_OVERRIDE_COMBO_VALUES, width=30,
+        )
+        self._override_combo.pack(side="left")
+        ttk.Button(override_row, text="Anwenden", command=self._on_override_apply).pack(side="left", padx=(6, 0))
+        ttk.Label(
+            override_frame,
+            text="Hinweis: Solange ein Override aktiv ist, pausiert die Regime-Persistenz-Zählung "
+            "(Hebel-Risikofaktor 'Regime-Konflikt'/'Regime-Ausrichtung') - sie zählt erst wieder ab "
+            "dem ersten Tag nach der Rückkehr zu 'Kein Override' hoch.",
+            wraplength=760, justify="left",
+        ).pack(anchor="w", pady=(4, 0))
 
         ttk.Separator(self, orient="horizontal").pack(fill="x", padx=8, pady=6)
 
@@ -84,10 +116,32 @@ class RegimeView(ttk.Frame):
             regime_status = get_last_known_regime_status(conn)
         finally:
             conn.close()
-        parameter_rows = build_parameter_overview(config_module.load_config())
+        config_dict = config_module.load_config()
+        parameter_rows = build_parameter_overview(config_dict)
 
         self._render_regime_status(regime_status)
         self._render_parameter_overview(parameter_rows)
+
+        current_override = config_dict.get("regime", {}).get("manueller_override", "none")
+        self._override_var.set(_OVERRIDE_LABELS.get(current_override, _OVERRIDE_LABELS["none"]))
+
+    def _on_override_apply(self) -> None:
+        selected_label = self._override_var.get()
+        new_value = _OVERRIDE_VALUES_BY_LABEL.get(selected_label)
+        if new_value is None:
+            return
+        try:
+            geaendert = config_module.set_regime_manueller_override(new_value)
+        except (config_module.WatchlistWriteError, ValueError) as exc:
+            messagebox.showerror("Manueller Override", f"Fehlgeschlagen: {exc}")
+            return
+        if geaendert:
+            messagebox.showinfo(
+                "Manueller Override",
+                f"Override gesetzt auf '{selected_label}'. Wirkt ab dem nächsten Pipeline-Lauf "
+                "(kein Neustart nötig).",
+            )
+        self.refresh()
 
     def _render_regime_status(self, status: dict | None) -> None:
         if status is None:
@@ -106,10 +160,20 @@ class RegimeView(ttk.Frame):
         label = _REGIME_LABELS.get(regime, regime)
         self._regime_label.config(text=f"Regime: {label}", foreground=theme.regime_color(regime))
 
+        # 2026-07-26 Bugfix: vorher wurde `regime_reason` bei aktivem Override
+        # KOMPLETT durch einen generischen Hinweistext ersetzt - dabei enthaelt
+        # `regime_reason` bei source=="manuell" bereits den vollstaendigen,
+        # informativen Text "Manueller Override (X) - regelbasiert wäre 'Y'
+        # gewesen: ..." (siehe regime.py::determine_regime()). Jetzt wird
+        # dieser Text immer angezeigt, nur um ein zusaetzliches ⚠-Praefix
+        # ergaenzt, wenn ein Override aktiv ist.
+        reason_text = status.get("regime_reason") or ""
         if status.get("regime_source") == "manuell":
-            self._reason_label.config(text="⚠ manuell überschrieben")
-        else:
-            self._reason_label.config(text=status.get("regime_reason") or "")
+            reason_text = f"⚠ {reason_text}" if reason_text else "⚠ manuell überschrieben"
+        persistenz_tage = status.get("regime_persistenz_tage")
+        if persistenz_tage is not None and persistenz_tage > 0:
+            reason_text += f" (seit {persistenz_tage} Tag(en) regelbasiert bestätigt.)"
+        self._reason_label.config(text=reason_text)
 
         btc_trend = status.get("btc_trend_label") or "nicht verfügbar"
         self._detail_labels["btc_trend"].config(text=f"BTC-Trend: {btc_trend}")

@@ -29,6 +29,7 @@ from agent.krypto.signal_stabilitaet import (
 from agent.krypto.hebel_risk_gate import post_check_hebel, pre_check_hebel
 from agent.krypto.llm_provider import llm_model_label
 from agent.krypto.pipeline import _load_closes_and_ohlc, compute_current_regime, fetch_market_context
+from agent.krypto.regime import regime_persistenz_tage
 from agent.krypto.risk_gate import STOP_LOSS_ATR_MULTIPLE, _portfolio_values_usd
 from database.models import HebelSignal, HebelTrigger
 from indicators.calculations import (
@@ -120,6 +121,16 @@ def generate_hebel_signal(
     config_dict = config_module.load_config()
     regime_result = compute_current_regime(conn, coingecko_client, watchlist, fred_api_key, config_dict)
     regime_profile = config_dict["regime"]["profile"].get(regime_result.regime, {})
+    # Regime-Persistenz (2026-07-26) - siehe regime.py::regime_persistenz_tage()
+    # Docstring. Nur bei regelbasiertem Regime sinnvoll (sonst waere
+    # `regime_result.regime` selbst schon ein manueller Wert, siehe dortige
+    # Erlaeuterung) - bei aktivem Override bleibt der Wert None (P-8, kein
+    # harter Block, hebel_risk_gate.py haengt dann einfach keinen
+    # Persistenz-Satz an den Regime-Konflikt/-Ausrichtung-Text an).
+    regime_persistenz_tage_wert = (
+        regime_persistenz_tage(conn, regime_result.regime)
+        if regime_result.source == "regelbasiert" else None
+    )
 
     confluence = summarize_confluence(snapshot, closes[-1])
 
@@ -262,6 +273,8 @@ def generate_hebel_signal(
         kontrathese_verlauf=kontrathese_verlauf,
         now_unix=now_unix,
         richtungswende=richtungswende,
+        regime_persistenz_tage=regime_persistenz_tage_wert,
+        btc_relativwert=btc_relativwert,
         current_price=current_price_usd,
         atr_value=atr_value,
         dates=dates,

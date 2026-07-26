@@ -290,10 +290,15 @@ function renderRegimeStatus(r) {
   const cls = "regime-" + r.regime;
   let html = '<div class="row"><span>Stand</span><span>' + fmtDateTime(r.created_at) + '</span></div>';
   html += '<div class="row"><span>Regime</span><span class="' + cls + '"><strong>' + label + '</strong></span></div>';
-  if (r.regime_source === "manuell") {
+  if (r.regime_reason) {
+    const praefix = r.regime_source === "manuell" ? "⚠ " : "";
+    html += '<div class="row"><span class="muted-text">' + praefix + r.regime_reason + '</span></div>';
+  } else if (r.regime_source === "manuell") {
     html += '<div class="row"><span class="muted-text">⚠ manuell überschrieben</span></div>';
-  } else if (r.regime_reason) {
-    html += '<div class="row"><span class="muted-text">' + r.regime_reason + '</span></div>';
+  }
+  if (r.regime_persistenz_tage) {
+    html += '<div class="row"><span class="muted-text">Regime seit ' + r.regime_persistenz_tage
+      + ' Tag(en) regelbasiert bestätigt.</span></div>';
   }
   const zeilen = [
     ["BTC-Trend", r.btc_trend_label],

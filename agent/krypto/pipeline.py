@@ -73,7 +73,7 @@ def _update_macro_snapshot(
 ) -> list[MacroSnapshot]:
     from api.macro import get_all_fred_rates, get_btc_dominance, get_fear_greed_index, get_pboc_lpr
 
-    today = datetime.now(timezone.utc).date().isoformat()
+    today = db.heutiges_datum_utc()
     try:
         dominance = get_btc_dominance(coingecko_client)
     except Exception as exc:
@@ -241,7 +241,7 @@ def _fetch_boden_zielzone_context(conn, config_dict: dict) -> dict:
         context["equities_baermarkt_begruendung"] = "Boden-Zielzone deaktiviert (config.yaml boden_zielzone.aktiv=false)."
         return context
 
-    today = datetime.now(timezone.utc).date().isoformat()
+    today = db.heutiges_datum_utc()
     cached = db.get_latest_macro_snapshot(conn)
     cache_hit = (
         cached is not None and cached.date == today
@@ -397,7 +397,7 @@ def compute_current_regime(conn, coingecko_client, watchlist, fred_api_key: str 
     # Netzwerk-Call - macht die Werte fuer eine passive "letzter bekannter Stand"-Anzeige
     # verfuegbar (agent/krypto/regime.py::get_last_known_regime_status()).
     try:
-        today = datetime.now(timezone.utc).date().isoformat()
+        today = db.heutiges_datum_utc()
         db.upsert_macro_snapshot(conn, MacroSnapshot(
             date=today, btc_dominance_pct=None, fear_greed_value=None, fear_greed_label=None,
             fetched_at=_now(),

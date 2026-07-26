@@ -698,3 +698,72 @@ def update_watchlist_beobachtungsstatus(symbol: str, new_beobachtungsstatus: str
     Redesign live aus den echten Bestaenden abgeleitet, nicht mehr hier
     gespeichert."""
     return _update_watchlist_field(symbol, "beobachtungsstatus", new_beobachtungsstatus)
+
+
+REGIME_MANUELLER_OVERRIDE_WERTE = ("none", "krise_extrem", "baer", "seitwaerts", "bulle", "euphorie_extrem")
+
+
+def set_regime_manueller_override(new_value: str) -> bool:
+    """Setzt den TOP-LEVEL Skalar `regime.manueller_override` (RG-8, Basisinfos/
+    config.yaml Zeile ~1005) - bisher ein reines "Uboot" (nur per Hand in der
+    YAML-Datei editierbar), jetzt ueber ui/regime_view.py als sichtbares
+    GUI-Setting bedienbar (2026-07-26, Nutzer-Wunsch). Gleiches Backup-/
+    Schreib-/Reparse-/Rollback-Muster wie `_update_watchlist_field()`, aber
+    fuer einen einzelnen Top-Level-Schluessel statt eines Watchlist-Eintrag-
+    Blocks - `manueller_override:` kommt in der Datei nur genau einmal vor,
+    daher reicht eine einfache Zeilensuche ohne Block-Grenzen.
+
+    Ein evtl. vorhandener Inline-Kommentar (`# RG-8: none | krise_extrem | ...`)
+    bleibt beim Schreiben erhalten - nur der Wert vor dem `#` wird ersetzt.
+
+    Gibt `False` zurück (kein Schreibvorgang) wenn der Schlüssel nicht
+    gefunden wird oder bereits den Zielwert hat."""
+    if new_value not in REGIME_MANUELLER_OVERRIDE_WERTE:
+        raise ValueError(f"Ungültiger Override-Wert: {new_value!r} (erlaubt: {REGIME_MANUELLER_OVERRIDE_WERTE})")
+
+    original_bytes = CONFIG_PATH.read_bytes()
+    newline_style = "\r\n" if b"\r\n" in original_bytes else "\n"
+    original_text = original_bytes.decode("utf-8")
+    lines = original_text.splitlines(keepends=True)
+
+    field_line_idx = next(
+        (i for i, line in enumerate(lines) if line.strip().startswith("manueller_override:")), None,
+    )
+    if field_line_idx is None:
+        return False
+
+    line = lines[field_line_idx]
+    indent = line[: len(line) - len(line.lstrip())]
+    rest = line.split(":", 1)[1]
+    if "#" in rest:
+        value_part, comment_part = rest.split("#", 1)
+        comment_part = "#" + comment_part.rstrip("\r\n")
+    else:
+        value_part, comment_part = rest, ""
+    current_value = value_part.strip()
+    if current_value == new_value:
+        return False
+
+    padding = " " * max(1, len(value_part) - len(value_part.strip()) - 1) if comment_part else " "
+    lines[field_line_idx] = f"{indent}manueller_override: {new_value}{padding}{comment_part}{newline_style}"
+    new_text = "".join(lines)
+
+    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    backup_path = BACKUP_DIR / f"config.yaml.{timestamp}.bak"
+    shutil.copy2(CONFIG_PATH, backup_path)
+
+    CONFIG_PATH.write_bytes(new_text.encode("utf-8"))
+
+    try:
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+            reparsed = yaml.safe_load(f)
+        if reparsed.get("regime", {}).get("manueller_override") != new_value:
+            raise WatchlistWriteError("Validierung fehlgeschlagen: manueller_override nicht wie erwartet gesetzt")
+    except Exception as exc:
+        shutil.copy2(backup_path, CONFIG_PATH)
+        raise WatchlistWriteError(f"Schreiben fehlgeschlagen, Backup wiederhergestellt: {exc}") from exc
+
+    global _config_cache
+    _config_cache = None
+    return True
