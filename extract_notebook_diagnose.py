@@ -95,6 +95,21 @@ Produktions-DB war korrekt befuellt, nur dieser Export sah die beiden
 Spalten nicht (kein Live-Bug, reine Export-Luecke, analog den fruaeheren
 Nachzieh-Eintraegen oben).
 
+Nachtrag (2026-07-26, Nutzer-Frage "brauchen die heutigen Umsetzungen neues
+Logging/DB-Extrakte?"): zwei Luecken geschlossen.
+- `konfidenz_kalibrierung` (compute_konfidenz_kalibrierung(), siehe
+  project_konfidenz_kalibrierungskurve.md) als fertige Aggregat-Sektion
+  ergaenzt - analog provider_performance, erspart eine manuelle Nachrechnung
+  aus den ohnehin schon exportierten confidence_pct/outcome_status-Spalten.
+- `deribit_cross_check_verlauf` (neu, siehe _deribit_cross_check_verlauf()
+  unten) - der rohe Deribit-DVOL/Skew-Wert wird NIRGENDS dauerhaft
+  gespeichert (Live-Fetch pro Signal, siehe agent/krypto/optionsmarkt.py) und
+  steckt nur transient in facts_json, das dieser Export sonst bewusst
+  ausschliesst. Gezielter Parse NUR des optionsmarkt-Teilobjekts (nicht der
+  gesamte Blob) - ohne diese Sektion waere spaeter nie rekonstruierbar, ob
+  der Deribit-Cross-Check ueberhaupt etwas bewirkt hat (Deribit selbst hat
+  keine historischen Options-Skew-Snapshots nach Verfall).
+
 Aufruf am Notebook: python extract_notebook_diagnose.py [SYMBOL] [LOG_STUNDEN]
   (SYMBOL optional, Default LINK, fuer den Tiefenanalyse-Teil;
    LOG_STUNDEN optional, Default 72, Zeitfenster fuer den Log-Auszug)
@@ -109,7 +124,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import database.db as db
-from agent.krypto.backward_tracking import compute_provider_performance
+from agent.krypto.backward_tracking import compute_konfidenz_kalibrierung, compute_provider_performance
 from agent.krypto.regime import get_last_known_regime_status
 
 DEEP_DIVE_SYMBOL = sys.argv[1] if len(sys.argv) > 1 else "LINK"
@@ -381,6 +396,50 @@ _JOB_FEHLSCHLAG_MUSTER = re.compile(r"(fehlgeschlagen|verpasst \(Misfire\))")
 _GROQ_ERSCHOEPFT_MUSTER = re.compile(r"Groq: \d+ Fehlschlaege in Folge")
 
 
+def _deribit_cross_check_verlauf(conn) -> dict:
+    """Neu (2026-07-26, Deribit-Optionsmarkt-Anreicherung, siehe
+    project_deribit_optionsmarkt_anreicherung.md) - der rohe DVOL-/Skew-Wert
+    wird NIRGENDS dauerhaft gespeichert (Live-Fetch pro Signal-Lauf, siehe
+    agent/krypto/optionsmarkt.py Modul-Docstring) und steckt nur transient in
+    `facts_json`, das dieses Skript sonst bewusst ausschliesst (siehe
+    Spaltenauswahl-Kommentar oben). Ohne diese Sektion waere die Frage "hat
+    der Deribit-Cross-Check ueberhaupt je etwas bewirkt, und war er
+    zutreffend" NIE rueckwirkend beantwortbar - Deribit selbst liefert keine
+    historischen Options-Skew-Snapshots nach Verfall. Deshalb: gezielter,
+    schlanker Parse NUR des `optionsmarkt`-Teilobjekts aus facts_json (nicht
+    der gesamte Blob) je Hebel-Signal, zusammen mit den bereits andernorts
+    exportierten Begleitwerten (confidence_pct/gegenargument/outcome_status),
+    damit spaeter geprueft werden kann, ob ein Deribit-basierter Widerspruch
+    im gegenargument-Text mit dem tatsaechlichen Ausgang korrelierte."""
+    rows = conn.execute(
+        "SELECT symbol, richtung, action, created_at, confidence_pct, gegenargument, "
+        "outcome_status, outcome_realisiertes_crv, facts_json "
+        "FROM hebel_signals ORDER BY created_at ASC"
+    ).fetchall()
+    eintraege = []
+    for r in rows:
+        try:
+            facts = json.loads(r["facts_json"]) if r["facts_json"] else {}
+        except (TypeError, json.JSONDecodeError):
+            continue
+        optionsmarkt = facts.get("optionsmarkt")
+        if not optionsmarkt:
+            continue
+        eintraege.append({
+            "symbol": r["symbol"], "richtung": r["richtung"], "action": r["action"],
+            "created_at": r["created_at"], "confidence_pct": r["confidence_pct"],
+            "gegenargument": r["gegenargument"],
+            "outcome_status": r["outcome_status"], "outcome_realisiertes_crv": r["outcome_realisiertes_crv"],
+            "dvol_prozent": optionsmarkt.get("dvol_prozent"),
+            "skew_prozentpunkte": optionsmarkt.get("skew_prozentpunkte"),
+        })
+    return {
+        "anzahl_mit_optionsmarkt_fakt": len(eintraege),
+        "anzahl_mit_gegenargument": sum(1 for e in eintraege if e["gegenargument"]),
+        "eintraege": eintraege,
+    }
+
+
 def _log_dateien(log_pfad: Path) -> list[Path]:
     """Aelteste zuerst, damit _log_zeilen_im_fenster() den Zeitfortschritt
     korrekt verfolgen kann - RotatingFileHandler haengt .1/.2/.3 AN (ersetzt
@@ -552,9 +611,18 @@ def main() -> None:
         hebel_erstmalige_erkennung_delta = _hebel_erstmalige_erkennung_delta(conn)
         rohdaten_fuer_backtest = _rohdaten_fuer_backtest(conn)
         preishistorie_ueberholte_symbole = _preishistorie_ueberholte_symbole(conn)
+        deribit_cross_check_verlauf = _deribit_cross_check_verlauf(conn)
 
         # 4) Provider-Performance (Win-Rate/CRV je Anbieter, Spot+Hebel getrennt)
         provider_performance = compute_provider_performance(conn)
+        # 4b) Konfidenz-Kalibrierungskurve (2026-07-26, Punkt 3 des Regime-
+        # Persistenz-Folge-Vorschlags, siehe project_konfidenz_kalibrierungskurve.md) -
+        # gleiches Prinzip wie provider_performance oben: die Aggregat-Funktion
+        # selbst mitschicken statt nur die Rohspalten (confidence_pct/
+        # outcome_status stehen zwar schon in hebel_signals/spot_signals unten,
+        # aber die fertige Band-Aufschluesselung erspart eine manuelle
+        # Nachrechnung bei jeder Analyse).
+        konfidenz_kalibrierung = compute_konfidenz_kalibrierung(conn)
 
         # 5) Alle Hebel-Signale (fuer Long/Short-Bugfix-Verifikation +
         # Gate/Veto-Muster + Outcome-Verteilung)
@@ -610,6 +678,7 @@ def main() -> None:
         "llm_calls_heute": llm_calls_heute,
         "signal_volumen_heute": signal_volumen_heute,
         "provider_performance": provider_performance,
+        "konfidenz_kalibrierung": konfidenz_kalibrierung,
         "hebel_signals": hebel_rows,
         "hebel_positions": [row_to_dict(r) for r in hebel_positions],
         "spot_signals": spot_rows,
@@ -630,6 +699,7 @@ def main() -> None:
         "hebel_erstmalige_erkennung_delta": hebel_erstmalige_erkennung_delta,
         "rohdaten_fuer_backtest": rohdaten_fuer_backtest,
         "preishistorie_ueberholte_symbole": preishistorie_ueberholte_symbole,
+        "deribit_cross_check_verlauf": deribit_cross_check_verlauf,
         "deep_dive": {
             "symbol": DEEP_DIVE_SYMBOL,
             "hebel_signals": [row_to_dict(r) for r in deep_signale],
@@ -670,6 +740,9 @@ def main() -> None:
           f"Kandidaten, {len(rohdaten_fuer_backtest['marktscan_kaufkandidaten'])} Marktscan-Kaufkandidaten")
     print(f"  Preishistorie ueberholte Symbole: {len(preishistorie_ueberholte_symbole['symbole'])} Symbole "
           f"({', '.join(preishistorie_ueberholte_symbole['symbole']) or '-'})")
+    print(f"  Konfidenz-Kalibrierung: {konfidenz_kalibrierung}")
+    print(f"  Deribit-Cross-Check: {deribit_cross_check_verlauf['anzahl_mit_optionsmarkt_fakt']} Signale mit "
+          f"Optionsmarkt-Fakt, davon {deribit_cross_check_verlauf['anzahl_mit_gegenargument']} mit gegenargument")
 
 
 if __name__ == "__main__":
