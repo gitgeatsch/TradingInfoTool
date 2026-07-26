@@ -8943,3 +8943,99 @@ nach Thread-Abschluss verifiziert).
 Begleitwerten für spätere Korrelation mit dem tatsächlichen Signal-Ausgang,
 analog zum Deribit-Cross-Check) - echter Lauf gegen die Produktions-DB
 bestätigt (aktuell 0 Einträge, da das Feature gerade erst gebaut wurde).
+
+## Nachtrag (2026-07-26, später): Z.ai-Gegenprüfung um unabhängigen Richtungs-Abgleich erweitert + sichtbar in App/E-Mail
+
+Erweitert die obige Gegenprüfungslogik direkt am selben Tag, ausgelöst durch
+eine Rückfrage des Nutzers, wo das Z.ai-Urteil im E-Mail-Text überhaupt zu
+sehen sei (bisher: nirgends, Phase 1 war bewusst rein beobachtend, nur in der
+DB gespeichert). Bei der Gelegenheit stellte sich heraus, dass der Nutzer sich
+an eine frühere Absprache erinnerte, die von der tatsächlich umgesetzten
+abwich - direkter Transkript-Abgleich (nicht nur Erinnerung) bestätigte: was
+tatsächlich vereinbart und mit "trifft es genau" bestätigt wurde, war ein
+reiner Text-vs-Fakten-Konsistenz-Check (siehe oben) - was der Nutzer jetzt
+zusätzlich wollte, war ein echtes JA/NEIN, ob Z.ai *unabhängig* zur selben
+Richtung (LONG/SHORT) kommt wie das Primär-Modell. Nutzer-Entscheidung nach
+kurzer Abwägung: **beide Prüfungen als Paket**, nicht als Ersatz füreinander.
+
+### Zwei getrennte Z.ai-Calls, bewusst NICHT ein kombinierter Call
+
+Der naheliegende erste Entwurf (ein Call, der beides zugleich beantwortet)
+wurde vor jeder Code-Zeile verworfen: `baue_fakten()` enthält bereits
+`richtung`/`action`/`confidence_pct` als Fakt. Würde dieselbe Faktenmenge auch
+für die Richtungsableitung verwendet, bekäme Z.ai die gesuchte Antwort
+praktisch vorgegeben (Echo-/Anker-Effekt) - der zweite Check wäre wertlos, da
+er keine wirklich unabhängige zweite Meinung mehr wäre. Lösung: ein zweiter,
+schmalerer Fakten-Baustein `baue_objektive_fakten()` (identisch zu
+`baue_fakten()`, aber OHNE `richtung`/`action`/`confidence_pct`), nur für den
+neuen Call `leite_eigene_richtung()` verwendet. Die eigentliche
+Übereinstimmungs-Prüfung (`uebereinstimmung = "ja"|"nein"`) wird NICHT vom LLM
+selbst beurteilt, sondern deterministisch in Python berechnet (Vergleich
+`eigene_richtung == primaer_richtung`) - robuster als eine dritte Frage an ein
+LLM, ob es "übereinstimmt". `NEUTRAL` zählt wie jede andere Abweichung als
+"nein" (keine Sonderbehandlung, Nutzer-Entscheidung).
+
+### Live-Kalibrierung: echte, nicht temperaturbedingte Antwort-Varianz gefunden
+
+Wiederholte identische Grenzfall-Faktensets (bearisher Trend + überverkaufter
+RSI als Gegen-Indikator) ergaben bei `temperature=0.2` 5/6 SHORT zu 1/6
+NEUTRAL, bei `temperature=0.0` 4/6 SHORT zu 2/6 NEUTRAL - die Varianz
+verschwindet bei Temperatur 0 NICHT, ist also keine Sampling-Eigenart, sondern
+echte Modell-Unsicherheit beim Abwägen widersprüchlicher Signale. Per
+`AskUserQuestion` mit drei Optionen zur Entscheidung vorgelegt (Prompt
+nachschärfen / Rauschen akzeptieren / Frage anders stellen) -
+**Nutzer-Entscheidung: Rauschen akzeptieren, keine Prompt-Nachschärfung**,
+ausdrücklich unter Verweis auf die bereits dokumentierte Anker-Kollaps-Gefahr
+bei übermäßig spezifizierten Prompts (Regel 22/13, siehe Nachtrag 2026-07-24
+"Gates-Kalibrierung"). Die beobachtete Inkonsistenz wird als Teil dessen
+behandelt, was über Zeit beobachtet werden soll, statt weg-konstruiert zu
+werden.
+
+### Umsetzung
+
+- `agent/krypto/gegenpruefung.py`: `baue_objektive_fakten()`,
+  `SYSTEM_PROMPT_RICHTUNG`, `leite_eigene_richtung()` (P-8, validiert
+  `eigene_richtung` gegen `{LONG, SHORT, NEUTRAL}`).
+- `database/models.py` + `database/db.py`: drei neue `HebelSignal`-Felder
+  (`zai_eigene_richtung`, `zai_uebereinstimmung`, `zai_richtung_kurzbegruendung`),
+  additive Migration gegen die echte Produktions-DB angewendet und verifiziert.
+  `update_hebel_signal_zai_gegenpruefung()` um die drei Parameter erweitert -
+  Docstring warnt jetzt explizit davor, die Funktion zweimal pro Datensatz
+  aufzurufen (würde den ersten Aufruf durch die Default-`None`-Werte des
+  zweiten stillschweigend überschreiben).
+- `agent/krypto/hebel_pipeline.py`: `_zai_gegenpruefung_im_hintergrund()` führt
+  beide Z.ai-Calls sequenziell im selben Hintergrund-Thread aus, berechnet
+  `uebereinstimmung` deterministisch, schreibt alle 5 Felder in EINEM
+  `db.update_...()`-Aufruf (verhindert das oben genannte Überschreiben bei
+  Teilfehlschlägen - nur wenn BEIDE Calls fehlschlagen, entfällt der Update
+  komplett).
+- `ui/formatting.py`: `format_zai_gegenpruefung_lines()` (zwei Zeilen, gleiche
+  ▲/▼-Symbolik wie Risikofaktoren, farbig aber NICHT fett - Abstufung
+  Abschnitts-Header > Fazit > Risikofaktoren/Z.ai bleibt erhalten). Bei der
+  Gelegenheit zusätzlicher, unabhängiger Nutzer-Wunsch umgesetzt: bei der
+  Fazit-Zeile ist jetzt nur noch das Wort "Fazit:" unterstrichen, nicht mehr
+  die ganze Zeile (`_split_fazit_label()`, zwei HTML-Spans für die E-Mail,
+  zwei Tk-Tags mit Bereichs-Split für die App - Tk mischt Font-Eigenschaften
+  überlappender Tags nicht, daher zwei vollständig eigene Font-Objekte statt
+  eines gemeinsamen).
+- `ui/detail_panel.py`: neue `fazit_label_*`-Tags (fett+unterstrichen), nach
+  den bestehenden `fazit_*`-Tags (fett only) konfiguriert - später
+  konfigurierte Tags gewinnen bei Tk für überlappende Zeichenbereiche.
+- `ui/hebel_view.py`: `format_zai_gegenpruefung_lines()`-Aufruf direkt nach dem
+  bestehenden Fazit-Block im Detail-Panel.
+- `scheduler/background.py`: neue `_formatiere_zai_gegenpruefung()` (eigene
+  Kopie für den E-Mail-Textkontext, analog `_formatiere_fazit()`), nur in
+  `_notify_hebel_signal()` verdrahtet (Signal/Spot hat diese Felder nicht).
+
+**Verifiziert:** Compile-Check + Import-Regression (`ui.hebel_view`,
+`scheduler.background`, `main`); synthetischer Test aller 3
+E-Mail-Textbau-Fälle (beide Felder gesetzt, nur Konsistenz-Check gesetzt,
+beide leer); Tk-Smoke-Test von `render_detail_text()` mit Fazit- und
+Z.ai-Zeilen gemischt (bestätigt: Fazit bekommt `fazit_positiv` +
+`fazit_label_positiv` nur über "Fazit:", Z.ai-Zeilen bekommen `risk_negativ`/
+`risk_positiv` über die ganze Zeile, keine Fett-Formatierung); HTML-Rendering
+(`render_detail_html()`) mit derselben Zeilenmischung geprüft (Fazit-Split in
+zwei Spans, Z.ai-Zeilen ein Span, keine Unterstreichung).
+
+Scope bleibt Hebel-only (v1-Entscheidung unverändert). Phase 1 (rein
+beobachtend, kein Gate) gilt unverändert auch für den neuen Richtungs-Abgleich.

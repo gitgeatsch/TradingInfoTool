@@ -24,6 +24,7 @@ import ui.theme as theme
 from ui.detail_panel import configure_tags, render_detail_text
 from ui.formatting import (
     RISIKOFAKTOREN_LEGENDE, format_fazit_lines, format_money, format_risikofaktoren_lines,
+    format_zai_gegenpruefung_lines,
 )
 from ui.heading_tooltip import add_heading_tooltips
 from ui.row_tooltip import add_row_tooltips
@@ -523,6 +524,14 @@ class HebelView(ttk.Frame):
         if fazit_lines:
             lines.append("")
             lines.extend(fazit_lines)
+
+        zai_lines = format_zai_gegenpruefung_lines(
+            signal.zai_gegenpruefung_urteil, signal.zai_gegenpruefung_kurzbegruendung,
+            signal.zai_eigene_richtung, signal.zai_uebereinstimmung, signal.zai_richtung_kurzbegruendung,
+        )
+        if zai_lines:
+            lines.append("")
+            lines.extend(zai_lines)
 
         self._set_detail_text("\n".join(lines))
         self._render_liquiditaetszonen_chart(signal)

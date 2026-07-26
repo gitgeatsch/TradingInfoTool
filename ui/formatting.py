@@ -8,7 +8,7 @@ from staleness import format_price_age, is_history_stale, is_price_stale
 __all__ = [
     "format_money", "format_price_age", "is_history_stale", "is_price_stale",
     "format_risikofaktoren_lines", "RISIKOFAKTOREN_LEGENDE",
-    "format_fazit_lines",
+    "format_fazit_lines", "format_zai_gegenpruefung_lines",
     "classify_detail_line", "render_detail_html",
 ]
 
@@ -67,6 +67,10 @@ def format_risikofaktoren_lines(risikofaktoren_json: str | None) -> list[str]:
 
 
 _FAZIT_SYMBOL = {"ja": "▲", "mit_vorbehalt": "●", "nein": "▼"}
+# 2026-07-26 (Nutzer-Wunsch "nur das Wort Fazit unterstreichen, nicht der
+# ganze Text"): eigene Konstante statt eines Literals im f-String, damit
+# _split_fazit_label() unten denselben exakten Text zum Suchen verwendet.
+_FAZIT_LABEL = "Fazit:"
 
 
 def format_fazit_lines(
@@ -84,9 +88,54 @@ def format_fazit_lines(
     if not fazit_folgen:
         return []
     symbol = _FAZIT_SYMBOL.get(fazit_folgen, "●")
-    zeilen = [f"{symbol} Fazit: {fazit_folgen.replace('_', ' ')} - {fazit_kurzfazit or ''}"]
+    zeilen = [f"{symbol} {_FAZIT_LABEL} {fazit_folgen.replace('_', ' ')} - {fazit_kurzfazit or ''}"]
     if fazit_konsistenz_hinweis:
         zeilen.append(f"⚠ {fazit_konsistenz_hinweis}")
+    return zeilen
+
+
+_ZAI_KONSISTENZ_SYMBOL = {"konsistent": "▲", "widerspruch": "▼"}
+_ZAI_UEBEREINSTIMMUNG_SYMBOL = {"ja": "▲", "nein": "▼"}
+_ZAI_KONSISTENZ_LABEL = "Z.ai-Gegenprüfung der Begründung:"
+_ZAI_RICHTUNG_LABEL = "Z.ai eigene Richtungseinschätzung:"
+
+
+def format_zai_gegenpruefung_lines(
+    zai_gegenpruefung_urteil: str | None,
+    zai_gegenpruefung_kurzbegruendung: str | None,
+    zai_eigene_richtung: str | None,
+    zai_uebereinstimmung: str | None,
+    zai_richtung_kurzbegruendung: str | None,
+) -> list[str]:
+    """Z.ai-Gegenpruefung (2026-07-26, siehe agent/krypto/gegenpruefung.py) -
+    ZWEI unabhaengige Zeilen, analog format_fazit_lines(): dieselben ▲/▼-
+    Symbole (kein ●, `urteil`/`uebereinstimmung` kennen nur zwei Werte), damit
+    classify_detail_line() automatisch greift (risk_positiv/risk_negativ -
+    bewusst NICHT die fazit_*-Tags, siehe Nutzer-Entscheidung 2026-07-26:
+    farbig wie Risikofaktoren, aber NICHT fett wie das Fazit selbst, um die
+    Abstufung Abschnitts-Header > Fazit > Risikofaktoren/Z.ai zu erhalten).
+    Explizites Label unterscheidet klar von "Fazit:" - prueft die eigene
+    Begruendung des Primaer-Modells (Abschnitt 2), NICHT dessen Fazit
+    (Abschnitt 3). Jede Zeile erscheint nur, wenn das jeweilige Feld gesetzt
+    ist (kein Rauschen bei aelteren Signalen oder fehlgeschlagenem Z.ai-Call)."""
+    zeilen = []
+    if zai_gegenpruefung_urteil:
+        symbol = _ZAI_KONSISTENZ_SYMBOL.get(zai_gegenpruefung_urteil, "●")
+        zeilen.append(
+            f"{symbol} {_ZAI_KONSISTENZ_LABEL} {zai_gegenpruefung_urteil} - "
+            f"{zai_gegenpruefung_kurzbegruendung or ''}"
+        )
+    if zai_eigene_richtung:
+        symbol = _ZAI_UEBEREINSTIMMUNG_SYMBOL.get(zai_uebereinstimmung, "●")
+        abgleich_text = (
+            "stimmt überein" if zai_uebereinstimmung == "ja"
+            else "weicht ab" if zai_uebereinstimmung == "nein"
+            else "unklar"
+        )
+        zeilen.append(
+            f"{symbol} {_ZAI_RICHTUNG_LABEL} {zai_eigene_richtung} ({abgleich_text}) - "
+            f"{zai_richtung_kurzbegruendung or ''}"
+        )
     return zeilen
 
 
@@ -120,7 +169,7 @@ def classify_detail_line(line: str) -> str | None:
         return "warning"
     if stripped[0] in _RISK_TAG_BY_SYMBOL:
         rest = stripped[1:].strip()
-        if rest.startswith("Fazit:"):
+        if rest.startswith(_FAZIT_LABEL):
             return _FAZIT_TAG_BY_SYMBOL[stripped[0]]
         return _RISK_TAG_BY_SYMBOL[stripped[0]]
     if stripped.startswith("(") and stripped.endswith(")") and "Warnsignal" in stripped:
@@ -153,11 +202,36 @@ _HTML_STYLE_BY_TAG = {
     "risk_positiv": "color:#1a7f37;",
     "risk_neutral": "color:#4a4a4a;",
     "risk_negativ": "color:#c0392b;",
+    # 2026-07-26 (Nutzer-Wunsch "nur das Wort Fazit unterstreichen, nicht der
+    # ganze Text"): Unterstreichung NICHT mehr hier - nur noch fett+farbig
+    # fuer den Rest der Zeile, das Wort "Fazit:" selbst bekommt zusaetzlich
+    # _FAZIT_LABEL_STYLE_BY_TAG (siehe render_detail_html()/_split_fazit_label()).
+    "fazit_positiv": "font-weight:bold;color:#1a7f37;",
+    "fazit_neutral": "font-weight:bold;color:#4a4a4a;",
+    "fazit_negativ": "font-weight:bold;color:#c0392b;",
+    "legend": "color:#4a4a4a;font-style:italic;",
+}
+
+# Nur fuer das "Fazit:"-Label-Praefix (siehe _split_fazit_label()) - dieselbe
+# Farbe wie der jeweilige Basis-Tag oben, zusaetzlich unterstrichen.
+_FAZIT_LABEL_STYLE_BY_TAG = {
     "fazit_positiv": "font-weight:bold;text-decoration:underline;color:#1a7f37;",
     "fazit_neutral": "font-weight:bold;text-decoration:underline;color:#4a4a4a;",
     "fazit_negativ": "font-weight:bold;text-decoration:underline;color:#c0392b;",
-    "legend": "color:#4a4a4a;font-style:italic;",
 }
+
+
+def _split_fazit_label(line: str) -> tuple[str, str] | None:
+    """Trennt eine Fazit-Zeile in Label-Praefix ('<Symbol> Fazit:') und den
+    Rest - fuer die Teil-Unterstreichung (nur das Wort 'Fazit' unterstrichen,
+    nicht der ganze Text, Nutzer-Wunsch 2026-07-26). None, wenn "Fazit:" aus
+    irgendeinem Grund nicht in der Zeile vorkommt (sollte bei einer als
+    fazit_*-getaggten Zeile nicht passieren, defensiv trotzdem abgesichert)."""
+    idx = line.find(_FAZIT_LABEL)
+    if idx == -1:
+        return None
+    ende = idx + len(_FAZIT_LABEL)
+    return line[:ende], line[ende:]
 
 
 def _html_escape(text: str) -> str:
@@ -169,13 +243,21 @@ def render_detail_html(text: str) -> str:
     demselben Zeilen-Text ein <pre>-basiertes HTML-Fragment mit Inline-Styles
     fuer dieselben Zeilenmuster (Abschnitts-Kopfzeilen fett+Akzentfarbe,
     Risikofaktor-Zeilen farbig etc.), damit die E-Mail dieselbe visuelle
-    Hervorhebung zeigt wie das App-Detail-Panel."""
+    Hervorhebung zeigt wie das App-Detail-Panel. Fazit-Zeilen werden in ZWEI
+    Spans gesplittet (siehe _split_fazit_label()), damit nur das Wort
+    "Fazit:" unterstrichen ist, nicht der gesamte Text."""
     teile = ["<pre style=\"font-family: monospace; color:#1a1a1a; margin:0;\">"]
     for line in text.split("\n"):
-        escaped = _html_escape(line)
         tag = classify_detail_line(line)
-        style = _HTML_STYLE_BY_TAG.get(tag)
-        teile.append(f"<span style=\"{style}\">{escaped}</span>" if style else escaped)
+        split = _split_fazit_label(line) if tag in _FAZIT_LABEL_STYLE_BY_TAG else None
+        if split:
+            prefix, rest = split
+            teile.append(f"<span style=\"{_FAZIT_LABEL_STYLE_BY_TAG[tag]}\">{_html_escape(prefix)}</span>")
+            teile.append(f"<span style=\"{_HTML_STYLE_BY_TAG[tag]}\">{_html_escape(rest)}</span>")
+        else:
+            escaped = _html_escape(line)
+            style = _HTML_STYLE_BY_TAG.get(tag)
+            teile.append(f"<span style=\"{style}\">{escaped}</span>" if style else escaped)
         teile.append("\n")
     teile.append("</pre>")
     return "".join(teile)

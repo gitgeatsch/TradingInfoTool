@@ -722,6 +722,10 @@ def _migrate_kontrathese_columns(conn: sqlite3.Connection) -> None:
 
 _ZAI_GEGENPRUEFUNG_NEW_COLUMNS = {
     "zai_gegenpruefung_urteil": "TEXT", "zai_gegenpruefung_kurzbegruendung": "TEXT",
+    # Unabhaengiger Richtungs-Abgleich (2026-07-26, gleicher Tag) - siehe
+    # database/models.py::HebelSignal.zai_eigene_richtung-Docstring.
+    "zai_eigene_richtung": "TEXT", "zai_uebereinstimmung": "TEXT",
+    "zai_richtung_kurzbegruendung": "TEXT",
 }
 
 
@@ -2640,6 +2644,7 @@ _HEBEL_SIGNAL_COLUMNS = (
     "kontrathese_zu_position", "kontrathese_llm_richtung",
     "fazit_folgen", "fazit_kurzfazit", "fazit_konsistenz_hinweis",
     "zai_gegenpruefung_urteil", "zai_gegenpruefung_kurzbegruendung",
+    "zai_eigene_richtung", "zai_uebereinstimmung", "zai_richtung_kurzbegruendung",
 )
 
 
@@ -2784,7 +2789,13 @@ def update_hebel_signal_outcome(
 
 
 def update_hebel_signal_zai_gegenpruefung(
-    conn: sqlite3.Connection, hebel_signal_id: int, urteil: str | None, kurzbegruendung: str | None,
+    conn: sqlite3.Connection,
+    hebel_signal_id: int,
+    urteil: str | None,
+    kurzbegruendung: str | None,
+    eigene_richtung: str | None = None,
+    uebereinstimmung: str | None = None,
+    richtung_kurzbegruendung: str | None = None,
 ) -> None:
     """Nachtrag 2026-07-26 (Z.ai-Gegenpruefungslogik, siehe agent/krypto/
     gegenpruefung.py) - bewusst NACHTRAEGLICHES Update statt Teil des initialen
@@ -2795,11 +2806,26 @@ def update_hebel_signal_zai_gegenpruefung(
     notification.md - genau diese Latenz wurde dort bereits einmal behoben,
     ein synchroner Call vor dem Insert haette sie wieder eingefuehrt). Die
     Gegenpruefung laeuft deshalb NACH insert_hebel_signal(), aktualisiert die
-    bereits gespeicherte Zeile per id."""
+    bereits gespeicherte Zeile per id.
+
+    Erweitert (2026-07-26, gleicher Tag) um den unabhaengigen Richtungs-
+    Abgleich - die drei neuen Parameter sind optional (Default None), damit
+    ein Aufruf ohne den zweiten Z.ai-Call (z.B. falls dieser fehlschlaegt)
+    weiterhin nur die urspruenglichen zwei Felder setzt, ohne die anderen
+    versehentlich auf None zurueckzusetzen, WENN der Aufrufer sie einfach
+    weglaesst - Vorsicht: ruft man diese Funktion zweimal fuer denselben
+    Datensatz auf (z.B. erst Konsistenz-, dann Richtungs-Ergebnis), ueberschreibt
+    der zweite Aufruf die ersten beiden Felder mit None, falls sie nicht erneut
+    mitgegeben werden. hebel_pipeline.py::_zai_gegenpruefung_im_hintergrund()
+    ruft deshalb IMMER alle fuenf Werte in einem einzigen Aufruf mit."""
     conn.execute(
         "UPDATE hebel_signals SET zai_gegenpruefung_urteil = ?, "
-        "zai_gegenpruefung_kurzbegruendung = ? WHERE id = ?",
-        (urteil, kurzbegruendung, hebel_signal_id),
+        "zai_gegenpruefung_kurzbegruendung = ?, zai_eigene_richtung = ?, "
+        "zai_uebereinstimmung = ?, zai_richtung_kurzbegruendung = ? WHERE id = ?",
+        (
+            urteil, kurzbegruendung, eigene_richtung, uebereinstimmung,
+            richtung_kurzbegruendung, hebel_signal_id,
+        ),
     )
     conn.commit()
 

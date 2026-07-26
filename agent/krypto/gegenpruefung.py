@@ -4,14 +4,46 @@ automatischen Fallback-Kette loesen und stattdessen fuer eine kleine,
 dedizierte Konsistenzpruefung nutzen - siehe agent/krypto/budget_allocator.py
 Modul-Docstring fuer die Fallback-Kette-Aenderung).
 
-Aufgabe: prueft NICHT, ob die Handelsentscheidung selbst richtig ist (das
-waere eine zweite, primitivere Bewertung und wuerde die eigentliche
-Primaer-Analyse unterlaufen, siehe [[feedback_llm_synthese_kein_deterministischer_override]])
-- sondern nur, ob die vom Primaer-Modell selbst gegebene Kurzbegruendung
-(`short_reasoning`) den harten, deterministisch berechneten Fakten
-WIDERSPRICHT. Eine reine Python-Regel koennte das nicht leisten (Freitext-
-gegen-Zahlen-Konsistenz ist keine Schwellenwert-Frage) - das ist die
-tatsaechliche, einzigartige LLM-Faehigkeit, die hier genutzt wird.
+Zwei unabhaengige Pruefungen, ZWEI getrennte Z.ai-Calls (siehe Nachtrag
+2026-07-26 unten fuer die Begruendung, warum nicht EIN kombinierter Call):
+
+1. **Konsistenz-Check** (`pruefe_konsistenz()`, urspruengliches Feature):
+   prueft NICHT, ob die Handelsentscheidung selbst richtig ist (das waere
+   eine zweite, primitivere Bewertung und wuerde die eigentliche
+   Primaer-Analyse unterlaufen, siehe [[feedback_llm_synthese_kein_deterministischer_override]])
+   - sondern nur, ob die vom Primaer-Modell selbst gegebene Kurzbegruendung
+   (`short_reasoning`) den harten, deterministisch berechneten Fakten
+   WIDERSPRICHT. Eine reine Python-Regel koennte das nicht leisten (Freitext-
+   gegen-Zahlen-Konsistenz ist keine Schwellenwert-Frage) - das ist die
+   tatsaechliche, einzigartige LLM-Faehigkeit, die hier genutzt wird.
+
+2. **Unabhaengiger Richtungs-Abgleich** (`leite_eigene_richtung()`, Nachtrag
+   2026-07-26, gleicher Tag): Nutzer-Wunsch nach einer echten JA/NEIN-Aussage,
+   ob Z.ai bei denselben Fakten selbststaendig zum gleichen Ergebnis (Richtung)
+   kommt wie das Primaer-Modell. KRITISCH fuer die Kalibrierung: Z.ai bekommt
+   hierfuer explizit NICHT dieselbe `fakten`-Struktur wie der Konsistenz-Check
+   (die `richtung`/`action`/`confidence_pct` bereits als "Fakt" enthaelt) -
+   das waere ein Echo-Effekt/Anker (Z.ai wuerde die vorgegebene Richtung
+   quasi nur bestaetigen, weil sie ihm als gegeben praesentiert wird, statt
+   sie unabhaengig herzuleiten). Stattdessen bekommt `leite_eigene_richtung()`
+   nur `baue_objektive_fakten()` (KEINE richtung/action/confidence_pct) und
+   leitet daraus selbst LONG/SHORT/NEUTRAL ab. `uebereinstimmung` wird
+   anschliessend deterministisch in Python verglichen (nicht vom Modell
+   selbst geurteilt) - robuster, kein zusaetzliches Bias-Risiko durch eine
+   dritte Modell-Frage.
+
+   Live-Kalibrierung (2026-07-26): bei eindeutigen Fakten (rein bullisch/rein
+   baerisch, keine Gegenindikatoren) liefert Z.ai stabile, korrekte Urteile.
+   Bei GRENZWERTIGEN Fakten (z.B. durchgehend baerischer Trend, aber
+   ueberverkaufter RSI als Gegenindikator) zeigte ein Wiederholungstest
+   echte Uneinheitlichkeit (5/6 SHORT bei temperature=0.2, 4/6 SHORT bei
+   temperature=0.0 - die Streuung liegt NICHT an der Temperatur, sondern an
+   echter Modell-Unschluessigkeit beim Abwaegen widerspruechlicher Signale).
+   Nutzer-Entscheidung nach Vorlage dieses Befunds: Rauschen akzeptieren,
+   kein Prompt-Tuning (Risiko eines neuen Anker-Bugs, siehe [[project_konfidenz_prompt_anker_fix]]),
+   NEUTRAL zaehlt wie jede andere Nicht-Uebereinstimmung als "nein" - Phase 1
+   ist ohnehin rein beobachtend, das Rauschen selbst ist Teil dessen, was
+   ueber Zeit beobachtet werden soll.
 
 Live kalibriert (2026-07-26, drei Bias-Testreihen gegen die echte Z.ai-API,
 nicht nur angenommen):
@@ -124,6 +156,85 @@ def baue_fakten(
     if optionsmarkt_skew is not None:
         fakten["optionsmarkt_skew"] = optionsmarkt_skew
     return fakten
+
+
+def baue_objektive_fakten(
+    symbol: str,
+    rsi: float | None,
+    trend_label: str | None,
+    regime: str | None,
+    funding_rate_stunde: float | None,
+    confluence_bullish: int,
+    confluence_bearish: int,
+    confluence_neutral: int,
+    optionsmarkt_skew: float | None,
+) -> dict:
+    """Wie baue_fakten(), aber BEWUSST OHNE richtung/action/confidence_pct -
+    siehe Modul-Docstring Punkt 2 (Echo-/Anker-Vermeidung fuer
+    leite_eigene_richtung()). Nur fuer den unabhaengigen Richtungs-Abgleich
+    verwenden, NICHT fuer pruefe_konsistenz() (die braucht richtung/action
+    als Vergleichsbasis fuer den Begruendungstext)."""
+    fakten = {"symbol": symbol}
+    if rsi is not None:
+        fakten["rsi"] = round(rsi, 1)
+    if trend_label:
+        fakten["trend"] = trend_label
+    if regime:
+        fakten["regime"] = regime
+    funding_text = _funding_rate_vorzeichen_text(funding_rate_stunde)
+    if funding_text:
+        fakten["funding_rate_vorzeichen"] = funding_text
+    gesamt = confluence_bullish + confluence_bearish + confluence_neutral
+    if gesamt > 0:
+        fakten["technische_konfluenz"] = (
+            f"{confluence_bullish} bullisch / {confluence_bearish} baerisch / "
+            f"{confluence_neutral} neutral von {gesamt}"
+        )
+    if optionsmarkt_skew is not None:
+        fakten["optionsmarkt_skew"] = optionsmarkt_skew
+    return fakten
+
+
+SYSTEM_PROMPT_RICHTUNG = (
+    "Du bekommst ausschliesslich objektive Marktfakten zu einem Krypto-Hebel-Kandidaten "
+    "(technische Indikatoren, Marktregime, Funding-Rate, Optionsmarkt-Daten). Du kennst KEINE "
+    "Handelsempfehlung eines anderen Modells. Deine Aufgabe: leite ALLEIN aus diesen Fakten deine "
+    "eigene Markteinschaetzung ab - LONG (bullisch), SHORT (baerisch) oder NEUTRAL (keine klare "
+    "Tendenz erkennbar). Erfinde NIEMALS eigene Fakten, nutze nur die gegebenen Werte. Antworte "
+    "AUSSCHLIESSLICH mit JSON, exakt diese zwei Felder: "
+    '{"eigene_richtung": "LONG" oder "SHORT" oder "NEUTRAL", "kurzbegruendung": "<= 12 Woerter"}.'
+)
+
+_GUELTIGE_RICHTUNGEN = {"LONG", "SHORT", "NEUTRAL"}
+
+
+def leite_eigene_richtung(zai_client, objektive_fakten: dict) -> dict | None:
+    """Zweiter, GETRENNTER Z.ai-Call (siehe Modul-Docstring Punkt 2) - leitet
+    unabhaengig von der Primaer-Empfehlung eine eigene Richtung her. Gibt
+    None zurueck, wenn `zai_client` nicht konfiguriert ist oder der Call
+    fehlschlaegt (P-8, wie pruefe_konsistenz())."""
+    if zai_client is None:
+        return None
+
+    user_content = json.dumps({"fakten": objektive_fakten}, ensure_ascii=False)
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT_RICHTUNG},
+        {"role": "user", "content": user_content},
+    ]
+    try:
+        antwort = zai_client.chat(messages, temperature=0.2, response_format=_JSON_OBJECT_FORMAT)
+        geparst = json.loads(antwort)
+        eigene_richtung = geparst.get("eigene_richtung")
+        if eigene_richtung not in _GUELTIGE_RICHTUNGEN:
+            logger.info("Z.ai-Richtungsabgleich: ungueltiges eigene_richtung-Feld: %r", eigene_richtung)
+            return None
+        return {
+            "eigene_richtung": eigene_richtung,
+            "kurzbegruendung": geparst.get("kurzbegruendung"),
+        }
+    except Exception as exc:
+        logger.info("Z.ai-Richtungsabgleich fehlgeschlagen (P-8, ohne Auswirkung auf das Signal): %s", exc)
+        return None
 
 
 def pruefe_konsistenz(zai_client, fakten: dict, begruendungstext: str | None) -> dict | None:

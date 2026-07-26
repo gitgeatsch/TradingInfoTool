@@ -585,6 +585,14 @@ class HebelSignal:
     # oder der Call fehlgeschlagen ist (P-8).
     zai_gegenpruefung_urteil: str | None = None  # 'konsistent'|'widerspruch'
     zai_gegenpruefung_kurzbegruendung: str | None = None
+    # Unabhaengiger Richtungs-Abgleich (2026-07-26, gleicher Tag, siehe
+    # agent/krypto/gegenpruefung.py::leite_eigene_richtung()-Docstring) -
+    # GETRENNTER Z.ai-Call ohne Kenntnis der Primaer-Richtung (Echo-/Anker-
+    # Vermeidung). zai_uebereinstimmung wird deterministisch in Python
+    # verglichen (nicht vom Modell selbst geurteilt).
+    zai_eigene_richtung: str | None = None  # 'LONG'|'SHORT'|'NEUTRAL'
+    zai_uebereinstimmung: str | None = None  # 'ja'|'nein'
+    zai_richtung_kurzbegruendung: str | None = None
 
 
 @dataclass

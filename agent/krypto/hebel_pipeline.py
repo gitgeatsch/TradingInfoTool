@@ -21,7 +21,12 @@ from agent.krypto.analyst import AnalystResponseInvalid
 from agent.krypto.anticyclic import assess as assess_anticyclic
 from agent.krypto.backward_tracking import compute_win_rate_fact
 from agent.krypto.btc_relativwert import btc_relativwert_fakt
-from agent.krypto.gegenpruefung import baue_fakten as baue_zai_fakten, pruefe_konsistenz as zai_pruefe_konsistenz
+from agent.krypto.gegenpruefung import (
+    baue_fakten as baue_zai_fakten,
+    baue_objektive_fakten as baue_zai_objektive_fakten,
+    leite_eigene_richtung as zai_leite_eigene_richtung,
+    pruefe_konsistenz as zai_pruefe_konsistenz,
+)
 from agent.krypto.hebel_analyst import build_hebel_facts, call_llm_for_hebel_signal
 from agent.krypto.liquidity_zones import liquiditaetszonen_fakt
 from agent.krypto.makro_analog import get_cached_makro_analog_fact
@@ -51,7 +56,12 @@ def _now() -> str:
 
 
 def _zai_gegenpruefung_im_hintergrund(
-    hebel_signal_id: int, fakten: dict, begruendungstext: str | None, zai_client,
+    hebel_signal_id: int,
+    fakten: dict,
+    begruendungstext: str | None,
+    objektive_fakten: dict,
+    primaer_richtung: str | None,
+    zai_client,
 ) -> None:
     """Laeuft in einem eigenen Thread (siehe Aufrufstelle in
     generate_hebel_signal()) - GENUINE Entkopplung von der eigentlichen
@@ -68,16 +78,43 @@ def _zai_gegenpruefung_im_hintergrund(
     teilbar) statt der von der aufrufenden Funktion verwendeten - jene wird
     vom Aufrufer ggf. bereits geschlossen, sobald generate_hebel_signal()
     zurueckkehrt. Fehler bleiben komplett folgenlos (P-8, doppelt abgesichert:
-    pruefe_konsistenz() faengt bereits selbst ab, hier zusaetzlich fuer den
-    Thread-Kontext selbst, z.B. falls die neue DB-Connection scheitert)."""
+    pruefe_konsistenz()/leite_eigene_richtung() fangen bereits selbst ab, hier
+    zusaetzlich fuer den Thread-Kontext selbst, z.B. falls die neue DB-
+    Connection scheitert).
+
+    ZWEI unabhaengige, sequentielle Z.ai-Calls (Nachtrag 2026-07-26, gleicher
+    Tag, siehe agent/krypto/gegenpruefung.py Modul-Docstring Punkt 2 fuer die
+    Begruendung, warum nicht EIN kombinierter Call): Konsistenz-Check zuerst,
+    dann der unabhaengige Richtungs-Abgleich. `uebereinstimmung` wird
+    deterministisch in Python verglichen (eigene_richtung vs. primaer_richtung),
+    NEUTRAL zaehlt wie jede andere Nicht-Uebereinstimmung als 'nein' (Nutzer-
+    Entscheidung nach Live-Kalibrierung, siehe dortiger Docstring). Beide
+    Ergebnisse werden gemeinsam in EINEM DB-Update geschrieben, damit ein
+    fehlgeschlagener zweiter Call das Ergebnis des ersten nicht durch Nones
+    ueberschreibt (siehe db.update_hebel_signal_zai_gegenpruefung()-
+    Docstring-Warnung)."""
+    urteil = kurzbegruendung = eigene_richtung = uebereinstimmung = richtung_kurzbegruendung = None
     try:
-        ergebnis = zai_pruefe_konsistenz(zai_client, fakten, begruendungstext)
-        if ergebnis is None:
-            return
+        konsistenz_ergebnis = zai_pruefe_konsistenz(zai_client, fakten, begruendungstext)
+        if konsistenz_ergebnis is not None:
+            urteil = konsistenz_ergebnis.get("urteil")
+            kurzbegruendung = konsistenz_ergebnis.get("kurzbegruendung")
+
+        richtung_ergebnis = zai_leite_eigene_richtung(zai_client, objektive_fakten)
+        if richtung_ergebnis is not None:
+            eigene_richtung = richtung_ergebnis.get("eigene_richtung")
+            richtung_kurzbegruendung = richtung_ergebnis.get("kurzbegruendung")
+            if primaer_richtung is not None:
+                uebereinstimmung = "ja" if eigene_richtung == primaer_richtung else "nein"
+
+        if urteil is None and eigene_richtung is None:
+            return  # beide Calls fehlgeschlagen - nichts zu speichern
+
         thread_conn = db.get_connection()
         try:
             db.update_hebel_signal_zai_gegenpruefung(
-                thread_conn, hebel_signal_id, ergebnis.get("urteil"), ergebnis.get("kurzbegruendung"),
+                thread_conn, hebel_signal_id, urteil, kurzbegruendung,
+                eigene_richtung, uebereinstimmung, richtung_kurzbegruendung,
             )
         finally:
             thread_conn.close()
@@ -453,7 +490,7 @@ def generate_hebel_signal(
     # _zai_gegenpruefung_im_hintergrund()-Docstring fuer die Begruendung,
     # warum ein einfacher Aufruf NACH dem Insert - aber noch innerhalb dieser
     # Funktion - die on_signal_ready-E-Mail-Latenz NICHT geloest haette).
-    # Rein beobachtend: das zurueckgegebene `signal`-Objekt traegt die beiden
+    # Rein beobachtend: das zurueckgegebene `signal`-Objekt traegt die neuen
     # Felder bewusst noch nicht (der Thread laeuft ja gerade erst los) - der
     # spaetere DB-Update ist die alleinige Quelle, GUI/Notebook-Export lesen
     # ohnehin aus der DB, nicht aus diesem Rueckgabewert.
@@ -461,13 +498,30 @@ def generate_hebel_signal(
         ema_ordnung_item = next(
             (item for item in confluence.items if item.indicator == "EMA-Ordnung"), None,
         )
+        trend_label = ema_ordnung_item.detail if ema_ordnung_item else None
+        rsi_wert = latest_value(snapshot.rsi)
         zai_fakten = baue_zai_fakten(
             symbol=asset.symbol,
             richtung=corrected.get("richtung"),
             action=corrected.get("action"),
             confidence_pct=corrected.get("confidence_pct"),
-            rsi=latest_value(snapshot.rsi),
-            trend_label=ema_ordnung_item.detail if ema_ordnung_item else None,
+            rsi=rsi_wert,
+            trend_label=trend_label,
+            regime=regime_result.regime,
+            funding_rate_stunde=anticyclic_context.funding_rate_current,
+            confluence_bullish=confluence.bullish_count,
+            confluence_bearish=confluence.bearish_count,
+            confluence_neutral=confluence.neutral_count,
+            optionsmarkt_skew=(optionsmarkt or {}).get("skew_prozentpunkte"),
+        )
+        # Unabhaengiger Richtungs-Abgleich (2026-07-26, gleicher Tag) - siehe
+        # agent/krypto/gegenpruefung.py Modul-Docstring Punkt 2: BEWUSST eine
+        # eigene, engere Faktenmenge OHNE richtung/action/confidence_pct
+        # (Echo-/Anker-Vermeidung), nicht dieselbe `zai_fakten` von oben.
+        zai_objektive_fakten = baue_zai_objektive_fakten(
+            symbol=asset.symbol,
+            rsi=rsi_wert,
+            trend_label=trend_label,
             regime=regime_result.regime,
             funding_rate_stunde=anticyclic_context.funding_rate_current,
             confluence_bullish=confluence.bullish_count,
@@ -477,7 +531,10 @@ def generate_hebel_signal(
         )
         threading.Thread(
             target=_zai_gegenpruefung_im_hintergrund,
-            args=(new_id, zai_fakten, corrected.get("short_reasoning"), zai_client),
+            args=(
+                new_id, zai_fakten, corrected.get("short_reasoning"),
+                zai_objektive_fakten, corrected.get("richtung"), zai_client,
+            ),
             daemon=True,
         ).start()
 

@@ -1152,6 +1152,40 @@ def _formatiere_fazit(signal) -> str:
     return zeile
 
 
+_ZAI_KONSISTENZ_SYMBOL = {"konsistent": "▲", "widerspruch": "▼"}
+_ZAI_UEBEREINSTIMMUNG_SYMBOL = {"ja": "▲", "nein": "▼"}
+
+
+def _formatiere_zai_gegenpruefung(signal) -> str:
+    """Z.ai-Gegenpruefung (2026-07-26, siehe agent/krypto/gegenpruefung.py) -
+    eigene Kopie wie _formatiere_fazit() (E-Mail-Textkontext, getrennt von
+    ui/formatting.py::format_zai_gegenpruefung_lines() fuer die App). Zwei
+    unabhaengige Zeilen (Konsistenz-Check der Begruendung gegen Abschnitt 2,
+    NICHT gegen das Fazit + eigene, unabhaengig hergeleitete Richtungs-
+    einschaetzung im Vergleich zur primaeren Richtung) - Hebel-only (siehe
+    Modul-Docstring in agent/krypto/gegenpruefung.py), Signal (Spot) hat
+    diese Felder nicht."""
+    zeilen = []
+    if signal.zai_gegenpruefung_urteil:
+        symbol = _ZAI_KONSISTENZ_SYMBOL.get(signal.zai_gegenpruefung_urteil, "●")
+        zeilen.append(
+            f"{symbol} Z.ai-Gegenprüfung der Begründung: {signal.zai_gegenpruefung_urteil} - "
+            f"{signal.zai_gegenpruefung_kurzbegruendung or ''}"
+        )
+    if signal.zai_eigene_richtung:
+        symbol = _ZAI_UEBEREINSTIMMUNG_SYMBOL.get(signal.zai_uebereinstimmung, "●")
+        abgleich_text = (
+            "stimmt überein" if signal.zai_uebereinstimmung == "ja"
+            else "weicht ab" if signal.zai_uebereinstimmung == "nein"
+            else "unklar"
+        )
+        zeilen.append(
+            f"{symbol} Z.ai eigene Richtungseinschätzung: {signal.zai_eigene_richtung} ({abgleich_text}) - "
+            f"{signal.zai_richtung_kurzbegruendung or ''}"
+        )
+    return "\n\n".join(zeilen)
+
+
 def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None, conn_factory=None) -> None:
     """E-Mail bei handlungsrelevanter Spot-Empfehlung (2026-07-14, Erweiterung
     von U-8/P-7 - Empfehlungen sollen den Nutzer auch erreichen, wenn er selten
@@ -1355,6 +1389,7 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None, 
         forecast_text = _formatiere_forecast(signal)
         risikofaktoren_text = _formatiere_risikofaktoren(signal)
         fazit_text = _formatiere_fazit(signal)
+        zai_text = _formatiere_zai_gegenpruefung(signal)
         zeitpunkt_text = _formatiere_zeitpunkt_lokal(signal.created_at)
         wartezeit_text = ""
         if conn_factory is not None:
@@ -1396,6 +1431,7 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None, 
             + f"{_RISIKOFAKTOREN_LEGENDE}\n\n"
             + (risikofaktoren_text if risikofaktoren_text else "Keine strukturierten Risikofaktoren verfügbar.")
             + (f"\n\n{fazit_text}" if fazit_text else "")
+            + (f"\n\n{zai_text}" if zai_text else "")
             + "\n\nDetails im Hebel-Tab der App. Ausführung manuell über die Bitpanda-App."
         )
         # Liquiditätszonen-Grafik (2026-07-23, Nutzer-Wunsch: nicht nur in der
