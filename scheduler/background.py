@@ -959,23 +959,12 @@ def _formatiere_top_gruende(signal) -> str:
     return "\n".join(f"- {g}" for g in gruende if g)
 
 
-def _formatiere_zeitpunkt_lokal(iso_timestamp: str | None) -> str:
-    """BUGFIX (2026-07-21, Nutzer-Fund): 'Berechnet: ...' in den Signal-E-Mails
-    zeigte bisher den rohen UTC-Zeitstempel aus der DB (`signal.created_at`)
-    OHNE Umrechnung auf lokale Zeit, waehrend der E-Mail-Client (Gmail) den
-    Empfangszeitpunkt ganz normal lokal anzeigt - das erweckte den falschen
-    Eindruck einer ~2-Stunden-Verzoegerung zwischen Berechnung und Versand
-    (CEST = UTC+2), obwohl beide Zeitpunkte nur Sekunden auseinanderlagen.
-    `astimezone()` ohne Argument konvertiert auf die lokale Systemzeitzone."""
-    if not iso_timestamp:
-        return "-"
-    try:
-        dt = datetime.fromisoformat(iso_timestamp)
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-        return dt.astimezone().strftime("%Y-%m-%d %H:%M")
-    except ValueError:
-        return iso_timestamp[:16].replace("T", " ")
+# 2026-07-26 (echter Folge-Fund, Nutzer-Screenshot GUI vs. E-Mail): nach
+# ui/formatting.py::format_zeitpunkt_lokal() verschoben - der 2026-07-21-Fix
+# lebte nur hier und wurde nie von der App-GUI verwendet, wodurch dieselbe
+# optische 2-Stunden-Luecke dort weiterhin auftrat. Re-Export unter dem alten
+# Namen, damit die 3 bestehenden Aufrufstellen unten unveraendert bleiben.
+from ui.formatting import format_zeitpunkt_lokal as _formatiere_zeitpunkt_lokal
 
 
 def _formatiere_key_risks(signal) -> str:

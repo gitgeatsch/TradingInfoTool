@@ -22,6 +22,7 @@ import ui.theme as theme
 from ui.detail_panel import configure_tags, render_detail_text
 from ui.formatting import (
     RISIKOFAKTOREN_LEGENDE, format_fazit_lines, format_money, format_risikofaktoren_lines,
+    format_zeitpunkt_lokal,
 )
 from ui.heading_tooltip import add_heading_tooltips
 from ui.sortable_tree import make_sortable
@@ -258,7 +259,7 @@ class SignalsView(ttk.Frame):
         ):
             sig = latest_by_symbol.get(asset.symbol)
             action_text = sig.action if sig else "-"
-            created_text = sig.created_at[:16].replace("T", " ") if sig else "-"
+            created_text = format_zeitpunkt_lokal(sig.created_at) if sig else "-"
             self.tree.insert("", "end", iid=asset.symbol, values=(asset.symbol, asset.name, action_text, created_text))
         self._reapply_sort()
         theme.restripe_treeview(self.tree)
@@ -323,7 +324,7 @@ class SignalsView(ttk.Frame):
             text=(
                 f"Konfidenz: {conf_text} · Regime: {signal.regime or '-'} ({signal.regime_source or '-'}) · "
                 f"Anbieter: {signal.groq_model or '-'} · "
-                f"Berechnet: {signal.created_at[:16].replace('T', ' ')}"
+                f"Berechnet: {format_zeitpunkt_lokal(signal.created_at)}"
             )
         )
 
@@ -1036,7 +1037,7 @@ class SignalHistoryDialog(tk.Toplevel):
 
         self._history_by_item: dict[str, object] = {}
         for signal in history:
-            when = signal.created_at[:16].replace("T", " ") if signal.created_at else "-"
+            when = format_zeitpunkt_lokal(signal.created_at)
             konfidenz = f"{signal.confidence_pct:.0f} %" if signal.confidence_pct is not None else "-"
             status = signal.outcome_status
             outcome_text = _OUTCOME_LABELS.get(status, "—") if status else "—"
@@ -1084,7 +1085,7 @@ class LlmAbfrageDialog(tk.Toplevel):
         frame = ttk.Frame(self, padding=12)
         frame.pack(fill="both", expand=True)
 
-        zeitpunkt = signal.created_at[:16].replace("T", " ") if signal.created_at else "-"
+        zeitpunkt = format_zeitpunkt_lokal(signal.created_at)
         ttk.Label(
             frame, text=f"Anbieter: {signal.groq_model or '-'}   ·   Berechnet: {zeitpunkt}",
             font=("", 10, "bold"),

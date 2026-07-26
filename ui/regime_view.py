@@ -13,6 +13,7 @@ import config as config_module
 import ui.theme as theme
 from agent.krypto.regelwerk_parameter import build_parameter_overview
 from agent.krypto.regime import REGIME_STATES, get_last_known_regime_status
+from ui.formatting import format_zeitpunkt_lokal
 from ui.row_tooltip import add_row_tooltips
 from ui.sortable_tree import make_sortable
 
@@ -153,7 +154,7 @@ class RegimeView(ttk.Frame):
             return
 
         created_at = status.get("created_at")
-        stand = created_at[:16].replace("T", " ") if created_at else "-"
+        stand = format_zeitpunkt_lokal(created_at)
         self._stand_label.config(text=f"Stand: {stand}")
 
         regime = status["regime"]

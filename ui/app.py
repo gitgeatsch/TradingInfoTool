@@ -16,7 +16,7 @@ import ui.settings as ui_settings
 import ui.theme as theme
 from api.bitpanda import is_listed as bitpanda_is_listed
 from importer.excel_import import EXPORT_XLSX_PATH, export_holdings, import_holdings
-from ui.formatting import format_money, format_price_age, is_price_stale
+from ui.formatting import format_money, format_price_age, format_zeitpunkt_lokal, is_price_stale
 from ui.heading_tooltip import add_heading_tooltips
 from ui.hebel_view import HebelView
 from ui.marktscan_view import MarktscanView
@@ -656,7 +656,7 @@ class TradingInfoToolApp(tk.Tk):
             conn.close()
         if signal is None:
             return text or "Noch keine Analyse berechnet."
-        when = signal.created_at[:16].replace("T", " ") if signal.created_at else "-"
+        when = format_zeitpunkt_lokal(signal.created_at)
         conf = f"{signal.confidence_pct:.0f}%" if signal.confidence_pct is not None else "-"
         if text:
             text += "\n\n"

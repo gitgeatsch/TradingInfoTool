@@ -15,6 +15,7 @@ import tkinter as tk
 from tkinter import ttk
 
 import database.db as db
+from ui.formatting import format_zeitpunkt_lokal
 
 
 def show_letzte_bewertung(parent, db_conn_factory, symbol: str) -> None:
@@ -37,7 +38,7 @@ def show_letzte_bewertung(parent, db_conn_factory, symbol: str) -> None:
         ttk.Button(frame, text="Schließen", command=dialog.destroy).pack(anchor="e", pady=(10, 0))
         return
 
-    when = latest.created_at[:16].replace("T", " ") if latest.created_at else "-"
+    when = format_zeitpunkt_lokal(latest.created_at)
     ttk.Label(
         frame, text=f"{symbol} — letzte Analyse vom {when} ({latest.action}, {latest.confidence_pct or '-'}% Konfidenz)",
         font=("", 10, "bold"), wraplength=480,

@@ -3,13 +3,15 @@ Staleness-Erkennung (P-10) lebt in staleness.py (Domaenenlogik, auch vom Agent
 gebraucht) - hier nur re-exportiert, damit bestehende Imports unveraendert bleiben."""
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from staleness import format_price_age, is_history_stale, is_price_stale
 
 __all__ = [
     "format_money", "format_price_age", "is_history_stale", "is_price_stale",
     "format_risikofaktoren_lines", "RISIKOFAKTOREN_LEGENDE",
     "format_fazit_lines", "format_zai_gegenpruefung_lines",
-    "classify_detail_line", "render_detail_html",
+    "classify_detail_line", "render_detail_html", "format_zeitpunkt_lokal",
 ]
 
 
@@ -19,6 +21,36 @@ def format_money(value: float | None) -> str:
     if abs(value) >= 1:
         return f"{value:,.2f}"
     return f"{value:,.8f}"
+
+
+def format_zeitpunkt_lokal(iso_timestamp: str | None) -> str:
+    """BUGFIX (2026-07-21, Nutzer-Fund): "Berechnet: ..." in den Signal-E-Mails
+    zeigte den rohen UTC-Zeitstempel aus der DB (`signal.created_at`) OHNE
+    Umrechnung auf lokale Zeit, waehrend der E-Mail-Client (Gmail) den
+    Empfangszeitpunkt ganz normal lokal anzeigt - das erweckte den falschen
+    Eindruck einer ~2-Stunden-Verzoegerung zwischen Berechnung und Versand
+    (CEST = UTC+2), obwohl beide Zeitpunkte nur Sekunden auseinanderlagen.
+    `astimezone()` ohne Argument konvertiert auf die lokale Systemzeitzone.
+
+    2026-07-26 (echter Folge-Fund, Nutzer-Screenshot GUI vs. E-Mail): der
+    Fix von 2026-07-21 lebte nur in scheduler/background.py und wurde nie
+    fuer die App-GUI verwendet - `ui/hebel_view.py`/`ui/signals_view.py`/
+    `ui/app.py`/`ui/regime_view.py`/`ui/letzte_bewertung.py` zeigten
+    `created_at[:16].replace("T", " ")` weiterhin roh, wodurch GENAU dieselbe
+    optische 2-Stunden-Luecke wieder auftrat - nur diesmal zwischen GUI-Liste
+    und E-Mail statt zwischen Berechnung und Versand. Deshalb hierher in das
+    gemeinsame, Tk-freie Modul verschoben (aus scheduler/background.py, dort
+    nur noch re-exportiert), damit GUI und E-Mail dieselbe EINE Funktion
+    verwenden und nicht wieder auseinanderlaufen koennen."""
+    if not iso_timestamp:
+        return "-"
+    try:
+        dt = datetime.fromisoformat(iso_timestamp)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone().strftime("%Y-%m-%d %H:%M")
+    except ValueError:
+        return iso_timestamp[:16].replace("T", " ")
 
 
 _RISIKOFAKTOR_SYMBOL = {"positiv": "▲", "neutral": "●", "negativ": "▼"}

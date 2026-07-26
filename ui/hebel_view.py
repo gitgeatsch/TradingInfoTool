@@ -24,7 +24,7 @@ import ui.theme as theme
 from ui.detail_panel import configure_tags, render_detail_text
 from ui.formatting import (
     RISIKOFAKTOREN_LEGENDE, format_fazit_lines, format_money, format_risikofaktoren_lines,
-    format_zai_gegenpruefung_lines,
+    format_zai_gegenpruefung_lines, format_zeitpunkt_lokal,
 )
 from ui.heading_tooltip import add_heading_tooltips
 from ui.row_tooltip import add_row_tooltips
@@ -212,7 +212,7 @@ class HebelView(ttk.Frame):
         for sig in sorted(signals.values(), key=lambda s: s.created_at, reverse=True):
             iid = f"{sig.symbol}:{sig.richtung}"
             self._rows[iid] = ("signal", sig)
-            zeit = sig.created_at[:16].replace("T", " ") if sig.created_at else "-"
+            zeit = format_zeitpunkt_lokal(sig.created_at)
             hebel_text = f"{sig.hebel_final:.1f}x" if sig.hebel_final else "-"
             these_text = _TRADE_THESIS_LABELS.get(sig.trade_thesis_typ, sig.trade_thesis_typ or "-")
             self.tree.insert(
@@ -360,7 +360,7 @@ class HebelView(ttk.Frame):
                 f"Konfidenz: {conf_text} · Trigger: {signal.trigger_zweig or '-'} "
                 f"({signal.trigger_score if signal.trigger_score is not None else '-'}) · "
                 f"Anbieter: {signal.llm_model or '-'} · "
-                f"Berechnet: {signal.created_at[:16].replace('T', ' ')}"
+                f"Berechnet: {format_zeitpunkt_lokal(signal.created_at)}"
             )
         )
 
@@ -786,7 +786,7 @@ class HebelSignalHistoryDialog(tk.Toplevel):
 
         self._history_by_item: dict[str, object] = {}
         for signal in history:
-            when = signal.created_at[:16].replace("T", " ") if signal.created_at else "-"
+            when = format_zeitpunkt_lokal(signal.created_at)
             konfidenz = f"{signal.confidence_pct:.0f} %" if signal.confidence_pct is not None else "-"
             status = signal.outcome_status
             outcome_text = _HEBEL_OUTCOME_LABELS.get(status, "—") if status else "—"
@@ -832,7 +832,7 @@ class HebelLlmAbfrageDialog(tk.Toplevel):
         frame = ttk.Frame(self, padding=12)
         frame.pack(fill="both", expand=True)
 
-        zeitpunkt = signal.created_at[:16].replace("T", " ") if signal.created_at else "-"
+        zeitpunkt = format_zeitpunkt_lokal(signal.created_at)
         ttk.Label(
             frame, text=f"Anbieter: {signal.llm_model or '-'}   ·   Berechnet: {zeitpunkt}",
             font=("", 10, "bold"),

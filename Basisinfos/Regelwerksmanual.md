@@ -9148,3 +9148,43 @@ Richtungs-Abgleich als auch dieser E-Mail-Fix dort live. Zusaetzlich wurde
 erweitert - die `zai_gegenpruefung_verlauf`-Aggregatsektion zeigt bis dahin
 weiterhin nur den Konsistenz-Check, nicht den Richtungs-Abgleich (loser
 Faden, niedrige Prioritaet, siehe Memory).
+
+## Nachtrag (2026-07-26, zum Abschluss dieses Tages): GUI zeigte Zeitstempel systemweit roh in UTC statt lokal - derselbe Fehler wie beim E-Mail-Fix vom 2026-07-21, nur an 11 anderen Stellen
+
+Nutzer verglich einen Screenshot des Hebel-Tabs mit der zugehoerigen E-Mail:
+BTC-SHORT stand in der GUI-Liste mit "2026-07-26 15:14", die E-Mail kam aber
+laut Posteingang um "17:14" an - auf den ersten Blick wie eine 2-Stunden-
+Verzoegerung. War keine: exakt derselbe Fund wie im Nachtrag vom 2026-07-21
+("Delta Berechnung/LLM-Abfrage"), nur diesmal zwischen GUI und E-Mail statt
+zwischen Berechnung und Versand.
+
+### Root Cause
+
+Der 2026-07-21-Fix (`_formatiere_zeitpunkt_lokal()`, konvertiert UTC auf die
+lokale Systemzeitzone via `astimezone()`) lebte ausschliesslich in
+`scheduler/background.py` und wurde nur fuer den E-Mail-Text verwendet. Die
+App-GUI hatte ihr eigenes, nie synchronisiertes Muster
+(`created_at[:16].replace("T", " ")`, ROH, ohne Umrechnung) an **11 Stellen
+in 5 Dateien**: `ui/app.py`, `ui/hebel_view.py` (4×), `ui/signals_view.py`
+(4×), `ui/letzte_bewertung.py`, `ui/regime_view.py`. Jede Liste/jedes
+Detail-Panel/jeder Historie-Dialog zeigte also weiterhin die rohe UTC-Zeit -
+bei CEST (UTC+2) optisch immer exakt 2 Stunden "zu frueh".
+
+### Fix: eine gemeinsame Funktion statt zwei getrennter Kopien
+
+`_formatiere_zeitpunkt_lokal()` nach `ui/formatting.py::
+format_zeitpunkt_lokal()` verschoben (dieses Modul ist bereits das etablierte,
+Tk-freie Gemeinsamkeits-Modul zwischen App und E-Mail, siehe
+`format_zai_gegenpruefung_lines()`/`format_fazit_lines()` weiter oben).
+`scheduler/background.py` importiert die Funktion jetzt von dort (Re-Export
+unter dem alten Namen, alle bestehenden Aufrufstellen unveraendert). Alle 11
+GUI-Stellen auf `format_zeitpunkt_lokal()` umgestellt - dadurch koennen GUI
+und E-Mail nicht mehr auseinanderlaufen, weil es nur noch EINE Implementierung
+gibt statt zweier potenziell divergierender Kopien.
+
+**Verifiziert:** Compile-Check + Import-Regression aller 7 geaenderten
+Dateien; direkter Funktionstest gegen den echten BTC-Zeitstempel aus dem
+Vorfall (`2026-07-26T15:14:07+00:00` → `2026-07-26 17:14`, exakt die
+E-Mail-Ankunftszeit aus dem Nutzer-Screenshot) sowie Randfaelle (None, leerer
+String, ungueltiges Format). Kein Tk-Smoke-Test noetig - reine
+Funktionsaufruf-Substitution mit identischer Signatur je Stelle.
