@@ -40,6 +40,21 @@ _ERWARTETE_GEBUEHR_BASIS_PROZENT = 0.3
 _ERWARTETE_GEBUEHR_PRO_TAG_PROZENT = 0.18
 _LIQUIDATIONS_VERDACHT_SCHWELLE_PROZENTPUNKTE = 0.7
 
+# Teilverkauf-Erkennung (2026-07-26, echter NEAR-Fund - Nutzer meldete, dass
+# eine per TEILVERKAUF reduzierte Position komplett aus "Offene Hebel-
+# Positionen" verschwand statt reduziert weiterzulaufen): Bitpanda kennzeichnet
+# einen Teilverkauf mit demselben "close"-Tag wie eine vollstaendige
+# Schliessung (siehe Modul-Docstring - dasselbe Muster wie bei Liquidationen,
+# die auch nicht separat getaggt sind). Ob tatsaechlich die GESAMTE Position
+# verkauft wurde, laesst sich nur ueber die verkaufte Menge (sell_qty) im
+# Vergleich zur verbleibenden Positionsmenge (running_qty) bestimmen, nicht
+# ueber den Tag allein. Reine Gleitkomma-/Rundungstoleranz (KEIN Markt-
+# Schwellenwert wie z.B. die VIX-Baender - daher ohne Backtest festgelegt):
+# 0.5% Restmenge gilt noch als "alles verkauft", um Rundungs-Dust bei
+# Kryptomengen nicht faelschlich als Teilverkauf mit winziger Restposition
+# zu werten.
+_VOLLSTAENDIGER_VERKAUF_TOLERANZ_RELATIV = 0.005
+
 
 def _unix_to_iso(unix_timestamp: int) -> str:
     return datetime.fromtimestamp(unix_timestamp, tz=timezone.utc).isoformat()
@@ -110,6 +125,7 @@ def reconstruct_margin_positions(
                 "borrow": sum(t.amount_cryptocoin_wallet for t in borrow_leg),
                 "fee_crypto": sum(abs(t.amount_cryptocoin_wallet) for t in fee_leg),
                 "sell_value": sum(t.trade_amount_fiat or 0.0 for t in sell_leg),
+                "sell_qty": sum(t.trade_amount_cryptocoin or 0.0 for t in sell_leg),
                 "sell_price": sell_leg[0].trade_price if sell_leg else None,
             }
         )
@@ -138,6 +154,26 @@ def reconstruct_margin_positions(
                 running_qty += e["buy_qty"]
                 last_ts = e["ts"]
             elif e["kind"] == "close" and opened_at_unix is not None:
+                # Teilverkauf-Erkennung (siehe Konstanten-Kommentar oben,
+                # echter NEAR-Fund 2026-07-26): `running_qty` fehlt nur bei
+                # sehr alten Bestandsdaten von vor der positionsmenge-
+                # Erfassung - dann bleibt das bisherige Verhalten (immer
+                # vollstaendiger Close) als sicherer Fallback erhalten (P-8),
+                # weil ohne Mengenangabe keine Teilverkaufs-Erkennung moeglich
+                # ist.
+                sell_qty = e["sell_qty"]
+                ist_vollstaendiger_verkauf = (
+                    running_qty <= 0
+                    or sell_qty >= running_qty * (1 - _VOLLSTAENDIGER_VERKAUF_TOLERANZ_RELATIV)
+                )
+                if not ist_vollstaendiger_verkauf:
+                    verkaufter_anteil = sell_qty / running_qty
+                    running_value *= (1 - verkaufter_anteil)
+                    running_borrow *= (1 - verkaufter_anteil)
+                    running_qty -= sell_qty
+                    last_ts = e["ts"]
+                    continue
+
                 eigenkapital = running_value - running_borrow
                 hebel = running_value / eigenkapital if eigenkapital > 0 else None
                 haltedauer_tage = (e["ts"] - opened_at_unix) / 86400

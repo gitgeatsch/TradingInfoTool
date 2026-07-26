@@ -11,6 +11,36 @@ Hebel-Empfehlungen laufen vollautomatisch im 15-Min-Takt UND sind jetzt
 erstmals in der App selbst sichtbar. Nichts mehr offen aus der ursprünglichen
 Roadmap.
 
+## Bugfix (2026-07-26): Teilverkauf ließ die Position komplett verschwinden
+
+**Echter Fund:** Nutzer verringerte die NEAR-Hebel-Position per TEILVERKAUF
+wie empfohlen — die Position verschwand danach komplett aus "Offene
+Hebel-Positionen" statt mit reduzierter Menge weiterzulaufen.
+
+**Root Cause:** `reconstruct_margin_positions()` unterschied nie zwischen
+einem echten vollständigen Close und einem Teilverkauf — Bitpanda
+kennzeichnet beide mit demselben `"close"`-Tag (dasselbe Muster wie bei
+Liquidationen, die auch nicht separat getaggt sind, siehe Modul-Docstring).
+Jedes `close`-Ereignis setzte unbedingt `running_value`/`running_borrow`/
+`running_qty` auf 0 und entfernte die Position aus `offene` — unabhängig
+davon, ob tatsächlich die gesamte oder nur ein Teil der Position verkauft
+wurde. Die verkaufte Menge (`trade_amount_cryptocoin` des sell-Legs) wurde
+zwar aus der API geliefert, aber nie erfasst oder mit der verbleibenden
+Positionsmenge verglichen.
+
+**Fix:** neues Feld `sell_qty` im Event-Dict; beim `close`-Ereignis wird
+`sell_qty` gegen `running_qty` verglichen (0,5% Gleitkomma-/Rundungs-
+toleranz, kein Markt-Schwellenwert). Nur wenn (annähernd) die gesamte
+Restmenge verkauft wurde, gilt es als echter Close (bisheriges Verhalten
+unverändert). Sonst: Teilverkauf — `running_value`/`running_borrow`/
+`running_qty` werden anteilig um den verkauften Mengenanteil reduziert,
+die Position bleibt mit `opened_at`/`eroeffnet_am` unverändert offen.
+
+Verifiziert: synthetischer Test exakt für den realen Fall (offene Position
+aus vorherigem Sync-Lauf + Teilverkauf-Transaktion) — Position bleibt offen,
+Menge korrekt reduziert, `eroeffnet_am` bleibt erhalten. Regressionstest für
+echten vollständigen Verkauf bestätigt unverändertes Verhalten.
+
 ## Phase 6 (UI-Tab) implementiert (2026-07-14)
 
 `ui/hebel_view.py::HebelView` — neuer "Hebel"-Tab, mirrort `ui/signals_view.py`s
