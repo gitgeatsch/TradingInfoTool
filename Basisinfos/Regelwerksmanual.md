@@ -9188,3 +9188,41 @@ Vorfall (`2026-07-26T15:14:07+00:00` → `2026-07-26 17:14`, exakt die
 E-Mail-Ankunftszeit aus dem Nutzer-Screenshot) sowie Randfaelle (None, leerer
 String, ungueltiges Format). Kein Tk-Smoke-Test noetig - reine
 Funktionsaufruf-Substitution mit identischer Signatur je Stelle.
+
+## Nachtrag (2026-07-26, Abschluss): extract_notebook_diagnose.py verschluckte teilweise erfolgreiche Z.ai-Richtungs-Calls
+
+Nutzer wollte eine echte Gegenueberstellung LLM 1 (Mistral, Primaer-Richtung)
+vs. LLM 2 (Z.ai, unabhaengige Richtungsableitung) und wies zurecht darauf hin,
+dass Z.ai-Abfragen bereits gelaufen waren - die vorherige Einschaetzung
+("keine Daten vorhanden") war unvollstaendig recherchiert.
+
+### Root Cause
+
+`_zai_gegenpruefung_verlauf()` in `extract_notebook_diagnose.py` wurde beim
+Bau des zweiten Z.ai-Calls (Richtungs-Abgleich, siehe voriger Nachtrag) nicht
+mit erweitert: weder SELECT-Spaltenliste noch `_HEBEL_SIGNAL_SPALTEN` kannten
+`zai_eigene_richtung`/`zai_uebereinstimmung`/`zai_richtung_kurzbegruendung`.
+Schlimmer als reines Fehlen: der WHERE-Filter (`zai_gegenpruefung_urteil IS
+NOT NULL`) haette jeden Datensatz, bei dem NUR der Richtungs-Call gelang
+(Konsistenz-Call fehlgeschlagen), komplett aus der Aggregation verschwinden
+lassen, obwohl er echte Z.ai-Ergebnisse enthaelt.
+
+### Fix
+
+`_HEBEL_SIGNAL_SPALTEN` um die 3 neuen Spalten erweitert. WHERE-Filter in
+`_zai_gegenpruefung_verlauf()` auf ODER umgestellt
+(`zai_gegenpruefung_urteil IS NOT NULL OR zai_eigene_richtung IS NOT NULL`),
+neue Aggregat-Felder `anzahl_richtung_gesamt`/`anzahl_uebereinstimmung`/
+`anzahl_abweichung` ergaenzt, symmetrisch zu den bestehenden
+Konsistenz-Feldern.
+
+**Verifiziert:** Compile-Check; synthetischer Test mit 4 Szenarien (kein
+Z.ai-Call, nur Konsistenz-Call, nur Richtungs-Call, beide Calls mit
+Abweichung) - bestaetigt insbesondere, dass der zuvor verschluckte
+"nur Richtungs-Call gelang"-Fall jetzt korrekt erfasst wird.
+
+**Naechster Schritt (Nutzer-Aktion erforderlich):** `extract_notebook_
+diagnose.py` muss am Notebook (nicht Desktop, siehe [[feedback_desktop_kein_
+produktivstart]]) mit dem aktuellen Code-Stand erneut laufen und der Export
+nach Google Drive synchronisiert werden, damit die eigentlich gewuenschte
+LLM1-vs-Z.ai-Gegenueberstellung ueberhaupt moeglich wird.

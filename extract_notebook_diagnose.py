@@ -198,6 +198,7 @@ _HEBEL_SIGNAL_SPALTEN = (
     "outcome_realisiertes_crv, outcome_datenquelle, "
     "kontrathese_zu_position, kontrathese_llm_richtung, "
     "zai_gegenpruefung_urteil, zai_gegenpruefung_kurzbegruendung, "
+    "zai_eigene_richtung, zai_uebereinstimmung, zai_richtung_kurzbegruendung, "
     + _VOLLSTAENDIGKEITS_SPALTEN
 )
 _SPOT_SIGNAL_SPALTEN = (
@@ -461,12 +462,28 @@ def _zai_gegenpruefung_verlauf(conn) -> dict:
     widerspricht Z.ai der eigenen Begruendung, und korreliert das mit dem
     tatsaechlichen Signal-Ausgang?') nicht bei jeder Analyse neu aus den
     Rohspalten rekonstruiert werden muss. Phase 1 bleibt rein beobachtend
-    (kein Gate) - siehe reference_offene_zeitbasierte_beobachtungspunkte.md."""
+    (kein Gate) - siehe reference_offene_zeitbasierte_beobachtungspunkte.md.
+
+    BUGFIX (2026-07-26, spaeter am selben Tag - Nutzer-Nachfrage nach dem
+    LLM1-vs-Z.ai-Richtungsvergleich): diese Funktion wurde beim Bau des
+    zweiten, unabhaengigen Z.ai-Calls (`zai_eigene_richtung`/
+    `zai_uebereinstimmung`/`zai_richtung_kurzbegruendung`, siehe
+    agent/krypto/gegenpruefung.py Punkt 2) NICHT mit erweitert - weder die
+    SELECT-Spaltenliste noch der WHERE-Filter kannten die 3 neuen Felder.
+    Zwei Faelle waren dadurch unsichtbar: (1) beide Calls liefen und lieferten
+    Ergebnisse, aber der Richtungs-Teil wurde nie angezeigt, (2) der
+    Konsistenz-Call schlug fehl, aber der Richtungs-Call gelang - so ein
+    Datensatz wurde durch den alten WHERE-Filter (nur auf
+    `zai_gegenpruefung_urteil` gefiltert) komplett verschluckt, obwohl er
+    echte Z.ai-Ergebnisse enthielt. Filter jetzt auf ODER umgestellt, damit
+    kein teilweise erfolgreicher Call mehr verloren geht."""
     rows = conn.execute(
         "SELECT symbol, richtung, action, created_at, confidence_pct, "
         "zai_gegenpruefung_urteil, zai_gegenpruefung_kurzbegruendung, "
+        "zai_eigene_richtung, zai_uebereinstimmung, zai_richtung_kurzbegruendung, "
         "outcome_status, outcome_realisiertes_crv "
         "FROM hebel_signals WHERE zai_gegenpruefung_urteil IS NOT NULL "
+        "OR zai_eigene_richtung IS NOT NULL "
         "ORDER BY created_at ASC"
     ).fetchall()
     eintraege = [row_to_dict(r) for r in rows]
@@ -474,6 +491,9 @@ def _zai_gegenpruefung_verlauf(conn) -> dict:
         "anzahl_gesamt": len(eintraege),
         "anzahl_konsistent": sum(1 for e in eintraege if e["zai_gegenpruefung_urteil"] == "konsistent"),
         "anzahl_widerspruch": sum(1 for e in eintraege if e["zai_gegenpruefung_urteil"] == "widerspruch"),
+        "anzahl_richtung_gesamt": sum(1 for e in eintraege if e["zai_eigene_richtung"] is not None),
+        "anzahl_uebereinstimmung": sum(1 for e in eintraege if e["zai_uebereinstimmung"] == "ja"),
+        "anzahl_abweichung": sum(1 for e in eintraege if e["zai_uebereinstimmung"] == "nein"),
         "eintraege": eintraege,
     }
 
