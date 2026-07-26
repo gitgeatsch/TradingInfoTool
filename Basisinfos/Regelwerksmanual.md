@@ -9305,3 +9305,55 @@ fehlendes `text`-Feld) sowie weitere Formulierungsvarianten (Retail-Bias/
 Short-Konten-Anteil/Long-Short-Ratio) ebenfalls abgedeckt. `_validate_hebel()`
 lehnt das alte `antizyklisch`-Label jetzt korrekt mit `AnalystResponseInvalid`
 ab, ein gueltiger 4-Kategorien-Fall wird weiterhin akzeptiert.
+
+## Nachtrag (2026-07-26, gleicher Tag): Z.ai-Konsistenz-Check verwechselte Positions-Richtung mit Markteinschaetzung (echter HYPE-Fund)
+
+Nutzer zeigte einen echten Screenshot (HYPE, TEILVERKAUF einer offenen LONG-
+Position): Z.ai-Konsistenz-Check meldete "widerspruch - Text spricht von
+Abwaertsbewegung bei LONG-Signal", obwohl das Signal fachlich korrekt war.
+
+### Root Cause
+
+Bei `action` TEILVERKAUF/SCHLIESSEN (Kontrathese-Uebersetzung) beschreibt
+`richtung` die BESTEHENDE Position, die abgebaut wird - NICHT Mistrals eigene
+Markteinschaetzung (die steht separat in `kontrathese_llm_richtung`). Eine
+baerische Begruendung fuer den Teilverkauf einer LONG-Position ist fachlich
+korrekt (genau deshalb verkauft man teilweise), aber `gegenpruefung.py::
+pruefe_konsistenz()` gibt Z.ai `richtung`+`action` roh mit, ohne diese
+Semantik zu erklaeren - Z.ai las `richtung=LONG` naiv als "Text soll bullisch
+sein" und wertete die korrekte baerische Rechtfertigung als Widerspruch.
+
+Haeufigkeit geprueft: von 8 "widerspruch"-Urteilen desselben Tages war NUR
+dieser eine (HYPE, `kontrathese_zu_position=1`) betroffen - die anderen 7
+sind echte, unabhaengige Text-vs-Fakten-Widersprueche bei regulaeren HALTEN-
+Signalen (kein offener Positions-Bezug), korrekt erkannt.
+
+### Fix + eigener Fund waehrend der Umsetzung
+
+`SYSTEM_PROMPT` in `agent/krypto/gegenpruefung.py` ergaenzt: bei `action`
+TEILVERKAUF/SCHLIESSEN/HEBEL_SENKEN beschreibt `richtung` die bestehende
+Position, gegenlaeufige Begruendung ist dort konsistent; bei ALLEN anderen
+Aktionen (insbesondere HALTEN) bleibt `richtung` die Markteinschaetzung,
+normale Widerspruchspruefung gilt weiter.
+
+**Erster Entwurf hatte einen echten Regressions-Bug**, live gegen die echte
+Z.ai-API entdeckt: eine zu weit gefasste erste Formulierung ("bei HALTEN/
+HEBEL_SENKEN ist beides moeglich") kippte einen ECHTEN, unabhaengig
+bestehenden Widerspruchsfall (KAIA, HALTEN, `richtung=LONG` bei durchgehend
+baerischem Text, KEIN offener Positions-Bezug) von "widerspruch" (3/3 mit
+altem Prompt) auf faelschlich "konsistent" (3/3 mit erstem Entwurf) - HALTEN
+wurde faelschlich in die Ausnahme mit hineingezogen. Sofort korrigiert:
+Ausnahme gilt nur noch fuer TEILVERKAUF/SCHLIESSEN/HEBEL_SENKEN, HALTEN
+explizit wieder ausgeschlossen.
+
+**Verifiziert:** echter Live-A/B-Test gegen die echte Z.ai-API (kein
+synthetischer Mock) mit den exakten Fakten/Texten beider realer Faelle -
+HYPE (TEILVERKAUF) bleibt nach dem Fix 3/3 "konsistent", KAIA (HALTEN) kehrt
+nach der Korrektur 3/3 zu "widerspruch" zurueck (identisch zum
+Alt-Prompt-Verhalten). Compile-/Import-Regressionscheck.
+
+**Lehre (uebergreifend mit dem Antizyklisch-Fund vom selben Tag):** auch eine
+gezielte, klein wirkende Prompt-Praezisierung kann unbeabsichtigt eine
+bestehende, korrekte Erkennung in einer ANDEREN Aktionsklasse aufweichen -
+ein Live-A/B-Test gegen einen bekannten POSITIVEN Referenzfall (hier: KAIA)
+ist deshalb genauso wichtig wie der Test gegen den eigentlichen Zielfall.
