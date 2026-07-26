@@ -483,6 +483,7 @@ def generate_hebel_signal(
         **top_grund_fields,
     )
     new_id = db.insert_hebel_signal(conn, signal)
+    signal.id = new_id
     db.update_hebel_trigger_status(conn, trigger.id, "llm_generiert")
 
     # Z.ai-Gegenpruefung (2026-07-26, siehe agent/krypto/gegenpruefung.py) -
@@ -493,7 +494,13 @@ def generate_hebel_signal(
     # Rein beobachtend: das zurueckgegebene `signal`-Objekt traegt die neuen
     # Felder bewusst noch nicht (der Thread laeuft ja gerade erst los) - der
     # spaetere DB-Update ist die alleinige Quelle, GUI/Notebook-Export lesen
-    # ohnehin aus der DB, nicht aus diesem Rueckgabewert.
+    # ohnehin aus der DB, nicht aus diesem Rueckgabewert. `signal.id` (oben
+    # gesetzt) ermoeglicht genau das: scheduler/background.py::
+    # _sende_hebel_email_mit_zai_wartezeit() nutzt es, um vor dem E-Mail-
+    # Versand per db.get_hebel_signal_by_id() begrenzt auf dieses Ergebnis
+    # zu warten (Nachtrag 2026-07-26, spaeter am Tag - echter Fund: die
+    # Notification-E-Mail zeigte nie Z.ai-Zeilen, weil sie sich bisher IMMER
+    # auf dieses noch-nicht-angereicherte Rueckgabeobjekt stuetzte).
     if zai_client is not None:
         ema_ordnung_item = next(
             (item for item in confluence.items if item.indicator == "EMA-Ordnung"), None,

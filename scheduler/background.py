@@ -1322,6 +1322,93 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None, c
         logger.exception("Spot-Empfehlungs-E-Mail für %s fehlgeschlagen", signal.symbol)
 
 
+_ZAI_EMAIL_WARTE_MAX_SEKUNDEN = 60
+_ZAI_EMAIL_POLL_INTERVALL_SEKUNDEN = 3
+
+
+def _sende_hebel_email_mit_zai_wartezeit(
+    ergebnis, watchlist: list, bitpanda_assets: list | None, conn_factory,
+) -> None:
+    """Nutzer-Entscheidung (2026-07-26, Nachtrag zur Z.ai-Gegenpruefung,
+    ausgeloest durch einen Screenshot-Fund: die BTC-SHORT-E-Mail zeigte
+    keine Z.ai-Zeilen, obwohl die DB zum Versandzeitpunkt bereits ein Urteil
+    hatte): die Hebel-E-Mail SOLL die Z.ai-Zeilen enthalten, auch wenn dafuer
+    eine begrenzte Wartezeit in Kauf genommen wird - bewusst GEGEN die
+    Standard-Empfehlung (nur GUI, E-Mail bleibt sofort), aber informiert
+    entschieden (siehe AskUserQuestion-Antwort im Chat-Verlauf).
+
+    Root Cause des Funds: `generate_hebel_signal()` gibt das `signal`-Objekt
+    bewusst zurueck, BEVOR der Z.ai-Hintergrund-Thread ueberhaupt fertig ist
+    (siehe dortiger Docstring) - das In-Memory-Objekt traegt die Z.ai-Felder
+    also nie, unabhaengig davon, wie schnell Z.ai tatsaechlich antwortet.
+
+    Laeuft in einem EIGENEN Hintergrund-Thread (siehe Aufrufstelle in
+    _on_signal_ready() unten) - NICHT im Haupt-Callback-Pfad von
+    run_budget_allocator(), sonst wuerde genau die Batch-Blockade
+    zurueckkehren, die der urspruengliche E-Mail-Latenz-Fix behoben hat
+    (project_email_latenz_fix_batch_notification.md: ein einzelner Kandidat
+    mit langsamem externen Call durfte NIE nachfolgende, laengst fertige
+    Signale in derselben Charge blockieren). Diese Funktion wartet NUR auf
+    das EINE Signal, dessen E-Mail sie selbst verschickt - andere
+    Kandidaten im selben Lauf sind davon vollstaendig unberuehrt, da
+    _on_signal_ready() diesen Thread startet und sofort zurueckkehrt.
+
+    Fruehausstieg vor der Wartezeit fuer HALTEN/nicht-benachrichtigungs-
+    relevante Aktionen (Duplikat der Pruefung in _notify_hebel_signal(),
+    hier VOR der Wartezeit noetig - sonst wuerde fuer den haeufigsten Fall
+    ueberhaupt, ein HALTEN-Signal ohne jede E-Mail, unnoetig bis zu 60s in
+    einem Thread verbraucht).
+
+    Begrenztes Polling (max. `_ZAI_EMAIL_WARTE_MAX_SEKUNDEN`, alle
+    `_ZAI_EMAIL_POLL_INTERVALL_SEKUNDEN`) statt festem Sleep - beendet die
+    Wartezeit sofort, sobald beide Z.ai-Calls fertig sind (typische
+    Antwortzeit 12-25s je Call, siehe agent/krypto/gegenpruefung.py), statt
+    immer das volle Zeitbudget zu verbrauchen. Wird das Limit erreicht (z.B.
+    bei einem Z.ai-Timeout von bis zu 150s je Call), geht die E-Mail trotzdem
+    OHNE Z.ai-Zeilen raus (P-8, kein Hard-Fail wegen einer optionalen
+    Zusatzinfo) - identisches Verhalten zu vorher dieser Aenderung."""
+    from agent.krypto.hebel_analyst import REQUIRED_HEBEL_ACTIONS
+
+    if ergebnis.action not in REQUIRED_HEBEL_ACTIONS or ergebnis.action == "HALTEN":
+        return
+
+    angereichertes_signal = ergebnis
+    if conn_factory is not None and ergebnis.id is not None:
+        gewartet = 0.0
+        while gewartet < _ZAI_EMAIL_WARTE_MAX_SEKUNDEN:
+            time.sleep(_ZAI_EMAIL_POLL_INTERVALL_SEKUNDEN)
+            gewartet += _ZAI_EMAIL_POLL_INTERVALL_SEKUNDEN
+            try:
+                conn = conn_factory()
+                try:
+                    frisch = db.get_hebel_signal_by_id(conn, ergebnis.id)
+                finally:
+                    conn.close()
+            except Exception:
+                logger.exception(
+                    "Nachladen des Signals fuer Z.ai-Wartezeit (%s) fehlgeschlagen", ergebnis.symbol,
+                )
+                break
+            if frisch is not None:
+                angereichertes_signal = frisch
+                if frisch.zai_gegenpruefung_urteil is not None or frisch.zai_eigene_richtung is not None:
+                    logger.info(
+                        "Z.ai-Gegenpruefung fuer %s nach %.0fs abgeschlossen (vor E-Mail-Versand)",
+                        ergebnis.symbol, gewartet,
+                    )
+                    break
+        else:
+            # while-Schleife ohne break durchgelaufen = Zeitlimit erreicht,
+            # ohne dass Z.ai fertig wurde (misst genau die Nutzer-Frage nach
+            # der realen Pipeline-Dauer LLM Pruefung 1 -> LLM Pruefung 2 fuer
+            # kuenftige Signale - bisher gab es dafuer keine Log-Zeile).
+            logger.info(
+                "Z.ai-Gegenpruefung fuer %s nach %.0fs (Zeitlimit) noch nicht abgeschlossen - "
+                "E-Mail geht ohne Z.ai-Zeilen raus", ergebnis.symbol, gewartet,
+            )
+    _notify_hebel_signal(angereichertes_signal, watchlist, bitpanda_assets, conn_factory)
+
+
 def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None, conn_factory=None) -> None:
     """Analog _notify_spot_signal() fuer Hebel-Empfehlungen (7-Aktionen-
     Vokabular statt 5, siehe agent/krypto/hebel_analyst.REQUIRED_HEBEL_
@@ -1742,7 +1829,21 @@ def hebel_screening_job(
                     bitpanda_assets_state["geholt"] = True
                 bitpanda_assets = bitpanda_assets_state["wert"]
                 if schluessel.startswith("hebel:"):
-                    _notify_hebel_signal(ergebnis, watchlist, bitpanda_assets, conn_factory)
+                    if zai_client is not None:
+                        # Begrenzte Wartezeit auf die Z.ai-Gegenpruefung in
+                        # einem EIGENEN Thread (2026-07-26, Nutzer-Entscheidung
+                        # gegen die Standard-Empfehlung "nur GUI") - siehe
+                        # _sende_hebel_email_mit_zai_wartezeit()-Docstring.
+                        # Blockiert NICHT diesen Callback/den Allocator-Loop,
+                        # andere Kandidaten im selben Batch werden weiterhin
+                        # sofort benachrichtigt (E-Mail-Latenz-Fix bleibt intakt).
+                        threading.Thread(
+                            target=_sende_hebel_email_mit_zai_wartezeit,
+                            args=(ergebnis, watchlist, bitpanda_assets, conn_factory),
+                            daemon=True,
+                        ).start()
+                    else:
+                        _notify_hebel_signal(ergebnis, watchlist, bitpanda_assets, conn_factory)
                 elif schluessel.startswith("spot:"):
                     _notify_spot_signal(ergebnis, watchlist, bitpanda_assets, conn_factory)
 

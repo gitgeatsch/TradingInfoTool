@@ -9039,3 +9039,112 @@ zwei Spans, Z.ai-Zeilen ein Span, keine Unterstreichung).
 
 Scope bleibt Hebel-only (v1-Entscheidung unverändert). Phase 1 (rein
 beobachtend, kein Gate) gilt unverändert auch für den neuen Richtungs-Abgleich.
+
+## Nachtrag (2026-07-26, noch später): E-Mail zeigte Z.ai-Zeilen nie - echter Fund per Screenshot, begrenzte Wartezeit als Fix
+
+Nutzer schickte einen Screenshot der echten BTC-SHORT-Benachrichtigungs-Mail:
+Risikofaktoren und Fazit waren korrekt formatiert, die neu verdrahteten
+Z.ai-Zeilen (siehe voriger Nachtrag) fehlten jedoch komplett - obwohl die DB
+zum exakt selben Zeitstempel bereits `zai_gegenpruefung_urteil = "konsistent"`
+für dieses Signal enthielt (per Notebook-Diagnose-Export verifiziert,
+`created_at` 15:14:07 UTC = 17:14 lokal, passend zur E-Mail-Zeit).
+
+### Root Cause
+
+`generate_hebel_signal()` gibt das `signal`-Objekt bewusst zurück, BEVOR der
+Z.ai-Hintergrund-Thread ueberhaupt fertig ist (siehe voriger Nachtrag,
+Architektur-Falle-Abschnitt) - das ist korrekt fuer die urspruengliche
+Design-Absicht (GUI liest ohnehin live aus der DB), aber `_on_signal_ready()`
+in `scheduler/background.py` reicht genau dieses In-Memory-Objekt direkt an
+`_notify_hebel_signal()` durch. Die E-Mail wird also strukturell IMMER
+komponiert, bevor die Z.ai-Felder existieren koennen - unabhaengig davon, wie
+schnell Z.ai tatsaechlich antwortet. Der neue E-Mail-Anzeige-Code (voriger
+Nachtrag) war fuer sich genommen korrekt, griff aber nie, weil die
+Datenquelle strukturell nie etwas zum Anzeigen hatte.
+
+### Entscheidung
+
+Per `AskUserQuestion` drei Optionen vorgelegt: (1) nur GUI, E-Mail-Aufruf
+entfernen (Standard-Empfehlung - kein Risiko einer neuen Latenz-Regression),
+(2) separate Kurz-Mail nur bei Widerspruch/Abweichung, (3) E-Mail-Versand um
+bis zu 60s verzoegern. **Nutzer-Entscheidung: Option 3**, bewusst gegen die
+Empfehlung, mit vollem Bewusstsein ueber den Tradeoff (Beschreibung der
+Option nannte den Zielkonflikt mit dem urspruenglichen E-Mail-Latenz-Fix
+explizit).
+
+### Umsetzung: begrenztes Warten in einem EIGENEN Thread, nicht im Allocator-Loop
+
+Ein simples "60s schlafen, dann E-Mail schicken" INNERHALB von
+`_on_signal_ready()` haette exakt die Batch-Blockade zurueckgebracht, die der
+E-Mail-Latenz-Fix (siehe `project_email_latenz_fix_batch_notification.md`)
+bereits einmal behoben hat: `_on_signal_ready()` laeuft synchron in der
+Aufrufer-Schleife von `run_budget_allocator()` - ein Block dort haette JEDES
+nachfolgende Signal im selben Lauf um bis zu 60s verzoegert, nicht nur dieses
+eine.
+
+Stattdessen:
+- `agent/krypto/hebel_pipeline.py`: `signal.id = new_id` direkt nach dem
+  Insert gesetzt (das Feld existierte bereits auf `HebelSignal`, wurde aber
+  bisher nirgends befuellt - weder hier noch beim analogen Spot-`Signal`).
+  Ermoeglicht das spaetere gezielte Nachladen per
+  `db.get_hebel_signal_by_id()`.
+- `scheduler/background.py`: neue Funktion
+  `_sende_hebel_email_mit_zai_wartezeit()` - laeuft in einem EIGENEN,
+  von `_on_signal_ready()` gestarteten Hintergrund-Thread (nicht im
+  Allocator-Loop selbst). Fruehausstieg bei HALTEN/nicht-benachrichtigungs-
+  relevanten Aktionen (kein Warten fuer den haeufigsten Fall). Begrenztes
+  Polling (`_ZAI_EMAIL_WARTE_MAX_SEKUNDEN` = 60, alle
+  `_ZAI_EMAIL_POLL_INTERVALL_SEKUNDEN` = 3 Sekunden per
+  `db.get_hebel_signal_by_id()`) statt festem Sleep - beendet die Wartezeit
+  sofort, sobald mindestens eines der beiden Z.ai-Urteile vorliegt (typische
+  Antwortzeit 12-25s je Call). Wird das Limit erreicht (z.B. bei einem
+  Z.ai-Timeout von bis zu 150s je Call), geht die E-Mail trotzdem OHNE
+  Z.ai-Zeilen raus (P-8, kein Hard-Fail wegen einer optionalen Zusatzinfo).
+  `_on_signal_ready()` dispatcht diese Funktion nur, wenn `zai_client is not
+  None` - ist Z.ai gar nicht konfiguriert, bleibt der alte, sofortige Pfad
+  unveraendert (kein sinnloses Warten auf etwas, das nie laeuft).
+
+**Zusaetzliche Log-Instrumentierung** (Nutzer-Nachfrage: wie lange dauert die
+Pipeline vom deterministischen Signal ueber LLM-Pruefung 1 und LLM-Pruefung 2
+bis zum E-Mail-Versand wirklich?): bisher gab es dafuer KEINE Log-Zeile - Z.ai-
+Erfolge wurden nie geloggt, nur Fehlschlaege (`gegenpruefung.py`, P-8). Die
+neue Wartefunktion loggt jetzt bei jedem Durchlauf entweder "Z.ai-Gegenpruefung
+fuer SYMBOL nach Xs abgeschlossen" (Fruehausstieg) oder "... nach 60s
+(Zeitlimit) noch nicht abgeschlossen" (Timeout-Fall) - ab dem naechsten
+Notebook-Deployment liefert das erstmals echte, fortlaufende Messwerte fuer
+genau diese Frage.
+
+**Real gemessene Zahlen aus dem heutigen Batch (17:12-17:22 Uhr, ALTER
+Code-Stand ohne diesen Fix):** Budget-Allocator waehlt Kandidaten aus
+(17:12:58) -> BTC-SHORT-E-Mail nach 73s (17:14:11, reine LLM-Pruefung-1-Zeit
+via Mistral + Pipeline, da die alte E-Mail noch vor Z.ai verschickt wurde) ->
+NEAR-LONG-E-Mail 34s spaeter (17:14:45) -> INJ-LONG-E-Mail 161s spaeter
+(17:17:26, vermutlich externe Datenabruf-Retries) -> gesamter Batch (8 Hebel +
+11 Spot) fertig nach knapp 10 Minuten (17:22:47). Die Z.ai-Gegenpruefung selbst
+(Pruefung 2) ist fuer diesen Batch NICHT separat messbar, da (a) keine
+Erfolgs-Log-Zeile existierte (siehe oben, jetzt behoben) und (b) das Notebook
+zu diesem Zeitpunkt noch den Code-Stand VOR diesem Fix fuhr. Einzige
+bisherige Referenz: die isolierte Kalibrierung gegen die echte Z.ai-API
+(voriger Nachtrag) mit 12-25s je Call, nicht aus echtem Produktivbetrieb.
+
+**Verifiziert:** Compile-Check + Import-Regression
+(`agent.krypto.hebel_pipeline`, `scheduler.background`,
+`agent.krypto.budget_allocator`, `main`); drei synthetische Tests
+(HALTEN -> sofortiger Ausstieg ohne DB-Zugriff/E-Mail, Fruehausstieg nach
+Z.ai-Fertigstellung mit angereichertem Signal, Timeout-Fall -> E-Mail geht
+nach vollem Zeitbudget trotzdem OHNE Z.ai-Daten raus); separater Test
+bestaetigt, dass der Thread-Dispatch selbst nicht blockiert (<1ms), nur der
+Hintergrund-Thread tatsaechlich wartet - die urspruengliche Garantie des
+E-Mail-Latenz-Fixes (andere Kandidaten im selben Batch werden nicht
+verzoegert) bleibt damit erhalten.
+
+**Noch offen (Notebook-Deployment):** der Notebook-Diagnose-Export vom
+26.07. abends zeigte, dass der 24/7-Produktivserver zum Zeitpunkt des
+Screenshot-Funds noch auf dem Code-Stand VOR dem Richtungs-Abgleich lief
+(keine `zai_eigene_richtung`/`zai_uebereinstimmung`-Werte in den exportierten
+Rohdaten) - erst nach Pull+Neustart am Notebook greifen sowohl der
+Richtungs-Abgleich als auch dieser E-Mail-Fix dort live. Zusaetzlich wurde
+`extract_notebook_diagnose.py` in dieser Runde NICHT um die 3 neuen Spalten
+erweitert - die `zai_gegenpruefung_verlauf`-Aggregatsektion zeigt bis dahin
+weiterhin nur den Konsistenz-Check, nicht den Richtungs-Abgleich (loser
+Faden, niedrige Prioritaet, siehe Memory).
