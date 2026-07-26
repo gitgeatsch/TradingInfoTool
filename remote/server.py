@@ -313,6 +313,10 @@ function renderRegimeStatus(r) {
     if (wert === null || wert === undefined) continue;
     html += '<div class="row"><span>' + titel + '</span><span>' + wert + '</span></div>';
   }
+  if (r.regime_konflikt_gesamt) {
+    html += '<div class="row"><span>Regime-Konflikt-Übersicht</span><span>' + r.regime_konflikt_anzahl
+      + ' von ' + r.regime_konflikt_gesamt + ' aktiven Kandidaten</span></div>';
+  }
   return html;
 }
 

@@ -1739,6 +1739,19 @@ Machbarkeits-Analyse (siehe Memory `project_selbstverifikation_ki_trimmen`)
   Persistenz-Zählung während eines aktiven Overrides pausiert. Wirkt ab dem
   nächsten Pipeline-Lauf, kein Neustart nötig.
 
+**Makro-Kennzahl „X von Y im Regime-Konflikt" (2026-07-26):** `agent/krypto/
+regime.py::regime_konflikt_uebersicht()` — reine Momentaufnahme über alle
+aktuell aktiven Hebel-Kandidaten (jüngstes echtes Signal je (symbol,
+richtung) mit `outcome_status` in `None`/`"offen"`, also weder aufgelöst
+noch überholt), gezählt gegen das aktuelle Regime (`regime_konflikt_hebel()`,
+dieselbe Bedingung wie der Hebel-Deckel selbst — keine zweite, potenziell
+driftende Implementierung). Bewusst OHNE Backtest-Wartezeit umgesetzt: anders
+als die Risikofaktoren-Häufungs-Regel (siehe dortiger Wiedervorlage-Punkt)
+ist das kein neuer Deckel/keine neue Vorhersage, sondern ein rein
+beschreibender Fakt — gleiches Prinzip wie Fear&Greed oder VIX, sofort
+nutzbar ohne historische Fallzahlen. Sichtbar im Regime-Tab und in der
+Remote-Karte („X von Y aktiven Kandidaten").
+
 ---
 
 ## 14. Portfolio-Vollständigkeit — Cash-Sperren, Staking, Margin-Trading

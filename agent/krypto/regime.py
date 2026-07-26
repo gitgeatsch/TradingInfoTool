@@ -562,6 +562,40 @@ def regime_persistenz_tage(conn, aktuelles_regime: str) -> int:
     return tage
 
 
+def regime_konflikt_uebersicht(conn, aktuelles_regime: str) -> dict:
+    """Systemweite Makro-Kennzahl (2026-07-26, Nutzer-Vorschlag Punkt 3 -
+    "wenn z.B. 90% aller aktiven Hebel-Kandidaten diese Woche im Regime-
+    Konflikt stehen, ist das selbst eine Erkenntnis wert"). Reine
+    Momentaufnahme aus bereits vorhandenen Daten (aktuellster Hebel-Signal-
+    Stand je (symbol, richtung) + das aktuelle Regime) - KEIN Backtest
+    noetig, weil das kein neuer Deckel/keine neue Vorhersage-Regel ist,
+    sondern ein rein beschreibender Fakt (gleiches Prinzip wie Fear&Greed/
+    VIX: sofort nutzbar, keine Wartezeit auf historische Fallzahlen).
+
+    "Aktiv" = juengstes echtes Signal je (symbol, richtung)
+    (`db.get_latest_hebel_signal_per_symbol_and_richtung()`, bereits auf
+    `groq_raw_response IS NOT NULL` gefiltert) MIT `outcome_status` in
+    (None, "offen") - schliesst bereits aufgeloeste (TP/SL/Liquidation/
+    abgelaufen) und ueberholte Signale aus, da die kein aktueller "Kandidat"
+    mehr sind. `aktuelles_regime` bewusst OHNE Einschraenkung auf
+    regelbasiert (anders als regime_persistenz_tage()) - die Kennzahl fragt
+    "wie viele Positionen widersprechen dem Regime, so wie es GERADE gilt",
+    unabhaengig davon ob das Regime manuell oder regelbasiert zustande kam."""
+    import database.db as db
+    from agent.krypto.backward_tracking import OUTCOME_OFFEN
+    from agent.krypto.hebel_risk_gate import regime_konflikt_hebel
+
+    aktive_signale = db.get_latest_hebel_signal_per_symbol_and_richtung(conn)
+    relevante = [s for s in aktive_signale.values() if s.outcome_status in (None, OUTCOME_OFFEN)]
+    im_konflikt = [s for s in relevante if regime_konflikt_hebel(aktuelles_regime, s.richtung)]
+
+    return {
+        "gesamt": len(relevante),
+        "im_konflikt": len(im_konflikt),
+        "symbole_im_konflikt": sorted({s.symbol for s in im_konflikt}),
+    }
+
+
 def get_last_known_regime_status(conn) -> dict | None:
     """Regime-Status-Anzeige (2026-07-17, Remote-Seite + Desktop-Tab "Regime") -
     rein passiver Lesezugriff auf den zuletzt PERSISTIERTEN Regime-Stand, OHNE
@@ -587,12 +621,15 @@ def get_last_known_regime_status(conn) -> dict | None:
     snapshot = db.get_latest_macro_snapshot(conn)
     dominance_trend_label = _dominance_trend_label(db.get_macro_snapshot_history(conn))
     regime_persistenz = regime_persistenz_tage(conn, regime) if regime_source == "regelbasiert" else None
+    konflikt_uebersicht = regime_konflikt_uebersicht(conn, regime)
 
     return {
         "regime": regime,
         "regime_source": regime_source,
         "created_at": created_at,
         "regime_persistenz_tage": regime_persistenz,
+        "regime_konflikt_gesamt": konflikt_uebersicht["gesamt"],
+        "regime_konflikt_anzahl": konflikt_uebersicht["im_konflikt"],
         "regime_reason": snapshot.regime_reason if snapshot else None,
         "btc_trend_label": snapshot.btc_trend_label if snapshot else None,
         "fear_greed_value": snapshot.fear_greed_value if snapshot else None,

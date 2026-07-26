@@ -53,7 +53,7 @@ class RegimeView(ttk.Frame):
         self._reason_label.pack(anchor="w")
 
         self._detail_labels: dict[str, ttk.Label] = {}
-        for key in ("btc_trend", "fear_greed", "dominanz", "zyklus_risiko", "liquiditaet"):
+        for key in ("btc_trend", "fear_greed", "dominanz", "zyklus_risiko", "liquiditaet", "regime_konflikt"):
             lbl = ttk.Label(status_frame, text="", wraplength=760, justify="left")
             lbl.pack(anchor="w")
             self._detail_labels[key] = lbl
@@ -198,6 +198,19 @@ class RegimeView(ttk.Frame):
         if liquiditaet_begruendung:
             liquiditaet += f" — {liquiditaet_begruendung}"
         self._detail_labels["liquiditaet"].config(text=f"Liquiditätsregime: {liquiditaet}")
+
+        # Makro-Kennzahl (2026-07-26, Nutzer-Vorschlag Punkt 3) - reine
+        # Momentaufnahme, siehe regime.py::regime_konflikt_uebersicht().
+        konflikt_gesamt = status.get("regime_konflikt_gesamt")
+        konflikt_anzahl = status.get("regime_konflikt_anzahl")
+        if konflikt_gesamt:
+            konflikt_text = (
+                f"Regime-Konflikt-Übersicht: {konflikt_anzahl} von {konflikt_gesamt} aktiven "
+                f"Hebel-Kandidaten stehen aktuell im Konflikt mit dem {label}-Regime."
+            )
+        else:
+            konflikt_text = "Regime-Konflikt-Übersicht: keine aktiven Hebel-Kandidaten."
+        self._detail_labels["regime_konflikt"].config(text=konflikt_text)
 
     def _render_parameter_overview(self, rows: list[dict]) -> None:
         self.tree.delete(*self.tree.get_children())
