@@ -23,6 +23,7 @@ from agent.krypto.btc_relativwert import btc_relativwert_fakt
 from agent.krypto.hebel_analyst import build_hebel_facts, call_llm_for_hebel_signal
 from agent.krypto.liquidity_zones import liquiditaetszonen_fakt
 from agent.krypto.makro_analog import get_cached_makro_analog_fact
+from agent.krypto.optionsmarkt import fetch_optionsmarkt_fakt
 from agent.krypto.signal_stabilitaet import (
     DEFAULT_ANZAHL_ZYKLEN, juengste_richtungswende, signal_stabilitaet_fakt,
 )
@@ -234,6 +235,11 @@ def generate_hebel_signal(
             )
             btc_relativwert_ergebnis = compute_btc_relativwert(dates, closes, btc_dates, btc_closes)
             btc_relativwert = btc_relativwert_fakt(btc_relativwert_ergebnis, config_dict)
+    # Optionsmarkt (Punkt 2 des Regime-Persistenz-Folge-Vorschlags, 2026-07-26) -
+    # immer BTC (marktweiter Barometer), unabhaengig vom Coin dieses Signals,
+    # siehe agent/krypto/optionsmarkt.py Modul-Docstring fuer die Live-Fetch-
+    # statt-Caching-Begruendung.
+    optionsmarkt = fetch_optionsmarkt_fakt(config_dict)
     facts = build_hebel_facts(
         asset, price_snap, snapshot, confluence, regime_result, regime_profile,
         anticyclic_context, market_context, trigger, position_aktuell, pre_result,
@@ -243,6 +249,7 @@ def generate_hebel_signal(
         liquiditaetszonen=liquiditaetszonen,
         signal_stabilitaet=signal_stabilitaet,
         btc_relativwert=btc_relativwert,
+        optionsmarkt=optionsmarkt,
     )
 
     try:

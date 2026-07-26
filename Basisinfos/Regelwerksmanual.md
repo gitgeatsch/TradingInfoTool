@@ -1796,6 +1796,68 @@ zählt bei Hebel wie überall sonst als Fehlschlag).
   reale Aussagekraft entsteht erst nach Prüfung gegen einen aktuellen
   Notebook-Export.
 
+**Deribit-Optionsmarkt-Anreicherung (2026-07-26, Punkt 2 des Regime-
+Persistenz-Folge-Vorschlags — BTC/ETH, letzter der drei ursprünglich
+vorgeschlagenen Bausteine):** `api/deribit.py` liest zwei öffentliche
+Deribit-Endpunkte (kein API-Key, kein dokumentiertes Rate-Limit) —
+`get_volatility_index()` (DVOL, marktimplizite 30-Tage-Volatilität) und
+`get_options_skew()` (näherungsweiser Risk-Reversal aus dem nächstgelegenen
+Verfallstermin mit 14-60 Tagen Restlaufzeit, feste Moneyness-Ziele ±15% statt
+echtem 25-Delta — ein 25-Delta-Wert bräuchte pro Strike einen eigenen
+`ticker()`-Call, ~20-30 zusätzliche Anfragen je Abruf, daher bewusst als
+Näherung dokumentiert, kein exakter Marktstandard-Wert).
+
+- **Scope-Entscheidung (live verifiziert, nicht bloß angenommen):** obwohl
+  Deribits `get_currencies` auch SOL/XRP/MATIC/LINK/AVAX/ADA/BNB/BCH als
+  unterstützte Währungen listet, ergab ein echter Live-Check
+  (`get_book_summary_by_currency`/`get_instruments` für SOL/XRP) **null
+  aktive Options-Instrumente** — die März-2024-Optionslaunches für diese
+  Coins sind offenbar eingestellt. Punkt 2 bleibt daher bewusst BTC/ETH-only
+  (aktuell nur BTC verdrahtet, siehe unten).
+- **Warum das gerade für BTC selbst sinnvoll ist, nicht nur als generischer
+  Marktbarometer:** anders als bei einem beliebigen Altcoin ist BTC hier
+  sowohl das Objekt des Optionsmarkts als auch (meist) das Signal-Asset
+  selbst — bei einem Hebel-Signal für einen anderen Coin bleibt es ein
+  Cross-Asset-Kontext (wie Fear&Greed/VIX), bei einem BTC-Signal ist es eine
+  direkte, marktgepreiste Einschätzung des exakt gehandelten Assets.
+- **`agent/krypto/optionsmarkt.py::optionsmarkt_fakt()`** übersetzt die
+  Rohwerte in einen Fakt für `build_hebel_facts()` (reine Formatierungs-
+  schicht, mirrort `btc_relativwert_fakt()`) — bewusst KEINE hart
+  kategorisierten DVOL-Bänder (anders als `VIX_BANDS`, die auf breit
+  etablierten Finanzmarkt-Konventionen beruhen; für DVOL gibt es keine
+  vergleichbare Skala), der Rohwert wird direkt genannt. Der Skew-
+  Wertungstext (±1 Prozentpunkt als „symmetrisch") ist rein deskriptiv, kein
+  Deckel — analog zur bereits etablierten ±3pp-Wertung in
+  `btc_relativwert.py`.
+- **`fetch_optionsmarkt_fakt()`** ist der einzige Einstiegspunkt für
+  `hebel_pipeline.py` — Live-Fetch bei JEDEM Hebel-Signal-Lauf, bewusst OHNE
+  eigene Caching-Tabelle/Scheduler-Job (anders als `makro_analog.py`): Hebel-
+  Signale entstehen selten genug (Trigger-basiertes Screening, keine
+  Sekunden-Taktung) und Deribit hat kein dokumentiertes Rate-Limit — exakt
+  dasselbe Live-Fetch-Muster wie `agent/krypto/anticyclic.py::assess()` für
+  die Kraken-Funding-Rate. Fängt Netzwerkfehler selbst ab (P-8), Aufrufer
+  braucht keinen eigenen try/except.
+- **Verwendung ausschließlich als Cross-Check-Fakt, KEIN neuer
+  deterministischer Risikofaktor:** SYSTEM_PROMPT Regel 21 in
+  `hebel_analyst.py` weist das Modell an, den Optionsmarkt-Fakt gegen seine
+  eigene `confidence_pct` zu prüfen — ein deutlicher Put-Skew UND eine hohe
+  Konfidenz-LONG-Empfehlung (oder umgekehrt Call-Skew + hohe Konfidenz-
+  SHORT) ist ein echter Widerspruch, den das Modell in `gegenargument`
+  benennen soll (bereits existierendes, angezeigtes Feld — keine neue
+  UI-Anzeige nötig). Bezieht sich immer auf BTC, unabhängig vom Coin des
+  jeweiligen Signals.
+- **`config.yaml`:** neue Sektion `deribit_optionsmarkt: {aktiv: true}`.
+- **`remote/server.py`:** `deribit` zu `API_HEALTH_GROUPS["api-health-makro"]`
+  ergänzt (nutzt den bereits vorhandenen `track_api_health("deribit")`-
+  Decorator).
+- **Verifiziert:** synthetisch (`optionsmarkt_fakt()` mit/ohne DVOL/Skew,
+  Call-Skew/Put-Skew/symmetrisch-Wertung, `aktiv: false`-Toggle), echter
+  Live-Abruf gegen die reale Deribit-API (`fetch_optionsmarkt_fakt()`, BTC
+  DVOL ≈37.3%, echter Put-Skew ≈-9.0pp beobachtet), Compile-/Import-Check der
+  gesamten Aufrufkette (`hebel_pipeline.py` → `hebel_analyst.py` →
+  `optionsmarkt.py` → `api/deribit.py`, inkl. `main.py`/`scheduler/
+  background.py`/`budget_allocator.py`).
+
 ---
 
 ## 14. Portfolio-Vollständigkeit — Cash-Sperren, Staking, Margin-Trading

@@ -256,7 +256,19 @@ hoechstens, um eine bereits vorliegende BTC-/Makro-Einschaetzung (z.B. \
 bewegt sich mit Beta 1.9 historisch fast doppelt so stark - waere bei einer \
 BTC-Schwaeche ueberproportional betroffen". Erwaehne es hoechstens im \
 `long_reasoning.makro`, nie als eigenstaendigen Grund fuer `action`/`richtung`.
-21. Fuelle `eigene_einschaetzung` GANZ ZULETZT aus, NACHDEM du `action`, \
+21. Ist `optionsmarkt` NICHT null (Deribit, oeffentliche Marktdaten): zeigt die \
+implizite Volatilitaet (DVOL, marktgepreiste 30-Tage-Erwartung) sowie einen \
+naeherungsweisen Risk-Reversal/Skew (OTM-Call-IV minus OTM-Put-IV, KEIN exakter \
+25-Delta-Wert - siehe `einordnung`-Text im Fakt selbst fuer die genaue Methodik). \
+Anders als alle bisherigen Fakten ist das ein VORAUSSCHAUENDER, aus echten \
+Optionspreisen abgeleiteter Wert (keine Vergangenheitsdaten) - nutze ihn als \
+Cross-Check gegen deine eigene `confidence_pct`: preist der Optionsmarkt einen \
+deutlichen Put-Skew (negativer Wert, Markt zahlt mehr fuer Abwaerts-Absicherung) \
+UND du selbst empfiehlst mit hoher Konfidenz LONG (oder umgekehrt: Call-Skew UND \
+hohe Konfidenz SHORT), ist das ein echter Widerspruch, den du in `gegenargument` \
+benennen solltest. Bezieht sich immer auf BTC (marktweiter Krypto-Barometer, \
+NICHT nur fuer BTC-Signale relevant), nicht auf den einzelnen Coin selbst.
+22. Fuelle `eigene_einschaetzung` GANZ ZULETZT aus, NACHDEM du `action`, \
 `confidence_pct`, `gegenargument`, `top_gruende` und `long_reasoning` bereits \
 fertiggestellt hast - das ist ein ABSCHLIESSENDER, GANZHEITLICHER Rueckblick \
 auf deine eigene bereits fertige Analyse, keine Wiederholung/Formalitaet. \
@@ -420,6 +432,7 @@ def build_hebel_facts(
     liquiditaetszonen: dict | None = None,
     signal_stabilitaet: dict | None = None,
     btc_relativwert: dict | None = None,
+    optionsmarkt: dict | None = None,
 ) -> dict:
     """Analog agent/krypto/analyst.py::build_facts() - wiederverwendet dieselben
     Bausteine fuer technische_analyse/regime/markt_kontext/antizyklisch 1:1 (siehe
@@ -584,6 +597,7 @@ def build_hebel_facts(
         "liquiditaetszonen": liquiditaetszonen,
         "signal_stabilitaet": signal_stabilitaet,
         "btc_relativwert": btc_relativwert,
+        "optionsmarkt": optionsmarkt,
         "hebel_kontext": {
             "max_hebel_config": pre_result.config_max_hebel,
             "max_sicherer_hebel_geschaetzt": _native(pre_result.max_sicherer_hebel),

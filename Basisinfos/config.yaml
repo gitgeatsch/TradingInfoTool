@@ -1147,6 +1147,14 @@ btc_relativwert:
     # (~1 Monat, passt zur typischen swing_strategie-Haltedauer) - zeigt, ob
     # GERADE Kapital in diesen Coin oder zurueck zu BTC rotiert.
 
+# --- Optionsmarkt (2026-07-26, Punkt 2 des Regime-Persistenz-Folge-Vorschlags,
+# siehe agent/krypto/optionsmarkt.py) - Deribit-DVOL + naeherungsweiser Skew,
+# IMMER BTC (marktweiter Barometer), Live-Fetch bei jedem Hebel-Signal-Lauf
+# (kein Caching-Job, siehe dortiger Docstring). Reiner Cross-Check-Fakt fuer
+# die LLM-eigene confidence_pct - kein neuer deterministischer Risikofaktor.
+deribit_optionsmarkt:
+  aktiv: true
+
 # --- Signal-Fazit (2026-07-25, agent/krypto/risk_gate.py::_fazit_konsistenz_
 # hinweis()) - abschliessendes LLM-Synthese-Verdikt (eigene_einschaetzung).
 # BEWUSST KEIN deterministischer Override von folgen/kurzfazit (siehe Memory
