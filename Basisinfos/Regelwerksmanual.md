@@ -9226,3 +9226,82 @@ diagnose.py` muss am Notebook (nicht Desktop, siehe [[feedback_desktop_kein_
 produktivstart]]) mit dem aktuellen Code-Stand erneut laufen und der Export
 nach Google Drive synchronisiert werden, damit die eigentlich gewuenschte
 LLM1-vs-Z.ai-Gegenueberstellung ueberhaupt moeglich wird.
+
+## Nachtrag (2026-07-26, Folgetag): Retail-Konsens ("antizyklisch") wird bei Hebel nie wieder in top_gruende zugelassen - deterministisch statt nur per Prompt
+
+Nach der ersten echten LLM1-vs-Z.ai-Gegenueberstellung (0 von 12 Faellen mit
+Uebereinstimmung, Z.ai sagte in keinem einzigen Fall LONG obwohl Mistral 11 von
+12 Mal LONG waehlte) verlangte der Nutzer eine tiefere Analyse - mit der
+korrekten Einordnung, dass der bestehende "antizyklisch"-Mechanismus zwei
+voellig unterschiedliche Dinge verwechselt: AZ-4 (Boden-Akkumulation, siehe
+`docs/`-Baustein zu Tranchen) gilt bewusst nur Spot, nur BTC/ETH/SOL, gebunden
+an eine objektiv geschaetzte Bodenzielzone - bei Hebel gibt es dafuer keine
+fachliche Rechtfertigung, hier muss eine echte Long-Chance aus echter
+technischer Bestaetigung hervorgehen (MACD/EMA-Struktur/RSI/Konfluenz), nicht
+aus Positionierungsdaten.
+
+### Root Cause (echter Fund, nicht nur Konzeptfrage)
+
+Der Vortag (`f4e9c0e`, 2026-07-25) hatte bereits eine Regel-Luecke bei genau
+diesem Thema gefixt (Retail-Konsens durfte nicht unter anderem Kategorie-Label
+verkleidet werden). Trotzdem verletzten 4 von 5 am Folgetag geprueften echten
+Hebel-Signalen (ONDO/INJ/BTC/TAO, alle Baer-Regime) dieselbe Regel erneut -
+teils sogar unter dem korrekten Label `antizyklisch` selbst, nicht nur ueber
+die Umbenennungs-Luecke. Log-Analyse bestaetigte: das Notebook lief zwischen
+Fix-Commit und den betroffenen Signalen mehrfach neu (mehrere `Remote-Steuer-
+Seite gestartet`-Log-Zeilen dazwischen) - kein Deployment-Verzug, sondern eine
+strukturelle Luecke: Regel 8 war ausschliesslich eine Prompt-Anweisung, keine
+Code-Pruefung des tatsaechlichen `text`-Inhalts. Der bereits vorhandene,
+korrekte deterministische Risikofaktor (`compute_risikofaktoren_hebel()`,
+Abschnitt 3) klassifiziert denselben Rohwert (`long_konten_anteil_prozent`)
+schon laengst richtig (negativ bei extremer gleichgerichteter Mehrheit, neutral
+bei moderater, positiv nur bei echter Gegenrichtung) - das Modell durfte
+denselben Wert in Abschnitt 1 (`top_gruende`) trotzdem gegenteilig
+interpretieren, ein interner Widerspruch im selben Signal.
+
+### Fix
+
+1. `agent/krypto/hebel_analyst.py`: `antizyklisch` komplett aus
+   `TOP_GRUENDE_KATEGORIEN` entfernt (nur noch technisch/fundamental/makro/
+   risiko) - das alte Label wird jetzt schon von der Schema-Validierung
+   (`_validate_hebel()`) abgelehnt. Regel 8 neu gefasst: Retail-/Long-Konten-
+   Positionierung gehoert grundsaetzlich NICHT in `top_gruende`, weder
+   stuetzend noch neutral, da sie bereits vollstaendig in Abschnitt 3 bewertet
+   wird.
+2. `agent/krypto/hebel_risk_gate.py`: neue Funktion
+   `filtere_retail_konsens_top_gruende()` - entfernt jeden `top_gruende`-
+   Eintrag, dessen Text auf Retail-/Long-/Short-Konten-Positionierung oder
+   Long-Short-Ratio verweist, unabhaengig von Kategorie-Label. Angewendet ganz
+   am Anfang von `post_check_hebel()`, bevor irgendeine andere Deckel-Logik
+   greift. Lenient wie bei der Tranchen-Validierung: fehlende Rangplaetze sind
+   unschaedlich (`hebel_pipeline.py` liest je Rang per `.get()` mit
+   None-Default), kein Retry/HALTEN-Fallback noetig.
+
+Retail-/Long-Konten-Daten bleiben unveraendert als Fakt UND als Risikofaktor
+(Abschnitt 3) vorhanden - nur die Verwendung als eigenstaendiger Grund in
+Abschnitt 1 ist jetzt beidseitig (Prompt UND Code) ausgeschlossen.
+
+### Warum das eine echte fachliche Verbesserung ist, nicht nur andere Zahlen
+
+"Long-Konten-Anteil zeigt Raum fuer Erholung" ist ein Non-Sequitur:
+Positionierungsdaten sagen etwas ueber Squeeze-/Liquidations-Risiko einer
+bereits gehebelten Crowd aus, nicht darueber, ob der Kurs steigen sollte. Die
+interne Konsistenz zwischen Abschnitt 1 und Abschnitt 3 desselben Signals war
+vorher nicht gegeben (derselbe Rohwert wurde an zwei Stellen gegensaetzlich
+gewertet) - das ist eine Korrektheits-, keine Geschmacksfrage. Die
+quantitative Wirkung auf die reale Trefferquote (aktuell 9,4 %, CRV −0,54)
+muss trotzdem erst durch Beobachtung bestaetigt werden, nicht nur logisch
+angenommen - siehe [[feedback_backtest_first_hard_guarantee]]. Als
+Nebenbefund notiert, noch nicht geprueft: die Makro-Analogie-Formulierungen
+("gemischt, aber teilweise positiv") wirkten in denselben Beispielen aehnlich
+beliebig verwendbar - moeglicher Geschwister-Fall fuer eine spaetere Runde.
+
+**Verifiziert:** Compile-/Import-Regressionscheck aller 4 betroffenen Module
+(`hebel_analyst`, `hebel_risk_gate`, `hebel_pipeline`, `scheduler.background`).
+Synthetischer Test mit den 4 echten Verstoss-Faellen (ONDO/INJ/BTC/TAO, exakte
+Formulierungen aus dem Notebook-Export) - alle korrekt entfernt; legitime
+technische/Risiko-Gruende bleiben unveraendert; Randfaelle (None/leere Liste/
+fehlendes `text`-Feld) sowie weitere Formulierungsvarianten (Retail-Bias/
+Short-Konten-Anteil/Long-Short-Ratio) ebenfalls abgedeckt. `_validate_hebel()`
+lehnt das alte `antizyklisch`-Label jetzt korrekt mit `AnalystResponseInvalid`
+ab, ein gueltiger 4-Kategorien-Fall wird weiterhin akzeptiert.

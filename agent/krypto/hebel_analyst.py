@@ -123,33 +123,25 @@ mehrere Tage bis Wochen trägt. Rate NICHT anhand einer angenommenen typischen \
 Haltedauer - der Nutzer selbst hält historisch im Schnitt nur ~1 Tag, das war aber \
 Marktreaktion, keine Strategie, und darf hier nicht als Erwartung einfließen.
 8. Fülle `top_gruende` mit GENAU 5 Einträgen wie bei Spot-Signalen (rang 1-5, \
-`kategorie` EXAKT einer von: technisch, fundamental, makro, risiko, antizyklisch, \
+`kategorie` EXAKT einer von: technisch, fundamental, makro, risiko, \
 `text` ein prägnanter Satz) - berücksichtige dabei explizit `trigger_zweig` und die \
-gelieferten Open-Interest-/Funding-Rate-/Long-Short-Ratio-Werte, die zum Trigger \
-geführt haben. WICHTIG bei der Kategorie `antizyklisch`: ein extremer Retail-\
-Konten-Anteil in EINE Richtung (`antizyklisch.retail_long_bias_extreme`, bzw. \
-`long_konten_anteil_prozent` sehr niedrig für die Gegenrichtung) ist ein \
-KONTRAINDIKATOR GEGEN diese Richtung, nicht dafür - die Mehrheit einer stark \
-gehebelten Crowd, die bereits in eine Richtung positioniert ist, wird bei einer \
-Gegenbewegung zuerst liquidiert/ausgestoppt. Ein `top_gruende`-Eintrag mit \
-`kategorie: antizyklisch`, der auf Retail-Konsens verweist, darf deshalb NIEMALS \
-dieselbe Richtung wie deine eigene `richtung`-Empfehlung stützen - stützt der \
-Retail-Konsens tatsächlich deine Richtung (z.B. Retail überwiegend short bei \
-deiner SHORT-Empfehlung), ist das KEIN antizyklisches Argument mehr und gehört \
-nicht in diese Kategorie. Das gilt AUCH bei einer nur MODERATEN (nicht extremen) \
-Mehrheit in deine Richtung: ein echter Fund war die Formulierung "Long-Konten-\
-Anteil von 63,5% zeigt eine moderate Positionierung, was Raum für eine Erholung \
-lässt" als Stütze für eine LONG-Empfehlung - das ist FALSCH, weil 63,5% bereits \
-eine Mehrheit IN DERSELBEN Richtung ist (auch wenn nicht extrem), also bestenfalls \
-neutral zu werten, niemals als unterstützendes Argument. "Noch nicht extrem, also \
-ist noch Luft nach oben" ist derselbe Fehler nur anders formuliert. WICHTIG \
-(2026-07-25, echter BTC-Fund): dieses Verbot gilt für den INHALT, NICHT nur für \
-das Label `kategorie: antizyklisch` - ein gleichgerichteter Retail-/Long-Konten-\
-Konsens (extrem oder moderat) darf UNTER KEINER Kategorie (auch nicht technisch/\
-fundamental/makro) als Stütze für deine Richtung formuliert werden, das Umbenennen \
-der Kategorie umgeht das Verbot nicht. Nutze diesen Fakt in `top_gruende` entweder \
-gar nicht, oder ausschließlich als neutralen/warnenden Hinweis - niemals mit einer \
-stützenden Formulierung wie "Raum für Erholung", "unterstützt Gegenbewegung" o.ä.
+gelieferten Open-Interest-/Funding-Rate-Werte, die zum Trigger geführt haben. \
+WICHTIG (2026-07-26, echte Nachanalyse mehrerer Bärenmarkt-Signale): Retail-/\
+Long-Konten-Positionierung (`antizyklisch.long_konten_anteil_prozent`, \
+`retail_long_bias_extreme`, Long-Short-Ratio) gehört NIEMALS in `top_gruende` - \
+weder stützend noch als neutraler Hinweis, unter KEINER Kategorie. Diese Daten \
+werden bereits vollständig und korrekt als eigener Risikofaktor in Abschnitt 3 \
+("Konklusion") bewertet. Ein früherer Versuch, sie zusätzlich hier einzuordnen \
+(Regel bis 2026-07-25), wurde trotz expliziten Verbots wiederholt verletzt \
+(echte Funde: "Long-Konten-Anteil von 63,5% zeigt Raum für eine Erholung" als \
+Stütze für LONG) - ein Non-Sequitur, da Positionierungsdaten etwas über Squeeze-/\
+Liquidations-Risiko einer bereits gehebelten Crowd aussagen, nicht darüber, ob \
+der Kurs steigen sollte. Ein deterministischer Filter entfernt `top_gruende`-\
+Einträge mit diesem Inhalt ohnehin automatisch, unabhängig vom Label - nutze die \
+gesparte Kategorie stattdessen für einen echten technischen/fundamentalen/makro-/\
+risikobezogenen Grund (z.B. eine tatsächliche Trendumkehr in einer \
+Bärenmarkt-Zwischenrally muss aus MACD/EMA-Struktur/RSI/Konfluenz hervorgehen, \
+nicht aus Positionierungsdaten).
 9. `key_risks` MUSS bei ERÖFFNEN/NACHKAUFEN/HEBEL_ERHÖHEN mindestens einen Eintrag \
 zu hebel-spezifischen Risiken enthalten (Liquidationsrisiko bei schnellen \
 Kursbewegungen, laufende Finanzierungsgebühr bei längerer Haltedauer) - das sind \
@@ -640,7 +632,11 @@ REQUIRED_HEBEL_TOP_LEVEL_FIELDS = (
     "eigene_einschaetzung",
 )
 
-TOP_GRUENDE_KATEGORIEN = ("technisch", "fundamental", "makro", "risiko", "antizyklisch")
+# 2026-07-26: "antizyklisch" hier entfernt - Retail-/Long-Konten-Positionierung
+# gehoert fuer Hebel-Signale ausschliesslich in Abschnitt 3 (Risikofaktoren,
+# compute_risikofaktoren_hebel()), nie in top_gruende, siehe Regel 8 oben und
+# hebel_risk_gate.py::filtere_retail_konsens_top_gruende().
+TOP_GRUENDE_KATEGORIEN = ("technisch", "fundamental", "makro", "risiko")
 _HALTE_KRITERIUM_BUCKETS = ("kurz", "mittel", "lang")
 _HALTEN_AEHNLICHE_ACTIONS = ("HALTEN", "SCHLIESSEN")
 # Signal-Fazit (2026-07-25, siehe Regel 21 / Memory feedback_llm_synthese_

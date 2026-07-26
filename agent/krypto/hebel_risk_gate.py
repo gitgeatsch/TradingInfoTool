@@ -17,6 +17,7 @@ dieselben Regeln nochmal deterministisch - das Modell wird nie blind vertraut.""
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
@@ -83,6 +84,39 @@ def retail_konsens_risiko(
     ):
         return True
     return False
+
+
+# 2026-07-26 (Nachtrag zum BTC-Hebel-Review vom Vortag, f4e9c0e): Regel 8 im
+# SYSTEM_PROMPT (hebel_analyst.py) verbietet bereits, Retail-/Long-Konten-
+# Konsens als Stuetze fuer top_gruende zu verwenden - blindes Vertrauen auf
+# Prompt-Befolgung reicht wie bei allen anderen Deckeln nicht. Echter Fund:
+# 4 von 5 am Folgetag geprueften Signalen verletzten das trotzdem, teils sogar
+# unter dem korrekten Label "antizyklisch" (nicht nur ueber die inzwischen
+# geschlossene Umbenennungs-Luecke). Retail-/Long-Konten-Daten werden bereits
+# vollstaendig und korrekt als eigener Risikofaktor in
+# compute_risikofaktoren_hebel() (Abschnitt 3) bewertet - in top_gruende
+# (Abschnitt 1) sind sie strukturell fehl am Platz, unabhaengig von Kategorie
+# oder Richtung ("Long-Konten-Anteil zeigt Raum fuer Erholung" ist ein
+# Non-Sequitur: Positionierungsdaten sagen etwas ueber Squeeze-/Liquidations-
+# Risiko aus, nicht darueber, ob der Kurs steigen sollte).
+_RETAIL_KONSENS_TOP_GRUND_MUSTER = re.compile(
+    r"(long|short)[- ]?konten|retail[- ]?(konsens|bias|positionierung|trader)|long[- ]?short[- ]?ratio",
+    re.IGNORECASE,
+)
+
+
+def filtere_retail_konsens_top_gruende(top_gruende: list) -> list:
+    """Entfernt top_gruende-Eintraege, deren Text auf Retail-/Long-Konten-
+    Positionierung verweist, komplett - unabhaengig von der angegebenen
+    Kategorie. Lenient wie bei der Tranchen-Validierung: fehlende Rangplaetze
+    sind unschaedlich (hebel_pipeline.py::top_grund_fields liest je Rang per
+    .get() mit None-Default), kein Retry/HALTEN-Fallback noetig."""
+    if not isinstance(top_gruende, list):
+        return top_gruende
+    return [
+        eintrag for eintrag in top_gruende
+        if not _RETAIL_KONSENS_TOP_GRUND_MUSTER.search(str((eintrag or {}).get("text") or ""))
+    ]
 
 
 def these_regime_widerspruch(trade_thesis_typ: str | None, regime_konflikt: bool) -> bool:
@@ -798,8 +832,13 @@ def post_check_hebel(
 
     Nachtrag 2026-07-26 (Regime-Persistenz + BTC-Relativwert-Kopplung):
     `regime_persistenz_tage`/`btc_relativwert` werden nur durchgereicht, siehe
-    compute_risikofaktoren_hebel()-Docstring fuer die eigentliche Logik."""
+    compute_risikofaktoren_hebel()-Docstring fuer die eigentliche Logik.
+
+    Nachtrag 2026-07-26 (Folgetag des BTC-Hebel-Reviews, echter Fund):
+    `filtere_retail_konsens_top_gruende()` wird ganz am Anfang auf
+    `result["top_gruende"]` angewendet, siehe deren Docstring."""
     result = dict(parsed)
+    result["top_gruende"] = filtere_retail_konsens_top_gruende(result.get("top_gruende"))
     risk_veto = False
     risk_veto_reason = None
     crv: float | None = None
