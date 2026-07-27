@@ -485,7 +485,7 @@ watchlist:
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: etf
-    yfinance_symbol: X136.BE
+    yfinance_symbol: X136.MU
     hauptgruppe: energie
     unterkategorie: erneuerbare
   - symbol: EXH3
@@ -509,7 +509,7 @@ watchlist:
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: etf
-    yfinance_symbol: IS0C.DE
+    yfinance_symbol: IS0C.SG
     hauptgruppe: agrarrohstoffe
     unterkategorie: agrar_diversifiziert
   - symbol: OD7H
