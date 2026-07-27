@@ -37,6 +37,7 @@ class RemoteStatus:
     regime_status: dict | None = None
     parameter_overview: list[dict] | None = None
     richtungstreffer_quote: dict | None = None
+    zai_richtung_performance: dict | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -58,6 +59,7 @@ class RemoteStatus:
             "regime_status": self.regime_status,
             "parameter_overview": self.parameter_overview,
             "richtungstreffer_quote": self.richtungstreffer_quote,
+            "zai_richtung_performance": self.zai_richtung_performance,
         }
 
 
@@ -141,6 +143,7 @@ def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, erro
         regime_status=_get_regime_status(conn),
         parameter_overview=_get_parameter_overview(),
         richtungstreffer_quote=_get_richtungstreffer_quote(conn, watchlist),
+        zai_richtung_performance=_get_zai_richtung_performance(conn, watchlist),
     )
 
 
@@ -205,6 +208,20 @@ def _get_richtungstreffer_quote(conn: sqlite3.Connection, watchlist: list) -> di
         "spot": compute_richtungstreffer_quote(conn, "spot", schwelle),
         "hebel": compute_richtungstreffer_quote(conn, "hebel", schwelle),
     }
+
+
+def _get_zai_richtung_performance(conn: sqlite3.Connection, watchlist: list) -> dict:
+    """Z.ais UNABHAENGIGE Richtungs-Erfolgsquote (2026-07-27, Nutzer-Wunsch nach
+    der `hebel_richtung_modus="nur_long"`-Feststellung: "ZAI unabhaengig mit
+    seinen unterschiedlichen Entscheidungen und deren Erfolgsquote messen")
+    - reiner Lesezugriff auf agent/krypto/backward_tracking.py::
+    compute_zai_richtung_performance(). Anders als provider_performance
+    (das Mistrals EIGENE Empfehlung bewertet) misst diese Karte, ob Z.ais
+    Call-2-Richtungsableitung (`zai_eigene_richtung`) unabhaengig von Mistrals
+    Bias mit der tatsaechlichen Marktrichtung uebereinstimmte."""
+    from agent.krypto.backward_tracking import compute_zai_richtung_performance
+
+    return compute_zai_richtung_performance(conn, watchlist)
 
 
 def _get_regime_status(conn: sqlite3.Connection) -> dict | None:

@@ -133,7 +133,11 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import database.db as db
-from agent.krypto.backward_tracking import compute_konfidenz_kalibrierung, compute_provider_performance
+from agent.krypto.backward_tracking import (
+    compute_konfidenz_kalibrierung,
+    compute_provider_performance,
+    compute_zai_richtung_performance,
+)
 from agent.krypto.regime import get_last_known_regime_status
 
 DEEP_DIVE_SYMBOL = sys.argv[1] if len(sys.argv) > 1 else "LINK"
@@ -696,6 +700,12 @@ def main() -> None:
         # aber die fertige Band-Aufschluesselung erspart eine manuelle
         # Nachrechnung bei jeder Analyse).
         konfidenz_kalibrierung = compute_konfidenz_kalibrierung(conn)
+        # 4c) Z.ais UNABHAENGIGE Richtungs-Erfolgsquote (2026-07-27, Nutzer-Wunsch
+        # nach der hebel_richtung_modus="nur_long"-Feststellung: "ZAI unabhaengig
+        # mit seinen unterschiedlichen Entscheidungen und deren Erfolgsquote
+        # messen") - siehe agent/krypto/backward_tracking.py::
+        # compute_zai_richtung_performance() Docstring.
+        zai_richtung_performance = compute_zai_richtung_performance(conn)
 
         # 5) Alle Hebel-Signale (fuer Long/Short-Bugfix-Verifikation +
         # Gate/Veto-Muster + Outcome-Verteilung)
@@ -752,6 +762,7 @@ def main() -> None:
         "signal_volumen_heute": signal_volumen_heute,
         "provider_performance": provider_performance,
         "konfidenz_kalibrierung": konfidenz_kalibrierung,
+        "zai_richtung_performance": zai_richtung_performance,
         "hebel_signals": hebel_rows,
         "hebel_positions": [row_to_dict(r) for r in hebel_positions],
         "spot_signals": spot_rows,

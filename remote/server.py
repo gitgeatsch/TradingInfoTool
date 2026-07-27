@@ -121,6 +121,16 @@ _INDEX_HTML = """<!doctype html>
 </div>
 
 <div class="card">
+  <div class="row"><strong>Z.ai-Richtungs-Erfolgsquote (unabhaengig von Mistral)</strong></div>
+  <div class="row"><span class="muted-text">Misst NICHT, ob Z.ai mit Mistral uebereinstimmte (das zeigt das
+  Detail-Panel je Signal) - sondern ob Z.ais UNABHAENGIGE Richtungs-Ableitung (Call 2, ohne Mistrals Empfehlung
+  als Vorgabe) im Nachhinein mit der tatsaechlichen Kursbewegung uebereinstimmte. Relevant, weil Mistral bei
+  Hebel durch die Einstellung "Nur Long" strukturell nie SHORT empfehlen darf - diese Quote zeigt, wie gut Z.ai
+  unabhaengig davon liegen wuerde. NEUTRAL-Urteile zaehlen nicht mit (analog zu HALTEN).</span></div>
+  <div id="zai-richtung-performance"></div>
+</div>
+
+<div class="card">
   <div class="row"><strong>API-Status: LLM-Anbieter</strong></div>
   <div id="api-health-llm"></div>
   <div class="row"><strong>API-Status: Markt-/Preisdaten</strong></div>
@@ -320,6 +330,36 @@ function renderRichtungstrefferQuote(data) {
     renderRichtungstrefferQuoteTier("Hebel", data.hebel);
 }
 
+// Z.ai-Richtungs-Erfolgsquote (2026-07-27, siehe agent/krypto/backward_tracking.py::
+// compute_zai_richtung_performance()) - feste Tier-Reihenfolge wie SPOT_ASSETKLASSEN,
+// damit ein (noch) leeres Tier sichtbar bleibt statt stillschweigend zu fehlen.
+const ZAI_RICHTUNG_TIERS = [
+  ["hebel", "Hebel"], ["krypto", "Krypto (Spot)"], ["aktien", "Aktien"],
+  ["rohstoffe", "Rohstoffe"], ["etf", "ETF (Themen/Hedge)"],
+];
+
+function renderZaiRichtungPerformanceTier(label, tierData) {
+  if (!tierData || tierData.anzahl_bewertet === 0) {
+    const neutralHinweis = tierData && tierData.neutral_bei_klarer_bewegung > 0
+      ? ' (' + tierData.neutral_bei_klarer_bewegung + 'x NEUTRAL bei bereits aufgeloester Bewegung)' : '';
+    return '<div class="row"><span class="muted-text">' + label +
+      ': noch keine bewertbaren Z.ai-Richtungs-Calls' + neutralHinweis + '.</span></div>';
+  }
+  const neutralHinweis = tierData.neutral_bei_klarer_bewegung > 0
+    ? ' <span class="muted-text">(+' + tierData.neutral_bei_klarer_bewegung + 'x NEUTRAL, nicht mitgezaehlt)</span>'
+    : '';
+  return '<div class="row"><span>' + label + ' (n=' + tierData.anzahl_bewertet + ')' + neutralHinweis + '</span>' +
+    '<span>' + tierData.treffer + '/' + tierData.anzahl_bewertet + ' = ' +
+    tierData.trefferquote_pct.toFixed(1) + '%</span></div>';
+}
+
+function renderZaiRichtungPerformance(data) {
+  if (!data) return "";
+  return ZAI_RICHTUNG_TIERS.map(function([key, label]) {
+    return renderZaiRichtungPerformanceTier(label, data[key]);
+  }).join("");
+}
+
 const API_HEALTH_GROUPS = {
   "api-health-llm": ["groq", "mistral", "gemini", "zai"],
   "api-health-markt": ["coingecko", "kraken", "bitpanda", "yfinance"],
@@ -491,6 +531,11 @@ async function refreshStatus() {
   if (data.richtungstreffer_quote) {
     document.getElementById("richtungstreffer-quote").innerHTML =
       renderRichtungstrefferQuote(data.richtungstreffer_quote);
+  }
+
+  if (data.zai_richtung_performance) {
+    document.getElementById("zai-richtung-performance").innerHTML =
+      renderZaiRichtungPerformance(data.zai_richtung_performance);
   }
 
   if (data.api_health) {

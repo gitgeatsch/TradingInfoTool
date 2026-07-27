@@ -529,6 +529,135 @@ def compute_provider_performance(conn, watchlist: list | None = None) -> dict:
     return ergebnis
 
 
+def bewerte_zai_richtung(
+    primaer_richtung: str, outcome_status: str, zai_eigene_richtung: str | None,
+) -> str | None:
+    """Vergleicht Z.ais UNABHAENGIGE Richtungs-Ableitung (Call 2,
+    `zai_eigene_richtung` aus agent/krypto/gegenpruefung.py::leite_eigene_richtung())
+    gegen die TATSAECHLICHE Marktrichtung - komplett unabhaengig davon, ob
+    Z.ai mit dem primaeren Signal selbst uebereinstimmte (das misst bereits
+    `zai_uebereinstimmung`, siehe Modul-Docstring von gegenpruefung.py).
+
+    Nutzer-Wunsch (2026-07-27, nach der Feststellung, dass `hebel_richtung_modus`
+    auf dem Notebook seit Einfuehrung der Long/Short-Funktion durchgehend
+    "nur_long" ist - Mistrals extreme LONG-Bias in den bisherigen Auswertungen
+    ist also ein strukturelles Konfigurations-Artefakt, keine organische
+    Strategie): "ZAI unabhaengig mit seinen unterschiedlichen Entscheidungen
+    und deren Erfolgsquote messen" - analog zu compute_provider_performance()/
+    compute_win_rate_fact(), aber unabhaengig von Mistrals Bias.
+
+    Kein neuer Kursabruf noetig: `outcome_status` wurde bereits vom normalen
+    Backward-Tracking (check_signal_outcome()/check_hebel_signal_outcome())
+    berechnet, und Take-Profit/Stop-Loss sind dort bereits RICHTUNGS-KORREKT
+    orientiert (LONG: TP oberhalb/SL unterhalb des Entrys, SHORT: umgekehrt -
+    siehe hebel_backward_tracking.py::check_hebel_signal_outcome() Zeile
+    ~146-206). Daraus laesst sich die tatsaechliche Kursbewegung ableiten,
+    ohne selbst nochmal OHLC-Daten zu lesen:
+    - `primaer_richtung`=LONG + take_profit_erreicht -> Kurs stieg -> Markt war LONG
+    - `primaer_richtung`=LONG + stop_loss_erreicht/liquidation -> Kurs fiel -> Markt war SHORT
+    - `primaer_richtung`=SHORT + take_profit_erreicht -> Kurs fiel -> Markt war SHORT
+    - `primaer_richtung`=SHORT + stop_loss_erreicht/liquidation -> Kurs stieg -> Markt war LONG
+
+    `zai_eigene_richtung`=NEUTRAL (oder None/unbekannt) liefert None (kein
+    Treffer, kein Fehlschlag) - Nutzer-Entscheidung 2026-07-27: "wuerde ich
+    neutral zaehlen eher nein - denn wir messen es auch nicht oder?" (analog
+    dazu, dass HALTEN/Mistral-NEUTRAL ebenfalls nicht in die bestehenden
+    Trefferquoten einfliesst). `outcome_status` ausserhalb der aufgeloesten
+    Zustaende (offen/abgelaufen/ueberholt/nicht_anwendbar) liefert ebenfalls
+    None - keine tatsaechliche Marktrichtung ableitbar."""
+    if zai_eigene_richtung not in ("LONG", "SHORT"):
+        return None
+    if outcome_status == OUTCOME_TAKE_PROFIT:
+        tatsaechliche_richtung = primaer_richtung
+    elif outcome_status in (OUTCOME_STOP_LOSS, OUTCOME_LIQUIDATION):
+        tatsaechliche_richtung = "SHORT" if primaer_richtung == "LONG" else "LONG"
+    else:
+        return None
+    return "treffer" if zai_eigene_richtung == tatsaechliche_richtung else "fehlschlag"
+
+
+def compute_zai_richtung_performance(conn, watchlist: list | None = None) -> dict:
+    """Aggregiert bewerte_zai_richtung() ueber alle bereits aufgeloesten Signale
+    mit gesetztem `zai_eigene_richtung` - aus hebel_signals (echtes `richtung`-
+    Feld) UND signals (Spot-family, `primaer_richtung` via
+    agent.krypto.gegenpruefung.richtung_aus_action() aus `action` abgeleitet,
+    identisch zu der Ableitung, die bereits fuer `zai_uebereinstimmung`
+    verwendet wird). Gleiche Tier-Aufschluesselung wie compute_provider_
+    performance() (Hebel gesondert, Spot-family nach Assetklasse wenn
+    `watchlist` uebergeben wird).
+
+    Hedge-Instrumente (in agent.hedge.pipeline.SYMBOL_ZU_HEBEL_FAKTOR gelistet)
+    bekommen `ist_hedge_invertiert=True` fuer richtung_aus_action() - siehe
+    dortiger Docstring (KAUFEN = Hedge aufbauen = baerische Gesamtmarkt-
+    erwartung -> SHORT).
+
+    Wichtige Einschraenkung (2026-07-27): signals._TRACKABLE_ACTIONS = nur
+    KAUFEN/NACHKAUFEN werden je outcome-aufgeloest (siehe Modul-Docstring
+    oben) - VERKAUFEN/TAUSCHEN (die SHORT-Seite der Spot-family) liefern
+    strukturell NIE take_profit_erreicht/stop_loss_erreicht, tauchen hier
+    also praktisch nicht auf, bis ein eigenes Sell-Side-Tracking existiert.
+    Bei Hebel gilt diese Einschraenkung NICHT (check_hebel_signal_outcome()
+    loest beide Richtungen vollstaendig auf).
+
+    Rueckgabe je Tier: {"anzahl_bewertet", "treffer", "fehlschlaege",
+    "neutral_bei_klarer_bewegung", "trefferquote_pct"}. Reine Lesefunktion,
+    kein Seiteneffekt."""
+    from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR as _hedge_symbole
+    from agent.krypto.gegenpruefung import richtung_aus_action
+
+    assetklasse_by_symbol = {a.symbol: a.assetklasse for a in watchlist} if watchlist else {}
+    ergebnis: dict = {}
+
+    def _stelle_sicher(tier: str) -> dict:
+        return ergebnis.setdefault(tier, {
+            "anzahl_bewertet": 0, "treffer": 0, "fehlschlaege": 0,
+            "neutral_bei_klarer_bewegung": 0, "trefferquote_pct": None,
+        })
+
+    def _erfasse(tier: str, urteil: str | None) -> None:
+        eintrag = _stelle_sicher(tier)
+        if urteil is None:
+            eintrag["neutral_bei_klarer_bewegung"] += 1
+            return
+        eintrag["anzahl_bewertet"] += 1
+        if urteil == "treffer":
+            eintrag["treffer"] += 1
+        else:
+            eintrag["fehlschlaege"] += 1
+
+    placeholders = ", ".join("?" for _ in _RESOLVED_OUTCOMES)
+
+    hebel_rows = conn.execute(
+        f"SELECT richtung, outcome_status, zai_eigene_richtung FROM hebel_signals "
+        f"WHERE outcome_status IN ({placeholders}) AND zai_eigene_richtung IS NOT NULL",
+        _RESOLVED_OUTCOMES,
+    ).fetchall()
+    for row in hebel_rows:
+        urteil = bewerte_zai_richtung(row["richtung"], row["outcome_status"], row["zai_eigene_richtung"])
+        _erfasse("hebel", urteil)
+
+    spot_rows = conn.execute(
+        f"SELECT symbol, action, outcome_status, zai_eigene_richtung FROM signals "
+        f"WHERE outcome_status IN ({placeholders}) AND zai_eigene_richtung IS NOT NULL",
+        _RESOLVED_OUTCOMES,
+    ).fetchall()
+    for row in spot_rows:
+        primaer_richtung = richtung_aus_action(
+            row["action"], ist_hedge_invertiert=row["symbol"] in _hedge_symbole,
+        )
+        if primaer_richtung is None:
+            continue
+        tier = assetklasse_by_symbol.get(row["symbol"], "unbekannt") if watchlist else "spot"
+        urteil = bewerte_zai_richtung(primaer_richtung, row["outcome_status"], row["zai_eigene_richtung"])
+        _erfasse(tier, urteil)
+
+    for eintrag in ergebnis.values():
+        n = eintrag["anzahl_bewertet"]
+        eintrag["trefferquote_pct"] = round(100 * eintrag["treffer"] / n, 1) if n > 0 else None
+
+    return ergebnis
+
+
 # Trackbare Hebel-Aktionen fuer die Offen-Uebersicht (2026-07-24) - identisch zu
 # _TRACKABLE_HEBEL_ACTIONS in hebel_backward_tracking.py, hier bewusst dupliziert
 # statt importiert: hebel_backward_tracking.py importiert bereits von diesem Modul

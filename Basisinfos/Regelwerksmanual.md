@@ -10272,3 +10272,116 @@ Tk-Smoke-Test (`HebelView()`-Erstellung, Standardwert "2_tage" bestätigt,
 Umschalten auf "alle" + `refresh()` ohne Absturz); Import-Regressionscheck
 für `database/db.py` + alle 4 anderen Verbraucher der geteilten Funktion
 (unverändert, keine Regression).
+
+## Nachtrag (2026-07-27): Z.ai-Richtungs-Erfolgsquote - unabhängig von Mistrals Übereinstimmung gemessen
+
+**Auslöser:** Analyse eines frischen Notebook-Exports zeigte, dass Z.ais
+unabhängige Richtungs-Ableitung (`zai_eigene_richtung`, Call 2) so gut wie nie
+mit Mistrals Hebel-Empfehlung übereinstimmte (57 LONG/2 SHORT bei Mistral vs.
+0 LONG/29 SHORT/28 NEUTRAL bei Z.ai). Der Nutzer stellte dazu die entscheidende
+Rückfrage, ob Mistral wisse, "dass wir nur long können" - Prüfung von
+`ui/settings.py`/`agent/krypto/budget_allocator.py` (Zeile ~383/388/435)
+bestätigte: die per-Gerät persistierte Einstellung `hebel_richtung_modus`
+(`data/settings.json`, NICHT im Git, getrennt vom statischen
+`Basisinfos/config.yaml`-Wert `hebel.nur_long`) filtert SHORT-Kandidaten
+bereits VOR jedem LLM-Call heraus, wenn auf `"nur_long"` gestellt - und der
+Nutzer bestätigte, dass genau das auf dem Notebook (der produktiven 24/7-
+Maschine) seit Einführung der Long/Short-Funktion (2026-07-15) der Fall ist,
+weil "1. bitpanda kann noch immer kein short" (weiterhin gültige Einschränkung,
+keine Änderung an `hebel_richtung_modus` geplant). Die extreme LONG-Bias in
+den bisherigen Auswertungen ist also ein strukturelles Konfigurations-
+Artefakt, keine organische Strategie - der reine "Z.ai stimmt mit Mistral
+überein"-Vergleich (`zai_uebereinstimmung`, bestehend seit dem 2026-07-26er
+Nachtrag) sagt unter dieser Einschränkung wenig darüber aus, ob Z.ais eigene
+Richtungs-Einschätzung tatsächlich GUT ist. Nutzer-Auftrag: **"2. ja ZAI
+unabhängig mit seinen unterschiedlichen Entscheidungen und deren Erfolgsquote
+messen"** - eine zu `compute_provider_performance()`/`compute_win_rate_fact()`
+analoge, aber von Mistrals Bias unabhängige Kennzahl.
+
+### Kein neuer Kursabruf nötig - Wiederverwendung des bereits aufgelösten Outcomes
+
+`check_signal_outcome()`/`check_hebel_signal_outcome()` lösen Take-Profit/
+Stop-Loss bereits RICHTUNGS-KORREKT orientiert auf (LONG: TP oberhalb/SL
+unterhalb des Entrys, SHORT: umgekehrt, siehe `hebel_backward_tracking.py`
+Zeile ~146-206). Damit lässt sich die TATSÄCHLICHE Marktrichtung aus dem
+bereits gespeicherten `outcome_status` ableiten, ohne selbst nochmal OHLC-
+Daten zu lesen:
+
+- `primaer_richtung`=LONG + `take_profit_erreicht` → Kurs stieg → Markt war LONG
+- `primaer_richtung`=LONG + `stop_loss_erreicht`/`liquidation_wahrscheinlich` → Kurs fiel → Markt war SHORT
+- `primaer_richtung`=SHORT + `take_profit_erreicht` → Kurs fiel → Markt war SHORT
+- `primaer_richtung`=SHORT + `stop_loss_erreicht`/`liquidation_wahrscheinlich` → Kurs stieg → Markt war LONG
+
+Neue reine Funktion `agent/krypto/gegenpruefung.py`-Nachbar
+`agent/krypto/backward_tracking.py::bewerte_zai_richtung(primaer_richtung,
+outcome_status, zai_eigene_richtung)` vergleicht `zai_eigene_richtung` gegen
+diese abgeleitete tatsächliche Richtung - "treffer"/"fehlschlag", oder `None`
+wenn kein Vergleich möglich ist (Z.ai NEUTRAL, oder `outcome_status` außerhalb
+der aufgelösten Zustände).
+
+### NEUTRAL-Behandlung - Nutzer-Entscheidung
+
+Z.ai-NEUTRAL-Urteile fließen NICHT in die Trefferquote ein (weder als Treffer
+noch als Fehlschlag), sondern werden separat als `neutral_bei_klarer_bewegung`
+gezählt. Nutzer-Begründung, explizit erfragt und bestätigt: **"würde ich
+neutral zählen eher nein - denn wir messen es auch nicht oder?"** - analog
+dazu, dass Mistrals eigenes HALTEN/NEUTRAL ebenfalls nicht in
+`compute_provider_performance()`/`compute_win_rate_fact()` einfließt.
+
+### Scope - alle 6 Pipelines, mit einer bekannten Einschränkung bei Spot
+
+Nutzer-Vorgabe: **"Scope sollte analog für alle Assets und Assetklassen
+angewendet werden - jedenfalls spot"**, mit der Annahme "kaufen bevor es
+steigt also long, verkaufen bevor es fällt also short" (bestätigt als
+korrekte Grundannahme). Neue Aggregat-Funktion
+`compute_zai_richtung_performance(conn, watchlist=None)` deckt beide Tabellen
+ab:
+
+- **Hebel** (`hebel_signals`): echtes `richtung`-Feld, volle Abdeckung -
+  `check_hebel_signal_outcome()` löst BEIDE Richtungen korrekt auf.
+- **Spot-family** (`signals`, Krypto-Spot/Aktien/Rohstoffe/Themen-ETF/Hedge):
+  `primaer_richtung` wird über das bereits bestehende
+  `agent/krypto/gegenpruefung.py::richtung_aus_action()` aus `action`
+  abgeleitet (identische Ableitung wie für `zai_uebereinstimmung` bereits
+  verwendet) - inklusive der Hedge-Invertierung (`ist_hedge_invertiert=True`
+  für Symbole aus `agent.hedge.pipeline.SYMBOL_ZU_HEBEL_FAKTOR`: KAUFEN =
+  Hedge aufbauen = bärische Gesamtmarkterwartung → SHORT-Erwartung an das
+  Instrument selbst).
+
+**Bekannte Lücke, transparent an den Nutzer kommuniziert statt stillschweigend
+übergangen:** `backward_tracking.py::_TRACKABLE_ACTIONS = {"KAUFEN",
+"NACHKAUFEN"}` - nur die KAUFEN-Seite der Spot-family wird von
+`check_signal_outcome()` überhaupt outcome-aufgelöst, VERKAUFEN/TAUSCHEN
+(die SHORT-Seite) liefern strukturell NIE `take_profit_erreicht`/
+`stop_loss_erreicht` und tauchen deshalb in dieser Kennzahl praktisch nicht
+auf, bis ein eigenes Sell-Side-Backward-Tracking existiert (nicht Teil dieser
+Runde). Bei Hebel gilt diese Einschränkung NICHT.
+
+### Anzeige + Export
+
+- `remote/status.py`: neues Feld `zai_richtung_performance`
+  (`_get_zai_richtung_performance()`, gleicher Lesezugriffs-Stil wie
+  `_get_provider_performance()`).
+- `remote/server.py`: neue Karte "Z.ai-Richtungs-Erfolgsquote (unabhängig von
+  Mistral)" - Tiers Hebel + Spot-family nach Assetklasse (analog
+  `SPOT_ASSETKLASSEN`), zeigt `n`, Trefferquote und NEUTRAL-Anzahl je Tier;
+  leere Tiers bleiben sichtbar statt stillschweigend zu fehlen.
+- `extract_notebook_diagnose.py`: `zai_richtung_performance`-Feld ergänzt
+  (Aggregat mitschicken statt nur Rohspalten, gleiches Prinzip wie
+  `provider_performance`/`konfidenz_kalibrierung`).
+
+**Verifiziert:** 11 synthetische Fälle für `bewerte_zai_richtung()` (alle
+LONG/SHORT × TP/SL/Liquidation-Kombinationen, NEUTRAL, `None`, nicht
+aufgelöster Status) + 8 End-to-End-Fälle für `compute_zai_richtung_performance()`
+gegen eine In-Memory-SQLite-DB (Hebel Treffer/Fehlschlag/NEUTRAL/fehlendes
+Feld, Spot KAUFEN-Treffer, Spot HALTEN korrekt ausgeschlossen, Hedge-
+Invertierung korrekt angewendet) - alle 19 Checks bestanden. Import-
+Regressionscheck für alle 4 geänderten Module (`backward_tracking.py`,
+`remote/status.py`, `remote/server.py`, `extract_notebook_diagnose.py`) ohne
+Fehler.
+
+**Bewusst NICHT Teil dieser Runde:** keine Änderung an `hebel_richtung_modus`
+selbst (Bitpanda-Short-Einschränkung bleibt gültig); kein Sell-Side-Backward-
+Tracking für VERKAUFEN/TAUSCHEN (siehe Lücke oben); keine GUI-Integration
+außerhalb der Remote-Seite (gleiche Platzierung wie Provider-Performance/
+Richtungstreffer-Quote, aus denen dieses Feature abgeleitet ist).
