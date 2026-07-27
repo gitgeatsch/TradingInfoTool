@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import threading
 from datetime import datetime, timezone
 
 import numpy as np
@@ -22,7 +23,9 @@ import database.db as db
 from agent.krypto.backward_tracking import compute_win_rate_fact
 from agent.krypto.llm_provider import llm_model_label
 from agent.krypto.makro_analog import get_cached_makro_analog_fact
-from agent.krypto.pipeline import MIN_GATE_INDICATORS_AVAILABLE, compute_current_regime
+from agent.krypto.pipeline import (
+    MIN_GATE_INDICATORS_AVAILABLE, compute_current_regime, eur_aus_usd, log_eur_abweichungen,
+)
 from agent.krypto.risk_gate import post_check, pre_check
 from agent.rohstoff.analyst import (
     AnalystResponseInvalid,
@@ -131,6 +134,55 @@ def _load_ohlc(conn, symbol: str):
     dates = np.array([o.date for o in ohlc_history])
     closes = np.array([o.close for o in ohlc_history], dtype=float)
     return dates, closes, ohlc_history, last_date
+
+
+# JIT-Historie-Nachladen (2026-07-27, Grundsatzfix Teil 2, gleiches Muster wie
+# agent/krypto/pipeline.py::jit_refresh_asset_historie()) - die Rohstoff-Pipeline
+# hatte bisher GAR KEINEN Scheduler-Job, nur den lazy _ensure_ohlc_backfilled()-
+# Aufruf oben (nur bei bereits >5 Tage veralteter Historie) - strukturell
+# schlechter als das urspruengliche Krypto-Staleness-Problem. Kein CoinGecko-
+# aehnliches Monatskontingent bei yfinance zu schonen - der Burst-Schutz dient
+# nur dem Schutz gegen Mehrfachanfragen innerhalb eines Allocator-/Batch-Zyklus.
+# Laedt bewusst vom Futures-Ticker (USD) - die Reskalierung auf die ETC-
+# Preisebene (_rescale_ohlc_zum_etc_kurs()) UND das Zurueckschreiben (Commit 1,
+# oben in generate_signal()) passieren erst NACH diesem Aufruf.
+JIT_REFRESH_MIN_ABSTAND_MINUTEN = 60
+
+_jit_letzter_versuch: dict[str, datetime] = {}
+_jit_lock = threading.Lock()
+
+
+def _jit_burst_schutz_pruefen(symbol: str) -> bool:
+    now = datetime.now(timezone.utc)
+    with _jit_lock:
+        letzter = _jit_letzter_versuch.get(symbol)
+        if (
+            letzter is not None
+            and (now - letzter).total_seconds() < JIT_REFRESH_MIN_ABSTAND_MINUTEN * 60
+        ):
+            return False
+        _jit_letzter_versuch[symbol] = now
+        return True
+
+
+def jit_refresh_ohlc(conn, asset) -> None:
+    """P-10: ein Fehlschlag darf die Signal-Erzeugung nicht kippen - es wird
+    dann einfach mit der bereits gespeicherten (ggf. staleren) Futures-Historie
+    weitergearbeitet."""
+    cfg = config.load_config()
+    if not cfg.get("datenquellen", {}).get("marktdaten_wertpapiere", {}).get(
+        "jit_historie_refresh_aktiv", True
+    ):
+        return
+    futures_ticker = SYMBOL_ZU_FUTURES_TICKER.get(asset.symbol)
+    if futures_ticker is None or not _jit_burst_schutz_pruefen(asset.symbol):
+        return
+    try:
+        ohlc_points = get_full_ohlc_history(futures_ticker, asset.symbol, "USD")
+        if ohlc_points:
+            db.upsert_ohlc_points(conn, ohlc_points)
+    except Exception as exc:
+        logger.info("JIT-Historie-Refresh (yfinance/Futures) für %s fehlgeschlagen: %s", asset.symbol, exc)
 
 
 def _rescale_ohlc_zum_etc_kurs(closes: np.ndarray, ohlc_history: list, etc_preis_usd: float | None):
@@ -266,10 +318,21 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
 
     rohstoff_watchlist = [a for a in watchlist if a.assetklasse == "rohstoffe"]
 
+    jit_refresh_ohlc(conn, asset)
     _ensure_ohlc_backfilled(conn, asset)
     dates, closes, ohlc_history, last_date = _load_ohlc(conn, asset.symbol)
     latest_prices = db.get_latest_prices(conn)
     price_snap = latest_prices.get(asset.symbol)
+    # Deterministische EUR-Ableitung (2026-07-27, Grundsatzfix Teil 2) - gleiches
+    # Muster wie agent/hedge/pipeline.py, siehe agent/krypto/pipeline.py::eur_aus_usd()
+    # Docstring. Die Herkunftsrichtung von price_snap.price_usd (hier: abgeleitet aus
+    # price_eur, siehe Gate-Kommentar oben) ist fuer die Ableitungsformel irrelevant,
+    # solange derselbe Live-EURCV-Kurs fuer Anzeige UND Ableitung verwendet wird.
+    eurcv_snap = latest_prices.get("EURCV")
+    eur_usd_fx_rate = (
+        eurcv_snap.price_usd / eurcv_snap.price_eur
+        if eurcv_snap and eurcv_snap.price_usd and eurcv_snap.price_eur else None
+    )
 
     if len(closes) == 0:
         signal = _fixed_signal(asset.symbol, "HALTEN", gate_passed=False, gate_reason="keine historischen Daten vorhanden")
@@ -301,6 +364,24 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
     # Docstring) - MUSS vor build_technical_snapshot() passieren, sonst liegen
     # EMA/Bollinger/ATR/S&R/Fibonacci auf der falschen absoluten Preisskala.
     closes, ohlc_history = _rescale_ohlc_zum_etc_kurs(closes, ohlc_history, price_snap.price_usd)
+
+    # Nachtrag (2026-07-27, Grundsatzfix Teil 2): die skalierte Reihe wurde bisher
+    # NUR im Arbeitsspeicher verwendet, nie zurueckgeschrieben - price_history_ohlc
+    # blieb dauerhaft auf der Futures-Preisskala (z.B. Gold ~4000 USD/Unze), waehrend
+    # signal.take_profit_usd_von/stop_loss_usd_von auf der ETC-Skala (~18-20 USD)
+    # liegen. agent/krypto/backward_tracking.py::check_signal_outcome() vergleicht
+    # genau diese gespeicherte (unskalierte!) Reihe gegen die ETC-Skala-Schwellen -
+    # ein Futures-High von ~4000 erfuellt "high >= take_profit_threshold(~20)" fast
+    # immer sofort, was Rohstoff-Signale bislang vermutlich systematisch zu frueh als
+    # take_profit_erreicht aufloeste (und damit auch historische_erfolgsquote
+    # verzerrte). Fix: die skalierte Reihe wird jetzt persistiert. Bewusste
+    # Verhaltensaenderung, keine reine Nebenwirkung: der Skalierungsfaktor (aktueller
+    # ETC-Kurs / letzter Futures-Kurs) aendert sich von Lauf zu Lauf leicht, jeder
+    # erneute Schreibvorgang ueberschreibt die GESAMTE historische Reihe mit dem
+    # jeweils neuesten Verhaeltnis - erwuenscht (haelt die Reihe konsistent zum
+    # aktuell bekannten Skalierungsfaktor), aber nicht zeilen-fuer-zeilen-idempotent.
+    if ohlc_history:
+        db.upsert_ohlc_points(conn, ohlc_history)
 
     snapshot = build_technical_snapshot(closes, dates, ohlc_history)
 
@@ -404,6 +485,19 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
         top_grund_fields[f"top_grund_{rang}_kategorie"] = eintrag.get("kategorie")
         top_grund_fields[f"top_grund_{rang}_text"] = eintrag.get("text")
 
+    log_eur_abweichungen(asset.symbol, {
+        "position_size": (position_size.get("eur"), eur_aus_usd(position_size.get("usd"), eur_usd_fx_rate)),
+        "entry_von": (entry.get("eur_von"), eur_aus_usd(entry.get("usd_von"), eur_usd_fx_rate)),
+        "entry_bis": (entry.get("eur_bis"), eur_aus_usd(entry.get("usd_bis"), eur_usd_fx_rate)),
+        "stop_loss_von": (stop_loss.get("eur_von"), eur_aus_usd(stop_loss.get("usd_von"), eur_usd_fx_rate)),
+        "stop_loss_bis": (stop_loss.get("eur_bis"), eur_aus_usd(stop_loss.get("usd_bis"), eur_usd_fx_rate)),
+        "take_profit_von": (take_profit.get("eur_von"), eur_aus_usd(take_profit.get("usd_von"), eur_usd_fx_rate)),
+        "take_profit_bis": (take_profit.get("eur_bis"), eur_aus_usd(take_profit.get("usd_bis"), eur_usd_fx_rate)),
+        "halte_kriterium_ziel_preis": (
+            halte_kriterium.get("ziel_preis_eur"), eur_aus_usd(halte_kriterium.get("ziel_preis_usd"), eur_usd_fx_rate),
+        ),
+    })
+
     signal = Signal(
         symbol=asset.symbol,
         created_at=_now(),
@@ -423,23 +517,23 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
         long_reasoning_fundamental=long_reasoning.get("fundamental"),
         long_reasoning_makro=long_reasoning.get("makro"),
         position_size_usd=position_size.get("usd"),
-        position_size_eur=position_size.get("eur"),
+        position_size_eur=eur_aus_usd(position_size.get("usd"), eur_usd_fx_rate),
         position_size_note=position_size.get("note"),
         entry_usd_von=entry.get("usd_von"),
         entry_usd_bis=entry.get("usd_bis"),
-        entry_eur_von=entry.get("eur_von"),
-        entry_eur_bis=entry.get("eur_bis"),
+        entry_eur_von=eur_aus_usd(entry.get("usd_von"), eur_usd_fx_rate),
+        entry_eur_bis=eur_aus_usd(entry.get("usd_bis"), eur_usd_fx_rate),
         stop_loss_usd_von=stop_loss.get("usd_von"),
         stop_loss_usd_bis=stop_loss.get("usd_bis"),
-        stop_loss_eur_von=stop_loss.get("eur_von"),
-        stop_loss_eur_bis=stop_loss.get("eur_bis"),
+        stop_loss_eur_von=eur_aus_usd(stop_loss.get("usd_von"), eur_usd_fx_rate),
+        stop_loss_eur_bis=eur_aus_usd(stop_loss.get("usd_bis"), eur_usd_fx_rate),
         take_profit_usd_von=take_profit.get("usd_von"),
         take_profit_usd_bis=take_profit.get("usd_bis"),
-        take_profit_eur_von=take_profit.get("eur_von"),
-        take_profit_eur_bis=take_profit.get("eur_bis"),
+        take_profit_eur_von=eur_aus_usd(take_profit.get("usd_von"), eur_usd_fx_rate),
+        take_profit_eur_bis=eur_aus_usd(take_profit.get("usd_bis"), eur_usd_fx_rate),
         halte_kriterium_bucket=halte_kriterium.get("bucket"),
         halte_kriterium_ziel_preis_usd=halte_kriterium.get("ziel_preis_usd"),
-        halte_kriterium_ziel_preis_eur=halte_kriterium.get("ziel_preis_eur"),
+        halte_kriterium_ziel_preis_eur=eur_aus_usd(halte_kriterium.get("ziel_preis_usd"), eur_usd_fx_rate),
         halte_kriterium_ziel_datum=halte_kriterium.get("ziel_datum"),
         halte_kriterium_bedingung_text=halte_kriterium.get("bedingung_text"),
         halte_kriterium_reasoning=halte_kriterium.get("reasoning"),

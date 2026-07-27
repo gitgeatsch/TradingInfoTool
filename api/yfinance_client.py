@@ -269,3 +269,21 @@ def _fetch_fundamentals(symbol: str, yfinance_symbol: str) -> FundamentalsSnapsh
         naechstes_earnings_datum=naechstes_earnings_datum,
         fetched_at=datetime.now(timezone.utc).isoformat(),
     )
+
+
+def resolve_native_currency(yfinance_symbol: str) -> str | None:
+    """Ermittelt die tatsaechliche Notierungswaehrung eines yfinance-Tickers
+    (2026-07-27, Grundsatzfix Teil 2) - fuer agent/aktien/pipeline.py und
+    agent/themen_etf/pipeline.py::_ensure_ohlc_backfilled()/_load_ohlc(), die
+    bisher die gespeicherte OHLC-Historie hartkodiert unter currency="USD"
+    fuehrten, obwohl z.B. Quotrix-/Xetra-gelistete Instrumente in EUR notieren.
+    Nutzt denselben `fast_info`-Zugriff wie _fetch_one() (billig, kein
+    .history()-Call). None bei einem Fehlschlag (P-10) - Aufrufer faellt dann
+    auf den bisherigen "USD"-Default zurueck."""
+    try:
+        return run_with_daemon_timeout(
+            lambda: yf.Ticker(yfinance_symbol).fast_info.get("currency"), _YFINANCE_TIMEOUT_SECONDS
+        )
+    except Exception as exc:
+        logger.info("Waehrungs-Aufloesung fuer %s fehlgeschlagen: %s", yfinance_symbol, exc)
+        return None

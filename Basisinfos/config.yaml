@@ -632,6 +632,14 @@ datenquellen:
     # jit_refresh_asset_historie()) - sofort per Config abschaltbar, falls das
     # CoinGecko-Monatskontingent trotz /global-Tages-Cache knapp werden sollte.
     jit_historie_refresh_aktiv: true
+  marktdaten_wertpapiere:
+    # Nachtrag 2026-07-27 (Grundsatzfix Teil 2): eigener, von marktdaten
+    # (CoinGecko) getrennter Not-Aus fuer das JIT-Historie-Nachladen der
+    # yfinance-basierten Pipelines (Aktien/Rohstoffe/Themen-ETF). Anders als
+    # bei CoinGecko gibt es hier KEIN dokumentiertes Monatskontingent zu
+    # schonen - reiner operativer Schutz gegen einen yfinance-Ausfall/eine
+    # IP-Sperre, der die Signal-Erzeugung nicht blockieren soll.
+    jit_historie_refresh_aktiv: true
   makro:
     leitzinsen: [Fed, EZB, BoJ, PBoC, BoK]
     maerkte: [USA, Japan, China, EU, Korea]
