@@ -41,7 +41,10 @@ from agent.krypto.signal_stabilitaet import (
 )
 from agent.krypto.hebel_risk_gate import post_check_hebel, pre_check_hebel
 from agent.krypto.llm_provider import llm_model_label
-from agent.krypto.pipeline import _load_closes_and_ohlc, compute_current_regime, fetch_market_context
+from agent.krypto.pipeline import (
+    _load_closes_and_ohlc, compute_current_regime, eur_aus_usd, fetch_market_context,
+    jit_refresh_asset_historie, log_eur_abweichungen,
+)
 from agent.krypto.regime import regime_persistenz_tage
 from agent.krypto.risk_gate import STOP_LOSS_ATR_MULTIPLE, _portfolio_values_usd
 from database.models import HebelSignal, HebelTrigger
@@ -159,6 +162,7 @@ def generate_hebel_signal(
     fred_api_key: str | None = None,
     zai_client=None,
 ) -> HebelSignal:
+    jit_refresh_asset_historie(conn, asset, coingecko_client, kraken_client)
     dates, closes, ohlc_history, last_date = _load_closes_and_ohlc(conn, asset.symbol, asset.coingecko_id)
     latest_prices = db.get_latest_prices(conn)
     price_snap = latest_prices.get(asset.symbol)
@@ -420,6 +424,18 @@ def generate_hebel_signal(
 
     llm_model = llm_model_label(llm_client)
 
+    log_eur_abweichungen(asset.symbol, {
+        "entry_von": (entry.get("eur_von"), eur_aus_usd(entry.get("usd_von"), eur_usd_fx_rate)),
+        "entry_bis": (entry.get("eur_bis"), eur_aus_usd(entry.get("usd_bis"), eur_usd_fx_rate)),
+        "stop_loss_von": (stop_loss.get("eur_von"), eur_aus_usd(stop_loss.get("usd_von"), eur_usd_fx_rate)),
+        "stop_loss_bis": (stop_loss.get("eur_bis"), eur_aus_usd(stop_loss.get("usd_bis"), eur_usd_fx_rate)),
+        "take_profit_von": (take_profit.get("eur_von"), eur_aus_usd(take_profit.get("usd_von"), eur_usd_fx_rate)),
+        "take_profit_bis": (take_profit.get("eur_bis"), eur_aus_usd(take_profit.get("usd_bis"), eur_usd_fx_rate)),
+        "halte_kriterium_ziel_preis": (
+            halte_kriterium.get("ziel_preis_eur"), eur_aus_usd(halte_kriterium.get("ziel_preis_usd"), eur_usd_fx_rate),
+        ),
+    })
+
     # Mindestziel-Kurs/Zeitschaetzung (2026-07-27) - siehe pipeline.py fuer die
     # Spot-Variante/Begruendung. Richtungsabhaengig: SHORT spiegelt die Distanz
     # unter den Entry statt darueber.
@@ -475,21 +491,21 @@ def generate_hebel_signal(
         long_reasoning_makro=long_reasoning.get("makro"),
         entry_usd_von=entry.get("usd_von"),
         entry_usd_bis=entry.get("usd_bis"),
-        entry_eur_von=entry.get("eur_von"),
-        entry_eur_bis=entry.get("eur_bis"),
+        entry_eur_von=eur_aus_usd(entry.get("usd_von"), eur_usd_fx_rate),
+        entry_eur_bis=eur_aus_usd(entry.get("usd_bis"), eur_usd_fx_rate),
         stop_loss_usd_von=stop_loss.get("usd_von"),
         stop_loss_usd_bis=stop_loss.get("usd_bis"),
-        stop_loss_eur_von=stop_loss.get("eur_von"),
-        stop_loss_eur_bis=stop_loss.get("eur_bis"),
+        stop_loss_eur_von=eur_aus_usd(stop_loss.get("usd_von"), eur_usd_fx_rate),
+        stop_loss_eur_bis=eur_aus_usd(stop_loss.get("usd_bis"), eur_usd_fx_rate),
         take_profit_usd_von=take_profit.get("usd_von"),
         take_profit_usd_bis=take_profit.get("usd_bis"),
-        take_profit_eur_von=take_profit.get("eur_von"),
-        take_profit_eur_bis=take_profit.get("eur_bis"),
+        take_profit_eur_von=eur_aus_usd(take_profit.get("usd_von"), eur_usd_fx_rate),
+        take_profit_eur_bis=eur_aus_usd(take_profit.get("usd_bis"), eur_usd_fx_rate),
         mindestziel_usd=mindestziel_usd_wert,
         mindestziel_zeitraum_tage_geschaetzt=mindestziel_zeitraum_tage_wert,
         halte_kriterium_bucket=halte_kriterium.get("bucket"),
         halte_kriterium_ziel_preis_usd=halte_kriterium.get("ziel_preis_usd"),
-        halte_kriterium_ziel_preis_eur=halte_kriterium.get("ziel_preis_eur"),
+        halte_kriterium_ziel_preis_eur=eur_aus_usd(halte_kriterium.get("ziel_preis_usd"), eur_usd_fx_rate),
         halte_kriterium_ziel_datum=halte_kriterium.get("ziel_datum"),
         halte_kriterium_bedingung_text=halte_kriterium.get("bedingung_text"),
         halte_kriterium_reasoning=halte_kriterium.get("reasoning"),

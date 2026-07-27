@@ -71,6 +71,16 @@ class CoinGeckoClient:
         if api_key:
             self._session.headers.update({"x-cg-demo-api-key": api_key})
 
+    def in_cooldown(self) -> bool:
+        """Fuer Aufrufer, denen ein Blockieren bis zum Cooldown-Ende schadet
+        (z.B. JIT-Refresh vor einer Signal-Generierung, siehe agent/krypto/
+        pipeline.py::jit_refresh_asset_historie() - ein synchroner 429-Backoff
+        wuerde sonst genau den E-Mail-Latenz-Pfad erneut verzoegern, der bereits
+        einmal gefixt wurde). _respect_rate_limit() selbst blockiert weiterhin
+        unveraendert per time.sleep() - diese Methode dient nur dazu, einen
+        Aufruf VORHER optional zu ueberspringen statt zu warten."""
+        return time.monotonic() < self._cooldown_until
+
     def _respect_rate_limit(self) -> None:
         now = time.monotonic()
         if now < self._cooldown_until:

@@ -26,7 +26,7 @@ from agent.hedge.analyst import AnalystResponseInvalid, build_facts, call_llm_fo
 from agent.krypto.backward_tracking import compute_win_rate_fact
 from agent.krypto.llm_provider import llm_model_label
 from agent.krypto.makro_analog import get_cached_makro_analog_fact
-from agent.krypto.pipeline import compute_current_regime
+from agent.krypto.pipeline import compute_current_regime, eur_aus_usd, log_eur_abweichungen
 from agent.krypto.risk_gate import (
     DEFAULT_FAZIT_KONSISTENZ_SCHWELLE_HOCH, DEFAULT_FAZIT_KONSISTENZ_SCHWELLE_NIEDRIG,
     _fazit_konsistenz_hinweis, _portfolio_values_usd,
@@ -203,15 +203,17 @@ def _post_check_hedge(
         position_size = result.get("position_size") or {}
         proposed_usd = position_size.get("usd")
         if proposed_usd is not None and proposed_usd > verbleibendes_budget_usd:
-            proposed_eur = position_size.get("eur")
-            fx = (proposed_usd / proposed_eur) if proposed_eur else eur_usd_fx_rate
             note = (
                 f"Von {proposed_usd:.2f} USD auf verbleibendes Hedge-Budget "
                 f"{verbleibendes_budget_usd:.2f} USD gekuerzt (deterministisch erzwungen, "
                 "Gesamt-Hedge-Abdeckung darf das konfigurierte Maximum nicht ueberschreiten)."
             )
             position_size["usd"] = verbleibendes_budget_usd
-            position_size["eur"] = verbleibendes_budget_usd / fx if fx else None
+            # Nachtrag 2026-07-27 (siehe Regelwerksmanual): der reale Live-Kurs
+            # ersetzt den zuvor aus der LLM-Eigenangabe abgeleiteten fx-Wert -
+            # eur_aus_usd() statt einer aus proposed_usd/proposed_eur
+            # (unverifizierte LLM-Zahlen) berechneten Rate.
+            position_size["eur"] = eur_aus_usd(verbleibendes_budget_usd, eur_usd_fx_rate)
             existing_note = position_size.get("note")
             position_size["note"] = f"{existing_note} {note}" if existing_note else note
             result["position_size"] = position_size
@@ -229,15 +231,13 @@ def _post_check_hedge(
             if proposed_usd is not None:
                 gedeckelt_usd = proposed_usd * deckel_anteil
                 if gedeckelt_usd < proposed_usd:
-                    proposed_eur = position_size.get("eur")
-                    fx = (proposed_usd / proposed_eur) if proposed_eur else eur_usd_fx_rate
                     note = (
                         f"Zusaetzlich auf {deckel_anteil * 100:.0f}% reduziert (Bull-Wahrscheinlichkeit "
                         f"{bull_pct:.0f}% >= Schwelle {schwelle:.0f}% - Decay-Risiko bei anhaltendem "
                         "Aufwaertstrend, Bull-Wahrscheinlichkeits-Deckel)."
                     )
                     position_size["usd"] = gedeckelt_usd
-                    position_size["eur"] = gedeckelt_usd / fx if fx else None
+                    position_size["eur"] = eur_aus_usd(gedeckelt_usd, eur_usd_fx_rate)
                     existing_note = position_size.get("note")
                     position_size["note"] = f"{existing_note} {note}" if existing_note else note
                     result["position_size"] = position_size
@@ -351,6 +351,19 @@ def generate_signal(
         top_grund_fields[f"top_grund_{rang}_kategorie"] = eintrag.get("kategorie")
         top_grund_fields[f"top_grund_{rang}_text"] = eintrag.get("text")
 
+    log_eur_abweichungen(asset.symbol, {
+        "position_size": (position_size.get("eur"), eur_aus_usd(position_size.get("usd"), eur_usd_fx_rate)),
+        "entry_von": (entry.get("eur_von"), eur_aus_usd(entry.get("usd_von"), eur_usd_fx_rate)),
+        "entry_bis": (entry.get("eur_bis"), eur_aus_usd(entry.get("usd_bis"), eur_usd_fx_rate)),
+        "stop_loss_von": (stop_loss.get("eur_von"), eur_aus_usd(stop_loss.get("usd_von"), eur_usd_fx_rate)),
+        "stop_loss_bis": (stop_loss.get("eur_bis"), eur_aus_usd(stop_loss.get("usd_bis"), eur_usd_fx_rate)),
+        "take_profit_von": (take_profit.get("eur_von"), eur_aus_usd(take_profit.get("usd_von"), eur_usd_fx_rate)),
+        "take_profit_bis": (take_profit.get("eur_bis"), eur_aus_usd(take_profit.get("usd_bis"), eur_usd_fx_rate)),
+        "halte_kriterium_ziel_preis": (
+            halte_kriterium.get("ziel_preis_eur"), eur_aus_usd(halte_kriterium.get("ziel_preis_usd"), eur_usd_fx_rate),
+        ),
+    })
+
     signal = Signal(
         symbol=asset.symbol,
         created_at=_now(),
@@ -367,23 +380,23 @@ def generate_signal(
         long_reasoning_fundamental=long_reasoning.get("fundamental"),
         long_reasoning_makro=long_reasoning.get("makro"),
         position_size_usd=position_size.get("usd"),
-        position_size_eur=position_size.get("eur"),
+        position_size_eur=eur_aus_usd(position_size.get("usd"), eur_usd_fx_rate),
         position_size_note=position_size.get("note"),
         entry_usd_von=entry.get("usd_von"),
         entry_usd_bis=entry.get("usd_bis"),
-        entry_eur_von=entry.get("eur_von"),
-        entry_eur_bis=entry.get("eur_bis"),
+        entry_eur_von=eur_aus_usd(entry.get("usd_von"), eur_usd_fx_rate),
+        entry_eur_bis=eur_aus_usd(entry.get("usd_bis"), eur_usd_fx_rate),
         stop_loss_usd_von=stop_loss.get("usd_von"),
         stop_loss_usd_bis=stop_loss.get("usd_bis"),
-        stop_loss_eur_von=stop_loss.get("eur_von"),
-        stop_loss_eur_bis=stop_loss.get("eur_bis"),
+        stop_loss_eur_von=eur_aus_usd(stop_loss.get("usd_von"), eur_usd_fx_rate),
+        stop_loss_eur_bis=eur_aus_usd(stop_loss.get("usd_bis"), eur_usd_fx_rate),
         take_profit_usd_von=take_profit.get("usd_von"),
         take_profit_usd_bis=take_profit.get("usd_bis"),
-        take_profit_eur_von=take_profit.get("eur_von"),
-        take_profit_eur_bis=take_profit.get("eur_bis"),
+        take_profit_eur_von=eur_aus_usd(take_profit.get("usd_von"), eur_usd_fx_rate),
+        take_profit_eur_bis=eur_aus_usd(take_profit.get("usd_bis"), eur_usd_fx_rate),
         halte_kriterium_bucket=halte_kriterium.get("bucket"),
         halte_kriterium_ziel_preis_usd=halte_kriterium.get("ziel_preis_usd"),
-        halte_kriterium_ziel_preis_eur=halte_kriterium.get("ziel_preis_eur"),
+        halte_kriterium_ziel_preis_eur=eur_aus_usd(halte_kriterium.get("ziel_preis_usd"), eur_usd_fx_rate),
         halte_kriterium_ziel_datum=halte_kriterium.get("ziel_datum"),
         halte_kriterium_bedingung_text=halte_kriterium.get("bedingung_text"),
         halte_kriterium_reasoning=halte_kriterium.get("reasoning"),

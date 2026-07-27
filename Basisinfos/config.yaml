@@ -627,6 +627,11 @@ datenquellen:
     anbieter: CoinGecko
     api_key_noetig: false
     rate_limit_pro_minute: 30
+    # Nachtrag 2026-07-27 (LINK-Vorfall, siehe Regelwerksmanual): Not-Aus fuer
+    # das JIT-Historie-Nachladen (agent/krypto/pipeline.py::
+    # jit_refresh_asset_historie()) - sofort per Config abschaltbar, falls das
+    # CoinGecko-Monatskontingent trotz /global-Tages-Cache knapp werden sollte.
+    jit_historie_refresh_aktiv: true
   makro:
     leitzinsen: [Fed, EZB, BoJ, PBoC, BoK]
     maerkte: [USA, Japan, China, EU, Korea]

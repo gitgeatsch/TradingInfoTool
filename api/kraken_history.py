@@ -32,7 +32,9 @@ class OhlcUpdateResult:
     reason: str | None = None
 
 
-def backfill_ohlc(client, conn, asset) -> OhlcUpdateResult:
+def backfill_ohlc(
+    client, conn, asset, currencies: tuple[str, ...] = ("USD", "EUR"),
+) -> OhlcUpdateResult:
     pair_map = KRAKEN_PAIR_MAP.get(asset.symbol)
     if pair_map is None:
         return OhlcUpdateResult(asset.symbol, 0, skipped=True, reason="kein Kraken-Listing")
@@ -42,6 +44,8 @@ def backfill_ohlc(client, conn, asset) -> OhlcUpdateResult:
     errors: list[str] = []
 
     for currency, pair in pair_map.items():
+        if currency not in currencies:
+            continue
         last_date = db.get_last_ohlc_date(conn, asset.symbol, currency)
         since = None
         if last_date is not None:

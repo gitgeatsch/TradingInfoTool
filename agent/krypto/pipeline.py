@@ -101,6 +101,119 @@ def _load_closes_and_ohlc(conn, symbol: str, coingecko_id: str):
     return dates, closes, ohlc_history, last_date
 
 
+# JIT-Historie-Nachladen (Nachtrag 2026-07-27, Auslöser: LINK-Hebel-Signal mit
+# 24h veralteter Entry-/Stop-Loss-/Take-Profit-Zone, siehe Regelwerksmanual).
+# _load_closes_and_ohlc() selbst wird an 7 Stellen aufgerufen (u.a. im 15-Min-
+# Screening-Loop ueber ALLE Kandidaten sowie den BTC/ETH-Kontextladungen) -
+# jit_refresh_asset_historie() wird deshalb NICHT dort, sondern NUR an den
+# beiden echten Signal-Erzeugungsstellen aufgerufen (hebel_pipeline.py::
+# generate_hebel_signal(), pipeline.py::generate_signal()), sonst wuerde das
+# CoinGecko-Kontingent vervielfacht statt nur um die tatsaechliche Anzahl
+# echter Signal-Ereignisse (~64-71/Tag) zu wachsen.
+JIT_REFRESH_MIN_ABSTAND_MINUTEN = 60  # 4x der 15-Min-Allocator-Zyklusdauer -
+# schuetzt NICHT gegen normale Wiederholungen (Hebel-Cooldown 3,5h, Spot-Kern-
+# Cooldown 8h liegen weit darueber), sondern ausschliesslich gegen mehrere
+# Anfragen INNERHALB eines Zyklus (z.B. Provider-Fallback Mistral->Gemini oder
+# dasselbe Symbol gleichzeitig als LONG-Hebel-, SHORT-Hebel- und Spot-Kandidat).
+
+_jit_letzter_versuch: dict[str, datetime] = {}
+_jit_lock = threading.Lock()
+
+
+def _jit_burst_schutz_pruefen(symbol: str) -> bool:
+    """True, wenn jetzt ein JIT-Refresh fuer `symbol` erlaubt ist. Haelt den
+    VERSUCHSZEITPUNKT fest (Erfolg ODER Fehlschlag), bewusst NICHT einen
+    Erfolgs-Zeitstempel wie `fetched_at` in der DB: Bei einem echten CoinGecko-
+    Ausfall wuerde ein erfolgsbasierter Guard bei jedem folgenden Signal-
+    Versuch erneut einen aussichtslosen Call ausloesen - exakt das Muster, das
+    beim 07-23-Vorfall bereits einmal 390 Signale in einer Nacht blockiert hat
+    (siehe scheduler/background.py::staleness_watchdog_job() Docstring)."""
+    now = datetime.now(timezone.utc)
+    with _jit_lock:
+        letzter = _jit_letzter_versuch.get(symbol)
+        if (
+            letzter is not None
+            and (now - letzter).total_seconds() < JIT_REFRESH_MIN_ABSTAND_MINUTEN * 60
+        ):
+            return False
+        _jit_letzter_versuch[symbol] = now
+        return True
+
+
+def jit_refresh_asset_historie(conn, asset, coingecko_client, kraken_client) -> None:
+    """Laedt fuer GENAU EIN Asset die juengste Tages-/OHLC-Historie unmittelbar
+    vor einer echten Signal-Generierung nach, statt auf den naechsten 24h-
+    Batch-Lauf (scheduler/background.py::refresh_history_job()/
+    refresh_ohlc_job()) zu warten - kollabiert die Staleness der technischen
+    Basis (RSI/MACD/EMA/ATR/Support-Resistance) auf ~60 Min. fuer genau die
+    Faelle, die tatsaechlich zaehlen.
+
+    USD-only: die EUR-Historie fuers Chart (ui/charts.py) bleibt exklusiv dem
+    taeglichen backfill_all()-Job vorbehalten, der COALESCE-Upsert in
+    db.upsert_price_history_points() schuetzt sie zusaetzlich davor, durch
+    dieses USD-only-Nachladen versehentlich genullt zu werden. Kontingent-
+    neutral: finanziert durch den /global-Tages-Cache in
+    _update_macro_snapshot() weiter oben in dieser Datei.
+
+    P-10: ein Fehlschlag hier darf die Signal-Erzeugung nicht kippen - bei
+    einem Fehler wird einfach mit der bereits gespeicherten Historie
+    weitergearbeitet (identisch zum bisherigen Verhalten ohne JIT-Refresh)."""
+    cfg = config.load_config()
+    if not cfg.get("datenquellen", {}).get("marktdaten", {}).get("jit_historie_refresh_aktiv", True):
+        return
+    if not _jit_burst_schutz_pruefen(asset.symbol):
+        return
+
+    from api.history import backfill_history
+    from api.kraken_history import backfill_ohlc
+
+    if coingecko_client.in_cooldown():
+        logger.info(
+            "JIT-Historie-Refresh (CoinGecko) für %s übersprungen: aktiver 429-Cooldown", asset.symbol,
+        )
+    else:
+        try:
+            backfill_history(coingecko_client, conn, asset, currencies=("usd",))
+        except Exception as exc:
+            logger.info("JIT-Historie-Refresh (CoinGecko/USD) für %s fehlgeschlagen: %s", asset.symbol, exc)
+
+    try:
+        backfill_ohlc(kraken_client, conn, asset, currencies=("USD",))
+    except Exception as exc:
+        logger.info("JIT-Historie-Refresh (Kraken/USD) für %s fehlgeschlagen: %s", asset.symbol, exc)
+
+
+def eur_aus_usd(usd_wert: float | None, eur_usd_fx_rate: float | None) -> float | None:
+    """Deterministische EUR-Ableitung fuer Entry/Stop-Loss/Take-Profit/Halte-
+    Kriterium/Positionsgroesse (Nachtrag 2026-07-27, LINK-Vorfall - siehe
+    Regelwerksmanual) - ersetzt die bisherige, ungeprueft aus der LLM-Antwort
+    uebernommene eur_von/eur_bis-Eigenberechnung. Identisches Muster wie das
+    bereits produktive `liquidationspreis_geschätzt_eur` in
+    hebel_risk_gate.py::post_check_hebel() (eur_usd_fx_rate wird dort wie hier
+    aus dem Live-EURCV-Snapshot abgeleitet, nicht vom LLM selbst geliefert)."""
+    if usd_wert is None or not eur_usd_fx_rate:
+        return None
+    return usd_wert / eur_usd_fx_rate
+
+
+def log_eur_abweichungen(symbol: str, felder: dict[str, tuple[float | None, float | None]]) -> None:
+    """Beobachtung (Nachtrag 2026-07-27), kein Verhaltenseingriff: vergleicht
+    den vom LLM selbst gelieferten eur_von/eur_bis-Wert mit der jetzt
+    deterministisch abgeleiteten Zahl (eur_aus_usd()) - liefert nach einigen
+    Tagen echte Daten darueber, wie ungenau die inzwischen verworfene LLM-
+    Eigenarithmetik tatsaechlich war. `felder`: Feldname -> (llm_wert, deterministisch_wert)."""
+    for feld, (llm_wert, deterministisch) in felder.items():
+        if llm_wert is None or not deterministisch:
+            continue
+        abweichung_relativ = abs(llm_wert - deterministisch) / abs(deterministisch)
+        if abweichung_relativ > 0.02:
+            logger.info(
+                "%s: LLM-EUR-Wert für %s weicht %.1f%% vom deterministisch abgeleiteten Wert ab "
+                "(LLM=%.4f, abgeleitet=%.4f)",
+                symbol, feld, abweichung_relativ * 100, llm_wert, deterministisch,
+            )
+
+
 def _update_macro_snapshot(
     conn, coingecko_client, fred_api_key: str | None, liquidity_context: dict
 ) -> list[MacroSnapshot]:
@@ -510,6 +623,7 @@ def generate_signal(
         db.insert_signal(conn, signal)
         return signal
 
+    jit_refresh_asset_historie(conn, asset, coingecko_client, kraken_client)
     dates, closes, ohlc_history, last_date = _load_closes_and_ohlc(conn, asset.symbol, asset.coingecko_id)
     latest_prices = db.get_latest_prices(conn)
     price_snap = latest_prices.get(asset.symbol)
@@ -766,6 +880,19 @@ def generate_signal(
         mindestziel_usd_wert, _entry_mid_neu, ohlc_history,
     )
 
+    log_eur_abweichungen(asset.symbol, {
+        "position_size": (position_size.get("eur"), eur_aus_usd(position_size.get("usd"), eur_usd_fx_rate)),
+        "entry_von": (entry.get("eur_von"), eur_aus_usd(entry.get("usd_von"), eur_usd_fx_rate)),
+        "entry_bis": (entry.get("eur_bis"), eur_aus_usd(entry.get("usd_bis"), eur_usd_fx_rate)),
+        "stop_loss_von": (stop_loss.get("eur_von"), eur_aus_usd(stop_loss.get("usd_von"), eur_usd_fx_rate)),
+        "stop_loss_bis": (stop_loss.get("eur_bis"), eur_aus_usd(stop_loss.get("usd_bis"), eur_usd_fx_rate)),
+        "take_profit_von": (take_profit.get("eur_von"), eur_aus_usd(take_profit.get("usd_von"), eur_usd_fx_rate)),
+        "take_profit_bis": (take_profit.get("eur_bis"), eur_aus_usd(take_profit.get("usd_bis"), eur_usd_fx_rate)),
+        "halte_kriterium_ziel_preis": (
+            halte_kriterium.get("ziel_preis_eur"), eur_aus_usd(halte_kriterium.get("ziel_preis_usd"), eur_usd_fx_rate),
+        ),
+    })
+
     signal = Signal(
         symbol=asset.symbol,
         created_at=_now(),
@@ -785,25 +912,25 @@ def generate_signal(
         long_reasoning_fundamental=long_reasoning.get("fundamental"),
         long_reasoning_makro=long_reasoning.get("makro"),
         position_size_usd=position_size.get("usd"),
-        position_size_eur=position_size.get("eur"),
+        position_size_eur=eur_aus_usd(position_size.get("usd"), eur_usd_fx_rate),
         position_size_note=position_size.get("note"),
         entry_usd_von=entry.get("usd_von"),
         entry_usd_bis=entry.get("usd_bis"),
-        entry_eur_von=entry.get("eur_von"),
-        entry_eur_bis=entry.get("eur_bis"),
+        entry_eur_von=eur_aus_usd(entry.get("usd_von"), eur_usd_fx_rate),
+        entry_eur_bis=eur_aus_usd(entry.get("usd_bis"), eur_usd_fx_rate),
         stop_loss_usd_von=stop_loss.get("usd_von"),
         stop_loss_usd_bis=stop_loss.get("usd_bis"),
-        stop_loss_eur_von=stop_loss.get("eur_von"),
-        stop_loss_eur_bis=stop_loss.get("eur_bis"),
+        stop_loss_eur_von=eur_aus_usd(stop_loss.get("usd_von"), eur_usd_fx_rate),
+        stop_loss_eur_bis=eur_aus_usd(stop_loss.get("usd_bis"), eur_usd_fx_rate),
         take_profit_usd_von=take_profit.get("usd_von"),
         take_profit_usd_bis=take_profit.get("usd_bis"),
-        take_profit_eur_von=take_profit.get("eur_von"),
-        take_profit_eur_bis=take_profit.get("eur_bis"),
+        take_profit_eur_von=eur_aus_usd(take_profit.get("usd_von"), eur_usd_fx_rate),
+        take_profit_eur_bis=eur_aus_usd(take_profit.get("usd_bis"), eur_usd_fx_rate),
         mindestziel_usd=mindestziel_usd_wert,
         mindestziel_zeitraum_tage_geschaetzt=mindestziel_zeitraum_tage_wert,
         halte_kriterium_bucket=halte_kriterium.get("bucket"),
         halte_kriterium_ziel_preis_usd=halte_kriterium.get("ziel_preis_usd"),
-        halte_kriterium_ziel_preis_eur=halte_kriterium.get("ziel_preis_eur"),
+        halte_kriterium_ziel_preis_eur=eur_aus_usd(halte_kriterium.get("ziel_preis_usd"), eur_usd_fx_rate),
         halte_kriterium_ziel_datum=halte_kriterium.get("ziel_datum"),
         halte_kriterium_bedingung_text=halte_kriterium.get("bedingung_text"),
         halte_kriterium_reasoning=halte_kriterium.get("reasoning"),

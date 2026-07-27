@@ -36,7 +36,10 @@ def _bucket_prices_by_date(raw_prices: list) -> dict[str, float]:
     return buckets
 
 
-def backfill_history(client, conn, asset, days: int = FULL_BACKFILL_DAYS) -> HistoryUpdateResult:
+def backfill_history(
+    client, conn, asset, days: int = FULL_BACKFILL_DAYS,
+    currencies: tuple[str, ...] = ("usd", "eur"),
+) -> HistoryUpdateResult:
     # 2026-07-20, echter Notebook-Fund (API-Health-Log: ".../coins/None/market_chart"
     # 404) - ein Krypto-Asset ohne aufgeloeste coingecko_id (z.B. frisch per Auto-Add
     # angelegt, Aufloesung noch ausstehend/fehlgeschlagen) loeste hier taeglich zwei
@@ -63,19 +66,21 @@ def backfill_history(client, conn, asset, days: int = FULL_BACKFILL_DAYS) -> His
     eur_by_date: dict[str, float] = {}
     errors: list[str] = []
 
-    try:
-        usd_data = client.get_market_chart(asset.coingecko_id, "usd", fetch_days)
-        usd_by_date = _bucket_prices_by_date(usd_data.get("prices", []))
-    except Exception as exc:
-        errors.append(f"USD: {exc}")
-        logger.info("Historie-Abruf (USD) für %s fehlgeschlagen: %s", asset.symbol, exc)
+    if "usd" in currencies:
+        try:
+            usd_data = client.get_market_chart(asset.coingecko_id, "usd", fetch_days)
+            usd_by_date = _bucket_prices_by_date(usd_data.get("prices", []))
+        except Exception as exc:
+            errors.append(f"USD: {exc}")
+            logger.info("Historie-Abruf (USD) für %s fehlgeschlagen: %s", asset.symbol, exc)
 
-    try:
-        eur_data = client.get_market_chart(asset.coingecko_id, "eur", fetch_days)
-        eur_by_date = _bucket_prices_by_date(eur_data.get("prices", []))
-    except Exception as exc:
-        errors.append(f"EUR: {exc}")
-        logger.info("Historie-Abruf (EUR) für %s fehlgeschlagen: %s", asset.symbol, exc)
+    if "eur" in currencies:
+        try:
+            eur_data = client.get_market_chart(asset.coingecko_id, "eur", fetch_days)
+            eur_by_date = _bucket_prices_by_date(eur_data.get("prices", []))
+        except Exception as exc:
+            errors.append(f"EUR: {exc}")
+            logger.info("Historie-Abruf (EUR) für %s fehlgeschlagen: %s", asset.symbol, exc)
 
     all_dates = sorted(set(usd_by_date) | set(eur_by_date))
 
