@@ -199,19 +199,29 @@ def reconstruct_margin_positions(
                 # weil ohne Mengenangabe keine Teilverkaufs-Erkennung moeglich
                 # ist.
                 #
-                # Zweites, unabhaengiges Signal (siehe Konstanten-Kommentar,
-                # echter HYPE-Fund 2026-07-27): bei einer gehebelten Position
-                # deckt sell_qty strukturell nur den eigenkapital-realisierenden
-                # Teil der Menge ab, nicht den Teil, der direkt zur Kredit-
-                # Rueckzahlung verwendet wird - sell_qty erreicht bei einem
-                # echten Vollverkauf deshalb oft NIE die Mengen-Toleranz oben.
-                # Wird stattdessen der GESAMTE verbleibende Kredit
-                # zurueckgezahlt, ist das ebenso ein eindeutiger Vollverkauf.
-                # `e["borrow"]` ist bei einer Rueckzahlung negativ (Betrag
-                # verlaesst die Kredit-Position), ein neuer Kredit (positiv)
-                # sollte in einem "close"-Ereignis nicht vorkommen - nur
-                # negative Werte zaehlen hier bewusst als Rueckzahlung.
+                # Zweites, unabhaengiges Signal (Konstanten-Kommentar, echter
+                # HYPE-Fund 2026-07-27, Runde 1): manche Rueckzahlungen laufen
+                # ueber eine separate EURCV-Transaktion mit einem "borrow"-
+                # Tag (wie beim OPEN-Ereignis) - `e["borrow"]` ist dort
+                # negativ (Betrag verlaesst die Kredit-Position).
+                #
+                # Drittes, unabhaengiges Signal (echter HYPE-Fund 2026-07-27,
+                # Runde 2 - verifiziert an den ECHTEN Bitpanda-Rohdaten):
+                # Bitpanda taggt eine Rueckzahlung teils NICHT mit "borrow",
+                # sondern mit "repay" (z.B. "margin_trading.repay"), UND die
+                # Rueckzahlung ist dabei kein separate Leg, sondern im
+                # Verkaufserloes derselben sell-Transaktion enthalten (bei
+                # HYPE: sell_qty deckte nur 66% der Menge, aber sell_value
+                # deckte exakt 100% des Kredits - Gebuehren/der Anteil, der
+                # zur Kredittilgung diente, verwaessern die Krypto-MENGE, nicht
+                # den EUR-Erloes). Wird der GESAMTE Kredit durch den
+                # Verkaufserloes (sell_value) gedeckt, ist die Margin-Position
+                # beendet (kein Hebel-Risiko mehr) - unabhaengig davon, ob
+                # unbelehnte Restmenge als normaler Spot-Bestand zurueckbleibt
+                # (das ist dann kein hebel_positions-Fall mehr, siehe
+                # importer/bitpanda_avg_cost.py fuer die Spot-Seite).
                 sell_qty = e["sell_qty"]
+                sell_value = e["sell_value"]
                 borrow_rueckzahlung = -e["borrow"] if e["borrow"] < 0 else 0.0
                 ist_vollstaendiger_verkauf = (
                     running_qty <= 0
@@ -220,6 +230,10 @@ def reconstruct_margin_positions(
                         running_borrow > 0
                         and borrow_rueckzahlung >= running_borrow * (1 - _VOLLSTAENDIGER_VERKAUF_TOLERANZ_RELATIV)
                     )
+                    or (
+                        running_borrow > 0
+                        and sell_value >= running_borrow * (1 - _VOLLSTAENDIGER_VERKAUF_TOLERANZ_RELATIV)
+                    )
                 )
                 if debug:
                     print(
@@ -227,6 +241,7 @@ def reconstruct_margin_positions(
                         f"sell_qty/running_qty={(sell_qty / running_qty if running_qty else 0):.4f} "
                         f"borrow_rueckzahlung={borrow_rueckzahlung:.4f} "
                         f"borrow_rueckzahlung/running_borrow={(borrow_rueckzahlung / running_borrow if running_borrow else 0):.4f} "
+                        f"sell_value/running_borrow={(sell_value / running_borrow if running_borrow else 0):.4f} "
                         f"=> ist_vollstaendiger_verkauf={ist_vollstaendiger_verkauf}"
                     )
                 if not ist_vollstaendiger_verkauf:
