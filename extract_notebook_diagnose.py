@@ -200,7 +200,7 @@ _HEBEL_SIGNAL_SPALTEN = (
     # tracking.py::mindestziel_preis()/check_hebel_signal_outcome()) - erste
     # zwei stehen sofort bei Erstellung fest, letzte zwei erst nachtraeglich
     # per Backward-Tracking.
-    "mindestziel_usd, mindestziel_zeitraum_tage_geschaetzt, "
+    "mindestziel_usd, mindestziel_eur, mindestziel_zeitraum_tage_geschaetzt, "
     "outcome_max_realisiertes_crv, outcome_mindestziel_erreicht_am, "
     "kontrathese_zu_position, kontrathese_llm_richtung, "
     "zai_gegenpruefung_urteil, zai_gegenpruefung_kurzbegruendung, "
@@ -214,7 +214,7 @@ _SPOT_SIGNAL_SPALTEN = (
     "risk_veto, risk_veto_reason, cash_veto, cash_veto_reason, groq_model, "
     "outcome_status, outcome_geprueft_am, outcome_entschieden_am, "
     "outcome_realisiertes_crv, outcome_datenquelle, "
-    "mindestziel_usd, mindestziel_zeitraum_tage_geschaetzt, "
+    "mindestziel_usd, mindestziel_eur, mindestziel_zeitraum_tage_geschaetzt, "
     "outcome_max_realisiertes_crv, outcome_mindestziel_erreicht_am, "
     "tranchen_json, cash_reserve_ziel_btc_usd, cash_reserve_ziel_eth_usd, "
     "cash_reserve_ziel_gesamt_usd, cash_reserve_ziel_begruendung, "

@@ -507,8 +507,11 @@ class HebelView(ttk.Frame):
                 f"{format_money(signal.take_profit_eur_von)}–{format_money(signal.take_profit_eur_bis)}"
             )
             if signal.mindestziel_usd is not None:
+                mindestziel_eur_text = (
+                    f" | {format_money(signal.mindestziel_eur)} EUR" if signal.mindestziel_eur is not None else ""
+                )
                 lines.append(
-                    f"  Mindestziel:  {format_money(signal.mindestziel_usd)} USD "
+                    f"  Mindestziel:  {format_money(signal.mindestziel_usd)} USD{mindestziel_eur_text} "
                     "(Min-Ziel Richtungstreffer, Take-Profit oben = Max-Ziel)"
                 )
                 if signal.mindestziel_zeitraum_tage_geschaetzt is not None:

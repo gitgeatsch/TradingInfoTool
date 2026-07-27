@@ -634,6 +634,12 @@ _SIGNAL_MINDESTZIEL_NEW_COLUMNS = {
     # schaetze_mindestziel_zeitraum_tage(). In derselben Migration belassen (beide
     # additiv, gleiche Tabelle, kein Grund fuer eine weitere Migrationsfunktion).
     "mindestziel_usd": "REAL",
+    # mindestziel_eur (2026-07-27, gleicher Tag, Nachtrag nach Nutzer-Fund am
+    # NEAR-Signal-Review): fehlte bei der Ersteinfuehrung oben, obwohl Entry/
+    # Stop-Loss/Take-Profit/Halte-Kriterium laengst deterministisch in EUR
+    # abgeleitet werden (agent/krypto/pipeline.py::eur_aus_usd()). Additiv in
+    # derselben Migration ergaenzt, kein Grund fuer eine weitere Funktion.
+    "mindestziel_eur": "REAL",
     "mindestziel_zeitraum_tage_geschaetzt": "REAL",
 }
 
@@ -653,6 +659,7 @@ _HEBEL_SIGNAL_MINDESTZIEL_NEW_COLUMNS = {
     "outcome_max_realisiertes_crv": "REAL",
     "outcome_mindestziel_erreicht_am": "TEXT",
     "mindestziel_usd": "REAL",
+    "mindestziel_eur": "REAL",
     "mindestziel_zeitraum_tage_geschaetzt": "REAL",
 }
 
@@ -1822,7 +1829,7 @@ _SIGNAL_COLUMNS = (
     "cash_reserve_ziel_btc_usd", "cash_reserve_ziel_eth_usd", "cash_reserve_ziel_gesamt_usd",
     "cash_reserve_ziel_begruendung", "gegenargument", "cash_veto", "cash_veto_reason",
     "risikofaktoren_json", "fazit_folgen", "fazit_kurzfazit", "fazit_konsistenz_hinweis",
-    "mindestziel_usd", "mindestziel_zeitraum_tage_geschaetzt",
+    "mindestziel_usd", "mindestziel_eur", "mindestziel_zeitraum_tage_geschaetzt",
 )
 
 
@@ -2747,7 +2754,7 @@ _HEBEL_SIGNAL_COLUMNS = (
     "fazit_folgen", "fazit_kurzfazit", "fazit_konsistenz_hinweis",
     "zai_gegenpruefung_urteil", "zai_gegenpruefung_kurzbegruendung",
     "zai_eigene_richtung", "zai_uebereinstimmung", "zai_richtung_kurzbegruendung",
-    "mindestziel_usd", "mindestziel_zeitraum_tage_geschaetzt",
+    "mindestziel_usd", "mindestziel_eur", "mindestziel_zeitraum_tage_geschaetzt",
 )
 
 

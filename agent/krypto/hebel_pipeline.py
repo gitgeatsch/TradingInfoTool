@@ -502,6 +502,7 @@ def generate_hebel_signal(
         take_profit_eur_von=eur_aus_usd(take_profit.get("usd_von"), eur_usd_fx_rate),
         take_profit_eur_bis=eur_aus_usd(take_profit.get("usd_bis"), eur_usd_fx_rate),
         mindestziel_usd=mindestziel_usd_wert,
+        mindestziel_eur=eur_aus_usd(mindestziel_usd_wert, eur_usd_fx_rate),
         mindestziel_zeitraum_tage_geschaetzt=mindestziel_zeitraum_tage_wert,
         halte_kriterium_bucket=halte_kriterium.get("bucket"),
         halte_kriterium_ziel_preis_usd=halte_kriterium.get("ziel_preis_usd"),

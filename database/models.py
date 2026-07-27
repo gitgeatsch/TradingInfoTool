@@ -243,6 +243,11 @@ class Signal:
     # mindestziel_preis()/schaetze_mindestziel_zeitraum_tage(). Min-Kurs-
     # Gegenstueck zur bestehenden Take-Profit-Zone (Max-Kurs).
     mindestziel_usd: float | None = None
+    # Nachtrag (2026-07-27, gleicher Tag, Nutzer-Fund am NEAR-Signal-Review):
+    # anders als Entry/Stop-Loss/Take-Profit/Liquidationspreis/Eigenkapitalbedarf
+    # bekam das Mindestziel bei seiner Einfuehrung oben KEINE EUR-Ableitung -
+    # genau die Luecke, die der ganze Grundsatzfix eigentlich schliessen sollte.
+    mindestziel_eur: float | None = None
     mindestziel_zeitraum_tage_geschaetzt: float | None = None  # rechnerisch angenommen, kein Versprechen
     # Top-5 rangierte Gruende (2026-07-10) - flach abgelegt analog forecast_bull/base/bear,
     # rang ergibt sich implizit aus der Spaltennummer.
@@ -528,6 +533,9 @@ class HebelSignal:
     # (LONG/SHORT) ueber die ist_short-Faelle in mindestziel_preis(). Steht
     # SOFORT bei Signal-Erstellung fest, siehe dortiger Docstring.
     mindestziel_usd: float | None = None
+    # Nachtrag (2026-07-27, gleicher Tag, Nutzer-Fund am NEAR-Signal-Review) -
+    # siehe Signal.mindestziel_eur-Docstring, identische Luecke hier.
+    mindestziel_eur: float | None = None
     mindestziel_zeitraum_tage_geschaetzt: float | None = None
     halte_kriterium_bucket: str | None = None
     halte_kriterium_ziel_preis_usd: float | None = None
