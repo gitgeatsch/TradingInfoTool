@@ -726,17 +726,19 @@ budget_allocator:
                                         # (>2x der 84/Tag-Basislast), bleibt aber weiterhin
                                         # unter Mistrals neuem 400er-Deckel (siehe unten) -
                                         # echte Ausreissertage laufen also weiterhin
-                                        # kontrolliert in Gemini/Zai als 3./4. Stufe, statt
-                                        # den ganzen Tag ungebremst durchzuschlagen.
+                                        # kontrolliert in Gemini als zweite Fallback-Stufe,
+                                        # statt den ganzen Tag ungebremst durchzuschlagen.
                                         # Urspruengliche Berechnung (2026-07-18): bei 8h Kern/
                                         # 15h taktisch liegt der rein rechnerische Spot-
                                         # Rotation-Bedarf bei 13 Kern-Assets*24/8 + 28
                                         # taktische*24/15 ≈ 39 + 45 = 84/Tag (theoretisches
                                         # Maximum, alle Assets exakt im Cooldown-Takt faellig).
                                         # B steuert nur, wie viele Kandidaten UEBERHAUPT einen
-                                        # LLM-Versuch bekommen (Mistral->Groq->Gemini->Zai-
-                                        # Kaskade je Kandidat) - NICHT wie viele Calls pro
-                                        # Anbieter stattfinden, das regeln die einzelnen
+                                        # LLM-Versuch bekommen (Mistral->Gemini-Kaskade je
+                                        # Kandidat, Groq/Z.ai 2026-07-26 aus dieser Kette
+                                        # entfernt - siehe agent/krypto/budget_allocator.py
+                                        # Modul-Docstring) - NICHT wie viele Calls pro Anbieter
+                                        # stattfinden, das regeln die einzelnen
                                         # *_taegliches_budget-Werte unten unabhaengig von B.
   spot_rotation_reserve: 60             # F, proportional mit B mitskaliert (2026-07-18,
                                         # jetzt erneut mit B auf 2026-07-20 mitskaliert) -
@@ -755,26 +757,22 @@ budget_allocator:
                                         # 2.250.000 Tokens/Min, 5 Req/Sek ≈ 300/Min), aber deutlich
                                         # weniger konservativ als zuvor, um die reale Belastungsgrenze
                                         # ueber echte api_health-429-Raten sichtbar zu machen.
-  gemini_taegliches_budget: 500          # dritte Fallback-Stufe (2026-07-14, Position 2026-07-17
-                                        # bestaetigt - Gemini hat von allen verbliebenen Anbietern
-                                        # die ungueenstigsten Vertragsbedingungen, siehe Memory
+  gemini_taegliches_budget: 500          # zweite (und aktuell letzte) Fallback-Stufe dieser
+                                        # Kette (2026-07-14, Position 2026-07-17 bestaetigt -
+                                        # Gemini hat von allen verbliebenen Anbietern die
+                                        # ungueenstigsten Vertragsbedingungen, siehe Memory
                                         # project_cerebras_free_tier_aenderung_2026-08-17).
                                         # ANGEHOBEN von 200 auf 500 (2026-07-20 Nacht, gleiche
                                         # Nutzer-Vorgabe wie bei Mistral) - weiterhin unter der
                                         # recherchierten ~1.000-1.500-Calls/Tag-Kapazitaet (Gemini
                                         # 3.1 Flash-Lite), aber deutlich mehr Spielraum als zuvor.
-  zai_taegliches_budget: 300             # NEU (2026-07-20), seit Testnacht LETZTE Stufe (nach
-                                        # Gemini) statt vor Mistral - siehe Memory
-                                        # reference_llm_provider_recherche_uebersicht.md).
-                                        # Anders als Mistral/Gemini NICHT aus einem verifizierten
-                                        # Dashboard-Wert abgeleitet - Z.ai veroeffentlicht fuer
-                                        # GLM-4.5-Flash/GLM-4.7-Flash nur ein Concurrency-Limit
-                                        # (2 bzw. 1), keine RPM/TPM/RPD-Zahl. Nutzer-Vorgabe:
-                                        # bewusst kein konservativer Deckel wie bei Mistral -
-                                        # "kein Grund nicht auf ein bestimmtes hoeheres Limit zu
-                                        # gehen, wenn diese Quelle blockiert wird passiert nichts
-                                        # fuer diese eine Nacht" - Wert dient nur als grobe
-                                        # Sicherheitsobergrenze, keine Kapazitaetsschaetzung.
+                                        # zai_taegliches_budget (fruehere 3./4. Stufe) am
+                                        # 2026-07-27 entfernt - Z.ai ist seit dem Gegenpruefungs-
+                                        # Umbau (26.07.) kein primaerer Analyst mehr, der Wert
+                                        # wurde nie mehr abgefragt (siehe agent/krypto/
+                                        # budget_allocator.py Modul-Docstring). Die echte Z.ai-
+                                        # Last aus der Gegenpruefung ist rein informativ auf der
+                                        # Remote-Steuer-Seite sichtbar, bewusst OHNE Tagesdeckel.
   groq_exhaustion_schwelle_fehlschlaege: 2  # NEU (2026-07-18, Nutzer-Fund "trotz Erschoepfung
                                         # wird immer zuerst Groq abgefragt") - anders als
                                         # Mistral/Gemini hatte Groq nie einen eigenen

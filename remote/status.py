@@ -215,7 +215,14 @@ def _get_budget_heute(conn: sqlite3.Connection) -> dict:
     gesamt-Verhaeltnis nach oben, sobald der 12h-Multi-Asset-Batch lief.
     `spot` ist jetzt Krypto-only gefiltert, Multi-Asset-Verbrauch wird
     separat als `multi_asset_heute` ausgewiesen statt unsichtbar
-    eingerechnet."""
+    eingerechnet.
+
+    `zai_gegenpruefung_heute` (2026-07-27, Nutzer-Fund): Z.ai ist seit dem
+    Gegenpruefungs-Umbau (26.07.) NICHT mehr Teil von `verbraucht_gesamt`/
+    `gesamt` (kein primaerer Analyst mehr, keine Ressourcen-Konkurrenz zum
+    B-Tagesbudget) - laeuft aber weiterhin real im Hintergrund. Separat
+    ausgewiesen statt in die Hauptzahl gemischt, aus demselben Grund wie
+    `multi_asset_heute`."""
     config_dict = config_module.load_config()
     gesamt = config_dict.get("budget_allocator", {}).get("taegliches_budget_gesamt", 15)
     krypto_symbole = {a.symbol for a in config_module.get_watchlist() if a.assetklasse == "krypto"}
@@ -230,6 +237,9 @@ def _get_budget_heute(conn: sqlite3.Connection) -> dict:
         "verbraucht_gesamt": hebel + marktscan + spot,
         "gesamt": gesamt,
         "multi_asset_heute": spot_gesamt - spot,
+        # Rein informativ (2026-07-27), KEIN Tagesdeckel - siehe
+        # count_zai_gegenpruefung_calls_today()-Docstring.
+        "zai_gegenpruefung_heute": db.count_zai_gegenpruefung_calls_today(conn),
     }
 
 

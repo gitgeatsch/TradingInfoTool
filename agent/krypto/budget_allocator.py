@@ -40,9 +40,9 @@ zusaetzliche Wartezeit kaum ins Gewicht, da nur genutzt wenn Mistral/Gemini
 beide fehlschlagen. Anders als Mistral/Gemini ist die reale Kapazitaet
 NICHT ueber ein Nutzer-Dashboard verifiziert - Z.ai veroeffentlicht fuer die
 kostenlosen Modelle nur ein Concurrency-Limit (2), keine RPM/TPM/RPD-Zahl.
-Eigener Tages-Deckel `zai_taegliches_budget` unveraendert aktiv.
-Reihenfolge ist weiterhin nicht zwingend final, aber deutlich wahrscheinlicher
-stabil als die urspruengliche Position - siehe Memory fuer weitere Updates.
+(HISTORISCH - siehe Nachtrag 2026-07-26/27 unten: Z.ai ist seit dem
+Gegenpruefungs-Umbau kein primaerer Analyst mehr, der damalige eigene
+Tages-Deckel `zai_taegliches_budget` existiert nicht mehr.)
 
 2026-07-17: Cerebras vollstaendig
 entfernt, siehe Memory project_cerebras_free_tier_aenderung_2026-08-17.md -
@@ -58,8 +58,8 @@ Fuer jeden ausgewaehlten Kandidaten wird ZUERST Mistral versucht (falls
 `mistral_client` gesetzt); schlaegt der Call fehl (jede Exception -
 Netzwerk, HTTP-Fehler, Rate-Limit), wird SOFORT die naechste Stufe
 versucht, solange deren eigener Tages-Deckel (config
-mistral_taegliches_budget/gemini_taegliches_budget/zai_taegliches_budget)
-noch nicht erschoepft ist. Gemini bleibt bewusst nahe am Ende der Kette -
+mistral_taegliches_budget/gemini_taegliches_budget) noch nicht erschoepft
+ist. Gemini bleibt bewusst nahe am Ende der Kette -
 vertraglich die ungueenstigsten Bedingungen aller Anbieter (EWR/CH/UK-
 Sonderklausel, explizite Warnung vor vertraulichen/Finanzdaten, nicht
 abwaehlbare Trainings-Nutzung - siehe Memory), soll deshalb am seltensten
@@ -73,12 +73,18 @@ gegenpruefung.py): Z.ai ist NICHT mehr Teil dieser Fallback-Kette (weder
 Hebel noch Marktscan noch Spot) - dediziert fuer eine neue, kleine
 Konsistenz-Gegenpruefung freigehalten (kleine Ein-/Ausgabe = schnell, siehe
 Modul-Docstring dort). `zai_client` wird stattdessen direkt an
-generate_hebel_signal() durchgereicht. Die bestehende Zai-Budget-
-Buchhaltung (`zai_taegliches_budget`, `zai_calls_verbraucht`,
-`zai_budget_erschoepft`) bleibt technisch bestehen, zeigt fuer die
-Primaer-Generierung aber dauerhaft 0 - bewusst nicht entfernt (kein
-funktionaler Schaden, Aufraeumen waere ein separates, hier nicht noetiges
-Refactoring).
+generate_hebel_signal() durchgereicht.
+
+Nachtrag (2026-07-27, Nutzer-Fund): die alte Zai-Budget-Buchhaltung
+(`zai_taegliches_budget`, `zai_calls_verbraucht`, `zai_budget_erschoepft`)
+wurde jetzt entfernt - sie konnte seit obigem Umbau nie mehr > 0 werden
+(Z.ai erscheint in keiner `calls`-Liste mehr), taeuschte also ein
+funktionsloses "Z.ai-Tagesbudget" vor. Die ECHTE Z.ai-Last durch die
+Gegenpruefung (1 Aufruf/Spot-Signal, 2 Aufrufe/Hebel-Signal - Konsistenz UND
+Richtungs-Abgleich sind unabhaengige Calls) wird jetzt stattdessen rein
+informativ ueber `database.db.count_zai_gegenpruefung_calls_today()` auf der
+Remote-Steuer-Seite angezeigt, bewusst OHNE Tagesdeckel (Z.ai hat laut
+Nutzer-Vorgabe keinen, nur den 120/Min-Rate-Limiter im Client selbst).
 
 Echte Tages-Zaehler (2026-07-14-Fix): Mistrals/Gemini's Tagesbudget wird zu
 Beginn jedes Laufs EINMAL per db.count_real_llm_calls_today_by_provider()
@@ -137,8 +143,6 @@ class AllocationResult:
     mistral_budget_erschoepft: bool = False
     gemini_calls_verbraucht: int = 0
     gemini_budget_erschoepft: bool = False
-    zai_calls_verbraucht: int = 0
-    zai_budget_erschoepft: bool = False
     # 2026-07-14 (Empfehlungs-E-Mails): die echten Signal-/HebelSignal-Objekte
     # zu jedem schluessel aus hebel_verarbeitet/spot_verarbeitet - nur befuellt,
     # wenn provider_je_call[schluessel] ebenfalls gesetzt wurde (also ein
@@ -355,7 +359,6 @@ def run_budget_allocator(
     spot_reserve = cfg.get("spot_rotation_reserve", 5)
     mistral_budget = cfg.get("mistral_taegliches_budget", 150)
     gemini_budget = cfg.get("gemini_taegliches_budget", 200)
-    zai_budget = cfg.get("zai_taegliches_budget", 300)
     cooldown_stunden = cfg.get("cooldown_stunden", 3.5)
     marktscan_kandidat_verfall_stunden = cfg.get("marktscan_kandidat_verfall_stunden", 48.0)
     hebel_cooldown_stunden_ausgemustert = cfg.get(
@@ -483,11 +486,10 @@ def run_budget_allocator(
         tages_verbraucht = {
             "mistral": db.count_real_llm_calls_today_by_provider(conn, "mistral:"),
             "gemini": db.count_real_llm_calls_today_by_provider(conn, "gemini:"),
-            "zai": db.count_real_llm_calls_today_by_provider(conn, "zai:"),
         }
     finally:
         conn.close()
-    tages_budget = {"mistral": mistral_budget, "gemini": gemini_budget, "zai": zai_budget}
+    tages_budget = {"mistral": mistral_budget, "gemini": gemini_budget}
 
     tier1_n, tier2_n, tier3_n = _verteile_budget(
         len(hebel_kandidaten), len(marktscan_kandidaten), len(spot_kandidaten), budget_gesamt, spot_reserve,
@@ -525,10 +527,12 @@ def run_budget_allocator(
 
     def _mit_fallback_chain(schluessel: str, calls: list[tuple[str, object]]) -> bool:
         """Versucht `calls` (Liste von (provider_name, call_fn)) der Reihe nach.
-        "mistral"/"gemini"/"zai" werden nur versucht, wenn ihr echter Tages-
-        Zaehler (`tages_verbraucht`) das eigene Budget (`tages_budget`) noch
-        nicht erreicht hat - sonst wird diese Stufe uebersprungen (NICHT
-        versucht) und die naechste Stufe an der Reihe.
+        "mistral"/"gemini" werden nur versucht, wenn ihr echter Tages-Zaehler
+        (`tages_verbraucht`) das eigene Budget (`tages_budget`) noch nicht
+        erreicht hat - sonst wird diese Stufe uebersprungen (NICHT versucht)
+        und die naechste Stufe an der Reihe. Z.ai ist seit 2026-07-26 kein
+        Bestandteil von `calls` mehr (siehe Modul-Docstring), taucht hier
+        also nie auf.
 
         Wichtig: ein Datenqualitaets-Gate (Signal.gate_passed/HebelSignal.
         gate_passed == False, z.B. veralteter Preis) schlaegt VOR jedem echten
@@ -545,8 +549,6 @@ def run_budget_allocator(
                         result.mistral_budget_erschoepft = True
                     elif provider_name == "gemini":
                         result.gemini_budget_erschoepft = True
-                    elif provider_name == "zai":
-                        result.zai_budget_erschoepft = True
                     continue
             try:
                 res = call_fn()
@@ -577,8 +579,6 @@ def run_budget_allocator(
                         result.mistral_calls_verbraucht = tages_verbraucht["mistral"]
                     elif provider_name == "gemini":
                         result.gemini_calls_verbraucht = tages_verbraucht["gemini"]
-                    elif provider_name == "zai":
-                        result.zai_calls_verbraucht = tages_verbraucht["zai"]
                 return True
             except Exception as exc:
                 last_exc = exc

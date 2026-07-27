@@ -85,6 +85,7 @@ _INDEX_HTML = """<!doctype html>
   <div class="row"><span>&nbsp;&nbsp;davon Marktscan</span><span id="budget-marktscan">-</span></div>
   <div class="row"><span>&nbsp;&nbsp;davon Spot-Rotation</span><span id="budget-spot">-</span></div>
   <div class="row"><span>Multi-Asset heute (Aktien/Rohstoffe/Hedge/ETF, separates Budget)</span><span id="budget-multi-asset">-</span></div>
+  <div class="row"><span>Z.ai-Gegenprüfung heute (Konsistenz+Richtung, kein Tagesdeckel)</span><span id="budget-zai-gegenpruefung">-</span></div>
 </div>
 
 <div class="card">
@@ -306,9 +307,17 @@ function fmtRelativeTime(iso) {
   return "vor " + Math.round(diffHours / 24) + " Tagen";
 }
 
+// Quellen, die seit 2026-07-26 bewusst NICHT mehr Teil einer automatischen
+// Kette sind (Groq: aus budget_allocator.py entfernt, siehe dortiger Modul-
+// Docstring) - ein alter Fehlschlag ist hier kein Defekt, sondern schlicht
+// "seit dem letzten manuellen Test nicht mehr versucht". Rot waere hier
+// irrefuehrend (suggeriert "kaputt, muss repariert werden").
+const MANUAL_ONLY_SOURCES = new Set(["groq"]);
+
 function renderApiHealthGroup(sourceKeys, apiHealth) {
   return sourceKeys.map(function(key) {
     const entry = apiHealth[key];
+    const manualOnly = MANUAL_ONLY_SOURCES.has(key);
     let statusClass = "";
     let statusText = "unbekannt";
     if (entry) {
@@ -316,9 +325,17 @@ function renderApiHealthGroup(sourceKeys, apiHealth) {
         statusClass = "ok";
         statusText = "OK (" + fmtRelativeTime(entry.last_success_at) + ")";
       } else if (entry.status === "fehler") {
-        statusClass = "err";
-        statusText = "Fehler (" + fmtRelativeTime(entry.last_error_at) + ")";
+        if (manualOnly) {
+          statusClass = "muted-text";
+          statusText = "nur manuell · letzter Test " + fmtRelativeTime(entry.last_error_at) + " fehlgeschlagen";
+        } else {
+          statusClass = "err";
+          statusText = "Fehler (" + fmtRelativeTime(entry.last_error_at) + ")";
+        }
       }
+    } else if (manualOnly) {
+      statusClass = "muted-text";
+      statusText = "nur manuell";
     }
     return '<div class="row"><span>' + key + '</span><span class="' + statusClass + '">' +
       statusText + '</span></div>';
@@ -421,6 +438,7 @@ async function refreshStatus() {
     document.getElementById("budget-marktscan").textContent = b.marktscan;
     document.getElementById("budget-spot").textContent = b.spot;
     document.getElementById("budget-multi-asset").textContent = b.multi_asset_heute;
+    document.getElementById("budget-zai-gegenpruefung").textContent = b.zai_gegenpruefung_heute;
   }
 
   if (data.provider_performance) {

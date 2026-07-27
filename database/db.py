@@ -2775,6 +2775,36 @@ def count_real_hebel_signals_today(conn: sqlite3.Connection) -> int:
     return row["n"]
 
 
+def count_zai_gegenpruefung_calls_today(conn: sqlite3.Connection) -> int:
+    """Echte Z.ai-Last durch die Gegenpruefungslogik (agent/krypto/
+    gegenpruefung.py, 2026-07-26/27) seit Mitternacht UTC - REIN INFORMATIV,
+    kein Tagesdeckel (Z.ai hat bewusst keinen, nur den 120/Min-Rate-Limiter
+    im Client selbst, siehe config.yaml `zai` in `hebel_screening`-Kommentaren).
+    Ersetzt die alte, seit dem Gegenpruefungs-Umbau tote Budget-Buchhaltung
+    (`AllocationResult.zai_calls_verbraucht`, konnte nie mehr > 0 werden, da
+    Z.ai nicht mehr Teil der primaeren Analyst-Fallback-Kette ist).
+
+    Jedes Spot-Signal mit erfolgreicher Konsistenzpruefung (`zai_gegenpruefung_
+    urteil IS NOT NULL`) zaehlt als EIN Z.ai-Aufruf (nur pruefe_konsistenz()).
+    Jedes Hebel-Signal zaehlt Konsistenzpruefung UND Richtungs-Abgleich
+    SEPARAT (zwei unabhaengige Z.ai-Calls, koennen unabhaengig voneinander
+    fehlschlagen - siehe hebel_pipeline.py::_zai_gegenpruefung_im_hintergrund())."""
+    today_utc_midnight = datetime.now(timezone.utc).strftime("%Y-%m-%dT00:00:00")
+    spot_konsistenz = conn.execute(
+        "SELECT COUNT(*) AS n FROM signals WHERE zai_gegenpruefung_urteil IS NOT NULL AND created_at >= ?",
+        (today_utc_midnight,),
+    ).fetchone()["n"]
+    hebel_konsistenz = conn.execute(
+        "SELECT COUNT(*) AS n FROM hebel_signals WHERE zai_gegenpruefung_urteil IS NOT NULL AND created_at >= ?",
+        (today_utc_midnight,),
+    ).fetchone()["n"]
+    hebel_richtung = conn.execute(
+        "SELECT COUNT(*) AS n FROM hebel_signals WHERE zai_eigene_richtung IS NOT NULL AND created_at >= ?",
+        (today_utc_midnight,),
+    ).fetchone()["n"]
+    return spot_konsistenz + hebel_konsistenz + hebel_richtung
+
+
 def get_hebel_signal_by_id(conn: sqlite3.Connection, hebel_signal_id: int) -> HebelSignal | None:
     row = conn.execute("SELECT * FROM hebel_signals WHERE id = ?", (hebel_signal_id,)).fetchone()
     return _row_to_hebel_signal(row) if row else None

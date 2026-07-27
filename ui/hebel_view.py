@@ -84,6 +84,11 @@ class HebelView(ttk.Frame):
         # (2026-07-21, SLA-Redesign-Transparenz) - live berechnet, kein
         # neues DB-Feld.
         self._wartezeit_tooltips: dict[str, str] = {}
+        # (symbol, richtung) -> HebelPosition, fuer HALTEN-Signale auf einem
+        # Symbol MIT offener Position (2026-07-27, Nutzer-Fund: Abschnitt 1
+        # blieb bei HALTEN immer leer, auch wenn eine offene Position
+        # existiert und ihr aktueller Liquidationspreis zeigbar waere).
+        self._offene_positionen: dict[tuple[str, str], object] = {}
         # GUI-Refresh-Fix Teil 2 (2026-07-16) - siehe ui/signals_view.py fuer die
         # volle Begruendung: unterdrueckt das durch die periodische selection_set()-
         # Wiederherstellung ausgeloeste <<TreeviewSelect>>, das sonst das rechte
@@ -199,6 +204,8 @@ class HebelView(ttk.Frame):
             )
         finally:
             conn.close()
+
+        self._offene_positionen = {(p.symbol, p.richtung): p for p in positions}
 
         vorher_selected = self.tree.selection()
         vorher_iid = vorher_selected[0] if vorher_selected else None
@@ -407,6 +414,28 @@ class HebelView(ttk.Frame):
             )
         if signal.ausfuehrbarkeit_hinweis:
             lines.append(f"Ausführbarkeit: {signal.ausfuehrbarkeit_hinweis}")
+        # HALTEN berechnet nichts Neues (siehe Kommentar oben) - aber falls
+        # fuer dieses Symbol+Richtung eine offene Position existiert, ist
+        # deren AKTUELLER Stand (aus dem letzten Positions-Sync, nicht neu
+        # fuer dieses Signal berechnet) trotzdem eine echte, mathematisch
+        # ermittelte Zahl und gehoert hierher, nicht in Abschnitt 2.
+        if signal.action == "HALTEN":
+            offene_position = self._offene_positionen.get((signal.symbol, signal.richtung))
+            if offene_position is not None:
+                hebel_text = (
+                    f"{offene_position.hebel_effektiv:.2f}x"
+                    if offene_position.hebel_effektiv is not None else "-"
+                )
+                lines.append(
+                    f"Offene Position (Stand letzter Sync): Hebel {hebel_text}, "
+                    f"Eigenkapital {format_money(offene_position.eigenkapital_eur)} EUR, "
+                    f"eröffnet am {offene_position.eroeffnet_am[:10] if offene_position.eroeffnet_am else '-'}"
+                )
+                if offene_position.liquidationspreis_geschaetzt_eur is not None:
+                    lines.append(
+                        f"  Geschätzter Liquidationspreis: "
+                        f"{format_money(offene_position.liquidationspreis_geschaetzt_eur)} EUR"
+                    )
         lines.append("")
 
         # Abschnitt 2: alles, was das LLM selbst entschieden/formuliert hat -

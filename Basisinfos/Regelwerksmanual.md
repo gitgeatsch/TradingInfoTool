@@ -9518,3 +9518,140 @@ explizit AN), `get_pending_hebel_candidates()` schliesst KAITO korrekt aus,
 ETH+SOL korrekt enthalten, Sortierung nach `score_gesamt DESC` bleibt intakt.
 Compile-/Import-Regressionscheck: `database/db.py`, `agent/krypto/
 budget_allocator.py`, `ui/hebel_view.py`.
+
+## Nachtrag (2026-07-27): HALTEN auf Symbol mit offener Hebel-Position zeigt jetzt deren aktuellen Stand (Abschnitt 1)
+
+Nutzer-Nachfrage anhand eines Screenshots (VIRTUAL LONG HALTEN): Abschnitt 1
+("MATHEMATISCH BERECHNET") im Hebel-Detail-Panel blieb bei HALTEN immer leer.
+
+### Einordnung
+
+Kein Bug im bisherigen Sinne - Abschnitt 1 zeigt bewusst NUR deterministisch
+berechnete Werte, die aus einer Positionsveraenderung entstehen (Hebel final,
+Liquidationspreis, Eigenkapitalbedarf/-nachschuss), siehe die urspruengliche
+3-Abschnitte-Entscheidung vom 2026-07-19 (AVAX-Fund). HALTEN veraendert nichts,
+also gibt es dafuer folgerichtig nichts zu berechnen. Bei VIRTUAL im
+Screenshot kommt hinzu: keine offene Position auf VIRTUAL vorhanden.
+
+**Aber:** bei einem Symbol MIT offener Position (im Screenshot: HYPE) ist der
+*aktuelle* Stand dieser Position (Hebel, Eigenkapital, geschaetzter
+Liquidationspreis - alles echte, im letzten Positions-Sync berechnete Werte,
+siehe `hebel_positions`/`importer/bitpanda_margin_positions.py`) eine legitime
+Ergaenzung fuer Abschnitt 1 - er wird nur bisher nicht angezeigt, weil
+`_render_signal()` keinen Zugriff auf die offenen Positionen hatte.
+
+Nutzer-Entscheidung: E-Mail-Politik "HALTEN nie" bleibt unveraendert (siehe
+`_notify_hebel_signal()`/`_notify_spot_signal()`, `scheduler/background.py`,
+beide pruefen `signal.action == "HALTEN"` als fruehen Return - unabhaengig
+von offener Position, das war schon immer so). Nur die GUI-Anzeige wird
+nachgezogen.
+
+### Umsetzung
+
+`ui/hebel_view.py`:
+- Neues Instanzfeld `self._offene_positionen: dict[(symbol, richtung),
+  HebelPosition]`, in `refresh()` direkt nach dem bereits vorhandenen
+  `db.get_open_hebel_positions()`-Aufruf befuellt (kein neuer DB-Zugriff -
+  `refresh()` hatte die Positionsliste bereits fuer das separate
+  "Offene Hebel-Positionen"-Panel geladen, wird jetzt zusaetzlich fuer die
+  Signal-Detail-Anzeige indiziert).
+- `_render_signal()`: neuer Block am Ende von Abschnitt 1, NUR wenn
+  `signal.action == "HALTEN"` UND ein Eintrag fuer `(signal.symbol,
+  signal.richtung)` in `self._offene_positionen` existiert - zeigt Hebel,
+  Eigenkapital, Eroeffnungsdatum und (falls vorhanden) den geschaetzten
+  Liquidationspreis der bestehenden Position. Bewusst als "(Stand letzter
+  Sync)" gekennzeichnet, um klarzustellen: das ist NICHT neu fuer dieses
+  HALTEN-Signal berechnet, sondern der zuletzt synchronisierte Positions-
+  Zustand (identisch mit der Zahl im "Offene Hebel-Positionen"-Panel).
+
+**Bewusst NICHT angefasst:**
+- `scheduler/background.py`s E-Mail-Guards (`action == "HALTEN"` -> return) -
+  Nutzer-Entscheidung, "HALTEN nie" bleibt unveraendert.
+- `ui/signals_view.py` (Spot) - Spot kennt keine Hebel-Positionen/
+  Liquidationspreise, dieses Thema betrifft ausschliesslich `ui/hebel_view.py`.
+
+**Verifiziert:** Tk-Smoke-Test (isolierte Temp-DB, kein sichtbares Fenster) mit
+3 Faellen: (1) HALTEN OHNE offene Position (VIRTUAL) - Abschnitt 1 bleibt wie
+zuvor ohne Positions-Zeile (Regression). (2) HALTEN MIT offener Position
+(HYPE) - neue Zeile korrekt mit Hebel/Eigenkapital/Datum/Liquidationspreis.
+(3) ERÖFFNEN (LINK) - bestehende `hebel_final`-Anzeige unveraendert, keine
+faelschliche Positions-Zeile. Compile-/Import-Regressionscheck `ui/hebel_view.py`.
+
+## Nachtrag (2026-07-27): LLM-Budget-Anzeige/-Zaehlung nach Groq-Entfernung + Z.ai-Gegenpruefungs-Umbau nachgezogen
+
+Nutzer-Nachfrage anhand von zwei Remote-Steuer-Seite-Screenshots: "LLM-Budget
+heute (Krypto)" und "API-Status: LLM-Anbieter" pruefen, ob nach den
+juengsten Aenderungen (Groq aus der automatischen Kette entfernt, Z.ai macht
+pro Hebel-Signal 2 zusaetzliche Abfragen) etwas angepasst werden sollte.
+
+### Fund 1: Z.ai-Budget-Buchhaltung war seit dem Gegenpruefungs-Umbau toter Code
+
+`agent/krypto/budget_allocator.py` hatte seit 2026-07-26 (Commit, in dem
+Z.ai von einer primaeren Analyst-Fallback-Stufe zur dedizierten
+Gegenpruefungslogik umgebaut wurde) noch die komplette alte
+Budget-Buchhaltung dafuer (`zai_taegliches_budget` in config.yaml,
+`tages_verbraucht["zai"]`, `tages_budget["zai"]`,
+`AllocationResult.zai_calls_verbraucht`/`zai_budget_erschoepft`) - konnte
+aber strukturell nie mehr > 0 werden, weil Z.ai in KEINER `calls`-Liste der
+3 Tiers mehr auftaucht (bereits im damaligen Modul-Docstring als "bewusst
+nicht entfernt, kein funktionaler Schaden" dokumentiert). Gleichzeitig wurde
+die ECHTE Z.ai-Last durch die Gegenpruefung (1 Aufruf/Spot-Signal, 2
+Aufrufe/Hebel-Signal - Konsistenz-Check UND Richtungs-Abgleich sind zwei
+unabhaengige Calls) nirgends gezaehlt oder angezeigt.
+
+**Fix:**
+- `database/db.py`: neue `count_zai_gegenpruefung_calls_today()` - zaehlt
+  echte Z.ai-Gegenpruefungs-Aufrufe seit Mitternacht UTC (Spot-Konsistenz +
+  Hebel-Konsistenz + Hebel-Richtung, jeweils separat gezaehlt, da unabhaengig
+  scheitern koennen). REIN INFORMATIV, kein Tagesdeckel (Z.ai hat laut
+  Nutzer-Vorgabe keinen, nur den 120/Min-Rate-Limiter im Client selbst).
+- `remote/status.py::_get_budget_heute()`: neues Feld
+  `zai_gegenpruefung_heute`, bewusst NICHT in `verbraucht_gesamt`/`gesamt`
+  eingerechnet (Z.ai ist kein primaerer Analyst mehr, keine Ressourcen-
+  Konkurrenz zum B-Tagesbudget) - gleiche Trennung wie bei
+  `multi_asset_heute`.
+- `remote/server.py`: neue Zeile "Z.ai-Gegenpruefung heute (Konsistenz+
+  Richtung, kein Tagesdeckel)" in der LLM-Budget-Karte.
+- `agent/krypto/budget_allocator.py`: die tote Zai-Budget-Buchhaltung
+  komplett entfernt (`AllocationResult`-Felder, `tages_verbraucht`/
+  `tages_budget`-Eintraege, beide `elif provider_name == "zai":`-Zweige in
+  `_mit_fallback_chain()`), Modul-Docstring + zwei weitere stale
+  Kommentarstellen ("Mistral->Groq->Gemini->Zai-Kaskade") korrigiert.
+- `scheduler/background.py`: Log-Zeile um die toten Zai-Werte gekuerzt.
+- `Basisinfos/config.yaml`: `zai_taegliches_budget`-Schluessel entfernt,
+  `gemini_taegliches_budget`-Kommentar korrigiert ("dritte" -> "zweite und
+  aktuell letzte Fallback-Stufe" - die Kette ist seit der Groq-Entfernung
+  nur noch 2-stufig: Mistral -> Gemini).
+
+### Fund 2: Groq-Eintrag im API-Status zeigte irrefuehrend rot
+
+Groq wurde bereits am 2026-07-26 bewusst aus der automatischen Kette
+entfernt (Commit "Groq aus automatischer Signal-Kette entfernt, Client
+bleibt fuer manuelle Tests" - siehe project_groq_entfernung_2026-07-26.md),
+bleibt aber fuer manuelle Einzelklicks nutzbar. Die "API-Status:
+LLM-Anbieter"-Karte zeigte dafuer weiterhin rot "Fehler (vor 3 Tagen)" -
+technisch korrekt (letzter tatsaechlicher Call schlug fehl/liegt lange
+zurueck), aber irrefuehrend: rot suggeriert "hier ist etwas kaputt, das
+repariert werden muss", nicht "wird absichtlich nicht mehr automatisch
+aufgerufen".
+
+**Fix:** `remote/server.py::renderApiHealthGroup()` - neues
+`MANUAL_ONLY_SOURCES`-Set (aktuell nur `"groq"`). Bei `status === "fehler"`
+UND manueller Quelle: neutrales Grau ("nur manuell · letzter Test vor Xd
+fehlgeschlagen") statt Rot. Ein ECHTER Erfolg (`status === "ok"`) bleibt
+weiterhin gruen "OK (vor X)" - eine erfolgreiche manuelle Pruefung ist
+weiterhin eine gute Nachricht.
+
+### Nebenbefund (kein Fix, nur geprueft): `groq_exhaustion_schwelle_fehlschlaege`
+ist NICHT tot - wird weiterhin von `agent/kategorie_synthese.py` verwendet
+(eigenstaendiger taeglicher Job, der Groq unabhaengig vom Budget-Allocator
+in seiner eigenen Fallback-Kette nutzt) - bewusst unveraendert gelassen.
+
+**Verifiziert:** `count_zai_gegenpruefung_calls_today()` synthetisch (3
+Signale: 1 Spot-Konsistenz, 1 Hebel mit beiden Zai-Calls, 1 Hebel nur mit
+Konsistenz -> korrekt 1+2+1=4). `_get_budget_heute()`-Integration End-to-End
+(Config/Watchlist gemockt). `AllocationResult`-Felder korrekt bereinigt.
+`run_budget_allocator()` Smoke-Test (aktiv=False fruehzeitiger Return,
+aktiv=True mit leerer Watchlist) laeuft ohne Fehler. YAML-Parse-Check
+config.yaml. Compile-/Import-Regressionscheck aller 6 geaenderten
+Python-Dateien.
