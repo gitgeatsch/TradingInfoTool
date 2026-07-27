@@ -9889,3 +9889,173 @@ EUR-Chart-Durchgaengigkeit bestaetigen. Beobachtungspunkte (kein Fix noetig):
 moeglicherweise mehr Kandidaten passieren jetzt das P-10-Gate (hoehere
 Mistral/Gemini-Auslastung moeglich); `signal_stabilitaet` koennte durch
 haeufigere Kursaenderungen mehr Richtungswechsel zeigen als zuvor.
+
+## Nachtrag (2026-07-27, gleicher Tag, Folge): Grundsatzfix Teil 2 - derselbe
+JIT-/EUR-Fix fuer Aktien/Rohstoffe/Themen-ETF + ein unabhaengiger, schwerer
+Rohstoff-Skalierungsbug
+
+Der Nutzer stellte nach dem LINK-Fix explizit klar: "der Fix ist ein
+Grundsatzfix, Link war nur der Ausloeser" - und fragte, ob fuer die drei
+verbliebenen, yfinance-basierten Pipelines (Aktien, Rohstoffe, Themen-ETF)
+noch etwas fehlt. Vertiefte Recherche (Explore- + Plan-Agent, alle Kernbefunde
+selbst im Code nachverifiziert) ergab ein praeziseres, teils anderes Bild als
+bei Krypto - vier Einzelfunde:
+
+**1. EUR-Bug identisch vorhanden, aber KEIN neuer Ableitungs-Helfer noetig.**
+Die vom 07-27-Nachtrag oben als "eigene Folge-Runde vorgesehen" markierte
+Luecke (`entry.get("eur_von")` etc., unveraendert in allen drei Pipelines)
+existierte tatsaechlich - aber `agent/hedge/pipeline.py` beweist bereits live,
+dass das bestehende `eur_aus_usd()` fuer EUR-native UND USD-native Instrumente
+gleichermassen korrekt ist (Regel 4 aller Analyst-Prompts: "berechne den
+prozentualen Abstand EINMAL in USD und wende ihn auf EUR gleichermassen an" -
+algebraisch unabhaengig von der Herkunftsrichtung des USD-Preises, siehe
+Verifikation unten). Kein neuer, richtungsbewusster Helfer noetig - 1:1 dasselbe
+Muster (`eur_aus_usd()`/`log_eur_abweichungen()`) wie bei Hedge/Spot/Hebel
+uebernommen.
+
+**2. Ein unabhaengiger, deutlich schwererer Fund bei der Vertiefung:**
+`api/yfinance_history.py::get_full_ohlc_history(ticker, symbol, currency)`
+speichert OHLC-Rohwerte OHNE Waehrungsumrechnung unter dem uebergebenen
+`currency`-Label - alle drei Pipelines uebergaben dafuer hartkodiert `"USD"`,
+unabhaengig von der tatsaechlichen Notierungswaehrung. Zwei Faelle
+unterschiedlichen Schweregrads:
+- **Aktien/Themen-ETF:** reines Label-Problem (Zahlen korrekt, nur die
+  Waehrungsspalte bei EUR-nativen Tickern falsch beschriftet). Aktuell
+  folgenlos fuer Aktien (nur USD-native VST/PLTR in der Watchlist), aber
+  bereits aktiv falsch fuer alle 5 Themen-ETF-Symbole (VVMX/X136/EXH3/CEBS/
+  ISOC, alle `.DE`/`.BE`, EUR-nativ).
+- **Rohstoffe - ein echter, aktiver Zahlenfehler, kein Label-Problem:**
+  `agent/rohstoff/pipeline.py::_ensure_ohlc_backfilled()` laedt/speichert die
+  OHLC-Historie vom liquiden Futures-Kontrakt (GC=F/SI=F/HG=F/NG=F, USD,
+  Groessenordnung ~4000 fuer Gold). `_rescale_ohlc_zum_etc_kurs()` (siehe
+  Docstring vom 07-18, Rohstoff-Pipeline Phase 2) skaliert diese Reihe auf die
+  tatsaechliche ETC-Preisebene (~18-20 USD) herunter - aber bisher NUR im
+  Arbeitsspeicher, nie zurueck in die DB geschrieben. Direkt verifiziert:
+  `agent/krypto/backward_tracking.py::check_signal_outcome()` (keine
+  Assetklassen-Filterung) las genau diese unskalierte, gespeicherte Reihe und
+  verglich sie gegen `take_profit_usd_von`/`stop_loss_usd_von` auf ETC-
+  Preisebene (~18-20) - ein Futures-High von ~4000 erfuellt `high >= ~20`
+  praktisch immer sofort. Das liess Rohstoff-KAUFEN/NACHKAUFEN-Signale seit
+  Einfuehrung der Pipeline vermutlich fast immer sofort faelschlich als
+  `take_profit_erreicht` aufloesen - korrumpiert nicht nur die Anzeige,
+  sondern via `compute_win_rate_fact()` auch die `historische_erfolgsquote`,
+  die als Fakt in jedes kuenftige Rohstoff-Signal zurueckfliesst (LLM bewertet
+  seine eigene, durch den Bug verzerrte Erfolgsbilanz). **Der mit Abstand
+  wichtigste Einzelfund dieser Runde.**
+
+**3. Staleness strukturell schlechter als der urspruengliche Krypto-Zustand:**
+Rohstoffe und Themen-ETF hatten GAR KEINEN Scheduler-Job (Aktien immerhin
+einen taeglichen 24h-Job seit 07-19) - Historie wurde ausschliesslich beim
+Signal-Lauf selbst nachgeladen, und nur nach Ueberschreiten der 5-Tage-
+Schwelle. Bis zu 5 statt 1 Tag, ohne jeden autonomen Auffrisch-Mechanismus.
+
+**4. Kein CoinGecko-Kontingent-Analogon noetig:** yfinance dokumentiert
+keinerlei Monats-/Rate-Limit in diesem Codebase (nur Timeout-Guards). Der
+Krypto-Fix hatte einen eigenen "Schritt 0" (`/global`-Deckelung), um das
+JIT-Nachladen kontingent-neutral zu finanzieren - hier bewusst nicht
+nachgebaut, da nicht noetig.
+
+### Commit 1: Rohstoff-Skalierung tatsaechlich persistieren (hoechste Prioritaet)
+
+`agent/rohstoff/pipeline.py::generate_signal()`: nach `_rescale_ohlc_zum_etc_kurs()`
+einen `db.upsert_ohlc_points(conn, ohlc_history)`-Schreibvorgang
+ergaenzt. Bewusste Verhaltensaenderung, kein reiner Nebeneffekt: der
+Skalierungsfaktor (`etc_preis_usd / closes[-1]`) aendert sich bei jedem Lauf
+leicht mit dem aktuellen Futures/ETC-Verhaeltnis - jeder Schreibvorgang
+ueberschreibt die GESAMTE historische Reihe mit dem jeweils neuesten
+Verhaeltnis. Erwuenscht (haelt die Reihe konsistent zum aktuell bekannten
+Faktor), aber nicht zeilenweise idempotent - hier explizit dokumentiert, damit
+niemand spaeter einen Bug vermutet.
+
+### Commit 2: Deterministische EUR-Ableitung (alle drei Pipelines)
+
+`eur_aus_usd()`/`log_eur_abweichungen()` (aus `agent/krypto/pipeline.py`)
+1:1 wie bei Hedge/Spot/Hebel eingebaut: `eur_usd_fx_rate` aus dem Live-EURCV-
+Snapshot abgeleitet, alle 7 betroffenen Felder (`position_size_eur`,
+`entry_eur_von/bis`, `stop_loss_eur_von/bis`, `take_profit_eur_von/bis`,
+`halte_kriterium_ziel_preis_eur`) von der rohen LLM-Antwort auf die
+deterministische Ableitung umgestellt. `agent/aktien/pipeline.py` zusaetzlich:
+neues Gate-Problem `price_snap.price_usd is None`, falls ein kuenftiges
+EUR-natives Aktien-Asset ohne echten `eur_usd_fx_rate` sauber scheitern soll
+statt still weiterzulaufen. Analyst-Prompts/Schema bewusst unveraendert - das
+LLM darf weiter `eur_von`/`eur_bis` liefern, nur nicht mehr uebernommen.
+
+### Commit 3: OHLC-Waehrungslabel Aktien/Themen-ETF + Migration
+
+Neue Funktion `api/yfinance_client.py::resolve_native_currency(yfinance_symbol)`
+- billiger `fast_info.get("currency")`-Call (kein `.history()`),
+P-10-sicher (`None` bei Fehlschlag, Aufrufer faellt auf `"USD"` zurueck).
+`agent/aktien/pipeline.py` und `agent/themen_etf/pipeline.py` bekamen je einen
+`_resolve_asset_currency(asset)`-Helper sowie einen um `currency`
+parametrisierten `_ensure_ohlc_backfilled()`/`_load_ohlc()`. Themen-ETFs
+SPY-Benchmarkserie bleibt hartkodiert `"USD"` (SPY ist echt USD-nativ).
+Rohstoffe bewusst NICHT parametrisiert - Futures sind genuin USD, das ist kein
+Label- sondern ein reines Skalierungsproblem (siehe Commit 1).
+
+Einmaliges Migrationsskript `migrate_themen_etf_ohlc_currency.py`
+(Projekt-Root, Dry-Run per Default, `--apply` fuer echtes Schreiben) relabelt
+die 5 betroffenen Themen-ETF-Symbole (VVMX/X136/EXH3/CEBS/ISOC) von
+`currency='USD'` auf `'EUR'`. Sicher wegen `PRIMARY KEY (symbol, currency,
+date)` und keiner bereits existierenden `'EUR'`-Kollision (verifiziert). Kein
+Blocker, falls nicht sofort ausgefuehrt - die 5-Tage-Staleness-Schwelle
+wuerde die falsch beschrifteten Zeilen ohnehin binnen 5 Tagen durch den
+korrigierten Code selbst heilen. **Muss vom Nutzer auf dem Notebook (echte
+Produktions-DB) ausgefuehrt werden, NIE auf dem Desktop** - analog zum
+`fix_stuck_hebel_positions.py`-Workflow vom HYPE-Fix.
+
+### Commit 4: JIT-Nachladen fuer alle drei Pipelines + Config
+
+Neue Funktion `jit_refresh_ohlc()` in jeder der drei Pipeline-Dateien
+(eigener, unabhaengiger Burst-Schutz-Dict pro Datei - Symbole ueberschneiden
+sich nicht zwischen Assetklassen), gleiches attempt-based 60-Minuten-Muster
+wie beim Krypto-Fix. Aufrufstellen jeweils direkt vor dem bestehenden
+`_ensure_ohlc_backfilled()` in `generate_signal()`
+(`agent/multi_asset_batch.py` ruft `generate_signal()` ohnehin auf, ist also
+automatisch mitabgedeckt). Rohstoff-Besonderheit: der JIT-Aufruf laedt ueber
+`SYMBOL_ZU_FUTURES_TICKER[asset.symbol]` mit `currency="USD"` und laeuft VOR
+`_ensure_ohlc_backfilled()`/`_rescale_ohlc_zum_etc_kurs()`, damit die frisch
+geladene Futures-Reihe auch reskaliert+persistiert wird (Commit 1). Eigener,
+neuer Config-Schalter `datenquellen.marktdaten_wertpapiere.jit_historie_
+refresh_aktiv` (bewusst getrennt von Kryptos `datenquellen.marktdaten.*` -
+reiner operativer Not-Aus gegen einen yfinance-Ausfall, KEINE
+Kontingent-Finanzierung wie bei Krypto, da yfinance keine dokumentierte Quote
+kennt).
+
+### Explizit NICHT Teil dieser Runde
+
+Kein neuer richtungsbewusster/bidirektionaler Umrechnungs-Helfer (algebraisch/
+live durch Hedge bereits bewiesen unnoetig); keine CoinGecko-Analogie-
+Kontingent-Finanzierung (yfinance hat keine dokumentierte Quote); `post_
+check()`s fehlende `current_price`/`atr_value`/`dates`/`closes`-Kwargs bei
+Aktien/Rohstoff/Themen-ETF/Hedge (verifiziert folgenlos, gated durch
+`richtungswende is None`, eigenes kuenftiges Ticket falls je ausgeweitet); JIT-
+Nachladen fuer die Themen-ETF-SPY-Benchmarkserie (niedrige Prioritaet, rein
+informativer Fakt); Migration bereits gespeicherter Aktien-OHLC-Zeilen (aktuell
+keine EUR-native Aktie in der Watchlist, nichts zu migrieren).
+
+**Verifiziert (synthetisch, In-Memory-SQLite, keine Produktions-DB beruehrt):**
+Rohstoff-Skalierungs-Regressionstest (persistierte Reihe liegt nach dem Fix
+auf ETC-Skala statt Futures-Skala; `check_signal_outcome()` loest ein
+`take_profit_usd_von=20.0`-Signal NACH dem Fix nicht mehr sofort auf, OHNE
+Fix beweisbar schon); EUR-Ableitung-Identitaetstest (`eur_aus_usd()`
+numerisch identisch zur unabhaengig nachgerechneten Regel-4-Formel, inkl.
+Graceful-Degradation bei fehlendem `usd_wert`/`fx_rate`); OHLC-Label-
+Migrationstest (nach UPDATE liefert `get_ohlc_history(..., "EUR")` die
+migrierten Zeilen, `"USD"` liefert nichts mehr; `ui/charts.py::
+KRAKEN_PAIR_MAP` bestaetigt frei von allen 5 Themen-ETF-Symbolen); JIT-
+Burst-Schutz (zwei Aufrufe kurz hintereinander -> genau 1 echter Abruf, nach
+Ablauf des 60-Min.-Fensters wieder erlaubt); Graceful-Degradation (fehlendes
+`yfinance_symbol`, werfender Fake-Client, Config-Schalter aus - je kein
+Fehler, kein Abruf); statischer Regressions-Grep (keine verbliebenen rohen
+`entry.get("eur_von")`-Vorkommen ausserhalb der bewusst beibehaltenen
+Beobachtungs-Vergleiche in `log_eur_abweichungen()`); Compile-/Import-
+Regressionscheck ueber alle 6 geaenderten Module UND alle bekannten
+Konsumenten (`agent/multi_asset_batch.py`, `scheduler/background.py`,
+`ui/charts.py`, `remote/status.py`, `remote/server.py`) OK.
+
+**Ausstehend:** echter Notebook-Lauf (Nutzer) - ein Rohstoff-Signal nach dem
+Fix beobachten, ob `outcome_status` nicht mehr sofort `take_profit_erreicht`
+wird; `historische_erfolgsquote` fuer Rohstoffe nach einigen Tagen erneut
+gegenchecken (sollte sich strukturell veraendern, da die bisherige Quote auf
+dem Skalierungsbug beruhte); Migrationsskript `migrate_themen_etf_ohlc_
+currency.py --apply` auf dem Notebook ausfuehren.
