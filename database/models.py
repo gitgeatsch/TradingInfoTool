@@ -303,6 +303,13 @@ class Signal:
     fazit_kurzfazit: str | None = None
     fazit_konsistenz_hinweis: str | None = None
 
+    # Z.ai-Konsistenz-Check (2026-07-27, Ausweitung von HebelSignal auf Spot -
+    # siehe agent/krypto/gegenpruefung.py Modul-Docstring "Erweiterung") - NUR
+    # der Konsistenz-Teil, kein Richtungs-Abgleich (Signal/Spot hat kein
+    # richtung-Feld, siehe HebelSignal.zai_eigene_richtung fuer das Pendant).
+    zai_gegenpruefung_urteil: str | None = None  # 'konsistent'|'widerspruch'
+    zai_gegenpruefung_kurzbegruendung: str | None = None
+
 
 @dataclass
 class MarktscanCandidate:

@@ -9357,3 +9357,98 @@ gezielte, klein wirkende Prompt-Praezisierung kann unbeabsichtigt eine
 bestehende, korrekte Erkennung in einer ANDEREN Aktionsklasse aufweichen -
 ein Live-A/B-Test gegen einen bekannten POSITIVEN Referenzfall (hier: KAIA)
 ist deshalb genauso wichtig wie der Test gegen den eigentlichen Zielfall.
+
+## Nachtrag (2026-07-27): Z.ai-Konsistenz-Check auf Spot-Signale ausgeweitet (nicht der Richtungs-Abgleich)
+
+Nutzer-Nachfrage: warum gibt es die Z.ai-Gegenpruefung nur bei Hebel, nicht bei
+Spot? Antwort nach Recherche: reine "Scope v1"-Eingrenzung (Hebel zuerst, da
+hoeherer Einsatz durch Liquidationsrisiko - gleiches Muster wie bei
+Liquiditaetszonen-Grafik/Retail-Konsens-Fakt-zuerst, die beide zuerst bei
+Hebel gebaut und spaeter auf Spot nachgezogen wurden), kein Kosten-/
+Kapazitaetsgrund (Z.ai laeuft ueber `glm-4.5-flash`, eines der dauerhaft
+kostenlosen Modelle, Rate-Limit 120/Min, kein wirksames Tagesbudget mehr auf
+diesem Pfad). Nutzer-Entscheidung: Ausweitung umsetzen, NUR der Konsistenz-
+Check (`pruefe_konsistenz()`), NICHT der unabhaengige Richtungs-Abgleich
+(`leite_eigene_richtung()`) - Spot-Signale kennen kein `richtung`/LONG-SHORT-
+Konzept, eine Ausweitung des Richtungs-Abgleichs wuerde eine neue, eigene
+Interpretation erfordern (z.B. KAUFEN/VERKAUFEN statt LONG/SHORT) und war
+nicht angefragt.
+
+### Umsetzung
+
+- `agent/krypto/gegenpruefung.py`: `baue_fakten()`s `richtung`-Parameter jetzt
+  optional (Default None, ans Ende der Signatur verschoben) - fehlt er, wird
+  der Schluessel im Fakten-Dict komplett weggelassen statt mit einem
+  erfundenen Wert befuellt. Der SYSTEM_PROMPT musste NICHT angepasst werden:
+  die TEILVERKAUF/SCHLIESSEN/HEBEL_SENKEN-Klausel (siehe Nachtrag oben) greift
+  nur bei diesen drei Hebel-exklusiven Aktionsnamen - Spot-Aktionen
+  (KAUFEN/VERKAUFEN/TAUSCHEN/NACHKAUFEN/HALTEN) fallen automatisch unter die
+  "ALLEN anderen Aktionen"-Regel.
+- `database/models.py`: `Signal`-Dataclass um `zai_gegenpruefung_urteil`/
+  `zai_gegenpruefung_kurzbegruendung` erweitert - bewusst NUR diese 2 Felder
+  (kein `zai_eigene_richtung`/`zai_uebereinstimmung`/
+  `zai_richtung_kurzbegruendung` wie bei `HebelSignal`, da kein Richtungs-
+  Abgleich fuer Spot).
+- `database/db.py`: additive Migration `_migrate_signal_zai_gegenpruefung_
+  columns()` (analog zur bestehenden Hebel-Migration, nur `signals` statt
+  `hebel_signals`, nur 2 statt 5 Spalten) + neue, schlankere
+  `update_signal_zai_gegenpruefung()`.
+- `agent/krypto/pipeline.py`: neue `_zai_konsistenz_im_hintergrund()`
+  (Spot-Pendant zu `hebel_pipeline.py::_zai_gegenpruefung_im_hintergrund()`,
+  nur der Konsistenz-Teil), `generate_signal()` bekommt `zai_client=None`-
+  Parameter, Dispatch direkt nach `db.insert_signal()` (gleiches
+  Async-Thread-Muster wie bei Hebel - Z.ai hat einen 150s-Timeout, ein
+  synchroner Call vor `return signal` wuerde den `on_signal_ready`-E-Mail-
+  Callback verzoegern).
+- `agent/krypto/budget_allocator.py`: `zai_client=zai_client` an beide Spot-
+  Tier-3-Aufrufe (Mistral/Gemini) durchgereicht - `run_budget_allocator()`
+  hatte den Parameter bereits (Hebel nutzte ihn schon).
+- `ui/signals_view.py`: `format_zai_gegenpruefung_lines()`-Block im Detail-
+  Panel ergaenzt (identisch zu `ui/hebel_view.py`, Richtungs-Parameter bewusst
+  `None`).
+- `scheduler/background.py`: `_formatiere_zai_gegenpruefung()` in
+  `_notify_spot_signal()`s E-Mail-Body eingehaengt. **Echter Fund dabei:** die
+  Funktion griff bisher DIREKT auf `signal.zai_eigene_richtung` zu - waere bei
+  einem `Signal`-Objekt (das dieses Feld bewusst NICHT traegt) mit
+  `AttributeError` abgestuerzt. Auf `getattr(signal, "zai_eigene_richtung",
+  None)` (und die beiden zugehoerigen Folgefelder) umgestellt - funktioniert
+  dadurch unveraendert fuer `HebelSignal` UND `Signal`, ohne dass `Signal` die
+  drei ungenutzten Richtungs-Felder tragen muesste. Docstring (behauptete
+  faelschlich "Signal (Spot) hat diese Felder nicht") korrigiert.
+- `extract_notebook_diagnose.py`: `_SPOT_SIGNAL_SPALTEN` um die 2 neuen
+  Konsistenz-Spalten ergaenzt (analog zu `_HEBEL_SIGNAL_SPALTEN`, dort aber 5
+  Spalten wegen des zusaetzlichen Richtungs-Abgleichs).
+
+### Eigener Fund waehrend der Verifikation: Test haette beinahe die echte lokale Desktop-DB beruehrt
+
+Ein erster Testlauf von `_zai_konsistenz_im_hintergrund()` gegen eine isolierte
+Temp-DB schlug fehl mit `sqlite3.OperationalError: no such column`. Ursache:
+`database/db.py::get_connection()` verwendet einen FEST verdrahteten
+`DB_PATH` (`data/tradinginfotool.db`, die echte lokale Desktop-DB) statt der
+im Test uebergebenen Connection - der Hintergrund-Thread ruft `db.
+get_connection()` intern selbst auf (bewusst, siehe Docstring: eigene
+Connection noetig, da sqlite3-Connections nicht Thread-uebergreifend geteilt
+werden koennen), umgeht dadurch aber jede von aussen injizierte Test-
+Connection. Der Fehler kam VOR jedem `commit()`, es wurde nachweislich nichts
+geschrieben (per Nachkontrolle der echten Datei bestaetigt: weder die neue
+Spalte noch ein Test-Datensatz vorhanden) - trotzdem ein echter Beinahe-
+Verstoss gegen [[feedback_desktop_kein_produktivstart]]. Test korrigiert:
+`db.get_connection` fuer die Testdauer per Monkeypatch auf die isolierte
+Temp-DB umgebogen, danach sauber zurueckgesetzt. **Lehre:** bei jedem Test
+einer Funktion, die intern selbst eine neue DB-Connection oeffnet (statt eine
+uebergebene zu nutzen - hier bewusst wegen Thread-Sicherheit), muss der Test
+diese interne Connection-Erzeugung selbst isolieren, eine isolierte Connection
+nur an der Aufruf-Oberflaeche zu uebergeben reicht nicht.
+
+**Verifiziert:** Compile-/Import-Regressionscheck (8 geaenderte Dateien +
+4 Hebel-Module als Regressionscheck). DB-Migration + Idempotenz gegen
+isolierte Temp-DB. `baue_fakten()` mit/ohne `richtung` (Keyword-Aufruf).
+Echter Live-Test von `_zai_konsistenz_im_hintergrund()` gegen die echte
+Z.ai-API (isolierte Temp-DB, korrekt erkannter Widerspruch). `_formatiere_
+zai_gegenpruefung()` mit Signal-artigem Stub (kein `AttributeError`, korrekt
+nur Konsistenz-Zeile) UND Hebel-artigem Stub (Regressionscheck, Richtungsteil
+weiterhin korrekt). `format_zai_gegenpruefung_lines()` Spot-Aufruf (nur 1
+Zeile). Kein manueller Button (Signale-Tab-Batch, Hebel-Tab "Jetzt
+analysieren") einbezogen - gleiche Einschraenkung besteht bereits fuer Hebel
+(Gegenpruefung laeuft dort ebenfalls nur automatisch ueber den
+Budget-Allocator, nicht bei manuellen Einzelklicks).

@@ -740,6 +740,24 @@ def _migrate_zai_gegenpruefung_columns(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+_ZAI_GEGENPRUEFUNG_SPOT_NEW_COLUMNS = {
+    "zai_gegenpruefung_urteil": "TEXT", "zai_gegenpruefung_kurzbegruendung": "TEXT",
+}
+
+
+def _migrate_signal_zai_gegenpruefung_columns(conn: sqlite3.Connection) -> None:
+    """Nachtrag 2026-07-27 - Ausweitung von _migrate_zai_gegenpruefung_columns()
+    (nur hebel_signals) auf `signals` (Spot): NUR der Konsistenz-Check-Teil
+    (2 Spalten), NICHT der Richtungs-Abgleich (3 weitere Spalten bei Hebel) -
+    Signal (Spot) hat kein richtung/LONG-SHORT-Konzept, siehe
+    agent/krypto/gegenpruefung.py Modul-Docstring "Erweiterung"."""
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(signals)")}
+    for column, sql_type in _ZAI_GEGENPRUEFUNG_SPOT_NEW_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE signals ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
 _CASH_VETO_NEW_COLUMNS = {"cash_veto": "INTEGER", "cash_veto_reason": "TEXT"}
 
 
@@ -871,6 +889,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_kontrathese_columns(conn)
     _migrate_signal_fazit_columns(conn)
     _migrate_zai_gegenpruefung_columns(conn)
+    _migrate_signal_zai_gegenpruefung_columns(conn)
     import_holdings_manual_overrides(conn)
 
 
@@ -2826,6 +2845,23 @@ def update_hebel_signal_zai_gegenpruefung(
             urteil, kurzbegruendung, eigene_richtung, uebereinstimmung,
             richtung_kurzbegruendung, hebel_signal_id,
         ),
+    )
+    conn.commit()
+
+
+def update_signal_zai_gegenpruefung(
+    conn: sqlite3.Connection, signal_id: int, urteil: str | None, kurzbegruendung: str | None,
+) -> None:
+    """Spot-Pendant zu update_hebel_signal_zai_gegenpruefung() - NUR der
+    Konsistenz-Check-Teil (2026-07-27, siehe agent/krypto/gegenpruefung.py
+    Modul-Docstring "Erweiterung"). Signal (Spot) hat kein
+    zai_eigene_richtung/zai_uebereinstimmung/zai_richtung_kurzbegruendung -
+    kein Richtungs-Abgleich fuer Spot, daher keine der Ueberschreib-Vorsicht
+    von update_hebel_signal_zai_gegenpruefung() noetig."""
+    conn.execute(
+        "UPDATE signals SET zai_gegenpruefung_urteil = ?, zai_gegenpruefung_kurzbegruendung = ? "
+        "WHERE id = ?",
+        (urteil, kurzbegruendung, signal_id),
     )
     conn.commit()
 

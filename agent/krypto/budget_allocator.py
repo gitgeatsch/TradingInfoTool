@@ -658,14 +658,22 @@ def run_budget_allocator(
         calls = []
         if mistral_client is not None:
             calls.append(("mistral", lambda a=asset: _mit_conn(
-                lambda c: generate_signal(a, watchlist, c, mistral_client, coingecko_client, kraken_client, fred_api_key)
+                lambda c: generate_signal(
+                    a, watchlist, c, mistral_client, coingecko_client, kraken_client, fred_api_key,
+                    zai_client=zai_client,
+                )
             )))
         if gemini_client is not None:
             calls.append(("gemini", lambda a=asset: _mit_conn(
-                lambda c: generate_signal(a, watchlist, c, gemini_client, coingecko_client, kraken_client, fred_api_key)
+                lambda c: generate_signal(
+                    a, watchlist, c, gemini_client, coingecko_client, kraken_client, fred_api_key,
+                    zai_client=zai_client,
+                )
             )))
-        # Z.ai (2026-07-26) NICHT mehr Teil dieser Fallback-Kette - siehe
-        # Hebel-Kandidatenschleife oben fuer die Begruendung.
+        # Z.ai (2026-07-26) NICHT mehr Teil dieser Fallback-Kette als
+        # Primaer-Analyst - wird oben aber bereits als zai_client fuer die
+        # Konsistenz-Gegenpruefung durchgereicht (2026-07-27, Ausweitung von
+        # Hebel auf Spot, siehe agent/krypto/gegenpruefung.py Modul-Docstring).
         ok = _mit_fallback_chain(schluessel, calls)
         if ok:
             result.spot_verarbeitet.append(schluessel)

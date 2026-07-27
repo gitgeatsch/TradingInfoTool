@@ -82,7 +82,19 @@ Gegenpruefung ueber Zeit als tatsaechlich treffsicher erweist (Nutzer-
 Position 2026-07-26: "eher zu bezweifeln, es sei denn die Gegenpruefung ist
 so erfolgreich, dass dies tatsaechlich als Modell dienen kann").
 
-Scope v1: nur Hebel (siehe budget_allocator.py-Docstring)."""
+Scope v1: nur Hebel (siehe budget_allocator.py-Docstring).
+
+Erweiterung (2026-07-27): der Konsistenz-Check (`pruefe_konsistenz()`) laeuft
+jetzt auch fuer Spot-Signale (agent/krypto/pipeline.py), NICHT der
+unabhaengige Richtungs-Abgleich (`leite_eigene_richtung()`, bleibt Hebel-only
+- Spot-Signale kennen kein `richtung`/LONG-SHORT-Konzept). `baue_fakten()`
+bekommt dafuer ein optionales `richtung`-Argument (Default None) - fehlt es
+(Spot-Aufruf), wird der Schluessel im Fakten-Dict komplett weggelassen statt
+mit einem erfundenen Wert befuellt. Der SYSTEM_PROMPT unten muss dafuer NICHT
+angepasst werden: seine TEILVERKAUF/SCHLIESSEN/HEBEL_SENKEN-Klausel greift
+nur bei genau diesen drei (Hebel-exklusiven) Aktionsnamen - Spot-Aktionen
+(KAUFEN/VERKAUFEN/TAUSCHEN/NACHKAUFEN/HALTEN) fallen automatisch unter die
+"ALLEN anderen Aktionen"-Regel, exakt wie vor der Kontrathese-Erweiterung."""
 from __future__ import annotations
 
 import json
@@ -127,7 +139,6 @@ def _funding_rate_vorzeichen_text(funding_rate_stunde: float | None) -> str | No
 
 def baue_fakten(
     symbol: str,
-    richtung: str,
     action: str,
     confidence_pct: float | None,
     rsi: float | None,
@@ -138,15 +149,19 @@ def baue_fakten(
     confluence_bearish: int,
     confluence_neutral: int,
     optionsmarkt_skew: float | None,
+    richtung: str | None = None,
 ) -> dict:
     """Bewusst schmale Faktenmenge (siehe Modul-Docstring) - live verifiziert,
     dass eine reichere Menge (inkl. Optionsmarkt-Skew) KEINE zusaetzliche
     Antwortzeit kostet gegenueber einer minimalen Menge (12-16s in beiden
-    Faellen), also keine Notwendigkeit, hier weiter zu kuerzen."""
-    fakten = {
-        "symbol": symbol, "richtung": richtung, "action": action,
-        "confidence_pct": confidence_pct,
-    }
+    Faellen), also keine Notwendigkeit, hier weiter zu kuerzen.
+
+    `richtung` optional (Default None, 2026-07-27) - Spot-Signale haben kein
+    LONG/SHORT-Konzept, der Schluessel wird dann komplett weggelassen statt
+    mit einem erfundenen Wert befuellt (siehe Modul-Docstring "Erweiterung")."""
+    fakten = {"symbol": symbol, "action": action, "confidence_pct": confidence_pct}
+    if richtung is not None:
+        fakten["richtung"] = richtung
     if rsi is not None:
         fakten["rsi"] = round(rsi, 1)
     if trend_label:

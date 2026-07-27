@@ -22,7 +22,7 @@ import ui.theme as theme
 from ui.detail_panel import configure_tags, render_detail_text
 from ui.formatting import (
     RISIKOFAKTOREN_LEGENDE, format_fazit_lines, format_money, format_risikofaktoren_lines,
-    format_zeitpunkt_lokal,
+    format_zai_gegenpruefung_lines, format_zeitpunkt_lokal,
 )
 from ui.heading_tooltip import add_heading_tooltips
 from ui.sortable_tree import make_sortable
@@ -540,6 +540,17 @@ class SignalsView(ttk.Frame):
         if fazit_lines:
             lines.append("")
             lines.extend(fazit_lines)
+
+        # Z.ai-Konsistenz-Check (2026-07-27, von Hebel nachgezogen, siehe
+        # ui/hebel_view.py fuer das Original) - nur der Konsistenz-Teil, kein
+        # Richtungs-Abgleich (Signal/Spot hat kein richtung-Feld).
+        zai_lines = format_zai_gegenpruefung_lines(
+            signal.zai_gegenpruefung_urteil, signal.zai_gegenpruefung_kurzbegruendung,
+            None, None, None,
+        )
+        if zai_lines:
+            lines.append("")
+            lines.extend(zai_lines)
 
         self._set_detail_text("\n".join(lines))
         self._render_liquiditaetszonen_chart(signal)

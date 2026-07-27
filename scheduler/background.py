@@ -1151,9 +1151,15 @@ def _formatiere_zai_gegenpruefung(signal) -> str:
     ui/formatting.py::format_zai_gegenpruefung_lines() fuer die App). Zwei
     unabhaengige Zeilen (Konsistenz-Check der Begruendung gegen Abschnitt 2,
     NICHT gegen das Fazit + eigene, unabhaengig hergeleitete Richtungs-
-    einschaetzung im Vergleich zur primaeren Richtung) - Hebel-only (siehe
-    Modul-Docstring in agent/krypto/gegenpruefung.py), Signal (Spot) hat
-    diese Felder nicht."""
+    einschaetzung im Vergleich zur primaeren Richtung).
+
+    Erweitert (2026-07-27): der Konsistenz-Teil laeuft jetzt auch fuer Signal
+    (Spot), siehe agent/krypto/gegenpruefung.py Modul-Docstring "Erweiterung" -
+    Signal hat ABER kein zai_eigene_richtung/zai_uebereinstimmung/
+    zai_richtung_kurzbegruendung (kein richtung-Konzept bei Spot), deshalb
+    hier bewusst getattr() mit Default None statt direktem Attributzugriff -
+    funktioniert dadurch unveraendert fuer HebelSignal UND Signal, ohne dass
+    Signal diese drei ungenutzten Felder tragen muesste."""
     zeilen = []
     if signal.zai_gegenpruefung_urteil:
         symbol = _ZAI_KONSISTENZ_SYMBOL.get(signal.zai_gegenpruefung_urteil, "●")
@@ -1161,16 +1167,18 @@ def _formatiere_zai_gegenpruefung(signal) -> str:
             f"{symbol} Z.ai-Gegenprüfung der Begründung: {signal.zai_gegenpruefung_urteil} - "
             f"{signal.zai_gegenpruefung_kurzbegruendung or ''}"
         )
-    if signal.zai_eigene_richtung:
-        symbol = _ZAI_UEBEREINSTIMMUNG_SYMBOL.get(signal.zai_uebereinstimmung, "●")
+    zai_eigene_richtung = getattr(signal, "zai_eigene_richtung", None)
+    if zai_eigene_richtung:
+        zai_uebereinstimmung = getattr(signal, "zai_uebereinstimmung", None)
+        symbol = _ZAI_UEBEREINSTIMMUNG_SYMBOL.get(zai_uebereinstimmung, "●")
         abgleich_text = (
-            "stimmt überein" if signal.zai_uebereinstimmung == "ja"
-            else "weicht ab" if signal.zai_uebereinstimmung == "nein"
+            "stimmt überein" if zai_uebereinstimmung == "ja"
+            else "weicht ab" if zai_uebereinstimmung == "nein"
             else "unklar"
         )
         zeilen.append(
-            f"{symbol} Z.ai eigene Richtungseinschätzung: {signal.zai_eigene_richtung} ({abgleich_text}) - "
-            f"{signal.zai_richtung_kurzbegruendung or ''}"
+            f"{symbol} Z.ai eigene Richtungseinschätzung: {zai_eigene_richtung} ({abgleich_text}) - "
+            f"{getattr(signal, 'zai_richtung_kurzbegruendung', None) or ''}"
         )
     return "\n\n".join(zeilen)
 
@@ -1218,6 +1226,7 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None, c
         forecast_text = _formatiere_forecast(signal)
         risikofaktoren_text = _formatiere_risikofaktoren(signal)
         fazit_text = _formatiere_fazit(signal)
+        zai_text = _formatiere_zai_gegenpruefung(signal)
         zeitpunkt_text = _formatiere_zeitpunkt_lokal(signal.created_at)
         body = (
             f"Aktion: {signal.action}\n"
@@ -1239,6 +1248,7 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None, c
             + f"{_RISIKOFAKTOREN_LEGENDE}\n\n"
             + (risikofaktoren_text if risikofaktoren_text else "Keine strukturierten Risikofaktoren verfügbar.")
             + (f"\n\n{fazit_text}" if fazit_text else "")
+            + (f"\n\n{zai_text}" if zai_text else "")
             + "\n\nDetails im Signale-Tab der App. Ausführung manuell über die Bitpanda-App."
         )
         # Liquiditätszonen-Grafik (2026-07-25, von Hebel nachgezogen - siehe

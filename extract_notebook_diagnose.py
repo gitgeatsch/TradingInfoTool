@@ -211,6 +211,12 @@ _SPOT_SIGNAL_SPALTEN = (
     "tranchen_json, cash_reserve_ziel_btc_usd, cash_reserve_ziel_eth_usd, "
     "cash_reserve_ziel_gesamt_usd, cash_reserve_ziel_begruendung, "
     "umgesetzt, umgesetzt_am, umgesetzt_menge, umgesetzt_preis_usd, "
+    # Z.ai-Konsistenz-Check (2026-07-27, Ausweitung von hebel_signals auf
+    # signals - siehe agent/krypto/gegenpruefung.py Modul-Docstring
+    # "Erweiterung") - nur die 2 Konsistenz-Spalten, kein Richtungs-Abgleich
+    # (Spot hat kein richtung-Feld, siehe _HEBEL_SIGNAL_SPALTEN fuer die
+    # vollen 5 Hebel-Spalten zum Vergleich).
+    "zai_gegenpruefung_urteil, zai_gegenpruefung_kurzbegruendung, "
     + _VOLLSTAENDIGKEITS_SPALTEN
 )
 
