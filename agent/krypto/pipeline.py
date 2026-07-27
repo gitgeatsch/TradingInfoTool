@@ -24,7 +24,12 @@ from agent.krypto.backward_tracking import (
     schaetze_mindestziel_zeitraum_tage,
 )
 from agent.krypto.btc_relativwert import btc_relativwert_fakt
-from agent.krypto.gegenpruefung import baue_fakten as baue_zai_fakten, pruefe_konsistenz as zai_pruefe_konsistenz
+from agent.krypto.gegenpruefung import (
+    baue_fakten as baue_zai_fakten,
+    baue_objektive_fakten as baue_zai_objektive_fakten,
+    fuehre_beide_calls_im_hintergrund,
+    richtung_aus_action,
+)
 from agent.krypto.liquidity_zones import liquiditaetszonen_fakt
 from agent.krypto.makro_analog import get_cached_makro_analog_fact
 from agent.krypto.signal_stabilitaet import (
@@ -47,32 +52,6 @@ MIN_GATE_INDICATORS_AVAILABLE = ("rsi", "macd", "bollinger")
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
-
-
-def _zai_konsistenz_im_hintergrund(signal_id: int, fakten: dict, begruendungstext: str | None, zai_client) -> None:
-    """Spot-Pendant zu hebel_pipeline.py::_zai_gegenpruefung_im_hintergrund() -
-    NUR der Konsistenz-Check (2026-07-27, siehe agent/krypto/gegenpruefung.py
-    Modul-Docstring "Erweiterung"), kein unabhaengiger Richtungs-Abgleich
-    (Signal/Spot hat kein richtung-Feld). Eigener Thread + eigene DB-
-    Connection aus demselben Grund wie beim Hebel-Original: Z.ai hat einen
-    150s-Timeout (api/zai.py::REQUEST_TIMEOUT_SECONDS), ein synchroner Call
-    vor `return signal` wuerde generate_signal() selbst verzoegern und damit
-    auch den on_signal_ready-E-Mail-Callback in budget_allocator.py (feuert
-    erst NACH der Rueckkehr dieser Funktion)."""
-    try:
-        konsistenz_ergebnis = zai_pruefe_konsistenz(zai_client, fakten, begruendungstext)
-        if konsistenz_ergebnis is None:
-            return
-        thread_conn = db.get_connection()
-        try:
-            db.update_signal_zai_gegenpruefung(
-                thread_conn, signal_id,
-                konsistenz_ergebnis.get("urteil"), konsistenz_ergebnis.get("kurzbegruendung"),
-            )
-        finally:
-            thread_conn.close()
-    except Exception:
-        logger.exception("Z.ai-Konsistenzpruefung (Spot) im Hintergrund-Thread fehlgeschlagen (signal_id=%s)", signal_id)
 
 
 def _fixed_signal(
@@ -964,21 +943,26 @@ def generate_signal(
     new_id = db.insert_signal(conn, signal)
     signal.id = new_id
 
-    # Z.ai-Konsistenz-Check (2026-07-27, Ausweitung von hebel_pipeline.py auf
-    # Spot) - rein beobachtend, laeuft asynchron NACH dem Insert, siehe
-    # _zai_konsistenz_im_hintergrund()-Docstring. Kein optionsmarkt-Fakt hier
-    # (nur Hebel hat fetch_optionsmarkt_fakt(), siehe Modul-Docstring dort),
-    # kein richtung-Fakt (Spot kennt kein LONG/SHORT).
+    # Z.ai-Gegenpruefung (2026-07-27, Ausweitung von hebel_pipeline.py auf
+    # Spot; seit der "Vollstaendige Vereinheitlichung" auch der unabhaengige
+    # Richtungs-Abgleich, nicht mehr nur der Konsistenz-Check) - rein
+    # beobachtend, laeuft asynchron NACH dem Insert, siehe gegenpruefung.
+    # fuehre_beide_calls_im_hintergrund()-Docstring. Kein optionsmarkt-Fakt
+    # hier (nur Hebel hat fetch_optionsmarkt_fakt(), siehe Modul-Docstring
+    # dort). Spot kennt kein echtes richtung-Feld - richtung_aus_action()
+    # leitet die fuer den Vergleich erwartete Richtung deterministisch aus
+    # der Action ab (HALTEN/TAUSCHEN-Sonderfaelle siehe dortiger Docstring).
     if zai_client is not None:
         ema_ordnung_item = next(
             (item for item in confluence.items if item.indicator == "EMA-Ordnung"), None,
         )
         trend_label = ema_ordnung_item.detail if ema_ordnung_item else None
+        rsi_wert = latest_value(snapshot.rsi)
         zai_fakten = baue_zai_fakten(
             symbol=asset.symbol,
             action=corrected.get("action"),
             confidence_pct=corrected.get("confidence_pct"),
-            rsi=latest_value(snapshot.rsi),
+            rsi=rsi_wert,
             trend_label=trend_label,
             regime=regime_result.regime,
             funding_rate_stunde=anticyclic_context.funding_rate_current,
@@ -987,9 +971,25 @@ def generate_signal(
             confluence_neutral=confluence.neutral_count,
             optionsmarkt_skew=None,
         )
+        zai_objektive_fakten = baue_zai_objektive_fakten(
+            symbol=asset.symbol,
+            rsi=rsi_wert,
+            trend_label=trend_label,
+            regime=regime_result.regime,
+            funding_rate_stunde=anticyclic_context.funding_rate_current,
+            confluence_bullish=confluence.bullish_count,
+            confluence_bearish=confluence.bearish_count,
+            confluence_neutral=confluence.neutral_count,
+            optionsmarkt_skew=None,
+        )
+        primaer_richtung_erwartet = richtung_aus_action(corrected.get("action"))
         threading.Thread(
-            target=_zai_konsistenz_im_hintergrund,
-            args=(new_id, zai_fakten, corrected.get("short_reasoning"), zai_client),
+            target=fuehre_beide_calls_im_hintergrund,
+            args=(
+                new_id, zai_fakten, corrected.get("short_reasoning"),
+                zai_objektive_fakten, primaer_richtung_erwartet, zai_client,
+                db.update_signal_zai_gegenpruefung,
+            ),
             daemon=True,
         ).start()
 

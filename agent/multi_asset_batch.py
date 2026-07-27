@@ -116,6 +116,7 @@ def run_multi_asset_batch(
     config_dict: dict,
     gemini_client=None,
     mistral_client=None,
+    zai_client=None,
 ) -> MultiAssetBatchResult:
     result = MultiAssetBatchResult()
     cfg = config_dict.get("multi_asset_batch", {})
@@ -188,11 +189,11 @@ def run_multi_asset_batch(
         calls = []
         if mistral_client is not None:
             calls.append(("mistral", lambda a=asset, fn=pipeline_fn, kw=extra_kwargs: _mit_conn(
-                lambda c: fn(a, watchlist, c, mistral_client, coingecko_client, **kw)
+                lambda c: fn(a, watchlist, c, mistral_client, coingecko_client, zai_client=zai_client, **kw)
             )))
         if gemini_client is not None:
             calls.append(("gemini", lambda a=asset, fn=pipeline_fn, kw=extra_kwargs: _mit_conn(
-                lambda c: fn(a, watchlist, c, gemini_client, coingecko_client, **kw)
+                lambda c: fn(a, watchlist, c, gemini_client, coingecko_client, zai_client=zai_client, **kw)
             )))
 
         ok = False

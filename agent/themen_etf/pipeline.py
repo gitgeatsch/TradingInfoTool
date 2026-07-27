@@ -28,6 +28,12 @@ import agent.kategorie_thesen as kategorie_thesen
 import config
 import database.db as db
 from agent.krypto.backward_tracking import compute_win_rate_fact
+from agent.krypto.gegenpruefung import (
+    baue_fakten as baue_zai_fakten,
+    baue_objektive_fakten as baue_zai_objektive_fakten,
+    fuehre_beide_calls_im_hintergrund,
+    richtung_aus_action,
+)
 from agent.krypto.llm_provider import llm_model_label
 from agent.krypto.makro_analog import get_cached_makro_analog_fact
 from agent.krypto.pipeline import (
@@ -42,7 +48,7 @@ from agent.themen_etf.analyst import (
 from api.yfinance_client import resolve_native_currency
 from api.yfinance_history import get_full_ohlc_history
 from database.models import Signal
-from indicators.calculations import build_technical_snapshot, summarize_confluence
+from indicators.calculations import build_technical_snapshot, latest_value, summarize_confluence
 from staleness import is_price_stale
 
 logger = logging.getLogger(__name__)
@@ -209,7 +215,7 @@ def _compute_sektor_rotation(conn, symbol: str, etf_closes: np.ndarray) -> dict 
     }
 
 
-def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Signal:
+def generate_signal(asset, watchlist, conn, llm_client, coingecko_client, zai_client=None) -> Signal:
     """Analog zu agent/rohstoff/pipeline.py::generate_signal(). `watchlist` muss die
     VOLLSTAENDIGE Watchlist sein (inkl. BTC) - compute_current_regime() braucht
     zwingend ein BTC-Asset darin. Fuer pre_check()'s RM-2-Allokations-Berechnung wird
@@ -433,5 +439,54 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client) -> Sig
         groq_model=llm_model_label(llm_client),
         **top_grund_fields,
     )
-    db.insert_signal(conn, signal)
+    new_id = db.insert_signal(conn, signal)
+    signal.id = new_id
+
+    # Z.ai-Gegenpruefung (Ausweitung auf Themen-ETF, siehe agent/krypto/
+    # gegenpruefung.py Modul-Docstring "Vollstaendige Vereinheitlichung") -
+    # rein beobachtend, laeuft asynchron NACH dem Insert. Kein funding_rate/
+    # optionsmarkt-Fakt (Krypto-Perpetual/Deribit-exklusiv). richtung_aus_
+    # action() leitet die fuer den Vergleich erwartete Richtung deterministisch
+    # aus der Action ab (HALTEN -> kein Vergleich).
+    if zai_client is not None:
+        ema_ordnung_item = next(
+            (item for item in confluence.items if item.indicator == "EMA-Ordnung"), None,
+        )
+        trend_label = ema_ordnung_item.detail if ema_ordnung_item else None
+        rsi_wert = latest_value(snapshot.rsi)
+        zai_fakten = baue_zai_fakten(
+            symbol=asset.symbol,
+            action=corrected.get("action"),
+            confidence_pct=corrected.get("confidence_pct"),
+            rsi=rsi_wert,
+            trend_label=trend_label,
+            regime=regime_result.regime,
+            funding_rate_stunde=None,
+            confluence_bullish=confluence.bullish_count,
+            confluence_bearish=confluence.bearish_count,
+            confluence_neutral=confluence.neutral_count,
+            optionsmarkt_skew=None,
+        )
+        zai_objektive_fakten = baue_zai_objektive_fakten(
+            symbol=asset.symbol,
+            rsi=rsi_wert,
+            trend_label=trend_label,
+            regime=regime_result.regime,
+            funding_rate_stunde=None,
+            confluence_bullish=confluence.bullish_count,
+            confluence_bearish=confluence.bearish_count,
+            confluence_neutral=confluence.neutral_count,
+            optionsmarkt_skew=None,
+        )
+        primaer_richtung_erwartet = richtung_aus_action(corrected.get("action"))
+        threading.Thread(
+            target=fuehre_beide_calls_im_hintergrund,
+            args=(
+                new_id, zai_fakten, corrected.get("short_reasoning"),
+                zai_objektive_fakten, primaer_richtung_erwartet, zai_client,
+                db.update_signal_zai_gegenpruefung,
+            ),
+            daemon=True,
+        ).start()
+
     return signal

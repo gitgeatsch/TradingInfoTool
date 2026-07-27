@@ -327,11 +327,19 @@ class Signal:
     fazit_konsistenz_hinweis: str | None = None
 
     # Z.ai-Konsistenz-Check (2026-07-27, Ausweitung von HebelSignal auf Spot -
-    # siehe agent/krypto/gegenpruefung.py Modul-Docstring "Erweiterung") - NUR
-    # der Konsistenz-Teil, kein Richtungs-Abgleich (Signal/Spot hat kein
-    # richtung-Feld, siehe HebelSignal.zai_eigene_richtung fuer das Pendant).
+    # siehe agent/krypto/gegenpruefung.py Modul-Docstring "Erweiterung").
     zai_gegenpruefung_urteil: str | None = None  # 'konsistent'|'widerspruch'
     zai_gegenpruefung_kurzbegruendung: str | None = None
+    # Richtungs-Abgleich (Nachtrag 2026-07-27, Ausweitung von Z.ai auf alle
+    # Assetklassen) - Pendant zu HebelSignal.zai_eigene_richtung etc. Spot-
+    # family hat kein echtes richtung-Feld (KAUFEN/VERKAUFEN/NACHKAUFEN/
+    # TAUSCHEN/HALTEN statt LONG/SHORT) - agent/krypto/gegenpruefung.py::
+    # richtung_aus_action() leitet die fuer den Vergleich erwartete Richtung
+    # deterministisch aus der Action ab. uebereinstimmung wird wie bei Hebel
+    # deterministisch in Python verglichen, nicht vom LLM selbst beurteilt.
+    zai_eigene_richtung: str | None = None  # 'LONG'|'SHORT'|'NEUTRAL'
+    zai_uebereinstimmung: str | None = None  # 'ja'|'nein'
+    zai_richtung_kurzbegruendung: str | None = None
 
 
 @dataclass

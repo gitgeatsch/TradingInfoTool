@@ -792,15 +792,23 @@ def _migrate_zai_gegenpruefung_columns(conn: sqlite3.Connection) -> None:
 
 _ZAI_GEGENPRUEFUNG_SPOT_NEW_COLUMNS = {
     "zai_gegenpruefung_urteil": "TEXT", "zai_gegenpruefung_kurzbegruendung": "TEXT",
+    # Richtungs-Abgleich (Nachtrag 2026-07-27, Ausweitung von Z.ai auf alle
+    # Assetklassen) - Pendant zu HebelSignal.zai_eigene_richtung etc. Spot-
+    # family-Aktionen (KAUFEN/VERKAUFEN/NACHKAUFEN/TAUSCHEN/HALTEN) haben kein
+    # echtes LONG/SHORT-Feld, siehe agent/krypto/gegenpruefung.py::
+    # richtung_aus_action() fuer das deterministische Mapping.
+    "zai_eigene_richtung": "TEXT", "zai_uebereinstimmung": "TEXT",
+    "zai_richtung_kurzbegruendung": "TEXT",
 }
 
 
 def _migrate_signal_zai_gegenpruefung_columns(conn: sqlite3.Connection) -> None:
     """Nachtrag 2026-07-27 - Ausweitung von _migrate_zai_gegenpruefung_columns()
-    (nur hebel_signals) auf `signals` (Spot): NUR der Konsistenz-Check-Teil
-    (2 Spalten), NICHT der Richtungs-Abgleich (3 weitere Spalten bei Hebel) -
-    Signal (Spot) hat kein richtung/LONG-SHORT-Konzept, siehe
-    agent/krypto/gegenpruefung.py Modul-Docstring "Erweiterung"."""
+    (nur hebel_signals) auf `signals` (Spot-family: Krypto-Spot/Aktien/
+    Rohstoffe/Themen-ETF/Hedge). Urspruenglich (selber Tag, frueher) nur der
+    Konsistenz-Check-Teil (2 Spalten) - am selben Tag, spaeter erweitert um
+    die 3 Richtungs-Abgleich-Spalten (analog HebelSignal), siehe
+    agent/krypto/gegenpruefung.py::richtung_aus_action()."""
     existing = {row["name"] for row in conn.execute("PRAGMA table_info(signals)")}
     for column, sql_type in _ZAI_GEGENPRUEFUNG_SPOT_NEW_COLUMNS.items():
         if column not in existing:
@@ -2978,18 +2986,33 @@ def update_hebel_signal_zai_gegenpruefung(
 
 
 def update_signal_zai_gegenpruefung(
-    conn: sqlite3.Connection, signal_id: int, urteil: str | None, kurzbegruendung: str | None,
+    conn: sqlite3.Connection,
+    signal_id: int,
+    urteil: str | None,
+    kurzbegruendung: str | None,
+    eigene_richtung: str | None = None,
+    uebereinstimmung: str | None = None,
+    richtung_kurzbegruendung: str | None = None,
 ) -> None:
-    """Spot-Pendant zu update_hebel_signal_zai_gegenpruefung() - NUR der
-    Konsistenz-Check-Teil (2026-07-27, siehe agent/krypto/gegenpruefung.py
-    Modul-Docstring "Erweiterung"). Signal (Spot) hat kein
-    zai_eigene_richtung/zai_uebereinstimmung/zai_richtung_kurzbegruendung -
-    kein Richtungs-Abgleich fuer Spot, daher keine der Ueberschreib-Vorsicht
-    von update_hebel_signal_zai_gegenpruefung() noetig."""
+    """Spot-family-Pendant zu update_hebel_signal_zai_gegenpruefung() - jetzt
+    mit identischer 5-Werte-Signatur (Nachtrag 2026-07-27, Ausweitung von Z.ai
+    auf alle Assetklassen: Krypto-Spot/Aktien/Rohstoffe/Themen-ETF/Hedge).
+    Die 3 neuen Parameter sind optional (Default None), damit ein Aufruf ohne
+    den zweiten Z.ai-Call (z.B. falls dieser fehlschlaegt) weiterhin nur die
+    urspruenglichen zwei Felder setzt. Vorsicht: ruft man diese Funktion
+    zweimal fuer denselben Datensatz auf, ueberschreibt der zweite Aufruf die
+    zuvor gesetzten Felder mit None, falls sie nicht erneut mitgegeben werden
+    - exakt dieselbe Warnung wie bei update_hebel_signal_zai_gegenpruefung().
+    agent/krypto/gegenpruefung.py::fuehre_beide_calls_im_hintergrund() ruft
+    deshalb IMMER alle fuenf Werte in einem einzigen Aufruf mit."""
     conn.execute(
-        "UPDATE signals SET zai_gegenpruefung_urteil = ?, zai_gegenpruefung_kurzbegruendung = ? "
+        "UPDATE signals SET zai_gegenpruefung_urteil = ?, zai_gegenpruefung_kurzbegruendung = ?, "
+        "zai_eigene_richtung = ?, zai_uebereinstimmung = ?, zai_richtung_kurzbegruendung = ? "
         "WHERE id = ?",
-        (urteil, kurzbegruendung, signal_id),
+        (
+            urteil, kurzbegruendung, eigene_richtung, uebereinstimmung,
+            richtung_kurzbegruendung, signal_id,
+        ),
     )
     conn.commit()
 

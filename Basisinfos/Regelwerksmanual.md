@@ -10106,3 +10106,122 @@ beiden Tabellen, `eur_aus_usd()`-Identitaet, Insert+Read fuer Signal UND
 HebelSignal, E-Mail-Zeile zeigt EUR, Graceful-Degradation ohne
 `mindestziel_eur`); Compile-/Import-Regressionscheck ueber alle 8 geaenderten
 Module + bekannte Konsumenten.
+
+## Nachtrag (2026-07-27): Z.ai-Gegenpruefung auf alle 6 Signal-Pipelines ausgeweitet (Konsistenz-Check UND Richtungs-Abgleich)
+
+Auslöser: Prüfung eines echten ALGO-Spot-Signals ("wo ist hier ZAI?"). Analyse
+ergab eine gewachsene, asymmetrische Teil-Umsetzung: Krypto-Hebel hatte beide
+Z.ai-Calls (Konsistenz-Check + unabhängiger Richtungs-Abgleich) plus einen
+E-Mail-Wartemechanismus; Krypto-Spot nur den Konsistenz-Check ohne
+Wartemechanismus (Z.ai-Ergebnis kam strukturell fast nie rechtzeitig in die
+E-Mail); Aktien/Rohstoffe/Themen-ETF/Hedge hatten gar keine Z.ai-Integration.
+Nutzer-Vorgabe: **"soll vom Grundprinzip bei allen Assets ident
+funktionieren"** - beide Z.ai-Calls für alle 6 Pipelines.
+
+### Bestätigt vor der Umsetzung: Fakten sind bereits 1:1 kompatibel
+
+`baue_fakten()`/`baue_objektive_fakten()` (`agent/krypto/gegenpruefung.py`)
+waren bereits asset-neutral - alle Krypto-exklusiven Parameter
+(`funding_rate_stunde`, `optionsmarkt_skew`) sind optional und werden bei
+`None` einfach aus dem Fakten-Dict weggelassen, kein Fake-Wert nötig.
+
+### Zwei technische Lücken geschlossen
+
+1. **DB-Schema-Asymmetrie:** `hebel_signals` hatte bereits alle 5
+   Z.ai-Spalten, `signals` (gemeinsam für Krypto-Spot/Aktien/Rohstoffe/
+   Themen-ETF/Hedge) nur die 2 Konsistenz-Check-Spalten. Additive Migration:
+   `_ZAI_GEGENPRUEFUNG_SPOT_NEW_COLUMNS` (`database/db.py`) um
+   `zai_eigene_richtung`/`zai_uebereinstimmung`/`zai_richtung_kurzbegruendung`
+   erweitert; `update_signal_zai_gegenpruefung()` auf dieselbe 5-Parameter-
+   Signatur wie `update_hebel_signal_zai_gegenpruefung()` gebracht (3 neue
+   Parameter mit `None`-Default, bestehende 4-Parameter-Aufrufer bleiben
+   kompatibel); `Signal`-Dataclass (`database/models.py`) um die 3 Felder
+   erweitert (1:1 wie `HebelSignal`).
+2. **4 Pipelines ohne `zai_client`-Parameter und ohne Plumbing:** kein
+   `generate_signal()` von Aktien/Rohstoffe/Themen-ETF/Hedge kannte
+   `zai_client`; die Multi-Asset-Batch-Kette (`main.py` → `build_scheduler()`
+   → `multi_asset_batch_job()` → `run_multi_asset_batch()`) reichte
+   `zai_client` nirgends durch, obwohl er in `build_scheduler()` bereits im
+   Scope war (wird dort schon an `hebel_screening_job` durchgereicht).
+
+### Gemeinsame Logik statt Duplikation (`agent/krypto/gegenpruefung.py`)
+
+`hebel_pipeline.py::_zai_gegenpruefung_im_hintergrund()` (die Thread-Funktion,
+die beide Z.ai-Calls sequentiell ausführt und EIN kombiniertes DB-Update
+schreibt) wurde nach `gegenpruefung.py` verschoben und in
+`fuehre_beide_calls_im_hintergrund()` umbenannt - parametrisiert über
+`update_fn` (entweder `db.update_hebel_signal_zai_gegenpruefung` oder das neu
+erweiterte `db.update_signal_zai_gegenpruefung`, seit deren Angleichung
+identische Signatur). Von allen 6 Pipelines wiederverwendet statt sechsmal
+dupliziert.
+
+Neue Funktion `richtung_aus_action(action, ist_hedge_invertiert=False)`: die
+Spot-family (alle außer Hebel) hat kein echtes `richtung`-Feld (LONG/SHORT),
+nur Action-Verben. Deterministisches Mapping: `KAUFEN`/`NACHKAUFEN` → `LONG`,
+`VERKAUFEN`/`TAUSCHEN` → `SHORT`, `HALTEN` → `None` (kein Vergleich, analog
+zu Hebel-Sonderfällen).
+
+### Design-Entscheidung: Hedge-Invertierung (mit Nutzer abgestimmt)
+
+Hedge-Instrumente sind inverse Absicherungen - `KAUFEN` (Hedge aufbauen)
+korreliert mit einer **bärischen** Gesamtmarkterwartung, nicht mit einer
+bullischen Erwartung an das Hedge-Instrument selbst. Die an Call 2
+übergebenen Fakten sind bei Hedge ohnehin nur Makro-/Regime-Fakten (keine
+Einzeltitel-Technikanalyse, siehe `agent/hedge/pipeline.py` Modul-Docstring),
+Z.ais `eigene_richtung` bedeutet dort faktisch "Einschätzung zum
+Gesamtmarkt". Entschieden: **deterministische Invertierung in Python**
+(`ist_hedge_invertiert=True`, nur in `agent/hedge/pipeline.py` gesetzt, dort
+IMMER `True` - diese Pipeline verarbeitet ausschließlich Hedge-Instrumente,
+kein Symbol-Lookup nötig), KEIN neuer Fakt/Prompt-Zweig für Z.ai (Nutzer
+erwog auch "Z.ai die Funktion des Assets erklären" als Alternative -
+verworfen: die Invertierung ist hier ein einzelnes, fest verdrahtetes
+Boolean, keine wartungsbedürftige neue Regel; ein Prompt-Zweig hätte
+zusätzliches Fehlinterpretations-Risiko ins LLM-Urteil getragen, entgegen dem
+bestehenden Architekturprinzip, den eigentlichen Abgleich deterministisch in
+Python zu halten).
+
+### Bestätigt (keine Änderung nötig): JA/NEIN ist bereits erzwungen
+
+Nutzer-Nachfrage, ob beim Richtungs-Abgleich "JA/NEIN-Entscheidungen
+erzwungen" werden sollen - Abgleich mit der ursprünglichen Absprache vom
+2026-07-26 (Z.ai darf selbst LONG/SHORT/NEUTRAL antworten, Live-Test zeigte
+echte Modell-Unsicherheit bei Grenzfällen, Nutzer entschied damals explizit
+"Rauschen akzeptieren, keine Prompt-Nachschärfung"): das JA/NEIN ist bereits
+auf der Ebene des Vergleichsergebnisses (`uebereinstimmung`) erzwungen -
+NEUTRAL zählt deterministisch als "nein", nie als "unklar". Keine
+Prompt-Änderung nötig, weder bei Hebel noch bei der Erweiterung.
+
+### E-Mail: Re-Fetch statt Hebel-artigem Wartemechanismus
+
+Für Multi-Asset-Batch bewusst KEIN Poll-Wait-Mechanismus wie bei Hebel
+(`_sende_hebel_email_mit_zai_wartezeit()`): die Batch-Schleife verarbeitet
+bis zu 13 Assets sequentiell, bevor die E-Mail-Benachrichtigung überhaupt
+beginnt - für die meisten Signale ist die Z.ai-Hintergrundprüfung durch diese
+Restlaufzeit bereits fertig. Stattdessen in
+`scheduler/background.py::multi_asset_batch_job()` ein günstiger Re-Fetch
+per `db.get_signal_by_id()` direkt vor `_notify_multi_asset_signal()` -
+fehlschlagender Re-Fetch verhindert die E-Mail nicht (Fallback aufs
+ursprüngliche Objekt).
+
+### Bewusst unverändert: manueller "Signal berechnen"-Button
+
+`ui/signals_view.py::_run_pipeline()` reicht `zai_client` an KEINE der 6
+Pipelines durch - das war bereits vor dieser Runde so (auch für Krypto-Hebel/
+Spot), eine bestehende, bewusste Scope-Grenze. Sie jetzt nur für die 4 neuen
+Pipelines aufzubrechen hätte eine neue Asymmetrie geschaffen statt eine zu
+schließen - unverändert gelassen.
+
+### Verifiziert
+
+Compile-/Import-Regressionscheck über alle 11 geänderten Module; additive
+Migration (frische + simulierte Alt-DB, erneuter Migrationslauf ohne
+Exception); `update_signal_zai_gegenpruefung()` mit 4 UND 5 Positions-
+argumenten; `Signal`-Dataclass-Rundtrip für alle 3 neuen Felder;
+`richtung_aus_action()` alle Kombinationen inkl. Hedge-Inversion (Regressions-
+schutz: `KAUFEN` → `SHORT` bei `ist_hedge_invertiert=True`);
+`fuehre_beide_calls_im_hintergrund()` mit Mock-Client (genau EIN kombinierter
+Update-Aufruf, korrekte `ja`/`nein`-Berechnung, Call-1-Fehlschlag verhindert
+Call-2-Update nicht); Signatur-Regressionscheck aller 4 neuen Pipelines +
+der Plumbing-Kette (`run_multi_asset_batch()`, `multi_asset_batch_job()`).
+Echter Notebook-Lauf (nach Deploy) noch ausstehend, insbesondere für Hedge
+(dünnste Faktenbasis, höchstes Risiko für instabile Z.ai-Antworten).

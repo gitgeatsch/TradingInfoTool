@@ -1905,6 +1905,7 @@ def hebel_screening_job(
 
 def multi_asset_batch_job(
     conn_factory, watchlist_provider, coingecko_client, gemini_client=None, mistral_client=None,
+    zai_client=None,
 ) -> bool:
     """Multi-Asset-Batch (2026-07-18, siehe agent/multi_asset_batch.py Modul-
     Docstring fuer die volle Architektur-Begruendung) - automatische Signal-
@@ -1912,6 +1913,9 @@ def multi_asset_batch_job(
     erreichbar. P-8: nur aktiv, wenn mindestens einer von mistral_client/
     gemini_client gesetzt ist (gleiches Muster wie hebel_screening_job();
     Groq 2026-07-26 vollstaendig entfernt, siehe dortige Begruendung).
+    `zai_client` (Nachtrag, Ausweitung der Z.ai-Gegenpruefung auf alle
+    Assetklassen) allein aktiviert den Batch NICHT - ohne Mistral/Gemini
+    gaebe es keine primaere Analyse und damit keine Fakten fuer Z.ai.
     `watchlist_provider` siehe refresh_prices_job()-Docstring (2026-07-23)."""
     if not multi_asset_batch_lock.acquire(blocking=False):
         logger.info("Multi-Asset-Batch: bereits in Ausführung - übersprungen")
@@ -1929,7 +1933,7 @@ def multi_asset_batch_job(
         config_dict = config_module.load_config()
         result = run_multi_asset_batch(
             conn_factory, watchlist, coingecko_client, config_dict,
-            gemini_client=gemini_client, mistral_client=mistral_client,
+            gemini_client=gemini_client, mistral_client=mistral_client, zai_client=zai_client,
         )
         logger.info(
             "Multi-Asset-Batch: %d verarbeitet, %d fehlgeschlagen, %d Cooldown-uebersprungen, "
@@ -1946,6 +1950,27 @@ def multi_asset_batch_job(
                 bitpanda_assets = None
                 logger.info("Bitpanda-Listing-Abruf für Multi-Asset-Empfehlungs-E-Mails fehlgeschlagen: %s", exc)
             for signal in result.ergebnis_objekt.values():
+                # Re-Fetch vor Versand (Nachtrag, Z.ai-Ausweitung auf Multi-Asset) -
+                # kein Hebel-artiger Poll-Wait-Mechanismus hier (siehe agent/
+                # multi_asset_batch.py Modul-Docstring): diese Schleife laeuft erst
+                # NACH Abschluss des GESAMTEN Batches (bis zu 13 Assets sequentiell),
+                # die Z.ai-Hintergrundpruefung ist durch diese Restlaufzeit fuer die
+                # meisten Signale bereits fertig - ein guenstiges Neuladen per ID
+                # reicht, kein zusaetzliches Warten noetig. Fehlschlag darf die
+                # E-Mail nicht verhindern (Fallback aufs urspruengliche Objekt).
+                if signal.id is not None:
+                    try:
+                        refetch_conn = conn_factory()
+                        try:
+                            frisches_signal = db.get_signal_by_id(refetch_conn, signal.id)
+                        finally:
+                            refetch_conn.close()
+                        if frisches_signal is not None:
+                            signal = frisches_signal
+                    except Exception:
+                        logger.exception(
+                            "Nachladen des Signals %s vor Multi-Asset-E-Mail fehlgeschlagen", signal.symbol,
+                        )
                 _notify_multi_asset_signal(signal, watchlist, bitpanda_assets, conn_factory)
     except Exception as exc:
         logger.exception("Multi-Asset-Batch fehlgeschlagen")
@@ -2199,7 +2224,7 @@ def build_scheduler(
         hour=MULTI_ASSET_BATCH_CRON_HOURS,
         minute=0,
         day_of_week="mon-fri",
-        args=[db_conn_factory, watchlist_provider, coingecko_client, gemini_client, mistral_client],
+        args=[db_conn_factory, watchlist_provider, coingecko_client, gemini_client, mistral_client, zai_client],
         id="multi_asset_batch",
     )
     # MS-3: erster CronTrigger im Projekt (bisherige Jobs nutzen nur "interval") -

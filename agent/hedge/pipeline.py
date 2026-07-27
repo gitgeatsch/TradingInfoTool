@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import logging
+import threading
 from datetime import datetime, timezone
 
 import agent.kategorie_thesen as kategorie_thesen
@@ -24,6 +25,12 @@ import config
 import database.db as db
 from agent.hedge.analyst import AnalystResponseInvalid, build_facts, call_llm_for_signal
 from agent.krypto.backward_tracking import compute_win_rate_fact
+from agent.krypto.gegenpruefung import (
+    baue_fakten as baue_zai_fakten,
+    baue_objektive_fakten as baue_zai_objektive_fakten,
+    fuehre_beide_calls_im_hintergrund,
+    richtung_aus_action,
+)
 from agent.krypto.llm_provider import llm_model_label
 from agent.krypto.makro_analog import get_cached_makro_analog_fact
 from agent.krypto.pipeline import compute_current_regime, eur_aus_usd, log_eur_abweichungen
@@ -256,7 +263,8 @@ def _post_check_hedge(
 
 
 def generate_signal(
-    asset, watchlist, conn, llm_client, coingecko_client, *, bereits_vorgeschlagen_effektiv_usd: float = 0.0,
+    asset, watchlist, conn, llm_client, coingecko_client, *,
+    bereits_vorgeschlagen_effektiv_usd: float = 0.0, zai_client=None,
 ) -> Signal:
     """`asset.symbol` muss in SYMBOL_ZU_HEBEL_FAKTOR stehen. `watchlist` muss die
     VOLLSTAENDIGE Watchlist sein (fuer compute_current_regime() UND fuer die
@@ -417,5 +425,56 @@ def generate_signal(
         groq_model=llm_model_label(llm_client),
         **top_grund_fields,
     )
-    db.insert_signal(conn, signal)
+    new_id = db.insert_signal(conn, signal)
+    signal.id = new_id
+
+    # Z.ai-Gegenpruefung (Ausweitung auf Hedge, siehe agent/krypto/
+    # gegenpruefung.py Modul-Docstring "Vollstaendige Vereinheitlichung") -
+    # rein beobachtend, laeuft asynchron NACH dem Insert. KEIN RSI/Konfluenz-
+    # Fakt (Hedge betreibt bewusst GAR KEINE Einzeltitel-Technikanalyse, siehe
+    # Modul-Docstring oben) - baue_fakten()/baue_objektive_fakten() lassen den
+    # technische_konfluenz-Eintrag dann einfach weg (gesamt==0-Guard dort).
+    # ist_hedge_invertiert=True IMMER hier (diese Pipeline verarbeitet
+    # ausschliesslich Hedge-Instrumente) - siehe richtung_aus_action()-
+    # Docstring fuer die Begruendung der Invertierung (KAUFEN = Hedge
+    # aufbauen = baerische GESAMTMARKT-Erwartung, nicht bullisch auf das
+    # Hedge-Instrument selbst).
+    if zai_client is not None:
+        zai_fakten = baue_zai_fakten(
+            symbol=asset.symbol,
+            action=corrected.get("action"),
+            confidence_pct=corrected.get("confidence_pct"),
+            rsi=None,
+            trend_label=None,
+            regime=regime_result.regime,
+            funding_rate_stunde=None,
+            confluence_bullish=0,
+            confluence_bearish=0,
+            confluence_neutral=0,
+            optionsmarkt_skew=None,
+        )
+        zai_objektive_fakten = baue_zai_objektive_fakten(
+            symbol=asset.symbol,
+            rsi=None,
+            trend_label=None,
+            regime=regime_result.regime,
+            funding_rate_stunde=None,
+            confluence_bullish=0,
+            confluence_bearish=0,
+            confluence_neutral=0,
+            optionsmarkt_skew=None,
+        )
+        primaer_richtung_erwartet = richtung_aus_action(
+            corrected.get("action"), ist_hedge_invertiert=True,
+        )
+        threading.Thread(
+            target=fuehre_beide_calls_im_hintergrund,
+            args=(
+                new_id, zai_fakten, corrected.get("short_reasoning"),
+                zai_objektive_fakten, primaer_richtung_erwartet, zai_client,
+                db.update_signal_zai_gegenpruefung,
+            ),
+            daemon=True,
+        ).start()
+
     return signal

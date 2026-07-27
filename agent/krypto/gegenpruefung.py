@@ -94,11 +94,40 @@ mit einem erfundenen Wert befuellt. Der SYSTEM_PROMPT unten muss dafuer NICHT
 angepasst werden: seine TEILVERKAUF/SCHLIESSEN/HEBEL_SENKEN-Klausel greift
 nur bei genau diesen drei (Hebel-exklusiven) Aktionsnamen - Spot-Aktionen
 (KAUFEN/VERKAUFEN/TAUSCHEN/NACHKAUFEN/HALTEN) fallen automatisch unter die
-"ALLEN anderen Aktionen"-Regel, exakt wie vor der Kontrathese-Erweiterung."""
+"ALLEN anderen Aktionen"-Regel, exakt wie vor der Kontrathese-Erweiterung.
+
+Vollstaendige Vereinheitlichung (Nachtrag, gleicher Monat): BEIDE Calls jetzt
+fuer ALLE 6 Pipelines (Krypto-Hebel/Spot, Aktien, Rohstoffe, Themen-ETF,
+Hedge) - Nutzer-Vorgabe "soll vom Grundprinzip bei allen Assets ident
+funktionieren". Zwei neue, generische Bausteine:
+
+`richtung_aus_action()` - die Spot-family (alle ausser Hebel) hat kein
+echtes `richtung`-Feld (LONG/SHORT), nur Action-Verben (KAUFEN/VERKAUFEN/
+NACHKAUFEN/TAUSCHEN/HALTEN). Deterministisches Mapping auf die fuer den
+Richtungs-Abgleich erwartete Richtung, HALTEN liefert None (kein Vergleich,
+analog dazu, dass Hebel bestimmte Aktionen wie TEILVERKAUF/SCHLIESSEN vom
+Konsistenz-Check-Sonderfall betrifft). Hedge-Sonderfall: Hedge-Instrumente
+sind inverse Absicherungen - KAUFEN (Hedge aufbauen) korreliert mit einer
+BAERISCHEN Gesamtmarkterwartung, nicht mit einer bullischen Erwartung an das
+Hedge-Instrument selbst (die an Call 2 uebergebenen Fakten sind bei Hedge
+ohnehin nur Makro-/Regime-Fakten, kein instrumentenspezifisches RSI/
+Konfluenz - Z.ais `eigene_richtung` bedeutet dort faktisch "Einschaetzung
+zum Gesamtmarkt"). Deshalb `ist_hedge_invertiert=True` NUR beim Aufruf aus
+agent/hedge/pipeline.py - deterministisch in Python, kein neuer Fakt/Prompt-
+Zweig fuer Z.ai (mit Nutzer abgestimmt, 2026-07-27).
+
+`fuehre_beide_calls_im_hintergrund()` - verallgemeinerte Version von
+hebel_pipeline.py::_zai_gegenpruefung_im_hintergrund() (dorthin verschoben),
+parametrisiert ueber `update_fn` (entweder db.update_hebel_signal_zai_
+gegenpruefung oder db.update_signal_zai_gegenpruefung - seit deren
+Erweiterung identische 5-Werte-Signatur). Von ALLEN 6 Pipelines
+wiederverwendet statt pro Pipeline dupliziert."""
 from __future__ import annotations
 
 import json
 import logging
+
+import database.db as db
 
 logger = logging.getLogger(__name__)
 
@@ -291,3 +320,101 @@ def pruefe_konsistenz(zai_client, fakten: dict, begruendungstext: str | None) ->
     except Exception as exc:
         logger.info("Z.ai-Gegenpruefung fehlgeschlagen (P-8, ohne Auswirkung auf das Signal): %s", exc)
         return None
+
+
+_LONG_ACTIONS = {"KAUFEN", "NACHKAUFEN"}
+_SHORT_ACTIONS = {"VERKAUFEN", "TAUSCHEN"}  # TAUSCHEN nur Krypto-Spot-exklusiv
+
+
+def richtung_aus_action(action: str, ist_hedge_invertiert: bool = False) -> str | None:
+    """Deterministisches Mapping Action -> erwartete Richtung fuer Call 2 bei
+    der Spot-family (Krypto-Spot/Aktien/Rohstoffe/Themen-ETF/Hedge - keine hat
+    ein echtes `richtung`-Feld wie Hebel). Siehe Modul-Docstring
+    "Vollstaendige Vereinheitlichung" fuer die volle Begruendung.
+
+    HALTEN (und jede unbekannte Action) liefert None - kein Vergleich, analog
+    dazu, dass bestimmte Hebel-Aktionen ebenfalls Sonderbehandlung erfahren.
+    KAUFEN/NACHKAUFEN = bullische Erwartung an das Asset selbst -> LONG.
+    VERKAUFEN/TAUSCHEN = baerische Erwartung an das Asset selbst -> SHORT
+    (TAUSCHEN: das Ziel-Asset wird gekauft, aber DIESES Symbol wird als
+    schwaecher bewertet - bearish auf dieses Symbol).
+
+    `ist_hedge_invertiert=True` NUR fuer agent/hedge/pipeline.py setzen (dort
+    IMMER True, da diese Pipeline ausschliesslich Hedge-Instrumente
+    verarbeitet - kein Symbol-Lookup noetig): KAUFEN/NACHKAUFEN (Hedge
+    aufbauen/verstaerken) -> SHORT (baerische Gesamtmarkterwartung),
+    VERKAUFEN -> LONG."""
+    if action == "HALTEN":
+        return None
+    ist_long = action in _LONG_ACTIONS
+    ist_short = action in _SHORT_ACTIONS
+    if not ist_long and not ist_short:
+        return None
+    if ist_hedge_invertiert:
+        return "SHORT" if ist_long else "LONG"
+    return "LONG" if ist_long else "SHORT"
+
+
+def fuehre_beide_calls_im_hintergrund(
+    signal_id: int,
+    fakten: dict,
+    begruendungstext: str | None,
+    objektive_fakten: dict,
+    primaer_richtung_erwartet: str | None,
+    zai_client,
+    update_fn,
+) -> None:
+    """Generische, wiederverwendbare Version von hebel_pipeline.py::
+    _zai_gegenpruefung_im_hintergrund() (von dort hierher verschoben, siehe
+    Modul-Docstring "Vollstaendige Vereinheitlichung") - laeuft in einem
+    eigenen Thread (Aufrufstelle in jeder der 6 Pipelines), GENUINE
+    Entkopplung von der eigentlichen Signal-Erstellung: Z.ai hat einen
+    150s-Timeout (api/zai.py::REQUEST_TIMEOUT_SECONDS), ein synchroner Call
+    vor `return signal` wuerde die jeweilige `generate_signal()`/
+    `generate_hebel_signal()` selbst verzoegern - und damit auch den
+    `on_signal_ready`-E-Mail-Callback, der erst NACH der Rueckkehr dieser
+    Funktion feuert (siehe project_email_latenz_fix_batch_notification.md).
+
+    `update_fn` ist entweder db.update_hebel_signal_zai_gegenpruefung oder
+    db.update_signal_zai_gegenpruefung (seit deren Erweiterung identische
+    5-Werte-Signatur). `primaer_richtung_erwartet` ist bei Hebel die echte
+    `richtung` (LONG/SHORT), bei der Spot-family das Ergebnis von
+    richtung_aus_action() (None -> kein Vergleich, z.B. bei HALTEN).
+
+    Eigene DB-Connection (sqlite3-Connections sind nicht thread-uebergreifend
+    teilbar) statt der von der aufrufenden Funktion verwendeten. Fehler in
+    einem der beiden Calls duerfen das Schreiben des jeweils anderen nicht
+    verhindern (try/except pro Call bereits in pruefe_konsistenz()/
+    leite_eigene_richtung() selbst, hier zusaetzlich fuer den Thread-Kontext,
+    z.B. falls die neue DB-Connection scheitert) - beide Ergebnisse werden
+    gemeinsam in EINEM DB-Update geschrieben, damit ein fehlgeschlagener
+    zweiter Call das Ergebnis des ersten nicht durch Nones ueberschreibt."""
+    urteil = kurzbegruendung = eigene_richtung = uebereinstimmung = richtung_kurzbegruendung = None
+    try:
+        konsistenz_ergebnis = pruefe_konsistenz(zai_client, fakten, begruendungstext)
+        if konsistenz_ergebnis is not None:
+            urteil = konsistenz_ergebnis.get("urteil")
+            kurzbegruendung = konsistenz_ergebnis.get("kurzbegruendung")
+
+        richtung_ergebnis = leite_eigene_richtung(zai_client, objektive_fakten)
+        if richtung_ergebnis is not None:
+            eigene_richtung = richtung_ergebnis.get("eigene_richtung")
+            richtung_kurzbegruendung = richtung_ergebnis.get("kurzbegruendung")
+            if primaer_richtung_erwartet is not None:
+                uebereinstimmung = "ja" if eigene_richtung == primaer_richtung_erwartet else "nein"
+
+        if urteil is None and eigene_richtung is None:
+            return  # beide Calls fehlgeschlagen - nichts zu speichern
+
+        thread_conn = db.get_connection()
+        try:
+            update_fn(
+                thread_conn, signal_id, urteil, kurzbegruendung,
+                eigene_richtung, uebereinstimmung, richtung_kurzbegruendung,
+            )
+        finally:
+            thread_conn.close()
+    except Exception:
+        logger.exception(
+            "Z.ai-Gegenpruefung im Hintergrund-Thread fehlgeschlagen (signal_id=%s)", signal_id,
+        )

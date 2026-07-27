@@ -29,8 +29,7 @@ from agent.krypto.btc_relativwert import btc_relativwert_fakt
 from agent.krypto.gegenpruefung import (
     baue_fakten as baue_zai_fakten,
     baue_objektive_fakten as baue_zai_objektive_fakten,
-    leite_eigene_richtung as zai_leite_eigene_richtung,
-    pruefe_konsistenz as zai_pruefe_konsistenz,
+    fuehre_beide_calls_im_hintergrund,
 )
 from agent.krypto.hebel_analyst import build_hebel_facts, call_llm_for_hebel_signal
 from agent.krypto.liquidity_zones import liquiditaetszonen_fakt
@@ -61,75 +60,6 @@ MIN_GATE_INDICATORS_AVAILABLE = ("rsi", "macd", "bollinger")
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
-
-
-def _zai_gegenpruefung_im_hintergrund(
-    hebel_signal_id: int,
-    fakten: dict,
-    begruendungstext: str | None,
-    objektive_fakten: dict,
-    primaer_richtung: str | None,
-    zai_client,
-) -> None:
-    """Laeuft in einem eigenen Thread (siehe Aufrufstelle in
-    generate_hebel_signal()) - GENUINE Entkopplung von der eigentlichen
-    Signal-Erstellung, nicht nur eine spaetere Aufrufreihenfolge innerhalb
-    derselben Funktion: Z.ai hat einen 150s-Timeout (api/zai.py::
-    REQUEST_TIMEOUT_SECONDS), ein synchroner Call VOR dem `return signal`
-    wuerde `generate_hebel_signal()` selbst um bis zu 150s verzoegern - und
-    damit auch den `on_signal_ready`-E-Mail-Callback in budget_allocator.py,
-    der erst NACH der Rueckkehr dieser Funktion feuert (siehe project_email_
-    latenz_fix_batch_notification.md fuer den Vorfall, der genau diese Art
-    Latenz bereits einmal behoben hat - ein Nachtraeglich-statt-Vorher-
-    Aufruf innerhalb derselben Funktion haette daran nichts geaendert).
-    Eigene DB-Connection (sqlite3-Connections sind nicht thread-uebergreifend
-    teilbar) statt der von der aufrufenden Funktion verwendeten - jene wird
-    vom Aufrufer ggf. bereits geschlossen, sobald generate_hebel_signal()
-    zurueckkehrt. Fehler bleiben komplett folgenlos (P-8, doppelt abgesichert:
-    pruefe_konsistenz()/leite_eigene_richtung() fangen bereits selbst ab, hier
-    zusaetzlich fuer den Thread-Kontext selbst, z.B. falls die neue DB-
-    Connection scheitert).
-
-    ZWEI unabhaengige, sequentielle Z.ai-Calls (Nachtrag 2026-07-26, gleicher
-    Tag, siehe agent/krypto/gegenpruefung.py Modul-Docstring Punkt 2 fuer die
-    Begruendung, warum nicht EIN kombinierter Call): Konsistenz-Check zuerst,
-    dann der unabhaengige Richtungs-Abgleich. `uebereinstimmung` wird
-    deterministisch in Python verglichen (eigene_richtung vs. primaer_richtung),
-    NEUTRAL zaehlt wie jede andere Nicht-Uebereinstimmung als 'nein' (Nutzer-
-    Entscheidung nach Live-Kalibrierung, siehe dortiger Docstring). Beide
-    Ergebnisse werden gemeinsam in EINEM DB-Update geschrieben, damit ein
-    fehlgeschlagener zweiter Call das Ergebnis des ersten nicht durch Nones
-    ueberschreibt (siehe db.update_hebel_signal_zai_gegenpruefung()-
-    Docstring-Warnung)."""
-    urteil = kurzbegruendung = eigene_richtung = uebereinstimmung = richtung_kurzbegruendung = None
-    try:
-        konsistenz_ergebnis = zai_pruefe_konsistenz(zai_client, fakten, begruendungstext)
-        if konsistenz_ergebnis is not None:
-            urteil = konsistenz_ergebnis.get("urteil")
-            kurzbegruendung = konsistenz_ergebnis.get("kurzbegruendung")
-
-        richtung_ergebnis = zai_leite_eigene_richtung(zai_client, objektive_fakten)
-        if richtung_ergebnis is not None:
-            eigene_richtung = richtung_ergebnis.get("eigene_richtung")
-            richtung_kurzbegruendung = richtung_ergebnis.get("kurzbegruendung")
-            if primaer_richtung is not None:
-                uebereinstimmung = "ja" if eigene_richtung == primaer_richtung else "nein"
-
-        if urteil is None and eigene_richtung is None:
-            return  # beide Calls fehlgeschlagen - nichts zu speichern
-
-        thread_conn = db.get_connection()
-        try:
-            db.update_hebel_signal_zai_gegenpruefung(
-                thread_conn, hebel_signal_id, urteil, kurzbegruendung,
-                eigene_richtung, uebereinstimmung, richtung_kurzbegruendung,
-            )
-        finally:
-            thread_conn.close()
-    except Exception:
-        logger.exception(
-            "Z.ai-Gegenpruefung im Hintergrund-Thread fehlgeschlagen (hebel_signal_id=%s)", hebel_signal_id,
-        )
 
 
 def _fixed_hebel_signal(
@@ -541,9 +471,10 @@ def generate_hebel_signal(
 
     # Z.ai-Gegenpruefung (2026-07-26, siehe agent/krypto/gegenpruefung.py) -
     # laeuft in einem eigenen Hintergrund-Thread (siehe
-    # _zai_gegenpruefung_im_hintergrund()-Docstring fuer die Begruendung,
-    # warum ein einfacher Aufruf NACH dem Insert - aber noch innerhalb dieser
-    # Funktion - die on_signal_ready-E-Mail-Latenz NICHT geloest haette).
+    # gegenpruefung.fuehre_beide_calls_im_hintergrund()-Docstring fuer die
+    # Begruendung, warum ein einfacher Aufruf NACH dem Insert - aber noch
+    # innerhalb dieser Funktion - die on_signal_ready-E-Mail-Latenz NICHT
+    # geloest haette).
     # Rein beobachtend: das zurueckgegebene `signal`-Objekt traegt die neuen
     # Felder bewusst noch nicht (der Thread laeuft ja gerade erst los) - der
     # spaetere DB-Update ist die alleinige Quelle, GUI/Notebook-Export lesen
@@ -590,10 +521,11 @@ def generate_hebel_signal(
             optionsmarkt_skew=(optionsmarkt or {}).get("skew_prozentpunkte"),
         )
         threading.Thread(
-            target=_zai_gegenpruefung_im_hintergrund,
+            target=fuehre_beide_calls_im_hintergrund,
             args=(
                 new_id, zai_fakten, corrected.get("short_reasoning"),
                 zai_objektive_fakten, corrected.get("richtung"), zai_client,
+                db.update_hebel_signal_zai_gegenpruefung,
             ),
             daemon=True,
         ).start()
