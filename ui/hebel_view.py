@@ -16,6 +16,7 @@ import json
 import logging
 import threading
 import tkinter as tk
+from datetime import datetime, timedelta, timezone
 from tkinter import ttk
 
 import config as config_module
@@ -49,6 +50,12 @@ _LIST_COLUMN_DESCRIPTIONS = {
 }
 
 _TRADE_THESIS_LABELS = {"einmal_trade": "Einmaltrade", "swing_strategie": "Swing"}
+
+# Anzeigefilter-Fenster (2026-07-27, Nutzer-Wunsch: Hebel-Tab-Deckel gegen
+# veraltete/deaktivierte Zeilen) - Session-only, kein config.yaml-Wert (Nutzer
+# ausdruecklich: "keine Speicherung notwendig"), Standardwert bei jedem
+# App-Start "2 Tage".
+_ZEITFENSTER_TAGE = 2
 
 _POSITIONS_COLUMN_DESCRIPTIONS = {
     "symbol": "Kurzzeichen des Assets.",
@@ -89,6 +96,11 @@ class HebelView(ttk.Frame):
         # blieb bei HALTEN immer leer, auch wenn eine offene Position
         # existiert und ihr aktueller Liquidationspreis zeigbar waere).
         self._offene_positionen: dict[tuple[str, str], object] = {}
+        # Anzeigefilter (2026-07-27, Nutzer-Wunsch): "2_tage" blendet Signale
+        # aelter als _ZEITFENSTER_TAGE aus (Ausnahme: offene Positionen bleiben
+        # immer sichtbar), "alle" zeigt die volle Historie. Session-only,
+        # keine Persistenz - siehe Modul-Docstring-Konstante.
+        self._zeitfenster_var = tk.StringVar(value="2_tage")
         # GUI-Refresh-Fix Teil 2 (2026-07-16) - siehe ui/signals_view.py fuer die
         # volle Begruendung: unterdrueckt das durch die periodische selection_set()-
         # Wiederherstellung ausgeloeste <<TreeviewSelect>>, das sonst das rechte
@@ -162,6 +174,20 @@ class HebelView(ttk.Frame):
             toolbar, text="Signal-Historie", command=self._on_history_clicked, state="disabled"
         )
         self.history_button.pack(side="left", padx=(8, 0))
+
+        # Anzeigefilter (2026-07-27) - offene Positionen sind von beiden
+        # Radiobutton-Stufen ausgenommen (immer sichtbar), siehe refresh()-
+        # Docstring-Kommentar an der Filterstelle.
+        ttk.Label(toolbar, text="Anzeige:", foreground=theme.info_color()).pack(side="left", padx=(16, 4))
+        ttk.Radiobutton(
+            toolbar, text="2 Tage", value="2_tage", variable=self._zeitfenster_var,
+            command=self.refresh,
+        ).pack(side="left")
+        ttk.Radiobutton(
+            toolbar, text="Alle", value="alle", variable=self._zeitfenster_var,
+            command=self.refresh,
+        ).pack(side="left")
+
         self.status_label = ttk.Label(toolbar, text="", foreground=theme.info_color())
         self.status_label.pack(side="left", padx=(12, 0))
 
@@ -193,6 +219,15 @@ class HebelView(ttk.Frame):
             signals = db.get_latest_hebel_signal_per_symbol_and_richtung(conn)
             kandidaten = db.get_pending_hebel_candidates(conn)
             positions = db.get_open_hebel_positions(conn)
+            # Anzeigefilter (2026-07-27) - NUR fuer die GUI-Darstellung, die
+            # geteilte Funktion selbst bleibt unveraendert (siehe deren
+            # Docstring: budget_allocator.py/hebel_backward_tracking.py/
+            # regime.py/hebel_analyst.py verlassen sich auf das VOLLSTAENDIGE
+            # Ergebnis, unabhaengig vom aktuellen Toggle-Stand oder Alter -
+            # eine Filterung an der geteilten Funktion selbst wuerde dort
+            # z.B. die Ueberholt-Erkennung oder die Regime-Konflikt-Kennzahl
+            # verfaelschen).
+            hebel_toggle_map = db.get_hebel_pruefung_toggle_map(conn)
             # SLA-Redesign-Transparenz (2026-07-21): dieselbe Wartezeit-Funktion
             # wie im Budget-Allocator, hier nur zur Anzeige (nie an das LLM
             # weitergereicht - Anzeige-Muster wie _formatiere_zeitpunkt_lokal()).
@@ -215,8 +250,36 @@ class HebelView(ttk.Frame):
         self._rows = {}
         self._wartezeit_tooltips = {}
 
+        # covered() bewusst aus der VOLLSTAENDIGEN, ungefilterten signals-Menge
+        # gebaut (vor dem Anzeigefilter unten) - sonst wuerde ein durch den
+        # Toggle- oder Zeitfilter ausgeblendetes Signal seinen Platz faelschlich
+        # wieder fuer einen "Kandidat wartet auf Analyse"-Platzhalter freigeben.
         covered = {(s.symbol, s.richtung) for s in signals.values()}
+
+        zeitgrenze = None
+        if self._zeitfenster_var.get() == "2_tage":
+            zeitgrenze = datetime.now(timezone.utc) - timedelta(days=_ZEITFENSTER_TAGE)
+
         for sig in sorted(signals.values(), key=lambda s: s.created_at, reverse=True):
+            hat_offene_position = (sig.symbol, sig.richtung) in self._offene_positionen
+            if not hat_offene_position:
+                # Deaktiviert (Hebel-Pruefung-Toggle aus) UND keine offene
+                # Position -> dauerhaft ausblenden, unabhaengig vom Alter
+                # (2026-07-27, Nutzer-Wunsch: "fuer Assets die nicht mehr auf
+                # Hebel stehen aus der Hebel-Liste entfernen").
+                if not hebel_toggle_map.get(sig.symbol, True):
+                    continue
+                # Zeit-Switch (2026-07-27) - reiner Anzeige-Deckel gegen alte,
+                # aber weiterhin aktive (Toggle an) Eintraege. Offene Positionen
+                # sind hiervon ausgenommen (siehe hat_offene_position oben) -
+                # deren aktueller Stand soll unabhaengig vom Signal-Alter
+                # sichtbar bleiben.
+                if zeitgrenze is not None:
+                    erstellt = datetime.fromisoformat(sig.created_at)
+                    if erstellt.tzinfo is None:
+                        erstellt = erstellt.replace(tzinfo=timezone.utc)
+                    if erstellt < zeitgrenze:
+                        continue
             iid = f"{sig.symbol}:{sig.richtung}"
             self._rows[iid] = ("signal", sig)
             zeit = format_zeitpunkt_lokal(sig.created_at)

@@ -1224,6 +1224,17 @@ def set_hebel_pruefung_erlaubt(conn: sqlite3.Connection, symbol: str, erlaubt: b
     conn.commit()
 
 
+def get_hebel_pruefung_toggle_map(conn: sqlite3.Connection) -> dict[str, bool]:
+    """Bulk-Variante von get_hebel_pruefung_erlaubt() (2026-07-27, Hebel-Tab-
+    Anzeigefilter fuer deaktivierte Symbole ohne offene Position) - vermeidet
+    eine Einzelabfrage je angezeigtem Signal. Ein Symbol, das in
+    asset_hebel_settings fehlt, gilt als erlaubt (Default True) - der
+    Aufrufer muss das selbst per .get(symbol, True) abbilden, dieses Dict
+    enthaelt nur explizite Zeilen."""
+    rows = conn.execute("SELECT symbol, hebel_pruefung_erlaubt FROM asset_hebel_settings").fetchall()
+    return {r["symbol"]: bool(r["hebel_pruefung_erlaubt"]) for r in rows}
+
+
 def get_bitpanda_gelistet_override(conn: sqlite3.Connection, symbol: str) -> bool:
     """Bitpanda-Gelistet-Override (2026-07-20) - siehe asset_bitpanda_override-
     Tabellendocstring. Default: kein Override (False), solange keine explizite

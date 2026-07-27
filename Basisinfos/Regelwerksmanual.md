@@ -10225,3 +10225,50 @@ Call-2-Update nicht); Signatur-Regressionscheck aller 4 neuen Pipelines +
 der Plumbing-Kette (`run_multi_asset_batch()`, `multi_asset_batch_job()`).
 Echter Notebook-Lauf (nach Deploy) noch ausstehend, insbesondere für Hedge
 (dünnste Faktenbasis, höchstes Risiko für instabile Z.ai-Antworten).
+
+## Nachtrag (2026-07-27): Hebel-Tab-Anzeigefilter - deaktivierte Symbole ohne offene Position + Zeit-Switch
+
+Auslöser: Nutzer-Wunsch, deaktivierte Symbole (Hebel-Prüfung-Toggle aus)
+automatisch aus der Hebel-Tab-Liste zu entfernen. Der bereits am selben Tag
+gefixte KAITO-Fund (`87f325b`) deckte nur die Warteliste
+(`get_pending_hebel_candidates()`) ab - die Haupt-Tabelle zeigt zusätzlich
+das jeweils letzte generierte Signal je Symbol+Richtung
+(`get_latest_hebel_signal_per_symbol_and_richtung()`), das den Toggle gar
+nicht kennt. Ohne offene Position bleibt die letzte Zeile eines deaktivierten
+Symbols dadurch für immer stehen.
+
+**Bewusst NICHT an der geteilten Funktion selbst gefixt:**
+`get_latest_hebel_signal_per_symbol_and_richtung()` wird an 4 weiteren,
+echten Business-Logik-Stellen verwendet (`budget_allocator.py`-Cooldown-
+Prüfung, `hebel_backward_tracking.py`-Überholt-Erkennung, `regime.py`-
+Regime-Konflikt-Kennzahl, `hebel_analyst.py`-Wiederholungs-Erkennung) - alle
+vier brauchen das VOLLSTÄNDIGE, toggle-unabhängige Ergebnis. Eine Filterung
+an der geteilten Funktion hätte dort stillschweigend falsche Ergebnisse
+erzeugt (z.B. Überholt-Erkennung für ein deaktiviertes Symbol funktionslos).
+
+**Fix, ausschließlich in `ui/hebel_view.py::refresh()`:**
+1. Neue Bulk-Funktion `database/db.py::get_hebel_pruefung_toggle_map()` -
+   liest `asset_hebel_settings` einmalig komplett statt N Einzelabfragen.
+2. Zeilen-Filter beim Aufbau der Haupt-Tabelle: ein Signal wird ausgeblendet,
+   wenn (a) der Toggle für dieses Symbol aus ist UND (b) keine offene
+   Position für genau dieses Symbol+Richtung existiert (offene Positionen
+   bleiben aus demselben Grund wie beim `87f325b`-Fix immer verwaltbar).
+3. Zusätzlich ein Anzeige-Switch ("2 Tage"/"Alle", `ttk.Radiobutton`-Paar im
+   Toolbar) - blendet Signale älter als 2 Tage aus, ebenfalls mit Ausnahme
+   offener Positionen (deren aktueller Stand soll unabhängig vom Signal-Alter
+   sichtbar bleiben). Session-only, keine Persistenz (Nutzer-Vorgabe:
+   "keine Speicherung notwendig"), Standardwert bei jedem App-Start "2 Tage".
+4. Kritische Reihenfolge-Feinheit: die `covered`-Menge (verhindert doppelte
+   "Kandidat wartet auf Analyse"-Platzhalter für bereits echte Signale) wird
+   weiterhin aus der VOLLSTÄNDIGEN, ungefilterten `signals`-Menge gebaut, VOR
+   dem Anzeigefilter - sonst hätte ein ausgeblendetes Signal seinen Platz
+   fälschlich wieder für einen Kandidaten-Platzhalter freigegeben.
+
+**Verifiziert:** synthetischer Test mit 5 Szenarien (aktiv+frisch, deaktiviert
+ohne Position, deaktiviert MIT offener Position, aktiv aber 5 Tage alt ohne
+Position, aktiv 5 Tage altes Signal MIT offener Position) gegen beide
+Zeitfenster-Einstellungen - alle Kombinationen wie erwartet; echter
+Tk-Smoke-Test (`HebelView()`-Erstellung, Standardwert "2_tage" bestätigt,
+Umschalten auf "alle" + `refresh()` ohne Absturz); Import-Regressionscheck
+für `database/db.py` + alle 4 anderen Verbraucher der geteilten Funktion
+(unverändert, keine Regression).
