@@ -32,9 +32,16 @@ OUTCOME_UEBERHOLT = "ueberholt_durch_neuere_analyse"
 # tracking.py importiert die OUTCOME_*-Konstanten bereits von hier).
 OUTCOME_LIQUIDATION = "liquidation_wahrscheinlich"
 
-# Nur diese Aktionen haben eine Take-Profit/Stop-Loss-Semantik, die sich gegen
-# Kurshistorie pruefen laesst - HALTEN/VERKAUFEN/TAUSCHEN nicht.
-_TRACKABLE_ACTIONS = {"KAUFEN", "NACHKAUFEN"}
+# Trackbare Aktionen (2026-07-27, Nutzer-Wunsch "auch auf sinkende Short-Kurse
+# tracken, damit es vollstaendig ist fuer alle Assets - fuer ZAI und Mistral"):
+# VERKAUFEN/TAUSCHEN NACHTRAEGLICH ergaenzt - vorher nur KAUFEN/NACHKAUFEN, weil
+# Entry/Stop-Loss/Take-Profit erst seit der gespiegelten Regel-3/Regel-16-
+# Erweiterung (agent/krypto/analyst.py + 3 weitere Spot-family-Analysten,
+# NICHT agent/hedge/analyst.py - siehe dortige Regel 9, Hedge hat bewusst KEINE
+# CRV-Pflicht/Zonen-Richtungs-Garantie fuer irgendeine Richtung) zuverlaessig
+# bearisch orientiert sind (Take-Profit UNTER, Stop-Loss UEBER dem Entry).
+# HALTEN bleibt weiterhin nicht trackbar (keine Handlung, keine Zonen-These).
+_TRACKABLE_ACTIONS = {"KAUFEN", "NACHKAUFEN", "VERKAUFEN", "TAUSCHEN"}
 
 # Inhaltsbasierte Ablaufzeit (2026-07-19, Backtracking-Aussagekraft-Audit -
 # Nutzer-Wunsch: "der zeitliche Faktor sollte durch den Inhalt bzw. Angabe -
@@ -182,11 +189,25 @@ def check_signal_outcome(
     Mindestziel/MFE-Tracking (2026-07-27, siehe DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV):
     laeuft PARALLEL zur bestehenden TP/SL-Aufloesung mit, veraendert deren Ergebnis
     NICHT - max_realisiertes_crv ist das hoechste an irgendeinem Tag erreichte
-    guenstige CRV (Tages-High fuer LONG), unabhaengig davon, ob/wann das Signal
-    spaeter per TP/SL/Ueberholt/Abgelaufen aufgeloest wird. mindestziel_erreicht_am
-    ist das Datum des ERSTEN Tages, an dem die Schwelle erreicht wurde."""
+    guenstige CRV (Tages-High fuer LONG/Tages-Low fuer SHORT), unabhaengig davon,
+    ob/wann das Signal spaeter per TP/SL/Ueberholt/Abgelaufen aufgeloest wird.
+    mindestziel_erreicht_am ist das Datum des ERSTEN Tages, an dem die Schwelle
+    erreicht wurde.
+
+    Richtungsabhaengig (2026-07-27, Nutzer-Wunsch "auch auf sinkende Short-Kurse
+    tracken"): VERKAUFEN/TAUSCHEN spiegeln TP/SL/MFE komplett - mirror von
+    hebel_backward_tracking.py::check_hebel_signal_outcome()s ist_short-Zweig,
+    hier ueber agent.krypto.gegenpruefung.richtung_aus_action() abgeleitet statt
+    eines nativen richtung-Felds (Signal hat keins, siehe dortiger Docstring).
+    Hedge-Invertierung (ist_hedge_invertiert) ist hier bewusst NICHT relevant -
+    die Zonen beschreiben immer die Kursbewegung des Instruments SELBST, nicht
+    die Gesamtmarkt-Interpretation."""
     if signal.action not in _TRACKABLE_ACTIONS:
         return OUTCOME_NICHT_ANWENDBAR, {}
+
+    from agent.krypto.gegenpruefung import richtung_aus_action
+
+    ist_short = richtung_aus_action(signal.action) == "SHORT"
 
     take_profit_threshold = _threshold(signal.take_profit_usd_von, signal.take_profit_usd)
     stop_loss_threshold = _threshold(signal.stop_loss_usd_von, signal.stop_loss_usd)
@@ -199,9 +220,14 @@ def check_signal_outcome(
 
     min_date = signal.created_at[:10]
     entry_mid = _entry_mid(signal)
-    risiko_distanz = (
-        entry_mid - stop_loss_threshold if entry_mid is not None and entry_mid != stop_loss_threshold else None
-    )
+    if entry_mid is not None:
+        risiko_distanz = (
+            (stop_loss_threshold - entry_mid) if ist_short else (entry_mid - stop_loss_threshold)
+        )
+        if risiko_distanz == 0:
+            risiko_distanz = None
+    else:
+        risiko_distanz = None
 
     max_favorable_crv = None
     mindestziel_erreicht_am = None
@@ -210,7 +236,10 @@ def check_signal_outcome(
         nonlocal max_favorable_crv, mindestziel_erreicht_am
         if risiko_distanz is None or risiko_distanz <= 0:
             return
-        favorable_crv = (guenstigster_preis - entry_mid) / risiko_distanz
+        favorable_crv = (
+            (entry_mid - guenstigster_preis) / risiko_distanz if ist_short
+            else (guenstigster_preis - entry_mid) / risiko_distanz
+        )
         if max_favorable_crv is None or favorable_crv > max_favorable_crv:
             max_favorable_crv = favorable_crv
         if mindestziel_erreicht_am is None and favorable_crv >= richtungstreffer_mindest_crv:
@@ -220,7 +249,10 @@ def check_signal_outcome(
         status = OUTCOME_TAKE_PROFIT if hit_take else OUTCOME_STOP_LOSS
         realized_crv = None
         if entry_mid is not None and entry_mid != stop_loss_threshold:
-            realized_crv = (exit_price - entry_mid) / (entry_mid - stop_loss_threshold)
+            realized_crv = (
+                (entry_mid - exit_price) / (stop_loss_threshold - entry_mid) if ist_short
+                else (exit_price - entry_mid) / (entry_mid - stop_loss_threshold)
+            )
         return status, {
             "entschieden_am": day,
             "realisiertes_crv": realized_crv,
@@ -229,21 +261,29 @@ def check_signal_outcome(
             "mindestziel_erreicht_am": mindestziel_erreicht_am,
         }
 
+    def _check_preis(high: float, low: float) -> tuple[bool, bool, float, float]:
+        """Gibt (hit_take, hit_stop, exit_preis_bei_take, exit_preis_bei_stop) zurueck -
+        SHORT spiegelt Take-Profit/Stop-Loss gegenueber LONG (Take-Profit unten,
+        Stop-Loss oben)."""
+        if ist_short:
+            return (low <= take_profit_threshold, high >= stop_loss_threshold, low, high)
+        return (high >= take_profit_threshold, low <= stop_loss_threshold, high, low)
+
     ohlc_rows = db.get_ohlc_history(conn, signal.symbol, "USD", min_date=min_date)
     if len(ohlc_rows) >= 1:
         datenquelle = "real"
         for row in ohlc_rows:
             day = row.date
-            _erfasse_mfe(row.high, day)
-            hit_take = row.high >= take_profit_threshold
-            hit_stop = row.low <= stop_loss_threshold
+            guenstigster_tagespreis = row.low if ist_short else row.high
+            _erfasse_mfe(guenstigster_tagespreis, day)
+            hit_take, hit_stop, exit_take, exit_stop = _check_preis(row.high, row.low)
             if hit_stop:
                 # Konservativ (Z-1: Kapitalerhalt vor Gewinn): trifft ein Tag beide
                 # Zonen, gewinnt Stop-Loss - keine Annahme ueber die Intraday-
                 # Reihenfolge ohne Tick-Daten.
-                return resolve(row.low, hit_take=False)
+                return resolve(exit_stop, hit_take=False)
             if hit_take:
-                return resolve(row.high, hit_take=True)
+                return resolve(exit_take, hit_take=True)
     else:
         datenquelle = "proxy"
         price_rows = db.get_price_history(conn, asset.coingecko_id, min_date=min_date) if asset.coingecko_id else []
@@ -252,8 +292,7 @@ def check_signal_outcome(
                 continue
             day = row.date
             _erfasse_mfe(row.price_usd, day)
-            hit_take = row.price_usd >= take_profit_threshold
-            hit_stop = row.price_usd <= stop_loss_threshold
+            hit_take, hit_stop, _, _ = _check_preis(row.price_usd, row.price_usd)
             if hit_stop:
                 return resolve(row.price_usd, hit_take=False)
             if hit_take:
@@ -529,9 +568,18 @@ def compute_provider_performance(conn, watchlist: list | None = None) -> dict:
     return ergebnis
 
 
+# Rueckgabewerte von bewerte_zai_richtung() jenseits von "treffer"/"fehlschlag" -
+# als benannte Konstanten statt Strings inline, damit compute_zai_richtung_
+# performance() sie eindeutig in getrennte Zaehler einsortieren kann (siehe
+# dortige Docstring-Erklaerung des Unterschieds).
+ZAI_URTEIL_NEUTRAL = "neutral"
+ZAI_URTEIL_KEINE_KLARE_BEWEGUNG = "keine_klare_marktbewegung"
+
+
 def bewerte_zai_richtung(
-    primaer_richtung: str, outcome_status: str, zai_eigene_richtung: str | None,
-) -> str | None:
+    primaer_richtung: str, max_realisiertes_crv: float | None, zai_eigene_richtung: str | None,
+    richtungstreffer_mindest_crv: float = DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV,
+) -> str:
     """Vergleicht Z.ais UNABHAENGIGE Richtungs-Ableitung (Call 2,
     `zai_eigene_richtung` aus agent/krypto/gegenpruefung.py::leite_eigene_richtung())
     gegen die TATSAECHLICHE Marktrichtung - komplett unabhaengig davon, ob
@@ -546,62 +594,90 @@ def bewerte_zai_richtung(
     und deren Erfolgsquote messen" - analog zu compute_provider_performance()/
     compute_win_rate_fact(), aber unabhaengig von Mistrals Bias.
 
-    Kein neuer Kursabruf noetig: `outcome_status` wurde bereits vom normalen
-    Backward-Tracking (check_signal_outcome()/check_hebel_signal_outcome())
-    berechnet, und Take-Profit/Stop-Loss sind dort bereits RICHTUNGS-KORREKT
-    orientiert (LONG: TP oberhalb/SL unterhalb des Entrys, SHORT: umgekehrt -
-    siehe hebel_backward_tracking.py::check_hebel_signal_outcome() Zeile
-    ~146-206). Daraus laesst sich die tatsaechliche Kursbewegung ableiten,
-    ohne selbst nochmal OHLC-Daten zu lesen:
-    - `primaer_richtung`=LONG + take_profit_erreicht -> Kurs stieg -> Markt war LONG
-    - `primaer_richtung`=LONG + stop_loss_erreicht/liquidation -> Kurs fiel -> Markt war SHORT
-    - `primaer_richtung`=SHORT + take_profit_erreicht -> Kurs fiel -> Markt war SHORT
-    - `primaer_richtung`=SHORT + stop_loss_erreicht/liquidation -> Kurs stieg -> Markt war LONG
+    NACHTRAG (2026-07-27, Punkt 3 der Performance-Messung-Nachfrage): erste
+    Version nutzte den binaeren `outcome_status` (TP/SL-Zone getroffen?) -
+    Nutzer-Einwand zurecht: das "reizt die Take-Profit-Zone nicht aus", ein
+    Signal, das nie TP/SL erreicht (spaeter ueberholt/abgelaufen) aber
+    zwischenzeitlich klar in eine Richtung lief, wurde komplett ignoriert.
+    Jetzt auf `outcome_max_realisiertes_crv` (Maximum Favorable Excursion,
+    bereits fuer die bestehende Richtungstreffer-Quote berechnet, siehe
+    compute_richtungstreffer_quote()) umgestellt - BREITER als der reine
+    TP/SL-Fall, gleiche Philosophie: eine Bewegung zaehlt erst als
+    "tatsaechliche Richtung", wenn sie mindestens `richtungstreffer_mindest_crv`
+    CRV erreicht hat (Default 1.0, konfigurierbar, gleicher Wert wie
+    compute_richtungstreffer_quote() verwendet).
 
-    `zai_eigene_richtung`=NEUTRAL (oder None/unbekannt) liefert None (kein
-    Treffer, kein Fehlschlag) - Nutzer-Entscheidung 2026-07-27: "wuerde ich
-    neutral zaehlen eher nein - denn wir messen es auch nicht oder?" (analog
-    dazu, dass HALTEN/Mistral-NEUTRAL ebenfalls nicht in die bestehenden
-    Trefferquoten einfliesst). `outcome_status` ausserhalb der aufgeloesten
-    Zustaende (offen/abgelaufen/ueberholt/nicht_anwendbar) liefert ebenfalls
-    None - keine tatsaechliche Marktrichtung ableitbar."""
-    if zai_eigene_richtung not in ("LONG", "SHORT"):
-        return None
-    if outcome_status == OUTCOME_TAKE_PROFIT:
+    `max_realisiertes_crv` ist bereits relativ zu `primaer_richtung`s eigener
+    Risiko-Distanz berechnet (siehe check_signal_outcome()/
+    check_hebel_signal_outcome()): deutlich positiv (>= Schwelle) heisst
+    "Markt bestaetigte primaer_richtung", deutlich negativ (<= -Schwelle)
+    heisst "Markt lief klar in die GEGENRICHTUNG von primaer_richtung" (kein
+    neuer Kursabruf noetig, reine Vorzeichen-/Schwellen-Auswertung eines
+    bereits vorhandenen Werts). Dazwischen (keine der beiden Schwellen
+    erreicht) -> `ZAI_URTEIL_KEINE_KLARE_BEWEGUNG` (eigener Zaehler, siehe
+    compute_zai_richtung_performance() - nicht dasselbe wie NEUTRAL: hier hat
+    der MARKT nicht klar entschieden, unabhaengig davon, was Z.ai sagte).
+
+    `zai_eigene_richtung`=NEUTRAL (oder None/unbekannt) liefert
+    `ZAI_URTEIL_NEUTRAL` (eigener Zaehler, weder Treffer noch Fehlschlag) -
+    Nutzer-Entscheidung 2026-07-27: "wuerde ich neutral zaehlen eher nein -
+    denn wir messen es auch nicht oder?" (analog dazu, dass HALTEN/Mistral-
+    NEUTRAL ebenfalls nicht in die bestehenden Trefferquoten einfliesst).
+    `max_realisiertes_crv is None` wird ebenso behandelt (kein MFE-Wert
+    vorhanden, z.B. nie eine OHLC-Zeile gefunden)."""
+    if max_realisiertes_crv is None or zai_eigene_richtung not in ("LONG", "SHORT"):
+        return ZAI_URTEIL_NEUTRAL
+    if max_realisiertes_crv >= richtungstreffer_mindest_crv:
         tatsaechliche_richtung = primaer_richtung
-    elif outcome_status in (OUTCOME_STOP_LOSS, OUTCOME_LIQUIDATION):
+    elif max_realisiertes_crv <= -richtungstreffer_mindest_crv:
         tatsaechliche_richtung = "SHORT" if primaer_richtung == "LONG" else "LONG"
     else:
-        return None
+        return ZAI_URTEIL_KEINE_KLARE_BEWEGUNG
     return "treffer" if zai_eigene_richtung == tatsaechliche_richtung else "fehlschlag"
 
 
-def compute_zai_richtung_performance(conn, watchlist: list | None = None) -> dict:
-    """Aggregiert bewerte_zai_richtung() ueber alle bereits aufgeloesten Signale
-    mit gesetztem `zai_eigene_richtung` - aus hebel_signals (echtes `richtung`-
-    Feld) UND signals (Spot-family, `primaer_richtung` via
-    agent.krypto.gegenpruefung.richtung_aus_action() aus `action` abgeleitet,
-    identisch zu der Ableitung, die bereits fuer `zai_uebereinstimmung`
-    verwendet wird). Gleiche Tier-Aufschluesselung wie compute_provider_
-    performance() (Hebel gesondert, Spot-family nach Assetklasse wenn
-    `watchlist` uebergeben wird).
+def compute_zai_richtung_performance(
+    conn, watchlist: list | None = None,
+    richtungstreffer_mindest_crv: float = DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV,
+) -> dict:
+    """Aggregiert bewerte_zai_richtung() ueber alle Signale mit gesetztem
+    `zai_eigene_richtung` UND vorhandenem `outcome_max_realisiertes_crv` - aus
+    hebel_signals (echtes `richtung`-Feld) UND signals (Spot-family,
+    `primaer_richtung` via agent.krypto.gegenpruefung.richtung_aus_action()
+    aus `action` abgeleitet, identisch zu der Ableitung, die bereits fuer
+    `zai_uebereinstimmung` verwendet wird). Gleiche Tier-Aufschluesselung wie
+    compute_provider_performance() (Hebel gesondert, Spot-family nach
+    Assetklasse wenn `watchlist` uebergeben wird).
+
+    Basis ist `outcome_max_realisiertes_crv` (Maximum Favorable Excursion),
+    NICHT `outcome_status` - siehe bewerte_zai_richtung()-Docstring fuer die
+    Begruendung (Punkt 3 der Performance-Messung-Nachfrage, 2026-07-27:
+    "die Take-Profit-Zone nicht ausgereizt" haette mit dem binaeren
+    outcome_status viele Faelle uebersehen). WHERE-Filter deshalb breiter als
+    die erste Version: `outcome_max_realisiertes_crv IS NOT NULL` statt
+    `outcome_status IN (_RESOLVED_OUTCOMES)` - identisch zum WHERE-Filter von
+    compute_richtungstreffer_quote().
 
     Hedge-Instrumente (in agent.hedge.pipeline.SYMBOL_ZU_HEBEL_FAKTOR gelistet)
     bekommen `ist_hedge_invertiert=True` fuer richtung_aus_action() - siehe
     dortiger Docstring (KAUFEN = Hedge aufbauen = baerische Gesamtmarkt-
     erwartung -> SHORT).
 
-    Wichtige Einschraenkung (2026-07-27): signals._TRACKABLE_ACTIONS = nur
-    KAUFEN/NACHKAUFEN werden je outcome-aufgeloest (siehe Modul-Docstring
-    oben) - VERKAUFEN/TAUSCHEN (die SHORT-Seite der Spot-family) liefern
-    strukturell NIE take_profit_erreicht/stop_loss_erreicht, tauchen hier
-    also praktisch nicht auf, bis ein eigenes Sell-Side-Tracking existiert.
-    Bei Hebel gilt diese Einschraenkung NICHT (check_hebel_signal_outcome()
-    loest beide Richtungen vollstaendig auf).
+    Wichtige Einschraenkung (2026-07-27, gilt weiterhin): signals._TRACKABLE_
+    ACTIONS = nur KAUFEN/NACHKAUFEN bekommen je ein outcome_max_realisiertes_crv
+    berechnet (siehe check_signal_outcome()) - VERKAUFEN/TAUSCHEN (die SHORT-
+    Seite der Spot-family) tauchen hier also praktisch nicht auf, bis ein
+    eigenes Sell-Side-Tracking existiert. Bei Hebel gilt diese Einschraenkung
+    NICHT (check_hebel_signal_outcome() berechnet MFE fuer beide Richtungen).
 
-    Rueckgabe je Tier: {"anzahl_bewertet", "treffer", "fehlschlaege",
-    "neutral_bei_klarer_bewegung", "trefferquote_pct"}. Reine Lesefunktion,
-    kein Seiteneffekt."""
+    Rueckgabe je Tier: {"anzahl_bewertet" (nur treffer+fehlschlaege, siehe
+    unten), "treffer", "fehlschlaege", "neutral" (Z.ai antwortete NEUTRAL),
+    "keine_klare_marktbewegung" (Markt bewegte sich nicht entscheidend genug,
+    unabhaengig von Z.ais Antwort), "trefferquote_pct"}. `anzahl_bewertet`
+    zaehlt bewusst NUR Faelle mit eindeutigem Urteil (treffer+fehlschlaege) -
+    die anderen beiden Kategorien waeren sonst faelschlich in der
+    Trefferquote verwaesserend mitgezaehlt. Reine Lesefunktion, kein
+    Seiteneffekt."""
     from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR as _hedge_symbole
     from agent.krypto.gegenpruefung import richtung_aus_action
 
@@ -611,35 +687,36 @@ def compute_zai_richtung_performance(conn, watchlist: list | None = None) -> dic
     def _stelle_sicher(tier: str) -> dict:
         return ergebnis.setdefault(tier, {
             "anzahl_bewertet": 0, "treffer": 0, "fehlschlaege": 0,
-            "neutral_bei_klarer_bewegung": 0, "trefferquote_pct": None,
+            "neutral": 0, "keine_klare_marktbewegung": 0, "trefferquote_pct": None,
         })
 
-    def _erfasse(tier: str, urteil: str | None) -> None:
+    def _erfasse(tier: str, urteil: str) -> None:
         eintrag = _stelle_sicher(tier)
-        if urteil is None:
-            eintrag["neutral_bei_klarer_bewegung"] += 1
-            return
-        eintrag["anzahl_bewertet"] += 1
-        if urteil == "treffer":
+        if urteil == ZAI_URTEIL_NEUTRAL:
+            eintrag["neutral"] += 1
+        elif urteil == ZAI_URTEIL_KEINE_KLARE_BEWEGUNG:
+            eintrag["keine_klare_marktbewegung"] += 1
+        elif urteil == "treffer":
+            eintrag["anzahl_bewertet"] += 1
             eintrag["treffer"] += 1
         else:
+            eintrag["anzahl_bewertet"] += 1
             eintrag["fehlschlaege"] += 1
 
-    placeholders = ", ".join("?" for _ in _RESOLVED_OUTCOMES)
-
     hebel_rows = conn.execute(
-        f"SELECT richtung, outcome_status, zai_eigene_richtung FROM hebel_signals "
-        f"WHERE outcome_status IN ({placeholders}) AND zai_eigene_richtung IS NOT NULL",
-        _RESOLVED_OUTCOMES,
+        "SELECT richtung, outcome_max_realisiertes_crv, zai_eigene_richtung FROM hebel_signals "
+        "WHERE outcome_max_realisiertes_crv IS NOT NULL AND zai_eigene_richtung IS NOT NULL",
     ).fetchall()
     for row in hebel_rows:
-        urteil = bewerte_zai_richtung(row["richtung"], row["outcome_status"], row["zai_eigene_richtung"])
+        urteil = bewerte_zai_richtung(
+            row["richtung"], row["outcome_max_realisiertes_crv"], row["zai_eigene_richtung"],
+            richtungstreffer_mindest_crv,
+        )
         _erfasse("hebel", urteil)
 
     spot_rows = conn.execute(
-        f"SELECT symbol, action, outcome_status, zai_eigene_richtung FROM signals "
-        f"WHERE outcome_status IN ({placeholders}) AND zai_eigene_richtung IS NOT NULL",
-        _RESOLVED_OUTCOMES,
+        "SELECT symbol, action, outcome_max_realisiertes_crv, zai_eigene_richtung FROM signals "
+        "WHERE outcome_max_realisiertes_crv IS NOT NULL AND zai_eigene_richtung IS NOT NULL",
     ).fetchall()
     for row in spot_rows:
         primaer_richtung = richtung_aus_action(
@@ -648,7 +725,10 @@ def compute_zai_richtung_performance(conn, watchlist: list | None = None) -> dic
         if primaer_richtung is None:
             continue
         tier = assetklasse_by_symbol.get(row["symbol"], "unbekannt") if watchlist else "spot"
-        urteil = bewerte_zai_richtung(primaer_richtung, row["outcome_status"], row["zai_eigene_richtung"])
+        urteil = bewerte_zai_richtung(
+            primaer_richtung, row["outcome_max_realisiertes_crv"], row["zai_eigene_richtung"],
+            richtungstreffer_mindest_crv,
+        )
         _erfasse(tier, urteil)
 
     for eintrag in ergebnis.values():

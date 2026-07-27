@@ -67,7 +67,14 @@ sollte deutlich UNTER der Obergrenze liegen; nur bei hoher Konfidenz (nahe 100%)
 eine Positionsgroesse nahe der vollen Obergrenze gerechtfertigt. Die Obergrenze selbst \
 wird zusaetzlich serverseitig nach Konfidenz skaliert (deterministisch, nicht von dir \
 zu berechnen) - eine konfidenz-bewusste eigene Einschaetzung vermeidet unnoetige \
-nachtraegliche Kuerzungen.
+nachtraegliche Kuerzungen. Bei "VERKAUFEN" gilt dieselbe Pflicht GESPIEGELT: Stop-Loss \
+ist PFLICHT und das CRV MUSS mindestens 2.0 betragen, konservativ gerechnet \
+((entry_mitte - take_profit.usd_bis) / (stop_loss.usd_bis - entry_mitte)) - deine \
+Take-Profit-Zone muss dafuer VOLLSTAENDIG UNTERHALB und deine Stop-Loss-Zone \
+VOLLSTAENDIG OBERHALB der Entry-Zone liegen (Take-Profit = Kursniveau, das die \
+bearische These bestaetigt; Stop-Loss = Kursniveau, das sie widerlegt). Reicht diese \
+Rechnung nicht, wird die Empfehlung ebenfalls nachtraeglich deterministisch auf HALTEN \
+korrigiert.
 4. Berechne den prozentualen Abstand jeder Zonen-Grenze (von UND bis) von Entry/Stop-Loss/ \
 Take-Profit zum aktuellen Kurs EINMAL und wende ihn auf USD- UND EUR-Kurs gleichermassen an \
 (keine unabhaengig erfundenen Werte je Waehrung).
@@ -137,7 +144,9 @@ KAUFEN, VERKAUFEN, HALTEN, NACHKAUFEN.
 13. Entry/Stop-Loss/Take-Profit sind Kurszonen (von <= bis), abgeleitet aus echten, \
 gelieferten Referenzpunkten (`technische_analyse.atr.wert`, \
 `technische_analyse.support_resistance`, `technische_analyse.fibonacci`) - KEINE frei \
-geratene Bandbreite. Siehe Regel 3 fuer die daran gekoppelte CRV-Pflicht.
+geratene Bandbreite. Bei VERKAUFEN GESPIEGELT: Take-Profit-Zone UNTERHALB (naechste \
+Unterstuetzung/tieferes Fibonacci-Level), Stop-Loss-Zone OBERHALB (naechster \
+Widerstand) der Entry-Zone. Siehe Regel 3 fuer die daran gekoppelte CRV-Pflicht.
 14. Fuelle zusaetzlich zu `long_reasoning` das Feld `top_gruende` mit GENAU 5 Eintraegen, \
 sortiert von der staerksten zur schwaechsten Begruendung (rang 1 = staerkste, rang 5 = \
 schwaechste, jede Zahl 1-5 genau einmal). Jeder Eintrag hat `rang` (1-5), `kategorie` \

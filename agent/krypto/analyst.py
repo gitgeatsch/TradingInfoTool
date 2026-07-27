@@ -75,7 +75,14 @@ sollte deutlich UNTER der Obergrenze liegen; nur bei hoher Konfidenz (nahe 100%)
 eine Positionsgroesse nahe der vollen Obergrenze gerechtfertigt. Die Obergrenze selbst \
 wird zusaetzlich serverseitig nach Konfidenz skaliert (deterministisch, nicht von dir \
 zu berechnen) - eine konfidenz-bewusste eigene Einschaetzung vermeidet unnoetige \
-nachtraegliche Kuerzungen.
+nachtraegliche Kuerzungen. Bei "VERKAUFEN"/"TAUSCHEN" gilt dieselbe Pflicht GESPIEGELT: \
+Stop-Loss ist PFLICHT und das CRV MUSS mindestens 2.0 betragen, konservativ gerechnet \
+((entry_mitte - take_profit.usd_bis) / (stop_loss.usd_bis - entry_mitte)) - deine \
+Take-Profit-Zone muss dafuer VOLLSTAENDIG UNTERHALB und deine Stop-Loss-Zone \
+VOLLSTAENDIG OBERHALB der Entry-Zone liegen (Take-Profit = Kursniveau, das die \
+bearische These bestaetigt; Stop-Loss = Kursniveau, das sie widerlegt). Reicht diese \
+Rechnung nicht, wird die Empfehlung ebenfalls nachtraeglich deterministisch auf HALTEN \
+korrigiert.
 4. Berechne den prozentualen Abstand jeder Zonen-Grenze (von UND bis) von Entry/Stop-Loss/ \
 Take-Profit zum aktuellen Kurs EINMAL und wende ihn auf USD- UND EUR-Kurs gleichermassen an \
 (keine unabhaengig erfundenen Werte je Waehrung).
@@ -190,10 +197,15 @@ Hinweis - niemals mit einer stuetzenden Formulierung wie "Raum fuer Erholung", \
 16. Entry/Stop-Loss/Take-Profit sind KEINE Einzelkurse mehr, sondern Kurszonen (von <= \
 bis). Leite jede Zone aus echten, gelieferten Referenzpunkten ab \
 (`technische_analyse.atr.wert`, `technische_analyse.support_resistance`, \
-`technische_analyse.fibonacci`) - KEINE frei geratene Bandbreite. Beispiel: Kauf-Zone um \
-ein Support-/Fibonacci-Level +/- einen Bruchteil der ATR; Stop-Loss-Zone knapp unterhalb \
-der naechsten Unterstuetzung; Take-Profit-Zone um den naechsten Widerstand/ein hoeheres \
-Fibonacci-Level. Siehe Regel 3 fuer die daran gekoppelte CRV-Pflicht.
+`technische_analyse.fibonacci`) - KEINE frei geratene Bandbreite. Beispiel bei KAUFEN/ \
+NACHKAUFEN: Kauf-Zone um ein Support-/Fibonacci-Level +/- einen Bruchteil der ATR; \
+Stop-Loss-Zone knapp unterhalb der naechsten Unterstuetzung; Take-Profit-Zone um den \
+naechsten Widerstand/ein hoeheres Fibonacci-Level. Bei VERKAUFEN/TAUSCHEN GESPIEGELT: \
+Verkaufs-Zone um ein Widerstands-/Fibonacci-Level +/- einen Bruchteil der ATR; \
+Stop-Loss-Zone knapp OBERHALB des naechsten Widerstands (bearische These widerlegt, \
+wenn der Kurs darueber steigt); Take-Profit-Zone um die naechste Unterstuetzung/ein \
+tieferes Fibonacci-Level (bearische These bestaetigt). Siehe Regel 3 fuer die daran \
+gekoppelte CRV-Pflicht.
 17. Fuelle `halte_kriterium` zusaetzlich zum groben `bucket` (kurz|mittel|lang) mit \
 mindestens EINEM konkreten, ueberpruefbaren Kriterium: einem Ziel-Kurs (`ziel_preis_usd`/ \
 `ziel_preis_eur`), einem Ziel-Datum (`ziel_datum`, Format YYYY-MM-DD) und/oder einer \

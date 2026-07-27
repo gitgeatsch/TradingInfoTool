@@ -458,6 +458,15 @@ def compute_cash_reserve_ziel(
 
 
 _BUY_ACTIONS = ("KAUFEN", "NACHKAUFEN")
+# Gespiegelte CRV-Pflicht (2026-07-27, Nutzer-Wunsch: "verkaufen sprich short
+# Richtung muss aus dem Trading ebenfalls eine Zielzone haben welche dann
+# umgekehrt funktioniert - also mathematisch deterministisch wie fuer die
+# kauf-/long Positionen") - siehe post_check()-Block unten. TAUSCHEN ist
+# Krypto-Spot-exklusiv (siehe agent/krypto/gegenpruefung.py), hier trotzdem
+# generisch gefuehrt, da die 4 Spot-family-Pipelines dieselbe post_check()
+# wiederverwenden. Hedge NICHT betroffen (eigener Deterministik-Deckel, siehe
+# agent/hedge/analyst.py Regel 9 - bewusst KEINE CRV-Pflicht).
+_SELL_ACTIONS = ("VERKAUFEN", "TAUSCHEN")
 
 
 @dataclass
@@ -833,6 +842,36 @@ def post_check(
                 reason = (
                     f"CRV {crv} unter Minimum {CRV_MINIMUM} (Z-2, konservativ: "
                     f"Entry-Mitte {entry_mid}, ungünstigster Stop {stop_von}, ungünstigstes Ziel {take_von})"
+                )
+                risk_veto_reason = f"{risk_veto_reason}; {reason}" if risk_veto_reason else reason
+                action = "HALTEN"
+
+    # Gespiegelte CRV-Pflicht fuer VERKAUFEN/TAUSCHEN (2026-07-27, siehe
+    # _SELL_ACTIONS-Docstring oben) - identische Philosophie wie der _BUY_ACTIONS-
+    # Block darueber, nur Zonen-Vorzeichen gedreht: bei einer bearischen These
+    # liegt Take-Profit UNTER und Stop-Loss UEBER dem Entry (Regel 3/16 in
+    # agent/krypto/analyst.py + 3 weiteren Spot-family-Analysten verlangen das
+    # jetzt explizit vom LLM). Konservativ wird hier die JEWEILS NAEHERE Zonen-
+    # Grenze (`_bis` statt `_von`) verwendet - der geringste angenommene Gewinn/
+    # groesste angenommene Verlust, spiegelbildlich zur `_von`-Wahl bei KAUFEN.
+    # `crv is None` (z.B. Zonen falsch orientiert, stop_bis <= entry_mid) faellt
+    # automatisch unter denselben Veto-Zweig wie bei KAUFEN - keine eigene
+    # Richtungspruefung noetig, die Mathematik erzwingt sie implizit.
+    if action in _SELL_ACTIONS:
+        entry = result.get("entry") or {}
+        stop = result.get("stop_loss") or {}
+        take = result.get("take_profit") or {}
+        entry_von, entry_bis = entry.get("usd_von"), entry.get("usd_bis")
+        stop_bis = stop.get("usd_bis")
+        take_bis = take.get("usd_bis")
+        if entry_von is not None and entry_bis is not None and stop_bis is not None and take_bis is not None:
+            entry_mid = (entry_von + entry_bis) / 2
+            crv = (entry_mid - take_bis) / (stop_bis - entry_mid) if stop_bis > entry_mid else None
+            if crv is None or crv < CRV_MINIMUM:
+                risk_veto = True
+                reason = (
+                    f"CRV {crv} unter Minimum {CRV_MINIMUM} (Z-2, konservativ, gespiegelt: "
+                    f"Entry-Mitte {entry_mid}, ungünstigster Stop {stop_bis}, ungünstigstes Ziel {take_bis})"
                 )
                 risk_veto_reason = f"{risk_veto_reason}; {reason}" if risk_veto_reason else reason
                 action = "HALTEN"

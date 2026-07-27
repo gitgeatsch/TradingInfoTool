@@ -218,10 +218,18 @@ def _get_zai_richtung_performance(conn: sqlite3.Connection, watchlist: list) -> 
     compute_zai_richtung_performance(). Anders als provider_performance
     (das Mistrals EIGENE Empfehlung bewertet) misst diese Karte, ob Z.ais
     Call-2-Richtungsableitung (`zai_eigene_richtung`) unabhaengig von Mistrals
-    Bias mit der tatsaechlichen Marktrichtung uebereinstimmte."""
-    from agent.krypto.backward_tracking import compute_zai_richtung_performance
+    Bias mit der tatsaechlichen Marktrichtung uebereinstimmte.
 
-    return compute_zai_richtung_performance(conn, watchlist)
+    Seit Punkt 3 der Performance-Messung-Nachfrage (2026-07-27) auf derselben
+    Basis wie richtungstreffer_quote (Maximum Favorable Excursion, nicht der
+    binaere TP/SL-outcome_status) - dieselbe config-Schwelle wie dort
+    verwenden, damit beide Karten konsistent dieselbe CRV-Schwelle nutzen."""
+    from agent.krypto.backward_tracking import DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV, compute_zai_richtung_performance
+
+    schwelle = config_module.load_config().get("backward_tracking", {}).get(
+        "richtungstreffer_mindest_crv", DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV,
+    )
+    return compute_zai_richtung_performance(conn, watchlist, schwelle)
 
 
 def _get_regime_status(conn: sqlite3.Connection) -> dict | None:

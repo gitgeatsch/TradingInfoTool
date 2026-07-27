@@ -845,15 +845,22 @@ def generate_signal(
         _stop_loss_mid_neu = (stop_loss["usd_von"] + stop_loss["usd_bis"]) / 2
     elif stop_loss.get("usd_von") is not None:
         _stop_loss_mid_neu = stop_loss["usd_von"]
-    _risiko_distanz_neu = (
-        _entry_mid_neu - _stop_loss_mid_neu
-        if _entry_mid_neu is not None and _stop_loss_mid_neu is not None else None
-    )
+    # Sell-Side-Vollstaendigkeit (2026-07-27, Nutzer-Wunsch "auch auf sinkende
+    # Short-Kurse tracken"): bei VERKAUFEN/TAUSCHEN liegt der Stop-Loss OBERHALB
+    # des Entrys (gespiegelte Zonen, siehe Regel 3 in analyst.py) - risiko_distanz
+    # muss dann in die andere Richtung gerechnet werden, sonst waere sie negativ
+    # und mindestziel_preis() liefert None (risiko_distanz <= 0-Guard).
+    _ist_short_neu = richtung_aus_action(corrected["action"]) == "SHORT"
+    _risiko_distanz_neu = None
+    if _entry_mid_neu is not None and _stop_loss_mid_neu is not None:
+        _risiko_distanz_neu = (
+            _stop_loss_mid_neu - _entry_mid_neu if _ist_short_neu else _entry_mid_neu - _stop_loss_mid_neu
+        )
     _richtungstreffer_mindest_crv_cfg = config_dict.get("backward_tracking", {}).get(
         "richtungstreffer_mindest_crv", DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV,
     )
     mindestziel_usd_wert = mindestziel_preis(
-        _entry_mid_neu, _risiko_distanz_neu, _richtungstreffer_mindest_crv_cfg,
+        _entry_mid_neu, _risiko_distanz_neu, _richtungstreffer_mindest_crv_cfg, ist_short=_ist_short_neu,
     )
     mindestziel_zeitraum_tage_wert = schaetze_mindestziel_zeitraum_tage(
         mindestziel_usd_wert, _entry_mid_neu, ohlc_history,

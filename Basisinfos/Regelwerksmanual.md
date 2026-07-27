@@ -10385,3 +10385,183 @@ selbst (Bitpanda-Short-Einschränkung bleibt gültig); kein Sell-Side-Backward-
 Tracking für VERKAUFEN/TAUSCHEN (siehe Lücke oben); keine GUI-Integration
 außerhalb der Remote-Seite (gleiche Platzierung wie Provider-Performance/
 Richtungstreffer-Quote, aus denen dieses Feature abgeleitet ist).
+
+## Nachtrag (2026-07-27, noch später): Punkt 3 - Z.ai-Erfolgsquote auf Richtungstreffer/MFE statt binärem TP/SL-outcome_status umgestellt
+
+**Auslöser:** direkt nach dem Push der obigen Version stellte der Nutzer vier
+Anschlussfragen zum weiteren Optimierungsbedarf, von denen Punkt 3 die
+gerade gebaute Metrik selbst betraf: **"wir haben als Erfolgsquote auch nicht
+mehr die Take Profit Zone ausgereizt"** - zurecht, die erste Version nutzte
+den binären `outcome_status` (nur `take_profit_erreicht`/`stop_loss_erreicht`/
+`liquidation_wahrscheinlich`), ein Signal, das nie eine der beiden Zonen
+erreicht (später überholt/abgelaufen), aber zwischenzeitlich klar in eine
+Richtung lief, wurde komplett übersehen - exakt dasselbe Problem, das die
+bestehende Richtungstreffer-Quote (`compute_richtungstreffer_quote()`,
+2026-07-27 früher am selben Tag) bereits für Mistrals eigene Signale löst.
+
+**Zusatzfrage des Nutzers, direkt beantwortet:** "ist das für Mistral Quote
+und Richtung bereits korrekt für alle Assets oder nicht?" - Antwort nach
+Code-Prüfung (`run_backward_tracking()` Zeile ~382: `SELECT id FROM signals
+WHERE outcome_status IS NULL OR outcome_status = 'offen'` - KEIN Assetklassen-
+oder Symbol-Filter):
+
+1. **Datenberechnung**: JA, vollständig korrekt für alle 6 Pipelines.
+   `check_signal_outcome()`/`check_hebel_signal_outcome()` laufen
+   unverändert über die komplette geteilte `signals`/`hebel_signals`-Tabelle,
+   unabhängig davon, welche Pipeline das Signal erzeugt hat - kein
+   pipeline-spezifischer Sonderfall nötig, kein "vergessenes" Backfill.
+2. **Richtungskorrektheit**: bei Hebel vollständig korrekt für BEIDE
+   Richtungen (verifizierter Code, `ist_short`-Verzweigung sowohl in
+   `resolve()` als auch `_erfasse_mfe()`). Bei der Spot-family gilt
+   dieselbe Lücke wie beim binären Outcome: NUR KAUFEN/NACHKAUFEN
+   (`_TRACKABLE_ACTIONS`) werden je MFE-getrackt, VERKAUFEN/TAUSCHEN nie -
+   dieselbe, bereits dokumentierte Lücke, keine neue.
+3. **Anzeige-Aufschlüsselung**: `compute_richtungstreffer_quote(conn, tier,
+   ...)` bricht NICHT nach Assetklasse auf (anders als Provider-Performance/
+   Konfidenz-Kalibrierung) - poolt aktuell "spot" über Krypto-Spot/Aktien/
+   Rohstoffe/Themen-ETF/Hedge hinweg. Keine Korrektheitslücke, aber gröber
+   als die anderen Karten - nicht Teil dieser Runde, da nicht explizit
+   angefragt.
+
+**Umsetzung:** `bewerte_zai_richtung()` (Signatur geändert: `outcome_status`
+→ `max_realisiertes_crv: float | None` + `richtungstreffer_mindest_crv:
+float`) nutzt jetzt `outcome_max_realisiertes_crv` (bereits relativ zu
+`primaer_richtung` berechnet) statt des binären Status:
+- `max_realisiertes_crv >= Schwelle` → Markt bestätigte `primaer_richtung`.
+- `max_realisiertes_crv <= -Schwelle` → Markt lief klar in die Gegenrichtung.
+- Dazwischen → neuer Rückgabewert `ZAI_URTEIL_KEINE_KLARE_BEWEGUNG` (Markt
+  hat sich nicht entscheidend genug bewegt, unabhängig von Z.ais Antwort -
+  bewusst NICHT dasselbe wie NEUTRAL).
+- Z.ai=NEUTRAL (oder kein MFE-Wert vorhanden) → `ZAI_URTEIL_NEUTRAL`.
+
+`compute_zai_richtung_performance()` bekommt einen neuen Parameter
+`richtungstreffer_mindest_crv` (Default identisch zu `compute_richtungstreffer_
+quote()`, config-Schlüssel `backward_tracking.richtungstreffer_mindest_crv`,
+aktuell 1.0) - `remote/status.py::_get_zai_richtung_performance()` liest jetzt
+dieselbe config-Schwelle wie `_get_richtungstreffer_quote()`, damit beide
+Karten konsistent kalibriert sind. Rückgabe-Dict pro Tier jetzt mit vier statt
+zwei Zählern: `treffer`/`fehlschlaege`/`neutral`/`keine_klare_marktbewegung` -
+`anzahl_bewertet` (Basis der Trefferquote) zählt bewusst NUR treffer+
+fehlschlaege, die anderen beiden würden sonst die Quote verwässern.
+
+`remote/server.py`: Kartentext + Render-Funktion angepasst (zeigt jetzt
+beide Nebenkategorien getrennt, z.B. "3x NEUTRAL, 2x keine klare
+Marktbewegung, nicht mitgezählt").
+
+**Verifiziert:** 14 synthetische Randfälle für `bewerte_zai_richtung()`
+(Schwellenwert exakt getroffen/knapp verfehlt, beide Richtungen, NEUTRAL,
+`None`, fehlender MFE-Wert, konfigurierbare Schwelle) + 8 End-to-End-Fälle
+für `compute_zai_richtung_performance()` (inkl. Schwellenwert-Verschiebung
+end-to-end getestet: dieselben Rohdaten ergeben bei Schwelle=2.0 andere
+Buckets als bei Schwelle=1.0) + 2 Kontroll-Checks - alle 24 bestanden.
+Import-Regressionscheck für alle 4 betroffenen Module ohne Fehler.
+
+**Offen, vom Nutzer selbst als mehrtägiges Thema angekündigt** ("das Thema
+wird uns noch einige Zeit und Tage beschäftigen"), NICHT Teil dieser Runde:
+- Was folgt daraus, wenn Z.ai über längere Zeit signifikant besser liegt als
+  Mistral (Aufwertung von "rein beobachtend" zu einer echten zweiten Stimme)?
+- Zufalls-Trefferquote-Risiko: eine hohe SHORT-Trefferquote in einem
+  anhaltenden Bär-Regime kann ohne Baseline-Vergleich (z.B. gegen "Regime-
+  Richtung geraten") bedeutungslos sein - noch kein Baseline-Vergleich
+  gebaut.
+- Generelle Frage nach präziserer Kalibrierung beider Z.ai-Calls (Konsistenz-
+  Check UND Richtungs-Abgleich).
+
+## Nachtrag (2026-07-27, Abschluss der Sitzung): Sell-Side-Backward-Tracking - VERKAUFEN/TAUSCHEN jetzt vollständig trackbar (Mistral UND Z.ai)
+
+**Auslöser:** direkter Nutzer-Auftrag, nachdem die Z.ai-Richtungs-Erfolgsquote
+fertiggestellt war: **"bitte bei spot, etc. auch auf sinkende short Kurse -
+also verkauf Tracken damit es vollständig ist für alle Assets - für ZAI und
+Mistral - falls noch nicht angepasst."** Recherche ergab: VERKAUFEN/TAUSCHEN-
+Signale bekamen zwar formal `entry`/`stop_loss`/`take_profit`-Zonen vom LLM,
+aber OHNE erzwungene Richtung - Regel 3 (Stop-Loss/CRV-Pflicht) galt bisher
+NUR für KAUFEN/NACHKAUFEN, Regel 16 (Zonen-Beispiele) war durchgehend
+bullisch formuliert. Ohne Fix wären die Zonen bei VERKAUFEN strukturell
+unzuverlässig orientiert gewesen - eine reine Python-Erweiterung von
+`_TRACKABLE_ACTIONS` hätte mit Zonen gerechnet, die keine verlässliche
+bearische Struktur hatten. Nutzer-Vorgabe zur Lösung, nach kurzer
+Rückfrage bestätigt: **"verkaufen sprich short Richtung muss aus dem Trading
+ebenfalls eine Zielzone haben welche dann umgekehrt funktioniert - also
+mathematisch deterministisch wie für die kauf - long positionen wie wir sie
+haben"** - identisches Muster wie bei Hebel-SHORT, nur auf Spot übertragen.
+
+### Fünfteilige Umsetzung
+
+1. **Regel 3 + Regel 16/13/12/11 (Zonen-Beispiel) gespiegelt** in
+   `agent/krypto/analyst.py`, `agent/aktien/analyst.py`,
+   `agent/rohstoff/analyst.py`, `agent/themen_etf/analyst.py` (4 Dateien,
+   NICHT Hedge - siehe Punkt 5): bei VERKAUFEN/TAUSCHEN ist Stop-Loss jetzt
+   ebenfalls PFLICHT, CRV MUSS mindestens 2.0 betragen, gespiegelt gerechnet:
+   `(entry_mitte - take_profit.usd_bis) / (stop_loss.usd_bis - entry_mitte)`
+   - Take-Profit-Zone muss vollständig UNTERHALB, Stop-Loss-Zone vollständig
+   OBERHALB der Entry-Zone liegen.
+2. **`agent/krypto/risk_gate.py::post_check()`**: neuer `_SELL_ACTIONS`-Block,
+   identische Philosophie wie der bestehende `_BUY_ACTIONS`-CRV-Block, nur
+   Zonen-Vorzeichen gedreht (konservativ: die jeweils NÄHERE Zonen-Grenze
+   `_bis` statt `_von`). `crv is None` (z.B. Zonen falsch orientiert) fällt
+   automatisch unter denselben Veto-auf-HALTEN-Zweig - keine separate
+   Richtungsprüfung nötig, die Mathematik erzwingt sie implizit. Gilt für
+   alle 4 Pipelines, die `post_check()` teilen (Aktien/Rohstoffe/Themen-ETF
+   reuse identisch, siehe deren Pipeline-Docstrings).
+3. **`agent/krypto/backward_tracking.py::check_signal_outcome()`** komplett
+   überarbeitet: neue `ist_short`-Verzweigung (via
+   `agent.krypto.gegenpruefung.richtung_aus_action()`, da `Signal` - anders
+   als `HebelSignal` - kein natives `richtung`-Feld hat), spiegelt TP/SL-
+   Treffer-Logik UND die MFE-Berechnung (`_erfasse_mfe()`) - direkter Mirror
+   von `hebel_backward_tracking.py::check_hebel_signal_outcome()`s bereits
+   bewährter SHORT-Logik. `_TRACKABLE_ACTIONS` um `VERKAUFEN`/`TAUSCHEN`
+   erweitert (vorher nur `KAUFEN`/`NACHKAUFEN`). Hedge-Invertierung
+   (`ist_hedge_invertiert`) ist hier NICHT relevant - die Zonen beschreiben
+   immer die Kursbewegung des Instruments selbst, nicht die Gesamtmarkt-
+   Interpretation (unabhängig von Punkt 5 unten).
+4. **`agent/krypto/pipeline.py`**: `mindestziel_preis()`-Aufruf korrigiert -
+   `ist_short` wird jetzt aus `richtung_aus_action()` abgeleitet, `risiko_
+   distanz` entsprechend gespiegelt berechnet (vorher immer LONG-Annahme,
+   hätte bei VERKAUFEN eine negative/falsche Distanz ergeben und `None`
+   geliefert).
+5. **Hedge bewusst AUSGENOMMEN**: `agent/hedge/analyst.py` hat laut eigener
+   Regel 9 explizit KEINE CRV-Pflicht ("die Zonen sind informativer Kontext,
+   keine harte Kauf-Voraussetzung") - das gilt unverändert für BEIDE
+   Richtungen, kein neues Ungleichgewicht. `agent/hedge/pipeline.py` ruft
+   `risk_gate.py::post_check()` ohnehin nicht auf (eigener Deterministik-
+   Deckel). Hedge-VERKAUFEN-Signale werden trotzdem automatisch mitgetrackt,
+   wenn ihre Zonen zufällig korrekt orientiert sind (`check_signal_outcome()`
+   ist pipeline-agnostisch) - nur ohne die erzwungene Garantie.
+6. **`database/models.py`**: Docstring von `outcome_max_realisiertes_crv`
+   korrigiert (war "richtungsunabhängig für Spot immer 'steigend'" -
+   inzwischen unwahr).
+
+**Wichtige Konsequenz, die dem Nutzer bewusst ist:** die Formel oben verhält
+sich bei VERKAUFEN GENAUSO streng wie bei KAUFEN - eine VERKAUFEN-Empfehlung
+mit schlecht orientierten oder zu engen Zonen wird jetzt EBENFALLS auf
+HALTEN korrigiert, auch wenn die zugrunde liegende fundamentale These (Regel
+7: langfristige These gebrochen) berechtigt wäre. Das ist eine bewusste
+Design-Entscheidung des Nutzers (mathematische Parität zu KAUFEN), keine
+versehentliche Nebenwirkung - wird beobachtet, ob das in der Praxis zu
+unerwünschten Vetos führt.
+
+**Bekannte, unveränderte Lücke:** bereits bestehende VERKAUFEN/TAUSCHEN-
+Signale in der Produktions-DB (vor diesem Fix erzeugt) profitieren NICHT
+rückwirkend - ihre Zonen wurden ohne die neue Richtungs-Garantie erstellt und
+könnten falsch orientiert sein. Nur Signale NACH diesem Fix sind verlässlich
+trackbar.
+
+**Verifiziert:** 15 synthetische Fälle (`check_signal_outcome()` LONG-
+Regression, VERKAUFEN Take-Profit/Stop-Loss/MFE-ohne-Treffer, TAUSCHEN
+identisch zu VERKAUFEN, HALTEN weiterhin nicht trackbar,
+`mindestziel_preis(ist_short=True)` gespiegelt, `risk_gate.py::post_check()`
+CRV-Veto für VERKAUFEN/TAUSCHEN bei gutem/schlechtem CRV) - alle bestanden.
+Vollständiger Import-Regressionscheck über alle 4 geänderten Analyst-Dateien
++ `risk_gate.py` + `backward_tracking.py` + alle 5 Spot-family-Pipelines +
+`scheduler/background.py` ohne Fehler.
+
+**Automatischer Nebeneffekt, kein zusätzlicher Code nötig:** sowohl
+`compute_provider_performance()`/`compute_win_rate_fact()`/
+`compute_richtungstreffer_quote()` (Mistral) als auch
+`compute_zai_richtung_performance()` (Z.ai, siehe vorheriger Nachtrag) lesen
+bereits aus denselben `outcome_status`/`outcome_max_realisiertes_crv`-
+Feldern - sobald neue VERKAUFEN/TAUSCHEN-Signale nach diesem Fix aufgelöst
+werden, erscheinen sie automatisch in allen bestehenden Auswertungskarten,
+ohne dass diese selbst angepasst werden mussten.
+
+**Noch NICHT committet** - wartet auf Nutzer-Bestätigung.

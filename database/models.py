@@ -269,10 +269,11 @@ class Signal:
     halte_kriterium_ziel_datum: str | None = None
     halte_kriterium_bedingung_text: str | None = None
     halte_kriterium_reasoning: str | None = None
-    # Backward-Tracking (2026-07-10, Selbstverifikations-Vision Schritt 2) - nur fuer
-    # KAUFEN/NACHKAUFEN gefuellt (agent/krypto/backward_tracking.py), vergleicht die
-    # Entry/Stop/Take-Zonen gegen die seit created_at vorliegende Kurshistorie.
-    # None = noch nie geprueft.
+    # Backward-Tracking (2026-07-10, Selbstverifikations-Vision Schritt 2, seit
+    # 2026-07-27 auch VERKAUFEN/TAUSCHEN - siehe agent/krypto/backward_tracking.py::
+    # check_signal_outcome() Docstring fuer die richtungsabhaengige Spiegelung),
+    # vergleicht die Entry/Stop/Take-Zonen gegen die seit created_at vorliegende
+    # Kurshistorie. None = noch nie geprueft (oder Action ohne Zonen-These, z.B. HALTEN).
     outcome_status: str | None = None  # offen | take_profit_erreicht | stop_loss_erreicht | abgelaufen_unentschieden | nicht_anwendbar
     outcome_geprueft_am: str | None = None
     outcome_entschieden_am: str | None = None
@@ -280,8 +281,9 @@ class Signal:
     outcome_datenquelle: str | None = None  # real (OHLC) | proxy (Tagesschlusskurs)
     # Unabhaengiges Mindestziel / MFE-Tracking (2026-07-27, Nutzer-Wunsch nach der
     # Performance-Messung-Expertenanalyse) - siehe agent/krypto/backward_tracking.py
-    # Modul-Docstring. Hoechstes je erreichtes CRV (Maximum Favorable Excursion,
-    # richtungsunabhaengig fuer Spot immer "steigend"), UNABHAENGIG vom finalen
+    # Modul-Docstring. Hoechstes je erreichtes CRV (Maximum Favorable Excursion -
+    # "steigend" bei KAUFEN/NACHKAUFEN, "fallend" bei VERKAUFEN/TAUSCHEN, siehe
+    # check_signal_outcome()s ist_short-Spiegelung), UNABHAENGIG vom finalen
     # outcome_status - trennt "war die Richtung wenigstens zeitweise richtig" von
     # "wurde die exakte TP/SL-Zonen-Ausfuehrung getroffen".
     outcome_max_realisiertes_crv: float | None = None

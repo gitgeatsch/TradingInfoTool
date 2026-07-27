@@ -126,7 +126,10 @@ _INDEX_HTML = """<!doctype html>
   Detail-Panel je Signal) - sondern ob Z.ais UNABHAENGIGE Richtungs-Ableitung (Call 2, ohne Mistrals Empfehlung
   als Vorgabe) im Nachhinein mit der tatsaechlichen Kursbewegung uebereinstimmte. Relevant, weil Mistral bei
   Hebel durch die Einstellung "Nur Long" strukturell nie SHORT empfehlen darf - diese Quote zeigt, wie gut Z.ai
-  unabhaengig davon liegen wuerde. NEUTRAL-Urteile zaehlen nicht mit (analog zu HALTEN).</span></div>
+  unabhaengig davon liegen wuerde. Gleiche Basis wie die Richtungstreffer-Quote (Maximum Favorable Excursion,
+  nicht nur die exakte TP/SL-Zone) - zaehlt auch Signale mit, die spaeter ueberholt/abgelaufen sind aber
+  zwischenzeitlich klar in eine Richtung liefen. NEUTRAL-Urteile und Faelle ohne klare Marktbewegung zaehlen
+  nicht mit (analog zu HALTEN).</span></div>
   <div id="zai-richtung-performance"></div>
 </div>
 
@@ -339,16 +342,20 @@ const ZAI_RICHTUNG_TIERS = [
 ];
 
 function renderZaiRichtungPerformanceTier(label, tierData) {
-  if (!tierData || tierData.anzahl_bewertet === 0) {
-    const neutralHinweis = tierData && tierData.neutral_bei_klarer_bewegung > 0
-      ? ' (' + tierData.neutral_bei_klarer_bewegung + 'x NEUTRAL bei bereits aufgeloester Bewegung)' : '';
+  if (!tierData) {
     return '<div class="row"><span class="muted-text">' + label +
-      ': noch keine bewertbaren Z.ai-Richtungs-Calls' + neutralHinweis + '.</span></div>';
+      ': noch keine bewertbaren Z.ai-Richtungs-Calls.</span></div>';
   }
-  const neutralHinweis = tierData.neutral_bei_klarer_bewegung > 0
-    ? ' <span class="muted-text">(+' + tierData.neutral_bei_klarer_bewegung + 'x NEUTRAL, nicht mitgezaehlt)</span>'
-    : '';
-  return '<div class="row"><span>' + label + ' (n=' + tierData.anzahl_bewertet + ')' + neutralHinweis + '</span>' +
+  const nebenHinweise = [];
+  if (tierData.neutral > 0) nebenHinweise.push(tierData.neutral + 'x NEUTRAL');
+  if (tierData.keine_klare_marktbewegung > 0) nebenHinweise.push(tierData.keine_klare_marktbewegung + 'x keine klare Marktbewegung');
+  const nebenHinweisText = nebenHinweise.length
+    ? ' <span class="muted-text">(+' + nebenHinweise.join(', ') + ', nicht mitgezaehlt)</span>' : '';
+  if (tierData.anzahl_bewertet === 0) {
+    return '<div class="row"><span class="muted-text">' + label +
+      ': noch keine bewertbaren Z.ai-Richtungs-Calls' + nebenHinweisText + '.</span></div>';
+  }
+  return '<div class="row"><span>' + label + ' (n=' + tierData.anzahl_bewertet + ')' + nebenHinweisText + '</span>' +
     '<span>' + tierData.treffer + '/' + tierData.anzahl_bewertet + ' = ' +
     tierData.trefferquote_pct.toFixed(1) + '%</span></div>';
 }
