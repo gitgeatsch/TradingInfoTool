@@ -107,11 +107,20 @@ def _update_macro_snapshot(
     from api.macro import get_all_fred_rates, get_btc_dominance, get_fear_greed_index, get_pboc_lpr
 
     today = db.heutiges_datum_utc()
-    try:
-        dominance = get_btc_dominance(coingecko_client)
-    except Exception as exc:
-        logger.info("BTC-Dominanz-Abruf fehlgeschlagen: %s", exc)
+    bereits_heute = db.get_latest_macro_snapshot(conn)
+    if bereits_heute is not None and bereits_heute.date == today and bereits_heute.btc_dominance_pct is not None:
+        # /global (CoinGecko) liefert ohnehin nur einen Tageswert (macro_snapshot
+        # ist eine Ein-Zeile-pro-Tag-Tabelle) - ein zweiter Abruf am selben Tag
+        # kostet nur Kontingent ohne zusaetzliche Aufloesung. Finanziert das
+        # JIT-Historie-Nachladen (agent/krypto/hebel_pipeline.py/pipeline.py),
+        # siehe Regelwerksmanual-Nachtrag "JIT-Historie-Nachladen".
         dominance = None
+    else:
+        try:
+            dominance = get_btc_dominance(coingecko_client)
+        except Exception as exc:
+            logger.info("BTC-Dominanz-Abruf fehlgeschlagen: %s", exc)
+            dominance = None
     try:
         fgi = get_fear_greed_index()
         fgi_value, fgi_label = fgi.value, fgi.classification
