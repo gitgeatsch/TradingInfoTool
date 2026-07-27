@@ -2319,7 +2319,23 @@ def get_pending_hebel_candidates(conn: sqlite3.Connection) -> list[HebelTrigger]
     """Neuester Trigger je (symbol, richtung) mit ist_kandidat=1 UND status='neu' -
     fuer den kuenftigen Budget-Allocator (Tier 1). Self-Join analog
     get_latest_real_signal_per_symbol(), aber zusaetzlich nach richtung gruppiert,
-    da LONG und SHORT desselben Symbols unabhaengige Kandidaten sein koennen."""
+    da LONG und SHORT desselben Symbols unabhaengige Kandidaten sein koennen.
+
+    Nachtrag 2026-07-27 (echter KAITO-Fund): `hebel_screening.py::
+    run_hebel_screening()` filtert den Hebel-Pruefung-Toggle bereits VOR der
+    Neuentdeckung (verhindert neue `status='neu'`-Zeilen fuer ein
+    abgeschaltetes Asset) - hier fehlte aber die symmetrische Pruefung an der
+    LESE-Seite: eine bereits VOR dem Umschalten erzeugte `status='neu'`-Zeile
+    blieb bis zu ihrem 48h-Verfall weiter auswaehlbar, unabhaengig vom
+    aktuellen Toggle-Stand. Strukturell derselbe Fehler wie beim CANTON-Fund
+    (get_symbole_mit_ueberschrittener_oi_schwelle()-Docstring, 2026-07-20) -
+    nur an der Kandidaten-Auswahl statt der Warnmeldung. Gleiches Muster:
+    LEFT JOIN + COALESCE(..., 1) = 1, da eine fehlende asset_hebel_settings-
+    Zeile laut get_hebel_pruefung_erlaubt() "erlaubt" bedeutet. Beruehrt NUR
+    diese Auswahl - bereits offene Hebel-Positionen laufen ueber einen
+    komplett unabhaengigen Kandidatenpfad (budget_allocator.py::
+    _offene_positionen_als_kandidaten()) und bleiben bewusst weiter
+    risikoueberwacht, siehe dortigen Docstring."""
     rows = conn.execute(
         """
         SELECT t.* FROM hebel_triggers t
@@ -2331,7 +2347,9 @@ def get_pending_hebel_candidates(conn: sqlite3.Connection) -> list[HebelTrigger]
         ) latest
         ON t.symbol = latest.symbol AND t.richtung = latest.richtung
            AND t.screened_at = latest.max_screened_at
+        LEFT JOIN asset_hebel_settings s ON s.symbol = t.symbol
         WHERE t.ist_kandidat = 1 AND t.status = 'neu'
+              AND COALESCE(s.hebel_pruefung_erlaubt, 1) = 1
         ORDER BY t.score_gesamt DESC
         """
     ).fetchall()

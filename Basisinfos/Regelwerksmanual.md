@@ -9452,3 +9452,69 @@ Zeile). Kein manueller Button (Signale-Tab-Batch, Hebel-Tab "Jetzt
 analysieren") einbezogen - gleiche Einschraenkung besteht bereits fuer Hebel
 (Gegenpruefung laeuft dort ebenfalls nur automatisch ueber den
 Budget-Allocator, nicht bei manuellen Einzelklicks).
+
+## Nachtrag (2026-07-27): Hebel-Pruefung-Toggle bei bereits gequeueten Kandidaten wirkungslos (KAITO-Fund)
+
+Nutzer-Meldung: KAITO steht in der Watchlist unter Status "Beobachtung", der
+per-Asset Hebel-Pruefung-Toggle (`asset_hebel_settings`, siehe #268/2026-07-19)
+ist fuer KAITO AUS - trotzdem wurde KAITO weiterhin ueber den Hebel-Pfad
+gefuehrt und erhielt neue Signale.
+
+### Ursache
+
+Der Toggle wird korrekt an GENAU EINER Stelle geprueft:
+`agent/krypto/hebel_screening.py::run_hebel_screening()` filtert
+`krypto_assets` VOR dem OI-Abruf/Scoring - ein Symbol mit Toggle AUS erzeugt
+also ab dem Moment der Umschaltung keine NEUEN `hebel_triggers`-Zeilen mehr.
+
+Bereits VOR der Umschaltung angelegte Zeilen (`status='neu'`, bleiben laut
+[[project_kaia_review_inj_stabilitaet_diskussion|Info-Leichen-Verfall]]
+(#306-#310, 2026-07-25) bis zu `hebel_kandidat_verfall_stunden` = 48h
+gueltig) wurden davon NICHT erfasst: `database/db.py::
+get_pending_hebel_candidates()` - die gemeinsame Lese-Funktion, die SOWOHL
+`agent/krypto/budget_allocator.py` (Tier-1-Kandidatenauswahl, Zeile 384) ALS
+AUCH `ui/hebel_view.py` (Zeile 189, "Kandidat wartet auf Analyse"-Warteliste)
+verwendet - selektierte weiterhin ALLE `status='neu'`-Zeilen unabhaengig vom
+aktuellen Toggle-Zustand. Ein Toggle-Wechsel wirkte dadurch erst nach Ablauf
+des 48h-Verfallsfensters der zu diesem Zeitpunkt bereits gequeueten Kandidaten.
+
+**Strukturell identisch** zu einem bereits behobenen Bugmuster: der CANTON-
+Fund (2026-07-20, siehe [[project_hebel_rahmenbedingungen]]) bei
+`get_symbole_mit_ueberschrittener_oi_schwelle()` - dort exakt dieselbe fehlende
+Pruefung an einer ANDEREN Lese-Stelle. Beide Faelle: der Toggle wird bei der
+NEU-Erfassung korrekt geprueft, aber nicht erneut bei der spaeteren
+Selektion/Anzeige bereits gespeicherter Zeilen.
+
+### Fix
+
+`database/db.py::get_pending_hebel_candidates()`: `LEFT JOIN
+asset_hebel_settings s ON s.symbol = t.symbol` + `AND COALESCE(s.
+hebel_pruefung_erlaubt, 1) = 1` in der WHERE-Klausel ergaenzt - identisches
+Muster wie beim CANTON-Fix. `COALESCE(..., 1)`, da Symbole ohne Eintrag in
+`asset_hebel_settings` per Default erlaubt sind (siehe `get_hebel_pruefung_
+erlaubt()`).
+
+**Positiver Nebeneffekt:** da `ui/hebel_view.py` dieselbe Funktion fuer die
+Warteliste nutzt, verschwindet ein toggle-ausgeschalteter Kandidat dadurch
+automatisch auch aus der GUI-Anzeige - kein zusaetzlicher Patch an der
+UI-Stelle noetig, einmaliger Fix an der gemeinsamen Lese-Funktion behebt
+Signal-Erzeugung UND Anzeige gleichzeitig.
+
+**Bewusst unveraendert:** die zweite, unabhaengige Hebel-Kandidatenquelle -
+bereits offene Positionen (`budget_allocator.py::_offene_positionen_als_
+kandidaten()`, #130, 2026-07-19) - umgeht den Toggle weiterhin ABSICHTLICH
+(bestehende offene Positionen muessen weiter verwaltbar bleiben, auch wenn
+die Neu-Pruefung fuer dieses Symbol deaktiviert wurde, siehe [[project_sol_
+tranchen_hebel_toggle]]).
+
+Geprueft, ob eine Schwesterfunktion dasselbe Luecken-Muster hat:
+`get_pending_marktscan_kaufkandidaten()` (Docstring verweist zum Vergleich auf
+`get_pending_hebel_candidates()`) betrifft Marktscan/Spot-Kandidaten - dort
+existiert kein Hebel-Pruefung-Toggle-Konzept, kein Fix noetig.
+
+**Verifiziert:** synthetischer Test gegen isolierte In-Memory-DB - 3
+Kandidaten (KAITO Toggle AUS, ETH kein Toggle-Eintrag = Default AN, SOL Toggle
+explizit AN), `get_pending_hebel_candidates()` schliesst KAITO korrekt aus,
+ETH+SOL korrekt enthalten, Sortierung nach `score_gesamt DESC` bleibt intakt.
+Compile-/Import-Regressionscheck: `database/db.py`, `agent/krypto/
+budget_allocator.py`, `ui/hebel_view.py`.
