@@ -53,6 +53,21 @@ _LIQUIDATIONS_VERDACHT_SCHWELLE_PROZENTPUNKTE = 0.7
 # 0.5% Restmenge gilt noch als "alles verkauft", um Rundungs-Dust bei
 # Kryptomengen nicht faelschlich als Teilverkauf mit winziger Restposition
 # zu werten.
+#
+# NACHTRAG (2026-07-27, echter HYPE-Fund - Nutzer meldete das GEGENTEIL des
+# NEAR-Falls: eine auf Bitpanda VOLLSTAENDIG geschlossene 3x-Position blieb in
+# der App mit reduziertem, aber weiterhin positivem Eigenkapital "offen"
+# haengen, 100 EUR wurden faelschlich auf 67,14 EUR = genau 1/3 reduziert).
+# Wurzel: bei einer gehebelten Position wird beim Close nur der Teil der
+# Krypto-Menge ueber den "sell"-Leg verkauft, der das EIGENKAPITAL realisiert -
+# der Rest (bei 3x Hebel: 2/3 der Menge) geht direkt in die Kredit-
+# Rueckzahlung, taucht also nie in sell_qty auf. Die reine Mengen-Toleranz
+# oben erkennt einen echten Vollverkauf einer gehebelten Position deshalb
+# strukturell so gut wie nie zuverlaessig. Zusaetzliches, unabhaengiges Signal:
+# wird beim Close-Ereignis der GESAMTE verbleibende Kredit (running_borrow)
+# zurueckgezahlt, ist das ebenfalls ein eindeutiger Vollverkauf - unabhaengig
+# von sell_qty, da Gebuehren/Zinsen die Krypto-Menge verwaessern koennen, den
+# EUR-Kreditbetrag aber nicht.
 _VOLLSTAENDIGER_VERKAUF_TOLERANZ_RELATIV = 0.005
 
 
@@ -77,6 +92,7 @@ class ReconstructionResult:
 def reconstruct_margin_positions(
     transactions: list[BitpandaTransaction],
     existing: dict[str, HebelPosition] | None = None,
+    debug_symbols: set[str] | None = None,
 ) -> ReconstructionResult:
     """Reine Funktion, keine DB-/Netzwerk-Zugriffe (wie compute_avg_buy_prices()).
 
@@ -90,7 +106,12 @@ def reconstruct_margin_positions(
        `existing[symbol]` auf, falls dort eine offene Position liegt); "close"
        berechnet Eigenkapital/effektiven Hebel + Gebuehren-Anomalie-Check und
        schliesst die Position ab.
-    """
+
+    `debug_symbols` (2026-07-27, HYPE-Diagnose - siehe diagnose_hype_position_
+    bug.py): rein optionale, zustandslose Klartext-Ausgabe (print, kein
+    logging-Handler-Setup noetig) des vollstaendigen Ereignis-/Entscheidungs-
+    Trace fuer die genannten Symbole - beeinflusst die Rekonstruktions-Logik
+    selbst nicht, Default None = unveraendertes Verhalten."""
     margin_txs = [t for t in transactions if any("margin" in tag.lower() for tag in t.tags)]
 
     by_ts: dict[int, list[BitpandaTransaction]] = defaultdict(list)
@@ -120,6 +141,7 @@ def reconstruct_margin_positions(
             {
                 "ts": ts,
                 "kind": kind,
+                "tags": tags_flat,  # nur fuer Diagnose (debug_symbols) - kein Einfluss auf die Logik
                 "buy_value": sum(t.trade_amount_fiat or 0.0 for t in buy_leg),
                 "buy_qty": sum(t.trade_amount_cryptocoin or 0.0 for t in buy_leg),
                 "borrow": sum(t.amount_cryptocoin_wallet for t in borrow_leg),
@@ -144,7 +166,22 @@ def reconstruct_margin_positions(
         opened_at_iso = state.eroeffnet_am if state else None
         last_ts = state.letzte_transaktion_unix_timestamp if state else None
 
+        debug = debug_symbols is not None and symbol in debug_symbols
+        if debug:
+            print(f"\n=== {symbol}: {len(events)} margin-Ereignis(se), Start-Zustand ===")
+            print(
+                f"  running_value={running_value:.4f} running_borrow={running_borrow:.4f} "
+                f"running_qty={running_qty:.8f} opened_at={opened_at_iso}"
+            )
+
         for e in events:
+            if debug:
+                print(
+                    f"  --- Ereignis {_unix_to_iso(e['ts'])} kind={e['kind']} tags={e['tags']} ---\n"
+                    f"      buy_value={e['buy_value']:.4f} buy_qty={e['buy_qty']:.8f} "
+                    f"sell_value={e['sell_value']:.4f} sell_qty={e['sell_qty']:.8f} "
+                    f"borrow={e['borrow']:.4f} fee_crypto={e['fee_crypto']:.8f}"
+                )
             if e["kind"] == "open":
                 if opened_at_unix is None:
                     opened_at_unix = e["ts"]
@@ -161,11 +198,37 @@ def reconstruct_margin_positions(
                 # vollstaendiger Close) als sicherer Fallback erhalten (P-8),
                 # weil ohne Mengenangabe keine Teilverkaufs-Erkennung moeglich
                 # ist.
+                #
+                # Zweites, unabhaengiges Signal (siehe Konstanten-Kommentar,
+                # echter HYPE-Fund 2026-07-27): bei einer gehebelten Position
+                # deckt sell_qty strukturell nur den eigenkapital-realisierenden
+                # Teil der Menge ab, nicht den Teil, der direkt zur Kredit-
+                # Rueckzahlung verwendet wird - sell_qty erreicht bei einem
+                # echten Vollverkauf deshalb oft NIE die Mengen-Toleranz oben.
+                # Wird stattdessen der GESAMTE verbleibende Kredit
+                # zurueckgezahlt, ist das ebenso ein eindeutiger Vollverkauf.
+                # `e["borrow"]` ist bei einer Rueckzahlung negativ (Betrag
+                # verlaesst die Kredit-Position), ein neuer Kredit (positiv)
+                # sollte in einem "close"-Ereignis nicht vorkommen - nur
+                # negative Werte zaehlen hier bewusst als Rueckzahlung.
                 sell_qty = e["sell_qty"]
+                borrow_rueckzahlung = -e["borrow"] if e["borrow"] < 0 else 0.0
                 ist_vollstaendiger_verkauf = (
                     running_qty <= 0
                     or sell_qty >= running_qty * (1 - _VOLLSTAENDIGER_VERKAUF_TOLERANZ_RELATIV)
+                    or (
+                        running_borrow > 0
+                        and borrow_rueckzahlung >= running_borrow * (1 - _VOLLSTAENDIGER_VERKAUF_TOLERANZ_RELATIV)
+                    )
                 )
+                if debug:
+                    print(
+                        f"      VOR Close: running_qty={running_qty:.8f} running_borrow={running_borrow:.4f} "
+                        f"sell_qty/running_qty={(sell_qty / running_qty if running_qty else 0):.4f} "
+                        f"borrow_rueckzahlung={borrow_rueckzahlung:.4f} "
+                        f"borrow_rueckzahlung/running_borrow={(borrow_rueckzahlung / running_borrow if running_borrow else 0):.4f} "
+                        f"=> ist_vollstaendiger_verkauf={ist_vollstaendiger_verkauf}"
+                    )
                 if not ist_vollstaendiger_verkauf:
                     verkaufter_anteil = sell_qty / running_qty
                     running_value *= (1 - verkaufter_anteil)

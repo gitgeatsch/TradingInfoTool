@@ -9725,3 +9725,17 @@ Ueberholt-Pfad). Compile-/Import-Regressionscheck aller 11 geaenderten
 Python-Dateien (models.py, db.py, backward_tracking.py, hebel_backward_
 tracking.py, pipeline.py, hebel_pipeline.py, signals_view.py, hebel_view.py,
 background.py, status.py, server.py, extract_notebook_diagnose.py).
+
+## Nachtrag (2026-07-27): HYPE-Hebel-Position blieb trotz Vollverkauf "offen" - Kredit-Rueckzahlung als zusaetzliches Signal
+
+Nutzer-Fund: eine auf Bitpanda VOLLSTAENDIG geschlossene 3x-Hebel-Position (HYPE) blieb in der App mit reduziertem Eigenkapital (100 -> 67,14 EUR, exakt 1/3) als "offen" haengen - das Gegenteil des NEAR-Bugs vom 26.07. (dort wurde ein echter Teilverkauf faelschlich als Vollverkauf gewertet und verschwand komplett).
+
+**Root Cause:** die am 26.07. eingefuehrte Mengen-Toleranz (`sell_qty >= running_qty * 0,995`) erkennt einen Vollverkauf einer GEHEBELTEN Position strukturell fast nie zuverlaessig - `sell_qty` deckt nur den eigenkapital-realisierenden Teil der Menge ab, der Rest (bei 3x Hebel: 2/3) wird direkt zur Kredit-Rueckzahlung verwendet, taucht also nie im "sell"-Leg auf.
+
+**Fix:** `importer/bitpanda_margin_positions.py::reconstruct_margin_positions()` - zweites, unabhaengiges Vollstaendig-Signal: wird beim Close-Ereignis der GESAMTE verbleibende Kredit zurueckgezahlt (gleiche 99,5%-Toleranz), gilt das unabhaengig von `sell_qty` als Vollverkauf. Nutzt `e["borrow"]` (bisher nur fuer "open"-Ereignisse verwendet, negativ = Rueckzahlung). Reine ODER-Erweiterung, kann echte Teilverkaeufe nicht neu falsch klassifizieren (eine Teil-Reduktion zahlt den Kredit strukturell nur proportional, nie vollstaendig zurueck).
+
+Neuer optionaler `debug_symbols`-Parameter (print-basiert, kein Verhaltenseinfluss) fuer den vollstaendigen Ereignis-/Entscheidungs-Trace inkl. Roh-Tags - bleibt fuer kuenftige aehnliche Faelle im Code.
+
+**Korrektur der bereits haengengebliebenen Zeile:** neues Skript `fix_stuck_hebel_positions.py` (Projekt-Root) - rekonstruiert alle aktuell "offen" gefuehrten Positionen komplett neu aus der vollen Bitpanda-Historie (`existing=None`, schliesst Drift aus), zeigt Alt-vs-Neu-Vergleich, schreibt nur mit explizitem `--apply`-Flag. Muss auf dem Notebook laufen (echter API-Key + echte Produktiv-DB).
+
+**Verifiziert:** synthetisch (3x-Hebel-Vollclose mit `sell_qty` bei nur 1/3 der Menge aber 100% Kredit-Rueckzahlung -> jetzt korrekt geschlossen; Gegentest echter Teilverkauf ohne Kredit-Rueckzahlung bleibt korrekt Teilverkauf). Compile-/Import-Regressionscheck.
