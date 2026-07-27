@@ -1201,6 +1201,13 @@ backward_tracking:
   # Hebel-Cooldown (3,5-7h), aber kurz genug fuer eine wirklich kurzlebige
   # Gegenbewegungs-These. 'swing_strategie' nutzt die Tage-Bucket-Logik oben.
   hebel_mindestbeobachtung_stunden_einmal_trade: 18
+  # Mindestziel/MFE-Tracking (2026-07-27, Performance-Messung-Expertenanalyse,
+  # siehe agent/krypto/backward_tracking.py::mindestziel_preis()): CRV-Schwelle
+  # fuer "war die Richtung wenigstens zeitweise richtig" - bewusst NIEDRIGER als
+  # CRV_MINIMUM=2.0 (risk_gate.py, die harte Take-Profit-Vorgabe des Modells).
+  # Min-Kurs = Entry + 1x Risikodistanz (dieselbe Distanz wie der Stop-Loss, nur
+  # in die guenstige Richtung). Steht sofort bei Signal-Erstellung fest.
+  richtungstreffer_mindest_crv: 1.0
 
 # --- Antizyklische Kauf-Disziplin (siehe Spezifikation Kap. 15) ---
 antizyklisch:

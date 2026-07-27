@@ -20,6 +20,7 @@ from agent.krypto.backward_tracking import (
     DEFAULT_ABGELAUFEN_TAGE_FALLBACK,
     DEFAULT_MINDESTBEOBACHTUNG_TAGE_BUCKET,
     DEFAULT_MINDESTBEOBACHTUNG_TAGE_FALLBACK,
+    DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV,
     DEFAULT_ZONEN_REAFFIRMATION_TOLERANZ_RELATIV,
     OUTCOME_ABGELAUFEN,
     OUTCOME_LIQUIDATION,
@@ -121,11 +122,18 @@ def _mindestbeobachtung_erreicht(
     return alter >= timedelta(days=mindest_tage)
 
 
-def check_hebel_signal_outcome(conn, signal, watchlist) -> tuple[str, dict]:
+def check_hebel_signal_outcome(
+    conn, signal, watchlist, richtungstreffer_mindest_crv: float = DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV,
+) -> tuple[str, dict]:
     """Prueft EIN Hebel-Signal gegen die seit signal.created_at vorliegende
     Kurshistorie - mirror check_signal_outcome() (backward_tracking.py:57-118),
     richtungsabhaengig. Gibt (neuer_status, extra_felder) zurueck, schreibt selbst
-    nichts (Testbarkeit ohne DB-Mocking der Schreibpfade)."""
+    nichts (Testbarkeit ohne DB-Mocking der Schreibpfade).
+
+    Mindestziel/MFE-Tracking (2026-07-27, siehe backward_tracking.py::
+    check_signal_outcome() Docstring fuer die volle Begruendung): laeuft
+    richtungsabhaengig PARALLEL zur bestehenden TP/SL/Liquidation-Aufloesung mit -
+    LONG: guenstigster Preis ist das Tages-High, SHORT: das Tages-Low."""
     if signal.action not in _TRACKABLE_HEBEL_ACTIONS:
         return OUTCOME_NICHT_ANWENDBAR, {}
 
@@ -143,37 +151,59 @@ def check_hebel_signal_outcome(conn, signal, watchlist) -> tuple[str, dict]:
 
     min_date = signal.created_at[:10]
     entry_mid = _entry_mid(signal)
+    if entry_mid is not None:
+        risiko_distanz = (stop_loss_threshold - entry_mid) if ist_short else (entry_mid - stop_loss_threshold)
+    else:
+        risiko_distanz = None
+
+    max_favorable_crv = None
+    mindestziel_erreicht_am = None
+
+    def _erfasse_mfe(high: float, low: float, day_value: str) -> None:
+        nonlocal max_favorable_crv, mindestziel_erreicht_am
+        if risiko_distanz is None or risiko_distanz <= 0:
+            return
+        guenstigster_preis = low if ist_short else high
+        favorable_crv = (
+            (entry_mid - guenstigster_preis) / risiko_distanz if ist_short
+            else (guenstigster_preis - entry_mid) / risiko_distanz
+        )
+        if max_favorable_crv is None or favorable_crv > max_favorable_crv:
+            max_favorable_crv = favorable_crv
+        if mindestziel_erreicht_am is None and favorable_crv >= richtungstreffer_mindest_crv:
+            mindestziel_erreicht_am = day_value
 
     def resolve(exit_price: float, status: str) -> tuple[str, dict]:
         realized_crv = None
         if entry_mid is not None:
             if ist_short:
-                risiko_distanz = stop_loss_threshold - entry_mid
-                if risiko_distanz != 0:
-                    realized_crv = (entry_mid - exit_price) / risiko_distanz
+                risiko_distanz_lokal = stop_loss_threshold - entry_mid
+                if risiko_distanz_lokal != 0:
+                    realized_crv = (entry_mid - exit_price) / risiko_distanz_lokal
             else:
-                risiko_distanz = entry_mid - stop_loss_threshold
-                if risiko_distanz != 0:
-                    realized_crv = (exit_price - entry_mid) / risiko_distanz
+                risiko_distanz_lokal = entry_mid - stop_loss_threshold
+                if risiko_distanz_lokal != 0:
+                    realized_crv = (exit_price - entry_mid) / risiko_distanz_lokal
         return status, {
             "entschieden_am": day,
             "realisiertes_crv": realized_crv,
             "datenquelle": datenquelle,
+            "max_realisiertes_crv": max_favorable_crv,
+            "mindestziel_erreicht_am": mindestziel_erreicht_am,
         }
 
     def _check_day(high: float, low: float, day_value: str) -> tuple[str, dict] | None:
         nonlocal day
         day = day_value
+        _erfasse_mfe(high, low, day_value)
         if ist_short:
             hit_liquidation = liquidation_threshold is not None and high >= liquidation_threshold
             hit_stop = high >= stop_loss_threshold
             hit_take = low <= take_profit_threshold
-            exit_hoch, exit_tief = high, low
         else:
             hit_liquidation = liquidation_threshold is not None and low <= liquidation_threshold
             hit_stop = low <= stop_loss_threshold
             hit_take = high >= take_profit_threshold
-            exit_hoch, exit_tief = high, low
 
         # Konservativste Annahme zuerst: Liquidation vor Stop-Loss vor Take-Profit.
         if hit_liquidation:
@@ -202,7 +232,10 @@ def check_hebel_signal_outcome(conn, signal, watchlist) -> tuple[str, dict]:
             if result is not None:
                 return result
 
-    return OUTCOME_OFFEN, {}
+    return OUTCOME_OFFEN, {
+        "max_realisiertes_crv": max_favorable_crv,
+        "mindestziel_erreicht_am": mindestziel_erreicht_am,
+    }
 
 
 def _is_superseded(
@@ -309,6 +342,9 @@ def run_hebel_backward_tracking(conn, watchlist, config: dict) -> HebelBackwardT
     einmal_trade_stunden = bt_cfg.get(
         "hebel_mindestbeobachtung_stunden_einmal_trade", DEFAULT_HEBEL_MINDESTBEOBACHTUNG_STUNDEN_EINMAL_TRADE,
     )
+    richtungstreffer_mindest_crv = bt_cfg.get(
+        "richtungstreffer_mindest_crv", DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV,
+    )
     latest_real = db.get_latest_hebel_signal_per_symbol_and_richtung(conn)
 
     rows = conn.execute(
@@ -322,7 +358,7 @@ def run_hebel_backward_tracking(conn, watchlist, config: dict) -> HebelBackwardT
             continue
         result.geprueft_count += 1
 
-        status, extra = check_hebel_signal_outcome(conn, signal, watchlist)
+        status, extra = check_hebel_signal_outcome(conn, signal, watchlist, richtungstreffer_mindest_crv)
 
         if status == OUTCOME_NICHT_ANWENDBAR:
             db.update_hebel_signal_outcome(conn, signal.id, status)
@@ -334,6 +370,8 @@ def run_hebel_backward_tracking(conn, watchlist, config: dict) -> HebelBackwardT
                 entschieden_am=extra.get("entschieden_am"),
                 realisiertes_crv=extra.get("realisiertes_crv"),
                 datenquelle=extra.get("datenquelle"),
+                max_realisiertes_crv=extra.get("max_realisiertes_crv"),
+                mindestziel_erreicht_am=extra.get("mindestziel_erreicht_am"),
             )
             if status == OUTCOME_TAKE_PROFIT:
                 result.resolved_take_profit += 1
@@ -347,10 +385,18 @@ def run_hebel_backward_tracking(conn, watchlist, config: dict) -> HebelBackwardT
         if _is_superseded(
             signal, latest_real, mindestbeob_bucket, mindestbeob_fallback, zonen_toleranz, einmal_trade_stunden,
         ):
-            db.update_hebel_signal_outcome(conn, signal.id, OUTCOME_UEBERHOLT)
+            db.update_hebel_signal_outcome(
+                conn, signal.id, OUTCOME_UEBERHOLT,
+                max_realisiertes_crv=extra.get("max_realisiertes_crv"),
+                mindestziel_erreicht_am=extra.get("mindestziel_erreicht_am"),
+            )
             result.superseded += 1
         elif _is_expired(signal, bucket_tage, fallback_tage):
-            db.update_hebel_signal_outcome(conn, signal.id, OUTCOME_ABGELAUFEN)
+            db.update_hebel_signal_outcome(
+                conn, signal.id, OUTCOME_ABGELAUFEN,
+                max_realisiertes_crv=extra.get("max_realisiertes_crv"),
+                mindestziel_erreicht_am=extra.get("mindestziel_erreicht_am"),
+            )
             result.expired += 1
         else:
             result.still_open += 1

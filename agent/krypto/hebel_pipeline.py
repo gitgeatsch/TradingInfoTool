@@ -19,7 +19,12 @@ from datetime import datetime, timezone
 import database.db as db
 from agent.krypto.analyst import AnalystResponseInvalid
 from agent.krypto.anticyclic import assess as assess_anticyclic
-from agent.krypto.backward_tracking import compute_win_rate_fact
+from agent.krypto.backward_tracking import (
+    DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV,
+    compute_win_rate_fact,
+    mindestziel_preis,
+    schaetze_mindestziel_zeitraum_tage,
+)
 from agent.krypto.btc_relativwert import btc_relativwert_fakt
 from agent.krypto.gegenpruefung import (
     baue_fakten as baue_zai_fakten,
@@ -415,6 +420,35 @@ def generate_hebel_signal(
 
     llm_model = llm_model_label(llm_client)
 
+    # Mindestziel-Kurs/Zeitschaetzung (2026-07-27) - siehe pipeline.py fuer die
+    # Spot-Variante/Begruendung. Richtungsabhaengig: SHORT spiegelt die Distanz
+    # unter den Entry statt darueber.
+    _ist_short_neu = corrected["richtung"] == "SHORT"
+    _entry_mid_neu = None
+    if entry.get("usd_von") is not None and entry.get("usd_bis") is not None:
+        _entry_mid_neu = (entry["usd_von"] + entry["usd_bis"]) / 2
+    elif entry.get("usd_von") is not None:
+        _entry_mid_neu = entry["usd_von"]
+    _stop_loss_mid_neu = None
+    if stop_loss.get("usd_von") is not None and stop_loss.get("usd_bis") is not None:
+        _stop_loss_mid_neu = (stop_loss["usd_von"] + stop_loss["usd_bis"]) / 2
+    elif stop_loss.get("usd_von") is not None:
+        _stop_loss_mid_neu = stop_loss["usd_von"]
+    _risiko_distanz_neu = None
+    if _entry_mid_neu is not None and _stop_loss_mid_neu is not None:
+        _risiko_distanz_neu = (
+            (_stop_loss_mid_neu - _entry_mid_neu) if _ist_short_neu else (_entry_mid_neu - _stop_loss_mid_neu)
+        )
+    _richtungstreffer_mindest_crv_cfg = config_dict.get("backward_tracking", {}).get(
+        "richtungstreffer_mindest_crv", DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV,
+    )
+    mindestziel_usd_wert = mindestziel_preis(
+        _entry_mid_neu, _risiko_distanz_neu, _richtungstreffer_mindest_crv_cfg, _ist_short_neu,
+    )
+    mindestziel_zeitraum_tage_wert = schaetze_mindestziel_zeitraum_tage(
+        mindestziel_usd_wert, _entry_mid_neu, ohlc_history,
+    )
+
     signal = HebelSignal(
         symbol=asset.symbol,
         created_at=_now(),
@@ -451,6 +485,8 @@ def generate_hebel_signal(
         take_profit_usd_bis=take_profit.get("usd_bis"),
         take_profit_eur_von=take_profit.get("eur_von"),
         take_profit_eur_bis=take_profit.get("eur_bis"),
+        mindestziel_usd=mindestziel_usd_wert,
+        mindestziel_zeitraum_tage_geschaetzt=mindestziel_zeitraum_tage_wert,
         halte_kriterium_bucket=halte_kriterium.get("bucket"),
         halte_kriterium_ziel_preis_usd=halte_kriterium.get("ziel_preis_usd"),
         halte_kriterium_ziel_preis_eur=halte_kriterium.get("ziel_preis_eur"),

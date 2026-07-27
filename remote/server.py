@@ -112,6 +112,15 @@ _INDEX_HTML = """<!doctype html>
 </div>
 
 <div class="card">
+  <div class="row"><strong>Richtungstreffer-Quote (Mindestziel/MFE)</strong></div>
+  <div class="row"><span class="muted-text">Unabhaengig von der exakten Take-Profit-Zonen-Ausfuehrung - wie oft
+  war die Richtung wenigstens ZEITWEISE (Maximum Favorable Excursion) mindestens die Mindestziel-Schwelle wert?
+  Zaehlt auch spaeter ueberholte/abgelaufene Signale mit, wenn sie zwischenzeitlich in die richtige Richtung
+  liefen. Ø Tage bis Mindestziel nur bei ausreichender Stichprobe (n≥15) empirisch belastbar.</span></div>
+  <div id="richtungstreffer-quote"></div>
+</div>
+
+<div class="card">
   <div class="row"><strong>API-Status: LLM-Anbieter</strong></div>
   <div id="api-health-llm"></div>
   <div class="row"><strong>API-Status: Markt-/Preisdaten</strong></div>
@@ -288,6 +297,29 @@ function renderKonfidenzKalibrierungByAssetklasse(kalibData) {
   }).join("");
 }
 
+// Richtungstreffer-Quote (2026-07-27, Mindestziel/MFE-Tracking - siehe
+// agent/krypto/backward_tracking.py::compute_richtungstreffer_quote()).
+function renderRichtungstrefferQuoteTier(label, tierData) {
+  if (!tierData) {
+    return '<div class="row"><span class="muted-text">' + label +
+      ': noch keine ausgewerteten Signale.</span></div>';
+  }
+  const zeitHinweis = tierData.avg_tage_bis_mindestziel !== null && tierData.avg_tage_bis_mindestziel !== undefined
+    ? '&Oslash; ' + tierData.avg_tage_bis_mindestziel.toFixed(1) + ' Tage bis Mindestziel (n=' +
+      tierData.avg_tage_bis_mindestziel_stichprobe_n + ')'
+    : 'Ø Tage bis Mindestziel noch nicht belastbar (n=' + tierData.avg_tage_bis_mindestziel_stichprobe_n + ', Ziel n≥15)';
+  return '<div class="row"><span>' + label + ' (n=' + tierData.anzahl_ausgewertet + ')</span>' +
+    '<span>' + tierData.richtungstreffer + '/' + tierData.anzahl_ausgewertet + ' = ' +
+    tierData.richtungstreffer_quote_pct.toFixed(1) + '%</span></div>' +
+    '<div class="row"><span class="muted-text">' + zeitHinweis + '</span></div>';
+}
+
+function renderRichtungstrefferQuote(data) {
+  if (!data) return "";
+  return renderRichtungstrefferQuoteTier("Spot", data.spot) +
+    renderRichtungstrefferQuoteTier("Hebel", data.hebel);
+}
+
 const API_HEALTH_GROUPS = {
   "api-health-llm": ["groq", "mistral", "gemini", "zai"],
   "api-health-markt": ["coingecko", "kraken", "bitpanda", "yfinance"],
@@ -454,6 +486,11 @@ async function refreshStatus() {
       renderKonfidenzKalibrierungByAssetklasse(data.konfidenz_kalibrierung);
     document.getElementById("konfidenz-kalibrierung-hebel").innerHTML =
       renderKonfidenzKalibrierungTier(data.konfidenz_kalibrierung.hebel || {});
+  }
+
+  if (data.richtungstreffer_quote) {
+    document.getElementById("richtungstreffer-quote").innerHTML =
+      renderRichtungstrefferQuote(data.richtungstreffer_quote);
   }
 
   if (data.api_health) {

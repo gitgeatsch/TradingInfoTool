@@ -623,6 +623,49 @@ def _migrate_hebel_signal_outcome_columns(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+_SIGNAL_MINDESTZIEL_NEW_COLUMNS = {
+    "outcome_max_realisiertes_crv": "REAL",
+    "outcome_mindestziel_erreicht_am": "TEXT",
+    # mindestziel_usd/mindestziel_zeitraum_tage_geschaetzt (2026-07-27, Nachtrag
+    # nach Nutzer-Rueckfrage): anders als die beiden Felder oben (erst NACHTRAEGLICH
+    # per Backward-Tracking befuellt) stehen diese beiden SOFORT bei Signal-
+    # Erstellung fest - rein arithmetisch aus Entry/Stop-Loss (wie die bestehende
+    # Take-Profit-Zone), siehe agent/krypto/backward_tracking.py::mindestziel_preis()/
+    # schaetze_mindestziel_zeitraum_tage(). In derselben Migration belassen (beide
+    # additiv, gleiche Tabelle, kein Grund fuer eine weitere Migrationsfunktion).
+    "mindestziel_usd": "REAL",
+    "mindestziel_zeitraum_tage_geschaetzt": "REAL",
+}
+
+
+def _migrate_signal_mindestziel_columns(conn: sqlite3.Connection) -> None:
+    """Unabhaengiges Mindestziel / MFE-Tracking (2026-07-27, siehe agent/krypto/
+    backward_tracking.py Modul-Docstring "Erweiterung") - additive Migration wie
+    _migrate_signal_outcome_columns()."""
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(signals)")}
+    for column, sql_type in _SIGNAL_MINDESTZIEL_NEW_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE signals ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
+_HEBEL_SIGNAL_MINDESTZIEL_NEW_COLUMNS = {
+    "outcome_max_realisiertes_crv": "REAL",
+    "outcome_mindestziel_erreicht_am": "TEXT",
+    "mindestziel_usd": "REAL",
+    "mindestziel_zeitraum_tage_geschaetzt": "REAL",
+}
+
+
+def _migrate_hebel_signal_mindestziel_columns(conn: sqlite3.Connection) -> None:
+    """Wie _migrate_signal_mindestziel_columns(), aber fuer hebel_signals."""
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(hebel_signals)")}
+    for column, sql_type in _HEBEL_SIGNAL_MINDESTZIEL_NEW_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE hebel_signals ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
 _HEBEL_SIGNAL_SENKUNG_NEW_COLUMNS = {"hebel_senkung_eigenkapital_nachschuss_eur": "REAL"}
 
 
@@ -890,6 +933,8 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_signal_fazit_columns(conn)
     _migrate_zai_gegenpruefung_columns(conn)
     _migrate_signal_zai_gegenpruefung_columns(conn)
+    _migrate_signal_mindestziel_columns(conn)
+    _migrate_hebel_signal_mindestziel_columns(conn)
     import_holdings_manual_overrides(conn)
 
 
@@ -1770,6 +1815,7 @@ _SIGNAL_COLUMNS = (
     "cash_reserve_ziel_btc_usd", "cash_reserve_ziel_eth_usd", "cash_reserve_ziel_gesamt_usd",
     "cash_reserve_ziel_begruendung", "gegenargument", "cash_veto", "cash_veto_reason",
     "risikofaktoren_json", "fazit_folgen", "fazit_kurzfazit", "fazit_konsistenz_hinweis",
+    "mindestziel_usd", "mindestziel_zeitraum_tage_geschaetzt",
 )
 
 
@@ -1910,16 +1956,28 @@ def update_signal_outcome(
     entschieden_am: str | None = None,
     realisiertes_crv: float | None = None,
     datenquelle: str | None = None,
+    max_realisiertes_crv: float | None = None,
+    mindestziel_erreicht_am: str | None = None,
 ) -> None:
     """Backward-Tracking-Ergebnis (2026-07-10, Selbstverifikations-Vision Schritt 2,
     siehe agent/krypto/backward_tracking.py) - wie update_signal_umsetzung() ein
     gezieltes Update EINER bestehenden Zeile, signals bleibt fuer neue Pipeline-
-    Laeufe weiterhin Append-only."""
+    Laeufe weiterhin Append-only.
+
+    max_realisiertes_crv/mindestziel_erreicht_am (2026-07-27, Mindestziel-/MFE-
+    Tracking - siehe project_performance_messung_backtracking_expertenanalyse.md):
+    unabhaengig vom finalen outcome_status - selbst ein spaeter per Stop-Loss/
+    Ueberholt/Abgelaufen aufgeloestes Signal kann zwischenzeitlich die
+    Mindestziel-Schwelle erreicht haben (Maximum Favorable Excursion)."""
     conn.execute(
         "UPDATE signals SET outcome_status = ?, outcome_geprueft_am = ?, "
         "outcome_entschieden_am = ?, outcome_realisiertes_crv = ?, "
-        "outcome_datenquelle = ? WHERE id = ?",
-        (status, _now_iso(), entschieden_am, realisiertes_crv, datenquelle, signal_id),
+        "outcome_datenquelle = ?, outcome_max_realisiertes_crv = ?, "
+        "outcome_mindestziel_erreicht_am = ? WHERE id = ?",
+        (
+            status, _now_iso(), entschieden_am, realisiertes_crv, datenquelle,
+            max_realisiertes_crv, mindestziel_erreicht_am, signal_id,
+        ),
     )
     conn.commit()
 
@@ -2682,6 +2740,7 @@ _HEBEL_SIGNAL_COLUMNS = (
     "fazit_folgen", "fazit_kurzfazit", "fazit_konsistenz_hinweis",
     "zai_gegenpruefung_urteil", "zai_gegenpruefung_kurzbegruendung",
     "zai_eigene_richtung", "zai_uebereinstimmung", "zai_richtung_kurzbegruendung",
+    "mindestziel_usd", "mindestziel_zeitraum_tage_geschaetzt",
 )
 
 
@@ -2843,14 +2902,21 @@ def update_hebel_signal_outcome(
     entschieden_am: str | None = None,
     realisiertes_crv: float | None = None,
     datenquelle: str | None = None,
+    max_realisiertes_crv: float | None = None,
+    mindestziel_erreicht_am: str | None = None,
 ) -> None:
     """Wie update_signal_outcome(), aber fuer hebel_signals (2026-07-15, Hebel-
-    Backward-Tracking - siehe agent/krypto/hebel_backward_tracking.py)."""
+    Backward-Tracking - siehe agent/krypto/hebel_backward_tracking.py).
+    max_realisiertes_crv/mindestziel_erreicht_am siehe update_signal_outcome()."""
     conn.execute(
         "UPDATE hebel_signals SET outcome_status = ?, outcome_geprueft_am = ?, "
         "outcome_entschieden_am = ?, outcome_realisiertes_crv = ?, "
-        "outcome_datenquelle = ? WHERE id = ?",
-        (status, _now_iso(), entschieden_am, realisiertes_crv, datenquelle, hebel_signal_id),
+        "outcome_datenquelle = ?, outcome_max_realisiertes_crv = ?, "
+        "outcome_mindestziel_erreicht_am = ? WHERE id = ?",
+        (
+            status, _now_iso(), entschieden_am, realisiertes_crv, datenquelle,
+            max_realisiertes_crv, mindestziel_erreicht_am, hebel_signal_id,
+        ),
     )
     conn.commit()
 

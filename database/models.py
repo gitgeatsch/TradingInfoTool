@@ -234,6 +234,16 @@ class Signal:
     take_profit_usd_bis: float | None = None
     take_profit_eur_von: float | None = None
     take_profit_eur_bis: float | None = None
+    # Mindestziel-Kurs/Zeitschaetzung (2026-07-27, Performance-Messung-
+    # Expertenanalyse) - anders als outcome_max_realisiertes_crv/
+    # outcome_mindestziel_erreicht_am weiter unten (die stehen erst NACHTRAEGLICH
+    # per Backward-Tracking fest) sind diese beiden Felder rein arithmetisch aus
+    # Entry/Stop-Loss (wie die Take-Profit-Zone oben) und stehen SOFORT bei
+    # Signal-Erstellung fest - siehe agent/krypto/backward_tracking.py::
+    # mindestziel_preis()/schaetze_mindestziel_zeitraum_tage(). Min-Kurs-
+    # Gegenstueck zur bestehenden Take-Profit-Zone (Max-Kurs).
+    mindestziel_usd: float | None = None
+    mindestziel_zeitraum_tage_geschaetzt: float | None = None  # rechnerisch angenommen, kein Versprechen
     # Top-5 rangierte Gruende (2026-07-10) - flach abgelegt analog forecast_bull/base/bear,
     # rang ergibt sich implizit aus der Spaltennummer.
     top_grund_1_kategorie: str | None = None
@@ -263,6 +273,14 @@ class Signal:
     outcome_entschieden_am: str | None = None
     outcome_realisiertes_crv: float | None = None
     outcome_datenquelle: str | None = None  # real (OHLC) | proxy (Tagesschlusskurs)
+    # Unabhaengiges Mindestziel / MFE-Tracking (2026-07-27, Nutzer-Wunsch nach der
+    # Performance-Messung-Expertenanalyse) - siehe agent/krypto/backward_tracking.py
+    # Modul-Docstring. Hoechstes je erreichtes CRV (Maximum Favorable Excursion,
+    # richtungsunabhaengig fuer Spot immer "steigend"), UNABHAENGIG vom finalen
+    # outcome_status - trennt "war die Richtung wenigstens zeitweise richtig" von
+    # "wurde die exakte TP/SL-Zonen-Ausfuehrung getroffen".
+    outcome_max_realisiertes_crv: float | None = None
+    outcome_mindestziel_erreicht_am: str | None = None
     # AZ-4-Tranchen (2026-07-12, gestaffelte Kauf-/Verkaufszonen) - JSON-Liste von
     # {rang, anteil_prozent, zone, trigger_bedingung}, rein informativ (siehe
     # agent/krypto/analyst.py::_validate()). None = keine Tranchierung vorgeschlagen
@@ -505,6 +523,12 @@ class HebelSignal:
     take_profit_usd_bis: float | None = None
     take_profit_eur_von: float | None = None
     take_profit_eur_bis: float | None = None
+    # Mindestziel-Kurs/Zeitschaetzung (2026-07-27), mirror Signal.mindestziel_usd/
+    # mindestziel_zeitraum_tage_geschaetzt (models.py) - richtungsabhaengig
+    # (LONG/SHORT) ueber die ist_short-Faelle in mindestziel_preis(). Steht
+    # SOFORT bei Signal-Erstellung fest, siehe dortiger Docstring.
+    mindestziel_usd: float | None = None
+    mindestziel_zeitraum_tage_geschaetzt: float | None = None
     halte_kriterium_bucket: str | None = None
     halte_kriterium_ziel_preis_usd: float | None = None
     halte_kriterium_ziel_preis_eur: float | None = None
@@ -563,6 +587,10 @@ class HebelSignal:
     outcome_entschieden_am: str | None = None
     outcome_realisiertes_crv: float | None = None
     outcome_datenquelle: str | None = None
+    # Unabhaengiges Mindestziel / MFE-Tracking (2026-07-27), mirror Signal.
+    # outcome_max_realisiertes_crv - hier richtungsabhaengig (LONG/SHORT).
+    outcome_max_realisiertes_crv: float | None = None
+    outcome_mindestziel_erreicht_am: str | None = None
     # Risikofaktoren-Liste (2026-07-19, siehe Signal.risikofaktoren_json-
     # Docstring) - deterministisch aus agent/krypto/hebel_risk_gate.py::
     # compute_risikofaktoren_hebel() berechnet.

@@ -62,6 +62,16 @@ DEFAULT_MINDESTBEOBACHTUNG_TAGE_BUCKET = {"kurz": 2, "mittel": 5, "lang": 10}
 DEFAULT_MINDESTBEOBACHTUNG_TAGE_FALLBACK = 3
 DEFAULT_ZONEN_REAFFIRMATION_TOLERANZ_RELATIV = 0.03
 
+# Mindestziel/MFE-Tracking (2026-07-27, Performance-Messung-Expertenanalyse - siehe
+# project_performance_messung_backtracking_expertenanalyse.md). Unabhaengig vom
+# finalen outcome_status (auch wenn spaeter Stop-Loss/Ueberholt/Abgelaufen folgt):
+# wurde WENIGSTENS ZEITWEISE ein CRV von mindestens diesem Wert erreicht (Maximum
+# Favorable Excursion, Van-Tharp-Konzept)? Bewusst NIEDRIGER als CRV_MINIMUM=2.0
+# (risk_gate.py, die harte Take-Profit-Vorgabe) - Mindestziel ist ein separater,
+# schwaecherer Maszstab ("war die Richtung ueberhaupt richtig"), kein Ersatz fuer
+# die bestehende TP-Zone. Ueberschreibt/veraendert KEIN bestehendes Gate.
+DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV = 1.0
+
 
 @dataclass
 class BackwardTrackingResult:
@@ -159,12 +169,22 @@ def _mindestbeobachtung_erreicht(
     return alter >= timedelta(days=mindest_tage)
 
 
-def check_signal_outcome(conn, signal, watchlist) -> tuple[str, dict]:
+def check_signal_outcome(
+    conn, signal, watchlist, richtungstreffer_mindest_crv: float = DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV,
+) -> tuple[str, dict]:
     """Prueft EIN Signal gegen die seit signal.created_at vorliegende Kurshistorie.
     Gibt (neuer_status, extra_felder) zurueck - schreibt selbst NICHTS in die DB
     (reiner Funktionskern, Testbarkeit ohne DB-Mocking der Schreibpfade). extra_felder
-    ist ein dict mit optionalen Keys 'entschieden_am'/'realisiertes_crv'/'datenquelle',
-    passend fuer db.update_signal_outcome(**extra_felder)."""
+    ist ein dict mit optionalen Keys 'entschieden_am'/'realisiertes_crv'/'datenquelle'/
+    'max_realisiertes_crv'/'mindestziel_erreicht_am', passend fuer
+    db.update_signal_outcome(**extra_felder).
+
+    Mindestziel/MFE-Tracking (2026-07-27, siehe DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV):
+    laeuft PARALLEL zur bestehenden TP/SL-Aufloesung mit, veraendert deren Ergebnis
+    NICHT - max_realisiertes_crv ist das hoechste an irgendeinem Tag erreichte
+    guenstige CRV (Tages-High fuer LONG), unabhaengig davon, ob/wann das Signal
+    spaeter per TP/SL/Ueberholt/Abgelaufen aufgeloest wird. mindestziel_erreicht_am
+    ist das Datum des ERSTEN Tages, an dem die Schwelle erreicht wurde."""
     if signal.action not in _TRACKABLE_ACTIONS:
         return OUTCOME_NICHT_ANWENDBAR, {}
 
@@ -179,6 +199,22 @@ def check_signal_outcome(conn, signal, watchlist) -> tuple[str, dict]:
 
     min_date = signal.created_at[:10]
     entry_mid = _entry_mid(signal)
+    risiko_distanz = (
+        entry_mid - stop_loss_threshold if entry_mid is not None and entry_mid != stop_loss_threshold else None
+    )
+
+    max_favorable_crv = None
+    mindestziel_erreicht_am = None
+
+    def _erfasse_mfe(guenstigster_preis: float, day_value: str) -> None:
+        nonlocal max_favorable_crv, mindestziel_erreicht_am
+        if risiko_distanz is None or risiko_distanz <= 0:
+            return
+        favorable_crv = (guenstigster_preis - entry_mid) / risiko_distanz
+        if max_favorable_crv is None or favorable_crv > max_favorable_crv:
+            max_favorable_crv = favorable_crv
+        if mindestziel_erreicht_am is None and favorable_crv >= richtungstreffer_mindest_crv:
+            mindestziel_erreicht_am = day_value
 
     def resolve(exit_price: float, hit_take: bool) -> tuple[str, dict]:
         status = OUTCOME_TAKE_PROFIT if hit_take else OUTCOME_STOP_LOSS
@@ -189,6 +225,8 @@ def check_signal_outcome(conn, signal, watchlist) -> tuple[str, dict]:
             "entschieden_am": day,
             "realisiertes_crv": realized_crv,
             "datenquelle": datenquelle,
+            "max_realisiertes_crv": max_favorable_crv,
+            "mindestziel_erreicht_am": mindestziel_erreicht_am,
         }
 
     ohlc_rows = db.get_ohlc_history(conn, signal.symbol, "USD", min_date=min_date)
@@ -196,6 +234,7 @@ def check_signal_outcome(conn, signal, watchlist) -> tuple[str, dict]:
         datenquelle = "real"
         for row in ohlc_rows:
             day = row.date
+            _erfasse_mfe(row.high, day)
             hit_take = row.high >= take_profit_threshold
             hit_stop = row.low <= stop_loss_threshold
             if hit_stop:
@@ -212,6 +251,7 @@ def check_signal_outcome(conn, signal, watchlist) -> tuple[str, dict]:
             if row.price_usd is None:
                 continue
             day = row.date
+            _erfasse_mfe(row.price_usd, day)
             hit_take = row.price_usd >= take_profit_threshold
             hit_stop = row.price_usd <= stop_loss_threshold
             if hit_stop:
@@ -220,7 +260,10 @@ def check_signal_outcome(conn, signal, watchlist) -> tuple[str, dict]:
                 return resolve(row.price_usd, hit_take=True)
 
     # Kein Treffer gefunden - offen oder abgelaufen, je nach Alter.
-    return OUTCOME_OFFEN, {}
+    return OUTCOME_OFFEN, {
+        "max_realisiertes_crv": max_favorable_crv,
+        "mindestziel_erreicht_am": mindestziel_erreicht_am,
+    }
 
 
 _GEGENRICHTUNG_AKTIONEN = ("VERKAUFEN", "TAUSCHEN")
@@ -331,6 +374,9 @@ def run_backward_tracking(conn, watchlist, config: dict) -> BackwardTrackingResu
     zonen_toleranz = bt_cfg.get(
         "zonen_reaffirmation_toleranz_relativ", DEFAULT_ZONEN_REAFFIRMATION_TOLERANZ_RELATIV,
     )
+    richtungstreffer_mindest_crv = bt_cfg.get(
+        "richtungstreffer_mindest_crv", DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV,
+    )
     latest_real = db.get_latest_real_signal_per_symbol(conn)
 
     rows = conn.execute(
@@ -344,7 +390,7 @@ def run_backward_tracking(conn, watchlist, config: dict) -> BackwardTrackingResu
             continue
         result.geprueft_count += 1
 
-        status, extra = check_signal_outcome(conn, signal, watchlist)
+        status, extra = check_signal_outcome(conn, signal, watchlist, richtungstreffer_mindest_crv)
 
         if status == OUTCOME_NICHT_ANWENDBAR:
             db.update_signal_outcome(conn, signal.id, status)
@@ -356,6 +402,8 @@ def run_backward_tracking(conn, watchlist, config: dict) -> BackwardTrackingResu
                 entschieden_am=extra.get("entschieden_am"),
                 realisiertes_crv=extra.get("realisiertes_crv"),
                 datenquelle=extra.get("datenquelle"),
+                max_realisiertes_crv=extra.get("max_realisiertes_crv"),
+                mindestziel_erreicht_am=extra.get("mindestziel_erreicht_am"),
             )
             if status == OUTCOME_TAKE_PROFIT:
                 result.resolved_take_profit += 1
@@ -365,10 +413,18 @@ def run_backward_tracking(conn, watchlist, config: dict) -> BackwardTrackingResu
 
         # status == OUTCOME_OFFEN: erst Ueberholt-Check, dann Ablauf-Check.
         if _is_superseded(signal, latest_real, mindestbeob_bucket, mindestbeob_fallback, zonen_toleranz):
-            db.update_signal_outcome(conn, signal.id, OUTCOME_UEBERHOLT)
+            db.update_signal_outcome(
+                conn, signal.id, OUTCOME_UEBERHOLT,
+                max_realisiertes_crv=extra.get("max_realisiertes_crv"),
+                mindestziel_erreicht_am=extra.get("mindestziel_erreicht_am"),
+            )
             result.superseded += 1
         elif _is_expired(signal, bucket_tage, fallback_tage):
-            db.update_signal_outcome(conn, signal.id, OUTCOME_ABGELAUFEN)
+            db.update_signal_outcome(
+                conn, signal.id, OUTCOME_ABGELAUFEN,
+                max_realisiertes_crv=extra.get("max_realisiertes_crv"),
+                mindestziel_erreicht_am=extra.get("mindestziel_erreicht_am"),
+            )
             result.expired += 1
         else:
             result.still_open += 1
@@ -677,3 +733,123 @@ def compute_konfidenz_kalibrierung(conn, watchlist: list | None = None) -> dict:
         }
 
     return ergebnis
+
+
+# Mindestziel-Preis/Zeitraum bei SIGNAL-ERSTELLUNG (2026-07-27, Nachtrag nach
+# Nutzer-Rueckfrage "die Basiswerte muessten doch schon bei Signalerzeugung
+# feststehen?"): anders als max_realisiertes_crv/mindestziel_erreicht_am oben
+# (die koennen erst NACHTRAEGLICH per Backward-Tracking ermittelt werden - man
+# kann nicht wissen, ob ein Ziel getroffen wurde, bevor Zeit vergangen ist) sind
+# der Mindestziel-KURS und die Zeitschaetzung rein arithmetisch aus bereits beim
+# Signal vorhandenen Werten (Entry/Stop-Loss, wie die bestehende Take-Profit-
+# Zone) - stehen SOFORT fest und werden von der Pipeline direkt auf das Signal
+# geschrieben (mindestziel_usd/mindestziel_zeitraum_tage_geschaetzt), damit GUI/
+# E-Mail sie beim Erzeugen des Signals zusammen mit Entry/Stop-Loss/Take-Profit
+# zeigen koennen - kein Warten auf das Backward-Tracking noetig.
+DEFAULT_ZEITRAUM_SCHAETZUNG_TAGE_FENSTER = 14
+
+
+def _durchschnittliche_tagesspanne(
+    ohlc_rows, fenster_tage: int = DEFAULT_ZEITRAUM_SCHAETZUNG_TAGE_FENSTER,
+) -> float | None:
+    """Durchschnittliche Tages-High-Low-Spanne der letzten `fenster_tage` bereits
+    vorliegenden OHLC-Zeilen (chronologisch aufsteigend erwartet, wie ueberall
+    sonst in diesem Modul) - Grundlage der Random-Walk-Zeitschaetzung unten.
+    Rein deskriptiv aus real vorliegenden Daten, keine Prognose."""
+    relevante = [r for r in ohlc_rows if r.high is not None and r.low is not None][-fenster_tage:]
+    if len(relevante) < 2:
+        return None
+    spannen = [r.high - r.low for r in relevante]
+    avg = sum(spannen) / len(spannen)
+    return avg if avg > 0 else None
+
+
+def mindestziel_preis(
+    entry_mid: float | None, risiko_distanz: float | None,
+    richtungstreffer_mindest_crv: float = DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV,
+    ist_short: bool = False,
+) -> float | None:
+    """Mindestziel-Kurs (Min-Kurs bei LONG/Spot, entsprechend gespiegelt bei
+    Hebel-SHORT) - dieselbe Distanz wie der Stop-Loss, nur in die guenstige
+    Richtung (CRV=richtungstreffer_mindest_crv). Rein arithmetisch aus bereits
+    vorhandenen Entry-/Stop-Loss-Werten - siehe Modul-Docstring-Nachtrag oben."""
+    if entry_mid is None or risiko_distanz is None or risiko_distanz <= 0:
+        return None
+    if ist_short:
+        return entry_mid - richtungstreffer_mindest_crv * risiko_distanz
+    return entry_mid + richtungstreffer_mindest_crv * risiko_distanz
+
+
+def schaetze_mindestziel_zeitraum_tage(
+    ziel_preis: float | None, entry_mid: float | None, ohlc_rows,
+) -> float | None:
+    """Rechnerisch ANGENOMMENE Anzahl Tage bis zum Mindestziel - Kursdistanz zum
+    Ziel geteilt durch die durchschnittliche Tagesspanne (High-Low) der letzten
+    DEFAULT_ZEITRAUM_SCHAETZUNG_TAGE_FENSTER bereits gehandelten Tage vor
+    Signal-Erstellung (Random-Walk-Annahme: erwartete Tage = Distanz / typische
+    Tagesbewegung). KEIN Versprechen, kann verfehlt werden - GUI/E-Mail muessen
+    das explizit als 'angenommen' kennzeichnen, solange keine belastbare
+    empirische Ø-Tage-Zahl vorliegt (siehe compute_richtungstreffer_quote())."""
+    if ziel_preis is None or entry_mid is None:
+        return None
+    distanz = abs(ziel_preis - entry_mid)
+    if distanz == 0:
+        return 0.0
+    avg_tagesspanne = _durchschnittliche_tagesspanne(ohlc_rows)
+    if avg_tagesspanne is None:
+        return None
+    return round(distanz / avg_tagesspanne, 1)
+
+
+def compute_richtungstreffer_quote(
+    conn, tier: str, richtungstreffer_mindest_crv: float = DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV,
+    erlaubte_symbole: set[str] | None = None,
+) -> dict | None:
+    """Richtungstreffer-Quote (2026-07-27, Performance-Messung-Expertenanalyse -
+    siehe project_performance_messung_backtracking_expertenanalyse.md): unabhaengig
+    von der exakten TP/SL-Zonen-Ausfuehrung - wie oft war die Richtung wenigstens
+    zeitweise (Maximum Favorable Excursion) mindestens richtungstreffer_mindest_crv
+    wert? BREITER gefasst als compute_win_rate_fact() (_RESOLVED_OUTCOMES) - zaehlt
+    JEDES Signal mit outcome_max_realisiertes_crv IS NOT NULL, also auch spaeter
+    ueberholte/abgelaufene, die trotzdem eine Zeitlang in die richtige Richtung
+    liefen. Ø-Tage-bis-Mindestziel nur bei n>=_MIN_SAMPLE_FUER_AUSSAGE als
+    belastbar markiert - GUI/E-Mail sollen sonst den rechnerisch angenommenen Wert
+    aus schaetze_mindestziel_zeitraum_tage() zeigen, nicht diesen. Reine
+    Lesefunktion, kein Seiteneffekt."""
+    table = "signals" if tier == "spot" else "hebel_signals"
+    rows = conn.execute(
+        f"SELECT symbol, created_at, outcome_max_realisiertes_crv, outcome_mindestziel_erreicht_am "
+        f"FROM {table} WHERE outcome_max_realisiertes_crv IS NOT NULL",
+    ).fetchall()
+    if erlaubte_symbole is not None:
+        rows = [r for r in rows if r["symbol"] in erlaubte_symbole]
+    total = len(rows)
+    if total == 0:
+        return None
+
+    treffer_rows = [r for r in rows if r["outcome_max_realisiertes_crv"] >= richtungstreffer_mindest_crv]
+    treffer = len(treffer_rows)
+    quote_pct = round(100.0 * treffer / total, 1)
+
+    tage_liste = []
+    for r in treffer_rows:
+        if not r["outcome_mindestziel_erreicht_am"]:
+            continue
+        try:
+            erstellt = _parse_dt(r["created_at"])
+            erreicht = _parse_dt(r["outcome_mindestziel_erreicht_am"])
+        except ValueError:
+            continue
+        tage_liste.append((erreicht - erstellt).total_seconds() / 86400)
+
+    ausreichend_stichprobe = len(tage_liste) >= _MIN_SAMPLE_FUER_AUSSAGE
+    avg_tage = round(sum(tage_liste) / len(tage_liste), 1) if tage_liste else None
+
+    return {
+        "anzahl_ausgewertet": total,
+        "richtungstreffer": treffer,
+        "richtungstreffer_quote_pct": quote_pct,
+        "avg_tage_bis_mindestziel": avg_tage if ausreichend_stichprobe else None,
+        "avg_tage_bis_mindestziel_stichprobe_n": len(tage_liste),
+        "ausreichend_stichprobe": ausreichend_stichprobe,
+    }

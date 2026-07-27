@@ -1141,6 +1141,29 @@ def _formatiere_fazit(signal) -> str:
     return zeile
 
 
+def _formatiere_mindestziel(signal) -> str:
+    """Mindestziel-Kurs/Zeitschaetzung (2026-07-27, Performance-Messung-
+    Expertenanalyse, Nutzer-Wunsch "das hätte ich gerne im eMail") - Min-Ziel-
+    Gegenstueck zur bereits vorhandenen Take-Profit-Zeile (Max-Ziel), plus eine
+    rechnerisch angenommene Zeitschaetzung (siehe agent/krypto/backward_
+    tracking.py::schaetze_mindestziel_zeitraum_tage() Docstring - kein
+    Versprechen, kann verfehlt werden)."""
+    from ui.formatting import format_money
+
+    if signal.mindestziel_usd is None:
+        return ""
+    zeile = (
+        f"Mindestziel: {format_money(signal.mindestziel_usd)} USD "
+        "(Min-Ziel Richtungstreffer, Take-Profit oben = Max-Ziel)\n"
+    )
+    if signal.mindestziel_zeitraum_tage_geschaetzt is not None:
+        zeile += (
+            f"Zeitraum bis Mindestziel: ~{signal.mindestziel_zeitraum_tage_geschaetzt:.1f} Tage "
+            "(rechnerisch angenommen aus bisheriger Volatilität, kein Versprechen)\n"
+        )
+    return zeile
+
+
 _ZAI_KONSISTENZ_SYMBOL = {"konsistent": "▲", "widerspruch": "▼"}
 _ZAI_UEBEREINSTIMMUNG_SYMBOL = {"ja": "▲", "nein": "▼"}
 
@@ -1227,6 +1250,7 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None, c
         risikofaktoren_text = _formatiere_risikofaktoren(signal)
         fazit_text = _formatiere_fazit(signal)
         zai_text = _formatiere_zai_gegenpruefung(signal)
+        mindestziel_text = _formatiere_mindestziel(signal)
         zeitpunkt_text = _formatiere_zeitpunkt_lokal(signal.created_at)
         body = (
             f"Aktion: {signal.action}\n"
@@ -1236,6 +1260,7 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None, c
             f"Entry: {format_money(signal.entry_eur_von)}-{format_money(signal.entry_eur_bis)} EUR\n"
             f"Stop-Loss: {format_money(signal.stop_loss_eur_von)}-{format_money(signal.stop_loss_eur_bis)} EUR\n"
             f"Take-Profit: {format_money(signal.take_profit_eur_von)}-{format_money(signal.take_profit_eur_bis)} EUR\n"
+            f"{mindestziel_text}"
             + (f"{positionsgroesse_text}\n" if positionsgroesse_text else "")
             + f"\n--- 2. LLM-BEWERTUNG (Konfidenz {signal.confidence_pct}%) ---\n"
             f"{signal.short_reasoning or ''}\n\n"
@@ -1476,6 +1501,7 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None, 
         risikofaktoren_text = _formatiere_risikofaktoren(signal)
         fazit_text = _formatiere_fazit(signal)
         zai_text = _formatiere_zai_gegenpruefung(signal)
+        mindestziel_text = _formatiere_mindestziel(signal)
         zeitpunkt_text = _formatiere_zeitpunkt_lokal(signal.created_at)
         wartezeit_text = ""
         if conn_factory is not None:
@@ -1501,6 +1527,7 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None, 
             f"Entry: {format_money(signal.entry_eur_von)}-{format_money(signal.entry_eur_bis)} EUR\n"
             f"Stop-Loss: {format_money(signal.stop_loss_eur_von)}-{format_money(signal.stop_loss_eur_bis)} EUR\n"
             f"Take-Profit: {format_money(signal.take_profit_eur_von)}-{format_money(signal.take_profit_eur_bis)} EUR\n"
+            f"{mindestziel_text}"
             f"Geschätzter Liquidationspreis: {format_money(signal.liquidationspreis_geschaetzt_usd)} USD"
             f"{' (' + format_money(signal.liquidationspreis_geschaetzt_eur) + ' EUR)' if signal.liquidationspreis_geschaetzt_eur is not None else ''}\n"
             f"{eigenkapital_zeile}"
@@ -1646,6 +1673,7 @@ def _notify_multi_asset_signal(signal, watchlist: list, bitpanda_assets: list | 
         forecast_text = _formatiere_forecast(signal)
         risikofaktoren_text = _formatiere_risikofaktoren(signal)
         fazit_text = _formatiere_fazit(signal)
+        mindestziel_text = _formatiere_mindestziel(signal)
         zeitpunkt_text = _formatiere_zeitpunkt_lokal(signal.created_at)
         body = (
             f"Aktion: {signal.action}\n"
@@ -1654,6 +1682,7 @@ def _notify_multi_asset_signal(signal, watchlist: list, bitpanda_assets: list | 
             f"Entry: {format_money(signal.entry_eur_von)}-{format_money(signal.entry_eur_bis)} EUR\n"
             f"Stop-Loss: {format_money(signal.stop_loss_eur_von)}-{format_money(signal.stop_loss_eur_bis)} EUR\n"
             f"Take-Profit: {format_money(signal.take_profit_eur_von)}-{format_money(signal.take_profit_eur_bis)} EUR\n"
+            f"{mindestziel_text}"
             + (f"{positionsgroesse_text}\n" if positionsgroesse_text else "")
             + f"\n--- 2. LLM-BEWERTUNG (Konfidenz {signal.confidence_pct}%) ---\n"
             f"{signal.short_reasoning or ''}\n\n"

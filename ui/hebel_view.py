@@ -506,6 +506,16 @@ class HebelView(ttk.Frame):
                 f"  Take-Profit:  {format_money(signal.take_profit_usd_von)}–{format_money(signal.take_profit_usd_bis)} | "
                 f"{format_money(signal.take_profit_eur_von)}–{format_money(signal.take_profit_eur_bis)}"
             )
+            if signal.mindestziel_usd is not None:
+                lines.append(
+                    f"  Mindestziel:  {format_money(signal.mindestziel_usd)} USD "
+                    "(Min-Ziel Richtungstreffer, Take-Profit oben = Max-Ziel)"
+                )
+                if signal.mindestziel_zeitraum_tage_geschaetzt is not None:
+                    lines.append(
+                        f"  Zeitraum:     ~{signal.mindestziel_zeitraum_tage_geschaetzt:.1f} Tage bis Mindestziel "
+                        "(rechnerisch angenommen aus bisheriger Volatilität, kein Versprechen)"
+                    )
 
         if signal.halte_kriterium_bucket:
             lines.append("\nHalte-Kriterium:")

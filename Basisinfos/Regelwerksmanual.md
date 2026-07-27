@@ -9655,3 +9655,73 @@ Konsistenz -> korrekt 1+2+1=4). `_get_budget_heute()`-Integration End-to-End
 aktiv=True mit leerer Watchlist) laeuft ohne Fehler. YAML-Parse-Check
 config.yaml. Compile-/Import-Regressionscheck aller 6 geaenderten
 Python-Dateien.
+
+## Nachtrag (2026-07-27): Mindestziel/MFE-Tracking - unabhaengige Erfolgsmessung neben Take-Profit
+
+Ausloeser: Nutzer bat um eine Experten-Bewertung der Performance-Messung
+(Backward-Tracking, siehe Kap. 9/16) - Ergebnis: solide Grundlage
+(R-Multiple, Kalibrierungskurve, Forward-statt-Backtest-Methodik), aber die
+bestehende Trefferquote misst nur "wurde exakt die Take-Profit-Zone
+getroffen", nicht "war die Richtung wenigstens zeitweise richtig". Nach
+Nutzer-Rueckfrage klar in zwei Ebenen getrennt.
+
+### Ebene 1: sofort bei Signal-Erstellung (rein arithmetisch, kein Backward-Tracking noetig)
+
+Neue Felder `mindestziel_usd`/`mindestziel_zeitraum_tage_geschaetzt` auf
+`signals`/`hebel_signals`, berechnet in `agent/krypto/pipeline.py`/
+`hebel_pipeline.py` direkt vor dem `Signal()`/`HebelSignal()`-Konstruktor-
+aufruf, ueber neue Funktionen in `backward_tracking.py`:
+
+- `mindestziel_preis(entry_mid, risiko_distanz, richtungstreffer_mindest_crv,
+  ist_short)`: Min-Kurs = Entry + 1x Risikodistanz (dieselbe Distanz wie der
+  Stop-Loss, nur in die guenstige Richtung) - CRV-Schwelle konfigurierbar
+  (`backward_tracking.richtungstreffer_mindest_crv`, Default 1.0, bewusst
+  niedriger als CRV_MINIMUM=2.0 der bestehenden Take-Profit-Vorgabe). Bei
+  Hebel richtungsabhaengig (SHORT spiegelt die Distanz unter den Entry).
+  Take-Profit (bereits vorhanden) ist das Max-Ziel-Gegenstueck.
+- `schaetze_mindestziel_zeitraum_tage(ziel_preis, entry_mid, ohlc_rows)`:
+  rechnerisch ANGENOMMENE Anzahl Tage bis zum Mindestziel = Kursdistanz /
+  durchschnittliche Tages-High-Low-Spanne der letzten 14 bereits gehandelten
+  Tage vor Signal-Erstellung (Random-Walk-Annahme). Kein Versprechen, kann
+  verfehlt werden - explizit so gekennzeichnet in GUI/E-Mail.
+
+### Ebene 2: erst nachtraeglich per Backward-Tracking (kann naturgemaess erst nach Zeitablauf feststehen)
+
+`outcome_max_realisiertes_crv` (Maximum Favorable Excursion - hoechstes je
+erreichtes guenstiges CRV, richtungsabhaengig) + `outcome_mindestziel_
+erreicht_am` (Datum des ersten Treffers). Laeuft PARALLEL zur bestehenden
+TP/SL/Liquidation-Aufloesung in `check_signal_outcome()`/`check_hebel_
+signal_outcome()` mit, veraendert deren Ergebnis NICHT (Mindestbeobachtung/
+Zonen-Reaffirmation-Gates bleiben unberuehrt) - auch ein spaeter per
+Stop-Loss/Ueberholt/Abgelaufen aufgeloestes Signal bekommt seinen
+tatsaechlichen Zwischenhoehepunkt persistiert. Neue Aggregationsfunktion
+`compute_richtungstreffer_quote()` (breiter gefasst als `compute_win_rate_
+fact()` - zaehlt auch spaeter ueberholte/abgelaufene Signale mit, wenn sie
+zwischenzeitlich in die richtige Richtung liefen), zeigt "Ø Tage bis
+Mindestziel" nur bei n>=15 als empirisch belastbar an.
+
+### Anzeige
+
+- GUI (`ui/signals_view.py`/`ui/hebel_view.py`): Mindestziel-Zeile direkt
+  neben der bestehenden Take-Profit-Zeile im Detail-Panel.
+- E-Mail (`scheduler/background.py`): neue `_formatiere_mindestziel()`-
+  Helper-Funktion, in allen 3 E-Mail-Buildern (Spot/Hebel/Multi-Asset)
+  verdrahtet.
+- Remote-Steuer-Seite (`remote/status.py`/`server.py`): neue Karte
+  "Richtungstreffer-Quote (Mindestziel/MFE)".
+- `extract_notebook_diagnose.py`: alle 4 neuen Felder in den Export-
+  Spaltenlisten fuer Spot- und Hebel-Signale aufgenommen.
+
+Bewusst NICHT umgesetzt: LLM-Prompt-Wiring (Werte existieren zwar zum
+LLM-Erzeugungszeitpunkt, aber eine Rueckkopplung waere eine eigene
+Verhaltensaenderung), Positions-Lifecycle-Tracking, EUR-Variante von
+mindestziel_usd.
+
+**Verifiziert:** synthetische Tests (Spot LONG mit Zwischenhoehepunkt ueber
+Mindestziel, der dann bis zum Stop-Loss reversiert - outcome_status bleibt
+korrekt stop_loss_erreicht, MFE-Werte werden trotzdem korrekt persistiert;
+Hebel SHORT-Szenario richtungsabhaengig; MFE persistiert auch beim
+Ueberholt-Pfad). Compile-/Import-Regressionscheck aller 11 geaenderten
+Python-Dateien (models.py, db.py, backward_tracking.py, hebel_backward_
+tracking.py, pipeline.py, hebel_pipeline.py, signals_view.py, hebel_view.py,
+background.py, status.py, server.py, extract_notebook_diagnose.py).

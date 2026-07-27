@@ -36,6 +36,7 @@ class RemoteStatus:
     api_health: dict | None = None
     regime_status: dict | None = None
     parameter_overview: list[dict] | None = None
+    richtungstreffer_quote: dict | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -56,6 +57,7 @@ class RemoteStatus:
             "api_health": self.api_health,
             "regime_status": self.regime_status,
             "parameter_overview": self.parameter_overview,
+            "richtungstreffer_quote": self.richtungstreffer_quote,
         }
 
 
@@ -138,6 +140,7 @@ def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, erro
         api_health=_get_api_health(conn),
         regime_status=_get_regime_status(conn),
         parameter_overview=_get_parameter_overview(),
+        richtungstreffer_quote=_get_richtungstreffer_quote(conn, watchlist),
     )
 
 
@@ -180,6 +183,28 @@ def _get_konfidenz_kalibrierung(conn: sqlite3.Connection, watchlist: list) -> di
     from agent.krypto.backward_tracking import compute_konfidenz_kalibrierung
 
     return compute_konfidenz_kalibrierung(conn, watchlist)
+
+
+def _get_richtungstreffer_quote(conn: sqlite3.Connection, watchlist: list) -> dict:
+    """Richtungstreffer-Quote-Karte (2026-07-27, Performance-Messung-
+    Expertenanalyse, Nutzer-Wunsch "bitte nicht auf der Remoteseite vergessen")
+    - reiner Lesezugriff auf agent/krypto/backward_tracking.py::
+    compute_richtungstreffer_quote(). Anders als provider_performance/
+    konfidenz_kalibrierung (die watchlist-basiert nach Assetklasse
+    aufschluesseln) liefert compute_richtungstreffer_quote() nur EINEN Tier
+    pro Aufruf - hier bewusst nur grob nach spot/hebel getrennt (wie
+    compute_win_rate_fact()), keine feinere Assetklassen-Aufschluesselung noetig
+    fuer diese Uebersichtskarte."""
+    from agent.krypto.backward_tracking import DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV, compute_richtungstreffer_quote
+
+    schwelle = config_module.load_config().get("backward_tracking", {}).get(
+        "richtungstreffer_mindest_crv", DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV,
+    )
+    return {
+        "mindest_crv": schwelle,
+        "spot": compute_richtungstreffer_quote(conn, "spot", schwelle),
+        "hebel": compute_richtungstreffer_quote(conn, "hebel", schwelle),
+    }
 
 
 def _get_regime_status(conn: sqlite3.Connection) -> dict | None:
