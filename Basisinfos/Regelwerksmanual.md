@@ -10059,3 +10059,50 @@ wird; `historische_erfolgsquote` fuer Rohstoffe nach einigen Tagen erneut
 gegenchecken (sollte sich strukturell veraendern, da die bisherige Quote auf
 dem Skalierungsbug beruhte); Migrationsskript `migrate_themen_etf_ohlc_
 currency.py --apply` auf dem Notebook ausfuehren.
+
+## Nachtrag (2026-07-27, gleicher Tag, Folge): NEAR-Hebel-Signal-Review -
+Mindestziel-EUR-Luecke gefunden und geschlossen
+
+Nutzer bat um eine Konsistenzpruefung eines konkreten NEAR-LONG-Hebel-Signals
+gegen den frisch gepushten Grundsatzfix (EUR/USD-Umrechnung, Ablaufkette). Zwei
+Punkte geprueft:
+
+1. **Bestaetigt, echt: Mindestziel hatte nie eine EUR-Ableitung.** Anders als
+   Entry/Stop-Loss/Take-Profit/Halte-Kriterium/Liquidationspreis/
+   Eigenkapitalbedarf (alle laengst deterministisch in EUR via `eur_aus_usd()`)
+   zeigte `_formatiere_mindestziel()` (`scheduler/background.py`) das
+   Mindestziel nur in USD - `HebelSignal`/`Signal` hatten schlicht kein
+   `mindestziel_eur`-Feld (Luecke seit Einfuehrung des Mindestziel/MFE-
+   Feature am selben Tag). Gefixt: neues additives Feld `mindestziel_eur` in
+   beiden Dataclasses (`database/models.py`), additive Migration (dieselbe
+   Migrationsfunktion wie `mindestziel_usd`, `database/db.py`), Ableitung via
+   `eur_aus_usd(mindestziel_usd_wert, eur_usd_fx_rate)` in `agent/krypto/
+   pipeline.py`/`hebel_pipeline.py`, Anzeige nachgezogen in E-Mail
+   (`scheduler/background.py::_formatiere_mindestziel()`) UND beiden
+   App-Detail-Panels (`ui/hebel_view.py`, `ui/signals_view.py` - vorher
+   ebenfalls USD-only, derselbe Fund), sowie im Diagnose-Export
+   (`extract_notebook_diagnose.py`).
+
+2. **Zurueckgezogen: vermeintliche CRV-Diskrepanz war ein eigener
+   Rechenfehler, kein Systemfehler.** Erster Verdacht: der gedruckte CRV-Wert
+   (2,79) liess sich aus der gedruckten EUR-Entry/Stop-Loss/Take-Profit-Zone
+   nicht nachrechnen (~3,57 statt 2,79). Code-Pruefung (`hebel_risk_gate.py::
+   post_check_hebel()`, Zeilen ~994-1010) zeigt: `entry`/`stop_loss`/
+   `take_profit` werden einmal aus der LLM-Antwort gelesen und danach nie
+   veraendert - CRV, `sl_abstand_relativ` UND die spaetere EUR-Ableitung
+   (`hebel_pipeline.py`) lesen beweisbar dieselben, unveraenderten USD-
+   Rohwerte. Ursache der scheinbaren Diskrepanz: `format_money()`
+   (`ui/formatting.py`) rundet ab `|Wert| ≥ 1` auf 2 Nachkommastellen - bei
+   NEAR (~1,6 EUR, ~2-3% Stop-Loss-Abstand) reicht diese Rundung aus, um beim
+   Zurueckrechnen aus den ANGEZEIGTEN Zonenwerten einen CRV zwischen ~2,56 und
+   ~5,40 zu ergeben, obwohl intern nur EIN exakter Wert (2,79) existiert. Kein
+   Fix noetig - Lehre: bei engen Hebel-Stops (Coins im 1-5-EUR-Bereich) ist der
+   gedruckte CRV/SL-Abstand-Wert selbst massgeblich, eine manuelle Nachrechnung
+   aus der 2-Dezimal-EUR-Zone ist bei kleinen Stop-Distanzen nicht zuverlaessig
+   moeglich.
+
+**Verifiziert:** synthetischer Migrations-/Rundtrip-Test (`mindestziel_eur` in
+beiden Tabellen, `eur_aus_usd()`-Identitaet, Insert+Read fuer Signal UND
+HebelSignal, E-Mail-Zeile zeigt EUR, Graceful-Degradation ohne
+`mindestziel_eur`); Compile-/Import-Regressionscheck ueber alle 8 geaenderten
+Module + bekannte Konsumenten.
