@@ -1355,11 +1355,18 @@ def mark_history_backfilled(conn: sqlite3.Connection) -> None:
 def upsert_price_history_points(
     conn: sqlite3.Connection, points: list[PriceHistoryPoint]
 ) -> None:
+    """P-10 (gleiches Muster wie upsert_macro_snapshot()): ein Nachladen, das nur
+    eine Waehrung abdeckt (z.B. JIT-Refresh, siehe agent/krypto/pipeline.py::
+    jit_refresh_asset_historie()), oder ein fehlgeschlagener Einzel-Waehrungs-
+    Abruf im taeglichen Job darf die jeweils andere, bereits gespeicherte
+    Waehrung nicht mit NULL ueberschreiben - COALESCE behaelt den zuletzt
+    bekannten Wert, wenn der neue NULL ist."""
     conn.executemany(
         "INSERT INTO price_history (coingecko_id, date, price_usd, price_eur, fetched_at) "
         "VALUES (?, ?, ?, ?, ?) "
         "ON CONFLICT(coingecko_id, date) DO UPDATE SET "
-        "price_usd = excluded.price_usd, price_eur = excluded.price_eur, "
+        "price_usd = COALESCE(excluded.price_usd, price_history.price_usd), "
+        "price_eur = COALESCE(excluded.price_eur, price_history.price_eur), "
         "fetched_at = excluded.fetched_at",
         [
             (p.coingecko_id, p.date, p.price_usd, p.price_eur, p.fetched_at)
