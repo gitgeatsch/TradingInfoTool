@@ -9739,3 +9739,15 @@ Neuer optionaler `debug_symbols`-Parameter (print-basiert, kein Verhaltenseinflu
 **Korrektur der bereits haengengebliebenen Zeile:** neues Skript `fix_stuck_hebel_positions.py` (Projekt-Root) - rekonstruiert alle aktuell "offen" gefuehrten Positionen komplett neu aus der vollen Bitpanda-Historie (`existing=None`, schliesst Drift aus), zeigt Alt-vs-Neu-Vergleich, schreibt nur mit explizitem `--apply`-Flag. Muss auf dem Notebook laufen (echter API-Key + echte Produktiv-DB).
 
 **Verifiziert:** synthetisch (3x-Hebel-Vollclose mit `sell_qty` bei nur 1/3 der Menge aber 100% Kredit-Rueckzahlung -> jetzt korrekt geschlossen; Gegentest echter Teilverkauf ohne Kredit-Rueckzahlung bleibt korrekt Teilverkauf). Compile-/Import-Regressionscheck.
+
+## Nachtrag (2026-07-27, gleicher Tag): HYPE-Fix Runde 2 - "borrow"-Tag-Theorie war falsch, echte Ursache ist "repay"-Tag + sell_value
+
+Der obige Fix (Runde 1) beruhte auf einer plausiblen, aber FALSCHEN Annahme: dass Bitpanda die Kredit-Rueckzahlung mit einem "borrow"-Tag versieht (analog zum OPEN-Ereignis). Der Nutzer bestand zurecht auf einer Pruefung an echten, unverarbeiteten Rohdaten, nachdem mehrere Notebook-KI-Zusammenfassungen widerspruechliche/erfundene Ergebnisse lieferten ("es gibt keinen Teilverkauf - die Position ist ZU"). Erst eine per `> datei.txt`-Redirect direkt in Notepad geoeffnete Rohausgabe von `fix_stuck_hebel_positions.py` lieferte vertrauenswuerdige Daten.
+
+**Echte Root Cause:** Bitpanda taggt die HYPE-Rueckzahlung mit `"margin_trading.repay"`, nicht "borrow" - der Runde-1-Fix hat dieses Tag nie erkannt. Zusaetzlich ist die Rueckzahlung hier kein separates Leg, sondern im Verkaufserloes (`sell_value`) der Close-Transaktion enthalten: `sell_qty` deckte nur 66,4% der offenen Menge (Gebuehren + Kredittilgungsanteil verwaessern die Krypto-MENGE), aber `sell_value` deckte exakt 100% von `running_borrow` (400,00 EUR Erloes = 400,00 EUR Kredit).
+
+**Fix (Runde 2):** drittes, unabhaengiges Signal in `reconstruct_margin_positions()` - deckt der Verkaufserloes (`sell_value`) mindestens 99,5% des verbleibenden Kredits (`running_borrow`), gilt das unabhaengig von `sell_qty` UND vom "borrow"-Tag als Vollverkauf. Der Runde-1-Fix (`borrow`-Tag-Signal) bleibt zusaetzlich bestehen fuer Faelle mit echtem separaten Rueckzahlungs-Leg.
+
+**Verifiziert:** alle Runde-1-Tests weiterhin gruen (kein Regressionsverlust); neuer Test mit den EXAKTEN echten HYPE-Rohdaten (OPEN buy_value=600/buy_qty=11,58535869/borrow=400; CLOSE sell_value=400/sell_qty=7,69619853, Tags `margin_trading.close`+`margin_trading.repay`) liefert `sell_value/running_borrow=1,0000 => ist_vollstaendiger_verkauf=True`. Compile-/Import-Regressionscheck OK.
+
+Commit `6c92103`.
