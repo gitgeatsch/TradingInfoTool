@@ -9751,3 +9751,141 @@ Der obige Fix (Runde 1) beruhte auf einer plausiblen, aber FALSCHEN Annahme: das
 **Verifiziert:** alle Runde-1-Tests weiterhin gruen (kein Regressionsverlust); neuer Test mit den EXAKTEN echten HYPE-Rohdaten (OPEN buy_value=600/buy_qty=11,58535869/borrow=400; CLOSE sell_value=400/sell_qty=7,69619853, Tags `margin_trading.close`+`margin_trading.repay`) liefert `sell_value/running_borrow=1,0000 => ist_vollstaendiger_verkauf=True`. Compile-/Import-Regressionscheck OK.
 
 Commit `6c92103`.
+
+## Nachtrag (2026-07-27, gleicher Tag): JIT-Historie-Nachladen + deterministische EUR-Ableitung - echter LINK-Vorfall
+
+Nutzer meldete ein LINK-Hebel-Signal (LONG, ERÖFFNEN) mit Entry-Zone 6,81-6,91 EUR,
+waehrend der Live-Kurs bereits bei 7,7 EUR stand - die Take-Profit-Zone
+(7,80-7,90 EUR) lag praktisch auf dem aktuellen Kurs. Vom Nutzer explizit als
+"make or break"-Thema eingestuft, mit der Vorgabe, die eigentliche Ursache zu
+beheben statt nur ein Symptom (z.B. ein deterministisches Veto-Gate) zu
+kaschieren - ein Gate haette die ohnehin knappe Signal-Frequenz weiter
+reduziert, ohne das Grundproblem zu loesen.
+
+**Root Cause (per Live-Diagnose an echten Notebook-Daten gefunden):** die
+technische Analyse (RSI/MACD/EMA/ATR/Support-Resistance), aus der Entry-/
+Stop-Loss-/Take-Profit-Zonen abgeleitet werden, basiert auf `price_history`
+(CoinGecko)/`price_history_ohlc` (Kraken) - beide werden nur alle 24h per
+Scheduler-Job aktualisiert. Der separate Live-Ticker (`price_cache`, 15-Min-
+Takt, `staleness.py::PRICE_STALE_THRESHOLD_MINUTES`) war die ganze Zeit
+korrekt - nur die technische Basis konnte bis zu 24h alt sein. Fachlich
+bewertet (Nutzer-Vorgabe): eine feste 15-Min-Sequenz mit erst nach 6h+
+sichtbarem Kurs-Gap ist fuer eine Entry-/Exit-Berechnung unbrauchbar.
+
+**Zweiter, unabhaengiger Befund:** die EUR-Werte fuer Entry/Stop-Loss/Take-
+Profit/Halte-Kriterium/Positionsgroesse kamen bisher direkt und ungeprueft aus
+der eigenen `eur_von`/`eur_bis`-Antwort des LLM, nicht aus einer
+deterministischen Umrechnung - obwohl der Nutzer in EUR auf Bitpanda handelt
+("mir nutzt ein USD Stop Loss oder Schwelle nichts").
+
+### Fix 1: JIT-Historie-Nachladen (Hebel + Spot, Krypto-only)
+
+Neue Funktion `agent/krypto/pipeline.py::jit_refresh_asset_historie(conn,
+asset, coingecko_client, kraken_client)` - laedt fuer GENAU EIN Asset die
+juengste Tages-/OHLC-Historie unmittelbar VOR der eigentlichen Signal-
+Generierung nach (USD-only), statt auf den naechsten 24h-Batch zu warten.
+Eingebaut an den zwei echten Signal-Erzeugungsstellen:
+`hebel_pipeline.py::generate_hebel_signal()` und `pipeline.py::
+generate_signal()` (Spot) - bewusst NICHT in `_load_closes_and_ohlc()` selbst
+(7 Aufrufstellen, u.a. der 15-Min-Screening-Loop ueber alle Kandidaten sowie
+BTC/ETH-Kontextladungen - dort haette das Kontingent vervielfacht statt nur um
+die Anzahl echter Signal-Ereignisse gewachsen).
+
+**Burst-Schutz** (`JIT_REFRESH_MIN_ABSTAND_MINUTEN = 60`, Python-Konstante):
+verhindert Mehrfach-Anfragen INNERHALB eines 15-Min-Allocator-Zyklus (Provider-
+Fallback Mistral->Gemini, oder dasselbe Symbol gleichzeitig als LONG-Hebel-,
+SHORT-Hebel- und Spot-Kandidat) - normale Wiederholungen (Hebel-Cooldown 3,5h,
+Spot-Kern-Cooldown 8h) liegen weit darueber. Merkt sich bewusst den
+VERSUCHSZEITPUNKT (Erfolg ODER Fehlschlag), nicht einen Erfolgs-Zeitstempel -
+sonst wuerde ein echter CoinGecko-Ausfall bei jedem folgenden Signal-Versuch
+erneut einen aussichtslosen Call ausloesen (analog zum 07-23-Staleness-
+Watchdog-Vorfall, 390 blockierte Signale in einer Nacht). Zusaetzlich prueft
+`CoinGeckoClient.in_cooldown()` (neu) einen aktiven 429-Backoff, um die
+Signal-Erzeugung nicht bis zu 5 Minuten zu blockieren. P-10: ein Fehlschlag
+(Netzwerk, fehlende coingecko_id/Kraken-Listing) darf die Signal-Erzeugung
+nicht kippen - es wird einfach mit der bereits gespeicherten Historie
+weitergearbeitet. Not-Aus per `Basisinfos/config.yaml`:
+`datenquellen.marktdaten.jit_historie_refresh_aktiv` (Default `true`).
+
+**Kontingent-Finanzierung (Voraussetzung, sonst waere das JIT-Nachladen ueber
+das CoinGecko-Monatskontingent von 10.000 Calls gegangen):**
+`_update_macro_snapshot()` rief bisher bei JEDER Signal-Generierung
+ungecacht `/global` (BTC-Dominanz) ab. Jetzt: hoechstens 1x pro UTC-Tag (Pruefung
+gegen `db.get_latest_macro_snapshot()`), der bestehende COALESCE-Upsert in
+`upsert_macro_snapshot()` behaelt den Tageswert automatisch bei. Spart genau so
+viele Calls, wie das JIT-Nachladen zusaetzlich kostet - netto quotenneutral.
+
+**Blocker-Fix (Voraussetzung):** `database/db.py::upsert_price_history_points()`
+schrieb bisher direkt (`price_usd = excluded.price_usd, price_eur =
+excluded.price_eur`) statt mit COALESCE - ein USD-only-Nachladen haette die
+EUR-Historie (fuer `ui/charts.py`s Euro-Chart, vom Nutzer ausdruecklich als zu
+erhalten eingefordert) mit NULL ueberschrieben. Behebt zugleich einen bereits
+bestehenden, unabhaengigen Bug: ein fehlgeschlagener EUR-Abruf im taeglichen
+Job loeschte schon vorher echte EUR-Werte. Jetzt (analog `upsert_macro_
+snapshot()`s Muster): `COALESCE(excluded.price_usd, price_history.price_usd)`
+/ `COALESCE(excluded.price_eur, price_history.price_eur)`.
+
+`api/history.py::backfill_history()` und `api/kraken_history.py::
+backfill_ohlc()` haben dafuer einen neuen `currencies`-Parameter (Default
+weiterhin beide Waehrungen - die taeglichen Scheduler-Jobs `backfill_all()`/
+`backfill_all_ohlc()` sind dadurch unveraendert).
+
+### Fix 2: Deterministische EUR-Ableitung (Hebel + Spot + Hedge)
+
+Neuer Helper `agent/krypto/pipeline.py::eur_aus_usd(usd_wert,
+eur_usd_fx_rate)` - identisches Muster wie das bereits produktive
+`liquidationspreis_geschätzt_eur` in `hebel_risk_gate.py::post_check_hebel()`
+(Live-EURCV-Snapshot, nicht die LLM-Eigenberechnung). Ersetzt die bisherige
+`entry.get("eur_von")`-artige Weitergabe fuer Entry/Stop-Loss/Take-Profit/
+Halte-Kriterium-Zielpreis/Positionsgroesse in `hebel_pipeline.py`,
+`pipeline.py` (Spot) und `agent/hedge/pipeline.py` - alle drei hatten
+`eur_usd_fx_rate` bereits im Scope. `_validate_hebel()` und das LLM-Schema/
+der Prompt (`hebel_analyst.py`) bleiben bewusst unangetastet - das Modell darf
+weiterhin `eur_von`/`eur_bis` liefern (bleibt in `groq_raw_response`
+erhalten), es fliesst nur nicht mehr in die finale Signal-Struktur.
+Beobachtungs-Log `log_eur_abweichungen()` vergleicht optional die LLM-eigene
+EUR-Zahl mit dem deterministisch abgeleiteten Wert (>2% Abweichung ->
+`logger.info()`), rein informativ, keine Verhaltensaenderung.
+
+**Nebenfund in `agent/hedge/pipeline.py::_post_check_hedge()`:** die
+Budget-Kappung und der Bull-Wahrscheinlichkeits-Deckel leiteten ihren eigenen
+fx-Rate-Fallback bisher aus den LLM-eigenen `usd`/`eur`-Positionsgroessen-
+Werten ab (`fx = proposed_usd / proposed_eur`), bevorzugt vor dem echten
+`eur_usd_fx_rate` - jetzt ausschliesslich `eur_aus_usd()` mit dem echten Kurs.
+
+**Bewusst NICHT mitgezogen:** `agent/aktien/pipeline.py`, `agent/rohstoff/
+pipeline.py`, `agent/themen_etf/pipeline.py` - gleicher EUR-Bug, aber keine
+lokal berechnete `eur_usd_fx_rate` (muesste neu ergaenzt werden) und ein
+strukturell anderes, yfinance-basiertes Frische-Profil (Quotrix-Handelsfenster
+Mo-Fr 07:30-23:00 CET, nicht 24/7, bereits eigene 5-Tage-Toleranz statt
+Kryptos 2-Tage-Schwelle) - eigene Folge-Runde vorgesehen.
+
+**Verifiziert:** COALESCE-Erhalt der EUR-Historie bei einem USD-only-Upsert
+(inkl. Regressionstest, dass ein echter EUR-Update weiterhin normal
+durchschlaegt); Burst-Schutz (Erst-Versuch erlaubt, Zweit-Versuch INNERHALB
+der Sperrfrist blockiert, nach Ablauf wieder erlaubt, verschiedene Symbole
+unabhaengig); `/global`-Tages-Cache (zwei `_update_macro_snapshot()`-Aufrufe
+am selben Tag -> genau 1 CoinGecko-Call, BTC-Dominanz bleibt erhalten);
+`eur_aus_usd()`-Unit-Tests (Normalfall, `usd_wert=None`, `fx_rate=None`,
+`fx_rate=0`); End-to-End-Reproduktion des LINK-Vorfalls mit Fake-CoinGecko/
+Kraken-Clients (genau 1 CoinGecko-Call, ausschliesslich `"usd"`, frischer Kurs
+danach in `_load_closes_and_ohlc()` sichtbar, zweiter Aufruf innerhalb der
+Sperrfrist macht keinen weiteren Call); Graceful-Degradation (beide Clients
+werfen -> keine Exception; Asset ohne `coingecko_id` -> kein Call, kein
+Fehler); Config-Schalter aus -> kein Call; `_post_check_hedge()` nutzt nach
+dem Fix nachweislich den echten `eur_usd_fx_rate` statt einer aus der
+LLM-Eigenangabe abgeleiteten Zahl (mit UND ohne verfuegbaren echten Kurs
+geprueft); statischer Regressions-Grep bestaetigt keine verbliebenen rohen
+`entry.get("eur_von")`-Vorkommen mehr in den drei geaenderten Dateien;
+Compile-/Import-Regressionscheck ueber alle 7 geaenderten Module UND alle
+bekannten Konsumenten (Aktien/Rohstoffe/Themen-ETF-Pipelines, Screening/
+Marktscan/Budget-Allocator, Scheduler, Charts, GUI-Views, Remote-Status/
+-Server) OK.
+
+**Ausstehend:** echter Notebook-Lauf (Nutzer) - CoinGecko-Monatskontingent in
+der ersten Woche gegen das Dashboard gegenchecken, ein echtes Signal
+stichprobenartig nachrechnen (`entry_eur_von × fx_rate == entry_usd_von`),
+EUR-Chart-Durchgaengigkeit bestaetigen. Beobachtungspunkte (kein Fix noetig):
+moeglicherweise mehr Kandidaten passieren jetzt das P-10-Gate (hoehere
+Mistral/Gemini-Auslastung moeglich); `signal_stabilitaet` koennte durch
+haeufigere Kursaenderungen mehr Richtungswechsel zeigen als zuvor.

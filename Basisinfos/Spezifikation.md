@@ -377,6 +377,13 @@ Näherung an dieser Stelle neu zu bewerten.
   `REFRESH_INTERVAL_MINUTES`) → ca. 5.340 Calls/Monat, mit Puffer für Erstimport/
   manuelle Aktualisierungen. Staleness-Schwelle entsprechend auf 30 Min angepasst
   (weiterhin 2× Scheduler-Takt, siehe `ui/formatting.py`).
+  **Nachtrag (2026-07-27, LINK-Vorfall, siehe Regelwerksmanual):** die obige
+  Rechnung hatte den `/global`-Call (BTC-Dominanz, `api/macro.py::
+  get_btc_dominance()`) übersehen — er lief bisher ungecacht bei **jeder**
+  Signal-Generierung mit, nicht nur im Scheduler-Takt. Jetzt auf 1×/UTC-Tag
+  gedeckelt (`agent/krypto/pipeline.py::_update_macro_snapshot()`), was
+  gleichzeitig das neu eingeführte JIT-Historie-Nachladen (siehe dort)
+  quotenneutral finanziert.
 - **Echtes OHLC (ATR, Swing-Highs/-Lows):** **ERLEDIGT (2026-07-07):** Kraken liefert
   echte Kerzendaten (Open/High/Low/Close) über öffentliche Endpunkte — kein Account,
   kein API-Key, keine Anmeldung nötig, zählt nicht gegen Rate-Limits. Ersetzt die in
