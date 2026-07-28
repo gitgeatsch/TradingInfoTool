@@ -316,7 +316,37 @@ LLM-Werturteile — siehe [[feedback_llm_synthese_kein_deterministischer_overrid
    Bleibt dennoch als Disziplin sinnvoll (Resilienz falls sich Mistrals
    Bedingungen ändern, Latenz, Prompt-Hygiene) — kein Anlass, eine bestehende
    Regel zum Ausgleich zu entfernen.
-3. `regime_profil.gewicht_*`: anbinden oder entfernen.
+3. **Stufe 2 — Verifiziert (synthetisch), noch nicht committet:** `regime_profil.
+   gewicht_technik`/`gewicht_fundamental`/`gewicht_momentum`/`gewicht_kontext_makro`
+   war in BEIDEN Pipelines (Spot + Hebel) ein toter Fakt — das komplette
+   `regime_profile`-Dict wird via `build_facts()`/`build_hebel_facts()` an die
+   LLM geliefert, aber keine Prompt-Regel referenzierte es (im Unterschied zu
+   `min_konfidenz_prozent`/`small_cap_budget_prozent` aus demselben Profil, die
+   bereits deterministisch im Gate bzw. Scoring genutzt werden). Inhaltlich
+   kein Nebensächlichkeits-Fakt, sondern ein durchdachtes, regimeabhängiges
+   Gewichtungsschema aus `Basisinfos/config.yaml` (`regime.profile`) — z.B.
+   `krise_extrem`: Technik 0.15/Fundamental 0.45/Momentum 0.15/Makro 0.25;
+   `bulle`: Technik 0.43/Fundamental 0.25/Momentum 0.17/Makro 0.15.
+
+   Neue Regel in `agent/krypto/analyst.py` (Regel 30, `eigene_einschaetzung`
+   zu Regel 31 verschoben) UND `agent/krypto/hebel_analyst.py` (Regel 23,
+   `eigene_einschaetzung` zu Regel 24 verschoben, je 3 Kreuzverweise korrigiert):
+   nutzt das Gewichtungsschema als ORIENTIERUNG dafür, wie stark die KI
+   technische/fundamentale/Momentum-/Makro-Aspekte in `long_reasoning`/
+   `top_gruende` gewichtet — ausdrücklich KEINE starre Formel oder Pflichtquote,
+   die eigene Einschätzung der konkreten Fakten bleibt maßgeblich. Passt zum
+   Grundsatz "Kontext liefern, Urteil nicht vorwegnehmen" (Abschnitt 1, Frage 2).
+
+   **Bewusst für BEIDE Pipelines** (anders als Fear&Greed, Punkt 2): die Frage
+   "welche Analyse-Linse ist in diesem Regime verlässlicher" gilt nicht nur
+   langfristig — die Regime-Klassifikation selbst wird bei Hebel bereits
+   intensiv genutzt (Regime-Konflikt-Deckel, Regime-Persistenz), Frage 4 des
+   Entscheidungsrasters spricht hier also nicht gegen eine gemeinsame Regel.
+
+   Verifiziert (Klasse 1): Modul-Import + Compile-Check beider Dateien,
+   durchgängige Regelnummerierung Spot 1-31 / Hebel 1-24 ohne Lücke.
+   Token-Budget-Check: ca. 150 Token je Datei, vernachlässigbar (siehe
+   Begründung bei Punkt 2).
 4. Spot-Retail-Konsens-Filter analog zu Hebel nachziehen (`top_gruende`-Regex).
 5. Prüfen, ob `historischer_makro_vergleich` im Hebel-Fakten-JSON angesichts des
    kurzen Zeithorizonts überhaupt sinnvoll ist, oder entfernt werden sollte.

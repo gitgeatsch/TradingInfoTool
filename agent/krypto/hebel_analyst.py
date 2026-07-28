@@ -277,7 +277,16 @@ Wochen entfernt ist oder du selbst es fuer nicht entscheidungsrelevant haeltst. 
 Position (typische Haltedauer Stunden bis wenige Tage) ein mehrjaehriger \
 Hintergrund-Fakt ohne direkte Kurzfrist-Aussagekraft - erwaehne ihn hoechstens am \
 Rande, wenn ueberhaupt, niemals als eigenstaendigen Grund fuer `action`/`richtung`.
-23. Fuelle `eigene_einschaetzung` GANZ ZULETZT aus, NACHDEM du `action`, \
+23. `regime_profil.gewicht_technik`/`gewicht_fundamental`/`gewicht_momentum`/ \
+`gewicht_kontext_makro` (Summe ca. 1.0, regimeabhaengig) zeigt, welche \
+Analyse-Kategorie im AKTUELLEN Regime historisch verlaesslicher/wichtiger \
+eingestuft wird (z.B. im Regime `krise_extrem` Fundamentaldaten deutlich hoeher \
+gewichtet als kurzfristige Technik-Muster). Nutze das als ORIENTIERUNG dafuer, \
+wie stark du technische/fundamentale/Momentum-/Makro-Aspekte in `long_reasoning`/ \
+`top_gruende` gewichtest - KEINE starre Formel oder Pflichtquote, deine \
+eigene Einschaetzung der konkreten Fakten bleibt massgeblich. Erwaehne die \
+Zahlen selbst nicht woertlich, nutze sie nur zur Schwerpunktsetzung.
+24. Fuelle `eigene_einschaetzung` GANZ ZULETZT aus, NACHDEM du `action`, \
 `confidence_pct`, `gegenargument`, `top_gruende` und `long_reasoning` bereits \
 fertiggestellt hast - das ist ein ABSCHLIESSENDER, GANZHEITLICHER Rueckblick \
 auf deine eigene bereits fertige Analyse, keine Wiederholung/Formalitaet. \
@@ -337,7 +346,7 @@ SCHEMA:
     "base": {"scenario": "<Text>", "probability_pct": <0-100>},
     "bear": {"scenario": "<Text>", "probability_pct": <0-100>}
   },
-  "eigene_einschaetzung": {"folgen": "ja|nein|mit_vorbehalt", "kurzfazit": "<1 Satz, siehe Regel 23>"}
+  "eigene_einschaetzung": {"folgen": "ja|nein|mit_vorbehalt", "kurzfazit": "<1 Satz, siehe Regel 24>"}
 }"""
 
 
@@ -656,7 +665,7 @@ REQUIRED_HEBEL_TOP_LEVEL_FIELDS = (
 TOP_GRUENDE_KATEGORIEN = ("technisch", "fundamental", "makro", "risiko")
 _HALTE_KRITERIUM_BUCKETS = ("kurz", "mittel", "lang")
 _HALTEN_AEHNLICHE_ACTIONS = ("HALTEN", "SCHLIESSEN")
-# Signal-Fazit (2026-07-25, siehe Regel 23 / Memory feedback_llm_synthese_
+# Signal-Fazit (2026-07-25, siehe Regel 24 / Memory feedback_llm_synthese_
 # kein_deterministischer_override.md) - bewusst KEIN deterministischer
 # Override des Werturteils, nur Format-/Vollstaendigkeits-Validierung hier.
 _EIGENE_EINSCHAETZUNG_FOLGEN_WERTE = ("ja", "nein", "mit_vorbehalt")
@@ -725,7 +734,7 @@ def _validate_hebel(data: dict, asset_symbol: str) -> dict:
         raise AnalystResponseInvalid(f"gegenargument fehlt oder zu kurz: {data.get('gegenargument')!r}")
     data["gegenargument"] = gegenargument
 
-    # Signal-Fazit (2026-07-25, Regel 23) - reine Format-/Vollstaendigkeits-
+    # Signal-Fazit (2026-07-25, Regel 24) - reine Format-/Vollstaendigkeits-
     # pruefung, bewusst KEINE inhaltliche Korrektur von `folgen`/`kurzfazit`
     # (siehe Memory feedback_llm_synthese_kein_deterministischer_override.md).
     eigene_einschaetzung = data.get("eigene_einschaetzung")
