@@ -110,7 +110,12 @@ def filtere_retail_konsens_top_gruende(top_gruende: list) -> list:
     Positionierung verweist, komplett - unabhaengig von der angegebenen
     Kategorie. Lenient wie bei der Tranchen-Validierung: fehlende Rangplaetze
     sind unschaedlich (hebel_pipeline.py::top_grund_fields liest je Rang per
-    .get() mit None-Default), kein Retry/HALTEN-Fallback noetig."""
+    .get() mit None-Default), kein Retry/HALTEN-Fallback noetig.
+
+    2026-07-28 (Punkt 4 der Fakten_Entscheidungsmappe.md-Prioritaetenliste):
+    risk_gate.py hat eine bewusst DUPLIZIERTE (nicht importierte) Kopie
+    dieser Funktion fuer Krypto-Spot - siehe dortiger Kommentar fuer die
+    Begruendung (Spot/Hebel koennten hier inhaltlich auseinanderlaufen)."""
     if not isinstance(top_gruende, list):
         return top_gruende
     return [

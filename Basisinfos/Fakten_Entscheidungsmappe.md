@@ -347,9 +347,88 @@ LLM-Werturteile — siehe [[feedback_llm_synthese_kein_deterministischer_overrid
    durchgängige Regelnummerierung Spot 1-31 / Hebel 1-24 ohne Lücke.
    Token-Budget-Check: ca. 150 Token je Datei, vernachlässigbar (siehe
    Begründung bei Punkt 2).
-4. Spot-Retail-Konsens-Filter analog zu Hebel nachziehen (`top_gruende`-Regex).
-5. Prüfen, ob `historischer_makro_vergleich` im Hebel-Fakten-JSON angesichts des
-   kurzen Zeithorizonts überhaupt sinnvoll ist, oder entfernt werden sollte.
+4. **Stufe 2 — Verifiziert (synthetisch), noch nicht committet:** Spot-Retail-
+   Konsens-Filter analog zu Hebel nachgezogen. Bei Hebel gibt es zwei getrennte
+   Mechanismen, die beide "Retail-Konsens" heißen: `retail_konsens_risiko()`
+   (richtungsabhängige Deckel-Formel für den erlaubten Hebel) und
+   `filtere_retail_konsens_top_gruende()` (reiner Text-Filter, entfernt jeden
+   `top_gruende`-Eintrag, der sich auf Retail-Konten-Positionierung beruft,
+   unabhängig von der Richtung — Kategorie-Fehler: Positionierungsdaten sagen
+   etwas über Squeeze-/Liquidationsrisiko aus, nicht darüber, ob der Kurs
+   steigen sollte). Nur Letzteres ist für Spot relevant (kein Hebel-Konzept
+   bei Spot); Spot hat aber bereits denselben zugrunde liegenden Fakt
+   (`retail_long_bias_extrem`/`long_konten_anteil_prozent`) und dieselbe
+   Prompt-Warnung (Regel 15), nur ohne deterministische Rückversicherung.
+
+   **Bewusst dupliziert statt importiert** (Nutzer-Einschätzung: Spot/Hebel
+   könnten hier eher auseinanderlaufen als gleich bleiben): `risk_gate.py`
+   bekommt eine eigene Kopie von `_RETAIL_KONSENS_TOP_GRUND_MUSTER`/
+   `filtere_retail_konsens_top_gruende()`, mit Kreuzverweis-Kommentar zum
+   Hebel-Pendant in `hebel_risk_gate.py` — abweichend vom sonst üblichen
+   "einzige Quelle der Wahrheit"-Muster (`CRV_MINIMUM`), weil Spot
+   (langfristige These) und Hebel (kurzfristige Taktik) hier absichtlich als
+   eigenständig behandelt werden.
+
+   **Anwendungsort:** neuer Parameter `filter_retail_konsens_top_gruende`
+   (Default `False`) in `risk_gate.py::post_check()` — nur
+   `agent/krypto/pipeline.py` (Krypto-Spot) setzt `True`. NICHT generisch für
+   alle 4 Spot-family-Pipelines aktiv: Aktien hat mit `short_interest_finra`
+   ein ähnlich klingendes, aber fachlich anderes Konzept (institutionelle
+   FINRA-Meldungen, kein Retail-Konsens) — per synthetischem Test (T4)
+   empirisch bestätigt, dass der Regex bei FINRA-Short-Interest-Formulierungen
+   ("Short-Interest laut FINRA...", "Short-Squeeze-Setup...") NICHT anschlägt,
+   trotzdem bewusst nur am Krypto-Spot-Aufruf aktiviert statt generisch in
+   `post_check()`, um kein unnötiges Risiko in einer gemeinsam genutzten
+   Funktion einzugehen.
+
+   Verifiziert (Klasse 2, 4 Testfälle): T1 Hebel-Regression (Verhalten
+   unverändert), T2 Spot-Positivfall (identisches Verhalten zu Hebel bei
+   demselben Text), T3 Grenzfälle (kein list, leere Liste, fehlendes
+   `text`-Feld, `None`-Eintrag), T4 Kombinationsfall (Retail-/Long-Short-
+   Ratio-Varianten werden gefiltert, FINRA-Short-Interest/Short-Squeeze-Text
+   bleibt erhalten). Regressionscheck: Import aller 5 Spot-family-
+   Pipeline-Module OK.
+5. **Stufe 2 — Verifiziert (synthetisch), noch nicht committet:** `historischer_
+   makro_vergleich` bei Hebel geprüft. Anders als Fear&Greed/`regime_profil`
+   war das KEIN toter Fakt ohne Kontext — die Hebel-Regel 15 hatte bereits
+   eine auffällig starke Warnung ("NIEMALS als belastbare Statistik...
+   insbesondere für Hebel-Positionen"). Die eigentliche Frage: lohnt sich der
+   Fakt trotz starker Warnung noch, angesichts der 6-/12-Monats-Vorwärts-
+   renditen (`top_analoge`, `spx_forward_*`/`btc_forward_*`), die strukturell
+   ein Mehrmonats-Konzept sind — ein Kategorie-Problem, das selbst starke
+   Prompt-Warnungen nicht zuverlässig lösen (dasselbe Muster wie beim
+   Retail-Konsens-Fund: reine Prompt-Warnungen reichen nicht immer aus).
+
+   **Lösung (Nutzer-Vorschlag, verfeinert):** nicht komplett entfernen,
+   sondern **destillieren** — die aktuelle Makro-Konstellation
+   (`aktuelle_konstellation`: Dollarstärke/Zinsen/Renditen/Öl/Aktienbewertung)
+   ist zeitlos gültig, kein Mehrmonats-Konzept, bleibt erhalten. Neue Funktion
+   `agent/krypto/makro_analog.py::distill_makro_vergleich_fuer_hebel()`
+   reduziert auf `aktuelle_konstellation` + `anzahl_analoge` +
+   `spx_median_forward_6m_prozent` (12-Monats-Wert bewusst weggelassen — noch
+   länger, noch unpassender; `top_analoge`-Liste entfällt komplett — größter
+   Umfang UND größte Fehlinterpretationsgefahr; kein aggregiertes BTC-Feld,
+   unverändert). Gleicher Fakt-Schlüsselname `historischer_makro_vergleich`
+   für Spot UND Hebel beibehalten (nicht umbenannt) — der Fakt wird nirgends
+   dauerhaft gespeichert, beide Fassungen werden nie gemeinsam vom selben
+   Code gelesen, ein Kreuzverweis-Kommentar an der Hebel-Definitionsstelle
+   reicht für menschliche Lesbarkeit.
+
+   Hebel-Regel 15 komplett neu gefasst: die verbleibende Kennzahl wird
+   ausdrücklich als **richtungsneutraler** Risikoappetit-Hintergrund für
+   `key_risks`/`gegenargument` gerahmt — bewusst KEINE LONG/SHORT-Ableitung
+   (SPX-Vorwärtsrendite auf Krypto zu übertragen wäre eine Scheingenauigkeit,
+   die der Fakt selbst schon für `btc_forward_*` vermeidet) und KEINE
+   Kategorie-Bucket-Übersetzung (bräuchte eine nicht vorhandene
+   Vergleichsbasis, ebenfalls Scheingenauigkeit) — rohe Zahl mit klarer
+   Einordnung, konsistent mit `zyklus_risiko`/`atr.perzentil`.
+
+   Verifiziert (Klasse 2, 4 Testfälle): T1 `None`-Input, T2 Positivfall
+   (Destillation entfernt `top_analoge`/`aktueller_monat`/12-Monats-Wert
+   korrekt, behält die 3 Zielfelder), T3 Grenzfall (fehlende/`None`-Werte),
+   T4 Kombinationsfall (Import-Konsistenz zwischen `hebel_pipeline.py` und
+   `makro_analog.py`). Regressionscheck: Spot (`pipeline.py`/`analyst.py`)
+   unverändert, Regelnummerierung Hebel 1-24 ohne Lücke.
 
 Diese Liste wird schrittweise abgearbeitet, mit Vorher/Nachher-Beobachtung über die
 in Abschnitt 6 (Prozess-Phase 4) genannten Metriken.

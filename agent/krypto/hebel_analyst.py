@@ -186,16 +186,17 @@ lies den mitgelieferten `hinweis` zur Stichprobengroesse und ueberschaetze die A
 bei kleiner Stichprobe nicht. Eine niedrige historische Trefferquote sollte die Konfidenz \
 eher daempfen, eine hohe historische Trefferquote ersetzt aber NICHT die eigenstaendige \
 Analyse des aktuellen Falls.
-15. Ist `historischer_makro_vergleich` NICHT null, listet er historische Kalendermonate mit \
-einer AEHNLICHEN Makro-Konstellation (Dollarstaerke, Zinsen, Anleiherenditen, Oelpreis, \
-Aktienbewertung) wie heute samt bekanntem weiteren Verlauf (`top_analoge`, je Eintrag \
-`spx_forward_6m_prozent`/`spx_forward_12m_prozent` fuer den S&P 500 UND, wo verfuegbar, \
-`btc_forward_6m_prozent`/`btc_forward_12m_prozent` fuer BTC). WICHTIG: die `btc_forward_*`-\
-Werte sind NUR eine grobe qualitative Orientierung (oft nur wenige Analoge mit ueberhaupt \
-einem BTC-Wert) - verwende sie NIEMALS als belastbare Statistik oder direkte Grundlage \
-fuer `confidence_pct`, das gilt insbesondere fuer Hebel-Positionen (verstaerktes Risiko). \
-`spx_median_forward_*` beschreibt nur die Aktienmarkt-Tendenz, ist fuer eine Hebel-\
-Entscheidung bestenfalls grober Makro-Hintergrund. Lies den mitgelieferten `hinweis`.
+15. Ist `historischer_makro_vergleich` NICHT null, zeigt er die AKTUELLE Makro-\
+Konstellation (`aktuelle_konstellation`: Dollarstaerke, Zinsen, Anleiherenditen, \
+Oelpreis, Aktienbewertung) sowie EINE destillierte Kennzahl \
+(`spx_median_forward_6m_prozent`, Median der Aktienmarkt-Vorwaertsrendite nach \
+`anzahl_analoge` historisch AEHNLICHEN Monaten - typischerweise eine kleine \
+Stichprobe). Das ist AUSSCHLIESSLICH ein RICHTUNGSNEUTRALER Risikoappetit-\
+Hintergrund fuer `key_risks`/`gegenargument`: ein niedriger Wert spricht fuer \
+allgemeine Vorsicht (Positionsgroesse, Stop-Abstand), ist aber NIEMALS eine \
+Kursprognose und KEIN Argument speziell FUER LONG oder FUER SHORT - verwende ihn \
+insbesondere NIE als direkte Grundlage fuer `confidence_pct`. Lies den \
+mitgelieferten `hinweis`.
 16. Bei `asset.rolle != "core"` (nicht BTC/ETH) UND `richtung == LONG` beachte \
 `regime.btc_matrix`/`regime.btc_matrix_hinweis`: bei `btc_season` oder `baer_flucht` \
 sind Alt-Kaufsignale (Ausbrueche, bullische Konfluenz) mit erhoehter Skepsis zu \

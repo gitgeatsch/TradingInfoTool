@@ -33,7 +33,7 @@ from agent.krypto.gegenpruefung import (
 )
 from agent.krypto.hebel_analyst import build_hebel_facts, call_llm_for_hebel_signal
 from agent.krypto.liquidity_zones import liquiditaetszonen_fakt
-from agent.krypto.makro_analog import get_cached_makro_analog_fact
+from agent.krypto.makro_analog import distill_makro_vergleich_fuer_hebel, get_cached_makro_analog_fact
 from agent.krypto.optionsmarkt import fetch_optionsmarkt_fakt
 from agent.krypto.signal_stabilitaet import (
     DEFAULT_ANZAHL_ZYKLEN, juengste_richtungswende, signal_stabilitaet_fakt,
@@ -212,7 +212,11 @@ def generate_hebel_signal(
 
     now_unix = int(datetime.now(timezone.utc).timestamp())
     historische_erfolgsquote = compute_win_rate_fact(conn, "hebel")
-    historischer_makro_vergleich = get_cached_makro_analog_fact(conn)
+    # 2026-07-28 (Punkt 5 der Fakten_Entscheidungsmappe.md-Prioritaetenliste):
+    # verschlankte Fassung statt der vollen Analog-Liste (siehe agent/krypto/
+    # pipeline.py fuer die volle Fassung, unveraendert bei Spot) - siehe
+    # distill_makro_vergleich_fuer_hebel()-Docstring fuer die Begruendung.
+    historischer_makro_vergleich = distill_makro_vergleich_fuer_hebel(get_cached_makro_analog_fact(conn))
     # Liquiditaetszonen (Marketmaker-Konzept, Stufe 1, 2026-07-23) - rein
     # informativ, siehe agent/krypto/liquidity_zones.py Modul-Docstring.
     liquiditaetszonen = liquiditaetszonen_fakt(

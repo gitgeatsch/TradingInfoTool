@@ -343,6 +343,41 @@ def summarize_analogs_for_facts(aktuell: MakroHistorieMonat | None, analoge: lis
     }
 
 
+def distill_makro_vergleich_fuer_hebel(fakt: dict | None) -> dict | None:
+    """Verschlankte Fassung von summarize_analogs_for_facts() fuer Hebel
+    (2026-07-28, Punkt 5 der Fakten_Entscheidungsmappe.md-Prioritaetenliste,
+    verwendet in agent/krypto/hebel_pipeline.py) - die volle Fassung mit den
+    einzelnen Analog-Monaten (`top_analoge`) und deren 6-/12-Monats-
+    Vorwaertsrenditen (siehe agent/krypto/pipeline.py fuer die volle
+    Fassung, unveraendert fuer Spot) ist fuer eine Haltedauer von Stunden
+    bis wenigen Tagen ein strukturelles Kategorie-Problem - selbst mit
+    starker Prompt-Warnung bleibt die Versuchung, eine konkrete Prozentzahl
+    als Kurserwartung zu lesen (dasselbe Muster wie beim Retail-Konsens-Fund:
+    reine Prompt-Warnungen reichen nicht immer aus).
+
+    Reduziert auf die aktuelle Makro-Konstellation (zeitlos gueltig, kein
+    Mehrmonats-Konzept) plus EINE destillierte Kennzahl
+    (`spx_median_forward_6m_prozent` - der 12-Monats-Wert entfaellt bewusst,
+    noch laenger, noch unpassender fuer den Zeithorizont). Kein aggregiertes
+    BTC-Feld (unveraendert, siehe Modul-Docstring), keine `top_analoge`-Liste
+    (groesster Umfang UND groesste Fehlinterpretationsgefahr)."""
+    if fakt is None:
+        return None
+    return {
+        "aktuelle_konstellation": fakt.get("aktuelle_konstellation"),
+        "anzahl_analoge": fakt.get("anzahl_analoge"),
+        "spx_median_forward_6m_prozent": fakt.get("spx_median_forward_6m_prozent"),
+        "hinweis": (
+            "Verschlankte Hebel-Fassung (volle Analog-Liste nur bei Spot): "
+            "spx_median_forward_6m_prozent ist ein grober, RICHTUNGSNEUTRALER "
+            "Risikoappetit-Hintergrund - niedrige Werte sprechen fuer "
+            "allgemeine Vorsicht (Positionsgroesse, Stop-Abstand), sind aber "
+            "KEINE Kursprognose und KEIN Argument speziell fuer LONG oder "
+            "SHORT. anzahl_analoge ist typischerweise eine kleine Stichprobe."
+        ),
+    }
+
+
 def run_makro_analog_update(conn, fred_api_key: str | None, config: dict) -> dict | None:
     """Vom Scheduler-Job (scheduler/background.py::makro_analog_job()) taeglich
     aufgerufen: Historie auffrischen, Analoge neu berechnen, Ergebnis cachen (siehe

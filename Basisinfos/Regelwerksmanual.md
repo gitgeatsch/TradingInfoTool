@@ -10733,3 +10733,74 @@ Zeithorizont-Frage spricht hier also nicht gegen eine gemeinsame Regel.
 **Verifiziert:** Modul-Import + Compile-Check beider Dateien, durchgaengige
 Regelnummerierung Spot 1-31 / Hebel 1-24 ohne Luecke geprueft (Klasse 1).
 Token-Budget-Check: ca. 150 Token je Datei, vernachlaessigbar.
+
+**Ergaenzung (2026-07-28, Punkt 4 der Prioritaetenliste): Spot-Retail-
+Konsens-Filter.** Bei Hebel gibt es zwei getrennte Mechanismen, die beide
+"Retail-Konsens" heissen: `retail_konsens_risiko()` (richtungsabhaengige
+Deckel-Formel fuer den erlaubten Hebel) und `filtere_retail_konsens_
+top_gruende()` (reiner Text-Filter, entfernt jeden `top_gruende`-Eintrag,
+der sich auf Retail-Konten-Positionierung beruft, unabhaengig von der
+Richtung). Nur Letzteres ist fuer Spot relevant (kein Hebel-Konzept bei
+Spot) - Spot hat aber bereits denselben zugrunde liegenden Fakt
+(`retail_long_bias_extrem`/`long_konten_anteil_prozent`) und dieselbe
+Prompt-Warnung (Regel 15), nur ohne deterministische Rueckversicherung.
+
+**Bewusst dupliziert statt importiert** (Nutzer-Einschaetzung: Spot/Hebel
+koennten hier eher auseinanderlaufen als gleich bleiben - abweichend vom
+sonst ueblichen "einzige Quelle der Wahrheit"-Muster wie bei `CRV_MINIMUM`):
+`risk_gate.py` bekommt eine eigene Kopie von `_RETAIL_KONSENS_TOP_GRUND_
+MUSTER`/`filtere_retail_konsens_top_gruende()`, mit Kreuzverweis-Kommentar
+zum Hebel-Pendant in `hebel_risk_gate.py`.
+
+**Anwendungsort:** neuer Parameter `filter_retail_konsens_top_gruende`
+(Default `False`) in `risk_gate.py::post_check()` - nur `agent/krypto/
+pipeline.py` (Krypto-Spot) setzt `True`. NICHT generisch fuer alle 4
+Spot-family-Pipelines aktiv: Aktien hat mit `short_interest_finra` ein
+aehnlich klingendes, aber fachlich anderes Konzept (institutionelle
+FINRA-Meldungen, kein Retail-Konsens) - per synthetischem Test empirisch
+bestaetigt, dass der Regex bei FINRA-Short-Interest-Formulierungen NICHT
+anschlaegt, trotzdem bewusst nur am Krypto-Spot-Aufruf aktiviert statt
+generisch in `post_check()`.
+
+**Verifiziert:** Klasse 2, 4 Testfaelle - T1 Hebel-Regression (Verhalten
+unveraendert), T2 Spot-Positivfall (identisches Verhalten zu Hebel), T3
+Grenzfaelle (kein list, leere Liste, fehlendes `text`-Feld, `None`-Eintrag),
+T4 Kombinationsfall (Retail-/Long-Short-Ratio-Varianten gefiltert,
+FINRA-Short-Interest/Short-Squeeze-Text bleibt erhalten). Regressionscheck:
+Import aller 5 Spot-family-Pipeline-Module OK.
+
+**Ergaenzung (2026-07-28, Punkt 5 der Prioritaetenliste): historischer_
+makro_vergleich bei Hebel.** Anders als Fear&Greed/`regime_profil` war das
+KEIN toter Fakt ohne Kontext - Hebel-Regel 15 hatte bereits eine auffaellig
+starke Warnung ("NIEMALS als belastbare Statistik... insbesondere fuer
+Hebel-Positionen"). Die eigentliche Frage: lohnt sich der Fakt trotz starker
+Warnung noch, angesichts der 6-/12-Monats-Vorwaertsrenditen (`top_analoge`,
+`spx_forward_*`/`btc_forward_*`), die strukturell ein Mehrmonats-Konzept
+sind - ein Kategorie-Problem, das selbst starke Prompt-Warnungen nicht
+zuverlaessig loesen (dasselbe Muster wie beim Retail-Konsens-Fund).
+
+**Loesung (Nutzer-Vorschlag, verfeinert): destillieren statt entfernen.**
+Die aktuelle Makro-Konstellation (`aktuelle_konstellation`) ist zeitlos
+gueltig, kein Mehrmonats-Konzept, bleibt erhalten. Neue Funktion
+`agent/krypto/makro_analog.py::distill_makro_vergleich_fuer_hebel()`
+reduziert auf `aktuelle_konstellation` + `anzahl_analoge` +
+`spx_median_forward_6m_prozent` (12-Monats-Wert bewusst weggelassen;
+`top_analoge`-Liste entfaellt komplett - groesster Umfang UND groesste
+Fehlinterpretationsgefahr; kein aggregiertes BTC-Feld, unveraendert).
+Gleicher Fakt-Schluesselname `historischer_makro_vergleich` fuer Spot UND
+Hebel beibehalten (Fakt wird nirgends dauerhaft gespeichert, beide
+Fassungen werden nie gemeinsam vom selben Code gelesen) - Kreuzverweis-
+Kommentar an der Hebel-Aufrufstelle (`hebel_pipeline.py`) fuer menschliche
+Lesbarkeit.
+
+Hebel-Regel 15 komplett neu gefasst: die verbleibende Kennzahl wird
+ausdruecklich als RICHTUNGSNEUTRALER Risikoappetit-Hintergrund fuer
+`key_risks`/`gegenargument` gerahmt - bewusst KEINE LONG/SHORT-Ableitung
+und KEINE Kategorie-Bucket-Uebersetzung (beides Scheingenauigkeit), rohe
+Zahl mit klarer Einordnung, konsistent mit `zyklus_risiko`/`atr.perzentil`.
+
+**Verifiziert:** Klasse 2, 4 Testfaelle - T1 `None`-Input, T2 Positivfall
+(Destillation entfernt `top_analoge`/`aktueller_monat`/12-Monats-Wert
+korrekt), T3 Grenzfall (fehlende/`None`-Werte), T4 Kombinationsfall
+(Import-Konsistenz `hebel_pipeline.py`<->`makro_analog.py`). Regressionscheck:
+Spot unveraendert, Regelnummerierung Hebel 1-24 ohne Luecke.

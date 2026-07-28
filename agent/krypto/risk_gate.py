@@ -19,6 +19,7 @@ dupliziert.
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -51,6 +52,42 @@ KONFIDENZ_SCHWELLE_HOCH = 70.0
 # bisher gestakten Bitpanda-Assets waren instant handelbar - bei neuen
 # gestakten Assets pruefen, ob diese Liste erweitert werden muss.
 STAKING_ILLIQUID_SYMBOLS = {"ETH"}
+
+# 2026-07-28 (Punkt 4 der Fakten_Entscheidungsmappe.md-Prioritaetenliste):
+# bewusst dupliziert statt von hebel_risk_gate.py importiert - Spot (lang-
+# fristige Investitionsthese) und Hebel (kurzfristige Taktik) koennten hier
+# inhaltlich auseinanderlaufen (Nutzer-Einschaetzung), z.B. falls Spot
+# irgendwann einen Begriff braucht, den Hebel nicht kennt oder umgekehrt.
+# Nur fuer den Krypto-Spot-Aufruf gedacht (siehe post_check()-Parameter
+# `filter_retail_konsens_top_gruende` unten) - NICHT generisch in post_check()
+# fuer alle 4 Spot-family-Pipelines aktiv, weil Aktien/Rohstoffe/Themen-ETF
+# das Retail-Konten-Konzept gar nicht kennen (Aktien hat mit
+# `short_interest_finra` ein aehnlich klingendes, aber fachlich anderes
+# Konzept - institutionelle FINRA-Meldungen, kein Retail-Konsens - der Regex
+# wuerde dort zwar vermutlich nicht anschlagen, aber "vermutlich nicht" ist
+# keine Basis fuer einen Filter in einer gemeinsam genutzten Funktion).
+_RETAIL_KONSENS_TOP_GRUND_MUSTER = re.compile(
+    r"(long|short)[- ]?konten|retail[- ]?(konsens|bias|positionierung|trader)|long[- ]?short[- ]?ratio",
+    re.IGNORECASE,
+)
+
+
+def filtere_retail_konsens_top_gruende(top_gruende: list) -> list:
+    """Entfernt top_gruende-Eintraege, deren Text auf Retail-/Long-Konten-
+    Positionierung verweist, komplett - unabhaengig von der angegebenen
+    Kategorie. Identische Logik wie hebel_risk_gate.py::
+    filtere_retail_konsens_top_gruende() (bewusst dupliziert, siehe Kommentar
+    oben), Aufloeser 2026-07-26: Positionierungsdaten sagen etwas ueber
+    Squeeze-/Liquidations-Risiko aus, nicht darueber, ob der Kurs steigen
+    sollte - ein Kategorie-Fehler in der Begruendung, unabhaengig von Long
+    oder Short. Lenient: fehlende Rangplaetze sind unschaedlich (pipeline.py
+    liest top_gruende je Rang per .get() mit None-Default)."""
+    if not isinstance(top_gruende, list):
+        return top_gruende
+    return [
+        eintrag for eintrag in top_gruende
+        if not _RETAIL_KONSENS_TOP_GRUND_MUSTER.search(str((eintrag or {}).get("text") or ""))
+    ]
 
 
 @dataclass
@@ -787,6 +824,7 @@ def post_check(
     dates=None,
     closes=None,
     richtungswende_atr_schwelle: float | None = None,
+    filter_retail_konsens_top_gruende: bool = False,
 ) -> dict:
     """Nimmt die bereits validierte (siehe agent/analyst.py) Groq-Antwort und erzwingt
     RM-1/-2/-4/-5, Mindest-Konfidenz (R-5.10) und CRV >= 2.0 (Z-2) noch einmal
@@ -794,11 +832,20 @@ def post_check(
     auf die RM-1/RM-2-Obergrenze (Korrektur, kein Veto). Gibt die (ggf. korrigierte)
     Antwort + Veto-Metadaten zurueck.
 
+    `filter_retail_konsens_top_gruende` (2026-07-28, Punkt 4 der Fakten_
+    Entscheidungsmappe.md-Prioritaetenliste, analog zu hebel_risk_gate.py)
+    - Default False mit Absicht: nur agent/krypto/pipeline.py (Krypto-Spot,
+    hat als einzige der 4 Spot-family-Pipelines echte Retail-Konten-Daten)
+    setzt True. Aktien/Rohstoffe/Themen-ETF rufen post_check() unveraendert
+    ohne diesen Parameter auf.
+
     `confluence` (2026-07-18, Nutzer-Fund am echten CAT-Fall: "Ergebnis ist
     durchgaengig eher schlecht" trotz 80% Konfidenz) optional - ohne sie faellt
     nur der neue Konflikt-Deckel unten weg, der Rest der Funktion bleibt
     unveraendert funktionsfaehig (P-10)."""
     result = dict(parsed)
+    if filter_retail_konsens_top_gruende:
+        result["top_gruende"] = filtere_retail_konsens_top_gruende(result.get("top_gruende"))
     risk_veto = False
     risk_veto_reason = None
     crv = None

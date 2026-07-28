@@ -807,6 +807,7 @@ def generate_signal(
         atr_value=atr_value,
         dates=dates,
         closes=closes,
+        filter_retail_konsens_top_gruende=True,
     )
     risk_veto = corrected.pop("_risk_veto")
     risk_veto_reason = corrected.pop("_risk_veto_reason")
