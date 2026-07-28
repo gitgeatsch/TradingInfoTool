@@ -260,7 +260,24 @@ UND du selbst empfiehlst mit hoher Konfidenz LONG (oder umgekehrt: Call-Skew UND
 hohe Konfidenz SHORT), ist das ein echter Widerspruch, den du in `gegenargument` \
 benennen solltest. Bezieht sich immer auf BTC (marktweiter Krypto-Barometer, \
 NICHT nur fuer BTC-Signale relevant), nicht auf den einzelnen Coin selbst.
-22. Fuelle `eigene_einschaetzung` GANZ ZULETZT aus, NACHDEM du `action`, \
+22. `markt_kontext.naechste_fomc_sitzungen`/`naechste_cpi_veroeffentlichung` (falls \
+nicht leer/null): FOMC-Sitzungen und CPI-Veroeffentlichungen zeigen in dokumentierten \
+Marktstudien (vor allem Aktien-/Zinsmaerkte) typischerweise eine ERHOEHTE realisierte \
+Volatilitaet im Zeitfenster um den Termin selbst, oft nach einer vergleichsweise \
+ruhigeren, eng gehandelten Phase in den 1-2 Tagen davor. Fuer Krypto ist das WENIGER \
+belastbar untersucht als fuer traditionelle Maerkte, und die RICHTUNG der Bewegung \
+(auf oder ab) laesst sich daraus NICHT ableiten - nur die erhoehte Unsicherheit ist \
+der eigentliche, dokumentierte Effekt. Gewichte das bei einer GEHEBELTEN Position \
+eigenstaendig: ist der Termin laut `in_tagen` sehr nah UND deine Stop-Loss-Distanz \
+eng, ist ein ploetzlicher Volatilitaets-Spike ein reales Stop-Loss-/ \
+Liquidations-Risiko, das du in `key_risks` oder `gegenargument` benennen kannst. Erfinde daraus \
+KEINE Richtungsprognose und erzwinge keine Erwaehnung, wenn der Termin mehrere \
+Wochen entfernt ist oder du selbst es fuer nicht entscheidungsrelevant haeltst. \
+`markt_kontext.praesidentschaftszyklus` ist fuer eine kurzfristige, gehebelte \
+Position (typische Haltedauer Stunden bis wenige Tage) ein mehrjaehriger \
+Hintergrund-Fakt ohne direkte Kurzfrist-Aussagekraft - erwaehne ihn hoechstens am \
+Rande, wenn ueberhaupt, niemals als eigenstaendigen Grund fuer `action`/`richtung`.
+23. Fuelle `eigene_einschaetzung` GANZ ZULETZT aus, NACHDEM du `action`, \
 `confidence_pct`, `gegenargument`, `top_gruende` und `long_reasoning` bereits \
 fertiggestellt hast - das ist ein ABSCHLIESSENDER, GANZHEITLICHER Rueckblick \
 auf deine eigene bereits fertige Analyse, keine Wiederholung/Formalitaet. \
@@ -320,7 +337,7 @@ SCHEMA:
     "base": {"scenario": "<Text>", "probability_pct": <0-100>},
     "bear": {"scenario": "<Text>", "probability_pct": <0-100>}
   },
-  "eigene_einschaetzung": {"folgen": "ja|nein|mit_vorbehalt", "kurzfazit": "<1 Satz, siehe Regel 21>"}
+  "eigene_einschaetzung": {"folgen": "ja|nein|mit_vorbehalt", "kurzfazit": "<1 Satz, siehe Regel 23>"}
 }"""
 
 
@@ -639,7 +656,7 @@ REQUIRED_HEBEL_TOP_LEVEL_FIELDS = (
 TOP_GRUENDE_KATEGORIEN = ("technisch", "fundamental", "makro", "risiko")
 _HALTE_KRITERIUM_BUCKETS = ("kurz", "mittel", "lang")
 _HALTEN_AEHNLICHE_ACTIONS = ("HALTEN", "SCHLIESSEN")
-# Signal-Fazit (2026-07-25, siehe Regel 21 / Memory feedback_llm_synthese_
+# Signal-Fazit (2026-07-25, siehe Regel 23 / Memory feedback_llm_synthese_
 # kein_deterministischer_override.md) - bewusst KEIN deterministischer
 # Override des Werturteils, nur Format-/Vollstaendigkeits-Validierung hier.
 _EIGENE_EINSCHAETZUNG_FOLGEN_WERTE = ("ja", "nein", "mit_vorbehalt")
@@ -708,7 +725,7 @@ def _validate_hebel(data: dict, asset_symbol: str) -> dict:
         raise AnalystResponseInvalid(f"gegenargument fehlt oder zu kurz: {data.get('gegenargument')!r}")
     data["gegenargument"] = gegenargument
 
-    # Signal-Fazit (2026-07-25, Regel 21) - reine Format-/Vollstaendigkeits-
+    # Signal-Fazit (2026-07-25, Regel 23) - reine Format-/Vollstaendigkeits-
     # pruefung, bewusst KEINE inhaltliche Korrektur von `folgen`/`kurzfazit`
     # (siehe Memory feedback_llm_synthese_kein_deterministischer_override.md).
     eigene_einschaetzung = data.get("eigene_einschaetzung")

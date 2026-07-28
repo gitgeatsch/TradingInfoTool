@@ -10564,4 +10564,76 @@ Feldern - sobald neue VERKAUFEN/TAUSCHEN-Signale nach diesem Fix aufgelöst
 werden, erscheinen sie automatisch in allen bestehenden Auswertungskarten,
 ohne dass diese selbst angepasst werden mussten.
 
+**Committet und gepusht** (`cf79071`).
+
+## Nachtrag (2026-07-28): Fakten-Entscheidungsmappe + Hebel-Regel 22 (FOMC/CPI-Kontext)
+
+Nutzer-Anstoß: bei der Detailanalyse eines frischen Notebook-Diagnose-Exports fiel
+auf, dass Z.ais unabhängige Richtungseinschätzung bei Hebel-Signalen fast nie mit
+dem Haupt-Signal übereinstimmt (75/76 Fällen "Abweichung"). Tiefere Analyse ergab:
+kein Datenqualitätsproblem wie beim früheren Retail-Konsens-Fund, sondern ein
+Mess-Artefakt - `hebel_richtung_modus="nur_long"` filtert SHORT-Kandidaten schon
+vor jedem LLM-Call heraus (Bitpanda kann nicht shorten), daher ist die Haupt-
+Richtung praktisch immer LONG, während Z.ais unabhängige Einschätzung im
+anhaltenden Bär-Regime ehrlich SHORT/NEUTRAL liest. Der Vergleich misst also nicht
+"liegt Z.ai falsch", sondern "stimmt eine strukturell auf LONG beschränkte
+Empfehlung mit einer unvoreingenommenen Einschätzung überein" - in einem
+Bärenmarkt naturgemäß selten.
+
+Als Nebenbefund beim Faktencheck fiel auf: die Krypto-Fakten enthalten `markt_
+kontext.naechste_fomc_sitzungen`/`naechste_cpi_veroeffentlichung`, aber der
+Hebel-Prompt (`agent/krypto/hebel_analyst.py`) hatte dafür KEINE Regel (die
+Spot-Regel 13 dagegen eine schwache 14-/5-Tage-Schwelle ohne Richtung/Magnitude).
+Das führte zu einer breiteren, grundsätzlichen Diskussion: soll man Fakten
+deterministisch vor-bewerten (dann: wozu die KI?) oder soll man sie roh ohne
+jede Einordnung durchreichen (dann: unreproduzierbares, im schlimmsten Fall
+zufälliges LLM-Verhalten)? Antwort: keins von beidem - Fakten, die echtes,
+kontextabhängiges Abwägen brauchen, gehören dem LLM, aber mit einer
+dokumentierten Marktbasis als Kontext, nicht mit einer vorgegebenen
+Schlussfolgerung. Fakten, deren "richtige" Reaktion immer dieselbe ist, gehören
+stattdessen hart ins Risk-Gate (unverändertes Prinzip, siehe CRV-Minimum/Cash-
+Reserve/Konfidenz-Regime-Schwelle).
+
+**Vollständige Bestandsaufnahme:** neues, dauerhaftes Referenzdokument
+`Basisinfos/Fakten_Entscheidungsmappe.md` - alle 156 Fakten der Krypto-Spot- und
+Hebel-Pipeline katalogisiert und in vier Kategorien eingeordnet (Regel+Gate /
+nur Regel / nur Gate / weder noch - letztere ~28 Fakten sind der eigentliche
+Handlungsraum). Zusätzlich neue vierte Prüf-Dimension "Zeithorizont-Passung"
+(Nutzer-Vorgabe): Hebel = kurzfristige Taktik (~1 Tag Haltedauer), Spot =
+langfristige Investitionsthese/Zyklus-Positionierung (sinngemäß "Bitcoin-
+Sparplan": antizyklisch kaufen im Bärenmarkt, AZ-4-Bausteine). Ein Fakt ohne
+Kontext ist in der Pipeline dringlicher, zu der er zeitlich passt - FOMC-Nähe
+fehlte komplett dort, wo sie am relevantesten ist (Hebel), während die schwache
+Spot-Regel für die Langfrist-These fast proportional richtig ist.
+
+**Umgesetzt (Punkt 1 der Prioritätenliste):** neue Regel 22 in
+`agent/krypto/hebel_analyst.py::SYSTEM_PROMPT` - liefert dokumentierten
+Marktkontext (FOMC-Sitzungen/CPI-Veröffentlichungen zeigen in etablierten
+Marktstudien typischerweise erhöhte realisierte Volatilität um den Termin,
+oft nach einer ruhigeren Phase davor; für Krypto weniger belastbar untersucht;
+KEINE Richtungsaussage ableitbar) statt einer vorgegebenen Schlussfolgerung -
+das LLM gewichtet selbst, ob und wie stark das bei der konkreten Stop-Loss-
+Distanz relevant ist, insbesondere fürs Liquidations-/Stop-Loss-Risiko einer
+gehebelten Position. `praesidentschaftszyklus` wird explizit als für Hebel
+kaum aussagekräftiger Hintergrund-Fakt eingeordnet (mehrjähriger Zyklus vs.
+Stunden-/Tage-Haltedauer). Bewusst KEIN neues Gate/Deckel - passend zum
+Grundsatz "Kontext liefern, Urteil nicht vorwegnehmen".
+
+Vorherige Regel 22 ("eigene_einschaetzung") zu Regel 23 verschoben; dabei auch
+3 bereits vorher veraltete "Regel 21"-Verweise im Code (Schema-Kommentar +
+2 Docstrings) auf "Regel 23" korrigiert - waren schon vor dieser Änderung um
+eins versetzt.
+
+**Verifiziert:** Modul-Import, Compile-Check, durchgängige Regelnummerierung
+1-23 ohne Lücke geprüft.
+
+**Weitere, noch offene Punkte** (Priorisierung bestätigt, siehe
+`Fakten_Entscheidungsmappe.md` Abschnitt 5+6): Fear&Greed-Index anbinden/
+entfernen, `regime_profil.gewicht_*` anbinden/entfernen, Spot-Retail-Konsens-
+Filter analog zu Hebel nachziehen, `historischer_makro_vergleich` bei Hebel
+ggf. entfernen (Zeithorizont-Fehlpassung), plus drei "sofort machbare" neue
+Fakten (DXY-Trend direkt in Krypto-Fakten, OI-Trend-vs-Kurs-Divergenz,
+Funding-Rate-Perzentil) - alle mit bereits vorhandenen, kostenfreien Daten
+umsetzbar, nur noch nicht verdrahtet.
+
 **Noch NICHT committet** - wartet auf Nutzer-Bestätigung.
