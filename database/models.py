@@ -298,6 +298,28 @@ class Signal:
     # "wurde die exakte TP/SL-Zonen-Ausfuehrung getroffen".
     outcome_max_realisiertes_crv: float | None = None
     outcome_mindestziel_erreicht_am: str | None = None
+    # Veto-Schatten-Tracking (2026-07-28, siehe database/db.py::_SIGNAL_VETO_SHADOW_
+    # NEW_COLUMNS-Docstring fuer die volle Herleitung) - trackt Signale, deren
+    # `action` durch einen Risk-Gate-Veto (z.B. CRV-Pflicht, Bitpanda/Cash-Veto,
+    # Regime-Mindestkonfidenz R-5.10) auf HALTEN zurueckgestuft wurde, OBWOHL das
+    # LLM urspruenglich einen echten Trade (KAUFEN/NACHKAUFEN/VERKAUFEN/TAUSCHEN)
+    # vorgeschlagen hatte. Diskriminator (kein eigenes Feld noetig): `risk_veto ==
+    # True and action == "HALTEN"` UND entry/stop_loss/take_profit-Zonen gesetzt -
+    # nur dann ist ueberhaupt eine hypothetische These vorhanden, die sich
+    # nachverfolgen laesst. Komplett getrennte Spalten (Option B) statt Wieder-
+    # verwendung der outcome_*-Felder, damit eine vergessene Filterstelle nie
+    # hypothetische mit echten Trade-Ergebnissen vermischt. Selbe Statuswerte wie
+    # outcome_status (OUTCOME_OFFEN/TAKE_PROFIT/STOP_LOSS/ABGELAUFEN/UEBERHOLT/
+    # NICHT_ANWENDBAR), berechnet in agent/krypto/backward_tracking.py::
+    # check_signal_veto_shadow_outcome(). Da `action` bereits auf HALTEN steht,
+    # wird die Handelsrichtung fuer die Zonen-Auswertung aus der relativen
+    # Reihenfolge stop_loss/entry/take_profit abgeleitet, nicht aus `action`.
+    veto_outcome_status: str | None = None
+    veto_outcome_geprueft_am: str | None = None
+    veto_outcome_entschieden_am: str | None = None
+    veto_outcome_realisiertes_crv: float | None = None
+    veto_outcome_max_realisiertes_crv: float | None = None
+    veto_outcome_mindestziel_erreicht_am: str | None = None
     # AZ-4-Tranchen (2026-07-12, gestaffelte Kauf-/Verkaufszonen) - JSON-Liste von
     # {rang, anteil_prozent, zone, trigger_bedingung}, rein informativ (siehe
     # agent/krypto/analyst.py::_validate()). None = keine Tranchierung vorgeschlagen
@@ -619,6 +641,18 @@ class HebelSignal:
     # outcome_max_realisiertes_crv - hier richtungsabhaengig (LONG/SHORT).
     outcome_max_realisiertes_crv: float | None = None
     outcome_mindestziel_erreicht_am: str | None = None
+    # Veto-Schatten-Tracking (2026-07-28), mirror Signal.veto_outcome_* - hier
+    # aber KEINE Zonen-Richtungs-Ableitung noetig, da `signal.richtung` (LONG/
+    # SHORT) den Veto unveraendert uebersteht (nur action/risk_veto/
+    # risk_veto_reason werden ueberschrieben, siehe hebel_risk_gate.py::
+    # post_check_hebel()). Diskriminator: `risk_veto == True and action ==
+    # "HALTEN"` UND entry/stop_loss/take_profit gesetzt.
+    veto_outcome_status: str | None = None
+    veto_outcome_geprueft_am: str | None = None
+    veto_outcome_entschieden_am: str | None = None
+    veto_outcome_realisiertes_crv: float | None = None
+    veto_outcome_max_realisiertes_crv: float | None = None
+    veto_outcome_mindestziel_erreicht_am: str | None = None
     # Risikofaktoren-Liste (2026-07-19, siehe Signal.risikofaktoren_json-
     # Docstring) - deterministisch aus agent/krypto/hebel_risk_gate.py::
     # compute_risikofaktoren_hebel() berechnet.

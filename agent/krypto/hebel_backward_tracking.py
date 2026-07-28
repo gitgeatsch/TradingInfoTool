@@ -60,6 +60,14 @@ class HebelBackwardTrackingResult:
     superseded: int = 0
     still_open: int = 0
     warnings: list[str] = field(default_factory=list)
+    # Veto-Schatten-Tracking (2026-07-28, mirror backward_tracking.py::
+    # BackwardTrackingResult - siehe check_hebel_signal_veto_shadow_outcome()).
+    veto_schatten_geprueft_count: int = 0
+    veto_schatten_take_profit: int = 0
+    veto_schatten_stop_loss: int = 0
+    veto_schatten_liquidation: int = 0
+    veto_schatten_expired: int = 0
+    veto_schatten_still_open: int = 0
 
 
 def _entry_mid(signal) -> float | None:
@@ -238,6 +246,143 @@ def check_hebel_signal_outcome(
     }
 
 
+def _hat_hebel_veto_schatten_these(signal) -> bool:
+    """Diskriminator fuer einen echten Hebel-Veto-Schatten-Kandidaten (2026-07-28,
+    mirror backward_tracking.py::_hat_veto_schatten_these()): `risk_veto=True`
+    UND `action="HALTEN"` (per Veto zurueckgestuft, z.B. Nur-Long-Deckel, CRV-
+    Veto, Regime-Konflikt-Deckel, Retail-Konsens-Deckel - siehe hebel_risk_gate.py::
+    post_check_hebel()) UND alle drei Preiszonen gesetzt. Ein regelkonformes,
+    selbst gewaehltes HALTEN hat KEINE Zonen und faellt automatisch durch."""
+    if not (getattr(signal, "risk_veto", False) and signal.action == "HALTEN"):
+        return False
+    return (
+        signal.entry_usd_von is not None
+        and signal.stop_loss_usd_von is not None
+        and signal.take_profit_usd_von is not None
+    )
+
+
+def check_hebel_signal_veto_shadow_outcome(
+    conn, signal, watchlist, richtungstreffer_mindest_crv: float = DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV,
+) -> tuple[str, dict]:
+    """Wie check_hebel_signal_outcome(), aber fuer den Veto-Schatten-Zweig
+    (2026-07-28, mirror backward_tracking.py::check_signal_veto_shadow_outcome()
+    - siehe dort fuer die volle Herleitung dieses Features). Trackt Hebel-
+    Signale, deren Action durch einen Risk-Gate-Veto auf HALTEN zurueckgestuft
+    wurde, OBWOHL das LLM urspruenglich ERÖFFNEN/NACHKAUFEN vorgeschlagen hatte.
+
+    Anders als beim Spot-Pendant (dort muss die Richtung aus der Zonen-
+    Reihenfolge abgeleitet werden) bleibt `signal.richtung` (LONG/SHORT) hier
+    vom Veto unberuehrt - nur `action`/`risk_veto`/`risk_veto_reason` werden
+    ueberschrieben (siehe hebel_risk_gate.py::post_check_hebel()) - deshalb
+    exakt dieselbe ist_short-Ableitung wie im Nicht-Schatten-Zweig.
+
+    Liquidationspreis-Pruefung bewusst BEIBEHALTEN (nicht weggelassen): auch
+    fuer eine nie eroeffnete Position ist informativ, ob der geschaetzte
+    Liquidationspreis vor Stop-Loss/Take-Profit erreicht worden waere - zeigt,
+    wie riskant der vetote Vorschlag tatsaechlich war.
+
+    Gibt (neuer_status, extra_felder) zurueck, extra_felder passend fuer
+    db.update_hebel_signal_veto_shadow_outcome(**extra_felder) (bewusst OHNE
+    'datenquelle'-Key, siehe database/db.py::_HEBEL_SIGNAL_VETO_SHADOW_NEW_
+    COLUMNS-Docstring)."""
+    if not _hat_hebel_veto_schatten_these(signal):
+        return OUTCOME_NICHT_ANWENDBAR, {}
+
+    take_profit_threshold = signal.take_profit_usd_von
+    stop_loss_threshold = signal.stop_loss_usd_von
+    liquidation_threshold = signal.liquidationspreis_geschaetzt_usd
+    ist_short = signal.richtung == "SHORT"
+
+    asset = next((a for a in watchlist if a.symbol == signal.symbol), None)
+    if asset is None:
+        return OUTCOME_OFFEN, {}
+
+    min_date = signal.created_at[:10]
+    entry_mid = _entry_mid(signal)
+    if entry_mid is not None:
+        risiko_distanz = (stop_loss_threshold - entry_mid) if ist_short else (entry_mid - stop_loss_threshold)
+    else:
+        risiko_distanz = None
+
+    max_favorable_crv = None
+    mindestziel_erreicht_am = None
+
+    def _erfasse_mfe(high: float, low: float, day_value: str) -> None:
+        nonlocal max_favorable_crv, mindestziel_erreicht_am
+        if risiko_distanz is None or risiko_distanz <= 0:
+            return
+        guenstigster_preis = low if ist_short else high
+        favorable_crv = (
+            (entry_mid - guenstigster_preis) / risiko_distanz if ist_short
+            else (guenstigster_preis - entry_mid) / risiko_distanz
+        )
+        if max_favorable_crv is None or favorable_crv > max_favorable_crv:
+            max_favorable_crv = favorable_crv
+        if mindestziel_erreicht_am is None and favorable_crv >= richtungstreffer_mindest_crv:
+            mindestziel_erreicht_am = day_value
+
+    def resolve(exit_price: float, status: str) -> tuple[str, dict]:
+        realized_crv = None
+        if entry_mid is not None:
+            if ist_short:
+                risiko_distanz_lokal = stop_loss_threshold - entry_mid
+                if risiko_distanz_lokal != 0:
+                    realized_crv = (entry_mid - exit_price) / risiko_distanz_lokal
+            else:
+                risiko_distanz_lokal = entry_mid - stop_loss_threshold
+                if risiko_distanz_lokal != 0:
+                    realized_crv = (exit_price - entry_mid) / risiko_distanz_lokal
+        return status, {
+            "entschieden_am": day,
+            "realisiertes_crv": realized_crv,
+            "max_realisiertes_crv": max_favorable_crv,
+            "mindestziel_erreicht_am": mindestziel_erreicht_am,
+        }
+
+    def _check_day(high: float, low: float, day_value: str) -> tuple[str, dict] | None:
+        nonlocal day
+        day = day_value
+        _erfasse_mfe(high, low, day_value)
+        if ist_short:
+            hit_liquidation = liquidation_threshold is not None and high >= liquidation_threshold
+            hit_stop = high >= stop_loss_threshold
+            hit_take = low <= take_profit_threshold
+        else:
+            hit_liquidation = liquidation_threshold is not None and low <= liquidation_threshold
+            hit_stop = low <= stop_loss_threshold
+            hit_take = high >= take_profit_threshold
+
+        if hit_liquidation:
+            return resolve(liquidation_threshold, OUTCOME_LIQUIDATION)
+        if hit_stop:
+            return resolve(stop_loss_threshold, OUTCOME_STOP_LOSS)
+        if hit_take:
+            return resolve(take_profit_threshold, OUTCOME_TAKE_PROFIT)
+        return None
+
+    day = None
+    ohlc_rows = db.get_ohlc_history(conn, signal.symbol, "USD", min_date=min_date)
+    if len(ohlc_rows) >= 1:
+        for row in ohlc_rows:
+            result = _check_day(row.high, row.low, row.date)
+            if result is not None:
+                return result
+    else:
+        price_rows = db.get_price_history(conn, asset.coingecko_id, min_date=min_date) if asset.coingecko_id else []
+        for row in price_rows:
+            if row.price_usd is None:
+                continue
+            result = _check_day(row.price_usd, row.price_usd, row.date)
+            if result is not None:
+                return result
+
+    return OUTCOME_OFFEN, {
+        "max_realisiertes_crv": max_favorable_crv,
+        "mindestziel_erreicht_am": mindestziel_erreicht_am,
+    }
+
+
 def _is_superseded(
     signal, latest_real: dict, mindestbeob_bucket: dict[str, int],
     mindestbeob_fallback: int, zonen_toleranz_relativ: float,
@@ -400,5 +545,54 @@ def run_hebel_backward_tracking(conn, watchlist, config: dict) -> HebelBackwardT
             result.expired += 1
         else:
             result.still_open += 1
+
+    # Veto-Schatten-Zweig (2026-07-28, mirror backward_tracking.py::
+    # run_backward_tracking() - siehe check_hebel_signal_veto_shadow_outcome()-
+    # Docstring). Bewusst OHNE Ueberholt-Check, gleiche Begruendung wie beim
+    # Spot-Pendant: eine hypothetische, nie eroeffnete Position kann durch eine
+    # neuere echte Analyse nicht im selben Sinn "ueberholt" werden.
+    veto_shadow_rows = conn.execute(
+        "SELECT id FROM hebel_signals WHERE risk_veto = 1 AND action = 'HALTEN' "
+        "AND (veto_outcome_status IS NULL OR veto_outcome_status = ?)",
+        (OUTCOME_OFFEN,),
+    ).fetchall()
+
+    for row in veto_shadow_rows:
+        signal = db.get_hebel_signal_by_id(conn, row["id"])
+        if signal is None:
+            continue
+        result.veto_schatten_geprueft_count += 1
+
+        status, extra = check_hebel_signal_veto_shadow_outcome(conn, signal, watchlist, richtungstreffer_mindest_crv)
+
+        if status == OUTCOME_NICHT_ANWENDBAR:
+            db.update_hebel_signal_veto_shadow_outcome(conn, signal.id, status)
+            continue
+
+        if status in (OUTCOME_TAKE_PROFIT, OUTCOME_STOP_LOSS, OUTCOME_LIQUIDATION):
+            db.update_hebel_signal_veto_shadow_outcome(
+                conn, signal.id, status,
+                entschieden_am=extra.get("entschieden_am"),
+                realisiertes_crv=extra.get("realisiertes_crv"),
+                max_realisiertes_crv=extra.get("max_realisiertes_crv"),
+                mindestziel_erreicht_am=extra.get("mindestziel_erreicht_am"),
+            )
+            if status == OUTCOME_TAKE_PROFIT:
+                result.veto_schatten_take_profit += 1
+            elif status == OUTCOME_STOP_LOSS:
+                result.veto_schatten_stop_loss += 1
+            else:
+                result.veto_schatten_liquidation += 1
+            continue
+
+        if _is_expired(signal, bucket_tage, fallback_tage):
+            db.update_hebel_signal_veto_shadow_outcome(
+                conn, signal.id, OUTCOME_ABGELAUFEN,
+                max_realisiertes_crv=extra.get("max_realisiertes_crv"),
+                mindestziel_erreicht_am=extra.get("mindestziel_erreicht_am"),
+            )
+            result.veto_schatten_expired += 1
+        else:
+            result.veto_schatten_still_open += 1
 
     return result

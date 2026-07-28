@@ -677,6 +677,61 @@ def _migrate_hebel_signal_mindestziel_columns(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+# Veto-Schatten-Tracking (2026-07-28, Nutzer-Fund: veto'te ERÖFFNEN/KAUFEN/
+# VERKAUFEN-Vorschlaege - z.B. Nur-Long-Deckel, CRV-Veto, Bitpanda/Cash-Veto,
+# Regime-Mindestkonfidenz - werden auf action=HALTEN zurueckgestuft und sind
+# seither STRUKTURELL unsichtbar fuer jede Performance-Auswertung
+# (compute_provider_performance()/compute_zai_richtung_performance() filtern
+# auf outcome_status IN (_RESOLVED_OUTCOMES), HALTEN-Zeilen bekommen nie einen
+# solchen Status - siehe check_signal_outcome()/check_hebel_signal_outcome()s
+# _TRACKABLE_ACTIONS-Gate). Bewusst KOMPLETT GETRENNTE Spalten (Option B,
+# Nutzer-Entscheidung nach Diskussion) statt Wiederverwendung der outcome_*-
+# Felder mit einem Filter-Flag - eine vergessene Filterstelle wuerde sonst
+# hypothetische (nie ausgefuehrte) Trades still mit echten Ergebnissen
+# vermischen. `outcome_datenquelle` bewusst NICHT gespiegelt (verifiziert:
+# wird im gesamten Code nirgends tatsaechlich gesetzt, keine tote Spalte
+# duplizieren). mindestziel_usd/mindestziel_eur/mindestziel_zeitraum_tage_
+# geschaetzt brauchen ebenfalls keine Schatten-Kopie - die werden bereits rein
+# arithmetisch aus Entry/Stop-Loss abgeleitet, unabhaengig vom Veto.
+_SIGNAL_VETO_SHADOW_NEW_COLUMNS = {
+    "veto_outcome_status": "TEXT",
+    "veto_outcome_geprueft_am": "TEXT",
+    "veto_outcome_entschieden_am": "TEXT",
+    "veto_outcome_realisiertes_crv": "REAL",
+    "veto_outcome_max_realisiertes_crv": "REAL",
+    "veto_outcome_mindestziel_erreicht_am": "TEXT",
+}
+
+
+def _migrate_signal_veto_shadow_columns(conn: sqlite3.Connection) -> None:
+    """Additive Migration wie _migrate_signal_mindestziel_columns() - siehe
+    _SIGNAL_VETO_SHADOW_NEW_COLUMNS-Docstring fuer die volle Begruendung."""
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(signals)")}
+    for column, sql_type in _SIGNAL_VETO_SHADOW_NEW_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE signals ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
+_HEBEL_SIGNAL_VETO_SHADOW_NEW_COLUMNS = {
+    "veto_outcome_status": "TEXT",
+    "veto_outcome_geprueft_am": "TEXT",
+    "veto_outcome_entschieden_am": "TEXT",
+    "veto_outcome_realisiertes_crv": "REAL",
+    "veto_outcome_max_realisiertes_crv": "REAL",
+    "veto_outcome_mindestziel_erreicht_am": "TEXT",
+}
+
+
+def _migrate_hebel_signal_veto_shadow_columns(conn: sqlite3.Connection) -> None:
+    """Wie _migrate_signal_veto_shadow_columns(), aber fuer hebel_signals."""
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(hebel_signals)")}
+    for column, sql_type in _HEBEL_SIGNAL_VETO_SHADOW_NEW_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE hebel_signals ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
 _HEBEL_SIGNAL_SENKUNG_NEW_COLUMNS = {"hebel_senkung_eigenkapital_nachschuss_eur": "REAL"}
 
 
@@ -954,6 +1009,8 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_signal_zai_gegenpruefung_columns(conn)
     _migrate_signal_mindestziel_columns(conn)
     _migrate_hebel_signal_mindestziel_columns(conn)
+    _migrate_signal_veto_shadow_columns(conn)
+    _migrate_hebel_signal_veto_shadow_columns(conn)
     import_holdings_manual_overrides(conn)
 
 
@@ -2019,6 +2076,33 @@ def update_signal_outcome(
     conn.commit()
 
 
+def update_signal_veto_shadow_outcome(
+    conn: sqlite3.Connection,
+    signal_id: int,
+    status: str,
+    entschieden_am: str | None = None,
+    realisiertes_crv: float | None = None,
+    max_realisiertes_crv: float | None = None,
+    mindestziel_erreicht_am: str | None = None,
+) -> None:
+    """Wie update_signal_outcome(), aber fuer den Veto-Schatten-Zweig (2026-07-28,
+    siehe _SIGNAL_VETO_SHADOW_NEW_COLUMNS-Docstring) - trackt Signale, deren
+    action nach einem Risk-Gate-Veto auf HALTEN zurueckgestuft wurde, damit
+    diese hypothetischen Trade-Vorschlaege nicht aus der Performance-Betrachtung
+    verschwinden. Bewusst KEIN datenquelle-Parameter (siehe Docstring dort)."""
+    conn.execute(
+        "UPDATE signals SET veto_outcome_status = ?, veto_outcome_geprueft_am = ?, "
+        "veto_outcome_entschieden_am = ?, veto_outcome_realisiertes_crv = ?, "
+        "veto_outcome_max_realisiertes_crv = ?, veto_outcome_mindestziel_erreicht_am = ? "
+        "WHERE id = ?",
+        (
+            status, _now_iso(), entschieden_am, realisiertes_crv,
+            max_realisiertes_crv, mindestziel_erreicht_am, signal_id,
+        ),
+    )
+    conn.commit()
+
+
 def get_signal_history(conn: sqlite3.Connection, symbol: str, limit: int = 20) -> list[Signal]:
     rows = conn.execute(
         "SELECT * FROM signals WHERE symbol = ? ORDER BY created_at DESC LIMIT ?",
@@ -2952,6 +3036,30 @@ def update_hebel_signal_outcome(
         "outcome_mindestziel_erreicht_am = ? WHERE id = ?",
         (
             status, _now_iso(), entschieden_am, realisiertes_crv, datenquelle,
+            max_realisiertes_crv, mindestziel_erreicht_am, hebel_signal_id,
+        ),
+    )
+    conn.commit()
+
+
+def update_hebel_signal_veto_shadow_outcome(
+    conn: sqlite3.Connection,
+    hebel_signal_id: int,
+    status: str,
+    entschieden_am: str | None = None,
+    realisiertes_crv: float | None = None,
+    max_realisiertes_crv: float | None = None,
+    mindestziel_erreicht_am: str | None = None,
+) -> None:
+    """Wie update_signal_veto_shadow_outcome(), aber fuer hebel_signals (2026-07-28,
+    siehe _HEBEL_SIGNAL_VETO_SHADOW_NEW_COLUMNS-Docstring)."""
+    conn.execute(
+        "UPDATE hebel_signals SET veto_outcome_status = ?, veto_outcome_geprueft_am = ?, "
+        "veto_outcome_entschieden_am = ?, veto_outcome_realisiertes_crv = ?, "
+        "veto_outcome_max_realisiertes_crv = ?, veto_outcome_mindestziel_erreicht_am = ? "
+        "WHERE id = ?",
+        (
+            status, _now_iso(), entschieden_am, realisiertes_crv,
             max_realisiertes_crv, mindestziel_erreicht_am, hebel_signal_id,
         ),
     )

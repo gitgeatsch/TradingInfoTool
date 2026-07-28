@@ -11269,3 +11269,176 @@ Keine Umstellung von sequenziell auf parallel (beide Calls gleichzeitig
 starten würde die Wartezeit auf `max(Call1, Call2)` statt `Call1+Call2`
 senken) - nicht angefragt, würde eine tiefere Änderung an
 `fuehre_beide_calls_im_hintergrund()` erfordern.
+
+## Nachtrag (2026-07-28, noch selber Tag): Z.ai-Fakten-Prüfung ("Punkt 0") — kein Fakten-Bug, sondern durch `nur_long`+Bär-Regime vollständig erklärt
+
+**Auslöser:** offener Nutzer-Auftrag vom selben Tag, die an Z.ai übergebenen
+Fakten (`baue_objektive_fakten()` in `agent/krypto/gegenpruefung.py`) zu
+prüfen: ob dieselbe Klasse von irreführenden/beliebig-interpretierbaren
+Fakten wie beim gefixten Mistral-Retail-Konsens-Fall die anhaltend hohe
+Abweichungsquote zwischen Z.ais unabhängigem Richtungsvotum und dem
+Primär-Signal (zuletzt 98%, siehe frühere Nachträge) verursacht.
+
+**Code-Audit:** `trend_label` ist bereits die neutrale EMA-Beschreibung
+("Preis > EMA20 > EMA50 > EMA200"), nicht vorinterpretiert.
+`_funding_rate_vorzeichen_text()` beschreibt nur den mechanischen Sachverhalt
+("Longs zahlen Shorts"), keine Wertung. Kein struktureller Bug analog zum
+Retail-Konsens-Fall gefunden.
+
+**Direkte Datenauswertung (alle 103 Hebel-Signale mit `zai_eigene_richtung`,
+07-26 bis 07-28 — ALLE bereits NACH dem Retail-Konsens-Fix vom 07-22, die
+Abweichungsquote hat sich seither nicht verändert):**
+- 101/103 "nein" (98%), davon 51 `NEUTRAL` (keine Gegenmeinung, nur keine
+  klare Tendenz) und 50 echte Gegenrichtung.
+- **Alle 50** echten Gegenrichtung-Fälle sind exakt `primaer=LONG,
+  zai=SHORT` (keine einzige Ausnahme, nie SHORT→LONG) und **alle 50** bei
+  `regime="baer"`.
+
+**Root Cause:** `hebel_richtung_modus="nur_long"` filtert SHORT-Kandidaten
+bereits VOR jedem LLM-Call heraus (98 von 103 Primär-Signalen sind LONG,
+unabhängig vom Regime). Z.ai bekommt nur objektive Fakten OHNE Kenntnis
+dieser Einschränkung und leitet aus bärischen Fakten (Regime/Trend/
+Konfluenz/Funding/Skew) korrekt und konsistent SHORT ab. Die Abweichung ist
+also kein Fakten-Qualitätsproblem, sondern die logische Konsequenz aus der
+Kombination von Geschäftsregel (kein Shorting auf Bitpanda) und anhaltendem
+Bär-Regime.
+
+**Bezug zu einem separaten Fund desselben Tages:** erklärt vermutlich auch
+die schwache Mistral-Hebel-Performance (Ø realisiertes CRV vor dem
+Retail-Konsens-Fix +0,22, danach -0,48 bei n=416) - LONG-only-Signale in
+einem anhaltenden Bär-Regime sind strukturell benachteiligt, unabhängig von
+der Modellqualität.
+
+**Verifiziert:** direkte Auswertung des vollständigen `hebel_signals`-Exports
+(103 von 958 Zeilen mit gesetztem `zai_eigene_richtung`).
+
+**Nutzer-Entscheidung:** nur dokumentieren, keine Code-Änderung.
+`hebel_richtung_modus="nur_long"` bleibt wie besprochen (Bitpanda-
+Limitierung weiterhin gültig). Punkt 0 damit abgeschlossen — mit
+umgekehrtem Ergebnis als ursprünglich angenommen: kein Fakten-Bug, sondern
+Bestätigung eines bereits bekannten strukturellen Trade-offs.
+
+**Bewusst NICHT Teil dieser Runde:** keine Umsetzung der im Vorfeld
+diskutierten Idee, Z.ais SHORT-Votum bei primärem LONG+Bär-Regime als
+zusätzlichen (rein informativen) Risikofaktor/Warnhinweis anzuzeigen -
+Nutzer entschied sich für die Dokumentations-Option. Punkt 0b (Wartezeit bis
+Mistral-Signale als Stop-Loss/Richtungsverfehlung aufgelöst werden) bleibt
+weiterhin offen, siehe [[reference_offene_zeitbasierte_beobachtungspunkte]].
+
+## Nachtrag (2026-07-28): Veto-Schatten-Tracking — vetote Trade-Vorschläge werden jetzt weiterverfolgt statt spurlos zu verschwinden
+
+**Auslöser:** Nutzer prüfte ein NEAR-Signal (LONG 01:17, SHORT 08:46 desselben
+Tages) und fragte im Fachexpertenmodus nach: "werden aktuell potenzielle
+Shorts auf Halten gesetzt, und fallen die dann unter den Tisch bei Schwankung/
+Performance/Trefferquote?" Antwort nach Code-Prüfung: ja — jeder Risk-Gate-
+Veto, der `action` auf `HALTEN` zurückstuft (CRV-Pflicht, Bitpanda/Cash-Veto,
+Regime-Mindestkonfidenz R-5.10, Nur-Long-Deckel, Regime-Konflikt-Deckel,
+Retail-Konsens-Deckel), macht das Signal für JEDE bestehende Performance-
+Statistik unsichtbar — inklusive Z.ais unabhängigem Richtungsurteil auf genau
+diesen Fall.
+
+**Root Cause (verifiziert im Code):** `_TRACKABLE_ACTIONS`
+(`agent/krypto/backward_tracking.py`) bzw. `_TRACKABLE_HEBEL_ACTIONS`
+(`agent/krypto/hebel_backward_tracking.py`) filtern beim Backward-Tracking
+konsequent auf `action IN (KAUFEN, NACHKAUFEN, VERKAUFEN, TAUSCHEN)` bzw.
+`(ERÖFFNEN, NACHKAUFEN)` — ein vetotes `HALTEN` fällt sofort auf
+`OUTCOME_NICHT_ANWENDBAR` und wird nie ausgewertet.
+`compute_provider_performance()`/`compute_zai_richtung_performance()` lesen
+wiederum nur `outcome_status`/`outcome_max_realisiertes_crv`, die für einen
+vetoten Vorschlag nie gesetzt werden. Wichtig: der Veto überschreibt NUR
+`action`/`risk_veto`/`risk_veto_reason` — Entry/Stop-Loss/Take-Profit-Zonen
+und bei Hebel `richtung` bleiben unverändert in der DB erhalten, die
+Information zum ursprünglichen LLM-Vorschlag geht also nicht verloren, sie
+wird nur nicht mehr AUSGEWERTET.
+
+**Konzept (mit Nutzer im Detail abgestimmt, "Fachexpertenmodus"):**
+Pipeline-Stufen sind Stufe 0 (deterministische Vorauswahl, `hebel_screening.py`),
+Stufe 1 (Budget/Cooldown-Auswahl), Stufe 2 (LLM1, entscheidet `action`/
+`richtung` frei), Stufe 3 (`post_check()`/`post_check_hebel()`, deterministische
+Vetos AUF LLM1s eigene Entscheidung), Stufe 4 (Z.ai/LLM2, rein beobachtend).
+Gate/Parameter/Deckel-Funktionen VOR LLM1 (`pre_check()`/`pre_check_hebel()`)
+blockieren den LLM-Call selbst NICHT (Ausnahme: `krise_extrem`-Regime, und
+selbst dort läuft LLM1 noch) — sie bereiten nur Fakten/spätere Ceiling-Werte
+vor. Nur Stufe-3-Vetos erzeugen das hier behobene Problem.
+
+**Umsetzung — Option B (komplett getrennte Schatten-Felder statt
+Wiederverwendung der `outcome_*`-Felder mit Filter-Flag), Nutzer-Entscheidung
+nach Abwägung:** ein vergessener Filter an irgendeiner Konsumentenstelle
+würde sonst hypothetische mit echten Trade-Ergebnissen vermischen — mit
+komplett getrennten Spalten ist das strukturell ausgeschlossen.
+
+- `database/db.py`: `_SIGNAL_VETO_SHADOW_NEW_COLUMNS`/`_HEBEL_SIGNAL_VETO_
+  SHADOW_NEW_COLUMNS` (additive Migration, je 6 Felder: `veto_outcome_status`,
+  `veto_outcome_geprueft_am`, `veto_outcome_entschieden_am`, `veto_outcome_
+  realisiertes_crv`, `veto_outcome_max_realisiertes_crv`, `veto_outcome_
+  mindestziel_erreicht_am`) + `update_signal_veto_shadow_outcome()`/
+  `update_hebel_signal_veto_shadow_outcome()`. Bewusst KEIN `veto_outcome_
+  datenquelle`-Feld (verifiziert per grep: `outcome_datenquelle` wird im
+  gesamten bestehenden Code nirgends tatsächlich beschrieben — keine tote
+  Spalte duplizieren) und keine Schatten-Kopie für `mindestziel_usd`/
+  `mindestziel_eur`/`mindestziel_zeitraum_tage_geschaetzt` (rein arithmetisch
+  aus Entry/Stop-Loss abgeleitet, unabhängig vom Veto).
+- `database/models.py`: 6 neue Felder je in `Signal` und `HebelSignal`.
+- Diskriminator "echter Schatten-Kandidat" (kein eigenes Feld nötig):
+  `risk_veto=True AND action="HALTEN"` UND Entry-/Stop-Loss-/Take-Profit-
+  Zonen alle gesetzt (ein regelkonformes, selbst gewähltes HALTEN hat KEINE
+  Zonen und fällt automatisch durch).
+- Richtungs-Ableitung für den Schatten-Zweig: bei Hebel unverändert
+  `signal.richtung` (übersteht den Veto), bei Spot-family (`action` steht
+  bereits auf HALTEN, `richtung_aus_action()` liefert also `None`) neu aus der
+  relativen Zonen-Reihenfolge abgeleitet (`_richtung_aus_veto_zonen()`
+  /`_richtung_aus_hebel_veto_zonen()`-Äquivalent: Stop-Loss über Entry =
+  SHORT-Orientierung, darunter = LONG — spiegelt dieselbe implizite Logik,
+  die `risk_gate.py::post_check()` für die CRV-Pflicht-Vetos bereits nutzt).
+- `agent/krypto/backward_tracking.py`: `check_signal_veto_shadow_outcome()` +
+  zweiter, unabhängiger Durchlauf in `run_backward_tracking()` (identische
+  TP/SL/MFE-Mechanik wie der reale Zweig, inkl. Ablauf-Check; BEWUSST OHNE
+  Überholt-Check — eine hypothetische, nie ausgeführte These kann nicht im
+  selben Sinn "überholt" werden wie eine offene reale Position).
+- `agent/krypto/hebel_backward_tracking.py`: `check_hebel_signal_veto_shadow_
+  outcome()` analog, inkl. Liquidations-Prüfung (bewusst beibehalten — zeigt,
+  wie riskant der vetote Vorschlag gewesen wäre, auch ohne echte Position).
+- Neue Aggregationen: `compute_veto_shadow_performance()` (Provider-/Tier-
+  Aufschlüsselung wie `compute_provider_performance()`, Aggregations-Kern
+  gemeinsam in `_aggregate_resolved_signal_rows()` extrahiert),
+  `compute_zai_richtung_performance_schatten()` (Z.ais Urteil NUR für vetote
+  Fälle), `compute_gesamt_signalqualitaet()` ("Gesamt-Signalqualität,
+  unabhängig vom Risk-Gate" — additive Zusammenführung von Real+Schatten AUF
+  DER ANZEIGE-EBENE, Rohzähler-Summierung statt Rückrechnung aus bereits
+  gemittelten Werten, um Rundungsfehler bei fehlendem `entry_mid` auszuschließen;
+  Storage bleibt getrennt).
+- Provider-Sendezähler-Fix (separater, aber verwandter Fund): `compute_
+  provider_sendezaehler()` zählt jede Zeile mit `groq_raw_response IS NOT
+  NULL` unabhängig von `outcome_status` — ein selten eingesetzter Provider
+  (Gemini) konnte in der bisherigen Provider-Performance-Karte komplett
+  unsichtbar bleiben, solange kein einziges seiner Signale aufgelöst war.
+- `remote/status.py`/`remote/server.py`: Remote-Seite in 3 Gruppen
+  reorganisiert (Nutzer-Wunsch: "sauber in eigene Bereiche aufteilen mit
+  einem bestimmten Zweck") — Gruppe A "Ausgeführte Empfehlungen" (Provider-
+  Performance/Konfidenz-Kalibrierung/Richtungstreffer-Quote, unverändert),
+  Gruppe B "Unabhängige Zweitmeinung (Z.ai)" (Z.ai-Richtungs-Erfolgsquote,
+  unverändert), Gruppe C "Veto-Schatten + Gesamt" (3 neue Karten). Provider-
+  Performance-Karte zeigt jetzt zusätzlich die Sendezahl je Provider.
+- `extract_notebook_diagnose.py`: alle 6 neuen `veto_outcome_*`-Spalten in
+  beiden Spaltenlisten + alle 4 neuen Aggregationen im Export-Payload.
+
+**Bewusst NICHT Teil dieser Runde (Nutzer-Fragen im Detail geklärt, siehe
+Diskussion):**
+- Gruppe B bereits vollständig für alle 6 Pipelines verdrahtet bestätigt
+  (Call 1+2, siehe früherer Nachtrag "Z.ai auf alle 6 Pipelines") — keine
+  weitere Arbeit nötig, nur zur Klarstellung erneut geprüft.
+- Kein eigener "Z.ai-Konsistenz-Check-Trefferquote"-Karte (nur Call-Zähler
+  vorhanden) — separat vermerkt, nicht Teil dieser Runde.
+- Kein Ueberholt-Check im Veto-Schatten-Zweig (siehe Begründung oben).
+
+**Verifiziert:** synthetische Tests für alle neuen Funktionen (LONG-/SHORT-
+Zonen-Ableitung, Diskriminator, TP/SL/Liquidation/Abgelaufen/Offen,
+Aggregations-Konsistenz Real vs. Schatten vs. Gesamt), Flask-Smoke-Test
+(Index-HTML enthält alle 3 Gruppen-Header + neuen Karten-IDs, `/api/status`
+liefert alle 4 neuen Felder), SQL-Spaltenlisten-Syntaxcheck, und ein echter
+Lauf gegen eine Kopie der Produktions-DB (Original nie direkt geöffnet,
+siehe [[feedback_desktop_kein_produktivstart]]): 4 reale Spot- und 1 reales
+Hebel-Veto-HALTEN gefunden, davon 0 Spot-/1 Hebel-Zeile mit vollständigen
+Zonen als echter Schatten-Kandidat identifiziert; End-to-End-Lauf löste eine
+echte historische Aktien/Cerebras-Zeile als Stop-Loss auf (Ø CRV -2,10) und
+die Hebel-Zeile als Abgelaufen — keine Abstürze, kein Datenverlust.

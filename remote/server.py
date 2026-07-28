@@ -62,6 +62,9 @@ _INDEX_HTML = """<!doctype html>
   .regime-euphorie_extrem { color: #7a6ee0; }
   .muted-text { color: #999; font-size: 0.82rem; }
   .kategorie-header { color: #7a8290; font-size: 0.78rem; text-transform: uppercase; margin-top: 8px; }
+  .gruppe-header { font-size: 0.95rem; color: #9fb3c8; margin: 18px 0 6px; padding-top: 8px;
+                    border-top: 1px solid #2a323c; }
+  .gruppe-header:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
   button { width: 100%; padding: 14px; margin-top: 8px; font-size: 1rem; border: none;
            border-radius: 8px; background: #2e5fa3; color: white; }
   button:disabled { background: #3a4048; color: #888; }
@@ -88,11 +91,14 @@ _INDEX_HTML = """<!doctype html>
   <div class="row"><span>Z.ai-Gegenprüfung heute (Konsistenz+Richtung, kein Tagesdeckel)</span><span id="budget-zai-gegenpruefung">-</span></div>
 </div>
 
+<h2 class="gruppe-header">Gruppe A &middot; Ausgeführte Empfehlungen (real, im Handel/Portfolio wirksam)</h2>
+
 <div class="card">
   <div class="row"><strong>Provider-Performance (Spot, nach Assetklasse)</strong></div>
   <div class="row"><span class="muted-text">Je LLM-Anbieter: wie viele SEINER Spot-Empfehlungen bereits abschliessend
   entschieden sind (Kurs erreichte Take-Profit oder Stop-Loss) - je Assetklasse getrennt, weil unterschiedliche
-  Risikoprofile. Zeigt NUR reale, aufgeloeste Ergebnisse, kein Backtest.</span></div>
+  Risikoprofile. Zeigt NUR reale, aufgeloeste Ergebnisse, kein Backtest. Zahl in Klammern: aufgeloest / insgesamt
+  gesendet.</span></div>
   <div id="provider-performance-spot"></div>
   <div class="row"><strong>Provider-Performance (Hebel)</strong></div>
   <div class="row"><span class="muted-text">Gleiches Prinzip fuer Hebel-Positionen (zusaetzlich: Liquidation als
@@ -120,6 +126,8 @@ _INDEX_HTML = """<!doctype html>
   <div id="richtungstreffer-quote"></div>
 </div>
 
+<h2 class="gruppe-header">Gruppe B &middot; Unabhängige Zweitmeinung (Z.ai)</h2>
+
 <div class="card">
   <div class="row"><strong>Z.ai-Richtungs-Erfolgsquote (unabhaengig von Mistral)</strong></div>
   <div class="row"><span class="muted-text">Misst NICHT, ob Z.ai mit Mistral uebereinstimmte (das zeigt das
@@ -129,8 +137,42 @@ _INDEX_HTML = """<!doctype html>
   unabhaengig davon liegen wuerde. Gleiche Basis wie die Richtungstreffer-Quote (Maximum Favorable Excursion,
   nicht nur die exakte TP/SL-Zone) - zaehlt auch Signale mit, die spaeter ueberholt/abgelaufen sind aber
   zwischenzeitlich klar in eine Richtung liefen. NEUTRAL-Urteile und Faelle ohne klare Marktbewegung zaehlen
-  nicht mit (analog zu HALTEN).</span></div>
+  nicht mit (analog zu HALTEN). Bezieht sich hier NUR auf real ausgefuehrte Empfehlungen - der Veto-Schatten-
+  Anteil steht in Gruppe C.</span></div>
   <div id="zai-richtung-performance"></div>
+</div>
+
+<h2 class="gruppe-header">Gruppe C &middot; Veto-Schatten (hypothetisch, nie ausgeführt) + Gesamt</h2>
+
+<div class="card">
+  <div class="row"><strong>Veto-Schatten-Performance</strong></div>
+  <div class="row"><span class="muted-text">Das LLM wollte hier tatsaechlich handeln (Kaufen/Verkaufen/Eröffnen),
+  wurde aber durch einen deterministischen Risk-Gate-Veto (CRV-Pflicht, Bitpanda/Cash-Veto, Regime-
+  Mindestkonfidenz, Nur-Long-Deckel, ...) auf HALTEN zurueckgestuft - der Trade wurde NIE ausgefuehrt. Diese
+  Karte zeigt, wie diese rein hypothetischen Vorschlaege sich tatsaechlich entwickelt haetten, damit sie nicht
+  spurlos aus der Bewertung verschwinden.</span></div>
+  <div id="veto-schatten-performance-spot"></div>
+  <div class="row"><strong>&nbsp;&nbsp;davon Hebel</strong></div>
+  <div id="veto-schatten-performance-hebel"></div>
+</div>
+
+<div class="card">
+  <div class="row"><strong>Z.ai-Richtungs-Erfolgsquote (Veto-Schatten)</strong></div>
+  <div class="row"><span class="muted-text">Wie die Z.ai-Karte in Gruppe B, aber NUR fuer die vetoten
+  Vorschlaege oben - gerade hier ist Z.ais unabhaengiges Urteil interessant, weil es auf einen Fall angewendet
+  wird, den das primaere Regelwerk selbst blockiert hat.</span></div>
+  <div id="zai-richtung-performance-schatten"></div>
+</div>
+
+<div class="card">
+  <div class="row"><strong>Gesamt-Signalqualitaet (unabhaengig vom Risk-Gate)</strong></div>
+  <div class="row"><span class="muted-text">Real ausgefuehrte Empfehlungen (Gruppe A) PLUS Veto-Schatten
+  zusammengefasst - beantwortet "wie gut waere das Modell insgesamt gelegen, wenn man das Risk-Gate ausblendet?".
+  Nur eine Anzeige-Zusammenfuehrung, keine eigene Datenquelle - Real und Schatten bleiben in der Datenbank
+  getrennt gespeichert.</span></div>
+  <div id="gesamt-signalqualitaet-spot"></div>
+  <div class="row"><strong>&nbsp;&nbsp;davon Hebel</strong></div>
+  <div id="gesamt-signalqualitaet-hebel"></div>
 </div>
 
 <div class="card">
@@ -231,8 +273,14 @@ function renderOffeneSignaleHinweis(offenInfo) {
     ' in Beobachtung' + alterText + '</span></div>';
 }
 
-function renderProviderPerformance(tierData, offenInfo) {
-  const providers = Object.keys(tierData);
+function renderProviderPerformance(tierData, offenInfo, sendeData) {
+  const sendeD = sendeData || {};
+  // Provider-Sendezaehler-Fix (2026-07-28, Nutzer-Frage "wie oft hat Gemini
+  // ueberhaupt welche Signale gesendet?"): ein Provider mit Sendungen aber
+  // noch KEINEM aufgeloesten Signal war bisher komplett unsichtbar (nur
+  // tierData durchsucht) - jetzt Vereinigung beider Schluesselmengen, damit
+  // z.B. Gemini (selten eingesetzt) sichtbar bleibt, auch ohne Resolved-Wert.
+  const providers = Array.from(new Set(Object.keys(tierData).concat(Object.keys(sendeD))));
   if (providers.length === 0) {
     // 2026-07-21, Nutzer-Fund: "noch keine Daten" ohne Begruendung war nicht
     // nachvollziehbar - erklaeren WARUM (keine aufgeloesten Signale, nicht:
@@ -243,13 +291,19 @@ function renderProviderPerformance(tierData, offenInfo) {
   }
   return providers.map(function(p) {
     const d = tierData[p];
+    const gesendet = sendeD[p];
+    const gesendetText = gesendet !== undefined ? ' / ' + gesendet + ' gesendet' : '';
+    if (!d) {
+      return '<div class="row"><span>' + p + ' (0' + gesendetText + ')</span>' +
+        '<span class="muted-text">noch kein Signal aufgeloest</span></div>';
+    }
     const winRate = d.win_rate !== null && d.win_rate !== undefined
       ? Math.round(d.win_rate * 100) + "%" : "-";
     const crv = d.avg_realisiertes_crv !== null && d.avg_realisiertes_crv !== undefined
       ? d.avg_realisiertes_crv.toFixed(2) : "-";
     const kleineStichprobe = d.anzahl_resolved < PROVIDER_PERF_MIN_SAMPLE
       ? ' <span class="muted-text">(n&lt;' + PROVIDER_PERF_MIN_SAMPLE + ', noch nicht belastbar)</span>' : '';
-    return '<div class="row"><span>' + p + ' (' + d.anzahl_resolved + ')' + kleineStichprobe + '</span>' +
+    return '<div class="row"><span>' + p + ' (' + d.anzahl_resolved + gesendetText + ')' + kleineStichprobe + '</span>' +
       '<span>Win-Rate ' + winRate + ', &oslash; CRV ' + crv + '</span></div>';
   }).join("") + renderOffeneSignaleHinweis(offenInfo);
 }
@@ -264,10 +318,10 @@ const SPOT_ASSETKLASSEN = [
   ["krypto", "Krypto"], ["aktien", "Aktien"], ["rohstoffe", "Rohstoffe"], ["etf", "ETF (Themen/Hedge)"],
 ];
 
-function renderSpotProviderPerformanceByAssetklasse(perfData, offeneData) {
+function renderSpotProviderPerformanceByAssetklasse(perfData, offeneData, sendeData) {
   return SPOT_ASSETKLASSEN.map(function([key, label]) {
     return '<div class="row"><span class="muted-text">' + label + '</span></div>' +
-      renderProviderPerformance(perfData[key] || {}, (offeneData || {})[key]);
+      renderProviderPerformance(perfData[key] || {}, (offeneData || {})[key], (sendeData || {})[key]);
   }).join("");
 }
 
@@ -522,10 +576,11 @@ async function refreshStatus() {
 
   if (data.provider_performance) {
     const offen = data.offene_signale || {};
+    const sende = data.provider_sendezaehler || {};
     document.getElementById("provider-performance-spot").innerHTML =
-      renderSpotProviderPerformanceByAssetklasse(data.provider_performance, offen);
+      renderSpotProviderPerformanceByAssetklasse(data.provider_performance, offen, sende);
     document.getElementById("provider-performance-hebel").innerHTML =
-      renderProviderPerformance(data.provider_performance.hebel || {}, offen.hebel);
+      renderProviderPerformance(data.provider_performance.hebel || {}, offen.hebel, sende.hebel);
   }
 
   if (data.konfidenz_kalibrierung) {
@@ -543,6 +598,27 @@ async function refreshStatus() {
   if (data.zai_richtung_performance) {
     document.getElementById("zai-richtung-performance").innerHTML =
       renderZaiRichtungPerformance(data.zai_richtung_performance);
+  }
+
+  // Gruppe C: Veto-Schatten + Gesamt (2026-07-28) - gleiche Render-Funktionen
+  // wie Gruppe A/B, nur gegen die veto_schatten_*/gesamt_signalqualitaet-Felder.
+  if (data.veto_schatten_performance) {
+    document.getElementById("veto-schatten-performance-spot").innerHTML =
+      renderSpotProviderPerformanceByAssetklasse(data.veto_schatten_performance, {}, {});
+    document.getElementById("veto-schatten-performance-hebel").innerHTML =
+      renderProviderPerformance(data.veto_schatten_performance.hebel || {}, null, null);
+  }
+
+  if (data.zai_richtung_performance_schatten) {
+    document.getElementById("zai-richtung-performance-schatten").innerHTML =
+      renderZaiRichtungPerformance(data.zai_richtung_performance_schatten);
+  }
+
+  if (data.gesamt_signalqualitaet) {
+    document.getElementById("gesamt-signalqualitaet-spot").innerHTML =
+      renderSpotProviderPerformanceByAssetklasse(data.gesamt_signalqualitaet, {}, {});
+    document.getElementById("gesamt-signalqualitaet-hebel").innerHTML =
+      renderProviderPerformance(data.gesamt_signalqualitaet.hebel || {}, null, null);
   }
 
   if (data.api_health) {

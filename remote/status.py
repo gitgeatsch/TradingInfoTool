@@ -38,6 +38,17 @@ class RemoteStatus:
     parameter_overview: list[dict] | None = None
     richtungstreffer_quote: dict | None = None
     zai_richtung_performance: dict | None = None
+    # Veto-Schatten-Tracking (2026-07-28, siehe agent/krypto/backward_tracking.py::
+    # check_signal_veto_shadow_outcome()-Docstring) - 3-Gruppen-Anzeige-Redesign
+    # (Nutzer-Wunsch: "sauber in eigene Bereiche aufteilen mit einem bestimmten
+    # Zweck"). provider_sendezaehler ist bewusst UNABHAENGIG von der Veto-Schatten-
+    # Frage (behebt einen separaten, aelteren Fund: ein selten eingesetzter
+    # Provider wie Gemini kann in provider_performance komplett unsichtbar
+    # bleiben, solange kein Signal von ihm aufgeloest ist).
+    veto_schatten_performance: dict | None = None
+    zai_richtung_performance_schatten: dict | None = None
+    gesamt_signalqualitaet: dict | None = None
+    provider_sendezaehler: dict | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -60,6 +71,10 @@ class RemoteStatus:
             "parameter_overview": self.parameter_overview,
             "richtungstreffer_quote": self.richtungstreffer_quote,
             "zai_richtung_performance": self.zai_richtung_performance,
+            "veto_schatten_performance": self.veto_schatten_performance,
+            "zai_richtung_performance_schatten": self.zai_richtung_performance_schatten,
+            "gesamt_signalqualitaet": self.gesamt_signalqualitaet,
+            "provider_sendezaehler": self.provider_sendezaehler,
         }
 
 
@@ -144,6 +159,10 @@ def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, erro
         parameter_overview=_get_parameter_overview(),
         richtungstreffer_quote=_get_richtungstreffer_quote(conn, watchlist),
         zai_richtung_performance=_get_zai_richtung_performance(conn, watchlist),
+        veto_schatten_performance=_get_veto_schatten_performance(conn, watchlist),
+        zai_richtung_performance_schatten=_get_zai_richtung_performance_schatten(conn, watchlist),
+        gesamt_signalqualitaet=_get_gesamt_signalqualitaet(conn, watchlist),
+        provider_sendezaehler=_get_provider_sendezaehler(conn, watchlist),
     )
 
 
@@ -230,6 +249,54 @@ def _get_zai_richtung_performance(conn: sqlite3.Connection, watchlist: list) -> 
         "richtungstreffer_mindest_crv", DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV,
     )
     return compute_zai_richtung_performance(conn, watchlist, schwelle)
+
+
+def _get_veto_schatten_performance(conn: sqlite3.Connection, watchlist: list) -> dict:
+    """Gruppe C ("Veto-Schatten", 2026-07-28) - reiner Lesezugriff auf
+    agent/krypto/backward_tracking.py::compute_veto_shadow_performance(). Wie
+    _get_provider_performance(), aber fuer die hypothetischen, nie
+    ausgefuehrten Trade-Vorschlaege, deren Action durch einen Risk-Gate-Veto
+    auf HALTEN zurueckgestuft wurde - siehe check_signal_veto_shadow_outcome()-
+    Docstring fuer die volle Herleitung dieses Features."""
+    from agent.krypto.backward_tracking import compute_veto_shadow_performance
+
+    return compute_veto_shadow_performance(conn, watchlist)
+
+
+def _get_zai_richtung_performance_schatten(conn: sqlite3.Connection, watchlist: list) -> dict:
+    """Gruppe C, Z.ai-Anteil (2026-07-28) - reiner Lesezugriff auf
+    compute_zai_richtung_performance_schatten(). Misst Z.ais unabhaengiges
+    Richtungsurteil gerade fuer die vetoten Signale - siehe dortiger
+    Docstring."""
+    from agent.krypto.backward_tracking import (
+        DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV,
+        compute_zai_richtung_performance_schatten,
+    )
+
+    schwelle = config_module.load_config().get("backward_tracking", {}).get(
+        "richtungstreffer_mindest_crv", DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV,
+    )
+    return compute_zai_richtung_performance_schatten(conn, watchlist, schwelle)
+
+
+def _get_gesamt_signalqualitaet(conn: sqlite3.Connection, watchlist: list) -> dict:
+    """"Gesamt-Signalqualitaet, unabhaengig vom Risk-Gate" (2026-07-28, Nutzer-
+    Einsicht: Gruppe C ist eigentlich Real+Schatten zusammen) - reiner
+    Lesezugriff auf compute_gesamt_signalqualitaet(), siehe dortiger Docstring
+    fuer die additive Zusammenfuehrung."""
+    from agent.krypto.backward_tracking import compute_gesamt_signalqualitaet
+
+    return compute_gesamt_signalqualitaet(conn, watchlist)
+
+
+def _get_provider_sendezaehler(conn: sqlite3.Connection, watchlist: list) -> dict:
+    """Rohe Sendeanzahl je Provider (2026-07-28, Nutzer-Frage "wie oft hat
+    Gemini ueberhaupt welche Signale gesendet?") - reiner Lesezugriff auf
+    compute_provider_sendezaehler(), macht selten eingesetzte Provider auch
+    OHNE aufgeloestes Signal sichtbar (siehe dortiger Docstring)."""
+    from agent.krypto.backward_tracking import compute_provider_sendezaehler
+
+    return compute_provider_sendezaehler(conn, watchlist)
 
 
 def _get_regime_status(conn: sqlite3.Connection) -> dict | None:

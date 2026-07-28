@@ -155,9 +155,13 @@ from pathlib import Path
 
 import database.db as db
 from agent.krypto.backward_tracking import (
+    compute_gesamt_signalqualitaet,
     compute_konfidenz_kalibrierung,
     compute_provider_performance,
+    compute_provider_sendezaehler,
+    compute_veto_shadow_performance,
     compute_zai_richtung_performance,
+    compute_zai_richtung_performance_schatten,
 )
 from agent.krypto.regime import get_last_known_regime_status
 
@@ -232,6 +236,12 @@ _HEBEL_SIGNAL_SPALTEN = (
     # per Backward-Tracking.
     "mindestziel_usd, mindestziel_eur, mindestziel_zeitraum_tage_geschaetzt, "
     "outcome_max_realisiertes_crv, outcome_mindestziel_erreicht_am, "
+    # Veto-Schatten-Tracking (2026-07-28, siehe database/db.py::_HEBEL_SIGNAL_
+    # VETO_SHADOW_NEW_COLUMNS-Docstring) - Ergebnis der vetoten (action=HALTEN
+    # trotz LLM-Vorschlag ERÖFFNEN/NACHKAUFEN) hypothetischen Trades.
+    "veto_outcome_status, veto_outcome_geprueft_am, veto_outcome_entschieden_am, "
+    "veto_outcome_realisiertes_crv, veto_outcome_max_realisiertes_crv, "
+    "veto_outcome_mindestziel_erreicht_am, "
     "kontrathese_zu_position, kontrathese_llm_richtung, "
     "zai_gegenpruefung_urteil, zai_gegenpruefung_kurzbegruendung, "
     "zai_eigene_richtung, zai_uebereinstimmung, zai_richtung_kurzbegruendung, "
@@ -246,6 +256,11 @@ _SPOT_SIGNAL_SPALTEN = (
     "outcome_realisiertes_crv, outcome_datenquelle, "
     "mindestziel_usd, mindestziel_eur, mindestziel_zeitraum_tage_geschaetzt, "
     "outcome_max_realisiertes_crv, outcome_mindestziel_erreicht_am, "
+    # Veto-Schatten-Tracking (2026-07-28), siehe _HEBEL_SIGNAL_SPALTEN-Kommentar
+    # oben - identisches Feld-Set, hier fuer die Spot-family (signals-Tabelle).
+    "veto_outcome_status, veto_outcome_geprueft_am, veto_outcome_entschieden_am, "
+    "veto_outcome_realisiertes_crv, veto_outcome_max_realisiertes_crv, "
+    "veto_outcome_mindestziel_erreicht_am, "
     "tranchen_json, cash_reserve_ziel_btc_usd, cash_reserve_ziel_eth_usd, "
     "cash_reserve_ziel_gesamt_usd, cash_reserve_ziel_begruendung, "
     "umgesetzt, umgesetzt_am, umgesetzt_menge, umgesetzt_preis_usd, "
@@ -808,6 +823,17 @@ def main() -> None:
         # messen") - siehe agent/krypto/backward_tracking.py::
         # compute_zai_richtung_performance() Docstring.
         zai_richtung_performance = compute_zai_richtung_performance(conn)
+        # 4d) Veto-Schatten-Aggregationen (2026-07-28, siehe agent/krypto/
+        # backward_tracking.py::check_signal_veto_shadow_outcome()-Docstring
+        # fuer die volle Herleitung) - hypothetische, nie ausgefuehrte Trade-
+        # Vorschlaege, die durch einen Risk-Gate-Veto auf HALTEN zurueckgestuft
+        # wurden, plus die additive "Gesamt"-Zusammenfuehrung mit den echten
+        # Signalen und der providerunabhaengige Sendezaehler (Gemini-Sichtbarkeits-
+        # Fix).
+        veto_schatten_performance = compute_veto_shadow_performance(conn)
+        zai_richtung_performance_schatten = compute_zai_richtung_performance_schatten(conn)
+        gesamt_signalqualitaet = compute_gesamt_signalqualitaet(conn)
+        provider_sendezaehler = compute_provider_sendezaehler(conn)
 
         # 5) Alle Hebel-Signale (fuer Long/Short-Bugfix-Verifikation +
         # Gate/Veto-Muster + Outcome-Verteilung)
@@ -865,6 +891,10 @@ def main() -> None:
         "provider_performance": provider_performance,
         "konfidenz_kalibrierung": konfidenz_kalibrierung,
         "zai_richtung_performance": zai_richtung_performance,
+        "veto_schatten_performance": veto_schatten_performance,
+        "zai_richtung_performance_schatten": zai_richtung_performance_schatten,
+        "gesamt_signalqualitaet": gesamt_signalqualitaet,
+        "provider_sendezaehler": provider_sendezaehler,
         "hebel_signals": hebel_rows,
         "hebel_positions": [row_to_dict(r) for r in hebel_positions],
         "spot_signals": spot_rows,
