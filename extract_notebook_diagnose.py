@@ -150,7 +150,7 @@ import json
 import re
 import sys
 from collections import Counter
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import database.db as db
@@ -163,6 +163,11 @@ from agent.krypto.regime import get_last_known_regime_status
 
 DEEP_DIVE_SYMBOL = sys.argv[1] if len(sys.argv) > 1 else "LINK"
 LOG_FENSTER_STUNDEN = int(sys.argv[2]) if len(sys.argv) > 2 else 72
+# Gate-Veto-Auswertung (2026-07-28-Fund, siehe _gate_veto_analyse() Docstring):
+# eigenes, kuerzeres Fenster als LOG_FENSTER_STUNDEN - signals/hebel_signals werden
+# komplett all-time geladen (kein Datumsfilter), ein 7-Tage-Fenster reicht um aktuelle
+# von historischer (laengst gefixter) Veto-Haeufung zu trennen.
+GATE_VETO_FENSTER_TAGE = 7
 
 
 def _google_drive_wurzel() -> Path:
@@ -261,6 +266,38 @@ def row_to_dict(row) -> dict:
 def haeufigkeit(rows, feld: str) -> dict:
     zaehler = Counter(r[feld] for r in rows if r[feld])
     return dict(zaehler.most_common())
+
+
+def _gate_veto_analyse(rows: list[dict], feld: str, seit_tagen: int | None = None) -> dict:
+    """Erweiterte Gate-/Risk-Veto-Auswertung (2026-07-28-Fund): haeufigkeit() aggregiert
+    ausschliesslich global und ALL-TIME (signals/hebel_signals werden ohne Datumsfilter
+    geladen) - das verschleiert, ob ein Veto-Grund noch AKTUELL auftritt oder nur ein
+    laengst gefixter historischer Vorfall ist. Konkreter Live-Fund: "Historie veraltet"
+    machte all-time 84% aller Spot-Gate-Vetos aus, stammte aber zu 321 von 380 Faellen
+    aus einem einzigen Tag (2026-07-23, bereits mit dem Staleness-Watchdog-Fix
+    behoben) - ohne Symbol-/Zeitaufschluesselung liest sich das faelschlich wie ein
+    andauerndes Problem. Liefert zusaetzlich zur globalen Haeufigkeit (1) eine
+    Pro-Symbol-Aufschluesselung und (2) optional ein Zeitfenster (seit_tagen), um
+    aktuelle von historischer Haeufung zu trennen."""
+    gefiltert = rows
+    if seit_tagen is not None:
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=seit_tagen)).isoformat()
+        gefiltert = [r for r in rows if (r.get("created_at") or "") >= cutoff]
+    gesamt = Counter(r[feld] for r in gefiltert if r.get(feld))
+    je_symbol: dict[str, Counter] = {}
+    for r in gefiltert:
+        symbol, wert = r.get("symbol"), r.get(feld)
+        if symbol and wert:
+            je_symbol.setdefault(symbol, Counter())[wert] += 1
+    return {
+        "zeitfenster_tage": seit_tagen,
+        "anzahl_zeilen_im_fenster": len(gefiltert),
+        "haeufigkeit_gesamt": dict(gesamt.most_common()),
+        "je_symbol": {
+            symbol: dict(c.most_common())
+            for symbol, c in sorted(je_symbol.items(), key=lambda kv: -sum(kv[1].values()))
+        },
+    }
 
 
 def _marktscan_discovery_llm_delta(conn) -> dict:
@@ -832,10 +869,25 @@ def main() -> None:
         "hebel_positions": [row_to_dict(r) for r in hebel_positions],
         "spot_signals": spot_rows,
         "gate_veto_haeufigkeit": {
+            # bestehende reine Text-Aggregation - all-time, KEIN Symbol-/Zeitbezug
+            # (siehe _gate_veto_analyse()-Docstring fuer die Einschraenkung).
             "hebel_gate_reason": haeufigkeit(hebel_rows, "gate_reason"),
             "hebel_risk_veto_reason": haeufigkeit(hebel_rows, "risk_veto_reason"),
             "spot_gate_reason": haeufigkeit(spot_rows, "gate_reason"),
             "spot_risk_veto_reason": haeufigkeit(spot_rows, "risk_veto_reason"),
+            # NEU (2026-07-28-Fund): Pro-Symbol-Aufschluesselung + Zeitfenster fuer
+            # gate_reason (der Veto-Grund, der Live-Datenprobleme wie "Historie
+            # veraltet" anzeigt - risk_veto_reason ist ueberwiegend erwartetes
+            # Regelwerk-Verhalten wie CRV<Minimum, daher hier bewusst nicht
+            # aufgeschluesselt).
+            "hebel_gate_reason_all_time": _gate_veto_analyse(hebel_rows, "gate_reason"),
+            "spot_gate_reason_all_time": _gate_veto_analyse(spot_rows, "gate_reason"),
+            "hebel_gate_reason_letzte_tage": _gate_veto_analyse(
+                hebel_rows, "gate_reason", seit_tagen=GATE_VETO_FENSTER_TAGE
+            ),
+            "spot_gate_reason_letzte_tage": _gate_veto_analyse(
+                spot_rows, "gate_reason", seit_tagen=GATE_VETO_FENSTER_TAGE
+            ),
         },
         "regime_status": regime_status,
         "thesen_alle": thesen_alle,
