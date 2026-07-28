@@ -10650,3 +10650,53 @@ zu interpretieren).
 
 **Committet und gepusht** (`7eac0ec`) - Stufe 3 des in diesem Nachtrag selbst
 eingefuehrten Statusvokabulars.
+
+**Ergaenzung (2026-07-28, Punkt 2 der Prioritaetenliste): Fear&Greed-Index.**
+`regime.fear_greed.wert`/`einstufung` war ein komplett toter Fakt (an
+`build_facts()` geliefert, aber ohne Prompt-Regel bei Spot, ganz ohne
+Fakt-Uebergabe bei Hebel). Neue Regel 29 in `agent/krypto/analyst.py::
+SYSTEM_PROMPT` (vorherige Regel 29 "eigene_einschaetzung" zu Regel 30
+verschoben, 3 Kreuzverweise korrigiert). Nutzer-Praezisierung machte die Regel
+bewusst ASYMMETRISCH statt eines einfachen Kontraindikators: im Baerenmarkt
+sind Angstphasen langanhaltend und alleine kein verlaesslicher Bodenindikator
+(Bodenbildung braucht zusaetzliche Bestaetigung, z.B. niedriges
+`zyklus_risiko`), waehrend Gier-Extreme historisch kuerzer und als
+Warnsignal fuer lokale Uebertreibung brauchbarer sind - darf staerker
+gewichtet werden, vor allem kombiniert mit hohem `zyklus_risiko`. Passt zum
+Grundsatz "Kontext liefern, Urteil nicht vorwegnehmen" und zur
+Zeithorizont-Frage (Spot = langfristige Zyklus-These).
+
+**Bewusst NUR Spot, nicht Hebel (verworfene Variante B):** eine analoge
+Hebel-Regel wurde geprueft und explizit NICHT umgesetzt (Muster siehe
+[[feedback_document_rejected_options]]) - die fuer Fear&Greed relevante
+Unterscheidung Baerenmarkt-Angstphase-vs-Hype-Phase ist eine
+mehrwoechige/mehrmonatige Marktstruktur-Frage, unpassend fuer die typische
+Hebel-Haltedauer von Stunden bis wenigen Tagen (Zeithorizont-Fehlpassung,
+identisches Muster wie beim `historischer_makro_vergleich`-Befund, siehe
+Punkt 5 der Prioritaetenliste). Nutzer-Einschaetzung: "hier ist weniger
+mehr". Revisit-Bedingung: nur falls ein Backtest gegen echte
+`hebel_signals`-Outcomes einen eigenstaendigen Tages-Signalwert belegt -
+dann eigener neuer Fakt, keine Kopie von Regel 29. Vollstaendig dokumentiert
+in `Fakten_Entscheidungsmappe.md` Abschnitt 5, Punkt 2.
+
+**Token-Budget-Pruefung (Nutzer-Vorgabe, ab jetzt Standard fuer jede
+Regeländerung):** Regel 29 ist mit ca. 150 Token ein vernachlaessigbarer
+Zuwachs. Wichtiger: waehrend dieser Pruefung stellte sich heraus, dass eine
+in dieser Sitzung zunaechst herangezogene Sorge - Z.ais 8K-Kontext-Drosselung
+koennte durch SYSTEM_PROMPT-Wachstum verschaerft werden - auf einer
+veralteten Memory-Notiz beruhte (Stand 2026-07-20, 4-stufige Kette
+Mistral->Groq->Gemini->Z.ai). Nutzer-Korrektur: "ZAI ist kein fallback mehr
+hat andere anwendung gefunden". Code-Verifikation (`agent/krypto/
+budget_allocator.py`-Docstring + `grep` nach `_client is not None`)
+bestaetigt: die tatsaechliche Haupt-Fallback-Kette fuer Signal-Generierung
+ist seit dem Gegenpruefungs-Umbau (2026-07-26) nur noch **Mistral -> Gemini**
+(kein Groq, kein Z.ai mehr). Z.ai laeuft seitdem ausschliesslich als
+separate Gegenpruefung mit eigenem schlanken Fakten-Satz und sieht den
+Haupt-SYSTEM_PROMPT nie - die urspruengliche Sorge war damit gegenstandslos,
+aus dem richtigen aktuellen Grund. `reference_llm_provider_recherche_
+uebersicht.md` entsprechend korrigiert (alte 4-stufige Kette als
+"historischer Stand" markiert, neue Kette + Einordnung fuer
+Prompt-Laengen-Diskussionen ergaenzt).
+
+**Verifiziert:** Modul-Import, Compile-Check, durchgaengige Regelnummerierung
+1-30 ohne Luecke geprueft (Klasse 1).

@@ -311,7 +311,18 @@ kurzfristige Kauf-/Verkaufsentscheidung - nutze ihn hoechstens, um eine bereits 
 vorliegende BTC-/Makro-Einschaetzung (z.B. `historischer_makro_vergleich`) auf \
 diesen Coin zu uebersetzen. Erwaehne es hoechstens im `long_reasoning.makro`, \
 nie als eigenstaendigen Grund fuer `action`.
-29. Fuelle `eigene_einschaetzung` GANZ ZULETZT aus, NACHDEM du `action`, \
+29. Beziehe `regime.fear_greed.wert`/`einstufung` (Fear & Greed Index) als \
+ZUSAETZLICHEN Kontext ein - jedoch ASYMMETRISCH gewichtet, nicht symmetrisch wie \
+ein einfacher Kontraindikator: extreme ANGST ("Extreme Fear") ist in Baermaerkten \
+historisch LANGANHALTEND und alleine KEIN verlaesslicher Bodenindikator - werte sie \
+nur als unterstuetzenden Faktor, wenn sie zusaetzlich mit niedrigem \
+`regime.zyklus_risiko` UND anderen Fakten (z.B. `historischer_makro_vergleich`) \
+uebereinstimmt, NIEMALS als eigenstaendigen Kaufgrund. Extreme GIER ("Extreme \
+Greed") ist historisch KUERZER und ein tendenziell brauchbareres Warnsignal fuer \
+lokale Uebertreibung - hier darfst du staerker gewichten, besonders in Kombination \
+mit hohem `zyklus_risiko`. Erwaehne `fear_greed` hoechstens in \
+`long_reasoning.makro` oder `key_risks`, nie als alleinigen Grund fuer `action`.
+30. Fuelle `eigene_einschaetzung` GANZ ZULETZT aus, NACHDEM du `action`, \
 `confidence_pct`, `gegenargument`, `top_gruende` und `long_reasoning` bereits \
 fertiggestellt hast - das ist ein ABSCHLIESSENDER, GANZHEITLICHER Rueckblick \
 auf deine eigene bereits fertige Analyse, keine Wiederholung/Formalitaet. \
@@ -373,7 +384,7 @@ SCHEMA:
     "bear": {"scenario": "<Text>", "probability_pct": <0-100>}
   },
   "tauschen_target_symbol": "<Symbol oder null>",
-  "eigene_einschaetzung": {"folgen": "ja|nein|mit_vorbehalt", "kurzfazit": "<1 Satz, siehe Regel 29>"}
+  "eigene_einschaetzung": {"folgen": "ja|nein|mit_vorbehalt", "kurzfazit": "<1 Satz, siehe Regel 30>"}
 }"""
 
 
@@ -679,7 +690,7 @@ REQUIRED_TOP_LEVEL_FIELDS = (
 
 TOP_GRUENDE_KATEGORIEN = ("technisch", "fundamental", "makro", "risiko", "antizyklisch")
 _HALTE_KRITERIUM_BUCKETS = ("kurz", "mittel", "lang")
-# Signal-Fazit (2026-07-25, siehe Regel 29 / Memory feedback_llm_synthese_
+# Signal-Fazit (2026-07-25, siehe Regel 30 / Memory feedback_llm_synthese_
 # kein_deterministischer_override.md) - bewusst KEIN deterministischer
 # Override des Werturteils, nur Format-/Vollstaendigkeits-Validierung hier.
 _EIGENE_EINSCHAETZUNG_FOLGEN_WERTE = ("ja", "nein", "mit_vorbehalt")
@@ -745,7 +756,7 @@ def _validate(data: dict, asset_symbol: str) -> dict:
         raise AnalystResponseInvalid(f"gegenargument fehlt oder zu kurz: {data.get('gegenargument')!r}")
     data["gegenargument"] = gegenargument
 
-    # Signal-Fazit (2026-07-25, Regel 29) - reine Format-/Vollstaendigkeits-
+    # Signal-Fazit (2026-07-25, Regel 30) - reine Format-/Vollstaendigkeits-
     # pruefung, bewusst KEINE inhaltliche Korrektur von `folgen`/`kurzfazit`
     # (siehe Memory feedback_llm_synthese_kein_deterministischer_override.md).
     eigene_einschaetzung = data.get("eigene_einschaetzung")

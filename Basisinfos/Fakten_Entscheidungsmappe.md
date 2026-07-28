@@ -265,7 +265,57 @@ LLM-Werturteile — siehe [[feedback_llm_synthese_kein_deterministischer_overrid
    (im Betrieb bestätigt) ist bei dieser reinen Kontext-Ergänzung ohne Gate
    voraussichtlich nicht sauber isolierbar messbar — siehe Methodik-Dokument
    Abschnitt 2.2.
-2. Fear&Greed-Index: anbinden oder entfernen (aktuell komplett toter Fakt).
+2. **Stufe 3 — Committet/gepusht** (Statusvokabular siehe
+   [[reference_test_und_verifikationsmethodik]]): Fear&Greed-Index war komplett
+   toter Fakt (an `build_facts()` geliefert, aber ohne Prompt-Regel für Spot,
+   ganz ohne Fakt-Übergabe für Hebel) — neue Regel 29 in
+   `agent/krypto/analyst.py::SYSTEM_PROMPT` (vorherige Regel 29
+   "eigene_einschaetzung" zu Regel 30 verschoben, 3 Kreuzverweise korrigiert:
+   Schema-Kommentar, Modul-Docstring, Validierungsfunktion-Kommentar).
+   Verifiziert (Klasse 1): Modul-Import, Compile-Check, durchgängige
+   Regelnummerierung 1-30.
+
+   **Nutzer-Nuance (2026-07-28), die die Regel komplexer macht als ein
+   einfacher Kontraindikator:** im Bärenmarkt ist Fear&Greed nicht eindeutig
+   verwertbar, da lange Angstphasen vorherrschen und Bodenbildung nur mit
+   zusätzlichen Faktoren sinnvoll einzuordnen ist. Bei Hype-Phasen ist die
+   Lage anders gelagert (kürzere Phasen, tendenziell brauchbareres
+   Warnsignal). Regel 29 bildet das **asymmetrisch** ab: extreme Angst nur als
+   unterstützenden Faktor werten (gekoppelt an niedriges `zyklus_risiko` +
+   weitere Fakten), niemals als eigenständigen Kaufgrund; extreme Gier darf
+   stärker gewichtet werden, besonders kombiniert mit hohem `zyklus_risiko`.
+   Passt zum Grundsatz "Kontext liefern, Urteil nicht vorwegnehmen"
+   (Abschnitt 1, Frage 2) und zur Spot-Zeithorizont-Einordnung (Frage 4) —
+   die Regel liefert Marktkontext samt der dokumentierten Asymmetrie, nimmt
+   dem LLM aber nicht die eigentliche Gewichtungsentscheidung ab.
+
+   **Geltungsbereich: nur Spot (Variante a).** Für Hebel wäre eine analoge
+   Regel eine **Variante B**, die geprüft und bewusst NICHT umgesetzt wurde
+   (siehe [[feedback_document_rejected_options]]-Muster): Hebel-Positionen
+   haben eine typische Haltedauer von Stunden bis wenigen Tagen — die für
+   Fear&Greed relevante Unterscheidung "lange Bärenmarkt-Angstphase vs. kurze
+   Hype-Phase" ist eine mehrwöchige bis mehrmonatige Marktstruktur-Frage
+   (Zeithorizont-Fehlpassung, Frage 4 des Entscheidungsrasters, analog zum
+   bereits identifizierten `historischer_makro_vergleich`-Fall bei Hebel,
+   siehe Punkt 5 unten). Nutzer-Einschätzung dazu: "hier ist weniger mehr" —
+   das Konzept nicht künstlich aufblähen. **Revisit-Bedingung:** falls sich
+   künftig zeigt, dass kurzfristige Fear&Greed-Ausschläge (Tagesbasis statt
+   Wochen/Monate) selbst einen brauchbaren Signalwert für Hebel-Timing haben
+   (z.B. per Backtest gegen `hebel_signals`-Outcomes belegt), wäre das ein
+   eigenständiger neuer Fakt/eigene Regel — keine einfache Kopie von Regel 29.
+
+   **Token-Budget-Check (Standardprüfung ab jetzt für jede Regeländerung,
+   siehe Abschnitt 1 Frage 5):** Regel-29-Text ca. 620 Zeichen / ~150 Token.
+   Mistral ist der einzige reale Ablaufkette-Bestandteil neben Gemini (siehe
+   [[reference_llm_provider_recherche_uebersicht]], 2026-07-28 korrigiert —
+   Z.ai ist NICHT mehr Teil der Haupt-Fallback-Kette, läuft nur noch separat
+   für die Gegenprüfung mit eigenem schlanken Fakten-Satz und sieht diesen
+   SYSTEM_PROMPT nie). Mistral: 2.250.000 TPM / 300 RPM, realer Verbrauch
+   geschätzt ~1.000-1.200 Token/Minute im Schnitt — ein einzelner
+   ~150-Token-Regelzuwachs ist rechnerisch irrelevant für die Kapazität.
+   Bleibt dennoch als Disziplin sinnvoll (Resilienz falls sich Mistrals
+   Bedingungen ändern, Latenz, Prompt-Hygiene) — kein Anlass, eine bestehende
+   Regel zum Ausgleich zu entfernen.
 3. `regime_profil.gewicht_*`: anbinden oder entfernen.
 4. Spot-Retail-Konsens-Filter analog zu Hebel nachziehen (`top_gruende`-Regex).
 5. Prüfen, ob `historischer_makro_vergleich` im Hebel-Fakten-JSON angesichts des
