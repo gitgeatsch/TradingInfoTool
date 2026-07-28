@@ -781,6 +781,7 @@ def post_check_hebel(
     richtungswende_atr_schwelle: float | None = None,
     regime_persistenz_tage: int | None = None,
     btc_relativwert: dict | None = None,
+    hebel_richtung_modus: str | None = None,
 ) -> dict:
     """Nimmt die bereits schema-validierte LLM-Antwort und erzwingt AZ-7/RM-1/
     RM-11/CRV noch einmal deterministisch, analog risk_gate.py::post_check().
@@ -841,7 +842,31 @@ def post_check_hebel(
 
     Nachtrag 2026-07-26 (Folgetag des BTC-Hebel-Reviews, echter Fund):
     `filtere_retail_konsens_top_gruende()` wird ganz am Anfang auf
-    `result["top_gruende"]` angewendet, siehe deren Docstring."""
+    `result["top_gruende"]` angewendet, siehe deren Docstring.
+
+    Nachtrag 2026-07-28 (Nutzer-Fund: "Hebel ERÖFFNEN NEAR (SHORT)"/"TAO
+    (SHORT)" trotz aktivem "Nur Long"-Schalter): `hebel_richtung_modus`
+    (optional, aus `ui/settings.py` via `ui_settings.load_settings()`) - der
+    bestehende Kandidaten-Filter in `budget_allocator.py` (Zeile ~388/435)
+    filtert nur `trigger.richtung` (die Kandidaten-Einstufung VOR dem LLM-
+    Call) heraus, wenn `"nur_long"` aktiv ist. Das LLM entscheidet
+    `parsed["richtung"]` in seiner Antwort aber vollstaendig frei (siehe
+    hebel_analyst.py-Schema) - bekommt `trigger.richtung` nur als EINEN
+    beschreibenden Fakt (`regime.richtungs_konflikt_mit_trigger`), NICHT als
+    verbindliche Vorgabe, und weiss vom `hebel_richtung_modus`-Schalter selbst
+    ueberhaupt nichts. Log-Beweis: `Budget-Allocator: Hebel 2/2
+    (Richtung=nur_long, ...)` gefolgt von einer tatsaechlich verschickten
+    "SHORT ERÖFFNEN"-E-Mail - der Filter lief korrekt, das LLM entschied sich
+    trotzdem fuer SHORT. Deckt NUR den echten Fresh-ERÖFFNEN-Fall ohne
+    bestehende Position ab (`position_aktuell is None`) - der bewusst erlaubte
+    Kontrathese-Fall (SHORT-Vorschlag GEGEN eine bestehende LONG-Position,
+    siehe Nachtrag 2026-07-24 oben) bleibt davon unberuehrt, weil dessen
+    `elif`-Zweig oben bei vorhandener Position bereits zuerst greift.
+    KORREKTUR eines fruehreren Fehlschlusses (Regelwerksmanual.md, Nachtrag
+    27.07. "Z.ai-Richtungs-Erfolgsquote"): "57 LONG/2 SHORT bei Mistral" wurde
+    damals als Bestaetigung gewertet, dass der Kandidaten-Filter ausreicht -
+    die 2 SHORT-Faelle waren vermutlich bereits genau diese Luecke, nur nicht
+    als solche erkannt."""
     result = dict(parsed)
     result["top_gruende"] = filtere_retail_konsens_top_gruende(result.get("top_gruende"))
     risk_veto = False
@@ -921,6 +946,22 @@ def post_check_hebel(
                 action = "HALTEN"
         richtung = str(position_aktuell.richtung).upper()
         result["richtung"] = richtung
+    elif (
+        hebel_richtung_modus == "nur_long"
+        and richtung == RICHTUNG_SHORT
+        and action == "ERÖFFNEN"
+    ):
+        # Nur-Long-Deckel (2026-07-28, siehe Docstring "Nachtrag 2026-07-28")
+        # - greift NUR hier (position_aktuell is None, sonst waere der
+        # Kontrathese-Zweig oben schon gelaufen), also ein echter Fresh-
+        # ERÖFFNEN-Vorschlag ohne bestehende Position - auf Bitpanda nicht
+        # ausfuehrbar, unabhaengig davon was das LLM selbst dazu meint.
+        risk_veto = True
+        risk_veto_reason = (
+            "\"Nur Long\"-Einstellung aktiv, LLM empfahl SHORT ERÖFFNEN "
+            "(auf Bitpanda nicht ausfuehrbar)"
+        )
+        action = "HALTEN"
 
     def _hebel_deckel_kandidaten(crv: float | None = None) -> list[tuple[str, float]]:
         """Nachtrag 2026-07-17 (echter LINK-Fall): gemeinsame Deckel-Logik fuer

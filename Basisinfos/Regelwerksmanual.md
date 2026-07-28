@@ -10288,8 +10288,17 @@ bereits VOR jedem LLM-Call heraus, wenn auf `"nur_long"` gestellt - und der
 Nutzer bestätigte, dass genau das auf dem Notebook (der produktiven 24/7-
 Maschine) seit Einführung der Long/Short-Funktion (2026-07-15) der Fall ist,
 weil "1. bitpanda kann noch immer kein short" (weiterhin gültige Einschränkung,
-keine Änderung an `hebel_richtung_modus` geplant). Die extreme LONG-Bias in
-den bisherigen Auswertungen ist also ein strukturelles Konfigurations-
+keine Änderung an `hebel_richtung_modus` geplant).
+
+**KORREKTUR (2026-07-28, siehe Nachtrag weiter unten):** Diese Einschätzung war
+UNVOLLSTÄNDIG - "57 LONG/2 SHORT bei Mistral" wurde damals als Beleg dafür
+gewertet, dass der Kandidaten-Filter ausreicht, aber genau diese 2 SHORT-Fälle
+waren vermutlich bereits die hier beschriebene Lücke: der Filter greift nur VOR
+dem LLM-Call (auf `trigger.richtung`), das LLM entscheidet die tatsächliche
+`richtung` seiner Antwort aber selbst und wird danach nicht mehr geprüft. Ein
+echter Vorfall (NEAR/TAO SHORT ERÖFFNEN trotz aktivem `nur_long`) bestätigte
+das am 2026-07-28 - siehe dortigen Nachtrag für den vollständigen Fix. Die
+extreme LONG-Bias in den bisherigen Auswertungen ist also ein strukturelles Konfigurations-
 Artefakt, keine organische Strategie - der reine "Z.ai stimmt mit Mistral
 überein"-Vergleich (`zai_uebereinstimmung`, bestehend seit dem 2026-07-26er
 Nachtrag) sagt unter dieser Einschränkung wenig darüber aus, ob Z.ais eigene
@@ -11014,3 +11023,110 @@ DB-Wrapper mit None-Filterung. Regelnummerierung + Import-Regressionscheck
 ueber alle 6 betroffenen Module (`pipeline.py`, `hebel_pipeline.py`,
 `analyst.py`, `hebel_analyst.py`, `hebel_screening.py`,
 `indicators/calculations.py`) sowie `main.py`.
+
+## Nachtrag (2026-07-28): Nur-Long-Deckel — echter Bug, keine reine Konfigurationsfrage (NEAR/TAO SHORT ERÖFFNEN trotz aktivem `nur_long`)
+
+**Auslöser:** Nutzer meldete zwei tatsächlich verschickte E-Mails -
+"Hebel ERÖFFNEN NEAR (SHORT)" (28.07. 08:46 Uhr) und "Hebel ERÖFFNEN TAO
+(SHORT)" (28.07. 11:50 Uhr) - obwohl der "Nur Long"-Schalter (`ui/settings.py::
+hebel_richtung_modus`) auf dem Notebook durchgehend aktiv war. Log-Beweis
+direkt aus dem 72h-Fenster des Notebook-Exports:
+
+```
+08:44:46 Budget-Allocator: Hebel 2/2 (Richtung=nur_long, ...)
+08:46:28 E-Mail gesendet: "Hebel ERÖFFNEN NEAR (SHORT)"
+11:47:39 Budget-Allocator: Hebel 3/3 (Richtung=nur_long, ...)
+11:50    E-Mail gesendet: "Hebel ERÖFFNEN TAO (SHORT)"
+```
+
+Der Kandidaten-Filter lief korrekt (alle Kandidaten passierten `hebel_richtung_
+modus=="nur_long"`), trotzdem kam eine SHORT-Empfehlung durch.
+
+### Root Cause
+
+`agent/krypto/budget_allocator.py` (Zeile ~388/435) filtert `hebel_pending`/
+`offene_positionen_roh` NUR nach `trigger.richtung` - der Kandidaten-
+Klassifikation VOR dem LLM-Call (vergeben von `hebel_screening.py`'s Trigger-
+Discovery). Das LLM (Mistral/Gemini) entscheidet `parsed["richtung"]` in
+seiner strukturierten Antwort aber KOMPLETT FREI (Schema `hebel_analyst.py`
+Zeile 338: `"richtung": "LONG|SHORT"`) - `trigger.richtung` wird ihm nur als
+EIN beschreibender Fakt mitgegeben (`regime.richtungs_konflikt_mit_trigger`),
+niemals als bindende Vorgabe, und `hebel_richtung_modus` selbst ist dem Modell
+komplett unbekannt (kein Prompt-Hinweis irgendwo). `hebel_pipeline.py::
+generate_hebel_signal()` uebernimmt am Ende `richtung=corrected.get("richtung")`
+1:1 aus der LLM-Antwort in das persistierte/versendete `HebelSignal` - nichts
+prueft das danach nochmal gegen den Schalter.
+
+**Klarstellung zu Mistral vs. Z.ai (Nutzer-Rueckfrage):** Mistral bekommt keine
+zwingende Richtungsvorgabe, sondern `trigger.richtung` nur als EINEN von vielen
+Fakten (daher "kennt die Richtung indirekt"). Z.ai (`gegenpruefung.py::
+leite_eigene_richtung()`) bekommt dagegen ausschliesslich objektive Marktfakten,
+kennt weder Mistrals Empfehlung noch `hebel_richtung_modus`, leitet komplett
+unabhaengig eine eigene Richtung her (reiner Bestaetigungs-/Widerspruchs-
+Abgleich) und laeuft zudem asynchron in einem Hintergrund-Thread ERST NACHDEM
+das Signal bereits gespeichert und die E-Mail schon raus ist - kann also auch
+prinzipiell nichts mehr verhindern.
+
+**Bezug zur bereits bestehenden Kontrathese-Erkennung (Nachtrag 2026-07-24
+oben):** dort wird ein SHORT-Vorschlag GEGEN eine bestehende LONG-Position
+bewusst NICHT geblockt, sondern als Kontrathese behandelt (Zeitfenster-
+Bestaetigung, `kontrathese_zu_position`). Der neue Nur-Long-Deckel darf diesen
+Fall nicht anfassen - beide NEAR/TAO-Faelle betrafen aber Symbole OHNE
+aktuell offene Position (`hebel_positions`-Check: alle bisherigen TAO/NEAR-
+Positionen bereits `geschlossen`/`wahrscheinlich_liquidiert`), also echte
+Fresh-ERÖFFNEN-Vorschlaege ohne Kontrathese-Bezug.
+
+### Fix
+
+Neuer deterministischer Veto-Zweig in `agent/krypto/hebel_risk_gate.py::
+post_check_hebel()`, als eigener `elif` DIREKT NACH dem bestehenden
+Kontrathese-Zweig (greift also nur, wenn `position_aktuell is None` - der
+Kontrathese-Fall hat bereits vorher entschieden):
+
+```python
+elif (
+    hebel_richtung_modus == "nur_long"
+    and richtung == RICHTUNG_SHORT
+    and action == "ERÖFFNEN"
+):
+    risk_veto = True
+    risk_veto_reason = "\"Nur Long\"-Einstellung aktiv, LLM empfahl SHORT ERÖFFNEN (auf Bitpanda nicht ausfuehrbar)"
+    action = "HALTEN"
+```
+
+Neuer Parameter `hebel_richtung_modus: str | None = None` (Default `None` =
+kein Veto, rueckwaertskompatibel). `agent/krypto/hebel_pipeline.py::
+generate_hebel_signal()` liest den aktuellen Wert direkt vor dem Aufruf
+(`ui_settings.load_settings().get("hebel_richtung_modus", "beide")`) und
+reicht ihn durch - identisches Muster wie `budget_allocator.py`'s bereits
+bestehender Kandidaten-Filter, nur eben NACH statt VOR dem LLM-Call.
+
+### Korrektur einer früheren Fehleinschätzung
+
+Der Nachtrag vom 27.07. ("Z.ai-Richtungs-Erfolgsquote", weiter oben in diesem
+Kapitel) wertete "57 LONG/2 SHORT bei Mistral" als Beleg dafür, dass der
+Kandidaten-Filter ausreicht, mit der expliziten Schlussfolgerung "keine
+Änderung an `hebel_richtung_modus` geplant" - siehe dort eingefügte Korrektur.
+Die 2 SHORT-Faelle damals waren vermutlich bereits genau diese Luecke, nur
+nicht als solche erkannt, weil die Verifikation nur bis zur Kandidaten-Filter-
+Ebene ging und nicht bis zur tatsaechlichen LLM-Entscheidung.
+
+### Verifiziert (Klasse 2, synthetisch)
+
+8 Checks gegen `post_check_hebel()`: SHORT ERÖFFNEN bei `nur_long` ohne
+Position → HALTEN + Veto-Reason gesetzt; LONG ERÖFFNEN bei `nur_long` →
+unveraendert; SHORT ERÖFFNEN bei `modus=beide` → unveraendert (kein
+Veto, korrekte CRV-Werte fuer beide Richtungen verifiziert); kein
+`hebel_richtung_modus` uebergeben (Default) → unveraendertes Altverhalten;
+Kontrathese-Fall (bestehende LONG-Position, LLM schlaegt SHORT vor) bleibt
+vom neuen Deckel UNBERUEHRT, der bestehende Kontrathese-Zweig greift weiterhin
+zuerst. Import-Regressionscheck ueber `hebel_pipeline.py`, `hebel_risk_gate.py`,
+`budget_allocator.py`, `scheduler/background.py`, `main.py`.
+
+**Bewusst NICHT Teil dieser Runde:** kein Prompt-Hinweis an Mistral/Gemini
+ueber `hebel_richtung_modus` (der deterministische Veto ist die garantierte
+Absicherung, unabhaengig von Prompt-Befolgung - Nutzer-Praeferenz, siehe
+`feedback_backtest_first_hard_guarantee`-Prinzip); keine Aenderung an der
+Architektur-Frage `data/settings.json` (device-lokal, git-ignoriert) vs.
+`Basisinfos/config.yaml` (git-synchronisiert) - separat zu entscheiden, siehe
+Diskussion in derselben Session.

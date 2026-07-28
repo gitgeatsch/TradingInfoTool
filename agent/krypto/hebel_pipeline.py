@@ -56,6 +56,7 @@ from indicators.calculations import (
     build_technical_snapshot, compute_btc_relativwert, latest_value, summarize_confluence,
 )
 from staleness import is_history_stale, is_price_stale
+import ui.settings as ui_settings
 
 logger = logging.getLogger(__name__)
 
@@ -307,8 +308,16 @@ def generate_hebel_signal(
 
     raw_response = parsed.pop("_raw_response", None)
 
+    # Nur-Long-Deckel (2026-07-28, echter NEAR/TAO-Fund): der Kandidaten-Filter
+    # in budget_allocator.py filtert nur nach trigger.richtung VOR dem LLM-Call -
+    # das LLM entscheidet `richtung` in seiner Antwort aber komplett frei (siehe
+    # hebel_analyst.py-Schema), nichts prüft danach nochmal gegen
+    # hebel_richtung_modus. post_check_hebel() bekommt den aktuellen Wert daher
+    # hier durchgereicht, siehe dessen Docstring fuer die genaue Veto-Bedingung.
+    hebel_richtung_modus = ui_settings.load_settings().get("hebel_richtung_modus", "beide")
     corrected = post_check_hebel(
         parsed, pre_result, regime_result, config_dict, confluence=confluence,
+        hebel_richtung_modus=hebel_richtung_modus,
         retail_long_bias_extreme=anticyclic_context.retail_long_bias_extreme,
         long_account_pct=anticyclic_context.long_account_pct,
         historische_erfolgsquote=historische_erfolgsquote,
