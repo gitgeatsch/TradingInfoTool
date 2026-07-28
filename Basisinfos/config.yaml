@@ -723,6 +723,15 @@ signale_batch:
 # (Tier 2) + Spot-Rotation (Tier 3), huckepack auf dem 15-Min-Hebel-Screening-Takt.
 budget_allocator:
   aktiv: true
+  hebel_richtung_modus: nur_long        # migriert aus data/settings.json (2026-07-28,
+                                        # geraete-lokal+git-ignoriert -> hier git-
+                                        # synchronisiert, siehe Regelwerksmanual-Nachtrag
+                                        # "Nur-Long-Deckel") - "beide" oder "nur_long",
+                                        # Bitpanda kann Hebel-Short nicht ausfuehren. Ueber
+                                        # GUI-Menü "Hebel" aenderbar (config.py::
+                                        # set_hebel_richtung_modus(), schreibt direkt hier
+                                        # hinein - Aenderung wirkt erst nach Commit+Push
+                                        # (Desktop) + Pull (Notebook), nicht mehr sofort).
   taegliches_budget_gesamt: 180          # B, ANGEHOBEN 90->180 (2026-07-20 Nacht, Nutzer-
                                         # Vorgabe "flachere Budgetkurve/Glaettung, weniger
                                         # 1h-Leerlaufphasen") - B=90 war zwar schon per
@@ -983,8 +992,14 @@ benachrichtigung:
     empfehlungen_aktiv: true           # 2026-07-14: E-Mail bei handlungsrelevanten
       # Spot-/Hebel-Empfehlungen (KAUFEN/VERKAUFEN/NACHKAUFEN/TAUSCHEN bzw.
       # ERÖFFNEN/HEBEL_ERHÖHEN/HEBEL_SENKEN/TEILVERKAUF/SCHLIESSEN) - HALTEN
-      # loest bewusst NIE eine Mail aus. Bitpanda-Listing-Filter separat als
-      # In-App-Schalter (Menü "Benachrichtigungen"), nicht hier.
+      # loest bewusst NIE eine Mail aus.
+    nur_bitpanda_gelistet: true        # migriert aus data/settings.json (2026-07-28,
+      # geraete-lokal+git-ignoriert -> hier git-synchronisiert, siehe Regelwerksmanual-
+      # Nachtrag "Nur-Long-Deckel") - E-Mail nur fuer aktuell Bitpanda-gelistete Assets
+      # (Umsetzung erfolgt manuell ueber die Bitpanda-App). Ueber GUI-Menü
+      # "Benachrichtigungen" aenderbar (config.py::set_email_nur_bitpanda_gelistet(),
+      # schreibt direkt hier hinein - Aenderung wirkt erst nach Commit+Push (Desktop) +
+      # Pull (Notebook), nicht mehr sofort).
     job_ausfall_cooldown_minuten: 60   # [OFFEN] Spam-Schutz: derselbe Job meldet
       # sich hoechstens 1x pro Cooldown-Fenster, auch bei einem mehrstuendigen
       # Ausfall (siehe scheduler/background.py::_notify_job_failure())

@@ -100,7 +100,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 
 import database.db as db
-import ui.settings as ui_settings
 from agent.krypto.hebel_pipeline import generate_hebel_signal
 from agent.krypto.hebel_screening import RICHTUNG_LONG
 from agent.krypto.llm_provider import llm_model_label
@@ -378,9 +377,12 @@ def run_budget_allocator(
     # nachtraeglich in der Anzeige - direkter Hebel auf die tatsaechliche
     # LLM-Aufrufzahl (siehe Memory project_llm_budget_ueberlast_2026-07-15:
     # 13 von 14 echten ERGOEFFNEN-Empfehlungen waren SHORT, auf Bitpanda
-    # aber gar nicht ausfuehrbar). LIVE wirksam, kein Neustart noetig -
-    # gleiches Muster wie email_empfehlungen_nur_bitpanda (ui/settings.py).
-    hebel_richtung_modus = ui_settings.load_settings().get("hebel_richtung_modus", "beide")
+    # aber gar nicht ausfuehrbar).
+    # Nachtrag 2026-07-28: aus data/settings.json (geraete-lokal+git-ignoriert)
+    # nach config.yaml migriert (siehe Regelwerksmanual-Nachtrag "Nur-Long-
+    # Deckel") - wirkt jetzt erst nach Commit+Push+Pull, nicht mehr sofort,
+    # dafuer garantiert konsistent zwischen Desktop und Notebook.
+    hebel_richtung_modus = cfg.get("hebel_richtung_modus", "beide")
 
     conn = conn_factory()
     try:

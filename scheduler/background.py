@@ -903,8 +903,11 @@ def _ist_email_relevantes_asset(
     """Bitpanda-Listing-Filter (2026-07-14, In-App-Schalter, siehe ui/app.py::
     _toggle_email_nur_bitpanda(), Standard AN) - Umsetzung erfolgt manuell ueber
     die Bitpanda-App, eine Empfehlung fuer ein dort nicht gelistetes Asset waere
-    also ohnehin nicht direkt ausfuehrbar. ui/settings.py hat keine tkinter-
-    Abhaengigkeit, deshalb hier ohne Probleme aus dem Hintergrund-Job lesbar.
+    also ohnehin nicht direkt ausfuehrbar. Nachtrag 2026-07-28: Schalter-Wert
+    liegt jetzt in config.yaml statt data/settings.json (siehe Regelwerksmanual-
+    Nachtrag "Nur-Long-Deckel") - config.py hat wie ui/settings.py vorher keine
+    tkinter-Abhaengigkeit, deshalb weiterhin ohne Probleme aus dem Hintergrund-
+    Job lesbar.
 
     WatchlistAsset speichert KEIN bitpanda_gelistet-Feld (das wird bei jedem
     Signal-Lauf frisch per API abgefragt, siehe agent/krypto/pipeline.py::
@@ -925,10 +928,14 @@ def _ist_email_relevantes_asset(
     (Standard None) fuer Rueckwaertskompatibilitaet bestehender Aufrufer/Tests
     ohne DB-Zugriff - ohne conn_factory bleibt das alte Verhalten (nur Live-
     Check) unveraendert."""
-    import ui.settings as ui_settings
+    import config as config_module
 
-    settings = ui_settings.load_settings()
-    if not settings.get("email_empfehlungen_nur_bitpanda", True):
+    # Aus config.yaml (nicht mehr data/settings.json, 2026-07-28 Migration -
+    # siehe Regelwerksmanual-Nachtrag "Nur-Long-Deckel").
+    nur_bitpanda_gelistet = config_module.load_config().get("benachrichtigung", {}).get(
+        "email", {}
+    ).get("nur_bitpanda_gelistet", True)
+    if not nur_bitpanda_gelistet:
         return True
     if bitpanda_assets is None:
         # P-10: Abruf fehlgeschlagen -> nicht blockieren, lieber eine Mail zu

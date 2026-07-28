@@ -11126,7 +11126,63 @@ zuerst. Import-Regressionscheck ueber `hebel_pipeline.py`, `hebel_risk_gate.py`,
 **Bewusst NICHT Teil dieser Runde:** kein Prompt-Hinweis an Mistral/Gemini
 ueber `hebel_richtung_modus` (der deterministische Veto ist die garantierte
 Absicherung, unabhaengig von Prompt-Befolgung - Nutzer-Praeferenz, siehe
-`feedback_backtest_first_hard_guarantee`-Prinzip); keine Aenderung an der
-Architektur-Frage `data/settings.json` (device-lokal, git-ignoriert) vs.
-`Basisinfos/config.yaml` (git-synchronisiert) - separat zu entscheiden, siehe
-Diskussion in derselben Session.
+`feedback_backtest_first_hard_guarantee`-Prinzip); die Architektur-Frage
+`data/settings.json` (device-lokal, git-ignoriert) vs. `Basisinfos/config.yaml`
+(git-synchronisiert) wurde noch am selben Tag entschieden und umgesetzt - siehe
+direkt folgender Nachtrag.
+
+## Nachtrag (2026-07-28, noch selber Tag): `hebel_richtung_modus`/E-Mail-Bitpanda-Filter von `data/settings.json` nach `config.yaml` migriert
+
+**Auslöser:** Nach dem Nur-Long-Deckel-Fix (siehe Nachtrag oben) Nachfrage des
+Nutzers, ob die geraete-lokale Persistenz der beiden Schalter selbst noch ein
+Problem ist. Zwar war sie im diagnostizierten Vorfall NICHT die Ursache (der
+Notebook-Wert stand die ganze Zeit korrekt auf `nur_long`), aber ein latentes
+Risiko bleibt bestehen: eine kaputte/fehlende `data/settings.json` faellt
+STILLSCHWEIGEND auf den Code-Default `"beide"`/`True` zurueck (kein Log-
+Hinweis), und die Datei ist bewusst git-ignoriert - toggelt der Nutzer den
+Schalter auf dem "falschen" Geraet, bleibt das unbemerkt. Abwaegung Kosten
+(Verlust des sofortigen Wirkens, "handgepflegt"-Charakter von `config.yaml`
+wird durch GUI-Schreibzugriff etwas aufgeweicht) vs. Nutzen (garantierte
+Konsistenz zwischen Desktop und Notebook fuer zwei Schalter, die reales
+Trading-/Versand-Verhalten steuern) - Entscheidung: migrieren, da selten
+umgestellt und Korrektheit hier wichtiger als Tempo.
+
+**Umsetzung:**
+- `Basisinfos/config.yaml`: `budget_allocator.hebel_richtung_modus` (Default
+  `nur_long`, der tatsaechliche Produktionswert) und
+  `benachrichtigung.email.nur_bitpanda_gelistet` (Default `true`) neu.
+- `config.py`: neue gemeinsame Schreibfunktion `_set_top_level_skalar()`
+  (identisches Backup-/Schreib-/Reparse-/Rollback-Muster wie
+  `set_regime_manueller_override()`, mit optionalem `block_scope`-Parameter
+  fuer die Zeilensuche, da `nur_bitpanda_gelistet` allein nicht eindeutig
+  genug waere) + zwei duenne Wrapper `set_hebel_richtung_modus()`/
+  `set_email_nur_bitpanda_gelistet()`.
+- `agent/krypto/budget_allocator.py`/`agent/krypto/hebel_pipeline.py`: lesen
+  `hebel_richtung_modus` jetzt aus dem ohnehin bereits geladenen `config_dict`
+  statt `ui_settings.load_settings()` - `import ui.settings` in beiden
+  Dateien entfernt (nicht mehr benoetigt).
+- `scheduler/background.py::_ist_email_relevantes_asset()`: liest
+  `nur_bitpanda_gelistet` jetzt aus `config.load_config()` statt
+  `ui_settings.load_settings()`.
+- `ui/settings.py`: `_DEFAULTS` auf `dark_mode` reduziert (einzige echte
+  GERAETE-LOKALE GUI-Praeferenz, die bewusst NICHT synchronisiert werden soll -
+  Dark Mode ist reine Optik, kein Trading-Verhalten).
+- `ui/app.py`: beide Menü-Handler (`_toggle_hebel_richtung()`,
+  `_toggle_email_nur_bitpanda()`) rufen jetzt die neuen `config.py`-
+  Schreibfunktionen auf statt `ui_settings.save_settings()`, mit
+  Nutzer-Hinweis-Dialog ("wirkt erst nach Commit+Push+Pull") statt der
+  bisherigen stillschweigenden Sofort-Wirkung.
+
+**Verifiziert:** 9 synthetische Checks (`config.set_hebel_richtung_modus()`/
+`set_email_nur_bitpanda_gelistet()`) direkt gegen die echte `config.yaml`
+(vorher per Backup gesichert, in `finally`-Block garantiert wiederhergestellt) -
+Wertaenderung, Ruecksetzung, No-Op bei identischem Wert (`False`-Rueckgabe),
+ungueltiger Wert wirft `ValueError`. Import-Regressionscheck ueber alle 7
+geaenderten Module inkl. `ui/app.py` (tkinter-Import) und `main.py`.
+
+**Bewusst NICHT Teil dieser Runde:** keine Migration von `dark_mode` (bleibt
+bewusst geraete-lokal, siehe Begruendung oben); keine generelle Ueberarbeitung
+des `config.yaml`-vs-`data/settings.json`-Musters fuer eventuelle zukuenftige
+GUI-Schalter - jeweils im Einzelfall neu abwaegen, ob ein Schalter
+Trading-/Versand-relevant (→ config.yaml) oder reine GUI-Optik (→
+data/settings.json) ist.

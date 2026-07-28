@@ -1,8 +1,20 @@
-"""Lokale UI-Einstellungen (z.B. Dark Mode, Nutzer-Idee 2026-07-09). Bewusst NICHT
+"""Lokale UI-Einstellungen (Dark Mode, Nutzer-Idee 2026-07-09). Bewusst NICHT
 in Basisinfos/config.yaml (die Datei ist handgepflegt/versioniert, siehe deren
-Kopfkommentar) - eine reine UI-Praeferenz gehoert nicht dort hin. Stattdessen eine
-kleine, nicht versionierte JSON-Datei neben der DB (gleiches Verzeichnis-Muster wie
-database/db.py::DB_PATH)."""
+Kopfkommentar) - eine reine GERAETE-LOKALE UI-Praeferenz gehoert nicht dort hin.
+Stattdessen eine kleine, nicht versionierte JSON-Datei neben der DB (gleiches
+Verzeichnis-Muster wie database/db.py::DB_PATH).
+
+Nachtrag 2026-07-28 (siehe Regelwerksmanual-Nachtrag "Nur-Long-Deckel"):
+`email_empfehlungen_nur_bitpanda`/`hebel_richtung_modus` waren urspruenglich
+hier, sind aber nach Basisinfos/config.yaml migriert worden - beide steuern
+tatsaechliches Trading-/Versand-Verhalten auf der 24/7-Notebook-Instanz, nicht
+bloss eine kosmetische GUI-Praeferenz wie Dark Mode. Der Nachteil (kein
+sofortiges Wirken mehr, sondern erst nach Commit+Push+Pull) wurde bewusst in
+Kauf genommen, weil eine per-Geraet abweichende `data/settings.json` (git-
+ignoriert) sonst unbemerkt zu inkonsistentem Verhalten zwischen Desktop und
+Notebook fuehren kann - siehe echter NEAR/TAO-SHORT-Vorfall trotz aktivem
+"Nur Long"-Schalter. Siehe config.py::set_hebel_richtung_modus()/
+set_email_nur_bitpanda_gelistet() fuer die neuen Schreibfunktionen."""
 from __future__ import annotations
 
 import json
@@ -12,18 +24,6 @@ SETTINGS_PATH = Path(__file__).resolve().parent.parent / "data" / "settings.json
 
 _DEFAULTS = {
     "dark_mode": False,
-    # 2026-07-14: Empfehlungs-E-Mails (Spot/Hebel) nur fuer aktuell Bitpanda-
-    # gelistete Assets, da Umsetzung manuell ueber die Bitpanda-App erfolgt -
-    # siehe scheduler/background.py::_ist_email_relevantes_asset(). Anders als
-    # dark_mode LIVE wirksam (wird erst beim tatsaechlichen E-Mail-Versand aus
-    # dem Hintergrund-Job gelesen, kein Neustart noetig).
-    "email_empfehlungen_nur_bitpanda": True,
-    # 2026-07-15 (Nutzer-Wunsch, siehe Memory project_llm_budget_ueberlast_
-    # 2026-07-15): "beide" oder "nur_long" - steuert, ob der Budget-Allocator
-    # SHORT-Hebel-Kandidaten ueberhaupt noch an ein LLM schickt (Bitpanda kann
-    # Hebel-Short nicht ausfuehren). LIVE wirksam, direkt vor dem naechsten
-    # 15-Min-Allocator-Lauf (agent/krypto/budget_allocator.py) gelesen.
-    "hebel_richtung_modus": "beide",
 }
 
 

@@ -703,6 +703,92 @@ def update_watchlist_beobachtungsstatus(symbol: str, new_beobachtungsstatus: str
 REGIME_MANUELLER_OVERRIDE_WERTE = ("none", "krise_extrem", "baer", "seitwaerts", "bulle", "euphorie_extrem")
 
 
+def _set_top_level_skalar(field_name: str, new_value_yaml: str, block_scope: str | None = None) -> bool:
+    """Gemeinsame Schreiblogik fuer `set_hebel_richtung_modus()`/`set_email_nur_
+    bitpanda_gelistet()` (2026-07-28, Migration von `data/settings.json` -
+    geraete-lokal+git-ignoriert - nach `config.yaml` - git-synchronisiert, siehe
+    Regelwerksmanual-Nachtrag "Nur-Long-Deckel": der Kandidaten-Filter allein reicht
+    nicht, aber unabhaengig davon soll der SCHALTER selbst auf beiden Geraeten
+    garantiert denselben Wert haben, nicht nur zufaellig durch manuelle Disziplin).
+    Identisches Backup-/Schreib-/Reparse-/Rollback-Muster wie
+    `set_regime_manueller_override()`, `new_value_yaml` ist bereits YAML-serialisiert
+    (z.B. "nur_long" oder "true"/"false") und wird 1:1 in die Zeile geschrieben.
+    `block_scope` (optional) schraenkt die Zeilensuche auf Zeilen NACH der ersten
+    Fundstelle von `f"{block_scope}:"` ein - noetig fuer `nur_bitpanda_gelistet`,
+    dessen Feldname sonst nicht eindeutig genug waere, falls er je in einem anderen
+    Abschnitt wiederverwendet wird."""
+    original_bytes = CONFIG_PATH.read_bytes()
+    newline_style = "\r\n" if b"\r\n" in original_bytes else "\n"
+    original_text = original_bytes.decode("utf-8")
+    lines = original_text.splitlines(keepends=True)
+
+    start_idx = 0
+    if block_scope is not None:
+        scope_idx = next((i for i, line in enumerate(lines) if line.strip() == f"{block_scope}:"), None)
+        if scope_idx is None:
+            return False
+        start_idx = scope_idx
+
+    field_line_idx = next(
+        (i for i in range(start_idx, len(lines)) if lines[i].strip().startswith(f"{field_name}:")), None,
+    )
+    if field_line_idx is None:
+        return False
+
+    line = lines[field_line_idx]
+    indent = line[: len(line) - len(line.lstrip())]
+    rest = line.split(":", 1)[1]
+    if "#" in rest:
+        value_part, comment_part = rest.split("#", 1)
+        comment_part = "#" + comment_part.rstrip("\r\n")
+    else:
+        value_part, comment_part = rest, ""
+    current_value = value_part.strip()
+    if current_value == new_value_yaml:
+        return False
+
+    padding = " " * max(1, len(value_part) - len(value_part.strip()) - 1) if comment_part else " "
+    lines[field_line_idx] = f"{indent}{field_name}: {new_value_yaml}{padding}{comment_part}{newline_style}"
+    new_text = "".join(lines)
+
+    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    backup_path = BACKUP_DIR / f"config.yaml.{timestamp}.bak"
+    shutil.copy2(CONFIG_PATH, backup_path)
+
+    CONFIG_PATH.write_bytes(new_text.encode("utf-8"))
+
+    try:
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+            yaml.safe_load(f)
+    except Exception as exc:
+        shutil.copy2(backup_path, CONFIG_PATH)
+        raise WatchlistWriteError(f"Schreiben fehlgeschlagen, Backup wiederhergestellt: {exc}") from exc
+
+    global _config_cache
+    _config_cache = None
+    return True
+
+
+HEBEL_RICHTUNG_MODUS_WERTE = ("beide", "nur_long")
+
+
+def set_hebel_richtung_modus(new_value: str) -> bool:
+    """Setzt `budget_allocator.hebel_richtung_modus` (2026-07-28, migriert aus
+    `ui/settings.py`/`data/settings.json` - siehe Regelwerksmanual-Nachtrag
+    "Nur-Long-Deckel"). Aufrufer: `ui/app.py::_toggle_hebel_richtung()`."""
+    if new_value not in HEBEL_RICHTUNG_MODUS_WERTE:
+        raise ValueError(f"Ungültiger Richtungsmodus: {new_value!r} (erlaubt: {HEBEL_RICHTUNG_MODUS_WERTE})")
+    return _set_top_level_skalar("hebel_richtung_modus", new_value, block_scope="budget_allocator")
+
+
+def set_email_nur_bitpanda_gelistet(new_value: bool) -> bool:
+    """Setzt `benachrichtigung.email.nur_bitpanda_gelistet` (2026-07-28, migriert aus
+    `ui/settings.py`/`data/settings.json` - siehe Regelwerksmanual-Nachtrag
+    "Nur-Long-Deckel"). Aufrufer: `ui/app.py::_toggle_email_nur_bitpanda()`."""
+    return _set_top_level_skalar("nur_bitpanda_gelistet", "true" if new_value else "false", block_scope="email")
+
+
 def set_regime_manueller_override(new_value: str) -> bool:
     """Setzt den TOP-LEVEL Skalar `regime.manueller_override` (RG-8, Basisinfos/
     config.yaml Zeile ~1005) - bisher ein reines "Uboot" (nur per Hand in der

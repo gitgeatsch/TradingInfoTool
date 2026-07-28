@@ -11,6 +11,7 @@ from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
 import agent.kategorie_thesen as kategorie_thesen
+import config as config_module
 import database.db as db
 import ui.settings as ui_settings
 import ui.theme as theme
@@ -263,8 +264,9 @@ class TradingInfoToolApp(tk.Tk):
         menubar.add_cascade(label="Ansicht", menu=view_menu)
 
         benachrichtigung_menu = tk.Menu(menubar, tearoff=0)
+        _cfg_benachrichtigung = config_module.load_config().get("benachrichtigung", {}).get("email", {})
         self._email_nur_bitpanda_var = tk.BooleanVar(
-            value=self._settings["email_empfehlungen_nur_bitpanda"]
+            value=_cfg_benachrichtigung.get("nur_bitpanda_gelistet", True)
         )
         benachrichtigung_menu.add_checkbutton(
             label="E-Mail-Empfehlungen nur für Bitpanda-gelistete Assets",
@@ -275,7 +277,7 @@ class TradingInfoToolApp(tk.Tk):
 
         hebel_menu = tk.Menu(menubar, tearoff=0)
         self._hebel_richtung_var = tk.StringVar(
-            value=self._settings["hebel_richtung_modus"]
+            value=config_module.load_config().get("budget_allocator", {}).get("hebel_richtung_modus", "beide")
         )
         hebel_menu.add_radiobutton(
             label="Long + Short analysieren", variable=self._hebel_richtung_var,
@@ -302,20 +304,46 @@ class TradingInfoToolApp(tk.Tk):
         )
 
     def _toggle_email_nur_bitpanda(self) -> None:
-        """Anders als Dark Mode SOFORT wirksam, kein Neustart noetig - der
-        Hintergrund-Job liest die Einstellung erst beim tatsaechlichen
-        E-Mail-Versand (siehe scheduler/background.py::
+        """Nachtrag 2026-07-28 (siehe Regelwerksmanual-Nachtrag "Nur-Long-
+        Deckel"): schreibt jetzt nach Basisinfos/config.yaml statt
+        data/settings.json (config.py::set_email_nur_bitpanda_gelistet()) -
+        wirkt dadurch nicht mehr sofort, sondern erst nach Commit+Push
+        (Desktop) + Pull (Notebook), dafuer garantiert konsistent zwischen
+        beiden Geraeten. Der Hintergrund-Job liest den Wert weiterhin erst
+        beim tatsaechlichen E-Mail-Versand (siehe scheduler/background.py::
         _ist_email_relevantes_asset())."""
-        self._settings["email_empfehlungen_nur_bitpanda"] = self._email_nur_bitpanda_var.get()
-        ui_settings.save_settings(self._settings)
+        try:
+            config_module.set_email_nur_bitpanda_gelistet(self._email_nur_bitpanda_var.get())
+        except Exception as exc:
+            messagebox.showerror("Fehler", f"Einstellung konnte nicht gespeichert werden: {exc}")
+            self._email_nur_bitpanda_var.set(not self._email_nur_bitpanda_var.get())
+            return
+        messagebox.showinfo(
+            "Gespeichert",
+            "Einstellung in config.yaml gespeichert. Wirkt nach Commit+Push (Desktop) "
+            "und Pull (Notebook) beim naechsten Lauf.",
+        )
 
     def _toggle_hebel_richtung(self) -> None:
-        """LIVE wirksam wie E-Mail-Filter, kein Neustart noetig - der
-        Budget-Allocator liest die Einstellung direkt vor dem naechsten
-        15-Min-Lauf (siehe agent/krypto/budget_allocator.py::
-        run_budget_allocator())."""
-        self._settings["hebel_richtung_modus"] = self._hebel_richtung_var.get()
-        ui_settings.save_settings(self._settings)
+        """Nachtrag 2026-07-28 (siehe Regelwerksmanual-Nachtrag "Nur-Long-
+        Deckel", echter NEAR/TAO-SHORT-Vorfall trotz aktivem Schalter):
+        schreibt jetzt nach Basisinfos/config.yaml statt data/settings.json
+        (config.py::set_hebel_richtung_modus()) - wirkt dadurch nicht mehr
+        sofort, sondern erst nach Commit+Push (Desktop) + Pull (Notebook),
+        dafuer garantiert konsistent zwischen beiden Geraeten (der eigentliche
+        Vorfall war zwar ein Code-Bug, kein Sync-Problem, aber der Schalter
+        selbst soll trotzdem nicht mehr geraeteabhaengig auseinanderlaufen
+        koennen)."""
+        try:
+            config_module.set_hebel_richtung_modus(self._hebel_richtung_var.get())
+        except Exception as exc:
+            messagebox.showerror("Fehler", f"Einstellung konnte nicht gespeichert werden: {exc}")
+            return
+        messagebox.showinfo(
+            "Gespeichert",
+            "Einstellung in config.yaml gespeichert. Wirkt nach Commit+Push (Desktop) "
+            "und Pull (Notebook) beim naechsten Lauf.",
+        )
 
     def _build_watchlist_tab(self, parent) -> ttk.Frame:
         frame = ttk.Frame(parent)
