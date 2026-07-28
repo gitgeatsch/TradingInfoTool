@@ -119,6 +119,27 @@ _zai_gegenpruefung_verlauf() unten) fuer dieselbe Korrelations-Frage wie
 beim Deribit-Cross-Check: haelt sich das Urteil ('konsistent'/
 'widerspruch') mit dem tatsaechlichen Signal-Ausgang?
 
+Nachtrag (2026-07-28, Abschnitt 6 Fakten-Entscheidungsmappe - Nutzer-Hinweis
+"nicht vergessen das Analyse-Skript zu adaptieren"): drei neue Fakten seit dem
+letzten Update dieses Skripts nachgezogen.
+- `vix_wert`/`dollar_index_wert`/`dollar_index_trend` fehlten in
+  `get_last_known_regime_status()` (agent/krypto/regime.py) selbst - beide
+  laenger als Fakt in allen 6 Analyst-Prompts verdrahtet, aber nie in diesen
+  kuratierten Status-Export aufgenommen (den GUI-Tab/Remote-Seite/dieses
+  Skript alle gemeinsam nutzen). VIX war dabei ein ECHTER Alt-Fund (seit
+  2026-07-18 verdrahtet, nie hier sichtbar), Dollar-Index ist der neue Fakt
+  von heute - beide zusammen ergaenzt, um keine zweite Luecke zu hinterlassen.
+- `squeeze_divergenz`/`funding_rate_perzentil` (heutige OI-Squeeze-Divergenz +
+  Funding-Rate-Perzentil, Krypto Spot+Hebel) stecken wie beim Deribit-Cross-
+  Check NUR transient in `facts_json` (unter `antizyklisch`) - neue Sektion
+  `oi_fakten_verlauf` (siehe _oi_fakten_verlauf() unten), gezielter Parse nur
+  dieser beiden Teilwerte aus BEIDEN Tabellen (signals + hebel_signals, da das
+  Feature fuer Spot UND Hebel gebaut wurde), damit spaeter geprueft werden
+  kann, ob die Label-Verteilung plausibel ist und das Perzentil ueberhaupt
+  Werte liefert (haengt an einer Mindestpunktzahl, siehe MIN_FUNDING_
+  PERZENTIL_PUNKTE in indicators/calculations.py - koennte am frisch
+  deployten Notebook noch zu wenig Historie haben).
+
 Aufruf am Notebook: python extract_notebook_diagnose.py [SYMBOL] [LOG_STUNDEN]
   (SYMBOL optional, Default LINK, fuer den Tiefenanalyse-Teil;
    LOG_STUNDEN optional, Default 72, Zeitfenster fuer den Log-Auszug)
@@ -516,6 +537,49 @@ def _zai_gegenpruefung_verlauf(conn) -> dict:
     }
 
 
+def _oi_fakten_verlauf(conn) -> dict:
+    """Neu (2026-07-28, OI-Squeeze-Divergenz + Funding-Rate-Perzentil, siehe
+    project_oi_squeeze_funding_perzentil.md) - identisches Prinzip wie
+    _deribit_cross_check_verlauf() oben: beide Fakten stecken nur transient
+    im `antizyklisch`-Teilobjekt von `facts_json`, gezielter Parse NUR dieser
+    zwei Werte (nicht der gesamte Blob). Anders als beim Deribit-Cross-Check
+    (nur Hebel) wurde dieses Feature bewusst fuer Spot UND Hebel gebaut (siehe
+    Mengenanalyse im Modul-Docstring-Nachtrag) - deshalb BEIDE Tabellen
+    (`signals`+`hebel_signals`), mit einer `pipeline`-Spalte zur
+    Unterscheidung. Ohne diese Sektion waere insbesondere die Frage "liefert
+    das Funding-Perzentil ueberhaupt Werte, oder fehlt am frisch deployten
+    Notebook noch die Mindesthistorie (MIN_FUNDING_PERZENTIL_PUNKTE)" nicht
+    beantwortbar, ohne facts_json manuell durchzugehen."""
+    eintraege = []
+    for tabelle, pipeline in (("signals", "spot"), ("hebel_signals", "hebel")):
+        rows = conn.execute(
+            f"SELECT symbol, action, created_at, confidence_pct, "
+            f"outcome_status, facts_json FROM {tabelle} ORDER BY created_at ASC"
+        ).fetchall()
+        for r in rows:
+            try:
+                facts = json.loads(r["facts_json"]) if r["facts_json"] else {}
+            except (TypeError, json.JSONDecodeError):
+                continue
+            antizyklisch = facts.get("antizyklisch") or {}
+            squeeze = antizyklisch.get("squeeze_divergenz")
+            funding_perz = antizyklisch.get("funding_rate_perzentil")
+            if squeeze is None and funding_perz is None:
+                continue
+            eintraege.append({
+                "pipeline": pipeline, "symbol": r["symbol"], "action": r["action"],
+                "created_at": r["created_at"], "confidence_pct": r["confidence_pct"],
+                "outcome_status": r["outcome_status"],
+                "squeeze_divergenz": squeeze, "funding_rate_perzentil": funding_perz,
+            })
+    return {
+        "anzahl_mit_squeeze_divergenz": sum(1 for e in eintraege if e["squeeze_divergenz"] is not None),
+        "squeeze_divergenz_verteilung": haeufigkeit(eintraege, "squeeze_divergenz"),
+        "anzahl_mit_funding_rate_perzentil": sum(1 for e in eintraege if e["funding_rate_perzentil"] is not None),
+        "eintraege": eintraege,
+    }
+
+
 def _log_dateien(log_pfad: Path) -> list[Path]:
     """Aelteste zuerst, damit _log_zeilen_im_fenster() den Zeitfortschritt
     korrekt verfolgen kann - RotatingFileHandler haengt .1/.2/.3 AN (ersetzt
@@ -689,6 +753,7 @@ def main() -> None:
         preishistorie_ueberholte_symbole = _preishistorie_ueberholte_symbole(conn)
         deribit_cross_check_verlauf = _deribit_cross_check_verlauf(conn)
         zai_gegenpruefung_verlauf = _zai_gegenpruefung_verlauf(conn)
+        oi_fakten_verlauf = _oi_fakten_verlauf(conn)
 
         # 4) Provider-Performance (Win-Rate/CRV je Anbieter, Spot+Hebel getrennt)
         provider_performance = compute_provider_performance(conn)
@@ -785,6 +850,7 @@ def main() -> None:
         "preishistorie_ueberholte_symbole": preishistorie_ueberholte_symbole,
         "deribit_cross_check_verlauf": deribit_cross_check_verlauf,
         "zai_gegenpruefung_verlauf": zai_gegenpruefung_verlauf,
+        "oi_fakten_verlauf": oi_fakten_verlauf,
         "deep_dive": {
             "symbol": DEEP_DIVE_SYMBOL,
             "hebel_signals": [row_to_dict(r) for r in deep_signale],

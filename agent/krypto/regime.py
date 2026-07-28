@@ -657,4 +657,13 @@ def get_last_known_regime_status(conn) -> dict | None:
         "btc_boden_zielzone_bis": snapshot.btc_boden_zielzone_bis if snapshot else None,
         "eth_boden_zielzone_von": snapshot.eth_boden_zielzone_von if snapshot else None,
         "eth_boden_zielzone_bis": snapshot.eth_boden_zielzone_bis if snapshot else None,
+        # VIX + Dollar-Index (2026-07-28) - beide bereits laenger als Fakt in
+        # den 6 Analyst-Prompts verdrahtet, fehlten aber bisher hier im
+        # kuratierten Status-Export (GUI-Tab/Remote-Seite/Notebook-Diagnose
+        # nutzen alle diese eine Funktion) - echte Export-Luecke, kein neuer
+        # Datenpunkt. VIX war schon vorher fertig, wurde beim Anlegen dieser
+        # Funktion (2026-07-17) aber nicht mit aufgenommen.
+        "vix_wert": snapshot.vix_wert if snapshot else None,
+        "dollar_index_wert": snapshot.dollar_index_wert if snapshot else None,
+        "dollar_index_trend": snapshot.dollar_index_trend if snapshot else None,
     }
