@@ -11442,3 +11442,153 @@ Hebel-Veto-HALTEN gefunden, davon 0 Spot-/1 Hebel-Zeile mit vollständigen
 Zonen als echter Schatten-Kandidat identifiziert; End-to-End-Lauf löste eine
 echte historische Aktien/Cerebras-Zeile als Stop-Loss auf (Ø CRV -2,10) und
 die Hebel-Zeile als Abgelaufen — keine Abstürze, kein Datenverlust.
+
+## Nachtrag (2026-07-28): Punkt 0b — Wartezeit bis Mistral-Hebel-Signale als Stop-Loss/Richtungsverfehlung aufgelöst werden, PLUS Enge-Stop-Loss-Backtest jetzt ausreichend Stichprobe
+
+**Auslöser:** Nutzer-Auftrag im selben Analyseblock wie Punkt 0 (Z.ai-Fakten-
+Prüfung): "wie lange die Wartezeit war bis Mistral - als falsche Richtung
+bzw. hat Zielzone nicht erreicht gemessen wurde - als Experte". Analysiert
+gegen den frischesten Notebook-Export (28.07., 22:07 Uhr).
+
+**Methodischer Hinweis (wichtig für künftige Zeit-Analysen dieser Art):**
+`outcome_entschieden_am`/`outcome_geprueft_am` sind reine Kalendertag-Strings
+(aus der Tages-OHLC-Zeile `row.date`), `created_at` ist ein voller
+Zeitstempel — eine naive Sekunden-Differenz erzeugt bei Auflösung am
+Erstellungstag scheinbar negative Wartezeiten. Korrekt: auf Kalendertag-Basis
+rechnen (`date(entschieden_am) - date(created_at)`, min. 0).
+
+**Ergebnis (694 Mistral-Hebel-Signale, gefiltert nach `outcome_status`):**
+
+| Ausgang | n | Median | Mittelwert |
+|---|---|---|---|
+| Stop-Loss erreicht | 50 | 1 Tag | 1,60 Tage |
+| Take-Profit erreicht | 11 | 2 Tage | 2,36 Tage |
+| Richtungsverfehlung ohne SL (überholt/abgelaufen, Mindestziel nie erreicht) | 19 | 1 Tag | 1,53 Tage |
+
+**Einordnung:** Verluste lösen sich fast doppelt so schnell auf wie Gewinne
+(1 vs. 2 Tage Median) — die Messung wartet bei Fehlschlägen NICHT zu lange,
+sie schlägt eher zu früh zu. Die Hypothese "die Wartezeit selbst verzerrt
+das schlechte Mistral-Bild nach unten" ist damit entkräftet — wenn überhaupt
+wirkt die Asymmetrie in die andere Richtung.
+
+**Direkter Anschluss an den bestehenden Enge-Stop-Loss-Fund (22.07.,
+`sl_abstand_eng_schwelle_relativ`, siehe
+[[project_historische_trefferquote_nachbesserung]]):** von den 50
+Stop-Loss-Fällen haben 39 (78%) einen SL-Abstand unter 5%, Ø aller 50 Fälle
+nur 3,5% — mitten in der damals identifizierten blinden Zone (2-5%), die der
+bestehende Risikofaktor mit seiner 2%-Schwelle verpasst. Diese engen Fälle
+lösen sich noch schneller auf (Median 1 Tag, 44% schon an Tag 0) als die
+wenigen mit weiterem SL (Median 2 Tage) — konsistent mit "zu enger Stop,
+von normalem Kursrauschen ausgelöst, bevor die These eine faire Chance
+hatte".
+
+**Backtest jetzt mit ausreichender Stichprobe (Wiedervorlage-Bedingung
+n≥15/Bucket aus dem 27.07.-Fund war bei n=5-11 noch nicht erfüllt, jetzt
+erfüllt):**
+
+| SL-Abstand-Bucket | n | Win-Rate | Ø realisiertes CRV |
+|---|---|---|---|
+| <2% | 9 | 0,0% | -1,00 |
+| 2-5% | 36 | 16,7% | -0,41 |
+| 5-10% | 16 | 31,2% | +0,31 |
+| ≥10% | 0 | — | — |
+
+Monotoner Zusammenhang: je enger der Stop, desto schlechter Win-Rate/CRV.
+Die 5-10%-Zone liegt nahe/über der Gewinnschwelle, alles darunter ist klar
+verlustträchtig. `<2%` weiterhin zu klein für Alleinstellung (n=9), aber
+`2-5%` (n=36) und `5-10%` (n=16) sind jetzt beide über der n≥15-Schwelle —
+die 27.07. gesetzte Wiedervorlage-Bedingung ist damit erfüllt, eine
+Entscheidung über Gegenmaßnahmen ist jetzt sachlich fundiert möglich (siehe
+Diskussion mit Nutzer, Optionen unten).
+
+**Diskutierte Lösungsoptionen (mit Nutzer besprochen, Entscheidung siehe
+[[project_enge_stop_loss_backtest_und_massnahmen]]):**
+- **A (soft):** `sl_abstand_eng_schwelle_relativ` von 2% auf 5% anheben —
+  rein informativ, bestehender "Enger Stop-Loss"-Risikofaktor deckt dann
+  auch die eigentliche Problemzone ab, kein Verhaltenszwang.
+- **B (hart):** neuer deterministischer Veto in `post_check_hebel()` analog
+  zur CRV-Pflicht — SL-Abstand < 5% erzwingt HALTEN. Würde durch das frisch
+  gebaute Veto-Schatten-Tracking automatisch weiterbeobachtet (Selbstprüfung
+  ohne separaten Backtest-Harness).
+- **C (mittel):** Positionsgröße statt Hard-Veto skalieren (analog
+  Konfidenz-Skalierung), reduziert Exposure statt Trade komplett zu blocken.
+- **D (praeziser, groesserer Aufwand):** Schwelle relativ zur Volatilitaet
+  (ATR-Perzentil, bereits vorhanden aus Baustein 2) statt fixem Prozentsatz -
+  ein "5%-Stop" bedeutet fuer BTC etwas anderes als fuer einen volatilen
+  Altcoin.
+
+## Nachtrag (2026-07-28): Option D umgesetzt (Fakt + Prompt-Regel, bewusst OHNE Hard-Veto) - Root-Cause-Analyse vor Umsetzung
+
+**Root-Cause-Analyse (vor der Umsetzung durchgefuehrt, Nutzer-Auftrag "berechnen
+wir etwas falsch oder treffen falsche Annahmen"):** `agent/krypto/hebel_analyst.py`
+Regel 6 durchgesehen - der bestehende CRV-Formel-Code selbst rechnet korrekt
+(fruehere Verifikation), das Problem liegt eine Ebene davor. Zwei konkrete
+Luecken gefunden:
+1. Regel 6 sagt dem Modell nur, Entry/Stop/Take-Profit aus `atr.wert`/
+   `support_resistance`/`fibonacci` abzuleiten - OHNE eine Mindestdistanz-
+   Vorgabe. Das Modell erfuellt die Regel bereits formal, sobald es irgendeinen
+   der drei Referenzpunkte zitiert, unabhaengig davon wie nah er liegt.
+2. `technische_analyse.atr.wert` wurde bisher NUR als absoluter Preiswert
+   (USD) geliefert, nicht als Prozentsatz vom Kurs - das Modell musste diese
+   Umrechnung selbst vornehmen, um die Stop-Distanz gegen die Volatilitaet
+   einzuordnen (fehleranfaelliger Rechenschritt).
+3. Nebenbefund: fuer Symbole OHNE Kraken-Spot-Paar liefert
+   `atr_close_to_close_proxy()` (per Docstring ausdruecklich "kein echtes
+   ATR") eine strukturell zu niedrige Volatilitaets-Naeherung (keine
+   untertaegigen Ausschlaege erfasst) - verschaerft das Problem zusaetzlich
+   fuer diese Teilmenge.
+
+**Kein Rechenfehler in der Kern-Logik gefunden** (CRV-Formel, Zonen-Vergleich
+korrekt) - die Ursache ist eine Prompt-/Fakten-Luecke: keine Volatilitaets-
+Verankerung fuer die Stop-Distanz, nicht ein Bug in einer bestehenden Formel.
+
+**Cross-Check-Empfehlung (wie man das serioes verifiziert, zweite Nutzerfrage):**
+der bereits durchgefuehrte Backtest gegen reale Trade-Ausgaenge (Win-Rate/CRV
+je SL-Abstand-Bucket) ist der belastbarste Cross-Check ueberhaupt (validiert
+gegen tatsaechliche Marktergebnisse, nicht nur gegen eine andere Formel).
+Zusaetzlich sinnvoll (nicht Teil dieser Runde): eigene Wilder-ATR-Implementierung
+gegen eine Referenzbibliothek (z.B. pandas-ta) mit denselben Kraken-OHLC-
+Rohdaten gegenrechnen; Stichprobenvergleich unserer ATR-%-Werte gegen eine
+externe Chartquelle (TradingView/Binance).
+
+**Entscheidung: D statt B, mit Begruendung ueber die reinen Bucket-Zahlen
+hinaus.** B (harter 5%-Fixprozent-Veto) wuerde nur das Symptom kappen - ein
+fixer Cutoff ist fuer BTC in ruhiger Phase zu grosszuegig und fuer einen
+volatilen Altcoin in einer Squeeze-Phase immer noch zu eng, das
+Grundproblem (keine Volatilitaets-Bindung) bliebe bestehen. D behebt die
+tatsaechliche Ursache. Nutzer-Vorgabe fuer die Umsetzung: "safe genug ...
+dass wir keine Signale unnoetig wegschmeissen" - deshalb bewusst OHNE
+deterministischen Backstop-Veto in dieser Runde, rein informativ/Prompt-
+Guidance (siehe unten).
+
+**Umsetzung (`agent/krypto/hebel_analyst.py::build_hebel_facts()`):**
+- Neuer Fakt `technische_analyse.atr.relativ_prozent` = ATR-Wert / aktueller
+  Kurs × 100 (gerundet auf 2 Nachkommastellen), `None` wenn ATR oder Preis
+  fehlt/0 ist (kein Crash, kein irrefuehrender Wert).
+- Regel 6 um einen Richtwert erweitert: Stop-Loss-Abstand sollte in der
+  Regel mindestens dem 1,5-fachen von `atr.relativ_prozent` entsprechen,
+  MIT explizitem Hinweis auf den Backtest-Befund (SL<5% = 0-16,7% Win-Rate,
+  5-10% = 31,2%). Ausdruecklich als RICHTWERT markiert (nicht wie das
+  CRV-Minimum in Regel 5 eine harte Vorgabe) - begruendetes Abweichen bei
+  einem klar naeheren Support/Widerstand/Fibonacci-Level ist erlaubt, muss
+  aber in `short_reasoning` explizit genannt werden.
+- Bewusst NICHT veraendert: der bestehende "Enger Stop-Loss"-Risikofaktor
+  in `hebel_risk_gate.py::compute_risikofaktoren_hebel()` (weiterhin fixer
+  2%-Schwellenwert, rein informativ) - keine zusaetzliche Verhaltensaenderung
+  ueber die Prompt-Regel hinaus in dieser Runde.
+
+**Verifiziert:** Import-Regressionscheck, isolierter Test der neuen
+Berechnung inkl. Edge Cases (ATR/Preis `None`, Preis 0 - kein Crash, `None`-
+Rueckgabe statt falscher Wert).
+
+**Bewusst NICHT Teil dieser Runde:** kein harter Veto (Option B verworfen,
+siehe Begruendung oben); keine Aenderung an Spot-family-Analysten (Fund war
+Hebel-spezifisch, gleiche Luecke dort nicht verifiziert); kein Cross-Check
+gegen externe ATR-Referenzbibliothek (empfohlen, aber nicht durchgefuehrt).
+
+**Doku-Zuordnung (korrigiert):** der neue Fakt `atr.relativ_prozent` ist in
+`Basisinfos/Fakten_Entscheidungsmappe.md` katalogisiert (Abschnitt 4.2, plus
+neuer Asymmetrie-Punkt 6 in Abschnitt 3.3 zur offenen Spot-Frage) - das ist
+der bestehende, richtige Ort fuer Fakt-Entscheidungen (Frage-1/Frage-2-
+Raster), nicht eine neue Datei. Der Backtest selbst bleibt in
+[[project_enge_stop_loss_backtest_und_massnahmen]] (Memory).

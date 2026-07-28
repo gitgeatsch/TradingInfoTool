@@ -111,6 +111,12 @@ am sauberen Zielzustand (siehe Abschnitt 3.2).
 5. **Spot hat 29 Prompt-Regeln für ~127 Fakt-Knoten, Hebel nur 22 Regeln für ~105** —
    der Hebel-Prompt lässt `markt_kontext`, `moeglicher_flush`, `zyklus_risiko` und
    `disclaimers` komplett unkommentiert, obwohl die Fakten geliefert werden.
+6. **ATR-relativ-Richtwert (NEU 2026-07-28):** Hebel bekam `atr.relativ_prozent` +
+   einen 1,5×-Richtwert in Regel 6 (siehe 4.2, `.atr.relativ_prozent`). Spot hat
+   dieselbe strukturelle Lücke (ATR nur absolut, keine SL-Distanz-Volatilitäts-
+   Bindung in Regel 16), wurde aber nicht angefasst — Auslöser war ein Hebel-
+   spezifischer Backtest, die Frage ob Spot dieselbe Nachbesserung braucht wurde
+   mit dem Nutzer noch nicht besprochen. **Offen.**
 
 ---
 
@@ -158,6 +164,7 @@ vorgenommen wird.)*
 **`technische_analyse.*`** (identisch in beiden)
 - `.ema`/`.macd`/`.rsi_14`/`.bollinger` — indirekt über `.confluence`; MACD/RSI/Bollinger zusätzlich als hartes Verfügbarkeits-Gate vor jedem LLM-Call (`MIN_GATE_INDICATORS_AVAILABLE`).
 - `.atr.wert` — **Regel 16 (Spot) / 6 (Hebel)**: Zonen-Ableitung aus echten Referenzpunkten. Gate: zentral — Stop-Loss-Distanz, RM-5-Veto bei Fehlen, RM-1-Obergrenze, Hebel: `max_safe_hebel()`.
+- `.atr.relativ_prozent` (NEU 2026-07-28, **nur Hebel**) — ATR ÷ Kurs × 100, damit das LLM die Umrechnung nicht selbst vornehmen muss. Auslöser: Backtest von 61 aufgelösten Hebel-Trades zeigte SL-Abstand <5% mit 0-16,7% Win-Rate vs. 31,2% bei 5-10% (siehe [[project_enge_stop_loss_backtest_und_massnahmen]]). Frage 1 (Gate/deterministisch?) explizit verneint — Nutzer schloss einen harten Veto aus ("keine Signale unnötig wegschmeissen"); stattdessen Frage 2 (LLM-Urteil mit Kontext): Regel 6 um einen Richtwert erweitert (SL-Abstand i.d.R. ≥ 1,5× `atr.relativ_prozent`, mit Backtest-Zahlen als Begründung im Prompt, explizite Abweichungs-Erlaubnis bei Support/Widerstand/Fibonacci). **Kategorie (b)** — Prompt-Regel, kein Gate. Bei Spot fehlt dieses Feld bisher komplett (siehe 3.3, neuer Punkt 6) — nicht mit dem Nutzer abgestimmt, ob das nachgezogen werden soll.
 - `.atr.perzentil` — **Regel 27 (Spot) / 19 (Hebel)**: reiner Risiko-/Positionsgrößen-Kontext, keine Richtungsaussage. Gate: negativ ab Schwelle, sonst neutral, nie positiv, kein Deckel.
 - `.support_resistance`/`.fibonacci` — **Regel 9**: explizit relativ zum aktuellen Kurs einordnen, sonst würden diese Level "systematisch ignoriert". Kein Gate.
 - `.confluence.gesamttendenz` — **Regel 22 (Spot) / 13 (Hebel)**: Pflicht-Prüfpunkt fürs Gegenargument bei "gemischt". Gate: doppelt — Positionsgrößen-/Hebel-Deckel bei "gemischt", plus Risikofaktor bullish/bearish gegen die gewählte Richtung.

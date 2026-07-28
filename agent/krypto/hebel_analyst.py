@@ -113,7 +113,19 @@ nachträglich auf HALTEN korrigiert.
 Referenzpunkten abgeleitet (`technische_analyse.atr.wert`, \
 `technische_analyse.support_resistance`, `technische_analyse.fibonacci`) - KEINE \
 frei geratene Bandbreite. Für SHORT spiegelbildlich (Entry nahe Widerstand, Stop \
-darüber, Take-Profit an tieferer Unterstützung/Fibonacci-Level).
+darüber, Take-Profit an tieferer Unterstützung/Fibonacci-Level). \
+WICHTIG (2026-07-28, Backtest von 61 aufgelösten Hebel-Trades: SL-Abstand \
+unter 5% hatte 0-16,7% Win-Rate, ab 5-10% bereits 31,2% - siehe \
+project_enge_stop_loss_backtest_und_massnahmen.md): dein Stop-Loss-Abstand \
+vom Entry (relativ, in %) sollte in der Regel mindestens dem 1,5-fachen von \
+`technische_analyse.atr.relativ_prozent` entsprechen (falls verfügbar) - ein \
+engerer Stop wird in der Praxis überwiegend durch normales Marktrauschen \
+ausgelöst, bevor sich deine These überhaupt bestätigen konnte, nicht durch \
+eine falsche Richtungseinschätzung. Das ist ein RICHTWERT, keine harte \
+Vorgabe wie das CRV-Minimum aus Regel 5 - weiche begründet ab, wenn ein \
+naher Support/Widerstand/Fibonacci-Level eindeutig eine engere, inhaltlich \
+sinnvollere Zone vorgibt, aber nenne diese Abweichung dann explizit in \
+`short_reasoning`.
 7. `trade_thesis_typ` MUSS "einmal_trade" oder "swing_strategie" sein. \
 "einmal_trade" bei kurzfristigen, ereignisgetriebenen Situationen (z.B. \
 `trigger_zweig == "kontra"`, Squeeze-Chance nach Extremwerten - diese lösen sich \
@@ -508,6 +520,17 @@ def build_hebel_facts(
             "lower": _last(bv["lower"]),
         }
 
+    # ATR relativ zum aktuellen Kurs (2026-07-28, Enge-Stop-Loss-Backtest, siehe
+    # project_enge_stop_loss_backtest_und_massnahmen.md) - `atr.wert` liefert bisher
+    # NUR den absoluten Preiswert (USD), das Modell muss die Umrechnung in Relation
+    # zum Kurs selbst vornehmen, um einzuschaetzen ob ein gewaehlter Stop-Loss-
+    # Abstand im Verhaeltnis zur Volatilitaet sinnvoll ist - ein fehleranfaelliger
+    # Rechenschritt. `relativ_prozent` nimmt diese Umrechnung deterministisch ab.
+    atr_wert_usd = _native(latest_value(technical_snapshot.atr))
+    atr_relativ_prozent = None
+    if atr_wert_usd is not None and latest_price and latest_price.price_usd:
+        atr_relativ_prozent = round(atr_wert_usd / latest_price.price_usd * 100, 2)
+
     nicht_verfuegbar = []
     for period, r in technical_snapshot.ema.items():
         if not r.available:
@@ -539,7 +562,8 @@ def build_hebel_facts(
             "rsi_14": _native(latest_value(technical_snapshot.rsi)),
             "bollinger": bollinger_facts,
             "atr": {
-                "wert": _native(latest_value(technical_snapshot.atr)),
+                "wert": atr_wert_usd,
+                "relativ_prozent": atr_relativ_prozent,
                 "label": technical_snapshot.atr_label,
                 "quelle": technical_snapshot.atr_source,
                 "perzentil": _native(latest_value(technical_snapshot.atr_percentile)),
