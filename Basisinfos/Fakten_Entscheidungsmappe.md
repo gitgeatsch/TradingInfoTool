@@ -249,7 +249,7 @@ LLM-Werturteile — siehe [[feedback_llm_synthese_kein_deterministischer_overrid
 
 ## 5. Nächste Schritte (Priorisierung bestätigt, 2026-07-28)
 
-1. **Stufe 2 — Verifiziert, NICHT committet (2026-07-28)** (Statusvokabular siehe
+1. **Stufe 3 — Committet/gepusht (`7eac0ec`, 2026-07-28)** (Statusvokabular siehe
    [[reference_test_und_verifikationsmethodik]]): Hebel-Prompt um FOMC/CPI-Kontext
    ergänzt — neue Regel 22 in `agent/krypto/hebel_analyst.py::SYSTEM_PROMPT`
    (vorherige Regel 22 "eigene_einschaetzung" zu Regel 23 verschoben, inkl.

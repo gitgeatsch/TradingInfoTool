@@ -10636,4 +10636,17 @@ Fakten (DXY-Trend direkt in Krypto-Fakten, OI-Trend-vs-Kurs-Divergenz,
 Funding-Rate-Perzentil) - alle mit bereits vorhandenen, kostenfreien Daten
 umsetzbar, nur noch nicht verdrahtet.
 
-**Noch NICHT committet** - wartet auf Nutzer-Bestätigung.
+**Ergaenzung noch am selben Tag:** drittes Referenzdokument
+`Basisinfos/Test_und_Verifikationsmethodik.md` - Ausloeser war eine Nutzer-
+Rueckfrage ("was meinst du mit umgesetzt?"), die aufdeckte, dass der Status
+"erledigt" ohne feste Bedeutung missverstaendlich ist. Enthaelt ein 5-Stufen-
+Statusvokabular (Geschrieben/Verifiziert/Committet/Deployed/Im Betrieb
+bestaetigt - ab jetzt IMMER die konkrete Stufe nennen statt "erledigt"), 4
+Aenderungsklassen mit Mindest-Testtiefe fuer synthetische Tests, sowie einen
+festen 8-Punkte-Kennzahlenkatalog fuer Notebook-Export-Analysen inkl.
+Vorher-Hypothese-Prinzip (vor jeder Verhaltensbeobachtung im Betrieb
+festhalten, was erwartet wird, statt die Beobachtung nachtraeglich passend
+zu interpretieren).
+
+**Committet und gepusht** (`7eac0ec`) - Stufe 3 des in diesem Nachtrag selbst
+eingefuehrten Statusvokabulars.
