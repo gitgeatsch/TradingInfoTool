@@ -11231,5 +11231,41 @@ Hebel-E-Mails - Nutzer-Beobachtung (Screenshot, Hebel ERÖFFNEN ETH LONG,
 07-28 19:37), dass das Fazit des 2. Z.ai-Calls (Richtungs-Abgleich,
 `zai_eigene_richtung`/`zai_uebereinstimmung`) in der E-Mail fehlte, obwohl der
 1. Call (Konsistenz-Check) erschien - siehe
-[[reference_offene_zeitbasierte_beobachtungspunkte]] fuer Details, noch nicht
-untersucht.
+[[reference_offene_zeitbasierte_beobachtungspunkte]] fuer Details, zum
+Zeitpunkt dieses Nachtrags noch nicht untersucht (siehe Folge-Nachtrag unten).
+
+## Nachtrag (2026-07-28, noch selber Tag): Z.ai-E-Mail-Wartezeit auf 90s erhöht (60s zu knapp)
+
+**Auslöser:** Nutzer-Auftrag "Z.ai-Wartezeit-Konstante lokalisieren und
+Call-2-Laufzeiten prüfen" - direkte Fortsetzung des oben vermerkten
+ETH-LONG-Screenshot-Funds.
+
+**Fund:** `_ZAI_EMAIL_WARTE_MAX_SEKUNDEN = 60` /
+`_ZAI_EMAIL_POLL_INTERVALL_SEKUNDEN = 3` in
+`scheduler/background.py::_sende_signal_email_mit_zai_wartezeit()`. Beide
+Z.ai-Calls laufen SEQUENZIELL (Call 2 Richtungs-Abgleich startet erst nach
+Call 1 Konsistenz-Check, siehe
+`agent/krypto/gegenpruefung.py::fuehre_beide_calls_im_hintergrund()`) und
+werden GEMEINSAM in einem DB-Update geschrieben - kein Teilschreiben, die
+E-Mail bekommt entweder beide Z.ai-Zeilen oder keine.
+
+Log-Auswertung (`tradinginfotool.log`, 8 echte Fälle 07-26 bis 07-28):
+HYPE 48s/27s, LINK 42s, NEAR 42s/60s(genau am Limit)/60s(Zeitlimit,
+gescheitert), VIRTUAL 60s (Zeitlimit, gescheitert), TAO 57s. 2 von 8 Fällen
+(25%) liefen tatsächlich ins alte 60s-Limit, mehrere weitere lagen knapp
+darunter (48s/57s/60s) - die "typisch 12-25s je Call"-Doku-Annahme summiert
+sich sequenziell auf 24-50s im Normalfall, mit Ausreißern darüber.
+
+**Fix:** `_ZAI_EMAIL_WARTE_MAX_SEKUNDEN` von 60 auf 90 erhöht (Puffer über
+dem beobachteten Maximalwert 60s). Poll-Intervall (3s) unverändert.
+
+**Verifiziert:** Syntax-/Import-Check von `scheduler/background.py`.
+
+**Bewusst NICHT Teil dieser Runde:** die konkrete ETH-LONG-Mail (07-28 19:37)
+selbst konnte nicht direkt nachvollzogen werden - sie wurde nach dem letzten
+verfügbaren Log-Sync (19:36) verschickt, dafür gibt es keine Log-Zeile. Die
+Neukalibrierung stützt sich auf die 8 anderen, bereits geloggten Fälle.
+Keine Umstellung von sequenziell auf parallel (beide Calls gleichzeitig
+starten würde die Wartezeit auf `max(Call1, Call2)` statt `Call1+Call2`
+senken) - nicht angefragt, würde eine tiefere Änderung an
+`fuehre_beide_calls_im_hintergrund()` erfordern.

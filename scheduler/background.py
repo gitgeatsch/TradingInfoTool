@@ -1356,7 +1356,11 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None, c
         logger.exception("Spot-Empfehlungs-E-Mail für %s fehlgeschlagen", signal.symbol)
 
 
-_ZAI_EMAIL_WARTE_MAX_SEKUNDEN = 60
+_ZAI_EMAIL_WARTE_MAX_SEKUNDEN = 90  # NEUKALIBRIERT (2026-07-28): Log-Auswertung von
+# 8 echten Faellen zeigte 2 Zeitlimit-Ueberschreitungen (VIRTUAL, NEAR) und mehrere
+# knapp am alten 60s-Limit (48s/57s/60s) - beide Z.ai-Calls laufen sequenziell
+# (Call 2 startet erst nach Call 1), Summe der "typisch 12-25s je Call" kann also
+# 24-50s im Normalfall erreichen, mit Ausreissern darueber.
 _ZAI_EMAIL_POLL_INTERVALL_SEKUNDEN = 3
 
 
