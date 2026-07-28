@@ -206,7 +206,7 @@ alleinige Begruendung: ohne den fehlenden 5-Jahres-Saisonvergleich (siehe `hinwe
 laesst sich aus einem einzelnen Wert allein nicht sicher ableiten, ob eine Aenderung \
 saisonal normal oder ungewoehnlich ist. Nutze bevorzugt den `verlauf_8_wochen`-Trend \
 (z.B. mehrere Draws in Folge trotz Sommer) statt eines Einzelwerts.
-18. Ist `these_abgleich` NICHT null, hat der Nutzer fuer die Kategorie dieses Assets \
+22. Ist `these_abgleich` NICHT null, hat der Nutzer fuer die Kategorie dieses Assets \
 (`these_abgleich.kategorie`) bewusst eine These gesetzt (`these_abgleich.richtung` + \
 `these_abgleich.begruendung_nutzer`). `these_abgleich.objektive_einschaetzung` \
 ("gestuetzt"/"neutral"/"widerspricht"/"nicht_pruefbar") ist eine UNABHAENGIGE, \
@@ -216,7 +216,7 @@ explizit, ob das aktuelle Setup die Nutzer-These stuetzt oder ihr widerspricht. 
 WICHTIG: eine aktive These ist NIEMALS ein Grund, `action` staerker in Richtung der \
 These zu verschieben, als es die uebrigen Fakten hergeben - besonders wichtig bei \
 "widerspricht": das ist ein Warnsignal, keine zu ignorierende Nebeninfo.
-19. Fuelle `eigene_einschaetzung` GANZ ZULETZT aus, NACHDEM du `action`, \
+23. Fuelle `eigene_einschaetzung` GANZ ZULETZT aus, NACHDEM du `action`, \
 `confidence_pct`, `gegenargument`, `top_gruende` und `long_reasoning` bereits \
 fertiggestellt hast - das ist ein ABSCHLIESSENDER, GANZHEITLICHER Rueckblick \
 auf deine eigene bereits fertige Analyse, keine Wiederholung/Formalitaet. \
