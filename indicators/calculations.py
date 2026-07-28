@@ -266,6 +266,37 @@ def atr_percentile(atr_result: IndicatorResult) -> IndicatorResult:
     return IndicatorResult(round(rang, 1), True)
 
 
+MIN_FUNDING_PERZENTIL_PUNKTE = 30
+
+
+def funding_rate_percentile(werte: np.ndarray) -> IndicatorResult:
+    """Perzentilrang der AKTUELLEN Funding-Rate innerhalb der EIGENEN
+    historischen Verteilung (2026-07-28, Abschnitt 6 Fakten-Entscheidungsmappe,
+    Crowding-Indikator) - identisches Prinzip wie atr_percentile() oben (bewusst
+    NICHT dieselbe Funktion wiederverwendet, um deren ATR-spezifischen
+    Docstring/Namen nicht zu verwaessern - reine 3-Zeilen-Logik, keine
+    Abstraktion noetig). Zeigt, ob GENAU DIESE Funding-Rate historisch extrem
+    ist (Crowding-Signal), NICHT die absolute Kosten-Hoehe selbst (das leistet
+    bereits der bestehende Funding-Kosten-Risikofaktor, siehe hebel_risk_gate.py -
+    beide Signale sind unabhaengig, keine Ueberschneidung).
+
+    `werte` ist die rohe Funding-Rate-Historie eines Symbols (bereits ohne
+    None-Luecken gefiltert durch den Aufrufer, siehe hebel_screening.py::
+    compute_funding_rate_percentile()). P-10: mind. MIN_FUNDING_PERZENTIL_PUNKTE
+    Werte noetig, sonst `unavailable` (analog atr_percentile())."""
+    if len(werte) < MIN_FUNDING_PERZENTIL_PUNKTE:
+        reason = (
+            f"benötigt mind. {MIN_FUNDING_PERZENTIL_PUNKTE} gültige Funding-Rate-Werte, "
+            f"nur {len(werte)} vorhanden"
+        )
+        _log_unavailable("Funding-Rate-Perzentil", reason)
+        return IndicatorResult(None, False, reason)
+
+    aktuell = werte[-1]
+    rang = float((werte < aktuell).sum()) / len(werte) * 100
+    return IndicatorResult(round(rang, 1), True)
+
+
 @dataclass
 class TechnicalSnapshot:
     """Buendelt alle Chart-/Agent-Indikatoren fuer eine Preisreihe, inkl. der

@@ -26,6 +26,8 @@ import logging
 import uuid
 from datetime import datetime, timedelta, timezone
 
+import numpy as np
+
 import database.db as db
 from api.derivatives import (
     get_binance_long_short_ratio,
@@ -35,7 +37,13 @@ from api.derivatives import (
 )
 from api.kraken import KRAKEN_FUTURES_SYMBOL_MAP
 from database.models import HebelTrigger, OpenInterestSnapshot
-from indicators.calculations import ConfluenceSummary, TechnicalSnapshot, latest_value
+from indicators.calculations import (
+    ConfluenceSummary,
+    IndicatorResult,
+    TechnicalSnapshot,
+    funding_rate_percentile,
+    latest_value,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -131,6 +139,56 @@ def compute_oi_change_pct(conn, symbol: str, exchange: str, lookback_hours: floa
     if not aeltester.open_interest:
         return None
     return (neuester.open_interest - aeltester.open_interest) / aeltester.open_interest * 100
+
+
+SQUEEZE_LABELS = (
+    "aufbau_bestaetigt", "short_squeeze_verdacht",
+    "abbau_deleveraging", "long_squeeze_verdacht", "neutral",
+)
+
+
+def classify_squeeze_divergenz(
+    oi_change_pct: float | None, kursaenderung_pct: float | None, schwelle_prozent: float,
+) -> str | None:
+    """Open-Interest-Trend-vs-Kurs-Divergenz (2026-07-28, Abschnitt 6 Fakten-
+    Entscheidungsmappe, Squeeze-Erkennung) - klassischer Krypto-Derivate-Desk-
+    Check: Kurs UND OI in dieselbe Richtung = frisches Kapital, robuster;
+    Kurs UND OI in ENTGEGENGESETZTE Richtung = Positionen werden zwangsweise
+    ein-/gedeckt (Squeeze), fragiler.
+
+    Bewusst reine, DB-freie Funktion (Signatur analog Baustein-Helfern wie
+    atr_percentile() - der Aufrufer beschafft `oi_change_pct` ueber
+    compute_oi_change_pct() und `kursaenderung_pct` ueber die bereits
+    vorhandene antizyklisch.kursaenderung_letzte_tage_prozent, siehe pipeline.py/
+    hebel_pipeline.py). None bei fehlendem Input (mind. eine Seite nicht
+    verfuegbar) statt einer erratenen Klassifikation.
+
+    "neutral", wenn EINE der beiden Aenderungen betragsmaessig unter
+    `schwelle_prozent` liegt - eine Divergenz-Aussage braucht eine echte
+    Bewegung auf BEIDEN Seiten, sonst waere z.B. eine winzige Kurszuckung bei
+    grossem OI-Aufbau faelschlich als "Squeeze" ueberinterpretiert."""
+    if oi_change_pct is None or kursaenderung_pct is None:
+        return None
+    if abs(oi_change_pct) < schwelle_prozent or abs(kursaenderung_pct) < schwelle_prozent:
+        return "neutral"
+    if kursaenderung_pct > 0:
+        return "aufbau_bestaetigt" if oi_change_pct > 0 else "short_squeeze_verdacht"
+    return "abbau_deleveraging" if oi_change_pct < 0 else "long_squeeze_verdacht"
+
+
+def compute_funding_rate_percentile(conn, symbol: str, exchange: str = "binance") -> IndicatorResult:
+    """DB-Fetch-Wrapper um indicators/calculations.py::funding_rate_percentile()
+    (2026-07-28, Abschnitt 6 Fakten-Entscheidungsmappe) - liest die komplette
+    Funding-Rate-Historie eines Symbols aus open_interest_snapshot (derselbe
+    Kraken-Wert liegt redundant in allen 3 Boersen-Zeilen, siehe
+    fetch_and_store_oi_snapshot()-Docstring, daher reicht EINE Boerse als
+    Quelle), filtert None-Luecken (Kraken-Abruf kann pro Tick fehlgeschlagen
+    sein) und delegiert die eigentliche Perzentil-Berechnung."""
+    history = db.get_oi_history(conn, symbol, exchange)
+    werte = np.array(
+        [h.funding_rate for h in history if h.funding_rate is not None], dtype=float,
+    )
+    return funding_rate_percentile(werte)
 
 
 def _combine(scores: dict[str, float | None], gewichte: dict) -> float | None:

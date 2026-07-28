@@ -335,7 +335,22 @@ wie stark du technische/fundamentale/Momentum-/Makro-Aspekte in `long_reasoning`
 `top_gruende` gewichtest - KEINE starre Formel oder Pflichtquote, deine \
 eigene Einschaetzung der konkreten Fakten bleibt massgeblich. Erwaehne die \
 Zahlen selbst nicht woertlich, nutze sie nur zur Schwerpunktsetzung.
-31. Fuelle `eigene_einschaetzung` GANZ ZULETZT aus, NACHDEM du `action`, \
+31. Ist `antizyklisch.squeeze_divergenz` NICHT null, zeigt es das Verhaeltnis von \
+Open-Interest-Aenderung zu Kursaenderung ueber dasselbe mehrtaegige Fenster: \
+"aufbau_bestaetigt" (Kurs UND OI in dieselbe Richtung - frisches Kapital, \
+tendenziell robusterer Trend) vs. "short_squeeze_verdacht"/"long_squeeze_verdacht" \
+(Kurs und OI GEGENLAEUFIG - der Kursverlauf wird eher durch Zwangs-Ein-/Eindeckung \
+bestehender Positionen getrieben als durch neues Kapital, tendenziell fragiler/ \
+weniger belastbar). "abbau_deleveraging" (beide fallend) ist meist eine normale \
+Korrektur, kein Warnsignal. "neutral" = keine der beiden Seiten hat sich \
+nennenswert bewegt, ignorieren. Ist `antizyklisch.funding_rate_perzentil` \
+(0-100) NICHT null, zeigt es, ob die AKTUELLE Funding-Rate historisch fuer \
+GENAU DIESEN Coin extrem ist (Crowding-Signal, hohe/niedrige Werte deuten auf \
+einseitig ueberfuellte Positionierung) - das ist ein ANDERES Signal als die \
+absolute Funding-Kosten-Hoehe selbst, dupliziere sie nicht als Zahl in `key_risks`, \
+sondern nutze sie als zusaetzlichen Kontext in `long_reasoning.technisch`/ \
+`key_risks`.
+32. Fuelle `eigene_einschaetzung` GANZ ZULETZT aus, NACHDEM du `action`, \
 `confidence_pct`, `gegenargument`, `top_gruende` und `long_reasoning` bereits \
 fertiggestellt hast - das ist ein ABSCHLIESSENDER, GANZHEITLICHER Rueckblick \
 auf deine eigene bereits fertige Analyse, keine Wiederholung/Formalitaet. \
@@ -470,6 +485,8 @@ def build_facts(
     liquiditaetszonen: dict | None = None,
     signal_stabilitaet: dict | None = None,
     btc_relativwert: dict | None = None,
+    squeeze_divergenz: str | None = None,
+    funding_rate_perzentil: float | None = None,
 ) -> dict:
     macd_val = technical_snapshot.macd
     macd_facts = None
@@ -654,6 +671,13 @@ def build_facts(
             "long_konten_anteil_prozent": _native(anticyclic_context.long_account_pct),
             "retail_long_bias_extrem": anticyclic_context.retail_long_bias_extreme,
             "grund": anticyclic_context.reason,
+            # OI-Squeeze-Divergenz + Funding-Rate-Perzentil (2026-07-28, Abschnitt 6
+            # Fakten-Entscheidungsmappe Punkt 2+3) - siehe SYSTEM_PROMPT fuer die
+            # Bedeutung der squeeze_divergenz-Label. Beide `None`, wenn zu wenig
+            # OI-Historie fuer dieses Symbol vorliegt (z.B. kein Binance-Derivate-
+            # Markt) - kein Fehler, einfach nicht verfuegbar (P-10).
+            "squeeze_divergenz": squeeze_divergenz,
+            "funding_rate_perzentil": _native(funding_rate_perzentil),
         },
         "markt_kontext": {
             "btc_exchange_flow_netto_btc": (

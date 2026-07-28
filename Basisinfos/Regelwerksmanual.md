@@ -10956,3 +10956,61 @@ geflaggt, nicht Teil dieser Aenderung). Synthetischer Test: `RegimeResult` mit
 gesetzten `dollar_index_wert`/`_trend`-Werten instanziierbar. Reines,
 risikoarmes Fakten-Wiring nach bereits produktiv laufendem VIX-Muster, keine
 neue Berechnungslogik - kein hoeherer Testklassen-Aufwand noetig.
+
+---
+
+## Nachtrag (2026-07-28): OI-Squeeze-Divergenz + Funding-Rate-Perzentil (Krypto Spot+Hebel)
+
+**Kontext:** Abschnitt 6 Punkt 2+3 der Fakten-Entscheidungsmappe. Vor der
+Umsetzung Mengenanalyse gegen die echte Desktop-DB durchgefuehrt (Nutzer-
+Vorgabe: "erst eine Mengenanalyse, dann entscheiden"), da unklar war, ob die
+Doku-Behauptung "Daten bereits vorhanden" auch fuer Krypto-Spot gilt (die
+zugrundeliegende `open_interest_snapshot`-Tabelle wird technisch nur ueber
+den Hebel-Screening-Job befuellt).
+
+**Mengenanalyse-Fund:** `asset_hebel_settings` (Hebel-Pruefung-Toggle) ist ein
+reiner OPT-OUT - Default `True` fuer ALLE Krypto-Assets (`database/db.py::
+get_hebel_pruefung_erlaubt()`), Tabelle war zum Pruefzeitpunkt komplett leer.
+Von 43 Krypto-Watchlist-Assets hatten bereits 38 (88%) historische OI-/
+Funding-Daten. Ergebnis: beide Fakten von Anfang an fuer Spot UND Hebel bauen,
+keine Zeitreihen-Infrastruktur fehlt real.
+
+**OI-Squeeze-Divergenz:** neue reine Funktion `classify_squeeze_divergenz()`
+(`agent/krypto/hebel_screening.py`) - vergleicht Open-Interest-Aenderung
+(`compute_oi_change_pct()`, NEUES eigenes Lookback-Fenster `config.yaml
+krypto_oi_fakten.squeeze_oi_lookback_stunden=72`, bewusst NICHT Hebels
+bestehendes 4h-Trendfolge-Fenster - zeitlich nicht vergleichbar mit einem
+mehrtaegigen Kursfenster) mit der Kursaenderung (bereits vorhandenes
+`antizyklisch.kursaenderung_letzte_tage_prozent`, 3-Tage-Fenster aus
+`anticyclic.py`). Vier Label: `aufbau_bestaetigt` (beide gleiche Richtung -
+frisches Kapital, robuster), `short_squeeze_verdacht`/`long_squeeze_verdacht`
+(gegenlaeufig - Zwangs-Ein-/Eindeckung, fragiler), `abbau_deleveraging`
+(beide fallend, normale Korrektur), plus `neutral` bei zu kleinen Aenderungen
+(`squeeze_schwelle_prozent=1.0`, [OFFEN] Platzhalter ohne Live-Kalibrierung).
+
+**Funding-Rate-Perzentil:** neue Funktion `funding_rate_percentile()`
+(`indicators/calculations.py`) exakt nach dem `atr_percentile()`-Muster
+(eigene `MIN_FUNDING_PERZENTIL_PUNKTE=30`-Konstante, bewusst NICHT dieselbe
+Funktion wiederverwendet, um deren ATR-spezifischen Docstring nicht zu
+verwaessern - reine 3-Zeilen-Logik). DB-Fetch-Wrapper
+`hebel_screening.py::compute_funding_rate_percentile()` liest die Kraken-
+Funding-Rate aus (redundant in allen 3 Boersen-Zeilen von
+`open_interest_snapshot` gespeichert, EINE Boerse als Quelle reicht), filtert
+None-Luecken.
+
+**Wiring:** beide Fakten in `agent/krypto/pipeline.py`/`hebel_pipeline.py`
+berechnet, als `antizyklisch.squeeze_divergenz`/`.funding_rate_perzentil` in
+`analyst.py`/`hebel_analyst.py` verdrahtet (neue Regel 31 Spot, Regel 25
+Hebel - Funding-Rate-Perzentil bewusst als ANDERES Signal zur absoluten
+Funding-Kosten-Hoehe gerahmt, keine Duplizierung in `key_risks`).
+
+**Verifiziert (Klasse 2, 16 synthetische Testfaelle):** T1-T4 alle 4 Squeeze-
+Quadranten, T5-T6 neutral bei zu kleiner OI-/Kursaenderung, T7-T9 None-
+Propagierung, T10 Grenzfall (exakte Schwelle zaehlt nicht als neutral), T11
+unavailable bei zu wenig Punkten, T12-T13 Perzentil bei Maximal-/Minimalwert
+(identische Formel wie `atr_percentile()`: `(werte < aktuell).sum()/len*100`,
+Grenzwert selbst zaehlt nicht mit), T14 Grenzfall genau Mindestpunkte, T15-T16
+DB-Wrapper mit None-Filterung. Regelnummerierung + Import-Regressionscheck
+ueber alle 6 betroffenen Module (`pipeline.py`, `hebel_pipeline.py`,
+`analyst.py`, `hebel_analyst.py`, `hebel_screening.py`,
+`indicators/calculations.py`) sowie `main.py`.

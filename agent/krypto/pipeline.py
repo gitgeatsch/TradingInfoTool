@@ -30,6 +30,11 @@ from agent.krypto.gegenpruefung import (
     fuehre_beide_calls_im_hintergrund,
     richtung_aus_action,
 )
+from agent.krypto.hebel_screening import (
+    classify_squeeze_divergenz,
+    compute_funding_rate_percentile,
+    compute_oi_change_pct,
+)
 from agent.krypto.liquidity_zones import liquiditaetszonen_fakt
 from agent.krypto.makro_analog import get_cached_makro_analog_fact
 from agent.krypto.signal_stabilitaet import (
@@ -787,6 +792,25 @@ def generate_signal(
             btc_relativwert_ergebnis = compute_btc_relativwert(dates, closes, btc_dates, btc_closes)
             btc_relativwert = btc_relativwert_fakt(btc_relativwert_ergebnis, config_dict)
 
+    # OI-Squeeze-Divergenz + Funding-Rate-Perzentil (2026-07-28, Abschnitt 6
+    # Fakten-Entscheidungsmappe Punkt 2+3) - wiederverwendet dieselbe
+    # open_interest_snapshot-Quelle wie Hebel (siehe hebel_screening.py::
+    # classify_squeeze_divergenz()/compute_funding_rate_percentile() Docstrings
+    # fuer die volle Begruendung, inkl. warum ein EIGENES Lookback-Fenster
+    # noetig ist statt Hebels 4h-Trendfolge-Fenster). Rein lokaler DB-Read,
+    # kein zusaetzlicher Netzwerk-Call - die Daten werden vom 15-Min-Hebel-
+    # Screening-Job befuellt, unabhaengig davon, ob dieses Symbol tatsaechlich
+    # gehebelt gehandelt wird.
+    _oi_cfg = config_dict.get("krypto_oi_fakten", {})
+    oi_change_pct = compute_oi_change_pct(
+        conn, asset.symbol, "binance", _oi_cfg.get("squeeze_oi_lookback_stunden", 72),
+    )
+    squeeze_divergenz = classify_squeeze_divergenz(
+        oi_change_pct, anticyclic_context.recent_drop_pct,
+        _oi_cfg.get("squeeze_schwelle_prozent", 1.0),
+    )
+    funding_rate_perzentil = latest_value(compute_funding_rate_percentile(conn, asset.symbol))
+
     facts = build_facts(
         asset, price_snap, holdings.get(asset.symbol), snapshot, confluence, regime_result,
         regime_profile, risk_result, anticyclic_context, strategien_aktiv, price_age_minutes,
@@ -797,6 +821,8 @@ def generate_signal(
         liquiditaetszonen=liquiditaetszonen,
         signal_stabilitaet=signal_stabilitaet,
         btc_relativwert=btc_relativwert,
+        squeeze_divergenz=squeeze_divergenz,
+        funding_rate_perzentil=funding_rate_perzentil,
     )
 
     # R-5.6 Groq-Synthese.

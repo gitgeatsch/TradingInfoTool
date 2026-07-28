@@ -293,7 +293,21 @@ Index, bereits vorklassifiziert) als ZUSAETZLICHEN Makro-Kontext in \
 Dollar-Index korreliert historisch oft NEGATIV mit Krypto (globale Liquiditaets- \
 verknappung), ein "fallender" tendenziell positiv - KEINE harte Kausalitaet, nur \
 ein zusaetzlicher Punkt neben regime.liquiditaets_regime.
-25. Fuelle `eigene_einschaetzung` GANZ ZULETZT aus, NACHDEM du `action`, \
+25. Ist `antizyklisch.squeeze_divergenz` NICHT null, zeigt es das Verhaeltnis von \
+Open-Interest-Aenderung zu Kursaenderung ueber dasselbe mehrtaegige Fenster - \
+BESONDERS relevant fuer eine gehebelte Position: "aufbau_bestaetigt" (Kurs UND OI \
+in dieselbe Richtung - frisches Kapital, tendenziell robusterer Trend, geringeres \
+Liquidations-Kaskaden-Risiko) vs. "short_squeeze_verdacht"/"long_squeeze_verdacht" \
+(Kurs und OI GEGENLAEUFIG - der Kursverlauf wird eher durch Zwangs-Ein-/Eindeckung \
+bestehender Positionen getrieben, ERHOEHTES Risiko einer schnellen Gegenbewegung/ \
+Liquidationskaskade sobald der Squeeze auslaeuft). "abbau_deleveraging" (beide \
+fallend) ist meist eine normale Korrektur. "neutral" = keine der beiden Seiten hat \
+sich nennenswert bewegt, ignorieren. Ist `antizyklisch.funding_rate_perzentil` \
+(0-100) NICHT null, zeigt es, ob die AKTUELLE Funding-Rate historisch fuer GENAU \
+DIESEN Coin extrem ist (Crowding-Signal) - ein ANDERES Signal als die absolute \
+Funding-Kosten-Hoehe (Abschnitt 3, hebel_risk_gate.py), dupliziere sie nicht als \
+Zahl, nutze sie als Kontext in `long_reasoning.technisch`/`key_risks`.
+26. Fuelle `eigene_einschaetzung` GANZ ZULETZT aus, NACHDEM du `action`, \
 `confidence_pct`, `gegenargument`, `top_gruende` und `long_reasoning` bereits \
 fertiggestellt hast - das ist ein ABSCHLIESSENDER, GANZHEITLICHER Rueckblick \
 auf deine eigene bereits fertige Analyse, keine Wiederholung/Formalitaet. \
@@ -458,6 +472,8 @@ def build_hebel_facts(
     signal_stabilitaet: dict | None = None,
     btc_relativwert: dict | None = None,
     optionsmarkt: dict | None = None,
+    squeeze_divergenz: str | None = None,
+    funding_rate_perzentil: float | None = None,
 ) -> dict:
     """Analog agent/krypto/analyst.py::build_facts() - wiederverwendet dieselben
     Bausteine fuer technische_analyse/regime/markt_kontext/antizyklisch 1:1 (siehe
@@ -617,6 +633,13 @@ def build_hebel_facts(
             "long_konten_anteil_prozent": _native(anticyclic_context.long_account_pct),
             "retail_long_bias_extrem": anticyclic_context.retail_long_bias_extreme,
             "grund": anticyclic_context.reason,
+            # OI-Squeeze-Divergenz + Funding-Rate-Perzentil (2026-07-28, Abschnitt 6
+            # Fakten-Entscheidungsmappe Punkt 2+3) - siehe agent/krypto/analyst.py
+            # (Spot-Pendant) fuer die volle Begruendung. Eigenes Lookback-Fenster
+            # (siehe hebel_pipeline.py), NICHT trigger.oi_change_pct_lookback unten
+            # (4h Trendfolge-Fenster, anderer Zweck).
+            "squeeze_divergenz": squeeze_divergenz,
+            "funding_rate_perzentil": _native(funding_rate_perzentil),
         },
         "trigger": {
             "trigger_zweig": trigger.trigger_zweig,

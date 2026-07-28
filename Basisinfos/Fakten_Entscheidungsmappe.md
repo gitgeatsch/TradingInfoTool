@@ -449,8 +449,8 @@ kostenfreien Quellen (feste Projekt-Vorgabe, siehe
 | Kandidat | Warum marktüblich | Aufwand |
 |---|---|---|
 | **DXY-Trend (Dollar-Index) direkt in Krypto-Fakten** — **ERLEDIGT (2026-07-28)** | Dollar-Stärke korreliert historisch invers mit Krypto/Risk-Assets — Standard-Makro-Cross-Check bei jedem Krypto-Desk. `api/macro.py::get_dollar_index_trend()` existiert bereits (gebaut für `agent/kategorie_thesen.py`), wird aber **nie** an Krypto-Spot/Hebel übergeben — nur indirekt und stark verzögert über den monatlichen Makro-Analog-Cache. | Gering — reines Wiring, Funktion + Datenquelle bereits getestet im Einsatz. |
-| **Open-Interest-Trend-vs-Kurs-Divergenz** (Squeeze-Erkennung) | Klassische Technik: Kurs steigt bei FALLENDEM OI → oft fragile Short-Squeeze-Rally (wenig belastbar); Kurs steigt bei STEIGENDEM OI → frisches Kapital, robuster. Wird an praktisch jedem Krypto-Derivate-Desk verwendet. | Gering — wir haben Binance/Bybit/OKX-OI UND Kursänderung bereits (`antizyklisch.*`), nur die Verknüpfung als eigener Fakt fehlt. |
-| **Funding-Rate-Perzentil** (Crowding-Indikator) | Zeigt, ob die AKTUELLE Funding-Rate historisch extrem ist (Crowding-Signal), nicht nur den Rohwert. Genau dasselbe Prinzip wie das bereits gebaute `atr_percentile()` — nur auf Funding-Rate-Historie angewendet. | Gering — identisches Code-Muster wiederverwendbar. |
+| **Open-Interest-Trend-vs-Kurs-Divergenz** (Squeeze-Erkennung) — **ERLEDIGT (2026-07-28)** | Klassische Technik: Kurs steigt bei FALLENDEM OI → oft fragile Short-Squeeze-Rally (wenig belastbar); Kurs steigt bei STEIGENDEM OI → frisches Kapital, robuster. Wird an praktisch jedem Krypto-Derivate-Desk verwendet. | Gering — wir haben Binance/Bybit/OKX-OI UND Kursänderung bereits (`antizyklisch.*`), nur die Verknüpfung als eigener Fakt fehlt. |
+| **Funding-Rate-Perzentil** (Crowding-Indikator) — **ERLEDIGT (2026-07-28)** | Zeigt, ob die AKTUELLE Funding-Rate historisch extrem ist (Crowding-Signal), nicht nur den Rohwert. Genau dasselbe Prinzip wie das bereits gebaute `atr_percentile()` — nur auf Funding-Rate-Historie angewendet. | Gering — identisches Code-Muster wiederverwendbar. |
 
 ### 6.2 Recherchebedürftig — plausibel machbar, aber nicht sofort einschätzbar
 
@@ -474,6 +474,39 @@ Priorisierungsvorschlag: 6.1 zusammen mit den bereits entschiedenen Punkten aus
 Abschnitt 5 angehen (DXY-Wiring ist im Aufwand vergleichbar mit den dortigen
 Punkten), 6.2 erst nach einer kurzen Datenverfügbarkeits-Prüfung, 6.3 nicht ohne
 neue Nutzer-Anfrage.
+
+**OI-Squeeze-Divergenz + Funding-Rate-Perzentil — Umsetzung (2026-07-28):** vor
+der Umsetzung Mengenanalyse gegen die echte Desktop-DB durchgeführt, da die
+Doku-Behauptung "Daten bereits vorhanden" nur fuer Hebel-geprüfte Assets
+zutraf, nicht pauschal für Spot. Fund: `asset_hebel_settings` (Hebel-Prüfung-
+Toggle) ist ein reiner OPT-OUT (Default `True` für ALLE Krypto-Assets, siehe
+`db.get_hebel_pruefung_erlaubt()`-Docstring) und die Tabelle war zum
+Prüfzeitpunkt komplett leer (niemand hat je opt-out gemacht) — von 43 Krypto-
+Watchlist-Assets hatten bereits 38 (88%) historische OI-/Funding-Daten in
+`open_interest_snapshot`, die 5 fehlenden plausibel durch neuere Watchlist-
+Ergänzungen oder fehlenden Derivate-Markt erklärt (bereits durch die
+bestehende OI-Abdeckungs-Warnung sichtbar gemacht). Damit Entscheidung: beide
+Fakten von Anfang an für Spot UND Hebel bauen, keine gestaffelte Ausweitung.
+
+Neue reine Funktion `classify_squeeze_divergenz()` (`hebel_screening.py`)
+vergleicht `compute_oi_change_pct()` (NEUES, eigenes 72h-Lookback-Fenster,
+`config.yaml krypto_oi_fakten.squeeze_oi_lookback_stunden` — bewusst NICHT
+Hebels 4h-Trendfolge-Fenster, da zeitlich nicht vergleichbar mit dem 3-Tage-
+Kursfenster) mit dem bereits vorhandenen `antizyklisch.kursaenderung_letzte_
+tage_prozent` (`anticyclic.py::DROP_LOOKBACK_DAYS=3`). 4 Label plus
+"neutral" (Mindestbetrag `squeeze_schwelle_prozent`). Neue Funktion
+`funding_rate_percentile()` (`indicators/calculations.py`) exakt nach dem
+`atr_percentile()`-Muster (eigene `MIN_FUNDING_PERZENTIL_PUNKTE`-Konstante,
+kein Anfassen des bestehenden ATR-Codes), gefüttert über einen DB-Fetch-
+Wrapper (`hebel_screening.py::compute_funding_rate_percentile()`), der die
+redundant in allen 3 Börsen-Zeilen gespeicherte Kraken-Funding-Rate ausliest.
+
+Beide Fakten in `pipeline.py`/`hebel_pipeline.py` berechnet und in
+`analyst.py`/`hebel_analyst.py` als `antizyklisch.squeeze_divergenz`/
+`.funding_rate_perzentil` verdrahtet (neue Regeln 31/25). Verifiziert:
+Klasse 2, 16 synthetische Testfälle (alle 4 Squeeze-Quadranten + neutral +
+None-Propagierung + Perzentil-Grenzfälle + DB-Wrapper mit None-Filterung),
+Regelnummerierung + Import-Regressionscheck über alle 6 betroffenen Module.
 
 **DXY-Trend — Umsetzung (2026-07-28):** einheitlich für alle 6 Pipelines (Krypto
 Spot/Hebel, Aktien, Rohstoffe, Themen-ETF, Hedge) verdrahtet, keine

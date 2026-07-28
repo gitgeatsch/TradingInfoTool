@@ -957,6 +957,23 @@ hebel_screening:
       gewicht_long_bias_extrem: 0.35
       gewicht_wende_anzeichen: 0.3
 
+# --- Krypto-OI-Fakten (2026-07-28, Abschnitt 6 Fakten-Entscheidungsmappe) ---
+# Squeeze-Divergenz + Funding-Perzentil - NICHT hebel_screening-spezifisch (anders
+# als der Abschnitt oben): beide Fakten laufen fuer Spot UND Hebel, wiederverwenden
+# aber dieselbe open_interest_snapshot-Tabelle/hebel_screening.py-Helferfunktionen.
+krypto_oi_fakten:
+  squeeze_oi_lookback_stunden: 72     # an anticyclic.py::DROP_LOOKBACK_DAYS=3 (72h)
+                                      # angeglichen - die Squeeze-Divergenz vergleicht
+                                      # OI-Aenderung UND Kursaenderung ueber dasselbe
+                                      # Zeitfenster, sonst Aepfel-Birnen-Vergleich
+                                      # (der Hebel-eigene oi_lookback_stunden=4 oben ist
+                                      # bewusst kurz fuer den Trendfolge-Zweig, passt aber
+                                      # NICHT zum 3-Tage-Kursfenster dieses neuen Fakts).
+  squeeze_schwelle_prozent: 1.0       # Mindestbetrag fuer OI- UND Kursaenderung, unterhalb
+                                      # derer die Divergenz als "neutral" gilt (keine der
+                                      # beiden Seiten hat sich nennenswert bewegt) -
+                                      # [OFFEN] Platzhalter, keine Live-Kalibrierung.
+
 # --- E-Mail-Benachrichtigung (U-8, 2026-07-12, siehe Regelwerksmanual.md Kap. 12;
 # Zugangsdaten NUR in .env, nie hier) ---
 benachrichtigung:

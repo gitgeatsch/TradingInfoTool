@@ -32,6 +32,11 @@ from agent.krypto.gegenpruefung import (
     fuehre_beide_calls_im_hintergrund,
 )
 from agent.krypto.hebel_analyst import build_hebel_facts, call_llm_for_hebel_signal
+from agent.krypto.hebel_screening import (
+    classify_squeeze_divergenz,
+    compute_funding_rate_percentile,
+    compute_oi_change_pct,
+)
 from agent.krypto.liquidity_zones import liquiditaetszonen_fakt
 from agent.krypto.makro_analog import distill_makro_vergleich_fuer_hebel, get_cached_makro_analog_fact
 from agent.krypto.optionsmarkt import fetch_optionsmarkt_fakt
@@ -260,6 +265,21 @@ def generate_hebel_signal(
     # siehe agent/krypto/optionsmarkt.py Modul-Docstring fuer die Live-Fetch-
     # statt-Caching-Begruendung.
     optionsmarkt = fetch_optionsmarkt_fakt(config_dict)
+    # OI-Squeeze-Divergenz + Funding-Rate-Perzentil (2026-07-28, Abschnitt 6
+    # Fakten-Entscheidungsmappe Punkt 2+3) - siehe agent/krypto/pipeline.py
+    # (Spot-Pendant) fuer die volle Begruendung, insbesondere warum ein
+    # EIGENES Lookback-Fenster noetig ist statt trigger.oi_change_pct_lookback
+    # (4h Trendfolge-Fenster, zeitlich nicht vergleichbar mit dem 3-Tage-
+    # Kursfenster dieses neuen Fakts).
+    _oi_cfg = config_dict.get("krypto_oi_fakten", {})
+    oi_change_pct = compute_oi_change_pct(
+        conn, asset.symbol, "binance", _oi_cfg.get("squeeze_oi_lookback_stunden", 72),
+    )
+    squeeze_divergenz = classify_squeeze_divergenz(
+        oi_change_pct, anticyclic_context.recent_drop_pct,
+        _oi_cfg.get("squeeze_schwelle_prozent", 1.0),
+    )
+    funding_rate_perzentil = latest_value(compute_funding_rate_percentile(conn, asset.symbol))
     facts = build_hebel_facts(
         asset, price_snap, snapshot, confluence, regime_result, regime_profile,
         anticyclic_context, market_context, trigger, position_aktuell, pre_result,
@@ -270,6 +290,8 @@ def generate_hebel_signal(
         signal_stabilitaet=signal_stabilitaet,
         btc_relativwert=btc_relativwert,
         optionsmarkt=optionsmarkt,
+        squeeze_divergenz=squeeze_divergenz,
+        funding_rate_perzentil=funding_rate_perzentil,
     )
 
     try:
