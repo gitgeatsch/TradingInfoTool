@@ -11186,3 +11186,50 @@ des `config.yaml`-vs-`data/settings.json`-Musters fuer eventuelle zukuenftige
 GUI-Schalter - jeweils im Einzelfall neu abwaegen, ob ein Schalter
 Trading-/Versand-relevant (→ config.yaml) oder reine GUI-Optik (→
 data/settings.json) ist.
+
+## Nachtrag (2026-07-28, frischer NB-Export): Multi-Asset-Batch Cron/Cooldown-Mismatch gefixt
+
+**Auslöser:** Nutzer meldete "aus dem Multiassets Bereich NULL Signale" - Analyse
+eines frischen `extract_notebook_diagnose.py`-Exports (22 MB, 07-28 19:36) plus
+`tradinginfotool.log` bestätigte den Verdacht als echten, aktuellen Bug (nicht
+nur historisch/erledigt wie eine frühere Session vermutet hatte).
+
+**Root Cause:** `MULTI_ASSET_BATCH_CRON_HOURS = "9,19"`
+(`scheduler/background.py:98`, seit dem Quotrix-Handelsfenster-Fix 2026-07-20)
+laesst den Job 2x/Tag laufen, Abstand abwechselnd 10h (09→19 Uhr) und 14h
+(19→09 Uhr). `cooldown_stunden_gehalten` stand aber auf 24 - ueber BEIDEN
+Abstaenden. Ein gehaltenes Asset, das um 09:00 verarbeitet wird, ist beim
+naechsten Lauf (10h spaeter) UND beim uebernaechsten (14h spaeter, 24h
+insgesamt) noch im Cooldown - erst der 3. Lauf (~24h nach dem 1.) verarbeitet
+es wieder. Log-Beweis: von 07-26 bis 07-28 (~15 Cron-Firings) gab es genau
+EINEN produktiven Lauf ("13 verarbeitet", 07-27 09:05), alle anderen zeigten
+"0 verarbeitet, 13 Cooldown-uebersprungen".
+
+**Fix:** `multi_asset_batch.cooldown_stunden_gehalten` von 24 auf 8 gesenkt
+(`Basisinfos/config.yaml`) - liegt unter beiden Cron-Abstaenden (10h/14h),
+angelehnt an das bereits bestehende Krypto-Spot-"Kern"-Muster
+(`spot_cooldown_stunden_kern=8`). `cooldown_stunden_beobachtet` (72h, reine
+Beobachtungs-Kandidaten alle 3 Tage) bewusst unveraendert - eigenstaendiges,
+absichtliches Design, nicht Teil des Cron-Mismatches.
+
+**Verifiziert:** `yaml.safe_load()` gegen die geaenderte `config.yaml` -
+`multi_asset_batch.cooldown_stunden_gehalten == 8`.
+
+**Weitere Funde derselben Analyse (kein Bug, informativ):**
+- "84%/93% Historie veraltet"-Muster bei Hebel-Gate-Vetos weiterhin bestaetigt
+  reine 07-23-Altlast (keine neuen Treffer seither).
+- Krypto-Hebel-Rueckgang bei echten ERÖFFNEN-Signalen (18→10→8→4→3 an den
+  letzten 5 Tagen) ueberwiegend durch CRV-Risk-Veto (CRV < 2.0) erklaerbar -
+  Hebel-Screening findet weiterhin konstant 5-11 Kandidaten/15-Min-Zyklus,
+  keine Erkennungslücke gefunden.
+- Krypto-Spot "massiver Rueckgang" nicht bestaetigt: 68 echte Signale am
+  07-28 (bis 19:36), alles reine Krypto-Symbole, normale Aktivitaet bis 10:33
+  UTC, danach Stille durch reguläre 8h/15h-Cooldown-Fenster erklaerbar.
+
+**Bewusst NICHT Teil dieser Runde:** Z.ai-Antwortzeit/Wartemechanismus bei
+Hebel-E-Mails - Nutzer-Beobachtung (Screenshot, Hebel ERÖFFNEN ETH LONG,
+07-28 19:37), dass das Fazit des 2. Z.ai-Calls (Richtungs-Abgleich,
+`zai_eigene_richtung`/`zai_uebereinstimmung`) in der E-Mail fehlte, obwohl der
+1. Call (Konsistenz-Check) erschien - siehe
+[[reference_offene_zeitbasierte_beobachtungspunkte]] fuer Details, noch nicht
+untersucht.

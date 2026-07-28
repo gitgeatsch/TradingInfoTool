@@ -1313,9 +1313,18 @@ hedge:
 # warum das ein eigener Job statt Tier 4 im Krypto-Budget-Allocator ist) ---
 multi_asset_batch:
   aktiv: true
-  cooldown_stunden_gehalten: 24    # gehaltene Positionen (live aus holdings
-                                    # abgeleitet, wie bei Krypto) taeglich neu
-                                    # pruefen
+  cooldown_stunden_gehalten: 8     # NEUKALIBRIERT (2026-07-28, Cron/Cooldown-
+                                    # Mismatch-Fix): der Cron laeuft 2x/Tag
+                                    # (MULTI_ASSET_BATCH_CRON_HOURS="9,19",
+                                    # Abstand abwechselnd 10h/14h), 24h Cooldown
+                                    # war > als beide Abstaende - dadurch wurde
+                                    # PRAKTISCH NIE ein gehaltenes Asset beim
+                                    # naechsten Lauf wieder faellig (Log-Beweis:
+                                    # 07-26 bis 07-28 nur 1 produktiver Lauf von
+                                    # ~15 Cron-Firings). 8h liegt unter beiden
+                                    # Abstaenden, angelehnt an das analoge
+                                    # Krypto-Spot-"Kern"-Muster
+                                    # (spot_cooldown_stunden_kern=8).
   cooldown_stunden_beobachtet: 72  # reine Beobachtungs-Kandidaten alle 3 Tage -
                                     # deutlich traeger als Kryptos 10h/20h,
                                     # passend zur langsameren Marktdynamik
