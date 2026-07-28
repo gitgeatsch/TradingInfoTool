@@ -10804,3 +10804,113 @@ Zahl mit klarer Einordnung, konsistent mit `zyklus_risiko`/`atr.perzentil`.
 korrekt), T3 Grenzfall (fehlende/`None`-Werte), T4 Kombinationsfall
 (Import-Konsistenz `hebel_pipeline.py`<->`makro_analog.py`). Regressionscheck:
 Spot unveraendert, Regelnummerierung Hebel 1-24 ohne Luecke.
+
+---
+
+## Nachtrag (2026-07-28): HOTFIX - Z.ai-429-Sturm behoben (`api/zai.py`)
+
+**Ausloeser:** Nutzer-Meldung "alle Z.ai-Infos sind aus den E-Mails gefallen, Hebel
+UND Spot". Live-Test des Z.ai-API-Keys war unauffaellig (funktionierte einwandfrei),
+die DB (`zai_gegenpruefung_verlauf` im Notebook-Export) zeigte sogar durchgaengig
+frische Eintraege bis kurz vor Exportzeitpunkt - der Fehler lag also nicht am Key
+oder an Z.ai selbst, sondern irgendwo im Zusammenspiel.
+
+**Root Cause (im Log-Auszug des Notebook-Exports eindeutig nachgewiesen):**
+210 Z.ai-bezogene Log-Zeilen in einem Zeitfenster, praktisch ausschliesslich
+`"429 Client Error: Too Many Requests"`. `api/zai.py` dokumentiert selbst ein von
+Z.ai vorgegebenes Concurrency-Limit von 2 fuer GLM-4.5-Flash - der Client hatte
+aber bewusst KEINE eigene Drosselung (Nutzer-Entscheidung 2026-07-20, kalibriert
+fuer Hebel-only-Volumen, also niedrige Last). Seit der Ausweitung der
+Z.ai-Gegenpruefung auf alle 6 Signal-Pipelines (Commit `17b1c9b`, 2026-07-27 - je
+2 sequenzielle Calls pro Signal, ueber mehrere gleichzeitig laufende Batches)
+wurde das Concurrency-Limit chronisch ueberschritten - Calls scheiterten schlicht,
+statt nur langsamer zu sein (auch der schon vorhandene 60s-Wartemechanismus vor
+dem Hebel-E-Mail-Versand konnte das nicht kompensieren, wenn der Call selbst nie
+durchkam).
+
+**Fix (`api/zai.py`, `ZaiClient`):**
+1. **Echtes Concurrency-Gate:** `threading.Semaphore(MAX_CONCURRENT_REQUESTS=2)`
+   als Instanzattribut - `chat()` wartet jetzt auf einen freien Slot, statt sofort
+   zu feuern und ggf. per 429 abgewiesen zu werden. Da `main.py` genau EINE
+   `ZaiClient`-Instanz erstellt und an alle 6 Pipelines durchreicht, wirkt das
+   Semaphore global ueber alle gleichzeitig laufenden Hintergrund-Threads.
+2. **429-Retry:** bis zu `RETRY_ON_429_MAX_VERSUCHE=2` zusaetzliche Versuche mit
+   steigender Wartezeit (`RETRY_ON_429_BASIS_WARTEZEIT_SEKUNDEN=5.0` je Versuch),
+   respektiert einen `Retry-After`-Header falls vorhanden. Andere Fehler (Timeout,
+   5xx, Verbindungsfehler) werden NICHT wiederholt - bleibt P-8 (kein Hard-Fail,
+   Aufrufer faengt die Exception weiterhin ab).
+3. `RATE_LIMIT_PER_MINUTE` (Gesamtvolumen/Minute) bleibt unveraendert bestehen -
+   andere Achse (Durchsatz vs. Gleichzeitigkeit), beide Mechanismen ergaenzen sich.
+
+**Verifiziert (Klasse 2, 6 Testfaelle, alle mit gemocktem `_session.post`):**
+T1 Concurrency-Gate (6 parallele Threads, max. gleichzeitig aktive Calls <= 2),
+T2 429-Retry (429 dann 200 - Erfolg nach 1 Wiederholung), T3 `Retry-After`-Header
+wird respektiert, T4 Nicht-429-Fehler (500) wird NICHT wiederholt (1 Aufruf,
+sofortige Exception), T5 Regressionsfall (sofortiger 200-Erfolg, kein Retry-Sleep),
+T6 Retries ausgeschoepft (3 Versuche gesamt, dann Exception). Regressionscheck:
+`main.py`-Import weiterhin unveraendert funktionsfaehig.
+
+---
+
+## Nachtrag (2026-07-28): Krypto-Spot-Luecke im Z.ai-E-Mail-Versand geschlossen (`scheduler/background.py`)
+
+**Ausloeser:** Nutzer-Nachfrage nach dem 429-Hotfix oben: "hast du das fuer alle
+ZAI und eMail benachrichtigung beruecksichtigt?" - Rundum-Pruefung aller Z.ai-
+Aufrufstellen und E-Mail-Pfade ergab eine ZWEITE, vom Concurrency-Fix unabhaengige
+Luecke.
+
+**Root Cause:** `generate_hebel_signal()`/`generate_signal()` geben das Signal-
+Objekt zurueck, BEVOR der Z.ai-Hintergrund-Thread ueberhaupt fertig ist (siehe
+`api/zai.py`-Docstring). Fuer Hebel existierte deshalb bereits seit 2026-07-26 ein
+Wartemechanismus (`_sende_hebel_email_mit_zai_wartezeit()`, begrenztes Polling bis
+zu `_ZAI_EMAIL_WARTE_MAX_SEKUNDEN`), fuer Multi-Asset-Batch (Aktien/Rohstoffe/
+Themen-ETF/Hedge) ein guenstiger Re-Fetch-by-ID direkt vor dem Versand (Commit 10
+der Z.ai-6-Pipelines-Ausweitung). **Krypto-Spot hatte WEDER von beidem** -
+`_on_signal_ready()` rief `_notify_spot_signal()` in ihrem `"spot:"`-Zweig direkt
+mit dem In-Memory-Objekt auf, dessen Z.ai-Felder strukturell nie gesetzt sein
+konnten. Ein reiner Re-Fetch (wie bei Multi-Asset) haette hier NICHT geholfen, da
+Krypto-Spot pro Signal sofort benachrichtigt (E-Mail-Latenz-Fix), nicht erst am
+Ende eines mehrstuendigen Batches wie Multi-Asset - es brauchte echtes Warten wie
+bei Hebel.
+
+**Fix:** die bisher Hebel-spezifische `_sende_hebel_email_mit_zai_wartezeit()`
+wurde zu einer generischen, parametrisierten Funktion
+`_sende_signal_email_mit_zai_wartezeit(ergebnis, watchlist, bitpanda_assets,
+conn_factory, required_actions, get_signal_by_id_fn, notify_fn)` verallgemeinert
+(die Wartemechanik selbst ist asset-neutral - anders als z.B. der Retail-Konsens-
+Filter, der bewusst je Assetklasse dupliziert bleibt, weil dort inhaltliche
+Unterschiede bestehen). Zwei duenne Wrapper `_sende_hebel_email_mit_zai_
+wartezeit()` (unveraendertes Verhalten, reiner Regressions-Checkpoint) und neu
+`_sende_spot_email_mit_zai_wartezeit()` rufen die generische Funktion mit ihren
+jeweiligen `REQUIRED_*_ACTIONS`/`get_*_signal_by_id`/`_notify_*_signal` auf.
+`_on_signal_ready()`s `"spot:"`-Zweig spawnt jetzt analog zum `"hebel:"`-Zweig
+einen eigenen Hintergrund-Thread mit Wartezeit (nur wenn `zai_client is not None`,
+sonst unveraendert direkter Aufruf).
+
+**Selbst gefundener und selbst gefixter Regressions-Bug beim Verallgemeinern:**
+die urspruengliche Fruehausstiegs-Pruefung fuer HALTEN/nicht-relevante Aktionen war
+in der Hebel-Fassung ein blanker `return` VOR jedem `notify_fn`-Aufruf (sicher fuer
+Hebel, da `_notify_hebel_signal()` denselben HALTEN-Guard ohnehin selbst hat).
+Fuer Spot waere das ein echter Fehler gewesen: `_notify_spot_signal()` prueft
+`cash_veto` UNABHAENGIG von der Aktion (auch bei HALTEN) - ein blanker Return
+haette die Cash-Veto-Warnmail fuer Spot-HALTEN-Signale mit `cash_veto=True`
+verschluckt. Gefixt, indem der Fruehausstieg `notify_fn` weiterhin aufruft (nur
+OHNE Wartezeit) statt komplett zu returnen.
+
+**Rundum-Pruefung sonst ergebnislos (bewusst dokumentiert, damit klar ist, was
+geprueft wurde):** `agent/krypto/gegenpruefung.py`s zwei Z.ai-Aufrufstellen
+(`leite_eigene_richtung()`, `pruefe_konsistenz()`) haben keine eigene Retry-Logik
+(einfaches try/except-return-None, P-8) - kein Konflikt mit dem neuen Retry im
+Client. Die manuellen "Signal berechnen"-Buttons (`ui/signals_view.py::
+_run_pipeline()`, `ui/hebel_view.py::_run_analysis()`) loesen ueberhaupt keine
+E-Mail aus (nur GUI-Update) - koennen die Fixes also nicht umgehen.
+
+**Verifiziert (Klasse 2, 7 Testfaelle, gemockte `time.sleep`/Signal-Objekte):**
+T1 HALTEN (sofortiger `notify_fn`-Aufruf, kein Sleep), T2 Positivfall (Loop endet
+nach 1 Poll, sobald Z.ai-Urteil vorliegt, `notify_fn` bekommt das frische Signal),
+T3 `conn_factory=None` (kein Wartezeit-Pfad, Original-Signal durchgereicht), T4
+Zeitlimit erreicht (volle 20 Polls, `notify_fn` trotzdem aufgerufen), T5 (KRITISCH)
+Spot-HALTEN mit `cash_veto=True` - `notify_fn` wird trotzdem aufgerufen, Cash-Veto-
+Warnung bleibt erhalten, T6/T7 Delegations-Regressionstests fuer beide duennen
+Wrapper. Regressionscheck: `main.py`/`scheduler/background.py`/`agent/krypto/
+gegenpruefung.py`-Import weiterhin unveraendert funktionsfaehig.

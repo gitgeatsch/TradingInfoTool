@@ -1353,21 +1353,29 @@ _ZAI_EMAIL_WARTE_MAX_SEKUNDEN = 60
 _ZAI_EMAIL_POLL_INTERVALL_SEKUNDEN = 3
 
 
-def _sende_hebel_email_mit_zai_wartezeit(
+def _sende_signal_email_mit_zai_wartezeit(
     ergebnis, watchlist: list, bitpanda_assets: list | None, conn_factory,
+    required_actions: tuple, get_signal_by_id_fn, notify_fn,
 ) -> None:
-    """Nutzer-Entscheidung (2026-07-26, Nachtrag zur Z.ai-Gegenpruefung,
-    ausgeloest durch einen Screenshot-Fund: die BTC-SHORT-E-Mail zeigte
-    keine Z.ai-Zeilen, obwohl die DB zum Versandzeitpunkt bereits ein Urteil
-    hatte): die Hebel-E-Mail SOLL die Z.ai-Zeilen enthalten, auch wenn dafuer
-    eine begrenzte Wartezeit in Kauf genommen wird - bewusst GEGEN die
-    Standard-Empfehlung (nur GUI, E-Mail bleibt sofort), aber informiert
-    entschieden (siehe AskUserQuestion-Antwort im Chat-Verlauf).
+    """Generische Fassung (2026-07-28, Nachtrag zum Z.ai-429-Sturm-Hotfix -
+    siehe api/zai.py Modul-Docstring) von urspruenglich `_sende_hebel_email_
+    mit_zai_wartezeit()` (Nutzer-Entscheidung 2026-07-26, ausgeloest durch
+    einen Screenshot-Fund: die BTC-SHORT-E-Mail zeigte keine Z.ai-Zeilen,
+    obwohl die DB zum Versandzeitpunkt bereits ein Urteil hatte). Bewusst
+    parametrisiert (`required_actions`/`get_signal_by_id_fn`/`notify_fn`)
+    statt dupliziert, da die Logik selbst asset-neutral ist (reine
+    Wartemechanik, keine inhaltliche Spot/Hebel-Unterscheidung wie bei den
+    Fakten/Regeln) - Krypto-Spot hatte bislang GAR KEINEN Warte- oder
+    Re-Fetch-Mechanismus (echter Nutzer-Fund, 2026-07-28): `_notify_spot_
+    signal()` bekam das In-Memory-Signal direkt, dessen Z.ai-Felder
+    strukturell nie gesetzt sein konnten, da der Z.ai-Hintergrund-Thread
+    erst zeitgleich mit dem Callback startet.
 
-    Root Cause des Funds: `generate_hebel_signal()` gibt das `signal`-Objekt
-    bewusst zurueck, BEVOR der Z.ai-Hintergrund-Thread ueberhaupt fertig ist
-    (siehe dortiger Docstring) - das In-Memory-Objekt traegt die Z.ai-Felder
-    also nie, unabhaengig davon, wie schnell Z.ai tatsaechlich antwortet.
+    Root Cause des urspruenglichen Funds: `generate_hebel_signal()`/
+    `generate_signal()` geben das `signal`-Objekt bewusst zurueck, BEVOR der
+    Z.ai-Hintergrund-Thread ueberhaupt fertig ist (siehe dortiger Docstring) -
+    das In-Memory-Objekt traegt die Z.ai-Felder also nie, unabhaengig davon,
+    wie schnell Z.ai tatsaechlich antwortet.
 
     Laeuft in einem EIGENEN Hintergrund-Thread (siehe Aufrufstelle in
     _on_signal_ready() unten) - NICHT im Haupt-Callback-Pfad von
@@ -1381,7 +1389,7 @@ def _sende_hebel_email_mit_zai_wartezeit(
     _on_signal_ready() diesen Thread startet und sofort zurueckkehrt.
 
     Fruehausstieg vor der Wartezeit fuer HALTEN/nicht-benachrichtigungs-
-    relevante Aktionen (Duplikat der Pruefung in _notify_hebel_signal(),
+    relevante Aktionen (Duplikat der Pruefung im jeweiligen `notify_fn`,
     hier VOR der Wartezeit noetig - sonst wuerde fuer den haeufigsten Fall
     ueberhaupt, ein HALTEN-Signal ohne jede E-Mail, unnoetig bis zu 60s in
     einem Thread verbraucht).
@@ -1393,10 +1401,17 @@ def _sende_hebel_email_mit_zai_wartezeit(
     immer das volle Zeitbudget zu verbrauchen. Wird das Limit erreicht (z.B.
     bei einem Z.ai-Timeout von bis zu 150s je Call), geht die E-Mail trotzdem
     OHNE Z.ai-Zeilen raus (P-8, kein Hard-Fail wegen einer optionalen
-    Zusatzinfo) - identisches Verhalten zu vorher dieser Aenderung."""
-    from agent.krypto.hebel_analyst import REQUIRED_HEBEL_ACTIONS
+    Zusatzinfo).
 
-    if ergebnis.action not in REQUIRED_HEBEL_ACTIONS or ergebnis.action == "HALTEN":
+    Fruehausstieg ruft `notify_fn` bewusst TROTZDEM auf (nur OHNE Wartezeit),
+    statt komplett zu returnen (2026-07-28, echter Fund beim Verallgemeinern
+    auf Spot): `_notify_spot_signal()` prueft `cash_veto` UNABHAENGIG von der
+    Aktion (auch bei HALTEN) - ein blanker Return haette diese Warnmail fuer
+    Spot-HALTEN-Signale mit `cash_veto` verschluckt. Fuer Hebel aendert das
+    nichts (dort hat `_notify_hebel_signal()` denselben HALTEN-Guard ohnehin
+    schon selbst, der Aufruf ist ein sicherer No-Op)."""
+    if ergebnis.action not in required_actions or ergebnis.action == "HALTEN":
+        notify_fn(ergebnis, watchlist, bitpanda_assets, conn_factory)
         return
 
     angereichertes_signal = ergebnis
@@ -1408,7 +1423,7 @@ def _sende_hebel_email_mit_zai_wartezeit(
             try:
                 conn = conn_factory()
                 try:
-                    frisch = db.get_hebel_signal_by_id(conn, ergebnis.id)
+                    frisch = get_signal_by_id_fn(conn, ergebnis.id)
                 finally:
                     conn.close()
             except Exception:
@@ -1433,7 +1448,41 @@ def _sende_hebel_email_mit_zai_wartezeit(
                 "Z.ai-Gegenpruefung fuer %s nach %.0fs (Zeitlimit) noch nicht abgeschlossen - "
                 "E-Mail geht ohne Z.ai-Zeilen raus", ergebnis.symbol, gewartet,
             )
-    _notify_hebel_signal(angereichertes_signal, watchlist, bitpanda_assets, conn_factory)
+    notify_fn(angereichertes_signal, watchlist, bitpanda_assets, conn_factory)
+
+
+def _sende_hebel_email_mit_zai_wartezeit(
+    ergebnis, watchlist: list, bitpanda_assets: list | None, conn_factory,
+) -> None:
+    """Hebel-Fassung von `_sende_signal_email_mit_zai_wartezeit()` - siehe
+    dortigen Docstring fuer die volle Begruendung."""
+    from agent.krypto.hebel_analyst import REQUIRED_HEBEL_ACTIONS
+
+    _sende_signal_email_mit_zai_wartezeit(
+        ergebnis, watchlist, bitpanda_assets, conn_factory,
+        required_actions=REQUIRED_HEBEL_ACTIONS,
+        get_signal_by_id_fn=db.get_hebel_signal_by_id,
+        notify_fn=_notify_hebel_signal,
+    )
+
+
+def _sende_spot_email_mit_zai_wartezeit(
+    ergebnis, watchlist: list, bitpanda_assets: list | None, conn_factory,
+) -> None:
+    """Spot-Fassung von `_sende_signal_email_mit_zai_wartezeit()` (2026-07-28,
+    echter Nutzer-Fund: Krypto-Spot hatte bislang WEDER Wartemechanismus
+    (wie Hebel) NOCH Re-Fetch (wie Multi-Asset-Batch) - `_notify_spot_
+    signal()` bekam das In-Memory-Signal direkt und konnte dessen Z.ai-Felder
+    strukturell nie tragen). Siehe Haupt-Docstring fuer die volle
+    Begruendung."""
+    from agent.krypto.analyst import REQUIRED_ACTIONS
+
+    _sende_signal_email_mit_zai_wartezeit(
+        ergebnis, watchlist, bitpanda_assets, conn_factory,
+        required_actions=REQUIRED_ACTIONS,
+        get_signal_by_id_fn=db.get_signal_by_id,
+        notify_fn=_notify_spot_signal,
+    )
 
 
 def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None, conn_factory=None) -> None:
@@ -1876,7 +1925,20 @@ def hebel_screening_job(
                     else:
                         _notify_hebel_signal(ergebnis, watchlist, bitpanda_assets, conn_factory)
                 elif schluessel.startswith("spot:"):
-                    _notify_spot_signal(ergebnis, watchlist, bitpanda_assets, conn_factory)
+                    if zai_client is not None:
+                        # Analog zum Hebel-Zweig oben (2026-07-28, Nachtrag -
+                        # echter Nutzer-Fund: Spot hatte bislang KEINEN Warte-
+                        # oder Re-Fetch-Mechanismus, siehe _sende_spot_email_
+                        # mit_zai_wartezeit()-Docstring). Eigener Hintergrund-
+                        # Thread, blockiert andere Kandidaten im selben Batch
+                        # nicht.
+                        threading.Thread(
+                            target=_sende_spot_email_mit_zai_wartezeit,
+                            args=(ergebnis, watchlist, bitpanda_assets, conn_factory),
+                            daemon=True,
+                        ).start()
+                    else:
+                        _notify_spot_signal(ergebnis, watchlist, bitpanda_assets, conn_factory)
 
             allocation = run_budget_allocator(
                 conn_factory, watchlist, coingecko_client, kraken_client,

@@ -25,9 +25,25 @@ risk_gate.py::post_check() validiert jede Empfehlung unabhaengig vom
 LLM-Anbieter deterministisch nach (P-7).
 
 OpenAI-kompatible API wie Groq/Mistral/Gemini, identisches `.chat()`-
-Interface."""
+Interface.
+
+Nachtrag (2026-07-28, echter Notebook-Fund - siehe Regelwerksmanual): die
+urspruengliche "keine Drosselung"-Entscheidung oben war fuer Hebel-only-
+Volumen kalibriert. Seit der Ausweitung der Z.ai-Gegenpruefung auf alle 6
+Signal-Pipelines (Commit 17b1c9b, 2026-07-27, je 2 sequenzielle Calls pro
+Signal ueber mehrere gleichzeitig laufende Batches) wurde das dokumentierte
+Concurrency-Limit (GLM-4.5-Flash=2) chronisch ueberschritten - echter
+Notebook-Export zeigte 210 Z.ai-Log-Zeilen in einem Fenster, praktisch alle
+"429 Too Many Requests". Ergebnis: Z.ai-Infos fehlten in nahezu allen
+Signal-E-Mails (Hebel UND Spot), weil die Calls schlicht fehlschlugen statt
+nur langsamer zu sein. Deshalb jetzt EIN echter Concurrency-Gate
+(MAX_CONCURRENT_REQUESTS unten) plus ein begrenzter 429-Retry - die
+RATE_LIMIT_PER_MINUTE-Drosselung (Gesamtvolumen/Minute) bleibt davon
+unberuehrt, das ist eine andere Achse (Gesamtdurchsatz vs. Gleichzeitigkeit)."""
 from __future__ import annotations
 
+import logging
+import threading
 import time
 from collections import deque
 
@@ -35,13 +51,31 @@ import requests
 
 from database.api_health import track_api_health
 
+logger = logging.getLogger(__name__)
+
 BASE_URL = "https://api.z.ai/api/paas/v4/chat/completions"
 DEFAULT_MODEL = "glm-4.5-flash"
-# Bewusst KEINE konservative Drosselung (Nutzer-Vorgabe 2026-07-20, siehe
-# Modul-Docstring) - nur ein grosszuegiger Sicherheitsnetz-Wert gegen einen
-# etwaigen Endlosschleifen-Bug, keine Kapazitaetsschaetzung. Die reale
-# Obergrenze ist unbekannt und soll sich im echten Betrieb zeigen.
+# Bewusst KEINE Volumen-Drosselung ueber RATE_LIMIT_PER_MINUTE hinaus
+# (Nutzer-Vorgabe 2026-07-20, siehe Modul-Docstring) - nur ein grosszuegiger
+# Sicherheitsnetz-Wert gegen einen etwaigen Endlosschleifen-Bug, keine
+# Kapazitaetsschaetzung. Die reale Obergrenze ist unbekannt und soll sich im
+# echten Betrieb zeigen.
 RATE_LIMIT_PER_MINUTE = 120
+# Gleichzeitigkeits-Bremse (2026-07-28, Nachtrag oben) - GEGENSATZ zu
+# RATE_LIMIT_PER_MINUTE: begrenzt nicht das Gesamtvolumen, sondern wie viele
+# Requests zeitgleich unterwegs sein duerfen. Deckt sich mit Z.ais eigener
+# Doku fuer GLM-4.5-Flash ("Concurrency limit: 2") - alles darueber wird vom
+# Server ohnehin per 429 abgewiesen, ein Client-seitiges Warten auf einen
+# freien Slot ist strikt besser als ein sofortiger, garantierter Fehlschlag.
+MAX_CONCURRENT_REQUESTS = 2
+# 429-Retry (2026-07-28) - Ergaenzung zum Concurrency-Gate: selbst mit
+# eigener Drosselung kann ein 429 vorkommen (z.B. kurzzeitig hoehere externe
+# Last bei Z.ai selbst). 2 zusaetzliche Versuche mit steigender Wartezeit,
+# `Retry-After`-Header wird respektiert falls vorhanden. Andere Fehler
+# (Timeout, 5xx, Verbindungsfehler) werden NICHT wiederholt - das bleibt wie
+# bisher P-8 (kein Hard-Fail, Aufrufer faengt die Exception ab).
+RETRY_ON_429_MAX_VERSUCHE = 2
+RETRY_ON_429_BASIS_WARTEZEIT_SEKUNDEN = 5.0
 # REQUEST_TIMEOUT_SECONDS (2026-07-20, Nachbesserung nach der ersten echten
 # Testnacht): urspruenglich 60s, aber reproduzierte Live-Tests (Desktop +
 # Notebook) zeigten, dass glm-4.5-flash bei realistischer Payload-Groesse
@@ -59,6 +93,13 @@ class ZaiClient:
         self._api_key = api_key
         self._session = session or requests.Session()
         self._call_timestamps_minute: deque[float] = deque()
+        # Gleichzeitigkeits-Gate (siehe MAX_CONCURRENT_REQUESTS-Docstring oben) -
+        # EIN Semaphore pro Client-Instanz, und main.py erstellt genau EINE
+        # ZaiClient-Instanz fuer den ganzen Prozess (siehe main.py), die an alle
+        # 6 Pipelines durchgereicht wird - das Semaphore wirkt also global ueber
+        # alle gleichzeitig laufenden Hintergrund-Threads hinweg, nicht nur
+        # innerhalb einer einzelnen Pipeline.
+        self._concurrency_semaphore = threading.Semaphore(MAX_CONCURRENT_REQUESTS)
 
     def _respect_rate_limit(self) -> None:
         now = time.monotonic()
@@ -83,7 +124,32 @@ class ZaiClient:
         payload = {"model": model, "messages": messages, "temperature": temperature}
         if response_format is not None:
             payload["response_format"] = response_format
-        response = self._session.post(BASE_URL, json=payload, headers=headers, timeout=REQUEST_TIMEOUT_SECONDS)
+        # Wartet auf einen freien Slot statt sofort zu feuern (siehe
+        # MAX_CONCURRENT_REQUESTS-Docstring) - blockiert den aufrufenden
+        # Hintergrund-Thread, was hier gewuenscht ist (kein zusaetzlicher
+        # Call soll gestartet werden, waehrend schon 2 unterwegs sind).
+        with self._concurrency_semaphore:
+            versuch = 0
+            while True:
+                response = self._session.post(
+                    BASE_URL, json=payload, headers=headers, timeout=REQUEST_TIMEOUT_SECONDS
+                )
+                if response.status_code == 429 and versuch < RETRY_ON_429_MAX_VERSUCHE:
+                    versuch += 1
+                    wartezeit = RETRY_ON_429_BASIS_WARTEZEIT_SEKUNDEN * versuch
+                    retry_after = response.headers.get("Retry-After")
+                    if retry_after is not None:
+                        try:
+                            wartezeit = max(wartezeit, float(retry_after))
+                        except ValueError:
+                            pass
+                    logger.info(
+                        "Z.ai 429 (Versuch %s/%s) - warte %.1fs vor erneutem Versuch",
+                        versuch, RETRY_ON_429_MAX_VERSUCHE, wartezeit,
+                    )
+                    time.sleep(wartezeit)
+                    continue
+                break
         response.raise_for_status()
         data = response.json()
         return data["choices"][0]["message"]["content"]
