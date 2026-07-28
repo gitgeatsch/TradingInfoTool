@@ -448,7 +448,7 @@ kostenfreien Quellen (feste Projekt-Vorgabe, siehe
 
 | Kandidat | Warum marktüblich | Aufwand |
 |---|---|---|
-| **DXY-Trend (Dollar-Index) direkt in Krypto-Fakten** | Dollar-Stärke korreliert historisch invers mit Krypto/Risk-Assets — Standard-Makro-Cross-Check bei jedem Krypto-Desk. `api/macro.py::get_dollar_index_trend()` existiert bereits (gebaut für `agent/kategorie_thesen.py`), wird aber **nie** an Krypto-Spot/Hebel übergeben — nur indirekt und stark verzögert über den monatlichen Makro-Analog-Cache. | Gering — reines Wiring, Funktion + Datenquelle bereits getestet im Einsatz. |
+| **DXY-Trend (Dollar-Index) direkt in Krypto-Fakten** — **ERLEDIGT (2026-07-28)** | Dollar-Stärke korreliert historisch invers mit Krypto/Risk-Assets — Standard-Makro-Cross-Check bei jedem Krypto-Desk. `api/macro.py::get_dollar_index_trend()` existiert bereits (gebaut für `agent/kategorie_thesen.py`), wird aber **nie** an Krypto-Spot/Hebel übergeben — nur indirekt und stark verzögert über den monatlichen Makro-Analog-Cache. | Gering — reines Wiring, Funktion + Datenquelle bereits getestet im Einsatz. |
 | **Open-Interest-Trend-vs-Kurs-Divergenz** (Squeeze-Erkennung) | Klassische Technik: Kurs steigt bei FALLENDEM OI → oft fragile Short-Squeeze-Rally (wenig belastbar); Kurs steigt bei STEIGENDEM OI → frisches Kapital, robuster. Wird an praktisch jedem Krypto-Derivate-Desk verwendet. | Gering — wir haben Binance/Bybit/OKX-OI UND Kursänderung bereits (`antizyklisch.*`), nur die Verknüpfung als eigener Fakt fehlt. |
 | **Funding-Rate-Perzentil** (Crowding-Indikator) | Zeigt, ob die AKTUELLE Funding-Rate historisch extrem ist (Crowding-Signal), nicht nur den Rohwert. Genau dasselbe Prinzip wie das bereits gebaute `atr_percentile()` — nur auf Funding-Rate-Historie angewendet. | Gering — identisches Code-Muster wiederverwendbar. |
 
@@ -474,3 +474,18 @@ Priorisierungsvorschlag: 6.1 zusammen mit den bereits entschiedenen Punkten aus
 Abschnitt 5 angehen (DXY-Wiring ist im Aufwand vergleichbar mit den dortigen
 Punkten), 6.2 erst nach einer kurzen Datenverfügbarkeits-Prüfung, 6.3 nicht ohne
 neue Nutzer-Anfrage.
+
+**DXY-Trend — Umsetzung (2026-07-28):** einheitlich für alle 6 Pipelines (Krypto
+Spot/Hebel, Aktien, Rohstoffe, Themen-ETF, Hedge) verdrahtet, keine
+Sonderbehandlung (Nutzer bestätigt: keine Gegenargumente gegen Gleichbehandlung
+wie beim VIX-Vorbild). `RegimeResult.dollar_index_wert`/`dollar_index_trend`
+(bereits vorklassifiziert: "steigend"/"fallend"/"gleichbleibend"/"unbekannt",
+`DOLLAR_INDEX_TREND_THRESHOLD_PCT = 1.5`) fließt über `compute_current_regime()`
+(gemeinsame Funktion aller 6 Pipelines) automatisch in `build_facts()`/
+`build_hebel_facts()` als `regime.dollar_index.wert`/`.trend`. In 5 der 6
+Analyst-Dateien als Ergänzung an die bestehende VIX-Regel angehängt (identisches
+Makro-Kontext-Muster, minimaler Zusatz-Tokenaufwand); Hebel hat kein
+VIX-Äquivalent, dort eigene kompakte Regel (Regel 24, vor dem abschließenden
+`eigene_einschaetzung`-Rückblick). Verifiziert Klasse 1 (Import/Compile/
+Regelnummerierung über alle 6 Dateien) — reines, risikoarmes Fakten-Wiring nach
+demselben bereits produktiv laufenden VIX-Muster, keine neue Logik.

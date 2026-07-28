@@ -80,7 +80,11 @@ verfuegbar" ist - im Gegensatz zu `regime.aktien_baermarkt` (nachlaufender Drawd
 ist VIX ein VORLAUFENDES Optionsmarkt-Stimmungssignal, kann fuer eine Hedge-Position \
 frueher relevant werden als der Drawdown-Indikator. "gestresst"/"krise" ist ein \
 zusaetzliches (schwaecheres als aktien_baermarkt.aktiv) Signal FUER mehr Absicherung \
-- formuliere vorsichtig, keine harte Kausalitaet behaupten.
+- formuliere vorsichtig, keine harte Kausalitaet behaupten. Beziehe zusaetzlich \
+`regime.dollar_index.wert`/`regime.dollar_index.trend` (DXY) ein, falls `trend` \
+nicht "unbekannt" ist - ein "steigender" Dollar-Index faellt oft mit angespannter \
+globaler Liquiditaet zusammen (schwaches Zusatzsignal FUER mehr Absicherung), ein \
+"fallender" eher entspannend - keine harte Kausalitaet behaupten.
 6. Ist `historischer_makro_vergleich` NICHT null: eine stark NEGATIVE \
 `spx_median_forward_6m_prozent`/`spx_median_forward_12m_prozent` (historische Analoge \
 mit aehnlicher Makro-Konstellation) ist ein Signal FUER mehr Absicherung. Lies den \
@@ -267,6 +271,12 @@ def build_facts(
             "vix": {
                 "wert": _native(regime_result.vix_wert),
                 "label": regime_result.vix_label,
+            },
+            # Dollar-Index-Trend (2026-07-28, Abschnitt 6 Fakten-Entscheidungsmappe) -
+            # bereits vorklassifiziert, analog zu vix oben direkt im Regime-Fakt verdrahtet.
+            "dollar_index": {
+                "wert": _native(regime_result.dollar_index_wert),
+                "trend": regime_result.dollar_index_trend,
             },
         },
         "historischer_makro_vergleich": historischer_makro_vergleich,

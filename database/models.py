@@ -161,6 +161,16 @@ class MacroSnapshot:
     # kein Label - Baender koennten sich spaeter aendern (analog zum
     # equities_baermarkt-Bool-Verzicht oben).
     vix_wert: float | None = None
+    # Dollar-Index (DXY, 2026-07-28, Abschnitt 6 Fakten_Entscheidungsmappe.md) -
+    # api/macro.py::get_dollar_index_trend() braucht einen 12-Monats-Verlauf, um
+    # den Trend zu bestimmen (anders als VIX also keine reine Momentaufnahme).
+    # Beide Werte (aktueller Stand + bereits klassifizierter Trend) taeglich
+    # gecacht wie vix_wert, ueber agent/krypto/pipeline.py::
+    # _fetch_boden_zielzone_context() abgerufen und in RegimeResult (regime.py)
+    # durchgereicht - dieselbe gemeinsame Stelle, die bereits alle 6 Pipelines
+    # (Krypto Spot/Hebel, Aktien, Rohstoffe, Themen-ETF, Hedge) versorgt.
+    dollar_index_wert: float | None = None
+    dollar_index_trend: str | None = None
 
 
 @dataclass

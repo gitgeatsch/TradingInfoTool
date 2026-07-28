@@ -112,7 +112,11 @@ Kausalitaet behaupten. Beziehe zusaetzlich `regime.vix.wert`/`regime.vix.label` 
 falls `label` nicht "nicht verfuegbar" ist - ein VORLAUFENDES Optionsmarkt- \
 Stimmungssignal (im Gegensatz zum nachlaufenden `aktien_baermarkt`-Drawdown-Flag); \
 "gestresst"/"krise" verstaerkt bei einem hoeher-Beta-Themen-ETF tendenziell das \
-Risk-off-Risiko.
+Risk-off-Risiko. Beziehe zusaetzlich `regime.dollar_index.wert`/ \
+`regime.dollar_index.trend` (DXY) ein, falls `trend` nicht "unbekannt" ist - ein \
+"steigender" Dollar-Index wirkt historisch tendenziell belastend fuer Auslands- \
+umsaetze/globale Liquiditaet, relevant vor allem fuer international/Emerging- \
+Markets-lastige Themen-ETFs - keine harte Kausalitaet behaupten.
 9. `sektor_rotation`-Regel: zeigt die relative Wertentwicklung dieses ETFs gegenueber \
 einem breiten Markt-Benchmark (SPY) ueber die letzten 30/90 Handelstage \
 (`relative_staerke_30d_pct`/`relative_staerke_90d_pct`). Ein POSITIVER Wert bedeutet \
@@ -399,6 +403,12 @@ def build_facts(
             "vix": {
                 "wert": _native(regime_result.vix_wert),
                 "label": regime_result.vix_label,
+            },
+            # Dollar-Index-Trend (2026-07-28, Abschnitt 6 Fakten-Entscheidungsmappe) -
+            # bereits vorklassifiziert, analog zu vix oben direkt im Regime-Fakt verdrahtet.
+            "dollar_index": {
+                "wert": _native(regime_result.dollar_index_wert),
+                "trend": regime_result.dollar_index_trend,
             },
         },
         "risiko_check": {

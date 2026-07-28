@@ -113,7 +113,12 @@ Kontext fuer JEDE Einzelaktie, nicht nur ein Zusatzfakt. Beziehe zusaetzlich \
 - im Gegensatz zu `regime.aktien_baermarkt` (nachlaufender Drawdown) ist VIX ein \
 VORLAUFENDES Optionsmarkt-Stimmungssignal. "gestresst"/"krise" deutet auf erhoehte \
 Risikoaversion hin, relevant fuer Timing-Vorsicht - formuliere entsprechend \
-vorsichtig, keine harte Kausalitaet behaupten.
+vorsichtig, keine harte Kausalitaet behaupten. Beziehe zusaetzlich \
+`regime.dollar_index.wert`/`regime.dollar_index.trend` (DXY) ein, falls `trend` \
+nicht "unbekannt" ist - ein "steigender" Dollar-Index belastet historisch tendenziell \
+die Auslandsumsaetze/-gewinne US-multinationaler Unternehmen (FX-Translationseffekt), \
+ein "fallender" wirkt eher unterstuetzend - nur relevant bei Unternehmen mit \
+nennenswertem Auslandsumsatzanteil, keine harte Kausalitaet behaupten.
 9. Fundamentaldaten-Bewertungsregel: vergleiche `fundamentaldaten.kgv` (trailing) MIT \
 `fundamentaldaten.forward_kgv` UND den Wachstumsraten `gewinnwachstum_prozent`/ \
 `umsatzwachstum_prozent`, bevor du ein hohes KGV als Risiko einordnest - ein hohes \
@@ -487,6 +492,12 @@ def build_facts(
             "vix": {
                 "wert": _native(regime_result.vix_wert),
                 "label": regime_result.vix_label,
+            },
+            # Dollar-Index-Trend (2026-07-28, Abschnitt 6 Fakten-Entscheidungsmappe) -
+            # bereits vorklassifiziert, analog zu vix oben direkt im Regime-Fakt verdrahtet.
+            "dollar_index": {
+                "wert": _native(regime_result.dollar_index_wert),
+                "trend": regime_result.dollar_index_trend,
             },
         },
         "risiko_check": {

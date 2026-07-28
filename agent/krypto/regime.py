@@ -130,6 +130,13 @@ class RegimeResult:
     # Deckel, Nutzer-Entscheidung 2026-07-18), siehe _vix_label() unten.
     vix_wert: float | None
     vix_label: str
+    # Dollar-Index (DXY, 2026-07-28, Abschnitt 6 Fakten_Entscheidungsmappe.md) -
+    # anders als VIX braucht der Trend selbst schon einen 12-Monats-Vergleich
+    # (siehe api/macro.py::get_dollar_index_trend()), daher kommt `trend` hier
+    # bereits fertig klassifiziert an ("steigend"/"fallend"/"gleichbleibend"/
+    # "unbekannt"), kein eigenes _label()-Aequivalent noetig.
+    dollar_index_wert: float | None
+    dollar_index_trend: str | None
 
 
 def _btc_change_pct(btc_closes: np.ndarray, days: int = 30) -> float | None:
@@ -390,6 +397,8 @@ def determine_regime(
     equities_baermarkt_begruendung: str = "Aktien-Bärenmarkt-Status nicht verfügbar.",
     boden_zielzone_overlay_shift_std: float = 0.0,
     vix_wert: float | None = None,
+    dollar_index_wert: float | None = None,
+    dollar_index_trend: str | None = None,
 ) -> RegimeResult:
     """Boden-Zielzone-Parameter (AZ-4 Baustein 2, 2026-07-12): bewusst als bereits
     aufgeloeste Werte uebergeben (wie `manual_override`) statt hier config.yaml zu
@@ -494,6 +503,8 @@ def determine_regime(
             equities_baermarkt_begruendung=equities_baermarkt_begruendung,
             vix_wert=vix_wert,
             vix_label=vix_label,
+            dollar_index_wert=dollar_index_wert,
+            dollar_index_trend=dollar_index_trend,
         )
 
     return RegimeResult(
@@ -520,6 +531,8 @@ def determine_regime(
         equities_baermarkt_begruendung=equities_baermarkt_begruendung,
         vix_wert=vix_wert,
         vix_label=vix_label,
+        dollar_index_wert=dollar_index_wert,
+        dollar_index_trend=dollar_index_trend,
     )
 
 

@@ -495,6 +495,9 @@ _MACRO_SNAPSHOT_NEW_COLUMNS = (
     # VIX-Fruehindikator (2026-07-18) - siehe database/models.py::MacroSnapshot
     # fuer die Feld-Dokumentation.
     "vix_wert",
+    # Dollar-Index (DXY, 2026-07-28) - siehe database/models.py::MacroSnapshot
+    # fuer die Feld-Dokumentation.
+    "dollar_index_wert", "dollar_index_trend",
 )
 
 # Erste TEXT-Spalten in dieser bisher rein numerischen Migrationsliste (siehe
@@ -504,6 +507,7 @@ _MACRO_SNAPSHOT_NEW_COLUMNS = (
 _MACRO_SNAPSHOT_TEXT_COLUMNS = {
     "zyklus_risiko_begruendung", "liquiditaets_regime",
     "liquiditaets_regime_begruendung", "btc_trend_label", "regime_reason",
+    "dollar_index_trend",
 }
 
 

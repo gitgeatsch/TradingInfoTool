@@ -110,7 +110,11 @@ zusaetzlich `regime.vix.wert`/`regime.vix.label` ein, falls `label` nicht "nicht
 verfuegbar" ist - ein VORLAUFENDES Optionsmarkt-Stimmungssignal (im Gegensatz zum \
 nachlaufenden `aktien_baermarkt`-Drawdown-Flag). "gestresst"/"krise" verstaerkt bei \
 Gold/Silber tendenziell die Safe-Haven-Logik oben, bei Kupfer/Erdgas eher neutral - \
-formuliere vorsichtig, keine harte Kausalitaet behaupten.
+formuliere vorsichtig, keine harte Kausalitaet behaupten. Beziehe zusaetzlich \
+`regime.dollar_index.wert`/`regime.dollar_index.trend` (DXY) ein, falls `trend` \
+nicht "unbekannt" ist - Rohstoffe sind USD-denominiert, ein "steigender" Dollar-Index \
+wirkt historisch DIREKT preisbelastend (staerker/direkter als bei Aktien), ein \
+"fallender" preisunterstuetzend - gilt fuer alle 4 Rohstoffe, nicht nur Gold/Silber.
 9. `makro_ueberlagerung`-Regel: `realrendite_10j_prozent` (10-Jahres-TIPS-Realrendite) \
 ist historisch der staerkste Preistreiber fuer Gold/Silber - eine STEIGENDE Realrendite \
 ist tendenziell belastend (Opportunitaetskosten des zinslosen Haltens steigen), eine \
@@ -429,6 +433,12 @@ def build_facts(
             "vix": {
                 "wert": _native(regime_result.vix_wert),
                 "label": regime_result.vix_label,
+            },
+            # Dollar-Index-Trend (2026-07-28, Abschnitt 6 Fakten-Entscheidungsmappe) -
+            # bereits vorklassifiziert, analog zu vix oben direkt im Regime-Fakt verdrahtet.
+            "dollar_index": {
+                "wert": _native(regime_result.dollar_index_wert),
+                "trend": regime_result.dollar_index_trend,
             },
         },
         "risiko_check": {

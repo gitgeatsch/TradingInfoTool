@@ -10914,3 +10914,45 @@ Spot-HALTEN mit `cash_veto=True` - `notify_fn` wird trotzdem aufgerufen, Cash-Ve
 Warnung bleibt erhalten, T6/T7 Delegations-Regressionstests fuer beide duennen
 Wrapper. Regressionscheck: `main.py`/`scheduler/background.py`/`agent/krypto/
 gegenpruefung.py`-Import weiterhin unveraendert funktionsfaehig.
+
+---
+
+## Nachtrag (2026-07-28): DXY-Trend (Dollar-Index) fuer alle 6 Pipelines verdrahtet
+
+**Kontext:** Abschnitt 6 Punkt 1 der Fakten-Entscheidungsmappe. `api/macro.py::
+get_dollar_index_trend()` existierte bereits (2026-07-20, fuer `agent/kategorie_
+thesen.py`), war aber nie an die 6 Signal-Pipelines angebunden - nur indirekt und
+stark verzoegert ueber den monatlichen Makro-Analog-Cache. Nutzer bestaetigt:
+keine Gegenargumente gegen Gleichbehandlung aller 6 Pipelines (analog zum
+VIX-Vorbild).
+
+**Datenschicht (bereits vorhanden aus Vorlaeufer-Session):**
+`RegimeResult.dollar_index_wert`/`dollar_index_trend` (Trend bereits
+vorklassifiziert: "steigend"/"fallend"/"gleichbleibend"/"unbekannt",
+`DOLLAR_INDEX_TREND_THRESHOLD_PCT = 1.5`), gecacht ueber `MacroSnapshot`
+(1x/Tag, analog VIX), fliesst ueber `compute_current_regime()` (gemeinsame
+Funktion aller 6 Pipelines) automatisch durch.
+
+**Fakt-Wiring (diese Runde):** `regime.dollar_index.wert`/`.trend` in
+`build_facts()`/`build_hebel_facts()` aller 6 Analyst-Dateien ergaenzt (`agent/
+krypto/analyst.py`, `agent/krypto/hebel_analyst.py`, `agent/aktien/analyst.py`,
+`agent/rohstoff/analyst.py`, `agent/themen_etf/analyst.py`, `agent/hedge/
+analyst.py`). In den 5 Spot-family-Pipelines als Ergaenzung an die bestehende
+VIX-Regel angehaengt (identisches Makro-Kontext-Muster: "steigender" DXY
+korreliert historisch tendenziell negativ mit Krypto/hoeher-Beta-Assets,
+direkter preisbelastend bei USD-denominierten Rohstoffen, belastend fuer
+Auslandsumsaetze bei Aktien) - bewusst MINIMALER Zusatz-Tokenaufwand (ein
+Satz je Datei), kein eigener Regel-Absatz, da inhaltlich eng verwandt mit VIX.
+Hebel hat KEIN VIX-Aequivalent im Fakten-Dict - dort neue eigenstaendige Regel
+24 (vor dem abschliessenden `eigene_einschaetzung`-Rueckblick, der auf 25
+verschoben wurde).
+
+**Verifiziert (Klasse 1):** `python -m py_compile` + Import-Regressionscheck
+fuer alle 6 Analyst- + 6 Pipeline-Module, Regelnummerierung 1..N luecken-/
+duplikatfrei in 5 von 6 Dateien prognostiziert und bestaetigt (Ausnahme:
+`agent/rohstoff/analyst.py` hat einen VORBESTEHENDEN, von dieser Aenderung
+unabhaengigen Nummerierungs-Doppler bei Regel 18/19 - separat als Task
+geflaggt, nicht Teil dieser Aenderung). Synthetischer Test: `RegimeResult` mit
+gesetzten `dollar_index_wert`/`_trend`-Werten instanziierbar. Reines,
+risikoarmes Fakten-Wiring nach bereits produktiv laufendem VIX-Muster, keine
+neue Berechnungslogik - kein hoeherer Testklassen-Aufwand noetig.

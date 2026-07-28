@@ -357,6 +357,7 @@ def _fetch_boden_zielzone_context(conn, config_dict: dict) -> dict:
     ungedrosselt. _boden_zielzone() selbst wird trotzdem bei JEDEM Aufruf frisch
     gerechnet (billige Arithmetik, kein Netzwerk) - auch bei einem Cache-Treffer,
     damit eine zwischenzeitliche config.yaml-Aenderung sofort greift."""
+    from api.macro import get_dollar_index_trend
     from api.yfinance_history import get_equities_bear_market_status, get_full_price_history, get_vix_reading
     from indicators.calculations import BtcLogRegressionRisk, compute_eth_log_regression_risk
 
@@ -370,6 +371,10 @@ def _fetch_boden_zielzone_context(conn, config_dict: dict) -> dict:
         # VIX-Fruehindikator (2026-07-18) - siehe get_vix_reading() Docstring
         # fuer die Abgrenzung zum nachlaufenden Drawdown-Status oben.
         "vix_wert": None,
+        # Dollar-Index (DXY, 2026-07-28) - siehe get_dollar_index_trend() Docstring,
+        # gleiches Tages-Cache-Muster wie VIX.
+        "dollar_index_wert": None,
+        "dollar_index_trend": None,
     }
     if not cfg.get("aktiv", True):
         context["equities_baermarkt_begruendung"] = "Boden-Zielzone deaktiviert (config.yaml boden_zielzone.aktiv=false)."
@@ -390,6 +395,8 @@ def _fetch_boden_zielzone_context(conn, config_dict: dict) -> dict:
         sp500_drawdown_pct = cached.equities_sp500_drawdown_pct
         nasdaq_drawdown_pct = cached.equities_nasdaq_drawdown_pct
         context["vix_wert"] = cached.vix_wert
+        context["dollar_index_wert"] = cached.dollar_index_wert
+        context["dollar_index_trend"] = cached.dollar_index_trend
     else:
         try:
             eth_history = get_full_price_history("ETH-USD")
@@ -411,6 +418,15 @@ def _fetch_boden_zielzone_context(conn, config_dict: dict) -> dict:
             context["vix_wert"] = get_vix_reading().wert
         except Exception as exc:
             logger.info("VIX-Abruf fehlgeschlagen: %s", exc)
+        try:
+            # Eigener try/except (P-10, wie VIX oben) - ein DXY-Ausfall soll
+            # weder VIX noch die Drawdown-Fakten mit reissen.
+            dxy = get_dollar_index_trend()
+            if dxy is not None:
+                context["dollar_index_wert"] = dxy.aktueller_wert
+                context["dollar_index_trend"] = dxy.trend
+        except Exception as exc:
+            logger.info("Dollar-Index-Abruf fehlgeschlagen: %s", exc)
 
         elr = context["eth_log_regression_risk"]
         db.upsert_macro_snapshot(conn, MacroSnapshot(
@@ -421,6 +437,8 @@ def _fetch_boden_zielzone_context(conn, config_dict: dict) -> dict:
             equities_sp500_drawdown_pct=sp500_drawdown_pct,
             equities_nasdaq_drawdown_pct=nasdaq_drawdown_pct,
             vix_wert=context["vix_wert"],
+            dollar_index_wert=context["dollar_index_wert"],
+            dollar_index_trend=context["dollar_index_trend"],
         ))
 
     # "aktiv"-Entscheidung: config-abhaengiger Schwellenwert-Vergleich, bewusst HIER
@@ -518,6 +536,8 @@ def compute_current_regime(conn, coingecko_client, watchlist, fred_api_key: str 
         equities_baermarkt_begruendung=boden_zielzone_context["equities_baermarkt_begruendung"],
         boden_zielzone_overlay_shift_std=boden_zielzone_context["overlay_shift_std"],
         vix_wert=boden_zielzone_context["vix_wert"],
+        dollar_index_wert=boden_zielzone_context["dollar_index_wert"],
+        dollar_index_trend=boden_zielzone_context["dollar_index_trend"],
     )
 
     # Fertige Zone zusaetzlich zu den Cache-Rohwerten persistieren (siehe

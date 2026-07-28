@@ -287,7 +287,13 @@ wie stark du technische/fundamentale/Momentum-/Makro-Aspekte in `long_reasoning`
 `top_gruende` gewichtest - KEINE starre Formel oder Pflichtquote, deine \
 eigene Einschaetzung der konkreten Fakten bleibt massgeblich. Erwaehne die \
 Zahlen selbst nicht woertlich, nutze sie nur zur Schwerpunktsetzung.
-24. Fuelle `eigene_einschaetzung` GANZ ZULETZT aus, NACHDEM du `action`, \
+24. Beziehe `regime.dollar_index.wert`/`regime.dollar_index.trend` (DXY, US-Dollar- \
+Index, bereits vorklassifiziert) als ZUSAETZLICHEN Makro-Kontext in \
+`long_reasoning.makro` ein, falls `trend` nicht "unbekannt" ist - ein "steigender" \
+Dollar-Index korreliert historisch oft NEGATIV mit Krypto (globale Liquiditaets- \
+verknappung), ein "fallender" tendenziell positiv - KEINE harte Kausalitaet, nur \
+ein zusaetzlicher Punkt neben regime.liquiditaets_regime.
+25. Fuelle `eigene_einschaetzung` GANZ ZULETZT aus, NACHDEM du `action`, \
 `confidence_pct`, `gegenargument`, `top_gruende` und `long_reasoning` bereits \
 fertiggestellt hast - das ist ein ABSCHLIESSENDER, GANZHEITLICHER Rueckblick \
 auf deine eigene bereits fertige Analyse, keine Wiederholung/Formalitaet. \
@@ -554,6 +560,14 @@ def build_hebel_facts(
             "btc_matrix_hinweis": regime_result.btc_matrix_beschreibung,
             "liquiditaets_regime": regime_result.liquiditaets_regime,
             "zyklus_risiko": _native(regime_result.zyklus_risiko),
+            # Dollar-Index-Trend (2026-07-28, Abschnitt 6 Fakten-Entscheidungsmappe) -
+            # bereits vorklassifiziert. Hebel hat (anders als die 5 Spot-family-
+            # Pipelines) KEIN VIX-Aequivalent im Fakten-Dict, daher eigene Regel
+            # statt Anhaengsel an eine bestehende VIX-Regel (siehe SYSTEM_PROMPT Regel 24).
+            "dollar_index": {
+                "wert": _native(regime_result.dollar_index_wert),
+                "trend": regime_result.dollar_index_trend,
+            },
             "richtungs_konflikt_mit_trigger": (
                 (regime_result.regime == "baer" and trigger.richtung == "LONG")
                 or (regime_result.regime == "bulle" and trigger.richtung == "SHORT")

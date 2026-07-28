@@ -136,7 +136,11 @@ Optionsmarkt-Stimmungssignal (kann schon ausschlagen, bevor/ohne dass ein echter
 Baermarkt eintritt). "gestresst"/"krise" deutet auf erhoehte Risikoaversion am \
 breiten Markt hin, relevant auch fuer Krypto (historisch oft korreliert, aber \
 NICHT immer - formuliere entsprechend vorsichtig, keine harte Kausalitaet \
-behaupten).
+behaupten). Beziehe zusaetzlich `regime.dollar_index.wert`/`regime.dollar_index.trend` \
+(DXY, US-Dollar-Index) ein, falls `trend` nicht "unbekannt" ist - ein "steigender" \
+Dollar-Index korreliert historisch oft NEGATIV mit Krypto (globale Liquiditaets- \
+verknappung, Krypto meist USD-denominiert), ein "fallender" tendenziell positiv - \
+auch hier KEINE harte Kausalitaet, nur ein zusaetzlicher Makro-Kontextpunkt.
 11. Beziehe `regime.zyklus_risiko` (0-1, hoeher = naeher an einem historischen \
 Bewertungsextrem laut Log-Regression-Modell) UND `regime.zyklus_risiko_begruendung` \
 (enthaelt bereits den MVRV/NUPL-Cross-Check) in `long_reasoning.fundamental` ein - \
@@ -604,6 +608,13 @@ def build_facts(
             "vix": {
                 "wert": _native(regime_result.vix_wert),
                 "label": regime_result.vix_label,
+            },
+            # Dollar-Index-Trend (2026-07-28, Abschnitt 6 Fakten-Entscheidungsmappe) -
+            # bereits vorklassifiziert (kein separates Label noetig, siehe RegimeResult-
+            # Docstring), analog zu vix oben direkt im Regime-Fakt verdrahtet.
+            "dollar_index": {
+                "wert": _native(regime_result.dollar_index_wert),
+                "trend": regime_result.dollar_index_trend,
             },
             # Cash-Reserve-Ziel (AZ-4 Baustein 3, 2026-07-12) - deterministischer Fakt
             # (wie boden_zielzone_btc/_eth oben), None wenn Regime nicht antizyklisch
