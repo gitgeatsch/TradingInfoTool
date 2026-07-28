@@ -266,10 +266,12 @@ _SPOT_SIGNAL_SPALTEN = (
     "umgesetzt, umgesetzt_am, umgesetzt_menge, umgesetzt_preis_usd, "
     # Z.ai-Konsistenz-Check (2026-07-27, Ausweitung von hebel_signals auf
     # signals - siehe agent/krypto/gegenpruefung.py Modul-Docstring
-    # "Erweiterung") - nur die 2 Konsistenz-Spalten, kein Richtungs-Abgleich
-    # (Spot hat kein richtung-Feld, siehe _HEBEL_SIGNAL_SPALTEN fuer die
-    # vollen 5 Hebel-Spalten zum Vergleich).
+    # "Erweiterung"), seit 2026-07-27 um die vollen 5 Z.ai-Spalten ergaenzt
+    # (database/db.py::update_signal_zai_gegenpruefung(),
+    # database/models.py::Signal-Dataclass) - identisches Feld-Set wie
+    # _HEBEL_SIGNAL_SPALTEN.
     "zai_gegenpruefung_urteil, zai_gegenpruefung_kurzbegruendung, "
+    "zai_eigene_richtung, zai_uebereinstimmung, zai_richtung_kurzbegruendung, "
     + _VOLLSTAENDIGKEITS_SPALTEN
 )
 
