@@ -162,8 +162,27 @@ interpretiert oder gar in eine Handlungsempfehlung übersetzt wird:**
 4. Bleibt die Kennzahl stabil, gilt der Befund als robust und kann als echte
    Erkenntnis dokumentiert und diskutiert werden.
 
+**Nachgeschärfte Mindestschwelle (Nachtrag 29.07., externe Recherche zu
+Backtest-Overfitting - Bailey/Lopez de Prado, "The Probability of Backtest
+Overfitting"; Harvey/Liu/Zhu zu Multiple-Testing bei Handelsstrategien):**
+ein aus einem Backtest abgeleitetes Muster wird NIE operationalisiert (kein
+Gate, kein Deckel, keine Schwellenwert-Änderung), solange (a) n < 50 ODER
+(b) ein einzelnes Symbol > 20-25% der Fälle stellt. Bei geclusterten
+Beobachtungen (mehrere Signale desselben Symbols aus derselben
+Marktbewegung) ist die EFFEKTIVE Stichprobengröße die Anzahl distinkter
+Symbole, nicht die Roh-Zeilenzahl - analog zu "clustered standard errors"
+in der Ökonometrie. Jede Analyse-Zusammenfassung weist deshalb IMMER beide
+Zahlen aus: Roh-n UND Anzahl distinkter Symbole.
+
+Zusätzlich: informell nacheinander getestete Hypothesen (z.B. "Deckel bauen"
+→ "Gegenteil scheint zu gelten" → "Kontrolle zeigt Artefakt") sind ein
+Multiple-Testing-Szenario - ein gefundener Effekt gilt bei jeder
+Zwischenstufe zunächst nur als hypothesengenerierend, nicht als bestätigt,
+bis er nach unabhängiger Replikation (neuer Zeitraum/neue Symbole) noch
+Bestand hat.
+
 Diese Prüfung wird in Abschnitt 3 der jeweiligen Analyse-Zusammenfassung (Chat oder
-Memory) kurz mit ausgewiesen (Anzahl Symbole, WR mit/ohne Top-N), nicht nur das
+Memory) kurz mit ausgewiesen (Roh-n, Anzahl Symbole, WR mit/ohne Top-N), nicht nur das
 Endergebnis genannt.
 
 ### 2.5.1 Klarstellung: was der Check NICHT bedeutet (Nachtrag 29.07.)
