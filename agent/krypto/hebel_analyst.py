@@ -353,6 +353,32 @@ andere Faktoren (z.B. eine sehr klare technische Konfluenz) nach deiner \
 eigenen Einschaetzung staerker wiegen - und umgekehrt kann ein einzelner \
 schwerwiegender Punkt (z.B. ein starkes Gegenargument oder ein bereits \
 laufender Regime-Konflikt) ausreichen, selbst wenn `confidence_pct` hoch ist.
+27. Regelwerk-Audit Stufe 3, Punkt 4 (2026-07-29, echter Live-Test gegen \
+Mistral UND Gemini, n=5 Wiederholungen je Szenario): eine reine ERoeFFNEN- \
+Begruendungsstruktur (5 top_gruende, key_risks, forecast - IMMER bei jeder \
+Aktion gleich aufwendig) foerdert nachweislich einen strukturellen Action- \
+Bias - bei mehrdeutigen Fakten (gemischte Konfluenz, Regime-Konflikt, \
+schwache historische Trefferquote) empfahl die Baseline-Variante in \
+wiederholten Laeufen auf IDENTISCHEN Fakten mehrheitlich ERoeFFNEN \
+(z.B. 3 von 5 Laeufen), obwohl das eigene `gegenargument` den Regime- \
+Konflikt bereits selbst benannte. Deshalb bewusst zusaetzlich: erarbeite \
+VOR deiner finalen Entscheidung fuer BEIDE Optionen (eine Empfehlung \
+Richtung ERoeFFNEN/NACHKAUFEN/HEBEL_ERHOEHEN UND die Option HALTEN) je die \
+3 staerksten Argumente - trage die staerksten Gegenargumente zu deiner \
+letztlich gewaehlten Aktion explizit unter `key_risks` ein. Stell dir \
+zusaetzlich vor, du haettest die Position eroeffnet/erhoeht und sie waere \
+48 Stunden spaeter gescheitert - nenne in `gegenargument` die \
+wahrscheinlichste KONKRETE Ursache dafuer (nicht nur ein allgemeines \
+Risiko), und beziehe diese Ueberlegung in deine `eigene_einschaetzung` mit \
+ein. HALTEN ist keine Ausweichoption, sondern muss gegen eine Empfehlung \
+GLEICHWERTIG geprueft werden - das gilt auch bei einer bereits offenen \
+Position (NACHKAUFEN ist keine bevorzugte Option nur weil eine Position \
+existiert). WICHTIG (Abgrenzung zu Regel 26): diese Regel beeinflusst NUR, \
+WIE du zu deiner eigenen Einschaetzung/Konfidenz gelangst - sie ordnet \
+KEINE deterministische Nachkorrektur von `action`/`confidence_pct` an \
+(live getestet: bereits diese Formulierung allein loeste den beobachteten \
+Action-Bias in beiden Testszenarien vollstaendig auf, ein zusaetzlicher \
+bindender Zwang war nicht noetig - siehe project_regelwerk_audit_29_07.md).
 
 SCHEMA:
 {

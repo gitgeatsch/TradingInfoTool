@@ -11767,10 +11767,15 @@ in [[project_regelwerk_audit_29_07]] (Memory).
   UNTEN, umgesetzt.
 - **Stufe 2** (Baseline-Infrastruktur): konsolidierte Baseline-Vergleichs-
   Funktion(en) in `backward_tracking.py` - SIEHE UNTEN, umgesetzt.
-- **Stufe 3** (groessere Strukturfragen, Diskussion noetig): CRV-Gate um
-  echte Trefferwahrscheinlichkeits-Schaetzung ergaenzen, Deckel-Konstanten
-  kalibrieren, Regime-Konflikt-Restrukturierung, Prompt-Bias zugunsten
-  Empfehlungen entschaerfen - noch offen.
+- **Stufe 3** (groessere Strukturfragen, Diskussion noetig): 4 Punkte -
+  Punkt 1 (CRV-Expectancy-Gate) bewusst IN EVIDENZ gehalten (Backtest zeigt
+  negative CRV-Trefferquoten-Korrelation, ueberwiegend Echo des
+  Enge-Stop-Loss-Befunds, Wiedervorlage bei n≥50 Post-Fix-Signalen); Punkt 2
+  (Deckel-Konstanten kalibrieren) vertagt (aktuell 0 Varianz im Outcome,
+  Kalibrierung derzeit prinzipiell unmoeglich); Punkt 3
+  (Regime-Konflikt-Restrukturierung) SIEHE UNTEN, umgesetzt; Punkt 4
+  (Prompt-Bias zugunsten Empfehlungen entschaerfen) SIEHE UNTEN, umgesetzt.
+  **Stufe 3 damit vollstaendig bearbeitet.**
 
 ### Stufe 0 umgesetzt: Eigenkapital-Deckel griff nicht ohne FX-Kurs
 
@@ -11922,3 +11927,57 @@ Signale ohne das Feld rendern identisch wie vorher.
               Leerfaelle (None/leer/[]) weiterhin robust - PASS
   Regressionscheck (Import aller abhaengigen Module): PASS
   Gesamturteil: verifiziert (Stufe 3, Punkt 3)
+
+### Stufe 3, Punkt 4 umgesetzt: Action-Bias-Korrektur (Regel 27) - echter Live-Test gegen Mistral UND Gemini
+
+**Fund:** externe Recherche (Sycophancy-/Omission-Bias-Literatur, Analysis of
+Competing Hypotheses, Premortem-Technik) plus eigener Live-Test bestaetigten:
+eine Prompt-Struktur, die IMMER dieselbe aufwendige Begruendung verlangt
+(5 top_gruende, key_risks, forecast), egal welche Aktion gewaehlt wird, foerdert
+einen Action-Bias zugunsten von Empfehlungen. Live-Test (Mistral, n=5
+Wiederholungen auf IDENTISCHEN, bewusst mehrdeutigen Fakten): die
+Baseline-Variante empfahl in Szenario 2 (Kontra/Squeeze, Retail-Extrem,
+schwache historische Trefferquote 18,2%) in 3 von 5 unabhaengigen Laeufen
+ERoeFFNEN - trotz im eigenen `gegenargument` selbst benanntem Regime-Konflikt.
+Ein erster kleinerer Test hatte das faelschlich als "einmaligen Zufallstreffer"
+missverstanden (temperature=0.2 ist nicht deterministisch) - erst die
+Wiederholungsmessung zeigte, dass die Mehrheit der Baseline-Laeufe tatsaechlich
+ERoeFFNEN waehlte, kein Rauschen.
+
+**Wichtiger Zwischenfund:** die urspruenglich getestete Kombination aus 3
+Bausteinen (A: symmetrische Gruende fuer/gegen, B: bindendes Selbstzweifel-Gate,
+C: Premortem-Ueberlegung) widersprach in Baustein B der bestehenden Leitplanke
+gegen deterministische Ueberschreibung von `eigene_einschaetzung`/Werturteil
+(siehe Fakten_Entscheidungsmappe/Memory feedback_llm_synthese_kein_
+deterministischer_override). Direkter Vergleich A+B+C gegen A+C (ohne
+bindendes Gate), je n=5 auf 2 Szenarien: **A+C allein erreichte in BEIDEN
+Szenarien exakt dieselbe Aktionskorrektur (5/5 HALTEN) wie A+B+C** - der
+bindende Zwang war fuer den beobachteten Effekt nicht noetig.
+
+**Fix:** neue Regel 27 in `hebel_analyst.py::SYSTEM_PROMPT` - symmetrische
+Gruende-Pflicht (3 staerkste Argumente fuer JEDE Option) + Premortem-Frage
+(48h-Scheitern-Ueberlegung, fliesst in `eigene_einschaetzung` ein) + explizite
+Gleichwertigkeit von HALTEN (auch bei bestehender Position). BEWUSST ohne
+deterministische Nachkorrektur von `action`/`confidence_pct` - Regel 27 enthaelt
+eine explizite Abgrenzung zu Regel 26 dazu.
+
+**Verifiziert (Testklasse 1, Prompt-only + echte Live-Tests):**
+  Betroffene Datei(en): agent/krypto/hebel_analyst.py
+  Aenderungsklasse: 1
+  Live-Tests (echte API-Calls, Mistral + Gemini):
+    - 3 Basis-Szenarien (mehrdeutig/Regime-Konflikt, Kontra/Squeeze, klar
+      regimekonform) je Baseline vs. A+B+C - PASS (kein Uebervorsichts-
+      Nebeneffekt bei klar gutem Setup)
+    - Erweiterter Test: 5 Szenarien x 2 Provider (Mistral+Gemini) x 2 Varianten
+      - kein Fall, in dem die modifizierte Variante ein klar gutes Setup zu
+        HALTEN kippte
+    - Wiederholungsmessung n=5 je Szenario (Mistral): Baseline zeigt echten
+      Action-Bias (Szenario 2: 60% ERoeFFNEN trotz schwacher Fakten),
+      A+B+C korrigiert konsistent auf 5/5 HALTEN in beiden Szenarien - PASS
+    - A+C-vs-A+B+C-Vergleich (n=5 je Variante je Szenario): identische
+      Aktionskorrektur (5/5 HALTEN in beiden Szenarien) OHNE bindendes Gate - PASS
+  Prompt-Integritaet: Regelnummerierung fortlaufend 1-27, kein Mojibake,
+  Abgrenzung zu Regel 26 explizit im Text - PASS
+  Regressionscheck (Import aller abhaengigen Module) - PASS
+  Gesamturteil: verifiziert (Stufe 3, Punkt 4) - **Stufe 3 damit vollstaendig
+  bearbeitet** (Punkt 1+2 bewusst in Evidenz gehalten/vertagt, Punkt 3+4 umgesetzt)
