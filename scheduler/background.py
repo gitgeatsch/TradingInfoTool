@@ -1533,8 +1533,12 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None, 
             f" ({format_money(signal.eigenkapitalbedarf_eur)} EUR)"
             if signal.eigenkapitalbedarf_eur is not None else ""
         )
+        eigenkapital_deckel_zeile = (
+            f"  ({signal.eigenkapital_deckel_hinweis})\n" if signal.eigenkapital_deckel_hinweis else ""
+        )
         eigenkapital_zeile = (
             f"Eigenkapitalbedarf: {format_money(signal.eigenkapitalbedarf_usd)} USD{eigenkapital_eur_text}\n"
+            f"{eigenkapital_deckel_zeile}"
             if signal.eigenkapitalbedarf_usd is not None else ""
         )
         senkung_zeile = (

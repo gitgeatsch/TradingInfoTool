@@ -11592,3 +11592,64 @@ neuer Asymmetrie-Punkt 6 in Abschnitt 3.3 zur offenen Spot-Frage) - das ist
 der bestehende, richtige Ort fuer Fakt-Entscheidungen (Frage-1/Frage-2-
 Raster), nicht eine neue Datei. Der Backtest selbst bleibt in
 [[project_enge_stop_loss_backtest_und_massnahmen]] (Memory).
+
+## Nachtrag (2026-07-29): Eigenkapital-Richtwert fuer Hebel-Positionsgroesse (weicher Deckel)
+
+**Ausloeser:** Bei der Diskussion des R-5.10-Konfidenz-Veto-Fundes (siehe
+`project_r510_konfidenz_veto_analyse_29_07.md`, Memory) pruefte der Nutzer
+konkret nach, welche Eigenkapitalbetraege die App aktuell fuer Hebel-
+Signale empfiehlt. Ergebnis (149 Signale mit Eigenkapitalbedarf): **Median
+~1.204 USD (~1.100 EUR), Spanne 290 bis 41.242 USD** - weit ueber der
+tatsaechlichen Handelspraxis des Nutzers (100-300 EUR ueblich, max. 500 EUR
+normal, bis 1.000 EUR nur bei bewusster Sonderlage).
+
+**Wichtige Klarstellung (Nutzerfrage "was bringt uns das?"):** diese
+Aenderung behebt NICHT das eigentliche Konfidenz-Kalibrierungsproblem
+(bleibt offen, separat zu besprechen) und veraendert auch nicht Win-Rate/
+CRV/Liquidations-Klassifikation eines Signals - all das haengt nur von den
+Preiszonen ab, nicht von der Positionsgroesse. Es ist eine reine Praxis-/
+Risikomanagement-Anpassung: die bestehende RM-1-Risikoformel (1% Portfolio-
+Verlustrisiko) zielt auf ein FESTES Verlustrisiko, nicht auf ein gedeckeltes
+Eigenkapital - bei engem Stop-Loss/niedrigem Hebel kann das einen sehr hohen
+Eigenkapitalbedarf verlangen, unabhaengig von der Signalqualitaet.
+
+**Umsetzung (`agent/krypto/hebel_risk_gate.py::post_check_hebel()`):**
+- Neuer Config-Wert `risiko.hebel.eigenkapital_richtwert_eur` (Default 500).
+- Wenn der berechnete `eigenkapitalbedarf_eur` diesen Wert ueberschreitet,
+  wird `positionsgroesse_usd` (und damit `eigenkapitalbedarf`/
+  `eigenkapitalbedarf_eur`) proportional heruntergerechnet, bis der
+  Richtwert genau erreicht ist. **Hebel (`hebel_final`), Zonen und These
+  bleiben unveraendert** - die Empfehlung bleibt bestehen, nur die
+  Positionsgroesse wird realistischer dimensioniert.
+- **Bewusst KEIN Veto/harte Grenze.** Neues Transparenz-Feld
+  `eigenkapital_deckel_hinweis` (analog `hebel_korrektur_hinweis`),
+  NUR gefuellt wenn tatsaechlich skaliert wurde.
+- **Bewusst KEINE automatische Sonderfall-Erkennung** fuer die vom Nutzer
+  genannte Ausnahme ("bis 1.000 EUR bei BTC-Absturz + hoher Rebound-
+  Wahrscheinlichkeit") - das waere eine komplexe, wahrscheinlich
+  unzuverlaessige Mustererkennung fuer eine Situation, die der Nutzer selbst
+  besser erkennt und manuell entscheidet.
+- Nutzer-Vorgabe ausdruecklich als **"Gummi-Parameter"** verstanden: der
+  Wert 500 EUR gilt nur, solange das System nicht besser kalibriert ist
+  bzw. wesentliche Luecken bestehen - bei wachsendem Vertrauen in die
+  Kalibrierung ist eine Anpassung vorgesehen, kein dauerhaft fixer Wert.
+
+**Neue Felder:** `database/models.py::HebelSignal.eigenkapital_deckel_hinweis`
+(additive Migration `_migrate_hebel_signal_eigenkapital_deckel_column()`),
+angezeigt in App (`ui/hebel_view.py`) und E-Mail (`scheduler/background.py`),
+exportiert in `extract_notebook_diagnose.py`.
+
+**Verifiziert (synthetisch, Testklasse 3 - DB-Schema-Aenderung):**
+T1 Migration frische In-Memory-DB (Spalte vorhanden) - PASS; T2 Migration
+zweimal ausgefuehrt (idempotent) - PASS; T3 Positivfall (Eigenkapitalbedarf
+3.035 EUR -> auf 500 EUR gedeckelt, Hinweis gesetzt) - PASS; T4 Negativfall
+(Eigenkapitalbedarf 84 EUR, kein Deckel) - PASS; T5 fehlender Config-Wert
+(kein Crash, keine Skalierung) - PASS; T6 DB-Insert/Read-Roundtrip erhaelt
+das Feld korrekt - PASS. Import-Regressionscheck aller 7 geaenderten Module
+bestanden.
+
+**Offen, separat zu besprechen (Nutzer-Auftrag):** die eigentliche
+Konfidenz-Kalibrierungsfrage - ist die mangelnde Vorhersagekraft der
+LLM-Konfidenz bei Hebel ein Fehler in unserem System, oder eine bekannte
+Grenze, mit der andere Trading-/Analyse-Plattformen anders umgehen?
+Vergleich mit branchenueblichen Ansaetzen noch ausstehend.

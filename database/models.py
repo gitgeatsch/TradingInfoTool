@@ -616,6 +616,17 @@ class HebelSignal:
     # post_check_hebel() berechnet beide aus demselben deterministischen Wert).
     liquidationspreis_geschaetzt_eur: float | None = None
     eigenkapitalbedarf_eur: float | None = None
+    # Eigenkapital-Richtwert (2026-07-29, Nutzer-Vorgabe nach R-5.10-Analyse-
+    # Session, siehe project_r510_konfidenz_veto_analyse_29_07.md): die RM-1-
+    # Risikoformel zielt auf ein FESTES Verlustrisiko (1% Portfolio), nicht auf
+    # ein gedeckeltes Eigenkapital - bei engem Stop-Loss/niedrigem Hebel kann
+    # das einen Eigenkapitalbedarf weit ueber der Nutzer-Praxis (100-300,
+    # max. 500 EUR normal) verlangen. `eigenkapital_deckel_hinweis` ist NUR
+    # gefuellt, wenn `eigenkapitalbedarf_eur` deswegen aktiv nach unten
+    # skaliert wurde (Transparenz statt stiller Kuerzung, gleiches Prinzip
+    # wie `hebel_korrektur_hinweis` oben) - bewusst als WEICHER Richtwert
+    # (config `risiko.hebel.eigenkapital_richtwert_eur`), kein Veto.
+    eigenkapital_deckel_hinweis: str | None = None
     # Nachtrag 2026-07-17 (echter LINK-Fall): bei action == HEBEL_SENKEN der
     # konkrete, deterministisch berechnete EUR-Betrag, der ins Eigenkapital
     # der Position nachgeschossen werden muesste, um den empfohlenen

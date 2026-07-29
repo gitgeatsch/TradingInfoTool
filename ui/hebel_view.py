@@ -470,6 +470,8 @@ class HebelView(ttk.Frame):
                 if signal.eigenkapitalbedarf_eur is not None else ""
             )
             lines.append(f"Eigenkapitalbedarf: {format_money(signal.eigenkapitalbedarf_usd)} USD{eur_text}")
+            if signal.eigenkapital_deckel_hinweis:
+                lines.append(f"  Hinweis: {signal.eigenkapital_deckel_hinweis}")
         if signal.hebel_senkung_eigenkapital_nachschuss_eur is not None:
             lines.append(
                 f"Eigenkapital-Nachschuss für Hebel-Senkung: "

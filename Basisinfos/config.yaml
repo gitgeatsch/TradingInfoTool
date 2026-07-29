@@ -121,6 +121,22 @@ risiko:
                                         # Spot (2%) wegen Liquidations-Gap-Risiko +
                                         # laufender Finanzierungsgebuehr, siehe
                                         # docs/hebel_positionsformel.md
+    eigenkapital_richtwert_eur: 500     # 2026-07-29 (Nutzer-Vorgabe nach R-5.10-Analyse-
+                                        # Session, siehe project_r510_konfidenz_veto_analyse_
+                                        # 29_07.md): die 1%-Risikoformel oben zielt auf ein
+                                        # festes VERLUSTrisiko, nicht auf ein gedeckeltes
+                                        # Eigenkapital - bei engem Stop/niedrigem Hebel kann
+                                        # das weit ueber der Nutzer-Praxis liegen (Fund:
+                                        # Median ~1.100 EUR, Ausreisser bis 41.000 EUR).
+                                        # Skaliert die Positionsgroesse weich herunter (siehe
+                                        # hebel_risk_gate.py::post_check_hebel()), KEIN Veto.
+                                        # AUSDRUECKLICH ein "Gummi-Parameter" (Nutzer-Zitat):
+                                        # solange das System nicht besser kalibriert ist bzw.
+                                        # wesentliche Luecken bestehen, haelt sich der Nutzer
+                                        # eher an 100-300 EUR (max. 500 EUR normal, bis 1.000
+                                        # EUR nur bei bewusster Sonderlage) - diesen Wert bei
+                                        # wachsendem Vertrauen in die Kalibrierung anpassen,
+                                        # nicht als dauerhaft fixen Wert betrachten.
     liquidationspreis_ausweisen: true  # RM-11 - nur Schaetzung, Bitpanda-Formel nicht
                                         # oeffentlich, siehe docs/hebel_positionsformel.md
     liquidations_sicherheitsmarge_relativ: 0.09  # RM-11 - 2026-07-19 NEU KALIBRIERT (vorher

@@ -490,6 +490,7 @@ def generate_hebel_signal(
         eigenkapitalbedarf_usd=corrected.get("eigenkapitalbedarf"),
         liquidationspreis_geschaetzt_eur=corrected.get("liquidationspreis_geschätzt_eur"),
         eigenkapitalbedarf_eur=corrected.get("eigenkapitalbedarf_eur"),
+        eigenkapital_deckel_hinweis=corrected.get("eigenkapital_deckel_hinweis"),
         hebel_senkung_eigenkapital_nachschuss_eur=senkung_nachschuss_eur,
         ausfuehrbarkeit_hinweis=corrected.get("ausführbarkeit_hinweis"),
         groq_raw_response=raw_response,

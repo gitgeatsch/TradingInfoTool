@@ -813,6 +813,21 @@ def _migrate_hebel_signal_eur_columns(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+_HEBEL_SIGNAL_EIGENKAPITAL_DECKEL_NEW_COLUMN = {"eigenkapital_deckel_hinweis": "TEXT"}
+
+
+def _migrate_hebel_signal_eigenkapital_deckel_column(conn: sqlite3.Connection) -> None:
+    """Nachtrag 2026-07-29 (Nutzer-Vorgabe nach R-5.10-Analyse-Session, siehe
+    HebelSignal.eigenkapital_deckel_hinweis-Docstring) - Transparenz-Hinweis,
+    wenn die Positionsgroesse wegen des Eigenkapital-Richtwerts reduziert
+    wurde. Gleiches additive Migrations-Muster wie oben."""
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(hebel_signals)")}
+    for column, sql_type in _HEBEL_SIGNAL_EIGENKAPITAL_DECKEL_NEW_COLUMN.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE hebel_signals ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
 _KONTRATHESE_NEW_COLUMNS = {"kontrathese_zu_position": "INTEGER", "kontrathese_llm_richtung": "TEXT"}
 
 
@@ -1003,6 +1018,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_cash_veto_columns(conn)
     _migrate_risikofaktoren_columns(conn)
     _migrate_hebel_signal_eur_columns(conn)
+    _migrate_hebel_signal_eigenkapital_deckel_column(conn)
     _migrate_kontrathese_columns(conn)
     _migrate_signal_fazit_columns(conn)
     _migrate_zai_gegenpruefung_columns(conn)
@@ -2853,7 +2869,7 @@ _HEBEL_SIGNAL_COLUMNS = (
     "key_risks_text", "regime", "regime_source", "forecast_bull_text", "forecast_bull_prob_pct",
     "forecast_base_text", "forecast_base_prob_pct", "forecast_bear_text", "forecast_bear_prob_pct",
     "liquidationspreis_geschaetzt_usd", "eigenkapitalbedarf_usd",
-    "liquidationspreis_geschaetzt_eur", "eigenkapitalbedarf_eur",
+    "liquidationspreis_geschaetzt_eur", "eigenkapitalbedarf_eur", "eigenkapital_deckel_hinweis",
     "hebel_senkung_eigenkapital_nachschuss_eur", "ausfuehrbarkeit_hinweis",
     "gate_passed", "gate_reason", "risk_veto", "risk_veto_reason", "facts_json",
     "groq_raw_response", "llm_model", "gegenargument", "risikofaktoren_json",

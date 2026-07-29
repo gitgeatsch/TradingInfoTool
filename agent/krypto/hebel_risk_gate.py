@@ -1102,6 +1102,43 @@ def post_check_hebel(
                             result["eigenkapitalbedarf"] / eur_usd_fx_rate
                             if result["eigenkapitalbedarf"] is not None else None
                         )
+
+                        # Eigenkapital-Richtwert (2026-07-29, Nutzer-Vorgabe nach
+                        # R-5.10-Analyse-Session): die RM-1-Risikoformel zielt auf
+                        # ein FESTES Verlustrisiko (1% Portfolio), nicht auf ein
+                        # gedeckeltes Eigenkapital - bei engem Stop-Loss/niedrigem
+                        # Hebel kann das einen sehr hohen Eigenkapitalbedarf
+                        # verlangen (Praxis-Fund: Median ~1.100 EUR, Ausreisser
+                        # bis 41.000 EUR - weit ueber der Nutzer-Praxis von
+                        # 100-300, max. 500 EUR). Bewusst als WEICHER Deckel:
+                        # Positionsgroesse (und damit Eigenkapitalbedarf) wird
+                        # proportional herunterskaliert, hebel_final/Zonen/
+                        # These bleiben unveraendert - KEIN Veto, die Empfehlung
+                        # bleibt bestehen, nur realistischer dimensioniert.
+                        # Nutzer-Vorgabe ausdruecklich als "Gummi-Parameter"
+                        # verstanden (100-300 EUR ueblich, 500 EUR Regel-
+                        # Obergrenze, bis 1.000 EUR nur bei bewusster Sonder-
+                        # lage wie BTC-Crash+hoher Rebound-Wahrscheinlichkeit) -
+                        # der Nutzer hebt das im Einzelfall manuell selbst an,
+                        # keine automatische Sonderfall-Erkennung dafuer.
+                        eigenkapital_richtwert_eur = hebel_cfg.get("eigenkapital_richtwert_eur")
+                        if (
+                            eigenkapital_richtwert_eur is not None
+                            and result["eigenkapitalbedarf_eur"] is not None
+                            and result["eigenkapitalbedarf_eur"] > eigenkapital_richtwert_eur
+                        ):
+                            alter_eigenkapitalbedarf_eur = result["eigenkapitalbedarf_eur"]
+                            skalierungsfaktor = eigenkapital_richtwert_eur / alter_eigenkapitalbedarf_eur
+                            positionsgroesse_usd *= skalierungsfaktor
+                            result["eigenkapitalbedarf"] *= skalierungsfaktor
+                            result["eigenkapitalbedarf_eur"] = eigenkapital_richtwert_eur
+                            result["eigenkapital_deckel_hinweis"] = (
+                                f"Eigenkapitalbedarf von {alter_eigenkapitalbedarf_eur:.0f} EUR auf "
+                                f"Richtwert {eigenkapital_richtwert_eur:.0f} EUR reduziert (Positionsgroesse "
+                                f"entsprechend verkleinert, Hebel/Zonen unveraendert)."
+                            )
+                        else:
+                            result["eigenkapital_deckel_hinweis"] = None
         else:
             risk_veto = True
             reason = "Zonen unvollständig - Hebel-Empfehlung kann nicht sicher berechnet werden"
