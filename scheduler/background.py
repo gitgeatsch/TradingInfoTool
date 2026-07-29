@@ -1368,11 +1368,16 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None, c
         logger.exception("Spot-Empfehlungs-E-Mail für %s fehlgeschlagen", signal.symbol)
 
 
-_ZAI_EMAIL_WARTE_MAX_SEKUNDEN = 90  # NEUKALIBRIERT (2026-07-28): Log-Auswertung von
-# 8 echten Faellen zeigte 2 Zeitlimit-Ueberschreitungen (VIRTUAL, NEAR) und mehrere
-# knapp am alten 60s-Limit (48s/57s/60s) - beide Z.ai-Calls laufen sequenziell
-# (Call 2 startet erst nach Call 1), Summe der "typisch 12-25s je Call" kann also
-# 24-50s im Normalfall erreichen, mit Ausreissern darueber.
+_ZAI_EMAIL_WARTE_MAX_SEKUNDEN = 135  # NEUKALIBRIERT (2026-07-29): seit dem
+# Positions-Bias-Fix (siehe gegenpruefung.py::leite_eigene_richtung_
+# positionsrobust()) macht der Richtungs-Call intern 2 statt 1 sequenzielle
+# Z.ai-Calls (Original- + umgekehrte Reihenfolge) - macht 3 statt 2
+# sequenzielle Z.ai-Calls pro Signal insgesamt (pruefe_konsistenz() +
+# 2x leite_eigene_richtung()). Vorheriger Wert 90s war fuer 2 sequenzielle
+# Calls kalibriert (Log-Auswertung 2026-07-28: 8 echte Faelle, 2 Zeitlimit-
+# Ueberschreitungen, mehrere knapp am alten 60s-Limit) - proportional
+# hochskaliert (90s * 3/2 = 135s) statt neu zu raten, bis genug echte
+# 3-Call-Faelle fuer eine erneute Log-Auswertung vorliegen.
 _ZAI_EMAIL_POLL_INTERVALL_SEKUNDEN = 3
 
 

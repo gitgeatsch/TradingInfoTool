@@ -261,11 +261,22 @@ SYSTEM_PROMPT_RICHTUNG = (
 _GUELTIGE_RICHTUNGEN = {"LONG", "SHORT", "NEUTRAL"}
 
 
-def leite_eigene_richtung(zai_client, objektive_fakten: dict) -> dict | None:
+def leite_eigene_richtung(zai_client, objektive_fakten: dict, temperature: float = 0.0) -> dict | None:
     """Zweiter, GETRENNTER Z.ai-Call (siehe Modul-Docstring Punkt 2) - leitet
     unabhaengig von der Primaer-Empfehlung eine eigene Richtung her. Gibt
     None zurueck, wenn `zai_client` nicht konfiguriert ist oder der Call
-    fehlschlaegt (P-8, wie pruefe_konsistenz())."""
+    fehlschlaegt (P-8, wie pruefe_konsistenz()).
+
+    `temperature=0.0` (2026-07-29, Regelwerk-Audit Stufe 3 Punkt 4 Folgefrage,
+    siehe project_regelwerk_audit_29_07.md): live gegen Mistral/Z.ai-aehnliche
+    LLM-als-Klassifikator-Literatur abgeglichen UND live gegen die echte
+    Z.ai-API getestet - `temperature=0.2` fuegte bei mehrdeutigen Fakten
+    zusaetzliches, rein zufallsbedingtes Rauschen ueber die ohnehin
+    vorhandene echte Modell-Unschluessigkeit hinauf (n=8 Wiederholungen: 7/8
+    SHORT + 1/8 NEUTRAL bei 0.2, 8/8 SHORT bei 0.0, identische Fakten). 0.0
+    entfernt NUR diese zusaetzliche Sampling-Varianz, NICHT die echte,
+    akzeptierte Modell-Unschluessigkeit bei echten Grenzfaellen (siehe
+    Positions-Bias-Befund unten in `leite_eigene_richtung_positionsrobust()`)."""
     if zai_client is None:
         return None
 
@@ -275,7 +286,7 @@ def leite_eigene_richtung(zai_client, objektive_fakten: dict) -> dict | None:
         {"role": "user", "content": user_content},
     ]
     try:
-        antwort = zai_client.chat(messages, temperature=0.2, response_format=_JSON_OBJECT_FORMAT)
+        antwort = zai_client.chat(messages, temperature=temperature, response_format=_JSON_OBJECT_FORMAT)
         geparst = json.loads(antwort)
         eigene_richtung = geparst.get("eigene_richtung")
         if eigene_richtung not in _GUELTIGE_RICHTUNGEN:
@@ -290,12 +301,93 @@ def leite_eigene_richtung(zai_client, objektive_fakten: dict) -> dict | None:
         return None
 
 
+def _kehre_objektive_fakten_um(objektive_fakten: dict) -> dict:
+    """Baut ein NEUES Dict mit umgekehrter Schluesselreihenfolge (Werte
+    unveraendert) - `symbol` bleibt bewusst an erster Stelle (reiner
+    Bezeichner, keine Marktevidenz, siehe baue_objektive_fakten()-Docstring).
+    Mutiert `objektive_fakten` NICHT."""
+    keys = list(objektive_fakten.keys())
+    if not keys:
+        return dict(objektive_fakten)
+    inhalts_keys = [k for k in keys if k != "symbol"]
+    neue_reihenfolge = (["symbol"] if "symbol" in objektive_fakten else []) + list(reversed(inhalts_keys))
+    return {k: objektive_fakten[k] for k in neue_reihenfolge}
+
+
+def leite_eigene_richtung_positionsrobust(zai_client, objektive_fakten: dict) -> dict | None:
+    """Positions-Bias-robuste Fassung von `leite_eigene_richtung()` (2026-07-29,
+    Regelwerk-Audit Stufe 3 Punkt 4 Folgefrage - Nutzer-Wunsch, den Fund
+    "sehr genau" umzusetzen, siehe project_regelwerk_audit_29_07.md).
+
+    LIVE-BEFUND (temperature=0.0, 2 unabhaengige Szenarien, je n=6, echte
+    Z.ai-API): die Schluesselreihenfolge im Fakten-JSON beeinflusst das
+    Urteil bei mehrdeutigen Fakten erheblich - steht der einzige
+    Gegenindikator (z.B. RSI) frueh in der Liste, wird er fast vollstaendig
+    ignoriert (6/6 bzw. 5/6+1 NEUTRAL entschieden); steht er ganz am Ende,
+    wird er deutlich staerker gewichtet (4/6 NEUTRAL). Eine Test-Reihenfolge
+    "Gegenindikator in der Mitte" (Nutzer-Hypothese, mathematisch motiviert)
+    war sogar NOCH entschiedener (6/6 in beiden Szenarien) - deckt sich mit
+    der "Lost in the Middle"-Literatur (U-foermige Aufmerksamkeitskurve:
+    Anfang UND Mitte schwach gewichtet, nur die letzte Position bekommt
+    verlaesslich mehr Gewicht). Da bei einem echten Signal vorher nicht
+    bekannt ist, WELCHER Fakt der Ausreisser ist (mal RSI, mal Funding-Rate,
+    mal Regime), loest keine feste Reihenfolge das Problem grundsaetzlich -
+    jede feste Reihenfolge bevorzugt strukturell den zuletzt genannten Fakt.
+
+    Deshalb NICHT eine "klug gewaehlte" feste Reihenfolge, sondern das in der
+    LLM-Gutachter-Literatur etablierte Gegenmittel gegen Positions-Bias:
+    "Position Swapping" - dieselben Fakten in ZWEI Reihenfolgen (Original +
+    umgekehrt) abfragen und vergleichen. Stimmen beide Urteile ueberein, ist
+    das Ergebnis positions-unabhaengig belastbar. Weichen sie voneinander ab,
+    ist GENAU DAS die ehrliche Information (die Einschaetzung ist bei diesem
+    Signal positions-empfindlich, also nicht robust) - wird als NEUTRAL mit
+    explizitem Vermerk zurueckgegeben, statt eine der beiden Antworten
+    verdeckt zu bevorzugen.
+
+    WICHTIG fuer Aufrufer (E-Mail-Wartezeit/Backward-Tracking): diese
+    Funktion macht ZWEI sequenzielle Z.ai-Calls statt einem (siehe
+    scheduler/background.py::_ZAI_EMAIL_WARTE_MAX_SEKUNDEN, entsprechend
+    angepasst). Liefert nach aussen weiterhin GENAU EIN kombiniertes
+    Ergebnis (wie `leite_eigene_richtung()`) - `fuehre_beide_calls_im_
+    hintergrund()` schreibt davon unveraendert nur EIN DB-Update,
+    `backward_tracking.py::bewerte_zai_richtung()` liest nur das gespeicherte
+    Endergebnis und ist von dieser Aenderung nicht betroffen."""
+    ergebnis_a = leite_eigene_richtung(zai_client, objektive_fakten)
+    ergebnis_b = leite_eigene_richtung(zai_client, _kehre_objektive_fakten_um(objektive_fakten))
+
+    if ergebnis_a is None and ergebnis_b is None:
+        return None
+    if ergebnis_a is None:
+        return ergebnis_b
+    if ergebnis_b is None:
+        return ergebnis_a
+
+    richtung_a = ergebnis_a.get("eigene_richtung")
+    richtung_b = ergebnis_b.get("eigene_richtung")
+    if richtung_a == richtung_b:
+        return {"eigene_richtung": richtung_a, "kurzbegruendung": ergebnis_a.get("kurzbegruendung")}
+
+    logger.info(
+        "Z.ai-Richtungsabgleich positions-uneinheitlich: Original=%s, umgekehrt=%s",
+        richtung_a, richtung_b,
+    )
+    return {
+        "eigene_richtung": "NEUTRAL",
+        "kurzbegruendung": f"Positions-uneinheitlich (Original={richtung_a}, umgekehrt={richtung_b})",
+    }
+
+
 def pruefe_konsistenz(zai_client, fakten: dict, begruendungstext: str | None) -> dict | None:
     """Ruft Z.ai fuer die Konsistenzpruefung auf. Gibt None zurueck, wenn
     `zai_client` nicht konfiguriert ist, kein Begruendungstext vorliegt (nichts
     zu pruefen) oder der Call fehlschlaegt (P-8, faengt Netzwerkfehler UND
     ungueltige/nicht parsebare Antworten ab - analog agent/krypto/
-    anticyclic.py::assess())."""
+    anticyclic.py::assess()).
+
+    `temperature=0.0` (2026-07-29, siehe leite_eigene_richtung()-Docstring) -
+    reine Ja/Nein-Klassifikationsaufgabe, keine kreative Textaufgabe;
+    identische Fakten sollen identisches Urteil liefern statt zusaetzlichem
+    Sampling-Rauschen obendrauf."""
     if zai_client is None or not begruendungstext:
         return None
 
@@ -307,7 +399,7 @@ def pruefe_konsistenz(zai_client, fakten: dict, begruendungstext: str | None) ->
         {"role": "user", "content": user_content},
     ]
     try:
-        antwort = zai_client.chat(messages, temperature=0.2, response_format=_JSON_OBJECT_FORMAT)
+        antwort = zai_client.chat(messages, temperature=0.0, response_format=_JSON_OBJECT_FORMAT)
         geparst = json.loads(antwort)
         urteil = geparst.get("urteil")
         if urteil not in _GUELTIGE_URTEILE:
@@ -388,7 +480,19 @@ def fuehre_beide_calls_im_hintergrund(
     leite_eigene_richtung() selbst, hier zusaetzlich fuer den Thread-Kontext,
     z.B. falls die neue DB-Connection scheitert) - beide Ergebnisse werden
     gemeinsam in EINEM DB-Update geschrieben, damit ein fehlgeschlagener
-    zweiter Call das Ergebnis des ersten nicht durch Nones ueberschreibt."""
+    zweiter Call das Ergebnis des ersten nicht durch Nones ueberschreibt.
+
+    NACHTRAG (2026-07-29, Positions-Bias-Fix): `leite_eigene_richtung_
+    positionsrobust()` macht INTERN 2 Z.ai-Calls statt 1 (siehe dortiger
+    Docstring) - macht insgesamt 3 sequenzielle Z.ai-Calls pro Signal
+    (`pruefe_konsistenz()` + 2x `leite_eigene_richtung()`). Liefert nach
+    aussen weiterhin GENAU EIN kombiniertes `eigene_richtung`/
+    `kurzbegruendung`-Ergebnis - an dieser Stelle und beim DB-Update
+    (`update_fn`, unten) aendert sich dadurch NICHTS: es wird weiterhin nur
+    EIN Update pro Signal geschrieben, `backward_tracking.py::bewerte_zai_
+    richtung()` liest nur das gespeicherte Endergebnis. Siehe scheduler/
+    background.py::_ZAI_EMAIL_WARTE_MAX_SEKUNDEN fuer die entsprechend
+    angepasste E-Mail-Wartezeit (3 statt 2 sequenzielle Calls)."""
     urteil = kurzbegruendung = eigene_richtung = uebereinstimmung = richtung_kurzbegruendung = None
     try:
         konsistenz_ergebnis = pruefe_konsistenz(zai_client, fakten, begruendungstext)
@@ -396,7 +500,7 @@ def fuehre_beide_calls_im_hintergrund(
             urteil = konsistenz_ergebnis.get("urteil")
             kurzbegruendung = konsistenz_ergebnis.get("kurzbegruendung")
 
-        richtung_ergebnis = leite_eigene_richtung(zai_client, objektive_fakten)
+        richtung_ergebnis = leite_eigene_richtung_positionsrobust(zai_client, objektive_fakten)
         if richtung_ergebnis is not None:
             eigene_richtung = richtung_ergebnis.get("eigene_richtung")
             richtung_kurzbegruendung = richtung_ergebnis.get("kurzbegruendung")

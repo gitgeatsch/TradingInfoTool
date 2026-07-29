@@ -11981,3 +11981,87 @@ eine explizite Abgrenzung zu Regel 26 dazu.
   Regressionscheck (Import aller abhaengigen Module) - PASS
   Gesamturteil: verifiziert (Stufe 3, Punkt 4) - **Stufe 3 damit vollstaendig
   bearbeitet** (Punkt 1+2 bewusst in Evidenz gehalten/vertagt, Punkt 3+4 umgesetzt)
+
+### Nachtrag (2026-07-29): Z.ai `leite_eigene_richtung()` - Temperature-Fix + Positions-Bias-Fix (Position Swapping)
+
+Anschlussfrage des Nutzers nach Stufe 3 Punkt 4: soll die Action-Bias-Korrektur
+auch auf die Z.ai-Prompts (`agent/krypto/gegenpruefung.py`) uebertragen werden?
+Ergebnis einer eigenen, breiten Recherche + Live-Tests gegen die echte Z.ai-API
+(insgesamt 64 rohe Z.ai-Calls in dieser Runde): der Hebel-spezifische
+Action-Bias-Mechanismus (asymmetrische Begruendungstiefe je Aktion) existiert
+bei Z.ais `pruefe_konsistenz()`/`leite_eigene_richtung()` strukturell NICHT
+(beide liefern ein bereits symmetrisches Output-Schema unabhaengig vom
+Urteil) - stattdessen wurden ZWEI unabhaengige, tatsaechlich relevante Funde
+gemacht.
+
+**Fund 1 - Temperature 0.2 unnoetig fuer eine Klassifikationsaufgabe:**
+`pruefe_konsistenz()`/`leite_eigene_richtung()` sind reine Ja/Nein- bzw.
+3-Wege-Klassifikationsaufgaben (kein kreativer Text) - LLM-als-Klassifikator-
+Literatur empfiehlt hierfuer `temperature=0.0`. Live bestaetigt (n=8,
+identische mehrdeutige Fakten): `temperature=0.2` lieferte 7/8 SHORT + 1/8
+NEUTRAL, `temperature=0.0` lieferte 8/8 SHORT - 0.2 fuegte nur zusaetzliches,
+rein zufallsbedingtes Sampling-Rauschen hinzu, ohne Nutzen.
+**Fix:** beide Funktionen auf `temperature=0.0` umgestellt.
+
+**Fund 2 - echter Positions-Bias in `leite_eigene_richtung()` (deutlich
+gewichtiger als Fund 1):** die Reihenfolge der JSON-Schluessel im
+Fakten-Dict beeinflusst das Urteil bei mehrdeutigen Fakten erheblich, auch
+bei `temperature=0.0` (also KEIN Sampling-Effekt, ein echter, reproduzierbarer
+"Recency"-Effekt). Live getestet (2 unabhaengige, spiegelbildliche Szenarien,
+je n=6, 3 Positionen des Gegenindikators):
+
+| Position des Gegenindikators | Szenario 1 (bearisch) | Szenario 2 (bullisch) |
+|---|---|---|
+| Zuerst | 6/6 SHORT | 5/6 LONG, 1/6 NEUTRAL |
+| Mitte | 6/6 SHORT | 6/6 LONG |
+| Zuletzt | 4/6 NEUTRAL, 2/6 SHORT | 4/6 NEUTRAL, 2/6 LONG |
+
+Steht der Gegenindikator frueh/mittig, wird er fast vollstaendig ignoriert;
+steht er ganz am Ende, wird er deutlich staerker gewichtet - deckt sich mit
+der "Lost in the Middle"-Literatur (U-foermige Aufmerksamkeitskurve). Eine
+Nutzer-Hypothese ("Mitte waere neutraler") wurde damit live widerlegt (Mitte
+war sogar am entschiedensten). Da bei einem echten Signal vorher nicht
+bekannt ist, welcher Fakt der Ausreisser ist, loest keine feste Reihenfolge
+das Problem grundsaetzlich - jede feste Reihenfolge bevorzugt strukturell
+den zuletzt genannten Fakt (aktuell `technische_konfluenz`).
+
+**Fix (Position Swapping, etabliertes Gegenmittel aus der LLM-Gutachter-
+Literatur):** neue Funktion `leite_eigene_richtung_positionsrobust()` -
+ruft `leite_eigene_richtung()` ZWEIMAL auf (Original-Reihenfolge + komplett
+umgekehrte Reihenfolge, neuer Helfer `_kehre_objektive_fakten_um()`,
+`symbol` bleibt bewusst erster Schluessel). Stimmen beide Urteile ueberein,
+wird dieses Urteil verwendet. Weichen sie ab, wird NEUTRAL mit explizitem
+Vermerk ("Positions-uneinheitlich") zurueckgegeben, statt eine der beiden
+Antworten verdeckt zu bevorzugen. `fuehre_beide_calls_im_hintergrund()`
+ruft jetzt diese Funktion statt der einfachen Variante auf - macht insgesamt
+**3 statt 2 sequenzielle Z.ai-Calls pro Signal** (`pruefe_konsistenz()` +
+2x `leite_eigene_richtung()`). Liefert nach aussen weiterhin GENAU EIN
+kombiniertes `eigene_richtung`/`kurzbegruendung`-Ergebnis - am DB-Update
+(ein einziges `update_fn`-Callback) und an `backward_tracking.py::
+bewerte_zai_richtung()` (liest nur das gespeicherte Endergebnis) aendert
+sich dadurch nichts.
+
+**E-Mail-Wartezeit angepasst:** `scheduler/background.py::
+_ZAI_EMAIL_WARTE_MAX_SEKUNDEN` von 90s auf 135s erhoeht (proportional
+skaliert 90*3/2, da jetzt 3 statt 2 sequenzielle Z.ai-Calls pro Signal
+anfallen) - bis genug echte 3-Call-Faelle fuer eine erneute Log-Auswertung
+vorliegen (wie schon bei der 60s->90s-Kalibrierung 2026-07-28).
+
+**Verifiziert:**
+  Synthetisch (gemockter zai_client, Testklasse 1+2): `_kehre_objektive_
+  fakten_um()` (symbol bleibt erst, Rest umgekehrt, Original unveraendert,
+  Leerfall, Randfall ohne symbol) - PASS. `leite_eigene_richtung_
+  positionsrobust()`: Uebereinstimmung -> diese Richtung - PASS. Abweichung
+  -> NEUTRAL mit Vermerk - PASS. Je ein Call schlaegt fehl -> anderes
+  Ergebnis verwendet (beide Richtungen) - PASS. Beide fehlgeschlagen ->
+  None - PASS. `zai_client=None` -> None ohne Call - PASS. Regression
+  `fuehre_beide_calls_im_hintergrund()`: genau EIN DB-Update trotz 3
+  Z.ai-Calls (1+2) - PASS. Import-Regressionscheck (gegenpruefung, alle 6
+  Pipelines, backward_tracking, scheduler.background) - PASS.
+  Live-Bestaetigung (echter Produktionscode inkl. `baue_objektive_
+  fakten()`, echte Z.ai-API, 2 Szenarien, je n=3): lief fehlerfrei durch,
+  beide Reihenfolgen stimmten in dieser kleinen Stichprobe ueberein (bei
+  n=3 statistisch plausibel, kein Widerspruch zum breiteren Befund oben) -
+  PASS (Integrationstest, nicht erneute Bias-Messung).
+
+Dokumentiert hier + Memory. Commit/Push noch ausstehend.
