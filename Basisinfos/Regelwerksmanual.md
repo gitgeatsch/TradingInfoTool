@@ -11728,3 +11728,72 @@ belastbar mit 31-50% Win-Rate - deutlich ueber dem Hebel-Gesamtdurchschnitt.
 geändert. Punkt gemäß eigener Wiedervorlage-Kriterien geschlossen als
 "geprüft, kein belastbarer Zusammenhang gefunden" (nicht "Gegenteil
 bestätigt" - diese anfängliche Lesart wurde im Gespräch selbst korrigiert).
+
+## Nachtrag (2026-07-29): Regelwerk-Audit (3 Stufen) + Stufe 0 - Eigenkapital-Deckel-FX-Fallback gefixt
+
+**Ausloeser:** Nutzer-Auftrag nach der Hebel-Gap-Analyse, das gesamte Regelwerk
+(Determinismus/Gates → Mistral-LLM → Z.ai-Gegenpruefung) als Experte auf
+Fehler/Ungenauigkeiten/fehlende Info zu pruefen - ausgeloest durch die
+zugespitzte, berechtigte Frage, ob das System ueberhaupt besser als ein
+Muenzwurf ist. 3 parallele Audit-Agenten (je eine Pipeline-Stufe) fanden
+mehrere zusammenhaengende Kernbefunde:
+
+1. **CRV≥2.0-Gate ist kein Prognosefilter, sondern ein Selbstkonsistenz-Check**
+   der vom LLM selbst gewaehlten Entry/Stop/Take-Zonen - erklaert strukturell,
+   warum durchgelassene Trades (17,5% WR) schlechter abschneiden als vetote
+   (45,9% WR).
+2. **Regel 13 im Mistral-Prompt (`hebel_analyst.py`) haelt die Konfidenz
+   kuenstlich ueber 75%**, im direkten Widerspruch zu Regel 2/16 (die eine
+   Daempfung bei Regime-Konflikt fordern) - konkrete, behebbare Ursache fuer
+   die fehlende Trennschaerfe der Konfidenz.
+3. **Schaerfste Baseline:** bei CRV≥2.0 liegt die Break-even-Trefferquote bei
+   33,3% - tatsaechlich gemessen: 17,5%. Das System schlaegt nicht nur keinen
+   Muenzwurf, sondern nicht einmal seine eigene Chance-Risiko-Mathematik.
+4. **Z.ai bekommt strukturell weniger Fakten als Mistral** (6 statt ~26 Werte) -
+   die 4,8%-Uebereinstimmungsquote misst teils unterschiedliche
+   Informationslage, nicht nur unterschiedliche Bewertung.
+5. **Es existiert nirgends ein Baseline-Vergleichsmechanismus** - alle drei
+   Audits fanden das unabhaengig und schlugen dieselbe Loesung vor (siehe
+   Justierungsplan unten, Stufe 2).
+
+Vollstaendige Befundliste (je Stufe, priorisiert Kritisch/Wichtig/Kosmetisch)
+in [[project_regelwerk_audit_29_07]] (Memory).
+
+### Justierungsplan (4 Stufen)
+
+- **Stufe 0** (sofort, isolierter Bug): Eigenkapital-Deckel-FX-Fallback -
+  SIEHE UNTEN, umgesetzt.
+- **Stufe 1** (kleiner Prompt-Fix): Regel-13-Widerspruch aufloesen - noch
+  offen.
+- **Stufe 2** (Baseline-Infrastruktur): konsolidierte Baseline-Vergleichs-
+  Funktion(en) in `backward_tracking.py` - noch offen.
+- **Stufe 3** (groessere Strukturfragen, Diskussion noetig): CRV-Gate um
+  echte Trefferwahrscheinlichkeits-Schaetzung ergaenzen, Deckel-Konstanten
+  kalibrieren, Regime-Konflikt-Restrukturierung, Prompt-Bias zugunsten
+  Empfehlungen entschaerfen - noch offen.
+
+### Stufe 0 umgesetzt: Eigenkapital-Deckel griff nicht ohne FX-Kurs
+
+**Fund:** der am 29.07. eingefuehrte 500-EUR-Eigenkapital-Deckel
+(`hebel_risk_gate.py::post_check_hebel()`) steckte komplett innerhalb von
+`if eur_usd_fx_rate:` - schlug der EURCV-Snapshot fehl/fehlte, wurde der
+Deckel STILLSCHWEIGEND uebersprungen, obwohl `eigenkapitalbedarf` (USD)
+laengst bekannt war.
+
+**Fix:** `eigenkapital_deckel_hinweis` wird jetzt IMMER vorbelegt (`None`),
+und bei fehlendem FX-Kurs wird ein sichtbarer Warn-Hinweis gesetzt
+("Eigenkapital-Richtwert NICHT geprueft - EUR/USD-Kurs aktuell nicht
+verfuegbar"), statt den Ausfall lautlos zu verstecken. Bewusst KEIN
+Fallback-FX-Schaetzwert eingefuehrt - wuerde der bestehenden Konvention
+widersprechen, EUR-Felder bei fehlendem Kurs auf `None` zu lassen statt zu
+schaetzen.
+
+**Verifiziert (Testklasse 2):**
+  Betroffene Datei(en): agent/krypto/hebel_risk_gate.py
+  Aenderungsklasse: 2
+  Testfaelle: T1 FX-Kurs vorhanden, ueber Richtwert -> Deckel greift (Regression) - PASS
+              T2 FX-Kurs fehlt (None) -> sichtbarer Warn-Hinweis statt stillem Ausfall - PASS
+              T3 FX-Kurs=0 (falsy) -> gleiches Verhalten wie None - PASS
+              T4 FX-Kurs fehlt + kein Richtwert konfiguriert -> kein Crash, kein Hinweis - PASS
+  Regressionscheck (Import aller betroffenen Module): PASS
+  Gesamturteil: verifiziert (Stufe 2)

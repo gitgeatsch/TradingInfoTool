@@ -1094,6 +1094,18 @@ def post_check_hebel(
                     # (USD pro EUR, siehe risk_gate.py::pre_check() fuer dieselbe
                     # EURCV-Ableitung) macht die Umrechnung ohne zusaetzlichen
                     # API-Call moeglich.
+                    # Nachtrag 2026-07-29 (Audit-Fund derselben R-5.10-Session, siehe
+                    # Regelwerksmanual "Regelwerk-Audit"): der Eigenkapital-Deckel
+                    # unten steckte urspruenglich komplett innerhalb von
+                    # `if eur_usd_fx_rate:` - schlug der EURCV-Snapshot fehl/fehlte,
+                    # wurde der Deckel STILLSCHWEIGEND uebersprungen (kein Hinweis,
+                    # kein Log), obwohl `eigenkapitalbedarf` (USD) laengst bekannt
+                    # war. Vorbelegung hier stellt sicher, dass dieser Ausfall
+                    # sichtbar wird, statt lautlos zu bleiben - bewusst KEIN
+                    # Fallback-FX-Kurs (wuerde der bestehenden Konvention
+                    # widersprechen, EUR-Felder bei fehlendem Kurs auf None zu
+                    # lassen statt zu schaetzen).
+                    result["eigenkapital_deckel_hinweis"] = None
                     if eur_usd_fx_rate:
                         result["liquidationspreis_geschätzt_eur"] = (
                             result["liquidationspreis_geschätzt"] / eur_usd_fx_rate
@@ -1137,8 +1149,14 @@ def post_check_hebel(
                                 f"Richtwert {eigenkapital_richtwert_eur:.0f} EUR reduziert (Positionsgroesse "
                                 f"entsprechend verkleinert, Hebel/Zonen unveraendert)."
                             )
-                        else:
-                            result["eigenkapital_deckel_hinweis"] = None
+                    else:
+                        eigenkapital_richtwert_eur = hebel_cfg.get("eigenkapital_richtwert_eur")
+                        if eigenkapital_richtwert_eur is not None and result["eigenkapitalbedarf"] is not None:
+                            result["eigenkapital_deckel_hinweis"] = (
+                                f"Eigenkapital-Richtwert ({eigenkapital_richtwert_eur:.0f} EUR) NICHT "
+                                f"geprueft - EUR/USD-Kurs aktuell nicht verfuegbar "
+                                f"(Eigenkapitalbedarf {result['eigenkapitalbedarf']:.0f} USD ungeprueft)."
+                            )
         else:
             risk_veto = True
             reason = "Zonen unvollständig - Hebel-Empfehlung kann nicht sicher berechnet werden"
