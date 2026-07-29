@@ -139,6 +139,70 @@ Vorschlag für einen festen Zeitplan. Aber unabhängig vom Anlass gilt: einmal
 angefangen, wird der volle Katalog aus 2.1 durchgegangen, nicht nur die ursprünglich
 gestellte Frage.
 
+### 2.5 Symbol-/Konzentrations-Check vor jeder Muster-Interpretation (verbindlich)
+
+Auslöser: die R-5.10-Analyse (29.07., siehe
+[[project_r510_konfidenz_veto_analyse_29_07]]) zeigte eine naiv alarmierende Zahl
+(n=80, 55% Win-Rate, +0,64 CRV bei konfidenz-vetoten Spot-Signalen), die sich bei
+genauerem Hinsehen als Artefakt einer Handvoll gut laufender Symbole entpuppte (5
+Symbole = 29/29 Treffer, ohne sie nur noch 29,4% WR bei den restlichen 51). Eine
+zweite, strukturell ähnliche Prüfung am selben Tag (Hebel-Konfidenz-Bänder) ergab
+dagegen ein robustes Ergebnis - der Unterschied wurde erst durch diesen Check
+sichtbar.
+
+**Ab sofort verbindlich, bevor eine Win-Rate/CRV-Kennzahl aus Veto-Schatten-,
+Provider-Performance- oder Konfidenz-Band-Daten als "Muster"/"Erkenntnis"
+interpretiert oder gar in eine Handlungsempfehlung übersetzt wird:**
+
+1. Anzahl unterschiedlicher Symbole in der Stichprobe ermitteln (nicht nur Gesamt-n).
+2. Win-Rate/CRV zusätzlich OHNE die 3-5 häufigsten Symbole berechnen.
+3. Bewegt sich die Kennzahl dabei deutlich (>10 Prozentpunkte WR oder Vorzeichenwechsel
+   beim CRV), gilt der Befund als NICHT robust - vermutlich Symbol-/Rally-Artefakt,
+   nicht als Kalibrierungslücke behandeln, keine Schwellenwert-Änderung darauf stützen.
+4. Bleibt die Kennzahl stabil, gilt der Befund als robust und kann als echte
+   Erkenntnis dokumentiert und diskutiert werden.
+
+Diese Prüfung wird in Abschnitt 3 der jeweiligen Analyse-Zusammenfassung (Chat oder
+Memory) kurz mit ausgewiesen (Anzahl Symbole, WR mit/ohne Top-N), nicht nur das
+Endergebnis genannt.
+
+### 2.5.1 Klarstellung: was der Check NICHT bedeutet (Nachtrag 29.07.)
+
+Auslöser: Nutzer-Nachfrage, ob eine bewusst schmale Watchlist (z.B. nur BTC/ETH/SOL)
+das System damit faktisch unbenutzbar macht, und ob die Handelslogik überhaupt von
+Diversifikation abhängen sollte (Gegenbeispiel des Nutzers: bei Hebel laufen aktuell
+sowohl BTC als auch ein Memecoin - an fehlender Asset-Vielfalt kann und sollte es
+also nicht liegen).
+
+**Der eigentliche Maßstab ist Unabhängigkeit der Beobachtungen, nicht Anzahl der
+Symbole.** Symbol-Vielfalt ist nur der aktuell nächstliegende PROXY dafür, weil die
+bisherigen Datenmengen ihre scheinbare Größe oft aus wiederholtem
+Cooldown-Re-Signalisieren DESSELBEN Coins während EINER zusammenhängenden
+Marktbewegung beziehen (viele DB-Zeilen, aber wenige echte, unabhängige
+Marktereignisse dahinter). Daraus folgt:
+
+- **Eine schmale, bewusst gewählte Watchlist (wenige Symbole) ist für sich genommen
+  KEIN Konzentrationsproblem.** Dieselben 2-3 Symbole über einen langen Zeitraum
+  hinweg, der mehrere echte, unterschiedliche Marktphasen (Bulle/Bär/Seitwärts)
+  abdeckt, liefern genauso unabhängige Datenpunkte wie viele verschiedene Symbole -
+  nur über die Zeit-Achse gestreut statt über die Symbol-Achse. Das Betriebs-System
+  selbst braucht keine Symbol-Vielfalt, um zu funktionieren.
+- **Die Handelslogik/Regeln sollen asset-agnostisch funktionieren** (BTC und ein
+  Memecoin gleichermaßen abgedeckt) - der Check unterstellt nicht das Gegenteil. Er
+  prüft nur, ob eine KONKRETE Kennzahl (z.B. "46% Win-Rate bei Regel X") tatsächlich
+  die generelle Wirkung der Regel zeigt, oder ob sie nur "diese 3 Symbole liefen in
+  dieser einen Woche gut" beweist - was bei einer Schwellenwert-Änderung fälschlich
+  auf ALLE künftigen Symbole/Situationen verallgemeinert würde.
+- **Bei einer schmalen Watchlist ist der Symbol-Check durch einen
+  Zeitfenster-Unabhängigkeits-Check zu ERSETZEN bzw. zu ergänzen:** sind die
+  Gewinn-/Verlust-Fälle über mehrere klar unterschiedliche Marktphasen verteilt, oder
+  stammen sie praktisch alle aus einer einzigen zusammenhängenden Bewegung? Gleiches
+  Prinzip, andere Achse.
+- Die ">10 Prozentpunkte"-Schwelle aus 2.5 ist bereits genau dafür gebaut, "ab
+  welcher Menge kein Problem mehr" zu beantworten: nicht als feste Symbolanzahl,
+  sondern als Test, ob der Effekt beim Entfernen der dominantesten paar Symbole
+  verschwindet oder stabil bleibt.
+
 ---
 
 ## 3. Verwandte Dokumente
