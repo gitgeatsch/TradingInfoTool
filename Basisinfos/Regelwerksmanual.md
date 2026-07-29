@@ -11763,8 +11763,8 @@ in [[project_regelwerk_audit_29_07]] (Memory).
 
 - **Stufe 0** (sofort, isolierter Bug): Eigenkapital-Deckel-FX-Fallback -
   SIEHE UNTEN, umgesetzt.
-- **Stufe 1** (kleiner Prompt-Fix): Regel-13-Widerspruch aufloesen - noch
-  offen.
+- **Stufe 1** (kleiner Prompt-Fix): Regel-13-Widerspruch aufloesen - SIEHE
+  UNTEN, umgesetzt.
 - **Stufe 2** (Baseline-Infrastruktur): konsolidierte Baseline-Vergleichs-
   Funktion(en) in `backward_tracking.py` - noch offen.
 - **Stufe 3** (groessere Strukturfragen, Diskussion noetig): CRV-Gate um
@@ -11797,3 +11797,40 @@ schaetzen.
               T4 FX-Kurs fehlt + kein Richtwert konfiguriert -> kein Crash, kein Hinweis - PASS
   Regressionscheck (Import aller betroffenen Module): PASS
   Gesamturteil: verifiziert (Stufe 2)
+
+### Stufe 1 umgesetzt: Regel-13-Widerspruch im Mistral-Prompt aufgeloest
+
+**Fund:** Regel 13 (`hebel_analyst.py::SYSTEM_PROMPT`) schreibt vor, dass ein
+EINZELNER isolierter Schwachpunkt im `gegenargument` (z.B. gemischte
+Konfluenz, knappes CRV) die Konfidenz nur moderat daempfen darf, niemals
+unter 75%. Regel 2 und Regel 16 verlangen aber ausdruecklich, dass genau
+EIN Faktor - Regime-Konflikt (`regime.richtungs_konflikt_mit_trigger`) bzw.
+btc_season/baer_flucht-Alt-Skepsis bei Nicht-Core-Assets - Konfidenz UND
+Hebel-Vorschlag daempft, weil eine gehebelte Gegen-Trend-Position
+strukturell riskanter ist. In der Praxis (persistentes Baer-Regime) ist
+Regime-Konflikt bei LONG-Signalen quasi immer vorhanden und quasi immer der
+EINZIGE Schwachpunkt - Regel 13 hielt die Konfidenz dadurch systematisch
+ueber 75%, obwohl Regel 2 genau das verhindern wollte. Das ist eine der
+konkreten, behebbaren Ursachen fuer die fehlende Trennschaerfe der Konfidenz
+(siehe Audit-Fund 2 oben).
+
+**Fix:** Regel 13 bekommt eine explizite AUSNAHME-Klausel: der in Regel 2
+beschriebene Regime-Konflikt und die in Regel 16 beschriebene
+btc_season/baer_flucht-Alt-Skepsis sind KEINE generischen, mit gemischter
+Konfluenz/knappem CRV gleichwertige Einzel-Schwachpunkte, sondern die
+einzigen beiden Faelle, fuer die Regel 2 bzw. Regel 16 selbst schon eine
+Daempfung verlangen. Liegt einer dieser beiden Faelle vor, DARF die
+Konfidenz auch als einziger Schwachpunkt unter 75% fallen. Reiner
+Prompt-Wortlaut-Fix, keine Code-/Schema-Aenderung - kein anderer Codepfad
+haengt an der exakten 75%-Zahl (die Konstanten `KONFIDENZ_SCHWELLE_NIEDRIG`/
+`KONFIDENZ_SCHWELLE_HOCH` in `risk_gate.py` sind 55/70, unabhaengig davon).
+
+**Verifiziert (Testklasse 1, Prompt-only):**
+  Betroffene Datei(en): agent/krypto/hebel_analyst.py
+  Aenderungsklasse: 1
+  Testfaelle: Import von hebel_analyst.py - PASS
+              Regelnummerierung weiterhin fortlaufend 1-26 (keine Luecke/Dopplung) - PASS
+              Ausnahme-Klausel vorhanden und referenziert Regel 2/16 korrekt - PASS
+              Umlaute/Zeilenumbrueche im zusammengefuegten Prompt-Text korrekt (kein
+              Mojibake, keine fehlenden/doppelten Leerzeichen an der Einfuegestelle) - PASS
+  Gesamturteil: verifiziert (Stufe 1)

@@ -188,7 +188,16 @@ IRGENDEIN Gegenargument - dessen bloße Existenz allein ist KEIN Grund für eine
 Abwertung. Ein EINZELNER, isolierter Schwachpunkt rechtfertigt lediglich eine moderate \
 Abwertung, keinen Fall unter 75%. Erst wenn MEHRERE dieser Schwachpunkte gleichzeitig \
 zutreffen (z.B. widersprüchliche Konfluenz UND ein nur knapp ausreichendes CRV gleichzeitig), \
-ist eine hohe Konfidenz (>75%) nicht mehr angemessen. Nutze dabei die volle Bandbreite von \
+ist eine hohe Konfidenz (>75%) nicht mehr angemessen. AUSNAHME von dieser 75%-Untergrenze: der \
+in Regel 2 beschriebene Regime-Konflikt (`regime.richtungs_konflikt_mit_trigger`) und die in \
+Regel 16 beschriebene btc_season/baer_flucht-Alt-Skepsis sind KEINE generischen, mit gemischter \
+Konfluenz oder knappem CRV gleichwertige Einzel-Schwachpunkte, sondern die einzigen beiden \
+Fälle, für die Regel 2 bzw. Regel 16 explizit eine Dämpfung von Konfidenz UND Hebel-Vorschlag \
+verlangen (eine gehebelte Gegen-Trend-Position ist strukturell riskanter als dieselbe Position \
+ohne Hebel). Liegt einer dieser beiden Fälle vor, DARF `confidence_pct` auch DANN unter 75% \
+fallen, wenn sonst kein weiterer Schwachpunkt vorliegt - das widerspricht NICHT der GRADUELL-\
+Vorgabe oben, sondern IST für diese zwei strukturellen Fälle die dafür vorgesehene stärkere \
+Abstufung. Nutze dabei die volle Bandbreite von \
 `confidence_pct` (0-100%) - eine Konfidenz, die praktisch immer im selben schmalen Band \
 landet, ist selbst ein Kalibrierungsfehler und schadet der Aussagekraft der Zahl.
 14. Ist `historische_erfolgsquote` NICHT null, gibt sie die bisherige Trefferquote frueherer \
