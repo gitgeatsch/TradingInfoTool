@@ -11766,7 +11766,7 @@ in [[project_regelwerk_audit_29_07]] (Memory).
 - **Stufe 1** (kleiner Prompt-Fix): Regel-13-Widerspruch aufloesen - SIEHE
   UNTEN, umgesetzt.
 - **Stufe 2** (Baseline-Infrastruktur): konsolidierte Baseline-Vergleichs-
-  Funktion(en) in `backward_tracking.py` - noch offen.
+  Funktion(en) in `backward_tracking.py` - SIEHE UNTEN, umgesetzt.
 - **Stufe 3** (groessere Strukturfragen, Diskussion noetig): CRV-Gate um
   echte Trefferwahrscheinlichkeits-Schaetzung ergaenzen, Deckel-Konstanten
   kalibrieren, Regime-Konflikt-Restrukturierung, Prompt-Bias zugunsten
@@ -11834,3 +11834,56 @@ haengt an der exakten 75%-Zahl (die Konstanten `KONFIDENZ_SCHWELLE_NIEDRIG`/
               Umlaute/Zeilenumbrueche im zusammengefuegten Prompt-Text korrekt (kein
               Mojibake, keine fehlenden/doppelten Leerzeichen an der Einfuegestelle) - PASS
   Gesamturteil: verifiziert (Stufe 1)
+
+### Stufe 2 umgesetzt: konsolidierte Baseline-Vergleichs-Funktionsfamilie
+
+**Fund:** alle drei Audit-Agenten fanden unabhaengig voneinander denselben
+Mangel - nirgends im Code existiert eine Antwort auf die vom Nutzer selbst
+aufgeworfene Frage ("kann ich nicht auch einfach eine Muenze werfen?"). Eine
+Trefferquote ohne Referenzgroesse (Muenzwurf, CRV-Pflichtgrenze, regimenaive
+Baseline, Z.ai-Zufallsuebereinstimmung) ist nicht interpretierbar.
+
+**Fix:** zwei neue Funktionen in `agent/krypto/backward_tracking.py`
+(gebuendelt statt drei getrennter, wie von allen drei Audits vorgeschlagen):
+  - `compute_baseline_vergleich(conn, tier, erlaubte_symbole=None,
+    crv_minimum=CRV_MINIMUM)`: Trefferquote je Tier (spot/hebel) plus (a)
+    Muenzwurf-Vergleich (50%) mit exaktem zweiseitigem Binomialtest, (b) bei
+    Hebel zusaetzlich CRV-Breakeven-Vergleich (`1/(1+crv_minimum)`, bei
+    CRV_MINIMUM=2.0 also 33,3%), (c) bei Hebel zusaetzlich regimenaiver
+    Vergleich (Trefferquote des `trigger_zweig='trendfolge'`-Teilsatzes -
+    ein simpler Momentum-Trade OHNE LLM-Analyse als Referenz).
+  - `compute_zai_uebereinstimmung_baseline(conn, watchlist=None)`: die
+    bislang nur ad-hoc in `extract_notebook_diagnose.py` berechnete
+    LLM1-vs-Z.ai-Uebereinstimmungsquote (`zai_uebereinstimmung`) gegen eine
+    3-Weg-Zufalls-Baseline (33,3% - `zai_eigene_richtung` kann LONG/SHORT/
+    NEUTRAL sein, die Primaer-Richtung ist binaer, ein zufaelliger 3-Weg-Tipp
+    traefe sie im Schnitt in 1/3 der Faelle).
+  - Gemeinsamer Helfer `_binomialtest_zweiseitig_p_wert(erfolge, n, p)`:
+    exakter Test via `math.comb()`, BEWUSST ohne scipy (nicht in
+    requirements.txt, nirgends sonst im Projekt verwendet - keine neue harte
+    Abhaengigkeit fuer einen einzelnen Test).
+
+Reine Diagnose-/Leseinfrastruktur (kein Seiteneffekt, keine Aenderung an
+Gates/Prompt/E-Mail) - noch NICHT an GUI/Remote-Seite/E-Mail angebunden;
+folgt bei Bedarf separat.
+
+**Verifiziert (Testklasse 2):**
+  Betroffene Datei(en): agent/krypto/backward_tracking.py
+  Aenderungsklasse: 2
+  Testfaelle: Binomialtest-Helper (Grundeigenschaften: Symmetrie, n=0->None,
+              korrekte Signifikanz bei starker Abweichung) - PASS
+              compute_baseline_vergleich() Hebel (63 synth. Signale, 17,5%
+              WR, reproduziert echten Gruppe-A-Fund: Muenzwurf-Vergleich
+              signifikant negativ, CRV-Breakeven 33,3% korrekt, Regime-Naiv-
+              Vergleich ueber trigger_zweig='trendfolge') - PASS
+              compute_baseline_vergleich() Spot (kein CRV-/Regime-Vergleich,
+              da kein trigger_zweig-Feld; Kleine-Stichprobe-Hinweis) - PASS
+              0 Signale -> None - PASS
+              compute_zai_uebereinstimmung_baseline() (3/63, reproduziert
+              echten 4,8%-Fund, Zufalls-Baseline 33,3% korrekt) - PASS
+              keine Daten -> leeres Dict, kein Crash - PASS
+  Echter Lauf gegen Kopie der lokalen Desktop-DB: kein Absturz, sauberer
+  Leerfall (Desktop-Bestand aktuell zu klein/veraltet fuer inhaltliche
+  Zahlen - siehe project_dev_setup.md, Notebook ist alleinige Produktivinstanz)
+  Regressionscheck (Import aller abhaengigen Module): PASS
+  Gesamturteil: verifiziert (Stufe 2)

@@ -11,12 +11,13 @@ Datengrundlage fuer die spaeteren Schritte 3+4 der Selbstverifikations-Vision
 Ist-Ergebnisse kann nichts verglichen werden."""
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 
 import database.db as db
 from agent.krypto.llm_provider import provider_from_label
-from agent.krypto.risk_gate import KONFIDENZ_SCHWELLE_HOCH, KONFIDENZ_SCHWELLE_NIEDRIG
+from agent.krypto.risk_gate import CRV_MINIMUM, KONFIDENZ_SCHWELLE_HOCH, KONFIDENZ_SCHWELLE_NIEDRIG
 
 OUTCOME_OFFEN = "offen"
 OUTCOME_TAKE_PROFIT = "take_profit_erreicht"
@@ -1245,6 +1246,232 @@ def compute_win_rate_fact(conn, tier: str, erlaubte_symbole: set[str] | None = N
         "fehlschlaege": fehlschlaege,
         "hinweis": hinweis,
     }
+
+
+def _binomialtest_zweiseitig_p_wert(erfolge: int, n: int, p: float = 0.5) -> float | None:
+    """Exakter zweiseitiger Binomialtest (2026-07-29, Regelwerk-Audit Stufe 2 -
+    siehe project_regelwerk_audit_29_07.md, "Kein Baseline-Vergleichsmechanismus
+    existiert irgendwo im Code"): beantwortet "ist die beobachtete Trefferquote
+    ueberhaupt signifikant von einer Zufalls-/Baseline-Quote `p` verschieden,
+    oder ist der Unterschied bei dieser Stichprobengroesse durch Zufall
+    erklaerbar?" - Ergaenzung zur reinen Prozentzahl, die bei kleinem n leicht
+    ueberinterpretiert wird.
+
+    Bewusst OHNE scipy (nicht in requirements.txt, nirgends sonst im Projekt
+    verwendet - keine neue harte Abhaengigkeit fuer einen einzelnen Test):
+    reine Standardbibliothek (`math.comb`), Summe aller Ausgaenge, die
+    mindestens so unwahrscheinlich sind wie das beobachtete Ergebnis (Methode
+    identisch zu scipy.stats.binomtest(..., alternative="two-sided")). Fuer die
+    hier relevanten Stichprobengroessen (deutlich unter 1000) ist das schnell
+    genug ohne Naeherung.
+
+    Gibt None zurueck bei n=0 (kein Test moeglich) - Aufrufer soll das dann
+    z.B. als "n/a" statt als falsche 1.0/0.0 anzeigen."""
+    if n == 0:
+        return None
+    if not 0.0 < p < 1.0:
+        raise ValueError("p muss zwischen 0 und 1 liegen (exklusive)")
+
+    def _pmf(k: int) -> float:
+        return math.comb(n, k) * (p ** k) * ((1 - p) ** (n - k))
+
+    beobachtete_wahrscheinlichkeit = _pmf(erfolge)
+    # Toleranz gegen Gleitkomma-Rundungsfehler bei "mindestens so unwahrscheinlich".
+    p_wert = sum(
+        wahrscheinlichkeit
+        for k in range(n + 1)
+        if (wahrscheinlichkeit := _pmf(k)) <= beobachtete_wahrscheinlichkeit * (1 + 1e-9)
+    )
+    return min(1.0, p_wert)
+
+
+def compute_baseline_vergleich(
+    conn, tier: str, erlaubte_symbole: set[str] | None = None,
+    crv_minimum: float = CRV_MINIMUM,
+) -> dict | None:
+    """Konsolidierte Baseline-Vergleichs-Funktion (2026-07-29, Regelwerk-Audit
+    Stufe 2 - siehe project_regelwerk_audit_29_07.md). Alle drei Audit-Agenten
+    (Gate/Mistral/Z.ai) fanden unabhaengig voneinander denselben Mangel: es
+    gibt nirgends eine Antwort auf "ist diese Trefferquote ueberhaupt besser
+    als [Muenzwurf/CRV-Pflichtgrenze/regimenaiver Trendfolge-Trade]?" - diese
+    Funktion buendelt die drei vorgeschlagenen Vergleiche zu EINER
+    Funktionsfamilie statt drei getrennter (Nutzer-Vorgabe), ergaenzt um einen
+    Signifikanztest, damit ein kleiner Prozentpunkt-Unterschied bei kleiner
+    Stichprobe nicht als belastbarer Befund missverstanden wird.
+
+    `tier`: "spot" liest die `signals`-Tabelle, alles andere (z.B. "hebel")
+    liest `hebel_signals` - identisch zu compute_win_rate_fact(). Gleiche
+    _RESOLVED_OUTCOMES-Basis (take_profit/stop_loss/liquidation), Liquidation
+    zaehlt wie ueberall im Projekt als Fehlschlag.
+
+    `erlaubte_symbole`: siehe compute_win_rate_fact()-Docstring (Multi-Asset-
+    Vollstaendigkeitspruefung) - identisches Verhalten.
+
+    Rueckgabe (None bei 0 ausgewerteten Signalen, wie compute_win_rate_fact()):
+    - `anzahl_ausgewertete_signale`, `trefferquote_pct` (wie compute_win_rate_fact()).
+    - `muenzwurf_vergleich`: Vergleich gegen p=0,5 (die vom Nutzer selbst
+      aufgeworfene "kann ich nicht einfach eine Muenze werfen"-Frage) -
+      `baseline_pct`, `differenz_prozentpunkte`, `binomialtest_p_wert`,
+      `statistisch_signifikant_5pct`.
+    - `crv_breakeven_vergleich`: NUR wenn `tier != "spot"` (CRV-Pflicht gilt nur
+      fuer Hebel/gehebelte Trades) - Vergleich gegen die aus `crv_minimum`
+      implizierte Break-even-Trefferquote (`1/(1+crv_minimum)`, siehe
+      project_regelwerk_audit_29_07.md Kernerkenntnis 3: bei CRV_MINIMUM=2.0
+      liegt Break-even bei 33,3%). Bewusst der FESTE Konfig-Mindestwert, nicht
+      das tatsaechliche CRV je Signal - Letzteres ist noch kein eigenes
+      DB-Feld (Audit-Fund "Wichtig" #4, separat, nicht Teil dieser Stufe).
+    - `regime_naiv_vergleich`: NUR wenn `tier != "spot"` UND `trigger_zweig`
+      gespeichert ist (Hebel-only-Feld) - Trefferquote des `trigger_zweig ==
+      "trendfolge"`-Teilsatzes als regimenaive Referenz (Audit-Fund "Wichtig"
+      #9: dieser Zweig IST bereits ein simpler Momentum-Baseline-Trade, LONG
+      wenn 24h-Change>=0, wird aber nirgends separat ausgewertet). `None`, wenn
+      dieser Teilsatz selbst 0 Eintraege hat.
+    - `hinweis`: identischer Kleine-Stichprobe-Text wie compute_win_rate_fact().
+
+    Reine Lesefunktion, kein Seiteneffekt."""
+    table = "signals" if tier == "spot" else "hebel_signals"
+    spalten = "symbol, outcome_status" if tier == "spot" else "symbol, outcome_status, trigger_zweig"
+    placeholders = ", ".join("?" for _ in _RESOLVED_OUTCOMES)
+    rows = conn.execute(
+        f"SELECT {spalten} FROM {table} WHERE outcome_status IN ({placeholders})",
+        _RESOLVED_OUTCOMES,
+    ).fetchall()
+    if erlaubte_symbole is not None:
+        rows = [r for r in rows if r["symbol"] in erlaubte_symbole]
+    total = len(rows)
+    if total == 0:
+        return None
+
+    def _trefferquote(teilmenge: list) -> tuple[int, int, float]:
+        n = len(teilmenge)
+        treffer = sum(1 for r in teilmenge if r["outcome_status"] == OUTCOME_TAKE_PROFIT)
+        quote = round(100.0 * treffer / n, 1) if n > 0 else None
+        return treffer, n, quote
+
+    treffer, total, trefferquote_pct = _trefferquote(rows)
+
+    muenzwurf_p_wert = _binomialtest_zweiseitig_p_wert(treffer, total, p=0.5)
+    muenzwurf_vergleich = {
+        "baseline_pct": 50.0,
+        "differenz_prozentpunkte": round(trefferquote_pct - 50.0, 1),
+        "binomialtest_p_wert": muenzwurf_p_wert,
+        "statistisch_signifikant_5pct": (muenzwurf_p_wert is not None and muenzwurf_p_wert < 0.05),
+    }
+
+    crv_breakeven_vergleich = None
+    if tier != "spot":
+        breakeven_pct = round(100.0 / (1.0 + crv_minimum), 1)
+        crv_p_wert = _binomialtest_zweiseitig_p_wert(treffer, total, p=breakeven_pct / 100.0)
+        crv_breakeven_vergleich = {
+            "crv_minimum": crv_minimum,
+            "breakeven_pct": breakeven_pct,
+            "differenz_prozentpunkte": round(trefferquote_pct - breakeven_pct, 1),
+            "binomialtest_p_wert": crv_p_wert,
+            "statistisch_signifikant_5pct": (crv_p_wert is not None and crv_p_wert < 0.05),
+        }
+
+    regime_naiv_vergleich = None
+    if tier != "spot":
+        trendfolge_rows = [r for r in rows if r["trigger_zweig"] == "trendfolge"]
+        if trendfolge_rows:
+            tf_treffer, tf_n, tf_quote = _trefferquote(trendfolge_rows)
+            regime_naiv_vergleich = {
+                "beschreibung": (
+                    "Trefferquote des trigger_zweig='trendfolge'-Teilsatzes "
+                    "(simpler Momentum-Trade: LONG wenn 24h-Aenderung>=0) als "
+                    "regimenaive Referenz, OHNE LLM-Analyse."
+                ),
+                "anzahl": tf_n,
+                "trefferquote_pct": tf_quote,
+                "differenz_zur_gesamtquote_prozentpunkte": round(trefferquote_pct - tf_quote, 1),
+            }
+
+    if total < _MIN_SAMPLE_FUER_AUSSAGE:
+        hinweis = (
+            f"Basiert auf nur {total} bisher ausgewerteten Signalen - statistisch "
+            "NICHT belastbar (Mindeststichprobe fuer eine verlaessliche Aussage: "
+            f"{_MIN_SAMPLE_FUER_AUSSAGE}). Nur als sehr grobe Orientierung "
+            "verwenden, keinesfalls die Konfidenz allein darauf stuetzen."
+        )
+    else:
+        hinweis = f"Basiert auf {total} bisher ausgewerteten Signalen."
+
+    return {
+        "anzahl_ausgewertete_signale": total,
+        "trefferquote_pct": trefferquote_pct,
+        "muenzwurf_vergleich": muenzwurf_vergleich,
+        "crv_breakeven_vergleich": crv_breakeven_vergleich,
+        "regime_naiv_vergleich": regime_naiv_vergleich,
+        "hinweis": hinweis,
+    }
+
+
+_ZAI_ZUFALLS_BASELINE_PCT = 100.0 / 3.0  # Z.ai's zai_eigene_richtung ist LONG/SHORT/NEUTRAL;
+# bei rein zufaelliger Wahl unter diesen 3 Optionen stimmt genau 1 davon mit der
+# (binaeren LONG/SHORT-) Primaer-Richtung ueberein -> 1/3 Zufalls-Trefferquote.
+
+
+def compute_zai_uebereinstimmung_baseline(conn, watchlist: list | None = None) -> dict:
+    """Baseline-Vergleich fuer `zai_uebereinstimmung` (2026-07-29, Regelwerk-
+    Audit Stufe 2, Z.ai-Audit-Fund "Kein Baseline-Vergleich fuer die
+    4,8%-Uebereinstimmungsquote"): bislang wurde die Uebereinstimmungsquote
+    zwischen der primaeren LLM-Empfehlung und Z.ais unabhaengiger Richtungs-
+    Ableitung (`zai_eigene_richtung`, siehe gegenpruefung.py::leite_eigene_
+    richtung()) nur ad-hoc waehrend Analysen berechnet (siehe
+    extract_notebook_diagnose.py), nie als aufrufbare Funktion mit
+    Referenzgroesse. `zai_eigene_richtung` kann LONG/SHORT/NEUTRAL sein, die
+    Primaer-Richtung ist immer binaer (LONG/SHORT) - eine rein zufaellige
+    3-Weg-Wahl traefe die Primaer-Richtung daher im Schnitt in 1/3 der Faelle
+    (`_ZAI_ZUFALLS_BASELINE_PCT`), nicht in der Haelfte.
+
+    Gleiche Tier-Aufschluesselung wie compute_provider_performance() (Hebel
+    gesondert, Spot-family nach Assetklasse wenn `watchlist` uebergeben wird).
+    Zaehlt NUR Zeilen mit gesetztem `zai_uebereinstimmung` ('ja'/'nein') -
+    Zeilen ohne Z.ai-Ergebnis (Call fehlgeschlagen/nicht konfiguriert) fliessen
+    nicht ein. Reine Lesefunktion, kein Seiteneffekt."""
+    assetklasse_by_symbol = {a.symbol: a.assetklasse for a in watchlist} if watchlist else {}
+    gruppen: dict[str, dict] = {}
+
+    def _stelle_sicher(tier: str) -> dict:
+        return gruppen.setdefault(tier, {"anzahl_bewertet": 0, "anzahl_uebereinstimmung": 0})
+
+    hebel_rows = conn.execute(
+        "SELECT zai_uebereinstimmung FROM hebel_signals WHERE zai_uebereinstimmung IN ('ja', 'nein')",
+    ).fetchall()
+    for row in hebel_rows:
+        eintrag = _stelle_sicher("hebel")
+        eintrag["anzahl_bewertet"] += 1
+        if row["zai_uebereinstimmung"] == "ja":
+            eintrag["anzahl_uebereinstimmung"] += 1
+
+    spot_rows = conn.execute(
+        "SELECT symbol, zai_uebereinstimmung FROM signals WHERE zai_uebereinstimmung IN ('ja', 'nein')",
+    ).fetchall()
+    for row in spot_rows:
+        tier = assetklasse_by_symbol.get(row["symbol"], "unbekannt") if watchlist else "spot"
+        eintrag = _stelle_sicher(tier)
+        eintrag["anzahl_bewertet"] += 1
+        if row["zai_uebereinstimmung"] == "ja":
+            eintrag["anzahl_uebereinstimmung"] += 1
+
+    ergebnis: dict = {}
+    for tier, eintrag in gruppen.items():
+        n = eintrag["anzahl_bewertet"]
+        uebereinstimmung = eintrag["anzahl_uebereinstimmung"]
+        quote_pct = round(100.0 * uebereinstimmung / n, 1) if n > 0 else None
+        p_wert = _binomialtest_zweiseitig_p_wert(uebereinstimmung, n, p=_ZAI_ZUFALLS_BASELINE_PCT / 100.0)
+        ergebnis[tier] = {
+            "anzahl_bewertet": n,
+            "anzahl_uebereinstimmung": uebereinstimmung,
+            "uebereinstimmungsquote_pct": quote_pct,
+            "zufalls_baseline_pct": round(_ZAI_ZUFALLS_BASELINE_PCT, 1),
+            "differenz_prozentpunkte": (
+                round(quote_pct - _ZAI_ZUFALLS_BASELINE_PCT, 1) if quote_pct is not None else None
+            ),
+            "binomialtest_p_wert": p_wert,
+            "statistisch_signifikant_5pct": (p_wert is not None and p_wert < 0.05),
+        }
+    return ergebnis
 
 
 def _konfidenz_bucket(confidence_pct: float) -> str:
