@@ -11690,3 +11690,41 @@ Aufschluesselungs-Modus wird jetzt auch im Export genutzt.
 **Ausstehend:** Nutzer muss `extract_notebook_diagnose.py` am Notebook erneut
 laufen lassen + syncen, damit der naechste Export die feinere Aufschluesselung
 tatsaechlich enthaelt (Stufe 5, "im Betrieb bestaetigt", noch offen).
+
+## Nachtrag (2026-07-29): Risikofaktoren-Häufung bei Hebel — Backtest durchgeführt, kein Gate gebaut
+
+**Ausloeser:** offener Folgepunkt vom 2026-07-23 (siehe Fakten_Entscheidungsmappe-
+Historie): "Regime-Konflikt"/"Technische Konfluenz"/"Alt-Coin-Marktphase"/
+"These-Regime-Widerspruch" werden bei Hebel-Signalen als unabhaengige
+Risikofaktor-Bulletpoints gelistet, obwohl sie teilweise korreliert sind -
+Wiedervorlage-Bedingung war n>=30-50 aufgeloeste Hebel-Signale fuer einen
+Backtest.
+
+**Datenlage:** n=62 aufgeloeste Hebel-Signale mit `risikofaktoren_json`
+(nach Behebung der Assetklassen-Export-Luecke, siehe Nachtrag oben).
+
+**Erster Durchgang** (naiv, Anzahl gleichzeitig negativer Struktur-Faktoren):
+zeigte scheinbar das GEGENTEIL der Ausgangs-Hypothese (>=3 negative Faktoren
+schnitten mit 24,4% Win-Rate besser ab als <3 mit 4,8%).
+
+**Vertiefung deckte zwei Konfundierungen auf:**
+1. `Regime-Konflikt` ist fuer LONG-Signale im anhaltenden Bär-Regime eine
+   Tautologie (54/54 LONG-Signale "negativ", bei SHORT nie gebildet) - der
+   Faktor traegt keine unabhaengige Information, sondern kodiert nur die
+   Richtungswahl selbst.
+2. Nach Herausrechnen dieses Konfunds (nur LONG, verbleibende 3 Faktoren)
+   UND Anwendung des Symbol-Konzentrations-Checks (siehe
+   `Test_und_Verifikationsmethodik.md` Abschnitt 2.5) zerfaellt auch dieser
+   Rest: der scheinbar schlechteste Bucket (1 negativer Faktor, 0% WR) ist
+   zu 100% ein einziges Symbol (KAIA, 8/8) - kein echtes Muster.
+
+**Fazit:** weder die urspruengliche Hypothese (mehr negative Faktoren =
+schlechter) noch ihre scheinbare Umkehr sind robust genug belegt. Einzig
+der groesste, diverseste Bucket (3 von 4 Faktoren negativ, n=29→16 nach
+Symbol-Bereinigung, 10 unterschiedliche Symbole) bleibt einigermassen
+belastbar mit 31-50% Win-Rate - deutlich ueber dem Hebel-Gesamtdurchschnitt.
+
+**Entscheidung:** kein deterministischer Häufungs-Deckel gebaut, kein Code
+geändert. Punkt gemäß eigener Wiedervorlage-Kriterien geschlossen als
+"geprüft, kein belastbarer Zusammenhang gefunden" (nicht "Gegenteil
+bestätigt" - diese anfängliche Lesart wurde im Gespräch selbst korrigiert).
