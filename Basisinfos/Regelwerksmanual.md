@@ -12065,3 +12065,95 @@ vorliegen (wie schon bei der 60s->90s-Kalibrierung 2026-07-28).
   PASS (Integrationstest, nicht erneute Bias-Messung).
 
 Dokumentiert hier + Memory. Commit/Push noch ausstehend.
+
+**Nachtrag (2026-07-29, frischer NB-Export 21:18 Uhr): Konfidenz-Kalibrierung
+x CRV/SL-Korrelation - Analyse durchgefuehrt, Ergebnis "noch nicht
+entscheidbar" statt eines definitiven Befunds.**
+
+Anlass: Nutzer-Frage, ob die frueher (project_r510_konfidenz_veto_analyse_
+29_07.md) gefundene flache/uneinheitliche Konfidenz-Kalibrierung (niedrig
+20,6% WR > mittel 14,3% WR trotz hoeherer vorhergesagter Konfidenz) mit den
+bereits bekannten CRV-/SL-Abstand-Mustern (Stufe 3 Punkt 1 oben)
+zusammenhaengt - diese zwei Untersuchungsstraenge waren bisher nie direkt
+gegeneinander korreliert worden.
+
+**Export-Skript-Check (aktiv geprueft, wie vom Nutzer verlangt):**
+`extract_notebook_diagnose.py` brauchte KEINE Anpassung - alle noetigen
+Felder (`confidence_pct`, `llm_model`, `outcome_status`,
+`outcome_max_realisiertes_crv`, `zai_eigene_richtung`, `zai_uebereinstimmung`)
+waren bereits vorhanden, keine der heutigen Aenderungen (Regel 27,
+Z.ai-Fix) hat neue DB-Spalten eingefuehrt.
+
+**Datenqualitaets-Fund waehrend der Analyse:** `compute_konfidenz_
+kalibrierung()` mischt ALLE Provider (Mistral+Groq+Cerebras+Gemini) unter
+Tier "hebel" ohne Provider-Filter. Die fruehere "hoch"-Band-Zahl (n=9) war
+dadurch verzerrt - 8 von 9 stammen von laengst aus der Kette entfernten
+Providern (Groq/Cerebras), nur 1 von Mistral. Eine Mistral-only-
+Neuberechnung war deshalb noetig, um wirklich Mistrals eigene Kalibrierung
+zu beurteilen (n=63 Mistral-Gruppe-A-Signale, identisch zu
+`provider_performance.hebel.mistral.anzahl_resolved`, als Cross-Check
+verifiziert).
+
+**Erste Analyse (Pearson-Korrelationen, Mistral-Gruppe-A, n=63):**
+Konfidenz vs. CRV r=0,041, Konfidenz vs. SL-Abstand r=-0,070, Konfidenz vs.
+Win r=-0,067 - alle nahe Null. Zusaetzlicher Nebenbefund: CRV vs. Win
+INNERHALB Gruppe A allein r=+0,117 (schwach POSITIV, anders als das
+Gesamt-r=-0,25 aus der gemischten A+B-Population in Stufe 3 Punkt 1) -
+deutete zunaechst auf einen Zwischen-Gruppen-Effekt (Schwelleneffekt bei
+CRV=2,0) statt eines durchgehenden Dosis-Wirkungs-Zusammenhangs hin.
+
+**Selbstkorrektur nach Signifikanztest (Nutzer-Nachfrage "ist das Thema
+abgehakt oder fehlt eine Grundlage?"):** ALLE oben genannten Korrelationen
+UND der niedrig-vs-mittel-Bandunterschied sind bei den aktuellen
+Stichprobengroessen NICHT signifikant:
+
+| Vergleich | r / Differenz | 95%-CI bzw. z-Test |
+|---|---|---|
+| Konfidenz vs. CRV | r=0,041 | CI [-0,21, +0,29] |
+| Konfidenz vs. SL-Abstand | r=-0,070 | CI [-0,31, +0,18] |
+| Konfidenz vs. Win | r=-0,067 | CI [-0,31, +0,18] |
+| CRV vs. Win (nur Gruppe A) | r=0,117 | CI [-0,13, +0,36] |
+| SL-Abstand vs. Win (nur Gruppe A) | r=0,154 | CI [-0,10, +0,39] |
+| niedrig (20,6%) vs. mittel (14,3%) WR | Diff. 6,3 Pkt | z=0,65 (Schwelle 1,96) |
+
+Jedes Konfidenzintervall schliesst Null ein, der z-Test liegt weit unter
+der Signifikanzschwelle. **Korrigierte, ehrliche Schlussfolgerung:** bei
+n=63 (bzw. n=34/n=28 je Band) ist KEINE der beobachteten Differenzen von
+reinem Stichprobenrauschen unterscheidbar - weder die urspruengliche
+Annahme "Konfidenz korreliert mit gar nichts" noch der CRV/SL-Gruppe-A-
+Nebenbefund. Faustregel-Ueberschlag: um r≈0,15 mit 80%-Power zuverlaessig
+zu erkennen, braucht es ca. n≈340; fuer den 6-Prozentpunkte-Bandunterschied
+bei ~15-20% Basisrate aehnliche Groessenordnung.
+
+**Konsequenz fuer die Wiedervorlage-Bedingung:** die bisherige n≥50-Schwelle
+fuer Stufe 3 Punkt 1 (CRV-Expectancy-Gate, Post-Enge-Stop-Fix) reicht fuer
+die KONFIDENZ-Kalibrierungsfrage spezifisch NICHT aus - dafuer braucht es
+eine deutlich hoehere Schwelle (Groessenordnung mehrere Hundert aufgeloeste
+Mistral-Hebel-Signale), bevor eine belastbare Aussage zur Konfidenz-CRV/SL-
+Beziehung moeglich ist. Kein Code-Aenderungsbedarf, reine Analyse-
+Erkenntnis. Scratchpad-Analyseskripte (nicht committet):
+`analyse_konfidenz_crv_sl_korrelation.py`.
+
+**Nachtrag geprueft und geschlossen (2026-07-29):** ob der bei
+`leite_eigene_richtung()` gefundene Positions-Bias auch bei
+`pruefe_konsistenz()` existiert, wurde live getestet (2 spiegelbildliche
+Szenarien, temperature=0.0, Original- vs. komplett umgekehrte Reihenfolge
+der Evidenz-Fakten, je n=6 - `symbol`/`action`/`confidence_pct`/`richtung`
+bleiben als Kopf-Felder fix, da sie die zu pruefende Behauptung selbst
+sind, keine Evidenz). Bewusst grenzwertiger Begruendungstext: argumentiert
+nur ueber RSI/Funding-Rate, OHNE den gegenlaeufigen Trend/Regime-Fakt zu
+erwaehnen (reine Auslassung, nicht zu verwechseln mit dem am 26.07. bereits
+getesteten Fall, wo der Text den Gegenfakt offen benennt und bewusst
+dagegen argumentiert).
+
+**Ergebnis: 24/24 gueltige Antworten (1x transienter Server-500er,
+netzwerkbedingt) - ALLE "konsistent", unabhaengig von Szenario UND
+Reihenfolge.** Kein Positions-Bias gefunden. Nachvollziehbar: `pruefe_
+konsistenz()` prueft nur "widerspricht der Text den Fakten", nicht "waege
+mehrere Fakten gegeneinander ab" - eine reine Auslassung eines Gegenfakts
+wird laut Prompt-Regel korrekt NICHT als Widerspruch gewertet, unabhaengig
+davon, an welcher Position der ausgelassene Fakt in der Liste steht.
+
+**Entscheidung: kein Code-Aenderungsbedarf** - `pruefe_konsistenz()` bleibt
+unveraendert (nur der bereits umgesetzte Temperature-Fix 0.2->0.0 gilt
+weiterhin). Negativbefund dokumentiert, Punkt abgeschlossen.
