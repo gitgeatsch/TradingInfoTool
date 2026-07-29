@@ -11887,3 +11887,38 @@ folgt bei Bedarf separat.
   Zahlen - siehe project_dev_setup.md, Notebook ist alleinige Produktivinstanz)
   Regressionscheck (Import aller abhaengigen Module): PASS
   Gesamturteil: verifiziert (Stufe 2)
+
+### Stufe 3, Punkt 3 umgesetzt: Regime-Konflikt als Kontext statt gezaehlter Bulletpoint
+
+**Fund:** `compute_risikofaktoren_hebel()` listet Regime-Konflikt/-Ausrichtung
+als einen von mehreren gleichberechtigten ▲/▼/●-Bulletpoints in Abschnitt 3
+("Konklusion"). Da dieser Faktor in einem anhaltenden Regime fuer praktisch
+jedes Signal derselben Richtung vorhanden ist (87% aller Gruppe-A-Faelle),
+wirkt eine z.B. "3 rote Warnungen"-Wahrnehmung irrefuehrend, wenn eine davon
+kaum Unterscheidungskraft zwischen guten und schlechten Setups liefert.
+
+**Fix (rein anzeigerelevant, keine Gate-/Prompt-Aenderung):** neues optionales
+Feld `ist_kontext: bool = False` auf der `Risikofaktor`-Dataclass
+(`hebel_risk_gate.py`), gesetzt fuer Regime-Konflikt/-Ausrichtung. Beide
+Renderer (`ui/formatting.py::format_risikofaktoren_lines()` fuer GUI,
+`scheduler/background.py::_formatiere_risikofaktoren()` fuer E-Mail) zeigen
+`ist_kontext=True`-Eintraege zuerst als eigene Kontext-Zeile ("--- ... ---")
+ohne ▲/▼/●-Symbol, getrennt von der gezaehlten negativ/neutral/positiv-Liste.
+Rueckwaertskompatibel (`.get("ist_kontext", False)`) - aeltere gespeicherte
+Signale ohne das Feld rendern identisch wie vorher.
+
+**Verifiziert (Testklasse 2):**
+  Betroffene Datei(en): agent/krypto/hebel_risk_gate.py, ui/formatting.py,
+                        scheduler/background.py
+  Aenderungsklasse: 2
+  Testfaelle: Risikofaktor-Dataclass mit korrektem Default - PASS
+              compute_risikofaktoren_hebel() markiert Regime-Konflikt (LONG im
+              baer-Regime) UND Regime-Ausrichtung (SHORT im baer-Regime)
+              korrekt mit ist_kontext=True, alle anderen Faktoren False - PASS
+              format_risikofaktoren_lines(): Kontext-Zeile ohne Symbol zuerst,
+              kein Duplikat in der Restliste - PASS
+              Rueckwaertskompatibilitaet: altes JSON ohne ist_kontext-Feld
+              rendert identisch wie vorher - PASS
+              Leerfaelle (None/leer/[]) weiterhin robust - PASS
+  Regressionscheck (Import aller abhaengigen Module): PASS
+  Gesamturteil: verifiziert (Stufe 3, Punkt 3)

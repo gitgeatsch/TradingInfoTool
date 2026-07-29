@@ -1095,7 +1095,13 @@ def _formatiere_risikofaktoren(signal) -> str:
     compute_risikofaktoren() bzw. hebel_risk_gate.py::
     compute_risikofaktoren_hebel() erzeugt - bewusst NICHT vom LLM, siehe
     dortige Docstrings (echter Interpretationsfehler des Modells war der
-    Ausloeser)."""
+    Ausloeser).
+
+    Regelwerk-Audit Stufe 3, Punkt 3 (2026-07-29): Eintraege mit `ist_kontext`
+    (aktuell nur Regime-Konflikt/-Ausrichtung) erscheinen VOR den gezaehlten
+    Warnungen als eigene Kontext-Zeile ohne ▲/▼/●-Symbol - siehe
+    ui/formatting.py::format_risikofaktoren_lines()-Docstring fuer die volle
+    Begruendung (spiegelt dieselbe Logik fuer den E-Mail-Textkontext)."""
     import json
 
     if not signal.risikofaktoren_json:
@@ -1107,11 +1113,17 @@ def _formatiere_risikofaktoren(signal) -> str:
     if not faktoren:
         return ""
 
+    zeilen = [
+        f"--- {f.get('name', '')}: {f.get('begruendung', '')} ---"
+        for f in faktoren if f.get("ist_kontext", False)
+    ]
+
     gruppen: dict[str, list[dict]] = {"negativ": [], "neutral": [], "positiv": []}
     for f in faktoren:
+        if f.get("ist_kontext", False):
+            continue
         gruppen.setdefault(f.get("bewertung", "neutral"), []).append(f)
 
-    zeilen = []
     for bewertung in ("negativ", "neutral", "positiv"):
         eintraege = gruppen.get(bewertung, [])
         if not eintraege:

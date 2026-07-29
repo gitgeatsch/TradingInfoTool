@@ -139,6 +139,14 @@ class Risikofaktor:
     name: str
     bewertung: str  # "positiv" | "neutral" | "negativ"
     begruendung: str
+    # Regelwerk-Audit Stufe 3, Punkt 3 (2026-07-29): Regime-Konflikt/-Ausrichtung
+    # ist in einem anhaltenden Regime fuer praktisch jedes Signal derselben
+    # Richtung vorhanden (kein unabhaengiges Warnsignal wie z.B. CRV-knapp) -
+    # markiert diesen Eintrag als Kontext-Hinweis statt gezaehlter Bulletpoint,
+    # damit er in der Anzeige nicht als gleichwertige zusaetzliche Warnung
+    # neben echten Einzelfall-Faktoren erscheint. Rein anzeigerelevant, keine
+    # Gate-/Prompt-Logik haengt an diesem Feld.
+    ist_kontext: bool = False
 
 
 def _preis_am_datum(iso_zeitpunkt: str, dates, closes) -> float | None:
@@ -351,11 +359,13 @@ def compute_risikofaktoren_hebel(
         faktoren.append(Risikofaktor(
             "Regime-Konflikt", "negativ",
             f"Position ({richtung}) widerspricht dem aktuellen {regime}-Regime.{persistenz_text}{gegen_note}",
+            ist_kontext=True,
         ))
     else:
         faktoren.append(Risikofaktor(
             "Regime-Ausrichtung", "positiv",
             f"Position ({richtung}) folgt dem aktuellen {regime}-Regime, kein Gegen-Trend-Setup.{persistenz_text}",
+            ist_kontext=True,
         ))
 
     if these_regime_widerspruch(trade_thesis_typ, regime_konflikt):
@@ -1246,7 +1256,8 @@ def post_check_hebel(
         btc_relativwert=btc_relativwert,
     )
     result["_risikofaktoren"] = [
-        {"name": f.name, "bewertung": f.bewertung, "begruendung": f.begruendung} for f in risikofaktoren
+        {"name": f.name, "bewertung": f.bewertung, "begruendung": f.begruendung, "ist_kontext": f.ist_kontext}
+        for f in risikofaktoren
     ]
 
     # Signal-Fazit Konsistenz-Hinweis (2026-07-25) - rein diagnostisch, siehe

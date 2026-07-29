@@ -74,7 +74,16 @@ def format_risikofaktoren_lines(risikofaktoren_json: str | None) -> list[str]:
     scheduler/background.py::_formatiere_risikofaktoren() (dort eigene Kopie
     fuer den E-Mail-Textkontext - bewusst getrennt, unterschiedliche
     Ziel-Formate). Sortiert negativ vor neutral vor positiv, damit die
-    wichtigsten Warnungen zuerst erscheinen."""
+    wichtigsten Warnungen zuerst erscheinen.
+
+    Regelwerk-Audit Stufe 3, Punkt 3 (2026-07-29): Eintraege mit `ist_kontext`
+    (aktuell nur Regime-Konflikt/-Ausrichtung, siehe hebel_risk_gate.py::
+    Risikofaktor-Docstring) erscheinen VOR den gezaehlten Warnungen als eigene
+    Kontext-Zeile ohne ▲/▼/●-Symbol - sie sind in einem anhaltenden Regime fuer
+    praktisch jedes Signal derselben Richtung vorhanden und sollen nicht als
+    gleichwertige zusaetzliche Warnung neben echten Einzelfall-Faktoren
+    erscheinen. Rueckwaertskompatibel: fehlt das Feld (aeltere gespeicherte
+    Signale), verhaelt es sich wie `False` - identisches Verhalten wie vorher."""
     import json
 
     if not risikofaktoren_json:
@@ -86,11 +95,18 @@ def format_risikofaktoren_lines(risikofaktoren_json: str | None) -> list[str]:
     if not faktoren:
         return []
 
+    kontext_zeilen = [
+        f"--- {f.get('name', '')}: {f.get('begruendung', '')} ---"
+        for f in faktoren if f.get("ist_kontext", False)
+    ]
+
     gruppen: dict[str, list[dict]] = {"negativ": [], "neutral": [], "positiv": []}
     for f in faktoren:
+        if f.get("ist_kontext", False):
+            continue
         gruppen.setdefault(f.get("bewertung", "neutral"), []).append(f)
 
-    zeilen = []
+    zeilen = list(kontext_zeilen)
     for bewertung in ("negativ", "neutral", "positiv"):
         for f in gruppen.get(bewertung, []):
             symbol = _RISIKOFAKTOR_SYMBOL.get(bewertung, "●")
