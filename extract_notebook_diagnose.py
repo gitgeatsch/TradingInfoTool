@@ -140,6 +140,24 @@ letzten Update dieses Skripts nachgezogen.
   PERZENTIL_PUNKTE in indicators/calculations.py - koennte am frisch
   deployten Notebook noch zu wenig Historie haben).
 
+Nachtrag (2026-07-29, Export-Luecke bei der R-5.10-Analyse-Session gefunden,
+siehe project_r510_konfidenz_veto_analyse_29_07.md): `compute_provider_
+performance()`/`compute_veto_shadow_performance()`/`compute_gesamt_
+signalqualitaet()`/`compute_konfidenz_kalibrierung()`/`compute_zai_richtung_
+performance()`/`compute_zai_richtung_performance_schatten()`/`compute_
+provider_sendezaehler()` wurden bisher OHNE das optionale `watchlist`-Argument
+aufgerufen - dadurch landeten alle Spot-family-Signale (Krypto/Aktien/
+Rohstoffe/ETF) in einem einzigen "spot"-Topf, waehrend die Live-App-Remote-
+Seite (`remote/status.py`) dieselben Funktionen laengst MIT `watchlist`
+aufruft und dadurch nach `asset.assetklasse` aufschluesselt (siehe
+`SPOT_ASSETKLASSEN` in `remote/server.py`). Folge: bei einer Muster-Analyse
+aus diesem Export war nicht unterscheidbar, ob ein Befund krypto-spezifisch
+war oder auch Aktien/Rohstoffe/ETF betraf. Jetzt behoben - `watchlist =
+config_module.get_watchlist()` wird einmalig geladen und an alle sieben
+Aufrufe durchgereicht, identisch zum bereits etablierten Muster in
+remote/status.py. Reiner Lesezugriff auf config.yaml, kein Schreibzugriff,
+keine Verhaltensaenderung an der Produktions-App selbst.
+
 Aufruf am Notebook: python extract_notebook_diagnose.py [SYMBOL] [LOG_STUNDEN]
   (SYMBOL optional, Default LINK, fuer den Tiefenanalyse-Teil;
    LOG_STUNDEN optional, Default 72, Zeitfenster fuer den Log-Auszug)
@@ -153,6 +171,7 @@ from collections import Counter
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import config as config_module
 import database.db as db
 from agent.krypto.backward_tracking import (
     compute_gesamt_signalqualitaet,
@@ -811,7 +830,20 @@ def main() -> None:
         oi_fakten_verlauf = _oi_fakten_verlauf(conn)
 
         # 4) Provider-Performance (Win-Rate/CRV je Anbieter, Spot+Hebel getrennt)
-        provider_performance = compute_provider_performance(conn)
+        # Nachtrag 2026-07-29 (Export-Luecke gefunden bei der R-5.10-Analyse-
+        # Session, siehe project_r510_konfidenz_veto_analyse_29_07.md): alle
+        # folgenden compute_*()-Aufrufe unterstuetzen seit 2026-07-20 ein
+        # optionales `watchlist`-Argument, das Spot-family-Signale nach
+        # `asset.assetklasse` (krypto/aktien/rohstoffe/etf) statt in einem
+        # einzigen "spot"-Topf aufschluesselt - siehe compute_provider_
+        # performance()-Docstring in agent/krypto/backward_tracking.py und
+        # remote/status.py, das dieses Argument bereits durchreicht. Dieses
+        # Skript rief die Funktionen bisher ohne `watchlist` auf (altes
+        # Verhalten, alles unter "spot" gepoolt) - dadurch war z.B. bei der
+        # R-5.10-Analyse nicht unterscheidbar, ob ein Muster krypto-spezifisch
+        # war oder auch Aktien/Rohstoffe/ETF betraf.
+        watchlist = config_module.get_watchlist()
+        provider_performance = compute_provider_performance(conn, watchlist)
         # 4b) Konfidenz-Kalibrierungskurve (2026-07-26, Punkt 3 des Regime-
         # Persistenz-Folge-Vorschlags, siehe project_konfidenz_kalibrierungskurve.md) -
         # gleiches Prinzip wie provider_performance oben: die Aggregat-Funktion
@@ -819,13 +851,13 @@ def main() -> None:
         # outcome_status stehen zwar schon in hebel_signals/spot_signals unten,
         # aber die fertige Band-Aufschluesselung erspart eine manuelle
         # Nachrechnung bei jeder Analyse).
-        konfidenz_kalibrierung = compute_konfidenz_kalibrierung(conn)
+        konfidenz_kalibrierung = compute_konfidenz_kalibrierung(conn, watchlist)
         # 4c) Z.ais UNABHAENGIGE Richtungs-Erfolgsquote (2026-07-27, Nutzer-Wunsch
         # nach der hebel_richtung_modus="nur_long"-Feststellung: "ZAI unabhaengig
         # mit seinen unterschiedlichen Entscheidungen und deren Erfolgsquote
         # messen") - siehe agent/krypto/backward_tracking.py::
         # compute_zai_richtung_performance() Docstring.
-        zai_richtung_performance = compute_zai_richtung_performance(conn)
+        zai_richtung_performance = compute_zai_richtung_performance(conn, watchlist)
         # 4d) Veto-Schatten-Aggregationen (2026-07-28, siehe agent/krypto/
         # backward_tracking.py::check_signal_veto_shadow_outcome()-Docstring
         # fuer die volle Herleitung) - hypothetische, nie ausgefuehrte Trade-
@@ -833,10 +865,10 @@ def main() -> None:
         # wurden, plus die additive "Gesamt"-Zusammenfuehrung mit den echten
         # Signalen und der providerunabhaengige Sendezaehler (Gemini-Sichtbarkeits-
         # Fix).
-        veto_schatten_performance = compute_veto_shadow_performance(conn)
-        zai_richtung_performance_schatten = compute_zai_richtung_performance_schatten(conn)
-        gesamt_signalqualitaet = compute_gesamt_signalqualitaet(conn)
-        provider_sendezaehler = compute_provider_sendezaehler(conn)
+        veto_schatten_performance = compute_veto_shadow_performance(conn, watchlist)
+        zai_richtung_performance_schatten = compute_zai_richtung_performance_schatten(conn, watchlist)
+        gesamt_signalqualitaet = compute_gesamt_signalqualitaet(conn, watchlist)
+        provider_sendezaehler = compute_provider_sendezaehler(conn, watchlist)
 
         # 5) Alle Hebel-Signale (fuer Long/Short-Bugfix-Verifikation +
         # Gate/Veto-Muster + Outcome-Verteilung)

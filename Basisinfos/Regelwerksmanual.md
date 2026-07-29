@@ -11653,3 +11653,40 @@ Konfidenz-Kalibrierungsfrage - ist die mangelnde Vorhersagekraft der
 LLM-Konfidenz bei Hebel ein Fehler in unserem System, oder eine bekannte
 Grenze, mit der andere Trading-/Analyse-Plattformen anders umgehen?
 Vergleich mit branchenueblichen Ansaetzen noch ausstehend.
+
+## Nachtrag (2026-07-29): extract_notebook_diagnose.py - Assetklassen-Aufschluesselung nachgezogen
+
+**Ausloeser:** bei der Kauf-vs-Nichtkauf-Analyse (siehe Nachtrag oben) fiel auf,
+dass `extract_notebook_diagnose.py` sieben Aggregat-Funktionen
+(`compute_provider_performance()`, `compute_veto_shadow_performance()`,
+`compute_gesamt_signalqualitaet()`, `compute_konfidenz_kalibrierung()`,
+`compute_zai_richtung_performance()`, `compute_zai_richtung_performance_
+schatten()`, `compute_provider_sendezaehler()`) OHNE das seit 2026-07-20
+verfuegbare optionale `watchlist`-Argument aufrief - dadurch landeten alle
+Spot-family-Signale (Krypto/Aktien/Rohstoffe/ETF) in einem einzigen
+"spot"-Topf, waehrend die Live-App-Remote-Seite (`remote/status.py`)
+dieselben Funktionen laengst MIT `watchlist` aufruft und nach
+`asset.assetklasse` aufschluesselt (siehe `SPOT_ASSETKLASSEN` in
+`remote/server.py`). Folge: bei Analysen aus diesem Export war nicht
+unterscheidbar, ob ein Muster krypto-spezifisch war oder auch andere
+Assetklassen betraf.
+
+**Umsetzung:** `watchlist = config_module.get_watchlist()` einmalig geladen
+(reiner Lesezugriff auf config.yaml, kein Schreibzugriff, keine
+Verhaltensaenderung an der Produktions-App), an alle sieben Aufrufe
+durchgereicht - identisch zum bereits etablierten Muster in
+`remote/status.py`. Kein neues Verhalten, nur ein bereits vorhandener
+Aufschluesselungs-Modus wird jetzt auch im Export genutzt.
+
+**Verifiziert (Testklasse 2):**
+  Betroffene Datei(en): extract_notebook_diagnose.py
+  Aenderungsklasse: 2
+  Testfaelle: T1 ohne watchlist -> altes Verhalten (alles unter "spot") - PASS
+              T2 mit watchlist -> BTC->krypto, PLTR->aktien korrekt getrennt - PASS
+  Regressionscheck (Import des gesamten Moduls, __main__-Guard verhindert
+  main()-Ausfuehrung beim Import): PASS
+  Gesamturteil: verifiziert (Stufe 2)
+
+**Ausstehend:** Nutzer muss `extract_notebook_diagnose.py` am Notebook erneut
+laufen lassen + syncen, damit der naechste Export die feinere Aufschluesselung
+tatsaechlich enthaelt (Stufe 5, "im Betrieb bestaetigt", noch offen).
