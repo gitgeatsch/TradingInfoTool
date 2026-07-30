@@ -158,6 +158,16 @@ Aufrufe durchgereicht, identisch zum bereits etablierten Muster in
 remote/status.py. Reiner Lesezugriff auf config.yaml, kein Schreibzugriff,
 keine Verhaltensaenderung an der Produktions-App selbst.
 
+Nachtrag (2026-07-30, Marktscan-Schwellen-Kalibrierung): neue Sektion
+`rohdaten_fuer_backtest.marktscan_alle_kandidaten` - ALLE Einstufungen
+(kein_treffer/watchlist_wuerdig/kaufkandidat), nicht nur kaufkandidat wie
+`marktscan_kaufkandidaten` (dessen Filter/Spaltenauswahl bewusst unveraendert
+blieb, da backtest_budget_allocator_sla.py exakt davon abhaengt). Grundlage
+fuer eine Score-Schwellen-Kalibrierung (aktuell 70/50, VORLAEUFIG) gegen
+Forward-Kursverlauf, den ein separates Desktop-seitiges Skript per
+CoinGecko-Historie (get_market_chart) fuer eine gezielte Stichprobe nachtraegt
+- unabhaengig vom Notebook-Kontingent, da eigene IP/Session.
+
 Aufruf am Notebook: python extract_notebook_diagnose.py [SYMBOL] [LOG_STUNDEN]
   (SYMBOL optional, Default LINK, fuer den Tiefenanalyse-Teil;
    LOG_STUNDEN optional, Default 72, Zeitfenster fuer den Log-Auszug)
@@ -475,9 +485,29 @@ def _rohdaten_fuer_backtest(conn) -> dict:
             "FROM marktscan_candidates WHERE einstufung = 'kaufkandidat' ORDER BY discovered_at ASC"
         ).fetchall()
     ]
+    # Neu (2026-07-30, Marktscan-Schwellen-Kalibrierung): bewusst eine ZWEITE,
+    # eigenstaendige Sektion statt marktscan_kaufkandidaten oben zu erweitern -
+    # backtest_budget_allocator_sla.py baut aus marktscan_kaufkandidaten eine
+    # In-Memory-Tabelle mit exakt dessen 7 Spalten und erwartet ausschliesslich
+    # 'kaufkandidat'-Zeilen (die SLA-Simulation bildet bewusst nur die echte
+    # Kaufkandidaten-Warteschlange nach) - ein Aufweichen des Filters oder der
+    # Spaltenliste dort haette den bestehenden Backtest stillschweigend
+    # verfaelscht. marktscan_alle_kandidaten liefert stattdessen ALLE
+    # Einstufungen (kein_treffer/watchlist_wuerdig/kaufkandidat) inkl.
+    # price_usd (Kurs zum Entdeckungszeitpunkt) - Grundlage fuer eine
+    # Score-Schwellen-Kalibrierung (aktuell score_kaufkandidat_ab=70/
+    # score_watchlist_wuerdig_ab=50, laut config.yaml VORLAEUFIG, nie
+    # gegen Forward-Performance geprueft).
+    marktscan_alle_kandidaten = [
+        row_to_dict(r) for r in conn.execute(
+            "SELECT id, coingecko_id, symbol, discovered_at, score_gesamt, einstufung, "
+            "price_usd, status FROM marktscan_candidates ORDER BY discovered_at ASC"
+        ).fetchall()
+    ]
     return {
         "hebel_triggers_kandidaten": hebel_triggers_kandidaten,
         "marktscan_kaufkandidaten": marktscan_kaufkandidaten,
+        "marktscan_alle_kandidaten": marktscan_alle_kandidaten,
     }
 
 
@@ -1031,7 +1061,8 @@ def main() -> None:
     print(f"  Discovery->LLM-Delta (Marktscan): {marktscan_discovery_llm_delta['statistik']}")
     print(f"  Erstmalige-Erkennung->Signal-Delta (Hebel): {hebel_erstmalige_erkennung_delta['statistik']}")
     print(f"  Rohdaten fuer Backtest: {len(rohdaten_fuer_backtest['hebel_triggers_kandidaten'])} Hebel-Trigger-"
-          f"Kandidaten, {len(rohdaten_fuer_backtest['marktscan_kaufkandidaten'])} Marktscan-Kaufkandidaten")
+          f"Kandidaten, {len(rohdaten_fuer_backtest['marktscan_kaufkandidaten'])} Marktscan-Kaufkandidaten, "
+          f"{len(rohdaten_fuer_backtest['marktscan_alle_kandidaten'])} Marktscan-Kandidaten gesamt (alle Einstufungen)")
     print(f"  Preishistorie ueberholte Symbole: {len(preishistorie_ueberholte_symbole['symbole'])} Symbole "
           f"({', '.join(preishistorie_ueberholte_symbole['symbole']) or '-'})")
     print(f"  Konfidenz-Kalibrierung: {konfidenz_kalibrierung}")
