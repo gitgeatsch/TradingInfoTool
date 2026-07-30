@@ -156,6 +156,33 @@ belastbare Erfolgsmessung möglich, nur qualitative Beobachtung" statt eine
 Scheingenauigkeit vorzutäuschen. Ein hartes Vorher/Nachher-Signal ist nur bei
 Klasse-2/3-Änderungen (deterministische Logik) realistisch erwartbar.
 
+### 2.2a Mehrtägige Beobachtung vor Vollabschluss neuer Bausteine/Features (Nachtrag 30.07.)
+
+Auslöser: sowohl beim Konfidenz-Prompt-Fix als auch bei den Krypto-
+Relativwert-Bausteinen (Signal-Stabilität/ATR-Perzentil/BTC-Relativwert,
+siehe [[project_krypto_relativwert_bausteine]]) wurde ein neues Feature
+NICHT direkt nach der synthetischen Verifikation als abgeschlossen
+markiert, sondern bewusst offengehalten, bis mehrere Tage echter
+Produktionsdaten vorlagen - bisher nur informell in einzelnen
+Projekt-Memories festgehalten, nicht als Standard benannt.
+
+**Ab sofort als Standard-Praxis, wenn ein neuer Fakt/eine neue Kennzahl
+das LLM-Verhalten beeinflussen oder eine Entscheidungsgrundlage liefern
+soll (nicht bei reinen UI-/Kosmetik-Änderungen):**
+
+1. Nach Stufe 3 (Committet/gepusht) und Stufe 4 (Deployed) NICHT sofort
+   Stufe 5 ("Im Betrieb bestätigt") behaupten, auch wenn ein erster
+   Export unauffällig aussieht - ein einzelner Tag kann Zufallsrauschen
+   nicht von echtem Verhalten unterscheiden.
+2. Mindestens 3-5 reale Produktionstage abwarten (kein festes Datum,
+   abhängig von Signalfrequenz - bei seltenen Pipelines ggf. länger).
+3. Dann eine gezielte Plausibilitätsprüfung der realen Werte durchführen
+   (siehe 2.7 für den Fall scheinbar eingefrorener Kennzahlen) - erst
+   danach gilt das Feature als vollständig abgeschlossen (Stufe 5).
+4. Der Nutzer-Grundsatz "nicht nur beobachten, sondern aktiv gegenprüfen"
+   gilt auch hier - reines Abwarten ohne späteren Plausibilitätscheck
+   reicht nicht.
+
 ### 2.3 Lern-Log
 
 Kurze, stichwortartige Zusammenfassung nach jeder tieferen Export-Analyse: "was
@@ -292,6 +319,56 @@ bereits vorhandene "weichere" Felder (MFE, Mindestziel, Richtungstreffer)
 eine zusätzliche Ebene liefern koennten, BEVOR neue Datenerhebung als
 einzige Option angenommen wird - oft steckt die zusätzliche Trennschärfe
 schon in Feldern, die nur noch nie in dieser Kombination ausgewertet wurden.
+
+### 2.7 Plausibilitätsprüfung bei scheinbar eingefrorenen Kennzahlen (Nachtrag 30.07.)
+
+Auslöser: die ATR-/Volatilitäts-Perzentil-Kennzahl (Baustein 2 der
+Krypto-Relativwert-Bausteine) zeigte bei BTC/ETH/LINK/TAO/VIRTUAL/HYPE/INJ
+über 5 Beobachtungstage einen konstanten bzw. fast konstanten Wert (BTC
+durchgehend 0) - auf den ersten Blick ein Verdacht auf eingefrorene/veraltete
+Eingabedaten. Eine erste Prüfung bestätigte tatsächlich veraltete
+`price_history_ohlc`-Daten - aber nur auf der DESKTOP-Kopie, nicht auf dem
+eigentlichen Notebook-Produktivsystem (siehe `_ohlc_aktualitaet_je_symbol()`,
+Abschnitt 2.1a). Die Kennzahl selbst blieb aber auch mit nachweislich
+frischen Notebook-Daten unverändert - der ursprüngliche Verdacht war damit
+nicht erledigt, nur die naheliegendste Erklärung widerlegt.
+
+**Der entscheidende Schritt: ein Kontrollgruppen-Vergleich, keine Einzelwert-
+Betrachtung.** Andere Symbole (KAIA, KAITO, NEAR, ONDO) im selben Export,
+mit derselben Berechnungslogik, zeigten im selben Zeitraum deutliche
+Bewegung. Diese Symbole waren unabhängig bereits als Teil einer
+Altcoin-Rally dokumentiert (siehe
+[[project_r510_konfidenz_veto_analyse_29_07]]) - die Bewegung korreliert
+also mit einem bekannten, unabhängig bestätigten Marktereignis. Die
+"eingefrorenen" Symbole (BTC/ETH/Majors) hatten im selben Fenster
+schlicht kein vergleichbares Volatilitätsereignis - bei einer langsam
+geglätteten Kennzahl (hier: Wilder-ATR) ist ein über Tage konstanter
+Perzentilrang bei ruhigem Markt der ERWARTBARE Fall, kein Bug.
+
+**Verbindliches Vorgehen, bevor eine über mehrere Tage konstante/kaum
+wechselnde Kennzahl als Fehler eingestuft wird:**
+
+1. Datenaktualität an der Quelle prüfen (siehe 2.1a) - aber NICHT bei einer
+   Desktop-Kopie stehenbleiben, wenn die eigentliche Produktionsumgebung
+   (Notebook) unabhängig prüfbar ist.
+2. Kontrollgruppe bilden: zeigen andere Symbole/Fälle mit derselben
+   Berechnungslogik im selben Zeitraum Bewegung? Wenn ja, ist die
+   Berechnungslogik selbst funktionsfähig - die Frage verschiebt sich von
+   "ist die Funktion kaputt" zu "warum bewegt sich DIESES Symbol nicht".
+3. Prüfen, ob die bewegungslosen bzw. bewegten Fälle mit einem unabhängig
+   bekannten Markt-/Datenereignis erklärbar sind (hier: die Altcoin-Rally-
+   Gruppe aus einer anderen Analyse). Eine Erklärung, die bereits aus
+   einem anderen, unabhängigen Fund stammt, ist deutlich belastbarer als
+   eine neu erfundene Ad-hoc-Begründung.
+4. Erst wenn weder Datenaktualität noch ein Kontrollgruppen-Unterschied
+   noch ein bekanntes Marktereignis eine Erklärung liefern, gilt der
+   Verdacht auf einen echten Bug als bestätigt.
+
+**Allgemeine Lehre:** ein konstanter Wert ist nicht automatisch ein
+Fehlersignal - bei langsam geglätteten Kennzahlen (Wilder-Glättung,
+gleitende Durchschnitte, Perzentilränge über lange Historien) ist
+Konstanz bei fehlendem zugrundeliegendem Ereignis der Normalfall. Der
+Fehlerverdacht entsteht oft erst durch fehlenden Kontrollgruppen-Vergleich.
 
 ---
 

@@ -8303,6 +8303,35 @@ Entscheidung 3) eine mehrtägige Beobachtung im echten Betrieb, bevor das
 Feature endgültig als abgeschlossen gilt - siehe `extract_notebook_
 diagnose.py`-Auswertung als nächster Schritt nach einigen Tagen Laufzeit.
 
+### Nachtrag (2026-07-30): Mehrtägige Beobachtung abgeschlossen - alle drei Bausteine bestätigt
+
+Nach 5 realen Produktionstagen (25.-30.07.) gegen einen frischen Notebook-
+Export geprüft, wie in der ursprünglichen Design-Entscheidung 3 vorgesehen:
+
+- **Baustein 1 (BTC-Relativwert):** Korrelationswerte je Symbol plausibel
+  und differenziert (TAO 0,63-0,66, KAIA 0,56-0,59, VIRTUAL 0,57, ONDO
+  0,29-0,30, KAITO 0,22-0,25, NEAR 0,29-0,31, INJ 0,39, HYPE 0,48) - keine
+  Ausreißer.
+- **Baustein 3 (Signal-Stabilität):** 144 positiv / 142 negativ über 308
+  Signale seit Deploy - gesunde, nicht-entartete Verteilung.
+- **Baustein 2 (Volatilitäts-/ATR-Perzentil):** BTC/ETH/LINK/TAO/VIRTUAL/
+  HYPE/INJ blieben über alle 5 Tage nahe einem festen Wert (BTC durchgehend
+  0, HYPE durchgehend 57, INJ durchgehend 10), während KAIA (0→12), KAITO
+  (72→98), NEAR (16→19) und ONDO (15→21) im selben Zeitraum deutliche
+  Bewegung zeigten. Zunächst wie ein Fehler wirkend (siehe Abschnitt 4a der
+  offenen Beobachtungspunkte), aber durch Kontrollgruppen-Vergleich erklärt:
+  die beweglichen Symbole sind exakt die bereits anderweitig dokumentierte
+  Altcoin-Rally-Gruppe (siehe [[project_r510_konfidenz_veto_analyse_29_07]])
+  - echte Volatilitätsereignisse bei diesen Coins, während BTC/ETH/Majors im
+  selben Fenster ruhig blieben. Ein langsam geglätteter (Wilder-ATR)
+  Perzentilrang bleibt bei fehlendem Ereignis über 5 Tage erwartbar
+  konstant - kein Bug.
+
+**Ergebnis: kein Code-Änderungsbedarf, alle 3 Bausteine bestätigt.
+Krypto-Relativwert-Bausteine damit vollständig abgeschlossen** (Design-
+Entscheidung 3 erfüllt). Methodik der Kontrollgruppen-Plausibilitätsprüfung
+jetzt auch in `Test_und_Verifikationsmethodik.md` Abschnitt 2.7 verankert.
+
 ## Nachtrag (2026-07-25, gleicher Tag): Signal-Fazit (`eigene_einschaetzung`) - abschließendes LLM-Synthese-Verdikt, alle 6 Assetklassen mit LLM-Bewertung
 
 Direkt im Anschluss an die Krypto-Relativwert-Bausteine entstandene Idee:
