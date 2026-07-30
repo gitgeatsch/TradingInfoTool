@@ -49,6 +49,12 @@ class RemoteStatus:
     zai_richtung_performance_schatten: dict | None = None
     gesamt_signalqualitaet: dict | None = None
     provider_sendezaehler: dict | None = None
+    # R-5.10-Konfidenzschwellen-Nachtrag (2026-07-30, siehe Memory
+    # project_llm_optimierung_abdeckung_pruefung) - wie veto_schatten_
+    # performance, aber nach (tier, veto_grund) statt (tier, provider)
+    # gruppiert, damit kuenftige Schwellen-Entscheidungen ohne Ad-hoc-
+    # Analyse moeglich sind.
+    veto_schatten_performance_nach_grund: dict | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -75,6 +81,7 @@ class RemoteStatus:
             "zai_richtung_performance_schatten": self.zai_richtung_performance_schatten,
             "gesamt_signalqualitaet": self.gesamt_signalqualitaet,
             "provider_sendezaehler": self.provider_sendezaehler,
+            "veto_schatten_performance_nach_grund": self.veto_schatten_performance_nach_grund,
         }
 
 
@@ -163,6 +170,7 @@ def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, erro
         zai_richtung_performance_schatten=_get_zai_richtung_performance_schatten(conn, watchlist),
         gesamt_signalqualitaet=_get_gesamt_signalqualitaet(conn, watchlist),
         provider_sendezaehler=_get_provider_sendezaehler(conn, watchlist),
+        veto_schatten_performance_nach_grund=_get_veto_schatten_performance_nach_grund(conn, watchlist),
     )
 
 
@@ -261,6 +269,18 @@ def _get_veto_schatten_performance(conn: sqlite3.Connection, watchlist: list) ->
     from agent.krypto.backward_tracking import compute_veto_shadow_performance
 
     return compute_veto_shadow_performance(conn, watchlist)
+
+
+def _get_veto_schatten_performance_nach_grund(conn: sqlite3.Connection, watchlist: list) -> dict:
+    """R-5.10-Konfidenzschwellen-Nachtrag (2026-07-30) - reiner Lesezugriff auf
+    agent/krypto/backward_tracking.py::compute_veto_shadow_performance_nach_grund().
+    Wie _get_veto_schatten_performance(), aber nach (tier, veto_grund) statt
+    (tier, provider) aufgeschluesselt - beantwortet die fuer eine Schwellen-
+    Entscheidung eigentliche Frage: schlagen sich Konfidenzschwellen-Vetos
+    (R-5.10) anders als CRV<2.0-Vetos, je Assetklasse?"""
+    from agent.krypto.backward_tracking import compute_veto_shadow_performance_nach_grund
+
+    return compute_veto_shadow_performance_nach_grund(conn, watchlist)
 
 
 def _get_zai_richtung_performance_schatten(conn: sqlite3.Connection, watchlist: list) -> dict:

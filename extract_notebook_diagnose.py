@@ -179,6 +179,7 @@ from agent.krypto.backward_tracking import (
     compute_provider_performance,
     compute_provider_sendezaehler,
     compute_veto_shadow_performance,
+    compute_veto_shadow_performance_nach_grund,
     compute_zai_richtung_performance,
     compute_zai_richtung_performance_schatten,
 )
@@ -883,6 +884,12 @@ def main() -> None:
         # Signalen und der providerunabhaengige Sendezaehler (Gemini-Sichtbarkeits-
         # Fix).
         veto_schatten_performance = compute_veto_shadow_performance(conn, watchlist)
+        # R-5.10-Konfidenzschwellen-Nachtrag (2026-07-30, siehe Memory
+        # project_llm_optimierung_abdeckung_pruefung) - nach (tier, veto_grund)
+        # statt (tier, provider) gruppiert, direkte Grundlage fuer die
+        # config.yaml::regime.min_konfidenz_prozent_krypto_spot_override-
+        # Entscheidung und kuenftige Wiedervorlagen (Aktien/Rohstoffe/Themen-ETF).
+        veto_schatten_performance_nach_grund = compute_veto_shadow_performance_nach_grund(conn, watchlist)
         zai_richtung_performance_schatten = compute_zai_richtung_performance_schatten(conn, watchlist)
         gesamt_signalqualitaet = compute_gesamt_signalqualitaet(conn, watchlist)
         provider_sendezaehler = compute_provider_sendezaehler(conn, watchlist)
@@ -944,6 +951,7 @@ def main() -> None:
         "konfidenz_kalibrierung": konfidenz_kalibrierung,
         "zai_richtung_performance": zai_richtung_performance,
         "veto_schatten_performance": veto_schatten_performance,
+        "veto_schatten_performance_nach_grund": veto_schatten_performance_nach_grund,
         "zai_richtung_performance_schatten": zai_richtung_performance_schatten,
         "gesamt_signalqualitaet": gesamt_signalqualitaet,
         "provider_sendezaehler": provider_sendezaehler,

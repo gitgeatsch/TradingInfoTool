@@ -157,6 +157,17 @@ _INDEX_HTML = """<!doctype html>
 </div>
 
 <div class="card">
+  <div class="row"><strong>Veto-Schatten-Performance nach Veto-Grund</strong></div>
+  <div class="row"><span class="muted-text">Wie oben, aber nach dem Veto-GRUND aufgeschluesselt statt nach
+  Provider (2026-07-30, R-5.10-Konfidenzschwellen-Nachtrag) - beantwortet die fuer eine Schwellen-Entscheidung
+  eigentliche Frage: schlagen sich Konfidenzschwellen-Vetos (R-5.10) anders als CRV&lt;2.0-Vetos, je
+  Assetklasse?</span></div>
+  <div id="veto-schatten-performance-nach-grund-spot"></div>
+  <div class="row"><strong>&nbsp;&nbsp;davon Hebel</strong></div>
+  <div id="veto-schatten-performance-nach-grund-hebel"></div>
+</div>
+
+<div class="card">
   <div class="row"><strong>Z.ai-Richtungs-Erfolgsquote (Veto-Schatten)</strong></div>
   <div class="row"><span class="muted-text">Wie die Z.ai-Karte in Gruppe B, aber NUR fuer die vetoten
   Vorschlaege oben - gerade hier ist Z.ais unabhaengiges Urteil interessant, weil es auf einen Fall angewendet
@@ -607,6 +618,15 @@ async function refreshStatus() {
       renderSpotProviderPerformanceByAssetklasse(data.veto_schatten_performance, {}, {});
     document.getElementById("veto-schatten-performance-hebel").innerHTML =
       renderProviderPerformance(data.veto_schatten_performance.hebel || {}, null, null);
+  }
+
+  // R-5.10-Konfidenzschwellen-Nachtrag (2026-07-30) - gleiche Render-Funktionen
+  // wie oben, nur gegen die nach Veto-Grund statt Provider gruppierten Daten.
+  if (data.veto_schatten_performance_nach_grund) {
+    document.getElementById("veto-schatten-performance-nach-grund-spot").innerHTML =
+      renderSpotProviderPerformanceByAssetklasse(data.veto_schatten_performance_nach_grund, {}, {});
+    document.getElementById("veto-schatten-performance-nach-grund-hebel").innerHTML =
+      renderProviderPerformance(data.veto_schatten_performance_nach_grund.hebel || {}, null, null);
   }
 
   if (data.zai_richtung_performance_schatten) {

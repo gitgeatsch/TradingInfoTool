@@ -1221,6 +1221,34 @@ def set_backward_tracking_last_run_date(conn: sqlite3.Connection, iso_date: str)
     conn.commit()
 
 
+def get_multi_asset_batch_last_run_iso(conn: sqlite3.Connection) -> str | None:
+    """2026-07-30, Nutzer-Fund: waehrend intensiver Entwicklungsarbeit startete
+    die App auf dem Notebook an 27./28./29.07. auffaellig oft neu (11/11/4x) -
+    der 2x/Tag-Cron von multi_asset_batch_job() (Mo-Fr 9/19 Uhr) hatte KEINEN
+    Nachhol-Mechanismus (analog zum bereits gefixten backward_tracking_last_
+    run_date-Fall oben, aber mit Uhrzeit- statt nur Tag-Genauigkeit, da zwei
+    Termine pro Tag existieren): der 28.07.-19:00-Termin fiel komplett aus,
+    der 29.07.-09:00-Termin wurde durch einen Neustart mitten im Lauf
+    abgebrochen (PLTR/Aktien nie erreicht) - zwei Tage lang kamen dadurch
+    keine Aktien-/Rohstoff-/Themen-ETF-/Hedge-Signale (inkl. Absicherungs-
+    positionen) beim Nutzer an. Voller ISO-Zeitstempel (statt nur Datum) noetig,
+    um Vormittags- und Abend-Slot auseinanderzuhalten - siehe
+    multi_asset_batch_catchup_if_missed() in scheduler/background.py."""
+    row = conn.execute(
+        "SELECT value FROM meta WHERE key = 'multi_asset_batch_last_run_iso'"
+    ).fetchone()
+    return row["value"] if row is not None else None
+
+
+def set_multi_asset_batch_last_run_iso(conn: sqlite3.Connection, iso_timestamp: str) -> None:
+    conn.execute(
+        "INSERT INTO meta (key, value) VALUES ('multi_asset_batch_last_run_iso', ?) "
+        "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        (iso_timestamp,),
+    )
+    conn.commit()
+
+
 def get_cash_reserve_fiat_eur(conn: sqlite3.Connection) -> float:
     """Manuell gepflegtes Fiat-Guthaben (EUR) auf der Boerse, z.B. Bitpanda - nicht
     in Stablecoins umgewandeltes Geld, das die App sonst nirgends kennt (RM-4-

@@ -815,6 +815,123 @@ def compute_veto_shadow_performance(conn, watchlist: list | None = None) -> dict
     return _format_performance_gruppen(gruppen, watchlist)
 
 
+VETO_GRUND_KONFIDENZSCHWELLE = "konfidenzschwelle_r510"
+VETO_GRUND_CRV = "crv_unter_minimum"
+VETO_GRUND_SONSTIGE = "sonstige"
+
+
+def _kategorisiere_veto_grund(reason: str | None) -> str:
+    """Klassifiziert `risk_veto_reason`/hebel-Pendant in eine von drei groben
+    Kategorien (2026-07-30, R-5.10-Konfidenzschwellen-Nachtrag - siehe Memory
+    project_llm_optimierung_abdeckung_pruefung). Textbasiert statt eines
+    eigenen Enum-Felds, da der Veto-Grund bisher NUR als Freitext gespeichert
+    wird (risk_gate.py::post_check()/hebel_risk_gate.py::post_check_hebel()) -
+    beide Texte enthalten die charakteristischen Substrings zuverlaessig
+    ("Regime-Mindestschwelle...% (R-5.10)" bzw. "CRV ... unter Minimum").
+    Mehrere Veto-Gruende koennen im selben Feld aneinandergehaengt sein
+    (siehe post_check(): `f"{risk_veto_reason}; {reason}"`) - hier wird
+    bewusst NUR der ERSTE erkannte Grund gewertet (Prioritaet: Konfidenz vor
+    CRV), da eine doppelte Zaehlung in mehreren Kategorien die Aggregation
+    verfaelschen wuerde."""
+    if not reason:
+        return VETO_GRUND_SONSTIGE
+    if "Regime-Mindestschwelle" in reason:
+        return VETO_GRUND_KONFIDENZSCHWELLE
+    if "CRV" in reason:
+        return VETO_GRUND_CRV
+    return VETO_GRUND_SONSTIGE
+
+
+def compute_veto_shadow_performance_nach_grund(conn, watchlist: list | None = None) -> dict:
+    """Wie compute_veto_shadow_performance(), aber gruppiert nach (tier,
+    veto_grund) statt (tier, provider) (2026-07-30, R-5.10-Konfidenzschwellen-
+    Nachtrag - siehe Memory project_llm_optimierung_abdeckung_pruefung fuer
+    die volle Herleitung). Der Provider ist fuer eine Schwellen-Entscheidung
+    nicht die relevante Dimension - der Veto-GRUND ist es: schlagen sich
+    Konfidenzschwellen-Vetos (R-5.10) anders als CRV<2.0-Vetos, und
+    unterscheidet sich das je Assetklasse? Bewusst eine KOMPLETT SEPARATE
+    Funktion (Option B, wie im gesamten Modul ueblich) statt eines
+    Parameters an compute_veto_shadow_performance() - dieselbe Begruendung
+    wie dort (ein Konsument, der nur die Provider-Sicht braucht, muss sich
+    nicht mit der Veto-Grund-Dimension befassen).
+
+    Ergebnis war die direkte Grundlage fuer die config.yaml::regime.
+    min_konfidenz_prozent_krypto_spot_override-Entscheidung: Krypto-Spot
+    hatte bei Konfidenzschwellen-Vetos eine belastbare Stichprobe (n>=50)
+    mit leicht positivem Ø realisiertem CRV, Aktien/Rohstoffe/Themen-ETF
+    hatten keine ausreichende Stichprobe."""
+    gruppen: dict[tuple[str, str], dict] = {}
+    assetklasse_by_symbol = {a.symbol: a.assetklasse for a in watchlist} if watchlist else {}
+
+    def _stelle_sicher(tier: str, grund: str) -> dict:
+        key = (tier, grund)
+        if key not in gruppen:
+            gruppen[key] = {
+                "anzahl_resolved": 0,
+                "take_profit_count": 0,
+                "stop_loss_count": 0,
+                "liquidation_count": 0,
+                "_crv_summe": 0.0,
+                "_crv_count": 0,
+            }
+        return gruppen[key]
+
+    placeholders = ", ".join("?" for _ in _RESOLVED_OUTCOMES)
+    spot_rows = conn.execute(
+        f"SELECT symbol, risk_veto_reason, veto_outcome_status AS status, "
+        f"veto_outcome_realisiertes_crv AS crv FROM signals WHERE risk_veto = 1 "
+        f"AND action = 'HALTEN' AND veto_outcome_status IN ({placeholders})",
+        _RESOLVED_OUTCOMES,
+    ).fetchall()
+    for row in spot_rows:
+        tier = assetklasse_by_symbol.get(row["symbol"], "unbekannt") if watchlist else "spot"
+        grund = _kategorisiere_veto_grund(row["risk_veto_reason"])
+        eintrag = _stelle_sicher(tier, grund)
+        eintrag["anzahl_resolved"] += 1
+        if row["status"] == OUTCOME_TAKE_PROFIT:
+            eintrag["take_profit_count"] += 1
+        elif row["status"] == OUTCOME_STOP_LOSS:
+            eintrag["stop_loss_count"] += 1
+        if row["crv"] is not None:
+            eintrag["_crv_summe"] += row["crv"]
+            eintrag["_crv_count"] += 1
+
+    hebel_rows = conn.execute(
+        f"SELECT risk_veto_reason, veto_outcome_status AS status, "
+        f"veto_outcome_realisiertes_crv AS crv FROM hebel_signals WHERE risk_veto = 1 "
+        f"AND action = 'HALTEN' AND veto_outcome_status IN ({placeholders})",
+        _RESOLVED_OUTCOMES,
+    ).fetchall()
+    for row in hebel_rows:
+        grund = _kategorisiere_veto_grund(row["risk_veto_reason"])
+        eintrag = _stelle_sicher("hebel", grund)
+        eintrag["anzahl_resolved"] += 1
+        if row["status"] == OUTCOME_TAKE_PROFIT:
+            eintrag["take_profit_count"] += 1
+        elif row["status"] == OUTCOME_STOP_LOSS:
+            eintrag["stop_loss_count"] += 1
+        elif row["status"] == OUTCOME_LIQUIDATION:
+            eintrag["liquidation_count"] += 1
+        if row["crv"] is not None:
+            eintrag["_crv_summe"] += row["crv"]
+            eintrag["_crv_count"] += 1
+
+    ergebnis: dict = {"hebel": {}} if watchlist else {"spot": {}, "hebel": {}}
+    for (tier, grund), eintrag in gruppen.items():
+        anzahl = eintrag["anzahl_resolved"]
+        ergebnis.setdefault(tier, {})[grund] = {
+            "anzahl_resolved": anzahl,
+            "take_profit_count": eintrag["take_profit_count"],
+            "stop_loss_count": eintrag["stop_loss_count"],
+            "liquidation_count": eintrag["liquidation_count"],
+            "win_rate": (eintrag["take_profit_count"] / anzahl) if anzahl > 0 else None,
+            "avg_realisiertes_crv": (
+                eintrag["_crv_summe"] / eintrag["_crv_count"] if eintrag["_crv_count"] > 0 else None
+            ),
+        }
+    return ergebnis
+
+
 def compute_gesamt_signalqualitaet(conn, watchlist: list | None = None) -> dict:
     """"Gesamt-Signalqualitaet, unabhaengig vom Risk-Gate" (2026-07-28, Nutzer-
     Einsicht bei der Konzeption dieses Features: "eigentlich die Veto-Schatten

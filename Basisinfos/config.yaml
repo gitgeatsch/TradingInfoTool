@@ -1110,6 +1110,20 @@ regime:
       min_konfidenz_prozent: 60
       gewinnabsicherung_verschaerft: true  # RG-11: engere Trailing-Stops, Teilverkaeufe
 
+  # Kein Krypto-Spot-Override von min_konfidenz_prozent (2026-07-30 kurz
+  # eingefuehrt, GLEICHENTAGS ZURUECKGENOMMEN - siehe Memory
+  # project_llm_optimierung_abdeckung_pruefung, Abschnitt "Korrektur"). Die
+  # Veto-Schatten-Auswertung (n=106 Konfidenzschwellen-Vetos, Ø CRV +0.222)
+  # hielt dem verbindlichen Symbol-Konzentrations-Check (Test_und_
+  # Verifikationsmethodik.md 2.5) NICHT stand: ohne die Top-5-Symbole
+  # (39.6% Anteil) kippt Ø CRV auf -0.242 (Vorzeichenwechsel - laut
+  # Methodik-Dokument explizit disqualifizierend) und die Win-Rate faellt
+  # von 41.5% auf 32.8%. `agent/krypto/risk_gate.py::post_check()`s
+  # `min_konfidenz_override_prozent`-Parameter (generische Infrastruktur,
+  # nutzt nichts Falsches) bleibt bewusst bestehen - eine spaetere,
+  # belastbarere Wiedervorlage kann diese Sektion einfach neu befuellen,
+  # ohne Code-Aenderung.
+
 # --- Boden-Zielzone: BTC/ETH-Bodenpreis-Schaetzung + Aktien-Baermarkt-Overlay
 # (AZ-4 Baustein 2, 2026-07-12, siehe Basisinfos/Regelwerksmanual.md) ---
 boden_zielzone:

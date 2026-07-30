@@ -12304,3 +12304,255 @@ Dokumentiert in `Basisinfos/Regelwerksmanual.md`/`.docx` +
 `Test_und_Verifikationsmethodik.md`/`.docx`. Reine Lesefunktion, noch nicht
 an GUI/Remote-Seite/E-Mail angebunden (wie bei den Stufe-2-Baseline-
 Funktionen) - Anbindung kann bei Bedarf separat erfolgen.
+
+## Nachtrag (2026-07-30): Multi-Asset-Batch-Nachhol-Mechanismus (fehlende Hedge-/Aktien-/Rohstoff-/Themen-ETF-Signale)
+
+**Auslöser:** Nutzer berichtete, seit ~2 Tagen nur noch Krypto-Hebel-Signale
+und einen einzigen Marktscan-Kaufkandidaten erhalten zu haben - keine
+Hedge- (Absicherungspositionen DBPK/3QSS), Aktien-, Rohstoff- oder
+Themen-ETF-Signale. Analyse gegen den frischen Notebook-Export (30.07.,
+05:51 Uhr) zeigte den Root Cause: `multi_asset_batch_job()` (deckt genau
+diese vier Assetklassen ab) läuft nur 2x/Tag (`cron[mon-fri, hour='9,19']`,
+siehe `MULTI_ASSET_BATCH_CRON_HOURS`), OHNE Nachhol-Mechanismus - anders als
+`backward_tracking_job()`, der genau dafür bereits am 2026-07-17 einen Fix
+bekam (`backward_tracking_catchup_if_missed()`).
+
+**Konkreter Befund (Log-/DB-Auswertung):**
+- Die App startete während intensiver Entwicklungsarbeit auffällig oft neu
+  (11x am 27.07., 11x am 28.07., 4x am 29.07. - laut Nutzer der
+  Entwicklungsarbeit geschuldet, kein unbekanntes Problem).
+- 28.07. 19:00-Termin: komplett ausgefallen, kein einziger Log-Eintrag.
+- 29.07. 09:00-Termin: durch einen Neustart mitten im Lauf abgebrochen -
+  8 von 9 Symbolen (VST, OD7N, VVMX, 3QSS, DBPK, X136, EXH3, CEBS) liefen
+  noch durch (DBPK sogar mit einem echten VERKAUFEN-Signal), PLTR (Aktien)
+  wurde nie erreicht.
+- 29.07. 19:00-Termin: ebenfalls komplett ausgefallen.
+- Die häufiger getakteten Krypto-Jobs (15-Min-Intervall) bemerken einen
+  kurzen Ausfall praktisch nie - das schmale 2x/Tag-Fenster des Multi-Asset-
+  Batches dagegen verliert bei jedem Treffer einen ganzen Termin ersatzlos.
+
+**Fix (analog zum bestehenden Backward-Tracking-Muster):**
+- `database/db.py`: neue Funktionen `get_multi_asset_batch_last_run_iso()`/
+  `set_multi_asset_batch_last_run_iso()` (nutzen die bestehende `meta`-
+  Tabelle, kein neues Schema/keine Migration nötig) - voller ISO-Zeitstempel
+  statt nur Datum, da zwei Termine pro Tag existieren.
+- `scheduler/background.py::multi_asset_batch_job()`: setzt den Zeitstempel
+  erst NACH erfolgreichem Abschluss von `run_multi_asset_batch()` - bricht
+  der Prozess vorher ab (wie am 29.07. real passiert), bleibt der alte Wert
+  stehen und der nächste Start holt den Termin nach.
+- Neue Helferfunktion `_letzter_faelliger_multi_asset_termin(now)`: ermittelt
+  rein per Datumsarithmetik den letzten bereits erreichten Mo-Fr-9/19-Slot
+  (geht bei Bedarf mehrere Tage zurück, überspringt Wochenenden korrekt).
+- Neue Funktion `multi_asset_batch_catchup_if_missed()`: vergleicht beim
+  App-Start den letzten fälligen Termin gegen den zuletzt erfolgreich
+  abgeschlossenen Lauf - nur bei einem GENUIN verpassten Termin wird
+  `multi_asset_batch_job()` sofort synchron nachgeholt. Bewusst KEIN
+  `next_run_time=jetzt` am Job selbst (das würde bei JEDEM Neustart
+  außerhalb der Handelszeiten feuern, siehe bestehender Kommentar an der
+  `add_job()`-Stelle) - der Nachhol-Check greift gezielt nur bei einem
+  tatsächlich verpassten Slot.
+- Aufruf in `build_scheduler()` direkt neben dem bestehenden
+  `backward_tracking_catchup_if_missed()`-Aufruf verdrahtet.
+
+**Verifiziert (synthetisch, Testklasse 2):** T1-T4
+`_letzter_faelliger_multi_asset_termin()` - Montag vormittags/abends,
+Rückfall über Montag-früh auf Freitag-abend, Samstag auf Freitag-abend -
+alle PASS. T5 DB-Roundtrip (get vor jedem Set → `None`, set/get, Überschreiben
+via ON CONFLICT) - PASS. T6 Regressionsfall (letzter Lauf bereits nach dem
+fälligen Termin → kein Nachhol-Lauf) - PASS. T7 Positivfall (28.07.-19:00-
+Termin verpasst → Nachhol-Lauf wird ausgelöst) - PASS. T8 Grenzfall (nie
+gelaufen, `None` → Nachhol-Lauf wird ausgelöst) - PASS. T9 Kombinationsfall
+(kaputter ISO-Zeitstempel in der DB → kein Crash, Nachhol-Lauf wird
+trotzdem ausgelöst) - PASS. Zusätzlich: Compile-/Import-Regressionscheck
+beider geänderter Module + End-to-End-Smoke-Test von `build_scheduler()`
+mit dem neuen Aufruf verdrahtet - kein Fehler, 13 Jobs korrekt registriert.
+
+**Separat abgegrenzt (Nutzer-Nachfrage zum Screener):** der Aktien-/ETF-
+Screener (`ui/screener_view.py`) ist bewusst ein rein GUI-lokaler
+`.after()`-Timer, KEIN Scheduler-Job - er persistiert nichts in die DB und
+verschickt keine E-Mails (siehe Modul-Docstring dort, Entscheidung vom
+2026-07-20) - das ist so gewollt und kein Fehler in der aktuellen
+Funktionsweise. **Aber (siehe Nachtrag direkt im Anschluss):** die vom
+Nutzer vermutete GRÖSSERE Lücke - fehlende Schwerpunkte-gesteuerte
+Kandidaten-Empfehlung/Benachrichtigung - ist real und jetzt als geplante
+Erweiterung dokumentiert.
+
+Dokumentiert in `Basisinfos/Regelwerksmanual.md`/`.docx`. Committet+gepusht
+ausständig.
+
+## Nachtrag (2026-07-30): Screener × Schwerpunkte — geplante, noch nicht umgesetzte Kandidaten-Benachrichtigung (echter Gap, kein Bug)
+
+**Auslöser:** Nutzer widersprach der obigen "kein Bug, reines Design"-
+Einordnung: er habe mehrfach angemerkt, dass der Screener NICHT dauerhaft
+rein GUI-only bleiben soll, sondern ähnlich zur Marktscan-Funktion
+Benachrichtigungen/Signale liefern muss - konkret: die aussichtsreichsten
+NEUEN Kandidaten sollen selektiv je nach aktivem Schwerpunkt (z.B. KI,
+Rohstoffe) empfohlen bzw. per E-Mail übermittelt werden, wahlweise manuell
+override oder automatisch anhand der aktiven Schwerpunkte.
+
+**Nachrecherche (schriftliche Historie, nicht nur Erinnerung):** kein
+Beleg für einen bereits DISKUTIERTEN, dann liegengelassenen Plan (Regel-
+werksmanual/Fakten-Entscheidungsmappe/Memory enthalten dazu nichts) -
+ABER ein klar erkennbarer STRUKTURELLER Vorläufer seit dem allerersten
+Screener-Konzepttag:
+
+- **2026-07-19, "Lücke 7" (Schwerpunkte-Konzeptrunde, derselbe Tag wie der
+  Screener-Erstbau):** *"Synergie mit dem Screener (`scan_etf_candidates()`
+  taggt Kandidaten schon heute mit Hauptgruppe/Unterkategorie, Release 1)
+  noch nicht genutzt - Kandidaten aus Kategorien mit aktiver, aber in der
+  Watchlist noch nicht vertretener These könnten hervorgehoben werden."*
+  Diese Lücke wurde SEITHER ZWEIMAL angegangen, aber beide Male bewusst nur
+  PASSIV geschlossen:
+  - **2026-07-20 (#343):** Treffer-vor-Nicht-Treffer-Sortierung im
+    Screener-Tab (Stufe 1, reine GUI-Priorisierung).
+  - **2026-07-25 (#442, `_kategorie_score_bonus()`):** zusätzlicher
+    Score-Bonus/-Malus als sekundärer Sortierschlüssel, weiterhin NUR
+    GUI-Sortierung, keine Benachrichtigung.
+- Der einzige echte E-Mail-Mechanismus im gesamten Schwerpunkte-System
+  (`_notify_schneller_wechsel()`, #440, 2026-07-25) hat einen komplett
+  ANDEREN Auslöser: warnt bei einem akuten Regime-Umschwung einer
+  BESTEHENDEN These, nicht bei neu entdeckten Screener-Kandidaten.
+
+**Einordnung:** ein echter, plausibler Gap - die Verbindung zwischen
+Schwerpunkte (existiert seit 07-19/07-24) und Screener-Kandidaten-Entdeckung
+war von Anfang an naheliegend und wurde zweimal aufgegriffen, aber beide
+Male nur bis zur GUI-Sortierung zu Ende gedacht, nie bis zur aktiven
+Benachrichtigung. Es ist aber KEINE bereits spezifizierte, dann abgebrochene
+Umsetzung - die konkrete Ausgestaltung (Trigger-Schwelle, manuell vs.
+automatisch je Schwerpunkt, Cooldown, E-Mail-Format) wurde nie im Detail
+besprochen und muss vor einer Umsetzung erst geklärt werden.
+
+**Status: bewusst nur als geplante Erweiterung dokumentiert, NICHT jetzt
+umgesetzt** (Nutzer-Wunsch: erst sauber verankern, damit das Thema nicht
+wiederholt unklar wieder auftaucht - Umsetzung folgt als eigener,
+separater Schritt nach weiterer Detailklärung). Siehe Memory
+[[project_screener_schwerpunkte_benachrichtigung_gap]] für die volle
+Herleitung und als Anlaufstelle für die künftige Umsetzungsdiskussion.
+
+**Nachtrag (2026-07-30, weitere Planungsrunde): vages Grundgerüst erarbeitet.**
+Kein Neubau - alle Bausteine nutzen bereits vorhandenen Code: (1) keine
+LLM-Bewertung an der Entdeckungsstelle (wie bei Krypto-Marktscan, rein
+deterministisch); (2) Bitpanda-Pflicht wird von reinem Anzeige-Flag zu
+echtem Ausschlussfilter (wiederverwendet `is_listed()`, mit globalem
+Ein/Aus-Schalter analog Hebel-Prüfung-Toggle); (3) Qualitäts-Vorfilter über
+die bereits vorhandenen, bisher für Screener-Kandidaten ungenutzten
+`fetch_fundamentals()` (Aktien) und `api/asset_quality.py::get_asset_
+quality()` (ETF mit echtem Yahoo-Ticker); (4) Klassifikation +
+wiederkehrende Benachrichtigung analog `_notify_marktscan_kaufkandidaten()`,
+aber bewusst OHNE automatische Watchlist-Aufnahme - der Nutzer entscheidet
+weiterhin manuell. Grund für Punkt 4: ein frischer 13-Tage-Export (30.07.)
+zeigt 0 von 80 Signalen mit einer Aktion außer HALTEN für Aktien/Rohstoffe/
+Themen-ETF (LLM real aufgerufen, keine Gate-Blockade) - automatische
+Watchlist-Aufnahme würde aktuell vor allem HALTEN-Rauschen erzeugen. Die
+Takt-Frage (2x/Tag-Cron erhöhen?) bleibt deshalb bewusst ABHÄNGIG von der
+separaten, breiteren LLM-Optimierungs-Abdeckungsprüfung (siehe eigener
+Nachtrag) - nicht isoliert entschieden.
+
+## Nachtrag (2026-07-30): Regime-Konflikt/-Ausrichtung für die Spot-Familie nachgerüstet (Punkt B der LLM-Optimierungs-Abdeckungsprüfung)
+
+**Auslöser:** breite Prüfung, wo die gestrigen (29.07.) LLM-Qualitäts-Fixes je
+Assetklasse bereits greifen und wo nicht. Ergebnis für Punkt B: der
+Regime-Konflikt/-Ausrichtung-Risikofaktor (Hebel: `hebel_risk_gate.py`,
+Regelwerk-Audit Stufe 3 Punkt 3, 2026-07-29) existierte für die Spot-Familie
+(Krypto-Spot/Aktien/Rohstoffe/Themen-ETF) überhaupt nicht - die alte
+`compute_risikofaktoren()`-Docstring-Behauptung *"kein eigenes
+Regime-Konflikt bei Spot"* war falsch. RM-10/-11 (Hebel-Deckel) sind
+tatsächlich hebel-spezifisch, aber die reine ANZEIGE eines
+Regime-Konflikts/einer -Ausrichtung fehlte schlicht, obwohl `regime_result`
+für alle 4 Pipelines längst als Pflichtparameter durch `post_check()` läuft.
+
+**Fix (`agent/krypto/risk_gate.py`):** neue Funktion `regime_konflikt(regime,
+richtung)` - asset-neutrales Pendant zu `hebel_risk_gate.py::
+regime_konflikt_hebel()` (bewusst eigene Kopie statt Import, wie beim
+gesamten Modul üblich - Zirkelbezug-Vermeidung). `Risikofaktor` bekam das
+bereits bei Hebel bestehende Feld `ist_kontext: bool = False`.
+`compute_risikofaktoren()` bekam zwei neue optionale Parameter (`regime`,
+`regime_persistenz_tage`) und berechnet daraus - NUR innerhalb des
+bestehenden BUY-only-Blocks (`action not in _BUY_ACTIONS: return`, eine
+bewusste, bereits vorher bestehende Design-Grenze der Funktion, siehe
+dortiger Kommentar zur Kauf-Idee-Fokussierung - unverändert gelassen, keine
+Ausweitung auf VERKAUFEN/TAUSCHEN in dieser Runde) - denselben
+Regime-Konflikt/-Ausrichtung-Faktor wie bei Hebel, `ist_kontext=True`. Kein
+BTC-Relativwert-Dämpfungstext wie bei Hebel (asset-übergreifend nicht
+sinnvoll, betrifft nur Krypto-Alt-Coins gegen BTC).
+
+**Wiring:** keine Änderung an den 4 Pipeline-Dateien nötig - `regime_result`
+war in `post_check()` bereits ein Pflichtparameter für Krypto-Spot/Aktien/
+Rohstoffe/Themen-ETF, der neue Faktor aktiviert sich also automatisch für
+alle 4 gleichzeitig. Hedge bewusst NICHT betroffen (nutzt `risk_gate.py::
+post_check()` gar nicht, hat eine eigenständige, spiegelverkehrte
+Deckel-Logik in `agent/hedge/pipeline.py` - eine automatische Aktivierung
+hätte dort wegen der invertierten Hedge-Semantik falsche Ergebnisse
+geliefert). `regime_persistenz_tage` bleibt vorerst auf dem Default `None`
+(reine Text-Anreicherung, kein Pipeline-Wiring in dieser Runde - optional
+nachrüstbar wie bei `hebel_pipeline.py`). Anzeige (App-Detail-Panel +
+E-Mail) brauchte KEINE Änderung - `ui/formatting.py::
+format_risikofaktoren_lines()` und `scheduler/background.py::
+_formatiere_risikofaktoren()` lesen `ist_kontext` bereits generisch aus dem
+JSON, unabhängig davon, welche Pipeline den Eintrag erzeugt hat.
+
+**Verifiziert (synthetisch):** `regime_konflikt()` alle 4 Kombinationen
+bulle/baer × LONG/SHORT plus None-Fälle. `compute_risikofaktoren()`: KAUFEN
+im Bär-Regime → Regime-Konflikt/negativ/`ist_kontext=True`; KAUFEN im
+Bulle-Regime → Regime-Ausrichtung/positiv; `regime=None` → kein Faktor, kein
+Crash (Rückwärtskompatibilität); VERKAUFEN → weiterhin kein Faktor
+(bestätigt die unveränderte BUY-only-Grenze); Persistenz-Text wird korrekt
+angehängt. End-to-End über `post_check()` mit echtem `RiskPreCheckResult`/
+`regime_result`-Mock: Regime-Konflikt UND Regime-Ausrichtung korrekt im
+`_risikofaktoren`-Dict inkl. `ist_kontext`-Feld, alle anderen Faktoren
+weiterhin mit `ist_kontext=False`. Import-Regressionscheck aller 5
+betroffenen Module (risk_gate.py + 4 Pipelines) plus Hedge zur Kontrolle -
+keine Fehler.
+
+## Nachtrag (2026-07-30): R-5.10-Konfidenzschwelle - Live-Test, Backtest-Infrastruktur, Korrektur
+
+**Auslöser:** die Live-Test-Untersuchung zu Punkt C (siehe oben, Regime-Konflikt-Nachtrag)
+zeigte KEINEN Inaktivitäts-Bias auf LLM-Ebene für Aktien/Rohstoffe/Themen-ETF - beide
+Provider (Mistral, Gemini) empfehlen bei eindeutiger Lage zuverlässig KAUFEN/VERKAUFEN.
+Die echte Ursache des 0/80-Befunds lag stattdessen im deterministischen R-5.10-
+Konfidenzschwellen-Veto (`config.yaml::regime.profile.<regime>.min_konfidenz_prozent`,
+laut dortigem Kommentar "Alle Werte VORLAEUFIG" - nie durch einen Backtest kalibriert):
+238+ Fälle von `"Konfidenz X% unter Regime-Mindestschwelle Y% (R-5.10)"` im Notebook-
+Export, die eigenen Live-Test-Konfidenzwerte (70-85%) lagen genau in diesem kritischen
+Band.
+
+**Neue Infrastruktur (bleibt bestehen):** `agent/krypto/backward_tracking.py::
+compute_veto_shadow_performance_nach_grund()` - wie die bestehende `compute_veto_shadow_
+performance()`, aber nach (Assetklasse, Veto-GRUND: Konfidenzschwelle/CRV/Sonstige) statt
+(Assetklasse, Provider) gruppiert, damit künftige Schwellen-Entscheidungen ohne Ad-hoc-
+Analyse möglich sind. `agent/krypto/risk_gate.py::post_check()` bekam einen neuen
+optionalen Parameter `min_konfidenz_override_prozent` - ersetzt, wenn gesetzt, den
+Regime-Profil-Wert für BEIDE Verwendungen (harter Veto + Konfidenz-skalierte
+Positionsgrößen-Obergrenze). Export (`extract_notebook_diagnose.py`) und Remote-Status-
+Seite (neue Karte "Veto-Schatten-Performance nach Veto-Grund") wurden entsprechend
+erweitert.
+
+**Erste Auswertung (Krypto-Spot, Konfidenzschwellen-Vetos): n=106 aufgelöst, Win-Rate
+41,5%, Ø realisiertes CRV +0,222** - auf den ersten Blick eine belastbare Stichprobe
+(>= 50, siehe Test_und_Verifikationsmethodik.md) mit leicht positivem Ergebnis. Ein
+`min_konfidenz_prozent_krypto_spot_override` (-5 Prozentpunkte je Regime) wurde daraufhin
+kurzzeitig in `config.yaml` eingeführt und live verdrahtet.
+
+**KORREKTUR (gleicher Tag):** der verbindliche Symbol-Konzentrations-Check (Abschnitt 2.5
+der Test_und_Verifikationsmethodik.md - genau für diese Art Befund eingeführt, nach einem
+fast identischen Fall am 29.07.) wurde nachträglich auf diesen Befund angewendet und
+NICHT bestanden: die Top-5-Symbole (AKT, CAT, GRIFFAIN, KAITO, S) stellen 39,6% der
+Fälle; ohne sie fällt die Win-Rate auf 32,8% und das Ø realisierte CRV **kippt im
+Vorzeichen** auf -0,242 - laut Methodik-Dokument explizit disqualifizierend ("Vorzeichen-
+wechsel beim CRV" ist eine der beiden harten Ausschlusskriterien). Der Override wurde
+noch am selben Tag aus `config.yaml` zurückgenommen. Der `min_konfidenz_override_
+prozent`-Mechanismus in `risk_gate.py` bleibt als generische, ungenutzte Infrastruktur
+bestehen (behauptet nichts Falsches) - eine spätere, belastbarere Wiedervorlage kann die
+Config-Sektion einfach neu befüllen, ohne Code-Änderung.
+
+**Zusätzlich klargestellt (Nutzer-Nachfrage):** auch die zweite Teilauswertung (Krypto-
+Spot, CRV<2,0-Vetos: n=18, Win-Rate 33,3%, Ø CRV -0,137, ursprünglich als "Veto arbeitet
+korrekt" eingeordnet) ist NICHT belastbar - n=18 liegt unter der n>=50-Mindestschwelle,
+unabhängig von der Konzentration (hier gut verteilt, größtes Symbol nur 11%). Beide
+Krypto-Spot-Fragen (Konfidenzschwelle UND CRV-Schwelle) bleiben damit echt OFFEN, nicht
+bestätigt - als Wiedervorlage vermerkt (siehe Memory-Referenzliste). Aktien/Rohstoffe/
+Themen-ETF hatten ohnehin nie eine ausreichende Stichprobe (n=4 bzw. n=0).
+
+Dokumentiert in `Basisinfos/Regelwerksmanual.md`/`.docx` +
+`Basisinfos/Test_und_Verifikationsmethodik.md` (neuer Fallbeispiel-Eintrag zu Abschnitt
+2.5) + Memory. Noch NICHT committet/gepusht.

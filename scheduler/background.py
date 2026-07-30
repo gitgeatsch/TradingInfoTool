@@ -472,6 +472,71 @@ def backward_tracking_catchup_if_missed(conn_factory, watchlist_provider) -> Non
     backward_tracking_job(conn_factory, watchlist_provider)
 
 
+def _letzter_faelliger_multi_asset_termin(now: datetime) -> datetime:
+    """Ermittelt den letzten Slot aus MULTI_ASSET_BATCH_CRON_HOURS (Mo-Fr,
+    9:00/19:00 lokal), der bereits erreicht wurde. Geht noetigenfalls mehrere
+    Tage zurueck (Wochenende, laengerer Ausfall). Reine Datumsarithmetik, kein
+    Bezug zu APScheduler - siehe multi_asset_batch_catchup_if_missed()."""
+    kandidat_tag = now
+    for _ in range(10):
+        for stunde in (19, 9):
+            slot = kandidat_tag.replace(hour=stunde, minute=0, second=0, microsecond=0)
+            if slot <= now and slot.weekday() < 5:
+                return slot
+        kandidat_tag -= timedelta(days=1)
+    return now
+
+
+def multi_asset_batch_catchup_if_missed(
+    conn_factory, watchlist_provider, coingecko_client, gemini_client=None, mistral_client=None,
+    zai_client=None,
+) -> None:
+    """2026-07-30, Nutzer-Fund: waehrend intensiver Entwicklungsarbeit startete
+    die App an 27./28./29.07. auffaellig oft neu (11/11/4x) - der 2x/Tag-Cron
+    von multi_asset_batch_job() (Mo-Fr 9/19 Uhr, siehe MULTI_ASSET_BATCH_CRON_
+    HOURS) hat dabei GENAU wie der 06:00-Backward-Tracking-Cron vor diesem Fix
+    (siehe backward_tracking_catchup_if_missed() oben) keinen automatischen
+    Nachhol-Mechanismus: fiel ein Neustart in eines der beiden schmalen
+    Zeitfenster, wurde der Termin fuer den Tag ersatzlos uebersprungen (28.07.
+    19:00 komplett ausgefallen; 29.07. 09:00 durch einen Neustart mitten im
+    Lauf abgebrochen, PLTR/Aktien nie erreicht) - waehrend die haeufiger
+    getakteten Krypto-Jobs (15-Min-Intervall) einen kurzen Ausfall praktisch
+    nie bemerken. Betrifft alle 4 ueber diesen Batch abgedeckten Assetklassen
+    (Aktien/Rohstoffe/Themen-ETF/Hedge), inkl. der Hedge-Absicherungspositionen
+    (DBPK/3QSS).
+
+    Analog zum Backward-Tracking-Fix: beim App-Start einmalig geprueft, ob der
+    letzte bereits FAELLIGE Slot (`_letzter_faelliger_multi_asset_termin()`)
+    tatsaechlich beendet wurde. Bewusst NICHT einfach next_run_time=jetzt beim
+    Job selbst (siehe Kommentar an dessen add_job()-Aufruf: das wuerde bei
+    JEDEM Neustart ausserhalb der Handelszeiten feuern) - nur ein GENUIN
+    verpasster Slot loest den Nachhol-Lauf aus, kein Neustart innerhalb eines
+    bereits erledigten Zeitfensters."""
+    letzter_faelliger_termin = _letzter_faelliger_multi_asset_termin(datetime.now())
+    conn = conn_factory()
+    try:
+        last_run_iso = db.get_multi_asset_batch_last_run_iso(conn)
+    finally:
+        conn.close()
+    if last_run_iso is not None:
+        try:
+            last_run = datetime.fromisoformat(last_run_iso)
+        except ValueError:
+            last_run = None
+    else:
+        last_run = None
+    if last_run is not None and last_run >= letzter_faelliger_termin:
+        return
+    logger.info(
+        "Multi-Asset-Batch: faelliger Termin %s noch nicht erledigt (zuletzt: %s) - hole sofort nach.",
+        letzter_faelliger_termin.isoformat(timespec="minutes"), last_run_iso or "nie",
+    )
+    multi_asset_batch_job(
+        conn_factory, watchlist_provider, coingecko_client,
+        gemini_client=gemini_client, mistral_client=mistral_client, zai_client=zai_client,
+    )
+
+
 def refresh_bitpanda_holdings_job(api_key, conn_factory) -> bool:
     """Automatischer VOLLER Bestandsabgleich (2026-07-16, ersetzt den bisherigen
     reinen Cash-Sync) - moeglich geworden durch die Staking-Verifikation in
@@ -2029,6 +2094,15 @@ def multi_asset_batch_job(
             conn_factory, watchlist, coingecko_client, config_dict,
             gemini_client=gemini_client, mistral_client=mistral_client, zai_client=zai_client,
         )
+        # Nachhol-Mechanismus (2026-07-30, siehe multi_asset_batch_catchup_if_missed()):
+        # erst NACH erfolgreichem Abschluss von run_multi_asset_batch() gesetzt - bricht
+        # der Prozess vorher ab (z.B. Neustart mitten im Batch, echter Fall 29.07.),
+        # bleibt der alte Zeitstempel stehen und der naechste Start holt den Termin nach.
+        last_run_conn = conn_factory()
+        try:
+            db.set_multi_asset_batch_last_run_iso(last_run_conn, datetime.now().isoformat())
+        finally:
+            last_run_conn.close()
         logger.info(
             "Multi-Asset-Batch: %d verarbeitet, %d fehlgeschlagen, %d Cooldown-uebersprungen, "
             "Mistral-Calls %d, Gemini-Calls %d",
@@ -2404,6 +2478,15 @@ def build_scheduler(
     # synchroner Nachhol-Check beim Start (kein Netzwerk-Call, siehe Docstring
     # dort) - No-Op, falls der heutige Lauf schon glückte.
     backward_tracking_catchup_if_missed(db_conn_factory, watchlist_provider)
+    # Multi-Asset-Batch-Nachhol-Check (2026-07-30, siehe multi_asset_batch_
+    # catchup_if_missed()-Docstring) - gleiches Muster wie Backward-Tracking
+    # oben, angewendet auf den 2x/Tag-Cron fuer Aktien/Rohstoffe/Themen-ETF/
+    # Hedge. Reine DB-Abfrage + ggf. ein synchroner Batch-Lauf, kein
+    # zusaetzliches Risiko fuer den Scheduler-Start selbst.
+    multi_asset_batch_catchup_if_missed(
+        db_conn_factory, watchlist_provider, coingecko_client,
+        gemini_client=gemini_client, mistral_client=mistral_client, zai_client=zai_client,
+    )
     # Automatischer VOLLER Bestandsabgleich (2026-07-11 als reiner Cash-Sync
     # eingefuehrt, 2026-07-16 auf den kompletten Bestandsabgleich erweitert, siehe
     # refresh_bitpanda_holdings_job()-Docstring) - P-8: nur registriert, wenn ein

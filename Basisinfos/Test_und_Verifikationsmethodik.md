@@ -281,6 +281,39 @@ Marktereignisse dahinter). Daraus folgt:
   sondern als Test, ob der Effekt beim Entfernen der dominantesten paar Symbole
   verschwindet oder stabil bleibt.
 
+### 2.5.2 Zweites Fallbeispiel: R-5.10-Konfidenzschwelle (Nachtrag 30.07.)
+
+Auslöser: eine Live-Test-Untersuchung zu moeglichem LLM-Inaktivitaets-Bias
+(Aktien/Rohstoffe/Themen-ETF, siehe Memory
+[[project_llm_optimierung_abdeckung_pruefung]]) fuehrte zur echten Ursache
+des Symptoms: dem R-5.10-Konfidenzschwellen-Veto in `risk_gate.py::
+post_check()`. Eine erste Veto-Schatten-Auswertung fuer Krypto-Spot
+(n=106 aufgeloest, Win-Rate 41,5%, Ø realisiertes CRV +0,222) sah auf den
+ersten Blick belastbar aus (n>=50 erfuellt) und fuehrte zu einer
+config.yaml-Aenderung (Konfidenzschwelle -5 Prozentpunkte je Regime,
+NUR Krypto-Spot).
+
+**Der in 2.5 vorgeschriebene Symbol-Konzentrations-Check wurde bei dieser
+ersten Auswertung uebersprungen** - erst beim nachtraeglichen Dokumentieren
+angewendet. Ergebnis: Top-5-Symbole (AKT, CAT, GRIFFAIN, KAITO, S) stellen
+39,6% der Faelle; ohne sie faellt die Win-Rate auf 32,8% und das Ø
+realisierte CRV **kippt im Vorzeichen** von +0,222 auf -0,242 - exakt die
+in 2.5 als disqualifizierend definierte Bedingung. Die config.yaml-Aenderung
+wurde noch am selben Tag zurueckgenommen.
+
+**Lehre:** der Check muss VOR jeder Operationalisierung angewendet werden,
+nicht erst beim Dokumentieren danach - sonst wird eine bereits live gesetzte
+Aenderung auf nicht belastbarer Evidenz entdeckt, statt gar nicht erst
+gesetzt zu werden. Zweiter unabhaengiger Beleg (nach dem 29.07.-Fall in
+2.5), dass genau dieses Muster - Konfidenzschwellen-Vetos, Krypto-Spot,
+scheinbar okay-grosses n - anfaellig fuer Symbol-/Rally-Artefakte ist.
+
+Zusaetzlich bei derselben Gelegenheit festgestellt: die parallele
+CRV<2,0-Veto-Teilauswertung (Krypto-Spot, n=18, urspruenglich als
+"Veto arbeitet korrekt" eingeordnet) unterschreitet die n>=50-Mindestschwelle
+unabhaengig von der Konzentration (hier gut verteilt) - beide
+Krypto-Spot-Fragen bleiben damit offen, keine der beiden gilt als bestaetigt.
+
 ### 2.6 Mehrebenen-Erfolgsmessung: striktes Outcome vs. MFE/Mindestziel (Nachtrag 30.07.)
 
 Auslöser: Nutzer-Frage, ob und wie Erfolgsquoten auf mehreren Ebenen geprüft

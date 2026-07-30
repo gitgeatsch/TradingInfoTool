@@ -517,6 +517,24 @@ class Risikofaktor:
     name: str
     bewertung: str  # "positiv" | "neutral" | "negativ"
     begruendung: str
+    # 2026-07-30 (Nutzer-Fund: Regime-Konflikt/-Ausrichtung fehlte bislang
+    # komplett fuer die Spot-Familie, siehe compute_risikofaktoren()-Nachtrag
+    # unten) - identisches Feld wie hebel_risk_gate.py::Risikofaktor.ist_kontext,
+    # gleiche Begruendung: in einem anhaltenden Regime praktisch immer
+    # vorhanden, daher Kontext-Hinweis statt gezaehlter Bulletpoint.
+    ist_kontext: bool = False
+
+
+def regime_konflikt(regime: str | None, richtung: str | None) -> bool:
+    """Asset-neutrales Pendant zu hebel_risk_gate.py::regime_konflikt_hebel() -
+    bewusst eigene Kopie statt Import (siehe Risikofaktor-Docstring oben:
+    Zirkelbezug-Vermeidung). `richtung` erwartet "LONG"/"SHORT" (siehe
+    agent/krypto/gegenpruefung.py::richtung_aus_action() - liefert genau diese
+    Werte aus der Spot-family-Action KAUFEN/NACHKAUFEN/VERKAUFEN/TAUSCHEN).
+    None (z.B. bei HALTEN oder fehlendem Regime) -> kein Konflikt."""
+    if regime is None or richtung is None:
+        return False
+    return (regime == "baer" and richtung == "LONG") or (regime == "bulle" and richtung == "SHORT")
 
 
 def _preis_am_datum(iso_zeitpunkt: str, dates, closes) -> float | None:
@@ -595,14 +613,26 @@ def compute_risikofaktoren(
     dates=None,
     closes=None,
     richtungswende_atr_schwelle: float | None = None,
+    regime: str | None = None,
+    regime_persistenz_tage: int | None = None,
 ) -> list["Risikofaktor"]:
     """Spot/Aktien/Rohstoffe/Themen-ETF-Pendant zu hebel_risk_gate.py::
     compute_risikofaktoren_hebel() - deterministische Zusammenfassung der
     bereits vorhandenen Deckel-/Veto-Checks in eine kompakte positiv/neutral/
     negativ-Liste fuer Abschnitt 3 der neuen E-Mail-/App-Struktur. Bewusst
-    NICHT vom LLM generiert. Kein eigenes Regime-Konflikt/These-Widerspruch
-    (die gibt es bei Spot nicht, siehe Modul-Docstring: RM-10/-11 sind
-    hebel-spezifisch) - dafuer cash_veto, das es bei Hebel nicht gibt.
+    NICHT vom LLM generiert. Dafuer cash_veto, das es bei Hebel nicht gibt.
+
+    Nachtrag 2026-07-30 (Regelwerk-Audit LLM-Optimierungen, Punkt B): die
+    urspruengliche Docstring-Behauptung "kein eigenes Regime-Konflikt bei
+    Spot" war falsch - RM-10/-11 (Hebel-Deckel) sind tatsaechlich
+    hebel-spezifisch, aber die reine ANZEIGE eines Regime-Konflikts/einer
+    -Ausrichtung (wie bei Hebel, `ist_kontext=True`) fehlte hier schlicht,
+    obwohl `regime` fuer alle 4 Spot-family-Pipelines laengst ueber
+    `post_check()`s `regime_result`-Parameter vorliegt. `regime`/`richtung`
+    (aus `agent/krypto/gegenpruefung.py::richtung_aus_action()`) sind optional
+    - ohne sie faellt nur dieser eine Risikofaktor weg (P-10), keine
+    BTC-Relativwert-Daempfung wie bei Hebel (asset-uebergreifend nicht
+    sinnvoll, betrifft nur Krypto-Alt-Coins gegen BTC).
 
     `action` erwartet hier bewusst die URSPRUENGLICHE, vom Modell vorgeschlagene
     Aktion (post_check()'s `original_action`, VOR jeder Veto-Ueberschreibung
@@ -627,6 +657,30 @@ def compute_risikofaktoren(
 
     if action not in _BUY_ACTIONS:
         return faktoren
+
+    # Regime-Konflikt/-Ausrichtung (2026-07-30, Nachtrag siehe Docstring oben,
+    # Punkt B) - `action` ist an dieser Stelle durch den fruehen Return oben
+    # bereits garantiert KAUFEN/NACHKAUFEN, die Richtung also immer "LONG"
+    # (kein SHORT-Fall wie bei Hebel, siehe Retail-Konsens-Kommentar unten fuer
+    # dieselbe Einschraenkung). Optional (nur wenn `regime` durchgereicht
+    # wird) - fehlt es, faellt nur dieser eine Faktor weg.
+    if regime is not None:
+        persistenz_text = (
+            f" Regime seit {regime_persistenz_tage} Tag(en) regelbasiert bestätigt."
+            if regime_persistenz_tage is not None and regime_persistenz_tage > 0 else ""
+        )
+        if regime_konflikt(regime, "LONG"):
+            faktoren.append(Risikofaktor(
+                "Regime-Konflikt", "negativ",
+                f"Kauf-Idee widerspricht dem aktuellen {regime}-Regime.{persistenz_text}",
+                ist_kontext=True,
+            ))
+        else:
+            faktoren.append(Risikofaktor(
+                "Regime-Ausrichtung", "positiv",
+                f"Kauf-Idee folgt dem aktuellen {regime}-Regime, kein Gegen-Trend-Setup.{persistenz_text}",
+                ist_kontext=True,
+            ))
 
     if gegenszenario_pct is not None and gegenszenario_schwelle is not None:
         if gegenszenario_pct >= gegenszenario_schwelle:
@@ -825,6 +879,8 @@ def post_check(
     closes=None,
     richtungswende_atr_schwelle: float | None = None,
     filter_retail_konsens_top_gruende: bool = False,
+    regime_persistenz_tage: int | None = None,
+    min_konfidenz_override_prozent: float | None = None,
 ) -> dict:
     """Nimmt die bereits validierte (siehe agent/analyst.py) Groq-Antwort und erzwingt
     RM-1/-2/-4/-5, Mindest-Konfidenz (R-5.10) und CRV >= 2.0 (Z-2) noch einmal
@@ -842,7 +898,24 @@ def post_check(
     `confluence` (2026-07-18, Nutzer-Fund am echten CAT-Fall: "Ergebnis ist
     durchgaengig eher schlecht" trotz 80% Konfidenz) optional - ohne sie faellt
     nur der neue Konflikt-Deckel unten weg, der Rest der Funktion bleibt
-    unveraendert funktionsfaehig (P-10)."""
+    unveraendert funktionsfaehig (P-10).
+
+    `regime_persistenz_tage` (2026-07-30, optional wie bei hebel_pipeline.py)
+    reichert nur den Regime-Konflikt/-Ausrichtung-Risikofaktor textuell an
+    (siehe compute_risikofaktoren()) - `regime` selbst kommt bereits aus dem
+    ohnehin vorhandenen `regime_result`-Parameter.
+
+    `min_konfidenz_override_prozent` (2026-07-30, R-5.10-Nachtrag, siehe
+    Memory project_llm_optimierung_abdeckung_pruefung + config.yaml::
+    regime.min_konfidenz_prozent_krypto_spot_override): ersetzt, wenn
+    gesetzt, den aus `config["regime"]["profile"]` gelesenen Schwellenwert
+    komplett (nicht additiv) - fuer BEIDE Verwendungen (harter Konfidenz-
+    Veto weiter unten UND die Konfidenz-skalierte Positionsgroessen-
+    Obergrenze). Default `None` -> unveraendertes Verhalten fuer alle
+    Aufrufer, die den Parameter nicht setzen (aktuell nur agent/krypto/
+    pipeline.py/Krypto-Spot setzt ihn - Aktien/Rohstoffe/Themen-ETF bleiben
+    auf der gemeinsamen `regime.profile`-Schwelle, siehe dortige
+    Begruendung: Backtest-Evidenz bisher nur fuer Krypto-Spot ausreichend)."""
     result = dict(parsed)
     if filter_retail_konsens_top_gruende:
         result["top_gruende"] = filtere_retail_konsens_top_gruende(result.get("top_gruende"))
@@ -865,7 +938,9 @@ def post_check(
 
     if action in _BUY_ACTIONS:
         min_konfidenz = (
-            config["regime"]["profile"].get(regime_result.regime, {}).get("min_konfidenz_prozent")
+            min_konfidenz_override_prozent
+            if min_konfidenz_override_prozent is not None
+            else config["regime"]["profile"].get(regime_result.regime, {}).get("min_konfidenz_prozent")
         )
         confidence = result.get("confidence_pct")
         if min_konfidenz is not None and confidence is not None and confidence < min_konfidenz:
@@ -967,7 +1042,9 @@ def post_check(
             # von Hebels eigenen (nur die Verknuepfungslogik wird angeglichen).
             sockel_anteil = config["risiko"].get("konfidenz_positionsgroesse_sockel_anteil")
             min_konfidenz = (
-                config["regime"]["profile"].get(regime_result.regime, {}).get("min_konfidenz_prozent")
+                min_konfidenz_override_prozent
+                if min_konfidenz_override_prozent is not None
+                else config["regime"]["profile"].get(regime_result.regime, {}).get("min_konfidenz_prozent")
             )
             confidence = result.get("confidence_pct")
             forecast = result.get("forecast") or {}
@@ -1101,9 +1178,12 @@ def post_check(
             if richtungswende_atr_schwelle is not None
             else config.get("signal_stabilitaet", {}).get("richtungswende_atr_schwelle_relativ")
         ),
+        regime=regime_result.regime if regime_result is not None else None,
+        regime_persistenz_tage=regime_persistenz_tage,
     )
     result["_risikofaktoren"] = [
-        {"name": f.name, "bewertung": f.bewertung, "begruendung": f.begruendung} for f in risikofaktoren
+        {"name": f.name, "bewertung": f.bewertung, "begruendung": f.begruendung, "ist_kontext": f.ist_kontext}
+        for f in risikofaktoren
     ]
 
     # Signal-Fazit Konsistenz-Hinweis (2026-07-25) - rein diagnostisch, siehe

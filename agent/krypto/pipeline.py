@@ -841,6 +841,22 @@ def generate_signal(
 
     # R-5.5 (post) / R-5.9 / R-5.10 - deterministische Nachkontrolle, Modell wird nie
     # blind vertraut.
+    #
+    # min_konfidenz_override_prozent (2026-07-30, R-5.10-Nachtrag - siehe
+    # Memory project_llm_optimierung_abdeckung_pruefung): optionaler,
+    # generischer Override-Mechanismus in post_check(). Aktuell INAKTIV -
+    # eine erste Veto-Schatten-Auswertung (n=106, Ø CRV +0.222) hielt dem
+    # verbindlichen Symbol-Konzentrations-Check (Test_und_
+    # Verifikationsmethodik.md 2.5) nicht stand (Vorzeichenwechsel ohne
+    # Top-5-Symbole) und wurde gleichentags zurueckgenommen -
+    # config.yaml::regime hat deshalb bewusst KEINE
+    # min_konfidenz_prozent_krypto_spot_override-Sektion mehr; `.get(...)`
+    # liefert dann `{}`/`None`, unveraendertes Verhalten. Bei einer
+    # spaeteren, belastbareren Wiedervorlage genuegt es, die Config-Sektion
+    # wieder zu befuellen - kein Code-Change noetig.
+    min_konfidenz_override = config_dict.get("regime", {}).get(
+        "min_konfidenz_prozent_krypto_spot_override", {},
+    ).get(regime_result.regime)
     corrected = post_check(
         parsed, risk_result, regime_result, config_dict, confluence=confluence,
         retail_long_bias_extreme=anticyclic_context.retail_long_bias_extreme,
@@ -854,6 +870,7 @@ def generate_signal(
         dates=dates,
         closes=closes,
         filter_retail_konsens_top_gruende=True,
+        min_konfidenz_override_prozent=min_konfidenz_override,
     )
     risk_veto = corrected.pop("_risk_veto")
     risk_veto_reason = corrected.pop("_risk_veto_reason")
