@@ -498,10 +498,17 @@ def _rohdaten_fuer_backtest(conn) -> dict:
     # Score-Schwellen-Kalibrierung (aktuell score_kaufkandidat_ab=70/
     # score_watchlist_wuerdig_ab=50, laut config.yaml VORLAEUFIG, nie
     # gegen Forward-Performance geprueft).
+    # Nachtrag (2026-07-30, Nutzer-Hinweis "ungenutzte Daten, welche uns helfen"):
+    # discovery_source/volume_24h_usd/change_24h_pct/signale_momentum_json (enthaelt
+    # change_7d_pct + verlaengerungs_malus, siehe score_momentum()) werden pro
+    # Kandidat-Zeile bereits seit Beginn gespeichert, waren hier aber nie exportiert -
+    # Grundlage fuer die "Reifegrad"-Diskussion (Streak-Laenge/Verlangsamung/
+    # Volumen-Trend als Erschoepfungssignal bei rasch gestiegenen Coins).
     marktscan_alle_kandidaten = [
         row_to_dict(r) for r in conn.execute(
-            "SELECT id, coingecko_id, symbol, discovered_at, score_gesamt, einstufung, "
-            "price_usd, status FROM marktscan_candidates ORDER BY discovered_at ASC"
+            "SELECT id, coingecko_id, symbol, discovered_at, discovery_source, score_gesamt, "
+            "einstufung, price_usd, change_24h_pct, volume_24h_usd, market_cap_usd, "
+            "signale_momentum_json, status FROM marktscan_candidates ORDER BY discovered_at ASC"
         ).fetchall()
     ]
     return {
