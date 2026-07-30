@@ -1822,10 +1822,20 @@ def _notify_multi_asset_signal(signal, watchlist: list, bitpanda_assets: list | 
         forecast_text = _formatiere_forecast(signal)
         risikofaktoren_text = _formatiere_risikofaktoren(signal)
         fazit_text = _formatiere_fazit(signal)
+        # BUGFIX (2026-07-30, Nutzer-Fund am echten 3QSS-Fall): _notify_spot_
+        # signal() ruft _formatiere_zai_gegenpruefung() bereits seit dessen
+        # Einfuehrung auf - hier fehlte der Aufruf schlicht, obwohl die
+        # Z.ai-Ausweitung auf alle 4 Multi-Asset-Batch-Pipelines (Aktien/
+        # Rohstoffe/Themen-ETF/Hedge, 2026-07-27) die Daten laengst berechnet
+        # und per Re-Fetch (Commit 10) korrekt in `signal` nachlaedt - nur die
+        # E-Mail-Vorlage selbst hat den Text nie angehaengt. Betraf alle 4
+        # Pipelines, nicht nur Hedge (dort nur zuerst bemerkt).
+        zai_text = _formatiere_zai_gegenpruefung(signal)
         mindestziel_text = _formatiere_mindestziel(signal)
         zeitpunkt_text = _formatiere_zeitpunkt_lokal(signal.created_at)
         body = (
             f"Aktion: {signal.action}\n"
+            f"Regime: {signal.regime or 'unbekannt'}\n"
             f"Berechnet: {zeitpunkt_text} · Anbieter: {signal.groq_model or '-'}\n\n"
             f"--- 1. MATHEMATISCH BERECHNET ---\n"
             f"Entry: {format_money(signal.entry_eur_von)}-{format_money(signal.entry_eur_bis)} EUR\n"
@@ -1844,6 +1854,7 @@ def _notify_multi_asset_signal(signal, watchlist: list, bitpanda_assets: list | 
             + f"{_RISIKOFAKTOREN_LEGENDE}\n\n"
             + (risikofaktoren_text if risikofaktoren_text else "Keine strukturierten Risikofaktoren verfügbar.")
             + (f"\n\n{fazit_text}" if fazit_text else "")
+            + (f"\n\n{zai_text}" if zai_text else "")
             + "\n\nDetails im Signale-Tab der App. Ausführung manuell über die Bitpanda-App."
         )
         send_notification_email(f"TradingInfoTool: {signal.action} {signal.symbol}", body, empfaenger)

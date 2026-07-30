@@ -554,12 +554,17 @@ class SignalsView(ttk.Frame):
             lines.append("")
             lines.extend(fazit_lines)
 
-        # Z.ai-Konsistenz-Check (2026-07-27, von Hebel nachgezogen, siehe
-        # ui/hebel_view.py fuer das Original) - nur der Konsistenz-Teil, kein
-        # Richtungs-Abgleich (Signal/Spot hat kein richtung-Feld).
+        # Z.ai-Gegenpruefung (2026-07-27, von Hebel nachgezogen, siehe
+        # ui/hebel_view.py fuer das Original). BUGFIX (2026-07-30, im Zuge des
+        # 3QSS-E-Mail-Funds entdeckt): Signal bekam den Richtungs-Abgleich
+        # bereits mit der Z.ai-Ausweitung auf alle 6 Pipelines (2026-07-27),
+        # hier wurden aber weiterhin None-Platzhalter uebergeben - der
+        # Konsistenz-Teil war korrekt, der Richtungs-Abgleich fehlte im
+        # Detail-Panel komplett (fuer Spot UND alle 4 Multi-Asset-Pipelines).
         zai_lines = format_zai_gegenpruefung_lines(
             signal.zai_gegenpruefung_urteil, signal.zai_gegenpruefung_kurzbegruendung,
-            None, None, None,
+            signal.zai_eigene_richtung, signal.zai_uebereinstimmung,
+            signal.zai_richtung_kurzbegruendung,
         )
         if zai_lines:
             lines.append("")

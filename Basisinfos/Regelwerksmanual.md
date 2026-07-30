@@ -12556,3 +12556,52 @@ Themen-ETF hatten ohnehin nie eine ausreichende Stichprobe (n=4 bzw. n=0).
 Dokumentiert in `Basisinfos/Regelwerksmanual.md`/`.docx` +
 `Basisinfos/Test_und_Verifikationsmethodik.md` (neuer Fallbeispiel-Eintrag zu Abschnitt
 2.5) + Memory. Noch NICHT committet/gepusht.
+
+## Nachtrag (2026-07-30): BUGFIX - Z.ai-Gegenprüfung fehlte in allen Multi-Asset-Batch-E-Mails
+
+**Auslöser:** Nutzer-Fund an einem echten, bereits versendeten Produktions-Signal (3QSS
+NACHKAUFEN, Hedge, 30.07. 09:05) - die E-Mail enthielt keinerlei Z.ai-Abschnitt, obwohl
+die Z.ai-Ausweitung auf alle 6 Signal-Pipelines (siehe Nachtrag oben, "Z.ai-Gegenprüfung
+auf alle 6 Signal-Pipelines ausweiten") bereits am 27.07. abgeschlossen wurde.
+
+**Root Cause:** die Z.ai-Daten waren für dieses Signal korrekt in der DB vorhanden
+(`zai_eigene_richtung=SHORT`, `zai_uebereinstimmung=ja`, `zai_gegenpruefung_urteil=
+konsistent`, inkl. Kurzbegründungstext) - das Problem lag ausschließlich in
+`scheduler/background.py::_notify_multi_asset_signal()` (die E-Mail-Funktion für ALLE
+VIER Multi-Asset-Batch-Pipelines: Aktien/Rohstoffe/Themen-ETF/Hedge, nicht nur Hedge):
+diese Funktion rief `_formatiere_zai_gegenpruefung(signal)` nie auf und fügte den Text
+nie in den E-Mail-Body ein - anders als `_notify_spot_signal()` (Krypto-Spot) und
+`_notify_hebel_signal()` (Hebel), die das von Anfang an korrekt tun. Die Plumbing-Seite
+(Commits 1-10 der Z.ai-Ausweitung) war vollständig korrekt - inklusive Re-Fetch der
+frischen Z.ai-Felder aus der DB vor dem E-Mail-Versand - nur der finale
+Text-Rendering-Schritt in der E-Mail-Vorlage selbst fehlte.
+
+**Fix:** in `_notify_multi_asset_signal()` (Zeile ~1833) `zai_text =
+_formatiere_zai_gegenpruefung(signal)` ergänzt und ans Ende des Body-Strings angehängt
+(`+ (f"\n\n{zai_text}" if zai_text else "")`) - exakt analog zu `_notify_spot_signal()`.
+Bei derselben Gelegenheit fiel eine zweite, kleinere Inkonsistenz auf: die
+"Regime: ..."-Zeile am Kopf der E-Mail existierte ebenfalls nur bei Spot/Hebel, nicht bei
+Multi-Asset-Batch - `signal.regime` wird aber in allen 4 Pipelines korrekt befüllt
+(verifiziert per Grep), daher ebenfalls ergänzt.
+
+**Verifikation:** `py_compile` nach beiden Änderungen fehlerfrei; synthetischer Test mit
+einem Mock-Signal-Objekt (Felder analog dem echten 3QSS-Fall) bestätigt, dass
+`_formatiere_zai_gegenpruefung()` einen nicht-leeren Text liefert. Ein echter
+Notebook-Lauf (nächstes reales Aktien/Rohstoffe/Themen-ETF/Hedge-Signal) steht noch aus,
+um die End-to-End-E-Mail zu bestätigen.
+
+**Betroffener Zeitraum:** alle Multi-Asset-Batch-E-Mails seit der Z.ai-Ausweitung
+(27.07.) bis zu diesem Fix (30.07.) hatten keinen Z.ai-Abschnitt - reiner
+Anzeige-/Text-Bug, keine Daten gingen verloren (in der DB waren die Felder immer
+korrekt befüllt).
+
+**Zweiter, verwandter Fund bei derselben Gelegenheit:** `ui/signals_view.py` (Detail-
+Panel im App-Signale-Tab, verwendet für Krypto-Spot UND alle 4 Multi-Asset-Pipelines)
+übergab an `format_zai_gegenpruefung_lines()` für die drei Richtungs-Abgleich-Parameter
+fest `None, None, None`, mit dem veralteten Kommentar "Signal/Spot hat kein
+richtung-Feld" - dieser Kommentar stammte aus der Zeit VOR der Z.ai-Ausweitung
+(27.07., Commit 1 erweiterte die `Signal`-Dataclass genau um diese 3 Felder) und wurde
+danach nie aktualisiert. Ergebnis: der Konsistenz-Check wurde im App-Detailpanel korrekt
+angezeigt, der Richtungs-Abgleich dagegen NIE - weder für Spot noch für die 4
+Multi-Asset-Pipelines. Fix: die drei `signal.zai_*`-Felder werden jetzt tatsächlich
+durchgereicht (Zeile ~560-564).
