@@ -10223,8 +10223,14 @@ schutz: `KAUFEN` → `SHORT` bei `ist_hedge_invertiert=True`);
 Update-Aufruf, korrekte `ja`/`nein`-Berechnung, Call-1-Fehlschlag verhindert
 Call-2-Update nicht); Signatur-Regressionscheck aller 4 neuen Pipelines +
 der Plumbing-Kette (`run_multi_asset_batch()`, `multi_asset_batch_job()`).
-Echter Notebook-Lauf (nach Deploy) noch ausstehend, insbesondere für Hedge
-(dünnste Faktenbasis, höchstes Risiko für instabile Z.ai-Antworten).
+**Echter Notebook-Lauf ERLEDIGT (2026-07-30):** frischer Produktions-Export
+bestätigt Z.ai-Richtung für alle 4 neuen Pipelines (Aktien n=1, Rohstoffe n=1,
+Themen-ETF n=3, Hedge n=2 - DBPK/3QSS). Hedge-Inversion mit einem echten
+`action=VERKAUFEN`-Fall bestätigt (`zai_eigene_richtung=SHORT` korrekt als
+Abweichung gegen die invertierte Erwartung LONG gewertet). Aktien/Rohstoffe
+mit n=1 noch zu duenn fuer eine Trefferquoten-Aussage, aber die Grund-
+Verdrahtung funktioniert nachweislich in allen 4 Pipelines. Details siehe
+[[project_zai_alle_6_pipelines_ausgeweitet]].
 
 ## Nachtrag (2026-07-27): Hebel-Tab-Anzeigefilter - deaktivierte Symbole ohne offene Position + Zeit-Switch
 
@@ -11648,11 +11654,14 @@ zweimal ausgefuehrt (idempotent) - PASS; T3 Positivfall (Eigenkapitalbedarf
 das Feld korrekt - PASS. Import-Regressionscheck aller 7 geaenderten Module
 bestanden.
 
-**Offen, separat zu besprechen (Nutzer-Auftrag):** die eigentliche
-Konfidenz-Kalibrierungsfrage - ist die mangelnde Vorhersagekraft der
-LLM-Konfidenz bei Hebel ein Fehler in unserem System, oder eine bekannte
-Grenze, mit der andere Trading-/Analyse-Plattformen anders umgehen?
-Vergleich mit branchenueblichen Ansaetzen noch ausstehend.
+**ERLEDIGT (29.07., spaeter am selben Tag):** die Frage, ob die mangelnde
+Vorhersagekraft der LLM-Konfidenz bei Hebel ein Fehler in unserem System
+oder eine bekannte Grenze ist, wurde per externer Fachliteratur-Recherche
+beantwortet (LLM-Konfidenz-Kalibrierung, CRV/Reward-Risk als Praediktor +
+Positionsgroessen-Normen, Risikofaktoren-Aggregation + Backtest-Overfitting-
+Fallstricke) - Grundlage fuer die nachgeschaerfte n>=50-Regel in
+`Test_und_Verifikationsmethodik.md`. Details siehe
+[[reference_externe_recherche_konfidenz_crv_risikofaktoren_29_07]].
 
 ## Nachtrag (2026-07-29): extract_notebook_diagnose.py - Assetklassen-Aufschluesselung nachgezogen
 
@@ -12064,7 +12073,7 @@ vorliegen (wie schon bei der 60s->90s-Kalibrierung 2026-07-28).
   n=3 statistisch plausibel, kein Widerspruch zum breiteren Befund oben) -
   PASS (Integrationstest, nicht erneute Bias-Messung).
 
-Dokumentiert hier + Memory. Commit/Push noch ausstehend.
+Dokumentiert hier + Memory. Committet als `67571bd`, gepusht.
 
 **Nachtrag (2026-07-29, frischer NB-Export 21:18 Uhr): Konfidenz-Kalibrierung
 x CRV/SL-Korrelation - Analyse durchgefuehrt, Ergebnis "noch nicht
@@ -12216,3 +12225,53 @@ Desktop-Livetest + echte Notebook-Produktionsdaten), keine Bugs gefunden.**
 Kein Code-Aenderungsbedarf. Scratchpad-Testskripte (nicht committet):
 `integrationstest_gates_email_backtracking.py`,
 `integrationstest_formatierung_nachtrag.py`.
+
+### Nachtrag (2026-07-30): compute_sl_mfe_analyse() - Mehrebenen-Erfolgsmessung
+
+Nutzer-Frage: "wie pruefen wir Erfolgsquoten auf mehreren Ebenen" - Anlass war
+eine gezielte Verschneidung bereits vorhandener Felder (`outcome_max_
+realisiertes_crv`/MFE, `outcome_mindestziel_erreicht_am`) gegen den strikten
+`outcome_status`, OHNE neue Daten zu erheben. Volle Methodik-Begruendung
+siehe `Test_und_Verifikationsmethodik.md` Abschnitt 2.6 - hier nur die
+Code-Seite.
+
+**Neue Funktion `compute_sl_mfe_analyse(conn, tier, erlaubte_symbole=None)`**
+(`agent/krypto/backward_tracking.py`, direkt nach den Stufe-2-Baseline-
+Funktionen): fuer alle Signale mit `outcome_status == stop_loss_erreicht`,
+welcher Anteil zeigt trotzdem einen positiven MFE-Wert (Kurs lief
+zwischenzeitlich profitabel, bevor er zurueckdrehte und den Stop ausloeste)?
+Trennt damit "Richtung war falsch" von "Richtung war richtig, aber zu eng
+gestoppt" - zwei Fehlerbilder, die eine reine Win/Loss-Quote vermischt.
+
+Rueckgabe: `anzahl_sl_gesamt`, `anzahl_mit_mfe_daten`, `anzahl_mit_positivem_
+mfe`/`quote_positiver_mfe_trotz_stop_pct` (Kern-Kennzahl), `anzahl_
+mindestziel_vor_stop_erreicht` (strengere Teilmenge), `anzahl_distinkte_
+symbole_bei_positivem_mfe`/`haeufigstes_symbol_anteil_pct` (Symbol-
+Konzentrations-Check, Test_und_Verifikationsmethodik.md 2.5 - IMMER mit
+ausgewiesen, da diese Funktion typischerweise auf kleinen Stichproben
+laeuft), `hinweis` (Kleine-Stichprobe- + Konzentrations-Warnung). `None` bei
+0 Stop-Loss-Faellen.
+
+**Erster Blick auf echte Daten (30.07., frischer NB-Export, Hebel):** von 57
+SL-Faellen haben 23 MFE-Daten, davon 20 (87%) mit positivem MFE - 9 davon
+erreichten sogar das Mindestziel vor dem Stop. Bestaetigt aus einem neuen
+Blickwinkel den bereits behobenen Enge-Stop-Loss-Befund vom 28.07. (siehe
+[[project_enge_stop_loss_backtest_und_massnahmen]]). Konzentrations-Hinweis:
+SUI stellt 3 der 9 Mindestziel-Faelle (33%) - ueber der 20-25%-Schwelle,
+im Hinterkopf behalten.
+
+**Verifiziert (synthetisch, Testklasse 1):** T1 gemischte Faelle (positiver/
+negativer/fehlender MFE, Mindestziel-Fall, ein Nicht-SL-Fall der nicht
+mitzaehlt) - alle Kennzahlen korrekt berechnet - PASS. T2 leerer Datensatz
+(0 SL-Faelle) -> `None` - PASS. T3 Konzentrations-Warnung greift korrekt bei
+einem dominanten Symbol - PASS. T4 `erlaubte_symbole`-Filter - PASS. T5
+`tier="spot"` liest korrekt die `signals`-Tabelle statt `hebel_signals` -
+PASS. Zusaetzlich gegen eine echte DB-Kopie ausgefuehrt (0 SL-Faelle dort,
+da die Desktop-DB-Kopie kaum aufgeloeste Hebel-Signale hat - korrektes
+`None`-Verhalten bestaetigt, keine Diskrepanz zu den echten Notebook-Zahlen,
+die aus einer physisch anderen Datenbank stammen).
+
+Dokumentiert in `Basisinfos/Regelwerksmanual.md`/`.docx` +
+`Test_und_Verifikationsmethodik.md`/`.docx`. Reine Lesefunktion, noch nicht
+an GUI/Remote-Seite/E-Mail angebunden (wie bei den Stufe-2-Baseline-
+Funktionen) - Anbindung kann bei Bedarf separat erfolgen.

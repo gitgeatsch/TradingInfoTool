@@ -510,6 +510,22 @@ def _preishistorie_ueberholte_symbole(conn) -> dict:
     return {"symbole": alle_symbole, "preishistorie_je_symbol": preishistorie}
 
 
+def _ohlc_aktualitaet_je_symbol(conn) -> dict:
+    """Neu (2026-07-30, siehe Test_und_Verifikationsmethodik.md Abschnitt 2.1a) -
+    MAX(date)/Anzahl Zeilen je Symbol in price_history_ohlc UEBER DIE GESAMTE
+    Watchlist (nicht nur ueberholte Symbole wie _preishistorie_ueberholte_
+    symbole() oder einzelne deep_dive-Symbole) - Grundlage fuer eine
+    Veraltungs-Pruefung, ausgeloest durch einen auf dem Desktop gefundenen
+    ATR-Perzentil-Plausibilitaetsfund (Werte blieben ueber 5 Tage identisch,
+    Ursache: price_history_ohlc fuer mehrere Symbole seit 11 Tagen nicht
+    aktualisiert)."""
+    rows = conn.execute(
+        "SELECT symbol, COUNT(*) AS anzahl, MIN(date) AS von, MAX(date) AS bis "
+        "FROM price_history_ohlc GROUP BY symbol ORDER BY bis ASC"
+    ).fetchall()
+    return {"symbole": [row_to_dict(r) for r in rows]}
+
+
 # --- Log-Auszug (2026-07-18, siehe Modul-Docstring) ---------------------
 # Format aus main.py::logging.basicConfig(): "%(asctime)s %(levelname)s
 # %(name)s: %(message)s" - asctime ist "YYYY-MM-DD HH:MM:SS,mmm".
@@ -828,6 +844,7 @@ def main() -> None:
         deribit_cross_check_verlauf = _deribit_cross_check_verlauf(conn)
         zai_gegenpruefung_verlauf = _zai_gegenpruefung_verlauf(conn)
         oi_fakten_verlauf = _oi_fakten_verlauf(conn)
+        ohlc_aktualitaet_je_symbol = _ohlc_aktualitaet_je_symbol(conn)
 
         # 4) Provider-Performance (Win-Rate/CRV je Anbieter, Spot+Hebel getrennt)
         # Nachtrag 2026-07-29 (Export-Luecke gefunden bei der R-5.10-Analyse-
@@ -968,6 +985,7 @@ def main() -> None:
         "deribit_cross_check_verlauf": deribit_cross_check_verlauf,
         "zai_gegenpruefung_verlauf": zai_gegenpruefung_verlauf,
         "oi_fakten_verlauf": oi_fakten_verlauf,
+        "ohlc_aktualitaet_je_symbol": ohlc_aktualitaet_je_symbol,
         "deep_dive": {
             "symbol": DEEP_DIVE_SYMBOL,
             "hebel_signals": [row_to_dict(r) for r in deep_signale],

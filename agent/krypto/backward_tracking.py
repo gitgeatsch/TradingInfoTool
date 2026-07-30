@@ -1474,6 +1474,98 @@ def compute_zai_uebereinstimmung_baseline(conn, watchlist: list | None = None) -
     return ergebnis
 
 
+def compute_sl_mfe_analyse(conn, tier: str, erlaubte_symbole: set[str] | None = None) -> dict | None:
+    """Trennt bei Stop-Loss-Faellen "Richtung war falsch" von "Richtung war
+    zwischenzeitlich richtig, aber zu eng gestoppt" (2026-07-30, Nutzer-Frage
+    "wie pruefen wir Erfolgsquoten auf mehreren Ebenen" - Anschluss an den
+    Enge-Stop-Loss-Fund vom 28.07., siehe project_enge_stop_loss_backtest_
+    und_massnahmen.md). Nutzt AUSSCHLIESSLICH bereits vorhandene Felder
+    (`outcome_max_realisiertes_crv`/MFE, `outcome_mindestziel_erreicht_am`) -
+    keine neue Datenerhebung noetig, nur eine neue Verschneidung.
+
+    Fuer alle Signale mit `outcome_status == OUTCOME_STOP_LOSS`: wie viele
+    haben trotzdem einen POSITIVEN `outcome_max_realisiertes_crv` (der Kurs
+    lief zwischenzeitlich profitabel in die signalisierte Richtung, bevor er
+    zurueckdrehte und den Stop ausloeste) bzw. haben sogar das Mindestziel
+    (`outcome_mindestziel_erreicht_am`) VOR dem Stop erreicht. Eine hohe Quote
+    deutet auf "richtige Richtung, aber Stop zu eng/Positionsfuehrung
+    verbesserungswuerdig" hin statt auf grundsaetzlich falsche Signale -
+    genau die Unterscheidung, die eine reine Win/Loss-Quote nicht liefert.
+
+    `tier`: "spot" liest `signals`, alles andere liest `hebel_signals" -
+    identisch zu compute_win_rate_fact()/compute_baseline_vergleich().
+
+    Rueckgabe (None bei 0 Stop-Loss-Faellen):
+    - `anzahl_sl_gesamt`: alle SL-Faelle (auch ohne MFE-Daten).
+    - `anzahl_mit_mfe_daten`: davon mit gesetztem `outcome_max_realisiertes_crv`.
+    - `anzahl_mit_positivem_mfe`/`quote_positiver_mfe_trotz_stop_pct`: Kern-
+      Kennzahl dieser Funktion.
+    - `anzahl_mindestziel_vor_stop_erreicht`: strengere Teilmenge (Mindestziel
+      TATSAECHLICH erreicht, nicht nur MFE>0).
+    - `anzahl_distinkte_symbole_bei_positivem_mfe`/`haeufigstes_symbol_anteil_
+      pct`: Symbol-Konzentrations-Check (Test_und_Verifikationsmethodik.md
+      Abschnitt 2.5) - IMMER mit ausweisen, da diese Funktion typischerweise
+      auf kleinen Stichproben laeuft.
+    - `hinweis`: Kleine-Stichprobe-Text (analog compute_win_rate_fact()) UND
+      Konzentrations-Warnung, wenn ein einzelnes Symbol >20-25% der
+      positiven Faelle stellt (`_MIN_SAMPLE_FUER_AUSSAGE`-Schwelle bewusst
+      NICHT wiederverwendet - Nutzer-Vorgabe 2.5: > 20-25% Anteil EINES
+      Symbols zaehlt separat, unabhaengig vom Gesamt-n).
+
+    Reine Lesefunktion, kein Seiteneffekt."""
+    table = "signals" if tier == "spot" else "hebel_signals"
+    rows = conn.execute(
+        f"SELECT symbol, outcome_max_realisiertes_crv, outcome_mindestziel_erreicht_am "
+        f"FROM {table} WHERE outcome_status = ?",
+        (OUTCOME_STOP_LOSS,),
+    ).fetchall()
+    if erlaubte_symbole is not None:
+        rows = [r for r in rows if r["symbol"] in erlaubte_symbole]
+    anzahl_sl_gesamt = len(rows)
+    if anzahl_sl_gesamt == 0:
+        return None
+
+    mit_mfe = [r for r in rows if r["outcome_max_realisiertes_crv"] is not None]
+    anzahl_mit_mfe = len(mit_mfe)
+    positiv_mfe = [r for r in mit_mfe if r["outcome_max_realisiertes_crv"] > 0]
+    anzahl_mindestziel_vor_stop = sum(1 for r in rows if r["outcome_mindestziel_erreicht_am"])
+
+    quote_pct = round(100.0 * len(positiv_mfe) / anzahl_mit_mfe, 1) if anzahl_mit_mfe > 0 else None
+
+    symbol_counts: dict[str, int] = {}
+    for r in positiv_mfe:
+        symbol_counts[r["symbol"]] = symbol_counts.get(r["symbol"], 0) + 1
+    anzahl_distinkte_symbole = len(symbol_counts)
+    haeufigstes_symbol_anteil_pct = (
+        round(100.0 * max(symbol_counts.values()) / len(positiv_mfe), 1)
+        if symbol_counts else None
+    )
+
+    hinweise = []
+    if anzahl_mit_mfe < _MIN_SAMPLE_FUER_AUSSAGE:
+        hinweise.append(
+            f"Nur {anzahl_mit_mfe} SL-Faelle mit MFE-Daten - statistisch NICHT belastbar "
+            f"(Mindeststichprobe: {_MIN_SAMPLE_FUER_AUSSAGE})."
+        )
+    if haeufigstes_symbol_anteil_pct is not None and haeufigstes_symbol_anteil_pct > 20:
+        hinweise.append(
+            f"Ein einzelnes Symbol stellt {haeufigstes_symbol_anteil_pct}% der Faelle mit "
+            "positivem MFE - Konzentrationsrisiko, siehe Test_und_Verifikationsmethodik.md 2.5."
+        )
+    hinweis = " ".join(hinweise) if hinweise else f"Basiert auf {anzahl_mit_mfe} Faellen mit MFE-Daten."
+
+    return {
+        "anzahl_sl_gesamt": anzahl_sl_gesamt,
+        "anzahl_mit_mfe_daten": anzahl_mit_mfe,
+        "anzahl_mit_positivem_mfe": len(positiv_mfe),
+        "quote_positiver_mfe_trotz_stop_pct": quote_pct,
+        "anzahl_mindestziel_vor_stop_erreicht": anzahl_mindestziel_vor_stop,
+        "anzahl_distinkte_symbole_bei_positivem_mfe": anzahl_distinkte_symbole,
+        "haeufigstes_symbol_anteil_pct": haeufigstes_symbol_anteil_pct,
+        "hinweis": hinweis,
+    }
+
+
 def _konfidenz_bucket(confidence_pct: float) -> str:
     """Bucket-Grenzen bewusst identisch zu den bereits operativ genutzten
     Schwellen in risk_gate.py::post_check() (dort seit Item E fuer den

@@ -102,11 +102,43 @@ Lücke, Compile-Check OK").
    gleichem Kalendertag wie Erstellung vs. späterem Tag - siehe
    [[project_zai_gegenpruefungslogik]] für die Methodik, warum diese Trennung
    nötig ist)
+9. Stop-Loss-MFE-Analyse (`compute_sl_mfe_analyse()`) - Quote der SL-Fälle mit
+   zwischenzeitlich positivem MFE trotz spätem Stop (siehe Abschnitt 2.6)
 
 Diese acht Punkte werden IMMER kurz durchgegangen, auch wenn der Anlass für den
 Export etwas anderes war - Auffälligkeiten ausserhalb der eigentlichen Fragestellung
 nicht ignorieren (siehe z.B. den ISOC/X136-Ticker-Fund, der nebenbei beim
 Durchgehen von Punkt 6 auffiel).
+
+### 2.1a Export-Vollständigkeits-Check vor jeder NEUEN Fragestellung (verbindlich)
+
+Auslöser: wiederholt aufgetreten (29.07. Konfidenz-CRV/SL-Korrelation, 30.07.
+Z.ai-6-Pipelines-Assetklassen-Zuordnung, 30.07. ATR-Perzentil-Veraltungs-Check)
+- bevor eine Frage beantwortet wird, die NICHT bereits vom festen
+Kennzahlen-Katalog (2.1) abgedeckt ist, aktiv prüfen, ob
+`extract_notebook_diagnose.py` die dafür nötigen Rohdaten überhaupt exportiert
+- nicht stillschweigend mit vorhandenen, aber eigentlich unpassenden Daten
+behelfen oder die Frage unbeantwortet lassen.
+
+**Vorgehen:**
+1. Export-Top-Level-Keys durchsehen (`data.keys()`) - existiert bereits eine
+   passende Sektion?
+2. Falls eine verwandte, aber zu enge Sektion existiert (z.B. eine Preishistorie
+   nur für eine Teilmenge Symbole): pruefen, ob sie fuer die konkrete Frage
+   ausreicht, oder ob sie strukturell den falschen Ausschnitt liefert.
+3. Falls nötig: eine neue, MINIMALE Export-Funktion nach dem etablierten Muster
+   ergänzen (eigene `_xxx(conn) -> dict`-Funktion, reine Lesefunktion/Aggregation,
+   in `main()` eingehängt) - keine Sonderlösung nur für diese eine Frage, sondern
+   eine wiederverwendbare Sektion (siehe z.B. `_preishistorie_ueberholte_symbole()`,
+   `_deribit_cross_check_verlauf()` als Referenzmuster).
+4. Skript-Änderung dem Nutzer explizit zur Bestätigung vorlegen (siehe
+   `Basisinfos/Fakten_Entscheidungsmappe.md`-Konvention: Code-Änderungen brauchen
+   Bestätigung), dann am Notebook laufen lassen + zurücksynchronisieren lassen,
+   bevor die eigentliche Analyse fortgesetzt wird.
+
+Bewusst NICHT: aus fehlenden Daten eine Vermutung machen und diese als Befund
+ausgeben - fehlende Exportabdeckung ist ein Blocker für die Fragestellung, kein
+Grund für eine ungeprüfte Annahme.
 
 ### 2.2 Vorher-Hypothese (Lerneffekt-Kern)
 
@@ -221,6 +253,45 @@ Marktereignisse dahinter). Daraus folgt:
   welcher Menge kein Problem mehr" zu beantworten: nicht als feste Symbolanzahl,
   sondern als Test, ob der Effekt beim Entfernen der dominantesten paar Symbole
   verschwindet oder stabil bleibt.
+
+### 2.6 Mehrebenen-Erfolgsmessung: striktes Outcome vs. MFE/Mindestziel (Nachtrag 30.07.)
+
+Auslöser: Nutzer-Frage, ob und wie Erfolgsquoten auf mehreren Ebenen geprüft
+werden - neben dem strikten `outcome_status` (TP/SL/Liquidation/abgelaufen)
+tracken wir bereits zwei weichere Zwischenebenen (`outcome_max_realisiertes_
+crv`/MFE, `outcome_mindestziel_erreicht_am`), die bisher nie systematisch
+gegen den strikten Outcome verschnitten wurden.
+
+**Kernidee:** eine reine Win/Loss-Quote vermischt zwei grundverschiedene
+Fehlerbilder - "Richtung war komplett falsch" und "Richtung war
+zwischenzeitlich richtig, aber zu eng gestoppt/schlechte Positionsführung".
+Diese zwei Fälle brauchen unterschiedliche Fixes (Prompt-/Fakten-Korrektur
+vs. Stop-Platzierung) und sollten nie in einer einzigen Kennzahl verschwinden.
+
+**Konkrete Prüfung (`compute_sl_mfe_analyse()`, `agent/krypto/
+backward_tracking.py`):** von allen Signalen mit `outcome_status ==
+stop_loss_erreicht`, welcher Anteil zeigt trotzdem einen positiven MFE-Wert
+(der Kurs lief zwischenzeitlich profitabel, bevor er zurückdrehte)? Ein
+erster Blick auf echte Daten (30.07., Hebel, n=23 mit MFE-Daten von 57
+SL-Fällen) zeigte 87% mit positivem MFE, 9 davon erreichten sogar das
+Mindestziel vor dem Stop - bestätigt aus einem neuen Blickwinkel den
+bereits behobenen Enge-Stop-Loss-Befund vom 28.07. (siehe
+[[project_enge_stop_loss_backtest_und_massnahmen]]), OHNE dass neue Daten
+gesammelt werden mussten - reine Verschneidung bereits vorhandener Felder.
+
+**Wichtig, gleiche Einschränkung wie überall in diesem Dokument:** diese
+weichere Ebene hat NICHT automatisch mehr Fälle als die strikte (im
+konkreten Fall eher weniger: 22-36 vs. 71 Hebel-Signale insgesamt) - der
+Wert liegt nicht in der Stichprobengröße, sondern in der zusätzlichen
+Trennschärfe. Symbol-Konzentrations-Check (2.5) gilt hier genauso -
+`compute_sl_mfe_analyse()` weist `anzahl_distinkte_symbole_bei_positivem_
+mfe`/`haeufigstes_symbol_anteil_pct` deshalb immer mit aus.
+
+**Allgemeine Lehre:** bei jeder neuen Kalibrierungsfrage aktiv prüfen, ob
+bereits vorhandene "weichere" Felder (MFE, Mindestziel, Richtungstreffer)
+eine zusätzliche Ebene liefern koennten, BEVOR neue Datenerhebung als
+einzige Option angenommen wird - oft steckt die zusätzliche Trennschärfe
+schon in Feldern, die nur noch nie in dieser Kombination ausgewertet wurden.
 
 ---
 
