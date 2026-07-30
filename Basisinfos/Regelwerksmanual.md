@@ -12157,3 +12157,62 @@ davon, an welcher Position der ausgelassene Fakt in der Liste steht.
 **Entscheidung: kein Code-Aenderungsbedarf** - `pruefe_konsistenz()` bleibt
 unveraendert (nur der bereits umgesetzte Temperature-Fix 0.2->0.0 gilt
 weiterhin). Negativbefund dokumentiert, Punkt abgeschlossen.
+
+### Nachtrag (2026-07-30): Detailverifikation aller heutigen Aenderungen - Gates, Z.ai, E-Mail/GUI, Backtracking Stufe 2
+
+Anlass: Nutzer-Wunsch, nach Neustart der App im Detail zu pruefen, ob Gates,
+E-Mail, Backtracking und die uebrigen heutigen Aenderungen (6 geaenderte
+Dateien seit `6756601`) tatsaechlich korrekt funktionieren - nicht nur die
+Notebook-Datenanalyse allein.
+
+**Teil 1 - Live-Integrationstest gegen eine DB-Kopie (Desktop, echte APIs):**
+`data/tradinginfotool.db` in den Scratchpad kopiert, `db.DB_PATH` VOR der
+ersten Verbindung ueberschrieben (siehe `feedback_desktop_kein_
+produktivstart.md`), `db.init_db()` fuer die Migrationen nachgezogen (reine
+Datei-Kopie durchlaeuft den Start-Migrationslauf sonst nicht), frischer
+Preis-Snapshot fuer BTC geholt (sonst kurzschliesst das Datenqualitaets-Gate
+das Signal vor Erreichen der eigentlichen Testpunkte). Danach echter
+Aufruf von `generate_hebel_signal()` mit echten Mistral-/Z.ai-/CoinGecko-
+Clients:
+- **Gates:** Signal lief komplett durch (`gate_passed=True`). `ist_kontext`
+  korrekt NUR bei "Regime-Konflikt" gesetzt, alle 9 uebrigen Risikofaktoren
+  korrekt `False`. Stufe-0-Fix griff real: `eigenkapital_deckel_hinweis` =
+  "Eigenkapitalbedarf von 3516 EUR auf Richtwert 500 EUR reduziert" mit
+  echtem EUR/USD-Kurs.
+- **Z.ai:** Hintergrund-Thread lief mit 3 echten Calls (2x Position-Swap +
+  1x Konsistenz) durch, schrieb nach 54s GENAU EIN kombiniertes Update
+  (`urteil=widerspruch`, `eigene_richtung=SHORT`, `uebereinstimmung=nein`).
+- **E-Mail/GUI-Formatierung:** beide Renderer liefern identischen Inhalt -
+  Kontext-Zeile zuerst ohne Symbol, danach ▼/●/▲-gruppiert. (Zwei Fehler im
+  ersten Testlauf-Versuch waren reine Bugs im eigenen Testskript - falscher
+  Rueckgabetyp angenommen -, nicht im Produktivcode.)
+- **Backtracking Stufe 2:** `compute_zai_uebereinstimmung_baseline()` lief
+  korrekt (n=1, Binomialtest p=1,0). `compute_baseline_vergleich()` gab
+  `None` zurueck - korrektes Verhalten bei 0 ausgewerteten Signalen in der
+  Desktop-DB-Kopie (nur 8 `hebel_signals`-Zeilen, keine aufgeloest - die
+  eigentliche Handelshistorie liegt auf dem Notebook), kein Bug.
+
+**Teil 2 - Frischer Notebook-Export (30.07., 04:38 Uhr) mit echten
+Produktionsdaten, unabhaengig von Teil 1:**
+- **Z.ai-Positions-Bias-Fix laeuft live:** seit Deploy (erster beobachteter
+  Fall 29.07. 18:45 Uhr) zeigen 8 von 25 Eintraegen (32%) den neuen
+  "Positions-uneinheitlich"-Fallback auf NEUTRAL - genau das designte
+  Verhalten, 0 Ausfaelle (`zai_eigene_richtung=None`). Die durchgehend hohe
+  Abweichungsrate (`zai_uebereinstimmung=nein` in allen 25 Faellen seit
+  Deploy) ist der bereits bekannte, separate Befund aus dem 27.07.-
+  Quickcheck, keine neue Regression.
+- **Regel-27-Action-Bias-Korrektur laeuft live:** 29.07. 61/64 Signale (95%)
+  HALTEN, 30.07. bisher 7/7 (100%). Konsistent mit der Fix-Absicht
+  (uebereifriges ERoeFFNEN bei mehrdeutigen Fakten korrigieren) UND dem
+  anhaltenden Baer-Regime-Konflikt auf praktisch jedem Signal - kein
+  Hinweis auf einen neuen Bug.
+- `ist_kontext` bestaetigt auch hier: "Regime-Konflikt" erscheint korrekt
+  als Kontext-Faktor auf allen juengsten echten Notebook-Signalen.
+- `auffaelligkeiten: []`, keine neuen Job-Fehler (nur bekanntes
+  Hintergrundrauschen: yfinance-/FRED-Timeouts, unabhaengig von heute).
+
+**Ergebnis: alle 6 heute geaenderten Dateien doppelt verifiziert (echter
+Desktop-Livetest + echte Notebook-Produktionsdaten), keine Bugs gefunden.**
+Kein Code-Aenderungsbedarf. Scratchpad-Testskripte (nicht committet):
+`integrationstest_gates_email_backtracking.py`,
+`integrationstest_formatierung_nachtrag.py`.
