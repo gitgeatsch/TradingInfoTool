@@ -192,8 +192,15 @@ def score_fundamental(stufe_a: StufeAResult, filter_cfg: dict) -> tuple[float | 
     return round(score, 1), signale
 
 
+_STREAK_MALUS_PRO_STUFE = 5.0
+_STREAK_MALUS_MAX = 20.0
+_ATH_MALUS_MAX = 20.0
+_ATH_ABSTAND_MALUS_SCHWELLE = -30.0  # ab hier (Coin weiter unter seinem ATH) kein Malus mehr
+
+
 def score_momentum(
     change_24h_pct: float | None, trending_rank: int | None, change_7d_pct: float | None = None,
+    sichtung_position: int | None = None, ath_change_pct: float | None = None,
 ) -> tuple[float | None, dict]:
     """Nachbesserung (2026-07-16, Nutzer-Wunsch "Top-Gainer sind bereits
     gestiegene Coins, ggf. eher zur Korrektur"): die urspruengliche Formel
@@ -216,7 +223,36 @@ def score_momentum(
     dem Trending-Ergaenzungscall, siehe api/coingecko.py::MarketCoin):
     zusaetzlicher Abschlag, wenn der Coin SCHON UEBER 7 TAGE stark gelaufen
     ist (eher spaet als frisch) - ein frischer Ausbruch (24h hoch, 7d flach)
-    bleibt unbeeinflusst, P-10: fehlende 7d-Daten loesen KEINEN Abschlag aus."""
+    bleibt unbeeinflusst, P-10: fehlende 7d-Daten loesen KEINEN Abschlag aus.
+
+    Nachtrag (2026-07-30, Nutzer-Diskussion "Coin steigt rasant - wann ist
+    das Potential ausgeschoepft, nicht erst beim Traden sondern schon beim
+    Suchen/Finden ein Thema"): zwei weitere Reifegrad-Abschlaege, siehe
+    Basisinfos/Test_und_Verifikationsmethodik.md (Abschnitt Marktscan-
+    Reifegrad) und Regelwerksmanual-Nachtrag 30.07. fuer die volle Herleitung:
+
+    1. Streak-Malus (`sichtung_position`, PER BACKTEST BESTAETIGT): wievielte
+       Sichtung dieses Coins als Marktscan-Kandidat (jede Einstufung, ueber
+       ALLE bisherigen Scan-Laeufe) - siehe database/db.py::get_marktscan_
+       sichtung_position(). Backtest gegen 70 Coins mit >= 4 Tages-Sichtungen
+       (Launch-Tag-Mehrfachscans auf einen Tageswert kollabiert) zeigte einen
+       saubere, monotonen Ruckgang der anschliessenden Kursentwicklung
+       (Win-Rate 3. Sichtung 57% -> 4. 49% -> 5. 36%, bei allen drei Stufen
+       100% distinkte Coins - kein Symbol-Konzentrations-Problem). Verlangsamungs-
+       und Volumen-Trend-Hypothesen wurden im selben Backtest GETESTET UND NICHT
+       BESTAETIGT (kein Effekt bzw. Stichprobe zu klein/konzentriert) - deshalb
+       hier bewusst NICHT eingebaut.
+    2. ATH-Abstand-Malus (`ath_change_pct`, NUR ERFAHRUNGSBASIERT - Nutzer-
+       Domainwissen 30.07., NICHT eigenstaendig gegen unsere Daten getestet):
+       je naeher der Coin an seinem Allzeithoch, desto hoeher der Malus. Nur
+       relevant bei JUNGEN Coins (Altcoin-Erstpump-Zyklus: kurzer, heftiger
+       Anstieg, danach oft jahrelanger Abstieg unter den Einstiegskurs) -
+       ein jahrealtes ATH aus einem frueheren Marktzyklus ist bedeutungslos
+       (live stichprobenartig bestaetigt: DigiByte -97,8% ATH-Abstand, sagt
+       nichts ueber die aktuelle Phase; zama -17,7%, junger Coin, plausibles
+       Signal). Deshalb NUR fuer Coins unterhalb einer Altersschwelle
+       berechnet - siehe run_scan()-Aufrufstelle (`alter_tage_geschaetzt`,
+       config.yaml marktscan.filter.ath_abstand_junger_coin_max_alter_tage)."""
     if change_24h_pct is None:
         return None, {}
     signale: dict = {"change_24h_pct": change_24h_pct}
@@ -249,8 +285,46 @@ def score_momentum(
         signale["trending_rank"] = trending_rank
         signale["rank_bonus"] = round(rank_bonus, 1)
 
-    score = change_score + rank_bonus - verlaengerungs_malus
+    streak_malus = 0.0
+    if sichtung_position is not None and sichtung_position >= 3:
+        streak_malus = min(_STREAK_MALUS_MAX, (sichtung_position - 2) * _STREAK_MALUS_PRO_STUFE)
+        signale["sichtung_position"] = sichtung_position
+        signale["streak_malus"] = streak_malus
+
+    ath_malus = 0.0
+    if ath_change_pct is not None:
+        ath_malus = max(0.0, min(_ATH_MALUS_MAX, ath_change_pct - _ATH_ABSTAND_MALUS_SCHWELLE))
+        signale["ath_change_pct"] = round(ath_change_pct, 1)
+        signale["ath_malus"] = round(ath_malus, 1)
+
+    score = change_score + rank_bonus - verlaengerungs_malus - streak_malus - ath_malus
     return round(min(max(score, 0.0), 100.0), 1), signale
+
+
+def ist_hohes_potential_kandidat(candidate: MarktscanCandidate, config_dict: dict) -> bool:
+    """"Hohes Potential" (2026-07-30, Reifegrad-Diskussion Punkt 4) - EINE Definition,
+    an zwei Stellen wiederverwendet: (1) budget_allocator.py::effektive_sla_marktscan
+    (SLA-Bonus fuer frische, starke Kandidaten, siehe dort), (2) scheduler/
+    background.py::_notify_marktscan_writeup() (Mail-1-Hinweis-Satz). "Frisch" =
+    `sichtung_position` aus `signale_momentum_json` <= 2 (noch KEIN Streak-Malus,
+    siehe score_momentum()) UND `score_gesamt` deutlich ueber der Kaufkandidat-
+    Schwelle (score_kaufkandidat_ab + hohes_potential_score_marge, beide
+    VORLAEUFIG aus config.yaml)."""
+    if candidate.score_gesamt is None:
+        return False
+    marktscan_cfg = config_dict["marktscan"]
+    schwelle = (
+        marktscan_cfg["schwellen"]["score_kaufkandidat_ab"]
+        + marktscan_cfg["erfolgsmessung"].get("hohes_potential_score_marge", 15.0)
+    )
+    if candidate.score_gesamt < schwelle:
+        return False
+    try:
+        signale = json.loads(candidate.signale_momentum_json or "{}")
+    except (TypeError, ValueError):
+        signale = {}
+    sichtung_position = signale.get("sichtung_position", 1)
+    return sichtung_position <= 2
 
 
 def score_kontext_makro(regime_result: RegimeResult) -> tuple[float | None, dict]:
@@ -460,9 +534,33 @@ def run_scan(
         if stufe_a.bestanden:
             snapshot = _try_backfill_snapshot(coingecko_client, conn, coingecko_id, coin.symbol)
 
+        # Reifegrad-Baustein 1 (2026-07-30): Streak-Laenge - guenstig, immer
+        # berechnet (reine DB-Abfrage, kein externer Call), siehe score_momentum()-
+        # Nachtrag fuer die Backtest-Herleitung.
+        sichtung_position = db.get_marktscan_sichtung_position(conn, coingecko_id)
+
+        # Reifegrad-Baustein 2 (2026-07-30): ATH-Abstand - NUR fuer junge, Stufe-A-
+        # bestandene Coins (Nutzer-Erfahrung: bei altem ATH bedeutungslos, siehe
+        # score_momentum()-Nachtrag) - deutlich schwererer Call als der uebrige
+        # Scan, deshalb gezielt gegated statt pauschal fuer jeden Rohkandidaten.
+        # Ein fehlgeschlagener Abruf darf den restlichen Scan-Lauf nicht abbrechen.
+        ath_change_pct = None
+        ath_max_alter_tage = marktscan_cfg["filter"].get("ath_abstand_junger_coin_max_alter_tage", 180)
+        if (
+            stufe_a.bestanden and stufe_a.alter_tage_geschaetzt is not None
+            and stufe_a.alter_tage_geschaetzt <= ath_max_alter_tage
+        ):
+            try:
+                ath_change_pct = coingecko_client.get_coin_ath_change_percentage(coingecko_id)
+            except Exception as exc:
+                logger.info("ATH-Abstand-Abruf für Marktscan-Kandidat %s fehlgeschlagen: %s", coin.symbol, exc)
+
         tech_score, tech_signale = score_technik(coin.price_usd, coin.change_24h_pct, snapshot)
         fund_score, fund_signale = score_fundamental(stufe_a, marktscan_cfg["filter"])
-        mom_score, mom_signale = score_momentum(coin.change_24h_pct, entry["trending_rank"], coin.change_7d_pct)
+        mom_score, mom_signale = score_momentum(
+            coin.change_24h_pct, entry["trending_rank"], coin.change_7d_pct,
+            sichtung_position=sichtung_position, ath_change_pct=ath_change_pct,
+        )
 
         scores = {
             "technik": tech_score, "fundamental": fund_score, "momentum": mom_score,

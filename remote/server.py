@@ -126,6 +126,15 @@ _INDEX_HTML = """<!doctype html>
   <div id="richtungstreffer-quote"></div>
 </div>
 
+<div class="card">
+  <div class="row"><strong>Marktscan-Erfolgsquote (Kaufkandidaten/"heiße" Watchlist)</strong></div>
+  <div class="row"><span class="muted-text">Anteil der abgeschlossenen Erfolgsmessungen (CRV-Mindestziel
+  erreicht, siehe Regelwerksmanual "Marktscan-Erfolgsmessung"), die tatsaechlich erfolgreich waren. "Offen"
+  laufende Messungen zaehlen nicht mit. Ø Tage bis Erfolg nur bei ausreichender Stichprobe (n≥15) empirisch
+  belastbar.</span></div>
+  <div id="marktscan-erfolgsquote"></div>
+</div>
+
 <h2 class="gruppe-header">Gruppe B &middot; Unabhängige Zweitmeinung (Z.ai)</h2>
 
 <div class="card">
@@ -398,6 +407,23 @@ function renderRichtungstrefferQuote(data) {
     renderRichtungstrefferQuoteTier("Hebel", data.hebel);
 }
 
+// Marktscan-Erfolgsquote (2026-07-30, siehe agent/krypto/
+// marktscan_backward_tracking.py::compute_marktscan_erfolgsquote()).
+function renderMarktscanErfolgsquote(data) {
+  if (!data) {
+    return '<div class="row"><span class="muted-text">Noch keine abgeschlossenen Erfolgsmessungen.</span></div>';
+  }
+  const zeitHinweis = data.avg_tage_bis_erfolg !== null && data.avg_tage_bis_erfolg !== undefined
+    ? '&Oslash; ' + data.avg_tage_bis_erfolg.toFixed(1) + ' Tage bis Erfolg (n=' +
+      data.avg_tage_bis_erfolg_stichprobe_n + ')'
+    : 'Ø Tage bis Erfolg noch nicht belastbar (n=' + data.avg_tage_bis_erfolg_stichprobe_n + ', Ziel n≥15)';
+  return '<div class="row"><span>Erfolgsquote (n=' + data.anzahl_ausgewertet + ')</span>' +
+    '<span>' + data.erfolge + '/' + data.anzahl_ausgewertet + ' = ' +
+    data.erfolgsquote_pct.toFixed(1) + '%</span></div>' +
+    '<div class="row"><span class="muted-text">' + zeitHinweis + '</span></div>' +
+    '<div class="row"><span class="muted-text">' + data.offen + ' Messung(en) noch offen</span></div>';
+}
+
 // Z.ai-Richtungs-Erfolgsquote (2026-07-27, siehe agent/krypto/backward_tracking.py::
 // compute_zai_richtung_performance()) - feste Tier-Reihenfolge wie SPOT_ASSETKLASSEN,
 // damit ein (noch) leeres Tier sichtbar bleibt statt stillschweigend zu fehlen.
@@ -605,6 +631,9 @@ async function refreshStatus() {
     document.getElementById("richtungstreffer-quote").innerHTML =
       renderRichtungstrefferQuote(data.richtungstreffer_quote);
   }
+
+  document.getElementById("marktscan-erfolgsquote").innerHTML =
+    renderMarktscanErfolgsquote(data.marktscan_erfolgsquote);
 
   if (data.zai_richtung_performance) {
     document.getElementById("zai-richtung-performance").innerHTML =

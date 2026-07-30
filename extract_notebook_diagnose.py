@@ -504,11 +504,16 @@ def _rohdaten_fuer_backtest(conn) -> dict:
     # Kandidat-Zeile bereits seit Beginn gespeichert, waren hier aber nie exportiert -
     # Grundlage fuer die "Reifegrad"-Diskussion (Streak-Laenge/Verlangsamung/
     # Volumen-Trend als Erschoepfungssignal bei rasch gestiegenen Coins).
+    # Nachtrag (2026-07-30, Erfolgsmessung Teil 2, siehe agent/krypto/
+    # marktscan_backward_tracking.py): outcome_status/outcome_return_pct/
+    # outcome_geprueft_am/mindestziel_usd fuer eine spaetere Erfolgsquote-
+    # Validierung (analog zur Score-Schwellen-Kalibrierung oben).
     marktscan_alle_kandidaten = [
         row_to_dict(r) for r in conn.execute(
             "SELECT id, coingecko_id, symbol, discovered_at, discovery_source, score_gesamt, "
             "einstufung, price_usd, change_24h_pct, volume_24h_usd, market_cap_usd, "
-            "signale_momentum_json, status FROM marktscan_candidates ORDER BY discovered_at ASC"
+            "signale_momentum_json, status, outcome_status, outcome_return_pct, "
+            "outcome_geprueft_am, mindestziel_usd FROM marktscan_candidates ORDER BY discovered_at ASC"
         ).fetchall()
     ]
     return {

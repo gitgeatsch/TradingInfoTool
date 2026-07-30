@@ -524,6 +524,21 @@ def _migrate_macro_snapshot_columns(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+_MARKTSCAN_OUTCOME_NEW_COLUMNS = {
+    # DEFAULT haelt bestehende UND neue Zeilen konsistent mit dem Python-Dataclass-
+    # Default ("nicht_anwendbar") - ohne DEFAULT waeren neue Zeilen NULL (upsert_
+    # marktscan_candidate() schreibt outcome_status nicht mit, siehe Kommentar unten),
+    # was get_marktscan_kandidaten_fuer_messstart()s IS NULL-Fallback zwar abfaengt,
+    # aber unnoetig zwei gueltige "leer"-Werte nebeneinander erzeugen wuerde.
+    "outcome_status": "TEXT DEFAULT 'nicht_anwendbar'",
+    "outcome_gestartet_am": "TEXT",
+    "outcome_geprueft_am": "TEXT",
+    "outcome_return_pct": "REAL",
+    "mindestziel_usd": "REAL",
+    "mindestziel_zeitraum_tage_geschaetzt": "REAL",
+}
+
+
 def _migrate_marktscan_candidates_columns(conn: sqlite3.Connection) -> None:
     """Wie _migrate_macro_snapshot_columns(): marktscan_candidates existierte bereits
     vor der bitpanda_gelistet-Spalte (2026-07-09, Nutzer-Wunsch Handelsboersen-Check)."""
@@ -536,6 +551,15 @@ def _migrate_marktscan_candidates_columns(conn: sqlite3.Connection) -> None:
         # - noetig fuer einen echten, providerspezifischen Tages-Zaehler ueber
         # alle 3 Budget-Allocator-Tiers (siehe count_real_llm_calls_today_by_provider()).
         conn.execute("ALTER TABLE marktscan_candidates ADD COLUMN llm_model TEXT")
+    # Erfolgsmessung (2026-07-30, siehe agent/krypto/marktscan_backward_tracking.py) -
+    # bewusst NICHT Teil von _MARKTSCAN_COLUMNS/upsert_marktscan_candidate(): jede
+    # Wiederentdeckung eines Coins legt eine NEUE Zeile an (UNIQUE(coingecko_id,
+    # scan_run_id)), ein Upsert-Overwrite wuerde eine laufende Messung nie treffen -
+    # diese Felder werden ausschliesslich ueber dedizierte update_marktscan_outcome_*()
+    # Funktionen auf einer bestehenden Zeile gesetzt.
+    for column, sql_type in _MARKTSCAN_OUTCOME_NEW_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE marktscan_candidates ADD COLUMN {column} {sql_type}")
     conn.commit()
 
 
@@ -2352,6 +2376,138 @@ def get_letzter_marktscan_verfall_am(conn: sqlite3.Connection, coingecko_id: str
         (coingecko_id,),
     ).fetchone()
     return row["letzter"] if row and row["letzter"] else None
+
+
+def get_marktscan_sichtung_position(conn: sqlite3.Connection, coingecko_id: str) -> int:
+    """Reifegrad-Baustein (2026-07-30, siehe agent/krypto/marktscan.py::
+    score_momentum()-Nachtrag "Streak-Malus" - per Backtest gegen 70 Coins mit
+    >= 4 Tages-Sichtungen bestaetigt: Win-Rate der anschliessenden
+    Kursentwicklung faellt monoton von 57% bei der 3. Sichtung auf 36% bei der
+    5., jeweils ohne Symbol-Konzentrations-Problem). Anzahl distinkter
+    Kalendertage (UTC), an denen dieser Coin bereits als Marktscan-Kandidat
+    entdeckt wurde (unabhaengig von Einstufung/Status), + 1 fuer die aktuelle,
+    noch nicht gespeicherte Sichtung. `DATE()` versteht die hier verwendeten
+    ISO8601-Zeitstempel (inkl. Mikrosekunden/Offset) direkt, live geprueft."""
+    row = conn.execute(
+        "SELECT COUNT(DISTINCT DATE(discovered_at)) AS n FROM marktscan_candidates WHERE coingecko_id = ?",
+        (coingecko_id,),
+    ).fetchone()
+    return (row["n"] if row and row["n"] else 0) + 1
+
+
+def get_marktscan_sichtungs_zeitspanne_bis_n(
+    conn: sqlite3.Connection, coingecko_id: str, n: int = 3
+) -> float | None:
+    """Erfolgsmessung Mail 2 (2026-07-30, Watchlist-"heiss"): Stunden zwischen der 1.
+    und der n-ten distinkten Kalendertag-Sichtung dieses Coins. Ergaenzt
+    get_marktscan_sichtung_position() (zaehlt nur die Anzahl) um die Zeitdimension -
+    `None` falls noch keine `n` distinkten Sichtungs-Tage existieren. Nimmt je
+    Kalendertag den FRUEHESTEN Zeitstempel (bei mehreren Scans pro Tag), damit das
+    Ergebnis unabhaengig von der Scan-Reihenfolge innerhalb eines Tages ist."""
+    rows = conn.execute(
+        """
+        SELECT MIN(discovered_at) AS erster_zeitstempel
+        FROM marktscan_candidates
+        WHERE coingecko_id = ?
+        GROUP BY DATE(discovered_at)
+        ORDER BY DATE(discovered_at)
+        LIMIT ?
+        """,
+        (coingecko_id, n),
+    ).fetchall()
+    if len(rows) < n:
+        return None
+    erster = datetime.fromisoformat(rows[0]["erster_zeitstempel"])
+    n_ter = datetime.fromisoformat(rows[n - 1]["erster_zeitstempel"])
+    return (n_ter - erster).total_seconds() / 3600.0
+
+
+def has_pending_marktscan_messung(conn: sqlite3.Connection, coingecko_id: str) -> bool:
+    """Erfolgsmessung (2026-07-30): verhindert ueberlappende Messzyklen fuer denselben
+    Coin - solange eine Zeile mit outcome_status='offen' existiert, startet
+    run_marktscan_backward_tracking() keine zweite Messung. Analog
+    has_pending_marktscan_kaufkandidat()."""
+    row = conn.execute(
+        "SELECT 1 FROM marktscan_candidates WHERE coingecko_id = ? "
+        "AND outcome_status = 'offen' LIMIT 1",
+        (coingecko_id,),
+    ).fetchone()
+    return row is not None
+
+
+def update_marktscan_outcome_start(
+    conn: sqlite3.Connection,
+    candidate_id: int,
+    mindestziel_usd: float,
+    mindestziel_zeitraum_tage_geschaetzt: float,
+) -> None:
+    """Erfolgsmessung (2026-07-30): markiert eine Messung als gestartet (outcome_
+    status='offen') und speichert das berechnete Mindestziel. Aufgerufen von
+    agent/krypto/marktscan_backward_tracking.py::starte_messung()."""
+    conn.execute(
+        "UPDATE marktscan_candidates SET outcome_status = 'offen', outcome_gestartet_am = ?, "
+        "mindestziel_usd = ?, mindestziel_zeitraum_tage_geschaetzt = ? WHERE id = ?",
+        (_now_iso(), mindestziel_usd, mindestziel_zeitraum_tage_geschaetzt, candidate_id),
+    )
+    conn.commit()
+
+
+def update_marktscan_outcome_ergebnis(
+    conn: sqlite3.Connection,
+    candidate_id: int,
+    outcome_status: str,
+    outcome_return_pct: float,
+    geprueft_abschliessen: bool = False,
+) -> None:
+    """Erfolgsmessung (2026-07-30): aktualisiert outcome_return_pct bei jedem Check
+    (auch waehrend outcome_status weiterhin 'offen' bleibt); setzt outcome_geprueft_am
+    nur, wenn die Messung tatsaechlich abgeschlossen wird (erfolg/kein_erfolg).
+    Aufgerufen von agent/krypto/marktscan_backward_tracking.py::pruefe_messung()."""
+    if geprueft_abschliessen:
+        conn.execute(
+            "UPDATE marktscan_candidates SET outcome_status = ?, outcome_return_pct = ?, "
+            "outcome_geprueft_am = ? WHERE id = ?",
+            (outcome_status, outcome_return_pct, _now_iso(), candidate_id),
+        )
+    else:
+        conn.execute(
+            "UPDATE marktscan_candidates SET outcome_status = ?, outcome_return_pct = ? WHERE id = ?",
+            (outcome_status, outcome_return_pct, candidate_id),
+        )
+    conn.commit()
+
+
+def get_offene_marktscan_messungen(conn: sqlite3.Connection) -> list[MarktscanCandidate]:
+    """Erfolgsmessung (2026-07-30): alle Kandidaten mit outcome_status='offen', fuer
+    Schritt 2 von run_marktscan_backward_tracking() (gebuendelter Preis-Check)."""
+    rows = conn.execute(
+        "SELECT * FROM marktscan_candidates WHERE outcome_status = 'offen'"
+    ).fetchall()
+    return [_row_to_marktscan_candidate(row) for row in rows]
+
+
+def get_marktscan_kandidaten_fuer_messstart(conn: sqlite3.Connection) -> list[MarktscanCandidate]:
+    """Erfolgsmessung (2026-07-30): neueste Zeile je coingecko_id mit
+    einstufung='kaufkandidat' ODER (einstufung='watchlist_wuerdig' UND
+    sichtung_position >= 3 aus signale_momentum_json), outcome_status noch
+    'nicht_anwendbar'. Filterung auf sichtung_position erfolgt aufrufseitig
+    (agent/krypto/marktscan_backward_tracking.py), da signale_momentum_json hier nicht
+    geparst wird - diese Funktion liefert bewusst eine Obermenge (alle kaufkandidat-
+    Zeilen + alle watchlist_wuerdig-Zeilen mit outcome_status='nicht_anwendbar')."""
+    rows = conn.execute(
+        """
+        SELECT c.* FROM marktscan_candidates c
+        INNER JOIN (
+            SELECT coingecko_id, MAX(discovered_at) AS max_discovered_at
+            FROM marktscan_candidates
+            GROUP BY coingecko_id
+        ) latest
+        ON c.coingecko_id = latest.coingecko_id AND c.discovered_at = latest.max_discovered_at
+        WHERE c.einstufung IN ('kaufkandidat', 'watchlist_wuerdig')
+        AND (c.outcome_status IS NULL OR c.outcome_status = 'nicht_anwendbar')
+        """
+    ).fetchall()
+    return [_row_to_marktscan_candidate(row) for row in rows]
 
 
 def update_marktscan_candidate_status(conn: sqlite3.Connection, candidate_id: int, status: str) -> None:

@@ -12605,3 +12605,193 @@ danach nie aktualisiert. Ergebnis: der Konsistenz-Check wurde im App-Detailpanel
 angezeigt, der Richtungs-Abgleich dagegen NIE - weder für Spot noch für die 4
 Multi-Asset-Pipelines. Fix: die drei `signal.zai_*`-Felder werden jetzt tatsächlich
 durchgereicht (Zeile ~560-564).
+
+## Nachtrag (2026-07-30): Marktscan-Reifegrad-Scoring + Erfolgsmessung
+
+Zwei zusammengehörige Bausteine, in einer Runde gebaut und hier gemeinsam dokumentiert
+(Teil 1 zeitlich zuerst umgesetzt, aber gemeinsam mit Teil 2 committet).
+
+### Teil 1: Reifegrad-Scoring (Streak-Malus + ATH-Malus)
+
+Ausgangspunkt war die Frage, ob `score_kaufkandidat_ab=70`/`score_watchlist_wuerdig_ab=50`
+(beide VORLAEUFIG) gut kalibriert sind. Ein Vorab-Backtest gegen echte Notebook-Daten
+zeigte: die Konzentration weniger, wiederholt entdeckter Coins macht eine klassische
+Schwellen-Kalibrierung unzuverlässig (Symbol-Konzentrations-Check schlägt fehl, siehe
+Test_und_Verifikationsmethodik.md Abschnitt 2.5) - ABER dieselbe Wiederholung ist ein
+bisher ungenutztes Signal: je öfter ein Coin schon als Kandidat gesichtet wurde
+("Streak"), desto schlechter die anschließende Kursentwicklung. Per Backtest bestätigt
+(70 Coins mit ≥4 Tages-Sichtungen, Tages-Kollabierung um den Launch-Tag-Burst vom
+09.07. nicht zu verfälschen): Win-Rate fällt sauber von 57% (3. Sichtung) über 49%
+(4.) auf 36% (5.), ohne Symbol-Konzentrations-Problem.
+
+Zusätzlich, auf Nutzer-Domainwissen basierend (nicht per eigenem Backtest bestätigt):
+der ATH-Abstand eines Coins kann ein "Potential ausgeschöpft"-Signal sein.
+**Korrektur einer eigenen Fehleinschätzung während der Diskussion:** ursprünglich
+formuliert als "ATH-Abstand ist bei alten Coins bedeutungslos" (Beleg: DigiByte,
+-97,8% ATH-Abstand, ohne erkennbare Aussagekraft) - der Nutzer korrigierte das: die
+ATH-Thematik ist besonders bei JUNGEN Altcoins ausgeprägt (Erstpump-Zyklus), aber auch
+bei reifen, weiterhin aktiv gehandelten Projekten kann sie bedeutsam sein (Beispiel
+XRP: ATH Januar 2018, seither über Jahre weit darunter, eine real diskutierte
+Marktfrage). Die daraufhin eingeführte 180-Tage-Alters-Schwelle ist deshalb eine
+bewusste, PRAKTISCHE Scope-Entscheidung nur für die Marktscan-Zielgruppe (Top-Gainer/
+Trending sind so gut wie immer kleine/junge Pump-Coins, große reife Projekte tauchen
+dort kaum auf) - keine allgemeingültige Aussage über ATH-Abstand bei alten Coins im
+Allgemeinen. Der DigiByte-Fall bleibt ein Beispiel für ein Legacy-Projekt ohne aktuelle
+Relevanz, nicht ein Beleg für "alt = bedeutungslos".
+
+**Umsetzung** (`agent/krypto/marktscan.py::score_momentum()`): zwei neue optionale
+Parameter, `sichtung_position` (Anzahl distinkter Kalendertage bisheriger Sichtungen +
+1, aus `database/db.py::get_marktscan_sichtung_position()`) und `ath_change_pct`
+(`api/coingecko.py::get_coin_ath_change_percentage()`, `/coins/{id}`-Endpunkt). Zwei
+neue Abzüge:
+- **Streak-Malus**: ab Sichtung 3, `-5 Punkte je Stufe`, gedeckelt bei `-20`
+  (`_STREAK_MALUS_PRO_STUFE=5.0`, `_STREAK_MALUS_MAX=20.0`).
+- **ATH-Malus**: `clamp(ath_change_pct - (-30), 0, 20)` - ausgelaufen ab -30% Abstand,
+  gedeckelt bei `-20` (`_ATH_MALUS_MAX=20.0`, `_ATH_ABSTAND_MALUS_SCHWELLE=-30.0`).
+  Der ATH-Abruf erfolgt in `run_scan()` NUR für Stufe-A-bestandene Coins innerhalb der
+  Altersschwelle (`config.yaml marktscan.filter.ath_abstand_junger_coin_max_alter_tage`,
+  180 Tage) - deutlich schwererer Call als der übrige Scan, deshalb gezielt gegated.
+
+Beide Signale sind rückwärtskompatibel (bestehende Aufrufer ohne die neuen Parameter
+bekommen unverändertes Verhalten) und wurden synthetisch verifiziert (Formel-
+Grenzwerte, Streak-Malus-Werte für Sichtung 1-10).
+
+### Teil 2: Erfolgsmessung für Kaufkandidaten/"heiße" Watchlist-Kandidaten
+
+Marktscan-Kandidaten hatten bisher KEINE Erfolgsmessung (anders als Signale mit vollem
+MFE/Outcome-Tracking) - nur den Preis zum Entdeckungszeitpunkt und einen reinen
+Lifecycle-Status. Ziel: eine leichtgewichtige, aber echte Erfolgsmessung, die (a) bei
+schnellem Erfolg aktiv reagiert, (b) auch über mehrere Tage eine Aussage liefert, und
+(c) konsequent bestehende Bausteine wiederverwendet.
+
+**Kraken→CoinGecko-OHLC-Korrektur (dokumentierte Lehre):** der ursprüngliche Plan sah
+vor, die bestehende `mindestziel_preis()`/`schaetze_mindestziel_zeitraum_tage()`-Logik
+(`agent/krypto/backward_tracking.py`) unverändert wiederzuverwenden. Bei der Umsetzung
+fiel auf: diese Funktionen brauchen `ohlc_rows` aus `db.get_ohlc_history()` →
+`price_history_ohlc` - Kraken-basiert, NUR für Watchlist-Assets befüllt. Marktscan-
+Kandidaten sind meist obskure, nicht Kraken-gelistete Altcoins - der Aufruf hätte fast
+immer `None` geliefert. **Fix:** neues Modul `agent/krypto/marktscan_backward_tracking.py`
+nutzt CoinGecko `/coins/{id}/ohlc` statt der Kraken-Tabelle, mit derselben Ø-Tagesspanne-
+Formel (`_durchschnittliche_tagesspanne_coingecko()`, eigene Kopie statt Import der
+privaten Kraken-Version). Da CoinGecko je nach `days`-Parameter unterschiedlich grobe
+Kerzen liefert (30 Min./4h/4 Tage, dynamisch), werden die rohen Kerzen zuerst zu echten
+Kalendertag-Balken aggregiert (`_ohlc_rows_zu_tages_bars()`, High=Tagesmaximum,
+Low=Tagesminimum aller Kerzen des Tages) - garantiert eine echte "Tage"-Einheit,
+unabhängig von der gelieferten Rohgranularität.
+
+**CRV-Schwelle 0,8 (marktscan-eigen, getrennt von `backward_tracking.
+richtungstreffer_mindest_crv=1.0`):** rechnerisch hergeleitet aus echten Daten - Ø
+absolute Tagesbewegung der Marktscan-Kandidaten = 13,9% (Median 8,8%); Ziel-Move am
+P70-P75 der beobachteten Forward-Returns (+9,1% bis +15,9%) ergibt CRV-Äquivalent
+0,65-0,94 (Ziel-Move ÷ Ø Tagesbewegung), Empfehlung Mitte = 0,8, vom Nutzer bestätigt.
+Wichtig: 12-24h- und 3-Tage-Renditeverteilung sind fast identisch (P70: +9,1% vs.
++7,5%) - EIN Schwellenwert bedient sowohl schnelle als auch mehrtägige Erfolge.
+
+**Watchlist-Trigger** (welche `watchlist_wuerdig`-Kandidaten bekommen überhaupt eine
+Messung): ein Datencheck (Zeit bis 3. Sichtung vs. spätere Kaufkandidat-Beförderung,
+n=7) zeigte keine robuste Korrelation für eine eigene enge Zeitfenster-Regel - bewusst
+KEINE neue Regel erfunden, stattdessen Wiederverwendung von `sichtung_position >= 3`
+(bereits per Streak-Backtest aus Teil 1 bestätigt).
+
+**Architektur (`agent/krypto/marktscan_backward_tracking.py`):**
+- `starte_messung()`: holt CoinGecko-OHLC, berechnet Mindestziel-Preis (CRV-basiert)
+  + geschätzte Zeitspanne, setzt `outcome_status='offen'`. Kein OHLC verfügbar → bleibt
+  `nicht_anwendbar`, kein Hard-Fail.
+- `pruefe_messung()`: `outcome_return_pct` wird bei JEDEM Check aktualisiert (auch
+  während `offen`). Erfolg = aktueller Preis ≥ bereits gespeichertes `mindestziel_usd`
+  (direkter Preisvergleich, kein erneutes CRV-Zurückrechnen nötig). Kein Erfolg nach
+  Ablauf von `config.yaml marktscan.erfolgsmessung.mindestziel_zeitraum_tage_cap`
+  (7 Tage, harte Obergrenze) ohne Zielerreichung.
+- `run_marktscan_backward_tracking()`: 2 Schritte pro Lauf - (1) neue Messungen für
+  Kaufkandidaten + "heiße" Watchlist-Kandidaten starten, (2) alle offenen Messungen
+  gebündelt gegen EINEN `get_simple_prices()`-Call prüfen (kein Call pro Zeile). Bei
+  Erfolg: falls noch keine LLM-Kurzbegründung vorhanden, synchroner
+  `generate_candidate_writeup()`-Aufruf (kein Wartemechanismus nötig - anders als der
+  Z.ai-Wartemechanismus bei Hebel/Spot, der existiert WEIL Z.ai in einem Hintergrund-
+  Thread läuft; hier läuft der LLM-Call synchron im selben taeglichen Job).
+- Neuer täglicher Scheduler-Job `marktscan_backward_tracking_job` (07:00, nach dem
+  bestehenden 06:00 Spot/Hebel-Backward-Tracking).
+
+**"Hohes Potential"-Definition** (`agent/krypto/marktscan.py::
+ist_hohes_potential_kandidat()`, EINE Definition an zwei Stellen wiederverwendet):
+`sichtung_position <= 2` (noch kein Streak-Malus) UND `score_gesamt >=
+score_kaufkandidat_ab + hohes_potential_score_marge` (VORLAEUFIG 15, also ≥85). Genutzt
+für (1) einen SLA-Bonus in `budget_allocator.py::effektive_sla_marktscan` (analog zum
+bestehenden `portfolio_bonus`-Muster, senkt die effektive SLA zusätzlich für frische,
+starke Kandidaten - der Zwei-Eimer-Mechanismus in `_priorisiere_nach_wartezeit()`
+selbst bleibt unverändert) und (2) einen Hinweis-Satz in Mail 1.
+
+**Benachrichtigung - 3 eigenständige E-Mails statt einer gebündelten (Nutzer-Korrektur):**
+Der erste Entwurf sah EINE gebündelte Erfolgs-E-Mail für jeden CRV-0,8-Treffer vor -
+eigene Schlussfolgerung aus der Recherche, keine explizit bestätigte Vorgabe. Der
+Nutzer erinnerte sich anders (Benachrichtigung nur für "Sonderfälle mit hohem
+Potential"). Bei der Recherche dazu wurde ein echter, schon bestehender Verdrahtungs-
+Fehler gefunden: der Tier-2-Marktscan-Zweig von `run_budget_allocator()`
+(`budget_allocator.py:644-655`) feuert bereits seit dem E-Mail-Latenz-Fix (27-07-23)
+`on_signal_ready(f"marktscan:{coingecko_id}", res)` nach jedem fertigen LLM-Kurzgutachten
+- der Dispatcher `_on_signal_ready()` in `scheduler/background.py` hatte dafür aber nur
+Zweige für `"hebel:"`/`"spot:"`, für `"marktscan:"` passierte nichts (das fertige
+Kurzgutachten verschwand nach dem stillen DB-Update). Die Benachrichtigung gliedert
+sich jetzt in 3 unabhängig getriggerte Mails:
+1. **Kaufkandidat-Tier2-Mail** (`_notify_marktscan_writeup()`): schließt die
+   gefundene Lücke - feuert bei JEDEM Tier-2-Writeup (keine Potential-Schwelle als
+   Trigger nötig), enthält zusätzlich den "hohes Potential"-Hinweis falls zutreffend.
+   Voraussetzung: `_writeup()` in `budget_allocator.py` gab bisher implizit `None`
+   zurück (kein `return`-Statement) - gibt jetzt `candidate` zurück, damit der Callback
+   überhaupt Inhalt hat.
+2. **Watchlist-"heiß"-Mail** (`_notify_marktscan_watchlist_heiss()`, in
+   `marktscan_job()`): NUR wenn ein `watchlist_wuerdig`-Kandidat GENAU beim Übergang zu
+   `sichtung_position==3` (nicht bei jeder weiteren Sichtung) UND die 3 Sichtungen
+   innerhalb `config.yaml marktscan.erfolgsmessung.watchlist_heiss_fenster_stunden`
+   (48h, vom Nutzer bestätigt - ca. 2x der beobachteten Median-Zeit bis zur
+   3. Sichtung von 24h, n=172) aufeinander folgten. Neue DB-Funktion
+   `get_marktscan_sichtungs_zeitspanne_bis_n()`.
+3. **Schnellerfolg-Mail** (`_notify_marktscan_schnellerfolg()`, in
+   `marktscan_backward_tracking_job()`): NUR wenn die tatsächliche Dauer bis Erfolg
+   ≤ `config.yaml marktscan.erfolgsmessung.schnellerfolg_anteil_max` (0,5, vom Nutzer
+   bestätigt) mal der geschätzten Dauer war - ein ungewöhnlich schneller Treffer gilt
+   als zusätzliche Bestätigung des hohen Potentials. JEDER Erfolg wird trotzdem
+   vollständig in der DB erfasst (Abschnitt Datenmodell) - nur die E-Mail ist auf die
+   schnellen Fälle beschränkt.
+
+**GUI (`ui/marktscan_view.py`) - zwei getrennte Elemente, ursprünglich im ersten
+Plan-Entwurf ein fehlendes Element:** "Potential" (Vorhersage, sofort bei Entdeckung
+verfügbar) wurde im ersten Entwurf übersehen - der Nutzer wies darauf hin, dass dies
+sein ursprünglicher Wunsch aus der Diskussion war. Lösung ohne neue Backend-Berechnung:
+der bereits gespeicherte `score_momentum`-Wert reflektiert bereits Streak-/ATH-/
+Verlängerungs-Malus + Rank-Bonus - er IST bereits die "Potential"-Kennzahl. Neue Spalte
+`"potential"` + Detail-Panel-Zeile mit transparenter Aufschlüsselung aus
+`signale_momentum_json` (z.B. "3. Sichtung (-5), ATH-Abstand -12,3% (-18)"). "Outcome"
+(gemessenes Ergebnis, erst nach `starte_messung()` verfügbar) ist unabhängig davon:
+neue Spalte `"outcome"` + `_MARKTSCAN_OUTCOME_LABELS`/`_marktscan_outcome_color()`
+(analog `ui/signals_view.py::_OUTCOME_LABELS`/`_outcome_color()`) + Detail-Panel-Zeile.
+
+**Remote-Status:** neue Karte "Marktscan-Erfolgsquote" (`_get_marktscan_erfolgsquote()`
+→ `agent/krypto/marktscan_backward_tracking.py::compute_marktscan_erfolgsquote()`,
+analog `compute_richtungstreffer_quote()`) - Anteil erfolgreicher ABGESCHLOSSENER
+Messungen (offene zählen nicht mit), Ø Tage bis Erfolg nur bei n≥15 als belastbar
+markiert.
+
+**Neue Config-Schlüssel** (`Basisinfos/config.yaml`):
+```yaml
+marktscan:
+  erfolgsmessung:
+    richtungstreffer_mindest_crv: 0.8
+    mindestziel_zeitraum_tage_cap: 7
+    watchlist_heiss_fenster_stunden: 48
+    schnellerfolg_anteil_max: 0.5
+    hohes_potential_score_marge: 15
+budget_allocator:
+  marktscan_reifegrad_bonus_stunden: 10
+```
+
+**Verifikation:** durchgängig synthetisch getestet (In-Memory-SQLite + Mock-CoinGecko-
+Client) - Kalendertag-Aggregation, Streak-/ATH-Malus-Grenzwerte, `starte_messung()`/
+`pruefe_messung()` (Erfolg/Kein-Erfolg/Ablauf/Schnellerfolg-Fälle), `has_pending_
+marktscan_messung()`, `get_marktscan_sichtungs_zeitspanne_bis_n()` (positiv + negativ),
+kompletter `run_marktscan_backward_tracking()`-Durchlauf inkl. Watchlist-Filter-Guard,
+`ist_hohes_potential_kandidat()` (4 Fallkombinationen), GUI-Smoke-Test (Tk-Instanziierung
++ Spalten/Tags/Detail-Panel-Rendering gegen echte In-Memory-DB), `compute_marktscan_
+erfolgsquote()` gegen befüllte Testdaten, sowie ein Kompilier-/Import-Check aller
+geänderten/neuen Dateien. Ein echter Lauf gegen Notebook-Produktivdaten steht als
+Nachtrag aus (kein direkter Notebook-Zugriff in dieser Session).

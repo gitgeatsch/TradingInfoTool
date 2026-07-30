@@ -135,6 +135,41 @@ class CoinGeckoClient:
         params = {"vs_currency": vs_currency, "days": days}
         return self._get(f"{BASE_URL}/coins/{coingecko_id}/market_chart", params)
 
+    def get_coin_ath_change_percentage(self, coingecko_id: str, vs_currency: str = "usd") -> float | None:
+        """Reifegrad-Baustein (2026-07-30, Marktscan-"Potential ausgeschoepft"-
+        Diskussion): `market_data.ath_change_percentage` - wie weit ist der
+        Coin von seinem Allzeithoch entfernt. Nutzer-Erfahrung (live per
+        WebFetch stichprobenartig bestaetigt): nur bei JUNGEN Coins
+        aussagekraeftig (Altcoin-Erstpump-Zyklus, siehe agent/krypto/
+        marktscan.py Aufrufstelle - dort ueber `alter_tage_geschaetzt` gegatet),
+        bei jahrealtem ATH aus einem frueheren Marktzyklus bedeutungslos
+        (Beispiel DigiByte: -97,8%, sagt nichts ueber die aktuelle Phase aus).
+        Bewusst der schlanke Weg zum `/coins/{id}`-Endpunkt (tickers/community/
+        developer-data false) - CoinGecko liefert trotzdem das volle Objekt,
+        kein leichterer Endpunkt fuer nur dieses eine Feld verfuegbar. Deutlich
+        schwererer Call als `get_market_chart()` - deshalb NUR gezielt fuer
+        Stufe-A-Ueberlebende innerhalb der Altersschwelle aufgerufen, nicht
+        pauschal fuer jeden Kandidaten."""
+        params = {
+            "localization": "false", "tickers": "false", "market_data": "true",
+            "community_data": "false", "developer_data": "false", "sparkline": "false",
+        }
+        data = self._get(f"{BASE_URL}/coins/{coingecko_id}", params)
+        return data.get("market_data", {}).get("ath_change_percentage", {}).get(vs_currency)
+
+    def get_coin_ohlc(
+        self, coingecko_id: str, vs_currency: str = "usd", days: int = 30
+    ) -> list[tuple]:
+        """Erfolgsmessung-Baustein (2026-07-30, Marktscan-Backward-Tracking): echte
+        OHLC-Kerzen ueber `/coins/{id}/ohlc`, statt der Kraken-basierten
+        `price_history_ohlc`-Tabelle (die ist nur fuer Watchlist-Assets befuellt -
+        Marktscan-Coins sind meist nicht Kraken-gelistet). Deckt praktisch jeden
+        CoinGecko-Coin ab. Rueckgabe: Liste von `[timestamp_ms, open, high, low, close]`-
+        Listen (roh, wie von CoinGecko geliefert) - die Umwandlung in ein Objekt mit
+        `.high`/`.low` erfolgt in agent/krypto/marktscan_backward_tracking.py."""
+        params = {"vs_currency": vs_currency, "days": days}
+        return self._get(f"{BASE_URL}/coins/{coingecko_id}/ohlc", params)
+
     def search_coins(self, query: str) -> list[CoinSearchResult]:
         """CoinGecko `/search` - fuer die manuelle Symbol->coingecko_id-Aufloesung
         im "Asset hinzufuegen/bearbeiten"-Dialog (2026-07-19, echter Fund: Symbol

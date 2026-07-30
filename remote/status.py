@@ -55,6 +55,9 @@ class RemoteStatus:
     # gruppiert, damit kuenftige Schwellen-Entscheidungen ohne Ad-hoc-
     # Analyse moeglich sind.
     veto_schatten_performance_nach_grund: dict | None = None
+    # Marktscan-Erfolgsmessung (2026-07-30, siehe agent/krypto/
+    # marktscan_backward_tracking.py::compute_marktscan_erfolgsquote()).
+    marktscan_erfolgsquote: dict | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -82,6 +85,7 @@ class RemoteStatus:
             "gesamt_signalqualitaet": self.gesamt_signalqualitaet,
             "provider_sendezaehler": self.provider_sendezaehler,
             "veto_schatten_performance_nach_grund": self.veto_schatten_performance_nach_grund,
+            "marktscan_erfolgsquote": self.marktscan_erfolgsquote,
         }
 
 
@@ -171,6 +175,7 @@ def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, erro
         gesamt_signalqualitaet=_get_gesamt_signalqualitaet(conn, watchlist),
         provider_sendezaehler=_get_provider_sendezaehler(conn, watchlist),
         veto_schatten_performance_nach_grund=_get_veto_schatten_performance_nach_grund(conn, watchlist),
+        marktscan_erfolgsquote=_get_marktscan_erfolgsquote(conn),
     )
 
 
@@ -235,6 +240,17 @@ def _get_richtungstreffer_quote(conn: sqlite3.Connection, watchlist: list) -> di
         "spot": compute_richtungstreffer_quote(conn, "spot", schwelle),
         "hebel": compute_richtungstreffer_quote(conn, "hebel", schwelle),
     }
+
+
+def _get_marktscan_erfolgsquote(conn: sqlite3.Connection) -> dict | None:
+    """Marktscan-Erfolgsquote-Karte (2026-07-30, Erfolgsmessung Teil 2) - reiner
+    Lesezugriff auf agent/krypto/marktscan_backward_tracking.py::
+    compute_marktscan_erfolgsquote(). Anders als richtungstreffer_quote braucht
+    diese Karte KEINE Watchlist (die Aggregation liest direkt aus
+    marktscan_candidates, nicht ueber Assetklassen der Watchlist)."""
+    from agent.krypto.marktscan_backward_tracking import compute_marktscan_erfolgsquote
+
+    return compute_marktscan_erfolgsquote(conn)
 
 
 def _get_zai_richtung_performance(conn: sqlite3.Connection, watchlist: list) -> dict:

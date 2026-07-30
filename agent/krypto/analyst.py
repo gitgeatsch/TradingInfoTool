@@ -487,6 +487,8 @@ def build_facts(
     btc_relativwert: dict | None = None,
     squeeze_divergenz: str | None = None,
     funding_rate_perzentil: float | None = None,
+    marktscan_reifegrad: dict | None = None,
+    marktscan_mindestziel: dict | None = None,
 ) -> dict:
     macd_val = technical_snapshot.macd
     macd_facts = None
@@ -557,6 +559,11 @@ def build_facts(
         "liquiditaetszonen": liquiditaetszonen,
         "signal_stabilitaet": signal_stabilitaet,
         "btc_relativwert": btc_relativwert,
+        # Marktscan-Reifegrad/Mindestziel (2026-07-30) - NUR von
+        # generate_candidate_writeup() (agent/krypto/marktscan.py) befuellt, alle
+        # anderen Aufrufer (pipeline.py) lassen beide Parameter auf None.
+        "marktscan_reifegrad": marktscan_reifegrad,
+        "marktscan_mindestziel": marktscan_mindestziel,
         "technische_analyse": {
             "ema": {str(p): _native(latest_value(r)) for p, r in technical_snapshot.ema.items()},
             "macd": macd_facts,

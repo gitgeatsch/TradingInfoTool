@@ -103,7 +103,7 @@ import database.db as db
 from agent.krypto.hebel_pipeline import generate_hebel_signal
 from agent.krypto.hebel_screening import RICHTUNG_LONG
 from agent.krypto.llm_provider import llm_model_label
-from agent.krypto.marktscan import generate_candidate_writeup
+from agent.krypto.marktscan import generate_candidate_writeup, ist_hohes_potential_kandidat
 from agent.krypto.pipeline import compute_current_regime, generate_signal
 from agent.krypto.signal_batch import (
     SPOT_COOLDOWN_STUNDEN,
@@ -469,8 +469,21 @@ def run_budget_allocator(
             conn, marktscan_wartezeit_lookback_tage_cap, marktscan_kandidat_luecken_toleranz_stunden,
         )
         basis_sla_marktscan = cfg.get("marktscan_kandidat_sla_stunden", 30.0)
+        # Reifegrad-Bonus (2026-07-30, Diskussion Punkt 4): "hohes Potential"-
+        # Kandidaten (frisch + starker Score, siehe marktscan.py::
+        # ist_hohes_potential_kandidat() - dieselbe Definition wie der Mail-1-
+        # Hinweis in scheduler/background.py) bekommen zusaetzlich zum
+        # portfolio_bonus eine gesenkte SLA, damit sie eher ins naechste Tier-2-
+        # Budget-Fenster fallen - analog zum bestehenden portfolio_bonus-Muster,
+        # OHNE den Zwei-Eimer-Mechanismus in _priorisiere_nach_wartezeit() selbst
+        # zu veraendern.
+        reifegrad_bonus_stunden = cfg.get("marktscan_reifegrad_bonus_stunden", 10.0)
         effektive_sla_marktscan = {
-            c.coingecko_id: max(0.0, basis_sla_marktscan - portfolio_bonus.get(c.symbol, 0.0))
+            c.coingecko_id: max(
+                0.0,
+                basis_sla_marktscan - portfolio_bonus.get(c.symbol, 0.0)
+                - (reifegrad_bonus_stunden if ist_hohes_potential_kandidat(c, config_dict) else 0.0),
+            )
             for c in marktscan_kandidaten
         }
         marktscan_kandidaten = _priorisiere_nach_wartezeit(
@@ -627,17 +640,26 @@ def run_budget_allocator(
             conn.close()
 
         def _writeup(candidate, llm_client):
+            """Gibt seit 2026-07-30 `candidate` (mit frisch gesetztem
+            `groq_kurzbegruendung`) zurueck, statt implizit `None` - das Ergebnis
+            wird als `res` an `on_signal_ready()` durchgereicht (siehe
+            _mit_fallback_chain()) und war zuvor immer `None`, wodurch ein
+            spaeterer `"marktscan:"`-Zweig im Dispatcher (scheduler/background.py)
+            nie Inhalt gehabt haette."""
             conn = conn_factory()
             try:
                 parsed = generate_candidate_writeup(
                     candidate, regime_result, llm_client, kraken_client, conn, watchlist, config_dict,
                     fred_api_key,
                 )
+                kurzbegruendung = parsed.get("short_reasoning")
                 db.update_marktscan_candidate_groq_writeup(
-                    conn, candidate.id, parsed.get("short_reasoning"),
+                    conn, candidate.id, kurzbegruendung,
                     json.dumps(parsed.get("long_reasoning") or {}, ensure_ascii=False),
                     llm_model=llm_model_label(llm_client),
                 )
+                candidate.groq_kurzbegruendung = kurzbegruendung
+                return candidate
             finally:
                 conn.close()
 

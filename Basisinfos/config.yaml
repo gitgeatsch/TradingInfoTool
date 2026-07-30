@@ -698,6 +698,15 @@ marktscan:
     vol_marktkap_ratio_min: 0.005      # A(MS)-3 unteres Limit (Illiquiditaet)
     vol_marktkap_ratio_max: 1.0        # A(MS)-3 oberes Limit (Wash-Trading-Verdacht)
     stablecoins_ausschliessen: true    # A(MS)-3
+    ath_abstand_junger_coin_max_alter_tage: 180  # NEU (2026-07-30, Reifegrad-Baustein 2,
+                                        # siehe score_momentum()-Nachtrag "ATH-Abstand-Malus")
+                                        # - VORLAEUFIG, nur erfahrungsbasiert (Nutzer-Domain-
+                                        # wissen: Altcoin-Erstpump-Zyklus), NICHT gegen
+                                        # eigene Daten getestet. Nur Coins bis zu diesem
+                                        # geschaetzten Alter bekommen den zusaetzlichen
+                                        # /coins/{id}-Abruf (ATH-Abstand) - bei aelteren
+                                        # Coins bedeutungslos (live bestaetigt: DigiByte
+                                        # -97,8% ATH-Abstand ohne Aussagekraft).
   # Stufe B (vier Kategorien: Technik/Fundamental/Momentum/Kontext-Makro), C (Gewichtung
   # aus regime.profile, siehe unten) und D (Schwellen) - VORLAEUFIG, siehe agent/marktscan.py
   schwellen:
@@ -720,6 +729,21 @@ marktscan:
                                         # Ein Coin mit bereits UNBEARBEITETER Kaufkandidat-
                                         # Zeile (status='neu') wird unabhaengig davon immer
                                         # uebersprungen (kein Zeitfenster noetig).
+  erfolgsmessung:                       # NEU (2026-07-30, Backward-Tracking fuer Kaufkandidaten/
+                                        # "heisse" Watchlist-Kandidaten, siehe agent/krypto/
+                                        # marktscan_backward_tracking.py)
+    richtungstreffer_mindest_crv: 0.8    # VORLAEUFIG, rechnerisch hergeleitet (P70-P75 der
+                                        # beobachteten Forward-Returns / Oe Tagesbewegung, siehe
+                                        # Regelwerksmanual) - bewusst eigenstaendig von
+                                        # backward_tracking.richtungstreffer_mindest_crv (1.0)
+    mindestziel_zeitraum_tage_cap: 7     # harte Obergrenze fuer die Messdauer, danach kein_erfolg
+    watchlist_heiss_fenster_stunden: 48   # Mail 2 - Nutzer-bestaetigt (~2x Median 24h, n=172)
+    schnellerfolg_anteil_max: 0.5         # Mail 3 - tatsaechliche Dauer <= 50% der Schaetzung
+    hohes_potential_score_marge: 15       # VORLAEUFIG - "hohes Potential" = score_gesamt >=
+                                        # score_kaufkandidat_ab + diese Marge UND sichtung_
+                                        # position <= 2 (siehe marktscan.py::
+                                        # ist_hohes_potential_kandidat()) - fuer SLA-Bonus
+                                        # (budget_allocator.py) + Mail-1-Hinweis
 
 # --- Batch-Signal-Berechnung (2026-07-13, siehe Regelwerksmanual.md Kap. 5/12) ---
 # Signal-Berechnung kostet pro Asset einen echten Groq-Aufruf (~5.600-6.000 Tokens
@@ -894,6 +918,11 @@ budget_allocator:
                                         # er als uebergangen gilt.
   marktscan_kandidat_sla_stunden: 30     # Ueber 24h (1 voller Scan-Zyklus, Scan laeuft nur
                                         # 2x/Tag), klar unter dem 48h-Verfall.
+  marktscan_reifegrad_bonus_stunden: 10  # NEU (2026-07-30, Reifegrad-Diskussion Punkt 4) -
+                                        # zusaetzlich zum portfolio_bonus fuer "hohes
+                                        # Potential"-Kandidaten (siehe marktscan.py::
+                                        # ist_hohes_potential_kandidat()), analog zum
+                                        # bestehenden portfolio_bonus-Muster.
   bonus_gehalten_stunden: 12             # Portfolio-Bezug: Symbol wird bereits gehalten (Spot
                                         # ODER offene Hebel-Position) - reduziert die effektive
                                         # SLA (wird schneller "ueberfaellig"). Startwert, spaeter

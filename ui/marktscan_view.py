@@ -36,14 +36,36 @@ STATUS_LABELS = {
     "verfallen": "verfallen (zu alt)",
 }
 
+# Erfolgsmessung (2026-07-30) - Outcome: gemessenes Ergebnis, erst nach
+# starte_messung() verfuegbar (siehe agent/krypto/marktscan_backward_tracking.py).
+_MARKTSCAN_OUTCOME_LABELS = {
+    "nicht_anwendbar": "Nicht anwendbar",
+    "offen": "Offen",
+    "erfolg": "Erfolg",
+    "kein_erfolg": "Kein Erfolg",
+}
+
+
+def _marktscan_outcome_color(status: str | None):
+    if status == "erfolg":
+        return theme.umgesetzt_color()
+    if status == "kein_erfolg":
+        return theme.stale_color()
+    if status == "offen":
+        return theme.info_color()
+    return theme.default_text_color()
+
+
 _MARKTSCAN_COLUMN_DESCRIPTIONS = {
     "symbol": "Kurzzeichen des vom Marktscan entdeckten Assets.",
     "tier": "Marktkapitalisierungs-Stufe (Tier 1 = groß, Tier 3 = klein) - Basis für den Score.",
     "score": "Gesamt-Score aus Stufe A (Basis) + Stufe B (Kontext/Makro) - je höher, desto eher ein Kaufkandidat.",
     "einstufung": "Kaufkandidat, watchlist-würdig oder kein Treffer - Ergebnis der Score-Schwellenwerte.",
+    "potential": "Reifegrad-Score (Momentum abzüglich Streak-/ATH-Malus) - sofort bei Entdeckung verfügbar, unabhängig vom späteren Ergebnis.",
     "bitpanda": "Ob das Asset aktuell auf Bitpanda handelbar ist.",
     "entdeckt": "Datum, an dem der Marktscan dieses Asset erstmals gefunden hat.",
     "status": "Neu, übernommen (in die Watchlist aufgenommen) oder verworfen (manuell abgelehnt).",
+    "outcome": "Ergebnis der Erfolgsmessung (CRV-Mindestziel) - erst nach Start einer Messung verfügbar.",
 }
 
 
@@ -128,16 +150,20 @@ class MarktscanView(ttk.Frame):
             command=self._refresh_list,
         ).pack(side="left")
 
-        columns = ("symbol", "tier", "score", "einstufung", "bitpanda", "entdeckt", "status")
+        columns = (
+            "symbol", "tier", "score", "einstufung", "potential", "bitpanda", "entdeckt",
+            "status", "outcome",
+        )
         self.tree = ttk.Treeview(left, columns=columns, show="headings", height=20)
         headings = {
             "symbol": "Symbol", "tier": "Tier", "score": "Score", "einstufung": "Einstufung",
-            "bitpanda": "Bitpanda", "entdeckt": "Entdeckt", "status": "Status",
+            "potential": "Potential", "bitpanda": "Bitpanda", "entdeckt": "Entdeckt",
+            "status": "Status", "outcome": "Erfolg",
         }
         for col in columns:
             self.tree.heading(col, text=headings[col])
             self.tree.column(col, width=90, anchor="w" if col == "symbol" else "center")
-        self._reapply_sort = make_sortable(self.tree, numeric_columns=frozenset({"score"}))
+        self._reapply_sort = make_sortable(self.tree, numeric_columns=frozenset({"score", "potential"}))
         add_heading_tooltips(self.tree, _MARKTSCAN_COLUMN_DESCRIPTIONS)
         add_row_tooltips(self.tree, lambda iid: self._wartezeit_tooltips.get(iid))
         self.tree.pack(fill="both", expand=True)
@@ -215,6 +241,7 @@ class MarktscanView(ttk.Frame):
         for c in candidates:
             self._candidates_by_id[c.id] = c
             score_text = f"{c.score_gesamt:.1f}" if c.score_gesamt is not None else "-"
+            potential_text = f"{c.score_momentum:.1f}" if c.score_momentum is not None else "-"
             entdeckt_text = c.discovered_at[:16].replace("T", " ")
             if c.bitpanda_gelistet is True:
                 bitpanda_text = "✓"
@@ -222,11 +249,17 @@ class MarktscanView(ttk.Frame):
                 bitpanda_text = "✗"
             else:
                 bitpanda_text = "?"
+            outcome_text = _MARKTSCAN_OUTCOME_LABELS.get(c.outcome_status, c.outcome_status or "-")
+            tags = []
+            if c.bitpanda_gelistet is False:
+                tags.append("nicht_gelistet")
+            if c.outcome_status in ("erfolg", "kein_erfolg", "offen"):
+                tags.append(f"outcome_{c.outcome_status}")
             self.tree.insert(
                 "", "end", iid=str(c.id),
-                values=(c.symbol, c.tier or "-", score_text, c.einstufung or "-", bitpanda_text,
-                        entdeckt_text, STATUS_LABELS.get(c.status, c.status)),
-                tags=("nicht_gelistet",) if c.bitpanda_gelistet is False else (),
+                values=(c.symbol, c.tier or "-", score_text, c.einstufung or "-", potential_text,
+                        bitpanda_text, entdeckt_text, STATUS_LABELS.get(c.status, c.status), outcome_text),
+                tags=tuple(tags),
             )
             # Nur fuer noch unbearbeitete Kaufkandidaten sinnvoll (die auf die
             # LLM-Bewertung durch den Budget-Allocator warten).
@@ -237,6 +270,9 @@ class MarktscanView(ttk.Frame):
                         f"Wartezeit seit Erstkandidatur: {wartestunden:.1f}h"
                     )
         self.tree.tag_configure("nicht_gelistet", foreground=theme.danger_color())
+        self.tree.tag_configure("outcome_erfolg", foreground=_marktscan_outcome_color("erfolg"))
+        self.tree.tag_configure("outcome_kein_erfolg", foreground=_marktscan_outcome_color("kein_erfolg"))
+        self.tree.tag_configure("outcome_offen", foreground=_marktscan_outcome_color("offen"))
         self._reapply_sort()
         theme.restripe_treeview(self.tree)
         if vorher_iid and self.tree.exists(vorher_iid):
@@ -314,6 +350,43 @@ class MarktscanView(ttk.Frame):
             lines.append("\n⚠ NICHT bei Bitpanda gelistet — dort aktuell nicht direkt kaufbar.")
         if c.small_cap_budget_hinweis:
             lines.append(f"\n⚠ {c.small_cap_budget_hinweis}")
+        lines.append("")
+
+        # Potential (2026-07-30, Reifegrad-Scoring - Vorhersage, sofort verfügbar,
+        # unabhängig vom später gemessenen Outcome): score_momentum reflektiert
+        # bereits Streak-/ATH-/Verlängerungs-Malus + Rank-Bonus, hier transparent
+        # aus signale_momentum_json aufgeschlüsselt statt als Black Box gezeigt.
+        potential_text = f"{c.score_momentum:.1f}" if c.score_momentum is not None else "-"
+        gruende = []
+        try:
+            momentum_signale = json.loads(c.signale_momentum_json or "{}")
+        except (json.JSONDecodeError, TypeError):
+            momentum_signale = {}
+        if momentum_signale.get("sichtung_position"):
+            gruende.append(
+                f"{momentum_signale['sichtung_position']}. Sichtung (-{momentum_signale.get('streak_malus', 0):.0f})"
+            )
+        if momentum_signale.get("ath_change_pct") is not None:
+            gruende.append(
+                f"ATH-Abstand {momentum_signale['ath_change_pct']:.1f}% (-{momentum_signale.get('ath_malus', 0):.0f})"
+            )
+        if momentum_signale.get("verlaengerungs_malus"):
+            gruende.append(f"Verlängerungs-Malus (-{momentum_signale['verlaengerungs_malus']:.0f})")
+        potential_zeile = f"POTENTIAL: {potential_text}"
+        if gruende:
+            potential_zeile += f" — Grund: {', '.join(gruende)}"
+        lines.append(potential_zeile)
+
+        # Outcome (2026-07-30, Erfolgsmessung - erst nach starte_messung()
+        # verfügbar, unabhängig vom Potential).
+        outcome_label = _MARKTSCAN_OUTCOME_LABELS.get(c.outcome_status, c.outcome_status or "-")
+        outcome_zeile = f"ERFOLG: {outcome_label}"
+        if c.outcome_status in ("offen", "erfolg", "kein_erfolg"):
+            if c.outcome_return_pct is not None:
+                outcome_zeile += f" ({c.outcome_return_pct:+.1f}%)"
+            if c.mindestziel_usd is not None:
+                outcome_zeile += f" · Mindestziel: {format_money(c.mindestziel_usd)} USD"
+        lines.append(outcome_zeile)
         lines.append("")
 
         change_text = f"{c.change_24h_pct:+.2f}%" if c.change_24h_pct is not None else "-"

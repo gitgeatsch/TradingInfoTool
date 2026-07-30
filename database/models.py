@@ -437,6 +437,15 @@ class MarktscanCandidate:
     # Lifecycle (U-10)
     status: str = "neu"  # 'neu'|'nutzer_behalten_manuell_uebernommen'|'nutzer_verworfen'
     status_geaendert_am: str | None = None
+    # Erfolgsmessung (2026-07-30, siehe agent/krypto/marktscan_backward_tracking.py) -
+    # analog zu Signal/HebelSignal, aber CoinGecko-OHLC- statt Kraken-basiert (Marktscan-
+    # Coins sind meist nicht Kraken-gelistet).
+    outcome_status: str = "nicht_anwendbar"  # nicht_anwendbar|offen|erfolg|kein_erfolg
+    outcome_gestartet_am: str | None = None
+    outcome_geprueft_am: str | None = None
+    outcome_return_pct: float | None = None  # bei jedem Check aktualisiert, auch waehrend 'offen'
+    mindestziel_usd: float | None = None
+    mindestziel_zeitraum_tage_geschaetzt: float | None = None
 
 
 @dataclass

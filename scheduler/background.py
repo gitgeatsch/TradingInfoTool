@@ -306,6 +306,29 @@ def marktscan_job(coingecko_client, kraken_client, conn_factory, watchlist_provi
         )
         kaufkandidaten = [c for c in candidates if c.einstufung == "kaufkandidat"]
         _notify_marktscan_kaufkandidaten(kaufkandidaten)
+
+        # Mail 2 (2026-07-30, Watchlist-"heiss"): GENAU beim Uebergang zu
+        # sichtung_position==3 (nicht bei jeder weiteren Sichtung) UND nur, wenn
+        # die 3 Sichtungen ungewoehnlich schnell aufeinander folgten (Nutzer-
+        # bestaetigtes Fenster, ~2x Median 24h, n=172 - siehe config.yaml
+        # marktscan.erfolgsmessung.watchlist_heiss_fenster_stunden).
+        import json as json_module
+
+        fenster_stunden = config_dict["marktscan"]["erfolgsmessung"]["watchlist_heiss_fenster_stunden"]
+        watchlist_heiss = []
+        for c in candidates:
+            if c.einstufung != "watchlist_wuerdig":
+                continue
+            try:
+                signale = json_module.loads(c.signale_momentum_json or "{}")
+            except (TypeError, ValueError):
+                signale = {}
+            if signale.get("sichtung_position") != 3:
+                continue
+            zeitspanne = db.get_marktscan_sichtungs_zeitspanne_bis_n(conn, c.coingecko_id, n=3)
+            if zeitspanne is not None and zeitspanne <= fenster_stunden:
+                watchlist_heiss.append(c)
+        _notify_marktscan_watchlist_heiss(watchlist_heiss)
     except Exception as exc:
         logger.exception("Marktscan fehlgeschlagen")
         _notify_job_failure("marktscan", f"Marktscan fehlgeschlagen: {exc}")
@@ -354,6 +377,44 @@ def backward_tracking_job(conn_factory, watchlist_provider) -> None:
         _notify_job_failure("backward_tracking", f"Backward-Tracking fehlgeschlagen: {exc}")
     finally:
         conn.close()
+
+
+def marktscan_backward_tracking_job(
+    coingecko_client, kraken_client, conn_factory, watchlist_provider, fred_api_key,
+    mistral_client=None, gemini_client=None,
+) -> None:
+    """Erfolgsmessung fuer Marktscan-Kandidaten (2026-07-30, Teil 2 der Reifegrad-/
+    Erfolgsmessung-Runde, siehe agent/krypto/marktscan_backward_tracking.py
+    Modul-Docstring). Taeglich, feste Uhrzeit (siehe build_scheduler()) - startet
+    neue Messungen (Kaufkandidaten + "heisse" Watchlist-Kandidaten) und prueft
+    laufende Messungen gebuendelt gegen aktuelle CoinGecko-Preise. P-8: ohne
+    mindestens einen LLM-Client (Mistral/Gemini) wird die synchrone LLM-
+    Kurzbegruendung bei Erfolg uebersprungen (kein Fehler, siehe
+    run_marktscan_backward_tracking()-Docstring), die Erfolgsmessung selbst
+    laeuft trotzdem."""
+    watchlist = watchlist_provider()
+    try:
+        import config as config_module
+        from agent.krypto.marktscan_backward_tracking import run_marktscan_backward_tracking
+
+        config_dict = config_module.load_config()
+        if not config_dict.get("marktscan", {}).get("aktiv", True):
+            logger.info("Marktscan-Erfolgsmessung: Marktscan deaktiviert - übersprungen")
+            return
+        llm_client = mistral_client or gemini_client
+        result = run_marktscan_backward_tracking(
+            conn_factory, coingecko_client, kraken_client, llm_client, watchlist, fred_api_key, config_dict,
+        )
+        logger.info(
+            "Marktscan-Erfolgsmessung: %d neue Messung(en) gestartet, %d geprüft, %d Erfolg(e), "
+            "%d kein Erfolg, %d Schnellerfolg(e)",
+            result["neue_messungen"], result["geprueft"], result["erfolge"], result["kein_erfolg"],
+            len(result["schnellerfolge"]),
+        )
+        _notify_marktscan_schnellerfolg(result["schnellerfolge"], config_dict)
+    except Exception as exc:
+        logger.exception("Marktscan-Erfolgsmessung fehlgeschlagen")
+        _notify_job_failure("marktscan_backward_tracking", f"Marktscan-Erfolgsmessung fehlgeschlagen: {exc}")
 
 
 def makro_analog_job(conn_factory, fred_api_key) -> None:
@@ -960,6 +1021,144 @@ def _notify_marktscan_kaufkandidaten(kaufkandidaten: list) -> None:
         )
     except Exception:
         logger.exception("Marktscan-Kaufkandidaten-E-Mail fehlgeschlagen")
+
+
+def _notify_marktscan_writeup(candidate, config_dict: dict) -> None:
+    """Mail 1 (2026-07-30, siehe hebel_screening_job()::_on_signal_ready() -
+    "marktscan:"-Zweig): E-Mail sobald ein Marktscan-Kaufkandidat sein LLM-
+    Kurzgutachten (Tier-2-Dispatch im Budget-Allocator) erhalten hat. Feuert fuer
+    JEDEN Tier-2-Writeup (keine Potential-Schwelle als Trigger noetig), enthaelt
+    aber einen zusaetzlichen Hinweis-Satz, falls der Kandidat das "hohes
+    Potential"-Kriterium erfuellt (dieselbe Definition wie budget_allocator.py::
+    effektive_sla_marktscan, siehe marktscan.py::ist_hohes_potential_kandidat()).
+    Kein Cooldown noetig (ein Writeup pro Kandidat, kein Wiederholungsrisiko)."""
+    try:
+        from agent.krypto.marktscan import ist_hohes_potential_kandidat
+        from api.email_notify import send_notification_email
+
+        email_cfg = config_dict.get("benachrichtigung", {}).get("email", {})
+        if not email_cfg.get("aktiv", False):
+            return
+        empfaenger = email_cfg.get("empfaenger")
+        if not empfaenger:
+            return
+        if not config_dict.get("marktscan", {}).get("benachrichtigung_email", False):
+            return
+
+        score_text = f"{candidate.score_gesamt:.0f}" if candidate.score_gesamt is not None else "?"
+        body = (
+            f"KI-Kurzgutachten fuer Marktscan-Kaufkandidat {candidate.symbol} ({candidate.name}) "
+            f"ist da:\n\nScore {score_text}, Tier {candidate.tier}: {candidate.einstufung_begruendung}\n\n"
+            f"KI-Kurzbegründung: {candidate.groq_kurzbegruendung or '(keine)'}"
+        )
+        if ist_hohes_potential_kandidat(candidate, config_dict):
+            body += (
+                "\n\n⚠ Hohes Potential: frisch entdeckt (noch kein Streak-Malus) und Score "
+                "deutlich ueber der Kaufkandidat-Schwelle."
+            )
+        body += "\n\nDetails im Marktscan-Tab der App."
+        send_notification_email(
+            f"TradingInfoTool: KI-Kurzgutachten für Marktscan-Kaufkandidat {candidate.symbol}",
+            body,
+            empfaenger,
+        )
+    except Exception:
+        logger.exception("Marktscan-Tier2-Writeup-E-Mail fehlgeschlagen")
+
+
+def _notify_marktscan_watchlist_heiss(kandidaten: list) -> None:
+    """Mail 2 (2026-07-30, siehe marktscan_job() - Watchlist-"heiss"): analog
+    _notify_marktscan_kaufkandidaten(), aber fuer Watchlist-würdig-Kandidaten, die
+    innerhalb kurzer Zeit (config.yaml marktscan.erfolgsmessung.watchlist_heiss_
+    fenster_stunden) bereits 3x gesichtet wurden - ein staerkeres Signal als eine
+    einzelne watchlist_wuerdig-Einstufung. Bewusst OHNE Cooldown (feuert nur
+    EINMAL pro Coin, siehe Uebergangs-Guard sichtung_position==3 an der
+    Aufrufstelle)."""
+    if not kandidaten:
+        return
+    try:
+        import config as config_module
+        from api.email_notify import send_notification_email
+
+        config_dict = config_module.load_config()
+        email_cfg = config_dict.get("benachrichtigung", {}).get("email", {})
+        if not email_cfg.get("aktiv", False):
+            return
+        empfaenger = email_cfg.get("empfaenger")
+        if not empfaenger:
+            return
+        if not config_dict.get("marktscan", {}).get("benachrichtigung_email", False):
+            return
+
+        zeilen = []
+        for c in kandidaten:
+            score_text = f"{c.score_gesamt:.0f}" if c.score_gesamt is not None else "?"
+            zeilen.append(f"- {c.symbol} ({c.name}), Score {score_text}: {c.einstufung_begruendung}")
+
+        body = (
+            f"{len(kandidaten)} Watchlist-würdige Kandidat(en) wurden innerhalb kurzer Zeit "
+            "bereits 3x gesichtet (\"heiß\"):\n\n"
+            + "\n".join(zeilen)
+            + "\n\nDetails im Marktscan-Tab der App."
+        )
+        send_notification_email(
+            f"TradingInfoTool: {len(kandidaten)} 'heiße(r)' Marktscan-Watchlist-Kandidat(en)",
+            body,
+            empfaenger,
+        )
+    except Exception:
+        logger.exception("Marktscan-Watchlist-heiss-E-Mail fehlgeschlagen")
+
+
+def _notify_marktscan_schnellerfolg(erfolge: list, config_dict: dict) -> None:
+    """Mail 3 (2026-07-30, siehe marktscan_backward_tracking_job()): NUR fuer
+    Kandidaten, deren Erfolgsmessung ungewoehnlich schnell abgeschlossen wurde
+    (tatsaechliche Dauer <= config.yaml marktscan.erfolgsmessung.
+    schnellerfolg_anteil_max * geschaetzter Dauer) - siehe agent/krypto/
+    marktscan_backward_tracking.py::run_marktscan_backward_tracking() fuer das
+    Gate selbst. JEDER Erfolg wird unabhaengig davon vollstaendig in der DB
+    erfasst (Abschnitt 1) - nur die E-Mail ist auf die schnellen Faelle
+    beschraenkt (Nutzer-bestaetigt: kein Interesse an einer Mail fuer JEDEN
+    CRV-Treffer, nur an den "hohes Potential bestaetigt"-Sonderfaellen)."""
+    if not erfolge:
+        return
+    try:
+        from api.email_notify import send_notification_email
+
+        email_cfg = config_dict.get("benachrichtigung", {}).get("email", {})
+        if not email_cfg.get("aktiv", False):
+            return
+        empfaenger = email_cfg.get("empfaenger")
+        if not empfaenger:
+            return
+        if not config_dict.get("marktscan", {}).get("benachrichtigung_email", False):
+            return
+
+        zeilen = []
+        for e in erfolge:
+            c = e["candidate"]
+            anteil_pct = (e["tatsaechliche_dauer_tage"] / e["geschaetzte_dauer_tage"]) * 100
+            zeile = (
+                f"- {c.symbol} ({c.name}): {e['outcome_return_pct']:+.1f}% erreicht in "
+                f"{e['tatsaechliche_dauer_tage']:.1f} Tagen (geschätzt: {e['geschaetzte_dauer_tage']:.1f} Tage, "
+                f"{anteil_pct:.0f}% der Schätzung) - Hinweis auf bestätigtes hohes Potential."
+            )
+            if c.groq_kurzbegruendung:
+                zeile += f"\n  KI-Kurzbegründung: {c.groq_kurzbegruendung}"
+            zeilen.append(zeile)
+
+        body = (
+            f"{len(erfolge)} Marktscan-Kandidat(en) haben ihr Mindestziel ungewöhnlich schnell erreicht:\n\n"
+            + "\n".join(zeilen)
+            + "\n\nDetails im Marktscan-Tab der App."
+        )
+        send_notification_email(
+            f"TradingInfoTool: {len(erfolge)} Marktscan-Schnellerfolg(e)",
+            body,
+            empfaenger,
+        )
+    except Exception:
+        logger.exception("Marktscan-Schnellerfolg-E-Mail fehlgeschlagen")
 
 
 def _ist_email_relevantes_asset(
@@ -2047,6 +2246,15 @@ def hebel_screening_job(
                         ).start()
                     else:
                         _notify_spot_signal(ergebnis, watchlist, bitpanda_assets, conn_factory)
+                elif schluessel.startswith("marktscan:"):
+                    # Mail 1 (2026-07-30, schliesst eine bisher bestehende Luecke):
+                    # dieser Zweig fehlte bisher komplett - `on_signal_ready()`
+                    # feuerte fuer Marktscan-Tier2-Writeups schon seit dem E-Mail-
+                    # Latenz-Fix (2026-07-23), landete aber nie in einem Dispatcher-
+                    # Zweig. Kein Z.ai-Wartemechanismus noetig (Marktscan-Writeups
+                    # nutzen Z.ai nicht in der Fallback-Kette, siehe budget_
+                    # allocator.py Tier-2-Kommentar).
+                    _notify_marktscan_writeup(ergebnis, config_dict)
 
             allocation = run_budget_allocator(
                 conn_factory, watchlist, coingecko_client, kraken_client,
@@ -2432,6 +2640,22 @@ def build_scheduler(
         minute=0,
         args=[db_conn_factory, watchlist_provider],
         id="backward_tracking",
+    )
+    # Marktscan-Erfolgsmessung (2026-07-30, Teil 2 der Reifegrad-/Erfolgsmessung-
+    # Runde) - taeglich, 1 Std. nach dem Spot/Hebel-Backward-Tracking (analoges
+    # Timing-Muster, kein harter Grund fuer genau diesen Abstand). Kein eigener
+    # Aktiv-Schalter noetig - marktscan.aktiv wird im Job-Body geprueft (gleiches
+    # Muster wie marktscan_job()).
+    scheduler.add_job(
+        marktscan_backward_tracking_job,
+        "cron",
+        hour=7,
+        minute=0,
+        args=[
+            coingecko_client, kraken_client, db_conn_factory, watchlist_provider, fred_api_key,
+            mistral_client, gemini_client,
+        ],
+        id="marktscan_backward_tracking",
     )
     # Makro-Analog-Vergleich (2026-07-18) - taeglich, gestaffelt nach Backward-
     # Tracking (kein harter Grund, nur um nicht beide teureren Jobs exakt

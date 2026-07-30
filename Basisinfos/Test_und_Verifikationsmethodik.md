@@ -314,6 +314,33 @@ CRV<2,0-Veto-Teilauswertung (Krypto-Spot, n=18, urspruenglich als
 unabhaengig von der Konzentration (hier gut verteilt) - beide
 Krypto-Spot-Fragen bleiben damit offen, keine der beiden gilt als bestaetigt.
 
+### 2.5.3 Drittes Fallbeispiel: Marktscan-Score-Schwellen-Kalibrierung - Konzentration als Signal statt nur als Störfaktor (Nachtrag 30.07.)
+
+Auslöser: die Frage, ob `score_kaufkandidat_ab=70`/`score_watchlist_wuerdig_ab=50`
+(beide VORLAEUFIG) gut kalibriert sind. Ein Backtest gegen echte Notebook-Daten
+scheiterte am Symbol-Konzentrations-Check (2.5) - wenige Coins wurden immer
+wieder als Kandidat entdeckt, eine klassische Schwellen-Kalibrierung wäre auf
+dieser Basis nicht belastbar gewesen.
+
+**Der entscheidende Perspektivwechsel:** statt die Konzentration nur als
+Störfaktor zu behandeln (der eine Frage unbeantwortbar macht), wurde sie
+selbst zur Fragestellung - "warum wird derselbe Coin so oft wiederentdeckt,
+und sagt DAS etwas über die künftige Performance aus?" Ein eigens dafür
+konstruierter Backtest (Streak-Position vs. Forward-Return, siehe Memory
+[[project_krypto_relativwert_bausteine]] und Regelwerksmanual-Nachtrag
+"Marktscan-Reifegrad-Scoring") bestätigte sauber (n=70 Coins mit ≥4
+Tages-Sichtungen, OHNE Konzentrationsproblem in diesem spezifischen Test):
+Win-Rate fällt monoton von 57% (3. Sichtung) auf 36% (5. Sichtung).
+
+**Lehre:** wenn der Symbol-Konzentrations-Check eine urspüngliche
+Fragestellung disqualifiziert, lohnt sich die Nachfrage, ob die Konzentration
+selbst (die Wiederholung) ein eigenständiges, bisher ungenutztes Signal ist -
+statt die Frage nur als "nicht beantwortbar" zu verwerfen. Bei der später
+gebauten Erfolgsmessung (Marktscan Teil 2) drehte sich diese Konzentration
+sogar zu einem PRAKTISCHEN Vorteil um: wenige distinkte Coins bedeuten
+günstigere gebündelte `get_simple_prices()`-Abrufe (ein API-Call für mehrere
+offene Messungen desselben Coins) statt vieler Einzelabrufe.
+
 ### 2.6 Mehrebenen-Erfolgsmessung: striktes Outcome vs. MFE/Mindestziel (Nachtrag 30.07.)
 
 Auslöser: Nutzer-Frage, ob und wie Erfolgsquoten auf mehreren Ebenen geprüft
@@ -402,6 +429,45 @@ Fehlersignal - bei langsam geglätteten Kennzahlen (Wilder-Glättung,
 gleitende Durchschnitte, Perzentilränge über lange Historien) ist
 Konstanz bei fehlendem zugrundeliegendem Ereignis der Normalfall. Der
 Fehlerverdacht entsteht oft erst durch fehlenden Kontrollgruppen-Vergleich.
+
+### 2.8 Methodik-Vorlage: rechnerische Herleitung einer neuen Schwelle statt Schätzung (Nachtrag 30.07., Marktscan-CRV=0,8)
+
+Auslöser: für die Marktscan-Erfolgsmessung wurde ein neuer, eigenständiger
+CRV-Schwellenwert gebraucht (getrennt von `backward_tracking.
+richtungstreffer_mindest_crv=1,0`, da Marktscan-Kandidaten ein anderes
+Volatilitätsprofil haben als Watchlist-Assets). Statt eine Zahl zu schätzen
+oder den bestehenden Wert unreflektiert zu übernehmen, wurde die Schwelle
+rechnerisch aus echten Daten hergeleitet - als wiederverwendbare Vorlage für
+künftige Schwellen-Kalibrierungen hier festgehalten:
+
+1. **Referenzgröße bestimmen**: Ø absolute Tagesbewegung der betroffenen
+   Grundgesamtheit berechnen (hier: 13,9% für Marktscan-Kandidaten, deutlich
+   höher als bei etablierten Watchlist-Assets - die Volatilitätsprofile
+   unterscheiden sich, ein pauschal übernommener Wert wäre nicht passend
+   gewesen).
+2. **Forward-Return-Verteilung ermitteln**: an mehreren Zeit-Horizonten
+   prüfen (hier 12-24h UND 3 Tage), an welchem Perzentil (P70-P75) sich ein
+   sinnvoller Ziel-Move ablesen lässt. Wenn die Verteilungen an
+   verschiedenen Horizonten nahezu identisch sind (hier: P70 +9,1% vs.
+   +7,5%), reicht EIN Schwellenwert für mehrere Anwendungsfälle (schnelle
+   UND mehrtägige Erfolge) - keine Notwendigkeit, zwei getrennte Regeln zu
+   bauen.
+3. **CRV-Äquivalent berechnen**: Ziel-Move ÷ Referenzgröße aus Schritt 1
+   ergibt eine Bandbreite (hier 0,65-0,94 aus P70-P75), Empfehlung = Mitte
+   der Bandbreite (hier 0,8).
+4. **Nutzer-Bestätigung einholen**, bevor der Wert operationalisiert wird -
+   eine rechnerisch hergeleitete Zahl ersetzt nicht die fachliche
+   Freigabe, sie macht sie nur informierter.
+
+**Allgemeine Lehre:** wann immer ein neuer Schwellenwert für eine andere
+Grundgesamtheit als eine bereits bestehende Regel gebraucht wird (anderes
+Volatilitätsprofil, andere Zeithorizonte, andere Assetklasse), lohnt sich
+dieselbe 4-Schritte-Herleitung, statt einen bestehenden Wert unreflektiert
+zu kopieren ODER eine neue Zahl zu schätzen. Dieselbe Methodik gilt
+spiegelbildlich auch für zeitbasierte Schwellen (siehe die parallel
+hergeleiteten Werte `watchlist_heiss_fenster_stunden=48` und
+`schnellerfolg_anteil_max=0,5` im selben Marktscan-Nachtrag - beide aus
+beobachteten Verteilungen abgeleitet, nicht geschätzt).
 
 ---
 
