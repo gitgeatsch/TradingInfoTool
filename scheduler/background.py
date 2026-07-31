@@ -127,6 +127,22 @@ _BACKOFF_BASE_INTERVAL_MINUTES = {
     "bitpanda_holdings": BITPANDA_HOLDINGS_REFRESH_INTERVAL_MINUTES,
 }
 _IMMEDIATE_START_MISFIRE_GRACE_SECONDS = 300  # siehe build_scheduler()-Kommentar (2026-07-19)
+_STARTUP_STAGGER_SECONDS = 5  # siehe _staggered_start()-Docstring (2026-07-31)
+
+
+def _staggered_start(index: int) -> datetime:
+    """Verteilt die Sofort-Start-Jobs auf ein paar Sekunden Abstand statt alle
+    exakt gleichzeitig zu starten (2026-07-31, Bug-Runde-Fund, siehe Memory
+    project_bug_runde_31_07_notebook_export): mehrere Jobs trafen bei jedem
+    Neustart gleichzeitig auf yfinance (refresh_securities_prices +
+    refresh_aktien_ohlc) bzw. schrieben gleichzeitig in die SQLite-DB (ein
+    "database is locked" bei hebel_screening beobachtet, 24s nach einem
+    Neustart). Aendert NUR den Startzeitpunkt, nicht die Job-Logik selbst -
+    jeder Job hat bereits sein eigenes Lock gegen Doppelausfuehrung (siehe
+    Lock-Definitionen oben), die Staffelung interagiert damit nicht.
+    index=0 startet weiterhin sofort (identisches Verhalten wie vor dieser
+    Aenderung fuer den ersten Job)."""
+    return datetime.now() + timedelta(seconds=index * _STARTUP_STAGGER_SECONDS)
 _BACKOFF_MAX_MINUTES = 240  # Deckel 4 Std. - auch bei einem sehr langen Ausfall soll die
 # App nach spaetestens 4 Std. wieder einen Versuch starten, statt den Job faktisch
 # stillzulegen.
@@ -2493,7 +2509,7 @@ def build_scheduler(
         minutes=REFRESH_INTERVAL_MINUTES,
         args=[coingecko_client, db_conn_factory, watchlist_provider],
         id="refresh_prices",
-        next_run_time=datetime.now(),
+        next_run_time=_staggered_start(0),
         misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
     )
     # Betriebssicherheit (2026-07-12): anders als bei den Preisen oben KEIN
@@ -2561,7 +2577,7 @@ def build_scheduler(
         minutes=SECURITIES_REFRESH_INTERVAL_MINUTES,
         args=[YFinanceClient(), db_conn_factory, watchlist_provider],
         id="refresh_securities_prices",
-        next_run_time=datetime.now(),
+        next_run_time=_staggered_start(1),
         misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
     )
     # Aktien-OHLC-Refresh (2026-07-16, Asset-Verwaltungs-Audit-Fund, siehe
@@ -2574,7 +2590,7 @@ def build_scheduler(
         hours=OHLC_REFRESH_INTERVAL_HOURS,
         args=[db_conn_factory, watchlist_provider],
         id="refresh_aktien_ohlc",
-        next_run_time=datetime.now(),
+        next_run_time=_staggered_start(2),
         misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
     )
     # Hebel-Screening (2026-07-14, Phase 1) - eigener 15-Min-Takt, unabhaengig vom
@@ -2594,7 +2610,7 @@ def build_scheduler(
             groq_client, gemini_client, fred_api_key, mistral_client, zai_client,
         ],
         id="hebel_screening",
-        next_run_time=datetime.now(),
+        next_run_time=_staggered_start(3),
         misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
     )
     # Multi-Asset-Batch (2026-07-18, siehe agent/multi_asset_batch.py) - eigener,
@@ -2670,7 +2686,7 @@ def build_scheduler(
         minute=30,
         args=[db_conn_factory, fred_api_key],
         id="makro_analog",
-        next_run_time=datetime.now(),
+        next_run_time=_staggered_start(4),
         misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
     )
     # #333 KI-Vorschlaege-Job (2026-07-24) - gleiches Muster wie makro_analog
@@ -2682,7 +2698,7 @@ def build_scheduler(
         minute=30,
         args=[db_conn_factory],
         id="kategorie_vorschlaege",
-        next_run_time=datetime.now(),
+        next_run_time=_staggered_start(5),
         misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
     )
     # #333 Schicht 2 (2026-07-25) - BEWUSST VOR kategorie_vorschlaege_job
@@ -2703,7 +2719,7 @@ def build_scheduler(
         minute=15,
         args=[db_conn_factory, mistral_client, groq_client, gemini_client],
         id="kategorie_synthese",
-        next_run_time=datetime.now(),
+        next_run_time=_staggered_start(6),
         misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
     )
     # 2026-07-17, Nutzer-Fund: ein fester Cron holt einen verpassten Termin NICHT
@@ -2736,7 +2752,7 @@ def build_scheduler(
             minutes=BITPANDA_HOLDINGS_REFRESH_INTERVAL_MINUTES,
             args=[bitpanda_api_key, db_conn_factory],
             id="bitpanda_holdings",
-            next_run_time=datetime.now(),
+            next_run_time=_staggered_start(7),
             misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
         )
     else:
