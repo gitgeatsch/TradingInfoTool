@@ -762,6 +762,17 @@ class HebelSignal:
     fazit_folgen: str | None = None  # 'ja'|'nein'|'mit_vorbehalt'
     fazit_kurzfazit: str | None = None
     fazit_konsistenz_hinweis: str | None = None
+    # ATR-relativ_prozent bei Signal-Erstellung (2026-07-31, Vorbereitung fuer
+    # den spaeteren TP-ATR-Backtest der Regel-6-Erweiterung, siehe hebel_
+    # analyst.py SYSTEM_PROMPT Regel 6 + project_enge_stop_loss_backtest_und_
+    # massnahmen.md Nachtrag 31.07.) - persistiert den Fakt-Wert, der dem LLM
+    # tatsaechlich vorlag (`technische_analyse.atr.relativ_prozent`), damit
+    # eine kuenftige Nachmessung NICHT wie beim ersten Bucket-Vergleich
+    # retroaktiv aus frisch abgerufenen CoinGecko-OHLC-Daten rekonstruiert
+    # werden muss (naeherungsweise, abhaengig von Datums-Zuordnung) - direkte,
+    # exakte Messgroesse statt Approximation. Nur Hebel (Regel 6 existiert
+    # nur dort, kein Spot-Pendant).
+    atr_relativ_prozent_bei_signal: float | None = None
     # Z.ai-Gegenpruefung (2026-07-26, siehe agent/krypto/gegenpruefung.py) -
     # unabhaengige Konsistenzpruefung (passt die eigene Begruendung zu den
     # harten Fakten?) durch ein separates, kleines LLM. Rein beobachtend

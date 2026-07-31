@@ -867,6 +867,20 @@ def _migrate_hebel_signal_selbst_halten_columns(conn: sqlite3.Connection) -> Non
     conn.commit()
 
 
+_HEBEL_SIGNAL_ATR_NEW_COLUMNS = {"atr_relativ_prozent_bei_signal": "REAL"}
+
+
+def _migrate_hebel_signal_atr_column(conn: sqlite3.Connection) -> None:
+    """Additive Migration (2026-07-31) fuer atr_relativ_prozent_bei_signal -
+    siehe HebelSignal-Docstring fuer die volle Begruendung (Messstandard fuer
+    kuenftigen TP-ATR-Backtest der Regel-6-Erweiterung)."""
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(hebel_signals)")}
+    for column, sql_type in _HEBEL_SIGNAL_ATR_NEW_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE hebel_signals ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
 _HEBEL_SIGNAL_SENKUNG_NEW_COLUMNS = {"hebel_senkung_eigenkapital_nachschuss_eur": "REAL"}
 
 
@@ -1166,6 +1180,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_hebel_signal_llm_halten_column(conn)
     _migrate_signal_selbst_halten_columns(conn)
     _migrate_hebel_signal_selbst_halten_columns(conn)
+    _migrate_hebel_signal_atr_column(conn)
     import_holdings_manual_overrides(conn)
 
 
@@ -3206,7 +3221,7 @@ _HEBEL_SIGNAL_COLUMNS = (
     "zai_gegenpruefung_urteil", "zai_gegenpruefung_kurzbegruendung",
     "zai_eigene_richtung", "zai_uebereinstimmung", "zai_richtung_kurzbegruendung",
     "mindestziel_usd", "mindestziel_eur", "mindestziel_zeitraum_tage_geschaetzt",
-    "ist_reines_llm_halten", "original_action",
+    "ist_reines_llm_halten", "original_action", "atr_relativ_prozent_bei_signal",
 )
 
 

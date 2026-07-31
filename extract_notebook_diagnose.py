@@ -290,6 +290,13 @@ _HEBEL_SIGNAL_SPALTEN = (
     "kontrathese_zu_position, kontrathese_llm_richtung, "
     "zai_gegenpruefung_urteil, zai_gegenpruefung_kurzbegruendung, "
     "zai_eigene_richtung, zai_uebereinstimmung, zai_richtung_kurzbegruendung, "
+    # ATR-relativ_prozent bei Signal-Erstellung (2026-07-31, siehe database/
+    # models.py::HebelSignal.atr_relativ_prozent_bei_signal-Docstring) -
+    # Messstandard fuer den kuenftigen TP-ATR-Backtest der Regel-6-Erweiterung,
+    # macht die bisherige retroaktive CoinGecko-OHLC-Rekonstruktion (siehe
+    # project_enge_stop_loss_backtest_und_massnahmen.md) fuer neue Signale
+    # ueberfluessig. Nur Hebel (Regel 6 existiert nur dort).
+    "atr_relativ_prozent_bei_signal, "
     + _VOLLSTAENDIGKEITS_SPALTEN
 )
 _SPOT_SIGNAL_SPALTEN = (

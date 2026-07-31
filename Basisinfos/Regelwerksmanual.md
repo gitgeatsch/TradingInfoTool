@@ -13058,5 +13058,68 @@ aufgerufen (kein toter Refetch-Versuch mehr). Regressionscheck: beide
 bestehenden Wrapper (Hebel/Spot) sowie ihre `REQUIRED_ACTIONS`-Importe
 unveraendert funktionsfaehig.
 
-**Status:** Code-Fix implementiert + verifiziert, Commit noch ausstehend
-(Nutzer-Entscheidung, siehe Entscheidungskatalog Punkt 1).
+**Status:** Committet + gepusht (`b2b4438`, zusammen mit dem Z.ai-n<15-
+Kartenfix vom selben Tag).
+
+## Nachtrag (2026-07-31): Hebel Regel 6 um Take-Profit-ATR-Leitplanke erweitert + neuer Messstandard atr_relativ_prozent_bei_signal
+
+Fortsetzung der CRV-Gate-Untersuchung (siehe project_enge_stop_loss_backtest_
+und_massnahmen.md fuer die volle Herleitung): ein granularerer Vergleich der
+CRV-Baender zeigte einen unerklaerten Trefferquote-Einbruch von 67,3% (Band
+1,0-1,5) auf 30,4% (Band 1,5-2,0), der sich nicht durch Stop-Loss-Abstand,
+Konfidenz, Symbol-Konzentration oder These-Typ erklaeren liess. Ein echter
+CoinGecko-OHLC-Abruf (14 Symbole, Wilder ATR-14) zeigte: die Take-Profit-
+Distanz relativ zum ATR ist im schlechten Band ~29% weiter (0,75x vs. 0,58x),
+waehrend die Stop-Loss-Distanz nahezu identisch bleibt (0,44x vs. 0,48x).
+
+Ueber ein Random-Walk-Barrier-Race-Modell (Optionstheorie "Probability of
+Touch": P(obere Barriere zuerst getroffen) = Distanz_unten / (Distanz_unten +
+Distanz_oben)) wurde quantifiziert, dass diese TP-ATR-Asymmetrie genau ~23%
+des beobachteten Einbruchs erklaert - real und bedeutsam, aber mit ~77%
+unerklaertem Rest (Tage-Clustering suggestiv, nicht abschliessend geklaert).
+Externe Literatur (Marcos Lopez de Prado, "Advances in Financial Machine
+Learning", 2018 - Triple-Barrier-Method) bestaetigt: professionelle Ansaetze
+skalieren Take-Profit UND Stop-Loss gleichermassen relativ zur Volatilitaet;
+unser bisheriges Design (Option D, 28.07.) skalierte nur die Stop-Seite.
+
+**Umsetzung:** `agent/krypto/hebel_analyst.py` SYSTEM_PROMPT Regel 6 um einen
+symmetrischen Take-Profit-Zusatz erweitert (~1,5-2x ATR-relativ als
+Richtwert, kein hartes Limit, exakt gleiches Muster wie die bestehende
+Stop-Loss-Leitplanke - Abweichung bei klarem Support/Widerstand/Fibonacci-
+Level bleibt erlaubt, muss aber in `short_reasoning` benannt werden).
+
+**Live-API-Test vor Einsatz (Nutzer-Vorgabe):** echter Mistral-Call, ALT- vs.
+NEU-SYSTEM_PROMPT, 3 reale Coins (INJ/KAITO/NEAR, echte CoinGecko-Preis-/
+ATR-Werte) plus 3 Wiederholungslaeufe je Variante fuer INJ zur Trennung von
+Signal und Sampling-Rauschen. Ergebnis: kein Format-/Parsing-Problem in 9
+echten Calls; der beabsichtigte Effekt (TP-ATR-Vielfaches steigt) zeigt sich
+im Mittel (0,62x zu 0,83x bei INJ-Wiederholungen), die Lauf-zu-Lauf-Streuung
+bei Mistral temperature=0.2 ist aber genauso gross wie der zugeschriebene
+Effekt - bei n=3 pro Bedingung statistisch nicht von Zufall zu unterscheiden.
+Bewusst KEIN neuer harter Schwellenwert/Risikofaktor (Konsistenz mit
+"Backtest first, harte Garantie statt Soft-Boost" - dieser TP-Zusatz hat noch
+keinen dedizierten Vorher-Nachher-Bucket-Backtest wie der urspruengliche
+SL-Fix).
+
+**Neuer Messstandard:** `database/models.py::HebelSignal.
+atr_relativ_prozent_bei_signal` (additive Migration
+`_migrate_hebel_signal_atr_column()` in `database/db.py`, verdrahtet in
+`agent/krypto/hebel_pipeline.py` aus `facts["technische_analyse"]["atr"]
+["relativ_prozent"]`, exportiert in `extract_notebook_diagnose.py::
+_HEBEL_SIGNAL_SPALTEN`) - persistiert den ATR-Fakt-Wert, der dem LLM
+tatsaechlich vorlag, direkt bei Signal-Erstellung. Ersetzt fuer kuenftige
+Signale die bisherige retroaktive CoinGecko-OHLC-Rekonstruktion (naeherungs-
+weise, abhaengig von Datums-Zuordnung) durch eine exakte, sofort verfuegbare
+Messgroesse.
+
+**Verifiziert:** Klasse-1 (Import + Textmarker + Regel-7-Anschluss fuer den
+Prompt-Zusatz); Klasse-2 (4 Tests: Migration idempotent, Spalte existiert,
+Insert+Read-Rundlauf mit korrektem Wert, NULL-Fall fuer fehlenden Wert -
+alle PASS); Import-Regressionscheck fuer `hebel_pipeline.py` und
+`extract_notebook_diagnose.py`.
+
+**Wiedervorlage (kein festes Datum):** sobald n>=15 neue, nach diesem Fix
+aufgeloeste Hebel-LONG-Signale mit gesetztem `atr_relativ_prozent_bei_signal`
+vorliegen, direkter Vorher-Nachher-Bucket-Vergleich moeglich - siehe
+project_enge_stop_loss_backtest_und_massnahmen.md fuer den vollstaendigen
+Stand und die noch offene ~77%-Erklaerungsluecke.

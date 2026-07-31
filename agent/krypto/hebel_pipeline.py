@@ -505,6 +505,10 @@ def generate_hebel_signal(
         fazit_folgen=eigene_einschaetzung.get("folgen"),
         fazit_kurzfazit=eigene_einschaetzung.get("kurzfazit"),
         fazit_konsistenz_hinweis=fazit_konsistenz_hinweis,
+        # Messstandard fuer den TP-ATR-Backtest der Regel-6-Erweiterung
+        # (2026-07-31, siehe HebelSignal.atr_relativ_prozent_bei_signal-
+        # Docstring) - derselbe Fakt-Wert, der dem LLM in `facts` vorlag.
+        atr_relativ_prozent_bei_signal=facts.get("technische_analyse", {}).get("atr", {}).get("relativ_prozent"),
         **top_grund_fields,
     )
     new_id = db.insert_hebel_signal(conn, signal)

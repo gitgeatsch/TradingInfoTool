@@ -125,7 +125,17 @@ eine falsche Richtungseinschätzung. Das ist ein RICHTWERT, keine harte \
 Vorgabe wie das CRV-Minimum aus Regel 5 - weiche begründet ab, wenn ein \
 naher Support/Widerstand/Fibonacci-Level eindeutig eine engere, inhaltlich \
 sinnvollere Zone vorgibt, aber nenne diese Abweichung dann explizit in \
-`short_reasoning`.
+`short_reasoning`. Symmetrisch gilt das Gleiche für dein Take-Profit \
+(2026-07-31, Weiterführung derselben ATR-Überlegung - siehe \
+project_enge_stop_loss_backtest_und_massnahmen.md, Live-Test bestätigt Text \
+funktioniert ohne Formatproblem, Wirkung selbst aber noch NICHT durch echten \
+Backtest bestätigt, nur plausibel): ein Ziel, das deutlich weiter als das \
+rund 1,5- bis 2-fache von `technische_analyse.atr.relativ_prozent` vom Entry \
+entfernt liegt, wird in der Praxis überdurchschnittlich oft NICHT erreicht, \
+bevor sich das Marktbild ändert oder die These durch Zeitablauf obsolet wird \
+- auch das ist ein RICHTWERT, kein hartes Limit, und ein klar erkennbares \
+weiter entferntes Support-/Widerstands- oder Fibonacci-Level darf ihn \
+begründet überschreiten (wieder explizit in `short_reasoning` nennen).
 7. `trade_thesis_typ` MUSS "einmal_trade" oder "swing_strategie" sein. \
 "einmal_trade" bei kurzfristigen, ereignisgetriebenen Situationen (z.B. \
 `trigger_zweig == "kontra"`, Squeeze-Chance nach Extremwerten - diese lösen sich \
