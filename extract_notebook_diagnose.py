@@ -188,6 +188,8 @@ from agent.krypto.backward_tracking import (
     compute_konfidenz_kalibrierung,
     compute_provider_performance,
     compute_provider_sendezaehler,
+    compute_selbst_halten_performance,
+    compute_selbst_halten_performance_nach_grund,
     compute_veto_shadow_performance,
     compute_veto_shadow_performance_nach_grund,
     compute_zai_richtung_performance,
@@ -273,6 +275,15 @@ _HEBEL_SIGNAL_SPALTEN = (
     "veto_outcome_status, veto_outcome_geprueft_am, veto_outcome_entschieden_am, "
     "veto_outcome_realisiertes_crv, veto_outcome_max_realisiertes_crv, "
     "veto_outcome_mindestziel_erreicht_am, "
+    # Selbst-gewaehltes-HALTEN-Schatten-Tracking (2026-07-31, siehe
+    # database/db.py::_HEBEL_SIGNAL_SELBST_HALTEN_NEW_COLUMNS-Docstring) -
+    # Gegenfall zum Veto-Schatten oben: kein Gate/Veto, das LLM hat sich
+    # selbst gegen einen Trade entschieden, aber trotzdem eine hypothetische
+    # Zone angegeben.
+    "ist_reines_llm_halten, "
+    "selbst_halten_outcome_status, selbst_halten_outcome_geprueft_am, "
+    "selbst_halten_outcome_entschieden_am, selbst_halten_outcome_realisiertes_crv, "
+    "selbst_halten_outcome_max_realisiertes_crv, selbst_halten_outcome_mindestziel_erreicht_am, "
     "kontrathese_zu_position, kontrathese_llm_richtung, "
     "zai_gegenpruefung_urteil, zai_gegenpruefung_kurzbegruendung, "
     "zai_eigene_richtung, zai_uebereinstimmung, zai_richtung_kurzbegruendung, "
@@ -292,6 +303,12 @@ _SPOT_SIGNAL_SPALTEN = (
     "veto_outcome_status, veto_outcome_geprueft_am, veto_outcome_entschieden_am, "
     "veto_outcome_realisiertes_crv, veto_outcome_max_realisiertes_crv, "
     "veto_outcome_mindestziel_erreicht_am, "
+    # Selbst-gewaehltes-HALTEN-Schatten-Tracking (2026-07-31), identisches
+    # Feld-Set wie _HEBEL_SIGNAL_SPALTEN oben.
+    "ist_reines_llm_halten, "
+    "selbst_halten_outcome_status, selbst_halten_outcome_geprueft_am, "
+    "selbst_halten_outcome_entschieden_am, selbst_halten_outcome_realisiertes_crv, "
+    "selbst_halten_outcome_max_realisiertes_crv, selbst_halten_outcome_mindestziel_erreicht_am, "
     "tranchen_json, cash_reserve_ziel_btc_usd, cash_reserve_ziel_eth_usd, "
     "cash_reserve_ziel_gesamt_usd, cash_reserve_ziel_begruendung, "
     "umgesetzt, umgesetzt_am, umgesetzt_menge, umgesetzt_preis_usd, "
@@ -932,6 +949,15 @@ def main() -> None:
         # config.yaml::regime.min_konfidenz_prozent_krypto_spot_override-
         # Entscheidung und kuenftige Wiedervorlagen (Aktien/Rohstoffe/Themen-ETF).
         veto_schatten_performance_nach_grund = compute_veto_shadow_performance_nach_grund(conn, watchlist)
+        # Selbst-gewaehltes-HALTEN-Aggregationen (2026-07-31, Gegenfall zum
+        # Veto-Schatten oben - siehe agent/krypto/backward_tracking.py::
+        # compute_selbst_halten_performance()-Docstring): kein Gate/Veto, das
+        # LLM hat sich selbst gegen einen Trade entschieden, aber trotzdem
+        # eine hypothetische Zone angegeben.
+        selbst_gewaehltes_halten_performance = compute_selbst_halten_performance(conn, watchlist)
+        selbst_gewaehltes_halten_performance_nach_grund = compute_selbst_halten_performance_nach_grund(
+            conn, watchlist,
+        )
         zai_richtung_performance_schatten = compute_zai_richtung_performance_schatten(conn, watchlist)
         gesamt_signalqualitaet = compute_gesamt_signalqualitaet(conn, watchlist)
         provider_sendezaehler = compute_provider_sendezaehler(conn, watchlist)
@@ -994,6 +1020,8 @@ def main() -> None:
         "zai_richtung_performance": zai_richtung_performance,
         "veto_schatten_performance": veto_schatten_performance,
         "veto_schatten_performance_nach_grund": veto_schatten_performance_nach_grund,
+        "selbst_gewaehltes_halten_performance": selbst_gewaehltes_halten_performance,
+        "selbst_gewaehltes_halten_performance_nach_grund": selbst_gewaehltes_halten_performance_nach_grund,
         "zai_richtung_performance_schatten": zai_richtung_performance_schatten,
         "gesamt_signalqualitaet": gesamt_signalqualitaet,
         "provider_sendezaehler": provider_sendezaehler,

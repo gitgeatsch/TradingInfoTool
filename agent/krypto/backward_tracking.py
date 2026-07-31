@@ -98,6 +98,15 @@ class BackwardTrackingResult:
     veto_schatten_stop_loss: int = 0
     veto_schatten_expired: int = 0
     veto_schatten_still_open: int = 0
+    # Selbst-gewaehltes-HALTEN-Schatten-Tracking (2026-07-31, siehe
+    # _hat_selbst_halten_these()-Docstring) - Gegenfall zum Veto-Schatten
+    # oben: kein Gate/Veto, das LLM hat sich selbst gegen einen Trade
+    # entschieden, aber trotzdem eine hypothetische Zone angegeben.
+    selbst_halten_geprueft_count: int = 0
+    selbst_halten_take_profit: int = 0
+    selbst_halten_stop_loss: int = 0
+    selbst_halten_expired: int = 0
+    selbst_halten_still_open: int = 0
 
 
 def _threshold(von_value: float | None, point_value: float | None) -> float | None:
@@ -331,18 +340,33 @@ def _hat_veto_schatten_these(signal) -> bool:
     return entry is not None and stop is not None and take is not None
 
 
-def _richtung_aus_veto_zonen(signal) -> str | None:
-    """Bestimmt LONG/SHORT-Orientierung fuer einen Veto-Schatten-Kandidaten rein
-    aus der relativen Zonen-Reihenfolge (Stop-Loss vs. Entry) - `action` ist
-    durch den Veto bereits auf HALTEN ueberschrieben, richtung_aus_action()
-    (agent/krypto/gegenpruefung.py) liefert also None und kann hier nicht
-    genutzt werden. Spiegelt dieselbe implizite Logik, die risk_gate.py::
-    post_check() fuer die CRV-Pflicht-Vetos bereits nutzt (_BUY_ACTIONS
-    verlangt entry>stop_von, _SELL_ACTIONS verlangt stop_bis>entry): Stop-Loss
-    UEBER dem Entry bedeutet SHORT-Orientierung (Stop-Loss oben, wie bei
-    check_signal_outcome()s ist_short-Zweig), Stop-Loss UNTER dem Entry
-    bedeutet LONG. None, wenn Entry/Stop-Loss fehlen oder identisch sind
-    (keine eindeutige Richtung ableitbar)."""
+def _hat_selbst_halten_these(signal) -> bool:
+    """Diskriminator fuer einen echten Selbst-Halten-Schatten-Kandidaten
+    (2026-07-31, Ergaenzung zu _hat_veto_schatten_these() oben - siehe
+    dortigen Docstring fuer den Gegenfall): `ist_reines_llm_halten == True`
+    (bereits deterministisch bei der Generierung berechnet, siehe
+    risk_gate.py::post_check()) UND alle drei Preiszonen (Entry/Stop-Loss/
+    Take-Profit) gesetzt."""
+    if not getattr(signal, "ist_reines_llm_halten", False):
+        return False
+    entry = _entry_mid(signal)
+    stop = _threshold(signal.stop_loss_usd_von, signal.stop_loss_usd)
+    take = _threshold(signal.take_profit_usd_von, signal.take_profit_usd)
+    return entry is not None and stop is not None and take is not None
+
+
+def _richtung_aus_zonen(signal) -> str | None:
+    """Bestimmt LONG/SHORT-Orientierung rein aus der relativen Zonen-
+    Reihenfolge (Stop-Loss vs. Entry) - fuer Veto-Schatten- UND Selbst-
+    Halten-Schatten-Kandidaten gleichermassen nutzbar, da `action` in beiden
+    Faellen bereits auf HALTEN steht und richtung_aus_action() (agent/krypto/
+    gegenpruefung.py) daher None liefern wuerde. Spiegelt dieselbe implizite
+    Logik, die risk_gate.py::post_check() fuer die CRV-Pflicht-Vetos bereits
+    nutzt (_BUY_ACTIONS verlangt entry>stop_von, _SELL_ACTIONS verlangt
+    stop_bis>entry): Stop-Loss UEBER dem Entry bedeutet SHORT-Orientierung
+    (Stop-Loss oben, wie bei check_signal_outcome()s ist_short-Zweig),
+    Stop-Loss UNTER dem Entry bedeutet LONG. None, wenn Entry/Stop-Loss
+    fehlen oder identisch sind (keine eindeutige Richtung ableitbar)."""
     entry_mid = _entry_mid(signal)
     stop_loss_threshold = _threshold(signal.stop_loss_usd_von, signal.stop_loss_usd)
     if entry_mid is None or stop_loss_threshold is None or entry_mid == stop_loss_threshold:
@@ -374,7 +398,106 @@ def check_signal_veto_shadow_outcome(
     if not _hat_veto_schatten_these(signal):
         return OUTCOME_NICHT_ANWENDBAR, {}
 
-    ist_short = _richtung_aus_veto_zonen(signal) == "SHORT"
+    ist_short = _richtung_aus_zonen(signal) == "SHORT"
+
+    take_profit_threshold = _threshold(signal.take_profit_usd_von, signal.take_profit_usd)
+    stop_loss_threshold = _threshold(signal.stop_loss_usd_von, signal.stop_loss_usd)
+
+    asset = next((a for a in watchlist if a.symbol == signal.symbol), None)
+    if asset is None:
+        return OUTCOME_OFFEN, {}
+
+    min_date = signal.created_at[:10]
+    entry_mid = _entry_mid(signal)
+    risiko_distanz = (stop_loss_threshold - entry_mid) if ist_short else (entry_mid - stop_loss_threshold)
+    if risiko_distanz == 0:
+        risiko_distanz = None
+
+    max_favorable_crv = None
+    mindestziel_erreicht_am = None
+
+    def _erfasse_mfe(guenstigster_preis: float, day_value: str) -> None:
+        nonlocal max_favorable_crv, mindestziel_erreicht_am
+        if risiko_distanz is None or risiko_distanz <= 0:
+            return
+        favorable_crv = (
+            (entry_mid - guenstigster_preis) / risiko_distanz if ist_short
+            else (guenstigster_preis - entry_mid) / risiko_distanz
+        )
+        if max_favorable_crv is None or favorable_crv > max_favorable_crv:
+            max_favorable_crv = favorable_crv
+        if mindestziel_erreicht_am is None and favorable_crv >= richtungstreffer_mindest_crv:
+            mindestziel_erreicht_am = day_value
+
+    def resolve(exit_price: float, hit_take: bool) -> tuple[str, dict]:
+        status = OUTCOME_TAKE_PROFIT if hit_take else OUTCOME_STOP_LOSS
+        realized_crv = None
+        if entry_mid != stop_loss_threshold:
+            realized_crv = (
+                (entry_mid - exit_price) / (stop_loss_threshold - entry_mid) if ist_short
+                else (exit_price - entry_mid) / (entry_mid - stop_loss_threshold)
+            )
+        return status, {
+            "entschieden_am": day,
+            "realisiertes_crv": realized_crv,
+            "max_realisiertes_crv": max_favorable_crv,
+            "mindestziel_erreicht_am": mindestziel_erreicht_am,
+        }
+
+    def _check_preis(high: float, low: float) -> tuple[bool, bool, float, float]:
+        if ist_short:
+            return (low <= take_profit_threshold, high >= stop_loss_threshold, low, high)
+        return (high >= take_profit_threshold, low <= stop_loss_threshold, high, low)
+
+    ohlc_rows = db.get_ohlc_history(conn, signal.symbol, "USD", min_date=min_date)
+    if len(ohlc_rows) >= 1:
+        for row in ohlc_rows:
+            day = row.date
+            guenstigster_tagespreis = row.low if ist_short else row.high
+            _erfasse_mfe(guenstigster_tagespreis, day)
+            hit_take, hit_stop, exit_take, exit_stop = _check_preis(row.high, row.low)
+            if hit_stop:
+                return resolve(exit_stop, hit_take=False)
+            if hit_take:
+                return resolve(exit_take, hit_take=True)
+    else:
+        price_rows = db.get_price_history(conn, asset.coingecko_id, min_date=min_date) if asset.coingecko_id else []
+        for row in price_rows:
+            if row.price_usd is None:
+                continue
+            day = row.date
+            _erfasse_mfe(row.price_usd, day)
+            hit_take, hit_stop, _, _ = _check_preis(row.price_usd, row.price_usd)
+            if hit_stop:
+                return resolve(row.price_usd, hit_take=False)
+            if hit_take:
+                return resolve(row.price_usd, hit_take=True)
+
+    return OUTCOME_OFFEN, {
+        "max_realisiertes_crv": max_favorable_crv,
+        "mindestziel_erreicht_am": mindestziel_erreicht_am,
+    }
+
+
+def check_signal_selbst_halten_outcome(
+    conn, signal, watchlist, richtungstreffer_mindest_crv: float = DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV,
+) -> tuple[str, dict]:
+    """Wie check_signal_veto_shadow_outcome(), aber fuer den Zweig "selbst
+    gewaehltes HALTEN" (2026-07-31, siehe _hat_selbst_halten_these()-
+    Docstring): trackt Signale, bei denen das LLM sich OHNE Gate/Veto von
+    sich aus gegen einen Trade entschieden hat, aber trotzdem eine
+    hypothetische Zone angegeben hat - beantwortet die Frage "war die eigene
+    Zurueckhaltung im Nachhinein richtig?", getrennt vom Veto-Schatten-Zweig
+    (dort hat das Gate entschieden, hier das LLM selbst).
+
+    Identische TP/SL/MFE-Mechanik wie check_signal_veto_shadow_outcome(),
+    inkl. Richtungsableitung ueber _richtung_aus_zonen() (auch hier steht
+    `action` bereits auf HALTEN). Gibt (neuer_status, extra_felder) zurueck,
+    passend fuer db.update_signal_selbst_halten_outcome(**extra_felder)."""
+    if not _hat_selbst_halten_these(signal):
+        return OUTCOME_NICHT_ANWENDBAR, {}
+
+    ist_short = _richtung_aus_zonen(signal) == "SHORT"
 
     take_profit_threshold = _threshold(signal.take_profit_usd_von, signal.take_profit_usd)
     stop_loss_threshold = _threshold(signal.stop_loss_usd_von, signal.stop_loss_usd)
@@ -668,6 +791,53 @@ def run_backward_tracking(conn, watchlist, config: dict) -> BackwardTrackingResu
         else:
             result.veto_schatten_still_open += 1
 
+    # Selbst-gewaehltes-HALTEN-Zweig (2026-07-31, Gegenfall zum Veto-Schatten-
+    # Zweig oben - siehe check_signal_selbst_halten_outcome()-Docstring).
+    # Bewusst OHNE Ueberholt-Check, gleiche Begruendung wie beim Veto-
+    # Schatten-Zweig: eine hypothetische, nie ausgefuehrte These kann durch
+    # eine neuere echte Analyse nicht im selben Sinn "ueberholt" werden.
+    selbst_halten_rows = conn.execute(
+        "SELECT id FROM signals WHERE ist_reines_llm_halten = 1 "
+        "AND (selbst_halten_outcome_status IS NULL OR selbst_halten_outcome_status = ?)",
+        (OUTCOME_OFFEN,),
+    ).fetchall()
+
+    for row in selbst_halten_rows:
+        signal = db.get_signal_by_id(conn, row["id"])
+        if signal is None:
+            continue
+        result.selbst_halten_geprueft_count += 1
+
+        status, extra = check_signal_selbst_halten_outcome(conn, signal, watchlist, richtungstreffer_mindest_crv)
+
+        if status == OUTCOME_NICHT_ANWENDBAR:
+            db.update_signal_selbst_halten_outcome(conn, signal.id, status)
+            continue
+
+        if status in (OUTCOME_TAKE_PROFIT, OUTCOME_STOP_LOSS):
+            db.update_signal_selbst_halten_outcome(
+                conn, signal.id, status,
+                entschieden_am=extra.get("entschieden_am"),
+                realisiertes_crv=extra.get("realisiertes_crv"),
+                max_realisiertes_crv=extra.get("max_realisiertes_crv"),
+                mindestziel_erreicht_am=extra.get("mindestziel_erreicht_am"),
+            )
+            if status == OUTCOME_TAKE_PROFIT:
+                result.selbst_halten_take_profit += 1
+            else:
+                result.selbst_halten_stop_loss += 1
+            continue
+
+        if _is_expired(signal, bucket_tage, fallback_tage):
+            db.update_signal_selbst_halten_outcome(
+                conn, signal.id, OUTCOME_ABGELAUFEN,
+                max_realisiertes_crv=extra.get("max_realisiertes_crv"),
+                mindestziel_erreicht_am=extra.get("mindestziel_erreicht_am"),
+            )
+            result.selbst_halten_expired += 1
+        else:
+            result.selbst_halten_still_open += 1
+
     return result
 
 
@@ -904,6 +1074,167 @@ def compute_veto_shadow_performance_nach_grund(conn, watchlist: list | None = No
     ).fetchall()
     for row in hebel_rows:
         grund = _kategorisiere_veto_grund(row["risk_veto_reason"])
+        eintrag = _stelle_sicher("hebel", grund)
+        eintrag["anzahl_resolved"] += 1
+        if row["status"] == OUTCOME_TAKE_PROFIT:
+            eintrag["take_profit_count"] += 1
+        elif row["status"] == OUTCOME_STOP_LOSS:
+            eintrag["stop_loss_count"] += 1
+        elif row["status"] == OUTCOME_LIQUIDATION:
+            eintrag["liquidation_count"] += 1
+        if row["crv"] is not None:
+            eintrag["_crv_summe"] += row["crv"]
+            eintrag["_crv_count"] += 1
+
+    ergebnis: dict = {"hebel": {}} if watchlist else {"spot": {}, "hebel": {}}
+    for (tier, grund), eintrag in gruppen.items():
+        anzahl = eintrag["anzahl_resolved"]
+        ergebnis.setdefault(tier, {})[grund] = {
+            "anzahl_resolved": anzahl,
+            "take_profit_count": eintrag["take_profit_count"],
+            "stop_loss_count": eintrag["stop_loss_count"],
+            "liquidation_count": eintrag["liquidation_count"],
+            "win_rate": (eintrag["take_profit_count"] / anzahl) if anzahl > 0 else None,
+            "avg_realisiertes_crv": (
+                eintrag["_crv_summe"] / eintrag["_crv_count"] if eintrag["_crv_count"] > 0 else None
+            ),
+        }
+    return ergebnis
+
+
+def _aggregate_resolved_selbst_halten_signal_rows(
+    conn, *, watchlist: list | None = None,
+) -> dict[tuple[str, str], dict]:
+    """Eigenstaendige Kopie von _aggregate_resolved_signal_rows() (2026-07-31,
+    Option-B-Konvention dieses Moduls - siehe compute_veto_shadow_performance_
+    nach_grund()s Docstring fuer den bereits etablierten Praezedenzfall einer
+    vollstaendig separaten Kopie statt eines dritten `veto`-Parameterwerts)
+    fuer den Zweig "selbst gewaehltes HALTEN": filtert auf `ist_reines_llm_
+    halten = 1` statt `risk_veto = 1 AND action = 'HALTEN'`, liest
+    selbst_halten_outcome_status/selbst_halten_outcome_realisiertes_crv statt
+    veto_outcome_*."""
+    gruppen: dict[tuple[str, str], dict] = {}
+    assetklasse_by_symbol = {a.symbol: a.assetklasse for a in watchlist} if watchlist else {}
+
+    def _stelle_sicher(tier: str, provider: str) -> dict:
+        key = (tier, provider)
+        if key not in gruppen:
+            gruppen[key] = {
+                "anzahl_resolved": 0,
+                "take_profit_count": 0,
+                "stop_loss_count": 0,
+                "liquidation_count": 0,
+                "_crv_summe": 0.0,
+                "_crv_count": 0,
+            }
+        return gruppen[key]
+
+    placeholders = ", ".join("?" for _ in _RESOLVED_OUTCOMES)
+    spot_rows = conn.execute(
+        f"SELECT symbol, groq_model AS llm_model, selbst_halten_outcome_status AS status, "
+        f"selbst_halten_outcome_realisiertes_crv AS crv FROM signals WHERE ist_reines_llm_halten = 1 "
+        f"AND selbst_halten_outcome_status IN ({placeholders})",
+        _RESOLVED_OUTCOMES,
+    ).fetchall()
+    for row in spot_rows:
+        tier = assetklasse_by_symbol.get(row["symbol"], "unbekannt") if watchlist else "spot"
+        eintrag = _stelle_sicher(tier, provider_from_label(row["llm_model"]))
+        eintrag["anzahl_resolved"] += 1
+        if row["status"] == OUTCOME_TAKE_PROFIT:
+            eintrag["take_profit_count"] += 1
+        elif row["status"] == OUTCOME_STOP_LOSS:
+            eintrag["stop_loss_count"] += 1
+        if row["crv"] is not None:
+            eintrag["_crv_summe"] += row["crv"]
+            eintrag["_crv_count"] += 1
+
+    hebel_rows = conn.execute(
+        f"SELECT llm_model, selbst_halten_outcome_status AS status, "
+        f"selbst_halten_outcome_realisiertes_crv AS crv FROM hebel_signals WHERE ist_reines_llm_halten = 1 "
+        f"AND selbst_halten_outcome_status IN ({placeholders})",
+        _RESOLVED_OUTCOMES,
+    ).fetchall()
+    for row in hebel_rows:
+        eintrag = _stelle_sicher("hebel", provider_from_label(row["llm_model"]))
+        eintrag["anzahl_resolved"] += 1
+        if row["status"] == OUTCOME_TAKE_PROFIT:
+            eintrag["take_profit_count"] += 1
+        elif row["status"] == OUTCOME_STOP_LOSS:
+            eintrag["stop_loss_count"] += 1
+        elif row["status"] == OUTCOME_LIQUIDATION:
+            eintrag["liquidation_count"] += 1
+        if row["crv"] is not None:
+            eintrag["_crv_summe"] += row["crv"]
+            eintrag["_crv_count"] += 1
+
+    return gruppen
+
+
+def compute_selbst_halten_performance(conn, watchlist: list | None = None) -> dict:
+    """Wie compute_veto_shadow_performance(), aber fuer den Zweig "selbst
+    gewaehltes HALTEN" (2026-07-31, siehe check_signal_selbst_halten_outcome()/
+    check_hebel_signal_selbst_halten_outcome()-Docstrings): Provider-/Tier-
+    Aufschluesselung ueber alle Faelle, in denen das LLM sich OHNE Gate/Veto
+    von sich aus gegen einen Trade entschieden, aber trotzdem eine
+    hypothetische Zone angegeben hat. Beantwortet eine strukturell ANDERE
+    Frage als compute_veto_shadow_performance() ("war die eigene
+    Zurueckhaltung richtig" statt "war das Gate richtig") - bewusst NICHT in
+    compute_gesamt_signalqualitaet() eingemischt, siehe dortiger Docstring."""
+    gruppen = _aggregate_resolved_selbst_halten_signal_rows(conn, watchlist=watchlist)
+    return _format_performance_gruppen(gruppen, watchlist)
+
+
+def compute_selbst_halten_performance_nach_grund(conn, watchlist: list | None = None) -> dict:
+    """Wie compute_selbst_halten_performance(), aber gruppiert nach (tier,
+    top_grund_1_kategorie) statt (tier, provider) (2026-07-31, mirror
+    compute_veto_shadow_performance_nach_grund()). Anders als dort ist hier
+    KEIN Freitext-Klassifikator noetig - `top_grund_1_kategorie` ist bereits
+    ein kleines, sauberes Enum (siehe hebel_analyst.py/analyst.py TOP_GRUENDE_
+    KATEGORIEN), direkt aus der Zeile gelesen."""
+    gruppen: dict[tuple[str, str], dict] = {}
+    assetklasse_by_symbol = {a.symbol: a.assetklasse for a in watchlist} if watchlist else {}
+
+    def _stelle_sicher(tier: str, grund: str) -> dict:
+        key = (tier, grund)
+        if key not in gruppen:
+            gruppen[key] = {
+                "anzahl_resolved": 0,
+                "take_profit_count": 0,
+                "stop_loss_count": 0,
+                "liquidation_count": 0,
+                "_crv_summe": 0.0,
+                "_crv_count": 0,
+            }
+        return gruppen[key]
+
+    placeholders = ", ".join("?" for _ in _RESOLVED_OUTCOMES)
+    spot_rows = conn.execute(
+        f"SELECT symbol, top_grund_1_kategorie, selbst_halten_outcome_status AS status, "
+        f"selbst_halten_outcome_realisiertes_crv AS crv FROM signals WHERE ist_reines_llm_halten = 1 "
+        f"AND selbst_halten_outcome_status IN ({placeholders})",
+        _RESOLVED_OUTCOMES,
+    ).fetchall()
+    for row in spot_rows:
+        tier = assetklasse_by_symbol.get(row["symbol"], "unbekannt") if watchlist else "spot"
+        grund = row["top_grund_1_kategorie"] or "unbekannt"
+        eintrag = _stelle_sicher(tier, grund)
+        eintrag["anzahl_resolved"] += 1
+        if row["status"] == OUTCOME_TAKE_PROFIT:
+            eintrag["take_profit_count"] += 1
+        elif row["status"] == OUTCOME_STOP_LOSS:
+            eintrag["stop_loss_count"] += 1
+        if row["crv"] is not None:
+            eintrag["_crv_summe"] += row["crv"]
+            eintrag["_crv_count"] += 1
+
+    hebel_rows = conn.execute(
+        f"SELECT top_grund_1_kategorie, selbst_halten_outcome_status AS status, "
+        f"selbst_halten_outcome_realisiertes_crv AS crv FROM hebel_signals WHERE ist_reines_llm_halten = 1 "
+        f"AND selbst_halten_outcome_status IN ({placeholders})",
+        _RESOLVED_OUTCOMES,
+    ).fetchall()
+    for row in hebel_rows:
+        grund = row["top_grund_1_kategorie"] or "unbekannt"
         eintrag = _stelle_sicher("hebel", grund)
         eintrag["anzahl_resolved"] += 1
         if row["status"] == OUTCOME_TAKE_PROFIT:

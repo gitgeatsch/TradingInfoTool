@@ -885,6 +885,12 @@ def post_check_hebel(
     sl_abstand_relativ: float | None = None
     positionsgroesse_usd: float | None = None
     action = str(result.get("action", "")).upper()
+    # Selbst-gewaehltes-HALTEN-Diskriminator (2026-07-31, siehe HebelSignal.
+    # ist_reines_llm_halten-Docstring) - Kopie der Roh-Aktion VOR jeder Gate-/
+    # Veto-/Kontrathese-Uebersetzung, damit am Funktionsende unterschieden
+    # werden kann, ob ein finales "HALTEN" schon von Anfang an die LLM-eigene
+    # Entscheidung war (statt durch einen der Zweige unten dorthin gelangt).
+    ursprüngliche_action = action
     richtung = str(result.get("richtung", "")).upper()
     hebel_cfg = config["risiko"]["hebel"]
     kontrathese_zu_position = False
@@ -1183,6 +1189,15 @@ def post_check_hebel(
     result["_risk_veto_reason"] = risk_veto_reason
     result["kontrathese_zu_position"] = kontrathese_zu_position
     result["kontrathese_llm_richtung"] = kontrathese_llm_richtung
+    # Selbst-gewaehltes-HALTEN-Flag (2026-07-31) - True NUR wenn die Aktion
+    # bereits VOR jeder Verzweigung "HALTEN" war UND am Ende immer noch
+    # "HALTEN" ist UND kein risk_veto gesetzt wurde. Schliesst so sowohl
+    # Gate-Veto-HALTEN (risk_veto=True) als auch Kontrathese-uebersetztes
+    # HALTEN (ursprüngliche_action war ERÖFFNEN/NACHKAUFEN/... und wurde erst
+    # durch die Uebersetzung oben zu HALTEN) korrekt aus.
+    result["_ist_reines_llm_halten"] = (
+        ursprüngliche_action == "HALTEN" and action == "HALTEN" and not risk_veto
+    )
 
     # Risikofaktoren-Liste (2026-07-19, Abschnitt 3 der neuen E-Mail-/App-
     # Struktur) - dieselben Werte wie oben in _hebel_deckel_kandidaten()

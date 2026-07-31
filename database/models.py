@@ -214,6 +214,13 @@ class Signal:
     forecast_bear_prob_pct: float | None = None
     tauschen_target_symbol: str | None = None
     risk_veto_reason: str | None = None
+    # Selbst gewaehltes HALTEN (2026-07-31) - mirror HebelSignal.ist_reines_
+    # llm_halten-Docstring fuer die volle Herleitung. Spot hat keine Kontra-
+    # these-Uebersetzung wie Hebel, das Prinzip bleibt aber aus Symmetrie-
+    # gruenden identisch: True NUR wenn die urspruengliche LLM-Aktion bereits
+    # "HALTEN" war UND am Ende weiterhin "HALTEN" ist UND kein risk_veto
+    # gesetzt wurde (siehe risk_gate.py::post_check(), original_action).
+    ist_reines_llm_halten: bool = False
     groq_raw_response: str | None = None
     groq_model: str | None = None
     # Gegenargument-Pflichtfeld (2026-07-18, Regel 22 in analyst.py::SYSTEM_PROMPT,
@@ -320,6 +327,21 @@ class Signal:
     veto_outcome_realisiertes_crv: float | None = None
     veto_outcome_max_realisiertes_crv: float | None = None
     veto_outcome_mindestziel_erreicht_am: str | None = None
+    # Selbst-gewaehltes-HALTEN-Schatten-Tracking (2026-07-31) - mirror
+    # HebelSignal.selbst_halten_outcome_*-Docstring. Eigenstaendige Kopie von
+    # veto_outcome_* statt Wiederverwendung derselben Spalten (Option-B-
+    # Konvention dieses Projekts). Diskriminator: `ist_reines_llm_halten ==
+    # True` UND entry/stop_loss/take_profit-Zonen gesetzt, siehe agent/krypto/
+    # backward_tracking.py::_hat_selbst_halten_these(). Richtung fuer die
+    # Zonen-Auswertung wird wie beim Veto-Pendant aus der relativen
+    # Reihenfolge stop_loss/entry/take_profit abgeleitet (_richtung_aus_
+    # zonen()), nicht aus `action` (steht bereits auf HALTEN).
+    selbst_halten_outcome_status: str | None = None
+    selbst_halten_outcome_geprueft_am: str | None = None
+    selbst_halten_outcome_entschieden_am: str | None = None
+    selbst_halten_outcome_realisiertes_crv: float | None = None
+    selbst_halten_outcome_max_realisiertes_crv: float | None = None
+    selbst_halten_outcome_mindestziel_erreicht_am: str | None = None
     # AZ-4-Tranchen (2026-07-12, gestaffelte Kauf-/Verkaufszonen) - JSON-Liste von
     # {rang, anteil_prozent, zone, trigger_bedingung}, rein informativ (siehe
     # agent/krypto/analyst.py::_validate()). None = keine Tranchierung vorgeschlagen
@@ -644,6 +666,17 @@ class HebelSignal:
     hebel_senkung_eigenkapital_nachschuss_eur: float | None = None
     ausfuehrbarkeit_hinweis: str | None = None
     risk_veto_reason: str | None = None
+    # Selbst gewaehltes HALTEN (2026-07-31, Nutzer-Fund: 49/51 Hebel-Signale an
+    # einem Tag reines HALTEN, keine Daten um zu pruefen ob das richtig war) -
+    # True NUR wenn die LLM-Aktion bereits VOR jeder Gate-/Veto-/Kontrathese-
+    # Uebersetzung "HALTEN" war UND am Ende immer noch "HALTEN" ist UND kein
+    # risk_veto gesetzt wurde (siehe hebel_risk_gate.py::post_check_hebel()
+    # Berechnung ganz am Funktionsende). Schliesst sowohl Gate-Veto-HALTEN
+    # (risk_veto=True) als auch Kontrathese-uebersetztes HALTEN (urspruengliche
+    # Aktion war NICHT schon HALTEN) korrekt aus - bewusst als eigenes, bei der
+    # Generierung berechnetes Flag statt nachtraeglicher Ableitung aus
+    # action/risk_veto, um genau diese beiden Sonderfaelle nicht zu vermischen.
+    ist_reines_llm_halten: bool = False
     groq_raw_response: str | None = None
     llm_model: str | None = None
     # Gegenargument-Pflichtfeld (2026-07-18, siehe Signal.gegenargument-Docstring,
@@ -673,6 +706,20 @@ class HebelSignal:
     veto_outcome_realisiertes_crv: float | None = None
     veto_outcome_max_realisiertes_crv: float | None = None
     veto_outcome_mindestziel_erreicht_am: str | None = None
+    # Selbst-gewaehltes-HALTEN-Schatten-Tracking (2026-07-31), eigenstaendige
+    # Kopie von veto_outcome_* mit neuem Praefix statt Wiederverwendung
+    # derselben Spalten (Option-B-Konvention dieses Projekts, siehe
+    # database/db.py Veto-Schatten-Migrationskommentar) - Diskriminator ist
+    # `ist_reines_llm_halten == True` UND entry/stop_loss/take_profit gesetzt,
+    # siehe agent/krypto/hebel_backward_tracking.py::_hat_hebel_selbst_halten_
+    # these(). Bewusst KEIN eigenes _datenquelle-Feld (gleiche Begruendung wie
+    # beim Veto-Schatten-Pendant - nie tatsaechlich befuellt).
+    selbst_halten_outcome_status: str | None = None
+    selbst_halten_outcome_geprueft_am: str | None = None
+    selbst_halten_outcome_entschieden_am: str | None = None
+    selbst_halten_outcome_realisiertes_crv: float | None = None
+    selbst_halten_outcome_max_realisiertes_crv: float | None = None
+    selbst_halten_outcome_mindestziel_erreicht_am: str | None = None
     # Risikofaktoren-Liste (2026-07-19, siehe Signal.risikofaktoren_json-
     # Docstring) - deterministisch aus agent/krypto/hebel_risk_gate.py::
     # compute_risikofaktoren_hebel() berechnet.

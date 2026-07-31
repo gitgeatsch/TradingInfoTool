@@ -878,6 +878,7 @@ def generate_signal(
     cash_veto_reason = corrected.pop("_cash_veto_reason")
     risikofaktoren = corrected.pop("_risikofaktoren", None)
     fazit_konsistenz_hinweis = corrected.pop("_fazit_konsistenz_hinweis", None)
+    ist_reines_llm_halten = corrected.pop("_ist_reines_llm_halten", False)
     eigene_einschaetzung = corrected.get("eigene_einschaetzung") or {}
 
     long_reasoning = corrected.get("long_reasoning", {})
@@ -951,6 +952,7 @@ def generate_signal(
         gate_reason=None,
         risk_veto=risk_veto,
         risk_veto_reason=risk_veto_reason,
+        ist_reines_llm_halten=ist_reines_llm_halten,
         cash_veto=cash_veto,
         cash_veto_reason=cash_veto_reason,
         risikofaktoren_json=json.dumps(risikofaktoren, ensure_ascii=False) if risikofaktoren else None,

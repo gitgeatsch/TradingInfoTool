@@ -12795,3 +12795,117 @@ kompletter `run_marktscan_backward_tracking()`-Durchlauf inkl. Watchlist-Filter-
 erfolgsquote()` gegen befüllte Testdaten, sowie ein Kompilier-/Import-Check aller
 geänderten/neuen Dateien. Ein echter Lauf gegen Notebook-Produktivdaten steht als
 Nachtrag aus (kein direkter Notebook-Zugriff in dieser Session).
+
+## Nachtrag (2026-07-31): Blinder Fleck behoben — Schatten-Tracking auch für selbst gewähltes HALTEN (kein Gate/Veto)
+
+**Auslöser:** ein frischer Notebook-Export zeigte 49 von 51 Hebel-Signalen an
+einem Tag als reines, selbst gewähltes HALTEN (`risk_veto=False`) - die letzte
+echte ERÖFFNEN-Empfehlung lag zu dem Zeitpunkt bereits ~27 Stunden zurück,
+trotz eines BTC-Anstiegs an diesem Tag. Der Nutzer konnte nicht beurteilen, ob
+das System "einfach nur gute Trades filtert" oder "vollständig blockiert" ist,
+und ordnete das explizit den Vortages-Optimierungen zu (Regel-13-Fix + Regel
+27 "Action-Bias-Korrektur", siehe [[project_regelwerk_audit_29_07]]) - Prüfung
+bestätigte: erwarteter, bereits dokumentierter Effekt von Regel 27, kein Bug.
+Das eigentliche Problem lag tiefer: das bestehende Veto-Schatten-Tracking
+(Nachtrag 28.07. oben) verfolgt NUR Fälle, in denen ein Gate eine Empfehlung zu
+HALTEN zurückstuft (`risk_veto=True`) - ein **selbst gewähltes** HALTEN (das
+LLM entscheidet sich von sich aus dagegen, Regel 27 mandatiert genau das als
+Normalfall) hatte bisher gar keine Preiszonen und fiel beim bestehenden
+Diskriminator automatisch durch. Ohne Gegenmaßnahme bleibt die Kernfrage des
+Nutzers ("war die eigene Zurückhaltung richtig?") auf unbegrenzte Zeit
+unbeantwortbar - explizite Nutzer-Vorgabe: "diesen Blinden Fleck müssen wir
+beheben sonst haben wir auch in 2 Monaten keine Daten."
+
+**Design-Entscheidung - neues Flag statt nachträglicher Ableitung:** ein
+naiver Diskriminator (`action=='HALTEN' and risk_veto==False`) hätte bei Hebel
+einen echten Sonderfall falsch eingeschlossen: die "Kontrathese-Übersetzung"
+(`hebel_risk_gate.py::post_check_hebel()`, siehe [[project_hebel_kontrathese_
+uebersetzung]]) kann eine LLM-Empfehlung in Gegenrichtung zu einer offenen
+Position ebenfalls zu `action="HALTEN"` machen, OHNE `risk_veto=True` zu
+setzen - ein anderes Phänomen (Positions-Management statt "LLM lehnt jedes
+Handeln ab"). Lösung: die ursprüngliche LLM-Aktion wird direkt bei der
+Generierung festgehalten (`ursprüngliche_action` in `post_check_hebel()`, vor
+jeder Verzweigung), am Funktionsende gilt `ist_reines_llm_halten =
+(ursprüngliche_action == "HALTEN" and action == "HALTEN" and not risk_veto)` -
+schließt so sowohl Gate-Veto-HALTEN als auch Kontrathese-übersetztes HALTEN
+korrekt aus. Spot (`risk_gate.py::post_check()`) hatte die Erfassung
+`original_action = action` bereits vorhanden (kein Kontrathese-Äquivalent,
+Prinzip aber aus Symmetriegründen identisch übernommen).
+
+**Umsetzung - Option B (komplett eigenständige Spalten/Funktionen, gleiches
+Muster wie das Veto-Schatten-Tracking, siehe Nachtrag 28.07. oben):**
+- `database/models.py`/`db.py`: neues Feld `ist_reines_llm_halten: bool` +
+  additive Migration (`Signal`+`HebelSignal`), plus 6 neue `selbst_halten_
+  outcome_*`-Felder (byte-identisches Schema zu `veto_outcome_*`) +
+  `update_signal_selbst_halten_outcome()`/`update_hebel_signal_selbst_halten_
+  outcome()`.
+- `hebel_risk_gate.py::post_check_hebel()`/`risk_gate.py::post_check()`:
+  Flag-Berechnung wie oben beschrieben, `result["_ist_reines_llm_halten"]`.
+- `hebel_pipeline.py`/`pipeline.py`: Flag durchgereicht in `HebelSignal(...)`/
+  `Signal(...)`.
+- Neuer Diskriminator `_hat_hebel_selbst_halten_these()`/`_hat_selbst_halten_
+  these()`: `ist_reines_llm_halten == True` UND alle drei Preiszonen gesetzt -
+  bewusst KEIN Rücklesen von `risk_veto`/`action` (das Flag existiert genau
+  deshalb, um den Kontrathese-Fallstrick strukturell auszuschließen, nicht nur
+  per Konvention).
+- `_richtung_aus_veto_zonen()` in `backward_tracking.py` umbenannt zu
+  `_richtung_aus_zonen()` (dient jetzt zwei Diskriminatoren - Veto-Schatten UND
+  Selbst-Halten-Schatten, beide brauchen dieselbe Zonen-Richtungs-Ableitung,
+  da `action` in beiden Fällen bereits auf HALTEN steht).
+- `check_hebel_signal_selbst_halten_outcome()`/`check_signal_selbst_halten_
+  outcome()`: identische TP/SL/Liquidation/MFE-Mechanik wie das Veto-Schatten-
+  Pendant, eigene `selbst_halten_outcome_*`-Spalten. Neuer SQL-Zweig in
+  `run_hebel_backward_tracking()`/`run_backward_tracking()`, kein Überholt-
+  Check (gleiche Begründung wie beim Veto-Schatten-Zweig).
+- Neue Aggregationen `compute_selbst_halten_performance()`/`_nach_grund()`
+  (letztere gruppiert nach `top_grund_1_kategorie` - bereits ein sauberes
+  Enum, kein Freitext-Klassifikator wie bei `_kategorisiere_veto_grund()`
+  nötig). **Bewusst NICHT in `compute_gesamt_signalqualitaet()` gemischt:**
+  jene Funktion beantwortet "hätte gehandelt, wurde ausgeführt ODER vom Gate
+  verhindert" (LLM wollte handeln) - Selbst-Halten beantwortet die strukturell
+  andere Frage "war die eigene Zurückhaltung richtig" (LLM wollte NICHT
+  handeln). Bleibt eine eigene, separate Kennzahl.
+- `extract_notebook_diagnose.py`: neue Spalten + 2 neue Payload-Keys
+  (`selbst_gewaehltes_halten_performance`/`_nach_grund`).
+- **Remote-Status-Anzeige** (Nutzer-Nachforderung nach dem ersten Plan-Entwurf:
+  "sollen auf der Remote Seite mit kurzer Info angezeigt werden um zu
+  Monitoren - füge diese Sauber in die bestehende Sortierung ein"): zwei neue,
+  kompakte Karten direkt nach der bestehenden "Veto-Schatten-Performance nach
+  Veto-Grund"-Karte, innerhalb derselben Gruppe C - keine neue Gruppe, keine
+  Umsortierung. Wiederverwendet die bereits vorhandenen generischen Renderer
+  (`renderSpotProviderPerformanceByAssetklasse()`/`renderProviderPerformance()`
+  - identisches Datenformat wie `veto_schatten_performance`, keine neue
+  JS-Render-Funktion nötig).
+- Neue Prompt-Regeln (rein Daten-Vervollständigung, KEINE Entscheidungs-
+  änderung, konsistent mit [[feedback_llm_synthese_kein_deterministischer_
+  override]]): Regel 28 (`hebel_analyst.py`) und Regel 33 (`analyst.py`,
+  Spot hatte bisher gar keine Action-Bias-Regel) verlangen, bei selbst
+  gewähltem HALTEN trotzdem eine hypothetische Entry/Stop-Loss/Take-Profit-
+  Zone anzugeben, so als wäre man bei der (Regel 27 mandatierten) Abwägung zur
+  Gegenoption gekommen. `action`/`confidence_pct` bleiben unverändert auf
+  HALTEN bezogen; ohne kohärentes Setup keine Zahlen erfinden - Zonen bleiben
+  dann wie bisher leer (Konsistenz mit demselben Guardrail: das Werturteil
+  selbst wird nicht angetastet, nur zusätzliche Information angefordert).
+
+**Bewusst NICHT Teil dieser Runde (Scope-Cut, Nutzer-Vorgabe):** App-GUI-
+Spalten (`ui/hebel_view.py`/`ui/signals_view.py`) und E-Mail-Vorlagen bleiben
+außen vor - erst sinnvoll, sobald genug aufgelöste Fälle für eine
+detailliertere Anzeige vorliegen (Remote-Status-Karten reichen für das
+Monitoring-Bedürfnis dieser Runde).
+
+**Verifikation:** synthetische Tests für alle 6 Plan-Fälle (Gate-Veto-HALTEN,
+Kontrathese-übersetztes HALTEN als kritischer Negativfall, echtes selbst
+gewähltes HALTEN mit/ohne Zonen, normales ERÖFFNEN ohne Gate-Eingriff, Spot-
+Äquivalente ohne Kontrathese-Fall) direkt gegen `post_check_hebel()`/
+`post_check()` und die neuen Diskriminatoren, Migrationstest gegen frische
+temp-SQLite-Datei (Idempotenz zweier `init_db()`-Läufe, alle 7 neuen Spalten
+je Tabelle vorhanden), DB-Rundlauf (Insert/Read-back/Update-Funktion für
+Hebel+Spot), End-to-End-Check-Funktions-Test gegen synthetische OHLC-Daten
+(Take-Profit-Treffer, realistisches CRV), Regressionscheck der bestehenden
+Veto-Schatten-Diskriminatoren (einzige gemeinsame Code-Berührung war die
+Umbenennung `_richtung_aus_veto_zonen()`→`_richtung_aus_zonen()`) - alle 33
+Prüfungen bestanden. Kompilier-Check aller 13 geänderten Dateien fehlerfrei.
+Ein echter Lauf gegen Notebook-Produktivdaten steht als Nachtrag aus
+(braucht mehrere Wochen echter Signale, bis genug selbst gewählte HALTEN-Fälle
+aufgelöst sind, um die Frage "war die Zurückhaltung richtig?" belastbar zu
+beantworten - Wiedervorlage entsprechend spät).

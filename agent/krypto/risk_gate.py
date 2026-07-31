@@ -1134,6 +1134,14 @@ def post_check(
     result["action"] = action
     result["_risk_veto"] = risk_veto
     result["_risk_veto_reason"] = risk_veto_reason
+    # Selbst-gewaehltes-HALTEN-Flag (2026-07-31, mirror hebel_risk_gate.py::
+    # post_check_hebel()-Docstring) - True NUR wenn `original_action` bereits
+    # "HALTEN" war UND die finale `action` immer noch "HALTEN" ist UND kein
+    # risk_veto gesetzt wurde. Spot hat keine Kontrathese-Uebersetzung wie
+    # Hebel, das Prinzip bleibt aber aus Symmetriegruenden identisch.
+    result["_ist_reines_llm_halten"] = (
+        original_action == "HALTEN" and action == "HALTEN" and not risk_veto
+    )
     # Cash-Veto (2026-07-18, Detailanalyse) - bewusst IMMER durchgereicht, nicht
     # nur bei einer tatsaechlichen Aktions-Ueberschreibung (siehe cash_veto-
     # Docstring in RiskPreCheckResult): das ist der tatsaechliche RM-4-Zustand

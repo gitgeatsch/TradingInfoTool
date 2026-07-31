@@ -177,6 +177,24 @@ _INDEX_HTML = """<!doctype html>
 </div>
 
 <div class="card">
+  <div class="row"><strong>Selbst gewähltes HALTEN - Schatten-Performance</strong></div>
+  <div class="row"><span class="muted-text">Das LLM hat sich HIER von sich aus (kein Gate/Veto)
+  gegen einen Trade entschieden, aber trotzdem eine hypothetische Zone angegeben (2026-07-31,
+  Regel 28/33) - zeigt, ob die eigene Zurueckhaltung im Nachhinein richtig war. Getrennt von der
+  Veto-Schatten-Karte oben, da dort das Gate entschieden hat, hier das LLM selbst.</span></div>
+  <div id="selbst-halten-performance-spot"></div>
+  <div class="row"><strong>&nbsp;&nbsp;davon Hebel</strong></div>
+  <div id="selbst-halten-performance-hebel"></div>
+</div>
+
+<div class="card">
+  <div class="row"><strong>Selbst gewähltes HALTEN nach Grund</strong></div>
+  <div id="selbst-halten-performance-nach-grund-spot"></div>
+  <div class="row"><strong>&nbsp;&nbsp;davon Hebel</strong></div>
+  <div id="selbst-halten-performance-nach-grund-hebel"></div>
+</div>
+
+<div class="card">
   <div class="row"><strong>Z.ai-Richtungs-Erfolgsquote (Veto-Schatten)</strong></div>
   <div class="row"><span class="muted-text">Wie die Z.ai-Karte in Gruppe B, aber NUR fuer die vetoten
   Vorschlaege oben - gerade hier ist Z.ais unabhaengiges Urteil interessant, weil es auf einen Fall angewendet
@@ -656,6 +674,22 @@ async function refreshStatus() {
       renderSpotProviderPerformanceByAssetklasse(data.veto_schatten_performance_nach_grund, {}, {});
     document.getElementById("veto-schatten-performance-nach-grund-hebel").innerHTML =
       renderProviderPerformance(data.veto_schatten_performance_nach_grund.hebel || {}, null, null);
+  }
+
+  // Selbst-gewaehltes-HALTEN-Schatten-Tracking (2026-07-31) - Gegenfall zum
+  // Veto-Schatten oben: kein Gate/Veto, das LLM hat sich selbst gegen einen
+  // Trade entschieden. Gleiche Render-Funktionen, identisches Datenformat.
+  if (data.selbst_gewaehltes_halten_performance) {
+    document.getElementById("selbst-halten-performance-spot").innerHTML =
+      renderSpotProviderPerformanceByAssetklasse(data.selbst_gewaehltes_halten_performance, {}, {});
+    document.getElementById("selbst-halten-performance-hebel").innerHTML =
+      renderProviderPerformance(data.selbst_gewaehltes_halten_performance.hebel || {}, null, null);
+  }
+  if (data.selbst_gewaehltes_halten_performance_nach_grund) {
+    document.getElementById("selbst-halten-performance-nach-grund-spot").innerHTML =
+      renderSpotProviderPerformanceByAssetklasse(data.selbst_gewaehltes_halten_performance_nach_grund, {}, {});
+    document.getElementById("selbst-halten-performance-nach-grund-hebel").innerHTML =
+      renderProviderPerformance(data.selbst_gewaehltes_halten_performance_nach_grund.hebel || {}, null, null);
   }
 
   if (data.zai_richtung_performance_schatten) {

@@ -374,6 +374,15 @@ Signale muessen NICHT zwingend zu "nein" fuehren, wenn andere Faktoren \
 staerker wiegen - und umgekehrt kann ein einzelner schwerwiegender Punkt \
 (z.B. ein starkes Gegenargument) ausreichen, selbst wenn `confidence_pct` \
 hoch ist.
+33. Reine Daten-Vervollstaendigung (2026-07-31, analog zur Hebel-Pipeline, \
+siehe hebel_analyst.py Regel 28 - Spot hatte bisher gar keine Action-Bias- \
+Regel, siehe Regel 32 direkt darueber): entscheidest du dich fuer \
+`action=HALTEN` OHNE dass ein Gate/Veto dich dazu zwingt, fuelle `entry`/ \
+`stop_loss`/`take_profit` TROTZDEM mit der hypothetischen Zone, die du bei \
+einer KAUFEN/NACHKAUFEN-Empfehlung gewaehlt haettest - ausschliesslich fuer \
+die spaetere Nachverfolgung, ob dein HALTEN im Nachhinein richtig war. KEINE \
+Aenderung deiner Entscheidungslogik: `action` bleibt HALTEN. Siehst du kein \
+kohaerentes Setup, erfinde KEINE Zahlen - lass die Zonen dann leer wie bisher.
 
 SCHEMA:
 {

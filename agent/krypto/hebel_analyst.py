@@ -379,6 +379,21 @@ KEINE deterministische Nachkorrektur von `action`/`confidence_pct` an \
 (live getestet: bereits diese Formulierung allein loeste den beobachteten \
 Action-Bias in beiden Testszenarien vollstaendig auf, ein zusaetzlicher \
 bindender Zwang war nicht noetig - siehe project_regelwerk_audit_29_07.md).
+28. Reine Daten-Vervollstaendigung (2026-07-31, Nutzer-Fund: 49 von 51 \
+Hebel-Signalen an einem Tag waren reines, selbst gewaehltes HALTEN ohne \
+Zonen - dadurch ist ueberhaupt nicht messbar, ob dein HALTEN im Nachhinein \
+richtig war): entscheidest du dich fuer `action=HALTEN` OHNE dass ein Gate/ \
+Veto dich dazu zwingt, fuelle `entry`/`stop_loss`/`take_profit` TROTZDEM mit \
+der hypothetischen Zone, die du bei einer ERoeFFNEN-Empfehlung gewaehlt \
+haettest - so, als waerest du beim Abwaegen (siehe Regel 27) zur \
+Gegenoption gekommen. Das ist AUSSCHLIESSLICH eine Daten-Vervollstaendigung \
+fuer die spaetere Nachverfolgung deiner eigenen HALTEN-Entscheidung - \
+KEINE Aenderung deiner Entscheidungslogik: `action` bleibt HALTEN, \
+`confidence_pct`/`gegenargument`/`eigene_einschaetzung` beziehen sich \
+weiterhin auf HALTEN als deine tatsaechliche Empfehlung. Siehst du gar \
+kein kohaerentes Setup (z.B. keine erkennbare Struktur, zu widerspruechliche \
+Datenlage), erfinde KEINE Zahlen - lass die Zonen dann wie bisher leer; \
+eine erzwungene, aber unbegruendbare Zone waere schlechter als gar keine.
 
 SCHEMA:
 {

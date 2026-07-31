@@ -55,6 +55,13 @@ class RemoteStatus:
     # gruppiert, damit kuenftige Schwellen-Entscheidungen ohne Ad-hoc-
     # Analyse moeglich sind.
     veto_schatten_performance_nach_grund: dict | None = None
+    # Selbst-gewaehltes-HALTEN-Schatten-Tracking (2026-07-31, siehe agent/
+    # krypto/backward_tracking.py::compute_selbst_halten_performance()-
+    # Docstring) - Gegenfall zum Veto-Schatten oben: kein Gate/Veto, das LLM
+    # hat sich selbst gegen einen Trade entschieden, aber trotzdem eine
+    # hypothetische Zone angegeben.
+    selbst_gewaehltes_halten_performance: dict | None = None
+    selbst_gewaehltes_halten_performance_nach_grund: dict | None = None
     # Marktscan-Erfolgsmessung (2026-07-30, siehe agent/krypto/
     # marktscan_backward_tracking.py::compute_marktscan_erfolgsquote()).
     marktscan_erfolgsquote: dict | None = None
@@ -85,6 +92,8 @@ class RemoteStatus:
             "gesamt_signalqualitaet": self.gesamt_signalqualitaet,
             "provider_sendezaehler": self.provider_sendezaehler,
             "veto_schatten_performance_nach_grund": self.veto_schatten_performance_nach_grund,
+            "selbst_gewaehltes_halten_performance": self.selbst_gewaehltes_halten_performance,
+            "selbst_gewaehltes_halten_performance_nach_grund": self.selbst_gewaehltes_halten_performance_nach_grund,
             "marktscan_erfolgsquote": self.marktscan_erfolgsquote,
         }
 
@@ -175,6 +184,10 @@ def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, erro
         gesamt_signalqualitaet=_get_gesamt_signalqualitaet(conn, watchlist),
         provider_sendezaehler=_get_provider_sendezaehler(conn, watchlist),
         veto_schatten_performance_nach_grund=_get_veto_schatten_performance_nach_grund(conn, watchlist),
+        selbst_gewaehltes_halten_performance=_get_selbst_gewaehltes_halten_performance(conn, watchlist),
+        selbst_gewaehltes_halten_performance_nach_grund=_get_selbst_gewaehltes_halten_performance_nach_grund(
+            conn, watchlist,
+        ),
         marktscan_erfolgsquote=_get_marktscan_erfolgsquote(conn),
     )
 
@@ -297,6 +310,26 @@ def _get_veto_schatten_performance_nach_grund(conn: sqlite3.Connection, watchlis
     from agent.krypto.backward_tracking import compute_veto_shadow_performance_nach_grund
 
     return compute_veto_shadow_performance_nach_grund(conn, watchlist)
+
+
+def _get_selbst_gewaehltes_halten_performance(conn: sqlite3.Connection, watchlist: list) -> dict:
+    """Gruppe C, Gegenfall zum Veto-Schatten (2026-07-31) - reiner Lesezugriff
+    auf agent/krypto/backward_tracking.py::compute_selbst_halten_performance().
+    Kein Gate/Veto, das LLM hat sich selbst gegen einen Trade entschieden,
+    aber trotzdem eine hypothetische Zone angegeben - siehe check_signal_
+    selbst_halten_outcome()-Docstring fuer die volle Herleitung."""
+    from agent.krypto.backward_tracking import compute_selbst_halten_performance
+
+    return compute_selbst_halten_performance(conn, watchlist)
+
+
+def _get_selbst_gewaehltes_halten_performance_nach_grund(conn: sqlite3.Connection, watchlist: list) -> dict:
+    """Wie _get_selbst_gewaehltes_halten_performance(), aber nach (tier,
+    top_grund_1_kategorie) statt (tier, provider) aufgeschluesselt (2026-07-31,
+    mirror _get_veto_schatten_performance_nach_grund())."""
+    from agent.krypto.backward_tracking import compute_selbst_halten_performance_nach_grund
+
+    return compute_selbst_halten_performance_nach_grund(conn, watchlist)
 
 
 def _get_zai_richtung_performance_schatten(conn: sqlite3.Connection, watchlist: list) -> dict:
