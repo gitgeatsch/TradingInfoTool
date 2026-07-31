@@ -76,6 +76,12 @@ BITPANDA_HOLDINGS_REFRESH_INTERVAL_MINUTES = 30  # 2026-07-11: seltener als der
 # Modul-Docstring) deckt derselbe Takt den KOMPLETTEN Bestandsabgleich ab
 # (sync_from_bitpanda() macht Cash intern automatisch mit, kein separater Job
 # mehr noetig).
+COINGECKO_QUOTA_CHECK_INTERVAL_MINUTES = 60  # 2026-07-31, echte CoinGecko-80%-
+# Warnmail ausgeloest (siehe Memory project_bug_runde_31_07_notebook_export) -
+# reiner Lese-Check (siehe coingecko_quota_check_job() unten), der Zaehler
+# selbst aendert sich pro Call in api/coingecko.py::CoinGeckoClient.
+# _track_quota() - stuendlich reicht voellig, das Kontingent aendert sich
+# langsam ueber Stunden/Tage, kein Grund fuer einen engeren Takt.
 STALENESS_RECHECK_INTERVAL_MINUTES = 15  # 2026-07-23, echter Fund: _history_data_is_
 # stale()/_ohlc_data_is_stale() liefen bisher NUR einmalig beim App-Start (siehe
 # build_scheduler() unten). Landete der letzte Neustart zufaellig knapp VOR dem
@@ -853,6 +859,71 @@ def _notify_cash_veto_warning(signal) -> None:
     )
     if send_notification_email(f"TradingInfoTool: WARNUNG - Cash-Veto ({signal.symbol})", body, empfaenger):
         _last_cash_veto_email_sent = time.monotonic()
+
+
+def _notify_coingecko_quota_warning(anzahl: int, limit: int, schwelle_prozent: int, prozent: float) -> None:
+    """WARNUNG-E-Mail bei ueberschrittener CoinGecko-Kontingent-Schwelle
+    (2026-07-31, echte CoinGecko-80%-Warnmail ausgeloest, siehe Memory
+    project_bug_runde_31_07_notebook_export). Anders als die anderen Warn-
+    mails hier bewusst KEIN Zeit-Cooldown (Aufrufer coingecko_quota_check_job
+    prueft bereits ueber database.db::has_quota_warnung_been_sent(), ob diese
+    Schwelle in diesem Monat schon gemeldet wurde - ein DB-Flag statt eines
+    In-Memory-Zeitstempels, der bei jedem Neustart verloren ginge)."""
+    import config as config_module
+    from api.email_notify import send_notification_email
+
+    config_dict = config_module.load_config()
+    email_cfg = config_dict.get("benachrichtigung", {}).get("email", {})
+    if not email_cfg.get("aktiv", False):
+        return
+    empfaenger = email_cfg.get("empfaenger")
+    if not empfaenger:
+        return
+
+    body = (
+        f"CoinGecko-Monats-Kontingent hat {schwelle_prozent}% erreicht "
+        f"({anzahl:,} von {limit:,} Calls, {prozent:.1f}%).\n\n"
+        "Bei 100% wird das Kontingent laut CoinGecko hart gedeckelt - Preis-/"
+        "Historie-/Marktscan-Abrufe wuerden dann fehlschlagen, bis der naechste "
+        "Kalendermonat beginnt (oder auf einen bezahlten Plan umgestellt wird).\n\n"
+        f"Diese Warnung wird fuer die {schwelle_prozent}%-Schwelle nur einmal "
+        "pro Kalendermonat versendet."
+    )
+    send_notification_email(
+        f"TradingInfoTool: CoinGecko-Kontingent {schwelle_prozent}% erreicht", body, empfaenger,
+    )
+
+
+def coingecko_quota_check_job(db_conn_factory) -> None:
+    """Prueft periodisch (COINGECKO_QUOTA_CHECK_INTERVAL_MINUTES), ob das
+    CoinGecko-Monats-Kontingent eine in config.yaml (coingecko_quota.
+    warnschwellen_prozent) definierte Warnschwelle ueberschritten hat
+    (2026-07-31, echte CoinGecko-80%-Warnmail ausgeloest). BEWUSST komplett
+    von der eigentlichen Zaehlung entkoppelt (siehe api/coingecko.py::
+    CoinGeckoClient._track_quota()) - dieser Job liest den Zaehler nur,
+    schreibt ihn nie selbst. Ein Fehler hier kann daher NIE einen echten
+    CoinGecko-API-Call beeintraechtigen, selbst wenn diese Funktion komplett
+    fehlschlaegt."""
+    import config as config_module
+
+    config_dict = config_module.load_config()
+    cfg = config_dict.get("coingecko_quota", {})
+    limit = cfg.get("monatslimit")
+    if not limit:
+        return
+    schwellen = sorted(cfg.get("warnschwellen_prozent", [80, 90]))
+
+    conn = db_conn_factory()
+    try:
+        monat = db.aktueller_monat_utc()
+        anzahl = db.get_api_call_counter(conn, "coingecko", monat)
+        prozent = (anzahl / limit) * 100
+        for schwelle in schwellen:
+            if prozent >= schwelle and not db.has_quota_warnung_been_sent(conn, "coingecko", monat, schwelle):
+                db.record_quota_warnung_sent(conn, "coingecko", monat, schwelle)
+                _notify_coingecko_quota_warning(anzahl, limit, schwelle, prozent)
+    finally:
+        conn.close()
 
 
 # Schnelle-Wechsel-Warnmail (#333 Schicht 2, 2026-07-25) - EIN globaler
@@ -2570,6 +2641,17 @@ def build_scheduler(
         minutes=STALENESS_RECHECK_INTERVAL_MINUTES,
         args=[db_conn_factory, watchlist_provider],
         id="staleness_watchdog",
+    )
+    # KEIN next_run_time=jetzt (2026-07-31, Nutzer-Vorgabe "nichts extra
+    # anfassen") - reiner Lese-Check, kein Grund, ihn den bereits gestaffelten
+    # Sofort-Start-Jobs hinzuzufuegen (siehe _staggered_start()-Docstring),
+    # erster Lauf einfach nach dem regulaeren Takt.
+    scheduler.add_job(
+        coingecko_quota_check_job,
+        "interval",
+        minutes=COINGECKO_QUOTA_CHECK_INTERVAL_MINUTES,
+        args=[db_conn_factory],
+        id="coingecko_quota_check",
     )
     scheduler.add_job(
         refresh_securities_prices_job,

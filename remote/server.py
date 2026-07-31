@@ -91,6 +91,13 @@ _INDEX_HTML = """<!doctype html>
   <div class="row"><span>Z.ai-Gegenprüfung heute (Konsistenz+Richtung, kein Tagesdeckel)</span><span id="budget-zai-gegenpruefung">-</span></div>
 </div>
 
+<div class="card">
+  <div class="row"><span>CoinGecko-Kontingent diesen Monat</span><span id="coingecko-quota">-</span></div>
+  <div class="row"><span class="muted-text">Monatliches Call-Kontingent (2026-07-31, echte 80%-Warnmail von
+  CoinGecko ausgeloest) - bei 100% wird laut CoinGecko hart gedeckelt. Warnmails bei 80%/90% (config.yaml
+  coingecko_quota.warnschwellen_prozent), je Schwelle nur einmal pro Kalendermonat.</span></div>
+</div>
+
 <h2 class="gruppe-header">Gruppe A &middot; Ausgeführte Empfehlungen (real, im Handel/Portfolio wirksam)</h2>
 
 <div class="card">
@@ -627,6 +634,13 @@ async function refreshStatus() {
     document.getElementById("budget-spot").textContent = b.spot;
     document.getElementById("budget-multi-asset").textContent = b.multi_asset_heute;
     document.getElementById("budget-zai-gegenpruefung").textContent = b.zai_gegenpruefung_heute;
+  }
+
+  if (data.coingecko_quota) {
+    const q = data.coingecko_quota;
+    const el = document.getElementById("coingecko-quota");
+    el.textContent = q.anzahl.toLocaleString() + " / " + q.limit.toLocaleString() + " (" + q.prozent + "%)";
+    el.className = q.prozent >= 80 ? "stale" : "ok";
   }
 
   if (data.provider_performance) {

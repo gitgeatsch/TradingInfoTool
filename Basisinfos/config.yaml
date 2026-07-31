@@ -1065,6 +1065,18 @@ benachrichtigung:
     # api/email_notify.py) - kein config-seitiger Wert mehr noetig.
     # Zugangsdaten (GMAIL_ABSENDER_ADRESSE/GMAIL_APP_PASSWORT) ausschliesslich in .env.
 
+# --- CoinGecko-Monats-Kontingent-Warnung (2026-07-31, echte 80%-Warnmail von
+# CoinGecko ausgeloest) - siehe scheduler/background.py::
+# coingecko_quota_check_job() + api/coingecko.py::CoinGeckoClient.
+# _track_quota(). monatslimit gilt fuer den Demo-Plan (kostenlos, mit ODER
+# ohne API-Key - der Key erhoeht nur das Minuten-Rate-Limit, siehe
+# api/coingecko.py-Modul-Docstring; die 15-Min- statt 5-Min-Taktung von
+# REFRESH_INTERVAL_MINUTES oben wurde bereits 2026-07-06 gezielt gegen genau
+# dieses Limit kalibriert). Bei einem Plan-Wechsel hier anpassen. ---
+coingecko_quota:
+  monatslimit: 10000
+  warnschwellen_prozent: [80, 90]
+
 # --- #333 Schicht 2 Gleichzeitigkeits-Moderation (2026-07-25) ---
 kategorie_vorschlaege:
   richtgroesse_max_aktive_thesen: 6   # siehe Kategorie_Basisinformationen_Release2.md

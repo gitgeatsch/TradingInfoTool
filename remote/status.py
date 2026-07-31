@@ -85,6 +85,9 @@ class RemoteStatus:
     # Marktscan-Erfolgsmessung (2026-07-30, siehe agent/krypto/
     # marktscan_backward_tracking.py::compute_marktscan_erfolgsquote()).
     marktscan_erfolgsquote: dict | None = None
+    # CoinGecko-Monats-Kontingent (2026-07-31, echte 80%-Warnmail ausgeloest,
+    # siehe scheduler/background.py::coingecko_quota_check_job()).
+    coingecko_quota: dict | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -115,6 +118,7 @@ class RemoteStatus:
             "selbst_gewaehltes_halten_performance": self.selbst_gewaehltes_halten_performance,
             "selbst_gewaehltes_halten_performance_nach_grund": self.selbst_gewaehltes_halten_performance_nach_grund,
             "marktscan_erfolgsquote": self.marktscan_erfolgsquote,
+            "coingecko_quota": self.coingecko_quota,
         }
 
 
@@ -209,6 +213,7 @@ def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, erro
             _get_selbst_gewaehltes_halten_performance_nach_grund, conn, watchlist,
         ),
         marktscan_erfolgsquote=_safe(_get_marktscan_erfolgsquote, conn),
+        coingecko_quota=_safe(_get_coingecko_quota, conn),
     )
 
 
@@ -217,6 +222,26 @@ def _get_api_health(conn: sqlite3.Connection) -> dict:
     database/api_health.py::track_api_health()) - reiner Lesezugriff, keine neue
     Logik."""
     return db.get_api_health_status(conn)
+
+
+def _get_coingecko_quota(conn: sqlite3.Connection) -> dict | None:
+    """CoinGecko-Monats-Kontingent-Sichtbarkeit (2026-07-31, echte 80%-
+    Warnmail von CoinGecko ausgeloest, siehe scheduler/background.py::
+    coingecko_quota_check_job()) - reiner Lesezugriff auf den Zaehler, keine
+    neue Logik. None, wenn coingecko_quota.monatslimit in config.yaml (noch)
+    nicht gesetzt ist."""
+    config_dict = config_module.load_config()
+    limit = config_dict.get("coingecko_quota", {}).get("monatslimit")
+    if not limit:
+        return None
+    monat = db.aktueller_monat_utc()
+    anzahl = db.get_api_call_counter(conn, "coingecko", monat)
+    return {
+        "monat": monat,
+        "anzahl": anzahl,
+        "limit": limit,
+        "prozent": round((anzahl / limit) * 100, 1),
+    }
 
 
 def _get_provider_performance(conn: sqlite3.Connection, watchlist: list) -> dict:

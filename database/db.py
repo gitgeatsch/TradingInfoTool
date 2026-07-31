@@ -373,6 +373,34 @@ CREATE TABLE IF NOT EXISTS api_health_status (
     last_error_message  TEXT
 );
 
+-- API-Call-Kontingent-Tracking (2026-07-31, echte CoinGecko-80%-Warnmail
+-- ausgeloest) - Monats-Zaehler je externer Quelle mit einem Call-Kontingent
+-- (aktuell nur CoinGecko: 10.000 Calls/Monat, mit ODER ohne API-Key, siehe
+-- api/coingecko.py-Modul-Docstring). monat als "YYYY-MM" (UTC-Kalendermonat
+-- als Naeherung fuer CoinGecko's tatsaechlichen Abrechnungszyklus, der uns
+-- nicht bekannt ist). Bewusst getrennt von api_health_status (dort ein
+-- Zustand je Quelle, hier ein Zaehler je Quelle+Monat).
+CREATE TABLE IF NOT EXISTS api_call_kontingent (
+    source  TEXT NOT NULL,
+    monat   TEXT NOT NULL,
+    anzahl  INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (source, monat)
+);
+
+-- Verhindert wiederholte Warnmails fuer dieselbe Schwelle im selben Monat.
+-- Bewusst DB-persistiert statt In-Memory-Cooldown (Muster bei anderen
+-- Warnmails im Projekt, z.B. _last_cash_veto_email_sent) - ein In-Memory-
+-- Zeitstempel ginge bei jedem Neustart verloren und wuerde angesichts der
+-- beobachteten Neustart-Haeufigkeit (siehe Memory
+-- project_bug_runde_31_07_notebook_export) zu Duplikat-Mails fuehren.
+CREATE TABLE IF NOT EXISTS api_call_kontingent_warnung_gesendet (
+    source           TEXT NOT NULL,
+    monat            TEXT NOT NULL,
+    schwelle_prozent INTEGER NOT NULL,
+    gesendet_am      TEXT NOT NULL,
+    PRIMARY KEY (source, monat, schwelle_prozent)
+);
+
 -- Historischer Makro-Konstellationsvergleich (2026-07-18, siehe Memory
 -- project_konfidenz_kalibrierung_regelwerk.md / makro_analog.py) - monatliche
 -- Zeitreihe mehrerer Makro-Faktoren + gecachtes Vergleichsergebnis.
@@ -3505,6 +3533,62 @@ def record_api_health_error(conn: sqlite3.Connection, source: str, error_type: s
         "ON CONFLICT(source) DO UPDATE SET last_error_at = excluded.last_error_at, "
         "last_error_type = excluded.last_error_type, last_error_message = excluded.last_error_message",
         (source, _now_iso(), error_type, error_message),
+    )
+    conn.commit()
+
+
+def aktueller_monat_utc() -> str:
+    """Gemeinsamer Monats-Schluessel ("YYYY-MM", UTC) fuer das Kontingent-
+    Tracking unten - EINE Quelle der Wahrheit fuer Schreiber (increment_
+    api_call_counter) UND Leser (scheduler/background.py::
+    coingecko_quota_check_job), damit beide niemals auseinanderlaufen."""
+    return datetime.now(timezone.utc).strftime("%Y-%m")
+
+
+def increment_api_call_counter(conn: sqlite3.Connection, source: str) -> int:
+    """Kontingent-Tracking (2026-07-31, siehe api_call_kontingent-Tabellen-
+    Kommentar). Erhoeht den Zaehler fuer `source` im aktuellen UTC-Monat um 1
+    und gibt den neuen Stand zurueck (fuer den Aufrufer, der ggf. sofort eine
+    Warnschwelle pruefen will, ohne einen zweiten SELECT zu brauchen)."""
+    monat = aktueller_monat_utc()
+    conn.execute(
+        "INSERT INTO api_call_kontingent (source, monat, anzahl) VALUES (?, ?, 1) "
+        "ON CONFLICT(source, monat) DO UPDATE SET anzahl = anzahl + 1",
+        (source, monat),
+    )
+    conn.commit()
+    row = conn.execute(
+        "SELECT anzahl FROM api_call_kontingent WHERE source = ? AND monat = ?",
+        (source, monat),
+    ).fetchone()
+    return row["anzahl"]
+
+
+def get_api_call_counter(conn: sqlite3.Connection, source: str, monat: str | None = None) -> int:
+    """Reiner Lesezugriff (Remote-Status-Karte, coingecko_quota_check_job) -
+    0, wenn fuer den Monat noch kein einziger Call gezaehlt wurde."""
+    monat = monat or aktueller_monat_utc()
+    row = conn.execute(
+        "SELECT anzahl FROM api_call_kontingent WHERE source = ? AND monat = ?",
+        (source, monat),
+    ).fetchone()
+    return row["anzahl"] if row else 0
+
+
+def has_quota_warnung_been_sent(conn: sqlite3.Connection, source: str, monat: str, schwelle_prozent: int) -> bool:
+    row = conn.execute(
+        "SELECT 1 FROM api_call_kontingent_warnung_gesendet "
+        "WHERE source = ? AND monat = ? AND schwelle_prozent = ?",
+        (source, monat, schwelle_prozent),
+    ).fetchone()
+    return row is not None
+
+
+def record_quota_warnung_sent(conn: sqlite3.Connection, source: str, monat: str, schwelle_prozent: int) -> None:
+    conn.execute(
+        "INSERT OR IGNORE INTO api_call_kontingent_warnung_gesendet "
+        "(source, monat, schwelle_prozent, gesendet_am) VALUES (?, ?, ?, ?)",
+        (source, monat, schwelle_prozent, _now_iso()),
     )
     conn.commit()
 

@@ -4,6 +4,7 @@ moeglich). Mit kostenlosem Demo-API-Key (COINGECKO_API_KEY in .env): 100 Req/Min
 stabiler. Key ist optional - App funktioniert auch ohne (konservativeres Limit)."""
 from __future__ import annotations
 
+import logging
 import time
 from collections import deque
 from dataclasses import dataclass
@@ -11,8 +12,11 @@ from datetime import datetime, timezone
 
 import requests
 
+import database.db as db
 from database.api_health import track_api_health
 from database.models import PriceSnapshot
+
+logger = logging.getLogger(__name__)
 
 BASE_URL = "https://api.coingecko.com/api/v3"
 RATE_LIMIT_ANONYMOUS_PER_MINUTE = 30
@@ -94,10 +98,36 @@ class CoinGeckoClient:
                 time.sleep(sleep_for)
         self._call_timestamps.append(time.monotonic())
 
+    def _track_quota(self) -> None:
+        """Kontingent-Zaehlung (2026-07-31, echte CoinGecko-80%-Warnmail
+        ausgeloest, siehe Memory project_bug_runde_31_07_notebook_export) -
+        zaehlt jeden tatsaechlich an CoinGecko gesendeten Call fuer die
+        Monats-Warnschwellen-Pruefung (scheduler/background.py::
+        coingecko_quota_check_job). Bewusst NACH response = self._session.
+        get(...) aufgerufen (siehe _get()): ein Netzwerkfehler VOR einer
+        Antwort (Timeout/Connection-Error) hat noch kein Kontingent
+        verbraucht, ein empfangener 429/4xx/5xx dagegen schon (CoinGecko hat
+        den Request bereits verarbeitet). Fehler bei der Zaehlung selbst
+        duerfen NIE den eigentlichen API-Call zum Scheitern bringen -
+        deshalb breit abgefangen und nur geloggt (gleiches Vorsichtsprinzip
+        wie database/api_health.py, aber dort wird bewusst NICHT abgefangen -
+        hier zusaetzliche Vorsicht, weil eine reine Zaehl-Nebenwirkung
+        niemals wichtiger sein darf als der eigentliche Preis-/Marktdaten-
+        Abruf)."""
+        try:
+            conn = db.get_connection()
+            try:
+                db.increment_api_call_counter(conn, "coingecko")
+            finally:
+                conn.close()
+        except Exception:
+            logger.exception("Kontingent-Zaehlung fuer CoinGecko fehlgeschlagen (Call selbst nicht betroffen)")
+
     @track_api_health("coingecko")
     def _get(self, url: str, params: dict) -> dict:
         self._respect_rate_limit()
         response = self._session.get(url, params=params, timeout=15)
+        self._track_quota()
         if response.status_code == 429:
             # Server sagt "zu viele Anfragen" trotz unseres eigenen Limiters (z.B. IP-weites
             # Limit, nicht nur pro Client) - exponentiell laengere Abkuehlpause erzwingen,
