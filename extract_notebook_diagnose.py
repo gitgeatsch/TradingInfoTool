@@ -279,8 +279,11 @@ _HEBEL_SIGNAL_SPALTEN = (
     # database/db.py::_HEBEL_SIGNAL_SELBST_HALTEN_NEW_COLUMNS-Docstring) -
     # Gegenfall zum Veto-Schatten oben: kein Gate/Veto, das LLM hat sich
     # selbst gegen einen Trade entschieden, aber trotzdem eine hypothetische
-    # Zone angegeben.
-    "ist_reines_llm_halten, "
+    # Zone angegeben. original_action (selber Tag, Fund 2 der Kontrapruefung,
+    # siehe Basisinfos/Regelwerksmanual.md-Nachtrag) urspruenglich beim Fix
+    # selbst vergessen - haette ohne Export nie sichtbar verifiziert werden
+    # koennen.
+    "ist_reines_llm_halten, original_action, "
     "selbst_halten_outcome_status, selbst_halten_outcome_geprueft_am, "
     "selbst_halten_outcome_entschieden_am, selbst_halten_outcome_realisiertes_crv, "
     "selbst_halten_outcome_max_realisiertes_crv, selbst_halten_outcome_mindestziel_erreicht_am, "
@@ -304,8 +307,9 @@ _SPOT_SIGNAL_SPALTEN = (
     "veto_outcome_realisiertes_crv, veto_outcome_max_realisiertes_crv, "
     "veto_outcome_mindestziel_erreicht_am, "
     # Selbst-gewaehltes-HALTEN-Schatten-Tracking (2026-07-31), identisches
-    # Feld-Set wie _HEBEL_SIGNAL_SPALTEN oben.
-    "ist_reines_llm_halten, "
+    # Feld-Set wie _HEBEL_SIGNAL_SPALTEN oben. original_action ebenfalls
+    # nachgezogen (siehe Kommentar dort - beim urspruenglichen Fix vergessen).
+    "ist_reines_llm_halten, original_action, "
     "selbst_halten_outcome_status, selbst_halten_outcome_geprueft_am, "
     "selbst_halten_outcome_entschieden_am, selbst_halten_outcome_realisiertes_crv, "
     "selbst_halten_outcome_max_realisiertes_crv, selbst_halten_outcome_mindestziel_erreicht_am, "

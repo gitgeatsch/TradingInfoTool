@@ -4,6 +4,7 @@ Flask-Abhaengigkeit - eigenstaendig testbar, gleiches Trennungsprinzip wie
 staleness.py (Domaenenlogik) vs. ui/formatting.py (Anzeige)."""
 from __future__ import annotations
 
+import logging
 import sqlite3
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -14,7 +15,26 @@ import database.db as db
 import scheduler.background as background
 from staleness import is_price_stale
 
+logger = logging.getLogger(__name__)
+
 _TREFFER_EINSTUFUNGEN = {"kaufkandidat", "watchlist_wuerdig"}
+
+
+def _safe(fn, *args, **kwargs):
+    """Fehlerisolierung je Karte (2026-07-31, Bug-Runde-Fund): build_status()
+    reihte bisher alle _get_*()-Aufrufe direkt als Konstruktor-Argumente von
+    RemoteStatus(...) auf - EIN Fehler in irgendeiner der ueber 15 Karten (z.B.
+    der original_action-Rename-Vorfall vom selben Tag) riss die KOMPLETTE
+    /api/status-Antwort mit, genau in dem Moment nach einem Deploy, in dem die
+    Remote-Seite am dringendsten gebraucht wird (264 Fehlschlaege in ~9 Minuten
+    im Log beobachtet, weil die Seite alle paar Sekunden pollt). Ab jetzt
+    bleibt ein Fehler auf die eine betroffene Karte begrenzt (None statt
+    Daten), der Rest der Seite funktioniert weiter."""
+    try:
+        return fn(*args, **kwargs)
+    except Exception:
+        logger.exception("Remote-Status-Karte '%s' fehlgeschlagen - Rest der Seite bleibt unbeeinflusst", fn.__name__)
+        return None
 
 
 @dataclass
@@ -166,29 +186,29 @@ def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, erro
         cash_reserve_eur=fiat_cash_eur,
         cash_reserve_synced_at=db.get_cash_reserve_synced_at(conn),
         staked_value_eur=staked_value_eur,
-        marktscan_last=_get_marktscan_last(conn),
+        marktscan_last=_safe(_get_marktscan_last, conn),
         recent_errors=_tail_log_errors(log_path, error_tail_lines),
         jobs_running=jobs_running,
         jobs_running_seit_minuten=jobs_running_seit_minuten,
-        budget_heute=_get_budget_heute(conn),
-        provider_performance=_get_provider_performance(conn, watchlist),
-        offene_signale=_get_offene_signale_uebersicht(conn, watchlist),
-        konfidenz_kalibrierung=_get_konfidenz_kalibrierung(conn, watchlist),
-        api_health=_get_api_health(conn),
-        regime_status=_get_regime_status(conn),
-        parameter_overview=_get_parameter_overview(),
-        richtungstreffer_quote=_get_richtungstreffer_quote(conn, watchlist),
-        zai_richtung_performance=_get_zai_richtung_performance(conn, watchlist),
-        veto_schatten_performance=_get_veto_schatten_performance(conn, watchlist),
-        zai_richtung_performance_schatten=_get_zai_richtung_performance_schatten(conn, watchlist),
-        gesamt_signalqualitaet=_get_gesamt_signalqualitaet(conn, watchlist),
-        provider_sendezaehler=_get_provider_sendezaehler(conn, watchlist),
-        veto_schatten_performance_nach_grund=_get_veto_schatten_performance_nach_grund(conn, watchlist),
-        selbst_gewaehltes_halten_performance=_get_selbst_gewaehltes_halten_performance(conn, watchlist),
-        selbst_gewaehltes_halten_performance_nach_grund=_get_selbst_gewaehltes_halten_performance_nach_grund(
-            conn, watchlist,
+        budget_heute=_safe(_get_budget_heute, conn),
+        provider_performance=_safe(_get_provider_performance, conn, watchlist),
+        offene_signale=_safe(_get_offene_signale_uebersicht, conn, watchlist),
+        konfidenz_kalibrierung=_safe(_get_konfidenz_kalibrierung, conn, watchlist),
+        api_health=_safe(_get_api_health, conn),
+        regime_status=_safe(_get_regime_status, conn),
+        parameter_overview=_safe(_get_parameter_overview),
+        richtungstreffer_quote=_safe(_get_richtungstreffer_quote, conn, watchlist),
+        zai_richtung_performance=_safe(_get_zai_richtung_performance, conn, watchlist),
+        veto_schatten_performance=_safe(_get_veto_schatten_performance, conn, watchlist),
+        zai_richtung_performance_schatten=_safe(_get_zai_richtung_performance_schatten, conn, watchlist),
+        gesamt_signalqualitaet=_safe(_get_gesamt_signalqualitaet, conn, watchlist),
+        provider_sendezaehler=_safe(_get_provider_sendezaehler, conn, watchlist),
+        veto_schatten_performance_nach_grund=_safe(_get_veto_schatten_performance_nach_grund, conn, watchlist),
+        selbst_gewaehltes_halten_performance=_safe(_get_selbst_gewaehltes_halten_performance, conn, watchlist),
+        selbst_gewaehltes_halten_performance_nach_grund=_safe(
+            _get_selbst_gewaehltes_halten_performance_nach_grund, conn, watchlist,
         ),
-        marktscan_erfolgsquote=_get_marktscan_erfolgsquote(conn),
+        marktscan_erfolgsquote=_safe(_get_marktscan_erfolgsquote, conn),
     )
 
 
