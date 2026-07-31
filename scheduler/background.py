@@ -1864,6 +1864,30 @@ def _sende_spot_email_mit_zai_wartezeit(
     )
 
 
+def _sende_multi_asset_email_mit_zai_wartezeit(
+    ergebnis, watchlist: list, bitpanda_assets: list | None, conn_factory,
+) -> None:
+    """Multi-Asset-Fassung (Aktien/Rohstoffe/Themen-ETF/Hedge) von
+    `_sende_signal_email_mit_zai_wartezeit()` - siehe dortigen Docstring fuer
+    die volle Begruendung. Ersetzt den bisherigen einmaligen Re-Fetch in
+    `multi_asset_batch_job()` (2026-07-27, Nachtrag "E-Mail: Re-Fetch statt
+    Hebel-artigem Wartemechanismus"): jener Ansatz nahm bewusst in Kauf, dass
+    NUR "die meisten" (nicht alle) Signale rechtzeitig fertig sind, weil die
+    Restlaufzeit des restlichen Batches als Puffer diente. Echter Fund
+    (2026-07-31, Nutzer-Screenshot: S&P-Hedge-VERKAUFEN-E-Mail komplett ohne
+    Z.ai-Zeilen) zeigte den Fall, in dem der Puffer nicht ausreichte.
+    `REQUIRED_ACTIONS` ist bei allen 4 Multi-Asset-Analysten identisch
+    (`agent.aktien/rohstoff/themen_etf/hedge.analyst`, jeweils ("KAUFEN",
+    "VERKAUFEN", "HALTEN", "NACHKAUFEN")) - hier direkt inline statt eines
+    beliebig wirkenden Imports aus nur einem der vier Module."""
+    _sende_signal_email_mit_zai_wartezeit(
+        ergebnis, watchlist, bitpanda_assets, conn_factory,
+        required_actions=("KAUFEN", "VERKAUFEN", "HALTEN", "NACHKAUFEN"),
+        get_signal_by_id_fn=db.get_signal_by_id,
+        notify_fn=_notify_multi_asset_signal,
+    )
+
+
 def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None, conn_factory=None) -> None:
     """Analog _notify_spot_signal() fuer Hebel-Empfehlungen (7-Aktionen-
     Vokabular statt 5, siehe agent/krypto/hebel_analyst.REQUIRED_HEBEL_
@@ -2424,28 +2448,23 @@ def multi_asset_batch_job(
                 bitpanda_assets = None
                 logger.info("Bitpanda-Listing-Abruf für Multi-Asset-Empfehlungs-E-Mails fehlgeschlagen: %s", exc)
             for signal in result.ergebnis_objekt.values():
-                # Re-Fetch vor Versand (Nachtrag, Z.ai-Ausweitung auf Multi-Asset) -
-                # kein Hebel-artiger Poll-Wait-Mechanismus hier (siehe agent/
-                # multi_asset_batch.py Modul-Docstring): diese Schleife laeuft erst
-                # NACH Abschluss des GESAMTEN Batches (bis zu 13 Assets sequentiell),
-                # die Z.ai-Hintergrundpruefung ist durch diese Restlaufzeit fuer die
-                # meisten Signale bereits fertig - ein guenstiges Neuladen per ID
-                # reicht, kein zusaetzliches Warten noetig. Fehlschlag darf die
-                # E-Mail nicht verhindern (Fallback aufs urspruengliche Objekt).
-                if signal.id is not None:
-                    try:
-                        refetch_conn = conn_factory()
-                        try:
-                            frisches_signal = db.get_signal_by_id(refetch_conn, signal.id)
-                        finally:
-                            refetch_conn.close()
-                        if frisches_signal is not None:
-                            signal = frisches_signal
-                    except Exception:
-                        logger.exception(
-                            "Nachladen des Signals %s vor Multi-Asset-E-Mail fehlgeschlagen", signal.symbol,
-                        )
-                _notify_multi_asset_signal(signal, watchlist, bitpanda_assets, conn_factory)
+                # Wartemechanismus statt reinem Re-Fetch (2026-07-31, Nachtrag -
+                # echter Fund: eine S&P-Hedge-VERKAUFEN-E-Mail hatte trotz
+                # unbedingtem Z.ai-Aufruf gar keine Z.ai-Zeilen, siehe
+                # _sende_multi_asset_email_mit_zai_wartezeit()-Docstring fuer
+                # die volle Begruendung. Eigener Hintergrund-Thread pro Signal
+                # (wie bei Hebel/Spot in _on_signal_ready()) blockiert die
+                # anderen Signale in dieser Schleife NICHT - sie startet nur
+                # Threads und kehrt sofort zurueck, der E-Mail-Latenz-Fix
+                # bleibt dadurch unberuehrt.
+                if zai_client is not None:
+                    threading.Thread(
+                        target=_sende_multi_asset_email_mit_zai_wartezeit,
+                        args=(signal, watchlist, bitpanda_assets, conn_factory),
+                        daemon=True,
+                    ).start()
+                else:
+                    _notify_multi_asset_signal(signal, watchlist, bitpanda_assets, conn_factory)
     except Exception as exc:
         logger.exception("Multi-Asset-Batch fehlgeschlagen")
         _notify_job_failure("multi_asset_batch", f"Multi-Asset-Batch fehlgeschlagen: {exc}")

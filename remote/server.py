@@ -471,7 +471,13 @@ function renderZaiRichtungPerformanceTier(label, tierData) {
     return '<div class="row"><span class="muted-text">' + label +
       ': noch keine bewertbaren Z.ai-Richtungs-Calls' + nebenHinweisText + '.</span></div>';
   }
-  return '<div class="row"><span>' + label + ' (n=' + tierData.anzahl_bewertet + ')' + nebenHinweisText + '</span>' +
+  // 2026-07-31, Screenshot-Review-Fund: anders als renderProviderPerformance()
+  // fehlte hier der Hinweis auf kleine Stichproben - gleiche Schwelle
+  // (PROVIDER_PERF_MIN_SAMPLE) nachgeruestet, damit n=1 nicht wie eine
+  // belastbare Quote aussieht.
+  const kleineStichprobe = tierData.anzahl_bewertet < PROVIDER_PERF_MIN_SAMPLE
+    ? ' <span class="muted-text">(n&lt;' + PROVIDER_PERF_MIN_SAMPLE + ', noch nicht belastbar)</span>' : '';
+  return '<div class="row"><span>' + label + ' (n=' + tierData.anzahl_bewertet + ')' + nebenHinweisText + kleineStichprobe + '</span>' +
     '<span>' + tierData.treffer + '/' + tierData.anzahl_bewertet + ' = ' +
     tierData.trefferquote_pct.toFixed(1) + '%</span></div>';
 }

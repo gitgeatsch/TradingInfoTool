@@ -12971,3 +12971,92 @@ Zusaetzlich zwei End-to-End-`extract_notebook_diagnose.py::main()`-Laeufe
 gegen frische temp-SQLite-Dateien (vor und nach dem `original_action`-Fix)
 ohne Fehler durchgelaufen - reproduziert exakt den Pfad, der beim Nutzer
 fehlschlug.
+
+## Nachtrag (2026-07-31): Staggering der Sofort-Start-Jobs, CoinGecko-Kontingent-Tracking, Remote-Fehlerisolierung, Z.ai-Kartenfix
+
+**Staggering der 8 Sofort-Start-Jobs** (`scheduler/background.py`,
+`_staggered_start(index)`, committet `88c0b82`): alle Sofort-Start-Jobs
+(`next_run_time=jetzt`) feuerten bisher gleichzeitig bei jedem Neustart -
+Root Cause fuer wiederholte yfinance-Timeouts und mindestens einen SQLite-
+"database is locked"-Absturz direkt nach dem Start. Jetzt um
+`index * 5s` gestaffelt. Per echtem Log-Vergleich bestaetigt: 0 yfinance-
+Timeouts und 0 DB-Lock-Vorfaelle ueber 3 Neustarts nach dem Fix, gegenueber
+nahezu 100% Vorfallquote davor.
+
+**Remote-Status-Fehlerisolierung** (`remote/status.py`, `_safe()`-Wrapper,
+committet `a9849fa`): eine einzelne kaputte `_get_*()`-Funktion riss bisher
+die komplette `/api/status`-Antwort mit - jetzt einzeln abgefangen und
+geloggt, Rest der Seite bleibt intakt.
+
+**CoinGecko-Kontingent-Tracking** (`api/coingecko.py`, `database/db.py`,
+`scheduler/background.py`, `remote/status.py`+`server.py`, committet
+`9a744a8`): ausgeloest durch eine echte CoinGecko-E-Mail ("80% consumption
+reached"). Zaehlt jeden tatsaechlich gesendeten Call ueber den einzigen
+Funnel-Punkt `CoinGeckoClient._get()`, Warnmails bei 80%/90% (DB-Flag statt
+Zeit-Cooldown, damit ein Neustart keine Duplikat-Mail ausloest - siehe
+Begruendung in Memory `project_coingecko_kontingent_tracking`).
+**Bekannte Einschraenkung:** der Zaehler startet bei Feature-Deploy
+(31.07., letzter Tag des Monats), nicht rueckwirkend ab Monatsanfang -
+die Remote-Karte zeigte am Deploy-Tag deshalb einen stark untertriebenen
+Prozentwert (z. B. 0,1% statt der von CoinGecko tatsaechlich gemeldeten
+80%). Ab dem 1. eines Monats beginnt der Zaehler jeweils zum echten
+Monatsanfang und ist dann akkurat - betrifft nur den einmaligen
+Deploy-Tag.
+
+**Z.ai-Richtungs-Karten: fehlender Kleine-Stichprobe-Hinweis behoben**
+(`remote/server.py::renderZaiRichtungPerformanceTier()`, Fund beim
+Screenshot-Review der Remote-Seite): anders als `renderProviderPerformance()`
+zeigte diese Funktion nie den "(n<15, noch nicht belastbar)"-Hinweis, auch
+bei n=1. Betraf beide Z.ai-Karten (Gruppe B und Veto-Schatten-Variante in
+Gruppe C), da beide dieselbe Renderfunktion nutzen. Jetzt dieselbe
+`PROVIDER_PERF_MIN_SAMPLE`-Schwelle nachgeruestet - rein kosmetisch, die
+zugrunde liegenden Prozentwerte waren immer korrekt.
+
+## Nachtrag (2026-07-31): Multi-Asset Z.ai-Wartemechanismus statt Re-Fetch (Entscheidungskatalog Punkt 1)
+
+**Ausloeser:** echter Nutzer-Fund - eine S&P-Hedge-VERKAUFEN-E-Mail hatte
+trotz unbedingtem Z.ai-Aufruf (`agent/hedge/pipeline.py`, `if zai_client is
+not None:` ohne Aktions-Filter) ueberhaupt keine Z.ai-Zeilen. Nutzer verwies
+auf seine fruehere Vorgabe "soll vom Grundprinzip bei allen Assets ident
+funktionieren" (27.07.) sowie die explizite Rueckfrage "hast du das fuer
+alle ZAI und eMail benachrichtigung beruecksichtigt?" (28.07.) und wollte
+wissen, ob dieser Fall damals uebersehen wurde. **Klarstellung:** nicht
+uebersehen - die Multi-Asset-Re-Fetch-Loesung (2026-07-27, "E-Mail: Re-Fetch
+statt Hebel-artigem Wartemechanismus") wurde bei der 28.07.-Pruefung explizit
+als ausreichend eingestuft ("fuer die meisten Signale bereits fertig"). Der
+heutige Fund zeigt den Fall, in dem diese probabilistische Annahme nicht
+zutraf - ein damals bewusst akzeptiertes Restrisiko, das jetzt real
+aufgetreten ist.
+
+**Fix:** neue Funktion `_sende_multi_asset_email_mit_zai_wartezeit()`
+(`scheduler/background.py`), dritter duenner Wrapper um die bereits
+bestehende, generische `_sende_signal_email_mit_zai_wartezeit()` (Hebel/Spot
+haben je einen eigenen). `REQUIRED_ACTIONS` ist bei allen 4 Multi-Asset-
+Analysten (Aktien/Rohstoffe/Themen-ETF/Hedge) identisch (`("KAUFEN",
+"VERKAUFEN", "HALTEN", "NACHKAUFEN")`, per Grep bestaetigt) - hier inline
+statt eines beliebig wirkenden Imports aus nur einem der vier Module.
+`multi_asset_batch_job()`s Benachrichtigungsschleife spawnt jetzt pro Signal
+einen eigenen Hintergrund-Thread (exakt das Muster von `_on_signal_ready()`
+fuer Hebel/Spot) statt des bisherigen einmaligen Re-Fetches - blockiert die
+anderen Signale in der Schleife nicht (E-Mail-Latenz-Fix bleibt intakt), da
+die Schleife selbst nur Threads startet und sofort zurueckkehrt. Bei
+`zai_client=None` weiterhin direkter Aufruf ohne jeden Refetch-Versuch
+(kein Z.ai-Hintergrund-Thread existiert in diesem Fall ueberhaupt).
+
+**Verifiziert (Klasse 2, 21 Pruefungen, alle PASS):** Wrapper-Funktion
+isoliert (HALTEN-Fruehausstieg ohne Wartezeit, Z.ai-Urteil trifft waehrend
+der Wartezeit ein -> Early-Break mit angereichertem Signal, Z.ai-Urteil
+trifft nie ein -> Zeitlimit greift, E-Mail trotzdem ohne Z.ai-Zeilen);
+`multi_asset_batch_job()` end-to-end gegen frische temp-SQLite-Datei (nie
+Produktions-DB) mit gemocktem `run_multi_asset_batch()`/`get_listed_assets()`
+und abgefangenem `threading.Thread` (erfasst Ziel+Argumente statt echter
+Thread-Ausfuehrung, danach synchron im Test nachvollzogen): `zai_client`
+gesetzt -> genau 1 Thread mit korrektem Ziel gespawnt, kein synchroner
+`notify_fn`-Aufruf in der Schleife selbst; `zai_client=None` -> kein Thread,
+direkter `notify_fn`-Aufruf, `db.get_signal_by_id()` kein einziges Mal
+aufgerufen (kein toter Refetch-Versuch mehr). Regressionscheck: beide
+bestehenden Wrapper (Hebel/Spot) sowie ihre `REQUIRED_ACTIONS`-Importe
+unveraendert funktionsfaehig.
+
+**Status:** Code-Fix implementiert + verifiziert, Commit noch ausstehend
+(Nutzer-Entscheidung, siehe Entscheidungskatalog Punkt 1).
