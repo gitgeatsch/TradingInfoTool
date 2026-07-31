@@ -770,7 +770,12 @@ def _migrate_hebel_signal_veto_shadow_columns(conn: sqlite3.Connection) -> None:
 # verwendung derselben Spalten - eine vergessene Filterstelle wuerde sonst
 # zwei strukturell unterschiedliche Fragen ("war das Gate richtig?" vs. "war
 # die eigene LLM-Zurueckhaltung richtig?") vermischen.
-_SIGNAL_LLM_HALTEN_NEW_COLUMNS = {"ist_reines_llm_halten": "INTEGER"}
+#
+# original_action (2026-07-31 Nachtrag, Kontrapruefung nach dem obigen
+# Feature - echter Fund): siehe database/models.py::HebelSignal.
+# original_action-Docstring - macht _hat_hebel_veto_schatten_these() moeglich,
+# ein bereits vor dem Veto selbst gewaehltes HALTEN auszuschliessen.
+_SIGNAL_LLM_HALTEN_NEW_COLUMNS = {"ist_reines_llm_halten": "INTEGER", "original_action": "TEXT"}
 
 
 def _migrate_signal_llm_halten_column(conn: sqlite3.Connection) -> None:
@@ -782,7 +787,7 @@ def _migrate_signal_llm_halten_column(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
-_HEBEL_SIGNAL_LLM_HALTEN_NEW_COLUMNS = {"ist_reines_llm_halten": "INTEGER"}
+_HEBEL_SIGNAL_LLM_HALTEN_NEW_COLUMNS = {"ist_reines_llm_halten": "INTEGER", "original_action": "TEXT"}
 
 
 def _migrate_hebel_signal_llm_halten_column(conn: sqlite3.Connection) -> None:
@@ -2060,7 +2065,7 @@ _SIGNAL_COLUMNS = (
     "cash_reserve_ziel_begruendung", "gegenargument", "cash_veto", "cash_veto_reason",
     "risikofaktoren_json", "fazit_folgen", "fazit_kurzfazit", "fazit_konsistenz_hinweis",
     "mindestziel_usd", "mindestziel_eur", "mindestziel_zeitraum_tage_geschaetzt",
-    "ist_reines_llm_halten",
+    "ist_reines_llm_halten", "original_action",
 )
 
 
@@ -3173,7 +3178,7 @@ _HEBEL_SIGNAL_COLUMNS = (
     "zai_gegenpruefung_urteil", "zai_gegenpruefung_kurzbegruendung",
     "zai_eigene_richtung", "zai_uebereinstimmung", "zai_richtung_kurzbegruendung",
     "mindestziel_usd", "mindestziel_eur", "mindestziel_zeitraum_tage_geschaetzt",
-    "ist_reines_llm_halten",
+    "ist_reines_llm_halten", "original_action",
 )
 
 

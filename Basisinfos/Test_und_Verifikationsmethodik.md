@@ -81,6 +81,36 @@ Verifikation [Datum]:
 Für Klasse 1 genügt eine Kurzfassung ("Modul-Import OK, Regelnummerierung 1-N ohne
 Lücke, Compile-Check OK").
 
+### 1.4 Lücke gefunden und geschlossen (2026-07-31): `py_compile`/`ast.parse` reicht NICHT für Funktionsumbenennungen
+
+**Auslöser:** nach dem Selbst-Halten-Schatten-Feature (siehe Regelwerksmanual-
+Nachtrag) lief `extract_notebook_diagnose.py` am Notebook mit `NameError:
+name '_richtung_aus_veto_zonen' is not defined`. Die Funktion war im selben
+Commit zu `_richtung_aus_zonen()` umbenannt worden - `python -m py_compile`
+UND ein reiner `ast.parse()`-Check waren beide grün, weil beide nur Syntax
+prüfen, nicht ob ein referenzierter Name zur Laufzeit existiert. Der
+verbliebene Aufruf lag in `compute_zai_richtung_performance_schatten()` -
+einer bereits BESTEHENDEN Funktion (28.07.), die beim Umbenennen nicht als
+Aufrufer erkannt wurde, weil sie nicht Teil des aktuell bearbeiteten
+Funktions-Sets war.
+
+**Lehre 1 - bei jeder Funktions-/Symbol-Umbenennung:** `grep -rn "<alter_name>"`
+über das GESAMTE Repository (nicht nur die Datei, die gerade bearbeitet wird)
+VOR dem Abschluss der Änderung, nicht danach. Ein "einziger Aufrufer" ist eine
+Annahme, keine verifizierte Tatsache, bis der Grep sie bestätigt hat.
+
+**Lehre 2 - `py_compile`/`ast.parse` deckt nur Syntaxfehler ab, keine
+Laufzeit-Namensauflösung.** Ein `NameError` in einer Funktion, die im
+Testlauf nie AUFGERUFEN wird, bleibt für beide Checks unsichtbar. Für
+Skripte mit einem klaren Einstiegspunkt (`extract_notebook_diagnose.py::
+main()`, ähnliche Batch-/Export-Skripte) gehört ab jetzt zur Klasse-2/3-
+Mindesttiefe zusätzlich ein **End-to-End-Smoke-Test des Einstiegspunkts**
+gegen eine frische temp-SQLite-Datei (DB_PATH umgebogen, NIE Produktiv-DB,
+siehe [[feedback_desktop_kein_produktivstart]]) - nicht nur ein Test der
+einzelnen neu geschriebenen Funktionen. Der reine `import`-Test allein reicht
+ebenfalls nicht (Python löst Namen erst bei Funktionsaufruf auf, nicht beim
+Modul-Import).
+
 ---
 
 ## 2. Notebook-Export-Analyse-Standard (Realitätscheck + Lerneffekt)

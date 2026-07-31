@@ -12909,3 +12909,65 @@ Ein echter Lauf gegen Notebook-Produktivdaten steht als Nachtrag aus
 (braucht mehrere Wochen echter Signale, bis genug selbst gewählte HALTEN-Fälle
 aufgelöst sind, um die Frage "war die Zurückhaltung richtig?" belastbar zu
 beantworten - Wiedervorlage entsprechend spät).
+
+## Nachtrag (2026-07-31): zwei echte Funde beim ersten Notebook-Lauf - NameError-Bugfix + Veto-Schatten-Kontamination behoben
+
+**Auslöser 1 (Nutzer-Meldung):** der erste `extract_notebook_diagnose.py`-
+Lauf am Notebook nach dem obigen Feature schlug mit `NameError: name
+'_richtung_aus_veto_zonen' is not defined` fehl. Root Cause: beim Umbenennen
+`_richtung_aus_veto_zonen()` → `_richtung_aus_zonen()` wurde EIN Aufrufer
+übersehen - `compute_zai_richtung_performance_schatten()`, eine bereits
+bestehende Funktion vom 28.07., die nicht Teil des bearbeiteten Funktions-
+Sets war und daher beim manuellen Nachvollzug der Call-Sites nicht als
+Aufrufer erkannt wurde. `python -m py_compile` UND `ast.parse()` waren
+beide gruen, weil beide nur Syntax pruefen - der Fehler zeigte sich erst
+zur Laufzeit, als `main()` (indirekt) diese Funktion tatsaechlich aufrief.
+**Fix:** Aufrufstelle + 2 stale Docstring-Referenzen korrigiert
+(`agent/krypto/backward_tracking.py`). Methodik-Lehre in
+`Basisinfos/Test_und_Verifikationsmethodik.md` (Abschnitt 1.4) festgehalten:
+Umbenennungen brauchen ein repository-weites Grep VOR Abschluss, UND
+Skripte mit klarem Einstiegspunkt (`main()`) brauchen zusaetzlich zum reinen
+Klasse-2/3-Funktionstest einen End-to-End-Smoke-Test des Einstiegspunkts
+selbst.
+
+**Auslöser 2 (eigene Kontraprüfung, vom Nutzer explizit angefordert -
+"mach eine Kontraprüfung - kritisch als Experte"):** bei der kritischen
+Durchsicht der eigenen Loesung fiel ein zweiter, unabhaengiger Fund auf:
+`post_check_hebel()`s AZ-7/`krise_extrem`-Deckel (`if not pre_result.
+hebel_erlaubt:`) ist die EINZIGE **unbedingte** Veto-Verzweigung der
+Funktion - sie feuert unabhaengig davon, was das LLM urspruenglich
+entschied (alle anderen Veto-Zweige sind an `action != "HALTEN"` bzw. eine
+bestimmte `action` gebunden). Hatte das LLM in einem `krise_extrem`-Regime
+von sich aus schon HALTEN gewaehlt (und dank der neuen Regel 28 jetzt
+hypothetische Zonen dazu ausgefuellt), wurde dieser Fall trotzdem mit
+`risk_veto=True` markiert - und landete damit im bestehenden Veto-Schatten-
+Diskriminator (`risk_veto=True AND action=="HALTEN" AND Zonen gesetzt`),
+obwohl nie ein Trade vorgeschlagen wurde. **Vor Regel 28 war dieser Pfad
+strukturell inaktiv** (ein selbst gewaehltes HALTEN hatte nie Zonen, der
+Diskriminator schied schon an der Zonen-Bedingung aus) - die neue Regel 28
+hat diesen latenten Fall erst scharf geschaltet. Geprueft und ausgeschlossen:
+Spot hat keine unbedingte Veto-Verzweigung (`kauf_erlaubt`-Check ist immer
+an `action in _BUY_ACTIONS` gebunden) - Kontamination betrifft ausschliesslich
+Hebel.
+
+**Fix:** neues Feld `original_action: str | None` (additive Migration,
+`Signal`+`HebelSignal`) - persistiert dieselbe rohe Vor-Veto-Aktion, die
+`ist_reines_llm_halten` intern bereits berechnet, zusaetzlich als eigenes
+Feld. `_hat_hebel_veto_schatten_these()` verlangt jetzt zusaetzlich
+`original_action != "HALTEN"`. Bewusst rueckwaertskompatibel: fuer Alt-
+Zeilen ohne `original_action` (vor dieser Migration, Wert `None`) gilt
+`None != "HALTEN"` weiterhin als `True` - keine rueckwirkende Neubewertung
+bereits aufgeloester Faelle, der Fix wirkt nur auf Signale ab jetzt.
+
+**Verifiziert (9 zusaetzliche synthetische Pruefungen, alle PASS):**
+Kontaminations-Fall (`krise_extrem` + bereits selbst gewaehltes HALTEN mit
+Regel-28-Zonen) - `original_action` wird korrekt als `"HALTEN"` persistiert,
+Diskriminator schliesst den Fall jetzt korrekt aus; Kontroll-Fall (echter
+`ERÖFFNEN`-Vorschlag, per `krise_extrem` vetoed) - `original_action` wird
+korrekt als `"ERÖFFNEN"` persistiert, Diskriminator erfasst den Fall
+weiterhin unveraendert; Backward-Compat-Fall (Alt-Zeile ohne
+`original_action`) - Diskriminator erfasst den Fall weiterhin unveraendert.
+Zusaetzlich zwei End-to-End-`extract_notebook_diagnose.py::main()`-Laeufe
+gegen frische temp-SQLite-Dateien (vor und nach dem `original_action`-Fix)
+ohne Fehler durchgelaufen - reproduziert exakt den Pfad, der beim Nutzer
+fehlschlug.

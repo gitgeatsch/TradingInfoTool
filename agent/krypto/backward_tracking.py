@@ -390,7 +390,7 @@ def check_signal_veto_shadow_outcome(
     Identische TP/SL/MFE-Mechanik wie check_signal_outcome() (inkl. derselben
     konservativen Stop-Loss-vor-Take-Profit-Prioritaet bei Mehrfachtreffern am
     selben Tag) - einziger struktureller Unterschied: die Handelsrichtung kommt
-    aus _richtung_aus_veto_zonen() statt richtung_aus_action(), weil `action`
+    aus _richtung_aus_zonen() statt richtung_aus_action(), weil `action`
     hier bereits auf HALTEN steht. Gibt (neuer_status, extra_felder) zurueck,
     extra_felder passend fuer db.update_signal_veto_shadow_outcome(**extra_felder)
     (bewusst OHNE 'datenquelle'-Key - dieses Feld wird im Schatten-Zweig nicht
@@ -1519,7 +1519,7 @@ def compute_zai_richtung_performance_schatten(
     permanent unausgewertet).
 
     Direktions-Ableitung: Hebel nutzt weiterhin `signal.richtung` (vom Veto
-    unveraendert), Spot-family nutzt _richtung_aus_veto_zonen() (Zonen-
+    unveraendert), Spot-family nutzt _richtung_aus_zonen() (Zonen-
     Reihenfolge) statt richtung_aus_action() - `action` steht hier bereits auf
     HALTEN, richtung_aus_action() wuerde also None liefern (siehe dortiger
     Docstring). Gleiche Tier-Aufschluesselung und Rueckgabeform wie
@@ -1567,7 +1567,7 @@ def compute_zai_richtung_performance_schatten(
         signal = db.get_signal_by_id(conn, row["id"])
         if signal is None:
             continue
-        primaer_richtung = _richtung_aus_veto_zonen(signal)
+        primaer_richtung = _richtung_aus_zonen(signal)
         if primaer_richtung is None:
             continue
         tier = assetklasse_by_symbol.get(row["symbol"], "unbekannt") if watchlist else "spot"

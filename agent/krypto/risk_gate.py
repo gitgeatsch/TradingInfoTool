@@ -1142,6 +1142,11 @@ def post_check(
     result["_ist_reines_llm_halten"] = (
         original_action == "HALTEN" and action == "HALTEN" and not risk_veto
     )
+    # Rohe LLM-Aktion VOR jedem Veto (2026-07-31, Nachtrag - Kontrapruefung,
+    # nur zur Symmetrie mit HebelSignal.original_action persistiert - Spot hat
+    # keinen unbedingten Veto-Zweig, daher kein Diskriminator-Bug hier zu
+    # beheben, siehe Signal.original_action-Docstring).
+    result["_original_action"] = original_action
     # Cash-Veto (2026-07-18, Detailanalyse) - bewusst IMMER durchgereicht, nicht
     # nur bei einer tatsaechlichen Aktions-Ueberschreibung (siehe cash_veto-
     # Docstring in RiskPreCheckResult): das ist der tatsaechliche RM-4-Zustand

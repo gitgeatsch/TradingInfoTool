@@ -221,6 +221,15 @@ class Signal:
     # "HALTEN" war UND am Ende weiterhin "HALTEN" ist UND kein risk_veto
     # gesetzt wurde (siehe risk_gate.py::post_check(), original_action).
     ist_reines_llm_halten: bool = False
+    # Rohe LLM-Aktion VOR jedem Veto (2026-07-31, Nachtrag - Kontraprüfung
+    # nach dem obigen Feature): persistiert dieselbe Groesse, die
+    # ist_reines_llm_halten schon intern verwendet - hier zusaetzlich als
+    # eigenes Feld, damit _hat_veto_schatten_these() sie ebenfalls lesen
+    # kann. Spot hat keinen unbedingten Veto-Zweig (kauf_erlaubt-Check ist
+    # immer an `action in _BUY_ACTIONS` gebunden), daher rein zur Symmetrie
+    # mit HebelSignal.original_action persistiert - kein Diskriminator-Bug
+    # hier zu beheben.
+    original_action: str | None = None
     groq_raw_response: str | None = None
     groq_model: str | None = None
     # Gegenargument-Pflichtfeld (2026-07-18, Regel 22 in analyst.py::SYSTEM_PROMPT,
@@ -677,6 +686,18 @@ class HebelSignal:
     # Generierung berechnetes Flag statt nachtraeglicher Ableitung aus
     # action/risk_veto, um genau diese beiden Sonderfaelle nicht zu vermischen.
     ist_reines_llm_halten: bool = False
+    # Rohe LLM-Aktion VOR jedem Veto (2026-07-31, Nachtrag - Kontraprüfung
+    # nach dem obigen Feature, echter Fund): post_check_hebel()'s
+    # `if not pre_result.hebel_erlaubt:`-Zweig (AZ-7/krise_extrem-Deckel)
+    # ist UNBEDINGT - feuert unabhaengig davon, was das LLM urspruenglich
+    # entschied. War die Aktion schon vorher HALTEN (selbst gewaehlt, jetzt
+    # dank Regel 28 mit hypothetischen Zonen), landete dieser Fall bisher
+    # trotzdem im Veto-Schatten-Topf (`_hat_hebel_veto_schatten_these()`
+    # prueft nur `risk_veto=True AND action=="HALTEN" AND Zonen gesetzt`) -
+    # obwohl das LLM nie einen Trade vorschlug. Dieses Feld macht die
+    # Unterscheidung moeglich: `_hat_hebel_veto_schatten_these()` verlangt
+    # jetzt zusaetzlich `original_action != "HALTEN"`.
+    original_action: str | None = None
     groq_raw_response: str | None = None
     llm_model: str | None = None
     # Gegenargument-Pflichtfeld (2026-07-18, siehe Signal.gegenargument-Docstring,

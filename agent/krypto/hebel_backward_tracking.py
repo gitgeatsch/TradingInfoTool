@@ -262,8 +262,22 @@ def _hat_hebel_veto_schatten_these(signal) -> bool:
     UND `action="HALTEN"` (per Veto zurueckgestuft, z.B. Nur-Long-Deckel, CRV-
     Veto, Regime-Konflikt-Deckel, Retail-Konsens-Deckel - siehe hebel_risk_gate.py::
     post_check_hebel()) UND alle drei Preiszonen gesetzt. Ein regelkonformes,
-    selbst gewaehltes HALTEN hat KEINE Zonen und faellt automatisch durch."""
+    selbst gewaehltes HALTEN OHNE Zonen faellt automatisch durch.
+
+    Nachtrag 2026-07-31 (Kontrapruefung nach der Selbst-Halten-Schatten-
+    Erweiterung, echter Fund): zusaetzlich `original_action != "HALTEN"`
+    verlangt. Grund: `post_check_hebel()`s AZ-7/krise_extrem-Deckel
+    (`if not pre_result.hebel_erlaubt:`) ist UNBEDINGT - setzt `risk_veto=True`
+    unabhaengig davon, was das LLM urspruenglich entschied. War die Aktion
+    schon VORHER selbst gewaehltes HALTEN (das dank Regel 28 jetzt ebenfalls
+    hypothetische Zonen traegt), landete dieser Fall bisher faelschlich hier
+    im Veto-Schatten-Topf, obwohl nie ein Trade vorgeschlagen wurde. Alte
+    Zeilen ohne `original_action` (vor dieser Migration) bleiben unveraendert
+    erfasst (`None != "HALTEN"` ist True) - keine rueckwirkende Aenderung
+    bereits aufgeloester Faelle."""
     if not (getattr(signal, "risk_veto", False) and signal.action == "HALTEN"):
+        return False
+    if getattr(signal, "original_action", None) == "HALTEN":
         return False
     return (
         signal.entry_usd_von is not None

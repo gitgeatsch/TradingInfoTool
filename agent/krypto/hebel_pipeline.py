@@ -345,6 +345,7 @@ def generate_hebel_signal(
     risikofaktoren = corrected.pop("_risikofaktoren", None)
     fazit_konsistenz_hinweis = corrected.pop("_fazit_konsistenz_hinweis", None)
     ist_reines_llm_halten = corrected.pop("_ist_reines_llm_halten", False)
+    original_action = corrected.pop("_original_action", None)
     eigene_einschaetzung = corrected.get("eigene_einschaetzung") or {}
 
     # Nachtrag 2026-07-17 (echter LINK-Fall - Punkt 3A+3B der Regelwerk-
@@ -500,6 +501,7 @@ def generate_hebel_signal(
         kontrathese_zu_position=corrected.get("kontrathese_zu_position", False),
         kontrathese_llm_richtung=corrected.get("kontrathese_llm_richtung"),
         ist_reines_llm_halten=ist_reines_llm_halten,
+        original_action=original_action,
         fazit_folgen=eigene_einschaetzung.get("folgen"),
         fazit_kurzfazit=eigene_einschaetzung.get("kurzfazit"),
         fazit_konsistenz_hinweis=fazit_konsistenz_hinweis,

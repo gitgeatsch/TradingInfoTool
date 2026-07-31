@@ -1198,6 +1198,12 @@ def post_check_hebel(
     result["_ist_reines_llm_halten"] = (
         ursprüngliche_action == "HALTEN" and action == "HALTEN" and not risk_veto
     )
+    # Rohe LLM-Aktion VOR jedem Veto (2026-07-31, Nachtrag - Kontrapruefung,
+    # echter Fund): persistiert, damit _hat_hebel_veto_schatten_these() ein
+    # bereits selbst gewaehltes HALTEN ausschliessen kann, das per unbedingtem
+    # AZ-7/krise_extrem-Deckel zusaetzlich risk_veto=True bekommt (siehe
+    # HebelSignal.original_action-Docstring fuer die volle Herleitung).
+    result["_original_action"] = ursprüngliche_action
 
     # Risikofaktoren-Liste (2026-07-19, Abschnitt 3 der neuen E-Mail-/App-
     # Struktur) - dieselben Werte wie oben in _hebel_deckel_kandidaten()
