@@ -773,6 +773,25 @@ class HebelSignal:
     # exakte Messgroesse statt Approximation. Nur Hebel (Regel 6 existiert
     # nur dort, kein Spot-Pendant).
     atr_relativ_prozent_bei_signal: float | None = None
+    # Angefragte Richtung (2026-07-31, echter VIRTUAL-Fund: Cooldown-Umgehung
+    # durch Nur-Long-Deckel) - `richtung` oben ist die vom LLM frei gewaehlte
+    # Antwort (siehe kontrathese_llm_richtung-Docstring, gleiches Prinzip: das
+    # LLM darf abweichen). Wenn das LLM ueber viele Zyklen konsistent in die
+    # Gegenrichtung des angefragten Kandidaten antwortet UND der Nur-Long-
+    # Deckel (hebel_risk_gate.py::post_check_hebel(), "Nur-Long-Deckel"-Zweig)
+    # greift, bleibt `richtung` bewusst unveraendert (siehe Docstring dort +
+    # hebel_backward_tracking.py::check_hebel_signal_veto_shadow_outcome() -
+    # Veto-Schatten-Tracking braucht die wahre Zonen-Richtung) - dadurch
+    # findet _filter_hebel_cooldown()/get_latest_hebel_signal_per_symbol_and_
+    # richtung() nie mehr einen Treffer fuer die eigentlich angefragte
+    # Richtung, und der 3,5h-Cooldown greift nie (jeden 15-Min-Zyklus erneut
+    # angefragt). Dieses Feld haelt separat die vom Screening/der offenen
+    # Position tatsaechlich angefragte Richtung fest (HebelTrigger.richtung
+    # zum Zeitpunkt des LLM-Calls, siehe hebel_pipeline.py) - ausschliesslich
+    # fuer den Cooldown-Filter (get_latest_hebel_signal_per_symbol_and_
+    # angefragte_richtung()), NICHT fuer Ueberholt-Erkennung/GUI/regime.py
+    # (die brauchen weiterhin die LLM-eigene `richtung`).
+    angefragte_richtung: str | None = None
     # Z.ai-Gegenpruefung (2026-07-26, siehe agent/krypto/gegenpruefung.py) -
     # unabhaengige Konsistenzpruefung (passt die eigene Begruendung zu den
     # harten Fakten?) durch ein separates, kleines LLM. Rein beobachtend

@@ -83,6 +83,7 @@ def _fixed_hebel_signal(
         hebel_trigger_id=trigger.id,
         trigger_zweig=trigger.trigger_zweig,
         trigger_score=trigger.score_gesamt,
+        angefragte_richtung=trigger.richtung,
     )
 
 
@@ -452,6 +453,7 @@ def generate_hebel_signal(
         hebel_trigger_id=trigger.id,
         trigger_zweig=trigger.trigger_zweig,
         trigger_score=trigger.score_gesamt,
+        angefragte_richtung=trigger.richtung,
         gegenargument=corrected.get("gegenargument"),
         confidence_pct=corrected.get("confidence_pct"),
         short_reasoning=corrected.get("short_reasoning"),

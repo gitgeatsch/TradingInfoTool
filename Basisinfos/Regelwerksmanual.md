@@ -13123,3 +13123,75 @@ aufgeloeste Hebel-LONG-Signale mit gesetztem `atr_relativ_prozent_bei_signal`
 vorliegen, direkter Vorher-Nachher-Bucket-Vergleich moeglich - siehe
 project_enge_stop_loss_backtest_und_massnahmen.md fuer den vollstaendigen
 Stand und die noch offene ~77%-Erklaerungsluecke.
+
+## Nachtrag (2026-07-31): Hebel-Cooldown-Umgehungs-Bugfix (echter VIRTUAL-Fund) - angefragte_richtung
+
+**Anlass:** Nutzer meldete eine Verdopplung der taeglichen Mistral-/CoinGecko-
+Abfragen ab dem 31.07. (Remote-Seite zeigte `LLM-Budget heute (Krypto):
+314 / 180`, davon 217 allein Hebel). Genaue Analyse (exakte Timestamps,
+`richtung`/`ist_reines_llm_halten`-Verlauf) zeigte: fuer VIRTUAL wechselte das
+LLM ab exakt 12:07:38 UTC konsistent von "antwortet LONG" auf "antwortet
+SHORT" (korreliert mit Fear&Greed="Extreme Fear"=25), obwohl die Kandidatur
+weiterhin LONG war (`hebel_richtung_modus: nur_long`). Ab diesem Zeitpunkt
+lief VIRTUAL alle ~15 Min. erneut durch die Analyse statt im vorgesehenen
+3,5h-`cooldown_stunden`-Abstand (43 Analysen an einem Tag statt ~7).
+
+**Root Cause:** `_filter_hebel_cooldown()` (`agent/krypto/budget_allocator.
+py`) nutzte `db.get_latest_hebel_signal_per_symbol_and_richtung()`, deren
+Lookup-Key `richtung` die vom LLM FREI gewaehlte Antwort ist (siehe deren
+eigener Docstring + `HebelSignal.kontrathese_llm_richtung`-Praezedenzfall) -
+NICHT die tatsaechlich angefragte Richtung. Der Nur-Long-Deckel-Veto-Zweig in
+`hebel_risk_gate.py::post_check_hebel()` ("Nur-Long-Deckel"-Kommentar) laesst
+`richtung` bewusst unveraendert (anders als die Kontrathese-Uebersetzung
+direkt darueber, die `richtung` deterministisch zurueckssetzt) - das ist seit
+dem 2026-07-28-Fix ("Nur-Long-Deckel-Luecke") beabsichtigt, weil `hebel_
+backward_tracking.py::check_hebel_signal_veto_shadow_outcome()` explizit
+darauf angewiesen ist, dass `richtung` die WAHRE (SHORT-)Form des vetoten
+Vorschlags behaelt (sonst wuerde die Veto-Schatten-Performance-Auswertung
+SHORT-foermige Zonen faelschlich als LONG auswerten - TP/SL-Richtung
+invertiert). Sobald das LLM ueber viele Zyklen konsistent SHORT statt LONG
+antwortete, fand `latest.get((symbol, "LONG"))` also nie mehr einen aktuellen
+Treffer - der Cooldown griff nicht mehr.
+
+**Kritische Gegenpruefung vor Umsetzung (Nutzer-Auftrag):** ein erster
+Loesungsansatz ("wie bei Kontrathese `richtung` zuruecksetzen") wurde anhand
+von `Regelwerksmanual.md` (Kontrathese-Nachtrag oben) und `hebel_backward_
+tracking.py`s Docstring explizit verworfen - das haette die Veto-Schatten-
+Tracking-Kette fuer alle Nur-Long-Deckel-Faelle stillschweigend korrumpiert.
+
+**Fix (rein additiv, beruehrt NUR den Cooldown-Filter):**
+- `database/models.py::HebelSignal.angefragte_richtung: str | None = None` -
+  neues, unabhaengiges Feld, haelt die vom Kandidaten (Screening-Trigger ODER
+  offene Position, `HebelTrigger.richtung`) tatsaechlich angefragte Richtung
+  fest, komplett unabhaengig von der LLM-Antwort `richtung`.
+- `database/db.py`: additive Migration `_migrate_hebel_signal_angefragte_
+  richtung_column()`, neue Spalte in `_HEBEL_SIGNAL_COLUMNS`, neue Funktion
+  `get_latest_hebel_signal_per_symbol_and_angefragte_richtung()` (exakter
+  struktureller Zwilling der bestehenden richtungsbasierten Funktion, aber
+  gruppiert auf `angefragte_richtung`).
+- `agent/krypto/hebel_pipeline.py`: `angefragte_richtung=trigger.richtung` an
+  beiden `HebelSignal(...)`-Konstruktionsstellen (Fixed-Signal-Pfad + echter
+  LLM-Pfad) ergaenzt.
+- `agent/krypto/budget_allocator.py::_filter_hebel_cooldown()`: Lookup auf
+  die neue Funktion umgestellt (einzige Verhaltensaenderung).
+- `extract_notebook_diagnose.py`: `angefragte_richtung` zu `_HEBEL_SIGNAL_
+  SPALTEN` ergaenzt (Diagnose-Sichtbarkeit fuer kuenftige Divergenz-Faelle).
+- **Unveraendert (bewusst):** `get_latest_hebel_signal_per_symbol_and_
+  richtung()` selbst und alle 4 anderen Konsumenten (Ueberholt-Erkennung in
+  `hebel_backward_tracking.py`, GUI-Historie in `ui/hebel_view.py`, `regime.
+  py`, Doku-Verweis in `hebel_analyst.py`), die Kontrathese-Uebersetzung, der
+  Nur-Long-Deckel-Veto-Zweig selbst, die Veto-Schatten-Tracking-Logik.
+
+**Verifiziert:** Klasse-1 (Compile-Check aller 5 geaenderten Dateien); Klasse-
+2 synthetisch gegen temp-DB (10 Tests, alle PASS) - Migration idempotent,
+Insert+Read-Rundlauf, exakte Reproduktion des echten VIRTUAL-Bugs (alte
+Funktion findet nur eine 10h alte Stale-Zeile statt der frischen SHORT-
+Antwort-Zeile, haette den Kandidaten faelschlich durchgelassen; neue Funktion
+blockt korrekt), unabhaengige LONG-/SHORT-Thesen bleiben unabhaengig,
+Altzeilen ohne `angefragte_richtung` (NULL) verhalten sich wie "kein
+Treffer" (einmaliges Nachhol-Verhalten, kein Absturz); Regression bestaetigt
+(alte Funktion + alle 4 anderen Konsumenten unveraendert grep-verifiziert).
+
+**Wiedervorlage:** keine - der Fix ist in sich abgeschlossen. Beobachten, ob
+sich die taegliche Mistral-/CoinGecko-Abfragezahl nach Deploy wieder auf das
+Vor-31.07.-Niveau normalisiert (Notebook-Deploy ausstehend).

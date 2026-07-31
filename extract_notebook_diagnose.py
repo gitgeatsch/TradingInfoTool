@@ -297,6 +297,12 @@ _HEBEL_SIGNAL_SPALTEN = (
     # project_enge_stop_loss_backtest_und_massnahmen.md) fuer neue Signale
     # ueberfluessig. Nur Hebel (Regel 6 existiert nur dort).
     "atr_relativ_prozent_bei_signal, "
+    # Angefragte Richtung (2026-07-31, siehe database/models.py::HebelSignal.
+    # angefragte_richtung-Docstring) - Cooldown-Umgehungs-Bugfix (echter
+    # VIRTUAL-Fund): fuer Diagnose-Zwecke sichtbar machen, ob/wo `richtung`
+    # (LLM-eigene Antwort) und `angefragte_richtung` (Kandidat/Screening)
+    # auseinanderlaufen.
+    "angefragte_richtung, "
     + _VOLLSTAENDIGKEITS_SPALTEN
 )
 _SPOT_SIGNAL_SPALTEN = (

@@ -881,6 +881,22 @@ def _migrate_hebel_signal_atr_column(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+_HEBEL_SIGNAL_ANGEFRAGTE_RICHTUNG_NEW_COLUMNS = {"angefragte_richtung": "TEXT"}
+
+
+def _migrate_hebel_signal_angefragte_richtung_column(conn: sqlite3.Connection) -> None:
+    """Additive Migration (2026-07-31, Cooldown-Umgehungs-Bugfix) - siehe
+    HebelSignal.angefragte_richtung-Docstring. Alte Zeilen bleiben NULL (kein
+    Backfill moeglich, HebelTrigger-Zuordnung nur zum LLM-Call-Zeitpunkt
+    bekannt) - _filter_hebel_cooldown() behandelt das wie "kein Treffer",
+    identisch zum Verhalten vor diesem Fix."""
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(hebel_signals)")}
+    for column, sql_type in _HEBEL_SIGNAL_ANGEFRAGTE_RICHTUNG_NEW_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE hebel_signals ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
 _HEBEL_SIGNAL_SENKUNG_NEW_COLUMNS = {"hebel_senkung_eigenkapital_nachschuss_eur": "REAL"}
 
 
@@ -1181,6 +1197,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_signal_selbst_halten_columns(conn)
     _migrate_hebel_signal_selbst_halten_columns(conn)
     _migrate_hebel_signal_atr_column(conn)
+    _migrate_hebel_signal_angefragte_richtung_column(conn)
     import_holdings_manual_overrides(conn)
 
 
@@ -3222,6 +3239,7 @@ _HEBEL_SIGNAL_COLUMNS = (
     "zai_eigene_richtung", "zai_uebereinstimmung", "zai_richtung_kurzbegruendung",
     "mindestziel_usd", "mindestziel_eur", "mindestziel_zeitraum_tage_geschaetzt",
     "ist_reines_llm_halten", "original_action", "atr_relativ_prozent_bei_signal",
+    "angefragte_richtung",
 )
 
 
@@ -3303,6 +3321,36 @@ def get_latest_hebel_signal_per_symbol_and_richtung(conn: sqlite3.Connection) ->
         """
     ).fetchall()
     return {(row["symbol"], row["richtung"]): _row_to_hebel_signal(row) for row in rows}
+
+
+def get_latest_hebel_signal_per_symbol_and_angefragte_richtung(
+    conn: sqlite3.Connection,
+) -> dict[tuple[str, str], HebelSignal]:
+    """Wie get_latest_hebel_signal_per_symbol_and_richtung(), aber gruppiert
+    nach `angefragte_richtung` statt `richtung` (2026-07-31, echter VIRTUAL-
+    Fund: Cooldown-Umgehungs-Bugfix). NUR fuer den Cooldown-Filter in
+    budget_allocator.py::_filter_hebel_cooldown() - siehe HebelSignal.
+    angefragte_richtung-Docstring. Die richtungsbasierte Variante bleibt
+    unveraendert fuer ihre anderen 4 Konsumenten (Ueberholt-Erkennung,
+    GUI-Historie, regime.py, dieser Docstring-Verweis) - deren Diskriminator
+    ist bewusst die vom LLM frei gewaehlte Richtung, nicht die angefragte.
+    Zeilen mit angefragte_richtung IS NULL (vor diesem Fix erzeugt) werden
+    hier nie gefunden, was denselben "kein Treffer"-Effekt hat wie fehlende
+    Historie - kein Sonderfall noetig."""
+    rows = conn.execute(
+        """
+        SELECT s.* FROM hebel_signals s
+        INNER JOIN (
+            SELECT symbol, angefragte_richtung, MAX(created_at) AS max_created_at
+            FROM hebel_signals
+            WHERE groq_raw_response IS NOT NULL AND angefragte_richtung IS NOT NULL
+            GROUP BY symbol, angefragte_richtung
+        ) latest ON s.symbol = latest.symbol
+            AND s.angefragte_richtung = latest.angefragte_richtung
+            AND s.created_at = latest.max_created_at
+        """
+    ).fetchall()
+    return {(row["symbol"], row["angefragte_richtung"]): _row_to_hebel_signal(row) for row in rows}
 
 
 def count_real_hebel_signals_today(conn: sqlite3.Connection) -> int:

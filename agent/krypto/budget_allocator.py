@@ -209,7 +209,23 @@ def _filter_hebel_cooldown(
     # Uebersetzung in hebel_risk_gate.py::post_check_hebel() richtig - schuetzt
     # z.B. auch zwei echte, unabhaengige LONG-/SHORT-Thesen fuer dasselbe Symbol
     # davor, sich gegenseitig den Cooldown zurueckzusetzen.
-    latest = db.get_latest_hebel_signal_per_symbol_and_richtung(conn)
+    #
+    # BUGFIX 2 (2026-07-31, echter VIRTUAL-Fund): der obige Fix nutzte
+    # `sig.richtung` (die vom LLM FREI gewaehlte Antwort, siehe HebelSignal.
+    # richtung-Docstring) statt der tatsaechlich angefragten Richtung. Wenn das
+    # LLM ueber viele Zyklen konsistent in die Gegenrichtung antwortet UND der
+    # Nur-Long-Deckel (hebel_risk_gate.py, "Nur-Long-Deckel"-Zweig) greift,
+    # bleibt `richtung` bewusst auf der LLM-Antwort stehen (siehe dortiger
+    # Docstring) - `latest.get((c.symbol, c.richtung))` fand dann nie mehr
+    # einen Treffer fuer die angefragte Richtung, der 3,5h-Cooldown griff nie
+    # (jeden 15-Min-Zyklus erneut angefragt, live beobachtet ab 31.07. 12:07
+    # UTC fuer VIRTUAL). Fix: eigenstaendiges, additiv erfasstes Feld
+    # `angefragte_richtung` (siehe HebelSignal-Docstring) + eigene Lookup-
+    # Funktion statt der LLM-Antwort-Richtung - betrifft NUR diesen Cooldown-
+    # Filter, alle anderen Konsumenten von get_latest_hebel_signal_per_symbol_
+    # and_richtung() (Ueberholt-Erkennung, GUI-Historie, regime.py) bleiben
+    # unveraendert auf der LLM-eigenen Richtung.
+    latest = db.get_latest_hebel_signal_per_symbol_and_angefragte_richtung(conn)
     gefiltert, uebersprungen = [], 0
     for c in candidates:
         asset = watchlist_by_symbol.get(c.symbol)
