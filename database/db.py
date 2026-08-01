@@ -3097,6 +3097,72 @@ def get_portfolio_prioritaets_bonus_je_symbol(
     return ergebnis
 
 
+def _mittelwert(von: float | None, bis: float | None) -> float | None:
+    if von is None or bis is None:
+        return None
+    return (von + bis) / 2
+
+
+def get_symbole_mit_erreichtem_halte_kriterium(
+    conn: sqlite3.Connection, watchlist: list,
+) -> set[str]:
+    """Spot-Verkaufs-Luecke (2026-08-01, siehe Basisinfos/Test_und_
+    Verifikationsmethodik.md + Regelwerksmanual-Nachtrag "halte_kriterium
+    scharfschalten"): das LLM setzt bei jedem HALTEN ein eigenes
+    `halte_kriterium` (Regel 17, agent/krypto/analyst.py) - bisher rein
+    deskriptiv, nie gegen den aktuellen Kurs geprueft (Regel 17 selbst:
+    "KEIN automatischer Trigger"). Diese Funktion macht das Kriterium
+    erstmals WIRKSAM, aber weiterhin OHNE automatischen Verkauf: ein
+    erreichtes Kriterium erhoeht nur die Prioritaet fuer die naechste echte
+    Neubewertung (siehe signal_batch.py::select_assets_due_for_signal(),
+    Cooldown-Tier 'Re-Evaluierung faellig') - die eigentliche Handlungs-
+    Entscheidung (weiter HALTEN oder doch VERKAUFEN/TAUSCHEN) trifft
+    weiterhin das LLM selbst im naechsten Lauf.
+
+    Nur `ziel_preis_usd`/`ziel_preis_eur` und `ziel_datum` sind maschinell
+    auswertbar - `bedingung_text` (Freitext wie "RSI faellt unter 30") bleibt
+    bewusst aussen vor (kein NLP-Parsing noetig/gewollt), bleibt wie bisher
+    rein manuell.
+
+    Richtungs-Mehrdeutigkeit bei `ziel_preis`: das Prompt-Schema legt nicht
+    fest, ob ein Kursziel eine Aufwaerts- oder Abwaerts-Schwelle ist -
+    Richtung wird relativ zur eigenen Entry-Zone des Signals abgeleitet
+    (liegt das Ziel darueber: 'erreicht' bei aktuellem Kurs >= Ziel; liegt
+    es darunter: bei aktuellem Kurs <= Ziel). Ohne gesetzte Entry-Zone
+    (dank Regel 33 Daten-Vervollstaendigung selten, aber moeglich bei
+    Alt-Signalen vor deren Einfuehrung) wird das Symbol uebersprungen -
+    kein Rateversuch ohne Referenzpunkt."""
+    latest_real = get_latest_real_signal_per_symbol(conn)
+    preise = get_latest_prices(conn)
+    heute_iso = datetime.now(timezone.utc).date().isoformat()
+    krypto_symbole = {a.symbol for a in watchlist if a.assetklasse == "krypto"}
+
+    ergebnis: set[str] = set()
+    for symbol in krypto_symbole:
+        signal = latest_real.get(symbol)
+        if signal is None or signal.action != "HALTEN":
+            continue
+        halte = signal
+        ziel_datum = halte.halte_kriterium_ziel_datum
+        if ziel_datum and heute_iso >= ziel_datum:
+            ergebnis.add(symbol)
+            continue
+
+        ziel_preis = halte.halte_kriterium_ziel_preis_eur
+        aktueller_preis = preise.get(symbol)
+        aktueller_preis_wert = aktueller_preis.price_eur if aktueller_preis else None
+        if ziel_preis is None or aktueller_preis_wert is None:
+            continue
+        referenz_preis = _mittelwert(signal.entry_eur_von, signal.entry_eur_bis)
+        if referenz_preis is None:
+            continue
+        if ziel_preis >= referenz_preis and aktueller_preis_wert >= ziel_preis:
+            ergebnis.add(symbol)
+        elif ziel_preis < referenz_preis and aktueller_preis_wert <= ziel_preis:
+            ergebnis.add(symbol)
+    return ergebnis
+
+
 def update_hebel_trigger_status(conn: sqlite3.Connection, trigger_id: int, status: str) -> None:
     conn.execute(
         "UPDATE hebel_triggers SET status = ?, status_geaendert_am = ? WHERE id = ?",

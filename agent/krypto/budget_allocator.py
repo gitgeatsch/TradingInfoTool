@@ -109,6 +109,7 @@ from agent.krypto.signal_batch import (
     SPOT_COOLDOWN_STUNDEN,
     SPOT_COOLDOWN_STUNDEN_AUSGEMUSTERT,
     SPOT_COOLDOWN_STUNDEN_KERN,
+    SPOT_COOLDOWN_STUNDEN_RE_EVALUIERUNG,
     select_assets_due_for_signal,
 )
 from database.models import HebelTrigger, MarktscanCandidate
@@ -387,6 +388,9 @@ def run_budget_allocator(
     spot_cooldown_stunden_ausgemustert = cfg.get(
         "spot_cooldown_stunden_ausgemustert", SPOT_COOLDOWN_STUNDEN_AUSGEMUSTERT
     )
+    spot_cooldown_stunden_re_evaluierung = cfg.get(
+        "spot_cooldown_stunden_re_evaluierung", SPOT_COOLDOWN_STUNDEN_RE_EVALUIERUNG
+    )
 
     # GUI-Schalter (2026-07-15, Nutzer-Wunsch): "Nur Long" filtert Hebel-
     # Kandidaten VOR dem Cooldown-Check/LLM-Call heraus, nicht erst
@@ -506,10 +510,17 @@ def run_budget_allocator(
             marktscan_kandidaten, marktscan_wartezeiten, effektive_sla_marktscan,
             lambda c: c.coingecko_id,
         )
+        # "halte_kriterium scharfschalten" (2026-08-01, siehe db.py::
+        # get_symbole_mit_erreichtem_halte_kriterium()-Docstring): macht das
+        # bisher rein deskriptive LLM-eigene Kriterium erstmals wirksam -
+        # KEIN automatischer Verkauf, nur schnellere Neubewertung.
+        re_evaluierung_faellig = db.get_symbole_mit_erreichtem_halte_kriterium(conn, watchlist)
         spot_kandidaten = select_assets_due_for_signal(
             conn, watchlist, max_count=budget_gesamt, cooldown_stunden=spot_cooldown_stunden,
             cooldown_stunden_kern=spot_cooldown_stunden_kern,
             cooldown_stunden_ausgemustert=spot_cooldown_stunden_ausgemustert,
+            re_evaluierung_faellig_symbole=re_evaluierung_faellig,
+            cooldown_stunden_re_evaluierung=spot_cooldown_stunden_re_evaluierung,
         )
         # Echte Tages-Zaehler (2026-07-14-Fix) - EINMAL pro Lauf aus der DB
         # gelesen, statt einer lokalen Variable, die bei jedem 15-Min-Lauf
@@ -537,11 +548,13 @@ def run_budget_allocator(
     )
     logger.info(
         "Budget-Allocator: Hebel %d/%d (Richtung=%s, ueberfaellig=%d), Marktscan %d/%d (ueberfaellig=%d), "
-        "Spot %d/%d ausgewaehlt (B=%d, F=%d), Cooldown uebersprungen: Hebel %d, Marktscan %d",
+        "Spot %d/%d ausgewaehlt (B=%d, F=%d), Cooldown uebersprungen: Hebel %d, Marktscan %d, "
+        "halte_kriterium faellig: %d",
         tier1_n, len(hebel_kandidaten), hebel_richtung_modus, hebel_ueberfaellig_n,
         tier2_n, len(marktscan_kandidaten), marktscan_ueberfaellig_n,
         tier3_n, len(spot_kandidaten),
         budget_gesamt, spot_reserve, result.uebersprungen_cooldown_hebel, result.uebersprungen_cooldown_marktscan,
+        len(re_evaluierung_faellig),
     )
 
     def _mit_conn(fn):

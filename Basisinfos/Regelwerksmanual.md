@@ -13246,3 +13246,67 @@ wuerde `multi_asset_batch` lautlos zur falschen Real-Uhrzeit relativ zu
 Bitpandas Handelsfenster laufen (keine Fehlermeldung, nur stille
 Fehlausrichtung) - dann waere das Festnageln der Zeitzone (siehe verworfene
 Alternative oben) neu zu bewerten.
+
+## Nachtrag (2026-08-01): Spot-Verkaufs-Luecke identifiziert + Phase 1 "halte_kriterium scharfschalten" umgesetzt
+
+**Anlass:** breite Root-Cause-Untersuchung (Nutzer-Auftrag, vier parallele
+Recherche-Agenten) zu einem am selben Tag empirisch bestaetigten Befund: von
+1142 echten Krypto-Spot-Signalen ueber die gesamte Historie gab es **0**
+VERKAUFEN-Aktionen (98,2% HALTEN). Root Cause laut Agenten-Berichten NICHT
+die deterministischen Gates (auf der Sell-Seite sogar lockerer als beim
+Kauf), sondern (a) Prompt-Bias in `agent/krypto/analyst.py` (Regel 7 setzt
+fuer Core/These-Kandidaten eine sehr hohe Verkaufs-Huerde, keine Regel
+draengt aktiv Richtung Verkauf) und (b) das vom LLM selbst gesetzte
+`halte_kriterium` (Regel 17) war bisher rein deskriptiv - nie gegen den
+aktuellen Kurs geprueft. Externe Recherche (Disposition Effect vs. Status-
+quo-/Endowment-Bias, RL-Trading-Literatur "buy more, sell less", RLHF-
+bedingtes Hedging bei LLMs) stuetzt den Befund als bekanntes, dokumentiertes
+Muster, kein Einzelfall dieses Projekts.
+
+**Roadmap (mehrstufig, laufender Prozess, keine Einmalaktion):**
+1. `halte_kriterium` scharfschalten (dieser Nachtrag) - Infrastruktur-Fix,
+   gilt ueber die geteilte `signals`-Tabelle automatisch fuer Spot/Aktien/
+   Rohstoffe/Themen-ETF/Hedge.
+2. Echte VERKAUFEN-vs-HALTEN-Abwaegung fuer Spot (Regel-27-Aequivalent,
+   analog zu Hebel) - noch offen.
+3. Ausweitung auf Aktien/Rohstoffe/Themen-ETF (nur noch Prompt-Teil, da
+   Infrastruktur ab Schritt 1 mitlaeuft) - noch offen.
+4. Z.ai fuer Re-Evaluierungs-Kandidaten, eng gefasst NICHT blanket fuer alle
+   HALTEN-Faelle (Kapazitaetsgrund: `MAX_CONCURRENT_REQUESTS=2`, kein
+   Tagesdeckel, bereits ein echter 429-Sturm-Vorfall bei geringerem Volumen)
+   - noch offen.
+5. Separates, spaeteres Thema (vorgemerkt, nicht Teil dieser Runde): Hebel-
+   CRV-Pflicht symmetrisch auch fuer TEILVERKAUF/SCHLIESSEN.
+
+**Umsetzung Schritt 1 (2026-08-01):** `database/db.py::get_symbole_mit_
+erreichtem_halte_kriterium()` prueft fuer jedes Krypto-Symbol mit letztem
+echten HALTEN-Signal, ob `halte_kriterium_ziel_preis_usd/eur` oder
+`halte_kriterium_ziel_datum` (Regel 17) mittlerweile erreicht ist - NUR
+diese beiden maschinell auswertbaren Felder, `bedingung_text` (Freitext wie
+"RSI faellt unter 30") bleibt bewusst aussen vor (kein NLP-Parsing).
+Richtungs-Mehrdeutigkeit bei `ziel_preis` (das Prompt-Schema legt nicht
+fest, ob ein Kursziel eine Aufwaerts- oder Abwaerts-Schwelle ist) wird
+relativ zur eigenen Entry-Zone des Signals aufgeloest. Nutzt ausschliesslich
+bereits gecachte Preise (`get_latest_prices()`) - **kein zusaetzlicher
+CoinGecko-Kontingent-Verbrauch**.
+
+Ein erreichtes Kriterium loest **keinen automatischen Verkauf** aus, sondern
+nur eine schnellere echte Neubewertung: neue, vierte Cooldown-Stufe in
+`agent/krypto/signal_batch.py::select_assets_due_for_signal()`
+("Re-Evaluierung faellig", `SPOT_COOLDOWN_STUNDEN_RE_EVALUIERUNG=1h`,
+config.yaml `spot_cooldown_stunden_re_evaluierung`), Praezedenz VOR dem
+bestehenden Kern-Tier - analog zum bereits etablierten Drei-Stufen-Cooldown-
+Muster (Kern/Taktisch/Ausgemustert). Verdrahtet in `agent/krypto/
+budget_allocator.py` (neuer Aufruf vor `select_assets_due_for_signal()`,
+neue Log-Kennzahl "halte_kriterium faellig").
+
+Verifiziert: 10 synthetische Faelle (Aufwaerts-/Abwaerts-Ziel erreicht/
+offen, Datum erreicht/offen, kein Kriterium gesetzt, falsche Aktion, fehlende
+Entry-Zone, Kern-Symbol) + 2 Cooldown-Praezedenz-Tests (Re-Evaluierung
+schlaegt 100h-Cooldown; `None` deaktiviert die Stufe komplett, altes
+Verhalten) - alle bestanden. Import-/Config-Parse-Regressionscheck fuer alle
+drei geaenderten Dateien bestanden.
+
+**Wiedervorlage:** Schritt 2 (echte Abwaegungs-Regel) als naechster
+Roadmap-Schritt, dann 3/4 - jeweils eigene Punkt-fuer-Punkt-Analyse vor der
+Umsetzung, kein festes Datum.

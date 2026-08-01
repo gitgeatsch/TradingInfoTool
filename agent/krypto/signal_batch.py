@@ -65,6 +65,19 @@ SPOT_COOLDOWN_STUNDEN_KERN = 10.0
 # Cooldown-Werte, noch nicht ueber echten Betrieb kalibriert.
 SPOT_COOLDOWN_STUNDEN_AUSGEMUSTERT = 120.0  # 5 Tage
 
+# Vierte Cooldown-Stufe (2026-08-01, "halte_kriterium scharfschalten" - siehe
+# Basisinfos/Test_und_Verifikationsmethodik.md + Regelwerksmanual-Nachtrag):
+# ein Symbol, dessen zuletzt vom LLM selbst gesetztes halte_kriterium
+# (Regel 17, analyst.py) mittlerweile erreicht ist (siehe db.py::
+# get_symbole_mit_erreichtem_halte_kriterium()), bekommt die kuerzeste aller
+# Cooldown-Stufen - naeherungsweise "naechster Allocator-Zyklus" (der laeuft
+# alle 15 Min, siehe budget_allocator.py). Bewusst KEIN automatischer
+# Verkauf, nur eine schnellere echte Neubewertung durch das LLM selbst -
+# das Kriterium bleibt weiterhin rein datenbasiert, keine Handlungslogik
+# hier. [OFFEN]/vorlaeufig wie die anderen Cooldown-Werte, noch nicht ueber
+# echten Betrieb kalibriert.
+SPOT_COOLDOWN_STUNDEN_RE_EVALUIERUNG = 1.0
+
 
 @dataclass
 class BatchResult:
@@ -89,6 +102,8 @@ def select_assets_due_for_signal(
     conn, watchlist: list, max_count: int, cooldown_stunden: float | None = SPOT_COOLDOWN_STUNDEN,
     cooldown_stunden_kern: float | None = SPOT_COOLDOWN_STUNDEN_KERN,
     cooldown_stunden_ausgemustert: float | None = SPOT_COOLDOWN_STUNDEN_AUSGEMUSTERT,
+    re_evaluierung_faellig_symbole: set[str] | None = None,
+    cooldown_stunden_re_evaluierung: float | None = SPOT_COOLDOWN_STUNDEN_RE_EVALUIERUNG,
 ) -> list:
     """Sortiert alle Watchlist-Assets (aktiv UND watchlist-Status - Nutzer-
     Wunsch 2026-07-13: 'sonst macht es keinen Sinn') nach Tagen seit der
@@ -132,6 +147,15 @@ def select_assets_due_for_signal(
     (Taktisch/Beobachtung). `cooldown_stunden_kern=None` UND
     `cooldown_stunden_ausgemustert=None` deaktivieren die Mehrstufigkeit
     (dann gilt `cooldown_stunden` fuer alle gleich, altes Verhalten).
+
+    Vierte Stufe "Re-Evaluierung faellig" (2026-08-01, siehe
+    SPOT_COOLDOWN_STUNDEN_RE_EVALUIERUNG-Docstring): `re_evaluierung_faellig_
+    symbole` (vom Aufrufer per db.get_symbole_mit_erreichtem_halte_kriterium()
+    berechnet) bekommt den kuerzesten Cooldown, Praezedenz VOR Kern - ein
+    erreichtes, vom LLM selbst gesetztes Kriterium ist zeitkritischer als die
+    normale Kern-Rotation, unabhaengig davon ob das Symbol zusaetzlich auch
+    Kern ist. `re_evaluierung_faellig_symbole=None` (Default) deaktiviert
+    diese Stufe komplett (altes Verhalten, z.B. fuer Tests).
 
     Cash-Aequivalente (Stablecoins) ausgeschlossen (A-1: bekommen
     strukturell nie ein echtes Signal - generate_signal() gibt sofort HALTEN
@@ -183,7 +207,11 @@ def select_assets_due_for_signal(
         if a.beobachtungsstatus == "ausgemustert" and a.symbol not in kern_symbole
     }
 
+    re_evaluierung_faellig_symbole = re_evaluierung_faellig_symbole or set()
+
     def _cooldown_fuer(asset) -> float | None:
+        if asset.symbol in re_evaluierung_faellig_symbole:
+            return cooldown_stunden_re_evaluierung
         if asset.symbol in kern_symbole:
             return cooldown_stunden_kern
         if asset.symbol in ausgemusterte_symbole:

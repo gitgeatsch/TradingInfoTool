@@ -889,6 +889,15 @@ budget_allocator:
                                         # noch nicht ueber echten Betrieb kalibriert. Kern
                                         # (rolle=core/gehalten/offene Hebel-Position) schlaegt
                                         # IMMER Ausgemustert (Praezedenz).
+  spot_cooldown_stunden_re_evaluierung: 1  # NEU (2026-08-01, "halte_kriterium scharfschalten" -
+                                        # siehe db.py::get_symbole_mit_erreichtem_halte_
+                                        # kriterium()-Docstring): vierte, kuerzeste Cooldown-Stufe,
+                                        # Praezedenz VOR Kern - ein vom LLM selbst gesetztes und
+                                        # jetzt erreichtes Kriterium ist zeitkritischer als die
+                                        # normale Kern-Rotation. 1h = naeherungsweise "naechster
+                                        # Allocator-Zyklus" (laeuft alle 15 Min). [OFFEN]/
+                                        # vorlaeufig wie die anderen Cooldown-Werte, noch nicht
+                                        # ueber echten Betrieb kalibriert.
   hebel_cooldown_stunden_ausgemustert: 120  # Analog zu oben, fuer Hebel-Trigger-Kandidaten -
                                         # Kern/Taktisch bleiben bei cooldown_stunden (3.5h)
                                         # unveraendert, nur diese neue Stufe kommt dazu.
