@@ -241,6 +241,11 @@ def _get_coingecko_quota(conn: sqlite3.Connection) -> dict | None:
         "anzahl": anzahl,
         "limit": limit,
         "prozent": round((anzahl / limit) * 100, 1),
+        # Tages-Granularitaet (2026-08-01, Nutzer-Nachfrage nach ungewoehnlich
+        # hohem Verbrauch) - macht kuenftig sichtbar, an welchem Tag der
+        # Verbrauch tatsaechlich anstieg, statt es im Nachhinein schaetzen zu
+        # muessen.
+        "anzahl_heute": db.get_api_call_counter_taeglich(conn, "coingecko"),
     }
 
 

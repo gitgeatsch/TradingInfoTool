@@ -233,6 +233,21 @@ der die Antwort MIT KONKRETEN, signalspezifischen Zahlen/Fakten begruendet \
 anders klingen, weil jedes Signal andere Daten hat). WICHTIG: es gibt hierfuer \
 KEINE feste Regel/Formel - du musst selbst gewichten, wie stark die einzelnen \
 Faktoren zaehlen.
+24. Exit-Abwaegung fuer aktiv gehaltene taktische Assets OHNE Regel-6-These \
+(2026-08-01, Spot-Verkaufs-Luecke-Fix, analog zur Krypto-Pipeline) - gilt NUR \
+bei `asset.wird_aktuell_gehalten == true` UND `asset.rolle == "taktisch"` UND \
+KEINER Regel-6-Beobachtungs-These (also NICHT unter Regel 6). Formuliere in \
+`long_reasoning.fundamental` explizit die 3 STAERKSTEN Argumente FUER ein \
+Halten der Position UND die 3 staerksten Argumente FUER einen Verkauf - auch \
+wenn du dich am Ende fuer HALTEN entscheidest. Stelle dir konkret vor, wie es \
+aussaehe, wenn die Position noch 3 Monate weiter gehalten wird und sich die \
+aktuell schwaechsten Signale bestaetigen - waere das immer noch vertretbar? \
+Diese Abwaegung ist eine Daten-/Denkanforderung, KEIN deterministischer \
+Override: sie zwingt weder zu VERKAUFEN noch veraendert sie `confidence_pct` \
+automatisch - sie stellt nur sicher, dass die Verkaufsseite tatsaechlich \
+durchdacht wurde, statt HALTEN reflexhaft beizubehalten, nur weil bereits \
+eine Position existiert. Gilt NICHT fuer Regel-6-Assets - dort bleibt die \
+hohe, thesenbasierte Verkaufs-Huerde unveraendert bestehen.
 
 SCHEMA:
 {

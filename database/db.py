@@ -387,6 +387,18 @@ CREATE TABLE IF NOT EXISTS api_call_kontingent (
     PRIMARY KEY (source, monat)
 );
 
+-- Tages-Granularitaet (2026-08-01, Nutzer-Nachfrage nach ungewoehnlich hohem
+-- CoinGecko-Verbrauch): der Monats-Zaehler oben allein macht es unmoeglich,
+-- im Nachhinein zu sagen "an welchem Tag stieg der Verbrauch tatsaechlich".
+-- Rein additiv, gleiche Schreibstelle (increment_api_call_counter()) - kein
+-- separater Zaehl-Pfad, kein zusaetzliches Fehlerrisiko.
+CREATE TABLE IF NOT EXISTS api_call_kontingent_taeglich (
+    source  TEXT NOT NULL,
+    tag     TEXT NOT NULL,
+    anzahl  INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (source, tag)
+);
+
 -- Verhindert wiederholte Warnmails fuer dieselbe Schwelle im selben Monat.
 -- Bewusst DB-persistiert statt In-Memory-Cooldown (Muster bei anderen
 -- Warnmails im Projekt, z.B. _last_cash_veto_email_sent) - ein In-Memory-
@@ -3105,6 +3117,7 @@ def _mittelwert(von: float | None, bis: float | None) -> float | None:
 
 def get_symbole_mit_erreichtem_halte_kriterium(
     conn: sqlite3.Connection, watchlist: list,
+    assetklassen: frozenset[str] = frozenset({"krypto"}),
 ) -> set[str]:
     """Spot-Verkaufs-Luecke (2026-08-01, siehe Basisinfos/Test_und_
     Verifikationsmethodik.md + Regelwerksmanual-Nachtrag "halte_kriterium
@@ -3118,6 +3131,15 @@ def get_symbole_mit_erreichtem_halte_kriterium(
     Cooldown-Tier 'Re-Evaluierung faellig') - die eigentliche Handlungs-
     Entscheidung (weiter HALTEN oder doch VERKAUFEN/TAUSCHEN) trifft
     weiterhin das LLM selbst im naechsten Lauf.
+
+    `assetklassen` (2026-08-01, Roadmap-Schritt 3: Ausweitung auf Aktien/
+    Rohstoffe/Themen-ETF): default bleibt reines Krypto (bestehender
+    Aufrufer agent/krypto/budget_allocator.py bleibt unveraendert). Themen-
+    ETF UND Hedge teilen sich `assetklasse == "etf"` - ein Aufrufer, der nur
+    Themen-ETF (nicht Hedge) meint, muss Hedge-Symbole selbst aus dem
+    Ergebnis herausrechnen (siehe agent/multi_asset_batch.py, das denselben
+    Ausschluss bereits fuer `_kandidaten()` so handhabt) - diese Funktion
+    kennt Hedge-Symbole bewusst nicht (keine agent/-Importe in database/).
 
     Nur `ziel_preis_usd`/`ziel_preis_eur` und `ziel_datum` sind maschinell
     auswertbar - `bedingung_text` (Freitext wie "RSI faellt unter 30") bleibt
@@ -3135,10 +3157,10 @@ def get_symbole_mit_erreichtem_halte_kriterium(
     latest_real = get_latest_real_signal_per_symbol(conn)
     preise = get_latest_prices(conn)
     heute_iso = datetime.now(timezone.utc).date().isoformat()
-    krypto_symbole = {a.symbol for a in watchlist if a.assetklasse == "krypto"}
+    relevante_symbole = {a.symbol for a in watchlist if a.assetklasse in assetklassen}
 
     ergebnis: set[str] = set()
-    for symbol in krypto_symbole:
+    for symbol in relevante_symbole:
         signal = latest_real.get(symbol)
         if signal is None or signal.action != "HALTEN":
             continue
@@ -3678,12 +3700,22 @@ def increment_api_call_counter(conn: sqlite3.Connection, source: str) -> int:
     """Kontingent-Tracking (2026-07-31, siehe api_call_kontingent-Tabellen-
     Kommentar). Erhoeht den Zaehler fuer `source` im aktuellen UTC-Monat um 1
     und gibt den neuen Stand zurueck (fuer den Aufrufer, der ggf. sofort eine
-    Warnschwelle pruefen will, ohne einen zweiten SELECT zu brauchen)."""
+    Warnschwelle pruefen will, ohne einen zweiten SELECT zu brauchen).
+
+    Erhoeht zusaetzlich den Tages-Zaehler (2026-08-01, siehe api_call_
+    kontingent_taeglich-Tabellenkommentar) - gleicher Aufrufer, gleiche
+    Transaktion, kein zweiter Fehlerpunkt."""
     monat = aktueller_monat_utc()
+    tag = heutiges_datum_utc()
     conn.execute(
         "INSERT INTO api_call_kontingent (source, monat, anzahl) VALUES (?, ?, 1) "
         "ON CONFLICT(source, monat) DO UPDATE SET anzahl = anzahl + 1",
         (source, monat),
+    )
+    conn.execute(
+        "INSERT INTO api_call_kontingent_taeglich (source, tag, anzahl) VALUES (?, ?, 1) "
+        "ON CONFLICT(source, tag) DO UPDATE SET anzahl = anzahl + 1",
+        (source, tag),
     )
     conn.commit()
     row = conn.execute(
@@ -3700,6 +3732,17 @@ def get_api_call_counter(conn: sqlite3.Connection, source: str, monat: str | Non
     row = conn.execute(
         "SELECT anzahl FROM api_call_kontingent WHERE source = ? AND monat = ?",
         (source, monat),
+    ).fetchone()
+    return row["anzahl"] if row else 0
+
+
+def get_api_call_counter_taeglich(conn: sqlite3.Connection, source: str, tag: str | None = None) -> int:
+    """Tages-Pendant zu get_api_call_counter() (2026-08-01) - 0, wenn fuer
+    den Tag noch kein einziger Call gezaehlt wurde."""
+    tag = tag or heutiges_datum_utc()
+    row = conn.execute(
+        "SELECT anzahl FROM api_call_kontingent_taeglich WHERE source = ? AND tag = ?",
+        (source, tag),
     ).fetchone()
     return row["anzahl"] if row else 0
 

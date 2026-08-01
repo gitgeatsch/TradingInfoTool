@@ -13357,3 +13357,76 @@ Minus, siehe P&L-Tabelle in der zugehoerigen Session) - ob Regel 34 auch bei
 einem profitablen taktischen Halt eine echte Verkaufs-/Tausch-Abwaegung
 ausloest (statt nur bei starken Verlusten), bleibt bis zu einem passenden
 realen Fall ungetestet.
+
+## Nachtrag (2026-08-01): Spot-Verkaufs-Luecke Roadmap Schritt 3 (Aktien/Rohstoffe/Themen-ETF) + CoinGecko-Tageszaehler
+
+**Anlass Schritt 3:** Ausweitung der Regel-34-Logik (siehe vorheriger Nachtrag)
+von Krypto auf die drei anderen Spot-family-Pipelines. Eigene Punkt-fuer-Punkt-
+Analyse (Nutzer-Standing-Vorgabe) zeigte: die Roadmap-Annahme "nur Prompt-Teil
+noetig, Infrastruktur laeuft schon fuer alle Pipelines mit" war UNVOLLSTAENDIG -
+`database/db.py::get_symbole_mit_erreichtem_halte_kriterium()` (Schritt 1) war
+hart auf `assetklasse == "krypto"` gefiltert und `agent/multi_asset_batch.py`
+hatte nur ein zweistufiges Cooldown-Schema ohne die "Re-Evaluierung faellig"-
+Stufe. Auf Nutzer-Entscheidung ("beide mitbauen") wurden Prompt-Teil UND
+Cooldown-Erweiterung gemeinsam umgesetzt, nicht nur der Prompt-Teil.
+
+**Umsetzung:**
+1. `database/db.py::get_symbole_mit_erreichtem_halte_kriterium()`: neuer
+   Parameter `assetklassen: frozenset[str] = frozenset({"krypto"})` - Default
+   erhaelt das bestehende Krypto-only-Verhalten (kein Code-Change am
+   bestehenden Aufrufer in `budget_allocator.py` noetig). Themen-ETF und Hedge
+   teilen sich `assetklasse == "etf"` - die Funktion kennt Hedge-Symbole
+   bewusst NICHT (keine agent/-Importe in database/), der Ausschluss passiert
+   beim Aufrufer.
+2. `agent/multi_asset_batch.py`: `_ist_faellig()` um `re_evaluierung_faellig`-
+   Parameter erweitert (Vorrang vor dem bestehenden 2-Stufen-Cooldown, analog
+   zu `signal_batch.py`). `run_multi_asset_batch()` berechnet
+   `re_eval_symbole` via `get_symbole_mit_erreichtem_halte_kriterium(...,
+   assetklassen={"aktien","rohstoffe","etf"})` MINUS Hedge-Symbole
+   (`SYMBOL_ZU_HEBEL_FAKTOR`-Set) - Hedge bewusst ausgeschlossen, kein Teil
+   dieser Roadmap-Runde.
+3. Neue Regel in allen drei SYSTEM_PROMPTs, wortgleiches Muster zu Krypto-
+   Regel 34, aber ohne TAUSCHEN (diese drei Pipelines kennen nur 4 Actions:
+   KAUFEN/VERKAUFEN/HALTEN/NACHKAUFEN) - Aktien Regel 27, Rohstoff Regel 24,
+   Themen-ETF Regel 22 (jeweils direkt nach der letzten bestehenden Regel,
+   additiv). Gilt jeweils nur fuer Regel-6-Assets OHNE These (das
+   Regel-7-Aequivalent dieser drei Pipelines ist dort Regel 6).
+4. Empirischer Befund aus der Vor-Analyse (read-only DB-Query): Rohstoffe
+   und Themen-ETF hatten zum Zeitpunkt der Analyse 0 Signale ueberhaupt in
+   der DB - beide Pipelines liefen bislang nicht produktiv. Aktien 8/8
+   Signale HALTEN (Stichprobe zu klein fuer eine eigene Aussage). Die neue
+   Regel wirkt also bei Rohstoffen/Themen-ETF zunaechst nur "auf Vorrat",
+   bis diese Pipelines echte Produktivlaeufe haben.
+
+**CoinGecko-Tageszaehler (zusaetzlich, Nutzer-Nachfrage nach ungewoehnlich
+hohem Verbrauch):** neue Tabelle `api_call_kontingent_taeglich` (additiv,
+gleiche Schreibstelle wie der bestehende Monats-Zaehler in
+`increment_api_call_counter()` - kein zweiter Fehlerpunkt). Neue Funktion
+`get_api_call_counter_taeglich()`. Remote-Status-Karte "CoinGecko-Kontingent"
+zeigt jetzt zusaetzlich "davon heute". Macht kuenftig sichtbar, an welchem
+Tag der Verbrauch tatsaechlich ansteigt - vorher war das nur ueber den
+Monats-Gesamtwert rekonstruierbar.
+
+**Verifikation (Klasse 1 + synthetisch):**
+- Compile/Import aller 7 geaenderten Dateien bestanden.
+- Regelnummerierung 1..N sequenziell fuer alle drei SYSTEM_PROMPTs bestanden
+  (Aktien bis 27, Rohstoff bis 24, Themen-ETF bis 22), kein TAUSCHEN-Leck in
+  den neuen Regeln.
+- `get_symbole_mit_erreichtem_halte_kriterium()`: synthetischer Test mit
+  gemischter Watchlist (Aktien+Krypto) bestaetigt Default (krypto-only),
+  Aktien-Scope und kombinierten Scope korrekt.
+- `_ist_faellig()`: 4 synthetische Faelle (Re-Eval-Vorrang trotz frischem
+  Signal, bestehende Cooldown-Logik unveraendert, kein Signal -> faellig)
+  bestanden.
+- `run_multi_asset_batch()`: echter Trockenlauf gegen eine frische Test-DB
+  mit echter Watchlist (13 Multi-Asset-Symbole), `coingecko_client=None`/
+  `mistral_client=None`/`gemini_client=None` - lief ohne Absturz durch, alle
+  Kandidaten korrekt als faellig erkannt.
+- CoinGecko-Tageszaehler: synthetischer Increment-Test bestaetigt Monats-
+  UND Tages-Zaehler laufen parallel korrekt hoch, `init_db()` bleibt bei
+  wiederholtem Aufruf idempotent.
+
+**Wiedervorlage:** Schritt 4 (Z.ai fuer Re-Evaluierungs-Kandidaten, eng
+gefasst) als naechster Roadmap-Schritt, jeweils eigene Punkt-fuer-Punkt-
+Analyse davor. Rohstoff/Themen-ETF-Wirkung der neuen Regel kann erst
+beurteilt werden, sobald diese Pipelines echte Produktivdaten haben.

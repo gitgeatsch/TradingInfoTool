@@ -122,9 +122,11 @@ _INDEX_HTML = """<!doctype html>
 
 <div class="card">
   <div class="row"><span>CoinGecko-Kontingent diesen Monat</span><span id="coingecko-quota">-</span></div>
+  <div class="row"><span>&nbsp;&nbsp;davon heute</span><span id="coingecko-quota-heute">-</span></div>
   <div class="row"><span class="muted-text">Monatliches Call-Kontingent (2026-07-31, echte 80%-Warnmail von
   CoinGecko ausgeloest) - bei 100% wird laut CoinGecko hart gedeckelt. Warnmails bei 80%/90% (config.yaml
-  coingecko_quota.warnschwellen_prozent), je Schwelle nur einmal pro Kalendermonat.</span></div>
+  coingecko_quota.warnschwellen_prozent), je Schwelle nur einmal pro Kalendermonat. Tages-Zeile (2026-08-01) macht
+  sichtbar, an welchem Tag der Verbrauch tatsaechlich ansteigt.</span></div>
 </div>
 
 </div>
@@ -683,6 +685,7 @@ async function refreshStatus() {
     const el = document.getElementById("coingecko-quota");
     el.textContent = q.anzahl.toLocaleString() + " / " + q.limit.toLocaleString() + " (" + q.prozent + "%)";
     el.className = q.prozent >= 80 ? "stale" : "ok";
+    document.getElementById("coingecko-quota-heute").textContent = (q.anzahl_heute ?? 0).toLocaleString();
   }
 
   if (data.provider_performance) {

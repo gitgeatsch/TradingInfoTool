@@ -98,7 +98,16 @@ def _pipeline_fuer(asset):
 
 def _ist_faellig(
     letztes_signal, gehalten: bool, cooldown_gehalten_stunden: float, cooldown_beobachtet_stunden: float,
+    re_evaluierung_faellig: bool = False,
 ) -> bool:
+    # Re-Evaluierung-faellig-Vorrang (2026-08-01, Roadmap-Schritt 3: Ausweitung
+    # der Spot-Verkaufs-Luecke-Fixes auf Aktien/Rohstoffe/Themen-ETF, analog
+    # zu agent/krypto/signal_batch.py::select_assets_due_for_signal()) - ein
+    # erreichtes halte_kriterium ueberstimmt den regulaeren 2-stufigen
+    # Cooldown, loest aber KEINEN automatischen Verkauf aus (siehe database/
+    # db.py::get_symbole_mit_erreichtem_halte_kriterium()-Docstring).
+    if re_evaluierung_faellig:
+        return True
     if letztes_signal is None:
         return True
     letzter_zeitpunkt = datetime.fromisoformat(letztes_signal.created_at)
@@ -139,11 +148,22 @@ def run_multi_asset_batch(
             h.symbol for h in db.get_all_holdings(conn)
             if (h.quantity or 0.0) + (h.staked_quantity or 0.0) > 0.0
         }
+        # Re-Evaluierung-faellig (2026-08-01, Schritt 3): Themen-ETF teilt sich
+        # assetklasse=="etf" mit Hedge - Hedge bewusst ausgeschlossen (nicht Teil
+        # dieser Roadmap-Runde, siehe agent/hedge/pipeline.py Modul-Docstring
+        # fuer die eigenstaendige Hedge-Handelslogik ohne halte_kriterium-Aequivalent).
+        from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR as _hedge_symbole_fuer_ausschluss
+        re_eval_symbole = db.get_symbole_mit_erreichtem_halte_kriterium(
+            conn, watchlist, assetklassen=frozenset({"aktien", "rohstoffe", "etf"}),
+        ) - set(_hedge_symbole_fuer_ausschluss)
         faellige = []
         for asset in _kandidaten(watchlist):
             gehalten = asset.symbol in gehaltene_symbole
             letztes = db.get_latest_signal(conn, asset.symbol)
-            if _ist_faellig(letztes, gehalten, cooldown_gehalten, cooldown_beobachtet):
+            if _ist_faellig(
+                letztes, gehalten, cooldown_gehalten, cooldown_beobachtet,
+                re_evaluierung_faellig=asset.symbol in re_eval_symbole,
+            ):
                 faellige.append(asset)
             else:
                 result.uebersprungen_cooldown += 1
