@@ -62,9 +62,31 @@ _INDEX_HTML = """<!doctype html>
   .regime-euphorie_extrem { color: #7a6ee0; }
   .muted-text { color: #999; font-size: 0.82rem; }
   .kategorie-header { color: #7a8290; font-size: 0.78rem; text-transform: uppercase; margin-top: 8px; }
-  .gruppe-header { font-size: 0.95rem; color: #9fb3c8; margin: 18px 0 6px; padding-top: 8px;
-                    border-top: 1px solid #2a323c; }
-  .gruppe-header:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+
+  /* Kapitel-Header (2026-08-01): farblich klar abgesetzte Zwischenabschnitte statt
+     einheitlichem Grau-in-Grau - je Bereich (System/Budget, Gruppe A/B/C) eine
+     eigene Akzentfarbe fuer Badge + Rahmen der zugehoerigen Karten. */
+  .section-header { display: flex; align-items: baseline; gap: 10px; margin: 26px 0 10px;
+                     padding-bottom: 8px; border-bottom: 2px solid #2a323c; }
+  .section-header:first-of-type { margin-top: 0; }
+  .section-badge { display: inline-block; flex: none; font-size: 0.7rem; font-weight: 700;
+                    letter-spacing: 0.04em; padding: 3px 10px; border-radius: 999px;
+                    background: #3a4048; color: #0d1117; }
+  .section-title { font-size: 1rem; color: #eef2f7; font-weight: 600; }
+  .section-sub { font-size: 0.78rem; color: #8a93a0; }
+  .section-group { border-left: 3px solid #2a323c; padding-left: 11px; margin-left: -14px; }
+  .section-system { border-bottom-color: #5b8fd6; }
+  .section-system .section-badge { background: #5b8fd6; }
+  .group-system { border-left-color: #5b8fd6; }
+  .section-a { border-bottom-color: #4caf50; }
+  .section-a .section-badge { background: #4caf50; }
+  .group-a { border-left-color: #4caf50; }
+  .section-b { border-bottom-color: #b18cf0; }
+  .section-b .section-badge { background: #b18cf0; }
+  .group-b { border-left-color: #b18cf0; }
+  .section-c { border-bottom-color: #e0a030; }
+  .section-c .section-badge { background: #e0a030; }
+  .group-c { border-left-color: #e0a030; }
   button { width: 100%; padding: 14px; margin-top: 8px; font-size: 1rem; border: none;
            border-radius: 8px; background: #2e5fa3; color: white; }
   button:disabled { background: #3a4048; color: #888; }
@@ -75,6 +97,13 @@ _INDEX_HTML = """<!doctype html>
 </head>
 <body>
 <h1>TradingInfoTool - Fernsteuerung</h1>
+
+<div class="section-header section-system">
+  <span class="section-badge">System</span>
+  <span class="section-title">Status &amp; Budget</span>
+  <span class="section-sub">Portfolio, LLM-Kontingente, CoinGecko-Quote</span>
+</div>
+<div class="section-group group-system">
 
 <div class="card">
   <div class="row"><span>Portfolio-Wert</span><span id="portfolio-value">-</span></div>
@@ -98,7 +127,14 @@ _INDEX_HTML = """<!doctype html>
   coingecko_quota.warnschwellen_prozent), je Schwelle nur einmal pro Kalendermonat.</span></div>
 </div>
 
-<h2 class="gruppe-header">Gruppe A &middot; Ausgeführte Empfehlungen (real, im Handel/Portfolio wirksam)</h2>
+</div>
+
+<div class="section-header section-a">
+  <span class="section-badge">A</span>
+  <span class="section-title">Ausgeführte Empfehlungen</span>
+  <span class="section-sub">real, im Handel/Portfolio wirksam</span>
+</div>
+<div class="section-group group-a">
 
 <div class="card">
   <div class="row"><strong>Provider-Performance (Spot, nach Assetklasse)</strong></div>
@@ -142,7 +178,14 @@ _INDEX_HTML = """<!doctype html>
   <div id="marktscan-erfolgsquote"></div>
 </div>
 
-<h2 class="gruppe-header">Gruppe B &middot; Unabhängige Zweitmeinung (Z.ai)</h2>
+</div>
+
+<div class="section-header section-b">
+  <span class="section-badge">B</span>
+  <span class="section-title">Unabhängige Zweitmeinung</span>
+  <span class="section-sub">Z.ai-Gegenprüfung</span>
+</div>
+<div class="section-group group-b">
 
 <div class="card">
   <div class="row"><strong>Z.ai-Richtungs-Erfolgsquote (unabhaengig von Mistral)</strong></div>
@@ -158,7 +201,14 @@ _INDEX_HTML = """<!doctype html>
   <div id="zai-richtung-performance"></div>
 </div>
 
-<h2 class="gruppe-header">Gruppe C &middot; Veto-Schatten (hypothetisch, nie ausgeführt) + Gesamt</h2>
+</div>
+
+<div class="section-header section-c">
+  <span class="section-badge">C</span>
+  <span class="section-title">Veto-Schatten</span>
+  <span class="section-sub">hypothetisch, nie ausgeführt + Gesamt</span>
+</div>
+<div class="section-group group-c">
 
 <div class="card">
   <div class="row"><strong>Veto-Schatten-Performance</strong></div>
@@ -218,6 +268,8 @@ _INDEX_HTML = """<!doctype html>
   <div id="gesamt-signalqualitaet-spot"></div>
   <div class="row"><strong>&nbsp;&nbsp;davon Hebel</strong></div>
   <div id="gesamt-signalqualitaet-hebel"></div>
+</div>
+
 </div>
 
 <div class="card">
@@ -490,7 +542,7 @@ function renderZaiRichtungPerformance(data) {
 }
 
 const API_HEALTH_GROUPS = {
-  "api-health-llm": ["groq", "mistral", "gemini", "zai"],
+  "api-health-llm": ["mistral", "gemini", "zai"],
   "api-health-markt": ["coingecko", "kraken", "bitpanda", "yfinance"],
   "api-health-makro": [
     "fear_greed", "fred", "ecb", "china_pboc_lpr", "china_m2", "japan_boj",
@@ -508,17 +560,9 @@ function fmtRelativeTime(iso) {
   return "vor " + Math.round(diffHours / 24) + " Tagen";
 }
 
-// Quellen, die seit 2026-07-26 bewusst NICHT mehr Teil einer automatischen
-// Kette sind (Groq: aus budget_allocator.py entfernt, siehe dortiger Modul-
-// Docstring) - ein alter Fehlschlag ist hier kein Defekt, sondern schlicht
-// "seit dem letzten manuellen Test nicht mehr versucht". Rot waere hier
-// irrefuehrend (suggeriert "kaputt, muss repariert werden").
-const MANUAL_ONLY_SOURCES = new Set(["groq"]);
-
 function renderApiHealthGroup(sourceKeys, apiHealth) {
   return sourceKeys.map(function(key) {
     const entry = apiHealth[key];
-    const manualOnly = MANUAL_ONLY_SOURCES.has(key);
     let statusClass = "";
     let statusText = "unbekannt";
     if (entry) {
@@ -526,17 +570,9 @@ function renderApiHealthGroup(sourceKeys, apiHealth) {
         statusClass = "ok";
         statusText = "OK (" + fmtRelativeTime(entry.last_success_at) + ")";
       } else if (entry.status === "fehler") {
-        if (manualOnly) {
-          statusClass = "muted-text";
-          statusText = "nur manuell · letzter Test " + fmtRelativeTime(entry.last_error_at) + " fehlgeschlagen";
-        } else {
-          statusClass = "err";
-          statusText = "Fehler (" + fmtRelativeTime(entry.last_error_at) + ")";
-        }
+        statusClass = "err";
+        statusText = "Fehler (" + fmtRelativeTime(entry.last_error_at) + ")";
       }
-    } else if (manualOnly) {
-      statusClass = "muted-text";
-      statusText = "nur manuell";
     }
     return '<div class="row"><span>' + key + '</span><span class="' + statusClass + '">' +
       statusText + '</span></div>';

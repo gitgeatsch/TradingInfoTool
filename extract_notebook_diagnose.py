@@ -249,6 +249,15 @@ _VOLLSTAENDIGKEITS_SPALTEN = (
     # gegenargument/risikofaktoren_json Pflicht-Inhalt jedes Signals ist -
     # deckt ueber die geteilte signals-Tabelle automatisch auch Aktien/
     # Rohstoffe/Themen-ETF/Hedge mit ab, nicht nur Krypto Spot/Hebel.
+    #
+    # Beobachtungspunkt (2026-08-01, siehe Basisinfos/Test_und_
+    # Verifikationsmethodik.md Abschnitt 2.9): fazit_folgen ist bei echten
+    # Trade-Empfehlungen (ERÖFFNEN/KAUFEN) praktisch IMMER "mit_vorbehalt"
+    # (Hebel: 0 von 572 je "ja"), "ja"/"nein" treten fast nur bei HALTEN auf.
+    # Ein Backtest (Fazit-Kategorie vs. tatsaechliches Outcome) ist erst
+    # moeglich, sobald selbst_halten_outcome_status (siehe unten) erste
+    # aufgeloeste Faelle zeigt - bisher (Stand 01.08.) durchgehend None/
+    # nicht_anwendbar fuer alle "ja"/"nein"-Faelle.
     "fazit_folgen, fazit_kurzfazit, fazit_konsistenz_hinweis"
 )
 _HEBEL_SIGNAL_SPALTEN = (

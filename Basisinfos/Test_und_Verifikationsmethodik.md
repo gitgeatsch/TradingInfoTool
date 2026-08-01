@@ -134,8 +134,13 @@ Modul-Import).
    nötig ist)
 9. Stop-Loss-MFE-Analyse (`compute_sl_mfe_analyse()`) - Quote der SL-Fälle mit
    zwischenzeitlich positivem MFE trotz spätem Stop (siehe Abschnitt 2.6)
+10. Fazit-Selbsteinschätzung-Verteilung (`fazit_folgen`: ja/nein/mit_vorbehalt)
+    je Assetklasse UND Aktionstyp (echter Trade vs. HALTEN) - insbesondere ob
+    "ja"/"nein" inzwischen auch bei echten Trade-Empfehlungen (ERÖFFNEN/KAUFEN)
+    auftreten, nicht nur bei HALTEN, und ob `selbst_halten_outcome_status`
+    inzwischen erste aufgelöste Fälle zeigt (siehe Abschnitt 2.9).
 
-Diese acht Punkte werden IMMER kurz durchgegangen, auch wenn der Anlass für den
+Diese zehn Punkte werden IMMER kurz durchgegangen, auch wenn der Anlass für den
 Export etwas anderes war - Auffälligkeiten ausserhalb der eigentlichen Fragestellung
 nicht ignorieren (siehe z.B. den ISOC/X136-Ticker-Fund, der nebenbei beim
 Durchgehen von Punkt 6 auffiel).
@@ -498,6 +503,101 @@ spiegelbildlich auch für zeitbasierte Schwellen (siehe die parallel
 hergeleiteten Werte `watchlist_heiss_fenster_stunden=48` und
 `schnellerfolg_anteil_max=0,5` im selben Marktscan-Nachtrag - beide aus
 beobachteten Verteilungen abgeleitet, nicht geschätzt).
+
+### 2.9 Fazit-Selbsteinschätzung (`eigene_einschaetzung.folgen`) — offener Kalibrierungs-Beobachtungspunkt (Nachtrag 01.08.)
+
+Auslöser: Nutzer-Beobachtung, noch nie ein Signal gesehen zu haben, bei dem
+Mistral im `eigene_einschaetzung.kurzfazit`/`folgen` der eigenen Empfehlung
+mit "ja" zustimmt (siehe BEAMX-Signal, `fazit_folgen="mit_vorbehalt"`, dazu
+Z.ai mit abweichender eigener Richtungseinschätzung SHORT).
+
+**Befund (kompletter Notebook-Export, seit Einführung des Features 25.07.):**
+
+- Hebel: **0 von 572** Signalen mit `fazit_folgen="ja"` - in der gesamten
+  Historie noch nie. 508 "mit_vorbehalt" (88,8%), 64 "nein" (11,2%).
+- Spot: nur 34 von 761 (4,5%) "ja", Rest "mit_vorbehalt" (95,5%). Nie "nein".
+- Gilt für Mistral UND Gemini gleichermaßen (Gemini-Hebel: 8 von 9 ebenfalls
+  "mit_vorbehalt") - kein reiner Mistral-Artefakt.
+- Widerspricht direkt Regel 26/32 in `hebel_analyst.py`/`analyst.py` ("'mit
+  vorbehalt' ist... KEIN bequemer Standardfall... 'ja' und 'nein' sind
+  gleichwertige, vollständige Antworten").
+
+**Kreuztabelle `original_action` × `fazit_folgen` klärt das Muster auf:**
+für eine ECHTE Trade-Empfehlung (ERÖFFNEN/KAUFEN) ist es praktisch IMMER
+"mit_vorbehalt" (Hebel: 220/220 = 100%, Spot: 22/24 = 92%) - "ja"/"nein"
+treten fast ausschließlich bei HALTEN-Entscheidungen auf. Nicht durch
+Z.ai-Widerspruch erklärbar: selbst wenn Z.ai der Richtung zustimmt
+(`zai_uebereinstimmung="ja"`), bleibt das Hebel-Fazit in 122 von 123 Fällen
+trotzdem "mit_vorbehalt" - die Hedging-Tendenz ist vom Ergebnis der eigenen
+Gegenprüfung unabhängig.
+
+**Backtest-Versuch (01.08.) - aktuell NICHT durchführbar:** von allen 71
+"ja"/"nein"-Fällen (64 Hebel-nein + 34 Spot-ja, teils mit Aktions-Überlappung)
+hat **keiner** einen aufgelösten `selbst_halten_outcome_status` (siehe
+Regel 28, `ist_reines_llm_halten`) - alle `None` oder `nicht_anwendbar`
+(Zonen fehlten oder das Feature ist erst seit 31.07. aktiv). Die paar echten
+KAUFEN/VERKAUFEN-"ja"-Fälle bei Spot (n=2+2) sind zusätzlich zu wenige und
+ebenfalls ohne aufgelösten `outcome_status`. Ein Vergleich "war das Hedging
+gerechtfertigt" (CRV/Win-Rate "ja" vs. "mit_vorbehalt") ist damit strukturell
+unmöglich, solange keine "ja"/"nein"-Fälle aufgelöst sind.
+
+**Bewusst NICHT sofort gefixt:** eine Prompt-Nachschärfung würde das gleiche
+Risiko bergen wie beim Action-Bias-Fund (Regel 27, siehe Regelwerksmanual-
+Nachtrag "Regelwerk-Audit Stufe 3, Punkt 4") - ein zu forscher Zwang zur
+einen Seite kann den gegenteiligen Bias erzeugen. Erst beobachten, dann ggf.
+gezielt nachschärfen.
+
+**Wiedervorlage (kein festes Datum, siehe 2.2a "Mehrtägige Beobachtung"):**
+sobald `selbst_halten_outcome_status` erste aufgelöste Fälle zeigt (die
+Selbst-Halten-Schatten-Verfolgung braucht Wochen, um genug Fälle zu sammeln),
+den Backtest "Fazit-Kategorie vs. tatsächliches Outcome" wiederholen - dabei
+Symbol-Konzentrations-Check (2.5) UND Mindestschwelle n≥50 (2.5) beachten,
+da die Stichprobe bei "ja"/"nein" absehbar klein bleiben wird.
+
+### 2.10 Z.ai-"Gegenprüfung wäre richtiger"-These — geprüft und über LONG/SHORT-Symmetrietest WIDERLEGT (Nachtrag 01.08.)
+
+Auslöser: Anschlussfrage an 2.9 - Mistrals LONG-Empfehlungen performen
+schlecht (18,6% Trefferquote, n=59 aufgelöst) UND Z.ai widerspricht ihnen in
+88% der Fälle mit klarer Richtung (n=8 von 17 mit Z.ai-Wert). Erste
+Interpretation: Z.ai als informelles Meta-Label/Gegen-Check nutzen. **Vom
+Nutzer explizit hinterfragt ("nicht bei halber Strecke halt machen") -
+Symmetrietest gefordert:** wie performen Mistrals SHORT-Empfehlungen, und
+folgt Z.ai dort ebenfalls konsequent der jeweils anderen Seite?
+
+**Ergebnis, WIDERLEGT die Gegenprüfungs-These:**
+
+| Richtung | n aufgelöst | Trefferquote |
+|---|---|---|
+| Mistral LONG | 59 | 18,6% |
+| Mistral SHORT | 9 (dedupliziert nach Symbol+Tag: bleibt 9) | **0,0%** |
+
+SHORT performt nicht besser als LONG, sondern schlechter - widerspricht der
+Annahme "mit dem Bär-Trend gehen wäre richtig gewesen". Zusätzlich:
+`zai_eigene_richtung` über ALLE 1336 Hebel-Signale (469 mit Wert) ist
+SHORT=246, NEUTRAL=222, **LONG=1** - Z.ai sagt praktisch nie LONG. Das
+erklärt die scheinbare Korrelation als Scheinzusammenhang: beide Größen
+(Mistral-LONG-Fehlschläge, Z.ais Dauer-Bär-Haltung) hängen unabhängig
+voneinander mit dem anhaltenden Bär-Regime zusammen, ohne dass Z.ai
+tatsächlich prädiktive Fähigkeit zeigt - der Beweis: wenn Z.ai Recht hätte,
+müssten SHORT-Trades (die praktisch immer mit Z.ais Dauerhaltung
+übereinstimmen) gut performen. Sie performen am schlechtesten von allen.
+
+**Schlussfolgerung:** das Problem ist RICHTUNGS-UNABHÄNGIG (LONG und SHORT
+beide schlecht, SHORT sogar schlechter) - kein Beleg für eine falsche
+Richtungswahl, sondern für einen anderen, richtungsneutralen Faktor. Damit
+gehört diese Spur NICHT zu einer neuen Meta-Labeling-/Gegenprüfungs-Regel,
+sondern zurück zum bereits bestehenden, noch ungelösten Thema in
+[[project_enge_stop_loss_backtest_und_massnahmen]] (~77% des CRV-Band-
+Einbruchs weiterhin unerklärt) - dort wurde am selben Tag ein neuer,
+konkreter Kandidat gefunden (Breakeven-/Teilgewinn-Lock, siehe dortiger
+Nachtrag 01.08.). Die Fazit-Vorbehalt-Beobachtung aus 2.9 bleibt davon
+unberührt gültig (eigenständiger Befund).
+
+**Methodischer Punkt für künftige Analysen:** eine auffällige Korrelation
+zwischen zwei Kennzahlen ist erst dann ein Kausal-/Prädiktivitäts-Beleg, wenn
+sie den Symmetrietest übersteht (hier: Spiegelfall SHORT statt nur LONG
+geprüft) - sonst bleibt offen, ob beide Größen nur einen gemeinsamen Dritt-
+faktor (hier: Bär-Regime) widerspiegeln.
 
 ---
 
