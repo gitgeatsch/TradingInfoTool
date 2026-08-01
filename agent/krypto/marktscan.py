@@ -508,7 +508,16 @@ def run_scan(
     docs/budget_queue_design.md). Der automatische Groq-Begruendungs-Zweig ist
     in den zentralen Budget-Allocator (agent/krypto/budget_allocator.py)
     umgezogen - der manuelle Button (ui/marktscan_view.py) ruft
-    `generate_candidate_writeup()` weiterhin direkt auf."""
+    `generate_candidate_writeup()` weiterhin direkt auf.
+
+    Top-N-Deckel (2026-08-01, CoinGecko-Kontingent-Backtest, siehe backtest_
+    coingecko_marktscan_kosten.py + config.yaml marktscan.stufe_b_top_n_deckel):
+    ein Vorpass ermittelt fuer alle Stufe-A-Ueberlebenden eine guenstige Vorab-
+    Note (Fundamental+Momentum OHNE ATH-Abstand, keine externen Calls), nur die
+    besten N bekommen danach den teuren Backfill+ATH-Check. Nicht ausgewaehlte
+    Ueberlebende durchlaufen die Klassifikation trotzdem - mit degradiertem
+    Score (kein `snapshot`/`ath_change_pct`), identisch zum bestehenden
+    Verhalten bei einem fehlgeschlagenen Backfill (kein neuer Code-Pfad)."""
     marktscan_cfg = config_dict["marktscan"]
     scan_run_id = f"{datetime.now(timezone.utc).isoformat()}_{uuid.uuid4().hex[:8]}"
     raw = _collect_raw_candidates(coingecko_client)
@@ -532,7 +541,12 @@ def run_scan(
     latest_prices = db.get_latest_prices(conn)
 
     verfallen_abklingzeit_stunden = marktscan_cfg.get("verfallen_abklingzeit_stunden", 24.0)
-    candidates: list[MarktscanCandidate] = []
+
+    # --- Vorpass: Stufe A + guenstige Rangfolge fuer den Top-N-Deckel. KEIN
+    # externer Call hier (Stufe A ist reine Feld-Pruefung, die Vorab-Note nutzt
+    # nur bereits vorhandene Discovery-Daten) - nur Stufe-A-Ueberlebende
+    # konkurrieren um die begrenzten Backfill/ATH-Slots.
+    vorpass: list[dict] = []
     for coingecko_id, entry in raw.items():
         if _duplicate_should_skip(conn, coingecko_id, watchlist, verfallen_abklingzeit_stunden):
             continue
@@ -542,15 +556,53 @@ def run_scan(
             bitpanda_is_listed(coin.symbol, bitpanda_assets, name=coin.name)
             if bitpanda_assets is not None else None
         )
-
-        snapshot = None
-        if stufe_a.bestanden:
-            snapshot = _try_backfill_snapshot(coingecko_client, conn, coingecko_id, coin.symbol)
-
         # Reifegrad-Baustein 1 (2026-07-30): Streak-Laenge - guenstig, immer
         # berechnet (reine DB-Abfrage, kein externer Call), siehe score_momentum()-
         # Nachtrag fuer die Backtest-Herleitung.
         sichtung_position = db.get_marktscan_sichtung_position(conn, coingecko_id)
+        vorab_score = None
+        if stufe_a.bestanden:
+            fund_score_vorab, _ = score_fundamental(stufe_a, marktscan_cfg["filter"])
+            mom_score_vorab, _ = score_momentum(
+                coin.change_24h_pct, entry["trending_rank"], coin.change_7d_pct,
+                sichtung_position=sichtung_position, ath_change_pct=None,
+            )
+            vorab_score = (fund_score_vorab or 0) + (mom_score_vorab or 0)
+        vorpass.append({
+            "coingecko_id": coingecko_id, "entry": entry, "stufe_a": stufe_a,
+            "bitpanda_gelistet": bitpanda_gelistet, "sichtung_position": sichtung_position,
+            "vorab_score": vorab_score,
+        })
+
+    top_n = marktscan_cfg.get("stufe_b_top_n_deckel")
+    tiefenanalyse_erlaubt: set[str] | None = None
+    if top_n is not None:
+        ueberlebende = [v for v in vorpass if v["vorab_score"] is not None]
+        ueberlebende.sort(key=lambda v: v["vorab_score"], reverse=True)
+        tiefenanalyse_erlaubt = {v["coingecko_id"] for v in ueberlebende[:top_n]}
+        if len(ueberlebende) > top_n:
+            logger.info(
+                "Marktscan Top-%d-Deckel griff: %d/%d Stufe-A-Ueberlebende bekommen "
+                "keinen Backfill/ATH-Check (degradierter Score statt teurem Call)",
+                top_n, len(ueberlebende) - top_n, len(ueberlebende),
+            )
+
+    candidates: list[MarktscanCandidate] = []
+    for v in vorpass:
+        coingecko_id = v["coingecko_id"]
+        entry = v["entry"]
+        stufe_a = v["stufe_a"]
+        bitpanda_gelistet = v["bitpanda_gelistet"]
+        sichtung_position = v["sichtung_position"]
+        coin: MarketCoin = entry["coin"]
+
+        darf_tiefenanalyse = stufe_a.bestanden and (
+            tiefenanalyse_erlaubt is None or coingecko_id in tiefenanalyse_erlaubt
+        )
+
+        snapshot = None
+        if darf_tiefenanalyse:
+            snapshot = _try_backfill_snapshot(coingecko_client, conn, coingecko_id, coin.symbol)
 
         # Reifegrad-Baustein 2 (2026-07-30): ATH-Abstand - NUR fuer junge, Stufe-A-
         # bestandene Coins (Nutzer-Erfahrung: bei altem ATH bedeutungslos, siehe
@@ -560,7 +612,7 @@ def run_scan(
         ath_change_pct = None
         ath_max_alter_tage = marktscan_cfg["filter"].get("ath_abstand_junger_coin_max_alter_tage", 180)
         if (
-            stufe_a.bestanden and stufe_a.alter_tage_geschaetzt is not None
+            darf_tiefenanalyse and stufe_a.alter_tage_geschaetzt is not None
             and stufe_a.alter_tage_geschaetzt <= ath_max_alter_tage
         ):
             try:

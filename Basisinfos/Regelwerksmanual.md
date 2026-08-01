@@ -13629,3 +13629,62 @@ gegen die Produktions-DB, siehe [[feedback_desktop_kein_produktivstart]]).
 Tage/Wochen echter Daten vorliegen erneut pruefen, ob Marktscan-USD-only
 allein ausreicht oder ein Top-N-Deckel doch noetig wird (Backtest-Skript
 bleibt fuer eine erneute Auswertung nutzbar).
+
+## Nachtrag (2026-08-01, spaeter am selben Tag): Marktscan Top-N-Deckel umgesetzt + "unbekannte Aufrufe" geklaert
+
+**Anlass:** frischer Notebook-Export (21:35 Uhr) zeigte den Verbrauch weiter
+steigend, Nutzer-Entscheidung nach Ruecksprache: "wir werden einen Deckel
+brauchen sonst wird es kritisch" - der oben dokumentierte USD-only-Fix allein
+reicht nicht, wenn JIT-Refresh (nicht Marktscan) der Haupttreiber eines Tages
+ist. Zusaetzliche Nutzerfrage: was sind die "unbekannten Aufrufe" aus dem
+vorherigen Nachtrag?
+
+**Klaerung "unbekannte Aufrufe":** die ATH-Abstand-Calls (`get_coin_ath_
+change_percentage()`) fuer junge Stufe-A-Ueberlebende - das Kandidaten-Alter
+wird nirgends dauerhaft gespeichert, daher nicht exakt rekonstruierbar (nur
+nach oben begrenzt durch die Anzahl Stufe-A-Ueberlebender). Zusaetzlich
+geprueft und AUSGESCHLOSSEN als versteckte Mehrfach-Call-Quelle: `hebel_
+screening_job` nutzt kein CoinGecko (Binance/Bybit/OKX/Kraken), `/global`
+(BTC-Dominanz) ist bereits auf 1×/Tag gecacht (Schritt-0-Fix, `agent/krypto/
+pipeline.py::_update_macro_snapshot()`). Abgleich mit dem frischen Export
+(21:32 Uhr, 90% des Tages): das rekonstruierte Modell (Fixboden+Marktscan+
+JIT) kam auf ~348 Calls, LIEGT UNTER dem bereits um 18:47 Uhr real
+beobachteten Wert 353 - das Modell untertreibt den echten Verbrauch leicht
+(ATH-Checks + moeglicher weiterer kleiner Rest). Genau deshalb ist ein
+Deckel der pragmatischere Weg als jede Quelle perfekt zu attribuieren: er
+begrenzt die groesste, beherrschbare variable Quelle hart, unabhaengig davon
+ob jede letzte Call-Quelle bekannt ist.
+
+**Umgesetzt:** `agent/krypto/marktscan.py::run_scan()` umstrukturiert in
+zwei Durchlaeufe - ein Vorpass ermittelt fuer alle Stufe-A-Ueberlebenden
+eine guenstige Vorab-Note (`score_fundamental()` + `score_momentum(...,
+ath_change_pct=None)`, KEIN externer Call, nutzt nur bereits vorhandene
+Discovery-Daten), nur die `config.yaml marktscan.stufe_b_top_n_deckel`
+(=10, Nutzer-Wahl) besten davon bekommen danach `_try_backfill_snapshot()`
++ ATH-Check. Nicht ausgewaehlte Ueberlebende durchlaufen die Klassifikation
+trotzdem (bleiben als Kandidat sichtbar, kein Datenverlust) - mit
+degradiertem Score (kein `snapshot`/`ath_change_pct`), EXAKT derselbe
+Code-Pfad wie ein heute schon existierender fehlgeschlagener Backfill
+(kein neuer Sonderfall). `top_n=None`/Schluessel entfernen = unveraendertes
+Alt-Verhalten.
+
+**Backtest-Update (`backtest_coingecko_marktscan_kosten.py`, erweitert um
+Top-N-Varianten, gegen dieselben 38 echten Laeufe):** Top-10-Deckel zusaetzlich
+zu USD-only: Ø 40,1 Calls/Tag (-23,4% ggu. Baseline), Deckel griff nur in
+1/38 Laeufen (2,6%) - normale Tage bleiben praktisch unveraendert, der
+09.07.-Ausreisser (51 Ueberlebende, 197 Calls in einem Lauf) waere auf einen
+Bruchteil gekappt worden.
+
+**Verifikation:** Compile bestanden. Synthetischer Test (15 synthetische
+Stufe-A-Kandidaten, gemockter `backfill_history()`/`get_coin_ath_change_
+percentage()`): Top-5-Deckel -> genau 5 Backfill- UND 5 ATH-Calls (dieselben
+5 Coins fuer beide, korrekt gekoppelt), alle 15 Kandidaten trotzdem
+gespeichert. Default aus config.yaml (10) bestaetigt. `top_n=None` ->
+alle 15 bekommen Backfill (Alt-Verhalten unveraendert, Regressionscheck
+bestanden).
+
+**Ehrliches Fazit bleibt bestehen:** der Deckel wirkt gezielt gegen
+Marktscan-Ausreisser-Tage, loest aber nicht die JIT-Refresh-lastigen Tage
+(bewusst unangetastet, siehe vorheriger Nachtrag - Signalqualitaets-
+Kompromiss). Der neue Tageszaehler-Export bleibt der Weg, um zu beobachten,
+ob beide Massnahmen zusammen ausreichen oder weitere Schritte noetig werden.

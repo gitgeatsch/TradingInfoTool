@@ -729,6 +729,18 @@ marktscan:
                                         # Ein Coin mit bereits UNBEARBEITETER Kaufkandidat-
                                         # Zeile (status='neu') wird unabhaengig davon immer
                                         # uebersprungen (kein Zeitfenster noetig).
+  stufe_b_top_n_deckel: 10               # NEU (2026-08-01, CoinGecko-Kontingent-Backtest,
+                                        # siehe backtest_coingecko_marktscan_kosten.py) -
+                                        # nur die N Stufe-A-Ueberlebenden mit der besten
+                                        # guenstigen Vorab-Note (Fundamental+Momentum OHNE
+                                        # ATH, kein externer Call) bekommen den teuren
+                                        # Backfill+ATH-Check; der Rest wird trotzdem als
+                                        # Kandidat gespeichert, nur mit degradiertem Score
+                                        # (identisch zum bestehenden Verhalten bei einem
+                                        # fehlgeschlagenen Backfill). Backtest: griff nur in
+                                        # 1/38 echten Laeufen, kappte aber den 09.07.-
+                                        # Ausreisser (51 Ueberlebende, 197 Calls) zuverlaessig.
+                                        # null/Schluessel entfernen = kein Deckel (Alt-Verhalten).
   erfolgsmessung:                       # NEU (2026-07-30, Backward-Tracking fuer Kaufkandidaten/
                                         # "heisse" Watchlist-Kandidaten, siehe agent/krypto/
                                         # marktscan_backward_tracking.py)
