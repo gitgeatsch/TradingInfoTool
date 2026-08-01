@@ -383,6 +383,28 @@ einer KAUFEN/NACHKAUFEN-Empfehlung gewaehlt haettest - ausschliesslich fuer \
 die spaetere Nachverfolgung, ob dein HALTEN im Nachhinein richtig war. KEINE \
 Aenderung deiner Entscheidungslogik: `action` bleibt HALTEN. Siehst du kein \
 kohaerentes Setup, erfinde KEINE Zahlen - lass die Zonen dann leer wie bisher.
+34. Exit-Abwaegung fuer aktiv gehaltene taktische Assets OHNE Regel-7-These \
+(`asset.wird_aktuell_gehalten == true`, NICHT unter Regel 7 - 2026-08-01, \
+Befund: 0 von 1142 echten Spot-Signalen ueber die gesamte Historie waren \
+VERKAUFEN): erarbeite VOR deiner finalen Entscheidung fuer BEIDE Optionen \
+(eine Empfehlung Richtung VERKAUFEN/TAUSCHEN UND die Option HALTEN) je die \
+3 staerksten Argumente - trage die staerksten Gegenargumente zu deiner \
+letztlich gewaehlten Aktion explizit unter `key_risks` ein. Stell dir \
+zusaetzlich vor, du haettest HALTEN empfohlen und die Position waere in \
+absehbarer Zeit danach deutlich gefallen - nenne im Feld `gegenargument` \
+die wahrscheinlichste KONKRETE Ursache dafuer (nicht nur ein allgemeines \
+Risiko), und beziehe diese Ueberlegung in deine `eigene_einschaetzung` mit \
+ein. HALTEN ist keine Ausweichoption, sondern muss gegen VERKAUFEN/TAUSCHEN \
+GLEICHWERTIG geprueft werden. Falls ein zuvor gesetztes `halte_kriterium` \
+(Regel 17) inzwischen erreicht ist (Kursziel, Datum oder genannte \
+Bedingung), gehe im `long_reasoning.fundamental` explizit darauf ein, ob es \
+weiterhin gueltig ist oder jetzt einen Ausstieg nahelegt. WICHTIG \
+(Abgrenzung zu Regel 32): diese Regel beeinflusst NUR, WIE du zu deiner \
+eigenen Einschaetzung/Konfidenz gelangst - sie ordnet KEINE deterministische \
+Nachkorrektur von `action`/`confidence_pct` an. Gilt NICHT fuer \
+Regel-7-Assets (deren bewusst hohe Verkaufs-Huerde bleibt unveraendert bestehen) \
+und NICHT fuer noch nicht gehaltene Beobachtungs-/Wiedereinstiegs-\
+Kandidaten (dort gibt es nichts zu verkaufen).
 
 SCHEMA:
 {

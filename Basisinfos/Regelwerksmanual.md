@@ -13310,3 +13310,50 @@ drei geaenderten Dateien bestanden.
 **Wiedervorlage:** Schritt 2 (echte Abwaegungs-Regel) als naechster
 Roadmap-Schritt, dann 3/4 - jeweils eigene Punkt-fuer-Punkt-Analyse vor der
 Umsetzung, kein festes Datum.
+
+**Umsetzung Schritt 2 (2026-08-01): neue Regel 34 "Exit-Abwaegung fuer aktiv
+gehaltene taktische Assets OHNE Regel-7-These"** in `agent/krypto/analyst.py`
+(SYSTEM_PROMPT, additiv nach Regel 33 eingefuegt, Regel 7/8-Text unveraendert
+gelassen). Template/Vorbild war Hebel-Regel 27 ("Action-Bias-Korrektur",
+29.07.) - beim genauen Nachlesen von Regel 27 stellte sich heraus, dass diese
+tatsaechlich eine ENTRY-seitige Regel ist (ERROEFFNEN/NACHKAUFEN/
+HEBEL_ERHOEHEN vs. HALTEN), nicht wie zunaechst angenommen exit-seitig -
+Regel 34 ist also ein neues Muster (HALTEN-vs-VERKAUFEN/TAUSCHEN statt
+HALTEN-vs-ERROEFFNEN), mechanisch an Regel 27 angelehnt (3 staerkste Argumente
+je Seite, "male dir aus, wie es schiefgeht, wenn du bei HALTEN bleibst"-
+Formulierung, expliziter Hinweis: keine deterministische Override von
+`action`/`confidence_pct`). Gilt NUR fuer den Regel-8-Anwendungsbereich
+(aktiv gehaltene taktische Assets ohne Regel-7-These, `asset.
+wird_aktuell_gehalten==true`) - Regel 7 (Core/These-Kandidaten) bleibt
+unangetastet, dort bleibt die hohe Verkaufs-Huerde bewusst bestehen.
+
+**Verifikation, zwei Stufen:**
+1. Klasse 1 (Prompt-Text): Compile/Import/Text-Marker/Regelnummerierung
+   1-34 sequenziell - bestanden, ein Formatierungsfehler ("Regel-7- Assets"
+   statt "Regel-7-Assets") gefunden und behoben.
+2. Echter Live-API-Test (ALT-Prompt = git HEAD vor Regel 34, 33 Regeln, vs.
+   NEU = Arbeitskopie mit Regel 34) gegen echte, aktuelle Marktdaten (echter
+   `build_facts()`-Payload aus der vollen Pipeline, echte Mistral-API-Calls,
+   n=3 je Variante) fuer drei real gehaltene Symbole:
+   - **KAIA** (taktisch, Regel-8-scoped, -82,8% Verlust, durchgehend
+     bearische Konfluenz): ALT 2/3 HALTEN + 1/3 VERKAUFEN, NEU 3/3
+     VERKAUFEN - klare Verschiebung.
+   - **ASTER** (taktisch, Regel-8-scoped, -9,9% Verlust, These intakt):
+     ALT 3/3 HALTEN, NEU 3/3 HALTEN - KEINE Verschiebung. Wichtiger
+     Gegenbefund: Regel 34 ist kein pauschaler Verkaufs-Bias, sondern wiegt
+     erkennbar ab - bei moderatem Verlust und intakter These bleibt die
+     Empfehlung in beiden Varianten identisch HALTEN.
+   - **MORPHO** (core, Regel-7-scoped, +4,7% Gewinn, Kontrollfall): ALT
+     3/3 HALTEN, NEU 3/3 HALTEN - Regel 34 greift korrekt NICHT ein, kein
+     Uebergriff in den Core-Bereich.
+
+   Alle 18 Live-Calls lieferten valides JSON, kein Retry noetig, keine
+   Schema-Verletzung. Rohdaten (facts-Payloads + volle Antworten) im
+   Scratch-Verzeichnis der Session archiviert.
+
+**Offene, ehrlich benannte Luecke:** aktuell existiert im echten Portfolio
+keine im Gewinn stehende Regel-8-Position (alle taktischen Haltungen sind im
+Minus, siehe P&L-Tabelle in der zugehoerigen Session) - ob Regel 34 auch bei
+einem profitablen taktischen Halt eine echte Verkaufs-/Tausch-Abwaegung
+ausloest (statt nur bei starken Verlusten), bleibt bis zu einem passenden
+realen Fall ungetestet.
