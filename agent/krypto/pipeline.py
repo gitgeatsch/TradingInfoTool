@@ -617,6 +617,7 @@ def _compute_cash_reserve_ziel_context(
 def generate_signal(
     asset, watchlist, conn, groq_client, coingecko_client, kraken_client,
     fred_api_key: str | None = None, zai_client=None,
+    war_re_evaluierung_faellig: bool = False,
 ) -> Signal:
     # A-1: Stablecoins/Cash-Aequivalente haben kein eigenstaendiges Handelssignal.
     if asset.ist_cash_aequivalent:
@@ -955,6 +956,7 @@ def generate_signal(
         risk_veto_reason=risk_veto_reason,
         ist_reines_llm_halten=ist_reines_llm_halten,
         original_action=original_action,
+        war_re_evaluierung_faellig=war_re_evaluierung_faellig,
         cash_veto=cash_veto,
         cash_veto_reason=cash_veto_reason,
         risikofaktoren_json=json.dumps(risikofaktoren, ensure_ascii=False) if risikofaktoren else None,

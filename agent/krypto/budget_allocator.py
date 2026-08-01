@@ -714,6 +714,7 @@ def run_budget_allocator(
                 lambda c: generate_signal(
                     a, watchlist, c, mistral_client, coingecko_client, kraken_client, fred_api_key,
                     zai_client=zai_client,
+                    war_re_evaluierung_faellig=a.symbol in re_evaluierung_faellig,
                 )
             )))
         if gemini_client is not None:
@@ -721,6 +722,7 @@ def run_budget_allocator(
                 lambda c: generate_signal(
                     a, watchlist, c, gemini_client, coingecko_client, kraken_client, fred_api_key,
                     zai_client=zai_client,
+                    war_re_evaluierung_faellig=a.symbol in re_evaluierung_faellig,
                 )
             )))
         # Z.ai (2026-07-26) NICHT mehr Teil dieser Fallback-Kette als

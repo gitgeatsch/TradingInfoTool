@@ -204,7 +204,11 @@ def run_multi_asset_batch(
         schluessel = asset.symbol
         ist_hedge = asset.symbol in _hedge_hebel_faktoren
         extra_kwargs = (
-            {"bereits_vorgeschlagen_effektiv_usd": hedge_effektiv_vorgeschlagen_usd} if ist_hedge else {}
+            {"bereits_vorgeschlagen_effektiv_usd": hedge_effektiv_vorgeschlagen_usd} if ist_hedge
+            # Re-Evaluierung-faellig (2026-08-01, Schritt 4): Hedge hat kein
+            # halte_kriterium-Aequivalent und generate_signal() dort kennt den
+            # Parameter nicht - daher nur fuer Aktien/Rohstoffe/Themen-ETF.
+            else {"war_re_evaluierung_faellig": asset.symbol in re_eval_symbole}
         )
         calls = []
         if mistral_client is not None:

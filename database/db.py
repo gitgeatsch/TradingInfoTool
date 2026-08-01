@@ -827,6 +827,22 @@ def _migrate_signal_llm_halten_column(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+# Re-Evaluierung-faellig-Flag (2026-08-01, Spot-Verkaufs-Luecke Schritt 4,
+# siehe database/models.py::Signal.war_re_evaluierung_faellig-Docstring) -
+# eigene, kleine Migration statt Wiederverwendung der Migration oben, weil
+# beide Features unabhaengig voneinander entstanden sind (keine Kopplung).
+_SIGNAL_RE_EVALUIERUNG_FAELLIG_NEW_COLUMNS = {"war_re_evaluierung_faellig": "INTEGER"}
+
+
+def _migrate_signal_re_evaluierung_faellig_column(conn: sqlite3.Connection) -> None:
+    """Additive Migration fuer das war_re_evaluierung_faellig-Flag auf signals."""
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(signals)")}
+    for column, sql_type in _SIGNAL_RE_EVALUIERUNG_FAELLIG_NEW_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE signals ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
 _HEBEL_SIGNAL_LLM_HALTEN_NEW_COLUMNS = {"ist_reines_llm_halten": "INTEGER", "original_action": "TEXT"}
 
 
@@ -1206,6 +1222,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_hebel_signal_veto_shadow_columns(conn)
     _migrate_signal_llm_halten_column(conn)
     _migrate_hebel_signal_llm_halten_column(conn)
+    _migrate_signal_re_evaluierung_faellig_column(conn)
     _migrate_signal_selbst_halten_columns(conn)
     _migrate_hebel_signal_selbst_halten_columns(conn)
     _migrate_hebel_signal_atr_column(conn)
@@ -2137,14 +2154,15 @@ _SIGNAL_COLUMNS = (
     "cash_reserve_ziel_begruendung", "gegenargument", "cash_veto", "cash_veto_reason",
     "risikofaktoren_json", "fazit_folgen", "fazit_kurzfazit", "fazit_konsistenz_hinweis",
     "mindestziel_usd", "mindestziel_eur", "mindestziel_zeitraum_tage_geschaetzt",
-    "ist_reines_llm_halten", "original_action",
+    "ist_reines_llm_halten", "original_action", "war_re_evaluierung_faellig",
 )
 
 
 def insert_signal(conn: sqlite3.Connection, signal: Signal) -> int:
     placeholders = ", ".join("?" for _ in _SIGNAL_COLUMNS)
     values = [
-        int(getattr(signal, col)) if col in ("gate_passed", "risk_veto", "cash_veto", "ist_reines_llm_halten")
+        int(getattr(signal, col))
+        if col in ("gate_passed", "risk_veto", "cash_veto", "ist_reines_llm_halten", "war_re_evaluierung_faellig")
         else getattr(signal, col)
         for col in _SIGNAL_COLUMNS
     ]
@@ -2162,6 +2180,7 @@ def _row_to_signal(row: sqlite3.Row) -> Signal:
     data["risk_veto"] = bool(data["risk_veto"])
     data["cash_veto"] = bool(data["cash_veto"]) if data.get("cash_veto") is not None else False
     data["ist_reines_llm_halten"] = bool(data.get("ist_reines_llm_halten") or False)
+    data["war_re_evaluierung_faellig"] = bool(data.get("war_re_evaluierung_faellig") or False)
     if data["umgesetzt"] is not None:
         data["umgesetzt"] = bool(data["umgesetzt"])
     return Signal(**data)

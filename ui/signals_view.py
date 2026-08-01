@@ -565,6 +565,7 @@ class SignalsView(ttk.Frame):
             signal.zai_gegenpruefung_urteil, signal.zai_gegenpruefung_kurzbegruendung,
             signal.zai_eigene_richtung, signal.zai_uebereinstimmung,
             signal.zai_richtung_kurzbegruendung,
+            war_re_evaluierung_faellig=signal.war_re_evaluierung_faellig,
         )
         if zai_lines:
             lines.append("")

@@ -13430,3 +13430,95 @@ Monats-Gesamtwert rekonstruierbar.
 gefasst) als naechster Roadmap-Schritt, jeweils eigene Punkt-fuer-Punkt-
 Analyse davor. Rohstoff/Themen-ETF-Wirkung der neuen Regel kann erst
 beurteilt werden, sobald diese Pipelines echte Produktivdaten haben.
+
+## Nachtrag (2026-08-01): Spot-Verkaufs-Luecke Roadmap Schritt 4 (Z.ai-Re-Evaluierungs-Anzeige) - Roadmap-Praemisse korrigiert VOR dem Bau
+
+**Wichtig, dieser Abschnitt ERGAENZT den vorherigen Nachtrag (Schritt 3) -
+nichts davon wurde geloescht oder ueberschrieben. Zweck: nachvollziehbare
+Historie, was wann geaendert wurde.**
+
+**Urspruengliche Roadmap-Annahme (aus der Wiedervorlage oben):** "Z.ai fuer
+Re-Evaluierungs-Kandidaten, eng gefasst" - implizierte NEUE Z.ai-Calls
+speziell fuer Symbole, bei denen das eigene `halte_kriterium`/Regel 17
+erreicht wurde.
+
+**Pre-Build-Analyse (Nutzer-Standing-Vorgabe, hier durch einen Analyse-Agenten
+durchgefuehrt) ergab: diese Annahme war FALSCH.** `agent/krypto/
+gegenpruefung.py::fuehre_beide_calls_im_hintergrund()` ruft Z.ai bereits
+IMMER auf - fuer jedes Signal, jede Action, inklusive HALTEN (einziges Gate
+projektweit: `if zai_client is not None`, identisch in allen 6 Pipelines).
+Neue Calls speziell fuer Re-Evaluierungs-Kandidaten waeren also (a) reine
+Redundanz und (b) ein Risiko, exakt den Z.ai-429-Sturm-Vorfall (27./28.07.,
+siehe `api/zai.py`-Modul-Kommentare Zeile 30-42) zu wiederholen, den das
+Projekt bereits einmal live hatte.
+
+**Der eigentliche, reale Gap:** `_notify_spot_signal()`
+(`scheduler/background.py:1582`) verschickt fuer `action == "HALTEN"` NIE
+eine E-Mail - Z.ais bereits vorhandene, unabhaengige Richtungseinschaetzung
+(`zai_eigene_richtung`) fuer die kleine Teilmenge der "Re-Evaluierung
+faellig"-HALTEN-Faelle war also nur in der App sichtbar, dort aber nicht von
+den 98%+ routinemaessigen HALTEN-Faellen unterscheidbar (`abgleich_text`
+zeigte in beiden Faellen generisch "unklar", weil `zai_uebereinstimmung`
+fuer HALTEN strukturell immer `None` ist - `richtung_aus_action()` gibt fuer
+HALTEN bewusst `None` zurueck, siehe Modul-Docstring).
+
+**Korrigierter, deutlich kleinerer Umfang (vom Nutzer bestaetigt: "ja, passt
+so - bau es"):** rein GUI-seitige Datensichtbarkeit, KEINE neuen Z.ai-Calls,
+KEINE E-Mail-Aenderung (HALTEN erreicht den E-Mail-Pfad ohnehin nie).
+
+**Umsetzung:**
+1. Neues Flag `war_re_evaluierung_faellig: bool = False` auf `Signal`
+   (NICHT auf `HebelSignal` - Hebel hat kein `halte_kriterium`-Aequivalent).
+   Muss zur GENERIERUNGSZEIT persistiert werden, nicht nachtraeglich
+   ableitbar, weil `get_symbole_mit_erreichtem_halte_kriterium()` nur den
+   AKTUELLEN Kurs/die aktuelle Watchlist kennt - eine rueckwirkende
+   Berechnung anhand eines gespeicherten Signals waere nicht mehr moeglich.
+2. `database/db.py`: additive Migration `_migrate_signal_re_evaluierung_
+   faellig_column()` (eigene, von der Schritt-3-Migration unabhaengige
+   Funktion - beide Features entstanden unabhaengig voneinander), Spalte
+   in `_SIGNAL_COLUMNS`/Bool-Cast in `insert_signal()`/`_row_to_signal()`
+   aufgenommen.
+3. Alle vier Spot-family-`generate_signal()`-Funktionen (Krypto/Aktien/
+   Rohstoffe/Themen-ETF) um Parameter `war_re_evaluierung_faellig: bool =
+   False` erweitert, an die jeweilige `Signal(...)`-Konstruktion
+   durchgereicht.
+4. Aufrufer-Wiring: `agent/krypto/budget_allocator.py` (Tier-3-Spot-
+   Rotation, beide Provider-Lambdas) nutzt das bereits vorhandene
+   `re_evaluierung_faellig`-Set (Zeile ~517). `agent/multi_asset_batch.py`
+   nutzt das in Schritt 3 bereits berechnete `re_eval_symbole`-Set - dort
+   ueber `extra_kwargs` durchgereicht, bewusst NUR fuer Nicht-Hedge-Symbole
+   (Hedge-`generate_signal()` kennt den Parameter nicht, hat kein
+   `halte_kriterium`-Aequivalent).
+5. `ui/formatting.py::format_zai_gegenpruefung_lines()`: neuer optionaler
+   Parameter `war_re_evaluierung_faellig: bool = False`. Wenn gesetzt UND
+   `zai_uebereinstimmung is None` (der HALTEN-Regelfall), zeigt
+   `abgleich_text` jetzt "Re-Evaluierung fällig - unabhängige Einschätzung
+   beachten" statt des generischen "unklar" - Faelle mit `ja`/`nein`
+   bleiben unveraendert (das Flag greift nur, wenn sonst nichts Konkreteres
+   vorliegt). `ui/signals_view.py` reicht `signal.war_re_evaluierung_
+   faellig` durch; `ui/hebel_view.py` braucht KEINE Aenderung (Default
+   `False` gilt automatisch, `HebelSignal` hat das Feld nicht).
+
+**Bewusster Scope-Cut (identisch zur urspruenglichen Nutzer-Vorgabe):**
+keine E-Mail-Template-Aenderung (unerreichbarer Pfad fuer HALTEN), keine
+neuen Z.ai-Calls, keine Aenderung an `zai_uebereinstimmung`-Berechnung
+selbst - reine Anzeige-Verbesserung fuer bereits vorhandene Daten.
+
+**Verifikation (Klasse 1 + synthetisch):**
+- Compile/Import aller 10 beruehrten Dateien bestanden.
+- DB-Round-Trip-Test: `war_re_evaluierung_faellig=True`/`False` ueberleben
+  `insert_signal()`/`get_latest_signal()` korrekt (bool-Cast in beide
+  Richtungen bestaetigt).
+- `format_zai_gegenpruefung_lines()`: 4 synthetische Faelle bestanden -
+  (1) routinemaessiges HALTEN ohne Flag -> "unklar" unveraendert, (2) Flag
+  gesetzt + `zai_uebereinstimmung=None` -> neues Label, (3) Flag gesetzt
+  ABER `zai_uebereinstimmung="ja"` -> "stimmt überein" bleibt unveraendert
+  (Flag ueberschreibt keine konkrete Uebereinstimmung), (4) Alt-Aufruf ohne
+  den neuen Parameter (Hebel-Muster) -> unveraendertes Verhalten, volle
+  Rueckwaertskompatibilitaet bestaetigt.
+
+**Wiedervorlage:** wie bei Schritt 3 - erst nach einigen Wochen echter
+Produktivdaten laesst sich beurteilen, ob die Re-Evaluierung-faellig-
+Kennzeichnung in der Praxis zu besseren HALTEN-Entscheidungen fuehrt oder
+nur Anzeige-Rauschen bleibt. Hebel-CRV-Pflicht-Symmetrie (urspruenglich
+Roadmap-Punkt 5) bleibt separates, noch nicht begonnenes Thema.

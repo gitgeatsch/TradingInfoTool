@@ -154,6 +154,7 @@ def format_zai_gegenpruefung_lines(
     zai_eigene_richtung: str | None,
     zai_uebereinstimmung: str | None,
     zai_richtung_kurzbegruendung: str | None,
+    war_re_evaluierung_faellig: bool = False,
 ) -> list[str]:
     """Z.ai-Gegenpruefung (2026-07-26, siehe agent/krypto/gegenpruefung.py) -
     ZWEI unabhaengige Zeilen, analog format_fazit_lines(): dieselben ▲/▼-
@@ -165,7 +166,18 @@ def format_zai_gegenpruefung_lines(
     Explizites Label unterscheidet klar von "Fazit:" - prueft die eigene
     Begruendung des Primaer-Modells (Abschnitt 2), NICHT dessen Fazit
     (Abschnitt 3). Jede Zeile erscheint nur, wenn das jeweilige Feld gesetzt
-    ist (kein Rauschen bei aelteren Signalen oder fehlgeschlagenem Z.ai-Call)."""
+    ist (kein Rauschen bei aelteren Signalen oder fehlgeschlagenem Z.ai-Call).
+
+    war_re_evaluierung_faellig (2026-08-01, Spot-Verkaufs-Luecke Schritt 4,
+    nur Signal - HebelSignal hat kein solches Feld, Default False laesst den
+    Hebel-Aufruf unveraendert): HALTEN-Signale liefern nie ein
+    zai_uebereinstimmung, weil richtung_aus_action() dafuer None zurueckgibt
+    (siehe agent/krypto/gegenpruefung.py) - das macht "unklar" fuer die
+    ueberwiegende Mehrheit aller HALTEN-Faelle zu reinem Rauschen. Fuer die
+    kleine Teilmenge, bei der das eigene halte_kriterium/Regel 17 bereits
+    erreicht war (Re-Evaluierung faellig), ist Z.ais unabhaengige Richtungs-
+    einschaetzung aber besonders lesenswert - daher ein eigenes, informativeres
+    Label statt des generischen "unklar"."""
     zeilen = []
     if zai_gegenpruefung_urteil:
         symbol = _ZAI_KONSISTENZ_SYMBOL.get(zai_gegenpruefung_urteil, "●")
@@ -175,11 +187,14 @@ def format_zai_gegenpruefung_lines(
         )
     if zai_eigene_richtung:
         symbol = _ZAI_UEBEREINSTIMMUNG_SYMBOL.get(zai_uebereinstimmung, "●")
-        abgleich_text = (
-            "stimmt überein" if zai_uebereinstimmung == "ja"
-            else "weicht ab" if zai_uebereinstimmung == "nein"
-            else "unklar"
-        )
+        if zai_uebereinstimmung == "ja":
+            abgleich_text = "stimmt überein"
+        elif zai_uebereinstimmung == "nein":
+            abgleich_text = "weicht ab"
+        elif war_re_evaluierung_faellig:
+            abgleich_text = "Re-Evaluierung fällig - unabhängige Einschätzung beachten"
+        else:
+            abgleich_text = "unklar"
         zeilen.append(
             f"{symbol} {_ZAI_RICHTUNG_LABEL} {zai_eigene_richtung} ({abgleich_text}) - "
             f"{zai_richtung_kurzbegruendung or ''}"

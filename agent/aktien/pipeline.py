@@ -176,7 +176,10 @@ def jit_refresh_ohlc(conn, asset, currency: str) -> None:
         logger.info("JIT-Historie-Refresh (yfinance) für %s fehlgeschlagen: %s", asset.symbol, exc)
 
 
-def generate_signal(asset, watchlist, conn, llm_client, coingecko_client, zai_client=None) -> Signal:
+def generate_signal(
+    asset, watchlist, conn, llm_client, coingecko_client, zai_client=None,
+    war_re_evaluierung_faellig: bool = False,
+) -> Signal:
     """Analog zu agent/krypto/pipeline.py::generate_signal(), aber fuer Einzelaktien.
     `watchlist` muss die VOLLSTAENDIGE Watchlist sein (inkl. BTC) - compute_current_regime()
     braucht zwingend ein BTC-Asset darin (Regime-Bestimmung ist BTC-verankert, siehe
@@ -403,6 +406,7 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client, zai_cl
         gate_reason=None,
         risk_veto=risk_veto,
         risk_veto_reason=risk_veto_reason,
+        war_re_evaluierung_faellig=war_re_evaluierung_faellig,
         cash_veto=cash_veto,
         cash_veto_reason=cash_veto_reason,
         risikofaktoren_json=json.dumps(risikofaktoren, ensure_ascii=False) if risikofaktoren else None,

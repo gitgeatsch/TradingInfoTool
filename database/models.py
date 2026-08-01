@@ -230,6 +230,16 @@ class Signal:
     # mit HebelSignal.original_action persistiert - kein Diskriminator-Bug
     # hier zu beheben.
     original_action: str | None = None
+    # Re-Evaluierung-faellig-Flag (2026-08-01, Spot-Verkaufs-Luecke Schritt 4):
+    # True, wenn dieses Symbol beim Erzeugen des Signals in db.py::
+    # get_symbole_mit_erreichtem_halte_kriterium() stand (das vom LLM selbst
+    # gesetzte halte_kriterium/Regel 17 wurde erreicht). Persistiert zur
+    # Erzeugungszeit statt retroactiv abgeleitet, weil die Funktion nur den
+    # AKTUELLEN Kurs/die aktuelle Watchlist kennt - eine rueckwirkende
+    # Berechnung anhand des gespeicherten Signals waere nicht mehr moeglich.
+    # Nur Spot-family (Krypto/Aktien/Rohstoffe/Themen-ETF) - Hebel hat kein
+    # halte_kriterium-Aequivalent, daher kein Pendant auf HebelSignal.
+    war_re_evaluierung_faellig: bool = False
     groq_raw_response: str | None = None
     groq_model: str | None = None
     # Gegenargument-Pflichtfeld (2026-07-18, Regel 22 in analyst.py::SYSTEM_PROMPT,

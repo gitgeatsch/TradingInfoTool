@@ -215,7 +215,10 @@ def _compute_sektor_rotation(conn, symbol: str, etf_closes: np.ndarray) -> dict 
     }
 
 
-def generate_signal(asset, watchlist, conn, llm_client, coingecko_client, zai_client=None) -> Signal:
+def generate_signal(
+    asset, watchlist, conn, llm_client, coingecko_client, zai_client=None,
+    war_re_evaluierung_faellig: bool = False,
+) -> Signal:
     """Analog zu agent/rohstoff/pipeline.py::generate_signal(). `watchlist` muss die
     VOLLSTAENDIGE Watchlist sein (inkl. BTC) - compute_current_regime() braucht
     zwingend ein BTC-Asset darin. Fuer pre_check()'s RM-2-Allokations-Berechnung wird
@@ -391,6 +394,7 @@ def generate_signal(asset, watchlist, conn, llm_client, coingecko_client, zai_cl
         gate_reason=None,
         risk_veto=risk_veto,
         risk_veto_reason=risk_veto_reason,
+        war_re_evaluierung_faellig=war_re_evaluierung_faellig,
         cash_veto=cash_veto,
         cash_veto_reason=cash_veto_reason,
         risikofaktoren_json=json.dumps(risikofaktoren, ensure_ascii=False) if risikofaktoren else None,
