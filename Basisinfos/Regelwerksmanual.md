@@ -13195,3 +13195,54 @@ Treffer" (einmaliges Nachhol-Verhalten, kein Absturz); Regression bestaetigt
 **Wiedervorlage:** keine - der Fix ist in sich abgeschlossen. Beobachten, ob
 sich die taegliche Mistral-/CoinGecko-Abfragezahl nach Deploy wieder auf das
 Vor-31.07.-Niveau normalisiert (Notebook-Deploy ausstehend).
+
+## Nachtrag (2026-08-01): Zwei Zeit-Domaenen im Projekt (UTC-Daten vs. lokale Scheduler-Zeit) - bewusst KEIN Fix
+
+**Anlass:** Nutzer bemerkte auf der Remote-Seite/in Logs eine 2h-Differenz
+zwischen manchen Zeitangaben und fragte, ob Scheduler-Trigger faelschlich nach
+"amerikanischer Zeit" statt lokaler Zeit laufen bzw. ob UTC und lokale Zeit im
+Projekt unbeabsichtigt gemischt werden.
+
+**Befund (Code-Analyse, keine Aenderung):** das Projekt nutzt bewusst/faktisch
+zwei getrennte, jeweils in sich konsistente Zeit-Domaenen:
+1. **Alle Daten** (`created_at`, `api_call_kontingent.monat`, Tages-/Monats-
+   grenzen fuer Budgets/Kontingente, Regime-Datum etc.) - durchgehend
+   `datetime.now(timezone.utc)`, UTC ueberall. Keine Ausnahme gefunden.
+2. **Der APScheduler selbst** (`BackgroundScheduler()` in `scheduler/
+   background.py`, siehe `build_scheduler()`) bekommt KEINE explizite
+   `timezone=`-Angabe - APScheduler faellt dann automatisch auf die lokale
+   Systemzeitzone des ausfuehrenden Rechners zurueck (Windows: aktuell "W.
+   Europe Standard/Daylight Time", also Europe/Berlin, UTC+2 im Sommer).
+   Alle CronTrigger-Jobs mit fester Uhrzeit (`multi_asset_batch`, `marktscan`
+   4/16 Uhr, `backward_tracking` 6:00, `kategorie_synthese` 6:15, `makro_
+   analog`/`kategorie_vorschlaege` 6:30, `marktscan_backward_tracking` 7:00)
+   sowie alle begleitenden `datetime.now()`-Aufrufe im selben File
+   (Staggering, Nachhol-/Misfire-Logik, `next_run_time`) sind konsistent auf
+   dieselbe lokale Referenz abgestimmt - kein Mix INNERHALB dieser Domaene.
+
+Die vom Nutzer beobachtete 2h-Differenz ist schlicht der korrekte UTC+2-
+Versatz derselben Sommerzeit-Sekunde, ausgedrueckt in zwei unterschiedlichen
+Uhren (lokale Job-Anzeige vs. UTC-Log-/DB-Zeitstempel) - keine Fehlfunktion.
+
+**Diskutierte Alternative (explizites Festnageln der Zeitzone im Code,
+`zoneinfo`/`pytz`) - bewusst VERWORFEN:** wuerde auf Windows zusaetzlich das
+`tzdata`-Paket als neue Abhaengigkeit erfordern, nur um ein Risiko
+abzusichern, das im aktuellen Betriebskontext nicht zutrifft: Desktop UND
+Notebook werden von derselben Person in derselben echten Zeitzone betrieben,
+`multi_asset_batch` (bewusst an Bitpandas reales Quotrix-Handelsfenster
+gekoppelt) laeuft dadurch schon heute korrekt zur richtigen Real-Uhrzeit,
+ohne dass eine eigene Zeitzone-Funktion noetig waere. Explizites Festnageln
+wuerde Komplexitaet fuer einen rein hypothetischen Fall einfuehren.
+
+**Entscheidung:** Code bleibt unveraendert (lokale/Windows-Zeit fuer alle
+Scheduler-Trigger, UTC fuer alle Daten) - dieser Nachtrag dokumentiert die
+Architektur, damit die 2h-Differenz kuenftig nicht erneut als vermeintlicher
+Bug missverstanden wird.
+
+**Wiedervorlage (Beobachtungspunkt, kein festes Datum):** falls jemals eine
+dritte Maschine in einer ANDEREN echten Zeitzone hinzukommt, oder falls die
+Windows-Zeitzone auf Desktop ODER Notebook versehentlich veraendert wird,
+wuerde `multi_asset_batch` lautlos zur falschen Real-Uhrzeit relativ zu
+Bitpandas Handelsfenster laufen (keine Fehlermeldung, nur stille
+Fehlausrichtung) - dann waere das Festnageln der Zeitzone (siehe verworfene
+Alternative oben) neu zu bewerten.
