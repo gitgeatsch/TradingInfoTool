@@ -388,13 +388,26 @@ def _try_backfill_snapshot(
     wird der Kandidat spaeter manuell in die echte Watchlist uebernommen, hat
     agent/pipeline.py::generate_signal() dafuer schon Vorlauf-Historie, kein
     Kaltstart. Kein WatchlistAsset-Objekt in der DB noetig, `backfill_history()` ist
-    bereits rein duck-typed (`.coingecko_id`/`.symbol`)."""
+    bereits rein duck-typed (`.coingecko_id`/`.symbol`).
+
+    USD-only (2026-08-01, CoinGecko-Kontingent-Analyse - siehe backtest_
+    coingecko_marktscan_kosten.py): EUR wird hier NIE gebraucht - weder fuer
+    den technischen Snapshot unten (nur `closes`/USD) noch fuer
+    generate_candidate_writeup() (nutzt ebenfalls nur USD-`closes`, der dort
+    angezeigte EUR-Preis kommt aus dem bereits kostenlosen Discovery-Snapshot
+    `candidate.price_eur`, NICHT aus dieser Historie). Uebernahmequote aus
+    marktscan_candidates: nur 0,4% aller je entdeckten Kandidaten wurden
+    jemals in die echte Watchlist uebernommen - selbst in diesem seltenen
+    Fall holt der naechste taegliche refresh_history_job die fehlende EUR-
+    Historie automatisch nach (max. 24h Verzoegerung, kein Kaltstart-Risiko,
+    das nicht schon anderswo im Projekt toleriert wird). Halbiert die
+    Backfill-Kosten fuer jeden Stufe-A-Ueberlebenden."""
     try:
         asset = WatchlistAsset(
             symbol=symbol, name=symbol, rolle="taktisch", beobachtungsstatus="beobachtung",
             coingecko_id=coingecko_id,
         )
-        backfill_history(coingecko_client, conn, asset)
+        backfill_history(coingecko_client, conn, asset, currencies=("usd",))
         history = db.get_price_history(conn, coingecko_id)
         dates = np.array([p.date for p in history])
         closes = np.array([p.price_usd for p in history], dtype=float)

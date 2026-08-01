@@ -612,6 +612,28 @@ def _ohlc_aktualitaet_je_symbol(conn) -> dict:
     return {"symbole": [row_to_dict(r) for r in rows]}
 
 
+def _coingecko_kontingent(conn) -> dict:
+    """Neu (2026-08-01, Nutzer-Fund "Tagesverbrauch duerfte zu hoch sein") -
+    bisheriger blinder Fleck: die api_call_kontingent[_taeglich]-Tabellen
+    (siehe [[project_coingecko_kontingent_tracking]], Tageszaehler seit
+    Schritt 3 der Spot-Verkaufs-Luecke-Roadmap) wurden bisher NUR live auf
+    der Remote-Statusseite angezeigt, nie hierher exportiert - eine
+    Verbrauchsanalyse musste bislang muehsam aus dem rohen Log rekonstruiert
+    werden. `taeglich_verlauf` liefert die volle Tageshistorie (nicht nur
+    "heute" wie db.get_api_call_counter_taeglich()), damit Trends ueber
+    mehrere Tage sichtbar werden, sobald genug Tage vorliegen."""
+    monat = db.aktueller_monat_utc()
+    monatliches_kontingent = db.get_api_call_counter(conn, "coingecko", monat)
+    taeglich_rows = conn.execute(
+        "SELECT tag, anzahl FROM api_call_kontingent_taeglich WHERE source = 'coingecko' ORDER BY tag ASC"
+    ).fetchall()
+    return {
+        "monat": monat,
+        "monatliches_kontingent": monatliches_kontingent,
+        "taeglich_verlauf": [row_to_dict(r) for r in taeglich_rows],
+    }
+
+
 # --- Log-Auszug (2026-07-18, siehe Modul-Docstring) ---------------------
 # Format aus main.py::logging.basicConfig(): "%(asctime)s %(levelname)s
 # %(name)s: %(message)s" - asctime ist "YYYY-MM-DD HH:MM:SS,mmm".
@@ -931,6 +953,7 @@ def main() -> None:
         zai_gegenpruefung_verlauf = _zai_gegenpruefung_verlauf(conn)
         oi_fakten_verlauf = _oi_fakten_verlauf(conn)
         ohlc_aktualitaet_je_symbol = _ohlc_aktualitaet_je_symbol(conn)
+        coingecko_kontingent = _coingecko_kontingent(conn)
 
         # 4) Provider-Performance (Win-Rate/CRV je Anbieter, Spot+Hebel getrennt)
         # Nachtrag 2026-07-29 (Export-Luecke gefunden bei der R-5.10-Analyse-
@@ -1090,6 +1113,7 @@ def main() -> None:
         "zai_gegenpruefung_verlauf": zai_gegenpruefung_verlauf,
         "oi_fakten_verlauf": oi_fakten_verlauf,
         "ohlc_aktualitaet_je_symbol": ohlc_aktualitaet_je_symbol,
+        "coingecko_kontingent": coingecko_kontingent,
         "deep_dive": {
             "symbol": DEEP_DIVE_SYMBOL,
             "hebel_signals": [row_to_dict(r) for r in deep_signale],
@@ -1137,6 +1161,9 @@ def main() -> None:
     print(f"  Z.ai-Gegenpruefung: {zai_gegenpruefung_verlauf['anzahl_gesamt']} Signale mit Urteil "
           f"({zai_gegenpruefung_verlauf['anzahl_konsistent']} konsistent, "
           f"{zai_gegenpruefung_verlauf['anzahl_widerspruch']} widerspruch)")
+    print(f"  CoinGecko-Kontingent ({coingecko_kontingent['monat']}): "
+          f"{coingecko_kontingent['monatliches_kontingent']} Calls, "
+          f"{len(coingecko_kontingent['taeglich_verlauf'])} Tage mit Tageszaehler-Historie")
 
 
 if __name__ == "__main__":

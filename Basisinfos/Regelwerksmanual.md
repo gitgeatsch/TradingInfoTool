@@ -13522,3 +13522,110 @@ Produktivdaten laesst sich beurteilen, ob die Re-Evaluierung-faellig-
 Kennzeichnung in der Praxis zu besseren HALTEN-Entscheidungen fuehrt oder
 nur Anzeige-Rauschen bleibt. Hebel-CRV-Pflicht-Symmetrie (urspruenglich
 Roadmap-Punkt 5) bleibt separates, noch nicht begonnenes Thema.
+
+## Nachtrag (2026-08-01): CoinGecko-Kontingent-Tiefenanalyse - Marktscan USD-only, JIT-Refresh-Drossel bewusst unveraendert gelassen
+
+**Anlass:** Nutzer-Beobachtung anhand eines frischen Notebook-Exports -
+Remote-Statusseite zeigte "CoinGecko-Kontingent diesen Monat: 353/10.000
+(3,5%), davon heute: 30", Nutzer-Projektion "kommen locker bis Tagesende
+auf ca. 400" -> bei diesem Tempo waere das Monatskontingent in ~20-25 Tagen
+erschoepft. Auftrag: genau aufschluesseln, wann wer eine CoinGecko-Abfrage
+ausloest, u.U. einschraenken.
+
+**Vorab gefundene Export-Luecke:** `extract_notebook_diagnose.py` exportierte
+die `api_call_kontingent[_taeglich]`-Tabellen (siehe [[project_coingecko_kontingent_tracking]])
+bisher NICHT - nur die Remote-Statusseite zeigte sie live. Neue Funktion
+`_coingecko_kontingent(conn)` (liest Monatszaehler + volle Tageshistorie),
+neuer Payload-Key `coingecko_kontingent`. Synthetisch verifiziert (DB-
+Roundtrip-Test). Kuenftige Verbrauchsanalysen brauchen damit keine Log-
+Archaeologie mehr.
+
+**Vollstaendige Call-Site-Landkarte** (jede Methode in `api/coingecko.py`,
+die tatsaechlich `_get()` aufruft, gegen alle Aufrufer im Code geprueft):
+- Fixer Boden (~223/Tag, siehe [[project_coingecko_kontingent_tracking]]):
+  `refresh_prices_job` (96/Tag, 1 gebuendelter Call), `refresh_history_job`
+  (114/Tag, 57 Watchlist-Coins × 2 Waehrungen, NICHT gebuendelt),
+  `marktscan_backward_tracking_job` (~10/Tag). `coingecko_quota_check_job`
+  kostet NICHTS (reiner Lesecheck gegen den lokalen Zaehler, verifiziert
+  gegen `scheduler/background.py:897-912`).
+- Marktscan (`agent/krypto/marktscan.py::run_scan()`, fest 2×/Tag um 04:00/
+  16:00 Uhr, cron): `fetch_top_gainers()` 5 Calls + `get_trending()` 1 Call
+  (Fixkosten je Lauf) + 1 `get_simple_prices()`-Call je Trending-Coin
+  ausserhalb der Top-Gainer + 2 `backfill_history()`-Calls (USD+EUR, Default)
+  je Stufe-A-Ueberlebendem (`_try_backfill_snapshot()`) + 1 `get_coin_ath_
+  change_percentage()`-Call je jungem Stufe-A-Ueberlebenden.
+- JIT-Historie-Refresh (`agent/krypto/pipeline.py::jit_refresh_asset_
+  historie()`, ausgeloest bei JEDER echten Signal-Generierung in Krypto-Spot
+  UND Hebel, 60-Min-Drossel je Symbol): 1 `get_market_chart`-Call (USD-only)
+  pro nicht gedrosseltem Trigger.
+
+**Backtest 1 (`backtest_coingecko_marktscan_kosten.py`, neu, 38 echte
+Marktscan-Laeufe 09.07.-01.08., liest `rohdaten_fuer_backtest.marktscan_
+alle_kandidaten`):**
+- Baseline (aktuell): Ø 52,3 Calls/Tag, aber fetter Schwanz - ein einzelner
+  Lauf am 09.07. mit 51 Stufe-A-Ueberlebenden kostete allein 197 Calls.
+- USD-only: Ø 42,2 Calls/Tag (-19,2%), gleichmaessige Ersparnis unabhaengig
+  von der Tagesform.
+- USD-only + Top-N-Deckel (N=5/10/15): zusaetzliche Ersparnis nur marginal
+  (Deckel griff in nur 1-8 von 38 Laeufen), aber genau dort, wo es zaehlt -
+  der 09.07.-Ausreisser waere mit Top-5 auf ~103 statt 197 Calls gefallen.
+  NICHT umgesetzt (kein eindeutiger Fall wie bei USD-only, echter Kompromiss
+  zwischen Kontingent-Sicherheit und Marktscan-Abdeckung, siehe unten).
+- Uebernahmequote als Begruendung fuer USD-only: `kandidaten_warteschlangen_
+  status.marktscan_candidates` zeigt 1701 "neu", nur 7 "nutzer_behalten_
+  manuell_uebernommen" (~0,4%). EUR-Historie wird fuer 99,6% der Kandidaten
+  nie gebraucht; selbst im seltenen Uebernahme-Fall holt der naechste
+  taegliche `refresh_history_job` die fehlende EUR-Historie automatisch nach
+  (max. 24h Verzoegerung, kein Kaltstart-Risiko). Doppelt gegengeprueft, dass
+  EUR-Historie fuer Marktscan-Kandidaten SONST NIRGENDS gelesen wird (weder
+  `_try_backfill_snapshot()` noch `generate_candidate_writeup()` - beide
+  nutzen nur `closes`/USD; der im Prompt gezeigte EUR-Preis kommt aus dem
+  bereits kostenlosen Discovery-Snapshot `candidate.price_eur`, nicht aus der
+  Historie).
+- **Umgesetzt:** `_try_backfill_snapshot()` ruft `backfill_history(...,
+  currencies=("usd",))` statt Default. Synthetisch verifiziert (Mock-Test
+  bestaetigt nur-USD-Aufruf).
+
+**Backtest 2 (JIT-Refresh, gegen echte heutige Signal-Zeitstempel aus
+`spot_signals`/`hebel_signals` - 71 Spot- + 21 Hebel-Signale, 43 betroffene
+Symbole):** heutiger Marktscan-Beitrag war mit nur 46 Calls (2 Laeufe)
+UNTERDURCHSCHNITTLICH klein - entgegen der ersten Arbeitshypothese war
+Marktscan heute NICHT der Haupttreiber. Rekonstruktion der 60-Min-Drossel
+ergab ~88 JIT-Calls heute - schliesst die Luecke zwischen Fixboden+Marktscan
+(223+46=269) und dem beobachteten Gesamtwert (353) fast exakt. JIT-Refresh
+war der eigentliche Haupttreiber des Tages.
+
+Drossel-Fenster durchgerechnet: 60 Min (aktuell) 88 Calls, 2h 82, 4h 75, 6h
+72, 8h 72 (Plateau), 12h 45. Kein sauberer Hebel wie bei Marktscan: bis 6-8h
+sinkt die Zahl nur um ~18%, weil die meisten der 43 Symbole ohnehin nur 1-2×/
+Tag real bewertet werden (bestehende 8h/15h-Cooldowns greifen schon) - die
+60-Min-Drossel ist meist gar nicht die begrenzende Groesse. Ein spuerbarer
+Sprung kommt erst bei 12h, aber `_bucket_prices_by_date()`
+(`api/history.py:30`) haelt bewusst den LETZTEN Intraday-Preis pro Tag -
+jeder JIT-Call refresht "heute" auf einen aktuelleren Kurs (RSI/MACD-Basis).
+Eine Verlaengerung waere also ein echter Signalqualitaets-Kompromiss, keine
+reine Redundanz-Eliminierung wie bei der Marktscan-EUR-Frage.
+
+**Nutzer-Entscheidung:** JIT-Drossel unveraendert lassen (Empfehlung
+gefolgt - Ersparnis/Risiko-Verhaeltnis lohnt sich nicht), Marktscan USD-only
+umsetzen (risikofrei, hilft an Ausreisser-Tagen deutlich).
+
+**Ehrliches Gesamtbild:** die "20-Tage"-Sorge ist mit den geprueften Hebeln
+NICHT grundlegend geloest - an einem JIT-lastigen Tag wie dem 01.08. bringt
+USD-only nur eine kleine Ersparnis (~9 von 353 Calls), weil Marktscan an
+diesem Tag klein war. Der Nutzen zeigt sich vor allem an Marktscan-lastigen
+Ausreisser-Tagen. Der neue Tageszaehler-Export ermoeglicht ab jetzt
+lueckenlose Beobachtung ohne erneute Log-Archaeologie.
+
+**Verifikation:** Compile aller 2 geaenderten Dateien (`extract_notebook_
+diagnose.py`, `agent/krypto/marktscan.py`) + neues `backtest_coingecko_
+marktscan_kosten.py`. Synthetische Tests: `_coingecko_kontingent()` DB-
+Roundtrip (Monats+Tageszaehler korrekt gelesen), `_try_backfill_snapshot()`
+Mock-Test (bestaetigt USD-only-Aufruf). Backtests liefen gegen echte
+Produktivdaten aus dem Notebook-Export (read-only, keine Schreiboperation
+gegen die Produktions-DB, siehe [[feedback_desktop_kein_produktivstart]]).
+
+**Wiedervorlage:** neuer Tageszaehler-Export beobachten, sobald mehrere
+Tage/Wochen echter Daten vorliegen erneut pruefen, ob Marktscan-USD-only
+allein ausreicht oder ein Top-N-Deckel doch noetig wird (Backtest-Skript
+bleibt fuer eine erneute Auswertung nutzbar).
