@@ -13688,3 +13688,50 @@ Marktscan-Ausreisser-Tage, loest aber nicht die JIT-Refresh-lastigen Tage
 (bewusst unangetastet, siehe vorheriger Nachtrag - Signalqualitaets-
 Kompromiss). Der neue Tageszaehler-Export bleibt der Weg, um zu beobachten,
 ob beide Massnahmen zusammen ausreichen oder weitere Schritte noetig werden.
+
+## Nachtrag (2026-08-01): Hebel-CRV-Pflicht-Symmetrie (Spot-Verkaufs-Luecke Roadmap-Punkt 5) - Praemisse geprueft und verworfen, KEIN Code-Change
+
+**Anlass:** letzter offener Punkt der Spot-Verkaufs-Luecke-Roadmap (siehe
+[[project_spot_verkaufs_luecke_roadmap]]) - urspruengliche Idee: die CRV-
+Pflicht (Chance-Risiko-Verhaeltnis, Mindestschwelle `CRV_MINIMUM`=2.0) soll
+bei Hebel-TEILVERKAUF/SCHLIESSEN symmetrisch zur bereits umgesetzten Spot-
+Spiegelung gelten (siehe Nachtrag Zeile ~10519, VERKAUFEN/TAUSCHEN, Task
+#522/#523).
+
+**Recherche-Befund:** `agent/krypto/hebel_risk_gate.py::post_check_hebel()`
+- der CRV-Gate-Block (~Zeile 1056-1078) feuert NUR fuer `_HEBEL_ACTIONS_MIT_
+HEBEL = ("ERÖFFNEN", "NACHKAUFEN", "HEBEL_ERHÖHEN")`. `HEBEL_SENKEN` ist
+bereits EXPLIZIT von der CRV-Pflicht ausgenommen (~Zeile 1035-1036, Docstring-
+Zitat: "eine Risikoreduktion braucht keine Chance-Risiko-Rechtfertigung").
+`TEILVERKAUF`/`SCHLIESSEN` stehen in KEINER der beiden Listen - fuer sie
+laeuft im gesamten `post_check_hebel()` bereits heute kein einziger CRV-
+Check, weder fuer originaere LLM-Empfehlungen noch fuer die Kontrathese-
+uebersetzten Faelle (Zeile 921-964, setzt `action` direkt auf SCHLIESSEN/
+TEILVERKAUF).
+
+**Fachliche Pruefung (Nutzer-Bitte um Experten-Einschaetzung, da nicht
+selbst entscheidbar):** die Spot-CRV-Pflicht bei VERKAUFEN/TAUSCHEN
+behandelt den Verkauf wie eine eigene gerichtete Wette und verlangt dieselbe
+Qualitaetsschwelle wie bei einer Neu-Eroeffnung - sicher bei Spot, WEIL die
+Rueckfalloption (HALTEN bei zu schwachem CRV) selbst risikofrei ist (kein
+Liquidationsrisiko, keine Finanzierungskosten). Bei einer offenen Hebel-
+Position ist die Rueckfalloption HALTEN NICHT risikofrei - sie bedeutet
+weiterlaufendes Liquidationsrisiko und Funding-Kosten. Eine CRV-Pflicht, die
+ein schwaches TEILVERKAUF/SCHLIESSEN-Signal zu HALTEN zurueckstuft, wuerde
+die Position trotz LLM-Empfehlung zur Reduktion exponiert lassen - das Risk-
+Gate wuerde damit paradoxerweise MEHR Risiko erzwingen statt zu verhindern.
+Exakt dieselbe Logik, die HEBEL_SENKEN bereits von der CRV-Pflicht ausnimmt -
+TEILVERKAUF/SCHLIESSEN sind strukturell dasselbe (Risikoreduktion/-abbau),
+kein neuer gerichteter Einsatz.
+
+**Ergebnis:** die urspruengliche Roadmap-Praemisse ("symmetrisch zu Spot")
+ging von einem Modell aus, in dem HALTEN immer der sichere Rueckfall ist -
+das stimmt bei Spot, aber nicht bei Hebel, wo die Position selbst das
+Risiko traegt. Der bestehende Zustand (keine CRV-Pflicht bei TEILVERKAUF/
+SCHLIESSEN) ist bereits korrekt - **kein Code-Change noetig**, reine
+Verifikation + Dokumentation der Begruendung (Muster [[feedback_document_rejected_options]]:
+verworfene Optionen mit Grund dokumentieren).
+
+**Damit ist die Spot-Verkaufs-Luecke-Roadmap (5 Punkte) vollstaendig
+abgeschlossen** - Schritte 1-4 umgesetzt+committet, Punkt 5 geprueft und
+als bereits korrekt bestaetigt.
