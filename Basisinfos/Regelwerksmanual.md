@@ -12557,6 +12557,33 @@ Dokumentiert in `Basisinfos/Regelwerksmanual.md`/`.docx` +
 `Basisinfos/Test_und_Verifikationsmethodik.md` (neuer Fallbeispiel-Eintrag zu Abschnitt
 2.5) + Memory. Noch NICHT committet/gepusht.
 
+## Nachtrag (2026-08-01): R-5.10-Konfidenzschwelle erneut geprüft bei größerer Stichprobe (n=148) - Vorzeichenwechsel bleibt bestehen
+
+Im Rahmen einer allgemeinen "Detailanalyse aller Messpunkte" gegen einen frischen
+Notebook-Export lag die R-5.10-Konfidenzschwellen-Veto-Schatten-Auswertung (Krypto-Spot)
+diesmal bei n=148 (statt n=106 beim 30.07.-Fund) mit Ø realisiertem CRV +0,334 - erneut
+auf den ersten Blick eine belastbare, jetzt noch größere Bestätigung.
+
+Der Symbol-Konzentrations-Check (Abschnitt 2.5 der Test_und_Verifikationsmethodik.md)
+wurde diesmal VOR der Interpretation angewendet (direkt aus den rohen `spot_signals`-
+Exportdaten, gefiltert auf `risk_veto_reason` enthält "R-5.10" UND Symbol in der
+Krypto-Watchlist): die prozentuale Verteilung ist tatsächlich breiter als beim
+30.07.-Fund (22 Symbole, größter Anteil nur 8,1% statt der damaligen 39,6%-Top-5-
+Häufung). Der Vorzeichenwechsel bleibt trotzdem bestehen, ausgelöst durch ein einzelnes
+Symbol statt einer Gruppe: AIOZ allein (n=12, 8% der Fälle, 100% Take-Profit-Quote, Ø
+CRV +4,71) trägt den gesamten positiven Gesamtdurchschnitt. Ohne AIOZ fällt n=136 auf
+Ø CRV **-0,052** - Vorzeichenwechsel, identisch disqualifizierend wie beim 30.07.-Fund.
+Zusätzlich: von allen 148 Einzel-Outcomes sind 91 (61,5%) negativ, nur 57 (38,5%)
+positiv - der positive Mittelwert ist eine Ausreißer-getriebene Verzerrung, kein
+Mehrheitsmuster.
+
+**Lehre (siehe Test_und_Verifikationsmethodik.md 2.5.4):** eine breitere prozentuale
+Verteilung allein reicht nicht, um den Konzentrations-Check als bestanden zu werten -
+ein einzelner Ausreißer mit extremem CRV kann denselben Effekt auslösen wie eine
+Gruppen-Häufung. Die 30.07. getroffene Entscheidung, den Krypto-Spot-R-5.10-Override
+NICHT zu setzen, bleibt bei 1,4x größerer Stichprobe bestätigt - keine Revision nötig,
+kein Code-Change.
+
 ## Nachtrag (2026-07-30): BUGFIX - Z.ai-Gegenprüfung fehlte in allen Multi-Asset-Batch-E-Mails
 
 **Auslöser:** Nutzer-Fund an einem echten, bereits versendeten Produktions-Signal (3QSS

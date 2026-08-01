@@ -376,6 +376,38 @@ sogar zu einem PRAKTISCHEN Vorteil um: wenige distinkte Coins bedeuten
 günstigere gebündelte `get_simple_prices()`-Abrufe (ein API-Call für mehrere
 offene Messungen desselben Coins) statt vieler Einzelabrufe.
 
+### 2.5.4 Viertes Fallbeispiel: R-5.10 erneut geprüft bei 1,4x größerer Stichprobe - Konzentration gesunken, Vorzeichenwechsel bleibt (Nachtrag 01.08.)
+
+Auslöser: eine allgemeine "Detailanalyse aller Messpunkte" gegen einen
+frischen Notebook-Export zeigte fuer den Krypto-Spot-Konfidenzschwellen-Veto
+(R-5.10) eine deutlich groessere Stichprobe als beim 2.5.2-Fund (n=148 statt
+n=106) mit Ø realisiertem CRV +0,334 - auf den ersten Blick eine noch
+belastbarere Bestaetigung des scheinbar positiven Befunds.
+
+**Symbol-Konzentrations-Check diesmal VOR jeder Interpretation angewendet**
+(gelernte Lehre aus 2.5.2): die Verteilung ist tatsaechlich breiter als beim
+ersten Fund - 22 Symbole, groesster Anteil nur 8,1% (AIOZ/IO je n=12), keine
+Top-5-Haeufung wie beim 39,6%-Befund von 29.07./30.07. Auf den ersten Blick
+sieht das nach einem entschaerften Konzentrationsproblem aus.
+
+**Der Vorzeichenwechsel bleibt trotzdem bestehen, ausgeloest durch ein
+EINZELNES Symbol statt einer Gruppe:** AIOZ allein (n=12, 8% der Faelle,
+100% Take-Profit-Quote, Ø CRV +4,71) traegt den gesamten positiven
+Gesamtdurchschnitt. Ohne AIOZ faellt n=136 verbleibender Faelle auf Ø CRV
+**-0,052** - Vorzeichenwechsel, identisch disqualifizierend wie beim
+2.5.2-Fund. Zusaetzlich: von allen 148 Einzel-Outcomes sind 91 (61,5%)
+negativ, nur 57 (38,5%) positiv - der positive Mittelwert ist eine
+Ausreisser-getriebene Verzerrung, kein Mehrheitsmuster.
+
+**Lehre:** eine breitere prozentuale Verteilung (keine Top-5-Gruppe >10
+Prozentpunkte) reicht allein nicht aus, um den Konzentrations-Check als
+bestanden zu werten - ein einzelner Ausreisser mit extremem CRV kann
+denselben Vorzeichenwechsel-Effekt auslösen wie eine Gruppen-Häufung. Die
+2.5-Pruefung sollte daher immer BEIDES ansehen: prozentuale Verteilung UND
+"was passiert beim Entfernen des staerksten Einzelwerts". Die am 30.07.
+getroffene Entscheidung, den Krypto-Spot-R-5.10-Override nicht zu setzen,
+bleibt bei 1,4x groesserer Stichprobe bestaetigt - keine Revision noetig.
+
 ### 2.6 Mehrebenen-Erfolgsmessung: striktes Outcome vs. MFE/Mindestziel (Nachtrag 30.07.)
 
 Auslöser: Nutzer-Frage, ob und wie Erfolgsquoten auf mehreren Ebenen geprüft
