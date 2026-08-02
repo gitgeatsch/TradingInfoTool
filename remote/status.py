@@ -365,15 +365,39 @@ def _get_veto_schatten_performance_nach_grund(conn: sqlite3.Connection, watchlis
     return compute_veto_shadow_performance_nach_grund(conn, watchlist)
 
 
+# Zwischenspeicher fuer die Systemguete (2026-08-03, HOTFIX).
+# HINTERGRUND: die Remote-Seite ruft /api/status alle 2 Sekunden ab
+# (setInterval(refreshStatus, 2000) in remote/server.py). Am 03.08. kamen
+# Basislinien-Simulation und Bootstrap dazu, zusammen rund 1-1,5 s je Aufruf -
+# damit ueberlappten sich die Anfragen, der Server kam nicht mehr hinterher und
+# die Seite zeigte nur noch kurz Werte, bevor sie leer blieb (Nutzer-Fund).
+# Die Zahlen aendern sich ohnehin nur beim taeglichen Backward-Tracking-Lauf,
+# ein Zwischenspeicher kostet also keine Aktualitaet.
+_SYSTEMGUETE_CACHE: dict = {"stand": 0.0, "wert": None}
+_SYSTEMGUETE_CACHE_SEKUNDEN = 300
+
+
 def _get_systemguete(conn: sqlite3.Connection, watchlist: list) -> dict:
     """SQN/Expectancy/Profit Factor je tier (2026-08-02) - reiner Lesezugriff
     auf agent/krypto/backward_tracking.py::compute_systemguete(). Zielwerte und
     Herleitung in Basisinfos/Zielgroessen_und_Erfolgsmasse.md; getrennt nach
     real ausgefuehrt und Veto-Schatten, weil beide verschiedene Fragen
-    beantworten."""
+    beantworten.
+
+    Ergebnis wird 5 Minuten zwischengespeichert - Begruendung bei
+    _SYSTEMGUETE_CACHE."""
+    import time
+
     from agent.krypto.backward_tracking import compute_systemguete
 
-    return compute_systemguete(conn, watchlist)
+    jetzt = time.monotonic()
+    if (_SYSTEMGUETE_CACHE["wert"] is not None
+            and jetzt - _SYSTEMGUETE_CACHE["stand"] < _SYSTEMGUETE_CACHE_SEKUNDEN):
+        return _SYSTEMGUETE_CACHE["wert"]
+    wert = compute_systemguete(conn, watchlist)
+    _SYSTEMGUETE_CACHE["wert"] = wert
+    _SYSTEMGUETE_CACHE["stand"] = jetzt
+    return wert
 
 
 def _get_selbst_gewaehltes_halten_performance(conn: sqlite3.Connection, watchlist: list) -> dict:
