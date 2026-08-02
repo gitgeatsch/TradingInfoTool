@@ -757,6 +757,13 @@ async function refreshStatus() {
           var k = data.systemguete[tier][art];
           if (!k || !k.anzahl_bewertet) { return ""; }
           var ew = k.expectancy_r === null ? "-" : (k.expectancy_r >= 0 ? "+" : "") + k.expectancy_r.toFixed(3);
+          // Bootstrap-Intervall direkt an den Punktwert (2026-08-03): "-0,299 R"
+          // liest sich exakt, beruht aber auf wenigen Trades. Das Intervall
+          // zeigt, wie weit der wahre Wert streuen kann.
+          if (k.expectancy_ci_unten !== null && k.expectancy_ci_unten !== undefined) {
+            ew += ' <span class="muted-text">[' + k.expectancy_ci_unten.toFixed(2) +
+                  " bis " + k.expectancy_ci_oben.toFixed(2) + "]</span>";
+          }
           var sqn = k.sqn === null ? "-" : k.sqn.toFixed(2) + " (" + k.sqn_einordnung + ")";
           var pf = k.profit_factor === null ? "-" : k.profit_factor.toFixed(2);
           var auf = k.aufloesungsquote === null ? "-" : (k.aufloesungsquote * 100).toFixed(0) + "%";
@@ -770,11 +777,16 @@ async function refreshStatus() {
             var sb = (k.signalbeitrag_r >= 0 ? "+" : "") + k.signalbeitrag_r.toFixed(3);
             var blw = (k.basislinie_erwartungswert_r >= 0 ? "+" : "") +
                       k.basislinie_erwartungswert_r.toFixed(3);
+            var chance = "";
+            if (k.anteil_positiv !== null && k.anteil_positiv !== undefined) {
+              chance = " | " + (k.anteil_positiv * 100).toFixed(0) +
+                       "% der Bootstrap-Ziehungen positiv";
+            }
             zusatz = '<div class="row"><span class="muted-text">&nbsp;&nbsp;&nbsp;&nbsp;' +
               "Zufallseinstieg, gleiche Parameter (Stop " +
               (k.basislinie_stop_rel * 100).toFixed(1) + "%, CRV " +
               k.basislinie_crv.toFixed(2) + ", n=" + k.basislinie_anzahl + "): " +
-              blw + " R</span><span class=\"" +
+              blw + " R" + chance + "</span><span class=\"" +
               (k.signalbeitrag_r >= 0 ? "ok" : "warn") +
               '">Signalbeitrag ' + sb + " R</span></div>";
           }

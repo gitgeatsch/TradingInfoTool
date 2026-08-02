@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import logging
 import math
+import random
 import statistics
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -1531,6 +1532,75 @@ def _sqn_einordnung(sqn: float | None) -> str | None:
     return "ausserhalb der Skala"
 
 
+# Bootstrap-Parameter. 1000 Ziehungen sind der in der Literatur uebliche
+# Mindestwert fuer stabile Perzentile; darunter schwanken die Intervallgrenzen
+# selbst spuerbar.
+_BOOTSTRAP_ZIEHUNGEN = 1000
+# Fester Seed: die Kennzahl wird bei jedem Seitenabruf neu berechnet. Ohne
+# Seed sprangen die Intervallgrenzen zwischen zwei Aufrufen, was wie eine
+# Datenaenderung aussieht und Vertrauen kostet. Der Zufall soll die
+# Stichprobenunsicherheit abbilden, nicht die Anzeige unruhig machen.
+_BOOTSTRAP_SEED = 20260803
+
+
+def bootstrap_unsicherheit(r_multiples: list[float],
+                           ziehungen: int = _BOOTSTRAP_ZIEHUNGEN) -> dict:
+    """Konfidenzintervalle fuer Expectancy und SQN per Bootstrap (2026-08-03).
+
+    PROBLEM. Die Kennzahlen stehen als Punktwerte da - "EW -0,299 R, SQN -1,72"
+    liest sich exakt, beruht aber auf 86 Trades. Wie sicher der Wert ist, sagt
+    die Zahl nicht. Van Tharp selbst empfiehlt 100+ Trades fuer eine
+    Live-Bewertung und nennt 30 als Untergrenze fuer eine vorlaeufige Lesung -
+    wir liegen dazwischen.
+
+    VERFAHREN. Aus den vorhandenen R-Multiples wird `ziehungen` mal eine
+    gleich grosse Stichprobe MIT ZURUECKLEGEN gezogen und jeweils Expectancy
+    und SQN neu berechnet. Die 2,5%- und 97,5%-Perzentile der so entstehenden
+    Verteilung bilden das 95%-Intervall. Das setzt keine Normalverteilung
+    voraus - bei R-Multiples mit ihrer Haeufung bei genau -1,0 waere die
+    Annahme auch falsch.
+
+    `anteil_positiv` ist der praktisch wichtigste Wert: der Anteil der
+    Ziehungen mit positiver Expectancy, also grob die Wahrscheinlichkeit, dass
+    der wahre Erwartungswert ueber null liegt. Bei 0,5 ist die Datenlage
+    schlicht unentschieden, egal wie der Punktwert aussieht.
+
+    Gibt None-Felder zurueck, wenn zu wenige Werte fuer eine Streuung
+    vorliegen (n < 2)."""
+    n = len(r_multiples)
+    if n < 2:
+        return {"expectancy_ci_unten": None, "expectancy_ci_oben": None,
+                "sqn_ci_unten": None, "sqn_ci_oben": None,
+                "anteil_positiv": None, "bootstrap_ziehungen": 0}
+    rng = random.Random(_BOOTSTRAP_SEED)
+    ews: list[float] = []
+    sqns: list[float] = []
+    for _ in range(ziehungen):
+        probe = [r_multiples[rng.randrange(n)] for _ in range(n)]
+        mittel = statistics.fmean(probe)
+        ews.append(mittel)
+        streuung = statistics.stdev(probe)
+        if streuung:
+            sqns.append(mittel / streuung * math.sqrt(n))
+
+    def _perzentil(werte: list[float], p: float) -> float | None:
+        if not werte:
+            return None
+        sortiert = sorted(werte)
+        # Nearest-Rank: robust und ohne Interpolationsannahme.
+        idx = min(len(sortiert) - 1, max(0, int(round(p * (len(sortiert) - 1)))))
+        return sortiert[idx]
+
+    return {
+        "expectancy_ci_unten": _perzentil(ews, 0.025),
+        "expectancy_ci_oben": _perzentil(ews, 0.975),
+        "sqn_ci_unten": _perzentil(sqns, 0.025),
+        "sqn_ci_oben": _perzentil(sqns, 0.975),
+        "anteil_positiv": sum(1 for x in ews if x > 0) / len(ews),
+        "bootstrap_ziehungen": ziehungen,
+    }
+
+
 def _guete_kennzahlen(r_multiples: list[float], anzahl_offen: int) -> dict:
     """SQN, Expectancy und Profit Factor aus einer Liste von R-Multiples.
 
@@ -1561,7 +1631,8 @@ def _guete_kennzahlen(r_multiples: list[float], anzahl_offen: int) -> dict:
     }
     if n == 0:
         return {**basis, "expectancy_r": None, "sqn": None, "sqn_einordnung": None,
-                "sqn_belastbar": False, "profit_factor": None, "standardabweichung_r": None}
+                "sqn_belastbar": False, "profit_factor": None, "standardabweichung_r": None,
+                **bootstrap_unsicherheit([])}
     mittel = statistics.fmean(r_multiples)
     streuung = statistics.stdev(r_multiples) if n >= 2 else None
     sqn = (mittel / streuung * math.sqrt(n)) if streuung else None
@@ -1575,6 +1646,8 @@ def _guete_kennzahlen(r_multiples: list[float], anzahl_offen: int) -> dict:
         "sqn_einordnung": _sqn_einordnung(sqn),
         "sqn_belastbar": n >= _SQN_MIN_N_FUER_AUSSAGE,
         "profit_factor": (gewinne / verluste) if verluste > 0 else None,
+        # Wie sicher sind diese Punktwerte? Siehe bootstrap_unsicherheit().
+        **bootstrap_unsicherheit(r_multiples),
     }
 
 
