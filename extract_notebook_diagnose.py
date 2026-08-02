@@ -1122,6 +1122,12 @@ def main() -> None:
                 "SELECT * FROM price_history_ohlc WHERE symbol = ? AND date >= ? ORDER BY date ASC",
                 (DEEP_DIVE_SYMBOL, von),
             ).fetchall()
+        # MUSS vor conn.close() stehen: compute_systemguete() liest die DB.
+        # Alle anderen Payload-Werte sind vorberechnete Variablen - beim
+        # Einbau am 02.08. war das uebersehen worden, der Aufruf stand
+        # zwischen den Payload-Eintraegen und lief damit gegen eine bereits
+        # geschlossene Verbindung.
+        systemguete = compute_systemguete(conn, watchlist)
     finally:
         conn.close()
 
@@ -1146,7 +1152,7 @@ def main() -> None:
         "zai_richtung_performance": zai_richtung_performance,
         "veto_schatten_performance": veto_schatten_performance,
         "veto_schatten_performance_nach_grund": veto_schatten_performance_nach_grund,
-        "systemguete": compute_systemguete(conn, watchlist),
+        "systemguete": systemguete,
         "selbst_gewaehltes_halten_performance": selbst_gewaehltes_halten_performance,
         "selbst_gewaehltes_halten_performance_nach_grund": selbst_gewaehltes_halten_performance_nach_grund,
         "zai_richtung_performance_schatten": zai_richtung_performance_schatten,
