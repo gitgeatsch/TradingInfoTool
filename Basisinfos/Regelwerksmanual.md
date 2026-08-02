@@ -13883,4 +13883,69 @@ Faelle, 0,2% aller Versuche) - ein Prompt-Eingriff waere unverifiziert
 und bei dieser Fallzahl nicht gerechtfertigt. Bleibt offener
 Beobachtungspunkt, kein Code-Change.
 
+Committet als `ca8b098`.
+
+### Massnahme 2 umgesetzt: Zeitschaetzung + Handlungsansatz je Wiedervorlage-Thread
+
+Alle offenen Wiedervorlage-Bedingungen wurden gegen echte Generierungs-/
+Aufloesungsraten (Export 02.08. 06:49) hochgerechnet und je Zeile um einen
+Handlungsansatz ergaenzt - Nutzer-Vorgabe: "wenn wir nicht mit den Messungen
+weiterkommen sind Alternative Loesungsvorschlaege erforderlich". Volle
+Tabelle in Memory `project_dead_loop_synthese_root_cause.md` (dort
+autoritativ gepflegt, nicht hier dupliziert). Kernergebnisse:
+
+- **Praktikabel, passiv abwarten (4 Threads):** Enge-Stop-Loss/TP-ATR
+  Post-Fix (~09.-11.08.), Krypto-Spot CRV<2,0 (~20.08.), ADX/Choppiness
+  (~12.-13.08.), Deribit Cross-Check (~17.08.).
+- **Strukturell NICHT durch Messung loesbar (3 Threads, neue explizite
+  Kategorie):** Konfidenz-Kalibrierung "mittel"-Band (n≈340 = ~4,5 Monate),
+  Aktien/Rohstoffe/Themen-ETF-R-5.10 (>200 Tage), Backward-Tracking-
+  "lang"-Bucket (120 Tage strukturell). Hier loest reines Warten das
+  Problem nicht - Alternativvorschlaege statt weiterer Datensammlung:
+  (a) Konfidenz-Kalibrierung auf den bereits einmal (29.07.) durchgefuehrten
+  kontinuierlichen Korrelationstest umstellen statt auf Bucket-n zu warten
+  (nutzt alle ~86 Datenpunkte statt 3-Buckets-Split); (b) Nicht-Krypto-
+  R-5.10: den robust abgesicherten Krypto-Spot-Befund (n=148) als
+  ausdruecklich gekennzeichnete Arbeitsannahme uebertragen statt
+  unabhaengig zu verifizieren.
+- **Positiv ueberraschend:** Selbst-Halten-Schatten-Tracking laeuft mit
+  ~14,5 Kandidaten/Tag deutlich schneller als die urspruengliche Annahme
+  "mehrere Wochen" - Wiedervorlage auf ~09.-16.08. vorgezogen.
+- **Eigener Auswertungsfehler gefunden+korrigiert:** der Deribit-Wert wurde
+  zunaechst als "n=3, moeglicherweise Datenanomalie" gemeldet - tatsaechlich
+  war `len()` auf das umschliessende Dict statt auf die enthaltene
+  `eintraege`-Liste angewendet worden (echte Struktur: 538 Eintraege, davon
+  16 aufgeloest). Kein Datenproblem.
+
+### Neues Referenzdokument: Stage-Abhaengigkeitsmatrix
+
+Nutzer-Vorgabe: "die einzelnen Probleme koennen nicht vollstaendig isoliert
+werden... eine Anpassung X in Stage 1 kann oder muss sich auf Funktionalitaet
+Y in Stage 2 LLM1 und dann auf Funktion Z in Stage 3 LLM2 auswirken - sonst
+bleibt es auch mit Messungen beim Regler probieren".
+
+Neues Dokument `Basisinfos/Regler_Signal_Pipeline_Abhaengigkeiten.md`
+(dauerhaftes Referenzdokument analog `Fakten_Entscheidungsmappe.md`):
+buendelt erstmals die bereits bekannten, aber ueber Dutzende Einzel-Memories
+verstreuten Kopplungen zwischen Stage 1 (Regler/deterministisch), Stage 2
+(LLM1/Analyst) und Stage 3 (LLM2/Z.ai) in einer Matrix. Enthaelt u.a.:
+`nur_long` → SHORT erreicht Mistral nie → Z.ai-SHORT erscheint strukturell
+als "Abweichung" (bereits einmal als Kalibrierungsproblem fehlgedeutet);
+CRV-/R-5.10-Schwellen verschieben unbemerkt die Z.ai-Vergleichspopulation;
+die heute gefixte Preiszonen-Validierung schuetzt Stage 1s CRV-Berechnung
+mit, nicht nur Stage 2. **Regel fuer kuenftige Regler-Aenderungen:** vor
+jeder Schwellen-Aenderung pruefen, ob sie die an Stage 2 uebergebene
+Kandidatenmenge und damit die Stage-3-Vergleichsbasis verschiebt.
+
+### Memory-Konsolidierung (Nutzer-Wunsch, ohne Informationsverlust)
+
+`reference_offene_zeitbasierte_beobachtungspunkte.md` wurde entschlackt: alle
+statistischen n<15-/Wiedervorlage-Fragen (frueher Abschnitte 3, 4b, 5, 6)
+sind jetzt ausschliesslich in `project_dead_loop_synthese_root_cause.md`
+gepflegt - dort mit Zeitschaetzung und Handlungsansatz statt nur der rohen
+Bedingung. Die Beobachtungspunkte-Datei bleibt zustaendig fuer aktive
+Debug-Logs und Deploy-Verifikationspunkte. Beide Dateien verweisen
+gegenseitig aufeinander; kein Inhalt wurde geloescht, nur an genau eine
+zustaendige Stelle verschoben.
+
 Noch NICHT committet/gepusht - folgt nach Nutzer-Bestaetigung.
