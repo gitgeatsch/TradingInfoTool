@@ -979,7 +979,9 @@ def post_check_hebel(
         )
         action = "HALTEN"
 
-    def _hebel_deckel_kandidaten(crv: float | None = None) -> list[tuple[str, float]]:
+    def _hebel_deckel_kandidaten(
+        crv: float | None = None, sl_abstand_relativ: float | None = None,
+    ) -> list[tuple[str, float]]:
         """Nachtrag 2026-07-17 (echter LINK-Fall): gemeinsame Deckel-Logik fuer
         beide Faelle, die einen Ziel-Hebel brauchen - ERÖFFNEN/NACHKAUFEN/
         HEBEL_ERHÖHEN (mit CRV-Pflicht) UND HEBEL_SENKEN (ohne, siehe unten,
@@ -988,6 +990,33 @@ def post_check_hebel(
         kandidaten: list[tuple[str, float]] = [("Config-Maximum", pre_result.config_max_hebel)]
         if pre_result.max_sicherer_hebel is not None:
             kandidaten.append(("RM-11 max. sicherer Hebel", pre_result.max_sicherer_hebel))
+
+        # RM-11 exakt (2026-08-02): `pre_check_hebel()` laeuft VOR dem LLM-Call und
+        # berechnet den maximal sicheren Hebel aus einer ANGENOMMENEN Stop-Distanz
+        # (STOP_LOSS_ATR_MULTIPLE = 2,0 x ATR). Liegt der tatsaechlich
+        # vorgeschlagene Stop WEITER (an 222 Signalen gemessen: 18,5% der Faelle,
+        # Median 2,56x ATR), ist der vorab berechnete Hebel ZU HOCH - dann kann
+        # Bitpandas Zwangsliquidation greifen, BEVOR der eigene Stop ausloest.
+        # Genau das soll RM-11 verhindern; die Luecke entstand allein dadurch,
+        # dass die Annahme nie gegen das Ergebnis geprueft wurde.
+        #
+        # Beispiel mit der ECHTEN Sicherheitsmarge (0,09 laut config.yaml::risiko.
+        # hebel.liquidations_sicherheitsmarge_relativ): ATR 7% -> Annahme 14% Stop
+        # -> 6,50x erlaubt. Tatsaechlicher Stop 17,9% -> nur 5,08x sind sicher.
+        # Der vorab berechnete Wert laege also 1,4 Hebelstufen zu hoch.
+        #
+        # Bisher unauffaellig geblieben, weil der Median-Hebel bei 3,0 liegt - die
+        # Luecke ist real, hat sich aber noch nicht materialisiert. Als
+        # Deckel-Kandidat statt als Veto: der Hebel wird gesenkt, das Signal bleibt
+        # erhalten.
+        if sl_abstand_relativ and sl_abstand_relativ > 0:
+            kandidaten.append((
+                "RM-11 exakt (tatsaechlicher Stop)",
+                max_safe_hebel(
+                    sl_abstand_relativ * 100,
+                    hebel_cfg["liquidations_sicherheitsmarge_relativ"],
+                ),
+            ))
 
         regime_konflikt = regime_konflikt_hebel(regime_result.regime, richtung)
         if regime_konflikt:
@@ -1134,7 +1163,9 @@ def post_check_hebel(
                 action = "HALTEN"
             else:
                 hebel_vorschlag = result.get("hebel_vorschlag")
-                deckel_kandidaten = _hebel_deckel_kandidaten(crv=crv)
+                deckel_kandidaten = _hebel_deckel_kandidaten(
+                    crv=crv, sl_abstand_relativ=sl_abstand_relativ,
+                )
                 deckel_werte = [wert for _, wert in deckel_kandidaten]
                 hebel_final = min([hebel_vorschlag] + deckel_werte) if hebel_vorschlag is not None else None
 

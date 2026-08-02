@@ -334,6 +334,15 @@ _SPOT_SIGNAL_SPALTEN = (
     "outcome_realisiertes_crv, outcome_datenquelle, "
     "mindestziel_usd, mindestziel_eur, mindestziel_zeitraum_tage_geschaetzt, "
     "outcome_max_realisiertes_crv, outcome_mindestziel_erreicht_am, "
+    # 2026-08-02: die vorgeschlagene Positionsgroesse wurde zwar seit jeher
+    # persistiert (signals-Tabelle, alle 5 Spot-family-Pipelines befuellen sie),
+    # aber nie exportiert. Dadurch war die Nutzer-Beobachtung "die Betraege sind
+    # so hoch, dass nur EIN Trade moeglich waere" am Export nicht nachpruefbar -
+    # und die neuen Deckel RM-1 exakt / RM-1d waeren es ebenso wenig. Die `note`
+    # traegt die Begruendung, welcher Deckel gebunden hat.
+    # NUR hier, nicht bei Hebel: `hebel_signals` hat keine position_size-Spalten,
+    # dort ist `eigenkapitalbedarf_usd` die entsprechende Groesse.
+    "position_size_usd, position_size_eur, position_size_note, "
     # Veto-Schatten-Tracking (2026-07-28), siehe _HEBEL_SIGNAL_SPALTEN-Kommentar
     # oben - identisches Feld-Set, hier fuer die Spot-family (signals-Tabelle).
     "veto_outcome_status, veto_outcome_geprueft_am, veto_outcome_entschieden_am, "
