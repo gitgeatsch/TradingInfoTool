@@ -88,6 +88,17 @@ siehe Plan-Datei) "gerettetes" Signal tatsaechlich Take-Profit/Stop-Loss
 erreicht haette. Bewusst nur fuer betroffene Symbole (nicht die gesamte
 price_history_ohlc-Tabelle) - haelt den Export schlank.
 
+Nachtrag (2026-08-02, Maßnahme 3 der Dead-Loop-Synthese): neue Sektion
+`preishistorie_signal_symbole`. Die Sektion von 2026-07-22 (oben) deckt nur
+Symbole mit 'ueberholt'-Ausgang ab - beim Versuch, ADX/Choppiness rueckwirkend
+ueber bereits aufgeloeste Signale nachzurechnen, fehlten dadurch 14 von 32
+Hebel-Signal-Symbolen, darunter ausgerechnet die aktiven (SOL, NEAR, AVAX,
+APT, RENDER, SEI, TAO ...). Die Daten lagen in der DB, nur nicht im Export -
+eine reine Export-Luecke, keine Datenluecke. Die neue Sektion nimmt alle
+Signal-Symbole mit, dafuer zeitlich begrenzt (ab aeltestem Signal minus 60
+Tage Indikator-Vorlauf) statt voller Historie; sie ersetzt die aeltere
+Sektion nicht, weil der Ueberholt-Backtest dort die volle Historie braucht.
+
 Nachtrag (2026-07-24, NB-Analyse-Fund): `kontrathese_zu_position`/
 `kontrathese_llm_richtung` (heutiges Kontrathese-Uebersetzung-Feature,
 siehe HebelSignal-Docstring) fehlten in `_HEBEL_SIGNAL_SPALTEN` - die
@@ -596,6 +607,61 @@ def _preishistorie_ueberholte_symbole(conn) -> dict:
     return {"symbole": alle_symbole, "preishistorie_je_symbol": preishistorie}
 
 
+def _preishistorie_signal_symbole(conn, vorlauf_tage: int = 60) -> dict:
+    """Neu (2026-08-02, Maßnahme 3 der Dead-Loop-Synthese): OHLC-Reihen fuer
+    ALLE Symbole, zu denen es ueberhaupt Signale gibt - nicht nur fuer die
+    'ueberholten' wie _preishistorie_ueberholte_symbole().
+
+    Anlass: die rueckwirkende Nachrechnung deterministischer Indikatoren
+    (ADX/Choppiness) ueber bereits aufgeloeste Signale scheiterte nicht an
+    fehlenden Daten, sondern daran, dass der Export sie nicht mitnahm - von
+    32 Hebel-Signal-Symbolen waren nur 18 enthalten, und ausgerechnet die
+    aktiven (SOL, NEAR, AVAX, APT, RENDER, SEI, TAO ...) fehlten. Die
+    'ueberholt'-Auswahl ist fuer diese Frage zusaetzlich verzerrt: sie
+    enthaelt per Konstruktion nur Symbole mit haeufigen Neuanalysen.
+
+    Bewusst zeitlich begrenzt statt voller Historie: ab dem aeltesten Signal
+    minus `vorlauf_tage` (Indikator-Vorlauf, 60 Tage decken auch 50er-Fenster
+    ab). Volle Historie ueber ~60 Symbole wuerde den Export vervielfachen,
+    ohne fuer diese Frage etwas beizutragen - das Nach-Signal-Fenster ist
+    automatisch enthalten, weil bis heute exportiert wird.
+    """
+    grenzen = conn.execute(
+        "SELECT MIN(d) AS von FROM ("
+        "  SELECT MIN(created_at) AS d FROM hebel_signals"
+        "  UNION ALL SELECT MIN(created_at) FROM signals)"
+    ).fetchone()
+    aeltestes = (grenzen["von"] or "")[:10]
+    if not aeltestes:
+        return {"symbole": [], "ab_datum": None, "preishistorie_je_symbol": {}}
+
+    ab = (datetime.fromisoformat(aeltestes) - timedelta(days=vorlauf_tage)).strftime("%Y-%m-%d")
+
+    symbole = sorted({
+        r["symbol"] for r in conn.execute(
+            "SELECT DISTINCT symbol FROM hebel_signals"
+            " UNION SELECT DISTINCT symbol FROM signals"
+        ).fetchall() if r["symbol"]
+    })
+    preishistorie = {
+        symbol: [
+            row_to_dict(r) for r in conn.execute(
+                "SELECT * FROM price_history_ohlc WHERE symbol = ? AND date >= ?"
+                " ORDER BY date ASC", (symbol, ab)
+            ).fetchall()
+        ]
+        for symbol in symbole
+    }
+    ohne_daten = sorted(s for s, v in preishistorie.items() if not v)
+    return {
+        "symbole": symbole,
+        "ab_datum": ab,
+        "vorlauf_tage": vorlauf_tage,
+        "symbole_ohne_ohlc": ohne_daten,
+        "preishistorie_je_symbol": preishistorie,
+    }
+
+
 def _ohlc_aktualitaet_je_symbol(conn) -> dict:
     """Neu (2026-07-30, siehe Test_und_Verifikationsmethodik.md Abschnitt 2.1a) -
     MAX(date)/Anzahl Zeilen je Symbol in price_history_ohlc UEBER DIE GESAMTE
@@ -949,6 +1015,7 @@ def main() -> None:
         hebel_erstmalige_erkennung_delta = _hebel_erstmalige_erkennung_delta(conn)
         rohdaten_fuer_backtest = _rohdaten_fuer_backtest(conn)
         preishistorie_ueberholte_symbole = _preishistorie_ueberholte_symbole(conn)
+        preishistorie_signal_symbole = _preishistorie_signal_symbole(conn)
         deribit_cross_check_verlauf = _deribit_cross_check_verlauf(conn)
         zai_gegenpruefung_verlauf = _zai_gegenpruefung_verlauf(conn)
         oi_fakten_verlauf = _oi_fakten_verlauf(conn)
@@ -1109,6 +1176,7 @@ def main() -> None:
         "hebel_erstmalige_erkennung_delta": hebel_erstmalige_erkennung_delta,
         "rohdaten_fuer_backtest": rohdaten_fuer_backtest,
         "preishistorie_ueberholte_symbole": preishistorie_ueberholte_symbole,
+        "preishistorie_signal_symbole": preishistorie_signal_symbole,
         "deribit_cross_check_verlauf": deribit_cross_check_verlauf,
         "zai_gegenpruefung_verlauf": zai_gegenpruefung_verlauf,
         "oi_fakten_verlauf": oi_fakten_verlauf,
@@ -1155,6 +1223,11 @@ def main() -> None:
           f"{len(rohdaten_fuer_backtest['marktscan_alle_kandidaten'])} Marktscan-Kandidaten gesamt (alle Einstufungen)")
     print(f"  Preishistorie ueberholte Symbole: {len(preishistorie_ueberholte_symbole['symbole'])} Symbole "
           f"({', '.join(preishistorie_ueberholte_symbole['symbole']) or '-'})")
+    _psy = preishistorie_signal_symbole
+    _psy_punkte = sum(len(v) for v in _psy['preishistorie_je_symbol'].values())
+    print(f"  Preishistorie Signal-Symbole: {len(_psy['symbole'])} Symbole ab {_psy['ab_datum']}, "
+          f"{_psy_punkte} OHLC-Punkte"
+          + (f" - OHNE Daten: {', '.join(_psy['symbole_ohne_ohlc'])}" if _psy['symbole_ohne_ohlc'] else ""))
     print(f"  Konfidenz-Kalibrierung: {konfidenz_kalibrierung}")
     print(f"  Deribit-Cross-Check: {deribit_cross_check_verlauf['anzahl_mit_optionsmarkt_fakt']} Signale mit "
           f"Optionsmarkt-Fakt, davon {deribit_cross_check_verlauf['anzahl_mit_gegenargument']} mit gegenargument")
