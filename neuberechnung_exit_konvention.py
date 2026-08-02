@@ -7,9 +7,9 @@ aufgeloesten Bewertungen stehen damit nach einer anderen Konvention in der
 Datenbank - ohne Bereinigung mischen sich zwei Massstaebe in Expectancy und SQN.
 
 ANSATZ: keine zweite Berechnungslogik, sondern outcome_status der betroffenen
-Zeilen auf NULL zuruecksetzen. Der naechste regulaere backward_tracking_job
-bewertet sie dann mit dem neuen Code und denselben Kursdaten neu. Damit kann
-die Neuberechnung nicht von der Produktivlogik abweichen.
+Zeilen auf NULL zuruecksetzen und anschliessend run_backward_tracking() /
+run_hebel_backward_tracking() aufrufen - dieselben Funktionen wie im Scheduler.
+Damit kann die Neuberechnung nicht von der Produktivlogik abweichen.
 
 Sicher, weil:
 - nur AUFGELOESTE Bewertungen betroffen sind (take_profit/stop_loss/liquidation).
@@ -21,19 +21,23 @@ Sicher, weil:
 AUFRUF (am Notebook, wo die Produktiv-DB liegt):
     python neuberechnung_exit_konvention.py            # nur zaehlen, nichts aendern
     python neuberechnung_exit_konvention.py --schreiben
-Danach den backward_tracking_job abwarten (taeglich 06:00) oder die App neu
-starten - der Nachhol-Mechanismus holt den Termin nach.
+Der Schreibmodus bewertet direkt im Anschluss neu (dieselben Funktionen wie der
+taegliche 06:00-Job) - danach ist ein Notebook-Export sinnvoll. Ohne diesen
+Schritt stuende die DB bis 06:00 ohne Ergebnisse da.
 """
 from __future__ import annotations
 
 import sys
 
+import config
 import database.db as db
 from agent.krypto.backward_tracking import (
     OUTCOME_LIQUIDATION,
     OUTCOME_STOP_LOSS,
     OUTCOME_TAKE_PROFIT,
+    run_backward_tracking,
 )
+from agent.krypto.hebel_backward_tracking import run_hebel_backward_tracking
 
 AUFGELOEST = (OUTCOME_TAKE_PROFIT, OUTCOME_STOP_LOSS, OUTCOME_LIQUIDATION)
 
@@ -81,13 +85,30 @@ def main() -> None:
                 AUFGELOEST,
             )
 
-    if schreiben:
-        conn.commit()
-        print(f"\n{gesamt} Bewertungen zurueckgesetzt. Der naechste "
-              f"backward_tracking_job bewertet sie mit der neuen Konvention neu.")
-    else:
+    if not schreiben:
         print(f"\n{gesamt} Bewertungen waeren betroffen. "
               f"Zum Ausfuehren: --schreiben")
+        conn.close()
+        return
+
+    conn.commit()
+    print(f"\n{gesamt} Bewertungen zurueckgesetzt.")
+
+    # Direkt neu bewerten statt auf den 06:00-Job zu warten: sonst stuende die
+    # DB bis dahin ohne Ergebnisse da, und ein Export dazwischen waere leer.
+    # Bewusst dieselben Funktionen wie im Scheduler - keine Sonderlogik.
+    print("\nNeubewertung laeuft (dieselben Funktionen wie der taegliche Job)...")
+    watchlist = config.get_watchlist()
+    cfg = config.load_config()
+    spot = run_backward_tracking(conn, watchlist, cfg)
+    hebel = run_hebel_backward_tracking(conn, watchlist, cfg)
+    print(f"  Spot : {spot.geprueft_count} geprueft, "
+          f"{spot.resolved_take_profit} Take-Profit, {spot.resolved_stop_loss} Stop-Loss, "
+          f"{spot.still_open} weiter offen")
+    print(f"  Hebel: {hebel.geprueft_count} geprueft, "
+          f"{hebel.resolved_take_profit} Take-Profit, {hebel.resolved_stop_loss} Stop-Loss, "
+          f"{hebel.resolved_liquidation} Liquidation, {hebel.still_open} weiter offen")
+    print("\nFertig - jetzt ist ein Notebook-Export sinnvoll.")
     conn.close()
 
 

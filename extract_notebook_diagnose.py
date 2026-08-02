@@ -277,6 +277,12 @@ _HEBEL_SIGNAL_SPALTEN = (
     "hebel_korrektur_hinweis, trade_thesis_typ, trigger_zweig, trigger_score, "
     "confidence_pct, short_reasoning, entry_eur_von, entry_eur_bis, "
     "stop_loss_eur_von, stop_loss_eur_bis, take_profit_eur_von, take_profit_eur_bis, "
+    # USD-Zonen zusaetzlich zu EUR (2026-08-02): das Backward-Tracking rechnet
+    # intern in USD. Ohne diese Felder laesst sich eine Auswertung am Desktop
+    # nicht bitgleich zur Produktivlogik nachrechnen - nur naeherungsweise in
+    # EUR, was ueber die Haltedauer um die Wechselkursbewegung abweicht.
+    "entry_usd_von, entry_usd_bis, stop_loss_usd_von, stop_loss_usd_bis, "
+    "take_profit_usd_von, take_profit_usd_bis, "
     "liquidationspreis_geschaetzt_usd, eigenkapitalbedarf_usd, eigenkapitalbedarf_eur, "
     "eigenkapital_deckel_hinweis, "
     "hebel_senkung_eigenkapital_nachschuss_eur, ausfuehrbarkeit_hinweis, "
@@ -329,7 +335,14 @@ _HEBEL_SIGNAL_SPALTEN = (
 _SPOT_SIGNAL_SPALTEN = (
     "id, symbol, created_at, action, confidence_pct, short_reasoning, "
     "entry_eur_von, entry_eur_bis, stop_loss_eur_von, stop_loss_eur_bis, "
-    "take_profit_eur_von, take_profit_eur_bis, regime, gate_passed, gate_reason, "
+    "take_profit_eur_von, take_profit_eur_bis, "
+    # USD-Zonen (2026-08-02, gleiche Begruendung wie bei _HEBEL_SIGNAL_SPALTEN).
+    # Spot fuehrt zusaetzlich Einzelwert-Felder ohne _von/_bis - check_signal_
+    # outcome() nimmt _von und faellt auf den Einzelwert zurueck, deshalb beide.
+    "entry_usd_von, entry_usd_bis, entry_usd, "
+    "stop_loss_usd_von, stop_loss_usd_bis, stop_loss_usd, "
+    "take_profit_usd_von, take_profit_usd_bis, take_profit_usd, "
+    "regime, gate_passed, gate_reason, "
     "risk_veto, risk_veto_reason, cash_veto, cash_veto_reason, groq_model, "
     "outcome_status, outcome_geprueft_am, outcome_entschieden_am, "
     "outcome_realisiertes_crv, outcome_datenquelle, "
