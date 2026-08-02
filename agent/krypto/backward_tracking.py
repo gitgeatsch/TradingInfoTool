@@ -17,6 +17,7 @@ from datetime import datetime, timedelta, timezone
 
 import database.db as db
 from agent.krypto.llm_provider import provider_from_label
+from agent.krypto.statistik import beitrags_konzentration, wilson_intervall
 from agent.krypto.risk_gate import CRV_MINIMUM, KONFIDENZ_SCHWELLE_HOCH, KONFIDENZ_SCHWELLE_NIEDRIG
 
 OUTCOME_OFFEN = "offen"
@@ -874,6 +875,10 @@ def _aggregate_resolved_signal_rows(
                 "liquidation_count": 0,
                 "_crv_summe": 0.0,
                 "_crv_count": 0,
+                # Einzelwerte zusaetzlich zur Summe: der Mittelwert allein
+                # verraet nicht, ob er an wenigen Ausreissern haengt
+                # (Methodik 2.5.5). Fuer den Beitrags-Check gebraucht.
+                "_crv_werte": [],
             }
         return gruppen[key]
 
@@ -894,6 +899,7 @@ def _aggregate_resolved_signal_rows(
         if row["crv"] is not None:
             eintrag["_crv_summe"] += row["crv"]
             eintrag["_crv_count"] += 1
+            eintrag["_crv_werte"].append(row["crv"])
 
     hebel_rows = conn.execute(
         f"SELECT llm_model, {status_col} AS status, {crv_col} AS crv "
@@ -912,24 +918,57 @@ def _aggregate_resolved_signal_rows(
         if row["crv"] is not None:
             eintrag["_crv_summe"] += row["crv"]
             eintrag["_crv_count"] += 1
+            eintrag["_crv_werte"].append(row["crv"])
 
     return gruppen
+
+
+def _kennzahlen_mit_pruefung(eintrag: dict) -> dict:
+    """Kennzahlen einer Gruppe - mit den beiden Pruefungen direkt daneben.
+
+    Bis 2026-08-02 lieferten die Aggregationen nur `win_rate` und
+    `avg_realisiertes_crv`. Beide Zahlen wurden dadurch regelmaessig
+    ueberinterpretiert: eine Trefferquote von 40% bei n=10 sah aus wie eine
+    von 40% bei n=200, und ein positiver Mittelwert sagte nichts darueber,
+    ob er an drei Ausreissern hing. An genau diesen zwei Luecken sind an
+    jenem Tag fuenf von sieben Befunden gescheitert - die Pruefungen dafuer
+    standen bis dahin nur als Text in der Methodik und mussten jedes Mal von
+    Hand nachgezogen werden. Jetzt laufen sie automatisch mit.
+
+    Zwei Zusatzfelder:
+    - `win_rate_ci_95`: Wilson-Intervall. Macht den Unterschied zwischen
+      "40% aus 10 Faellen" und "40% aus 200 Faellen" sofort sichtbar.
+    - `crv_konzentration`: Beitrags-Check (Methodik 2.5.5). Entscheidend
+      darin ist `vorzeichen_kippt` - faellt der Mittelwert ohne die fuenf
+      groessten Werte auf die andere Seite der Null, ist die Kennzahl NICHT
+      belastbar, egal wie gut die Anzahl-Verteilung aussieht.
+    """
+    anzahl = eintrag["anzahl_resolved"]
+    crv_werte = eintrag.get("_crv_werte") or []
+    return {
+        "anzahl_resolved": anzahl,
+        "take_profit_count": eintrag["take_profit_count"],
+        "stop_loss_count": eintrag["stop_loss_count"],
+        "liquidation_count": eintrag["liquidation_count"],
+        "win_rate": (eintrag["take_profit_count"] / anzahl) if anzahl > 0 else None,
+        "win_rate_ci_95": (
+            wilson_intervall(eintrag["take_profit_count"], anzahl) if anzahl > 0 else None
+        ),
+        "avg_realisiertes_crv": (
+            eintrag["_crv_summe"] / eintrag["_crv_count"] if eintrag["_crv_count"] > 0 else None
+        ),
+        # Unter 6 Werten ist ein Top-5-Beitrag keine Aussage, sondern fast
+        # die ganze Stichprobe - dann bleibt das Feld bewusst leer.
+        "crv_konzentration": (
+            beitrags_konzentration(crv_werte) if len(crv_werte) >= 6 else None
+        ),
+    }
 
 
 def _format_performance_gruppen(gruppen: dict[tuple[str, str], dict], watchlist: list | None) -> dict:
     ergebnis: dict = {"hebel": {}} if watchlist else {"spot": {}, "hebel": {}}
     for (tier, provider), eintrag in gruppen.items():
-        anzahl = eintrag["anzahl_resolved"]
-        ergebnis.setdefault(tier, {})[provider] = {
-            "anzahl_resolved": anzahl,
-            "take_profit_count": eintrag["take_profit_count"],
-            "stop_loss_count": eintrag["stop_loss_count"],
-            "liquidation_count": eintrag["liquidation_count"],
-            "win_rate": (eintrag["take_profit_count"] / anzahl) if anzahl > 0 else None,
-            "avg_realisiertes_crv": (
-                eintrag["_crv_summe"] / eintrag["_crv_count"] if eintrag["_crv_count"] > 0 else None
-            ),
-        }
+        ergebnis.setdefault(tier, {})[provider] = _kennzahlen_mit_pruefung(eintrag)
     return ergebnis
 
 
@@ -1043,6 +1082,10 @@ def compute_veto_shadow_performance_nach_grund(conn, watchlist: list | None = No
                 "liquidation_count": 0,
                 "_crv_summe": 0.0,
                 "_crv_count": 0,
+                # Einzelwerte zusaetzlich zur Summe: der Mittelwert allein
+                # verraet nicht, ob er an wenigen Ausreissern haengt
+                # (Methodik 2.5.5). Fuer den Beitrags-Check gebraucht.
+                "_crv_werte": [],
             }
         return gruppen[key]
 
@@ -1065,6 +1108,7 @@ def compute_veto_shadow_performance_nach_grund(conn, watchlist: list | None = No
         if row["crv"] is not None:
             eintrag["_crv_summe"] += row["crv"]
             eintrag["_crv_count"] += 1
+            eintrag["_crv_werte"].append(row["crv"])
 
     hebel_rows = conn.execute(
         f"SELECT risk_veto_reason, veto_outcome_status AS status, "
@@ -1085,20 +1129,11 @@ def compute_veto_shadow_performance_nach_grund(conn, watchlist: list | None = No
         if row["crv"] is not None:
             eintrag["_crv_summe"] += row["crv"]
             eintrag["_crv_count"] += 1
+            eintrag["_crv_werte"].append(row["crv"])
 
     ergebnis: dict = {"hebel": {}} if watchlist else {"spot": {}, "hebel": {}}
     for (tier, grund), eintrag in gruppen.items():
-        anzahl = eintrag["anzahl_resolved"]
-        ergebnis.setdefault(tier, {})[grund] = {
-            "anzahl_resolved": anzahl,
-            "take_profit_count": eintrag["take_profit_count"],
-            "stop_loss_count": eintrag["stop_loss_count"],
-            "liquidation_count": eintrag["liquidation_count"],
-            "win_rate": (eintrag["take_profit_count"] / anzahl) if anzahl > 0 else None,
-            "avg_realisiertes_crv": (
-                eintrag["_crv_summe"] / eintrag["_crv_count"] if eintrag["_crv_count"] > 0 else None
-            ),
-        }
+        ergebnis.setdefault(tier, {})[grund] = _kennzahlen_mit_pruefung(eintrag)
     return ergebnis
 
 
@@ -1126,6 +1161,10 @@ def _aggregate_resolved_selbst_halten_signal_rows(
                 "liquidation_count": 0,
                 "_crv_summe": 0.0,
                 "_crv_count": 0,
+                # Einzelwerte zusaetzlich zur Summe: der Mittelwert allein
+                # verraet nicht, ob er an wenigen Ausreissern haengt
+                # (Methodik 2.5.5). Fuer den Beitrags-Check gebraucht.
+                "_crv_werte": [],
             }
         return gruppen[key]
 
@@ -1147,6 +1186,7 @@ def _aggregate_resolved_selbst_halten_signal_rows(
         if row["crv"] is not None:
             eintrag["_crv_summe"] += row["crv"]
             eintrag["_crv_count"] += 1
+            eintrag["_crv_werte"].append(row["crv"])
 
     hebel_rows = conn.execute(
         f"SELECT llm_model, selbst_halten_outcome_status AS status, "
@@ -1166,6 +1206,7 @@ def _aggregate_resolved_selbst_halten_signal_rows(
         if row["crv"] is not None:
             eintrag["_crv_summe"] += row["crv"]
             eintrag["_crv_count"] += 1
+            eintrag["_crv_werte"].append(row["crv"])
 
     return gruppen
 
@@ -1204,6 +1245,10 @@ def compute_selbst_halten_performance_nach_grund(conn, watchlist: list | None = 
                 "liquidation_count": 0,
                 "_crv_summe": 0.0,
                 "_crv_count": 0,
+                # Einzelwerte zusaetzlich zur Summe: der Mittelwert allein
+                # verraet nicht, ob er an wenigen Ausreissern haengt
+                # (Methodik 2.5.5). Fuer den Beitrags-Check gebraucht.
+                "_crv_werte": [],
             }
         return gruppen[key]
 
@@ -1226,6 +1271,7 @@ def compute_selbst_halten_performance_nach_grund(conn, watchlist: list | None = 
         if row["crv"] is not None:
             eintrag["_crv_summe"] += row["crv"]
             eintrag["_crv_count"] += 1
+            eintrag["_crv_werte"].append(row["crv"])
 
     hebel_rows = conn.execute(
         f"SELECT top_grund_1_kategorie, selbst_halten_outcome_status AS status, "
@@ -1246,20 +1292,11 @@ def compute_selbst_halten_performance_nach_grund(conn, watchlist: list | None = 
         if row["crv"] is not None:
             eintrag["_crv_summe"] += row["crv"]
             eintrag["_crv_count"] += 1
+            eintrag["_crv_werte"].append(row["crv"])
 
     ergebnis: dict = {"hebel": {}} if watchlist else {"spot": {}, "hebel": {}}
     for (tier, grund), eintrag in gruppen.items():
-        anzahl = eintrag["anzahl_resolved"]
-        ergebnis.setdefault(tier, {})[grund] = {
-            "anzahl_resolved": anzahl,
-            "take_profit_count": eintrag["take_profit_count"],
-            "stop_loss_count": eintrag["stop_loss_count"],
-            "liquidation_count": eintrag["liquidation_count"],
-            "win_rate": (eintrag["take_profit_count"] / anzahl) if anzahl > 0 else None,
-            "avg_realisiertes_crv": (
-                eintrag["_crv_summe"] / eintrag["_crv_count"] if eintrag["_crv_count"] > 0 else None
-            ),
-        }
+        ergebnis.setdefault(tier, {})[grund] = _kennzahlen_mit_pruefung(eintrag)
     return ergebnis
 
 
