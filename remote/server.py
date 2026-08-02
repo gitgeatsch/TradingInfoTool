@@ -786,7 +786,7 @@ async function refreshStatus() {
               "Zufallseinstieg, gleiche Parameter (Stop " +
               (k.basislinie_stop_rel * 100).toFixed(1) + "%, CRV " +
               k.basislinie_crv.toFixed(2) + ", n=" + k.basislinie_anzahl + "): " +
-              blw + " R" + chance + "</span><span class=\"" +
+              blw + " R" + chance + '</span><span class="' +
               (k.signalbeitrag_r >= 0 ? "ok" : "warn") +
               '">Signalbeitrag ' + sb + " R</span></div>";
           }
