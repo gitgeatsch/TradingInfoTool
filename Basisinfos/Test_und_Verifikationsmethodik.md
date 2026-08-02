@@ -456,6 +456,50 @@ Zwei belegte Faelle vom selben Tag:
   uebernommenen Grenzen gerechnet worden - und haette eine moeglicherweise
   falsch gesetzte Schnittstelle zweimal bestaetigt.
 
+### 2.5.7 Indikator-Befunde: Basislinie je Bucket ist PFLICHT
+
+Ein Befund der Form "bei hohem X laufen unsere Signale besser" ist erst dann
+ein Regelkandidat, wenn die MECHANISCHE BASISLINIE JE X-BUCKET danebensteht -
+also: wie oft trifft ein Zufallseinstieg das Ziel bei diesem Indikatorniveau?
+Ohne diesen Vergleich misst man Marktphasen und haelt sie fuer Signalqualitaet.
+
+Werkzeug: `agent/krypto/statistik.py::basislinie_je_indikator_bucket()`.
+
+**Lehrbeispiel ADX (02.08.), warum das keine Formalie ist:** der Befund sah
+durch ALLE uebrigen Pruefungen gut aus - monoton steigende Trefferquote,
+plausible Theorie, Literaturdeckung, scheinbar an einem zweiten Datensatz
+repliziert. Er fiel erst hier:
+
+| ADX | Zufallseinstieg (n=1.298) | Signale (n=74) |
+|---|---|---|
+| unter 15 | 19,9% | 8,8% |
+| 15-20 | 25,6% | 18,5% |
+| 20-25 | 30,2% | 23,1% |
+| ab 25 | 31,1% | - |
+
+Der Zufallseinstieg wird in Trendphasen um 11,1 Prozentpunkte besser. Genau
+dieser Anstieg war als "Signalqualitaet" gelesen worden. Ein ADX-Gate haette
+nur in Phasen gefiltert, in denen ohnehin alles besser laeuft - und selbst der
+beste Bucket hat einen Erwartungswert von -0,068 R.
+
+Zuvor waren schon zwei andere Pruefungen faellig gewesen: die spektakulaeren
+oberen Werte des Ausgangsbefunds ("69,2%", "100%") stammten aus Buckets mit
+n=1, und die Aussage haing an der Bucket-Wahl (Grenze 20: +13,6pp, Grenze 22:
++8,8pp, Grenze 25: +35,1pp bei n=2).
+
+**Zweitens: Simulation schlaegt Warten.** Die Frage war zunaechst auf "in
+einigen Wochen mit mehr Signalen entscheiden" vertagt. Die Basislinie
+beantwortete sie sofort mit 3.385 Tagesbalken statt 76 Signalen - besser, als
+die Datenlage nach vier Wochen Warten gewesen waere. Wo eine mechanische
+Simulation moeglich ist, ist Abwarten die schlechtere Option.
+
+**Drittens, der eigentliche Fund dieser Pruefung:** die Signale liegen in
+JEDEM ADX-Bucket unter dem Zufallseinstieg. Das ist ernster als die
+untersuchte Frage - eine Untersuchung kann Wichtigeres finden als das, wonach
+sie gesucht hat. Einschraenkung dazu: die Basislinie ist LONG-only, die
+Signalmenge enthaelt rund 20% SHORT; in einem um 28% gefallenen Markt
+beguenstigt das die Signale eher, der Abstand ist also nicht geschoent.
+
 **Konsequenz fuer uebernommene Standardwerte:** jede aus der Literatur
 uebernommene Schwelle ist zunaechst eine **Hypothese**, kein Parameter. Vor
 der Verwendung als Auswertungsgrenze auf Sensitivitaet pruefen (verschiebt
