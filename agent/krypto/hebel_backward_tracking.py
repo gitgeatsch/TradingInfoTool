@@ -29,6 +29,7 @@ from agent.krypto.backward_tracking import (
     OUTCOME_STOP_LOSS,
     OUTCOME_TAKE_PROFIT,
     OUTCOME_UEBERHOLT,
+    persistiere_offenes_mfe,
 )
 
 # Hebel-spezifischer Override (2026-07-22, siehe Plan-Datei "Ueberholt-
@@ -695,6 +696,10 @@ def run_hebel_backward_tracking(conn, watchlist, config: dict) -> HebelBackwardT
             )
             result.expired += 1
         else:
+            persistiere_offenes_mfe(
+                conn, signal.id, extra, signal.outcome_max_realisiertes_crv,
+                db.update_hebel_signal_outcome,
+            )
             result.still_open += 1
 
     # Veto-Schatten-Zweig (2026-07-28, mirror backward_tracking.py::
@@ -744,6 +749,10 @@ def run_hebel_backward_tracking(conn, watchlist, config: dict) -> HebelBackwardT
             )
             result.veto_schatten_expired += 1
         else:
+            persistiere_offenes_mfe(
+                conn, signal.id, extra, signal.veto_outcome_max_realisiertes_crv,
+                db.update_hebel_signal_veto_shadow_outcome,
+            )
             result.veto_schatten_still_open += 1
 
     # Selbst-gewaehltes-HALTEN-Zweig (2026-07-31, Gegenfall zum Veto-Schatten-
@@ -793,6 +802,10 @@ def run_hebel_backward_tracking(conn, watchlist, config: dict) -> HebelBackwardT
             )
             result.selbst_halten_expired += 1
         else:
+            persistiere_offenes_mfe(
+                conn, signal.id, extra, signal.selbst_halten_outcome_max_realisiertes_crv,
+                db.update_hebel_signal_selbst_halten_outcome,
+            )
             result.selbst_halten_still_open += 1
 
     return result

@@ -779,6 +779,37 @@ def _is_expired(signal, bucket_tage: dict[str, int], fallback_tage: int) -> bool
     return age_days >= tage
 
 
+def persistiere_offenes_mfe(conn, signal_id: int, extra: dict,
+                           gespeichertes_mfe: float | None, update_fn) -> None:
+    """MFE auch bei noch OFFENEM Signal festhalten (2026-08-02, Task #602).
+
+    check_*_outcome() berechnet den Maximum-Favorable-Excursion-Wert bei jedem
+    Lauf neu ueber die volle Historie seit created_at - bisher wurde er nur
+    dann geschrieben, wenn zugleich ein Endstatus feststand (aufgeloest,
+    ueberholt, abgelaufen). Folge: MFE existierte ausschliesslich fuer
+    abgeschlossene Faelle - also genau fuer die selektierte Teilmenge, gegen
+    deren Survivorship-Verzerrung die Kennzahl eigentlich helfen soll.
+
+    Gemessen am Export vom 02.08.: 52 von 881 Hebel-Signalen mit Zonen hatten
+    einen MFE-Wert, gegenueber 382 aufgeloesten. Die Kennzahl war duenner als
+    das Problem, das sie loesen sollte.
+
+    Schreibt nur bei tatsaechlicher Aenderung: MFE ist ein Maximum und bewegt
+    sich selten: ein bedingungsloses UPDATE je Lauf waere ein Schreibsturm
+    ueber mehrere tausend offene Signale (update_*_outcome() committet einzeln).
+
+    Der Status bleibt bewusst OUTCOME_OFFEN - die Zeile bleibt damit in der
+    Selektion des naechsten Laufs (`... IS NULL OR ... = 'offen'`)."""
+    neuer_mfe = extra.get("max_realisiertes_crv")
+    if neuer_mfe is None or neuer_mfe == gespeichertes_mfe:
+        return
+    update_fn(
+        conn, signal_id, OUTCOME_OFFEN,
+        max_realisiertes_crv=neuer_mfe,
+        mindestziel_erreicht_am=extra.get("mindestziel_erreicht_am"),
+    )
+
+
 def run_backward_tracking(conn, watchlist, config: dict) -> BackwardTrackingResult:
     """Holt alle Signale mit outcome_status IN (NULL, 'offen'), prueft jedes gegen
     die Kurshistorie, schreibt ein Ergebnis nur bei tatsaechlicher Statusaenderung
@@ -850,6 +881,10 @@ def run_backward_tracking(conn, watchlist, config: dict) -> BackwardTrackingResu
             )
             result.expired += 1
         else:
+            persistiere_offenes_mfe(
+                conn, signal.id, extra, signal.outcome_max_realisiertes_crv,
+                db.update_signal_outcome,
+            )
             result.still_open += 1
 
     # Veto-Schatten-Zweig (2026-07-28, siehe check_signal_veto_shadow_outcome()-
@@ -900,6 +935,10 @@ def run_backward_tracking(conn, watchlist, config: dict) -> BackwardTrackingResu
             )
             result.veto_schatten_expired += 1
         else:
+            persistiere_offenes_mfe(
+                conn, signal.id, extra, signal.veto_outcome_max_realisiertes_crv,
+                db.update_signal_veto_shadow_outcome,
+            )
             result.veto_schatten_still_open += 1
 
     # Selbst-gewaehltes-HALTEN-Zweig (2026-07-31, Gegenfall zum Veto-Schatten-
@@ -947,6 +986,10 @@ def run_backward_tracking(conn, watchlist, config: dict) -> BackwardTrackingResu
             )
             result.selbst_halten_expired += 1
         else:
+            persistiere_offenes_mfe(
+                conn, signal.id, extra, signal.selbst_halten_outcome_max_realisiertes_crv,
+                db.update_signal_selbst_halten_outcome,
+            )
             result.selbst_halten_still_open += 1
 
     return result
@@ -1878,8 +1921,9 @@ _HEBEL_TRACKABLE_ACTIONS_FUER_UEBERSICHT = ("ERÖFFNEN", "NACHKAUFEN")
 
 def compute_offene_signale_uebersicht(conn, watchlist: list | None = None) -> dict:
     """Ergaenzt compute_provider_performance() um Sichtbarkeit fuer noch NICHT
-    aufgeloeste, aber bereits trackbare Signale (outcome_status IS NULL, echte
-    Kauf-/Nachkauf-/Eroeffnen-Aktion) - Nutzer-Fund (2026-07-24, Remote-Seite
+    aufgeloeste, aber bereits trackbare Signale (outcome_status offen oder
+    NULL, echte Kauf-/Nachkauf-/Eroeffnen-Aktion) - Nutzer-Fund (2026-07-24,
+    Remote-Seite
     zeigte bei 0 abgeschlossenen Spot-Signalen keinerlei Hinweis, ob ueberhaupt
     Fortschritt passiert oder das Tracking schlicht stillsteht). Gleiche
     Tier-Aufschluesselung wie compute_provider_performance() (Spot nach
@@ -1900,7 +1944,7 @@ def compute_offene_signale_uebersicht(conn, watchlist: list | None = None) -> di
 
     placeholders = ", ".join("?" for _ in _TRACKABLE_ACTIONS)
     spot_rows = conn.execute(
-        f"SELECT symbol, created_at FROM signals WHERE outcome_status IS NULL AND action IN ({placeholders})",
+        f"SELECT symbol, created_at FROM signals WHERE (outcome_status IS NULL OR outcome_status = 'offen') AND action IN ({placeholders})",
         tuple(_TRACKABLE_ACTIONS),
     ).fetchall()
     for row in spot_rows:
@@ -1909,7 +1953,7 @@ def compute_offene_signale_uebersicht(conn, watchlist: list | None = None) -> di
 
     hebel_placeholders = ", ".join("?" for _ in _HEBEL_TRACKABLE_ACTIONS_FUER_UEBERSICHT)
     hebel_rows = conn.execute(
-        f"SELECT created_at FROM hebel_signals WHERE outcome_status IS NULL AND action IN ({hebel_placeholders})",
+        f"SELECT created_at FROM hebel_signals WHERE (outcome_status IS NULL OR outcome_status = 'offen') AND action IN ({hebel_placeholders})",
         _HEBEL_TRACKABLE_ACTIONS_FUER_UEBERSICHT,
     ).fetchall()
     for row in hebel_rows:
