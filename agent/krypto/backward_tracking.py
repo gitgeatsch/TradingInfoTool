@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import logging
 import math
+import statistics
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 
@@ -1406,6 +1407,144 @@ def compute_selbst_halten_performance_nach_grund(conn, watchlist: list | None = 
     ergebnis: dict = _tier_geruest(watchlist)
     for (tier, grund), eintrag in gruppen.items():
         ergebnis.setdefault(tier, {})[grund] = _kennzahlen_mit_pruefung(eintrag)
+    return ergebnis
+
+
+# Van-Tharp-Skala fuer den System Quality Number (Definitive Guide to Position
+# Sizing, 2008). Grenzen bewusst als Konstante statt als Magic Numbers im Code -
+# sie sind uebernommene Fremdwerte, keine eigene Kalibrierung (Methodik 2.5.6).
+_SQN_SKALA = (
+    (1.5, "kaum handelbar"),
+    (2.0, "durchschnittlich"),
+    (3.0, "gut"),
+    (5.0, "exzellent"),
+    (7.0, "super"),
+)
+# Unter dieser Zahl ist der SQN durch den sqrt(n)-Faktor mehr Stichproben-
+# artefakt als Systemeigenschaft - dann wird er zwar berechnet, aber mit
+# ausdruecklichem Vorbehalt ausgewiesen.
+_SQN_MIN_N_FUER_AUSSAGE = 30
+
+
+def _sqn_einordnung(sqn: float | None) -> str | None:
+    if sqn is None:
+        return None
+    for grenze, label in _SQN_SKALA:
+        if sqn < grenze:
+            return label
+    return "ausserhalb der Skala"
+
+
+def _guete_kennzahlen(r_multiples: list[float], anzahl_offen: int) -> dict:
+    """SQN, Expectancy und Profit Factor aus einer Liste von R-Multiples.
+
+    R-Multiple = Ergebnis geteilt durch das anfangs riskierte Kapital. In
+    diesem Projekt ist `outcome_realisiertes_crv` bereits genau das (bei
+    Stop-Loss-Treffer -1,0, bei Take-Profit das erreichte Chance-Risiko-
+    Verhaeltnis), es muss also nichts umgerechnet werden.
+
+    - Expectancy = Mittelwert der R-Multiples. Positiv heisst: der Ansatz
+      traegt sich rechnerisch. Notwendige, nicht hinreichende Bedingung.
+    - SQN = Mittelwert / Standardabweichung * sqrt(n) (Van Tharp). Bestraft
+      Streuung: zwei Systeme mit gleichem Mittelwert, aber unterschiedlicher
+      Schwankung, bekommen verschiedene Werte - und genau das unterscheidet
+      ein handelbares von einem bloss rechnerisch profitablen System.
+    - Profit Factor = Summe der Gewinne / Betrag der Summe der Verluste.
+
+    `anzahl_offen` (Signale mit Zonen, aber ohne Ergebnis) geht in keine
+    Kennzahl ein, wird aber mitgefuehrt: die Aufloesungsquote ist seit dem
+    02.08. Pflichtangabe, weil Gruppen mit weiten Stops kaum aufgeloest werden
+    und ihre Trefferquote dadurch selektiert ist (siehe
+    Basisinfos/Zielgroessen_und_Erfolgsmasse.md, Abschnitt 4)."""
+    n = len(r_multiples)
+    gesamt = n + anzahl_offen
+    basis = {
+        "anzahl_bewertet": n,
+        "anzahl_offen": anzahl_offen,
+        "aufloesungsquote": (n / gesamt) if gesamt > 0 else None,
+    }
+    if n == 0:
+        return {**basis, "expectancy_r": None, "sqn": None, "sqn_einordnung": None,
+                "sqn_belastbar": False, "profit_factor": None, "standardabweichung_r": None}
+    mittel = statistics.fmean(r_multiples)
+    streuung = statistics.stdev(r_multiples) if n >= 2 else None
+    sqn = (mittel / streuung * math.sqrt(n)) if streuung else None
+    gewinne = sum(r for r in r_multiples if r > 0)
+    verluste = abs(sum(r for r in r_multiples if r < 0))
+    return {
+        **basis,
+        "expectancy_r": mittel,
+        "standardabweichung_r": streuung,
+        "sqn": sqn,
+        "sqn_einordnung": _sqn_einordnung(sqn),
+        "sqn_belastbar": n >= _SQN_MIN_N_FUER_AUSSAGE,
+        "profit_factor": (gewinne / verluste) if verluste > 0 else None,
+    }
+
+
+def compute_systemguete(conn, watchlist: list | None = None) -> dict:
+    """System Quality Number + Expectancy + Profit Factor je tier (2026-08-02).
+
+    Antwort auf eine Nutzer-Kritik nach einem Tag mit neun revidierten
+    Befunden: ohne definierte Zielgroesse ist jede Kalibrierung beliebig, weil
+    sich immer eine Zahl findet, die sich verbessern laesst. Herleitung und
+    Zielwerte in `Basisinfos/Zielgroessen_und_Erfolgsmasse.md`.
+
+    Bewusst GETRENNT nach `real` (tatsaechlich gesendete Signale) und
+    `schatten` (vom Gate zurueckgestufte Vorschlaege, hypothetisch): am
+    02.08. waren 468 von 560 ausgewerteten Faellen hypothetisch - ein
+    Zusammenwurf haette die Systemguete zu 84% aus nie ausgefuehrten Trades
+    berechnet. Die beiden Zahlen beantworten verschiedene Fragen ("wie gut ist
+    das, was wir tun" vs. "wie gut waere das, was wir verhindern").
+
+    Reine Lesefunktion. Gibt je tier ein dict mit den Schluesseln `real` und
+    `schatten` zurueck, jeweils mit den Feldern aus _guete_kennzahlen()."""
+    assetklasse_by_symbol = _assetklasse_index(watchlist, "compute_systemguete()")
+    r_werte: dict[tuple[str, str], list[float]] = {}
+    offen: dict[tuple[str, str], int] = {}
+
+    def _erfasse(tier: str, art: str, crv, ist_offen: bool) -> None:
+        key = (tier, art)
+        r_werte.setdefault(key, [])
+        offen.setdefault(key, 0)
+        if ist_offen:
+            offen[key] += 1
+        elif crv is not None:
+            r_werte[key].append(crv)
+
+    for tabelle, ist_hebel in (("signals", False), ("hebel_signals", True)):
+        # Die Veto-Schatten-Spalten kamen erst am 28.07. dazu. Aeltere
+        # Datenbestaende (z.B. eine nie migrierte Zweitkopie) haben sie nicht -
+        # dann wird der Schatten-Zweig einfach weggelassen statt die ganze
+        # Auswertung mit einem OperationalError abzubrechen.
+        spalten = {r[1] for r in conn.execute(f"PRAGMA table_info({tabelle})")}
+        hat_schatten = {"veto_outcome_status", "veto_outcome_realisiertes_crv"} <= spalten
+        felder = "symbol, outcome_status, outcome_realisiertes_crv, risk_veto"
+        if hat_schatten:
+            felder += ", veto_outcome_status, veto_outcome_realisiertes_crv"
+        rows = conn.execute(
+            f"SELECT {felder} FROM {tabelle} WHERE take_profit_usd_von IS NOT NULL"
+        ).fetchall()
+        for row in rows:
+            tier = TIER_HEBEL if ist_hebel else _tier_fuer_spot_symbol(
+                row["symbol"], assetklasse_by_symbol
+            )
+            if row["risk_veto"]:
+                if not hat_schatten:
+                    continue
+                st = row["veto_outcome_status"]
+                _erfasse(tier, "schatten", row["veto_outcome_realisiertes_crv"],
+                         st not in _RESOLVED_OUTCOMES)
+            else:
+                st = row["outcome_status"]
+                _erfasse(tier, "real", row["outcome_realisiertes_crv"],
+                         st not in _RESOLVED_OUTCOMES)
+
+    ergebnis: dict = {}
+    for (tier, art) in sorted(set(r_werte) | set(offen)):
+        ergebnis.setdefault(tier, {})[art] = _guete_kennzahlen(
+            r_werte.get((tier, art), []), offen.get((tier, art), 0)
+        )
     return ergebnis
 
 

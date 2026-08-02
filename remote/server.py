@@ -236,6 +236,17 @@ _INDEX_HTML = """<!doctype html>
 </div>
 
 <div class="card">
+  <div class="row"><strong>Systemgüte (SQN / Expectancy)</strong></div>
+  <div class="row"><span class="muted-text">Die Zielgröße des Systems, nicht nur eine Trefferquote
+  (2026-08-02, Herleitung in Basisinfos/Zielgroessen_und_Erfolgsmasse.md). <b>Expectancy</b> in R =
+  mittlerer Gewinn je riskierter Einheit, muss über 0 liegen. <b>SQN</b> = Mittelwert ÷ Streuung × √n
+  (Van Tharp): unter 1,5 kaum handelbar, 1,5-2 durchschnittlich, ab 2 gut - bestraft also Schwankung,
+  nicht nur einen schwachen Durchschnitt. Die <b>Auflösungsquote</b> steht bewusst daneben: Gruppen mit
+  weiten Stops werden kaum aufgelöst, ihre Quoten sind entsprechend selektiert.</span></div>
+  <div id="systemguete"></div>
+</div>
+
+<div class="card">
   <div class="row"><strong>Selbst gewähltes HALTEN - Schatten-Performance</strong></div>
   <div class="row"><span class="muted-text">Das LLM hat sich HIER von sich aus (kein Gate/Veto)
   gegen einen Trade entschieden, aber trotzdem eine hypothetische Zone angegeben (2026-07-31,
@@ -738,6 +749,24 @@ async function refreshStatus() {
   // Selbst-gewaehltes-HALTEN-Schatten-Tracking (2026-07-31) - Gegenfall zum
   // Veto-Schatten oben: kein Gate/Veto, das LLM hat sich selbst gegen einen
   // Trade entschieden. Gleiche Render-Funktionen, identisches Datenformat.
+  if (data.systemguete) {
+    document.getElementById("systemguete").innerHTML =
+      Object.keys(data.systemguete).sort().map(function (tier) {
+        return ["real", "schatten"].map(function (art) {
+          var k = data.systemguete[tier][art];
+          if (!k || !k.anzahl_bewertet) { return ""; }
+          var ew = k.expectancy_r === null ? "-" : (k.expectancy_r >= 0 ? "+" : "") + k.expectancy_r.toFixed(3);
+          var sqn = k.sqn === null ? "-" : k.sqn.toFixed(2) + " (" + k.sqn_einordnung + ")";
+          var pf = k.profit_factor === null ? "-" : k.profit_factor.toFixed(2);
+          var auf = k.aufloesungsquote === null ? "-" : (k.aufloesungsquote * 100).toFixed(0) + "%";
+          var warn = k.sqn_belastbar ? "" : ' <span class="muted-text">[n&lt;30]</span>';
+          return '<div class="row"><span>' + tier + " / " + art +
+            ' <span class="muted-text">(n=' + k.anzahl_bewertet + ", " + k.anzahl_offen +
+            " offen, Auflösung " + auf + ")</span></span>" +
+            "<span>EW " + ew + " R, SQN " + sqn + ", PF " + pf + warn + "</span></div>";
+        }).join("");
+      }).join("") || '<div class="row"><span class="muted-text">noch keine bewerteten Trades</span></div>';
+  }
   if (data.selbst_gewaehltes_halten_performance) {
     document.getElementById("selbst-halten-performance-spot").innerHTML =
       renderSpotProviderPerformanceByAssetklasse(data.selbst_gewaehltes_halten_performance, {}, {});

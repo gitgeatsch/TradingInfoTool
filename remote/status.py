@@ -80,6 +80,7 @@ class RemoteStatus:
     # Docstring) - Gegenfall zum Veto-Schatten oben: kein Gate/Veto, das LLM
     # hat sich selbst gegen einen Trade entschieden, aber trotzdem eine
     # hypothetische Zone angegeben.
+    systemguete: dict | None = None
     selbst_gewaehltes_halten_performance: dict | None = None
     selbst_gewaehltes_halten_performance_nach_grund: dict | None = None
     # Marktscan-Erfolgsmessung (2026-07-30, siehe agent/krypto/
@@ -115,6 +116,7 @@ class RemoteStatus:
             "gesamt_signalqualitaet": self.gesamt_signalqualitaet,
             "provider_sendezaehler": self.provider_sendezaehler,
             "veto_schatten_performance_nach_grund": self.veto_schatten_performance_nach_grund,
+            "systemguete": self.systemguete,
             "selbst_gewaehltes_halten_performance": self.selbst_gewaehltes_halten_performance,
             "selbst_gewaehltes_halten_performance_nach_grund": self.selbst_gewaehltes_halten_performance_nach_grund,
             "marktscan_erfolgsquote": self.marktscan_erfolgsquote,
@@ -208,6 +210,7 @@ def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, erro
         gesamt_signalqualitaet=_safe(_get_gesamt_signalqualitaet, conn, watchlist),
         provider_sendezaehler=_safe(_get_provider_sendezaehler, conn, watchlist),
         veto_schatten_performance_nach_grund=_safe(_get_veto_schatten_performance_nach_grund, conn, watchlist),
+        systemguete=_safe(_get_systemguete, conn, watchlist),
         selbst_gewaehltes_halten_performance=_safe(_get_selbst_gewaehltes_halten_performance, conn, watchlist),
         selbst_gewaehltes_halten_performance_nach_grund=_safe(
             _get_selbst_gewaehltes_halten_performance_nach_grund, conn, watchlist,
@@ -360,6 +363,17 @@ def _get_veto_schatten_performance_nach_grund(conn: sqlite3.Connection, watchlis
     from agent.krypto.backward_tracking import compute_veto_shadow_performance_nach_grund
 
     return compute_veto_shadow_performance_nach_grund(conn, watchlist)
+
+
+def _get_systemguete(conn: sqlite3.Connection, watchlist: list) -> dict:
+    """SQN/Expectancy/Profit Factor je tier (2026-08-02) - reiner Lesezugriff
+    auf agent/krypto/backward_tracking.py::compute_systemguete(). Zielwerte und
+    Herleitung in Basisinfos/Zielgroessen_und_Erfolgsmasse.md; getrennt nach
+    real ausgefuehrt und Veto-Schatten, weil beide verschiedene Fragen
+    beantworten."""
+    from agent.krypto.backward_tracking import compute_systemguete
+
+    return compute_systemguete(conn, watchlist)
 
 
 def _get_selbst_gewaehltes_halten_performance(conn: sqlite3.Connection, watchlist: list) -> dict:
