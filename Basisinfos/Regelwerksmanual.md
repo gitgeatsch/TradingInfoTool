@@ -13762,3 +13762,125 @@ verworfene Optionen mit Grund dokumentieren).
 **Damit ist die Spot-Verkaufs-Luecke-Roadmap (5 Punkte) vollstaendig
 abgeschlossen** - Schritte 1-4 umgesetzt+committet, Punkt 5 geprueft und
 als bereits korrekt bestaetigt.
+
+## Nachtrag (2026-08-02): Dead-Loop-Synthese (Task #598) - Gliederung, Root-Cause-Analyse, Massnahme 1 umgesetzt
+
+**Auftrag (Task #598):** "Root-Cause-Analyse warum Kalibrierung/Erfolgsmessung
+systemweit an n<15 haengt, priorisierte Massnahmen zur Beschleunigung
+vorschlagen." Auf Nutzer-Wunsch zunaechst die Gliederung aus Memory + Task
+#598 rekonstruiert (keine fruehere schriftliche Fassung vorhanden), dann die
+vollstaendige Root-Cause-Analyse erstellt, bevor mit einzelnen Massnahmen
+begonnen wurde.
+
+### Gliederung (4 Gruppen, entlang der Signal-Pipeline)
+
+- **A. Deterministische Stufe (Regler/Gates):** CRV-Mindestschwelle,
+  Enger-Stop-Loss/ATR-Regeln, R-5.10-Konfidenzschwelle, Risikofaktoren-
+  Haeufung, Backward-Tracking-Fristen - das "Regler"-Thema. Groesstenteils
+  bereits mehrfach untersucht (siehe [[project_enge_stop_loss_backtest_und_massnahmen]],
+  [[project_r510_konfidenz_veto_analyse_29_07]]).
+- **B. LLM1/Analyst-Stufe:** Konfidenz-Kalibrierung, historische
+  Trefferquote-Fakt, Fazit-Selbsteinschaetzung (LLM sagt fast nie "ja"), UND
+  strukturell ungueltige LLM-Antworten ("Agent-Antwort ungueltig", 3
+  Versuche, dann Verwurf) - bis 02.08. komplett unquantifiziert, siehe
+  Massnahme 1 unten.
+- **C. LLM2/Z.ai-Gegenpruefung-Stufe:** Konsistenz-Check + Richtungs-
+  Abgleich, Deribit-Cross-Check, Coverage je Assetklasse. Groesstenteils
+  "Phase 1, rein beobachtend"; ein Sonderfall (Z.ai-Richtungs-"Abweichung")
+  ist bereits strukturell durch `hebel_richtung_modus=nur_long` erklaert,
+  kein Kalibrierungsproblem.
+- **D. Cross-Cutting/Meta-Infrastruktur:** die n-Schwelle selbst (n≥15 →
+  n≥50 + Symbol-Konzentrations-Check, fuer Korrelationsfragen real eher
+  n≈340+, siehe [[reference_test_und_verifikationsmethodik]] Abschnitt 2.5)
+  sowie mehrere ruecklaeufig erklaerende Infra-Bugs, die ueber Wochen fast
+  jede Stichprobe klein gehalten haben, bevor sie gefixt wurden (siehe unten,
+  RC1).
+
+### Sechs Root-Cause-Kategorien
+
+1. **RC1 - Ruecklaeufige Infra-Bugs:** `_is_superseded()`-Bug (Fix 19.07.,
+   siehe [[project_selbstverifikation_ki_trimmen]]) hat fast jedes offene
+   Signal durch ein neueres HALTEN vorzeitig "ueberholt", bevor es TP/SL
+   erreichen konnte. Dazu ein verpasster Cron-Job (Fix 17.07.) und das
+   Veto-Schatten- (seit 28.07.) bzw. Selbst-Halten-Schatten-Tracking (seit
+   31.07.), die vorher schlicht nicht existierten. Ein Grossteil der
+   aktuell kleinen Stichproben ist erst seit 1-3 Wochen ueberhaupt messbar.
+2. **RC2 - Bewusste Durchsatz-Bremsen:** `hebel_richtung_modus=nur_long`,
+   Multi-Asset-Batch nur 2x/Tag, Regel-27-Action-Bias-Korrektur (HALTEN als
+   Normalfall) - alle drei korrekt so, schrumpfen aber den Nenner
+   messbarer Trade-Outcomes.
+3. **RC3 - Messlatte war anfangs zu niedrig:** n≥15 war ein willkuerlicher
+   Schwellenwert, spaeter auf n≥50+Konzentrations-Check verschaerft; fuer
+   Korrelationsfragen liegt der reale Bedarf bei n≈340+.
+4. **RC4 - Viele Messebenen sind schlicht neu:** Marktscan-Erfolgsmessung
+   (seit 30.07.), Selbst-Halten-Schatten (seit 31.07.), Z.ai-Abdeckung
+   Nicht-Krypto (seit 29.07.) - hier ist Abwarten die einzig korrekte
+   Antwort.
+5. **RC5 - Enge Watchlist erzeugt Pseudo-Unabhaengigkeit:** dieselbe
+   Handvoll Symbole (AIOZ, INJ, KAIA, KAITO, CAT...) erscheint ueber
+   Cooldown-getriebene Re-Signale wiederholt - n waechst schneller als
+   echte unabhaengige Beobachtungen.
+6. **RC6 - LLM1-Validierungsfehler waren komplett unquantifiziert** (siehe
+   Massnahme 1).
+
+### Priorisierte Massnahmen (Uebersicht)
+
+1. Systematische Auswertung der LLM1-Validierungsfehler (RC6) - **umgesetzt,
+   siehe unten**.
+2. Wiedervorlage-Bedingungen aus [[reference_offene_zeitbasierte_beobachtungspunkte]]
+   mit Zeitschaetzung versehen (RC1/RC4) - naechster Schritt.
+3. Vor-01.08.-Befunde gegen die neue n≥50-Regel nachpruefen (RC3).
+4. Durchsatz-Bremsen (RC2) an einer Stelle explizit als Trade-off
+   dokumentieren.
+5. Pruefen, ob Multi-Asset-Batch-Frequenz erhoeht werden kann (RC2), jetzt
+   wo Mistral/Gemini/Z.ai kein reales Budget-Limit mehr haben.
+
+### Massnahme 1 umgesetzt: LLM1-Validierungsfehler quantifiziert + 2 von 3 Fehlerklassen behoben
+
+**Auswertung (frischer NB-Export 02.08. 06:49, `spot_signals`+`hebel_signals`
+roh ausgewertet, 14.07.-02.08., 19 Tage):** 27 "Agent-Antwort ungueltig"-
+Faelle von 3522 Signal-Generierungen insgesamt (0,77%) - absolut zu klein,
+um irgendeinen n<15-Thread spuerbar zu beschleunigen (RC6 damit deutlich
+abgeschwaecht gegenueber der urspruenglichen Vermutung). Drei Fehlerklassen
+erklaeren 24/27 (89%):
+
+| Klasse | n | Root Cause |
+|---|---|---|
+| Preiszonen-Vertauschung (`von>bis`) | 12 (44%) | LLM liefert Ober-/Untergrenze gelegentlich vertauscht |
+| `eigene_einschaetzung`-Pflichtfeld fehlt | 7 (26%) | LLM laesst das Objekt komplett weg |
+| `top_gruende.kategorie` ungueltig | 5 (19%) | 100% Rohstoff/Themen-ETF: Schema verlangt "positionierung"/"sektor", `long_reasoning` nennt dieselbe Dimension aber durchgaengig "fundamental" (Prompt-interner Widerspruch) |
+
+**Kritische Gegenpruefung vor Umsetzung (Nutzer-Vorgabe):** urspruenglich
+erwogen, `long_reasoning.fundamental` in Rohstoff/Themen-ETF-Prompts auf
+`positionierung`/`sektor` umzubenennen. Verworfen: `long_reasoning_
+fundamental=long_reasoning.get("fundamental")` ist in allen 6 `pipeline.py`-
+Dateien fest verdrahtet (gemeinsame DB-Spalte `long_reasoning_fundamental`
+ueber alle Assetklassen, siehe `database/models.py`) - eine Umbenennung
+haette das Feld fuer jedes kuenftige Rohstoff/Themen-ETF-Signal
+stillschweigend geleert. Fix daher auf den `top_gruende.kategorie`-
+Validator beschraenkt (per Grep bestaetigt: "positionierung"/"sektor"
+werden sonst nirgends hart verglichen). Die Zonen-Tausch-Logik wurde gegen
+`risk_gate.py`s CRV-Berechnung gegengeprueft: dort wird `von`/`bis` bei der
+CRV-Berechnung ausschliesslich nach numerischer Lage gewaehlt (nicht nach
+LLM-Reihenfolge) - ein Tausch stellt exakt die bereits vorausgesetzte
+Invariante her, kein Eingriff in die vom LLM gelieferten Preiswerte.
+
+**Umgesetzt (verifiziert per `py_compile` + synthetischen Tests, 5/5 PASS
+inkl. Negativtest fuer echte ungueltige Kategorien):**
+- `agent/krypto/analyst.py`, `agent/krypto/hebel_analyst.py`,
+  `agent/aktien/analyst.py`, `agent/rohstoff/analyst.py`,
+  `agent/themen_etf/analyst.py`, `agent/hedge/analyst.py`: `von>bis` wird
+  jetzt getauscht statt die Antwort zu verwerfen (identischer Fix in allen
+  6 Kopien, Option-B-Konvention dieses Projekts).
+- `agent/rohstoff/analyst.py`, `agent/themen_etf/analyst.py`:
+  `top_gruende.kategorie="fundamental"` wird vor der Pruefung auf
+  `"positionierung"`/`"sektor"` normalisiert statt abgelehnt.
+
+**Bewusst nicht umgesetzt:** `eigene_einschaetzung`-Pflichtfeld-Fix (7
+Faelle, 0,2% aller Versuche) - ein Prompt-Eingriff waere unverifiziert
+(siehe eigene Erfahrung 31.07. in [[project_enge_stop_loss_backtest_und_massnahmen]]:
+"Lauf-zu-Lauf-Streuung bei Prompt-Aenderungen oft groesser als der Effekt")
+und bei dieser Fallzahl nicht gerechtfertigt. Bleibt offener
+Beobachtungspunkt, kein Code-Change.
+
+Noch NICHT committet/gepusht - folgt nach Nutzer-Bestaetigung.

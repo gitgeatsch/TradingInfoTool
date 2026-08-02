@@ -899,7 +899,14 @@ def _validate(data: dict, asset_symbol: str) -> dict:
             except (TypeError, ValueError):
                 raise AnalystResponseInvalid(f"{field_name}.{currency}_von/{currency}_bis nicht numerisch")
             if von > bis:
-                raise AnalystResponseInvalid(f"{field_name}.{currency}_von > {currency}_bis ({von} > {bis})")
+                # Zonengrenzen vertauscht zurueckgegeben (2026-08-02-Fund, staerkster
+                # Validierungsfehler-Cluster) - reine Format-Korrektur, KEIN Eingriff in
+                # die vom LLM gelieferten Preiswerte selbst. Sicher, weil risk_gate.py
+                # bei der CRV-Berechnung von/bis ohnehin nur nach numerischer Lage
+                # (niedrigster/hoechster Wert) auswaehlt, nicht danach, welchen das LLM
+                # zuerst genannt hat - ein Tausch stellt exakt die Invariante her, die
+                # dort bereits vorausgesetzt wird.
+                von, bis = bis, von
             obj[f"{currency}_von"], obj[f"{currency}_bis"] = von, bis
 
     halte = data["halte_kriterium"]

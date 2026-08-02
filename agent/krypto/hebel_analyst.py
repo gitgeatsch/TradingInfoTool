@@ -933,7 +933,10 @@ def _validate_hebel(data: dict, asset_symbol: str) -> dict:
             except (TypeError, ValueError):
                 raise AnalystResponseInvalid(f"{field_name}.{currency}_von/{currency}_bis nicht numerisch")
             if von > bis:
-                raise AnalystResponseInvalid(f"{field_name}.{currency}_von > {currency}_bis ({von} > {bis})")
+                # Zonengrenzen vertauscht zurueckgegeben (2026-08-02-Fund, staerkster
+                # Validierungsfehler-Cluster) - reine Format-Korrektur, siehe
+                # agent/krypto/analyst.py fuer die volle Begruendung.
+                von, bis = bis, von
             obj[f"{currency}_von"], obj[f"{currency}_bis"] = von, bis
 
     if action in _HEBEL_ACTIONS_MIT_HEBEL:

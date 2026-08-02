@@ -552,6 +552,13 @@ def _validate(data: dict) -> dict:
             raise AnalystResponseInvalid(f"top_gruende.rang ungültig oder doppelt: {rang!r}")
         ranks_seen.add(rang)
         kategorie = str(eintrag.get("kategorie", "")).strip().lower()
+        # 2026-08-02-Fund: das Schema verlangt hier "sektor", aber long_reasoning (Feld
+        # `long_reasoning.fundamental`, siehe Prompt Regel 6/13 + JSON-Schema oben) nennt
+        # exakt dieselbe Begruendungsdimension durchgaengig "fundamental" - das LLM greift
+        # verlaesslich zum vertrauteren Wort. Alias statt Ablehnung, siehe agent/rohstoff/
+        # analyst.py fuer den identischen Fund/dieselbe Begruendung.
+        if kategorie == "fundamental":
+            kategorie = "sektor"
         if kategorie not in TOP_GRUENDE_KATEGORIEN:
             raise AnalystResponseInvalid(f"top_gruende.kategorie ungültig: {eintrag.get('kategorie')!r}")
         eintrag["kategorie"] = kategorie
@@ -571,7 +578,10 @@ def _validate(data: dict) -> dict:
             except (TypeError, ValueError):
                 raise AnalystResponseInvalid(f"{field_name}.{currency}_von/{currency}_bis nicht numerisch")
             if von > bis:
-                raise AnalystResponseInvalid(f"{field_name}.{currency}_von > {currency}_bis ({von} > {bis})")
+                # Zonengrenzen vertauscht zurueckgegeben (2026-08-02-Fund, staerkster
+                # Validierungsfehler-Cluster) - reine Format-Korrektur, siehe
+                # agent/krypto/analyst.py fuer die volle Begruendung.
+                von, bis = bis, von
             obj[f"{currency}_von"], obj[f"{currency}_bis"] = von, bis
 
     halte = data["halte_kriterium"]
