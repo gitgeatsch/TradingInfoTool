@@ -493,12 +493,35 @@ beantwortete sie sofort mit 3.385 Tagesbalken statt 76 Signalen - besser, als
 die Datenlage nach vier Wochen Warten gewesen waere. Wo eine mechanische
 Simulation moeglich ist, ist Abwarten die schlechtere Option.
 
-**Drittens, der eigentliche Fund dieser Pruefung:** die Signale liegen in
-JEDEM ADX-Bucket unter dem Zufallseinstieg. Das ist ernster als die
-untersuchte Frage - eine Untersuchung kann Wichtigeres finden als das, wonach
-sie gesucht hat. Einschraenkung dazu: die Basislinie ist LONG-only, die
-Signalmenge enthaelt rund 20% SHORT; in einem um 28% gefallenen Markt
-beguenstigt das die Signale eher, der Abstand ist also nicht geschoent.
+**Drittens - und hier zeigte sich die Regel selbst als unvollstaendig:** aus
+derselben Auswertung schien hervorzugehen, dass die Signale in JEDEM
+ADX-Bucket unter dem Zufallseinstieg liegen. Bei sauberer Nachmessung loeste
+sich das auf. Daraus die entscheidende Ergaenzung:
+
+**Die Basislinie muss MATCHED sein - in Parametern UND Richtung.**
+
+Die erste Messung verglich Signale gegen eine Basislinie mit 6,7% Stop und
+CRV 2,0. Die Signale selbst fahren aber 3,2% Median-Stop und CRV 3,50 - das
+ist eine voellig andere Strategie, mit Break-even bei 22% statt 33%. Der
+"Abstand" war der Unterschied zwischen zwei Strategien, nicht zwischen Signal
+und Zufall.
+
+Richtungsgetrennt und mit den Parametern der jeweiligen Signalgruppe
+gerechnet:
+
+| Richtung | Signale | Zufall (matched) | Differenz |
+|---|---|---|---|
+| LONG (n=55) | 16,4% [9-28%] | 16,0% [15-17%] | +0,3pp |
+| SHORT (n=14) | 14,3% [4-40%] | 21,3% [20-23%] | -7,0pp, Intervalle ueberlappen |
+
+Der Abstand ist null. Die Signale sind bei LONG genauso gut wie ein
+Zufallseinstieg - nicht schlechter, aber auch nicht besser; beide liegen
+unter dem Break-even von 22%. SHORT bleibt mit n=14 unbeurteilbar.
+
+**Checkliste fuer jeden Basislinien-Vergleich:** gleiche Richtung, gleicher
+Stop-Abstand, gleiches CRV, gleicher Zeitraum. Fehlt eine dieser vier
+Bedingungen, misst man etwas anderes als Signalqualitaet - und zwar mit
+Zahlen, die ueberzeugend aussehen.
 
 **Konsequenz fuer uebernommene Standardwerte:** jede aus der Literatur
 uebernommene Schwelle ist zunaechst eine **Hypothese**, kein Parameter. Vor
