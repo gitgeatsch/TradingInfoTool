@@ -11348,4 +11348,50 @@ Debug-Logs und Deploy-Verifikationspunkte. Beide Dateien verweisen
 gegenseitig aufeinander; kein Inhalt wurde geloescht, nur an genau eine
 zustaendige Stelle verschoben.
 
-Noch NICHT committet/gepusht - folgt nach Nutzer-Bestaetigung.
+Committet ff887a2 (Split) bzw. 3688d8a (.docx-Konverter).
+
+
+## Nachtrag (2026-08-02): Trendstaerke (ADX) trennt Treffer von Verlusten - erster an zwei Datensaetzen replizierter Befund
+
+**Frage:** laufen Signale in trendlosen Marktphasen schlechter? Ausgangspunkt
+war die Wiedervorlage "ADX/Choppiness-Filter" aus der Dead-Loop-Synthese.
+
+**Methodisch neu:** verglichen wurde nicht gegen null, sondern gegen eine
+**ADX-spezifische mechanische Basislinie** (Einstieg an beliebigem Tag,
+fester Stop, Ziel bei CRV 2.0, 14 Tage Horizont, getrennt je ADX-Niveau).
+Ohne diese Trennung haette man nur "in Seitwaertsphasen laeuft alles
+schlechter" gemessen - eine Marktphasen-Aussage, keine Signalqualitaets-
+Aussage.
+
+**Befund (Hebel, Veto-Schatten, LONG):** Trefferquote steigt monoton mit der
+Trendstaerke - ADX 5-15: 29,6% | 10-20: 28,2% | 15-25: 41,8% | 20-30: 62,0%.
+Der Bereich 20-30 liegt mit n=50 auch Bonferroni-korrigiert (6 Zellen
+getestet) ueber der Basislinie von 29,5%, und die Signifikanz haelt beim
+Entfernen JEDES einzelnen Symbols. 5 Symbole, Top-Symbol 32%, 12
+verschiedene Tage.
+
+**Konfirmation an Spot (unabhaengiger Datensatz, anderer Veto-Grund - R-5.10
+statt CRV):** derselbe Verlauf, deutlicher - 5-15: 14,6% | 10-20: 18,7% |
+15-25: 39,6% | 20-30: 50,0% | 25-35: 69,2% | 30-40: 100% (n=12).
+Median-Split ohne jede Grenzziehung: 22,7% vs. 52,6%. Ueber Raenge:
+Treffer liegen im ADX im Schnitt 35 Raenge (von 151) hoeher als Verluste.
+
+**Was die Recherche verhindert hat (siehe Test_und_Verifikationsmethodik
+2.5.6):** die Schwellen 20/25/30 stammen aus Forex/Aktien und sind laut
+Literatur **marktabhaengig, nicht absolut**. Die Sensitivitaetspruefung
+zeigte daraufhin, dass die ADX-Spanne der Hebel-Daten nur bis 30,7 reicht -
+der urspruenglich gemeldete "ADX > 30: 0 von 26 Treffer" war kein Bucket,
+sondern der Randbereich, dominiert von AKT-SHORT (17 von 26). Ohne die
+Recherche waere dieses Randartefakt in die Konfirmation getragen und dort
+als Kategorie zementiert worden.
+
+**Belastbarer Kern, bewusst OHNE harte Schwelle formuliert:** je staerker der
+Trend zum Signalzeitpunkt, desto besser laufen Kauf-/LONG-Signale - auch
+solche, die die Gates verworfen haben. Beide Gates (CRV bei Hebel, R-5.10 bei
+Spot) ignorieren diesen Kontext bisher vollstaendig.
+
+**Noch KEINE Regelaenderung.** Ein Regel-Kandidat waere eine
+kontextabhaengige statt pauschale CRV-Anforderung; wegen des in der Literatur
+dokumentierten ADX-Flackerns nahe Schwellen muesste er gestuft wirken, nicht
+als harte Grenze. Offen bleibt ausserdem: 5 Symbole (CANTON, KAIA, KAITO,
+SUPRA, XNO) fehlen mangels OHLC in beiden Auswertungen.

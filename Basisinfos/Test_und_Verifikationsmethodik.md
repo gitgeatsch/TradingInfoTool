@@ -408,6 +408,60 @@ denselben Vorzeichenwechsel-Effekt auslösen wie eine Gruppen-Häufung. Die
 getroffene Entscheidung, den Krypto-Spot-R-5.10-Override nicht zu setzen,
 bleibt bei 1,4x groesserer Stichprobe bestaetigt - keine Revision noetig.
 
+### 2.5.5 Beitrags-Konzentration zusaetzlich zur Anzahl-Konzentration (Nachtrag 02.08.)
+
+Der Check aus 2.5 prueft, wie sich die Faelle **nach Anzahl** auf Symbole
+verteilen. Am 02.08. hat ein Befund diese Pruefung glatt bestanden und war
+trotzdem ein Artefakt: Spot-R-5.10-Veto-Schatten, n=156, Oe CRV +0,25,
+groesstes Symbol nur **7,7 %** der Faelle. Beim Entfernen genau dieses
+Symbols (AIOZ, 12 von 156) drehte der Erwartungswert auf -0,12.
+
+Ursache: die **fuenf groessten Gewinner trugen 32,0 von 39,7 der
+Gesamtsumme** - 81 % des Ergebnisses aus 3 % der Faelle. Anzahl-Konzentration
+und Beitrags-Konzentration sind zwei verschiedene Dinge; bei schiefen
+Verteilungen (Median ueberall bei -1,0, wenige grosse Gewinner) sagt die
+erste nichts ueber die zweite.
+
+**Verbindlich ergaenzt:** bei jeder Mittelwert-basierten Kennzahl zusaetzlich
+ausweisen, welchen Anteil die 3-5 groessten Einzelwerte an der Gesamtsumme
+haben, und den Mittelwert ohne sie erneut rechnen. Kippt das Vorzeichen, ist
+der Befund nicht belastbar - unabhaengig davon, wie gut die Anzahl-Verteilung
+aussieht.
+
+**Robusterer Ausweg:** wo moeglich auf **Trefferquoten statt Mittelwerte**
+umstellen und gegen die mathematisch noetige Break-even-Quote `1/(1+CRV)`
+pruefen. Eine Trefferquote ist ein Zaehler und damit ausreisser-robust; ein
+einzelner Extremgewinn kann sie nicht verzerren. Genau dieser Wechsel hat am
+02.08. den einzigen belastbaren Befund des Tages sichtbar gemacht, nachdem
+drei Mittelwert-Befunde gefallen waren.
+
+### 2.5.6 Externe Recherche VOR dem Bestaetigungsversuch, nicht danach (Nachtrag 02.08.)
+
+Nutzer-Vorgabe nach einem Tag mit fuenf revidierten Befunden: wenn bei einem
+Muster Unsicherheit besteht, **zuerst kurz extern recherchieren, ob es
+theoretisch ueberhaupt plausibel ist** - erst dann an den eigenen (duennen)
+Daten zu bestaetigen versuchen.
+
+Zwei belegte Faelle vom selben Tag:
+
+- **Zu spaet recherchiert:** die Break-even-Formel `1/(1+CRV)` kam erst,
+  nachdem mehrere Mittelwert-Auswertungen bereits gefallen waren. Frueher
+  angewandt haette sie mindestens einen Fehlschluss erspart, weil sie den
+  robusteren Messansatz (Trefferquote statt Mittelwert) sofort nahegelegt
+  haette.
+- **Rechtzeitig recherchiert:** beim ADX-Befund ergab die Recherche, dass die
+  ueblichen Schwellen (20/25/30) **marktabhaengig und nicht absolut** sind.
+  Sie stammen aus Forex/Aktien; fuer Krypto sind sie ungeprueft. Ohne diesen
+  Hinweis waere die geplante Konfirmation mit denselben willkuerlich
+  uebernommenen Grenzen gerechnet worden - und haette eine moeglicherweise
+  falsch gesetzte Schnittstelle zweimal bestaetigt.
+
+**Konsequenz fuer uebernommene Standardwerte:** jede aus der Literatur
+uebernommene Schwelle ist zunaechst eine **Hypothese**, kein Parameter. Vor
+der Verwendung als Auswertungsgrenze auf Sensitivitaet pruefen (verschiebt
+man sie leicht, bleibt der Effekt?) - sonst misst man die Bucket-Wahl statt
+des Effekts.
+
 ### 2.6 Mehrebenen-Erfolgsmessung: striktes Outcome vs. MFE/Mindestziel (Nachtrag 30.07.)
 
 Auslöser: Nutzer-Frage, ob und wie Erfolgsquoten auf mehreren Ebenen geprüft
