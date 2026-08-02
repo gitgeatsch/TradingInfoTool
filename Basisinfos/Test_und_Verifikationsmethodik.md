@@ -456,6 +456,33 @@ Zwei belegte Faelle vom selben Tag:
   uebernommenen Grenzen gerechnet worden - und haette eine moeglicherweise
   falsch gesetzte Schnittstelle zweimal bestaetigt.
 
+### 2.5.8 Stille Degradierung: der gefaehrlichste Codefehler dieses Projekts
+
+Zwei Muster aus Task #561 (02.08.), beide liefern im Fehlerfall **plausibel
+aussehende falsche Zahlen** statt zu scheitern:
+
+**Optionaler Parameter mit Sammel-Fallback.** `watchlist=None` liess zehn
+Aggregationen alle Assetklassen in einen Topf werfen - kein Fehler, keine
+Warnung, nur ein Ergebnis, das nach Krypto-Daten aussah. Am 29.07. real
+passiert und erst bei einer Auswertung aufgefallen.
+
+**Else-faellt-auf-X.** `table = "signals" if tier == "spot" else
+"hebel_signals"` - jeder unerwartete Wert landet im Else-Zweig. Wenn X eine
+echte Alternative ist (nicht "unbekannt"), wird aus einem Tippfehler ein
+stilles Vertauschen von Datenquellen.
+
+**Regel:** Wo ein Fallback eine ECHTE Alternative ist und kein Fehlerzustand,
+gehoert an seine Stelle eine explizite Pruefung mit `raise`. Ein Absturz beim
+Entwickeln ist harmlos; eine falsche Zahl in einer Auswertung wird geglaubt.
+Wo ein Fallback wirklich noetig ist, muss er sich mindestens im Log melden -
+mit dem Namen der aufrufenden Funktion, sonst ist die Warnung nicht zuordenbar.
+
+**Beim Massenersetzen:** die erwartete Trefferzahl als `assert` ins
+Aenderungsskript schreiben. In diesem Fall fingen zwei solche Assertions je
+eine falsche Zaehlung ab, bevor etwas geschrieben wurde - und die
+Gegenpruefung fand, dass der erste Durchgang nur 10 von 24 Stellen erfasst
+hatte, weil `grep | head` den Rest abgeschnitten hatte.
+
 ### 2.5.7 Indikator-Befunde: Basislinie je Bucket ist PFLICHT
 
 Ein Befund der Form "bei hohem X laufen unsere Signale besser" ist erst dann

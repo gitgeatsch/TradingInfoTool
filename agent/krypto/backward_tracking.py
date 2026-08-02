@@ -11,6 +11,7 @@ Datengrundlage fuer die spaeteren Schritte 3+4 der Selbstverifikations-Vision
 Ist-Ergebnisse kann nichts verglichen werden."""
 from __future__ import annotations
 
+import logging
 import math
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -33,6 +34,114 @@ OUTCOME_UEBERHOLT = "ueberholt_durch_neuere_analyse"
 # hier definiert statt dort, um einen Kreisimport zu vermeiden (hebel_backward_
 # tracking.py importiert die OUTCOME_*-Konstanten bereits von hier).
 OUTCOME_LIQUIDATION = "liquidation_wahrscheinlich"
+
+logger = logging.getLogger(__name__)
+
+# --- Tier-Schluessel der Aggregationen (2026-08-02, Task #561) --------------
+# Alle compute_*-Aggregationen gruppieren nach (tier, provider|grund). Spot-
+# family-Signale werden dabei nach asset.assetklasse aufgeschluesselt, Hebel-
+# Signale bilden einen eigenen Topf. Bis heute stand die Zuordnungslogik als
+# identischer Einzeiler an ZEHN Stellen - eine Aenderung haette an neun davon
+# vergessen werden koennen.
+TIER_HEBEL = "hebel"
+# Sammel-Topf, wenn keine Watchlist vorliegt: dann ist keine Aufschluesselung
+# moeglich und alle Spot-family-Signale landen zusammen. Der Schluessel heisst
+# bewusst weiterhin "spot" - remote/server.py::SPOT_ASSETKLASSEN rendert ihn
+# nicht, wodurch der Ausfall in der Anzeige als leere Karte sichtbar wird
+# statt als falsch beschriftete Zahl.
+TIER_SPOT_SAMMEL = "spot"
+# Symbol ist (nicht mehr) in der Watchlist - typischerweise nach Ausmusterung.
+TIER_UNBEKANNT = "unbekannt"
+
+
+def _tier_geruest(watchlist: list | None) -> dict:
+    """Leeres Ergebnis-Geruest der Aggregationen.
+
+    Der Hebel-Topf existiert immer. Der Spot-Sammel-Topf wird nur vorangelegt,
+    wenn KEINE Watchlist vorliegt - mit Watchlist entstehen stattdessen die
+    einzelnen Assetklassen-Toepfe erst beim Befuellen, damit eine leere
+    Assetklasse nicht als "0 Signale" erscheint, wo remote/server.py sie
+    ohnehin aus seiner festen Liste rendert."""
+    if watchlist:
+        return {TIER_HEBEL: {}}
+    return {TIER_SPOT_SAMMEL: {}, TIER_HEBEL: {}}
+
+
+def _tabelle_fuer_tier(tier: str, funktionsname: str) -> str:
+    """Signal-Tabelle zu einem tier - strikt, ohne Auffang-Zweig.
+
+    Bis 2026-08-02 stand an fuenf Stellen `"signals" if tier == "spot" else
+    "hebel_signals"`. Damit las JEDER andere Wert die Hebel-Tabelle: "krypto",
+    "aktien", ein Tippfehler, None. Das ist deshalb heikel, weil die
+    Aggregationen desselben Moduls genau solche tiers erzeugen
+    (Assetklassen-Aufschluesselung seit 2026-07-20) - wer sie hier einsetzt,
+    bekaeme lautlos Hebel-Zahlen unter Spot-Beschriftung, dazu die nur fuer
+    Hebel gedachten CRV-Break-even- und Regime-Vergleiche.
+
+    Bewusst ValueError statt Warnung+Fallback: ein Absturz beim Entwickeln ist
+    harmlos, eine falsche Zahl in einer Auswertung nicht (Projektpraeferenz
+    "harte Garantie statt Soft-Boost"). Alle heutigen Aufrufer uebergeben
+    String-Literale, koennen also nicht versehentlich hineinlaufen."""
+    if tier == TIER_SPOT_SAMMEL:
+        return "signals"
+    if tier == TIER_HEBEL:
+        return "hebel_signals"
+    raise ValueError(
+        f"{funktionsname}: unbekanntes tier {tier!r}. Erlaubt sind nur "
+        f"{TIER_SPOT_SAMMEL!r} (Tabelle signals) und {TIER_HEBEL!r} "
+        f"(hebel_signals). Assetklassen-Schluessel wie 'krypto'/'aktien' aus "
+        f"den compute_*-Aggregationen sind hier NICHT gueltig - fuer eine "
+        f"Einschraenkung auf einzelne Assetklassen den Parameter "
+        f"erlaubte_symbole verwenden."
+    )
+
+
+def _assetklasse_index(watchlist: list | None, kontext: str) -> dict[str, str]:
+    """Symbol -> assetklasse. Meldet LAUT, wenn die Watchlist fehlt.
+
+    Warum diese Warnung existiert: am 2026-07-29 wurden sieben dieser
+    Aggregationen im Notebook-Export ohne `watchlist` aufgerufen. Die Folge war
+    kein Fehler, sondern ein plausibel aussehendes Ergebnis - saemtliche
+    Spot-family-Signale (Krypto/Aktien/Rohstoffe/ETF) in einem einzigen Topf,
+    wodurch bei einer Muster-Analyse nicht mehr unterscheidbar war, ob ein
+    Befund krypto-spezifisch war oder alle Assetklassen betraf. Der Aufruf
+    wurde damals korrigiert (siehe Kopfkommentar in
+    extract_notebook_diagnose.py), die Konstruktion aber nicht: der Parameter
+    ist weiterhin optional und degradiert still. Diese Warnung macht einen
+    Rueckfall hoerbar, statt ihn erst Wochen spaeter in einer Auswertung
+    auffallen zu lassen."""
+    if not watchlist:
+        logger.warning(
+            "%s ohne watchlist aufgerufen - keine Assetklassen-Aufschluesselung "
+            "moeglich, alle Spot-family-Signale landen im Sammel-Topf '%s'. "
+            "Zahlen aus dieser Auswertung NICHT als krypto-spezifisch lesen.",
+            kontext,
+            TIER_SPOT_SAMMEL,
+        )
+        return {}
+    return {a.symbol: a.assetklasse for a in watchlist}
+
+
+def _tier_fuer_spot_symbol(symbol: str, assetklasse_by_symbol: dict[str, str]) -> str:
+    """Tier-Schluessel eines Spot-family-Signals (Hebel hat seinen eigenen).
+
+    Drei Faelle, alle bewusst unterschieden statt in einen Default zu fallen:
+    leerer Index (keine Watchlist - siehe _assetklasse_index()), Symbol nicht
+    gefunden (ausgemustert), und der Normalfall."""
+    if not assetklasse_by_symbol:
+        return TIER_SPOT_SAMMEL
+    klasse = assetklasse_by_symbol.get(symbol)
+    if not klasse:
+        return TIER_UNBEKANNT
+    if klasse == TIER_HEBEL:
+        # Kollisionsschutz: eine Assetklasse namens "hebel" wuerde sonst
+        # lautlos mit dem Hebel-Topf derselben Aggregation verschmelzen und
+        # Spot-Zahlen in die Hebel-Auswertung mischen. Aktuell existiert keine
+        # solche Assetklasse (krypto|aktien|etf|rohstoffe) - der Zweig kostet
+        # nichts und schliesst einen sehr schwer auffindbaren Fehler aus.
+        return f"spot_{klasse}"
+    return klasse
+
 
 # Trackbare Aktionen (2026-07-27, Nutzer-Wunsch "auch auf sinkende Short-Kurse
 # tracken, damit es vollstaendig ist fuer alle Assets - fuer ZAI und Mistral"):
@@ -863,7 +972,7 @@ def _aggregate_resolved_signal_rows(
     filter_clause = "risk_veto = 1 AND action = 'HALTEN' AND " if veto else ""
 
     gruppen: dict[tuple[str, str], dict] = {}
-    assetklasse_by_symbol = {a.symbol: a.assetklasse for a in watchlist} if watchlist else {}
+    assetklasse_by_symbol = _assetklasse_index(watchlist, "_aggregate_resolved_signal_rows()")
 
     def _stelle_sicher(tier: str, provider: str) -> dict:
         key = (tier, provider)
@@ -889,7 +998,7 @@ def _aggregate_resolved_signal_rows(
         _RESOLVED_OUTCOMES,
     ).fetchall()
     for row in spot_rows:
-        tier = assetklasse_by_symbol.get(row["symbol"], "unbekannt") if watchlist else "spot"
+        tier = _tier_fuer_spot_symbol(row["symbol"], assetklasse_by_symbol)
         eintrag = _stelle_sicher(tier, provider_from_label(row["llm_model"]))
         eintrag["anzahl_resolved"] += 1
         if row["status"] == OUTCOME_TAKE_PROFIT:
@@ -907,7 +1016,7 @@ def _aggregate_resolved_signal_rows(
         _RESOLVED_OUTCOMES,
     ).fetchall()
     for row in hebel_rows:
-        eintrag = _stelle_sicher("hebel", provider_from_label(row["llm_model"]))
+        eintrag = _stelle_sicher(TIER_HEBEL, provider_from_label(row["llm_model"]))
         eintrag["anzahl_resolved"] += 1
         if row["status"] == OUTCOME_TAKE_PROFIT:
             eintrag["take_profit_count"] += 1
@@ -966,7 +1075,7 @@ def _kennzahlen_mit_pruefung(eintrag: dict) -> dict:
 
 
 def _format_performance_gruppen(gruppen: dict[tuple[str, str], dict], watchlist: list | None) -> dict:
-    ergebnis: dict = {"hebel": {}} if watchlist else {"spot": {}, "hebel": {}}
+    ergebnis: dict = _tier_geruest(watchlist)
     for (tier, provider), eintrag in gruppen.items():
         ergebnis.setdefault(tier, {})[provider] = _kennzahlen_mit_pruefung(eintrag)
     return ergebnis
@@ -1070,7 +1179,7 @@ def compute_veto_shadow_performance_nach_grund(conn, watchlist: list | None = No
     mit leicht positivem Ø realisiertem CRV, Aktien/Rohstoffe/Themen-ETF
     hatten keine ausreichende Stichprobe."""
     gruppen: dict[tuple[str, str], dict] = {}
-    assetklasse_by_symbol = {a.symbol: a.assetklasse for a in watchlist} if watchlist else {}
+    assetklasse_by_symbol = _assetklasse_index(watchlist, "compute_veto_shadow_performance_nach_grund()")
 
     def _stelle_sicher(tier: str, grund: str) -> dict:
         key = (tier, grund)
@@ -1097,7 +1206,7 @@ def compute_veto_shadow_performance_nach_grund(conn, watchlist: list | None = No
         _RESOLVED_OUTCOMES,
     ).fetchall()
     for row in spot_rows:
-        tier = assetklasse_by_symbol.get(row["symbol"], "unbekannt") if watchlist else "spot"
+        tier = _tier_fuer_spot_symbol(row["symbol"], assetklasse_by_symbol)
         grund = _kategorisiere_veto_grund(row["risk_veto_reason"])
         eintrag = _stelle_sicher(tier, grund)
         eintrag["anzahl_resolved"] += 1
@@ -1118,7 +1227,7 @@ def compute_veto_shadow_performance_nach_grund(conn, watchlist: list | None = No
     ).fetchall()
     for row in hebel_rows:
         grund = _kategorisiere_veto_grund(row["risk_veto_reason"])
-        eintrag = _stelle_sicher("hebel", grund)
+        eintrag = _stelle_sicher(TIER_HEBEL, grund)
         eintrag["anzahl_resolved"] += 1
         if row["status"] == OUTCOME_TAKE_PROFIT:
             eintrag["take_profit_count"] += 1
@@ -1131,7 +1240,7 @@ def compute_veto_shadow_performance_nach_grund(conn, watchlist: list | None = No
             eintrag["_crv_count"] += 1
             eintrag["_crv_werte"].append(row["crv"])
 
-    ergebnis: dict = {"hebel": {}} if watchlist else {"spot": {}, "hebel": {}}
+    ergebnis: dict = _tier_geruest(watchlist)
     for (tier, grund), eintrag in gruppen.items():
         ergebnis.setdefault(tier, {})[grund] = _kennzahlen_mit_pruefung(eintrag)
     return ergebnis
@@ -1149,7 +1258,7 @@ def _aggregate_resolved_selbst_halten_signal_rows(
     selbst_halten_outcome_status/selbst_halten_outcome_realisiertes_crv statt
     veto_outcome_*."""
     gruppen: dict[tuple[str, str], dict] = {}
-    assetklasse_by_symbol = {a.symbol: a.assetklasse for a in watchlist} if watchlist else {}
+    assetklasse_by_symbol = _assetklasse_index(watchlist, "_aggregate_resolved_selbst_halten_signal_rows()")
 
     def _stelle_sicher(tier: str, provider: str) -> dict:
         key = (tier, provider)
@@ -1176,7 +1285,7 @@ def _aggregate_resolved_selbst_halten_signal_rows(
         _RESOLVED_OUTCOMES,
     ).fetchall()
     for row in spot_rows:
-        tier = assetklasse_by_symbol.get(row["symbol"], "unbekannt") if watchlist else "spot"
+        tier = _tier_fuer_spot_symbol(row["symbol"], assetklasse_by_symbol)
         eintrag = _stelle_sicher(tier, provider_from_label(row["llm_model"]))
         eintrag["anzahl_resolved"] += 1
         if row["status"] == OUTCOME_TAKE_PROFIT:
@@ -1195,7 +1304,7 @@ def _aggregate_resolved_selbst_halten_signal_rows(
         _RESOLVED_OUTCOMES,
     ).fetchall()
     for row in hebel_rows:
-        eintrag = _stelle_sicher("hebel", provider_from_label(row["llm_model"]))
+        eintrag = _stelle_sicher(TIER_HEBEL, provider_from_label(row["llm_model"]))
         eintrag["anzahl_resolved"] += 1
         if row["status"] == OUTCOME_TAKE_PROFIT:
             eintrag["take_profit_count"] += 1
@@ -1233,7 +1342,7 @@ def compute_selbst_halten_performance_nach_grund(conn, watchlist: list | None = 
     ein kleines, sauberes Enum (siehe hebel_analyst.py/analyst.py TOP_GRUENDE_
     KATEGORIEN), direkt aus der Zeile gelesen."""
     gruppen: dict[tuple[str, str], dict] = {}
-    assetklasse_by_symbol = {a.symbol: a.assetklasse for a in watchlist} if watchlist else {}
+    assetklasse_by_symbol = _assetklasse_index(watchlist, "compute_selbst_halten_performance_nach_grund()")
 
     def _stelle_sicher(tier: str, grund: str) -> dict:
         key = (tier, grund)
@@ -1260,7 +1369,7 @@ def compute_selbst_halten_performance_nach_grund(conn, watchlist: list | None = 
         _RESOLVED_OUTCOMES,
     ).fetchall()
     for row in spot_rows:
-        tier = assetklasse_by_symbol.get(row["symbol"], "unbekannt") if watchlist else "spot"
+        tier = _tier_fuer_spot_symbol(row["symbol"], assetklasse_by_symbol)
         grund = row["top_grund_1_kategorie"] or "unbekannt"
         eintrag = _stelle_sicher(tier, grund)
         eintrag["anzahl_resolved"] += 1
@@ -1281,7 +1390,7 @@ def compute_selbst_halten_performance_nach_grund(conn, watchlist: list | None = 
     ).fetchall()
     for row in hebel_rows:
         grund = row["top_grund_1_kategorie"] or "unbekannt"
-        eintrag = _stelle_sicher("hebel", grund)
+        eintrag = _stelle_sicher(TIER_HEBEL, grund)
         eintrag["anzahl_resolved"] += 1
         if row["status"] == OUTCOME_TAKE_PROFIT:
             eintrag["take_profit_count"] += 1
@@ -1294,7 +1403,7 @@ def compute_selbst_halten_performance_nach_grund(conn, watchlist: list | None = 
             eintrag["_crv_count"] += 1
             eintrag["_crv_werte"].append(row["crv"])
 
-    ergebnis: dict = {"hebel": {}} if watchlist else {"spot": {}, "hebel": {}}
+    ergebnis: dict = _tier_geruest(watchlist)
     for (tier, grund), eintrag in gruppen.items():
         ergebnis.setdefault(tier, {})[grund] = _kennzahlen_mit_pruefung(eintrag)
     return ergebnis
@@ -1347,13 +1456,13 @@ def compute_provider_sendezaehler(conn, watchlist: list | None = None) -> dict:
     ohne echte Antwort), unabhaengig von outcome_status/action/risk_veto -
     rein informativ, keine Performance-Aussage."""
     zaehler: dict[tuple[str, str], int] = {}
-    assetklasse_by_symbol = {a.symbol: a.assetklasse for a in watchlist} if watchlist else {}
+    assetklasse_by_symbol = _assetklasse_index(watchlist, "compute_provider_sendezaehler()")
 
     spot_rows = conn.execute(
         "SELECT symbol, groq_model AS llm_model FROM signals WHERE groq_raw_response IS NOT NULL",
     ).fetchall()
     for row in spot_rows:
-        tier = assetklasse_by_symbol.get(row["symbol"], "unbekannt") if watchlist else "spot"
+        tier = _tier_fuer_spot_symbol(row["symbol"], assetklasse_by_symbol)
         key = (tier, provider_from_label(row["llm_model"]))
         zaehler[key] = zaehler.get(key, 0) + 1
 
@@ -1361,10 +1470,10 @@ def compute_provider_sendezaehler(conn, watchlist: list | None = None) -> dict:
         "SELECT llm_model FROM hebel_signals WHERE groq_raw_response IS NOT NULL",
     ).fetchall()
     for row in hebel_rows:
-        key = ("hebel", provider_from_label(row["llm_model"]))
+        key = (TIER_HEBEL, provider_from_label(row["llm_model"]))
         zaehler[key] = zaehler.get(key, 0) + 1
 
-    ergebnis: dict = {"hebel": {}} if watchlist else {"spot": {}, "hebel": {}}
+    ergebnis: dict = _tier_geruest(watchlist)
     for (tier, provider), anzahl in zaehler.items():
         ergebnis.setdefault(tier, {})[provider] = anzahl
 
@@ -1484,7 +1593,7 @@ def compute_zai_richtung_performance(
     from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR as _hedge_symbole
     from agent.krypto.gegenpruefung import richtung_aus_action
 
-    assetklasse_by_symbol = {a.symbol: a.assetklasse for a in watchlist} if watchlist else {}
+    assetklasse_by_symbol = _assetklasse_index(watchlist, "compute_zai_richtung_performance()")
     ergebnis: dict = {}
 
     def _stelle_sicher(tier: str) -> dict:
@@ -1515,7 +1624,7 @@ def compute_zai_richtung_performance(
             row["richtung"], row["outcome_max_realisiertes_crv"], row["zai_eigene_richtung"],
             richtungstreffer_mindest_crv,
         )
-        _erfasse("hebel", urteil)
+        _erfasse(TIER_HEBEL, urteil)
 
     spot_rows = conn.execute(
         "SELECT symbol, action, outcome_max_realisiertes_crv, zai_eigene_richtung FROM signals "
@@ -1527,7 +1636,7 @@ def compute_zai_richtung_performance(
         )
         if primaer_richtung is None:
             continue
-        tier = assetklasse_by_symbol.get(row["symbol"], "unbekannt") if watchlist else "spot"
+        tier = _tier_fuer_spot_symbol(row["symbol"], assetklasse_by_symbol)
         urteil = bewerte_zai_richtung(
             primaer_richtung, row["outcome_max_realisiertes_crv"], row["zai_eigene_richtung"],
             richtungstreffer_mindest_crv,
@@ -1562,7 +1671,7 @@ def compute_zai_richtung_performance_schatten(
     Docstring). Gleiche Tier-Aufschluesselung und Rueckgabeform wie
     compute_zai_richtung_performance(), bewusst als separate Funktion (Option
     B) statt eines Parameters."""
-    assetklasse_by_symbol = {a.symbol: a.assetklasse for a in watchlist} if watchlist else {}
+    assetklasse_by_symbol = _assetklasse_index(watchlist, "compute_zai_richtung_performance_schatten()")
     ergebnis: dict = {}
 
     def _stelle_sicher(tier: str) -> dict:
@@ -1594,7 +1703,7 @@ def compute_zai_richtung_performance_schatten(
             row["richtung"], row["veto_outcome_max_realisiertes_crv"], row["zai_eigene_richtung"],
             richtungstreffer_mindest_crv,
         )
-        _erfasse("hebel", urteil)
+        _erfasse(TIER_HEBEL, urteil)
 
     spot_ids = conn.execute(
         "SELECT id, symbol FROM signals WHERE risk_veto = 1 AND action = 'HALTEN' "
@@ -1607,7 +1716,7 @@ def compute_zai_richtung_performance_schatten(
         primaer_richtung = _richtung_aus_zonen(signal)
         if primaer_richtung is None:
             continue
-        tier = assetklasse_by_symbol.get(row["symbol"], "unbekannt") if watchlist else "spot"
+        tier = _tier_fuer_spot_symbol(row["symbol"], assetklasse_by_symbol)
         urteil = bewerte_zai_richtung(
             primaer_richtung, signal.veto_outcome_max_realisiertes_crv, signal.zai_eigene_richtung,
             richtungstreffer_mindest_crv,
@@ -1639,10 +1748,10 @@ def compute_offene_signale_uebersicht(conn, watchlist: list | None = None) -> di
     offenes Signal hat noch kein Ergebnis, das waere irrefuehrend.
 
     Rueckgabe je Tier: {"anzahl": int, "aeltestes_erstellt_am": str | None}."""
-    assetklasse_by_symbol = {a.symbol: a.assetklasse for a in watchlist} if watchlist else {}
-    ergebnis: dict = {"hebel": {"anzahl": 0, "aeltestes_erstellt_am": None}}
+    assetklasse_by_symbol = _assetklasse_index(watchlist, "compute_offene_signale_uebersicht()")
+    ergebnis: dict = {TIER_HEBEL: {"anzahl": 0, "aeltestes_erstellt_am": None}}
     if not watchlist:
-        ergebnis["spot"] = {"anzahl": 0, "aeltestes_erstellt_am": None}
+        ergebnis[TIER_SPOT_SAMMEL] = {"anzahl": 0, "aeltestes_erstellt_am": None}
 
     def _erfasse(tier: str, created_at: str) -> None:
         eintrag = ergebnis.setdefault(tier, {"anzahl": 0, "aeltestes_erstellt_am": None})
@@ -1656,7 +1765,7 @@ def compute_offene_signale_uebersicht(conn, watchlist: list | None = None) -> di
         tuple(_TRACKABLE_ACTIONS),
     ).fetchall()
     for row in spot_rows:
-        tier = assetklasse_by_symbol.get(row["symbol"], "unbekannt") if watchlist else "spot"
+        tier = _tier_fuer_spot_symbol(row["symbol"], assetklasse_by_symbol)
         _erfasse(tier, row["created_at"])
 
     hebel_placeholders = ", ".join("?" for _ in _HEBEL_TRACKABLE_ACTIONS_FUER_UEBERSICHT)
@@ -1698,7 +1807,7 @@ def compute_win_rate_fact(conn, tier: str, erlaubte_symbole: set[str] | None = N
     Uebergabe eines eigenen Symbol-Sets ihre EIGENE (anfangs meist leere,
     also None liefernde) Trefferquote statt einer fremden geliehenen Zahl.
     None (Default) = ungefiltert, wie bisher."""
-    table = "signals" if tier == "spot" else "hebel_signals"
+    table = _tabelle_fuer_tier(tier, "compute_win_rate_fact()")
     placeholders = ", ".join("?" for _ in _RESOLVED_OUTCOMES)
     rows = conn.execute(
         f"SELECT symbol, outcome_status FROM {table} WHERE outcome_status IN ({placeholders})",
@@ -1814,8 +1923,9 @@ def compute_baseline_vergleich(
     - `hinweis`: identischer Kleine-Stichprobe-Text wie compute_win_rate_fact().
 
     Reine Lesefunktion, kein Seiteneffekt."""
-    table = "signals" if tier == "spot" else "hebel_signals"
-    spalten = "symbol, outcome_status" if tier == "spot" else "symbol, outcome_status, trigger_zweig"
+    table = _tabelle_fuer_tier(tier, "compute_baseline_vergleich()")
+    spalten = ("symbol, outcome_status" if tier == TIER_SPOT_SAMMEL
+               else "symbol, outcome_status, trigger_zweig")
     placeholders = ", ".join("?" for _ in _RESOLVED_OUTCOMES)
     rows = conn.execute(
         f"SELECT {spalten} FROM {table} WHERE outcome_status IN ({placeholders})",
@@ -1844,7 +1954,7 @@ def compute_baseline_vergleich(
     }
 
     crv_breakeven_vergleich = None
-    if tier != "spot":
+    if tier != TIER_SPOT_SAMMEL:
         breakeven_pct = round(100.0 / (1.0 + crv_minimum), 1)
         crv_p_wert = _binomialtest_zweiseitig_p_wert(treffer, total, p=breakeven_pct / 100.0)
         crv_breakeven_vergleich = {
@@ -1856,7 +1966,7 @@ def compute_baseline_vergleich(
         }
 
     regime_naiv_vergleich = None
-    if tier != "spot":
+    if tier != TIER_SPOT_SAMMEL:
         trendfolge_rows = [r for r in rows if r["trigger_zweig"] == "trendfolge"]
         if trendfolge_rows:
             tf_treffer, tf_n, tf_quote = _trefferquote(trendfolge_rows)
@@ -1914,7 +2024,7 @@ def compute_zai_uebereinstimmung_baseline(conn, watchlist: list | None = None) -
     Zaehlt NUR Zeilen mit gesetztem `zai_uebereinstimmung` ('ja'/'nein') -
     Zeilen ohne Z.ai-Ergebnis (Call fehlgeschlagen/nicht konfiguriert) fliessen
     nicht ein. Reine Lesefunktion, kein Seiteneffekt."""
-    assetklasse_by_symbol = {a.symbol: a.assetklasse for a in watchlist} if watchlist else {}
+    assetklasse_by_symbol = _assetklasse_index(watchlist, "compute_zai_uebereinstimmung_baseline()")
     gruppen: dict[str, dict] = {}
 
     def _stelle_sicher(tier: str) -> dict:
@@ -1924,7 +2034,7 @@ def compute_zai_uebereinstimmung_baseline(conn, watchlist: list | None = None) -
         "SELECT zai_uebereinstimmung FROM hebel_signals WHERE zai_uebereinstimmung IN ('ja', 'nein')",
     ).fetchall()
     for row in hebel_rows:
-        eintrag = _stelle_sicher("hebel")
+        eintrag = _stelle_sicher(TIER_HEBEL)
         eintrag["anzahl_bewertet"] += 1
         if row["zai_uebereinstimmung"] == "ja":
             eintrag["anzahl_uebereinstimmung"] += 1
@@ -1933,7 +2043,7 @@ def compute_zai_uebereinstimmung_baseline(conn, watchlist: list | None = None) -
         "SELECT symbol, zai_uebereinstimmung FROM signals WHERE zai_uebereinstimmung IN ('ja', 'nein')",
     ).fetchall()
     for row in spot_rows:
-        tier = assetklasse_by_symbol.get(row["symbol"], "unbekannt") if watchlist else "spot"
+        tier = _tier_fuer_spot_symbol(row["symbol"], assetklasse_by_symbol)
         eintrag = _stelle_sicher(tier)
         eintrag["anzahl_bewertet"] += 1
         if row["zai_uebereinstimmung"] == "ja":
@@ -1998,7 +2108,7 @@ def compute_sl_mfe_analyse(conn, tier: str, erlaubte_symbole: set[str] | None = 
       Symbols zaehlt separat, unabhaengig vom Gesamt-n).
 
     Reine Lesefunktion, kein Seiteneffekt."""
-    table = "signals" if tier == "spot" else "hebel_signals"
+    table = _tabelle_fuer_tier(tier, "compute_sl_mfe_analyse()")
     rows = conn.execute(
         f"SELECT symbol, outcome_max_realisiertes_crv, outcome_mindestziel_erreicht_am "
         f"FROM {table} WHERE outcome_status = ?",
@@ -2094,7 +2204,7 @@ def compute_konfidenz_kalibrierung(conn, watchlist: list | None = None) -> dict:
 
     Reine Lesefunktion, kein Seiteneffekt."""
     gruppen: dict[tuple[str, str], dict] = {}
-    assetklasse_by_symbol = {a.symbol: a.assetklasse for a in watchlist} if watchlist else {}
+    assetklasse_by_symbol = _assetklasse_index(watchlist, "compute_konfidenz_kalibrierung()")
 
     def _stelle_sicher(tier: str, bucket: str) -> dict:
         key = (tier, bucket)
@@ -2109,7 +2219,7 @@ def compute_konfidenz_kalibrierung(conn, watchlist: list | None = None) -> dict:
         _RESOLVED_OUTCOMES,
     ).fetchall()
     for row in spot_rows:
-        tier = assetklasse_by_symbol.get(row["symbol"], "unbekannt") if watchlist else "spot"
+        tier = _tier_fuer_spot_symbol(row["symbol"], assetklasse_by_symbol)
         eintrag = _stelle_sicher(tier, _konfidenz_bucket(row["confidence_pct"]))
         eintrag["anzahl"] += 1
         if row["outcome_status"] == OUTCOME_TAKE_PROFIT:
@@ -2122,13 +2232,13 @@ def compute_konfidenz_kalibrierung(conn, watchlist: list | None = None) -> dict:
         _RESOLVED_OUTCOMES,
     ).fetchall()
     for row in hebel_rows:
-        eintrag = _stelle_sicher("hebel", _konfidenz_bucket(row["confidence_pct"]))
+        eintrag = _stelle_sicher(TIER_HEBEL, _konfidenz_bucket(row["confidence_pct"]))
         eintrag["anzahl"] += 1
         if row["outcome_status"] == OUTCOME_TAKE_PROFIT:
             eintrag["take_profit_count"] += 1
         eintrag["_konfidenz_summe"] += row["confidence_pct"]
 
-    ergebnis: dict = {"hebel": {}} if watchlist else {"spot": {}, "hebel": {}}
+    ergebnis: dict = _tier_geruest(watchlist)
     for (tier, bucket), eintrag in gruppen.items():
         anzahl = eintrag["anzahl"]
         avg_konfidenz = round(eintrag["_konfidenz_summe"] / anzahl, 1)
@@ -2226,7 +2336,7 @@ def compute_richtungstreffer_quote(
     belastbar markiert - GUI/E-Mail sollen sonst den rechnerisch angenommenen Wert
     aus schaetze_mindestziel_zeitraum_tage() zeigen, nicht diesen. Reine
     Lesefunktion, kein Seiteneffekt."""
-    table = "signals" if tier == "spot" else "hebel_signals"
+    table = _tabelle_fuer_tier(tier, "compute_richtungstreffer_quote()")
     rows = conn.execute(
         f"SELECT symbol, created_at, outcome_max_realisiertes_crv, outcome_mindestziel_erreicht_am "
         f"FROM {table} WHERE outcome_max_realisiertes_crv IS NOT NULL",
