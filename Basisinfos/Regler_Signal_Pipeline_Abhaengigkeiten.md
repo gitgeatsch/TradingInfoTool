@@ -32,12 +32,24 @@ Zeile ergänzen.
 | Regel 27 "Action-Bias-Korrektur" (Stage 2, Prompt in `hebel_analyst.py`) | erhöht Anteil HALTEN ohne Gate-Veto (>95% aller Hebel-Signale) | reduziert Menge an ERÖFFNEN-Kandidaten, die Z.ai überhaupt bewertet | Genau die Population, die erst seit 31.07. (Selbst-Halten-Schatten-Tracking) überhaupt sichtbar ist — vor diesem Fix wäre eine Prompt-Änderung wie Regel 27 spurlos an jeder Messung vorbeigegangen. Direkt mitverantwortlich für RC2 (siehe Dead-Loop-Synthese) |
 | `eigene_einschaetzung.folgen` (Stage 2, Signal-Fazit-Pflichtfeld) | — | — (Cross-Cutting) | Einzige Datenquelle für die Fazit-Selbsteinschätzung-Kalibrierung — kein Backup, wenn das Feld fehlt (7 der 27 Validierungsfehler aus Maßnahme 1 betrafen genau dieses Feld) |
 | `_is_superseded()`-Logik (Cross-Cutting, `backward_tracking.py`/`hebel_backward_tracking.py`, Fix 19.07.) | — | — | Bestimmt, ob ein offenes Signal überhaupt bis TP/SL "überleben" kann, bevor es als "überholt" gilt. Betrifft ALLE Stage-2/3-Messungen gleichzeitig — der historische Bug (jedes neuere HALTEN überholte praktisch jedes offene Signal) erklärt rückwirkend einen Großteil der über Wochen kleinen Stichproben (RC1) |
+| **RM-1b** Enge-Stop-Veto 2,5% + **RM-1c** ATR-relative Untergrenze 0,75x (Stage 1, `risk_gate.py`/`hebel_risk_gate.py`, beide 02.08.) | stufen ERÖFFNEN/KAUFEN vor dem CRV-Check zu HALTEN zurück - vergrößern also die Veto-Schatten-Population | Z.ai sieht diese Signale nicht mehr als Handelsempfehlung | **Dieselbe Kopplung wie CRV_MINIMUM oben, und sie kommt ZUSÄTZLICH** - der Z.ai-Nenner verschiebt sich seit 02.08. aus zwei neuen Gründen. Jede Z.ai-Auswertung, die Daten von vor und nach dem 02.08. mischt, vergleicht verschiedene Populationen. RM-1b greift laut Messung bei ~3,6% der Signale, RM-1c bei ~1,8% (Überschneidung fast vollständig) |
+| **RM-1 exakt** + **RM-1d** Ziel-Positionszahl (Stage 1, `risk_gate.py::_rm1_exakt_und_positionszahl()`, 02.08.) | **keine** - verändern nur die Positionsgröße, nicht die Kandidatenmenge | **keine** | Bewusst hier vermerkt, damit die Abwesenheit einer Kopplung dokumentiert ist: beide wirken NACH der Aktionsentscheidung und ändern kein `action`. Wer sie später verschärft, muss diese Zeile prüfen - sobald daraus ein Veto würde (statt einer Größenkorrektur), entstünde dieselbe Nenner-Verschiebung wie bei RM-1b/1c. Reihenfolge beachten: beide korrigieren die BASIS, auf der die vier Anteils-Deckel (Konfidenz/Gegenszenario/technischer Konflikt/CRV-knapp) danach rechnen |
+| **RM-11 exakt** (Stage 1, `hebel_risk_gate.py::_hebel_deckel_kandidaten()`, 02.08.) | **keine** - senkt nur den Hebel, kein `action`-Wechsel | **keine** | Weiterer Kandidat in der bestehenden `min()`-Kette neben Config-Maximum, RM-11 vorab, Regime-Konflikt und Gegenszenario. Wichtig beim Debuggen: der genannte "bindende Grund" kann seit 02.08. auch "RM-11 exakt" lauten - das ist kein Fehler, sondern der tatsächliche Stop, der die Vorab-Schätzung (2,0x ATR) unterbietet |
+| Statistik-Prüfungen `win_rate_ci_95`/`crv_konzentration` (Cross-Cutting, `backward_tracking.py::_kennzahlen_mit_pruefung()`, 02.08.) | — | — | Verändern keine Pipeline, aber die **Interpretation** aller drei Aggregationen. `crv_konzentration.vorzeichen_kippt=True` heißt: der Mittelwert dieser Gruppe hängt an wenigen Ausreißern und trägt keine Regeländerung. Wer eine Regel auf `avg_realisiertes_crv` stützt, ohne dieses Feld zu prüfen, wiederholt den AIOZ-Fehler vom 02.08. |
 
 ## Wie diese Matrix zu pflegen ist
 
 - Vor jeder Regler-Änderung (Stage 1) prüfen: verändert sie die an Stage 2
   übergebene Kandidatenmenge? Falls ja, hier eine Zeile ergänzen und bei
   jeder Stage-3-Auswertung danach die Baseline-Verschiebung mitdenken.
+- Auch das FEHLEN einer Kopplung eintragen (siehe RM-1 exakt/RM-1d/RM-11
+  exakt): sonst prüft die nächste Änderung dieselbe Frage von vorne, und
+  eine spätere Verschärfung - aus einer Größenkorrektur wird ein Veto -
+  bleibt unbemerkt.
+- Nachtrag 02.08.: an einem Tag kamen vier neue Gates dazu, ohne dass diese
+  Matrix mitgezogen wurde. Sie stand danach mehrere Stunden unvollständig da
+  und hätte die nächste Änderung in die Irre geführt. Die Matrix gehört in
+  denselben Commit wie die Regel, nicht in einen Aufräumdurchgang danach.
 - Vor jeder Prompt-/Schema-Änderung (Stage 2) prüfen: wird das betroffene
   Feld irgendwo als Berechnungsgrundlage (Stage 1, z.B. CRV-Formel) oder als
   Gruppierungs-/Filterschlüssel (Meta-Stufe) weiterverwendet?
