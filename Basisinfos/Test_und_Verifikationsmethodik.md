@@ -462,6 +462,46 @@ der Verwendung als Auswertungsgrenze auf Sensitivitaet pruefen (verschiebt
 man sie leicht, bleibt der Effekt?) - sonst misst man die Bucket-Wahl statt
 des Effekts.
 
+**Vorgelagerte Regel - erst im eigenen Code, dann extern:** die
+Break-even-Formel `1/(1+CRV)` wurde am 02.08. per Web-Recherche "gefunden",
+obwohl sie seit 2026-07-29 in `backward_tracking.py::compute_baseline_
+vergleich()` implementiert und im Docstring erklaert war ("bei CRV_MINIMUM=2.0
+liegt Break-even bei 33,3%"), inklusive exaktem Binomialtest. Vor jeder
+externen Recherche also zuerst die eigene Codebasis und die Basisinfos-
+Dokumente durchsuchen - sonst wird Vorhandenes teuer nachgebaut oder, schlimmer,
+in einer zweiten Variante dupliziert.
+
+**Quellen mitfuehren (Nutzer-Vorgabe 02.08.):** Rechercheergebnisse ohne
+Quellenangabe sind spaeter nicht nachpruefbar und nicht widerlegbar - die
+Recherche vom 29.07. steht in
+`reference_externe_recherche_konfidenz_crv_risikofaktoren_29_07` (Memory)
+ohne eine einzige URL und ist damit nur noch "haben wir mal gelesen".
+Deshalb ab sofort: jede externe Quelle, auf die sich eine Entscheidung
+stuetzt, mit Link und Zugriffsdatum festhalten - hier im Dokument, wenn sie
+eine Regel begruendet, sonst in der zugehoerigen Memory.
+
+Quellen der Recherchen vom 02.08.:
+
+- Break-even-Trefferquote je Chance-Risiko-Verhaeltnis (`1/(1+CRV)`; bei CRV
+  2,0 = 33,3%), Zusammenhang Trefferquote/CRV und Expectancy-Formel:
+  - https://traderssecondbrain.com/guides/win-rate-vs-risk-reward
+  - https://www.luxalgo.com/blog/win-rate-and-riskreward-connection-explained/
+  - https://fxnx.com/en/blog/the-1-2-risk-reward-rule-why-it-s-the-minimum-for-forex
+- ADX-Schwellen (20/25/30) als Trendstaerke-Indikator, Einstiegs-Timing sowie
+  die hier entscheidende Warnung, dass diese Schwellen **marktabhaengig und
+  nicht absolut** sind und ADX durch Doppelglaettung traege ist und nahe der
+  Schwelle flackert:
+  - https://blog.traderspost.io/article/adx-indicator-trading-systems
+  - https://fxnx.com/en/blog/adx-indicator-strategy-the-gatekeeper-to-profitable-trends
+  - https://capital.com/en-int/learn/technical-analysis/average-directional-index
+
+Einordnung der Quellenguete: es handelt sich um Trading-Fachportale, nicht um
+begutachtete Literatur. Fuer mathematische Identitaeten (Break-even-Formel)
+unkritisch - die ist herleitbar und wurde hier auch unabhaengig nachgerechnet.
+Fuer die ADX-Aussagen dienten sie als **Plausibilitaets- und Warnhinweis**,
+nicht als Beleg; der Beleg kam aus den eigenen Daten (Sensitivitaetspruefung
+plus Replikation an einem zweiten Datensatz).
+
 ### 2.6 Mehrebenen-Erfolgsmessung: striktes Outcome vs. MFE/Mindestziel (Nachtrag 30.07.)
 
 Auslöser: Nutzer-Frage, ob und wie Erfolgsquoten auf mehreren Ebenen geprüft
