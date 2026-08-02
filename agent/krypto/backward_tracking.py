@@ -390,13 +390,14 @@ def check_signal_outcome(
             "mindestziel_erreicht_am": mindestziel_erreicht_am,
         }
 
-    def _check_preis(high: float, low: float) -> tuple[bool, bool, float, float]:
-        """Gibt (hit_take, hit_stop, exit_preis_bei_take, exit_preis_bei_stop) zurueck -
-        SHORT spiegelt Take-Profit/Stop-Loss gegenueber LONG (Take-Profit unten,
-        Stop-Loss oben)."""
+    def _check_preis(high: float, low: float) -> tuple[bool, bool]:
+        """Gibt (hit_take, hit_stop) zurueck - SHORT spiegelt Take-Profit/Stop-Loss
+        gegenueber LONG (Take-Profit unten, Stop-Loss oben). Der Ausfuehrungspreis
+        kommt seit dem 02.08. aus gap_bewusster_fill(), nicht mehr aus dem
+        Tages-Extremwert (Begruendung dort)."""
         if ist_short:
-            return (low <= take_profit_threshold, high >= stop_loss_threshold, low, high)
-        return (high >= take_profit_threshold, low <= stop_loss_threshold, high, low)
+            return low <= take_profit_threshold, high >= stop_loss_threshold
+        return high >= take_profit_threshold, low <= stop_loss_threshold
 
     ohlc_rows = db.get_ohlc_history(conn, signal.symbol, "USD", min_date=min_date)
     if len(ohlc_rows) >= 1:
@@ -405,14 +406,18 @@ def check_signal_outcome(
             day = row.date
             guenstigster_tagespreis = row.low if ist_short else row.high
             _erfasse_mfe(guenstigster_tagespreis, day)
-            hit_take, hit_stop, exit_take, exit_stop = _check_preis(row.high, row.low)
+            hit_take, hit_stop = _check_preis(row.high, row.low)
             if hit_stop:
                 # Konservativ (Z-1: Kapitalerhalt vor Gewinn): trifft ein Tag beide
                 # Zonen, gewinnt Stop-Loss - keine Annahme ueber die Intraday-
                 # Reihenfolge ohne Tick-Daten.
-                return resolve(exit_stop, hit_take=False)
+                return resolve(gap_bewusster_fill(
+                    stop_loss_threshold, row.open, ist_stop=True, ist_short=ist_short,
+                ), hit_take=False)
             if hit_take:
-                return resolve(exit_take, hit_take=True)
+                return resolve(gap_bewusster_fill(
+                    take_profit_threshold, row.open, ist_stop=False, ist_short=ist_short,
+                ), hit_take=True)
     else:
         datenquelle = "proxy"
         price_rows = db.get_price_history(conn, asset.coingecko_id, min_date=min_date) if asset.coingecko_id else []
@@ -421,17 +426,57 @@ def check_signal_outcome(
                 continue
             day = row.date
             _erfasse_mfe(row.price_usd, day)
-            hit_take, hit_stop, _, _ = _check_preis(row.price_usd, row.price_usd)
+            hit_take, hit_stop = _check_preis(row.price_usd, row.price_usd)
             if hit_stop:
-                return resolve(row.price_usd, hit_take=False)
+                return resolve(stop_loss_threshold, hit_take=False)
             if hit_take:
-                return resolve(row.price_usd, hit_take=True)
+                return resolve(take_profit_threshold, hit_take=True)
 
     # Kein Treffer gefunden - offen oder abgelaufen, je nach Alter.
     return OUTCOME_OFFEN, {
         "max_realisiertes_crv": max_favorable_crv,
         "mindestziel_erreicht_am": mindestziel_erreicht_am,
     }
+
+
+def gap_bewusster_fill(schwelle: float, open_preis: float | None,
+                       ist_stop: bool, ist_short: bool) -> float:
+    """Ausfuehrungspreis beim Treffen einer Zonen-Schwelle (2026-08-02, Task #604).
+
+    Grundregel ist der Schwellwert selbst: eine Stop- oder Limit-Order fuellt
+    dort, nicht am Tagesextrem. Ausnahme ist ein Gap - eroeffnet der Tag bereits
+    jenseits der Schwelle, kommt die Order erst zum Eroeffnungskurs zum Zug.
+    Bei einem Stop ist das schlechter als geplant, bei einem Take-Profit besser.
+
+    Vorgeschichte: bis zum 02.08. nahm die Spot-Seite den tatsaechlichen
+    Tages-Extremwert (Hoch bei Take, Tief bei Stop), die Hebel-Seite den
+    Schwellwert. Die Spot-Variante entsprach der Doku vom 10.07. ("mit dem
+    tatsaechlich erreichten Kurs statt der Zonen-Grenze"), war aber in sich
+    widerspruechlich: Stop zum Tagestief ist pessimistisch, Take zum Tageshoch
+    optimistisch - die Kombination blaeht genau die Streuung auf, die der SQN
+    bestraft. Gemessen am Export vom 02.08. lagen Spot-Verluste dadurch bei
+    -1,19 R im Mittel statt -1,00 R (n=7), Hebel exakt bei -1,000 R (n=70).
+
+    Die Absicht hinter der alten Konvention - abbilden, wie weit der Markt
+    tatsaechlich gelaufen ist - stammt vom 10.07. und damit 17 Tage VOR dem
+    MFE-Feld (max_realisiertes_crv, 27.07.). Diese Rolle hat heute ein eigenes
+    Feld; realisiertes_crv soll das Ausfuehrungsergebnis abbilden.
+
+    Gap-Haeufigkeit in den eigenen Daten (Export 02.08.): 1 von 49 pruefbaren
+    Hebel-Stops (Gap 2,0%), 2 von 11 Take-Profits, bei Spot 0 von 6. Selten,
+    aber nicht null - und fuer Aktien/Themen-ETFs mit echten Wochenendluecken
+    strukturell haeufiger als bei durchgehend gehandelten Kryptowerten.
+
+    `open_preis=None` (Proxy-Zweig ohne OHLC, nur Tagesschlusskurs) faellt auf
+    den Schwellwert zurueck - ohne Eroeffnungskurs ist ein Gap nicht erkennbar.
+    """
+    if open_preis is None or open_preis <= 0:
+        return schwelle
+    # Unguenstige Richtung: LONG-Stop und SHORT-Take liegen unterhalb,
+    # LONG-Take und SHORT-Stop oberhalb der Schwelle.
+    if ist_stop != ist_short:
+        return min(schwelle, open_preis)
+    return max(schwelle, open_preis)
 
 
 def _hat_veto_schatten_these(signal) -> bool:
@@ -555,10 +600,10 @@ def check_signal_veto_shadow_outcome(
             "mindestziel_erreicht_am": mindestziel_erreicht_am,
         }
 
-    def _check_preis(high: float, low: float) -> tuple[bool, bool, float, float]:
+    def _check_preis(high: float, low: float) -> tuple[bool, bool]:
         if ist_short:
-            return (low <= take_profit_threshold, high >= stop_loss_threshold, low, high)
-        return (high >= take_profit_threshold, low <= stop_loss_threshold, high, low)
+            return low <= take_profit_threshold, high >= stop_loss_threshold
+        return high >= take_profit_threshold, low <= stop_loss_threshold
 
     ohlc_rows = db.get_ohlc_history(conn, signal.symbol, "USD", min_date=min_date)
     if len(ohlc_rows) >= 1:
@@ -566,11 +611,15 @@ def check_signal_veto_shadow_outcome(
             day = row.date
             guenstigster_tagespreis = row.low if ist_short else row.high
             _erfasse_mfe(guenstigster_tagespreis, day)
-            hit_take, hit_stop, exit_take, exit_stop = _check_preis(row.high, row.low)
+            hit_take, hit_stop = _check_preis(row.high, row.low)
             if hit_stop:
-                return resolve(exit_stop, hit_take=False)
+                return resolve(gap_bewusster_fill(
+                    stop_loss_threshold, row.open, ist_stop=True, ist_short=ist_short,
+                ), hit_take=False)
             if hit_take:
-                return resolve(exit_take, hit_take=True)
+                return resolve(gap_bewusster_fill(
+                    take_profit_threshold, row.open, ist_stop=False, ist_short=ist_short,
+                ), hit_take=True)
     else:
         price_rows = db.get_price_history(conn, asset.coingecko_id, min_date=min_date) if asset.coingecko_id else []
         for row in price_rows:
@@ -578,11 +627,11 @@ def check_signal_veto_shadow_outcome(
                 continue
             day = row.date
             _erfasse_mfe(row.price_usd, day)
-            hit_take, hit_stop, _, _ = _check_preis(row.price_usd, row.price_usd)
+            hit_take, hit_stop = _check_preis(row.price_usd, row.price_usd)
             if hit_stop:
-                return resolve(row.price_usd, hit_take=False)
+                return resolve(stop_loss_threshold, hit_take=False)
             if hit_take:
-                return resolve(row.price_usd, hit_take=True)
+                return resolve(take_profit_threshold, hit_take=True)
 
     return OUTCOME_OFFEN, {
         "max_realisiertes_crv": max_favorable_crv,
@@ -654,10 +703,10 @@ def check_signal_selbst_halten_outcome(
             "mindestziel_erreicht_am": mindestziel_erreicht_am,
         }
 
-    def _check_preis(high: float, low: float) -> tuple[bool, bool, float, float]:
+    def _check_preis(high: float, low: float) -> tuple[bool, bool]:
         if ist_short:
-            return (low <= take_profit_threshold, high >= stop_loss_threshold, low, high)
-        return (high >= take_profit_threshold, low <= stop_loss_threshold, high, low)
+            return low <= take_profit_threshold, high >= stop_loss_threshold
+        return high >= take_profit_threshold, low <= stop_loss_threshold
 
     ohlc_rows = db.get_ohlc_history(conn, signal.symbol, "USD", min_date=min_date)
     if len(ohlc_rows) >= 1:
@@ -665,11 +714,15 @@ def check_signal_selbst_halten_outcome(
             day = row.date
             guenstigster_tagespreis = row.low if ist_short else row.high
             _erfasse_mfe(guenstigster_tagespreis, day)
-            hit_take, hit_stop, exit_take, exit_stop = _check_preis(row.high, row.low)
+            hit_take, hit_stop = _check_preis(row.high, row.low)
             if hit_stop:
-                return resolve(exit_stop, hit_take=False)
+                return resolve(gap_bewusster_fill(
+                    stop_loss_threshold, row.open, ist_stop=True, ist_short=ist_short,
+                ), hit_take=False)
             if hit_take:
-                return resolve(exit_take, hit_take=True)
+                return resolve(gap_bewusster_fill(
+                    take_profit_threshold, row.open, ist_stop=False, ist_short=ist_short,
+                ), hit_take=True)
     else:
         price_rows = db.get_price_history(conn, asset.coingecko_id, min_date=min_date) if asset.coingecko_id else []
         for row in price_rows:
@@ -677,11 +730,11 @@ def check_signal_selbst_halten_outcome(
                 continue
             day = row.date
             _erfasse_mfe(row.price_usd, day)
-            hit_take, hit_stop, _, _ = _check_preis(row.price_usd, row.price_usd)
+            hit_take, hit_stop = _check_preis(row.price_usd, row.price_usd)
             if hit_stop:
-                return resolve(row.price_usd, hit_take=False)
+                return resolve(stop_loss_threshold, hit_take=False)
             if hit_take:
-                return resolve(row.price_usd, hit_take=True)
+                return resolve(take_profit_threshold, hit_take=True)
 
     return OUTCOME_OFFEN, {
         "max_realisiertes_crv": max_favorable_crv,

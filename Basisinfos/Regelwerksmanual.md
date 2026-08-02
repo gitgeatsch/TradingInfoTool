@@ -739,7 +739,7 @@ haben keine vergleichbare Take-Profit/Stop-Loss-Logik und werden sofort als
 | **Ergebnis-Status** | Einer von: Offen · Take-Profit erreicht · Stop-Loss erreicht · Abgelaufen (unentschieden) · Überholt (neuere Analyse vorhanden) · Nicht anwendbar |
 | **Zuletzt geprüft am** | Zeitstempel des letzten Prüflaufs |
 | **Entschieden am** | Datum, an dem die Zone erreicht wurde (leer, solange offen) |
-| **Realisiertes CRV** | Nur bei entschiedenem Ergebnis: `(erzielter Kurs − Entry-Mitte) / (Entry-Mitte − Stop-Loss-Zone-Untergrenze)` — dieselbe konservative Formel wie die ursprünglich vorhergesagte CRV (Abschnitt 2, Z-2), nur mit dem tatsächlich erreichten Kurs statt der Zonen-Grenze. Positiv bei Take-Profit, negativ bei Stop-Loss. |
+| **Realisiertes CRV** | Nur bei entschiedenem Ergebnis: `(Ausführungspreis − Entry-Mitte) / (Entry-Mitte − Stop-Loss-Zone-Untergrenze)` — dieselbe konservative Formel wie die ursprünglich vorhergesagte CRV (Abschnitt 2, Z-2). Als Ausführungspreis gilt seit dem **2026-08-02** die getroffene **Zonen-Grenze**, nicht mehr der Tages-Extremwert; Ausnahme ist ein Gap (siehe Kapitel 21). Positiv bei Take-Profit, negativ bei Stop-Loss. |
 | **Datenquelle** | `real` (echtes OHLC) oder `proxy` (nur Tagesschlusskurs) |
 
 **Wo du das siehst:** neuer Button **"Signal-Historie"** im Signale-Tab, direkt
@@ -2796,6 +2796,59 @@ richtungsbewusst wie überall sonst im Hebel-Code.
 
 
 ---
+
+## 21. Ausführungspreis im Backward-Tracking — gap-bewusst (2026-08-02)
+
+**Was sich geändert hat.** Wenn ein Signal seine Stop-Loss- oder Take-Profit-Zone
+erreicht, muss das Backward-Tracking einen Preis annehmen, zu dem der Trade
+geschlossen worden wäre. Bis zum 02.08. gab es dafür **zwei verschiedene
+Konventionen** im System:
+
+| | bis 02.08. | ab 02.08. |
+|---|---|---|
+| Spot-Familie | tatsächlicher Tages-Extremwert (Hoch bei Take, Tief bei Stop) | Zonen-Grenze, bei Gap der Eröffnungskurs |
+| Hebel | Zonen-Grenze | Zonen-Grenze, bei Gap der Eröffnungskurs |
+
+Die Spot-Variante entsprach der ursprünglichen Beschreibung vom 10.07. („mit
+dem tatsächlich erreichten Kurs statt der Zonen-Grenze"). Sie war aber in sich
+widersprüchlich: einen Stop zum Tagestief anzusetzen ist pessimistisch, einen
+Take-Profit zum Tageshoch optimistisch. Die Kombination bläht genau die
+**Streuung** auf, die der SQN als Zielgröße bestraft — real gemessen lagen
+Spot-Verluste dadurch im Mittel bei −1,19 R statt −1,00 R (n=7), während Hebel
+exakt bei −1,000 R lag (n=70).
+
+**Warum die alte Absicht entfallen ist.** Sie sollte abbilden, wie weit der
+Markt tatsächlich gelaufen ist. Diese Rolle hat seit dem **27.07.** ein eigenes
+Feld: die *Maximum Favorable Excursion* (`outcome_max_realisiertes_crv`), also
+der günstigste Punkt, den der Kurs während der Laufzeit erreicht hat. Die
+Doku-Konvention stammt 17 Tage davor — sie war der einzige damals verfügbare
+Weg, diese Information überhaupt zu erfassen. `realisiertes_crv` bildet jetzt
+sauber das **Ausführungsergebnis** ab, MFE das **Marktpotential**.
+
+**Die Gap-Ausnahme.** Eine Stop- oder Limit-Order füllt normalerweise genau an
+ihrer Schwelle. Eröffnet der Tag aber bereits jenseits davon — der Kurs ist über
+Nacht über die Schwelle gesprungen —, kommt die Order erst zum Eröffnungskurs
+zum Zug: bei einem Stop schlechter als geplant, bei einem Take-Profit besser.
+Häufigkeit in den eigenen Daten (Stand 02.08.): 1 von 49 prüfbaren Hebel-Stops
+(Gap-Höhe 2,0 %), 2 von 11 Take-Profits, bei Spot 0 von 6. Selten, aber nicht
+null — und für Aktien und Themen-ETFs mit echten Wochenendlücken strukturell
+häufiger als bei durchgehend gehandelten Kryptowerten.
+
+Bewusst **keine pauschale Slippage-Annahme**, obwohl die Backtesting-Literatur
+das verbreitet empfiehlt: das wäre ein frei gewählter Parameter ohne
+Datengrundlage im eigenen System. Der Gap-Fall dagegen ist aus den vorhandenen
+OHLC-Daten direkt ablesbar.
+
+**Wo im Code:** `agent/krypto/backward_tracking.py::gap_bewusster_fill()`, von
+`agent/krypto/hebel_backward_tracking.py` importiert — eine gemeinsame Funktion
+für beide Seiten, damit die Konventionen nicht wieder auseinanderlaufen können.
+Greift in allen sechs Auswertungszweigen (Spot und Hebel, je real /
+Veto-Schatten / selbst gewähltes HALTEN). Im Proxy-Zweig (nur Tagesschlusskurs,
+kein OHLC) gibt es keinen Eröffnungskurs — dort bleibt es bei der Zonen-Grenze.
+
+**Folge für Altdaten:** Bewertungen aus der Zeit davor stehen noch nach den
+alten Konventionen in der Datenbank. Ohne Neuberechnung mischen sich zwei
+Maßstäbe in Expectancy und SQN.
 
 ## 20. Entscheidungslog — wo die Entstehungsgeschichte steht
 

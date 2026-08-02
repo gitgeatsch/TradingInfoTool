@@ -29,6 +29,7 @@ from agent.krypto.backward_tracking import (
     OUTCOME_STOP_LOSS,
     OUTCOME_TAKE_PROFIT,
     OUTCOME_UEBERHOLT,
+    gap_bewusster_fill,
     persistiere_offenes_mfe,
 )
 
@@ -211,7 +212,8 @@ def check_hebel_signal_outcome(
             "mindestziel_erreicht_am": mindestziel_erreicht_am,
         }
 
-    def _check_day(high: float, low: float, day_value: str) -> tuple[str, dict] | None:
+    def _check_day(high: float, low: float, day_value: str,
+                   open_preis: float | None = None) -> tuple[str, dict] | None:
         nonlocal day
         day = day_value
         _erfasse_mfe(high, low, day_value)
@@ -226,11 +228,17 @@ def check_hebel_signal_outcome(
 
         # Konservativste Annahme zuerst: Liquidation vor Stop-Loss vor Take-Profit.
         if hit_liquidation:
-            return resolve(liquidation_threshold, OUTCOME_LIQUIDATION)
+            return resolve(gap_bewusster_fill(
+                liquidation_threshold, open_preis, ist_stop=True, ist_short=ist_short,
+            ), OUTCOME_LIQUIDATION)
         if hit_stop:
-            return resolve(stop_loss_threshold, OUTCOME_STOP_LOSS)
+            return resolve(gap_bewusster_fill(
+                stop_loss_threshold, open_preis, ist_stop=True, ist_short=ist_short,
+            ), OUTCOME_STOP_LOSS)
         if hit_take:
-            return resolve(take_profit_threshold, OUTCOME_TAKE_PROFIT)
+            return resolve(gap_bewusster_fill(
+                take_profit_threshold, open_preis, ist_stop=False, ist_short=ist_short,
+            ), OUTCOME_TAKE_PROFIT)
         return None
 
     day = None
@@ -238,7 +246,7 @@ def check_hebel_signal_outcome(
     if len(ohlc_rows) >= 1:
         datenquelle = "real"
         for row in ohlc_rows:
-            result = _check_day(row.high, row.low, row.date)
+            result = _check_day(row.high, row.low, row.date, row.open)
             if result is not None:
                 return result
     else:
@@ -371,7 +379,8 @@ def check_hebel_signal_selbst_halten_outcome(
             "mindestziel_erreicht_am": mindestziel_erreicht_am,
         }
 
-    def _check_day(high: float, low: float, day_value: str) -> tuple[str, dict] | None:
+    def _check_day(high: float, low: float, day_value: str,
+                   open_preis: float | None = None) -> tuple[str, dict] | None:
         nonlocal day
         day = day_value
         _erfasse_mfe(high, low, day_value)
@@ -385,18 +394,24 @@ def check_hebel_signal_selbst_halten_outcome(
             hit_take = high >= take_profit_threshold
 
         if hit_liquidation:
-            return resolve(liquidation_threshold, OUTCOME_LIQUIDATION)
+            return resolve(gap_bewusster_fill(
+                liquidation_threshold, open_preis, ist_stop=True, ist_short=ist_short,
+            ), OUTCOME_LIQUIDATION)
         if hit_stop:
-            return resolve(stop_loss_threshold, OUTCOME_STOP_LOSS)
+            return resolve(gap_bewusster_fill(
+                stop_loss_threshold, open_preis, ist_stop=True, ist_short=ist_short,
+            ), OUTCOME_STOP_LOSS)
         if hit_take:
-            return resolve(take_profit_threshold, OUTCOME_TAKE_PROFIT)
+            return resolve(gap_bewusster_fill(
+                take_profit_threshold, open_preis, ist_stop=False, ist_short=ist_short,
+            ), OUTCOME_TAKE_PROFIT)
         return None
 
     day = None
     ohlc_rows = db.get_ohlc_history(conn, signal.symbol, "USD", min_date=min_date)
     if len(ohlc_rows) >= 1:
         for row in ohlc_rows:
-            result = _check_day(row.high, row.low, row.date)
+            result = _check_day(row.high, row.low, row.date, row.open)
             if result is not None:
                 return result
     else:
@@ -492,7 +507,8 @@ def check_hebel_signal_veto_shadow_outcome(
             "mindestziel_erreicht_am": mindestziel_erreicht_am,
         }
 
-    def _check_day(high: float, low: float, day_value: str) -> tuple[str, dict] | None:
+    def _check_day(high: float, low: float, day_value: str,
+                   open_preis: float | None = None) -> tuple[str, dict] | None:
         nonlocal day
         day = day_value
         _erfasse_mfe(high, low, day_value)
@@ -506,18 +522,24 @@ def check_hebel_signal_veto_shadow_outcome(
             hit_take = high >= take_profit_threshold
 
         if hit_liquidation:
-            return resolve(liquidation_threshold, OUTCOME_LIQUIDATION)
+            return resolve(gap_bewusster_fill(
+                liquidation_threshold, open_preis, ist_stop=True, ist_short=ist_short,
+            ), OUTCOME_LIQUIDATION)
         if hit_stop:
-            return resolve(stop_loss_threshold, OUTCOME_STOP_LOSS)
+            return resolve(gap_bewusster_fill(
+                stop_loss_threshold, open_preis, ist_stop=True, ist_short=ist_short,
+            ), OUTCOME_STOP_LOSS)
         if hit_take:
-            return resolve(take_profit_threshold, OUTCOME_TAKE_PROFIT)
+            return resolve(gap_bewusster_fill(
+                take_profit_threshold, open_preis, ist_stop=False, ist_short=ist_short,
+            ), OUTCOME_TAKE_PROFIT)
         return None
 
     day = None
     ohlc_rows = db.get_ohlc_history(conn, signal.symbol, "USD", min_date=min_date)
     if len(ohlc_rows) >= 1:
         for row in ohlc_rows:
-            result = _check_day(row.high, row.low, row.date)
+            result = _check_day(row.high, row.low, row.date, row.open)
             if result is not None:
                 return result
     else:
