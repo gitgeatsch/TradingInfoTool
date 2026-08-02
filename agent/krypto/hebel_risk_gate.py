@@ -1081,6 +1081,22 @@ def post_check_hebel(
             # Schwelle liegt seit 2026-08-02 auf risiko-Ebene (nicht mehr in
             # risiko.hebel) - sie gilt jetzt fuer alle Assetklassen.
             sl_eng_schwelle = config["risiko"].get("sl_abstand_eng_schwelle_relativ")
+            # RM-1c (2026-08-02): zweite Untergrenze, volatilitaets-relativ.
+            # `atr_value` ist ein absoluter Preisabstand, `sl_abstand_relativ`
+            # ein Anteil - ohne die Division durch den Kurs wuerden hier zwei
+            # verschiedene Einheiten verglichen und die Regel waere je nach
+            # Kursniveau mal wirkungslos, mal ein Totalveto.
+            atr_relativ = (
+                atr_value / current_price
+                if atr_value and current_price and current_price > 0
+                else None
+            )
+            min_atr_faktor = config["risiko"].get("sl_abstand_min_atr_faktor")
+            atr_untergrenze = (
+                atr_relativ * min_atr_faktor
+                if atr_relativ is not None and min_atr_faktor is not None
+                else None
+            )
             if (
                 sl_abstand_relativ is not None
                 and sl_eng_schwelle is not None
@@ -1093,6 +1109,21 @@ def post_check_hebel(
                     f"aus 10.570 Tagesbalken zeigt hier {'unter 22%' if sl_abstand_relativ < 0.01 else 'rund 30%'} "
                     f"Trefferquote gegen 33% Break-even; in den echten Daten 0 von 20 "
                     f"aufgeloesten Signalen erfolgreich"
+                )
+                risk_veto_reason = f"{risk_veto_reason}; {reason}" if risk_veto_reason else reason
+                action = "HALTEN"
+            elif (
+                sl_abstand_relativ is not None
+                and atr_untergrenze is not None
+                and sl_abstand_relativ < atr_untergrenze
+            ):
+                risk_veto = True
+                reason = (
+                    f"Stop-Loss-Abstand {sl_abstand_relativ * 100:.2f}% entspricht nur "
+                    f"{sl_abstand_relativ / atr_relativ:.2f}× ATR (Minimum {min_atr_faktor}× ATR, "
+                    f"RM-1c) - bei einer Tagesschwankung von {atr_relativ * 100:.1f}% loest "
+                    f"normales Kursrauschen den Stop aus, bevor die These sich zeigen kann. "
+                    f"Aufgeloeste Signale in diesem Bereich: 10,3% Trefferquote gegen 33% Break-even"
                 )
                 risk_veto_reason = f"{risk_veto_reason}; {reason}" if risk_veto_reason else reason
                 action = "HALTEN"

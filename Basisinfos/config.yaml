@@ -31,6 +31,82 @@ ziele:
 # --- Risikomanagement / Kernmodul (siehe Spezifikation Kap. 3) ---
 risiko:
   risiko_pro_trade_prozent: 2          # RM-1: max. Verlust bis Stop-Loss je Trade
+  sl_abstand_min_atr_faktor: 0.75      # RM-1c (2026-08-02): zweite, VOLATILITAETS-
+                                        # RELATIVE Untergrenze fuer den Stop-Abstand.
+                                        # Wirkt zusaetzlich zu RM-1b darunter - es
+                                        # vetot, was die STRENGERE der beiden Grenzen
+                                        # reisst. Gilt fuer alle Assetklassen.
+                                        #
+                                        # Warum zusaetzlich statt ersetzend: eine feste
+                                        # Prozentgrenze ist blind fuer Volatilitaet. Der
+                                        # ATR der beobachteten Symbole reicht von 2,2%
+                                        # bis 26,9% (Median 7,0%); bei einem Coin mit
+                                        # 27% ATR sind 2,5% gerade 0,09x ATR - das Netz
+                                        # haette dort faktisch kein Netz. Umgekehrt ist
+                                        # bei 2,2% ATR die feste Grenze die strengere
+                                        # (in den 222 Signalen vom 31.07.-02.08. traf
+                                        # das auf 4 Faelle zu, die NUR die Prozentgrenze
+                                        # erwischt).
+                                        #
+                                        # Kalibrierung 0,75x: auf 69 aufgeloesten Faellen
+                                        # hat die betroffene Gruppe 10,3% Trefferquote
+                                        # gegen 33% Break-even (CRV 2,0). Auf den 222
+                                        # neuen Signalen greift es bei 6,8% - selten
+                                        # genug fuer ein Sicherheitsnetz.
+                                        # Verworfen: 0,5x (traf 0 Faelle, die RM-1b nicht
+                                        # schon faengt - kein Zusatznutzen) und 1,5x
+                                        # (haette 48,2% der Signale vetot - das waere
+                                        # keine Bodensicherung mehr, sondern eine
+                                        # Strategieaenderung, und die Vergleichsgruppe
+                                        # dafuer waere n=3 gewesen).
+                                        #
+                                        # EHRLICH ZUR EVIDENZ - was traegt und was nicht:
+                                        #
+                                        # TRAEGT: die betroffene Gruppe liegt bei 10,5%
+                                        # Trefferquote, Wilson-Intervall [4-24%]. Das
+                                        # obere Ende bleibt unter dem Break-even von 33%
+                                        # (CRV 2,0) - diese Gruppe ist also mit hoher
+                                        # Sicherheit verlustbringend. Das ist der
+                                        # eigentliche Grund fuer das Veto.
+                                        #
+                                        # TRAEGT NICHT: der Vergleich zur nicht
+                                        # betroffenen Gruppe (22,6%). Der haelt der
+                                        # Sensitivitaetspruefung nur teilweise stand -
+                                        # ohne LINK (der 4 von 7 Treffern der
+                                        # Vergleichsgruppe stellt) schrumpft die Differenz
+                                        # von 12,1 auf 5,3 Prozentpunkte. Nur-LONG
+                                        # verstaerkt sie (+17,6pp), Nur-SHORT kippt sie -
+                                        # dort ist die Vergleichsgruppe aber n=3 und damit
+                                        # ohne Aussage. Die Wilson-Intervalle ueberlappen
+                                        # in allen Varianten.
+                                        #
+                                        # Zusaetzlich stuetzend: dieselbe Gruppe wird vom
+                                        # bereits abgesicherten RM-1b getroffen (0 von 20,
+                                        # p=0,0005), und der theoretische Grund (Stop
+                                        # innerhalb der normalen Tagesschwankung wird von
+                                        # Rauschen ausgeloest) ist datenunabhaengig.
+                                        #
+                                        # Gegenpruefungen bestanden (Muster RM-1b): kein
+                                        # Zeit-Bias (groesster Tag 18% bzw. 23%), kein
+                                        # Hebel-Confounding (Median 3,0 in beiden Gruppen),
+                                        # Symbol-Konzentration der betroffenen Gruppe
+                                        # unauffaellig (groesstes Symbol 13%). Auffaellig,
+                                        # aber die Regel eher stuetzend: die betroffenen
+                                        # Signale haben HOEHERE Konfidenz (Median 65% vs
+                                        # 50%) - das LLM ist bei engen Stops selbstsicherer
+                                        # und liegt zugleich schlechter.
+                                        #
+                                        # Das Veto-Schatten-Tracking verfolgt die vetoten
+                                        # Faelle weiter - in einigen Wochen ist an echten
+                                        # Daten pruefbar, ob die Schwelle richtig liegt.
+                                        #
+                                        # Zweiter Grund fuer ein HARTES Veto statt eines
+                                        # Prompt-Richtwerts: der 1,5x-ATR-Richtwert in
+                                        # Regel 6 (seit 28.07.) wird nur zu 52% befolgt
+                                        # und haengt daran, dass das LLM ihn befolgt. Bei
+                                        # den haeufigen Provider-Wechseln in diesem
+                                        # Projekt kann das unbemerkt kippen; ein Gate
+                                        # nicht.
   sl_abstand_eng_schwelle_relativ: 0.025  # RM-1b: Mindest-Abstand Entry -> Stop-Loss.
                                         # Unterhalb dieser Schwelle wird die Empfehlung
                                         # deterministisch zu HALTEN zurueckgestuft (Veto).

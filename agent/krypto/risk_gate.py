@@ -866,6 +866,51 @@ def _fazit_konsistenz_hinweis(
     return None
 
 
+def _rm1c_atr_untergrenze(
+    sl_abstand_relativ: float | None,
+    atr_value: float | None,
+    current_price_usd: float | None,
+    config: dict,
+) -> tuple[bool, str | None]:
+    """RM-1c (2026-08-02): volatilitaets-relative Untergrenze fuer den Stop-Abstand.
+
+    Zweite Untergrenze NEBEN RM-1b (fester Prozentsatz) - es vetot, was die
+    strengere der beiden reisst. Notwendig, weil eine feste Prozentgrenze
+    blind fuer Volatilitaet ist: der ATR der beobachteten Symbole reicht von
+    2,2% bis 26,9%, und bei 27% ATR sind die 2,5% aus RM-1b nur 0,09x ATR -
+    dort haette das Netz kein Netz.
+
+    Bewusst als gemeinsame Funktion fuer Buy- und Sell-Zweig: RM-1b wurde an
+    beiden Stellen kopiert, was zwei Pfade ergibt, die bei einer Aenderung
+    auseinanderlaufen koennen. Hier nicht.
+
+    `atr_value` ist ein absoluter Preisabstand, `sl_abstand_relativ` ein
+    Anteil - ohne Division durch den Kurs wuerden zwei Einheiten verglichen.
+
+    Einordnung: `STOP_LOSS_ATR_MULTIPLE` (2.0) ist die Rechenkonvention fuer
+    die Positionsgroesse in RM-5. RM-1c liegt mit 0,75x bewusst deutlich
+    darunter - es ist eine Bodensicherung, keine Sollgroesse.
+    """
+    faktor = config["risiko"].get("sl_abstand_min_atr_faktor")
+    if (
+        sl_abstand_relativ is None
+        or faktor is None
+        or not atr_value
+        or not current_price_usd
+        or current_price_usd <= 0
+    ):
+        return False, None
+    atr_relativ = atr_value / current_price_usd
+    if atr_relativ <= 0 or sl_abstand_relativ >= atr_relativ * faktor:
+        return False, None
+    return True, (
+        f"Stop-Loss-Abstand {sl_abstand_relativ * 100:.2f}% entspricht nur "
+        f"{sl_abstand_relativ / atr_relativ:.2f}x ATR (Minimum {faktor}x ATR, RM-1c) - "
+        f"bei einer Tagesschwankung von {atr_relativ * 100:.1f}% loest normales "
+        f"Kursrauschen den Stop aus, bevor die These sich zeigen kann"
+    )
+
+
 def post_check(
     parsed: dict, pre_result: RiskPreCheckResult, regime_result, config: dict, confluence=None,
     retail_long_bias_extreme: bool | None = None, long_account_pct: float | None = None,
@@ -970,6 +1015,9 @@ def post_check(
             # (Median-Stop 10,6%) - die Regel wirkt als Schutz, nicht als Filter.
             sl_eng_schwelle = config["risiko"].get("sl_abstand_eng_schwelle_relativ")
             sl_abstand_relativ = abs(entry_mid - stop_von) / entry_mid if entry_mid > 0 else None
+            rm1c_verletzt, rm1c_reason = _rm1c_atr_untergrenze(
+                sl_abstand_relativ, atr_value, current_price_usd, config
+            )
             if (
                 sl_abstand_relativ is not None
                 and sl_eng_schwelle is not None
@@ -982,6 +1030,11 @@ def post_check(
                     f"innerhalb der normalen Tagesschwankung und wird mit hoher "
                     f"Wahrscheinlichkeit durch Kursrauschen ausgeloest"
                 )
+                risk_veto_reason = f"{risk_veto_reason}; {reason}" if risk_veto_reason else reason
+                action = "HALTEN"
+            elif rm1c_verletzt:
+                risk_veto = True
+                reason = rm1c_reason
                 risk_veto_reason = f"{risk_veto_reason}; {reason}" if risk_veto_reason else reason
                 action = "HALTEN"
             elif crv is None or crv < CRV_MINIMUM:
@@ -1019,6 +1072,9 @@ def post_check(
             # identisch zum _BUY_ACTIONS-Zweig oben.
             sl_eng_schwelle = config["risiko"].get("sl_abstand_eng_schwelle_relativ")
             sl_abstand_relativ = abs(stop_bis - entry_mid) / entry_mid if entry_mid > 0 else None
+            rm1c_verletzt, rm1c_reason = _rm1c_atr_untergrenze(
+                sl_abstand_relativ, atr_value, current_price_usd, config
+            )
             if (
                 sl_abstand_relativ is not None
                 and sl_eng_schwelle is not None
@@ -1031,6 +1087,11 @@ def post_check(
                     f"liegt innerhalb der normalen Tagesschwankung und wird mit hoher "
                     f"Wahrscheinlichkeit durch Kursrauschen ausgeloest"
                 )
+                risk_veto_reason = f"{risk_veto_reason}; {reason}" if risk_veto_reason else reason
+                action = "HALTEN"
+            elif rm1c_verletzt:
+                risk_veto = True
+                reason = rm1c_reason
                 risk_veto_reason = f"{risk_veto_reason}; {reason}" if risk_veto_reason else reason
                 action = "HALTEN"
             elif crv is None or crv < CRV_MINIMUM:
