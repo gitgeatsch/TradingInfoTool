@@ -1071,7 +1071,32 @@ def post_check_hebel(
                 crv = (take_von - entry_mid) / (entry_mid - stop_von) if entry_mid > stop_von else None
                 sl_abstand_relativ = abs(entry_mid - stop_von) / entry_mid if entry_mid > 0 else None
 
-            if crv is None or crv < CRV_MINIMUM:
+            # 2026-08-02: Enge-Stop-Veto VOR dem CRV-Check. Reihenfolge ist
+            # bewusst - ein extremes CRV entsteht fast immer durch einen zu
+            # engen Stop, nicht durch ein ambitioniertes Ziel (Extremfall aus
+            # den echten Daten: ETH mit Stop 0,12% unter Entry und CRV 360).
+            # Wuerde der CRV-Check zuerst laufen, passierte so ein Signal das
+            # Gate muehelos und der Veto-Grund waere spaeter nicht mehr als
+            # Stop-Problem erkennbar.
+            # Schwelle liegt seit 2026-08-02 auf risiko-Ebene (nicht mehr in
+            # risiko.hebel) - sie gilt jetzt fuer alle Assetklassen.
+            sl_eng_schwelle = config["risiko"].get("sl_abstand_eng_schwelle_relativ")
+            if (
+                sl_abstand_relativ is not None
+                and sl_eng_schwelle is not None
+                and sl_abstand_relativ < sl_eng_schwelle
+            ):
+                risk_veto = True
+                reason = (
+                    f"Stop-Loss-Abstand {sl_abstand_relativ * 100:.2f}% unter Minimum "
+                    f"{sl_eng_schwelle * 100:.1f}% (Enge-Stop-Veto) - mechanische Basislinie "
+                    f"aus 10.570 Tagesbalken zeigt hier {'unter 22%' if sl_abstand_relativ < 0.01 else 'rund 30%'} "
+                    f"Trefferquote gegen 33% Break-even; in den echten Daten 0 von 20 "
+                    f"aufgeloesten Signalen erfolgreich"
+                )
+                risk_veto_reason = f"{risk_veto_reason}; {reason}" if risk_veto_reason else reason
+                action = "HALTEN"
+            elif crv is None or crv < CRV_MINIMUM:
                 risk_veto = True
                 reason = f"CRV {crv} unter Minimum {CRV_MINIMUM} (unveraendert ggü. Spot)"
                 risk_veto_reason = f"{risk_veto_reason}; {reason}" if risk_veto_reason else reason
@@ -1247,7 +1272,7 @@ def post_check_hebel(
         veto_reason=pre_result.veto_reason,
         historische_erfolgsquote=historische_erfolgsquote,
         sl_abstand_relativ=sl_abstand_relativ,
-        sl_abstand_eng_schwelle_relativ=hebel_cfg.get("sl_abstand_eng_schwelle_relativ"),
+        sl_abstand_eng_schwelle_relativ=config["risiko"].get("sl_abstand_eng_schwelle_relativ"),
         funding_rate_stunde=funding_rate_stunde,
         funding_kosten_usd_pro_tag=funding_kosten_usd_pro_tag,
         eur_usd_fx_rate=eur_usd_fx_rate,

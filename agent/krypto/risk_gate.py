@@ -959,7 +959,32 @@ def post_check(
         if entry_von is not None and entry_bis is not None and stop_von is not None and take_von is not None:
             entry_mid = (entry_von + entry_bis) / 2
             crv = (take_von - entry_mid) / (entry_mid - stop_von) if entry_mid > stop_von else None
-            if crv is None or crv < CRV_MINIMUM:
+            # RM-1b (2026-08-02): Enge-Stop-Veto VOR dem CRV-Check. Ein extremes
+            # CRV entsteht fast immer durch einen zu engen Stop, nicht durch ein
+            # ambitioniertes Ziel - liefe der CRV-Check zuerst, waere der Veto-
+            # Grund spaeter nicht mehr als Stop-Problem erkennbar. Die Schwelle
+            # ist gegen eine mechanische Basislinie aus 10.570 Tagesbalken
+            # kalibriert (siehe config.yaml::risiko.sl_abstand_eng_schwelle_
+            # relativ); sie wurde hebelfrei simuliert, gilt also unveraendert
+            # fuer die Spot-Familie. Betroffenheit hier aktuell praktisch null
+            # (Median-Stop 10,6%) - die Regel wirkt als Schutz, nicht als Filter.
+            sl_eng_schwelle = config["risiko"].get("sl_abstand_eng_schwelle_relativ")
+            sl_abstand_relativ = abs(entry_mid - stop_von) / entry_mid if entry_mid > 0 else None
+            if (
+                sl_abstand_relativ is not None
+                and sl_eng_schwelle is not None
+                and sl_abstand_relativ < sl_eng_schwelle
+            ):
+                risk_veto = True
+                reason = (
+                    f"Stop-Loss-Abstand {sl_abstand_relativ * 100:.2f}% unter Minimum "
+                    f"{sl_eng_schwelle * 100:.1f}% (RM-1b, Enge-Stop-Veto): Stop liegt "
+                    f"innerhalb der normalen Tagesschwankung und wird mit hoher "
+                    f"Wahrscheinlichkeit durch Kursrauschen ausgeloest"
+                )
+                risk_veto_reason = f"{risk_veto_reason}; {reason}" if risk_veto_reason else reason
+                action = "HALTEN"
+            elif crv is None or crv < CRV_MINIMUM:
                 risk_veto = True
                 reason = (
                     f"CRV {crv} unter Minimum {CRV_MINIMUM} (Z-2, konservativ: "
@@ -989,7 +1014,26 @@ def post_check(
         if entry_von is not None and entry_bis is not None and stop_bis is not None and take_bis is not None:
             entry_mid = (entry_von + entry_bis) / 2
             crv = (entry_mid - take_bis) / (stop_bis - entry_mid) if stop_bis > entry_mid else None
-            if crv is None or crv < CRV_MINIMUM:
+            # RM-1b gespiegelt: bei bearischer These liegt der Stop UEBER dem
+            # Entry, der Abstand berechnet sich entsprechend andersherum. Sonst
+            # identisch zum _BUY_ACTIONS-Zweig oben.
+            sl_eng_schwelle = config["risiko"].get("sl_abstand_eng_schwelle_relativ")
+            sl_abstand_relativ = abs(stop_bis - entry_mid) / entry_mid if entry_mid > 0 else None
+            if (
+                sl_abstand_relativ is not None
+                and sl_eng_schwelle is not None
+                and sl_abstand_relativ < sl_eng_schwelle
+            ):
+                risk_veto = True
+                reason = (
+                    f"Stop-Loss-Abstand {sl_abstand_relativ * 100:.2f}% unter Minimum "
+                    f"{sl_eng_schwelle * 100:.1f}% (RM-1b, Enge-Stop-Veto, gespiegelt): Stop "
+                    f"liegt innerhalb der normalen Tagesschwankung und wird mit hoher "
+                    f"Wahrscheinlichkeit durch Kursrauschen ausgeloest"
+                )
+                risk_veto_reason = f"{risk_veto_reason}; {reason}" if risk_veto_reason else reason
+                action = "HALTEN"
+            elif crv is None or crv < CRV_MINIMUM:
                 risk_veto = True
                 reason = (
                     f"CRV {crv} unter Minimum {CRV_MINIMUM} (Z-2, konservativ, gespiegelt: "

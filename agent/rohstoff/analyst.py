@@ -248,6 +248,24 @@ automatisch - sie stellt nur sicher, dass die Verkaufsseite tatsaechlich \
 durchdacht wurde, statt HALTEN reflexhaft beizubehalten, nur weil bereits \
 eine Position existiert. Gilt NICHT fuer Regel-6-Assets - dort bleibt die \
 hohe, thesenbasierte Verkaufs-Huerde unveraendert bestehen.
+25. Stop-Loss-Abstand (2026-08-02, hergeleitet aus einer mechanischen Basislinie \
+ueber 10.570 Tagesbalken): setze den Stop-Loss so, dass er AUSSERHALB der \
+normalen Tagesschwankung des Assets liegt - orientiere dich dafuer am \
+ABSOLUTEN ATR-Wert, also der durchschnittlichen Tagesspanne des Assets - \
+NICHT am ATR-Perzentil: das sagt nur, ob die Volatilitaet fuer dieses Asset \
+historisch hoch oder niedrig ist, und bleibt wie bisher reiner \
+Einordnungs-Kontext fuers `short_reasoning`. Ein Stop innerhalb des \
+ueblichen Tagesrauschens wird mit hoher Wahrscheinlichkeit ausgeloest, BEVOR \
+deine These sich ueberhaupt entfalten kann - unabhaengig davon, wie gut die \
+Analyse ist. Das gilt ausdruecklich auch dann, wenn ein enger Stop \
+rechnerisch ein attraktives Chance-Risiko-Verhaeltnis erzeugt: ein hohes \
+CRV, das nur durch einen zu nahen Stop zustande kommt, ist ein \
+Rechenartefakt und kein gutes Setup. Diese Regel nennt bewusst KEINEN \
+Zahlenwert - ein genannter Mindestabstand wuerde nur dazu fuehren, dass alle \
+Stops knapp darueber landen, statt sich an der tatsaechlichen Volatilitaet \
+des Assets zu orientieren. Ein deterministisches Gate faengt Extremfaelle \
+ohnehin ab; dein Beitrag ist die fachlich richtige Zone, nicht das Treffen \
+einer Zahl.
 
 SCHEMA:
 {

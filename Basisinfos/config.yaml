@@ -31,6 +31,49 @@ ziele:
 # --- Risikomanagement / Kernmodul (siehe Spezifikation Kap. 3) ---
 risiko:
   risiko_pro_trade_prozent: 2          # RM-1: max. Verlust bis Stop-Loss je Trade
+  sl_abstand_eng_schwelle_relativ: 0.025  # RM-1b: Mindest-Abstand Entry -> Stop-Loss.
+                                        # Unterhalb dieser Schwelle wird die Empfehlung
+                                        # deterministisch zu HALTEN zurueckgestuft (Veto).
+                                        # Gilt fuer ALLE Assetklassen - Hebel wie Spot-Familie.
+                                        #
+                                        # 2026-07-22 zunaechst nur als Hebel-Risikofaktor bei
+                                        # 0.02 eingefuehrt (echter BTC-Fund: 1,12%-Stop bei 3x
+                                        # Hebel wurde als "CRV deutlich ueber Minimum, positiv"
+                                        # gewertet, obwohl normales Kursrauschen - kein
+                                        # Krisenereignis noetig - den Stop ausloest).
+                                        #
+                                        # 2026-08-02 auf 0.025 angehoben und zum Veto
+                                        # hochgestuft. Grundlage ist erstmals eine mechanische
+                                        # Basislinie aus 10.570 Tagesbalken (Einstieg an
+                                        # beliebigem Tag, fester Stop, Ziel bei CRV 2.0,
+                                        # 14 Tage Horizont, nur Baermarkt-Tage):
+                                        #   Stop 0,5% -> 13,0% Trefferquote, -0,61R
+                                        #   Stop 1,0% -> 21,6%,               -0,35R
+                                        #   Stop 2,0% -> 30,0%,               -0,10R
+                                        #   Stop 3-5% -> 31,8%,               -0,04R  (Optimum)
+                                        # Ein enger Stop ist also unabhaengig von der
+                                        # Analysequalitaet strukturell schlechter - bei 0,5%
+                                        # verliert man das 15-Fache des Optimums.
+                                        #
+                                        # In den echten Daten (Export 02.08.): von 20
+                                        # aufgeloesten Hebel-Signalen mit Stop < 2,5% hat KEIN
+                                        # einziges sein Ziel erreicht (p=0,0005, haelt der
+                                        # Bonferroni-Korrektur ueber 5 getestete Schwellen
+                                        # stand - 2,0% haette sie mit p=0,0047 verfehlt).
+                                        # Gegengeprueft: keine Zeitverzerrung (Aufloesequote
+                                        # bei engen Stops 42% vs. 52% bei mittleren), kein
+                                        # Hebel-Confounding (Median-Hebel 3,0 in JEDER
+                                        # Stop-Klasse), keine Konfidenz-Verzerrung (61,8% vs.
+                                        # 59,6%). Symbol-Konzentration ist bei einem
+                                        # Null-Ergebnis logisch irrelevant.
+                                        #
+                                        # Bewusst auf risiko-Ebene statt in risiko.hebel: die
+                                        # Basislinie wurde hebelfrei simuliert, die Begruendung
+                                        # ist assetklassen-unabhaengig. Spot ist faktisch nicht
+                                        # betroffen (Median-Stop 10,6%, Minimum 1,6%) - dort
+                                        # wirkt die Regel als Schutz, nicht als Filter.
+                                        # Siehe hebel_risk_gate.py::post_check_hebel() und
+                                        # risk_gate.py::post_check().
   max_allokation_pro_asset_prozent: 25 # RM-2: fuer typ=taktisch (core siehe unten)
   max_allokation_pro_core_asset_prozent: 35 # RM-2: fuer typ=core (BTC/ETH) - vorlaeufig,
                                         # 2026-07-07 entschieden nachdem echte BTC-Allokation
@@ -206,15 +249,9 @@ risiko:
                                         # LONG_BIAS_EXTREME_THRESHOLD_PCT), statt (antizyklisch
                                         # korrekt) dagegen zu wetten - siehe hebel_risk_gate.py::
                                         # retail_konsens_risiko().
-    sl_abstand_eng_schwelle_relativ: 0.02  # NEU (2026-07-22, echter BTC-Fund: 1,12%-Stop bei
-                                        # 3x Hebel wurde als "CRV deutlich ueber Minimum,
-                                        # positiv" gewertet, obwohl normales Kursrauschen
-                                        # (kein Krisenereignis noetig) den Stop ausloesen
-                                        # kann) - unter dieser Schwelle (2% Abstand Entry zu
-                                        # Stop-Loss) erscheint ein eigener "Enger Stop-Loss"-
-                                        # Risikofaktor, unabhaengig von einer hohen CRV, die
-                                        # das allein nicht sichtbar macht - siehe
-                                        # hebel_risk_gate.py::compute_risikofaktoren_hebel().
+    # sl_abstand_eng_schwelle_relativ wurde 2026-08-02 eine Ebene hoeher nach
+    # `risiko:` verschoben - die Regel gilt seither fuer alle Assetklassen,
+    # nicht mehr nur fuer Hebel. Begruendung und Kalibrierung stehen dort.
     funding_rate_hoch_schwelle_relativ_stunde: 0.0001  # NEU (2026-07-22, echter LINK-Fund:
                                         # Funding-Rate erschien als unformatierter Rohfloat
                                         # "2.624963888888792e-06" im Risiken-Text) - derselbe

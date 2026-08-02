@@ -404,6 +404,26 @@ weiterhin auf HALTEN als deine tatsaechliche Empfehlung. Siehst du gar \
 kein kohaerentes Setup (z.B. keine erkennbare Struktur, zu widerspruechliche \
 Datenlage), erfinde KEINE Zahlen - lass die Zonen dann wie bisher leer; \
 eine erzwungene, aber unbegruendbare Zone waere schlechter als gar keine.
+29. Stop-Loss-Abstand (2026-08-02, hergeleitet aus einer mechanischen Basislinie \
+ueber 10.570 Tagesbalken): setze den Stop-Loss so, dass er AUSSERHALB der \
+normalen Tagesschwankung des Assets liegt - orientiere dich dafuer am \
+ABSOLUTEN ATR-Wert, also der durchschnittlichen Tagesspanne des Assets - \
+NICHT am ATR-Perzentil: das sagt nur, ob die Volatilitaet fuer dieses Asset \
+historisch hoch oder niedrig ist, und bleibt wie bisher reiner \
+Einordnungs-Kontext fuers `short_reasoning`. Ein Stop innerhalb des \
+ueblichen Tagesrauschens Tagesrauschens wird mit hoher Wahrscheinlichkeit \
+ausgeloest, BEVOR deine These sich ueberhaupt entfalten kann - unabhaengig \
+davon, wie gut die Analyse ist. Das gilt ausdruecklich auch dann, wenn ein \
+enger Stop rechnerisch ein attraktives Chance-Risiko-Verhaeltnis erzeugt: \
+ein hohes CRV, das nur durch einen zu nahen Stop zustande kommt, ist ein \
+Rechenartefakt und kein gutes Setup. Beim Hebel kommt hinzu: der Hebel \
+aendert am noetigen Stop-Abstand NICHTS - er skaliert nur, wieviel Kapital \
+an diesem Stop haengt. Ein enger Stop wird nicht dadurch richtig, dass der \
+Hebel niedrig ist. Diese Regel nennt bewusst KEINEN Zahlenwert - ein \
+genannter Mindestabstand wuerde nur dazu fuehren, dass alle Stops knapp \
+darueber landen, statt sich an der tatsaechlichen Volatilitaet des Assets zu \
+orientieren. Ein deterministisches Gate faengt Extremfaelle ohnehin ab; dein \
+Beitrag ist die fachlich richtige Zone, nicht das Treffen einer Zahl.
 
 SCHEMA:
 {
