@@ -373,8 +373,19 @@ def _get_veto_schatten_performance_nach_grund(conn: sqlite3.Connection, watchlis
 # die Seite zeigte nur noch kurz Werte, bevor sie leer blieb (Nutzer-Fund).
 # Die Zahlen aendern sich ohnehin nur beim taeglichen Backward-Tracking-Lauf,
 # ein Zwischenspeicher kostet also keine Aktualitaet.
+#
+# NACHTRAG 03.08.: 300 Sekunden waren immer noch 60x haeufiger als noetig. Die
+# Zahlen speisen sich ausschliesslich aus den outcome_*-Spalten, und die werden
+# nur vom taeglichen 06:00-Backward-Tracking geschrieben - zwischen zwei Laeufen
+# kann sich das Ergebnis gar nicht aendern. Auf dem Notebook (i5-4300U, zwei
+# Kerne von 2013) kostet ein Durchlauf ein Vielfaches der 1,8 s vom Desktop,
+# und die reine Python-Schleife des Bootstraps belegt dabei einen der beiden
+# Kerne - der Nutzer sah nach einem Browser-Refresh 15-20 s lang keine
+# aktualisierten Werte. Ein Stundentakt loest das an der Wurzel: der Wert ist
+# hoechstens eine Stunde alt, die Berechnung laeuft statt 288x nur noch 24x
+# am Tag.
 _SYSTEMGUETE_CACHE: dict = {"stand": 0.0, "wert": None, "laeuft": False}
-_SYSTEMGUETE_CACHE_SEKUNDEN = 300
+_SYSTEMGUETE_CACHE_SEKUNDEN = 3600
 
 
 def _get_systemguete(conn: sqlite3.Connection, watchlist: list) -> dict:
