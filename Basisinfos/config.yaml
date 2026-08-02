@@ -290,6 +290,34 @@ risiko:
                                         # EUR nur bei bewusster Sonderlage) - diesen Wert bei
                                         # wachsendem Vertrauen in die Kalibrierung anpassen,
                                         # nicht als dauerhaft fixen Wert betrachten.
+                                        #
+                                        # 2026-08-02 GEPRUEFT (Frage: braucht Hebel ein Pendant
+                                        # zum neuen RM-1d `ziel_gleichzeitige_positionen`?):
+                                        # NEIN, dieser Richtwert IST das Hebel-Pendant, und
+                                        # zwar das passendere - er greift an der richtigen
+                                        # Groesse (Eigenkapital statt Positionsgroesse) und
+                                        # stammt direkt aus der Praxis statt aus einer
+                                        # abgeleiteten Zahl.
+                                        #
+                                        # Messung an 157 Signalen mit Eigenkapitalbedarf: roher
+                                        # Median 1.157 USD, 90%-Quantil 3.219, Maximum 41.243 -
+                                        # 87,3% liegen ueber dem Richtwert und werden
+                                        # heruntergerechnet. Der Deckel ist also alles andere
+                                        # als wirkungslos; die Zahlen bestaetigen den Fund vom
+                                        # 29.07. (Median ~1.100, Ausreisser bis 41.000).
+                                        #
+                                        # Ein zusaetzliches portfolio-relatives RM-1d waere nur
+                                        # bei einem Portfolio UNTER 2.500 EUR strenger
+                                        # (Portfolio/5 < 500). Darunter liegt der Nutzer laut
+                                        # eigener Angabe ohnehin (100-300 EUR je Position), der
+                                        # Deckel bindet dort also nicht als erster. Ein zweiter
+                                        # Deckel haette in keinem realistischen Fall etwas
+                                        # zusaetzlich gefangen - verworfen als Duplikat.
+                                        #
+                                        # Offen bleibt bewusst: der Wert ist ein FESTBETRAG und
+                                        # skaliert bei wachsendem Portfolio nicht mit. Das ist
+                                        # gewollt (siehe "Gummi-Parameter" oben), aber beim
+                                        # naechsten Anheben mitzudenken.
     liquidationspreis_ausweisen: true  # RM-11 - nur Schaetzung, Bitpanda-Formel nicht
                                         # oeffentlich, siehe docs/hebel_positionsformel.md
     liquidations_sicherheitsmarge_relativ: 0.09  # RM-11 - 2026-07-19 NEU KALIBRIERT (vorher
