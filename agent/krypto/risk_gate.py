@@ -111,6 +111,11 @@ class RiskPreCheckResult:
     rm1_risk_ceiling_usd: float | None = None
     rm2_allocation_headroom_usd: float | None = None
     rm4_required_reserve_usd: float | None = None
+    # 2026-08-02 (RM-1d): der Portfoliowert selbst wird in post_check() gebraucht,
+    # um den Ziel-Positionszahl-Deckel zu rechnen. Bisher blieb er in pre_check()
+    # eingeschlossen und war nicht rekonstruierbar (rm2_allocation_headroom_usd
+    # allein reicht nicht, da max_allok_pct dort nicht mit exponiert ist).
+    total_value_usd: float | None = None
     # Cash-Veto als eigenes, robustes Feld (2026-07-18, Nutzer-Detailanalyse
     # "wann informiert das System ueber einen Cash-Block") - bewusst UNABHAENGIG
     # davon, ob `veto_reasons` (und damit `kauf_erlaubt`) am Ende ueberhaupt
@@ -398,6 +403,7 @@ def pre_check(
         veto_reason="; ".join(veto_reasons) if veto_reasons else None,
         max_position_size_usd=max_position_size_usd,
         max_position_size_eur=max_position_size_eur,
+        total_value_usd=total_value_usd,
         stop_loss_distance_pct=stop_loss_distance_pct,
         cash_reserve_pct_current=cash_reserve_pct_current,
         allocation_pct_current=allocation_pct_current,
@@ -911,6 +917,71 @@ def _rm1c_atr_untergrenze(
     )
 
 
+def _rm1_exakt_und_positionszahl(
+    basis_max_usd: float,
+    sl_abstand_relativ: float | None,
+    total_value_usd: float | None,
+    config: dict,
+) -> tuple[float, list[str]]:
+    """Korrigiert die Positionsgroessen-Obergrenze mit dem TATSAECHLICHEN Stop
+    (RM-1 exakt) und begrenzt sie zusaetzlich auf `Portfolio / N` (RM-1d).
+
+    Hintergrund RM-1 exakt (2026-08-02): `pre_check()` laeuft VOR dem LLM-Call
+    und muss den Stop-Abstand deshalb schaetzen - es nimmt `STOP_LOSS_ATR_
+    MULTIPLE` (2,0) x ATR an. Der tatsaechlich vorgeschlagene Stop wurde danach
+    nie dagegen geprueft. Messung an 222 Signalen: bei 18,5% liegt er WEITER
+    als 2x ATR (Median 2,56x, Extremfall 8,27x). Da
+    `max_position = Risikobudget / Stop-Abstand` gilt, ist die freigegebene
+    Position dort zu gross und der Verlust uebersteigt das Risikobudget - im
+    Median dieser Gruppe um 28%, im Extremfall um 313%. RM-1 ist laut
+    Regelwerksmanual "unantastbar"; verletzt wurde sie nicht per Override,
+    sondern durch eine Annahme, die niemand gegen das Ergebnis geprueft hat.
+
+    NUR NACH UNTEN korrigierend, bewusst: bei den ueblichen 1,53x ATR waere die
+    exakte Rechnung GROESSER als die Schaetzung und wuerde die Positionen um
+    rund 30% aufblaehen. Mathematisch waere das RM-1-konform (engerer Stop =
+    gleiches Risiko bei mehr Kapital), praktisch riskanter - bei einem Gap ueber
+    den Stop hinaus skaliert der Verlust mit der Positionsgroesse, nicht mit dem
+    geplanten Stop. RM-1 ist eine Obergrenze, kein Sollwert; sie zu
+    unterschreiten ist immer regelkonform.
+
+    Hintergrund RM-1d (Nutzer-Beobachtung 02.08.): dieselbe Formel von der
+    anderen Seite - je enger der Stop, desto groesser die Position. Bei 1500 EUR
+    Portfolio, 2% Risiko und 3% Stop sind das 1.000 EUR = 67% des Portfolios,
+    also faktisch nur EIN Trade gleichzeitig. Der Deckel `Portfolio / N` wirkt
+    nur, solange er strenger als RM-1 ist, und verschwindet bei wachsendem
+    Portfolio von selbst (Variante C).
+
+    Rueckgabe: (korrigierte Obergrenze, Liste von Erklaertexten fuer `checks`).
+    """
+    hinweise: list[str] = []
+    ergebnis = basis_max_usd
+
+    riskante_prozent = config["risiko"].get("risiko_pro_trade_prozent")
+    if sl_abstand_relativ and sl_abstand_relativ > 0 and total_value_usd and riskante_prozent:
+        risikobudget = total_value_usd * riskante_prozent / 100
+        exakt = risikobudget / sl_abstand_relativ
+        if exakt < ergebnis:
+            hinweise.append(
+                f"RM-1 exakt: Obergrenze {ergebnis:.2f} -> {exakt:.2f} USD "
+                f"(tatsaechlicher Stop {sl_abstand_relativ * 100:.2f}% statt "
+                f"{STOP_LOSS_ATR_MULTIPLE}x-ATR-Annahme)"
+            )
+            ergebnis = exakt
+
+    ziel_n = config["risiko"].get("ziel_gleichzeitige_positionen")
+    if total_value_usd and ziel_n and ziel_n > 0:
+        pro_position = total_value_usd / ziel_n
+        if pro_position < ergebnis:
+            hinweise.append(
+                f"RM-1d: Obergrenze {ergebnis:.2f} -> {pro_position:.2f} USD "
+                f"(Kapital soll fuer {ziel_n} gleichzeitige Positionen reichen)"
+            )
+            ergebnis = pro_position
+
+    return ergebnis, hinweise
+
+
 def post_check(
     parsed: dict, pre_result: RiskPreCheckResult, regime_result, config: dict, confluence=None,
     retail_long_bias_extreme: bool | None = None, long_account_pct: float | None = None,
@@ -975,6 +1046,11 @@ def post_check(
     # Gegenszenario/Retail-Konsens/Konfidenz bereits vorlagen) - `action`
     # selbst wird unten bei jedem Veto auf "HALTEN" ueberschrieben.
     original_action = action
+    # 2026-08-02: wird erst tief im Buy-/Sell-Zweig gesetzt (nur wenn alle sechs
+    # Zonenwerte vorliegen), aber weiter unten im Positionsgroessen-Block
+    # gelesen - ohne diese Initialisierung waere das bei fehlenden Zonen ein
+    # NameError statt einer stillen Nicht-Anwendung.
+    sl_abstand_relativ: float | None = None
 
     if action in _BUY_ACTIONS and not pre_result.kauf_erlaubt:
         risk_veto = True
@@ -1016,7 +1092,7 @@ def post_check(
             sl_eng_schwelle = config["risiko"].get("sl_abstand_eng_schwelle_relativ")
             sl_abstand_relativ = abs(entry_mid - stop_von) / entry_mid if entry_mid > 0 else None
             rm1c_verletzt, rm1c_reason = _rm1c_atr_untergrenze(
-                sl_abstand_relativ, atr_value, current_price_usd, config
+                sl_abstand_relativ, atr_value, current_price, config
             )
             if (
                 sl_abstand_relativ is not None
@@ -1073,7 +1149,7 @@ def post_check(
             sl_eng_schwelle = config["risiko"].get("sl_abstand_eng_schwelle_relativ")
             sl_abstand_relativ = abs(stop_bis - entry_mid) / entry_mid if entry_mid > 0 else None
             rm1c_verletzt, rm1c_reason = _rm1c_atr_untergrenze(
-                sl_abstand_relativ, atr_value, current_price_usd, config
+                sl_abstand_relativ, atr_value, current_price, config
             )
             if (
                 sl_abstand_relativ is not None
@@ -1124,6 +1200,18 @@ def post_check(
         proposed_usd = position_size.get("usd")
         max_usd = pre_result.max_position_size_usd
         max_eur = pre_result.max_position_size_eur
+        # RM-1 exakt + RM-1d (2026-08-02): die Basis korrigieren, BEVOR die vier
+        # Anteils-Deckel darauf rechnen - sonst wuerden Prozentsaetze auf eine
+        # Obergrenze angewendet, die selbst schon falsch ist.
+        rm1_korrektur_hinweise: list[str] = []
+        if max_usd is not None:
+            max_usd, rm1_korrektur_hinweise = _rm1_exakt_und_positionszahl(
+                max_usd, sl_abstand_relativ, pre_result.total_value_usd, config
+            )
+            if max_eur is not None and pre_result.max_position_size_usd:
+                # EUR proportional mitziehen, damit beide Waehrungen konsistent
+                # bleiben (der FX-Kurs steckt bereits im urspruenglichen Paar).
+                max_eur = max_eur * (max_usd / pre_result.max_position_size_usd)
         if max_usd is not None:
             # Vier Deckel-Kandidaten fuer die Positionsgroessen-Obergrenze
             # (Konfidenz-Skalierung, Gegenszenario, technischer Konflikt,
@@ -1225,6 +1313,12 @@ def post_check(
                 )
                 if bindender_grund:
                     clamp_note = f"{clamp_note} Bindender Grund: {bindender_grund}."
+                if rm1_korrektur_hinweise:
+                    # RM-1-exakt/RM-1d haben die Basis schon vor den Anteils-Deckeln
+                    # gesenkt - ohne diesen Zusatz waere im Signal nicht erkennbar,
+                    # warum die Obergrenze niedriger liegt als die RM-1-Rechnung
+                    # aus dem Vorab-Check erwarten liesse.
+                    clamp_note = f"{clamp_note} " + " ".join(rm1_korrektur_hinweise)
                 position_size["usd"] = effective_max_usd
                 position_size["eur"] = effective_max_usd * fx if fx is not None else effective_max_eur
                 existing_note = position_size.get("note")

@@ -31,6 +31,40 @@ ziele:
 # --- Risikomanagement / Kernmodul (siehe Spezifikation Kap. 3) ---
 risiko:
   risiko_pro_trade_prozent: 2          # RM-1: max. Verlust bis Stop-Loss je Trade
+  ziel_gleichzeitige_positionen: 5     # RM-1d (2026-08-02): das Kapital soll fuer
+                                        # mindestens so viele Positionen reichen.
+                                        # Wirkt als zusaetzlicher Deckel
+                                        # (Portfoliowert / N) - aber NUR solange er
+                                        # strenger ist als die RM-1-Grenze. Bei
+                                        # wachsendem Portfolio verschwindet er von
+                                        # selbst, statt dauerhaft eine willkuerliche
+                                        # Zahl gegen eine Risikoueberlegung zu setzen
+                                        # (Variante C der Entscheidungsvorlage).
+                                        #
+                                        # Anlass (Nutzer-Beobachtung 02.08.): die
+                                        # vorgeschlagenen Einmalinvestitionen waren so
+                                        # hoch, dass bei knappem Budget nur EIN Trade
+                                        # moeglich gewesen waere. Ursache ist die
+                                        # RM-1-Mechanik selbst - `Risikobudget /
+                                        # Stop-Abstand` waechst ins Absurde, je enger
+                                        # der Stop liegt. Bei 1500 EUR Portfolio, 2%
+                                        # Risiko und 3% Stop sind das 1.000 EUR = 67%
+                                        # des Portfolios in einer einzigen Position.
+                                        #
+                                        # Warum 5 und nicht 4: bei N=4 waere
+                                        # Portfolio/4 = 25% und damit exakt die
+                                        # RM-2-Grenze (max_allokation_pro_asset_
+                                        # prozent) - die Regel waere ein wirkungsloses
+                                        # Duplikat. Erst ab 5 (20%) greift sie
+                                        # ueberhaupt. Der Nutzer tendierte zur
+                                        # strengeren Seite; das ist 5, nicht 4.
+                                        #
+                                        # Bewusst NICHT gewaehlt: RM-2 von 25% auf 15%
+                                        # senken. Das haette auch grosse Portfolios
+                                        # getroffen, wo 25% vernuenftig sind, und haette
+                                        # zwei verschiedene Dinge vermischt -
+                                        # Klumpenrisiko (RM-2) und Diversifikations-
+                                        # wunsch bei kleinem Kapital (RM-1d).
   sl_abstand_min_atr_faktor: 0.75      # RM-1c (2026-08-02): zweite, VOLATILITAETS-
                                         # RELATIVE Untergrenze fuer den Stop-Abstand.
                                         # Wirkt zusaetzlich zu RM-1b darunter - es
