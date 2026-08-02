@@ -1578,7 +1578,135 @@ def _guete_kennzahlen(r_multiples: list[float], anzahl_offen: int) -> dict:
     }
 
 
-def compute_systemguete(conn, watchlist: list | None = None) -> dict:
+# Horizont der Basislinien-Simulation. Bewusst derselbe Wert wie
+# DEFAULT_ABGELAUFEN_TAGE_FALLBACK im Backward-Tracking: die Basislinie soll
+# dasselbe Zeitfenster abbilden wie die Bewertung der echten Signale.
+_BASISLINIE_HORIZONT_TAGE = 14
+# Unter dieser Zahl simulierter Einstiege wird keine Basislinie ausgewiesen -
+# ein Vergleichsmassstab aus wenigen Punkten ist schlechter als keiner.
+_BASISLINIE_MIN_EINSTIEGE = 200
+
+
+def _zonen_kennzahlen(row) -> tuple[float, float, bool] | None:
+    """(Stop-Abstand relativ, CRV, ist_short) einer Signalzeile nach Z-2.
+
+    Die Richtung kommt aus den Zonen selbst (Ziel unter Entry = bearisch) statt
+    aus einem richtung-Feld - so funktioniert es fuer Hebel UND die
+    Spot-Familie, die kein solches Feld hat.
+
+    Kantenwahl richtungsabhaengig wie im Risk-Gate: bei bullischer These
+    stop_von/take_von, bei bearischer die gespiegelten _bis. Gibt None zurueck,
+    wenn die Zonen unvollstaendig oder unplausibel sind."""
+    def _f(name):
+        try:
+            return row[name]
+        except (IndexError, KeyError):
+            return None
+
+    e_von, e_bis = _f("entry_usd_von"), _f("entry_usd_bis")
+    if e_von is None:
+        e_von = e_bis = _f("entry_usd")
+    s_von, s_bis = _f("stop_loss_usd_von"), _f("stop_loss_usd_bis")
+    t_von, t_bis = _f("take_profit_usd_von"), _f("take_profit_usd_bis")
+    if s_von is None:
+        s_von = s_bis = _f("stop_loss_usd")
+    if t_von is None:
+        t_von = t_bis = _f("take_profit_usd")
+    if None in (e_von, s_von, t_von):
+        return None
+    e = (e_von + (e_bis or e_von)) / 2
+    ist_short = t_von < e
+    if ist_short:
+        if s_bis is None or t_bis is None:
+            return None
+        stop, ziel = s_bis, t_bis
+    else:
+        stop, ziel = s_von, t_von
+    risiko = (stop - e) if ist_short else (e - stop)
+    chance = (e - ziel) if ist_short else (ziel - e)
+    if risiko <= 0 or chance <= 0 or e <= 0:
+        return None
+    return risiko / e, chance / risiko, ist_short
+
+
+def lade_kursreihen(conn) -> dict[str, list]:
+    """Alle USD-Tageskerzen nach Symbol gruppiert - einmal laden, mehrfach
+    nutzen. Ohne das laedt jede Basislinien-Berechnung die vollen rund 64000
+    Zeilen erneut (bei acht Gruppen achtmal)."""
+    reihen: dict[str, list] = {}
+    for r in conn.execute(
+        "SELECT symbol, date, open, high, low, close FROM price_history_ohlc "
+        "WHERE currency = 'USD' ORDER BY symbol, date"
+    ):
+        reihen.setdefault(r["symbol"], []).append(r)
+    return reihen
+
+
+def basislinie_erwartungswert(conn, stop_rel: float, crv: float, ist_short: bool,
+                              horizont: int = _BASISLINIE_HORIZONT_TAGE,
+                              reihen: dict | None = None) -> dict:
+    """Mechanische Basislinie: Zufallseinstieg an JEDEM Tagesbalken aller
+    Symbole mit exakt diesen Stop-/Ziel-Abstaenden (2026-08-03).
+
+    WARUM DAS NOETIG IST. Am 03.08. gegen den vollen Signalbestand gemessen
+    verliert ein solcher Zufallseinstieg systematisch: -0,11 bis -0,26 R je nach
+    Parametersatz. Damit ist ein Teil der absoluten Negativitaet des Systems
+    (hebel/real EW -0,299 R, SQN -1,72) schlicht Marktphase. Wer SQN ohne
+    diesen Bezugspunkt liest, haelt ein funktionierendes System in einer
+    schlechten Phase fuer kaputt - und steuert in die falsche Richtung nach.
+    Der SIGNALBEITRAG (Expectancy minus Basislinie) ist die belastbarere
+    Groesse, solange nur ein Regime beobachtet ist
+    (Test_und_Verifikationsmethodik 2.5.7, Zielgroessen_und_Erfolgsmasse 4).
+
+    Verwendet dieselbe Abbruch- und Fill-Logik wie das Backward-Tracking:
+    Stop schlaegt Ziel am selben Tag, Ausfuehrung zur Zonen-Grenze bzw. bei
+    einem Gap zum Eroeffnungskurs (gap_bewusster_fill).
+
+    Kosten rund 0,06 s je Aufruf bei 64000 Kursreihen-Zeilen - guenstig genug
+    fuer den laufenden Betrieb, deshalb kein Caching."""
+    if stop_rel <= 0 or crv <= 0:
+        return {"anzahl": 0, "erwartungswert_r": None}
+    if reihen is None:
+        reihen = lade_kursreihen(conn)
+
+    werte: list[float] = []
+    for rr in reihen.values():
+        for i in range(len(rr) - horizont - 1):
+            e = rr[i]["close"]
+            if not e or e <= 0:
+                continue
+            risiko = e * stop_rel
+            stop = e + risiko if ist_short else e - risiko
+            ziel = e - risiko * crv if ist_short else e + risiko * crv
+            fenster = rr[i + 1:i + 2 + horizont]
+            ergebnis = None
+            for p in fenster:
+                hoch, tief, auf = p["high"], p["low"], p["open"]
+                if hoch is None or tief is None:
+                    continue
+                hit_stop = (hoch >= stop) if ist_short else (tief <= stop)
+                hit_ziel = (tief <= ziel) if ist_short else (hoch >= ziel)
+                if hit_stop:
+                    fill = gap_bewusster_fill(stop, auf, ist_stop=True, ist_short=ist_short)
+                    ergebnis = ((e - fill) if ist_short else (fill - e)) / risiko
+                    break
+                if hit_ziel:
+                    fill = gap_bewusster_fill(ziel, auf, ist_stop=False, ist_short=ist_short)
+                    ergebnis = ((e - fill) if ist_short else (fill - e)) / risiko
+                    break
+            if ergebnis is None and fenster and fenster[-1]["close"]:
+                schluss = fenster[-1]["close"]
+                ergebnis = ((e - schluss) if ist_short else (schluss - e)) / risiko
+            if ergebnis is not None:
+                werte.append(ergebnis)
+
+    if len(werte) < _BASISLINIE_MIN_EINSTIEGE:
+        return {"anzahl": len(werte), "erwartungswert_r": None}
+    return {"anzahl": len(werte), "erwartungswert_r": statistics.fmean(werte)}
+
+
+def compute_systemguete(conn, watchlist: list | None = None,
+                        mit_basislinie: bool = True) -> dict:
     """System Quality Number + Expectancy + Profit Factor je tier (2026-08-02).
 
     Antwort auf eine Nutzer-Kritik nach einem Tag mit neun revidierten
@@ -1593,20 +1721,36 @@ def compute_systemguete(conn, watchlist: list | None = None) -> dict:
     berechnet. Die beiden Zahlen beantworten verschiedene Fragen ("wie gut ist
     das, was wir tun" vs. "wie gut waere das, was wir verhindern").
 
+    SEIT 03.08. MIT BASISLINIE. Zusaetzlich wird je Gruppe eine mechanische
+    Basislinie mitgerechnet (Zufallseinstieg mit denselben Median-Parametern,
+    siehe basislinie_erwartungswert()) und daraus der SIGNALBEITRAG gebildet.
+    Grund: die Basislinie ist im beobachteten Zeitraum durchgehend negativ, ein
+    absolut gelesener SQN alarmiert dadurch strukturell falsch. `mit_basislinie
+    =False` schaltet das ab, falls ein Aufrufer nur die reinen Kennzahlen will.
+
     Reine Lesefunktion. Gibt je tier ein dict mit den Schluesseln `real` und
-    `schatten` zurueck, jeweils mit den Feldern aus _guete_kennzahlen()."""
+    `schatten` zurueck, jeweils mit den Feldern aus _guete_kennzahlen() plus
+    basislinie_erwartungswert_r / basislinie_anzahl / basislinie_stop_rel /
+    basislinie_crv / signalbeitrag_r."""
     assetklasse_by_symbol = _assetklasse_index(watchlist, "compute_systemguete()")
     r_werte: dict[tuple[str, str], list[float]] = {}
     offen: dict[tuple[str, str], int] = {}
 
-    def _erfasse(tier: str, art: str, crv, ist_offen: bool) -> None:
+    zonen: dict[tuple[str, str], list[tuple[float, float]]] = {}
+
+    def _erfasse(tier: str, art: str, crv, ist_offen: bool, zonen_werte=None) -> None:
         key = (tier, art)
         r_werte.setdefault(key, [])
         offen.setdefault(key, 0)
         if ist_offen:
             offen[key] += 1
-        elif crv is not None:
+            return
+        if crv is not None:
             r_werte[key].append(crv)
+        # Zonen nur von den BEWERTETEN Faellen sammeln - die Basislinie soll die
+        # Parameter genau der Trades abbilden, deren Ergebnis sie einordnet.
+        if zonen_werte is not None:
+            zonen.setdefault(key, []).append(zonen_werte)
 
     for tabelle, ist_hebel in (("signals", False), ("hebel_signals", True)):
         # Die Veto-Schatten-Spalten kamen erst am 28.07. dazu. Aeltere
@@ -1616,6 +1760,16 @@ def compute_systemguete(conn, watchlist: list | None = None) -> dict:
         spalten = {r[1] for r in conn.execute(f"PRAGMA table_info({tabelle})")}
         hat_schatten = {"veto_outcome_status", "veto_outcome_realisiertes_crv"} <= spalten
         felder = "symbol, outcome_status, outcome_realisiertes_crv, risk_veto"
+        # Zonen mitlesen: daraus kommen die Parameter der Basislinie (Median
+        # Stop-Abstand und CRV je Gruppe). Nur die Spalten, die es in der
+        # jeweiligen Tabelle wirklich gibt - Spot fuehrt zusaetzlich
+        # Einzelwert-Felder ohne _von/_bis, Hebel nicht.
+        zonen_spalten = [c for c in (
+            "entry_usd_von", "entry_usd_bis", "entry_usd",
+            "stop_loss_usd_von", "stop_loss_usd_bis", "stop_loss_usd",
+            "take_profit_usd_von", "take_profit_usd_bis", "take_profit_usd",
+        ) if c in spalten]
+        felder += "".join(f", {c}" for c in zonen_spalten)
         if hat_schatten:
             felder += ", veto_outcome_status, veto_outcome_realisiertes_crv"
         rows = conn.execute(
@@ -1625,22 +1779,51 @@ def compute_systemguete(conn, watchlist: list | None = None) -> dict:
             tier = TIER_HEBEL if ist_hebel else _tier_fuer_spot_symbol(
                 row["symbol"], assetklasse_by_symbol
             )
+            z = _zonen_kennzahlen(row)
             if row["risk_veto"]:
                 if not hat_schatten:
                     continue
                 st = row["veto_outcome_status"]
                 _erfasse(tier, "schatten", row["veto_outcome_realisiertes_crv"],
-                         st not in _RESOLVED_OUTCOMES)
+                         st not in _RESOLVED_OUTCOMES, z)
             else:
                 st = row["outcome_status"]
                 _erfasse(tier, "real", row["outcome_realisiertes_crv"],
-                         st not in _RESOLVED_OUTCOMES)
+                         st not in _RESOLVED_OUTCOMES, z)
 
     ergebnis: dict = {}
+    # Einmal laden statt je Gruppe - siehe lade_kursreihen().
+    reihen = lade_kursreihen(conn) if mit_basislinie else None
     for (tier, art) in sorted(set(r_werte) | set(offen)):
-        ergebnis.setdefault(tier, {})[art] = _guete_kennzahlen(
-            r_werte.get((tier, art), []), offen.get((tier, art), 0)
-        )
+        k = _guete_kennzahlen(r_werte.get((tier, art), []), offen.get((tier, art), 0))
+        z = [x for x in zonen.get((tier, art), []) if x]
+        if mit_basislinie and z and k["expectancy_r"] is not None:
+            stop_rel = statistics.median(x[0] for x in z)
+            crv = statistics.median(x[1] for x in z)
+            # Richtung nach Mehrheit der Gruppe: bei Hebel gibt es SHORT-Signale,
+            # deren Basislinie spiegelverkehrt laeuft. Eine pauschale
+            # LONG-Annahme waere dort schlicht die falsche Vergleichsgroesse.
+            anteil_short = sum(1 for x in z if x[2]) / len(z)
+            bl = basislinie_erwartungswert(conn, stop_rel, crv,
+                                           ist_short=anteil_short > 0.5,
+                                           reihen=reihen)
+            k["basislinie_erwartungswert_r"] = bl["erwartungswert_r"]
+            k["basislinie_anzahl"] = bl["anzahl"]
+            k["basislinie_stop_rel"] = stop_rel
+            k["basislinie_crv"] = crv
+            k["basislinie_anteil_short"] = anteil_short
+            k["signalbeitrag_r"] = (
+                None if bl["erwartungswert_r"] is None
+                else k["expectancy_r"] - bl["erwartungswert_r"]
+            )
+        else:
+            k["basislinie_erwartungswert_r"] = None
+            k["basislinie_anzahl"] = 0
+            k["basislinie_stop_rel"] = None
+            k["basislinie_crv"] = None
+            k["basislinie_anteil_short"] = None
+            k["signalbeitrag_r"] = None
+        ergebnis.setdefault(tier, {})[art] = k
     return ergebnis
 
 

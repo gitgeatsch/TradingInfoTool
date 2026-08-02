@@ -243,6 +243,7 @@ _INDEX_HTML = """<!doctype html>
   (Van Tharp): unter 1,5 kaum handelbar, 1,5-2 durchschnittlich, ab 2 gut - bestraft also Schwankung,
   nicht nur einen schwachen Durchschnitt. Die <b>Auflösungsquote</b> steht bewusst daneben: Gruppen mit
   weiten Stops werden kaum aufgelöst, ihre Quoten sind entsprechend selektiert.</span></div>
+    <div class="row"><span class="muted-text"><b>Signalbeitrag</b> (2026-08-03) ist die wichtigere Zahl, solange nur eine Marktphase beobachtet ist: Expectancy minus dem, was ein reiner Zufallseinstieg mit denselben Stop- und Zielabständen im selben Zeitraum gebracht hätte. Gemessen am 03.08. verliert dieser Zufallseinstieg 0,11 bis 0,26 R - ein negativer SQN heißt also nicht zwingend, dass das System nicht funktioniert, sondern kann schlicht die Marktphase sein. Positiver Signalbeitrag = die Signale tragen etwas bei, was der Zufall nicht hergibt.</span></div>
   <div id="systemguete"></div>
 </div>
 
@@ -760,10 +761,27 @@ async function refreshStatus() {
           var pf = k.profit_factor === null ? "-" : k.profit_factor.toFixed(2);
           var auf = k.aufloesungsquote === null ? "-" : (k.aufloesungsquote * 100).toFixed(0) + "%";
           var warn = k.sqn_belastbar ? "" : ' <span class="muted-text">[n&lt;30]</span>';
+          // Zweite Zeile: Signalbeitrag gegen die mechanische Basislinie
+          // (2026-08-03). Ohne diesen Bezugspunkt liest sich ein negativer SQN
+          // als kaputtes System, obwohl der Zufallseinstieg im selben Zeitraum
+          // noch mehr verliert - Begruendung in basislinie_erwartungswert().
+          var zusatz = "";
+          if (k.signalbeitrag_r !== null && k.signalbeitrag_r !== undefined) {
+            var sb = (k.signalbeitrag_r >= 0 ? "+" : "") + k.signalbeitrag_r.toFixed(3);
+            var blw = (k.basislinie_erwartungswert_r >= 0 ? "+" : "") +
+                      k.basislinie_erwartungswert_r.toFixed(3);
+            zusatz = '<div class="row"><span class="muted-text">&nbsp;&nbsp;&nbsp;&nbsp;' +
+              "Zufallseinstieg, gleiche Parameter (Stop " +
+              (k.basislinie_stop_rel * 100).toFixed(1) + "%, CRV " +
+              k.basislinie_crv.toFixed(2) + ", n=" + k.basislinie_anzahl + "): " +
+              blw + " R</span><span class=\"" +
+              (k.signalbeitrag_r >= 0 ? "ok" : "warn") +
+              '">Signalbeitrag ' + sb + " R</span></div>";
+          }
           return '<div class="row"><span>' + tier + " / " + art +
             ' <span class="muted-text">(n=' + k.anzahl_bewertet + ", " + k.anzahl_offen +
             " offen, Auflösung " + auf + ")</span></span>" +
-            "<span>EW " + ew + " R, SQN " + sqn + ", PF " + pf + warn + "</span></div>";
+            "<span>EW " + ew + " R, SQN " + sqn + ", PF " + pf + warn + "</span></div>" + zusatz;
         }).join("");
       }).join("") || '<div class="row"><span class="muted-text">noch keine bewerteten Trades</span></div>';
   }
