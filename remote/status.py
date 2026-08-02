@@ -373,7 +373,7 @@ def _get_veto_schatten_performance_nach_grund(conn: sqlite3.Connection, watchlis
 # die Seite zeigte nur noch kurz Werte, bevor sie leer blieb (Nutzer-Fund).
 # Die Zahlen aendern sich ohnehin nur beim taeglichen Backward-Tracking-Lauf,
 # ein Zwischenspeicher kostet also keine Aktualitaet.
-_SYSTEMGUETE_CACHE: dict = {"stand": 0.0, "wert": None}
+_SYSTEMGUETE_CACHE: dict = {"stand": 0.0, "wert": None, "laeuft": False}
 _SYSTEMGUETE_CACHE_SEKUNDEN = 300
 
 
@@ -384,20 +384,48 @@ def _get_systemguete(conn: sqlite3.Connection, watchlist: list) -> dict:
     real ausgefuehrt und Veto-Schatten, weil beide verschiedene Fragen
     beantworten.
 
-    Ergebnis wird 5 Minuten zwischengespeichert - Begruendung bei
+    Ergebnis wird zwischengespeichert und im HINTERGRUND erneuert - der
+    Statusabruf wartet nie auf die Berechnung. Begruendung bei
     _SYSTEMGUETE_CACHE."""
+    import threading
     import time
 
+    jetzt = time.monotonic()
+    frisch = (_SYSTEMGUETE_CACHE["wert"] is not None
+              and jetzt - _SYSTEMGUETE_CACHE["stand"] < _SYSTEMGUETE_CACHE_SEKUNDEN)
+    if not frisch and not _SYSTEMGUETE_CACHE["laeuft"]:
+        _SYSTEMGUETE_CACHE["laeuft"] = True
+        threading.Thread(target=_systemguete_neu_berechnen, args=(watchlist,),
+                         daemon=True).start()
+    # Bis die Berechnung fertig ist, kommt der vorige Wert zurueck (beim
+    # allerersten Aufruf None - die Karte bleibt dann eine Runde leer und
+    # fuellt sich beim naechsten Refresh zwei Sekunden spaeter).
+    return _SYSTEMGUETE_CACHE["wert"]
+
+
+def _systemguete_neu_berechnen(watchlist: list) -> None:
+    """Laeuft in einem Hintergrund-Thread und OEFFNET EINE EIGENE
+    DB-Verbindung - sqlite3-Verbindungen duerfen nicht ueber Threads hinweg
+    benutzt werden, die Verbindung des Aufrufers ist hier also tabu."""
+    import time
+
+    import database.db as db
     from agent.krypto.backward_tracking import compute_systemguete
 
-    jetzt = time.monotonic()
-    if (_SYSTEMGUETE_CACHE["wert"] is not None
-            and jetzt - _SYSTEMGUETE_CACHE["stand"] < _SYSTEMGUETE_CACHE_SEKUNDEN):
-        return _SYSTEMGUETE_CACHE["wert"]
-    wert = compute_systemguete(conn, watchlist)
-    _SYSTEMGUETE_CACHE["wert"] = wert
-    _SYSTEMGUETE_CACHE["stand"] = jetzt
-    return wert
+    try:
+        eigene = db.get_connection()
+        try:
+            wert = compute_systemguete(eigene, watchlist)
+        finally:
+            eigene.close()
+        _SYSTEMGUETE_CACHE["wert"] = wert
+        _SYSTEMGUETE_CACHE["stand"] = time.monotonic()
+    except Exception:
+        # Nicht durchreichen: ein Fehler hier darf den Statusabruf nicht
+        # beeinflussen. Beim naechsten Abruf wird es erneut versucht.
+        logger.exception("Systemguete-Neuberechnung im Hintergrund fehlgeschlagen")
+    finally:
+        _SYSTEMGUETE_CACHE["laeuft"] = False
 
 
 def _get_selbst_gewaehltes_halten_performance(conn: sqlite3.Connection, watchlist: list) -> dict:
