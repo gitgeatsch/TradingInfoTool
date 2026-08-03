@@ -18,15 +18,18 @@ BLOCKER 2 - Vorzeichen-Widerspruch.
   stark der Wert vom Parametersatz abhaengt - und ob beide Zahlen aus
   demselben Code stammen koennen.
 
-Am NOTEBOOK laufen lassen (Produktiv-DB). Ausgabe in eine Datei umleiten und
-in den Austauschordner legen:
+Am NOTEBOOK laufen lassen (Produktiv-DB), ohne Umleitung:
 
-    python messe_basislinie_aufloesung.py > basislinie_messung.txt 2>&1
+    python messe_basislinie_aufloesung.py
+
+Das Skript legt die Ergebnisdatei SELBST im Austauschordner ab und nennt am
+Ende den vollen Pfad. Eine Shell-Umleitung wuerde im aktuellen Verzeichnis
+landen, also im Repo-Ordner - genau das soll sie nicht.
 """
 
 from __future__ import annotations
 
-import math
+import os
 import statistics
 import sys
 
@@ -42,6 +45,54 @@ from agent.krypto.backward_tracking import (
 # stop_rel = Stop-Abstand relativ zum Einstieg, crv = Ziel als Vielfaches davon.
 RASTER_STOP = (0.02, 0.03, 0.05, 0.08)
 RASTER_CRV = (2.0, 2.5, 3.0, 4.0)
+
+# Der Austauschordner (reference_notebook_analyseordner_standard). Der
+# Laufwerksbuchstabe der Google-Drive-Einbindung kann sich je Geraet
+# unterscheiden, deshalb mehrere Kandidaten - der erste existierende gewinnt.
+AUSTAUSCH_KANDIDATEN = (
+    r"K:\My Drive\Claude_Austauschordner\Notebook_Analysedaten",
+    r"G:\My Drive\Claude_Austauschordner\Notebook_Analysedaten",
+    r"H:\My Drive\Claude_Austauschordner\Notebook_Analysedaten",
+    os.path.expanduser(r"~\Google Drive\Claude_Austauschordner\Notebook_Analysedaten"),
+    os.path.expanduser(r"~\My Drive\Claude_Austauschordner\Notebook_Analysedaten"),
+)
+DATEINAME = "basislinie_messung.txt"
+
+
+class Tee:
+    """Schreibt gleichzeitig auf den Bildschirm und in die Ergebnisdatei.
+
+    So sieht der Nutzer den Fortschritt (das Raster laeuft einige Minuten)
+    UND bekommt die Datei, ohne an eine Shell-Umleitung denken zu muessen -
+    die wuerde im aktuellen Verzeichnis landen statt im Austauschordner."""
+
+    def __init__(self, ziel):
+        self._ziel = ziel
+
+    def write(self, text):
+        sys.__stdout__.write(text)
+        self._ziel.write(text)
+        return len(text)
+
+    def flush(self):
+        sys.__stdout__.flush()
+        self._ziel.flush()
+
+
+def _ergebnispfad() -> tuple[str, str | None]:
+    """Liefert (voller Pfad, Hinweistext bei Ausweichen).
+
+    Faellt auf das Skriptverzeichnis zurueck, wenn kein Austauschordner
+    gefunden wird - lieber eine Datei am falschen Ort als gar keine."""
+    for ordner in AUSTAUSCH_KANDIDATEN:
+        if os.path.isdir(ordner):
+            return os.path.join(ordner, DATEINAME), None
+    hier = os.path.dirname(os.path.abspath(__file__))
+    return (
+        os.path.join(hier, DATEINAME),
+        "Kein Austauschordner gefunden - Datei liegt im Skriptverzeichnis "
+        "und muss von Hand kopiert werden.",
+    )
 
 
 def basislinie_mit_buckets(reihen: dict, stop_rel: float, crv: float,
@@ -165,8 +216,14 @@ def _median_parameter_echter_signale(conn) -> None:
 
 
 def main() -> int:
+    pfad, hinweis = _ergebnispfad()
+    ziel = open(pfad, "w", encoding="utf-8")
+    alt = sys.stdout
+    sys.stdout = Tee(ziel)
     conn = db.get_connection()
     try:
+        if hinweis:
+            print(f"HINWEIS: {hinweis}")
         _median_parameter_echter_signale(conn)
 
         print("\n=== Kursreihen laden ===")
@@ -222,6 +279,11 @@ def main() -> int:
         return 0
     finally:
         conn.close()
+        sys.stdout = alt
+        ziel.close()
+        print(f"\nErgebnisdatei geschrieben:\n  {pfad}")
+        if hinweis:
+            print(f"  ACHTUNG: {hinweis}")
 
 
 if __name__ == "__main__":
