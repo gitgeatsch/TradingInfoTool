@@ -74,6 +74,14 @@ MIN_SYMBOLE_FUER_FX = 3
 # eine der beiden Kursreihen nicht stimmt.
 MAX_FX_SPANNWEITE_RELATIV = 0.02
 
+# Ab welcher Menge gilt eine Position als real? Vollstaendig verkaufte Positionen
+# hinterlassen Fliesskomma-Reste - gemessen 04.08. am echten Bestand: 25 Symbole
+# zwischen 5,5e-17 und 1,9e-09. Mit einem simplen `> 0` gelten die als gehaltene
+# Position, haben aber natuerlich keinen Kurs und blaehten die Kennzahl
+# "Symbole ohne Kurs" auf das Anderthalbfache auf. Wirtschaftlich sind sie null;
+# die kleinste ECHTE Position lag um viele Groessenordnungen darueber.
+MIN_MENGE_REAL = 1e-8
+
 
 @dataclass
 class SymbolDiagnose:
@@ -519,7 +527,7 @@ def verketteter_index(
         alt = neu = 0.0
         bewertet = 0
         for symbol, menge in basis.items():
-            if menge <= 0:
+            if menge <= MIN_MENGE_REAL:
                 continue
             p_alt, p_neu = kurs_am(symbol, vortag), kurs_am(symbol, tag)
             if p_alt is None or p_neu is None:
@@ -685,7 +693,7 @@ def rekonstruiere_aus_transaktionen(
         wert = 0.0
         ohne_kurs = 0
         for symbol, menge in stand.items():
-            if menge <= 0:
+            if menge <= MIN_MENGE_REAL:
                 continue
             kurs = kurs_am(symbol, tag)
             if kurs is None:
@@ -695,8 +703,19 @@ def rekonstruiere_aus_transaktionen(
         reihe.append((tag, wert, index, ohne_kurs))
         del bewertet
 
+    # Welche Symbole am LETZTEN Tag ohne Kurs blieben, mit ihrer Menge. Die
+    # blosse Anzahl sagt zu wenig: sie unterscheidet nicht zwischen "eine grosse
+    # Position wird nicht bewertet" (ernst) und "viele Kleinstposten" (egal).
+    letzter_tag = tage[-1] if tage else None
+    ohne_kurs_detail = []
+    if letzter_tag:
+        for symbol, menge in sorted(mengen_am(letzter_tag).items()):
+            if menge > MIN_MENGE_REAL and kurs_am(symbol, letzter_tag) is None:
+                ohne_kurs_detail.append((symbol, menge))
+
     diagnose = {
         "naeherung_konstante_menge": sorted(ohne_verlauf),
+        "ohne_kurs_letzter_tag": ohne_kurs_detail,
         "kursherkunft": herkunft,
         "ohne_jeden_kurs": sorted(s for s, h in herkunft.items() if h == "keine"),
         "bewegungstage_gesamt": len(bewegungstage),

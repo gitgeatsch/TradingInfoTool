@@ -140,6 +140,14 @@ def main() -> None:
             print(f"  OHNE JEDEN KURS: {diagnose['ohne_jeden_kurs']}")
         maximal_ohne_kurs = max(z[3] for z in reihe)
         print(f"  Symbole ohne Kurs, schlimmster Tag: {maximal_ohne_kurs}")
+        detail = diagnose.get("ohne_kurs_letzter_tag") or []
+        if detail:
+            print()
+            print(f"  OHNE KURS am letzten Tag ({len(detail)}) - hier zaehlt die MENGE,")
+            print("  nicht die Anzahl. Grosse Positionen ohne Kurs senken den Tageswert;")
+            print("  Kleinstposten sind belanglos:")
+            for symbol, menge in sorted(detail, key=lambda x: -x[1]):
+                print(f"     {symbol:10s} Menge {menge:16.8f}")
 
         print("\n  Erste und letzte fuenf Tage:")
         for datum, wert, index, ohne in reihe[:5] + reihe[-5:]:
