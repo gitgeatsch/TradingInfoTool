@@ -1658,6 +1658,12 @@ _BASISLINIE_HORIZONT_TAGE = 14
 # Unter dieser Zahl simulierter Einstiege wird keine Basislinie ausgewiesen -
 # ein Vergleichsmassstab aus wenigen Punkten ist schlechter als keiner.
 _BASISLINIE_MIN_EINSTIEGE = 200
+# Zieht die Basislinie ihre Zufallseinstiege nur aus dem Zeitraum, in dem die
+# bewerteten Signale tatsaechlich liefen? Siehe basislinie_erwartungswert().
+# RUECKSCHRITT: diesen Wert auf False setzen stellt exakt das Verhalten vor dem
+# 03.08. wieder her (Ziehungen aus der gesamten Kurshistorie). Kein weiterer
+# Eingriff noetig - die Kennzahlen aendern sich dann zurueck, nicht der Code.
+_BASISLINIE_NUR_SIGNALFENSTER = True
 
 
 def _zonen_kennzahlen(row) -> tuple[float, float, bool] | None:
@@ -1715,11 +1721,35 @@ def lade_kursreihen(conn) -> dict[str, list]:
     return reihen
 
 
+def _reihen_im_fenster(reihen: dict, ab_datum: str | None,
+                       bis_datum: str | None) -> dict:
+    """Beschneidet die Kursreihen auf [ab_datum, bis_datum] (ISO, inklusiv).
+
+    Beide Grenzen optional - None laesst die jeweilige Seite offen. Reihen, die
+    danach leer sind, fallen raus; die Zaehlung der Ziehungen in
+    basislinie_erwartungswert() bleibt dadurch automatisch korrekt."""
+    if ab_datum is None and bis_datum is None:
+        return reihen
+    geschnitten: dict[str, list] = {}
+    for symbol, rows in reihen.items():
+        gefiltert = [
+            r for r in rows
+            if (ab_datum is None or r["date"] >= ab_datum)
+            and (bis_datum is None or r["date"] <= bis_datum)
+        ]
+        if gefiltert:
+            geschnitten[symbol] = gefiltert
+    return geschnitten
+
+
 def basislinie_erwartungswert(conn, stop_rel: float, crv: float, ist_short: bool,
                               horizont: int = _BASISLINIE_HORIZONT_TAGE,
-                              reihen: dict | None = None) -> dict:
-    """Mechanische Basislinie: Zufallseinstieg an JEDEM Tagesbalken aller
-    Symbole mit exakt diesen Stop-/Ziel-Abstaenden (2026-08-03).
+                              reihen: dict | None = None,
+                              ab_datum: str | None = None,
+                              bis_datum: str | None = None) -> dict:
+    """Mechanische Basislinie: Zufallseinstieg an jedem Tagesbalken aller
+    Symbole mit exakt diesen Stop-/Ziel-Abstaenden, beschraenkt auf das
+    Zeitfenster der bewerteten Signale (2026-08-03).
 
     WARUM DAS NOETIG IST. Ohne Bezugspunkt haelt man ein funktionierendes
     System in einer schlechten Phase fuer kaputt - und steuert in die falsche
@@ -1727,41 +1757,75 @@ def basislinie_erwartungswert(conn, stop_rel: float, crv: float, ist_short: bool
     belastbarere Groesse, solange nur ein Regime beobachtet ist
     (Test_und_Verifikationsmethodik 2.5.7, Zielgroessen_und_Erfolgsmasse 4).
 
-    KORREKTUR 04.08. (#617): hier stand, ein Zufallseinstieg verliere
-    systematisch "-0,11 bis -0,26 R je nach Parametersatz", ein Teil unserer
-    Negativitaet sei also blosse Marktphase. Das ist gegen den heutigen Code
-    NICHT reproduzierbar - ueber ein Raster von 4 Stop-Abstaenden x 4 CRV-Werten
-    sind ALLE 16 LONG-Zellen positiv (+0,026 bis +0,115); SHORT liegt zwischen
-    -0,111 und -0,034. Die alten Zahlen passen der Groessenordnung nach zur
-    BEREINIGTEN Rechnung (siehe naechster Absatz), nicht zu dem, was diese
-    Funktion zurueckgibt. Wer die Basislinie zur Entlastung heranzieht, stuetzt
-    sich sonst auf eine Zahl, die der Code so nicht mehr liefert.
+    DAS ZEITFENSTER IST DER GANZE PUNKT - und war bis heute falsch gesetzt.
+    Zieht die Basislinie aus der gesamten Kurshistorie, mittelt sie ueber rund
+    zwei Jahre Marktgeschichte, waehrend unsere bewerteten Signale aus wenigen
+    Wochen stammen. Sie kontrolliert dann nicht die Marktphase, sondern ersetzt
+    sie durch "Durchschnittsmarkt" - also genau das, wogegen sie gebaut wurde.
+    Gemessen am 03.08. mit identischem Code und identischen Parametern
+    (stop_rel 0,0394, CRV 2,698, LONG, Horizont 14):
 
-    ACHTUNG, ASYMMETRIE - der wichtigste Vorbehalt dieser Funktion.
+        Signalfenster 2026-05-08..2026-08-03 (88 Tage):   -0,224 R  (n=2817)
+        volle Historie 2024-07-17..2026-08-03 (~2 Jahre): +0,081 R  (n=60010)
+
+    Das Vorzeichen kippt, Differenz 0,30 R. Der Signalbeitrag hebel/real geht
+    dadurch von -0,379 R auf rund -0,075 R zurueck.
+
+    KORREKTUR DER KORREKTUR (03.08.): Ein frueherer Docstring begruendete die
+    Konstruktion mit "Zufallseinstieg verliert systematisch, -0,11 bis -0,26 R
+    je nach Parametersatz". Commit b8d7cac erklaerte diese Zahl fuer nicht
+    reproduzierbar und vermutete sie bei einer bereinigten Nebenrechnung. Beides
+    war falsch: sie stammt aus der Basislinie von analyse_crv_gate_
+    survivorship.py, deren Werte ueber alle Gruppen und beide Horizonte exakt
+    zwischen -0,114 und -0,265 R liegen. Jenes Skript zieht bereits aus dem
+    Signalfenster - die alte Zahl war also richtig, nur diese Funktion war es
+    nicht. Beide Rechnungen sind mit dem Parameter unten jetzt deckungsgleich.
+
+    RUECKSCHRITT: `_BASISLINIE_NUR_SIGNALFENSTER = False` (oben im Modul) stellt
+    das alte Verhalten vollstaendig wieder her, ohne Code-Aenderung. Die Zahlen
+    oben sind die beiden Erwartungswerte, zwischen denen dieser Schalter wechselt.
+
+    VERBLEIBENDER VORBEHALT - Aufloesungs-Asymmetrie (#617, unveraendert offen).
     Trifft eine Ziehung weder Stop noch Ziel, wird sie unten zum Schlusskurs
     bewertet und ZAEHLT MIT. Echte Signale bekommen in derselben Lage
-    'abgelaufen_unentschieden' und GAR KEINEN R-Wert - sie fallen aus der SQN
-    heraus. Die Basislinie hat also einen Topf, den unsere Signale nicht haben,
-    und er ist gross und gut: bei unseren Median-Parametern (Hebel, Stop 0,044,
-    CRV 3,27, 80 % LONG) sind es 40,5 % aller Ziehungen mit +0,47 R im Schnitt.
-    Nimmt man sie heraus, dreht die Basislinie von +0,071 auf -0,201 - das
-    Vorzeichen kippt. Der Signalbeitrag schrumpft dadurch von -0,379 R auf
-    rund -0,08 R, liegt also bei n=86 im Rauschen.
-    Gemessen mit messe_basislinie_aufloesung.py; die dortige Schleife
-    reproduziert den Produktivwert (+0,0706 gegen +0,0807 im Export).
-    SOLANGE #617 OFFEN IST: den Signalbeitrag nicht als Beleg verwenden, weder
-    im LLM-Prompt noch in Berichten noch als Begruendung fuer Regelaenderungen.
+    'abgelaufen_unentschieden' und GAR KEINEN R-Wert. Der Topf ist gross und
+    strukturell positiv (Barrieren-Konditionierung: was den Stop nicht trifft,
+    ist nach oben selektiert - in BEIDEN Richtungen). An der Produktionszelle
+    rund 31 % der Ziehungen, Verzerrung etwa +0,13 R. Das ist der kleinere der
+    beiden Posten und bleibt bewusst offen: ihn zu beheben hiesse, entweder die
+    Basislinie zu kuerzen oder unsere unaufgelosten Signale mitzubewerten - und
+    Letzteres aendert die SQN-Basis aller bisherigen Auswertungen.
 
     Verwendet ansonsten dieselbe Abbruch- und Fill-Logik wie das
     Backward-Tracking: Stop schlaegt Ziel am selben Tag, Ausfuehrung zur
     Zonen-Grenze bzw. bei einem Gap zum Eroeffnungskurs (gap_bewusster_fill).
 
-    Kosten rund 0,06 s je Aufruf bei 64000 Kursreihen-Zeilen - guenstig genug
-    fuer den laufenden Betrieb, deshalb kein Caching."""
+    `ab_datum`/`bis_datum`: ISO-Tagesdaten, inklusiv, beide optional. Werden sie
+    weggelassen, zieht die Funktion aus der gesamten uebergebenen Historie -
+    Aufrufer, die einen fairen Vergleich wollen, MUESSEN sie setzen.
+
+    ZWEI FOLGEN DES FENSTERS, beide gewollt, beide sichtbar in `anzahl`:
+    1. Eine Ziehung braucht `horizont`+1 Folgetage INNERHALB des Fensters. Das
+       effektive Einstiegsfenster endet also rund einen Horizont vor
+       `bis_datum` - deshalb setzt compute_systemguete() dort bewusst
+       "letztes Signal + Horizont" und nicht das Datum des letzten Signals.
+       Reicht die Kurshistorie nicht bis dorthin, deckt die Basislinie den
+       juengsten Teil des Signalzeitraums nicht ab.
+    2. Junge Gruppen fallen unter _BASISLINIE_MIN_EINSTIEGE und bekommen GAR
+       KEINE Basislinie (erwartungswert_r None) statt einer aus wenigen
+       Punkten. Am 03.08. traf das hebel/schatten (140 Ziehungen); hebel/real
+       lag mit 210 knapp darueber. Das loest sich mit wachsender Historie von
+       selbst - bis dahin ist "kein Massstab" die ehrlichere Anzeige als einer,
+       der auf wenigen, stark korrelierten Ziehungen beruht.
+
+    Kosten rund 0,06 s je Aufruf bei 64000 Kursreihen-Zeilen, mit Fenster
+    entsprechend weniger - guenstig genug fuer den Betrieb, deshalb kein
+    Caching."""
     if stop_rel <= 0 or crv <= 0:
         return {"anzahl": 0, "erwartungswert_r": None}
     if reihen is None:
         reihen = lade_kursreihen(conn)
+    reihen = _reihen_im_fenster(reihen, ab_datum, bis_datum)
 
     werte: list[float] = []
     for rr in reihen.values():
@@ -1794,9 +1858,13 @@ def basislinie_erwartungswert(conn, stop_rel: float, crv: float, ist_short: bool
             if ergebnis is not None:
                 werte.append(ergebnis)
 
+    # Fenster mit zurueckgeben: ohne diese Angabe ist ein Basislinienwert nicht
+    # nachvollziehbar - derselbe Parametersatz liefert je nach Zeitraum
+    # entgegengesetzte Vorzeichen (siehe Docstring).
+    fenster = {"basislinie_ab_datum": ab_datum, "basislinie_bis_datum": bis_datum}
     if len(werte) < _BASISLINIE_MIN_EINSTIEGE:
-        return {"anzahl": len(werte), "erwartungswert_r": None}
-    return {"anzahl": len(werte), "erwartungswert_r": statistics.fmean(werte)}
+        return {"anzahl": len(werte), "erwartungswert_r": None, **fenster}
+    return {"anzahl": len(werte), "erwartungswert_r": statistics.fmean(werte), **fenster}
 
 
 def compute_systemguete(conn, watchlist: list | None = None,
@@ -1822,17 +1890,35 @@ def compute_systemguete(conn, watchlist: list | None = None,
     absolut gelesener SQN alarmiert dadurch strukturell falsch. `mit_basislinie
     =False` schaltet das ab, falls ein Aufrufer nur die reinen Kennzahlen will.
 
+    ZEITFENSTER JE GRUPPE (03.08.): Die Basislinie zieht nur noch aus dem
+    Zeitraum, in dem die bewerteten Signale DIESER Gruppe liefen - vom ersten
+    bis zum letzten `created_at` plus Horizont. Vorher lief sie ueber die
+    gesamte Kurshistorie und verglich damit zwei Jahre Durchschnittsmarkt mit
+    wenigen Wochen Signalen; das drehte das Vorzeichen der Basislinie und
+    ueberzeichnete den Signalbeitrag um rund 0,30 R. Herleitung, Messwerte und
+    der Rueckschritt-Schalter stehen in basislinie_erwartungswert().
+
+    Jede Gruppe bekommt ihr EIGENES Fenster, nicht ein gemeinsames: real und
+    schatten, Hebel und Spot laufen ueber verschiedene Zeitraeume, und ein
+    gemeinsames Fenster waere fuer jede einzelne Gruppe das falsche.
+
     Reine Lesefunktion. Gibt je tier ein dict mit den Schluesseln `real` und
     `schatten` zurueck, jeweils mit den Feldern aus _guete_kennzahlen() plus
     basislinie_erwartungswert_r / basislinie_anzahl / basislinie_stop_rel /
-    basislinie_crv / signalbeitrag_r."""
+    basislinie_crv / basislinie_anteil_short / basislinie_ab_datum /
+    basislinie_bis_datum / signalbeitrag_r."""
     assetklasse_by_symbol = _assetklasse_index(watchlist, "compute_systemguete()")
     r_werte: dict[tuple[str, str], list[float]] = {}
     offen: dict[tuple[str, str], int] = {}
 
     zonen: dict[tuple[str, str], list[tuple[float, float]]] = {}
+    # Entstehungszeitpunkte der BEWERTETEN Faelle - daraus das Zeitfenster der
+    # Basislinie. Ohne das mittelt sie ueber die ganze Kurshistorie und misst
+    # eine andere Marktphase als die, die sie einordnen soll.
+    zeitpunkte: dict[tuple[str, str], list[str]] = {}
 
-    def _erfasse(tier: str, art: str, crv, ist_offen: bool, zonen_werte=None) -> None:
+    def _erfasse(tier: str, art: str, crv, ist_offen: bool, zonen_werte=None,
+                 created_at=None) -> None:
         key = (tier, art)
         r_werte.setdefault(key, [])
         offen.setdefault(key, 0)
@@ -1845,6 +1931,8 @@ def compute_systemguete(conn, watchlist: list | None = None,
         # Parameter genau der Trades abbilden, deren Ergebnis sie einordnet.
         if zonen_werte is not None:
             zonen.setdefault(key, []).append(zonen_werte)
+        if created_at:
+            zeitpunkte.setdefault(key, []).append(str(created_at)[:10])
 
     for tabelle, ist_hebel in (("signals", False), ("hebel_signals", True)):
         # Die Veto-Schatten-Spalten kamen erst am 28.07. dazu. Aeltere
@@ -1853,7 +1941,7 @@ def compute_systemguete(conn, watchlist: list | None = None,
         # Auswertung mit einem OperationalError abzubrechen.
         spalten = {r[1] for r in conn.execute(f"PRAGMA table_info({tabelle})")}
         hat_schatten = {"veto_outcome_status", "veto_outcome_realisiertes_crv"} <= spalten
-        felder = "symbol, outcome_status, outcome_realisiertes_crv, risk_veto"
+        felder = "symbol, outcome_status, outcome_realisiertes_crv, risk_veto, created_at"
         # Zonen mitlesen: daraus kommen die Parameter der Basislinie (Median
         # Stop-Abstand und CRV je Gruppe). Nur die Spalten, die es in der
         # jeweiligen Tabelle wirklich gibt - Spot fuehrt zusaetzlich
@@ -1879,11 +1967,11 @@ def compute_systemguete(conn, watchlist: list | None = None,
                     continue
                 st = row["veto_outcome_status"]
                 _erfasse(tier, "schatten", row["veto_outcome_realisiertes_crv"],
-                         st not in _RESOLVED_OUTCOMES, z)
+                         st not in _RESOLVED_OUTCOMES, z, row["created_at"])
             else:
                 st = row["outcome_status"]
                 _erfasse(tier, "real", row["outcome_realisiertes_crv"],
-                         st not in _RESOLVED_OUTCOMES, z)
+                         st not in _RESOLVED_OUTCOMES, z, row["created_at"])
 
     ergebnis: dict = {}
     # Einmal laden statt je Gruppe - siehe lade_kursreihen().
@@ -1898,14 +1986,27 @@ def compute_systemguete(conn, watchlist: list | None = None,
             # deren Basislinie spiegelverkehrt laeuft. Eine pauschale
             # LONG-Annahme waere dort schlicht die falsche Vergleichsgroesse.
             anteil_short = sum(1 for x in z if x[2]) / len(z)
+            # Zeitfenster der Gruppe: vom ersten bewerteten Signal bis zum
+            # letzten PLUS Horizont - so lange konnte das letzte Signal noch
+            # laufen. Fehlen die Zeitstempel (Altbestand), bleibt das Fenster
+            # offen und die Basislinie verhaelt sich wie vor dem 03.08.
+            tage = sorted(zeitpunkte.get((tier, art), []))
+            ab_datum = bis_datum = None
+            if tage and _BASISLINIE_NUR_SIGNALFENSTER:
+                ab_datum = tage[0]
+                bis_datum = (datetime.fromisoformat(tage[-1])
+                             + timedelta(days=_BASISLINIE_HORIZONT_TAGE)).date().isoformat()
             bl = basislinie_erwartungswert(conn, stop_rel, crv,
                                            ist_short=anteil_short > 0.5,
-                                           reihen=reihen)
+                                           reihen=reihen,
+                                           ab_datum=ab_datum, bis_datum=bis_datum)
             k["basislinie_erwartungswert_r"] = bl["erwartungswert_r"]
             k["basislinie_anzahl"] = bl["anzahl"]
             k["basislinie_stop_rel"] = stop_rel
             k["basislinie_crv"] = crv
             k["basislinie_anteil_short"] = anteil_short
+            k["basislinie_ab_datum"] = bl["basislinie_ab_datum"]
+            k["basislinie_bis_datum"] = bl["basislinie_bis_datum"]
             k["signalbeitrag_r"] = (
                 None if bl["erwartungswert_r"] is None
                 else k["expectancy_r"] - bl["erwartungswert_r"]
@@ -1916,6 +2017,8 @@ def compute_systemguete(conn, watchlist: list | None = None,
             k["basislinie_stop_rel"] = None
             k["basislinie_crv"] = None
             k["basislinie_anteil_short"] = None
+            k["basislinie_ab_datum"] = None
+            k["basislinie_bis_datum"] = None
             k["signalbeitrag_r"] = None
         ergebnis.setdefault(tier, {})[art] = k
     return ergebnis

@@ -772,8 +772,13 @@ async function refreshStatus() {
           // (2026-08-03). Ohne diesen Bezugspunkt liest sich ein negativer SQN
           // als kaputtes System, obwohl der Zufallseinstieg im selben Zeitraum
           // noch mehr verliert - Begruendung in basislinie_erwartungswert().
+          // Erst ab anzahl_bewertet >= 30 (dieselbe Schwelle wie sqn_belastbar):
+          // ein Signalbeitrag aus 8 Trades gegen eine Basislinie aus tausenden
+          // Ziehungen suggeriert eine Genauigkeit, die er nicht hat - krypto/real
+          // stand am 03.08. mit n=8 bei "-1,069 R" auf dieser Karte.
           var zusatz = "";
-          if (k.signalbeitrag_r !== null && k.signalbeitrag_r !== undefined) {
+          if (k.signalbeitrag_r !== null && k.signalbeitrag_r !== undefined
+              && k.sqn_belastbar) {
             var sb = (k.signalbeitrag_r >= 0 ? "+" : "") + k.signalbeitrag_r.toFixed(3);
             var blw = (k.basislinie_erwartungswert_r >= 0 ? "+" : "") +
                       k.basislinie_erwartungswert_r.toFixed(3);
@@ -782,10 +787,18 @@ async function refreshStatus() {
               chance = " | " + (k.anteil_positiv * 100).toFixed(0) +
                        "% der Bootstrap-Ziehungen positiv";
             }
+            // Zeitraum mit ausweisen: derselbe Parametersatz liefert je nach
+            // Fenster entgegengesetzte Vorzeichen, ohne die Angabe ist der
+            // Wert nicht nachvollziehbar.
+            var zeitraum = "";
+            if (k.basislinie_ab_datum && k.basislinie_bis_datum) {
+              zeitraum = ", " + k.basislinie_ab_datum + ".." + k.basislinie_bis_datum;
+            }
             zusatz = '<div class="row"><span class="muted-text">&nbsp;&nbsp;&nbsp;&nbsp;' +
               "Zufallseinstieg, gleiche Parameter (Stop " +
               (k.basislinie_stop_rel * 100).toFixed(1) + "%, CRV " +
-              k.basislinie_crv.toFixed(2) + ", n=" + k.basislinie_anzahl + "): " +
+              k.basislinie_crv.toFixed(2) + ", n=" + k.basislinie_anzahl +
+              zeitraum + "): " +
               blw + " R" + chance + '</span><span class="' +
               (k.signalbeitrag_r >= 0 ? "ok" : "warn") +
               '">Signalbeitrag ' + sb + " R</span></div>";
