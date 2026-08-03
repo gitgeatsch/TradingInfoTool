@@ -334,7 +334,31 @@ risiko:
                                         # Schaetzung. Wirkt auf estimate_liquidation_price()
                                         # (angezeigter Wert) UND max_safe_hebel() (RM-11-Deckel
                                         # fuer empfohlenen Hebel) gleichermassen.
-    max_hebel_faellt_regime_krise_extrem_auf_null: true  # AZ-7
+    # ENTFERNT 2026-08-04 (Regler-Audit): hier stand
+    # `max_hebel_faellt_regime_krise_extrem_auf_null: true`, und unter
+    # antizyklisch.hebel stand `aus_bei_krise_extrem: true` - ZWEI Schluessel,
+    # beide "# AZ-7" beschriftet, beide nie gelesen, beide fuer DIESELBE eine
+    # Codestelle: hebel_risk_gate.py::pre_check_hebel() setzt bei
+    # regime == "krise_extrem" in einem Zug hebel_erlaubt=False UND
+    # max_sicherer_hebel=0.0. Es gibt keinen zweiten Mechanismus, den der
+    # zweite Schluessel meinen koennte (max_safe_hebel() ist eine reine Formel
+    # ohne Regime-Behandlung).
+    #
+    # AZ-7 ist BEWUSST ein hartes Gate ohne Regler. Es schuetzt das Instrument
+    # mit Liquidationsrisiko in genau dem Regime, in dem Liquidationen
+    # passieren - ein Schalter dafuer waere etwas anderes als ein Rate-Limit.
+    # Der Notausstieg liegt eine Ebene hoeher: regime.manueller_override (RG-8,
+    # config.py::set_regime_manueller_override(), per GUI bedienbar). Wer der
+    # Einstufung widerspricht, korrigiert die Einstufung, nicht die daran
+    # haengende Regel - sichtbar in der Oberflaeche statt in einer YAML-Zeile,
+    # und konsistent fuer alles, was am Regime haengt.
+    #
+    # WARUM dieser Override ueberhaupt existiert (Nutzer, 04.08.): die
+    # Regime-Einstufung ist traege. Die Krise kann bereits vorbei sein, waehrend
+    # die Einstufung noch "krise_extrem" sagt - dann bleibt das meiste Potential
+    # am Boden liegen, und wenn die Einstufung nachzieht, sind die Kauf- und
+    # Hebelchancen vorbei. Der Override ist der Preis dafuer, dass AZ-7 hart
+    # bleibt. Bewusst akzeptierter Kompromiss, kein Versehen.
     kontra_konservativ_faktor: 0.6  # [OFFEN] AZ-7-Konservativ-Bias NUR fuer Zweig 2
                                     # (Kontra) - daempft max_sicherer_hebel zusaetzlich,
                                     # gilt NICHT fuer Zweig 1 (Trendfolge), siehe
@@ -1542,7 +1566,11 @@ antizyklisch:
   these_gescheitert_stop: true         # AZ-6: Nachkaufen stoppen, wenn These scheitert
   hebel:
     nur_nach_bestaetigung: true        # AZ-7
-    aus_bei_krise_extrem: true         # AZ-7
+    # ENTFERNT 2026-08-04 (Regler-Audit): `aus_bei_krise_extrem: true` war die
+    # zweite Beschriftung derselben Regel - Begruendung und Notausstieg stehen
+    # bei risiko.hebel (Suche: "AZ-7 ist BEWUSST ein hartes Gate").
+    # Die beiden verbliebenen Schluessel hier sind NICHT dasselbe: sie sind
+    # nie umgesetzt worden (andere Kategorie als "hartkodiert"), siehe #611.
     aus_bei_strukturrisiko: true       # AZ-7
 
 # --- Historischer Makro-Konstellationsvergleich (2026-07-18, Nutzer-Idee, siehe
