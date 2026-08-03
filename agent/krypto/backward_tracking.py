@@ -2892,6 +2892,82 @@ def kumulative_inzidenz(ereignisse: list[tuple[int, str, str]], horizont: int) -
     }
 
 
+def basislinie_ziel_anteil(reihen: dict, stop_rel: float, crv: float, ist_short: bool,
+                           horizont: int, ab_datum: str | None = None,
+                           bis_datum: str | None = None) -> dict:
+    """Wie oft trifft ein ZUFALLSEINSTIEG mit diesen Zonen sein Ziel vor dem Stop?
+
+    DER GRUND, WARUM ES DIESE FUNKTION GEBEN MUSS - nachgewiesen an synthetischen
+    Daten mit bekannter Wahrheit (03.08.): Der Vergleich einer bei Horizont H
+    abgeschnittenen Trefferquote gegen die arithmetische Formel 1/(1+CRV) ist
+    NICHT nur ungenau, er DREHT AB CRV 2,5 DAS VORZEICHEN. Ursache ist die
+    Horizont-Trunkierung: das Ziel liegt CRV-mal weiter weg als der Stop und
+    wird deshalb systematisch spaeter erreicht. Wer frueh abschneidet,
+    uebersamplet Stops - und zwar umso staerker, je hoeher das CRV.
+
+    Gemessen an reinen Zufallseinstiegen, Horizont 7, driftfrei:
+
+        CRV    wahre Quote    gemessen bei H=7    erfasster Anteil
+        1,5        39,9 %              32,6 %              82 %
+        2,5        28,4 %               7,0 %              25 %
+        4,0        20,4 %               0,0 %               0 %
+
+    Bei CRV 4,0 misst ein Zufallseinstieg exakt NULL - ein 4R-Ziel ist in sieben
+    Tagen mechanisch kaum erreichbar. Jede Aussage der Form "Band X verfehlt
+    seinen Breakeven" ist bei kurzem Horizont also zuerst eine Aussage ueber die
+    Erreichbarkeit, nicht ueber die Signalqualitaet.
+
+    DIE LOESUNG ist der Vergleich gegen einen Zufallseinstieg mit DENSELBEN
+    Parametern, DEMSELBEN Horizont und DEMSELBEN Zeitfenster: beide Seiten
+    tragen denselben Trunkierungsfehler, er kuerzt sich weitgehend heraus. An
+    synthetischen Signalen mit echter Kante (+0,3 % Drift) geprueft:
+
+        CRV    wahre Kante    gegen Basislinie    gegen 1/(1+CRV)
+        2,0        +24,3 pp           +22,7 pp           +11,7 pp
+        2,5        +26,7 pp           +16,7 pp            -1,0 pp
+        3,0        +27,5 pp            +8,0 pp           -10,8 pp
+        4,0        +31,3 pp            +0,5 pp           -18,4 pp
+
+    Der Basislinien-Vergleich behaelt bei JEDEM CRV das richtige Vorzeichen.
+    RESTFEHLER, der bleibt: er unterschaetzt die Staerke mit steigendem CRV
+    zunehmend - bei CRV 4,0 und Horizont 7 ist praktisch nichts mehr messbar.
+    Das ist eine Grenze der Datenlage, keine des Verfahrens.
+
+    Damit erfuellt diese Funktion die Pflichtangabe aus
+    Test_und_Verifikationsmethodik 2.5.7 ("Basislinie je Bucket ist PFLICHT")
+    auf der Ebene der Trefferquote - basislinie_erwartungswert() tut dasselbe
+    fuer den Erwartungswert."""
+    if stop_rel <= 0 or crv <= 0:
+        return {"ziel_anteil": None, "anzahl": 0}
+    geschnitten = _reihen_im_fenster(reihen, ab_datum, bis_datum)
+    ereignisse: list[tuple[int, str, str]] = []
+    for symbol, rows in geschnitten.items():
+        for i in range(len(rows) - horizont - 1):
+            e = rows[i]["close"]
+            if not e or e <= 0:
+                continue
+            risiko = e * stop_rel
+            z = {
+                "entry": e,
+                "stop": e + risiko if ist_short else e - risiko,
+                "ziel": e - risiko * crv if ist_short else e + risiko * crv,
+                "risiko": risiko,
+                "ist_short": ist_short,
+            }
+            sim = simuliere_signal(z, rows[i:], rows[i]["date"], horizont,
+                                   voller_horizont_noetig=False)
+            if sim is None:
+                continue
+            ereignisse.append((sim["tag"],
+                               "zensiert" if sim["zensiert"] else sim["ausgang"],
+                               symbol))
+    if len(ereignisse) < _BASISLINIE_MIN_EINSTIEGE:
+        return {"ziel_anteil": None, "anzahl": len(ereignisse)}
+    ki = kumulative_inzidenz(ereignisse, horizont)
+    return {"ziel_anteil": ki["ziel_anteil"], "anzahl": len(ereignisse),
+            "aufloesungsquote": ki["aufloesungsquote"]}
+
+
 def _block_bootstrap_ziel_anteil(ereignisse: list[tuple[int, str, str]], horizont: int,
                                  ziehungen: int = _BOOTSTRAP_ZIEHUNGEN) -> tuple:
     """95%-Intervall fuer `ziel_anteil`, gezogen ueber SYMBOLE statt Signale.
@@ -2994,9 +3070,11 @@ def compute_crv_breakeven_baender(
             ohne_kursreihe += 1
             continue
         action_mix[str(row["action"])] = action_mix.get(str(row["action"]), 0) + 1
-        faelle.append({"crv": z["crv"], "r": sim["r"], "ausgang": sim["ausgang"],
-                       "tag": sim["tag"], "zensiert": sim["zensiert"],
-                       "symbol": row["symbol"]})
+        faelle.append({"crv": z["crv"], "stop_rel": z["stop_rel"],
+                       "ist_short": z["ist_short"], "r": sim["r"],
+                       "ausgang": sim["ausgang"], "tag": sim["tag"],
+                       "zensiert": sim["zensiert"], "symbol": row["symbol"],
+                       "datum": str(row["created_at"])[:10]})
     if not faelle:
         return None
 
@@ -3014,6 +3092,21 @@ def compute_crv_breakeven_baender(
         ki = kumulative_inzidenz(ereignisse, horizont)
         anteil = ki["ziel_anteil"]
         ki_unten, ki_oben = _block_bootstrap_ziel_anteil(ereignisse, horizont)
+        # LEITGROESSE: Abstand zu einem Zufallseinstieg mit denselben Zonen,
+        # demselben Horizont und demselben Zeitfenster. Nur so kuerzt sich die
+        # Horizont-Trunkierung heraus - der Vergleich gegen 1/(1+CRV) dreht ab
+        # CRV 2,5 das Vorzeichen (siehe basislinie_ziel_anteil()).
+        tage_band = sorted(f["datum"] for f in teil)
+        bis_band = (datetime.fromisoformat(tage_band[-1])
+                    + timedelta(days=horizont)).date().isoformat()
+        bl = basislinie_ziel_anteil(
+            reihen, statistics.median(f["stop_rel"] for f in teil), crv_median,
+            ist_short=sum(1 for f in teil if f["ist_short"]) / n > 0.5,
+            horizont=horizont, ab_datum=tage_band[0], bis_datum=bis_band,
+        )
+        bl_anteil = bl["ziel_anteil"]
+        abstand_basislinie = (None if (anteil is None or bl_anteil is None)
+                              else round((anteil - bl_anteil) * 100, 1))
         # Die beiden bekannt-falschen Abkuerzungen bleiben als Kontrolle
         # sichtbar - weichen sie stark vom Schaetzer ab, lohnt ein Blick.
         ziel_roh = sum(1 for f in teil if f["ausgang"] == "ziel")
@@ -3029,10 +3122,20 @@ def compute_crv_breakeven_baender(
             "anzahl": n,
             "anzahl_zensiert": ki["anzahl_zensiert"],
             "crv_median": round(crv_median, 2),
-            # PRIMAERWERT: Anteil Ziel an allen aufgeloesten, zensierungsbereinigt.
+            # Zensierungsbereinigter Anteil Ziel-vor-Stop BIS zum Horizont.
+            # Absolut NICHT interpretierbar - nur im Vergleich zur Basislinie.
             "ziel_anteil_pct": None if anteil is None else round(anteil * 100, 1),
-            "breakeven_pct": round(breakeven * 100, 1),
-            "abstand_prozentpunkte": (None if anteil is None
+            # LEITGROESSE.
+            "basislinie_ziel_anteil_pct": (None if bl_anteil is None
+                                           else round(bl_anteil * 100, 1)),
+            "basislinie_anzahl": bl["anzahl"],
+            "abstand_zur_basislinie_pp": abstand_basislinie,
+            # NACHRANGIG, bewusst nicht mehr die Leitgroesse: der Vergleich gegen
+            # die arithmetische Formel unterstellt einen abgeschlossenen Trade.
+            # Bei unseren Horizonten dreht er ab CRV 2,5 das Vorzeichen - nur
+            # als Kontext lesen, nie als Urteil.
+            "breakeven_formel_pct": round(breakeven * 100, 1),
+            "abstand_zur_formel_pp": (None if anteil is None
                                       else round((anteil - breakeven) * 100, 1)),
             "ki_unten_pct": None if ki_unten is None else round(ki_unten * 100, 1),
             "ki_oben_pct": None if ki_oben is None else round(ki_oben * 100, 1),
@@ -3040,13 +3143,14 @@ def compute_crv_breakeven_baender(
             # Pflichtangabe: je niedriger, desto mehr steckt der Punktwert in
             # der Hochrechnung statt in beobachteten Faellen.
             "aufloesungsquote_pct": round(ki["aufloesungsquote"] * 100, 1),
-            # Fuer eine SCHWELLE reicht der Punktwert nicht - das Intervall
-            # muss den Breakeven auch verfehlen. Das Intervall stammt aus dem
-            # Block-Bootstrap ueber Symbole, nicht aus Wilson.
+            # Fuer eine SCHWELLE reicht der Punktwert nicht - das Intervall muss
+            # die BASISLINIE verfehlen (nicht die Formel, siehe oben). Das
+            # Intervall stammt aus dem Block-Bootstrap ueber Symbole, nicht aus
+            # Wilson: einzelne Symbole stellen bis zu einem Drittel eines Bandes.
             "belastbar": bool(
                 n >= _MIN_SAMPLE_FUER_AUSSAGE and anteil is not None
-                and ki_unten is not None
-                and (ki_unten > breakeven or ki_oben < breakeven)
+                and ki_unten is not None and bl_anteil is not None
+                and (ki_unten > bl_anteil or ki_oben < bl_anteil)
             ),
             "erwartungswert_r": round(statistics.fmean(f["r"] for f in teil), 4),
             # Kontrollwerte, bewusst mitgefuehrt (siehe kumulative_inzidenz()):
@@ -3070,17 +3174,22 @@ def compute_crv_breakeven_baender(
         "baender": baender,
         "hinweis": (
             f"{len(faelle)} Signale mit Zonen, neu simuliert ueber {horizont} Tage. "
-            "Geschaetzt wird der Anteil 'Ziel vor Stop' als kumulative Inzidenz "
-            "mit Rechtszensierung am Horizont - teilbeobachtete Signale zaehlen "
-            "bis zu ihrem Zensierungszeitpunkt mit, statt weggeworfen zu werden. "
-            "Erfolgskriterium ist ZIEL ERREICHT, nicht 'MFE >= 1R': die beiden "
-            "laufen gegenlaeufig, ein hoeheres CRV senkt die noetige Trefferquote "
-            "UND die tatsaechliche. Konfidenzintervalle per Block-Bootstrap ueber "
-            "Symbole, weil einzelne Symbole bis zu einem Drittel eines Bandes "
-            f"stellen. {belastbare} von {len(baender)} Baendern sind belastbar; "
-            "die uebrigen sind eine Groessenordnung, keine Punktprognose. "
-            "aufloesungsquote_pct mitlesen: je niedriger, desto mehr steckt der "
-            "Wert in der Hochrechnung."
+            "LESEART: Nur `abstand_zur_basislinie_pp` ist interpretierbar - der "
+            "Vergleich mit einem Zufallseinstieg gleicher Zonen, gleichen "
+            "Horizonts und gleichen Zeitfensters. Der absolute `ziel_anteil_pct` "
+            "ist es NICHT: bei kurzem Horizont wird ein weit entferntes Ziel "
+            "seltener erreicht, unabhaengig von der Signalqualitaet - bei CRV 4,0 "
+            "und Horizont 7 misst selbst ein Zufallseinstieg 0,0 %. Aus demselben "
+            "Grund ist `abstand_zur_formel_pp` (gegen 1/(1+CRV)) nur Kontext: er "
+            "dreht ab CRV 2,5 das Vorzeichen. "
+            "Geschaetzt wird per kumulativer Inzidenz mit Rechtszensierung - "
+            "teilbeobachtete Signale zaehlen bis zu ihrem Zensierungszeitpunkt "
+            "mit, statt weggeworfen zu werden. Erfolgskriterium ist ZIEL "
+            "ERREICHT, nicht 'MFE >= 1R'. Konfidenzintervalle per Block-Bootstrap "
+            f"ueber Symbole. {belastbare} von {len(baender)} Baendern trennen "
+            "sich belastbar von ihrer Basislinie; die uebrigen sind eine "
+            "Groessenordnung. aufloesungsquote_pct mitlesen: je niedriger, desto "
+            "mehr steckt der Wert in der Hochrechnung."
         ),
     }
 
