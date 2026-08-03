@@ -105,6 +105,18 @@ def main() -> None:
     }
     watchlist = config.get_watchlist()
     conn = db.get_connection()
+    # get_connection() oeffnet nur die Verbindung - das Schema legt init_db() an,
+    # und das ruft sonst ausschliesslich main.py beim App-Start. Ein
+    # eigenstaendiges Skript wie dieses muss es selbst tun, sonst fehlt die am
+    # 04.08. neu hinzugekommene Tabelle portfolio_wert_historie (im ersten
+    # NB-Schreiblauf genau so passiert; der Probelauf lief durch, weil er nur
+    # liest).
+    #
+    # UNBEDENKLICH: init_db() ist idempotent - CREATE TABLE IF NOT EXISTS plus
+    # rein additive Spalten-Migrationen. Es legt Fehlendes an und ruehrt
+    # Bestehendes nicht an. Ein Datenbank-Reset waere hier grundfalsch und
+    # wuerde die Produktivdaten vernichten.
+    db.init_db(conn)
     try:
         # --- Schritt 1: Pruefstein ------------------------------------------
         # Vorwaerts von null ueber die volle Historie. Rueckwaerts vom heutigen
