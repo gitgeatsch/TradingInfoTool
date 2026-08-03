@@ -821,6 +821,37 @@ faktor (hier: Bär-Regime) widerspiegeln.
 
 ---
 
+### 2.11 Positionsgrößen-Empfehlung: Befolgungsgrad als eigener Messpunkt (Nachtrag 04.08., #606)
+
+**Das Problem hinter der Messung.** Die Positionsgrößen-Untersuchung vom 04.08.
+ergab für Krypto-Spot einen Vorteil von +0,055 R je Signal (gepaart, mit
+Konfidenz-Kopplung +0,073 R) für fractional Kelly auf das CRV. Dieser Vorteil
+entsteht **rechnerisch dadurch, dass die Größen variieren** — ein Signal mit
+CRV 4,0 wird größer gekauft als eines mit CRV 2,2.
+
+**Der Einsatz wird bisher aber von Hand gesetzt** (100–500 EUR, siehe
+`project_positionsgroessen_praxis_entkopplung`). Bleibt das so, tritt der
+gemessene Vorteil **nie ein** — die Verbesserung wäre nachgewiesen und
+folgenlos zugleich.
+
+**Daraus folgt ein Messpunkt, den es vorher nicht gab:** Es genügt nicht, die
+empfohlene Größe zu berechnen. Es muss auch **gemessen werden, ob ihr gefolgt
+wurde**. Deshalb werden ab #606 beide Zahlen je Signal gespeichert (empfohlene
+Größe und RM-1-Obergrenze), damit das Backward-Tracking später den
+Befolgungsgrad und dessen Ergebnis auswerten kann.
+
+**Verallgemeinerung für künftige Regeln:** Wo eine Messung eine Verbesserung
+zeigt, die eine Verhaltensänderung voraussetzt, gehört die Verhaltensänderung
+selbst zum Messgegenstand. Sonst misst man eine Wirkung, die im Betrieb nie
+eintritt — eine Variante der stillen Degradierung aus 2.5.8, nur eine Ebene
+höher: nicht der Code degradiert, sondern die Annahme über seine Verwendung.
+
+**Vorbehalt zur Datenlage, der mitgeführt gehört:** die +0,055 R stammen aus
+einem 17-Tage-Fenster mit begrenzter Signalzahl. Statistisch belastbar, aber
+nicht in Stein. Deshalb wird die Kelly-Zahl als Empfehlung **neben** der
+sichtbaren RM-1-Obergrenze ausgewiesen und nicht als alleinige Vorgabe — die
+Spanne bleibt sichtbar und einordenbar.
+
 ## 3. Verwandte Dokumente
 
 - [[Fakten_Entscheidungsmappe.md]] - Entscheidungsraster für Fakten/Prompt-Regeln
