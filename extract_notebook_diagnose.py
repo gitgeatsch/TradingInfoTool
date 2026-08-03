@@ -195,6 +195,7 @@ from pathlib import Path
 import config as config_module
 import database.db as db
 from agent.krypto.backward_tracking import (
+    compute_crv_breakeven_baender,
     compute_gesamt_signalqualitaet,
     compute_konfidenz_kalibrierung,
     compute_provider_performance,
@@ -206,6 +207,7 @@ from agent.krypto.backward_tracking import (
     compute_veto_shadow_performance_nach_grund,
     compute_zai_richtung_performance,
     compute_zai_richtung_performance_schatten,
+    lade_kursreihen,
 )
 from agent.krypto.regime import get_last_known_regime_status
 
@@ -1141,6 +1143,28 @@ def main() -> None:
         # zwischen den Payload-Eintraegen und lief damit gegen eine bereits
         # geschlossene Verbindung.
         systemguete = compute_systemguete(conn, watchlist)
+        # CRV-Breakeven-Baender (2026-08-03, Population B). Ebenfalls VOR
+        # conn.close(), gleiche Falle wie oben.
+        #
+        # VIER VARIANTEN statt einer: Horizont 7/14 x mit/ohne HALTEN-Signale.
+        # Welche Kombination die belastbarste Schaetzung liefert, ist NICHT
+        # entschieden - sie wird walk-forward gegeneinander geprueft, und dafuer
+        # muessen alle vier aus DERSELBEN Datenlage stammen. Wer eine Variante
+        # vorab auswaehlt, kalibriert auf seine eigene Annahme.
+        #
+        # Kursreihen einmal laden und durchreichen: sonst laedt jede der acht
+        # Kombinationen (4 x 2 tiers) die vollen rund 60000 Zeilen erneut.
+        _reihen = lade_kursreihen(conn)
+        crv_breakeven_baender = {}
+        for _tier in ("hebel", "spot"):
+            for _horizont in (7, 14):
+                for _mit_halten in (True, False):
+                    _schluessel = (f"{_tier}_h{_horizont}"
+                                   f"_{'mit' if _mit_halten else 'ohne'}_halten")
+                    crv_breakeven_baender[_schluessel] = compute_crv_breakeven_baender(
+                        conn, _tier, horizont=_horizont, mit_halten=_mit_halten,
+                        reihen=_reihen,
+                    )
     finally:
         conn.close()
 
@@ -1166,6 +1190,7 @@ def main() -> None:
         "veto_schatten_performance": veto_schatten_performance,
         "veto_schatten_performance_nach_grund": veto_schatten_performance_nach_grund,
         "systemguete": systemguete,
+        "crv_breakeven_baender": crv_breakeven_baender,
         "selbst_gewaehltes_halten_performance": selbst_gewaehltes_halten_performance,
         "selbst_gewaehltes_halten_performance_nach_grund": selbst_gewaehltes_halten_performance_nach_grund,
         "zai_richtung_performance_schatten": zai_richtung_performance_schatten,
