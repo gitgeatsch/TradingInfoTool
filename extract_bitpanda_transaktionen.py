@@ -50,7 +50,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import database.db as db
-from api.bitpanda import get_wallet_transactions
+from api.bitpanda import get_trades, get_wallet_transactions
 from extract_notebook_diagnose import ZIEL_ORDNER
 
 DATEINAME = "bitpanda_transaktionen.json"
@@ -101,6 +101,22 @@ def main() -> None:
         ).strftime("%Y-%m-%d")
         zeilen.append(zeile)
 
+    # Zweiter Endpunkt, ohne den Aktien/ETF/ETC fehlen (2026-08-04, Task #613).
+    # `/wallets/transactions` oben fuehrt NUR Krypto-Wallets; die naheliegende
+    # Symmetrie `/asset-wallets/transactions` existiert nicht (belegt per
+    # Kontrolltest mit einem erfundenen Pfad - 401 heisst bei dieser API
+    # "Pfad unbekannt"). `/trades` deckt alle Assetklassen ab.
+    print("Rufe Trades ab (alle Assetklassen)...")
+    trades = get_trades(key, on_page_fetched=_fortschritt)
+    print(f"{len(trades)} Trades geladen.\n")
+    trade_zeilen = []
+    for tr in trades:
+        zeile = asdict(tr)
+        zeile["datum_utc"] = datetime.fromtimestamp(
+            tr.unix_timestamp, tz=timezone.utc
+        ).strftime("%Y-%m-%d")
+        trade_zeilen.append(zeile)
+
     # Bestands-Schnappschuss aus DEMSELBEN Lauf - siehe Modul-Docstring.
     conn = db.get_connection()
     try:
@@ -134,6 +150,8 @@ def main() -> None:
         "zweck": "Portfolio-Wert-Rekonstruktion fuer Z-3/RM-7 (Task #612)",
         "transaktionen_anzahl": len(zeilen),
         "transaktionen": zeilen,
+        "trades_anzahl": len(trade_zeilen),
+        "trades": trade_zeilen,
         "holdings_schnappschuss": holdings,
         "tag_inventar": dict(sorted(tag_inventar.items(), key=lambda x: -x[1])),
         "typ_inventar": dict(sorted(typ_inventar.items(), key=lambda x: -x[1])),

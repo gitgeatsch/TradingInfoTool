@@ -16,19 +16,18 @@ die spaeter eine harte Regel zugreift. Erst ansehen, was herauskommt, dann
 schreiben. `--schreiben` ist eine bewusste zweite Entscheidung.
 
 WORAUF BEIM PROBELAUF ZU ACHTEN IST - der Ausdruck zeigt es:
+  * "Ohne Verlauf" MUSS 0 sein. Steht dort etwas, fehlen dem Export die
+    `/trades` (alte Fassung des Export-Skripts) - dann liefen Aktien/ETF/ETC
+    mit konstanter Menge, und der Hoechststand, gegen den Z-3 spaeter misst,
+    entstuende auf Naeherungsdaten.
   * Bestandsabgleich: der rekonstruierte Ist-Bestand MUSS holdings.quantity
     treffen. Stimmt er nicht, ist auch jeder historische Tageswert falsch.
-    Bekannte Ausnahmen zum Stand 04.08.: 13 Nicht-Krypto ohne Verlauf (Naeherung,
-    siehe unten) und SPC (eine reward-Gutschrift, die holdings gar nicht fuehrt).
+    Einzige bekannte Ausnahme zum Stand 04.08.: SPC (eine reward-Gutschrift von
+    6,29 Einheiten, die `holdings` ueberhaupt nicht fuehrt).
   * Symbole ohne Kurs je Tag: steigt die Zahl, fehlen Kurse und der Tageswert
     ist zu niedrig - das saehe aus wie ein Kursrutsch.
   * Der Indexverlauf selbst: er bildet Marktbewegung ab, KEINE Zu-/Verkaeufe.
     Ein Sprung an einem Tag, an dem du gehandelt hast, waere ein Warnsignal.
-
-NAEHERUNG, die im Ausdruck namentlich erscheint: fuer Aktien/ETF/ETC gibt es
-keinen Bestandsverlauf (`/wallets/transactions` liefert nur Krypto-Wallets).
-Ihre heutige Menge wird konstant angesetzt - exakt, solange dort nicht
-gehandelt wurde. Aufloesung ist als eigene Aufgabe eingetaktet.
 
 Nur lesend, ausser mit --schreiben. Kein Netzwerk-Call: Transaktionen kommen
 aus dem Export, Kurse aus der lokalen Datenbank.
@@ -76,9 +75,16 @@ def main() -> None:
         )
     daten = json.load(io.open(EXPORT, encoding="utf-8"))
     transaktionen = daten["transaktionen"]
+    # Seit 04.08. im Export: Trades aller Assetklassen (Task #613). Ohne sie
+    # laufen Aktien/ETF/ETC mit konstanter Menge - siehe bestandsverlauf().
+    trades = daten.get("trades") or []
     holdings_export = {h["symbol"]: h["quantity"] for h in daten["holdings_schnappschuss"]}
     print(f"Export vom {daten['erzeugt_am'][:10]}: {len(transaktionen)} Transaktionen, "
-          f"{len(holdings_export)} Bestandszeilen")
+          f"{len(trades)} Trades, {len(holdings_export)} Bestandszeilen")
+    if not trades:
+        print("  ACHTUNG: keine Trades im Export - Aktien/ETF/ETC laufen dann mit")
+        print("  konstanter Menge. Fuer eine saubere Reihe zuerst")
+        print("  `python extract_bitpanda_transaktionen.py` in der aktuellen Fassung laufen lassen.")
 
     overrides = {v: k for k, v in BITPANDA_SYMBOL_OVERRIDES.items()}
     watchlist = config.get_watchlist()
@@ -89,7 +95,7 @@ def main() -> None:
         # Bestand waere der Abgleich per Konstruktion erfuellt und wuerde jede
         # falsche Regel bestehen.
         print("\n--- Bestandsabgleich (der Pruefstein) ---")
-        verlauf = bestandsverlauf(transaktionen, symbol_overrides=overrides)
+        verlauf = bestandsverlauf(transaktionen, symbol_overrides=overrides, trades=trades)
         pruefung = pruefe_gegen_holdings(verlauf, holdings_export)
         print(f"  Treffer:            {len(pruefung['treffer'])}")
         print(f"  Glatt aufgeloest:   {len(pruefung['glatt_aufgeloest'])}")
@@ -108,6 +114,7 @@ def main() -> None:
         reihe, diagnose = rekonstruiere_aus_transaktionen(
             conn, transaktionen, holdings_export,
             ab_datum=AB_DATUM, watchlist=watchlist, symbol_overrides=overrides,
+            trades=trades,
         )
         if not reihe:
             raise SystemExit("Keine Tage mit Kursen gefunden - Kurshistorie pruefen.")
@@ -128,6 +135,7 @@ def main() -> None:
         for name, (kat_reihe, kat_diag) in reihen_je_kategorie(
             conn, transaktionen, holdings_export,
             ab_datum=AB_DATUM, watchlist=watchlist, symbol_overrides=overrides,
+            trades=trades,
         ).items():
             if not kat_reihe:
                 continue
@@ -145,7 +153,7 @@ def main() -> None:
             return
 
         print(f"\n--- Schreiben ({QUELLE_REKONSTRUIERT}) ---")
-        gesamt_verlauf = bestandsverlauf(transaktionen, symbol_overrides=overrides)
+        gesamt_verlauf = bestandsverlauf(transaktionen, symbol_overrides=overrides, trades=trades)
         bewegungstage = sorted(gesamt_verlauf)
         konstant = {
             s: m for s, m in holdings_export.items()

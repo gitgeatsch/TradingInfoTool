@@ -13,20 +13,20 @@ vollstaendig vor. Rekonstruierbar ist der Portfoliowert also ueber
 Bestand x Kurs - die Frage ist nur, welchen Bestand man fuer die Vergangenheit
 ansetzt.
 
-ZWEI STUFEN, BEWUSST GETRENNT
-Stufe 1 (dieses Modul, jetzt): Stichtags-Bestaende. Der heutige Bestand wird
-rueckwaerts fortgeschrieben. Das ist exakt, solange sich nichts geaendert hat,
-und wird mit jedem zurueckliegenden Handel ungenauer. Deshalb gibt
-`rekonstruiere_stichtag()` ein `gueltig_ab`-Datum mit zurueck, das der Aufrufer
-setzen muss - eine stillschweigende Ausdehnung auf beliebig lange Zeitraeume
-waere genau der stille Falschwert, den P-10 verbietet.
+WOHER DIE BESTAENDE KOMMEN (Stand 04.08., Tasks #612+#613)
+`bestandsverlauf()` rechnet den Verlauf VORWAERTS aus zwei Bitpanda-Quellen:
+  * `get_wallet_transactions()` - alle Krypto-Bewegungen, auch die ohne
+    bepreisten Trade (Staking-Gutschriften, Boni, externe Einzahlungen). Der
+    Fallstrick dazu steht in `importer/bitpanda_avg_cost.py`.
+  * `get_trades()` - Kaeufe/Verkaeufe ALLER Assetklassen; deckt Aktien/ETF/ETC
+    ab, die in `/wallets/transactions` gar nicht vorkommen.
+Beide zusammen treffen `holdings.quantity` fuer alle 33 gehaltenen Symbole.
 
-Stufe 2 (spaeter): echte Bestandsverlaeufe aus
-`api/bitpanda.py::get_wallet_transactions()`. Teurer (~9500 Transaktionen) und
-mit einem bekannten Fallstrick - siehe `importer/bitpanda_avg_cost.py`:
-holdings.quantity enthaelt Einheiten, die NIE ueber einen bepreisten Trade
-liefen (Staking-Gutschriften, externe Einzahlungen). Wer Stufe 2 baut, muss
-ALLE Bewegungsarten einbeziehen, nicht nur buy/sell.
+`rekonstruiere_stichtag()` (heutiger Bestand rueckwaerts fortgeschrieben) bleibt
+als Baustein erhalten, ist aber NICHT mehr der Hauptweg: das Fenster
+unveraenderter Bestaende betrug am 04.08. zwei Tage. Wer sie benutzt, muss
+`ab_datum` bewusst setzen - eine stillschweigende Ausdehnung auf lange
+Zeitraeume waere genau der stille Falschwert, den P-10 verbietet.
 
 WAS `wert_eur` BEDEUTET - UND WARUM CASH NICHT DRIN IST
 `wert_eur` ist der Wert der GEHALTENEN ASSETS, ohne Cash. Das ist eine bewusste
@@ -351,7 +351,10 @@ def normal_wallet_delta(tx: dict) -> float | None:
 
 
 def bestandsverlauf(
-    transaktionen: list[dict], *, symbol_overrides: dict[str, str] | None = None
+    transaktionen: list[dict],
+    *,
+    symbol_overrides: dict[str, str] | None = None,
+    trades: list[dict] | None = None,
 ) -> dict[str, dict[str, float]]:
     """Bestand je Symbol am ENDE jedes Tages, an dem sich etwas bewegt hat.
 
@@ -360,20 +363,58 @@ def bestandsverlauf(
     zurueckfuehren. Das haelt das Ergebnis klein und macht es lesbar.
 
     `symbol_overrides` bildet Bitpanda-Symbole auf die internen ab (z.B.
-    "CC" -> "CANTON"). Ohne diese Abbildung landen 868,97 CANTON unter einem
-    Symbol, das die Watchlist nicht kennt - im ersten Lauf genau so passiert.
+    "CC" -> "CANTON", "VST-US" -> "VST", "IS0C" -> "ISOC"). Ohne diese Abbildung
+    landen 868,97 CANTON unter einem Symbol, das die Watchlist nicht kennt - im
+    ersten Lauf genau so passiert.
+
+    `trades` (GET /trades, alle Assetklassen) ERGAENZT die Wallet-Transaktionen
+    fuer Aktien/ETF/ETC. `/wallets/transactions` fuehrt nur Krypto-Wallets, und
+    `/asset-wallets/transactions` existiert nicht (siehe api/bitpanda.py::
+    get_trades()).
+
+    ERGAENZT, NICHT ERSETZT - und das ist hier mechanisch erzwungen: ein Trade
+    wird nur beruecksichtigt, wenn das Symbol in den Transaktionen UEBERHAUPT
+    NICHT vorkommt. Wuerde man beide Quellen fuer dasselbe Symbol mischen,
+    zaehlte jeder Krypto-Kauf doppelt (er steht in beiden). Wuerde man umgekehrt
+    fuer Krypto auf `/trades` umstellen, verlaere man 1468 `instant_trade_bonus`-
+    sowie alle `stake`/`unstake`/`reward`-Buchungen - `/trades` enthaelt nur
+    Trades.
+
+    Verifiziert am 04.08. gegen den echten Account: alle 13 Nicht-Krypto-Werte
+    treffen `holdings.quantity` auf sechs Nachkommastellen. Fuer diese
+    Assetklassen gibt es also keine Mengenaenderungen ausserhalb von Trades
+    (keine Splits, keine Fusionen im betrachteten Zeitraum).
     """
     overrides = symbol_overrides or {}
-    laufend: dict[str, float] = {}
-    verlauf: dict[str, dict[str, float]] = {}
-    for tx in sorted(transaktionen, key=lambda t: t["unix_timestamp"]):
+    ereignisse: list[tuple[int, str, str, float]] = []
+
+    krypto_symbole: set[str] = set()
+    for tx in transaktionen:
         delta = normal_wallet_delta(tx)
         if delta is None:
             continue
         roh = tx["cryptocoin_symbol"]
         symbol = overrides.get(roh, roh)
+        krypto_symbole.add(symbol)
+        ereignisse.append((tx["unix_timestamp"], tx["datum_utc"], symbol, delta))
+
+    for tr in trades or []:
+        if tr.get("status") and tr["status"] != "finished":
+            continue  # nur abgeschlossene Trades aendern den Bestand
+        symbol = overrides.get(tr["symbol"], tr["symbol"])
+        if symbol in krypto_symbole:
+            continue  # schon ueber die Wallet-Transaktionen abgedeckt
+        menge = tr["amount_cryptocoin"]
+        ereignisse.append((
+            tr["unix_timestamp"], tr["datum_utc"], symbol,
+            menge if tr["type"] == "buy" else -menge,
+        ))
+
+    laufend: dict[str, float] = {}
+    verlauf: dict[str, dict[str, float]] = {}
+    for _, datum, symbol, delta in sorted(ereignisse, key=lambda e: e[0]):
         laufend[symbol] = laufend.get(symbol, 0.0) + delta
-        verlauf[tx["datum_utc"]] = dict(laufend)
+        verlauf[datum] = dict(laufend)
     return verlauf
 
 
@@ -570,6 +611,7 @@ def rekonstruiere_aus_transaktionen(
     watchlist: list | None = None,
     symbol_overrides: dict[str, str] | None = None,
     nur_symbole: set[str] | None = None,
+    trades: list[dict] | None = None,
 ) -> tuple[list[tuple[str, float, int, int]], dict]:
     """Alle drei Schichten zusammen: Buchungen -> Mengen je Tag -> EUR-Wert
     je Tag -> mengenkonstanter Index.
@@ -596,7 +638,7 @@ def rekonstruiere_aus_transaktionen(
     coingecko_ids = {a.symbol: a.coingecko_id for a in watchlist if a.coingecko_id}
     cash_aequivalente = {a.symbol for a in watchlist if a.ist_cash_aequivalent}
 
-    verlauf = bestandsverlauf(transaktionen, symbol_overrides=symbol_overrides)
+    verlauf = bestandsverlauf(transaktionen, symbol_overrides=symbol_overrides, trades=trades)
     bewegungstage = sorted(verlauf)
     ohne_verlauf = {
         s: menge for s, menge in holdings.items()
@@ -671,6 +713,7 @@ def reihen_je_kategorie(
     ab_datum: str,
     watchlist: list | None = None,
     symbol_overrides: dict[str, str] | None = None,
+    trades: list[dict] | None = None,
 ) -> dict[str, tuple[list, dict]]:
     """Dieselbe Reihe zusaetzlich je Assetklasse - als DIAGNOSE, nicht als
     zweiter Ausloeser.
@@ -708,7 +751,7 @@ def reihen_je_kategorie(
     ergebnis: dict[str, tuple[list, dict]] = {
         "gesamt": rekonstruiere_aus_transaktionen(
             conn, transaktionen, holdings, ab_datum=ab_datum,
-            watchlist=watchlist, symbol_overrides=symbol_overrides,
+            watchlist=watchlist, symbol_overrides=symbol_overrides, trades=trades,
         )
     }
     for klasse, symbole in sorted(je_klasse.items()):
@@ -720,7 +763,7 @@ def reihen_je_kategorie(
         ergebnis[klasse] = rekonstruiere_aus_transaktionen(
             conn, transaktionen, holdings, ab_datum=ab_datum,
             watchlist=watchlist, symbol_overrides=symbol_overrides,
-            nur_symbole=symbole,
+            nur_symbole=symbole, trades=trades,
         )
     return ergebnis
 

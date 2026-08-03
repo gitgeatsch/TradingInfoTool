@@ -348,6 +348,91 @@ class BitpandaTransaction:
     tags: list[str]  # 2026-07-11, Staking-Sichtbarkeit: short_name je Tag, z.B. "stake"/"unstake"
 
 
+@dataclass
+class BitpandaTrade:
+    """Ein Kauf/Verkauf aus GET /trades - im Gegensatz zu BitpandaTransaction
+    ueber ALLE Assetklassen hinweg (2026-08-04, Task #613)."""
+
+    type: str  # "buy" | "sell"
+    symbol: str  # Bitpanda-Wallet-Symbol, z.B. "VST-US", "IS0C" - NICHT das interne
+    amount_cryptocoin: float
+    amount_fiat: float | None
+    price: float | None
+    fiat_id: str | None  # "1" = EUR
+    unix_timestamp: int
+    is_swap: bool
+    is_savings: bool  # Sparplan-Kauf
+    status: str  # nur "finished" ist eine echte Mengenaenderung
+
+
+@track_api_health("bitpanda")
+def get_trades(
+    api_key: str,
+    session: requests.Session | None = None,
+    page_size: int = BITPANDA_TRANSACTIONS_PAGE_SIZE,
+    on_page_fetched: Callable[[int, int], None] | None = None,
+) -> list[BitpandaTrade]:
+    """GET /trades - Kaeufe/Verkaeufe ALLER Assetklassen, nur lesend.
+
+    WARUM ES DIESEN ZWEITEN ENDPUNKT BRAUCHT
+    `/wallets/transactions` liefert ausschliesslich Krypto-Wallets. Fuer Aktien,
+    ETFs und ETCs gibt es dort nichts - und die naheliegende Symmetrie
+    `/asset-wallets/transactions` EXISTIERT NICHT.
+
+    Belegt am 04.08. durch einen Kontrolltest: ein frei erfundener Pfad liefert
+    ebenfalls HTTP 401. **Bei dieser API heisst 401 "Pfad unbekannt", nicht
+    "Berechtigung fehlt"** - wer das verwechselt, haelt eine Endpunkt-Luecke fuer
+    ein Scope-Problem (ist mir genau so passiert). Fuer jede kuenftige
+    Endpunkt-Suche: erst den Unsinns-Pfad testen, dann interpretieren.
+
+    `/trades` deckt dagegen alles ab - in den ersten 500 von 6149 Eintraegen
+    fanden sich bereits alle 13 Nicht-Krypto-Watchlist-Symbole.
+
+    ERGAENZT `get_wallet_transactions()`, ERSETZT SIE NICHT. `/trades` enthaelt
+    nur Trades: keine Transfers, kein Staking, keine Boni. Wer fuer Krypto darauf
+    umstellt, verliert 1468 `instant_trade_bonus`- sowie alle `stake`/`unstake`/
+    `reward`-Buchungen und bekommt einen zu niedrigen Bestand.
+
+    `symbol` ist das BITPANDA-Wallet-Symbol, nicht das interne. Abbildung ueber
+    BITPANDA_NON_CRYPTO_WALLET_SYMBOL_OVERRIDES ("VST-US"->"VST", "IS0C"->"ISOC")
+    bzw. BITPANDA_SYMBOL_OVERRIDES ("CC"->"CANTON") - siehe
+    resolve_bitpanda_symbol_to_watchlist().
+    """
+    session = session or requests.Session()
+    trades: list[BitpandaTrade] = []
+    page = 1
+    while True:
+        payload = _authenticated_get(
+            "/trades",
+            api_key,
+            session,
+            params={"page_size": page_size, "page_number": page},
+        )
+        total_count = payload["meta"]["total_count"]
+        for entry in payload["data"]:
+            attrs = entry["attributes"]
+            trades.append(
+                BitpandaTrade(
+                    type=attrs["type"],
+                    symbol=attrs.get("cryptocoin_symbol") or "",
+                    amount_cryptocoin=float(attrs["amount_cryptocoin"]),
+                    amount_fiat=float(attrs["amount_fiat"]) if attrs.get("amount_fiat") else None,
+                    price=float(attrs["price"]) if attrs.get("price") else None,
+                    fiat_id=attrs.get("fiat_id"),
+                    unix_timestamp=int(attrs["time"]["unix"]),
+                    is_swap=bool(attrs.get("is_swap")),
+                    is_savings=bool(attrs.get("is_savings")),
+                    status=attrs.get("status", ""),
+                )
+            )
+        if on_page_fetched:
+            on_page_fetched(len(trades), total_count)
+        if page * page_size >= total_count:
+            break
+        page += 1
+    return trades
+
+
 def get_wallet_transactions(
     api_key: str,
     session: requests.Session | None = None,
