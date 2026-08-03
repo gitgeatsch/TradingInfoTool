@@ -19,6 +19,13 @@ from database.models import PriceSnapshot
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://api.coingecko.com/api/v3"
+# Minuten-Rate-Limit: harte Vorgabe von CoinGecko, kein Regler. Der API-Key
+# erhoeht NUR diesen Takt, nicht das Monatskontingent (10.000, siehe
+# config.yaml::coingecko_quota.monatslimit). Bewusst KEIN Config-Schluessel:
+# gegen ein Monatskontingent hilft langsamer nichts, am Monatsende steht
+# dieselbe Zahl. Die wirksame Bremse sitzt bei der ANZAHL der Abfragen -
+# Marktscan USD-only + Top-10-Deckel (config.yaml::marktscan) und der Not-Aus
+# jit_historie_refresh_aktiv. Dort nachsehen, nicht hier (Regler-Audit 04.08.).
 RATE_LIMIT_ANONYMOUS_PER_MINUTE = 30
 RATE_LIMIT_WITH_KEY_PER_MINUTE = 100
 DEFAULT_COOLDOWN_SECONDS = 60  # Backoff nach 429, falls kein Retry-After-Header vorhanden

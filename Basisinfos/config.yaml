@@ -816,8 +816,19 @@ agent:
 datenquellen:
   marktdaten:
     anbieter: CoinGecko
-    api_key_noetig: false
-    rate_limit_pro_minute: 30
+    # ENTFERNT 2026-08-04 (Regler-Audit): hier standen `api_key_noetig: false`
+    # und `rate_limit_pro_minute: 30`. Beide wurden nie gelesen, sahen aber wie
+    # Regler aus. `rate_limit_pro_minute` war zusaetzlich IRREFUEHREND: der
+    # tatsaechliche Minutentakt betraegt 30 ohne und 100 MIT API-Key
+    # (Konstanten in api/coingecko.py) - ein einzelner Wert kann beide
+    # Betriebsfaelle gar nicht abbilden.
+    # Bewusst NICHT durch einen Drossel-Regler ersetzt: der Minutentakt ist
+    # eine harte CoinGecko-Vorgabe, und gegen das MONATSkontingent
+    # (coingecko_quota.monatslimit: 10000, vom API-Key nicht erhoeht) hilft
+    # langsamer nichts - am Monatsende steht dieselbe Zahl. Die wirksame
+    # Bremse sitzt bei der ANZAHL der Abfragen: marktscan (USD-only +
+    # stufe_b_top_n_deckel) sowie der Not-Aus direkt hier unten.
+    #
     # Nachtrag 2026-07-27 (LINK-Vorfall, siehe Regelwerksmanual): Not-Aus fuer
     # das JIT-Historie-Nachladen (agent/krypto/pipeline.py::
     # jit_refresh_asset_historie()) - sofort per Config abschaltbar, falls das
