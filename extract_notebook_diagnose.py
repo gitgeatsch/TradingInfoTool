@@ -208,6 +208,7 @@ from agent.krypto.backward_tracking import (
     compute_zai_richtung_performance,
     compute_zai_richtung_performance_schatten,
     lade_kursreihen,
+    spot_symbole_je_tier,
 )
 from agent.krypto.regime import get_last_known_regime_status
 
@@ -1155,14 +1156,24 @@ def main() -> None:
         # Kursreihen einmal laden und durchreichen: sonst laedt jede der acht
         # Kombinationen (4 x 2 tiers) die vollen rund 60000 Zeilen erneut.
         _reihen = lade_kursreihen(conn)
+        # Spot NACH ASSETKLASSE getrennt: `signals` fuehrt Krypto, Aktien,
+        # Rohstoffe und Themen-ETF gemeinsam. Ohne Symbolfilter waere jeder
+        # Spot-Befund ein Mischwert, bei dem hinterher niemand sagen kann, ob er
+        # krypto-spezifisch war (Fund 29.07.). Der Sammel-Topf 'spot' laeuft
+        # zusaetzlich mit, damit die Aufteilung gegen die Summe pruefbar bleibt.
+        _spot_tiers = spot_symbole_je_tier(watchlist)
         crv_breakeven_baender = {}
-        for _tier in ("hebel", "spot"):
+        _laeufe = [("hebel", None), ("spot", None)]
+        _laeufe += [(t, s) for t, s in sorted(_spot_tiers.items())]
+        for _tier, _symbole in _laeufe:
             for _horizont in (7, 14):
                 for _mit_halten in (True, False):
+                    _tabellen_tier = "hebel" if _tier == "hebel" else "spot"
                     _schluessel = (f"{_tier}_h{_horizont}"
                                    f"_{'mit' if _mit_halten else 'ohne'}_halten")
                     crv_breakeven_baender[_schluessel] = compute_crv_breakeven_baender(
-                        conn, _tier, horizont=_horizont, mit_halten=_mit_halten,
+                        conn, _tabellen_tier, horizont=_horizont,
+                        mit_halten=_mit_halten, erlaubte_symbole=_symbole,
                         reihen=_reihen,
                     )
     finally:

@@ -2750,24 +2750,39 @@ _CRV_BAENDER = ((0.0, 2.0), (2.0, 2.5), (2.5, 3.0), (3.0, 4.0), (4.0, None))
 _BAND_ERFOLGSKRITERIUM = "ziel_erreicht"
 
 
-def simuliere_signal(z: dict, reihe: list, ab_datum: str, horizont: int) -> dict | None:
+def simuliere_signal(z: dict, reihe: list, ab_datum: str, horizont: int,
+                     voller_horizont_noetig: bool = True) -> dict | None:
     """Ein Signal Tag fuer Tag gegen die Kurshistorie, ab `ab_datum`.
 
-    GLEICHE BEOBACHTUNGSDAUER (Kontrolle 1 aus Task #602): Gibt None zurueck,
-    wenn die Reihe den vollen Horizont nicht abdeckt. Ohne diese Bedingung
-    misst man Beobachtungszeit statt Signalqualitaet - laenger beobachtete
-    Signale haben mehr Gelegenheit, ihren Stop zu treffen.
+    `voller_horizont_noetig=True` (Default) haelt die alte Bedingung GLEICHE
+    BEOBACHTUNGSDAUER (Kontrolle 1 aus Task #602): Signale, deren Reihe den
+    Horizont nicht abdeckt, geben None. Das ist richtig, solange die Auswertung
+    Ergebnisse einfach mittelt - laenger beobachtete Signale haetten sonst mehr
+    Gelegenheit, ihren Stop zu treffen.
+
+    `voller_horizont_noetig=False` gibt sie stattdessen ZENSIERT zurueck
+    (`zensiert=True`, `tag` = letzter beobachteter Tag). Nur fuer Auswerter, die
+    mit Rechtszensierung umgehen koennen - siehe kumulative_inzidenz(). Dort
+    ist das Wegwerfen der teilbeobachteten Faelle nicht noetig, sondern
+    schaedlich: bei Horizont 7 fielen dadurch 304 von 759 Hebel-Signalen weg,
+    bei Horizont 14 sogar 606.
 
     Identische Abbruch- und Fill-Logik wie das Backward-Tracking: Stop schlaegt
     Ziel am selben Tag, Ausfuehrung zur Zonen-Grenze bzw. bei einem Gap zum
     Eroeffnungskurs (gap_bewusster_fill). Trifft nichts, wird zum Schlusskurs
     des letzten Tages bewertet - dieselbe Konvention wie in der Basislinie,
-    dadurch sind beide Seiten symmetrisch."""
+    dadurch sind beide Seiten symmetrisch.
+
+    Rueckgabe: `r` (R-Multiple), `ausgang` ('ziel'/'stop'/'offen'), `tag`
+    (0-basierter Tagesindex des Ereignisses) und `zensiert` (True, wenn bis zum
+    letzten beobachteten Tag keine Barriere getroffen wurde)."""
     tage = [p for p in reihe if p["date"] >= ab_datum][:horizont + 1]
-    if len(tage) < horizont + 1:
+    if voller_horizont_noetig and len(tage) < horizont + 1:
+        return None
+    if not tage:
         return None
     e, risiko, ist_short = z["entry"], z["risiko"], z["ist_short"]
-    for p in tage:
+    for i, p in enumerate(tage):
         hoch, tief, auf = p["high"], p["low"], p["open"]
         if hoch is None or tief is None:
             continue
@@ -2776,16 +2791,140 @@ def simuliere_signal(z: dict, reihe: list, ab_datum: str, horizont: int) -> dict
         if hit_stop:
             fill = gap_bewusster_fill(z["stop"], auf, ist_stop=True, ist_short=ist_short)
             return {"r": ((e - fill) if ist_short else (fill - e)) / risiko,
-                    "ausgang": "stop"}
+                    "ausgang": "stop", "tag": i, "zensiert": False}
         if hit_ziel:
             fill = gap_bewusster_fill(z["ziel"], auf, ist_stop=False, ist_short=ist_short)
             return {"r": ((e - fill) if ist_short else (fill - e)) / risiko,
-                    "ausgang": "ziel"}
+                    "ausgang": "ziel", "tag": i, "zensiert": False}
     schluss = tage[-1]["close"]
     if not schluss:
         return None
     return {"r": ((e - schluss) if ist_short else (schluss - e)) / risiko,
-            "ausgang": "offen"}
+            "ausgang": "offen", "tag": len(tage) - 1, "zensiert": True}
+
+
+def spot_symbole_je_tier(watchlist: list | None) -> dict[str, set[str]]:
+    """{tier: Symbolmenge} fuer die Spot-Familie, aus der Watchlist.
+
+    WOFUER. Die Tabelle `signals` fuehrt Krypto, Aktien, Rohstoffe und
+    Themen-ETF gemeinsam. Wer sie ohne Symbolfilter auswertet, bekommt einen
+    Mischtopf und kann hinterher nicht sagen, ob ein Befund krypto-spezifisch
+    war - genau der Fehler vom 29.07., gegen den _assetklasse_index() seither
+    laut warnt, und genau der Grund, warum Regel 36 bewusst nur fuer
+    Krypto-Spot gilt.
+
+    Leere Watchlist -> leeres dict; der Aufrufer faellt dann sichtbar auf den
+    Sammel-Topf zurueck, statt still zu mischen."""
+    index = _assetklasse_index(watchlist, "spot_symbole_je_tier()")
+    je_tier: dict[str, set[str]] = {}
+    for symbol in index:
+        je_tier.setdefault(_tier_fuer_spot_symbol(symbol, index), set()).add(symbol)
+    return je_tier
+
+
+def kumulative_inzidenz(ereignisse: list[tuple[int, str, str]], horizont: int) -> dict:
+    """Aalen-Johansen-Schaetzer fuer zwei konkurrierende Ereignisse (2026-08-03).
+
+    WARUM NICHT EINFACH ZAEHLEN. Unser Aufbau ist die Triple-Barrier-Methode
+    (Lopez de Prado): obere Barriere Take-Profit, untere Stop-Loss, vertikale
+    das Zeitlimit. Statistisch sind Ziel und Stop KONKURRIERENDE EREIGNISSE mit
+    Rechtszensierung am Horizont. Die beiden naheliegenden Abkuerzungen sind
+    beide bekannt-falsche Schaetzer:
+
+      Ziel / ALLE Signale      - zaehlt Zensierte als Misserfolg, UNTERSCHAETZT
+                                 systematisch. Bei Horizont 7 sind 39 % der
+                                 Signale unentschieden - die wurden bisher wie
+                                 Verlierer behandelt.
+      Ziel / AUFGELOESTE       - Complete-Case-Analyse, verzerrt sobald die
+                                 Zensierung informativ ist. Sie ist es: ob ein
+                                 Trade aufloest, haengt vom Stop-Abstand ab.
+                                 Genau daran brach der Befund vom 02.08.
+
+    Die beiden nebeneinanderzustellen mittelt nicht zwei Wahrheiten, sondern
+    zwei Fehler. Der Standardschaetzer fuer diese Lage ist die kumulative
+    Inzidenzfunktion.
+
+    DER EIGENTLICHE GEWINN ist aber ein anderer: der Schaetzer braucht KEIN
+    vollstaendiges Beobachtungsfenster. Ein Signal mit 3 von 7 Tagen traegt zum
+    Risikoset dieser 3 Tage bei und scheidet dann aus, statt weggeworfen zu
+    werden. Bei Horizont 14 nutzt das 759 statt 153 Hebel-Signale.
+
+    `ereignisse`: (tag, art, symbol) je Signal, art in 'ziel'/'stop'/'zensiert'.
+    Das Symbol wird hier nicht gebraucht, aber durchgereicht - der Bootstrap
+    darueber braucht es (siehe _block_bootstrap_ziel_anteil()).
+
+    Rueckgabe: cif_ziel / cif_stop (Wahrscheinlichkeit, die jeweilige Barriere
+    BIS zum Horizont zu treffen), `ziel_anteil` = cif_ziel/(cif_ziel+cif_stop) -
+    das ist der Wert, der gegen 1/(1+CRV) gehoert, weil beide Seiten des
+    Bruchs gleich stark von der Zensierung betroffen sind - und
+    `aufloesungsquote` = cif_ziel+cif_stop als Pflicht-Vorbehalt."""
+    ziel_je_tag: dict[int, int] = {}
+    stop_je_tag: dict[int, int] = {}
+    zens_je_tag: dict[int, int] = {}
+    for tag, art, _symbol in ereignisse:
+        eimer = {"ziel": ziel_je_tag, "stop": stop_je_tag}.get(art, zens_je_tag)
+        eimer[tag] = eimer.get(tag, 0) + 1
+
+    n_risiko = len(ereignisse)
+    ueberleben = 1.0        # Anteil, der bis hierher KEINE Barriere getroffen hat
+    cif_ziel = cif_stop = 0.0
+    for tag in range(horizont + 1):
+        if n_risiko <= 0:
+            break
+        z, s = ziel_je_tag.get(tag, 0), stop_je_tag.get(tag, 0)
+        if z or s:
+            h_ziel, h_stop = z / n_risiko, s / n_risiko
+            cif_ziel += ueberleben * h_ziel
+            cif_stop += ueberleben * h_stop
+            ueberleben *= (1.0 - h_ziel - h_stop)
+        # Zensierte scheiden NACH den Ereignissen desselben Tages aus - sie
+        # waren an diesem Tag noch unter Risiko.
+        n_risiko -= z + s + zens_je_tag.get(tag, 0)
+
+    aufloesung = cif_ziel + cif_stop
+    return {
+        "cif_ziel": cif_ziel,
+        "cif_stop": cif_stop,
+        "aufloesungsquote": aufloesung,
+        "ziel_anteil": (cif_ziel / aufloesung) if aufloesung > 0 else None,
+        "anzahl": len(ereignisse),
+        "anzahl_zensiert": sum(zens_je_tag.values()),
+    }
+
+
+def _block_bootstrap_ziel_anteil(ereignisse: list[tuple[int, str, str]], horizont: int,
+                                 ziehungen: int = _BOOTSTRAP_ZIEHUNGEN) -> tuple:
+    """95%-Intervall fuer `ziel_anteil`, gezogen ueber SYMBOLE statt Signale.
+
+    Ein gewoehnliches Wilson-Intervall unterstellt unabhaengige Beobachtungen.
+    Unsere sind es nicht: einzelne Symbole stellen bis zu einem Drittel eines
+    Bandes (VIRTUAL 33 %, HYPE 27 %), dazu ueberlappen sich die Zeitfenster.
+    Wilson faellt dadurch zu ENG aus, und ein Band gilt zu leicht als belastbar.
+
+    Deshalb Block-Bootstrap: gezogen werden ganze Symbole mit Zuruecklegen,
+    nicht einzelne Signale. Damit bleibt die Abhaengigkeit innerhalb eines
+    Symbols erhalten und schlaegt sich in der Intervallbreite nieder."""
+    je_symbol: dict[str, list] = {}
+    for e in ereignisse:
+        je_symbol.setdefault(e[2], []).append(e)
+    symbole = list(je_symbol)
+    if len(symbole) < 2:
+        return (None, None)
+    rng = random.Random(_BOOTSTRAP_SEED)
+    werte: list[float] = []
+    for _ in range(ziehungen):
+        probe: list[tuple[int, str, str]] = []
+        for _ in range(len(symbole)):
+            probe.extend(je_symbol[symbole[rng.randrange(len(symbole))]])
+        anteil = kumulative_inzidenz(probe, horizont)["ziel_anteil"]
+        if anteil is not None:
+            werte.append(anteil)
+    if len(werte) < 20:
+        return (None, None)
+    werte.sort()
+    unten = werte[max(0, int(0.025 * len(werte)) - 1)]
+    oben = werte[min(len(werte) - 1, int(0.975 * len(werte)))]
+    return (unten, oben)
 
 
 def compute_crv_breakeven_baender(
@@ -2836,7 +2975,7 @@ def compute_crv_breakeven_baender(
     ).fetchall()
 
     faelle: list[dict] = []
-    ohne_volle_reihe = 0
+    ohne_kursreihe = 0
     action_mix: dict[str, int] = {}
     for row in rows:
         if erlaubte_symbole is not None and row["symbol"] not in erlaubte_symbole:
@@ -2847,12 +2986,16 @@ def compute_crv_breakeven_baender(
         z = _zonen_absolut(row)
         if z is None or row["symbol"] not in reihen:
             continue
-        sim = simuliere_signal(z, reihen[row["symbol"]], str(row["created_at"])[:10], horizont)
+        # voller_horizont_noetig=False: teilbeobachtete Signale werden ZENSIERT
+        # mitgezaehlt statt weggeworfen - der ganze Punkt des Schaetzers.
+        sim = simuliere_signal(z, reihen[row["symbol"]], str(row["created_at"])[:10],
+                               horizont, voller_horizont_noetig=False)
         if sim is None:
-            ohne_volle_reihe += 1
+            ohne_kursreihe += 1
             continue
         action_mix[str(row["action"])] = action_mix.get(str(row["action"]), 0) + 1
         faelle.append({"crv": z["crv"], "r": sim["r"], "ausgang": sim["ausgang"],
+                       "tag": sim["tag"], "zensiert": sim["zensiert"],
                        "symbol": row["symbol"]})
     if not faelle:
         return None
@@ -2863,11 +3006,19 @@ def compute_crv_breakeven_baender(
         n = len(teil)
         if n == 0:
             continue
-        ziel = sum(1 for f in teil if f["ausgang"] == "ziel")
         crv_median = statistics.median(f["crv"] for f in teil)
         breakeven = 1.0 / (1.0 + crv_median)
-        quote = ziel / n
-        ki_unten, ki_oben = wilson_intervall(ziel, n)
+        # Der Schaetzer: konkurrierende Ereignisse mit Rechtszensierung.
+        ereignisse = [(f["tag"], "zensiert" if f["zensiert"] else f["ausgang"], f["symbol"])
+                      for f in teil]
+        ki = kumulative_inzidenz(ereignisse, horizont)
+        anteil = ki["ziel_anteil"]
+        ki_unten, ki_oben = _block_bootstrap_ziel_anteil(ereignisse, horizont)
+        # Die beiden bekannt-falschen Abkuerzungen bleiben als Kontrolle
+        # sichtbar - weichen sie stark vom Schaetzer ab, lohnt ein Blick.
+        ziel_roh = sum(1 for f in teil if f["ausgang"] == "ziel")
+        stop_roh = sum(1 for f in teil if f["ausgang"] == "stop")
+        aufgeloest_roh = ziel_roh + stop_roh
         zaehler: dict[str, int] = {}
         for f in teil:
             zaehler[f["symbol"]] = zaehler.get(f["symbol"], 0) + 1
@@ -2876,17 +3027,32 @@ def compute_crv_breakeven_baender(
             "crv_von": von,
             "crv_bis": bis,
             "anzahl": n,
+            "anzahl_zensiert": ki["anzahl_zensiert"],
             "crv_median": round(crv_median, 2),
-            "trefferquote_pct": round(quote * 100, 1),
+            # PRIMAERWERT: Anteil Ziel an allen aufgeloesten, zensierungsbereinigt.
+            "ziel_anteil_pct": None if anteil is None else round(anteil * 100, 1),
             "breakeven_pct": round(breakeven * 100, 1),
-            "abstand_prozentpunkte": round((quote - breakeven) * 100, 1),
-            "ki_unten_pct": round(ki_unten * 100, 1),
-            "ki_oben_pct": round(ki_oben * 100, 1),
+            "abstand_prozentpunkte": (None if anteil is None
+                                      else round((anteil - breakeven) * 100, 1)),
+            "ki_unten_pct": None if ki_unten is None else round(ki_unten * 100, 1),
+            "ki_oben_pct": None if ki_oben is None else round(ki_oben * 100, 1),
+            # Anteil, der bis zum Horizont ueberhaupt eine Barriere trifft -
+            # Pflichtangabe: je niedriger, desto mehr steckt der Punktwert in
+            # der Hochrechnung statt in beobachteten Faellen.
+            "aufloesungsquote_pct": round(ki["aufloesungsquote"] * 100, 1),
             # Fuer eine SCHWELLE reicht der Punktwert nicht - das Intervall
-            # muss den Breakeven auch verfehlen.
-            "belastbar": bool(n >= _MIN_SAMPLE_FUER_AUSSAGE
-                              and (ki_unten > breakeven or ki_oben < breakeven)),
+            # muss den Breakeven auch verfehlen. Das Intervall stammt aus dem
+            # Block-Bootstrap ueber Symbole, nicht aus Wilson.
+            "belastbar": bool(
+                n >= _MIN_SAMPLE_FUER_AUSSAGE and anteil is not None
+                and ki_unten is not None
+                and (ki_unten > breakeven or ki_oben < breakeven)
+            ),
             "erwartungswert_r": round(statistics.fmean(f["r"] for f in teil), 4),
+            # Kontrollwerte, bewusst mitgefuehrt (siehe kumulative_inzidenz()):
+            "kontrolle_ziel_durch_alle_pct": round(ziel_roh / n * 100, 1),
+            "kontrolle_ziel_durch_aufgeloeste_pct": (
+                None if aufgeloest_roh == 0 else round(ziel_roh / aufgeloest_roh * 100, 1)),
             "groesstes_symbol": top_symbol,
             "groesstes_symbol_anteil_pct": round(top_n / n * 100, 1),
         })
@@ -2898,15 +3064,23 @@ def compute_crv_breakeven_baender(
         "messgroesse": _BAND_ERFOLGSKRITERIUM,
         "mit_halten_signalen": mit_halten,
         "anzahl_signale": len(faelle),
-        "anzahl_ohne_volle_preisreihe": ohne_volle_reihe,
+        "anzahl_ohne_kursreihe": ohne_kursreihe,
+        "schaetzer": "kumulative_inzidenz_aalen_johansen",
         "action_mix": action_mix,
         "baender": baender,
         "hinweis": (
-            f"{len(faelle)} Signale mit Zonen, neu simuliert ueber {horizont} Tage "
-            f"(survivorship-frei, nicht nur aufgeloeste Faelle). Erfolgskriterium: "
-            f"Ziel erreicht - NICHT 'MFE >= 1R', die beiden laufen gegenlaeufig. "
-            f"{belastbare} von {len(baender)} Baendern sind statistisch belastbar; "
-            "die uebrigen sind eine Groessenordnung, keine Punktprognose."
+            f"{len(faelle)} Signale mit Zonen, neu simuliert ueber {horizont} Tage. "
+            "Geschaetzt wird der Anteil 'Ziel vor Stop' als kumulative Inzidenz "
+            "mit Rechtszensierung am Horizont - teilbeobachtete Signale zaehlen "
+            "bis zu ihrem Zensierungszeitpunkt mit, statt weggeworfen zu werden. "
+            "Erfolgskriterium ist ZIEL ERREICHT, nicht 'MFE >= 1R': die beiden "
+            "laufen gegenlaeufig, ein hoeheres CRV senkt die noetige Trefferquote "
+            "UND die tatsaechliche. Konfidenzintervalle per Block-Bootstrap ueber "
+            "Symbole, weil einzelne Symbole bis zu einem Drittel eines Bandes "
+            f"stellen. {belastbare} von {len(baender)} Baendern sind belastbar; "
+            "die uebrigen sind eine Groessenordnung, keine Punktprognose. "
+            "aufloesungsquote_pct mitlesen: je niedriger, desto mehr steckt der "
+            "Wert in der Hochrechnung."
         ),
     }
 
