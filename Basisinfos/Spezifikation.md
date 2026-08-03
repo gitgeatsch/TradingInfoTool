@@ -1184,6 +1184,25 @@ seinen Emotionen scheitert. Grundsatz: **antizyklisch, aber bedingt.**
   abgeschlossen.**
 - **AZ-5 Fundamental-Gate:** Nachkaufen nur bei **intakter Substanz**. Fallender Kurs +
   erodierende Substanz = Value-Falle, **kein** Kauf.
+  **NICHT UMGESETZT (Stand 2026-08-04, Regler-Audit).** Bewusst festgehalten statt
+  stillschweigend offen gelassen: es gibt weder ein Gate im Risk-Gate noch eine
+  Prompt-Regel in einem der sechs Analysten. Der nächste Verwandte ist Regel 9 in
+  `agent/aktien/analyst.py`, die aber die BEWERTUNGSqualität prüft (KGV gegen
+  Forward-KGV gegen Wachstum) und nicht den AZ-5-Fall „Nachkauf in einen fallenden
+  Kurs". Der Config-Schlüssel `antizyklisch.fundamental_gate: true` wurde nie gelesen.
+  *Warum nicht umgesetzt:* Für **Krypto** fehlt die Datengrundlage — „Substanz" hat dort
+  keine bilanzielle Entsprechung, und Ersatzgrößen (On-Chain-Aktivität, TVL,
+  Entwicklertätigkeit) werden nicht abgerufen. Ein Gate wäre ein eigenes Datenprojekt.
+  Für **Aktien/Themen-ETF** wäre es über die vorhandenen yfinance-Fundamentaldaten
+  machbar, aber mit derzeit 7 auswertbaren Aktien-Signalen über Monate nicht
+  überprüfbar — es entstünde eine Regel aus Prinzip statt aus Messung.
+  *Wiedervorlage:* wenn das System stabil läuft und die Multi-Asset-Stichprobe
+  belastbar ist, für Aktien/Themen-ETF als weiche Stage-2-Regel (Fakt + Prompt, kein
+  Veto mit erfundener Schwelle) erneut bewerten.
+  **Achtung, Kopplung:** AZ-8 nennt das Fundamental-Gate ausdrücklich als einen von
+  sechs Schaltkreis-Unterbrechern. Zwei der sechs existieren nicht — dieser hier und
+  die Drawdown-Notbremse (Z-3). Das dort beschriebene Schutzkonzept ist entsprechend
+  unvollständig; wer sich darauf beruft, muss das mitdenken.
 - **AZ-6 „Gescheiterte-These"-Ausstieg:** Läuft ein antizyklischer Kauf über Schwelle
   *und* erwartete Zyklusdauer hinaus gegen die These, **stoppt** das Nachkaufen und wird
   neu bewertet — kein mechanisches Weiter-Mitteln.

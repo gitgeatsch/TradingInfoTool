@@ -71,13 +71,37 @@ Mess-/Analysegrundlage übersehen (Nutzer-Fund).
   `ema_perioden`, `rsi_periode`, `forecast_szenarien` — entfernt. Die
   Config-Werte beschrieben das Verhalten korrekt, steuerten es aber nicht.
   Genau diese Sorte verleitet dazu, in der Config nachzusehen statt im Code.
+- `gestaffelt_kaufen` (AZ-4) — entfernt. **Lehre aus diesem Fall:** Erst hielt
+  ich ihn für reine Aufräumarbeit, dann für eine Abweichung zwischen
+  Spezifikation („nie all-in") und Umsetzung (Erlaubnis für drei Symbole).
+  Beides falsch — die Spezifikation dokumentiert in Kap. 15 vollständig, was
+  gebaut wurde, samt aller drei Einschränkungen (Regime baer/krise_extrem/
+  seitwaerts, nur BTC/ETH/SOL, Toggle je Asset) und der strukturellen Grenze:
+  Bitpanda hat keine Handels-API, das System kann Tranchen nur EMPFEHLEN.
+  Der Fehler entstand, weil ich aus einer bei `→` abgeschnittenen Grep-Zeile
+  geschlossen habe, statt den Absatz zu lesen. **Regel für alle weiteren
+  AZ-Fälle: zuerst den Spezifikationsabsatz vollständig lesen, dann die
+  Codesuche** — nicht umgekehrt.
+
+**Als unerfüllt dokumentiert (04.08.):** `fundamental_gate` (AZ-5). Weder Gate
+noch Prompt-Regel. Für Krypto fehlt die Datengrundlage („Substanz" hat keine
+bilanzielle Entsprechung, Ersatzgrößen werden nicht abgerufen), für Aktien wäre
+es machbar, aber bei 7 auswertbaren Signalen über Monate nicht überprüfbar.
+Bewusst NICHT gebaut und in Spezifikation Kap. 15 mit Begründung und
+Wiedervorlage-Bedingung vermerkt, statt stillschweigend offen zu bleiben.
+
+**Strukturelle Lücke, die dabei sichtbar wurde:** AZ-8 beschreibt das
+Schutzkonzept des antizyklischen Kapitels und nennt sechs
+Schaltkreis-Unterbrecher — **zwei davon existieren nicht**, das Fundamental-Gate
+(AZ-5) und die Drawdown-Notbremse (Z-3). Wer sich auf AZ-8 beruft, beruft sich
+auf ein Konzept, das zu einem Drittel aus nicht gebauten Teilen besteht.
 
 **Offen (#611):** `max_drawdown_prozent` (Z-3, in keinem Dokument außer der
-Config, nie umgesetzt), der gesamte `antizyklisch`-Block (AZ-1 bis AZ-7, acht
-Schlüssel, nirgends gelesen — soweit vorhanden lebt das Verhalten als
-Prompt-Text auf Stage 2, während die Config Stage 1 suggeriert), sowie
-`auto_watchlist` (verspricht automatische Aufnahme, real ist es ein manueller
-Button in `marktscan_view.py:568`).
+Config, nie umgesetzt — und laut AZ-8 einer der tragenden Unterbrecher), der
+Rest des `antizyklisch`-Blocks (nirgends gelesen — soweit vorhanden lebt das
+Verhalten als Prompt-Text auf Stage 2, während die Config Stage 1 suggeriert),
+sowie `auto_watchlist` (verspricht automatische Aufnahme, real ist es ein
+manueller Button in `marktscan_view.py:568`).
 
 **Nebenbefund:** Die Parameter-Übersicht der Remote-Seite
 (`regelwerk_parameter.py::_PARAMETER`) umfasst 34 handverlesene Einträge von

@@ -1588,7 +1588,16 @@ antizyklisch:
   aktiv: true
   bestaetigung_pflicht: true           # AZ-2: "kaufe die Bestaetigung, nicht das Messer"
   spot_sondierung_nur_kernwerte: true  # AZ-3: kleine Vorab-Tranche nur fuer core (BTC/ETH)
-  gestaffelt_kaufen: true              # AZ-4: Tranchen/DCA, nie all-in
+  # ENTFERNT 2026-08-04 (Regler-Audit): `gestaffelt_kaufen: true` (AZ-4) wurde
+  # nie gelesen. Das Verhalten existiert und ist in Spezifikation Kap. 15
+  # vollstaendig beschrieben - inklusive aller Einschraenkungen: Tranchen nur
+  # bei Regime baer/krise_extrem/seitwaerts, nur BTC/ETH/SOL, nur bei
+  # aktiviertem Toggle je Asset (DB-Flag `tranchen_erlaubt`, NICHT dieser
+  # Schluessel). Gesteuert wird ueber Prompt-Regel 20 in analyst.py.
+  # Die harte Grenze ist strukturell: Bitpanda bietet keine Handels-API, das
+  # System kann Tranchen nur EMPFEHLEN. In dem Sinn ist AZ-4 so weit gebaut,
+  # wie es geht - offen waere hoechstens eine Ausweitung des Geltungsbereichs
+  # (mehr Symbole, mehr Regime), und dafuer fehlt bisher jede Messung.
   fundamental_gate: true               # AZ-5: Nachkauf nur bei intakter Substanz
   these_gescheitert_stop: true         # AZ-6: Nachkaufen stoppen, wenn These scheitert
   hebel:
