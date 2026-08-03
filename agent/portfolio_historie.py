@@ -422,6 +422,103 @@ def pruefe_gegen_holdings(
     return ergebnis
 
 
+def verketteter_index(
+    tage: list[str],
+    mengen_am: "callable",
+    kurs_am: "callable",
+    *,
+    startwert: float = 100.0,
+) -> list[tuple[str, float, int]]:
+    """Mengenkonstanter Index - die Grundlage, auf der Z-3 rechnen muss.
+
+    WARUM NICHT DER ROHE PORTFOLIOWERT
+    Ein Zukauf hebt den Portfoliowert, ist aber kein Gewinn; ein Verkauf senkt
+    ihn, ist aber kein Verlust. Eine Drawdown-Notbremse auf der rohen Wertreihe
+    wuerde also auf Handelsaktivitaet reagieren statt auf Marktbewegung - und
+    zwar in beide Richtungen falsch: ein grosser Verkauf koennte Z-3 grundlos
+    ausloesen, ein grosser Zukauf einen echten Einbruch verdecken.
+
+    Das ist keine graue Theorie: am 12.07. gab es eine Einzahlung ueber 2.500
+    EUR, dazu laufende Sparplan-Kaeufe. Der Fiat-Zufluss selbst steht nicht im
+    Krypto-Export, aber sobald er zu einem Kauf wird, hebt er die Mengen - und
+    damit den rohen Wert.
+
+    DIE FORMEL
+    Fuer jeden Tag wird die Rendite mit den Mengen des VORTAGS gerechnet:
+
+        r_t = (Summe q_{t-1} * p_t) / (Summe q_{t-1} * p_{t-1}) - 1
+
+    Weil in Zaehler und Nenner dieselben Mengen stehen, faellt jede
+    zwischenzeitliche Mengenaenderung heraus - uebrig bleibt reine
+    Kursbewegung. Die Tagesrenditen werden dann verkettet
+    (I_t = I_{t-1} * (1 + r_t)). Das ist die zeitgewichtete Rendite, der
+    uebliche Weg, Performance von Ein- und Auszahlungen zu trennen.
+
+    `mengen_am(tag) -> dict[symbol, menge]` und
+    `kurs_am(symbol, tag) -> float | None` werden hereingereicht, damit diese
+    Funktion rein rechnerisch bleibt und ohne Datenbank testbar ist.
+
+    Rueckgabe je Tag: (datum, indexwert, anzahl_bewerteter_symbole). Die dritte
+    Zahl ist kein Beiwerk - faellt sie ploetzlich, beruht die Tagesrendite auf
+    weniger Positionen und ist entsprechend weniger belastbar.
+
+    Ein Symbol geht nur in die Rendite ein, wenn es an BEIDEN Tagen einen Kurs
+    hat. Sonst waere der Vergleich schief: ein Symbol nur im Zaehler wirkt wie
+    ein Kurssprung aus dem Nichts, nur im Nenner wie ein Totalverlust.
+    """
+    index = startwert
+    reihe: list[tuple[str, float, int]] = []
+    for i, tag in enumerate(tage):
+        if i == 0:
+            reihe.append((tag, index, 0))
+            continue
+        vortag = tage[i - 1]
+        basis = mengen_am(vortag)
+        alt = neu = 0.0
+        bewertet = 0
+        for symbol, menge in basis.items():
+            if menge <= 0:
+                continue
+            p_alt, p_neu = kurs_am(symbol, vortag), kurs_am(symbol, tag)
+            if p_alt is None or p_neu is None:
+                continue
+            alt += menge * p_alt
+            neu += menge * p_neu
+            bewertet += 1
+        if alt > 0:
+            index *= neu / alt
+        reihe.append((tag, index, bewertet))
+    return reihe
+
+
+def groesster_rueckschlag(reihe: list[tuple[str, float, int]]) -> dict:
+    """Groesster Rueckgang vom laufenden Hoechststand - die Zahl, gegen die
+    Z-3/RM-7 seine Schwelle (`ziele.max_drawdown_prozent`, 15) prueft.
+
+    Zusaetzlich `aktuell_prozent`: der Abstand zum Hoechststand HEUTE. Fuer die
+    Notbremse ist das der eigentlich relevante Wert - der historisch groesste
+    Rueckschlag ist Kontext, ausgeloest wird auf dem aktuellen."""
+    if not reihe:
+        return {"max_prozent": 0.0, "aktuell_prozent": 0.0, "hoch_am": None, "tief_am": None}
+    hoch = reihe[0][1]
+    hoch_am = tief_am = reihe[0][0]
+    schlimmster_hoch_am = reihe[0][0]
+    max_rueckschlag = 0.0
+    for tag, wert, _ in reihe:
+        if wert > hoch:
+            hoch, hoch_am = wert, tag
+        rueckschlag = (hoch - wert) / hoch * 100 if hoch > 0 else 0.0
+        if rueckschlag > max_rueckschlag:
+            max_rueckschlag, tief_am, schlimmster_hoch_am = rueckschlag, tag, hoch_am
+    letzter = reihe[-1][1]
+    return {
+        "max_prozent": max_rueckschlag,
+        "aktuell_prozent": (hoch - letzter) / hoch * 100 if hoch > 0 else 0.0,
+        "hoch_am": schlimmster_hoch_am,
+        "tief_am": tief_am,
+    }
+
+
 def schreibe_rekonstruktion(
     conn: sqlite3.Connection, ergebnis: RekonstruktionsErgebnis
 ) -> int:
