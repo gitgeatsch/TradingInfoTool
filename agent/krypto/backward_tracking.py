@@ -1721,19 +1721,40 @@ def basislinie_erwartungswert(conn, stop_rel: float, crv: float, ist_short: bool
     """Mechanische Basislinie: Zufallseinstieg an JEDEM Tagesbalken aller
     Symbole mit exakt diesen Stop-/Ziel-Abstaenden (2026-08-03).
 
-    WARUM DAS NOETIG IST. Am 03.08. gegen den vollen Signalbestand gemessen
-    verliert ein solcher Zufallseinstieg systematisch: -0,11 bis -0,26 R je nach
-    Parametersatz. Damit ist ein Teil der absoluten Negativitaet des Systems
-    (hebel/real EW -0,299 R, SQN -1,72) schlicht Marktphase. Wer SQN ohne
-    diesen Bezugspunkt liest, haelt ein funktionierendes System in einer
-    schlechten Phase fuer kaputt - und steuert in die falsche Richtung nach.
-    Der SIGNALBEITRAG (Expectancy minus Basislinie) ist die belastbarere
-    Groesse, solange nur ein Regime beobachtet ist
+    WARUM DAS NOETIG IST. Ohne Bezugspunkt haelt man ein funktionierendes
+    System in einer schlechten Phase fuer kaputt - und steuert in die falsche
+    Richtung nach. Der SIGNALBEITRAG (Expectancy minus Basislinie) ist die
+    belastbarere Groesse, solange nur ein Regime beobachtet ist
     (Test_und_Verifikationsmethodik 2.5.7, Zielgroessen_und_Erfolgsmasse 4).
 
-    Verwendet dieselbe Abbruch- und Fill-Logik wie das Backward-Tracking:
-    Stop schlaegt Ziel am selben Tag, Ausfuehrung zur Zonen-Grenze bzw. bei
-    einem Gap zum Eroeffnungskurs (gap_bewusster_fill).
+    KORREKTUR 04.08. (#617): hier stand, ein Zufallseinstieg verliere
+    systematisch "-0,11 bis -0,26 R je nach Parametersatz", ein Teil unserer
+    Negativitaet sei also blosse Marktphase. Das ist gegen den heutigen Code
+    NICHT reproduzierbar - ueber ein Raster von 4 Stop-Abstaenden x 4 CRV-Werten
+    sind ALLE 16 LONG-Zellen positiv (+0,026 bis +0,115); SHORT liegt zwischen
+    -0,111 und -0,034. Die alten Zahlen passen der Groessenordnung nach zur
+    BEREINIGTEN Rechnung (siehe naechster Absatz), nicht zu dem, was diese
+    Funktion zurueckgibt. Wer die Basislinie zur Entlastung heranzieht, stuetzt
+    sich sonst auf eine Zahl, die der Code so nicht mehr liefert.
+
+    ACHTUNG, ASYMMETRIE - der wichtigste Vorbehalt dieser Funktion.
+    Trifft eine Ziehung weder Stop noch Ziel, wird sie unten zum Schlusskurs
+    bewertet und ZAEHLT MIT. Echte Signale bekommen in derselben Lage
+    'abgelaufen_unentschieden' und GAR KEINEN R-Wert - sie fallen aus der SQN
+    heraus. Die Basislinie hat also einen Topf, den unsere Signale nicht haben,
+    und er ist gross und gut: bei unseren Median-Parametern (Hebel, Stop 0,044,
+    CRV 3,27, 80 % LONG) sind es 40,5 % aller Ziehungen mit +0,47 R im Schnitt.
+    Nimmt man sie heraus, dreht die Basislinie von +0,071 auf -0,201 - das
+    Vorzeichen kippt. Der Signalbeitrag schrumpft dadurch von -0,379 R auf
+    rund -0,08 R, liegt also bei n=86 im Rauschen.
+    Gemessen mit messe_basislinie_aufloesung.py; die dortige Schleife
+    reproduziert den Produktivwert (+0,0706 gegen +0,0807 im Export).
+    SOLANGE #617 OFFEN IST: den Signalbeitrag nicht als Beleg verwenden, weder
+    im LLM-Prompt noch in Berichten noch als Begruendung fuer Regelaenderungen.
+
+    Verwendet ansonsten dieselbe Abbruch- und Fill-Logik wie das
+    Backward-Tracking: Stop schlaegt Ziel am selben Tag, Ausfuehrung zur
+    Zonen-Grenze bzw. bei einem Gap zum Eroeffnungskurs (gap_bewusster_fill).
 
     Kosten rund 0,06 s je Aufruf bei 64000 Kursreihen-Zeilen - guenstig genug
     fuer den laufenden Betrieb, deshalb kein Caching."""
