@@ -30,7 +30,7 @@ Diese vier stehen über allen anderen Regeln — jede andere Regel muss sich dar
 |----|-----------|-----------|
 | Z-1 | Kapitalerhalt vor Gewinn | Im Zweifel gewinnt immer "Verlust vermeiden" gegen "mehr Gewinn machen". |
 | Z-2 | Mindest-Chance-Risiko-Verhältnis | Jedes KAUFEN-Signal braucht ein Verhältnis von **mindestens 2,0** — der mögliche Gewinn bis zum Take-Profit muss mindestens doppelt so groß sein wie der mögliche Verlust bis zum Stop-Loss. Konservativ gerechnet (schlechtester Fall der Kurszone). **AKTIV**, hart erzwungen — ein Vorschlag, der das nicht schafft, wird automatisch auf HALTEN korrigiert. |
-| Z-3 | Drawdown-Notbremse | Bei zu großem Gesamt-Portfolio-Verlust automatisch in den Kapitalschutz-Modus wechseln. **OFFEN** — fehlt noch eine Portfolio-Wert-Historie als Grundlage. |
+| Z-3 | Drawdown-Notbremse | Bei zu großem Gesamt-Portfolio-Verlust Kapitalschutz-Modus (S-5) erwägen. **UMGESETZT 2026-08-04** — Schwelle `ziele.max_drawdown_prozent` (15 %), tägliche Prüfung 6:30 durch `portfolio_wert_job()`. Gerechnet auf einer **mengenkonstanten** Wertreihe: 15 % meint Marktbewegung, Zu-/Verkäufe sind herausgerechnet. Wirkt als dringender Alert (E-Mail), nicht als Automatik — es gibt keine Handels-API. |
 | Z-4 | Nachvollziehbarkeit | Jede Empfehlung braucht Begründung + Datenbasis + Konfidenz-Angabe. **AKTIV** (Top-5-Gründe, Kurszonen, Halte-Kriterium). |
 
 ---
@@ -45,7 +45,7 @@ Diese vier stehen über allen anderen Regeln — jede andere Regel muss sich dar
 | RM-4 | Cash-Reserve-Minimum | **Größerer Wert aus 10 %** des Portfolios **oder 2000 €** Festbetrag | AKTIV, seit heute (2026-07-10) Hybrid-Formel — Unterschreitung blockiert weitere Käufe |
 | RM-5 | Pflicht-Stop-Loss | jede Position braucht einen | AKTIV, unantastbar (kein Override erlaubt) |
 | RM-6 | Trailing-Stop | erlaubt | Als Option vorhanden, keine automatische Durchsetzung |
-| RM-7 | Drawdown-Notbremse | — | **OFFEN**, siehe Z-3 |
+| RM-7 | Drawdown-Notbremse | `ziele.max_drawdown_prozent` | **UMGESETZT 2026-08-04**, siehe Z-3 (eine Regel, zwei Kennungen) |
 | RM-8/RM-9 | Risiko-Score je Asset (aus Volatilität, Liquidität, BTC-Korrelation, Projektreife) → höheres Risiko = kleinere erlaubte Position | — | **OFFEN**, noch nicht gebaut |
 | RM-10/RM-11 | Hebel: Long **und** Short (Short nur beratend, Bitpanda kann es noch nicht ausführen), max. **10x** (2026-07-14 kalibriert), eigenes Risiko-pro-Trade von **1 %** (statt 2 % bei Spot), Liquidationspreis als Schätzung ausgewiesen | Formel/Regelwerk + komplette Umsetzung (Screening/Risiko-Formeln/Positions-Rekonstruktion/KI-Empfehlung/Budget-Allocator/UI-Tab) fertig | **AKTIV, automatisch im 15-Min-Takt + im "Hebel"-Tab sichtbar** — volles Design in Kap. 14, `docs/hebel_positionsformel.md` |
 

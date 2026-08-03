@@ -1200,9 +1200,11 @@ seinen Emotionen scheitert. Grundsatz: **antizyklisch, aber bedingt.**
   belastbar ist, für Aktien/Themen-ETF als weiche Stage-2-Regel (Fakt + Prompt, kein
   Veto mit erfundener Schwelle) erneut bewerten.
   **Achtung, Kopplung:** AZ-8 nennt das Fundamental-Gate ausdrücklich als einen von
-  sechs Schaltkreis-Unterbrechern. Zwei der sechs existieren nicht — dieser hier und
-  die Drawdown-Notbremse (Z-3). Das dort beschriebene Schutzkonzept ist entsprechend
-  unvollständig; wer sich darauf beruft, muss das mitdenken.
+  sechs Schaltkreis-Unterbrechern. Bis 2026-08-04 fehlten zwei der sechs — dieser hier
+  und die Drawdown-Notbremse (Z-3). **Z-3 ist seit 2026-08-04 umgesetzt** (Task #612),
+  offen bleibt allein das Fundamental-Gate. Das Schutzkonzept ist damit nicht mehr zu
+  einem Drittel, sondern zu einem Sechstel unbelegt; wer sich darauf beruft, muss diese
+  eine Lücke mitdenken.
 - **AZ-6 „Gescheiterte-These"-Ausstieg:** Läuft ein antizyklischer Kauf über Schwelle
   *und* erwartete Zyklusdauer hinaus gegen die These, **stoppt** das Nachkaufen und wird
   neu bewertet — kein mechanisches Weiter-Mitteln.
@@ -1255,10 +1257,13 @@ Prüfzyklen) noch offen — brauchen jetzt erstmal echte KAUFEN/NACHKAUFEN-Signa
 mit Zeit zum Auflösen als Datengrundlage.
 
 **Risiko-/Basiswerte:**
-- Maximaler tolerierter Gesamt-Drawdown (Z-3)? Vorschlag −15 %. Drawdown-Notbremse
-  (RM-7) technisch noch nicht umgesetzt (braucht eine Portfolio-Wert-Historie, die
-  noch nicht existiert) — im Facts-Objekt an Groq ehrlich als
-  `risiko_check.drawdown_notbremse_geprueft: false` ausgewiesen.
+- Maximaler tolerierter Gesamt-Drawdown (Z-3): **−15 %, umgesetzt 2026-08-04**
+  (Task #612). Die fehlende Portfolio-Wert-Historie war der Blocker; sie existiert
+  jetzt als Tabelle `portfolio_wert_historie`, gefüllt aus den Bitpanda-Buchungen und
+  täglich fortgeschrieben. Gerechnet wird auf einer **mengenkonstanten** Wertreihe —
+  15 % meint reine Marktbewegung, eigene Zu-/Verkäufe sind herausgerechnet.
+  Aufschlüsselung nach Assetklasse existiert als Diagnose, ausgelöst wird aber
+  weiterhin auf dem Gesamtwert (Begründung siehe `reihen_je_kategorie()`).
 - Max. Allokation pro Einzelwert (RM-2): **vorläufig entschieden (2026-07-07)** —
   25 % für taktische Assets, 35 % für Core-Assets (BTC/ETH,
   `config.yaml risiko.max_allokation_pro_core_asset_prozent`), nachdem die reale

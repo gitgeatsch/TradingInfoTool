@@ -361,6 +361,87 @@ def marktscan_job(coingecko_client, kraken_client, conn_factory, watchlist_provi
     return True
 
 
+def portfolio_wert_job(conn_factory, watchlist_provider) -> None:
+    """Taeglicher Portfoliowert + Z-3/RM-7-Pruefung (2026-08-04, Task #612).
+
+    Schreibt den heutigen Wert fort und prueft die Drawdown-Notbremse. Kein
+    eigener Netzwerk-Call - Bestaende und Kurse liegen bereits in der DB, wie
+    beim Backward-Tracking. Deshalb auch dieselbe Uhrzeit-Logik: nach dem
+    naechtlichen Kurs-Refresh.
+
+    Z-3 ist ein ALERT, keine Automatik (Spezifikation Zeile 58) - das System
+    hat ohnehin keine Handels-API. Die Mail sagt "melden und Kapitalschutz S-5
+    erwaegen", nicht "verkaufen".
+
+    BEWUSST OHNE COOLDOWN, anders als die Cash-Veto-Warnung: ein anhaltender
+    Drawdown IST die Meldung wert, und zwar jeden Tag, an dem er anhaelt. Ein
+    Spam-Schutz wuerde hier genau die Wiederholung unterdruecken, die die
+    Dringlichkeit ausmacht. Solange der Rueckschlag unter der Schwelle bleibt,
+    kommt ohnehin keine Mail."""
+    import config as config_module
+    from agent.portfolio_historie import pruefe_z3, schreibe_tageswert
+    from api.email_notify import send_notification_email
+
+    conn = conn_factory()
+    try:
+        watchlist = watchlist_provider()
+        ergebnis = schreibe_tageswert(conn, watchlist=watchlist)
+        logger.info(
+            "Portfolio-Wert %s: %.2f EUR, Index %.3f, %d Symbole ohne Kurs",
+            ergebnis["datum"], ergebnis["wert_eur"], ergebnis["index"],
+            ergebnis["symbole_ohne_kurs"],
+        )
+
+        config_dict = config_module.load_config()
+        schwelle = config_dict.get("ziele", {}).get("max_drawdown_prozent", 15)
+        z3 = pruefe_z3(conn, schwelle_prozent=schwelle)
+        if not z3["ausgeloest"]:
+            logger.info(
+                "Z-3: Rueckschlag %.1f%% (Schwelle %.0f%%, %d Tage Historie)",
+                z3["aktuell_prozent"], schwelle, z3["tage_historie"],
+            )
+            return
+
+        logger.warning(
+            "Z-3 AUSGELOEST: Rueckschlag %.1f%% >= Schwelle %.0f%%",
+            z3["aktuell_prozent"], schwelle,
+        )
+        email_cfg = config_dict.get("benachrichtigung", {}).get("email", {})
+        empfaenger = email_cfg.get("empfaenger")
+        if not (email_cfg.get("aktiv", False) and empfaenger):
+            return
+
+        hinweis = ""
+        if z3["datenbasis_duenn"]:
+            hinweis = (
+                f"\n\nACHTUNG zur Einordnung: die Wertreihe umfasst erst "
+                f"{z3['tage_historie']} Tage. Ein Hoechststand aus so kurzer Historie "
+                "ist wenig aussagekraeftig - dieser Alarm sagt derzeit mehr ueber die "
+                "Datenlage als ueber den Markt."
+            )
+        body = (
+            f"Z-3 / RM-7 (Drawdown-Notbremse) ausgeloest.\n\n"
+            f"Rueckschlag vom Hoechststand: {z3['aktuell_prozent']:.1f} %\n"
+            f"Schwelle (ziele.max_drawdown_prozent): {schwelle} %\n"
+            f"Groesster Rueckschlag im Zeitraum: {z3['max_prozent']:.1f} % "
+            f"({z3['hoch_am']} bis {z3['tief_am']})\n"
+            f"Datenbasis: {z3['tage_historie']} Tage\n\n"
+            "Gerechnet wird auf einer mengenkonstanten Wertreihe - Zukaeufe und "
+            "Verkaeufe sind herausgerechnet, der Rueckschlag ist also reine "
+            "Marktbewegung, kein Effekt eigener Handelsaktivitaet.\n\n"
+            "Z-3 ist ein hartes Limit und laut RG-6 weder durch den Nutzer noch "
+            "durch die KI ueberschreibbar. Es wirkt als dringender Hinweis, nicht "
+            "als automatische Aktion - zu pruefen ist der Kapitalschutz-Modus S-5."
+            f"{hinweis}"
+        )
+        send_notification_email("TradingInfoTool: Z-3 AUSGELOEST - Drawdown-Notbremse", body, empfaenger)
+    except Exception:
+        logger.exception("portfolio_wert_job fehlgeschlagen")
+        _notify_job_failure("portfolio_wert_job")
+    finally:
+        conn.close()
+
+
 def backward_tracking_job(conn_factory, watchlist_provider) -> None:
     """Selbstverifikations-Vision Schritt 2 (2026-07-10, siehe
     agent/krypto/backward_tracking.py) - taeglich, feste Uhrzeit (siehe
@@ -2757,6 +2838,19 @@ def build_scheduler(
         minute=0,
         args=[db_conn_factory, watchlist_provider],
         id="backward_tracking",
+    )
+    # Portfolio-Wert + Z-3/RM-7 (2026-08-04, Task #612) - taeglich 6:30, aus
+    # demselben Grund wie das Backward-Tracking darueber nach dem naechtlichen
+    # Kurs-Refresh: der Job liest nur DB-Stand, macht keinen eigenen
+    # Netzwerk-Call, braucht aber aktuelle Kurse. Eine halbe Stunde Versatz,
+    # damit sich die beiden nicht ueberlappen.
+    scheduler.add_job(
+        portfolio_wert_job,
+        "cron",
+        hour=6,
+        minute=30,
+        args=[db_conn_factory, watchlist_provider],
+        id="portfolio_wert",
     )
     # Marktscan-Erfolgsmessung (2026-07-30, Teil 2 der Reifegrad-/Erfolgsmessung-
     # Runde) - taeglich, 1 Std. nach dem Spot/Hebel-Backward-Tracking (analoges

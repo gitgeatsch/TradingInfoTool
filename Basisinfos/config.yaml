@@ -25,7 +25,22 @@ meta:
 ziele:
   kapitalerhalt_vor_gewinn: true       # Z-1: Kapitalerhalt hat immer Vorrang
   crv_minimum: 2.0                     # Z-2: Mindest-Chance-Risiko-Verhaeltnis (2:1)
-  max_drawdown_prozent: 15             # Z-3: [OFFEN] Vorschlag -> bei Ueberschreitung Kapitalschutz-Modus
+  # Z-3 / RM-7 (Drawdown-Notbremse). UMGESETZT 2026-08-04 (Task #612) - stand
+  # bis dahin als "[OFFEN] Vorschlag" hier und als "OFFEN - fehlt noch eine
+  # Portfolio-Wert-Historie" im Regelwerksmanual. Die Historie existiert jetzt
+  # (Tabelle portfolio_wert_historie, agent/portfolio_historie.py), geprueft
+  # wird taeglich um 6:30 durch portfolio_wert_job().
+  #
+  # WICHTIG ZUR AUSLEGUNG: gerechnet wird auf einer MENGENKONSTANTEN Wertreihe,
+  # nicht auf dem rohen Portfoliowert. 15 % meint also 15 % Marktbewegung -
+  # Zukaeufe und Verkaeufe sind herausgerechnet. Ohne das loeste ein groesserer
+  # Verkauf die Notbremse aus und ein groesserer Zukauf verdeckte einen echten
+  # Einbruch.
+  #
+  # Wirkt als dringender Alert (E-Mail), nicht als Automatik - das System hat
+  # keine Handels-API. Hart und laut RG-6 weder durch Nutzer noch durch die KI
+  # ueberschreibbar; pruefe_z3() nimmt bewusst keinen Override-Parameter.
+  max_drawdown_prozent: 15
   # ENTFERNT 2026-08-04 (Regler-Audit): `begruendung_pflicht: true` (Z-4) wurde
   # nie gelesen. Die Pflicht existiert trotzdem und ist staerker als ein
   # Schalter: `long_reasoning`/`key_risks`/`confidence_pct` sind

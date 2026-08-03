@@ -92,9 +92,19 @@ Wiedervorlage-Bedingung vermerkt, statt stillschweigend offen zu bleiben.
 
 **Strukturelle Lücke, die dabei sichtbar wurde:** AZ-8 beschreibt das
 Schutzkonzept des antizyklischen Kapitels und nennt sechs
-Schaltkreis-Unterbrecher — **zwei davon existieren nicht**, das Fundamental-Gate
-(AZ-5) und die Drawdown-Notbremse (Z-3). Wer sich auf AZ-8 beruft, beruft sich
-auf ein Konzept, das zu einem Drittel aus nicht gebauten Teilen besteht.
+Schaltkreis-Unterbrecher — **zwei davon existierten nicht**, das Fundamental-Gate
+(AZ-5) und die Drawdown-Notbremse (Z-3).
+
+**Nachtrag 2026-08-04:** Z-3/RM-7 ist umgesetzt (Task #612) — Tabelle
+`portfolio_wert_historie`, `agent/portfolio_historie.py`, tägliche Prüfung 6:30
+durch `portfolio_wert_job()`. Damit fehlt von den sechs nur noch AZ-5, das
+bewusst als unerfüllt dokumentiert ist. Wer sich auf AZ-8 beruft, muss also
+noch eine Lücke mitdenken statt zwei.
+
+**Wichtig für künftige Regler-Entscheidungen:** Z-3 rechnet auf einer
+MENGENKONSTANTEN Wertreihe, nicht auf dem rohen Portfoliowert. Wer eine
+weitere Regel auf Portfolio-Ebene baut, sollte dieselbe Unterscheidung treffen —
+sonst reagiert sie auf eigene Handelsaktivität statt auf den Markt.
 
 **Offen (#611):** `max_drawdown_prozent` (Z-3, in keinem Dokument außer der
 Config, nie umgesetzt — und laut AZ-8 einer der tragenden Unterbrecher), der
