@@ -519,6 +519,144 @@ def groesster_rueckschlag(reihe: list[tuple[str, float, int]]) -> dict:
     }
 
 
+def _kurs_lookup(
+    conn: sqlite3.Connection,
+    symbole: set[str],
+    ab_datum: str,
+    coingecko_ids: dict[str, str],
+    cash_aequivalente: set[str],
+) -> tuple["callable", dict[str, str]]:
+    """Baut eine `kurs_am(symbol, tag) -> float | None`-Funktion und meldet je
+    Symbol, woher die Kurse kamen ('eur', 'fx', 'cash', 'keine').
+
+    Einmal alle Kurse laden statt je Abfrage in die DB: bei 88 Tagen x 33
+    Symbolen waeren das sonst knapp 3000 Einzelabfragen."""
+    direkt, usd_roh = _eur_kurse_je_symbol(
+        conn, symbole - cash_aequivalente, ab_datum, coingecko_ids
+    )
+    fx, _ = tages_fx_kurse(conn)
+
+    herkunft: dict[str, str] = {}
+    for symbol in symbole:
+        if symbol in cash_aequivalente:
+            herkunft[symbol] = "cash"
+        elif direkt.get(symbol):
+            herkunft[symbol] = "eur"
+        elif usd_roh.get(symbol):
+            herkunft[symbol] = "fx"
+        else:
+            herkunft[symbol] = "keine"
+
+    def kurs_am(symbol: str, tag: str) -> float | None:
+        if symbol in cash_aequivalente:
+            return 1.0
+        kurs = direkt.get(symbol, {}).get(tag)
+        if kurs is not None:
+            return kurs
+        usd = usd_roh.get(symbol, {}).get(tag)
+        tages_fx = fx.get(tag)
+        return usd * tages_fx if usd is not None and tages_fx is not None else None
+
+    return kurs_am, herkunft
+
+
+def rekonstruiere_aus_transaktionen(
+    conn: sqlite3.Connection,
+    transaktionen: list[dict],
+    holdings: dict[str, float],
+    *,
+    ab_datum: str,
+    watchlist: list | None = None,
+    symbol_overrides: dict[str, str] | None = None,
+) -> tuple[list[tuple[str, float, int, int]], dict]:
+    """Alle drei Schichten zusammen: Buchungen -> Mengen je Tag -> EUR-Wert
+    je Tag -> mengenkonstanter Index.
+
+    NAEHERUNG FUER NICHT-KRYPTO (Nutzer-Entscheidung 04.08.)
+    Aktien, ETFs und ETCs stehen nicht in `/wallets/transactions` - fuer sie
+    gibt es keinen Bestandsverlauf. Ihre HEUTIGE Menge wird deshalb konstant
+    ueber den ganzen Zeitraum angesetzt. Das ist genau dann richtig, wenn in
+    diesen Werten nicht gehandelt wurde, und wird mit jedem zurueckliegenden
+    Kauf/Verkauf ungenauer.
+
+    Die Naeherung wird NICHT stillschweigend angewandt: jedes betroffene Symbol
+    steht namentlich in `diagnose["naeherung_konstante_menge"]`, und wer die
+    Zahlen liest, soll die Liste sehen. Fuer den Drawdown ist der Effekt
+    ausserdem gedaempft - der Index rechnet mit den Mengen des Vortags, und
+    eine konstante Menge ist ueber zwei aufeinanderfolgende Tage per Definition
+    unveraendert. Falsch wird nur das GEWICHT dieser Werte im Index, nicht ihre
+    Kursbewegung.
+
+    Rueckgabe: (reihe, diagnose). Reihe je Tag:
+    (datum, wert_eur, index, anzahl_bewerteter_symbole).
+    """
+    watchlist = watchlist if watchlist is not None else config.get_watchlist()
+    coingecko_ids = {a.symbol: a.coingecko_id for a in watchlist if a.coingecko_id}
+    cash_aequivalente = {a.symbol for a in watchlist if a.ist_cash_aequivalent}
+
+    verlauf = bestandsverlauf(transaktionen, symbol_overrides=symbol_overrides)
+    bewegungstage = sorted(verlauf)
+    ohne_verlauf = {
+        s: menge for s, menge in holdings.items()
+        if menge > 0 and (not bewegungstage or s not in verlauf[bewegungstage[-1]])
+    }
+
+    def mengen_am(tag: str) -> dict[str, float]:
+        """Bestand am Ende von `tag`: der letzte Bewegungstag davor, ergaenzt um
+        die konstant gehaltenen Nicht-Krypto-Werte."""
+        stand: dict[str, float] = {}
+        for bewegungstag in bewegungstage:
+            if bewegungstag > tag:
+                break
+            stand = verlauf[bewegungstag]
+        return {**stand, **ohne_verlauf}
+
+    alle_symbole = set(ohne_verlauf) | {
+        s for tagesstand in verlauf.values() for s in tagesstand
+    }
+    kurs_am, herkunft = _kurs_lookup(
+        conn, alle_symbole, ab_datum, coingecko_ids, cash_aequivalente
+    )
+
+    # Handelstage aus den Kursen ableiten, nicht aus einem Kalender: an Tagen
+    # ohne jeden Kurs gab es keinen bewertbaren Stand.
+    tage = sorted({
+        r["date"] for r in conn.execute(
+            "SELECT DISTINCT date FROM price_history_ohlc WHERE date >= ?", (ab_datum,)
+        ).fetchall()
+    } | {
+        r["date"] for r in conn.execute(
+            "SELECT DISTINCT date FROM price_history WHERE date >= ?", (ab_datum,)
+        ).fetchall()
+    })
+
+    index_reihe = verketteter_index(tage, mengen_am, kurs_am)
+    reihe: list[tuple[str, float, int, int]] = []
+    for (tag, index, bewertet) in index_reihe:
+        stand = mengen_am(tag)
+        wert = 0.0
+        ohne_kurs = 0
+        for symbol, menge in stand.items():
+            if menge <= 0:
+                continue
+            kurs = kurs_am(symbol, tag)
+            if kurs is None:
+                ohne_kurs += 1
+            else:
+                wert += menge * kurs
+        reihe.append((tag, wert, index, ohne_kurs))
+        del bewertet
+
+    diagnose = {
+        "naeherung_konstante_menge": sorted(ohne_verlauf),
+        "kursherkunft": herkunft,
+        "ohne_jeden_kurs": sorted(s for s, h in herkunft.items() if h == "keine"),
+        "bewegungstage_gesamt": len(bewegungstage),
+        "bewegungstage_im_fenster": sum(1 for t in bewegungstage if t >= ab_datum),
+    }
+    return reihe, diagnose
+
+
 def schreibe_rekonstruktion(
     conn: sqlite3.Connection, ergebnis: RekonstruktionsErgebnis
 ) -> int:
