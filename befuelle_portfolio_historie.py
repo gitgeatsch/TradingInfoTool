@@ -51,7 +51,10 @@ from agent.portfolio_historie import (
     rekonstruiere_aus_transaktionen,
     reihen_je_kategorie,
 )
-from api.bitpanda import BITPANDA_SYMBOL_OVERRIDES
+from api.bitpanda import (
+    BITPANDA_NON_CRYPTO_WALLET_SYMBOL_OVERRIDES,
+    BITPANDA_SYMBOL_OVERRIDES,
+)
 from extract_notebook_diagnose import ZIEL_ORDNER
 
 EXPORT = ZIEL_ORDNER / "bitpanda_transaktionen.json"
@@ -86,7 +89,20 @@ def main() -> None:
         print("  konstanter Menge. Fuer eine saubere Reihe zuerst")
         print("  `python extract_bitpanda_transaktionen.py` in der aktuellen Fassung laufen lassen.")
 
-    overrides = {v: k for k, v in BITPANDA_SYMBOL_OVERRIDES.items()}
+    # BEIDE Override-Dicts, nicht nur eins (Fix 04.08. nach erstem NB-Probelauf).
+    # BITPANDA_SYMBOL_OVERRIDES ist {intern: bitpanda} und deckt nur Krypto ab
+    # ("CANTON": "CC") - deshalb umgedreht. Die Nicht-Krypto-Abbildungen stehen
+    # in einem ZWEITEN Dict und liegen bereits in der Richtung {bitpanda:
+    # intern} ("VST-US": "VST", "IS0C": "ISOC" mit Ziffer Null).
+    #
+    # Ohne das zweite Dict tauchten IS0C und VST-US als eigene, der Watchlist
+    # unbekannte Symbole auf: mit rekonstruierter Menge, ohne Bestand und ohne
+    # Kurs (die Kurse liegen unter ISOC/VST). Genau so im ersten NB-Probelauf
+    # passiert - der Abgleich hat es gemeldet, wofuer er da ist.
+    overrides = {
+        **BITPANDA_NON_CRYPTO_WALLET_SYMBOL_OVERRIDES,
+        **{v: k for k, v in BITPANDA_SYMBOL_OVERRIDES.items()},
+    }
     watchlist = config.get_watchlist()
     conn = db.get_connection()
     try:
