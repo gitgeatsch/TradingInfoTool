@@ -1664,6 +1664,16 @@ _BASISLINIE_MIN_EINSTIEGE = 200
 # 03.08. wieder her (Ziehungen aus der gesamten Kurshistorie). Kein weiterer
 # Eingriff noetig - die Kennzahlen aendern sich dann zurueck, nicht der Code.
 _BASISLINIE_NUR_SIGNALFENSTER = True
+# Population A (compute_systemguete): zaehlen nur Zeilen mit, deren action
+# tatsaechlich handelbar war? 'nicht_anwendbar' bedeutet HALTEN oder fehlende
+# Zonen - nie eine Position. RUECKSCHRITT: False zaehlt sie wieder als "offen"
+# mit und stellt die alte, zu niedrige Aufloesungsquote wieder her.
+_SYSTEMGUETE_NUR_ECHTE_TRADES = True
+# Bekommen noch laufende und ueberholte Trades einen R-Wert zum Schlusskurs?
+# Das loest die Aufloesungs-Asymmetrie aus #617: die Basislinie tut es seit
+# jeher, unsere Signale bisher nicht. RUECKSCHRITT: False laesst sie wieder aus
+# allen Kennzahlen fallen - dann gilt die SQN-Basis von vor dem 03.08.
+_SYSTEMGUETE_MARK_TO_MARKET = True
 
 
 def _zonen_absolut(row) -> dict | None:
@@ -1918,12 +1928,46 @@ def compute_systemguete(conn, watchlist: list | None = None,
     schatten, Hebel und Spot laufen ueber verschiedene Zeitraeume, und ein
     gemeinsames Fenster waere fuer jede einzelne Gruppe das falsche.
 
+    POPULATION A (03.08.) - diese Funktion beantwortet ausschliesslich "wie gut
+    ist, was wir TUN?". Die Schwesterfrage "haette das Gate richtig gefiltert?"
+    hat mit compute_crv_breakeven_baender() eine eigene Funktion und eine eigene
+    Grundgesamtheit. Zwei Aenderungen machen das hier scharf:
+
+    1. NIE EIN TRADE FLIEGT RAUS. Zeilen mit outcome_status 'nicht_anwendbar'
+       (action war HALTEN oder Zonen fehlten) tragen zwar Zonen, waren aber nie
+       eine Position. Sie standen bisher im Offen-Topf und druckten die
+       Aufloesungsquote: bei spot/real 240 von 271 Zeilen - ausgewiesen wurden
+       3 % statt der ehrlichen 26 %. Bei hebel/real 94 von 242 (36 % statt
+       58 %).
+    2. MARK-TO-MARKET STATT WEGWERFEN. Noch laufende und ueberholte Trades
+       bekommen einen R-Wert zum Schlusskurs nach _BASISLINIE_HORIZONT_TAGE,
+       simuliert mit derselben Fill-Logik. Das loest die Aufloesungs-Asymmetrie
+       aus #617: die Basislinie bewertet ihre unaufgeloesten Ziehungen seit
+       jeher so, unsere Signale bekamen gar keinen R-Wert und fielen aus der
+       SQN. Jetzt behandeln beide Seiten denselben Fall gleich. Signale, deren
+       Horizont die Kurshistorie noch nicht abdeckt, bleiben 'offen' und gehen
+       in keine Kennzahl ein - gleiche Beobachtungsdauer auf beiden Seiten.
+
+    AUFGELOESTE BEHALTEN IHR DB-ERGEBNIS. Bewusst nicht ebenfalls simuliert:
+    'liquidation_wahrscheinlich' haengt vom Hebel ab und laesst sich aus Zonen
+    allein nicht rekonstruieren. Die Konvention ist dieselbe (gap_bewusster_
+    fill, Stop schlaegt Ziel), nur der Rechenweg unterscheidet sich.
+
+    DAS AENDERT DIE SQN-BASIS aller Auswertungen vor dem 03.08. Bewusster
+    Schnitt, keine Nebenwirkung. RUECKSCHRITT ohne Code-Aenderung ueber
+    _SYSTEMGUETE_NUR_ECHTE_TRADES / _SYSTEMGUETE_MARK_TO_MARKET (oben im Modul),
+    einzeln oder zusammen.
+
     Reine Lesefunktion. Gibt je tier ein dict mit den Schluesseln `real` und
     `schatten` zurueck, jeweils mit den Feldern aus _guete_kennzahlen() plus
     basislinie_erwartungswert_r / basislinie_anzahl / basislinie_stop_rel /
     basislinie_crv / basislinie_anteil_short / basislinie_ab_datum /
-    basislinie_bis_datum / signalbeitrag_r."""
+    basislinie_bis_datum / signalbeitrag_r / anzahl_nie_ein_trade /
+    anzahl_mark_to_market."""
     assetklasse_by_symbol = _assetklasse_index(watchlist, "compute_systemguete()")
+    # Vor der Zeilenschleife laden: das Mark-to-Market unaufgeloester Trades
+    # braucht die Kursreihen bereits dort, nicht erst bei der Basislinie.
+    reihen = lade_kursreihen(conn)
     r_werte: dict[tuple[str, str], list[float]] = {}
     offen: dict[tuple[str, str], int] = {}
 
@@ -1932,6 +1976,11 @@ def compute_systemguete(conn, watchlist: list | None = None,
     # Basislinie. Ohne das mittelt sie ueber die ganze Kurshistorie und misst
     # eine andere Marktphase als die, die sie einordnen soll.
     zeitpunkte: dict[tuple[str, str], list[str]] = {}
+
+    # Zaehler fuer die beiden neuen Toepfe (03.08.), damit die Umstellung
+    # nachvollziehbar bleibt statt nur die Kennzahlen zu verschieben.
+    nie_trade: dict[tuple[str, str], int] = {}
+    mtm: dict[tuple[str, str], int] = {}
 
     def _erfasse(tier: str, art: str, crv, ist_offen: bool, zonen_werte=None,
                  created_at=None) -> None:
@@ -1949,6 +1998,21 @@ def compute_systemguete(conn, watchlist: list | None = None,
             zonen.setdefault(key, []).append(zonen_werte)
         if created_at:
             zeitpunkte.setdefault(key, []).append(str(created_at)[:10])
+
+    def _mark_to_market(row, reihen_: dict) -> float | None:
+        """R-Wert eines noch nicht aufgeloesten, aber echten Trades.
+
+        Simuliert ueber DENSELBEN Horizont wie die Basislinie und bewertet am
+        Fensterende zum Schlusskurs - dadurch behandeln beide Seiten des
+        Vergleichs Unaufgeloeste gleich. Gibt None zurueck, wenn die
+        Kurshistorie den Horizont noch nicht abdeckt; solche Faelle bleiben
+        'offen' und gehen in keine Kennzahl ein (gleiche Beobachtungsdauer)."""
+        za = _zonen_absolut(row)
+        if za is None or row["symbol"] not in reihen_:
+            return None
+        sim = simuliere_signal(za, reihen_[row["symbol"]],
+                               str(row["created_at"])[:10], _BASISLINIE_HORIZONT_TAGE)
+        return None if sim is None else sim["r"]
 
     for tabelle, ist_hebel in (("signals", False), ("hebel_signals", True)):
         # Die Veto-Schatten-Spalten kamen erst am 28.07. dazu. Aeltere
@@ -1981,19 +2045,48 @@ def compute_systemguete(conn, watchlist: list | None = None,
             if row["risk_veto"]:
                 if not hat_schatten:
                     continue
-                st = row["veto_outcome_status"]
-                _erfasse(tier, "schatten", row["veto_outcome_realisiertes_crv"],
-                         st not in _RESOLVED_OUTCOMES, z, row["created_at"])
+                art, st = "schatten", row["veto_outcome_status"]
+                crv = row["veto_outcome_realisiertes_crv"]
             else:
-                st = row["outcome_status"]
-                _erfasse(tier, "real", row["outcome_realisiertes_crv"],
-                         st not in _RESOLVED_OUTCOMES, z, row["created_at"])
+                art, st = "real", row["outcome_status"]
+                crv = row["outcome_realisiertes_crv"]
+
+            # POPULATION A (03.08.): war das ueberhaupt ein Trade? 'nicht_
+            # anwendbar' setzt das Backward-Tracking, wenn die action nicht
+            # handelbar war (HALTEN) oder Zonen fehlten. Solche Zeilen tragen
+            # zwar Zonen, waren aber nie eine Position - sie gehoeren weder in
+            # den Zaehler noch in den Nenner. Vorher landeten sie im
+            # Offen-Topf und drueckten die Aufloesungsquote: bei spot/real
+            # 240 von 271 Zeilen, ausgewiesen wurden 3 % statt 26 %.
+            if _SYSTEMGUETE_NUR_ECHTE_TRADES and (st is None or st == OUTCOME_NICHT_ANWENDBAR):
+                nie_trade[(tier, art)] = nie_trade.get((tier, art), 0) + 1
+                continue
+
+            if st in _RESOLVED_OUTCOMES:
+                _erfasse(tier, art, crv, False, z, row["created_at"])
+                continue
+
+            # Noch laufend oder ueberholt: Mark-to-Market statt Wegwerfen -
+            # das ist die Aufloesungs-Asymmetrie aus #617. Die Basislinie
+            # bewertet ihre unaufgeloesten Ziehungen seit jeher zum
+            # Schlusskurs; unsere Signale bekamen gar keinen R-Wert. Jetzt
+            # behandeln beide Seiten denselben Fall gleich.
+            r_mtm = _mark_to_market(row, reihen) if _SYSTEMGUETE_MARK_TO_MARKET else None
+            if r_mtm is None:
+                _erfasse(tier, art, None, True, z, row["created_at"])
+            else:
+                mtm[(tier, art)] = mtm.get((tier, art), 0) + 1
+                _erfasse(tier, art, r_mtm, False, z, row["created_at"])
 
     ergebnis: dict = {}
-    # Einmal laden statt je Gruppe - siehe lade_kursreihen().
-    reihen = lade_kursreihen(conn) if mit_basislinie else None
+    # `reihen` ist schon oben geladen (Mark-to-Market braucht sie fruehe) -
+    # einmal fuer alles, siehe lade_kursreihen().
     for (tier, art) in sorted(set(r_werte) | set(offen)):
         k = _guete_kennzahlen(r_werte.get((tier, art), []), offen.get((tier, art), 0))
+        # Nachvollziehbarkeit der Umstellung: wie viele Faelle waren nie ein
+        # Trade, wie viele sind per Mark-to-Market statt DB-Ergebnis bewertet?
+        k["anzahl_nie_ein_trade"] = nie_trade.get((tier, art), 0)
+        k["anzahl_mark_to_market"] = mtm.get((tier, art), 0)
         z = [x for x in zonen.get((tier, art), []) if x]
         if mit_basislinie and z and k["expectancy_r"] is not None:
             stop_rel = statistics.median(x[0] for x in z)

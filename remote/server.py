@@ -803,9 +803,17 @@ async function refreshStatus() {
               (k.signalbeitrag_r >= 0 ? "ok" : "warn") +
               '">Signalbeitrag ' + sb + " R</span></div>";
           }
+          // Mark-to-Market getrennt ausweisen (2026-08-03): seit Population A
+          // bekommen noch laufende Trades einen R-Wert zum Schlusskurs. Ohne
+          // die Angabe liest sich "n=111" als 111 abgeschlossene Trades,
+          // obwohl 25 davon noch offene Positionen sind.
+          var mtm = "";
+          if (k.anzahl_mark_to_market) {
+            mtm = ", davon " + k.anzahl_mark_to_market + " zum Schlusskurs bewertet";
+          }
           return '<div class="row"><span>' + tier + " / " + art +
-            ' <span class="muted-text">(n=' + k.anzahl_bewertet + ", " + k.anzahl_offen +
-            " offen, Auflösung " + auf + ")</span></span>" +
+            ' <span class="muted-text">(n=' + k.anzahl_bewertet + mtm + ", " +
+            k.anzahl_offen + " offen, Auflösung " + auf + ")</span></span>" +
             "<span>EW " + ew + " R, SQN " + sqn + ", PF " + pf + warn + "</span></div>" + zusatz;
         }).join("");
       }).join("") || '<div class="row"><span class="muted-text">noch keine bewerteten Trades</span></div>';
