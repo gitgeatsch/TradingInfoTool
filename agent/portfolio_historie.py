@@ -307,6 +307,121 @@ def rekonstruiere_stichtag(
     return ergebnis
 
 
+# --- Bestandsverlauf aus Transaktionen (Stufe 2) ----------------------------
+# Regeln am 04.08. an den echten Daten hergeleitet, nicht ausgedacht: erst die
+# naive Annahme (incoming +, outgoing -) gegen den Bestands-Schnappschuss
+# gerechnet, dann die Abweichungen einzeln angesehen. 92 von 146 Symbolen
+# stimmten sofort; von den 54 Abweichungen waren zwei Drittel gar keine
+# Datenprobleme (Nicht-Krypto, Symbol-Override, Fliesskomma-Reste).
+
+
+def normal_wallet_delta(tx: dict) -> float | None:
+    """Wirkung EINER Buchung auf das normale Wallet. None = beruehrt es nicht.
+
+    Der Margin-Teil ist der eigentliche Inhalt dieser Funktion. Ohne ihn stimmt
+    der ENDSTAND trotzdem - ueber eine abgeschlossene Position heben sich
+    Eroeffnung und Schliessung exakt auf, das Episoden-Netto ist 0. Fuer einen
+    Tag MITTENDRIN gilt das nicht: eine offene Margin-Position wuerde dem
+    normalen Bestand zugeschlagen.
+
+    Gemessen an einer vollstaendigen NEAR-Episode (22.-27.07.2026): naiv lagen
+    am 24.07. 355,33 NEAR im Bestand, tatsaechlich 0 - bei ~1,60 EUR gut
+    570 EUR Scheinvermoegen. Ein Fehler, der jeden Endstands-Test besteht.
+
+    Die Buchungsmechanik dahinter, am Beispiel einer 3x-Eroeffnung ueber 600 EUR:
+      EURCV sell  outgoing 600  margin_trading.open    -> aus dem normalen Wallet
+      EURCV transfer in  400    margin_trading.borrow  -> geliehen, ins normale
+      NEAR  buy   incoming 355  margin_trading.open    -> ins MARGIN-Wallet
+    Netto normal: -200 EUR, also genau das Eigenkapital. Beim Schliessen kommt
+    `margin_trading.close` als PAAR aus incoming und outgoing mit identischem
+    Betrag - das ist der Uebertrag margin -> normal, zaehlen darf nur eine Seite.
+    """
+    tags = set(tx.get("tags") or ())
+    menge = tx["amount_cryptocoin_wallet"]
+    eingehend = tx["in_or_out"] == "incoming"
+
+    if "margin_trading.open" in tags:
+        return None if eingehend else -menge
+    if "margin_trading.repay" in tags or "margin_trading.fee" in tags:
+        return None  # beides aus dem Margin-Wallet
+    if "margin_trading.close" in tags:
+        return menge if eingehend else None  # nur der Eingang ins normale Wallet
+    return menge if eingehend else -menge
+
+
+def bestandsverlauf(
+    transaktionen: list[dict], *, symbol_overrides: dict[str, str] | None = None
+) -> dict[str, dict[str, float]]:
+    """Bestand je Symbol am ENDE jedes Tages, an dem sich etwas bewegt hat.
+
+    Bewusst nur Bewegungstage: dazwischen aendert sich nichts, und der Aufrufer
+    kann jeden Tag der Kursreihe auf den letzten Bewegungstag davor
+    zurueckfuehren. Das haelt das Ergebnis klein und macht es lesbar.
+
+    `symbol_overrides` bildet Bitpanda-Symbole auf die internen ab (z.B.
+    "CC" -> "CANTON"). Ohne diese Abbildung landen 868,97 CANTON unter einem
+    Symbol, das die Watchlist nicht kennt - im ersten Lauf genau so passiert.
+    """
+    overrides = symbol_overrides or {}
+    laufend: dict[str, float] = {}
+    verlauf: dict[str, dict[str, float]] = {}
+    for tx in sorted(transaktionen, key=lambda t: t["unix_timestamp"]):
+        delta = normal_wallet_delta(tx)
+        if delta is None:
+            continue
+        roh = tx["cryptocoin_symbol"]
+        symbol = overrides.get(roh, roh)
+        laufend[symbol] = laufend.get(symbol, 0.0) + delta
+        verlauf[tx["datum_utc"]] = dict(laufend)
+    return verlauf
+
+
+def pruefe_gegen_holdings(
+    verlauf: dict[str, dict[str, float]],
+    holdings: dict[str, float],
+    *,
+    toleranz_relativ: float = 0.01,
+    epsilon: float = 1e-6,
+) -> dict[str, list]:
+    """Der Pruefstein: der rekonstruierte Endstand MUSS holdings.quantity treffen.
+
+    Er hat nur dann Aussagekraft, wenn der Verlauf VORWAERTS von null gerechnet
+    wurde. Rueckwaerts vom heutigen Bestand waere er per Konstruktion erfuellt
+    und wuerde jede falsche Regel bestehen.
+
+    Drei getrennte Toepfe statt einer Abweichungsliste, weil sie
+    unterschiedliches bedeuten:
+      `treffer`        - stimmt
+      `glatt_aufgeloest` - beide praktisch null; vollstaendig verkaufte
+                         Positionen hinterlassen Fliesskomma-Reste. Ein
+                         relativer Vergleich meldet hier 100% Abweichung,
+                         weil er durch ~1e-12 teilt - das ist ein Fehler der
+                         Pruefung, nicht der Daten.
+      `nicht_im_verlauf` - im Bestand, aber ohne jede Buchung. Aktien/ETF/ETC
+                         stehen nicht in /wallets/transactions (13 Symbole,
+                         Stand 04.08.) - eine bekannte Luecke, keine Abweichung.
+      `abweichungen`   - alles andere. DAS sind die Faelle zum Ansehen.
+    """
+    endstand = verlauf[max(verlauf)] if verlauf else {}
+    ergebnis: dict[str, list] = {
+        "treffer": [], "glatt_aufgeloest": [], "nicht_im_verlauf": [], "abweichungen": [],
+    }
+    for symbol in sorted(set(endstand) | set(holdings)):
+        soll = holdings.get(symbol, 0.0)
+        ist = endstand.get(symbol, 0.0)
+        if symbol not in endstand and soll > epsilon:
+            ergebnis["nicht_im_verlauf"].append(symbol)
+            continue
+        abstand = abs(ist - soll)
+        if abstand < epsilon and abs(soll) < epsilon:
+            ergebnis["glatt_aufgeloest"].append(symbol)
+        elif abstand / max(abs(soll), abs(ist), epsilon) < toleranz_relativ:
+            ergebnis["treffer"].append(symbol)
+        else:
+            ergebnis["abweichungen"].append((symbol, soll, ist))
+    return ergebnis
+
+
 def schreibe_rekonstruktion(
     conn: sqlite3.Connection, ergebnis: RekonstruktionsErgebnis
 ) -> int:
