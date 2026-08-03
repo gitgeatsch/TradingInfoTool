@@ -2954,7 +2954,13 @@ def basislinie_ziel_anteil(reihen: dict, stop_rel: float, crv: float, ist_short:
                 "risiko": risiko,
                 "ist_short": ist_short,
             }
-            sim = simuliere_signal(z, rows[i:], rows[i]["date"], horizont,
+            # AB i+1, NICHT ab i: der Einstieg ist der SCHLUSSKURS von Tag i,
+            # dessen Hoch und Tief liegen zeitlich davor. Simuliert man Tag i
+            # mit, treffen Ziehungen systematisch den naeheren Stop und NIE das
+            # weiter entfernte Ziel - an 2000 Kandidaten gemessen: 249 Treffer
+            # am Tag 0, davon 249 Stop und 0 Ziel. basislinie_erwartungswert()
+            # macht es seit jeher richtig (rr[i+1:...]); hier fehlte der Versatz.
+            sim = simuliere_signal(z, rows[i + 1:], rows[i + 1]["date"], horizont,
                                    voller_horizont_noetig=False)
             if sim is None:
                 continue
