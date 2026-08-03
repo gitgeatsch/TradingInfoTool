@@ -501,6 +501,37 @@ CREATE TABLE IF NOT EXISTS oi_abdeckung_status (
     letzter_erfolg_at           TEXT,
     zuletzt_gemeldet_at         TEXT
 );
+
+-- Portfolio-Wert je Tag (2026-08-04, Task #612). Voraussetzung fuer Z-3/RM-7
+-- (Drawdown-Notbremse), die laut Regelwerksmanual seit jeher als "OFFEN -
+-- fehlt noch eine Portfolio-Wert-Historie" gefuehrt wird, und fuer die
+-- Drawdown-Anzeige in U-1.
+--
+-- WARUM eine eigene Tabelle: `holdings` ist eine ZUSTANDStabelle (symbol als
+-- PRIMARY KEY), jeder Bitpanda-Sync ueberschreibt sie. Der Verlauf ging
+-- bisher jedes Mal verloren.
+--
+-- `quelle` unterscheidet, wie ein Tageswert entstanden ist:
+--   'rekonstruiert' - rueckwirkend aus Bestaenden x Kurshistorie berechnet
+--   'laufend'       - vom taeglichen Job zum jeweiligen Zeitpunkt geschrieben
+-- Das ist kein Schoenheitsfehler, sondern noetig: rekonstruierte Werte nehmen
+-- die Bestaende eines Stichtags fuer die ganze Zeitreihe an und sind damit
+-- ungenauer als laufend erfasste. Wer auf der Historie rechnet, muss den
+-- Unterschied sehen koennen.
+--
+-- `symbole_ohne_kurs` haelt fest, wieviele gehaltene Symbole an diesem Tag
+-- KEINEN Kurs hatten - ohne diese Zahl sieht ein zu niedriger Portfoliowert
+-- aus wie ein Kursrueckgang statt wie eine Datenluecke. Genau der stille
+-- Falschwert, den P-10 verbietet.
+CREATE TABLE IF NOT EXISTS portfolio_wert_historie (
+    datum               TEXT PRIMARY KEY,
+    wert_eur            REAL NOT NULL,
+    cash_eur            REAL NOT NULL DEFAULT 0,
+    symbole_gesamt      INTEGER NOT NULL DEFAULT 0,
+    symbole_ohne_kurs   INTEGER NOT NULL DEFAULT 0,
+    quelle              TEXT NOT NULL,
+    berechnet_am        TEXT NOT NULL
+);
 """
 
 
@@ -3890,3 +3921,60 @@ def set_oi_abdeckung_gemeldet(conn: sqlite3.Connection, symbol: str) -> None:
         (_now_iso(), symbol),
     )
     conn.commit()
+
+
+# --- Portfolio-Wert-Historie (2026-08-04, Task #612) -------------------------
+# Grundlage fuer Z-3/RM-7 (Drawdown-Notbremse) und die U-1-Drawdown-Anzeige.
+# Tabellenkommentar in SCHEMA erklaert, warum es eine eigene Tabelle braucht.
+
+
+def upsert_portfolio_wert(
+    conn: sqlite3.Connection,
+    datum: str,
+    wert_eur: float,
+    *,
+    cash_eur: float = 0.0,
+    symbole_gesamt: int = 0,
+    symbole_ohne_kurs: int = 0,
+    quelle: str,
+    commit: bool = True,
+) -> None:
+    """Einen Tageswert schreiben oder ersetzen.
+
+    Bewusst ein UPSERT statt INSERT: ein Tag darf neu berechnet werden, ohne
+    dass alte Zeilen von Hand geloescht werden muessen. Wird zuerst
+    rekonstruiert und spaeter laufend erfasst, gewinnt der spaetere Schreiber -
+    das ist gewollt, weil `laufend` die genauere Quelle ist (siehe SCHEMA).
+
+    `commit=False` fuer Schleifen ueber viele Tage - der Aufrufer committet
+    einmal am Ende statt 88 Mal.
+    """
+    conn.execute(
+        "INSERT INTO portfolio_wert_historie "
+        "(datum, wert_eur, cash_eur, symbole_gesamt, symbole_ohne_kurs, quelle, berechnet_am) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?) "
+        "ON CONFLICT(datum) DO UPDATE SET "
+        "wert_eur = excluded.wert_eur, cash_eur = excluded.cash_eur, "
+        "symbole_gesamt = excluded.symbole_gesamt, "
+        "symbole_ohne_kurs = excluded.symbole_ohne_kurs, "
+        "quelle = excluded.quelle, berechnet_am = excluded.berechnet_am",
+        (datum, wert_eur, cash_eur, symbole_gesamt, symbole_ohne_kurs, quelle, _now_iso()),
+    )
+    if commit:
+        conn.commit()
+
+
+def get_portfolio_wert_historie(
+    conn: sqlite3.Connection, ab_datum: str | None = None
+) -> list[dict]:
+    """Die Zeitreihe aufsteigend nach Datum - so, wie eine Equity-Kurve
+    gelesen wird. `symbole_ohne_kurs` kommt mit, damit Aufrufer Tage mit
+    Datenluecken erkennen, statt einen zu niedrigen Wert fuer einen
+    Kursrueckgang zu halten."""
+    sql = "SELECT * FROM portfolio_wert_historie"
+    params: tuple = ()
+    if ab_datum:
+        sql += " WHERE datum >= ?"
+        params = (ab_datum,)
+    sql += " ORDER BY datum"
+    return [dict(row) for row in conn.execute(sql, params).fetchall()]
