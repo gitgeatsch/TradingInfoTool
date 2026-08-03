@@ -37,6 +37,54 @@ Zeile ergänzen.
 | **RM-11 exakt** (Stage 1, `hebel_risk_gate.py::_hebel_deckel_kandidaten()`, 02.08.) | **keine** - senkt nur den Hebel, kein `action`-Wechsel | **keine** | Weiterer Kandidat in der bestehenden `min()`-Kette neben Config-Maximum, RM-11 vorab, Regime-Konflikt und Gegenszenario. Wichtig beim Debuggen: der genannte "bindende Grund" kann seit 02.08. auch "RM-11 exakt" lauten - das ist kein Fehler, sondern der tatsächliche Stop, der die Vorab-Schätzung (2,0x ATR) unterbietet |
 | Statistik-Prüfungen `win_rate_ci_95`/`crv_konzentration` (Cross-Cutting, `backward_tracking.py::_kennzahlen_mit_pruefung()`, 02.08.) | — | — | Verändern keine Pipeline, aber die **Interpretation** aller drei Aggregationen. `crv_konzentration.vorzeichen_kippt=True` heißt: der Mittelwert dieser Gruppe hängt an wenigen Ausreißern und trägt keine Regeländerung. Wer eine Regel auf `avg_realisiertes_crv` stützt, ohne dieses Feld zu prüfen, wiederholt den AIOZ-Fehler vom 02.08. |
 
+| **RM-5 → RM-1** Volatilität steckt bereits in der Positionsgröße (Stage 1, `risk_gate.py:253-268`) | — | — | **Nachgetragen 04.08., hatte gefehlt.** RM-5 setzt den Stop auf `2 × ATR`, RM-1 rechnet `Positionsgröße = Risikobudget ÷ Stop-Abstand` — die Größe ist damit **proportional zu 1/ATR**, also lehrbuchmäßiges Volatility Targeting, seit Beginn eingebaut. Wer eine Volatilitäts-Komponente in die Positionsgröße einbaut, zählt sie ein **zweites** Mal. Genau das passierte am 04.08. bei der Positionsgrößen-Messung: die Variante "nur Volatilität" schnitt signifikant SCHLECHTER ab (−0,029 R je Signal, Intervall [−0,051 .. −0,008]) und wäre ohne diesen Kontrollfall als Literaturempfehlung eingebaut worden. Volatilität ist an drei Stellen im System: hier (Positionsgröße), RM-1c (Stop-Untergrenze 0,75× ATR) und Regel 6 (TP-Leitplanke ~1,5–2× ATR) |
+
+## Regler-Klassifikation (Audit 04.08., Task #610/#611)
+
+Von 202 Blatt-Schlüsseln in `config.yaml` werden 36 im Produktivcode nie
+namentlich gelesen. Die Suche muss ohne Ausschlussfilter laufen — der erste
+Durchgang schloss `analyse_*.py`, `backtest_*.py` und
+`extract_notebook_diagnose.py` aus und hätte eine Verwendung als
+Mess-/Analysegrundlage übersehen (Nutzer-Fund).
+
+**Drei Kategorien, die auseinandergehalten werden müssen:**
+
+| Kategorie | Kennzeichen | Behandlung |
+|---|---|---|
+| **Fehlalarm** | Name wird dynamisch zusammengebaut | Nicht anfassen. Beispiel: `gewicht_*` — `hebel_screening.py:200` baut `f"gewicht_{kategorie}"`. Textsuche findet das nicht |
+| **Attrappe** | Verhalten existiert, ist aber hartkodiert; der Schlüssel steuert nichts | Entfernen **mit Begründung an Ort und Stelle**, nicht spurlos. Wenn der Config-Wert zusätzlich vom echten Verhalten abweicht, ist es kein harmloser Rest, sondern irreführend |
+| **Nie umgesetzt** | Weder Schlüssel gelesen noch Verhalten vorhanden | Eigene Entscheidung je Fall — bauen, verwerfen oder als offen markieren |
+
+**Entschieden und umgesetzt (04.08.):**
+
+- `api_key_noetig`, `rate_limit_pro_minute` — entfernt. Letzterer war
+  irreführend: 30 ohne, 100 **mit** API-Key. Kein Drossel-Regler als Ersatz,
+  weil die wirksame Bremse bei der ANZAHL der Abfragen sitzt (Marktscan
+  USD-only + `stufe_b_top_n_deckel`), nicht beim Takt — gegen ein
+  Monatskontingent hilft langsamer nichts.
+- `max_hebel_faellt_regime_krise_extrem_auf_null`, `aus_bei_krise_extrem` —
+  Dublette, beide entfernt. **AZ-7 ist bewusst ein hartes Gate ohne Regler.**
+  Notausstieg liegt beim `regime.manueller_override` (RG-8), weil die
+  Regime-Einstufung träge ist und die Krise vorbei sein kann, während die
+  Einstufung noch steht.
+- `begruendung_pflicht` (Z-4), `liquidationspreis_ausweisen` (RM-11),
+  `ema_perioden`, `rsi_periode`, `forecast_szenarien` — entfernt. Die
+  Config-Werte beschrieben das Verhalten korrekt, steuerten es aber nicht.
+  Genau diese Sorte verleitet dazu, in der Config nachzusehen statt im Code.
+
+**Offen (#611):** `max_drawdown_prozent` (Z-3, in keinem Dokument außer der
+Config, nie umgesetzt), der gesamte `antizyklisch`-Block (AZ-1 bis AZ-7, acht
+Schlüssel, nirgends gelesen — soweit vorhanden lebt das Verhalten als
+Prompt-Text auf Stage 2, während die Config Stage 1 suggeriert), sowie
+`auto_watchlist` (verspricht automatische Aufnahme, real ist es ein manueller
+Button in `marktscan_view.py:568`).
+
+**Nebenbefund:** Die Parameter-Übersicht der Remote-Seite
+(`regelwerk_parameter.py::_PARAMETER`) umfasst 34 handverlesene Einträge von
+rund 200 Schlüsseln. Z-3 steht nicht darin — ein definiertes Systemziel fehlt
+in der Aufstellung der geltenden Parameter. Die Auswahlregel dieser Liste ist
+selbst ungeklärt.
+
 ## Wie diese Matrix zu pflegen ist
 
 - Vor jeder Regler-Änderung (Stage 1) prüfen: verändert sie die an Stage 2

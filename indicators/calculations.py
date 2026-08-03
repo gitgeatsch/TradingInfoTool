@@ -325,6 +325,14 @@ def build_technical_snapshot(
     closes: np.ndarray,
     dates: np.ndarray,
     ohlc_history: list,
+    # HIER stehen die geltenden Indikator-Perioden - bewusst als Vorgabe im
+    # Code, nicht in der Config. Bis 2026-08-04 standen sie zusaetzlich in
+    # config.yaml (ema_perioden, rsi_periode), wurden dort aber nie gelesen:
+    # eine korrekte Beschreibung, die nichts steuerte und beim naechsten
+    # Aenderungsschritt hier stillschweigend falsch geworden waere. Entfernt
+    # im Regler-Audit. Eine Perioden-Aenderung bricht die Vergleichbarkeit mit
+    # der gesamten Signal-Historie - das ist kein Regler fuer den Alltag,
+    # sondern ein Eingriff, der eine neue Messbasis erfordert.
     ema_periods: tuple[int, ...] = (20, 50, 200),
 ) -> TechnicalSnapshot:
     has_real_ohlc = len(ohlc_history) >= 3

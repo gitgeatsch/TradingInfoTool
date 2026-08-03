@@ -26,7 +26,13 @@ ziele:
   kapitalerhalt_vor_gewinn: true       # Z-1: Kapitalerhalt hat immer Vorrang
   crv_minimum: 2.0                     # Z-2: Mindest-Chance-Risiko-Verhaeltnis (2:1)
   max_drawdown_prozent: 15             # Z-3: [OFFEN] Vorschlag -> bei Ueberschreitung Kapitalschutz-Modus
-  begruendung_pflicht: true            # Z-4: jede Empfehlung mit Begruendung + Konfidenz
+  # ENTFERNT 2026-08-04 (Regler-Audit): `begruendung_pflicht: true` (Z-4) wurde
+  # nie gelesen. Die Pflicht existiert trotzdem und ist staerker als ein
+  # Schalter: `long_reasoning`/`key_risks`/`confidence_pct` sind
+  # Schema-Pflichtfelder aller sechs Analysten, eine Antwort ohne sie faellt
+  # bereits in der Validierung durch. Z-4 ist damit nicht abschaltbar - was
+  # richtig ist, denn eine Empfehlung ohne Begruendung waere fuer die
+  # Nachvollziehbarkeit wertlos. Beschreibung siehe Spezifikation Kap. 1.
 
 # --- Risikomanagement / Kernmodul (siehe Spezifikation Kap. 3) ---
 risiko:
@@ -318,8 +324,13 @@ risiko:
                                         # skaliert bei wachsendem Portfolio nicht mit. Das ist
                                         # gewollt (siehe "Gummi-Parameter" oben), aber beim
                                         # naechsten Anheben mitzudenken.
-    liquidationspreis_ausweisen: true  # RM-11 - nur Schaetzung, Bitpanda-Formel nicht
-                                        # oeffentlich, siehe docs/hebel_positionsformel.md
+    # ENTFERNT 2026-08-04 (Regler-Audit): `liquidationspreis_ausweisen: true`
+    # (RM-11) wurde nie gelesen - die Anzeige ist in GUI, E-Mail und
+    # Remote-Seite fest verdrahtet und nicht abschaltbar. Der Hinweis, dass es
+    # sich nur um eine SCHAETZUNG handelt (Bitpanda-Formel nicht oeffentlich),
+    # steht dort, wo er hingehoert: docs/hebel_positionsformel.md und der
+    # Docstring von estimate_liquidation_price(). Die Sicherheitsmarge dafuer
+    # ist der Parameter direkt unter diesem Kommentar - der wird gelesen.
     liquidations_sicherheitsmarge_relativ: 0.09  # RM-11 - 2026-07-19 NEU KALIBRIERT (vorher
                                         # 0.175, ein reiner "Mittelwert einer 15-20%-Spanne"
                                         # ohne echte Quelle). Jetzt hergeleitet aus Bitpandas
@@ -811,9 +822,20 @@ strategien:
 # --- Technische Indikatoren (siehe Spezifikation Kap. 7) ---
 indikatoren:
   trend: [EMA, MACD]
-  ema_perioden: [20, 50, 200]
   momentum: [RSI]
-  rsi_periode: 14
+  # ENTFERNT 2026-08-04 (Regler-Audit): `ema_perioden: [20, 50, 200]` und
+  # `rsi_periode: 14`. Beide wurden nie gelesen - die Werte stehen als
+  # Vorgaben in indicators/calculations.py::build_technical_snapshot()
+  # (ema_periods=(20, 50, 200)) bzw. rsi(closes, period=14), und alle Aufrufer
+  # rufen ohne Parameter auf. Die Config-Werte waren identisch, also nicht
+  # falsch - aber sie konnten jederzeit auseinanderlaufen, sobald jemand die
+  # Vorgabe im Code aendert. Genau diese Sorte "beschreibt korrekt, steuert
+  # nicht" hat am 04.08. eine Fehlmessung verursacht (Volatilitaets-Komponente
+  # doppelt gezaehlt, weil in der Config nachgesehen statt im Code).
+  # BEWUSST nicht verdrahtet: eine Perioden-Aenderung wuerde saemtliche Signale
+  # veraendern und die Vergleichbarkeit mit der gesamten bisherigen Historie
+  # brechen - das ist kein Regler fuer den Alltag. Ein Kommentar an der
+  # Code-Vorgabe haelt das fest.
   volatilitaet: [BollingerBands, ATR]
   levels: [Fibonacci, SupportResistance]
   marktbreite: [BTC_Dominanz, FearGreedIndex]
@@ -830,7 +852,12 @@ agent:
     technische_analyse: 0.5
     makro: 0.3
     sentiment: 0.2                     # niedrig - Manipulationsgefahr
-  forecast_szenarien: [bull, base, bear]
+  # ENTFERNT 2026-08-04 (Regler-Audit): `forecast_szenarien: [bull, base, bear]`
+  # wurde nie gelesen. Die drei Szenarien sind im JSON-Schema aller Analysten
+  # fest vorgegeben (Pflichtfeld `forecast` mit genau bull/base/bear), und
+  # risk_gate.py greift namentlich auf forecast.bear zu (Gegenszenario-Deckel).
+  # Eine Aenderung dieser Liste haette also nichts bewirkt, ausser einen
+  # Widerspruch zum Schema zu erzeugen.
   # KI-Ebene (P-8, Architektur-Seam 2026-07-10, siehe api/local_model.py):
   # "groq" (aktiv) oder "lokal" (vorbereitet, noch NICHT implementiert - erst nach
   # Hardware-Upgrade des Notebooks, siehe api/local_model.py fuer die Begruendung).
