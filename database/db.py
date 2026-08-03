@@ -523,6 +523,15 @@ CREATE TABLE IF NOT EXISTS oi_abdeckung_status (
 -- KEINEN Kurs hatten - ohne diese Zahl sieht ein zu niedriger Portfoliowert
 -- aus wie ein Kursrueckgang statt wie eine Datenluecke. Genau der stille
 -- Falschwert, den P-10 verbietet.
+-- `index_wert` ist die Groesse, auf der Z-3 rechnet - NICHT `wert_eur`. Ein
+-- Zukauf hebt den Wert, ist aber kein Gewinn; der Index laesst
+-- Mengenaenderungen heraus (siehe agent/portfolio_historie.py).
+--
+-- `mengen_json` haelt den Bestand des Tages fest. Ohne ihn liesse sich der
+-- Index am naechsten Tag nicht fortschreiben: die Tagesrendite braucht die
+-- Mengen des VORTAGS, und die stehen nach dem naechsten Bitpanda-Sync nicht
+-- mehr in `holdings` (Zustandstabelle, wird ueberschrieben). Klein genug -
+-- rund 33 Symbole je Tag.
 CREATE TABLE IF NOT EXISTS portfolio_wert_historie (
     datum               TEXT PRIMARY KEY,
     wert_eur            REAL NOT NULL,
@@ -530,7 +539,9 @@ CREATE TABLE IF NOT EXISTS portfolio_wert_historie (
     symbole_gesamt      INTEGER NOT NULL DEFAULT 0,
     symbole_ohne_kurs   INTEGER NOT NULL DEFAULT 0,
     quelle              TEXT NOT NULL,
-    berechnet_am        TEXT NOT NULL
+    berechnet_am        TEXT NOT NULL,
+    index_wert          REAL,
+    mengen_json         TEXT
 );
 """
 
@@ -1052,6 +1063,27 @@ def _migrate_hebel_signal_eigenkapital_deckel_column(conn: sqlite3.Connection) -
     conn.commit()
 
 
+_PORTFOLIO_WERT_NEW_COLUMNS = {"index_wert": "REAL", "mengen_json": "TEXT"}
+
+
+def _migrate_portfolio_wert_columns(conn: sqlite3.Connection) -> None:
+    """Nachtrag 2026-08-04 (Task #612, Z-3/RM-7). Die Tabelle entstand am selben
+    Tag; die Migration steht trotzdem hier, weil der erste Stand bereits
+    ausgeliefert war und auf dem Notebook eine Tabelle ohne diese Spalten
+    existieren kann.
+
+    `index_wert` ist die Groesse, auf der Z-3 rechnet - nicht `wert_eur`.
+    `mengen_json` haelt den Tagesbestand fest, ohne den sich der Index am
+    Folgetag nicht fortschreiben liesse: die Tagesrendite braucht die Mengen des
+    Vortags, und `holdings` wird bei jedem Sync ueberschrieben. Gleiches
+    additive Migrations-Muster wie oben."""
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(portfolio_wert_historie)")}
+    for column, sql_type in _PORTFOLIO_WERT_NEW_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE portfolio_wert_historie ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
 _KONTRATHESE_NEW_COLUMNS = {"kontrathese_zu_position": "INTEGER", "kontrathese_llm_richtung": "TEXT"}
 
 
@@ -1244,6 +1276,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_hebel_signal_eur_columns(conn)
     _migrate_hebel_signal_eigenkapital_deckel_column(conn)
     _migrate_kontrathese_columns(conn)
+    _migrate_portfolio_wert_columns(conn)
     _migrate_signal_fazit_columns(conn)
     _migrate_zai_gegenpruefung_columns(conn)
     _migrate_signal_zai_gegenpruefung_columns(conn)
@@ -3937,6 +3970,8 @@ def upsert_portfolio_wert(
     symbole_gesamt: int = 0,
     symbole_ohne_kurs: int = 0,
     quelle: str,
+    index_wert: float | None = None,
+    mengen_json: str | None = None,
     commit: bool = True,
 ) -> None:
     """Einen Tageswert schreiben oder ersetzen.
@@ -3951,14 +3986,17 @@ def upsert_portfolio_wert(
     """
     conn.execute(
         "INSERT INTO portfolio_wert_historie "
-        "(datum, wert_eur, cash_eur, symbole_gesamt, symbole_ohne_kurs, quelle, berechnet_am) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?) "
+        "(datum, wert_eur, cash_eur, symbole_gesamt, symbole_ohne_kurs, quelle, "
+        " berechnet_am, index_wert, mengen_json) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "
         "ON CONFLICT(datum) DO UPDATE SET "
         "wert_eur = excluded.wert_eur, cash_eur = excluded.cash_eur, "
         "symbole_gesamt = excluded.symbole_gesamt, "
         "symbole_ohne_kurs = excluded.symbole_ohne_kurs, "
-        "quelle = excluded.quelle, berechnet_am = excluded.berechnet_am",
-        (datum, wert_eur, cash_eur, symbole_gesamt, symbole_ohne_kurs, quelle, _now_iso()),
+        "quelle = excluded.quelle, berechnet_am = excluded.berechnet_am, "
+        "index_wert = excluded.index_wert, mengen_json = excluded.mengen_json",
+        (datum, wert_eur, cash_eur, symbole_gesamt, symbole_ohne_kurs, quelle,
+         _now_iso(), index_wert, mengen_json),
     )
     if commit:
         conn.commit()

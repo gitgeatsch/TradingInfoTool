@@ -47,6 +47,7 @@ beide Quellen hinweg dasselbe Mass.
 """
 from __future__ import annotations
 
+import json
 import logging
 import sqlite3
 from dataclasses import dataclass, field
@@ -722,6 +723,112 @@ def reihen_je_kategorie(
             nur_symbole=symbole,
         )
     return ergebnis
+
+
+def schreibe_tageswert(
+    conn: sqlite3.Connection,
+    *,
+    datum: str | None = None,
+    watchlist: list | None = None,
+) -> dict:
+    """Den heutigen Portfoliowert fortschreiben - der taegliche Betriebsteil.
+
+    Setzt den Index dort fort, wo die letzte Zeile aufgehoert hat: die
+    Tagesrendite wird mit den Mengen des VORTAGS gerechnet (aus `mengen_json`,
+    nicht aus `holdings` - letzteres ist zum Zeitpunkt des Laufs schon der
+    heutige Stand und wuerde den Zukauf mitzaehlen, den der Index gerade
+    herausrechnen soll).
+
+    Gibt es noch keine Vorzeile, startet der Index bei 100 - dann ist der
+    Rueckschlag naturgemaess 0, bis genug Historie da ist.
+
+    WORAUF ZU ACHTEN IST: `symbole_ohne_kurs` in der geschriebenen Zeile. Steigt
+    diese Zahl, fehlen Kurse, und der Tageswert ist zu niedrig - das saehe wie
+    ein Kursrutsch aus. Deshalb wird sie mitgeschrieben und nicht nur geloggt.
+    """
+    tag = datum or _heute_utc()
+    watchlist = watchlist if watchlist is not None else config.get_watchlist()
+    coingecko_ids = {a.symbol: a.coingecko_id for a in watchlist if a.coingecko_id}
+    cash_aequivalente = {a.symbol for a in watchlist if a.ist_cash_aequivalent}
+
+    holdings = {h.symbol: h.quantity for h in db.get_all_holdings(conn) if h.quantity > 0}
+    vorzeilen = [z for z in db.get_portfolio_wert_historie(conn) if z["datum"] < tag]
+    vorzeile = vorzeilen[-1] if vorzeilen else None
+
+    ab = vorzeile["datum"] if vorzeile else tag
+    kurs_am, _ = _kurs_lookup(
+        conn, set(holdings) | set(json.loads(vorzeile["mengen_json"] or "{}") if vorzeile else ()),
+        ab, coingecko_ids, cash_aequivalente,
+    )
+
+    wert = 0.0
+    ohne_kurs = 0
+    for symbol, menge in holdings.items():
+        kurs = kurs_am(symbol, tag)
+        if kurs is None:
+            ohne_kurs += 1
+        else:
+            wert += menge * kurs
+
+    index = 100.0
+    if vorzeile and vorzeile["index_wert"] and vorzeile["mengen_json"]:
+        basis = json.loads(vorzeile["mengen_json"])
+        alt = neu = 0.0
+        for symbol, menge in basis.items():
+            p_alt, p_neu = kurs_am(symbol, vorzeile["datum"]), kurs_am(symbol, tag)
+            if p_alt is None or p_neu is None or menge <= 0:
+                continue
+            alt += menge * p_alt
+            neu += menge * p_neu
+        index = vorzeile["index_wert"] * (neu / alt) if alt > 0 else vorzeile["index_wert"]
+
+    db.upsert_portfolio_wert(
+        conn, tag, wert,
+        cash_eur=db.get_cash_reserve_fiat_eur(conn),
+        symbole_gesamt=len(holdings),
+        symbole_ohne_kurs=ohne_kurs,
+        quelle=QUELLE_LAUFEND,
+        index_wert=index,
+        mengen_json=json.dumps(holdings),
+    )
+    return {"datum": tag, "wert_eur": wert, "index": index, "symbole_ohne_kurs": ohne_kurs}
+
+
+def pruefe_z3(conn: sqlite3.Connection, *, schwelle_prozent: float) -> dict:
+    """Z-3 / RM-7 - Drawdown-Notbremse.
+
+    HART UND NICHT UEBERSCHREIBBAR (RG-6: "Weder Nutzer noch KI duerfen RM-1,
+    RM-5 oder Z-3 per Override..."). Diese Funktion nimmt deshalb bewusst
+    KEINEN Override-Parameter entgegen - was es nicht gibt, kann auch nicht
+    versehentlich verdrahtet werden.
+
+    Wirkt laut Spezifikation als DRINGENDER ALERT, nicht als Automatik: das
+    System kann ohnehin keine Order ausloesen (keine Handels-API bei Bitpanda).
+    `ausgeloest` heisst also "melden und Kapitalschutz-Modus S-5 erwaegen",
+    nicht "verkaufen".
+
+    Gerechnet wird auf `index_wert`, NICHT auf `wert_eur` - sonst loeste ein
+    grosser Verkauf die Notbremse aus und ein grosser Zukauf verdeckte einen
+    echten Einbruch.
+
+    `datenbasis_duenn` ist der Ehrlichkeitsteil: mit wenigen Tagen Historie ist
+    ein Hoechststand kein Hoechststand. Wer den Alert liest, soll sehen, worauf
+    er beruht - eine Notbremse, die am dritten Tag ausloest, sagt mehr ueber
+    die Datenlage als ueber den Markt.
+    """
+    reihe = [
+        (z["datum"], z["index_wert"], 0)
+        for z in db.get_portfolio_wert_historie(conn)
+        if z["index_wert"] is not None
+    ]
+    rueckschlag = groesster_rueckschlag(reihe)
+    return {
+        **rueckschlag,
+        "schwelle_prozent": schwelle_prozent,
+        "ausgeloest": rueckschlag["aktuell_prozent"] >= schwelle_prozent,
+        "tage_historie": len(reihe),
+        "datenbasis_duenn": len(reihe) < 30,
+    }
 
 
 def schreibe_rekonstruktion(
