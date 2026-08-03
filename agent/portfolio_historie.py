@@ -568,6 +568,7 @@ def rekonstruiere_aus_transaktionen(
     ab_datum: str,
     watchlist: list | None = None,
     symbol_overrides: dict[str, str] | None = None,
+    nur_symbole: set[str] | None = None,
 ) -> tuple[list[tuple[str, float, int, int]], dict]:
     """Alle drei Schichten zusammen: Buchungen -> Mengen je Tag -> EUR-Wert
     je Tag -> mengenkonstanter Index.
@@ -600,6 +601,10 @@ def rekonstruiere_aus_transaktionen(
         s: menge for s, menge in holdings.items()
         if menge > 0 and (not bewegungstage or s not in verlauf[bewegungstage[-1]])
     }
+    if nur_symbole is not None:
+        verlauf = {t: {s: m for s, m in stand.items() if s in nur_symbole}
+                   for t, stand in verlauf.items()}
+        ohne_verlauf = {s: m for s, m in ohne_verlauf.items() if s in nur_symbole}
 
     def mengen_am(tag: str) -> dict[str, float]:
         """Bestand am Ende von `tag`: der letzte Bewegungstag davor, ergaenzt um
@@ -655,6 +660,68 @@ def rekonstruiere_aus_transaktionen(
         "bewegungstage_im_fenster": sum(1 for t in bewegungstage if t >= ab_datum),
     }
     return reihe, diagnose
+
+
+def reihen_je_kategorie(
+    conn: sqlite3.Connection,
+    transaktionen: list[dict],
+    holdings: dict[str, float],
+    *,
+    ab_datum: str,
+    watchlist: list | None = None,
+    symbol_overrides: dict[str, str] | None = None,
+) -> dict[str, tuple[list, dict]]:
+    """Dieselbe Reihe zusaetzlich je Assetklasse - als DIAGNOSE, nicht als
+    zweiter Ausloeser.
+
+    ROLLENVERTEILUNG (Nutzer-Entscheidung 04.08., nach eigenem Vorschlag)
+    Ausgeloest wird Z-3/RM-7 weiterhin auf dem GESAMTwert. Das ist keine
+    Bequemlichkeit, sondern folgt aus dem Zweck der Regel: Z-3 schuetzt
+    Kapital, und Diversifikation ist genau dafuer da. Faellt Krypto um 20%
+    waehrend Aktien halten, liegt der Gesamtrueckschlag vielleicht bei 12% -
+    das Portfolio ist intakt, ein kategoriebezogener Alarm waere ein
+    Fehlsignal. Ausserdem ist `ziele.max_drawdown_prozent` eine
+    Portfolio-Groesse, und RG-6 stellt Z-3 unter Aenderungsschutz; ein zweiter
+    Ausloeser waere eine neue Regel, keine Anpassung.
+
+    WOFUER DIE AUFSCHLUESSELUNG DANN DA IST
+    Sie beantwortet die Frage, die nach jedem Alarm sofort kommt: woher kommt
+    der Rueckschlag? Gedacht fuers Dashboard, die Alert-Mail und perspektivisch
+    als Fakt fuer die Analysten.
+
+    UND EIN QUALITAETSARGUMENT, das nicht untergehen soll: die Krypto-Reihe
+    kommt OHNE Naeherung aus. Jede Mengenaenderung ist dort durch eine Buchung
+    belegt, lueckenlos ueber zwei Jahre. Die konstant gehaltenen Mengen
+    betreffen ausschliesslich Aktien/ETF/ETC. Wer beide Reihen nebeneinander
+    liest, sollte wissen, dass die eine gemessen und die andere teilweise
+    angenommen ist - `diagnose["naeherung_konstante_menge"]` sagt es je Reihe.
+
+    Rueckgabe: {"gesamt": (reihe, diagnose), "krypto": (...), ...}
+    """
+    watchlist = watchlist if watchlist is not None else config.get_watchlist()
+    je_klasse: dict[str, set[str]] = {}
+    for asset in watchlist:
+        klasse = getattr(asset, "assetklasse", None) or "unbekannt"
+        je_klasse.setdefault(klasse, set()).add(asset.symbol)
+
+    ergebnis: dict[str, tuple[list, dict]] = {
+        "gesamt": rekonstruiere_aus_transaktionen(
+            conn, transaktionen, holdings, ab_datum=ab_datum,
+            watchlist=watchlist, symbol_overrides=symbol_overrides,
+        )
+    }
+    for klasse, symbole in sorted(je_klasse.items()):
+        # Leere Kategorien ueberspringen statt eine Reihe aus Nullen zu bauen -
+        # eine flache Linie bei 100 saehe aus wie "keine Bewegung" statt wie
+        # "keine Daten".
+        if not (symbole & set(holdings)):
+            continue
+        ergebnis[klasse] = rekonstruiere_aus_transaktionen(
+            conn, transaktionen, holdings, ab_datum=ab_datum,
+            watchlist=watchlist, symbol_overrides=symbol_overrides,
+            nur_symbole=symbole,
+        )
+    return ergebnis
 
 
 def schreibe_rekonstruktion(
