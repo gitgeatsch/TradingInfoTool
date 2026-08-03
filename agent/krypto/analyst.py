@@ -423,6 +423,8 @@ Stops knapp darueber landen, statt sich an der tatsaechlichen Volatilitaet \
 des Assets zu orientieren. Ein deterministisches Gate faengt Extremfaelle \
 ohnehin ab; dein Beitrag ist die fachlich richtige Zone, nicht das Treffen \
 einer Zahl.
+36. Chance-Risiko-Verhaeltnis, Einordnung statt blosser Mindestgrenze (2026-08-04, gemessen an 491 Signalen, siehe `crv_erfolgsbaender`): das Gate verlangt CRV >= 2,0 - das ist eine Untergrenze, KEIN Qualitaetsurteil. Gemessen erreichen Signale mit CRV zwischen 2,0 und 4,0 in nur 26-32 % der Faelle mindestens 1R; ab CRV 4,0 sind es 51 %. Der Unterschied zwischen 2,1 und 3,8 ist also gering, der Sprung liegt bei 4,0. Zwei Folgerungen fuer dich: (a) Wenn sich Entry/Stop/Take-Profit sinnvoll so setzen lassen, dass das CRV ueber 4,0 liegt, ist das ein deutlich anderes Setup als ein knapp bestandenes - bevorzuge es, SOFERN die Zonen technisch begruendet bleiben. Ziehe NIEMALS den Take-Profit kuenstlich hoch oder den Stop kuenstlich eng, nur um die Schwelle zu reissen: ein zu enger Stop verletzt Regel 35 und zerstoert genau den Vorteil, den die Zahl beschreibt. (b) Ein CRV knapp ueber 2,0 rechtfertigt fuer sich genommen KEINE hohe `confidence_pct`. Es hat das Gate passiert, mehr nicht. Lies den `hinweis` mit: die Baender stammen ueberwiegend aus nicht ausgefuehrten Signalen und sind eine Groessenordnung, keine Punktprognose.
+
 
 SCHEMA:
 {
@@ -510,6 +512,43 @@ def _build_haltung_facts(holding, latest_price) -> dict:
         "menge_ohne_bekannten_einstandspreis": _native(view.unknown_quantity),
         "gewinn_verlust_pct": _native(view.pl_pct),
     }
+
+
+# --- CRV-Erfolgsbaender (#602, gemessen 2026-08-04) -------------------------
+# Bewusst eine KONSTANTE mit Herkunftsangabe statt einer Live-Berechnung, gleiche
+# Bauart wie die ATR-Basislinie hinter Regel 35: die Zahlen stammen aus einer
+# einmaligen, dokumentierten Messung und sollen sich nicht still mit jedem Lauf
+# verschieben. Wer sie neu misst, ersetzt sie hier und aktualisiert Datum und
+# Stichprobe mit.
+#
+# WARUM DIESE TABELLE UEBERHAUPT: das Gate kennt nur die harte Untergrenze
+# CRV >= 2,0 (Z-2). Gemessen wurde, dass das Gate zwar signifikant trennt
+# (blockiert 14,1 % gegen durchgelassen 32,8 % Trefferanteil, +0,558 R,
+# p < 0,0001), aber bei 2,0 KEINE Kante liegt - direkt darunter 22,2 %, direkt
+# darueber 23,2 %. Der Sprung passiert erst bei CRV 4,0: von 31,9 % auf 51,0 %.
+# Das LLM wusste davon bisher nichts und behandelte CRV 2,1 und CRV 4,2 gleich.
+#
+# Die Tabelle wird VOR der Zonen-Festlegung mitgegeben, nicht danach: das
+# geplante CRV entsteht erst aus Entry/Stop/Ziel, die das Modell selbst setzt.
+# So kann es die Baender beim SETZEN beruecksichtigen statt nur hinterher
+# eingeordnet zu werden.
+CRV_ERFOLGSBAENDER = {
+    "gemessen_am": "2026-08-04",
+    "stichprobe": 491,
+    "messgroesse": "Anteil der Signale, die mindestens 1R erreicht haben (MFE, "
+                   "nicht nur aufgeloeste Faelle - sonst Survivorship-Verzerrung)",
+    "baender": [
+        {"crv_von": 2.0, "crv_bis": 2.5, "anteil_mindestens_1r_pct": 26.5, "n": 113},
+        {"crv_von": 2.5, "crv_bis": 3.0, "anteil_mindestens_1r_pct": 30.8, "n": 65},
+        {"crv_von": 3.0, "crv_bis": 4.0, "anteil_mindestens_1r_pct": 31.9, "n": 72},
+        {"crv_von": 4.0, "crv_bis": None, "anteil_mindestens_1r_pct": 51.0, "n": 49},
+    ],
+    "hinweis": "Der Verlauf zwischen CRV 2,0 und 4,0 ist flach (26-32 %). Der "
+               "deutliche Sprung liegt bei 4,0. Die Baender stammen ueberwiegend "
+               "aus dem Veto-Schatten (333 von 491), messen also vor allem "
+               "NICHT ausgefuehrte Signale - als Groessenordnung belastbar, "
+               "nicht als Punktprognose.",
+}
 
 
 def build_facts(
@@ -604,6 +643,7 @@ def build_facts(
         "haltung": _build_haltung_facts(holding, latest_price),
         "vorherige_empfehlung": vorherige_empfehlung_fact,
         "historische_erfolgsquote": historische_erfolgsquote,
+        "crv_erfolgsbaender": CRV_ERFOLGSBAENDER,
         "historischer_makro_vergleich": historischer_makro_vergleich,
         "liquiditaetszonen": liquiditaetszonen,
         "signal_stabilitaet": signal_stabilitaet,
