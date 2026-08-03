@@ -1666,16 +1666,13 @@ _BASISLINIE_MIN_EINSTIEGE = 200
 _BASISLINIE_NUR_SIGNALFENSTER = True
 
 
-def _zonen_kennzahlen(row) -> tuple[float, float, bool] | None:
-    """(Stop-Abstand relativ, CRV, ist_short) einer Signalzeile nach Z-2.
+def _zonen_absolut(row) -> dict | None:
+    """Absolute Zonenwerte einer Signalzeile nach Z-2: Entry-Mitte, Stop, Ziel.
 
-    Die Richtung kommt aus den Zonen selbst (Ziel unter Entry = bearisch) statt
-    aus einem richtung-Feld - so funktioniert es fuer Hebel UND die
-    Spot-Familie, die kein solches Feld hat.
-
-    Kantenwahl richtungsabhaengig wie im Risk-Gate: bei bullischer These
-    stop_von/take_von, bei bearischer die gespiegelten _bis. Gibt None zurueck,
-    wenn die Zonen unvollstaendig oder unplausibel sind."""
+    Eine Quelle fuer beides - _zonen_kennzahlen() leitet seine relativen Werte
+    hieraus ab. Vorher lag dieselbe Logik zusaetzlich in
+    analyse_crv_gate_survivorship.py::zonen(); zwei Fassungen derselben Formel
+    driften auseinander, sobald eine angepasst wird."""
     def _f(name):
         try:
             return row[name]
@@ -1695,6 +1692,8 @@ def _zonen_kennzahlen(row) -> tuple[float, float, bool] | None:
         return None
     e = (e_von + (e_bis or e_von)) / 2
     ist_short = t_von < e
+    # Kantenwahl richtungsabhaengig wie im Risk-Gate: bei bullischer These
+    # stop_von/take_von, bei bearischer die gespiegelten _bis.
     if ist_short:
         if s_bis is None or t_bis is None:
             return None
@@ -1705,7 +1704,24 @@ def _zonen_kennzahlen(row) -> tuple[float, float, bool] | None:
     chance = (e - ziel) if ist_short else (ziel - e)
     if risiko <= 0 or chance <= 0 or e <= 0:
         return None
-    return risiko / e, chance / risiko, ist_short
+    return {"entry": e, "stop": stop, "ziel": ziel, "risiko": risiko,
+            "stop_rel": risiko / e, "crv": chance / risiko, "ist_short": ist_short}
+
+
+def _zonen_kennzahlen(row) -> tuple[float, float, bool] | None:
+    """(Stop-Abstand relativ, CRV, ist_short) einer Signalzeile nach Z-2.
+
+    Die Richtung kommt aus den Zonen selbst (Ziel unter Entry = bearisch) statt
+    aus einem richtung-Feld - so funktioniert es fuer Hebel UND die
+    Spot-Familie, die kein solches Feld hat.
+
+    Duennes Tupel-Sichtfenster auf _zonen_absolut() - die Formel steht dort ein
+    einziges Mal. Gibt None zurueck, wenn die Zonen unvollstaendig oder
+    unplausibel sind."""
+    z = _zonen_absolut(row)
+    if z is None:
+        return None
+    return z["stop_rel"], z["crv"], z["ist_short"]
 
 
 def lade_kursreihen(conn) -> dict[str, list]:
@@ -2614,6 +2630,191 @@ def compute_baseline_vergleich(
         "crv_breakeven_vergleich": crv_breakeven_vergleich,
         "regime_naiv_vergleich": regime_naiv_vergleich,
         "hinweis": hinweis,
+    }
+
+
+# --- CRV-Breakeven-Baender (Population B) ------------------------------------
+# ZWEI GRUNDGESAMTHEITEN, bewusst nicht vermischt (Nutzer-Vorgabe 03.08.):
+#
+#   A "Wie gut ist, was wir TUN?"          -> compute_systemguete()
+#     Nur Signale, deren action handelbar war. Ergebnis aus der DB.
+#     Bei Hebel real: 148 Faelle (242 mit Zonen minus 94, die nie ein Trade
+#     waren, weil die action HALTEN lautete).
+#
+#   B "Haette das Gate richtig GEFILTERT?" -> diese Funktion
+#     ALLE Signale mit Zonen, einheitlich ab created_at neu simuliert - auch
+#     vetote und (je nach `mit_halten`) auch nicht gehandelte. Das geplante CRV
+#     ist eine Eigenschaft der ZONEN, nicht der Handelsentscheidung.
+#
+# Wer beides in einen Topf wirft, beantwortet keine der beiden Fragen. Genau
+# diese Vermischung hat am 02.08. einen CRV-Befund gekippt.
+_CRV_BAENDER = ((0.0, 2.0), (2.0, 2.5), (2.5, 3.0), (3.0, 4.0), (4.0, None))
+# Erfolgskriterium ist "Ziel erreicht", NICHT "MFE >= 1R". Gemessen laufen die
+# beiden GEGENLAEUFIG: bei CRV >= 4,0 beruehren 51 % einmal 1R, aber nur 7,7 %
+# erreichen ihr Ziel - je hoeher das CRV, desto weiter das Ziel. Nur "Ziel
+# erreicht" darf gegen den Breakeven 1/(1+CRV) gestellt werden; MFE-Quoten
+# wuerden das Band bevorzugen, das sein Ziel am seltensten erreicht.
+_BAND_ERFOLGSKRITERIUM = "ziel_erreicht"
+
+
+def simuliere_signal(z: dict, reihe: list, ab_datum: str, horizont: int) -> dict | None:
+    """Ein Signal Tag fuer Tag gegen die Kurshistorie, ab `ab_datum`.
+
+    GLEICHE BEOBACHTUNGSDAUER (Kontrolle 1 aus Task #602): Gibt None zurueck,
+    wenn die Reihe den vollen Horizont nicht abdeckt. Ohne diese Bedingung
+    misst man Beobachtungszeit statt Signalqualitaet - laenger beobachtete
+    Signale haben mehr Gelegenheit, ihren Stop zu treffen.
+
+    Identische Abbruch- und Fill-Logik wie das Backward-Tracking: Stop schlaegt
+    Ziel am selben Tag, Ausfuehrung zur Zonen-Grenze bzw. bei einem Gap zum
+    Eroeffnungskurs (gap_bewusster_fill). Trifft nichts, wird zum Schlusskurs
+    des letzten Tages bewertet - dieselbe Konvention wie in der Basislinie,
+    dadurch sind beide Seiten symmetrisch."""
+    tage = [p for p in reihe if p["date"] >= ab_datum][:horizont + 1]
+    if len(tage) < horizont + 1:
+        return None
+    e, risiko, ist_short = z["entry"], z["risiko"], z["ist_short"]
+    for p in tage:
+        hoch, tief, auf = p["high"], p["low"], p["open"]
+        if hoch is None or tief is None:
+            continue
+        hit_stop = (hoch >= z["stop"]) if ist_short else (tief <= z["stop"])
+        hit_ziel = (tief <= z["ziel"]) if ist_short else (hoch >= z["ziel"])
+        if hit_stop:
+            fill = gap_bewusster_fill(z["stop"], auf, ist_stop=True, ist_short=ist_short)
+            return {"r": ((e - fill) if ist_short else (fill - e)) / risiko,
+                    "ausgang": "stop"}
+        if hit_ziel:
+            fill = gap_bewusster_fill(z["ziel"], auf, ist_stop=False, ist_short=ist_short)
+            return {"r": ((e - fill) if ist_short else (fill - e)) / risiko,
+                    "ausgang": "ziel"}
+    schluss = tage[-1]["close"]
+    if not schluss:
+        return None
+    return {"r": ((e - schluss) if ist_short else (schluss - e)) / risiko,
+            "ausgang": "offen"}
+
+
+def compute_crv_breakeven_baender(
+    conn, tier: str, horizont: int = 7, mit_halten: bool = True,
+    erlaubte_symbole: set[str] | None = None, reihen: dict | None = None,
+) -> dict | None:
+    """Trefferquote je CRV-Band gegen den Breakeven 1/(1+CRV) - Population B.
+
+    DIE LEITGROESSE. Expectancy = q*CRV - (1-q) > 0 ist gleichbedeutend mit
+    q > 1/(1+CRV). "Expectancy-Gate" und "Abstand zum CRV-Breakeven" sind
+    dieselbe Formel unter zwei Namen. Anders als ein reiner Erwartungswert
+    laesst sich der Breakeven-Abstand NICHT durch weniger Handeln verbessern -
+    er steigt nur, wenn mehr gute Signale kommen. Und weil die Schwelle mit
+    steigendem CRV faellt (2,0 -> 33,3 %; 4,0 -> 20,0 %), ist er zugleich das
+    gleitende Gate, das die starre 2,0-Grenze einmal ersetzen kann.
+
+    SURVIVORSHIP-FREI: bewertet wird jedes Signal mit Zonen durch Neusimulation,
+    nicht der DB-Status. Ob ein Signal aufloest, haengt vom Stop-Abstand ab -
+    wer nur aufgeloeste Faelle vergleicht, vergleicht Selektionsgrade. Genau
+    daran brach die Messung vom 02.08.
+
+    `mit_halten`: nimmt Signale mit nicht handelbarer action (HALTEN) mit auf.
+    Dafuer spricht, dass das CRV eine Eigenschaft der Zonen ist und die Menge
+    deutlich groesser wird; dagegen, dass das Modell dort nichts riskieren
+    wollte und seine Zonen weniger sorgfaeltig gesetzt haben koennte. BEWUSST
+    NICHT vorab entschieden - beide Varianten werden gerechnet und
+    gegeneinander geprueft (Schritt 2b, walk-forward).
+
+    `belastbar` je Band heisst: mindestens _MIN_SAMPLE_FUER_AUSSAGE Faelle UND
+    das Konfidenzintervall schliesst den Breakeven nicht ein. Nur dann taugt
+    das Band fuer eine SCHWELLE. Als informierender Fakt fuer das LLM ist auch
+    ein nicht belastbares Band brauchbar, solange die Unsicherheit mitgeliefert
+    wird - das ist der Unterschied zwischen "informieren" und "blockieren".
+
+    Reine Lesefunktion. None, wenn keine Kursreihen oder keine Signale."""
+    table = _tabelle_fuer_tier(tier, "compute_crv_breakeven_baender()")
+    if reihen is None:
+        reihen = lade_kursreihen(conn)
+    if not reihen:
+        return None
+    # _HEBEL_TRACKABLE_ACTIONS_FUER_UEBERSICHT statt des Originals aus
+    # hebel_backward_tracking.py - dieses Modul kann von dort nicht importieren
+    # (Kreisimport), siehe Kommentar an der Konstanten.
+    trackable = (_HEBEL_TRACKABLE_ACTIONS_FUER_UEBERSICHT if table == "hebel_signals"
+                 else _TRACKABLE_ACTIONS)
+    rows = conn.execute(
+        f"SELECT * FROM {table} WHERE take_profit_usd_von IS NOT NULL"
+    ).fetchall()
+
+    faelle: list[dict] = []
+    ohne_volle_reihe = 0
+    action_mix: dict[str, int] = {}
+    for row in rows:
+        if erlaubte_symbole is not None and row["symbol"] not in erlaubte_symbole:
+            continue
+        handelbar = row["action"] in trackable
+        if not handelbar and not mit_halten:
+            continue
+        z = _zonen_absolut(row)
+        if z is None or row["symbol"] not in reihen:
+            continue
+        sim = simuliere_signal(z, reihen[row["symbol"]], str(row["created_at"])[:10], horizont)
+        if sim is None:
+            ohne_volle_reihe += 1
+            continue
+        action_mix[str(row["action"])] = action_mix.get(str(row["action"]), 0) + 1
+        faelle.append({"crv": z["crv"], "r": sim["r"], "ausgang": sim["ausgang"],
+                       "symbol": row["symbol"]})
+    if not faelle:
+        return None
+
+    baender = []
+    for von, bis in _CRV_BAENDER:
+        teil = [f for f in faelle if f["crv"] >= von and (bis is None or f["crv"] < bis)]
+        n = len(teil)
+        if n == 0:
+            continue
+        ziel = sum(1 for f in teil if f["ausgang"] == "ziel")
+        crv_median = statistics.median(f["crv"] for f in teil)
+        breakeven = 1.0 / (1.0 + crv_median)
+        quote = ziel / n
+        ki_unten, ki_oben = wilson_intervall(ziel, n)
+        zaehler: dict[str, int] = {}
+        for f in teil:
+            zaehler[f["symbol"]] = zaehler.get(f["symbol"], 0) + 1
+        top_symbol, top_n = max(zaehler.items(), key=lambda x: x[1])
+        baender.append({
+            "crv_von": von,
+            "crv_bis": bis,
+            "anzahl": n,
+            "crv_median": round(crv_median, 2),
+            "trefferquote_pct": round(quote * 100, 1),
+            "breakeven_pct": round(breakeven * 100, 1),
+            "abstand_prozentpunkte": round((quote - breakeven) * 100, 1),
+            "ki_unten_pct": round(ki_unten * 100, 1),
+            "ki_oben_pct": round(ki_oben * 100, 1),
+            # Fuer eine SCHWELLE reicht der Punktwert nicht - das Intervall
+            # muss den Breakeven auch verfehlen.
+            "belastbar": bool(n >= _MIN_SAMPLE_FUER_AUSSAGE
+                              and (ki_unten > breakeven or ki_oben < breakeven)),
+            "erwartungswert_r": round(statistics.fmean(f["r"] for f in teil), 4),
+            "groesstes_symbol": top_symbol,
+            "groesstes_symbol_anteil_pct": round(top_n / n * 100, 1),
+        })
+
+    belastbare = sum(1 for b in baender if b["belastbar"])
+    return {
+        "tier": tier,
+        "horizont_tage": horizont,
+        "messgroesse": _BAND_ERFOLGSKRITERIUM,
+        "mit_halten_signalen": mit_halten,
+        "anzahl_signale": len(faelle),
+        "anzahl_ohne_volle_preisreihe": ohne_volle_reihe,
+        "action_mix": action_mix,
+        "baender": baender,
+        "hinweis": (
+            f"{len(faelle)} Signale mit Zonen, neu simuliert ueber {horizont} Tage "
+            f"(survivorship-frei, nicht nur aufgeloeste Faelle). Erfolgskriterium: "
+            f"Ziel erreicht - NICHT 'MFE >= 1R', die beiden laufen gegenlaeufig. "
+            f"{belastbare} von {len(baender)} Baendern sind statistisch belastbar; "
+            "die uebrigen sind eine Groessenordnung, keine Punktprognose."
+        ),
     }
 
 

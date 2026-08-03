@@ -37,6 +37,7 @@ from collections import defaultdict
 
 sys.path.insert(0, r'D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool')
 from agent.krypto.statistik import wilson_intervall
+from agent.krypto.backward_tracking import _zonen_absolut, simuliere_signal
 
 STANDARD_PFAD = (r'K:\My Drive\Claude_Austauschordner\Notebook_Analysedaten'
                  r'\notebook_diagnose.json')
@@ -47,30 +48,13 @@ HORIZONTE = (7, 14)   # 14 wie im Backward-Tracking, 7 als groessere Stichprobe
 def zonen(r: dict) -> dict | None:
     """Entry-Mitte, Stop, Ziel und CRV nach der Z-2-Formel des Risk-Gates.
 
-    Kantenwahl richtungsabhaengig - risk_gate.py nimmt bei bullischer These
-    stop_von/take_von, bei bearischer die gespiegelten _bis (Zeile 1082/1145).
+    Seit 03.08. nur noch ein Wrapper auf backward_tracking._zonen_absolut() -
+    die Formel stand vorher zweimal im Projekt (hier und dort) und waere beim
+    naechsten Eingriff auseinandergelaufen. Der Export liefert dicts, der
+    Produktivcode sqlite3.Row; _zonen_absolut() kommt mit beidem zurecht, weil
+    es Feldzugriffe ueber try/except kapselt.
     """
-    e_von, e_bis = r.get('entry_usd_von'), r.get('entry_usd_bis')
-    if e_von is None:
-        e_von = e_bis = r.get('entry_usd')
-    s_von, s_bis = r.get('stop_loss_usd_von'), r.get('stop_loss_usd_bis')
-    t_von, t_bis = r.get('take_profit_usd_von'), r.get('take_profit_usd_bis')
-    if None in (e_von, s_von, t_von):
-        return None
-    e = (e_von + (e_bis or e_von)) / 2
-    ist_short = t_von < e
-    if ist_short:
-        if s_bis is None or t_bis is None:
-            return None
-        stop, ziel = s_bis, t_bis
-    else:
-        stop, ziel = s_von, t_von
-    risiko = (stop - e) if ist_short else (e - stop)
-    chance = (e - ziel) if ist_short else (ziel - e)
-    if risiko <= 0 or e <= 0 or chance <= 0:
-        return None
-    return {'entry': e, 'stop': stop, 'ziel': ziel, 'ist_short': ist_short,
-            'risiko': risiko, 'crv': chance / risiko, 'stop_rel': risiko / e}
+    return _zonen_absolut(r)
 
 
 def _lauf(e: float, stop: float, ziel: float, short: bool, risiko: float,
@@ -93,11 +77,12 @@ def _lauf(e: float, stop: float, ziel: float, short: bool, risiko: float,
 
 
 def simuliere(z: dict, reihe: list[dict], ab_datum: str, horizont: int) -> dict | None:
-    """Nur auswerten, wenn die Reihe den vollen Horizont abdeckt (Kontrolle 1)."""
-    tage = [p for p in reihe if p['date'] >= ab_datum][:horizont + 1]
-    if len(tage) < horizont + 1:
-        return None
-    return _lauf(z['entry'], z['stop'], z['ziel'], z['ist_short'], z['risiko'], tage)
+    """Nur auswerten, wenn die Reihe den vollen Horizont abdeckt (Kontrolle 1).
+
+    Seit 03.08. Wrapper auf backward_tracking.simuliere_signal() - dieselbe
+    Begruendung wie bei zonen(): eine Implementierung, nicht zwei.
+    """
+    return simuliere_signal(z, reihe, ab_datum, horizont)
 
 
 def basislinie(reihen: dict, stop_rel: float, crv: float, short: bool,
