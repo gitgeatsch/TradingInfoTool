@@ -505,145 +505,151 @@ ist das zu begründen.
 
 ---
 
-## 6.7 Der Kostenrahmen — was der Plan unter welcher Annahme aussagt
+## 6.7 Der Kostenrahmen — Stand 04.08.2026, an der App verifiziert
 
-**Anlass:** Nutzer-Vorgabe 04.08. — es sollen **Standard-Hebeltrades werden,
-kein Scalping**; Kapital und Zeit bilden den Rahmen. Dazu die Feststellung,
-dass die beobachtete Haltedauer von ~1,1 Tagen eine *Information* ist, keine
-Vorgabe.
+**Anlass:** Nutzer-Vorgabe — es sollen **Standard-Hebeltrades** werden, kein
+Scalping; Kapital und Zeit bilden den Rahmen. Die beobachtete Haltedauer von
+~1,1 Tagen ist Information, keine Vorgabe.
 
-### Die offiziellen Sätze (recherchiert, nicht geschätzt)
+### Die gültigen Sätze
 
-**Bitpanda Leverage** (Blog von Bitpanda, direkt gelesen):
+**Maßgeblich ist die Kostentransparenz-Unterlage Version 4.0.0 vom
+08.07.2026.** An diesem Stichtag wurde umgestellt; die Produktbezeichnung in
+der App wechselte dabei mehrfach („Leverage" / „Margin Trading"), die
+Gebührenstruktur ist aber eindeutig.
 
-| | |
+| | aktuell (ab 08.07.2026) | vorher |
+|---|---|---|
+| Kauf / Trading | **0 %** (in der App bestätigt: „Tradinggebühr 0,00 €") | 0 % |
+| **Tagesgebühr** | **0,18 % / Tag**, alle 4 h anteilig (0,03 % je 4 h) | 0,1 % / Tag |
+| Staffelung | 0,18 % bis Tag 60 · 0,12 % bis 100 · 0,06 % bis 180 · 0,0312 % ab 181 | keine |
+| Schließung | **0,3 %** | 1 % |
+| Liquidation | 1 % zusätzlich | — |
+| Hebel | 2× / 3× / 5× / 10×, **nur Long** | 2× Long, 1× Short |
+
+**An einem echten App-Screen gegengeprüft** (100 EURCV, 3× Long LINK):
+Gesamtposition 300 €, geliehenes Kapital 200 €, Tagesgebühr 0,18 %,
+Tradinggebühr 0,00 €, Liquidation bei −28,67 %.
+
+Die Liquidations-Gegenrechnung geht auf und zeigt einen Wartungspuffer:
+42,10 LINK × 5,0831 € = 213,99 € Positionswert minus 200 € Schuld =
+**14 € Restkapital**. Liquidiert wird also bereits bei ~14 % verbliebenem
+Eigenkapital, nicht bei null.
+
+**Eine Unsicherheit bleibt:** Ob die 0,18 % auf das **geliehene Kapital**
+(200 €) oder das **Nominal** (300 €) gerechnet werden, sagt weder App noch
+Produktseite. Der Helpdesk-Wortlaut nennt *„0,18 % per day of the Borrowed
+E-Token"*, und das entspricht dem Marktstandard — Finanzierung zahlt man auf
+Geliehenes. **Alle Zahlen unten rechnen mit dem geliehenen Kapital**, die
+Nominal-Variante steht zum Vergleich daneben. Endgültig klärt es die erste
+tatsächlich abgerechnete Tagesgebühr an einer offenen Position.
+
+### Kosten am konkreten Beispiel (100 € Einsatz, 3×, Stop 4,42 %)
+
+Risiko der Position: 300 € × 4,42 % = **13,26 €** — das ist 1 R, und zugleich
+**13,3 % des eingesetzten Kapitals**.
+
+| Tage | Kosten (geliehen) | in R | in % Kapital | Kosten (Nominal) | in R |
+|---|---|---|---|---|---|
+| 1 | 1,26 € | **0,095** | 1,3 % | 1,44 € | 0,109 |
+| 3 | 1,98 € | **0,149** | 2,0 % | 2,52 € | 0,190 |
+| 7 | 3,42 € | **0,258** | 3,4 % | 4,68 € | 0,353 |
+| 14 | 5,94 € | **0,448** | 5,9 % | 8,46 € | 0,638 |
+| 21 | 8,46 € | **0,638** | 8,5 % | 12,24 € | 0,923 |
+
+**Was der Trade allein für die Kosten verdienen muss:**
+
+| Haltedauer | nötige Kursbewegung | in R |
+|---|---|---|
+| 1 Tag | 0,42 % | 0,095 |
+| 3 Tage | 0,66 % | 0,149 |
+| 7 Tage | 1,14 % | 0,258 |
+| 14 Tage | 1,98 % | 0,448 |
+
+### Der Befund
+
+**Der gemessene Erwartungswert von −0,104 R ist BRUTTO.** Die R-Multiples
+entstehen aus Zonen — reine Preisbewegung, ohne jede Gebühr. Netto:
+
+| Haltedauer | Netto-EW (geliehen) |
 |---|---|
-| Kaufgebühr | 0 % |
-| Schließungsgebühr | **1 %** |
-| Overnight-Gebühr | **0,1 % pro Tag auf den gehebelten Betrag** |
+| 1 Tag | −0,199 R |
+| 3 Tage | −0,254 R |
+| 7 Tage | **−0,362 R** |
+| 14 Tage | −0,552 R |
 
-**Bitpanda Margin Trading** (Positionen ab 08.07.2026; Helpdesk-Seite liefert
-403, Angaben daher aus zweiter Hand — **vor Verwendung an der Quelle
-bestätigen**):
+**Die Lücke zum Break-even ist damit nicht 0,104 R, sondern 0,20 bis 0,55 R —
+je nach Haltedauer das Zwei- bis Fünffache.** Und sie ist durch bessere
+Selektion allein nicht zu schließen: Die gemessene Spreizung zwischen
+durchgelassenen und vetoten Signalen beträgt 0,55 R und wäre bei 14 Tagen
+Haltedauer vollständig aufgebraucht, nur um die Finanzierung zu bezahlen.
 
-| | |
-|---|---|
-| Kaufgebühr | 0 % |
-| Schließungsgebühr | 0,3 % |
-| Zusatz bei Liquidation | 1 % |
-| Finanzierung | 0,18 %/Tag bis Tag 60, danach fallend (0,12 % bis 100, 0,06 % bis 180) |
+**Das ist der wichtigste Befund dieser Untersuchungsreihe.** Die Daten lagen
+vor, die Rechnung wurde nie gemacht.
 
-**Offene Frage, die den Betrag um ein Drittel verschiebt:** „auf den gehebelten
-Betrag" — Nominal oder nur der geliehene Anteil? Bei 3× wären das 100 % gegen
-67 %. Alle Zahlen unten gehen vom **Nominal** aus, also vom ungünstigeren Fall.
-
-### Kosten in R
-
-Die Umrechnung ist einfach und folgenreich:
+### Zwei Hebel, die dieselbe Formel aufzeigt
 
 ```
-Kosten in R  =  Kostensatz (% vom Nominal)  ÷  Stop-Abstand (% vom Preis)
+Kosten in R  =  Kostensatz  ÷  Stop-Abstand
 ```
 
-Mit dem gemessenen Median-Stop von **4,42 %**:
+**Erstens: weitere Stops senken die Kostenlast.** Damit die Kosten unter 0,15 R
+bleiben, müsste der Stop bei 3× sitzen bei
 
-| Tage | Leverage (1 % + 0,1 %/T) | Margin (0,3 % + 0,18 %/T) | günstiger |
+| Haltedauer | nötiger Stop |
+|---|---|
+| 3 Tage | 4,4 % |
+| 7 Tage | 7,6 % |
+| 14 Tage | 13,2 % |
+
+Der heutige Median-Stop von 4,42 % trägt rechnerisch **rund drei Tage**.
+
+**Zweitens: höherer Hebel kostet mehr pro R** — weil mehr geliehen wird,
+während das Risikobudget gleich bleibt (Kosten in R, 7 Tage, Stop 4,42 %):
+
+| Hebel | 1 Tag | 7 Tage | 14 Tage |
 |---|---|---|---|
-| 1 | 0,249 R | **0,109 R** | Margin |
-| 3 | 0,294 R | **0,190 R** | Margin |
-| 7 | 0,385 R | **0,353 R** | Margin |
-| 10 | **0,452 R** | 0,475 R | Leverage |
-| 14 | **0,543 R** | 0,638 R | Leverage |
-| 34 | **0,995 R** | 1,452 R | Leverage |
+| 2× | 0,088 | 0,210 | 0,353 |
+| **3×** | **0,095** | **0,258** | **0,448** |
+| 5× | 0,100 | 0,296 | 0,524 |
+| 10× | 0,105 | 0,324 | 0,581 |
 
-**Produktwechsel bei 8,8 Tagen:** darunter ist Margin günstiger, darüber
-Leverage. Leverage hat die hohe Fixgebühr (1 % Schließung), Margin die höhere
-Laufzeitgebühr.
+*(Korrigiert eine frühere Aussage in diesem Dokument: bei Bemessung auf das
+Nominal wäre der Hebel kostenneutral in R — bei Bemessung auf das Geliehene
+ist er es nicht.)*
 
-### Was das mit dem gemessenen Erwartungswert macht
+**Zusammen ergibt das ein stimmiges Bild für Standard-Trades:**
+Mehrtages-Positionen verlangen **weite Stops, hohe CRV-Ziele und eher
+niedrigen Hebel** — das Gegenteil von Scalping. Enge Stops sind doppelt teuer:
+häufiger getroffen *und* höhere Kostenlast pro R. Das stützt RM-1b
+(Mindeststop 2,5 %) und RM-1c (0,75× ATR) nachträglich mit einer zweiten,
+unabhängigen Begründung.
 
-**Der gemessene EW von −0,104 R ist BRUTTO.** Die R-Multiples entstehen aus
-Zonen (Entry/Stop/Ziel) — reine Preisbewegung, ohne jede Gebühr.
+### Die Zeitrahmen-Frage ist eine Kostenrechnung
 
-| Haltedauer | netto Leverage | netto Margin |
-|---|---|---|
-| 1 Tag | −0,353 R | −0,213 R |
-| 7 Tage | −0,489 R | −0,457 R |
-| 14 Tage | −0,647 R | −0,742 R |
+„1, 7 oder 14 Tage" lässt sich nicht unabhängig vom Stop-Abstand beantworten —
+die Kostenformel koppelt beide:
 
-**Die Lücke zum Break-even beträgt nicht 0,104 R, sondern rund 0,46 R bei
-7 Tagen Haltedauer.** Sie ist damit vier- bis siebenmal größer als bisher
-angenommen — und sie ist durch bessere Selektion nicht zu schließen. Die
-gemessene Spreizung zwischen durchgelassenen und vetoten Signalen beträgt
-0,55 R; sie müsste praktisch vollständig ausgeschöpft werden, nur um die
-Kosten zu bezahlen.
+- bei **4,42 % Stop** (heutiger Median) trägt der Trade etwa **3 Tage**
+- für **7 Tage** braucht es rund **7,6 %** Stop
+- für **14 Tage** rund **13,2 %**
 
-**Das ist der wichtigste Befund dieser Untersuchungsreihe.** Er war die ganze
-Zeit da und wurde nie gerechnet.
-
-### Der Hebel, den die Formel aufzeigt: weitere Stops
-
-Weil die Kosten durch den Stop-Abstand geteilt werden, sinken sie in R, wenn
-der Stop weiter sitzt:
-
-| Stop | Kosten 7 Tage (Margin) | Kosten 7 Tage (Leverage) |
-|---|---|---|
-| 2,5 % | 0,624 R | 0,680 R |
-| **4,4 % (heute)** | **0,353 R** | **0,385 R** |
-| 6,0 % | 0,260 R | 0,283 R |
-| 10,0 % | 0,156 R | 0,170 R |
-| 15,0 % | 0,104 R | 0,113 R |
-
-**Ein Stop von 10 % statt 4,4 % halbiert die Kostenlast in R mehr als.** Das
-ist kein Trick — bei gleichem Risikobudget bedeutet ein weiterer Stop eine
-kleinere Position, und die Gebühren skalieren mit der Position.
-
-**Damit ergibt sich ein in sich stimmiges Bild für Standard-Trades:**
-Kostenintensive Mehrtages-Positionen verlangen **weite Stops und hohe
-CRV-Ziele** — genau das Gegenteil von Scalping. Enge Stops sind bei diesem
-Gebührenmodell doppelt teuer: sie werden häufiger getroffen *und* sie
-vervielfachen die Kostenlast in R.
-
-Das stützt RM-1b (Mindeststop 2,5 %) und RM-1c (0,75× ATR) nachträglich mit
-einer zweiten, unabhängigen Begründung — sie wurden aus Trefferquoten-Gründen
-eingeführt, wirken aber auch als Kostenbremse.
-
-### Was der Plan unter welcher Annahme aussagt
-
-| Annahme | Folge für den Plan |
-|---|---|
-| **Produkt = Leverage, Haltedauer ~1 Tag** | Kosten 0,25 R. Netto-EW −0,35 R. Selektion allein reicht nicht. |
-| **Produkt = Margin, Haltedauer ~1 Tag** | Kosten 0,11 R. Netto-EW −0,21 R. Nächstliegend erreichbar. |
-| **Produkt = Margin, Haltedauer 7 Tage** | Kosten 0,35 R. Netto-EW −0,46 R. Nur mit deutlich weiteren Stops tragfähig. |
-| **Haltedauer 14+ Tage** | Kosten ≥ 0,54 R. **Bei 4,4 % Stop strukturell nicht tragfähig** — der Trade müsste über ein halbes Risikobudget allein an Gebühren verdienen. |
-| Gebühr nur auf den geliehenen Anteil | alle Werte ×0,67 bei 3× Hebel — ändert die Rangfolge nicht |
-
-### Was daraus für die Zeitrahmen-Frage folgt
-
-Die Frage „1, 7 oder 14 Tage" ist damit **keine Stilfrage mehr, sondern eine
-Kostenrechnung**:
-
-- Bei **4,4 % Stop** ist alles ab ~7 Tagen grenzwertig und ab 14 Tagen
-  strukturell defizitär.
-- Bei **10 % Stop** kostet ein 14-Tage-Trade 0,28 R statt 0,64 R — dann wird
-  Swing tragfähig.
-
-**Der Zeitrahmen und der Stop-Abstand lassen sich nicht getrennt festlegen.**
-Sie sind über die Kostenformel gekoppelt. Wer mehrtägige Standard-Trades will,
-braucht weitere Stops — sonst frisst die Finanzierung die These.
+**Wer mehrtägige Standard-Trades will, muss die Stops weiten.** Sonst frisst
+die Finanzierung die These, bevor sie aufgehen kann.
 
 ### Was im System dazu fehlt
 
 | | Lücke |
 |---|---|
-| 1 | **Kein Kostenmodell** in irgendeiner Messung |
-| 2 | **Keine Zieldauer-Angabe** am Signal. `halte_kriterium_bucket` ist eine Ablauffrist (14/45/120 T), `mindestziel_zeitraum_tage_geschaetzt` eine Volatilitätsrechnung (Median 1,5 T, nur 35 % befüllt) — beide sind keine Strategieangabe, und sie widersprechen einander |
-| 3 | **Kein Produkt-Kennzeichen** — Leverage oder Margin ist nirgends hinterlegt, obwohl die Gebühren sich um Faktor 2 unterscheiden |
-| 4 | Das LLM kennt die Kostenstruktur nicht und kann sie beim Zonensetzen nicht berücksichtigen |
+| 1 | **Kein Kostenmodell** in irgendeiner Messung — weder Backward-Tracking noch Simulation |
+| 2 | **Keine Zieldauer am Signal.** `halte_kriterium_bucket` ist eine Ablauffrist (14/45/120 T), `mindestziel_zeitraum_tage_geschaetzt` eine Volatilitätsrechnung (Median 1,5 T, nur 35 % befüllt). Beide sind keine Strategieangabe und widersprechen einander |
+| 3 | **Der Hebel geht nicht in die Kostenrechnung ein**, obwohl er sie bei Bemessung auf Geliehenes um ein Fünftel verschiebt |
+| 4 | **Das LLM kennt die Kostenstruktur nicht** und kann sie beim Setzen von Stop und Ziel nicht berücksichtigen |
+| 5 | Die Staffelung (0,18 → 0,12 → 0,06 %) ist nirgends hinterlegt — für Positionen über 60 Tage relevant |
 
 ### Quellen
 
-- [Introducing Bitpanda Leverage](https://blog.bitpanda.com/en/introducing-bitpanda-leverage) — 0 % Kauf, 1 % Schließung, 0,1 %/Tag (direkt gelesen)
-- [Bitpanda Margin Trading (Helpdesk)](https://support.bitpanda.com/hc/en-us/articles/21417526386588-Bitpanda-Margin-Trading) — 403, Angaben aus zweiter Hand, zu bestätigen
-- [Amplify your trading with Bitpanda Leverage](https://support.bitpanda.com/hc/en-us/articles/6242864492572-Amplify-your-trading-with-Bitpanda-Leverage)
-- Kosten im Backtest als Standard: [Crypto Perpetual Trading Strategy Backtest](https://stingray.fi/blog/crypto-perpetual-trading-strategy-backtest/)
+- [Bitpanda Margin Trading — Produktseite](https://www.bitpanda.com/en/margin-trading): 0 % Kauf, 0,18 %/Tag, 0,3 % Schließung, 1 % Liquidation, Hebel 2×–10×
+- [Kostentransparenz Krypto, Version 4.0.0 vom 08.07.2026](https://cdn.bitpanda.com/terms-and-conditions/cost-transparency-crypto-bitpanda-en-latest.pdf) (bildbasiert, nicht maschinell auslesbar)
+- [Introducing Bitpanda Leverage](https://blog.bitpanda.com/en/introducing-bitpanda-leverage) — alte Sätze (1 % / 0,1 %), historisch
+- App-Screen vom 04.08.2026 (100 EURCV, 3× Long LINK) — Gegenprobe der Positions- und Liquidationswerte
