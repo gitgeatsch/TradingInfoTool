@@ -596,7 +596,7 @@ Plattform.
 
 | | Frage | Methode |
 |---|---|---|
-| a | **Tut der Prüfer, wofür er gebaut ist?** Erkennt er echte Widersprüche zwischen `short_reasoning` und Fakten? | Trefferquote und Fehlalarmquote gegen eine Stichprobe, deren Widersprüche unabhängig festgestellt wurden — NICHT gegen Handelsergebnisse |
+| a | **Tut der Prüfer, wofür er gebaut ist?** | **Verfahren gebaut 04.08.** (`pruefe_gegenpruefung_trefferquote.py`): Widersprüche werden in die Begründung **eingebaut**, damit die Wahrheit bekannt ist. Gemessen werden Trefferquote *und* Fehlalarmquote — eine allein ist wertlos, ein Dauermelder hätte 100 % Treffer. Sechs Verfälschungen in drei Schweregraden (plump/mittel/fein). Selbsttest gegen drei nachgebildete Prüfer bestanden. **Echter Lauf offen** (braucht den Z.ai-Schlüssel) |
 | b | ~~Warum liegt die Abdeckung bei 40,7 %?~~ | **beantwortet 04.08.: kein Problem.** Vor dem 27.07. 2,6 % (Feature existierte nicht), ab 27.07. **96,5 %** (576/597). Die 40,7 % waren ein Mittelwert über einen Zeitraum, in dem es die Funktion zur Hälfte nicht gab. Restlücke ~3,5 % ohne Tages- oder Symbolmuster — plausibel Zeitüberschreitungen der asynchronen Prüfung |
 | c | Was kostet sie an Budget und Laufzeit? | gegen den Nutzen aus (a) stellen |
 | d | Welche Rolle soll sie künftig haben? | offen — laut Regelwerksmanual käme ein Gate nur infrage, wenn sich die Prüfung über Zeit als treffsicher erweist |
