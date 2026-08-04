@@ -536,13 +536,50 @@ Die Liquidations-Gegenrechnung geht auf und zeigt einen Wartungspuffer:
 **14 € Restkapital**. Liquidiert wird also bereits bei ~14 % verbliebenem
 Eigenkapital, nicht bei null.
 
-**Eine Unsicherheit bleibt:** Ob die 0,18 % auf das **geliehene Kapital**
-(200 €) oder das **Nominal** (300 €) gerechnet werden, sagt weder App noch
-Produktseite. Der Helpdesk-Wortlaut nennt *„0,18 % per day of the Borrowed
-E-Token"*, und das entspricht dem Marktstandard — Finanzierung zahlt man auf
-Geliehenes. **Alle Zahlen unten rechnen mit dem geliehenen Kapital**, die
-Nominal-Variante steht zum Vergleich daneben. Endgültig klärt es die erste
-tatsächlich abgerechnete Tagesgebühr an einer offenen Position.
+**Bemessungsgrundlage: das geliehene Kapital — an eigenen Daten belegt.**
+Weder App noch Produktseite sagen es ausdrücklich; der Helpdesk-Wortlaut nennt
+*„0,18 % per day of the Borrowed E-Token"*. Nachgerechnet an **104 echten,
+geschlossenen Positionen** aus dem Bitpanda-Transaktionsexport (Tag
+`margin_trading.fee`, 315 Buchungen):
+
+Der implizite Satz fällt mit steigender Haltedauer — die Signatur einer
+Fixgebühr plus Tagesrate in derselben Buchung. Per Regression getrennt
+(`Gebühr / Bezugsgröße = a + b × Haltetage`):
+
+| Bezugsgröße | Fixgebühr geschätzt | offiziell (alte Sätze) | Treffer |
+|---|---|---|---|
+| **Kredit** | **1,081 %** | **1,00 %** | **ja** |
+| Nominal | 0,624 % | 1,00 % | nein, 38 % daneben |
+
+Auf Kreditbasis trifft die geschätzte Schließungsgebühr den offiziellen Wert
+nahezu punktgenau. **Alle Zahlen unten rechnen deshalb mit dem geliehenen
+Kapital**; die Nominal-Variante steht nur noch als Obergrenze daneben.
+
+*Was die Regression NICHT klären konnte:* die Tagesrate (R² ≈ 0). Die in Krypto
+abgebuchten Gebühren werden mit dem Einstandspreis in Euro umgerechnet, was bei
+volatilen Coins stark rauscht, und kurze Haltedauern lassen die Fixgebühr
+dominieren. **Seit dem Stichtag 08.07.2026 liegen erst 3 Positionen vor** — die
+0,18 %/Tag sind offiziell belegt, aber noch nicht an eigenen Daten verifiziert.
+
+### Kosten sind nicht Steuer — die Abgrenzung
+
+Bitpanda ist steuereinfach, die KESt wird automatisch einbehalten. Für diese
+Rechnung ist der Unterschied wesentlich:
+
+| | fällt an | Wirkung |
+|---|---|---|
+| **Gebühren und Finanzierung** | **immer**, auch beim Verlusttrade | verschieben den **Break-even** |
+| **KESt** | nur auf **realisierte Gewinne** | verschiebt den Break-even **nicht**, mindert den Ertrag darüber |
+
+Die Steuer macht die Break-even-Analyse also nicht kaputt — sie beantwortet
+eine andere Frage („was bleibt übrig") als die hier gestellte („ab wann trägt
+sich ein Trade"). Beides darf nicht in einen Topf.
+
+**Stablecoin-Swaps sind in Österreich steuerfrei.** Der Kredit läuft in EURCV,
+also sind die Buchungen `margin_trading.borrow` und `.repay` steuerneutral —
+sie erscheinen im Transaktionsexport, dürfen aber weder als Kapitalfluss noch
+als steuerliches Ereignis gewertet werden. Im Gebühren-Tag steckt keine Steuer
+(geprüft: nur eine einzelne verdächtige Buchung, außerhalb der Margin-Tags).
 
 ### Kosten am konkreten Beispiel (100 € Einsatz, 3×, Stop 4,42 %)
 
