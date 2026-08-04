@@ -852,6 +852,64 @@ nicht in Stein. Deshalb wird die Kelly-Zahl als Empfehlung **neben** der
 sichtbaren RM-1-Obergrenze ausgewiesen und nicht als alleinige Vorgabe — die
 Spanne bleibt sichtbar und einordenbar.
 
+### 2.12 Sieben Messfallen aus einem Tag (Nachtrag 04.08.2026)
+
+Alle sieben sind an einem einzigen Arbeitstag aufgetreten, sechs davon in
+eigener Arbeit und vor dem Deploy gefunden. Sie sind hier festgehalten, weil
+jede von ihnen ein *plausibles Ergebnis* erzeugt hat — keine Fehlermeldung,
+kein Absturz. Genau das macht sie gefährlich.
+
+**1. Gegen den ZWECK messen, nicht gegen das Ergebnis.**
+Ich habe die Z.ai-Gegenprüfung — einen *Konsistenzprüfer* — gegen
+Handelsergebnisse gestellt und geschlossen, sie trage nichts bei. Sie sagt
+aber gar nichts über Ausgänge, sondern nur, ob eine Begründung den Fakten
+widerspricht. **Vor jeder Bewertung eines Bausteins nachlesen, wofür er
+gebaut wurde.** Ein Rechtschreibprüfer sagt Kurse nicht vorher, und das ist
+kein Mangel.
+
+**2. Kein Mittelwert über einen Zeitraum, in dem es das Feature nicht gab.**
+„Z.ai-Abdeckung 40,7 %" war ein Artefakt: vor dem Rollout 2,6 %, danach
+96,5 %. **Bei jeder Abdeckungs- oder Quotenangabe zuerst nach Datum
+aufschlüsseln.** Kosten: zehn Sekunden.
+
+**3. Anpassungsverfahren brauchen den Arm „gar keine Anpassung".**
+Die Frage „welche Fensterlänge ist die beste?" liefert immer eine Antwort.
+Erst der feste Vergleichsarm zeigte, dass **kein** Fenster den festen Wert
+schlägt — die Anpassung selbst war der Fehler, nicht ihre Parametrierung.
+
+**4. LLM-Prompt-Änderungen brauchen einen Rauschboden.**
+Ein LLM antwortet auf denselben Prompt nie zweimal gleich. Zwei Arme (mit /
+ohne) finden deshalb bei *jeder* Änderung eine „Wirkung". Drei Arme sind
+Pflicht: A1, A2 (identisch zu A1) und B. Nur was über A1↔A2 hinausgeht,
+ist Wirkung.
+
+**5. Absolute Preisfelder sind Symbol-Kennungen.**
+`entry_usd_von` und Geschwister haben eine Intraklassen-Korrelation von
+0,998–1,000 — BTC kostet fünfstellig, KAIA Cent. Eine Merkmalssuche darauf
+findet „Symbol X war gut", verkleidet als Regel. **Vor jeder Merkmalssuche
+die ICC prüfen**, nicht nur eine Namensliste pflegen: die Liste ist nie
+vollständig.
+
+**6. Währungsfilter bei Kursreihen aus dem Export.**
+`preishistorie_je_symbol` führt EUR- und USD-Zeilen **verschachtelt**. Ohne
+Filter misst man die Sprünge dazwischen: 15,08 % = ln(1/0,86) = der
+EUR/USD-Kurs, ausgewiesen als „Tagesvolatilität", für jedes Symbol nahezu
+gleich. Aufgefallen ist es nur daran, dass die „Verteilung" keine war.
+**Eine unplausibel enge Streuung ist ein Messfehler-Signal.**
+Die Produktion ist nicht betroffen (`lade_kursreihen()` filtert auf USD).
+
+**7. Skripte aus dem Scratchpad sind keine Module.**
+Eine übernommene Datei stand als Modulcode da und startete bei **jedem
+Import** einen Lauf über 12.421 Einstiege. `py_compile` und `ast.parse` waren
+grün — siehe schon 1.4. **Der Import-Regressionscheck gehört vor jeden
+Deploy**, und er misst auch die Import-*Dauer*, nicht nur den Erfolg.
+
+**Übergreifend:** Fünf der sieben Fehler wurden von einem Prüfstand gefunden,
+nicht von echten Daten. Der Aufwand für synthetische Prüfstände mit bekannter
+Wahrheit hat sich an diesem einen Tag mehrfach zurückgezahlt.
+
+---
+
 ## 3. Verwandte Dokumente
 
 - [[Fakten_Entscheidungsmappe.md]] - Entscheidungsraster für Fakten/Prompt-Regeln
