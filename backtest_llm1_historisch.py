@@ -134,7 +134,30 @@ def baue_historische_fakten(sym: str, reihe: list[Kerze], i: int,
     snap = build_technical_snapshot(closes, dates, hist)
 
     def w(res):
-        v = latest_value(res)
+        """Letzter Wert eines Indikators - auch wenn er mehrere Reihen fuehrt.
+
+        MACD und Bollinger liefern ein dict von Reihen (macd/signal/histogram
+        bzw. upper/middle/lower), kein einzelnes Array. latest_value() erwartet
+        ein Array und wirft dort einen TypeError - das hat den ersten Lauf
+        abgebrochen. Hier wird das dict aufgeloest, damit die Fakten dieselbe
+        Aussage tragen wie im Betrieb."""
+        if res is None or not getattr(res, "available", False):
+            return None
+        wert = res.value
+        if isinstance(wert, dict):
+            raus = {}
+            for name, reihe in wert.items():
+                try:
+                    v = latest_value(type(res)(reihe, True))
+                except Exception:
+                    v = None
+                if v is not None and math.isfinite(float(v)):
+                    raus[name] = round(float(v), 6)
+            return raus or None
+        try:
+            v = latest_value(res)
+        except Exception:
+            return None
         return None if v is None else round(float(v), 6)
 
     # BTC-Trend historisch: EMA-Staffel am selben Tag, nicht der heutige Wert
