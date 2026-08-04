@@ -488,7 +488,7 @@ ehrliche Grundlinie voraus — ohne Phase 0 optimieren sie auf zu gute Zahlen.
 |---|---|---|
 | 3.1 | Positionsgröße #606 (Kelly-Empfehlung + RM-1-Obergrenze) | entschieden 04.08., nicht gebaut |
 | 3.1b | **Spot auf CRV-Positionsgröße umstellen** (Gate behalten nur beim Hebel) | **gebaut und verifiziert 04.08.** — stufenlose Abstufung, CRV 2,0 → 20 % / 3,0 → 40 % / 4,0 → 60 % / ab 6,0 volle Größe. Noch nicht deployed |
-| 3.2 | **Ausstiegsregel** — siehe unten | neu 04.08. |
+| 3.2 | **Ausstiegsregel** — Trailing-Stop ab +1R, Abstand 1R | **gemessen und gebaut 04.08.** — EW −0,176 → −0,084 R, SQN −3,07 → −1,59; Block-Bootstrap [+0,051; +0,131] R. Notification-Verdrahtung offen |
 | 3.3 | **Gleitendes Gate = Expectancy-Gate = CRV-Breakeven-Bänder** | Messung steht, kein Aufrufer |
 
 **3.1b/3.3 — was am 04.08. beim Umschreiben dieses Plans herausgefallen war**
