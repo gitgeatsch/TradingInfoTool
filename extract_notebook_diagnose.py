@@ -584,6 +584,33 @@ def _rohdaten_fuer_backtest(conn) -> dict:
     #
     # Mit dem Ergebnis verknuepfbar ueber hebel_signals.hebel_trigger_id;
     # ohne diese Verbindung waere der Export Selbstzweck.
+    # Makro- und OI-Historie fuer den LLM1-Backtest (2026-08-04).
+    #
+    # WOFUER. Der historische Backtest (backtest_llm1_historisch.py) baut
+    # Faktensaetze aus der Kurshistorie. Was fehlt, sind genau die
+    # Gegenindikatoren, die im Betrieb das HALTEN ausloesen: Funding-Rate,
+    # Open Interest, Fear&Greed, Long-Konten-Anteil. Ohne sie eroeffnete das
+    # Modell im ersten Lauf in 36 von 36 Faellen - im Betrieb sind es 35 %.
+    # Beide Tabellen fuehren die Werte taeglich, sie waren nur nie exportiert.
+    #
+    # REICHWEITE beachten: macro_snapshot beginnt erst im Juli 2026, die
+    # Kurshistorie reicht 748 Tage. Der Backtest muss also entscheiden,
+    # ob er lange Fenster mit duennen oder kurze mit vollen Fakten will.
+    macro_historie = [
+        row_to_dict(r) for r in conn.execute(
+            "SELECT date, btc_dominance_pct, fear_greed_value, fear_greed_label, "
+            "btc_trend_label, regime_reason, zyklus_risiko, liquiditaets_regime, "
+            "vix_wert, dollar_index_wert, dollar_index_trend "
+            "FROM macro_snapshot ORDER BY date ASC"
+        ).fetchall()
+    ]
+    oi_historie = [
+        row_to_dict(r) for r in conn.execute(
+            "SELECT symbol, exchange, open_interest, open_interest_usd, "
+            "funding_rate, long_account_pct, fetched_at "
+            "FROM open_interest_snapshot ORDER BY fetched_at ASC"
+        ).fetchall()
+    ]
     hebel_triggers_alle = [
         row_to_dict(r) for r in conn.execute(
             "SELECT id, symbol, richtung, screened_at, trigger_zweig, "
@@ -633,6 +660,8 @@ def _rohdaten_fuer_backtest(conn) -> dict:
     return {
         "hebel_triggers_kandidaten": hebel_triggers_kandidaten,
         "hebel_triggers_alle": hebel_triggers_alle,
+        "macro_historie": macro_historie,
+        "oi_historie": oi_historie,
         "marktscan_kaufkandidaten": marktscan_kaufkandidaten,
         "marktscan_alle_kandidaten": marktscan_alle_kandidaten,
     }

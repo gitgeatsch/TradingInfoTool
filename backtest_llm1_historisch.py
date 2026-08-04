@@ -34,13 +34,24 @@ ab, BEVOR irgendein Indikator gerechnet wird. Ohne das waere der ganze
 Backtest wertlos, und der Fehler waere in den Ergebnissen nicht zu sehen -
 sie saehen nur verdaechtig gut aus.
 
-WAS NICHT REKONSTRUIERBAR IST, und das ist die ehrliche Grenze: Regime,
-Funding-Rate, Open Interest und Fear&Greed werden historisch nicht
-gespeichert. Kursbasierte Fakten sind echt (Preis, EMA, MACD, RSI,
-Bollinger, ATR, Swings, BTC-Trend), der Rest fehlt oder ist genaehert. Der
-Faktensatz ist also duenner als im Betrieb - fuer den VERGLEICH zweier
-Varianten ist das unkritisch, weil beide denselben bekommen. Fuer eine
-Aussage ueber die absolute Guete waere es das nicht.
+ANREICHERUNG NACH DEM ERSTEN LAUF (04.08.). Der erste Faktensatz war so
+duenn, dass das Modell in 36 von 36 Faellen eroeffnete - im Betrieb sagt es
+zu 65 % HALTEN. Ohne Gegenindikatoren fehlt ihm der Grund zurueckzuhalten,
+und der Backtest mass dadurch ZONENQUALITAET statt SELEKTIVITAET. Ergaenzt
+wurden deshalb, alles rein kursbasiert und damit fuer die vollen 748 Tage
+verfuegbar: Konfluenz (im Betrieb Pflicht-Pruefpunkt und Ausloeser des
+Positionsgroessen-Deckels bei "gemischt"), Fibonacci, Liquiditaetszonen und
+der BTC-Relativwert ueber 30 Tage.
+
+WAS WEITERHIN FEHLT: Funding-Rate, Open Interest, Fear&Greed und
+Long-Konten-Anteil. Sie liegen in der DB (macro_snapshot,
+open_interest_snapshot, beide taeglich), sind aber noch nicht im Export -
+und sie reichen nur bis Juli 2026 zurueck, waehrend die Kurshistorie 748 Tage
+umfasst. Daraus folgt ein Zielkonflikt, der bewusst zugunsten der Reichweite
+entschieden ist: lange Fenster mit kursbasierten Fakten schlagen kurze
+Fenster mit vollstaendigen. Fuer den VERGLEICH zweier Varianten ist das
+unkritisch (beide bekommen denselben Satz), fuer eine Aussage ueber die
+absolute Guete waere es das nicht.
 
 Lauf: python -u backtest_llm1_historisch.py [--n 12] [--w 3]
 """
@@ -59,7 +70,9 @@ import numpy as np
 from agent.krypto.backward_tracking import gap_bewusster_fill
 from agent.krypto.hebel_analyst import SYSTEM_PROMPT
 from api.mistral import MistralClient
-from indicators.calculations import build_technical_snapshot, latest_value
+from indicators.calculations import (
+    build_technical_snapshot, latest_value, summarize_confluence,
+)
 
 ORDNER = r"K:\My Drive\Claude_Austauschordner\Notebook_Analysedaten"
 HORIZONT = 14          # Bewertungsfenster in Tagen, wie im Backward-Tracking
@@ -176,6 +189,25 @@ def baue_historische_fakten(sym: str, reihe: list[Kerze], i: int,
                 else:
                     btc_trend = "gemischt"
 
+    # ANREICHERUNG (2026-08-04, zweiter Lauf). Der erste Faktensatz war so
+    # duenn, dass das Modell in 36 von 36 Faellen eroeffnete - im Betrieb sagt
+    # es zu 65 % HALTEN. Ohne Gegenindikatoren fehlt ihm der Grund
+    # zurueckzuhalten, und der Backtest mass dadurch Zonenqualitaet statt
+    # Selektivitaet. Alles Folgende ist REIN KURSBASIERT und damit fuer die
+    # vollen 748 Tage rekonstruierbar - kein Makro-Wert, der die
+    # Vergleichbarkeit auf wenige Wochen einschraenken wuerde.
+    konf = summarize_confluence(snap, hist[-1].close)
+
+    # BTC-Relativwert: Vorsprung/Rueckstand gegenueber BTC ueber 30 Tage.
+    # Im Betrieb ein eigener Faktenblock, hier aus denselben Kursen abgeleitet.
+    btc_rel = None
+    if btc and len(hist) > 31:
+        bh = [k for k in btc if k.date <= hist[-1].date]
+        if len(bh) > 31:
+            eig = hist[-1].close / hist[-31].close - 1.0
+            ref = bh[-1].close / bh[-31].close - 1.0
+            btc_rel = {"vorsprung_30t_prozentpunkte": round((eig - ref) * 100, 2)}
+
     return {
         "asset": {"symbol": sym, "name": sym, "rolle": "historischer Backtest"},
         "preis": {"usd": round(hist[-1].close, 8), "aktualisiert_vor_min": 0},
@@ -185,11 +217,26 @@ def baue_historische_fakten(sym: str, reihe: list[Kerze], i: int,
             "bollinger": w(snap.bollinger), "atr": w(snap.atr),
             "atr_perzentil": w(snap.atr_percentile),
             "support_resistance": w(snap.support_resistance),
+            "fibonacci": snap.fibonacci,
+            # Der wichtigste Zusatz: die Konfluenz ist im Betrieb ein
+            # Pflicht-Pruefpunkt (Regel 13/22) und loest bei "gemischt" einen
+            # Positionsgroessen-Deckel aus. Sie fehlte bisher komplett.
+            "confluence": {
+                "gesamttendenz": konf.overall_bias,
+                "bullish": konf.bullish_count,
+                "bearish": konf.bearish_count,
+                "neutral": konf.neutral_count,
+                "nicht_verfuegbar": konf.unavailable_count,
+            },
         },
+        "liquiditaetszonen": w(snap.liquidity_zones),
+        "btc_relativwert": btc_rel,
         "regime": {"wert": "nicht rekonstruierbar", "quelle": "historischer Backtest",
                    "btc_trend": btc_trend},
         # AUSDRUECKLICH als fehlend markiert statt weggelassen - das Modell soll
-        # wissen, dass hier nichts steht, und nicht raten.
+        # wissen, dass hier nichts steht, und nicht raten. Die verbliebenen vier
+        # brauchen macro_snapshot/open_interest_snapshot; beide liegen in der
+        # DB, sind aber noch nicht im Export (siehe Commit vom 04.08.).
         "nicht_verfuegbar": ["funding_rate", "open_interest", "fear_greed",
                              "long_short_ratio", "historische_erfolgsquote"],
         "position_aktuell": None,
