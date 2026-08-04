@@ -484,6 +484,67 @@ Competing-Risks-Schätzer widerlegt, wo echte Daten schwiegen.
 Positionsgröße (#606), Ausstiegsregel, gleitendes Gate. Alle drei setzen eine
 ehrliche Grundlinie voraus — ohne Phase 0 optimieren sie auf zu gute Zahlen.
 
+| | Maßnahme | Stand |
+|---|---|---|
+| 3.1 | Positionsgröße #606 (Kelly-Empfehlung + RM-1-Obergrenze) | entschieden 04.08., nicht gebaut |
+| 3.2 | **Ausstiegsregel** — siehe unten | neu 04.08. |
+| 3.3 | Gleitendes Gate | offen |
+
+**3.2 Die Ausstiegsregel — warum sie hierher gehört und nicht nach vorn**
+
+Gemessen am 04.08.: Signale lösen nach **2,57 T** auf, gehandelt wird nach
+**0,30 T** (75 % unter einem Tag). Zugleich standen **50 % bei +1R, aber nur
+17,6 % kamen an** — wer bis zur Barriere hält, gibt regelmäßig zurück, was
+schon da war.
+
+**Beides zusammen heißt: der Ausstieg ist ein echter Hebel, aber er ist noch
+nicht entscheidbar.** Es fehlt die Grundlage:
+
+| | fehlt |
+|---|---|
+| a | Ein Feld, das eine **Zieldauer** trägt. `halte_kriterium_bucket` ist eine Ablauffrist, `mindestziel_zeitraum_tage_geschaetzt` eine Volatilitätsrechnung — beide keine Strategieangabe, und sie widersprechen einander |
+| b | Eine **Messung des Ist-Ausstiegs** — die Entscheidung liegt heute vollständig außerhalb des Systems |
+| c | Die Volatilität taugt **nicht** als Dauer-Prognose (belegt in 6.7, Trennschärfe 95 %, rho ≈ 0 mit echtem σ) |
+
+**Deshalb bewusst NACH Phase 1.** Der Ausstieg verändert das Ergebnismaß, an
+dem der Vorfilter kalibriert wird. Beides gleichzeitig zu bewegen macht jede
+Kalibrierung unbeurteilbar.
+
+> **Feste Messkonvention bis dahin:** Der Vorfilter wird gegen *„Barriere
+> erreicht innerhalb 14 Tagen, Bewertung zum Schlusskurs"* kalibriert — das
+> Maß von `compute_systemguete()`. Diese Konvention wird während Phase 1
+> **nicht** geändert. Wird sie später geändert, sind alle Phase-1-Ergebnisse
+> neu zu rechnen; das ist der Preis und er ist bewusst akzeptiert.
+
+**Einstiegsdaten sind NICHT der Engpass — geprüft am 04.08.**
+
+Feldinventur auf der kalibrierbaren Population (86 durchgelassene und 327
+vetote aufgelöste Hebel-Signale):
+
+| | Anzahl |
+|---|---|
+| **auf beiden Seiten ≥ 60 % befüllt — für Phase 1 brauchbar** | **49 Felder** |
+| davon zu 100/100/100 % | `confidence_pct`, `trigger_score`, `forecast_bull/base/bear_prob_pct`, `top_grund_1–5_kategorie`, `regime`, `richtung`, `trade_thesis_typ`, `halte_kriterium_*`, alle Zonen |
+| einseitig, für real/schatten-Vergleich **unbrauchbar** | `hebel_final`, `eigenkapitalbedarf_*`, `liquidationspreis_geschaetzt_usd` (0 % im Schatten) — strukturell, sie entstehen erst nach dem Gate |
+| zu dünn | Z.ai-Felder (15–26 %), `mindestziel_*` (8–23 %), ATR (0 % auf aufgelösten) |
+
+**Damit ist Phase 0.1 kein Vorläufer von Phase 1.** Die vier dort genannten
+Exportfelder werden für die Ausschuss-Hypothese nicht gebraucht; 49 Felder
+liegen an. Phase 0.1 bleibt sinnvoll, aber sie blockiert nichts.
+
+### Abbruchregel gegen den Deadloop (04.08.)
+
+Diese Untersuchungsreihe läuft seit Tagen und hat bisher jede Analyse mit dem
+Grund für die nächste beendet. Ab sofort gilt:
+
+1. **Eine Messung wird nur begonnen, wenn vorher benannt ist, welche
+   Entscheidung von ihrem Ergebnis abhängt.** Fällt die Entscheidung bei jedem
+   möglichen Ausgang gleich aus, entfällt die Messung.
+2. **Ein Nebenbefund erzeugt keine neue Messung**, sondern eine Zeile in
+   diesem Dokument.
+3. **„n zu klein" ist kein Abschluss** (stehende Vorgabe) — aber „Trennschärfe
+   simuliert, Effekt nicht vorhanden" ist einer, und zwar ein endgültiger.
+
 ### Was NICHT weiterverfolgt wird
 
 Unverändert gegenüber 6.4: Nur-Long lockern (reale Broker-Vorgabe),
@@ -748,6 +809,86 @@ bleibt jede Vorgabe folgenlos, weil kein Feld sie trägt.
 | 4 | **Das LLM kennt die Kostenstruktur nicht** und kann sie beim Setzen von Stop und Ziel nicht berücksichtigen | **offen** — der Faktor existiert jetzt deterministisch, die Weitergabe in den Prompt fehlt |
 | 6 | **Spot-Kosten sind nicht belegt** — nur 348 von 3578 Trades tragen eine explizite Gebührenbuchung (`vsn_fee`, Median 1,03 % je Seite), bei den übrigen steckt sie im Spread und ist ohne Marktmitte nicht messbar | **offen** — als Annahme geführt und als solche gekennzeichnet (`kosten_belegt=False`) |
 | 7 | **Die Tagesrate 0,18 %/Tag ist offiziell belegt, aber nicht an eigenen Daten verifiziert** — seit dem Stichtag 08.07.2026 liegen erst 3 Positionen vor | **offen** — klärt sich mit der Zeit von selbst |
+
+### Der Zeitrahmen 0–5 Tage — Bewertung vom 04.08.
+
+**Vorgabe des Nutzers:** Trades unter einem Tag sollen *möglich* sein, aber
+nicht Standard. Der Rahmen ist **0 bis max. 5 Tage**.
+
+> **Korrektur meiner eigenen Darstellung.** Die 7 und 14 Tage weiter oben sind
+> **Messhorizonte, keine Sollwerte**. Die daraus abgeleitete Forderung „wer
+> Mehrtages-Trades will, muss die Stops weiten" gilt für 7–14 Tage und ist für
+> den Rahmen 0–5 Tage gegenstandslos.
+
+**Wir sind bereits im Rahmen:** Signale lösen im Median nach **2,57 Tagen**
+auf, **68 %** innerhalb von 0–5 Tagen. Der Stop trägt rechnerisch 3,3 Tage.
+Für den Zeitrahmen ist **keine Stop-Änderung nötig**.
+
+#### Die Volatilitätsthese: Mechanismus richtig, als Prognose untauglich
+
+Die Zeit bis zur Barriere folgt der Diffusionsnäherung
+
+```
+T  ≈  c × (Stop-Abstand ÷ Tagesvolatilität)²        k := Stop ÷ σ
+```
+
+Eigene Simulation (3000 Pfade je Stützstelle, 24 Schritte/Tag): **c ≈ 2,0,
+stabil über k = 0,8 bis 2,5.** Der Mechanismus existiert.
+
+Auf unseren Daten trägt er aber **nicht als Vorhersage**:
+
+| Prüfung | Ergebnis |
+|---|---|
+| Rangkorrelation k² ↔ Haltedauer | +0,300 (n=47) |
+| einfacher Permutationstest | p = 0,039 |
+| **symbolgeblockt** (16 Symbole) | **p = 0,194 — nicht gesichert** |
+| **Trennschärfe, simuliert** | **95 %** — n=47 hätte gereicht |
+| mit σ **während** des Trades (nicht vorhersagbar) | rho ≈ **0** (n=26) |
+
+**Da die Trennschärfe bei 95 % liegt, ist p = 0,194 kein Datenmangel, sondern
+ein echter Unterschied zum Modell** (simuliertes rho +0,57 gegen gemessene
++0,30). Die Ordnung der Haltedauern lässt sich mit k² nicht herstellen — auch
+nicht mit perfekter Kenntnis der Volatilität im Trade.
+
+**Was dagegen sauber herauskommt:** Eichfaktor mit Rückblick-σ **c = 1,18**,
+mit tatsächlichem σ **c = 1,88** (nahe der simulierten 2,0). **Die
+Volatilität während unserer Trades liegt rund 30 % über der Schätzung aus 20
+Rückblicktagen** — Signale feuern in erhöhte Volatilität hinein, deshalb lösen
+sie schneller auf als jede naive Rechnung sagt.
+
+**Das ATR-Feld kann das nicht ersetzen:** `atr_relativ_prozent_bei_signal` ist
+bei 307 von 1471 Signalen befüllt, aber bei **null aufgelösten** — als
+Prädiktor derzeit nicht bewertbar.
+
+#### Warum die kurzen Trades kein Defekt sind
+
+Gehandelt wird bei **0,30 Tagen** Median, 75 % unter einem Tag. Das steht
+gegen 2,57 Tage Signal-Auflösung — Positionen werden geschlossen, bevor die
+These entschieden ist.
+
+**Daraus folgt aber nicht, dass das falsch wäre.** Der Befund vom 04.08.
+(#615/#618) sagt: **50 % standen bei +1R, nur 17,6 % kamen an.** Wer bis zur
+Barriere hält, gibt regelmäßig zurück, was schon da war. Ein Ausstieg nach
+Stunden kann genau das einsammeln.
+
+> **Belegbar ist heute weder das eine noch das andere** — weil die
+> Ausstiegsentscheidung außerhalb des Systems liegt: keine Regel, keine
+> Messung, kein Feld. Das ist die eigentliche Lücke, nicht die Haltedauer.
+
+#### Ein Messfehler, der fast durchgegangen wäre
+
+Die erste Volatilitätsmessung ergab 14 % Tagesvolatilität für **jedes**
+Kryptosymbol (Quartile 13,44/13,84 — fast eine Konstante). Ursache: die
+Kursreihen im Notebook-Export führen **EUR- und USD-Zeilen verschachtelt**
+(je 88 bei AIOZ). Gemessen wurde der Sprung zwischen den Währungen —
+15,08 % = ln(1/0,86) = der EUR/USD-Kurs.
+
+**Die Produktion ist nicht betroffen** (`lade_kursreihen()` filtert auf USD),
+nur Auswertungen direkt auf `preishistorie_je_symbol`. Aufgefallen ist es
+allein daran, dass die „Verteilung" keine war.
+
+> **Lehre für künftige Auswertungen des Exports: immer auf eine Währung
+> filtern.** Und: eine unplausibel enge Streuung ist ein Messfehler-Signal.
 
 ### Quellen
 
