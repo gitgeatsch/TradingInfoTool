@@ -44,15 +44,31 @@ NUR KRYPTO. Wertpapiere (3QSS, DBPK, VSN) laufen ueber yfinance
 Unterscheidung laeuft ueber `assetklasse`, nicht ueber das Fehlen eines
 Kraken-Paares - sonst wuerde diese Funktion Aktien bei CoinGecko suchen.
 
-KOSTEN. Ein Abruf je Symbol und Lauf, taeglich, fuer rund sieben Symbole.
-Gegen das CoinGecko-Kontingent (siehe api/coingecko.py) faellt das nicht ins
-Gewicht; die Drossel des Clients gilt unveraendert.
+KOSTEN, gegen das echte Kontingent gerechnet (Stand 03.08.):
+
+    Monatslimit (Demo-Plan)                     10.000
+    rechnerisches Tagesbudget (/31)                322
+    tatsaechlicher Verbrauch 01.-04.08.    84 / 310 / 266 / 134
+
+An aktiven Tagen liegt der Verbrauch bei 96 % des Tagesbudgets - Spielraum gibt
+es also nur wenig. Diese Funktion kostet EINEN Abruf je betroffenem Symbol und
+Lauf, bei sieben Symbolen und taeglichem Intervall also 7 Calls/Tag = 217/Monat
+= 2,2 % des Limits. `days` beeinflusst die Kosten NICHT (CoinGecko zaehlt Calls,
+keine Datenmenge), deshalb wird gleich die volle Historie geholt.
+
+DER TEURE FALL WAERE EIN ANDERER, und dagegen schuetzt die Aktualitaetspruefung
+in fuelle_ohlc_aus_coingecko(): refresh_ohlc_job() laeuft bei veralteten Daten
+SOFORT an, nicht erst zum naechsten Intervall - jeder App-Neustart wuerde die
+sieben Abrufe sonst wiederholen. Liegt die Kerze von gestern bereits vor, wird
+gar nicht erst abgerufen.
+
+Die Minuten-Drossel des Clients (_respect_rate_limit) gilt unveraendert.
 """
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import database.db as db
 from api.kraken import KRAKEN_PAIR_MAP
@@ -124,6 +140,17 @@ def fuelle_ohlc_aus_coingecko(client, conn, asset,
         return FallbackResult(asset.symbol, 0, skipped=True,
                               reason="kein Fallback noetig (Kraken-Listing, "
                                      "keine Krypto-Klasse oder keine CoinGecko-ID)")
+    # KONTINGENT-SCHUTZ: liegt die Kerze von gestern schon vor, ist nichts zu
+    # holen. Ohne diese Pruefung kostet jeder App-Neustart erneut einen Abruf je
+    # Symbol - refresh_ohlc_job() laeuft bei veralteten Daten sofort an, nicht
+    # erst zum naechsten Intervall. Bei drei Neustarts an einem Tag waeren das
+    # 28 statt 7 Calls. Gestern statt heute als Massstab, weil CoinGecko die
+    # Tageskerze erst nach Tagesschluss vollstaendig liefert.
+    gestern = (datetime.now(timezone.utc) - timedelta(days=1)).date().isoformat()
+    vorhanden = db.get_last_ohlc_date(conn, asset.symbol, currencies[0])
+    if vorhanden is not None and vorhanden >= gestern:
+        return FallbackResult(asset.symbol, 0, skipped=True,
+                              reason=f"aktuell (letzte Kerze {vorhanden})")
     fetched_at = datetime.now(timezone.utc).isoformat()
     gesamt = 0
     fehler: list[str] = []
