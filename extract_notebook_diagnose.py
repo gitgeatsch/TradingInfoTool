@@ -553,10 +553,43 @@ def _rohdaten_fuer_backtest(conn) -> dict:
     In-Memory-SQLite-DB und ruft dieselben database/db.py-Funktionen auf
     wie der Live-Allocator (db.get_hebel_wartezeit_stunden_je_paar() etc.,
     ueber deren as_of-Parameter)."""
+    # Phase 0.1 (2026-08-04): Score-KOMPONENTEN mitexportieren.
+    #
+    # WOFUER. Der Screening-Score diskriminiert nicht (Event-Study 04.08.,
+    # nicht-monoton) und korreliert mit dem Ergebnis sogar -0,200, also
+    # invers. Ob das fuer den Gesamtscore gilt oder nur fuer einzelne seiner
+    # vier Komponenten (oi_aenderung, kursaenderung, funding_rate, konfluenz),
+    # laesst sich ohne `score_details_json` nicht sagen - die Frage stand seit
+    # dem 04.08. im Plan und wurde zweimal zurueckgestellt.
+    #
+    # ZWEI GETRENNTE SCHLUESSEL, bewusst keine Umdeutung des bestehenden.
+    # `hebel_triggers_kandidaten` bleibt exakt wie bisher (nur ist_kandidat=1,
+    # gleiche Spalten) - backtest_budget_allocator_sla.py simuliert damit den
+    # Allocator und SETZT VORAUS, dass es Kandidaten sind. Denselben Schluessel
+    # still mit anderer Bedeutung zu fuellen waere genau die stille
+    # Degradierung aus Methodik 2.5.8: der Backtest liefe weiter und waere
+    # falsch.
     hebel_triggers_kandidaten = [
         row_to_dict(r) for r in conn.execute(
             "SELECT id, symbol, richtung, screened_at, score_gesamt, status "
             "FROM hebel_triggers WHERE ist_kandidat = 1 ORDER BY screened_at ASC"
+        ).fetchall()
+    ]
+    # NEU und OHNE Schwellenfilter: nur hierauf laesst sich die Frage "trennt
+    # der Score ueberhaupt?" beantworten. Wer nur die Ueberschwelligen
+    # betrachtet, misst in einem beschnittenen Wertebereich - derselbe Fehler
+    # hat am 02.08. den CRV-Gate-Befund entwertet (Survivorship) und am 04.08.
+    # die Volatilitaetsauswertung beinahe.
+    #
+    # Mit dem Ergebnis verknuepfbar ueber hebel_signals.hebel_trigger_id;
+    # ohne diese Verbindung waere der Export Selbstzweck.
+    hebel_triggers_alle = [
+        row_to_dict(r) for r in conn.execute(
+            "SELECT id, symbol, richtung, screened_at, trigger_zweig, "
+            "score_gesamt, score_details_json, oi_change_pct_lookback, "
+            "kursaenderung_pct_lookback, funding_rate_aktuell, "
+            "long_konten_anteil_prozent, ist_kandidat, status "
+            "FROM hebel_triggers ORDER BY screened_at ASC"
         ).fetchall()
     ]
     marktscan_kaufkandidaten = [
@@ -598,6 +631,7 @@ def _rohdaten_fuer_backtest(conn) -> dict:
     ]
     return {
         "hebel_triggers_kandidaten": hebel_triggers_kandidaten,
+        "hebel_triggers_alle": hebel_triggers_alle,
         "marktscan_kaufkandidaten": marktscan_kaufkandidaten,
         "marktscan_alle_kandidaten": marktscan_alle_kandidaten,
     }
