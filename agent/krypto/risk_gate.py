@@ -1293,6 +1293,49 @@ def post_check(
                     max_usd * crv_knapp_deckel_anteil,
                 ))
 
+            # Stufenlose CRV-Abstufung, NUR SPOT (2026-08-04).
+            #
+            # WOFUER. Bis heute hatte die CRV-Abstufung genau eine Stufe: unter
+            # 2,0 Veto, 2,0-2,4 Deckel auf 60 %, ab 2,4 gar nichts mehr. Ein
+            # CRV von 2,5 und eines von 6,0 bekamen dieselbe Groesse. Messung
+            # vom 03.08. an 298 Spot-Signalen: das Gate entfernt bei Spot nur
+            # 12 %, beisst also kaum; die Groesse ist dort der wirksame Hebel.
+            # Mit 5-facher Spreizung stieg SQN von +0,63 auf +1,36, die Summe
+            # von +9,8 auf +23,1 R, und der Rueckschlag SANK von 36,3 auf
+            # 27,1 R - besseres Ergebnis bei kleinerem Risiko.
+            #
+            # BEIM HEBEL IST DIE ANTWORT GEGENLAEUFIG (Gate behalten, SQN
+            # +3,25 gegen +1,25 fuer jede Groessen-Variante). Dieses Modul ist
+            # das Spot-Modul; hebel_risk_gate.py hat seine eigene Logik und
+            # bleibt bewusst unberuehrt.
+            #
+            # SICHER DURCH BAUFORM: als weiterer Kandidat im min() kann das
+            # eine Position nur verkleinern, nie vergroessern. Eine
+            # Ueberexposition ist damit ausgeschlossen, nicht bloss
+            # unwahrscheinlich. Abschalten ueber spreizung = 1.0.
+            crv_spreizung = config["risiko"].get("crv_positionsgroesse_spreizung")
+            crv_voll_ab = config["risiko"].get("crv_positionsgroesse_voll_ab")
+            if (
+                crv is not None
+                and crv_spreizung is not None
+                and crv_voll_ab is not None
+                and crv_spreizung > 1.0
+                and crv_voll_ab > CRV_MINIMUM
+            ):
+                # Linear von 1/Spreizung bei CRV_MINIMUM auf 1,0 bei voll_ab.
+                # Unterhalb des Minimums greift ohnehin das Veto; der clamp
+                # dient dem Fall, dass das Veto spaeter einmal entfaellt.
+                spanne = (crv - CRV_MINIMUM) / (crv_voll_ab - CRV_MINIMUM)
+                spanne = max(0.0, min(1.0, spanne))
+                sockel = 1.0 / crv_spreizung
+                faktor = sockel + (1.0 - sockel) * spanne
+                if faktor < 1.0:
+                    deckel_kandidaten.append((
+                        f"CRV-Abstufung ({crv:.2f}: {faktor * 100:.0f} % der "
+                        f"Obergrenze, volle Groesse ab CRV {crv_voll_ab:.1f})",
+                        max_usd * faktor,
+                    ))
+
             if deckel_kandidaten:
                 bindender_grund, effective_max_usd = min(deckel_kandidaten, key=lambda paar: paar[1])
                 scale_ratio = effective_max_usd / max_usd if max_usd else 1.0

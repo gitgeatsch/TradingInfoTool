@@ -261,6 +261,27 @@ risiko:
   crv_knapp_positionsgroesse_deckel_anteil: 0.6  # Positionsgroessen-Obergrenze wird bei CRV
                                         # knapp am Minimum zusaetzlich auf diesen Anteil reduziert.
                                         # Siehe agent/krypto/risk_gate.py::post_check().
+                                        # SEIT 04.08. weitgehend abgeloest durch die stufenlose
+                                        # Abstufung unten - bleibt als zweiter Kandidat stehen,
+                                        # min() nimmt ohnehin den strengeren.
+  # --- Stufenlose CRV-Abstufung der Positionsgroesse, NUR SPOT (2026-08-04) ---
+  # Messung 03.08. an 298 Spot-Signalen: das CRV-Gate entfernt bei Spot nur
+  # 12 % (37 von 298) und beisst damit kaum - praktisch bekommt alles dasselbe
+  # Gewicht. Die Abstufung hatte GENAU EINE STUFE (unter 2,0 Veto, 2,0-2,4
+  # Deckel 60 %, ab 2,4 nichts mehr): ein CRV von 2,5 und eines von 6,0 waren
+  # gleichwertig.
+  #     heute (Gate + Deckel)   SQN +0,63   Summe +9,8 R   Rueckschlag 36,3 R
+  #     CRV-Groesse Spreizung 3x  SQN +1,11   Summe +17,9 R   Rueckschlag 29,6 R
+  #     CRV-Groesse Spreizung 5x  SQN +1,36   Summe +23,1 R   Rueckschlag 27,1 R
+  # Beim HEBEL ist die Antwort gegenlaeufig (Gate behalten, SQN +3,25 gegen
+  # +1,25) - deshalb wirkt das hier ausdruecklich nur fuer die Spot-Familie.
+  #
+  # SICHER DURCH BAUFORM: der Wert geht als zusaetzlicher Kandidat in das
+  # min() ueber die Deckel-Kandidaten ein. Ein weiterer Kandidat kann eine
+  # Position nur VERKLEINERN, nie vergroessern - die Aenderung kann also keine
+  # Ueberexposition erzeugen. Abschalten mit spreizung: 1.0.
+  crv_positionsgroesse_spreizung: 5.0   # Verhaeltnis groesste zu kleinster Position
+  crv_positionsgroesse_voll_ab: 6.0     # ab diesem CRV volle (RM-1-)Groesse
   cash_reserve_min_prozent: 10         # RM-4: bestaetigter Wert (2026-07-17, nicht mehr [OFFEN]) -
                                         # gaengige Hausnummer als Overtrading-Bremse/Liquiditaets-
                                         # puffer, in der Praxis bewaehrt (Nutzer haelt bewusst

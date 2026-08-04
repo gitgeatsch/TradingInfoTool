@@ -487,7 +487,7 @@ ehrliche Grundlinie voraus — ohne Phase 0 optimieren sie auf zu gute Zahlen.
 | | Maßnahme | Stand |
 |---|---|---|
 | 3.1 | Positionsgröße #606 (Kelly-Empfehlung + RM-1-Obergrenze) | entschieden 04.08., nicht gebaut |
-| 3.1b | **Spot auf CRV-Positionsgröße umstellen** (Gate behalten nur beim Hebel) | **gemessen und entschieden 03.08., nicht umgesetzt** |
+| 3.1b | **Spot auf CRV-Positionsgröße umstellen** (Gate behalten nur beim Hebel) | **gebaut und verifiziert 04.08.** — stufenlose Abstufung, CRV 2,0 → 20 % / 3,0 → 40 % / 4,0 → 60 % / ab 6,0 volle Größe. Noch nicht deployed |
 | 3.2 | **Ausstiegsregel** — siehe unten | neu 04.08. |
 | 3.3 | **Gleitendes Gate = Expectancy-Gate = CRV-Breakeven-Bänder** | Messung steht, kein Aufrufer |
 
