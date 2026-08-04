@@ -445,7 +445,7 @@ Alle vier sind reine Export-Ergänzungen ohne Verhaltensrisiko.
 
 | | Maßnahme | warum zuerst | Stand |
 |---|---|---|---|
-| 0.1 | Vier fehlende Felder in den Export | ohne sie ist 0.2 nicht rechenbar | offen — die Annahme stimmte nicht, 0.2 war ohne sie rechenbar |
+| 0.1 | Vier fehlende Felder in den Export | ohne sie ist 0.2 nicht rechenbar | **erledigt 04.08.** — `hebel_triggers_alle` mit 41.552 Zeilen (statt 6.412 Kandidaten), `score_details_json` zu 100 % befüllt. Ausgewertet: **keine Komponente trägt** |
 | 0.2 | **Kostenmodell in die R-Rechnung** (Funding + Gebühren + Spread) | kann die Break-even-Lücke verdoppeln — jede Zielaussage davor ist unbelastbar | **erledigt 04.08.** — Lücke verdoppelt sich tatsächlich (0,104 → 0,233 R). Details in 6.7 |
 | 0.3 | Basislinien-Funktionen: matched-Parameter als **Pflicht**, Abbruch statt Default | Deadloop-Schutz, siehe 6.1 | offen |
 
@@ -489,7 +489,7 @@ ehrliche Grundlinie voraus — ohne Phase 0 optimieren sie auf zu gute Zahlen.
 | 3.1 | Positionsgröße #606 (Kelly-Empfehlung + RM-1-Obergrenze) | entschieden 04.08., nicht gebaut |
 | 3.1b | **Spot auf CRV-Positionsgröße umstellen** (Gate behalten nur beim Hebel) | **gebaut und verifiziert 04.08.** — stufenlose Abstufung, CRV 2,0 → 20 % / 3,0 → 40 % / 4,0 → 60 % / ab 6,0 volle Größe. Noch nicht deployed |
 | 3.2 | **Ausstiegsregel** — Trailing-Stop ab +1R, Abstand 1R | **gemessen und gebaut 04.08.** — EW −0,176 → −0,084 R, SQN −3,07 → −1,59; Block-Bootstrap [+0,051; +0,131] R. Notification-Verdrahtung offen |
-| 3.3 | **Gleitendes Gate = Expectancy-Gate = CRV-Breakeven-Bänder** | Messung steht, kein Aufrufer |
+| 3.3 | **Gleitendes Gate = Expectancy-Gate = CRV-Breakeven-Bänder** | Messung steht, kein Aufrufer. **04.08.: Gate ist an der Schwelle 2,0 belegt richtig** (−3,7 pp darunter, +3,4 pp darüber, kostenbereinigt) — kein Handlungsdruck |
 
 **3.1b/3.3 — was am 04.08. beim Umschreiben dieses Plans herausgefallen war**
 
@@ -1110,7 +1110,7 @@ vorwärts gerechnet.
 | 1.2 | Suche auf der **ersten Hälfte** (bis 22.07.), je Tier getrennt | Verfahren aus 1.1 **unverändert** |
 | 1.2a | **Benannter Prüffall**: Komplementarität `trigger_score` × `confidence_pct` — nur Hebel | war am 04.08. schon einmal aus dem Plan gefallen |
 | 1.2b | **Benannter Prüffall**: CRV als Merkmal (aus Zonen ableitbar) — beantwortet die offene Schwellenfrage 2,0 gegen 4,0 mit Falschtrefferkontrolle | ersetzt einen separaten Anlauf |
-| 1.3 | Prüfung auf der **zweiten Hälfte**, bis dahin unangetastet | kein Blick vorher |
+| 1.3 | Prüfung auf der **zweiten Hälfte** | **entfällt** — 1.2 fand nichts, es gibt keinen Kandidaten zu prüfen. Holdout bleibt unangetastet |
 | 1.4 | Erfolg **nur** bei: Teilmenge ≥ durchgelassene **und** Volumen steigt | beides, nicht eines |
 
 ### 7.4 Verbindliche Methodik je Schritt
@@ -1144,10 +1144,10 @@ kostenrobust, weil beide Seiten dieselben Sätze tragen.
 
 | | Schritt | Status |
 |---|---|---|
-| a | `assetklasse` in `holdings_check` exportieren | offen — Voraussetzung für die Spot-Aufschlüsselung |
-| b | Phase 1.1 Teil A + B bauen | offen |
-| c | Akzeptanzkriterien 1–4 prüfen | offen |
-| d | Entscheidung: 1.2 starten oder Phase 1 abschließen | offen |
+| a | `assetklasse` exportieren | **erledigt 04.08.** — als `watchlist_stammdaten` (57 Symbole: krypto 44, etf 7, rohstoffe 4, aktien 2) |
+| b | Phase 1.1 Teil A + B bauen | **erledigt 04.08.** — `ausschuss_suche.py` + `pruefe_ausschuss_suche.py` |
+| c | Akzeptanzkriterien prüfen | **erledigt 04.08.** — alle fünf bestanden, inkl. gemessener Betriebsgrenze ICC ≤ 0,80 |
+| d | Entscheidung: 1.2 starten oder abschließen | **erledigt 04.08.** — 1.2 gelaufen, **kein Fund** (p=0,32 Hebel / 0,49 Spot). Vorher bekannt: nur Effekte ≥ 1,2 R wären auffindbar |
 
 ---
 
