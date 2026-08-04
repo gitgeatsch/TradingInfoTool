@@ -563,53 +563,54 @@ vetote aufgelöste Hebel-Signale):
 Exportfelder werden für die Ausschuss-Hypothese nicht gebraucht; 49 Felder
 liegen an. Phase 0.1 bleibt sinnvoll, aber sie blockiert nichts.
 
-### 2.3b LLM2 (Z.ai) — NUR PLANEN, nichts bauen (Nutzer-Vorgabe 04.08.)
+### 2.3b LLM2 (Z.ai) — Planung, kein Bau (Stand 04.08.)
 
-**Gemessen am 04.08.**, Hebel, Export vom selben Tag:
+> **KORREKTUR einer eigenen Fehlmessung vom selben Tag.** Ich hatte
+> `zai_gegenpruefung_urteil` gegen den Erwartungswert gestellt und daraus
+> geschlossen, LLM2 trage nichts bei. **Das war eine Kategorienverwechslung.**
+> Die Doku ist eindeutig: LLM2 ist ein *reiner Konsistenz-Check* zwischen der
+> Kurzbegründung des Primärmodells und den bereits vorhandenen Fakten —
+> **keine zweite Handelsentscheidung, keine Prognose.** Ein Konsistenzprüfer
+> gegen Handelsergebnisse zu messen ist wie zu prüfen, ob eine
+> Rechtschreibkorrektur Kurse vorhersagt. Die Zahlen (−0,918 / −1,001 R je
+> Urteil) sind deshalb **gestrichen, nicht relativiert** — sie beantworten
+> keine sinnvolle Frage.
 
-| | n | aufgelöst | EW |
-|---|---|---|---|
-| Urteil `konsistent` | 341 | 75 | **−0,918 R** |
-| Urteil `widerspruch` | 258 | 24 | −1,001 R |
-| Übereinstimmung **ja** | 173 | 41 | **−1,364 R** |
-| Übereinstimmung **nein** | 426 | 57 | **−0,631 R** |
+**Was LLM2 ist und warum es so gebaut wurde** (siehe
+`agent/krypto/gegenpruefung.py`, Regelwerksmanual):
 
-Abdeckung 40,7 % (599/1471). **Das Urteil trennt praktisch nicht** (0,08 R),
-und **Übereinstimmung sieht schlechter aus als Widerspruch** — um 0,73 R.
+Die ursprüngliche Idee, Z.ai eigenes Wissen (z. B. Nachrichtenlage)
+einbringen zu lassen, wurde wegen **Halluzinationsrisiko verworfen** — Z.ai
+hat keinen echten Nachrichtenzugriff. Stattdessen der enge, prüfbare Auftrag:
+*widerspricht die Begründung des Primärmodells den harten Fakten?*
+Vom Nutzer bestätigt. **Phase 1 ist rein beobachtend**: kein Risikofaktor,
+kein Gate — bewusst, siehe
+`feedback_llm_synthese_kein_deterministischer_override`.
 
-> **Vorbehalt, der die Zahlen begrenzt:** alle Werte liegen nahe −1,0, also
-> nahe „reiner Stop", während die übrige Hebel-Population bei −0,10 bis
-> −0,14 R liegt. Die Z.ai-abgedeckte Teilmenge ist **stark selektiert**. Bei
-> n=41 und n=57 ist der Unterschied nicht gesichert. Ein *positiver* Beitrag
-> ist aber nirgends sichtbar, und das deckt sich mit dem LONG/SHORT-
-> Symmetrietest vom 01.08.
+**Rahmenbedingung, die den Zuschnitt erklärt:** Z.ai bietet nur wenig
+Prompt-Platz, deshalb mehrere getrennte Abfragen statt einer großen. Die
+Abdeckung ist damit keine Schwäche der Idee, sondern eine Folge der
+Plattform.
 
-**Was zu planen ist, bevor gebaut wird:**
+**Die Fragen, die vor einem Bau zu beantworten sind — neu gefasst:**
 
 | | Frage | Methode |
 |---|---|---|
-| a | Warum nur 40,7 % Abdeckung? Ist die Auswahl systematisch? | Abdeckung gegen Merkmale prüfen — falls selektiv, sind alle Beitragszahlen verzerrt |
-| b | Trennt das Urteil auf **unselektierter** Grundlage? | Beitrag je Urteil auf der vollen Population, nicht nur den aufgelösten |
-| c | Was kostet LLM2 an Budget und Laufzeit? | gegen den gemessenen Beitrag stellen |
-| d | Entfernen oder reparieren? | erst nach a–c entscheidbar |
+| a | **Tut der Prüfer, wofür er gebaut ist?** Erkennt er echte Widersprüche zwischen `short_reasoning` und Fakten? | Trefferquote und Fehlalarmquote gegen eine Stichprobe, deren Widersprüche unabhängig festgestellt wurden — NICHT gegen Handelsergebnisse |
+| b | Warum liegt die Abdeckung bei 40,7 %? Zeitüberschreitungen, Zuschnitt oder Auswahl? | Abdeckung gegen Merkmale und Laufzeit prüfen; die Prüfung läuft asynchron im Thread |
+| c | Was kostet sie an Budget und Laufzeit? | gegen den Nutzen aus (a) stellen |
+| d | Welche Rolle soll sie künftig haben? | offen — laut Regelwerksmanual käme ein Gate nur infrage, wenn sich die Prüfung über Zeit als treffsicher erweist |
 
-**Nicht bauen, bevor a–c beantwortet sind.**
+**Reihenfolge (Nutzer-Klarstellung 04.08.):** Die drei Ebenen sind eine
+**Folge** — *1. deterministisch kalibriert und misst → 2. bessere Datenmenge
+und -qualität an LLM1, dadurch bessere Zustimmung → 3. LLM2 als Gegenprüfung
+bzw. Bestätigung.* LLM2 prüft das Material, das aus Stufe 2 kommt. Solange
+dessen Konfidenz keine Information trägt (−0,021), wird jede Bewertung von
+LLM2 am Fehler des Vorgängers gemessen.
 
-> **ENTSCHEIDEND, und es begrenzt alle Zahlen oben (Nutzer-Klarstellung
-> 04.08.): LLM2 ist die DRITTE Stufe.** Die Kette ist gemeint als
-> *1. deterministisch kalibriert und misst → 2. bessere Datenmenge und
-> -qualität an LLM1, dadurch bessere Zustimmung → 3. LLM2 als Gegenprüfung
-> oder Bestätigung.*
->
-> Damit wurde LLM2 hier **gegen ein defektes Vorfeld gemessen**. Sie prüft
-> das Material, das LLM1 liefert — und dessen Konfidenz trägt nachweislich
-> keine Information (−0,021). Ein Gegenprüfer, der schlechtes Material
-> bestätigt oder verwirft, *kann* keinen Beitrag zeigen.
->
-> **Die −1,364 R sagen deshalb nichts über LLM2 aus, sondern über die Kette
-> davor.** Sie taugen NICHT als Begründung zum Entfernen. Die Frage
-> „entfernen oder reparieren?" ist erst nach Stufe 1 und 2 überhaupt
-> stellbar — vorher misst man den Gegenprüfer am Fehler des Vorgängers.
+**Deshalb: nicht bauen, nicht entfernen, nicht bewerten — bis Stufe 1 und 2
+stehen.** Was LLM2 künftig leisten muss, ist noch nicht vollständig
+bestimmbar, und das ist ein zulässiger Zustand, kein offener Mangel.
 
 ### Abbruchregel gegen den Deadloop (04.08.)
 
