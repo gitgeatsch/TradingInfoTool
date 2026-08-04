@@ -307,7 +307,7 @@ Auflösung** — ohne sie kann keine Stufe lernen.
 
 ---
 
-## 6.4 Der Plan
+## 6.4 Der Plan (UEBERHOLT durch 6.6 - dort steht der Lebenszyklus-Plan)
 
 ### Phase 1 — Deadloop-Schutz (sofort, ~1 Tag)
 
@@ -371,3 +371,134 @@ nie untersucht wurde.
 **Kein Schritt aus Phase 4 lohnt vor Phase 2.** Wer bei 10 Signalen pro Woche
 an der Selektion optimiert, kalibriert auf Rauschen — genau der Deadloop, aus
 dem dieser Abschnitt herausführen soll.
+
+---
+
+## 6.6 Der Gesamtplan über den Signal-Lebenszyklus (04.08., ersetzt 6.4)
+
+**Grundlage:** Nutzer-Vorgabe vom 04.08. — *fehlende Daten werden simuliert, um
+Regeln zu bestätigen, nicht abgewartet* (siehe
+`feedback_simulieren_statt_auf_daten_warten`). Damit fällt der Grund weg, an
+dem die letzten drei Anläufe hängengeblieben sind.
+
+### Die acht Stufen, Ist-Zustand und Lücke
+
+| # | Stufe | was heute gemessen wird | **was fehlt** | Weg dorthin |
+|---|---|---|---|---|
+| 1 | **Screening** erzeugt Kandidaten | `score_gesamt`, `trigger_zweig` | Score **diskriminiert nicht** (Event-Study 04.08.); Einzelkomponenten (`score_details_json`) nicht im Export | Komponenten exportieren, dann simulativ prüfen welche trägt |
+| 2 | **Auswahl** (Budget-Allocator) | nichts über die 5.170 nie aufgerufenen Kandidaten | ob die Auswahl **besser als Zufall** ist — nie gemessen | mechanische Simulation ab `screened_at`, ausgewählt gegen nicht ausgewählt |
+| 3 | **LLM1** setzt Zonen + action | outcome, Zonen, Konfidenz | **23,9 % erarbeiten gar keine Zonen** — Ursache unbekannt; Zonen*qualität* nie bewertet | Begründungskategorien auswerten; Zonen gegen ATR/Struktur prüfen |
+| 4 | **Gate/Veto** entscheidet | Beitrag je Gruppe (durchgelassen +0,784 / Veto +0,235) | **die Ausschuss-Hypothese**: gibt es im Geblockten eine identifizierbare gute Teilmenge? | synthetische Validierung + Holdout (unten) |
+| 5 | **LLM2** (Z.ai) prüft gegen | Übereinstimmungsquote | ob die Übereinstimmung **prädiktiven Wert** hat — nie gemessen; nur 24 % Abdeckung | Beitrag getrennt nach Übereinstimmung/Abweichung |
+| 6 | **Laufzeit** | `outcome_status`, Überholung | `halte_kriterium` wird **gesetzt, aber nie gegen den Verlauf ausgewertet** (941 Zielpreise, 57 Mindestziel-Treffer) | Auswertung nachrüsten |
+| 7 | **Ausstieg** | R-Multiple aus Zonen | **Kosten fehlen vollständig** — siehe unten | Kostenmodell in die R-Rechnung |
+| 8 | **Messung** | Systemgüte, Bänder, Basislinie | steht seit 04.08. | — |
+
+### Was wir vergessen haben: die Kosten
+
+**In keinem R-Multiple stecken Funding, Gebühren oder Spread.** Weder im
+Backward-Tracking noch in einer der Simulationen.
+
+Das ist kein Detail, sondern Standard: In der Backtest-Literatur zu Krypto-
+Perpetuals gilt, dass Ausführungsverzögerung, Funding, Gebühren und Slippage
+die berichtete Performance aufblähen — *„funding payments can turn a profitable
+strategy into a losing one if the position is held while funding repeatedly
+moves against it"*.
+
+Größenordnung, gerechnet mit unseren echten Werten (Hebel median 3,0×,
+Stop median 4,42 % → `Kosten in R = Kostensatz ÷ Stop-Abstand`):
+
+| Kostenart | Annahme | in R |
+|---|---|---|
+| Gebühren Ein+Ausstieg | 0,1 % / 0,3 % / 0,5 % | 0,023 / 0,068 / 0,113 |
+| Funding | 0,03 %/Tag × 3 Tage | 0,020 |
+| Funding | 0,10 %/Tag × 7 Tage | 0,158 |
+
+**Spanne 0,04 bis 0,27 R** — gegen eine Break-even-Lücke von **0,104 R**. Der
+vergessene Kostenblock kann also kleiner oder **doppelt so groß** wie das Ziel
+sein, das wir zu erreichen versuchen.
+
+**Wichtig zur Einordnung:** Der Hebel vervielfacht die Funding-Kosten in
+R-Rechnung *nicht* — Gewinn und Funding skalieren beide mit dem Nominalwert.
+Entscheidend sind Haltedauer und Stop-Abstand, nicht der Hebel.
+
+**Was zur Quantifizierung fehlt:** `funding_rate_aktuell` steht in
+`HebelTrigger`, ist aber nicht im Backtest-Export. Die Gebührensätze von
+Bitpanda für Hebelprodukte sind nirgends hinterlegt.
+
+### Weitere Export-Lücken (Daten vorhanden, nicht exportiert)
+
+| Feld | wofür es fehlt |
+|---|---|
+| `funding_rate_aktuell` | Kostenmodell |
+| `score_details_json` | welche Score-Komponente trägt |
+| `oi_change_pct_lookback` | Merkmal für die Ausschuss-Analyse |
+| `long_konten_anteil_prozent` | dito |
+
+Alle vier sind reine Export-Ergänzungen ohne Verhaltensrisiko.
+
+---
+
+### Der Ablauf
+
+**Phase 0 — Ehrliche Grundlinie (zuerst, sonst messen wir gegen falsche Zahlen)**
+
+| | Maßnahme | warum zuerst |
+|---|---|---|
+| 0.1 | Vier fehlende Felder in den Export | ohne sie ist 0.2 nicht rechenbar |
+| 0.2 | **Kostenmodell in die R-Rechnung** (Funding + Gebühren + Spread) | kann die Break-even-Lücke verdoppeln — jede Zielaussage davor ist unbelastbar |
+| 0.3 | Basislinien-Funktionen: matched-Parameter als **Pflicht**, Abbruch statt Default | Deadloop-Schutz, siehe 6.1 |
+
+**Phase 1 — Die Ausschuss-Hypothese (der Kern deines Konzepts)**
+
+Frage: Gibt es im geblockten Bestand (464 Fälle mit Zonen) eine über Merkmale
+identifizierbare Teilmenge, deren Beitrag mindestens dem der durchgelassenen
+entspricht?
+
+Ablauf, in dieser Reihenfolge:
+
+| | Schritt |
+|---|---|
+| 1.1 | **Synthetische Validierung zuerst**: künstliche Signalmengen mit *eingebauter* guter Teilmenge erzeugen. Findet das Verfahren sie wieder? Findet es eine, wo keine ist? Das kalibriert die Falschtrefferquote, bevor echte Daten angefasst werden. |
+| 1.2 | Erst dann die 464 echten Fälle, Suche auf der ersten Hälfte (bis 22.07.) |
+| 1.3 | Prüfung auf der zweiten Hälfte, unangetastet |
+| 1.4 | Erfolg nur bei: Teilmenge ≥ durchgelassene **und** Volumen steigt |
+
+**Warum 1.1 der entscheidende Schritt ist:** Der Holdout hat nur 17 Symbole.
+Ob ein gefundenes Muster echt ist, kann er allein nicht klären. Die Simulation
+mit *bekannter Wahrheit* kann es — sie sagt, wie oft das Verfahren etwas
+findet, wo nichts ist. Genau dieses Vorgehen hat am 04.08. den
+Competing-Risks-Schätzer widerlegt, wo echte Daten schwiegen.
+
+**Phase 2 — Die unbeantworteten Stufen** (jede für sich klein, zusammen der Rest)
+
+| | Frage | Methode |
+|---|---|---|
+| 2.1 | Warum erarbeitet LLM1 bei 23,9 % keine Zonen? | Begründungskategorien + Regime auswerten |
+| 2.2 | Ist die Allocator-Auswahl besser als Zufall? | mechanische Simulation ab `screened_at` |
+| 2.3 | Hat die Z.ai-Übereinstimmung prädiktiven Wert? | Beitrag getrennt nach Urteil |
+| 2.4 | Wird `halte_kriterium` je eingelöst? | Zielpreis gegen Verlauf |
+
+**Phase 3 — Ernte** (erst wenn 0–2 stehen)
+
+Positionsgröße (#606), Ausstiegsregel, gleitendes Gate. Alle drei setzen eine
+ehrliche Grundlinie voraus — ohne Phase 0 optimieren sie auf zu gute Zahlen.
+
+### Was NICHT weiterverfolgt wird
+
+Unverändert gegenüber 6.4: Nur-Long lockern (reale Broker-Vorgabe),
+CRV-Schwelle senken (02.08. entschieden), Score-Kalibrierung ohne
+Komponentenanalyse, Filter pauschal lockern.
+
+**Neu gestrichen:** „auf mehr Daten warten" in jeder Form — siehe die stehende
+Vorgabe. Wo Daten fehlen, wird simuliert; wo Simulation die Frage nicht trägt,
+ist das zu begründen.
+
+### Quellen zu diesem Abschnitt
+
+- Kosten im Backtest: [Crypto Perpetual Trading Strategy Backtest](https://stingray.fi/blog/crypto-perpetual-trading-strategy-backtest/),
+  [How to Backtest a Crypto Strategy](https://coinbureau.com/guides/how-to-backtest-your-crypto-trading-strategy)
+- Multiples Testen / Backtest-Overfitting: [The Dangers of Backtesting](https://portfoliooptimizationbook.com/book/8.3-dangers-backtesting.html),
+  Bailey/López de Prado (bereits in Abschnitt „Quellen" oben)
+- Meta-Labeling als Zielbild für Stufe 4: [Meta-Labeling](https://en.wikipedia.org/wiki/Meta-Labeling),
+  [Does Meta Labeling Add to Signal Efficacy?](https://hudsonthames.org/does-meta-labeling-add-to-signal-efficacy-triple-barrier-method/)
