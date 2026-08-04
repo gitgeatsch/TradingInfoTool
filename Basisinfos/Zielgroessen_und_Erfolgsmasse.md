@@ -443,11 +443,11 @@ Alle vier sind reine Export-Ergänzungen ohne Verhaltensrisiko.
 
 **Phase 0 — Ehrliche Grundlinie (zuerst, sonst messen wir gegen falsche Zahlen)**
 
-| | Maßnahme | warum zuerst |
-|---|---|---|
-| 0.1 | Vier fehlende Felder in den Export | ohne sie ist 0.2 nicht rechenbar |
-| 0.2 | **Kostenmodell in die R-Rechnung** (Funding + Gebühren + Spread) | kann die Break-even-Lücke verdoppeln — jede Zielaussage davor ist unbelastbar |
-| 0.3 | Basislinien-Funktionen: matched-Parameter als **Pflicht**, Abbruch statt Default | Deadloop-Schutz, siehe 6.1 |
+| | Maßnahme | warum zuerst | Stand |
+|---|---|---|---|
+| 0.1 | Vier fehlende Felder in den Export | ohne sie ist 0.2 nicht rechenbar | offen — die Annahme stimmte nicht, 0.2 war ohne sie rechenbar |
+| 0.2 | **Kostenmodell in die R-Rechnung** (Funding + Gebühren + Spread) | kann die Break-even-Lücke verdoppeln — jede Zielaussage davor ist unbelastbar | **erledigt 04.08.** — Lücke verdoppelt sich tatsächlich (0,104 → 0,233 R). Details in 6.7 |
+| 0.3 | Basislinien-Funktionen: matched-Parameter als **Pflicht**, Abbruch statt Default | Deadloop-Schutz, siehe 6.1 | offen |
 
 **Phase 1 — Die Ausschuss-Hypothese (der Kern deines Konzepts)**
 
@@ -581,45 +581,99 @@ sie erscheinen im Transaktionsexport, dürfen aber weder als Kapitalfluss noch
 als steuerliches Ereignis gewertet werden. Im Gebühren-Tag steckt keine Steuer
 (geprüft: nur eine einzelne verdächtige Buchung, außerhalb der Margin-Tags).
 
-### Kosten am konkreten Beispiel (100 € Einsatz, 3×, Stop 4,42 %)
+### Die Formel
 
-Risiko der Position: 300 € × 4,42 % = **13,26 €** — das ist 1 R, und zugleich
-**13,3 % des eingesetzten Kapitals**.
+Einsatz E, Hebel L, damit Nominal N = E × L und Kredit K = E × (L−1). Das
+Risiko N × Stop ist 1 R. Die Gebühren fallen auf K an:
 
-| Tage | Kosten (geliehen) | in R | in % Kapital | Kosten (Nominal) | in R |
-|---|---|---|---|---|---|
-| 1 | 1,26 € | **0,095** | 1,3 % | 1,44 € | 0,109 |
-| 3 | 1,98 € | **0,149** | 2,0 % | 2,52 € | 0,190 |
-| 7 | 3,42 € | **0,258** | 3,4 % | 4,68 € | 0,353 |
-| 14 | 5,94 € | **0,448** | 5,9 % | 8,46 € | 0,638 |
-| 21 | 8,46 € | **0,638** | 8,5 % | 12,24 € | 0,923 |
+```
+Kosten in R  =  (L−1)/L  ×  (Schließung + Tagesgebühr × Tage)  ÷  Stop-Abstand
+```
 
-**Was der Trade allein für die Kosten verdienen muss:**
+**Der Einsatz kürzt sich heraus.** Die Kostenlast in R hängt nur an Hebel,
+Haltedauer und Stop-Abstand — nicht an der Positionsgröße. Nur deshalb passt
+sie überhaupt in eine R-Rechnung. Implementiert und geprüft in
+`agent/krypto/backward_tracking.py::kosten_in_r()` (04.08.).
 
-| Haltedauer | nötige Kursbewegung | in R |
+> **Korrektur zur ersten Fassung dieses Abschnitts (04.08.).** Sie rechnete
+> die Schließungsgebühr auf das **Nominal**, die Tagesgebühr auf den Kredit —
+> im Widerspruch zur eigenen Regression eine Seite weiter oben, die den
+> Fixanteil auf **Kreditbasis** belegt. Der Code rechnet jetzt beides auf den
+> Kredit. Die Kosten fallen dadurch um rund 9 % niedriger aus als in der
+> ersten Tabelle.
+
+### Kosten am konkreten Beispiel (100 € Einsatz, 3×, Stop 3,94 %)
+
+Stop 3,94 % ist der **gemessene Median** der ausgeführten Hebel-Trades
+(n=86, Quartile 2,30 / 5,70 %), nicht mehr ein angenommener Wert.
+Risiko: 300 € × 3,94 % = **11,82 €** = 1 R.
+
+| Haltedauer | Kosten | in R | nötige Kursbewegung |
+|---|---|---|---|
+| **0,3 Tage** (heutige Praxis) | 0,71 € | **0,060** | 0,24 % |
+| 1 Tag | 0,96 € | **0,081** | 0,32 % |
+| **2,6 Tage** (Signal-Auflösung) | 1,53 € | **0,129** | 0,51 % |
+| 7 Tage | 3,12 € | **0,264** | 1,04 % |
+| 14 Tage | 5,64 € | **0,477** | 1,88 % |
+
+### Zwei gemessene Haltedauern, die nicht zusammenpassen
+
+| | Median | Verteilung |
 |---|---|---|
-| 1 Tag | 0,42 % | 0,095 |
-| 3 Tage | 0,66 % | 0,149 |
-| 7 Tage | 1,14 % | 0,258 |
-| 14 Tage | 1,98 % | 0,448 |
+| **tatsächlich gehandelte Positionen** (n=188) | **0,30 Tage** | 75 % unter 1 Tag, 14 % 1–3 T, 8 % 3–7 T, 3 % über 7 T |
+| **Auflösung der Signale** (n=86, davon 62 mit echtem Enddatum) | **2,57 Tage** | Quartile 1,03 / 5,28 T, Max 12,5 T |
+
+**Gehandelt wird heute faktisch Scalping** — drei von vier Positionen sind
+binnen eines Tages wieder zu. Die Signale dagegen brauchen im Median 2,6 Tage,
+bis eine Barriere fällt. Positionen werden also regelmäßig geschlossen, bevor
+die These, auf der sie beruhen, überhaupt entschieden ist.
+
+Das ist ein Befund, keine Vorgabe — aber es ist genau der Gegensatz zur
+gesetzten Richtung „Standard-Trades, kein Scalping". **Der Preis dieser
+Umstellung ist bezifferbar:** von 0,3 auf 7 Tage kostet **+0,20 R je Trade**.
+Gegen die gemessene Spreizung von 0,55 R zwischen durchgelassenen und vetoten
+Signalen sind das 37 % der verfügbaren Kante.
 
 ### Der Befund
 
 **Der gemessene Erwartungswert von −0,104 R ist BRUTTO.** Die R-Multiples
-entstehen aus Zonen — reine Preisbewegung, ohne jede Gebühr. Netto:
+entstehen aus Zonen — reine Preisbewegung, ohne jede Gebühr.
 
-| Haltedauer | Netto-EW (geliehen) |
+| Haltedauer | Netto-EW |
 |---|---|
-| 1 Tag | −0,199 R |
-| 3 Tage | −0,254 R |
-| 7 Tage | **−0,362 R** |
-| 14 Tage | −0,552 R |
+| 0,3 Tage (heutige Praxis) | −0,164 R |
+| **2,6 Tage (gemessene Signal-Auflösung)** | **−0,233 R** |
+| 7 Tage | −0,368 R |
+| 14 Tage | −0,581 R |
 
-**Die Lücke zum Break-even ist damit nicht 0,104 R, sondern 0,20 bis 0,55 R —
-je nach Haltedauer das Zwei- bis Fünffache.** Und sie ist durch bessere
-Selektion allein nicht zu schließen: Die gemessene Spreizung zwischen
-durchgelassenen und vetoten Signalen beträgt 0,55 R und wäre bei 14 Tagen
-Haltedauer vollständig aufgebraucht, nur um die Finanzierung zu bezahlen.
+**Die Lücke zum Break-even ist nicht 0,104 R, sondern beim gemessenen Stand
+0,233 R — mehr als das Doppelte.** Sie wächst mit jeder Stunde Haltedauer.
+
+**Was Kosten NICHT kaputtmachen: den Signalbeitrag.** Die Basislinie ist ein
+alternativer Trade, kein Nulltarif — sie trägt dieselben Sätze, aber zu **ihrer
+eigenen Haltedauer**. Der Signalbeitrag verschiebt sich deshalb nicht um die
+vollen Kosten, sondern **genau um die Kostendifferenz beider Seiten**.
+
+> **Kosten kippen die ABSOLUTE Frage („trägt sich das System?"), nicht die
+> RELATIVE („ist die Auswahl besser als Zufall?").** Alle Selektionsbefunde
+> der Vortage bleiben damit gültig. Die Break-even-Aussagen nicht.
+
+**Diese Differenz ist nicht klein, und ihr Vorzeichen ist unbequem günstig.**
+Ein Zufallseinstieg trifft seltener eine Barriere und läuft deshalb häufiger
+bis zum Horizont — er zahlt also **länger**. Im E2E-Test (flache Kurse, 5 %
+Stop) standen 0,400 R Basislinienkosten gegen 0,160 R Signalkosten; der
+Signalbeitrag verbesserte sich dadurch um 0,24 R. Auf echten Daten fällt der
+Effekt kleiner aus, weil unaufgelöste Signale per Mark-to-Market ebenfalls bis
+zum Horizont laufen und mitzahlen. **Ein Signalbeitrag, der sich durch die
+Kostenrechnung verbessert, ist deshalb genau zu prüfen, bevor er zitiert
+wird** — er kann echt sein (schnellere Auflösung ist ein realer Vorteil) oder
+ein Artefakt der Horizontwahl.
+
+Deshalb bleiben `expectancy_r` und `sqn` brutto und behalten ihre Bedeutung;
+`expectancy_r_netto`, `sqn_netto` und `signalbeitrag_r_netto` stehen als
+eigene Felder daneben. Ein still korrigierter Wert ließe sich nicht mehr
+nachrechnen — und für Spot ist der Satz ausdrücklich **nicht belegt**
+(`kosten_belegt=False`).
 
 **Das ist der wichtigste Befund dieser Untersuchungsreihe.** Die Daten lagen
 vor, die Rechnung wurde nie gemacht.
@@ -635,25 +689,27 @@ bleiben, müsste der Stop bei 3× sitzen bei
 
 | Haltedauer | nötiger Stop |
 |---|---|
-| 3 Tage | 4,4 % |
-| 7 Tage | 7,6 % |
-| 14 Tage | 13,2 % |
+| 3 Tage | 3,7 % |
+| 7 Tage | 6,9 % |
+| 14 Tage | 12,5 % |
 
-Der heutige Median-Stop von 4,42 % trägt rechnerisch **rund drei Tage**.
+Der gemessene Median-Stop von 3,94 % trägt rechnerisch **rund 3,3 Tage** —
+und liegt damit knapp über der gemessenen Signal-Auflösung von 2,6 Tagen.
+Für die angestrebten Mehrtages-Trades reicht er nicht.
 
 **Zweitens: höherer Hebel kostet mehr pro R** — weil mehr geliehen wird,
-während das Risikobudget gleich bleibt (Kosten in R, 7 Tage, Stop 4,42 %):
+während das Risikobudget gleich bleibt (Kosten in R, Stop 3,94 %):
 
-| Hebel | 1 Tag | 7 Tage | 14 Tage |
-|---|---|---|---|
-| 2× | 0,088 | 0,210 | 0,353 |
-| **3×** | **0,095** | **0,258** | **0,448** |
-| 5× | 0,100 | 0,296 | 0,524 |
-| 10× | 0,105 | 0,324 | 0,581 |
+| Hebel | (L−1)/L | 1 Tag | 7 Tage | 14 Tage |
+|---|---|---|---|---|
+| 2× | 0,50 | 0,061 | 0,198 | 0,358 |
+| **3×** | **0,67** | **0,081** | **0,264** | **0,477** |
+| 5× | 0,80 | 0,097 | 0,317 | 0,573 |
+| 10× | 0,90 | 0,110 | 0,356 | 0,644 |
 
 *(Korrigiert eine frühere Aussage in diesem Dokument: bei Bemessung auf das
 Nominal wäre der Hebel kostenneutral in R — bei Bemessung auf das Geliehene
-ist er es nicht.)*
+ist er es nicht. Von 2× auf 10× steigt die Kostenlast um 80 %.)*
 
 **Zusammen ergibt das ein stimmiges Bild für Standard-Trades:**
 Mehrtages-Positionen verlangen **weite Stops, hohe CRV-Ziele und eher
@@ -667,22 +723,31 @@ unabhängigen Begründung.
 „1, 7 oder 14 Tage" lässt sich nicht unabhängig vom Stop-Abstand beantworten —
 die Kostenformel koppelt beide:
 
-- bei **4,42 % Stop** (heutiger Median) trägt der Trade etwa **3 Tage**
-- für **7 Tage** braucht es rund **7,6 %** Stop
-- für **14 Tage** rund **13,2 %**
+- bei **3,94 % Stop** (gemessener Median) trägt der Trade etwa **3,3 Tage**
+- für **7 Tage** braucht es rund **6,9 %** Stop
+- für **14 Tage** rund **12,5 %**
 
 **Wer mehrtägige Standard-Trades will, muss die Stops weiten.** Sonst frisst
 die Finanzierung die These, bevor sie aufgehen kann.
 
-### Was im System dazu fehlt
+**Die Messung vom 04.08. macht daraus eine belegte Aussage statt einer
+Rechnung:** Der heutige Stop trägt 3,3 Tage, die Signale lösen im Median nach
+2,6 Tagen auf, gehandelt wird nach 0,3 Tagen. Die drei Zahlen beschreiben drei
+verschiedene Strategien im selben System. Bevor eine Zieldauer festgelegt
+wird, muss Lücke 2 („keine Zieldauer am Signal") geschlossen sein — sonst
+bleibt jede Vorgabe folgenlos, weil kein Feld sie trägt.
 
-| | Lücke |
-|---|---|
-| 1 | **Kein Kostenmodell** in irgendeiner Messung — weder Backward-Tracking noch Simulation |
-| 2 | **Keine Zieldauer am Signal.** `halte_kriterium_bucket` ist eine Ablauffrist (14/45/120 T), `mindestziel_zeitraum_tage_geschaetzt` eine Volatilitätsrechnung (Median 1,5 T, nur 35 % befüllt). Beide sind keine Strategieangabe und widersprechen einander |
-| 3 | **Der Hebel geht nicht in die Kostenrechnung ein**, obwohl er sie bei Bemessung auf Geliehenes um ein Fünftel verschiebt |
-| 4 | **Das LLM kennt die Kostenstruktur nicht** und kann sie beim Setzen von Stop und Ziel nicht berücksichtigen |
-| 5 | Die Staffelung (0,18 → 0,12 → 0,06 %) ist nirgends hinterlegt — für Positionen über 60 Tage relevant |
+### Was im System dazu fehlt — Stand nach Phase 0.2
+
+| | Lücke | Stand |
+|---|---|---|
+| 1 | **Kein Kostenmodell** in irgendeiner Messung | **erledigt 04.08.** — `kosten_in_r()`, verdrahtet in `compute_systemguete()` inkl. Basislinie, Export und Anzeige |
+| 3 | **Der Hebel geht nicht in die Kostenrechnung ein** | **erledigt 04.08.** — `hebel_final` vor `hebel_vorschlag`, Median je Gruppe, Rückfall auf 3,0 |
+| 5 | Die Staffelung (0,18 → 0,12 → 0,06 %) nirgends hinterlegt | **erledigt 04.08.** — `_KOSTEN_HEBEL_STAFFEL`, über die Stufen integriert |
+| 2 | **Keine Zieldauer am Signal.** `halte_kriterium_bucket` ist eine Ablauffrist (14/45/120 T), `mindestziel_zeitraum_tage_geschaetzt` eine Volatilitätsrechnung (Median 1,5 T, nur 35 % befüllt). Beide sind keine Strategieangabe und widersprechen einander | **offen** — jetzt schärfer: die gemessene Auflösung liegt bei 2,6 T, die Praxis bei 0,3 T, keiner der beiden Felder sagt das |
+| 4 | **Das LLM kennt die Kostenstruktur nicht** und kann sie beim Setzen von Stop und Ziel nicht berücksichtigen | **offen** — der Faktor existiert jetzt deterministisch, die Weitergabe in den Prompt fehlt |
+| 6 | **Spot-Kosten sind nicht belegt** — nur 348 von 3578 Trades tragen eine explizite Gebührenbuchung (`vsn_fee`, Median 1,03 % je Seite), bei den übrigen steckt sie im Spread und ist ohne Marktmitte nicht messbar | **offen** — als Annahme geführt und als solche gekennzeichnet (`kosten_belegt=False`) |
+| 7 | **Die Tagesrate 0,18 %/Tag ist offiziell belegt, aber nicht an eigenen Daten verifiziert** — seit dem Stichtag 08.07.2026 liegen erst 3 Positionen vor | **offen** — klärt sich mit der Zeit von selbst |
 
 ### Quellen
 

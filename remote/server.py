@@ -811,10 +811,46 @@ async function refreshStatus() {
           if (k.anzahl_mark_to_market) {
             mtm = ", davon " + k.anzahl_mark_to_market + " zum Schlusskurs bewertet";
           }
+          // Dritte Zeile: Handelskosten (2026-08-04, Phase 0.2). Der EW oben
+          // ist BRUTTO - er entsteht aus Zonen, also aus reiner
+          // Preisbewegung. Ohne diese Zeile liest sich "EW -0,104 R" als die
+          // Luecke zum Break-even, obwohl Finanzierung und Schliessungsgebuehr
+          // noch fehlen. Herleitung in backward_tracking.py::kosten_in_r().
+          var kostenzeile = "";
+          if (k.kosten_r !== null && k.kosten_r !== undefined) {
+            var netto = k.expectancy_r_netto === null || k.expectancy_r_netto === undefined
+              ? "-" : (k.expectancy_r_netto >= 0 ? "+" : "") + k.expectancy_r_netto.toFixed(3);
+            var annahme = k.kosten_hebel
+              ? "Hebel " + k.kosten_hebel.toFixed(1) + ", "
+              : "";
+            if (k.kosten_median_haltedauer_tage !== null
+                && k.kosten_median_haltedauer_tage !== undefined) {
+              annahme += k.kosten_median_haltedauer_tage.toFixed(1) + " Tage gehalten";
+            }
+            // Unbelegte Saetze deutlich kennzeichnen: fuer Spot ist der Satz
+            // eine Annahme, weil die Gebuehr dort im Spread steckt und aus den
+            // eigenen Buchungen nicht messbar ist. Eine Zahl ohne diesen
+            // Hinweis wuerde wie ein Messwert gelesen.
+            var beleg = k.kosten_belegt
+              ? ""
+              : ' <span class="warn">[Satz nicht belegt]</span>';
+            kostenzeile = '<div class="row"><span class="muted-text">' +
+              "&nbsp;&nbsp;&nbsp;&nbsp;Handelskosten (" + annahme + "): -" +
+              k.kosten_r.toFixed(3) + " R" + beleg +
+              // Einfache Anfuehrungszeichen um dieses Fragment: der Block
+              // liegt in einem NICHT-rohen dreifach gequoteten Python-String.
+              // Ein rueckwaerts escaptes doppeltes Anfuehrungszeichen wuerde
+              // dort von Python aufgeloest und das JavaScript zerstoeren -
+              // genau so ist diese Zeile beim ersten Anlauf gebrochen.
+              '</span><span class="' +
+              (k.expectancy_r_netto >= 0 ? "ok" : "warn") +
+              '">EW netto ' + netto + " R</span></div>";
+          }
           return '<div class="row"><span>' + tier + " / " + art +
             ' <span class="muted-text">(n=' + k.anzahl_bewertet + mtm + ", " +
             k.anzahl_offen + " offen, Auflösung " + auf + ")</span></span>" +
-            "<span>EW " + ew + " R, SQN " + sqn + ", PF " + pf + warn + "</span></div>" + zusatz;
+            "<span>EW " + ew + " R (brutto), SQN " + sqn + ", PF " + pf + warn +
+            "</span></div>" + kostenzeile + zusatz;
         }).join("");
       }).join("") || '<div class="row"><span class="muted-text">noch keine bewerteten Trades</span></div>';
   }

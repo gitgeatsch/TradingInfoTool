@@ -1854,6 +1854,12 @@ def basislinie_erwartungswert(conn, stop_rel: float, crv: float, ist_short: bool
     reihen = _reihen_im_fenster(reihen, ab_datum, bis_datum)
 
     werte: list[float] = []
+    # Haltedauer je Ziehung (04.08., Phase 0.2). Die Basislinie muss dieselben
+    # Gebuehren tragen wie die Signale, gegen die sie steht - sonst vergleicht
+    # der Signalbeitrag einen Netto-Wert mit einem Brutto-Wert. Sie traegt sie
+    # aber zu IHRER eigenen Dauer: eine Zufallsziehung loest im Mittel anders
+    # schnell auf als ein Signal, und die Kosten haengen linear an der Dauer.
+    dauern: list[int] = []
     for rr in reihen.values():
         for i in range(len(rr) - horizont - 1):
             e = rr[i]["close"]
@@ -1864,7 +1870,8 @@ def basislinie_erwartungswert(conn, stop_rel: float, crv: float, ist_short: bool
             ziel = e - risiko * crv if ist_short else e + risiko * crv
             fenster = rr[i + 1:i + 2 + horizont]
             ergebnis = None
-            for p in fenster:
+            dauer = None
+            for j, p in enumerate(fenster):
                 hoch, tief, auf = p["high"], p["low"], p["open"]
                 if hoch is None or tief is None:
                     continue
@@ -1873,24 +1880,188 @@ def basislinie_erwartungswert(conn, stop_rel: float, crv: float, ist_short: bool
                 if hit_stop:
                     fill = gap_bewusster_fill(stop, auf, ist_stop=True, ist_short=ist_short)
                     ergebnis = ((e - fill) if ist_short else (fill - e)) / risiko
+                    # Einstieg ist der Schlusskurs von Tag i, `fenster` beginnt
+                    # bei i+1 - der erste Fenstertag ist also ein Haltetag.
+                    dauer = j + 1
                     break
                 if hit_ziel:
                     fill = gap_bewusster_fill(ziel, auf, ist_stop=False, ist_short=ist_short)
                     ergebnis = ((e - fill) if ist_short else (fill - e)) / risiko
+                    dauer = j + 1
                     break
             if ergebnis is None and fenster and fenster[-1]["close"]:
                 schluss = fenster[-1]["close"]
                 ergebnis = ((e - schluss) if ist_short else (schluss - e)) / risiko
+                dauer = len(fenster)
             if ergebnis is not None:
                 werte.append(ergebnis)
+                if dauer is not None:
+                    dauern.append(dauer)
 
     # Fenster mit zurueckgeben: ohne diese Angabe ist ein Basislinienwert nicht
     # nachvollziehbar - derselbe Parametersatz liefert je nach Zeitraum
     # entgegengesetzte Vorzeichen (siehe Docstring).
-    fenster = {"basislinie_ab_datum": ab_datum, "basislinie_bis_datum": bis_datum}
+    fenster = {"basislinie_ab_datum": ab_datum, "basislinie_bis_datum": bis_datum,
+               "median_haltedauer_tage": (statistics.median(dauern) if dauern else None)}
     if len(werte) < _BASISLINIE_MIN_EINSTIEGE:
         return {"anzahl": len(werte), "erwartungswert_r": None, **fenster}
     return {"anzahl": len(werte), "erwartungswert_r": statistics.fmean(werte), **fenster}
+
+
+# --- Kostenmodell (2026-08-04, Phase 0.2) ----------------------------------
+# WOFUER. Bis heute enthielt KEINE Kennzahl dieses Moduls eine Gebuehr. Alle
+# R-Multiples entstehen aus Zonen, also aus reiner Preisbewegung. Der
+# ausgewiesene Erwartungswert war damit durchgehend BRUTTO, und die Frage
+# "traegt sich das System?" wurde gegen eine Null-Kosten-Welt beantwortet.
+#
+# Herleitung, Quellen und die Gegenrechnung an echten Buchungen stehen in
+# Basisinfos/Zielgroessen_und_Erfolgsmasse.md Abschnitt 6.7. Kurzfassung fuer
+# den Hebel (Bitpanda Margin Trading, Kostentransparenz Version 4.0.0 vom
+# 08.07.2026): Kauf 0 % - Schliessung 0,3 % - Tagesgebuehr 0,18 % -
+# Liquidation 1 % zusaetzlich.
+#
+# BEMESSUNGSGRUNDLAGE IST DAS GELIEHENE KAPITAL. Das ist nicht aus dem
+# Produkttext geschlossen, sondern an 104 eigenen geschlossenen Positionen
+# nachgerechnet. Je Position gibt es genau EINE margin_trading.fee-Buchung
+# (315 Buchungen zu 315 repay- und 315 close-Paaren), die den Fixanteil und
+# die aufgelaufene Tagesgebuehr zusammen abrechnet - genau das Modell, das die
+# Regression `Gebuehr / Bezugsgroesse = a + b x Haltetage` unterstellt. Auf
+# Kreditbasis trifft der geschaetzte Fixanteil den offiziellen Satz
+# (1,081 % gegen 1,00 % nach altem Tarif), auf Nominalbasis nicht (0,624 %).
+_KOSTEN_AKTIV = True
+_KOSTEN_HEBEL_SCHLIESSUNG = 0.003
+_KOSTEN_HEBEL_LIQUIDATION = 0.01
+# Staffelung der Tagesgebuehr: (bis einschliesslich Tag, Satz je Tag). Der
+# letzte Eintrag mit Grenze None gilt darueber hinaus. Fuer die heutigen
+# Horizonte (7/14 Tage) greift nur die erste Stufe - hinterlegt, weil die
+# Ablauffrist bis 120 Tage reicht und die Staffel dort den Unterschied macht.
+_KOSTEN_HEBEL_STAFFEL = ((60, 0.0018), (100, 0.0012), (180, 0.0006), (None, 0.000312))
+# Fallback, wenn die Zeile keinen Hebel fuehrt: hebel_final ist nur bei 158 von
+# 941 Hebel-Signalen gesetzt, hebel_vorschlag bei 894 - der Median beider ist
+# 3,0, die Verteilung fast durchgehend 3x mit einem 5x-Anteil.
+_KOSTEN_HEBEL_FALLBACK = 3.0
+
+# SPOT IST NICHT BELEGT - bewusst als Annahme gefuehrt, nicht als Messwert.
+# Im Bitpanda-Transaktionsexport tragen nur 348 von 3578 Spot-Trades eine
+# explizite Gebuehrenbuchung (Tag vsn_fee, Median 1,03 % je Seite), und die
+# auch nur in einem begrenzten Zeitfenster. Bei den uebrigen steckt die
+# Gebuehr im Spread, also im ausgefuehrten Preis selbst, und ist ohne
+# Marktmitte zum Ausfuehrungszeitpunkt nicht messbar. Der Satz unten ist die
+# vorsichtige Fortschreibung des Messbaren; jede darauf gestuetzte Zahl traegt
+# `kosten_belegt=False` und darf NICHT wie ein gemessener Wert zitiert werden.
+_KOSTEN_SPOT_JE_SEITE = 0.01
+
+
+def _tagesgebuehr_rel(tage: float) -> float:
+    """Aufgelaufene Tagesgebuehr ueber `tage`, ueber die Staffel integriert."""
+    rest, summe, vorher = max(0.0, float(tage)), 0.0, 0
+    for grenze, satz in _KOSTEN_HEBEL_STAFFEL:
+        spanne = math.inf if grenze is None else grenze - vorher
+        genommen = min(rest, spanne)
+        summe += genommen * satz
+        rest -= genommen
+        if rest <= 0:
+            break
+        vorher = grenze
+    return summe
+
+
+def kosten_in_r(stop_rel: float | None, tier: str, tage: float,
+                hebel: float | None = None,
+                ist_liquidation: bool = False) -> dict:
+    """Handelskosten eines Trades, ausgedrueckt in R (Vielfachen des Risikos).
+
+    HERLEITUNG. Einsatz E, Hebel L, damit Nominal N = E x L und geliehenes
+    Kapital K = E x (L-1). Das Risiko der Position ist N x stop_rel und
+    definiert 1 R. Die Gebuehren fallen auf K an:
+
+        Kosten      = K x (schliessung + tagesgebuehr(tage))
+        Kosten in R = Kosten / (N x stop_rel)
+                    = (L-1)/L x (schliessung + tagesgebuehr(tage)) / stop_rel
+
+    DER EINSATZ KUERZT SICH HERAUS. Die Kostenlast in R haengt nur an Hebel,
+    Haltedauer und Stop-Abstand - nicht an der Positionsgroesse. Das ist der
+    Grund, warum sie ueberhaupt in eine R-Rechnung passt.
+
+    Zwei Folgerungen fallen direkt aus der Formel:
+
+    1. ENGE STOPS SIND DOPPELT TEUER. stop_rel steht im Nenner: ein enger Stop
+       wird nicht nur haeufiger getroffen, er traegt auch je R eine hoehere
+       Kostenlast. Das stuetzt RM-1b/RM-1c nachtraeglich mit einer zweiten,
+       von der Trefferquote unabhaengigen Begruendung.
+    2. HOEHERER HEBEL KOSTET MEHR JE R, nicht gleich viel. (L-1)/L waechst von
+       0,50 (2x) ueber 0,67 (3x) auf 0,90 (10x), waehrend das Risikobudget
+       gleich bleibt. Bei Bemessung auf das Nominal waere der Hebel neutral -
+       genau deshalb ist die Bemessungsgrundlage oben keine Nebensache.
+
+    Fuer die Spot-Familie gibt es keinen Kredit und keine Finanzierung; dort
+    zaehlen Kauf und Verkauf je einmal (_KOSTEN_SPOT_JE_SEITE), unabhaengig
+    von der Haltedauer, und `belegt` ist False.
+
+    Gibt ein dict zurueck statt einer nackten Zahl, damit jede abgeleitete
+    Kennzahl ihre Annahmen mitfuehren kann: `belegt` trennt gemessene von
+    gesetzten Saetzen, `hebel`/`tage` machen die Rechnung nachvollziehbar.
+    `kosten_r` ist None, wenn der Stop-Abstand fehlt oder unplausibel ist -
+    dann wird bewusst NICHT geraten."""
+    if not stop_rel or stop_rel <= 0:
+        return {"kosten_r": None, "kosten_rel": None, "hebel": hebel,
+                "tage": tage, "belegt": False, "basis": "kein Stop-Abstand"}
+
+    if tier == TIER_HEBEL:
+        L = float(hebel) if hebel and hebel > 1 else _KOSTEN_HEBEL_FALLBACK
+        satz = _KOSTEN_HEBEL_SCHLIESSUNG + _tagesgebuehr_rel(tage)
+        if ist_liquidation:
+            satz += _KOSTEN_HEBEL_LIQUIDATION
+        kosten_rel = (L - 1.0) / L * satz
+        belegt, basis = True, "geliehenes Kapital, an 104 Positionen belegt"
+    else:
+        L = None
+        kosten_rel = 2.0 * _KOSTEN_SPOT_JE_SEITE
+        belegt, basis = False, "Spot-Annahme, im Spread nicht messbar"
+
+    return {"kosten_r": kosten_rel / stop_rel, "kosten_rel": kosten_rel,
+            "hebel": L, "tage": tage, "belegt": belegt, "basis": basis}
+
+
+def _feld(row, name: str, default=None):
+    """Spaltenzugriff, der fehlende Spalten vertraegt.
+
+    sqlite3.Row wirft IndexError statt None zu liefern. Aeltere Datenbestaende
+    fuehren einzelne Spalten nicht (siehe hat_schatten weiter unten) - ohne das
+    braeche die ganze Auswertung an einer Nebengroesse ab."""
+    try:
+        return row[name]
+    except (IndexError, KeyError):
+        return default
+
+
+def _haltedauer_tage(row, art: str) -> float | None:
+    """Tatsaechliche Haltedauer aus den Zeitstempeln der Zeile.
+
+    Nur fuer aufgeloeste Faelle gesetzt und selbst dort duenn: am 04.08. trug
+    nur ein Zehntel der Hebel-Signale ein outcome_entschieden_am. Wo sie fehlt,
+    faellt compute_systemguete() auf die simulierte Dauer zurueck."""
+    ende = _feld(row, "veto_outcome_entschieden_am" if art == "schatten"
+                 else "outcome_entschieden_am")
+    start = _feld(row, "created_at")
+    if not ende or not start:
+        return None
+    try:
+        d = (_parse_dt(str(ende)) - _parse_dt(str(start))).total_seconds() / 86400.0
+    except Exception:
+        return None
+    # Negative Differenzen und absurde Laufzeiten deuten auf Datenfehler -
+    # lieber keine Dauer als eine falsche, die in die Kosten durchschlaegt.
+    return d if 0.0 <= d <= 400.0 else None
+
+
+def _hebel_der_zeile(row) -> float | None:
+    """hebel_final vor hebel_vorschlag - der finale Wert ist der gehandelte."""
+    for spalte in ("hebel_final", "hebel_vorschlag"):
+        v = _feld(row, spalte)
+        if v:
+            return float(v)
+    return None
 
 
 def compute_systemguete(conn, watchlist: list | None = None,
@@ -1958,12 +2129,41 @@ def compute_systemguete(conn, watchlist: list | None = None,
     _SYSTEMGUETE_NUR_ECHTE_TRADES / _SYSTEMGUETE_MARK_TO_MARKET (oben im Modul),
     einzeln oder zusammen.
 
+    SEIT 04.08. MIT KOSTENMODELL (Phase 0.2). Bis dahin enthielt keine Zahl
+    dieser Funktion eine Gebuehr - die R-Multiples entstehen aus Zonen, also
+    aus reiner Preisbewegung. Jeder ausgewiesene Erwartungswert war damit
+    BRUTTO, und "traegt sich das System?" wurde gegen eine Null-Kosten-Welt
+    beantwortet. Formel und belegte Saetze in kosten_in_r().
+
+    DIE BRUTTOZAHLEN BLEIBEN UNVERAENDERT. expectancy_r und sqn behalten ihre
+    Bedeutung, die Nettowerte stehen als eigene Felder daneben. Grund: die
+    Spot-Kostenannahme ist ausdruecklich nicht belegt (kosten_belegt=False),
+    und ein still korrigierter Wert liesse sich hinterher nicht nachrechnen.
+
+    DIE BASISLINIE TRAEGT DIESELBEN SAETZE, aber zu IHRER eigenen Haltedauer.
+    Sie ist ein alternativer Trade, kein Nulltarif; sie brutto gegen ein
+    Netto-Signal zu stellen rechnete dem Signal die Gebuehren doppelt an.
+    Daraus folgt der eigentliche Befund der Umstellung: weil beide Seiten
+    zahlen, kuerzen sich die Kosten im SIGNALBEITRAG weitgehend heraus.
+    Kosten kippen die ABSOLUTE Frage ("traegt sich das System?"), nicht die
+    RELATIVE ("ist die Auswahl besser als Zufall?"). Alle Selektionsbefunde
+    aus den Vortagen bleiben damit gueltig; die Break-even-Aussagen nicht.
+
+    HALTEDAUER: bevorzugt aus outcome_entschieden_am, sonst aus der Simulation
+    (siehe _simuliere_zeile()). Wie viele Faelle welchen Weg gingen, steht in
+    kosten_dauer_aus_zeitstempel / kosten_dauer_anzahl - ohne diese Angabe
+    waere die Kostenzahl nicht einzuordnen.
+
     Reine Lesefunktion. Gibt je tier ein dict mit den Schluesseln `real` und
     `schatten` zurueck, jeweils mit den Feldern aus _guete_kennzahlen() plus
     basislinie_erwartungswert_r / basislinie_anzahl / basislinie_stop_rel /
     basislinie_crv / basislinie_anteil_short / basislinie_ab_datum /
     basislinie_bis_datum / signalbeitrag_r / anzahl_nie_ein_trade /
-    anzahl_mark_to_market."""
+    anzahl_mark_to_market sowie den Kostenfeldern kosten_r / kosten_belegt /
+    kosten_basis / kosten_hebel / kosten_median_haltedauer_tage /
+    kosten_dauer_anzahl / kosten_dauer_aus_zeitstempel / expectancy_r_netto /
+    sqn_netto / basislinie_kosten_r / basislinie_erwartungswert_r_netto /
+    basislinie_median_haltedauer_tage / signalbeitrag_r_netto."""
     assetklasse_by_symbol = _assetklasse_index(watchlist, "compute_systemguete()")
     # Vor der Zeilenschleife laden: das Mark-to-Market unaufgeloester Trades
     # braucht die Kursreihen bereits dort, nicht erst bei der Basislinie.
@@ -1982,8 +2182,19 @@ def compute_systemguete(conn, watchlist: list | None = None,
     nie_trade: dict[tuple[str, str], int] = {}
     mtm: dict[tuple[str, str], int] = {}
 
+    # Kostenmodell (04.08., Phase 0.2): Haltedauer und Hebel je bewertetem Fall.
+    # Beide gehen NUR in die Kosten ein, nie in den R-Wert selbst - die
+    # Bruttozahlen bleiben unveraendert, siehe kosten_in_r().
+    dauern: dict[tuple[str, str], list[float]] = {}
+    hebel_werte: dict[tuple[str, str], list[float]] = {}
+    # Woher die Dauer kam: echte Zeitstempel oder Simulation. Ohne diese
+    # Aufschluesselung liesse sich hinterher nicht sagen, wie belastbar die
+    # Kostenzahl ist - am 04.08. trug nur ein Zehntel der Zeilen ein Enddatum.
+    dauer_echt: dict[tuple[str, str], int] = {}
+
     def _erfasse(tier: str, art: str, crv, ist_offen: bool, zonen_werte=None,
-                 created_at=None) -> None:
+                 created_at=None, dauer=None, hebel=None,
+                 dauer_aus_zeitstempel: bool = False) -> None:
         key = (tier, art)
         r_werte.setdefault(key, [])
         offen.setdefault(key, 0)
@@ -1998,21 +2209,37 @@ def compute_systemguete(conn, watchlist: list | None = None,
             zonen.setdefault(key, []).append(zonen_werte)
         if created_at:
             zeitpunkte.setdefault(key, []).append(str(created_at)[:10])
+        if dauer is not None:
+            dauern.setdefault(key, []).append(float(dauer))
+            if dauer_aus_zeitstempel:
+                dauer_echt[key] = dauer_echt.get(key, 0) + 1
+        if hebel:
+            hebel_werte.setdefault(key, []).append(float(hebel))
 
-    def _mark_to_market(row, reihen_: dict) -> float | None:
-        """R-Wert eines noch nicht aufgeloesten, aber echten Trades.
+    def _simuliere_zeile(row, reihen_: dict) -> dict | None:
+        """Simulationsergebnis einer Signalzeile, oder None.
 
-        Simuliert ueber DENSELBEN Horizont wie die Basislinie und bewertet am
-        Fensterende zum Schlusskurs - dadurch behandeln beide Seiten des
-        Vergleichs Unaufgeloeste gleich. Gibt None zurueck, wenn die
-        Kurshistorie den Horizont noch nicht abdeckt; solche Faelle bleiben
-        'offen' und gehen in keine Kennzahl ein (gleiche Beobachtungsdauer)."""
+        Zwei Verwendungen mit unterschiedlichem Anspruch:
+
+        - MARK-TO-MARKET fuer noch nicht aufgeloeste, aber echte Trades. Dann
+          zaehlt `r`. Simuliert ueber DENSELBEN Horizont wie die Basislinie und
+          bewertet am Fensterende zum Schlusskurs - dadurch behandeln beide
+          Seiten des Vergleichs Unaufgeloeste gleich. Gibt None zurueck, wenn
+          die Kurshistorie den Horizont noch nicht abdeckt; solche Faelle
+          bleiben 'offen' und gehen in keine Kennzahl ein (gleiche
+          Beobachtungsdauer auf beiden Seiten).
+        - HALTEDAUER fuer das Kostenmodell, auch bei aufgeloesten Zeilen. Dann
+          zaehlt `tag`. Das ist ein Ersatzmass: der R-Wert kommt bei diesen
+          Zeilen aus der DB, die Dauer aber aus der Nachbildung. Die Mechanik
+          ist dieselbe (gap_bewusster_fill, Stop schlaegt Ziel), die
+          Ausfuehrungszeitpunkte koennen dennoch abweichen. Verwendet wird es
+          nur, wo outcome_entschieden_am fehlt - der Anteil steht als
+          `kosten_dauer_aus_zeitstempel` im Ergebnis."""
         za = _zonen_absolut(row)
         if za is None or row["symbol"] not in reihen_:
             return None
-        sim = simuliere_signal(za, reihen_[row["symbol"]],
-                               str(row["created_at"])[:10], _BASISLINIE_HORIZONT_TAGE)
-        return None if sim is None else sim["r"]
+        return simuliere_signal(za, reihen_[row["symbol"]],
+                                str(row["created_at"])[:10], _BASISLINIE_HORIZONT_TAGE)
 
     for tabelle, ist_hebel in (("signals", False), ("hebel_signals", True)):
         # Die Veto-Schatten-Spalten kamen erst am 28.07. dazu. Aeltere
@@ -2032,6 +2259,14 @@ def compute_systemguete(conn, watchlist: list | None = None,
             "take_profit_usd_von", "take_profit_usd_bis", "take_profit_usd",
         ) if c in spalten]
         felder += "".join(f", {c}" for c in zonen_spalten)
+        # Nur fuer das Kostenmodell (04.08.): Enddatum fuer die echte
+        # Haltedauer, Hebel fuer den Kreditanteil. Beide optional - die
+        # Spot-Tabelle fuehrt keinen Hebel, aeltere Bestaende kein Enddatum.
+        kosten_spalten = [c for c in (
+            "outcome_entschieden_am", "veto_outcome_entschieden_am",
+            "hebel_final", "hebel_vorschlag",
+        ) if c in spalten]
+        felder += "".join(f", {c}" for c in kosten_spalten)
         if hat_schatten:
             felder += ", veto_outcome_status, veto_outcome_realisiertes_crv"
         rows = conn.execute(
@@ -2062,8 +2297,19 @@ def compute_systemguete(conn, watchlist: list | None = None,
                 nie_trade[(tier, art)] = nie_trade.get((tier, art), 0) + 1
                 continue
 
+            hebel = _hebel_der_zeile(row)
+
             if st in _RESOLVED_OUTCOMES:
-                _erfasse(tier, art, crv, False, z, row["created_at"])
+                # Haltedauer fuer die Kosten: echte Zeitstempel bevorzugt, sonst
+                # die simulierte Dauer. Der R-Wert bleibt in JEDEM Fall der aus
+                # der DB - simuliert wird hier nur die Dauer.
+                dauer = _haltedauer_tage(row, art)
+                echt = dauer is not None
+                if dauer is None:
+                    sim = _simuliere_zeile(row, reihen)
+                    dauer = None if sim is None else sim["tag"] + 1
+                _erfasse(tier, art, crv, False, z, row["created_at"],
+                         dauer=dauer, hebel=hebel, dauer_aus_zeitstempel=echt)
                 continue
 
             # Noch laufend oder ueberholt: Mark-to-Market statt Wegwerfen -
@@ -2071,12 +2317,13 @@ def compute_systemguete(conn, watchlist: list | None = None,
             # bewertet ihre unaufgeloesten Ziehungen seit jeher zum
             # Schlusskurs; unsere Signale bekamen gar keinen R-Wert. Jetzt
             # behandeln beide Seiten denselben Fall gleich.
-            r_mtm = _mark_to_market(row, reihen) if _SYSTEMGUETE_MARK_TO_MARKET else None
-            if r_mtm is None:
+            sim = _simuliere_zeile(row, reihen) if _SYSTEMGUETE_MARK_TO_MARKET else None
+            if sim is None:
                 _erfasse(tier, art, None, True, z, row["created_at"])
             else:
                 mtm[(tier, art)] = mtm.get((tier, art), 0) + 1
-                _erfasse(tier, art, r_mtm, False, z, row["created_at"])
+                _erfasse(tier, art, sim["r"], False, z, row["created_at"],
+                         dauer=sim["tag"] + 1, hebel=hebel)
 
     ergebnis: dict = {}
     # `reihen` ist schon oben geladen (Mark-to-Market braucht sie fruehe) -
@@ -2088,6 +2335,39 @@ def compute_systemguete(conn, watchlist: list | None = None,
         k["anzahl_nie_ein_trade"] = nie_trade.get((tier, art), 0)
         k["anzahl_mark_to_market"] = mtm.get((tier, art), 0)
         z = [x for x in zonen.get((tier, art), []) if x]
+
+        # --- Kosten (04.08., Phase 0.2) ------------------------------------
+        # BRUTTO BLEIBT BRUTTO. expectancy_r und sqn werden NICHT
+        # ueberschrieben, die Nettowerte stehen daneben. Ein still korrigierter
+        # Wert liesse sich hinterher nicht mehr nachrechnen, und die
+        # Spot-Kostenannahme ist ausdruecklich nicht belegt (kosten_belegt).
+        d_liste = dauern.get((tier, art), [])
+        h_liste = hebel_werte.get((tier, art), [])
+        kosten = kosten_in_r(
+            statistics.median(x[0] for x in z) if z else None, tier,
+            statistics.median(d_liste) if d_liste else _BASISLINIE_HORIZONT_TAGE,
+            hebel=statistics.median(h_liste) if h_liste else None,
+        ) if _KOSTEN_AKTIV else {"kosten_r": None, "kosten_rel": None, "hebel": None,
+                                 "tage": None, "belegt": False, "basis": "abgeschaltet"}
+        k["kosten_r"] = kosten["kosten_r"]
+        k["kosten_belegt"] = kosten["belegt"]
+        k["kosten_basis"] = kosten["basis"]
+        k["kosten_hebel"] = kosten["hebel"]
+        k["kosten_median_haltedauer_tage"] = kosten["tage"]
+        # Belastbarkeit der Dauer: wie viele Faelle trugen ein echtes Enddatum,
+        # wie viele mussten simuliert werden?
+        k["kosten_dauer_anzahl"] = len(d_liste)
+        k["kosten_dauer_aus_zeitstempel"] = dauer_echt.get((tier, art), 0)
+        k["expectancy_r_netto"] = (
+            None if k["expectancy_r"] is None or kosten["kosten_r"] is None
+            else k["expectancy_r"] - kosten["kosten_r"])
+        # Kosten verschieben den Mittelwert, nicht die Streuung - der Abzug ist
+        # fuer jeden Trade derselbe. Deshalb genuegt der verschobene Zaehler.
+        k["sqn_netto"] = (
+            None if k["expectancy_r_netto"] is None or not k["standardabweichung_r"]
+            else k["expectancy_r_netto"] / k["standardabweichung_r"]
+            * math.sqrt(k["anzahl_bewertet"]))
+
         if mit_basislinie and z and k["expectancy_r"] is not None:
             stop_rel = statistics.median(x[0] for x in z)
             crv = statistics.median(x[1] for x in z)
@@ -2120,6 +2400,39 @@ def compute_systemguete(conn, watchlist: list | None = None,
                 None if bl["erwartungswert_r"] is None
                 else k["expectancy_r"] - bl["erwartungswert_r"]
             )
+            # DIE BASISLINIE TRAEGT DIESELBEN KOSTEN. Sie ist ein alternativer
+            # Trade, kein Nulltarif - wer sie brutto gegen ein Netto-Signal
+            # stellt, rechnet dem Signal die Gebuehren doppelt an. Aber zu
+            # IHRER Dauer: Zufallsziehungen loesen anders schnell auf als
+            # Signale, und die Kosten haengen linear an der Haltedauer.
+            k["basislinie_median_haltedauer_tage"] = bl.get("median_haltedauer_tage")
+            bl_kosten = kosten_in_r(
+                stop_rel, tier,
+                bl.get("median_haltedauer_tage") or _BASISLINIE_HORIZONT_TAGE,
+                hebel=kosten["hebel"],
+            ) if _KOSTEN_AKTIV else {"kosten_r": None}
+            k["basislinie_kosten_r"] = bl_kosten["kosten_r"]
+            k["basislinie_erwartungswert_r_netto"] = (
+                None if bl["erwartungswert_r"] is None or bl_kosten["kosten_r"] is None
+                else bl["erwartungswert_r"] - bl_kosten["kosten_r"])
+            # Netto-Signalbeitrag. Weil beide Seiten dieselben Saetze tragen,
+            # verschiebt er sich NICHT um die vollen Kosten, sondern genau um
+            # die Kostendifferenz beider Seiten. Das ist der eigentliche
+            # Befund dieser Umstellung: Kosten kippen die ABSOLUTE Frage
+            # ("traegt sich das System?"), nicht die RELATIVE ("ist die
+            # Auswahl besser als Zufall?").
+            #
+            # ACHTUNG BEIM LESEN: die Differenz ist nicht klein und faellt
+            # tendenziell zu unseren Gunsten aus. Ein Zufallseinstieg trifft
+            # seltener eine Barriere und laeuft haeufiger bis zum Horizont -
+            # er zahlt also laenger. Ein Signalbeitrag, der sich durch die
+            # Kostenrechnung VERBESSERT, ist deshalb zu pruefen, bevor er
+            # zitiert wird: er kann echt sein (schnellere Aufloesung ist ein
+            # realer Vorteil) oder ein Artefakt der Horizontwahl.
+            k["signalbeitrag_r_netto"] = (
+                None if k["expectancy_r_netto"] is None
+                or k["basislinie_erwartungswert_r_netto"] is None
+                else k["expectancy_r_netto"] - k["basislinie_erwartungswert_r_netto"])
         else:
             k["basislinie_erwartungswert_r"] = None
             k["basislinie_anzahl"] = 0
@@ -2129,6 +2442,10 @@ def compute_systemguete(conn, watchlist: list | None = None,
             k["basislinie_ab_datum"] = None
             k["basislinie_bis_datum"] = None
             k["signalbeitrag_r"] = None
+            k["basislinie_median_haltedauer_tage"] = None
+            k["basislinie_kosten_r"] = None
+            k["basislinie_erwartungswert_r_netto"] = None
+            k["signalbeitrag_r_netto"] = None
         ergebnis.setdefault(tier, {})[art] = k
     return ergebnis
 
