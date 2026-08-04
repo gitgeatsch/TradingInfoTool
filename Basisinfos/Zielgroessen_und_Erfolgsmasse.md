@@ -1029,11 +1029,30 @@ Fehlalarme** erzeugt.
 > erwarte ich eine Trennschärfe **unter 50 %** — die realistische Effektgröße
 > liegt nahe der Nachweisgrenze dieser Stichprobe.
 
-**Wenn Kriterium 1 und 2 erfüllt sind, die Trennschärfe bei +0,3 R aber unter
-50 % liegt, ist Phase 1 mit diesen Daten nicht entscheidbar.** Das ist nach
-der Abbruchregel (6.6) ein **Abschluss**, kein Grund für die nächste Analyse —
-und dann wandert der Aufwand zu Phase 2 und 3, wo die Fragen mit derselben
-Datenmenge beantwortbar sind.
+**Geringe Trennschärfe ist ein Parameter, kein Abbruchgrund.**
+
+> **Korrektur der ersten Fassung dieses Abschnitts.** Dort stand: „liegt die
+> Trennschärfe unter 50 %, ist Phase 1 nicht entscheidbar — das ist ein
+> Abschluss." Das ist die vierte Variante derselben Ausrede („zu wenige
+> Fälle" → „Holdout zu klein" → „n reicht nicht" → **„zu wenig
+> Trennschärfe"**). Nutzer-Vorgabe, wiederholt am 04.08.: *„Was wir nicht an
+> Daten haben, rechnen wir vorwärts und simulieren und testen und bestätigen
+> soweit möglich."*
+
+Fällt die Trennschärfe niedrig aus, liefert 1.1 stattdessen **vier Zahlen**:
+
+| | statt „nicht entscheidbar" |
+|---|---|
+| 1 | **Welche Effektgröße ist mit n=86/327 nachweisbar?** Ein Wert in R, keine Ausrede |
+| 2 | **Welches n bräuchte +0,3 R?** Damit wird aus „zu wenig" ein Zielwert, der mit der Signalrate in eine Zeitangabe umrechenbar ist |
+| 3 | **Kandidatenregel vorwärts simulieren:** eine schwach belegte Regel gegen synthetische Welten mit den gemessenen Eigenschaften laufen lassen. Hält sie dort, ist das **Teilbestätigung** |
+| 4 | **Teilbestätigung wird ausgewiesen**, nicht gegen einen Vollbeweis eingetauscht, der dann ausbleibt |
+
+**Ein Ergebnis mit benannter Unsicherheit ist ein Ergebnis. „Nicht
+entscheidbar" ist keines.** Die Abbruchregel aus 6.6 gilt weiter für
+*Messungen ohne abhängige Entscheidung* — sie deckt ausdrücklich **nicht** den
+Fall ab, dass eine Entscheidung ansteht und die Datenlage dünn ist. Dort wird
+vorwärts gerechnet.
 
 ### 7.3 Phase 1.2 bis 1.4 — der Ablauf auf echten Daten
 

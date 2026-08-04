@@ -1190,7 +1190,32 @@ def main() -> None:
     groq_erschoepfung = _groq_erschoepfung_aus_log(log_zeilen)
     auffaelligkeiten = _auffaelligkeiten(hebel_rows, spot_rows)
 
+    # Watchlist-Stammdaten je Symbol (2026-08-04, Phase 1 Schritt a).
+    #
+    # WOFUER. Die Assetklasse steht NUR in der Watchlist, nicht in `holdings`
+    # und nicht in der Signalzeile. Ohne sie laesst sich die Spot-Familie im
+    # Export nicht aufschluesseln - jede Auswertung landet im Sammeltopf
+    # "spot" und mischt Krypto, Aktien, Rohstoffe und Themen-ETF. Genau dieser
+    # Mischtopf war der Fehler vom 29.07., vor dem _assetklasse_index()
+    # seither laut warnt; im Export war er bis heute unvermeidbar.
+    #
+    # `hauptgruppe`, `unterkategorie` und `rolle` kommen mit, weil sie
+    # Merkmale sind, die in KEINER Signalzeile stehen - fuer die
+    # Ausschuss-Suche (Abschnitt 7 der Zielgroessen-Doku) sind sie damit neue
+    # Information, nicht bloss eine Kopie. Kosten: rund 60 Symbole x 5 Felder.
+    watchlist_stammdaten = {
+        a.symbol: {
+            "assetklasse": a.assetklasse,
+            "rolle": a.rolle,
+            "beobachtungsstatus": a.beobachtungsstatus,
+            "hauptgruppe": a.hauptgruppe,
+            "unterkategorie": a.unterkategorie,
+        }
+        for a in watchlist
+    }
+
     payload = {
+        "watchlist_stammdaten": watchlist_stammdaten,
         "holdings_check": [row_to_dict(r) for r in holdings],
         "api_health": api_health,
         "llm_calls_heute": llm_calls_heute,
