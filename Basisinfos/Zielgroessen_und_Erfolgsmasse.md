@@ -1148,3 +1148,79 @@ kostenrobust, weil beide Seiten dieselben Sätze tragen.
 | b | Phase 1.1 Teil A + B bauen | offen |
 | c | Akzeptanzkriterien 1–4 prüfen | offen |
 | d | Entscheidung: 1.2 starten oder Phase 1 abschließen | offen |
+
+---
+
+## 8. LLM1-Prompt: gemessen und abgeschlossen (04.08.2026)
+
+**Zwei Änderungsvorschläge, beide gemessen, beide ohne Wirkung.** Der Thread
+ist damit abgeschlossen, nicht vertagt.
+
+### Das Verfahren, das die Frage endlich beantwortbar machte
+
+Bis heute konnten LLM-Messungen nur zeigen, ob sich eine Entscheidung
+**ändert** — nicht, ob sie **besser** wird. Nutzer-Einwand vom 04.08.:
+*„sicher ist das durchführbar, du kannst die Historie simulieren"*. Er trifft:
+Die Ergebnisse liegen in der Kurshistorie.
+
+`backtest_llm1_historisch.py` stellt LLM1 an einen historischen Zeitpunkt,
+baut den Faktensatz **nur aus Daten bis zu diesem Tag**, lässt das Modell
+Richtung **und Zonen selbst setzen** und bewertet diese Zonen gegen den
+tatsächlichen weiteren Verlauf. Bewertet wird also die Entscheidung am
+eigenen Maßstab des Modells — nicht ein fester mechanischer Trade.
+
+### Die Ergebnisse
+
+| Variante | Lauf 1 (dünner Faktensatz) | Lauf 2 (angereichert) |
+|---|---|---|
+| A unverändert | +0,333 R | +0,173 R |
+| B erweiterte Chain-of-Thought | +0,269 R | +0,221 R |
+| **B − A** | **−0,064** | **+0,047** |
+
+**Das Vorzeichen kippt zwischen den Läufen.** Die Zahlen erklären, warum:
+
+| | |
+|---|---|
+| Rauschen zwischen zwei Läufen **derselben** Variante | **0,752 R** (A) / 0,784 R (B) |
+| Wirkung der CoT-Änderung | **0,009 R** |
+| Verhältnis | **0,01×** |
+
+95 %-Intervall über beide Läufe, symbolgeblockt: **[−0,297; +0,241]**.
+
+> **Die Wirkung ist ein Hundertstel des LLM-Eigenrauschens.** Bei drei
+> Wiederholungen je Ankerpunkt ist jede Prompt-Aussage dieser Größenordnung
+> nicht unterscheidbar von Zufall.
+
+### Beide Vorschläge, beide erledigt
+
+| | Befund |
+|---|---|
+| **V1** `disclaimers` von der letzten Position | **widerrufen** — die gemessene Positionsempfindlichkeit (5,3× Rauschen) war ein Artefakt bei n=2; mit 8 grenzwertigen Fällen 1,3× |
+| **V2** erweiterte Chain-of-Thought | **ohne Wirkung** — 0,01× Rauschen über zwei Läufe |
+
+Die Literatur nennt Chain-of-Thought „universell positiv" — aber für
+**LLM-as-Judge**. Unser Fall ist kein Urteil über zwei Kandidaten, sondern
+eine Handelsentscheidung mit selbst gesetzten Zonen. Andere Aufgabe.
+
+### Der strukturelle Befund, der bleibt
+
+**Die Anreicherung hat die Eröffnungsrate nicht bewegt: 36/36 in beiden
+Läufen.** Konfluenz, Fibonacci, Liquiditätszonen und BTC-Relativwert reichen
+nicht, um das Modell so selektiv zu machen wie im Betrieb (65 % HALTEN).
+
+**Die Zurückhaltung muss aus Regime, Funding oder der Veto-Stufe kommen.**
+Beides steht nach dem nächsten Export bereit (`macro_historie`,
+`oi_historie`) — dann ist messbar, welcher Fakt das HALTEN trägt.
+
+### Vorwärtsrechnung statt Abbruch
+
+| nachzuweisender Effekt | nötige Paare | Aufrufe | Laufzeit |
+|---|---|---|---|
+| 0,30 R | 77 | 463 | 0,5 h |
+| 0,20 R | 174 | 1.042 | 1,2 h |
+| **0,10 R** | **695** | **4.168** | **4,6 h** |
+| 0,05 R | 2.779 | 16.672 | 18,5 h |
+
+Ein Prompt-Effekt von 0,10 R wäre in rund fünf Stunden nachweisbar. **Machbar
+— aber nur lohnend, wenn ein Effekt dieser Größe plausibel ist.** Nach zwei
+Läufen mit 0,009 R gemessener Wirkung ist er das nicht.
