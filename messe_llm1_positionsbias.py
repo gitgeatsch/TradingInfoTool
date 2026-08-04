@@ -171,8 +171,33 @@ def main() -> int:
     import io
     d = json.load(io.open(ORDNER + r"\notebook_diagnose.json", encoding="utf-8"))
     stamm = d.get("watchlist_stammdaten") or {}
-    kandidaten = [s for s in d["hebel_signals"]
-                  if s.get("entry_usd_von") and s.get("take_profit_usd_von")][:n]
+    # GRENZWERTIGE FAELLE BEVORZUGEN. Ob eine Konfidenzverschiebung von rund
+    # 3 pp die ENTSCHEIDUNG kippt, zeigt sich nur dort, wo die Konfidenz nahe
+    # der Regime-Schwelle liegt (R-5.10: unter min_konfidenz_prozent wird
+    # vetot). Bei einem Signal mit 85 % Konfidenz bewegt eine Verschiebung
+    # nichts - der erste Lauf hatte genau solche Faelle erwischt (76,8 %) und
+    # konnte deshalb nur zeigen, DASS sich die Konfidenz bewegt, nicht ob es
+    # zaehlt.
+    SCHWELLE = 60.0
+    mit_zonen = [s for s in d["hebel_signals"]
+                 if s.get("entry_usd_von") and s.get("take_profit_usd_von")]
+    grenzwertig = sorted(
+        (s for s in mit_zonen if isinstance(s.get("confidence_pct"), (int, float))),
+        key=lambda s: abs(s["confidence_pct"] - SCHWELLE))
+    # Symbole nicht doppeln - sonst misst man ein Symbol mehrfach
+    kandidaten, gesehen = [], set()
+    for s in grenzwertig:
+        if s["symbol"] in gesehen:
+            continue
+        gesehen.add(s["symbol"])
+        kandidaten.append(s)
+        if len(kandidaten) >= n:
+            break
+    if kandidaten:
+        spanne = [s["confidence_pct"] for s in kandidaten]
+        print(f"grenzwertige Faelle gewaehlt: Konfidenz {min(spanne):.0f}-"
+              f"{max(spanne):.0f} % (Schwelle {SCHWELLE:.0f} %), "
+              f"{len(set(s['symbol'] for s in kandidaten))} verschiedene Symbole")
     if not kandidaten:
         print("keine Signale im Export")
         return 1
@@ -183,7 +208,7 @@ def main() -> int:
     print(f"= {len(kandidaten) * 4 * w} Aufrufe, temperature=0.2 wie im Betrieb")
     print("=" * 74)
 
-    r_act, r_konf = [], []
+    r_act, r_konf, kipper = [], [], []
     w_um_act, w_um_konf, w_tr_act, w_tr_konf = [], [], [], []
 
     for sig in kandidaten:
@@ -198,6 +223,15 @@ def main() -> int:
             k = f"{statistics.fmean(arm[1]):.1f}" if arm[1] else "-"
             print(f"  {name:20s} {dict((x, arm[0].count(x)) for x in set(arm[0]))}"
                   f"   Konfidenz {k}")
+        # Kippt die ENTSCHEIDUNG? Das ist die eigentliche Frage - eine
+        # Konfidenzverschiebung ohne Wirkung auf die action waere folgenlos.
+        for name, arm in (("umgekehrt", b1), ("trigger zuletzt", b2)):
+            anders = set(a1[0]) != set(arm[0])
+            if anders:
+                print(f"  ** ENTSCHEIDUNG KIPPT bei '{name}': "
+                      f"{sorted(set(a1[0]))} -> {sorted(set(arm[0]))}")
+                kipper.append((sig["symbol"], name))
+
         r_act.append(abstand(a1[0], a2[0]))
         w_um_act.append(abstand(a1[0], b1[0]))
         w_tr_act.append(abstand(a1[0], b2[0]))
@@ -219,6 +253,13 @@ def main() -> int:
                        ("trigger zuletzt", m(w_tr_act), m(w_tr_konf))):
         srv = max((a / rb_a) if rb_a > 1e-9 else 0, (k / rb_k) if rb_k > 1e-9 else 0)
         print(f"{name:24s} {a:10.3f} {k:11.2f} pp {srv:15.1f}x")
+    print()
+    if kipper:
+        print(f"ENTSCHEIDUNG KIPPTE in {len(kipper)} von "
+              f"{len(kandidaten)*2} Vergleichen: {kipper}")
+    else:
+        print("Die action blieb in ALLEN Vergleichen stabil - die "
+              "Konfidenz verschiebt sich, die Entscheidung nicht.")
     print()
     grenze = 2.0
     srv_max = max(
