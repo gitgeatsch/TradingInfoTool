@@ -61,6 +61,35 @@ class Stopempfehlung:
     begruendung: str
 
 
+def stopempfehlung_aus_mfe(entry: float, stop_original: float, mfe_r: float,
+                           ist_short: bool = False,
+                           stop_aktuell: float | None = None,
+                           ausloese_r: float = AUSLOESE_R,
+                           abstand_r: float = ABSTAND_R) -> Stopempfehlung | None:
+    """Wie stopempfehlung(), aber mit dem MFE direkt statt dem Hoechstkurs.
+
+    WOFUER. Das Backward-Tracking schreibt seit dem 02.08. bei JEDEM Lauf
+    `outcome_max_realisiertes_crv` fort - auch fuer noch offene Signale. Das
+    IST der hoechste erreichte Buchgewinn in R, also genau die Eingabe dieser
+    Regel. Sie muss deshalb nichts neu berechnen und braucht keine Kursreihe;
+    der Wert steht bereits in der Zeile.
+
+    Die Kursvariante bleibt fuer Aufrufer, die nur Kurse haben."""
+    if not entry or entry <= 0 or stop_original is None or mfe_r is None:
+        return None
+    risiko = (stop_original - entry) if ist_short else (entry - stop_original)
+    if risiko <= 0:
+        return None
+    if mfe_r < ausloese_r:
+        return Stopempfehlung(
+            aktiv=False, stop_empfohlen=None, mfe_r=mfe_r, gesicherte_r=0.0,
+            begruendung=(f"noch nicht ausgeloest: hoechster Buchgewinn "
+                         f"{mfe_r:.2f} R unter der Schwelle {ausloese_r:.1f} R"))
+    hoechstkurs = (entry - risiko * mfe_r) if ist_short else (entry + risiko * mfe_r)
+    return stopempfehlung(entry, stop_original, hoechstkurs, ist_short,
+                          stop_aktuell, ausloese_r, abstand_r)
+
+
 def stopempfehlung(entry: float, stop_original: float, hoechstkurs: float,
                    ist_short: bool = False, stop_aktuell: float | None = None,
                    ausloese_r: float = AUSLOESE_R,

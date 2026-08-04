@@ -81,6 +81,9 @@ class RemoteStatus:
     # hat sich selbst gegen einen Trade entschieden, aber trotzdem eine
     # hypothetische Zone angegeben.
     systemguete: dict | None = None
+    # Trailing-Stop-Empfehlungen fuer offene Signale (2026-08-04,
+    # Punkt 3.2). Advisory-only: rechnet und meldet, greift nicht ein.
+    ausstiegs_empfehlungen: dict | None = None
     selbst_gewaehltes_halten_performance: dict | None = None
     selbst_gewaehltes_halten_performance_nach_grund: dict | None = None
     # Marktscan-Erfolgsmessung (2026-07-30, siehe agent/krypto/
@@ -117,6 +120,7 @@ class RemoteStatus:
             "provider_sendezaehler": self.provider_sendezaehler,
             "veto_schatten_performance_nach_grund": self.veto_schatten_performance_nach_grund,
             "systemguete": self.systemguete,
+            "ausstiegs_empfehlungen": self.ausstiegs_empfehlungen,
             "selbst_gewaehltes_halten_performance": self.selbst_gewaehltes_halten_performance,
             "selbst_gewaehltes_halten_performance_nach_grund": self.selbst_gewaehltes_halten_performance_nach_grund,
             "marktscan_erfolgsquote": self.marktscan_erfolgsquote,
@@ -211,6 +215,7 @@ def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, erro
         provider_sendezaehler=_safe(_get_provider_sendezaehler, conn, watchlist),
         veto_schatten_performance_nach_grund=_safe(_get_veto_schatten_performance_nach_grund, conn, watchlist),
         systemguete=_safe(_get_systemguete, conn, watchlist),
+        ausstiegs_empfehlungen=_safe(_get_ausstiegs_empfehlungen, conn, watchlist),
         selbst_gewaehltes_halten_performance=_safe(_get_selbst_gewaehltes_halten_performance, conn, watchlist),
         selbst_gewaehltes_halten_performance_nach_grund=_safe(
             _get_selbst_gewaehltes_halten_performance_nach_grund, conn, watchlist,
@@ -386,6 +391,17 @@ def _get_veto_schatten_performance_nach_grund(conn: sqlite3.Connection, watchlis
 # am Tag.
 _SYSTEMGUETE_CACHE: dict = {"stand": 0.0, "wert": None, "laeuft": False}
 _SYSTEMGUETE_CACHE_SEKUNDEN = 3600
+
+
+def _get_ausstiegs_empfehlungen(conn, watchlist: list) -> dict:
+    """Offene Signale, deren Stop nachgezogen gehoert (2026-08-04).
+
+    Reiner Lesezugriff auf backward_tracking.py::
+    compute_ausstiegs_empfehlungen(). Advisory-only (P-7) - die
+    Empfehlung wird angezeigt, nicht ausgefuehrt."""
+    from agent.krypto.backward_tracking import compute_ausstiegs_empfehlungen
+    import config as _config
+    return compute_ausstiegs_empfehlungen(conn, watchlist, _config.load_config())
 
 
 def _get_systemguete(conn: sqlite3.Connection, watchlist: list) -> dict:

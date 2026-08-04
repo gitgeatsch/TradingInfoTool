@@ -248,6 +248,12 @@ _INDEX_HTML = """<!doctype html>
 </div>
 
 <div class="card">
+  <h2>Stop nachziehen &mdash; offene Signale mit ungesichertem Gewinn</h2>
+  <div class="row"><span class="muted-text">Advisory-only: gerechnet und gemeldet, nicht ausgef&uuml;hrt. Grundlage (2026-08-04): 50&nbsp;% der Signale standen einmal bei +1R, nur 17,6&nbsp;% kamen am Ziel an &ndash; Positionen geben Gewinne zur&uuml;ck. Ein Trailing-Stop ab +1R hob den Erwartungswert von &minus;0,176 auf &minus;0,084&nbsp;R (495 echte Signale, symbolgeblocktes Intervall [+0,051; +0,131], h&auml;lt im Split-Sample und &uuml;ber alle drei Marktphasen). Das ist <b>kein</b> Breakeven-Lock &ndash; der wurde am 01.08. gemessen und verworfen, er kostet 63&nbsp;% der Gewinner.</span></div>
+  <div id="ausstieg-empfehlungen"></div>
+</div>
+
+<div class="card">
   <div class="row"><strong>Selbst gewähltes HALTEN - Schatten-Performance</strong></div>
   <div class="row"><span class="muted-text">Das LLM hat sich HIER von sich aus (kein Gate/Veto)
   gegen einen Trade entschieden, aber trotzdem eine hypothetische Zone angegeben (2026-07-31,
@@ -853,6 +859,38 @@ async function refreshStatus() {
             "</span></div>" + kostenzeile + zusatz;
         }).join("");
       }).join("") || '<div class="row"><span class="muted-text">noch keine bewerteten Trades</span></div>';
+  }
+  if (data.ausstiegs_empfehlungen) {
+    var ae = data.ausstiegs_empfehlungen;
+    var liste = ae.empfehlungen || [];
+    var html = "";
+    if (!ae.parameter || ae.parameter.aktiv === false) {
+      html = '<div class="row"><span class="muted-text">'
+           + "über config abgeschaltet (risiko.ausstieg_trailing_*)</span></div>";
+    } else if (!liste.length) {
+      html = '<div class="row"><span class="muted-text">'
+           + "kein offenes Signal über der Auslöseschwelle von "
+           + ae.parameter.ausloese_r.toFixed(1) + " R (" + (ae.geprueft || 0)
+           + " geprüft)</span></div>";
+    } else {
+      html = liste.map(function (e) {
+        // Der gesicherte Betrag ist die eigentliche Botschaft: so viel steht
+        // fest, wenn der Stop nachgezogen wird und der Kurs dreht.
+        var sichert = (e.sichert_r >= 0 ? "+" : "") + e.sichert_r.toFixed(2);
+        return '<div class="row"><span>' + e.symbol
+             + ' <span class="muted-text">(' + e.tier + ", " + e.richtung
+             + ", seit " + e.seit + ")</span></span>"
+             + '<span>MFE ' + e.mfe_r.toFixed(2) + " R &rarr; Stop auf "
+             + Number(e.stop_empfohlen).toPrecision(6)
+             + ' <span class="ok">sichert ' + sichert + " R</span></span></div>";
+      }).join("");
+      html += '<div class="row"><span class="muted-text">'
+            + liste.length + " von " + (ae.geprueft || 0)
+            + " offenen Signalen über der Schwelle ("
+            + ae.parameter.ausloese_r.toFixed(1) + " R Auslösung, "
+            + ae.parameter.abstand_r.toFixed(1) + " R Abstand)</span></div>";
+    }
+    document.getElementById("ausstieg-empfehlungen").innerHTML = html;
   }
   if (data.selbst_gewaehltes_halten_performance) {
     document.getElementById("selbst-halten-performance-spot").innerHTML =

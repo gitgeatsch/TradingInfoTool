@@ -20,6 +20,9 @@ from datetime import datetime, timedelta, timezone
 
 import database.db as db
 from agent.krypto.llm_provider import provider_from_label
+from agent.krypto.ausstiegsregel import (
+    parameter_aus_config, stopempfehlung_aus_mfe,
+)
 from agent.krypto.statistik import beitrags_konzentration, wilson_intervall
 from agent.krypto.risk_gate import CRV_MINIMUM, KONFIDENZ_SCHWELLE_HOCH, KONFIDENZ_SCHWELLE_NIEDRIG
 
@@ -3897,3 +3900,82 @@ def compute_richtungstreffer_quote(
         "avg_tage_bis_mindestziel_stichprobe_n": len(tage_liste),
         "ausreichend_stichprobe": ausreichend_stichprobe,
     }
+
+
+def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
+                                   config: dict | None = None) -> dict:
+    """Offene Signale, bei denen der Trailing-Stop nachgezogen gehoert.
+
+    ADVISORY-ONLY (P-7). Rechnet und meldet, greift nicht ein - der Nutzer
+    entscheidet und fuehrt aus. Kein Gate, kein Veto, keine Positions-
+    aenderung.
+
+    DER BEFUND DAHINTER (04.08.): 50 % der Signale standen einmal bei +1R,
+    nur 17,6 % kamen am Ziel an. Positionen geben Gewinne zurueck. Der
+    Trailing-Stop ab +1R hebt den Erwartungswert von -0,176 auf -0,084 R
+    (495 echte Signale), symbolgeblocktes Intervall [+0,051; +0,131],
+    haelt im Split-Sample und ueber alle drei Marktphasen. Herleitung und
+    Abgrenzung zum verworfenen Breakeven-Lock in ausstiegsregel.py.
+
+    KEINE NEUE BERECHNUNG NOETIG. `outcome_max_realisiertes_crv` wird seit
+    dem 02.08. bei jedem Backward-Tracking-Lauf fortgeschrieben, auch fuer
+    OFFENE Signale - das ist bereits der hoechste erreichte Buchgewinn in R
+    und damit exakt die Eingabe der Regel. Ohne diese Vorarbeit braeuchte es
+    hier eine eigene Kursreihen-Auswertung.
+
+    Reine Lesefunktion. Gibt {'empfehlungen': [...], 'geprueft': n,
+    'parameter': {...}} zurueck, absteigend nach MFE - der groesste
+    ungesicherte Buchgewinn zuerst."""
+    ausloese, abstand, aktiv = parameter_aus_config(config or {})
+    ergebnis: dict = {"empfehlungen": [], "geprueft": 0,
+                      "parameter": {"ausloese_r": ausloese, "abstand_r": abstand,
+                                    "aktiv": aktiv}}
+    if not aktiv:
+        ergebnis["hinweis"] = "ueber config abgeschaltet (ausstieg_trailing_*)"
+        return ergebnis
+
+    assetklasse_by_symbol = _assetklasse_index(
+        watchlist, "compute_ausstiegs_empfehlungen()")
+    for tabelle, ist_hebel in (("signals", False), ("hebel_signals", True)):
+        spalten = {r[1] for r in conn.execute(f"PRAGMA table_info({tabelle})")}
+        if "outcome_max_realisiertes_crv" not in spalten:
+            continue
+        zonen_spalten = [c for c in (
+            "entry_usd_von", "entry_usd_bis", "entry_usd",
+            "stop_loss_usd_von", "stop_loss_usd_bis", "stop_loss_usd",
+            "take_profit_usd_von", "take_profit_usd_bis", "take_profit_usd",
+        ) if c in spalten]
+        felder = ("symbol, created_at, outcome_status, "
+                  "outcome_max_realisiertes_crv"
+                  + "".join(f", {c}" for c in zonen_spalten))
+        rows = conn.execute(
+            f"SELECT {felder} FROM {tabelle} "
+            f"WHERE outcome_status = ? AND outcome_max_realisiertes_crv IS NOT NULL "
+            f"AND take_profit_usd_von IS NOT NULL",
+            (OUTCOME_OFFEN,),
+        ).fetchall()
+        for row in rows:
+            ergebnis["geprueft"] += 1
+            z = _zonen_absolut(row)
+            if z is None:
+                continue
+            e = stopempfehlung_aus_mfe(
+                z["entry"], z["stop"], row["outcome_max_realisiertes_crv"],
+                ist_short=z["ist_short"], ausloese_r=ausloese, abstand_r=abstand)
+            if e is None or not e.aktiv:
+                continue
+            ergebnis["empfehlungen"].append({
+                "tier": TIER_HEBEL if ist_hebel else _tier_fuer_spot_symbol(
+                    row["symbol"], assetklasse_by_symbol),
+                "symbol": row["symbol"],
+                "seit": str(row["created_at"])[:10],
+                "richtung": "SHORT" if z["ist_short"] else "LONG",
+                "mfe_r": round(e.mfe_r, 3),
+                "entry": z["entry"],
+                "stop_bisher": z["stop"],
+                "stop_empfohlen": e.stop_empfohlen,
+                "sichert_r": round(e.gesicherte_r, 3),
+                "begruendung": e.begruendung,
+            })
+    ergebnis["empfehlungen"].sort(key=lambda x: -x["mfe_r"])
+    return ergebnis

@@ -201,6 +201,7 @@ from agent.krypto.backward_tracking import (
     compute_provider_performance,
     compute_provider_sendezaehler,
     compute_selbst_halten_performance,
+    compute_ausstiegs_empfehlungen,
     compute_systemguete,
     compute_selbst_halten_performance_nach_grund,
     compute_veto_shadow_performance,
@@ -1178,6 +1179,10 @@ def main() -> None:
         # zwischen den Payload-Eintraegen und lief damit gegen eine bereits
         # geschlossene Verbindung.
         systemguete = compute_systemguete(conn, watchlist)
+        # Punkt 3.2 (2026-08-04): welche offenen Signale haben einen
+        # ungesicherten Buchgewinn ueber der Ausloeseschwelle?
+        ausstiegs_empfehlungen = compute_ausstiegs_empfehlungen(
+            conn, watchlist, config_module.load_config())
         # CRV-Breakeven-Baender (2026-08-03, Population B). Ebenfalls VOR
         # conn.close(), gleiche Falle wie oben.
         #
@@ -1260,6 +1265,7 @@ def main() -> None:
         "veto_schatten_performance": veto_schatten_performance,
         "veto_schatten_performance_nach_grund": veto_schatten_performance_nach_grund,
         "systemguete": systemguete,
+        "ausstiegs_empfehlungen": ausstiegs_empfehlungen,
         "crv_breakeven_baender": crv_breakeven_baender,
         "selbst_gewaehltes_halten_performance": selbst_gewaehltes_halten_performance,
         "selbst_gewaehltes_halten_performance_nach_grund": selbst_gewaehltes_halten_performance_nach_grund,
