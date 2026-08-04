@@ -529,3 +529,57 @@ VIX-Äquivalent, dort eigene kompakte Regel (Regel 24, vor dem abschließenden
 `eigene_einschaetzung`-Rückblick). Verifiziert Klasse 1 (Import/Compile/
 Regelnummerierung über alle 6 Dateien) — reines, risikoarmes Fakten-Wiring nach
 demselben bereits produktiv laufenden VIX-Muster, keine neue Logik.
+
+---
+
+## LLM1 ist positionsempfindlich — live gemessen (2026-08-04)
+
+**Der Ausgangsbefund lag seit dem 29.07. vor**, gemessen an der echten
+Z.ai-API (`gegenpruefung.py::leite_eigene_richtung_positionsrobust`):
+Gegenindikator früh → ignoriert (6/6), am Ende → stärker gewichtet (4/6),
+in der Mitte → noch entschiedener (6/6). Das ist die U-förmige
+Aufmerksamkeitskurve der *Lost-in-the-Middle*-Literatur. **LLM2 bekam
+daraufhin Position Swapping. LLM1 hat davon nichts.**
+
+**Die Reihenfolge im Hebel-Prompt ist fest** — 17 Blöcke, und sie endet so:
+
+| Position | Block | |
+|---|---|---|
+| 7 von 17 | `trigger` | der Grund, warum das Signal existiert — **schwache Mitte** |
+| **17 von 17** | `disclaimers` | ein Hinweistext — **stärkste Position** |
+
+**Live-Messung am Desktop (Mistral, temperature=0.2 wie im Betrieb),
+2 Faktensätze × 4 Arme × 5 Wiederholungen:**
+
+| Arm | action | Konfidenz | gegen Rauschen |
+|---|---|---|---|
+| **Rauschboden** (A1 gegen A2, identischer Prompt) | 0,000 | 0,60 pp | — |
+| umgekehrte Reihenfolge | 0,000 | 1,10 pp | 1,8× |
+| **`trigger` ans Ende** | 0,000 | **3,20 pp** | **5,3×** |
+
+**Die action blieb stabil, die Konfidenz nicht.** Sie fällt von 76,8 auf
+73,2, wenn `trigger` ans Ende wandert — mehr als das Fünffache dessen, was
+zwei identische Läufe auseinanderliegen.
+
+**Warum das kein Längenproblem ist:** Mistral hat 2.250.000 TPM und 300 RPM
+(am Dashboard verifiziert) — kein Kontextdruck. Anders als bei Z.ai, das ab
+8K Token auf 1 % Concurrency gedrosselt wird und deshalb einen bewusst
+schlanken Faktensatz bekommt. Bei LLM1 ist es ein reiner Aufmerksamkeitseffekt.
+
+**Was daraus NICHT folgt:** dass eine „bessere" feste Reihenfolge die Lösung
+ist. Genau das wurde am 29.07. verworfen — bei einem echten Signal ist
+vorher nicht bekannt, welcher Fakt der Ausreißer ist, und *jede* feste
+Reihenfolge bevorzugt strukturell den zuletzt genannten. Das etablierte
+Gegenmittel ist Position Swapping.
+
+**Offen:** Ob sich die Konfidenzverschiebung von 3,2 pp auf die
+Handelsentscheidung auswirkt. Die action war in diesem Lauf stabil — bei
+n=2 Faktensätzen ist das aber keine belastbare Aussage, sondern ein erster
+Hinweis. Vor einer Prompt-Änderung gehört der Lauf verbreitert.
+
+**Einschränkung des Laufs, ehrlich benannt:** Der erste Versuch mit 72
+schnellen Aufrufen scheiterte überwiegend mit HTTPError. Ich habe das als
+Ratenbegrenzung gedeutet und eine Drossel eingebaut — bei 300 RPM hätte die
+Rate aber nicht greifen dürfen. Was tatsächlich half, war vermutlich die
+Wiederholung, nicht die Wartezeit. **Die Ursache ist nicht belegt.**
+
