@@ -927,3 +927,156 @@ allein daran, dass die „Verteilung" keine war.
 - [Kostentransparenz Krypto, Version 4.0.0 vom 08.07.2026](https://cdn.bitpanda.com/terms-and-conditions/cost-transparency-crypto-bitpanda-en-latest.pdf) (bildbasiert, nicht maschinell auslesbar)
 - [Introducing Bitpanda Leverage](https://blog.bitpanda.com/en/introducing-bitpanda-leverage) — alte Sätze (1 % / 0,1 %), historisch
 - App-Screen vom 04.08.2026 (100 EURCV, 3× Long LINK) — Gegenprobe der Positions- und Liquidationswerte
+
+---
+
+## 7. Der durchgeplante Ablauf (04.08.2026)
+
+Ausgearbeitete Fassung des Plans aus 6.6. Nutzer-Vorgabe: **„wir sind bei
+Hebel — ziehe parallel die anderen Assets mit, damit wir nicht 3 Lösungen
+bauen müssen."**
+
+### 7.1 Eine Lösung für alle Assetklassen — geprüft, nicht angenommen
+
+**Merkmalsinventur auf den aufgelösten Zeilen** (Befüllung ≥ 60 % auf beiden
+Seiten, 04.08.):
+
+| | Anzahl | |
+|---|---|---|
+| **gemeinsamer Kern Hebel ∩ Spot** | **43** | trägt eine Lösung |
+| nur Hebel | 7 | `trigger_score`, `trigger_zweig`, `hebel_vorschlag`, `richtung`, `trade_thesis_typ`, `llm_model`, `regime_source` |
+| nur Spot | 5 | `position_size_eur/usd`, `position_size_note`, `cash_veto`, `groq_model` |
+
+> **43 gemeinsame Merkmale sind der Beleg, dass eine Lösung reicht.** Das
+> Suchverfahren bekommt die Merkmalsliste als **Eingabe**, nicht fest
+> verdrahtet. Es läuft je Tier mit der jeweils gültigen Liste; der Code ist
+> einer.
+
+**Eine Einschränkung, die daraus folgt und die vorher niemand gesehen hat:**
+`trigger_score` gibt es **nur beim Hebel**. Die Frage „Komplementarität von
+Screening-Score und LLM-Konfidenz" ist damit **nur für den Hebel
+beantwortbar** — die Spot-Familie führt den Score nicht in der Signalzeile.
+Das ist keine Blockade für Phase 1, aber es begrenzt eine ihrer Teilfragen.
+
+**Kalibrierbare Populationen je Tier** (aufgelöste Fälle, Export 04.08.):
+
+| Tier | Signale mit Zonen | real aufgelöst | Schatten aufgelöst |
+|---|---|---|---|
+| **hebel** | 941 | **86** | **327** |
+| **spot** (alle Klassen) | 681 | **10** | **226** |
+
+> **Spot hat nur 10 durchgelassene aufgelöste Trades.** Die Ausschuss-Suche
+> läuft dort auf der Schattenseite (226) technisch identisch, aber der
+> Vergleichsanker „Teilmenge ≥ durchgelassene" steht auf 10 Fällen. **Für
+> Spot wird deshalb nur ein Richtungsbefund erwartet, keine Entscheidung.**
+> Das steht hier vorher, damit es hinterher nicht als Ausrede gelesen wird.
+
+Die Aufschlüsselung nach Assetklasse (Aktien/Rohstoffe/Themen-ETF getrennt)
+scheitert derzeit an der Exportseite: `holdings_check` führt keine
+`assetklasse`. **Das ist die erste konkrete Aufgabe** — ohne sie bleibt Spot
+ein Sammeltopf, und der Fehler vom 29.07. (Mischtopf-Auswertung) wäre wieder
+möglich.
+
+### 7.2 Phase 1.1 — was genau gebaut wird
+
+**Zweck: nicht Signale finden, sondern das Suchverfahren vermessen.**
+
+Rechnerisch: 43 Merkmale × ~10 Schwellen = rund 430 Einzelhypothesen, dazu
+Paare. Bei naiven 5 % erwarten wir **~21 „Funde" aus reinem Rauschen**. Die
+Symbolklumpung verschärft das — am 04.08. gemessen: naiv p = 0,039,
+symbolgeblockt p = 0,194 für denselben Zusammenhang.
+
+**Teil A — das Suchverfahren** (läuft später unverändert auf echten Daten)
+
+| | |
+|---|---|
+| Eingabe | Signale mit Merkmalen + R-Ergebnis + Symbol + Tier |
+| Gesucht | Regel über Merkmale, deren Teilmenge einen Signalbeitrag ≥ dem der durchgelassenen hat |
+| Tiefe | 1 (Einzelschwelle) und 2 (Paar) — **nicht tiefer**, sonst explodiert der Hypothesenraum |
+| Unsicherheit | **symbolgeblocktes Bootstrap**, nie naive Intervalle |
+| Basislinie | je Teilmenge eigene, matched (Methodik 2.5.7 — **Pflicht**) |
+| Buchführung | Zahl der geprüften Hypothesen wird mitgeführt (Pflichtangabe Abschnitt 4) |
+
+**Teil B — der synthetische Prüfstand**
+
+Erzeugt Datensätze mit der **gemessenen** Struktur: Populationsgrößen je Tier
+wie oben, 16–21 Symbole mit der echten Größenverteilung (LINK 11, KAIA 11,
+INJ 8, …), korrelierte Merkmale, R-Werte überwiegend −1 / +CRV.
+
+| Welt | Aufbau | gemessen wird |
+|---|---|---|
+| **H0** | Ergebnis hängt von **keinem** Merkmal ab | **Falschtrefferquote** — wie oft meldet das Verfahren trotzdem einen Fund? |
+| **H1** | bekannte Regel definiert Teilmenge mit erhöhtem EW (+0,2 / +0,3 / +0,5 R) | **Trennschärfe** — wie oft wird sie gefunden? |
+| **H1-grob** | eingebauter Effekt +2,0 R | **Funktionsprüfung** — muss fast immer gefunden werden |
+
+Daraus wird die Entscheidungsschwelle so geeicht, dass **H0 höchstens 5 %
+Fehlalarme** erzeugt.
+
+**Akzeptanzkriterien — vorher festgelegt (Methodik 2.2, Vorher-Hypothese)**
+
+| # | Kriterium | wenn verletzt |
+|---|---|---|
+| 1 | H0-Falschtrefferquote ≤ 5 % nach Eichung | Verfahren untauglich, nicht die Daten |
+| 2 | H1-grob (+2,0 R) wird in ≥ 95 % gefunden | Verfahren defekt — Bau prüfen, nicht Datenlage |
+| 3 | Das symbolgeblockte Bootstrap reproduziert den bekannten Fall vom 04.08. (naiv 0,039 / geblockt 0,194) | Bootstrap falsch implementiert |
+| 4 | Generator trifft die realen Randverteilungen und Merkmalskorrelationen | Simulation nicht übertragbar |
+
+**Meine Vorher-Hypothese, ausdrücklich vor der Messung notiert:**
+
+> Ich erwarte eine H0-Falschtrefferquote **deutlich über 5 %** bei naiver
+> Auswertung (Schätzung 30–60 %, weil 430 Hypothesen auf 16 Symbolclustern
+> laufen), und dass die Eichung sie auf 5 % drückt. Für H1 bei **+0,3 R**
+> erwarte ich eine Trennschärfe **unter 50 %** — die realistische Effektgröße
+> liegt nahe der Nachweisgrenze dieser Stichprobe.
+
+**Wenn Kriterium 1 und 2 erfüllt sind, die Trennschärfe bei +0,3 R aber unter
+50 % liegt, ist Phase 1 mit diesen Daten nicht entscheidbar.** Das ist nach
+der Abbruchregel (6.6) ein **Abschluss**, kein Grund für die nächste Analyse —
+und dann wandert der Aufwand zu Phase 2 und 3, wo die Fragen mit derselben
+Datenmenge beantwortbar sind.
+
+### 7.3 Phase 1.2 bis 1.4 — der Ablauf auf echten Daten
+
+| | Schritt | Bindung |
+|---|---|---|
+| 1.2 | Suche auf der **ersten Hälfte** (bis 22.07.), je Tier getrennt | Verfahren aus 1.1 **unverändert** |
+| 1.2a | **Benannter Prüffall**: Komplementarität `trigger_score` × `confidence_pct` — nur Hebel | war am 04.08. schon einmal aus dem Plan gefallen |
+| 1.2b | **Benannter Prüffall**: CRV als Merkmal (aus Zonen ableitbar) — beantwortet die offene Schwellenfrage 2,0 gegen 4,0 mit Falschtrefferkontrolle | ersetzt einen separaten Anlauf |
+| 1.3 | Prüfung auf der **zweiten Hälfte**, bis dahin unangetastet | kein Blick vorher |
+| 1.4 | Erfolg **nur** bei: Teilmenge ≥ durchgelassene **und** Volumen steigt | beides, nicht eines |
+
+### 7.4 Verbindliche Methodik je Schritt
+
+Aus `Test_und_Verifikationsmethodik.md`, hier auf diesen Plan angewendet:
+
+| Methodik | wo sie greift |
+|---|---|
+| **0** Statusvokabular (5 Stufen) | jede Statusangabe benennt die Stufe — „geschrieben" ≠ „im Betrieb bestätigt" |
+| **1.1** Änderungsklassen | 1.1 ist Klasse 2/3 (deterministische Logik) → synthetischer Test **Pflicht**, hartes Vorher/Nachher erwartbar |
+| **2.1a** Export-Vollständigkeitscheck | **vor** 1.2, nicht mittendrin |
+| **2.2** Vorher-Hypothese | oben notiert, wird nach der Messung ehrlich gegengehalten |
+| **2.5** Symbol-/Konzentrationscheck | **vor jeder** Musterinterpretation — der Grund, warum 1.1 überhaupt existiert |
+| **2.5.5** Beitrags-Konzentration | zusätzlich zur Anzahl: trägt ein Symbol den halben Effekt? |
+| **2.5.7** Basislinie je Bucket | **Pflicht** — jede gefundene Teilmenge bekommt ihre eigene matched Basislinie |
+| **2.6** Mehrebenen-Erfolgsmessung | striktes Outcome **und** MFE getrennt ausweisen |
+| **2.8** Schwellen rechnerisch herleiten | keine geschätzten Schnitte |
+
+### 7.5 Messkonvention und Statusführung
+
+**Feste Messkonvention für die gesamte Phase 1** (aus 6.6, hier wiederholt
+weil zentral): *„Barriere erreicht innerhalb 14 Tagen, Bewertung zum
+Schlusskurs"* — das Maß von `compute_systemguete()`. **Wird während Phase 1
+nicht geändert.**
+
+Kosten werden **brutto und netto** geführt (6.7). Für die Ausschuss-Suche ist
+der **Signalbeitrag** die Zielgröße, nicht der absolute EW — er ist
+kostenrobust, weil beide Seiten dieselben Sätze tragen.
+
+**Reihenfolge der Umsetzung:**
+
+| | Schritt | Status |
+|---|---|---|
+| a | `assetklasse` in `holdings_check` exportieren | offen — Voraussetzung für die Spot-Aufschlüsselung |
+| b | Phase 1.1 Teil A + B bauen | offen |
+| c | Akzeptanzkriterien 1–4 prüfen | offen |
+| d | Entscheidung: 1.2 starten oder Phase 1 abschließen | offen |
