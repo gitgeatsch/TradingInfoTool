@@ -1,10 +1,22 @@
-# Bestandsaufnahme 01.–02.08.: was wurde geändert, und wo wirkt es?
+# Bestandsaufnahme: was wurde geändert, und wo wirkt es?
 
-**Zweck:** Vorbereitung auf den 03.08. Die Änderungen der letzten zwei Tage
-sind zahlreich (29 Commits) und lassen sich chronologisch nicht mehr
-überblicken. Entscheidend ist nicht, WANN etwas gebaut wurde, sondern auf
+**Laufendes Dokument.** Abschnitt 1 deckt den 01.–02.08. ab, Abschnitt 2 den
+03.–04.08. Fortschreiben statt eine zweite Datei anlegen — genau die
+Unübersichtlichkeit, gegen die dieses Dokument gebaut wurde, entsteht sonst
+zwischen den Dateien neu.
+
+**Zweck:** Die Änderungen sind zahlreich und lassen sich chronologisch nicht
+mehr überblicken. Entscheidend ist nicht, WANN etwas gebaut wurde, sondern auf
 WELCHER EBENE es wirkt — denn nur eine der vier Ebenen entscheidet darüber,
 ob überhaupt ein Signal entsteht.
+
+**Für den schnellen Einstieg:** Abschnitt 2 am Ende enthält das
+Kennzahlen-Panel mit den Ausgangswerten vom 04.08. — daran ist jede künftige
+Änderung messbar.
+
+---
+
+# Abschnitt 1 — 01.–02.08.
 
 Ergänzt `Regler_Signal_Pipeline_Abhaengigkeiten.md` (Kopplungen zwischen den
 Stufen) um die Frage: wie groß ist der Hebel des jeweiligen Elements?
@@ -138,3 +150,156 @@ behandeln" trifft hier besonders zu. Betroffen wären mindestens:
 - **Task #601**: Regel-28-Hypothese (Entscheidungsfreude-Sprung am 31.07.)
 - Reihenfolge-Empfehlung: #602 zuerst — es ist der größte Hebel, und die
   anderen beiden liefern Kontext dafür.
+
+---
+---
+
+# Abschnitt 2 — 03.–04.08.
+
+## Der Befund in einem Satz
+
+**Elf Commits, und KEINER wirkt auf Ebene 2.** Alles liegt auf Ebene 4
+(Messung und Sichtbarkeit). Volumen und Trefferquote haben sich um null Punkte
+bewegt.
+
+Das ist die Fortsetzung des 02.08.-Befundes ("von 29 Commits wirken zwei auf
+Ebene 2") — nur diesmal war es **beabsichtigt**: Die Messung selbst war falsch,
+und zwar um 0,30 R. Ohne korrigierten Maßstab wäre jede Ebene-2-Änderung
+unbeurteilbar gewesen.
+
+## Was auf Ebene 4 gebaut wurde
+
+| Commit | Änderung | Wirkung |
+|---|---|---|
+| `a8ddbaa` | Basislinie nur noch aus dem Signalfenster | Vorzeichen kippt, 0,30 R |
+| `1cb9451` | Systemgüte auf Population A (nur echte Trades, Mark-to-Market) | Auflösungsasymmetrie gelöst |
+| `8ed9523` | CRV-Breakeven-Bänder (Population B) | neue Messgröße |
+| `0d5cdbb` | Bänder in den Notebook-Export | sichtbar |
+| `7e1928a` | Competing-Risks-Schätzer + Assetklassen-Trennung | 759 statt 455/153 Signale |
+| `a9f1e32` | Vergleich gegen Basislinie statt gegen Formel | Vorzeichenfehler behoben |
+| `18a69d1` | Bugfix: Einstiegstag wurde mitsimuliert | Basislinie war zu niedrig |
+| `875f0f5` | CoinGecko-OHLC für Krypto ohne Kraken-Listing | Datenlücke #614 |
+| `2c4640a` | Kontingent-Schutz für den Rückfall | verhindert Mehrfachabrufe |
+| `b04d0f7` | entartetes Konfidenzintervall gilt nicht als belastbar | Randfall-Fehler |
+
+**#617 ist damit geschlossen.** Beide Blocker gelöst, keine Sperre offen.
+
+## Warum die Richtung mehrfach wechselte
+
+Nachvollziehbar aufgeschrieben, weil der Verlauf sonst nicht rekonstruierbar ist:
+
+| # | Annahme | warum verworfen |
+|---|---|---|
+| 1 | Basislinie als Fakt ins LLM (#617-Auftrag) | #618: CRV-Breakeven ist der sauberere Maßstab |
+| 2 | CRV-Breakeven als Leitgröße | dreht ab CRV 2,5 das Vorzeichen — Horizont-Trunkierung |
+| 3 | Nur-Long ist der größte Volumen-Hebel (51,5 %) | **reale Broker-Vorgabe**, keine Regel und kein Hebel |
+| 4 | HALTEN-Neigung ist der Hebel (36 %) | zerfällt in "gar keine Zonen" (29,1 %) und "Zonen + HALTEN" (6,8 %) |
+| 5 | Filter lockern bringt mehr Signale | **jede** messbare Ablehnung ist schlechter als das Durchgelassene |
+| 6 | Screening-Score kalibrieren | Schritt 1 ergab: **diskriminiert nicht** |
+
+**Das Ergebnis dieser sechs Wenden ist kein Rückschritt, sondern eine
+Eingrenzung:** Die Filter arbeiten richtig. Mehr Signale kommen deshalb nicht
+aus gelockerten Filtern, sondern nur aus **besseren Kandidaten** und **besseren
+Zonen**. Das ist die Nutzer-Vorgabe "bessere Daten und gezielte Selektion" plus
+"bessere Auswahl durch das LLM" — und sie ist jetzt messtechnisch belegt, nicht
+nur plausibel.
+
+## Sechs Fehler derselben Familie
+
+An zwei Tagen sechsmal dieselbe Ursache: **Signal- und Basislinienseite ungleich
+behandelt.** Jedes Mal sah das Ergebnis plausibel aus.
+
+| | Fehler |
+|---|---|
+| 1 | Basislinie über 2 Jahre, Signale über 3 Wochen |
+| 2 | Basislinie zählt Unaufgelöste mit, Signale nicht |
+| 3 | Bänder gegen horizontlose Formel statt gegen Basislinie |
+| 4 | Basislinie ab Einstiegstag simuliert (Entry = Schlusskurs) |
+| 5 | Perzentil über LONG+SHORT, Auswertung getrennt |
+| 6 | entartetes Intervall [0,0–0,0] galt als belastbar |
+
+**Stehende Prüffrage:** *Werden beide Seiten des Vergleichs wirklich gleich
+behandelt?* Gehört vor jede Auswertung.
+
+**Widerrufene Befunde — nicht wiederbeleben:**
+- "CRV ≥ 4,0 ist das schlechteste Band" — Trunkierungs-Artefakt
+- "Gate-Senkung unter 2,0 ist gemessen erledigt" — war Wilson-Artefakt, Frage ist offen
+- "36 % Auflösungsquote belegt Selektion" — Nenner enthielt 94 Nicht-Trades, ehrlich sind 58 %
+
+---
+
+## Das Kennzahlen-Panel: woran Fortschritt sichtbar wird
+
+**Das fehlte bisher.** Ohne definierte Ausgangswerte ist jede künftige Änderung
+wieder unbeurteilbar. Alle Werte aus dem Notebook-Export vom **04.08. 06:35**.
+
+### A — Volumen (Ziel: mehr)
+
+| Kennzahl | Quelle im Export | Stand 04.08. |
+|---|---|---|
+| handelbare Hebel-Signale / 7 Tage | `hebel_signals`: kein Veto, `action != HALTEN`, Zonen vorhanden | **15** |
+| Anteil "gar keine Zonen erarbeitet" | `hebel_signals`: `take_profit_usd_von is None` | **29,1 %** |
+| Anteil "Zonen erarbeitet, LLM wählt HALTEN" | kein Veto, `action == HALTEN`, Zonen vorhanden | **6,8 %** |
+| Anteil Gate-/Veto-gestoppt | `risk_veto = 1`, ohne Nur-Long | **9,6 %** |
+| Trichter Kandidaten → LLM-Call | `rohdaten_fuer_backtest.hebel_triggers_kandidaten` | 2.543 LONG → **1.159** |
+| Trichter LLM-Call → handelbar | dieselbe Quelle | **147 (12,7 %)** |
+
+### B — Qualität (Ziel: besser)
+
+| Kennzahl | Quelle im Export | Stand 04.08. |
+|---|---|---|
+| Signalbeitrag hebel/real | `systemguete.hebel.real.signalbeitrag_r` | **+0,257** |
+| Signalbeitrag krypto/real | `systemguete.krypto.real.signalbeitrag_r` | **+0,272** |
+| Expectancy hebel/real | `systemguete.hebel.real.expectancy_r` | −0,104 |
+| SQN hebel/real | `systemguete.hebel.real.sqn` | −0,65 |
+| Auflösungsquote hebel/real | `systemguete.hebel.real.aufloesungsquote` | 76,4 % |
+| Bandabstand Hebel h7, CRV 2,0–2,5 | `crv_breakeven_baender.hebel_h7_mit_halten` | **+28,6 pp** |
+| Bandabstand Hebel h7, CRV < 2,0 | dieselbe Quelle | +20,4 pp |
+| belastbare Bänder (von 5) | `belastbar` | **2** |
+
+### C — Datengüte (Voraussetzung für A und B)
+
+| Kennzahl | Quelle im Export | Stand 04.08. | Ziel |
+|---|---|---|---|
+| Symbole ohne Kursreihe | `preishistorie_signal_symbole.symbole_ohne_ohlc` | **11** | 4 (nur Wertpapiere/Stablecoin) |
+| auswertbarer Anteil der Kandidaten | abgeleitet | **71,9 %** | > 95 % |
+| CoinGecko-Verbrauch / Tag | `coingecko_kontingent.taeglich_verlauf` | 84–310 (Limit 322) | < 322 |
+| Job-Fehlschläge / Tag | `job_fehlschlaege` | 26, davon 19 "database is locked" | 0 |
+
+### Wie das Panel zu benutzen ist
+
+1. **Vor** einer Änderung die betroffenen Zeilen notieren.
+2. **Nach** dem Live-Lauf gegen dieselben Zeilen vergleichen.
+3. Eine Änderung auf Ebene 1 oder 2 muss sich in **A oder B** zeigen — sonst
+   wirkt sie nicht dort, wo entschieden wird (der Befund vom 02.08.).
+4. Bewegt sich nur C, war es Datenpflege — wertvoll, aber kein Fortschritt am Ziel.
+
+**Wichtig:** A und B können gegenläufig sein. Am 04.08. gemessen: Jede
+Lockerung eines Filters erhöht A und senkt B (durchgelassen +0,784 R gegen
+LLM-HALTEN +0,360 gegen Veto +0,235). **Gleichzeitiger Fortschritt in A und B
+ist deshalb der einzige gültige Erfolgsnachweis** — nicht A allein.
+
+---
+
+## Wo wir am Ziel stehen
+
+**Ziel:** mehr Signale UND bessere Trefferquote, über bessere Daten und
+gezielte Selektion plus bessere Auswahl durch das LLM.
+
+| | Stand |
+|---|---|
+| **Messebene** | fertig und live verifiziert. Der Maßstab trägt. |
+| **Datengüte** | Lücke erkannt und geschlossen, **Wirkung noch nicht im Export** |
+| **Volumen** | unverändert — 15 handelbare Hebel-Signale in 7 Tagen |
+| **Qualität** | unverändert — Signalbeitrag stabil positiv, aber nichts wurde geändert |
+
+**Nächster Schritt: Komplementarität von Screening-Score und LLM-Konfidenz.**
+Sind Signale mit hohem Score UND hoher Konfidenz besser als mit einem allein?
+Wenn nein, ist eine der beiden Stufen redundant. Nie gemessen — und es
+entscheidet, ob die zweistufige Architektur überhaupt trägt.
+
+Danach in dieser Reihenfolge:
+1. `score_gesamt` aus dem Fakten-JSON (diskriminiert nicht, steht ohne Regel drin)
+2. Ausstieg: +0,43 R mechanisch gegen −0,30 R verwaltet — größter Qualitätshebel
+3. Cron-Staggering 06:30 (drei Jobs auf derselben Minute → SQLite-Sperren)
+4. Hypothese prüfen: Cooldown-Filter läuft vor der Score-Sortierung
