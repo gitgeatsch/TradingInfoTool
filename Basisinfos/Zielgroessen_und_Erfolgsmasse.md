@@ -487,8 +487,39 @@ ehrliche Grundlinie voraus — ohne Phase 0 optimieren sie auf zu gute Zahlen.
 | | Maßnahme | Stand |
 |---|---|---|
 | 3.1 | Positionsgröße #606 (Kelly-Empfehlung + RM-1-Obergrenze) | entschieden 04.08., nicht gebaut |
+| 3.1b | **Spot auf CRV-Positionsgröße umstellen** (Gate behalten nur beim Hebel) | **gemessen und entschieden 03.08., nicht umgesetzt** |
 | 3.2 | **Ausstiegsregel** — siehe unten | neu 04.08. |
-| 3.3 | Gleitendes Gate | offen |
+| 3.3 | **Gleitendes Gate = Expectancy-Gate = CRV-Breakeven-Bänder** | Messung steht, kein Aufrufer |
+
+**3.1b/3.3 — was am 04.08. beim Umschreiben dieses Plans herausgefallen war**
+
+Beides war gemessen und entschieden und stand dann in keiner Phase. Damit es
+nicht ein drittes Mal passiert (nach „Komplementarität" und diesen beiden),
+hier ausdrücklich:
+
+| Befund | Zahl | Code-Stand |
+|---|---|---|
+| **Spot**: CRV gehört in die Positionsgröße, nicht ins Gate | SQN 0,63 → **1,36** (03.08.) | nicht umgesetzt |
+| **Hebel**: CRV gehört ins Gate, nicht in die Größe — gegenläufig! | SQN **3,25** gegen 1,25 (03.08.) | bestehendes Verhalten ist richtig |
+| **CRV-Schwelle 2,0**: trennt signifikant, **aber die Kante liegt nicht dort** | +0,558 R, p<0,0001, n=491; Sprung bei CRV **4,0** (31,9 % → 51,0 %), 04.08. | `CRV_MINIMUM = 2.0` unverändert |
+
+> **Die drei Namen sind eine Sache.** `compute_crv_breakeven_baender()` misst
+> `q > 1/(1+CRV)` — und *Expectancy > 0* ist algebraisch genau das. „Gleitendes
+> Gate", „Expectancy-Gate" und „CRV-Breakeven-Bänder" bezeichnen denselben
+> Mechanismus. Er ist **gemessen, aber von keinem Gate aufgerufen**: einziger
+> Aufrufer ist `extract_notebook_diagnose.py`. Das ist die Wirkebene-Lücke in
+> einem Satz.
+
+**Die CRV-Schwellenfrage wird NICHT separat entschieden.** CRV ist aus den
+Zonen ableitbar und damit eines der 49 Merkmale in Phase 1. Die Suche dort
+prüft es mit Falschtrefferkontrolle und symbolgeblocktem Bootstrap — also
+sauberer, als eine Einzelmessung es könnte. Ein separater Anlauf wäre nach
+der Abbruchregel eine Messung ohne abhängige Entscheidung.
+
+**Verbindung zur Roadmap aus Abschnitt 5:** Deren Schritt 1 (SQN/Expectancy
+messen) ist fertig, Schritt 2 (genug reale Trades) ist der Deadloop, den
+Phase 1 umgeht, Schritt 3 (CRV-Gate durch Expectancy-Gate ersetzen) ist
+Punkt 3.3 hier. Es ist dieselbe Roadmap, nur feiner aufgeteilt.
 
 **3.2 Die Ausstiegsregel — warum sie hierher gehört und nicht nach vorn**
 
