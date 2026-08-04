@@ -3153,9 +3153,17 @@ def compute_crv_breakeven_baender(
             # die BASISLINIE verfehlen (nicht die Formel, siehe oben). Das
             # Intervall stammt aus dem Block-Bootstrap ueber Symbole, nicht aus
             # Wilson: einzelne Symbole stellen bis zu einem Drittel eines Bandes.
+            # ENTARTETE INTERVALLE ZAEHLEN NICHT (Fund 04.08. am Notebook-Export):
+            # Erreicht in einem Band kein einziger Fall sein Ziel, liefert der
+            # Bootstrap in jeder Ziehung 0,0 - das Intervall [0,0 .. 0,0] verfehlt
+            # die Basislinie dann rein rechnerisch und galt als "belastbar".
+            # Beobachtet bei krypto >= 4,0: n=20, davon 6 aufgeloest, alle Stop.
+            # Ein Intervall ohne Breite ist keine Signifikanz, sondern ein
+            # Randfall - deshalb zusaetzlich eine Mindestbreite verlangen.
             "belastbar": bool(
                 n >= _MIN_SAMPLE_FUER_AUSSAGE and anteil is not None
                 and ki_unten is not None and bl_anteil is not None
+                and (ki_oben - ki_unten) > 1e-9
                 and (ki_unten > bl_anteil or ki_oben < bl_anteil)
             ),
             "erwartungswert_r": round(statistics.fmean(f["r"] for f in teil), 4),
