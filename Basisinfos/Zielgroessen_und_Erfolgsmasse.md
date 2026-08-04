@@ -593,10 +593,23 @@ und **Übereinstimmung sieht schlechter aus als Widerspruch** — um 0,73 R.
 | c | Was kostet LLM2 an Budget und Laufzeit? | gegen den gemessenen Beitrag stellen |
 | d | Entfernen oder reparieren? | erst nach a–c entscheidbar |
 
-**Nicht bauen, bevor a–c beantwortet sind.** Ein Provider, der 40 % der
-Signale zusätzlich verarbeitet und keinen messbaren Beitrag liefert, ist ein
-Kandidat zum **Entfernen** — nicht zum Ausbauen. Das ist dieselbe Frage wie
-bei Score und Konfidenz: *weglassen kann mehr helfen als hinzufügen.*
+**Nicht bauen, bevor a–c beantwortet sind.**
+
+> **ENTSCHEIDEND, und es begrenzt alle Zahlen oben (Nutzer-Klarstellung
+> 04.08.): LLM2 ist die DRITTE Stufe.** Die Kette ist gemeint als
+> *1. deterministisch kalibriert und misst → 2. bessere Datenmenge und
+> -qualität an LLM1, dadurch bessere Zustimmung → 3. LLM2 als Gegenprüfung
+> oder Bestätigung.*
+>
+> Damit wurde LLM2 hier **gegen ein defektes Vorfeld gemessen**. Sie prüft
+> das Material, das LLM1 liefert — und dessen Konfidenz trägt nachweislich
+> keine Information (−0,021). Ein Gegenprüfer, der schlechtes Material
+> bestätigt oder verwirft, *kann* keinen Beitrag zeigen.
+>
+> **Die −1,364 R sagen deshalb nichts über LLM2 aus, sondern über die Kette
+> davor.** Sie taugen NICHT als Begründung zum Entfernen. Die Frage
+> „entfernen oder reparieren?" ist erst nach Stufe 1 und 2 überhaupt
+> stellbar — vorher misst man den Gegenprüfer am Fehler des Vorgängers.
 
 ### Abbruchregel gegen den Deadloop (04.08.)
 
