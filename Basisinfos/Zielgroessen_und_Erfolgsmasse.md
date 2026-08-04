@@ -563,6 +563,41 @@ vetote aufgelöste Hebel-Signale):
 Exportfelder werden für die Ausschuss-Hypothese nicht gebraucht; 49 Felder
 liegen an. Phase 0.1 bleibt sinnvoll, aber sie blockiert nichts.
 
+### 2.3b LLM2 (Z.ai) — NUR PLANEN, nichts bauen (Nutzer-Vorgabe 04.08.)
+
+**Gemessen am 04.08.**, Hebel, Export vom selben Tag:
+
+| | n | aufgelöst | EW |
+|---|---|---|---|
+| Urteil `konsistent` | 341 | 75 | **−0,918 R** |
+| Urteil `widerspruch` | 258 | 24 | −1,001 R |
+| Übereinstimmung **ja** | 173 | 41 | **−1,364 R** |
+| Übereinstimmung **nein** | 426 | 57 | **−0,631 R** |
+
+Abdeckung 40,7 % (599/1471). **Das Urteil trennt praktisch nicht** (0,08 R),
+und **Übereinstimmung sieht schlechter aus als Widerspruch** — um 0,73 R.
+
+> **Vorbehalt, der die Zahlen begrenzt:** alle Werte liegen nahe −1,0, also
+> nahe „reiner Stop", während die übrige Hebel-Population bei −0,10 bis
+> −0,14 R liegt. Die Z.ai-abgedeckte Teilmenge ist **stark selektiert**. Bei
+> n=41 und n=57 ist der Unterschied nicht gesichert. Ein *positiver* Beitrag
+> ist aber nirgends sichtbar, und das deckt sich mit dem LONG/SHORT-
+> Symmetrietest vom 01.08.
+
+**Was zu planen ist, bevor gebaut wird:**
+
+| | Frage | Methode |
+|---|---|---|
+| a | Warum nur 40,7 % Abdeckung? Ist die Auswahl systematisch? | Abdeckung gegen Merkmale prüfen — falls selektiv, sind alle Beitragszahlen verzerrt |
+| b | Trennt das Urteil auf **unselektierter** Grundlage? | Beitrag je Urteil auf der vollen Population, nicht nur den aufgelösten |
+| c | Was kostet LLM2 an Budget und Laufzeit? | gegen den gemessenen Beitrag stellen |
+| d | Entfernen oder reparieren? | erst nach a–c entscheidbar |
+
+**Nicht bauen, bevor a–c beantwortet sind.** Ein Provider, der 40 % der
+Signale zusätzlich verarbeitet und keinen messbaren Beitrag liefert, ist ein
+Kandidat zum **Entfernen** — nicht zum Ausbauen. Das ist dieselbe Frage wie
+bei Score und Konfidenz: *weglassen kann mehr helfen als hinzufügen.*
+
 ### Abbruchregel gegen den Deadloop (04.08.)
 
 Diese Untersuchungsreihe läuft seit Tagen und hat bisher jede Analyse mit dem
