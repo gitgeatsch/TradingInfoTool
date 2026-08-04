@@ -247,8 +247,17 @@ def refresh_history_job(client, conn_factory, watchlist_provider) -> None:
         conn.close()
 
 
-def refresh_ohlc_job(client, conn_factory, watchlist_provider) -> None:
-    """`watchlist_provider` siehe refresh_prices_job()-Docstring (2026-07-23)."""
+def refresh_ohlc_job(client, conn_factory, watchlist_provider,
+                     coingecko_client=None) -> None:
+    """`watchlist_provider` siehe refresh_prices_job()-Docstring (2026-07-23).
+
+    ZWEITE QUELLE seit 03.08.: Krypto-Assets ohne Kraken-Listing bekamen bisher
+    GAR KEINE Kerzen - stillschweigend, weil backfill_ohlc() sie als
+    "kein Kraken-Listing" ueberspringt. Betroffen waren elf Symbole, darunter
+    KAIA mit 17,2 % aller Hebel-Screening-Kandidaten. Der CoinGecko-Rueckfall
+    (api/coingecko_ohlc_fallback.py) schliesst das; er laeuft NACH Kraken und
+    ruehrt nur Assets an, die dort leer ausgehen. `coingecko_client=None`
+    schaltet ihn ab - dann verhaelt sich der Job wie vor dem 03.08."""
     watchlist = watchlist_provider()
     conn = conn_factory()
     try:
@@ -265,6 +274,27 @@ def refresh_ohlc_job(client, conn_factory, watchlist_provider) -> None:
     except Exception as exc:
         logger.exception("Kraken-OHLC-Refresh fehlgeschlagen")
         _notify_job_failure("refresh_ohlc", f"Kraken-OHLC-Refresh fehlgeschlagen: {exc}")
+    else:
+        # Bewusst im else-Zweig und mit eigenem try: ein Fehler in der
+        # Rueckfallquelle darf den erfolgreichen Kraken-Lauf nicht als
+        # fehlgeschlagen melden.
+        if coingecko_client is not None:
+            try:
+                from api.coingecko_ohlc_fallback import fuelle_alle_ohlc_luecken
+
+                fb = fuelle_alle_ohlc_luecken(coingecko_client, conn, watchlist)
+                if fb:
+                    logger.info(
+                        "CoinGecko-OHLC-Rueckfall: %d/%d Assets befuellt, %d Kerzen "
+                        "(Symbole ohne Kraken-Listing)",
+                        sum(1 for r in fb if r.points_upserted > 0), len(fb),
+                        sum(r.points_upserted for r in fb),
+                    )
+            except Exception as exc:
+                logger.exception("CoinGecko-OHLC-Rueckfall fehlgeschlagen")
+                _notify_job_failure(
+                    "refresh_ohlc_fallback",
+                    f"CoinGecko-OHLC-Rueckfall fehlgeschlagen: {exc}")
     finally:
         conn.close()
 
@@ -2725,7 +2755,9 @@ def build_scheduler(
         refresh_ohlc_job,
         "interval",
         hours=OHLC_REFRESH_INTERVAL_HOURS,
-        args=[kraken_client, db_conn_factory, watchlist_provider],
+        # coingecko_client als viertes Argument: Rueckfallquelle fuer
+        # Krypto-Assets ohne Kraken-Listing (03.08.), siehe refresh_ohlc_job().
+        args=[kraken_client, db_conn_factory, watchlist_provider, coingecko_client],
         id="refresh_ohlc",
         **ohlc_job_kwargs,
     )
