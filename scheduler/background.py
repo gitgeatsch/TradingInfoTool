@@ -1419,6 +1419,43 @@ def _notify_marktscan_schnellerfolg(erfolge: list, config_dict: dict) -> None:
         logger.exception("Marktscan-Schnellerfolg-E-Mail fehlgeschlagen")
 
 
+def _ist_email_relevante_richtung(richtung: str | None) -> bool:
+    """Richtungs-Filter fuer Hebel-E-Mails (2026-08-05, Schritt 1 des
+    Nur-Long-Umbaus).
+
+    ZIEL DES UMBAUS. Der `hebel_richtung_modus`-Schalter soll AUSSCHLIESSLICH
+    steuern, was per E-Mail rausgeht und was die GUI zeigt - und sonst gar
+    nichts. Bisher greift er an drei Stellen TIEF in die Verarbeitung ein:
+    zwei Vorfilter im Budget-Allocator werfen SHORT-Kandidaten schon vor dem
+    LLM-Aufruf weg, und ein Veto im Risk-Gate dreht `action` nachtraeglich auf
+    HALTEN. Beides verfaelscht die Messung: 313 SHORT-Vorschlaege liegen
+    seither als "HALTEN" in der Datenbank und haben bei der Ursachensuche zum
+    31.07.-Bruch wiederholt Populationen vermischt.
+
+    WARUM DIESER SCHRITT ZUERST KOMMT. Solange die beiden Vorfilter und der
+    Veto noch greifen, erreicht diese Funktion gar keinen SHORT-Vorschlag -
+    sie aendert also zunaechst NICHTS und laesst sich trotzdem vollstaendig
+    testen. Erst wenn das Netz haelt, werden die drei Eingriffe entfernt.
+
+    WARUM NICHT IN _ist_email_relevantes_asset(): jene Funktion filtert nach
+    SYMBOL und wird von Spot, Hebel und Multi-Asset gemeinsam genutzt. Eine
+    Richtungspruefung gehoert dort nicht hinein - Spot-Signale haben keine
+    Hebel-Richtung, und eine gemeinsame Funktion mit zwei unabhaengigen
+    Zustaendigkeiten waere genau die Vermischung, die wir gerade aufloesen.
+
+    KEIN VETO, KEINE ZUSTANDSAENDERUNG. Diese Funktion entscheidet nur ueber
+    den Versand. Das Signal bleibt in der Datenbank vollstaendig erhalten -
+    mit seiner echten `richtung` und seiner echten `action` - und wird
+    normal weiterverfolgt und gemessen."""
+    import config as config_module
+
+    modus = config_module.load_config().get("budget_allocator", {}).get(
+        "hebel_richtung_modus", "beide")
+    if modus != "nur_long":
+        return True
+    return str(richtung or "").upper() != "SHORT"
+
+
 def _ist_email_relevantes_asset(
     symbol: str, watchlist: list, bitpanda_assets: list | None, conn_factory=None,
 ) -> bool:
@@ -2101,6 +2138,17 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None, 
     if signal.action not in REQUIRED_HEBEL_ACTIONS or signal.action == "HALTEN":
         return
     if not _ist_email_relevantes_asset(signal.symbol, watchlist, bitpanda_assets, conn_factory):
+        return
+    # Richtungs-Filter (2026-08-05, siehe _ist_email_relevante_richtung()).
+    # Solange die Vorfilter im Budget-Allocator und der Veto im Risk-Gate noch
+    # greifen, kommt hier nie ein SHORT-Vorschlag an - die Zeile ist bis dahin
+    # wirkungslos und bewusst so gebaut: erst das Netz, dann der Sprung.
+    if not _ist_email_relevante_richtung(getattr(signal, "richtung", None)):
+        logger.info(
+            "Hebel-E-Mail fuer %s (%s) unterdrueckt - hebel_richtung_modus=nur_long. "
+            "Das Signal bleibt vollstaendig erhalten und wird weiter gemessen.",
+            signal.symbol, getattr(signal, "richtung", "?"),
+        )
         return
     try:
         import config as config_module
