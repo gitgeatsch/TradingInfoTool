@@ -45,14 +45,52 @@ DREI EINWAENDE GEGEN DEN BEFUND, ALLE GEPRUEFT:
    ENTKRAEFTET per Block-Bootstrap ueber Symbole, 10.000 Ziehungen:
    Differenz +35,9 pp, 95 %-Intervall [+15,4 ; +56,9], p ~ 0,0001.
 
-BEGLEITBEFUNDE ZUM 31.07., die auf einen Deploy deuten statt auf den Markt:
-  - atr_relativ_prozent_bei_signal ist VOR dem 31.07. leer und danach befuellt
-  - Signalvolumen an dem Tag 239 gegen 13-21 an den beiden Vortagen
-  - SHORT-Anteil springt binnen einer Stunde von 0 % (11:00 UTC) auf 100 %
-  - Screening unveraendert: Kontra-Zweig stabil 8-21 %, Trigger-Richtungen gleich
+NACHTRAG DERSELBEN SITZUNG - die Deploy-Spurensuche korrigierte die Datierung
+oben. Es sind ZWEI Vorgaenge, die ich zunaechst zu einem verschmolzen hatte.
 
-Die Ursache ist damit NICHT gefunden, nur eingekreist. Was feststeht: es ist
-kein Marktereignis, kein Messartefakt und keine Richtungsfrage.
+VORGANG 1 - SIGNAL-KNAPPHEIT, auf die Minute datiert. c8dd982 ("Nur-Long-
+Deckel: LLM-Output wurde nie gegen hebel_richtung_modus geprueft") ging am
+28.07. um 17:08 UTC ein; das erste Nur-Long-Veto ueberhaupt faellt 17:37 UTC,
+29 Minuten spaeter. Vorher liefen SHORT-Empfehlungen unbemerkt durch, seither
+werden sie verworfen. Zusammen mit dem SHORT-Anteil, der ab 31.07. auf 54-77 %
+steigt, faellt damit der Grossteil der Signale weg - weder Umsetzungsfehler
+noch gewolltes Verhalten, sondern ein korrekter Bugfix, der auf eine
+unerklaerte SHORT-Verschiebung trifft.
+
+VORGANG 2 - QUALITAETSEINBRUCH, echt, aber am 29.07. beginnend, NICHT am
+31.07. Die taegliche Trefferquote (Phase E unten) zeigt keinen Sprung, sondern
+einen Kipppunkt: Plateau 26-35 % bis 27.07., 22,2 % am 28.07., 7,1 % am
+29.07., danach 0-14 %.
+
+DESHALB IST DIE ZAHL OBEN ("38,5 -> 4,0") TEILWEISE EIN ZUSAMMENSETZUNGS-
+EFFEKT MEINER EIGENEN AUSWERTUNG: ab 28.07. 17:37 UTC wandern die Nur-Long-
+Vetos mit ihren ~10 % in die Schattengruppe und stellen danach 81 der 98
+aufgeloesten Faelle. Der saubere Massstab ist LONG allein, weil dort kein
+Nur-Long-Veto moeglich ist: 45,1 % (n=206) auf 3,2 % (n=31), +41,9 pp,
+Block-Bootstrap ueber Symbole [+14,6 ; +64,5] pp, p = 0,0033. Der Effekt ist
+kleiner als gemeldet, aber er bleibt.
+
+ZWEI WEITERE ERKLAERUNGEN GEPRUEFT UND AUSGESCHLOSSEN:
+  Markt        direkt ueber 41 Symbole gemessen (Phase F): 21.-28.07. Median
+               -0,46 %, Streuung 3,47 %, 43 % Aufwaerts; 29.07.-05.08. Median
+               -0,04 %, Streuung 3,23 %, 48 % Aufwaerts. Die Einbruchsperiode
+               war minimal BESSER. Regime-Label und Fear&Greed allein haetten
+               das nicht gezeigt.
+  Stop-Breite  jedes Band bricht gleich ein: 3-5 % 50,7->6,7, 5-8 %
+               45,6->11,4, ueber 8 % 92,9->7,9. Enge Stops <3 % sind
+               unabhaengig davon schlecht (6,0 % bzw. 4,3 %) - bestaetigt nur
+               den bekannten 01.08.-Befund.
+
+ZWEI VERDAECHTIGE ENTLASTET, weil sie NACH dem Einbruch deployten: 0b1b41e
+(TP-ATR-Leitplanke; das Feld atr_relativ_prozent_bei_signal erscheint erst ab
+14:00 UTC am 31.07.) und b9a464b (Kontrapruefung-NameError; Kontra-Anteil
+stabil 8-21 %).
+
+OFFEN BLEIBT die Ursache von Vorgang 2. Das Fenster 28.-29.07. enthaelt rund
+zehn Regelwerksaenderungen. Einschraenkung, die dazugehoert: nach dem 29.07.
+liegen nur 31 aufgeloeste LONG-Signale vor - der Befund ist signifikant, aber
+der Kipppunkt laesst sich nicht genauer als "zwischen 28. und 31.07."
+eingrenzen.
 
 Lauf: python -u messe_short_und_einbruch.py
 """
@@ -220,7 +258,84 @@ def main():
         lo * 100, hi * 100, p))
     print("\n  " + ("BESTAETIGT - der Einbruch ueberlebt die Symbol-Clusterung"
                     if lo > 0 else "NICHT belastbar - Intervall schliesst 0 ein"))
+
+    phase_e(sig, stand)
+    phase_f(d)
     return 0
+
+
+def phase_e(sig, stand):
+    """Wann genau kippt es? Taeglich, mit identischem Fenster je Tag - und NUR
+    LONG, weil dort kein Nur-Long-Veto moeglich ist und damit auch kein
+    Zusammensetzungseffekt. Genau daran ist meine erste Datierung gescheitert."""
+    print("\n" + "=" * 78)
+    print("E. Kipppunkt: taegliche Trefferquote, NUR LONG (H=4)")
+    print("=" * 78)
+    tage = {}
+    for s in sig:
+        if str(s.get("richtung") or "").upper() != "LONG":
+            continue
+        a = _tag(s.get("created_at"))
+        if not a:
+            continue
+        st, b = ausgang(s)
+        if st and b and (b - a).days <= 4:
+            r = tage.setdefault(a.strftime("%m-%d"), [0, 0, []])
+            r[0] += st == TP
+            r[1] += 1
+            r[2].append((s.get("symbol") or "?", 1 if st == TP else 0))
+    for k in sorted(tage):
+        tp, auf, _ = tage[k]
+        if auf < 3:
+            continue
+        print("  {}  n={:3d}  TP={:3d}  Treffer={:6.1f}%  {}".format(
+            k, auf, tp, tp / auf * 100, "#" * int(tp / auf * 25)))
+    grenze = "07-29"
+    a = [x for k, v in tage.items() if k < grenze for x in v[2]]
+    b = [x for k, v in tage.items() if k >= grenze for x in v[2]]
+    if a and b:
+        ra, rb = sum(y for _, y in a) / len(a), sum(y for _, y in b) / len(b)
+        lo, hi, p = block_bootstrap(a, b)
+        print("\n  vor 29.07. {:.1f}% (n={})   ab 29.07. {:.1f}% (n={})   "
+              "Differenz {:+.1f} pp".format(ra * 100, len(a), rb * 100, len(b),
+                                            (ra - rb) * 100))
+        print("  Block-Bootstrap ueber Symbole: [{:+.1f} , {:+.1f}] pp, p={:.4f}".format(
+            lo * 100, hi * 100, p))
+
+
+def phase_f(d):
+    """Hat sich der MARKT geaendert? Regime-Label und Fear&Greed reichen dafuer
+    nicht - beide waren durchgehend gleich. Hier die tatsaechliche Bewegung
+    ueber alle Watchlist-Symbole, USD-gefiltert (Waehrungsfalle Methodik 2.1a)."""
+    print("\n" + "=" * 78)
+    print("F. Hat sich der Markt geaendert? Direkt gemessen")
+    print("=" * 78)
+    best = {}
+    for blk in ("preishistorie_signal_symbole", "preishistorie_ueberholte_symbole"):
+        for sym, reihe in (d.get(blk, {}).get("preishistorie_je_symbol") or {}).items():
+            if not isinstance(reihe, list) or not reihe or not isinstance(reihe[0], dict):
+                continue
+            r = [x for x in reihe
+                 if str(x.get("currency") or x.get("waehrung") or "USD").upper() == "USD"]
+            if len(r) > len(best.get(sym, [])):
+                best[sym] = r
+    tage = defaultdict(list)
+    for r in best.values():
+        r = sorted(r, key=lambda x: str(x.get("date") or ""))
+        for i in range(1, len(r)):
+            p0, p1 = r[i - 1].get("close"), r[i].get("close")
+            t = str(r[i].get("date") or "")[:10]
+            if isinstance(p0, (int, float)) and isinstance(p1, (int, float)) and p0 > 0 and t:
+                tage[t].append((p1 - p0) / p0 * 100)
+    print("  Symbole mit USD-Reihe: {}".format(len(best)))
+    for lab, a, b in (("21.-28.07. Plateau", "2026-07-21", "2026-07-29"),
+                      ("29.07.-05.08. Einbruch", "2026-07-29", "2026-08-06")):
+        v = [x for t, g in tage.items() if a <= t < b for x in g]
+        if v:
+            print("  {:24s} n={:5d}  Median {:+5.2f}%  Streuung {:5.2f}%  "
+                  "Anteil hoch {}%".format(lab, len(v), statistics.median(v),
+                                           statistics.pstdev(v),
+                                           sum(1 for x in v if x > 0) * 100 // len(v)))
 
 
 if __name__ == "__main__":
