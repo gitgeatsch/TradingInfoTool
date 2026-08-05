@@ -1260,10 +1260,11 @@ def main() -> None:
         # aber die fertige Band-Aufschluesselung erspart eine manuelle
         # Nachrechnung bei jeder Analyse).
         konfidenz_kalibrierung = compute_konfidenz_kalibrierung(conn, watchlist)
-        # 4c) Z.ais UNABHAENGIGE Richtungs-Erfolgsquote (2026-07-27, Nutzer-Wunsch
-        # nach der hebel_richtung_modus="nur_long"-Feststellung: "ZAI unabhaengig
-        # mit seinen unterschiedlichen Entscheidungen und deren Erfolgsquote
-        # messen") - siehe agent/krypto/backward_tracking.py::
+        # 4c) Z.ais UNABHAENGIGE Richtungs-Erfolgsquote (2026-07-27,
+        # Nutzer-Wunsch: "ZAI unabhaengig mit seinen unterschiedlichen
+        # Entscheidungen und deren Erfolgsquote messen"). Die urspruengliche
+        # Begruendung stuetzte sich auf den Nur-Long-Kandidatenfilter - der ist
+        # seit dem 05.08. entfernt, siehe agent/krypto/backward_tracking.py::
         # compute_zai_richtung_performance() Docstring.
         zai_richtung_performance = compute_zai_richtung_performance(conn, watchlist)
         # 4d) Veto-Schatten-Aggregationen (2026-07-28, siehe agent/krypto/

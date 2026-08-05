@@ -2542,13 +2542,31 @@ def bewerte_zai_richtung(
     Z.ai mit dem primaeren Signal selbst uebereinstimmte (das misst bereits
     `zai_uebereinstimmung`, siehe Modul-Docstring von gegenpruefung.py).
 
-    Nutzer-Wunsch (2026-07-27, nach der Feststellung, dass `hebel_richtung_modus`
-    auf dem Notebook seit Einfuehrung der Long/Short-Funktion durchgehend
-    "nur_long" ist - Mistrals extreme LONG-Bias in den bisherigen Auswertungen
-    ist also ein strukturelles Konfigurations-Artefakt, keine organische
-    Strategie): "ZAI unabhaengig mit seinen unterschiedlichen Entscheidungen
-    und deren Erfolgsquote messen" - analog zu compute_provider_performance()/
-    compute_win_rate_fact(), aber unabhaengig von Mistrals Bias.
+    Nutzer-Wunsch (2026-07-27): "ZAI unabhaengig mit seinen unterschiedlichen
+    Entscheidungen und deren Erfolgsquote messen" - analog zu
+    compute_provider_performance()/compute_win_rate_fact(), aber unabhaengig
+    von Mistrals Neigung.
+
+    URSPRUENGLICHE BEGRUENDUNG UEBERHOLT (2026-08-05). Sie lautete: der
+    Kandidatenfilter halte `hebel_richtung_modus="nur_long"` durchgehend
+    aktiv, Mistrals LONG-Uebergewicht sei damit ein strukturelles
+    Konfigurations-Artefakt und keine organische Strategie.
+
+    Dieser Filter ist seit dem 05.08. entfernt (budget_allocator.py, und der
+    nachgelagerte Veto in hebel_risk_gate.py::post_check_hebel() ebenfalls -
+    siehe dortigen Docstring). SHORT-Kandidaten erreichen das LLM jetzt, und
+    SHORT-Empfehlungen laufen normal durch. Ein LONG-Uebergewicht in
+    kuenftigen Auswertungen ist deshalb NICHT mehr automatisch ein Artefakt -
+    es kann eine echte Modellneigung sein, und genau das macht diese Messung
+    ab jetzt aussagekraeftiger als vorher.
+
+    Die Messung selbst bleibt unveraendert richtig: `leite_eigene_richtung()`
+    bekommt bewusst KEINE richtung/action/confidence_pct und leitet
+    LONG/SHORT/NEUTRAL allein aus den objektiven Fakten ab - sie war nie vom
+    Filter abhaengig, nur ihre Begruendung war es.
+
+    ZEITVERGLEICHE: der 05.08. ist eine Bruchstelle (Testmethodik 2.1b).
+    Vorher-Werte stammen aus einer Population ohne SHORT-Kandidaten.
 
     NACHTRAG (2026-07-27, Punkt 3 der Performance-Messung-Nachfrage): erste
     Version nutzte den binaeren `outcome_status` (TP/SL-Zone getroffen?) -

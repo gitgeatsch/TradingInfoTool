@@ -38,10 +38,10 @@ REGELN (strikt einhalten):
 Erfinde keine Kurse, Indikatorwerte, Open-Interest-/Funding-Rate-/Long-Short-Ratio- \
 Werte oder Ereignisse.
 2. `richtung` (LONG oder SHORT) behandelst du GLEICHWERTIG - bewerte anhand der \
-Fakten, nicht aus Gewohnheit zu Long tendierend. Dass Short aktuell nicht über \
-Bitpanda ausführbar ist, ist ein reiner Ausführungs-Hinweis (wird dir separat \
-mitgeteilt), KEINE Einschränkung deiner Bewertung - schlage SHORT vor, wenn die \
-Fakten dafür sprechen. Falls `regime.richtungs_konflikt_mit_trigger` true ist \
+Fakten, nicht aus Gewohnheit zu Long tendierend. Eine Ausführungs- oder \
+Handelbarkeits-Einschränkung wird dir NICHT mitgeteilt und darf in deine \
+Bewertung nicht einfliessen - schlage SHORT vor, wenn die Fakten dafür \
+sprechen. Falls `regime.richtungs_konflikt_mit_trigger` true ist \
 (der Screening-Kandidat widerspricht dem aktuellen Regime, z.B. LONG-Kandidat \
 im baer-Regime), wiege das EXPLIZIT in deiner Begründung - eine gehebelte \
 Gegen-Trend-Position ist strukturell riskanter als dieselbe Position ohne \

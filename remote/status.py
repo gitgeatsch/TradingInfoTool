@@ -325,9 +325,12 @@ def _get_marktscan_erfolgsquote(conn: sqlite3.Connection) -> dict | None:
 
 
 def _get_zai_richtung_performance(conn: sqlite3.Connection, watchlist: list) -> dict:
-    """Z.ais UNABHAENGIGE Richtungs-Erfolgsquote (2026-07-27, Nutzer-Wunsch nach
-    der `hebel_richtung_modus="nur_long"`-Feststellung: "ZAI unabhaengig mit
-    seinen unterschiedlichen Entscheidungen und deren Erfolgsquote messen")
+    """Z.ais UNABHAENGIGE Richtungs-Erfolgsquote (2026-07-27, Nutzer-Wunsch:
+    "ZAI unabhaengig mit seinen unterschiedlichen Entscheidungen und deren
+    Erfolgsquote messen"). Die urspruengliche Begruendung stuetzte sich auf den
+    Nur-Long-Kandidatenfilter - der ist seit dem 05.08. entfernt, siehe
+    compute_zai_richtung_performance()-Docstring, Abschnitt "URSPRUENGLICHE
+    BEGRUENDUNG UEBERHOLT".
     - reiner Lesezugriff auf agent/krypto/backward_tracking.py::
     compute_zai_richtung_performance(). Anders als provider_performance
     (das Mistrals EIGENE Empfehlung bewertet) misst diese Karte, ob Z.ais
