@@ -75,24 +75,36 @@ from api.mistral import MistralClient
 from backtest_llm1_historisch import _arg, frage
 from datiere_einbruch import ORDNER
 
-REGEL_ANFANG = "30. Handelskosten"
-REGEL_ENDE = "wenn sie deine Zone beeinflusst hat."
+# ALLE drei neuen Fakten werden gemeinsam getestet (Nutzer-Hinweis 05.08.:
+# "sollten dann nicht alle neuen drinnen sein"). Ein Zwischenstand gegen nichts
+# zu vergleichen waere die falsche Frage - im Betrieb stehen alle drei.
+REGELN = (
+    ("30. Handelskosten", "wenn sie deine Zone beeinflusst hat."),
+    ("31. Ausstiegsregel", "erfinde nichts."),
+)
+NEUE_FAKTEN = ("kosten", "ausstiegsregel", "systemguete")
 
 
 def baue_arme() -> dict[str, str]:
-    i = SYSTEM_PROMPT.find(REGEL_ANFANG)
-    j = SYSTEM_PROMPT.find(REGEL_ENDE)
-    if i < 0 or j < 0:
-        raise SystemExit("Regel 30 nicht gefunden - Formulierung geaendert?")
-    j += len(REGEL_ENDE)
-    ohne = SYSTEM_PROMPT[:i] + SYSTEM_PROMPT[j:]
+    """B-Arm ohne ALLE drei neuen Regeln. Von hinten entfernen, damit die
+    Positionen der frueheren Treffer gueltig bleiben."""
+    ohne = SYSTEM_PROMPT
+    for anfang, ende in reversed(REGELN):
+        i = ohne.find(anfang)
+        j = ohne.find(ende, i if i >= 0 else 0)
+        if i < 0 or j < 0:
+            raise SystemExit(f"Regel nicht gefunden: {anfang}")
+        ohne = ohne[:i] + ohne[j + len(ende):]
     weg = len(SYSTEM_PROMPT) - len(ohne)
-    if weg < 500:
+    if weg < 1500:
         raise SystemExit(f"verdaechtig wenig entfernt: {weg} Zeichen")
-    print(f"  Regel 30 entfernt: -{weg} Zeichen")
-    return {"A1 mit Kosten": SYSTEM_PROMPT,
-            "A2 mit Kosten (Rauschen)": SYSTEM_PROMPT,
-            "B ohne Kosten": ohne}
+    for anfang, _ in REGELN:
+        if anfang in ohne:
+            raise SystemExit(f"{anfang} steht noch im B-Arm")
+    print(f"  beide neuen Regeln entfernt: -{weg} Zeichen")
+    return {"A1 alle neuen Fakten": SYSTEM_PROMPT,
+            "A2 alle neuen Fakten (Rauschen)": SYSTEM_PROMPT,
+            "B ohne die neuen Fakten": ohne}
 
 
 def lade_faelle(n: int):
@@ -152,7 +164,46 @@ def main() -> int:
     akt: dict[str, list[str]] = defaultdict(list)
     antworten = []
 
-    from agent.krypto.backward_tracking import kosten_kontext_fuer_prompt
+    import copy as _copy
+    import config as _config
+    from agent.krypto.backward_tracking import (
+        ausstiegsregel_kontext_fuer_prompt, kosten_kontext_fuer_prompt,
+    )
+
+    _cfg = _copy.deepcopy(_config.load_config())
+    _ausstieg = ausstiegsregel_kontext_fuer_prompt(_cfg)
+    # Systemguete AUS DEM EXPORT, nicht aus der Datenbank. Stehende Vorgabe:
+    # Desktop-Testskripte fassen die Produktiv-DB nicht an. Die Zahlen sind
+    # dieselben - der Export liest genau diese Funktion - und sie stammen aus
+    # dem Notebook-Lauf, also aus der Quelle, die auch im Betrieb zaehlt.
+    _d = json.load(io.open(os.path.join(ORDNER, "notebook_diagnose.json"),
+                           encoding="utf-8"))
+    _real = ((_d.get("systemguete") or {}).get("hebel") or {}).get("real") or {}
+    _n = _real.get("anzahl_bewertet")
+    if isinstance(_n, int) and _n >= 30:
+        _guete = {
+            "anzahl_ausgewerteter_trades": _n,
+            "erwartungswert_r": round(_real["expectancy_r"], 3),
+            "sqn": round(_real["sqn"], 2),
+            "sqn_einordnung": _real.get("sqn_einordnung"),
+            "profit_factor": round(_real["profit_factor"], 2),
+            "lesehilfe": (
+                "Erwartungswert in R = durchschnittliches Ergebnis je Signal, gemessen "
+                "an tatsaechlich eroeffneten Trades dieser Kategorie. Ein negativer Wert "
+                "heisst, dass die bisherigen Signale im Schnitt Geld gekostet haben."
+            ),
+            "wie_du_das_nutzt": (
+                "Das ist Kalibrierungs-Kontext, KEINE Handlungsanweisung und kein Grund, "
+                "grundsaetzlich zurueckhaltender zu werden. Es sagt dir, wie streng die "
+                "Latte fuer ein lohnendes Setup liegt - nicht, dass du keines mehr "
+                "vorschlagen sollst."
+            ),
+            "belegt": True,
+        }
+    else:
+        _guete = None
+    print(f"  neue Fakten im A-Arm: kosten=ja, ausstiegsregel="
+          f"{'ja' if _ausstieg else 'nein'}, systemguete={'ja' if _guete else 'nein'}")
 
     for f in faelle:
         ohne_kosten = json.loads(f["facts_json"])
@@ -165,7 +216,12 @@ def main() -> int:
         basis = copy.deepcopy(ohne_kosten)
         basis["kosten"] = kosten_kontext_fuer_prompt(
             (basis.get("hebel_kontext") or {}).get("max_hebel_config"))
-        ohne_kosten.pop("kosten", None)
+        if _ausstieg is not None:
+            basis["ausstiegsregel"] = _ausstieg
+        if _guete is not None:
+            basis["systemguete"] = _guete
+        for _k in NEUE_FAKTEN:
+            ohne_kosten.pop(_k, None)
         print(f"\n{f['symbol']} @ {f['created_at'][:16]}:", flush=True)
         for name, prompt in arme.items():
             # Der B-Arm bekommt AUCH die Fakten ohne `kosten` - Regel und Fakt
@@ -207,9 +263,9 @@ def main() -> int:
         print(f"{name:28s}{len(v):5d}{statistics.median(v):10.2f}"
               f"{statistics.fmean(v):10.2f}{er:10.0f}%")
 
-    a1 = stops.get("A1 mit Kosten", [])
-    a2 = stops.get("A2 mit Kosten (Rauschen)", [])
-    b = stops.get("B ohne Kosten", [])
+    a1 = stops.get("A1 alle neuen Fakten", [])
+    a2 = stops.get("A2 alle neuen Fakten (Rauschen)", [])
+    b = stops.get("B ohne die neuen Fakten", [])
     if len(a1) < 10 or len(b) < 10:
         print("\n  zu wenige Faelle")
         return 1
