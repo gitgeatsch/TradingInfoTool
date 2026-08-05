@@ -1333,6 +1333,28 @@ def main() -> None:
         # zwischen den Payload-Eintraegen und lief damit gegen eine bereits
         # geschlossene Verbindung.
         systemguete = compute_systemguete(conn, watchlist)
+        # Echte Faktensaetze fuer den Regel-28-Test (2026-08-05). MUSS
+        # ebenfalls hier stehen - beim ersten Einbau stand der Aufruf oben bei
+        # watchlist_stammdaten, das ist aber ein vorberechneter Wert und
+        # braucht keine Verbindung mehr. Ergebnis: "Cannot operate on a closed
+        # database", derselbe Fehler wie am 02.08. bei compute_systemguete().
+        # Der Rauchtest fand das nicht, weil er die FUNKTION mit offener
+        # Verbindung prueft, nicht ihre PLATZIERUNG in main().
+        #
+        # Fail-soft, aber nicht blind: ein fehlender Block darf den Exportlauf
+        # nicht kippen (Lehre vom 04.08., portfolio_wert_historie) - ein
+        # Verdrahtungsfehler soll aber laut sein und nicht als leeres Ergebnis
+        # durchgehen.
+        try:
+            hebel_faktensaetze = _hebel_faktensaetze(conn)
+        except Exception as exc:
+            hebel_faktensaetze = {
+                "fehler": f"{type(exc).__name__}: {exc}",
+                "verdacht": ("VERDRAHTUNGSFEHLER - der Aufruf steht vermutlich nach "
+                             "conn.close()" if "closed database" in str(exc).lower()
+                             else "Datenbestand"),
+                "eintraege": [],
+            }
         # Punkt 3.2 (2026-08-04): welche offenen Signale haben einen
         # ungesicherten Buchgewinn ueber der Ausloeseschwelle?
         ausstiegs_empfehlungen = compute_ausstiegs_empfehlungen(
@@ -1396,15 +1418,6 @@ def main() -> None:
     # Merkmale sind, die in KEINER Signalzeile stehen - fuer die
     # Ausschuss-Suche (Abschnitt 7 der Zielgroessen-Doku) sind sie damit neue
     # Information, nicht bloss eine Kopie. Kosten: rund 60 Symbole x 5 Felder.
-    # Echte Faktensaetze fuer den Regel-28-Test (2026-08-05) - fail-soft, weil
-    # aeltere Datenbestaende die Spalte facts_json nicht zwingend befuellt
-    # haben. Ein fehlender Block darf den gesamten Exportlauf nicht kippen;
-    # genau das waere am 04.08. mit portfolio_wert_historie beinahe passiert.
-    try:
-        hebel_faktensaetze = _hebel_faktensaetze(conn)
-    except Exception as exc:
-        hebel_faktensaetze = {"fehler": f"{type(exc).__name__}: {exc}", "eintraege": []}
-
     watchlist_stammdaten = {
         a.symbol: {
             "assetklasse": a.assetklasse,
