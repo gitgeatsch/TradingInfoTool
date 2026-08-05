@@ -233,3 +233,59 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+# --- Zweite Runde (05.08.): die sieben Bloecke, die im Betrieb stehen ------
+# Die erste Runde zeigte, dass WEDER Regime NOCH Funding/OI NOCH Fear&Greed
+# das HALTEN traegt (100 % / 100 % / 100 %, alles zusammen 96 %). Der
+# Faktensatz-Vergleich gegen den Betrieb ergab sieben fehlende Bloecke -
+# darunter zwei mit einem klaren Wirkmechanismus:
+#
+#   regime_profil  traegt `min_konfidenz_prozent` - eine EXPLIZITE Schwelle,
+#                  die dem Modell mitgeteilt wird. Im Baerenregime 75 %; die
+#                  erste Runde mass 77-79 % Konfidenz, also knapp darueber.
+#   trigger        sagt, WARUM dieser Kandidat kam (Zweig, Score) - ohne ihn
+#                  bewertet das Modell frei statt einen Vorschlag zu pruefen.
+
+REGIME_MINDESTKONFIDENZ = {"krise_extrem": 85, "baer": 75, "seitwaerts": 65,
+                           "bulle": 60, "euphorie_extrem": 60}
+
+
+def regime_aus_reason(makro_zeile: dict) -> str:
+    """Regime-Schluessel aus btc_trend_label/regime_reason ableiten.
+
+    Der Wert selbst steht historisch nicht in macro_snapshot - nur die
+    Begruendung und der BTC-Trend. Bewusst grob und konservativ: im Zweifel
+    das strengere Regime, damit die Mindestkonfidenz nicht zu niedrig
+    angesetzt wird und der Test das HALTEN nicht kuenstlich erschwert."""
+    trend = str(makro_zeile.get("btc_trend_label") or "")
+    fg = makro_zeile.get("fear_greed_value")
+    if "abwärts" in trend or "abwaerts" in trend:
+        return "krise_extrem" if (fg is not None and fg < 20) else "baer"
+    if "aufwärts" in trend or "aufwaerts" in trend:
+        return "bulle"
+    return "seitwaerts"
+
+
+def block_regime_profil(makro_zeile: dict) -> dict:
+    r = regime_aus_reason(makro_zeile)
+    return {"regime_profil": {"regime": r,
+                              "min_konfidenz_prozent": REGIME_MINDESTKONFIDENZ[r]}}
+
+
+def block_trigger(trigger_zeilen: list[dict]) -> dict:
+    """Der Trigger-Block wie im Betrieb, aus hebel_triggers_alle rekonstruiert."""
+    if not trigger_zeilen:
+        return {}
+    import statistics as _st
+    def med(feld):
+        v = [x[feld] for x in trigger_zeilen
+             if isinstance(x.get(feld), (int, float)) and not isinstance(x.get(feld), bool)]
+        return round(_st.median(v), 6) if v else None
+    zweige = [x.get("trigger_zweig") for x in trigger_zeilen if x.get("trigger_zweig")]
+    return {"trigger": {
+        "trigger_zweig": max(set(zweige), key=zweige.count) if zweige else None,
+        "score_gesamt": med("score_gesamt"),
+        "oi_change_pct_lookback": med("oi_change_pct_lookback"),
+        "kursaenderung_pct_lookback": med("kursaenderung_pct_lookback"),
+    }}
