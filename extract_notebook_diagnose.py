@@ -203,6 +203,7 @@ from agent.krypto.backward_tracking import (
     compute_provider_sendezaehler,
     compute_selbst_halten_performance,
     compute_ausstiegs_empfehlungen,
+    compute_richtungsverteilung,
     compute_systemguete,
     compute_selbst_halten_performance_nach_grund,
     compute_veto_shadow_performance,
@@ -1334,6 +1335,18 @@ def main() -> None:
         # zwischen den Payload-Eintraegen und lief damit gegen eine bereits
         # geschlossene Verbindung.
         systemguete = compute_systemguete(conn, watchlist)
+        # Richtungsverteilung seit dem Nur-Long-Umbau (2026-08-05). Ebenfalls
+        # VOR conn.close() - siehe die Warnung darueber, dieselbe Falle.
+        #
+        # Die Kennzahl gibt es auch auf der Remote-Seite; sie gehoert aber
+        # zusaetzlich in den Export, weil die Auswertung am Desktop laeuft und
+        # die Remote-Seite nur einen Momentwert zeigt. Bis zum 05.08. war die
+        # Frage nicht stellbar: SHORT-Kandidaten wurden vorgefiltert und
+        # SHORT-Empfehlungen vom Risk-Gate auf HALTEN gedreht.
+        try:
+            richtungsverteilung = compute_richtungsverteilung(conn, watchlist)
+        except Exception as exc:
+            richtungsverteilung = {"fehler": f"{type(exc).__name__}: {exc}"}
         # Echte Faktensaetze fuer den Regel-28-Test (2026-08-05). MUSS
         # ebenfalls hier stehen - beim ersten Einbau stand der Aufruf oben bei
         # watchlist_stammdaten, das ist aber ein vorberechneter Wert und
@@ -1433,6 +1446,7 @@ def main() -> None:
     payload = {
         "watchlist_stammdaten": watchlist_stammdaten,
         "hebel_faktensaetze": hebel_faktensaetze,
+        "richtungsverteilung": richtungsverteilung,
         "holdings_check": [row_to_dict(r) for r in holdings],
         "api_health": api_health,
         "llm_calls_heute": llm_calls_heute,
