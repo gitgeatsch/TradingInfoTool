@@ -42,6 +42,7 @@ Lauf: python -u backtest_regeln_29_07.py [--n 10] [--w 3]
 from __future__ import annotations
 
 import io
+import math
 import os
 import re
 import statistics
@@ -165,6 +166,7 @@ def main() -> int:
     print(f"Fenster: {anker[0][2]} .. {anker[-1][2]}")
     print("=" * 78)
 
+    je_anker: dict[tuple, dict[str, list[float]]] = defaultdict(lambda: defaultdict(list))
     rr: dict[str, list[float]] = defaultdict(list)
     akt: dict[str, list[str]] = defaultdict(list)
     stopw: dict[str, list[float]] = defaultdict(list)
@@ -184,6 +186,7 @@ def main() -> int:
                 r = bewerte(a, reihen[sym], i)
                 if r is not None:
                     rr[name].append(r)
+                    je_anker[(sym, tag)][name].append(r)
                     werte.append(r)
                 try:
                     e = (a["entry"]["usd_von"] + a["entry"]["usd_bis"]) / 2.0
@@ -210,25 +213,56 @@ def main() -> int:
               f"{(statistics.median(r) if r else float('nan')):10.3f}"
               f"{(statistics.fmean(stopw[name]) if stopw.get(name) else float('nan')):9.2f}")
 
-    a1, a2 = rr.get("A1 Stand heute", []), rr.get("A2 Stand heute (Rauschen)", [])
-    if a1 and a2:
-        boden = abs(statistics.fmean(a1) - statistics.fmean(a2))
-        print("\n" + "=" * 78)
-        print(f"NACHWEISGRENZE (A1 gegen A2, identischer Prompt): {boden:.3f} R")
-        print("=" * 78)
-        basis = statistics.fmean(a1 + a2)
-        for name in varianten:
-            if name.startswith("A"):
-                continue
-            r = rr.get(name, [])
-            if not r:
-                continue
-            d = statistics.fmean(r) - basis
-            urteil = ("TRAEGT" if abs(d) > 2 * boden else
-                      "unter der Nachweisgrenze" if abs(d) < boden else "unklar")
-            print(f"  {name:28s} {d:+7.3f} R  = {abs(d) / boden if boden else float('inf'):5.1f}x "
-                  f"Rauschen   {urteil}")
+    auswerten(je_anker, varianten)
     return 0
+
+
+def auswerten(je_anker, varianten):
+    """GEPAART je Ankerpunkt, nicht ueber alle Werte gepoolt.
+
+    Der erste Aufbau verglich |Mittelwert(A1) - Mittelwert(A2)| und nannte das
+    Nachweisgrenze. Das ist falsch: dieser Wert ist EINE Realisierung einer
+    Zufallsgroesse, und im Lauf vom 05.08. traf er zufaellig 0,005 R. Danach
+    dividiert wurden aus Effekten von 0,2 R glatte "53x Rauschen" - eine
+    Division durch eine Zufallszahl nahe null. Richtig ist die STREUUNG der
+    Ankerdifferenzen (im selben Lauf 0,439 R), und die Paarung nutzt aus, dass
+    alle Varianten denselben Ankerpunkt sehen."""
+    ank = sorted(je_anker)
+
+    def differenzen(v):
+        d = []
+        for a in ank:
+            basis = (je_anker[a].get("A1 Stand heute", [])
+                     + je_anker[a].get("A2 Stand heute (Rauschen)", []))
+            g = je_anker[a].get(v, [])
+            if basis and g:
+                d.append(statistics.fmean(g) - statistics.fmean(basis))
+        return d
+
+    print("\n" + "=" * 78)
+    print("Gepaarter Vergleich gegen die beiden Kontrollarme")
+    print("=" * 78)
+    print(f"{'Variante':28s}{'Diff':>8s}{'sd':>7s}{'SE':>7s}{'t':>7s}"
+          f"{'n noetig':>10s}  Urteil")
+    for name in varianten:
+        d = differenzen(name)
+        if len(d) < 3:
+            continue
+        mw, sd = statistics.fmean(d), statistics.stdev(d)
+        se = sd / math.sqrt(len(d))
+        noetig = math.ceil((1.96 * sd / abs(mw)) ** 2) if mw else 0
+        urteil = "TRAEGT" if abs(mw) > 1.96 * se else "nicht unterscheidbar"
+        print(f"{name:28s}{mw:+8.3f}{sd:7.3f}{se:7.3f}{(mw / se if se else 0):7.2f}"
+              f"{noetig:10d}  {urteil}")
+    d = [statistics.fmean(je_anker[a]["A1 Stand heute"])
+         - statistics.fmean(je_anker[a]["A2 Stand heute (Rauschen)"])
+         for a in ank
+         if je_anker[a].get("A1 Stand heute") and je_anker[a].get("A2 Stand heute (Rauschen)")]
+    if len(d) >= 3:
+        print(f"\nECHTE NACHWEISGRENZE (Streuung der A1/A2-Ankerdifferenzen): "
+              f"{statistics.stdev(d):.3f} R")
+        print("Der Rausch-Arm MUSS hier bei t nahe 0 stehen - tut er das nicht, "
+              "ist der Aufbau kaputt und kein Ergebnis darunter gilt.")
 
 
 if __name__ == "__main__":
