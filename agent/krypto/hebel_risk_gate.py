@@ -791,7 +791,6 @@ def post_check_hebel(
     richtungswende_atr_schwelle: float | None = None,
     regime_persistenz_tage: int | None = None,
     btc_relativwert: dict | None = None,
-    hebel_richtung_modus: str | None = None,
 ) -> dict:
     """Nimmt die bereits schema-validierte LLM-Antwort und erzwingt AZ-7/RM-1/
     RM-11/CRV noch einmal deterministisch, analog risk_gate.py::post_check().
@@ -854,29 +853,40 @@ def post_check_hebel(
     `filtere_retail_konsens_top_gruende()` wird ganz am Anfang auf
     `result["top_gruende"]` angewendet, siehe deren Docstring.
 
-    Nachtrag 2026-07-28 (Nutzer-Fund: "Hebel ERÖFFNEN NEAR (SHORT)"/"TAO
-    (SHORT)" trotz aktivem "Nur Long"-Schalter): `hebel_richtung_modus`
-    (optional, aus `ui/settings.py` via `ui_settings.load_settings()`) - der
-    bestehende Kandidaten-Filter in `budget_allocator.py` (Zeile ~388/435)
-    filtert nur `trigger.richtung` (die Kandidaten-Einstufung VOR dem LLM-
-    Call) heraus, wenn `"nur_long"` aktiv ist. Das LLM entscheidet
-    `parsed["richtung"]` in seiner Antwort aber vollstaendig frei (siehe
-    hebel_analyst.py-Schema) - bekommt `trigger.richtung` nur als EINEN
-    beschreibenden Fakt (`regime.richtungs_konflikt_mit_trigger`), NICHT als
-    verbindliche Vorgabe, und weiss vom `hebel_richtung_modus`-Schalter selbst
-    ueberhaupt nichts. Log-Beweis: `Budget-Allocator: Hebel 2/2
-    (Richtung=nur_long, ...)` gefolgt von einer tatsaechlich verschickten
-    "SHORT ERÖFFNEN"-E-Mail - der Filter lief korrekt, das LLM entschied sich
-    trotzdem fuer SHORT. Deckt NUR den echten Fresh-ERÖFFNEN-Fall ohne
-    bestehende Position ab (`position_aktuell is None`) - der bewusst erlaubte
-    Kontrathese-Fall (SHORT-Vorschlag GEGEN eine bestehende LONG-Position,
-    siehe Nachtrag 2026-07-24 oben) bleibt davon unberuehrt, weil dessen
-    `elif`-Zweig oben bei vorhandener Position bereits zuerst greift.
-    KORREKTUR eines fruehreren Fehlschlusses (Regelwerksmanual.md, Nachtrag
-    27.07. "Z.ai-Richtungs-Erfolgsquote"): "57 LONG/2 SHORT bei Mistral" wurde
-    damals als Bestaetigung gewertet, dass der Kandidaten-Filter ausreicht -
-    die 2 SHORT-Faelle waren vermutlich bereits genau diese Luecke, nur nicht
-    als solche erkannt."""
+    Nachtrag 2026-08-05: HIER STAND EIN NUR-LONG-VETO, ES IST BEWUSST
+    ENTFERNT. Wer sich fragt, warum diese Funktion die Bitpanda-Beschraenkung
+    nicht kennt - das ist Absicht.
+
+    Der Veto entstand am 28.07. als Reparatur eines echten Fundes ("Hebel
+    ERÖFFNEN NEAR (SHORT)" trotz aktivem Nur-Long-Schalter): der
+    Kandidatenfilter im Budget-Allocator filtert nur `trigger.richtung`, die
+    Einstufung VOR dem LLM-Call - das Modell waehlt `parsed["richtung"]` aber
+    frei. Der Veto drehte solche Faelle nachtraeglich auf `action="HALTEN"`.
+
+    WARUM ER WEG IST, drei Gruende:
+
+    1. Er hat die MESSUNG verdorben. 313 SHORT-Vorschlaege lagen dadurch als
+       "HALTEN" in der Datenbank. Bei der Ursachensuche zum Verhaltensbruch vom
+       31.07. wurden dadurch wiederholt unvergleichbare Populationen vermischt,
+       und die Frage "warum kommen so wenige Signale" war tagelang nicht
+       beantwortbar.
+    2. Er hat KEINEN Ertrag geschuetzt. Gemessen am 05.08. ueber zwei Regime
+       mit derselben Faktenquelle: im steigenden Markt ist LONG klar besser
+       (LONG minus SHORT +1,744 R, Bootstrap [+0,867 , +2,429]), im fallenden
+       ist nichts belastbar besser (-0,133 R, Intervall schliesst 0 ein). Die
+       Richtungswahl des Modells ist eine Regime-Wette, keine Kante - der Veto
+       verhinderte also weder Verluste noch entgingen uns Gewinne.
+    3. Er sass an der falschen Stelle. Die Beschraenkung ist ein
+       AUSFUEHRUNGS-Merkmal des Brokers, kein Risiko-Merkmal des Signals. Sie
+       gehoert an die Praesentationsgrenze, nicht in die Bewertung.
+
+    SEITHER gilt: SHORT-Signale werden vollstaendig normal erzeugt, bewertet
+    und gemessen. Gefiltert wird ausschliesslich, was der Nutzer zu sehen
+    bekommt - scheduler/background.py::_ist_email_relevante_richtung() fuer den
+    Mailversand, ui/hebel_view.py fuer die Anzeige.
+
+    NICHT VERWECHSELN: der Kandidatenfilter im Budget-Allocator ist eine
+    eigene, aeltere Massnahme (15.07., Budget-Ersparnis) - siehe dort."""
     result = dict(parsed)
     result["top_gruende"] = filtere_retail_konsens_top_gruende(result.get("top_gruende"))
     risk_veto = False
@@ -962,22 +972,6 @@ def post_check_hebel(
                 action = "HALTEN"
         richtung = str(position_aktuell.richtung).upper()
         result["richtung"] = richtung
-    elif (
-        hebel_richtung_modus == "nur_long"
-        and richtung == RICHTUNG_SHORT
-        and action == "ERÖFFNEN"
-    ):
-        # Nur-Long-Deckel (2026-07-28, siehe Docstring "Nachtrag 2026-07-28")
-        # - greift NUR hier (position_aktuell is None, sonst waere der
-        # Kontrathese-Zweig oben schon gelaufen), also ein echter Fresh-
-        # ERÖFFNEN-Vorschlag ohne bestehende Position - auf Bitpanda nicht
-        # ausfuehrbar, unabhaengig davon was das LLM selbst dazu meint.
-        risk_veto = True
-        risk_veto_reason = (
-            "\"Nur Long\"-Einstellung aktiv, LLM empfahl SHORT ERÖFFNEN "
-            "(auf Bitpanda nicht ausfuehrbar)"
-        )
-        action = "HALTEN"
 
     def _hebel_deckel_kandidaten(
         crv: float | None = None, sl_abstand_relativ: float | None = None,
