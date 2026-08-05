@@ -780,6 +780,25 @@ hergeleiteten Werte `watchlist_heiss_fenster_stunden=48` und
 `schnellerfolg_anteil_max=0,5` im selben Marktscan-Nachtrag - beide aus
 beobachteten Verteilungen abgeleitet, nicht geschätzt).
 
+**Nachtrag 05.08.: Schritt 2 kann die ganze Aufgabe beenden — und das ist ein
+Ergebnis, kein Scheitern.** Beauftragt war die Neukalibrierung der
+Konfidenz-Schwellen nach dem Mistral-Drift. Schritt 2 (Verteilung ermitteln)
+ergab, dass Konfidenz überhaupt keine Information über das Ergebnis trägt —
+acht Messungen, kein Intervall schließt null aus. Damit entfällt Schritt 3:
+eine Schwelle für eine Größe herzuleiten, die nicht diskriminiert, verschiebt
+nur eine Zahl.
+
+Die allgemeine Lehre: **vor jeder Schwellen-Kalibrierung zuerst prüfen, ob die
+zugrundeliegende Größe überhaupt trennt.** Wer direkt zu Schritt 3 springt,
+produziert eine sauber hergeleitete Zahl für ein Kriterium ohne Aussagekraft —
+und der gepflegte Herleitungsweg lässt sie glaubwürdiger aussehen, als sie ist.
+Dasselbe Muster liegt dem Screening-Score-Befund zugrunde (04.08., „Score
+diskriminiert nicht") und dem ADX-Befund in 2.5.2.
+
+Zweitens: bleibt die Größe trotzdem im System (weil sie etwas anderes steuert,
+hier die Signal-MENGE), gehört das ausdrücklich benannt und als
+Nutzer-Entscheidung markiert statt als hergeleitete Zahl ausgegeben.
+
 ### 2.9 Fazit-Selbsteinschätzung (`eigene_einschaetzung.folgen`) — offener Kalibrierungs-Beobachtungspunkt (Nachtrag 01.08.)
 
 Auslöser: Nutzer-Beobachtung, noch nie ein Signal gesehen zu haben, bei dem

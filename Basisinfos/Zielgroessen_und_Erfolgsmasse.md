@@ -387,7 +387,7 @@ dem die letzten drei Anläufe hängengeblieben sind.
 |---|---|---|---|---|
 | 1 | **Screening** erzeugt Kandidaten | `score_gesamt`, `trigger_zweig` | Score **diskriminiert nicht** (Event-Study 04.08.); Einzelkomponenten (`score_details_json`) nicht im Export | Komponenten exportieren, dann simulativ prüfen welche trägt |
 | 2 | **Auswahl** (Budget-Allocator) | nichts über die 5.170 nie aufgerufenen Kandidaten | ob die Auswahl **besser als Zufall** ist — nie gemessen | mechanische Simulation ab `screened_at`, ausgewählt gegen nicht ausgewählt |
-| 3 | **LLM1** setzt Zonen + action | outcome, Zonen, Konfidenz | **23,9 % erarbeiten gar keine Zonen** — Ursache unbekannt; Zonen*qualität* nie bewertet | Begründungskategorien auswerten; Zonen gegen ATR/Struktur prüfen |
+| 3 | **LLM1** setzt Zonen + action | outcome, Zonen, Konfidenz | **23,9 % erarbeiten gar keine Zonen** — Ursache unbekannt; Zonen*qualität* nie bewertet. **Konfidenz trägt keine Information** (05.08., siehe unten) | Begründungskategorien auswerten; Zonen gegen ATR/Struktur prüfen |
 | 4 | **Gate/Veto** entscheidet | Beitrag je Gruppe (durchgelassen +0,784 / Veto +0,235) | **die Ausschuss-Hypothese**: gibt es im Geblockten eine identifizierbare gute Teilmenge? | synthetische Validierung + Holdout (unten) |
 | 5 | **LLM2** (Z.ai) prüft gegen | Übereinstimmungsquote | ob die Übereinstimmung **prädiktiven Wert** hat — nie gemessen; nur 24 % Abdeckung | Beitrag getrennt nach Übereinstimmung/Abweichung |
 | 6 | **Laufzeit** | `outcome_status`, Überholung | `halte_kriterium` wird **gesetzt, aber nie gegen den Verlauf ausgewertet** (941 Zielpreise, 57 Mindestziel-Treffer) | Auswertung nachrüsten |
@@ -1148,6 +1148,56 @@ kostenrobust, weil beide Seiten dieselben Sätze tragen.
 | b | Phase 1.1 Teil A + B bauen | **erledigt 04.08.** — `ausschuss_suche.py` + `pruefe_ausschuss_suche.py` |
 | c | Akzeptanzkriterien prüfen | **erledigt 04.08.** — alle fünf bestanden, inkl. gemessener Betriebsgrenze ICC ≤ 0,80 |
 | d | Entscheidung: 1.2 starten oder abschließen | **erledigt 04.08.** — 1.2 gelaufen, **kein Fund** (p=0,32 Hebel / 0,49 Spot). Vorher bekannt: nur Effekte ≥ 1,2 R wären auffindbar |
+
+---
+
+## 7b. Konfidenz trägt keine Information (05.08.2026) — die Schwellen-Frage ist damit beantwortet
+
+**Auslöser:** Mistral hat am 31.07. anbieterseitig sein Verhalten geändert
+(Nachweis: Replay mit bitgleichem Juli-Prompt, 55,4 % → 68,0 % Konfidenz). Die
+Regime-Mindestschwellen R-5.10 (`krise_extrem 85 / bär 75 / seitwärts 65 /
+bulle 60`) stehen seither auf einer Verteilung, die es nicht mehr gibt:
+
+| Hebel-Konfidenz | Median | ≥70 % | ≥75 % |
+|---|---|---|---|
+| bis 30.07. | 60,0 | 9 % | 5 % |
+| ab 31.07. | 70,0 | **61 %** | 5 % |
+
+Die Masse liegt jetzt exakt auf 70. Im Bärenregime filtert 75 unverändert; bei
+einem Wechsel nach *seitwärts* (65) ließe das Gate schlagartig 61 % statt 9 %
+durch.
+
+**Methode nicht selbst gewählt.** Testmethodik 2.8 verlangt Verteilung vor
+Herleitung; die Dead-Loop-Synthese verwirft die Bucket-Methode als
+„strukturell nicht praktikabel" (reale Power n≈340, ≈4,5 Monate) und schlägt
+ausdrücklich den kontinuierlichen Korrelationstest vor. Also Spearman über alle
+Datenpunkte, getrennt vor/nach der Bruchstelle 31.07., Block-Bootstrap über
+Symbole (`messe_konfidenz_kalibrierung_neu.py`).
+
+**Ergebnis — acht Messungen, kein einziges Intervall schließt null aus:**
+
+| Population | n | Konfidenz→Treffer | Konfidenz→R |
+|---|---|---|---|
+| Spot bis 30.07. | 215 | −0,093 [−0,244 ; +0,055] | −0,116 [−0,256 ; +0,018] |
+| Spot ab 31.07. | 51 | −0,236 [−0,495 ; +0,059] | −0,214 [−0,383 ; +0,032] |
+| Hebel bis 30.07. | 358 | −0,023 | −0,038 |
+| Hebel ab 31.07. | 102 | −0,043 | +0,047 |
+
+Alle vier Spot-Punktschätzer sind **negativ** — höhere Konfidenz ging mit
+leicht schlechteren Ergebnissen einher, wenn auch nicht signifikant.
+
+**Konsequenz:** eine Neukalibrierung „für bessere Qualität" ist nicht
+begründbar. Die Schwelle selektiert nicht nach Qualität, weil die Zahl, auf die
+sie sich stützt, keine Information über das Ergebnis trägt.
+
+**Was die Schwelle trotzdem tut:** sie steuert die **Menge**. Der Drift hat sie
+in den Regimes *seitwärts* und *bulle* faktisch entschärft. Das ist eine
+Durchsatz-Entscheidung, keine Qualitätsentscheidung — und damit nach Methodik
+2.8 Schritt 4 eine Nutzer-Entscheidung, keine herleitbare Zahl.
+
+**Einschränkung:** die Intervalle sind ±0,15 bis ±0,25 breit. Ein echter
+Zusammenhang von ρ≈0,3 wäre in den kleineren Stichproben nicht sicher gefunden
+worden. „Kein Zusammenhang nachweisbar" heißt nicht „garantiert keiner".
 
 ---
 

@@ -465,16 +465,47 @@ bevor sortiert/gekappt wird. Gilt automatisch auch für den manuellen
 "Fällige Signale jetzt berechnen"-Button (dieselbe Funktion), nicht nur für
 den Budget-Allocator.
 
-**Nachtrag: GUI-Schalter "Nur Long" für Hebel-Kandidaten (2026-07-15,
-Nutzer-Wunsch).** Von 14 tatsächlichen Hebel-"ERÖFFNEN"-Empfehlungen im
-gesamten bisherigen Datensatz waren 13 SHORT, nur 1 LONG — Bitpanda kann
-Hebel-Short aber gar nicht ausführen, jede SHORT-Analyse war damit
-faktisch verschwendetes LLM-Budget. Neues Menü "Hebel" → "Nur Long
-analysieren" (`ui/settings.py::hebel_richtung_modus`, LIVE wirksam, kein
-Neustart nötig) filtert SHORT-Kandidaten schon **vor** dem Cooldown-Check
-und dem LLM-Aufruf heraus (`agent/krypto/budget_allocator.py::
-run_budget_allocator()`) — ein direkter Hebel auf die tatsächliche
-Aufrufzahl, keine nachträgliche Anzeige-Filterung.
+**Schalter "Nur Long" für Hebel — UMGEBAUT am 2026-08-05. Aktueller Stand
+zuerst, Historie darunter.**
+
+Der Schalter (`budget_allocator.hebel_richtung_modus`, Werte `nur_long` /
+`beide`, Menü "Hebel" in der App) steuert seit dem 05.08. **ausschließlich
+Anzeige und Versand**. Er greift an genau zwei Stellen:
+
+| Ort | Wirkung |
+|---|---|
+| `scheduler/background.py::_ist_email_relevante_richtung()` | SHORT-Signale werden nicht per E-Mail versendet |
+| `ui/hebel_view.py` (Umschalter "Richtung: handelbar / alle") | SHORT-Zeilen ausgeblendet, Standard folgt der Einstellung, offene Positionen immer sichtbar |
+
+**Kein Verarbeitungsschritt hängt mehr daran.** SHORT-Kandidaten erreichen das
+LLM, SHORT-Empfehlungen behalten `action=ERÖFFNEN` und ihre Richtung, laufen in
+den regulären Outcome-Pfad und werden normal gemessen. Das LLM erfährt die
+Beschränkung nicht (Regel 2 sagt das jetzt auch korrekt so).
+
+*Warum umgebaut:* der frühere Aufbau griff an drei Stellen in die Verarbeitung
+ein — zwei Vorfilter im Budget-Allocator und ein Veto im Risk-Gate, das
+`action` nachträglich auf HALTEN drehte. Das verdarb die Messung: 313
+SHORT-Vorschläge lagen als "HALTEN" in der Datenbank und vermischten bei der
+Ursachensuche zum 31.07.-Bruch wiederholt unvergleichbare Populationen. Die
+ursprüngliche Budget-Begründung (siehe Historie) trug nicht mehr: Groq und
+Cerebras sind entfernt, Mistral erlaubt 300 Anfragen pro Minute, gemessener
+Kopfraum 7- bis 16-fach. Und der Veto schützte keinen Ertrag — die
+Richtungswahl des Modells ist eine Regime-Wette, keine Kante (steigender Markt
+LONG−SHORT +1,744 R, fallender −0,133 R, Intervall schließt 0 ein).
+
+*Warum das LLM die Beschränkung NICHT erfährt:* gemessen. Ein Arm mit ehrlichem
+Ausführungshinweis ließ die ERÖFFNEN-Quote von 93 % auf 3 % einbrechen — das
+Modell wechselt nicht zu LONG, es verstummt.
+
+**Historie (2026-07-15 bis 2026-08-05, überholt).** Ursprünglich als reine
+Budgetmaßnahme gebaut: von 14 Hebel-"ERÖFFNEN"-Empfehlungen waren damals 13
+SHORT, und „jede SHORT-Analyse war faktisch verschwendetes LLM-Budget". Der
+Filter saß **vor** dem Cooldown-Check und dem LLM-Aufruf, ausdrücklich als
+Gegenentwurf zu einer „nachträglichen Anzeige-Filterung". Am 28.07. kam ein
+zweiter Veto im Risk-Gate dazu, weil der Vorfilter nur `trigger.richtung`
+prüfte, das Modell seine Richtung aber frei wählt (120 gemessene Fälle
+Allocator fragt LONG, Modell liefert SHORT). Beide sind seit dem 05.08.
+entfernt.
 
 **Nachtrag: Zwei-Stufen-Cooldown für Spot-Rotation (2026-07-16, Nutzer-
 Wunsch nach Gewichtungs-Analyse).** Der einheitliche Spot-Cooldown (siehe
@@ -2155,6 +2186,16 @@ in der JSON legt keine neue `holdings`-Zeile an) plus Regressionstest (frische
 leere DB, `init_db()` läuft fehlerfrei durch).
 
 ### Nachtrag (2026-07-17): BUGFIX — "Nur Long" griff nicht bei offenen Short-Positionen
+
+> **ÜBERHOLT seit 2026-08-05.** Beide hier beschriebenen Filter sind entfernt —
+> der Schalter steuert nur noch Anzeige und Versand (siehe Kap. 6, „Schalter
+> ‚Nur Long' für Hebel — UMGEBAUT"). Der Abschnitt bleibt stehen, weil er die
+> **Fehlerursache** erklärt, die auch nach dem Umbau gilt: das LLM wählt seine
+> Richtung frei, ein Filter auf `trigger.richtung` erfasst das nicht. Genau
+> deshalb sitzt der Filter jetzt am Versand statt in der Verarbeitung.
+> Bemerkenswert: die damalige Beobachtung „`_notify_hebel_signal()` prüft die
+> Richtung seinerseits nicht" ist seit dem Umbau **behoben** — dort sitzt sie
+> jetzt.
 
 **Auslöser:** Nutzer meldete weiterhin unnötige Short-Empfehlungs-E-Mails,
 obwohl `hebel_richtung_modus: nur_long` (Einstellungen-Dialog) aktiv war.
