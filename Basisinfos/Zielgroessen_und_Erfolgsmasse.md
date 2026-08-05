@@ -1151,6 +1151,33 @@ kostenrobust, weil beide Seiten dieselben Sätze tragen.
 
 ---
 
+## 7a. Ausstiegsregel — scharfgeschaltet am 05.08., ein Punkt bleibt optional
+
+**Erledigt:** Config-Schlüssel mit vollständiger Herleitung
+(`risiko.ausstieg_trailing_ausloese_r` / `_abstand_r`, beide 1,0), täglicher
+Job um 7:15 nach dem Backward-Tracking, und eine Sammel-E-Mail — höchstens eine
+pro Tag, keine wenn nichts anliegt, sortiert nach höchstem erreichten
+Buchgewinn.
+
+**Warum das zählte:** 50 % der Signale standen einmal bei +1R, nur 17,6 % kamen
+am Ziel an. Beim Export vom 05.08. standen 15 von 28 offenen Signalen über der
+Schwelle, darunter SOL mit 10,63 R ungesichert — gesehen nur, weil zufällig
+jemand in den Export schaute. Vorher rechnete die Regel zwar, aber rein passiv
+(Export und Remote-Seite, beides muss man aufrufen).
+
+**OPTIONAL, bewusst offen:** die Desktop-GUI-Ansicht. Ein Abschnitt im
+Hebel-Tab mit einer Zeile je betroffenem Signal wäre der dritte Kanal für
+dieselbe Information — E-Mail bringt sie aktiv, die Remote-Seite zeigt sie
+unterwegs. Lohnt sich nur bei viel Desktop-Arbeit. Nutzer-Entscheidung 05.08.:
+später.
+
+**Abschaltbar** über `ausstieg_trailing_ausloese_r = 0`, ohne Codeänderung —
+der Grund steht in der config: alle Kalibrierungszahlen stammen aus **einer**
+Marktphase (Bärenregime). In einer Aufwärtsphase könnte ein Trailing-Stop
+Gewinner zu früh beenden.
+
+---
+
 ## 7b. Konfidenz trägt keine Information (05.08.2026) — die Schwellen-Frage ist damit beantwortet
 
 **Auslöser:** Mistral hat am 31.07. anbieterseitig sein Verhalten geändert
