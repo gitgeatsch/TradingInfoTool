@@ -178,6 +178,29 @@ Durchgehen von Punkt 6 auffiel).
   nimmt statt der längsten, misst mit einem Bruchteil der Historie (05.08.:
   2 statt 183 AUF-Tage gemeldet).
 
+### 2.1b Bekannte BRUCHSTELLEN in den Daten (vor jedem Zeitvergleich prüfen)
+
+Ein Vergleich über eine dieser Grenzen hinweg mischt zwei verschiedene
+Populationen oder zwei verschiedene Messverfahren. Das ist am 05.08. mehrfach
+passiert und hat einen ganzen Arbeitstag gekostet — die Frage „warum kommen so
+wenige Signale" war deshalb tagelang nicht beantwortbar.
+
+| Datum | Was sich änderte | Folge für Auswertungen |
+|---|---|---|
+| **28.07. 17:37 UTC** | Nur-Long-Veto feuert erstmals (`c8dd982`) | 313 SHORT-Vorschläge liegen ab hier als `action=HALTEN` in der DB. Wer HALTEN zählt, zählt sie mit. |
+| **31.07. 07:01 UTC** | `original_action` eingeführt (`b9a464b`) | **Davor bei JEDEM Signal leer**, unabhängig von der Entscheidung. Über diese Grenze hinweg damit zu filtern misst die Feldeinführung, nicht das Verhalten. Stattdessen `risk_veto_reason` (seit 14.07. befüllt). |
+| **31.07. 06:39 UTC** | `ist_reines_llm_halten` eingeführt (`350918a`) | Für ältere Signale immer `false`. |
+| **31.07. ~12:00 UTC** | **Mistral ändert sein Verhalten** (anbieterseitig, Modellname unverändert) | Konfidenz-Mittel 54,1 % → 68,3 %, selbst gewähltes HALTEN 35–51/Tag → 2–6/Tag. Nachgewiesen durch Replay mit bitgleichem Juli-Prompt: 68,0 % statt 55,4 %. **Keine Auswertung über diesen Tag hinweg ohne Zeitschnitt.** |
+| **02.08. 23:46** | Ausführungspreis auf Zonen-Grenze statt Tages-Extremwert (`d16242e`) | Realisiertes CRV vor/nach nicht direkt vergleichbar. |
+| **04.08. 06:21** | CoinGecko-OHLC-Rückfall für Krypto ohne Kraken (`875f0f5`) | Datenquelle der Outcome-Prüfung wechselt für einzelne Symbole. |
+| **05.08.** | **Nur-Long-Umbau**: Veto und beide Vorfilter entfernt | SHORT-Signale laufen ab jetzt in den **regulären** Outcome-Pfad statt in den Veto-Schatten, und SHORT-Kandidaten erreichen erstmals das LLM. Beide Populationen ändern sich gleichzeitig. |
+
+**Regel:** vor jedem Vorher/Nachher-Vergleich diese Tabelle durchgehen. Liegt
+eine Grenze im Fenster, entweder den Zeitraum begrenzen oder den Effekt der
+Grenze getrennt ausweisen. Ein Trennpunkt darf ausserdem nie nach Sichtung der
+Daten gewählt werden — dann gilt Max-Statistik über alle Trennpunkte
+(`datiere_einbruch.py`), sonst ist der p-Wert wertlos.
+
 ### 2.1a Export-Vollständigkeits-Check vor jeder NEUEN Fragestellung (verbindlich)
 
 Auslöser: wiederholt aufgetreten (29.07. Konfidenz-CRV/SL-Korrelation, 30.07.
