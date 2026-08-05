@@ -391,6 +391,66 @@ def marktscan_job(coingecko_client, kraken_client, conn_factory, watchlist_provi
     return True
 
 
+def kanarienvogel_job(mistral_client) -> None:
+    """Taegliche LLM-Drift-Pruefung (2026-08-05, siehe agent/krypto/kanarienvogel.py).
+
+    ANLASS war der 31.07.: das Hebel-Verhalten kippte binnen einer Stunde
+    (selbst gewaehltes HALTEN von 35-51 auf 2-6 taeglich, Konfidenz 54,1 ->
+    68,3 %), und wir haben TAGE im eigenen Regelwerk gesucht - drei
+    Prompt-Regeln einzeln gegen einen Backtest, Gate, Markt, Messmethodik.
+    Der Nachweis kam erst durch ein Replay derselben Faktensaetze mit dem
+    bitgleichen Juli-Prompt: +12,6 Punkte Konfidenz bei unveraendertem
+    Modellnamen. Dieser Job macht daraus eine laufende Messung.
+
+    Fuenf eingefrorene Faktensaetze x 2 Wiederholungen = 10 Aufrufe taeglich.
+    Bewusst klein: die Messung soll das Kontingent nicht spuerbar belasten,
+    und fuer eine Verschiebung von der Groessenordnung des 31.07. reicht das
+    bei weitem (Eigenrauschen rund ein halber Punkt, Bruch 12,6 Punkte).
+
+    Faellt der Provider aus, meldet der Befund das ausdruecklich statt still
+    Entwarnung zu geben - ein stummer Kanarienvogel ist kein gesunder.
+
+    NICHT IM SCHEDULER REGISTRIERT (bewusst, 05.08.). Der Nutzer hat beim Bau
+    gefragt, ob das Feature ueberhaupt Wert bringt - zu Recht: es erzeugt kein
+    einziges zusaetzliches Signal, und der Drift, gegen den es schuetzt, ist
+    inzwischen bekannt. Es ist eine Versicherung gegen eine WIEDERHOLUNG, kein
+    Beitrag zum Ziel "mehr und bessere Signale". Der Baustein bleibt fertig und
+    getestet liegen; die Grundlinie ist aufgenommen, damit ein spaeterer
+    Vergleich ueberhaupt moeglich ist. Aktivieren heisst: einen add_job()-Aufruf
+    in start_scheduler() ergaenzen (taeglich, vor dem Backward-Tracking).
+
+    REVISIT-BEDINGUNG: sobald ein zweiter unerklaerter Verhaltenssprung
+    auftritt - dann ist die Wiederholungswahrscheinlichkeit belegt statt
+    vermutet."""
+    from agent.krypto.hebel_analyst import SYSTEM_PROMPT
+    from agent.krypto.kanarienvogel import pruefe_llm_drift
+
+    if mistral_client is None:
+        logger.info("Kanarienvogel uebersprungen - kein Mistral-Client")
+        return
+
+    def frage(client, fakten, prompt):
+        roh = client.chat(
+            [{"role": "system", "content": prompt},
+             {"role": "user", "content": json.dumps(fakten, ensure_ascii=False)}],
+            temperature=0.2,
+            response_format={"type": "json_object"},
+        )
+        return json.loads(roh)
+
+    try:
+        befund = pruefe_llm_drift(mistral_client, SYSTEM_PROMPT, frage)
+    except Exception:
+        logger.exception("Kanarienvogel-Lauf fehlgeschlagen")
+        return
+
+    if befund.abweichung:
+        logger.warning("KANARIENVOGEL: %s", befund.meldung)
+    else:
+        logger.info("Kanarienvogel: %s (%d Aufrufe, %d Fehler)",
+                    befund.meldung, befund.n_aufrufe, befund.n_fehler)
+
+
 def portfolio_wert_job(conn_factory, watchlist_provider) -> None:
     """Taeglicher Portfoliowert + Z-3/RM-7-Pruefung (2026-08-04, Task #612).
 
