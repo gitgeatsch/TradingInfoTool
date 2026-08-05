@@ -147,6 +147,7 @@ def main() -> int:
     client = MistralClient(api_key=key)
     akt = defaultdict(list)
     konf = defaultdict(list)
+    antworten: list[dict] = []
     je_fall = defaultdict(lambda: defaultdict(list))
 
     for f in faelle:
@@ -166,7 +167,31 @@ def main() -> int:
                 k = a.get("confidence_pct")
                 if isinstance(k, (int, float)):
                     konf[name].append(float(k))
+                # Volle Antwort mitschreiben (Nutzer-Hinweis 05.08.: die
+                # Historie-Simulation von gestern laesst sich hier
+                # weiterverwenden). Der Test allein sagt nur, OB Regel 28 auf
+                # EROEFFNEN dreht - nicht, ob das gut ist. Die Faktensaetze
+                # stammen vom 26.-30.07., der weitere Kursverlauf ist bekannt,
+                # also lassen sich die selbst gesetzten Zonen mit bewerte()
+                # aus dem historischen Backtest gegen den echten Verlauf
+                # rechnen. Hier nur PERSISTIEREN - die Bewertung passiert
+                # nachgelagert in bewerte_antworten.py, damit ein Fehler dort
+                # keinen Lauf mit echtem Kontingent zerstoert.
+                antworten.append({
+                    "arm": name, "symbol": f["symbol"],
+                    "created_at": f["created_at"], "antwort": a,
+                })
             print(f"  {name:28s} {dict(Counter(acts))}", flush=True)
+
+    ziel = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        "data", "regel28_antworten.json")
+    try:
+        os.makedirs(os.path.dirname(ziel), exist_ok=True)
+        io.open(ziel, "w", encoding="utf-8").write(
+            json.dumps(antworten, ensure_ascii=False))
+        print(f"\n  {len(antworten)} Antworten gesichert: {ziel}")
+    except OSError as exc:
+        print(f"\n  Antworten NICHT gesichert ({exc}) - der Lauf zaehlt trotzdem")
 
     def eroeffnet(werte):
         return sum(1 for x in werte if x in ("ERÖFFNEN", "EROEFFNEN"))
