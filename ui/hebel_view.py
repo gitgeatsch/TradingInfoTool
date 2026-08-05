@@ -101,6 +101,28 @@ class HebelView(ttk.Frame):
         # immer sichtbar), "alle" zeigt die volle Historie. Session-only,
         # keine Persistenz - siehe Modul-Docstring-Konstante.
         self._zeitfenster_var = tk.StringVar(value="2_tage")
+        # Richtungs-Anzeigefilter (2026-08-05, Schritt 2 des Nur-Long-Umbaus).
+        #
+        # Der hebel_richtung_modus-Schalter soll kuenftig NUR noch E-Mail und
+        # GUI steuern - nicht mehr die Verarbeitung. Dieser Filter ist die
+        # GUI-Haelfte davon; die E-Mail-Haelfte sitzt in scheduler/background.py
+        # ::_ist_email_relevante_richtung().
+        #
+        # BEWUSST ALS UMSCHALTER, nicht als hartes Ausblenden. Der Standard
+        # folgt der Einstellung (bei nur_long also "handelbar"), aber die
+        # SHORT-Zeilen bleiben EINEN KLICK entfernt. Grund: dieser Tab ist das
+        # Werkzeug, mit dem der Nutzer das System analysiert - Daten dauerhaft
+        # aus dem eigenen Analysewerkzeug zu entfernen erzeugt genau die
+        # blinden Flecken, die uns beim 31.07.-Bruch einen ganzen Tag gekostet
+        # haben (313 SHORT-Vorschlaege lagen unsichtbar als "HALTEN" in der
+        # DB). Session-only wie der Zeitfilter daneben, keine Persistenz.
+        try:
+            _modus = config_module.load_config().get("budget_allocator", {}).get(
+                "hebel_richtung_modus", "beide")
+        except Exception:
+            _modus = "beide"
+        self._richtung_var = tk.StringVar(
+            value="handelbar" if _modus == "nur_long" else "alle")
         # GUI-Refresh-Fix Teil 2 (2026-07-16) - siehe ui/signals_view.py fuer die
         # volle Begruendung: unterdrueckt das durch die periodische selection_set()-
         # Wiederherstellung ausgeloeste <<TreeviewSelect>>, das sonst das rechte
@@ -188,6 +210,21 @@ class HebelView(ttk.Frame):
             command=self.refresh,
         ).pack(side="left")
 
+        # Richtungsfilter (2026-08-05) - siehe _richtung_var-Kommentar oben.
+        # "handelbar" blendet SHORT aus (auf Bitpanda nicht ausfuehrbar),
+        # "alle" zeigt beide Richtungen. Offene Positionen sind ausgenommen,
+        # genau wie beim Zeitfilter.
+        ttk.Label(toolbar, text="Richtung:", foreground=theme.info_color()).pack(
+            side="left", padx=(16, 4))
+        ttk.Radiobutton(
+            toolbar, text="handelbar", value="handelbar", variable=self._richtung_var,
+            command=self.refresh,
+        ).pack(side="left")
+        ttk.Radiobutton(
+            toolbar, text="alle", value="alle", variable=self._richtung_var,
+            command=self.refresh,
+        ).pack(side="left")
+
         self.status_label = ttk.Label(toolbar, text="", foreground=theme.info_color())
         self.status_label.pack(side="left", padx=(12, 0))
 
@@ -260,9 +297,18 @@ class HebelView(ttk.Frame):
         if self._zeitfenster_var.get() == "2_tage":
             zeitgrenze = datetime.now(timezone.utc) - timedelta(days=_ZEITFENSTER_TAGE)
 
+        nur_handelbar = self._richtung_var.get() == "handelbar"
+
         for sig in sorted(signals.values(), key=lambda s: s.created_at, reverse=True):
             hat_offene_position = (sig.symbol, sig.richtung) in self._offene_positionen
             if not hat_offene_position:
+                # Richtungsfilter (2026-08-05) - reiner Anzeige-Deckel, exakt
+                # wie der Zeit-Switch darunter. Offene Positionen sind
+                # ausgenommen (hat_offene_position oben): eine bestehende
+                # SHORT-Position muss sichtbar bleiben, sonst verschwaende ein
+                # echtes Risiko aus der Ansicht.
+                if nur_handelbar and str(sig.richtung or "").upper() == "SHORT":
+                    continue
                 # Deaktiviert (Hebel-Pruefung-Toggle aus) UND keine offene
                 # Position -> dauerhaft ausblenden, unabhaengig vom Alter
                 # (2026-07-27, Nutzer-Wunsch: "fuer Assets die nicht mehr auf
@@ -293,6 +339,13 @@ class HebelView(ttk.Frame):
         for trig in kandidaten:
             if (trig.symbol, trig.richtung) in covered:
                 continue  # bereits als echtes Signal oben gelistet
+            # Richtungsfilter auch hier, sonst zeigte die Liste SHORT-
+            # Kandidaten an, deren fertiges Signal danach ausgeblendet wird -
+            # der Nutzer saehe eine Analyse "warten", die er nie zu sehen
+            # bekommt.
+            if (nur_handelbar and str(trig.richtung or "").upper() == "SHORT"
+                    and (trig.symbol, trig.richtung) not in self._offene_positionen):
+                continue
             iid = f"{trig.symbol}:{trig.richtung}"
             if iid in self._rows:
                 continue  # zweiter Kandidat fuer dasselbe Symbol+Richtung (Trendfolge+
