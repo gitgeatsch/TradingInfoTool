@@ -37,6 +37,38 @@ NICHT bewiesen, dass die drei Aenderungen unschuldig sind - nur, dass ihre
 Wirkung kleiner ist als das, was dieser Aufbau bei dieser Ankerzahl aufloest.
 Das ist der ehrliche Rahmen, und er gehoert in jede Schlussfolgerung.
 
+ERGEBNIS (Bestaetigungslauf, 28 Ankerpunkte, 504 echte Mistral-Aufrufe):
+
+  Variante                     Diff      SE      t   n noetig
+  A1 Stand heute             +0,004   0,053   0,07      24388
+  A2 Stand heute (Rauschen)  -0,013   0,055  -0,24       1826
+  ohne 1b0ab91 (Stop-ATR)    +0,014   0,102   0,14       5651
+  ohne c5acf6e (Regel 13)    -0,013   0,134  -0,10      10940
+  ohne 26f70af (Regel 27)    +0,125   0,156   0,80        167
+  C Stand vor 28.07.         +0,302   0,168   1,79         34
+  Nachweisgrenze (Streuung der A1/A2-Ankerdifferenzen): 0,571 R
+
+KEINE der drei Aenderungen traegt. Der Rausch-Arm steht bei t = 0,07 bzw.
+-0,24, der Aufbau ist also gesund.
+
+DER LEHRREICHE VERGLEICH ZUM VORLAUF mit 12 Ankern: dort lagen die
+Einzeleffekte bei +0,281 (1b0ab91) und +0,182 (c5acf6e). Mit 28 Ankern sind
+sie +0,014 und -0,013, also praktisch null. Die Punktschaetzer aus dem kleinen
+Lauf WAREN Rauschen - genau wie es die damaligen Intervalle sagten und wie es
+die erste, falsche Auswertungsformel gerade NICHT sagte.
+
+C (alle drei entfernt) liegt bei +0,302 R, t = 1,79, braeuchte 34 Anker. Das
+wird bewusst NICHT weiterverfolgt, und zwar aus einem inhaltlichen Grund: C
+ist der GROESSTE von vier Vergleichen, und alle drei Einzelbestandteile liegen
+bei null. Eine Dreifach-Wechselwirkung ohne jeden Haupteffekt ist a priori
+unplausibel; mit Mehrfachvergleichs-Korrektur landet C bei rund p = 0,3.
+Zwoelf Anker nachzulegen, um genau diesen einen Arm unter p = 0,05 zu
+druecken, waere das Ueberfitting, vor dem die eigene Testmethodik warnt.
+
+NEBENBEFUND, in beiden Laeufen gleich: die EROEFFNEN-Quote liegt in ALLEN
+Armen bei 94-100 %, auch ohne Regel 27. Ihr erklaerter Zweck war, den
+Action-Bias zu senken - in diesem Aufbau senkt sie ihn nicht.
+
 Lauf: python -u backtest_regeln_29_07.py [--n 10] [--w 3]
 """
 from __future__ import annotations
