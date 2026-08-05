@@ -15,6 +15,7 @@ import numpy as np
 
 from agent.krypto.analyst import AnalystResponseInvalid
 from agent.krypto.anticyclic import AnticyclicContext
+from agent.krypto.backward_tracking import kosten_kontext_fuer_prompt
 from agent.krypto.hebel_risk_gate import HebelPreCheckResult
 from agent.krypto.regime import RegimeResult
 from database.models import HebelPosition, HebelTrigger
@@ -425,6 +426,22 @@ darueber landen, statt sich an der tatsaechlichen Volatilitaet des Assets zu \
 orientieren. Ein deterministisches Gate faengt Extremfaelle ohnehin ab; dein \
 Beitrag ist die fachlich richtige Zone, nicht das Treffen einer Zahl.
 
+30. Handelskosten (2026-08-05, neu): der Fakt `kosten` enthaelt eine Tabelle \
+"Kosten in R" nach Stop-Abstand und Haltedauer - also den Anteil deines \
+Risikobudgets, den Schliessungsgebuehr und Finanzierung auffressen, BEVOR der \
+Trade etwas verdient. Lies dort ab, was DEIN Stop-Abstand kostet, statt zu \
+rechnen. Zwei Punkte, die deine Zonenwahl betreffen: enge Stops sind DOPPELT \
+teuer (sie werden haeufiger getroffen UND tragen je R mehr Kosten, weil der \
+Stop-Abstand im Nenner steht), und hoeherer Hebel kostet mehr je R, nicht \
+gleich viel. Ein Beispiel aus der Tabelle: bei 3x Hebel und 2 % Stop-Abstand \
+gehen nach 5 Tagen 0,40 R an Gebuehren - bei 8 % Stop nur 0,10 R. Das ist \
+KEIN Limit und kein Grund, einen strukturell falschen Stop zu waehlen: \
+Support, Widerstand, Fibonacci und ATR (Regeln 9 und 29) haben Vorrang. Es \
+ist ein zusaetzliches Argument in derselben Abwaegung - und ein Grund, ein \
+knappes CRV bei engem Stop kritischer zu sehen, weil die Kosten dort einen \
+groesseren Teil des Gewinns wegnehmen. Nenne die Kostenueberlegung in \
+`short_reasoning`, wenn sie deine Zone beeinflusst hat.
+
 SCHEMA:
 {
   "richtung": "LONG|SHORT",
@@ -758,6 +775,13 @@ def build_hebel_facts(
         "signal_stabilitaet": signal_stabilitaet,
         "btc_relativwert": btc_relativwert,
         "optionsmarkt": optionsmarkt,
+        # Kostenkontext (2026-08-05) - schliesst die Luecke aus der
+        # Zielgroessen-Doku: "Das LLM kennt die Kostenstruktur nicht und kann
+        # sie beim Setzen von Stop und Ziel nicht beruecksichtigen". Bewusst
+        # als TABELLE statt als Formel - dieselbe Loesung wie bei
+        # atr.relativ_prozent am 28.07., damit das Modell abliest statt zu
+        # rechnen. Kategorie (b): Kontext, kein Gate.
+        "kosten": kosten_kontext_fuer_prompt(pre_result.config_max_hebel),
         "hebel_kontext": {
             "max_hebel_config": pre_result.config_max_hebel,
             "max_sicherer_hebel_geschaetzt": _native(pre_result.max_sicherer_hebel),

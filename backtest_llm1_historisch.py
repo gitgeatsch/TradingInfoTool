@@ -67,7 +67,9 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from agent.krypto.backward_tracking import gap_bewusster_fill
+from agent.krypto.backward_tracking import (
+    gap_bewusster_fill, kosten_kontext_fuer_prompt,
+)
 from agent.krypto.hebel_analyst import SYSTEM_PROMPT
 from api.mistral import MistralClient
 from indicators.calculations import (
@@ -240,6 +242,10 @@ def baue_historische_fakten(sym: str, reihe: list[Kerze], i: int,
         "nicht_verfuegbar": ["funding_rate", "open_interest", "fear_greed",
                              "long_short_ratio", "historische_erfolgsquote"],
         "position_aktuell": None,
+        # Kostenkontext (2026-08-05) - im Betrieb seit heute Teil des
+        # Faktensatzes, deshalb auch hier. Ohne ihn wuerde der Backtest eine
+        # andere Aufgabe messen als die Produktion loest.
+        "kosten": kosten_kontext_fuer_prompt(5),
         "hebel_kontext": {"max_hebel_config": 5, "max_sicherer_hebel_geschaetzt": 3},
         "disclaimers": {"hinweis": "Historischer Backtest, keine Anlageberatung."},
     }

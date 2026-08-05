@@ -4104,3 +4104,80 @@ def compute_richtungsverteilung(conn, watchlist: list | None = None,
         "gemessen wird es trotzdem. `belastbar` erst ab 30 aufgeloesten Faellen "
         "je Richtung.")
     return ergebnis
+
+
+def kosten_kontext_fuer_prompt(hebel: float | None = None) -> dict:
+    """Kostentabelle als FAKT fuer den Hebel-Prompt (2026-08-05).
+
+    DIE LUECKE. Zielgroessen-Doku, Abschnitt "Was im System dazu fehlt":
+    "Das LLM kennt die Kostenstruktur nicht und kann sie beim Setzen von Stop
+    und Ziel nicht beruecksichtigen - der Faktor existiert jetzt
+    deterministisch, die Weitergabe in den Prompt fehlt." Genau die schliesst
+    diese Funktion.
+
+    WARUM EINE TABELLE UND NICHT DIE FORMEL. Die Kostenlast in R lautet
+    (L-1)/L x (Schliessung + Tagesgebuehr x Tage) / Stop-Abstand. Das Modell
+    muesste sie fuer seinen eigenen Zonenvorschlag selbst ausrechnen - ein
+    fehleranfaelliger Rechenschritt. Denselben Fehler hat das Projekt bei ATR
+    schon einmal gemacht und am 28.07. korrigiert, indem `atr.relativ_prozent`
+    deterministisch mitgeliefert wurde statt nur `atr.wert`. Die Tabelle ist
+    die gleiche Loesung: das Modell liest ab, statt zu rechnen.
+
+    WARUM KONTEXT UND KEIN GATE (Fakten-Entscheidungsmappe, 3+1-Raster):
+      Frage 1 - immer dieselbe richtige Reaktion? NEIN. Eine harte Schwelle
+        braeuchte die erwartete Trefferquote je Signal (kostenbereinigter
+        Breakeven q > (1+Kosten)/(1+CRV)), und die ist je Signal unbekannt.
+        Der Nutzer hat harte Vetos zudem wiederholt abgelehnt ("keine Signale
+        unnoetig wegschmeissen").
+      Frage 2 - kontextabhaengiges Abwaegen? JA. Das Modell waegt den
+        Stop-Abstand gegen Struktur ab (Support, Fibonacci, ATR); die Kosten
+        sind ein weiterer Eingang in dieselbe Abwaegung, keine Vorgabe.
+      Frage 3 - bekommt es heute eine Einordnung? NEIN, gar nichts.
+      Frage 4 - passt es zum Zeithorizont? JA, und darum traegt die Tabelle
+        die Haltedauer als eigene Achse: bei Hebel loest ein Signal im Median
+        nach 2,6 Tagen auf, gehandelt wird nach 0,3 Tagen.
+
+    ZWEI FOLGERUNGEN, die aus der Formel fallen und die das Modell kennen
+    sollte, weil sie seine Zonenwahl betreffen:
+      - ENGE STOPS SIND DOPPELT TEUER: der Stop-Abstand steht im Nenner. Ein
+        enger Stop wird nicht nur haeufiger getroffen, er traegt je R auch
+        mehr Kosten.
+      - HOEHERER HEBEL KOSTET MEHR JE R: (L-1)/L waechst von 0,50 (2x) ueber
+        0,67 (3x) auf 0,90 (10x), waehrend das Risikobudget gleich bleibt.
+
+    KEINE ERFUNDENEN ZAHLEN: die Saetze stammen aus der Bitpanda-
+    Kostentransparenz (siehe _KOSTEN_HEBEL_*-Konstanten). Fuer Spot ist
+    `belegt` False - dort steckt die Gebuehr groesstenteils im Spread und ist
+    ohne Marktmitte nicht messbar."""
+    L = float(hebel) if hebel and hebel > 1 else _KOSTEN_HEBEL_FALLBACK
+    stop_stufen = (0.02, 0.03, 0.05, 0.08, 0.12)
+    tage_stufen = (1, 3, 5)
+    tabelle = []
+    for stop_rel in stop_stufen:
+        zeile = {"stop_abstand_prozent": round(stop_rel * 100, 1)}
+        for tage in tage_stufen:
+            wert = kosten_in_r(stop_rel, "hebel", float(tage), hebel=L).get("kosten_r")
+            zeile[f"kosten_r_nach_{tage}_tagen"] = (
+                round(wert, 3) if wert is not None else None)
+        tabelle.append(zeile)
+    return {
+        "gilt_fuer_hebel": round(L, 1),
+        "kosten_in_r_tabelle": tabelle,
+        "lesehilfe": (
+            "Kosten in R = Anteil deines Risikobudgets, den Schliessungsgebuehr und "
+            "Finanzierung auffressen, BEVOR der Trade etwas verdient. 0,40 bedeutet: "
+            "40 % des Risikos gehen an Gebuehren."
+        ),
+        "zwei_folgerungen": [
+            "Enge Stops sind doppelt teuer: sie werden haeufiger getroffen UND "
+            "tragen je R eine hoehere Kostenlast (der Stop-Abstand steht im Nenner).",
+            "Hoeherer Hebel kostet mehr je R, nicht gleich viel - das Risikobudget "
+            "bleibt gleich, der Kreditanteil waechst.",
+        ],
+        "typische_haltedauer_tage": {
+            "median_bis_zur_aufloesung": 2.6,
+            "hinweis": "gemessen an aufgeloesten Hebel-Signalen; der Rahmen sind 0 bis max. 5 Tage",
+        },
+        "belegt": True,
+        "quelle": "Bitpanda-Kostentransparenz, Schliessung 0,3 % + gestaffelte Tagesgebuehr",
+    }
