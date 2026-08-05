@@ -101,7 +101,6 @@ from datetime import datetime, timedelta, timezone
 
 import database.db as db
 from agent.krypto.hebel_pipeline import generate_hebel_signal
-from agent.krypto.hebel_screening import RICHTUNG_LONG
 from agent.krypto.llm_provider import llm_model_label
 from agent.krypto.marktscan import generate_candidate_writeup, ist_hohes_potential_kandidat
 from agent.krypto.pipeline import compute_current_regime, generate_signal
@@ -402,13 +401,32 @@ def run_budget_allocator(
     # nach config.yaml migriert (siehe Regelwerksmanual-Nachtrag "Nur-Long-
     # Deckel") - wirkt jetzt erst nach Commit+Push+Pull, nicht mehr sofort,
     # dafuer garantiert konsistent zwischen Desktop und Notebook.
-    hebel_richtung_modus = cfg.get("hebel_richtung_modus", "beide")
+    # KEIN Richtungsfilter mehr (2026-08-05). Bis heute warf hier ein
+    # hebel_richtung_modus=="nur_long"-Filter alle SHORT-Kandidaten weg, BEVOR
+    # sie das LLM sahen (15.07., Begruendung damals woertlich: "jede
+    # SHORT-Analyse war faktisch verschwendetes LLM-Budget").
+    #
+    # Diese Begruendung traegt nicht mehr. Sie entstand, als Groq und Cerebras
+    # harte Limits hatten - beide Provider sind entfernt, Mistral erlaubt 300
+    # Anfragen pro MINUTE, und der Budget-Realitaetscheck vom 27.07. haelt
+    # fest: "kein echtes Provider-Limit mehr, B ist ein reines Pacing-Ventil,
+    # keine technische Notwendigkeit".
+    #
+    # Der Filter schuetzte ohnehin nicht, was er sollte: er filtert
+    # `trigger.richtung`, also die Einstufung VOR dem Aufruf - das Modell
+    # waehlt seine Richtung frei und drehte LONG-Kandidaten in 120 gemessenen
+    # Faellen zu SHORT. Genau dagegen war 2026-07-28 ein zweiter Veto im
+    # Risk-Gate nachgeruestet worden, der die Messung verdarb (313
+    # SHORT-Vorschlaege lagen als "HALTEN" in der DB).
+    #
+    # Die Bitpanda-Beschraenkung wirkt seither ausschliesslich an der
+    # Praesentationsgrenze: scheduler/background.py::
+    # _ist_email_relevante_richtung() und ui/hebel_view.py. Siehe
+    # hebel_risk_gate.py::post_check_hebel()-Docstring, "Nachtrag 2026-08-05".
 
     conn = conn_factory()
     try:
         hebel_pending = db.get_pending_hebel_candidates(conn)
-        if hebel_richtung_modus == "nur_long":
-            hebel_pending = [c for c in hebel_pending if c.richtung == RICHTUNG_LONG]
         hebel_trigger_kandidaten, uebersprungen_trigger = _filter_hebel_cooldown(
             conn, hebel_pending, watchlist, cooldown_stunden,
             cooldown_stunden_ausgemustert=hebel_cooldown_stunden_ausgemustert,
@@ -454,8 +472,6 @@ def run_budget_allocator(
         # entdeckte Trigger-Kandidaten (hebel_pending oben), nicht fuer
         # diesen zweiten, unabhaengigen Kandidatenpfad.
         offene_positionen_roh = _offene_positionen_als_kandidaten(conn)
-        if hebel_richtung_modus == "nur_long":
-            offene_positionen_roh = [c for c in offene_positionen_roh if c.richtung == RICHTUNG_LONG]
         offene_positionen_kandidaten, uebersprungen_position = _filter_hebel_cooldown(
             conn, offene_positionen_roh, watchlist, hebel_position_cooldown_stunden,
         )
@@ -550,7 +566,8 @@ def run_budget_allocator(
         "Budget-Allocator: Hebel %d/%d (Richtung=%s, ueberfaellig=%d), Marktscan %d/%d (ueberfaellig=%d), "
         "Spot %d/%d ausgewaehlt (B=%d, F=%d), Cooldown uebersprungen: Hebel %d, Marktscan %d, "
         "halte_kriterium faellig: %d",
-        tier1_n, len(hebel_kandidaten), hebel_richtung_modus, hebel_ueberfaellig_n,
+        tier1_n, len(hebel_kandidaten), "beide (Filter entfernt 2026-08-05)",
+        hebel_ueberfaellig_n,
         tier2_n, len(marktscan_kandidaten), marktscan_ueberfaellig_n,
         tier3_n, len(spot_kandidaten),
         budget_gesamt, spot_reserve, result.uebersprungen_cooldown_hebel, result.uebersprungen_cooldown_marktscan,
