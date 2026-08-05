@@ -186,6 +186,7 @@ Schreibt nach K:/My Drive/Claude_Austauschordner/Notebook_Analysedaten/
 """
 import dataclasses
 import json
+import sqlite3
 import re
 import sys
 from collections import Counter
@@ -212,6 +213,7 @@ from agent.krypto.backward_tracking import (
     spot_symbole_je_tier,
 )
 from agent.krypto.regime import get_last_known_regime_status
+from agent.portfolio_historie import pruefe_z3
 
 DEEP_DIVE_SYMBOL = sys.argv[1] if len(sys.argv) > 1 else "LINK"
 LOG_FENSTER_STUNDEN = int(sys.argv[2]) if len(sys.argv) > 2 else 72
@@ -584,6 +586,45 @@ def _rohdaten_fuer_backtest(conn) -> dict:
     #
     # Mit dem Ergebnis verknuepfbar ueber hebel_signals.hebel_trigger_id;
     # ohne diese Verbindung waere der Export Selbstzweck.
+    # Z-3 / RM-7 Drawdown-Notbremse (2026-08-05).
+    #
+    # ANLASS: die Notbremse hat am 05.08. um 06:30 zum ERSTEN MAL scharf
+    # gemeldet - "Rueckschlag 16,7 % >= Schwelle 15 %", E-Mail an den Nutzer
+    # raus. Der Mechanismus hat funktioniert, aber die erste Frage nach so
+    # einem Alarm - WOHER kommt der Rueckschlag, und stimmt die Zahl? - liess
+    # sich mit dem Export nicht beantworten. Weder der ausloesende Wert noch
+    # die zugrundeliegende Reihe waren darin enthalten.
+    #
+    # Exportiert wird deshalb beides: das Ergebnis von pruefe_z3() UND die
+    # Wertreihe, auf der es beruht. Nur mit der Reihe laesst sich der Alarm
+    # NACHRECHNEN statt ihm zu glauben - und das ist bei einer Groesse, die
+    # eine Notbremse ausloest, keine Kuer.
+    #
+    # `index_wert` ist die maessgebliche Spalte, nicht `wert_eur`: Z-3 rechnet
+    # mengenkonstant, sonst loeste ein grosser Verkauf die Bremse aus und ein
+    # grosser Zukauf verdeckte einen echten Einbruch.
+    # AUSFALLSICHER: `portfolio_wert_historie` wurde erst am 04.08. angelegt.
+    # Ein Bestand ohne die Tabelle (aeltere Kopie, frische Installation) haette
+    # den GESAMTEN Diagnoselauf abgebrochen - beim Rauchtest gegen die lokale
+    # Entwicklungskopie genau so passiert. Ein fehlender Nebenblock darf einen
+    # Export nicht toeten.
+    z3_status = None
+    portfolio_wert_historie = []
+    try:
+        z3_status = pruefe_z3(
+            conn,
+            schwelle_prozent=config_module.load_config()["ziele"]["max_drawdown_prozent"],
+        )
+        portfolio_wert_historie = [
+            row_to_dict(r) for r in db.get_portfolio_wert_historie(conn)
+        ]
+    except sqlite3.OperationalError as exc:
+        # Bewusst als Wert im Export, nicht nur im Log: wer die Datei liest,
+        # soll den Unterschied zwischen "kein Drawdown" und "nicht gemessen"
+        # sehen (stille Degradierung, Methodik 2.5.8).
+        z3_status = {"nicht_verfuegbar": str(exc)}
+        print(f"  HINWEIS: Z-3-Status nicht ermittelbar ({exc})")
+
     # Makro- und OI-Historie fuer den LLM1-Backtest (2026-08-04).
     #
     # WOFUER. Der historische Backtest (backtest_llm1_historisch.py) baut
@@ -660,6 +701,8 @@ def _rohdaten_fuer_backtest(conn) -> dict:
     return {
         "hebel_triggers_kandidaten": hebel_triggers_kandidaten,
         "hebel_triggers_alle": hebel_triggers_alle,
+        "z3_status": z3_status,
+        "portfolio_wert_historie": portfolio_wert_historie,
         "macro_historie": macro_historie,
         "oi_historie": oi_historie,
         "marktscan_kaufkandidaten": marktscan_kaufkandidaten,

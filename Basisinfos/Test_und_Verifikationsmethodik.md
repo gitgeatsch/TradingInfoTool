@@ -140,10 +140,40 @@ Modul-Import).
     auftreten, nicht nur bei HALTEN, und ob `selbst_halten_outcome_status`
     inzwischen erste aufgelöste Fälle zeigt (siehe Abschnitt 2.9).
 
-Diese zehn Punkte werden IMMER kurz durchgegangen, auch wenn der Anlass für den
+11. **Z-3-Drawdown-Status** (`z3_status`, `portfolio_wert_historie`) — hat die
+    Notbremse gemeldet, und **stimmt der Wert**? Erstauslösung 05.08. mit 16,7 %.
+    Der Alarm ist nur so viel wert wie die Reihe darunter: `index_wert` prüfen,
+    nicht `wert_eur`, und auf verworfene FX-Ableitungen im Log achten (05.08.:
+    586 Tage verworfen).
+12. **Ausstiegsempfehlungen** (`ausstiegs_empfehlungen`) — wie viele offene
+    Signale stehen über der Auslöseschwelle, und wie viel R liegt ungesichert?
+    Am 05.08.: 15 von 28, darunter SOL mit 10,63 R MFE.
+13. **Score-Komponenten** (`hebel_triggers_alle` mit `score_details_json`) —
+    OHNE `ist_kandidat`-Filter auswerten, sonst misst man im beschnittenen
+    Wertebereich. Stand 04.08.: keine Komponente trägt.
+14. **Makro-/OI-Historie** (`macro_historie`, `oi_historie`) — Reichweite
+    prüfen: beginnt erst Juli 2026, während die Kurshistorie 748 Tage umfasst.
+    Wer beides mischt, verkürzt sein Fenster unbemerkt.
+15. **Watchlist-Stammdaten** (`watchlist_stammdaten`) — Voraussetzung für jede
+    Aufschlüsselung der Spot-Familie nach Assetklasse. Fehlt der Block, ist
+    jede Spot-Auswertung ein Mischtopf (Fehler vom 29.07.).
+
+Diese fünfzehn Punkte werden IMMER kurz durchgegangen, auch wenn der Anlass für den
 Export etwas anderes war - Auffälligkeiten ausserhalb der eigentlichen Fragestellung
 nicht ignorieren (siehe z.B. den ISOC/X136-Ticker-Fund, der nebenbei beim
 Durchgehen von Punkt 6 auffiel).
+
+**Zwei Zugriffsfallen, die bei JEDER Auswertung dieser Blöcke gelten:**
+
+- **`preishistorie_je_symbol` führt EUR- und USD-Zeilen verschachtelt.** Ohne
+  Währungsfilter misst man den EUR/USD-Kurs (15,08 % = ln(1/0,86)) als
+  „Tagesvolatilität" — für jedes Symbol nahezu gleich. Immer auf eine Währung
+  filtern; die Produktion tut es (`lade_kursreihen()` filtert USD).
+- **Mehrere Quellen führen dasselbe Symbol mit unterschiedlicher Länge.**
+  `preishistorie_signal_symbole` deckt nur den Signalzeitraum ab,
+  `preishistorie_ueberholte_symbole` reicht weiter. Wer die erste Fundstelle
+  nimmt statt der längsten, misst mit einem Bruchteil der Historie (05.08.:
+  2 statt 183 AUF-Tage gemeldet).
 
 ### 2.1a Export-Vollständigkeits-Check vor jeder NEUEN Fragestellung (verbindlich)
 
