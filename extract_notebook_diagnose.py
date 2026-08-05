@@ -698,10 +698,15 @@ def _rohdaten_fuer_backtest(conn) -> dict:
             "outcome_geprueft_am, mindestziel_usd FROM marktscan_candidates ORDER BY discovered_at ASC"
         ).fetchall()
     ]
+    # z3_status wird NICHT hier eingehaengt, sondern von main() auf die
+    # oberste Ebene gehoben - ein Statuswert unter "rohdaten_fuer_backtest"
+    # findet niemand, der ihn sucht (erster Einbau am 05.08. lag genau so
+    # daneben). Die drei HISTORIEN bleiben hier: sie sind tatsaechlich
+    # Backtest-Rohdaten.
     return {
+        "_z3_status": z3_status,
         "hebel_triggers_kandidaten": hebel_triggers_kandidaten,
         "hebel_triggers_alle": hebel_triggers_alle,
-        "z3_status": z3_status,
         "portfolio_wert_historie": portfolio_wert_historie,
         "macro_historie": macro_historie,
         "oi_historie": oi_historie,
@@ -1377,6 +1382,7 @@ def main() -> None:
         "kandidaten_warteschlangen_status": kandidaten_warteschlangen_status,
         "marktscan_discovery_llm_delta": marktscan_discovery_llm_delta,
         "hebel_erstmalige_erkennung_delta": hebel_erstmalige_erkennung_delta,
+        "z3_status": rohdaten_fuer_backtest.pop("_z3_status", None),
         "rohdaten_fuer_backtest": rohdaten_fuer_backtest,
         "preishistorie_ueberholte_symbole": preishistorie_ueberholte_symbole,
         "preishistorie_signal_symbole": preishistorie_signal_symbole,

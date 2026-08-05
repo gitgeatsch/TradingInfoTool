@@ -140,7 +140,8 @@ Modul-Import).
     auftreten, nicht nur bei HALTEN, und ob `selbst_halten_outcome_status`
     inzwischen erste aufgelöste Fälle zeigt (siehe Abschnitt 2.9).
 
-11. **Z-3-Drawdown-Status** (`z3_status`, `portfolio_wert_historie`) — hat die
+11. **Z-3-Drawdown-Status** (`z3_status` auf oberster Ebene,
+    `portfolio_wert_historie` unter `rohdaten_fuer_backtest`) — hat die
     Notbremse gemeldet, und **stimmt der Wert**? Erstauslösung 05.08. mit 16,7 %.
     Der Alarm ist nur so viel wert wie die Reihe darunter: `index_wert` prüfen,
     nicht `wert_eur`, und auf verworfene FX-Ableitungen im Log achten (05.08.:
@@ -148,10 +149,12 @@ Modul-Import).
 12. **Ausstiegsempfehlungen** (`ausstiegs_empfehlungen`) — wie viele offene
     Signale stehen über der Auslöseschwelle, und wie viel R liegt ungesichert?
     Am 05.08.: 15 von 28, darunter SOL mit 10,63 R MFE.
-13. **Score-Komponenten** (`hebel_triggers_alle` mit `score_details_json`) —
+13. **Score-Komponenten** (`hebel_triggers_alle` mit `score_details_json`,
+    unter `rohdaten_fuer_backtest`) —
     OHNE `ist_kandidat`-Filter auswerten, sonst misst man im beschnittenen
     Wertebereich. Stand 04.08.: keine Komponente trägt.
-14. **Makro-/OI-Historie** (`macro_historie`, `oi_historie`) — Reichweite
+14. **Makro-/OI-Historie** (`macro_historie`, `oi_historie`, beide unter
+    `rohdaten_fuer_backtest`) — Reichweite
     prüfen: beginnt erst Juli 2026, während die Kurshistorie 748 Tage umfasst.
     Wer beides mischt, verkürzt sein Fenster unbemerkt.
 15. **Watchlist-Stammdaten** (`watchlist_stammdaten`) — Voraussetzung für jede
