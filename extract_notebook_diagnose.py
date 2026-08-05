@@ -715,6 +715,83 @@ def _rohdaten_fuer_backtest(conn) -> dict:
     }
 
 
+def _hebel_faktensaetze(conn, je_zelle: int = 12) -> dict:
+    """Echte `facts_json`-Saetze fuer den Regel-28-Test (2026-08-05).
+
+    WOFUER. Am 31.07. kippt das Hebel-Verhalten binnen einer Stunde: vorher
+    rund 50 HALTEN und 4 EROEFFNEN am Tag, danach rund 40 EROEFFNEN und 2
+    HALTEN, bei 97 % SHORT-Anteil und um 10 Punkte hoeherer Konfidenz. Der
+    Markt erklaert das nicht - der Indikatorsatz aus der Produktion zeigt an
+    dem Tag keinen Bruch, und bei UNVERAENDERT nicht-bearischer Datenlage
+    stieg der SHORT-Anteil von 5,2 % auf 69,9 %. Einzige Prompt-Aenderung im
+    Deploy-Fenster davor ist Regel 28 (350918a, 31.07. 04:39 UTC), die
+    verlangt, bei selbst gewaehltem HALTEN die Zonen auszufuellen, die man bei
+    EROEFFNEN gewaehlt haette.
+
+    WARUM DER HISTORISCHE BACKTEST DAS NICHT KLAEREN KANN: dort liegt die
+    EROEFFNEN-Quote in ALLEN Armen bei 94-100 %. Der rekonstruierte
+    Faktensatz ist zu duenn, um ueberhaupt ein HALTEN zu erzeugen - genau die
+    Achse, um die es geht, ist gesaettigt. Mit den ECHTEN Faktensaetzen
+    entfaellt dieses Problem: sie haben im Betrieb nachweislich HALTEN
+    erzeugt.
+
+    WARUM NICHT EINFACH IN _HEBEL_SIGNAL_SPALTEN: facts_json ist bewusst aus
+    der Spaltenauswahl ausgeschlossen (siehe Kommentar dort) - ein Satz wiegt
+    einige Kilobyte, ueber 1500 Signale waere das ein Vielfaches der
+    restlichen Datei. Deshalb hier eine GESCHICHTETE Stichprobe statt aller
+    Zeilen: je Tag und je action hoechstens `je_zelle` Saetze, und nur im
+    Fenster um den Sprung.
+
+    Die Schichtung ist nicht Kosmetik, sondern Voraussetzung des Tests: der
+    entscheidende Arm braucht Faktensaetze, bei denen das Modell VOR dem
+    31.07. selbst HALTEN gewaehlt hat. Eine unsortierte Stichprobe waere nach
+    dem 31.07. fast leer an HALTEN (2 pro Tag) und davor fast leer an
+    EROEFFNEN (4 pro Tag) - also genau dort duenn, wo gemessen werden soll."""
+    rows = conn.execute(
+        "SELECT id, symbol, created_at, action, richtung, confidence_pct, "
+        "regime, trigger_zweig, risk_veto_reason, facts_json "
+        "FROM hebel_signals "
+        "WHERE facts_json IS NOT NULL AND facts_json != '' "
+        "  AND date(created_at) BETWEEN '2026-07-26' AND '2026-08-05' "
+        "ORDER BY created_at ASC"
+    ).fetchall()
+
+    je_gruppe: dict[tuple, list] = {}
+    for r in rows:
+        schluessel = (str(r["created_at"])[:10], str(r["action"] or "?"))
+        je_gruppe.setdefault(schluessel, []).append(r)
+
+    eintraege = []
+    uebersprungen = 0
+    for (tag, aktion), gruppe in sorted(je_gruppe.items()):
+        # gleichmaessig ueber den Tag ziehen statt der ersten n - sonst
+        # bestuende die Stichprobe nur aus dem Nacht-Batch
+        schritt = max(1, len(gruppe) // je_zelle)
+        gewaehlt = gruppe[::schritt][:je_zelle]
+        uebersprungen += len(gruppe) - len(gewaehlt)
+        for r in gewaehlt:
+            eintraege.append({
+                "id": r["id"], "symbol": r["symbol"], "created_at": r["created_at"],
+                "action": r["action"], "richtung": r["richtung"],
+                "confidence_pct": r["confidence_pct"], "regime": r["regime"],
+                "trigger_zweig": r["trigger_zweig"],
+                "risk_veto_reason": r["risk_veto_reason"],
+                "facts_json": r["facts_json"],
+            })
+
+    groesse = sum(len(e["facts_json"] or "") for e in eintraege)
+    return {
+        "hinweis": "Geschichtete Stichprobe je Tag x action, Fenster 26.07.-05.08. "
+                   "Fuer den Regel-28-Test (350918a) - siehe Funktions-Docstring.",
+        "je_zelle": je_zelle,
+        "anzahl": len(eintraege),
+        "nicht_gezogen": uebersprungen,
+        "groesse_facts_json_bytes": groesse,
+        "belegung": {f"{tag} {aktion}": len(g) for (tag, aktion), g in sorted(je_gruppe.items())},
+        "eintraege": eintraege,
+    }
+
+
 def _preishistorie_ueberholte_symbole(conn) -> dict:
     """Neu (2026-07-22, siehe Modul-Docstring-Nachtrag) - Grundlage fuer
     backtest_ueberholt_erkennung.py: liefert die echte Kurshistorie fuer
@@ -1319,6 +1396,15 @@ def main() -> None:
     # Merkmale sind, die in KEINER Signalzeile stehen - fuer die
     # Ausschuss-Suche (Abschnitt 7 der Zielgroessen-Doku) sind sie damit neue
     # Information, nicht bloss eine Kopie. Kosten: rund 60 Symbole x 5 Felder.
+    # Echte Faktensaetze fuer den Regel-28-Test (2026-08-05) - fail-soft, weil
+    # aeltere Datenbestaende die Spalte facts_json nicht zwingend befuellt
+    # haben. Ein fehlender Block darf den gesamten Exportlauf nicht kippen;
+    # genau das waere am 04.08. mit portfolio_wert_historie beinahe passiert.
+    try:
+        hebel_faktensaetze = _hebel_faktensaetze(conn)
+    except Exception as exc:
+        hebel_faktensaetze = {"fehler": f"{type(exc).__name__}: {exc}", "eintraege": []}
+
     watchlist_stammdaten = {
         a.symbol: {
             "assetklasse": a.assetklasse,
@@ -1332,6 +1418,7 @@ def main() -> None:
 
     payload = {
         "watchlist_stammdaten": watchlist_stammdaten,
+        "hebel_faktensaetze": hebel_faktensaetze,
         "holdings_check": [row_to_dict(r) for r in holdings],
         "api_health": api_health,
         "llm_calls_heute": llm_calls_heute,
