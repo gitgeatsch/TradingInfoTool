@@ -57,7 +57,31 @@ Damit ist es der SIEBTE gemessene Mechanismus ohne Nachweis - nach
 Screening-Score, Konfidenz, Richtungswahl, Prompt-Aenderungen, CRV-Baendern,
 halte_kriterium und der Allocator-Auswahl.
 
-Lauf: python -u teste_kosten_fakt.py [--n 12] [--w 3]
+NACHTRAG 05./06.08.: AUFGESTOCKT AUF 24 FAELLE - der Befund bei 12 war Rauschen.
+
+                        n=12                    n=24
+    Wirkung          -0,734 pp               -0,334 pp
+    Bootstrap    [-1,571 ; +0,035]      [-1,269 ; +0,653]
+    n noetig             16                     212
+    Rauschboden       3,132 pp                4,519 pp
+
+Der Effekt HALBIERT sich bei verdoppelter Stichprobe, und das noetige n steigt
+von 16 auf 212. Das ist die Signatur eines Nullbefunds: ein Punktschaetzer aus
+einer kleinen Stichprobe schrumpft gegen null, sobald mehr Daten dazukommen.
+
+Genau dasselbe Muster wie beim Regel-Ablationstest am selben Tag: dort lagen
+die Einzeleffekte bei 12 Ankern bei +0,281 und +0,182 und bei 28 Ankern bei
++0,014 und -0,013. Zweimal am selben Tag - kleine Stichproben erzeugen
+zuverlaessig Scheinbefunde in der jeweils erwarteten Richtung.
+
+WAECHTER: EROEFFNEN 92,5 % (A1) / 92,1 % (A2) / 95,7 % (B). Kein Einbruch, die
+Befuerchtung zum Systemguete-Fakt hat sich nicht bestaetigt. Bemerkenswert ist
+aber, dass BEIDE A-Arme rund 3 pp unter B liegen - konsistent, wenn auch klein.
+Bei n=67/69 ist das nicht von Rauschen zu trennen, gehoert aber beobachtet:
+sollte sich das im Betrieb verfestigen, waere es der Anfang genau des
+Rueckzugs, vor dem der Fakt-Docstring warnt.
+
+Lauf: python -u teste_kosten_fakt.py [--n 12] [--w 3] [--versatz 0]
 """
 from __future__ import annotations
 
@@ -120,7 +144,12 @@ def lade_faelle(n: int):
             continue          # Ungueltig-Pfad, siehe teste_regel28_echt.py
         kand.append(e)
     kand.sort(key=lambda e: (e["created_at"], e["symbol"]))
-    return kand[:: max(1, len(kand) // n)][:n]
+    # `versatz` waehlt eine ANDERE Teilmenge derselben Schrittweite - damit
+    # laesst sich eine bestehende Stichprobe aufstocken, ohne dieselben Faelle
+    # noch einmal zu bezahlen (2026-08-05: n noetig 16, vorhanden 12).
+    schritt = max(1, len(kand) // n)
+    versatz = _arg("--versatz", 0) % schritt
+    return kand[versatz::schritt][:n]
 
 
 def stop_abstand(antwort) -> float | None:
@@ -245,7 +274,17 @@ def main() -> int:
         ziel = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                             "data", "kosten_fakt_antworten.json")
         os.makedirs(os.path.dirname(ziel), exist_ok=True)
-        io.open(ziel, "w", encoding="utf-8").write(json.dumps(antworten, ensure_ascii=False))
+        # ANHAENGEN statt ueberschreiben, damit Aufstockungslaeufe die
+        # bestehende Stichprobe ergaenzen. Doppelte (arm, symbol, created_at)
+        # werden beim Auswerten ohnehin gepaart zusammengefasst.
+        alt = []
+        if os.path.exists(ziel):
+            try:
+                alt = json.loads(io.open(ziel, encoding="utf-8").read()) or []
+            except (OSError, ValueError):
+                alt = []
+        io.open(ziel, "w", encoding="utf-8").write(
+            json.dumps(alt + antworten, ensure_ascii=False))
         print(f"\n  {len(antworten)} Antworten gesichert")
     except OSError as exc:
         print(f"\n  nicht gesichert ({exc})")
