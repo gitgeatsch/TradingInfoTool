@@ -1830,7 +1830,33 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None, c
         logger.exception("Spot-Empfehlungs-E-Mail für %s fehlgeschlagen", signal.symbol)
 
 
-_ZAI_EMAIL_WARTE_MAX_SEKUNDEN = 135  # NEUKALIBRIERT (2026-07-29): seit dem
+_ZAI_EMAIL_WARTE_MAX_SEKUNDEN = 240  # NEUKALIBRIERT (2026-08-05) an echten
+# Log-Daten, wie es der vorherige Kommentar selbst gefordert hatte ("bis genug
+# echte 3-Call-Faelle fuer eine erneute Log-Auswertung vorliegen").
+#
+# GEMESSEN, 17 Faelle vom 02.-05.08.:
+#     abgeschlossen        14 (82 %)   Median 49,5s   Maximum 105s
+#     Zeitlimit gerissen    3          BIO, MON, TAO
+#
+# HERLEITUNG statt Schaetzung (Methodik 2.8): ein Signal loest DREI
+# sequenzielle Z.ai-Calls aus. Reisst EINER davon sein eigenes Limit
+# (api/zai.py::REQUEST_TIMEOUT_SECONDS = 150s), brauchen die beiden anderen im
+# beobachteten oberen Bereich je rund 45s - macht 150 + 2*45 = 240s. Das deckt
+# den haeufigsten Ausfallgrund ab, ohne den strukturellen Extremfall (3*150 =
+# 450s) abzuwarten, bei dem Z.ai ohnehin nichts liefern wird.
+#
+# WARUM DAS NICHTS KOSTET: die Wartefunktion laeuft je Signal in einem EIGENEN
+# Thread (_on_signal_ready startet ihn und kehrt sofort zurueck) und das
+# Polling steigt aus, SOBALD das Ergebnis da ist. Fuer die 82 %, die
+# rechtzeitig fertig werden, aendert sich also gar nichts - verlaengert wird
+# nur dort, wo Warten sich lohnt.
+#
+# ANLASS war ein konkreter Vorfall: am 05.08. ging die TAO-Empfehlung ohne
+# Z.ai-Zeilen raus, waehrend Z.ai kurz darauf "widerspruch / eigene Richtung
+# SHORT" schrieb - bei einem LONG-Signal. Die vier frueheren Vorfaelle
+# kosteten eine Bestaetigung, dieser einen WIDERSPRUCH.
+#
+# Vorheriger Wert und seine Begruendung, zur Nachvollziehbarkeit: 135 = seit dem
 # Positions-Bias-Fix (siehe gegenpruefung.py::leite_eigene_richtung_
 # positionsrobust()) macht der Richtungs-Call intern 2 statt 1 sequenzielle
 # Z.ai-Calls (Original- + umgekehrte Reihenfolge) - macht 3 statt 2

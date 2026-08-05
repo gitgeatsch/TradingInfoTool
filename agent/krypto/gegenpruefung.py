@@ -125,6 +125,7 @@ wiederverwendet statt pro Pipeline dupliziert."""
 from __future__ import annotations
 
 import json
+import time
 import logging
 
 import database.db as db
@@ -494,6 +495,14 @@ def fuehre_beide_calls_im_hintergrund(
     background.py::_ZAI_EMAIL_WARTE_MAX_SEKUNDEN fuer die entsprechend
     angepasste E-Mail-Wartezeit (3 statt 2 sequenzielle Calls)."""
     urteil = kurzbegruendung = eigene_richtung = uebereinstimmung = richtung_kurzbegruendung = None
+    # LAUFZEITMESSUNG (2026-08-05). Bis heute war nur bekannt, dass ein Fall
+    # das E-Mail-Zeitlimit gerissen hat - NICHT, wie lange er tatsaechlich
+    # brauchte. Damit liess sich die Wartezeit nie an Daten kalibrieren, nur
+    # proportional hochskalieren (siehe scheduler/background.py). Diese eine
+    # Zeile schliesst die Luecke: der naechste Kalibrierungsschritt hat echte
+    # Zahlen fuer den SCHWANZ der Verteilung, nicht nur fuer die Faelle, die
+    # ohnehin rechtzeitig fertig wurden.
+    _begonnen = time.monotonic()
     try:
         konsistenz_ergebnis = pruefe_konsistenz(zai_client, fakten, begruendungstext)
         if konsistenz_ergebnis is not None:
@@ -518,6 +527,12 @@ def fuehre_beide_calls_im_hintergrund(
             )
         finally:
             thread_conn.close()
+        logger.info(
+            "Z.ai-Gegenpruefung (signal_id=%s) nach %.0fs fertig - Urteil=%s, "
+            "eigene Richtung=%s, Uebereinstimmung=%s",
+            signal_id, time.monotonic() - _begonnen, urteil, eigene_richtung,
+            uebereinstimmung,
+        )
     except Exception:
         logger.exception(
             "Z.ai-Gegenpruefung im Hintergrund-Thread fehlgeschlagen (signal_id=%s)", signal_id,
