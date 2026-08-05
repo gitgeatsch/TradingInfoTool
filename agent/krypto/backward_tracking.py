@@ -1070,7 +1070,21 @@ def _aggregate_resolved_signal_rows(
     (siehe check_signal_veto_shadow_outcome()-Docstring)."""
     status_col = "veto_outcome_status" if veto else "outcome_status"
     crv_col = "veto_outcome_realisiertes_crv" if veto else "outcome_realisiertes_crv"
-    filter_clause = "risk_veto = 1 AND action = 'HALTEN' AND " if veto else ""
+    # HISTORISCHE NUR-LONG-VETOS AUSSCHLIESSEN (2026-08-05). Der Veto, der
+    # SHORT-Vorschlaege auf HALTEN drehte, ist entfernt - seine 313 Altfaelle
+    # wachsen nicht mehr, wuerden hier aber dauerhaft in den Provider-Zahlen
+    # mitlaufen und einen eingefrorenen Bestand wie laufendes Systemverhalten
+    # aussehen lassen. Anders als bei der Aufschluesselung nach GRUND sind sie
+    # in dieser Provider-Gruppierung nicht nachtraeglich trennbar - deshalb
+    # hier in der Abfrage.
+    #
+    # Die Zeilen bleiben in der Datenbank und im Export vollstaendig erhalten;
+    # ueber VETO_GRUND_NUR_LONG sind sie gezielt auswertbar. Gefiltert wird nur
+    # die laufende Kennzahl.
+    filter_clause = (
+        "risk_veto = 1 AND action = 'HALTEN' "
+        "AND (risk_veto_reason IS NULL OR risk_veto_reason NOT LIKE '%Nur Long%') AND "
+    ) if veto else ""
 
     gruppen: dict[tuple[str, str], dict] = {}
     assetklasse_by_symbol = _assetklasse_index(watchlist, "_aggregate_resolved_signal_rows()")
@@ -1237,6 +1251,17 @@ def compute_veto_shadow_performance(conn, watchlist: list | None = None) -> dict
 VETO_GRUND_KONFIDENZSCHWELLE = "konfidenzschwelle_r510"
 VETO_GRUND_CRV = "crv_unter_minimum"
 VETO_GRUND_SONSTIGE = "sonstige"
+# HISTORISCH, entsteht seit dem 05.08. nicht mehr (2026-08-05, Nur-Long-Umbau).
+# Der Veto, der SHORT-Vorschlaege auf HALTEN drehte, ist entfernt - die
+# Bitpanda-Beschraenkung wirkt jetzt nur noch auf E-Mail und Anzeige. Die 313
+# Altfaelle bleiben in der Datenbank und bleiben auswertbar; sie duerfen aber
+# nicht mehr als laufende Messgroesse dargestellt werden, sonst liest man einen
+# eingefrorenen Bestand als aktuelles Systemverhalten.
+#
+# EIGENE KATEGORIE statt "sonstige": vorher fielen sie in den Sammeltopf und
+# waren dort nicht von echten Restfaellen zu trennen. Genau diese Vermischung
+# hat bei der Ursachensuche zum 31.07.-Bruch Zeit gekostet.
+VETO_GRUND_NUR_LONG = "nur_long_historisch"
 
 
 def _kategorisiere_veto_grund(reason: str | None) -> str:
@@ -1254,6 +1279,14 @@ def _kategorisiere_veto_grund(reason: str | None) -> str:
     verfaelschen wuerde."""
     if not reason:
         return VETO_GRUND_SONSTIGE
+    # Nur-Long ZUERST (2026-08-05): diese Faelle fielen bisher in "sonstige"
+    # und waren dort nicht von echten Restfaellen zu trennen. Sie entstehen
+    # seit dem Nur-Long-Umbau nicht mehr neu - eine eigene Kategorie macht den
+    # eingefrorenen Bestand sichtbar, statt ihn in einer laufenden Kennzahl zu
+    # verstecken. Der Text stammt aus dem entfernten Veto in
+    # hebel_risk_gate.py und ist in Altzeilen unveraendert erhalten.
+    if "Nur Long" in reason:
+        return VETO_GRUND_NUR_LONG
     if "Regime-Mindestschwelle" in reason:
         return VETO_GRUND_KONFIDENZSCHWELLE
     if "CRV" in reason:
@@ -3996,4 +4029,78 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
                 "begruendung": e.begruendung,
             })
     ergebnis["empfehlungen"].sort(key=lambda x: -x["mfe_r"])
+    return ergebnis
+
+
+# Datum des Nur-Long-Umbaus. Ab hier erreichen SHORT-Kandidaten das LLM und
+# SHORT-Empfehlungen laufen normal durch - davor wurden sie vorgefiltert oder
+# vom Risk-Gate auf HALTEN gedreht. Jede Auswertung ueber diese Grenze hinweg
+# mischt zwei Populationen (Testmethodik 2.1b, Bruchstellen-Tabelle).
+UMBAU_NUR_LONG_AB = "2026-08-05"
+
+
+def compute_richtungsverteilung(conn, watchlist: list | None = None,
+                                ab_datum: str = UMBAU_NUR_LONG_AB) -> dict:
+    """LONG gegen SHORT seit dem Nur-Long-Umbau (2026-08-05).
+
+    WOFUER. Bis zum 05.08. war diese Frage nicht sinnvoll zu stellen: SHORT-
+    Kandidaten wurden vor dem LLM-Aufruf weggefiltert, und was das Modell
+    trotzdem als SHORT empfahl, drehte das Risk-Gate auf HALTEN. Die 313
+    Altfaelle liegen deshalb als "HALTEN" in der Datenbank und haben bei der
+    Ursachensuche zum 31.07.-Bruch wiederholt Populationen vermischt.
+
+    Seit dem Umbau laufen beide Richtungen normal durch - erst dadurch wird
+    messbar, ob das Modell in eine Richtung besser liegt.
+
+    WAS DIE ZAHLEN NOCH NICHT SAGEN. Direkt nach dem Umbau ist n klein, und
+    ein frueher Blick auf eine kleine Stichprobe verleitet zu Schluessen, die
+    beim naechsten Dutzend Signale kippen. Deshalb wird `belastbar` erst ab 30
+    aufgeloesten Faellen je Richtung gesetzt - darunter ist die Karte eine
+    Bestandsanzeige, keine Aussage.
+
+    Zur Einordnung, was bereits GEMESSEN ist (05.08., zwei Regime, dieselbe
+    Faktenquelle): die Richtungswahl des Modells ist eine Regime-Wette, keine
+    Kante - im steigenden Markt LONG minus SHORT +1,744 R, im fallenden
+    -0,133 R mit einem Intervall, das null einschliesst. Diese Karte prueft,
+    ob sich das im Betrieb bestaetigt."""
+    _ = watchlist  # Signatur wie die uebrigen compute_*-Funktionen
+    placeholders = ", ".join("?" for _ in _RESOLVED_OUTCOMES)
+    rows = conn.execute(
+        f"SELECT richtung, action, outcome_status AS status, "
+        f"outcome_realisiertes_crv AS crv FROM hebel_signals "
+        f"WHERE date(created_at) >= ? AND richtung IN ('LONG','SHORT')",
+        (ab_datum,),
+    ).fetchall()
+    aufgeloest = conn.execute(
+        f"SELECT richtung, outcome_status AS status, "
+        f"outcome_realisiertes_crv AS crv FROM hebel_signals "
+        f"WHERE date(created_at) >= ? AND richtung IN ('LONG','SHORT') "
+        f"AND outcome_status IN ({placeholders})",
+        (ab_datum, *_RESOLVED_OUTCOMES),
+    ).fetchall()
+
+    ergebnis = {"ab_datum": ab_datum, "richtungen": {}}
+    for richtung in ("LONG", "SHORT"):
+        alle = [r for r in rows if r["richtung"] == richtung]
+        auf = [r for r in aufgeloest if r["richtung"] == richtung]
+        tp = sum(1 for r in auf if r["status"] == OUTCOME_TAKE_PROFIT)
+        crvs = [r["crv"] for r in auf if r["crv"] is not None]
+        ergebnis["richtungen"][richtung] = {
+            "signale": len(alle),
+            "eroeffnen": sum(1 for r in alle if str(r["action"] or "") == "ERÖFFNEN"),
+            "aufgeloest": len(auf),
+            "take_profit": tp,
+            "trefferquote_pct": round(tp / len(auf) * 100, 1) if auf else None,
+            "erwartungswert_r": round(sum(crvs) / len(crvs), 3) if crvs else None,
+            "belastbar": len(auf) >= 30,
+        }
+    gesamt = sum(v["signale"] for v in ergebnis["richtungen"].values())
+    ergebnis["short_anteil_pct"] = (
+        round(ergebnis["richtungen"]["SHORT"]["signale"] / gesamt * 100, 1)
+        if gesamt else None)
+    ergebnis["hinweis"] = (
+        "Seit dem Nur-Long-Umbau am 05.08. laufen beide Richtungen normal durch. "
+        "SHORT wird nicht gemailt und im Hebel-Tab standardmaessig ausgeblendet - "
+        "gemessen wird es trotzdem. `belastbar` erst ab 30 aufgeloesten Faellen "
+        "je Richtung.")
     return ergebnis

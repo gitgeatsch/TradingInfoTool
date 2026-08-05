@@ -20,6 +20,45 @@ logger = logging.getLogger(__name__)
 _TREFFER_EINSTUFUNGEN = {"kaufkandidat", "watchlist_wuerdig"}
 
 
+# Entfernte LLM-Provider (2026-08-05, Nutzer-Vorgabe "alle groq und cerebras
+# infos ausblenden bzw entfernen"). Beide sind laengst aus dem Betrieb
+# genommen - Cerebras vollstaendig, Groq ebenso -, ihre historischen Zeilen
+# stehen aber weiterhin in provider_performance, veto_schatten_performance,
+# gesamt_signalqualitaet, provider_sendezaehler, llm_calls_heute und
+# api_health. Auf einer Statusseite gelesen wirkt das wie ein aktiver
+# Provider, der nichts liefert.
+#
+# NUR DIE ANZEIGE wird gefiltert. Die Daten bleiben in Datenbank und Export
+# vollstaendig - dort gehoeren sie hin, weil alte Auswertungen sonst ihre
+# Vergleichsgrundlage verlieren.
+_ENTFERNTE_PROVIDER = ("groq", "cerebras")
+
+
+def _ohne_entfernte_provider(daten):
+    """Entfernt Eintraege entfernter Provider aus einer beliebig verschachtelten
+    Status-Struktur.
+
+    Rekursiv statt je Karte einzeln: die sechs betroffenen Bloecke haben
+    unterschiedliche Formen ({tier: {provider: ...}}, {provider: zahl},
+    Listen von Dicts). Eine gemeinsame Funktion kann nicht an einer Stelle
+    vergessen werden, wenn eine siebte Karte dazukommt.
+
+    Vergleich auf dem Praefix vor dem Doppelpunkt UND auf dem ganzen
+    Schluessel: die Werte treten als "groq" ebenso auf wie als
+    "groq:llama-3.3-70b-versatile"."""
+    if isinstance(daten, dict):
+        raus = {}
+        for k, v in daten.items():
+            name = str(k).split(":")[0].strip().lower()
+            if name in _ENTFERNTE_PROVIDER:
+                continue
+            raus[k] = _ohne_entfernte_provider(v)
+        return raus
+    if isinstance(daten, list):
+        return [_ohne_entfernte_provider(x) for x in daten]
+    return daten
+
+
 def _safe(fn, *args, **kwargs):
     """Fehlerisolierung je Karte (2026-07-31, Bug-Runde-Fund): build_status()
     reihte bisher alle _get_*()-Aufrufe direkt als Konstruktor-Argumente von
@@ -75,6 +114,7 @@ class RemoteStatus:
     # gruppiert, damit kuenftige Schwellen-Entscheidungen ohne Ad-hoc-
     # Analyse moeglich sind.
     veto_schatten_performance_nach_grund: dict | None = None
+    richtungsverteilung: dict | None = None
     # Selbst-gewaehltes-HALTEN-Schatten-Tracking (2026-07-31, siehe agent/
     # krypto/backward_tracking.py::compute_selbst_halten_performance()-
     # Docstring) - Gegenfall zum Veto-Schatten oben: kein Gate/Veto, das LLM
@@ -119,6 +159,7 @@ class RemoteStatus:
             "gesamt_signalqualitaet": self.gesamt_signalqualitaet,
             "provider_sendezaehler": self.provider_sendezaehler,
             "veto_schatten_performance_nach_grund": self.veto_schatten_performance_nach_grund,
+            "richtungsverteilung": self.richtungsverteilung,
             "systemguete": self.systemguete,
             "ausstiegs_empfehlungen": self.ausstiegs_empfehlungen,
             "selbst_gewaehltes_halten_performance": self.selbst_gewaehltes_halten_performance,
@@ -214,6 +255,7 @@ def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, erro
         gesamt_signalqualitaet=_safe(_get_gesamt_signalqualitaet, conn, watchlist),
         provider_sendezaehler=_safe(_get_provider_sendezaehler, conn, watchlist),
         veto_schatten_performance_nach_grund=_safe(_get_veto_schatten_performance_nach_grund, conn, watchlist),
+        richtungsverteilung=_safe(_get_richtungsverteilung, conn, watchlist),
         systemguete=_safe(_get_systemguete, conn, watchlist),
         ausstiegs_empfehlungen=_safe(_get_ausstiegs_empfehlungen, conn, watchlist),
         selbst_gewaehltes_halten_performance=_safe(_get_selbst_gewaehltes_halten_performance, conn, watchlist),
@@ -228,8 +270,14 @@ def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, erro
 def _get_api_health(conn: sqlite3.Connection) -> dict:
     """Sichtbarkeit fuer das passive API-Gesundheits-Tracking (2026-07-15, siehe
     database/api_health.py::track_api_health()) - reiner Lesezugriff, keine neue
-    Logik."""
-    return db.get_api_health_status(conn)
+    Logik.
+
+    Auch hier der Filter fuer entfernte Provider (2026-08-05): das
+    Gesundheits-Tracking ist passiv und schreibt fort, was einmal aufgerufen
+    wurde - Groq und Cerebras stehen dort mit ihrem letzten Stand von vor der
+    Entfernung und erschienen auf der Seite sonst als dauerhaft stille
+    Quellen."""
+    return _ohne_entfernte_provider(db.get_api_health_status(conn))
 
 
 def _get_coingecko_quota(conn: sqlite3.Connection) -> dict | None:
@@ -267,7 +315,7 @@ def _get_provider_performance(conn: sqlite3.Connection, watchlist: list) -> dict
     aufgeschluesselt wird - siehe compute_provider_performance()-Docstring."""
     from agent.krypto.backward_tracking import compute_provider_performance
 
-    return compute_provider_performance(conn, watchlist)
+    return _ohne_entfernte_provider(compute_provider_performance(conn, watchlist))
 
 
 def _get_offene_signale_uebersicht(conn: sqlite3.Connection, watchlist: list) -> dict:
@@ -358,7 +406,22 @@ def _get_veto_schatten_performance(conn: sqlite3.Connection, watchlist: list) ->
     Docstring fuer die volle Herleitung dieses Features."""
     from agent.krypto.backward_tracking import compute_veto_shadow_performance
 
-    return compute_veto_shadow_performance(conn, watchlist)
+    return _ohne_entfernte_provider(compute_veto_shadow_performance(conn, watchlist))
+
+
+def _get_richtungsverteilung(conn: sqlite3.Connection, watchlist: list) -> dict:
+    """LONG gegen SHORT seit dem Nur-Long-Umbau (2026-08-05) - NEUE Karte.
+
+    Bis zum Umbau war diese Frage nicht stellbar: SHORT-Kandidaten wurden vor
+    dem LLM-Aufruf gefiltert, und was das Modell trotzdem als SHORT empfahl,
+    drehte das Risk-Gate auf HALTEN. Seither laufen beide Richtungen normal
+    durch - und werden gemessen, auch wenn SHORT weder gemailt noch im
+    Hebel-Tab standardmaessig angezeigt wird.
+
+    Reiner Lesezugriff auf backward_tracking.py::compute_richtungsverteilung()."""
+    from agent.krypto.backward_tracking import compute_richtungsverteilung
+
+    return compute_richtungsverteilung(conn, watchlist)
 
 
 def _get_veto_schatten_performance_nach_grund(conn: sqlite3.Connection, watchlist: list) -> dict:
@@ -368,9 +431,32 @@ def _get_veto_schatten_performance_nach_grund(conn: sqlite3.Connection, watchlis
     (tier, provider) aufgeschluesselt - beantwortet die fuer eine Schwellen-
     Entscheidung eigentliche Frage: schlagen sich Konfidenzschwellen-Vetos
     (R-5.10) anders als CRV<2.0-Vetos, je Assetklasse?"""
-    from agent.krypto.backward_tracking import compute_veto_shadow_performance_nach_grund
+    from agent.krypto.backward_tracking import (
+        VETO_GRUND_NUR_LONG, compute_veto_shadow_performance_nach_grund,
+    )
 
-    return compute_veto_shadow_performance_nach_grund(conn, watchlist)
+    roh = compute_veto_shadow_performance_nach_grund(conn, watchlist)
+    # HISTORISCHEN BESTAND AUSBLENDEN (2026-08-05, Nutzer-Vorgabe "Informationen
+    # welche wir nicht mehr messen ... nicht mehr anzeigen"): der Nur-Long-Veto
+    # ist entfernt, seine 313 Altfaelle wachsen nicht mehr. Als laufende
+    # Kennzahl dargestellt liest man einen eingefrorenen Bestand als aktuelles
+    # Systemverhalten - genau die Verwechslung, die beim 31.07.-Bruch Zeit
+    # gekostet hat.
+    #
+    # Nur die ANZEIGE wird gefiltert. Die Daten bleiben in der Datenbank und im
+    # Export vollstaendig erhalten; die neue Kategorie VETO_GRUND_NUR_LONG
+    # macht sie dort gezielt auswertbar, statt sie wie bisher im Sammeltopf
+    # "sonstige" zu verstecken.
+    if not isinstance(roh, dict):
+        return roh
+    gefiltert = {}
+    for tier, gruende in roh.items():
+        if isinstance(gruende, dict):
+            gefiltert[tier] = {g: v for g, v in gruende.items()
+                               if g != VETO_GRUND_NUR_LONG}
+        else:
+            gefiltert[tier] = gruende
+    return gefiltert
 
 
 # Zwischenspeicher fuer die Systemguete (2026-08-03, HOTFIX).
@@ -501,7 +587,7 @@ def _get_gesamt_signalqualitaet(conn: sqlite3.Connection, watchlist: list) -> di
     fuer die additive Zusammenfuehrung."""
     from agent.krypto.backward_tracking import compute_gesamt_signalqualitaet
 
-    return compute_gesamt_signalqualitaet(conn, watchlist)
+    return _ohne_entfernte_provider(compute_gesamt_signalqualitaet(conn, watchlist))
 
 
 def _get_provider_sendezaehler(conn: sqlite3.Connection, watchlist: list) -> dict:
@@ -511,7 +597,7 @@ def _get_provider_sendezaehler(conn: sqlite3.Connection, watchlist: list) -> dic
     OHNE aufgeloestes Signal sichtbar (siehe dortiger Docstring)."""
     from agent.krypto.backward_tracking import compute_provider_sendezaehler
 
-    return compute_provider_sendezaehler(conn, watchlist)
+    return _ohne_entfernte_provider(compute_provider_sendezaehler(conn, watchlist))
 
 
 def _get_regime_status(conn: sqlite3.Connection) -> dict | None:
