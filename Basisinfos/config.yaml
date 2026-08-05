@@ -51,6 +51,42 @@ ziele:
 
 # --- Risikomanagement / Kernmodul (siehe Spezifikation Kap. 3) ---
 risiko:
+  ausstieg_trailing_ausloese_r: 1.0    # AUSSTIEG (2026-08-04 gebaut, 05.08. scharf
+  ausstieg_trailing_abstand_r: 1.0     # geschaltet). Sobald eine Position einmal
+                                        # bei ausloese_r im Plus stand, wird der Stop
+                                        # auf "MFE minus abstand_r" nachgezogen und
+                                        # NIE zurueckgenommen. Bei LONG zaehlt das
+                                        # bisherige Hoch, bei SHORT das Tief.
+                                        #
+                                        # ANLASS: 50 % der Signale standen einmal bei
+                                        # +1R, aber nur 17,6 % kamen am Ziel an -
+                                        # der groesste gemessene, bis dahin
+                                        # ungenutzte Hebel des Systems.
+                                        #
+                                        # HERGELEITET, nicht geschaetzt (495 echte
+                                        # aufgeloeste Signale, Hebel+Spot):
+                                        #   IST (halten bis Barriere)  EW -0,176 R
+                                        #   Trailing 1,0 / 1,0         EW -0,084 R
+                                        # Verbesserung +0,092 R je Signal. Gepaarter
+                                        # Block-Bootstrap ueber Symbole: 95%-Intervall
+                                        # [+0,051 ; +0,131], 100 % der Ziehungen
+                                        # positiv. Split-Sample haelt in beiden
+                                        # Haelften (+0,120 / +0,076). Groesstes Symbol
+                                        # traegt 16 % - kein Einzeltraeger.
+                                        # Schwaechere gepruefte Varianten: Teilverkauf
+                                        # 50 % bei +1R nur +0,032 R, Trailing erst ab
+                                        # +1,5 R nur +0,038 R.
+                                        #
+                                        # ABSCHALTEN: ausloese_r auf 0 setzen. Das ist
+                                        # kein Komfort, sondern Vorsorge - ALLE Zahlen
+                                        # stammen aus EINER Marktphase (Baerenregime).
+                                        # In einer Aufwaertsphase koennte ein Trailing
+                                        # Gewinner zu frueh beenden, weil Bewegungen
+                                        # dort weiterlaufen statt zu drehen. Genau
+                                        # deshalb steht das hier und nicht im Code.
+                                        #
+                                        # ADVISORY-ONLY (P-7): die Regel rechnet und
+                                        # meldet, sie fuehrt nichts aus.
   risiko_pro_trade_prozent: 2          # RM-1: max. Verlust bis Stop-Loss je Trade
   ziel_gleichzeitige_positionen: 5     # RM-1d (2026-08-02): das Kapital soll fuer
                                         # mindestens so viele Positionen reichen.

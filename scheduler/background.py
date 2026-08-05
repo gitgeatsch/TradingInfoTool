@@ -391,6 +391,118 @@ def marktscan_job(coingecko_client, kraken_client, conn_factory, watchlist_provi
     return True
 
 
+def ausstiegs_job(conn_factory, watchlist_provider) -> None:
+    """Taegliche Ausstiegs-Empfehlungen (2026-08-05, Punkt 3 scharfgeschaltet).
+
+    DER BEFUND DAHINTER: 50 % der Signale standen einmal bei +1R, aber nur
+    17,6 % kamen am Ziel an. Positionen geben Gewinne regelmaessig zurueck -
+    der groesste gemessene Hebel des Systems.
+
+    GEBAUT WAR DIE REGEL SEIT DEM 04.08., aber nur PASSIV: sie rechnete im
+    Export und auf der Remote-Seite. Beides muss man aufrufen. Beim Export vom
+    05.08. standen 15 von 28 offenen Signalen ueber der Schwelle, darunter SOL
+    mit 10,63 R ungesichertem Buchgewinn - gesehen wurde das nur, weil zufaellig
+    jemand hineinschaute. Dieser Job macht daraus eine Bringschuld.
+
+    EINE MAIL PRO TAG, HOECHSTENS. Bewusst ein Sammel-Ueberblick statt einer
+    Mail je Signal: bei 15 offenen Empfehlungen waeren 15 Mails Rauschen, und
+    Rauschen wird ignoriert - dann waere nichts gewonnen. Sortiert nach
+    ungesichertem Buchgewinn, damit die dringendste Zeile oben steht.
+
+    KEINE MAIL, WENN NICHTS ANLIEGT. Eine taegliche "nichts zu tun"-Mail
+    erzieht dazu, die Mail nicht mehr zu oeffnen.
+
+    ADVISORY-ONLY (P-7): der Job rechnet und meldet. Er aendert keine Position,
+    setzt keinen Stop und ruft keine Handels-API auf - es gibt keine.
+
+    Abschaltbar ueber config.yaml risiko.ausstieg_trailing_ausloese_r = 0,
+    ohne Codeaenderung. Der Grund steht dort: alle Kalibrierungszahlen stammen
+    aus EINER Marktphase."""
+    import config as config_module
+    from agent.krypto.ausstiegsregel import parameter_aus_config
+    from agent.krypto.backward_tracking import compute_ausstiegs_empfehlungen
+
+    cfg = config_module.load_config()
+    _ausloese, _abstand, aktiv = parameter_aus_config(cfg)
+    if not aktiv:
+        logger.info("Ausstiegsregel deaktiviert (ausstieg_trailing_ausloese_r <= 0)")
+        return
+
+    conn = conn_factory()
+    try:
+        ergebnis = compute_ausstiegs_empfehlungen(conn, watchlist_provider(), cfg)
+    except Exception:
+        logger.exception("Ausstiegs-Empfehlungen fehlgeschlagen")
+        return
+    finally:
+        conn.close()
+
+    empfehlungen = (ergebnis or {}).get("empfehlungen") or []
+    geprueft = (ergebnis or {}).get("geprueft")
+    if not empfehlungen:
+        logger.info("Ausstiegsregel: keine Empfehlung offen (%s Signale geprueft)", geprueft)
+        return
+
+    logger.info("Ausstiegsregel: %d von %s offenen Signalen ueber der Schwelle",
+                len(empfehlungen), geprueft)
+    try:
+        _sende_ausstiegs_email(empfehlungen, geprueft)
+    except Exception:
+        logger.exception("Ausstiegs-E-Mail fehlgeschlagen")
+
+
+def _sende_ausstiegs_email(empfehlungen: list, geprueft) -> None:
+    """Sammel-Mail der offenen Stop-Nachzieh-Empfehlungen.
+
+    Der Leer-Guard steht ABSICHTLICH hier und nicht nur im Aufrufer: eine
+    "0 Empfehlungen"-Mail erzieht dazu, die Mail nicht mehr zu oeffnen - und
+    dann ist auch die eine wichtige nichts mehr wert. Beim Test fiel auf, dass
+    ein Direktaufruf diese Mail sonst verschickt haette."""
+    import config as config_module
+    from api.email_notify import send_notification_email
+
+    if not empfehlungen:
+        return
+
+    email_cfg = config_module.load_config().get("benachrichtigung", {}).get("email", {})
+    if not email_cfg.get("aktiv", False):
+        return
+    empfaenger = email_cfg.get("empfaenger")
+    if not empfaenger:
+        return
+
+    zeilen = [
+        f"{len(empfehlungen)} von {geprueft} offenen Signalen haben ihren "
+        f"Buchgewinn nicht abgesichert.",
+        "",
+        "Sortiert nach hoechstem erreichten Buchgewinn. Die Regel ist eine "
+        "EMPFEHLUNG - sie fuehrt nichts aus.",
+        "",
+    ]
+    for e in empfehlungen:
+        stop = e.get("stop_empfohlen")
+        zeilen.append(
+            f"{e.get('symbol'):<10} {e.get('richtung','?'):<5} "
+            f"({e.get('tier','?')}, seit {e.get('seit','?')})"
+        )
+        zeilen.append(
+            f"    stand bei {e.get('mfe_r')} R - Stop von {e.get('stop_bisher')} "
+            f"auf {round(stop, 8) if isinstance(stop, (int, float)) else stop} "
+            f"nachziehen, sichert {e.get('sichert_r')} R"
+        )
+    zeilen += [
+        "",
+        "Warum das zaehlt: 50 % der Signale standen einmal bei +1R, nur 17,6 % "
+        "kamen am Ziel an.",
+        "Abschalten: config.yaml risiko.ausstieg_trailing_ausloese_r auf 0.",
+    ]
+    send_notification_email(
+        f"TradingInfoTool: {len(empfehlungen)} Stop-Nachzieh-Empfehlung(en)",
+        "\n".join(zeilen),
+        empfaenger,
+    )
+
+
 def kanarienvogel_job(mistral_client) -> None:
     """Taegliche LLM-Drift-Pruefung (2026-08-05, siehe agent/krypto/kanarienvogel.py).
 
@@ -2997,6 +3109,19 @@ def build_scheduler(
     # Auswertung bereits vorhandener Kursdaten) - feste Uhrzeit nach dem ueblichen
     # naechtlichen Refresh-Fenster, keine harte Abhaengigkeit (holt am naechsten Tag
     # nach, falls refresh_history/refresh_ohlc an dem Tag noch nicht durch waren).
+    # Ausstiegs-Empfehlungen (2026-08-05) - taeglich 7:15, also NACH dem
+    # Backward-Tracking (6:00) und dem Portfoliowert (6:30). Die Reihenfolge
+    # ist noetig, nicht kosmetisch: die Regel rechnet auf
+    # outcome_max_realisiertes_crv, und genau das schreibt das Backward-
+    # Tracking fort. Vorher gestartet arbeitete sie auf dem Stand von gestern.
+    scheduler.add_job(
+        ausstiegs_job,
+        "cron",
+        hour=7,
+        minute=15,
+        args=[db_conn_factory, watchlist_provider],
+        id="ausstiegs_empfehlungen",
+    )
     scheduler.add_job(
         backward_tracking_job,
         "cron",
