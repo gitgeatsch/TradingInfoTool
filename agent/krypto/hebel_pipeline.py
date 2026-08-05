@@ -281,6 +281,24 @@ def generate_hebel_signal(
         _oi_cfg.get("squeeze_schwelle_prozent", 1.0),
     )
     funding_rate_perzentil = latest_value(compute_funding_rate_percentile(conn, asset.symbol))
+    # Ausstiegsregel + eigene Systemguete (2026-08-05) - hier vorberechnet,
+    # weil build_hebel_facts() bewusst keinen DB-Zugriff hat. Beide sind
+    # fail-soft: schlaegt die Berechnung fehl, fehlt der Fakt, statt dass der
+    # ganze Signallauf kippt.
+    try:
+        from agent.krypto.backward_tracking import (
+            ausstiegsregel_kontext_fuer_prompt, systemguete_kontext_fuer_prompt,
+        )
+        fakt_ausstiegsregel = ausstiegsregel_kontext_fuer_prompt(config_dict)
+    except Exception:
+        logger.exception("Ausstiegsregel-Fakt fehlgeschlagen - Signal laeuft ohne")
+        fakt_ausstiegsregel = None
+    try:
+        fakt_systemguete = systemguete_kontext_fuer_prompt(conn, watchlist)
+    except Exception:
+        logger.exception("Systemguete-Fakt fehlgeschlagen - Signal laeuft ohne")
+        fakt_systemguete = None
+
     facts = build_hebel_facts(
         asset, price_snap, snapshot, confluence, regime_result, regime_profile,
         anticyclic_context, market_context, trigger, position_aktuell, pre_result,
@@ -288,6 +306,8 @@ def generate_hebel_signal(
         historische_erfolgsquote=historische_erfolgsquote,
         historischer_makro_vergleich=historischer_makro_vergleich,
         liquiditaetszonen=liquiditaetszonen,
+        ausstiegsregel=fakt_ausstiegsregel,
+        systemguete=fakt_systemguete,
         signal_stabilitaet=signal_stabilitaet,
         btc_relativwert=btc_relativwert,
         optionsmarkt=optionsmarkt,

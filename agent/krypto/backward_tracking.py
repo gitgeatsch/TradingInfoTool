@@ -4181,3 +4181,119 @@ def kosten_kontext_fuer_prompt(hebel: float | None = None) -> dict:
         "belegt": True,
         "quelle": "Bitpanda-Kostentransparenz, Schliessung 0,3 % + gestaffelte Tagesgebuehr",
     }
+
+
+def ausstiegsregel_kontext_fuer_prompt(config: dict | None = None) -> dict | None:
+    """Die aktive Ausstiegsregel als FAKT (2026-08-05).
+
+    DIE LUECKE: seit heute wird der Stop automatisch nachgezogen, sobald eine
+    Position einmal bei `ausloese_r` im Plus stand. Das Modell setzt aber
+    Take-Profit-Zonen, OHNE davon zu wissen - es plant gegen eine Regel, die es
+    nicht kennt.
+
+    WARUM DAS DIE ZONENWAHL BETRIFFT, und zwar in beide Richtungen: wer weiss,
+    dass ab +1R abgesichert wird, kann ein WEITER entferntes Ziel wagen (der
+    Rueckfall ist nach oben hin begrenzt) - oder ein naeheres waehlen, weil der
+    Trailing-Stop ohnehin frueher greift. Welche der beiden Ueberlegungen
+    richtig ist, haengt vom Einzelfall ab. Genau deshalb Kontext und keine
+    Vorgabe (Fakten-Entscheidungsmappe, Frage 2).
+
+    3+1-RASTER:
+      Frage 1 (immer dieselbe Reaktion -> Gate?): NEIN. Die Regel selbst IST
+        schon deterministisch; hier geht es darum, ob das Modell seine Zonen
+        anders legt, wenn es sie kennt - das ist eine Abwaegung.
+      Frage 2 (kontextabhaengig?): JA, siehe oben.
+      Frage 3 (bekommt es heute etwas?): NEIN.
+      Frage 4 (passt es zum Zeithorizont?): JA - der Trailing greift innerhalb
+        derselben 0-bis-5-Tage-Spanne, in der die Zonen liegen.
+
+    Gibt None zurueck, wenn die Regel abgeschaltet ist (ausloese_r <= 0) - dann
+    darf sie auch nicht als Fakt behauptet werden."""
+    from agent.krypto.ausstiegsregel import parameter_aus_config
+
+    ausloese, abstand, aktiv = parameter_aus_config(config or {})
+    if not aktiv:
+        return None
+    return {
+        "aktiv": True,
+        "ausloese_r": ausloese,
+        "abstand_r": abstand,
+        "so_funktioniert_es": (
+            f"Sobald die Position einmal {ausloese:.1f} R im Plus stand, wird der "
+            f"Stop auf 'hoechster Buchgewinn minus {abstand:.1f} R' nachgezogen und "
+            f"NIE wieder zurueckgenommen. Bei LONG zaehlt das bisherige Hoch, bei "
+            f"SHORT das bisherige Tief."
+        ),
+        "was_das_fuer_deine_zonen_heisst": (
+            "Der Rueckfall aus einem Gewinn ist dadurch nach unten begrenzt, sobald "
+            f"{ausloese:.1f} R erreicht war. Ob daraus ein weiter entferntes Ziel "
+            "folgt (mehr Raum, begrenztes Rueckfallrisiko) oder ein naeheres (der "
+            "Trailing greift ohnehin frueher), entscheidest du am Einzelfall."
+        ),
+        "kein_breakeven_lock": (
+            "Ausdruecklich KEIN Breakeven-Lock - der wurde am 01.08. gemessen und "
+            "verworfen, weil er 63 % der Gewinner kostet: der Kurs laeuft nach dem "
+            f"ersten Antippen von {ausloese:.1f} R regelmaessig noch einmal unter "
+            "den Einstand, bevor er das Ziel nimmt."
+        ),
+        "belegt": True,
+        "quelle": "gemessen an 495 aufgeloesten Signalen, EW -0,176 -> -0,084 R",
+    }
+
+
+def systemguete_kontext_fuer_prompt(conn, watchlist: list | None = None,
+                                    tier: str = "hebel") -> dict | None:
+    """Die eigene, gemessene Systemguete als FAKT (2026-08-05).
+
+    DIE LUECKE: Erwartungswert, SQN und Profitfaktor werden berechnet,
+    exportiert und auf der Remote-Seite angezeigt - erreichen das Modell aber
+    nie. Es beurteilt jedes Signal, ohne zu wissen, wie die bisherigen
+    ausgegangen sind.
+
+    ABSICHTLICH OHNE HANDLUNGSANWEISUNG. Die Zahl ist derzeit unerfreulich
+    (Erwartungswert negativ, SQN "kaum handelbar"). Die naheliegende
+    Formulierung waere "sei deshalb vorsichtiger" - und genau die waere ein
+    Fehler: derselbe Mechanismus liess beim Ausfuehrbarkeits-Hinweis die
+    EROEFFNEN-Quote von 93 % auf 3 % einbrechen. Ein Modell, das aus einer
+    schlechten Bilanz schliesst, gar nichts mehr vorzuschlagen, loest das
+    Problem nicht, es versteckt es.
+
+    Deshalb: die Zahl mit ihrer Bedeutung, die Schlussfolgerung offen - genau
+    die Linie der Fakten-Entscheidungsmappe ("Kontext liefern, Urteil
+    offenlassen").
+
+    RISIKO, das dazugehoert: sollte die Messung zeigen, dass dieser Fakt die
+    EROEFFNEN-Quote senkt, gehoert er wieder entfernt. Die Quote ist deshalb
+    Pflicht-Messgroesse jedes Tests dieses Fakts, nicht nur die Zonenqualitaet.
+
+    Gibt None zurueck, wenn keine belastbare Zahl vorliegt - eine Systemguete
+    aus fuenf Signalen waere irrefuehrender als gar keine."""
+    try:
+        guete = compute_systemguete(conn, watchlist)
+    except Exception:
+        return None
+    real = ((guete or {}).get(tier) or {}).get("real") or {}
+    n = real.get("anzahl_bewertet")
+    if not isinstance(n, int) or n < 30:
+        return None
+    ew = real.get("expectancy_r")
+    return {
+        "anzahl_ausgewerteter_trades": n,
+        "erwartungswert_r": round(ew, 3) if isinstance(ew, (int, float)) else None,
+        "sqn": round(real["sqn"], 2) if isinstance(real.get("sqn"), (int, float)) else None,
+        "sqn_einordnung": real.get("sqn_einordnung"),
+        "profit_factor": (round(real["profit_factor"], 2)
+                          if isinstance(real.get("profit_factor"), (int, float)) else None),
+        "lesehilfe": (
+            "Erwartungswert in R = durchschnittliches Ergebnis je Signal, gemessen "
+            "an tatsaechlich eroeffneten Trades dieser Kategorie. Ein negativer Wert "
+            "heisst, dass die bisherigen Signale im Schnitt Geld gekostet haben."
+        ),
+        "wie_du_das_nutzt": (
+            "Das ist Kalibrierungs-Kontext, KEINE Handlungsanweisung und kein Grund, "
+            "grundsaetzlich zurueckhaltender zu werden. Es sagt dir, wie streng die "
+            "Latte fuer ein lohnendes Setup liegt - nicht, dass du keines mehr "
+            "vorschlagen sollst."
+        ),
+        "belegt": True,
+    }

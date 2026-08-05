@@ -442,6 +442,21 @@ knappes CRV bei engem Stop kritischer zu sehen, weil die Kosten dort einen \
 groesseren Teil des Gewinns wegnehmen. Nenne die Kostenueberlegung in \
 `short_reasoning`, wenn sie deine Zone beeinflusst hat.
 
+31. Ausstiegsregel und eigene Bilanz (2026-08-05, neu): zwei Fakten, die dir \
+bisher fehlten. `ausstiegsregel` beschreibt einen Trailing-Stop, der \
+AUTOMATISCH greift - sobald die Position einmal die dort genannte Schwelle im \
+Plus stand, wird der Stop nachgezogen und nie zurueckgenommen. Du planst also \
+nicht gegen ein starres Stop-Ziel-Paar: der Rueckfall aus einem Gewinn ist ab \
+dieser Schwelle begrenzt. Ob daraus ein weiter entferntes Ziel folgt (mehr \
+Raum bei begrenztem Rueckfallrisiko) oder ein naeheres (der Trailing greift \
+ohnehin frueher), entscheidest du am Einzelfall - es gibt hier keine richtige \
+Standardantwort. `systemguete` nennt den gemessenen Erwartungswert und SQN der \
+bisher tatsaechlich eroeffneten Trades dieser Kategorie. Das ist Kalibrierung, \
+KEINE Handlungsanweisung: ein schwacher Wert sagt dir, wie hoch die Latte fuer \
+ein lohnendes Setup liegt - er ist ausdruecklich KEIN Grund, grundsaetzlich \
+zurueckhaltender zu werden oder weniger vorzuschlagen. Fehlt einer der beiden \
+Fakten, gilt er als nicht verfuegbar; erfinde nichts.
+
 SCHEMA:
 {
   "richtung": "LONG|SHORT",
@@ -583,6 +598,12 @@ def build_hebel_facts(
     optionsmarkt: dict | None = None,
     squeeze_divergenz: str | None = None,
     funding_rate_perzentil: float | None = None,
+    # 2026-08-05: beide VORBERECHNET hereingereicht statt hier die DB oder die
+    # Config anzufassen - build_hebel_facts() hat bewusst keinen DB-Zugriff,
+    # und das soll so bleiben (gleiches Prinzip wie bei
+    # historische_erfolgsquote/liquiditaetszonen darueber).
+    ausstiegsregel: dict | None = None,
+    systemguete: dict | None = None,
 ) -> dict:
     """Analog agent/krypto/analyst.py::build_facts() - wiederverwendet dieselben
     Bausteine fuer technische_analyse/regime/markt_kontext/antizyklisch 1:1 (siehe
@@ -642,7 +663,7 @@ def build_hebel_facts(
         if not r.available:
             nicht_verfuegbar.append(f"{name}: {r.reason}")
 
-    return {
+    fakten = {
         "asset": {
             "symbol": asset.symbol,
             "name": asset.name,
@@ -782,6 +803,12 @@ def build_hebel_facts(
         # atr.relativ_prozent am 28.07., damit das Modell abliest statt zu
         # rechnen. Kategorie (b): Kontext, kein Gate.
         "kosten": kosten_kontext_fuer_prompt(pre_result.config_max_hebel),
+        # Ausstiegsregel + eigene Systemguete (2026-08-05) - beide schliessen
+        # dokumentierte Luecken aus der Zielgroessen-Doku. None-Werte werden
+        # unten herausgefiltert, damit ein abgeschalteter Trailing-Stop nicht
+        # als Fakt behauptet wird.
+        "ausstiegsregel": ausstiegsregel,
+        "systemguete": systemguete,
         "hebel_kontext": {
             "max_hebel_config": pre_result.config_max_hebel,
             "max_sicherer_hebel_geschaetzt": _native(pre_result.max_sicherer_hebel),
@@ -815,6 +842,15 @@ def build_hebel_facts(
             ),
         },
     }
+    # None-Bloecke entfernen (2026-08-05). `ausstiegsregel` ist None, wenn die
+    # Regel abgeschaltet ist; `systemguete` ist None, solange zu wenige
+    # ausgewertete Trades vorliegen. Ein Schluessel mit null waere schlechter
+    # als gar keiner - das Modell wuerde eine Angabe sehen, die keine ist, und
+    # muesste raten was sie bedeutet.
+    for _schluessel in ("ausstiegsregel", "systemguete"):
+        if fakten.get(_schluessel) is None:
+            fakten.pop(_schluessel, None)
+    return fakten
 
 
 REQUIRED_HEBEL_TOP_LEVEL_FIELDS = (
