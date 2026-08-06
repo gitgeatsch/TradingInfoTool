@@ -334,6 +334,19 @@ Hedge-Auswertung, nicht danach.
 | Regime je Klasse (M6) | Basis wäre eine Klasse ohne saubere Evidenz | nach B und C |
 | Rollkosten/Gebühren modellieren | die Reihen taugen für kurze Horizonte; für Monate gälte das nicht — dort steht dann diese Frage | wenn eine Auswertung > 4 Wochen Haltedauer betrifft |
 
+## 3b. Drei Lücken, die erst beim Nachfragen auffielen (nachträglich gebaut)
+
+| Lücke | Warum sie zählt | Behoben durch |
+|---|---|---|
+| Rohstoff-/ETF-/Hedge-Reihen wurden **nie täglich gezogen** — nur wenn die Pipeline lief (9 und 19 Uhr, Mo–Fr), während der Portfolio-Job täglich um 6:30 läuft | Die Bewertung hing daran, ob am Vortag ein Signal entstand; am Wochenende gar nicht. Mit der Rekonstruktion schlimmer, weil deren Anker täglich wandert | `_refresh_nicht_aktien_ohlc()` im bestehenden OHLC-Refresh-Job |
+| Der **Export konnte die Behebung nicht belegen** — „19 Symbole ohne Kurs", aber nicht welche und warum | Ohne das wäre B3/B4 nach dem Pull nicht prüfbar | `bewertungs_diagnose` je Symbol + Währung/`quelle` in der OHLC-Sektion |
+| **Z-3 fehlte auf der Übersichtsseite**, und die beiden Portfoliowerte standen nie nebeneinander | Die Seite rechnet aus Snapshot-Preisen, Z-3 aus der Kursreihe. Am 06.08. lagen sie über 100 % auseinander — unsichtbar | Neue Z-3-Karte **mit Gegenprobe** und Warnung ab 5 % Abweichung |
+
+> Die Gegenprobe ist die billigste Dauerüberwachung, die aus dem Fund folgt:
+> zwei unabhängige Wege zur selben Größe, nebeneinander gestellt. Kein neuer
+> Datenbezug, keine Schwellenwert-Diskussion — nur die Weigerung, zwei Zahlen
+> getrennt anzuzeigen, die dasselbe meinen.
+
 ## 4. Ehrliche Grenzen dieses Stands
 
 - Die rekonstruierten Reihen tragen **keine** Rollkosten, Gebühren oder (bei

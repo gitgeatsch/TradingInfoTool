@@ -611,6 +611,7 @@ def _rohdaten_fuer_backtest(conn) -> dict:
     # Export nicht toeten.
     z3_status = None
     portfolio_wert_historie = []
+    bewertungs_diagnose = {}
     try:
         z3_status = pruefe_z3(
             conn,
@@ -619,11 +620,19 @@ def _rohdaten_fuer_backtest(conn) -> dict:
         portfolio_wert_historie = [
             row_to_dict(r) for r in db.get_portfolio_wert_historie(conn)
         ]
+        # WARUM DIE BEWERTUNG SO AUSSIEHT, WIE SIE AUSSIEHT (2026-08-06).
+        # z3_status liefert nur das Ergebnis. Am 06.08. stand daneben
+        # "19 Symbole ohne Kurs" - und niemand konnte aus dem Export sagen,
+        # WELCHE 19 und WARUM. Ursache waren zwei Defekte gleichzeitig
+        # (FX-Ableitung verworfen + Futures-Reihe unter dem ETC-Symbol).
+        # Ohne diese Diagnose ist die Verifikation der Behebung nicht moeglich.
+        bewertungs_diagnose = _bewertungs_diagnose(conn)
     except sqlite3.OperationalError as exc:
         # Bewusst als Wert im Export, nicht nur im Log: wer die Datei liest,
         # soll den Unterschied zwischen "kein Drawdown" und "nicht gemessen"
         # sehen (stille Degradierung, Methodik 2.5.8).
         z3_status = {"nicht_verfuegbar": str(exc)}
+        bewertungs_diagnose = {"nicht_verfuegbar": str(exc)}
         print(f"  HINWEIS: Z-3-Status nicht ermittelbar ({exc})")
 
     # Makro- und OI-Historie fuer den LLM1-Backtest (2026-08-04).
@@ -706,6 +715,7 @@ def _rohdaten_fuer_backtest(conn) -> dict:
     # Backtest-Rohdaten.
     return {
         "_z3_status": z3_status,
+        "_bewertungs_diagnose": bewertungs_diagnose,
         "hebel_triggers_kandidaten": hebel_triggers_kandidaten,
         "hebel_triggers_alle": hebel_triggers_alle,
         "portfolio_wert_historie": portfolio_wert_historie,
@@ -943,7 +953,66 @@ def _ohlc_aktualitaet_je_symbol(conn) -> dict:
         "SELECT symbol, COUNT(*) AS anzahl, MIN(date) AS von, MAX(date) AS bis "
         "FROM price_history_ohlc GROUP BY symbol ORDER BY bis ASC"
     ).fetchall()
-    return {"symbole": [row_to_dict(r) for r in rows]}
+    # WAEHRUNG UND HERKUNFT dazu (2026-08-06). Ohne die Waehrung war nicht
+    # sichtbar, dass die Nicht-Krypto-Symbole nur EINE Seite fuehren (OD7C/PLTR
+    # nur USD, X136/CEBS nur EUR) - genau der Grund, warum sie bei kaputter
+    # FX-Ableitung geschlossen aus der Portfolio-Bewertung fielen. Ohne `quelle`
+    # waere eine rekonstruierte Reihe im Export von einer gemessenen nicht zu
+    # unterscheiden, und die Rekonstruktion nicht verifizierbar.
+    je_reihe = conn.execute(
+        "SELECT symbol, currency, quelle, COUNT(*) AS anzahl, MIN(date) AS von, "
+        "MAX(date) AS bis FROM price_history_ohlc "
+        "GROUP BY symbol, currency, quelle ORDER BY symbol, currency"
+    ).fetchall()
+    rekonstruiert = conn.execute(
+        "SELECT symbol, currency, COUNT(*) AS anzahl, MAX(date) AS bis "
+        "FROM price_history_ohlc WHERE quelle = 'rekonstruiert' "
+        "GROUP BY symbol, currency ORDER BY symbol"
+    ).fetchall()
+    return {
+        "symbole": [row_to_dict(r) for r in rows],
+        "je_symbol_waehrung_quelle": [row_to_dict(r) for r in je_reihe],
+        "rekonstruierte_reihen": [row_to_dict(r) for r in rekonstruiert],
+    }
+
+
+def _bewertungs_diagnose(conn) -> dict:
+    """Je gehaltenes Symbol: kam ein Kurs zustande, und wenn nein - warum nicht?
+
+    Neu 2026-08-06. Der Portfolio-Wert-Job meldete "19 Symbole ohne Kurs", und
+    aus dem Export war nicht rekonstruierbar, welche das waren. Die Ursache lag
+    in zwei Defekten, die sich gegenseitig verdeckten: die FX-Ableitung wurde an
+    87 von 91 Tagen verworfen (Spannweite statt Interquartilsabstand), wodurch
+    alle NUR-USD-Symbole aus der Bewertung fielen - und darunter lag ein zweiter
+    Fehler, die Futures-Historie unter dem ETC-Symbol (OD7H mit 4.215,90 USD
+    statt 18,22 EUR).
+
+    Diese Sektion macht beide Ebenen sichtbar: fx_tage_verworfen zeigt Ebene 1,
+    reihen_verworfen die Plausibilitaetspruefung, und je Symbol steht, ob der
+    Kurs direkt in EUR vorlag, ueber den Wechselkurs kam oder ganz fehlte.
+    """
+    from agent.portfolio_historie import rekonstruiere_stichtag
+    from datetime import datetime, timedelta, timezone
+
+    ab = (datetime.now(timezone.utc).date() - timedelta(days=90)).isoformat()
+    erg = rekonstruiere_stichtag(conn, ab_datum=ab, watchlist=config_module.get_watchlist())
+    letzter = erg.tageswerte[-1] if erg.tageswerte else None
+    return {
+        "ab_datum": ab,
+        "letzter_tag": letzter[0] if letzter else None,
+        "letzter_wert_eur": round(letzter[1], 2) if letzter else None,
+        "symbole_gesamt": letzter[2] if letzter else 0,
+        "symbole_ohne_kurs": letzter[3] if letzter else 0,
+        "fx_tage_verworfen_anzahl": len(erg.fx_tage_verworfen),
+        "fx_tage_verworfen": erg.fx_tage_verworfen[-10:],
+        "reihen_verworfen": erg.reihen_verworfen,
+        "je_symbol": [
+            {"symbol": d.symbol, "menge": d.menge, "tage_direkt_eur": d.tage_direkt_eur,
+             "tage_ueber_fx": d.tage_ueber_fx, "tage_ohne_kurs": d.tage_ohne_kurs,
+             "letzter_kurs_eur": d.letzter_kurs_eur, "problemfall": d.ist_problemfall}
+            for d in erg.symbol_diagnosen
+        ],
+    }
 
 
 def _coingecko_kontingent(conn) -> dict:
@@ -1649,6 +1718,7 @@ def main() -> None:
         "marktscan_discovery_llm_delta": marktscan_discovery_llm_delta,
         "hebel_erstmalige_erkennung_delta": hebel_erstmalige_erkennung_delta,
         "z3_status": rohdaten_fuer_backtest.pop("_z3_status", None),
+        "bewertungs_diagnose": rohdaten_fuer_backtest.pop("_bewertungs_diagnose", None),
         "rohdaten_fuer_backtest": rohdaten_fuer_backtest,
         "preishistorie_ueberholte_symbole": preishistorie_ueberholte_symbole,
         "preishistorie_signal_symbole": preishistorie_signal_symbole,

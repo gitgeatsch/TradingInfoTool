@@ -299,6 +299,52 @@ def refresh_ohlc_job(client, conn_factory, watchlist_provider,
         conn.close()
 
 
+def _refresh_nicht_aktien_ohlc(conn, watchlist) -> None:
+    """Kursreihen der uebrigen Nicht-Krypto-Klassen taeglich mitziehen (2026-08-06).
+
+    WARUM DAS FEHLTE. backfill_all_aktien_ohlc() filtert auf
+    assetklasse == "aktien". Fuer Rohstoffe, Themen-ETF und Hedge entstand eine
+    Reihe deshalb nur, wenn die jeweilige PIPELINE lief - und die laeuft im
+    Multi-Asset-Batch um 9 und 19 Uhr, Mo-Fr. Der Portfolio-Wert-Job laeuft um
+    6:30, TAEGLICH. Damit haengt die Bewertung dieser Positionen daran, ob am
+    Vortag ein Signal erzeugt wurde; am Wochenende gar nicht.
+
+    Mit der Rekonstruktion (2026-08-06) wiegt das schwerer als vorher: die
+    rekonstruierte Reihe haengt an einem Ankerpreis, der sich taeglich bewegt.
+    Ohne eigenen Refresh waere sie am Montagmorgen drei Tage alt verankert.
+
+    Aufgerufen wird bewusst die PIPELINE-eigene Funktion je Klasse, nicht eine
+    Kopie davon - Staleness-Wache, Symboltrennung und Rekonstruktion sind dort
+    schon richtig entschieden, und zwei Implementierungen derselben Logik laufen
+    garantiert auseinander (Lehre vom 03.08.).
+
+    Fail-soft je Asset: ein Fehlschlag darf die uebrigen nicht mitreissen.
+    """
+    from agent.hedge.pipeline import _ensure_ohlc_backfilled as _hedge_ohlc
+    from agent.rohstoff.pipeline import _ensure_ohlc_backfilled as _rohstoff_ohlc
+    from agent.themen_etf.pipeline import (
+        _ensure_ohlc_backfilled as _etf_ohlc, _resolve_asset_currency as _etf_currency,
+    )
+
+    erledigt, fehlgeschlagen = 0, 0
+    for asset in watchlist:
+        try:
+            if asset.assetklasse == "rohstoffe":
+                _rohstoff_ohlc(conn, asset)
+            elif asset.assetklasse == "hedge":
+                _hedge_ohlc(conn, asset)
+            elif asset.assetklasse == "themen_etf":
+                _etf_ohlc(conn, asset, _etf_currency(asset))
+            else:
+                continue
+            erledigt += 1
+        except Exception:
+            fehlgeschlagen += 1
+            logger.exception("OHLC-Refresh fuer %s fehlgeschlagen", asset.symbol)
+    logger.info("Nicht-Aktien-OHLC-Refresh: %d Assets aktualisiert (%d fehlgeschlagen)",
+                erledigt, fehlgeschlagen)
+
+
 def refresh_aktien_ohlc_job(conn_factory, watchlist_provider) -> None:
     """Automatischer taeglicher OHLC-Refresh fuer Einzelaktien (2026-07-16, siehe
     api/yfinance_history.py::backfill_all_aktien_ohlc() Docstring fuer den vollen
@@ -316,6 +362,7 @@ def refresh_aktien_ohlc_job(conn_factory, watchlist_provider) -> None:
             "Aktien-OHLC-Refresh: %d/%d Assets aktualisiert (%d degradiert)",
             len(results) - len(degraded), len(results), len(degraded),
         )
+        _refresh_nicht_aktien_ohlc(conn, watchlist)
     except Exception as exc:
         logger.exception("Aktien-OHLC-Refresh fehlgeschlagen")
         _notify_job_failure("refresh_aktien_ohlc", f"Aktien-OHLC-Refresh fehlgeschlagen: {exc}")

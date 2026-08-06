@@ -94,6 +94,9 @@ class RemoteStatus:
     konfidenz_kalibrierung: dict | None = None
     api_health: dict | None = None
     regime_status: dict | None = None
+    # Z-3 und die Gegenprobe der Bewertung (2026-08-06) - siehe
+    # _get_z3_und_bewertung() fuer den Anlass.
+    z3_und_bewertung: dict | None = None
     parameter_overview: list[dict] | None = None
     richtungstreffer_quote: dict | None = None
     zai_richtung_performance: dict | None = None
@@ -151,6 +154,7 @@ class RemoteStatus:
             "konfidenz_kalibrierung": self.konfidenz_kalibrierung,
             "api_health": self.api_health,
             "regime_status": self.regime_status,
+            "z3_und_bewertung": self.z3_und_bewertung,
             "parameter_overview": self.parameter_overview,
             "richtungstreffer_quote": self.richtungstreffer_quote,
             "zai_richtung_performance": self.zai_richtung_performance,
@@ -247,6 +251,7 @@ def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, erro
         konfidenz_kalibrierung=_safe(_get_konfidenz_kalibrierung, conn, watchlist),
         api_health=_safe(_get_api_health, conn),
         regime_status=_safe(_get_regime_status, conn),
+        z3_und_bewertung=_safe(_get_z3_und_bewertung, conn, portfolio_value_eur),
         parameter_overview=_safe(_get_parameter_overview),
         richtungstreffer_quote=_safe(_get_richtungstreffer_quote, conn, watchlist),
         zai_richtung_performance=_safe(_get_zai_richtung_performance, conn, watchlist),
@@ -607,6 +612,53 @@ def _get_regime_status(conn: sqlite3.Connection) -> dict | None:
     from agent.krypto.regime import get_last_known_regime_status
 
     return get_last_known_regime_status(conn)
+
+
+def _get_z3_und_bewertung(conn: sqlite3.Connection, portfolio_value_eur: float | None) -> dict | None:
+    """Drawdown-Notbremse Z-3 - und die Gegenprobe, ob ihre Datenbasis stimmt.
+
+    ZWEI LUECKEN, die dieser Block schliesst (2026-08-06):
+
+    1. Z-3 stand ueberhaupt nicht auf der Uebersichtsseite. Die Notbremse loeste
+       am 05. und 06.08. aus, sichtbar war das nur per E-Mail und im Log.
+
+    2. WICHTIGER: die Seite rechnet den Portfoliowert aus den SNAPSHOT-Preisen
+       (`price_cache`), Z-3 aus der KURSREIHE (`price_history_ohlc`). Beide
+       beschreiben dasselbe Portfolio. Weichen sie voneinander ab, stimmt eine
+       der beiden Datenquellen nicht - und man sieht es sofort, statt es zu
+       suchen.
+
+    Genau diese Abweichung lag am 06.08. bei ueber 100 Prozent, ohne dass es
+    irgendwo auffiel: die Kursreihe fuehrte 19 gehaltene Symbole gar nicht (die
+    FX-Ableitung wurde an 87 von 91 Tagen verworfen), und unter denen lag ein
+    Symbol mit dem Kurs eines voellig anderen Instruments. Eine der beiden
+    Zahlen war immer falsch - nur nebeneinander gestellt wurden sie nie.
+    """
+    try:
+        from agent.portfolio_historie import pruefe_z3
+        import config as config_module
+        z3 = pruefe_z3(
+            conn, schwelle_prozent=config_module.load_config()["ziele"]["max_drawdown_prozent"]
+        )
+    except Exception as exc:            # Nebenblock darf die Seite nie toeten
+        logger.info("Z-3-Status fuer die Remote-Seite nicht ermittelbar: %s", exc)
+        return None
+
+    reihe = db.get_portfolio_wert_historie(conn)
+    letzter = reihe[-1] if reihe else None
+    reihen_wert = letzter["wert_eur"] if letzter and "wert_eur" in letzter.keys() else None
+    abweichung = None
+    if reihen_wert and portfolio_value_eur:
+        abweichung = abs(reihen_wert - portfolio_value_eur) / portfolio_value_eur * 100.0
+    return {
+        **z3,
+        "reihen_wert_eur": reihen_wert,
+        "reihen_tag": letzter["datum"] if letzter and "datum" in letzter.keys() else None,
+        "snapshot_wert_eur": portfolio_value_eur,
+        "abweichung_prozent": abweichung,
+        "symbole_ohne_kurs": (letzter["symbole_ohne_kurs"]
+                              if letzter and "symbole_ohne_kurs" in letzter.keys() else None),
+    }
 
 
 def _get_parameter_overview() -> list[dict]:

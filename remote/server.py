@@ -301,6 +301,11 @@ _INDEX_HTML = """<!doctype html>
   <div id="api-health-makro"></div>
 </div>
 
+<div class="card" id="z3-card" style="display:none">
+  <div class="row"><strong>Drawdown-Notbremse Z-3</strong></div>
+  <div id="z3-body"></div>
+</div>
+
 <div class="card" id="regime-status-card" style="display:none">
   <div class="row"><strong>Regime-Status</strong></div>
   <div id="regime-status-body"></div>
@@ -607,6 +612,41 @@ const REGIME_LABELS = {
 function fmtDateTime(iso) {
   if (!iso) return "-";
   return new Date(iso).toLocaleString("de-AT", { dateStyle: "medium", timeStyle: "short" });
+}
+
+function renderZ3(z) {
+  // Zwei Zahlen fuer dasselbe Portfolio: die Seite rechnet aus Snapshot-Preisen,
+  // Z-3 aus der Kursreihe. Weichen sie ab, stimmt eine der Quellen nicht - am
+  // 06.08. lag genau darin ein Fehler von ueber 50.000 EUR, den niemand sah,
+  // weil die beiden Werte nie nebeneinander standen.
+  const eur = (v) => (v === null || v === undefined) ? "—" :
+    v.toLocaleString("de-DE", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " €";
+  const pct = (v) => (v === null || v === undefined) ? "—" : v.toFixed(1) + " %";
+  const ausgeloest = z.ausgeloest === true;
+  let h = '<div class="row"><span>Rückschlag aktuell</span><strong' +
+    (ausgeloest ? ' class="err"' : '') + '>' + pct(z.aktuell_prozent) +
+    " (Schwelle " + pct(z.schwelle_prozent) + ")</strong></div>";
+  h += '<div class="row"><span>größter Rückschlag im Fenster</span><span>' +
+    pct(z.max_prozent) + (z.hoch_am ? " (" + z.hoch_am + " → " + (z.tief_am || "?") + ")" : "") +
+    "</span></div>";
+  if (ausgeloest) h += '<div class="row"><strong class="err">AUSGELÖST</strong></div>';
+  if (z.datenbasis_duenn) h += '<div class="row"><span>Datenbasis</span><span>dünn (' +
+    (z.tage_historie || 0) + " Tage)</span></div>";
+
+  h += '<div class="row" style="margin-top:8px"><strong>Gegenprobe der Datenbasis</strong></div>';
+  h += '<div class="row"><span>Wert laut Kursreihe' +
+    (z.reihen_tag ? " (" + z.reihen_tag + ")" : "") + "</span><span>" + eur(z.reihen_wert_eur) + "</span></div>";
+  h += '<div class="row"><span>Wert laut Snapshot-Preisen</span><span>' + eur(z.snapshot_wert_eur) + "</span></div>";
+  const abw = z.abweichung_prozent;
+  const warn = (abw !== null && abw !== undefined && abw > 5);
+  h += '<div class="row"><span>Abweichung</span><strong' + (warn ? ' class="err"' : '') +
+    ">" + pct(abw) + "</strong></div>";
+  if (z.symbole_ohne_kurs) h += '<div class="row"><span>Symbole ohne Kurs</span><strong' +
+    (z.symbole_ohne_kurs > 0 ? ' class="err"' : '') + ">" + z.symbole_ohne_kurs + "</strong></div>";
+  if (warn) h += '<div class="row" class="err" style="font-size:0.9em">' +
+    "Beide Zahlen beschreiben dasselbe Portfolio — weichen sie ab, ist eine der " +
+    "beiden Datenquellen fehlerhaft und Z-3 rechnet auf der falschen.</div>";
+  return h;
 }
 
 function renderRegimeStatus(r) {
@@ -921,6 +961,11 @@ async function refreshStatus() {
     for (const [elementId, sourceKeys] of Object.entries(API_HEALTH_GROUPS)) {
       document.getElementById(elementId).innerHTML = renderApiHealthGroup(sourceKeys, data.api_health);
     }
+  }
+
+  if (data.z3_und_bewertung) {
+    document.getElementById("z3-card").style.display = "block";
+    document.getElementById("z3-body").innerHTML = renderZ3(data.z3_und_bewertung);
   }
 
   if (data.regime_status) {

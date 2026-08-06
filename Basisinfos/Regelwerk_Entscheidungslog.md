@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (180 Einträge)
+## Index nach Thema (181 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -109,7 +109,9 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-05** — `halte_kriterium` erstmals ausgewertet - kein Trennnachweis, zwei strukturelle Maengel
 - **2026-08-06** — Die drei neuen Fakten sind im Betrieb ANGEKOMMEN (22/22) - Verifikation abgeschlossen, Zaehler-Fehler behoben
 
-### Datenquellen / APIs (19)
+### Datenquellen / APIs (20)
+
+- **2026-08-06** — Drei Lücken vor dem Push: Nicht-Krypto-OHLC-Refresh fehlte ganz, Export konnte die Behebung nicht belegen, Z-3 fehlte auf der Übersichtsseite (inkl. neuer Gegenprobe)
 
 - **2026-08-06** — Rekonstruktion der fehlenden Kursreihen (Rohstoffe/3QSS/DBPK) + Scheinwert von 51.000 EUR gefunden - zwei Defekte, die sich gegenseitig verdeckt haben
 
@@ -13010,3 +13012,66 @@ ausgewertete Trades statt einer erfundenen Kante.
 **Werkzeuge:** `agent/rekonstruktion.py` (Verfahren + `ankertag_abweichung()`
 als Pflicht-Pruefgroesse). Details und offene Punkte: `Basisinfos/
 Plan_Nicht_Krypto_Umbau_06_08.md`, Abschnitt "Zwischenbilanz".
+
+
+---
+
+## Nachtrag (2026-08-06): drei Luecken, die vor dem Push auffielen - Refresh, Export, Uebersichtsseite
+
+Nach dem Bau der Rekonstruktion die Frage gestellt, was ausser Code noch
+nachzuziehen ist. Drei Antworten, alle drei sind echte Luecken gewesen.
+
+### 1. Die Kursreihen der Nicht-Krypto-Klassen wurden gar nicht taeglich gezogen
+
+`api/yfinance_history.py::backfill_all_aktien_ohlc()` filtert auf
+`assetklasse == "aktien"`. Fuer **Rohstoffe, Themen-ETF und Hedge** entstand eine
+Reihe nur, wenn die jeweilige PIPELINE lief - und die laeuft im
+Multi-Asset-Batch **um 9 und 19 Uhr, Mo-Fr**. Der Portfolio-Wert-Job laeuft
+**taeglich um 6:30**. Die Bewertung dieser Positionen hing also daran, ob am
+Vortag ein Signal erzeugt wurde; am Wochenende gar nicht.
+
+Mit der Rekonstruktion wiegt das schwerer als vorher: die rekonstruierte Reihe
+haengt an einem Ankerpreis, der sich taeglich bewegt - ohne eigenen Refresh
+waere sie am Montagmorgen drei Tage alt verankert.
+
+**Gebaut:** `scheduler/background.py::_refresh_nicht_aktien_ohlc()`, aufgerufen
+im bestehenden taeglichen OHLC-Refresh-Job. Ruft bewusst die PIPELINE-eigene
+Funktion je Klasse auf statt einer Kopie - Staleness-Wache, Symboltrennung und
+Rekonstruktion sind dort schon richtig entschieden. Fail-soft je Asset.
+
+### 2. Der Export konnte die Behebung nicht belegen
+
+`z3_status` liefert nur das Ergebnis. Daneben stand "19 Symbole ohne Kurs" - und
+aus dem Export war **nicht rekonstruierbar, welche 19 und warum**. Damit waere
+die Verifikation nach dem Pull unmoeglich gewesen.
+
+**Ergaenzt in `extract_notebook_diagnose.py`:**
+- `ohlc_aktualitaet_je_symbol` traegt jetzt **Waehrung und `quelle`** je Reihe,
+  plus eine eigene Liste `rekonstruierte_reihen`. Ohne die Waehrung war nicht
+  sichtbar, dass die Nicht-Krypto-Symbole nur EINE Seite fuehren (OD7C/PLTR nur
+  USD, X136/CEBS nur EUR) - genau der Grund, warum sie bei kaputter
+  FX-Ableitung geschlossen aus der Bewertung fielen.
+- neue Sektion `bewertungs_diagnose`: je gehaltenem Symbol Tage direkt in EUR /
+  ueber FX / ohne Kurs, dazu `fx_tage_verworfen` und `reihen_verworfen`.
+
+### 3. Z-3 stand nicht auf der Uebersichtsseite - und die Gegenprobe fehlte
+
+Die Notbremse loeste am 05. und 06.08. aus. Sichtbar war das nur per E-Mail und
+im Log; die Remote-Uebersichtsseite zeigte den Drawdown **gar nicht**.
+
+**Der wichtigere Teil ist die Gegenprobe.** Die Seite rechnet den Portfoliowert
+aus den **Snapshot-Preisen** (`price_cache`), Z-3 aus der **Kursreihe**
+(`price_history_ohlc`). Beide beschreiben dasselbe Portfolio. Am 06.08. lagen
+sie um ueber 100 % auseinander - und niemand sah es, weil die beiden Zahlen nie
+nebeneinander standen. Ab jetzt stehen sie es, mit Abweichung in Prozent und
+Warnfarbe ab 5 %.
+
+> **Das ist die billigste Dauerueberwachung, die aus dem Fund folgt.** Zwei
+> unabhaengige Wege zur selben Groesse, nebeneinander gestellt. Kein neuer
+> Datenbezug, keine Schwellenwert-Diskussion - nur die Weigerung, zwei Zahlen
+> getrennt anzuzeigen, die dasselbe meinen.
+
+**Geprueft:** Z-3-Block gegen eine DB-Kopie mit eingesetzter Wertreihe -
+Abweichung 21,6 % korrekt berechnet und als Warnung markiert, Karte im
+`to_dict()` enthalten, Renderer nutzt die vorhandene `.err`-Klasse statt einer
+eigenen Farbe.
