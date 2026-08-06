@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 import numpy as np
 
 from agent.krypto.anticyclic import AnticyclicContext
-from agent.krypto.regime import RegimeResult
+from agent.krypto.regime import btc_ema50_einordnung, RegimeResult
 from agent.krypto.risk_gate import CashReserveZielResult, RiskPreCheckResult
 from agent.krypto.wiederholungs_erkennung import build_wiederholung_fact
 from importer.bitpanda_avg_cost import compute_cost_basis_view
@@ -448,6 +448,26 @@ erfinde nichts und leite auch nichts aus frueheren Fassungen dieser Regel \
 ab.
 
 
+37. Regime-Divergenz: Trend und Stimmung getrennt lesen (2026-08-06, neu). \
+`regime.wert` fasst zwei Groessen zu EINEM Label zusammen und kann dadurch \
+verschiedene Marktlagen gleich benennen - die Einstufung lautet intern \
+"Kurs unter der EMA50 ODER Stimmung im Angstbereich", eine der beiden \
+Bedingungen genuegt also. `regime.btc_zu_ema50` und `regime.fear_greed` \
+zeigen dir die beiden Bestandteile einzeln. Lies sie getrennt: (a) Stimmen \
+beide ueberein - Kurs unter der EMA50 UND Angst, oder Kurs darueber UND \
+Gier - dann traegt das Label, und du kannst dich darauf stuetzen. (b) \
+Laufen sie auseinander, ist das eine EIGENE, benennbare Lage und \
+ausdruecklich KEINE unklare: liegt der Kurs ueber der EMA50 waehrend die \
+Stimmung aengstlich bleibt, dreht der Preis vor der Stimmung - das ist das \
+typische Bild einer fruehen Erholung, und das Label haengt dem Kurs \
+hinterher. Umgekehrt, Kurs unter der EMA50 bei entspannter Stimmung, \
+haengt die Stimmung dem Kurs hinterher. (c) WICHTIG: eine Divergenz ist \
+weder ein Grund fuer pauschale Vorsicht noch fuer pauschale Zuversicht, \
+und sie ist kein Anlass, weniger vorzuschlagen. Sie sagt dir nur, dass die \
+Regime-Bezeichnung gerade ungenauer ist als ihre Bestandteile - gewichte \
+dann die beiden Einzelwerte hoeher als das zusammengefasste Label. Fehlt \
+einer der beiden Fakten, behandle das Label wie bisher; erfinde nichts.
+
 SCHEMA:
 {
   "action": "KAUFEN|VERKAUFEN|TAUSCHEN|HALTEN|NACHKAUFEN",
@@ -714,6 +734,21 @@ def build_facts(
             "quelle": regime_result.source,
             "begruendung": regime_result.reason,
             "btc_trend": regime_result.btc_trend_label,
+            # BTC-Abstand zur EMA50 (2026-08-06). SCHLIESST EINE LUECKE, die
+            # eine Nutzer-Beobachtung aufgedeckt hat: "BTC ist drei Tage
+            # gestiegen, aber keine Aenderung in den Signalen". Nachgemessen
+            # +1,78 % - und unsichtbar, weil `btc_trend` eine EMA-ORDNUNG ist
+            # und `regime.wert` aus einer ODER-Bedingung stammt, in der
+            # Fear & Greed allein "baer" erzwingt.
+            #
+            # BEIDE FORMEN, mit Absicht: die Zahl fuer die Groessenordnung, die
+            # Einordnung fuer die Verlaesslichkeit. Modelle schliessen ueber
+            # stetige Groessen schwach, ueber kategoriale Labels zuverlaessig -
+            # dieselbe Loesung wie bei den CRV-Baendern und der Kostentabelle.
+            "btc_zu_ema50": {
+                "abstand_prozent": _native(regime_result.btc_abstand_ema50_prozent),
+                "einordnung": btc_ema50_einordnung(regime_result.btc_abstand_ema50_prozent),
+            },
             "btc_dominanz_trend": regime_result.dominance_trend_label,
             "fear_greed": {
                 "wert": regime_result.fear_greed_value,

@@ -26,6 +26,148 @@ from indicators.calculations import (
 
 REGIME_STATES = ("krise_extrem", "baer", "seitwaerts", "bulle", "euphorie_extrem")
 
+# --- Stetiger Regime-Score (2026-08-06) ---------------------------------------
+#
+# WARUM. Das diskrete Regime hat zwei Defekte, beide am 06.08. gemessen:
+#
+#   1. ES HAT SICH NIE GEAENDERT. Ausnahmslos jedes Signal der gesamten
+#      Historie traegt "baer" (1.391 Hebel, 2.223 Spot). Alle
+#      regime-abhaengigen Mechanismen haben genau einen Zweig ausgefuehrt.
+#   2. DIE URSACHE IST EINE ODER-BEDINGUNG, nicht Traegheit. Die Einstufung
+#      lautet `btc < ema50 ODER fgi in (Fear, Extreme Fear)` - Fear & Greed
+#      allein erzwingt "baer", unabhaengig vom Kurs. Der Index stand an allen
+#      31 beobachteten Tagen zwischen 20 und 33.
+#
+# FOLGE: der halb erholte Zustand - Kurs ueber der EMA50 bei weiter
+# aengstlichem Sentiment - ist fuer das System NICHT DARSTELLBAR. Er bekommt
+# dasselbe Label wie ein voll baerischer Markt, und damit dieselbe harte
+# Konfidenzschwelle. Das ist kein Schwellenproblem, sondern ein
+# Informationsdefekt.
+#
+# WARUM NICHT EINFACH SCHNELLER MACHEN. Ein diskreter Zustand mit harten
+# Schwellen muss entweder traege sein (dann veraltet) oder flackern (dann
+# unbrauchbar). An der Geschwindigkeit zu drehen verschiebt nur, welche der
+# beiden Krankheiten man bekommt. Der Ausweg ist, nicht den Zustand schneller
+# zu machen, sondern seinen EINFLUSS stetig - dann erzeugt eine kleine
+# Marktaenderung eine kleine Gate-Aenderung, es gibt keine Klippe und nichts,
+# was flackern koennte.
+#
+# Dieselbe Bewegung hat das Projekt beim CRV schon vollzogen: von der harten
+# Ja/Nein-Schwelle zu gemessenen Baendern, mit der Begruendung "ein glatter
+# Verlauf verlangt glatte Behandlung".
+#
+# NUR FUER DAS GATE, NICHT FUER DAS LLM. Zwei unabhaengige Gruende:
+#   - Extern belegt: Modelle sind mit stetigen Zahlenwerten unzuverlaessig
+#     ("hard time reasoning about continuous attributes without finetuning");
+#     kategoriale Labels sind die robustere Form. Dasselbe Prinzip steckt
+#     bereits in Regel 32/36 (Baender statt Kurve) und im Kosten-Fakt (Tabelle
+#     statt Formel).
+#   - Intern gemessen (06.08., n=29): das Modell reagiert auf einen
+#     Regimewechsel im Faktensatz NICHT messbar - Konfidenz 0,28x, Stop 0,10x
+#     des Eigenrauschens. Ein feineres Signal brauchte es also gar nicht.
+#   - Und ein "Uebergangs"-Label waere strukturell eine "Unknown"-Option, die
+#     laut Literatur Abstention ausloest - genau der Mechanismus, der bei uns
+#     die EROEFFNEN-Quote von 93 % auf 3 % gedrueckt hat.
+#
+# KALIBRIERUNG, die den Umbau ungefaehrlich macht: die Stuetzstellen sind so
+# gesetzt, dass der heutige, VOLL baerische Zustand exakt die heutigen 75
+# liefert. Es aendert sich damit heute messbar nichts; die Klippe verschwindet
+# nur fuer spaeter, und der halb erholte Zustand bekommt erstmals einen
+# eigenen Wert.
+_SCORE_STUETZSTELLEN = (
+    (0.00, 85.0),   # voll defensiv - entspricht krise_extrem
+    (0.35, 75.0),   # voll baerisch - HEUTIGER Zustand, muss 75 ergeben
+    (0.65, 65.0),   # neutral       - entspricht seitwaerts
+    (1.00, 60.0),   # aufwaerts     - entspricht bulle
+)
+
+
+def regime_score(btc_close: float | None, ema50: float | None,
+                 ema200: float | None, fear_greed: float | None) -> float | None:
+    """Stetiger Regime-Score in [0, 1]. 0 = maximal defensiv, 1 = maximal offensiv.
+
+    Zwei gleichgewichtete Anteile, weil die diskrete Regel genau diese beiden
+    Groessen verwendet - nur eben mit ODER verknuepft statt gewichtet:
+
+      PREIS      Abstand des Kurses zur EMA50, gedeckelt bei +/-10 %. Die EMA200
+                 geht mit halbem Gewicht ein, damit der laengere Trend nicht
+                 voellig verschwindet.
+      SENTIMENT  Fear & Greed direkt, 0..100 -> 0..1.
+
+    Gibt None, wenn eine der beiden Seiten fehlt - dann bleibt es beim
+    diskreten Regime, kein stiller Ersatzwert.
+    """
+    if btc_close is None or ema50 is None or not ema50 or fear_greed is None:
+        return None
+    abstand50 = max(-1.0, min(1.0, (btc_close / ema50 - 1.0) / 0.10))
+    if ema200:
+        abstand200 = max(-1.0, min(1.0, (btc_close / ema200 - 1.0) / 0.20))
+        preis = (2.0 * abstand50 + abstand200) / 3.0
+    else:
+        preis = abstand50
+    preis_norm = (preis + 1.0) / 2.0                      # -1..1 -> 0..1
+    sentiment_norm = max(0.0, min(1.0, float(fear_greed) / 100.0))
+    return max(0.0, min(1.0, 0.5 * preis_norm + 0.5 * sentiment_norm))
+
+
+def min_konfidenz_stetig(score: float | None) -> float | None:
+    """Mindestkonfidenz als stetige Funktion des Scores - lineare Interpolation
+    zwischen den Stuetzstellen, ausserhalb geklemmt.
+
+    Bewusst stueckweise linear und nicht glatter: jede Stuetzstelle ist ein
+    Wert, den heute schon ein Regime traegt, und bleibt damit begruendbar. Eine
+    Spline haette Zwischenwerte erzeugt, die niemand herleiten kann."""
+    if score is None:
+        return None
+    punkte = _SCORE_STUETZSTELLEN
+    if score <= punkte[0][0]:
+        return punkte[0][1]
+    if score >= punkte[-1][0]:
+        return punkte[-1][1]
+    for (x0, y0), (x1, y1) in zip(punkte, punkte[1:]):
+        if x0 <= score <= x1:
+            anteil = (score - x0) / (x1 - x0) if x1 > x0 else 0.0
+            return round(y0 + (y1 - y0) * anteil, 1)
+    return punkte[-1][1]
+
+
+# Kategoriale Einordnung des BTC-Abstands zur EMA50 (2026-08-06).
+#
+# WARUM ZUSAETZLICH ZUR ZAHL. Extern belegt sind Modelle beim Schliessen ueber
+# stetige Groessen schwach ("hard time reasoning about continuous attributes");
+# kategoriale Labels tragen zuverlaessiger. Dieselbe Loesung steckt schon in
+# Regel 32/36 (gemessene Baender statt roher CRV-Kurve) und im Kosten-Fakt
+# (Tabelle statt Formel: "ein Modell, das rechnen soll, rechnet falsch; eines,
+# das nachschlaegt, schlaegt richtig nach"). Der Prozentwert bleibt daneben
+# stehen, damit die Groessenordnung nicht verlorengeht.
+_EMA50_BAENDER = (
+    (-5.0, "deutlich darunter"),
+    (-1.5, "darunter"),
+    (0.0, "knapp darunter"),
+    (1.5, "knapp darueber"),
+    (5.0, "darueber"),
+)
+
+
+def btc_ema50_einordnung(abstand_prozent: float | None) -> str | None:
+    """Kategoriale Lesart des Abstands - bewusst BEJAHEND formuliert.
+
+    Kein Band heisst "unklar" oder "uebergang". Ein Mehrdeutigkeits-Label waere
+    strukturell eine "Unknown"-Option, und die loest laut Literatur Abstention
+    aus - genau der Mechanismus, der in diesem Projekt die EROEFFNEN-Quote von
+    93 % auf 3 % gedrueckt hat (Ausfuehrbarkeits-Hinweis, gemessen 05.08.)."""
+    if abstand_prozent is None:
+        return None
+    for grenze, name in _EMA50_BAENDER:
+        if abstand_prozent < grenze:
+            return name
+    return "deutlich darueber"
+    for (x0, y0), (x1, y1) in zip(punkte, punkte[1:]):
+        if x0 <= score <= x1:
+            anteil = (score - x0) / (x1 - x0) if x1 > x0 else 0.0
+            return round(y0 + (y1 - y0) * anteil, 1)
+    return punkte[-1][1]
+
 # RG-2 BTC-Matrix (Spezifikation Kap. 14): ordnet zusammen mit dem BTC-Trend die
 # BTC-Dominanz-Richtung ein, um Alt-Signale (nicht Core-Assets) im richtigen Kontext
 # zu lesen - z.B. ist ein bullischer Alt-Ausbruch in "btc_season" meist eine Falle.
@@ -137,6 +279,18 @@ class RegimeResult:
     # "unbekannt"), kein eigenes _label()-Aequivalent noetig.
     dollar_index_wert: float | None
     dollar_index_trend: str | None
+    # Stetiger Regime-Score (2026-08-06) - siehe regime_score() oben.
+    # SCHATTENBETRIEB: wird berechnet und ausgewiesen, steuert das Gate aber
+    # nur, wenn `regime.stetige_mindestkonfidenz_aktiv` in der Config gesetzt
+    # ist. Vorgabewerte, damit bestehende Aufrufer unveraendert funktionieren.
+    score_stetig: float | None = None
+    min_konfidenz_stetig_wert: float | None = None
+    # BTC-Abstand zur eigenen EMA50 in Prozent (2026-08-06). Fuellt die
+    # Luecke, die die BTC-Beobachtung des Nutzers aufgedeckt hat: das
+    # Label `btc_trend` ist eine EMA-ORDNUNG und aendert sich erst, wenn
+    # die Reihenfolge kippt - ein Anstieg von 1,78 % in drei Tagen ist
+    # darin unsichtbar. Diese Zahl macht ihn sichtbar.
+    btc_abstand_ema50_prozent: float | None = None
 
 
 def _btc_change_pct(btc_closes: np.ndarray, days: int = 30) -> float | None:
@@ -455,6 +609,17 @@ def determine_regime(
     fgi_value = latest_macro.fear_greed_value if latest_macro else None
     fgi_label = latest_macro.fear_greed_label if latest_macro else None
 
+    # Stetiger Score + BTC-Abstand zur EMA50 (2026-08-06). Beides SCHATTEN:
+    # der Score steuert das Gate nur bei gesetztem Config-Schalter, der Abstand
+    # ist ein reiner Zusatzfakt. Hier berechnet, weil ema50/ema200/fgi_value an
+    # dieser Stelle bereits vorliegen.
+    _btc_letzter = btc_closes[-1] if len(btc_closes) else None
+    _score = regime_score(_btc_letzter, ema50, ema200, fgi_value)
+    _abstand50 = (
+        round((_btc_letzter / ema50 - 1.0) * 100.0, 2)
+        if _btc_letzter is not None and ema50 else None
+    )
+
     below_ema200 = bool(len(btc_closes)) and ema200 is not None and btc_closes[-1] < ema200
     above_all = ema20 is not None and ema50 is not None and ema200 is not None and ema20 > ema50 > ema200
 
@@ -505,6 +670,9 @@ def determine_regime(
             vix_label=vix_label,
             dollar_index_wert=dollar_index_wert,
             dollar_index_trend=dollar_index_trend,
+            score_stetig=_score,
+            min_konfidenz_stetig_wert=min_konfidenz_stetig(_score),
+            btc_abstand_ema50_prozent=_abstand50,
         )
 
     return RegimeResult(
@@ -533,6 +701,9 @@ def determine_regime(
         vix_label=vix_label,
         dollar_index_wert=dollar_index_wert,
         dollar_index_trend=dollar_index_trend,
+        score_stetig=_score,
+        min_konfidenz_stetig_wert=min_konfidenz_stetig(_score),
+        btc_abstand_ema50_prozent=_abstand50,
     )
 
 

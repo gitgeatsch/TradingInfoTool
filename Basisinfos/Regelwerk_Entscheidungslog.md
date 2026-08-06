@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (177 Einträge)
+## Index nach Thema (178 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -48,7 +48,7 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-05** — Ausstiegsregel scharfgeschaltet: Config, taeglicher Job 7:15, Sammel-E-Mail
 - **2026-08-06** — Gate-Untergrenze Stop-Abstand: EXISTIERT BEREITS (RM-1b 2,5 % + RM-1c 0,75xATR), richtig kalibriert, nichts gebaut
 
-### LLM-Prompts / Analysten (Stage 2) (15)
+### LLM-Prompts / Analysten (Stage 2) (16)
 
 - **2026-07-18** — Konfidenz-Kalibrierung nach dem echten CAT-Fall (fünf Bausteine A-E)
 - **2026-07-19** — Release 2 (Schwerpunkte/Thesen-Verwaltung) - Konzeptionsrunde
@@ -65,6 +65,7 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-05** — Konfidenz-Schwellen NICHT neu kalibriert - die Konfidenz sagt nichts vorher, Neukalibrierung waere Theater
 - **2026-08-05** — Drei neue Hebel-Fakten (Kosten, Ausstiegsregel, Systemguete) + Regeln 30/31 - kombiniert gemessen, kein Nachweis, bleiben drin
 - **2026-08-06** — Gesamtaufnahme der fehlenden Fakten (Abschnitt 8) + vierstufiges Ausstiegsverfahren statt Abbruchschwelle
+- **2026-08-06** — Regime-Glaettung (Schatten) + Divergenz-Fakt btc_zu_ema50, Regeln 33/37 - Korrektur einer eigenen Uebergeneralisierung
 
 ### Z.ai-Gegenpruefung (Stage 3) (23)
 
@@ -12265,6 +12266,67 @@ wird.**
 
 *Ist-Zustand: `Regelwerksmanual.md` Kapitel 22. Katalog und Herleitung:
 `Fakten_Entscheidungsmappe.md` Abschnitte 4.3 und 7.*
+
+## Nachtrag (2026-08-06): Regime-Glaettung + Divergenz-Fakt - und eine Korrektur an meiner eigenen Begruendung
+
+**Ausloeser:** Nutzer-Beobachtung „BTC ist drei Tage leicht gestiegen, aber
+keine Aenderung in den Signalen". Nachgemessen: +1,78 %, Signale unveraendert.
+
+**URSACHE IST KEINE TRAEGHEIT, SONDERN EINE ODER-BEDINGUNG.** `regime.py`:
+`btc < ema50 ODER fgi in (Fear, Extreme Fear)` -> "baer". Eine Bedingung
+genuegt. Fear & Greed stand an allen 31 Tagen zwischen 20 und 33. Zur
+Einordnung: ausnahmslos jedes Signal der Historie traegt "baer" (1.391 Hebel,
+2.223 Spot). Der halb erholte Zustand - Kurs ueber der EMA50 bei weiter
+aengstlicher Stimmung - war fuer das System NICHT DARSTELLBAR.
+
+**KORREKTUR AN MEINER EIGENEN BEGRUENDUNG, vom Nutzer angestossen.** Ich hatte
+geschlossen, die Information gehoere nicht ans LLM - gestuetzt auf drei Belege:
+das Modell reagiert nicht messbar auf das Label (n=29), Modelle sind mit
+stetigen Zahlen schwach, und ein Mehrdeutigkeits-Label loest Abstention aus.
+
+Nutzer-Einwand: das widerspricht den eigenen Regeln, es handelt sich um
+essentielle Information, und der einzige Hinderungsgrund ist, dass wir nicht
+wissen WIE wir sie uebergeben. **Der Einwand war berechtigt.** Meine drei Belege
+rechtfertigen "nicht als Rohzahl" und "nicht als Mehrdeutigkeits-Label" - ich
+hatte daraus "gar nicht" gemacht. Das ist eine Uebergeneralisierung und
+widerspricht Frage 2 des eigenen Rasters.
+
+Schlimmer: ich hatte einen Befund falsch herum gelesen. Dass das Modell auf das
+heutige Label nicht reagiert, ist KEIN Beleg dass die Information nutzlos ist -
+es ist ein Beleg dass die heutige UEBERMITTLUNG kaputt ist. Ein Label ohne Regel,
+das sich nie aendert, kann nichts ausloesen.
+
+**UMGESETZT, ZWEI TEILE:**
+
+1. FAKT + REGEL (Krypto-Spot Regel 37, Hebel Regel 33). Neu:
+   `regime.btc_zu_ema50.abstand_prozent` und `.einordnung`. Bewusst BEIDE
+   Formen - Zahl fuer die Groessenordnung, Kategorie fuer die Verlaesslichkeit,
+   dasselbe Muster wie CRV-Baender und Kostentabelle. Kein Band heisst "unklar"
+   oder "uebergang"; die Regel benennt die Divergenz BEJAHEND ("fruehe
+   Erholung") und sagt ausdruecklich, dass sie kein Grund fuer pauschale
+   Vorsicht ist - der Hedging-Schutz, der bei Regel 31 schon noetig war.
+   Nur die beiden Krypto-Pipelines; Aktien/Rohstoffe/Themen-ETF haben einen
+   anderen Regime-Block ohne BTC-Bezug.
+
+2. STETIGE KONFIDENZSCHWELLE, vorerst NUR IM SCHATTEN. `regime_score()` und
+   `min_konfidenz_stetig()` in regime.py, als Felder in RegimeResult. Kein Gate
+   liest sie; die Aktivierung ist ein eigener Schritt.
+
+**KALIBRIERUNG, NACHGERECHNET STATT BEHAUPTET:** heutiger Zustand ergibt 74,7
+statt hart 75,0. Da alle 3.614 Konfidenzwerte im System ganzzahlig sind, filtert
+74,7 EXAKT wie 75,0 - gemessen 594 gegen 594 durchgelassene Signale, kein
+Unterschied. Sichtbar wird die Aenderung erst in Lagen, die es heute nicht gibt
+(BTC +3 % ueber EMA50 -> 73,7; +6 % -> 71,7).
+
+**GEGENPRUEFUNG (`pruefe_regime_glaettung.py`, 33 Pruefungen, alle bestanden)** -
+und sie hat einen ECHTEN FEHLER gefunden: beim Einfuegen des Einordnungs-Helfers
+hatte ich die Interpolationsschleife von `min_konfidenz_stetig` herausgeschnitten
+(die Ankersuche traf das erste von zwei `return punkte[-1][1]`). Die Funktion gab
+danach fuer alle Zwischenwerte None zurueck. Ein Importtest haette das nie
+gezeigt - die Datei laedt sauber. Dazu Struktur-Test per AST (liegt der Fakt
+wirklich IM regime-Block?) und ein End-to-End-Lauf mit echten BTC-Daten:
+Abstand -0,74 % -> "knapp darunter", Score 0,356 -> 74,8, diskretes Regime
+unveraendert "baer".
 
 ## Nachtrag (2026-08-06): Gesamtaufnahme der fehlenden Fakten + Ausstiegsverfahren statt Abbruchschwelle
 

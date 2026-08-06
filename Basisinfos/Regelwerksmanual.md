@@ -3029,6 +3029,91 @@ Ankunft im Produktivlauf ist Prüfpunkt des nächsten Exports.
 *Details, Herleitung und Katalog-Einträge: `Fakten_Entscheidungsmappe.md`,
 Abschnitte 4.3 und 7.*
 
+## 23. Regime: warum ein steigender Kurs bisher nichts änderte (2026-08-06)
+
+**Auslöser war eine Beobachtung des Nutzers:** „BTC ist drei Tage leicht
+gestiegen, aber keine Änderung in den Signalen." Nachgemessen stimmte das —
++1,78 % über drei Tage, und die Signale blieben unverändert.
+
+### Der Grund ist keine Trägheit, sondern eine ODER-Bedingung
+
+Das Regime wird so bestimmt:
+
+> Kurs **unter** der EMA50 **ODER** Fear & Greed im Angstbereich → „bär"
+
+**Eine der beiden Bedingungen genügt.** Fear & Greed stand an allen 31
+beobachteten Tagen zwischen 20 und 33, also durchgehend in der Angst. Damit war
+„bär" gesetzt, egal was der Kurs tat. Zur Einordnung: **ausnahmslos jedes Signal
+der gesamten Projekthistorie trägt „bär"** — 1.391 Hebel-, 2.223 Spot-Signale.
+Kein anderes Label ist je vorgekommen.
+
+**Die Folge war ein blinder Fleck:** ein Markt, in dem der Kurs schon über der
+EMA50 liegt, die Stimmung aber noch ängstlich ist, bekam dasselbe Label wie ein
+voll bärischer Markt — und damit dieselbe harte Konfidenzschwelle von 75 %.
+Dieser Zustand war für das System **nicht darstellbar**.
+
+### Zwei Änderungen, beide ohne Wirkung auf den laufenden Betrieb
+
+**1. Der Agent sieht jetzt beide Bestandteile einzeln** (Krypto-Spot Regel 37,
+Hebel Regel 33). Neu im Faktensatz:
+
+```
+regime.btc_zu_ema50.abstand_prozent: −0,74
+regime.btc_zu_ema50.einordnung:      "knapp darunter"
+```
+
+Bewusst **beide Formen**: die Zahl für die Größenordnung, die Einordnung für die
+Verlässlichkeit — Sprachmodelle schließen über kategoriale Angaben deutlich
+zuverlässiger als über rohe Zahlen. Dasselbe Prinzip steckt schon in den
+CRV-Bändern und in der Kostentabelle.
+
+Die Regel sagt dem Agenten: stimmen Kurs und Stimmung überein, trägt das Label.
+Laufen sie auseinander, ist das **eine eigene, benennbare Lage und ausdrücklich
+keine unklare** — bei Kurs über der EMA50 und weiter ängstlicher Stimmung dreht
+der Preis vor der Stimmung, das typische Bild einer frühen Erholung.
+
+> **Warum die Formulierung so vorsichtig gewählt ist:** ein Label wie
+> „Übergang" oder „unklar" wäre für ein Sprachmodell eine Unsicherheits-Angabe
+> — und darauf reagieren Modelle mit Zurückhaltung statt mit Anpassung. Genau
+> dieser Mechanismus hat in diesem System schon einmal die Vorschlagsquote von
+> 93 % auf 3 % gedrückt. Die Regel benennt die Lage deshalb positiv und sagt
+> ausdrücklich, dass sie **kein Grund für pauschale Vorsicht** ist.
+
+**2. Die Konfidenzschwelle wird stetig berechnet — vorerst nur im Schatten.**
+Statt vier fester Stufen (85 / 75 / 65 / 60) gibt es einen gleitenden Übergang.
+Kleine Marktänderung, kleine Schwellenänderung — keine Sprungstelle mehr.
+
+**Der Wert wird berechnet und ausgewiesen, steuert aber noch kein Gate.** Die
+Aktivierung ist ein eigener, bewusster Schritt.
+
+### Was die Umstellung heute ändert: nachweislich nichts
+
+Die Stützstellen sind so gelegt, dass der heutige Zustand **74,7** ergibt statt
+hart 75,0. Und weil **alle 3.614 Konfidenzwerte im System ganzzahlig sind**,
+filtert 74,7 exakt wie 75,0 — nachgerechnet: 594 durchgelassene Signale in
+beiden Fällen, kein einziger Unterschied.
+
+Sichtbar wird die Änderung erst in Lagen, die es heute nicht gibt:
+
+| Zustand | bisher | stetig |
+|---|---|---|
+| BTC an der EMA50, Angst | 75,0 | 75,6 |
+| BTC +3 % über EMA50, Angst | 75,0 | 73,7 |
+| BTC +6 % über EMA50, Angst | 75,0 | 71,7 |
+| Krise (Extremfall) | 85,0 | 85,0 |
+
+### Warum nicht einfach „schneller reagieren"
+
+Ein Regime mit **festen Stufen** muss entweder träge sein — dann hinkt es dem
+Markt hinterher — oder schnell, dann springt es bei jeder Schwankung hin und
+her. An der Geschwindigkeit zu drehen verschiebt nur, welches der beiden
+Probleme man bekommt. Der Ausweg ist, nicht den Zustand schneller zu machen,
+sondern seinen **Einfluss gleitend**: dann gibt es keine Stufe, die springen
+könnte.
+
+Dieselbe Bewegung hat das System beim Chance-Risiko-Verhältnis schon vollzogen
+— weg von der harten Ja/Nein-Schwelle, hin zu gemessenen Bändern.
+
 ## 20. Entscheidungslog — wo die Entstehungsgeschichte steht
 
 Dieses Manual beschreibt den **Ist-Zustand** der Regeln. Die vollständige

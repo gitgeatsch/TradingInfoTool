@@ -171,7 +171,11 @@ vorgenommen wird.)*
 
 **`regime.*`** (Spot hat mehr Felder als Hebel, siehe 4.3)
 - `regime.wert` — Hebel **Regel 3**: `krise_extrem` → IMMER HALTEN. Gate: massiv — Small-Cap-Budget, Mindestkonfidenz-Veto, Positionsgrößen-Skalierung (Spot); Hebel-Totalveto bei `krise_extrem`, Hebel-Deckel, Risikofaktor (Hebel).
-- `regime.fear_greed.wert`/`.einstufung` — **keine Regel in beiden Prompts, keine Gate-Nutzung.** Siehe 3.2.
+- `regime.fear_greed.wert`/`.einstufung` — ~~keine Regel in beiden Prompts~~ — **seit 2026-08-06 in Regel 37 (Spot) / 33 (Hebel) geregelt**, zusammen mit `btc_zu_ema50`. Weiterhin keine Gate-Nutzung.
+- **`regime.btc_zu_ema50.abstand_prozent`/`.einordnung`** (NEU 2026-08-06, beide Krypto-Pipelines) — **Regel 37 (Spot) / 33 (Hebel)**. Schließt eine Lücke, die eine Nutzer-Beobachtung aufdeckte („BTC drei Tage gestiegen, keine Änderung in den Signalen" — nachgemessen +1,78 %). Unsichtbar war das, weil `btc_trend` eine **EMA-Ordnung** ist (ändert sich erst beim Kippen der Reihenfolge) und `regime.wert` aus einer **ODER-Bedingung** stammt, in der Fear & Greed allein „bär" erzwingt. **Kategorie (b)** — Kontext, kein Gate.
+  - **Zwei Formen mit Absicht:** Prozentwert *und* kategoriale Einordnung. Extern belegt sind Modelle beim Schließen über stetige Größen schwach; kategoriale Labels tragen zuverlässiger. Dasselbe Muster wie CRV-Bänder (statt roher Kurve) und Kostentabelle (statt Formel).
+  - **Kein Band heißt „unklar" oder „Übergang".** Ein Mehrdeutigkeits-Label wäre strukturell eine „Unknown"-Option — die löst laut Literatur Abstention aus, und genau dieser Mechanismus drückte hier die ERÖFFNEN-Quote von 93 % auf 3 %. Die Regel benennt die Divergenz **bejahend** („frühe Erholung") und sagt ausdrücklich, dass sie **kein Grund für pauschale Vorsicht** ist.
+  - Nur Krypto-Spot und Hebel — Aktien/Rohstoffe/Themen-ETF haben einen anderen Regime-Block ohne BTC-Bezug, dort wäre der Fakt sinnlos.
 - `regime.btc_matrix`/`.btc_matrix_hinweis` — **Regel 8 (Spot) / 16 (Hebel)**. Gate: **nur Hebel** — Risikofaktor "Alt-Coin-Marktphase".
 - `regime.liquiditaets_regime`(_begruendung) — **Regel 10 (Spot)**, niedrig gewichteter Kontext, bei "unbekannt" nicht erwähnen. Kein Gate. Bei Hebel kein eigenes Feld.
 - `regime.zyklus_risiko`(_begruendung) — **Regel 11 (Spot)**: BTC-weite Zyklus-Einordnung, relevant für alle Assets. Kein Gate. Bei Hebel geliefert, aber ohne Regel (siehe 3.1).
