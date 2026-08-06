@@ -911,10 +911,52 @@ danach den Stop mit.
 
 **Folge für die Praxis:** die Warnung in den neuen Regeln („zieh niemals den
 Stop enger, um in ein besseres Band zu rutschen") ist damit nicht mehr nur
-vorsichtig, sondern **an Zahlen belegt**. Und der Vorbehalt zum 5–8-%-Band
-gegenüber dem 01.08.-Befund („< 5 % schlecht, 5–10 % besser") bleibt offen:
-hier liegt 3–5 % vorn und 5–8 % negativ. Andere Population und eine Marktphase
-— **als Hinweis führen, nicht als neue Wahrheit.**
+vorsichtig, sondern **an Zahlen belegt**.
+
+#### 8.2c Der Widerspruch 3–5 % gegen 5–8 % — aufgelöst (06.08.)
+
+**Er existiert nicht.** Beide Ausgangszahlen waren Survivorship-Artefakte, und
+zwar aus demselben Grund: sie werteten nur **aufgelöste** Fälle aus. Ob ein
+Signal auflöst, hängt aber vom **Stop-Abstand** ab — genau der Variablen, um die
+es ging. Enge Stops lösen fast immer auf und landen mit −1 R in der Stichprobe;
+weite bleiben offen und fallen heraus, auch die, die später gewonnen hätten.
+**Die Stichprobenauswahl hing am Messgegenstand.**
+
+Nachgemessen in `messe_stop_abstand_baender.py`: kein Auflösungs-Filter, jedes
+Signal mit Zonen neu gegen die Preisreihe simuliert, Basislinie je Band mit
+demselben Stop und CRV, Block-Bootstrap über Symbole.
+
+| Stop-Band | n | EW | Bootstrap-KI | Abstand zur Basislinie |
+|---|---|---|---|---|
+| **0–2 %** | 26 | −0,770 | **[−1,124; −0,500]** | **−0,526** |
+| 2–3 % | 37 | +0,182 | [−0,604; +1,801] | +0,421 |
+| 3–5 % | 98 | +0,433 | [−0,185; +0,848] | +0,668 |
+| 5–8 % | 147 | −0,036 | [−0,359; +0,364] | +0,142 |
+| 8–12 % | 113 | −0,047 | [−0,319; +0,163] | +0,082 |
+| > 12 % | 72 | +0,224 | [−0,285; +0,521] | +0,317 |
+
+**Der einzige belastbare Befund: Stops unter 2 % sind zerstörerisch.** Als
+einziges Band schließt das Intervall die Null aus und liegt klar unter der
+Basislinie. Bei H14 bestätigt (−1,088, [−1,198; −1,000]), bei LONG allein
+ebenfalls (−1,061). **Alles andere ist nicht trennbar** — jedes übrige Intervall
+enthält die Null, 3–5 % überlappt 5–8 % vollständig.
+
+Damit fallen beide Behauptungen: „unter 5 % schlecht" (01.08.) ist zu grob, weil
+es das schlechteste Band mit den beiden besten Punktschätzern zusammenwirft;
+„5–8 % negativ" (06.08.) hält survivorship-bereinigt nicht.
+
+**Was daraus für Regeln folgt — und was nicht.** Die Daten stützen eine
+**Untergrenze**, keinen Optimalwert. Ein Richtwert „Stop möglichst bei X %" wäre
+durch nichts gedeckt; ein Hinweis „unter 2 % ist der Trade strukturell nicht
+überlebensfähig" ist es. Das deckt sich mit dem Kostenfakt (enge Stops sind
+doppelt teuer) und mit der Beobachtung aus 8.2b, dass genau dort MFE und
+Ergebnis auseinanderlaufen.
+
+**Einschränkung, die dazugehört:** 533 Signale fielen bei H7 aus, weil ihre
+Preisreihe den Horizont nicht abdeckt. Das ist ein reiner Zeiteffekt (junge
+Signale haben noch keine 7 Tage Zukunft) und damit **nicht** stop-abhängig — die
+Bandvergleiche bleiben davon unberührt. SHORT ist je Band zu dünn (n = 2–17);
+die Aussage trägt LONG.
 
 Der belastbare Kern ist damit schmal, aber real: **2,5–3,0 ist das einzige Band mit
 belastbarem Vorsprung.** Ein Fakt darf genau das sagen — und muss die drei anderen

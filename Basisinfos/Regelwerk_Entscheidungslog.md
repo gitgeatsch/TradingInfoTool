@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (170 Einträge)
+## Index nach Thema (171 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -191,7 +191,7 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-07-23** — Watchlist-Aenderungen wirkten nur nach App-Neustart - in 3 Phasen behoben
 - **2026-08-01** — Zwei Zeit-Domaenen im Projekt (UTC-Daten vs. lokale Scheduler-Zeit) - bewusst KEIN Fix
 
-### Methodik / Audits / Synthesen (12)
+### Methodik / Audits / Synthesen (13)
 
 - **2026-07-17** — Spot-Regelwerk-Konsistenzprüfung nach dem Hebel-Fix
 - **2026-07-19** — Konsistenzprüfung über ALLE
@@ -205,6 +205,7 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-05** — Der Dead-Loop aufgeloest: die Ursache liegt bei MISTRAL, nicht im Code (Replay-Nachweis)
 - **2026-08-05** — Allocator gegen Zufall: an historischen Daten NICHT beantwortbar - Vorfilter blockierte die Messung
 - **2026-08-06** — "Sprung bei CRV 4,0" gegengeprueft: es gibt keinen, und MFE >= 1R ist als Erfolgsmass untauglich
+- **2026-08-06** — Widerspruch 3-5 % vs 5-8 % aufgeloest: beide Zahlen waren Survivorship-Artefakte, nur <2 % traegt
 
 ### Hebel- / Signal-Einzelfunde (12)
 
@@ -12424,6 +12425,63 @@ richtig - aber aus einem anderen Grund als dem, den ich angegeben hatte. Die
 Warnung in den neuen Regeln ("zieh niemals den Stop enger, um in ein besseres
 Band zu rutschen") ist jetzt an Zahlen belegt statt nur vorsichtig formuliert.
 
-**OFFEN, bewusst nicht als Wahrheit gefuehrt:** hier liegt das Band 3-5 % vorn
-und 5-8 % negativ, waehrend der 01.08.-Befund "<5 % schlecht, 5-10 % besser"
-sagte. Andere Population, eine Marktphase. Als Hinweis fuehren.
+**Dieser Punkt wurde noch am selben Tag geklaert - siehe naechster Nachtrag.**
+
+## Nachtrag (2026-08-06): Widerspruch 3-5 % gegen 5-8 % aufgeloest - beide Zahlen waren Survivorship-Artefakte
+
+**Nutzer-Auftrag:** "den Widerspruch 3-5 % vs 5-8 % sauber nachmessen". Der
+Export vom selben Morgen reichte dafuer (vollstaendige OHLC aller 33
+Hebel-Symbole, 08.05.-06.08.) - kein neuer Lauf noetig.
+
+**ES GAB NIE EINEN WIDERSPRUCH.** Beide Ausgangszahlen litten am selben Fehler:
+sie werteten nur AUFGELOESTE Faelle aus.
+
+  01.08.: "SL < 5 % hat 0-16,7 % Trefferquote, 5-10 % hat 31,2 %" - 61
+          aufgeloeste Trades.
+  06.08.: "3-5 % kommt auf +0,340 R, 5-8 % auf -0,438 R" - 446 aufgeloeste.
+
+Ob ein Signal aufloest, haengt aber vom STOP-ABSTAND ab - genau der Variablen,
+um die es geht. Ein enger Stop wird fast immer getroffen, loest schnell auf und
+landet mit -1 R in der Stichprobe. Ein weiter Stop bleibt offen und faellt
+HERAUS, auch wenn er spaeter gewonnen haette. **Die Stichprobenauswahl hing am
+Messgegenstand.** Das ist derselbe Mechanismus, an dem die CRV-Gate-Messung vom
+02.08. gebrochen ist (widerlegt 03.08. in bd7aa86) - und ich bin ihm am 06.08.
+erneut aufgesessen, keine 48 Stunden nachdem er dokumentiert wurde.
+
+**RICHTIG GEMESSEN** (`messe_stop_abstand_baender.py`): kein Aufloesungs-Filter,
+jedes Signal mit Zonen neu gegen die Preisreihe simuliert (Unaufgeloeste
+bekommen Mark-to-Market statt herauszufallen), Basislinie je Band mit DEMSELBEN
+Stop und CRV, Block-Bootstrap ueber Symbole, zwei Horizonte, nach Richtung
+getrennt. Simulation aus `analyse_crv_gate_survivorship.py` importiert statt
+nachgebaut.
+
+| Stop-Band | n | EW | Bootstrap-KI | Abstand zur Basislinie |
+|---|---|---|---|---|
+| **0-2 %** | 26 | -0,770 | **[-1,124; -0,500]** | **-0,526** |
+| 2-3 % | 37 | +0,182 | [-0,604; +1,801] | +0,421 |
+| 3-5 % | 98 | +0,433 | [-0,185; +0,848] | +0,668 |
+| 5-8 % | 147 | -0,036 | [-0,359; +0,364] | +0,142 |
+| 8-12 % | 113 | -0,047 | [-0,319; +0,163] | +0,082 |
+| > 12 % | 72 | +0,224 | [-0,285; +0,521] | +0,317 |
+
+**EINZIGER BELASTBARER BEFUND: Stops unter 2 % sind zerstoererisch.** Als
+einziges Band schliesst das Intervall die Null aus und liegt klar unter der
+Basislinie. Bei H14 bestaetigt (-1,088, [-1,198; -1,000]), bei LONG allein
+ebenfalls (-1,061). **Alles andere ist nicht trennbar** - jedes uebrige
+Intervall enthaelt die Null, 3-5 % ueberlappt 5-8 % vollstaendig.
+
+Beide Behauptungen fallen damit: "unter 5 % schlecht" ist zu grob (wirft das
+schlechteste Band mit den beiden besten Punktschaetzern zusammen), "5-8 %
+negativ" haelt survivorship-bereinigt nicht.
+
+**FOLGE FUER REGELN: die Daten stuetzen eine UNTERGRENZE, keinen Optimalwert.**
+Ein Richtwert "Stop moeglichst bei X %" waere durch nichts gedeckt. Ein Hinweis
+"unter 2 % ist der Trade strukturell nicht ueberlebensfaehig" ist es - und er
+deckt sich mit dem Kostenfakt (enge Stops doppelt teuer) und mit dem Befund aus
+dem vorigen Nachtrag, dass genau dort MFE und Ergebnis auseinanderlaufen.
+NOCH KEINE REGELAENDERUNG - erst zur Entscheidung vorlegen.
+
+**Einschraenkung:** 533 Signale fielen bei H7 aus, weil die Preisreihe den
+Horizont nicht abdeckt. Reiner Zeiteffekt (junge Signale haben noch keine 7 Tage
+Zukunft), also NICHT stop-abhaengig - die Bandvergleiche bleiben unberuehrt.
+SHORT ist je Band zu duenn (n=2-17); die Aussage traegt LONG.
