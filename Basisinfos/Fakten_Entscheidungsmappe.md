@@ -228,6 +228,42 @@ ausgewertet — Hebel nutzt stattdessen feste Schwellen 55/70 aus `risk_gate.py`
 - `markt_kontext.*` bei Hebel — `praesidentschaftszyklus`/`naechste_fomc_sitzungen`/`naechste_cpi_veroeffentlichung` werden geliefert, aber **keine Hebel-Regel dafür existiert** (Spot-Regel 13 gilt nur dort). Höchste Priorität, siehe 3.1.
 - `disclaimers.hinweis` bei Hebel — nur ein Kurztext, keine `makro_einbezogen`/`sentiment_einbezogen`-Flags wie bei Spot, keine Regel.
 
+**Neu am 2026-08-05 — die drei Fakten der LLM-Erweiterung** (Herleitung, Messung und
+Verbleib-Entscheidung in Abschnitt 7):
+
+- `kosten.*` — **Regel 30**. Tabelle „Kosten in R" über fünf Stop-Abstände × drei
+  Haltedauern, dazu `lesehilfe`, `zwei_folgerungen` und die gemessene Haltedauer
+  (Median 2,6 Tage). Bewusst eine **Tabelle statt einer Formel** — ein Modell, das
+  rechnen soll, rechnet falsch; eines, das nachschlägt, schlägt richtig nach.
+  Quelle: `backward_tracking.kosten_kontext_fuer_prompt()`, gespeist aus
+  `kosten_in_r()`. **Kein Gate** — Frage 1 verneint: die richtige Reaktion auf
+  Kosten hängt vom Setup ab (ein enger Stop an echtem Support kann trotz höherer
+  Kostenlast richtig sein). Regel 30 sagt daher ausdrücklich **„KEIN Limit"**.
+- `ausstiegsregel.*` — **Regel 31**. Trailing-Mechanik der seit 05.08. scharfen
+  Regel (`ausloese_r`, `abstand_r`, Wirkungsweise, ausdrücklich `kein_breakeven_lock`
+  mit der Begründung aus der 01.08.-Messung). Liefert `None`, wenn die Regel
+  abgeschaltet ist (`ausloese_r = 0`) — der Fakt kann also nie behaupten, es gebe
+  einen Trailing-Stop, den es nicht gibt. **Kein Gate.** Der Schlüsselsatz
+  `was_das_fuer_deine_zonen_heisst` nennt **beide** Lesarten (weiteres Ziel wegen
+  begrenztem Rückfallrisiko / näheres Ziel weil der Trailing ohnehin greift) und
+  entscheidet bewusst nicht — Kontext liefern, Urteil offenlassen.
+- `systemguete.*` — **Regel 31**. Die eigene, gemessene Bilanz: `anzahl_ausgewerteter_trades`,
+  `erwartungswert_r`, `sqn` + `sqn_einordnung`, `profit_factor`. **Greift nur bei
+  Hebel**: die Mindestschwelle liegt bei n ≥ 30 ausgewerteten Trades, und die
+  erreicht Stand 05.08. allein `hebel` (n = 124). Krypto-Spot (19), Aktien, ETF und
+  Rohstoffe liegen darunter — dort fällt der Fakt still weg, weil eine Systemgüte
+  aus fünf Signalen irreführender wäre als gar keine. **Kein Gate.**
+
+  **Der heikelste der drei.** Die Zahl ist unerfreulich (EW −0,114 R, SQN −0,77
+  „kaum handelbar"). Die naheliegende Formulierung wäre „sei deshalb vorsichtiger"
+  — und genau die wäre der Fehler: derselbe Mechanismus ließ beim
+  Ausführbarkeits-Hinweis die ERÖFFNEN-Quote von 93 % auf 3 % einbrechen. Der Fakt
+  trägt deshalb den ausdrücklichen Satz „Kalibrierungs-Kontext, KEINE
+  Handlungsanweisung und kein Grund, grundsätzlich zurückhaltender zu werden".
+  **Daraus folgt eine Pflicht:** die ERÖFFNEN-Quote ist Pflicht-Messgröße jedes
+  Tests dieses Fakts — nicht nur die Zonenqualität. Senkt er sie im Betrieb,
+  gehört er wieder entfernt.
+
 ### 4.4 Was zusätzlich/separat an Z.ai geht
 
 Zwei getrennte, rein beobachtende Calls (Phase 1, kein Gate): Konsistenz-Check
@@ -582,4 +618,90 @@ schnellen Aufrufen scheiterte überwiegend mit HTTPError. Ich habe das als
 Ratenbegrenzung gedeutet und eine Drossel eingebaut — bei 300 RPM hätte die
 Rate aber nicht greifen dürfen. Was tatsächlich half, war vermutlich die
 Wiederholung, nicht die Wartezeit. **Die Ursache ist nicht belegt.**
+
+---
+
+## 7. Die LLM-Erweiterung vom 2026-08-05 — drei neue Fakten (Regeln 30/31)
+
+*Katalog-Einträge in 4.3. Dieser Abschnitt hält fest, warum sie gebaut wurden,
+was die Messung ergab und warum sie trotz Nullbefund drinbleiben.*
+
+### 7.1 Warum überhaupt neue Fakten
+
+Bis dahin waren **acht Selektionsmechanismen** gemessen worden — Screening-Score,
+Konfidenz, Richtungswahl, Prompt-Regeln, CRV-Bänder, `halte_kriterium`,
+Allocator-Auswahl — und keiner trug nachweisbar. Am *Sortieren* vorhandener
+Information war nichts mehr zu holen. **Neue Information war die letzte unerprobte
+Kategorie.** Nutzer-Vorgabe vom 05.08.: „merke dir vor allem die Punkte wo wir
+Informationen derzeit NICHT dem LLM geben".
+
+Aus sechs identifizierten Lücken wurden drei umgesetzt. Auswahlkriterium: beide
+aussichtsreichsten (Kosten, Ausstiegsregel) waren **bereits deterministisch
+berechnet** — es fehlte nur die Weitergabe. Und beide betreffen genau die Größen,
+die das Modell selbst setzt: Stop und Ziel. Ein Modell, das seine Kosten nicht
+kennt, kann kein kostendeckendes CRV wählen; eines, das den Trailing-Stop nicht
+kennt, setzt Ziele gegen eine Regel, von der es nichts weiß.
+
+### 7.2 Was bewusst NICHT gebaut wurde
+
+| Lücke | Warum nicht |
+|---|---|
+| **Z-3 Portfolio-Drawdown** | Das 3+1-Raster ordnet ihn dem **Gate** zu: Frage 1 ist bejaht, „Drawdown über Schwelle → Risiko reduzieren" ist kontextunabhängig. Ein Fakt wäre hier die falsche Ebene. |
+| **Ausführbarkeit / `nur_long`** | **Gemessen und verworfen.** Der ehrliche Hinweis ließ die ERÖFFNEN-Quote von 93 % auf 3 % einbrechen. Nicht anfassen. |
+| **Zieldauer / Haltedauer** | Es gibt gar keine — die zwei vorhandenen Felder widersprechen einander. Das ist ein **Konstruktionsfehler**, keine Prompt-Ergänzung. |
+
+### 7.3 Das Messergebnis
+
+Drei-Arm-Design mit Rauschboden (A1/A2 identisch + B), **gepaart** — jeder Arm
+sieht denselben Fall. 24 gepaarte Fälle, kombinierter Test aller drei Fakten.
+
+| | |
+|---|---|
+| Wirkung auf den Stop-Abstand | **−0,334 pp** |
+| nötiges n / vorhanden | **212** / 24 |
+| ERÖFFNEN-Wächter (A1 / A2 / B) | 92,5 % · 92,1 % · 95,7 % — **kein Einbruch** |
+
+**Kein Nachweis.** Der Effekt halbierte sich beim Verdoppeln der Stichprobe
+(−0,734 → −0,334 pp), das nötige n stieg von 16 auf 212 — die klassische Signatur
+eines Nullbefunds.
+
+Bemerkenswert war die **Richtung**: erwartet wurden *weitere* Stops (wegen der
+Kosten), das Modell wählte *engere*. Plausibel wegen der Ausstiegsregel — wer
+weiß, dass ab +1R nachgezogen wird, kann einen engeren Anfangsstop verantworten.
+Genau deshalb nennt Regel 30 beide Lesarten und schreibt keine vor.
+
+**Methodisch wichtig:** der Kosten-Fakt **allein** hätte n = 618 gebraucht,
+kombiniert waren es 16. Fakten einzeln zu testen ist bei dieser Effektgröße
+aussichtslos — der gemeinsame Test war die richtige Entscheidung.
+
+### 7.4 Warum sie trotzdem drinbleiben
+
+1. **„Nicht nachweisbar" ist hier eine Aussage über die Messgrenze, nicht über die
+   Wirkung.** 0,3 pp Effekt gegen 4,5 pp Rauschboden — mit unserem n ist alles
+   unter ~4 pp unsichtbar. Herausnehmen hieße, auf eine Nicht-Messung hin zu handeln.
+2. **Kein Schaden nachweisbar.** Der ERÖFFNEN-Wächter hält. Diese Messung war
+   Pflicht, weil genau hier der Ausführbarkeits-Hinweis eingebrochen ist (7.2).
+3. **Sie schließen namentlich dokumentierte Lücken** (Zielgrößen 6.7, Punkt 4).
+
+**Der ehrliche Gegenpunkt:** beide A-Arme lagen konsistent ~3 pp unter B. Bei
+n = 67/69 nicht von Rauschen zu trennen — aber es ist die Richtung, vor der der
+Systemgüte-Fakt in seinem eigenen Docstring warnt. **Stehender Beobachtungspunkt,
+kein abgeschlossenes Thema.** Verfestigt sich das im Betrieb, gehört
+`systemguete` raus.
+
+### 7.5 Verifikationsstand (Stand 2026-08-06)
+
+| Was | Stand |
+|---|---|
+| Bauen die drei Fakten korrekte Werte? | **verifiziert**, isoliert ausgeführt, Zahlen nachrechenbar, Quellen benannt |
+| Greift `systemguete` in allen Tiers? | **Nein, nur Hebel** (n = 124). Krypto 19, Aktien/ETF/Rohstoffe ≈ 0 → Fakt fällt still weg. So gewollt. |
+| Kommen sie im **Produktivlauf** an? | **NOCH OFFEN.** Der letzte Export (05.08. 19:54) ist älter als die Commits (20:33 / 21:34); 0 von 176 Faktensätzen enthalten die neuen Blöcke. **Prüfpunkt für den nächsten Export.** |
+
+### 7.6 Die übergreifende Lehre
+
+Zweimal unabhängig belegt: **kleine Stichproben erzeugen zuverlässig Scheinbefunde
+in der erwarteten Richtung.** Beim Regel-Ablationstest lagen die Einzeleffekte bei
+12 Ankern bei +0,281 und +0,182, bei 28 Ankern bei +0,014 und −0,013. Hier:
+−0,734 bei 12 Fällen, −0,334 bei 24. **Vielversprechende Zwischenstände immer
+aufstocken, bevor berichtet wird.**
 

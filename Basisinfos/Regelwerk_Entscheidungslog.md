@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (146 Einträge)
+## Index nach Thema (147 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -39,7 +39,7 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-01** — Marktscan Top-N-Deckel umgesetzt + "unbekannte Aufrufe" geklaert
 - **2026-08-01** — Hebel-CRV-Pflicht-Symmetrie (Spot-Verkaufs-Luecke Roadmap-Punkt 5) - Praemisse geprueft und verworfen, KEIN...
 
-### LLM-Prompts / Analysten (Stage 2) (11)
+### LLM-Prompts / Analysten (Stage 2) (12)
 
 - **2026-07-18** — Konfidenz-Kalibrierung nach dem echten CAT-Fall (fünf Bausteine A-E)
 - **2026-07-19** — Release 2 (Schwerpunkte/Thesen-Verwaltung) - Konzeptionsrunde
@@ -52,6 +52,7 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-07-28** — Fakten-Entscheidungsmappe + Hebel-Regel 22 (FOMC/CPI-Kontext)
 - **2026-07-31** — Hebel Regel 6 um Take-Profit-ATR-Leitplanke erweitert + neuer Messstandard atr_relativ_prozent_bei_signal
 - **2026-08-02** — Dead-Loop-Synthese (Task #598) - Gliederung, Root-Cause-Analyse, Massnahme 1 umgesetzt
+- **2026-08-05** — Drei neue Hebel-Fakten (Kosten, Ausstiegsregel, Systemguete) + Regeln 30/31 - kombiniert gemessen, kein Nachweis, bleiben drin
 
 ### Z.ai-Gegenpruefung (Stage 3) (23)
 
@@ -11395,3 +11396,77 @@ kontextabhaengige statt pauschale CRV-Anforderung; wegen des in der Literatur
 dokumentierten ADX-Flackerns nahe Schwellen muesste er gestuft wirken, nicht
 als harte Grenze. Offen bleibt ausserdem: 5 Symbole (CANTON, KAIA, KAITO,
 SUPRA, XNO) fehlen mangels OHLC in beiden Auswertungen.
+
+## Nachtrag (2026-08-05): drei neue Hebel-Fakten (Kosten, Ausstiegsregel, Systemguete) + Regeln 30/31
+
+**Ausgangslage.** Acht Selektionsmechanismen waren zu diesem Zeitpunkt gemessen
+und keiner trug nachweisbar — Screening-Score, Konfidenz, Richtungswahl,
+Prompt-Regeln, CRV-Baender, `halte_kriterium`, Allocator-Auswahl. Am *Sortieren*
+vorhandener Information war nichts mehr zu holen. Nutzer-Vorgabe deshalb: „merke
+dir vor allem die Punkte wo wir Informationen derzeit NICHT dem LLM geben".
+**Neue Information war die letzte unerprobte Kategorie.**
+
+**Sechs Luecken identifiziert, drei umgesetzt.** Auswahlkriterium: die beiden
+aussichtsreichsten (Kosten, Ausstiegsregel) waren bereits deterministisch
+berechnet — es fehlte nur die Weitergabe. Und beide betreffen genau die Groessen,
+die das Modell selbst setzt: Stop und Ziel.
+
+| Fakt | Regel | Kern |
+|---|---|---|
+| `kosten` | 30 | Tabelle Kosten-in-R (5 Stop-Abstaende × 3 Haltedauern) + Median-Haltedauer 2,6 T. Tabelle statt Formel, weil ein rechnendes Modell falsch rechnet. Ausdruecklich **KEIN Limit** — Struktur hat Vorrang. |
+| `ausstiegsregel` | 31 | Trailing-Mechanik der am selben Tag scharfgeschalteten Regel, inkl. „kein Breakeven-Lock" mit Begruendung. Liest die Config, ist also stumm wenn die Regel aus ist. |
+| `systemguete` | 31 | EW / SQN / Profitfaktor der eigenen Trades. Mindestschwelle n≥30 → greift derzeit **nur bei Hebel** (124); Krypto 19, uebrige Tiers ≈ 0. |
+
+**Drei bewusst NICHT gebaut** (verworfene Optionen, mit Revisit-Bedingung):
+
+- **Z-3 Portfolio-Drawdown** — das 3+1-Raster ordnet ihn dem **Gate** zu (Frage 1
+  bejaht: „Drawdown ueber Schwelle → Risiko reduzieren" ist kontextunabhaengig).
+  Revisit nur, falls Z-3 je als graduelle statt binaerer Groesse gebraucht wird.
+- **Ausfuehrbarkeit / `nur_long`** — gemessen und verworfen: der ehrliche Hinweis
+  liess die EROEFFNEN-Quote von 93 % auf 3 % einbrechen. **Nicht anfassen.**
+- **Zieldauer** — die zwei vorhandenen Felder widersprechen einander. Das ist ein
+  Konstruktionsfehler, keine Prompt-Ergaenzung. Revisit nach Schliessen von
+  Luecke 2 (Zielgroessen).
+
+**Die Systemguete war der heikelste der drei.** Die Zahl ist unerfreulich (EW
+−0,114 R, SQN „kaum handelbar"). Die naheliegende Formulierung „sei deshalb
+vorsichtiger" waere genau der Fehler gewesen, der beim Ausfuehrbarkeits-Hinweis
+den 93→3-%-Einbruch ausgeloest hat. Der Fakt traegt deshalb woertlich
+„Kalibrierungs-Kontext, KEINE Handlungsanweisung". **Daraus folgt eine
+Messpflicht:** die EROEFFNEN-Quote gehoert in jeden Test dieses Fakts, nicht nur
+die Zonenqualitaet.
+
+**Messung: kein Nachweis.** Drei-Arm-Design mit Rauschboden (A1/A2 identisch + B),
+gepaart, 24 Faelle, alle drei Fakten kombiniert. Wirkung auf den Stop-Abstand
+−0,334 pp, noetiges n **212**. Der Effekt halbierte sich beim Verdoppeln der
+Stichprobe (−0,734 → −0,334) — klassische Signatur eines Nullbefunds.
+EROEFFNEN-Waechter 92,5 / 92,1 / 95,7 %, kein Einbruch.
+
+**Methodisch:** der Kosten-Fakt **allein** haette n=618 gebraucht, kombiniert
+waren es 16. Fakten einzeln zu testen ist bei dieser Effektgroesse aussichtslos —
+der gemeinsame Test war die richtige Entscheidung.
+
+**Warum sie trotzdem bleiben:** bei 0,3 pp Effekt gegen 4,5 pp Rauschboden ist
+„nicht nachweisbar" eine Aussage ueber die **Messgrenze**, nicht ueber die
+Wirkung; Herausnehmen hiesse, auf eine Nicht-Messung hin zu handeln. Kein Schaden
+messbar. Und sie schliessen namentlich dokumentierte Luecken (Zielgroessen 6.7,
+Punkt 4).
+
+**Offen (Stand 2026-08-06):**
+
+1. **Ankunft im Produktivlauf nicht bestaetigt** — der letzte Export (05.08.
+   19:54) ist aelter als die Commits (20:33 / 21:34); 0 von 176 Faktensaetzen
+   enthalten die neuen Bloecke. Pruefpunkt des naechsten Exports.
+2. **Beobachtungspunkt:** beide A-Arme lagen konsistent ~3 pp unter B. Bei
+   n=67/69 nicht von Rauschen zu trennen, aber es ist die Richtung, vor der
+   Regel 31 selbst warnt. Verfestigt sich das im Betrieb, gehoert `systemguete`
+   wieder heraus.
+
+**Uebergreifende Lehre, zweimal unabhaengig belegt:** kleine Stichproben erzeugen
+zuverlaessig Scheinbefunde in der erwarteten Richtung. Regel-Ablationstest: +0,281
+und +0,182 bei 12 Ankern, +0,014 und −0,013 bei 28. Hier: −0,734 bei 12, −0,334
+bei 24. **Vielversprechende Zwischenstaende immer aufstocken, bevor berichtet
+wird.**
+
+*Ist-Zustand: `Regelwerksmanual.md` Kapitel 22. Katalog und Herleitung:
+`Fakten_Entscheidungsmappe.md` Abschnitte 4.3 und 7.*

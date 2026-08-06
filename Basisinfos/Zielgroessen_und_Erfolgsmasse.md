@@ -886,7 +886,7 @@ bleibt jede Vorgabe folgenlos, weil kein Feld sie trägt.
 | 3 | **Der Hebel geht nicht in die Kostenrechnung ein** | **erledigt 04.08.** — `hebel_final` vor `hebel_vorschlag`, Median je Gruppe, Rückfall auf 3,0 |
 | 5 | Die Staffelung (0,18 → 0,12 → 0,06 %) nirgends hinterlegt | **erledigt 04.08.** — `_KOSTEN_HEBEL_STAFFEL`, über die Stufen integriert |
 | 2 | **Keine Zieldauer am Signal.** `halte_kriterium_bucket` ist eine Ablauffrist (14/45/120 T), `mindestziel_zeitraum_tage_geschaetzt` eine Volatilitätsrechnung (Median 1,5 T, nur 35 % befüllt). Beide sind keine Strategieangabe und widersprechen einander | **offen** — jetzt schärfer: die gemessene Auflösung liegt bei 2,6 T, die Praxis bei 0,3 T, keiner der beiden Felder sagt das |
-| 4 | **Das LLM kennt die Kostenstruktur nicht** und kann sie beim Setzen von Stop und Ziel nicht berücksichtigen | **offen** — der Faktor existiert jetzt deterministisch, die Weitergabe in den Prompt fehlt |
+| 4 | **Das LLM kennt die Kostenstruktur nicht** und kann sie beim Setzen von Stop und Ziel nicht berücksichtigen | **erledigt 05.08.** — Fakt `kosten` + Regel 30 (Tabelle Kosten-in-R über Stop-Abstand × Haltedauer, ausdrücklich ohne Limit). Wirkung gemessen: **kein Nachweis** (−0,33 pp bei n=24, nötig wären 212), aber auch kein Schaden (ERÖFFNEN-Wächter hält). Bleibt drin. Details: `Fakten_Entscheidungsmappe.md` Abschnitt 7 |
 | 6 | **Spot-Kosten sind nicht belegt** — nur 348 von 3578 Trades tragen eine explizite Gebührenbuchung (`vsn_fee`, Median 1,03 % je Seite), bei den übrigen steckt sie im Spread und ist ohne Marktmitte nicht messbar | **offen** — als Annahme geführt und als solche gekennzeichnet (`kosten_belegt=False`) |
 | 7 | **Die Tagesrate 0,18 %/Tag ist offiziell belegt, aber nicht an eigenen Daten verifiziert** — seit dem Stichtag 08.07.2026 liegen erst 3 Positionen vor | **offen** — klärt sich mit der Zeit von selbst |
 
@@ -1175,6 +1175,14 @@ später.
 der Grund steht in der config: alle Kalibrierungszahlen stammen aus **einer**
 Marktphase (Bärenregime). In einer Aufwärtsphase könnte ein Trailing-Stop
 Gewinner zu früh beenden.
+
+**Nachtrag (05.08., gleicher Tag): das LLM kennt die Regel jetzt.** Fakt
+`ausstiegsregel` + Regel 31 — vorher setzte das Modell Zielzonen gegen eine
+Mechanik, von der es nichts wusste. Der Fakt liest die Config, ist also
+automatisch stumm, wenn die Regel per Kill-Switch aus ist. Er nennt bewusst
+**beide** möglichen Folgerungen für die Zielzone und schreibt keine vor.
+Wirkung: **kein Nachweis** (kombinierter Test, siehe
+`Fakten_Entscheidungsmappe.md` Abschnitt 7).
 
 ---
 

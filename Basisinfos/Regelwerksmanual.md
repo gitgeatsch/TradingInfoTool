@@ -2891,6 +2891,100 @@ kein OHLC) gibt es keinen Eröffnungskurs — dort bleibt es bei der Zonen-Grenz
 alten Konventionen in der Datenbank. Ohne Neuberechnung mischen sich zwei
 Maßstäbe in Expectancy und SQN.
 
+## 22. Was der KI-Agent über Kosten, Ausstieg und die eigene Bilanz weiß (2026-08-05)
+
+Bis zum 05.08. hat der Agent Stop und Ziel gesetzt, **ohne drei Dinge zu kennen,
+die das System längst ausgerechnet hatte**: was ein Trade an Gebühren kostet,
+dass es eine Ausstiegsregel gibt, und wie die bisherigen Signale ausgegangen sind.
+Seither bekommt er alle drei — als **Hebel-Regeln 30 und 31**.
+
+### Regel 30 — die Handelskosten
+
+Der Agent erhält eine Tabelle „Kosten in R" über fünf Stop-Abstände (2 / 3 / 5 /
+8 / 12 %) und drei Haltedauern (1 / 3 / 5 Tage), dazu die gemessene typische
+Haltedauer (Median 2,6 Tage).
+
+„Kosten in R" heißt: **welcher Anteil deines Risikobudgets an Gebühren geht,
+bevor der Trade überhaupt etwas verdient.** 0,40 bedeutet, dass 40 % des Risikos
+schon weg sind. Die Zahlen sind keine Schätzung, sondern folgen aus der
+Bitpanda-Kostenstruktur (Schließung 0,3 % + gestaffelte Tagesgebühr).
+
+Die entscheidende Aussage steht in zwei Sätzen im Prompt: **enge Stops sind
+doppelt teuer** — sie werden häufiger getroffen *und* tragen je R eine höhere
+Kostenlast, weil der Stop-Abstand im Nenner steht. Bei 2 % Abstand und drei Tagen
+sind 28 % des Risikobudgets weg, bei 8 % nur 7 %.
+
+**Ausdrücklich kein Limit.** Es gibt keine Kostenschwelle, ab der ein Signal
+abgelehnt wird, und der Prompt sagt das auch so. Grund: die richtige Reaktion auf
+Kosten hängt vom Setup ab — ein enger Stop direkt an echtem Support kann trotz
+höherer Kostenlast die bessere Wahl sein. Die Struktur hat Vorrang vor der
+Kostenrechnung.
+
+### Regel 31 — die Ausstiegsregel und die eigene Systemgüte
+
+**Teil 1, die Ausstiegsregel** (seit 05.08. scharf, siehe Kapitel 6): sobald eine
+Position einmal 1 R im Plus stand, wird der Stop auf „höchster Buchgewinn minus
+1 R" nachgezogen und nie zurückgenommen. Der Agent erfährt das jetzt — vorher hat
+er Ziele gegen eine Regel gesetzt, von der er nichts wusste.
+
+Ausdrücklich mitgeliefert wird auch, was **nicht** passiert: **kein
+Breakeven-Lock.** Der wurde am 01.08. gemessen und verworfen, weil er 63 % der
+Gewinner kostet — der Kurs läuft nach dem ersten Antippen von 1 R regelmäßig noch
+einmal unter den Einstand, bevor er das Ziel nimmt.
+
+Was daraus für die Zielzone folgt, entscheidet der Agent selbst. Der Prompt nennt
+**beide** Lesarten — weiteres Ziel, weil der Rückfall aus dem Gewinn begrenzt ist,
+oder näheres Ziel, weil der Trailing ohnehin früher greift — und schreibt keine
+vor.
+
+**Teil 2, die eigene Systemgüte:** Erwartungswert, SQN und Profitfaktor der
+tatsächlich eröffneten Hebel-Trades. Stand 05.08.: 124 Trades, Erwartungswert
+−0,114 R, SQN −0,77 („kaum handelbar"), Profitfaktor 0,84.
+
+**Warum das heikel ist und wie es gelöst wurde.** Die Zahl ist unerfreulich. Die
+naheliegende Formulierung wäre „sei deshalb vorsichtiger" — und genau die wäre ein
+Fehler. Derselbe Mechanismus hat schon einmal zugeschlagen: als der Agent testweise
+erfuhr, dass SHORT-Signale nicht ausgeführt werden, fiel seine ERÖFFNEN-Quote von
+93 % auf 3 %. Ein Agent, der aus einer schlechten Bilanz schließt, gar nichts mehr
+vorzuschlagen, löst das Problem nicht — er versteckt es.
+
+Deshalb steht im Prompt wörtlich: **Kalibrierungs-Kontext, KEINE
+Handlungsanweisung und kein Grund, grundsätzlich zurückhaltender zu werden.** Die
+Zahl sagt, wie streng die Latte für ein lohnendes Setup liegt — nicht, dass keines
+mehr vorgeschlagen werden soll.
+
+**Untergrenze:** unter 30 ausgewerteten Trades wird der Block weggelassen. Eine
+Systemgüte aus fünf Signalen wäre irreführender als gar keine. Praktisch heißt
+das: **derzeit nur Hebel.** Krypto-Spot liegt bei 19, Aktien/ETF/Rohstoffe
+praktisch bei null — dort sieht der Agent den Block nicht.
+
+### Was das gebracht hat — ehrlich
+
+**Keine nachweisbare Wirkung.** 24 gepaarte Testfälle, Effekt auf den
+Stop-Abstand −0,33 Prozentpunkte; für einen Nachweis wären 212 Fälle nötig. Der
+Effekt halbierte sich beim Verdoppeln der Stichprobe — die typische Signatur eines
+Nullbefunds.
+
+**Auch kein Schaden:** die ERÖFFNEN-Quote blieb bei 92,5 / 92,1 / 95,7 % über die
+drei Testarme. Diese Messung war Pflicht, gerade wegen des 93→3-%-Einbruchs oben.
+
+**Die Regeln bleiben trotzdem**, aus drei Gründen: bei 0,3 Prozentpunkten Effekt
+gegen 4,5 Prozentpunkte Messrauschen ist „nicht nachweisbar" eine Aussage über die
+Messgrenze und nicht über die Wirkung; es ist kein Schaden messbar; und sie
+schließen Lücken, die seit dem 04.08. namentlich als offen dokumentiert waren.
+
+**Ein Beobachtungspunkt bleibt offen:** die beiden Arme mit den neuen Fakten lagen
+konsistent ~3 Prozentpunkte unter dem Arm ohne sie. Das ist nicht von Rauschen zu
+trennen, aber es ist genau die Richtung, vor der Regel 31 selbst warnt. Verfestigt
+sich das im Betrieb, gehört der Systemgüte-Block wieder heraus.
+
+**Noch nicht bestätigt:** dass die Blöcke im echten Betrieb ankommen. Der letzte
+Datenexport ist älter als die Änderung — die Funktion ist isoliert geprüft, die
+Ankunft im Produktivlauf ist Prüfpunkt des nächsten Exports.
+
+*Details, Herleitung und Katalog-Einträge: `Fakten_Entscheidungsmappe.md`,
+Abschnitte 4.3 und 7.*
+
 ## 20. Entscheidungslog — wo die Entstehungsgeschichte steht
 
 Dieses Manual beschreibt den **Ist-Zustand** der Regeln. Die vollständige
@@ -2899,7 +2993,9 @@ Chronologie aller Änderungen, Untersuchungen und bewusst verworfenen Optionen
 `Basisinfos/Regelwerk_Entscheidungslog.md` — dort mit thematischem Index.
 
 **Wichtiger Hinweis zum Stand:** die Kapitel 1-19 oben bilden den Stand bis ca.
-2026-07-17 strukturiert ab. Regeländerungen danach (u.a. Signal-Fazit,
+2026-07-17 strukturiert ab; nachgezogen sind bisher nur Kapitel 6 (Ausstiegsregel,
+2026-08-05), 21 (Ausführungspreis, 2026-08-02) und 22 (Regeln 30/31,
+2026-08-05). Übrige Regeländerungen danach (u.a. Signal-Fazit,
 Kontrathese-Übersetzung, Veto-Schatten-Tracking, ATR-Leitplanken für Stop-Loss
 und Take-Profit, Nur-Long-Deckel, Regime-Konflikt für die Spot-Familie) sind
 bisher **nur im Entscheidungslog** dokumentiert und noch nicht in die Kapitel
