@@ -457,7 +457,18 @@ def _sende_ausstiegs_email(empfehlungen: list, geprueft) -> None:
     Der Leer-Guard steht ABSICHTLICH hier und nicht nur im Aufrufer: eine
     "0 Empfehlungen"-Mail erzieht dazu, die Mail nicht mehr zu oeffnen - und
     dann ist auch die eine wichtige nichts mehr wert. Beim Test fiel auf, dass
-    ein Direktaufruf diese Mail sonst verschickt haette."""
+    ein Direktaufruf diese Mail sonst verschickt haette.
+
+    KEIN RICHTUNGS-FILTER, UND ZWAR BEWUSST (bestaetigt 2026-08-06, nachdem der
+    erste Lauf SHORT-Empfehlungen enthielt). `_ist_email_relevante_richtung()`
+    gilt nur fuer SIGNAL-Mails, also fuer Vorschlaege, ETWAS NEUES ZU
+    EROEFFNEN - dort blendet der BP-Schalter SHORT aus, weil es nicht
+    ausfuehrbar waere. Diese Mail betrifft dagegen BEREITS OFFENE Positionen.
+    Eine offene SHORT-Position muss gemanagt werden, egal wie der Schalter
+    steht; sie zu verschweigen hiesse, den Nutzer genau ueber den Teil seines
+    Portfolios im Dunkeln zu lassen, der gerade Gewinn absichern koennte (beim
+    ersten Lauf: SOL SHORT mit 10,63 R). Der Schalter regelt, was NEU
+    vorgeschlagen wird - nicht, was bereits laeuft."""
     import config as config_module
     from api.email_notify import send_notification_email
 
