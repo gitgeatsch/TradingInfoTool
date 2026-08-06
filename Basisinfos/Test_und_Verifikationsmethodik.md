@@ -985,6 +985,81 @@ Wahrheit hat sich an diesem einen Tag mehrfach zurückgezahlt.
 
 ---
 
+## 2.13 Werkzeugkasten — welches Skript WANN (Nachtrag 2026-08-06)
+
+**Warum dieser Abschnitt existiert.** Am 04.08. stellte sich heraus, dass
+**drei Mess-Funktionen null externe Aufrufer hatten** — gebaut, dokumentiert,
+verifiziert, nie angeschlossen (`compute_baseline_vergleich`,
+`compute_sl_mfe_analyse`, `compute_zai_uebereinstimmung_baseline`). Ich habe
+stundenlang von Hand nachgerechnet, was fertig im Code lag. Inzwischen stehen
+**43 Analyse- und Prüfskripte** im Projektstamm — ohne Index findet niemand das
+richtige, und der nächste Nachbau ist nur eine Frage der Zeit.
+
+Sortiert ist nach **Auslöser**, nicht nach Funktion: die Frage im Kopf ist
+immer „ich will X wissen", nie „welches Skript gibt es".
+
+### Routine — bei JEDEM neuen Export, ohne Anlass
+
+| Skript | Beantwortet |
+|---|---|
+| `pruefe_export_standard.py` | Der feste 15-Punkte-Katalog aus 2.1. **Sind die Kennzahlen auffällig?** Meldet Abweichungen, nicht Vollständigkeit. |
+| `pruefe_export_vollcheck.py` | **Stimmt das, was wir glauben gebaut zu haben?** Wirken die Fixes im Betrieb, läuft Backward-Tracking/Schatten-Messung/Monitoring, hängen Signale, fehlen Daten. |
+
+> **Beide sind nötig, sie überlappen nicht.** Der Nur-Long-Umbau hätte in jedem
+> Kennzahlen-Katalog unauffällig ausgesehen — er berührt die Kennzahlen gar
+> nicht. Umgekehrt findet der Vollcheck keine schleichende Kennzahlen-Drift.
+
+### Vier BASIS-Werkzeuge — importieren statt nachbauen
+
+Zwei Implementierungen derselben Simulation laufen garantiert auseinander
+(Lehre vom 03.08.). Wer eine dieser Fähigkeiten braucht, **importiert**:
+
+| Basis | Liefert | wird importiert von |
+|---|---|---|
+| `analyse_crv_gate_survivorship.py` | `zonen()`, `simuliere()`, `basislinie()`, `kennzahlen()` — die survivorship-freie Simulation gegen echte Preisreihen | 3 Skripten |
+| `backtest_llm1_historisch.py` | historischer LLM1-Lauf gegen echte Faktensätze | **12 Skripten** |
+| `datiere_einbruch.py` | Trennpunkt-Suche per Max-Statistik + Block-Permutation | 8 Skripten |
+| `extract_notebook_diagnose.py` | der Export selbst, inkl. `_db_backup()` | 2 Skripten |
+
+### Bei Verdacht auf Datenfehler
+
+| Skript | Auslöser |
+|---|---|
+| `pruefe_fx_ableitung.py` | Verworfene FX-Ableitungen im Log, oder EUR/USD-Werte, die nicht zusammenpassen. Rankt die Ausreißer **und** unterscheidet Veraltung von Illiquidität (Renditekorrelation + sd-Verhältnis + Volumen). |
+| `backtest_ueberholt_erkennung.py` | Zweifel an der Überholt-Logik. |
+
+### Vor jeder Aussage über Signalqualität, Gates oder Stop/CRV
+
+| Skript | Auslöser |
+|---|---|
+| `messe_stop_abstand_baender.py` | Jede Frage, in der der **Stop-Abstand mitvariiert**. Kein Auflösungs-Filter, Basislinie je Band, Block-Bootstrap. |
+| `pruefe_sprung_bei_crv4.py` | Verdacht auf eine **konfundierte Kennzahl** — Vorlage für „Effekt innerhalb gleicher Stratum-Breite kontrollieren". |
+| `analyse_crv_gate_vs_positionsgroesse.py` | Gate oder Positionsgröße? |
+
+### Vor jeder Prompt- oder Fakten-Änderung
+
+| Skript | Auslöser |
+|---|---|
+| `messe_prompt_nebeneffekte.py` | **Dreiarm-Design mit Rauschboden** (A1/A2 identisch + B). Pflicht vor jeder Prompt-Aussage. |
+| `backtest_llm1_historisch.py` | Misst **RICHTIGKEIT**, nicht nur Veränderung. Hat am 04.08. einen bereits gemeldeten Befund widerrufen. |
+| `teste_kosten_fakt.py`, `teste_regel28_echt.py` | Test an **echten** Faktensätzen aus dem Betrieb statt rekonstruierten. |
+| `agent/krypto/kanarienvogel.py` | **Gebaut, NICHT aktiviert.** Provider-Drift-Replay gegen eingefrorene Faktensätze. Aktivieren = eine Zeile. Auslöser: ein zweiter unerklärter Verhaltenssprung. |
+
+### Einmalig, abgeschlossen — nicht routinemäßig laufen lassen
+
+Der Rest der 43 (`messe_halten_ursache*`, `teste_richtung_*`,
+`pruefe_short_ursache`, `analyse_score_komponenten`, `backtest_regeln_29_07`,
+`messe_fensterlaenge_selbstjustierung`, …) gehört zu abgeschlossenen
+Untersuchungen. Sie sind **Belege**, keine Werkzeuge — vor dem Wiederverwenden
+prüfen, ob ihre Annahmen noch gelten. Mehrere ruhen auf Populationen oder
+Messgrößen, die inzwischen widerlegt sind.
+
+> **Regel für neue Skripte:** wer eines baut, das mehr als einmal laufen soll,
+> trägt es hier ein. Sonst ist es in zwei Wochen unauffindbar und wird
+> nachgebaut — mit abweichender Logik.
+
+---
+
 ## 3. Verwandte Dokumente
 
 - [[Fakten_Entscheidungsmappe.md]] - Entscheidungsraster für Fakten/Prompt-Regeln
