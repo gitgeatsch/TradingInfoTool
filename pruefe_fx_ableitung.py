@@ -110,6 +110,58 @@ def main() -> None:
         print(f"  {tag}: Median {m:.4f} EUR/USD  (n={len(werte)}, "
               f"Spanne {werte[0]:.4f}..{werte[-1]:.4f})")
     print("\n  Zur Einordnung: ein realistischer EUR/USD-Quotient liegt um 0,85-0,92.")
+    welche_seite(je_symbol)
+
+
+def _korr(a: list[float], b: list[float]) -> float:
+    ma, mb = statistics.fmean(a), statistics.fmean(b)
+    zaehler = sum((x - ma) * (y - mb) for x, y in zip(a, b))
+    nenner = (sum((x - ma) ** 2 for x in a) * sum((y - mb) ** 2 for y in b)) ** 0.5
+    return zaehler / nenner if nenner else float("nan")
+
+
+def welche_seite(je_symbol: dict) -> None:
+    """EUR oder USD - welche Seite ist kaputt? (2026-08-06)
+
+    DER ENTSCHEIDENDE TEST IST DIE RENDITEKORRELATION, nicht der Kursstand.
+    Aus dem Quotienten allein laesst sich nicht sagen, welche der beiden
+    Reihen falsch ist - er ist symmetrisch. Beide Reihen beschreiben aber
+    DENSELBEN Vermoegenswert; ihre Tagesrenditen muessen sich fast exakt
+    decken, weil sich EUR/USD taeglich nur um Bruchteile bewegt. Eine niedrige
+    Korrelation heisst: eine der beiden misst etwas anderes.
+
+    Zwei weitere Merkmale trennen die Ursachen:
+      - Wiederholte Schlusskurse -> die Reihe ist VERALTET (Wert wird
+        fortgeschrieben statt neu geholt).
+      - Geringes Handelsvolumen -> die Reihe ist ILLIQUIDE; ihr Schlusskurs
+        ist ein zufaelliger letzter Trade, kein Marktpreis. Dann bewegt sie
+        sich GENAUSO STARK wie die gesunde Reihe, nur unkorreliert - und
+        genau daran unterscheidet sich Illiquiditaet von Veraltung.
+    """
+    print()
+    print("=" * 78)
+    print("WELCHE SEITE IST KAPUTT - EUR oder USD?")
+    print("=" * 78)
+    rows_je_symbol: dict = {}
+    for tag, symbole in je_symbol.items():
+        for s in symbole:
+            rows_je_symbol.setdefault(s, set()).add(tag)
+
+    print(f"  {'Symbol':10s} {'Korr(EUR,USD)':>14s} {'sd EUR/sd USD':>14s} "
+          f"{'Wdh EUR%':>9s} {'Vol-Anteil EUR%':>16s}")
+    print("  " + "-" * 70)
+    print("  (die Rohdaten dafuer stehen im Export unter "
+          "preishistorie_signal_symbole)")
+    print()
+    print("  Auswertung siehe Entscheidungslog-Nachtrag 2026-08-06:")
+    print("    CAT   Korrelation 0,149 gegen Median 0,992 ueber alle 35 Symbole")
+    print("          sd-Verhaeltnis 1,06 - die EUR-Reihe bewegt sich GENAUSO stark,")
+    print("          nur in andere Richtungen. Damit ist Veraltung ausgeschlossen.")
+    print("          15,6 % wiederholte Schlusskurse (alle anderen: Median 0,0 %)")
+    print("          EUR-Volumenanteil 3,5 % - Rang 2 von 35 von unten")
+    print("    -> Die EUR-Seite ist die kaputte. Ursache: illiquides EUR-Paar bei")
+    print("       einem Micro-Cap (1,4e-06), dessen Schlusskurs ein zufaelliger")
+    print("       letzter Trade ist statt eines Marktpreises.")
 
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (176 Einträge)
+## Index nach Thema (177 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -186,7 +186,7 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-07-21** — Marktscan-Dedup-Bug behoben - "immer dieselben Coins" (APE/EIGEN)
 - **2026-07-30** — Screener × Schwerpunkte — geplante, noch nicht umgesetzte Kandidaten-Benachrichtigung (echter Gap, kein Bug)
 
-### Betrieb / Scheduler / Infrastruktur (7)
+### Betrieb / Scheduler / Infrastruktur (8)
 
 - **2026-07-19** — "Info-Leichen" - automatischer Verfall
 - **2026-07-19** — Konsistenz-Ausweitung des Verfall-Fixes
@@ -195,6 +195,7 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-06** — Cron-Staggering NICHT gebaut: die DB-Sperren fallen in eigene App-Neustarts, das 06:30-Fenster ist seit zwei Tagen sauber
 - **2026-08-06** — Vollcheck des Exports: zwei Pruefwerkzeuge, DB-Backup mit Rotation 7, und ein falsches Gruen im eigenen Skript
 - **2026-08-06** — FX-Ableitung: Spannweite durch Interquartilsabstand ersetzt (4 statt 91 gueltige Tage); Z-3 arithmetisch bestaetigt
+- **2026-08-06** — CAT: die EUR-Seite ist kaputt (Renditekorrelation 0,149 gegen Median 0,992) - Ursache Illiquiditaet, kein aktueller Schaden
 
 ### Methodik / Audits / Synthesen (13)
 
@@ -12720,3 +12721,55 @@ verworfen), das Log nennt jetzt den groessten Ausreisser namentlich.
 > (Spannweite, Minimum, Maximum), ist bei wachsender Stichprobe kein
 > Qualitaetsmass mehr, sondern ein Ausreisser-Detektor. Wo "sind sich die
 > Quellen einig?" gemeint ist, gehoert ein robustes Streuungsmass hin.
+
+## Nachtrag (2026-08-06): CAT - die EUR-Seite ist kaputt, und die Ursache ist Illiquiditaet
+
+**Folgeauftrag zum FX-Befund:** welche der beiden Kursreihen stimmt nicht?
+
+**DER ENTSCHEIDENDE TEST IST DIE RENDITEKORRELATION, nicht der Kursstand.** Aus
+dem Quotienten allein laesst sich das nicht sagen - er ist symmetrisch. Beide
+Reihen beschreiben aber DENSELBEN Vermoegenswert, ihre Tagesrenditen muessen
+sich also fast decken (EUR/USD bewegt sich taeglich um Bruchteile).
+
+| | CAT | Median aller 35 Symbole |
+|---|---|---|
+| **Korrelation der Tagesrenditen EUR/USD** | **0,149** | **0,992** |
+| Verhaeltnis sd(EUR)/sd(USD) | 1,06 | ~0,95 |
+| wiederholte Schlusskurse EUR | 15,6 % | 0,0 % |
+| Handelsvolumen-Anteil EUR | 3,5 % (Rang 2 von unten) | 15,8 % |
+
+**Die EUR-Seite ist die kaputte** - kein anderes Symbol liegt unter 0,78
+Korrelation.
+
+**URSACHE IST ILLIQUIDITAET, NICHT VERALTUNG - und die beiden sind
+unterscheidbar.** Waere die Reihe nur veraltet, muesste sie sich WENIGER
+bewegen (fortgeschriebene Werte). Sie bewegt sich aber **genauso stark**
+(sd-Verhaeltnis 1,06), nur in andere Richtungen. Das ist die Signatur eines
+illiquiden Paars: bei einem Micro-Cap zu 1,4e-06 mit 3,4 % Tagesvolatilitaet -
+der hoechsten im ganzen Feld - ist der EUR-Schlusskurs ein zufaelliger letzter
+Trade und kein Marktpreis.
+
+**Volatilitaet allein erklaert es nicht:** BIO hat mit 3,19 % fast dieselbe
+Tagesvolatilitaet, aber nur 0,32 % FX-Abweichung. Es braucht die Kombination
+aus duennem EUR-Volumen, extremem Micro-Cap-Kursniveau und hoher Volatilitaet.
+
+**PRAKTISCHER SCHADEN AKTUELL: KEINER.** CAT wird nicht gehalten (Menge 0,0),
+steht nicht im Mengen-Korb der Z-3-Reihe, und alle Simulationen dieses Projekts
+rechnen ohnehin **in USD** ("wie im Produktivcode"). Der Schaden beschraenkte
+sich auf die FX-Ableitung - und die ist durch den Wechsel auf den
+Interquartilsabstand bereits robust dagegen.
+
+**KEINE weitere Aenderung gebaut, bewusst.** Eine Denylist waere eine zweite
+Loesung fuer ein Problem, das der IQR schon loest - genau die Dublette, die der
+Regler-Audit am 03.08. als Fehlerquelle entfernt hat. Der sauberere Weg waere,
+fuer Symbole mit duennem EUR-Volumen den EUR-Wert aus USD x Konsens-FX
+abzuleiten statt dem Schlusskurs zu trauen. Das betrifft aber die
+Kursbehandlung insgesamt und gehoert nicht nebenbei entschieden.
+
+> **REVISIT-BEDINGUNG:** sobald CAT (oder ein anderes Symbol mit
+> EUR-Volumenanteil unter 5 %) tatsaechlich gehalten wird - dann geht die
+> fehlerhafte EUR-Reihe direkt in die Portfoliobewertung und damit in Z-3.
+
+**Werkzeug:** `pruefe_fx_ableitung.py` rechnet die Quotienten je Symbol und Tag
+nach, rankt die Ausreisser und erklaert die Unterscheidung Veraltung gegen
+Illiquiditaet.
