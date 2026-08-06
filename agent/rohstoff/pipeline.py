@@ -40,6 +40,7 @@ from agent.rohstoff.analyst import (
 )
 from api.cftc_cot import get_cot_snapshot
 from api.macro import get_fred_latest
+from agent.rekonstruktion import QUELLE_REKONSTRUIERT, rekonstruiere
 from api.yfinance_history import get_full_ohlc_history
 from database.models import Signal
 from indicators.calculations import build_technical_snapshot, latest_value, summarize_confluence
@@ -118,20 +119,89 @@ def _is_rohstoff_history_stale(last_date: str | None) -> bool:
     return (today - last).days > _ROHSTOFF_HISTORY_STALE_THRESHOLD_TAGE
 
 
+
+def _futures_symbol(symbol: str) -> str:
+    """Eigenes Symbol fuer die Futures-Referenzreihe - siehe
+    _ensure_ohlc_backfilled() fuer die Begruendung."""
+    return f"_ROHSTOFF_FUTURES_{symbol}"
+
+
+def _rekonstruiere_etc_reihe(conn, asset, referenz_punkte) -> None:
+    """ETC-Reihe aus der Futures-Referenz und dem aktuellen Preis (2026-08-06).
+
+    NOETIG, WEIL ES KEINE ANDERE GIBT. Der Abruf-Test vom 06.08. hat bestaetigt,
+    was YFINANCE_HISTORY_UNRELIABLE_TICKERS seit dem 20.07. festhaelt: alle vier
+    Rohstoff-ETCs liefern ueber yfinance KEINE Historie, nur einen aktuellen
+    Preis. Ohne Reihe hat eine gehaltene Position keinen Tageswert und faellt
+    aus der Portfolio-Bewertung.
+
+    VERFAHREN: die Futures-Reihe liefert die Form, der aktuelle ETC-Preis die
+    Hoehe. Gegen die echten Signal-Entries geprueft (06.08.) trifft die
+    Rekonstruktion auf -3,3 % / -1,4 % / +0,2 %, wobei die Abweichung zum
+    Ankertag hin schrumpft - das erwartete Roll- und Gebuehrendrift-Muster.
+    Zum Vergleich: die vorherige Vermischung lag um den Faktor 5,49 daneben.
+
+    GRENZE, die zu jeder Verwendung gehoert: Rollkosten und Gebuehren fehlen.
+    Bei Gold und Silber ist das klein, bei ERDGAS (OD7L) notorisch gross. Die
+    Reihe taugt fuer kurze Horizonte, nicht fuer Monate - deshalb wird sie als
+    `quelle='rekonstruiert'` markiert und ist damit ausschliessbar.
+    """
+    try:
+        snap = db.get_latest_prices(conn).get(asset.symbol)
+        anker = getattr(snap, "price_usd", None) if snap else None
+        if not anker or anker <= 0:
+            logger.info("Keine ETC-Rekonstruktion fuer %s - kein aktueller Preis als Anker",
+                        asset.symbol)
+            return
+        referenz = [{"date": p.date, "close": p.close, "high": p.high, "low": p.low}
+                    for p in referenz_punkte]
+        punkte = rekonstruiere(asset.symbol, "USD", referenz, anker_preis=anker)
+        if not punkte:
+            logger.warning("ETC-Rekonstruktion fuer %s ergab keine Punkte", asset.symbol)
+            return
+        db.upsert_ohlc_points(conn, punkte, quelle=QUELLE_REKONSTRUIERT)
+        logger.info("ETC-Reihe fuer %s rekonstruiert: %d Punkte, Anker %.4f USD "
+                    "(quelle=rekonstruiert, Rollkosten und Gebuehren NICHT enthalten)",
+                    asset.symbol, len(punkte), anker)
+    except Exception:
+        logger.exception("ETC-Rekonstruktion fuer %s fehlgeschlagen - Signal laeuft "
+                         "ohne eigene Reihe weiter", asset.symbol)
+
+
 def _ensure_ohlc_backfilled(conn, asset) -> None:
     """Fetcht die OHLC-Historie ueber den liquiden Futures-Ticker (siehe
     SYMBOL_ZU_FUTURES_TICKER-Docstring), gespeichert unter asset.symbol -
     get_full_ohlc_history()s ticker/symbol-Trennung ist genau dafuer gedacht."""
-    last_date = db.get_last_ohlc_date(conn, asset.symbol, "USD")
+    # Die Wache fragt die FUTURES-Reihe, nicht asset.symbol (2026-08-06). Unter
+    # asset.symbol liegt seit der Trennung die REKONSTRUIERTE Reihe - und vor der
+    # Trennung lag dort die alte, falsch beschriftete Futures-Historie. In beiden
+    # Faellen haette eine Wache auf asset.symbol einen frischen Stand gemeldet und
+    # den Abruf uebersprungen: die Futures-Reihe waere unter ihrem neuen Symbol nie
+    # entstanden, und die technische Analyse waere dauerhaft auf den Rueckfallpfad
+    # gelaufen. Genau die Umstellung, die der Fix bewirken soll, haette sich damit
+    # selbst blockiert.
+    last_date = db.get_last_ohlc_date(conn, _futures_symbol(asset.symbol), "USD")
     if last_date is not None and not _is_rohstoff_history_stale(last_date):
         return
     futures_ticker = SYMBOL_ZU_FUTURES_TICKER.get(asset.symbol)
     if futures_ticker is None:
         logger.warning("Kein Futures-Ticker fuer %s hinterlegt - keine technische Historie moeglich", asset.symbol)
         return
-    ohlc_points = get_full_ohlc_history(futures_ticker, asset.symbol, "USD")
+    # Die Futures-Reihe bekommt ein EIGENES Symbol (2026-08-06) - dasselbe
+    # Muster, das agent/themen_etf/pipeline.py fuer seinen SPY-Benchmark schon
+    # nutzt (_THEMEN_ETF_BENCHMARK_SPY).
+    #
+    # WARUM DAS GEAENDERT WURDE. Bis heute landete die Futures-Historie unter
+    # dem ETC-Symbol. Die Absicht war richtig - der Future hat die liquide,
+    # lueckenlose Reihe fuer die technische Analyse -, die Ablage nicht: alles
+    # Nachgelagerte hielt die Reihe fuer den ETC. Ein OD7C-Signal mit Entry
+    # 34,63 wurde gegen eine Kupfer-Futures-Reihe bei 6,30 USD/lb bewertet, was
+    # (34,63 - 6,30) / 1,37 = 20,7 R ergab - dieser eine Trade war die gesamte
+    # Evidenz der Assetklasse Rohstoffe.
+    ohlc_points = get_full_ohlc_history(futures_ticker, _futures_symbol(asset.symbol), "USD")
     if ohlc_points:
         db.upsert_ohlc_points(conn, ohlc_points)
+        _rekonstruiere_etc_reihe(conn, asset, ohlc_points)
 
 
 def _load_ohlc(conn, symbol: str):
@@ -329,7 +399,22 @@ def generate_signal(
 
     jit_refresh_ohlc(conn, asset)
     _ensure_ohlc_backfilled(conn, asset)
-    dates, closes, ohlc_history, last_date = _load_ohlc(conn, asset.symbol)
+    # TECHNISCHE ANALYSE AUF DER FUTURES-REIHE (2026-08-06). Seit der Trennung
+    # liegt unter `asset.symbol` die REKONSTRUIERTE ETC-Reihe - die traegt Roll-
+    # und Gebuehrendrift und ist fuer Indikatoren die schlechtere Grundlage. Der
+    # Future hat die liquide, lueckenlose Reihe; genau deshalb wurde er
+    # urspruenglich gewaehlt. Die ETC-Reihe dient der BEWERTUNG (Portfolio-Wert,
+    # Outcome), nicht der Analyse.
+    #
+    # Rueckfall auf die ETC-Reihe, falls die Futures-Reihe fehlt - dann ist eine
+    # driftbehaftete Analyse besser als gar keine, und der Fall ist im Log
+    # sichtbar.
+    dates, closes, ohlc_history, last_date = _load_ohlc(conn, _futures_symbol(asset.symbol))
+    if last_date is None:
+        dates, closes, ohlc_history, last_date = _load_ohlc(conn, asset.symbol)
+        if last_date is not None:
+            logger.warning("Keine Futures-Reihe fuer %s - technische Analyse laeuft auf der "
+                           "rekonstruierten ETC-Reihe (driftbehaftet)", asset.symbol)
     latest_prices = db.get_latest_prices(conn)
     price_snap = latest_prices.get(asset.symbol)
     # Deterministische EUR-Ableitung (2026-07-27, Grundsatzfix Teil 2) - gleiches

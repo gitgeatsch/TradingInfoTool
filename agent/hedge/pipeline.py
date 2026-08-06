@@ -31,6 +31,7 @@ from agent.krypto.gegenpruefung import (
     fuehre_beide_calls_im_hintergrund,
     richtung_aus_action,
 )
+from agent.rekonstruktion import QUELLE_REKONSTRUIERT, rekonstruiere
 from api.yfinance_history import get_full_ohlc_history
 from agent.krypto.llm_provider import llm_model_label
 from agent.krypto.makro_analog import get_cached_makro_analog_fact
@@ -299,6 +300,73 @@ def _post_check_hedge(
 # bewerten zu koennen.
 _HEDGE_HISTORY_STALE_THRESHOLD_TAGE = 3
 
+# Referenzindizes fuer die Rekonstruktion (2026-08-06).
+SYMBOL_ZU_INDEX_TICKER = {
+    "DBPK": "^GSPC",   # S&P 500
+    "3QSS": "^NDX",    # Nasdaq-100
+}
+_INDEX_SYMBOL_PRAEFIX = "_HEDGE_INDEX_"
+
+
+def _rekonstruiere_hedge_reihe(conn, asset) -> None:
+    """Reihe fuer ein Hedge-Instrument ohne abrufbare Historie (3QSS).
+
+    VERFAHREN: taegliche Rendite = -faktor x Indexrendite, TAG FUER TAG
+    VERKETTET. Die Verkettung ist nicht optional: ein taeglich zuruecksetzendes
+    Produkt bildet das Faktor-fache der TAGESrendite ab, nicht der
+    Gesamtrendite. Der Unterschied ist der Volatilitaets-Drag - schwankt der
+    Index +10 %/-10 % im Wechsel, verliert ein 3x-Short trotz seitwaerts
+    laufendem Index. An einem konstruierten Fall geprueft: naive Hochrechnung
+    haette +5,97 % gesagt, die Verkettung liefert -17,19 %.
+
+    Genau deshalb hat der Modul-Docstring diese Rekonstruktion bisher gemieden -
+    sie braucht die korrekte Rebalancing-Simulation, sonst erzeugt sie selbst
+    falsche Werte. Die ist jetzt in agent/rekonstruktion.py gebaut und getestet.
+
+    GRENZE: Gebuehren und Swap-Kosten fehlen, und 3QSS notiert in EUR waehrend
+    der Nasdaq-100 in USD laeuft - die FX-Bewegung ist in der Reihe nicht
+    enthalten. Beides wirkt ueber laengere Zeitraeume zu optimistisch. Die
+    Reihe ist als `quelle='rekonstruiert'` markiert und dient der BEWERTUNG,
+    nicht der technischen Analyse (die bleibt fuer Hedge-Instrumente bewusst
+    ausgeschlossen, siehe Modul-Docstring).
+    """
+    ticker = SYMBOL_ZU_INDEX_TICKER.get(asset.symbol)
+    faktor = SYMBOL_ZU_HEBEL_FAKTOR.get(asset.symbol)
+    if not ticker or not faktor:
+        logger.info("Keine Rekonstruktion fuer %s - kein Referenzindex hinterlegt", asset.symbol)
+        return
+    try:
+        index_symbol = f"{_INDEX_SYMBOL_PRAEFIX}{asset.symbol}"
+        punkte_index = get_full_ohlc_history(ticker, index_symbol, "USD")
+        if punkte_index:
+            db.upsert_ohlc_points(conn, punkte_index)
+        else:
+            punkte_index = db.get_ohlc_history(conn, index_symbol, "USD")
+        if len(punkte_index) < 2:
+            logger.warning("Keine Indexreihe (%s) fuer %s - Rekonstruktion nicht moeglich",
+                           ticker, asset.symbol)
+            return
+        snap = db.get_latest_prices(conn).get(asset.symbol)
+        anker = getattr(snap, "price_eur", None) if snap else None
+        if not anker or anker <= 0:
+            logger.info("Keine Rekonstruktion fuer %s - kein aktueller Preis als Anker",
+                        asset.symbol)
+            return
+        referenz = [{"date": p.date, "close": p.close, "high": p.high, "low": p.low}
+                    for p in punkte_index]
+        punkte = rekonstruiere(asset.symbol, "EUR", referenz, anker_preis=anker,
+                               faktor=float(faktor), invers=True)
+        if not punkte:
+            logger.warning("Rekonstruktion fuer %s ergab keine Punkte", asset.symbol)
+            return
+        db.upsert_ohlc_points(conn, punkte, quelle=QUELLE_REKONSTRUIERT)
+        logger.info("Hedge-Reihe fuer %s rekonstruiert: %d Punkte aus %s, Faktor %.1fx invers, "
+                    "Anker %.4f EUR (quelle=rekonstruiert, Gebuehren und FX NICHT enthalten)",
+                    asset.symbol, len(punkte), ticker, faktor, anker)
+    except Exception:
+        logger.exception("Rekonstruktion fuer %s fehlgeschlagen - Signal laeuft ohne Reihe weiter",
+                         asset.symbol)
+
 
 def _ensure_ohlc_backfilled(conn, asset) -> None:
     """Fail-soft: schlaegt der Abruf fehl, laeuft das Signal ohne Historie
@@ -306,6 +374,16 @@ def _ensure_ohlc_backfilled(conn, asset) -> None:
     if not getattr(asset, "yfinance_symbol", None):
         return
     try:
+        # Eine REKONSTRUIERTE Reihe faellt nicht unter die Staleness-Wache
+        # (2026-08-06). Sie haengt an einem Ankerpreis, der sich jeden Tag
+        # bewegt; wuerde die Wache greifen, bliebe die Reihe bis zum Ablauf der
+        # Frist auf einem alten Anker stehen - und weil ihr letzter Tag mit dem
+        # Index mitwaechst, wuerde die Frist nie ablaufen. Der Direktabruf wird
+        # in diesem Fall uebersprungen (er ist bei diesen Tickern nachweislich
+        # leer), die Rekonstruktion laeuft dafuer bei jedem Lauf neu.
+        if db.get_ohlc_quelle_letzter_punkt(conn, asset.symbol, "EUR") == QUELLE_REKONSTRUIERT:
+            _rekonstruiere_hedge_reihe(conn, asset)
+            return
         letztes = db.get_last_ohlc_date(conn, asset.symbol, "EUR")
         if letztes is not None:
             alter = (datetime.now(timezone.utc).date()
@@ -318,9 +396,7 @@ def _ensure_ohlc_backfilled(conn, asset) -> None:
             logger.info("Hedge-OHLC fuer %s (%s): %d Punkte nachgeladen",
                         asset.symbol, asset.yfinance_symbol, len(punkte))
         else:
-            logger.info("Hedge-OHLC fuer %s (%s): keine Historie abrufbar - "
-                        "Rekonstruktion aus dem Referenzindex waere der naechste Schritt",
-                        asset.symbol, asset.yfinance_symbol)
+            _rekonstruiere_hedge_reihe(conn, asset)
     except Exception:
         logger.exception("Hedge-OHLC-Nachladen fuer %s fehlgeschlagen - "
                          "Signal laeuft ohne Historie weiter", asset.symbol)

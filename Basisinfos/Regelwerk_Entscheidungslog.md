@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (179 Einträge)
+## Index nach Thema (180 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -109,7 +109,9 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-05** — `halte_kriterium` erstmals ausgewertet - kein Trennnachweis, zwei strukturelle Maengel
 - **2026-08-06** — Die drei neuen Fakten sind im Betrieb ANGEKOMMEN (22/22) - Verifikation abgeschlossen, Zaehler-Fehler behoben
 
-### Datenquellen / APIs (18)
+### Datenquellen / APIs (19)
+
+- **2026-08-06** — Rekonstruktion der fehlenden Kursreihen (Rohstoffe/3QSS/DBPK) + Scheinwert von 51.000 EUR gefunden - zwei Defekte, die sich gegenseitig verdeckt haben
 
 - **2026-07-18** — Historischer Makro-Konstellationsvergleich umgesetzt
 - **2026-07-18** — VIX-Frühindikator als beschreibender Fakt
@@ -12868,3 +12870,143 @@ Kursbehandlung insgesamt und gehoert nicht nebenbei entschieden.
 **Werkzeug:** `pruefe_fx_ableitung.py` rechnet die Quotienten je Symbol und Tag
 nach, rankt die Ausreisser und erklaert die Unterscheidung Veraltung gegen
 Illiquiditaet.
+
+
+---
+
+## Nachtrag (2026-08-06): Rekonstruktion der fehlenden Kursreihen - und der Scheinwert von 51.000 EUR, den erst der FX-Fix gefaehrlich gemacht haette
+
+**AUFTRAG:** Rekonstruktion fuer Rohstoffe und 3QSS bauen (Phase A des
+Nicht-Krypto-Umbauplans), danach Zwischenbilanz fuer die uebrigen Klassen.
+
+### Was gebaut wurde
+
+`agent/rekonstruktion.py` - EIN Verfahren fuer beide Faelle: eine Referenzreihe
+liefert die Form, ein Ankerpreis die Hoehe.
+
+    ETC (ungehebelt):  wert[t] = anker x (referenz[t] / referenz[anker_tag])
+    Hebelprodukt:      taegliche Rendite = -faktor x Referenzrendite, VERKETTET
+
+**Die Verkettung ist nicht optional.** Ein taeglich zuruecksetzendes Produkt
+bildet das Faktor-fache der TAGESrendite ab, nicht der Gesamtrendite - der
+Unterschied ist der Volatilitaets-Drag. Am konstruierten Fall gemessen: Index
+-1,99 %, naive Hochrechnung **+5,97 %**, Verkettung **-17,19 %**. An echten
+^NDX-Daten: Index +0,48 % ueber 30 Handelstage, 3QSS -5,69 %, naiv waere -1,44 %.
+
+**Fenster auf 520 Handelstage begrenzt.** ^NDX reicht bis 1985 zurueck; ohne
+Grenze haette die 3QSS-Reihe dort bei **4,7e+14 EUR** begonnen. Die Grenze ist
+kein Sparzwang - die nicht modellierte Drift (Roll, Gebuehren, FX) akkumuliert
+mit jedem Tag rueckwaerts, und die Reihen taugen ohnehin nur fuer kurze
+Horizonte.
+
+**Verdrahtung:**
+- Rohstoffe: Futures unter `_ROHSTOFF_FUTURES_<SYM>`, rekonstruierter ETC unter
+  dem echten Symbol. Die technische Analyse liest weiterhin den **Future** -
+  die rekonstruierte Reihe traegt Drift und ist fuer Indikatoren die
+  schlechtere Grundlage. Rueckfall auf die ETC-Reihe nur, wenn die Futures-Reihe
+  fehlt, und dann mit Warnung.
+- Hedge: 3QSS aus `^NDX` (3x invers), DBPK aus `^GSPC` (2x invers), verankert am
+  aktuellen `fast_info`-Preis. **Die dokumentierte Entscheidung gegen
+  Einzeltitel-Technikanalyse fuer Hedges bleibt unberuehrt** - die Reihe dient
+  ausschliesslich der Bewertung.
+- `quelle`-Spalte in `price_history_ohlc` (additiv, idempotent, Standard
+  `gemessen`), damit eine rekonstruierte Reihe nie wie eine gemessene aussieht.
+
+### Der Fund, der beim Verifizieren auffiel
+
+**OD7H trug 4.215,90 USD statt 18,22 EUR** - das ist der Gold-Future je
+Feinunze, abgelegt unter dem ETC-Symbol.
+
+| Symbol | laut Reihe | echt | Differenz |
+|---|---:|---:|---:|
+| OD7H | 51.059 EUR | 255 EUR | **-50.803** |
+| OD7N | 670 | 551 | -120 |
+| OD7C | 30 | 156 | +126 |
+| OD7L | 100 | 169 | +69 |
+| 3QSS | 0 | 315 | +315 |
+| DBPK | 0 | 230 | +230 |
+| **Summe** | **51.859** | **1.676** | **-50.182** |
+
+Gemeldeter Portfoliowert am 06.08.: **6.180 EUR**.
+
+### WARUM DAS BISHER FOLGENLOS BLIEB - und warum genau das das Problem ist
+
+Der Scheinwert lief **nicht** in die Bewertung ein, weil ein ZWEITER Defekt ihn
+abfing: die FX-Ableitung wurde an praktisch jedem Tag verworfen, und ohne
+Wechselkurs faellt jedes USD-Symbol aus der Bewertung. Am Export nachgerechnet:
+
+| Streuungsmass | angenommene Tage |
+|---|---|
+| Spannweite max-min (alt) | **4 von 91** |
+| Interquartilsabstand (neu) | **91 von 91** |
+| Spannweite ohne CAT | 18 von 91 |
+
+Die letzte Zeile **korrigiert den Vorbefund von heute frueh**: CAT war der
+schlimmste Ausreisser, aber nicht die Ursache - das Streuungsmass selbst war es.
+
+**Daraus folgt die zentrale Erkenntnis:** der FX-Fix ALLEIN waere schaedlich
+gewesen. Er holt die USD-Symbole zurueck in die Bewertung - und damit 51.000 EUR
+Scheinvermoegen in ein Portfolio von 6.180 EUR. Z-3, jede Allokationsquote und
+jede Prozentregel waeren unbrauchbar geworden, und zwar mit plausibel
+aussehenden Zahlen.
+
+> **UEBERGREIFENDE LEHRE:** zwei Defekte, die sich gegenseitig verdecken, sehen
+> im Betrieb wie EIN Defekt aus. Wer einen davon behebt, verschlimmert die Lage.
+> Vor jedem Einzelfix gehoert deshalb die Frage: *was hat diesen Fehler bisher
+> unsichtbar gehalten, und was passiert, wenn ich dieses Etwas entferne?*
+
+### Zwei Sicherungen, die daraufhin dazukamen
+
+**1. Datenmigration beim Start** (`database/db.py::
+_migrate_rohstoff_futures_reihen_umziehen()`). Haengt die falsch abgelegten
+Zeilen auf `_ROHSTOFF_FUTURES_<SYM>` um - kein Datenverlust, dort sind sie genau
+das, was sie immer waren. **Beim Start und nicht erst beim naechsten
+Pipeline-Lauf**, weil sonst die Reihenfolge der Cron-Jobs darueber entscheidet,
+ob der Portfolio-Job den Scheinwert sieht. Idempotent: laeuft nur, solange das
+Zielsymbol leer ist.
+
+**2. Plausibilitaetsfilter in der Bewertung** (`agent/portfolio_historie.py::
+_verwerfe_unplausible_reihen()`). Vergleicht den juengsten Reihenwert mit dem
+aktuellen Snapshot-Preis derselben Waehrung; Faktor > 3 bedeutet "zwei
+verschiedene Instrumente". Das Symbol wird dann KOMPLETT aus der Bewertung
+genommen und faellt in "Symbole ohne Kurs" - sichtbar statt still falsch.
+
+**Zwei bewusste Einschraenkungen des Filters:**
+- Ohne Snapshot-Preis wird nicht verworfen. Fehlende Gegenprobe ist kein Beleg.
+- Eine Reihe, deren juengster Punkt aelter als 5 Tage ist, wird nicht geprueft.
+  Eine grosse Bewegung ueber eine Datenluecke ist eine Kursbewegung, kein
+  Etikettenfehler - bei kleinen Coins ist Faktor 3 in zwei Wochen normal.
+
+**Verworfen: eine Denylist fuer betroffene Symbole.** Waere eine zweite Loesung
+fuer ein Problem, das die Migration schon loest - genau die Dublette, die der
+Regler-Audit am 03.08. als Fehlerquelle entfernt hat.
+
+### Testung
+
+30 Pruefungen, alle bestanden, ausschliesslich gegen temporaere Datenbanken:
+Verdrahtung beider Pipelines (12), Migration und Filter (14 inkl. Grenzfaelle
+Faktor 2,99/3,01 und Veraltung), Robustheit (3), plus ein Regressionslauf gegen
+eine Kopie der lokalen DB (85.280 OHLC-Zeilen vorher wie nachher, FX-Tage
+verworfen: 0).
+
+### Was daraus fuer die anderen Klassen folgt
+
+**Aktien und Themen-ETF hatten nie einen Datendefekt** - sie fielen ueber
+DENSELBEN FX-Bruch aus der Bewertung wie die Rohstoffe. Ihre Bewertung ist
+heute mitrepariert, ohne dass an ihnen etwas geaendert wurde. Wer nur fragt
+"welche Klasse war kaputt", verpasst das.
+
+**Hedge braucht zusaetzlich eine eigene Erfolgsdefinition** (D-d): ein Hedge,
+der Geld verliert waehrend das Portfolio steigt, hat funktioniert. Solange
+Hedge-Signale nach derselben Systemguete gemessen werden wie Long-Signale, ist
+das Ergebnis garantiert negativ und garantiert bedeutungslos. Das gehoert VOR
+die erste Hedge-Auswertung.
+
+**Erwartete Werte nach dem Pull** (vorab falsifizierbar): Portfoliowert +~1.700
+EUR, "Symbole ohne Kurs" von 19 auf <= 4, Z-3-Rueckschlag **sinkt**,
+Rohstoff-Systemguete verliert den +20,5-R-Ausreisser und hat damit **null**
+ausgewertete Trades statt einer erfundenen Kante.
+
+**Werkzeuge:** `agent/rekonstruktion.py` (Verfahren + `ankertag_abweichung()`
+als Pflicht-Pruefgroesse). Details und offene Punkte: `Basisinfos/
+Plan_Nicht_Krypto_Umbau_06_08.md`, Abschnitt "Zwischenbilanz".

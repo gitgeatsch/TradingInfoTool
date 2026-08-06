@@ -51,7 +51,7 @@ import json
 import logging
 import sqlite3
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import config
 import database.db as db
@@ -105,6 +105,25 @@ MAX_FX_SPANNWEITE_RELATIV = MAX_FX_STREUUNG_RELATIV
 # die kleinste ECHTE Position lag um viele Groessenordnungen darueber.
 MIN_MENGE_REAL = 1e-8
 
+# Ab welchem Verhaeltnis zwischen dem juengsten Reihenwert und dem aktuellen
+# Snapshot-Preis gilt eine Kursreihe als "gehoert nicht zu diesem Symbol"?
+#
+# WARUM ES DIESE PRUEFUNG BRAUCHT (Fund 06.08.). Die Rohstoff-Pipeline legte
+# die FUTURES-Historie unter dem ETC-Symbol ab. OD7H (WisdomTree Gold) trug
+# dadurch den Gold-Future-Kurs von 4.215,90 USD statt der echten 18,22 EUR -
+# bei 14,02 gehaltenen Einheiten ein Scheinvermoegen von rund 51.000 EUR in
+# einem Portfolio von 6.180 EUR. Sichtbar wurde das nur, weil die FX-Ableitung
+# gleichzeitig kaputt war und alle USD-Symbole aus der Bewertung fielen. Mit
+# dem FX-Fix allein waere der Scheinwert in die Bewertung eingelaufen und
+# haette Z-3, jede Allokationsquote und jede Prozentregel unbrauchbar gemacht.
+#
+# Die Pruefung ist bewusst grob: Faktor 3 trennt "falsches Instrument" sicher
+# von "Kurs hat sich bewegt". Ein Symbol, das sie reisst, wird KOMPLETT aus der
+# Bewertung genommen - es faellt dann in "Symbole ohne Kurs" und ist damit
+# sichtbar, statt still einen falschen Wert beizusteuern.
+MAX_ABWEICHUNG_REIHE_ZU_SNAPSHOT = 3.0
+MAX_ALTER_FUER_PLAUSIBILITAET_TAGE = 5
+
 
 @dataclass
 class SymbolDiagnose:
@@ -140,6 +159,7 @@ class RekonstruktionsErgebnis:
     tageswerte: list[tuple[str, float, int, int]] = field(default_factory=list)
     symbol_diagnosen: list[SymbolDiagnose] = field(default_factory=list)
     fx_tage_verworfen: list[str] = field(default_factory=list)
+    reihen_verworfen: list[str] = field(default_factory=list)
 
     @property
     def problemfaelle(self) -> list[SymbolDiagnose]:
@@ -278,6 +298,57 @@ def _eur_kurse_je_symbol(
     return direkt, usd
 
 
+def _verwerfe_unplausible_reihen(
+    conn: sqlite3.Connection,
+    direkt: dict[str, dict[str, float]],
+    usd_roh: dict[str, dict[str, float]],
+) -> list[str]:
+    """Kursreihen aussortieren, die nicht zum Symbol gehoeren koennen.
+
+    Verglichen wird der JUENGSTE Reihenwert mit dem aktuellen Snapshot-Preis
+    derselben Waehrung - beide beschreiben dasselbe Instrument am selben Tag.
+    Liegen sie um mehr als MAX_ABWEICHUNG_REIHE_ZU_SNAPSHOT auseinander,
+    beschreiben sie zwei verschiedene Instrumente. Siehe die Konstante fuer den
+    Fall, der diese Pruefung ausgeloest hat.
+
+    Ohne Snapshot-Preis wird NICHT verworfen: fehlende Gegenprobe ist kein
+    Beleg fuer einen Fehler. Dasselbe gilt fuer eine VERALTETE Reihe: liegt ihr
+    juengster Punkt Tage zurueck, ist ein grosser Abstand zum heutigen Preis
+    eine echte Kursbewegung und kein Etikettenfehler - bei kleinen Coins sind
+    Faktor 3 ueber zwei Wochen nichts Besonderes. Die Pruefung zielt auf eine
+    LAUFENDE Reihe, die zum falschen Instrument gehoert; nur dort ist der
+    Vergleich mit dem heutigen Preis ueberhaupt aussagekraeftig."""
+    snapshots = db.get_latest_prices(conn)
+    juengster_erlaubt = (datetime.now(timezone.utc).date()
+                         - timedelta(days=MAX_ALTER_FUER_PLAUSIBILITAET_TAGE)).isoformat()
+    verworfen: list[str] = []
+    for reihe, feld, waehrung in ((direkt, "price_eur", "EUR"), (usd_roh, "price_usd", "USD")):
+        for symbol in list(reihe):
+            snap = snapshots.get(symbol)
+            aktuell = getattr(snap, feld, None) if snap else None
+            werte = reihe[symbol]
+            if not aktuell or aktuell <= 0 or not werte:
+                continue
+            letzter_tag = max(werte)
+            if letzter_tag < juengster_erlaubt:
+                continue
+            juengster = werte[letzter_tag]
+            if juengster <= 0:
+                continue
+            verhaeltnis = max(juengster / aktuell, aktuell / juengster)
+            if verhaeltnis > MAX_ABWEICHUNG_REIHE_ZU_SNAPSHOT:
+                logger.warning(
+                    "Kursreihe %s (%s) verworfen: juengster Reihenwert %.4f, aktueller "
+                    "Preis %.4f - Faktor %.1f. Die Reihe gehoert nicht zu diesem "
+                    "Instrument; das Symbol wird als 'ohne Kurs' gefuehrt statt falsch "
+                    "bewertet.",
+                    symbol, waehrung, juengster, aktuell, verhaeltnis,
+                )
+                del reihe[symbol]
+                verworfen.append(f"{symbol} ({waehrung}, Faktor {verhaeltnis:.1f})")
+    return verworfen
+
+
 def rekonstruiere_stichtag(
     conn: sqlite3.Connection,
     *,
@@ -317,6 +388,7 @@ def rekonstruiere_stichtag(
     direkt, usd_roh = _eur_kurse_je_symbol(
         conn, symbole - cash_aequivalente, ab_datum, coingecko_ids
     )
+    reihen_verworfen = _verwerfe_unplausible_reihen(conn, direkt, usd_roh)
     fx, fx_verworfen = tages_fx_kurse(conn)
 
     # Handelstage aus den vorhandenen Kursen ableiten statt einen Kalender zu
@@ -329,7 +401,8 @@ def rekonstruiere_stichtag(
     )
 
     diagnosen = {s: SymbolDiagnose(symbol=s, menge=mengen[s]) for s in symbole}
-    ergebnis = RekonstruktionsErgebnis(fx_tage_verworfen=fx_verworfen)
+    ergebnis = RekonstruktionsErgebnis(fx_tage_verworfen=fx_verworfen,
+                                       reihen_verworfen=reihen_verworfen)
 
     for tag in tage:
         wert = 0.0

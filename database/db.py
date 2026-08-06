@@ -87,6 +87,14 @@ CREATE TABLE IF NOT EXISTS price_history_ohlc (
     close           REAL NOT NULL,
     volume          REAL NOT NULL,
     fetched_at      TEXT NOT NULL,
+    -- Herkunft der Zeile (2026-08-06). 'gemessen' = echter Kursabruf,
+    -- 'rekonstruiert' = aus einer Referenzreihe abgeleitet, weil fuer dieses
+    -- Instrument keine Historie abrufbar ist (siehe agent/rekonstruktion.py).
+    -- Rekonstruierte Reihen tragen Roll- und Gebuehrendrift und taugen nur fuer
+    -- kurze Horizonte - ohne diese Spalte waere das nicht unterscheidbar, und
+    -- genau solche stillen Naeherungen haben in diesem Projekt schon mehrfach
+    -- falsche Kennzahlen erzeugt.
+    quelle          TEXT NOT NULL DEFAULT 'gemessen',
     PRIMARY KEY (symbol, currency, date)
 );
 
@@ -1291,6 +1299,8 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_hebel_signal_selbst_halten_columns(conn)
     _migrate_hebel_signal_atr_column(conn)
     _migrate_hebel_signal_angefragte_richtung_column(conn)
+    _migrate_price_history_ohlc(conn)
+    _migrate_rohstoff_futures_reihen_umziehen(conn)
     import_holdings_manual_overrides(conn)
 
 
@@ -1813,16 +1823,92 @@ def mark_ohlc_backfilled(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
-def upsert_ohlc_points(conn: sqlite3.Connection, points: list[OhlcPoint]) -> None:
+def _migrate_price_history_ohlc(conn: sqlite3.Connection) -> None:
+    """Additiv und idempotent (2026-08-06): `quelle` unterscheidet echte
+    Kursabrufe von rekonstruierten Reihen. DEFAULT haelt bestehende Zeilen
+    konsistent - alles, was vor dieser Migration geschrieben wurde, IST ein
+    echter Abruf."""
+    vorhanden = {r["name"] for r in conn.execute("PRAGMA table_info(price_history_ohlc)")}
+    if "quelle" not in vorhanden:
+        conn.execute("ALTER TABLE price_history_ohlc ADD COLUMN quelle TEXT NOT NULL DEFAULT 'gemessen'")
+        conn.commit()
+
+
+def _migrate_rohstoff_futures_reihen_umziehen(conn: sqlite3.Connection) -> None:
+    """Einmalig: falsch unter dem ETC-Symbol abgelegte Futures-Historie an ihren
+    richtigen Platz umziehen (2026-08-06).
+
+    WAS SCHIEF WAR. agent/rohstoff/pipeline.py holte die OHLC-Historie ueber den
+    liquiden Futures-Ticker (GC=F, SI=F, HG=F, NG=F) und legte sie UNTER DEM
+    ETC-SYMBOL ab. Die Absicht war richtig - der Future hat die saubere Reihe
+    fuer die technische Analyse -, die Ablage nicht: alles Nachgelagerte hielt
+    die Reihe fuer den ETC. OD7H trug dadurch 4.215,90 USD (Gold-Future je
+    Feinunze) statt der echten 18,22 EUR.
+
+    WARUM DAS NICHT WARTEN KANN. Die Zeilen sind nicht bloss unschoen, sie sind
+    im selben Auslieferungsstand GEFAEHRLICH: der FX-Fix vom selben Tag holt die
+    USD-Symbole zurueck in die Portfolio-Bewertung. Ohne diesen Umzug liefe der
+    Gold-Future-Kurs mal 14,02 Einheiten als rund 51.000 EUR Scheinvermoegen in
+    ein Portfolio von 6.180 EUR ein - und Z-3, jede Allokationsquote und jede
+    Prozentregel waeren unbrauchbar, bis die Rohstoff-Pipeline das naechste Mal
+    laeuft. Die Reihenfolge der Jobs darf darueber nicht entscheiden.
+
+    KEIN DATENVERLUST: die Zeilen werden UMGEHAENGT, nicht geloescht - unter
+    _ROHSTOFF_FUTURES_<SYM> sind sie genau das, was sie immer waren, und die
+    technische Analyse liest sie dort weiter. Unter dem ETC-Symbol entsteht eine
+    Luecke, die der naechste Pipeline-Lauf mit der rekonstruierten Reihe fuellt.
+    Bis dahin gilt das Symbol als "ohne Kurs" - sichtbar statt falsch.
+
+    IDEMPOTENT: laeuft nur, solange das Zielsymbol leer ist. Ab dem ersten
+    Pipeline-Lauf schreibt die Pipeline selbst dorthin, danach ist die Migration
+    ein No-op.
+    """
+    ziel_praefix = "_ROHSTOFF_FUTURES_"
+    for symbol in ("OD7N", "OD7H", "OD7C", "OD7L"):
+        ziel = f"{ziel_praefix}{symbol}"
+        schon_da = conn.execute(
+            "SELECT 1 FROM price_history_ohlc WHERE symbol = ? LIMIT 1", (ziel,)
+        ).fetchone()
+        if schon_da:
+            continue
+        anzahl = conn.execute(
+            "SELECT COUNT(*) AS n FROM price_history_ohlc WHERE symbol = ?", (symbol,)
+        ).fetchone()["n"]
+        if not anzahl:
+            continue
+        conn.execute(
+            "UPDATE price_history_ohlc SET symbol = ? WHERE symbol = ?", (ziel, symbol)
+        )
+        conn.commit()
+        logger.warning(
+            "Migration: %d Kurspunkte von %s nach %s umgehaengt - das war die "
+            "Futures-Reihe, nicht der ETC. %s hat bis zum naechsten Pipeline-Lauf "
+            "keine eigene Reihe.", anzahl, symbol, ziel, symbol,
+        )
+
+
+def upsert_ohlc_points(conn: sqlite3.Connection, points: list[OhlcPoint],
+                       quelle: str = "gemessen") -> None:
+    """`quelle` markiert die Herkunft (2026-08-06). Standard 'gemessen' -
+    bestehende Aufrufer bleiben unveraendert korrekt, denn alles was bisher hier
+    ankam WAR ein echter Abruf.
+
+    WICHTIG beim Konflikt-Update: `quelle` wird MITGESCHRIEBEN. Wird eine
+    rekonstruierte Zeile spaeter durch einen echten Abruf ersetzt, muss die
+    Markierung mitwandern - sonst bliebe eine gemessene Zeile faelschlich als
+    rekonstruiert stehen (oder umgekehrt, was schlimmer waere)."""
+    _migrate_price_history_ohlc(conn)
     conn.executemany(
         "INSERT INTO price_history_ohlc "
-        "(symbol, currency, date, open, high, low, close, volume, fetched_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "
+        "(symbol, currency, date, open, high, low, close, volume, fetched_at, quelle) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
         "ON CONFLICT(symbol, currency, date) DO UPDATE SET "
         "open = excluded.open, high = excluded.high, low = excluded.low, "
-        "close = excluded.close, volume = excluded.volume, fetched_at = excluded.fetched_at",
+        "close = excluded.close, volume = excluded.volume, "
+        "fetched_at = excluded.fetched_at, quelle = excluded.quelle",
         [
-            (p.symbol, p.currency, p.date, p.open, p.high, p.low, p.close, p.volume, p.fetched_at)
+            (p.symbol, p.currency, p.date, p.open, p.high, p.low, p.close,
+             p.volume, p.fetched_at, quelle)
             for p in points
         ],
     )
@@ -1854,6 +1940,19 @@ def get_last_ohlc_date(conn: sqlite3.Connection, symbol: str, currency: str) -> 
         (symbol, currency),
     ).fetchone()
     return row["max_date"] if row else None
+
+
+def get_ohlc_quelle_letzter_punkt(conn: sqlite3.Connection, symbol: str,
+                                  currency: str) -> str | None:
+    """Herkunft des juengsten Punktes einer Reihe ("gemessen"/"rekonstruiert",
+    None wenn es die Reihe nicht gibt). Aufrufer, die eine rekonstruierte Reihe
+    anders behandeln muessen als eine gemessene, fragen hier (2026-08-06)."""
+    row = conn.execute(
+        "SELECT quelle FROM price_history_ohlc WHERE symbol = ? AND currency = ? "
+        "ORDER BY date DESC LIMIT 1",
+        (symbol, currency),
+    ).fetchone()
+    return row["quelle"] if row else None
 
 
 _MACRO_SNAPSHOT_COLUMNS = (

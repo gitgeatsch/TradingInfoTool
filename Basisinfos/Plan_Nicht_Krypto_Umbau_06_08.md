@@ -206,3 +206,145 @@ erst *messbar* — heute ist es das nicht.
 **Heute machbar und sinnvoll: A1, A2 und die vollständige Abnahme B.** Das ist
 der Teil, der die Klassen von „erzeugt falsche Zahlen" auf „erzeugt korrekte
 oder gar keine" bringt — und genau das ist mit „stabile Beine" gemeint.
+
+
+---
+
+# Zwischenbilanz (06.08., nach Phase A)
+
+## 1. Was gebaut und belegt ist
+
+| Baustein | Zustand | Beleg |
+|---|---|---|
+| `agent/rekonstruktion.py` | fertig | 6 Testgruppen, 0 Fehler; Drag-Fall: Index −1,99 %, naiv +5,97 %, verkettet **−17,19 %** |
+| Rohstoff-Reihen getrennt | verdrahtet | Futures unter `_ROHSTOFF_FUTURES_<SYM>`, ETC rekonstruiert, TA liest den Future |
+| 3QSS/DBPK rekonstruiert | verdrahtet | aus `^NDX`/`^GSPC`, 3× bzw. 2× invers, täglich neu verankert |
+| `quelle`-Spalte | fertig | additive, idempotente Migration; Standard `gemessen` |
+| Datenmigration der Altzeilen | fertig | hängt falsch abgelegte Futures-Historie um, ohne Datenverlust |
+| Plausibilitätsfilter Bewertung | fertig | verwirft eine laufende Reihe, die um Faktor > 3 vom Snapshot abweicht |
+| Tests | 30 Prüfungen, alle bestanden | zwei Suiten gegen temporäre DBs, plus Regressionslauf auf einer DB-Kopie |
+
+**Abnahme A2 Punkt 3 erfüllt:** Ankertagsabweichung exakt 0 — an echten Daten
+gemessen (^NDX, 520 Punkte).
+
+## 2. Der eigentliche Fund — größer als der Anlass
+
+Beim Verifizieren, nicht beim Suchen: **OD7H trug 4.215,90 USD statt 18,22 EUR.**
+Das ist der Gold-Future je Feinunze, abgelegt unter dem ETC-Symbol.
+
+| Symbol | Wert laut Reihe | echter Wert | Differenz |
+|---|---:|---:|---:|
+| OD7H | 51.059 € | 255 € | **−50.803 €** |
+| OD7N | 670 € | 551 € | −120 € |
+| OD7C | 30 € | 156 € | +126 € |
+| OD7L | 100 € | 169 € | +69 € |
+| 3QSS | 0 € | 315 € | +315 € |
+| DBPK | 0 € | 230 € | +230 € |
+| **Summe** | **51.859 €** | **1.676 €** | **−50.182 €** |
+
+Zum Vergleich: der gemeldete Portfoliowert beträgt **6.180 €**.
+
+### Warum das bisher nicht aufgefallen ist — und warum genau das gefährlich war
+
+Der Scheinwert lief **nicht** in die Bewertung ein, weil ein *zweiter* Defekt ihn
+zufällig abfing: die FX-Ableitung wurde an praktisch jedem Tag verworfen, und
+ohne Wechselkurs fällt jedes USD-Symbol aus der Bewertung. Am Export vom 06.08.
+nachgerechnet:
+
+| Streuungsmaß | angenommene Tage |
+|---|---|
+| Spannweite max−min (alt) | **4 von 91** |
+| Interquartilsabstand (neu) | **91 von 91** |
+| Spannweite ohne CAT | 18 von 91 |
+
+Die letzte Zeile korrigiert eine frühere Vermutung: CAT war der schlimmste
+Ausreißer, aber **nicht** die Ursache — das Streuungsmaß selbst war es.
+
+**Daraus folgt die wichtigste Erkenntnis des Tages:** der FX-Fix allein wäre
+schädlich gewesen. Er holt die USD-Symbole zurück in die Bewertung — und hätte
+damit 51.000 € Scheinvermögen in ein 6.180-€-Portfolio geholt. Z-3, jede
+Allokationsquote und jede Prozentregel wären unbrauchbar geworden.
+
+Deshalb sind **drei** Dinge im selben Auslieferungsstand, und sie gehören
+zusammen:
+
+1. FX-Ableitung robust (IQR statt Spannweite)
+2. Datenmigration der falsch abgelegten Zeilen — **beim Start**, nicht erst beim
+   nächsten Pipeline-Lauf, damit die Reihenfolge der Jobs nicht darüber entscheidet
+3. Plausibilitätsfilter als dauerhaftes Netz für den nächsten Fall dieser Art
+
+> **Lehre, allgemein:** zwei Defekte, die sich gegenseitig verdecken, sehen im
+> Betrieb wie „nur ein Defekt" aus. Wer einen davon behebt, verschlimmert die
+> Lage. Vor jedem Einzelfix gehört deshalb die Frage: *was hat diesen Fehler
+> bisher unsichtbar gehalten, und was passiert, wenn ich dieses Etwas entferne?*
+
+## 3. Was noch offen ist — vollständig, ohne Lücken
+
+### Sofort, nach dem Pull auf dem Notebook (Abnahme B)
+
+| # | Prüfung | Erwartung |
+|---|---|---|
+| B3 | Z-3 vor/nach | Portfoliowert steigt um ~1.700 €, Rückschlag **sinkt**; Absicherung dämpft |
+| B4 | „Symbole ohne Kurs" | von 19 auf ≤ 4; die USD-Symbole kommen über FX zurück |
+| B2 | Rohstoff-Systemgüte | der +20,5-R-Ausreißer verschwindet → Klasse hat **0** ausgewertete Trades |
+| B5 | Krypto-Regression | Systemgüte spot/hebel unverändert |
+| — | Migrationslog | vier `Migration:`-Zeilen beim ersten Start, danach nie wieder |
+
+**B2 ist kein Rückschritt, sondern die Korrektur einer Falschmeldung.** Die
+Assetklasse Rohstoffe hat ab jetzt ehrlich null Evidenz statt einer erfundenen.
+
+### Reihenfolge für die übrigen Klassen
+
+Die Klassen unterscheiden sich **nicht** in dem, was ihnen fehlt, sondern nur
+darin, wie weit sie in derselben Kette stehen. Deshalb dieselbe Kette für alle,
+und zwar in dieser Reihenfolge — jede Stufe setzt die vorige voraus:
+
+```
+Kursdaten korrekt  →  Bewertung korrekt  →  Outcome messbar  →  Regime/Regeln  →  Universum
+```
+
+| Klasse | Kursdaten | Bewertung | Outcome | nächster Schritt |
+|---|---|---|---|---|
+| Rohstoffe | ✔ heute | ✔ heute | ab jetzt | B2 abwarten, dann zählen |
+| Hedge | ✔ heute (rekonstruiert) | ✔ heute | ab jetzt | eigene Erfolgsdefinition (s. u.) |
+| Aktien | ✔ vorhanden | ✔ über FX zurück | 4 Schattenfälle | **Universum** (Nutzer) |
+| Themen-ETF | ✔ vorhanden | ✔ über FX zurück | 0 Auflösungen | Auflösungen abwarten |
+
+**Die Lücke, die man dabei übersieht:** Aktien und Themen-ETF hatten nie einen
+Datendefekt — sie fielen über *denselben* FX-Bruch aus der Bewertung wie die
+Rohstoffe. Deren Bewertung ist damit heute mitrepariert, ohne dass an ihnen
+etwas geändert wurde. Wer nur auf „welche Klasse war kaputt" schaut, verpasst
+das.
+
+### Was Hedge zusätzlich braucht — und in keiner der anderen Klassen vorkommt
+
+Ein Absicherungs-Instrument mit Gewinn zu bewerten ist **falsch herum**. Ein
+Hedge, der Geld verliert, während das Portfolio steigt, hat funktioniert. Solange
+Hedge-Signale nach derselben Systemgüte gemessen werden wie Long-Signale,
+produziert die Messung ein garantiert negatives und garantiert bedeutungsloses
+Ergebnis. Das ist **D-d** aus Phase D und gehört **vor** die erste
+Hedge-Auswertung, nicht danach.
+
+### Was ausdrücklich NICHT heute passiert und warum
+
+| Punkt | Grund | Bedingung fürs Wiederaufgreifen |
+|---|---|---|
+| Universum erweitern | Nutzer-Entscheidung, kein Code | jederzeit |
+| Screening Nicht-Krypto | ohne Universum sinnlos | nach C1 |
+| Regime je Klasse (M6) | Basis wäre eine Klasse ohne saubere Evidenz | nach B und C |
+| Rollkosten/Gebühren modellieren | die Reihen taugen für kurze Horizonte; für Monate gälte das nicht — dort steht dann diese Frage | wenn eine Auswertung > 4 Wochen Haltedauer betrifft |
+
+## 4. Ehrliche Grenzen dieses Stands
+
+- Die rekonstruierten Reihen tragen **keine** Rollkosten, Gebühren oder (bei
+  3QSS) FX-Bewegung. Bei **Erdgas (OD7L)** ist der Rollverlust notorisch groß —
+  dort ist die Reihe über Wochen zu optimistisch. Deshalb `quelle`, deshalb das
+  520-Tage-Fenster, deshalb keine Monatsaussagen.
+- **B3 und B4 sind heute nicht messbar.** Die Produktiv-Datenbank liegt auf dem
+  Notebook; die Desktop-Kopie ist vom 21.07. und hat keine Nicht-Krypto-Reihen.
+  Beide Prüfungen laufen nach dem Pull — die erwarteten Werte stehen oben und
+  sind damit vorab falsifizierbar.
+- Der Plausibilitätsfilter kann eine **echte** 3×-Bewegung eines kleinen Coins
+  innerhalb eines Tages fälschlich verwerfen. Der Fehler geht dann in die sichere
+  Richtung (Symbol gilt als „ohne Kurs", Warnung nennt es beim Namen) — aber er
+  existiert und ist bewusst in Kauf genommen.
