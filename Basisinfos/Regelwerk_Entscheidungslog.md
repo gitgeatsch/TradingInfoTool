@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (178 Einträge)
+## Index nach Thema (179 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -48,7 +48,7 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-05** — Ausstiegsregel scharfgeschaltet: Config, taeglicher Job 7:15, Sammel-E-Mail
 - **2026-08-06** — Gate-Untergrenze Stop-Abstand: EXISTIERT BEREITS (RM-1b 2,5 % + RM-1c 0,75xATR), richtig kalibriert, nichts gebaut
 
-### LLM-Prompts / Analysten (Stage 2) (16)
+### LLM-Prompts / Analysten (Stage 2) (17)
 
 - **2026-07-18** — Konfidenz-Kalibrierung nach dem echten CAT-Fall (fünf Bausteine A-E)
 - **2026-07-19** — Release 2 (Schwerpunkte/Thesen-Verwaltung) - Konzeptionsrunde
@@ -66,6 +66,7 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-05** — Drei neue Hebel-Fakten (Kosten, Ausstiegsregel, Systemguete) + Regeln 30/31 - kombiniert gemessen, kein Nachweis, bleiben drin
 - **2026-08-06** — Gesamtaufnahme der fehlenden Fakten (Abschnitt 8) + vierstufiges Ausstiegsverfahren statt Abbruchschwelle
 - **2026-08-06** — Regime-Glaettung (Schatten) + Divergenz-Fakt btc_zu_ema50, Regeln 33/37 - Korrektur einer eigenen Uebergeneralisierung
+- **2026-08-06** — Divergenz-Fakt gemessen (n=28): Waechter haelt, EROEFFNEN in allen Armen identisch, keine Wirkung nachweisbar
 
 ### Z.ai-Gegenpruefung (Stage 3) (23)
 
@@ -12327,6 +12328,38 @@ gezeigt - die Datei laedt sauber. Dazu Struktur-Test per AST (liegt der Fakt
 wirklich IM regime-Block?) und ein End-to-End-Lauf mit echten BTC-Daten:
 Abstand -0,74 % -> "knapp darunter", Score 0,356 -> 74,8, diskretes Regime
 unveraendert "baer".
+
+## Nachtrag (2026-08-06): Divergenz-Fakt GEMESSEN - der Waechter haelt, keine Wirkung nachweisbar
+
+Dreiarm-Test zu Regel 33/37 und `regime.btc_zu_ema50`, drei Laeufe, 94 Antworten,
+**28 Faelle mit allen drei Armen**. Die historischen Faktensaetze tragen den Fakt
+noch nicht - er wurde je Signaldatum aus der BTC-Reihe rekonstruiert (EMA50 nur
+aus Kursen BIS zum Signaltag, kein Blick in die Zukunft). Beobachtete Spanne
+-1,94 % bis +0,15 %, also drei verschiedene Baender.
+
+| | Wirkung (B−A1) | t | Rauschboden | Verhaeltnis | noetiges n |
+|---|---|---|---|---|---|
+| **EROEFFNEN** | **96,4 / 96,4 / 96,4 %** | — | — | — | — |
+| Konfidenz | −0,750 | −0,74 | 4,087 | 0,18x | 197 |
+| Stop-Abstand | −1,014 | −0,78 | 6,321 | 0,16x | 176 |
+
+**DER WAECHTER HAELT - das war die entscheidende Frage.** Die EROEFFNEN-Quote ist
+in allen drei Armen auf die Nachkommastelle identisch. Ein Fakt ueber eine
+Marktlagen-Divergenz haette strukturell in dieselbe Richtung wirken koennen wie
+der Ausfuehrbarkeits-Hinweis, der die Quote einmal von 93 % auf 3 % gedrueckt
+hat. Der Hedging-Schutz in der Regel ("weder ein Grund fuer pauschale Vorsicht
+noch fuer pauschale Zuversicht, und kein Anlass weniger vorzuschlagen") war
+also nicht ueberfluessig, sondern hat seinen Zweck erfuellt.
+
+**Kein Wirkungsnachweis, aber auch kein Schaden** - dieselbe Lage wie bei den
+drei Fakten vom 05.08. Nach dem Ausstiegsverfahren (Mappe 7.4b) bleibt die Regel
+damit drin: kein Ausstiegsgrund ist ein fehlender Wirkungsnachweis, wenn der
+Effekt unter der Messgrenze liegt (hier 0,16-0,18x des Eigenrauschens).
+
+**Stabil ueber die Aufstockung**, anders als beim Regime-Test: n=20 zeigte
+EROEFFNEN 95,0/95,0/95,0 und Konfidenz −0,500, n=28 zeigt 96,4 dreimal und
+−0,750. Kein Vorzeichenwechsel, keine Halbierung - das Bild war von Anfang an
+dasselbe.
 
 ## Nachtrag (2026-08-06): Gesamtaufnahme der fehlenden Fakten + Ausstiegsverfahren statt Abbruchschwelle
 
