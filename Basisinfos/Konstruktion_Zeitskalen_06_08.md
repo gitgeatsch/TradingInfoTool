@@ -351,7 +351,103 @@ noch; sie sollte aber gegen den Aufwand einer erneuten Suche abgewogen werden.
 5. **V4** (kurzfristiges Regime als Schatten-Fakt) — erst sinnvoll, wenn es
    überhaupt Regime-Variation gibt, an der man es messen könnte.
 
-## 5. Was die beiden Messungen zusammen ergeben
+## 4b. V2b GEMESSEN am 06.08. — die Gefahr liegt in der anderen Richtung
+
+`messe_regimewechsel_trockenlauf.py`. Deterministischer Trockenlauf über alle
+fünf Regime-Profile, ohne LLM-Aufrufe.
+
+**Zuerst eine Korrektur an meiner eigenen Warnung:** R-5.10 greift **nur bei der
+Spot-Familie** (KAUFEN/NACHKAUFEN). Der Hebel-Gate nutzt feste Schwellen, die
+sich beim Regimewechsel nicht bewegen. Meine „Faktor zwölf"-Rechnung stand auf
+der Hebel-Konfidenzverteilung und war damit auf der falschen Grundlage.
+
+**Auf der richtigen Grundlage (35 Spot-Kaufsignale, Median-Konfidenz 75):**
+
+| Regime | Schwelle | kämen durch | gegen heute |
+|---|---|---|---|
+| **krise_extrem** | 85 | **5,7 %** | **−74,3 pp** |
+| **baer** (heute) | 75 | 80,0 % | — |
+| seitwärts | 65 | 100 % | +20,0 pp |
+| bulle | 60 | 100 % | +20,0 pp |
+
+**Die gefährliche Richtung ist krise_extrem, nicht seitwärts.** Ein Wechsel nach
+oben öffnet das Gate milde (80 → 100 %). Ein Wechsel nach `krise_extrem` bricht
+den Durchlass auf ein Vierzehntel — **und schaltet gleichzeitig über AZ-7 den
+Hebel komplett ab und das Small-Cap-Budget auf null.** Drei harte Umschaltungen
+auf einmal, in genau dem Moment, in dem der Markt gestresst ist und ein nie
+gelaufener Codepfad am wenigsten erwünscht ist.
+
+**Ein gegenläufiger Effekt, der das teilweise abfedert und gut konstruiert ist:**
+die Positionsgröße skaliert mit dem *Abstand zur Schwelle*. Ein niedrigeres
+Minimum lässt mehr Signale durch, gibt ihnen aber im Schnitt kleinere Positionen
+(50 % Sockel bei krise_extrem gegen 69,4 % bei bulle). Die beiden Effekte
+arbeiten gegeneinander — das war entweder gut gedacht oder glücklich.
+
+---
+
+## 4c. Zur Konstruktionsfrage: träge oder flackernd? — Weder noch
+
+**Nutzer-Einwand:** ein Regime kann konstruktionsbedingt nur träge sein; macht
+man es schneller, flackert es.
+
+**Der Einwand stimmt — aber er beschreibt ein Dilemma, das man nicht lösen,
+sondern auflösen muss.** Die Trägheit ist nicht das eigentliche Problem. Das
+Problem ist, dass ein **diskreter Zustand harte Schwellen schaltet**. Jeder
+diskrete Zustand mit harten Schwellen muss entweder träge sein (dann ist er
+veraltet) oder flackern (dann ist er unbrauchbar). An der Geschwindigkeit zu
+drehen verschiebt nur, welche der beiden Krankheiten man bekommt.
+
+**Der Ausweg: nicht den Zustand schneller machen, sondern seinen Einfluss
+stetig.**
+
+Heute: `regime ∈ {krise, bär, seitwärts, bulle}` → `min_konfidenz ∈ {85, 75, 65, 60}`
+Besser: ein stetiger Regime-Score → `min_konfidenz = f(score)`, glatt
+
+Damit erzeugt eine kleine Marktänderung eine kleine Gate-Änderung. **Keine
+Klippe, und nichts zu flackern** — es gibt keinen Zustand mehr, der umspringen
+könnte. Die langsame EMA darf als Eingang bleiben; sie erzeugt dann nur keine
+Sprungstelle mehr.
+
+**Das ist keine neue Idee, sondern eine Entscheidung, die dieses Projekt an
+anderer Stelle schon getroffen hat.** Beim CRV wurde genau dieser Schritt
+gegangen: von der harten Ja/Nein-Schwelle zu gemessenen Bändern, mit der
+ausdrücklichen Begründung *„ein glatter Verlauf verlangt glatte Behandlung"*.
+Beim Regime steht derselbe Schritt noch aus.
+
+### Die Bedingung, die den Umbau ungefährlich macht
+
+**`f(score)` wird so kalibriert, dass sie am heutigen Punkt exakt die heutigen
+Werte reproduziert.** Bär bleibt 75, Small-Cap bleibt 4 %. Damit ändert sich
+heute **nichts** — messbar nichts, nicht ungefähr nichts. Die Klippe
+verschwindet nur für später.
+
+Das ist eine **Robustheitsänderung, keine Ertragsbehauptung.** Sie verspricht
+keine besseren Signale; sie verspricht, dass ein Marktwechsel keinen Sprung
+erzeugt. Und genau das ist prüfbar: der Ausgabewert bei heutigem Regime muss
+bitgleich sein.
+
+### Warum das nicht empirisch validierbar ist — und warum es trotzdem richtig ist
+
+Ehrlich gesagt: **wir können nicht messen, ob die stetige Variante besser ist**,
+weil das Regime nie variiert hat. Es gibt keine Vergleichsdaten und wird vor dem
+ersten echten Wechsel auch keine geben.
+
+Das ist der seltene Fall, in dem eine Änderung **nicht durch Messung, sondern
+durch Konstruktion** begründet ist: eine Unstetigkeit an einer Stelle, die
+ausgerechnet im Stressfall zuschlägt, ist ein Risiko, das man nicht erst
+belegen muss. Das Risiko ist zudem **asymmetrisch** — die Klippe wirkt nach
+unten (krise_extrem), also dann, wenn Fehler teuer sind.
+
+**Falls ein diskreter Zustand aus anderen Gründen bleiben soll**, ist die
+klassische Alternative Hysterese plus Mindestverweildauer: verschiedene
+Schwellen für Eintritt und Austritt, dazu eine Mindestanzahl Tage vor dem
+Zurückschalten. Das verhindert das Flackern — aber die Klippe bleibt. Ich
+halte die stetige Variante für die bessere, würde die diskrete Bezeichnung
+aber für Anzeige und Kommunikation behalten.
+
+---
+
+## 5. Was die drei Messungen zusammen ergeben
 
 V3 sagt: **der Handelshorizont ist nicht das Problem** — der Median-Trade ist
 nach 1–2 Tagen entschieden, und für den Schwanz ist die bereits laufende
