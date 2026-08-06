@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (172 Einträge)
+## Index nach Thema (174 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -92,7 +92,7 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-07-31** — Multi-Asset Z.ai-Wartemechanismus statt Re-Fetch (Entscheidungskatalog Punkt 1)
 - **2026-08-01** — Spot-Verkaufs-Luecke Roadmap Schritt 4 (Z.ai-Re-Evaluierungs-Anzeige) - Roadmap-Praemisse korrigiert VOR de...
 
-### Backward-Tracking / Erfolgsmessung (11)
+### Backward-Tracking / Erfolgsmessung (12)
 
 - **2026-07-19** — Backtracking-Aussagekraft-Audit - Überholt-Erkennung neutralisierte die eigene Ergebnisstatistik
 - **2026-07-20** — Provider-Performance-Karte nach Assetklasse aufgeschluesselt (Krypto/Aktien/Rohstoffe/ETF getrennt statt ge...
@@ -105,6 +105,7 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-03** — Systemguete um mechanische Basislinie, Signalbeitrag und Bootstrap-Intervalle erweitert
 - **2026-08-04** — Kostenrahmen recherchiert und in die R-Rechnung eingebaut (Phase 0.2) + der Haltedauer-Widerspruch
 - **2026-08-05** — `halte_kriterium` erstmals ausgewertet - kein Trennnachweis, zwei strukturelle Maengel
+- **2026-08-06** — Die drei neuen Fakten sind im Betrieb ANGEKOMMEN (22/22) - Verifikation abgeschlossen, Zaehler-Fehler behoben
 
 ### Datenquellen / APIs (18)
 
@@ -185,12 +186,13 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-07-21** — Marktscan-Dedup-Bug behoben - "immer dieselben Coins" (APE/EIGEN)
 - **2026-07-30** — Screener × Schwerpunkte — geplante, noch nicht umgesetzte Kandidaten-Benachrichtigung (echter Gap, kein Bug)
 
-### Betrieb / Scheduler / Infrastruktur (4)
+### Betrieb / Scheduler / Infrastruktur (5)
 
 - **2026-07-19** — "Info-Leichen" - automatischer Verfall
 - **2026-07-19** — Konsistenz-Ausweitung des Verfall-Fixes
 - **2026-07-23** — Watchlist-Aenderungen wirkten nur nach App-Neustart - in 3 Phasen behoben
 - **2026-08-01** — Zwei Zeit-Domaenen im Projekt (UTC-Daten vs. lokale Scheduler-Zeit) - bewusst KEIN Fix
+- **2026-08-06** — Cron-Staggering NICHT gebaut: die DB-Sperren fallen in eigene App-Neustarts, das 06:30-Fenster ist seit zwei Tagen sauber
 
 ### Methodik / Audits / Synthesen (13)
 
@@ -12549,3 +12551,70 @@ eine ANHEBUNG von 2,5 %, weil das Band 2,5-3,0 % mit Abstand am besten
 abschneidet. Davon ist abzuraten - n=23, und ein schaerferes Gate widerspricht
 der Vorgabe "mehr Signale durch Qualitaet, nicht durch Lockerung" in die andere
 Richtung.
+
+## Nachtrag (2026-08-06): Cron-Staggering NICHT gebaut - die Sperren sind selbst produziert
+
+**Nutzer-Einwand vor der Umsetzung:** *"mach das Cron-Staggering aber nur wenn
+tatsaechlich vorhanden - Ursache vom zeitlichen Bereich sind diese Faelle selbst
+produziert meiner Meinung nach."* **Der Einwand war richtig, und der Beleg ist
+eindeutig.** Ich hatte das Staggering selbst vorgeschlagen, gestuetzt auf einen
+Befund vom 04.08. - ohne zu pruefen, ob er sich wiederholt.
+
+**23 "database is locked" im 72-Stunden-Fenster. Alle vier abendlichen Sperren
+fallen exakt in einen App-NEUSTART:**
+
+| Neustart (`Added job ... to job store`) | Sperre |
+|---|---|
+| 03.08. 20:11:28 | 20:12 |
+| 04.08. 20:51:54 | 20:52 |
+| 05.08. 19:43:11 | 19:43 |
+| 05.08. 19:52:37 | 19:53 |
+
+Beim Start feuern alle Jobs gleichzeitig, waehrend die DB noch initialisiert
+wird. Das sind unsere eigenen Pull-und-Neustart-Zyklen, kein
+Produktionsverhalten.
+
+**Und das 06:30-Fenster haelt der Pruefung ebenfalls nicht stand:**
+
+| Tag | Sperren im Fenster 06:29-06:36 |
+|---|---|
+| 04.08. | 8 |
+| 05.08. | **0** |
+| 06.08. | **0** |
+
+Am 05. und 06.08. lief praktisch dieselbe Job-Konstellation ohne jede Sperre.
+Der Unterschied am 04.08.: dort liefen zusaetzlich `kategorie_synthese_job` und
+`refresh_aktien_ohlc_job` in diesem Fenster - eine Sonderkonstellation, nicht
+der Normalfall.
+
+**Ein Einzelfall vor zwei Tagen, seither nicht reproduzierbar.** Den Scheduler
+dafuer umzubauen waere eine Aenderung ohne belegtes Problem, mit der bekannten
+Nebenwirkung, dass Job-Zeiten auseinanderlaufen.
+
+> **LEHRE:** Ein Betriebsfehler, der EINMAL auftrat, ist kein Muster. Vor jeder
+> Infrastruktur-Aenderung pruefen, ob er sich in den Folgetagen wiederholt -
+> und ob die betroffenen Zeitpunkte mit eigenen Eingriffen zusammenfallen.
+
+## Nachtrag (2026-08-06): die drei neuen Fakten sind im Betrieb ANGEKOMMEN - Verifikation abgeschlossen
+
+Der seit dem 05.08. offene Punkt ist geschlossen. Export vom 06.08. 07:56, neuer
+Block `bloecke_je_tag`:
+
+```
+2026-08-06:  22 Saetze | kosten=22  ausstiegsregel=22  systemguete=22
+```
+
+**Alle 22 Faktensaetze des Tages tragen alle drei Bloecke**, mit echtem Inhalt
+(Kostentabelle 5 Zeilen, Trailing aktiv, Systemguete n=126 / EW -0,106). Das
+rollierende Fenster aus demselben Commit funktioniert ebenfalls.
+
+**Noch offen, beides erwartbar:** `crv_baender` und die `score_gesamt`-Entfernung
+kamen nach dem Morgen-Signallauf und brauchen einen weiteren Pull.
+
+**EIGENER FEHLER IM NEUEN WERKZEUG, am selben Tag gefunden und behoben:** der
+Zaehler zaehlte nur Top-Level-Bloecke - und sah damit ausgerechnet den Fall
+nicht, der gerade verfolgt wurde. `score_gesamt` liegt VERSCHACHTELT unter
+`trigger`; seine Entfernung waere im Zaehler unsichtbar geblieben und ich haette
+sie faelschlich als erledigt gelesen. Zaehlt jetzt zwei Ebenen ("eltern.kind").
+Verifiziert an einer synthetischen DB: 3 von 5 Saetzen mit
+`trigger.score_gesamt` korrekt erkannt.

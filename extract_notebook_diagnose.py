@@ -804,14 +804,26 @@ def _hebel_faktensaetze(conn, je_zelle: int = 12, tage: int = 14) -> dict:
     # die Frage "ist der neue Fakt im Betrieb angekommen" darf nicht davon
     # abhaengen, ob die Schichtung den betreffenden Satz gezogen hat. Kostet
     # nur Schluesselnamen, kein facts_json.
+    #
+    # ZWEI EBENEN, NICHT NUR EINE (Nachtrag 2026-08-06, noch am Tag der
+    # Einfuehrung): der erste Wurf zaehlte nur Top-Level-Bloecke - und hat
+    # damit ausgerechnet den Fall nicht gesehen, der gerade verfolgt wurde.
+    # `score_gesamt` liegt VERSCHACHTELT unter `trigger`, seine Entfernung war
+    # im Zaehler also unsichtbar und ich haette sie faelschlich als "schon
+    # erledigt" gelesen. Unterschluessel laufen als "eltern.kind".
     bloecke_je_tag: dict[str, dict[str, int]] = {}
     for r in rows:
         tag = str(r["created_at"])[:10]
         eimer = bloecke_je_tag.setdefault(tag, {})
         eimer["_faktensaetze"] = eimer.get("_faktensaetze", 0) + 1
         try:
-            for schluessel in json.loads(r["facts_json"]):
+            fakten = json.loads(r["facts_json"])
+            for schluessel, wert in fakten.items():
                 eimer[schluessel] = eimer.get(schluessel, 0) + 1
+                if isinstance(wert, dict):
+                    for unter in wert:
+                        pfad = f"{schluessel}.{unter}"
+                        eimer[pfad] = eimer.get(pfad, 0) + 1
         except Exception:
             eimer["_unlesbar"] = eimer.get("_unlesbar", 0) + 1
 
@@ -1187,6 +1199,105 @@ def _auffaelligkeiten(hebel_rows: list[dict], spot_rows: list[dict]) -> list[dic
                     "action": zeile.get("action"), "gate_reason": zeile.get("gate_reason"),
                 })
     return funde
+
+
+DB_BACKUP_ORDNER = _google_drive_wurzel() / "Claude_Austauschordner" / "DB_Backups"
+DB_BACKUP_BEHALTEN = 7
+
+
+def _db_backup(conn, ordner=None, behalten: int = DB_BACKUP_BEHALTEN) -> dict:
+    """Konsistentes, geprueftes und rotiertes Backup der Produktiv-DB (2026-08-06).
+
+    WOFUER. Der Export enthaelt das Analyse-relevante Extrakt, aber nicht die
+    DB. Geht das Notebook verloren, ist die gesamte Signalhistorie weg - und
+    genau die ist die Grundlage jeder Messung in diesem Projekt. Das ist
+    Disaster-Recovery, kein Analysebedarf, und deshalb gelten andere Regeln:
+    regelmaessig, versioniert, geprueft.
+
+    WARUM NICHT EINFACH DIE DATEI KOPIEREN. Die App schreibt waehrenddessen
+    weiter (Scheduler laeuft 24/7). Ein Dateikopie erwischt moeglicherweise
+    einen Zustand mitten in einer Transaktion - das Ergebnis ist ein Backup,
+    das erst beim Zurueckspielen als kaputt auffaellt. `Connection.backup()`
+    ist die dafuer vorgesehene Online-Backup-API und zieht einen konsistenten
+    Snapshot, waehrend geschrieben wird.
+
+    WARUM DIE INTEGRITAETSPRUEFUNG. Ein Backup, das man nicht prueft, ist eine
+    Vermutung. `PRAGMA integrity_check` laeuft auf der KOPIE, nicht auf dem
+    Original - eine Pruefung des Originals sagt nichts ueber die Kopie aus.
+    Und die Rotation loescht erst NACH bestandener Pruefung: sonst koennte ein
+    fehlgeschlagener Lauf die letzten guten Staende mitnehmen.
+
+    WARUM GZIP. SQLite komprimiert stark (Faktor 3-5 bei dieser DB). Der
+    Zielordner liegt in Google Drive und wird synchronisiert - jedes
+    gesparte Megabyte ist gesparte Synchronisationszeit.
+
+    HINWEIS ZUM ABLAGEORT, bewusste Entscheidung: die DB enthaelt die
+    Portfoliobestaende. Der Notebook-Export liegt mit denselben Daten bereits
+    in diesem Ordner, es ist also keine neue Datenkategorie - aber es ist eine
+    Entscheidung und kein Automatismus.
+
+    Fail-soft: schlaegt irgendetwas fehl, wird geloggt und der Export laeuft
+    normal weiter. Ein misslungenes Backup darf den Analyselauf nicht kosten.
+    """
+    import gzip
+    import os
+    import shutil
+    import tempfile
+
+    ziel = Path(ordner) if ordner else DB_BACKUP_ORDNER
+    ergebnis = {"erfolg": False, "grund": None, "datei": None,
+                "bytes": None, "geloescht": []}
+    tmp_pfad = None
+    try:
+        ziel.mkdir(parents=True, exist_ok=True)
+        stempel = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M")
+        name = f"tradinginfotool_{stempel}.db.gz"
+
+        # 1) Online-Backup in eine temporaere Datei
+        fd, tmp_pfad = tempfile.mkstemp(suffix=".db")
+        os.close(fd)
+        sicherung = sqlite3.connect(tmp_pfad)
+        try:
+            conn.backup(sicherung)
+        finally:
+            sicherung.close()
+
+        # 2) Integritaetspruefung AUF DER KOPIE
+        pruef = sqlite3.connect(tmp_pfad)
+        try:
+            befund = pruef.execute("PRAGMA integrity_check").fetchone()[0]
+        finally:
+            pruef.close()
+        if befund != "ok":
+            ergebnis["grund"] = f"integrity_check: {befund[:200]}"
+            return ergebnis
+
+        # 3) Komprimieren an den Zielort
+        endziel = ziel / name
+        with open(tmp_pfad, "rb") as roh, gzip.open(endziel, "wb", compresslevel=6) as gz:
+            shutil.copyfileobj(roh, gz)
+        ergebnis["datei"] = str(endziel)
+        ergebnis["bytes"] = endziel.stat().st_size
+        ergebnis["erfolg"] = True
+
+        # 4) Rotation - ERST JETZT, nach bestandener Pruefung
+        vorhanden = sorted(ziel.glob("tradinginfotool_*.db.gz"))
+        for alt in vorhanden[:-behalten] if behalten > 0 else []:
+            try:
+                alt.unlink()
+                ergebnis["geloescht"].append(alt.name)
+            except OSError:
+                pass
+        return ergebnis
+    except Exception as exc:                                   # noqa: BLE001
+        ergebnis["grund"] = f"{type(exc).__name__}: {exc}"
+        return ergebnis
+    finally:
+        if tmp_pfad and os.path.exists(tmp_pfad):
+            try:
+                os.unlink(tmp_pfad)
+            except OSError:
+                pass
 
 
 def main() -> None:
@@ -1601,6 +1712,24 @@ def main() -> None:
     print(f"  CoinGecko-Kontingent ({coingecko_kontingent['monat']}): "
           f"{coingecko_kontingent['monatliches_kontingent']} Calls, "
           f"{len(coingecko_kontingent['taeglich_verlauf'])} Tage mit Tageszaehler-Historie")
+
+    # DB-Backup ganz zum Schluss (2026-08-06). Reihenfolge ist Absicht: der
+    # Export ist zu diesem Zeitpunkt geschrieben, ein fehlgeschlagenes Backup
+    # kostet ihn also nicht. Eigene Verbindung, weil die aus main() im
+    # try/finally darueber bereits geschlossen sein kann.
+    sicherungs_conn = db.get_connection()
+    try:
+        sicherung = _db_backup(sicherungs_conn)
+    finally:
+        sicherungs_conn.close()
+    if sicherung["erfolg"]:
+        print(f"  DB-Backup: {Path(sicherung['datei']).name} "
+              f"({sicherung['bytes'] / 1e6:.1f} MB komprimiert, integrity_check ok"
+              + (f", {len(sicherung['geloescht'])} alte entfernt" if sicherung["geloescht"] else "")
+              + ")")
+    else:
+        print(f"  DB-Backup FEHLGESCHLAGEN: {sicherung['grund']} "
+              f"- der Export ist davon unberuehrt")
 
 
 if __name__ == "__main__":
