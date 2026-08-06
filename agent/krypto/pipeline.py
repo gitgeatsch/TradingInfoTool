@@ -812,10 +812,24 @@ def generate_signal(
     )
     funding_rate_perzentil = latest_value(compute_funding_rate_percentile(conn, asset.symbol))
 
+    # CRV-Erfolgsbaender fuer Krypto-Spot (2026-08-06). Ersetzt die bis dahin
+    # eingefrorene Konstante hinter Regel 36 - Begruendung im Nachtrag in
+    # analyst.py. Rechnet EIGENE Zahlen dieser Assetklasse und liefert None,
+    # solange kein Band belastbar ist (Stand 06.08.: n=42, kein Band ueber 20).
+    # Fail-soft, mit Tages-Cache in der Funktion.
+    try:
+        from agent.krypto.backward_tracking import crv_baender_kontext_fuer_prompt
+        fakt_crv_baender = crv_baender_kontext_fuer_prompt(
+            conn, "krypto", watchlist=watchlist)
+    except Exception:
+        logger.exception("CRV-Baender-Fakt fehlgeschlagen - Signal laeuft ohne")
+        fakt_crv_baender = None
+
     facts = build_facts(
         asset, price_snap, holdings.get(asset.symbol), snapshot, confluence, regime_result,
         regime_profile, risk_result, anticyclic_context, strategien_aktiv, price_age_minutes,
         market_context, bitpanda_gelistet, tranchen_erlaubt, cash_reserve_ziel,
+        crv_baender=fakt_crv_baender,
         letztes_signal=letztes_signal,
         historische_erfolgsquote=historische_erfolgsquote,
         historischer_makro_vergleich=historischer_makro_vergleich,

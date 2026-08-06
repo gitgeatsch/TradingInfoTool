@@ -423,7 +423,29 @@ Stops knapp darueber landen, statt sich an der tatsaechlichen Volatilitaet \
 des Assets zu orientieren. Ein deterministisches Gate faengt Extremfaelle \
 ohnehin ab; dein Beitrag ist die fachlich richtige Zone, nicht das Treffen \
 einer Zahl.
-36. Chance-Risiko-Verhaeltnis, Einordnung statt blosser Mindestgrenze (2026-08-04, gemessen an 491 Signalen, siehe `crv_erfolgsbaender`): das Gate verlangt CRV >= 2,0 - das ist eine Untergrenze, KEIN Qualitaetsurteil. Gemessen erreichen Signale mit CRV zwischen 2,0 und 4,0 in nur 26-32 % der Faelle mindestens 1R; ab CRV 4,0 sind es 51 %. Der Unterschied zwischen 2,1 und 3,8 ist also gering, der Sprung liegt bei 4,0. Zwei Folgerungen fuer dich: (a) Wenn sich Entry/Stop/Take-Profit sinnvoll so setzen lassen, dass das CRV ueber 4,0 liegt, ist das ein deutlich anderes Setup als ein knapp bestandenes - bevorzuge es, SOFERN die Zonen technisch begruendet bleiben. Ziehe NIEMALS den Take-Profit kuenstlich hoch oder den Stop kuenstlich eng, nur um die Schwelle zu reissen: ein zu enger Stop verletzt Regel 35 und zerstoert genau den Vorteil, den die Zahl beschreibt. (b) Ein CRV knapp ueber 2,0 rechtfertigt fuer sich genommen KEINE hohe `confidence_pct`. Es hat das Gate passiert, mehr nicht. Lies den `hinweis` mit: die Baender stammen ueberwiegend aus nicht ausgefuehrten Signalen und sind eine Groessenordnung, keine Punktprognose.
+36. Chance-Risiko-Verhaeltnis, gemessene Einordnung (2026-08-06, ersetzt \
+die eingefrorene Fassung vom 04.08.): der Fakt `crv_baender` nennt je \
+CRV-Band, um wie viele Prozentpunkte Signale dieses Bandes ihr Ziel oefter \
+erreicht haben als ein mechanischer Zufallseinstieg mit demselben CRV und \
+demselben Stop-Abstand ("vorsprung_vor_zufallseinstieg_pp"). Die Tabelle \
+steht dir VOR dem Setzen der Zonen zur Verfuegung, damit du sie beim \
+Setzen beruecksichtigen kannst statt hinterher. Drei Dinge sind dabei \
+zwingend: (a) Dort stehen bewusst KEINE absoluten Trefferquoten. Die \
+absolute Quote faellt mit steigendem CRV zwangslaeufig, weil das Ziel \
+CRV-mal weiter liegt als der Stop und der Beobachtungszeitraum endlich ist \
+- bei hohem CRV kommt auch ein Zufallseinstieg fast nie an. Nur der \
+Vorsprung ist ueber Baender hinweg vergleichbar. (b) Ein Band mit \
+"belastbar": false ist gemessen, aber zu unsicher fuer eine \
+Schlussfolgerung - behandle es als UNBEKANNT, nicht als schlecht. (c) Das \
+ist eine Einordnung, KEIN Mindestwert und keine Vorgabe: die Mindestgrenze \
+steht unveraendert in Regel 3. Ziehe NIEMALS den Take-Profit kuenstlich \
+hoch oder den Stop enger, um in ein besseres Band zu rutschen - ein zu \
+enger Stop verletzt Regel 35 und zerstoert genau den Vorteil, den die Zahl \
+beschreibt. Ein CRV knapp ueber 2,0 rechtfertigt fuer sich genommen KEINE \
+hohe `confidence_pct`; es hat das Gate passiert, mehr nicht. Fehlt der \
+Fakt, liegen fuer Krypto-Spot derzeit keine belastbaren Zahlen vor; \
+erfinde nichts und leite auch nichts aus frueheren Fassungen dieser Regel \
+ab.
 
 
 SCHEMA:
@@ -514,41 +536,43 @@ def _build_haltung_facts(holding, latest_price) -> dict:
     }
 
 
-# --- CRV-Erfolgsbaender (#602, gemessen 2026-08-04) -------------------------
-# Bewusst eine KONSTANTE mit Herkunftsangabe statt einer Live-Berechnung, gleiche
-# Bauart wie die ATR-Basislinie hinter Regel 35: die Zahlen stammen aus einer
-# einmaligen, dokumentierten Messung und sollen sich nicht still mit jedem Lauf
-# verschieben. Wer sie neu misst, ersetzt sie hier und aktualisiert Datum und
-# Stichprobe mit.
+# HIER STAND "CRV_ERFOLGSBAENDER", EINE EINGEFRORENE KONSTANTE - SIE IST
+# BEWUSST ENTFERNT (2026-08-06). Ersetzt durch den je Assetklasse gerechneten
+# Fakt `crv_baender` (backward_tracking.crv_baender_kontext_fuer_prompt).
 #
-# WARUM DIESE TABELLE UEBERHAUPT: das Gate kennt nur die harte Untergrenze
-# CRV >= 2,0 (Z-2). Gemessen wurde, dass das Gate zwar signifikant trennt
-# (blockiert 14,1 % gegen durchgelassen 32,8 % Trefferanteil, +0,558 R,
-# p < 0,0001), aber bei 2,0 KEINE Kante liegt - direkt darunter 22,2 %, direkt
-# darueber 23,2 %. Der Sprung passiert erst bei CRV 4,0: von 31,9 % auf 51,0 %.
-# Das LLM wusste davon bisher nichts und behandelte CRV 2,1 und CRV 4,2 gleich.
+# Der urspruengliche Beschluss vom 03.08. (fde5bfe) hatte zwei Teile. Der eine
+# gilt weiter, der andere nicht mehr:
 #
-# Die Tabelle wird VOR der Zonen-Festlegung mitgegeben, nicht danach: das
-# geplante CRV entsteht erst aus Entry/Stop/Ziel, die das Modell selbst setzt.
-# So kann es die Baender beim SETZEN beruecksichtigen statt nur hinterher
-# eingeordnet zu werden.
-CRV_ERFOLGSBAENDER = {
-    "gemessen_am": "2026-08-04",
-    "stichprobe": 491,
-    "messgroesse": "Anteil der Signale, die mindestens 1R erreicht haben (MFE, "
-                   "nicht nur aufgeloeste Faelle - sonst Survivorship-Verzerrung)",
-    "baender": [
-        {"crv_von": 2.0, "crv_bis": 2.5, "anteil_mindestens_1r_pct": 26.5, "n": 113},
-        {"crv_von": 2.5, "crv_bis": 3.0, "anteil_mindestens_1r_pct": 30.8, "n": 65},
-        {"crv_von": 3.0, "crv_bis": 4.0, "anteil_mindestens_1r_pct": 31.9, "n": 72},
-        {"crv_von": 4.0, "crv_bis": None, "anteil_mindestens_1r_pct": 51.0, "n": 49},
-    ],
-    "hinweis": "Der Verlauf zwischen CRV 2,0 und 4,0 ist flach (26-32 %). Der "
-               "deutliche Sprung liegt bei 4,0. Die Baender stammen ueberwiegend "
-               "aus dem Veto-Schatten (333 von 491), messen also vor allem "
-               "NICHT ausgefuehrte Signale - als Groessenordnung belastbar, "
-               "nicht als Punktprognose.",
-}
+#   "BEWUSST NUR KRYPTO-SPOT ... dieselben Prozentwerte auf andere Klassen zu
+#   uebertragen waere eine Behauptung, keine Messung."
+#       -> GILT WEITER und ist der Grund, warum die neue Funktion je Tier
+#          eigene Zahlen rechnet und None liefert, wo die Daten fehlen.
+#
+#   "BEWUSST EINE KONSTANTE ... soll sich nicht still mit jedem Lauf
+#   verschieben."
+#       -> TRAEGT NICHT MEHR. Das Wort ist "still": der Faktensatz jedes
+#          Signals wird als facts_json persistiert, welche Zahlen ein Signal
+#          gesehen hat ist also exakt rekonstruierbar. Und eine stabile
+#          falsche Zahl ist schlechter als eine bewegliche richtige.
+#
+# WAS AN DER KONSTANTE FALSCH WAR: sie fuehrte ABSOLUTE Trefferquoten
+# (26,5 / 30,8 / 31,9 / 51,0 %) und leitete daraus "der Sprung liegt bei 4,0"
+# ab. Die absolute Quote faellt mit steigendem CRV aber zwangslaeufig, weil das
+# Ziel CRV-mal weiter liegt als der Stop und der Horizont endlich ist. Genau
+# dieser Trunkierungseffekt erzeugte am 03.08. den Scheinbefund "CRV >= 4,0 ist
+# das schlechteste Band" (7e1928a), noch am selben Tag widerrufen (a9f1e32).
+# Am 04.08. kam der Gegenbefund auf sauberen Krypto-Spot-Daten: Band >= 4,0
+# erreichte 0,0 % Zielerreichung bei n=20, Abstand zur Basislinie -2,3 pp.
+#
+# WARUM KRYPTO-SPOT JETZT (VORERST) GAR KEINEN BAENDER-FAKT BEKOMMT: die
+# Konstante ruhte auf 491 Faellen des SCHWAECHEREN Masses "MFE >= 1R",
+# ueberwiegend aus dem Veto-Schatten (333 von 491). Misst man stattdessen
+# "Ziel erreicht" an tatsaechlich eroeffneten Signalen, bleiben 42 - kein Band
+# erreicht n >= 20, keines ist belastbar. Der Fakt ist damit None und faellt
+# aus dem Faktensatz. Das ist kein Verlust, sondern die ehrliche Auskunft:
+# fuer Krypto-Spot gibt es diese Messung derzeit nicht. Er kehrt automatisch
+# zurueck, sobald die Datenlage ihn traegt - dieselbe Linie wie die
+# n>=30-Schwelle bei `systemguete`.
 
 
 def build_facts(
@@ -569,6 +593,7 @@ def build_facts(
     cash_reserve_ziel: CashReserveZielResult | None = None,
     letztes_signal=None,
     historische_erfolgsquote: dict | None = None,
+    crv_baender: dict | None = None,
     historischer_makro_vergleich: dict | None = None,
     liquiditaetszonen: dict | None = None,
     signal_stabilitaet: dict | None = None,
@@ -643,7 +668,9 @@ def build_facts(
         "haltung": _build_haltung_facts(holding, latest_price),
         "vorherige_empfehlung": vorherige_empfehlung_fact,
         "historische_erfolgsquote": historische_erfolgsquote,
-        "crv_erfolgsbaender": CRV_ERFOLGSBAENDER,
+        # CRV-Erfolgsbaender (2026-08-06): je Assetklasse gerechnet statt
+        # eingefroren, siehe den Nachtrag oben. None -> faellt unten raus.
+        "crv_baender": crv_baender,
         "historischer_makro_vergleich": historischer_makro_vergleich,
         "liquiditaetszonen": liquiditaetszonen,
         "signal_stabilitaet": signal_stabilitaet,
@@ -819,6 +846,12 @@ def build_facts(
             ),
         },
     }
+    # None-Bloecke entfernen (2026-08-06, gleiche Linie wie hebel_analyst.py):
+    # `crv_baender` ist None, solange fuer Krypto-Spot kein belastbares Band
+    # vorliegt. Ein Schluessel mit null waere schlechter als gar keiner.
+    for _schluessel in ("crv_baender",):
+        if facts.get(_schluessel) is None:
+            facts.pop(_schluessel, None)
     return facts
 
 
