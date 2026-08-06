@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (184 Einträge)
+## Index nach Thema (185 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -109,7 +109,9 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-05** — `halte_kriterium` erstmals ausgewertet - kein Trennnachweis, zwei strukturelle Maengel
 - **2026-08-06** — Die drei neuen Fakten sind im Betrieb ANGEKOMMEN (22/22) - Verifikation abgeschlossen, Zaehler-Fehler behoben
 
-### Datenquellen / APIs (23)
+### Datenquellen / APIs (24)
+
+- **2026-08-06** — Erste Verifikation am Export: FX und 3QSS erfüllt, ETC-Rekonstruktion lief nie (zwei Frische-Begriffe an einem Guard), +20,5-R-Ausreißer steht als gespeichertes Ergebnis weiter drin
 
 - **2026-08-06** — Fehler 3 und 4 derselben Runde (`build_hebel_facts()` ohne `crv_baender`, Refresh-Filter auf Phantom-Assetklassen) + `pruefe_aufruf_signaturen.py` belegt: kein Dominoeffekt
 
@@ -13298,3 +13300,76 @@ Betriebslog gefunden:
 > Gegenmassnahmen dieser Runde alle vom selben Typ: Aufschluesselung statt
 > Summe, Gegenprobe statt Einzelwert, statische Pruefung statt Vertrauen -
 > und ein Blick ins Log als Teil der Abnahme, nicht danach.
+
+
+---
+
+## Nachtrag (2026-08-06): erste echte Verifikation am Export - zwei Erwartungen erfuellt, zwei NICHT
+
+Der Export von 13:57 ist der erste mit dem neuen Stand. Gegen die am Vormittag
+schriftlich festgelegten Erwartungen geprueft - genau dafuer standen sie da.
+
+| Erwartung | Ergebnis | |
+|---|---|---|
+| FX-Ableitung repariert | **0 verworfene Tage** (vorher 87 von 91) | erfuellt |
+| 3QSS bewertbar | 520 rekonstruierte Punkte, Ankerabweichung 0 | erfuellt |
+| "Symbole ohne Kurs" <= 4 | **11** | NICHT erfuellt |
+| Rohstoff-Systemguete ohne +20,5-R-Ausreisser | **20,51 R steht weiter drin** | NICHT erfuellt |
+
+Portfoliowert 6.180 -> **7.150,24 EUR**. Z-3 unveraendert bei 16,84 % - das
+Fenster reicht 90 Tage zurueck, ein einzelner Tag verschiebt es kaum.
+
+### Warum "11 statt <= 4": die ETC-Rekonstruktion lief NIE
+
+Von den 11 sind **7 harmlos**: Aktien und ETFs handeln nicht am Wochenende,
+Krypto schon. 64 + 27 = 91 Tage - das ist der Kalender, kein Defekt.
+
+**Die vier OD7*-ETCs dagegen haben 91 von 91 Tagen ohne Kurs.** Ursache:
+`_ensure_ohlc_backfilled()` fragte die Frische der FUTURES-Reihe und sprang bei
+frischem Stand sofort heraus - und uebersprang damit die Rekonstruktion gleich
+mit.
+
+**Zwei Groessen, zwei Frische-Begriffe** - sie an denselben Guard zu haengen war
+der Fehler:
+
+    Futures : veraltet, wenn der letzte Handelstag zu lange her ist
+    ETC     : haengt an einem ANKERPREIS, der sich JEDEN Tag bewegt
+
+Auf dem Entwicklungsstand fiel es nicht auf, weil die Futures-Reihe dort
+veraltet war und der Abruf ohnehin lief. Im Betrieb war sie frisch. **Der Test
+hat den guenstigen Fall geprueft.** Neuer Regressionsfall A9b prueft jetzt
+genau den unguenstigen: frische Futures-Reihe, Rekonstruktion muss trotzdem
+laufen, und zwar ohne neuen Netzabruf.
+
+Dieselbe Falle hatte ich beim Hedge erkannt und behandelt (rekonstruierte Reihe
+faellt nicht unter die Staleness-Wache) - bei den Rohstoffen nicht. Ein Muster
+an einer Stelle zu sehen und an der baugleichen zweiten zu uebersehen.
+
+### Warum der +20,5-R-Ausreisser noch da ist
+
+**Die Schranke verhindert NEUE Fehlbewertungen, sie korrigiert keine alten.**
+Der Wert steht als ERGEBNIS in der DB (Signal #137, OD7C vom 03.08.,
+`take_profit_erreicht`, R=20,51) und geht weiter in jede Systemguete ein. Die
+Systemguete liest gespeicherte Ergebnisse, sie simuliert nicht neu.
+
+Das war ein Denkfehler in meiner eigenen Erwartung: ich hatte "der Ausreisser
+verschwindet" angekuendigt, ohne zu pruefen, woher die Kennzahl ihre Werte
+nimmt.
+
+**`korrigiere_rohstoff_outcome.py`** setzt betroffene Signale auf `offen`
+zurueck - Standard ist TROCKENLAUF, Anwenden nur mit `--anwenden`. Es erfindet
+kein Ergebnis: der naechste Backward-Tracking-Lauf bewertet neu, dann gegen die
+rekonstruierte Reihe auf der richtigen Skala. Kommt nichts zustande, bleibt es
+offen - der ehrliche Zustand.
+
+Bewusst KEIN automatischer Teil der Migration: eine Migration, die stillschweigend
+Messergebnisse aendert, ist genau die Sorte Automatik, die man spaeter nicht mehr
+nachvollziehen kann. Abgegrenzt ueber einen Stichtag; ein nach der Symboltrennung
+entschiedenes Signal bleibt unangetastet (im Test gegengeprueft), zweiter Lauf
+ist ein No-op.
+
+> **Was diese Verifikationsrunde methodisch zeigt:** die vier Erwartungen VORHER
+> aufzuschreiben war das Wertvollste an der ganzen Runde. Zwei davon waren
+> falsch - und beide Irrtuemer waeren ohne die schriftliche Vorfestlegung als
+> "sieht doch gut aus" durchgegangen. Ein Ergebnis, das man erst nach dem
+> Messen formuliert, kann nicht widerlegt werden.

@@ -180,9 +180,6 @@ def _ensure_ohlc_backfilled(conn, asset) -> None:
     # entstanden, und die technische Analyse waere dauerhaft auf den Rueckfallpfad
     # gelaufen. Genau die Umstellung, die der Fix bewirken soll, haette sich damit
     # selbst blockiert.
-    last_date = db.get_last_ohlc_date(conn, _futures_symbol(asset.symbol), "USD")
-    if last_date is not None and not _is_rohstoff_history_stale(last_date):
-        return
     futures_ticker = SYMBOL_ZU_FUTURES_TICKER.get(asset.symbol)
     if futures_ticker is None:
         logger.warning("Kein Futures-Ticker fuer %s hinterlegt - keine technische Historie moeglich", asset.symbol)
@@ -198,10 +195,35 @@ def _ensure_ohlc_backfilled(conn, asset) -> None:
     # 34,63 wurde gegen eine Kupfer-Futures-Reihe bei 6,30 USD/lb bewertet, was
     # (34,63 - 6,30) / 1,37 = 20,7 R ergab - dieser eine Trade war die gesamte
     # Evidenz der Assetklasse Rohstoffe.
-    ohlc_points = get_full_ohlc_history(futures_ticker, _futures_symbol(asset.symbol), "USD")
-    if ohlc_points:
-        db.upsert_ohlc_points(conn, ohlc_points)
-        _rekonstruiere_etc_reihe(conn, asset, ohlc_points)
+    #
+    # ZWEI GETRENNTE FRISCHE-BEGRIFFE (Korrektur 2026-08-06, Betriebsfund). Die
+    # Futures-Reihe und die rekonstruierte ETC-Reihe veralten NICHT nach
+    # derselben Regel, und sie an denselben Guard zu haengen war der Fehler:
+    #
+    #   Futures : veraltet, wenn der letzte Handelstag zu lange her ist
+    #   ETC     : haengt an einem ANKERPREIS, der sich JEDEN Tag bewegt
+    #
+    # Der erste Entwurf sprang bei frischer Futures-Reihe sofort heraus - und
+    # uebersprang damit die Rekonstruktion gleich mit. Auf dem Entwicklungsstand
+    # fiel das nicht auf, weil die Futures-Reihe dort veraltet war und der Abruf
+    # ohnehin lief. Im Betrieb war sie frisch, der frueher Ausstieg griff, und
+    # die vier ETC-Reihen entstanden NIE: im Export 91 von 91 Tagen ohne Kurs.
+    #
+    # Deshalb: der ABRUF haengt an der Futures-Frische, die REKONSTRUKTION
+    # laeuft bei jedem Aufruf. Sie kostet keinen Netzwerkzugriff - die Referenz
+    # steht bereits in der DB.
+    last_date = db.get_last_ohlc_date(conn, _futures_symbol(asset.symbol), "USD")
+    if last_date is None or _is_rohstoff_history_stale(last_date):
+        ohlc_points = get_full_ohlc_history(futures_ticker, _futures_symbol(asset.symbol), "USD")
+        if ohlc_points:
+            db.upsert_ohlc_points(conn, ohlc_points)
+
+    referenz = db.get_ohlc_history(conn, _futures_symbol(asset.symbol), "USD")
+    if referenz:
+        _rekonstruiere_etc_reihe(conn, asset, referenz)
+    else:
+        logger.warning("Keine Futures-Reihe fuer %s - ETC-Reihe kann nicht rekonstruiert "
+                       "werden, die Position bleibt ohne Tageswert", asset.symbol)
 
 
 def _load_ohlc(conn, symbol: str):

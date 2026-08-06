@@ -97,6 +97,22 @@ pruefe("A8 Tagesrenditen identisch zur Referenz",
 roh._ensure_ohlc_backfilled(conn, asset_od7c)
 pruefe("A9 zweiter Aufruf ohne erneuten Abruf", abrufe["n"] == 1)
 
+# A9b: DER FALL, DER IM BETRIEB GESCHEITERT IST. Ist die Futures-Reihe frisch,
+# wird nicht neu abgerufen - die REKONSTRUKTION muss trotzdem laufen. Sie haengt
+# an einem Ankerpreis, der sich taeglich bewegt, nicht an der Futures-Frische.
+# Der erste Entwurf sprang bei frischer Futures-Reihe heraus und uebersprang die
+# Rekonstruktion mit; im Betrieb hatten die vier ETCs dadurch 91 von 91 Tagen
+# ohne Kurs, waehrend der Entwicklungsstand (veraltete Futures-Reihe) sauber aussah.
+conn.execute("DELETE FROM price_history_ohlc WHERE symbol='OD7C'")
+conn.commit()
+vorher_abrufe = abrufe["n"]
+roh._ensure_ohlc_backfilled(conn, asset_od7c)
+etc_neu = db.get_ohlc_history(conn, "OD7C", "USD")
+pruefe("A9b Rekonstruktion laeuft auch bei FRISCHER Futures-Reihe",
+       len(etc_neu) == 40 and abs(etc_neu[-1].close - 34.63) / 34.63 < 1e-9,
+       f"{len(etc_neu)} Punkte, kein neuer Abruf: {abrufe['n'] == vorher_abrufe}")
+pruefe("A9c dabei kein unnoetiger Netzabruf", abrufe["n"] == vorher_abrufe)
+
 # A10: technische Analyse liest die FUTURES-Reihe
 d2, closes2, hist2, last2 = roh._load_ohlc(conn, roh._futures_symbol("OD7C"))
 pruefe("A10 TA-Pfad liefert Futures-Niveau", abs(closes2[-1] - futures_closes[-1]) < 1e-9,
