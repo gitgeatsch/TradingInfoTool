@@ -3153,6 +3153,38 @@ def simuliere_signal(z: dict, reihe: list, ab_datum: str, horizont: int,
     if not tage:
         return None
     e, risiko, ist_short = z["entry"], z["risiko"], z["ist_short"]
+
+    # PLAUSIBILITAETSSCHRANKE (2026-08-06): liegen Zonen und Kursreihe
+    # ueberhaupt auf derselben Skala?
+    #
+    # DER FALL, DER DAS AUSLOESTE. OD7C ("WisdomTree Copper", ein ETC) wird bei
+    # ~34,63 gehandelt; seine OHLC-Historie holt agent/rohstoff/pipeline.py
+    # aber ueber den KUPFER-FUTURES-Ticker HG=F bei ~6,30 USD/lb - und legt sie
+    # unter demselben Symbol ab. Ein VERKAUFEN-Signal mit Entry 34,63, Stop
+    # 36,00 und Ziel 31,50 wurde dann gegen eine Reihe bei 6,30 bewertet: das
+    # Ziel gilt sofort als erreicht, und (34,63 - 6,30) / 1,37 ergibt +20,7 R.
+    # Genau dieser eine Trade war die gesamte Evidenz der Assetklasse Rohstoffe.
+    #
+    # Das ist KEIN Skalierungsfaktor, den man herausrechnen koennte: OD7C liegt
+    # bei Faktor 5,49, OD7L bei 1,53, OD7N bei 0,74 - es sind verschiedene
+    # Instrumente in verschiedenen Einheiten (lb, MMBtu, Feinunze).
+    #
+    # Diese Schranke behebt die Ursache NICHT, sie verhindert nur, dass daraus
+    # Kennzahlen entstehen. Lieber kein Ergebnis als ein erfundenes. Die
+    # Grenze ist bewusst weit (Faktor 3): echte Gaps und Splits bleiben
+    # auswertbar, nur ein Instrumenten-Verwechsler faellt heraus.
+    erster = next((p["close"] for p in tage if p.get("close")), None)
+    if erster and e > 0:
+        verhaeltnis = max(e / erster, erster / e)
+        if verhaeltnis > 3.0:
+            logger.warning(
+                "Signal-Zonen und Kursreihe liegen auf verschiedenen Skalen "
+                "(Entry %.4f gegen Kurs %.4f, Faktor %.2f) - nicht bewertet. "
+                "Typische Ursache: die Historie wurde ueber einen Proxy-Ticker "
+                "geholt und unter dem echten Symbol abgelegt.",
+                e, erster, verhaeltnis,
+            )
+            return None
     for i, p in enumerate(tage):
         hoch, tief, auf = p["high"], p["low"], p["open"]
         if hoch is None or tief is None:
