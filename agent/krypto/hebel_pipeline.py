@@ -298,6 +298,17 @@ def generate_hebel_signal(
     except Exception:
         logger.exception("Systemguete-Fakt fehlgeschlagen - Signal laeuft ohne")
         fakt_systemguete = None
+    # CRV-Erfolgsbaender (2026-08-06, Kandidat A1 aus Abschnitt 8 der
+    # Fakten-Entscheidungsmappe). Schliesst die Asymmetrie zum Spot-Analyst,
+    # der die Baender seit dem 03.08. als Regel 36 bekommt. Der Aufruf ist
+    # intern auf einen Tages-Cache gelegt - er simuliert Kursreihen und wird
+    # hier je Signal erreicht.
+    try:
+        from agent.krypto.backward_tracking import crv_baender_kontext_fuer_prompt
+        fakt_crv_baender = crv_baender_kontext_fuer_prompt(conn, "hebel")
+    except Exception:
+        logger.exception("CRV-Baender-Fakt fehlgeschlagen - Signal laeuft ohne")
+        fakt_crv_baender = None
 
     facts = build_hebel_facts(
         asset, price_snap, snapshot, confluence, regime_result, regime_profile,
@@ -308,6 +319,7 @@ def generate_hebel_signal(
         liquiditaetszonen=liquiditaetszonen,
         ausstiegsregel=fakt_ausstiegsregel,
         systemguete=fakt_systemguete,
+        crv_baender=fakt_crv_baender,
         signal_stabilitaet=signal_stabilitaet,
         btc_relativwert=btc_relativwert,
         optionsmarkt=optionsmarkt,

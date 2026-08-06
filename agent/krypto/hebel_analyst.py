@@ -457,6 +457,27 @@ ein lohnendes Setup liegt - er ist ausdruecklich KEIN Grund, grundsaetzlich \
 zurueckhaltender zu werden oder weniger vorzuschlagen. Fehlt einer der beiden \
 Fakten, gilt er als nicht verfuegbar; erfinde nichts.
 
+32. Chance-Risiko-Verhaeltnis, gemessene Einordnung (2026-08-06, neu): der \
+Fakt `crv_baender` nennt je CRV-Band, um wie viele Prozentpunkte Signale \
+dieses Bandes ihr Ziel oefter erreicht haben als ein mechanischer \
+Zufallseinstieg mit demselben CRV und demselben Stop-Abstand \
+("vorsprung_vor_zufallseinstieg_pp"). Die Tabelle steht dir VOR dem Setzen \
+der Zonen zur Verfuegung, damit du sie beim Setzen beruecksichtigen kannst \
+statt hinterher. Drei Dinge sind dabei zwingend: (a) Dort stehen bewusst \
+KEINE absoluten Trefferquoten. Die absolute Quote faellt mit steigendem \
+CRV zwangslaeufig, weil das Ziel CRV-mal weiter liegt als der Stop und der \
+Beobachtungszeitraum endlich ist - bei hohem CRV kommt auch ein \
+Zufallseinstieg fast nie an. Nur der Vorsprung ist ueber Baender hinweg \
+vergleichbar. (b) Ein Band mit "belastbar": false ist gemessen, aber zu \
+unsicher fuer eine Schlussfolgerung - behandle es als UNBEKANNT, nicht als \
+schlecht. (c) Das ist eine Einordnung, KEIN Mindestwert und keine Vorgabe: \
+die Mindestgrenze steht unveraendert in Regel 5. Ziehe NIEMALS den \
+Take-Profit kuenstlich hoch oder den Stop enger, um in ein besseres Band \
+zu rutschen - ein CRV, das nur durch einen zu nahen Stop entsteht, \
+zerstoert genau den Vorteil, den die Zahl beschreibt. Fehlt der Fakt, \
+liegen fuer diese Assetklasse noch keine belastbaren Zahlen vor; erfinde \
+nichts.
+
 SCHEMA:
 {
   "richtung": "LONG|SHORT",
@@ -784,8 +805,34 @@ def build_hebel_facts(
             "funding_rate_perzentil": _native(funding_rate_perzentil),
         },
         "trigger": {
+            # HIER STAND "score_gesamt", ES IST BEWUSST ENTFERNT (2026-08-06).
+            #
+            # Beschlossen am 03.08. beim Messmethodik-Umbau, jetzt umgesetzt.
+            # Drei Gruende:
+            #
+            # 1. NACKTE ZAHL OHNE REGEL. Der Screening-Score ging als blosser
+            #    Wert in den Faktensatz - keine Prompt-Regel hat je erklaert,
+            #    was er bedeutet oder wie er zu gewichten ist (nachgeprueft:
+            #    null Treffer im gesamten SYSTEM_PROMPT). Das ist die
+            #    schlechteste aller Varianten: er kann ankern, ist aber nicht
+            #    deutbar. Kategorie (d) der Fakten-Entscheidungsmappe.
+            # 2. ER DISKRIMINIERT NICHT. Event-Study ueber alle Kandidaten
+            #    (03.08.): LONG-Quartile -1,2 / +4,0 / +13,0 / +2,4 pp - nicht
+            #    monoton, das dritte Quartil ist das beste und das oberste
+            #    fast das schlechteste. SHORT: alle vier Quartile -19 bis
+            #    -23 pp, keinerlei Ordnung.
+            # 3. STUFENVERMISCHUNG. Der Score ist eine Stage-1-
+            #    Selektionsvariable; das Signal liegt dem LLM ueberhaupt nur
+            #    vor, WEIL der Score hoch genug war. Ihn zusaetzlich als
+            #    Stage-2-Fakt zu reichen ist Doppelzaehlung - dasselbe Muster
+            #    wie bei der Volatilitaet, die ueber RM-5/RM-1 laengst in der
+            #    Positionsgroesse steckt (Regler-Audit 03.08.).
+            #
+            # NICHT betroffen: die Score-Sortierung im Budget-Allocator
+            # (Stage 1, dort gehoert sie hin), das Screening selbst, die
+            # GUI-Anzeige und die E-Mail-Texte. Die Spalte trigger_score wird
+            # weiter geschrieben - nur die Weitergabe an das Modell entfaellt.
             "trigger_zweig": trigger.trigger_zweig,
-            "score_gesamt": _native(trigger.score_gesamt),
             "oi_change_pct_lookback": _native(trigger.oi_change_pct_lookback),
             "kursaenderung_pct_lookback": _native(trigger.kursaenderung_pct_lookback),
         },
@@ -809,6 +856,13 @@ def build_hebel_facts(
         # als Fakt behauptet wird.
         "ausstiegsregel": ausstiegsregel,
         "systemguete": systemguete,
+        # CRV-Erfolgsbaender (2026-08-06, Kandidat A1). Der Analyst SETZT das
+        # CRV und kannte dazu nur die Mindestgrenze aus Regel 5. Enthaelt
+        # bewusst NUR den Vorsprung vor dem Zufallseinstieg, nie die absolute
+        # Zielquote - siehe crv_baender_kontext_fuer_prompt() fuer den Grund
+        # (Horizont-Trunkierung, am 03.08. schon einmal als Scheinbefund
+        # gemeldet und widerrufen).
+        "crv_baender": crv_baender,
         "hebel_kontext": {
             "max_hebel_config": pre_result.config_max_hebel,
             "max_sicherer_hebel_geschaetzt": _native(pre_result.max_sicherer_hebel),

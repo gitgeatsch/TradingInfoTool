@@ -245,6 +245,27 @@ des Assets zu orientieren. Ein deterministisches Gate faengt Extremfaelle \
 ohnehin ab; dein Beitrag ist die fachlich richtige Zone, nicht das Treffen \
 einer Zahl.
 
+24. Chance-Risiko-Verhaeltnis, gemessene Einordnung (2026-08-06, neu): der \
+Fakt `crv_baender` nennt je CRV-Band, um wie viele Prozentpunkte Signale \
+dieses Bandes ihr Ziel oefter erreicht haben als ein mechanischer \
+Zufallseinstieg mit demselben CRV und demselben Stop-Abstand \
+("vorsprung_vor_zufallseinstieg_pp"). Die Tabelle steht dir VOR dem Setzen \
+der Zonen zur Verfuegung, damit du sie beim Setzen beruecksichtigen kannst \
+statt hinterher. Drei Dinge sind dabei zwingend: (a) Dort stehen bewusst \
+KEINE absoluten Trefferquoten. Die absolute Quote faellt mit steigendem \
+CRV zwangslaeufig, weil das Ziel CRV-mal weiter liegt als der Stop und der \
+Beobachtungszeitraum endlich ist - bei hohem CRV kommt auch ein \
+Zufallseinstieg fast nie an. Nur der Vorsprung ist ueber Baender hinweg \
+vergleichbar. (b) Ein Band mit "belastbar": false ist gemessen, aber zu \
+unsicher fuer eine Schlussfolgerung - behandle es als UNBEKANNT, nicht als \
+schlecht. (c) Das ist eine Einordnung, KEIN Mindestwert und keine Vorgabe: \
+die Mindestgrenze steht unveraendert in Regel 3. Ziehe NIEMALS den \
+Take-Profit kuenstlich hoch oder den Stop enger, um in ein besseres Band \
+zu rutschen - ein CRV, das nur durch einen zu nahen Stop entsteht, \
+zerstoert genau den Vorteil, den die Zahl beschreibt. Fehlt der Fakt, \
+liegen fuer diese Assetklasse noch keine belastbaren Zahlen vor; erfinde \
+nichts.
+
 SCHEMA:
 {
   "action": "KAUFEN|VERKAUFEN|HALTEN|NACHKAUFEN",
@@ -335,6 +356,7 @@ def build_facts(
     sektor_rotation: dict | None,
     price_age_minutes: float | None,
     historische_erfolgsquote: dict | None = None,
+    crv_baender: dict | None = None,
     historischer_makro_vergleich: dict | None = None,
     letztes_signal=None,
     these_abgleich: dict | None = None,
@@ -393,6 +415,13 @@ def build_facts(
         "haltung": _build_haltung_facts(holding, latest_price),
         "vorherige_empfehlung": vorherige_empfehlung_fact,
         "historische_erfolgsquote": historische_erfolgsquote,
+        # CRV-Erfolgsbaender (2026-08-06, Kandidat A1 aus Abschnitt 8 der
+        # Fakten-Entscheidungsmappe). EIGENE Zahlen dieser Assetklasse, nie
+        # uebertragene - genau der Vorbehalt aus fde5bfe ("dieselben
+        # Prozentwerte auf andere Klassen zu uebertragen waere eine
+        # Behauptung, keine Messung"). Reicht die Datenlage nicht, ist der
+        # Fakt None und faellt unten raus.
+        "crv_baender": crv_baender,
         "historischer_makro_vergleich": historischer_makro_vergleich,
         "sektor_rotation": sektor_rotation,
         # Kategorie-These-Abgleich (2026-07-19, Release 2) - siehe
@@ -466,6 +495,13 @@ def build_facts(
             ),
         },
     }
+    # None-Bloecke entfernen (2026-08-06, gleiche Linie wie hebel_analyst.py):
+    # `crv_baender` ist None, solange fuer DIESE Assetklasse kein belastbares
+    # Band vorliegt. Ein Schluessel mit null waere schlechter als gar keiner -
+    # das Modell saehe eine Angabe, die keine ist, und muesste raten.
+    for _schluessel in ("crv_baender",):
+        if facts.get(_schluessel) is None:
+            facts.pop(_schluessel, None)
     return facts
 
 

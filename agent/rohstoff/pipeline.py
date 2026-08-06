@@ -450,9 +450,22 @@ def generate_signal(
     letztes_signal = db.get_latest_signal(conn, asset.symbol)
     these_abgleich = kategorie_thesen.build_these_abgleich_fact(conn, asset)
 
+    # CRV-Erfolgsbaender fuer DIESE Assetklasse (2026-08-06, Kandidat A1).
+    # Eigene Messung je Tier statt uebertragener Prozentwerte - der Vorbehalt
+    # aus fde5bfe. Ohne belastbares Band gibt die Funktion None zurueck und der
+    # Fakt entfaellt. Fail-soft: der Signallauf darf daran nicht kippen. Der
+    # Aufruf hat intern einen Tages-Cache, er simuliert Kursreihen.
+    try:
+        from agent.krypto.backward_tracking import crv_baender_kontext_fuer_prompt
+        fakt_crv_baender = crv_baender_kontext_fuer_prompt(
+            conn, "rohstoffe", watchlist=watchlist)
+    except Exception:
+        logger.exception("CRV-Baender-Fakt fehlgeschlagen - Signal laeuft ohne")
+        fakt_crv_baender = None
     facts = build_facts(
         asset, price_snap, holdings.get(asset.symbol), snapshot, confluence, regime_result,
         risk_result, makro_ueberlagerung, positionierung, price_age_minutes,
+        crv_baender=fakt_crv_baender,
         historische_erfolgsquote=historische_erfolgsquote,
         historischer_makro_vergleich=historischer_makro_vergleich,
         letztes_signal=letztes_signal,

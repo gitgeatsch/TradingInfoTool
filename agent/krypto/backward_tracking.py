@@ -4297,3 +4297,133 @@ def systemguete_kontext_fuer_prompt(conn, watchlist: list | None = None,
         ),
         "belegt": True,
     }
+
+
+# Tages-Cache fuer die CRV-Baender. Schluessel (tier, horizont) -> (datum, wert).
+# NOETIG, nicht Kosmetik: crv_baender_kontext_fuer_prompt() simuliert jedes
+# Signal mit Zonen gegen die Kursreihen, und der Fakt wird JE SIGNAL gebaut.
+# Die zugrunde liegenden outcome_*-Spalten schreibt nur der taegliche
+# Backward-Tracking-Lauf - zwischen zwei Laeufen kann sich das Ergebnis nicht
+# aendern. Genau die Lehre vom 03.08.: "wie teuer ist ein Aufruf" ist ohne
+# "wie oft passiert er" wertlos (damals 288 statt 24 Berechnungen taeglich).
+_CRV_BAENDER_PROMPT_CACHE: dict[tuple, tuple] = {}
+
+
+def crv_baender_kontext_fuer_prompt(conn, tier: str = "hebel", horizont: int = 7,
+                                    min_n: int = 20, watchlist: list | None = None,
+                                    heute: str | None = None) -> dict | None:
+    """Gemessene CRV-Erfolgsbaender als FAKT - fuer ALLE sechs Pipelines (2026-08-06).
+
+    DIE LUECKE (Fakten-Entscheidungsmappe Abschnitt 8, Kandidat A1). Der
+    Hebel-Analyst SETZT das CRV und kannte dazu nur die Mindestgrenze aus
+    Regel 5 - keine gemessene Einordnung. Der Krypto-Spot-Analyst bekam seit
+    dem 03.08. Baender als Regel 36, obwohl seine Datenbasis mit 19
+    ausgewerteten Trades gegen 124 weit duenner ist; Aktien, Rohstoffe und
+    Themen-ETF hatten gar nichts.
+
+    `tier` ist einer von: "hebel", "krypto", "aktien", "rohstoffe",
+    "themen_etf" (oder "spot" fuer den Sammel-Topf). Fuer alles ausser "hebel"
+    wird ueber `spot_symbole_je_tier()` auf die Symbole DIESER Assetklasse
+    gefiltert - ohne den Filter waere jeder Befund ein Mischwert, in dem
+    hinterher niemand sagen kann, ob er krypto-spezifisch war (Fund 29.07.).
+    Ohne Watchlist gibt es fuer die Spot-Familie deshalb bewusst None statt
+    einer stillen Mischung.
+
+    NUR DER ABSTAND ZUR BASISLINIE GEHT IN DEN FAKT, NIE DIE ABSOLUTE QUOTE.
+    Das ist keine Feinheit, sondern der Kern: die absolute Zielquote faellt mit
+    steigendem CRV zwangslaeufig, weil das Ziel CRV-mal weiter liegt als der
+    Stop und der Horizont endlich ist. Bei CRV 4,0 und H=7 erreicht selbst ein
+    Zufallseinstieg nur 3,1 %. Wer die absoluten Quoten nebeneinanderstellt,
+    liest daraus "hohes CRV ist schlecht" - genau der Trunkierungs-Artefakt,
+    der am 03.08. als Befund gemeldet und noch am selben Tag widerrufen wurde
+    (7e1928a -> a9f1e32). Der Abstand zur mechanischen Basislinie desselben
+    Bandes ist gegen diesen Effekt immun, weil er beide Seiten gleich
+    behandelt.
+
+    BAENDER OHNE `belastbar` WERDEN MITGELIEFERT, ABER GEKENNZEICHNET. Sie
+    wegzulassen waere Rosinenpickerei - das Modell saehe dann nur das eine
+    gute Band und hielte den Rest fuer ungemessen statt fuer unsicher.
+
+    Gibt None zurueck, wenn KEIN Band belastbar ist: dann traegt die Tabelle
+    keine Aussage, und eine Liste unsicherer Zahlen waere schlechter als gar
+    nichts (dieselbe Linie wie die n>=30-Schwelle bei der Systemguete)."""
+    schluessel = (tier, horizont)
+    tag = heute or datetime.now(timezone.utc).date().isoformat()
+    gecacht = _CRV_BAENDER_PROMPT_CACHE.get(schluessel)
+    if gecacht and gecacht[0] == tag:
+        return gecacht[1]
+
+    # Tabellen-Tier vs. Auswertungs-Tier: `hebel_signals` und `signals` sind
+    # zwei Tabellen, aber innerhalb von `signals` liegen alle vier
+    # Spot-Assetklassen gemeinsam - die Trennung passiert ueber die Symbole.
+    tabellen_tier = "hebel" if tier == "hebel" else "spot"
+    erlaubte_symbole = None
+    if tier not in ("hebel", "spot"):
+        erlaubte_symbole = spot_symbole_je_tier(watchlist).get(tier)
+        if not erlaubte_symbole:
+            # Kein stiller Rueckfall auf den Sammel-Topf: lieber kein Fakt als
+            # ein Mischwert ueber vier Assetklassen.
+            _CRV_BAENDER_PROMPT_CACHE[schluessel] = (tag, None)
+            return None
+
+    try:
+        roh = compute_crv_breakeven_baender(conn, tabellen_tier, horizont=horizont,
+                                            mit_halten=False,
+                                            erlaubte_symbole=erlaubte_symbole)
+    except Exception:
+        return None
+
+    baender = []
+    for b in ((roh or {}).get("baender") or []):
+        if not isinstance(b.get("anzahl"), int) or b["anzahl"] < min_n:
+            continue
+        abstand = b.get("abstand_zur_basislinie_pp")
+        if not isinstance(abstand, (int, float)):
+            continue
+        baender.append({
+            "crv_von": b.get("crv_von"),
+            "crv_bis": b.get("crv_bis"),
+            "anzahl_signale": b["anzahl"],
+            "vorsprung_vor_zufallseinstieg_pp": round(float(abstand), 1),
+            "erwartungswert_r": (round(b["erwartungswert_r"], 3)
+                                 if isinstance(b.get("erwartungswert_r"), (int, float))
+                                 else None),
+            "belastbar": bool(b.get("belastbar")),
+        })
+
+    ergebnis = None
+    if any(b["belastbar"] for b in baender):
+        ergebnis = {
+            "gilt_fuer": tier,
+            "horizont_tage": horizont,
+            "grundlage": (roh or {}).get("anzahl_signale"),
+            "baender": baender,
+            "lesehilfe": (
+                "'vorsprung_vor_zufallseinstieg_pp' = um wie viele Prozentpunkte "
+                "Signale dieses CRV-Bandes ihr Ziel oefter erreichen als ein "
+                "mechanischer Zufallseinstieg mit demselben CRV und demselben "
+                "Stop-Abstand. Nur dieser Vorsprung ist vergleichbar."
+            ),
+            "warum_keine_absoluten_quoten": (
+                "Die absolute Zielquote faellt mit steigendem CRV zwangslaeufig - "
+                "das Ziel liegt CRV-mal weiter als der Stop, der Beobachtungs-"
+                "zeitraum ist aber endlich. Bei CRV 4,0 kommt auch ein "
+                "Zufallseinstieg fast nie an. Absolute Quoten wuerden dich "
+                "deshalb systematisch gegen hohe CRV-Werte lenken, ohne dass "
+                "dahinter ein Qualitaetsunterschied steht."
+            ),
+            "wie_du_das_nutzt": (
+                "Einordnung beim SETZEN der Zonen, KEINE Vorgabe und kein "
+                "Mindestwert - die Mindestgrenze steht unveraendert in Regel 5. "
+                "Baender mit belastbar=false sind gemessen, aber zu unsicher fuer "
+                "eine Schlussfolgerung; behandle sie als 'unbekannt', nicht als "
+                "'schlecht'. Die Struktur des Charts hat Vorrang: ein CRV, das nur "
+                "durch einen zu nahen Stop entsteht, ist kein besseres Signal."
+            ),
+            "belegt": True,
+            "quelle": ((roh or {}).get("schaetzer")
+                       or "kumulative Inzidenz (Aalen-Johansen), Competing Risks"),
+        }
+
+    _CRV_BAENDER_PROMPT_CACHE[schluessel] = (tag, ergebnis)
+    return ergebnis
