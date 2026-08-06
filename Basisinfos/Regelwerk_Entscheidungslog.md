@@ -8,11 +8,11 @@
 
 ---
 
-## Index nach Thema (171 Einträge)
+## Index nach Thema (172 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
-### Regelwerk / deterministische Gates (32)
+### Regelwerk / deterministische Gates (33)
 
 - **2026-07-17** — RM-4 (Cash-Reserve) war rueckwaerts- statt vorwaertsgerichtet
 - **2026-07-18** — Cash-Veto-Warnsystem - RM-4-Block sichtbar machen statt stillschweigend zu HALTEN downzugraden
@@ -46,6 +46,7 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-05** — Die Richtungswahl ist eine REGIME-WETTE, keine Kante - plus 93→3 % beim Ausfuehrungshinweis
 - **2026-08-05** — Nur-Long-Umbau in fuenf Schritten: der BP-Schalter wirkt nur noch auf E-Mail und Anzeige
 - **2026-08-05** — Ausstiegsregel scharfgeschaltet: Config, taeglicher Job 7:15, Sammel-E-Mail
+- **2026-08-06** — Gate-Untergrenze Stop-Abstand: EXISTIERT BEREITS (RM-1b 2,5 % + RM-1c 0,75xATR), richtig kalibriert, nichts gebaut
 
 ### LLM-Prompts / Analysten (Stage 2) (15)
 
@@ -12485,3 +12486,66 @@ NOCH KEINE REGELAENDERUNG - erst zur Entscheidung vorlegen.
 Horizont nicht abdeckt. Reiner Zeiteffekt (junge Signale haben noch keine 7 Tage
 Zukunft), also NICHT stop-abhaengig - die Bandvergleiche bleiben unberuehrt.
 SHORT ist je Band zu duenn (n=2-17); die Aussage traegt LONG.
+
+## Nachtrag (2026-08-06): Gate-Untergrenze fuer den Stop-Abstand - EXISTIERT BEREITS, nichts gebaut
+
+**Auftrag:** die Untergrenze als Gate ausarbeiten, mit Begruendung warum ja und
+warum nein, plus die Frage "wie kommen die unter 2 Prozent ueberhaupt zustande
+und wo erfolgt die richtige Filterung". **Die Ausarbeitung endet bei NICHT
+UMSETZEN** - die Regel gibt es, zweistufig, und sie ist richtig kalibriert.
+
+**WAS EXISTIERT** (beides seit 02.08., fuer ALLE Assetklassen, es vetot die
+STRENGERE der beiden):
+
+| | Schwelle | faengt |
+|---|---|---|
+| **RM-1b** `sl_abstand_eng_schwelle_relativ` | Stop < **2,5 %** absolut | den strukturellen Mindestabstand: Gebuehren, Spread, Grundrauschen |
+| **RM-1c** `sl_abstand_min_atr_faktor` | Stop < **0,75 × ATR** | den Fall, wo 2,5 % absolut reichen, fuer DIESES Symbol aber im Rauschen liegen |
+
+**WIE DIE UNTER-2-%-FAELLE ZUSTANDE KAMEN - sie sind aelter als die Regel.** Von
+36 Signalen mit Stop < 2 % haben 24 kein Veto, und **alle 24 stammen vom
+14.-29.07.**, also von VOR dem 02.08. Seit RM-1b scharf ist, ist kein einziges
+mehr ohne Veto durchgekommen. Der Befund aus dem vorigen Nachtrag ist damit
+**keine Luecke, sondern eine unabhaengige survivorship-freie Bestaetigung** einer
+Regel, die auf ganz anderer Datenbasis kalibriert wurde.
+
+**DIE KALIBRIERUNG SITZT RICHTIG.** Feinaufloesung um die Schwelle, Horizont 7,
+Abstand zur mechanischen Basislinie mit demselben Stop:
+
+| Band | n | Abstand zur Basislinie |
+|---|---|---|
+| 0,0-1,5 % | 11 | −0,667 |
+| 1,5-2,0 % | 15 | −0,395 |
+| 2,0-2,5 % | 14 | +0,133 |
+| **2,5-3,0 %** | 23 | **+0,597** |
+| 3,0-4,0 % | 49 | +0,348 |
+
+Der Uebergang zu klar positiv liegt bei **2,5 %** - exakt dort, wo RM-1b steht.
+Und die Schwelle ist auch nicht zu streng: das Band direkt darunter traegt mit
++0,133 praktisch nichts ueber dem Zufall bei.
+
+**WARUM KEIN ZWEITES GATE.** Es waere eine **Dublette** - zwei Regeln fuer
+dieselbe Sache mit zwei Schwellen, die auseinanderlaufen koennen. Genau diesen
+Fehlertyp hat der Regler-Audit am 03.08. gefunden und entfernt (zwei
+Config-Namen fuer eine Codestelle). Ein *lockereres* Gate bei 2 % waere zudem
+reine Attrappe, weil die strengere Grenze ohnehin gewinnt.
+
+**DIE ARCHITEKTUR IST BEWUSST DREITEILIG** und beantwortet die Frage nach dem
+richtigen Filterort: weiche **Prompt-Leitplanke** (Regel 6: ziele auf
+1,5-2 × ATR) als Zielwert, **RM-1c** als volatilitaets-relative Notbremse bei
+0,75 × ATR, **RM-1b** als absolute Untergrenze. Das Gate ist die Notbremse,
+nicht der Zielwert - deshalb liegt die Prompt-Empfehlung deutlich darueber.
+
+**GEAENDERT, beides ohne Verhaltenswirkung:** die Veto-Begruendung in
+`hebel_risk_gate.py` zitierte "0 von 20 aufgeloesten Signalen" aus der
+01.08.-Messung - also genau die survivorship-behaftete Zahl, die derselbe Tag
+widerlegt hat. Ersetzt durch die sauberen Werte. Im Spot-Gate
+(`risk_gate.py`) ein Bestaetigungsvermerk ergaenzt, damit die Verifikation auch
+dort auffindbar ist (stehende Regel "bei Funden immer ALLE Asset-Varianten
+pruefen").
+
+**Falls je eine Aenderung gewollt ist:** der einzige begruendbare Hebel waere
+eine ANHEBUNG von 2,5 %, weil das Band 2,5-3,0 % mit Abstand am besten
+abschneidet. Davon ist abzuraten - n=23, und ein schaerferes Gate widerspricht
+der Vorgabe "mehr Signale durch Qualitaet, nicht durch Lockerung" in die andere
+Richtung.
