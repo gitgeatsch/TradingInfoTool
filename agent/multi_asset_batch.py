@@ -56,16 +56,16 @@ class MultiAssetBatchResult:
 
 
 def _kandidaten(watchlist: list) -> list:
-    from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR as _hedge_symbole
+    from agent.hedge.pipeline import ist_hedge_instrument
 
     kandidaten = [
         a for a in watchlist
-        if a.assetklasse in ("aktien", "rohstoffe") or a.symbol in _hedge_symbole
+        if a.assetklasse in ("aktien", "rohstoffe") or ist_hedge_instrument(a)
         # Themen-ETFs (2026-07-18, Multi-Asset-Vollstaendigkeitspruefung): restliche
         # assetklasse=="etf"-Assets, die KEINE Hedge-Instrumente sind (VVMX/X136/
         # EXH3/CEBS/ISOC) - standen bis hierher als einzige Watchlist-Assets ganz
         # ohne Pipeline da, siehe agent/themen_etf/pipeline.py Modul-Docstring.
-        or (a.assetklasse == "etf" and a.symbol not in _hedge_symbole)
+        or (a.assetklasse == "etf" and not ist_hedge_instrument(a))
     ]
     # 2026-07-19, Konsistenz-Check ueber alle Assetklassen (analog zum Krypto-
     # coingecko_id-Fix in agent/krypto/signal_batch.py): Aktien UND Themen-
@@ -77,7 +77,7 @@ def _kandidaten(watchlist: list) -> list:
     # TICKER), Hedge braucht ueberhaupt keine OHLC-Historie.
     return [
         a for a in kandidaten
-        if a.assetklasse == "rohstoffe" or a.symbol in _hedge_symbole or a.yfinance_symbol
+        if a.assetklasse == "rohstoffe" or ist_hedge_instrument(a) or a.yfinance_symbol
     ]
 
 
@@ -88,8 +88,8 @@ def _pipeline_fuer(asset):
     if asset.assetklasse == "rohstoffe":
         from agent.rohstoff.pipeline import generate_signal
         return generate_signal
-    from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR as _hedge_symbole
-    if asset.assetklasse == "etf" and asset.symbol not in _hedge_symbole:
+    from agent.hedge.pipeline import ist_hedge_instrument
+    if asset.assetklasse == "etf" and not ist_hedge_instrument(asset):
         from agent.themen_etf.pipeline import generate_signal
         return generate_signal
     from agent.hedge.pipeline import generate_signal
@@ -152,7 +152,7 @@ def run_multi_asset_batch(
         # assetklasse=="etf" mit Hedge - Hedge bewusst ausgeschlossen (nicht Teil
         # dieser Roadmap-Runde, siehe agent/hedge/pipeline.py Modul-Docstring
         # fuer die eigenstaendige Hedge-Handelslogik ohne halte_kriterium-Aequivalent).
-        from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR as _hedge_symbole_fuer_ausschluss
+        from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR as _hedge_symbole_fuer_ausschluss  # Mengendifferenz, kein Praedikat
         re_eval_symbole = db.get_symbole_mit_erreichtem_halte_kriterium(
             conn, watchlist, assetklassen=frozenset({"aktien", "rohstoffe", "etf"}),
         ) - set(_hedge_symbole_fuer_ausschluss)
@@ -195,14 +195,16 @@ def run_multi_asset_batch(
     # Ausgangsbestand sehen und in Summe ueber das Ziel-Maximum hinaus
     # vorschlagen koennen. Nur fuer Hedge-Symbole relevant, bleibt fuer
     # Aktien/Rohstoffe/Themen-ETF bei 0.0 (kein Effekt, kein extra kwarg).
-    from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR as _hedge_hebel_faktoren
+    from agent.hedge.pipeline import (
+        SYMBOL_ZU_HEBEL_FAKTOR as _hedge_hebel_faktoren, ist_hedge_instrument,
+    )
 
     hedge_effektiv_vorgeschlagen_usd = 0.0
 
     for asset in faellige:
         pipeline_fn = _pipeline_fuer(asset)
         schluessel = asset.symbol
-        ist_hedge = asset.symbol in _hedge_hebel_faktoren
+        ist_hedge = ist_hedge_instrument(asset)
         extra_kwargs = (
             {"bereits_vorgeschlagen_effektiv_usd": hedge_effektiv_vorgeschlagen_usd} if ist_hedge
             # Re-Evaluierung-faellig (2026-08-01, Schritt 4): Hedge hat kein

@@ -347,6 +347,38 @@ Hedge-Auswertung, nicht danach.
 > Datenbezug, keine Schwellenwert-Diskussion — nur die Weigerung, zwei Zahlen
 > getrennt anzuzeigen, die dasselbe meinen.
 
+## 3c. Hedge sauber abgrenzen — wo gleich, wo anders (06.08.)
+
+**Hedge ist keine Assetklasse.** Die Watchlist kennt nur `aktien`, `rohstoffe`,
+`krypto` und `etf`; DBPK und 3QSS stehen als `etf` darin und sind allein über
+ihre Mitgliedschaft in `SYMBOL_ZU_HEBEL_FAKTOR` erkennbar. Diese Prüfung stand
+an **sechs verstreuten Stellen** — und die siebte hat sie vergessen (der neue
+OHLC-Refresh filterte auf eine Assetklasse „hedge", die es nicht gibt).
+
+> Ein Begriff, der an sechs Stellen wiederholt wird, wird an der siebten falsch
+> gemacht. Deshalb jetzt **ein** Prädikat: `ist_hedge_instrument()`.
+
+Die Trennung, die dahinter steht:
+
+| | Hedge wird behandelt … | warum |
+|---|---|---|
+| Kursreihe beschaffen und aktuell halten | **gleich** | Datenversorgung ist Datenversorgung |
+| Portfoliobewertung, Tageswert, Z-3 | **gleich** | eine gehaltene Position ist eine gehaltene Position |
+| Staleness, Plausibilitätsprüfung der Reihe | **gleich** | dieselben Fehlerarten |
+| Signalerzeugung, Cooldown, Budget-Slot | **gleich** | derselbe Batch, derselbe Wettbewerb um Slots |
+| **Erfolgsmaß** | **anders** | ein Hedge, der verliert während das Portfolio steigt, hat funktioniert |
+| **Richtungsdeutung** | **anders** | KAUFEN = Hedge aufbauen = bärische Erwartung → SHORT |
+| **Positionsgröße** | **anders** | folgt dem Long-Exposure des Portfolios, nicht einer Kante im Instrument |
+| **Technische Analyse** | **anders** | bewusst keine — bei jedem anderen Asset ist sie die Grundlage |
+| **Regime** | **anders** | steigendes Aktienregime ist für ein inverses Produkt das *schlechte* Umfeld (offen, D-d) |
+
+**Die obere Hälfte ist heute umgesetzt und im Betrieb bestätigt** (`hedge: 2` im
+Refresh, 520 rekonstruierte 3QSS-Punkte). **Die untere Hälfte ist teilweise
+offen:** Richtungsdeutung und Positionsgröße sind gebaut, das **Erfolgsmaß und
+das Regime nicht** — und solange das Erfolgsmaß fehlt, darf keine
+Hedge-Systemgüte als Ergebnis gelesen werden. Sie wäre garantiert negativ und
+garantiert bedeutungslos.
+
 ## 4. Ehrliche Grenzen dieses Stands
 
 - Die rekonstruierten Reihen tragen **keine** Rollkosten, Gebühren oder (bei

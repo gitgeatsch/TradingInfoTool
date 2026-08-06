@@ -60,6 +60,49 @@ SYMBOL_ZU_REFERENZ_INDEX = {
 }
 
 
+def ist_hedge_instrument(asset_oder_symbol) -> bool:
+    """Ist dieses Asset ein Absicherungs-Instrument? DIE zentrale Abgrenzung.
+
+    WARUM ES DIESE FUNKTION GIBT (2026-08-06). Hedge ist KEINE Assetklasse -
+    die Watchlist kennt nur `aktien`, `rohstoffe`, `krypto` und `etf`. DBPK und
+    3QSS stehen als `etf` darin und sind nur ueber ihre Mitgliedschaft in
+    SYMBOL_ZU_HEBEL_FAKTOR erkennbar. Diese Pruefung stand bisher als
+    `asset.symbol in SYMBOL_ZU_HEBEL_FAKTOR` an sechs verstreuten Stellen; eine
+    siebte hat sie am 06.08. schlicht vergessen (der neue OHLC-Refresh filterte
+    auf eine Assetklasse "hedge", die es nicht gibt, und liess die beiden
+    Instrumente aus). Ein Begriff, der an sechs Stellen wiederholt wird, wird an
+    der siebten falsch gemacht.
+
+    DIE TRENNUNG, um die es geht - wo GLEICH, wo ANDERS:
+
+    GLEICH wie jedes andere Asset (Datenversorgung ist Datenversorgung):
+      - Kursreihe beschaffen und aktuell halten
+      - Portfoliobewertung, Tageswert, Eingang in Z-3
+      - Staleness-Ueberwachung, Plausibilitaetspruefung der Reihe
+      - Signalerzeugung im Multi-Asset-Batch, Cooldown, Budget-Slot
+
+    ANDERS als jedes andere Asset (die Richtung der Bewertung kehrt sich um):
+      - ERFOLGSMASS. Ein Hedge, der Geld verliert waehrend das Portfolio
+        steigt, hat FUNKTIONIERT. Nach derselben Systemguete gemessen wie ein
+        Long-Signal ist das Ergebnis garantiert negativ und garantiert
+        bedeutungslos.
+      - RICHTUNGSDEUTUNG. KAUFEN = Hedge aufbauen = baerische Gesamtmarkt-
+        erwartung, also SHORT (richtung_aus_action(ist_hedge_invertiert=True)).
+      - POSITIONSGROESSE. Sie folgt dem Long-Exposure des Portfolios, nicht
+        einer Kante im Instrument selbst (_compute_portfolio_exposure()).
+      - TECHNISCHE ANALYSE. Bewusst keine - siehe Modul-Docstring. Bei jedem
+        anderen Asset ist sie die Grundlage.
+      - REGIME. Umgekehrte Wirkrichtung: ein steigendes Aktienregime ist fuer
+        ein inverses Produkt das SCHLECHTE Umfeld (offen, Punkt D-d).
+
+    Nimmt ein Asset-Objekt oder ein Symbol - Aufrufer haben mal das eine, mal
+    das andere zur Hand, und ein zweiter Name dafuer waere schon wieder eine
+    Abgrenzung zu viel.
+    """
+    symbol = getattr(asset_oder_symbol, "symbol", asset_oder_symbol)
+    return symbol in SYMBOL_ZU_HEBEL_FAKTOR
+
+
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -414,7 +457,7 @@ def generate_signal(
 
     `bereits_vorgeschlagen_effektiv_usd` (keyword-only, 2026-07-22, siehe
     _compute_portfolio_exposure()-Docstring) - optional, Standard 0.0."""
-    if asset.symbol not in SYMBOL_ZU_HEBEL_FAKTOR:
+    if not ist_hedge_instrument(asset):
         raise ValueError(f"generate_signal() (agent/hedge) erwartet ein bekanntes Hedge-Symbol, bekam {asset.symbol!r}")
 
     _ensure_ohlc_backfilled(conn, asset)

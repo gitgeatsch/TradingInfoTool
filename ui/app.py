@@ -615,9 +615,10 @@ class TradingInfoToolApp(tk.Tk):
             # Ticker) und Hedge-Instrumente (kein OHLC noetig) sind NICHT
             # betroffen, siehe agent/multi_asset_batch.py::_kandidaten().
             from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR as _hedge_symbole
+            from agent.hedge.pipeline import ist_hedge_instrument
 
             yfinance_symbol_fehlt = (
-                asset.symbol not in _hedge_symbole
+                not ist_hedge_instrument(asset)
                 and (asset.assetklasse == "aktien" or asset.assetklasse == "etf")
                 and not asset.yfinance_symbol
             )
@@ -1330,7 +1331,7 @@ def _validate_new_asset(
         # hartkodiert, das laesst sich nicht per UI abbilden).
         if assetklasse == "etf":
             from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR as _hedge_symbole
-            if symbol not in _hedge_symbole:
+            if not ist_hedge_instrument(symbol):
                 warnungen.append(
                     f"'{symbol}' wird als Themen-/Sektor-ETF behandelt (agent/themen_etf/). "
                     "Falls stattdessen ein neues Portfolio-Hedge-Instrument gemeint ist: dafür "

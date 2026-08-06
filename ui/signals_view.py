@@ -105,13 +105,14 @@ class SignalsView(ttk.Frame):
         # eigenes assetklasse-Feld (bleiben "etf", siehe SYMBOL_ZU_HEBEL_FAKTOR dort),
         # daher per Symbol statt per Assetklasse gefiltert.
         from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR as _hedge_symbole
-        self._hedge_watchlist = [a for a in watchlist if a.symbol in _hedge_symbole]
+        from agent.hedge.pipeline import ist_hedge_instrument
+        self._hedge_watchlist = [a for a in watchlist if ist_hedge_instrument(a)]
         # Themen-ETFs (2026-07-18, agent/themen_etf/pipeline.py) - restliche
         # assetklasse=="etf"-Assets, die NICHT Hedge-Instrumente sind (VVMX/X136/
         # EXH3/CEBS/ISOC). Standen bis hierher ohne jede Pipeline in der Watchlist
         # (Multi-Asset-Vollstaendigkeitspruefung, siehe Memory project_multi_asset_batch.md).
         self._themen_etf_watchlist = [
-            a for a in watchlist if a.assetklasse == "etf" and a.symbol not in _hedge_symbole
+            a for a in watchlist if a.assetklasse == "etf" and not ist_hedge_instrument(a)
         ]
         # agent/aktien/pipeline.py::generate_signal() braucht die VOLLSTAENDIGE
         # Watchlist (inkl. BTC) fuer compute_current_regime() - filtert intern selbst

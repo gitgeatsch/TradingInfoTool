@@ -2685,7 +2685,7 @@ def compute_zai_richtung_performance(
     die anderen beiden Kategorien waeren sonst faelschlich in der
     Trefferquote verwaesserend mitgezaehlt. Reine Lesefunktion, kein
     Seiteneffekt."""
-    from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR as _hedge_symbole
+    from agent.hedge.pipeline import ist_hedge_instrument
     from agent.krypto.gegenpruefung import richtung_aus_action
 
     assetklasse_by_symbol = _assetklasse_index(watchlist, "compute_zai_richtung_performance()")
@@ -2727,7 +2727,7 @@ def compute_zai_richtung_performance(
     ).fetchall()
     for row in spot_rows:
         primaer_richtung = richtung_aus_action(
-            row["action"], ist_hedge_invertiert=row["symbol"] in _hedge_symbole,
+            row["action"], ist_hedge_invertiert=ist_hedge_instrument(row["symbol"]),
         )
         if primaer_richtung is None:
             continue

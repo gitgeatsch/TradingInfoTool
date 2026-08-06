@@ -227,16 +227,16 @@ def generate_signal(
     ebenfalls assetklasse=='etf', werden hier aber bewusst NICHT mit hineingezaehlt
     (eigene Pipeline, eigene Logik, siehe agent/hedge/) - Aufrufer muss ein Symbol
     ausserhalb von agent.hedge.pipeline.SYMBOL_ZU_HEBEL_FAKTOR uebergeben."""
-    from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR as _hedge_symbole
+    from agent.hedge.pipeline import ist_hedge_instrument
 
-    if asset.assetklasse != "etf" or asset.symbol in _hedge_symbole:
+    if asset.assetklasse != "etf" or ist_hedge_instrument(asset):
         raise ValueError(
             f"generate_signal() (agent/themen_etf) erwartet ein Themen-ETF (assetklasse=='etf', "
             f"nicht in SYMBOL_ZU_HEBEL_FAKTOR), bekam {asset.symbol!r} (assetklasse={asset.assetklasse!r})"
         )
 
     themen_etf_watchlist = [
-        a for a in watchlist if a.assetklasse == "etf" and a.symbol not in _hedge_symbole
+        a for a in watchlist if a.assetklasse == "etf" and not ist_hedge_instrument(a)
     ]
 
     native_currency = _resolve_asset_currency(asset)

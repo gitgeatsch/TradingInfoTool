@@ -335,8 +335,7 @@ def _refresh_nicht_aktien_ohlc(conn, watchlist) -> None:
     # Pipeline zu. Eine zweite Fassung derselben Regel waere genau die Dublette,
     # die am 03.08. schon einmal auseinandergelaufen ist.
     from agent.hedge.pipeline import (
-        SYMBOL_ZU_HEBEL_FAKTOR as _hedge_symbole,
-        _ensure_ohlc_backfilled as _hedge_ohlc,
+        ist_hedge_instrument, _ensure_ohlc_backfilled as _hedge_ohlc,
     )
     from agent.multi_asset_batch import _kandidaten
     from agent.rohstoff.pipeline import _ensure_ohlc_backfilled as _rohstoff_ohlc
@@ -353,7 +352,7 @@ def _refresh_nicht_aktien_ohlc(conn, watchlist) -> None:
             if asset.assetklasse == "rohstoffe":
                 _rohstoff_ohlc(conn, asset)
                 art = "rohstoffe"
-            elif asset.symbol in _hedge_symbole:
+            elif ist_hedge_instrument(asset):
                 _hedge_ohlc(conn, asset)
                 art = "hedge"
             elif asset.assetklasse == "etf":
