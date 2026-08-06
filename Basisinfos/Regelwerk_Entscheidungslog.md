@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (169 Einträge)
+## Index nach Thema (170 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -191,7 +191,7 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-07-23** — Watchlist-Aenderungen wirkten nur nach App-Neustart - in 3 Phasen behoben
 - **2026-08-01** — Zwei Zeit-Domaenen im Projekt (UTC-Daten vs. lokale Scheduler-Zeit) - bewusst KEIN Fix
 
-### Methodik / Audits / Synthesen (11)
+### Methodik / Audits / Synthesen (12)
 
 - **2026-07-17** — Spot-Regelwerk-Konsistenzprüfung nach dem Hebel-Fix
 - **2026-07-19** — Konsistenzprüfung über ALLE
@@ -204,6 +204,7 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-04** — Vier saubere Negativbefunde geschlossen (Score, Ausschuss, LLM1-Prompt, Selbstjustierung)
 - **2026-08-05** — Der Dead-Loop aufgeloest: die Ursache liegt bei MISTRAL, nicht im Code (Replay-Nachweis)
 - **2026-08-05** — Allocator gegen Zufall: an historischen Daten NICHT beantwortbar - Vorfilter blockierte die Messung
+- **2026-08-06** — "Sprung bei CRV 4,0" gegengeprueft: es gibt keinen, und MFE >= 1R ist als Erfolgsmass untauglich
 
 ### Hebel- / Signal-Einzelfunde (12)
 
@@ -12367,3 +12368,62 @@ vorher strukturell nicht geben konnte.
 **Nicht bewertbar bleibt die Signalmenge** (22 gegen 32-57 an Vortagen): die
 Produktion war waehrend der Desktop-Tests zeitweise offline, und es war erst der
 Morgen-Batch. Zwei moegliche Ursachen fuer dieselbe Zahl - deshalb kein Befund.
+
+## Nachtrag (2026-08-06): der "Sprung bei CRV 4,0" gegengeprueft - es gibt keinen, und MFE >= 1R ist als Erfolgsmass untauglich
+
+**Nutzer-Einwand:** der Sprung sei ihm „sehr oft vorgekommen und war irgendwie
+bewiesen, dass dieser existiert und eine besondere Zone ist". Berechtigt - und
+meine Erklaerung dafuer war **falsch adressiert**. Nachgerechnet in
+`pruefe_sprung_bei_crv4.py` an **871 Signalen** gegen 491 der Originalmessung.
+
+**KORREKTUR AN MIR SELBST.** Ich hatte den Sprung pauschal als
+Trunkierungs-Artefakt bezeichnet. Das gilt nur fuer das Mass "Ziel erreicht".
+Regel 36 nutzte aber "MFE >= 1R", und darauf wirkt Trunkierung **nicht** - die
+Schwelle 1R ist fest, unabhaengig vom CRV. Zwei verschiedene Messgroessen unter
+einem Etikett.
+
+**WAS STATTDESSEN DAHINTERSTECKT.** CRV = Zielabstand / Stopabstand. Ein hohes
+CRV entsteht auch durch einen ENGEN Stop - und bei engem Stop ist 1R eine
+winzige Kursbewegung, "MFE >= 1R" wird mechanisch leicht.
+
+| CRV-Band | MFE >= 1R | Median-Stop |
+|---|---|---|
+| 2,0-2,5 | 27,1 % | 6,25 % |
+| 2,5-3,0 | 37,3 % | 5,62 % |
+| 3,0-4,0 | 46,7 % | 4,22 % |
+| >= 4,0 | 63,9 % | **2,56 %** |
+
+**Es gibt gar keinen Sprung** - in der groesseren Stichprobe steigt es glatt,
+und der Stop-Abstand faellt spiegelbildlich. **Der Stop-Abstand ALLEIN trennt
+schaerfer als das CRV** (54,0 / 25,1 / 15,8 % ueber die Stop-Terzile, Intervalle
+getrennt). Kontrolliert man ihn, schrumpft der CRV-Effekt von +36,8 auf
++13,4 pp und alle Intervalle ueberlappen. Das CRV war ein **Stellvertreter fuer
+die Stop-Enge**.
+
+**UND DANN KIPPT ES** - die Nutzer-Formulierung traf den Kern: „es geht nicht um
+den Wert, sondern wann dieser Wert alles zum Kippen bringt."
+
+| Stop-Abstand | n | MFE >= 1R | Ergebnis (EW) |
+|---|---|---|---|
+| **0-2 %** | 47 | **55,3 %** | **-1,043 R** |
+| 2-3 % | 53 | 37,7 % | -0,479 R |
+| **3-5 %** | 117 | 64,1 % | **+0,340 R** |
+| 5-8 % | 136 | 36,0 % | -0,438 R |
+
+Unter 2 % Stop-Abstand meldet die Kennzahl 55 % Erfolg bei einem Erwartungswert
+von **-1,04 R**: praktisch jeder Trade wird voll ausgestoppt. Der Kurs tippt 1R
+an, weil 1R dort fast nichts ist, und nimmt danach den Stop mit.
+
+> **STEHENDE LEHRE:** "MFE >= 1R" taugt NICHT als Erfolgsmass fuer Fragen, bei
+> denen der Stop-Abstand mitvariiert - es belohnt genau das, was das Ergebnis
+> zerstoert. Fuer solche Fragen "Ziel erreicht" gegen eine Basislinie mit
+> DEMSELBEN Stop und DEMSELBEN Horizont verwenden.
+
+**FOLGEN.** Die Umstellung von Regel 36 auf das Mass "Ziel erreicht" war damit
+richtig - aber aus einem anderen Grund als dem, den ich angegeben hatte. Die
+Warnung in den neuen Regeln ("zieh niemals den Stop enger, um in ein besseres
+Band zu rutschen") ist jetzt an Zahlen belegt statt nur vorsichtig formuliert.
+
+**OFFEN, bewusst nicht als Wahrheit gefuehrt:** hier liegt das Band 3-5 % vorn
+und 5-8 % negativ, waehrend der 01.08.-Befund "<5 % schlecht, 5-10 % besser"
+sagte. Andere Population, eine Marktphase. Als Hinweis fuehren.

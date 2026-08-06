@@ -4340,6 +4340,28 @@ def crv_baender_kontext_fuer_prompt(conn, tier: str = "hebel", horizont: int = 7
     Bandes ist gegen diesen Effekt immun, weil er beide Seiten gleich
     behandelt.
 
+    WARUM DAS MASS "ZIEL ERREICHT" UND NICHT "MFE >= 1R" (gepruefte
+    Entscheidung, 2026-08-06, `pruefe_sprung_bei_crv4.py`). Die alte
+    Regel-36-Konstante nutzte "MFE >= 1R". Auf dieses Mass wirkt die
+    Trunkierung NICHT - die Schwelle 1R ist fest, unabhaengig vom CRV. Dafuer
+    wirkt dort etwas Schlimmeres: CRV = Zielabstand / Stopabstand, ein hohes
+    CRV entsteht also auch durch einen ENGEN Stop. Bei engem Stop ist 1R eine
+    winzige Kursbewegung, MFE >= 1R wird mechanisch leicht. An 871 Signalen
+    gemessen faellt der Median-Stop ueber die CRV-Baender monoton von 6,25 %
+    auf 2,56 %, und der Stop-Abstand ALLEIN trennt schaerfer als das CRV
+    (54,0 / 25,1 / 15,8 % ueber die Stop-Terzile, KIs getrennt). Kontrolliert
+    man ihn, schrumpft der CRV-Effekt von +36,8 auf +13,4 pp und alle
+    Intervalle ueberlappen.
+
+    UND DANN KIPPT ES. Bei Stops unter 2 % erreichen 55,3 % der Signale
+    MFE >= 1R - bei einem Erwartungswert von -1,043 R (n=47). Die Kennzahl
+    meldet Erfolg, waehrend praktisch jeder Trade voll ausgestoppt wird: der
+    Kurs tippt 1R an, weil 1R dort fast nichts ist, und nimmt danach den Stop
+    mit. Ein Mass, das genau das belohnt, was das Ergebnis zerstoert, taugt
+    nicht als Grundlage einer Empfehlung. Deshalb misst dieser Fakt "Ziel
+    erreicht" gegen die Basislinie - beide Seiten tragen denselben Stop und
+    denselben Horizont, der Vergleich ist damit gegen beide Effekte immun.
+
     BAENDER OHNE `belastbar` WERDEN MITGELIEFERT, ABER GEKENNZEICHNET. Sie
     wegzulassen waere Rosinenpickerei - das Modell saehe dann nur das eine
     gute Band und hielte den Rest fuer ungemessen statt fuer unsicher.

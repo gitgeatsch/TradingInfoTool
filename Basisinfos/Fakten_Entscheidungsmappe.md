@@ -858,6 +858,64 @@ Die gemessenen Hebel-Bänder (h7, n=136, nur ERÖFFNEN):
 > schlechteste Band" gemeldet und widerrufen wurde. **Nur
 > `abstand_zur_basislinie_pp` darf in einen Fakt, absolute Quoten nie.**
 
+#### 8.2b Der „Sprung bei CRV 4,0" — gegengeprüft und aufgelöst (06.08.)
+
+**Nutzer-Einwand:** der Sprung sei ihm „sehr oft vorgekommen und war irgendwie
+bewiesen". Berechtigt — und meine erste Erklärung war **falsch adressiert**.
+Nachgerechnet in `pruefe_sprung_bei_crv4.py` an 871 Signalen (gegen 491 der
+Originalmessung).
+
+**Zuerst die Korrektur an mir selbst:** ich hatte den Sprung pauschal als
+Trunkierungs-Artefakt bezeichnet. Das gilt nur für das Maß *„Ziel erreicht"*.
+Regel 36 nutzte aber *„MFE ≥ 1R"*, und auf dieses Maß wirkt Trunkierung
+**nicht** — die Schwelle 1R ist fest, unabhängig vom CRV.
+
+**Was stattdessen dahintersteckt.** CRV = Zielabstand ÷ Stopabstand. Ein hohes
+CRV entsteht auch durch einen **engen Stop** — und bei engem Stop ist 1R eine
+winzige Kursbewegung, „MFE ≥ 1R" wird also mechanisch leicht.
+
+| CRV-Band | MFE ≥ 1R | Median-Stop |
+|---|---|---|
+| 2,0–2,5 | 27,1 % | 6,25 % |
+| 2,5–3,0 | 37,3 % | 5,62 % |
+| 3,0–4,0 | 46,7 % | 4,22 % |
+| ≥ 4,0 | 63,9 % | **2,56 %** |
+
+**Es gibt gar keinen Sprung** — in der größeren Stichprobe steigt es glatt, und
+der Stop-Abstand fällt spiegelbildlich. **Der Stop-Abstand allein trennt
+schärfer als das CRV** (54,0 / 25,1 / 15,8 % über die Stop-Terzile, Intervalle
+getrennt). Kontrolliert man ihn, schrumpft der CRV-Effekt von +36,8 auf
++13,4 pp, und alle Intervalle überlappen. **Das CRV war hier ein Stellvertreter
+für die Stop-Enge.**
+
+**Und dann kippt es — der eigentliche Punkt** (Nutzer-Formulierung: „es geht
+nicht um den Wert, sondern wann dieser Wert alles zum Kippen bringt"):
+
+| Stop-Abstand | n | MFE ≥ 1R | Ergebnis (EW) |
+|---|---|---|---|
+| **0–2 %** | 47 | **55,3 %** | **−1,043 R** |
+| 2–3 % | 53 | 37,7 % | −0,479 R |
+| **3–5 %** | 117 | 64,1 % | **+0,340 R** |
+| 5–8 % | 136 | 36,0 % | −0,438 R |
+
+Unter 2 % Stop-Abstand meldet die Kennzahl 55 % Erfolg, während der
+Erwartungswert bei **−1,04 R** liegt: praktisch jeder Trade wird voll
+ausgestoppt. Der Kurs tippt 1R an, weil 1R dort fast nichts ist, und nimmt
+danach den Stop mit.
+
+> **STEHENDE LEHRE:** „MFE ≥ 1R" taugt **nicht** als Erfolgsmaß für Fragen, bei
+> denen der Stop-Abstand mitvariiert — es belohnt genau das, was das Ergebnis
+> zerstört. Für solche Fragen „Ziel erreicht" gegen eine Basislinie mit
+> **demselben Stop und demselben Horizont** verwenden; nur dann tragen beide
+> Seiten denselben Effekt.
+
+**Folge für die Praxis:** die Warnung in den neuen Regeln („zieh niemals den
+Stop enger, um in ein besseres Band zu rutschen") ist damit nicht mehr nur
+vorsichtig, sondern **an Zahlen belegt**. Und der Vorbehalt zum 5–8-%-Band
+gegenüber dem 01.08.-Befund („< 5 % schlecht, 5–10 % besser") bleibt offen:
+hier liegt 3–5 % vorn und 5–8 % negativ. Andere Population und eine Marktphase
+— **als Hinweis führen, nicht als neue Wahrheit.**
+
 Der belastbare Kern ist damit schmal, aber real: **2,5–3,0 ist das einzige Band mit
 belastbarem Vorsprung.** Ein Fakt darf genau das sagen — und muss die drei anderen
 Bänder als *nicht belastbar* kennzeichnen, statt eine Rangfolge zu suggerieren.
