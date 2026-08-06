@@ -70,9 +70,32 @@ MIN_SYMBOLE_FUER_FX = 3
 
 # Wie weit duerfen die aus verschiedenen Symbolen abgeleiteten FX-Kurse eines
 # Tages auseinanderliegen, bevor der Tag als unbrauchbar gilt? EUR/USD bewegt
-# sich intraday im Promillebereich; 2% Spannweite bedeutet, dass mindestens
+# sich intraday im Promillebereich; 2% Streuung bedeutet, dass mindestens
 # eine der beiden Kursreihen nicht stimmt.
-MAX_FX_SPANNWEITE_RELATIV = 0.02
+#
+# KORREKTUR 2026-08-06: gemessen wird jetzt der INTERQUARTILSABSTAND, vorher
+# war es die Spannweite max-min. Das war der Fehler, nicht die Daten.
+#
+# Die Spannweite ist nicht robust - sie waechst mit der Stichprobengroesse,
+# weil sie nur von den beiden Extremwerten abhaengt. Bei 35 Symbolen genuegt
+# EIN kaputtes, um sie zu sprengen, egal wie einig sich die anderen 34 sind.
+# Gemessen am Export vom 06.08.: von 91 Tagen bestanden nach alter Regel
+# 4 (!), nach jeder robusten Alternative 91. Ueber die gesamte Kurshistorie
+# wurden dadurch 589 von rund 750 Tagen verworfen - und 88 der 90 Tage im
+# Z-3-Fenster, waehrend Z-3 Alarm schlug.
+#
+# Der Median, der tatsaechlich verwendet wird, war dabei die ganze Zeit
+# korrekt: 0,8486 bis 0,8810 mit hoechstens 0,87 % Tagesaenderung - genau das
+# Verhalten eines echten EUR/USD-Kurses. Verworfen wurde also ein richtiger
+# Wert wegen eines falschen Streuungsmasses.
+#
+# Der Zweck der Pruefung bleibt: einen Tag verwerfen, an dem sich die Symbole
+# WIRKLICH uneinig sind. Der Interquartilsabstand tut genau das - er reagiert
+# auf breite Uneinigkeit, nicht auf einzelne Ausreisser.
+MAX_FX_STREUUNG_RELATIV = 0.02
+
+# Alte Bezeichnung, damit vorhandene Verweise nicht stillschweigend brechen.
+MAX_FX_SPANNWEITE_RELATIV = MAX_FX_STREUUNG_RELATIV
 
 # Ab welcher Menge gilt eine Position als real? Vollstaendig verkaufte Positionen
 # hinterlassen Fliesskomma-Reste - gemessen 04.08. am echten Bestand: 25 Symbole
@@ -127,6 +150,19 @@ def _heute_utc() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
 
+def _quantil(sortierte: list[float], anteil: float) -> float:
+    """Lineare Interpolation zwischen den Nachbarn - bewusst ohne numpy,
+    das Projekt haelt die Abhaengigkeiten hier bewusst schlank."""
+    if not sortierte:
+        return 0.0
+    if len(sortierte) == 1:
+        return sortierte[0]
+    stelle = (len(sortierte) - 1) * anteil
+    unten = int(stelle)
+    oben = min(unten + 1, len(sortierte) - 1)
+    return sortierte[unten] + (sortierte[oben] - sortierte[unten]) * (stelle - unten)
+
+
 def tages_fx_kurse(conn: sqlite3.Connection) -> tuple[dict[str, float], list[str]]:
     """EUR-pro-USD je Tag, abgeleitet aus Symbolen mit BEIDEN Waehrungen.
 
@@ -139,7 +175,7 @@ def tages_fx_kurse(conn: sqlite3.Connection) -> tuple[dict[str, float], list[str
     lieber eine Luecke, die als Luecke sichtbar ist, als ein plausibel
     aussehender Falschkurs."""
     rows = conn.execute(
-        "SELECT e.date AS datum, e.close AS eur, u.close AS usd "
+        "SELECT e.symbol AS symbol, e.date AS datum, e.close AS eur, u.close AS usd "
         "FROM price_history_ohlc e "
         "JOIN price_history_ohlc u ON u.symbol = e.symbol AND u.date = e.date "
         "WHERE e.currency = 'EUR' AND u.currency = 'USD' "
@@ -147,8 +183,13 @@ def tages_fx_kurse(conn: sqlite3.Connection) -> tuple[dict[str, float], list[str
     ).fetchall()
 
     je_tag: dict[str, list[float]] = {}
+    # Symbolnamen mitfuehren, damit der Verwurf sagen kann WER der Ausreisser
+    # war - ohne den Namen sucht man ihn bei jedem Vorfall neu.
+    je_symbol: dict[str, dict[str, float]] = {}
     for row in rows:
-        je_tag.setdefault(row["datum"], []).append(row["eur"] / row["usd"])
+        quotient = row["eur"] / row["usd"]
+        je_tag.setdefault(row["datum"], []).append(quotient)
+        je_symbol.setdefault(row["datum"], {})[row["symbol"]] = quotient
 
     kurse: dict[str, float] = {}
     verworfen: list[str] = []
@@ -157,16 +198,24 @@ def tages_fx_kurse(conn: sqlite3.Connection) -> tuple[dict[str, float], list[str
             verworfen.append(datum)
             continue
         werte.sort()
-        spannweite = (werte[-1] - werte[0]) / werte[len(werte) // 2]
-        if spannweite > MAX_FX_SPANNWEITE_RELATIV:
+        median = werte[len(werte) // 2]
+        streuung = (_quantil(werte, 0.75) - _quantil(werte, 0.25)) / median
+        if streuung > MAX_FX_STREUUNG_RELATIV:
+            # Den groessten Ausreisser mitloggen: bei wiederkehrenden
+            # Verwuerfen ist fast immer EIN Symbol schuld, und ohne den Namen
+            # sucht man ihn jedes Mal neu. Am 06.08. war es CAT mit 3,79 %
+            # medianer Abweichung - zwoelfmal so viel wie das naechstschlechte.
+            abstaende = {s: abs(w - median) / median for s, w in je_symbol[datum].items()}
+            schlimmster = max(abstaende, key=abstaende.get) if abstaende else "?"
             logger.warning(
-                "FX-Ableitung %s verworfen: %d Symbole, Spannweite %.1f%% "
-                "(Grenze %.0f%%) - mindestens eine Kursreihe ist fehlerhaft",
-                datum, len(werte), spannweite * 100, MAX_FX_SPANNWEITE_RELATIV * 100,
+                "FX-Ableitung %s verworfen: %d Symbole, Interquartilsabstand %.1f%% "
+                "(Grenze %.0f%%) - groesster Ausreisser %s mit %.1f%% Abweichung",
+                datum, len(werte), streuung * 100, MAX_FX_STREUUNG_RELATIV * 100,
+                schlimmster, abstaende.get(schlimmster, 0) * 100,
             )
             verworfen.append(datum)
             continue
-        kurse[datum] = werte[len(werte) // 2]
+        kurse[datum] = median
 
     return kurse, sorted(verworfen)
 
