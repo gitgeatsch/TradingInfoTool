@@ -385,6 +385,58 @@ arbeiten gegeneinander — das war entweder gut gedacht oder glücklich.
 
 ---
 
+## 4b2. Die LLM-Seite des Regimewechsels — GEMESSEN, keine Reaktion nachweisbar
+
+`teste_regime_llm.py` + `werte_regime_llm_aus.py`. Drei Arme mit **identischem
+Prompt**, die Änderung sitzt im Faktensatz: A1 unverändert (bär), A2 identisch
+(Rauschboden), B mit `regime = seitwaerts` und getauschtem `regime_profil`.
+
+**Erwartung vorab festgehalten** (im Docstring, damit sie nicht nachträglich
+passend gemacht wird): schwache bis keine Reaktion, weil die vier Gewichte keine
+Prompt-Regel haben und `regime.wert` im Prompt nur für `krise_extrem` genannt
+wird.
+
+| Messgröße | Wirkung (B−A1) | t | Rauschboden | Verhältnis | nötiges n |
+|---|---|---|---|---|---|
+| ERÖFFNEN | 100 / 100 / 94,7 % | — | — | — | — |
+| Konfidenz | −1,158 | −1,23 | 3,582 | **0,32×** | 48 |
+| Stop-Abstand | −0,297 | −0,24 | 3,080 | **0,10×** | 1245 |
+| CRV | −2,752 | −1,06 | 11,157 | **0,25×** | 62 |
+
+**Kein Nachweis auf irgendeiner Messgröße.** Jedes Bootstrap-Intervall enthält
+die Null, jeder Effekt liegt unter dem Eigenrauschen zweier *identischer* Arme.
+
+### Der Zwischenstand, der verschwand — zum dritten Mal
+
+Der erste Lauf (n=9) zeigte beim Stop-Abstand **−2,491 bei t = −2,86**, also
+über dem Rauschboden. Bei n=19 steht dort **−0,297** — der Effekt ist um den
+**Faktor acht** geschrumpft, und im zweiten Teillauf war das **Vorzeichen sogar
+umgekehrt** (+2,243).
+
+Damit ist dasselbe Muster zum dritten Mal aufgetreten:
+
+| | bei kleinem n | nach Aufstockung |
+|---|---|---|
+| Regel-Ablation (05.08.) | +0,281 / +0,182 | +0,014 / −0,013 |
+| Fakten-Test (05.08.) | −0,734 | −0,334 |
+| **Regime-Test (06.08.)** | **−2,491** | **−0,297** |
+
+**Dass ich den Befund nicht gemeldet, sondern aufgestockt habe, war der
+entscheidende Schritt.** Gemeldet hätte er wie ein Fund ausgesehen.
+
+### Was daraus für die Glättung folgt — sie wird kleiner
+
+**Das Modell reagiert nicht messbar auf das Regime-Label.** Damit bleibt die
+Glättung eine reine **Gate-Änderung**; die vier Gewichts-Fakten müssen nicht
+mitgeglättet werden, und der Umbau ist deutlich kleiner als befürchtet.
+
+**Nachweisgrenze ehrlich dazu:** bei n=19 und einem Rauschboden von 3,58 pp auf
+der Konfidenz sind nur Effekte über rund 3,6 pp erkennbar. Eine kleinere echte
+Reaktion kann existieren. „Nicht nachweisbar" heißt hier wie immer: unterhalb
+unserer Auflösung.
+
+---
+
 ## 4c. Zur Konstruktionsfrage: träge oder flackernd? — Weder noch
 
 **Nutzer-Einwand:** ein Regime kann konstruktionsbedingt nur träge sein; macht
@@ -396,6 +448,33 @@ Problem ist, dass ein **diskreter Zustand harte Schwellen schaltet**. Jeder
 diskrete Zustand mit harten Schwellen muss entweder träge sein (dann ist er
 veraltet) oder flackern (dann ist er unbrauchbar). An der Geschwindigkeit zu
 drehen verschiebt nur, welche der beiden Krankheiten man bekommt.
+
+### Der eigentliche Defekt ist nicht die Trägheit, sondern eine ODER-Bedingung
+
+Der Blick in `regime.py` zeigt, dass das Regime gar nicht „langsam" ist — es ist
+**von einer einzigen Bedingung dominiert**:
+
+```python
+elif (btc_closes[-1] < ema50) OR fgi_label in ("Fear", "Extreme Fear"):
+    regime = "baer"
+```
+
+**Fear & Greed allein erzwingt „bär", unabhängig vom Kurs.** Der Index stand an
+allen 31 beobachteten Tagen zwischen 20 und 33, also durchgehend im
+Angst-Bereich. BTCs Anstieg um 1,78 % konnte deshalb nichts bewegen — nicht
+weil die EMA träge ist, sondern weil die zweite Bedingung das Ergebnis ohnehin
+festnagelt. `seitwaerts` ist zudem nur ein **Fallback** („keine Bedingung
+eindeutig erfüllt").
+
+**Damit ist der halb erholte Zustand für das System nicht darstellbar:** BTC
+über der EMA50 bei weiterhin ängstlichem Sentiment ergibt hart „bär" — dasselbe
+Label wie ein voll bärischer Markt.
+
+> **Nutzer-Einordnung 06.08., und sie trifft es genauer als meine erste
+> Formulierung: das ist kein Schwellenproblem, sondern ein
+> INFORMATIONSDEFEKT.** Einen Zustand sichtbar zu machen, den das System heute
+> gar nicht abbilden kann, ist Qualität — keine Lockerung. Die Vorgabe „mehr
+> Signale durch Qualität, nicht durch Lockerung" ist damit gewahrt.
 
 **Der Ausweg: nicht den Zustand schneller machen, sondern seinen Einfluss
 stetig.**
