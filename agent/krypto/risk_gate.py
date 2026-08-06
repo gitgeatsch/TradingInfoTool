@@ -1058,15 +1058,47 @@ def post_check(
         action = "HALTEN"
 
     if action in _BUY_ACTIONS:
+        # R-5.10 Mindestkonfidenz. Seit 2026-08-06 wahlweise STETIG statt in
+        # vier festen Stufen - siehe regime.py::regime_score() fuer die volle
+        # Begruendung, hier nur der Kern:
+        #
+        # Das diskrete Regime hat sich NIE geaendert (jedes Signal der Historie
+        # traegt "baer"), weil es aus einer ODER-Bedingung stammt, in der
+        # Fear & Greed allein genuegt. Der halb erholte Zustand - Kurs ueber der
+        # EMA50 bei weiter aengstlicher Stimmung - bekam dieselbe harte
+        # Schwelle wie ein voll baerischer Markt.
+        #
+        # Ein diskreter Zustand mit harten Stufen muss entweder traege sein
+        # oder flackern; an der Geschwindigkeit zu drehen verschiebt nur, welche
+        # der beiden Krankheiten man bekommt. Der stetige Score loest das auf.
+        #
+        # KALIBRIERT AUF IDENTITAET: der heutige Zustand ergibt 74,7 statt hart
+        # 75,0. Da alle Konfidenzwerte des Systems ganzzahlig sind, filtert das
+        # EXAKT gleich (nachgerechnet: 594 gegen 594 durchgelassene Signale).
+        # Sichtbar wird der Unterschied erst in Lagen, die es heute nicht gibt.
+        #
+        # Der Override (min_konfidenz_override_prozent) behaelt Vorrang - er ist
+        # eine bewusste manuelle Setzung und darf nicht stillschweigend durch
+        # einen gerechneten Wert ersetzt werden.
+        _stetig_aktiv = bool(config.get("regime", {}).get(
+            "stetige_mindestkonfidenz_aktiv", False))
+        _stetig_wert = getattr(regime_result, "min_konfidenz_stetig_wert", None)
         min_konfidenz = (
             min_konfidenz_override_prozent
             if min_konfidenz_override_prozent is not None
-            else config["regime"]["profile"].get(regime_result.regime, {}).get("min_konfidenz_prozent")
+            else (_stetig_wert if (_stetig_aktiv and _stetig_wert is not None)
+                  else config["regime"]["profile"].get(regime_result.regime, {}).get("min_konfidenz_prozent"))
+        )
+        _quelle = (
+            "manueller Override" if min_konfidenz_override_prozent is not None
+            else ("stetig aus Regime-Score" if (_stetig_aktiv and _stetig_wert is not None)
+                  else f"Stufe '{regime_result.regime}'")
         )
         confidence = result.get("confidence_pct")
         if min_konfidenz is not None and confidence is not None and confidence < min_konfidenz:
             risk_veto = True
-            reason = f"Konfidenz {confidence}% unter Regime-Mindestschwelle {min_konfidenz}% (R-5.10)"
+            reason = (f"Konfidenz {confidence}% unter Regime-Mindestschwelle "
+                      f"{min_konfidenz}% ({_quelle}, R-5.10)")
             risk_veto_reason = f"{risk_veto_reason}; {reason}" if risk_veto_reason else reason
             action = "HALTEN"
 

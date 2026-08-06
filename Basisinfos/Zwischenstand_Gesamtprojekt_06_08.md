@@ -282,6 +282,33 @@ Duplikat.
 | **M3** | **3QSS und DBPK ohne OHLC** — bekannt (#614), unverändert. |
 | **M4** | Die Multi-Asset-Analysten haben inzwischen die CRV-Bänder-Regel, liefern aber mangels Daten `None`. Korrekt, aber es heißt: kein gemessener Kontext. |
 | **M5** | **Fusion-Spot-Agent** ist pausiert, **lokale KI-Ebene (P-8)** zurückgestellt. Beides bewusst. |
+| **M6** | **NEU 06.08.: Regime-Konzept für Nicht-Krypto ist offen.** Der Umbau auf stetige Mindestkonfidenz und den Divergenz-Fakt ist für **Krypto** gebaut und aktiv. Für Aktien, Rohstoffe, Themen-ETF und Hedge steht die eigene Bewertung aus — siehe unten. |
+
+### M6 im Detail — was für die anderen Klassen zu klären ist
+
+**Ausgangslage:** R-5.10 (die regime-abhängige Mindestkonfidenz) gilt für die
+**gesamte Spot-Familie**, der Regime-Score kommt aber aus **BTC-Daten**. Für
+Krypto ist das die richtige Bezugsgröße. Für Aktien, Rohstoffe und Themen-ETF
+ist es das vermutlich nicht — aber **das war schon vor dem Umbau so**: das
+diskrete Regime war ebenfalls BTC-basiert und gatete alle Spot-Klassen.
+
+**Der Umbau ändert daran nichts** — er filtert heute für alle Klassen identisch
+(nachgerechnet). Es ist also eine **Konzeptfrage, keine Verhaltensfrage**, und
+sie war schon vorher offen. Der Umbau macht sie nur sichtbar.
+
+**Zu klären, je Klasse getrennt:**
+
+| # | Frage |
+|---|---|
+| M6a | **Ist BTC die richtige Regime-Referenz für Aktien/Rohstoffe/ETF?** Naheliegender wären S&P 500 bzw. VIX — beide liegen bereits vor (`equities_baermarkt_aktiv`, `vix_wert`) und stecken schon im jeweiligen Regime-Block dieser Klassen. |
+| M6b | **Braucht jede Klasse einen eigenen Score, oder genügt einer je Familie?** Ein Score je Klasse ist sauberer, vervielfacht aber die Kalibrierung. |
+| M6c | **Der Divergenz-Fakt `btc_zu_ema50` geht bewusst NICHT an diese Klassen** — ihr Regime-Block hat keinen BTC-Bezug. Ein Pendant (z. B. Kursabstand zur eigenen EMA50 oder S&P-500-Abstand) wäre denkbar, ist aber ungemessen. |
+| M6d | **Hedge ist ein Sonderfall.** DBPK/3QSS sind inverse Produkte auf S&P 500 und Nasdaq — für sie wäre ein steigendes Aktienregime das Gegenteil eines guten Umfelds. Ein Score müsste dort **umgekehrt** wirken. Vorher blockiert ohnehin der fehlende Kursdatenzugang (siehe Konstruktions-Dokument 2b). |
+
+**Reihenfolge-Empfehlung:** M6 erst nach den Multi-Asset-Grundlagen — M1
+(Rohstoff-Instrumentenverwechslung) und die Hedge-Kursdaten blockieren jede
+Bewertung dieser Klassen. Ein Regime-Konzept für eine Klasse zu bauen, deren
+einzige Evidenz ein Datenfehler ist, wäre die falsche Reihenfolge.
 
 > **Einschätzung:** Multi-Asset ist **gebaut, aber nicht in Betrieb**. Die
 > Pipelines laufen, produzieren aber zu wenig, um bewertet zu werden. Vor einer
@@ -328,6 +355,11 @@ Priorisiert, mit Begründung warum es kein „nice to have" ist:
    der Screening-Ebene. Wiedervorlage terminiert.
 6. **Q1 — Z-3 nach dem FX-Fix neu bewerten.** Eine ausgelöste Notbremse auf
    unbestätigter Zahl.
+7. **M6 — Regime-Konzept für die Nicht-Krypto-Klassen.** Für Krypto am 06.08.
+   gebaut und aktiv; Aktien, Rohstoffe, Themen-ETF und Hedge brauchen eine
+   eigene Bewertung (welche Referenz statt BTC, eigener Score je Klasse, und
+   bei Hedge eine **umgekehrte** Wirkrichtung). Erst nach M1 und den
+   Hedge-Kursdaten sinnvoll.
 
 **Nicht auf dieser Liste, bewusst:** neue Fakten fürs LLM, weitere Gates, mehr
 Symbole. Acht Selektionsmechanismen wurden gemessen, keiner trug nachweisbar —

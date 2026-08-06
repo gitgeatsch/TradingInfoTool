@@ -1443,6 +1443,38 @@ regime:
   # aussagekraeftigsten ist; die drei bestehenden Gewichte wurden proportional
   # reduziert, damit die Summe weiterhin 1.0 ergibt (kein Verhaltensrisiko, da vorher
   # nichts diese Gewichte konsumiert hat).
+  # Stetige Mindestkonfidenz statt vier fester Stufen (2026-08-06).
+  #
+  # WARUM. Das diskrete Regime hat sich NIE geaendert: ausnahmslos jedes Signal
+  # der Projekthistorie traegt "baer" (1.391 Hebel, 2.223 Spot). Ursache ist
+  # keine Traegheit, sondern eine ODER-Bedingung - "Kurs unter EMA50 ODER
+  # Fear & Greed im Angstbereich", und der Index stand an allen 31 beobachteten
+  # Tagen zwischen 20 und 33. Der halb erholte Zustand (Kurs ueber der EMA50,
+  # Stimmung noch aengstlich) bekam damit dieselbe harte Schwelle von 75 % wie
+  # ein voll baerischer Markt - er war fuer das System nicht darstellbar.
+  #
+  # Ein diskreter Zustand mit harten Stufen muss entweder traege sein (dann
+  # veraltet) oder flackern (dann unbrauchbar). Der stetige Score loest das
+  # Dilemma auf, statt es zu verschieben.
+  #
+  # AENDERT HEUTE NACHWEISLICH NICHTS: der aktuelle Zustand ergibt 74,7 statt
+  # hart 75,0, und da alle 3.614 Konfidenzwerte des Systems ganzzahlig sind,
+  # filtert das exakt gleich - nachgerechnet 594 gegen 594 durchgelassene
+  # Signale. Sichtbar wird der Unterschied erst in Lagen, die es heute nicht
+  # gibt (BTC +3 % ueber EMA50 -> 73,7; +6 % -> 71,7).
+  #
+  # Auf false zurueckstellen genuegt, um den alten Stufen-Pfad zu reaktivieren -
+  # kein Codeeingriff noetig. Der manuelle Override behaelt in beiden Faellen
+  # Vorrang.
+  #
+  # GELTUNGSBEREICH: R-5.10 gilt fuer die gesamte Spot-Familie, der Score kommt
+  # aber aus BTC-Daten. Fuer Krypto ist das die richtige Bezugsgroesse; fuer
+  # Aktien/Rohstoffe/Themen-ETF steht die eigene Bewertung noch aus (siehe
+  # offene Punkte). Weil die Umstellung heute fuer ALLE Klassen identisch
+  # filtert, entsteht daraus aktuell kein Unterschied - die Klaerung ist eine
+  # Konzeptfrage, keine Verhaltensfrage.
+  stetige_mindestkonfidenz_aktiv: true
+
   profile:
     krise_extrem:
       small_cap_budget_prozent: 0
