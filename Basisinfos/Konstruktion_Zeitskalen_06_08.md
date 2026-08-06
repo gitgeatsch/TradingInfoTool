@@ -104,6 +104,77 @@ bereits).
 **Risiko:** null bis zur Entscheidung. Danach wäre eine Horizont-Änderung ein
 bewusster Schritt mit Messgrundlage statt einer Setzung.
 
+### V2 — GEMESSEN am 06.08.: das Regime hat sich NIE geändert
+
+Die Frage war „trennt das Regime überhaupt?". Sie ist **nicht beantwortbar —
+und genau das ist die Antwort.**
+
+**Ausnahmslos jedes Signal in der gesamten Datenbank trägt `regime = "baer"`:**
+1.391 Hebel-Signale, 2.223 Spot-Signale. Kein einziges anderes Label, über die
+ganze Historie.
+
+Die Eingangsgrößen erklären, warum — sie haben sich bewegt, aber nie genug:
+
+| Größe | Beobachtet (31 Tage) |
+|---|---|
+| `btc_trend_label` | **21 von 21** „abwärts (EMA20 < EMA50 < EMA200)" |
+| `fear_greed_label` | Fear (20) / Extreme Fear (11) — **nie darüber** |
+| `regime_reason` | **21 von 21** „BTC unter EMA50 und/oder Fear&Greed im Angst-Bereich" |
+| `fear_greed_value` | 20 bis 33 (Spanne 13) |
+| VIX | 15,81 bis 20,66 |
+
+**Eine Variable mit genau einem Wert kann nicht diskriminieren.** Die
+regime-abhängigen Mechanismen haben über die gesamte Projektlaufzeit **jeweils
+nur einen einzigen Zweig ausgeführt**.
+
+#### Was das bedeutet — und es ist mehr als eine Formalie
+
+**1. Die Regime-Gates sind keine Filter, sondern Konstanten.** Alles, was wir je
+über dieses System gemessen haben, wurde unter genau einer Regime-Einstellung
+gemessen. Das ist kein Codefehler — es ist eine Grenze dessen, was wir behaupten
+dürfen.
+
+**2. Die eigentliche Gefahr sind die nie ausgeführten Zweige.** Ein
+Regimewechsel schaltet gleichzeitig drei Dinge um, die noch nie mit echten Daten
+gelaufen sind:
+
+| | bär (immer aktiv) | seitwärts | bulle |
+|---|---|---|---|
+| `min_konfidenz_prozent` | **75** | **65** | **60** |
+| `small_cap_budget_prozent` | 4 | 8 | 12 |
+| vier Gewichts-Fakten | eine Belegung | andere | andere |
+
+**Der Konfidenz-Sprung ist der kritische.** Nach der Messung vom 05.08. liegt
+die Masse der Konfidenzverteilung seit dem Mistral-Drift **exakt auf 70**. Die
+Schwelle 75 filtert dort 5 % durch; eine Schwelle von 65 ließe **61 %** durch.
+
+> **Ein Regimewechsel nach „seitwärts" würde das Gate schlagartig um den Faktor
+> zwölf öffnen — über einen Codepfad, der noch nie mit echten Daten gelaufen
+> ist.** Das ist die größte Stabilitätsgefahr im System, und sie hat nichts mit
+> Zeitskalen zu tun.
+
+**3. Die Gewichts-Fakten haben keine Regel.** `gewicht_technik`,
+`gewicht_fundamental`, `gewicht_momentum`, `gewicht_kontext_makro` gehen an das
+Modell, ohne dass eine Prompt-Regel erklärt, was sie bedeuten (Katalog 4.2:
+„keine Regel, kein Gate"). Bei einem Regimewechsel ändern sich also stillschweigend
+vier Zahlen im Faktensatz, deren Wirkung nie gemessen wurde.
+
+#### Vorschlag V2b — den Regimewechsel trockenlaufen lassen, bevor er echt passiert
+
+**Was:** die historischen Faktensätze erneut durch die Kette schicken, einmal mit
+erzwungenem `seitwaerts`, einmal mit `bulle` — und messen, was die Gates tun.
+Wie viele Signale kämen durch, wie ändern sich Positionsgrößen und Hebel-Deckel?
+
+**Warum das jetzt geht:** die Werkzeuge existieren vollständig — echte
+Faktensätze im Export, `backtest_llm1_historisch.py` als Basis, das
+Dreiarm-Verfahren für die Prompt-Seite.
+
+**Risiko:** null. Reine Simulation, kein Produktionspfad wird berührt.
+
+**Warum es dringend ist:** dieser Zweig wird irgendwann von selbst aktiv — und
+zwar ohne Vorwarnung, an einem beliebigen Morgen um 06:00. Ihn dann zum ersten
+Mal live zu erleben, ist das Gegenteil von „stabil und sauber".
+
 ### V3 — GEMESSEN am 06.08.: das Ergebnis kippt die Frage
 
 `messe_planungshorizont.py`, 300–488 Hebel-Signale je Variante, Anteil des am
@@ -269,11 +340,31 @@ noch; sie sollte aber gegen den Aufwand einer erneuten Suche abgewogen werden.
    für den Median großzügig, aber ein Viertel läuft darüber hinaus. Ein fester
    Horizont ist das falsche Instrument; die Ausstiegsregel ist das richtige und
    ist bereits live. **Keine Horizont-Änderung empfohlen.**
-2. **V2** — trennt das Regime überhaupt? Das ist jetzt der nächste Schritt und
-   entscheidet, ob die Zeitskalen-Frage überhaupt die richtige Frage ist.
-   Kostet eine Auswertung.
-3. **V1** — Benennung nachziehen, sobald V2 vorliegt.
-4. **V4** nur, falls V2 zeigt, dass das langsame Regime nicht trennt.
+2. ~~**V2**~~ — **am 06.08. gemessen.** Das Regime war IMMER „baer", über alle
+   3.614 Signale. Nicht messbar, weil konstant — und damit ist die
+   Zeitskalen-Frage **nicht die dringendste**. Die dringendste ist der nie
+   ausgeführte Regimewechsel-Zweig.
+3. **V2b NEU und vorgezogen** — den Regimewechsel trockenlaufen lassen. Ein
+   Wechsel nach „seitwärts" öffnet das Konfidenz-Gate von 5 % auf 61 %, über
+   einen Codepfad der nie mit echten Daten lief. Reine Simulation, kein Risiko.
+4. **V1** — Benennung nachziehen.
+5. **V4** (kurzfristiges Regime als Schatten-Fakt) — erst sinnvoll, wenn es
+   überhaupt Regime-Variation gibt, an der man es messen könnte.
+
+## 5. Was die beiden Messungen zusammen ergeben
+
+V3 sagt: **der Handelshorizont ist nicht das Problem** — der Median-Trade ist
+nach 1–2 Tagen entschieden, und für den Schwanz ist die bereits laufende
+Ausstiegsregel das richtige Instrument.
+
+V2 sagt: **das Regime ist nicht einmal eine Variable** — es war immer derselbe
+Wert, und die daran hängenden Gates haben nie einen zweiten Zweig ausgeführt.
+
+**Die Zeitskalen-Fehlpassung, mit der dieses Dokument begann, ist damit real,
+aber nachrangig.** Ein langsames Regime, das ein schnelles Geschäft gatet, ist
+konstruktiv unschön — aber es hat bisher schlicht nichts getan. Das echte Risiko
+liegt nicht darin, dass das Regime zu langsam reagiert, sondern darin, **was
+passiert, wenn es zum ersten Mal reagiert.**
 
 **Ausdrücklich NICHT empfohlen:** jetzt am EMA-Fenster, an R-5.10 oder am
 Handelshorizont zu drehen. Alle drei sind gekoppelt, und wir haben für keinen
