@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (182 Einträge)
+## Index nach Thema (183 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -109,7 +109,9 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-05** — `halte_kriterium` erstmals ausgewertet - kein Trennnachweis, zwei strukturelle Maengel
 - **2026-08-06** — Die drei neuen Fakten sind im Betrieb ANGEKOMMEN (22/22) - Verifikation abgeschlossen, Zaehler-Fehler behoben
 
-### Datenquellen / APIs (21)
+### Datenquellen / APIs (22)
+
+- **2026-08-06** — `.get()` auf sqlite3.Row: ein Einzeiler legte Systemgüte, Basislinie und den CRV-Bänder-Fakt seit 09:17 still — fail-soft hat es versteckt, gefunden wurde es im Log
 
 - **2026-08-06** — Audit der Remote-Übersichtsseite: Richtungsverteilung wurde ausgeliefert aber nie angezeigt, Regime-Karte zeigte das alte Verfahren, zwei Karten ohne ihre eigene Einschränkung
 
@@ -13142,3 +13144,81 @@ Karte fuer die Qualitaetsfrage.
 > korrekt, die Karte beschrieb weiter das alte Verfahren, und beides sah
 > unauffaellig aus. Nach jeder Konzeptaenderung gehoert deshalb die Frage dazu:
 > *welche Anzeige behauptet jetzt etwas, das nicht mehr stimmt?*
+
+
+---
+
+## Nachtrag (2026-08-06): `.get()` auf sqlite3.Row - ein Einzeiler, der drei Produktivpfade seit 09:17 abgeschaltet hat
+
+**Gefunden vom Nutzer im Betriebslog**, nicht von mir und nicht von einem Test.
+
+### Der Fehler
+
+Die Plausibilitaetsschranke gegen den Instrumenten-Verwechsler (Commit
+185d4f3, 09:17) schrieb:
+
+```python
+erster = next((p["close"] for p in tage if p.get("close")), None)
+```
+
+`lade_kursreihen()` liefert **sqlite3.Row**, und Row kennt **kein `.get()`**.
+Jeder Aufruf von `simuliere_signal()` warf ab 09:17 einen `AttributeError`.
+
+Doppelt falsch: die Spalte `close` ist in der DB `NOT NULL` - der Fall, gegen
+den `.get()` absichern sollte, kann ueber diesen Pfad gar nicht auftreten.
+
+### Was dadurch ausfiel
+
+| Pfad | Wirkung |
+|---|---|
+| `compute_systemguete()` (mark-to-market) | Systemguete-Karte der Remote-Seite ohne Neuberechnung, Fehler alle paar Sekunden im Log |
+| `basislinie_ziel_anteil()` | Basislinien-Vergleich ohne Ergebnis |
+| `compute_crv_breakeven_baender()` | **und damit `crv_baender_kontext_fuer_prompt()`** |
+
+Die dritte Zeile ist die unangenehmste: der **CRV-Baender-Fakt**, am selben Tag
+in alle sechs Pipelines eingebaut und als Regel 32/36 dokumentiert, **hat das
+LLM seit 09:17 nie erreicht**. Der Kontext-Bauer faengt die Exception ab und
+gibt `None` zurueck - der Fakt fehlt dann einfach im Prompt.
+
+### WARUM ES NIEMAND GEMERKT HAT - das ist der eigentliche Befund
+
+**Fail-soft hat den Defekt versteckt.** `_safe()` auf der Remote-Seite,
+try/except im Export, try/except im Kontext-Bauer: jede Schicht hat brav
+weitergemacht. Die Anwendung lief, die Seite lud, Signale entstanden - nur drei
+Kennzahlen und ein Fakt waren still weg.
+
+Fail-soft ist richtig; ein Nebenblock darf die Anwendung nicht toeten. Aber
+**fail-soft ohne sichtbare Meldung ist fail-silent**. Der einzige Ort, an dem
+der Ausfall stand, war das Log.
+
+> **KONSEQUENZ FUER DIE ARBEITSWEISE:** nach einem Deploy reicht "die Anwendung
+> laeuft" als Abnahme nicht. Ein Blick ins Log auf `ERROR`-Zeilen gehoert dazu -
+> genau das hat der Nutzer getan und damit den Fehler gefunden, den meine
+> Testsuite nicht gefunden hat.
+
+### Warum meine Tests ihn nicht gefunden haben
+
+Die Testsuite vom selben Tag baute Zeilen als **dicts** nach, statt sie durch
+`lade_kursreihen()` zu laden. Mit dicts funktioniert `.get()` einwandfrei. Der
+Test hat also eine Welt geprueft, die es in der Produktion nicht gibt.
+
+**Neu: `teste_simuliere_signal_zeilentypen.py`** laedt die Reihen ueber
+`lade_kursreihen()` gegen eine echte SQLite-Verbindung - dieselbe Ladeform wie
+die Produktion - und prueft beide Zugriffsformen (Row und dict) auf identische
+Ergebnisse, dazu die Schranke selbst (Faktor 5,5 faellt, Faktor 2,5 bleibt) und
+`basislinie_ziel_anteil()` als zweiten Pfad.
+
+> **REGEL, die daraus folgt:** ein Test, der die Datenstruktur der Produktion
+> nachbaut statt sie zu LADEN, prueft die eigene Annahme mit. Wo eine Funktion
+> DB-Zeilen entgegennimmt, muss der Test sie aus der DB holen.
+
+### Fix
+
+```python
+erster = next((p["close"] for p in tage if p["close"] is not None), None)
+```
+
+Indexzugriff funktioniert bei Row und dict gleichermassen - genau wie in der
+Schleife direkt darunter, die schon immer `p["high"]`/`p["low"]` benutzt hat.
+Der Fehler war, in derselben Funktion zwei verschiedene Zugriffsformen zu
+mischen.

@@ -3173,7 +3173,12 @@ def simuliere_signal(z: dict, reihe: list, ab_datum: str, horizont: int,
     # Kennzahlen entstehen. Lieber kein Ergebnis als ein erfundenes. Die
     # Grenze ist bewusst weit (Faktor 3): echte Gaps und Splits bleiben
     # auswertbar, nur ein Instrumenten-Verwechsler faellt heraus.
-    erster = next((p["close"] for p in tage if p.get("close")), None)
+    # ACHTUNG bei der Zugriffsform: `tage` enthaelt je nach Aufrufer dicts ODER
+    # sqlite3.Row. Row kennt kein .get() - ein erster Entwurf dieser Schranke
+    # benutzte es und riss die Systemguete-Neuberechnung mit einem
+    # AttributeError ab (gefunden im Betrieb, 06.08. 13:19). Indexzugriff
+    # funktioniert bei beiden, genau wie in der Schleife darunter.
+    erster = next((p["close"] for p in tage if p["close"] is not None), None)
     if erster and e > 0:
         verhaeltnis = max(e / erster, erster / e)
         if verhaeltnis > 3.0:
