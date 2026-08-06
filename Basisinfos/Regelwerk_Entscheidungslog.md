@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (174 Einträge)
+## Index nach Thema (176 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -186,13 +186,15 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-07-21** — Marktscan-Dedup-Bug behoben - "immer dieselben Coins" (APE/EIGEN)
 - **2026-07-30** — Screener × Schwerpunkte — geplante, noch nicht umgesetzte Kandidaten-Benachrichtigung (echter Gap, kein Bug)
 
-### Betrieb / Scheduler / Infrastruktur (5)
+### Betrieb / Scheduler / Infrastruktur (7)
 
 - **2026-07-19** — "Info-Leichen" - automatischer Verfall
 - **2026-07-19** — Konsistenz-Ausweitung des Verfall-Fixes
 - **2026-07-23** — Watchlist-Aenderungen wirkten nur nach App-Neustart - in 3 Phasen behoben
 - **2026-08-01** — Zwei Zeit-Domaenen im Projekt (UTC-Daten vs. lokale Scheduler-Zeit) - bewusst KEIN Fix
 - **2026-08-06** — Cron-Staggering NICHT gebaut: die DB-Sperren fallen in eigene App-Neustarts, das 06:30-Fenster ist seit zwei Tagen sauber
+- **2026-08-06** — Vollcheck des Exports: zwei Pruefwerkzeuge, DB-Backup mit Rotation 7, und ein falsches Gruen im eigenen Skript
+- **2026-08-06** — FX-Ableitung: Spannweite durch Interquartilsabstand ersetzt (4 statt 91 gueltige Tage); Z-3 arithmetisch bestaetigt
 
 ### Methodik / Audits / Synthesen (13)
 
@@ -12618,3 +12620,103 @@ nicht, der gerade verfolgt wurde. `score_gesamt` liegt VERSCHACHTELT unter
 sie faelschlich als erledigt gelesen. Zaehlt jetzt zwei Ebenen ("eltern.kind").
 Verifiziert an einer synthetischen DB: 3 von 5 Saetzen mit
 `trigger.score_gesamt` korrekt erkannt.
+
+## Nachtrag (2026-08-06): Vollcheck des Exports - zwei neue Werkzeuge, ein DB-Backup, und ein falsches Gruen im eigenen Skript
+
+**Nutzer-Auftrag nach der Aenderungsphase:** neue Fehler, funktionieren die
+Fixes, laeuft Monitoring/Backtracking/Messen sauber, fehlen relevante
+Informationen, Status der Messpunkte.
+
+**Zwei Werkzeuge gebaut**, weil beide Fragen verschieden sind:
+
+- `pruefe_export_standard.py` - der feste 15-Punkte-Katalog aus
+  Test_und_Verifikationsmethodik 2.1. Fragt: *sind die Kennzahlen auffaellig?*
+- `pruefe_export_vollcheck.py` - fragt: *stimmt das, was wir glauben gebaut zu
+  haben?* Der Nur-Long-Umbau haette in JEDEM Kennzahlen-Katalog unauffaellig
+  ausgesehen, weil er die Kennzahlen gar nicht beruehrt.
+
+**ERGEBNIS - alles Wesentliche gruen.** Nur-Long-Veto tot seit 05.08. 13:46,
+5 SHORT-EROEFFNEN im regulaeren Pfad, E-Mail-Filter griff exakt 5x;
+Ausstiegsregel gelaufen mit 16 Empfehlungen ueber 22,4 R; die drei neuen Fakten
+in 22 von 22 Faktensaetzen; Backward-Tracking, Veto-Schatten, Selbst-HALTEN,
+Systemguete und Z.ai-Gegenpruefung alle aktuell; **null haengende Signale**
+aelter als 21 Tage ohne Outcome.
+
+**ALLOCATOR VERDRAENGT NICHTS** - der beim Umbau befuerchtete Effekt tritt nicht
+ein: "Hebel 22/22, Marktscan 0/0 (ueberfaellig=0), Spot 40/40 ausgewaehlt".
+Jede Stufe bekam 100 % dessen, was sie angefordert hat.
+
+**ZWEI FEHLER IM EIGENEN SKRIPT, beim ersten Lauf gefunden:**
+
+1. **Falsches Gruen bei `score_gesamt`.** Gemeldet wurde "entfernt: 0 von 22" -
+   der Zaehler in jenem Export war aber die alte, nur-Top-Level-Fassung. Eine
+   Null bedeutet dort "nicht gezaehlt", nicht "nicht vorhanden". Der Check
+   haengt jetzt explizit an der Zaehler-Version und meldet "NICHT PRUEFBAR".
+   **Ein Pruefskript, das einen blinden Fleck als Bestaetigung ausgibt, ist
+   schlimmer als keines.**
+2. **Falsche Erwartung bei Cerebras.** Ich hatte Altdaten im Export als Problem
+   gewertet - die Entscheidung vom 05.08. war aber ausdruecklich, dass NUR die
+   Anzeige gefiltert wird. Historische Cerebras-Signale sind korrekte Historie.
+
+**DB-BACKUP im Exportlauf** (Nutzer-Vorschlag), bewusst nicht als Dateikopie:
+`Connection.backup()` fuer einen konsistenten Snapshot waehrend die App
+schreibt, `PRAGMA integrity_check` AUF DER KOPIE, gzip, Rotation 7 - und die
+Rotation loescht erst NACH bestandener Pruefung, sonst nimmt ein
+fehlgeschlagener Lauf die letzten guten Staende mit. Ablage
+`Claude_Austauschordner/DB_Backups`; der Laufwerksbuchstabe wird ueber
+`_google_drive_wurzel()` je Geraet aufgeloest (Notebook G:, Desktop K:).
+
+## Nachtrag (2026-08-06): FX-Ableitung - die Pruefgroesse war der Fehler, und Z-3 ist arithmetisch korrekt
+
+**Ausloeser:** der Vollcheck meldete 1174 verworfene FX-Ableitungen im
+Log-Fenster, waehrend Z-3 seit dem 05.08. Alarm schlaegt. Nutzer-Auftrag: dem
+nachgehen und den Z-3-Wert pruefen.
+
+**Z-3 IST ARITHMETISCH KORREKT.** Aus der Reihe nachgerechnet: Hoch 102,832 am
+2026-05-10, aktuell 85,515 -> Rueckschlag **16,84 %**, groesster Rueckschlag
+**19,04 %**. Beides trifft `z3_status` auf zwei Nachkommastellen. Auch die
+Verkettung ist sauber gebaut - die Tagesrendite laeuft auf dem VORTAGES-Korb
+und verlangt beide Kurse, ein Basiswechsel erzeugt also keinen Levelsprung
+(am 05.08. wechselt die Reihe von "rekonstruiert" mit 156 Symbolen auf
+"laufend" mit 33).
+
+**DIE REIHE DARUNTER WAR AUSGEHUNGERT, und zwar durch ein untaugliches Mass.**
+`tages_fx_kurse()` verwarf einen Tag, wenn die SPANNWEITE max-min der aus 35
+Symbolen abgeleiteten Quotienten 2 % ueberstieg. Die Spannweite ist nicht
+robust - sie haengt nur an den beiden Extremwerten und waechst mit der
+Stichprobe. EIN kaputtes Symbol genuegt, egal wie einig die anderen 34 sind.
+
+| Verfahren | gueltige Tage |
+|---|---|
+| bisher: (max-min)/Median <= 2 % | **4** von 91 |
+| Interquartilsabstand <= 2 % | **91** von 91 |
+| >= 80 % der Symbole binnen 1 % | 91 von 91 |
+| getrimmte Spannweite | 91 von 91 |
+
+Ueber die gesamte Kurshistorie wurden 589 von rund 750 Tagen verworfen, davon
+**88 der 90 Tage im Z-3-Fenster**.
+
+**DER MEDIAN WAR DIE GANZE ZEIT RICHTIG:** 0,8486 bis 0,8810 mit hoechstens
+0,87 % Tagesaenderung - genau das Verhalten eines echten EUR/USD-Kurses.
+Verworfen wurde ein korrekter Wert wegen eines falschen Streuungsmasses.
+
+**HAUPTAUSREISSER IST CAT:** an 59 von 91 Tagen der schlechteste Wert, mediane
+Abweichung **3,79 %** - zwoelfmal so viel wie das naechstschlechte Symbol. CAT
+ist hier nicht zum ersten Mal auffaellig (Spot-Konzentration 03.08.: ohne CAT
+kippt das Ergebnis von +10,7 auf -6,1 R). **Der Fix macht das System nur robust
+DAGEGEN - die Kursreihe selbst gehoert eigenstaendig geprueft.**
+
+**UMGESETZT:** Interquartilsabstand statt Spannweite, Grenze unveraendert 2 %.
+Zweck bleibt erhalten (breite Uneinigkeit und zu duenne Tage werden weiter
+verworfen), das Log nennt jetzt den groessten Ausreisser namentlich.
+
+> **FOLGE, die man kennen muss:** der Z-3-Wert WIRD sich beim naechsten Lauf
+> aendern, weil mehr Tage einen FX-Kurs bekommen und dadurch weniger Symbole
+> als "ohne Kurs" ausfallen. Die 16,84 % sind richtig gerechnet, ruhen aber auf
+> duenner Abdeckung (3 bis 20 Symbole ohne Kurs je Tag). **Ob der Alarm danach
+> noch steht, ist offen.**
+
+> **UEBERGREIFENDE LEHRE:** eine Kennzahl, die auf Extremwerten beruht
+> (Spannweite, Minimum, Maximum), ist bei wachsender Stichprobe kein
+> Qualitaetsmass mehr, sondern ein Ausreisser-Detektor. Wo "sind sich die
+> Quellen einig?" gemeint ist, gehoert ein robustes Streuungsmass hin.
