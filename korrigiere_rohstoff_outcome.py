@@ -35,11 +35,48 @@ from agent.rohstoff.pipeline import SYMBOL_ZU_FUTURES_TICKER
 # falsch abgelegte Futures-Reihe.
 STICHTAG = "2026-08-06"
 
-FELDER = (
-    "outcome_status", "outcome_geprueft_am", "outcome_entschieden_am",
-    "outcome_realisiertes_crv", "outcome_datenquelle",
-    "outcome_max_realisiertes_crv", "outcome_mindestziel_erreicht_am",
-)
+# DREI MESSARME, nicht einer (Korrektur 2026-08-06 nach dem ersten Lauf). Der
+# erste Entwurf setzte nur `outcome_*` zurueck - und uebersah, dass dasselbe
+# Signal in bis zu drei getrennten Armen bewertet wird:
+#
+#   outcome_*               das echte Ergebnis
+#   veto_outcome_*          Schatten: was waere ohne das Veto passiert?
+#   selbst_halten_outcome_* Schatten: was waere ohne das selbst gewaehlte HALTEN?
+#
+# Folge im Betrieb: der +20,51-R-Ausreisser verschwand aus dem realen Arm, und
+# im Schattenarm stand danach -18,81 R - dasselbe Instrumenten-Missverstaendnis,
+# nur mit umgekehrtem Vorzeichen. Eine Korrektur, die einen Arm saeubert und die
+# anderen stehen laesst, verschiebt den Fehler, statt ihn zu beheben.
+#
+# ZWEITE LUECKE des ersten Entwurfs: die Bedingung verlangte ein gesetztes
+# `outcome_realisiertes_crv`. Ein Signal, das nur ein MFE
+# (`*_max_realisiertes_crv`) hat und noch offen ist, fiel durch - obwohl auch
+# dieses MFE gegen die falsche Reihe gerechnet wurde.
+ARME = {
+    "outcome": (
+        "outcome_status", "outcome_geprueft_am", "outcome_entschieden_am",
+        "outcome_realisiertes_crv", "outcome_datenquelle",
+        "outcome_max_realisiertes_crv", "outcome_mindestziel_erreicht_am",
+    ),
+    "veto_outcome": (
+        "veto_outcome_status", "veto_outcome_geprueft_am", "veto_outcome_entschieden_am",
+        "veto_outcome_realisiertes_crv", "veto_outcome_max_realisiertes_crv",
+        "veto_outcome_mindestziel_erreicht_am",
+    ),
+    "selbst_halten_outcome": (
+        "selbst_halten_outcome_status", "selbst_halten_outcome_geprueft_am",
+        "selbst_halten_outcome_entschieden_am", "selbst_halten_outcome_realisiertes_crv",
+        "selbst_halten_outcome_max_realisiertes_crv",
+        "selbst_halten_outcome_mindestziel_erreicht_am",
+    ),
+}
+
+# Zeitbezug ist `*_geprueft_am` - der Zeitpunkt der BEWERTUNG, nicht der der
+# Entscheidung. Ein noch offenes Signal hat kein entschieden_am, sein MFE wurde
+# aber trotzdem gegen die falsche Reihe gerechnet. Ausserdem macht es die
+# Korrektur idempotent: nach dem Zuruecksetzen sind alle Wertfelder NULL, die
+# Bedingung greift nicht mehr.
+WERTFELDER = ("realisiertes_crv", "max_realisiertes_crv")
 
 
 def main() -> int:
@@ -48,40 +85,46 @@ def main() -> int:
     db.init_db(conn)
 
     platzhalter = ",".join("?" for _ in SYMBOL_ZU_FUTURES_TICKER)
-    zeilen = conn.execute(
-        f"SELECT id, symbol, created_at, action, outcome_status, "
-        f"outcome_realisiertes_crv, outcome_entschieden_am FROM signals "
-        f"WHERE symbol IN ({platzhalter}) AND outcome_realisiertes_crv IS NOT NULL "
-        f"AND (outcome_entschieden_am IS NULL OR outcome_entschieden_am < ?)",
-        (*SYMBOL_ZU_FUTURES_TICKER, STICHTAG),
-    ).fetchall()
+    gesamt = 0
+    for arm, felder in ARME.items():
+        werte_bedingung = " OR ".join(f"{arm}_{f} IS NOT NULL" for f in WERTFELDER)
+        zeilen = conn.execute(
+            f"SELECT id, symbol, created_at, action, {arm}_status AS status, "
+            f"{arm}_realisiertes_crv AS r, {arm}_max_realisiertes_crv AS mfe, "
+            f"{arm}_geprueft_am AS geprueft FROM signals "
+            f"WHERE symbol IN ({platzhalter}) AND ({werte_bedingung}) "
+            f"AND ({arm}_geprueft_am IS NULL OR {arm}_geprueft_am < ?)",
+            (*SYMBOL_ZU_FUTURES_TICKER, STICHTAG),
+        ).fetchall()
+        if not zeilen:
+            print(f"  {arm}: nichts zu korrigieren")
+            continue
+        print(f"  {arm}: {len(zeilen)} Signal(e)")
+        for r in zeilen:
+            wert = f"R={r['r']:.2f}" if r["r"] is not None else f"MFE={r['mfe']:.2f}"
+            print(f"      #{r['id']}  {r['symbol']}  {str(r['created_at'])[:16]}  "
+                  f"{r['action']}  {r['status']}  {wert}  "
+                  f"geprueft {str(r['geprueft'])[:10]}")
+        gesamt += len(zeilen)
+        if anwenden:
+            setz = ", ".join(f"{f} = NULL" for f in felder if not f.endswith("_status"))
+            conn.execute(
+                f"UPDATE signals SET {arm}_status = NULL, {setz} "
+                f"WHERE id IN ({','.join('?' for _ in zeilen)})",
+                tuple(r["id"] for r in zeilen),
+            )
+            conn.commit()
 
-    if not zeilen:
-        print("Keine betroffenen Signale gefunden - nichts zu tun.")
+    if not gesamt:
+        print("\nNichts zu tun - alle drei Messarme sind sauber.")
         return 0
-
-    print(f"{len(zeilen)} betroffene(s) Signal(e):\n")
-    for r in zeilen:
-        print(f"  #{r['id']}  {r['symbol']}  {str(r['created_at'])[:16]}  "
-              f"{r['action']}  {r['outcome_status']}  "
-              f"R={r['outcome_realisiertes_crv']:.2f}  "
-              f"entschieden {str(r['outcome_entschieden_am'])[:10]}")
-
     if not anwenden:
-        print("\nTROCKENLAUF - nichts geaendert. Zum Anwenden: "
-              "python korrigiere_rohstoff_outcome.py --anwenden")
+        print(f"\nTROCKENLAUF - {gesamt} Eintrag/Eintraege betroffen, nichts geaendert. "
+              f"Zum Anwenden: python korrigiere_rohstoff_outcome.py --anwenden")
         return 0
-
-    setz = ", ".join(f"{f} = NULL" for f in FELDER if f != "outcome_status")
-    conn.execute(
-        f"UPDATE signals SET outcome_status = 'offen', {setz} "
-        f"WHERE id IN ({','.join('?' for _ in zeilen)})",
-        tuple(r["id"] for r in zeilen),
-    )
-    conn.commit()
-    print(f"\n{len(zeilen)} Signal(e) auf 'offen' zurueckgesetzt. Der naechste "
-          f"Backward-Tracking-Lauf (taeglich 06:00) bewertet sie neu - dann "
-          f"gegen die rekonstruierte ETC-Reihe auf der richtigen Skala.")
+    print(f"\n{gesamt} Eintrag/Eintraege zurueckgesetzt. Der naechste "
+          f"Backward-Tracking-Lauf (taeglich 06:00) bewertet neu - dann gegen die "
+          f"rekonstruierte ETC-Reihe auf der richtigen Skala.")
     return 0
 
 

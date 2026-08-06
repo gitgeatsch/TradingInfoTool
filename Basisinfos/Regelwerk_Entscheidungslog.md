@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (185 Einträge)
+## Index nach Thema (186 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -109,7 +109,9 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-05** — `halte_kriterium` erstmals ausgewertet - kein Trennnachweis, zwei strukturelle Maengel
 - **2026-08-06** — Die drei neuen Fakten sind im Betrieb ANGEKOMMEN (22/22) - Verifikation abgeschlossen, Zaehler-Fehler behoben
 
-### Datenquellen / APIs (24)
+### Datenquellen / APIs (25)
+
+- **2026-08-06** — Export 14:20: CRV-Bänder kommen an, ETC-Reihen da, aber der Ausreißer war nur in den Schattenarm umgezogen — Korrektur deckte nur 1 von 3 Messarmen ab
 
 - **2026-08-06** — Erste Verifikation am Export: FX und 3QSS erfüllt, ETC-Rekonstruktion lief nie (zwei Frische-Begriffe an einem Guard), +20,5-R-Ausreißer steht als gespeichertes Ergebnis weiter drin
 
@@ -13373,3 +13375,62 @@ ist ein No-op.
 > falsch - und beide Irrtuemer waeren ohne die schriftliche Vorfestlegung als
 > "sieht doch gut aus" durchgegangen. Ein Ergebnis, das man erst nach dem
 > Messen formuliert, kann nicht widerlegt werden.
+
+
+---
+
+## Nachtrag (2026-08-06, Export 14:20): der Ausreisser war nicht weg, er war umgezogen
+
+Zweiter Export nach den Fixes. Vier von fuenf Erwartungen erfuellt - und ein
+Fehler in meiner eigenen Korrektur.
+
+| | Ergebnis |
+|---|---|
+| ETC-Reihen rekonstruiert | **alle vier** (520/520/131/520 Punkte bis 06.08.) |
+| CRV-Baender-Fakt im Prompt | **12 Faktensaetze am 06.08.**, vollstaendiger Block |
+| +20,51 R im realen Arm | **weg** (Systemguete real: n=0) |
+| FX-Ableitung | weiterhin **0 verworfene Tage** |
+| Portfoliowert | 6.180 -> 7.150 -> **7.698 EUR** |
+
+### Der Fehler: eine Korrektur, die den Fehler verschiebt statt ihn zu beheben
+
+Nach dem Lauf stand in der Rohstoff-Systemguete **Schattenarm: -18,81 R**.
+Dasselbe Instrumenten-Missverstaendnis, nur mit umgekehrtem Vorzeichen und in
+einem anderen Messarm: `veto_outcome_realisiertes_crv` von OD7C (30.07.).
+
+Mein Korrekturskript setzte **nur `outcome_*`** zurueck. Jedes Signal wird aber
+in bis zu **drei** Armen bewertet:
+
+    outcome_*                das echte Ergebnis
+    veto_outcome_*           was waere ohne das Veto passiert?
+    selbst_halten_outcome_*  was waere ohne das selbst gewaehlte HALTEN?
+
+**Zweite Luecke derselben Korrektur:** die Bedingung verlangte ein gesetztes
+`realisiertes_crv`. Ein Signal mit nur einem MFE (`*_max_realisiertes_crv`) und
+Status `offen` fiel durch - obwohl auch dieses MFE gegen die falsche Reihe
+gerechnet wurde (OD7L, MFE 2,69).
+
+Behoben: alle drei Arme, Bedingung auf `realisiertes_crv ODER
+max_realisiertes_crv`, Zeitbezug jetzt `*_geprueft_am` (Zeitpunkt der BEWERTUNG,
+nicht der Entscheidung - ein offenes Signal hat kein entschieden_am, sein MFE
+ist trotzdem falsch). Gegengeprueft: ein nach dem Stichtag bewertetes Signal
+bleibt unangetastet, zweiter Lauf ist ein No-op.
+
+> **Das Muster wiederholt sich zum dritten Mal an einem Tag:** ein Begriff
+> existiert MEHRFACH (sechs Hedge-Pruefungen, zwei Frische-Begriffe, drei
+> Messarme), ich behandle eine Auspraegung und uebersehe die anderen. Die
+> Gegenmassnahme ist jedes Mal dieselbe: **zuerst zaehlen, wie viele
+> Auspraegungen es gibt**, dann handeln.
+
+### Noch offen: drei ETC-Reihen sind da, werden aber nicht bewertet
+
+OD7C/OD7H/OD7L stehen mit 91 von 91 Tagen ohne Kurs in der Diagnose, obwohl ihre
+Reihen im selben Export vorhanden sind. **OD7N dagegen wird bewertet** (62 von
+91 Tagen ueber FX - genau die Zahl der Handelstage).
+
+Wahrscheinlichste Erklaerung: ein Wettlauf. Im Refresh-Log steht OD7N als
+ERSTES, danach 3QSS, DBPK, OD7H, OD7C, OD7L - und genau OD7N ist der einzige,
+der in der Bewertung ankommt. Der Export duerfte die Bewertungsdiagnose
+berechnet haben, waehrend der Refresh noch lief. **Nicht bewiesen** - der
+naechste Export entscheidet es. Steht dort weiterhin 91/91, ist es kein
+Wettlauf, sondern ein Fehler.
