@@ -685,9 +685,30 @@ aussichtslos — der gemeinsame Test war die richtige Entscheidung.
 
 **Der ehrliche Gegenpunkt:** beide A-Arme lagen konsistent ~3 pp unter B. Bei
 n = 67/69 nicht von Rauschen zu trennen — aber es ist die Richtung, vor der der
-Systemgüte-Fakt in seinem eigenen Docstring warnt. **Stehender Beobachtungspunkt,
-kein abgeschlossenes Thema.** Verfestigt sich das im Betrieb, gehört
-`systemguete` raus.
+Systemgüte-Fakt in seinem eigenen Docstring warnt.
+
+### 7.4b Abbruchkriterium — damit der Beobachtungspunkt entscheidbar ist
+
+Ein „Beobachtungspunkt" ohne Schwelle bleibt ewig offen. Deshalb festgelegt:
+
+| | |
+|---|---|
+| **Messgröße** | ERÖFFNEN-Quote der Hebel-Signale mit `systemguete`-Block im Faktensatz |
+| **Vergleichsbasis** | 92,1–95,7 % aus dem Dreiarm-Test (der B-Arm ohne die Fakten lag bei 95,7 %) |
+| **Abbruch, wenn** | die Quote über **≥ 60 aufgelöste Signale** unter **85 %** liegt |
+| **Frühester Prüftermin** | sobald 60 Signale mit dem Block vorliegen — bei der aktuellen Rate ca. **Ende August 2026** |
+| **Konsequenz** | `systemguete` wird aus `build_hebel_facts()` entfernt, Regel 31 auf den Ausstiegsteil gekürzt. Kosten und Ausstiegsregel bleiben — sie tragen die Warnung nicht |
+
+**Warum 85 % und nicht „signifikant schlechter als B":** der Dreiarm-Test hat den
+Rauschboden bei ~4,5 pp verortet. Eine Schwelle innerhalb des Rauschens wäre nicht
+entscheidbar; 85 % liegt gut zwei Rauschbreiten unter der Basis und ist damit ein
+Wert, den zufällige Schwankung nicht erzeugt. Die eigentliche Gefahr ist ohnehin
+kein 3-pp-Abrieb, sondern der Zusammenbruch, den der Ausführbarkeits-Hinweis
+gezeigt hat (93 % → 3 %) — den fängt diese Schwelle sicher.
+
+**Was NICHT als Abbruchgrund zählt:** eine weiterhin negative Systemgüte. Der Fakt
+soll die Zahl melden, nicht sie verbessern. Wer ihn daran misst, misst das System,
+nicht den Fakt.
 
 ### 7.5 Verifikationsstand (Stand 2026-08-06)
 

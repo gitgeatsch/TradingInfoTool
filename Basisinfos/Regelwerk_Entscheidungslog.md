@@ -8,11 +8,11 @@
 
 ---
 
-## Index nach Thema (147 Einträge)
+## Index nach Thema (168 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
-### Regelwerk / deterministische Gates (24)
+### Regelwerk / deterministische Gates (32)
 
 - **2026-07-17** — RM-4 (Cash-Reserve) war rueckwaerts- statt vorwaertsgerichtet
 - **2026-07-18** — Cash-Veto-Warnsystem - RM-4-Block sichtbar machen statt stillschweigend zu HALTEN downzugraden
@@ -38,8 +38,16 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-07-31** — zwei echte Funde beim ersten Notebook-Lauf - NameError-Bugfix + Veto-Schatten-Kontamination behoben
 - **2026-08-01** — Marktscan Top-N-Deckel umgesetzt + "unbekannte Aufrufe" geklaert
 - **2026-08-01** — Hebel-CRV-Pflicht-Symmetrie (Spot-Verkaufs-Luecke Roadmap-Punkt 5) - Praemisse geprueft und verworfen, KEIN...
+- **2026-08-03** — CRV-Gate abschliessend geprueft: es filtert RICHTIG (#602 geschlossen, 02.08.-Befund widerrufen)
+- **2026-08-03** — Gate oder Positionsgroesse? Antwort je Tier gegenlaeufig - Hebel Gate behalten, Spot Groesse
+- **2026-08-03** — Z-3/RM-7 Drawdown-Notbremse gebaut (#612) - mengenkonstanter Index, Margin-Regel, loeste sofort aus
+- **2026-08-04** — Der Einstieg ist nicht das Problem, der AUSSTIEG ist es (50 % standen bei +1R, nur 17,6 % kamen an)
+- **2026-08-04** — Positionsgroesse #606 entschieden: Kelly-Empfehlung UND RM-1-Obergrenze gemeinsam anzeigen
+- **2026-08-05** — Die Richtungswahl ist eine REGIME-WETTE, keine Kante - plus 93→3 % beim Ausfuehrungshinweis
+- **2026-08-05** — Nur-Long-Umbau in fuenf Schritten: der BP-Schalter wirkt nur noch auf E-Mail und Anzeige
+- **2026-08-05** — Ausstiegsregel scharfgeschaltet: Config, taeglicher Job 7:15, Sammel-E-Mail
 
-### LLM-Prompts / Analysten (Stage 2) (12)
+### LLM-Prompts / Analysten (Stage 2) (14)
 
 - **2026-07-18** — Konfidenz-Kalibrierung nach dem echten CAT-Fall (fünf Bausteine A-E)
 - **2026-07-19** — Release 2 (Schwerpunkte/Thesen-Verwaltung) - Konzeptionsrunde
@@ -52,6 +60,8 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-07-28** — Fakten-Entscheidungsmappe + Hebel-Regel 22 (FOMC/CPI-Kontext)
 - **2026-07-31** — Hebel Regel 6 um Take-Profit-ATR-Leitplanke erweitert + neuer Messstandard atr_relativ_prozent_bei_signal
 - **2026-08-02** — Dead-Loop-Synthese (Task #598) - Gliederung, Root-Cause-Analyse, Massnahme 1 umgesetzt
+- **2026-08-03** — CRV-Erfolgsbaender als Fakt + Regel 36 (Krypto-Spot) - glatter Verlauf statt Ja/Nein-Schwelle
+- **2026-08-05** — Konfidenz-Schwellen NICHT neu kalibriert - die Konfidenz sagt nichts vorher, Neukalibrierung waere Theater
 - **2026-08-05** — Drei neue Hebel-Fakten (Kosten, Ausstiegsregel, Systemguete) + Regeln 30/31 - kombiniert gemessen, kein Nachweis, bleiben drin
 
 ### Z.ai-Gegenpruefung (Stage 3) (23)
@@ -80,7 +90,7 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-07-31** — Multi-Asset Z.ai-Wartemechanismus statt Re-Fetch (Entscheidungskatalog Punkt 1)
 - **2026-08-01** — Spot-Verkaufs-Luecke Roadmap Schritt 4 (Z.ai-Re-Evaluierungs-Anzeige) - Roadmap-Praemisse korrigiert VOR de...
 
-### Backward-Tracking / Erfolgsmessung (8)
+### Backward-Tracking / Erfolgsmessung (11)
 
 - **2026-07-19** — Backtracking-Aussagekraft-Audit - Überholt-Erkennung neutralisierte die eigene Ergebnisstatistik
 - **2026-07-20** — Provider-Performance-Karte nach Assetklasse aufgeschluesselt (Krypto/Aktien/Rohstoffe/ETF getrennt statt ge...
@@ -90,6 +100,9 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-07-24** — Provider-Performance zeigt jetzt auch offene/laufende Signale, nicht nur Abschlüsse
 - **2026-07-27** — Mindestziel/MFE-Tracking - unabhaengige Erfolgsmessung neben Take-Profit
 - **2026-07-30** — Marktscan-Reifegrad-Scoring + Erfolgsmessung
+- **2026-08-03** — Systemguete um mechanische Basislinie, Signalbeitrag und Bootstrap-Intervalle erweitert
+- **2026-08-04** — Kostenrahmen recherchiert und in die R-Rechnung eingebaut (Phase 0.2) + der Haltedauer-Widerspruch
+- **2026-08-05** — `halte_kriterium` erstmals ausgewertet - kein Trennnachweis, zwei strukturelle Maengel
 
 ### Datenquellen / APIs (18)
 
@@ -126,7 +139,7 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-07-29** — extract_notebook_diagnose.py - Assetklassen-Aufschluesselung nachgezogen
 - **2026-07-30** — Multi-Asset-Batch-Nachhol-Mechanismus (fehlende Hedge-/Aktien-/Rohstoff-/Themen-ETF-Signale)
 
-### LLM-Budget / Provider-Steuerung (6)
+### LLM-Budget / Provider-Steuerung (7)
 
 - **2026-07-18** — LLM-Tagesbudget-Konsistenzpruefung + E-Mail-Versand-Audit
 - **2026-07-18** — Groq-Tageserschöpfung erkennen - kein unnötiger Erschöpfungs-Versuch mehr pro Kandidat
@@ -134,8 +147,9 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-07-21** — Groq-Alternative-Recherche Runde 3+4 abgeschlossen - 32 Kandidaten insgesamt verworfen, Suche vorerst beendet
 - **2026-07-21** — Budget-Allocator neu gedacht - SLA-Reservierung statt Score-Ranking (Abschnitt 2+3 umgesetzt)
 - **2026-07-28** — Punkt 0b — Wartezeit bis Mistral-Hebel-Signale als Stop-Loss/Richtungsverfehlung aufgelöst werden, PLUS Eng...
+- **2026-08-05** — Kanarienvogel (Provider-Drift-Ueberwachung) gebaut, aber BEWUSST NICHT aktiviert - Nutzer-Einwand trug
 
-### GUI / E-Mail / Remote (17)
+### GUI / E-Mail / Remote (19)
 
 - **2026-07-19** — Watchlist-Tab-Konsistenzprüfung -
 - **2026-07-20** — Screener-Auto-Scan + Mouseover-Tooltips fuer Tabs/Aktionen
@@ -154,6 +168,8 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-07-26** — GUI zeigte Zeitstempel systemweit roh in UTC statt lokal - derselbe Fehler wie beim E-Mail-Fix vom 2026-07-...
 - **2026-07-27** — Hebel-Tab-Anzeigefilter - deaktivierte Symbole ohne offene Position + Zeit-Switch
 - **2026-07-28** — `hebel_richtung_modus`/E-Mail-Bitpanda-Filter von `data/settings.json` nach `config.yaml` migriert
+- **2026-08-03** — Drei Betriebsfehler an einem Abend (Remote-Seite): kaputtes JS, 2-Sekunden-Takt, Cache-Nachbesserungen
+- **2026-08-05** — Remote-Seite bereinigt: entfernte Provider und Nur-Long-Altbestand raus, Richtungsverteilung dazu
 
 ### Portfolio / Bitpanda (2)
 
@@ -174,7 +190,7 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-07-23** — Watchlist-Aenderungen wirkten nur nach App-Neustart - in 3 Phasen behoben
 - **2026-08-01** — Zwei Zeit-Domaenen im Projekt (UTC-Daten vs. lokale Scheduler-Zeit) - bewusst KEIN Fix
 
-### Methodik / Audits / Synthesen (6)
+### Methodik / Audits / Synthesen (11)
 
 - **2026-07-17** — Spot-Regelwerk-Konsistenzprüfung nach dem Hebel-Fix
 - **2026-07-19** — Konsistenzprüfung über ALLE
@@ -182,6 +198,11 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-07-25** — Echter KAIA-Hebel-Signal-Review (7 Funde) + INJ-Signal-Stabilität-Diskussion
 - **2026-07-27** — NEAR-Hebel-Signal-Review -
 - **2026-07-29** — Risikofaktoren-Häufung bei Hebel — Backtest durchgeführt, kein Gate gebaut
+- **2026-08-03** — Regler-Audit: 36 von 202 Config-Schluesseln ohne Wirkung; Volatilitaet steckt laengst in RM-1
+- **2026-08-03** — Messmethodik-Umbau (#617): FUENF eigene Fehler derselben Familie, drei Befunde widerrufen
+- **2026-08-04** — Vier saubere Negativbefunde geschlossen (Score, Ausschuss, LLM1-Prompt, Selbstjustierung)
+- **2026-08-05** — Der Dead-Loop aufgeloest: die Ursache liegt bei MISTRAL, nicht im Code (Replay-Nachweis)
+- **2026-08-05** — Allocator gegen Zufall: an historischen Daten NICHT beantwortbar - Vorfilter blockierte die Messung
 
 ### Hebel- / Signal-Einzelfunde (12)
 
@@ -11396,6 +11417,771 @@ kontextabhaengige statt pauschale CRV-Anforderung; wegen des in der Literatur
 dokumentierten ADX-Flackerns nahe Schwellen muesste er gestuft wirken, nicht
 als harte Grenze. Offen bleibt ausserdem: 5 Symbole (CANTON, KAIA, KAITO,
 SUPRA, XNO) fehlen mangels OHLC in beiden Auswertungen.
+
+## Nachtrag (2026-08-03): CRV-Gate abschliessend geprueft - es filtert RICHTIG (#602 geschlossen)
+
+**Widerruft den Befund vom 02.08.** („das Gate filtert invers") nicht nur, sondern
+belegt die Gegenrichtung. Ursache des Fehlbefunds war Survivorship: ob ein Signal
+ueberhaupt aufloest, haengt selbst vom Stop-Abstand ab.
+
+**Messaufbau ohne DB-Status.** Jedes Signal mit Zonen laeuft selbst gegen die
+Preishistorie ab seinem Erstellungstag - Ziel getroffen +CRV, Stop −1,0, keins von
+beidem Mark-to-Market am Fensterende. Damit bekommt auch das Signal ein Ergebnis,
+das nie ausgewertet wurde; die Selektion entfaellt **strukturell statt korrigiert
+zu werden**.
+
+**Drei Kontrollen, jede hat vorher einen Befund gekippt:** gleiche
+Beobachtungsdauer · mechanische Basislinie je Gruppe mit identischen Parametern
+(2778-3065 Zufallseinstiege je Satz) · Symbol-Konzentration.
+
+| Signalbeitrag ueber Zufallseinstieg | 7 Tage | 14 Tage |
+|---|---|---|
+| Hebel ausgefuehrt | +0,620 R (n=153) | +0,696 R (n=36) |
+| Hebel CRV-vetot | +0,092 R (n=282) | +0,435 R (n=83) |
+| Spot ausgefuehrt | +0,210 R (n=62) | +0,289 R (n=47) |
+| Spot CRV-vetot | −0,060 R (n=37) | −0,286 R (n=15) |
+
+**KEIN Gate-Umbau.** Der am 02.08. vorgeschlagene Wechsel auf ein Expectancy-Gate
+haette ein nachweislich richtig trennendes Gate gegen eines ersetzt, das auf 86
+Datenpunkten kalibriert waere.
+
+**Wichtigster Nebenbefund:** die Basislinie ist durchgehend negativ (−0,11 bis
+−0,26 R) - mit n≈3000 die statistisch sicherste Zahl der Messung. Damit ist die
+absolute Negativitaet des Systems zu einem erheblichen Teil **Marktphase, nicht
+Signalqualitaet**. `compute_systemguete()` mass bis dahin nur absolut und
+alarmierte dadurch strukturell falsch, solange nur ein Regime beobachtet ist.
+
+## Nachtrag (2026-08-03): Systemguete um mechanische Basislinie, Signalbeitrag und Bootstrap erweitert
+
+**Direkte Folge des Befunds oben.** Wer SQN ohne Bezugspunkt liest, haelt ein
+funktionierendes System in einer schlechten Phase fuer kaputt und steuert in die
+falsche Richtung nach - genau die Fehlerklasse, die diese Kennzahl verhindern soll.
+
+Neue Felder je Gruppe: `basislinie_erwartungswert_r`, `basislinie_anzahl`,
+`basislinie_stop_rel`, `basislinie_crv`, `basislinie_anteil_short`,
+`signalbeitrag_r`. Dazu **Bootstrap-Konfidenzintervalle** fuer Expectancy und SQN
+(1000 Ziehungen mit Zuruecklegen, fester Seed) - bewusst Bootstrap statt Formel,
+weil sich R-Multiples bei genau −1,0 haeufen und eine Normalverteilungsannahme
+schlicht falsch waere. Van Tharp nennt 100+ Trades fuer eine Live-Bewertung, 30 als
+Untergrenze; mit 86 lagen wir genau dazwischen.
+
+**`anteil_positiv`** ist der praktisch wichtigste neue Wert: Anteil der Ziehungen
+mit positiver Expectancy. Bei 0,5 ist die Datenlage unentschieden, egal wie
+ueberzeugend der Punktwert aussieht.
+
+**Die Gegenpruefung fand zwei eigene Fehler vor dem Commit:** `ist_short` war hart
+auf False - bei Hebel mit SHORT-Signalen waere die Basislinie spiegelverkehrt und
+der Signalbeitrag frei erfunden gewesen. Und die Kursreihen wurden je Gruppe neu
+geladen (64.000 Zeilen mal acht).
+
+**Wirkung auf die Kennzahl:** Signalbeitrag hebel/real **+0,244** statt vorher
+−0,379 - dieselben Signale, andere Methode.
+
+## Nachtrag (2026-08-03): drei Betriebsfehler an einem Abend - Remote-Seite
+
+Alle drei vom Nutzer gemeldet, alle drei Folgen derselben Erweiterung. Sie stehen
+hier, weil jeder eine uebertragbare Lehre traegt.
+
+**1. Kaputtes JavaScript legte ALLE Karten lahm.** Im JS-Block stand ein mit
+Backslash escaptes Anfuehrungszeichen (`\"`). Der umgebende Python-String ist kein
+Raw-String - Python loeste es auf, ausgeliefert wurde ein Syntaxfehler, und der
+bricht nicht nur die betroffene Karte ab, sondern das **gesamte Script**.
+
+> **LEHRE (gilt dauerhaft):** In `_INDEX_HTML` niemals `\"` verwenden. Und: den
+> Block nach jeder Aenderung **zur Laufzeit aus dem geparsten String** pruefen,
+> nicht aus der Quelldatei. Ich hatte Klammern- und Quote-Balance geprueft - die
+> waren korrekt, aber im Python-Quelltext. Ausgeliefert wird ein anderer String.
+> Derselbe Fehler trat am 04.08. ein zweites Mal auf.
+
+**2. Der 2-Sekunden-Takt ueberlastete den Server.** Basislinie und Bootstrap
+kosteten zusammen 1-1,5 s je Aufruf, `/api/status` wird alle 2 s abgerufen - die
+Anfragen ueberlappten.
+
+> **LEHRE:** Ich hatte die Laufzeit gemessen (0,06 s / 0,35 s) und als
+> „vertretbar" eingestuft, **ohne zu pruefen, wie oft die Funktion aufgerufen
+> wird**. Die Frage „wie teuer ist ein Aufruf" ist ohne „wie oft passiert er"
+> wertlos.
+
+**3. Zwei Nachbesserungen bis zur tragfaehigen Loesung:** erst Cache (5 min), dann
+Hintergrund-Thread mit **eigener DB-Verbindung** (sqlite3-Verbindungen duerfen
+nicht ueber Threads hinweg benutzt werden), schliesslich Stundentakt - die Zahlen
+stammen ausschliesslich aus den `outcome_*`-Spalten, und die schreibt nur das
+taegliche 06:00-Backward-Tracking. Von 288 Berechnungen taeglich waren 287
+folgenlos. Auf dem Notebook (zwei Kerne) kostete ein Durchlauf ein Vielfaches der
+1,8 s vom Desktop.
+
+## Nachtrag (2026-08-03): Gate oder Positionsgroesse? - die Antwort ist je Tier gegenlaeufig
+
+**Nutzerfrage:** „es gibt eine uebliche Methode wie man CRV anwendet, warum machen
+wir das nicht?" - berechtigt. Van Tharp/Kelly bemessen damit die **Position** statt
+Ja/Nein zu entscheiden; ein Gate ist der Sonderfall „Groesse 0 oder 1".
+
+**Hebel - Gate behalten.** SQN +3,25 gegen +1,25 fuer jede Kelly-Variante. Das Gate
+entfernt dort 65 % der Signale, laut #602 die richtigen.
+
+**Spot - Groesse schlaegt Gate deutlich.** Das Gate entfernt dort nur 12 %, beisst
+also kaum; praktisch bekommt alles dasselbe Gewicht.
+
+| Spot | SQN | Summe R | Rueckschlag |
+|---|---|---|---|
+| heute | +0,63 | +9,8 | 36,3 R |
+| CRV-Groesse, Spreizung 3x | +1,11 | +17,9 | 29,6 R |
+| CRV-Groesse, Spreizung 5x | +1,36 | +23,1 | 27,1 R |
+| ungedeckelt (399x, unbrauchbar) | +1,82 | +35,3 | 21,3 R |
+
+**Warum heute nichts davon greift:** die Infrastruktur existiert
+(`deckel_kandidaten`), aber die CRV-Abstufung hat **genau eine Stufe** - ab CRV 2,4
+wird nicht mehr differenziert, ein CRV von 2,5 und eines von 6,0 sind gleichwertig.
+
+**Zwei eigene Fehler, beide vor dem Melden gefunden:** der erste Lauf verglich
+Einsatzhoehen statt Auswahlqualitaet (Kelly-Groessen um 0,06 gegen Gate 1,00), und
+der Deckel-Test war als `max(g, 1/S)` gebaut - das **ebnet ein statt zu deckeln**
+und liess Kelly faelschlich zusammenbrechen. Ohne Nachpruefung waere ein falsches
+Negativergebnis gemeldet und der Spot-Befund unter den Tisch gefallen.
+
+**Nutzer-Hinweis, der die Ausgangslage aenderte:** der tatsaechliche Einsatz liegt
+zwischen 100 und 500 EUR und variiert bereits - nach Marktkapitalisierung. Das sind
+**exakt 5-fache Spreizung**, also der Bereich mit dem groessten gemessenen Nutzen.
+Vorbehalt, der dazugehoert: die 5x der Messung sind eine RELATIVE Spreizung der
+Risikogewichte, die 100-500 EUR absolute Betraege - beides deckt sich nur bei
+aehnlichem Stop-Abstand.
+
+## Nachtrag (2026-08-03): Regler-Audit - 36 von 202 Config-Schluesseln ohne Wirkung
+
+**Anlass:** Nutzerfrage nach „unbekannten bzw. aktuell nicht beruecksichtigten
+Reglern". Ergebnis groesser als erwartet. Klassifikation dauerhaft in
+`Regler_Signal_Pipeline_Abhaengigkeiten.md`.
+
+**Der wichtigste Einzelfund: Volatilitaet steckt seit jeher in der
+Positionsgroesse.** RM-5 setzt den Stop auf 2×ATR, RM-1 rechnet Groesse =
+Risikobudget / Stop-Abstand - die Groesse ist also proportional zu 1/ATR. **Das IST
+Volatility Targeting.** Eine Volatilitaets-Komponente im Groessenmodell zaehlt
+damit doppelt. Genau das passierte am selben Tag: die Variante „nur Volatilitaet"
+war signifikant SCHLECHTER (−0,029 R je Signal, [−0,051..−0,008]) und waere ohne
+den Kontrollfall als Literaturempfehlung eingebaut worden.
+
+**Drei Methodenfallen, alle real eingetreten:**
+
+1. **Dynamisch gebaute Namen** - `gewicht_*` wird per f-String zusammengesetzt,
+   Textsuche findet das nicht. 7 der 36 waren Fehlalarm.
+2. **Falsche Ausschlussfilter** - der erste Durchgang schloss `analyse_*.py`,
+   `backtest_*.py` und den Export aus, also genau die Orte, an denen eine
+   Verwendung als MESSGRUNDLAGE laege. **Vom Nutzer gefunden, nicht von mir.**
+3. **Namensaehnlichkeit statt Beleg** - `auto_watchlist` fuer implementiert
+   erklaert, weil `auto_add_unknown_hebel_symbols()` aehnlich klingt. Das ist der
+   Hebel-Pfad; fuer den Marktscan fuehrt der einzige Weg ueber einen Button.
+
+**Bereinigt (kein Verhaltensunterschied):** `api_key_noetig`,
+`rate_limit_pro_minute` (irrefuehrend: 30 ohne, 100 MIT API-Key - ein einzelner
+Wert kann beide Betriebsfaelle nicht abbilden), die AZ-7-Dublette
+(`max_hebel_faellt_regime_krise_extrem_auf_null` + `aus_bei_krise_extrem`, zwei
+Namen fuer EINE Codestelle), sowie `begruendung_pflicht`,
+`liquidationspreis_ausweisen`, `ema_perioden`, `rsi_periode`,
+`forecast_szenarien` - beschrieben korrekt, steuerten nicht.
+
+**BEWUSST NICHT ersetzt:** ein Drossel-Regler fuer CoinGecko. Der Minutentakt ist
+eine harte Vorgabe, und gegen das MONATSkontingent hilft langsamer nichts - am
+Monatsende steht dieselbe Zahl. Die wirksame Bremse sitzt bei der ANZAHL der
+Abfragen. Ein dritter Ort fuer dieselbe Aufgabe haette die Suche nur verlaengert.
+
+**AZ-7 bleibt bewusst ein hartes Gate ohne Regler** - es schuetzt das Instrument
+mit Liquidationsrisiko in genau dem Regime, in dem Liquidationen passieren. Der
+Notausstieg liegt eine Ebene hoeher bei `regime.manueller_override` (RG-8).
+
+**Nichts wurde spurlos geloescht.** Jede Entfernung steht als Kommentar an
+derselben Stelle, mit Grund und Verweis auf den echten Ort. Nutzer-Vorgabe:
+„Nachvollziehbarkeit ist Trumpf - u.U. ersetzen wir einen Dummy gegen etwas
+Besseres und dann soll es auch so stehen."
+
+**Offen geblieben:** der gesamte `antizyklisch`-Block (AZ-1..AZ-7, acht Schluessel)
+wird nirgends gelesen - das Verhalten lebt als Prompt-Text auf Stage 2, waehrend
+die Config Stage 1 suggeriert. **Ein ganzes Spezifikationskapitel auf der falschen
+Stufe.**
+
+## Nachtrag (2026-08-03): Z-3 / RM-7 Drawdown-Notbremse gebaut (#612) - stand seit Projektbeginn offen
+
+Die Regel war seit Projektbeginn als „OFFEN - fehlt noch eine Portfolio-Wert-
+Historie" gefuehrt. `holdings` ist eine ZUSTANDStabelle (symbol als PRIMARY KEY,
+jeder Sync ueberschreibt), eine Transaktionstabelle gab es nicht.
+
+**Ich hatte „hart oder weich?" faelschlich zur Nutzer-Entscheidung vorgelegt.** Das
+Regelwerk hatte es laengst festgelegt - RG-6 stellt Z-3 unter Aenderungsschutz,
+RG-9 fuehrt es unter den harten Limits, die Spezifikation definiert es als
+**dringenden Alert, nicht als Automatik**. Nachlesen haette gereicht.
+
+**Der Weg:** Rekonstruktion aus 9582 Wallet-Transaktionen + `price_history`.
+Obergrenze **88 Tage**, begrenzt durch die KURSE (alle 41 Symbole starten
+einheitlich am 2026-05-08), nicht durch die Transaktionen. Nur 112 der 9582
+Buchungen liegen im Kursfenster - einzeln nachpruefbar.
+
+**Die zentrale Konstruktionsentscheidung:** der Drawdown wird auf einem
+**mengenkonstanten Index** gemessen, nicht auf dem rohen Portfoliowert. Sonst sieht
+ein Zukauf wie ein Gewinn aus und ein Verkauf wie ein Verlust - eine EUR-Einzahlung
+ueber 2.500 EUR am 12.07. haette die Reihe sonst verdreht. **Wer die 15 % auf den
+rohen Wert bezieht, legt die Schwelle falsch aus.**
+
+**Die Margin-Regel, an einer vollstaendigen NEAR-Episode abgelesen:**
+`margin_trading.open` eingehend zaehlt NICHT (Margin-Wallet), ausgehend zaehlt;
+`.repay`/`.fee` zaehlen nicht; `.close` nur die eingehende Seite; `.borrow`
+eingehend zaehlt. **Warum das noetig war, obwohl der Endstand auch naiv stimmte:**
+ueber eine abgeschlossene Episode heben sich Eroeffnung und Schliessung auf, das
+Episoden-Netto ist exakt 0. Fuer einen Tag MITTENDRIN gilt das nicht - NEAR am
+24.07. naiv 355,33 gegen margin-bewusst 0,0000, gut 570 EUR Scheinvermoegen quer
+durchs Kursfenster. **Genau die Sorte Fehler, die jeden Endstands-Test besteht und
+trotzdem da ist.**
+
+**Methodisch:** vorwaerts von null rechnen, nicht rueckwaerts vom heutigen Bestand
+- rueckwaerts waere der Pruefstein per Konstruktion erfuellt und wuerde jede noch
+so falsche Regel bestehen. Erste Runde bewusst mit der NAIVEN Regel, um zu sehen
+WO sie bricht.
+
+**Vier eigene Fehler, alle vom Probelauf-Modus abgefangen** (nur ein
+Symbol-Override-Dict statt beider, Fliesskomma-Staub als „Position ohne Kurs",
+fehlender `init_db()`-Aufruf, widerlegte Wochenend-Hypothese). Das ist das Argument
+dafuer, kuenftige Schreibskripte wieder so zu bauen.
+
+**Befuellt:** 88 Tage, Index 100,000 → 85,628. **Z-3 loeste beim ersten Lauf aus**
+(16,73 % gegen 15 % Schwelle).
+
+**Kategorien: Diagnose ja, zweiter Ausloeser nein.** Nutzer-Vorschlag „nach
+Kategorien - Krypto nur fuer Krypto?" - die Aufschluesselung wird gebaut,
+**ausgeloest wird weiter auf dem Gesamtwert**. Z-3 schuetzt Kapital, und
+Diversifikation ist genau dafuer da: faellt Krypto 20 % waehrend Aktien halten, ist
+das Portfolio intakt. Ein zweiter Ausloeser waere eine NEUE REGEL unter
+RG-6-Aenderungsschutz - falls je gewollt, gehoert das separat entschieden, nicht
+nebenbei mitgebaut.
+
+**Einschraenkung, die man beim Lesen der Zahl kennen muss:** der Drawdown ruht auf
+rund 90 % des Portfolios - fuenf Positionen (~765 EUR) haben keine Kursdaten (#614).
+
+**Folgeaufgabe #613 mit BEDINGUNG statt Datum:** die 13 Nicht-Krypto laufen mit
+konstanter Menge. Nachzuziehen, bevor Z-3 genug Historie hat um scharf zu werden,
+ODER frueher sobald dort gehandelt wird. Grund: solange nichts passiert, ist die
+Naeherung nicht ungefaehr richtig, sondern EXAKT - ab dem ersten Trade driftet sie
+still, und rueckwirkend ueber den ganzen Zeitraum.
+
+## Nachtrag (2026-08-03): Messmethodik-Umbau (#617) - fuenf eigene Fehler DERSELBEN Familie an einem Tag
+
+**Der wichtigste methodische Eintrag dieser Phase.** Fuenfmal an einem Tag dieselbe
+Ursache: **Signal- und Basislinienseite ungleich behandelt.** Jedes Mal sah das
+Ergebnis plausibel aus.
+
+| | Fehler | gefunden durch |
+|---|---|---|
+| 1 | Basislinie ueber 2 Jahre, Signale ueber 3 Wochen | Isolationstest, 0,30 R |
+| 2 | Basislinie zaehlt Unaufgeloeste mit, Signale nicht | #617-Kernfrage |
+| 3 | Baender gegen horizontlose Formel `1/(1+CRV)` statt gegen Basislinie | synthetische Daten |
+| 4 | Basislinie ab Einstiegstag simuliert (Entry = Schlusskurs) | absurder Wert (0,0 %) misstraut |
+| 5 | Perzentil ueber LONG+SHORT gemeinsam, Auswertung getrennt | ungleiche Quartile |
+
+> **STEHENDE PRUEFFRAGE, gehoert vor jede Auswertung:** *Werden beide Seiten des
+> Vergleichs wirklich gleich behandelt?*
+
+**Fachlicher Kern.** Das ist die Triple-Barrier-Methode (Lopez de Prado):
+statistisch **Competing Risks mit Rechtszensierung**. `Ziel/alle` unterschaetzt,
+`Ziel/aufgeloeste` ist Complete-Case-verzerrt - **beide bekannt-falsch**,
+nebeneinanderstellen mittelt zwei Fehler. Korrekt ist die kumulative Inzidenz
+(Aalen-Johansen); der Hauptgewinn ist nicht Genauigkeit, sondern **Datenausbeute:
+759 statt 455 auswertbare Signale**. Wilson-Intervalle sind zu eng, weil einzelne
+Symbole bis zu einem Drittel eines Bandes stellen - deshalb Block-Bootstrap ueber
+Symbole.
+
+**Die entscheidende Einsicht, an synthetischen Daten mit bekannter Wahrheit
+belegt:** der Vergleich gegen `1/(1+CRV)` **dreht ab CRV 2,5 das Vorzeichen**,
+Ursache ist Horizont-Trunkierung. Ein Zufallseinstieg misst bei CRV 4,0 und H=7
+exakt 0,0 %.
+
+| CRV | wahre Kante | gegen Basislinie | gegen `1/(1+CRV)` |
+|---|---|---|---|
+| 2,0 | +24,3 pp | +22,7 pp | +11,7 pp |
+| 2,5 | +26,7 pp | +16,7 pp | −1,0 pp |
+| 4,0 | +31,3 pp | +0,5 pp | −18,4 pp |
+
+→ **Nur `abstand_zur_basislinie_pp` ist interpretierbar, absolute Quoten nie.** Das
+ist Methodik 2.5.7 („Basislinie je Bucket ist PFLICHT"), die ich zweimal
+weggelassen hatte.
+
+**DREI BEFUNDE WIDERRUFEN - nicht wiederbeleben:**
+
+- **„CRV ≥ 4,0 ist das schlechteste Band"** - Trunkierungs-Artefakt.
+- **„Gate-Senkung unter 2,0 ist gemessen erledigt"** - war Wilson-Artefakt, die
+  Frage ist **offen**.
+- **„36 % Aufloesungsquote belegt Selektion"** - der Nenner enthielt 94 Zeilen, die
+  nie ein Trade waren. Ehrlich: 58 %.
+
+**Ausserdem: der Screening-Score diskriminiert nicht.** Event-Study auf allen
+Kandidaten (nicht auf Signalen - dort liegen vier Selektionsschichten dazwischen):
+LONG −1,2 / +4,0 / **+13,0** / +2,4 pp - **nicht monoton**, drittes Quartil am
+besten. SHORT alle vier Quartile −19 bis −23 pp, keinerlei Ordnung. Nullbefund mit
+begrenzter Trennschaerfe, kein Beweis der Wirkungslosigkeit.
+
+**Architektur-Entscheidung daraus: der Score gehoert NICHT ins LLM.** Er ist eine
+Stage-1-Selektionsvariable, die CRV-Baender sind Stage-2-Fakt - Vermischung waere
+Doppelzaehlung. Heute bekommt das LLM `score_gesamt` als **nackte Zahl ohne jede
+Regel**, die schlechteste aller Varianten: kann ankern, ist aber nicht deutbar.
+
+## Nachtrag (2026-08-03): CRV-Erfolgsbaender als Fakt + Regel 36 (Krypto-Spot)
+
+Direkte Anwendung des #602-Befunds: das CRV trennt stetig, nicht an einer Kante.
+Ein glatter Verlauf verlangt glatte Behandlung - also gemessene Baender als
+**gewichtender Fakt** statt einer Ja/Nein-Schwelle.
+
+**Konflikt, der am 04.08. auf sauberen Krypto-Spot-Daten sichtbar wurde:** Regel 36
+sagt „bevorzuge CRV > 4,0", gemessen erreichen im Band ≥ 4,0 aber **0,0 % das Ziel
+(n=20)** - die Basislinie liegt dort bei 2,3 %, ein Zufallseinstieg kommt also auch
+fast nie an. Beide Aussagen sind vereinbar (Regel 36 misst „MFE ≥ 1R", nicht „Ziel
+erreicht"), die praktische Folge bleibt: **ein CRV ueber 4,0 zu bevorzugen liefert
+Signale, die ihr Ziel im relevanten Zeitfenster nie erreichen.** Hinweis, kein
+Beweis - n=20.
+
+## Nachtrag (2026-08-04): Kostenrahmen recherchiert und in die R-Rechnung eingebaut (Phase 0.2)
+
+**Bis dahin enthielt KEINE Messung im System Kosten.** Die Break-even-Luecke ist
+4-7x groesser als angenommen.
+
+```
+Kosten in R = (L−1)/L × (Schliessung + Tagesgebuehr × Tage) ÷ Stop-Abstand
+```
+
+**Der Einsatz kuerzt sich heraus** - die Last haengt nur an Hebel, Haltedauer und
+Stop-Abstand. Zwei Folgerungen fallen direkt aus der Formel und stuetzen RM-1b/1c
+mit einer **von der Trefferquote unabhaengigen** Begruendung: enge Stops sind
+doppelt teuer, und hoeherer Hebel kostet MEHR je R (der Faktor (L−1)/L geht von
+0,50 auf 0,90).
+
+**Netto-EW hebel/real: −0,233 R statt −0,104 R brutto.**
+
+> **Kosten kippen die ABSOLUTE Frage („traegt sich das System?"), nicht die
+> RELATIVE („ist die Auswahl besser als Zufall?").** Die Basislinie ist ein
+> alternativer Trade und traegt dieselben Saetze. **Alle Selektionsbefunde der
+> Vortage bleiben gueltig.** Deshalb bleiben `expectancy_r`/`sqn` brutto, die
+> Netto-Werte stehen daneben.
+
+**Achtung bei der Auswertung:** ein Zufallseinstieg trifft seltener eine Barriere
+und laeuft oefter bis zum Horizont - er zahlt also *laenger*. Ein Signalbeitrag,
+der sich durch die Kostenrechnung **verbessert**, ist zu pruefen bevor er zitiert
+wird.
+
+**Belegt vs. angenommen - die Trennung ist Teil des Modells:**
+
+| | Status |
+|---|---|
+| Bemessungsgrundlage = **geliehenes Kapital** | **belegt** an 104 Positionen; Regression 1,081 % auf Kredit gegen 1,00 % offiziell (auf Nominal 0,624 %) |
+| Schliessung 0,3 %, Liquidation 1 %, Staffel | offiziell belegt |
+| Tagesrate 0,18 %/Tag | offiziell belegt, **nicht** an eigenen Daten - erst 3 Positionen seit Stichtag |
+| Spot-Kosten | **NICHT belegt** - nur 348/3578 Trades tragen `vsn_fee`, sonst steckt sie im Spread. `kosten_belegt=False` |
+
+**DER EIGENTLICHE FUND, vorher unsichtbar: drei Haltedauern, die nicht
+zusammenpassen.**
+
+| | Median | Quelle |
+|---|---|---|
+| tatsaechlich gehandelt | **0,30 T** (75 % unter 1 Tag) | 188 echte Positionen |
+| Signal loest auf | **2,57 T** | 86 Trades |
+| Stop traegt rechnerisch | **3,3 T** | 3,94 % Stop bei 3× |
+
+Positionen werden regelmaessig geschlossen, **bevor die These entschieden ist**.
+Faktisch ist das Scalping - der Gegensatz zur Vorgabe „Standard-Trades". Bevor eine
+Zieldauer festgelegt werden kann, muss das **Feld dafuer existieren**:
+`halte_kriterium_bucket` ist eine Ablauffrist, `mindestziel_zeitraum_tage_
+geschaetzt` eine Volatilitaetsrechnung. Keins von beiden ist eine Strategieangabe,
+und sie widersprechen einander. **Offen bis heute.**
+
+**Zwei eigene Fehler vor dem Commit gefunden:** Abschnitt 6.7 rechnete die
+Schliessungsgebuehr auf das Nominal, im Widerspruch zur eigenen Regression eine
+Seite darueber (Kosten ~9 % zu hoch). Und zum **zweiten Mal** ein `\"` in einem
+nicht-rohen Python-String in `remote/server.py` - haette wieder die ganze
+Statusseite lahmgelegt. Gefunden, indem der *geparste* String geprueft wurde.
+
+## Nachtrag (2026-08-04): der Einstieg ist nicht das Problem - der AUSSTIEG ist es
+
+**Der wichtigste Befund dieser Projektphase.** Aus der SQN-Recherche (#615),
+ausgeloest durch den Nutzer-Einwand, dass Hebel und nicht Spot die echten Daten
+produziert.
+
+| Hebel, 86 real bewertete Signale (2026-07) | |
+|---|---|
+| erreichten unterwegs ≥ 1R (MFE) | **50,0 %** |
+| endeten tatsaechlich im Plus | **17,6 %** |
+
+**Die Haelfte aller Signale stand einmal bei +1R und ging trotzdem als Verlust
+aus.** Die Einstiege finden die Bewegung; zwischen Maximum und Ergebnis geht sie
+verloren. Wir haben monatelang an Gates, Konfidenz, CRV-Schwellen und
+Einstiegsqualitaet gemessen - an einer Stelle, die laut dieser Messung
+funktioniert.
+
+**Nachtrag desselben Tages, unangenehm:** der Befund war **nicht neu**.
+`compute_sl_mfe_analyse()` (gebaut am 30.07. auf eine Nutzerfrage hin) trennt
+exakt dies - „Richtung war falsch" gegen „Richtung war richtig, aber zu eng
+gestoppt" - inklusive Konzentrations-Check. **Sie wird nirgends aufgerufen.** Ich
+habe stundenlang von Hand nachgerechnet, was fertig im Code lag.
+
+**Bestandsaufnahme der Massstaebe (#618): drei Mess-Funktionen haben null externe
+Aufrufer** - gebaut, dokumentiert, verifiziert, nie angeschlossen
+(`compute_baseline_vergleich`, `compute_sl_mfe_analyse`,
+`compute_zai_uebereinstimmung_baseline`). Laufnachweis erbracht: sie sind nicht
+kaputt, nur unsichtbar.
+
+**Von vier Bezugspunkten taugt einer uneingeschraenkt:**
+
+| Bezugspunkt | Urteil |
+|---|---|
+| CRV-Breakeven `1/(1+CRV)` | brauchbar - arithmetisch, keine Asymmetrie |
+| regime-naiv | brauchbar - empirisch, braucht Daten |
+| **Muenzwurf 50 %** | **unbrauchbar, strukturell falsch** |
+| `basislinie_erwartungswert` | problematisch - Aufloesungs-Asymmetrie |
+
+**Warum der Muenzwurf falsch ist:** er unterstellt symmetrische Ausgaenge, die
+Ziele sind aber per Konstruktion asymmetrisch. Eine 50-%-Quote bei CRV 3,27
+entspraeche **+1,14 R** Erwartungswert - ein fantastisch profitables System, kein
+neutraler Vergleichspunkt.
+
+**Warnung fuer den Anschluss:** Breakeven-Lock ist die naheliegende Antwort und
+wurde am 01.08. bereits geprueft und **verworfen** - kostete 63 % der Gewinner. Die
+Frage ist nicht *ob* abgesichert wird, sondern **wo zwischen +1R und Stop die
+Bewegung kippt.** Nicht blind wiederholen.
+
+**Daraus die Ausstiegsregel** (Trailing ab +1R, Abstand 1R): gemessen an 495
+aufgeloesten Signalen, EW −0,176 → −0,084 R, Bootstrap [+0,051 ; +0,131], 100 %
+positive Ziehungen. Am 04.08. gebaut und verdrahtet, am 05.08. scharfgeschaltet.
+
+## Nachtrag (2026-08-04): Positionsgroesse #606 entschieden - Empfehlung UND Obergrenze gemeinsam
+
+**Der eigentliche Grund fuer die sichtbare Empfehlung:** der gemessene Vorteil
+entsteht **nur, wenn die Groessen tatsaechlich variieren**. Der Nutzer setzt den
+Einsatz bisher selbst (100-500 EUR). Bleibt das so, **tritt der Vorteil nie ein** -
+ein weiterer Deckel waere folgenlos, genau wie die vier bereits geprueften
+Positionsgroessen-Deckel, die alle unter dem tatsaechlichen Einsatz lagen. Deshalb
+muss die Zahl **sichtbar und benannt** sein: *„Empfohlen nach CRV: 340 EUR - RM-1
+erlaubt bis 780 EUR"*.
+
+**Ein eigener Konstruktionsfehler, vom Nutzer gefunden.** Ich hatte „Kelly ersetzt
+die Empfehlung" und „beide getrennt ausweisen" als **Alternativen** vorgelegt.
+Nutzer-Einwand: *„kannst du nicht Option A wie Option C bauen?"* - richtig, der
+Unterschied war reine Beschriftung, technisch rechnet das System beide Zahlen.
+**Lehre: vor dem Vorlegen von Optionen pruefen, ob sie sich technisch unterscheiden
+oder nur in der Benennung.**
+
+**Als Empfehlung, nicht als Information** - bewusst so entschieden. Fuer den Code
+egal, fuer die Auswertung nicht: **nur bei einer Empfehlung bedeutet „nicht
+gefolgt" eine Abweichung, die etwas aussagt.** Daraus der neue Messpunkt
+Befolgungsgrad (Methodik 2.11).
+
+**KEIN Volatilitaets-Divisor** - siehe Regler-Audit, die Doppelzaehlung war
+signifikant schaedlich.
+
+**Live gegangen ist an diesem Tag die stufenlose Spot-CRV-Groesse** (CRV 2,0 → 20 %
+/ 3,0 → 40 % / ab 6,0 volle Groesse), erwartet SQN 0,63 → 1,36. **Die einzige
+Verhaltensaenderung des Tages** - alles andere war Messung.
+
+## Nachtrag (2026-08-04): vier saubere Negativbefunde - geschlossen, nicht vertagt
+
+| | Ergebnis |
+|---|---|
+| **Score-Komponenten** | 41.552 Trigger auf 723 Faelle verdichtet: **keine traegt**. Bester Kandidat war ein Richtungs-Confounder (p=0,735 innerhalb LONG) |
+| **Ausschuss-Hypothese** | p = 0,32 (Hebel) / 0,49 (Spot). Vorher bekannt: nur Effekte ≥ 1,2 R auffindbar |
+| **LLM1-Prompt** | zwei Varianten, zwei Laeufe: Wirkung **0,009 R gegen 0,752 R Eigenrauschen** = 0,01×. Vorzeichen kippte zwischen den Laeufen |
+| **Selbstjustierung** | kein rollierendes Fenster schlaegt den festen Wert, bei keinem Horizont. Rauschen 0,98 R gegen 0,24 R Phasensignal |
+
+**Auch mehr Symbole helfen nicht:** 84 Symbole → 5 %, 168 → 2 % Trennschaerfe.
+
+**Der LLM1-Thread im Detail, weil er einen Widerruf enthaelt.** Zuerst wurde LLM1
+als positionsempfindlich gemessen (`trigger` ans Ende: 3,20 pp Konfidenzverschiebung
+gegen 0,60 pp Eigenrauschen, 5,3×) - die U-foermige Aufmerksamkeitskurve der
+*Lost-in-the-Middle*-Literatur. **Der daraus abgeleitete Befund wurde am selben Tag
+WIDERRUFEN**, nachdem ein historischer Backtest die RICHTIGKEIT statt nur die
+Veraenderung mass: keine der beiden abgeleiteten Prompt-Aenderungen traegt. Der
+CoT-Effekt liegt bei 1 % des Eigenrauschens.
+
+**Was daraus NICHT folgt:** dass eine „bessere" feste Reihenfolge die Loesung ist.
+Bei einem echten Signal ist vorher nicht bekannt, welcher Fakt der Ausreisser ist,
+und *jede* feste Reihenfolge bevorzugt strukturell den zuletzt genannten. Das
+etablierte Gegenmittel ist Position Swapping (bei LLM2 vorhanden, bei LLM1 nicht).
+
+**Gebaut und geprueft, aber ohne Ertrag im Betrieb:** acht Analyseskripte. Sie
+haben an diesem Tag allerdings **vier Fehlentscheidungen verhindert**.
+
+**Sechster Fehler derselben Familie wie am 03.08.:** ein **entartetes
+Konfidenzintervall galt als belastbar**. Erreicht in einem Band kein Fall sein
+Ziel, liefert der Bootstrap in jeder Ziehung 0,0 - das Intervall [0,0..0,0]
+verfehlt die Basislinie rein rechnerisch. Ausgerechnet das Band mit der duennsten
+Datenlage stand dadurch als einziges auf „belastbar". Behoben durch eine
+Mindestbreite.
+
+**LLM2 (Z.ai) bewusst geparkt.** Nutzer-Klarstellung: die drei Ebenen sind eine
+**Folge** - 1. deterministisch misst, 2. LLM1 entscheidet auf besserer Grundlage,
+3. LLM2 prueft gegen. **Nicht bewerten, bevor Stufe 1 und 2 stehen** - sonst misst
+man den Gegenpruefer am Fehler des Vorgaengers. Punkt b wurde beantwortet: die
+40,7 % Abdeckung waren ein Artefakt, real 96,5 % seit Rollout.
+
+**Betriebsbefund nebenbei: SQLite-Sperrkonflikte um 06:30** - 19 Treffer „database
+is locked", vier fehlgeschlagene Remote-Statuskarten, Hebel-Screening ausgefallen.
+Ursache: drei Cron-Jobs auf derselben Minute. Selbstheilend, aber erzeugt
+Fehlermails und Datenluecken. Loesung waere Staggering.
+
+## Nachtrag (2026-08-05): der Dead-Loop aufgeloest - die Ursache liegt bei MISTRAL, nicht im Code
+
+**Beantwortet die Leitfrage „warum kommen so wenige Signale".** Der Weg dorthin
+enthaelt drei eigene Korrekturen und ist deshalb ausfuehrlich festgehalten.
+
+**Es waren zwei getrennte Vorgaenge, die ich zunaechst zu einem verschmolzen
+hatte.**
+
+**Vorgang 1 - Signal-Knappheit, auf die Minute datiert.** `c8dd982` („Nur-Long-
+Deckel: LLM-Output wurde nie gegen `hebel_richtung_modus` geprueft") ging am
+28.07. 17:08 UTC ein. Das **erste Nur-Long-Veto ueberhaupt faellt 17:37 UTC - 29
+Minuten spaeter.** Vorher liefen SHORT-Empfehlungen unbemerkt durch. Weder
+Umsetzungsfehler noch gewolltes Verhalten, sondern **ein korrekter Bugfix, der auf
+eine unerklaerte SHORT-Verschiebung trifft**.
+
+**Vorgang 2 - echter Qualitaetseinbruch, aber ab 29.07.** Sauber an LONG allein
+gemessen (dort ist kein Nur-Long-Veto moeglich, also kein Zusammensetzungseffekt):
+**45,1 % (n=206) → 3,2 % (n=31)**, +41,9 pp, Block-Bootstrap ueber Symbole
+[+14,4 ; +64,9] pp, p = 0,0029.
+
+> **METHODISCH ZENTRAL:** der Trennpunkt wurde **gesucht statt gesetzt**
+> (Max-Statistik ueber alle Splits mit Block-Permutation). Mein erster Versuch
+> datierte auf den 31.07., weil ich die Reihe angesehen und *dann* dort getestet
+> hatte. Ein nach Sichtung gewaehlter Trennpunkt ist kein Test.
+
+**Fuenf Erklaerungen geprueft und ausgeschlossen:** Markt (direkt ueber 41 Symbole
+gemessen - die Einbruchsperiode war minimal **besser**), Stop-Breite (jedes Band
+bricht gleich ein), Richtung, Zensierung (Landmark H=3/4/5), Symbol-Clusterung.
+
+> **LEHRE:** Marktausschluss immer an der **tatsaechlichen Bewegung** messen, nie
+> am Regime-Label. Label und Fear & Greed haetten das nie gezeigt.
+
+**Der Nachweis.** 12 echte Faktensaetze aus `facts_json`, die im Juli zu 100 %
+HALTEN erzeugten, erneut gefragt - mit bitgleichem Juli-Prompt aus git:
+
+```
+Betrieb Juli, dieselben Faelle    55,4 %   (n=104)
+Replay heute, gleiche Fakten      68,0 %   +12,6 Punkte, t = +12,8
+Produktionssprung am 31.07.       54,1 % → 68,3 %
+```
+
+**Das Replay reproduziert nicht den Juli-Zustand, sondern den Zustand NACH dem
+31.07. - auf 0,3 Punkte genau.** Modellname `mistral-small-2506` unveraendert, das
+Verhalten dahinter nicht.
+
+**Vorher ausgeschlossen** (Nutzer-Vorgabe: ein von hier aus nicht widerlegbarer
+Grund darf erst am Ende stehen): Prompt bitgleich aus git, Fakten bitgleich,
+Aufrufparameter identisch, Validierung kann ERÖFFNEN nie in HALTEN drehen, drei
+Pipeline-Pfade, Markt, und die drei Prompt-Regeln vom 28./29.07. (28 Anker,
+Einzeleffekte praktisch null).
+
+**Regel 28 ist entlastet - gegen die eigene Hypothese.** Mit Regel 28 haelt das
+Modell **haeufiger** (14 % gegen 9 %), nicht seltener.
+
+**Zwei Feldfallen, die jede Auswertung ueber den 31.07. hinweg betreffen:**
+`original_action` existiert erst seit 31.07. 07:01 (davor bei JEDEM Signal leer -
+wer damit ueber die Grenze vergleicht, misst die Feldeinfuehrung; stattdessen
+`risk_veto_reason`), und `ist_reines_llm_halten` kam am selben Tag.
+
+**KORREKTUR eines eigenen Befunds - das Nur-Long-Veto ist der schaerfste Filter,
+nicht Verschwendung.** Ich hatte die 313 verworfenen SHORT-Signale als „nie
+ausfuehrbar - 20,8 % der Kapazitaet" committet. Nutzer-Korrektur: SHORT ist nicht
+tot, laeuft nur unsichtbar weiter, und muss als **Vergleich** gemessen werden.
+
+| Gruppe | n | aufgeloest | Trefferquote | EW |
+|---|---|---|---|---|
+| SHORT, Nur-Long-Veto | 313 | 88 | **10,2 %** | −1,136 R |
+| LONG, ausgefuehrt | 162 | 70 | 17,1 % | −0,332 R |
+| andere Vetos (KONTROLLE) | 415 | 274 | **43,8 %** | +0,054 R |
+
+Die Kontrollgruppe traegt den Schluss: **dasselbe** Schattenverfahren liefert bei
+anderen Vetos 43,8 %. Das Verfahren funktioniert - die verworfenen SHORTs sind
+wirklich die schlechteste Gruppe im System.
+
+> **LEHRE:** Ich hatte „wird verworfen" mit „geht verloren" gleichgesetzt, ohne den
+> Block zu lesen, der genau das misst. Vor jeder Aussage ueber verworfene Signale
+> erst die Schattenmessung nachschlagen.
+
+**Zahlenkorrektur zum Gate:** meine fruehere Aussage „das Gate dreht 64-67 % der
+LLM-Empfehlungen" war irrefuehrend. Fuer **ausfuehrbare** Signale filtert es 11 von
+207 = **5 %**. Die 64 % waren fast vollstaendig SHORT-Ablehnungen.
+
+**Das HALTEN kommt NICHT aus dem Faktensatz** - zwei Ablationsrunden, 8 Anker × 3
+Wiederholungen, echte Mistral-Calls: V0-V3 je 100 % EROEFFNEN, V4 96 %, V5-V7 je
+100 %. Kein Faktenblock traegt es, auch nicht `regime_profil` mit seiner
+Mindestkonfidenz. **Offen bleibt**, warum das Modell im Betrieb 64 % HALTEN sagt
+und im Backtest 0 % - struktureller Unterschied: der Backtest stellt jeden Anker
+als frische, isolierte Entscheidung, im Betrieb werden dieselben 33 Symbole
+mehrmals taeglich gefragt. Mit den vorhandenen Daten nicht pruefbar.
+
+## Nachtrag (2026-08-05): Kanarienvogel gebaut, aber BEWUSST NICHT aktiviert
+
+Nach dem Mistral-Nachweis lag eine Drift-Ueberwachung nahe: feste Faktensaetze
+periodisch neu fragen, Abweichung melden, bevor sie den Betrieb erklaert.
+
+**Gebaut und getestet** (`agent/krypto/kanarienvogel.py` + 5 eingefrorene
+Faktensaetze), **aber ohne `add_job()`**. Auslöser war ein Nutzer-Einwand:
+*„bringt uns das Feature einen Wert, finde das kann eigentlich nach hinten"* - und
+er trug. Ein zweiter Drift wuerde sich auch ohne Kanarienvogel in den
+Betriebszahlen zeigen; die laufenden Kosten fielen dagegen taeglich an.
+
+**Aktivieren = eine Zeile. Revisit-Bedingung: sobald ein zweiter unerklaerter
+Verhaltenssprung auftritt.**
+
+## Nachtrag (2026-08-05): die Richtungswahl ist eine REGIME-WETTE, keine Kante
+
+**Vorarbeit fuer den Nur-Long-Umbau** - die Architekturfrage wurde gemessen statt
+vorausgesetzt. Nutzer-Vorgabe: „miss beides, Richtung und Zonenqualitaet".
+
+| Marktfenster | LONG − SHORT | Intervall |
+|---|---|---|
+| steigend | **+1,744 R** | [+0,867 ; +2,429] |
+| fallend | −0,133 R | schliesst 0 ein |
+
+**Der Nur-Long-Veto schuetzte also keinen dauerhaften Ertrag.** Das entzieht der
+Begruendung „SHORT ist ertragsschwaechr" die Grundlage - die Richtung folgt dem
+Regime, nicht der Signalqualitaet.
+
+**Zweiter, wichtigerer Befund aus demselben Lauf:** der **Ausfuehrungshinweis
+zerstoert den Signalfluss**. Bekommt das Modell ehrlich mitgeteilt, dass SHORT
+nicht ausgefuehrt wird, faellt die EROEFFNEN-Quote von **93 % auf 3 %**. Es
+schlaegt dann gar nichts mehr vor, statt LONG-Alternativen zu suchen.
+
+> **Diese Zahl ist seither die stehende Warnung** vor jedem Fakt, der dem Modell
+> eine Einschraenkung mitteilt. Sie hat spaeter die Formulierung des
+> Systemguete-Fakts bestimmt (Regel 31) und den Z-3-Fakt verhindert.
+
+## Nachtrag (2026-08-05): Nur-Long-Umbau in fuenf Schritten - der BP-Schalter wirkt nur noch auf E-Mail und Anzeige
+
+**Nutzer-Vorgabe, woertlich:** der Schalter soll „NULL Einfluss auf die
+Funktionsweise im Hintergrund" haben - SHORTs sollen lediglich nicht per E-Mail
+kommen und nicht in der GUI erscheinen. Dazu: *„wir operieren wieder am Herzen und
+diesmal muss alles klappen"*.
+
+**Warum der Umbau noetig war - es ging um Messhygiene, nicht um Ertrag.** Solange
+der Veto vor der Verarbeitung sass, landeten SHORT-Signale im Veto-Schatten statt
+im regulaeren Outcome-Pfad. Jede Auswertung ueber Richtungen war dadurch
+strukturell verzerrt, und der Allocator-gegen-Zufall-Test war **gar nicht
+durchfuehrbar** (siehe unten).
+
+**Entfernt:** beide Vorfilter im Budget-Allocator, der Veto in
+`hebel_risk_gate.py::post_check_hebel()`, der `hebel_richtung_modus`-Parameter aus
+der Pipeline, und der Satz in Regel 2, der auf einen Ausfuehrungshinweis verwies,
+**den es nie gab**.
+
+**Verblieben:** genau zwei funktionale Lesestellen, beide an der
+Praesentationsgrenze - `scheduler/background.py:1453` (E-Mail) und
+`ui/hebel_view.py:121` (Anzeige). Die GUI bekam einen **Umschalter**
+„handelbar/alle" statt hartem Ausblenden; Standard folgt der Einstellung.
+
+**An der entfernten Stelle steht jetzt ein Nachtrag** („HIER STAND EIN
+NUR-LONG-VETO, ES IST BEWUSST ENTFERNT") mit drei Gruenden: Messverfaelschung,
+kein geschuetzter Gewinn, falscher Ort. Damit kann er nicht versehentlich
+wiederkehren.
+
+**Kein Budget angehoben - bewusst.** Gemessener Kopfraum 7- bis 16-fach
+(`mistral_taegliches_budget` 400 gegen Tageslast 24-56). Wichtig zum Verstaendnis:
+`taegliches_budget_gesamt` ist ein Deckel **pro Allocator-Lauf**, kein Tageszaehler.
+Spot ist ueber `spot_rotation_reserve` garantiert, egal wie viele Hebel-Kandidaten
+kommen; Marktscan waere der ungeschuetzte, aber die Schwelle liegt 15× ueber der
+Realitaet.
+
+**Im Betrieb bestaetigt** (05.08. abends, symbolgenau): sechs SHORT-Signale liefen
+durch die Verarbeitung (ETH, LINK, TURBO, RENDER, XLM, GRIFFAIN), der E-Mail-Filter
+unterdrueckte **genau diese sechs**. Die weiter feuernden Vetos sind CRV und
+Stop-Abstand - die echten Qualitaetsgates.
+
+## Nachtrag (2026-08-05): Konfidenz-Schwellen NICHT neu kalibriert - die Neukalibrierung waere Theater
+
+**Ausgangslage:** durch den Mistral-Drift hat sich die Konfidenzverteilung um 10
+Punkte verschoben und liegt als Masse exakt auf 70.
+
+| | Median | ≥70 % | ≥75 % |
+|---|---|---|---|
+| bis 30.07. | 60,0 | 9 % | 5 % |
+| ab 31.07. | 70,0 | **61 %** | 5 % |
+
+Im aktuellen Baerenregime filtert die Schwelle 75 unveraendert. **Bei einem Wechsel
+nach seitwaerts (65) liesse das Gate schlagartig 61 % statt 9 % durch.**
+
+**Das Ergebnis der Messung beendet die Frage anders als erwartet: die Konfidenz
+sagt nichts vorher.** Sie traegt keine Information ueber den Ausgang. Eine
+Neukalibrierung haette also eine Schwelle auf einer Groesse justiert, die nicht
+diskriminiert - **Theater mit Zahlen**.
+
+**Verworfen, mit Revisit-Bedingung:** die Bucket-Methode (Testmethodik 2.8 verlangt
+Verteilung vor Herleitung, die Dead-Loop-Synthese verwirft sie ohnehin). Revisit
+nur, falls Konfidenz je nachweislich diskriminiert.
+
+**Der Regimewechsel-Effekt bleibt aber ein realer Betriebspunkt** und ist als
+solcher dokumentiert - er folgt nicht aus der Konfidenzqualitaet, sondern aus der
+Verteilungsverschiebung.
+
+## Nachtrag (2026-08-05): Ausstiegsregel scharfgeschaltet - Config, taeglicher Job, E-Mail
+
+**Der groesste gemessene Hebel im System** (50 % standen bei +1R, nur 17,6 % kamen
+an) lief bis dahin **rein passiv**: die Regel rechnete zwar, aber nur in Export und
+Remote-Seite - beides muss man aufrufen. Im Export vom 05.08. standen **15 von 28
+offenen Signalen ueber der Ausloeseschwelle, darunter SOL mit 10,63 R
+ungesichert** - gesehen nur, weil zufaellig jemand hineinschaute.
+
+**Gebaut:** Config-Schluessel mit vollstaendiger Herleitung
+(`ausstieg_trailing_ausloese_r` / `_abstand_r`, beide 1,0), taeglicher Job **um
+7:15** und eine Sammel-E-Mail (hoechstens eine pro Tag, keine wenn nichts anliegt,
+sortiert nach hoechstem erreichten Buchgewinn).
+
+**Die Uhrzeit ist keine Nebensache:** 7:15 liegt **nach** dem Backward-Tracking um
+6:00, weil die Regel auf dessen `outcome_max_realisiertes_crv` rechnet. Vorher
+haette sie auf Zahlen des Vortags gearbeitet.
+
+**Abschaltbar** ueber `ausstieg_trailing_ausloese_r = 0`, ohne Codeaenderung. Der
+Grund steht in der Config: **alle Kalibrierungszahlen stammen aus einer einzigen
+Marktphase** (Baerenregime). In einer Aufwaertsphase koennte ein Trailing-Stop
+Gewinner zu frueh beenden.
+
+**Desktop-GUI bewusst NICHT gebaut, als OPTIONAL dokumentiert.** Die E-Mail bringt
+die Information aktiv, die Remote-Seite zeigt sie unterwegs - die Desktop-GUI waere
+der dritte Kanal fuer dasselbe. Nutzer-Entscheidung: „GUI machen wir spaeter".
+
+## Nachtrag (2026-08-05): Remote-Seite bereinigt - was nicht mehr gemessen wird, wird nicht mehr gezeigt
+
+Nutzer-Vorgabe: Informationen, die wir nicht mehr messen, sollen verschwinden,
+neue wie die SHORT-Verteilung dazukommen.
+
+**Umgesetzt:** ein **rekursiver** Filter `_ohne_entfernte_provider()` ueber fuenf
+Karten statt fuenf Einzelloesungen (Groq und Cerebras sind vollstaendig entfernt,
+tauchten aber weiter in Zaehlern und Historien auf), die Nur-Long-Gruppe aus der
+Veto-Grund-Karte, und `_get_richtungsverteilung()` neu.
+
+**Wichtig:** gefiltert wird **nur die Anzeige**. Daten und Export bleiben
+vollstaendig - der Altbestand ist historisch korrekt und darf nicht verschwinden,
+er ist nur nicht mehr aussagekraeftig fuer den laufenden Betrieb.
+
+## Nachtrag (2026-08-05): Allocator gegen Zufall - an historischen Daten NICHT beantwortbar
+
+**Stufe 2 der Messkette, nie gemessen.** Die Frage ist wichtig: waehlt der Allocator
+besser als Zufall? Wenn nein, ist die ganze Screening-Ebene fraglich.
+
+**Ergebnis: strukturell blockiert.** Der Nur-Long-Vorfilter hat bis zum 05.08.
+bestimmt, welche Kandidaten ueberhaupt in die Auswahl kamen - jeder historische
+Vergleich misst den Vorfilter mit, nicht die Auswahl.
+
+**Kein Nullbefund, sondern eine Nichtmessbarkeit** - der Unterschied ist wichtig,
+weil er die Frage offen laesst statt sie zu beantworten.
+
+**Wiedervorlage in 2-3 Wochen mit Datumsfilter ab 2026-08-05**, sobald genug
+Kandidaten ohne Vorfilter vorliegen. Das ist einer der konkreten Ertraege des
+Nur-Long-Umbaus: die Messung wird ueberhaupt erst moeglich.
+
+## Nachtrag (2026-08-05): halte_kriterium erstmals ausgewertet - zwei strukturelle Maengel
+
+**941 gesetzte Zielpreise, nie gegen den tatsaechlichen Verlauf geprueft** (Stufe 6
+der Messkette).
+
+**Kein Trennnachweis** - das Kriterium unterscheidet Treffer nicht von Verlusten.
+Wichtiger sind aber zwei **strukturelle** Maengel, die unabhaengig von der
+Stichprobe gelten:
+
+1. Der 45-Tage-Eimer ist mangels Zeit noch gar nicht auswertbar - **fruehestens ab
+   Mitte September**.
+2. `halte_kriterium_bucket` ist eine **Ablauffrist**, keine Strategieangabe - und
+   widerspricht `mindestziel_zeitraum_tage_geschaetzt`. Damit haengt dieser Punkt
+   am selben ungeloesten Konstruktionsfehler wie die Zieldauer (04.08.).
 
 ## Nachtrag (2026-08-05): drei neue Hebel-Fakten (Kosten, Ausstiegsregel, Systemguete) + Regeln 30/31
 

@@ -2975,8 +2975,18 @@ schließen Lücken, die seit dem 04.08. namentlich als offen dokumentiert waren.
 
 **Ein Beobachtungspunkt bleibt offen:** die beiden Arme mit den neuen Fakten lagen
 konsistent ~3 Prozentpunkte unter dem Arm ohne sie. Das ist nicht von Rauschen zu
-trennen, aber es ist genau die Richtung, vor der Regel 31 selbst warnt. Verfestigt
-sich das im Betrieb, gehört der Systemgüte-Block wieder heraus.
+trennen, aber es ist genau die Richtung, vor der Regel 31 selbst warnt.
+
+**Damit das entscheidbar bleibt, gibt es ein festes Abbruchkriterium:** fällt die
+ERÖFFNEN-Quote der Signale mit Systemgüte-Block über mindestens 60 aufgelöste
+Fälle unter **85 %**, wird der Block wieder entfernt und Regel 31 auf den
+Ausstiegsteil gekürzt. Vergleichsbasis sind die 92–96 % aus dem Test. Frühester
+Prüftermin: sobald 60 solche Signale vorliegen, bei der aktuellen Rate etwa Ende
+August 2026.
+
+**Kein Abbruchgrund ist eine weiterhin negative Systemgüte.** Der Block soll die
+Zahl melden, nicht sie verbessern — wer ihn daran misst, misst das System und
+nicht den Block.
 
 **Noch nicht bestätigt:** dass die Blöcke im echten Betrieb ankommen. Der letzte
 Datenexport ist älter als die Änderung — die Funktion ist isoliert geprüft, die
