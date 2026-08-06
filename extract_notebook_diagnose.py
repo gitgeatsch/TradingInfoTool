@@ -716,7 +716,7 @@ def _rohdaten_fuer_backtest(conn) -> dict:
     }
 
 
-def _hebel_faktensaetze(conn, je_zelle: int = 12) -> dict:
+def _hebel_faktensaetze(conn, je_zelle: int = 12, tage: int = 14) -> dict:
     """Echte `facts_json`-Saetze fuer den Regel-28-Test (2026-08-05).
 
     WOFUER. Am 31.07. kippt das Hebel-Verhalten binnen einer Stunde: vorher
@@ -747,14 +747,33 @@ def _hebel_faktensaetze(conn, je_zelle: int = 12) -> dict:
     entscheidende Arm braucht Faktensaetze, bei denen das Modell VOR dem
     31.07. selbst HALTEN gewaehlt hat. Eine unsortierte Stichprobe waere nach
     dem 31.07. fast leer an HALTEN (2 pro Tag) und davor fast leer an
-    EROEFFNEN (4 pro Tag) - also genau dort duenn, wo gemessen werden soll."""
+    EROEFFNEN (4 pro Tag) - also genau dort duenn, wo gemessen werden soll.
+
+    NACHTRAG 2026-08-06 - FENSTER ROLLIERT JETZT.
+    Bis hierher stand das Fenster fest auf '2026-07-26'..'2026-08-05'. Das war
+    fuer den Regel-28-Test richtig und ist es nach seinem Abschluss nicht mehr:
+    ein festes Enddatum in der Vergangenheit heisst, dass JEDE kuenftige
+    Prompt- oder Fakten-Aenderung in diesem Block unsichtbar bleibt. Genau das
+    ist am 06.08. eingetreten - die drei neuen Fakt-Bloecke (kosten,
+    ausstiegsregel, systemguete) waren in 0 von 177 Saetzen, und zwar nicht
+    weil sie fehlten, sondern weil das Fenster vor ihrem Deploy endete. Die
+    Verifikation lief dadurch ins Leere.
+
+    Der R28-Test bleibt reproduzierbar: seine 104 vollstaendigen Antworten
+    liegen in `data/regel28_echt_antworten.json`, und das damalige Fenster
+    steht oben im Docstring.
+
+    LEHRE, die ueber diese Funktion hinausgeht: ein Analyse-Export, der fuer
+    EINE Fragestellung gebaut wurde, verfaellt still. Wer ihn danach zur
+    Verifikation benutzt, misst das Fenster statt der Sache."""
     rows = conn.execute(
         "SELECT id, symbol, created_at, action, richtung, confidence_pct, "
         "regime, trigger_zweig, risk_veto_reason, facts_json "
         "FROM hebel_signals "
         "WHERE facts_json IS NOT NULL AND facts_json != '' "
-        "  AND date(created_at) BETWEEN '2026-07-26' AND '2026-08-05' "
-        "ORDER BY created_at ASC"
+        "  AND date(created_at) >= date('now', ?) "
+        "ORDER BY created_at ASC",
+        (f"-{int(tage)} days",),
     ).fetchall()
 
     je_gruppe: dict[tuple, list] = {}
@@ -780,15 +799,36 @@ def _hebel_faktensaetze(conn, je_zelle: int = 12) -> dict:
                 "facts_json": r["facts_json"],
             })
 
+    # Welche Fakt-Bloecke kamen an welchem Tag tatsaechlich beim Modell an?
+    # Bewusst ueber ALLE Zeilen des Fensters, nicht nur ueber die Stichprobe -
+    # die Frage "ist der neue Fakt im Betrieb angekommen" darf nicht davon
+    # abhaengen, ob die Schichtung den betreffenden Satz gezogen hat. Kostet
+    # nur Schluesselnamen, kein facts_json.
+    bloecke_je_tag: dict[str, dict[str, int]] = {}
+    for r in rows:
+        tag = str(r["created_at"])[:10]
+        eimer = bloecke_je_tag.setdefault(tag, {})
+        eimer["_faktensaetze"] = eimer.get("_faktensaetze", 0) + 1
+        try:
+            for schluessel in json.loads(r["facts_json"]):
+                eimer[schluessel] = eimer.get(schluessel, 0) + 1
+        except Exception:
+            eimer["_unlesbar"] = eimer.get("_unlesbar", 0) + 1
+
     groesse = sum(len(e["facts_json"] or "") for e in eintraege)
     return {
-        "hinweis": "Geschichtete Stichprobe je Tag x action, Fenster 26.07.-05.08. "
-                   "Fuer den Regel-28-Test (350918a) - siehe Funktions-Docstring.",
+        "hinweis": f"Geschichtete Stichprobe je Tag x action, rollierendes Fenster "
+                   f"der letzten {tage} Tage (seit 2026-08-06; davor fest "
+                   f"26.07.-05.08. fuer den Regel-28-Test). "
+                   f"`bloecke_je_tag` zaehlt ueber ALLE Zeilen des Fensters und "
+                   f"beantwortet, ob ein neuer Fakt-Block im Betrieb ankommt.",
+        "fenster_tage": tage,
         "je_zelle": je_zelle,
         "anzahl": len(eintraege),
         "nicht_gezogen": uebersprungen,
         "groesse_facts_json_bytes": groesse,
         "belegung": {f"{tag} {aktion}": len(g) for (tag, aktion), g in sorted(je_gruppe.items())},
+        "bloecke_je_tag": dict(sorted(bloecke_je_tag.items())),
         "eintraege": eintraege,
     }
 
