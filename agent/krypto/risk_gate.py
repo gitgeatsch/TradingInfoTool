@@ -1089,6 +1089,16 @@ def post_check(
             # relativ); sie wurde hebelfrei simuliert, gilt also unveraendert
             # fuer die Spot-Familie. Betroffenheit hier aktuell praktisch null
             # (Median-Stop 10,6%) - die Regel wirkt als Schutz, nicht als Filter.
+            #
+            # 2026-08-06 UNABHAENGIG BESTAETIGT: eine survivorship-freie
+            # Neumessung an Hebel-Signalen (messe_stop_abstand_baender.py, kein
+            # Aufloesungs-Filter, Basislinie je Band, Block-Bootstrap ueber
+            # Symbole) findet den Bruch genau hier - unter 2% liegt der
+            # Erwartungswert 0,53 R UNTER einem Zufallseinstieg mit demselben
+            # Stop und ist das einzige Band, dessen Intervall die Null
+            # ausschliesst; das Band 2,5-3% liegt +0,60 R darueber. Die
+            # Schwelle 2,5% sitzt damit knapp oberhalb des Bruchs, also
+            # richtig. KEINE Aenderung noetig - Verifikation, keine Luecke.
             sl_eng_schwelle = config["risiko"].get("sl_abstand_eng_schwelle_relativ")
             sl_abstand_relativ = abs(entry_mid - stop_von) / entry_mid if entry_mid > 0 else None
             rm1c_verletzt, rm1c_reason = _rm1c_atr_untergrenze(

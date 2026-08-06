@@ -1126,12 +1126,22 @@ def post_check_hebel(
                 and sl_abstand_relativ < sl_eng_schwelle
             ):
                 risk_veto = True
+                # Begruendungstext am 2026-08-06 aktualisiert. Die vorherige
+                # Fassung zitierte "0 von 20 aufgeloesten Signalen" aus der
+                # 01.08.-Messung - die war survivorship-behaftet, weil sie nur
+                # AUFGELOESTE Faelle zaehlte und die Aufloesung selbst vom
+                # Stop-Abstand abhaengt. Ersetzt durch die survivorship-freie
+                # Neumessung (messe_stop_abstand_baender.py, jedes Signal mit
+                # Zonen neu simuliert, Basislinie je Band, Block-Bootstrap).
+                # KEINE Verhaltensaenderung - nur der Text.
                 reason = (
                     f"Stop-Loss-Abstand {sl_abstand_relativ * 100:.2f}% unter Minimum "
-                    f"{sl_eng_schwelle * 100:.1f}% (Enge-Stop-Veto) - mechanische Basislinie "
-                    f"aus 10.570 Tagesbalken zeigt hier {'unter 22%' if sl_abstand_relativ < 0.01 else 'rund 30%'} "
-                    f"Trefferquote gegen 33% Break-even; in den echten Daten 0 von 20 "
-                    f"aufgeloesten Signalen erfolgreich"
+                    f"{sl_eng_schwelle * 100:.1f}% (Enge-Stop-Veto). Survivorship-frei "
+                    f"gemessen liegt der Erwartungswert unterhalb 2% bei -0,77 R und "
+                    f"damit 0,53 R UNTER einem Zufallseinstieg mit demselben Stop "
+                    f"(Bootstrap ueber Symbole [-1,12; -0,50], einziges Band dessen "
+                    f"Intervall die Null ausschliesst); zwischen 2,5% und 3% dagegen "
+                    f"+0,60 R ueber Zufall"
                 )
                 risk_veto_reason = f"{risk_veto_reason}; {reason}" if risk_veto_reason else reason
                 action = "HALTEN"
