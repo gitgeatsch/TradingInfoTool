@@ -31,6 +31,7 @@ from agent.krypto.gegenpruefung import (
     fuehre_beide_calls_im_hintergrund,
     richtung_aus_action,
 )
+from api.yfinance_history import get_full_ohlc_history
 from agent.krypto.llm_provider import llm_model_label
 from agent.krypto.makro_analog import get_cached_makro_analog_fact
 from agent.krypto.pipeline import compute_current_regime, eur_aus_usd, log_eur_abweichungen
@@ -262,6 +263,69 @@ def _post_check_hedge(
     return result
 
 
+
+# OHLC-Historie fuer Hedge-Instrumente - NUR ZUR BEWERTUNG (2026-08-06).
+#
+# ZUERST DIE ABGRENZUNG ZUR BESTEHENDEN ENTSCHEIDUNG, damit hier nichts
+# stillschweigend ueberschrieben wird. Der Modul-Docstring haelt fest, dass
+# fuer Hedge-Instrumente BEWUSST KEINE Einzeltitel-Technikanalyse betrieben
+# wird - konsistent fuer beide Instrumente, und inhaltlich richtig, weil ein
+# Absicherungs-Overlay ueber die Portfolio-Exposure bewertet gehoert und nicht
+# ueber Chartlevel. DIESE ENTSCHEIDUNG BLEIBT UNANGETASTET: der Analyst
+# bekommt weiterhin keine technischen Indikatoren fuer DBPK/3QSS.
+#
+# WAS SIE NICHT ABDECKT, und das ist die Luecke: die PORTFOLIO-BEWERTUNG. Ohne
+# Kursreihe hat eine gehaltene Position keinen Tageswert. DBPK (1.739
+# Einheiten) und 3QSS (218) stehen im Mengenkorb der Portfolio-Wertreihe und
+# fallen mangels Kurs heraus - mit der Folge, dass Z-3 den Drawdown OHNE die
+# Absicherung misst, die ihn daempfen soll. Am 06.08. fehlten 19 von 33
+# Symbolen; die beiden Hedges darunter.
+#
+# Bewertung und Technikanalyse sind zwei verschiedene Zwecke. Die Reihe hier
+# zu speichern beruehrt die Analyse-Entscheidung nicht - der Hedge-Analyst
+# liest sie schlicht nicht.
+#
+# ABRUF-TEST 06.08.: OD7N/OD7H/OD7C/OD7L und 3QSS liefern LEER (bestaetigt die
+# Liste YFINANCE_HISTORY_UNRELIABLE_TICKERS), DBPK.DE dagegen 4.159 Zeilen.
+# Fuer 3QSS bleibt eine Rekonstruktion aus dem Referenzindex der naechste
+# Schritt - und der Docstring nennt bereits den Grund, warum sie nicht trivial
+# ist: ein taeglich gehebeltes inverses Produkt braucht eine korrekte
+# Rebalancing-Simulation, sonst entstehen wieder falsche Werte. Siehe
+# Plan_Nicht_Krypto_Umbau_06_08.md, Phase A2.
+#
+# Groessenordnung ehrlich dazu: die DBPK-Position ist rund 230 EUR wert
+# (1.739 x 0,1321). Die Z-3-Korrektur daraus ist klein - richtig ist sie
+# trotzdem, und sie ist die Voraussetzung dafuer, den Hedge ueberhaupt je
+# bewerten zu koennen.
+_HEDGE_HISTORY_STALE_THRESHOLD_TAGE = 3
+
+
+def _ensure_ohlc_backfilled(conn, asset) -> None:
+    """Fail-soft: schlaegt der Abruf fehl, laeuft das Signal ohne Historie
+    weiter - genau wie bisher. Die Historie ist ein Gewinn, keine Bedingung."""
+    if not getattr(asset, "yfinance_symbol", None):
+        return
+    try:
+        letztes = db.get_last_ohlc_date(conn, asset.symbol, "EUR")
+        if letztes is not None:
+            alter = (datetime.now(timezone.utc).date()
+                     - datetime.fromisoformat(str(letztes)).date()).days
+            if alter <= _HEDGE_HISTORY_STALE_THRESHOLD_TAGE:
+                return
+        punkte = get_full_ohlc_history(asset.yfinance_symbol, asset.symbol, "EUR")
+        if punkte:
+            db.upsert_ohlc_points(conn, punkte)
+            logger.info("Hedge-OHLC fuer %s (%s): %d Punkte nachgeladen",
+                        asset.symbol, asset.yfinance_symbol, len(punkte))
+        else:
+            logger.info("Hedge-OHLC fuer %s (%s): keine Historie abrufbar - "
+                        "Rekonstruktion aus dem Referenzindex waere der naechste Schritt",
+                        asset.symbol, asset.yfinance_symbol)
+    except Exception:
+        logger.exception("Hedge-OHLC-Nachladen fuer %s fehlgeschlagen - "
+                         "Signal laeuft ohne Historie weiter", asset.symbol)
+
+
 def generate_signal(
     asset, watchlist, conn, llm_client, coingecko_client, *,
     bereits_vorgeschlagen_effektiv_usd: float = 0.0, zai_client=None,
@@ -276,6 +340,8 @@ def generate_signal(
     _compute_portfolio_exposure()-Docstring) - optional, Standard 0.0."""
     if asset.symbol not in SYMBOL_ZU_HEBEL_FAKTOR:
         raise ValueError(f"generate_signal() (agent/hedge) erwartet ein bekanntes Hedge-Symbol, bekam {asset.symbol!r}")
+
+    _ensure_ohlc_backfilled(conn, asset)
 
     latest_prices = db.get_latest_prices(conn)
     price_snap = latest_prices.get(asset.symbol)
