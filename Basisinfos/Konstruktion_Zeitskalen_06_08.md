@@ -104,6 +104,55 @@ bereits).
 **Risiko:** null bis zur Entscheidung. Danach wäre eine Horizont-Änderung ein
 bewusster Schritt mit Messgrundlage statt einer Setzung.
 
+### V3 — GEMESSEN am 06.08.: das Ergebnis kippt die Frage
+
+`messe_planungshorizont.py`, 300–488 Hebel-Signale je Variante, Anteil des am
+Horizont-Ende erreichten MFE, der bereits an Tag N stand.
+
+| Variante | n | Median-Tag für 99 % | **Bestwert erst NACH Tag 5** |
+|---|---|---|---|
+| H7, mit Barrieren | 487 | 1,0 | 14,4 % |
+| H7, ohne Barrieren | 488 | 3,0 | 26,4 % |
+| H14, mit Barrieren | 300 | 2,0 | 26,3 % |
+| **H14, ohne Barrieren** | 300 | 5,0 | **45,0 %** |
+| H14, nur LONG | 269 | 2,0 | 25,7 % |
+| H14, nur SHORT | 31 | 4,0 | 32,3 % |
+
+**Im Median ist bei Tag 5 alles da** — in jeder Variante 100 %. Der typische
+Trade ist nach **1–2 Tagen** entschieden. Für den Medianfall sind 5 Tage also
+nicht knapp, sondern großzügig.
+
+**Aber der Median verdeckt den Schwanz.** Bei **26 %** der Signale kommt der
+Bestwert erst nach Tag 5 — und ohne Barrieren, also wenn kein Stop dazwischen
+geht, bei **45 %**.
+
+**Die Lücke zwischen 26,3 % und 45,0 % ist die eigentliche Aussage.** Sie sagt:
+bei fast einem Fünftel der Signale beendet eine Barriere den Trade, *bevor* die
+Bewegung fertig ist. Das ist derselbe Befund wie beim Ausstieg (50 % standen
+einmal bei +1R, nur 17,6 % kamen an) — hier von der Zeitachse her gesehen.
+
+> **DARAUS FOLGT NICHT „HORIZONT VERLÄNGERN".** Ein fester Horizont ist für
+> diese Verteilung das falsche Instrument: er müsste für den Median viel zu
+> lang sein, um dem Viertel gerecht zu werden. Was man braucht, ist ein
+> Mechanismus, der **nicht im Voraus wissen muss, wie lange es dauert** — und
+> der ist seit dem 05.08. live: die **Ausstiegsregel** (Trailing ab +1R). Sie
+> lässt laufen, was läuft, und sichert, was erreicht wurde.
+
+**Die Konsequenz für den Prompt ist damit kleiner als gedacht:** die 5 Tage sind
+als *Planungsrahmen* vertretbar. Irreführend ist nur, sie als *harte Grenze*
+darzustellen, wo ein Viertel der Fälle darüber hinausläuft — und der
+Trailing-Stop diesen Fällen ohnehin gerecht wird.
+
+**Vorbehalte, die dazugehören:**
+
+- **Über 14 Tage hinaus ist nichts messbar.** Volle 21-Tage-Vorläufe gibt es
+  für 38 Signale, 30-Tage-Vorläufe für null. Ob die Bewegung darüber
+  weiterläuft, bleibt offen.
+- **Tag 0 trägt schon 60–80 % des End-MFE.** Das ist teils die Tagesspanne des
+  Signaltags selbst — der Einstieg liegt nahe am Kurs, und das Tageshoch zählt
+  bereits. Kein Fehler, aber es überzeichnet, wie schnell „die Kante da ist".
+- **SHORT nur n=31.** Die Richtungs-Aufteilung ist ein Hinweis, keine Aussage.
+
 ### V4 — Ein kurzfristiges Regime als SCHATTEN-Fakt
 
 **Was:** ein zweites Regime-Maß auf Skala B (z. B. 3–5-Tage-Trend oder EMA5/EMA20)
@@ -216,11 +265,14 @@ noch; sie sollte aber gegen den Aufwand einer erneuten Suche abgewogen werden.
    einzige Punkt, der eine **bereits ausgelöste** Notbremse untergräbt: Z-3
    meldet 16,84 % Rückschlag auf einem Portfolio, aus dem die Absicherung
    herausfällt.
-1. **V2** — trennt das Regime überhaupt? Das entscheidet, ob die
-   Zeitskalen-Frage die richtige Frage ist. Kostet eine Auswertung.
-2. **V3 parallel** — wann wird die Kante real? Liefert den empirischen
-   Handelshorizont.
-3. **V1** — Benennung nachziehen, sobald die beiden Zahlen vorliegen.
+1. ~~**V3**~~ — **am 06.08. gemessen, siehe oben.** Ergebnis: die 5 Tage sind
+   für den Median großzügig, aber ein Viertel läuft darüber hinaus. Ein fester
+   Horizont ist das falsche Instrument; die Ausstiegsregel ist das richtige und
+   ist bereits live. **Keine Horizont-Änderung empfohlen.**
+2. **V2** — trennt das Regime überhaupt? Das ist jetzt der nächste Schritt und
+   entscheidet, ob die Zeitskalen-Frage überhaupt die richtige Frage ist.
+   Kostet eine Auswertung.
+3. **V1** — Benennung nachziehen, sobald V2 vorliegt.
 4. **V4** nur, falls V2 zeigt, dass das langsame Regime nicht trennt.
 
 **Ausdrücklich NICHT empfohlen:** jetzt am EMA-Fenster, an R-5.10 oder am
