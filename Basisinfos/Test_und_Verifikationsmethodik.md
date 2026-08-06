@@ -992,7 +992,7 @@ Wahrheit hat sich an diesem einen Tag mehrfach zurückgezahlt.
 verifiziert, nie angeschlossen (`compute_baseline_vergleich`,
 `compute_sl_mfe_analyse`, `compute_zai_uebereinstimmung_baseline`). Ich habe
 stundenlang von Hand nachgerechnet, was fertig im Code lag. Inzwischen stehen
-**46 Analyse- und Prüfskripte** im Projektstamm — ohne Index findet niemand das
+**47 Analyse- und Prüfskripte** im Projektstamm — ohne Index findet niemand das
 richtige, und der nächste Nachbau ist nur eine Frage der Zeit.
 
 Sortiert ist nach **Auslöser**, nicht nach Funktion: die Frage im Kopf ist
@@ -1028,6 +1028,7 @@ Zwei Implementierungen derselben Simulation laufen garantiert auseinander
 | `pruefe_fx_ableitung.py` | Verworfene FX-Ableitungen im Log, oder EUR/USD-Werte, die nicht zusammenpassen. Rankt die Ausreißer **und** unterscheidet Veraltung von Illiquidität (Renditekorrelation + sd-Verhältnis + Volumen). |
 | `backtest_ueberholt_erkennung.py` | Zweifel an der Überholt-Logik. |
 | `teste_rekonstruktion_verdrahtung.py` | Nach jeder Änderung an den Rohstoff- oder Hedge-Pipelines. Prüft die Symboltrennung, den Ankertag, `quelle`, den Volatilitäts-Drag und den TA-Lesepfad — gegen eine temporäre DB, offline (yfinance gemockt). |
+| `pruefe_aufruf_signaturen.py` | **Nach jedem neuen Parameter an einer Funktion mit mehreren Aufrufern.** AST-Durchlauf über alle Dateien: findet Aufrufe, die Argumente übergeben, die die Zielfunktion nicht kennt. Am 06.08. hätte er den `crv_baender`-Fehler vor dem Deploy gefunden — und belegt hinterher, dass es der einzige seiner Art war. |
 | `teste_simuliere_signal_zeilentypen.py` | Nach jeder Änderung an `simuliere_signal()` oder an etwas, das DB-Zeilen entgegennimmt. Lädt die Reihen über `lade_kursreihen()` statt sie nachzubauen — genau die Lücke, durch die am 06.08. ein `.get()` auf `sqlite3.Row` in die Produktion kam. |
 | `teste_migration_und_filter.py` | Nach jeder Änderung an `init_db()` oder der Portfolio-Bewertung. Prüft die einmalige Umzugs-Migration auf Idempotenz und Datenerhalt sowie den Plausibilitätsfilter inkl. Grenzfällen (Faktor 2,99/3,01, veraltete Reihe). |
 

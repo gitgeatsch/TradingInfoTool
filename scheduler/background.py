@@ -320,29 +320,57 @@ def _refresh_nicht_aktien_ohlc(conn, watchlist) -> None:
 
     Fail-soft je Asset: ein Fehlschlag darf die uebrigen nicht mitreissen.
     """
-    from agent.hedge.pipeline import _ensure_ohlc_backfilled as _hedge_ohlc
+    # ASSETKLASSE REICHT NICHT ZUR AUSWAHL - und genau daran ist der erste
+    # Entwurf gescheitert (06.08., im Betriebslog: "4 Assets aktualisiert",
+    # erwartet waren 11). Die Watchlist kennt nur `aktien`, `rohstoffe`,
+    # `krypto` und `etf`. Es gibt KEINE Assetklasse "hedge" und keine
+    # "themen_etf": Hedge-Instrumente werden ueber die Mitgliedschaft in
+    # SYMBOL_ZU_HEBEL_FAKTOR erkannt, Themen-ETFs sind die uebrigen `etf`.
+    # Der erste Entwurf filterte auf Klassennamen, die es nicht gibt - er hat
+    # deshalb nur die Rohstoffe erwischt, und die 3QSS-Rekonstruktion lief nie.
+    #
+    # DIE AUSWAHLREGEL WIRD DESHALB NICHT NOCHMAL FORMULIERT, sondern aus
+    # agent/multi_asset_batch.py uebernommen: _kandidaten() bestimmt, welche
+    # Assets eine Nicht-Krypto-Pipeline haben, _pipeline_fuer() ordnet die
+    # Pipeline zu. Eine zweite Fassung derselben Regel waere genau die Dublette,
+    # die am 03.08. schon einmal auseinandergelaufen ist.
+    from agent.hedge.pipeline import (
+        SYMBOL_ZU_HEBEL_FAKTOR as _hedge_symbole,
+        _ensure_ohlc_backfilled as _hedge_ohlc,
+    )
+    from agent.multi_asset_batch import _kandidaten
     from agent.rohstoff.pipeline import _ensure_ohlc_backfilled as _rohstoff_ohlc
     from agent.themen_etf.pipeline import (
         _ensure_ohlc_backfilled as _etf_ohlc, _resolve_asset_currency as _etf_currency,
     )
 
     erledigt, fehlgeschlagen = 0, 0
-    for asset in watchlist:
+    je_art: dict[str, int] = {}
+    for asset in _kandidaten(watchlist):
+        if asset.assetklasse == "aktien":
+            continue                      # deckt backfill_all_aktien_ohlc() ab
         try:
             if asset.assetklasse == "rohstoffe":
                 _rohstoff_ohlc(conn, asset)
-            elif asset.assetklasse == "hedge":
+                art = "rohstoffe"
+            elif asset.symbol in _hedge_symbole:
                 _hedge_ohlc(conn, asset)
-            elif asset.assetklasse == "themen_etf":
+                art = "hedge"
+            elif asset.assetklasse == "etf":
                 _etf_ohlc(conn, asset, _etf_currency(asset))
+                art = "themen_etf"
             else:
                 continue
             erledigt += 1
+            je_art[art] = je_art.get(art, 0) + 1
         except Exception:
             fehlgeschlagen += 1
             logger.exception("OHLC-Refresh fuer %s fehlgeschlagen", asset.symbol)
-    logger.info("Nicht-Aktien-OHLC-Refresh: %d Assets aktualisiert (%d fehlgeschlagen)",
-                erledigt, fehlgeschlagen)
+    # Aufschluesselung je Art mitloggen: "4 Assets aktualisiert" sah unauffaellig
+    # aus, obwohl zwei Arten komplett fehlten. Eine Summe verbirgt genau das.
+    logger.info("Nicht-Aktien-OHLC-Refresh: %d Assets aktualisiert (%d fehlgeschlagen) - %s",
+                erledigt, fehlgeschlagen,
+                ", ".join(f"{k}: {v}" for k, v in sorted(je_art.items())) or "keine")
 
 
 def refresh_aktien_ohlc_job(conn_factory, watchlist_provider) -> None:

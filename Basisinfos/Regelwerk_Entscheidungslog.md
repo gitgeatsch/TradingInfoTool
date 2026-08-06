@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (183 Einträge)
+## Index nach Thema (184 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -109,7 +109,9 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-05** — `halte_kriterium` erstmals ausgewertet - kein Trennnachweis, zwei strukturelle Maengel
 - **2026-08-06** — Die drei neuen Fakten sind im Betrieb ANGEKOMMEN (22/22) - Verifikation abgeschlossen, Zaehler-Fehler behoben
 
-### Datenquellen / APIs (22)
+### Datenquellen / APIs (23)
+
+- **2026-08-06** — Fehler 3 und 4 derselben Runde (`build_hebel_facts()` ohne `crv_baender`, Refresh-Filter auf Phantom-Assetklassen) + `pruefe_aufruf_signaturen.py` belegt: kein Dominoeffekt
 
 - **2026-08-06** — `.get()` auf sqlite3.Row: ein Einzeiler legte Systemgüte, Basislinie und den CRV-Bänder-Fakt seit 09:17 still — fail-soft hat es versteckt, gefunden wurde es im Log
 
@@ -13222,3 +13224,77 @@ Indexzugriff funktioniert bei Row und dict gleichermassen - genau wie in der
 Schleife direkt darunter, die schon immer `p["high"]`/`p["low"]` benutzt hat.
 Der Fehler war, in derselben Funktion zwei verschiedene Zugriffsformen zu
 mischen.
+
+
+---
+
+## Nachtrag (2026-08-06): zwei weitere Fehler DERSELBEN Runde - und die Pruefung, die die ganze Klasse auf einmal abraeumt
+
+Nutzer-Vorgabe beim zweiten Betriebsfund: **"vor einem Fix sauber analysieren
+und recherchieren, damit wir keinen Dominoeffekt haben."** Genau richtig - ich
+haette sonst den dritten Fehler einzeln behoben und auf den vierten gewartet.
+
+### Fehler 3: `build_hebel_facts()` kannte `crv_baender` nicht
+
+`hebel_pipeline.py` uebergab `crv_baender=fakt_crv_baender`, der Funktionsrumpf
+benutzte `crv_baender` bereits - **nur der Parameter fehlte in der Signatur**.
+Jeder Hebel-LLM-Call brach mit `TypeError` ab, seit Commit 486c1c0 (07:12).
+
+Die fuenf anderen Analysten (Krypto-Spot, Aktien, Rohstoffe, Themen-ETF) hatten
+den Parameter von Anfang an. **Genau einer von sechs wurde uebersehen** - und
+weil der Rumpf ihn schon benutzte, sah der Code beim Lesen vollstaendig aus.
+
+### Fehler 4: der neue OHLC-Refresh filterte auf Assetklassen, die es nicht gibt
+
+Im Log stand `Nicht-Aktien-OHLC-Refresh: 4 Assets aktualisiert (0
+fehlgeschlagen)` - unauffaellig, erwartet waren **11**.
+
+Die Watchlist kennt nur `aktien`, `rohstoffe`, `krypto` und `etf`. Es gibt
+**keine** Assetklasse `hedge` und **keine** `themen_etf`: Hedge-Instrumente
+werden ueber die Mitgliedschaft in `SYMBOL_ZU_HEBEL_FAKTOR` erkannt,
+Themen-ETFs sind die uebrigen `etf`. Mein Filter fragte nach Klassennamen, die
+nicht existieren, und erwischte deshalb nur die vier Rohstoffe.
+
+**Folge: die 3QSS-Rekonstruktion lief nie** - der Teil des Tages, um den es
+ueberhaupt ging.
+
+**Fix ohne zweite Regelfassung:** die Auswahl kommt jetzt aus
+`agent/multi_asset_batch.py::_kandidaten()`, der bereits vorhandenen Regel.
+Eine eigene Fassung waere die Dublette gewesen, die am 03.08. schon einmal
+auseinandergelaufen ist. Zusaetzlich loggt der Job die **Aufschluesselung je
+Art** statt nur einer Summe - "4 Assets" sah unauffaellig aus, obwohl zwei
+Arten komplett fehlten. Nachher: `11 Assets aktualisiert (0 fehlgeschlagen) -
+hedge: 2, rohstoffe: 4, themen_etf: 5`.
+
+### Die Pruefung, die die Klasse abraeumt: `pruefe_aufruf_signaturen.py`
+
+Statt Fehler 3 einzeln zu beheben, wurde die ganze Fehlerklasse geprueft: ein
+AST-Durchlauf ueber **181 Dateien und 1.270 Funktionsnamen**, der jeden Aufruf
+gegen die Signatur der Zielfunktion haelt.
+
+**Ergebnis nach dem Fix: kein einziger weiterer Fall.** Kein Dominoeffekt - die
+`crv_baender`-Luecke war die einzige ihrer Art. Das ist der Unterschied zwischen
+"behoben" und "belegt behoben".
+
+Die drei verbleibenden Meldungen sind Namenskollisionen mit `subprocess.run()`
+und `app.run()` und bewusst als "zu pruefen" statt als Fehler ausgewiesen -
+eine Pruefung, die Rauschen erzeugt, wird nicht mehr gelesen.
+
+### Was diese Runde insgesamt zeigt
+
+Vier Fehler an einem Tag, **alle vier fail-silent**, alle vier vom Nutzer im
+Betriebslog gefunden:
+
+| # | Fehler | seit | versteckt durch |
+|---|---|---|---|
+| 1 | Scheinwert 51.000 EUR unter OD7H | laenger | kaputte FX-Ableitung |
+| 2 | `.get()` auf `sqlite3.Row` | 09:17 | `_safe()`, try/except |
+| 3 | `build_hebel_facts()` ohne `crv_baender` | 07:12 | try/except im LLM-Call |
+| 4 | Refresh-Filter auf Phantom-Assetklassen | 13:32 | Summe statt Aufschluesselung |
+
+> **Das gemeinsame Muster ist nicht Unachtsamkeit, sondern die
+> Rueckmeldeschleife.** Jeder dieser Fehler haette sich sofort selbst gemeldet,
+> wenn irgendetwas laut geworden waere. Keiner hat es. Deshalb sind die
+> Gegenmassnahmen dieser Runde alle vom selben Typ: Aufschluesselung statt
+> Summe, Gegenprobe statt Einzelwert, statische Pruefung statt Vertrauen -
+> und ein Blick ins Log als Teil der Abnahme, nicht danach.

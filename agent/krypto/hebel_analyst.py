@@ -645,6 +645,11 @@ def build_hebel_facts(
     # historische_erfolgsquote/liquiditaetszonen darueber).
     ausstiegsregel: dict | None = None,
     systemguete: dict | None = None,
+    # 2026-08-06: NACHGETRAGEN. Der Parameter fehlte, waehrend der Rumpf
+    # `crv_baender` bereits benutzte und hebel_pipeline.py ihn uebergab - jeder
+    # Hebel-LLM-Call brach mit TypeError ab. Die fuenf anderen Analysten hatten
+    # ihn von Anfang an; nur dieser eine wurde beim Einbau uebersehen.
+    crv_baender: dict | None = None,
 ) -> dict:
     """Analog agent/krypto/analyst.py::build_facts() - wiederverwendet dieselben
     Bausteine fuer technische_analyse/regime/markt_kontext/antizyklisch 1:1 (siehe
@@ -936,7 +941,7 @@ def build_hebel_facts(
     # ausgewertete Trades vorliegen. Ein Schluessel mit null waere schlechter
     # als gar keiner - das Modell wuerde eine Angabe sehen, die keine ist, und
     # muesste raten was sie bedeutet.
-    for _schluessel in ("ausstiegsregel", "systemguete"):
+    for _schluessel in ("ausstiegsregel", "systemguete", "crv_baender"):
         if fakten.get(_schluessel) is None:
             fakten.pop(_schluessel, None)
     return fakten
