@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (168 Einträge)
+## Index nach Thema (169 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -47,7 +47,7 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-05** — Nur-Long-Umbau in fuenf Schritten: der BP-Schalter wirkt nur noch auf E-Mail und Anzeige
 - **2026-08-05** — Ausstiegsregel scharfgeschaltet: Config, taeglicher Job 7:15, Sammel-E-Mail
 
-### LLM-Prompts / Analysten (Stage 2) (14)
+### LLM-Prompts / Analysten (Stage 2) (15)
 
 - **2026-07-18** — Konfidenz-Kalibrierung nach dem echten CAT-Fall (fünf Bausteine A-E)
 - **2026-07-19** — Release 2 (Schwerpunkte/Thesen-Verwaltung) - Konzeptionsrunde
@@ -63,6 +63,7 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-03** — CRV-Erfolgsbaender als Fakt + Regel 36 (Krypto-Spot) - glatter Verlauf statt Ja/Nein-Schwelle
 - **2026-08-05** — Konfidenz-Schwellen NICHT neu kalibriert - die Konfidenz sagt nichts vorher, Neukalibrierung waere Theater
 - **2026-08-05** — Drei neue Hebel-Fakten (Kosten, Ausstiegsregel, Systemguete) + Regeln 30/31 - kombiniert gemessen, kein Nachweis, bleiben drin
+- **2026-08-06** — Gesamtaufnahme der fehlenden Fakten (Abschnitt 8) + vierstufiges Ausstiegsverfahren statt Abbruchschwelle
 
 ### Z.ai-Gegenpruefung (Stage 3) (23)
 
@@ -12256,3 +12257,113 @@ wird.**
 
 *Ist-Zustand: `Regelwerksmanual.md` Kapitel 22. Katalog und Herleitung:
 `Fakten_Entscheidungsmappe.md` Abschnitte 4.3 und 7.*
+
+## Nachtrag (2026-08-06): Gesamtaufnahme der fehlenden Fakten + Ausstiegsverfahren statt Abbruchschwelle
+
+**Nutzer-Einwand, der beides ausgeloest hat:** die drei neuen Fakten wirkten wie
+„ok wir haben sie, aber ob es etwas bringt und warum wir sie einsetzen ist unklar
+bzw. koennte das auch negative Auswirkungen haben". Dazu die Vorgabe: kein
+radikaler Abbruch, sondern ein sauberer Ausstieg - und vorher pruefen, welche
+Fakten dem Modell sonst noch fehlen.
+
+### Teil 1: Ausstiegsverfahren statt Schwellwert
+
+Ich hatte zuvor ein hartes Kriterium gesetzt („EROEFFNEN-Quote unter 85 % ueber
+≥60 Faelle → Block fliegt raus"). **Das war derselbe Konstruktionsfehler wie ein
+hartes Gate: es entscheidet ohne Ursachenpruefung.** Eine gesunkene Quote kann vom
+Fakt kommen - oder vom Regime, von einem Provider-Drift wie am 31.07., oder von
+einer anderen Aenderung im selben Fenster.
+
+**Neu, vierstufig** (`Fakten_Entscheidungsmappe.md` 7.4b, gilt fuer JEDEN Fakt):
+
+| Stufe | |
+|---|---|
+| 0 | laufende Beobachtung ueber `bloecke_je_tag` im Export |
+| 1 | Schwelle loest **Pruefpflicht** aus, nicht Entfernung |
+| 2 | **drei Alternativen ausschliessen**: Provider-Drift (Kanarienvogel-Replay), Regime (getrennt auswerten), andere Aenderung im Fenster (Deploy-Liste) |
+| 3 | Entscheidung mit schriftlicher Begruendung im Entscheidungslog + Revisit-Bedingung; **kleinste wirksame Aenderung** (nur der verdaechtige Block, nicht die Gruppe) |
+| 4 | Ruecknahme nach dem **Nur-Long-Muster**: Nachtrag an der Codestelle, Katalogeintrag auf *entfernt*, und die Wirkung der Entfernung messen |
+
+**Ausdruecklich KEIN Ausstiegsgrund:** eine weiterhin negative Systemguete (der
+Block soll die Zahl melden, nicht sie verbessern), ein weiterhin fehlender
+Wirkungsnachweis (bei 0,3 pp gegen 4,5 pp Rauschboden waere die Entfernung
+genauso unbegruendet wie die Einfuehrung), und ein Abrieb innerhalb des
+Rauschbodens - genau die Konsistenz erzeugen kleine Stichproben zuverlaessig.
+
+### Teil 2: Gesamtaufnahme der fehlenden Fakten
+
+Erstellt durch **Differenzbildung** statt Nachdenken: alle 48 Bloecke des
+Notebook-Exports gegen die 20 Bloecke, die `build_hebel_facts()` liefert. Jeder
+Kandidat durch das 3+1-Raster. Vollstaendig in `Fakten_Entscheidungsmappe.md`
+Abschnitt 8.
+
+**Die klarste Luecke ist eine PIPELINE-ASYMMETRIE:** der Hebel-Analyst setzt das
+CRV und kennt nur die Mindestgrenze aus Regel 5. Der Spot-Analyst - mit n=19
+ausgewerteten Trades weit duennerer Datenbasis - bekommt seit dem 03.08. die
+vollen gemessenen Baender als Regel 36. **Die Pipeline mit den belastbaren Daten
+hat die schwaechere Regel.** Die Hebel-Baender sind gemessen und exportiert:
+
+| CRV-Band | n | Ziel | Basislinie | Abstand | belastbar |
+|---|---|---|---|---|---|
+| 2,0-2,5 | 79 | 24,0 % | 13,1 % | +10,9 pp | nein |
+| **2,5-3,0** | 34 | 43,1 % | 8,6 % | **+34,5 pp** | **ja** |
+| 3,0-4,0 | 33 | 20,5 % | 7,7 % | +12,7 pp | nein |
+| ≥ 4,0 | 26 | 5,1 % | 3,1 % | +2,1 pp | nein |
+
+> **Beim Bauen aufpassen:** die absolute Quote im Band ≥ 4,0 bricht ein, **aber
+> die Basislinie bricht mit**. Das ist Horizont-Trunkierung - exakt der Artefakt,
+> der am 03.08. als „CRV ≥ 4,0 ist das schlechteste Band" gemeldet und widerrufen
+> wurde. Nur `abstand_zur_basislinie_pp` darf in einen Fakt, absolute Quoten nie.
+
+**Sechs weitere Kandidaten, alle bewusst nachgelagert - nicht aus Aufwandsgruenden:**
+
+- **Eigene HALTEN-Bilanz** (n=12, Trefferquote 8,3 %) und **Konfidenz-Versatz**
+  (vorhergesagt 77,5 % → tatsaechlich 33,3 %): warten auf den Abschluss des
+  Ausstiegsverfahrens zu `systemguete`. **Zwei Selbstbewertungs-Fakten
+  gleichzeitig einzufuehren machte einen negativen Befund unzuordenbar.**
+- **Zieldauer**: Datenarbeit, keine Prompt-Arbeit - solange kein Feld eine
+  Zieldauer traegt, hat jede Prompt-Regel nichts, worauf sie sich bezieht.
+- **Klumpenrisiko im Portfolio**: offene Achsenfrage, kein Blocker. Meine erste
+  Einschaetzung („`hauptgruppe` nur bei 13 von 57 befuellt") war zu eng -
+  Nutzer-Hinweis vom 06.08.: *„die Kategorie-Thematik halte ich fuer nicht so
+  problematisch, die Bewertung muss ohnehin je Gruppe gesondert erfolgen."*
+  Richtig: `assetklasse` und `rolle` sind 57 von 57 befuellt. Offen ist damit
+  nicht die Datenlage, sondern **welche Gruppierungsachse** die richtige ist.
+- **Veto-Schatten je Grund**: naechster Verwandter des Ausfuehrbarkeits-Hinweises,
+  zudem fragile Zahl (5 Faelle tragen 221 % des Mittelwerts, `vorzeichen_kippt`).
+- **Relative Rangposition**: strukturell die einzige Information, die das Modell
+  nicht selbst herleiten kann - kaeme aber aus dem Screening-Score, und der
+  diskriminiert gemessen nicht. Scheinpraezision.
+
+**`score_gesamt` gehoert entfernt, nicht ergaenzt** - liegt heute als nackte Zahl
+ohne Regel im Faktensatz, die schlechteste aller Varianten (Beschluss 03.08.).
+
+### Teil 3: ein Messfehler, der die Verifikation fast in die Irre gefuehrt haette
+
+Bei der Verifikation am Morgen des 06.08. trugen **0 von 177 Faktensaetzen** die
+neuen Bloecke. Das sah nach einem Verdrahtungsfehler aus und war keiner:
+`_hebel_faktensaetze()` hatte das Fenster fest auf `2026-07-26`..`2026-08-05`
+verdrahtet - das Fenster des Regel-28-Tests. Die Fakten kamen am Abend des 05.08.
+
+**Behoben:** rollierendes Fenster (14 Tage) plus neuer Block `bloecke_je_tag`, der
+je Tag zaehlt, welche Fakt-Bloecke tatsaechlich im `facts_json` standen - ueber
+ALLE Zeilen des Fensters, nicht nur ueber die geschichtete Stichprobe. Damit ist
+die Ankunftsfrage fuer jede kuenftige Fakten-Aenderung ohne Umweg beantwortbar.
+
+> **LEHRE:** ein Analyse-Export, der fuer EINE Fragestellung gebaut wurde,
+> verfaellt still. Wer ihn danach zur Verifikation benutzt, misst das Fenster
+> statt der Sache.
+
+### Teil 4: der Nur-Long-Umbau ist im Betrieb bestaetigt
+
+Am Morgen des 06.08. liefen 22 Hebel-Signale, davon **5 EROEFFNEN - alle SHORT**
+(TURBO ×2, HYPE, ONDO, INJ), alle mit `hebel_final = 3.0`. Dass dort ein Hebel
+steht, ist der Beleg: das Risk-Gate hat sie bewertet und nicht vetot. Der
+E-Mail-Filter unterdrueckte genau diese fuenf, protokolliert je Symbol. Zum
+Vergleich die Vortage: 02.08. 38 SHORT und **0** EROEFFNEN, 04.08. 25 SHORT und
+**0** EROEFFNEN. Seit dem Umbau 12 SHORT-EROEFFNEN - eine Kategorie, die es
+vorher strukturell nicht geben konnte.
+
+**Nicht bewertbar bleibt die Signalmenge** (22 gegen 32-57 an Vortagen): die
+Produktion war waehrend der Desktop-Tests zeitweise offline, und es war erst der
+Morgen-Batch. Zwei moegliche Ursachen fuer dieselbe Zahl - deshalb kein Befund.

@@ -2977,16 +2977,50 @@ schließen Lücken, die seit dem 04.08. namentlich als offen dokumentiert waren.
 konsistent ~3 Prozentpunkte unter dem Arm ohne sie. Das ist nicht von Rauschen zu
 trennen, aber es ist genau die Richtung, vor der Regel 31 selbst warnt.
 
-**Damit das entscheidbar bleibt, gibt es ein festes Abbruchkriterium:** fällt die
-ERÖFFNEN-Quote der Signale mit Systemgüte-Block über mindestens 60 aufgelöste
-Fälle unter **85 %**, wird der Block wieder entfernt und Regel 31 auf den
-Ausstiegsteil gekürzt. Vergleichsbasis sind die 92–96 % aus dem Test. Frühester
-Prüftermin: sobald 60 solche Signale vorliegen, bei der aktuellen Rate etwa Ende
-August 2026.
+**Damit das entscheidbar bleibt, gibt es ein Ausstiegsverfahren** — bewusst kein
+einfacher Schwellwert. Fällt die ERÖFFNEN-Quote der Signale mit Systemgüte-Block
+über mindestens 60 aufgelöste Fälle unter **85 %**, löst das eine **Prüfpflicht**
+aus, keine automatische Entfernung. Denn eine gesunkene Quote kann auch vom
+Regime kommen, von einem Anbieter-Drift wie am 31.07., oder von einer anderen
+Änderung im selben Zeitraum. Wer beim ersten Unterschreiten entfernt, hat gute
+Chancen, das Falsche zu entfernen und den echten Grund nie zu finden.
 
-**Kein Abbruchgrund ist eine weiterhin negative Systemgüte.** Der Block soll die
+Erst wenn diese drei Alternativen ausgeschlossen sind, wird entschieden — und die
+Entfernung wird wie jede Regeländerung behandelt: mit schriftlicher Begründung im
+Entscheidungslog, einem Nachtrag an der Codestelle (damit sie nicht versehentlich
+zurückkehrt) und einer Messung, ob die Entfernung überhaupt geholfen hat.
+Entfernt wird dabei nur der verdächtige Block, nicht die Gruppe — Kosten und
+Ausstiegsregel tragen die Warnung nicht.
+
+**Kein Ausstiegsgrund ist eine weiterhin negative Systemgüte.** Der Block soll die
 Zahl melden, nicht sie verbessern — wer ihn daran misst, misst das System und
-nicht den Block.
+nicht den Block. Ebenso wenig zählt ein weiterhin fehlender Wirkungsnachweis: bei
+0,3 Prozentpunkten gegen 4,5 Prozentpunkte Messrauschen wäre die Entfernung
+genauso unbegründet wie die Einführung es wäre.
+
+*Das vollständige vierstufige Verfahren steht in `Fakten_Entscheidungsmappe.md`
+Abschnitt 7.4b und gilt für jeden Fakt, nicht nur für diesen.*
+
+### Was dem Agenten sonst noch fehlt
+
+Am 06.08. wurde vollständig aufgenommen, welche berechneten Größen den Agenten
+**nicht** erreichen — durch Abgleich aller 48 Export-Blöcke gegen die 20 Blöcke,
+die er tatsächlich bekommt. Ergebnis: `Fakten_Entscheidungsmappe.md` Abschnitt 8.
+
+**Die klarste Lücke ist eine Asymmetrie zwischen den Pipelines.** Der Hebel-Agent
+*setzt* das Chance-Risiko-Verhältnis, kennt aber nur die Mindestgrenze — keine
+gemessene Einordnung. Der Spot-Agent, dessen Datenbasis mit 19 ausgewerteten
+Trades weit dünner ist, bekommt seit dem 03.08. die vollen gemessenen Bänder
+(Regel 36). **Die Pipeline mit den belastbaren Daten hat die schwächere Regel.**
+Das ist der einzige heute umsetzungsreife Kandidat.
+
+Alles Weitere ist bewusst nachgelagert: zwei Kandidaten (eigene HALTEN-Bilanz,
+Konfidenz-Versatz) warten auf den Abschluss des Ausstiegsverfahrens oben — zwei
+Selbstbewertungs-Fakten gleichzeitig einzuführen machte einen negativen Befund
+unzuordenbar. Die Zieldauer ist Datenarbeit statt Prompt-Arbeit. Das
+Klumpenrisiko im Portfolio ist offen und wartet auf eine Entscheidung, nach
+welcher Achse gruppiert wird. Zwei Kandidaten sind begründet abgelehnt, jeweils
+mit Bedingung für eine erneute Prüfung.
 
 **Noch nicht bestätigt:** dass die Blöcke im echten Betrieb ankommen. Der letzte
 Datenexport ist älter als die Änderung — die Funktion ist isoliert geprüft, die

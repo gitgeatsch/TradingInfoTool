@@ -687,28 +687,84 @@ aussichtslos — der gemeinsame Test war die richtige Entscheidung.
 n = 67/69 nicht von Rauschen zu trennen — aber es ist die Richtung, vor der der
 Systemgüte-Fakt in seinem eigenen Docstring warnt.
 
-### 7.4b Abbruchkriterium — damit der Beobachtungspunkt entscheidbar ist
+### 7.4b Ausstiegsverfahren für einen Fakt — vierstufig, mit Begründungspflicht
 
-Ein „Beobachtungspunkt" ohne Schwelle bleibt ewig offen. Deshalb festgelegt:
+**Warum kein einfacher Schwellwert.** Ein hartes „unter X fliegt raus" ist derselbe
+Konstruktionsfehler wie ein hartes Gate: es entscheidet ohne Ursachenprüfung. Eine
+gesunkene ERÖFFNEN-Quote kann vom Fakt kommen — oder vom Regime, von einem
+Provider-Drift wie am 31.07., von einer anderen Änderung im selben Zeitraum. Wer
+beim ersten Unterschreiten entfernt, hat gute Chancen, das Falsche zu entfernen und
+den echten Grund nie zu finden. **Die Schwelle löst deshalb eine Prüfung aus, keine
+Entfernung.**
+
+Das Verfahren gilt für **jeden** Fakt, nicht nur für `systemguete`.
+
+#### Stufe 0 — laufende Beobachtung
 
 | | |
 |---|---|
-| **Messgröße** | ERÖFFNEN-Quote der Hebel-Signale mit `systemguete`-Block im Faktensatz |
-| **Vergleichsbasis** | 92,1–95,7 % aus dem Dreiarm-Test (der B-Arm ohne die Fakten lag bei 95,7 %) |
-| **Abbruch, wenn** | die Quote über **≥ 60 aufgelöste Signale** unter **85 %** liegt |
-| **Frühester Prüftermin** | sobald 60 Signale mit dem Block vorliegen — bei der aktuellen Rate ca. **Ende August 2026** |
-| **Konsequenz** | `systemguete` wird aus `build_hebel_facts()` entfernt, Regel 31 auf den Ausstiegsteil gekürzt. Kosten und Ausstiegsregel bleiben — sie tragen die Warnung nicht |
+| **Messgröße** | ERÖFFNEN-Quote der Signale, deren `facts_json` den Block enthält |
+| **Datenquelle** | `hebel_faktensaetze.bloecke_je_tag` im Notebook-Export (seit 06.08., zählt über alle Zeilen des Fensters) |
+| **Vergleichsbasis** | 92,1 / 92,5 / 95,7 % aus dem Dreiarm-Test |
+| **Rauschboden** | ~4,5 pp — alles darunter ist nicht interpretierbar |
 
-**Warum 85 % und nicht „signifikant schlechter als B":** der Dreiarm-Test hat den
-Rauschboden bei ~4,5 pp verortet. Eine Schwelle innerhalb des Rauschens wäre nicht
-entscheidbar; 85 % liegt gut zwei Rauschbreiten unter der Basis und ist damit ein
-Wert, den zufällige Schwankung nicht erzeugt. Die eigentliche Gefahr ist ohnehin
-kein 3-pp-Abrieb, sondern der Zusammenbruch, den der Ausführbarkeits-Hinweis
-gezeigt hat (93 % → 3 %) — den fängt diese Schwelle sicher.
+#### Stufe 1 — Auslöser (löst Prüfpflicht aus, nicht Entfernung)
 
-**Was NICHT als Abbruchgrund zählt:** eine weiterhin negative Systemgüte. Der Fakt
-soll die Zahl melden, nicht sie verbessern. Wer ihn daran misst, misst das System,
-nicht den Fakt.
+Die Quote liegt über **≥ 60 aufgelöste Signale** unter **85 %**.
+
+*Warum 85 %:* gut zwei Rauschbreiten unter der Basis — ein Wert, den zufällige
+Schwankung nicht erzeugt. Die eigentliche Gefahr ist ohnehin kein 3-pp-Abrieb,
+sondern der Zusammenbruch, den der Ausführbarkeits-Hinweis gezeigt hat
+(93 % → 3 %); den fängt diese Schwelle sicher.
+
+*Warum 60:* darunter ist der Unterschied zum Rauschboden nicht auflösbar. Bei der
+aktuellen Rate frühestens **Ende August 2026**.
+
+#### Stufe 2 — Ursachenprüfung, drei Alternativen sind auszuschließen
+
+**Bevor** über die Entfernung entschieden wird, ist zu belegen, dass es am Fakt
+liegt und nicht an:
+
+1. **Provider-Drift** — Replay eingefrorener Faktensätze gegen den aktuellen
+   Endpunkt. Das Werkzeug existiert (`kanarienvogel.py`, gebaut und getestet). Der
+   31.07. ist der Präzedenzfall: dort lag es am Anbieter, nicht am Code.
+2. **Regime** — die Quote getrennt je Regime auswerten. Ein Regimewechsel
+   verschiebt sie unabhängig vom Faktensatz.
+3. **Andere Änderung im selben Fenster** — Deploy-Liste des Zeitraums gegen die
+   Bruchstelle halten. Genau dieser Schritt hat am 05.08. die Datierung des
+   Einbruchs vom 31.07. auf den 29.07. korrigiert.
+
+**Erst wenn alle drei ausgeschlossen sind**, ist der Fakt der plausible Grund.
+
+#### Stufe 3 — Entscheidung mit schriftlicher Begründung
+
+Die Entfernung ist eine Regeländerung und wird wie eine behandelt: Eintrag im
+`Regelwerk_Entscheidungslog.md` mit Zahl, ausgeschlossenen Alternativen und
+**Revisit-Bedingung**. Eine Entfernung ohne Begründung ist so wenig zulässig wie
+eine Einführung ohne Begründung.
+
+Bei einem Teilbefund gilt die **kleinste wirksame Änderung**: `systemguete` ist der
+Block mit der Warnung, `kosten` und `ausstiegsregel` tragen sie nicht. Es wird der
+verdächtige Block entfernt, nicht die Gruppe.
+
+#### Stufe 4 — Rücknahme nach dem Nur-Long-Muster
+
+1. Block aus `build_hebel_facts()` entfernen, Regel 31 auf den Ausstiegsteil kürzen
+2. **Nachtrag an der Codestelle** — „HIER STAND …, BEWUSST ENTFERNT" mit Grund und
+   Messwert, wie beim Nur-Long-Veto. Verhindert versehentliche Wiederkehr.
+3. Katalogeintrag in 4.3 auf *entfernt* mit Datum
+4. Wirkung der Entfernung **messen** — sonst ist unbekannt, ob sie geholfen hat
+
+#### Was ausdrücklich KEIN Ausstiegsgrund ist
+
+- **Eine weiterhin negative Systemgüte.** Der Block soll die Zahl melden, nicht sie
+  verbessern. Wer ihn daran misst, misst das System und nicht den Block.
+- **Ein weiterhin fehlender Wirkungsnachweis.** „Nicht nachweisbar" bei 0,3 pp
+  gegen 4,5 pp Rauschboden ist eine Aussage über die Messgrenze. Sonst wäre die
+  Entfernung genauso unbegründet wie die Einführung es wäre.
+- **Ein Abrieb innerhalb des Rauschbodens** (< 4,5 pp), egal wie konsistent die
+  Richtung aussieht. Genau diese Konsistenz erzeugen kleine Stichproben zuverlässig
+  — siehe 7.6.
 
 ### 7.5 Verifikationsstand (Stand 2026-08-06)
 
@@ -718,6 +774,24 @@ nicht den Fakt.
 | Greift `systemguete` in allen Tiers? | **Nein, nur Hebel** (n = 124). Krypto 19, Aktien/ETF/Rohstoffe ≈ 0 → Fakt fällt still weg. So gewollt. |
 | Kommen sie im **Produktivlauf** an? | **NOCH OFFEN.** Der letzte Export (05.08. 19:54) ist älter als die Commits (20:33 / 21:34); 0 von 176 Faktensätzen enthalten die neuen Blöcke. **Prüfpunkt für den nächsten Export.** |
 
+### 7.5b Was die Verifikation am 06.08. zusätzlich ergab
+
+Die Ankunftsprüfung lief zunächst **ins Leere, und zwar aus einem Messfehler, nicht
+aus einem Verdrahtungsfehler**: `_hebel_faktensaetze()` hatte das Fenster fest auf
+`2026-07-26`..`2026-08-05` verdrahtet — das Fenster des Regel-28-Tests. Die drei
+Blöcke kamen am Abend des 05.08.; der Export konnte sie strukturell nicht enthalten.
+0 von 177 sah nach einem defekten Fakt aus und war ein totes Fenster.
+
+**Behoben:** rollierendes Fenster (14 Tage) plus ein neuer Block
+`bloecke_je_tag`, der je Tag zählt, welche Fakt-Blöcke tatsächlich im `facts_json`
+standen — über **alle** Zeilen des Fensters, nicht nur über die geschichtete
+Stichprobe. Damit ist die Ankunftsfrage für jede künftige Fakten-Änderung ohne
+Umweg beantwortbar.
+
+> **Lehre, die über diesen Fall hinausgeht:** ein Analyse-Export, der für EINE
+> Fragestellung gebaut wurde, verfällt still. Wer ihn danach zur Verifikation
+> benutzt, misst das Fenster statt der Sache.
+
 ### 7.6 Die übergreifende Lehre
 
 Zweimal unabhängig belegt: **kleine Stichproben erzeugen zuverlässig Scheinbefunde
@@ -725,4 +799,126 @@ in der erwarteten Richtung.** Beim Regel-Ablationstest lagen die Einzeleffekte b
 12 Ankern bei +0,281 und +0,182, bei 28 Ankern bei +0,014 und −0,013. Hier:
 −0,734 bei 12 Fällen, −0,334 bei 24. **Vielversprechende Zwischenstände immer
 aufstocken, bevor berichtet wird.**
+
+---
+
+## 8. Gesamtaufnahme: was das LLM heute NICHT sieht (Stand 2026-08-06)
+
+*Nutzer-Vorgabe 06.08.: „prüfe vorher ob dem LLM neben den genannten Fakten weitere
+fehlen welche rein sollten aber noch nicht sind — also als Gesamtkapitel."*
+Abschnitt 7 behandelt die drei am 05.08. gebauten Fakten. Dieses Kapitel ist die
+vollständige Liste dessen, was darüber hinaus fehlt.
+
+### 8.1 Wie die Liste entstanden ist
+
+Nicht durch Nachdenken, sondern durch **Differenzbildung**: alles, was das System
+deterministisch berechnet und für wissenswert hält (die 48 Blöcke des
+Notebook-Exports plus die Rechenfunktionen in `backward_tracking.py`), gegen die
+**20 Fakt-Blöcke**, die `build_hebel_facts()` tatsächlich liefert.
+
+Der Hebel-Faktensatz enthält heute: `antizyklisch` · `asset` · `ausstiegsregel` ·
+`btc_relativwert` · `disclaimers` · `hebel_kontext` · `historische_erfolgsquote` ·
+`historischer_makro_vergleich` · `kosten` · `liquiditaetszonen` · `markt_kontext` ·
+`optionsmarkt` · `position_aktuell` · `preis` · `regime` · `regime_profil` ·
+`signal_stabilitaet` · `systemguete` · `technische_analyse` · `trigger`.
+
+Jeder Kandidat wurde durch das **3+1-Fragen-Raster** aus Abschnitt 1 geschickt.
+
+### 8.2 Kategorie A — berechnet, aber nicht weitergereicht
+
+Das sind die billigsten Fälle: die Zahl existiert, es fehlt nur die Verdrahtung.
+
+| # | Was fehlt | Datenlage | Raster-Urteil |
+|---|---|---|---|
+| **A1** | **CRV-Erfolgsbänder für Hebel** | gemessen und exportiert (`crv_breakeven_baender.hebel_h7/h14`), mit Basislinie, KI und `belastbar`-Flag | **Frage 2 — gehört ans LLM.** Präzedenzfall existiert: Spot hat das seit 03.08. als Regel 36 |
+| **A2** | **Eigene HALTEN-Bilanz** | `selbst_gewaehltes_halten_performance`, Hebel n=12, Trefferquote 8,3 %, ⌀ −0,754 R | Frage 2, aber **Reihenfolge beachten** (8.5) |
+| **A3** | **Konfidenz-Kalibrierungsversatz** | `konfidenz_kalibrierung`: vorhergesagt 77,5 % → tatsächlich 33,3 % (Δ 44,2 pp); niedrig 48,3 % → 19,4 % (Δ 28,9 pp) | Frage 2 mit Vorbehalt (8.5) |
+| **A4** | **Veto-Schatten je Grund** | `crv_unter_minimum`: 274 aufgelöst, 43,8 % Trefferquote, +0,054 R | **Nicht empfohlen** (8.5) |
+| **A5** | **Datenqualität des eigenen Faktensatzes** | `ohlc_aktualitaet_je_symbol`, `api_health` (27 Quellen), Staleness je Indikator | Frage 2, geringer erwarteter Effekt |
+
+**A1 ist die klarste Lücke des ganzen Kapitels.** Der Hebel-Analyst *setzt* das CRV
+und kennt dazu nur die Mindestgrenze aus Regel 5 — keine gemessene Einordnung. Der
+Spot-Analyst, dessen Datenbasis mit n=19 ausgewerteten Trades weit dünner ist,
+bekommt seit dem 03.08. die vollen Bänder als Regel 36. **Die Pipeline mit den
+belastbaren Daten hat die schwächere Regel.**
+
+Die gemessenen Hebel-Bänder (h7, n=136, nur ERÖFFNEN):
+
+| CRV-Band | n | Ziel erreicht | Basislinie | **Abstand** | EW | belastbar |
+|---|---|---|---|---|---|---|
+| 2,0–2,5 | 79 | 24,0 % | 13,1 % | +10,9 pp | −0,092 R | nein |
+| **2,5–3,0** | 34 | 43,1 % | 8,6 % | **+34,5 pp** | **+0,571 R** | **ja** |
+| 3,0–4,0 | 33 | 20,5 % | 7,7 % | +12,7 pp | −0,009 R | nein |
+| ≥ 4,0 | 26 | 5,1 % | 3,1 % | +2,1 pp | −0,081 R | nein |
+
+> **WARNUNG — hier lauert ein bereits einmal widerrufener Befund.** Die absolute
+> Quote im Band ≥ 4,0 bricht auf 5,1 % ein, **aber die Basislinie bricht
+> mit** (3,1 %). Der Abstand bleibt positiv. Das ist Horizont-Trunkierung, kein
+> Qualitätsverlust — genau der Artefakt, der am 03.08. als „CRV ≥ 4,0 ist das
+> schlechteste Band" gemeldet und widerrufen wurde. **Nur
+> `abstand_zur_basislinie_pp` darf in einen Fakt, absolute Quoten nie.**
+
+Der belastbare Kern ist damit schmal, aber real: **2,5–3,0 ist das einzige Band mit
+belastbarem Vorsprung.** Ein Fakt darf genau das sagen — und muss die drei anderen
+Bänder als *nicht belastbar* kennzeichnen, statt eine Rangfolge zu suggerieren.
+
+### 8.3 Kategorie B — strukturell nicht vom Modell herleitbar
+
+Der stärkste Grund für einen Fakt: das Modell kann es **prinzipiell** nicht selbst
+wissen, egal wie gut es analysiert.
+
+| # | Was fehlt | Warum unherleitbar | Urteil |
+|---|---|---|---|
+| **B1** | **Relative Rangposition im Kandidatenfeld** | Das Modell sieht immer genau einen Kandidaten, nie das Feld. Ob dieser der beste von 40 oder der schlechteste ist, steht in keinem Fakt | **zurückgestellt** — der Rang käme aus dem Screening-Score, und der diskriminiert gemessen nicht (03.08.). Ein Rang aus einer nicht trennenden Größe ist Scheinpräzision |
+| **B2** | **Klumpenrisiko im offenen Portfolio** | `position_aktuell` betrifft nur das eine Symbol. Vier offene Positionen in derselben Wette sind ein Risiko, das kein Einzelsignal zeigt | **offen — Achsenfrage, kein Blocker** (8.5) |
+| **B3** | **Portfolio-Rückschlag Z-3** | Der Portfoliozustand steht in keinem Fakt (aktuell 16,84 % bei 15 % Schwelle, ausgelöst) | **bewusst NICHT** — Raster-Frage 1 bejaht, gehört ins Gate |
+
+### 8.4 Kategorie C — fehlt als FELD, nicht als Weitergabe
+
+| # | Was fehlt | Stand |
+|---|---|---|
+| **C1** | **Zieldauer / Haltedauer** | Es gibt keine. `halte_kriterium_bucket` ist eine Ablauffrist, `mindestziel_zeitraum_tage_geschaetzt` eine Volatilitätsrechnung — beide sind keine Strategieangabe und widersprechen einander. Gemessene Auflösung 2,6 T, Praxis 0,3 T |
+
+**Das ist kein Prompt-Thema.** Solange kein Feld eine Zieldauer trägt, bleibt jede
+Prompt-Ergänzung folgenlos — sie hätte nichts, worauf sie sich bezieht. Der
+Konstruktionsfehler ist zuerst zu beheben; er ist seit dem 04.08. dokumentiert und
+blockiert außerdem die Auswertung von `halte_kriterium` (05.08.).
+
+### 8.5 Kategorie D — bewusst NICHT, mit Revisit-Bedingung
+
+| Was | Warum nicht | Revisit, wenn |
+|---|---|---|
+| **Ausführbarkeit / `nur_long`** | **Gemessen:** ERÖFFNEN-Quote bricht von 93 % auf 3 % ein. Das Modell schlägt dann gar nichts mehr vor, statt LONG-Alternativen zu suchen | nie in dieser Form. Allenfalls als neutral formulierter Portfoliokontext, dann mit Dreiarm-Test |
+| **Z-3 Portfolio-Drawdown** | Raster-Frage 1 bejaht: „Rückschlag über Schwelle → Risiko reduzieren" ist kontextunabhängig. Ein Fakt wäre die falsche Ebene | Z-3 je als graduelle statt binärer Größe gebraucht wird |
+| **Veto-Schatten je Grund (A4)** | Nächster Verwandter des Ausführbarkeits-Hinweises: es teilt dem Modell mit, welche seiner Vorschläge verworfen werden. Zudem ist die Zahl fragil — beim CRV-Veto tragen 5 Fälle 221 % des Mittelwerts, `vorzeichen_kippt = true` | die Konzentration behoben ist UND eine neutrale Formulierung ohne Ausführbarkeits-Bezug vorliegt |
+| **`score_gesamt`** | Liegt heute als **nackte Zahl ohne Regel** im Faktensatz — die schlechteste aller Varianten: kann ankern, ist nicht deutbar. Beschluss vom 03.08.: **entfernen**, nicht ergänzen | der Score nachweislich diskriminiert |
+| **Eigene HALTEN-Bilanz (A2)** | Kein Einwand in der Sache — aber **dieselbe Familie wie `systemguete`**, das gerade unter Beobachtung steht (7.4b). Zwei Selbstbewertungs-Fakten gleichzeitig einzuführen macht einen negativen Befund unzuordenbar | das Ausstiegsverfahren zu `systemguete` abgeschlossen ist (frühestens Ende August) |
+| **Konfidenz-Versatz (A3)** | Die Konfidenz **diskriminiert nicht** (05.08.). Ein Kalibrierungshinweis verschöbe nur das Niveau — und das Niveau ist genau das, worauf die Regime-Schwellen R-5.10 rechnen. Nebenwirkung auf das Gate, ohne Gewinn an Trennschärfe | die Konfidenz je Trennschärfe zeigt |
+| **Klumpenrisiko (B2)** | **Offen, zur Klärung mit dem Nutzer** — nicht abgelehnt. Meine erste Einschätzung („`hauptgruppe` nur bei 13 von 57 befüllt, also blockiert") war zu eng gedacht: `assetklasse` und `rolle` sind **57 von 57** befüllt, und die Bewertung erfolgt ohnehin je Gruppe getrennt. Die offene Frage ist damit nicht *ob genug Daten da sind*, sondern **welche Gruppierungsachse** die richtige ist — Assetklasse, Rolle, Sektor oder eine korrelationsbasierte | Nutzer-Entscheidung zur Achse (Hinweis 06.08.: „die Kategorie-Thematik halte ich für nicht so problematisch — die Bewertung muss ohnehin je Gruppe gesondert erfolgen") |
+
+### 8.6 Priorisierung
+
+**Nur ein Kandidat ist heute umsetzungsreif: A1 (CRV-Erfolgsbänder für Hebel).**
+Daten gemessen und exportiert, Präzedenzfall auf Spot vorhanden, betrifft eine
+Größe, die das Modell selbst setzt, und schließt eine dokumentierte
+Pipeline-Asymmetrie. Aufwand: Verdrahtung plus eine Prompt-Regel.
+
+Alles andere ist **bewusst nachgelagert**, und zwar nicht aus Aufwandsgründen:
+
+1. **A2 und A3 warten auf das Ausstiegsverfahren zu `systemguete`.** Solange
+   offen ist, ob ein Selbstbewertungs-Fakt die ERÖFFNEN-Quote drückt, wäre ein
+   zweiter davon methodisch fahrlässig — ein negativer Befund ließe sich keinem
+   der beiden zuordnen.
+2. **C1 (Zieldauer) ist Datenarbeit**, keine Prompt-Arbeit — solange kein Feld
+   eine Zieldauer trägt, hat jede Prompt-Regel nichts, worauf sie sich bezieht.
+   **B2 (Klumpenrisiko) ist eine offene Achsenfrage** und wartet auf eine
+   Nutzer-Entscheidung, nicht auf Daten.
+3. **A4 und B1 sind begründet abgelehnt**, nicht vergessen — beide mit
+   Revisit-Bedingung oben.
+
+> **Methodische Vorgabe für A1, aus 7.3 gelernt:** einzelne Fakten sind bei dieser
+> Effektgröße nicht messbar (der Kosten-Fakt allein hätte n=618 gebraucht,
+> kombiniert waren es 16). A1 wird deshalb **nicht einzeln** getestet, sondern
+> gegen den heutigen Stand als Ganzes — Dreiarm-Design mit Rauschboden, gepaart,
+> ERÖFFNEN-Quote als Pflicht-Wächter.
 
