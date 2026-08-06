@@ -570,6 +570,9 @@ def compute_current_regime(conn, coingecko_client, watchlist, fred_api_key: str 
             liquiditaets_regime_begruendung=regime_result.liquiditaets_regime_begruendung,
             btc_trend_label=regime_result.btc_trend_label,
             regime_reason=regime_result.reason,
+            regime_score_stetig=getattr(regime_result, "score_stetig", None),
+            regime_min_konfidenz_stetig=getattr(regime_result, "min_konfidenz_stetig_wert", None),
+            btc_abstand_ema50_prozent=getattr(regime_result, "btc_abstand_ema50_prozent", None),
         ))
     except Exception:
         logger.exception("Boden-Zielzone-Verlaufs-Persistierung fehlgeschlagen (unkritisch)")

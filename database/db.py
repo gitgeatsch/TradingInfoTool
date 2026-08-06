@@ -577,6 +577,12 @@ _MACRO_SNAPSHOT_NEW_COLUMNS = (
     "eth_boden_zielzone_von", "eth_boden_zielzone_bis",
     "equities_sp500_drawdown_pct", "equities_nasdaq_drawdown_pct",
     "eth_regression_predicted_price", "eth_regression_residual_std",
+    # Regime-GLAETTUNG (2026-08-06) - dieselbe reine Persistierungs-Erweiterung
+    # wie 2026-07-17: bereits berechnet, bisher nirgends gespeichert. Ohne sie
+    # zeigt die Uebersichtsseite weiter nur das harte Label ("baer"), waehrend
+    # die Mindestkonfidenz laengst am STETIGEN Score haengt - die Anzeige
+    # beschreibt dann ein Verfahren, das so nicht mehr laeuft.
+    "regime_score_stetig", "regime_min_konfidenz_stetig", "btc_abstand_ema50_prozent",
     # Regime-Status-Anzeige (2026-07-17) - siehe database/models.py::MacroSnapshot
     # fuer die Feld-Dokumentation. zyklus_risiko ist REAL, der Rest TEXT (siehe
     # _MACRO_SNAPSHOT_TEXT_COLUMNS unten).

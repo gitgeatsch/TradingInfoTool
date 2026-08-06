@@ -134,6 +134,14 @@ class MacroSnapshot:
     # geaendert hat), statt nur die fertige alte Zone stur zu uebernehmen.
     eth_regression_predicted_price: float | None = None
     eth_regression_residual_std: float | None = None
+    # Regime-Glaettung (2026-08-06, siehe agent/krypto/regime.py::regime_score()).
+    # regime_score_stetig 0..1 (0 = klar baerisch), regime_min_konfidenz_stetig ist
+    # die daraus interpolierte Mindestkonfidenz in Prozent, btc_abstand_ema50_prozent
+    # der Abstand von BTC zur EMA50. Alle drei rein zur Anzeige persistiert - die
+    # Entscheidung faellt weiterhin live in risk_gate.py.
+    regime_score_stetig: float | None = None
+    regime_min_konfidenz_stetig: float | None = None
+    btc_abstand_ema50_prozent: float | None = None
     # Aktien-Baermarkt-Overlay: nur die rohen Drawdown-Werte gespeichert, bewusst
     # KEIN gespeichertes "aktiv"-Bool - der Schwellenwert (config.yaml
     # boden_zielzone.equities_baermarkt_schwelle_prozent) kann sich spaeter aendern,

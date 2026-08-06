@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (181 Einträge)
+## Index nach Thema (182 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -109,7 +109,9 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-05** — `halte_kriterium` erstmals ausgewertet - kein Trennnachweis, zwei strukturelle Maengel
 - **2026-08-06** — Die drei neuen Fakten sind im Betrieb ANGEKOMMEN (22/22) - Verifikation abgeschlossen, Zaehler-Fehler behoben
 
-### Datenquellen / APIs (20)
+### Datenquellen / APIs (21)
+
+- **2026-08-06** — Audit der Remote-Übersichtsseite: Richtungsverteilung wurde ausgeliefert aber nie angezeigt, Regime-Karte zeigte das alte Verfahren, zwei Karten ohne ihre eigene Einschränkung
 
 - **2026-08-06** — Drei Lücken vor dem Push: Nicht-Krypto-OHLC-Refresh fehlte ganz, Export konnte die Behebung nicht belegen, Z-3 fehlte auf der Übersichtsseite (inkl. neuer Gegenprobe)
 
@@ -13075,3 +13077,68 @@ Warnfarbe ab 5 %.
 Abweichung 21,6 % korrekt berechnet und als Warnung markiert, Karte im
 `to_dict()` enthalten, Renderer nutzt die vorhandene `.err`-Klasse statt einer
 eigenen Farbe.
+
+
+---
+
+## Nachtrag (2026-08-06): Audit der Remote-Uebersichtsseite - beschreiben die Karten noch das laufende System?
+
+**Nutzer-Frage:** "sind die Beschreibungen und die Nutzung der Kapitel noch
+aktuell, z. B. Veto und Schattenmessungen - hier haben wir jetzt ein anderes
+Konzept im Einsatz". Berechtigt: alle 17 Karten durchgegangen, vier Befunde.
+
+### 1. Die Richtungsverteilung wurde AUSGELIEFERT, aber nie angezeigt
+
+`richtungsverteilung` steckt seit dem Nur-Long-Umbau in `to_dict()` und damit in
+jeder `/api/status`-Antwort - es gab nur **keine Karte dafuer**. Das aktuellste
+Konzept des Systems war das einzige, das man auf der Seite nicht sehen konnte.
+Karte nachgezogen, inklusive der `belastbar`-Regel: unter 30 aufgeloesten
+Faellen wird **keine Trefferquote** gezeigt, sondern der Fallstand. Eine
+Prozentzahl aus drei Faellen sieht aus wie eine aus dreihundert.
+
+### 2. Die Regime-Karte beschrieb ein Verfahren, das so nicht mehr laeuft
+
+Sie zeigte nur das harte Label ("baer"/"bulle") - waehrend die Mindestkonfidenz
+seit der Glaettung vom selben Tag am **stetigen Score** haengt. Genau die
+vermutete Luecke.
+
+Die drei Werte (`score_stetig`, `min_konfidenz_stetig_wert`,
+`btc_abstand_ema50_prozent`) waren berechnet, aber nirgends gespeichert.
+**Persistiert an der Stelle, die 2026-07-17 genau dafuer angelegt wurde** -
+dieselbe reine Persistierungs-Erweiterung, kein neuer Netzwerk-Call, kein
+Live-Recompute (die Karte bleibt passiver Lesezugriff). Drei additive Spalten
+ueber die vorhandene generische macro_snapshot-Migration.
+
+### 3. `nur_long_historisch` beschreibt ein Veto, das es nicht mehr gibt
+
+Der Grund steht mit 90 aufgeloesten Faellen in der Veto-Schatten-Aufschluesselung
+- ein Veto, das seit dem 05.08. **nicht mehr feuert**. Die Faelle bleiben als
+Historie stehen (sie sind echt), aber die Karte sagt jetzt dazu, dass keine
+neuen hinzukommen und eine Quote daraus die Vergangenheit beschreibt.
+
+**Bewusst NICHT ausgeblendet.** Eine verschwundene Karte wirft die Frage auf,
+ob die Messung je stattgefunden hat. Ein gekennzeichneter Historienblock
+beantwortet sie.
+
+### 4. Die MFE-Karte trug die eigene Einschraenkung nicht
+
+"Richtungstreffer-Quote (Mindestziel/MFE)" beschrieb ausfuehrlich, was sie
+misst - aber nicht, dass **MFE bei variablem Stop-Abstand kein Erfolgsmass ist**
+(am 06.08. hergeleitet: sie belohnt enge Stops, und die liefern gemessen
+-1,04 R). Einordnung ergaenzt, mit Verweis auf die Systemguete als zustaendige
+Karte fuer die Qualitaetsfrage.
+
+### Was NICHT geaendert wurde, und warum
+
+| Karte | Warum sie bleibt wie sie ist |
+|---|---|
+| Veto-Schatten (nach Provider) | Aktiv und gefuettert (527 aufgeloeste Faelle), Konzept unveraendert |
+| Z.ai-Richtung (unabh. Mistral), n=12 | Hat die Kleine-Stichproben-Warnung bereits seit dem 31.07. |
+| Entfernte Provider (Groq/Cerebras) | `_ohne_entfernte_provider()` filtert sie auf der Seite bereits; im Export bleiben sie bewusst stehen, weil die Historie echt ist |
+| Selbst-gewaehltes HALTEN | Aktiv (25 Faelle), unabhaengig vom Nur-Long-Umbau |
+
+> **Muster, das dieses Audit sichtbar macht:** eine Anzeige veraltet nicht, wenn
+> das Konzept sich aendert - sie veraltet **still**. Der Code lief weiter
+> korrekt, die Karte beschrieb weiter das alte Verfahren, und beides sah
+> unauffaellig aus. Nach jeder Konzeptaenderung gehoert deshalb die Frage dazu:
+> *welche Anzeige behauptet jetzt etwas, das nicht mehr stimmt?*

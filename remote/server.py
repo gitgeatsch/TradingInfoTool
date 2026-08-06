@@ -168,6 +168,10 @@ _INDEX_HTML = """<!doctype html>
   war die Richtung wenigstens ZEITWEISE (Maximum Favorable Excursion) mindestens die Mindestziel-Schwelle wert?
   Zaehlt auch spaeter ueberholte/abgelaufene Signale mit, wenn sie zwischenzeitlich in die richtige Richtung
   liefen. Ø Tage bis Mindestziel nur bei ausreichender Stichprobe (n≥15) empirisch belastbar.</span></div>
+  <div class="row"><span class="muted-text"><b>Einordnung 06.08.:</b> MFE ist <b>kein Erfolgsmaß</b>, solange
+  der Stop-Abstand variiert - sie belohnt enge Stops systematisch, und genau die liefern gemessen −1,04 R.
+  Diese Karte beantwortet <i>"war die Richtung je richtig?"</i>, nicht <i>"war das Signal gut?"</i>. Für die
+  zweite Frage ist die Systemgüte (SQN/Expectancy) weiter unten zuständig.</span></div>
   <div id="richtungstreffer-quote"></div>
 </div>
 
@@ -230,6 +234,11 @@ _INDEX_HTML = """<!doctype html>
   Provider (2026-07-30, R-5.10-Konfidenzschwellen-Nachtrag) - beantwortet die fuer eine Schwellen-Entscheidung
   eigentliche Frage: schlagen sich Konfidenzschwellen-Vetos (R-5.10) anders als CRV&lt;2.0-Vetos, je
   Assetklasse?</span></div>
+  <div class="row"><span class="muted-text"><b>Nachtrag 06.08.:</b> der Grund
+  <code>nur_long_historisch</code> beschreibt ein Veto, das es SEIT DEM 05.08. NICHT MEHR GIBT
+  (Nur-Long-Umbau: beide Richtungen laufen durch, SHORT wird nur nicht gemailt). Seine Fälle bleiben
+  als Historie stehen, es kommen aber keine neuen dazu - eine Trefferquote daraus beschreibt die
+  Vergangenheit, nicht das laufende System.</span></div>
   <div id="veto-schatten-performance-nach-grund-spot"></div>
   <div class="row"><strong>&nbsp;&nbsp;davon Hebel</strong></div>
   <div id="veto-schatten-performance-nach-grund-hebel"></div>
@@ -299,6 +308,15 @@ _INDEX_HTML = """<!doctype html>
   <div id="api-health-markt"></div>
   <div class="row"><strong>API-Status: Makro/On-Chain/Derivate</strong></div>
   <div id="api-health-makro"></div>
+</div>
+
+<div class="card" id="richtungsverteilung-card" style="display:none">
+  <div class="row"><strong>Richtungsverteilung LONG / SHORT</strong></div>
+  <div class="row"><span class="muted-text">Seit dem Nur-Long-Umbau am 05.08. laufen BEIDE Richtungen
+  normal durch die Pipeline. SHORT wird nur nicht gemailt und im Hebel-Tab standardmäßig ausgeblendet -
+  gemessen wird es weiterhin. Diese Karte war bisher die einzige Sicht auf das, was das System tatsächlich
+  vorschlägt, und fehlte auf der Seite (nachgezogen 06.08.).</span></div>
+  <div id="richtungsverteilung-body"></div>
 </div>
 
 <div class="card" id="z3-card" style="display:none">
@@ -614,6 +632,34 @@ function fmtDateTime(iso) {
   return new Date(iso).toLocaleString("de-AT", { dateStyle: "medium", timeStyle: "short" });
 }
 
+function renderRichtungsverteilung(r) {
+  const pct = (v) => (v === null || v === undefined) ? "—" : v.toFixed(1) + " %";
+  let h = '<div class="row"><span>Zeitraum</span><span>ab ' + (r.ab_datum || "?") + "</span></div>";
+  h += '<div class="row"><span>SHORT-Anteil an allen Signalen</span><strong>' +
+    pct(r.short_anteil_pct) + "</strong></div>";
+  for (const [richtung, v] of Object.entries(r.richtungen || {})) {
+    h += '<div class="row" style="margin-top:6px"><strong>' + richtung + "</strong></div>";
+    h += '<div class="row"><span>Signale / davon ERÖFFNEN</span><span>' +
+      v.signale + " / " + v.eroeffnen + "</span></div>";
+    h += '<div class="row"><span>aufgelöst / davon Ziel erreicht</span><span>' +
+      v.aufgeloest + " / " + v.take_profit + "</span></div>";
+    // Trefferquote NUR zeigen, wenn sie belastbar ist. Eine Prozentzahl aus
+    // drei Fällen sieht genauso aus wie eine aus dreihundert - und wird auch so
+    // gelesen. Lieber die Fallzahl zeigen als eine Zahl, die Sicherheit
+    // vortäuscht (Methodik: unter 30 aufgelösten Fällen kein Ergebnis).
+    if (v.belastbar) {
+      h += '<div class="row"><span>Trefferquote / Erwartungswert</span><span>' +
+        pct(v.trefferquote_pct) + " / " +
+        (v.erwartungswert_r === null || v.erwartungswert_r === undefined
+          ? "—" : v.erwartungswert_r.toFixed(2) + " R") + "</span></div>";
+    } else {
+      h += '<div class="row"><span class="muted-text">noch nicht belastbar (' +
+        v.aufgeloest + " von 30 aufgelösten Fällen)</span></div>";
+    }
+  }
+  return h;
+}
+
 function renderZ3(z) {
   // Zwei Zahlen fuer dasselbe Portfolio: die Seite rechnet aus Snapshot-Preisen,
   // Z-3 aus der Kursreihe. Weichen sie ab, stimmt eine der Quellen nicht - am
@@ -664,6 +710,26 @@ function renderRegimeStatus(r) {
     html += '<div class="row"><span class="muted-text">Regime seit ' + r.regime_persistenz_tage
       + ' Tag(en) regelbasiert bestätigt.</span></div>';
   }
+  // REGIME-GLAETTUNG (2026-08-06). Bis heute zeigte diese Karte nur das harte
+  // Label ("baer"/"bulle") - waehrend die Mindestkonfidenz seit der Glaettung am
+  // STETIGEN Score haengt. Die Anzeige beschrieb damit ein Verfahren, das so
+  // nicht mehr laeuft. Genau der Fall, den der Nutzer am 06.08. vermutet hat:
+  // "hier haben wir jetzt ein anderes Konzept im Einsatz".
+  if (r.regime_score_stetig !== null && r.regime_score_stetig !== undefined) {
+    html += '<div class="row"><span>Regime-Score (stetig, 0 = klar bärisch)</span><span><strong>' +
+      r.regime_score_stetig.toFixed(2) + "</strong></span></div>";
+  }
+  if (r.regime_min_konfidenz_stetig !== null && r.regime_min_konfidenz_stetig !== undefined) {
+    html += '<div class="row"><span>daraus Mindestkonfidenz</span><span><strong>' +
+      r.regime_min_konfidenz_stetig.toFixed(1) + " %</strong></span></div>";
+  }
+  if (r.btc_abstand_ema50_prozent !== null && r.btc_abstand_ema50_prozent !== undefined) {
+    html += '<div class="row"><span>BTC zur EMA50</span><span>' +
+      (r.btc_abstand_ema50_prozent >= 0 ? "+" : "") +
+      r.btc_abstand_ema50_prozent.toFixed(2) + " %" +
+      (r.btc_ema50_einordnung ? " (" + r.btc_ema50_einordnung + ")" : "") + "</span></div>";
+  }
+
   const zeilen = [
     ["BTC-Trend", r.btc_trend_label],
     ["Fear &amp; Greed", r.fear_greed_label ? r.fear_greed_label + " (" + r.fear_greed_value + ")" : null],
@@ -961,6 +1027,12 @@ async function refreshStatus() {
     for (const [elementId, sourceKeys] of Object.entries(API_HEALTH_GROUPS)) {
       document.getElementById(elementId).innerHTML = renderApiHealthGroup(sourceKeys, data.api_health);
     }
+  }
+
+  if (data.richtungsverteilung) {
+    document.getElementById("richtungsverteilung-card").style.display = "block";
+    document.getElementById("richtungsverteilung-body").innerHTML =
+      renderRichtungsverteilung(data.richtungsverteilung);
   }
 
   if (data.z3_und_bewertung) {

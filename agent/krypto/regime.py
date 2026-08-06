@@ -816,6 +816,16 @@ def get_last_known_regime_status(conn) -> dict | None:
         "regime_konflikt_anzahl": konflikt_uebersicht["im_konflikt"],
         "regime_reason": snapshot.regime_reason if snapshot else None,
         "btc_trend_label": snapshot.btc_trend_label if snapshot else None,
+        # Regime-Glaettung (2026-08-06) - was tatsaechlich die Mindestkonfidenz
+        # bestimmt. Das harte Label allein beschreibt seit der Glaettung nicht
+        # mehr, wie das System entscheidet.
+        "regime_score_stetig": getattr(snapshot, "regime_score_stetig", None) if snapshot else None,
+        "regime_min_konfidenz_stetig": (
+            getattr(snapshot, "regime_min_konfidenz_stetig", None) if snapshot else None),
+        "btc_abstand_ema50_prozent": (
+            getattr(snapshot, "btc_abstand_ema50_prozent", None) if snapshot else None),
+        "btc_ema50_einordnung": btc_ema50_einordnung(
+            getattr(snapshot, "btc_abstand_ema50_prozent", None) if snapshot else None),
         "fear_greed_value": snapshot.fear_greed_value if snapshot else None,
         "fear_greed_label": snapshot.fear_greed_label if snapshot else None,
         "btc_dominance_pct": snapshot.btc_dominance_pct if snapshot else None,
