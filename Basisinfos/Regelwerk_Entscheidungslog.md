@@ -15137,3 +15137,51 @@ strukturell an `halte_kriterium`.
 weil das Guthaben eine **Zahlungsmethode** verlangte. Ob das heute noch gilt,
 kann nur der Nutzer im Dashboard sehen - Zahlungsdaten einzugeben ist fuer den
 Assistenten tabu.
+
+### Runde 5 der Provider-Suche (07.08. abends) — Ergebnis: kein freier Ersatz
+
+Anlass: Mistral hat **alle** Modelle kostenpflichtig gestellt (Nutzer-Befund) -
+das ist unabhaengig von der Prompt-Groesse und macht jede Modellwahl dort
+gegenstandslos. Gesucht wurde nach dem Profil, das unsere Last wirklich
+verlangt.
+
+**Zuerst gemessen, was wir brauchen** (Export 07.08., je Analyse):
+
+    SYSTEM_PROMPT Hebel   ~9.100 Token
+    SYSTEM_PROMPT Spot    ~8.650 Token
+    Faktensatz (Median)   ~3.350 Token
+    ---------------------------------
+    Summe je Call        ~12.500 Token,  ~142 Calls/Tag  =>  ~1,8 Mio. Token/Tag
+
+**Der eigene Prompt ist der Ausschlussgrund, nicht das Tagesvolumen.** Der
+System-Prompt allein sprengt jedes 8K-Fenster.
+
+| Anbieter | Kontext | freies Volumen | Warum es nicht traegt |
+|---|---|---|---|
+| **Google Gemini** | 1 Mio. | traegt aktuell alle 142 Signale | **der einzige, der passt** |
+| Cerebras | 8K | 1 Mio. Token/Tag | Kontext zu klein; zusaetzlich vom Nutzer aus frueheren Gruenden ausgeschlossen |
+| Z.ai | 8K | 1 Mio. Token/Tag | dieselbe 8K-Wand - bekannter Befund aus der Testnacht (Drosselung >8K auf 1 % Concurrency) |
+| Groq | - | **100K Token/Tag** | ~8 Analysen/Tag. RPD waere reichlich, TPD ist die Grenze |
+| OpenRouter | gross | **50 Anfragen/Tag** | 50 < 142. (1.000/Tag erst nach 10 $ EINMALZAHLUNG) |
+| Hugging Face Inference | gross | 100K Credits/Monat | Monatsdeckel, danach Pay-as-you-go - dieselbe 402-Falle wie Mistral |
+| Ollama Cloud | - | GPU-Zeit, 5-Stunden-Sessions | keine planbare Tagesmenge, 1 gleichzeitiges Modell |
+| GitHub Models | 8K/4K | 50-150 Anfragen/Tag | Kontext zu klein |
+
+**Damit ist die Suche fuer heute abgeschlossen: es gibt derzeit keinen zweiten
+dauerhaft freien Anbieter, der 12.500-Token-Calls in unserer Menge traegt.**
+Gemini ist nicht eine von mehreren Optionen, sondern die einzige - und das ist
+ein Ein-Anbieter-Risiko, das benannt gehoert.
+
+**Eine Option, die der Nutzer entscheiden muss** (Zahlungsvorgaenge sind fuer
+den Assistenten tabu): OpenRouter hebt den Tagesboden mit einer **einmaligen**
+10-$-Aufladung dauerhaft von 50 auf 1.000 Anfragen - ueber 28+ freie Modelle
+mit grossem Kontext. Das ist keine laufende Gebuehr, anders als Mistral Pro mit
+14,39 EUR/Monat. Ob eine Einmalzahlung mit
+[[feedback_kostenfreie_llm_only]] vereinbar ist, entscheidet der Nutzer.
+
+**Der Rueckfall, falls es dabei bleibt:** Z.ai ist bereits verdrahtet (Client,
+Key, Gegenpruefungs-Pfad) und haette 1 Mio. Token/Tag. Nutzbar wird er erst,
+wenn ein kompletter Call unter 8K bleibt - also System-Prompt unter ~4.500
+Token. Das waere ein Eingriff bei UNS statt beim Anbieter, und er wirkt bei
+jedem Anbieter gleichzeitig. Die Qualitaetswirkung einer Prompt-Kuerzung muss
+allerdings gemessen werden, nicht behauptet.
