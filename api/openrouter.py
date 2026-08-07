@@ -66,8 +66,19 @@ FREE_SUFFIX = ":free"
 # Vorwarnung. Faellt dieses Modell weg, liefert die API einen Fehler - der
 # Circuit Breaker (agent/provider_sperre.py) faengt das ab, aber der Eintrag
 # hier muss dann nachgezogen werden. Aktuelle Liste: openrouter.ai/models,
-# Preisfilter 0.
-DEFAULT_MODEL = "deepseek/deepseek-r1:free"
+# Preisfilter 0. Oder direkt: GET https://openrouter.ai/api/v1/models und auf
+# pricing.prompt == 0 filtern - das ist die einzige Quelle, die stimmt.
+#
+# GEMESSEN 07.08. an vier Kandidaten (Konsistenzfrage mit bekannter Antwort):
+#   nemotron-3-ultra-550b   1.000.000 Kontext    7,6 s   JSON ok, Urteil richtig
+#   nemotron-3-super-120b     262.144 Kontext   12,8 s   JSON ok, Urteil richtig
+#   gpt-oss-20b               131.072 Kontext   11,2 s   JSON ok, Urteil richtig
+#   gemma-4-31b               262.144 Kontext      -     429, temporaer gesperrt
+#
+# Der zuvor eingetragene deepseek-r1:free war aus der Free-Liste rotiert und
+# lieferte 404 mit dem Hinweis auf die BEZAHLTE Variante - der :free-Schutz in
+# chat() hat das abgefangen, es floss kein Geld.
+DEFAULT_MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free"
 
 # Free-Tier: 20 Anfragen/Minute (OpenRouter-Doku, Stand 07.08.2026). Ein
 # eigener Drosselwert statt blindem Feuern - dieselbe Bauart wie bei Z.ai.

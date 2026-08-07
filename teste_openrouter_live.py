@@ -35,6 +35,10 @@ verbraucht 8 davon.
 """
 import json
 import os
+
+from dotenv import load_dotenv
+
+load_dotenv()  # Keys stehen in der .env, nicht in der Shell-Umgebung
 import pathlib
 import shutil
 import sys
