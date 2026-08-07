@@ -1007,7 +1007,7 @@ anderer:
 | # | Maßnahme | Aufwand |
 |---|---|---|
 | **S-1** | **Verdrängung statt Sperre**: wird ein Vorschlag reif und das Budget ist voll, die schwächste bestehende These (z. B. `neutral` ohne Bewegung seit X Tagen) gegen die neue abwägen — statt den Vorschlag stumm zurückzustellen | mittel |
-| **S-2** | **Richtgröße erhöhen oder je Hauptgruppe vergeben** — sechs Plätze bei zehn Hauptgruppen heißt strukturell, dass vier Felder nie ein Urteil bekommen | klein (Zahl), mittel (je Gruppe) |
+| **S-2** | **Richtgröße spezifikationskonform machen** — die Spezifikation sagt „weich, kein Hard-Limit im Code", implementiert ist ein hartes Budget. Keine neue Zahl nötig, sondern die Rückführung auf die dokumentierte Semantik | klein |
 | **S-3** | **Sichtbarkeit**: die 14 wartenden Vorschläge stehen nur im Thesen-Tab. Ein „seit 13 Tagen wartet ein KI-Vorschlag" gehört auf die Übersichtsseite | klein |
 | **S-4** | Allocator-Priorität (aus 8e Lücke 1) — erst sinnvoll, wenn die Themenfelder überhaupt Thesen tragen | mittel |
 
@@ -1015,6 +1015,116 @@ anderer:
 einen Override bzw. eigene Schwerpunkte setzen"). Ein manueller Override ist
 technisch der einfachste Fall von S-1: der Nutzer entscheidet die Verdrängung
 selbst.
+
+
+
+---
+
+# 9. GESAMTKONZEPT „Vom Themenfeld zum Signal" (07.08.2026)
+
+**Auftrag:** aus den Einzelthemen des Tages und dem Schwerpunkte-Befund (8f)
+ein Gesamtkonzept mit kritischer Gegenprüfung, dann von vorne bis hinten
+durcharbeiten.
+
+## 9.1 Die Kette — das übergeordnete Thema
+
+Alle Einzelbefunde des Tages hängen an **einer** Kette, die der Nutzer selbst
+formuliert hat:
+
+```
+① Themenfeld relevant?  →  ② welche Assets darin?  →  ③ bei BP handelbar?
+                                                              ↓
+      ⑥ Erfolg je Themenfeld  ←  ⑤ Signal mit Fokus  ←  ④ in der Watchlist?
+```
+
+Jeder Befund des Tages ist ein Glied dieser Kette:
+
+| Glied | Stand | Befund aus |
+|---|---|---|
+| ① Themenfeld | Struktur ✔ (10 Gruppen/72 Unterkat.), Mechanik ✔, **blockiert durch Deckel 6** | 8f |
+| ② Assets darin | ✔ 211 Symbole zugeordnet | 8f |
+| ③ BP-handelbar | ✔ **heute gebaut** (Filter + Schalter + RM-Bitpanda für Hedge) | 8e |
+| ④ Watchlist | **manuell, kein Weg vom Kandidaten zur Pipeline** | *neu, siehe 9.3* |
+| ⑤ Signal mit Fokus | **Allocator kennt die Thesen nicht** | 8e |
+| ⑥ Erfolg je Themenfeld | **existiert nicht** — Systemgüte tiert nach Assetklasse, nicht nach Hauptgruppe | *neu, siehe 9.3* |
+
+Und die zweite Ebene, die unabhängig davon läuft, aber jedes Signal bewertet:
+
+| | Stand | Befund aus |
+|---|---|---|
+| Kosten je Klasse | **strukturell falsch** (fix vs. prozentual) | 8e |
+| Risikoparameter je Klasse | global statt klassenspezifisch | 8e |
+| Zeithorizont je Klasse | ✔ **heute gebaut** (H-2/H-3) | 8c |
+| Akkumulation (Aufstocken) | **fehlt für 3 von 4 Spot-Klassen** | 8c |
+
+## 9.2 Warum die Reihenfolge zwingend ist
+
+> **Ohne ① gibt es keinen Fokus. Ohne die Kostenebene ist jedes Ergebnis
+> unbelastbar. Ohne ⑥ merkt niemand, ob der Fokus etwas taugt.**
+
+Baut man H-4 (Akkumulation) zuerst — wie heute Vormittag geplant —, entsteht
+eine Aufstockungslogik, die alle Themenfelder gleich behandelt, auf falschen
+Kosten rechnet und deren Wirkung nicht messbar ist. **Drei Umbauten
+hintereinander statt einem.**
+
+## 9.3 Kritische Gegenprüfung — fünf Lücken, die in keinem Einzelbefund standen
+
+Diese fünf sind beim Zusammensetzen entstanden, nicht bei den Einzelanalysen:
+
+**G-1 · Vom Kandidaten in die Watchlist führt kein Weg.** Der Screener findet
+Kandidaten und taggt sie mit Hauptgruppe/Unterkategorie. Aber nur Assets **in
+der Watchlist** bekommen eine Pipeline und damit ein Signal. Der Schritt
+dazwischen ist heute vollständig manuell und in keinem Konzept beschrieben.
+**Die Kette bricht zwischen ③ und ⑤.**
+
+**G-2 · Kein Erfolgsmaß je Themenfeld.** Die Systemgüte tiert nach Assetklasse
+(krypto/aktien/hebel/…), nicht nach Hauptgruppe. Ob eine übergewichtete These
+bessere Signale liefert als eine neutrale, ist heute **nicht messbar** — und
+damit ist die gesamte Schwerpunkte-Ebene unbelegt. Das ist dieselbe
+Kategorie wie der Hedge-Befund von heute früh: eine Ebene ohne eigenes
+Erfolgsmaß.
+
+**G-3 · Regime gegen Themenfeld — wer gewinnt?** Das Regime sagt „bär", das
+Themenfeld sagt „übergewichten". Heute ist nicht definiert, wie sich das
+auflöst. Beide wirken auf dieselbe Entscheidung, und der Konflikt ist
+konstruktionsbedingt häufig — ein Themenfeld wird gerade dann interessant, wenn
+es billig ist.
+
+**G-4 · „Schwächste These" ist undefiniert.** S-1 (Verdrängung) braucht ein
+Maß dafür, welche bestehende These weichen muss. Alter? Richtung `neutral`?
+Kein Mechanismus-Signal seit X Tagen? Ohne Definition ist die Verdrängung
+willkürlich — und eine willkürliche Verdrängung ist schlechter als der jetzige
+Deckel, weil sie Bewegung ohne Begründung erzeugt.
+
+**G-5 · Ein Themenfeld ohne handelbare Assets ist wertlos.** Eine These auf
+`technologie_ki:ki` nützt nichts, wenn kein Asset dieser Unterkategorie bei
+Bitpanda handelbar oder in der Watchlist ist. Das müsste **beim Anlegen der
+These** geprüft werden, nicht erst beim Signal.
+
+## 9.4 Der Plan — sechs Schritte, nach Abhängigkeit geordnet
+
+| # | Schritt | löst | Aufwand |
+|---|---|---|---|
+| **1** | **Kosten strukturell trennen** (fix vs. prozentual, je Klasse) | P-1 | mittel |
+| **2** | **Richtgröße spezifikationskonform** (weich statt hart) + G-5 (Handelbarkeits-Prüfung beim Anlegen). **Vorlauf: am 24./25.08. werden 9 Kandidaten gleichzeitig reif** | S-2, G-5 | klein |
+| **3** | **Wartende Vorschläge sichtbar machen** (S-3) | S-3 | klein |
+| **4** | **Erfolgsmaß je Themenfeld** (G-2: Systemgüte zusätzlich nach Hauptgruppe) | G-2 | mittel |
+| **5** | **Allocator-Priorität** (S-4: übergewichtete Themenfelder bevorzugt) | S-4 | mittel |
+| **6** | **Rollout-Entscheidungen** der vier offenen Fakten (antizyklisch, tranchen_erlaubt, liquiditaetszonen, signal_stabilitaet) | H-7 | klein je Fakt |
+
+**Bewusst NICHT in diesem Plan:**
+
+- **H-4 (Akkumulation)** — Schritt 6 entscheidet, ob `antizyklisch` und
+  `tranchen_erlaubt` überhaupt für die anderen Klassen gelten sollen. Diese
+  Entscheidung ist H-4s Voraussetzung, nicht sein Nachgang.
+- **S-1 (Verdrängung)** — braucht G-4, und G-4 ist eine inhaltliche
+  Entscheidung über „was macht eine These schwach". Schritt 2 (Richtgröße je
+  Gruppe) löst das Problem ohne diese Entscheidung.
+- **G-1 (Kandidat → Watchlist)** und **G-3 (Regime gegen Themenfeld)** — beide
+  sind Konzeptfragen, keine Bauaufgaben. Sie gehören benannt und entschieden,
+  bevor jemand sie implementiert.
+- **P-2/P-3** (RM-3, Risikoparameter je Klasse) — reine Zahlenentscheidungen,
+  die der Nutzer treffen muss.
 
 
 ## Quellen (extern)
