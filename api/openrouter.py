@@ -9,20 +9,35 @@ Ausschlussgrund ist unser EIGENER System-Prompt mit ~9.100 Token, nicht das
 Tagesvolumen. Cerebras und Z.ai haetten je 1 Mio. Token/Tag, scheitern aber an
 8K Kontext. Groq hat 100K Token/TAG - acht Analysen.
 
-WARUM NUR FUER DIE GEGENPRUEFUNG. Die meisten freien Endpunkte auf OpenRouter
-verlangen, dass Logging/Training aktiviert ist - Prompts werden Trainings- bzw.
-Evaluierungsmaterial. Unser SYSTEM_PROMPT ist mit ~9.100 Token das inhaltliche
-Herzstueck des Projekts (Regelwerk, Bewertungslogik, Risikokriterien); den
-dorthin zu schicken hiesse, genau diese Arbeit wegzugeben.
+WARUM NUR FUER DIE GEGENPRUEFUNG. **Der Grund hat sich am 08.08. geaendert -
+wer hier nachliest, muss den neuen kennen, nicht den alten.**
 
-Die Gegenpruefung (`agent/krypto/gegenpruefung.py`) benutzt dagegen einen
-bewusst schlanken Faktensatz von rund zehn Feldern und bekommt den
-SYSTEM_PROMPT **nie** zu sehen. Der Nutzer hat die Trainings-Freigabe genau
-dafuer - und nur dafuer - ausdruecklich erteilt (07.08.).
+Der urspruengliche Grund war Datenschutz: die meisten freien Endpunkte
+verlangten aktiviertes Logging/Training, und unser SYSTEM_PROMPT ist das
+inhaltliche Herzstueck des Projekts. **Dieser Grund ist entfallen.** Der Nutzer
+hat am 07.08. alle vier Data-Training-Schalter im OpenRouter-Konto
+ausgeschaltet; was danach noch antwortet, bekommt unsere Prompts nicht als
+Trainingsmaterial. Der Zielkonflikt ist aufgeloest, nicht abgemildert.
 
-**Wer diesen Client in die Haupt-Signalkette haengt, macht diese Entscheidung
-rueckgaengig, ohne sie zu treffen.** Deshalb steht das hier und nicht nur im
-Entscheidungslog.
+Der Grund ist jetzt KAPAZITAET, und er ist gemessen statt vermutet. Haertetest
+am 08.08. mit dem echten Hebel-SYSTEM_PROMPT plus einem echten Faktensatz aus
+dem Notebook-Export (16.656 Eingabe-Token), 10 Faelle, geprueft gegen die
+echte `_validate_hebel()`:
+
+    openai/gpt-oss-20b:free   5 von 10 gueltig, Median 124,9 s, 1,80 Versuche/Fall
+                              Fehlschlaege: 4x HTTP 429, 1x erfundene Kategorie
+    google/gemma-4-26b:free   0 von  5 gueltig - Upstream-Timeouts nach ~24 s
+    Gemini (Referenz)         5 von  5 gueltig, Median 5,5 s, 1,00 Versuche/Fall
+
+Faktor ~23 in der Zeit bei 50 % Ausfall. Die Gegenpruefung dagegen sendet einen
+System-Prompt von ~365 Token - **Faktor 35 kleiner als die Signal-Kette**, und
+GENAU das ist der Unterschied zwischen "traegt" und "traegt nicht". Der freie
+Pool ist fuer kleine Anfragen brauchbar und fuer grosse nicht.
+
+**Wer diesen Client in die Haupt-Signalkette haengt, muss deshalb nicht mehr
+den Datenschutz begruenden, sondern die Kapazitaet** - und dafuer gibt es
+Messwerte, die dagegen sprechen. Neue Messung schlaegt alte; aber ohne neue
+Messung bleibt es dabei.
 
 WIE KEINE KOSTEN ENTSTEHEN. Zwei Regeln, beide hier im Code durchgesetzt statt
 auf Disziplin gebaut:
@@ -117,12 +132,31 @@ FREE_SUFFIX = ":free"
 # haeufiger, und die 429er zeigen, dass trainingsfreie Endpunkte staerker
 # umkaempft sind. Ohne die Rotation waere dieser Pool fahrlaessig; mit ihr ist
 # er handhabbar. Faellt alles aus, uebernimmt Z.ai die Gegenpruefung.
+#
+# NACHTRAG 2026-08-08, GEMESSEN: `inclusionai/ling-3.0-tiny:free` ist wieder
+# RAUS. Es war am 07.08. nur wegen eines 429 aufgenommen worden - also unter
+# der Annahme, es sei bloss ausgelastet. Der direkte Test zeigt etwas anderes:
+#
+#     ling-3.0-tiny  MIT response_format -> HTTP 400 INVALID_REQUEST
+#     ling-3.0-tiny  OHNE                -> HTTP 200, gueltiges JSON
+#
+# `response_format={"type":"json_object"}` ist fuer die Gegenpruefung PFLICHT
+# (so ausdruecklich in agent/krypto/gegenpruefung.py). Der Eintrag waere also
+# nicht "manchmal langsam", sondern bei JEDEM Aufruf ein harter Fehlschlag -
+# und zwar erst sichtbar geworden, wenn `openrouter_aktiv` auf true geht.
+# Lehre: ein 429 sagt nichts darueber, ob das Modell den Vertrag erfuellt. Fuer
+# die Aufnahme in diese Liste zaehlt nur ein Aufruf MIT den Parametern, die wir
+# tatsaechlich senden.
+#
+# `gemma-4-31b` bleibt drin, ist aber UNGEPRUEFT: am 08.08. in beiden Varianten
+# 429 ("temporarily rate-limited"), also gedrosselt und nicht abweisend. Faellt
+# es beim ersten echten Einsatz mit 400 aus, gehoert es aus demselben Grund
+# heraus wie ling.
 FREE_MODELLE = (
     "google/gemma-4-26b-a4b-it:free",   # 262.144 Kontext,  5,2 s - schnellster
-    "openai/gpt-oss-20b:free",          # 131.072 Kontext, 12,7 s - hat den
-                                        #   vollen 9.219-Token-Prompt getragen
-    "google/gemma-4-31b-it:free",       # 262.144 Kontext, am 07.08. 429
-    "inclusionai/ling-3.0-tiny:free",   # 262.144 Kontext, am 07.08. 429
+    "openai/gpt-oss-20b:free",          # 131.072 Kontext, 12,7 s - einziges,
+                                        #   das den vollen Signal-Prompt trug
+    "google/gemma-4-31b-it:free",       # 262.144 Kontext, 429 am 07. UND 08.08.
 )
 
 # Rueckwaertskompatibel: einzelne Aufrufer und Tests nennen weiterhin ein Modell.
@@ -138,6 +172,26 @@ assert all(m.endswith(":free") for m in FREE_MODELLE), (
 # Free-Tier: 20 Anfragen/Minute (OpenRouter-Doku, Stand 07.08.2026). Ein
 # eigener Drosselwert statt blindem Feuern - dieselbe Bauart wie bei Z.ai.
 MIN_ABSTAND_SEKUNDEN = 3.0
+
+# REASONING ABSCHALTEN (2026-08-08). Mehrere der freien Modelle sind
+# Reasoning-Modelle und denken ohne Vorgabe lang. GEMESSEN an EINEM echten
+# Hebel-Faktensatz (16.656 Eingabe-Token), dreimal dasselbe Modell
+# `openai/gpt-oss-20b:free`, nur dieser Regler verstellt:
+#
+#     nichts gesetzt        398,9 s   5.929 Ausgabe-Token, davon 5.089 Reasoning
+#     reasoning.effort=low  117,4 s   1.678 Ausgabe-Token, davon   879 Reasoning
+#     reasoning.exclude     44,5 s     710 Ausgabe-Token, davon    20 Reasoning
+#
+# **86 % der Wartezeit war verstecktes Nachdenken, das niemand angefordert
+# hat.** Wer das nicht setzt, misst den eigenen Konfigurationsfehler und haelt
+# ihn fuer eine Anbieter-Eigenschaft - genau das war der erste Befund dieses
+# Haertetests (488 s je Signal), und er war falsch.
+#
+# Warum ABSCHALTEN und nicht `effort=low`: unsere Prompts verlangen die
+# Herleitung im ANTWORT-JSON (`gegenargument`, `eigene_einschaetzung.
+# kurzfazit`) - dort ist sie pruefbar und wird gespeichert. Verstecktes
+# Reasoning landet nirgends und kostet trotzdem Zeit und Kontingent.
+STANDARD_REASONING = {"exclude": True, "effort": "low"}
 
 
 class OpenRouterModelNichtFrei(ValueError):
@@ -232,11 +286,25 @@ class OpenRouterClient:
         }
         # REGEL 2: genau EIN Modell, kein `models`-Array, kein `route`-Feld -
         # beides koennte auf einer bezahlten Variante landen.
-        payload = {"model": model, "messages": messages, "temperature": temperature}
+        payload = {"model": model, "messages": messages, "temperature": temperature,
+                   "reasoning": STANDARD_REASONING}
         if response_format is not None:
             payload["response_format"] = response_format
         response = self._session.post(BASE_URL, json=payload, headers=headers, timeout=90)
         response.raise_for_status()
         daten = response.json()
+        # OpenRouter liefert Upstream-Fehler teilweise mit HTTP 200 und einem
+        # `error`-Objekt STATT `choices` aus - `raise_for_status()` sieht davon
+        # nichts. Ohne diesen Zweig endete das in `KeyError: 'choices'`: die
+        # Rotation ging zwar weiter, aber im Log stand ein Feldname statt des
+        # Grundes, und der Circuit Breaker konnte "402" nicht als dauerhafte
+        # Fehlerklasse erkennen, weil im Text kein 402 mehr vorkam
+        # (gemessen 2026-08-07, agent/provider_sperre.py::ist_dauerhafter_fehler).
+        if "choices" not in daten:
+            fehler = daten.get("error") or daten
+            raise RuntimeError(
+                f"OpenRouter/{model}: HTTP 200 ohne 'choices' - "
+                f"{str(fehler)[:300]}"
+            )
         self.letztes_modell = model
         return daten["choices"][0]["message"]["content"]
