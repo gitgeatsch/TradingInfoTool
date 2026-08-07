@@ -1407,13 +1407,24 @@ coingecko_quota:
   monatslimit: 10000
   warnschwellen_prozent: [80, 90]
 
-# --- #333 Schicht 2 Gleichzeitigkeits-Moderation (2026-07-25) ---
+# --- Richtgroesse aktive Thesen (2026-07-25 als hartes Budget, seit 2026-08-07 WEICH) ---
+# Kategorie_Basisinformationen_Release2.md Abschnitt 5, Punkt 3 im Wortlaut:
+# "Richtgroesse: 3-6 gleichzeitig aktive Thesen, weich in der GUI angezeigt, kein
+# Hard-Limit im Code."
+#
+# Bis 07.08. war das Gegenteil implementiert: nur die Obergrenze existierte, und sie
+# war ein hartes Budget - wurde sie ueberschritten, landeten reife Kandidaten stumm
+# als "offen" statt als These. Das hat die Schieflage stabilisiert, statt sie zu
+# zeigen: sechs Thesen klingen nach "voll", aber vier davon sind Rohstoffe.
+#
+# BEIDE Zahlen sind jetzt reine Anzeige (agent/kategorie_vorschlaege.py::
+# richtgroessen_lage()). Weder Unter- noch Ueberschreiten aendert das Verhalten.
+# Zurueckgestellt wird nur noch aus Qualitaetsgrund: ein Themenfeld ohne handelbares
+# Asset (G-5, config.py::kategorie_handelbare_assets()).
 kategorie_vorschlaege:
-  richtgroesse_max_aktive_thesen: 6   # siehe Kategorie_Basisinformationen_Release2.md
-    # Abschnitt 5, Punkt 3 ("Richtgroesse 3-6 gleichzeitig aktive Thesen") - werden an
-    # einem Tag mehr Fall-A-Kandidaten reif, als hier noch Platz ist, entscheidet die
-    # Schicht-2-Prioritaetsrangfolge, welche automatisch uebernommen werden
-    # (agent/kategorie_vorschlaege.py::_bestimme_gesperrte_fall_a_kandidaten()).
+  richtgroesse_min_aktive_thesen: 3   # untere Orientierung - darunter tragen zu
+    # wenige Themenfelder eine These. Derzeit die interessantere der beiden Zahlen.
+  richtgroesse_max_aktive_thesen: 6   # obere Orientierung - KEIN Deckel mehr.
 
 # --- #334 Stufe 2 Screener-Score-Gewichtung (2026-07-25) - objektiv gegatet ueber
 # compute_these_abgleich(), NICHT ueber Trend/Beliebtheit (siehe 2026-07-21-Korrektur,

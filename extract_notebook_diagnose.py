@@ -1865,11 +1865,19 @@ def main() -> None:
     if "nicht_verfuegbar" in _wt:
         print(f"  Wartende Themen-Vorschlaege: NICHT VERFUEGBAR ({_wt['nicht_verfuegbar']})")
     else:
+        _lage = _wt["richtgroessen_lage"]
         print(f"  Wartende Themen-Vorschlaege: {_wt['anzahl_wartend']} warten, "
-              f"{_wt['anzahl_reif']} reif, freies Budget {_wt['freies_budget']}/"
-              f"{_wt['richtgroesse_max']}"
+              f"{_wt['anzahl_reif']} reif"
               + (f" - Engpass am {_wt['engpass_am']}: {_wt['engpass_anzahl']} gleichzeitig"
                  if _wt["engpass_am"] else ""))
+        print(f"  Richtgroesse (WEICH seit 07.08.): {_lage['aktive_thesen']} aktive Thesen "
+              f"({_lage['minimum']}-{_lage['maximum']}), Lage '{_lage['lage']}', "
+              f"{_lage['hauptgruppen_abgedeckt']} Hauptgruppen, "
+              f"{_lage['davon_neutral']} davon neutral")
+        _ohne = [v for v in _wt["vorschlaege"] if not v["handelbare_assets"]]
+        if _ohne:
+            print(f"  G-5: {len(_ohne)} Vorschlaege ohne handelbares Asset - "
+                  + ", ".join(v["kategorie_anzeige"] for v in _ohne))
     print(f"  CoinGecko-Kontingent ({coingecko_kontingent['monat']}): "
           f"{coingecko_kontingent['monatliches_kontingent']} Calls, "
           f"{len(coingecko_kontingent['taeglich_verlauf'])} Tage mit Tageszaehler-Historie")

@@ -14671,3 +14671,90 @@ bei `db.DB_PATH`.
 **`teste_wartende_vorschlaege.py`, 20 Pruefungen**, alle bestanden; elf
 Testsuiten und die Signaturpruefung gruen. Die Karte wurde in beiden Zustaenden
 im Browser gerendert (Engpass innerhalb des Budgets / darueber).
+
+## Nachtrag (2026-08-07): Richtgroesse weich gemacht - die Spezifikation stand seit dem 25.07. auf dem Kopf
+
+### Der Widerspruch
+
+`Kategorie_Basisinformationen_Release2.md` Abschnitt 5, Punkt 3, im Wortlaut:
+
+> **Richtgroesse:** 3-6 gleichzeitig aktive Thesen, weich in der GUI angezeigt,
+> kein Hard-Limit im Code.
+
+Implementiert war exakt das Gegenteil in **beiden** Halbsaetzen:
+
+- **Im Code ein hartes Limit.** Wurde die Obergrenze erreicht, landeten reife
+  Fall-A-Kandidaten als `offen` statt als These -
+  `_bestimme_gesperrte_fall_a_kandidaten()` hat sie stumm zurueckgestellt.
+- **In der GUI gar nicht angezeigt.** Die Zahl 6 stand nur in `config.yaml`.
+- Die **Untergrenze 3 existierte ueberhaupt nicht** - obwohl sie derzeit die
+  interessantere ist.
+
+### Warum der Deckel weg kann, ohne dass etwas verwaessert
+
+Das Hauptargument fuer die Begrenzung war, mehr Thesen wuerden die Rangfolge im
+Screener verduennen. **Das traegt nicht:** eine aktive These bringt einem
+Kandidaten keinen Bonus durch ihre blosse Existenz, sondern nur, wenn
+`compute_these_abgleich()` sie objektiv als "gestuetzt"/"widerspricht"
+bestaetigt (`agent/aktien/screener.py::_kategorie_score_bonus()`, so seit der
+2026-07-21-Korrektur). Mehr Thesen erzeugen also nicht mehr Bonus, sondern nur
+mehr Kandidaten fuer denselben objektiven Test.
+
+### Was der Deckel stattdessen getan hat
+
+Er hat eine Schieflage **stabilisiert statt sie zu zeigen**. Sechs aktive
+Thesen klingen nach "voll" - tatsaechlich sind vier davon Rohstoffe, zwei
+stehen auf `neutral`, und ausserhalb der Rohstoffe traegt praktisch kein
+Themenfeld eine These. `richtgroessen_lage()` liefert deshalb nicht nur die
+Zahl, sondern auch **die Verteilung**: `hauptgruppen_abgedeckt` und
+`davon_neutral`. Sechs Thesen auf fuenf Hauptgruppen sind etwas anderes als
+sechs auf zwei.
+
+### Was bleibt: ein Qualitaets-, kein Mengenkriterium
+
+Zurueckgestellt wird nur noch, wenn ein Themenfeld **gar kein handelbares Asset**
+hat (G-5) - dann koennte eine These darauf nichts ausloesen.
+
+**Vor dem Bauen gemessen, und die Messung hat die Umsetzung geaendert:**
+
+| Pruefung | Ergebnis |
+|---|---|
+| Unterkategorien mit Katalog-Symbolen | 70 von 72 |
+| Ohne Katalog-Symbole | `absicherung/aktienmarkt_short`, `absicherung/sektor_short` |
+| Diese beiden ueber die Watchlist abgedeckt | ja - DBPK und 3QSS |
+| Unterkategorien ohne JEDES handelbare Asset | **0** |
+| Nicht-Krypto-Watchlist mit Kategorie | 13 von 13 |
+
+Zwei Konsequenzen daraus:
+
+1. **Eine Pruefung nur ueber den Katalog haette ausgerechnet die beiden
+   Hedge-Kategorien gesperrt**, die der Nutzer aktiv haelt.
+   `kategorie_handelbare_assets()` liest deshalb Katalog **und** Watchlist.
+2. **G-5 feuert heute bei keiner einzigen Kategorie.** Es ist ein Wachhund fuer
+   neu angelegte Kategorien, kein Filter fuer den Bestand. Das steht so im
+   Code-Kommentar, damit niemand spaeter eine Wirkung vermutet, die es nicht
+   gibt.
+
+Die 44 Krypto-Assets ohne Kategorie sind **kein** Befund: die Taxonomie ist
+bewusst fuer Nicht-Krypto gebaut, Krypto laeuft ueber die Watchlist-Mechanik.
+
+### Nebenwirkung auf Schritt 3, offen benannt
+
+Die manuellen Schwerpunkte schuetzten bisher davor, in der
+Gleichzeitigkeits-Moderation verdraengt zu werden. **Diese Schutzwirkung ist
+jetzt gegenstandslos** - es gibt nichts mehr, wovor zu schuetzen waere. Der
+Schalter, die Konfiguration und die ★-Markierung bleiben und sind der Eingang
+fuer **Schritt 6 (Allocator-Prioritaet)**, wo der Schwerpunkt tatsaechlich
+greifen wird. Der Plan hatte diese Abhaengigkeit bereits so notiert.
+
+### Tests
+
+`teste_richtgroesse_weich.py`, **26 Pruefungen**. Der wichtigste ist B2/C1:
+neun reife Kandidaten bei sechs aktiven Thesen, nichts wird zurueckgestellt -
+**und die siebte These entsteht auch wirklich**. Getestet wird die aufrufende
+Funktion `_verarbeite_signal()`, nicht nur der Helfer: dass die Sperrmenge leer
+ist, nuetzt nichts, wenn die Anlage trotzdem ausbleibt (Lehre vom 02.08.,
+Stop-Regelfamilie). Zwoelf Testsuiten und die Signaturpruefung gruen.
+
+49 Zeilen toter Code (Budget-Rechnung, Schicht-2-Sortierung fuer die Sperre)
+entfernt statt auskommentiert.

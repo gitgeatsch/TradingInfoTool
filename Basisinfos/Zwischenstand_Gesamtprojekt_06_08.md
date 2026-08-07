@@ -1113,12 +1113,24 @@ tut.
 | # | Schritt | löst | Aufwand | Stand |
 |---|---|---|---|---|
 | **1** | **Kosten strukturell trennen** (fix vs. prozentual, je Klasse, mit Positionsgröße je Signal) | P-1 | mittel | **ERLEDIGT 07.08.** |
-| **2** | **Richtgröße spezifikationskonform** (weich statt hart) + G-5 (Handelbarkeits-Prüfung beim Anlegen). **Vorlauf: am 24./25.08. werden 9 Kandidaten gleichzeitig reif** | S-2, G-5 | klein | offen |
+| **2** | **Richtgröße spezifikationskonform** (weich statt hart) + G-5 (Handelbarkeits-Prüfung beim Anlegen) | S-2, G-5 | klein | **ERLEDIGT 07.08.** |
 | **3** | **Manuelle Schwerpunkte mit garantiertem Raum** (`schwerpunkte.manuell`, Schalter im Thesen-Tab) | Nutzer-Vorgabe 07.08. | klein | **ERLEDIGT 07.08.** |
 | **4** | **Wartende Vorschläge sichtbar machen** (S-3) — plus Layout-Fix im Schwerpunkte-Tab | S-3 | klein | **ERLEDIGT 07.08.** |
 | **5** | **Erfolgsmaß je Themenfeld** (G-2: Systemgüte zusätzlich nach Hauptgruppe) | G-2 | mittel | offen |
 | **6** | **Allocator-Priorität** (S-4: übergewichtete Themenfelder bevorzugt) — setzt Schritt 3 voraus | S-4 | mittel | offen |
 | **7** | **Rollout-Entscheidungen** der vier offenen Fakten (antizyklisch, tranchen_erlaubt, liquiditaetszonen, signal_stabilitaet) | H-7 | klein je Fakt | offen |
+
+**Was Schritt 2 verändert hat, und was dabei kippte:** die Spezifikation stand
+in *beiden* Halbsätzen auf dem Kopf — im Code ein hartes Limit, in der GUI gar
+nicht angezeigt, und die Untergrenze 3 existierte überhaupt nicht. Das
+Hauptargument für den Deckel (mehr Thesen verwässern die Screener-Rangfolge)
+hält nicht stand: der Bonus hängt am objektiven `compute_these_abgleich()`, nicht
+an der Existenz einer These. Zwei Messungen haben die Umsetzung geändert —
+**G-5 feuert heute bei keiner einzigen Kategorie** (alle 72 Unterkategorien haben
+mindestens ein handelbares Asset), und eine Prüfung nur über den Bitpanda-Katalog
+hätte ausgerechnet die beiden Hedge-Kategorien gesperrt, die aktiv gehalten
+werden. Offen benannt: die Schutzwirkung der manuellen Schwerpunkte aus Schritt 3
+ist damit gegenstandslos geworden — sie wird erst in Schritt 6 wieder greifen.
 
 **Was Schritt 4 gebracht hat, über die Sichtbarkeit hinaus:** beim Datieren der
 Vorschläge löste sich der vermutete „Themen-Deckel" auf — die Kandidaten waren

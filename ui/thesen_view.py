@@ -445,6 +445,27 @@ class ThesenView(ttk.Frame):
 
         paned.bind("<Configure>", _initiale_aufteilung)
 
+        # RICHTGROESSE, WEICH ANGEZEIGT (2026-08-07, S-2). Die Spezifikation
+        # (Kategorie_Basisinformationen_Release2.md Abschnitt 5, Punkt 3) sagt
+        # "weich in der GUI angezeigt, kein Hard-Limit im Code" - bis heute war
+        # sie ein hartes Budget im Code und in der GUI gar nicht zu sehen.
+        # Genau umgekehrt also. Diese Zeile ist der Anzeige-Teil davon.
+        richtgroesse_frame = ttk.Frame(oben_frame, padding=(8, 0, 8, 4))
+        richtgroesse_frame.pack(fill="x")
+        self._richtgroesse_label = ttk.Label(richtgroesse_frame, text="")
+        self._richtgroesse_label.pack(side="left")
+        add_widget_tooltip(
+            self._richtgroesse_label,
+            "Die Richtgröße 3–6 ist eine Orientierung, kein Limit.\n\n"
+            "Bis zum 07.08. war die Obergrenze ein hartes Budget: wurde sie erreicht, "
+            "landeten reife Themen-Vorschläge stumm als „offen\" statt als These. Das hat "
+            "die Schieflage stabilisiert statt sie zu zeigen — sechs Thesen klingen nach "
+            "„voll\", aber vier davon sind Rohstoffe.\n\n"
+            "Jetzt wird die Zahl nur noch angezeigt. Weder Unter- noch Überschreiten "
+            "ändert etwas am Verhalten. Zurückgestellt wird ein Vorschlag nur noch, wenn "
+            "sein Themenfeld gar kein handelbares Asset hat — dann könnte eine These "
+            "darauf nichts auslösen.")
+
         tree_frame = ttk.Frame(oben_frame, padding=(8, 0, 8, 8))
         tree_frame.pack(fill="both", expand=True)
 
@@ -555,11 +576,35 @@ class ThesenView(ttk.Frame):
             thesen = db.get_aktive_thesen(conn) if self._nur_aktive_var.get() else db.get_alle_thesen(conn)
             offene_vorschlaege = db.get_offene_aenderungsvorschlaege(conn)
             synthese_ergebnis = db.get_latest_kategorie_synthese_ergebnis(conn)
+            from agent.kategorie_vorschlaege import richtgroessen_lage
+            lage = richtgroessen_lage(conn)
         finally:
             conn.close()
+        self._render_richtgroesse(lage)
         self._render(thesen)
         self._render_vorschlaege(offene_vorschlaege)
         self._render_synthese(synthese_ergebnis)
+
+    def _render_richtgroesse(self, lage: dict) -> None:
+        """Die Richtgroesse als Lage, nicht als Grenze (2026-08-07).
+
+        Die Verteilung steht bewusst daneben: sechs Thesen auf zwei
+        Hauptgruppen sind etwas anderes als sechs auf sechs, und genau das
+        verdeckt die nackte Zahl. `info_color()` statt `warn_color()` beim
+        Ueberschreiten - es ist erlaubt, nicht falsch."""
+        text = lage["anzeige"]
+        text += f" · {lage['hauptgruppen_abgedeckt']} Hauptgruppen"
+        if lage["davon_neutral"]:
+            text += f" · {lage['davon_neutral']} davon neutral"
+        if lage["lage"] == "unter":
+            text += "  —  unter der Richtgröße: zu wenige Themenfelder tragen eine These"
+            farbe = theme.warn_color()
+        elif lage["lage"] == "ueber":
+            text += "  —  über der Richtgröße (erlaubt; die schwächsten lohnen einen Blick)"
+            farbe = theme.info_color()
+        else:
+            farbe = theme.info_color()
+        self._richtgroesse_label.config(text=text, foreground=farbe)
 
     def _render_vorschlaege(self, vorschlaege: list) -> None:
         """Fall B (these_id gesetzt) UND Fall A (these_id=None, hauptgruppe/

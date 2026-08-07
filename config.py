@@ -857,6 +857,68 @@ def _kategorie_klartext(hauptgruppe: str, unterkategorie: str | None) -> str | N
     return None
 
 
+def richtgroesse_thesen() -> tuple[int, int]:
+    """Die Richtgroesse fuer gleichzeitig aktive Thesen - (min, max). (2026-08-07)
+
+    `Kategorie_Basisinformationen_Release2.md` Abschnitt 5, Punkt 3, im
+    Wortlaut: *"Richtgroesse: 3-6 gleichzeitig aktive Thesen, weich in der GUI
+    angezeigt, kein Hard-Limit im Code."*
+
+    Implementiert war bis zum 07.08. das Gegenteil: nur die Obergrenze
+    existierte, und sie war ein hartes Budget - wurde sie ueberschritten,
+    landeten reife Kandidaten stumm als "offen" statt als These. Die
+    Untergrenze gab es gar nicht, obwohl sie derzeit die interessantere ist:
+    ausserhalb der Rohstoffe traegt kaum ein Themenfeld eine These.
+
+    Diese Funktion liefert die Zahlen; sie zu UNTERSCHREITEN oder zu
+    UEBERSCHREITEN ist kein Fehler, sondern eine Lage, die angezeigt wird.
+    """
+    cfg = load_config().get("kategorie_vorschlaege") or {}
+    minimum = int(cfg.get("richtgroesse_min_aktive_thesen", 3))
+    maximum = int(cfg.get("richtgroesse_max_aktive_thesen", 6))
+    return minimum, maximum
+
+
+def kategorie_handelbare_assets(hauptgruppe: str | None,
+                                unterkategorie: str | None = None) -> list[str]:
+    """Welche handelbaren Assets stehen hinter dieser Kategorie? (2026-08-07, G-5)
+
+    Eine These auf einem Themenfeld ohne handelbares Asset kann nichts
+    ausloesen - sie erzeugt Aufmerksamkeit ohne Ziel. Geprueft werden zwei
+    Quellen, weil beide vorkommen:
+
+      1. `bitpanda_symbole` aus dem Kategorien-Katalog (per Definition
+         handelbar), und
+      2. die Watchlist, ueber `hauptgruppe`/`unterkategorie`.
+
+    Quelle 2 ist nicht optional: `absicherung/aktienmarkt_short` und
+    `absicherung/sektor_short` haben KEINE Katalog-Symbole - dort haengen DBPK
+    und 3QSS ausschliesslich an der Watchlist. Eine Pruefung nur ueber den
+    Katalog haette also ausgerechnet die beiden Hedge-Kategorien gesperrt, die
+    der Nutzer aktiv haelt.
+
+    Ohne `unterkategorie` zaehlt die ganze Hauptgruppe (eine These auf
+    Hauptgruppen-Ebene erreicht alles darunter).
+    """
+    if not hauptgruppe:
+        return []
+    treffer: list[str] = []
+    for g in get_kategorien().get("hauptgruppen") or []:
+        if g.get("id") != hauptgruppe:
+            continue
+        for u in (g.get("unterkategorien") or []):
+            if unterkategorie and u.get("id") != unterkategorie:
+                continue
+            treffer.extend(u.get("bitpanda_symbole") or [])
+    for asset in get_watchlist():
+        if asset.hauptgruppe != hauptgruppe:
+            continue
+        if unterkategorie and asset.unterkategorie != unterkategorie:
+            continue
+        treffer.append(asset.symbol)
+    return sorted(set(treffer))
+
+
 def manuelle_schwerpunkte() -> list[tuple[str, str | None]]:
     """Vom Nutzer gesetzte Themen-Schwerpunkte (2026-08-07).
 

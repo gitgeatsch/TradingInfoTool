@@ -119,6 +119,56 @@ def _lade_heutiges_schicht2_ergebnis(conn, jetzt: datetime) -> dict[tuple[str, s
     return {(e.get("hauptgruppe"), e.get("unterkategorie")): e for e in kategorien}
 
 
+def richtgroessen_lage(conn) -> dict:
+    """Wie steht die Zahl aktiver Thesen zur Richtgroesse 3-6? (2026-08-07, S-2)
+
+    REINE INFORMATION. Weder das Unterschreiten noch das Ueberschreiten
+    veraendert das Verhalten - das ist der Punkt: die Spezifikation
+    (`Kategorie_Basisinformationen_Release2.md` Abschnitt 5, Punkt 3) sagt
+    *"weich in der GUI angezeigt, kein Hard-Limit im Code"*.
+
+    DIE UNTERGRENZE IST DERZEIT DIE INTERESSANTERE. Sechs aktive Thesen klingen
+    nach "voll", aber vier davon sind Rohstoffe und zwei stehen auf `neutral` -
+    ausserhalb der Rohstoffe traegt praktisch kein Themenfeld eine These. Ein
+    Deckel, der bei sechs greift, hat diese Schieflage stabilisiert statt sie
+    zu zeigen.
+    """
+    minimum, maximum = config.richtgroesse_thesen()
+    thesen = db.get_aktive_thesen(conn)
+    aktive = len(thesen)
+    if aktive < minimum:
+        lage, hinweis = "unter", (
+            "Zu wenige Themenfelder tragen eine These — reife Vorschläge werden "
+            "gebraucht, nicht gebremst."
+        )
+    elif aktive > maximum:
+        lage, hinweis = "ueber", (
+            "Mehr Thesen als die Richtgröße vorsieht. Das ist erlaubt; ein Blick "
+            "auf die schwächsten (Richtung „neutral“, lange ohne Bewegung) lohnt."
+        )
+    else:
+        lage, hinweis = "im_rahmen", "Im Rahmen der Richtgröße."
+    # Wie verteilt sich das? Sechs Thesen auf zwei Hauptgruppen sind etwas
+    # anderes als sechs auf sechs - die Zahl allein verdeckt genau das.
+    je_hauptgruppe: dict[str, int] = {}
+    neutrale = 0
+    for these in thesen:
+        je_hauptgruppe[these.hauptgruppe] = je_hauptgruppe.get(these.hauptgruppe, 0) + 1
+        if these.richtung == "neutral":
+            neutrale += 1
+    return {
+        "aktive_thesen": aktive,
+        "minimum": minimum,
+        "maximum": maximum,
+        "lage": lage,
+        "hinweis": hinweis,
+        "hauptgruppen_abgedeckt": len(je_hauptgruppe),
+        "je_hauptgruppe": je_hauptgruppe,
+        "davon_neutral": neutrale,
+        "anzeige": f"{aktive} aktive Thesen · Richtgröße {minimum}–{maximum}",
+    }
+
+
 # Klartext-Tabellen fuer die Anzeige wartender Vorschlaege (2026-08-07).
 # Bewusst hier und nicht in ui/thesen_view.py: Export, Uebersichtsseite und GUI
 # sollen dieselben Woerter benutzen - drei Kopien laufen garantiert auseinander.
@@ -195,6 +245,10 @@ def wartende_vorschlaege(conn, jetzt: datetime | None = None) -> dict:
             "reif_am": (seit + timedelta(days=schwelle)).date().isoformat(),
             "ist_reif": beobachtet >= schwelle,
             "ist_schwerpunkt": config.ist_manueller_schwerpunkt(hauptgruppe, unterkategorie),
+            # G-5: eine These auf einem Themenfeld ohne handelbares Asset kann
+            # nichts ausloesen. Steht hier als Attribut, damit es sichtbar ist -
+            # zurueckgestellt wird es in _bestimme_gesperrte_fall_a_kandidaten().
+            "handelbare_assets": config.kategorie_handelbare_assets(hauptgruppe, unterkategorie),
         })
     eintraege.sort(key=lambda e: (e["tage_bis_reif"], e["hauptgruppe"]))
 
@@ -209,9 +263,9 @@ def wartende_vorschlaege(conn, jetzt: datetime | None = None) -> dict:
         engpass_tag = max(je_tag, key=je_tag.get)
         engpass_anzahl = je_tag[engpass_tag]
 
-    aktive = len(db.get_aktive_thesen(conn))
-    richtgroesse = (config.load_config().get("kategorie_vorschlaege") or {}).get(
-        "richtgroesse_max_aktive_thesen", 6)
+    lage = richtgroessen_lage(conn)
+    aktive = lage["aktive_thesen"]
+    richtgroesse = lage["maximum"]
     return {
         "vorschlaege": eintraege,
         "anzahl_wartend": sum(1 for e in eintraege if not e["ist_reif"]),
@@ -221,13 +275,17 @@ def wartende_vorschlaege(conn, jetzt: datetime | None = None) -> dict:
         "freies_budget": max(0, richtgroesse - aktive),
         "engpass_am": engpass_tag,
         "engpass_anzahl": engpass_anzahl,
+        "richtgroesse_min": lage["minimum"],
+        "richtgroessen_lage": lage,
         "lesehilfe": (
             "tage_bis_reif zaehlt bis zur Persistenzschwelle des jeweiligen "
             "Mechanismus (7 Tage Baerenmarkt-Overlay, 14 COT/M2, 30 Zinskurve/"
             "Dollar-Index/Bellwether). engpass_anzahl ist die Zahl der Kandidaten, "
-            "die am selben Tag reif werden - uebersteigt sie freies_budget, "
-            "entscheidet die Schicht-2-Rangfolge, welche durchkommen. Gesetzte "
-            "Schwerpunkte (ist_schwerpunkt) umgehen das."
+            "die am selben Tag reif werden. Seit 07.08. SPERRT die Richtgroesse "
+            "nicht mehr (Spezifikation: 'weich, kein Hard-Limit im Code') - "
+            "freies_budget ist Orientierung, kein Gate. Zurueckgestellt wird nur "
+            "noch, wenn ein Themenfeld gar kein handelbares Asset hat "
+            "(handelbare_assets leer, G-5)."
         ),
     }
 
@@ -260,65 +318,53 @@ def _reife_fall_a_kandidaten(conn, jetzt: datetime) -> list[tuple[str, str | Non
 
 
 def _bestimme_gesperrte_fall_a_kandidaten(
-    conn, jetzt: datetime, richtgroesse_max: int, schicht2: dict[tuple[str, str | None], dict] | None,
+    conn, jetzt: datetime,
 ) -> set[tuple[str, str | None]]:
-    """Gleichzeitigkeits-Moderation (#333 Schicht 2, 2026-07-25): werden HEUTE
-    mehr Fall-A-Kandidaten reif, als innerhalb der Richtgroesse (3-6 aktive
-    Thesen) noch Platz haben, entscheidet die Schicht-2-Prioritaetsrangfolge,
-    welche automatisch uebernommen werden - der Rest wird stattdessen als
-    'offen' (manuelle Bestaetigung, siehe ui/thesen_view.py) zurueckgestellt,
-    statt unkoordiniert alle gleichzeitig anzulegen. Liegt kein aktuelles
-    Schicht-2-Ergebnis vor, bleibt das Verhalten unmoderiert (P-8)."""
+    """Wer wird zurueckgestellt? Seit 2026-08-07 NUR noch aus Qualitaetsgruenden.
+
+    BIS ZUM 07.08. war das hier die Gleichzeitigkeits-Moderation (#333 Schicht 2):
+    ein hartes Budget aus der Richtgroesse - wurde es ueberschritten, landeten
+    reife Kandidaten stumm als 'offen'. Die Spezifikation sagt aber
+    (`Kategorie_Basisinformationen_Release2.md` Abschnitt 5, Punkt 3) ausdruecklich
+    *"weich in der GUI angezeigt, kein Hard-Limit im Code"* - implementiert war
+    das Gegenteil.
+
+    WARUM DER DECKEL WEG KANN, ohne dass die Rangfolge verwaessert: eine aktive
+    These bringt einem Screener-Kandidaten NICHT schon durch ihre Existenz einen
+    Bonus, sondern nur, wenn `compute_these_abgleich()` sie objektiv als
+    "gestuetzt"/"widerspricht" bestaetigt (agent/aktien/screener.py::
+    `_kategorie_score_bonus()`). Mehr Thesen erzeugen also nicht mehr Bonus,
+    sondern nur mehr Kandidaten fuer denselben objektiven Test. Das war das
+    Hauptargument fuer den Deckel - es traegt nicht.
+
+    WAS BLEIBT: eine These auf einem Themenfeld ohne handelbares Asset kann
+    nichts ausloesen (G-5). Das ist ein Qualitaets-, kein Mengenkriterium, und
+    genau dafuer wird hier noch zurueckgestellt. Die Richtgroesse selbst wird
+    nur noch **berichtet** (siehe `richtgroessen_lage()`), nicht durchgesetzt.
+    """
     reife = _reife_fall_a_kandidaten(conn, jetzt)
     if not reife:
         return set()
 
-    # MANUELLE SCHWERPUNKTE KONKURRIEREN NICHT (2026-08-07, Schritt 3).
+    # G-5: Themenfeld ohne handelbares Asset (2026-08-07).
     #
-    # Nutzer-Sorge im Wortlaut: *"wenn z.B. ein Thema trendet, bekommen andere
-    # wichtige Bereiche keinen Raum, obwohl ich der Meinung bin, dass Energie
-    # aktuell unterbewertet ist ... und diese Trades werden vergessen bzw. gehen
-    # unter."*
-    #
-    # Das dreht die uebliche Anforderung um: ein Mechanismus, der Aufmerksamkeit
-    # nach TRENDSTAERKE verteilt, tut systematisch das Gegenteil dessen, was
-    # antizyklisches Investieren braucht - ein Themenfeld ist oft gerade dann
-    # interessant, WEIL niemand hinsieht.
-    #
-    # Ein gesetzter Schwerpunkt wird deshalb NIE zurueckgestellt. Er zaehlt auch
-    # nicht gegen das Budget der automatischen Kandidaten: sonst wuerde er
-    # denselben Verdraengungswettbewerb nur von der anderen Seite fuehren.
-    geschuetzt = {k for k in reife if config.ist_manueller_schwerpunkt(k[0], k[1])}
-    wettbewerber = [k for k in reife if k not in geschuetzt]
-    if geschuetzt:
-        logger.info(
-            "Kategorie-Vorschlaege: %d reife Kandidaten sind gesetzte Schwerpunkte und "
-            "umgehen die Gleichzeitigkeits-Moderation (%s)",
-            len(geschuetzt), ", ".join(f"{h}/{u or '-'}" for h, u in sorted(geschuetzt)),
+    # GEMESSEN, bevor gebaut wurde: aktuell trifft das auf KEINE Kategorie zu -
+    # 70 der 72 Unterkategorien haben Katalog-Symbole, die restlichen beiden
+    # (absicherung/aktienmarkt_short, absicherung/sektor_short) haengen ueber
+    # DBPK und 3QSS an der Watchlist. Eine Pruefung nur ueber den Katalog haette
+    # ausgerechnet die zwei Hedge-Kategorien gesperrt, die der Nutzer aktiv
+    # haelt. Die Pruefung bleibt trotzdem drin - aber als Wachhund fuer neu
+    # angelegte Kategorien, nicht als Filter fuer den heutigen Bestand.
+    ohne_assets = {
+        k for k in reife if not config.kategorie_handelbare_assets(k[0], k[1])
+    }
+    if ohne_assets:
+        logger.warning(
+            "Kategorie-Vorschlaege: %d reife Kandidaten haben KEIN handelbares Asset und werden "
+            "zurueckgestellt (%s) - eine These darauf koennte nichts ausloesen.",
+            len(ohne_assets), ", ".join(f"{h}/{u or '-'}" for h, u in sorted(ohne_assets)),
         )
-    if not wettbewerber:
-        return set()
-
-    aktuelle_anzahl = len(db.get_aktive_thesen(conn))
-    budget = max(0, richtgroesse_max - aktuelle_anzahl)
-    if len(wettbewerber) <= budget:
-        return set()
-    if schicht2 is None:
-        logger.info(
-            "Kategorie-Vorschlaege: %d Fall-A-Kandidaten reif, Richtgroesse (%d) wuerde ueberschritten, "
-            "aber kein aktuelles Schicht-2-Ergebnis vorhanden - unmoderiert (P-8).",
-            len(wettbewerber), richtgroesse_max,
-        )
-        return set()
-    reife_sortiert = sorted(wettbewerber,
-                            key=lambda k: (schicht2.get(k) or {}).get("prioritaet_rang") or 10_000)
-    gesperrte = set(reife_sortiert[budget:])
-    logger.info(
-        "Kategorie-Vorschlaege: Gleichzeitigkeits-Moderation aktiv - %d von %d Fall-A-Kandidaten werden "
-        "diese Runde zurueckgestellt (Richtgroesse %d, aktuell %d aktiv).",
-        len(gesperrte), len(reife), richtgroesse_max, aktuelle_anzahl,
-    )
-    return gesperrte
+    return ohne_assets
 
 
 def _verarbeite_signal(
@@ -419,11 +465,20 @@ def _verarbeite_signal(
 
 def run_kategorie_vorschlaege_job(conn) -> None:
     jetzt = datetime.now(timezone.utc)
-    richtgroesse_max = config.load_config().get("kategorie_vorschlaege", {}).get(
-        "richtgroesse_max_aktive_thesen", 6,
-    )
     schicht2 = _lade_heutiges_schicht2_ergebnis(conn, jetzt)
-    gesperrte_kategorien = _bestimme_gesperrte_fall_a_kandidaten(conn, jetzt, richtgroesse_max, schicht2)
+    gesperrte_kategorien = _bestimme_gesperrte_fall_a_kandidaten(conn, jetzt)
+
+    # Die Richtgroesse wird BERICHTET, nicht durchgesetzt (2026-08-07, S-2).
+    # Sie ist Orientierung fuer den Nutzer - die Spezifikation sagt "weich in
+    # der GUI angezeigt, kein Hard-Limit im Code". Eine Zeile im Log, damit die
+    # Lage auch ohne GUI nachvollziehbar bleibt.
+    lage = richtgroessen_lage(conn)
+    if lage["lage"] != "im_rahmen":
+        logger.info(
+            "Kategorie-Vorschlaege: %d aktive Thesen - %s der Richtgroesse %d-%d. %s",
+            lage["aktive_thesen"], "UNTER" if lage["lage"] == "unter" else "UEBER",
+            lage["minimum"], lage["maximum"], lage["hinweis"],
+        )
 
     for hauptgruppe, unterkategorie in _alle_kategorie_schluessel():
         mechanismus_info = config.get_pruef_mechanismus(hauptgruppe, unterkategorie)
