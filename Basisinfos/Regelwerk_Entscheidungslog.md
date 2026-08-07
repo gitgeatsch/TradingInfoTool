@@ -15062,3 +15062,78 @@ die beiden Faelle unter der Wachschwelle abdeckt.
 holt der Rohstoff-Lauf die Reihen sauber nach. `reihen_verworfen` muss im
 naechsten Export **leer** sein, und OD7C/OD7H muessen einen `letzter_kurs_eur`
 haben.
+
+## Nachtrag (2026-08-07, Abend): Mistral-Bruch bestaetigt — und die Bereinigung fand 6000 Punkte statt einem
+
+### Korrektur meiner eigenen Vorhersage
+
+Ich hatte "je ETC 62 rekonstruierte plus EIN gemessener Punkt" angesagt. Das Log
+nach dem Pull zeigt:
+
+    Bereinigung: 5990 gemessene Kurspunkte unter OD7N entfernt (2000-08-30 bis 2026-08-07, zuletzt 63,9750)
+    Bereinigung: 5988 ... OD7H ... zuletzt 4355,7998
+    Bereinigung: 5993 ... OD7C ... zuletzt 6,7470
+    Bereinigung: 6383 ... OD7L ... zuletzt 2,6640
+
+**Rund 6000 statt einem.** Der Grund fuer den Irrtum: der Export-Abschnitt
+`preishistorie_signal_symbole` ist auf ein 60-Tage-Fenster begrenzt - dort waren
+nur 63 Punkte je Symbol sichtbar. Tatsaechlich lag die **komplette
+Futures-Historie ab 2000** unter den ETC-Symbolen. Der alte Prozess hatte um
+07:08 nicht einen Punkt nachgetragen, sondern `period="max"` neu geholt.
+
+Die Diagnose in der Sache war richtig (Futures-Kurse am falschen Platz, Wache
+faengt nur die zwei lauten Faelle), die Groessenordnung nicht. **Ein
+Export-Ausschnitt ist keine Bestandsaufnahme** - dieselbe Familie wie "ein
+Dokumentstand ist keine Messung" vom Vormittag. Kein Datenverlust: die
+Futures-Reihen liegen unveraendert unter `_ROHSTOFF_FUTURES_*` (6507-6513
+Punkte).
+
+### Mistral: der freie API-Zugang ist umgestellt
+
+Konto-Dashboard des Nutzers, und das schlaegt jede Blog-Zusammenfassung:
+
+> **Free plan** - INCLUDED MONTHLY USAGE, "can be used for Studio, Vibe Code,
+> or API": **API usage 10 $ von 10 $, Resets in 24 days.**
+> Plan-Vergleich, Free-Spalte: *"Limited API access"*.
+
+**Frage 1 des Nutzers - bleibt ein Modell frei? Nein.** Die 10 $ haengen am
+KONTO, nicht am Modell, und werden zwischen Studio, Vibe Code und API geteilt.
+Es gibt kein Modell mit eigenem Freikontingent - deshalb findet sich unser
+`mistral-small-2506` auch nicht mehr in einer Rate-Limit-Liste je Modell.
+Mistrals Doku sagt inzwischen selbst, exakte RPM-Zahlen stuenden nicht mehr
+oeffentlich, sondern nur in der Admin-Konsole der Organisation. Die 24 Tage bis
+zum Reset sind damit die realistische Ausfallzeit, nicht eine Nacht.
+
+### Frage 2 - neue Anbieter: der beste Kandidat ist ein alter
+
+Die Bestandsdoku ([[reference_llm_provider_recherche_uebersicht]],
+[[project_groq_historie]]) fuehrt **32 begruendet verworfene Kandidaten**. Die
+Recherche vom 07.08. hat **keinen neuen** gefunden, der einen dieser Gruende
+entkraeftet:
+
+| Kandidat | Grund, unveraendert |
+|---|---|
+| OpenRouter | 20 RPM / 50 RPD - kleiner als das Tagesbudget allein fuer Krypto |
+| NVIDIA NIM | ToS verbietet Produktivbetrieb ohne Enterprise-Lizenz |
+| Cloudflare Workers AI | 10.000 Neuronen/Tag ueber alle Modelle |
+| GitHub Models | 8K Input / 4K Output - unsere Faktensaetze passen nicht hinein |
+| Cohere | Trial-ToS verbietet Produktivnutzung ausdruecklich |
+| SambaNova, Together, DeepSeek, Fireworks, AI21, Scaleway, Novita, Vercel | Einmal-Guthaben statt Dauer-Free-Tier |
+| Qwen/DashScope, Baidu, SiliconFlow | chinesische Telefonnummer noetig |
+
+**Der naheliegendste Ersatz ist Groq - und zwar, weil er nie wegen seines
+Kontingents entfernt wurde.** Am 26.07. flog er wegen eines **Startabsturzes**
+aus der automatischen Kette (vergessene `args`-Liste in `scheduler.add_job`);
+der Client blieb fuer manuelle Analysen erhalten, und das Log vom 07.08. meldet
+weiterhin "Groq API-Key gefunden". Freies Kontingent laut Recherche 07.08.:
+**30 RPM, 1.000 RPD, 12K TPM** fuer `llama-3.3-70b-versatile`, ohne
+Kreditkarte - bei rund 142 Calls/Tag reichlich Reserve.
+
+Zu klaeren vor dem Zurueckholen: die Ursache des Absturzes (Signatur des
+`add_job`-Aufrufs), und dass **70B statt 8B** genommen wird - 8B scheiterte
+strukturell an `halte_kriterium`.
+
+**Cerebras** meldet laut Recherche 1 Mio. Token/Tag frei, wurde aber entfernt,
+weil das Guthaben eine **Zahlungsmethode** verlangte. Ob das heute noch gilt,
+kann nur der Nutzer im Dashboard sehen - Zahlungsdaten einzugeben ist fuer den
+Assistenten tabu.
