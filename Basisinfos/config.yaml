@@ -1788,3 +1788,20 @@ screener:
                                     # das Notebook hatte bereits einen echten
                                     # yfinance-Haenger (siehe Memory) - 60 Min
                                     # ist ein bewusst zurueckhaltender Wert.
+
+# ---------------------------------------------------------------------------
+# Marktsuche (2026-08-07): Screener und Marktscan finden Kandidaten, die nicht
+# zwingend bei Bitpanda kaufbar sind - der Aktien-Screen laeuft ueber
+# Yahoo-Finance, der Krypto-Marktscan ueber CoinGecko. Beide ERFASSEN
+# `bitpanda_gelistet` bereits als Merkmal, haben aber bis hierher nicht danach
+# gefiltert: ein nicht handelbarer Kandidat stand gleichberechtigt in der Liste.
+#
+# Bewusst ein SCHALTER und kein hartes Gate: die Information "es gaebe da etwas,
+# nur nicht bei deinem Broker" kann wertvoll sein. Standard ist true, weil die
+# Umsetzung ueber die Bitpanda-App laeuft - was dort nicht kaufbar ist, ist
+# derzeit kein Kandidat.
+#
+# Unbekannt (None, Abruf fehlgeschlagen) wird NICHT ausgefiltert - dieselbe
+# P-10-Regel wie beim Gate RM-Bitpanda: unbekannt ist kein Ausschlussgrund.
+marktsuche:
+  nur_bitpanda_gelistet: true

@@ -275,6 +275,23 @@ class TradingInfoToolApp(tk.Tk):
         )
         menubar.add_cascade(label="Benachrichtigungen", menu=benachrichtigung_menu)
 
+        # MARKTSUCHE-SCHALTER (2026-08-07, Nutzer-Wunsch): Screener und
+        # Marktscan finden auch Kandidaten, die bei Bitpanda nicht handelbar
+        # sind. Bewusst ein Schalter statt eines harten Filters - die
+        # Information "es gaebe da etwas, nur nicht bei deinem Broker" kann
+        # wertvoll sein. Eigenes Menue statt unter "Benachrichtigungen", weil es
+        # die ANZEIGE steuert und nicht den Versand.
+        marktsuche_menu = tk.Menu(menubar, tearoff=0)
+        self._marktsuche_nur_bitpanda_var = tk.BooleanVar(
+            value=config_module.marktsuche_nur_bitpanda_gelistet()
+        )
+        marktsuche_menu.add_checkbutton(
+            label="Nur bei Bitpanda handelbare Kandidaten zeigen",
+            variable=self._marktsuche_nur_bitpanda_var,
+            command=self._toggle_marktsuche_nur_bitpanda,
+        )
+        menubar.add_cascade(label="Marktsuche", menu=marktsuche_menu)
+
         hebel_menu = tk.Menu(menubar, tearoff=0)
         self._hebel_richtung_var = tk.StringVar(
             value=config_module.load_config().get("budget_allocator", {}).get("hebel_richtung_modus", "beide")
@@ -301,6 +318,27 @@ class TradingInfoToolApp(tk.Tk):
         messagebox.showinfo(
             "Dark Mode",
             "Einstellung gespeichert. Bitte TradingInfoTool neu starten, damit die Änderung wirkt.",
+        )
+
+    def _toggle_marktsuche_nur_bitpanda(self) -> None:
+        """Schaltet den Marktsuche-Filter (2026-08-07). Wie der E-Mail-Schalter
+        schreibt er nach Basisinfos/config.yaml und wirkt damit erst nach
+        Commit+Push (Desktop) und Pull (Notebook) auf dem anderen Geraet - in
+        der laufenden GUI dagegen sofort beim naechsten Scan, weil
+        config.kandidat_ist_handelbar() bei jedem Rendern neu liest."""
+        neu = bool(self._marktsuche_nur_bitpanda_var.get())
+        if not config_module.set_marktsuche_nur_bitpanda_gelistet(neu):
+            messagebox.showwarning(
+                "Marktsuche",
+                "Einstellung konnte nicht in Basisinfos/config.yaml geschrieben werden.",
+            )
+            self._marktsuche_nur_bitpanda_var.set(not neu)
+            return
+        messagebox.showinfo(
+            "Marktsuche",
+            ("Nur bei Bitpanda handelbare Kandidaten werden angezeigt."
+             if neu else
+             "Auch nicht handelbare Kandidaten werden angezeigt (mit ✗ markiert)."),
         )
 
     def _toggle_email_nur_bitpanda(self) -> None:

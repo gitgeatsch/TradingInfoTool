@@ -669,6 +669,37 @@ def generate_signal(
 
     _ensure_ohlc_backfilled(conn, asset)
 
+    # RM-BITPANDA AUCH FUER HEDGE (2026-08-07). Die Regel existiert seit dem
+    # 16.07. in risk_gate.py::pre_check() und ist assetklassen-neutral - aber
+    # Hedge nutzt ein eigenes Gate (_post_check_hedge) und hat sie deshalb nie
+    # bekommen. Als einzige der sechs Pipelines.
+    #
+    # Heute kein akuter Fehler: DBPK und 3QSS SIND bei Bitpanda gelistet, sonst
+    # koennten sie nicht im Bestand sein. Aber ein kuenftiges Hedge-Instrument,
+    # das dort nicht handelbar ist, wuerde lautlos empfohlen - genau die Sorte
+    # Luecke, die der Rollout-Check (pruefe_fakten_rollout.py) sichtbar machen
+    # soll. Fail-soft wie ueberall: unbekannt ist kein Ausschlussgrund (P-10).
+    _bitpanda_gelistet = None
+    try:
+        from api.bitpanda import get_listed_non_crypto_assets
+        from api.bitpanda import is_listed as _bitpanda_is_listed
+
+        _bitpanda_gelistet = _bitpanda_is_listed(
+            asset.symbol, get_listed_non_crypto_assets(), name=asset.name)
+        if not _bitpanda_gelistet and db.get_bitpanda_gelistet_override(conn, asset.symbol):
+            _bitpanda_gelistet = True
+    except Exception as exc:
+        logger.info("Bitpanda-Listing-Abruf fuer %s fehlgeschlagen: %s", asset.symbol, exc)
+    if _bitpanda_gelistet is False:
+        logger.warning("%s ist nicht bei Bitpanda gelistet - Hedge-Signal wird als "
+                       "HALTEN gefuehrt (RM-Bitpanda)", asset.symbol)
+        signal = _fixed_signal(
+            asset.symbol, "HALTEN", gate_passed=False,
+            gate_reason=(f"{asset.symbol} ist nicht bei Bitpanda gelistet - auf der "
+                         "Handelsbörse des Nutzers aktuell nicht kaufbar"))
+        db.insert_signal(conn, signal)
+        return signal
+
     latest_prices = db.get_latest_prices(conn)
     price_snap = latest_prices.get(asset.symbol)
 

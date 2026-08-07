@@ -782,6 +782,40 @@ def set_hebel_richtung_modus(new_value: str) -> bool:
     return _set_top_level_skalar("hebel_richtung_modus", new_value, block_scope="budget_allocator")
 
 
+def marktsuche_nur_bitpanda_gelistet() -> bool:
+    """Sollen Screener und Marktscan nur bei Bitpanda handelbare Kandidaten
+    zeigen? (2026-08-07)
+
+    Beide erfassen `bitpanda_gelistet` schon lange als Merkmal, gefiltert wurde
+    danach aber nie - ein nicht handelbarer Kandidat stand gleichberechtigt in
+    der Liste, obwohl die Umsetzung ueber die Bitpanda-App laeuft.
+
+    Bewusst ein SCHALTER und kein hartes Gate: die Information "es gaebe da
+    etwas, nur nicht bei deinem Broker" kann wertvoll sein. Standard true.
+    """
+    return bool((load_config().get("marktsuche") or {}).get("nur_bitpanda_gelistet", True))
+
+
+def set_marktsuche_nur_bitpanda_gelistet(new_value: bool) -> bool:
+    """Schreibt den Schalter zurueck in config.yaml - analog
+    set_email_nur_bitpanda_gelistet(). Aenderung wirkt nach Commit+Push
+    (Desktop) und Pull (Notebook)."""
+    return _set_top_level_skalar("nur_bitpanda_gelistet", "true" if new_value else "false",
+                                 block_scope="marktsuche")
+
+
+def kandidat_ist_handelbar(bitpanda_gelistet: bool | None) -> bool:
+    """Faellt dieser Kandidat durch den Marktsuche-Filter?
+
+    UNBEKANNT (None) BLEIBT DRIN - dieselbe P-10-Regel wie beim Gate
+    RM-Bitpanda in risk_gate.py::pre_check(): ein fehlgeschlagener Abruf ist
+    kein Ausschlussgrund. Nur ein AUSDRUECKLICHES False filtert.
+    """
+    if not marktsuche_nur_bitpanda_gelistet():
+        return True
+    return bitpanda_gelistet is not False
+
+
 def set_email_nur_bitpanda_gelistet(new_value: bool) -> bool:
     """Setzt `benachrichtigung.email.nur_bitpanda_gelistet` (2026-07-28, migriert aus
     `ui/settings.py`/`data/settings.json` - siehe Regelwerksmanual-Nachtrag

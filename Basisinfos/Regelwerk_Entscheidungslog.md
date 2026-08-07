@@ -8,11 +8,13 @@
 
 ---
 
-## Index nach Thema (196 Einträge)
+## Index nach Thema (197 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
-### Regelwerk / deterministische Gates (36)
+### Regelwerk / deterministische Gates (37)
+
+- **2026-08-07** — RM-Bitpanda für Hedge nachgezogen (fehlte als einzige der sechs Pipelines) + Marktsuche-Filter `marktsuche.nur_bitpanda_gelistet` mit GUI-Schalter
 
 - **2026-08-07** — H-2 Zeithorizont-Deckel je Klasse (Maximum, kein Mindestwert) + H-3 Basislinie folgt der gemessenen Haltedauer; dazu Zwischenrecherche: Spot-Kosten zu hoch, RM-3 tot, Risikoparameter global
 
@@ -14253,3 +14255,61 @@ Was fehlt:
 
 Quellen: Handelsblatt (Bitpanda-Gebuehren je Anlageklasse), Finanzfuchs
 (Krypto-Spreads und Fusion-Staffel).
+
+
+---
+
+## Nachtrag (2026-08-07): Bitpanda-Handelbarkeit als Regel vervollstaendigt und in der Marktsuche schaltbar gemacht
+
+Nutzer-Vorgabe: *"auch bei diesen Assets ist es relevant, ob bei BP handelbar
+oder nicht - als Regel bitte entsprechend beruecksichtigen und auch bei der
+Marktsuche aus- und einschaltbar machen."*
+
+### Erst der Bestand: mehr vorhanden als erwartet
+
+**RM-Bitpanda ist eine echte Gate-Regel** in `risk_gate.py::pre_check()` und
+assetklassen-neutral formuliert: ein nachweislich nicht gelistetes Asset
+bekommt ein Veto, `None` (Abruf fehlgeschlagen) fuehrt bewusst zu KEINEM Veto
+(P-10: unbekannt ist kein Ausschlussgrund). Dazu existiert ein
+Override-Mechanismus (`asset_bitpanda_override`, seit 20.07.).
+
+Verdrahtet war sie in **vier von sechs** Pipelines: Krypto-Spot, Aktien,
+Rohstoffe, Themen-ETF. **Hedge hatte sie nicht** - als einzige, weil es ein
+eigenes Gate (`_post_check_hedge`) nutzt und die Regel deshalb nie mitbekam.
+Genau das Muster, das der Rollout-Check vom selben Tag sichtbar machen soll.
+
+Ebenfalls vorhanden: ein Schalter `benachrichtigung.email.nur_bitpanda_gelistet`
+- der steuert aber nur den **E-Mail-Versand**, nicht die Marktsuche.
+
+### Der eigentliche Fund: die Marktsuche filterte nie
+
+Screener und Marktscan **erfassen** `bitpanda_gelistet` seit jeher als Merkmal
+und zeigen es im Screener-Tab als Spalte. **Gefiltert wurde nie danach** - ein
+nicht handelbarer Kandidat stand gleichberechtigt in der Liste, obwohl die
+Umsetzung ueber die Bitpanda-App laeuft.
+
+### Was gebaut wurde
+
+1. **`marktsuche.nur_bitpanda_gelistet`** in `config.yaml`, Standard `true`.
+   Bewusst ein SCHALTER und kein hartes Gate: die Information "es gaebe da
+   etwas, nur nicht bei deinem Broker" kann wertvoll sein.
+2. **`config.kandidat_ist_handelbar()`** - eine Stelle fuer die Entscheidung,
+   mit derselben P-10-Regel wie das Gate: **unbekannt bleibt drin**, nur ein
+   ausdrueckliches `False` filtert.
+3. **Filter im Screener-Tab** beim Rendern, plus die Zahl der ausgeblendeten
+   Kandidaten in der Statuszeile - **ein Filter, der unbemerkt wirkt, ist ein
+   Datenverlust**.
+4. **GUI-Menue "Marktsuche"** mit dem Schalter, neben dem bestehenden
+   E-Mail-Schalter, aber bewusst in einem eigenen Menue: er steuert die
+   ANZEIGE, nicht den Versand.
+5. **RM-Bitpanda fuer Hedge** nachgezogen. Heute kein akuter Fehler - DBPK und
+   3QSS SIND gelistet, sonst waeren sie nicht im Bestand. Aber ein kuenftiges
+   Hedge-Instrument ohne Listing waere lautlos empfohlen worden.
+
+### Offen und bewusst nicht mitgebaut
+
+Der **Krypto-Marktscan** erfasst `bitpanda_gelistet` ebenfalls, filtert aber
+weiterhin nicht - er speist die Kandidaten-Warteschlange, und ein Filter dort
+wuerde die Discovery selbst beschneiden statt nur die Anzeige. Das ist eine
+eigene Entscheidung (Discovery gegen Anzeige) und gehoert nicht nebenbei
+getroffen.

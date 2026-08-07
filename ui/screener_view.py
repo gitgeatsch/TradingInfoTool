@@ -213,6 +213,21 @@ class ScreenerView(ttk.Frame):
             )
             return
 
+        # MARKTSUCHE-FILTER (2026-08-07): nicht bei Bitpanda handelbare
+        # Kandidaten ausblenden, wenn der Schalter gesetzt ist. Beide Screener
+        # erfassen `bitpanda_gelistet` seit jeher als Merkmal - gefiltert wurde
+        # danach nie, ein nicht handelbarer Kandidat stand gleichberechtigt in
+        # der Liste, obwohl die Umsetzung ueber die Bitpanda-App laeuft.
+        #
+        # UNBEKANNT bleibt drin (config.kandidat_ist_handelbar(), P-10) - ein
+        # fehlgeschlagener Listing-Abruf ist kein Ausschlussgrund. Die Zahl der
+        # ausgeblendeten Kandidaten steht in der Statuszeile, damit der Filter
+        # nicht unbemerkt wirkt.
+        _vorher = len(candidates)
+        candidates = [c for c in candidates
+                      if config.kandidat_ist_handelbar(c.bitpanda_gelistet)]
+        self._ausgeblendet = _vorher - len(candidates)
+
         self._candidates = candidates
         for item in self.tree.get_children():
             self.tree.delete(item)
@@ -294,7 +309,9 @@ class ScreenerView(ttk.Frame):
         self.status_label.config(
             text=f"{aktien_anzahl} neue Aktien-Kandidaten (Yahoo-Finance-Screener), "
                  f"{etf_anzahl} neue ETF/ETC-Kandidaten (Bitpanda-Katalog). "
-                 f"Naechster automatischer Scan in {self._auto_scan_intervall_ms // 60000} Minuten.",
+                 + (f"{self._ausgeblendet} nicht bei Bitpanda handelbar ausgeblendet. "
+                    if getattr(self, '_ausgeblendet', 0) else "")
+                 + f"Naechster automatischer Scan in {self._auto_scan_intervall_ms // 60000} Minuten.",
             foreground=theme.info_color(),
         )
 
