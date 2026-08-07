@@ -40,6 +40,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
 import database.db as db
+from agent import provider_sperre
 
 logger = logging.getLogger(__name__)
 
@@ -175,6 +176,11 @@ def run_multi_asset_batch(
         conn.close()
     tages_budget = {"mistral": mistral_budget, "gemini": gemini_budget}
 
+    # Der Breaker wird VOR der Schleife aus api_health_status vorbelegt: eine
+    # Sperre, die erst nach drei Fehlschlaegen greift und beim naechsten Lauf
+    # vergessen ist, verhindert bei ein bis zwei Kandidaten je Lauf fast nichts.
+    sperre = provider_sperre.vorbelegte_sperre(conn, ("mistral", "gemini"))
+
     def _mit_conn(fn):
         """Eigene Connection je Call (gleiches Muster wie budget_allocator.py::
         _mit_conn()) - ein LLM-Call ist potenziell langsam, eine gemeinsame
@@ -227,11 +233,17 @@ def run_multi_asset_batch(
         for provider_name, call_fn in calls:
             if provider_name in tages_budget and tages_verbraucht[provider_name] >= tages_budget[provider_name]:
                 continue
+            # CIRCUIT BREAKER (2026-08-07): siehe agent/provider_sperre.py.
+            # Ohne ihn versuchte jeder Kandidat zuerst Mistral, kassierte 402
+            # und fiel auf Gemini - 142 vergebliche Aufrufe an einem Tag.
+            if sperre.ist_gesperrt(provider_name):
+                continue
             try:
                 res = call_fn()
                 if getattr(res, "gate_passed", True) is False:
                     ok = True
                     break
+                sperre.melde_erfolg(provider_name)
                 result.provider_je_symbol[schluessel] = provider_name
                 result.ergebnis_objekt[schluessel] = res
                 if provider_name in tages_verbraucht:
@@ -244,6 +256,7 @@ def run_multi_asset_batch(
                 break
             except Exception as exc:
                 last_exc = exc
+                sperre.melde_fehlschlag(provider_name, exc)
                 continue
         if ok:
             result.verarbeitet.append(schluessel)

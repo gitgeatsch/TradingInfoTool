@@ -101,6 +101,7 @@ from datetime import datetime, timedelta, timezone
 
 import database.db as db
 from agent.krypto.hebel_pipeline import generate_hebel_signal
+from agent import provider_sperre
 from agent.krypto.llm_provider import llm_model_label
 from agent.krypto.marktscan import generate_candidate_writeup, ist_hohes_potential_kandidat
 from agent.krypto.pipeline import compute_current_regime, generate_signal
@@ -138,6 +139,9 @@ class AllocationResult:
     fehlgeschlagen: list[str] = field(default_factory=list)
     uebersprungen_cooldown_hebel: int = 0
     uebersprungen_cooldown_marktscan: int = 0
+    # Was hat der Circuit Breaker verhindert? Eine Sperre, die niemand sieht,
+    # ist die naechste stille Fehlfunktion (Lehre 06.08.).
+    provider_sperre_bericht: dict = field(default_factory=dict)
     mistral_calls_verbraucht: int = 0
     mistral_budget_erschoepft: bool = False
     gemini_calls_verbraucht: int = 0
@@ -545,6 +549,18 @@ def run_budget_allocator(
             "mistral": db.count_real_llm_calls_today_by_provider(conn, "mistral:"),
             "gemini": db.count_real_llm_calls_today_by_provider(conn, "gemini:"),
         }
+        # CIRCUIT BREAKER, vorbelegt aus api_health_status (2026-08-07).
+        #
+        # WARUM DIE VORBELEGUNG NOETIG IST: dieser Lauf hat typisch ein bis zwei
+        # Kandidaten (142 Signale auf 96 Laeufe am 07.08.). Eine Sperre, die erst
+        # nach drei Fehlschlaegen greift und beim naechsten Lauf vergessen ist,
+        # verhindert dann praktisch keinen einzigen vergeblichen Aufruf.
+        #
+        # WARUM DER ZAEHLER DARUEBER NICHT REICHT: er zaehlt DATENSAETZE, nicht
+        # Aufrufe - ein fehlgeschlagener Call erzeugt keine Zeile und bleibt
+        # unsichtbar. Deshalb stand fuer Mistral am 07.08. den ganzen Tag 0,
+        # waehrend jeder Kandidat dort vergeblich anklopfte.
+        sperre = provider_sperre.vorbelegte_sperre(conn, ("mistral", "gemini"))
     finally:
         conn.close()
     tages_budget = {"mistral": mistral_budget, "gemini": gemini_budget}
@@ -611,6 +627,9 @@ def run_budget_allocator(
                     elif provider_name == "gemini":
                         result.gemini_budget_erschoepft = True
                     continue
+            # CIRCUIT BREAKER (2026-08-07): siehe agent/provider_sperre.py.
+            if sperre.ist_gesperrt(provider_name):
+                continue
             try:
                 res = call_fn()
                 if getattr(res, "gate_passed", True) is False:
@@ -619,6 +638,7 @@ def run_budget_allocator(
                     # den Fehlschlag-Zaehler faelschlich auf Basis eines gar nicht
                     # stattgefundenen Calls zuruecksetzen).
                     return True
+                sperre.melde_erfolg(provider_name)
                 result.provider_je_call[schluessel] = provider_name
                 result.ergebnis_objekt[schluessel] = res
                 # E-Mail-Latenz-Fix (2026-07-23, echter Fund: ein einzelner Batch-Lauf
@@ -644,6 +664,7 @@ def run_budget_allocator(
             except Exception as exc:
                 last_exc = exc
                 logger.info("%s-Call für %s fehlgeschlagen (%s)", provider_name, schluessel, exc)
+                sperre.melde_fehlschlag(provider_name, exc)
 
         logger.warning("Alle Provider für %s fehlgeschlagen (letzter Fehler: %s)", schluessel, last_exc)
         result.fehlgeschlagen.append(schluessel)
@@ -749,5 +770,16 @@ def run_budget_allocator(
         ok = _mit_fallback_chain(schluessel, calls)
         if ok:
             result.spot_verarbeitet.append(schluessel)
+
+    # Was hat der Breaker verhindert? Ohne diese Zeile bliebe die Ersparnis
+    # unsichtbar - und eine unsichtbare Sperre ist von einem stillen Ausfall
+    # nicht zu unterscheiden.
+    result.provider_sperre_bericht = sperre.bericht()
+    if result.provider_sperre_bericht["gesamt_uebersprungen"]:
+        logger.info(
+            "Provider-Sperre: %d Aufrufe uebersprungen (%s)",
+            result.provider_sperre_bericht["gesamt_uebersprungen"],
+            result.provider_sperre_bericht["gesperrt"],
+        )
 
     return result

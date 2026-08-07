@@ -14924,3 +14924,81 @@ ein Circuit Breaker, der einen Anbieter nach N aufeinanderfolgenden
 Fehlschlaegen fuer den Rest des Laufs ueberspringt. Beides ist die richtige
 Konsequenz, aber es ist eine Aenderung an der Kette selbst - und die gehoert
 nicht in denselben Commit wie ein Logging-Fix.
+
+## Nachtrag (2026-08-07): Circuit Breaker fuer die LLM-Kette — und die Mistral-Recherche, die ihn dringend macht
+
+### Was das Konto-Dashboard sagt
+
+Der Nutzer hat den Mistral-Kontostand nachgesehen. Das ist die belastbarste
+Quelle, die es dazu gibt - belastbarer als jede Blog-Zusammenfassung:
+
+> **Free plan.** INCLUDED MONTHLY USAGE — "This usage is included with your plan
+> and can be used for Studio, Vibe Code, or API."
+> **API usage: 10 $ von 10 $. Resets in 24 days.**
+
+Drei Schluesse, alle mit Folgen:
+
+1. **Das Budget ist ein Monats-Dollarbetrag, kein Token- oder RPM-Limit.** Die
+   oeffentlich kursierenden Angaben ("1 Mrd. Token/Monat, 2 RPM") beschreiben
+   den alten Zustand - das Dashboard zeigt etwas anderes.
+2. **Ein anderes Modell hilft nicht.** Die 10 $ haengen am KONTO und werden
+   ausdruecklich zwischen Studio, Vibe Code und API geteilt. Die Frage "finden
+   wir unser Modell nicht in der Rate-Limit-Liste?" hat damit eine Antwort: die
+   Liste pro Modell ist nicht mehr die relevante Groesse. Auch Mistrals eigene
+   Doku sagt inzwischen, exakte RPM-Zahlen stuenden nicht mehr oeffentlich,
+   sondern nur noch in der Admin-Konsole der jeweiligen Organisation.
+3. **"Resets in 24 days" heisst: Mistral ist 24 Tage lang weg** - nicht bis
+   morgen frueh. Als *Hauptanbieter* ist Mistral unter diesen Bedingungen nicht
+   mehr tragfaehig, solange nichts bezahlt wird (stehende Vorgabe: nur
+   kostenfreie LLMs).
+
+Das ist eine Entscheidung fuer den Nutzer, kein Code-Problem. Der Code muss nur
+aufhoeren, gegen eine verschlossene Tuer zu laufen.
+
+### Der Breaker
+
+`agent/provider_sperre.py`, benutzt von **beiden** Ketten
+(`budget_allocator.py` und `multi_asset_batch.py` - dieselbe Schleife stand
+zweimal im Code; zwei Kopien der Sperre wuerden garantiert auseinanderlaufen).
+
+**Zwei Fehlerklassen, zwei Antworten.** Ein 429 oder ein Netzwerkfehler sind
+Wartefehler - dort ist der naechste Versuch eine echte Chance. Ein **402/401/403**
+ist Konto oder Berechtigung: der zweite Versuch scheitert garantiert genauso.
+
+| Fehlerklasse | Reaktion |
+|---|---|
+| 402 / 401 / 403 | sofort gesperrt, schon nach dem ERSTEN Vorfall |
+| alles andere | gesperrt nach `MAX_FEHLSCHLAEGE_IN_FOLGE` (3); ein Erfolg setzt die Serie zurueck |
+
+**Die Sperre wirkt ueber Laufgrenzen - und das ist der eigentliche Punkt.** Ein
+reiner In-Lauf-Breaker haette am 07.08. fast nichts verhindert: 142 Signale
+verteilen sich auf 96 Laeufe, die meisten Laeufe haben ein bis zwei Kandidaten.
+Eine Sperre, die erst nach drei Fehlschlaegen greift und danach vergessen ist,
+haette dort nie gegriffen.
+
+Die Persistenz brauchte **keine neue Tabelle**: `api_health_status` enthaelt den
+letzten Fehler ohnehin, weil `api/mistral.py::chat` mit
+`@track_api_health("mistral")` dekoriert ist. `vorbelegte_sperre()` liest ihn -
+aber nur bei dauerhafter Fehlerklasse. Ein einzelner Netzwerkhaenger darf einen
+Anbieter nicht stundenlang stilllegen.
+
+**Halb offen nach `PROBE_INTERVALL_STUNDEN` (6 h).** Ohne das wuerde niemand
+merken, wenn das Kontingent zurueckkommt - und bei Mistral kommt es laut
+Dashboard in 24 Tagen zurueck. Vier Proben am Tag statt 142 vergeblicher
+Versuche.
+
+**Die Ersparnis wird gezaehlt.** `LaufSperre.bericht()` liefert die
+uebersprungenen Versuche je Anbieter mit Grund, und der Allocator loggt sie.
+Eine Sperre, die niemand sieht, ist von einem stillen Ausfall nicht zu
+unterscheiden - dieselbe Lehre wie am 06.08.
+
+`teste_provider_sperre.py`, **20 Pruefungen**. Der wichtigste ist C1: die Sperre
+greift schon VOR dem ersten Versuch eines neuen Laufs. A4 sichert die
+Gegenrichtung ab - ein 429 darf NICHT dauerhaft sperren. 14 Testsuiten und die
+Signaturpruefung gruen.
+
+**Was der Breaker NICHT tut:** er repariert den Zaehler nicht.
+`count_real_llm_calls_today_by_provider()` zaehlt weiterhin Datensaetze statt
+Aufrufe, und `mistral_budget_erschoepft` bleibt damit blind fuer
+Fehlschlaege. Das ist die naechste Baustelle - der Breaker macht sie nur
+weniger dringend, weil vergebliche Aufrufe jetzt gar nicht erst stattfinden.
