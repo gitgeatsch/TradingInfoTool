@@ -787,7 +787,146 @@ vom Modell und wie viele vom Gate kommen.
 nächsten Erweiterung wieder.
 
 
+
+---
+
+# 8e. Zwei Konzeptfragen: Bitpanda-Gebühren und Schwerpunkte/Screener (07.08.2026)
+
+**Anlass:** zwei Nutzer-Punkte vor dem H-4-Umbau — *„zu den Gebühren bei BP ist
+es problematisch, kannst du die aktuellen bzw. fehlenden Bereiche recherchieren
+und wir einigen uns auf ein Konzept, sonst wird es u. U. nicht handhabbar"* und
+*„was in deinem aktuellen Konzept noch nicht ausreichend Beachtung findet: die
+Screener-Seite und die thematische Einteilung … dann sollen die Vorschläge und
+Signale einen Fokus bzw. Priorität bei diesen setzen"*.
+
+## A. Bitpanda-Gebühren — recherchiert
+
+| Klasse | **Struktur** | Wert |
+|---|---|---|
+| Krypto, Standard (BTC) | prozentual, **im Kurs enthalten** | 0,99 % |
+| Krypto, Altcoins | prozentual, im Kurs | bis 2,49 % |
+| Krypto-Indizes | prozentual | 1,99 % |
+| Bitpanda Fusion (Vieltrader) | Maker/Taker + Spread | 0,02–0,25 % |
+| **Aktien / ETFs** | **FIX + Spread** | **1 € je Trade**, Spread bis 0,5 % |
+| Sparpläne (Aktien/ETF/ETC) | — | **kommissionsfrei** |
+| Edelmetalle (Bitpanda Metals) | prozentual, **asymmetrisch** | Gold 0,50 % Kauf / 1,00 % Verkauf · Silber 2,50 / 2,00 · Platin 2,50 / 2,00 · Palladium 2,20 / 1,80 |
+| Depot / Verwahrung | — | 0 |
+
+### Drei strukturelle Probleme, nicht nur falsche Zahlen
+
+**1. Aktien und ETFs haben eine FIXE Gebühr — der Einsatz kürzt sich nicht mehr
+heraus.** Das ist der Kern. Unser Kostenmodell beruht auf der Eigenschaft, dass
+`Kosten in R` nur an Hebel, Haltedauer und Stop-Abstand hängt. Bei 1 € pro Trade
+gilt das nicht mehr:
+
+| Position | Stop 5 % → Risiko | Gebühr Roundtrip | **Kosten in R** |
+|---|---|---|---|
+| 300 € | 15 € | 2 € | **0,133 R** |
+| 1.000 € | 50 € | 2 € | **0,040 R** |
+| 2.000 € | 100 € | 2 € | **0,020 R** |
+
+Das aktuelle Modell setzt für alle drei **0,400 R** an — also **3- bis 20-fach
+zu hoch**.
+
+**2. Die Gebühr ist bei Bitpanda nicht separat ausgewiesen — sie steckt im
+Kurs.** An 5.734 echten Trades geprüft: `Fiat-Betrag ÷ (Menge × Preis)` ergibt
+**0,000 % Median**. Aus den Transaktionsdaten allein ist die Gebühr also **nicht
+messbar**; es braucht einen Referenzkurs zum selben Zeitpunkt.
+
+**3. Krypto ist coin-abhängig** (0,99 % BTC bis 2,49 % Altcoin). Pauschal 1 % je
+Seite ist für BTC/ETH plausibel und für kleine Coins zu niedrig — also in die
+**andere** Richtung falsch als bei Aktien.
+
+### Konzeptvorschlag — drei Stufen, bewusst nicht symbolgenau
+
+Eine exakte Modellierung bräuchte je Symbol einen Satz, plus Positionsgröße,
+plus Kauf/Verkauf-Asymmetrie. Das ist nicht pflegbar — genau der
+Handhabbarkeits-Einwand. Stattdessen:
+
+**Stufe 1 — Struktur je Klasse statt eines Satzes für alle.** Zwei Kostenarten
+statt einer: `prozentual` (Krypto, Edelmetalle) und `fix_plus_spread`
+(Aktien/ETF/ETC). Das behebt den eigentlichen Fehler und ist ein überschaubarer
+Eingriff in `kosten_in_r()`.
+
+**Stufe 2 — ein konservativer Satz je Klasse, dokumentiert, nicht je Symbol.**
+Vorschlag als Ausgangspunkt:
+
+| Klasse | Ansatz |
+|---|---|
+| Krypto | 1,5 % je Seite (Mitte zwischen BTC 0,99 und Altcoin 2,49) |
+| Aktien / Themen-ETF | 1 € je Seite + 0,25 % Spread |
+| Rohstoff-ETCs | wie Aktien — es sind **börsengehandelte ETCs**, nicht Bitpanda Metals |
+| Hedge-ETPs | wie Aktien, **plus** laufende Gebühr (TER) — die fehlt heute ganz |
+
+> **Wichtige Abgrenzung:** OD7N/OD7H/OD7C/OD7L sind **ETCs über die Börse**,
+> nicht Bitpanda-Metals. Die Metals-Aufschläge (Silber 2,5 %/2,0 %!) gelten für
+> sie **nicht**. Wer sie verwechselt, rechnet mit dem Dreifachen.
+
+**Stufe 3 — messen statt schätzen, sobald die Datenlage es hergibt.** Der
+Spread ist gegen die eigene Kursreihe messbar: Handelspreis gegen Tagesschluss,
+Kauf und Verkauf getrennt. Erster Versuch mit dem 90-Tage-Exportfenster ergab
+n = 31 Käufe / 16 Verkäufe — **zu wenig für eine Aussage**, und der
+Tagesschluss-Vergleich mischt Intraday-Bewegung in den Spread. Gegen die
+vollständige OHLC-Tabelle auf dem Notebook wäre es belastbar. Bis dahin bleibt
+`kosten_belegt = False`, und das ist ehrlich.
+
+## B. Schwerpunkte und Screener — der Befund
+
+### Was heute existiert
+
+Sechs aktive Kategorie-Thesen mit Richtung:
+
+| Hauptgruppe | Richtung |
+|---|---|
+| energie | **übergewichten** |
+| edelmetalle | **übergewichten** |
+| agrarrohstoffe | neutral |
+| industriemetalle | neutral |
+| absicherung | aktiv / inaktiv |
+
+Dazu Prüfmechanismen (COT-Positionierung, M2-Liquidität, Zinskurve,
+Dollar-Index, EIA-Erdgas, Bärenmarkt-Overlay), 105 Synthese-Läufe, 16
+Änderungsvorschläge, und `these_abgleich` als Fakt in den Analysten für Aktien,
+Rohstoffe, Themen-ETF und Hedge.
+
+### Vier Lücken
+
+**1. Der Budget-Allocator kennt die Thesen nicht.** Keine einzige Erwähnung von
+These/Kategorie/Schwerpunkt in `agent/krypto/budget_allocator.py`. Eine
+**übergewichtete** Kategorie bekommt damit **keinen bevorzugten LLM-Slot** —
+genau der „Fokus", der gemeint ist, existiert an der Stelle nicht, wo er wirken
+müsste.
+
+**2. Keine aktive Benachrichtigung** für Screener-Kandidaten je Schwerpunkt.
+Der Gap ist seit dem **19.07.** bekannt („Lücke 7") und wurde **zweimal nur
+passiv** geschlossen: GUI-Sortierung (20.07.) und ein Score-Bonus als sekundärer
+Sortierschlüssel (25.07.). Nie bis zur Benachrichtigung zu Ende gedacht.
+
+**3. Die Thesen decken nur Rohstoff-Hauptgruppen und Absicherung ab.** Es gibt
+**keine These für Krypto, Aktien oder Themen-ETF** — obwohl das Beispiel des
+Nutzers ausdrücklich „KI" nennt. Ein Schwerpunkt „KI" ließe sich heute gar nicht
+setzen.
+
+**4. Kein Override.** Die Thesen entstehen aus Prüfmechanismen und
+LLM-Synthese. Ein manuell gesetzter Schwerpunkt („ab jetzt Fokus Rohstoffe") ist
+nicht vorgesehen.
+
+### Warum das H-4 vorgelagert ist
+
+Ein Akkumulations-Konzept beantwortet die Frage *„wann aufstocken?"*. Der
+Schwerpunkt beantwortet *„wo überhaupt hinsehen?"*. Baut man H-4 zuerst,
+entsteht eine Aufstockungslogik, die alle Kategorien gleich behandelt — und der
+Schwerpunkt müsste nachträglich wieder hineinoperiert werden.
+
+**Vorschlag zur Reihenfolge:** die Lücken 1, 3 und 4 sind klein und unabhängig
+voneinander baubar. Lücke 2 (Benachrichtigung) braucht die Detailklärung, die
+seit dem 30.07. dokumentiert offen ist (Trigger, Cooldown, E-Mail-Format).
+
+
 ## Quellen (extern)
+
+- [Bitpanda Gebühren — Aktien/ETF 1 € pro Transaktion + Spread, Edelmetall-Aufschläge, Handelsblatt](https://www.handelsblatt.com/erfahrungen/bitpanda-gebuehren/)
+- [Bitpanda Gebühren nach Anlageklasse — Krypto 0,00–2,49 %, Fusion 0,02–0,25 %, Finanzfuchs](https://finanzfuchs.de/bitpanda-gebuehren/)
 
 - [System Quality Number — Formel und Bewertungsskala, QuantMonitor](https://quantmonitor.net/system-quality-number-sqn/)
 - [SQN und Mindest-Stichprobengröße, JournalPlus](https://journalplus.co/metrics/system-quality-number/)

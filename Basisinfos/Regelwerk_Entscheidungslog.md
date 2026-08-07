@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (195 Einträge)
+## Index nach Thema (196 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -121,7 +121,9 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-05** — `halte_kriterium` erstmals ausgewertet - kein Trennnachweis, zwei strukturelle Maengel
 - **2026-08-06** — Die drei neuen Fakten sind im Betrieb ANGEKOMMEN (22/22) - Verifikation abgeschlossen, Zaehler-Fehler behoben
 
-### Datenquellen / APIs (28)
+### Datenquellen / APIs (29)
+
+- **2026-08-07** — Bitpanda-Gebühren recherchiert (Aktien/ETF **fix 1 €**, nicht prozentual — Kostenmodell 3–20× zu hoch) + Schwerpunkte/Screener: vier Lücken, Allocator kennt die Thesen nicht
 
 - **2026-08-07** — Offene Punkte recherchiert und priorisiert (Zwischenstand 8b): vier von sieben Einträgen veraltet; `umgesetzt` fehlt auf `hebel_signals` komplett — Export-Fehlversuch zurückgenommen
 
@@ -14187,3 +14189,67 @@ Horizont kalibriert.
 
 **Bewusst nichts davon heute gebaut** - die Frage war eine Recherche, und jede
 dieser drei Aenderungen braucht eine eigene Entscheidung ueber die Zahlen.
+
+
+---
+
+## Nachtrag (2026-08-07): Bitpanda-Gebuehren recherchiert und Schwerpunkte/Screener geprueft - zwei Konzeptfragen vor H-4
+
+Vollstaendig in `Zwischenstand_Gesamtprojekt_06_08.md` **Abschnitt 8e**.
+
+### Gebuehren: drei STRUKTURELLE Probleme, nicht nur falsche Zahlen
+
+**1. Aktien und ETFs haben bei Bitpanda eine FIXE Gebuehr** - 1 EUR je Trade
+plus Spread bis 0,5 %, unabhaengig vom Ordervolumen. Damit **kuerzt sich der
+Einsatz nicht mehr heraus**, und genau darauf beruht unser Kostenmodell. Bei
+einem 5-%-Stop: 300-EUR-Position 0,133 R, 1.000 EUR 0,040 R, 2.000 EUR 0,020 R -
+das Modell setzt fuer alle drei **0,400 R** an, also drei- bis zwanzigfach zu
+hoch.
+
+**2. Die Gebuehr ist nicht separat ausgewiesen, sie steckt im Kurs.** An 5.734
+echten Trades geprueft: `Fiat / (Menge x Preis)` ergibt **0,000 % Median**. Aus
+den Transaktionsdaten allein ist sie nicht messbar.
+
+**3. Krypto ist coin-abhaengig** (0,99 % BTC bis 2,49 % Altcoin) - pauschal 1 %
+ist fuer BTC plausibel und fuer kleine Coins zu niedrig, also in die
+GEGENRICHTUNG falsch wie bei Aktien.
+
+**Wichtige Abgrenzung, die leicht schiefgeht:** OD7N/OD7H/OD7C/OD7L sind
+BOERSENGEHANDELTE ETCs, nicht Bitpanda Metals. Die Metals-Aufschlaege (Silber
+2,5 % Kauf / 2,0 % Verkauf) gelten fuer sie NICHT. Wer das verwechselt, rechnet
+mit dem Dreifachen.
+
+**Konzept in drei Stufen** (Details in 8e): Struktur je Klasse statt eines
+Satzes fuer alle (`prozentual` gegen `fix_plus_spread`), dann ein konservativer
+Satz je Klasse statt je Symbol, dann messen statt schaetzen. Der Spread ist
+gegen die eigene Kursreihe messbar - erster Versuch mit dem 90-Tage-Fenster
+ergab n=31/16, zu wenig; gegen die volle OHLC-Tabelle auf dem Notebook waere es
+belastbar. Bis dahin bleibt `kosten_belegt = False`.
+
+### Schwerpunkte/Screener: vier Luecken
+
+Es existieren **sechs aktive Kategorie-Thesen** (energie und edelmetalle
+uebergewichten, agrar/industriemetalle neutral, absicherung), Pruefmechanismen,
+105 Synthese-Laeufe und `these_abgleich` als Fakt in vier Analysten.
+
+Was fehlt:
+
+1. **Der Budget-Allocator kennt die Thesen nicht** - keine Erwaehnung von
+   These/Kategorie/Schwerpunkt. Eine uebergewichtete Kategorie bekommt keinen
+   bevorzugten LLM-Slot. Genau der "Fokus", um den es geht, fehlt an der
+   Stelle, an der er wirken muesste.
+2. **Keine aktive Benachrichtigung** fuer Screener-Kandidaten je Schwerpunkt -
+   der Gap ist seit dem 19.07. bekannt und wurde ZWEIMAL nur passiv geschlossen
+   (GUI-Sortierung 20.07., Score-Bonus 25.07.).
+3. **Die Thesen decken nur Rohstoff-Hauptgruppen und Absicherung ab** - es gibt
+   keine These fuer Krypto, Aktien oder Themen-ETF. Ein Schwerpunkt "KI", den
+   der Nutzer als Beispiel nennt, liesse sich heute gar nicht setzen.
+4. **Kein Override** - ein manuell gesetzter Schwerpunkt ist nicht vorgesehen.
+
+> **Warum das H-4 vorgelagert ist:** ein Akkumulations-Konzept beantwortet "wann
+> aufstocken?", der Schwerpunkt "wo ueberhaupt hinsehen?". Baut man H-4 zuerst,
+> entsteht eine Aufstockungslogik, die alle Kategorien gleich behandelt - und
+> der Schwerpunkt muesste nachtraeglich hineinoperiert werden.
+
+Quellen: Handelsblatt (Bitpanda-Gebuehren je Anlageklasse), Finanzfuchs
+(Krypto-Spreads und Fusion-Staffel).
