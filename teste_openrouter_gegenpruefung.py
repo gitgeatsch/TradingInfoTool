@@ -50,6 +50,63 @@ for verdaechtig in ("gpt-4o", "anthropic/claude-sonnet-4", "meta-llama/llama-4-s
     except Exception:
         pruefe(f"A3 {verdaechtig} abgewiesen", False, "anderer Fehler - Call ging evtl. raus")
 
+print("\nE) ROTATION - Ausfall eines Modells darf kein Ausfall des Anbieters sein")
+from api.openrouter import FREE_MODELLE
+
+pruefe("E1 die Liste hat mehrere Modelle", len(FREE_MODELLE) >= 3, str(len(FREE_MODELLE)))
+pruefe("E2 JEDER Eintrag ist :free - auch die Reserve",
+       all(m.endswith(":free") for m in FREE_MODELLE),
+       "ein vergessenes Suffix waere eine Zeitbombe, die erst beim Rueckfall zuendet")
+pruefe("E3 keine Doppelten", len(set(FREE_MODELLE)) == len(FREE_MODELLE))
+
+
+def probe_client(scheitern_bei):
+    """Rotation ohne Netz - aber mit der ECHTEN Klasse.
+
+    Bewusst keine Unterklasse: `llm_model_label()` erkennt den Anbieter am
+    Modulnamen, und eine im Testskript definierte Unterklasse lebt in
+    `__main__` - der Test wuerde dann etwas anderes pruefen als den Produktivfall.
+    (Diese Modulnamen-Erkennung ist eine bekannte Sproedigkeit von
+    llm_provider.py, hier nur umgangen, nicht behoben.)
+    """
+    c = OpenRouterClient("test")
+    c.versuche = []
+
+    def _ein_call(messages, model, temperature, response_format):
+        c.versuche.append(model)
+        if model in scheitern_bei:
+            raise RuntimeError("404 unavailable for free")
+        c.letztes_modell = model
+        return '{"bewertung":"konsistent"}'
+
+    c._ein_call = _ein_call
+    return c
+
+
+p2 = probe_client(FREE_MODELLE[:2])
+antwort = p2.chat([{"role": "user", "content": "x"}])
+pruefe("E4 rotiert der Reihe nach weiter",
+       p2.versuche == list(FREE_MODELLE[:3]), str(p2.versuche))
+pruefe("E5 liefert die Antwort des Modells, das getragen hat",
+       antwort == '{"bewertung":"konsistent"}')
+pruefe("E6 das Label nennt das TATSAECHLICHE Modell, nicht den Listenkopf",
+       llm_model_label(p2) == f"openrouter:{FREE_MODELLE[2]}",
+       llm_model_label(p2) + "  - sonst waere jede Provider-Auswertung gelogen")
+
+try:
+    probe_client(set(FREE_MODELLE)).chat([{"role": "user", "content": "x"}])
+    pruefe("E7 alle Modelle tot -> Fehler", False, "kein Fehler geworfen")
+except RuntimeError as exc:
+    pruefe("E7 alle Modelle tot -> Fehler mit Anzahl",
+           str(len(FREE_MODELLE)) in str(exc),
+           "erst DANN sieht der Circuit Breaker einen Anbieter-Ausfall")
+
+p3 = probe_client(())
+p3.chat([{"role": "user", "content": "x"}], model=FREE_MODELLE[2])
+pruefe("E8 mit ausdruecklichem model wird NICHT rotiert",
+       p3.versuche == [FREE_MODELLE[2]],
+       "Vergleichslaeufe muessen genau das messen, was sie angeben")
+
 print("\nB) DER CLIENT GEHOERT NICHT IN DIE SIGNAL-KETTE")
 haupt = io.open("main.py", encoding="utf-8").read()
 pruefe("B1 wird NICHT als mistral_client/gemini_client uebergeben",

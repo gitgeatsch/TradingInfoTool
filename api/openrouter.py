@@ -78,7 +78,40 @@ FREE_SUFFIX = ":free"
 # Der zuvor eingetragene deepseek-r1:free war aus der Free-Liste rotiert und
 # lieferte 404 mit dem Hinweis auf die BEZAHLTE Variante - der :free-Schutz in
 # chat() hat das abgefangen, es floss kein Geld.
-DEFAULT_MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free"
+# GEORDNETE MODELL-LISTE STATT EINES FESTGENAGELTEN MODELLS (2026-08-07,
+# Nutzer-Idee). Der erste Eintrag wird zuerst versucht; faellt er aus, geht es
+# der Reihe nach weiter.
+#
+# WARUM DAS NOETIG IST: die Free-Liste rotiert ohne Vorwarnung, und das ist
+# nicht theoretisch - beim allerersten echten Lauf war `deepseek-r1:free`
+# bereits verschwunden (404 mit Verweis auf die BEZAHLTE Variante). Mit einem
+# einzelnen Modell heisst das Ausfall bis jemand von Hand nachzieht.
+#
+# WARUM DAS NICHT DER ALTE ABLEHNUNGSGRUND IST: Runde 4 verwarf OpenRouter u.a.
+# weil "das zugrundeliegende Modell pro Call wechselt, nicht vorhersagbar".
+# Das betraf OpenRouters AUTO-ROUTER. Hier ist das Gegenteil der Fall: WIR
+# bestimmen die Reihenfolge, jeder Call nennt genau ein explizites Modell, und
+# welches geantwortet hat, steht hinterher in der DB (siehe `letztes_modell`).
+#
+# Reihenfolge nach Messung vom 07.08. (Konsistenzfrage mit bekannter Antwort):
+# groesster Kontext und schnellste Antwort zuerst.
+FREE_MODELLE = (
+    "nvidia/nemotron-3-ultra-550b-a55b:free",   # 1.000.000 Kontext,  7,6 s
+    "nvidia/nemotron-3-super-120b-a12b:free",   #   262.144 Kontext, 12,8 s
+    "openai/gpt-oss-20b:free",                  #   131.072 Kontext, 11,2 s
+    "google/gemma-4-31b-it:free",               #   262.144 Kontext, am 07.08. 429
+    "nvidia/nemotron-3-nano-30b-a3b:free",      #   256.000 Kontext, Reserve
+)
+
+# Rueckwaertskompatibel: einzelne Aufrufer und Tests nennen weiterhin ein Modell.
+DEFAULT_MODEL = FREE_MODELLE[0]
+
+# Regel 1 gilt fuer die ganze Liste, nicht nur fuer den Standardwert - ein
+# vergessenes Suffix in einem Reserve-Eintrag waere sonst eine Zeitbombe, die
+# erst beim Ausfall der davorstehenden Modelle zuendet.
+assert all(m.endswith(":free") for m in FREE_MODELLE), (
+    "Jeder Eintrag in FREE_MODELLE muss auf ':free' enden - sonst kostet der "
+    "Rueckfall echtes Guthaben.")
 
 # Free-Tier: 20 Anfragen/Minute (OpenRouter-Doku, Stand 07.08.2026). Ein
 # eigener Drosselwert statt blindem Feuern - dieselbe Bauart wie bei Z.ai.
@@ -99,6 +132,10 @@ class OpenRouterClient:
         self._session = session or requests.Session()
         self._lock = threading.Lock()
         self._letzter_call = 0.0
+        # Welches Modell hat zuletzt tatsaechlich geantwortet? Ohne das waere
+        # die Rotation eine stille Qualitaetsaenderung: in der DB stuende ein
+        # 550B-Modell, geantwortet haette vielleicht ein 20B.
+        self.letztes_modell: str | None = None
 
     def _respect_rate_limit(self) -> None:
         with self._lock:
@@ -111,9 +148,49 @@ class OpenRouterClient:
     def chat(
         self,
         messages: list[dict],
-        model: str = DEFAULT_MODEL,
+        model: str | None = None,
         temperature: float = 0.3,
         response_format: dict | None = None,
+    ) -> str:
+        """Ruft der Reihe nach die Modelle aus FREE_MODELLE auf, bis eines
+        antwortet. Mit ausdruecklichem `model` wird NICHT rotiert - Tests und
+        Vergleichslaeufe sollen genau das messen, was sie angeben.
+
+        Das Gesundheits-Tracking (`@track_api_health`) sieht nur das Ergebnis
+        der GANZEN Kette: ein Fehler wird erst vermerkt, wenn alle Modelle
+        gescheitert sind. Ein einzelnes weggerotiertes Modell ist kein
+        Anbieter-Ausfall und darf den Circuit Breaker nicht ausloesen.
+        """
+        if model is not None:
+            return self._ein_call(messages, model, temperature, response_format)
+
+        letzter_fehler: Exception | None = None
+        for kandidat in FREE_MODELLE:
+            try:
+                antwort = self._ein_call(messages, kandidat, temperature, response_format)
+                if kandidat != FREE_MODELLE[0]:
+                    logger.info(
+                        "OpenRouter: %s hat geantwortet (Rueckfall - %s war nicht "
+                        "verfuegbar). Steht die Liste dauerhaft auf einem spaeteren "
+                        "Eintrag, lohnt ein Blick auf GET /api/v1/models.",
+                        kandidat, FREE_MODELLE[0],
+                    )
+                return antwort
+            except Exception as exc:  # noqa: BLE001
+                letzter_fehler = exc
+                logger.info("OpenRouter: %s nicht nutzbar (%s) - naechstes Modell",
+                            kandidat, str(exc)[:120])
+        raise RuntimeError(
+            f"Kein Modell aus FREE_MODELLE hat geantwortet ({len(FREE_MODELLE)} "
+            f"versucht). Letzter Fehler: {letzter_fehler}"
+        ) from letzter_fehler
+
+    def _ein_call(
+        self,
+        messages: list[dict],
+        model: str,
+        temperature: float,
+        response_format: dict | None,
     ) -> str:
         # REGEL 1 aus dem Modul-Docstring, hier durchgesetzt statt vorausgesetzt.
         # Ein Tippfehler in einer Modell-ID waere sonst eine stille Abbuchung.
@@ -139,4 +216,5 @@ class OpenRouterClient:
         response = self._session.post(BASE_URL, json=payload, headers=headers, timeout=90)
         response.raise_for_status()
         daten = response.json()
+        self.letztes_modell = model
         return daten["choices"][0]["message"]["content"]

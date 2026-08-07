@@ -35,7 +35,12 @@ def llm_model_label(llm_client) -> str:
     if module.endswith("openrouter"):
         from api.openrouter import DEFAULT_MODEL
 
-        return f"openrouter:{DEFAULT_MODEL}"
+        # Das TATSAECHLICH verwendete Modell, nicht die Konstante (2026-08-07).
+        # OpenRouter rotiert bei Ausfall durch FREE_MODELLE - stuende hier fest
+        # der erste Eintrag, waere jede spaetere Provider-Auswertung gelogen:
+        # in der DB ein 550B-Modell, geantwortet haette vielleicht ein 20B.
+        benutzt = getattr(llm_client, "letztes_modell", None) or DEFAULT_MODEL
+        return f"openrouter:{benutzt}"
     if module.endswith("zai"):
         from api.zai import DEFAULT_MODEL
 
