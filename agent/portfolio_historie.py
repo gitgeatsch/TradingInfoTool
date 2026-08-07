@@ -146,6 +146,17 @@ MAX_ALTER_FUER_PLAUSIBILITAET_TAGE = 5
 # plausibel aussehender Falschwert; dasselbe Prinzip wie bei der FX-Ableitung.
 MIN_ABDECKUNG_FUER_TAGESWERT = 0.80
 
+# Welche FX-Verwuerfe wurden in DIESEM Prozess schon gemeldet, und wie oft kamen
+# sie seither wieder? Siehe tages_fx_kurse() fuer die Begruendung - kurz: die
+# Ableitung laeuft bei jeder Bewertung neu, und ein einziger verworfener Tag
+# erzeugte dadurch am 07.08. zwanzig identische WARNING-Zeilen in vier Minuten.
+#
+# Bewusst prozesslokal und ohne Aufraeumen: nach einem Neustart soll die Lage
+# wieder EINMAL im Log stehen (sonst verschwindet sie fuer den, der nur das
+# frische Log liest), und die Zahl der moeglichen Schluessel ist durch die Zahl
+# der Handelstage begrenzt.
+_FX_VERWURF_GEMELDET: dict[tuple[str, float, str], int] = {}
+
 
 @dataclass
 class SymbolDiagnose:
@@ -254,12 +265,34 @@ def tages_fx_kurse(conn: sqlite3.Connection) -> tuple[dict[str, float], list[str
             # medianer Abweichung - zwoelfmal so viel wie das naechstschlechte.
             abstaende = {s: abs(w - median) / median for s, w in je_symbol[datum].items()}
             schlimmster = max(abstaende, key=abstaende.get) if abstaende else "?"
-            logger.warning(
-                "FX-Ableitung %s verworfen: %d Symbole, Interquartilsabstand %.1f%% "
-                "(Grenze %.0f%%) - groesster Ausreisser %s mit %.1f%% Abweichung",
-                datum, len(werte), streuung * 100, MAX_FX_STREUUNG_RELATIV * 100,
-                schlimmster, abstaende.get(schlimmster, 0) * 100,
-            )
+            # NUR EINMAL JE LAGE MELDEN (2026-08-07, Nutzer-Fund im Log).
+            #
+            # Diese Funktion wird bei jeder Bewertung neu aufgerufen - am 07.08.
+            # dutzendfach pro Minute. Sie meldete jedes Mal DENSELBEN laengst
+            # bekannten Tag: ein einziger verworfener Tag (06.08.) erzeugte
+            # zwanzig Zeilen in vier Minuten. In diesem Takt ersaeuft jeder
+            # echte Fund, und das Log wird als Diagnosewerkzeug wertlos.
+            #
+            # Der Schluessel enthaelt die gerundete Streuung, nicht nur das
+            # Datum: aendert sich die Lage an einem bekannten Tag wirklich
+            # (neue Kursdaten, anderer Ausreisser), wird wieder gemeldet.
+            # Stumm wird nur die WIEDERHOLUNG derselben Aussage.
+            schluessel = (datum, round(streuung, 4), schlimmster)
+            if schluessel in _FX_VERWURF_GEMELDET:
+                _FX_VERWURF_GEMELDET[schluessel] += 1
+                logger.debug(
+                    "FX-Ableitung %s erneut verworfen (%d. Mal, unveraenderte Lage)",
+                    datum, _FX_VERWURF_GEMELDET[schluessel],
+                )
+            else:
+                _FX_VERWURF_GEMELDET[schluessel] = 1
+                logger.warning(
+                    "FX-Ableitung %s verworfen: %d Symbole, Interquartilsabstand %.1f%% "
+                    "(Grenze %.0f%%) - groesster Ausreisser %s mit %.1f%% Abweichung. "
+                    "Wiederholungen derselben Lage laufen ab jetzt auf DEBUG.",
+                    datum, len(werte), streuung * 100, MAX_FX_STREUUNG_RELATIV * 100,
+                    schlimmster, abstaende.get(schlimmster, 0) * 100,
+                )
             verworfen.append(datum)
             continue
         kurse[datum] = median

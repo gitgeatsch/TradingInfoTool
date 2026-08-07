@@ -14848,3 +14848,79 @@ Dreizehn Testsuiten und die Signaturpruefung gruen.
 Die "30 von 33 Symbolen ohne Kurs" aus der Bewertungs-Diagnose sind **kein**
 Befund: gezaehlt werden Symbole mit mindestens EINEM fehlenden Tag im
 91-Tage-Fenster - bei Boersenwerten sind das die Wochenenden.
+
+## Nachtrag (2026-08-07): FX-Verwurf nur noch einmal im Log — und dabei gemessen, warum Mistrals Budget "nie" aufgebraucht ist
+
+### B: ein verworfener Tag, zwanzig Warnzeilen
+
+Nutzer-Fund im Log nach dem App-Neustart: `FX-Ableitung 2026-08-06 verworfen`
+stand zwanzigmal in vier Minuten. Die Bewertung ruft `tages_fx_kurse()` bei
+jedem Durchlauf neu auf, und die Funktion meldete jedes Mal **denselben laengst
+bekannten Tag**.
+
+Die Zahl dahinter ist harmlos: **ein** Tag verworfen (06.08.,
+Interquartilsabstand 2,2 % gegen die Grenze 2,0 %). Der Schaden lag allein im
+Takt - in diesem Rhythmus ersaeuft jeder echte Fund, und das Log wird als
+Diagnosewerkzeug wertlos. Genau darauf stuetzt sich aber die stehende Regel
+"nach dem Deploy ins Log schauen".
+
+**Der Fix ist eine Stummschaltung der Wiederholung, keine der Aussage.** Der
+Schluessel enthaelt Datum, gerundete Streuung UND den groessten Ausreisser:
+aendert sich die Lage wirklich, wird wieder auf WARNING gemeldet. Wiederholungen
+derselben Aussage laufen auf DEBUG und werden gezaehlt. Der Verwurf selbst
+bleibt unveraendert im Rueckgabewert - der Export verliert nichts.
+
+Der Zustand ist bewusst prozesslokal und wird nicht aufgeraeumt: nach einem
+Neustart soll die Lage wieder **einmal** im Log stehen, sonst verschwindet sie
+fuer den, der nur das frische Log liest.
+
+Vier neue Pruefungen in `teste_tageswert_abdeckung.py` (Abschnitt D), darunter
+D4: geaenderte Lage muss wieder melden - sonst waere aus der Entlastung eine
+Vertuschung geworden.
+
+### C: warum Mistrals Budget "nach einem halben Tag" erschoepft schien
+
+Nutzer-Beobachtung: *"das Budget war noch NIE nach einem halben Tag aufgebraucht
+- entweder laufen Abfragen ohne Zaehler oder Mistral hat weiter eingeschraenkt."*
+**Beides trifft zu, und der erste Punkt ist strukturell.**
+
+**Der Zaehler zaehlt Zeilen, nicht Aufrufe.**
+`db.count_real_llm_calls_today_by_provider()` zaehlt Datensaetze in
+`hebel_signals`/`signals`/`marktscan_candidates`, deren Modellspalte mit dem
+Anbieterpraefix beginnt. Ein Aufruf, der **fehlschlaegt**, erzeugt keine Zeile -
+und wird deshalb nie gezaehlt. Im Allocator steht das Hochzaehlen konsequenterweise
+im Erfolgspfad; der `except`-Zweig loggt nur auf INFO.
+
+Das war fuer das Qualitaets-Tracking richtig gedacht (ein nie zustande
+gekommener Call soll die Provider-Statistik nicht verfaelschen) - aber dieselbe
+Zahl wird als **Budget**-Zaehler benutzt, und dafuer ist sie falsch.
+
+**Die Messung am Export vom 07.08. 15:16:**
+
+| | Wert |
+|---|---|
+| `llm_calls_heute` | groq 0, mistral **0**, gemini 142 |
+| Spot-Signale heute | 56, **alle** von Gemini |
+| Hebel-Signale heute | 86, **alle** von Gemini |
+| Mistral historisch (Sendezaehler) | 1952 Krypto, 1326 Hebel - klar der Hauptanbieter |
+
+Mistral steht in der Kette an **erster** Stelle und wird fuer jeden Kandidaten
+zuerst versucht. Es gibt **keinen Circuit Breaker**: nach dem 402 faellt der
+Lauf sofort auf Gemini, und beim naechsten Kandidaten beginnt dasselbe von
+vorn. `mistral_budget_erschoepft` kann dabei nie True werden, weil der Zaehler
+auf 0 stehen bleibt.
+
+Gemessene Folge fuer heute: **mindestens 142 vergebliche Mistral-Versuche**,
+plus der Aufruf der Kategorie-Synthese - jeder davon unsichtbar im Zaehler und
+jeder davon zusaetzliche Latenz vor jedem einzelnen Signal.
+
+**402 ist kein Rate-Limit.** Ein erschoepftes Kontingent liefert 429; 402
+Payment Required ist eine Konto-/Berechtigungsfrage. Die Erwartung "morgen ist
+das Kontingent wieder da" traegt also nicht - das muss am Mistral-Konto geklaert
+werden, nicht im Code.
+
+**Noch nicht gebaut, bewusst:** ein Zaehler fuer VERSUCHE (statt Erfolge) und
+ein Circuit Breaker, der einen Anbieter nach N aufeinanderfolgenden
+Fehlschlaegen fuer den Rest des Laufs ueberspringt. Beides ist die richtige
+Konsequenz, aber es ist eine Aenderung an der Kette selbst - und die gehoert
+nicht in denselben Commit wie ein Logging-Fix.

@@ -106,5 +106,63 @@ for name, anzahl in (("05.08.: 1 von 33", 1), ("06.08.: 14 von 33", 14)):
         conn.execute("DELETE FROM holdings WHERE symbol = ?", (s,))
     conn.commit()
 
+print("\nD) FX-VERWURF WIRD EINMAL GEMELDET, NICHT ZWANZIGMAL")
+# ANLASS (07.08., Nutzer-Fund im Log): EIN verworfener Tag erzeugte zwanzig
+# identische WARNING-Zeilen in vier Minuten, weil die Ableitung bei jeder
+# Bewertung neu laeuft. In diesem Takt ersaeuft jeder echte Fund.
+import io as _io
+import logging
+
+import agent.portfolio_historie as _ph
+
+_ph._FX_VERWURF_GEMELDET.clear()
+_TAG = "2026-08-06"
+for i in range(35):
+    # Ein Ausreisser plus eine gespaltene Gruppe -> Interquartilsabstand ueber
+    # der Grenze, also ein echter Verwurf.
+    quot = 0.86 + (0.05 if i == 0 else 0.0) + (0.02 if i < 12 else 0.0)
+    for waehrung, kurs in (("USD", 100.0), ("EUR", quot * 100.0)):
+        conn.execute(
+            "INSERT OR REPLACE INTO price_history_ohlc "
+            "(symbol,date,currency,open,high,low,close,volume,fetched_at) "
+            "VALUES (?,?,?,?,?,?,?,0,?)",
+            (f"FX{i}", _TAG, waehrung, kurs, kurs, kurs, kurs, heute.isoformat()))
+conn.commit()
+
+_puffer = _io.StringIO()
+_h = logging.StreamHandler(_puffer)
+_h.setLevel(logging.WARNING)
+_log = logging.getLogger("agent.portfolio_historie")
+_log.addHandler(_h)
+_log.setLevel(logging.DEBUG)
+
+for _ in range(20):
+    _kurse, _verworfen = _ph.tages_fx_kurse(conn)
+_zeilen = [z for z in _puffer.getvalue().splitlines() if "FX-Ableitung" in z]
+pruefe("D1 zwanzig Aufrufe erzeugen EINE Warnzeile", len(_zeilen) == 1,
+       f"{len(_zeilen)} Zeilen")
+pruefe("D2 der Verwurf steht weiter im Rueckgabewert - der Export verliert ihn nicht",
+       _TAG in _verworfen, str(_verworfen))
+pruefe("D3 die Wiederholungen werden gezaehlt, nicht verschluckt",
+       max(_ph._FX_VERWURF_GEMELDET.values()) == 20,
+       str(dict(_ph._FX_VERWURF_GEMELDET)))
+
+# Aendert sich die Lage WIRKLICH, muss wieder gemeldet werden - sonst waere aus
+# der Entlastung eine Vertuschung geworden.
+_puffer.truncate(0)
+_puffer.seek(0)
+for i in range(12, 24):
+    quot = 0.86 + 0.03
+    conn.execute(
+        "UPDATE price_history_ohlc SET open=?, high=?, low=?, close=? "
+        "WHERE symbol=? AND date=? AND currency='EUR'",
+        (quot * 100, quot * 100, quot * 100, quot * 100, f"FX{i}", _TAG))
+conn.commit()
+_ph.tages_fx_kurse(conn)
+_neue = [z for z in _puffer.getvalue().splitlines() if "FX-Ableitung" in z]
+pruefe("D4 geaenderte Lage wird wieder gemeldet", len(_neue) == 1,
+       f"{len(_neue)} Zeilen - Stummschaltung gilt nur fuer dieselbe Aussage")
+_log.removeHandler(_h)
+
 print("\n" + ("ALLE TESTS BESTANDEN" if not fehler else f"FEHLER: {fehler}"))
 conn.close()
