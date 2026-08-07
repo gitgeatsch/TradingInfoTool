@@ -1805,3 +1805,33 @@ screener:
 # P-10-Regel wie beim Gate RM-Bitpanda: unbekannt ist kein Ausschlussgrund.
 marktsuche:
   nur_bitpanda_gelistet: true
+
+# ---------------------------------------------------------------------------
+# MANUELLE SCHWERPUNKTE (2026-08-07)
+#
+# WOFUER. Nutzer-Sorge im Wortlaut: *"wenn z.B. ein Thema trendet, bekommen
+# andere wichtige Bereiche keinen Raum, obwohl ich der Meinung bin, dass Energie
+# aktuell unterbewertet ist und zukuenftig massiv steigen wird - und diese
+# Trades werden vergessen bzw. gehen unter."*
+#
+# Das dreht die uebliche Anforderung um. Ein Mechanismus, der Aufmerksamkeit
+# nach TRENDSTAERKE verteilt, wuerde systematisch das Gegenteil dessen tun, was
+# antizyklisches Investieren braucht: ein Themenfeld ist oft gerade dann
+# interessant, WEIL niemand hinsieht.
+#
+# WAS EIN EINTRAG HIER BEWIRKT:
+#   1. Die Kategorie wird von der Gleichzeitigkeits-Moderation NIE
+#      zurueckgestellt - sie konkurriert nicht um die automatischen Plaetze.
+#   2. Sie wird bei knappem Budget ZUERST bedient.
+#   3. Sie ist in Screener und Thesen-Tab als gesetzter Schwerpunkt erkennbar.
+#
+# WAS ER NICHT BEWIRKT: er erfindet keine These. Ein Schwerpunkt sorgt dafuer,
+# dass ein Themenfeld Raum BEKOMMT - ob die Pruefmechanismen dann eine
+# Uebergewichtung hergeben, entscheiden weiterhin die Daten. Ein Schwerpunkt ist
+# eine Aufmerksamkeits-Entscheidung, keine Richtungsvorgabe.
+#
+# Format: "hauptgruppe" oder "hauptgruppe:unterkategorie" (siehe
+# Basisinfos/kategorien.yaml). Leere Liste = keine Schwerpunkte gesetzt, alles
+# laeuft rein automatisch.
+schwerpunkte:
+  manuell: []

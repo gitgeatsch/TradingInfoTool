@@ -159,18 +159,46 @@ def _bestimme_gesperrte_fall_a_kandidaten(
     reife = _reife_fall_a_kandidaten(conn, jetzt)
     if not reife:
         return set()
+
+    # MANUELLE SCHWERPUNKTE KONKURRIEREN NICHT (2026-08-07, Schritt 3).
+    #
+    # Nutzer-Sorge im Wortlaut: *"wenn z.B. ein Thema trendet, bekommen andere
+    # wichtige Bereiche keinen Raum, obwohl ich der Meinung bin, dass Energie
+    # aktuell unterbewertet ist ... und diese Trades werden vergessen bzw. gehen
+    # unter."*
+    #
+    # Das dreht die uebliche Anforderung um: ein Mechanismus, der Aufmerksamkeit
+    # nach TRENDSTAERKE verteilt, tut systematisch das Gegenteil dessen, was
+    # antizyklisches Investieren braucht - ein Themenfeld ist oft gerade dann
+    # interessant, WEIL niemand hinsieht.
+    #
+    # Ein gesetzter Schwerpunkt wird deshalb NIE zurueckgestellt. Er zaehlt auch
+    # nicht gegen das Budget der automatischen Kandidaten: sonst wuerde er
+    # denselben Verdraengungswettbewerb nur von der anderen Seite fuehren.
+    geschuetzt = {k for k in reife if config.ist_manueller_schwerpunkt(k[0], k[1])}
+    wettbewerber = [k for k in reife if k not in geschuetzt]
+    if geschuetzt:
+        logger.info(
+            "Kategorie-Vorschlaege: %d reife Kandidaten sind gesetzte Schwerpunkte und "
+            "umgehen die Gleichzeitigkeits-Moderation (%s)",
+            len(geschuetzt), ", ".join(f"{h}/{u or '-'}" for h, u in sorted(geschuetzt)),
+        )
+    if not wettbewerber:
+        return set()
+
     aktuelle_anzahl = len(db.get_aktive_thesen(conn))
     budget = max(0, richtgroesse_max - aktuelle_anzahl)
-    if len(reife) <= budget:
+    if len(wettbewerber) <= budget:
         return set()
     if schicht2 is None:
         logger.info(
             "Kategorie-Vorschlaege: %d Fall-A-Kandidaten reif, Richtgroesse (%d) wuerde ueberschritten, "
             "aber kein aktuelles Schicht-2-Ergebnis vorhanden - unmoderiert (P-8).",
-            len(reife), richtgroesse_max,
+            len(wettbewerber), richtgroesse_max,
         )
         return set()
-    reife_sortiert = sorted(reife, key=lambda k: (schicht2.get(k) or {}).get("prioritaet_rang") or 10_000)
+    reife_sortiert = sorted(wettbewerber,
+                            key=lambda k: (schicht2.get(k) or {}).get("prioritaet_rang") or 10_000)
     gesperrte = set(reife_sortiert[budget:])
     logger.info(
         "Kategorie-Vorschlaege: Gleichzeitigkeits-Moderation aktiv - %d von %d Fall-A-Kandidaten werden "

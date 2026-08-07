@@ -857,6 +857,103 @@ def _kategorie_klartext(hauptgruppe: str, unterkategorie: str | None) -> str | N
     return None
 
 
+def manuelle_schwerpunkte() -> list[tuple[str, str | None]]:
+    """Vom Nutzer gesetzte Themen-Schwerpunkte (2026-08-07).
+
+    Siehe Basisinfos/config.yaml, Block `schwerpunkte`, fuer die Begruendung -
+    kurz: ein Mechanismus, der Aufmerksamkeit nach Trendstaerke verteilt, wuerde
+    das Gegenteil dessen tun, was antizyklisches Investieren braucht. Ein
+    gesetzter Schwerpunkt behaelt seinen Platz auch dann, wenn gerade ein
+    anderes Thema laeuft.
+
+    Rueckgabe: [(hauptgruppe, unterkategorie|None), ...]
+    """
+    roh = (load_config().get("schwerpunkte") or {}).get("manuell") or []
+    ergebnis: list[tuple[str, str | None]] = []
+    for eintrag in roh:
+        teile = str(eintrag).split(":", 1)
+        ergebnis.append((teile[0].strip(), teile[1].strip() if len(teile) > 1 else None))
+    return ergebnis
+
+
+def ist_manueller_schwerpunkt(hauptgruppe: str | None,
+                              unterkategorie: str | None = None) -> bool:
+    """Ist diese Kategorie ein gesetzter Schwerpunkt?
+
+    Ein Eintrag auf HAUPTGRUPPEN-Ebene deckt alle ihre Unterkategorien ab -
+    "energie" schuetzt damit auch "energie:erdgas". Umgekehrt schuetzt ein
+    Eintrag auf Unterkategorie-Ebene NUR diese eine.
+    """
+    if not hauptgruppe:
+        return False
+    for hg, uk in manuelle_schwerpunkte():
+        if hg != hauptgruppe:
+            continue
+        if uk is None or uk == unterkategorie:
+            return True
+    return False
+
+
+def setze_manuellen_schwerpunkt(hauptgruppe: str, unterkategorie: str | None,
+                                aktiv: bool) -> bool:
+    """Setzt oder entfernt einen Schwerpunkt in config.yaml.
+
+    Schreibt wie die uebrigen GUI-Schalter direkt in die Datei und wirkt damit
+    auf dem anderen Geraet erst nach Commit+Push und Pull - dafuer garantiert
+    konsistent. In der laufenden GUI wirkt es beim naechsten Lauf, weil die
+    Aufrufer bei jedem Zugriff neu lesen."""
+    schluessel = f"{hauptgruppe}:{unterkategorie}" if unterkategorie else hauptgruppe
+    aktuell = [f"{h}:{u}" if u else h for h, u in manuelle_schwerpunkte()]
+    if aktiv and schluessel not in aktuell:
+        aktuell.append(schluessel)
+    elif not aktiv and schluessel in aktuell:
+        aktuell.remove(schluessel)
+    else:
+        return True
+    return _schreibe_schwerpunkte(aktuell)
+
+
+def _schreibe_schwerpunkte(eintraege: list[str]) -> bool:
+    """Ersetzt die `manuell:`-Liste im Block `schwerpunkte`. Bewusst
+    zeilenbasiert wie die uebrigen Config-Schreiber - ein YAML-Roundtrip wuerde
+    saemtliche Kommentare der Datei verlieren, und die Kommentare sind hier die
+    eigentliche Dokumentation."""
+    try:
+        with open(CONFIG_PATH, "r", encoding="utf-8") as fh:
+            zeilen = fh.readlines()
+    except OSError:
+        return False
+    start = None
+    for i, z in enumerate(zeilen):
+        if z.rstrip() == "schwerpunkte:":
+            start = i
+            break
+    if start is None:
+        return False
+    # `manuell:`-Zeile und ihre bisherigen Listeneintraege finden
+    j = start + 1
+    while j < len(zeilen) and not zeilen[j].lstrip().startswith("manuell:"):
+        if zeilen[j].strip() and not zeilen[j].startswith((" ", "\t", "#")):
+            return False
+        j += 1
+    if j >= len(zeilen):
+        return False
+    ende = j + 1
+    while ende < len(zeilen) and zeilen[ende].lstrip().startswith("- "):
+        ende += 1
+    neu = ["  manuell: []\n"] if not eintraege else \
+          ["  manuell:\n"] + [f"    - {e}\n" for e in eintraege]
+    zeilen[j:ende] = neu
+    try:
+        with open(CONFIG_PATH, "w", encoding="utf-8") as fh:
+            fh.writelines(zeilen)
+    except OSError:
+        return False
+    global _config_cache
+    _config_cache = None
+    return True
+
+
 def themen_bruecken() -> list[dict]:
     """Themen, die quer zu den Hauptgruppen laufen (2026-08-07).
 

@@ -8,11 +8,13 @@
 
 ---
 
-## Index nach Thema (200 Einträge)
+## Index nach Thema (201 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
-### Regelwerk / deterministische Gates (38)
+### Regelwerk / deterministische Gates (39)
+
+- **2026-08-07** — Manuelle Schwerpunkte mit garantiertem Raum: eine gesetzte Überzeugung wird nicht von einem trendenden Thema verdrängt (Aufmerksamkeit, keine Richtungsvorgabe)
 
 - **2026-08-07** — Schwerpunkte: Struktur (10 Hauptgruppen/72 Unterkategorien) und Mechanik sind gebaut; blockiert wird die Erweiterung durch `richtgroesse_max_aktive_thesen: 6` bei 6 aktiven Thesen
 
@@ -14523,3 +14525,64 @@ Testsuiten und die Signaturpruefung gruen.
 
 Quellen: Handelsblatt (Bitpanda-Gebuehren je Anlageklasse), Finanzfuchs
 (Krypto-Spreads).
+
+
+---
+
+## Nachtrag (2026-08-07): manuelle Schwerpunkte mit garantiertem Raum - die Anforderung war umgekehrt, als ich sie verstanden hatte
+
+Schritt 3 des Gesamtkonzepts. Nutzer-Sorge im Wortlaut:
+
+> *"die Gewichtung war meine Befuerchtung, dass wenn z.B. ein Thema trendet,
+> andere wichtige Bereiche keinen Raum bekommen, obwohl ich der Meinung bin,
+> dass Energie aktuell unterbewertet ist und zukuenftig massiv steigen wird -
+> und diese Trades vergessen werden bzw. untergehen."*
+
+**Das dreht die Anforderung um.** Ich hatte den Fokus als "Trend verstaerken"
+verstanden - gemeint ist das Gegenteil: **eine gesetzte Ueberzeugung muss sich
+gegen einen Trend behaupten koennen.**
+
+Fachlich ist das der staerkere Entwurf. Ein Mechanismus, der Aufmerksamkeit nach
+TRENDSTAERKE verteilt, tut systematisch das Gegenteil dessen, was
+antizyklisches Investieren braucht: ein Themenfeld ist oft gerade dann
+interessant, WEIL niemand hinsieht. Ein Trendverstaerker haette genau die
+Faelle ausgeblendet, die den Ertrag bringen sollen.
+
+### Was gebaut wurde
+
+**`schwerpunkte.manuell`** in `config.yaml` - eine Liste von
+`"hauptgruppe"` oder `"hauptgruppe:unterkategorie"`. Ein Eintrag auf
+Hauptgruppen-Ebene deckt alle ihre Unterkategorien ab.
+
+**Wirkung in `_bestimme_gesperrte_fall_a_kandidaten()`:** gesetzte Schwerpunkte
+werden VOR der Budget-Rechnung herausgenommen. Sie werden nie zurueckgestellt
+und zaehlen auch nicht gegen das Budget der uebrigen Kandidaten - sonst wuerden
+sie denselben Verdraengungswettbewerb nur von der anderen Seite fuehren.
+
+**Schalter im Thesen-Tab** ("Schwerpunkt an/aus"), schreibt nach `config.yaml`
+wie die uebrigen GUI-Schalter.
+
+### Was ein Schwerpunkt ausdruecklich NICHT tut
+
+**Er erfindet keine Richtung.** Ob die Pruefmechanismen eine Uebergewichtung
+hergeben, entscheiden weiterhin die Daten. Ein Schwerpunkt sorgt dafuer, dass
+ein Themenfeld Raum BEKOMMT - er ist eine **Aufmerksamkeits-Entscheidung, keine
+Richtungsvorgabe**. Diese Trennung steht im Config-Kommentar, im Tooltip und im
+Test (E1), weil sie sonst schleichend verwaessert.
+
+Damit bleibt auch die Spezifikationsregel gewahrt, die eine Scoring-Gewichtung
+fuer sentimentgetriebene Kategorien ausdruecklich verbietet
+(`Kategorie_Basisinformationen_Release2.md` Abschnitt 5): ein Schwerpunkt wirkt
+auf die REIHENFOLGE, nicht auf den Score. Der Nutzer hat diese Abgrenzung
+ausdruecklich bestaetigt.
+
+### Der Konfliktfall im Test
+
+`teste_schwerpunkte.py` bildet genau die Sorge nach: fuenf reife Kandidaten,
+Budget null, "energie" als gesetzter Schwerpunkt. Ergebnis: die vier
+Wettbewerber werden zurueckgestellt, **Energie kommt durch**. Ohne gesetzten
+Schwerpunkt bleibt das Verhalten unveraendert - das Feature ist opt-in und
+aendert nichts, solange die Liste leer ist.
+
+**16 Pruefungen**, alle bestanden; zehn Testsuiten und die Signaturpruefung
+gruen.

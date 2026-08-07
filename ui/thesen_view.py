@@ -341,6 +341,21 @@ class ThesenView(ttk.Frame):
             "automatischen KI-Vorschläge-Job.",
         )
 
+        schwerpunkt_button = ttk.Button(
+            toolbar, text="Schwerpunkt an/aus", command=self._on_schwerpunkt_umschalten)
+        schwerpunkt_button.pack(side="left", padx=(6, 0))
+        add_widget_tooltip(
+            schwerpunkt_button,
+            "Markiert die Kategorie der gewählten These als gesetzten Schwerpunkt.\n\n"
+            "Ein Schwerpunkt konkurriert NICHT um die automatischen Themen-Plätze: er wird "
+            "nie zurückgestellt, wenn gerade ein anderes Thema trendet. Genau dafür ist er "
+            "da — ein Themenfeld ist oft dann interessant, wenn niemand hinsieht.\n\n"
+            "Er erfindet aber KEINE Richtung: ob die Prüfmechanismen eine Übergewichtung "
+            "hergeben, entscheiden weiterhin die Daten. Ein Schwerpunkt ist eine "
+            "Aufmerksamkeits-Entscheidung, keine Richtungsvorgabe.\n\n"
+            "Wird in Basisinfos/config.yaml gespeichert — auf dem anderen Gerät wirkt es "
+            "erst nach Commit+Push und Pull.")
+
         bearbeiten_button = ttk.Button(toolbar, text="Bearbeiten …", command=self._on_bearbeiten)
         bearbeiten_button.pack(side="left", padx=(6, 0))
         add_widget_tooltip(
@@ -758,6 +773,37 @@ class ThesenView(ttk.Frame):
             db.create_these(conn, these)
         finally:
             conn.close()
+        self.refresh()
+
+    def _on_schwerpunkt_umschalten(self) -> None:
+        """Setzt die Kategorie der gewaehlten These als Schwerpunkt - oder
+        entfernt sie wieder (2026-08-07, Schritt 3 des Gesamtkonzepts)."""
+        these_id = self._selected_these_id()
+        if these_id is None:
+            messagebox.showinfo("Schwerpunkt", "Bitte zuerst eine These auswählen.")
+            return
+        conn = self._db_conn_factory()
+        try:
+            these = db.get_these(conn, these_id)
+        finally:
+            conn.close()
+        if these is None:
+            messagebox.showwarning("Schwerpunkt", "These nicht mehr vorhanden.")
+            return
+        aktuell = config_module.ist_manueller_schwerpunkt(these.hauptgruppe, these.unterkategorie)
+        if not config_module.setze_manuellen_schwerpunkt(
+                these.hauptgruppe, these.unterkategorie, not aktuell):
+            messagebox.showwarning(
+                "Schwerpunkt",
+                "Einstellung konnte nicht in Basisinfos/config.yaml geschrieben werden.")
+            return
+        messagebox.showinfo(
+            "Schwerpunkt",
+            (f"{these.hauptgruppe} ist jetzt ein gesetzter Schwerpunkt — die Kategorie "
+             f"wird nicht mehr zurückgestellt, wenn andere Themen reif werden."
+             if not aktuell else
+             f"{these.hauptgruppe} ist kein Schwerpunkt mehr und konkurriert wieder "
+             f"regulär um die Themen-Plätze."))
         self.refresh()
 
     def _on_bearbeiten(self) -> None:
