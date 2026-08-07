@@ -831,6 +831,49 @@ def _is_superseded(
     return True
 
 
+# Zeithorizont-DECKEL je Assetklasse (2026-08-07, H-2).
+#
+# DAS PROBLEM. Der `halte_kriterium_bucket` kommt vom LLM je Signal. Gemessen am
+# Export vom 07.08.: **1.117 von 1.703 Hebel-Signalen tragen "mittel" = 45
+# Tage** - bei einer Handelspraxis von 1-5, maximal 14 Tagen. Umgekehrt tragen
+# 59 von 89 Themen-ETF-Signalen denselben Bucket, obwohl dort Monate gemeint
+# sind. **Zwei voellig verschiedene Praxen, derselbe Horizont.**
+#
+# DER DECKEL IST EIN MAXIMUM, KEIN MINDESTWERT - und das ist der Kern.
+# Nutzer-Hinweis vom 07.08.: *"auch bei laengerfristigen Positionen kann es zu
+# sehr hoher Volatilitaet und ggf. kuerzeren Trades kommen, auch wenn diese
+# urspruenglich laengerfristig geplant sind."* Genau deshalb wird nur nach oben
+# begrenzt: ein Signal, das nach drei Tagen seine Zone trifft, loest nach drei
+# Tagen auf - der Bucket steuert ausschliesslich, ab wann ein NICHT
+# aufgeloestes Signal als abgelaufen gilt. Ein Deckel verkuerzt also nie einen
+# Trade, er verhindert nur, dass ein Hebel-Signal 45 Tage lang als "noch offen"
+# gefuehrt wird, obwohl die Praxis es laengst beendet haette.
+#
+# Kein Eintrag = kein Deckel. Die Spot-Klassen duerfen weiterhin bis "lang".
+_HORIZONT_DECKEL_JE_TIER = {
+    TIER_HEBEL: "kurz",
+}
+# Reihenfolge von kurz nach lang - fuer den Vergleich beim Deckeln.
+_BUCKET_REIHENFOLGE = ("kurz", "mittel", "lang")
+
+
+def gedeckelter_bucket(bucket: str | None, tier: str) -> str | None:
+    """Begrenzt den vom LLM gewaehlten Zeithorizont auf das Maximum der Klasse.
+
+    Gibt den Bucket unveraendert zurueck, wenn die Klasse keinen Deckel hat oder
+    der gewaehlte Wert bereits darunter liegt. Siehe _HORIZONT_DECKEL_JE_TIER
+    fuer die Begruendung - und dafuer, warum nur nach oben begrenzt wird.
+    """
+    deckel = _HORIZONT_DECKEL_JE_TIER.get(tier)
+    if not deckel or not bucket:
+        return bucket
+    if bucket not in _BUCKET_REIHENFOLGE or deckel not in _BUCKET_REIHENFOLGE:
+        return bucket
+    if _BUCKET_REIHENFOLGE.index(bucket) <= _BUCKET_REIHENFOLGE.index(deckel):
+        return bucket
+    return deckel
+
+
 def _is_expired(signal, bucket_tage: dict[str, int], fallback_tage: int) -> bool:
     """Inhaltsbasierte Ablaufzeit (siehe DEFAULT_ABGELAUFEN_TAGE_BUCKET oben):
     ein explizites `halte_kriterium_ziel_datum` (vom Modell gesetzt, aber in
@@ -2459,12 +2502,33 @@ def compute_systemguete(conn, watchlist: list | None = None,
             ab_datum = bis_datum = None
             if tage and _BASISLINIE_NUR_SIGNALFENSTER:
                 ab_datum = tage[0]
+                # Fensterende ebenfalls am Gruppenhorizont (H-3) - so lange
+                # konnte das letzte Signal DIESER Gruppe noch laufen.
+                _fenster_horizont = (int(round(statistics.median(d_liste)))
+                                     if d_liste else _BASISLINIE_HORIZONT_TAGE)
                 bis_datum = (datetime.fromisoformat(tage[-1])
-                             + timedelta(days=_BASISLINIE_HORIZONT_TAGE)).date().isoformat()
+                             + timedelta(days=max(1, _fenster_horizont))).date().isoformat()
+            # H-3 (2026-08-07): DER BASISLINIEN-HORIZONT FOLGT DER GRUPPE.
+            # Bis hierher rechnete die Basislinie fuer JEDE Klasse fest 14 Tage
+            # - eine Position mit 120 Tagen Frist wurde also gegen einen
+            # 14-Tage-Zufallseinstieg gestellt, und der Signalbeitrag der
+            # langfristigen Klassen war damit systematisch falsch.
+            #
+            # Genommen wird die GEMESSENE mediane Haltedauer der Gruppe, nicht
+            # der konfigurierte Bucket. Das ist der empirisch richtige
+            # Vergleich und erledigt zugleich den Nutzer-Hinweis, dass auch
+            # langfristig geplante Positionen bei hoher Volatilitaet kurz
+            # ausfallen koennen: schliessen die Signale einer Gruppe
+            # tatsaechlich nach vier Tagen, misst die Basislinie vier Tage -
+            # unabhaengig davon, was geplant war.
+            bl_horizont = int(round(statistics.median(d_liste))) if d_liste else _BASISLINIE_HORIZONT_TAGE
+            bl_horizont = max(1, bl_horizont)
             bl = basislinie_erwartungswert(conn, stop_rel, crv,
                                            ist_short=anteil_short > 0.5,
+                                           horizont=bl_horizont,
                                            reihen=reihen,
                                            ab_datum=ab_datum, bis_datum=bis_datum)
+            k["basislinie_horizont_tage"] = bl_horizont
             k["basislinie_erwartungswert_r"] = bl["erwartungswert_r"]
             k["basislinie_anzahl"] = bl["anzahl"]
             k["basislinie_stop_rel"] = stop_rel

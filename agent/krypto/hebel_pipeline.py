@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 import database.db as db
 from agent.krypto.analyst import AnalystResponseInvalid
 from agent.krypto.anticyclic import assess as assess_anticyclic
+from agent.krypto.backward_tracking import TIER_HEBEL, gedeckelter_bucket
 from agent.krypto.backward_tracking import (
     DEFAULT_RICHTUNGSTREFFER_MINDEST_CRV,
     compute_win_rate_fact,
@@ -411,6 +412,17 @@ def generate_hebel_signal(
     stop_loss = corrected.get("stop_loss", {})
     take_profit = corrected.get("take_profit", {})
     halte_kriterium = corrected.get("halte_kriterium", {})
+    # ZEITHORIZONT-DECKEL (2026-08-07, H-2). Der Bucket kommt vom LLM; gemessen
+    # trugen 1.117 von 1.703 Hebel-Signalen "mittel" = 45 Tage, bei einer
+    # Handelspraxis von 1-5, maximal 14 Tagen. Der Deckel begrenzt nur nach
+    # oben - ein Signal, das nach drei Tagen seine Zone trifft, loest nach drei
+    # Tagen auf. Er verhindert lediglich, dass ein nicht aufgeloestes
+    # Hebel-Signal 45 Tage lang als offen gefuehrt wird.
+    _roher_bucket = halte_kriterium.get("bucket")
+    _gedeckelter_bucket = gedeckelter_bucket(_roher_bucket, TIER_HEBEL)
+    if _roher_bucket != _gedeckelter_bucket:
+        logger.info("Zeithorizont fuer %s gedeckelt: %s -> %s (Hebel-Praxis 1-5 Tage)",
+                    asset.symbol, _roher_bucket, _gedeckelter_bucket)
     top_gruende_by_rang = {g.get("rang"): g for g in corrected.get("top_gruende", [])}
     forecast = corrected.get("forecast", {})
 
@@ -503,7 +515,7 @@ def generate_hebel_signal(
         mindestziel_usd=mindestziel_usd_wert,
         mindestziel_eur=eur_aus_usd(mindestziel_usd_wert, eur_usd_fx_rate),
         mindestziel_zeitraum_tage_geschaetzt=mindestziel_zeitraum_tage_wert,
-        halte_kriterium_bucket=halte_kriterium.get("bucket"),
+        halte_kriterium_bucket=_gedeckelter_bucket,
         halte_kriterium_ziel_preis_usd=halte_kriterium.get("ziel_preis_usd"),
         halte_kriterium_ziel_preis_eur=eur_aus_usd(halte_kriterium.get("ziel_preis_usd"), eur_usd_fx_rate),
         halte_kriterium_ziel_datum=halte_kriterium.get("ziel_datum"),

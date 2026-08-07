@@ -669,6 +669,9 @@ Bucket für völlig verschiedene Praxis.**
 | ~~H-1~~ | ~~ISOC/X136-Historie reparieren~~ — **bereits behoben**, letzter Fall 27.07.; beide führen heute Daten bis zum 06.08. | — | zurückgezogen |
 | **H-2** | Zeithorizont je Assetklasse **deckeln** statt frei vom LLM setzen zu lassen | mittel | behebt (b); Voraussetzung für jede Aussage über Haltedauer und Kosten |
 | **H-3** | Basislinien-Horizont an den Bucket koppeln statt fest 14 Tage | mittel | behebt (a); ohne ihn ist der Signalbeitrag der langfristigen Klassen falsch |
+| **P-1** | **Spot-Kostensätze je Klasse trennen** (1 %/Seite gilt heute für Bitpanda-Krypto UND Börsen-Aktien) + laufende Gebühr für Hedge-ETPs | mittel |
+| **P-2** | **RM-3 entscheiden** — `max_allokation_pro_klasse_prozent` steht auf 0 für Aktien/ETF/Rohstoffe und wird nirgends gelesen | klein |
+| **P-3** | `crv_minimum` / `risiko_pro_trade_prozent` je Klasse prüfen — heute global | mittel |
 | **H-4** | Akkumulations-Konzept für Aktien/ETF/Rohstoffe | groß | **der eigentliche Hebel** — ohne ihn bleibt HALTEN die einzige regelkonforme Antwort |
 
 **H-4 ist die Ursache, H-2 und H-3 sind Voraussetzungen dafür, dass man den

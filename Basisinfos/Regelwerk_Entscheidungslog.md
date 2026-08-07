@@ -8,11 +8,13 @@
 
 ---
 
-## Index nach Thema (194 Einträge)
+## Index nach Thema (195 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
-### Regelwerk / deterministische Gates (35)
+### Regelwerk / deterministische Gates (36)
+
+- **2026-08-07** — H-2 Zeithorizont-Deckel je Klasse (Maximum, kein Mindestwert) + H-3 Basislinie folgt der gemessenen Haltedauer; dazu Zwischenrecherche: Spot-Kosten zu hoch, RM-3 tot, Risikoparameter global
 
 - **2026-08-07** — W2: Hedge-Risikofaktoren mit umgekehrter Wirkrichtung + Zonenwache — 9 von 11 Hedge-Empfehlungen hatten Stop über und Ziel unter dem Einstieg
 
@@ -14061,3 +14063,127 @@ nichts.
 > nicht in die Bewertung des Systems. Ich hatte sie dorthin gestellt, weil sie
 > die Zahlen "ehrlicher" gemacht haette - aber sie haette sie nur unmessbar
 > gemacht.
+
+
+---
+
+## Nachtrag (2026-08-07): H-2/H-3 Zeithorizont - und eine Zwischenrecherche zu den Bewertungsparametern, die drei Luecken findet
+
+### H-2: Zeithorizont-Deckel je Assetklasse
+
+`halte_kriterium_bucket` kommt vom LLM je Signal. Gemessen: **1.117 von 1.703
+Hebel-Signalen tragen "mittel" = 45 Tage** - bei einer Handelspraxis von 1-5,
+maximal 14 Tagen. `gedeckelter_bucket(bucket, tier)` begrenzt das auf "kurz"
+fuer Hebel; die Spot-Klassen bleiben ungedeckelt.
+
+**DER DECKEL IST EIN MAXIMUM, KEIN MINDESTWERT** - und das war die
+entscheidende Praezisierung durch den Nutzer: *"auch bei laengerfristigen
+Positionen kann es zu sehr hoher Volatilitaet und ggf. kuerzeren Trades kommen,
+auch wenn diese urspruenglich laengerfristig geplant sind."*
+
+Genau deshalb wird nur nach oben begrenzt. Der Bucket steuert ausschliesslich,
+ab wann ein NICHT aufgeloestes Signal als abgelaufen gilt. Ein Signal, das nach
+drei Tagen seine Zone trifft, loest nach drei Tagen auf - der Deckel verkuerzt
+nie einen Trade, er verhindert nur, dass ein Hebel-Signal 45 Tage lang als
+"offen" gefuehrt wird.
+
+### H-3: Basislinien-Horizont folgt der Gruppe
+
+Bis hierher rechnete die Basislinie fuer JEDE Klasse fest 14 Tage - eine
+Position mit 120 Tagen Frist wurde gegen einen 14-Tage-Zufallseinstieg
+gestellt, und der Signalbeitrag der langfristigen Klassen war damit
+systematisch falsch.
+
+Genommen wird jetzt die **gemessene mediane Haltedauer der Gruppe** (die fuers
+Kostenmodell ohnehin berechnet wird), nicht der konfigurierte Bucket. Das ist
+der empirisch richtige Vergleich - und erledigt denselben Nutzer-Hinweis von der
+anderen Seite: schliessen die Signale einer Gruppe tatsaechlich nach vier Tagen,
+misst die Basislinie vier Tage, unabhaengig davon was geplant war. Das
+Fensterende folgt demselben Horizont.
+
+---
+
+## Zwischenrecherche: haben alle Assetklassen die richtigen Bewertungsparameter?
+
+Nutzer-Frage vor dem naechsten Umbau: *"haben wir fuer alle Assetklassen die
+korrekten Bewertungsparameter oder gibt es da noch Luecken, u.U. eine kurze
+Zwischenrecherche, sonst bauen wir wieder mehrmals um."*
+
+**Antwort: es gibt drei Luecken.**
+
+### Luecke 1: die Spot-Kosten sind fuer Nicht-Krypto zu hoch angesetzt
+
+`_KOSTEN_SPOT_JE_SEITE = 0,01` - **1 % je Seite, 2 % Roundtrip, fuer ALLE
+Spot-Klassen gleich.** Bei einem Stop von 5 % ergibt das **0,40 R Kosten**:
+
+| Klasse | kosten_r (Stop 5 %, 10 Tage) | belegt |
+|---|---|---|
+| hebel | 0,280 | **ja** (104 Positionen) |
+| krypto / aktien / etf / rohstoffe / hedge | **0,400** | nein |
+
+Fuer Krypto bei Bitpanda ist 1 % je Seite plausibel - der Spread dort ist weit.
+Fuer **Aktien und Themen-ETFs an einer Boerse** (Ordergebuehr plus enger
+Spread) ist er es nicht; realistisch liegt der Roundtrip dort um eine
+Groessenordnung niedriger. Die Folge: der Netto-Erwartungswert dieser Klassen
+wird systematisch zu schlecht gerechnet - und zwar um mehr, als die gesamte
+Break-even-Luecke ausmacht.
+
+**Fuer Hedge fehlt zusaetzlich eine ganze Kostenart**: gehebelte ETPs tragen
+eine laufende Gebuehr und Swap-Kosten. Das Spot-Kostenmodell kennt aber gar
+keine Haltedauer-Komponente (`_KOSTEN_SPOT_JE_SEITE` faellt einmal je Seite an).
+Eine ueber Monate gehaltene Absicherung erscheint damit billiger als sie ist.
+
+### Luecke 2: RM-3 existiert nur auf dem Papier
+
+`max_allokation_pro_klasse_prozent` steht in der config:
+
+    krypto: 100     # [OFFEN] aktuell nur Krypto im Einsatz
+    aktien: 0
+    etf: 0
+    rohstoffe: 0
+
+**Der Wert wird an KEINER Stelle im Code gelesen** (kein Treffer fuer
+`pro_klasse` in `*.py`). RM-3 ist damit nicht implementiert.
+
+Zwei Seiten davon:
+
+- **Entwarnung:** die Nullen blockieren heute nichts. Sie sind NICHT die
+  Ursache der HALTEN-Flut.
+- **Aber:** wuerde RM-3 morgen implementiert, blockierte es mit diesen Werten
+  **genau die drei Klassen, die laut Nutzer gehandelt werden sollen** - lautlos
+  und mit voller Regelwerks-Legitimation. Der Kommentar "[OFFEN] aktuell nur
+  Krypto im Einsatz" stammt aus einer Zeit, in der das stimmte.
+
+### Luecke 3: die Risikoparameter sind global, die Praxis ist es nicht
+
+Klassenspezifisch differenziert sind heute nur `risiko.hebel.*` und die (tote)
+Allokationstabelle. **Global fuer alle Klassen gelten dagegen:**
+
+| Parameter | Wert | passt das fuer eine Monats-Aktienposition? |
+|---|---|---|
+| `ziele.crv_minimum` | 2,0 | fraglich - bei Monaten ist ein CRV von 2 eine andere Aussage als bei 3 Tagen |
+| `risiko_pro_trade_prozent` | 2 | fraglich - gilt fuer einen 3-Tage-Hebel wie fuer eine Kernposition |
+| `sl_abstand_min_atr_faktor` | 0,75 | ATR ist tagesbasiert; ueber Monate eine andere Groesse |
+| `sl_abstand_eng_schwelle_relativ` | 0,025 | dito |
+| `max_allokation_pro_asset_prozent` | 25 | plausibel klassenuebergreifend |
+
+Das ist **kein akuter Defekt**, aber es ist der Grund, warum ein
+Akkumulations-Konzept (H-4) nicht einfach "wie Krypto, nur woanders" gebaut
+werden kann: die Schwellen, gegen die es arbeitet, sind fuer den kurzen
+Horizont kalibriert.
+
+### Was daraus fuer die Reihenfolge folgt
+
+> **Die Recherche hat sich gelohnt: zwei der drei Luecken haetten nach einem
+> H-4-Umbau erneut zu einem Umbau gefuehrt.** Kostensaetze und
+> Klassenparameter gehoeren VOR das Akkumulations-Konzept, nicht danach.
+
+| # | | vor H-4? |
+|---|---|---|
+| **P-1** | Spot-Kostensaetze je Klasse trennen (Krypto/Bitpanda gegen Boerse) + laufende Gebuehr fuer Hedge-ETPs | **ja** |
+| **P-2** | RM-3 entscheiden: implementieren mit realistischen Werten, oder die tote Tabelle entfernen | **ja** (klein) |
+| **P-3** | `crv_minimum` und `risiko_pro_trade_prozent` je Klasse pruefen | **ja** |
+| H-4 | Akkumulations-Konzept | danach |
+
+**Bewusst nichts davon heute gebaut** - die Frage war eine Recherche, und jede
+dieser drei Aenderungen braucht eine eigene Entscheidung ueber die Zahlen.
