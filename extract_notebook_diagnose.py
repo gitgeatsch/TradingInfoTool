@@ -186,6 +186,7 @@ Schreibt nach K:/My Drive/Claude_Austauschordner/Notebook_Analysedaten/
 """
 import dataclasses
 import json
+import os
 import sqlite3
 import re
 import sys
@@ -242,7 +243,23 @@ def _google_drive_wurzel() -> Path:
     )
 
 
-ZIEL_ORDNER = _google_drive_wurzel() / "Claude_Austauschordner" / "Notebook_Analysedaten"
+# UEBERSCHREIB-SCHUTZ FUER TESTLAEUFE (2026-08-07).
+#
+# ANLASS: beim Verifizieren einer Export-Erweiterung wurde `_google_drive_wurzel()`
+# umgelenkt - wirkungslos, weil ZIEL_ORDNER eine MODUL-KONSTANTE ist, die schon
+# beim Import feststeht. Der Testlauf hat damit den echten
+# notebook_diagnose.json im Austauschordner ueberschrieben.
+#
+# Deshalb ein Ausgang, der VOR der Konstanten wirkt: mit gesetztem
+# TIT_EXPORT_ZIEL kann ein Testlauf den Austauschordner gar nicht mehr
+# erreichen. Eine Naht schlaegt eine Absichtserklaerung.
+_ZIEL_UEBERSCHREIBUNG = os.environ.get("TIT_EXPORT_ZIEL")
+
+ZIEL_ORDNER = (
+    Path(_ZIEL_UEBERSCHREIBUNG) / "Notebook_Analysedaten"
+    if _ZIEL_UEBERSCHREIBUNG
+    else _google_drive_wurzel() / "Claude_Austauschordner" / "Notebook_Analysedaten"
+)
 
 # Bewusst schlanke Spaltenauswahl fuer signals/hebel_signals - die langen
 # facts_json/*_raw_response-Felder sind redundant zu den strukturierten
@@ -1011,6 +1028,22 @@ def _hedge_wirksamkeit(conn) -> dict:
         conn, ab_datum=ab, watchlist=config_module.get_watchlist())
 
 
+def _wartende_themen_vorschlaege(conn) -> dict:
+    """Welche Themen-Vorschlaege warten, und wann werden sie reif? (2026-08-07, S-3)
+
+    ANLASS. Am 07.08. standen 14 von 16 Vorschlaegen auf "beobachtung" - und aus
+    dem Export war nicht ablesbar, dass darunter ein KI-Vorschlag seit dem
+    25.07. laeuft und in 18 Tagen reif wird. Die Statusverteilung allein
+    ("14 beobachtung") sagt genau nichts ueber den Vorlauf.
+
+    Die zweite Zahl ist die wichtigere: `engpass_anzahl` sagt, wie viele
+    Kandidaten am SELBEN Tag reif werden. Uebersteigt sie das freie Budget,
+    entscheidet die Gleichzeitigkeits-Moderation - und das gehoert mit Vorlauf
+    gesehen, nicht am Tag selbst."""
+    from agent.kategorie_vorschlaege import wartende_vorschlaege
+    return wartende_vorschlaege(conn)
+
+
 def _bewertungs_diagnose(conn) -> dict:
     """Je gehaltenes Symbol: kam ein Kurs zustande, und wenn nein - warum nicht?
 
@@ -1305,7 +1338,11 @@ def _auffaelligkeiten(hebel_rows: list[dict], spot_rows: list[dict]) -> list[dic
     return funde
 
 
-DB_BACKUP_ORDNER = _google_drive_wurzel() / "Claude_Austauschordner" / "DB_Backups"
+DB_BACKUP_ORDNER = (
+    Path(_ZIEL_UEBERSCHREIBUNG) / "DB_Backups"
+    if _ZIEL_UEBERSCHREIBUNG
+    else _google_drive_wurzel() / "Claude_Austauschordner" / "DB_Backups"
+)
 DB_BACKUP_BEHALTEN = 7
 
 
@@ -1492,6 +1529,14 @@ def main() -> None:
         oi_fakten_verlauf = _oi_fakten_verlauf(conn)
         ohlc_aktualitaet_je_symbol = _ohlc_aktualitaet_je_symbol(conn)
         coingecko_kontingent = _coingecko_kontingent(conn)
+
+        # Fail-soft: eine fehlende Kategorie-Konfiguration darf den Export
+        # nicht toeten (Lehre 06.08.) - aber sie muss im Export SICHTBAR
+        # scheitern, nicht still verschwinden.
+        try:
+            wartende_themen_vorschlaege = _wartende_themen_vorschlaege(conn)
+        except Exception as exc:  # noqa: BLE001
+            wartende_themen_vorschlaege = {"nicht_verfuegbar": str(exc)}
 
         # 4) Provider-Performance (Win-Rate/CRV je Anbieter, Spot+Hebel getrennt)
         # Nachtrag 2026-07-29 (Export-Luecke gefunden bei der R-5.10-Analyse-
@@ -1746,6 +1791,7 @@ def main() -> None:
         "regime_status": regime_status,
         "thesen_alle": thesen_alle,
         "these_aenderungsvorschlaege_alle": these_aenderungsvorschlaege_alle,
+        "wartende_themen_vorschlaege": wartende_themen_vorschlaege,
         "kategorie_synthese_ergebnisse_alle": kategorie_synthese_ergebnisse_alle,
         "oi_abdeckung_status_alle": oi_abdeckung_status_alle,
         "hebel_pruefung_toggles": hebel_pruefung_toggles,
@@ -1815,6 +1861,15 @@ def main() -> None:
     print(f"  Z.ai-Gegenpruefung: {zai_gegenpruefung_verlauf['anzahl_gesamt']} Signale mit Urteil "
           f"({zai_gegenpruefung_verlauf['anzahl_konsistent']} konsistent, "
           f"{zai_gegenpruefung_verlauf['anzahl_widerspruch']} widerspruch)")
+    _wt = wartende_themen_vorschlaege
+    if "nicht_verfuegbar" in _wt:
+        print(f"  Wartende Themen-Vorschlaege: NICHT VERFUEGBAR ({_wt['nicht_verfuegbar']})")
+    else:
+        print(f"  Wartende Themen-Vorschlaege: {_wt['anzahl_wartend']} warten, "
+              f"{_wt['anzahl_reif']} reif, freies Budget {_wt['freies_budget']}/"
+              f"{_wt['richtgroesse_max']}"
+              + (f" - Engpass am {_wt['engpass_am']}: {_wt['engpass_anzahl']} gleichzeitig"
+                 if _wt["engpass_am"] else ""))
     print(f"  CoinGecko-Kontingent ({coingecko_kontingent['monat']}): "
           f"{coingecko_kontingent['monatliches_kontingent']} Calls, "
           f"{len(coingecko_kontingent['taeglich_verlauf'])} Tage mit Tageszaehler-Historie")

@@ -1103,14 +1103,28 @@ These** geprüft werden, nicht erst beim Signal.
 
 ## 9.4 Der Plan — sechs Schritte, nach Abhängigkeit geordnet
 
-| # | Schritt | löst | Aufwand |
-|---|---|---|---|
-| **1** | **Kosten strukturell trennen** (fix vs. prozentual, je Klasse) | P-1 | mittel |
-| **2** | **Richtgröße spezifikationskonform** (weich statt hart) + G-5 (Handelbarkeits-Prüfung beim Anlegen). **Vorlauf: am 24./25.08. werden 9 Kandidaten gleichzeitig reif** | S-2, G-5 | klein |
-| **3** | **Wartende Vorschläge sichtbar machen** (S-3) | S-3 | klein |
-| **4** | **Erfolgsmaß je Themenfeld** (G-2: Systemgüte zusätzlich nach Hauptgruppe) | G-2 | mittel |
-| **5** | **Allocator-Priorität** (S-4: übergewichtete Themenfelder bevorzugt) | S-4 | mittel |
-| **6** | **Rollout-Entscheidungen** der vier offenen Fakten (antizyklisch, tranchen_erlaubt, liquiditaetszonen, signal_stabilitaet) | H-7 | klein je Fakt |
+Stand 07.08. abends. Die Reihenfolge hat sich während der Umsetzung um **einen
+Schritt erweitert**, der in der ursprünglichen Tabelle fehlte: die manuellen
+Schwerpunkte. Sie kamen aus einer Nutzer-Antwort, nicht aus der Lückenanalyse —
+und sie sind Voraussetzung für Schritt 6, weil ein Allocator, der nach
+Trendstärke priorisiert, ohne sie systematisch das Gegenteil von antizyklisch
+tut.
+
+| # | Schritt | löst | Aufwand | Stand |
+|---|---|---|---|---|
+| **1** | **Kosten strukturell trennen** (fix vs. prozentual, je Klasse, mit Positionsgröße je Signal) | P-1 | mittel | **ERLEDIGT 07.08.** |
+| **2** | **Richtgröße spezifikationskonform** (weich statt hart) + G-5 (Handelbarkeits-Prüfung beim Anlegen). **Vorlauf: am 24./25.08. werden 9 Kandidaten gleichzeitig reif** | S-2, G-5 | klein | offen |
+| **3** | **Manuelle Schwerpunkte mit garantiertem Raum** (`schwerpunkte.manuell`, Schalter im Thesen-Tab) | Nutzer-Vorgabe 07.08. | klein | **ERLEDIGT 07.08.** |
+| **4** | **Wartende Vorschläge sichtbar machen** (S-3) — plus Layout-Fix im Schwerpunkte-Tab | S-3 | klein | **ERLEDIGT 07.08.** |
+| **5** | **Erfolgsmaß je Themenfeld** (G-2: Systemgüte zusätzlich nach Hauptgruppe) | G-2 | mittel | offen |
+| **6** | **Allocator-Priorität** (S-4: übergewichtete Themenfelder bevorzugt) — setzt Schritt 3 voraus | S-4 | mittel | offen |
+| **7** | **Rollout-Entscheidungen** der vier offenen Fakten (antizyklisch, tranchen_erlaubt, liquiditaetszonen, signal_stabilitaet) | H-7 | klein je Fakt | offen |
+
+**Was Schritt 4 gebracht hat, über die Sichtbarkeit hinaus:** beim Datieren der
+Vorschläge löste sich der vermutete „Themen-Deckel" auf — die Kandidaten waren
+schlicht noch nicht reif. Die Zahl „14 in Beobachtung" hatte drei Wochen lang
+wie ein Blocker ausgesehen. Ein Fund, der sich beim Datieren in Luft auflöst,
+ist ein Hinweis darauf, dass die **Datierung** fehlt, nicht der Deckel.
 
 **Bewusst NICHT in diesem Plan:**
 

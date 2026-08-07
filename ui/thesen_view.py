@@ -404,18 +404,43 @@ class ThesenView(ttk.Frame):
         # unteren Bereiche blieben immer auf ihre feste Treeview-Hoehe (5 Zeilen)
         # gequetscht, egal wie gross das Fenster ist. PanedWindow mit
         # verschiebbarem Trenner statt starrem 50/50-Wert - der Nutzer kann den
-        # Bereich live nach Bedarf vergroessern/verkleinern, Startaufteilung
-        # ca. 50/50 (siehe sashpos-Aufruf unten).
+        # Bereich live nach Bedarf vergroessern/verkleinern.
+        #
+        # 2026-08-07, Nutzer-Fund (Screenshot): *"den Bereich unten sieht bzw.
+        # bedient man ohne Verschieben nicht vernuenftig"* - zwei Ursachen, die
+        # sich addiert haben:
+        #   1. ZWEI Panes fuer DREI Bereiche. Vorschlaege UND Synthese lagen
+        #      beide im unteren Frame, beide mit expand=True. Der letzte
+        #      gepackte Block (Synthese) faellt dann unten aus dem Fenster,
+        #      sobald der Pane knapp wird - genau das war zu sehen.
+        #   2. Die 50/50-Aufteilung gab der Thesen-Liste die halbe Fensterhoehe,
+        #      obwohl dort typisch 5-8 Zeilen stehen: oben zwoelf Zeilen Leere,
+        #      unten abgeschnittene Tabellen. `height=18` hat diesen Hunger noch
+        #      als Mindestanforderung zementiert.
+        #
+        # Jetzt: drei eigene Panes mit eigenen Trennern, Startaufteilung nach
+        # dem, was die Bereiche tatsaechlich brauchen (45/25/30). Die
+        # Treeview-Wunschhoehen sind auf realistische Werte gesetzt, damit sie
+        # keine Mindesthoehe erzwingen, die groesser ist als der Anteil.
         paned = ttk.PanedWindow(self, orient=tk.VERTICAL)
         paned.pack(fill="both", expand=True)
 
         oben_frame = ttk.Frame(paned)
-        unten_frame = ttk.Frame(paned)
-        paned.add(oben_frame, weight=1)
-        paned.add(unten_frame, weight=1)
+        vorschlag_pane = ttk.Frame(paned)
+        synthese_pane = ttk.Frame(paned)
+        paned.add(oben_frame, weight=3)
+        paned.add(vorschlag_pane, weight=2)
+        paned.add(synthese_pane, weight=2)
 
         def _initiale_aufteilung(event=None) -> None:
-            paned.sashpos(0, paned.winfo_height() // 2)
+            hoehe = paned.winfo_height()
+            # Beim allerersten <Configure> steht die Hoehe noch auf 1 - dann
+            # wuerden beide Trenner auf 0 landen und der Effekt waere schlimmer
+            # als vorher. Erst setzen, wenn das Fenster wirklich Groesse hat.
+            if hoehe < 200:
+                return
+            paned.sashpos(0, int(hoehe * 0.45))
+            paned.sashpos(1, int(hoehe * 0.70))
             paned.unbind("<Configure>")
 
         paned.bind("<Configure>", _initiale_aufteilung)
@@ -424,7 +449,7 @@ class ThesenView(ttk.Frame):
         tree_frame.pack(fill="both", expand=True)
 
         columns = ("kategorie", "richtung", "staerke", "mechanismus", "status", "gesetzt_am", "review_am")
-        self.tree = ttk.Treeview(tree_frame, columns=columns, show="headings", height=18, selectmode="browse")
+        self.tree = ttk.Treeview(tree_frame, columns=columns, show="headings", height=8, selectmode="browse")
         headings = {
             "kategorie": "Kategorie", "richtung": "Richtung", "staerke": "Stärke",
             "mechanismus": "Prüf-Mechanismus", "status": "Status",
@@ -451,19 +476,19 @@ class ThesenView(ttk.Frame):
         # Aenderungsaufforderungen (agent/kategorie_vorschlaege.py) haben
         # sonst KEINE GUI-Oberflaeche: sie liegen sonst unsichtbar in
         # these_aenderungsvorschlaege, ohne Weg zum Uebernehmen/Ablehnen.
-        vorschlag_label_frame = ttk.Frame(unten_frame, padding=(8, 8, 8, 4))
+        vorschlag_label_frame = ttk.Frame(vorschlag_pane, padding=(8, 8, 8, 4))
         vorschlag_label_frame.pack(fill="x")
         ttk.Label(
             vorschlag_label_frame, text="Offene Änderungsaufforderungen (KI-Vorschläge-Job)",
             font=("TkDefaultFont", 10, "bold"),
         ).pack(side="left")
 
-        vorschlag_frame = ttk.Frame(unten_frame, padding=(8, 0, 8, 8))
+        vorschlag_frame = ttk.Frame(vorschlag_pane, padding=(8, 0, 8, 8))
         vorschlag_frame.pack(fill="both", expand=True)
 
         vorschlag_columns = ("kategorie", "aktuell", "vorschlag", "mechanismus", "erkannt_am")
         self.vorschlag_tree = ttk.Treeview(
-            vorschlag_frame, columns=vorschlag_columns, show="headings", height=5, selectmode="browse",
+            vorschlag_frame, columns=vorschlag_columns, show="headings", height=4, selectmode="browse",
         )
         vorschlag_headings = {
             "kategorie": "Kategorie", "aktuell": "Aktuelle Richtung", "vorschlag": "Vorgeschlagene Richtung",
@@ -498,7 +523,7 @@ class ThesenView(ttk.Frame):
         # LLM-Einordnung (agent/kategorie_synthese.py), reine Anzeige, kein
         # eigener Aktions-Button - Ranking/Phase wirken bereits automatisch auf
         # die Gleichzeitigkeits-Moderation/den Schnell-Pfad oben.
-        self._synthese_label_frame = ttk.Frame(unten_frame, padding=(8, 4, 8, 4))
+        self._synthese_label_frame = ttk.Frame(synthese_pane, padding=(8, 8, 8, 4))
         self._synthese_label_frame.pack(fill="x")
         self._synthese_label = ttk.Label(
             self._synthese_label_frame, text="Tages-Synthese (KI, Schicht 2)",
@@ -506,7 +531,7 @@ class ThesenView(ttk.Frame):
         )
         self._synthese_label.pack(side="left")
 
-        synthese_frame = ttk.Frame(unten_frame, padding=(8, 0, 8, 8))
+        synthese_frame = ttk.Frame(synthese_pane, padding=(8, 0, 8, 8))
         synthese_frame.pack(fill="both", expand=True)
 
         synthese_columns = ("kategorie", "phase", "rang", "begruendung")

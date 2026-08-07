@@ -319,6 +319,17 @@ _INDEX_HTML = """<!doctype html>
   <div id="richtungsverteilung-body"></div>
 </div>
 
+<div class="card" id="wartende-themen-card" style="display:none">
+  <div class="row"><strong>Themen in Beobachtung — wann wird was reif?</strong></div>
+  <div class="row"><span class="muted-text">Ein Themen-Vorschlag zählt erst, wenn sein Prüf-Mechanismus
+  lange genug in dieselbe Richtung zeigt (7 Tage Bärenmarkt-Overlay, 14 COT/M2, 30 Zinskurve/Dollar-Index/
+  Bellwether). Bis dahin steht er auf „beobachtung“ — und genau das war bisher unsichtbar: die
+  Statusverteilung sagt <b>nichts</b> über den Vorlauf. Die entscheidende Zahl ist, wie viele Kandidaten am
+  <b>selben Tag</b> reif werden: übersteigt sie das freie Budget, entscheidet die Moderation, welche
+  durchkommen. Gesetzte Schwerpunkte (★) umgehen das.</span></div>
+  <div id="wartende-themen-body"></div>
+</div>
+
 <div class="card" id="hedge-card" style="display:none">
   <div class="row"><strong>Absicherung — hat sie gewirkt?</strong></div>
   <div class="row"><span class="muted-text">Ein Hedge, der Geld verliert während das Portfolio steigt,
@@ -672,6 +683,38 @@ function renderRichtungsverteilung(r) {
     }
   }
   return h;
+}
+
+function renderWartendeThemen(w) {
+  if (!w.vorschlaege || w.vorschlaege.length === 0) {
+    return '<div class="row"><span class="muted-text">Kein Themen-Vorschlag in Beobachtung. ' +
+      'Freies Budget: ' + w.freies_budget + " von " + w.richtgroesse_max + " Plätzen.</span></div>";
+  }
+  let x = '<div class="row"><span>in Beobachtung</span><span>' + w.anzahl_wartend + "</span></div>";
+  x += '<div class="row"><span>bereits reif</span><span>' + w.anzahl_reif + "</span></div>";
+  x += '<div class="row"><span>freie Plätze</span><span>' + w.freies_budget + " von " +
+    w.richtgroesse_max + "</span></div>";
+  if (w.engpass_am) {
+    // Die Zahl, die den Engpass ankuendigt - rot NUR wenn sie das Budget
+    // wirklich uebersteigt, sonst ist sie eine harmlose Terminmeldung.
+    const eng = w.engpass_anzahl > w.freies_budget;
+    x += '<div class="row"><span>am ' + w.engpass_am + " gleichzeitig reif</span><strong" +
+      (eng ? ' class="err"' : "") + ">" + w.engpass_anzahl +
+      (eng ? " — mehr als freie Plätze" : "") + "</strong></div>";
+  }
+  x += '<div class="row"><span class="muted-text">&nbsp;</span></div>';
+  for (const v of w.vorschlaege) {
+    const name = v.kategorie_anzeige || (v.hauptgruppe || "");
+    const stern = v.ist_schwerpunkt ? "★ " : "";
+    const rest = v.ist_reif
+      ? '<strong class="ok">reif</strong>'
+      : "noch " + v.tage_bis_reif + " T. → " + v.reif_am;
+    x += '<div class="row"><span>' + stern + name + ' <span class="muted-text">(' +
+      (v.richtung_anzeige || v.vorgeschlagene_richtung || "—") + " · " +
+      (v.mechanismus_anzeige || "") + " · " + v.tage_beobachtet + "/" + v.schwelle_tage +
+      ' Tage)</span></span><span>' + rest + "</span></div>";
+  }
+  return x;
 }
 
 function renderHedge(h) {
@@ -1070,6 +1113,12 @@ async function refreshStatus() {
     document.getElementById("richtungsverteilung-card").style.display = "block";
     document.getElementById("richtungsverteilung-body").innerHTML =
       renderRichtungsverteilung(data.richtungsverteilung);
+  }
+
+  if (data.wartende_themen) {
+    document.getElementById("wartende-themen-card").style.display = "block";
+    document.getElementById("wartende-themen-body").innerHTML =
+      renderWartendeThemen(data.wartende_themen);
   }
 
   if (data.hedge_wirksamkeit) {

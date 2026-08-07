@@ -138,6 +138,10 @@ class RemoteStatus:
     # CoinGecko-Monats-Kontingent (2026-07-31, echte 80%-Warnmail ausgeloest,
     # siehe scheduler/background.py::coingecko_quota_check_job()).
     coingecko_quota: dict | None = None
+    # Wartende Themen-Vorschlaege (2026-08-07, S-3). Die Statusverteilung
+    # "14 beobachtung" sagt nichts ueber den Vorlauf - diese Karte sagt, WANN
+    # etwas reif wird und wie viele am selben Tag.
+    wartende_themen: dict | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -174,6 +178,7 @@ class RemoteStatus:
             "selbst_gewaehltes_halten_performance_nach_grund": self.selbst_gewaehltes_halten_performance_nach_grund,
             "marktscan_erfolgsquote": self.marktscan_erfolgsquote,
             "coingecko_quota": self.coingecko_quota,
+            "wartende_themen": self.wartende_themen,
         }
 
 
@@ -274,6 +279,7 @@ def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, erro
         ),
         marktscan_erfolgsquote=_safe(_get_marktscan_erfolgsquote, conn),
         coingecko_quota=_safe(_get_coingecko_quota, conn),
+        wartende_themen=_safe(_get_wartende_themen, conn),
     )
 
 
@@ -677,6 +683,19 @@ def _get_hedge_wirksamkeit(conn: sqlite3.Connection, watchlist: list) -> dict | 
 
     ab = (date.today() - timedelta(days=90)).isoformat()
     return compute_hedge_wirksamkeit(conn, ab_datum=ab, watchlist=watchlist)
+
+
+def _get_wartende_themen(conn: sqlite3.Connection) -> dict | None:
+    """Welche Themen-Vorschlaege warten, und wann werden sie reif? (2026-08-07)
+
+    Siehe agent/kategorie_vorschlaege.py::wartende_vorschlaege(). Auf die
+    Uebersichtsseite gehoert davon vor allem EINE Zahl: wie viele Kandidaten am
+    SELBEN Tag reif werden. Uebersteigt sie das freie Budget, entscheidet die
+    Gleichzeitigkeits-Moderation - und das gehoert mit Wochen Vorlauf gesehen,
+    nicht am Tag selbst."""
+    from agent.kategorie_vorschlaege import wartende_vorschlaege
+
+    return wartende_vorschlaege(conn)
 
 
 def _get_parameter_overview() -> list[dict]:

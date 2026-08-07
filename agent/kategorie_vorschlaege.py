@@ -31,7 +31,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import config
 import database.db as db
@@ -117,6 +117,119 @@ def _lade_heutiges_schicht2_ergebnis(conn, jetzt: datetime) -> dict[tuple[str, s
         return None
     kategorien = json.loads(ergebnis.kategorie_ergebnisse_json)
     return {(e.get("hauptgruppe"), e.get("unterkategorie")): e for e in kategorien}
+
+
+# Klartext-Tabellen fuer die Anzeige wartender Vorschlaege (2026-08-07).
+# Bewusst hier und nicht in ui/thesen_view.py: Export, Uebersichtsseite und GUI
+# sollen dieselben Woerter benutzen - drei Kopien laufen garantiert auseinander.
+_RICHTUNG_ANZEIGE = {
+    "uebergewichten": "Übergewichten",
+    "neutral": "Neutral",
+    "meiden": "Meiden",
+    "aktiv": "Aktiv",
+    "inaktiv": "Inaktiv",
+}
+_MECHANISMUS_ANZEIGE = {
+    "m2_liquiditaet": "M2-Liquidität",
+    "cot_positionierung": "CFTC-COT-Positionierung",
+    "zinskurve": "Zinskurve (10J minus 2J)",
+    "dollar_index": "Dollar-Index-Trend (DXY)",
+    "baerenmarkt_overlay": "Bärenmarkt-Overlay",
+    "bellwether_sentiment": "Bellwether-Sentiment",
+}
+
+
+def wartende_vorschlaege(conn, jetzt: datetime | None = None) -> dict:
+    """Welche Themen-Vorschlaege warten, und wann werden sie reif? (2026-08-07)
+
+    ANLASS. Am 07.08. standen 14 von 16 Vorschlaegen auf "beobachtung" - und
+    weder in der GUI noch auf der Uebersichtsseite war erkennbar, dass darunter
+    ein KI-Vorschlag seit dem 25.07. laeuft und in 18 Tagen reif wird. Erst die
+    Datierung von Hand hat es gezeigt. **Ein Vorlauf, den niemand sieht, ist
+    keiner.**
+
+    DIE ZWEITE ZAHL IST DIE WICHTIGERE: `gleichzeitig_reif` zaehlt, wie viele
+    Kandidaten am selben Tag reif werden. Am 24./25.08. sind das neun - bei
+    einem Budget, das heute null betraegt. Ohne diese Vorschau faellt die
+    Entscheidung unter Druck statt mit siebzehn Tagen Vorlauf.
+
+    Reine Lesefunktion, kein Seiteneffekt. Persistenzschwellen und
+    Reife-Logik kommen aus denselben Funktionen wie der Job selbst - eine
+    zweite Fassung wuerde garantiert auseinanderlaufen (Lehre vom 03.08.).
+    """
+    jetzt = jetzt or datetime.now(timezone.utc)
+    eintraege = []
+    for hauptgruppe, unterkategorie in _alle_kategorie_schluessel():
+        tracker = db.get_kandidat_in_beobachtung(conn, hauptgruppe, unterkategorie)
+        if tracker is None:
+            continue
+        mechanismus_info = config.get_pruef_mechanismus(hauptgruppe, unterkategorie)
+        if mechanismus_info is None:
+            continue
+        schwelle = _persistenz_tage_fuer_mechanismen(mechanismus_info["mechanismen"])
+        seit = datetime.fromisoformat(tracker.beobachtung_seit)
+        if seit.tzinfo is None:
+            seit = seit.replace(tzinfo=timezone.utc)
+        beobachtet = (jetzt - seit).total_seconds() / 86400
+        rest = max(0.0, schwelle - beobachtet)
+        eintraege.append({
+            "hauptgruppe": hauptgruppe,
+            "unterkategorie": unterkategorie,
+            # Klartext NEBEN den IDs, nicht statt ihnen: die Seite und der
+            # Export sollen "Technologie & KI / Künstliche Intelligenz" zeigen,
+            # eine Auswertung braucht aber weiter die stabile ID.
+            "kategorie_anzeige": (
+                config._kategorie_klartext(hauptgruppe, unterkategorie)
+                or f"{hauptgruppe}{('/' + unterkategorie) if unterkategorie else ''}"
+            ),
+            "vorgeschlagene_richtung": tracker.vorgeschlagene_richtung,
+            "richtung_anzeige": _RICHTUNG_ANZEIGE.get(
+                tracker.vorgeschlagene_richtung, tracker.vorgeschlagene_richtung),
+            "mechanismus": tracker.mechanismus_typ,
+            "mechanismus_anzeige": _MECHANISMUS_ANZEIGE.get(
+                tracker.mechanismus_typ, tracker.mechanismus_typ),
+            "beobachtung_seit": tracker.beobachtung_seit,
+            "tage_beobachtet": round(beobachtet, 1),
+            "schwelle_tage": schwelle,
+            "tage_bis_reif": round(rest, 1),
+            "reif_am": (seit + timedelta(days=schwelle)).date().isoformat(),
+            "ist_reif": beobachtet >= schwelle,
+            "ist_schwerpunkt": config.ist_manueller_schwerpunkt(hauptgruppe, unterkategorie),
+        })
+    eintraege.sort(key=lambda e: (e["tage_bis_reif"], e["hauptgruppe"]))
+
+    # Wie viele werden am selben Tag reif? Das ist die Zahl, die den Engpass
+    # ankuendigt - nicht die Gesamtzahl der Wartenden.
+    je_tag: dict[str, int] = {}
+    for e in eintraege:
+        if not e["ist_reif"]:
+            je_tag[e["reif_am"]] = je_tag.get(e["reif_am"], 0) + 1
+    engpass_tag, engpass_anzahl = (None, 0)
+    if je_tag:
+        engpass_tag = max(je_tag, key=je_tag.get)
+        engpass_anzahl = je_tag[engpass_tag]
+
+    aktive = len(db.get_aktive_thesen(conn))
+    richtgroesse = (config.load_config().get("kategorie_vorschlaege") or {}).get(
+        "richtgroesse_max_aktive_thesen", 6)
+    return {
+        "vorschlaege": eintraege,
+        "anzahl_wartend": sum(1 for e in eintraege if not e["ist_reif"]),
+        "anzahl_reif": sum(1 for e in eintraege if e["ist_reif"]),
+        "aktive_thesen": aktive,
+        "richtgroesse_max": richtgroesse,
+        "freies_budget": max(0, richtgroesse - aktive),
+        "engpass_am": engpass_tag,
+        "engpass_anzahl": engpass_anzahl,
+        "lesehilfe": (
+            "tage_bis_reif zaehlt bis zur Persistenzschwelle des jeweiligen "
+            "Mechanismus (7 Tage Baerenmarkt-Overlay, 14 COT/M2, 30 Zinskurve/"
+            "Dollar-Index/Bellwether). engpass_anzahl ist die Zahl der Kandidaten, "
+            "die am selben Tag reif werden - uebersteigt sie freies_budget, "
+            "entscheidet die Schicht-2-Rangfolge, welche durchkommen. Gesetzte "
+            "Schwerpunkte (ist_schwerpunkt) umgehen das."
+        ),
+    }
 
 
 def _reife_fall_a_kandidaten(conn, jetzt: datetime) -> list[tuple[str, str | None]]:

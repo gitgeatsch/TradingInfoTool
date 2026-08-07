@@ -14586,3 +14586,88 @@ aendert nichts, solange die Liste leer ist.
 
 **16 Pruefungen**, alle bestanden; zehn Testsuiten und die Signaturpruefung
 gruen.
+
+## Nachtrag (2026-08-07): wartende Themen-Vorschlaege sichtbar gemacht - die Statusverteilung sagt nichts ueber den Vorlauf
+
+### Der Anlass
+
+Am 07.08. standen 14 von 16 Vorschlaegen auf `beobachtung`. Diese Zahl stand so
+in der GUI, im Export und auf der Uebersichtsseite - und sie ist **fuer eine
+Entscheidung wertlos**. Sie sagt nicht, ob ein Vorschlag seit gestern oder seit
+dem 25.07. laeuft, und schon gar nicht, wann er reif wird.
+
+Der Befund kam nur zustande, weil die Vorschlaege in dieser Session **von Hand
+datiert** wurden. Dabei stellte sich heraus: der vermeintete "Themen-Deckel"
+existierte nicht - die Kandidaten waren schlicht noch nicht reif. Ein Fund, der
+sich beim Datieren in Luft aufloest, ist ein Hinweis darauf, dass die Datierung
+fehlt, nicht der Deckel.
+
+### Die zweite Zahl ist die wichtigere
+
+Nicht "wie viele warten", sondern **wie viele am selben Tag reif werden**.
+Uebersteigt diese Zahl das freie Budget, entscheidet die
+Gleichzeitigkeits-Moderation, welche durchkommen. Am 24./25.08. betrifft das
+neun Kandidaten - eine Entscheidung, die mit siebzehn Tagen Vorlauf fallen kann
+oder unter Druck am Tag selbst. `engpass_am`/`engpass_anzahl` machen genau das
+sichtbar, und die Seite faerbt die Zahl **nur dann rot, wenn sie das freie
+Budget wirklich uebersteigt** - sonst ist sie eine harmlose Terminmeldung.
+
+### Was gebaut wurde
+
+**`agent/kategorie_vorschlaege.py::wartende_vorschlaege(conn, jetzt=None)`** -
+reine Lesefunktion. Persistenzschwellen und Reife-Logik kommen aus **denselben**
+Funktionen wie der Job selbst (`_persistenz_tage_fuer_mechanismen()`,
+`db.get_kandidat_in_beobachtung()`). Eine zweite Fassung wuerde garantiert
+auseinanderlaufen - das ist die Lehre vom 03.08.
+
+**Klartext neben den IDs, nicht statt ihnen.** `kategorie_anzeige`,
+`richtung_anzeige`, `mechanismus_anzeige` liefern "Technologie & KI /
+Kuenstliche Intelligenz · Uebergewichten · Bellwether-Sentiment"; die stabilen
+IDs stehen unveraendert daneben, weil eine Auswertung sie braucht. Die
+Klartext-Tabellen liegen in `kategorie_vorschlaege.py` und nicht in der GUI:
+Export, Seite und GUI sollen dieselben Woerter benutzen.
+
+**Export** (`extract_notebook_diagnose.py`): neuer Abschnitt
+`wartende_themen_vorschlaege` plus Konsolenzeile, fail-soft gekapselt, aber mit
+sichtbarem `nicht_verfuegbar`-Feld statt stillem Verschwinden.
+
+**Uebersichtsseite**: eigene Karte "Themen in Beobachtung - wann wird was reif?"
+vor der Hedge-Karte, mit Liste nach Restzeit sortiert und ★ fuer gesetzte
+Schwerpunkte.
+
+### Nebenbefund: der Schwerpunkte-Tab war unbedienbar
+
+Nutzer-Fund im selben Zug (Screenshot): *"den Bereich unten sieht bzw. bedient
+man ohne Verschieben nicht vernuenftig"*. Zwei Ursachen, die sich addiert
+haben - und die erste war seit dem 25.07. drin, also seit dem Fix, der genau
+dieses Problem loesen sollte:
+
+1. **Zwei Panes fuer drei Bereiche.** Vorschlaege UND Tages-Synthese lagen beide
+   im unteren Frame, beide mit `expand=True`. Der zuletzt gepackte Block
+   (Synthese) faellt dann unten aus dem Fenster.
+2. **50/50 war die falsche Aufteilung.** Die Thesen-Liste bekam die halbe
+   Fensterhoehe fuer typisch 5-8 Zeilen - oben zwoelf Zeilen Leere, unten
+   abgeschnittene Tabellen. `height=18` hat diesen Hunger als Mindesthoehe
+   zementiert.
+
+Jetzt: drei eigene Panes mit eigenen Trennern, Startaufteilung 45/25/30, und
+die `sashpos`-Setzung wartet, bis das Fenster wirklich Hoehe hat (beim ersten
+`<Configure>` steht sie auf 1 - dann waeren beide Trenner auf 0 gelandet).
+Gemessen gegen eine DB-Kopie: bei 1600x900 sind es 386/215/258 px, bei 1100x600
+noch 251/140/168 px - alle drei Bereiche bedienbar.
+
+### Und ein eigener Fehler, der eine Naht bekommen hat
+
+Beim Verifizieren der Export-Erweiterung wurde `_google_drive_wurzel()`
+umgelenkt - **wirkungslos**, weil `ZIEL_ORDNER` eine Modul-Konstante ist, die
+schon beim Import feststeht. Der Testlauf hat damit den echten
+`notebook_diagnose.json` im Austauschordner ueberschrieben.
+
+Konsequenz: `TIT_EXPORT_ZIEL` als Umgebungsvariable, die **vor** der Konstanten
+wirkt. Mit gesetzter Variable kann ein Testlauf den Austauschordner gar nicht
+mehr erreichen. Eine Naht schlaegt eine Absichtserklaerung - dieselbe Logik wie
+bei `db.DB_PATH`.
+
+**`teste_wartende_vorschlaege.py`, 20 Pruefungen**, alle bestanden; elf
+Testsuiten und die Signaturpruefung gruen. Die Karte wurde in beiden Zustaenden
+im Browser gerendert (Engpass innerhalb des Budgets / darueber).
