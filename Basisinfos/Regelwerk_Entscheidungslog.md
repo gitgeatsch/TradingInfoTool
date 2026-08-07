@@ -8,11 +8,13 @@
 
 ---
 
-## Index nach Thema (197 Einträge)
+## Index nach Thema (198 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
-### Regelwerk / deterministische Gates (37)
+### Regelwerk / deterministische Gates (38)
+
+- **2026-08-07** — Schwerpunkte: Struktur (10 Hauptgruppen/72 Unterkategorien) und Mechanik sind gebaut; blockiert wird die Erweiterung durch `richtgroesse_max_aktive_thesen: 6` bei 6 aktiven Thesen
 
 - **2026-08-07** — RM-Bitpanda für Hedge nachgezogen (fehlte als einzige der sechs Pipelines) + Marktsuche-Filter `marktsuche.nur_bitpanda_gelistet` mit GUI-Schalter
 
@@ -14313,3 +14315,68 @@ weiterhin nicht - er speist die Kandidaten-Warteschlange, und ein Filter dort
 wuerde die Discovery selbst beschneiden statt nur die Anzeige. Das ist eine
 eigene Entscheidung (Discovery gegen Anzeige) und gehoert nicht nebenbei
 getroffen.
+
+
+---
+
+## Nachtrag (2026-08-07): warum nur Rohstoffe eine These haben - es ist der Deckel, nicht die Mechanik
+
+Nutzer-Hinweis: es gebe bereits ein Grobkonzept mit Haupt- und Untergruppen,
+und bei Rohstoffen habe man nur begonnen. Beides bestaetigt. Vollstaendig in
+`Zwischenstand_Gesamtprojekt_06_08.md` **Abschnitt 8f**.
+
+### Die Struktur ist vollstaendig
+
+`Basisinfos/kategorien.yaml` fuehrt **10 Hauptgruppen, 72 Unterkategorien und
+211 zugeordnete Bitpanda-Symbole** - darunter "Technologie & KI" mit 18
+Unterkategorien (inklusive "Kuenstliche Intelligenz"), "Aktien - Regionen &
+Laender" mit 66 Symbolen, "Aktien - Sektoren", "Anleihen & Geldmarkt".
+
+Thesen gibt es fuer **5 von 10** Hauptgruppen - die vier Rohstoffgruppen plus
+Absicherung. **160 von 211 Symbolen (76 %) haben kein Themenfeld-Urteil.**
+
+**Korrektur an meinem eigenen Vorschlag von vorhin:** ich hatte gefragt, ob
+"KI" als neue Hauptgruppe oder als eigene Ebene angelegt werden soll. Beides
+ueberfluessig - es existiert seit dem 19.07. Haette ich vor dem Vorschlag in
+die Doku gesehen, waere die Frage nicht entstanden. Zum zweiten Mal an diesem
+Tag ein Vorschlag zu etwas, das es schon gibt.
+
+### Auch die Mechanik ist gebaut - und sie laeuft
+
+`_BELLWETHER_TICKER` deckt `technologie_ki:ki`, `:halbleiter`,
+`:cybersicherheit`, `:biotech` und vier `aktien_sektoren:*` ab (Analystentrend
+Finnhub + Insider SEC EDGAR + Short-Interest FINRA). Von 16
+Aenderungsvorschlaegen entfallen **4 auf technologie_ki und 6 auf
+aktien_sektoren** - der KI-Vorschlag steht seit dem **25.07.** in Beobachtung.
+
+### Die Ursache: ein Deckel bei sechs
+
+    richtgroesse_max_aktive_thesen: 6
+    aktive Thesen heute:            6
+    Budget:                         0
+
+`_bestimme_gesperrte_fall_a_kandidaten()` rechnet `budget = richtgroesse_max -
+aktuelle_anzahl`. Bei sechs aktiven Thesen ist das null - **kein reifer
+Vorschlag kann mehr automatisch uebernommen werden.** Der Status belegt es: 14
+von 16 Vorschlaegen stehen auf "beobachtung", genau einer wurde je uebernommen.
+
+**Das ist kein Bug** - die Richtgroesse 3-6 ist eine bewusste Entscheidung
+(Kategorie_Basisinformationen_Release2.md Abschnitt 5). Der Punkt ist:
+
+> **Die sechs Plaetze sind von den Rohstoffen belegt, weil sie zuerst da waren -
+> nicht weil sie die wichtigsten waeren.** Zwei davon stehen auf `neutral` und
+> belegen denselben Platz wie eine potenziell relevante KI-These. Es gibt keinen
+> Verdraengungsmechanismus: first come, first served statt Prioritaet.
+
+### Vier Massnahmen (Details in 8f)
+
+| | | Aufwand |
+|---|---|---|
+| S-1 | **Verdraengung statt Sperre** - bei vollem Budget die schwaechste bestehende These gegen die neue abwaegen | mittel |
+| S-2 | Richtgroesse erhoehen oder je Hauptgruppe vergeben - sechs Plaetze bei zehn Gruppen heisst strukturell, dass vier Felder nie ein Urteil bekommen | klein/mittel |
+| S-3 | Sichtbarkeit - "seit 13 Tagen wartet ein KI-Vorschlag" gehoert auf die Uebersichtsseite | klein |
+| S-4 | Allocator-Prioritaet (8e Luecke 1) - erst sinnvoll, wenn die Themenfelder Thesen tragen | mittel |
+
+**S-1 und S-2 sind die eigentliche Antwort auf den Nutzer-Wunsch nach einem
+Override**: ein manueller Override ist technisch der einfachste Fall von S-1 -
+der Nutzer entscheidet die Verdraengung selbst.

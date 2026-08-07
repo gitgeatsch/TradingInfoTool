@@ -923,6 +923,100 @@ voneinander baubar. Lücke 2 (Benachrichtigung) braucht die Detailklärung, die
 seit dem 30.07. dokumentiert offen ist (Trigger, Cooldown, E-Mail-Format).
 
 
+
+---
+
+# 8f. Warum nur Rohstoffe eine These haben — der Deckel, nicht die Mechanik (07.08.2026)
+
+**Anlass:** Nutzer-Hinweis, es gebe bereits ein Grobkonzept mit Haupt- und
+Untergruppen, und *„bei Rohstoffen haben wir nur begonnen"*. Beides bestätigt —
+und die Ursache ist eine andere, als Abschnitt 8e vermutet hatte.
+
+## Die Struktur ist vollständig, nicht angefangen
+
+`Basisinfos/kategorien.yaml`: **10 Hauptgruppen, 72 Unterkategorien, 211
+zugeordnete Bitpanda-Symbole.**
+
+| Hauptgruppe | Unterkat. | Symbole | These |
+|---|---:|---:|---|
+| Edelmetalle | 4 | 6 | übergewichten |
+| Industriemetalle | 8 | 9 | neutral |
+| Energie | 9 | 19 | übergewichten |
+| Agrarrohstoffe & Nahrungsmittel | 8 | 17 | neutral |
+| Absicherung / Hedge | 2 | 0 | aktiv |
+| **Technologie & KI** | **18** | **24** | **—** |
+| **Aktien – Regionen & Länder** | 7 | **66** | **—** |
+| **Aktien – Sektoren** | 8 | 23 | **—** |
+| **Anleihen & Geldmarkt** | 6 | 26 | **—** |
+| **Sonstige** | 2 | 21 | **—** |
+
+**160 von 211 Symbolen (76 %) haben kein Themenfeld-Urteil.**
+
+> **Korrektur zu meinem eigenen Vorschlag von vorhin:** ich hatte gefragt, ob
+> „KI" als neue Hauptgruppe oder als eigene Ebene angelegt werden soll.
+> **Beides überflüssig** — „Technologie & KI" existiert seit dem 19.07. samt
+> Unterkategorie „Künstliche Intelligenz". Hätte ich vor dem Vorschlag in die
+> Doku gesehen, wäre die Frage nicht entstanden.
+
+## Auch die Mechanik ist gebaut — für genau diese Kategorien
+
+`_BELLWETHER_TICKER` deckt bereits ab: `technologie_ki:ki`,
+`technologie_ki:halbleiter`, `technologie_ki:cybersicherheit`,
+`technologie_ki:biotech`, dazu vier `aktien_sektoren:*`. Der Mechanismus
+kombiniert Analystentrend (Finnhub), Insider-Aktivität (SEC EDGAR) und
+Short-Interest (FINRA).
+
+Und er **läuft**: von 16 Änderungsvorschlägen im Export entfallen
+
+- **4 auf `technologie_ki`** (ki, halbleiter, cybersicherheit, biotech)
+- **6 auf `aktien_sektoren`**
+- 2 auf `aktien_regionen`, 1 auf `anleihen_geldmarkt`
+
+Beispiel `technologie_ki:ki`, in Beobachtung **seit dem 25.07.**:
+*„Analystentrend (Finnhub, MSFT, PLTR): Buy+StrongBuy-Anteil 81 % vs. Vormonat
+80 % … Insider-Aktivität (SEC EDGAR): 0 Käufer vs. 13 Verkäufer"* — Vorschlag
+`meiden`.
+
+## Die eigentliche Ursache: ein Deckel bei 6
+
+```
+kategorie_vorschlaege.richtgroesse_max_aktive_thesen: 6
+aktive Thesen heute:                                  6
+verbleibendes Budget:                                 0
+```
+
+`_bestimme_gesperrte_fall_a_kandidaten()` rechnet
+`budget = richtgroesse_max − aktuelle_anzahl`. Bei sechs aktiven Thesen ist das
+**null** — **kein reifer Vorschlag kann mehr automatisch übernommen werden.**
+
+Der Status der 16 Vorschläge belegt es: **14 × „beobachtung", 1 × „offen",
+1 × „übernommen"**.
+
+**Das ist kein Bug.** Die Richtgröße 3–6 ist eine bewusste Entscheidung
+(`Kategorie_Basisinformationen_Release2.md`, Abschnitt 5). Der Punkt ist ein
+anderer:
+
+> **Die sechs Plätze sind von den Rohstoffen belegt, weil sie zuerst da
+> waren — nicht weil sie die wichtigsten wären.** Zwei davon stehen auf
+> `neutral` (Agrarrohstoffe, Industriemetalle) und belegen denselben Platz wie
+> eine potenziell relevante KI-These. Es gibt keinen Verdrängungsmechanismus:
+> first come, first served statt Priorität.
+
+## Was daraus folgt
+
+| # | Maßnahme | Aufwand |
+|---|---|---|
+| **S-1** | **Verdrängung statt Sperre**: wird ein Vorschlag reif und das Budget ist voll, die schwächste bestehende These (z. B. `neutral` ohne Bewegung seit X Tagen) gegen die neue abwägen — statt den Vorschlag stumm zurückzustellen | mittel |
+| **S-2** | **Richtgröße erhöhen oder je Hauptgruppe vergeben** — sechs Plätze bei zehn Hauptgruppen heißt strukturell, dass vier Felder nie ein Urteil bekommen | klein (Zahl), mittel (je Gruppe) |
+| **S-3** | **Sichtbarkeit**: die 14 wartenden Vorschläge stehen nur im Thesen-Tab. Ein „seit 13 Tagen wartet ein KI-Vorschlag" gehört auf die Übersichtsseite | klein |
+| **S-4** | Allocator-Priorität (aus 8e Lücke 1) — erst sinnvoll, wenn die Themenfelder überhaupt Thesen tragen | mittel |
+
+**S-1 und S-2 sind die eigentliche Antwort auf den Nutzer-Wunsch** („ich kann
+einen Override bzw. eigene Schwerpunkte setzen"). Ein manueller Override ist
+technisch der einfachste Fall von S-1: der Nutzer entscheidet die Verdrängung
+selbst.
+
+
 ## Quellen (extern)
 
 - [Bitpanda Gebühren — Aktien/ETF 1 € pro Transaktion + Spread, Edelmetall-Aufschläge, Handelsblatt](https://www.handelsblatt.com/erfahrungen/bitpanda-gebuehren/)
