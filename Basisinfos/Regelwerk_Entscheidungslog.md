@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (199 Einträge)
+## Index nach Thema (200 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -14447,3 +14447,79 @@ gar keine. Im Test ausdruecklich abgesichert (B7-B9, A5-A7).
 **19 Pruefungen**, alle bestanden - inklusive des Falls aus der Nutzer-Frage:
 "Kupfer interessant" liefert Material und Miner nebeneinander, und der Nutzer
 entscheidet.
+
+
+---
+
+## Nachtrag (2026-08-07): Kostenmodell strukturell getrennt - die Positionsgroesse geht jetzt ein
+
+Schritt 1 des Gesamtkonzepts. Bis hierher galt EIN Satz fuer die gesamte
+Spot-Familie: 1 % je Seite, 2 % Roundtrip, bei 5 % Stop also **0,400 R** - fuer
+Bitpanda-Krypto plausibel, fuer Boersen-Aktien um eine Groessenordnung zu hoch.
+
+### Der strukturelle Kern
+
+Bei Bitpanda kosten **Aktien und ETFs 1 EUR FIX je Trade** plus Spread. Eine
+fixe Gebuehr bricht die Eigenschaft, auf der die ganze R-Rechnung beruht: **der
+Einsatz kuerzt sich nicht mehr heraus.** Deshalb zwei Kostenarten statt einer,
+und deshalb geht die Positionsgroesse ein.
+
+| Klasse | Kosten in R (5 % Stop) | Position |
+|---|---|---|
+| hebel | 0,280 | irrelevant (belegt) |
+| krypto | 0,600 | irrelevant |
+| aktien / etf / rohstoffe | **0,233** | 300 EUR |
+| | **0,200** | 400 EUR (Referenz) |
+| | **0,140** | 1.000 EUR |
+| | **0,120** | 2.000 EUR |
+| hedge | 0,184 (10 T.) / **0,259** (180 T.) | 500 EUR |
+
+### Vier Entscheidungen, jede begruendet
+
+**1. Positionsgroesse je Signal statt eines Pauschalwerts.** Nutzer-Angabe:
+aktuell 300-500 EUR, kuenftig eher 500-1.000. Statt eine Spanne zu waehlen wird
+die **tatsaechliche** Groesse aus dem Signal genommen (`position_size_eur`),
+Referenz 400 EUR nur wenn sie fehlt. Damit rechnet das System mit der echten
+Praxis und waechst automatisch mit, ohne dass jemand eine Zahl nachzieht.
+
+**2. Ein Satz je Klasse, nicht je Symbol.** Krypto kostet bei Bitpanda 0,99 %
+(BTC) bis 2,49 % (Altcoins); angesetzt sind **1,5 % je Seite** als konservative
+Mitte. Eine symbolgenaue Tabelle waere nicht pflegbar - genau der
+Handhabbarkeits-Einwand des Nutzers.
+
+> **ACHTUNG BEIM LESEN DER KENNZAHLEN:** Krypto steigt damit von 0,400 auf
+> **0,600 R**. Der Netto-Erwartungswert der Krypto-Klassen faellt entsprechend
+> um 0,2 R. Das ist keine Verschlechterung des Systems, sondern eine
+> Korrektur der Annahme - aber jede Zahl vor dem 07.08. ist damit nicht mehr
+> direkt vergleichbar.
+
+**3. Laufende ETP-Gebuehr nur fuer Hedge.** Gehebelte ETPs tragen eine
+Verwaltungsgebuehr (angesetzt 0,8 % p.a., geschaetzt und als unbelegt
+markiert). Erst dadurch wird die Haltedauer einer Absicherung kostenwirksam -
+vorher erschien eine ueber Monate gehaltene Absicherung so billig wie eine ueber
+zehn Tage.
+
+**4. Die Basislinie traegt dieselbe Positionsgroesse.** Sonst waere der
+Vergleich schief: die Fixgebuehr haengt an der Ordergroesse, und eine Basislinie
+mit anderer Groesse traegt eine andere Kostenlast.
+
+### Abgrenzung, die leicht schiefgeht
+
+Die Rohstoff-ETCs (OD7N/OD7H/OD7C/OD7L) sind **boersengehandelte ETCs**, nicht
+Bitpanda Metals. Die Metals-Aufschlaege (Silber 2,5 % Kauf / 2,0 % Verkauf)
+gelten fuer sie NICHT - wer das verwechselt, rechnet mit dem Dreifachen. Im Code
+als Kommentar an `_KOSTEN_ART_JE_TIER` festgehalten.
+
+### Was ehrlich bleibt
+
+`belegt=True` gilt weiterhin **nur fuer Hebel** (an 104 echten Positionen
+gemessen). Boerse und Krypto sind recherchiert, aber nicht an den eigenen Daten
+verifiziert - der Spread steckt bei Bitpanda im Kurs und ist aus den
+Transaktionsdaten allein nicht messbar (an 5.734 Trades geprueft: 0,000 %
+Median). Die Messung gegen die eigene Kursreihe bleibt offen.
+
+**19 Pruefungen** in `teste_kostenmodell_je_klasse.py`, alle bestanden; neun
+Testsuiten und die Signaturpruefung gruen.
+
+Quellen: Handelsblatt (Bitpanda-Gebuehren je Anlageklasse), Finanzfuchs
+(Krypto-Spreads).

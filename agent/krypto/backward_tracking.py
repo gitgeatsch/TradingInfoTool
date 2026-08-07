@@ -2054,6 +2054,59 @@ _KOSTEN_HEBEL_FALLBACK = 3.0
 # `kosten_belegt=False` und darf NICHT wie ein gemessener Wert zitiert werden.
 _KOSTEN_SPOT_JE_SEITE = 0.01
 
+# --- Kostenstruktur je Assetklasse (2026-08-07, recherchiert) --------------
+#
+# DER FEHLER, DEN DAS BEHEBT. Bis hierher galt EIN Satz fuer die gesamte
+# Spot-Familie: 1 % je Seite, 2 % Roundtrip - bei einem 5-%-Stop also 0,40 R.
+# Das ist fuer Bitpanda-Krypto plausibel (der Spread dort ist weit) und fuer
+# Boersen-Aktien um eine Groessenordnung zu hoch.
+#
+# Recherchiert (Handelsblatt, Finanzfuchs, Stand 08/2026):
+#
+#   Krypto        0,99 % (BTC) bis 2,49 % (Altcoins), IM KURS enthalten
+#   Aktien/ETF    1 EUR FIX je Trade + Spread bis 0,5 %
+#   Sparplaene    kommissionsfrei
+#   Edelmetalle   asymmetrischer Aufschlag je Metall (Gold 0,50/1,00 %)
+#   Depot         0
+#
+# DAS STRUKTURELLE PROBLEM: eine FIXE Gebuehr bricht die Eigenschaft, auf der
+# die ganze R-Rechnung beruht - der Einsatz kuerzt sich nicht mehr heraus. Bei
+# 5 % Stop kostet dieselbe Gebuehr:
+#
+#     300 EUR Position  ->  15 EUR Risiko  ->  2 EUR  ->  0,133 R
+#   2.000 EUR Position  -> 100 EUR Risiko  ->  2 EUR  ->  0,020 R
+#
+# Deshalb zwei Kostenarten statt einer, und deshalb geht die Positionsgroesse
+# in die Rechnung ein.
+#
+# WICHTIGE ABGRENZUNG: die Rohstoff-ETCs (OD7N/OD7H/OD7C/OD7L) sind
+# BOERSENGEHANDELTE ETCs, nicht Bitpanda Metals. Die Metals-Aufschlaege
+# (Silber 2,5 % Kauf / 2,0 % Verkauf) gelten fuer sie NICHT - wer das
+# verwechselt, rechnet mit dem Dreifachen.
+_KOSTEN_ART_JE_TIER = {
+    "krypto": "prozentual",
+    "aktien": "fix_plus_spread",
+    "etf": "fix_plus_spread",
+    "rohstoffe": "fix_plus_spread",
+    TIER_HEDGE: "fix_plus_spread",
+}
+# Krypto ueber Bitpanda: 0,99 % (BTC) bis 2,49 % (Altcoins). 1,5 % je Seite ist
+# die konservative Mitte - bewusst EIN Satz je Klasse statt je Symbol, sonst
+# wird die Pflege unhandhabbar (Nutzer-Einwand 07.08.).
+_KOSTEN_KRYPTO_JE_SEITE = 0.015
+# Boerse ueber Bitpanda: 1 EUR fix je Trade plus Spread.
+_KOSTEN_BOERSE_FIX_EUR = 1.0
+_KOSTEN_BOERSE_SPREAD_JE_SEITE = 0.0025
+# Referenz-Positionsgroesse, wenn das Signal keine mitbringt. Nutzer-Angabe
+# 07.08.: aktuell 300-500 EUR, kuenftig eher 500-1.000. 400 EUR ist der
+# konservative (= teurere) Ausgangspunkt innerhalb der heutigen Praxis.
+_KOSTEN_REFERENZ_POSITION_EUR = 400.0
+# Laufende Gebuehr gehebelter ETPs (3QSS/DBPK). GESCHAETZT, nicht belegt -
+# WisdomTree/Xtrackers liegen bei rund 0,6-1,0 % p.a. Fliesst nur bei Hedge ein
+# und macht die dortige Haltedauer erstmals kostenwirksam; ohne sie erscheint
+# eine ueber Monate gehaltene Absicherung billiger als sie ist.
+_KOSTEN_HEDGE_TER_P_A = 0.008
+
 
 def _tagesgebuehr_rel(tage: float) -> float:
     """Aufgelaufene Tagesgebuehr ueber `tage`, ueber die Staffel integriert."""
@@ -2071,7 +2124,8 @@ def _tagesgebuehr_rel(tage: float) -> float:
 
 def kosten_in_r(stop_rel: float | None, tier: str, tage: float,
                 hebel: float | None = None,
-                ist_liquidation: bool = False) -> dict:
+                ist_liquidation: bool = False,
+                position_eur: float | None = None) -> dict:
     """Handelskosten eines Trades, ausgedrueckt in R (Vielfachen des Risikos).
 
     HERLEITUNG. Einsatz E, Hebel L, damit Nominal N = E x L und geliehenes
@@ -2110,6 +2164,7 @@ def kosten_in_r(stop_rel: float | None, tier: str, tage: float,
         return {"kosten_r": None, "kosten_rel": None, "hebel": hebel,
                 "tage": tage, "belegt": False, "basis": "kein Stop-Abstand"}
 
+    groesse = None
     if tier == TIER_HEBEL:
         L = float(hebel) if hebel and hebel > 1 else _KOSTEN_HEBEL_FALLBACK
         satz = _KOSTEN_HEBEL_SCHLIESSUNG + _tagesgebuehr_rel(tage)
@@ -2117,13 +2172,37 @@ def kosten_in_r(stop_rel: float | None, tier: str, tage: float,
             satz += _KOSTEN_HEBEL_LIQUIDATION
         kosten_rel = (L - 1.0) / L * satz
         belegt, basis = True, "geliehenes Kapital, an 104 Positionen belegt"
-    else:
+    elif _KOSTEN_ART_JE_TIER.get(tier) == "fix_plus_spread":
+        # BOERSE: 1 EUR fix je Trade plus Spread. Die Fixgebuehr macht die
+        # Kosten in R positionsgroessen-ABHAENGIG - der Einsatz kuerzt sich
+        # hier NICHT heraus (siehe _KOSTEN_ART_JE_TIER fuer die Herleitung).
         L = None
-        kosten_rel = 2.0 * _KOSTEN_SPOT_JE_SEITE
-        belegt, basis = False, "Spot-Annahme, im Spread nicht messbar"
+        groesse = float(position_eur) if position_eur and position_eur > 0 else _KOSTEN_REFERENZ_POSITION_EUR
+        fix_rel = (2.0 * _KOSTEN_BOERSE_FIX_EUR) / groesse
+        kosten_rel = fix_rel + 2.0 * _KOSTEN_BOERSE_SPREAD_JE_SEITE
+        if tier == TIER_HEDGE and tage:
+            # Laufende ETP-Gebuehr, anteilig fuer die Haltedauer. Nur hier -
+            # ein gewoehnlicher Spot-Kauf traegt keine.
+            kosten_rel += _KOSTEN_HEDGE_TER_P_A * (float(tage) / 365.0)
+        belegt = False
+        basis = (f"Boerse: {_KOSTEN_BOERSE_FIX_EUR:.0f} EUR fix je Seite auf "
+                 f"{groesse:.0f} EUR Position + {_KOSTEN_BOERSE_SPREAD_JE_SEITE * 100:.2f} % Spread"
+                 + (", plus laufende ETP-Gebuehr" if tier == TIER_HEDGE else "")
+                 + ("" if position_eur else " (Referenzgroesse, Signal ohne Positionsangabe)"))
+    else:
+        # KRYPTO ueber Bitpanda: prozentual, im Kurs enthalten.
+        L = None
+        kosten_rel = 2.0 * _KOSTEN_KRYPTO_JE_SEITE
+        belegt = False
+        basis = "Bitpanda-Krypto: 1,5 % je Seite (Mitte 0,99-2,49 %), im Kurs enthalten"
 
     return {"kosten_r": kosten_rel / stop_rel, "kosten_rel": kosten_rel,
-            "hebel": L, "tage": tage, "belegt": belegt, "basis": basis}
+            "hebel": L, "tage": tage, "belegt": belegt, "basis": basis,
+            # NUR melden, wo die Groesse tatsaechlich in die Rechnung eingeht.
+            # Bei Krypto und Hebel waere ein Wert hier irrefuehrend - dort
+            # kuerzt sich der Einsatz heraus, die Zahl haette keine Bedeutung.
+            "position_eur": (groesse if _KOSTEN_ART_JE_TIER.get(tier) == "fix_plus_spread"
+                             else None)}
 
 
 def _feld(row, name: str, default=None):
@@ -2164,6 +2243,24 @@ def _hebel_der_zeile(row) -> float | None:
         v = _feld(row, spalte)
         if v:
             return float(v)
+    return None
+
+
+def _position_eur_aus(row) -> float | None:
+    """Positionsgroesse einer Signalzeile in EUR, oder None (2026-08-07).
+
+    Spot fuehrt `position_size_eur`, Hebel `position_size_eur` bzw. den
+    Eigenkapitaleinsatz. sqlite3.Row kennt kein .get() - deshalb ueber keys(),
+    dieselbe Falle wie am 06.08. bei der Plausibilitaetsschranke."""
+    try:
+        felder = set(row.keys())
+    except AttributeError:
+        felder = set(row) if isinstance(row, dict) else set()
+    for name in ("position_size_eur", "einsatz_eur", "position_eur"):
+        if name in felder:
+            wert = row[name]
+            if wert and float(wert) > 0:
+                return float(wert)
     return None
 
 
@@ -2306,6 +2403,11 @@ def compute_systemguete(conn, watchlist: list | None = None,
     # Bruttozahlen bleiben unveraendert, siehe kosten_in_r().
     dauern: dict[tuple[str, str], list[float]] = {}
     hebel_werte: dict[tuple[str, str], list[float]] = {}
+    # POSITIONSGROESSE je bewertetem Fall (2026-08-07). Bei den boersengehandelten
+    # Klassen faellt eine FIXE Gebuehr an (1 EUR je Trade), damit haengen die
+    # Kosten in R an der Ordergroesse - der Einsatz kuerzt sich dort nicht
+    # heraus. Siehe _KOSTEN_ART_JE_TIER.
+    positionen: dict[tuple[str, str], list[float]] = {}
     # Woher die Dauer kam: echte Zeitstempel oder Simulation. Ohne diese
     # Aufschluesselung liesse sich hinterher nicht sagen, wie belastbar die
     # Kostenzahl ist - am 04.08. trug nur ein Zehntel der Zeilen ein Enddatum.
@@ -2313,7 +2415,7 @@ def compute_systemguete(conn, watchlist: list | None = None,
 
     def _erfasse(tier: str, art: str, crv, ist_offen: bool, zonen_werte=None,
                  created_at=None, dauer=None, hebel=None,
-                 dauer_aus_zeitstempel: bool = False) -> None:
+                 dauer_aus_zeitstempel: bool = False, position_eur=None) -> None:
         key = (tier, art)
         r_werte.setdefault(key, [])
         offen.setdefault(key, 0)
@@ -2334,6 +2436,8 @@ def compute_systemguete(conn, watchlist: list | None = None,
                 dauer_echt[key] = dauer_echt.get(key, 0) + 1
         if hebel:
             hebel_werte.setdefault(key, []).append(float(hebel))
+        if position_eur:
+            positionen.setdefault(key, []).append(float(position_eur))
 
     def _simuliere_zeile(row, reihen_: dict) -> dict | None:
         """Simulationsergebnis einer Signalzeile, oder None.
@@ -2428,7 +2532,8 @@ def compute_systemguete(conn, watchlist: list | None = None,
                     sim = _simuliere_zeile(row, reihen)
                     dauer = None if sim is None else sim["tag"] + 1
                 _erfasse(tier, art, crv, False, z, row["created_at"],
-                         dauer=dauer, hebel=hebel, dauer_aus_zeitstempel=echt)
+                         dauer=dauer, hebel=hebel, dauer_aus_zeitstempel=echt,
+                         position_eur=_position_eur_aus(row))
                 continue
 
             # Noch laufend oder ueberholt: Mark-to-Market statt Wegwerfen -
@@ -2442,7 +2547,8 @@ def compute_systemguete(conn, watchlist: list | None = None,
             else:
                 mtm[(tier, art)] = mtm.get((tier, art), 0) + 1
                 _erfasse(tier, art, sim["r"], False, z, row["created_at"],
-                         dauer=sim["tag"] + 1, hebel=hebel)
+                         dauer=sim["tag"] + 1, hebel=hebel,
+                         position_eur=_position_eur_aus(row))
 
     ergebnis: dict = {}
     # `reihen` ist schon oben geladen (Mark-to-Market braucht sie fruehe) -
@@ -2462,17 +2568,24 @@ def compute_systemguete(conn, watchlist: list | None = None,
         # Spot-Kostenannahme ist ausdruecklich nicht belegt (kosten_belegt).
         d_liste = dauern.get((tier, art), [])
         h_liste = hebel_werte.get((tier, art), [])
+        p_liste = positionen.get((tier, art), [])
         kosten = kosten_in_r(
             statistics.median(x[0] for x in z) if z else None, tier,
             statistics.median(d_liste) if d_liste else _BASISLINIE_HORIZONT_TAGE,
             hebel=statistics.median(h_liste) if h_liste else None,
+            position_eur=statistics.median(p_liste) if p_liste else None,
         ) if _KOSTEN_AKTIV else {"kosten_r": None, "kosten_rel": None, "hebel": None,
-                                 "tage": None, "belegt": False, "basis": "abgeschaltet"}
+                                 "tage": None, "belegt": False, "basis": "abgeschaltet",
+                                 "position_eur": None}
         k["kosten_r"] = kosten["kosten_r"]
         k["kosten_belegt"] = kosten["belegt"]
         k["kosten_basis"] = kosten["basis"]
         k["kosten_hebel"] = kosten["hebel"]
         k["kosten_median_haltedauer_tage"] = kosten["tage"]
+        # Woraus die Kosten gerechnet wurden - bei den boersengehandelten
+        # Klassen entscheidet die Ordergroesse ueber die Kostenlast in R.
+        k["kosten_position_eur"] = kosten.get("position_eur")
+        k["kosten_position_anzahl"] = len(p_liste)
         # Belastbarkeit der Dauer: wie viele Faelle trugen ein echtes Enddatum,
         # wie viele mussten simuliert werden?
         k["kosten_dauer_anzahl"] = len(d_liste)
@@ -2550,6 +2663,10 @@ def compute_systemguete(conn, watchlist: list | None = None,
                 stop_rel, tier,
                 bl.get("median_haltedauer_tage") or _BASISLINIE_HORIZONT_TAGE,
                 hebel=kosten["hebel"],
+                # DIESELBE Positionsgroesse wie die Signale - sonst traegt die
+                # Basislinie eine andere Kostenlast und der Vergleich waere
+                # schief (die Fixgebuehr haengt an der Ordergroesse).
+                position_eur=kosten.get("position_eur"),
             ) if _KOSTEN_AKTIV else {"kosten_r": None}
             k["basislinie_kosten_r"] = bl_kosten["kosten_r"]
             k["basislinie_erwartungswert_r_netto"] = (

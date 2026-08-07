@@ -992,7 +992,7 @@ Wahrheit hat sich an diesem einen Tag mehrfach zurückgezahlt.
 verifiziert, nie angeschlossen (`compute_baseline_vergleich`,
 `compute_sl_mfe_analyse`, `compute_zai_uebereinstimmung_baseline`). Ich habe
 stundenlang von Hand nachgerechnet, was fertig im Code lag. Inzwischen stehen
-**54 Analyse- und Prüfskripte** im Projektstamm — ohne Index findet niemand das
+**55 Analyse- und Prüfskripte** im Projektstamm — ohne Index findet niemand das
 richtige, und der nächste Nachbau ist nur eine Frage der Zeit.
 
 Sortiert ist nach **Auslöser**, nicht nach Funktion: die Frage im Kopf ist
@@ -1028,6 +1028,7 @@ Zwei Implementierungen derselben Simulation laufen garantiert auseinander
 | `pruefe_fx_ableitung.py` | Verworfene FX-Ableitungen im Log, oder EUR/USD-Werte, die nicht zusammenpassen. Rankt die Ausreißer **und** unterscheidet Veraltung von Illiquidität (Renditekorrelation + sd-Verhältnis + Volumen). |
 | `backtest_ueberholt_erkennung.py` | Zweifel an der Überholt-Logik. |
 | `teste_rekonstruktion_verdrahtung.py` | Nach jeder Änderung an den Rohstoff- oder Hedge-Pipelines. Prüft die Symboltrennung, den Ankertag, `quelle`, den Volatilitäts-Drag und den TA-Lesepfad — gegen eine temporäre DB, offline (yfinance gemockt). |
+| `teste_kostenmodell_je_klasse.py` | **Nach jeder Änderung an `kosten_in_r()`.** Prüft die strukturelle Trennung: bei den börsengehandelten Klassen müssen die Kosten mit der Positionsgröße **fallen**, bei Krypto und Hebel **nicht**. Plus Hedge-ETP-Gebühr über die Haltedauer und die Ehrlichkeit der `belegt`-Kennzeichnung. |
 | `teste_themen_und_steckbrief.py` | Nach jeder Änderung an `kategorien.yaml`, den Themen-Brücken oder dem Asset-Steckbrief. Prüft insbesondere, dass **Lücken erlaubt bleiben** — fehlende Angaben fallen weg statt geraten zu werden. |
 | `pruefe_fakten_rollout.py` | **Nach jeder Fakten- oder Regeländerung an einer Pipeline.** Vergleicht die `build_facts()` aller sechs Pipelines und meldet jeden Fakt, der nur in einer Teilmenge existiert — plus zehn Mechanismen auf Pipeline-Ebene. Fällt **kein Urteil**: viele Unterschiede sind richtig, das Skript stellt die Frage, ob sie *entschieden* wurden. Begründete Fälle gehören in `BEGRUENDETE_UNTERSCHIEDE`. |
 | `pruefe_aufruf_signaturen.py` | **Nach jedem neuen Parameter an einer Funktion mit mehreren Aufrufern.** AST-Durchlauf über alle Dateien: findet Aufrufe, die Argumente übergeben, die die Zielfunktion nicht kennt. Am 06.08. hätte er den `crv_baender`-Fehler vor dem Deploy gefunden — und belegt hinterher, dass es der einzige seiner Art war. |
