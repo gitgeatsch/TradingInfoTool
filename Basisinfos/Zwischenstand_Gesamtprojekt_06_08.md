@@ -1116,9 +1116,19 @@ tut.
 | **2** | **Richtgröße spezifikationskonform** (weich statt hart) + G-5 (Handelbarkeits-Prüfung beim Anlegen) | S-2, G-5 | klein | **ERLEDIGT 07.08.** |
 | **3** | **Manuelle Schwerpunkte mit garantiertem Raum** (`schwerpunkte.manuell`, Schalter im Thesen-Tab) | Nutzer-Vorgabe 07.08. | klein | **ERLEDIGT 07.08.** |
 | **4** | **Wartende Vorschläge sichtbar machen** (S-3) — plus Layout-Fix im Schwerpunkte-Tab | S-3 | klein | **ERLEDIGT 07.08.** |
-| **5** | **Erfolgsmaß je Themenfeld** (G-2: Systemgüte zusätzlich nach Hauptgruppe) | G-2 | mittel | offen |
+| **5** | **Erfolgsmaß je Themenfeld** (G-2) — **nicht** als Systemgüte je Hauptgruppe, siehe unten | G-2 | mittel | **ERLEDIGT 07.08.** |
 | **6** | **Allocator-Priorität** (S-4: übergewichtete Themenfelder bevorzugt) — setzt Schritt 3 voraus | S-4 | mittel | offen |
 | **7** | **Rollout-Entscheidungen** der vier offenen Fakten (antizyklisch, tranchen_erlaubt, liquiditaetszonen, signal_stabilitaet) | H-7 | klein je Fakt | offen |
+
+**Warum Schritt 5 anders gebaut wurde als geplant:** die Messung vor dem Bau
+ergab 101 aufgelöste Signale — und **kein einziges** davon gehört zu einem
+Themenfeld. Eine Systemgüte je Hauptgruppe wäre eine Tabelle aus leeren Zellen
+und sähe trotzdem aus wie ein Instrument. Gemessen wird deshalb die
+**Richtungsaussage auf einen Korb** (Überrendite gegen die übrigen Themen-Assets
+seit `gesetzt_am`) plus die **Wirkungskette** — bei Energie haben 2 von 22 Assets
+überhaupt eine Kursreihe, und genau das ist die eigentliche Engstelle. Die
+Absicherung bleibt draußen: ein Hedge, der verliert während das Portfolio steigt,
+hat funktioniert.
 
 **Was Schritt 2 verändert hat, und was dabei kippte:** die Spezifikation stand
 in *beiden* Halbsätzen auf dem Kopf — im Code ein hartes Limit, in der GUI gar

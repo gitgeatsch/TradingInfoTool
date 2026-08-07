@@ -319,6 +319,17 @@ _INDEX_HTML = """<!doctype html>
   <div id="richtungsverteilung-body"></div>
 </div>
 
+<div class="card" id="themenfeld-erfolg-card" style="display:none">
+  <div class="row"><strong>Themenfelder — traf die Richtung?</strong></div>
+  <div class="row"><span class="muted-text">Gemessen wird <b>nicht</b> die Systemgüte je Hauptgruppe:
+  von 101 aufgelösten Signalen (Stand 07.08.) gehört <b>keines</b> zu einem Themenfeld — die Tabelle wäre
+  leer und sähe trotzdem aus wie ein Instrument. Eine These ist auch keine Trade-Folge, sondern eine
+  Richtungsaussage auf einen Korb. Verglichen wird deshalb die gleichgewichtete Korbrendite der Kategorie
+  seit dem Setzen der These gegen die aller übrigen Themen-Assets. Die Absicherung fehlt hier bewusst —
+  sie wird über die Dämpfung gemessen, nicht über Überrendite.</span></div>
+  <div id="themenfeld-erfolg-body"></div>
+</div>
+
 <div class="card" id="wartende-themen-card" style="display:none">
   <div class="row"><strong>Themen in Beobachtung — wann wird was reif?</strong></div>
   <div class="row"><span class="muted-text">Ein Themen-Vorschlag zählt erst, wenn sein Prüf-Mechanismus
@@ -685,6 +696,49 @@ function renderRichtungsverteilung(r) {
     }
   }
   return h;
+}
+
+function renderThemenfeldErfolg(t) {
+  if (!t.thesen || t.thesen.length === 0) {
+    return '<div class="row"><span class="muted-text">Keine aktive These.</span></div>';
+  }
+  let x = '<div class="row"><span>Thesen gesamt</span><span>' + t.anzahl_thesen + "</span></div>";
+  x += '<div class="row"><span>davon messbar</span><span>' + t.anzahl_messbar + "</span></div>";
+  if (t.anzahl_mit_urteil > 0) {
+    x += '<div class="row"><span>Richtung getroffen</span><strong' +
+      (t.treffer >= t.fehlschlaege ? ' class="ok"' : ' class="err"') + ">" +
+      t.treffer + " von " + t.anzahl_mit_urteil + "</strong></div>";
+  }
+  x += '<div class="row"><span class="muted-text">&nbsp;</span></div>';
+  for (const e of t.thesen) {
+    const name = e.kategorie_anzeige || e.hauptgruppe;
+    if (!e.messbar) {
+      x += '<div class="row"><span>' + name + ' <span class="muted-text">(' +
+        (e.richtung_anzeige || e.richtung) +
+        ")</span></span><span class=\"muted-text\">nicht messbar</span></div>";
+      x += '<div class="row"><span class="muted-text">↳ ' + (e.grund || "") + "</span></div>";
+      continue;
+    }
+    // "unentschieden" ist ein String, Treffer/Fehlschlag sind Boolesche - der
+    // Unterschied muss sichtbar bleiben, sonst liest sich Zufall wie Koennen.
+    let urteil, klasse;
+    if (e.treffer === true) { urteil = "getroffen"; klasse = ' class="ok"'; }
+    else if (e.treffer === false) { urteil = "daneben"; klasse = ' class="err"'; }
+    else if (e.treffer === "unentschieden") { urteil = "unentschieden"; klasse = ""; }
+    else { urteil = "kein Urteil (neutral)"; klasse = ""; }
+    const pp = (e.ueberrendite_prozentpunkte >= 0 ? "+" : "") +
+      e.ueberrendite_prozentpunkte.toFixed(1) + " pp";
+    x += '<div class="row"><span>' + name + ' <span class="muted-text">(' +
+      (e.richtung_anzeige || e.richtung) +
+      ", " + e.tage_aktiv + " Tage, getragen von " +
+      (e.getragen_von || []).join(", ") + ')</span></span><strong' + klasse + ">" +
+      pp + " · " + urteil + "</strong></div>";
+    const w = e.wirkungskette || {};
+    x += '<div class="row"><span class="muted-text">↳ ' + w.assets_mit_kursreihe + " von " +
+      w.assets_gesamt + " Assets mit Kursreihe, " + w.signale_gesamt + " Signale (" +
+      w.signale_aufgeloest + " aufgelöst)</span></div>";
+  }
+  return x;
 }
 
 function renderWartendeThemen(w) {
@@ -1128,6 +1182,12 @@ async function refreshStatus() {
     document.getElementById("richtungsverteilung-card").style.display = "block";
     document.getElementById("richtungsverteilung-body").innerHTML =
       renderRichtungsverteilung(data.richtungsverteilung);
+  }
+
+  if (data.themenfeld_erfolg) {
+    document.getElementById("themenfeld-erfolg-card").style.display = "block";
+    document.getElementById("themenfeld-erfolg-body").innerHTML =
+      renderThemenfeldErfolg(data.themenfeld_erfolg);
   }
 
   if (data.wartende_themen) {

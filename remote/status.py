@@ -142,6 +142,9 @@ class RemoteStatus:
     # "14 beobachtung" sagt nichts ueber den Vorlauf - diese Karte sagt, WANN
     # etwas reif wird und wie viele am selben Tag.
     wartende_themen: dict | None = None
+    # Traf die Richtung der These? (2026-08-07, G-2) - bewusst NICHT die
+    # Systemguete je Hauptgruppe, siehe agent/themenfeld_erfolg.py.
+    themenfeld_erfolg: dict | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -179,6 +182,7 @@ class RemoteStatus:
             "marktscan_erfolgsquote": self.marktscan_erfolgsquote,
             "coingecko_quota": self.coingecko_quota,
             "wartende_themen": self.wartende_themen,
+            "themenfeld_erfolg": self.themenfeld_erfolg,
         }
 
 
@@ -280,6 +284,7 @@ def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, erro
         marktscan_erfolgsquote=_safe(_get_marktscan_erfolgsquote, conn),
         coingecko_quota=_safe(_get_coingecko_quota, conn),
         wartende_themen=_safe(_get_wartende_themen, conn),
+        themenfeld_erfolg=_safe(_get_themenfeld_erfolg, conn),
     )
 
 
@@ -683,6 +688,15 @@ def _get_hedge_wirksamkeit(conn: sqlite3.Connection, watchlist: list) -> dict | 
 
     ab = (date.today() - timedelta(days=90)).isoformat()
     return compute_hedge_wirksamkeit(conn, ab_datum=ab, watchlist=watchlist)
+
+
+def _get_themenfeld_erfolg(conn: sqlite3.Connection) -> dict | None:
+    """Traf die Richtungsaussage der These? Siehe agent/themenfeld_erfolg.py -
+    eine These ist eine Aussage ueber einen Korb, keine Trade-Folge, deshalb
+    eine eigene Karte statt einer Zeile in der Systemguete."""
+    from agent.themenfeld_erfolg import compute_themenfeld_erfolg
+
+    return compute_themenfeld_erfolg(conn)
 
 
 def _get_wartende_themen(conn: sqlite3.Connection) -> dict | None:

@@ -14758,3 +14758,93 @@ Stop-Regelfamilie). Zwoelf Testsuiten und die Signaturpruefung gruen.
 
 49 Zeilen toter Code (Budget-Rechnung, Schicht-2-Sortierung fuer die Sperre)
 entfernt statt auskommentiert.
+
+## Nachtrag (2026-08-07): Erfolgsmaß je Themenfeld - die geplante Kennzahl waere eine leere Tabelle gewesen
+
+### Die Messung vor dem ersten Zeilencode
+
+Geplant war "Systemguete zusaetzlich nach Hauptgruppe" (G-2). Am
+Notebook-Export vom 07.08. nachgezaehlt:
+
+| | Signale | davon aufgeloest |
+|---|---|---|
+| Spot | 2795 | 10 |
+| Hebel | 1759 | 91 |
+
+**Von diesen 101 aufgeloesten gehoert kein einziges zu einem Themenfeld.** Das
+ist kein Datenloch, sondern Konstruktion: die Themen-Taxonomie ist bewusst fuer
+Nicht-Krypto gebaut, und Nicht-Krypto hat bisher keine aufgeloesten Signale
+hervorgebracht - genau das ist ja der offene Befund "alle Nicht-Krypto-Signale
+sagen HALTEN".
+
+Eine Systemguete je Hauptgruppe waere heute also eine Tabelle aus leeren Zellen
+und wuerde dabei aussehen wie ein funktionierendes Instrument. **Das ist
+schlimmer als keine Zahl.**
+
+### Was stattdessen gemessen wird
+
+Eine These ist keine Trade-Folge, sondern eine **Richtungsaussage auf einen
+Korb**. SQN und Expectancy sind dafuer derselbe Kategorienfehler wie beim Hedge
+(`compute_hedge_wirksamkeit()`, W1 heute frueh): Kennzahlen, die eine andere
+Frage beantworten als die gestellte. `agent/themenfeld_erfolg.py` misst deshalb
+zwei Dinge:
+
+1. **Traf die Richtung?** Gleichgewichtete Korbrendite der Kategorie seit
+   `gesetzt_am` gegen die aller uebrigen Themen-Assets. Der Vergleichskorb ist
+   nicht schmueckendes Beiwerk: "uebergewichten" ist eine RELATIVE Aussage -
+   ohne Gegenueber misst man den Gesamtmarkt und nennt es Themenwahl.
+2. **Kam die These ueberhaupt bei einem Asset an?** Assets gesamt, davon mit
+   Kursreihe, davon mit Signal. Das macht die eigentliche Engstelle sichtbar,
+   statt sie zu verdecken - bei Energie sind es **2 von 22**.
+
+### Die Absicherung fehlt bewusst
+
+Ein Hedge, der verliert waehrend das Portfolio steigt, hat funktioniert. Eine
+Ueberrendite-Messung wuerde ihn systematisch als Fehlschlag ausweisen. Statt
+einer falschen Zahl steht dort ein Verweis auf `compute_hedge_wirksamkeit()` -
+dieselbe Abgrenzung wie am Vormittag, diesmal von der anderen Seite.
+
+### Drei Dinge, die kein Urteil bekommen
+
+- **`neutral`** trifft keine Richtungsaussage. Die Zahl steht da, ein Treffer
+  waere eine erfundene Aussage.
+- **Unter `SCHWELLE_TREFFER_PROZENT` (2,0 pp)** heisst "unentschieden". Bei
+  einem Korb aus ein bis drei Werten ist ein halber Prozentpunkt kein Signal.
+- **Unter `MIN_TAGE_FUER_URTEIL` (10 Tage)** gibt es kein Urteil - darunter
+  misst man Tagesrauschen und nennt es Treffer.
+
+### Welcher Korb fehlt, muss dastehen
+
+Erster Entwurf meldete pauschal "zu wenige Kurspunkte". Das laesst offen, ob
+die Kategorie oder der Vergleichsmassstab leer ist - und das sind voellig
+verschiedene Probleme: das eine betrifft eine Kategorie, das andere blockiert
+JEDE Themenfeld-Messung. Die Meldung unterscheidet jetzt drei Faelle, und die
+spezifischere Pruefung ("kein Asset hat ueberhaupt eine Kursreihe") greift
+zuerst.
+
+Beim Rauchtest gegen die Entwicklungskopie hat genau das getragen: dort sind
+**null** Symbole mit USD-Kurspunkten im Fenster - die Meldung sagt das jetzt,
+statt es einer Kategorie anzulasten.
+
+### Tests
+
+`teste_themenfeld_erfolg.py`, **30 Pruefungen**. Die Kursreihen sind
+**simuliert**, nicht abgewartet: ohne sie liesse sich nur der
+Nicht-Messbar-Zweig testen, und genau das waere der Fehler, den die stehende
+Vorgabe verbietet. Abgedeckt sind Treffer, Fehlschlag, `meiden` als
+Richtungsumkehr, `unentschieden`, `neutral` ohne Urteil, zu junge These,
+Absicherungs-Ausnahme, Wirkungskette und alle drei Diagnose-Zweige.
+Dreizehn Testsuiten und die Signaturpruefung gruen.
+
+### Offene Befunde aus Log und Export vom 07.08. (nicht in diesem Commit)
+
+| | Befund | Einordnung |
+|---|---|---|
+| A | **OD7C und OD7H: 0 von 91 Tagen bewertet**, `letzter_kurs_eur` leer | Die Rekonstruktion vom Vormittag lief fuer diese beiden nie. OD7L/OD7N/PLTR/VST haben 60 Tage ueber FX. |
+| B | FX-Ableitung: **1 Tag** verworfen (06.08., IQR 2,2 % vs. Grenze 2 %), aber **dutzendfach geloggt** | Log-Defekt, kein Datenfehler. In diesem Takt ersaeuft jeder echte Fund. |
+| C | `mistral: 402 Payment Required` -> Synthese lief ueber Gemini | Kette hat gegriffen (19 Kategorien), Mistral als Erstanbieter derzeit tot. |
+| D | CoinGecko `ConnectTimeout`, `refresh_prices_job` einmal fehlgeschlagen | Erklaert die "1 Tag ohne Kurs" bei allen Krypto-Werten. Kein Handlungsbedarf. |
+
+Die "30 von 33 Symbolen ohne Kurs" aus der Bewertungs-Diagnose sind **kein**
+Befund: gezaehlt werden Symbole mit mindestens EINEM fehlenden Tag im
+91-Tage-Fenster - bei Boersenwerten sind das die Wochenenden.

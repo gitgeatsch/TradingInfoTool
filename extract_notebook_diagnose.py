@@ -1028,6 +1028,16 @@ def _hedge_wirksamkeit(conn) -> dict:
         conn, ab_datum=ab, watchlist=config_module.get_watchlist())
 
 
+def _themenfeld_erfolg(conn) -> dict:
+    """Traf die Richtung der These? (2026-08-07, Schritt 5 / G-2)
+
+    NICHT die Systemguete je Hauptgruppe: von 101 aufgeloesten Signalen gehoert
+    keines zu einem Themenfeld, die Tabelle waere leer. Siehe
+    agent/themenfeld_erfolg.py fuer die Herleitung."""
+    from agent.themenfeld_erfolg import compute_themenfeld_erfolg
+    return compute_themenfeld_erfolg(conn)
+
+
 def _wartende_themen_vorschlaege(conn) -> dict:
     """Welche Themen-Vorschlaege warten, und wann werden sie reif? (2026-08-07, S-3)
 
@@ -1537,6 +1547,10 @@ def main() -> None:
             wartende_themen_vorschlaege = _wartende_themen_vorschlaege(conn)
         except Exception as exc:  # noqa: BLE001
             wartende_themen_vorschlaege = {"nicht_verfuegbar": str(exc)}
+        try:
+            themenfeld_erfolg = _themenfeld_erfolg(conn)
+        except Exception as exc:  # noqa: BLE001
+            themenfeld_erfolg = {"nicht_verfuegbar": str(exc)}
 
         # 4) Provider-Performance (Win-Rate/CRV je Anbieter, Spot+Hebel getrennt)
         # Nachtrag 2026-07-29 (Export-Luecke gefunden bei der R-5.10-Analyse-
@@ -1792,6 +1806,7 @@ def main() -> None:
         "thesen_alle": thesen_alle,
         "these_aenderungsvorschlaege_alle": these_aenderungsvorschlaege_alle,
         "wartende_themen_vorschlaege": wartende_themen_vorschlaege,
+        "themenfeld_erfolg": themenfeld_erfolg,
         "kategorie_synthese_ergebnisse_alle": kategorie_synthese_ergebnisse_alle,
         "oi_abdeckung_status_alle": oi_abdeckung_status_alle,
         "hebel_pruefung_toggles": hebel_pruefung_toggles,
@@ -1874,6 +1889,20 @@ def main() -> None:
               f"({_lage['minimum']}-{_lage['maximum']}), Lage '{_lage['lage']}', "
               f"{_lage['hauptgruppen_abgedeckt']} Hauptgruppen, "
               f"{_lage['davon_neutral']} davon neutral")
+    _tf = themenfeld_erfolg
+    if "nicht_verfuegbar" in _tf:
+        print(f"  Themenfeld-Erfolg: NICHT VERFUEGBAR ({_tf['nicht_verfuegbar']})")
+    else:
+        print(f"  Themenfeld-Erfolg: {_tf['anzahl_thesen']} Thesen, "
+              f"{_tf['anzahl_messbar']} messbar, {_tf['anzahl_mit_urteil']} mit Urteil "
+              f"({_tf['treffer']} Treffer, {_tf['fehlschlaege']} daneben)")
+        for _e in _tf["thesen"]:
+            if _e["messbar"]:
+                print(f"    {_e['kategorie_anzeige']}: {_e['ueberrendite_prozentpunkte']:+.1f} pp "
+                      f"({_e['richtung']}) -> {_e['treffer']}")
+            else:
+                print(f"    {_e['kategorie_anzeige']}: nicht messbar - {_e['grund']}")
+
         _ohne = [v for v in _wt["vorschlaege"] if not v["handelbare_assets"]]
         if _ohne:
             print(f"  G-5: {len(_ohne)} Vorschlaege ohne handelbares Asset - "
