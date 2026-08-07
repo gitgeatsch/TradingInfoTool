@@ -42,7 +42,10 @@ Cash heute zufaellig herumliegt. Ein Messfehler, der sich nach dem
 Kontostand des Erstellungstags richtet.
 
 `cash_eur` wird deshalb getrennt gefuehrt: bei laufenden Werten mit dem echten
-Betrag, bei rekonstruierten mit 0. Z-3 rechnet auf `wert_eur`, und das ist ueber
+Betrag, bei rekonstruierten mit 0. (KORREKTUR 07.08.: Z-3 rechnet auf
+`index_wert`, NICHT auf `wert_eur` - siehe pruefe_z3(). Der Satz hier stand
+seit dem 04.08. falsch und haette bei der Fehlersuche in die Irre gefuehrt.)
+Der Cash-Anteil ist ueber
 beide Quellen hinweg dasselbe Mass.
 """
 from __future__ import annotations
@@ -124,6 +127,25 @@ MIN_MENGE_REAL = 1e-8
 MAX_ABWEICHUNG_REIHE_ZU_SNAPSHOT = 3.0
 MAX_ALTER_FUER_PLAUSIBILITAET_TAGE = 5
 
+# Wie viele der gehaltenen Symbole muessen an einem Tag einen Kurs haben, damit
+# der Tageswert ueberhaupt geschrieben wird?
+#
+# DER FUND (07.08., Export-Pruefung). BEIDE Zeilen, die der taegliche Job je
+# geschrieben hat, waren unbrauchbar:
+#
+#     2026-08-05   1.241,35 EUR   Abdeckung  3,0 %  ( 1 von 33)
+#     2026-08-06   6.180,00 EUR   Abdeckung 42,4 %  (14 von 33)
+#
+# Zum Vergleich: die 88 nachtraeglich rekonstruierten Zeilen liegen durchgehend
+# bei 87-98 %. Das ist kein Ausreisser, sondern die Uhrzeit: der Job laeuft um
+# 06:30 und bewertet den LAUFENDEN Tag, fuer den es noch kaum Tageskerzen gibt.
+#
+# Behoben wird das an der Wurzel (Bezugstag = Vortag, siehe
+# schreibe_tageswert()). Diese Schwelle ist das Netz darunter - fuer Tage, an
+# denen auch der Vortag lueckenhaft ist. Lieber eine sichtbare Luecke als ein
+# plausibel aussehender Falschwert; dasselbe Prinzip wie bei der FX-Ableitung.
+MIN_ABDECKUNG_FUER_TAGESWERT = 0.80
+
 
 @dataclass
 class SymbolDiagnose:
@@ -164,6 +186,11 @@ class RekonstruktionsErgebnis:
     @property
     def problemfaelle(self) -> list[SymbolDiagnose]:
         return [d for d in self.symbol_diagnosen if d.ist_problemfall]
+
+
+def _gestern_utc() -> str:
+    """Bezugstag des taeglichen Laufs - siehe schreibe_tageswert()."""
+    return (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
 
 
 def _heute_utc() -> str:
@@ -930,7 +957,15 @@ def schreibe_tageswert(
     diese Zahl, fehlen Kurse, und der Tageswert ist zu niedrig - das saehe wie
     ein Kursrutsch aus. Deshalb wird sie mitgeschrieben und nicht nur geloggt.
     """
-    tag = datum or _heute_utc()
+    # BEZUGSTAG IST DER VORTAG (Korrektur 07.08.). Ein TAGESSCHLUSSwert
+    # existiert erst nach Tagesende - der Job um 06:30 kann den laufenden Tag
+    # gar nicht bewerten, weil die meisten Tageskerzen noch fehlen. Genau daran
+    # sind beide bisherigen Laeufe gescheitert (3,0 % und 42,4 % Abdeckung,
+    # siehe MIN_ABDECKUNG_FUER_TAGESWERT).
+    #
+    # `datum` explizit uebergeben ueberschreibt das weiterhin - Nachlaeufe und
+    # Tests brauchen den freien Zugriff.
+    tag = datum or _gestern_utc()
     watchlist = watchlist if watchlist is not None else config.get_watchlist()
     coingecko_ids = {a.symbol: a.coingecko_id for a in watchlist if a.coingecko_id}
     cash_aequivalente = {a.symbol for a in watchlist if a.ist_cash_aequivalent}
@@ -966,6 +1001,23 @@ def schreibe_tageswert(
             neu += menge * p_neu
         index = vorzeile["index_wert"] * (neu / alt) if alt > 0 else vorzeile["index_wert"]
 
+    # ABDECKUNGSWACHE: ein Tag, an dem die meisten Kurse fehlen, ist keine
+    # Messung, sondern eine Luecke. Ihn zu schreiben erzeugt einen Wert, der wie
+    # ein Kurssturz aussieht - und der steht dann in jeder Anzeige, die
+    # `wert_eur` liest.
+    abdeckung = (len(holdings) - ohne_kurs) / len(holdings) if holdings else 0.0
+    if abdeckung < MIN_ABDECKUNG_FUER_TAGESWERT:
+        logger.warning(
+            "Tageswert %s NICHT geschrieben: nur %d von %d Symbolen haben einen Kurs "
+            "(%.0f %%, Mindestabdeckung %.0f %%). Der Tag bleibt eine Luecke - das ist "
+            "richtiger als ein Wert, der wie ein Kurssturz aussieht.",
+            tag, len(holdings) - ohne_kurs, len(holdings), abdeckung * 100,
+            MIN_ABDECKUNG_FUER_TAGESWERT * 100,
+        )
+        return {"datum": tag, "wert_eur": None, "index": None,
+                "symbole_ohne_kurs": ohne_kurs, "geschrieben": False,
+                "abdeckung": abdeckung}
+
     db.upsert_portfolio_wert(
         conn, tag, wert,
         cash_eur=db.get_cash_reserve_fiat_eur(conn),
@@ -975,7 +1027,8 @@ def schreibe_tageswert(
         index_wert=index,
         mengen_json=json.dumps(holdings),
     )
-    return {"datum": tag, "wert_eur": wert, "index": index, "symbole_ohne_kurs": ohne_kurs}
+    return {"datum": tag, "wert_eur": wert, "index": index,
+            "symbole_ohne_kurs": ohne_kurs, "geschrieben": True, "abdeckung": abdeckung}
 
 
 def pruefe_z3(conn: sqlite3.Connection, *, schwelle_prozent: float) -> dict:

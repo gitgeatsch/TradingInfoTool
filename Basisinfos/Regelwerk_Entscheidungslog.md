@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (187 Einträge)
+## Index nach Thema (188 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -109,7 +109,9 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-05** — `halte_kriterium` erstmals ausgewertet - kein Trennnachweis, zwei strukturelle Maengel
 - **2026-08-06** — Die drei neuen Fakten sind im Betrieb ANGEKOMMEN (22/22) - Verifikation abgeschlossen, Zaehler-Fehler behoben
 
-### Datenquellen / APIs (26)
+### Datenquellen / APIs (27)
+
+- **2026-08-07** — Export-Verifikation: alle Fixes wirken; NEU der tägliche Portfolio-Job bewertete den laufenden statt des Vortags — beide je geschriebenen Zeilen unbrauchbar; CoinGecko bei 83 % Projektion
 
 - **2026-08-06** — Info-E-Mails: Farbe hing an den Bildern (Hedge-Mails immer unformatiert), und eine Meldung stand für drei verschiedene Sachverhalte
 
@@ -13505,3 +13507,88 @@ Konsistenzbruch gefunden.
 **Werkzeug:** `teste_email_darstellung.py` - baut echte Mails mit und ohne Bild,
 dekodiert den HTML-Teil und prueft Farbe, Meta-Tags und alle vier
 Risikofaktoren-Faelle. 13 Pruefungen.
+
+
+---
+
+## Nachtrag (2026-08-07, Export 06:07): alle gestrigen Fehler sind weg - und der taegliche Portfolio-Job hat noch NIE einen brauchbaren Wert geschrieben
+
+### Erst die Bestaetigung: die Fixes vom 06.08. wirken im Betrieb
+
+| | vorher | Export 07.08. |
+|---|---|---|
+| ERROR-Zeilen | 1.069 am 06.08. um 12:xx | **0 am 07.08.** |
+| `TypeError build_hebel_facts` | 255 Faelle 07:xx-13:xx | **0** |
+| verworfene FX-Ableitungen | 586 (05.08.), 588 (06.08.) | **0** |
+| CRV-Baender im Prompt | 0 | **29 von 29 Faktensaetzen** |
+| `score_gesamt` im Prompt | - | **0** (korrekt entfernt) |
+| Rohstoff-Schattenarm | -18,81 R | **-1,06 R** (ein normaler Stop) |
+| Rohstoff realer Arm | +20,51 R | **n=0, offen=4** - ehrlich leer |
+| OD7C/H/L bewertet | 91/91 Tage ohne Kurs | **60 Tage ueber FX**, Kurse 29,99 / 17,86 / 3,82 EUR |
+
+Der vermutete Wettlauf zwischen Export und Refresh war es also - **nicht** ein
+Fehler im Bewertungspfad. Die Vermutung ist damit bestaetigt, nicht nur
+plausibel.
+
+### Der neue Fund: der taegliche Job bewertet den falschen Tag
+
+`schreibe_tageswert()` bewertete den **laufenden** Tag - und laeuft um 06:30.
+Zu dieser Uhrzeit fehlen die meisten Tageskerzen noch. Ergebnis: **beide**
+Zeilen, die der Job je geschrieben hat, sind unbrauchbar.
+
+    2026-08-05   1.241,35 EUR   Abdeckung  3,0 %  ( 1 von 33 Symbolen)
+    2026-08-06   6.180,00 EUR   Abdeckung 42,4 %  (14 von 33 Symbolen)
+
+Zum Vergleich: die 88 nachtraeglich rekonstruierten Zeilen liegen durchgehend
+bei **87-98 %**. Das ist kein Ausreisser, sondern die Bauweise.
+
+Im Export vom 07.08. um 06:07 stand entsprechend **1.367,44 EUR bei 31 von 33
+Symbolen ohne Kurs** - der naechste Lauf haette das als dritten Truemmerwert
+festgeschrieben.
+
+**Z-3 SELBST IST NICHT BETROFFEN.** `pruefe_z3()` rechnet auf `index_wert`, und
+der Index ueberspringt Symbole, die an einem der beiden Tage keinen Kurs haben.
+Deshalb steht Z-3 seit Tagen stabil bei 16,84 %, waehrend die EUR-Spalte
+zwischen 1.241 und 7.698 sprang. Der Schaden ist `wert_eur` und alles, was
+diese Spalte liest - unter anderem die **Gegenprobe auf der Uebersichtsseite**,
+die ich am 06.08. gebaut habe. Sie haette hier korrekt Alarm geschlagen; das
+war ihr Zweck.
+
+**Nebenbefund:** der Modul-Docstring behauptete seit dem 04.08. das Gegenteil
+("Z-3 rechnet auf `wert_eur`"). Falsche Doku an genau der Stelle, an der man
+bei der Fehlersuche nachliest. Korrigiert.
+
+### Zwei Korrekturen
+
+1. **Bezugstag ist der VORTAG.** Ein Tagesschlusswert existiert erst nach
+   Tagesende - das ist die Ursachenbehebung, nicht ein Schwellenwert.
+2. **Abdeckungswache** (`MIN_ABDECKUNG_FUER_TAGESWERT = 0,80`) als Netz
+   darunter: faellt die Abdeckung, wird **gar nichts** geschrieben. Lieber eine
+   sichtbare Luecke als ein Wert, der wie ein Kurssturz aussieht - dasselbe
+   Prinzip wie bei der FX-Ableitung.
+
+`korrigiere_tageswerte.py` raeumt die beiden Altlasten weg (Trockenlauf als
+Standard). `teste_tageswert_abdeckung.py` prueft beides, inklusive der beiden
+echten Betriebsfaelle und der Schwelle bei genau 80 %.
+
+### CoinGecko: eng, aber nicht rot
+
+| | |
+|---|---|
+| verbraucht (01.-07.08.) | 2.067 von 10.000 = **20,7 %** |
+| Schnitt je vollem Tag | 261 |
+| Hochrechnung auf 31 Tage | **8.335 = 83 %** |
+
+Die 80-%-Warnschwelle wird beim aktuellen Tempo **gegen Monatsende** gerissen,
+das Limit selbst nicht. Kein Handlungsbedarf heute, aber die Warnmail kommt.
+
+Der Haupttreiber ist der Preis-Refresh: 67 Laeufe/Tag (statt der moeglichen 96 -
+die Luecke geht auf 24 App-Neustarts im Fenster zurueck). Der Rest verteilt sich
+auf Historien-Nachladungen und den OHLC-Rueckfall fuer Coins ohne Kraken-Listing.
+**Kein Ausreisser durch die Umbauten vom 06.08.** - die laufen ueber yfinance.
+
+> **Wenn Entlastung noetig wird**, ist der erste Hebel das Refresh-Intervall
+> (15 Min), nicht die Zahl der Coins: 96 moegliche Laeufe taeglich sind fuer ein
+> System, das zweimal taeglich Signale erzeugt, reichlich. Bewusst noch NICHT
+> geaendert - erst messen, ob die Preise zwischen den Laeufen ueberhaupt
+> gebraucht werden.
