@@ -472,3 +472,49 @@ hauptgruppen:
     - COMMEXAG
     - CARBON
     - AGEING
+
+# ---------------------------------------------------------------------------
+# THEMEN-BRUECKEN (2026-08-07)
+#
+# WOFUER. Die Hauptgruppen oben sind nach INSTRUMENTENTYP geschnitten
+# (Rohstoffe / Aktien-Sektoren / Aktien-Regionen / Anleihen). Ein THEMA laeuft
+# aber quer dazu: "Kupfer ist interessant" betrifft das Material
+# (industriemetalle:kupfer), die Minenbetreiber (aktien_sektoren:grundstoffe)
+# und ETFs auf beides.
+#
+# Nutzer-Vorgabe 07.08.: das System soll Werte aus dem Bereich vorschlagen -
+# ueber Instrumententypen hinweg - und der NUTZER entscheidet, ob er die
+# riskantere Aktie oder den breiteren ETF nimmt. Eine automatische Bewertung
+# "Aktie oder ETF" ist ausdruecklich NICHT gewollt: sie haengt an
+# Risikobereitschaft, Bestand und Zeithorizont, die das System nicht kennt.
+#
+# LUECKEN SIND ERLAUBT UND BEABSICHTIGT. Nicht jede Verbindung muss existieren
+# oder Sinn ergeben - Kupfer als Material kann steigen, waehrend die Miner aus
+# ganz anderen Gruenden schlecht laufen. Das ist ein eigenes Thema und kein
+# Fehler dieser Tabelle. Sie ist eine Lesehilfe fuer den Nutzer, kein Modell.
+#
+# Format: Liste von Bruecken, jede mit einem sprechenden Namen und den
+# beteiligten "hauptgruppe:unterkategorie"-Schluesseln (unterkategorie
+# weglassen = ganze Hauptgruppe).
+themen_bruecken:
+  - name: Kupfer
+    kategorien:
+      - industriemetalle:kupfer
+      - aktien_sektoren:grundstoffe
+  - name: Edelmetalle
+    kategorien:
+      - edelmetalle
+      - aktien_sektoren:grundstoffe
+  - name: Energie
+    kategorien:
+      - energie
+      - aktien_sektoren:energie
+  - name: Technologie und Halbleiter
+    kategorien:
+      - technologie_ki:halbleiter
+      - technologie_ki:ki
+      - aktien_sektoren:technologie
+  - name: Gesundheit und Biotech
+    kategorien:
+      - technologie_ki:biotech
+      - aktien_sektoren:gesundheit

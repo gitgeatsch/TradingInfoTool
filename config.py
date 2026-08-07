@@ -782,6 +782,141 @@ def set_hebel_richtung_modus(new_value: str) -> bool:
     return _set_top_level_skalar("hebel_richtung_modus", new_value, block_scope="budget_allocator")
 
 
+# Bitpandas `group`-Feld in Klartext (2026-08-07). Die Werte stammen aus
+# api/bitpanda.py::NON_CRYPTO_ASSET_GROUPS/CRYPTO_ASSET_GROUPS - sie beantworten
+# die halbe Frage "was ist das eigentlich" bereits ohne jede neue Datenquelle.
+_INSTRUMENTENTYP_KLARTEXT = {
+    "stock": "Einzelaktie",
+    "etf": "ETF (Korb aus vielen Werten)",
+    "etc": "ETC (besichertes Rohstoff-Zertifikat)",
+    "metal": "physisches Edelmetall",
+    "security_token": "Security Token",
+    "coin": "Kryptowaehrung",
+    "token": "Krypto-Token",
+    "leveraged_token": "gehebelter Krypto-Token",
+    "index": "Krypto-Index",
+}
+
+
+def asset_steckbrief(symbol: str, name: str | None = None,
+                     bitpanda_group: str | None = None,
+                     hauptgruppe: str | None = None,
+                     unterkategorie: str | None = None,
+                     bitpanda_gelistet: bool | None = None) -> str:
+    """Kurzer Klartext: was ist dieses Symbol, und was bildet es ab?
+
+    ANLASS (Nutzer 07.08.): *"falls moeglich waere es hilfreich zu wissen, wenn
+    ein Symbol z.B. ABCDE vorgeschlagen wird, welches Asset und was macht das
+    Asset - vor allem bei ETF relevant, da oft ueber einen Themenbereich
+    verteilt."*
+
+    KEINE NEUE DATENQUELLE NOETIG. Drei Bausteine liegen bereits vor:
+
+      - `name`            aus dem Bitpanda-Katalog
+      - `bitpanda_group`  liefert den INSTRUMENTENTYP (stock/etf/etc/metal)
+      - Haupt-/Unterkategorie aus Basisinfos/kategorien.yaml
+
+    Zusammen ergeben sie: "COPPERMINE - ETF (Korb aus vielen Werten),
+    Industriemetalle / Kupfer, Thema Kupfer". Das beantwortet die Frage fuer
+    die grosse Mehrheit der Faelle.
+
+    LUECKEN SIND ERLAUBT (Nutzer-Vorgabe: "auch wenn kleine Luecken
+    entstehen"). Fehlt eine Angabe, faellt sie weg statt geraten zu werden -
+    ein erfundener Steckbrief waere schlechter als ein knapper.
+    """
+    teile: list[str] = []
+    if name and name != symbol:
+        teile.append(str(name))
+    typ = _INSTRUMENTENTYP_KLARTEXT.get((bitpanda_group or "").lower())
+    if typ:
+        teile.append(typ)
+    if hauptgruppe:
+        gruppe_name = _kategorie_klartext(hauptgruppe, unterkategorie)
+        if gruppe_name:
+            teile.append(gruppe_name)
+    thema = bruecken_name_fuer(hauptgruppe, unterkategorie)
+    if thema:
+        teile.append(f"Thema {thema}")
+    if bitpanda_gelistet is False:
+        teile.append("bei Bitpanda NICHT handelbar")
+    return f"{symbol} - " + ", ".join(teile) if teile else symbol
+
+
+def _kategorie_klartext(hauptgruppe: str, unterkategorie: str | None) -> str | None:
+    """Lesbare Namen statt der internen IDs ("Industriemetalle / Kupfer")."""
+    for g in get_kategorien().get("hauptgruppen") or []:
+        if g.get("id") != hauptgruppe:
+            continue
+        hg = g.get("name") or hauptgruppe
+        if not unterkategorie:
+            return hg
+        for u in (g.get("unterkategorien") or []):
+            if u.get("id") == unterkategorie:
+                return f"{hg} / {u.get('name') or unterkategorie}"
+        return hg
+    return None
+
+
+def themen_bruecken() -> list[dict]:
+    """Themen, die quer zu den Hauptgruppen laufen (2026-08-07).
+
+    Die Hauptgruppen sind nach INSTRUMENTENTYP geschnitten, ein Thema laeuft
+    quer dazu: "Kupfer" betrifft das Material, die Minenbetreiber und ETFs auf
+    beides. Siehe Basisinfos/kategorien.yaml, Abschnitt `themen_bruecken`, fuer
+    die volle Begruendung - und dafuer, warum Luecken erlaubt sind.
+    """
+    return get_kategorien().get("themen_bruecken") or []
+
+
+def verwandte_kategorien(hauptgruppe: str | None,
+                         unterkategorie: str | None = None) -> list[tuple[str, str | None]]:
+    """Welche anderen Kategorien gehoeren thematisch dazu?
+
+    Gibt die Kategorien aller Bruecken zurueck, in denen diese Kategorie
+    vorkommt - ohne sie selbst. Leere Liste, wenn keine Bruecke greift; das ist
+    der Normalfall und kein Fehler.
+
+    Eine Bruecke kann eine ganze Hauptgruppe nennen ("edelmetalle") oder eine
+    einzelne Unterkategorie ("industriemetalle:kupfer"). Wird eine Hauptgruppe
+    genannt, passt jede ihrer Unterkategorien.
+    """
+    if not hauptgruppe:
+        return []
+    eigen = (hauptgruppe, unterkategorie)
+
+    def _passt(schluessel: str) -> bool:
+        teile = schluessel.split(":", 1)
+        if teile[0] != hauptgruppe:
+            return False
+        return len(teile) == 1 or teile[1] == unterkategorie
+
+    treffer: list[tuple[str, str | None]] = []
+    for bruecke in themen_bruecken():
+        schluessel = bruecke.get("kategorien") or []
+        if not any(_passt(s) for s in schluessel):
+            continue
+        for s in schluessel:
+            teile = s.split(":", 1)
+            kandidat = (teile[0], teile[1] if len(teile) > 1 else None)
+            if kandidat != eigen and kandidat not in treffer:
+                treffer.append(kandidat)
+    return treffer
+
+
+def bruecken_name_fuer(hauptgruppe: str | None,
+                       unterkategorie: str | None = None) -> str | None:
+    """Name der ersten Bruecke, in der diese Kategorie vorkommt - fuer die
+    Anzeige ("Thema: Kupfer")."""
+    if not hauptgruppe:
+        return None
+    for bruecke in themen_bruecken():
+        for s in (bruecke.get("kategorien") or []):
+            teile = s.split(":", 1)
+            if teile[0] == hauptgruppe and (len(teile) == 1 or teile[1] == unterkategorie):
+                return bruecke.get("name")
+    return None
+
+
 def marktsuche_nur_bitpanda_gelistet() -> bool:
     """Sollen Screener und Marktscan nur bei Bitpanda handelbare Kandidaten
     zeigen? (2026-08-07)

@@ -66,6 +66,11 @@ class ScreenerCandidate:
     hauptgruppe: str | None = None  # nur bei automatischer Klassifikation ueber kategorien.yaml
     unterkategorie: str | None = None
     kategorie_score_bonus: float = 0.0  # #334 Stufe 2 (2026-07-25), nur ETF-Kandidaten - siehe
+    # Instrumententyp aus Bitpandas `group` (2026-08-07): stock/etf/etc/metal.
+    # Beantwortet fuer den Nutzer die halbe Frage "was ist das eigentlich" -
+    # besonders bei ETFs, die ueber einen ganzen Themenbereich streuen. Wird
+    # ohne Bitpanda-Abgleich nicht gesetzt (None), siehe config.asset_steckbrief().
+    bitpanda_group: str | None = None
         # _kategorie_score_bonus(). 0.0 = keine Anpassung (kein conn beim Scan, keine
         # aktive These, oder objektive Einschaetzung neutral/nicht_pruefbar).
 
@@ -81,6 +86,19 @@ def _bereits_in_watchlist(symbol: str, watchlist) -> bool:
 
 
 @track_api_health("yfinance")
+def _group_fuer(symbol: str, bitpanda_assets) -> str | None:
+    """Bitpandas `group` zu einem Symbol - fuer den Asset-Steckbrief
+    (2026-08-07). None, wenn kein Abgleich moeglich war; der Steckbrief laesst
+    die Angabe dann weg statt zu raten."""
+    if not bitpanda_assets:
+        return None
+    ziel = (symbol or "").upper()
+    for a in bitpanda_assets:
+        if (a.symbol or "").upper() == ziel:
+            return a.group
+    return None
+
+
 def scan_aktien_candidates(
     watchlist, bitpanda_assets: list[BitpandaAsset] | None = None,
 ) -> list[ScreenerCandidate]:
@@ -127,6 +145,7 @@ def scan_aktien_candidates(
             marktkap_usd=marktkap,
             aenderung_pct=quote.get("regularMarketChangePercent"),
             bitpanda_gelistet=bitpanda_gelistet,
+            bitpanda_group=_group_fuer(symbol, bitpanda_assets),
         ))
 
     candidates.sort(key=lambda c: c.marktkap_usd or 0, reverse=True)
@@ -213,6 +232,7 @@ def scan_etf_candidates(watchlist, bitpanda_assets: list[BitpandaAsset], conn=No
             hinweis="Bitpanda-eigenes Produkt, kein yfinance-Symbol automatisch ableitbar.",
             hauptgruppe=kategorie[0] if kategorie else None,
             unterkategorie=kategorie[1] if kategorie else None,
+            bitpanda_group=asset.group,
         ))
 
     if conn is None:

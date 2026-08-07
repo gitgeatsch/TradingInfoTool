@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (198 Einträge)
+## Index nach Thema (199 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -58,7 +58,9 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-05** — Ausstiegsregel scharfgeschaltet: Config, taeglicher Job 7:15, Sammel-E-Mail
 - **2026-08-06** — Gate-Untergrenze Stop-Abstand: EXISTIERT BEREITS (RM-1b 2,5 % + RM-1c 0,75xATR), richtig kalibriert, nichts gebaut
 
-### LLM-Prompts / Analysten (Stage 2) (20)
+### LLM-Prompts / Analysten (Stage 2) (21)
+
+- **2026-08-07** — Themen-Brücken quer zu den Hauptgruppen (Kupfer = Material + Miner) + Asset-Steckbrief aus vorhandenen Daten; Lücken ausdrücklich erlaubt
 
 - **2026-08-07** — H-6 (`original_action` für die Spot-Familie) + H-5 (`pruefe_fakten_rollout.py`); dazu Korrektur: Befolgungsgrad war als „zentraler Blocker" überzeichnet
 
@@ -14380,3 +14382,68 @@ von 16 Vorschlaegen stehen auf "beobachtung", genau einer wurde je uebernommen.
 **S-1 und S-2 sind die eigentliche Antwort auf den Nutzer-Wunsch nach einem
 Override**: ein manueller Override ist technisch der einfachste Fall von S-1 -
 der Nutzer entscheidet die Verdraengung selbst.
+
+
+---
+
+## Nachtrag (2026-08-07): Themen-Bruecken und Asset-Steckbrief - zwei Nutzer-Vorgaben, eine gemeinsame Regel
+
+### Die Vorgaben
+
+**1. Themen quer zu den Hauptgruppen.** Am Kupfer-Beispiel: *"es gibt
+Kupferminer (Aktien), Kupfer als Material oder ETF ... Es werden Werte aus
+diesem Bereich mit Potential vorgeschlagen - eine automatische Bewertung halte
+ich vorerst als fast nicht umsetzbar - und ICH entscheide, das riskantere Aktien
+oder in nicht so riskante ETF einzusteigen."*
+
+**Diese Arbeitsteilung ist richtig, und zwar aus dem Grund, den der Nutzer
+selbst nennt.** Die Wahl zwischen Einzelaktie und ETF haengt an
+Risikobereitschaft, Bestand und Zeithorizont - drei Dinge, die das System nicht
+kennt. Ein Automatismus wuerde eine Praezision vortaeuschen, die es nicht gibt.
+
+Der Befund dahinter: die zehn Hauptgruppen sind nach **Instrumententyp**
+geschnitten (Rohstoffe / Aktien-Sektoren / Aktien-Regionen / Anleihen). Kupfer
+liegt deshalb in ZWEI getrennten Gruppen - `industriemetalle:kupfer` (Material)
+und `aktien_sektoren:grundstoffe` (Miner). Das System konnte bisher gar nicht
+"Werte aus diesem Bereich" quer ueber Instrumententypen zeigen.
+
+**Gebaut:** `themen_bruecken` in `kategorien.yaml` - fuenf Bruecken (Kupfer,
+Edelmetalle, Energie, Technologie/Halbleiter, Gesundheit/Biotech), dazu
+`config.verwandte_kategorien()` und `bruecken_name_fuer()`. Bewusst die
+**einfache Variante** (Verknuepfung statt neuer Themen-Ebene) - der Nutzer hat
+sie ausdruecklich gewaehlt.
+
+**2. Was ist das Symbol eigentlich?** *"falls moeglich waere es hilfreich zu
+wissen, wenn ein Symbol z.B. ABCDE vorgeschlagen wird, welches Asset und was
+macht das Asset - vor allem bei ETF relevant, da oft ueber einen Themenbereich
+verteilt."*
+
+**Gebaut ohne jede neue Datenquelle.** Drei Bausteine lagen bereits vor: der
+`name` aus dem Bitpanda-Katalog, das `group`-Feld (liefert den
+INSTRUMENTENTYP: stock/etf/etc/metal) und die Kategorienstruktur. Zusammen:
+
+    COPPERMINE - Copper Miners, ETF (Korb aus vielen Werten),
+                 Industriemetalle / Kupfer, Thema Kupfer
+    OD7C       - WisdomTree Copper, ETC (besichertes Rohstoff-Zertifikat),
+                 Industriemetalle / Kupfer, Thema Kupfer
+    PLTR       - Palantir, Einzelaktie, Technologie & KI / Kuenstliche
+                 Intelligenz, Thema Technologie und Halbleiter
+
+Der Steckbrief steht im Screener-Tooltip, zusammen mit den thematisch
+verwandten Kategorien.
+
+### Die gemeinsame Regel: LUECKEN SIND ERLAUBT
+
+Nutzer-Vorgabe woertlich: *"fuer den User handhabbar (auch wenn kleine Luecken
+entstehen) - es muss nicht alles abgedeckt sein und Sinn machen, z.B. kann
+Kupfer das Material steigen, aber Miner performen schlecht, aber aus anderen
+Gruenden."*
+
+Beide Bausteine folgen dem: fehlt eine Angabe, **faellt sie weg statt geraten zu
+werden**. Ein erfundener Steckbrief waere schlechter als ein knapper, und eine
+Bruecke, die eine Verbindung behauptet, die es nicht gibt, waere schlechter als
+gar keine. Im Test ausdruecklich abgesichert (B7-B9, A5-A7).
+
+**19 Pruefungen**, alle bestanden - inklusive des Falls aus der Nutzer-Frage:
+"Kupfer interessant" liefert Material und Miner nebeneinander, und der Nutzer
+entscheidet.

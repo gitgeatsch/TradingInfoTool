@@ -288,7 +288,19 @@ class ScreenerView(ttk.Frame):
             if erklaerung is not None:
                 tooltip_teile.append(erklaerung)
             if tooltip_teile:
-                self._row_tooltips[str(idx)] = "\n\n".join(tooltip_teile)
+                # ASSET-STECKBRIEF ganz oben (2026-08-07, Nutzer-Wunsch):
+                # "welches Asset und was macht das Asset - vor allem bei ETF
+                # relevant". Braucht keine neue Datenquelle - Name,
+                # Instrumententyp und Kategorie liegen bereits vor.
+                steckbrief = config.asset_steckbrief(
+                    c.symbol, c.name, getattr(c, "bitpanda_group", None),
+                    c.hauptgruppe, c.unterkategorie, c.bitpanda_gelistet)
+                verwandte = config.verwandte_kategorien(c.hauptgruppe, c.unterkategorie)
+                if verwandte:
+                    lesbar = ", ".join(
+                        config._kategorie_klartext(h, u) or h for h, u in verwandte)
+                    steckbrief += f"\n\nThematisch verwandt: {lesbar}"
+                self._row_tooltips[str(idx)] = "\n\n".join([steckbrief] + tooltip_teile)
             if c.bitpanda_gelistet is False:
                 tags.append("nicht_gelistet")  # zuletzt hinzugefuegt = hoehere Prioritaet bei ttk-Tag-Kollision
 
