@@ -15243,3 +15243,54 @@ Die Free-Liste auf OpenRouter **rotiert ohne Vorwarnung**. Faellt
 Breaker von heute frueh faengt das ab, aber `DEFAULT_MODEL` in
 `api/openrouter.py` muss dann nachgezogen werden. Ohne `OPENROUTER_API_KEY`
 laeuft die Gegenpruefung unveraendert ueber Z.ai.
+
+### OpenRouter: geprueft, bezahlt, aktiv (07.08. spaet abends)
+
+**Der erste Live-Test war nicht auswertbar** und wurde verworfen: er meldete
+"0 von 8 gueltig", aber **Z.ai scheiterte auf denselben acht Faellen identisch**.
+Wenn beide Seiten gleich versagen, misst der Test sich selbst. Erst ein direkter
+Probe-Call zeigte den echten Grund:
+
+    404: "This model is unavailable for free. The paid version is available now
+          - use this slug instead: deepseek/deepseek-r1"
+
+`deepseek-r1:free` war aus der Free-Liste rotiert - der dokumentierte
+Wartungspunkt, beim allerersten echten Lauf eingetreten. **Der `:free`-Schutz in
+`chat()` hat gehalten:** kein stilles Ausweichen auf die bezahlte Variante,
+kein Geld geflossen. Genau dafuer war er gebaut.
+
+**Korrektur einer eigenen Aussage.** Ich hatte aus Blog-Quellen geschlossen, im
+Free-Bereich habe nur Gemini grossen Kontext. Die Live-Abfrage von
+`GET /api/v1/models` widerlegt das: **17 kostenlose Modelle, die groessten mit
+262K bis 1 Mio. Kontext.** Die Modellliste der API ist die einzige Quelle, die
+stimmt - Aggregator-Blogs sind fuer diese Frage unbrauchbar.
+
+Vier Kandidaten mit einer Konsistenzfrage bekannter Antwort geprueft (RSI 72
+bei fallendem Trend gegen die Behauptung "RSI neutral, Aufwaertstrend intakt"):
+
+| Modell | Kontext | Zeit | Ergebnis |
+|---|---|---|---|
+| **nemotron-3-ultra-550b** | **1.000.000** | **7,6 s** | JSON gueltig, Urteil richtig |
+| nemotron-3-super-120b | 262.144 | 12,8 s | JSON gueltig, Urteil richtig |
+| gpt-oss-20b | 131.072 | 11,2 s | JSON gueltig, Urteil richtig |
+| gemma-4-31b | 262.144 | - | 429, temporaer gesperrt |
+
+**Die alte Ablehnung aus Runde 4 gilt nicht mehr** - und das ist begruendet,
+nicht weggewischt. Sie nannte zwei Punkte:
+
+1. *"nur 20 RPM / 50 RPD"* - genau das behebt die Einmalzahlung.
+2. *"zugrundeliegendes Modell wechselt pro Call, nicht vorhersagbar"* - das galt
+   fuer OpenRouters **Auto-Routing**. Unser Client sendet EIN explizit
+   festgelegtes Modell, kein `models`-Array, keinen Router. Der Einwand ist
+   durch die Bauart entschaerft. Was bleibt: ein freies Modell kann aus der
+   Liste verschwinden - ein sichtbarer Ausfall mit Fehlermeldung, keine stille
+   Vertauschung.
+
+**Zahlung und Verifikation.** Vor der Zahlung war nicht beweisbar, dass die 10 $
+den Deckel heben - `GET /api/v1/key` meldet den Tages-Deckel nicht, es gab nur
+die Dokumentation. Das wurde dem Nutzer ausdruecklich so gesagt. Nach der
+Zahlung kippte `is_free_tier` von `true` auf `false`, `usage` blieb 0. Die
+Zahlungsmethode wurde anschliessend geloescht - der Deckel haengt an "credits
+purchased (all time)", einer historischen Tatsache, und bleibt davon unberuehrt.
+Damit ist eine unbeabsichtigte Abbuchung auch bei spaeteren Kontoaenderungen
+ausgeschlossen (der Grund, an dem Vercel AI Gateway gescheitert war).
