@@ -15329,3 +15329,106 @@ haeufiger, und die beiden 429er zeigen, dass trainingsfreie Endpunkte staerker
 umkaempft sind. **Ohne die Rotation waere dieser Pool fahrlaessig** - mit ihr
 ist er handhabbar, und faellt alles aus, uebernimmt Z.ai. Die Nutzer-Idee von
 vorhin ist damit von "nuetzlich" zu "Voraussetzung" geworden.
+
+## Nachtrag (2026-08-08): OpenRouter am ECHTEN Signal-Prompt gemessen — und der Datenschutz-Grund ist entfallen
+
+### Der Grund für "nur Gegenprüfung" hat gewechselt
+
+Am 07.08. war der Grund **Datenschutz**: die freien Endpunkte verlangten
+aktiviertes Training, und der SYSTEM_PROMPT ist das Regelwerk. Nutzer-Hinweis
+am 08.08. hat das aufgelöst — und zwar gegen die bisherige Argumentation:
+
+> Gemini hat laut unserer eigenen Dokumentation (`budget_allocator.py:64`)
+> **nicht abwählbare Trainings-Nutzung**, eine EWR/CH/UK-Sonderklausel und eine
+> ausdrückliche Warnung vor vertraulichen/Finanzdaten — und trägt seit dem
+> 07.08. **100 % der Signale**.
+
+Das Regelwerk ist also längst Trainingsmaterial, täglich, bei Google. Die
+Schalter schützten es nie; sie schlossen nur den zweiten Anbieter aus, während
+der erste dasselbe unbeschränkt tat. **Nutzer-Entscheidung 08.08.:**
+Trainings-Nutzung wird für die Signal-Kette akzeptiert — für Gemini und
+OpenRouter gemeinsam, weil es sonst keine freie Option gibt. Schalter wieder an,
+13 von 14 Modellen erreichbar statt 4.
+
+Ein Nachsatz zum Faktensatz, nicht zum SYSTEM_PROMPT: **38 von 283 Faktensätzen
+(13,4 %) tragen die offene Position mit** (`eigenkapital_eur`,
+`positionswert_eur`, Hebel, Haltedauer). Keine Kontonummer, kein Name — aber
+echte Positionsgrößen in Euro, und genau die Kategorie, vor der Geminis
+Bedingungen warnen. Die beiden EUR-Felder ließen sich weglassen; ob das die
+Urteilsqualität kostet, ist messbar und offen.
+
+### Was den echten Signal-Prompt trägt (16.656 Eingabe-Token)
+
+Gemessen gegen die echte `_validate_hebel()`, echte Faktensätze aus dem Export:
+
+| Modell | Fälle | gültig | Median | Versuche/Fall |
+|---|---|---|---|---|
+| `nvidia/nemotron-3-super-120b:free` | 20 | **16/20** | 47,9 s | 1,31 |
+| `poolside/laguna-xs-2.1:free` | 3 | 3/3 | 19 s | — |
+| `openai/gpt-oss-20b:free` | 10 | 5/10 | 124,9 s | 1,80 |
+| `google/gemma-4-26b:free` | 5 | 0/5 | — | — |
+| Gemini (Referenz) | 5 | 5/5 | 5,5 s | 1,00 |
+
+Drei der vier Fehlschläge im 20er-Lauf waren **dieselbe Stelle**:
+`halte_kriterium.bucket = None`. Dieselbe Fehlerklasse wie bei Groqs 8B.
+
+### Der Latenz-Befund, der eine eigene Warnung wert ist
+
+Der erste Härtetest meldete 488 s je Signal. **Das war unsere Konfiguration,
+nicht der Anbieter.** Ein Fall, dasselbe Modell, nur ein Regler verstellt:
+
+    nichts gesetzt        398,9 s   5.929 Ausgabe-Token, davon 5.089 Reasoning
+    reasoning.effort=low  117,4 s   1.678 Ausgabe-Token, davon   879 Reasoning
+    reasoning.exclude      44,5 s     710 Ausgabe-Token, davon    20 Reasoning
+
+**86 % der Wartezeit war verstecktes Nachdenken, das niemand angefordert
+hatte.** Wer das nicht ausschließt, verwirft einen Anbieter für den eigenen
+Fehler. Steht jetzt als `STANDARD_REASONING` im Client (Commit `f6623b8`).
+
+### Parallelität: gemessen, aber bewusst NICHT gebaut
+
+    Volllast  2 parallel -> 2/2, 115,6 s Wanduhr, 1,0 Signale/Min
+              4 parallel -> 4/4, 119,1 s Wanduhr, 2,0 Signale/Min
+              8 parallel -> 8/8, 111,1 s Wanduhr, 4,3 Signale/Min
+
+Unter Parallellast 14/14 gültig — besser als seriell. Trotzdem seriell, weil
+der Bedarf 0,1 Signale/Minute beträgt und nemotron seriell 1,25 liefert:
+**zwölffache Reserve.** Parallelität hätte einen Semaphore-Umbau und Konkurrenz
+mit der Z.ai-Gegenprüfung um dieselben Threads gekostet, für ein Problem, das
+nicht existiert. Vorbehalt: bei 15 Kandidaten in einem 15-Minuten-Takt (also
+Gemini komplett ausgefallen) wären es seriell ~12 Minuten — es passt ohne
+Reserve.
+
+### Strukturfakten, die jede künftige Recherche abkürzen
+
+- **Jedes `:free`-Modell hat genau EINEN Upstream-Endpunkt.** Die 17 Endpunkte,
+  die `/api/v1/models/<slug>/endpoints` zeigt, gehören zum **bezahlten** Slug —
+  das `:free`-Suffix muss mit abgefragt werden.
+- **Die Drosselung greift auf Ebene der `:free`-Variante, nicht je Endpunkt.**
+  Gemessen: blind 429, auf Google AI Studio gepinnt 429, auf Darkbloom gepinnt
+  104 s erfolgreich. `provider.order`-Pinning bringt nichts.
+- **Pro-Anfrage-Freischaltung gibt es nicht.** `provider.data_collection:
+  "allow"` hebt die Kontoeinstellung nicht auf.
+- **Nur 5 von 15 freien Modellen unterstützen `response_format`.**
+
+### Kettenposition: letzte Stufe
+
+Mistral → Gemini → OpenRouter, seriell. Begründung ist 47,9 s gegen 5,5 s bei
+serieller Abarbeitung im 15-Minuten-Takt. **Das weicht von der Nutzer-Vorgabe
+vom 07.08. ab** ("zweiter Primär- bzw. erster Sekundäranbieter") und wurde am
+08.08. mit dieser Zahl neu begründet.
+
+### Qualitätsmessung: das Instrument ist blind
+
+`compute_provider_performance()` zeigt Mistral (Hebel) mit 13,4 % Trefferquote
+über 82 aufgelöste Signale und **−0,49 R** im Schnitt — ohne die besten fünf
+Fälle −0,76 R, `vorzeichen_kippt: false`. **Gemini hat gar keinen Eintrag**,
+weil noch kein einziges seiner Signale aufgelöst ist. Das System kann derzeit
+nicht sagen, ob Gemini besser ist als Mistral.
+
+Ersatz vor dem Einbau: **historischer Rücktest** über 38 Fälle mit gespeichertem
+Faktensatz und bekanntem Ausgang (alle Mistral, alle ERÖFFNEN, 35 Verlierer /
+3 Gewinner, **Summe −27,38 R**). Die Falle darin ist benannt: bei 35:3 gewinnt
+ein Modell, das immer HALTEN sagt, mit 0,00 R — deshalb steht die HALTEN-Quote
+gleichwertig neben der R-Summe, zusammen mit vermiedenen Verlusten und
+verpassten Gewinnen.
