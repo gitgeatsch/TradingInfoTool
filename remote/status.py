@@ -97,6 +97,9 @@ class RemoteStatus:
     # Z-3 und die Gegenprobe der Bewertung (2026-08-06) - siehe
     # _get_z3_und_bewertung() fuer den Anlass.
     z3_und_bewertung: dict | None = None
+    # Hedge-Wirksamkeit (2026-08-07, W1) - das zustaendige Erfolgsmass
+    # fuer Absicherungen, siehe compute_hedge_wirksamkeit().
+    hedge_wirksamkeit: dict | None = None
     parameter_overview: list[dict] | None = None
     richtungstreffer_quote: dict | None = None
     zai_richtung_performance: dict | None = None
@@ -155,6 +158,7 @@ class RemoteStatus:
             "api_health": self.api_health,
             "regime_status": self.regime_status,
             "z3_und_bewertung": self.z3_und_bewertung,
+            "hedge_wirksamkeit": self.hedge_wirksamkeit,
             "parameter_overview": self.parameter_overview,
             "richtungstreffer_quote": self.richtungstreffer_quote,
             "zai_richtung_performance": self.zai_richtung_performance,
@@ -252,6 +256,7 @@ def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, erro
         api_health=_safe(_get_api_health, conn),
         regime_status=_safe(_get_regime_status, conn),
         z3_und_bewertung=_safe(_get_z3_und_bewertung, conn, portfolio_value_eur),
+        hedge_wirksamkeit=_safe(_get_hedge_wirksamkeit, conn, watchlist),
         parameter_overview=_safe(_get_parameter_overview),
         richtungstreffer_quote=_safe(_get_richtungstreffer_quote, conn, watchlist),
         zai_richtung_performance=_safe(_get_zai_richtung_performance, conn, watchlist),
@@ -659,6 +664,19 @@ def _get_z3_und_bewertung(conn: sqlite3.Connection, portfolio_value_eur: float |
         "symbole_ohne_kurs": (letzter["symbole_ohne_kurs"]
                               if letzter and "symbole_ohne_kurs" in letzter.keys() else None),
     }
+
+
+def _get_hedge_wirksamkeit(conn: sqlite3.Connection, watchlist: list) -> dict | None:
+    """Hat die Absicherung gewirkt? Siehe agent/portfolio_historie.py::
+    compute_hedge_wirksamkeit() - SQN/Expectancy sind fuer diese Klasse die
+    falsche Frage, deshalb eine eigene Karte statt einer Zeile in der
+    Systemguete."""
+    from datetime import date, timedelta
+
+    from agent.portfolio_historie import compute_hedge_wirksamkeit
+
+    ab = (date.today() - timedelta(days=90)).isoformat()
+    return compute_hedge_wirksamkeit(conn, ab_datum=ab, watchlist=watchlist)
 
 
 def _get_parameter_overview() -> list[dict]:

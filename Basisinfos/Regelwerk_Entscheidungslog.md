@@ -8,11 +8,13 @@
 
 ---
 
-## Index nach Thema (189 Einträge)
+## Index nach Thema (190 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
-### Regelwerk / deterministische Gates (33)
+### Regelwerk / deterministische Gates (34)
+
+- **2026-08-07** — W1: Hedge bekommt eigenen Tier + `compute_hedge_wirksamkeit()` (Dämpfung statt Expectancy) — „invertieren" wäre falsch gewesen, der Fehler lag in der Fragestellung
 
 - **2026-07-17** — RM-4 (Cash-Reserve) war rueckwaerts- statt vorwaertsgerichtet
 - **2026-07-18** — Cash-Veto-Warnsystem - RM-4-Block sichtbar machen statt stillschweigend zu HALTEN downzugraden
@@ -13661,3 +13663,85 @@ sind es **14**. Sie enthaelt jetzt die vollstaendige Landkarte: welches Dokument
 wofuer zustaendig ist, und welche fuenf **laufend fortzuschreiben** sind
 (Entscheidungslog, Regelwerksmanual, Methodik, Fakten-Entscheidungsmappe,
 Zielgroessen).
+
+
+---
+
+## Nachtrag (2026-08-07): W1 Hedge-Erfolgsmass - und warum "invertieren" der falsche Begriff war
+
+Der Punkt hiess in meiner eigenen Priorisierung "Hedge-Erfolgsmass
+**invertieren**". Beim Bauen stellte sich heraus: **das waere falsch gewesen.**
+
+### Warum das Vorzeichen NICHT gedreht wird
+
+Kauft man 3QSS bei 1,45 mit Stop 1,35 und Ziel 1,65 und der Nasdaq faellt,
+steigt 3QSS auf 1,65 - der Trade gewinnt, und `R = +2` ist **richtig gerechnet**.
+Das R-Multiple des einzelnen Hedge-Trades stimmt bereits.
+
+Falsch ist etwas anderes: es zu einer **Guetekennzahl** zu aggregieren, die
+"negativ = schlecht" bedeutet. Eine Absicherung ist eine
+Versicherungspraemie - sie hat konstruktionsbedingt einen negativen
+Erwartungswert, weil man sie fuer Varianzreduktion kauft und nicht fuer
+Rendite. Nach Expectancy gemessen ist das Ergebnis garantiert negativ und sagt
+genau nichts ueber ihre Guete.
+
+> Der Fehler lag also nicht im Vorzeichen, sondern in der **Fragestellung**.
+> Ein Trade-Mass auf ein Portfolio-Instrument angewandt.
+
+### Was stattdessen gebaut wurde
+
+**1. Hedge bekommt einen eigenen Tier.** Bis hierher landeten DBPK und 3QSS in
+`etf` - zusammen mit den fuenf Themen-ETFs, weil sie dieselbe assetklasse
+tragen. Ein Themen-ETF soll steigen, ein Hedge soll fallen wenn das Portfolio
+steigt; in einem Topf heben sich zwei gegenlaeufige Logiken auf, und die
+entstehende Zahl beschreibt nichts. **Noch war kein Schaden entstanden**
+(`etf: real n=0`), aber der erste aufgeloeste Hedge-Trade haette ihn
+angerichtet - lautlos, weil eine Mischzahl immer plausibel aussieht.
+
+**2. `compute_hedge_wirksamkeit()`** - ein PORTFOLIO-Mass statt eines
+Trade-Masses:
+
+    Daempfung = Rueckschlag OHNE Hedge - Rueckschlag MIT Hedge
+
+Derselbe Bestand zweimal mengenkonstant verkettet, einmal mit und einmal ohne
+die Absicherungspositionen. Dazu die **Praemie**: der Renditeunterschied ueber
+den Zeitraum, im steigenden Markt negativ. Beides zusammen ist die ehrliche
+Bilanz einer Versicherung - was sie gekostet und was sie verhindert hat. Eine
+der beiden Zahlen allein ist immer irrefuehrend.
+
+**3. Messbarkeits-Wache.** Ohne sie liefert die Funktion still `0,0 Daempfung`,
+wenn die Hedge-Kursreihe fehlt: `verketteter_index()` ueberspringt Symbole ohne
+Kurs, beide Reihen werden identisch, und "0,0 Prozentpunkte" liest sich wie
+"die Absicherung hat nichts gebracht" statt wie "nicht messbar". Genau das
+fail-silent-Muster, das diese Woche schon dreimal zugeschlagen hat - hier vorab
+abgefangen.
+
+**4. Der Systemguete-Topf `hedge` bleibt stehen**, traegt aber
+`nicht_als_guete_lesen=True` plus Verweis. Bewusst kein Unterdruecken: eine
+fehlende Zahl wirft die Frage auf, ob ueberhaupt gemessen wurde - eine
+gekennzeichnete nicht.
+
+### Gegenpruefung, damit nichts bricht
+
+Der Tier-Split wirkt auf **alle zwoelf Aggregationen**, die
+`_assetklasse_index()` nutzen. Geprueft:
+
+| | Ergebnis |
+|---|---|
+| alle 12 Aggregationen gegen eine DB-Kopie | laufen fehlerfrei |
+| `spot_symbole_je_tier()` | `hedge` sauber getrennt, `etf` = nur die 5 Themen-ETFs |
+| CRV-Baender fuer Themen-ETF (`tier="etf"`) | enthaelt jetzt **keine** Hedge-Trades mehr - eine Verbesserung, kein Bruch |
+| Watchlist, Pipelines, Batch-Auswahl, UI-Filter | **unberuehrt** - die Aenderung sitzt im Mess-Index, nicht in der Watchlist |
+| fest verdrahtete Tier-Listen der Anzeige (2 Stueck) | nachgezogen, sonst waere `hedge` stillschweigend aus der Darstellung gefallen |
+| Signaturpruefung, 6 Testsuiten | gruen |
+
+Der Test `teste_hedge_wirksamkeit.py` rechnet einen **konstruierten Fall mit
+bekannter Antwort**: eine perfekt gegenlaeufige Absicherung nimmt einen
+29,36-%-Einbruch vollstaendig heraus (Daempfung 29,36 pp), und im reinen
+Aufwaertsmarkt kostet sie Rendite (Praemie negativ). Beide Vorzeichen stimmen.
+
+### Was damit freigeschaltet ist
+
+W2 (Hedge-Risikofaktoren) haengt an derselben Wurzel und ist jetzt baubar. Die
+Hedge-Klasse ist damit **messbar** - ob sie etwas taugt, ist eine andere Frage
+und braucht Zeit.

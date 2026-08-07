@@ -55,6 +55,9 @@ TIER_HEBEL = "hebel"
 # nicht, wodurch der Ausfall in der Anzeige als leere Karte sichtbar wird
 # statt als falsch beschriftete Zahl.
 TIER_SPOT_SAMMEL = "spot"
+# Eigener Tier fuer Absicherungs-Instrumente (2026-08-07) - siehe
+# _assetklasse_index() fuer die Begruendung.
+TIER_HEDGE = "hedge"
 # Symbol ist (nicht mehr) in der Watchlist - typischerweise nach Ausmusterung.
 TIER_UNBEKANNT = "unbekannt"
 
@@ -124,7 +127,28 @@ def _assetklasse_index(watchlist: list | None, kontext: str) -> dict[str, str]:
             TIER_SPOT_SAMMEL,
         )
         return {}
-    return {a.symbol: a.assetklasse for a in watchlist}
+    # HEDGE BEKOMMT EINEN EIGENEN TIER (2026-08-07, W1). Bis hierher landeten
+    # DBPK und 3QSS in "etf" - zusammen mit den fuenf Themen-ETFs, weil sie in
+    # der Watchlist dieselbe assetklasse tragen. Das ist fuer die Datenversorgung
+    # richtig und fuer die MESSUNG falsch:
+    #
+    #   Ein Themen-ETF soll steigen. Ein Hedge soll fallen, wenn das Portfolio
+    #   steigt - das ist seine Aufgabe, nicht sein Versagen.
+    #
+    # In einem gemeinsamen Topf heben sich zwei gegenlaeufige Logiken
+    # gegenseitig auf, und die entstehende Zahl beschreibt nichts. Noch ist kein
+    # Schaden entstanden (etf: real n=0), aber der erste aufgeloeste Hedge-Trade
+    # haette ihn angerichtet - lautlos, weil eine Mischzahl immer plausibel
+    # aussieht.
+    #
+    # Wirkt auf ALLE zwoelf Aggregationen, die diesen Index nutzen. Das ist
+    # Absicht: die Trennung gilt ueberall oder nirgends.
+    from agent.hedge.pipeline import ist_hedge_instrument
+
+    return {
+        a.symbol: (TIER_HEDGE if ist_hedge_instrument(a) else a.assetklasse)
+        for a in watchlist
+    }
 
 
 def _tier_fuer_spot_symbol(symbol: str, assetklasse_by_symbol: dict[str, str]) -> str:
@@ -2199,7 +2223,23 @@ def compute_systemguete(conn, watchlist: list | None = None,
     kosten_basis / kosten_hebel / kosten_median_haltedauer_tage /
     kosten_dauer_anzahl / kosten_dauer_aus_zeitstempel / expectancy_r_netto /
     sqn_netto / basislinie_kosten_r / basislinie_erwartungswert_r_netto /
-    basislinie_median_haltedauer_tage / signalbeitrag_r_netto."""
+    basislinie_median_haltedauer_tage / signalbeitrag_r_netto.
+
+    HEDGE STEHT HIER, GEHOERT ABER NICHT HIERHER (2026-08-07). Seit dem
+    Tier-Split taucht "hedge" als eigener Topf auf - das ist ein Fortschritt
+    gegenueber der Vermischung mit den Themen-ETFs, aber die Kennzahl selbst
+    bleibt fuer diese Klasse die FALSCHE FRAGE. SQN und Expectancy messen "wie
+    gut verdient das?"; eine Absicherung soll aber Rueckschlaege daempfen und
+    kostet dafuer Rendite. Nach Expectancy gemessen ist ihr Ergebnis
+    konstruktionsbedingt negativ und sagt nichts ueber ihre Guete.
+
+    Das richtige Mass steht in agent/portfolio_historie.py::
+    compute_hedge_wirksamkeit() - Rueckschlag mit gegen ohne Absicherung, plus
+    die gezahlte Praemie. Der hedge-Topf hier traegt deshalb ein
+    `nicht_als_guete_lesen`-Flag und einen Verweis; er wird bewusst NICHT
+    unterdrueckt, weil eine fehlende Zahl die Frage aufwirft, ob ueberhaupt
+    gemessen wurde.
+    """
     assetklasse_by_symbol = _assetklasse_index(watchlist, "compute_systemguete()")
     # Vor der Zeilenschleife laden: das Mark-to-Market unaufgeloester Trades
     # braucht die Kursreihen bereits dort, nicht erst bei der Basislinie.
@@ -2482,6 +2522,20 @@ def compute_systemguete(conn, watchlist: list | None = None,
             k["basislinie_kosten_r"] = None
             k["basislinie_erwartungswert_r_netto"] = None
             k["signalbeitrag_r_netto"] = None
+        # HEDGE: die Zahlen entstehen, werden aber ausdruecklich als
+        # ungeeignetes Guetemass markiert (2026-08-07, siehe Docstring). Ein
+        # Flag am Datum statt einer Unterdrueckung: eine fehlende Zahl wirft die
+        # Frage auf, ob ueberhaupt gemessen wurde - eine gekennzeichnete nicht.
+        if tier == TIER_HEDGE:
+            k["nicht_als_guete_lesen"] = True
+            k["hinweis"] = (
+                "SQN/Expectancy sind fuer eine Absicherung die falsche Frage - "
+                "ein Hedge soll Rueckschlaege daempfen und kostet dafuer "
+                "Rendite, sein Erwartungswert ist konstruktionsbedingt negativ. "
+                "Das zustaendige Mass ist agent/portfolio_historie.py::"
+                "compute_hedge_wirksamkeit() (Rueckschlag mit gegen ohne "
+                "Absicherung, plus gezahlte Praemie)."
+            )
         ergebnis.setdefault(tier, {})[art] = k
     return ergebnis
 
@@ -4358,8 +4412,10 @@ def crv_baender_kontext_fuer_prompt(conn, tier: str = "hebel", horizont: int = 7
     ausgewerteten Trades gegen 124 weit duenner ist; Aktien, Rohstoffe und
     Themen-ETF hatten gar nichts.
 
-    `tier` ist einer von: "hebel", "krypto", "aktien", "rohstoffe",
-    "themen_etf" (oder "spot" fuer den Sammel-Topf). Fuer alles ausser "hebel"
+    `tier` ist einer von: "hebel", "krypto", "aktien", "rohstoffe", "etf"
+    (Themen-ETFs; seit 07.08. OHNE die Hedge-Instrumente, die einen eigenen
+    Tier "hedge" haben - fuer eine Absicherung sind CRV-Baender ohnehin die
+    falsche Groesse, siehe compute_hedge_wirksamkeit()) (oder "spot" fuer den Sammel-Topf). Fuer alles ausser "hebel"
     wird ueber `spot_symbole_je_tier()` auf die Symbole DIESER Assetklasse
     gefiltert - ohne den Filter waere jeder Befund ein Mischwert, in dem
     hinterher niemand sagen kann, ob er krypto-spezifisch war (Fund 29.07.).

@@ -319,6 +319,15 @@ _INDEX_HTML = """<!doctype html>
   <div id="richtungsverteilung-body"></div>
 </div>
 
+<div class="card" id="hedge-card" style="display:none">
+  <div class="row"><strong>Absicherung — hat sie gewirkt?</strong></div>
+  <div class="row"><span class="muted-text">Ein Hedge, der Geld verliert während das Portfolio steigt,
+  hat <b>funktioniert</b> — er ist eine Versicherungsprämie. Nach Systemgüte oder Expectancy gemessen wäre
+  das Ergebnis konstruktionsbedingt negativ und ohne Aussage. Gemessen wird deshalb derselbe Bestand
+  einmal mit und einmal ohne Absicherung.</span></div>
+  <div id="hedge-body"></div>
+</div>
+
 <div class="card" id="z3-card" style="display:none">
   <div class="row"><strong>Drawdown-Notbremse Z-3</strong></div>
   <div id="z3-body"></div>
@@ -455,7 +464,11 @@ function renderProviderPerformance(tierData, offenInfo, sendeData) {
 // hier, damit auch eine (noch) leere Assetklasse sichtbar bleibt statt
 // stillschweigend zu fehlen.
 const SPOT_ASSETKLASSEN = [
-  ["krypto", "Krypto"], ["aktien", "Aktien"], ["rohstoffe", "Rohstoffe"], ["etf", "ETF (Themen/Hedge)"],
+  // "hedge" ist seit 07.08. ein EIGENER Tier (siehe backward_tracking.
+  // _assetklasse_index()). Ohne Eintrag hier faellt er stillschweigend aus der
+  // Anzeige - genau die Sorte Luecke, die am 06.08. schon einmal auftrat.
+  ["krypto", "Krypto"], ["aktien", "Aktien"], ["rohstoffe", "Rohstoffe"],
+  ["etf", "ETF (Themen)"], ["hedge", "Hedge (Absicherung)"],
 ];
 
 function renderSpotProviderPerformanceByAssetklasse(perfData, offeneData, sendeData) {
@@ -549,7 +562,8 @@ function renderMarktscanErfolgsquote(data) {
 // damit ein (noch) leeres Tier sichtbar bleibt statt stillschweigend zu fehlen.
 const ZAI_RICHTUNG_TIERS = [
   ["hebel", "Hebel"], ["krypto", "Krypto (Spot)"], ["aktien", "Aktien"],
-  ["rohstoffe", "Rohstoffe"], ["etf", "ETF (Themen/Hedge)"],
+  ["rohstoffe", "Rohstoffe"], ["etf", "ETF (Themen)"],
+  ["hedge", "Hedge (Absicherung)"],
 ];
 
 function renderZaiRichtungPerformanceTier(label, tierData) {
@@ -658,6 +672,29 @@ function renderRichtungsverteilung(r) {
     }
   }
   return h;
+}
+
+function renderHedge(h) {
+  const pct = (v) => (v === null || v === undefined) ? "—" : v.toFixed(2) + " %";
+  const pp = (v) => (v === null || v === undefined) ? "—" : (v >= 0 ? "+" : "") + v.toFixed(2) + " pp";
+  if (!h.messbar) {
+    return '<div class="row"><span class="muted-text">Nicht messbar: ' +
+      (h.grund || "unbekannt") + "</span></div>";
+  }
+  let x = '<div class="row"><span>Rückschlag OHNE Absicherung</span><span>' +
+    pct(h.rueckschlag_ohne_hedge_prozent) + "</span></div>";
+  x += '<div class="row"><span>Rückschlag MIT Absicherung</span><span>' +
+    pct(h.rueckschlag_mit_hedge_prozent) + "</span></div>";
+  const gut = (h.daempfung_prozentpunkte || 0) > 0;
+  x += '<div class="row"><span>Dämpfung</span><strong' + (gut ? ' class="ok"' : '') + ">" +
+    pp(h.daempfung_prozentpunkte) + "</strong></div>";
+  x += '<div class="row"><span>gezahlte Prämie (Renditeunterschied)</span><span>' +
+    pp(h.praemie_prozent) + "</span></div>";
+  x += '<div class="row"><span class="muted-text">' + (h.tage || 0) + " Tage · " +
+    (h.hedge_symbole_bewertet || []).join(", ") + "</span></div>";
+  if (h.teilweise_ohne_kurse) x += '<div class="row"><span class="err">ohne Kursreihe: ' +
+    h.teilweise_ohne_kurse.join(", ") + "</span></div>";
+  return x;
 }
 
 function renderZ3(z) {
@@ -1033,6 +1070,11 @@ async function refreshStatus() {
     document.getElementById("richtungsverteilung-card").style.display = "block";
     document.getElementById("richtungsverteilung-body").innerHTML =
       renderRichtungsverteilung(data.richtungsverteilung);
+  }
+
+  if (data.hedge_wirksamkeit) {
+    document.getElementById("hedge-card").style.display = "block";
+    document.getElementById("hedge-body").innerHTML = renderHedge(data.hedge_wirksamkeit);
   }
 
   if (data.z3_und_bewertung) {

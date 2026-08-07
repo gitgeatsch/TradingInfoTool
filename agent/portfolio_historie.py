@@ -1031,6 +1031,129 @@ def schreibe_tageswert(
             "symbole_ohne_kurs": ohne_kurs, "geschrieben": True, "abdeckung": abdeckung}
 
 
+def compute_hedge_wirksamkeit(
+    conn: sqlite3.Connection,
+    *,
+    ab_datum: str,
+    bis_datum: str | None = None,
+    watchlist: list | None = None,
+) -> dict:
+    """Hat die Absicherung den Rueckschlag gedaempft? DAS Erfolgsmass fuer Hedge.
+
+    WARUM DIE UEBLICHE MESSUNG HIER FALSCH IST. Systemguete, SQN und
+    Expectancy beantworten "verdient dieses Signal Geld?". Fuer ein
+    Absicherungs-Overlay ist das die falsche Frage: ein Hedge, der Geld
+    verliert waehrend das Portfolio steigt, hat FUNKTIONIERT. Er ist eine
+    Versicherungspraemie, und Versicherungen haben konstruktionsbedingt einen
+    negativen Erwartungswert - man kauft sie fuer Varianzreduktion, nicht fuer
+    Rendite. Nach Expectancy gemessen ist das Ergebnis garantiert negativ und
+    sagt genau nichts.
+
+    WAS HIER NICHT PASSIERT, UND WARUM DAS WICHTIG IST. Der naheliegende
+    Reflex - "dann dreh das Vorzeichen um" - waere schlicht falsch. Kauft man
+    3QSS bei 1,45 mit Ziel 1,65 und der Nasdaq faellt, steigt 3QSS, der Trade
+    gewinnt, und die R-Rechnung stimmt bereits. Das R-Multiple des einzelnen
+    Trades ist RICHTIG. Falsch ist nur, es zu einer Qualitaetskennzahl zu
+    aggregieren, die "negativ = schlecht" bedeutet.
+
+    DAS RICHTIGE MASS ist deshalb kein Trade-Mass, sondern ein PORTFOLIO-Mass:
+    derselbe Bestand einmal mit und einmal ohne die Absicherungspositionen,
+    beide mengenkonstant verkettet, und dann die Rueckschlaege verglichen.
+
+        Daempfung = Rueckschlag OHNE Hedge - Rueckschlag MIT Hedge
+
+    Positiv heisst: die Absicherung hat den Einbruch abgefedert. Genau das ist
+    ihre Aufgabe, und genau das misst diese Funktion.
+
+    DIE PRAEMIE gehoert dazu und wird mitgeliefert: `praemie_prozent` ist der
+    Renditeunterschied ueber den ganzen Zeitraum. In einem steigenden Markt ist
+    er negativ - die Absicherung hat Rendite gekostet. Beides zusammen ist die
+    ehrliche Bilanz einer Versicherung: was sie gekostet und was sie verhindert
+    hat. Eine der beiden Zahlen allein ist immer irrefuehrend.
+
+    GRENZE, die zu jeder Verwendung gehoert: gemessen wird der Zeitraum, den die
+    Kursreihen hergeben - nicht der Zeitraum, in dem die Absicherung gehalten
+    wurde. Solange die Hedge-Position ueber das ganze Fenster bestand, ist das
+    dasselbe; bei Zu- und Verkaeufen innerhalb des Fensters nicht. `tage` und
+    `hedge_symbole_bewertet` machen sichtbar, worauf die Zahl beruht.
+    """
+    from agent.hedge.pipeline import ist_hedge_instrument
+
+    bis = bis_datum or _heute_utc()
+    watchlist = watchlist if watchlist is not None else config.get_watchlist()
+    hedge_symbole = {a.symbol for a in watchlist if ist_hedge_instrument(a)}
+    holdings = {h.symbol: h.quantity for h in db.get_all_holdings(conn)
+                if h.quantity > MIN_MENGE_REAL}
+    gehaltene_hedges = sorted(hedge_symbole & set(holdings))
+    if not gehaltene_hedges:
+        return {"messbar": False, "grund": "keine Hedge-Position im Bestand",
+                "hedge_symbole_bewertet": []}
+
+    coingecko_ids = {a.symbol: a.coingecko_id for a in watchlist if a.coingecko_id}
+    cash_aequivalente = {a.symbol for a in watchlist if a.ist_cash_aequivalent}
+    kurs_am, _ = _kurs_lookup(conn, set(holdings), ab_datum, coingecko_ids, cash_aequivalente)
+
+    direkt, usd_roh = _eur_kurse_je_symbol(
+        conn, set(holdings) - cash_aequivalente, ab_datum, coingecko_ids)
+    tage = sorted({d for reihe in (direkt, usd_roh) for werte in reihe.values()
+                   for d in werte if ab_datum <= d <= bis})
+    if len(tage) < 2:
+        return {"messbar": False, "grund": "zu wenige Tage mit Kursen",
+                "hedge_symbole_bewertet": gehaltene_hedges}
+
+    # HABEN DIE HEDGE-POSITIONEN UEBERHAUPT KURSE? Ohne diese Pruefung liefert
+    # die Funktion still 0,0 Daempfung, wenn die Hedge-Reihe fehlt -
+    # verketteter_index() ueberspringt Symbole ohne Kurs, beide Reihen werden
+    # identisch, und "0,0 Prozentpunkte" liest sich wie "die Absicherung hat
+    # nichts gebracht" statt wie "nicht messbar". Genau der Unterschied, an dem
+    # sich diese Woche schon zweimal ein Fehler versteckt hat.
+    abgedeckt = {
+        s: sum(1 for tag in tage if kurs_am(s, tag) is not None)
+        for s in gehaltene_hedges
+    }
+    ohne_kurse = [s for s, n in abgedeckt.items() if n < 2]
+    if len(ohne_kurse) == len(gehaltene_hedges):
+        return {"messbar": False,
+                "grund": f"keine Kursreihe fuer {', '.join(ohne_kurse)} im Fenster",
+                "hedge_symbole_bewertet": gehaltene_hedges,
+                "abdeckung_je_symbol": abgedeckt}
+
+    ohne_hedge = {s: m for s, m in holdings.items() if s not in hedge_symbole}
+    mit = verketteter_index(tage, lambda _t: holdings, kurs_am)
+    ohne = verketteter_index(tage, lambda _t: ohne_hedge, kurs_am)
+    r_mit, r_ohne = groesster_rueckschlag(mit), groesster_rueckschlag(ohne)
+
+    praemie = None
+    if mit and ohne and mit[0][1] and ohne[0][1]:
+        rendite_mit = mit[-1][1] / mit[0][1] - 1.0
+        rendite_ohne = ohne[-1][1] / ohne[0][1] - 1.0
+        praemie = (rendite_mit - rendite_ohne) * 100.0
+
+    return {
+        "messbar": True,
+        "ab_datum": ab_datum,
+        "bis_datum": tage[-1],
+        "tage": len(tage),
+        "hedge_symbole_bewertet": gehaltene_hedges,
+        "abdeckung_je_symbol": abgedeckt,
+        "teilweise_ohne_kurse": ohne_kurse or None,
+        "rueckschlag_mit_hedge_prozent": r_mit["max_prozent"],
+        "rueckschlag_ohne_hedge_prozent": r_ohne["max_prozent"],
+        "daempfung_prozentpunkte": r_ohne["max_prozent"] - r_mit["max_prozent"],
+        "aktueller_rueckschlag_mit_prozent": r_mit["aktuell_prozent"],
+        "aktueller_rueckschlag_ohne_prozent": r_ohne["aktuell_prozent"],
+        "praemie_prozent": praemie,
+        "lesehilfe": (
+            "daempfung_prozentpunkte > 0 heisst: die Absicherung hat den "
+            "Rueckschlag verringert - das ist ihre Aufgabe. praemie_prozent ist "
+            "der Renditeunterschied ueber den Zeitraum und in einem steigenden "
+            "Markt negativ; das ist der Preis der Versicherung, kein Fehler. "
+            "Ein Hedge nach Expectancy oder SQN zu bewerten ist eine "
+            "Kategorieverwechslung - siehe compute_hedge_wirksamkeit()."
+        ),
+    }
+
+
 def pruefe_z3(conn: sqlite3.Connection, *, schwelle_prozent: float) -> dict:
     """Z-3 / RM-7 - Drawdown-Notbremse.
 

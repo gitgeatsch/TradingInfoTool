@@ -627,6 +627,7 @@ def _rohdaten_fuer_backtest(conn) -> dict:
     z3_status = None
     portfolio_wert_historie = []
     bewertungs_diagnose = {}
+    hedge_wirksamkeit = {}
     try:
         z3_status = pruefe_z3(
             conn,
@@ -642,12 +643,17 @@ def _rohdaten_fuer_backtest(conn) -> dict:
         # (FX-Ableitung verworfen + Futures-Reihe unter dem ETC-Symbol).
         # Ohne diese Diagnose ist die Verifikation der Behebung nicht moeglich.
         bewertungs_diagnose = _bewertungs_diagnose(conn)
+        # HEDGE-WIRKSAMKEIT (2026-08-07, W1): das zustaendige Erfolgsmass fuer
+        # Absicherungen. SQN/Expectancy beantworten fuer diese Klasse die
+        # falsche Frage - siehe compute_hedge_wirksamkeit().
+        hedge_wirksamkeit = _hedge_wirksamkeit(conn)
     except sqlite3.OperationalError as exc:
         # Bewusst als Wert im Export, nicht nur im Log: wer die Datei liest,
         # soll den Unterschied zwischen "kein Drawdown" und "nicht gemessen"
         # sehen (stille Degradierung, Methodik 2.5.8).
         z3_status = {"nicht_verfuegbar": str(exc)}
         bewertungs_diagnose = {"nicht_verfuegbar": str(exc)}
+        hedge_wirksamkeit = {"nicht_verfuegbar": str(exc)}
         print(f"  HINWEIS: Z-3-Status nicht ermittelbar ({exc})")
 
     # Makro- und OI-Historie fuer den LLM1-Backtest (2026-08-04).
@@ -731,6 +737,7 @@ def _rohdaten_fuer_backtest(conn) -> dict:
     return {
         "_z3_status": z3_status,
         "_bewertungs_diagnose": bewertungs_diagnose,
+        "_hedge_wirksamkeit": hedge_wirksamkeit,
         "hebel_triggers_kandidaten": hebel_triggers_kandidaten,
         "hebel_triggers_alle": hebel_triggers_alle,
         "portfolio_wert_historie": portfolio_wert_historie,
@@ -989,6 +996,19 @@ def _ohlc_aktualitaet_je_symbol(conn) -> dict:
         "je_symbol_waehrung_quelle": [row_to_dict(r) for r in je_reihe],
         "rekonstruierte_reihen": [row_to_dict(r) for r in rekonstruiert],
     }
+
+
+def _hedge_wirksamkeit(conn) -> dict:
+    """Hat die Absicherung den Rueckschlag gedaempft? (2026-08-07, W1)
+
+    Fenster wie bei Z-3: 90 Tage. Kuerzer waere fuer eine Drawdown-Aussage zu
+    wenig, laenger vermischt Zeitraeume mit und ohne Hedge-Position."""
+    from agent.portfolio_historie import compute_hedge_wirksamkeit
+    from datetime import datetime, timedelta, timezone
+
+    ab = (datetime.now(timezone.utc).date() - timedelta(days=90)).isoformat()
+    return compute_hedge_wirksamkeit(
+        conn, ab_datum=ab, watchlist=config_module.get_watchlist())
 
 
 def _bewertungs_diagnose(conn) -> dict:
@@ -1734,6 +1754,7 @@ def main() -> None:
         "hebel_erstmalige_erkennung_delta": hebel_erstmalige_erkennung_delta,
         "z3_status": rohdaten_fuer_backtest.pop("_z3_status", None),
         "bewertungs_diagnose": rohdaten_fuer_backtest.pop("_bewertungs_diagnose", None),
+        "hedge_wirksamkeit": rohdaten_fuer_backtest.pop("_hedge_wirksamkeit", None),
         "rohdaten_fuer_backtest": rohdaten_fuer_backtest,
         "preishistorie_ueberholte_symbole": preishistorie_ueberholte_symbole,
         "preishistorie_signal_symbole": preishistorie_signal_symbole,
