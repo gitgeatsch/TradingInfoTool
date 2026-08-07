@@ -182,7 +182,15 @@ def main() -> None:
     # SYSTEM_PROMPT, der mit ~9.100 Token das Regelwerk enthaelt. Deshalb wird
     # dieser Client NICHT an den Budget-Allocator uebergeben.
     openrouter_api_key = os.environ.get("OPENROUTER_API_KEY")
-    if openrouter_api_key:
+    # Der Key allein schaltet NICHTS um (2026-08-07). Die .env wird als Ganzes
+    # zwischen Desktop und Notebook synchronisiert - ein Schluessel in einer
+    # Datei ist keine Betriebsentscheidung. Erst der ausdrueckliche Schalter in
+    # config.yaml aktiviert OpenRouter, und der wird gesetzt, wenn der
+    # Desktop-Test Erreichbarkeit, Format und Urteilsuebereinstimmung belegt hat.
+    openrouter_aktiv = bool(
+        (config.load_config().get("gegenpruefung") or {}).get("openrouter_aktiv", False)
+    )
+    if openrouter_api_key and openrouter_aktiv:
         gegenpruefung_client = OpenRouterClient(api_key=openrouter_api_key)
         logger.info(
             "OpenRouter API-Key gefunden - uebernimmt die Gegenpruefung (%s). Z.ai bleibt "
@@ -191,9 +199,16 @@ def main() -> None:
         )
     else:
         gegenpruefung_client = zai_client
-        logger.info(
-            "Kein OPENROUTER_API_KEY gesetzt - Gegenpruefung laeuft wie bisher ueber Z.ai."
-        )
+        if openrouter_api_key and not openrouter_aktiv:
+            logger.info(
+                "OpenRouter-Key vorhanden, aber gegenpruefung.openrouter_aktiv=false - "
+                "Gegenpruefung laeuft unveraendert ueber Z.ai (Schalter erst nach dem "
+                "Desktop-Test umlegen)."
+            )
+        else:
+            logger.info(
+                "Kein OPENROUTER_API_KEY gesetzt - Gegenpruefung laeuft wie bisher ueber Z.ai."
+            )
 
     gemini_api_key = os.environ.get("GEMINI_API_KEY")
     if gemini_api_key:

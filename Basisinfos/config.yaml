@@ -1846,3 +1846,14 @@ marktsuche:
 # laeuft rein automatisch.
 schwerpunkte:
   manuell: []
+
+# --- OpenRouter fuer die Gegenpruefung (2026-08-07) ---
+# BEWUSST AUS. Der API-Key allein darf nichts umschalten: die .env wird als
+# Ganzes zwischen den Geraeten synchronisiert, und ein Schluessel in einer
+# Datei ist keine Betriebsentscheidung. Erst wenn der Desktop-Test
+# (teste_openrouter_live.py) Erreichbarkeit, Format und Urteilsuebereinstimmung
+# belegt hat, wird hier auf true gestellt - dann in einem Zug, nicht schrittweise.
+#
+# Solange false: die Gegenpruefung laeuft unveraendert ueber Z.ai.
+gegenpruefung:
+  openrouter_aktiv: false
