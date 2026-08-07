@@ -663,6 +663,110 @@ erzeugen, die man nicht belegen kann.
 die Ursache (5 Vetos gesamt), und eine Lockerung würde die Diagnose verwischen.
 
 
+
+---
+
+# 8d. Der Ausbaustand-Drift — die Nicht-Krypto-Klassen hängen vier Wochen zurück (07.08.2026)
+
+**Anlass:** Nutzer-Einwand zu 8c — *„hier musst du bei den Multi- oder sonstigen
+Assets genau achten, wo und wie diese umgesetzt wurden, u. U. hängen die noch
+Wochen zurück vom Code und Themenlage."*
+
+Berechtigt. Abschnitt 8c hatte implizit angenommen, die Nicht-Krypto-Pipelines
+seien „Krypto minus Akkumulation". **Gemessen ist der Rückstand deutlich
+größer — und systematisch.**
+
+## Wann kam welcher Fakt, und wo blieb er stehen
+
+| Fakt | Krypto-Spot | Hebel | Aktien | Themen-ETF | Rohstoffe |
+|---|---|---|---|---|---|
+| `markt_kontext` | 09.07. | 14.07. | **nie** | **nie** | **nie** |
+| `regime_profil` | 09.07. | 14.07. | **nie** | **nie** | **nie** |
+| `antizyklisch` | 09.07. | 14.07. | **nie** | **nie** | **nie** |
+| `tranchen_erlaubt` | 12.07. | — | **nie** | **nie** | **nie** |
+| `liquiditaetszonen` | 23.07. | 23.07. | **nie** | **nie** | **nie** |
+| `signal_stabilitaet` | 25.07. | 25.07. | **nie** | **nie** | **nie** |
+| `marktscan_reifegrad` | 30.07. | — | **nie** | **nie** | **nie** |
+| `ausstiegsregel` | — | 05.08. | **nie** | **nie** | **nie** |
+| `systemguete` | — | 05.08. | **nie** | **nie** | **nie** |
+| `kosten` | — | 05.08. | **nie** | **nie** | **nie** |
+| `crv_baender` | 06.08. | 06.08. | **06.08.** | **06.08.** | **06.08.** |
+
+> **Genau EIN Fakt wurde je auf alle fünf Spot-Klassen ausgerollt** —
+> `crv_baender`, gestern. Alles andere aus vier Wochen Weiterentwicklung ging
+> ausschließlich an Krypto und/oder Hebel.
+
+Der Stand der Nicht-Krypto-Analysten entspricht damit im Kern dem **09.07.**
+
+## Dasselbe Bild auf Pipeline-Ebene
+
+| Mechanismus | Krypto | Hebel | Aktien | ETF | Rohst. | Hedge |
+|---|---|---|---|---|---|---|
+| Z.ai-Gegenprüfung | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ |
+| Risikofaktoren | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ (seit heute) |
+| Fazit-Konsistenz | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ |
+| CRV-Bänder | ✔ | ✔ | ✔ | ✔ | ✔ | — |
+| **Selbst-HALTEN-Tracking** | ✔ | ✔ | **—** | **—** | **—** | — |
+| **`original_action`** | ✔ | ✔ | **—** | **—** | **—** | — |
+| **Mindestziel** | ✔ | ✔ | **—** | **—** | **—** | — |
+| **Ausstiegsregel** | — | ✔ | — | — | — | — |
+| **Systemgüte-Fakt** | — | ✔ | — | — | — | — |
+| Kostenmodell | — | — | — | — | — | — |
+| JIT-Historie | — | — | ✔ | ✔ | ✔ | — |
+
+| | Mechanismen |
+|---|---|
+| Hebel | **9 von 12** |
+| Krypto-Spot | 7 von 12 |
+| Aktien / Themen-ETF / Rohstoffe | **5 von 12** |
+| Hedge | **3 von 12** |
+
+## Was das für 8c bedeutet
+
+Die HALTEN-Diagnose bleibt richtig, aber ihre **Ursache ist breiter** als dort
+beschrieben. Es fehlt nicht nur das Akkumulations-Framework — es fehlen sechs
+von elf Weiterentwicklungen seit dem 09.07.
+
+Zwei Folgerungen, die vorher nicht sichtbar waren:
+
+**1. `original_action` fehlt → 8c konnte eine Frage gar nicht beantworten.**
+In 8c stand: „bei allen Nicht-Krypto-Signalen ist `original_action = None`, also
+lässt sich nicht unterscheiden, ob das LLM HALTEN sagte oder ein Gate es
+überschrieb." Der Grund ist jetzt klar — das Feld wird in diesen Pipelines nie
+gesetzt. **Die Unterscheidung ist strukturell unmöglich, nicht nur ungemessen.**
+
+**2. Der Rückstand ist kein Zufall, sondern ein Muster.** Jede Erweiterung wurde
+dort gebaut, wo gerade gearbeitet wurde — Krypto-Spot, dann Hebel. Der Rollout
+auf die übrigen Klassen war nie Teil der Definition von „fertig". `crv_baender`
+am 06.08. ist die einzige Ausnahme, und sie war ausdrücklich gefordert
+(*„nicht selektiv für eine Funktionalität sondern über alle Assets korrekt
+anpassen"*).
+
+> **Konsequenz für die Arbeitsweise:** eine Erweiterung an einer Pipeline ist
+> nicht fertig, wenn sie dort läuft. Sie ist fertig, wenn entschieden ist, ob
+> sie für die anderen fünf gilt — und die Entscheidung dokumentiert ist. Ein
+> „gilt nur für Krypto, weil X" ist ein gültiges Ergebnis; ein stilles
+> Auslassen nicht.
+
+## Was daraus folgt — Ergänzung zur Maßnahmenliste aus 8c
+
+Die Reihenfolge aus 8c bleibt, aber H-4 wird größer und bekommt Vorstufen:
+
+| # | Maßnahme | Aufwand |
+|---|---|---|
+| **H-5** | **Rollout-Prüfung als Pflichtschritt** — bei jeder Fakten-/Regel-Änderung entscheiden UND dokumentieren, ob sie für alle sechs Pipelines gilt | klein, dauerhaft |
+| **H-6** | `original_action` + Selbst-HALTEN-Tracking auf die Spot-Familie ausrollen | klein |
+| **H-7** | `ausstiegsregel`, `systemguete`, `kosten` von Hebel auf die Spot-Familie prüfen | mittel |
+| **H-4** | Akkumulations-Konzept (`antizyklisch`, `tranchen_erlaubt`) für Aktien/ETF/Rohstoffe | groß |
+
+**H-6 ist der günstigste Punkt der ganzen Liste** und macht 8c erst
+auswertbar — ohne `original_action` bleibt unbeantwortbar, wie viele der HALTEN
+vom Modell und wie viele vom Gate kommen.
+
+**H-5 ist der eigentliche Befund.** Ohne ihn entsteht derselbe Drift bei der
+nächsten Erweiterung wieder.
+
+
 ## Quellen (extern)
 
 - [System Quality Number — Formel und Bewertungsskala, QuantMonitor](https://quantmonitor.net/system-quality-number-sqn/)

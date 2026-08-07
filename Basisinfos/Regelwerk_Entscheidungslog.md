@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (192 Einträge)
+## Index nach Thema (193 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -52,7 +52,9 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-05** — Ausstiegsregel scharfgeschaltet: Config, taeglicher Job 7:15, Sammel-E-Mail
 - **2026-08-06** — Gate-Untergrenze Stop-Abstand: EXISTIERT BEREITS (RM-1b 2,5 % + RM-1c 0,75xATR), richtig kalibriert, nichts gebaut
 
-### LLM-Prompts / Analysten (Stage 2) (18)
+### LLM-Prompts / Analysten (Stage 2) (19)
+
+- **2026-08-07** — Ausbaustand-Drift gemessen: von 11 Fakten seit dem 09.07. wurde genau EINER auf alle Spot-Klassen ausgerollt; Nicht-Krypto-Analysten stehen im Kern auf dem 09.07.
 
 - **2026-08-07** — Warum Aktien/ETF/Rohstoffe nur HALTEN sagen: kein Akkumulations-Framework (Krypto 7x Tranche/15x antizyklisch, die anderen null) + Zeithorizont hängt am LLM statt an der Klasse
 
@@ -13921,3 +13923,68 @@ zum zweiten Mal an diesem Tag haette ein Befund zu Arbeit an etwas Erledigtem
 gefuehrt, wenn er nicht datiert worden waere. **Bewusst NICHT auf der Liste: die Gates
 lockern** - sie sind nachweislich nicht die Ursache, und eine Lockerung wuerde
 die Diagnose verwischen.
+
+
+---
+
+## Nachtrag (2026-08-07): der Ausbaustand-Drift - genau EIN Fakt wurde je auf alle Spot-Klassen ausgerollt
+
+Nutzer-Einwand zur HALTEN-Untersuchung: *"hier musst du bei den Multi- oder
+sonstigen Assets genau achten, wo und wie diese umgesetzt wurden, u.U. haengen
+die noch Wochen zurueck vom Code und Themenlage."*
+
+Berechtigt - und der gemessene Rueckstand ist groesser als die Untersuchung in
+8c angenommen hatte. Vollstaendige Tabellen in
+`Zwischenstand_Gesamtprojekt_06_08.md` **Abschnitt 8d**.
+
+### Der Befund in einer Zeile
+
+**Von elf Fakten, die zwischen dem 09.07. und dem 06.08. entstanden sind, wurde
+genau EINER auf alle fuenf Spot-Klassen ausgerollt** - `crv_baender`, gestern,
+und der nur, weil er ausdruecklich so gefordert war ("nicht selektiv fuer eine
+Funktionalitaet sondern ueber alle Assets korrekt anpassen").
+
+Alles andere - `markt_kontext`, `regime_profil`, `antizyklisch` (alle 09.07.),
+`tranchen_erlaubt` (12.07.), `liquiditaetszonen` (23.07.), `signal_stabilitaet`
+(25.07.), `marktscan_reifegrad` (30.07.), `ausstiegsregel`, `systemguete`,
+`kosten` (alle 05.08.) - ging ausschliesslich an Krypto-Spot und/oder Hebel.
+
+**Der Stand der Nicht-Krypto-Analysten entspricht im Kern dem 09.07.**
+
+Auf Pipeline-Ebene dasselbe Bild: Hebel hat 9 von 12 geprueften Mechanismen,
+Krypto-Spot 7, Aktien/Themen-ETF/Rohstoffe je 5, Hedge 3.
+
+### Was das an der HALTEN-Diagnose aendert
+
+Sie bleibt richtig, aber ihre Ursache ist breiter: es fehlt nicht nur das
+Akkumulations-Framework, sondern sechs von elf Weiterentwicklungen.
+
+Und ein Punkt aus 8c wird erst jetzt erklaerbar: dort stand, dass
+`original_action` bei allen Nicht-Krypto-Signalen None ist und sich deshalb
+nicht unterscheiden laesst, ob das LLM HALTEN sagte oder ein Gate es
+ueberschrieb. Der Grund ist, dass diese Pipelines das Feld **nie setzen** - die
+Unterscheidung ist strukturell unmoeglich, nicht nur ungemessen.
+
+### Die eigentliche Lehre
+
+Der Rueckstand ist **kein Zufall, sondern ein Muster**: jede Erweiterung wurde
+dort gebaut, wo gerade gearbeitet wurde. Der Rollout auf die uebrigen Klassen
+war nie Teil der Definition von "fertig".
+
+> **Eine Erweiterung an einer Pipeline ist nicht fertig, wenn sie dort laeuft.
+> Sie ist fertig, wenn entschieden ist, ob sie fuer die anderen fuenf gilt - und
+> die Entscheidung dokumentiert ist.** Ein "gilt nur fuer Krypto, weil X" ist ein
+> gueltiges Ergebnis; ein stilles Auslassen nicht.
+
+### Vier Massnahmen ergaenzen die Liste aus 8c
+
+| | | Aufwand |
+|---|---|---|
+| H-5 | Rollout-Pruefung als Pflichtschritt bei jeder Fakten-/Regel-Aenderung | klein, dauerhaft |
+| H-6 | `original_action` + Selbst-HALTEN-Tracking auf die Spot-Familie | klein |
+| H-7 | `ausstiegsregel`/`systemguete`/`kosten` von Hebel auf die Spot-Familie pruefen | mittel |
+| H-4 | Akkumulations-Konzept fuer Aktien/ETF/Rohstoffe | gross |
+
+**H-6 ist der guenstigste Punkt und macht 8c erst auswertbar. H-5 ist der
+eigentliche Befund** - ohne ihn entsteht derselbe Drift bei der naechsten
+Erweiterung wieder.
