@@ -1307,6 +1307,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_hebel_signal_angefragte_richtung_column(conn)
     _migrate_price_history_ohlc(conn)
     _migrate_rohstoff_futures_reihen_umziehen(conn)
+    _bereinige_gemessene_etc_punkte(conn)
     import_holdings_manual_overrides(conn)
 
 
@@ -1890,6 +1891,59 @@ def _migrate_rohstoff_futures_reihen_umziehen(conn: sqlite3.Connection) -> None:
             "Migration: %d Kurspunkte von %s nach %s umgehaengt - das war die "
             "Futures-Reihe, nicht der ETC. %s hat bis zum naechsten Pipeline-Lauf "
             "keine eigene Reihe.", anzahl, symbol, ziel, symbol,
+        )
+
+
+def _bereinige_gemessene_etc_punkte(conn: sqlite3.Connection) -> None:
+    """Unter einem ETC-Symbol darf NICHTS stehen, was 'gemessen' ist (2026-08-07).
+
+    DER FUND (Notebook-Export vom 07.08.). Die Migration darueber ist bewusst
+    idempotent: sie laeuft nur, solange das Zielsymbol leer ist. Das hat eine
+    Luecke im UEBERGANG hinterlassen - der alte Prozess lief nach dem Pull noch
+    mit altem Code weiter, und sein 07:08-Lauf schrieb noch einmal
+    Futures-Kurse unter die ETC-Symbole. Die Migration war da bereits ein
+    No-op, die Rekonstruktion um 12:39 fuellte nur bis zum letzten Tag der
+    Referenzreihe (06.08.) - der eine Punkt vom 07.08. blieb stehen:
+
+        Symbol   rekonstruiert   gemessen   letzter rek.   letzter gem.   Faktor
+        OD7C          62             1           34,63          6,75       5,1
+        OD7H          62             1           20,96       4.355,80     207,8
+        OD7L          62             1            4,44          2,66       1,7
+        OD7N          62             1           52,29         63,98       1,2
+
+    **Die gefaehrliche Haelfte ist die untere.** Bei OD7C/OD7H schlug die
+    Plausibilitaetswache an (Faktor > 3) und verwarf die ganze Reihe - sichtbar
+    als "91 von 91 Tagen ohne Kurs". OD7L und OD7N liegen mit 1,7 und 1,2
+    DARUNTER: dort floss der falsche Kurs still in die Bewertung ein. Genau das
+    Muster vom 06.08. - eine Wache faengt den lauten Fall und laesst den leisen
+    durch.
+
+    DIE REGEL DAHINTER ist praezise und selbstkorrigierend: die ETC-Reihe wird
+    per Definition REKONSTRUIERT (agent/rohstoff/pipeline.py::
+    _rekonstruiere_etc_reihe()). Ein Punkt mit quelle='gemessen' unter einem
+    ETC-Symbol kann deshalb nur ein Futures-Kurs am falschen Platz sein - egal
+    wie er dorthin kam. Anders als die Migration darueber haengt diese Pruefung
+    an KEINER Vorbedingung und laeuft bei jedem Start; sie ist ein No-op, sobald
+    nichts mehr zu bereinigen ist.
+    """
+    for symbol in ("OD7N", "OD7H", "OD7C", "OD7L"):
+        rows = conn.execute(
+            "SELECT date, close FROM price_history_ohlc "
+            "WHERE symbol = ? AND quelle = 'gemessen' ORDER BY date",
+            (symbol,),
+        ).fetchall()
+        if not rows:
+            continue
+        conn.execute(
+            "DELETE FROM price_history_ohlc WHERE symbol = ? AND quelle = 'gemessen'",
+            (symbol,),
+        )
+        conn.commit()
+        logger.warning(
+            "Bereinigung: %d gemessene Kurspunkte unter %s entfernt (%s bis %s, "
+            "zuletzt %.4f) - unter einem ETC-Symbol steht ausschliesslich die "
+            "rekonstruierte Reihe. Der naechste Pipeline-Lauf fuellt die Luecke.",
+            len(rows), symbol, rows[0]["date"], rows[-1]["date"], rows[-1]["close"],
         )
 
 

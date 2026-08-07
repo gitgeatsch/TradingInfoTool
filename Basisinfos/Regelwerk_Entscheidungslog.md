@@ -15002,3 +15002,63 @@ Signaturpruefung gruen.
 Aufrufe, und `mistral_budget_erschoepft` bleibt damit blind fuer
 Fehlschlaege. Das ist die naechste Baustelle - der Breaker macht sie nur
 weniger dringend, weil vergebliche Aufrufe jetzt gar nicht erst stattfinden.
+
+## Nachtrag (2026-08-07): A geloest — und die gefaehrliche Haelfte war die unsichtbare
+
+### Was der Export zeigte
+
+OD7C und OD7H standen mit **0 von 91 bewerteten Tagen** und ohne letzten Kurs
+da. Die Plausibilitaetswache hatte ihre Reihen verworfen:
+
+    reihen_verworfen: ["OD7C (USD, Faktor 5.2)", "OD7H (USD, Faktor 206.1)"]
+
+Der Blick in die Reihen selbst loeste es auf. Je ETC **62 rekonstruierte Punkte
+plus genau EINEN gemessenen** - und der gemessene ist der Futures-Kurs:
+
+| Symbol | rek. | gem. | letzter rek. | letzter gem. | Faktor | Wache |
+|---|---|---|---|---|---|---|
+| OD7C | 62 | 1 | 34,63 | 6,75 | 5,1 | greift |
+| OD7H | 62 | 1 | 20,96 | 4.355,80 | 207,8 | greift |
+| OD7L | 62 | 1 | 4,44 | 2,66 | **1,7** | **greift NICHT** |
+| OD7N | 62 | 1 | 52,29 | 63,98 | **1,2** | **greift NICHT** |
+
+**Die gefaehrliche Haelfte ist die untere.** OD7C/OD7H fielen laut auf - sie
+standen als "ohne Kurs" im Export. OD7L und OD7N liegen unter der Schwelle von
+Faktor 3: dort floss der falsche Kurs **still in die Portfolio-Bewertung ein**.
+Dasselbe Muster wie am 06.08. - eine Wache faengt den lauten Fall und laesst
+den leisen durch. Ohne die Detailansicht der Reihen waere nur die Haelfte des
+Befunds sichtbar gewesen.
+
+### Die Ursache: eine idempotente Migration im Uebergang
+
+`_migrate_rohstoff_futures_reihen_umziehen()` laeuft bewusst nur, **solange das
+Zielsymbol leer ist**. Das ist als Migration richtig - es hat aber eine Luecke
+genau im Uebergang hinterlassen:
+
+1. Pull, Migration laeuft, `_ROHSTOFF_FUTURES_*` ist belegt. Ab jetzt No-op.
+2. Der **alte Prozess lief weiter** (Neustart erst um 14:39). Sein 07:08-Lauf
+   schrieb noch einmal Futures-Kurse unter die ETC-Symbole.
+3. Die Rekonstruktion um 12:39 fuellte bis zum letzten Tag der Referenzreihe
+   (06.08.) - der Punkt vom 07.08. blieb stehen und war damit der **letzte**
+   Wert der Reihe. Genau den vergleicht die Wache mit dem Snapshot.
+
+### Die Regel, die das dauerhaft schliesst
+
+`_bereinige_gemessene_etc_punkte()` (`database/db.py`, laeuft bei jedem Start):
+
+> Die ETC-Reihe wird per Definition REKONSTRUIERT. Ein Punkt mit
+> `quelle='gemessen'` unter einem ETC-Symbol kann deshalb nur ein Futures-Kurs
+> am falschen Platz sein - **egal wie er dorthin kam**.
+
+Das ist praezise und selbstkorrigierend, und es haengt anders als die Migration
+darueber an **keiner Vorbedingung**. Es ist ein No-op, sobald nichts mehr zu
+bereinigen ist - aber es kann nicht mehr "schon gelaufen" sein.
+
+Fuenf neue Pruefungen in `teste_rekonstruktion_verdrahtung.py` (Abschnitt D),
+mit den **echten Zahlen aus dem Export** - einschliesslich D3, das ausdruecklich
+die beiden Faelle unter der Wachschwelle abdeckt.
+
+**Erwartung nach dem naechsten Pull:** vier Bereinigungs-Zeilen im Log, danach
+holt der Rohstoff-Lauf die Reihen sauber nach. `reihen_verworfen` muss im
+naechsten Export **leer** sein, und OD7C/OD7H muessen einen `letzter_kurs_eur`
+haben.

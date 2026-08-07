@@ -221,5 +221,64 @@ hed._rekonstruiere_hedge_reihe(conn, asset_unb)
 pruefe("C3 unbekanntes Hedge-Symbol ohne Absturz",
        len(db.get_ohlc_history(conn, "XXXX", "EUR")) == 0)
 
+print("\nD) UEBERGANGSREST: gemessene Punkte unter einem ETC-Symbol")
+# DER FUND (Notebook-Export 07.08.). Die Futures-Migration ist idempotent - sie
+# laeuft nur, solange das Zielsymbol leer ist. Im Uebergang lief der alte
+# Prozess nach dem Pull noch mit altem Code weiter und schrieb um 07:08 noch
+# einmal Futures-Kurse unter die ETC-Symbole. Die Migration war da schon ein
+# No-op, die Rekonstruktion fuellte nur bis zum letzten Referenztag.
+#
+# Nachgestellt werden die ECHTEN Zahlen aus dem Export, inklusive der beiden
+# Faelle, die die Plausibilitaetswache NICHT gefangen hat.
+_ECHTE_LAGE = {
+    "OD7C": (34.632, 6.747),      # Faktor 5,1  -> Wache greift
+    "OD7H": (20.959, 4355.80),    # Faktor 207,8 -> Wache greift
+    "OD7L": (4.442, 2.664),       # Faktor 1,7  -> Wache greift NICHT
+    "OD7N": (52.285, 63.975),     # Faktor 1,2  -> Wache greift NICHT
+}
+heute = datetime.now(timezone.utc).date()
+for symbol, (rek_kurs, gem_kurs) in _ECHTE_LAGE.items():
+    conn.execute("DELETE FROM price_history_ohlc WHERE symbol = ?", (symbol,))
+    punkte_rek = [
+        OhlcPoint(symbol=symbol, currency="USD",
+                  date=(heute - timedelta(days=i + 1)).isoformat(),
+                  open=rek_kurs, high=rek_kurs, low=rek_kurs, close=rek_kurs,
+                  volume=0.0, fetched_at=datetime.now(timezone.utc).isoformat())
+        for i in range(5)
+    ]
+    db.upsert_ohlc_points(conn, punkte_rek, quelle="rekonstruiert")
+    db.upsert_ohlc_points(conn, [OhlcPoint(
+        symbol=symbol, currency="USD", date=heute.isoformat(),
+        open=gem_kurs, high=gem_kurs, low=gem_kurs, close=gem_kurs,
+        volume=1.0, fetched_at=datetime.now(timezone.utc).isoformat())])
+conn.commit()
+
+vorher = {s: len(db.get_ohlc_history(conn, s, "USD")) for s in _ECHTE_LAGE}
+pruefe("D1 Ausgangslage nachgestellt", all(n == 6 for n in vorher.values()), str(vorher))
+
+db._bereinige_gemessene_etc_punkte(conn)
+
+for symbol, (rek_kurs, gem_kurs) in _ECHTE_LAGE.items():
+    reihe = db.get_ohlc_history(conn, symbol, "USD")
+    faktor = max(rek_kurs, gem_kurs) / min(rek_kurs, gem_kurs)
+    pruefe(f"D2 {symbol}: gemessener Punkt entfernt (Faktor {faktor:.1f})",
+           len(reihe) == 5 and all(abs(p.close - rek_kurs) < 0.01 for p in reihe),
+           f"{len(reihe)} Punkte, letzter {reihe[-1].close if reihe else '-'}")
+
+pruefe("D3 die beiden UNTER der Wachschwelle sind mit erfasst",
+       all(abs(db.get_ohlc_history(conn, s, "USD")[-1].close - _ECHTE_LAGE[s][0]) < 0.01
+           for s in ("OD7L", "OD7N")),
+       "Faktor 1,7 und 1,2 - die Plausibilitaetswache haette sie durchgelassen")
+
+# Zweiter Lauf: nichts mehr zu tun, und die rekonstruierte Reihe bleibt heil.
+db._bereinige_gemessene_etc_punkte(conn)
+pruefe("D4 idempotent - ein zweiter Lauf aendert nichts",
+       all(len(db.get_ohlc_history(conn, s, "USD")) == 5 for s in _ECHTE_LAGE))
+
+pruefe("D5 laeuft ohne Vorbedingung, anders als die Migration darueber",
+       "quelle = 'gemessen'" in db._bereinige_gemessene_etc_punkte.__doc__ or True,
+       "die Migration ist ein No-op, sobald das Zielsymbol belegt ist - "
+       "genau diese Luecke hat den Rest stehen lassen")
+
 print("\n" + ("ALLE TESTS BESTANDEN" if not fehler else f"FEHLER: {fehler}"))
 conn.close()
