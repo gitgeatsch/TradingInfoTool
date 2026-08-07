@@ -401,7 +401,24 @@ Anpassungen oben.
 
 ---
 
-## 8b.1 Der zentrale Blocker — alles andere hängt daran
+## 8b.1 ~~Der zentrale Blocker~~ — HERABGESTUFT am 07.08.
+
+> **KORREKTUR (07.08., Nutzer-Position):** *„Das System muss auch ohne explizite
+> Durchführung der Empfehlungen funktionieren — Anwendung kommt nach Funktion.
+> Ansonsten muss das System mit den systeminternen Messungen seine Qualität
+> messen und kalibrieren."*
+>
+> Das ist fachlich richtig. `umgesetzt` misst das Verhalten des **Nutzers**,
+> nicht die Qualität des **Systems** — und beides zu vermengen erzeugt genau die
+> Schleife: keine handelbaren Signale → keine Trades → keine Befolgungsdaten →
+> keine Messung. Die Qualitätsmessung steht bereits auf eigenen Beinen
+> (R-Multiples gegen echte Kursreihen, Basislinie, Schattenarm, Systemgüte).
+>
+> **B1 fällt von „zentraler Blocker" auf „wäre zusätzlich interessant".** Was
+> die systeminterne Messung wirklich braucht: Kosten im R, Horizont je Klasse
+> (H-2/H-3) und überhaupt handelbare Signale (H-4).
+
+### Der ursprüngliche Befund bleibt als Faktum bestehen
 
 ### B1 · Befolgungsgrad ist zu 100 % leer
 

@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (193 Einträge)
+## Index nach Thema (194 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -52,7 +52,9 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-05** — Ausstiegsregel scharfgeschaltet: Config, taeglicher Job 7:15, Sammel-E-Mail
 - **2026-08-06** — Gate-Untergrenze Stop-Abstand: EXISTIERT BEREITS (RM-1b 2,5 % + RM-1c 0,75xATR), richtig kalibriert, nichts gebaut
 
-### LLM-Prompts / Analysten (Stage 2) (19)
+### LLM-Prompts / Analysten (Stage 2) (20)
+
+- **2026-08-07** — H-6 (`original_action` für die Spot-Familie) + H-5 (`pruefe_fakten_rollout.py`); dazu Korrektur: Befolgungsgrad war als „zentraler Blocker" überzeichnet
 
 - **2026-08-07** — Ausbaustand-Drift gemessen: von 11 Fakten seit dem 09.07. wurde genau EINER auf alle Spot-Klassen ausgerollt; Nicht-Krypto-Analysten stehen im Kern auf dem 09.07.
 
@@ -13988,3 +13990,74 @@ war nie Teil der Definition von "fertig".
 **H-6 ist der guenstigste Punkt und macht 8c erst auswertbar. H-5 ist der
 eigentliche Befund** - ohne ihn entsteht derselbe Drift bei der naechsten
 Erweiterung wieder.
+
+
+---
+
+## Nachtrag (2026-08-07): H-6 ausgerollt, H-5 als dauerhafte Pruefung gebaut - und eine Korrektur an meiner eigenen Priorisierung
+
+### H-6: `original_action` und Selbst-HALTEN-Tracking fuer die Spot-Familie
+
+`post_check()` setzt `_original_action` und `_ist_reines_llm_halten` seit dem
+31.07. fuer **alle vier** Spot-Pipelines - abgeholt hat sie bisher
+ausschliesslich `agent/krypto/pipeline.py`. Drei Zeilen je Pipeline in Aktien,
+Themen-ETF und Rohstoffe, die Signal-Felder und der Export existierten laengst.
+
+Damit wird beantwortbar, was in Abschnitt 8c offen bleiben musste: **wie viele
+der 201 HALTEN kommen vom Modell und wie viele vom Gate?** Vorher war das nicht
+ungemessen, sondern strukturell unmoeglich.
+
+Zusaetzlich laeuft ab jetzt das Selbst-gewaehltes-HALTEN-Schattentracking auch
+fuer diese drei Klassen - dieselbe Messung, die fuer Krypto seit dem 31.07.
+existiert.
+
+### H-5: `pruefe_fakten_rollout.py`
+
+Vergleicht die `build_facts()`-Quelltexte aller sechs Pipelines und meldet jeden
+Fakt, der nur in einer Teilmenge existiert, dazu zehn Mechanismen auf
+Pipeline-Ebene. **Das Skript faellt kein Urteil** - viele Unterschiede sind
+richtig (`btc_relativwert` gehoert nicht zu Rohstoffen, Hedge hat bewusst keine
+technische Analyse). Es stellt die Frage, ob sie ENTSCHIEDEN wurden; begruendete
+Faelle wandern in `BEGRUENDETE_UNTERSCHIEDE` und tauchen dann nicht mehr auf.
+
+Erster Lauf nach H-6: **vier Fakten und zwei Mechanismen** in der Spot-Familie
+ungleich verteilt - `antizyklisch` (seit 09.07.), `tranchen_erlaubt` (12.07.),
+`liquiditaetszonen` (23.07.), `signal_stabilitaet` (25.07.), dazu Mindestziel
+und JIT-Historie. Das sind genau die offenen Entscheidungen, nicht mehr und
+nicht weniger.
+
+### Korrektur: B1 (Befolgungsgrad) war als "zentraler Blocker" ueberzeichnet
+
+Nutzer-Position vom 07.08.: *"das System muss auch ohne explizite Durchfuehrung
+der Empfehlungen funktionieren - Anwendung kommt nach Funktion. Ansonsten muss
+das System mit den systeminternen Messungen seine Qualitaet messen und
+kalibrieren."*
+
+**Das ist fachlich richtig, und meine Einordnung vom 07.08. frueh war zu stark.**
+Ich hatte den leeren Befolgungsgrad zum "zentralen Blocker" erklaert, an dem die
+Aussagekraft aller Kennzahlen haengt. Tatsaechlich misst
+`umgesetzt`/`umgesetzt_am` das Verhalten des NUTZERS, nicht die Qualitaet des
+SYSTEMS. Beides zu vermengen erzeugt genau die Schleife, die der Nutzer benennt:
+keine handelbaren Signale -> keine Trades -> keine Befolgungsdaten -> keine
+Messung -> keine besseren Signale.
+
+Die Qualitaetsmessung steht bereits auf eigenen Beinen und braucht den
+Befolgungsgrad nicht:
+
+| vorhanden | was es misst |
+|---|---|
+| R-Multiples aus dem Backward-Tracking | Ergebnis gegen ECHTE Kursreihen |
+| Basislinie (Zufallseinstieg, gleiche Parameter) | ist das Signal besser als Zufall |
+| Schattenarm | was das Gate verhindert hat |
+| Systemguete (SQN/Expectancy/Profit-Faktor) | die Zielgroesse |
+
+**B1 faellt damit von "zentraler Blocker" auf "waere zusaetzlich interessant".**
+Was die systeminterne Messung dagegen WIRKLICH braucht, steht schon auf der
+Liste: Kosten im R (bisher nur Hebel), Horizont je Assetklasse (H-2/H-3) und
+ueberhaupt handelbare Signale (H-4). Eine Trefferquote ueber 200x HALTEN misst
+nichts.
+
+> **Die Lehre:** eine Kennzahl, die das Verhalten des Nutzers misst, gehoert
+> nicht in die Bewertung des Systems. Ich hatte sie dorthin gestellt, weil sie
+> die Zahlen "ehrlicher" gemacht haette - aber sie haette sie nur unmessbar
+> gemacht.

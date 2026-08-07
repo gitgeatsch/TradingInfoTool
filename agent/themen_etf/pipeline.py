@@ -369,6 +369,18 @@ def generate_signal(
     cash_veto_reason = corrected.pop("_cash_veto_reason")
     risikofaktoren = corrected.pop("_risikofaktoren", None)
     fazit_konsistenz_hinweis = corrected.pop("_fazit_konsistenz_hinweis", None)
+    # H-6 (2026-08-07): `_original_action` und `_ist_reines_llm_halten` werden
+    # von post_check() seit dem 31.07. fuer ALLE Spot-Pipelines gesetzt - nur
+    # abgeholt hat sie bisher ausschliesslich agent/krypto/pipeline.py. Ohne sie
+    # laesst sich nicht unterscheiden, ob eine HALTEN-Empfehlung vom Modell kam
+    # oder ob ein Gate sie ueberschrieben hat.
+    #
+    # Das war keine Messluecke, sondern eine Funktionsluecke: bei 201
+    # Nicht-Krypto-Signalen war `original_action` durchgehend None, und die
+    # Frage "wie viele HALTEN kommen vom Modell?" damit strukturell
+    # unbeantwortbar (siehe Zwischenstand 8c/8d).
+    ist_reines_llm_halten = corrected.pop("_ist_reines_llm_halten", False)
+    original_action = corrected.pop("_original_action", None)
     eigene_einschaetzung = corrected.get("eigene_einschaetzung") or {}
 
     long_reasoning = corrected.get("long_reasoning", {})
@@ -411,6 +423,8 @@ def generate_signal(
         cash_veto=cash_veto,
         cash_veto_reason=cash_veto_reason,
         risikofaktoren_json=json.dumps(risikofaktoren, ensure_ascii=False) if risikofaktoren else None,
+        original_action=original_action,
+        ist_reines_llm_halten=ist_reines_llm_halten,
         facts_json=json.dumps(facts, ensure_ascii=False),
         pipeline_version=PIPELINE_VERSION,
         confidence_pct=corrected.get("confidence_pct"),
