@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (188 Einträge)
+## Index nach Thema (189 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -109,7 +109,9 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-05** — `halte_kriterium` erstmals ausgewertet - kein Trennnachweis, zwei strukturelle Maengel
 - **2026-08-06** — Die drei neuen Fakten sind im Betrieb ANGEKOMMEN (22/22) - Verifikation abgeschlossen, Zaehler-Fehler behoben
 
-### Datenquellen / APIs (27)
+### Datenquellen / APIs (28)
+
+- **2026-08-07** — Offene Punkte recherchiert und priorisiert (Zwischenstand 8b): vier von sieben Einträgen veraltet; `umgesetzt` fehlt auf `hebel_signals` komplett — Export-Fehlversuch zurückgenommen
 
 - **2026-08-07** — Export-Verifikation: alle Fixes wirken; NEU der tägliche Portfolio-Job bewertete den laufenden statt des Vortags — beide je geschriebenen Zeilen unbrauchbar; CoinGecko bei 83 % Projektion
 
@@ -13592,3 +13594,70 @@ auf Historien-Nachladungen und den OHLC-Rueckfall fuer Coins ohne Kraken-Listing
 > System, das zweimal taeglich Signale erzeugt, reichlich. Bewusst noch NICHT
 > geaendert - erst messen, ob die Preise zwischen den Laeufen ueberhaupt
 > gebraucht werden.
+
+
+---
+
+## Nachtrag (2026-08-07): offene Punkte recherchiert und priorisiert - vier von sieben Dokumenteintraegen waren veraltet
+
+Nutzer-Auftrag: alle offenen Themen recherchieren, gegenpruefen, Abhaengigkeiten
+aufdecken, priorisieren. Ergebnis steht in `Zwischenstand_Gesamtprojekt_06_08.md`
+**Abschnitt 8b** (der bestehende Abschnitt 8 bleibt darunter stehen - seine
+Begruendungen sind der wertvollere Teil).
+
+### Der Befund ueber die Dokumente selbst
+
+Jeder Punkt wurde am Code und am Export nachgeprueft statt uebernommen. **Vier
+von sieben Eintraegen aus Abschnitt 8 waren nicht mehr aktuell:**
+
+| Punkt | Dokument | tatsaechlich |
+|---|---|---|
+| M1 Rohstoff-Ausreisser | offen | erledigt 06./07.08. |
+| Q1 Z-3 nach FX-Fix | offen | erledigt; Z-3 rechnet auf `index_wert` und war nie beschaedigt |
+| H2 Zieldauer *als Feld* | "blockiert halte_kriterium" | Feld existiert, ist befuellt (211/318) und wird exportiert - offen ist die AUSWERTUNG |
+| 0.1 vier Export-Felder | "erledigt 04.08." | teilweise - zwei fehlen in beiden Signal-Exporten |
+
+> **Ein Dokumentstand ist keine Messung.** Vor jeder Priorisierung gehoert die
+> Pruefung am Code - sonst arbeitet man an Erledigtem und uebersieht das Offene.
+
+### Der zentrale Blocker, und ein Fehlversuch dabei
+
+`umgesetzt` ist bei **allen 2.742 Spot- und 1.703 Hebel-Signalen leer**. Damit
+beschreibt jede Kennzahl - Systemguete, CRV-Baender, Basislinie, Erwartungswert
+- **Empfehlungen, nicht Trades**.
+
+Der erste Reflex war, die vier Spalten in `_HEBEL_SIGNAL_SPALTEN` aufzunehmen -
+"ein Quick Win, eine Zeile". Der Test gegen eine DB-Kopie: **`no such column:
+umgesetzt`**. Auf `hebel_signals` existieren die Spalten gar nicht; die
+Umsetzungs-Rueckmeldung wurde am 09.07. ausschliesslich fuer Spot gebaut.
+
+**Die Aenderung haette den gesamten Export zum Absturz gebracht** - und zwar
+erst im Betrieb, nicht beim Schreiben. Zurueckgenommen und als Warnkommentar an
+der Stelle hinterlassen, damit der naechste Anlauf nicht dieselbe Abkuerzung
+nimmt.
+
+Damit ist B1 keine Export-Luecke, sondern eine **fehlende Funktion** fuer die
+Klasse mit der einzigen belastbaren Datenbasis: Migration + Schreibpfad + UI.
+
+### Was daraus als Reihenfolge folgt
+
+Zwei Ketten laufen parallel und behindern sich nicht - die Messkette (Export,
+dann Befolgungsgrad) und die Hedge-Kette (Erfolgsmass, dann Risikofaktoren).
+Eine dritte ist blockiert und bleibt es: Universum -> Screening -> Regime je
+Klasse wartet auf eine Nutzer-Entscheidung, nicht auf Arbeit.
+
+Vollstaendige Tabellen, Abhaengigkeitskette und Reihenfolge: Zwischenstand 8b.
+
+### Doku-Disziplin: derselbe Fehler zum zweiten Mal
+
+Die Priorisierung wurde zuerst als **neue Datei** `Offene_Punkte_Priorisiert_
+07_08.md` angelegt - obwohl Abschnitt 8 des Zwischenstands genau diese Liste
+fuehrt. Nutzer-Hinweis noch waehrend der Arbeit. Eingearbeitet als Abschnitt 8b,
+neue Datei entfernt.
+
+Derselbe Vorfall wie am 28.07. (zwei ueberfluessige Dateien). Die Memory-Regel
+dazu hat nicht gereicht, weil sie nur drei Bestandsdateien kannte - inzwischen
+sind es **14**. Sie enthaelt jetzt die vollstaendige Landkarte: welches Dokument
+wofuer zustaendig ist, und welche fuenf **laufend fortzuschreiben** sind
+(Entscheidungslog, Regelwerksmanual, Methodik, Fakten-Entscheidungsmappe,
+Zielgroessen).

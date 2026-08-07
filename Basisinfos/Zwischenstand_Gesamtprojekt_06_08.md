@@ -337,6 +337,11 @@ Entscheidungslog mit 178 Nachträgen.
 
 ## 8. Was vor einem Abschluss von Spot und Hebel zwingend fehlt
 
+> **STAND 07.08.2026 — die Liste unten wurde am Code und am Export nachgeprüft.
+> Vier von sieben Einträgen waren veraltet.** Der geprüfte Stand steht in
+> Abschnitt 8b; die ursprüngliche Liste bleibt darunter stehen, weil sie die
+> Begründungen enthält, warum jeder Punkt kein „nice to have" ist.
+
 Priorisiert, mit Begründung warum es kein „nice to have" ist:
 
 1. **S2 — Akkumulations-Messung für Spot (AZ-4 gegen DCA).** Ohne sie misst das
@@ -365,6 +370,174 @@ Priorisiert, mit Begründung warum es kein „nice to have" ist:
 Symbole. Acht Selektionsmechanismen wurden gemessen, keiner trug nachweisbar —
 die Grenze liegt derzeit nicht bei der Auswahl, sondern bei **Ausstieg,
 Kostendeckung und Maßstab**.
+
+---
+
+---
+
+# 8b. Geprüft und priorisiert (07.08.2026)
+
+**Auftrag:** alle offenen Themen recherchieren, gegen den Code prüfen,
+Abhängigkeiten aufdecken, dann priorisieren — Quick Wins und wichtige
+Anpassungen oben.
+
+**Methode:** jeder Punkt aus Abschnitt 8 oben, aus
+`Zielgroessen_und_Erfolgsmasse.md` Abschnitt 6.6 (Acht-Stufen-Lücke) und aus
+`Plan_Nicht_Krypto_Umbau_06_08.md` Phase C/D wurde **am Code und am Export vom
+07.08. nachgeprüft**, nicht aus dem Dokument übernommen.
+
+## 8b.0 Was die Prüfung an den Dokumenten selbst korrigiert
+
+| Dokumentierter Punkt | Stand laut Dokument | **tatsächlich** |
+|---|---|---|
+| **M1** Rohstoff-Ausreißer | offen | **erledigt 06./07.08.** — real n=0, Schatten −1,06 R |
+| **Q1** Z-3 nach FX-Fix | offen | **erledigt** — 0 verworfene FX-Tage; Z-3 rechnet auf `index_wert` und war nie beschädigt |
+| **H2** Zieldauer *als Feld* | „blockiert `halte_kriterium`" | **Feld existiert und ist befüllt** (`halte_kriterium_ziel_datum`, 211 Spot / 318 Hebel) und wird exportiert. Offen ist die **Auswertung**, nicht das Feld |
+| **0.1** vier Export-Felder | „erledigt 04.08." | **teilweise** — `score_details_json` und `funding_rate_aktuell` fehlen in **beiden** Signal-Exporten (sie sind nur in `hebel_triggers_alle`) |
+
+> **Lehre, die sich heute zum vierten Mal zeigt:** ein Dokumentstand ist keine
+> Messung. Vor jeder Priorisierung gehört die Prüfung am Code — sonst arbeitet
+> man an Punkten, die erledigt sind, und übersieht die, die es nicht sind.
+
+---
+
+## 8b.1 Der zentrale Blocker — alles andere hängt daran
+
+### B1 · Befolgungsgrad ist zu 100 % leer
+
+```
+spot_signals : umgesetzt = None bei ALLEN 2.742 Signalen
+hebel_signals: umgesetzt = None bei ALLEN 1.703 Signalen
+```
+
+Das Feld existiert seit dem 09.07. **auf `signals` (Spot)**, es gibt drei
+Aufrufstellen (`importer/bitpanda_sync.py`, `ui/app.py`, `ui/signals_view.py`)
+— und es wurde **nie befüllt**.
+
+**Für Hebel ist es schlimmer, und das kam erst beim Nachbauen heraus.** Der
+erste Versuch war, die vier Spalten einfach in `_HEBEL_SIGNAL_SPALTEN`
+aufzunehmen — der Test gegen eine DB-Kopie antwortete `no such column:
+umgesetzt`. **Auf `hebel_signals` existieren die Spalten gar nicht**: die
+Umsetzungs-Rückmeldung wurde 2026-07-09 ausschließlich für Spot gebaut, mit
+Tabelle, Migration und Schreibpfad. Für Hebel gibt es weder das eine noch das
+andere.
+
+Damit ist B1 **keine Export-Lücke, sondern eine fehlende Funktion** — und zwar
+für die Klasse mit 1.703 Signalen und der einzigen belastbaren Datenbasis. Der
+Aufwand ist entsprechend größer: Migration + Schreibpfad + UI, nicht eine
+Zeile Spaltenliste.
+
+**Warum das alles andere entwertet:** Systemgüte, CRV-Bänder, Basislinie,
+Erwartungswert — jede dieser Zahlen beschreibt **Empfehlungen, nicht Trades**.
+Ein System, das perfekte Signale erzeugt, die niemand ausführt, und eines, das
+schlechte erzeugt, die alle ausgeführt werden, sehen in unseren Kennzahlen
+identisch aus.
+
+**Abhängig davon:** die Aussagekraft von H-Systemgüte, SC2 (Allokator), Stufe 4
+(Gate-Beitrag), Stufe 7 (Kosten je echtem Trade) — also praktisch die gesamte
+Messebene.
+
+---
+
+## 8b.2 Quick Wins — kleiner Aufwand, sofort wirksam
+
+| # | Punkt | Aufwand | Wirkung |
+|---|---|---|---|
+| ~~QW1~~ | ~~`umgesetzt` in `_HEBEL_SIGNAL_SPALTEN`~~ — **kein Quick Win**, siehe 8b.1: die Spalte existiert auf `hebel_signals` nicht | — | zurückgezogen, gehört zu W4 |
+| **QW2** | `score_details_json` + `funding_rate_aktuell` in beide Signal-Exporte | 2 Zeilen | schließt die letzte der vier 04.08.-Export-Lücken; Kostenmodell je Signal rechenbar |
+| **QW3** | AZ-4-Messung **ausführen** (`messe_akkumulation_az4.py` liegt seit 06.08. fertig) | Skriptlauf | entscheidet, ob Spot seinen Zweck erfüllt — laut Zwischenstand „der günstigste Punkt der ganzen Liste" |
+| **QW4** | Ausstiegsempfehlungen: 23 Stück, **27,2 R ungesichert** | Entscheidung | SOL allein sichert 9,63 R. Bereits berechnet, liegt unversorgt herum |
+
+**QW1 und QW2 sind reine Export-Ergänzungen ohne Verhaltensrisiko** — dieselbe
+Kategorie, die am 04.08. schon einmal als unbedenklich eingestuft wurde.
+
+**QW4 ist kein Code, sondern eine Entscheidung.** Der Befund vom 04.08. steht:
+*50 % der Signale standen bei +1R, nur 17,6 % kamen dort an.* Der Ausstieg ist
+der größte gemessene Hebel des Systems, und die Empfehlungen dazu existieren
+bereits.
+
+---
+
+## 8b.3 Wichtige Anpassungen — mittlerer Aufwand, blockieren ganze Kapitel
+
+| # | Punkt | blockiert | Abhängig von |
+|---|---|---|---|
+| **W1** | **Hedge-Erfolgsmaß invertieren** (D-d) | jede Hedge-Auswertung; ohne es ist die Systemgüte garantiert negativ und bedeutungslos | — (unabhängig baubar) |
+| **W2** | **Hedge-Risikofaktoren** | Abschnitt 3 der Hedge-Mails; heute ehrlich als „gibt es noch nicht" ausgewiesen | W1 (dieselbe umgekehrte Wirkrichtung) |
+| **W3** | **Halte-Kriterium auswerten** (Stufe 6) | Aussagen über Zeithorizont und Ausstiegsgüte | H2-Abdeckung (heute nur 8 % Spot / 19 % Hebel) |
+| **W4** | **Befolgungsgrad erfassen** (B1 beheben) — für Spot befüllen, für Hebel erst **bauen** (Migration + Schreibpfad + UI) | siehe 8b.1 | — |
+
+**W1 ist der sauberste Einstieg von allen vier** — er hängt an nichts, ist
+inhaltlich eindeutig (ein Hedge, der verliert während das Portfolio steigt, hat
+funktioniert), und er schaltet zwei Punkte auf einmal frei (W1 → W2).
+
+---
+
+## 8b.4 Warten auf Zeit — kein Handlungsbedarf
+
+| Punkt | frühestens | Bedingung |
+|---|---|---|
+| Systemgüte-Lücke im A-Arm (~3 pp) | Ende August | genug aufgelöste Fälle |
+| SC2 Allokator gegen Zufall | 3 Wochen ab 05.08. | Datumsfilter ab 05.08. |
+| CoinGecko-80-%-Warnmail | Monatsende | Hochrechnung 8.335 von 10.000 |
+| Tageswert-Neuschreibung mit ≥ 80 % Abdeckung | morgen 06:30 | erster Lauf nach dem Fix |
+
+---
+
+## 8b.5 Nutzer-Entscheidung — Code kann das nicht lösen
+
+**C1 · Universum.** 2 Aktien, 4 Rohstoffe, 5 Themen-ETF, 2 Hedge. Externer
+Standard sind **30 aufgelöste Fälle als Untergrenze, 100+ für Belastbarkeit**.
+Bei dieser Größe entsteht in keiner Nicht-Krypto-Klasse je eine auswertbare
+Stichprobe — unabhängig davon, wie gut der Code wird.
+
+**Davon abhängig:** C2 (Screening für Nicht-Krypto) und M6 (Regime je Klasse).
+Beide sind ohne Universum sinnlos, nicht nur verfrüht.
+
+---
+
+## 8b.6 Abhängigkeitskette — was worauf wartet
+
+```
+W4 (Befolgungsgrad: Spot befuellen, Hebel BAUEN) ──►  Aussagekraft ALLER Kennzahlen
+                                                        │
+QW2 (Export funding/score) ─────────────────────────────┤
+                                                        ├─►  Stufe 7 Kosten je echtem Trade
+H2-Abdeckung  ──►  W3 (Halte-Kriterium auswerten)  ─────┘
+
+W1 (Hedge-Erfolgsmaß)  ──►  W2 (Hedge-Risikofaktoren)  ──►  Hedge auswertbar
+                        └──►  M6-Teil Hedge
+
+C1 (Universum, Nutzer)  ──►  C2 (Screening)  ──►  M6 (Regime je Klasse)
+
+QW3 (AZ-4 ausführen)  ──►  entscheidet über den MASSSTAB des Spot-Kapitels
+QW4 (Ausstieg)  ──►  unabhängig, sofort umsetzbar
+```
+
+**Zwei Ketten laufen parallel und behindern sich nicht:** die Messkette (QW1 →
+W4) und die Hedge-Kette (W1 → W2). Beide können gleichzeitig laufen.
+
+**Eine Kette ist blockiert und bleibt es:** C1 → C2 → M6 wartet auf eine
+Entscheidung, nicht auf Arbeit.
+
+---
+
+## 8b.7 Empfohlene Reihenfolge
+
+1. **QW2** (Export-Ergänzung `score_details_json` / `funding_rate_aktuell`) —
+   klein und ohne Verhaltensrisiko. **QW1 ist zurückgezogen** (siehe 8b.1)
+2. **QW3** (AZ-4 laufen lassen) — Skript liegt fertig, beantwortet die
+   Maßstabsfrage für Spot
+3. **W1** (Hedge-Erfolgsmaß) — hängt an nichts, schaltet W2 frei
+4. **QW4** (Ausstieg) — deine Entscheidung, 27,2 R liegen bereit
+5. **W4** (Befolgungsgrad) — der größte Hebel auf die Aussagekraft, aber
+   auch der größte Aufwand: für Hebel muss die Funktion erst gebaut werden
+
+**Bewusst nicht auf dieser Liste:** neue Fakten fürs LLM, weitere Gates, mehr
+Symbole. Acht Selektionsmechanismen wurden gemessen, **keiner trug nachweisbar**
+— die Grenze liegt nicht bei der Auswahl, sondern bei Ausstieg, Kostendeckung
+und Maßstab. Diese Aussage aus dem Zwischenstand hat die heutige Prüfung
+bestätigt, nicht widerlegt.
 
 ---
 

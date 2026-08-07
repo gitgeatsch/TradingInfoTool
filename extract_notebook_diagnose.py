@@ -338,6 +338,21 @@ _HEBEL_SIGNAL_SPALTEN = (
     # auseinanderlaufen.
     "angefragte_richtung, "
     + _VOLLSTAENDIGKEITS_SPALTEN
+    # HIER STAND EIN FEHLVERSUCH (2026-08-07) - bewusst als Warnung dokumentiert.
+    # Der Plan war, `umgesetzt, umgesetzt_am, umgesetzt_menge,
+    # umgesetzt_preis_usd` zu ergaenzen, weil der Befolgungsgrad fuer Hebel
+    # nicht exportiert wurde. Beim Test gegen eine DB-Kopie: "no such column:
+    # umgesetzt".
+    #
+    # DIE SPALTEN EXISTIEREN AUF `hebel_signals` GAR NICHT. Die
+    # Umsetzungs-Rueckmeldung wurde 2026-07-09 nur fuer `signals` (Spot) gebaut
+    # - Tabelle, Migration und die drei Schreibstellen. Fuer Hebel gibt es
+    # weder Spalte noch Schreibpfad.
+    #
+    # Das ist also keine Export-Luecke, sondern eine FEHLENDE FUNKTION, und sie
+    # gehoert entsprechend geplant (Migration + Schreibpfad + UI), nicht
+    # nebenbei in eine Spaltenliste geschrieben. Siehe Zwischenstand
+    # Abschnitt 8b, Punkt B1.
 )
 _SPOT_SIGNAL_SPALTEN = (
     "id, symbol, created_at, action, confidence_pct, short_reasoning, "
