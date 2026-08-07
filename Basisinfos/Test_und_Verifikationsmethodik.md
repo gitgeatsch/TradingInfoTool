@@ -992,7 +992,7 @@ Wahrheit hat sich an diesem einen Tag mehrfach zurückgezahlt.
 verifiziert, nie angeschlossen (`compute_baseline_vergleich`,
 `compute_sl_mfe_analyse`, `compute_zai_uebereinstimmung_baseline`). Ich habe
 stundenlang von Hand nachgerechnet, was fertig im Code lag. Inzwischen stehen
-**51 Analyse- und Prüfskripte** im Projektstamm — ohne Index findet niemand das
+**52 Analyse- und Prüfskripte** im Projektstamm — ohne Index findet niemand das
 richtige, und der nächste Nachbau ist nur eine Frage der Zeit.
 
 Sortiert ist nach **Auslöser**, nicht nach Funktion: die Frage im Kopf ist
@@ -1029,6 +1029,7 @@ Zwei Implementierungen derselben Simulation laufen garantiert auseinander
 | `backtest_ueberholt_erkennung.py` | Zweifel an der Überholt-Logik. |
 | `teste_rekonstruktion_verdrahtung.py` | Nach jeder Änderung an den Rohstoff- oder Hedge-Pipelines. Prüft die Symboltrennung, den Ankertag, `quelle`, den Volatilitäts-Drag und den TA-Lesepfad — gegen eine temporäre DB, offline (yfinance gemockt). |
 | `pruefe_aufruf_signaturen.py` | **Nach jedem neuen Parameter an einer Funktion mit mehreren Aufrufern.** AST-Durchlauf über alle Dateien: findet Aufrufe, die Argumente übergeben, die die Zielfunktion nicht kennt. Am 06.08. hätte er den `crv_baender`-Fehler vor dem Deploy gefunden — und belegt hinterher, dass es der einzige seiner Art war. |
+| `teste_hedge_risikofaktoren.py` | Nach jeder Änderung an der Hedge-Pipeline oder am Hedge-Prompt. Prüft die sieben Risikofaktoren auf **umgekehrte Wirkrichtung** und die Zonenwache am echten DBPK-Fall vom 06.08. (Stop über Entry) mit dem korrekten 3QSS-Fall als Gegenprobe. |
 | `teste_hedge_wirksamkeit.py` | Nach jeder Änderung am Hedge-Erfolgsmaß oder am Tier-Split. Rechnet einen konstruierten Fall mit **bekannter Antwort** (perfekt gegenläufige Absicherung nimmt einen 29,36-%-Einbruch heraus) und prüft die Messbarkeits-Wache. |
 | `teste_tageswert_abdeckung.py` | Nach jeder Änderung an `schreibe_tageswert()` oder am Portfolio-Wert-Job. Prüft Bezugstag (Vortag) und Abdeckungswache inkl. der beiden echten Betriebsfälle (3,0 % und 42,4 %) und der Schwelle bei genau 80 %. |
 | `teste_email_darstellung.py` | Nach jeder Änderung an den Mailtexten, `render_detail_html()` oder `send_notification_email()`. Baut echte Mails **mit und ohne Bild**, dekodiert den HTML-Teil und prüft Farbe, `color-scheme`-Meta und alle vier Risikofaktoren-Fälle. |

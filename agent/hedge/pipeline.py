@@ -31,6 +31,7 @@ from agent.krypto.gegenpruefung import (
     fuehre_beide_calls_im_hintergrund,
     richtung_aus_action,
 )
+from agent.krypto.risk_gate import Risikofaktor
 from agent.rekonstruktion import QUELLE_REKONSTRUIERT, rekonstruiere
 from api.yfinance_history import get_full_ohlc_history
 from agent.krypto.llm_provider import llm_model_label
@@ -226,6 +227,205 @@ def _compute_portfolio_exposure(
     }, verbleibendes_budget_fuer_instrument_usd
 
 
+# Ab welchem Anteil des Ziel-Abdeckungsgrades gilt die Absicherung als
+# weitgehend aufgebaut? Darueber ist ein Nachkauf ein Ueberhedge-Risiko, kein
+# Schutzgewinn (2026-08-07, W2).
+_ABDECKUNG_WEITGEHEND_AUFGEBAUT = 0.80
+# VIX-Schwellen fuer den "Preis der Versicherung". Derselbe Rohwert wie im
+# Regime-Block; die Einordnung passiert hier, weil er fuer Hedge eine ANDERE
+# Bedeutung hat als fuer Long-Positionen (siehe compute_risikofaktoren_hedge()).
+_VIX_TEUER = 25.0
+_VIX_GUENSTIG = 16.0
+# Aktionen, bei denen ein Hedge AUFGEBAUT wird - nur dort sind die
+# kaufbezogenen Risikofaktoren ueberhaupt anwendbar.
+_HEDGE_AUFBAU_AKTIONEN = ("KAUFEN", "NACHKAUFEN")
+
+
+def compute_risikofaktoren_hedge(
+    action: str,
+    portfolio_exposure: dict,
+    regime_result,
+    bull_wahrscheinlichkeit_pct: float | None = None,
+    hebel_faktor: float | None = None,
+    budget_gedeckelt: bool = False,
+    zonen_hinweis: str | None = None,
+) -> list[Risikofaktor]:
+    """Risikofaktoren fuer ein Absicherungs-Instrument (2026-08-07, W2).
+
+    WARUM ES DAFUER EINE EIGENE FUNKTION BRAUCHT. compute_risikofaktoren()
+    prueft eine LONG-KAUFIDEE: Regime-Konflikt gegen LONG, Retail-Long-Bias,
+    Konfluenz, Gegenszenario. Auf eine Absicherung angewandt stehen saemtliche
+    Vorzeichen falsch herum - ein baerisches Regime ist fuer einen Long ein
+    Warnsignal und fuer einen Hedge die Bestaetigung. Deshalb kein Parameter an
+    der bestehenden Funktion, sondern eine eigene mit eigener Logik.
+
+    Bis zum 07.08. lieferte die Hedge-Pipeline GAR KEINE Risikofaktoren; die
+    E-Mail schrieb "Keine strukturierten Risikofaktoren verfuegbar", was wie ein
+    Datenfehler aussah und keiner war.
+
+    DIE FAKTOREN, jeder mit seiner umgekehrten Wirkrichtung:
+
+    1. ABDECKUNGSGRAD (Kontext). Wo steht die Absicherung heute? Ausgangspunkt
+       jeder weiteren Entscheidung, kein Urteil - deshalb ist_kontext.
+    2. WEITGEHEND AUFGEBAUT. Je naeher am Zielwert, desto weniger bringt ein
+       Nachkauf und desto mehr kostet er. Bei einer Long-Position waere eine
+       hohe bestehende Quote kein Argument gegen mehr; bei einer Versicherung
+       schon.
+    3. VIX ALS PREIS. Hoher VIX heisst teure Absicherung - die Praemie ist
+       gestiegen, WEIL der Markt die Gefahr schon sieht. Fuer eine Long-Position
+       ist hoher VIX ein Risikosignal, fuer einen Hedge-KAUF ein Kostensignal:
+       dieselbe Zahl, entgegengesetzte Konsequenz.
+    4. AKTIEN-BAERENMARKT. Aktiv heisst, der Einbruch laeuft bereits. Die
+       bestehende Absicherung arbeitet - aber JETZT erst aufzustocken heisst,
+       nach dem Schaden Versicherung zu kaufen. Nachlaufender Indikator,
+       deshalb bewusst nicht als "positiv" gewertet.
+    5. VOLATILITAETS-DRAG. Taeglich zuruecksetzende Hebelprodukte verlieren in
+       Seitwaertsmaerkten unabhaengig von der Richtung, je hoeher der Faktor
+       desto schneller. Struktureller Preis dieser Instrumente, ohne
+       Gegenstueck bei einer ungehebelten Long-Position.
+    6. BULL-WAHRSCHEINLICHKEIT. Spiegelbild des Gegenszenarios: bei einem Long
+       ist die Baer-Wahrscheinlichkeit das Risiko, bei einem Hedge die
+       Bull-Wahrscheinlichkeit.
+    7. BUDGET-DECKEL. Wurde die Empfehlung bereits gekuerzt, gehoert das
+       sichtbar gemacht - nicht nur in der Positionsgroesse.
+
+    Bei allem ausser KAUFEN/NACHKAUFEN bleibt nur der Kontextfaktor: fuer ein
+    HALTEN oder VERKAUFEN ist "wie teuer waere der Zukauf" gegenstandslos.
+    """
+    faktoren: list[Risikofaktor] = []
+    exposure = portfolio_exposure or {}
+
+    abdeckung = exposure.get("aktuelle_hedge_abdeckung_prozent")
+    ziel_max = exposure.get("ziel_hedge_abdeckung_max_prozent")
+    if abdeckung is not None and ziel_max:
+        faktoren.append(Risikofaktor(
+            "Abdeckungsgrad", "neutral",
+            f"Die Absicherung deckt aktuell {abdeckung:.1f} % des Long-Exposure ab "
+            f"(Ziel maximal {ziel_max:.1f} %).",
+            ist_kontext=True,
+        ))
+
+    # Verworfene Zonen gehoeren GANZ nach oben und auch dann in die Liste, wenn
+    # sonst nichts anwendbar ist - der Nutzer sieht in der Mail sonst nur, dass
+    # Stop und Ziel fehlen, ohne zu erfahren warum.
+    if zonen_hinweis:
+        faktoren.append(Risikofaktor("Zonen unbrauchbar", "negativ", zonen_hinweis))
+
+    if action not in _HEDGE_AUFBAU_AKTIONEN:
+        return faktoren
+
+    if abdeckung is not None and ziel_max and abdeckung / ziel_max >= _ABDECKUNG_WEITGEHEND_AUFGEBAUT:
+        faktoren.append(Risikofaktor(
+            "Absicherung weitgehend aufgebaut", "negativ",
+            f"{abdeckung:.1f} % von maximal {ziel_max:.1f} % sind bereits abgesichert. "
+            f"Ein Nachkauf bringt wenig zusaetzlichen Schutz, kostet aber die volle "
+            f"Praemie - und erhoeht das Ueberhedge-Risiko, falls der Markt dreht.",
+        ))
+
+    vix = getattr(regime_result, "vix_wert", None)
+    if vix is not None:
+        if vix >= _VIX_TEUER:
+            faktoren.append(Risikofaktor(
+                "Versicherung ist teuer (VIX)", "negativ",
+                f"VIX bei {vix:.1f}. Die Praemie ist hoch, WEIL der Markt die Gefahr "
+                f"bereits einpreist - jetzt aufzustocken heisst teuer zu kaufen, was "
+                f"guenstiger zu haben war.",
+            ))
+        elif vix <= _VIX_GUENSTIG:
+            faktoren.append(Risikofaktor(
+                "Versicherung ist guenstig (VIX)", "positiv",
+                f"VIX bei {vix:.1f}. Absicherung ist billig - der bessere Zeitpunkt, "
+                f"Schutz aufzubauen, ist bevor er gebraucht wird.",
+            ))
+
+    if getattr(regime_result, "equities_baermarkt_aktiv", False):
+        faktoren.append(Risikofaktor(
+            "Einbruch laeuft bereits", "negativ",
+            "Der Aktien-Baerenmarkt ist aktiv. Die bestehende Absicherung arbeitet "
+            "gerade - aber JETZT erst aufzustocken heisst, nach dem Schaden "
+            "Versicherung zu kaufen. Der Indikator ist nachlaufend.",
+        ))
+
+    if hebel_faktor and hebel_faktor > 1.0:
+        faktoren.append(Risikofaktor(
+            "Volatilitaets-Drag", "negativ",
+            f"Taeglich zuruecksetzendes {hebel_faktor:.0f}x-Produkt: in einem "
+            f"Seitwaertsmarkt verliert es unabhaengig von der Richtung, je hoeher der "
+            f"Faktor desto schneller. Das spricht gegen langes Halten ohne konkreten "
+            f"Anlass.",
+        ))
+
+    if bull_wahrscheinlichkeit_pct is not None and bull_wahrscheinlichkeit_pct >= 50.0:
+        faktoren.append(Risikofaktor(
+            "Gegenszenario Aufwaertsmarkt", "negativ",
+            f"Das Modell haelt einen steigenden Markt mit "
+            f"{bull_wahrscheinlichkeit_pct:.0f} % fuer wahrscheinlich. Fuer eine "
+            f"Absicherung ist das genau das Szenario, in dem sie Geld kostet.",
+        ))
+
+    if budget_gedeckelt:
+        faktoren.append(Risikofaktor(
+            "Hedge-Budget ausgeschoepft", "negativ",
+            "Die vorgeschlagene Groesse wurde auf das verbleibende Budget gekuerzt. "
+            "Mehr Abdeckung ist ueber die Zielquote hinaus nicht vorgesehen.",
+        ))
+
+    return faktoren
+
+
+def _pruefe_hedge_zonen(result: dict) -> str | None:
+    """Stehen Stop und Ziel bei einer Hedge-KAUFEMPFEHLUNG richtig herum?
+
+    DER FUND (07.08., am Export gemessen): **9 von 11** auswertbaren
+    Hedge-Kaufsignalen hatten die Zonen VERDREHT - Stop UEBER dem Einstieg, Ziel
+    DARUNTER. Beispiel DBPK vom 06.08.:
+
+        Entry 0,1217   Stop 0,1565 (+28,6 %)   Ziel 0,0870 (-28,6 %)
+
+    Bei einer KAUFEN-Empfehlung heisst das: der Stop ist schon beim Einstieg
+    ausgeloest, und das Ziel liegt in Verlustrichtung. Beide Symbole betroffen,
+    also kein Einzelfall.
+
+    DIE URSACHE ist eine Denkrichtung, nicht ein Rechenfehler: das Modell denkt
+    in der MARKTrichtung ("wir wollen, dass der Index faellt") statt in der
+    INSTRUMENTENrichtung ("wir kaufen ein inverses Produkt, das steigt, wenn der
+    Index faellt"). Der Prompt sagt seit dem 18.07. das Richtige - es reicht
+    nicht. Deshalb eine deterministische Wache dahinter.
+
+    WARUM VERWORFEN UND NICHT GETAUSCHT. Ein Tausch waere verlockend: die
+    Abstaende sehen plausibel aus (6-29 %), nur die Rollen scheinen vertauscht.
+    Aber wir wissen NICHT, was die Zahl bedeuten sollte - ob das Modell den
+    Instrumentenpreis meinte und die Richtung verwechselte, oder ob es ueber ein
+    Indexniveau nachdachte und es als Instrumentenpreis ausgab. Eine Zahl
+    umzudeuten, deren Bedeutung unklar ist, waere genau die stille Annahme, an
+    der diese Woche schon mehrfach etwas gescheitert ist.
+
+    Verworfen werden nur die ZONEN. Die Handlungsempfehlung selbst bleibt
+    bestehen - sie haengt nicht an ihnen (Regel 9 des Hedge-Prompts: die Zonen
+    sind informativer Kontext, keine Kauf-Voraussetzung).
+
+    Rueckgabe: Hinweistext, wenn verworfen wurde, sonst None.
+    """
+    if result.get("action") not in _HEDGE_AUFBAU_AKTIONEN:
+        return None
+    entry = (result.get("entry") or {}).get("usd_von") or (result.get("entry") or {}).get("usd_bis")
+    stop = (result.get("stop_loss") or {}).get("usd_von") or (result.get("stop_loss") or {}).get("usd_bis")
+    ziel = (result.get("take_profit") or {}).get("usd_von") or (result.get("take_profit") or {}).get("usd_bis")
+    if entry is None or stop is None or ziel is None:
+        return None
+    if stop < entry < ziel:
+        return None
+
+    result["stop_loss"] = {}
+    result["take_profit"] = {}
+    return (
+        f"Zonen verworfen: bei einer Kaufempfehlung muss der Stop UNTER und das Ziel "
+        f"UEBER dem Einstieg liegen. Geliefert wurden Entry {entry:.4f}, Stop "
+        f"{stop:.4f}, Ziel {ziel:.4f} - das ist die Marktrichtung statt der "
+        f"Instrumentenrichtung. Die Empfehlung bleibt, die Zonen sind unbrauchbar."
+    )
+
+
 def _post_check_hedge(
     parsed: dict, verbleibendes_budget_usd: float, eur_usd_fx_rate: float | None, config_dict: dict,
 ) -> dict:
@@ -249,6 +449,7 @@ def _post_check_hedge(
     Regel 4). Ein naiv wiederverwendeter Bear-Deckel waere hier funktional
     falschherum gewesen (haette die Positionsgroesse ausgerechnet dann NICHT
     gekappt, wenn der Decay-Effekt am staerksten drueckt)."""
+    gedeckelt = False
     result = dict(parsed)
     action = result.get("action")
     if action in ("KAUFEN", "NACHKAUFEN"):
@@ -293,11 +494,17 @@ def _post_check_hedge(
                     existing_note = position_size.get("note")
                     position_size["note"] = f"{existing_note} {note}" if existing_note else note
                     result["position_size"] = position_size
+                    gedeckelt = True
 
     # Signal-Fazit Konsistenz-Hinweis (2026-07-25) - rein diagnostisch, siehe
     # agent/krypto/risk_gate.py::_fazit_konsistenz_hinweis()-Docstring.
     eigene_einschaetzung = result.get("eigene_einschaetzung") or {}
     fazit_cfg = config_dict.get("signal_fazit", {})
+    # Wurde die Groesse gekuerzt? Der Risikofaktor "Hedge-Budget ausgeschoepft"
+    # braucht die Information, und sie stand bisher nur im Freitext der
+    # position_size.note (2026-08-07, W2).
+    result["_budget_gedeckelt"] = bool(gedeckelt)
+    result["_zonen_hinweis"] = _pruefe_hedge_zonen(result)
     result["_fazit_konsistenz_hinweis"] = _fazit_konsistenz_hinweis(
         eigene_einschaetzung.get("folgen"),
         result.get("confidence_pct"),
@@ -527,6 +734,30 @@ def generate_signal(
     raw_response = parsed.pop("_raw_response", None)
     corrected = _post_check_hedge(parsed, verbleibendes_budget_usd, eur_usd_fx_rate, config_dict)
     fazit_konsistenz_hinweis = corrected.pop("_fazit_konsistenz_hinweis", None)
+    budget_gedeckelt = corrected.pop("_budget_gedeckelt", False)
+    zonen_hinweis = corrected.pop("_zonen_hinweis", None)
+    if zonen_hinweis:
+        logger.warning("Hedge-Zonen fuer %s verworfen: %s", asset.symbol, zonen_hinweis)
+    # RISIKOFAKTOREN FUER DIE ABSICHERUNG (2026-08-07, W2). Bis hierher lieferte
+    # diese Pipeline gar keine - die E-Mail schrieb "Keine strukturierten
+    # Risikofaktoren verfuegbar", was wie ein Datenfehler aussah und keiner war.
+    # Eigene Funktion statt compute_risikofaktoren(), weil dort saemtliche
+    # Vorzeichen fuer eine Long-Kaufidee stehen.
+    try:
+        risikofaktoren = compute_risikofaktoren_hedge(
+            action=corrected.get("action"),
+            portfolio_exposure=portfolio_exposure,
+            regime_result=regime_result,
+            bull_wahrscheinlichkeit_pct=(
+                (corrected.get("forecast") or {}).get("bull") or {}).get("probability_pct"),
+            hebel_faktor=SYMBOL_ZU_HEBEL_FAKTOR.get(asset.symbol),
+            budget_gedeckelt=budget_gedeckelt,
+            zonen_hinweis=zonen_hinweis,
+        )
+    except Exception:
+        logger.exception("Hedge-Risikofaktoren fuer %s fehlgeschlagen - Signal laeuft ohne",
+                         asset.symbol)
+        risikofaktoren = None
     eigene_einschaetzung = corrected.get("eigene_einschaetzung") or {}
 
     long_reasoning = corrected.get("long_reasoning", {})
@@ -567,6 +798,9 @@ def generate_signal(
         risk_veto_reason=None,
         facts_json=json.dumps(facts, ensure_ascii=False),
         pipeline_version=PIPELINE_VERSION,
+        risikofaktoren_json=(
+            json.dumps([f.__dict__ for f in risikofaktoren], ensure_ascii=False)
+            if risikofaktoren else None),
         confidence_pct=corrected.get("confidence_pct"),
         short_reasoning=corrected.get("short_reasoning"),
         long_reasoning_technisch=long_reasoning.get("technisch"),

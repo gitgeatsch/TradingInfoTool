@@ -463,7 +463,7 @@ bereits.
 | # | Punkt | blockiert | Abhängig von |
 |---|---|---|---|
 | ~~W1~~ | **ERLEDIGT 07.08.** — nicht „invertiert": das R des Einzeltrades war richtig, falsch war die Fragestellung. Gebaut: eigener Hedge-Tier + `compute_hedge_wirksamkeit()` (Dämpfung + Prämie) | — | — |
-| **W2** | **Hedge-Risikofaktoren** | Abschnitt 3 der Hedge-Mails | ~~W1~~ — **freigeschaltet**, jetzt baubar |
+| ~~W2~~ | **ERLEDIGT 07.08.** — sieben Faktoren mit umgekehrter Wirkrichtung. Dabei gefunden: **9 von 11 Hedge-Empfehlungen hatten verdrehte Zonen** (Stop über Entry) — Zonenwache + Prompt-Regel 9b | — | — |
 | **W3** | **Halte-Kriterium auswerten** (Stufe 6) | Aussagen über Zeithorizont und Ausstiegsgüte | H2-Abdeckung (heute nur 8 % Spot / 19 % Hebel) |
 | **W4** | **Befolgungsgrad erfassen** (B1 beheben) — für Spot befüllen, für Hebel erst **bauen** (Migration + Schreibpfad + UI) | siehe 8b.1 | — |
 

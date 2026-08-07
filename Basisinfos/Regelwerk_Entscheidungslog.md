@@ -8,11 +8,13 @@
 
 ---
 
-## Index nach Thema (190 Einträge)
+## Index nach Thema (191 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
-### Regelwerk / deterministische Gates (34)
+### Regelwerk / deterministische Gates (35)
+
+- **2026-08-07** — W2: Hedge-Risikofaktoren mit umgekehrter Wirkrichtung + Zonenwache — 9 von 11 Hedge-Empfehlungen hatten Stop über und Ziel unter dem Einstieg
 
 - **2026-08-07** — W1: Hedge bekommt eigenen Tier + `compute_hedge_wirksamkeit()` (Dämpfung statt Expectancy) — „invertieren" wäre falsch gewesen, der Fehler lag in der Fragestellung
 
@@ -13745,3 +13747,106 @@ Aufwaertsmarkt kostet sie Rendite (Praemie negativ). Beide Vorzeichen stimmen.
 W2 (Hedge-Risikofaktoren) haengt an derselben Wurzel und ist jetzt baubar. Die
 Hedge-Klasse ist damit **messbar** - ob sie etwas taugt, ist eine andere Frage
 und braucht Zeit.
+
+
+---
+
+## Nachtrag (2026-08-07): W2 Hedge-Risikofaktoren - und dabei der Fund, dass 9 von 11 Hedge-Empfehlungen verdrehte Zonen hatten
+
+W2 war als Anhaengsel an W1 geplant: die Hedge-Mails schrieben "Keine
+strukturierten Risikofaktoren verfuegbar", weil die Pipeline gar keine
+berechnet. Beim Bauen kam die Nutzer-Frage dazu, ob Hedge-Positionen ueberhaupt
+korrekt bewertet und in Mail/GUI richtig dargestellt werden. Die Antwort auf
+diese Frage ist der eigentliche Fund des Tages.
+
+### Der Fund: die Zonen stehen falsch herum
+
+Am Export gemessen, alle Hedge-Kaufempfehlungen:
+
+| | |
+|---|---|
+| Zonen KORREKT (Stop unter Entry, Ziel darueber) | **2** |
+| Zonen VERDREHT (Stop ueber Entry, Ziel darunter) | **9** |
+| ohne Zonen | 3 |
+
+Beispiel DBPK vom 06.08.:
+
+    Entry 0,1217   Stop 0,1565 (+28,6 %)   Ziel 0,0870 (-28,6 %)
+
+Bei einer NACHKAUFEN-Empfehlung heisst das: **der Stop ist schon beim Einstieg
+ausgeloest**, und das Ziel liegt in Verlustrichtung. Beide Symbole betroffen
+(3QSS 4x, DBPK 5x) - kein Einzelfall, sondern der Regelfall.
+
+**DIE URSACHE ist eine Denkrichtung, kein Rechenfehler.** Das Modell denkt in
+der MARKTrichtung ("wir wollen, dass der Index faellt") statt in der
+INSTRUMENTENrichtung ("wir kaufen ein inverses Produkt, das STEIGT, wenn der
+Index faellt"). Der Prompt sagt seit dem 18.07. inhaltlich das Richtige
+(Regel 9) - **es reicht nicht.**
+
+### Was der Fehler angerichtet hat, und warum er unsichtbar blieb
+
+Ein Stop oberhalb des Einstiegs bedeutet fuer das Backward-Tracking: sofort
+ausgeloest. Genau deshalb stand die Klasse im Export bei `etf real n=0` -
+**der Fehler hat sich hinter der fehlenden Auswertung versteckt.** Haette sie
+funktioniert, waeren reihenweise sofortige Stop-Loss-Treffer entstanden, und
+die Systemguete der Klasse waere aus lauter -1-R-Faellen zusammengesetzt
+gewesen.
+
+In der E-Mail stand er dagegen die ganze Zeit sichtbar - Stop ueber dem
+Einstieg, bei einer Kaufempfehlung. Der Nutzer hat genau dort nachgefragt.
+
+### Die Behebung: Wache statt besserer Worte
+
+`_pruefe_hedge_zonen()` prueft deterministisch `stop < entry < ziel` bei
+KAUFEN/NACHKAUFEN. Ist die Ungleichung verletzt, werden **die Zonen
+verworfen** - die Handlungsempfehlung bleibt (Regel 9: die Zonen sind
+informativer Kontext, keine Kauf-Voraussetzung).
+
+**WARUM VERWORFEN UND NICHT GETAUSCHT.** Ein Tausch waere verlockend: die
+Abstaende sehen plausibel aus (6-29 %), nur die Rollen scheinen vertauscht.
+Aber wir wissen NICHT, was die Zahl bedeuten sollte - ob das Modell den
+Instrumentenpreis meinte und die Richtung verwechselte, oder ob es ueber ein
+Indexniveau nachdachte und es als Instrumentenpreis ausgab. Eine Zahl
+umzudeuten, deren Bedeutung unklar ist, waere genau die stille Annahme, an der
+diese Woche schon mehrfach etwas gescheitert ist.
+
+Zusaetzlich **Regel 9b im Prompt**, diesmal als Ungleichung statt als Prosa:
+`stop_loss < entry < take_profit`, mit dem gemessenen Befund als Begruendung.
+Die Wache bleibt trotzdem - ein Prompt ist eine Bitte, kein Gate.
+
+### W2 selbst: sieben Risikofaktoren mit umgekehrter Wirkrichtung
+
+`compute_risikofaktoren_hedge()` - eigene Funktion, weil in
+`compute_risikofaktoren()` saemtliche Vorzeichen fuer eine Long-Kaufidee
+stehen:
+
+| Faktor | Wirkrichtung |
+|---|---|
+| Abdeckungsgrad | Kontext - wo steht die Absicherung heute |
+| Absicherung weitgehend aufgebaut (>= 80 % des Ziels) | **negativ** - Nachkauf bringt wenig Schutz, kostet volle Praemie |
+| VIX hoch (>= 25) | **negativ** - Praemie ist teuer, WEIL der Markt die Gefahr sieht |
+| VIX niedrig (<= 16) | **positiv** - der bessere Zeitpunkt ist, bevor es gebraucht wird |
+| Aktien-Baerenmarkt aktiv | **negativ** - nachlaufend, jetzt aufstocken heisst nach dem Schaden versichern |
+| Volatilitaets-Drag (2x/3x taeglich) | **negativ** - struktureller Preis, spricht gegen langes Halten |
+| Bull-Wahrscheinlichkeit >= 50 % | **negativ** - Spiegelbild des Gegenszenarios |
+| Hedge-Budget ausgeschoepft | **negativ** - Empfehlung wurde bereits gekuerzt |
+
+Zwei davon sind bei einer Long-Position gar nicht vorhanden (Drag,
+Abdeckungsgrad), und zwei haben dort das **entgegengesetzte** Vorzeichen (VIX,
+Baerenmarkt). Das ist der ganze Punkt von W2.
+
+Bei allem ausser KAUFEN/NACHKAUFEN bleibt nur der Kontextfaktor - fuer ein
+HALTEN ist "wie teuer waere der Zukauf" gegenstandslos.
+
+### Zur Bewertungsfrage: die Zahlen selbst sind RICHTIG
+
+Der Bestandswert einer Hedge-Position (`Menge x Kurs`) und ihr P&L gegen den
+Einstandspreis sind **arithmetisch korrekt und duerfen nicht invertiert
+werden** - ein 3QSS-Bestand, der 10 % gefallen ist, ist real 10 % weniger wert.
+Was fehlte, war nicht die Umkehrung der Zahl, sondern der **Kontext**, der ein
+Minus lesbar macht: dass es die Praemie ist und nicht ein Fehler. Den liefern
+jetzt die Risikofaktoren (Mail und GUI) und die Wirksamkeits-Karte aus W1.
+
+**Geprueft:** 19 Pruefungen in `teste_hedge_risikofaktoren.py`, darunter der
+echte DBPK-Fall vom 06.08. und der korrekte 3QSS-Fall vom selben Tag als
+Gegenprobe. Sieben Testsuiten und die Signaturpruefung gruen.

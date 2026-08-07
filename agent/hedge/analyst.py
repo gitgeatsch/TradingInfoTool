@@ -105,6 +105,13 @@ Absicherung ihren Zweck bereits erfuellt hat und reduziert werden sollte (der Ma
 sich bereits deutlich korrigiert). KEINE feste CRV-Mindestgrenze (anders als bei \
 Directional-Positionen) - die Zonen sind informativer Kontext, keine harte Kauf-\
 Voraussetzung.
+9b. ZAHLENREGEL DAZU, und sie gilt ohne Ausnahme: du empfiehlst den KAUF eines \
+inversen Instruments, nicht einen Short auf den Index. Alle drei Zonen sind \
+Preise DIESES Instruments. Deshalb muss bei KAUFEN/NACHKAUFEN immer gelten: \
+stop_loss < entry < take_profit. Faellt der Index, STEIGT dieses Instrument - \
+das Ziel liegt also OBERHALB des Einstiegs, der Stop darunter. Wird die \
+Ungleichung verletzt, werden deine Zonen deterministisch verworfen (gemessen \
+am 07.08.: 9 von 11 Empfehlungen hatten sie verdreht).
 10. Fuelle zusaetzlich zu `long_reasoning` das Feld `top_gruende` mit GENAU 5 Eintraegen, \
 sortiert von der staerksten zur schwaechsten Begruendung (rang 1 = staerkste, rang 5 = \
 schwaechste, jede Zahl 1-5 genau einmal). Jeder Eintrag hat `rang` (1-5), `kategorie` \
