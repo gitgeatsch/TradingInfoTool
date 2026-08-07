@@ -15294,3 +15294,38 @@ Zahlungsmethode wurde anschliessend geloescht - der Deckel haengt an "credits
 purchased (all time)", einer historischen Tatsache, und bleibt davon unberuehrt.
 Damit ist eine unbeabsichtigte Abbuchung auch bei spaeteren Kontoaenderungen
 ausgeschlossen (der Grund, an dem Vercel AI Gateway gescheitert war).
+
+### Datenschutz-Messung: der Zielkonflikt ist aufgeloest (07.08., nachts)
+
+Der Nutzer hat alle vier Data-Training-Schalter im OpenRouter-Konto
+ausgeschaltet. Gemessen wurde daraufhin, welche der 14 kostenlosen Modelle
+ueberhaupt noch antworten:
+
+| Ergebnis | Modelle |
+|---|---|
+| **erreichbar** | `gemma-4-26b` (5,2 s), `north-mini-code` (5,6 s), `gpt-oss-20b` (12,7 s) |
+| **429, gedrosselt** (nicht policy-gesperrt) | `gemma-4-31b`, `ling-3.0-tiny` |
+| **404 gesperrt** | 9 weitere - *"No endpoints available matching your guardrail restrictions and data policy"* |
+
+**Damit ist die Entscheidung vom Nachmittag nicht mehr noetig.** Der
+SYSTEM_PROMPT (~9.100 Token Regelwerk) wird nicht zu Trainingsmaterial, und
+trotzdem stehen Modelle mit **256K-262K Kontext** zur Verfuegung - unser Prompt
+passt mit enormem Abstand hinein. Die erreichbaren Modelle sind sogar
+**schneller** (5,2 s) als der trainings-aktivierte Endpunkt beim vollen Prompt
+(34,2 s).
+
+`FREE_MODELLE` wurde vollstaendig ausgetauscht: die bisherige Liste bestand
+ausschliesslich aus Modellen, die mit den neuen Einstellungen 404 liefern - ein
+Einschalten haette die komplette Rotation ins Leere laufen lassen. Das war kein
+Schoenheitsfehler, sondern eine scharfe Falle.
+
+**`cohere/north-mini-code` bleibt draussen**, obwohl erreichbar: Cohere wurde in
+Runde 4 verworfen, weil die Trial-Bedingungen Produktivnutzung ausdruecklich
+verbieten. Ob das ueber OpenRouter anders ist, ist ungeprueft - Nutzer-
+Entscheidung, es solange nicht zu benutzen.
+
+**Der Preis, offen benannt:** statt 14 Modellen bleiben 4. Ausfaelle werden
+haeufiger, und die beiden 429er zeigen, dass trainingsfreie Endpunkte staerker
+umkaempft sind. **Ohne die Rotation waere dieser Pool fahrlaessig** - mit ihr
+ist er handhabbar, und faellt alles aus, uebernimmt Z.ai. Die Nutzer-Idee von
+vorhin ist damit von "nuetzlich" zu "Voraussetzung" geworden.

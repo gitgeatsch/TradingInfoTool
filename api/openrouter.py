@@ -93,14 +93,36 @@ FREE_SUFFIX = ":free"
 # bestimmen die Reihenfolge, jeder Call nennt genau ein explizites Modell, und
 # welches geantwortet hat, steht hinterher in der DB (siehe `letztes_modell`).
 #
-# Reihenfolge nach Messung vom 07.08. (Konsistenzfrage mit bekannter Antwort):
-# groesster Kontext und schnellste Antwort zuerst.
+# Reihenfolge nach der Messung vom 07.08. spaet - NUR Modelle, die OHNE
+# Trainings-Freigabe antworten. Der Nutzer hat alle vier Data-Training-Schalter
+# im OpenRouter-Konto ausgeschaltet; damit wird der SYSTEM_PROMPT (~9.100 Token
+# Regelwerk) NICHT zu Trainingsmaterial - der Zielkonflikt vom Nachmittag ist
+# damit aufgeloest, nicht nur abgemildert.
+#
+# GEMESSEN an allen 14 Katalog-Eintraegen mit den Schaltern AUS:
+#   erreichbar : gemma-4-26b (5,2 s), north-mini-code (5,6 s), gpt-oss-20b (12,7 s)
+#   gedrosselt : gemma-4-31b, ling-3.0-tiny  -> 429, NICHT policy-gesperrt
+#   gesperrt   : 9 weitere -> 404 "No endpoints available matching your
+#                guardrail restrictions and data policy"
+#
+# Die 429er stehen bewusst MIT in der Liste: sie sind nicht verboten, nur gerade
+# ausgelastet - genau der Fall, fuer den die Rotation da ist.
+#
+# cohere/north-mini-code:free ist erreichbar, bleibt aber DRAUSSEN: Cohere wurde
+# in Runde 4 verworfen, weil die Trial-Bedingungen Produktivnutzung ausdruecklich
+# verbieten. Ob das ueber OpenRouter anders ist, waere zu pruefen - solange das
+# offen ist, nicht benutzen (Nutzer-Entscheidung 07.08.).
+#
+# DER PREIS, offen benannt: statt 14 Modellen bleiben 4. Ausfaelle werden
+# haeufiger, und die 429er zeigen, dass trainingsfreie Endpunkte staerker
+# umkaempft sind. Ohne die Rotation waere dieser Pool fahrlaessig; mit ihr ist
+# er handhabbar. Faellt alles aus, uebernimmt Z.ai die Gegenpruefung.
 FREE_MODELLE = (
-    "nvidia/nemotron-3-ultra-550b-a55b:free",   # 1.000.000 Kontext,  7,6 s
-    "nvidia/nemotron-3-super-120b-a12b:free",   #   262.144 Kontext, 12,8 s
-    "openai/gpt-oss-20b:free",                  #   131.072 Kontext, 11,2 s
-    "google/gemma-4-31b-it:free",               #   262.144 Kontext, am 07.08. 429
-    "nvidia/nemotron-3-nano-30b-a3b:free",      #   256.000 Kontext, Reserve
+    "google/gemma-4-26b-a4b-it:free",   # 262.144 Kontext,  5,2 s - schnellster
+    "openai/gpt-oss-20b:free",          # 131.072 Kontext, 12,7 s - hat den
+                                        #   vollen 9.219-Token-Prompt getragen
+    "google/gemma-4-31b-it:free",       # 262.144 Kontext, am 07.08. 429
+    "inclusionai/ling-3.0-tiny:free",   # 262.144 Kontext, am 07.08. 429
 )
 
 # Rueckwaertskompatibel: einzelne Aufrufer und Tests nennen weiterhin ein Modell.
