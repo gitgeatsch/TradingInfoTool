@@ -21,6 +21,7 @@ import database.db as db
 import ui.theme as theme
 from ui.detail_panel import configure_tags, render_detail_text
 from ui.formatting import (
+    risikofaktoren_hinweis,
     RISIKOFAKTOREN_LEGENDE, format_fazit_lines, format_money, format_risikofaktoren_lines,
     format_zai_gegenpruefung_lines, format_zeitpunkt_lokal,
 )
@@ -547,7 +548,7 @@ class SignalsView(ttk.Frame):
         lines.extend(abschnitt_2)
         lines.append("--- 3. KONKLUSION (RISIKOFAKTOREN) ---")
         lines.append(RISIKOFAKTOREN_LEGENDE)
-        lines.extend(risikofaktoren_lines if risikofaktoren_lines else ["Keine strukturierten Risikofaktoren verfügbar."])
+        lines.extend(risikofaktoren_lines or [risikofaktoren_hinweis(signal, "")])
         fazit_lines = format_fazit_lines(
             signal.fazit_folgen, signal.fazit_kurzfazit, signal.fazit_konsistenz_hinweis,
         )

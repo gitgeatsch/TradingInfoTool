@@ -67,35 +67,51 @@ def send_notification_email(
         return False
 
     try:
-        if not inline_images:
-            msg = MIMEText(body, "plain", "utf-8")
-        else:
-            msg = MIMEMultipart("related")
-            alternative = MIMEMultipart("alternative")
-            alternative.attach(MIMEText(body, "plain", "utf-8"))
-            bild_tags = "".join(
-                f"<img src=\"cid:{_INLINE_IMAGE_CID}-{i}\" alt=\"{bild.get('alt', '')}\" "
-                "style=\"background:#ffffff;border:1px solid #dddddd;padding:8px;margin-top:12px;display:block;\">"
-                for i, bild in enumerate(inline_images)
+        # FARBE HING AN DEN BILDERN - und das war ein Unfall (Fund 2026-08-06,
+        # Nutzer-Beobachtung "die farbliche Kennzeichnung ist nicht ueberall
+        # vorhanden"). Bis hierher wurde die HTML-Fassung NUR gebaut, wenn
+        # `inline_images` gesetzt war; ohne Bilder ging eine reine Textmail
+        # raus, ganz ohne Hervorhebung. Zwei voellig unabhaengige Dinge -
+        # Bildanhang und Textformatierung - hingen an derselben Bedingung.
+        #
+        # Sichtbar wurde es an den Hedge-Mails: Hedge-Instrumente bekommen
+        # bewusst KEINE technische Analyse und damit auch keine
+        # Liquiditaetszonen-/Stabilitaets-Grafik - also nie ein Bild, also nie
+        # Farbe. Dieselbe Mailstruktur sah je nach Assetklasse anders aus,
+        # ohne dass das je entschieden worden waere.
+        #
+        # Ab jetzt: die HTML-Alternative wird IMMER gebaut. Bilder kommen
+        # zusaetzlich dazu, wenn welche da sind. Die Textfassung bleibt als
+        # Alternative erhalten (Clients ohne HTML), und die
+        # color-scheme-Meta-Tags gelten damit fuer JEDE Mail - auch die
+        # Job-Ausfall- und Z-3-Mails, die Gmails Dark-Mode-Invertierung bisher
+        # ungeschuetzt ausgesetzt waren.
+        bild_tags = "".join(
+            f"<img src=\"cid:{_INLINE_IMAGE_CID}-{i}\" alt=\"{bild.get('alt', '')}\" "
+            "style=\"background:#ffffff;border:1px solid #dddddd;padding:8px;margin-top:12px;display:block;\">"
+            for i, bild in enumerate(inline_images or [])
+        )
+        msg = MIMEMultipart("related")
+        alternative = MIMEMultipart("alternative")
+        alternative.attach(MIMEText(body, "plain", "utf-8"))
+        html_body = (
+            "<html><head>"
+            "<meta name=\"color-scheme\" content=\"light\">"
+            "<meta name=\"supported-color-schemes\" content=\"light\">"
+            "</head><body style=\"background:#ffffff;color:#1a1a1a;margin:0;padding:12px;\">"
+            + render_detail_html(body) + bild_tags +
+            "</body></html>"
+        )
+        alternative.attach(MIMEText(html_body, "html", "utf-8"))
+        msg.attach(alternative)
+        for i, bild in enumerate(inline_images or []):
+            mime_bild = MIMEImage(bild["png"], "png")
+            mime_bild.add_header("Content-ID", f"<{_INLINE_IMAGE_CID}-{i}>")
+            mime_bild.add_header(
+                "Content-Disposition", "inline",
+                filename=bild.get("filename", f"grafik-{i}.png"),
             )
-            html_body = (
-                "<html><head>"
-                "<meta name=\"color-scheme\" content=\"light\">"
-                "<meta name=\"supported-color-schemes\" content=\"light\">"
-                "</head><body style=\"background:#ffffff;color:#1a1a1a;margin:0;padding:12px;\">"
-                + render_detail_html(body) + bild_tags +
-                "</body></html>"
-            )
-            alternative.attach(MIMEText(html_body, "html", "utf-8"))
-            msg.attach(alternative)
-            for i, bild in enumerate(inline_images):
-                mime_bild = MIMEImage(bild["png"], "png")
-                mime_bild.add_header("Content-ID", f"<{_INLINE_IMAGE_CID}-{i}>")
-                mime_bild.add_header(
-                    "Content-Disposition", "inline",
-                    filename=bild.get("filename", f"grafik-{i}.png"),
-                )
-                msg.attach(mime_bild)
+            msg.attach(mime_bild)
         msg["Subject"] = subject
         msg["From"] = absender
         msg["To"] = empfaenger

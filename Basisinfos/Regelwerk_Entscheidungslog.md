@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (186 Einträge)
+## Index nach Thema (187 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -109,7 +109,9 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-05** — `halte_kriterium` erstmals ausgewertet - kein Trennnachweis, zwei strukturelle Maengel
 - **2026-08-06** — Die drei neuen Fakten sind im Betrieb ANGEKOMMEN (22/22) - Verifikation abgeschlossen, Zaehler-Fehler behoben
 
-### Datenquellen / APIs (25)
+### Datenquellen / APIs (26)
+
+- **2026-08-06** — Info-E-Mails: Farbe hing an den Bildern (Hedge-Mails immer unformatiert), und eine Meldung stand für drei verschiedene Sachverhalte
 
 - **2026-08-06** — Export 14:20: CRV-Bänder kommen an, ETC-Reihen da, aber der Ausreißer war nur in den Schattenarm umgezogen — Korrektur deckte nur 1 von 3 Messarmen ab
 
@@ -13434,3 +13436,72 @@ der in der Bewertung ankommt. Der Export duerfte die Bewertungsdiagnose
 berechnet haben, waehrend der Refresh noch lief. **Nicht bewiesen** - der
 naechste Export entscheidet es. Steht dort weiterhin 91/91, ist es kein
 Wettlauf, sondern ein Fehler.
+
+
+---
+
+## Nachtrag (2026-08-06): Info-E-Mails geprueft - Farbe hing an den Bildern, und eine Meldung stand fuer drei verschiedene Sachverhalte
+
+Nutzer-Beobachtung: "es werden keine strukturierten Risikofaktoren mehr
+uebermittelt" und "die farbliche Kennzeichnung ist nicht ueberall vorhanden".
+Beides bestaetigt - mit unterschiedlicher Ursache.
+
+### 1. Die Farbe hing an den Bildern - ein Unfall, keine Entscheidung
+
+`api/email_notify.py::send_notification_email()` baute die HTML-Fassung **nur,
+wenn `inline_images` gesetzt war**. Ohne Bild ging eine reine Textmail raus,
+ganz ohne Hervorhebung. Zwei voellig unabhaengige Dinge - Bildanhang und
+Textformatierung - hingen an derselben Bedingung.
+
+Sichtbar wurde es an den **Hedge-Mails**: Hedge-Instrumente bekommen bewusst
+keine technische Analyse, also nie eine Liquiditaetszonen- oder
+Stabilitaets-Grafik, also nie ein Bild - **also nie Farbe**. Dieselbe
+Mailstruktur sah je nach Assetklasse anders aus, ohne dass das je entschieden
+worden waere.
+
+Ab jetzt wird die HTML-Alternative **immer** gebaut, Bilder kommen zusaetzlich
+dazu. Nebeneffekt, der dazugehoert: die `color-scheme`-Meta-Tags gegen Gmails
+Dark-Mode-Invertierung gelten jetzt auch fuer Job-Ausfall- und Z-3-Mails, die
+ihr bisher ungeschuetzt ausgesetzt waren.
+
+### 2. Die Risikofaktoren fehlen nicht - die Meldung war irrefuehrend
+
+An 276 Signalen seit dem 04.08. nachgemessen: **kein Datenverlust, keine
+Regression.** Derselbe Satz "Keine strukturierten Risikofaktoren verfuegbar"
+stand fuer drei verschiedene Sachverhalte:
+
+| Fall | Anzahl | Bedeutung |
+|---|---|---|
+| HALTEN/VERKAUFEN | 239 von 276 | `compute_risikofaktoren()` steigt bei allem ausser KAUFEN/NACHKAUFEN frueh aus - die Liste ist als Pruefung einer KAUFIDEE gebaut |
+| Hedge-Instrumente | 8 von 276 | `_post_check_hedge()` ruft `compute_risikofaktoren()` gar nicht auf - **echte, offene Luecke** |
+| tatsaechlich fehlende Daten | Rest | der einzige Fall, fuer den der Satz gedacht war |
+
+**"Verfuegbar" liest sich wie "die Daten fehlen".** Fall 1 heisst aber "alles in
+Ordnung, nichts zu berichten", Fall 3 heisst "hier ist etwas kaputt". Ein Satz
+fuer beide macht den einen unlesbar und den anderen unsichtbar - genau deshalb
+kam die Beobachtung auf.
+
+`ui/formatting.py::risikofaktoren_hinweis()` unterscheidet die drei Faelle und
+wird an **allen fuenf** Stellen benutzt (drei Mailtypen, Signale-Tab,
+Hebel-Tab) - nicht an jeder Stelle neu formuliert, siehe die Lehre vom selben
+Tag zum Hedge-Praedikat.
+
+### Offen: Risikofaktoren fuer Hedge-Instrumente
+
+Die Faktorenliste prueft eine Long-Kaufidee (Regime-Konflikt LONG,
+Retail-Long-Bias, Konfluenz). Fuer ein Absicherungs-Overlay sind die relevanten
+Faktoren **andere** - dieselbe umgekehrte Wirkrichtung wie beim Erfolgsmass
+(Punkt D-d). Bewusst nicht nebenbei erfunden; die Mail sagt jetzt ehrlich, dass
+es sie noch nicht gibt.
+
+### Gegenprobe der uebrigen Struktur
+
+Alle drei Mailtypen auf zwoelf Bausteine verglichen (Abschnitte 1-3, Legende,
+Gegenargument, Risiken, Halte-Kriterium, Forecast, Fazit, Z.ai, Mindestziel,
+Positionsgroesse): **identisch**, bis auf die Positionsgroesse, die bei der
+Hebel-Mail durch die Hebel-/Korrektur-Zeilen ersetzt ist. Kein weiterer
+Konsistenzbruch gefunden.
+
+**Werkzeug:** `teste_email_darstellung.py` - baut echte Mails mit und ohne Bild,
+dekodiert den HTML-Teil und prueft Farbe, Meta-Tags und alle vier
+Risikofaktoren-Faelle. 13 Pruefungen.

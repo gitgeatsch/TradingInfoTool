@@ -1727,7 +1727,10 @@ def _formatiere_top_gruende(signal) -> str:
 # lebte nur hier und wurde nie von der App-GUI verwendet, wodurch dieselbe
 # optische 2-Stunden-Luecke dort weiterhin auftrat. Re-Export unter dem alten
 # Namen, damit die 3 bestehenden Aufrufstellen unten unveraendert bleiben.
-from ui.formatting import format_zeitpunkt_lokal as _formatiere_zeitpunkt_lokal
+from ui.formatting import (
+    format_zeitpunkt_lokal as _formatiere_zeitpunkt_lokal,
+    risikofaktoren_hinweis as _risikofaktoren_hinweis,
+)
 
 
 def _formatiere_key_risks(signal) -> str:
@@ -2049,7 +2052,7 @@ def _notify_spot_signal(signal, watchlist: list, bitpanda_assets: list | None, c
             + (f"{forecast_text}\n" if forecast_text else "")
             + "\n--- 3. KONKLUSION (RISIKOFAKTOREN) ---\n"
             + f"{_RISIKOFAKTOREN_LEGENDE}\n\n"
-            + (risikofaktoren_text if risikofaktoren_text else "Keine strukturierten Risikofaktoren verfügbar.")
+            + _risikofaktoren_hinweis(signal, risikofaktoren_text)
             + (f"\n\n{fazit_text}" if fazit_text else "")
             + (f"\n\n{zai_text}" if zai_text else "")
             + "\n\nDetails im Signale-Tab der App. Ausführung manuell über die Bitpanda-App."
@@ -2443,7 +2446,7 @@ def _notify_hebel_signal(signal, watchlist: list, bitpanda_assets: list | None, 
             + (f"{forecast_text}\n" if forecast_text else "")
             + "\n--- 3. KONKLUSION (RISIKOFAKTOREN) ---\n"
             + f"{_RISIKOFAKTOREN_LEGENDE}\n\n"
-            + (risikofaktoren_text if risikofaktoren_text else "Keine strukturierten Risikofaktoren verfügbar.")
+            + _risikofaktoren_hinweis(signal, risikofaktoren_text)
             + (f"\n\n{fazit_text}" if fazit_text else "")
             + (f"\n\n{zai_text}" if zai_text else "")
             + "\n\nDetails im Hebel-Tab der App. Ausführung manuell über die Bitpanda-App."
@@ -2604,7 +2607,7 @@ def _notify_multi_asset_signal(signal, watchlist: list, bitpanda_assets: list | 
             + (f"{forecast_text}\n" if forecast_text else "")
             + "\n--- 3. KONKLUSION (RISIKOFAKTOREN) ---\n"
             + f"{_RISIKOFAKTOREN_LEGENDE}\n\n"
-            + (risikofaktoren_text if risikofaktoren_text else "Keine strukturierten Risikofaktoren verfügbar.")
+            + _risikofaktoren_hinweis(signal, risikofaktoren_text)
             + (f"\n\n{fazit_text}" if fazit_text else "")
             + (f"\n\n{zai_text}" if zai_text else "")
             + "\n\nDetails im Signale-Tab der App. Ausführung manuell über die Bitpanda-App."

@@ -15,6 +15,52 @@ __all__ = [
 ]
 
 
+# Aktionen, fuer die ueberhaupt Risikofaktoren berechnet werden - identisch zu
+# agent/krypto/risk_gate.py::_BUY_ACTIONS. Bewusst hier gespiegelt statt
+# importiert: ui/ soll nicht von agent/ abhaengen.
+_RISIKOFAKTOREN_KAUF_AKTIONEN = ("KAUFEN", "NACHKAUFEN")
+_HEDGE_SYMBOLE_FUER_HINWEIS = ("3QSS", "DBPK")
+
+
+def risikofaktoren_hinweis(signal, faktoren_text: str) -> str:
+    """Was steht in Abschnitt 3, wenn keine Risikofaktoren vorliegen?
+
+    ANLASS (Nutzer-Beobachtung 2026-08-06): "es werden keine strukturierten
+    Risikofaktoren mehr uebermittelt". Nachgemessen an 276 Signalen seit dem
+    04.08. - es ist KEIN Datenverlust und keine Regression, sondern die
+    Meldung war irrefuehrend. Drei verschiedene Sachverhalte trugen denselben
+    Satz "Keine strukturierten Risikofaktoren verfuegbar", und "verfuegbar"
+    liest sich wie "die Daten fehlen":
+
+      1. HALTEN/VERKAUFEN (239 von 276). compute_risikofaktoren() steigt bei
+         allem ausser KAUFEN/NACHKAUFEN frueh aus - die Faktorenliste ist als
+         Pruefung einer KAUFIDEE gebaut. Ohne Kaufidee gibt es nichts zu
+         pruefen; das ist kein Mangel, sondern die Definition.
+      2. Hedge-Instrumente (8 von 276). agent/hedge/pipeline.py nutzt einen
+         eigenen _post_check_hedge() und ruft compute_risikofaktoren() gar
+         nicht auf - fuer ein Absicherungs-Overlay sind die Faktoren auch
+         inhaltlich andere (siehe ist_hedge_instrument()-Docstring). Das ist
+         eine echte, offene Luecke - und sie gehoert benannt, nicht als
+         "nicht verfuegbar" getarnt.
+      3. Alles andere - dann fehlen die Daten tatsaechlich.
+
+    Der Unterschied ist nicht kosmetisch: Fall 1 heisst "alles in Ordnung,
+    nichts zu berichten", Fall 3 heisst "hier ist etwas kaputt". Ein Satz fuer
+    beide macht den einen unlesbar und den anderen unsichtbar.
+    """
+    if faktoren_text:
+        return faktoren_text
+    symbol = getattr(signal, "symbol", None)
+    if symbol in _HEDGE_SYMBOLE_FUER_HINWEIS:
+        return ("Fuer Absicherungs-Instrumente werden derzeit keine Risikofaktoren "
+                "berechnet - offener Punkt, kein Datenfehler.")
+    aktion = getattr(signal, "original_action", None) or getattr(signal, "action", None)
+    if aktion and aktion not in _RISIKOFAKTOREN_KAUF_AKTIONEN:
+        return (f"Keine Risikofaktoren - die Konklusion prueft eine KAUFIDEE, und die "
+                f"Empfehlung lautet {aktion}. Kein Veto ausgeloest, nichts zu berichten.")
+    return "Keine strukturierten Risikofaktoren verfügbar."
+
+
 def format_money(value: float | None) -> str:
     if value is None:
         return "-"
