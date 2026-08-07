@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (191 Einträge)
+## Index nach Thema (192 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -52,7 +52,9 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-05** — Ausstiegsregel scharfgeschaltet: Config, taeglicher Job 7:15, Sammel-E-Mail
 - **2026-08-06** — Gate-Untergrenze Stop-Abstand: EXISTIERT BEREITS (RM-1b 2,5 % + RM-1c 0,75xATR), richtig kalibriert, nichts gebaut
 
-### LLM-Prompts / Analysten (Stage 2) (17)
+### LLM-Prompts / Analysten (Stage 2) (18)
+
+- **2026-08-07** — Warum Aktien/ETF/Rohstoffe nur HALTEN sagen: kein Akkumulations-Framework (Krypto 7x Tranche/15x antizyklisch, die anderen null) + Zeithorizont hängt am LLM statt an der Klasse
 
 - **2026-07-18** — Konfidenz-Kalibrierung nach dem echten CAT-Fall (fünf Bausteine A-E)
 - **2026-07-19** — Release 2 (Schwerpunkte/Thesen-Verwaltung) - Konzeptionsrunde
@@ -13850,3 +13852,72 @@ jetzt die Risikofaktoren (Mail und GUI) und die Wirksamkeits-Karte aus W1.
 **Geprueft:** 19 Pruefungen in `teste_hedge_risikofaktoren.py`, darunter der
 echte DBPK-Fall vom 06.08. und der korrekte 3QSS-Fall vom selben Tag als
 Gegenprobe. Sieben Testsuiten und die Signaturpruefung gruen.
+
+
+---
+
+## Nachtrag (2026-08-07): warum die Nicht-Krypto-Klassen fast nur HALTEN sagen - untersucht, nicht vermutet
+
+Vollstaendige Untersuchung in `Zwischenstand_Gesamtprojekt_06_08.md` Abschnitt
+**8c**. Kurzfassung der Befunde:
+
+**Es kommen Signale** - 201 Nicht-Krypto-Spot-Signale im Exportfenster. Aktien
+(43) und Themen-ETF (89) haben in der GESAMTEN Historie nie etwas anderes als
+HALTEN gesagt, Rohstoffe 65x HALTEN gegen 4x VERKAUFEN.
+
+**Hauptursache: es fehlt das Akkumulations-Framework.** Wortzaehlung in den
+Prompts - Krypto-Spot hat 7x "Tranche" und 15x "antizyklisch", Aktien,
+Themen-ETF und Rohstoffe haben **null**. Sie kennen NACHKAUFEN nur als Wort
+ohne Mechanik. Fuer eine langfristig gehaltene Position ohne Aufstockungsanlass
+bleiben HALTEN oder VERKAUFEN - und Regel 6 schreibt HALTEN sogar ausdruecklich
+vor, solange die These intakt ist. **Das System verhaelt sich regelkonform; die
+Luecke ist eine fehlende Handlungsoption, kein Fehler.**
+
+**Zweite Ursache: 49 von 201 erreichen das LLM gar nicht** (Fixed-Signale) -
+aber die Datierung zeigt, dass der Grossteil **Vergangenheit** ist. ISOC
+("Historie veraltet, letzter Tag 2025-09-10", 6x) und X136 ("keine historischen
+Daten", 6x) traten zuletzt am **27.07.** auf; beide fuehren heute Daten bis zum
+06.08. **Ein Vorschlag "ISOC/X136 reparieren" waere Arbeit an einem erledigten
+Punkt gewesen - erst die Datierung der Faelle hat das gezeigt.** Es bleibt
+"Preis veraltet" mit 13 Faellen seit dem 05.08., und das betrifft auch BTC
+(12x) und ETH - also die Staleness-Ueberwachung insgesamt, nicht diese
+Untersuchung.
+
+**Das Gate ist NICHT die Ursache:** 5 Risk-Vetos in der gesamten Historie, 0
+Cash-Vetos. Konfidenz-Median 66 % gegen 70 % bei Krypto - das Modell ist nicht
+ratlos, es hat keinen Anlass zu handeln.
+
+### Der Zeithorizont - Nutzer-Vorgabe und Ist-Zustand
+
+Vorgabe: Spot/ETF/Aktien/Rohstoffe ueber **Monate**, Hebel **1-5, max 14 Tage**.
+
+Das System staffelt die Ablauffristen bereits (kurz 14 / mittel 45 / lang 120),
+ordnet sie aber **je Signal vom LLM** zu - und rechnet die Basislinie fuer ALLE
+Klassen fest auf **14 Tage**. Daraus zwei Messfehler:
+
+- eine 120-Tage-Position wird gegen einen 14-Tage-Zufallseinstieg verglichen;
+  der Signalbeitrag der langfristigen Klassen ist damit falsch berechnet
+- 1.117 von 1.703 Hebel-Signalen tragen `mittel` = 45 Tage, bei einer Praxis von
+  1-5 Tagen. Themen-ETF traegt denselben Bucket fuer Monate. **Zwei voellig
+  verschiedene Praxen, derselbe Horizont.**
+
+> **Die "andere Loesung", nach der gefragt wurde:** der Zeithorizont gehoert an
+> die ASSETKLASSE gebunden, nicht an das Einzelurteil des Modells. Das Modell
+> darf innerhalb des Klassenrahmens verfeinern, aber keinen Hebel-Trade auf 45
+> Tage stellen.
+
+### Vier Massnahmen, priorisiert (Details in 8c)
+
+| | | Aufwand |
+|---|---|---|
+| ~~H-1~~ | ~~ISOC/X136-Historie~~ - bereits behoben, letzter Fall 27.07. | - |
+| H-2 | Zeithorizont je Assetklasse deckeln | mittel |
+| H-3 | Basislinien-Horizont an den Bucket koppeln | mittel |
+| H-4 | Akkumulations-Konzept fuer Aktien/ETF/Rohstoffe | gross |
+
+H-4 ist die Ursache, H-2 und H-3 sind die Voraussetzung dafuer, den Erfolg von
+H-4 ueberhaupt messen zu koennen. **H-1 wurde beim Gegenpruefen zurueckgezogen** -
+zum zweiten Mal an diesem Tag haette ein Befund zu Arbeit an etwas Erledigtem
+gefuehrt, wenn er nicht datiert worden waere. **Bewusst NICHT auf der Liste: die Gates
+lockern** - sie sind nachweislich nicht die Ursache, und eine Lockerung wuerde
+die Diagnose verwischen.

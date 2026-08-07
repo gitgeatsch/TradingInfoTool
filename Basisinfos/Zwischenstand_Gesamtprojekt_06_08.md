@@ -541,6 +541,128 @@ bestätigt, nicht widerlegt.
 
 ---
 
+
+---
+
+# 8c. Warum die Nicht-Krypto-Klassen fast nur HALTEN sagen (07.08.2026)
+
+**Anlass:** Nutzer-Beobachtung "da hier keine Signale und Empfehlungen kommen".
+Nachgemessen: es kommen sehr wohl Signale — **201 Nicht-Krypto-Spot-Signale**
+allein im Exportfenster. Sie lauten nur fast alle HALTEN.
+
+| Klasse | HALTEN | KAUFEN/NACHKAUFEN | VERKAUFEN |
+|---|---|---|---|
+| Aktien | 43 | **0** | **0** |
+| Themen-ETF | 89 | **0** | **0** |
+| Rohstoffe | 65 | **0** | 4 |
+| Hedge | 20 | 14 | 2 |
+
+Aktien und Themen-ETF haben in der **gesamten Historie nie etwas anderes als
+HALTEN** gesagt.
+
+## Drei Ursachen, nach Gewicht
+
+### 1. Es fehlt das Akkumulations-Framework — der Hauptgrund
+
+Wortzählung in den System-Prompts:
+
+| Prompt | „Tranche" | „antizyklisch" |
+|---|---|---|
+| **Krypto-Spot** | **7** | **15** |
+| Aktien | – | – |
+| Themen-ETF | – | – |
+| Rohstoffe | – | – |
+
+Krypto-Spot hat ein vollständiges Aufstockungs-Konzept: Tranchen, antizyklische
+Zonen, Boden-Zielzone. Die drei anderen Spot-Klassen **kennen `NACHKAUFEN` nur
+als Wort, ohne Mechanik dahinter**.
+
+Für eine langfristig gehaltene Position ohne Aufstockungs-Anlass bleiben genau
+zwei sinnvolle Antworten: HALTEN (These intakt) oder VERKAUFEN (These
+gebrochen). Regel 6 der Prompts schreibt das sogar ausdrücklich vor:
+
+> *„Ist nur (a) schwach, aber (b) intakt, empfiehl HALTEN trotz kurzfristiger
+> Schwäche."*
+
+**Das System verhält sich also regelkonform.** Die Lücke ist nicht ein Fehler
+im Modell, sondern eine fehlende Handlungsoption im Regelwerk.
+
+### 2. Ein Viertel erreicht das LLM gar nicht — aber der Großteil ist Vergangenheit
+
+**49 von 201** Signalen sind Fixed-Signale ohne jede Analyse. Beim Nachdatieren
+zeigt sich jedoch, dass zwei der drei Gründe **bereits behoben sind**:
+
+| Grund | Anzahl | Zeitraum | seit 05.08. |
+|---|---|---|---|
+| Historie veraltet (ISOC, letzter Tag 2025-09-10) | 6 | 18.–27.07. | **0** |
+| keine historischen Daten (X136) | 6 | 18.–27.07. | **0** |
+| Preis veraltet oder nicht vorhanden | 38 | 07.07.–05.08. | **13** |
+
+ISOC führt heute 3.646 OHLC-Punkte bis zum 06.08., X136 156 Punkte bis zum
+06.08. — **beide Historien sind längst nachgeladen.** Ein Vorschlag „ISOC/X136
+reparieren" wäre Arbeit an einem erledigten Punkt gewesen; erst die Datierung
+der Fälle hat das gezeigt.
+
+**Was bleibt: „Preis veraltet"**, 13 Fälle seit dem 05.08. Das ist aber **kein
+Nicht-Krypto-Problem** — betroffen sind auch BTC (12×), ETH, SEI, KAS. Es
+gehört zur Staleness-Überwachung insgesamt, nicht in diese Untersuchung.
+
+### 3. Das Gate ist NICHT die Ursache
+
+In der gesamten Historie: **5 Risk-Vetos** (R-5.10, Konfidenz unter
+Regime-Schwelle), 0 Cash-Vetos. Die HALTEN kommen vom Modell, nicht vom Filter.
+Die Konfidenz liegt mit Median 66 % nur knapp unter Krypto (70 %) — das Modell
+ist nicht ratlos, es hat schlicht keinen Anlass zu handeln.
+
+## Der Zeithorizont — die zweite Hälfte der Antwort
+
+**Nutzer-Vorgabe (07.08.):** Spot, ETF, Aktien und Rohstoffe werden über
+**Monate** gehalten; Hebel über **1–5, maximal 14 Tage**.
+
+Was das System heute tut:
+
+| | |
+|---|---|
+| Ablauffristen (gestaffelt, ✔) | kurz 14 / mittel 45 / lang 120 Tage |
+| Zuordnung | **vom LLM je Signal** über `halte_kriterium_bucket` |
+| Basislinien-Horizont | **fest 14 Tage für ALLE Klassen** |
+
+Daraus folgen zwei Messfehler:
+
+**(a) Die Basislinie passt nicht zum Horizont.** Eine Position mit 120 Tagen
+Frist wird gegen einen 14-Tage-Zufallseinstieg verglichen. Der Signalbeitrag
+(`Expectancy − Basislinie`) ist damit für die langfristigen Klassen
+systematisch falsch berechnet.
+
+**(b) Der Horizont kommt vom Modell, nicht von der Assetklasse.** 1.117 von
+1.703 Hebel-Signalen tragen `mittel` = 45 Tage — bei einer Handelspraxis von
+1–5 Tagen. Umgekehrt liegen 59 von 89 Themen-ETF-Signalen ebenfalls auf
+`mittel`, obwohl dort Monate gemeint sind. **Beide Klassen bekommen denselben
+Bucket für völlig verschiedene Praxis.**
+
+> **Das ist die „andere Lösung", nach der gefragt wurde:** der Zeithorizont
+> gehört an die **Assetklasse** gebunden, nicht an das Einzelurteil des Modells.
+> Das Modell darf innerhalb des Klassenrahmens verfeinern, aber nicht einen
+> Hebel-Trade auf 45 Tage stellen, wenn die Praxis 1–5 Tage ist.
+
+## Was daraus folgt — Vorschläge, nach Aufwand
+
+| # | Maßnahme | Aufwand | Wirkung |
+|---|---|---|---|
+| ~~H-1~~ | ~~ISOC/X136-Historie reparieren~~ — **bereits behoben**, letzter Fall 27.07.; beide führen heute Daten bis zum 06.08. | — | zurückgezogen |
+| **H-2** | Zeithorizont je Assetklasse **deckeln** statt frei vom LLM setzen zu lassen | mittel | behebt (b); Voraussetzung für jede Aussage über Haltedauer und Kosten |
+| **H-3** | Basislinien-Horizont an den Bucket koppeln statt fest 14 Tage | mittel | behebt (a); ohne ihn ist der Signalbeitrag der langfristigen Klassen falsch |
+| **H-4** | Akkumulations-Konzept für Aktien/ETF/Rohstoffe | groß | **der eigentliche Hebel** — ohne ihn bleibt HALTEN die einzige regelkonforme Antwort |
+
+**H-4 ist die Ursache, H-2 und H-3 sind Voraussetzungen dafür, dass man den
+Erfolg von H-4 überhaupt messen könnte.** Ein Akkumulations-Konzept einzuführen,
+während die Basislinie den falschen Horizont hat, würde eine Verbesserung
+erzeugen, die man nicht belegen kann.
+
+**Nicht auf der Liste, bewusst:** die Gates lockern. Sie sind nachweislich nicht
+die Ursache (5 Vetos gesamt), und eine Lockerung würde die Diagnose verwischen.
+
+
 ## Quellen (extern)
 
 - [System Quality Number — Formel und Bewertungsskala, QuantMonitor](https://quantmonitor.net/system-quality-number-sqn/)
