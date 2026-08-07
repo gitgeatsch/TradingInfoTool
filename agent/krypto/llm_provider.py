@@ -32,6 +32,10 @@ def llm_model_label(llm_client) -> str:
         from api.mistral import DEFAULT_MODEL
 
         return f"mistral:{DEFAULT_MODEL}"
+    if module.endswith("openrouter"):
+        from api.openrouter import DEFAULT_MODEL
+
+        return f"openrouter:{DEFAULT_MODEL}"
     if module.endswith("zai"):
         from api.zai import DEFAULT_MODEL
 

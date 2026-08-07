@@ -16,6 +16,8 @@ from api.gemini import GeminiClient
 from api.history import backfill_all
 from api.groq import GroqClient
 from api.mistral import MistralClient
+from api.openrouter import DEFAULT_MODEL as OPENROUTER_MODELL
+from api.openrouter import OpenRouterClient
 from api.zai import ZaiClient
 from api.kraken import KrakenClient
 from api.kraken_history import backfill_all_ohlc
@@ -169,6 +171,30 @@ def main() -> None:
         zai_client = None
         logger.info("Kein ZAI_API_KEY gesetzt - Z.ai-Fallback-Stufe deaktiviert.")
 
+    # OPENROUTER FUER DIE GEGENPRUEFUNG (2026-08-07). Siehe api/openrouter.py -
+    # kurz: Mistral ist kostenpflichtig geworden, danach trug Gemini allein alle
+    # 142 Signale. OpenRouter bringt Redundanz ueber offen gewichtete Modelle mit
+    # grossem Kontext.
+    #
+    # AUSDRUECKLICH NUR FUER DIE GEGENPRUEFUNG. Die freien Endpunkte verlangen
+    # aktiviertes Logging/Training; der Nutzer hat das am 07.08. fuer den
+    # SCHLANKEN Gegenpruefungs-Faktensatz freigegeben - nicht fuer den
+    # SYSTEM_PROMPT, der mit ~9.100 Token das Regelwerk enthaelt. Deshalb wird
+    # dieser Client NICHT an den Budget-Allocator uebergeben.
+    openrouter_api_key = os.environ.get("OPENROUTER_API_KEY")
+    if openrouter_api_key:
+        gegenpruefung_client = OpenRouterClient(api_key=openrouter_api_key)
+        logger.info(
+            "OpenRouter API-Key gefunden - uebernimmt die Gegenpruefung (%s). Z.ai bleibt "
+            "als Rueckfall, falls OpenRouter ausfaellt. NICHT Teil der Signal-Kette.",
+            OPENROUTER_MODELL,
+        )
+    else:
+        gegenpruefung_client = zai_client
+        logger.info(
+            "Kein OPENROUTER_API_KEY gesetzt - Gegenpruefung laeuft wie bisher ueber Z.ai."
+        )
+
     gemini_api_key = os.environ.get("GEMINI_API_KEY")
     if gemini_api_key:
         gemini_client = GeminiClient(api_key=gemini_api_key)
@@ -287,7 +313,7 @@ def main() -> None:
         fred_api_key=fred_api_key,
         bitpanda_api_key=bitpanda_api_key,
         mistral_client=mistral_client,
-        zai_client=zai_client,
+        zai_client=gegenpruefung_client,
     )
     bg_scheduler.start()
 
@@ -326,7 +352,7 @@ def main() -> None:
             fred_api_key=fred_api_key,
             bitpanda_api_key=bitpanda_api_key,
             mistral_client=mistral_client,
-            zai_client=zai_client,
+            zai_client=gegenpruefung_client,
         )
     finally:
         bg_scheduler.shutdown(wait=False)

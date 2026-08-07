@@ -15185,3 +15185,61 @@ wenn ein kompletter Call unter 8K bleibt - also System-Prompt unter ~4.500
 Token. Das waere ein Eingriff bei UNS statt beim Anbieter, und er wirkt bei
 jedem Anbieter gleichzeitig. Die Qualitaetswirkung einer Prompt-Kuerzung muss
 allerdings gemessen werden, nicht behauptet.
+
+## Nachtrag (2026-08-07): OpenRouter fuer die Gegenpruefung — Redundanz ohne das Regelwerk wegzugeben
+
+Nutzer-Entscheidung nach der Aufschluesselung: OpenRouter kommt, aber
+**ausschliesslich in die Gegenpruefung**.
+
+### Warum diese Abgrenzung und keine andere
+
+Die freien Endpunkte auf OpenRouter verlangen aktiviertes Logging/Training -
+Prompts werden Trainings- bzw. Evaluierungsmaterial. Unser SYSTEM_PROMPT ist mit
+**~9.100 Token das inhaltliche Herzstueck des Projekts** (Regelwerk,
+Bewertungslogik, Risikokriterien). Ihn dorthin zu schicken hiesse, genau diese
+Arbeit wegzugeben.
+
+Die Gegenpruefung (`agent/krypto/gegenpruefung.py`) benutzt dagegen einen
+bewusst schlanken Faktensatz von rund zehn Feldern und sieht den SYSTEM_PROMPT
+**nie**. Genau dafuer - und nur dafuer - hat der Nutzer die Trainings-Freigabe
+erteilt. Der Test `teste_openrouter_gegenpruefung.py` haelt das fest (B1/B4):
+der Client darf nicht als `mistral_client`/`gemini_client` uebergeben werden,
+und der Budget-Allocator kennt ihn nicht.
+
+### Wie keine Kosten entstehen — im Code, nicht auf Disziplin gebaut
+
+Auf OpenRouter existieren Modelle doppelt: bezahlt und mit `:free`-Suffix zum
+Nullpreis. `OpenRouterClient.chat()` **weist jede ID ohne dieses Suffix ab, vor
+dem Netzwerk-Call**. Zweitens: genau ein explizites Modell je Anfrage, kein
+`models`-Array, kein Auto-Router - beides koennte auf einer bezahlten Variante
+landen.
+
+Der Nutzer hat ausdruecklich gesagt, eine frueher geleistete Einmalzahlung sei
+ein Fehler gewesen. Deshalb ist A2/A3 im Test der Kern: ein Tippfehler in einer
+Modell-ID darf kein Guthaben kosten.
+
+### Der Tagesboden, verifiziert an OpenRouters eigener Doku
+
+| Credits gekauft (**lifetime**) | Anfragen/Min | Anfragen/Tag |
+|---|---|---|
+| unter 10 $ | 20 | 50 |
+| ab 10 $ | 20 | **1.000** |
+
+Massgeblich ist "Credits purchased (all time)", **nicht der aktuelle Kontostand**
+- die 1.000/Tag bleiben auch nach Verbrauch. Und weil Free-Modelle 0 $/Token
+kosten, zehren sie das Guthaben nicht auf: die 10 $ waeren eine einmalige
+Schwelle, keine verbrauchte Zahlung. Ueberschreitung liefert 429, keine stille
+Abbuchung.
+
+**Bewusst noch NICHT bezahlt.** Ohne Aufladung sind es 50 Anfragen/Tag - bei
+rund 142 Gegenpruefungen also etwa ein Drittel Abdeckung. Das genuegt, um zu
+messen, ob die Modelle unser Format liefern. Erst danach ist die Aufladung eine
+informierte Entscheidung.
+
+### Wartungspunkt
+
+Die Free-Liste auf OpenRouter **rotiert ohne Vorwarnung**. Faellt
+`deepseek/deepseek-r1:free` weg, liefert die API einen Fehler; der Circuit
+Breaker von heute frueh faengt das ab, aber `DEFAULT_MODEL` in
+`api/openrouter.py` muss dann nachgezogen werden. Ohne `OPENROUTER_API_KEY`
+laeuft die Gegenpruefung unveraendert ueber Z.ai.
