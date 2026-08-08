@@ -225,7 +225,7 @@ class ScreenerView(ttk.Frame):
         # nicht unbemerkt wirkt.
         _vorher = len(candidates)
         candidates = [c for c in candidates
-                      if config.kandidat_ist_handelbar(c.bitpanda_gelistet)]
+                      if config_module.kandidat_ist_handelbar(c.bitpanda_gelistet)]
         self._ausgeblendet = _vorher - len(candidates)
 
         self._candidates = candidates
@@ -292,13 +292,14 @@ class ScreenerView(ttk.Frame):
                 # "welches Asset und was macht das Asset - vor allem bei ETF
                 # relevant". Braucht keine neue Datenquelle - Name,
                 # Instrumententyp und Kategorie liegen bereits vor.
-                steckbrief = config.asset_steckbrief(
+                steckbrief = config_module.asset_steckbrief(
                     c.symbol, c.name, getattr(c, "bitpanda_group", None),
                     c.hauptgruppe, c.unterkategorie, c.bitpanda_gelistet)
-                verwandte = config.verwandte_kategorien(c.hauptgruppe, c.unterkategorie)
+                verwandte = config_module.verwandte_kategorien(
+                    c.hauptgruppe, c.unterkategorie)
                 if verwandte:
                     lesbar = ", ".join(
-                        config._kategorie_klartext(h, u) or h for h, u in verwandte)
+                        config_module._kategorie_klartext(h, u) or h for h, u in verwandte)
                     steckbrief += f"\n\nThematisch verwandt: {lesbar}"
                 self._row_tooltips[str(idx)] = "\n\n".join([steckbrief] + tooltip_teile)
             if c.bitpanda_gelistet is False:
