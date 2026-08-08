@@ -15571,3 +15571,77 @@ sind einholbar": der naheliegende Griff (Breakeven-Lock) wurde am 01.08.
 geprüft und verworfen, weil er 63 % der Gewinner kostete. Jede künftige
 Ausstiegsregel muss auf beiden Seiten gemessen werden — was sie bei Verlierern
 rettet UND was sie bei Gewinnern kostet. Netto-R, nicht gerettetes R.
+
+## Nachtrag (2026-08-09): Teil C2 verdrahtet — OpenRouter steht in der Signal-Kette
+
+Damit ist der Schalter aus `0753f4e` keine Absichtserklärung mehr. Die drei
+`calls`-Listen in `agent/krypto/budget_allocator.py` (Hebel, Marktscan, Spot)
+laufen jetzt **Gemini → OpenRouter → Mistral**, und Budget, Tageszähler und
+Circuit Breaker kennen `openrouter` als vollwertige Stufe.
+
+### Zuerst gemessen, dann verdrahtet
+
+`api_health_status` meldete für OpenRouter am 08.08. um 07:04 lokal *„Kein
+Modell aus FREE_MODELLE hat geantwortet (3 versucht). Letzter Fehler: 404
+unavailable for free"*. Eine Kette in einen Anbieter zu verdrahten, der gerade
+404 liefert, wäre genau die stille Attrappe gewesen, die der Vorbereitungs-
+Commit vermeiden wollte. Deshalb vorab eine Erreichbarkeitsprobe mit den
+**produktiven** Parametern, jedes Modell einzeln (`model=` gesetzt, keine
+Rotation — der Sammelfehler „3 versucht" sagt nicht, ob eines oder alle
+ausgefallen sind):
+
+    OK      1,0 s   nvidia/nemotron-3-super-120b-a12b:free
+    OK      3,3 s   openai/gpt-oss-20b:free
+    FEHL    1,8 s   google/gemma-4-31b-it:free      429 Too Many Requests
+
+**Der 404 war vorübergehend.** `gemma-4-31b-it` liefert weiter 429 — genau wie
+der Codekommentar es seit dem 07.08. vermerkt. Es bleibt damit **ungeprüft,
+nicht widerlegt** (siehe Memory `feedback_katalog_ist_keine_messung`: ein
+Modell, das wegen Auslastung nicht antwortet, ist ungemessen). Als dritter
+Rückfalleintrag kostet es nur dann etwas, wenn die ersten beiden ausfallen.
+
+### Zwei Dinge, die beim Verdrahten aufgefallen sind
+
+**Der Laufzähler liegt für OpenRouter zu niedrig.** Der DB-Zähler ist richtig —
+`zaehle_aufruf()` sitzt in `_ein_call()` und zählt jeden HTTP-Aufruf der
+Modell-Rotation einzeln. Die Hochzählung *innerhalb* eines Laufs addiert
+dagegen +1 je erzeugtem Signal und liegt damit bis zu dreimal zu niedrig (drei
+Modelle in der Rotation, dazu 1,31 Versuche je Fall). Bewusst nicht repariert:
+ein Lauf hat typisch ein bis zwei Kandidaten, beim nächsten Lauf wird ohnehin
+wieder aus der DB gelesen — die Abweichung lebt maximal 15 Minuten. Der
+Tagesdeckel greift über den DB-Wert, nicht über die Laufvariable.
+
+**OpenRouter teilt sich `api_health_status` mit der Gegenprüfung.** Beide
+Verwendungen sind unter derselben Quelle `"openrouter"` dekoriert, ein
+dauerhafter Fehler der Gegenprüfung sperrt also auch die Signal-Kette. Das ist
+gewollt: 401/402/403 sind Kontofragen und gelten für jede Verwendung desselben
+Schlüssels. Nur vorübergehende Fehler wandern nicht über Laufgrenzen — deshalb
+sperrt der 429 von `gemma-4-31b-it` hier nichts.
+
+### Geprüft an der echten Funktion, nicht an einem Nachbau
+
+`teste_kette_reihenfolge.py`, sechs Läufe über die **echte**
+`run_budget_allocator()` mit echter Watchlist aus `config.yaml` und echten
+DB-Zeilen aus einer migrierten Kopie. Attrappe sind nur die drei
+Signal-Erzeuger — geprüft wird, welcher Client bei ihnen ankommt.
+
+| Lauf | Erwartung | Ergebnis |
+|---|---|---|
+| alle drei gesund | Gemini bedient alles, die anderen werden nicht versucht | 6× gemini, 0/0 |
+| Gemini aus | OpenRouter übernimmt, Mistral bleibt unberührt | 6× openrouter, Mistral 0 |
+| Gemini + OpenRouter aus | Mistral trägt, kein Kandidat fällt durch | 6× mistral, 0 fehlgeschlagen |
+| OpenRouter-Budget 0 | Stufe wird **übersprungen**, nicht versucht | OpenRouter 0 Aufrufe, `budget_erschoepft` meldet ihn |
+| OpenRouter 402 | Breaker sperrt nach dem **ersten** Fehler | genau 1 Versuch statt 6 |
+| kein OpenRouter-Client | alte Kette Gemini → Mistral unverändert | 6× mistral |
+
+13 Zusicherungen, alle bestanden. Der Test enthält eine **Wache gegen den
+leeren Lauf**: ohne mindestens zwei Kandidaten wären alle Aussagen wahr, ohne
+irgendetwas geprüft zu haben — es waren je sechs.
+
+### Was C2 ausdrücklich noch NICHT tut
+
+`scheduler/background.py` übergibt `openrouter_client` nicht, und das Gate bei
+Zeile 2747 (`any(c is not None for c in (mistral, gemini, zai))`) kennt ihn
+nicht. **C2 ist damit produktiv verhaltensneutral** — der Parameter hat den
+Vorgabewert `None`. Offen bleiben C3 (dasselbe in `agent/multi_asset_batch.py`)
+und C4 (main.py → `build_scheduler` → Job-Argumente, plus das Gate oben).

@@ -14,6 +14,40 @@ Verteilungsformel (1:1 aus docs/budget_queue_design.md):
     rest_fuer_3 = B - tier1_verbraucht - tier2_verbraucht
     tier3_verbraucht = min(anzahl_faelliger_spot_assets, rest_fuer_3)
 
+FALLBACK-KETTE, STAND 2026-08-09: Gemini -> OpenRouter -> Mistral.
+
+Begruendet mit Durchsatz, Verfuegbarkeit und Vertragslage - AUSDRUECKLICH NICHT
+mit Urteilsqualitaet: dafuer gibt es keine Daten (Gemini hat null aufgeloeste
+Signale, siehe Regelwerk_Entscheidungslog.md zum 09.08.).
+
+  Gemini zuerst   - einziger Anbieter mit belegtem Durchsatz am ECHTEN
+                    Signal-Prompt (5/5 gueltig, Median 5,5 s, 1,00 Versuche je
+                    Fall). Der Grund fuer seine bisherige spaete Position -
+                    nicht abwaehlbare Trainings-Nutzung - ist durch die
+                    Nutzer-Entscheidung vom 08.08. entfallen (siehe unten).
+                    Faktisch trug er seit dem 07.08. ohnehin 100 % der Signale.
+  OpenRouter 2.   - `nemotron-3-super-120b`, 16/20 am echten Prompt bei Median
+                    47,9 s, mit striktem Schema 20,8 s. Echte Redundanz statt
+                    einer zweiten Meinung. Der Client rotiert intern ueber
+                    FREE_MODELLE - EIN Kettenschritt kann also bis zu drei
+                    HTTP-Aufrufe bedeuten.
+  Mistral zuletzt - und NICHT wegen der gemessenen -0,49 R: die sind mit dem
+                    Zeitraum verwechselt, derselbe Verfall zeigt sich innerhalb
+                    von Mistral bei konstantem Anbieter. Die tragenden Gruende:
+                    (1) Mistral kehrt ca. 31.08. zurueck und wuerde den
+                    Primaerplatz sonst stillschweigend zurueckerobern, ohne dass
+                    jemand das entschieden haette; (2) sein neuer Free-Plan ist
+                    ein 10-$-Monatsbudget kontoweit - das traegt keine 142
+                    Aufrufe pro Tag.
+
+Der Datenschutz-Grund, der OpenRouter bis zum 08.08. aus dieser Kette
+heraushielt, ist ENTFALLEN: Gemini hat laut eigener Doku nicht abwaehlbare
+Trainings-Nutzung und trug 100 % der Signale - das Regelwerk war also laengst
+Trainingsmaterial. Nutzer-Entscheidung 08.08.: Trainings-Nutzung fuer die
+Signal-Kette akzeptiert, fuer beide Anbieter gemeinsam.
+
+--- Ab hier HISTORISCH: die Kette VOR dem 2026-08-09 ---------------------
+
 Fallback-Kette (Stand 2026-07-26) Mistral -> Gemini -> Z.ai - Groq wurde
 2026-07-26 vollstaendig aus dieser AUTOMATISCHEN Kette entfernt (siehe
 Memory project_groq_entfernung_2026-07-26.md): ein reproduzierter
@@ -54,19 +88,26 @@ Stufe uebernommen (echt verifizierte Kapazitaet weit ueber Cerebras/Gemini,
 saubere Vertragsbedingungen). Der `CEREBRAS_API_KEY` bleibt einzig in `.env`
 als Referenz stehen, jetzt kommentiert als obsolet fuer die Produktion.
 
-Fuer jeden ausgewaehlten Kandidaten wird ZUERST Mistral versucht (falls
-`mistral_client` gesetzt); schlaegt der Call fehl (jede Exception -
-Netzwerk, HTTP-Fehler, Rate-Limit), wird SOFORT die naechste Stufe
-versucht, solange deren eigener Tages-Deckel (config
-mistral_taegliches_budget/gemini_taegliches_budget) noch nicht erschoepft
-ist. Gemini bleibt bewusst nahe am Ende der Kette -
-vertraglich die ungueenstigsten Bedingungen aller Anbieter (EWR/CH/UK-
-Sonderklausel, explizite Warnung vor vertraulichen/Finanzdaten, nicht
-abwaehlbare Trainings-Nutzung - siehe Memory), soll deshalb am seltensten
-drankommen. Kandidaten, die an ALLEN verfuegbaren Stufen scheitern, bleiben
-unverarbeitet - kein Datenverlust (P-10), der naechste 15-Min-Lauf bewertet
-sie automatisch neu. `mistral_client`/`gemini_client`/`zai_client` sind alle
-optional (P-8).
+(HISTORISCHE BEGRUENDUNG, seit 2026-08-09 ueberholt: "Gemini bleibt bewusst
+nahe am Ende der Kette - vertraglich die unguenstigsten Bedingungen aller
+Anbieter (EWR/CH/UK-Sonderklausel, explizite Warnung vor vertraulichen/
+Finanzdaten, nicht abwaehlbare Trainings-Nutzung), soll deshalb am seltensten
+drankommen." Diese Abwaegung ist mit der Nutzer-Entscheidung vom 08.08.
+gegenstandslos geworden - siehe oben.)
+
+--- Ende HISTORISCH ------------------------------------------------------
+
+DER MECHANISMUS, unabhaengig von der jeweiligen Reihenfolge: fuer jeden
+ausgewaehlten Kandidaten werden die Stufen der Reihe nach versucht. Schlaegt
+ein Call fehl (jede Exception - Netzwerk, HTTP-Fehler, Rate-Limit), ist SOFORT
+die naechste Stufe an der Reihe. Eine Stufe wird uebersprungen (nicht versucht),
+wenn ihr eigener Tages-Deckel erschoepft ist (config
+mistral_/gemini_/openrouter_taegliches_budget) oder der Circuit Breaker sie
+fuer diesen Lauf gesperrt hat. Kandidaten, die an ALLEN verfuegbaren Stufen
+scheitern, bleiben unverarbeitet - kein Datenverlust (P-10), der naechste
+15-Min-Lauf bewertet sie automatisch neu. `gemini_client`/`openrouter_client`/
+`mistral_client`/`zai_client` sind alle optional (P-8); welche Stufen es
+ueberhaupt gibt, entscheidet allein, welche Clients uebergeben werden.
 
 Nachtrag (2026-07-26, Z.ai-Gegenpruefungslogik, siehe agent/krypto/
 gegenpruefung.py): Z.ai ist NICHT mehr Teil dieser Fallback-Kette (weder
@@ -86,12 +127,20 @@ informativ ueber `database.db.count_zai_gegenpruefung_calls_today()` auf der
 Remote-Steuer-Seite angezeigt, bewusst OHNE Tagesdeckel (Z.ai hat laut
 Nutzer-Vorgabe keinen, nur den 120/Min-Rate-Limiter im Client selbst).
 
-Echte Tages-Zaehler (2026-07-14-Fix): Mistrals/Gemini's Tagesbudget wird zu
-Beginn jedes Laufs EINMAL per db.count_real_llm_calls_today_by_provider()
-aus der DB gelesen (nicht mehr nur eine lokale, bei jedem 15-Min-Lauf
-zurueckgesetzte Variable) - vorher konnte eine feste Tagesgrenze innerhalb
-eines einzelnen Laufs (max. ~15 Kandidaten) nie erreicht werden, die
-Tagesobergrenze wirkte also nie wirklich."""
+Echte Tages-Zaehler (2026-07-14-Fix): das Tagesbudget jedes Anbieters wird zu
+Beginn jedes Laufs EINMAL aus der DB gelesen (nicht mehr nur eine lokale, bei
+jedem 15-Min-Lauf zurueckgesetzte Variable) - vorher konnte eine feste
+Tagesgrenze innerhalb eines einzelnen Laufs (max. ~15 Kandidaten) nie erreicht
+werden, die Tagesobergrenze wirkte also nie wirklich.
+
+Nachtrag (2026-08-09, Teil B): gelesen wird jetzt ueber
+`db.get_llm_budget_zaehler()`, das ECHTE AUFRUFE zaehlt - nicht mehr ueber
+`count_real_llm_calls_today_by_provider()`, das Signal-ZEILEN zaehlt. Ein
+fehlgeschlagener Aufruf erzeugt keine Zeile: am 07.08. stand Mistrals Zaehler
+den ganzen Tag auf 0, waehrend jeder Kandidat dort ein 402 kassierte, und
+`mistral_budget_erschoepft` konnte nie True werden. Fuer das QUALITAETS-Tracking
+(wer hat dieses Signal erzeugt) bleibt "Datensaetze" richtig - deshalb zwei
+getrennte Zaehler statt eines umgebauten."""
 from __future__ import annotations
 
 import json
@@ -372,7 +421,20 @@ def run_budget_allocator(
     mistral_client=None,
     zai_client=None,
     on_signal_ready=None,
+    openrouter_client=None,
 ) -> AllocationResult:
+    """Kettenreihenfolge seit 2026-08-09: Gemini -> OpenRouter -> Mistral.
+
+    `openrouter_client` steht bewusst HINTER `on_signal_ready` statt bei den
+    anderen Clients: alle bestehenden Aufrufer uebergeben ihre Argumente
+    benannt, aber ein neuer Parameter in der Mitte waere trotzdem eine Falle
+    fuer jeden kuenftigen positionellen Aufruf.
+
+    Ob OpenRouter mitspielt, entscheidet AUSSCHLIESSLICH, ob hier ein Client
+    ankommt - dieselbe Bauart wie bei `mistral_client`/`gemini_client`. Der
+    Schalter `budget_allocator.openrouter_aktiv` wird deshalb in main.py
+    ausgewertet und nicht hier noch einmal: zwei Tore fuer eine Entscheidung
+    bedeuten, dass irgendwann eines vergessen wird."""
     cfg = config_dict.get("budget_allocator", {})
     result = AllocationResult()
     if not cfg.get("aktiv", True):
@@ -382,6 +444,9 @@ def run_budget_allocator(
     spot_reserve = cfg.get("spot_rotation_reserve", 5)
     mistral_budget = cfg.get("mistral_taegliches_budget", 150)
     gemini_budget = cfg.get("gemini_taegliches_budget", 200)
+    # OpenRouter (2026-08-09, Teil C2). Der Wert steht seit 0753f4e in der
+    # config und wurde bis hierher von niemandem gelesen.
+    openrouter_budget = cfg.get("openrouter_taegliches_budget", 400)
     cooldown_stunden = cfg.get("cooldown_stunden", 3.5)
     marktscan_kandidat_verfall_stunden = cfg.get("marktscan_kandidat_verfall_stunden", 48.0)
     hebel_cooldown_stunden_ausgemustert = cfg.get(
@@ -562,9 +627,22 @@ def run_budget_allocator(
         # `get_api_call_counter_taeglich()` existierte bereits (seit 2026-08-01
         # fuer CoinGecko) und zaehlt echte Aufrufe; geschrieben wird in
         # api/llm_basis.py::zaehle_aufruf().
+        #
+        # OPENROUTER STEHT HIER MIT EINEM VORBEHALT (2026-08-09, Teil C2). Der
+        # DB-Zaehler ist fuer ihn richtig - `zaehle_aufruf()` sitzt in
+        # `_ein_call()`, zaehlt also jeden HTTP-Aufruf der Modell-Rotation
+        # einzeln. Die Hochzaehlung INNERHALB eines Laufs weiter unten in
+        # `_mit_fallback_chain()` addiert dagegen +1 je erzeugtem Signal und
+        # liegt damit fuer OpenRouter bis zu dreimal zu niedrig (drei Modelle in
+        # der Rotation, dazu 1,31 Versuche je Fall). Das ist bewusst nicht
+        # repariert: ein Lauf hat typisch ein bis zwei Kandidaten, und beim
+        # naechsten Lauf wird ohnehin wieder aus der DB gelesen - die Abweichung
+        # lebt maximal 15 Minuten und korrigiert sich von selbst. Der Tagesdeckel
+        # greift also ueber den DB-Wert, nicht ueber die Laufvariable.
         tages_verbraucht = {
             "mistral": db.get_llm_budget_zaehler(conn, "mistral"),
             "gemini": db.get_llm_budget_zaehler(conn, "gemini"),
+            "openrouter": db.get_llm_budget_zaehler(conn, "openrouter"),
         }
         # CIRCUIT BREAKER, vorbelegt aus api_health_status (2026-08-07).
         #
@@ -577,10 +655,24 @@ def run_budget_allocator(
         # Aufrufe - ein fehlgeschlagener Call erzeugt keine Zeile und bleibt
         # unsichtbar. Deshalb stand fuer Mistral am 07.08. den ganzen Tag 0,
         # waehrend jeder Kandidat dort vergeblich anklopfte.
-        sperre = provider_sperre.vorbelegte_sperre(conn, ("mistral", "gemini"))
+        #
+        # OPENROUTER TEILT SICH `api_health_status` MIT DER GEGENPRUEFUNG
+        # (2026-08-09) - beide Verwendungen sind unter derselben Quelle
+        # "openrouter" dekoriert. Ein dauerhafter Fehler, den die Gegenpruefung
+        # kassiert, sperrt also auch die Signal-Kette. Das ist GEWOLLT und nicht
+        # bloss hingenommen: 401/402/403 sind Kontofragen, die gelten fuer jede
+        # Verwendung desselben Schluessels gleichermassen. Nur voruebergehende
+        # Fehler (429, Timeout) wandern nicht ueber Laufgrenzen - siehe
+        # ist_dauerhafter_fehler(); genau deshalb sperrt der 429 von
+        # `gemma-4-31b-it:free` hier nichts.
+        sperre = provider_sperre.vorbelegte_sperre(conn, ("mistral", "gemini", "openrouter"))
     finally:
         conn.close()
-    tages_budget = {"mistral": mistral_budget, "gemini": gemini_budget}
+    tages_budget = {
+        "mistral": mistral_budget,
+        "gemini": gemini_budget,
+        "openrouter": openrouter_budget,
+    }
 
     tier1_n, tier2_n, tier3_n = _verteile_budget(
         len(hebel_kandidaten), len(marktscan_kandidaten), len(spot_kandidaten), budget_gesamt, spot_reserve,
@@ -687,18 +779,28 @@ def run_budget_allocator(
         if asset is None:
             continue
         schluessel = f"hebel:{trigger.symbol}:{trigger.richtung}"
+        # REIHENFOLGE Gemini -> OpenRouter -> Mistral (2026-08-09, Teil C2).
+        # Begruendung im Modul-Docstring - kurz: Durchsatz und Vertragslage,
+        # NICHT Urteilsqualitaet.
         calls = []
-        if mistral_client is not None:
-            calls.append(("mistral", lambda t=trigger, a=asset: _mit_conn(
-                lambda c: generate_hebel_signal(
-                    t, a, watchlist, c, mistral_client, coingecko_client, kraken_client, fred_api_key,
-                    zai_client=zai_client,
-                )
-            )))
         if gemini_client is not None:
             calls.append(("gemini", lambda t=trigger, a=asset: _mit_conn(
                 lambda c: generate_hebel_signal(
                     t, a, watchlist, c, gemini_client, coingecko_client, kraken_client, fred_api_key,
+                    zai_client=zai_client,
+                )
+            )))
+        if openrouter_client is not None:
+            calls.append(("openrouter", lambda t=trigger, a=asset: _mit_conn(
+                lambda c: generate_hebel_signal(
+                    t, a, watchlist, c, openrouter_client, coingecko_client, kraken_client, fred_api_key,
+                    zai_client=zai_client,
+                )
+            )))
+        if mistral_client is not None:
+            calls.append(("mistral", lambda t=trigger, a=asset: _mit_conn(
+                lambda c: generate_hebel_signal(
+                    t, a, watchlist, c, mistral_client, coingecko_client, kraken_client, fred_api_key,
                     zai_client=zai_client,
                 )
             )))
@@ -743,11 +845,14 @@ def run_budget_allocator(
 
         for candidate in marktscan_kandidaten[:tier2_n]:
             schluessel = f"marktscan:{candidate.coingecko_id}"
+            # REIHENFOLGE Gemini -> OpenRouter -> Mistral (2026-08-09, Teil C2).
             calls = []
-            if mistral_client is not None:
-                calls.append(("mistral", lambda c=candidate: _writeup(c, mistral_client)))
             if gemini_client is not None:
                 calls.append(("gemini", lambda c=candidate: _writeup(c, gemini_client)))
+            if openrouter_client is not None:
+                calls.append(("openrouter", lambda c=candidate: _writeup(c, openrouter_client)))
+            if mistral_client is not None:
+                calls.append(("mistral", lambda c=candidate: _writeup(c, mistral_client)))
             # Z.ai (2026-07-26) NICHT mehr Teil dieser Fallback-Kette - siehe
             # Hebel-Kandidatenschleife oben fuer die Begruendung.
             ok = _mit_fallback_chain(schluessel, calls)
@@ -757,19 +862,28 @@ def run_budget_allocator(
     # --- Tier 3: Spot-Rotation ---
     for asset in spot_kandidaten[:tier3_n]:
         schluessel = f"spot:{asset.symbol}"
+        # REIHENFOLGE Gemini -> OpenRouter -> Mistral (2026-08-09, Teil C2).
         calls = []
-        if mistral_client is not None:
-            calls.append(("mistral", lambda a=asset: _mit_conn(
-                lambda c: generate_signal(
-                    a, watchlist, c, mistral_client, coingecko_client, kraken_client, fred_api_key,
-                    zai_client=zai_client,
-                    war_re_evaluierung_faellig=a.symbol in re_evaluierung_faellig,
-                )
-            )))
         if gemini_client is not None:
             calls.append(("gemini", lambda a=asset: _mit_conn(
                 lambda c: generate_signal(
                     a, watchlist, c, gemini_client, coingecko_client, kraken_client, fred_api_key,
+                    zai_client=zai_client,
+                    war_re_evaluierung_faellig=a.symbol in re_evaluierung_faellig,
+                )
+            )))
+        if openrouter_client is not None:
+            calls.append(("openrouter", lambda a=asset: _mit_conn(
+                lambda c: generate_signal(
+                    a, watchlist, c, openrouter_client, coingecko_client, kraken_client, fred_api_key,
+                    zai_client=zai_client,
+                    war_re_evaluierung_faellig=a.symbol in re_evaluierung_faellig,
+                )
+            )))
+        if mistral_client is not None:
+            calls.append(("mistral", lambda a=asset: _mit_conn(
+                lambda c: generate_signal(
+                    a, watchlist, c, mistral_client, coingecko_client, kraken_client, fred_api_key,
                     zai_client=zai_client,
                     war_re_evaluierung_faellig=a.symbol in re_evaluierung_faellig,
                 )
