@@ -797,9 +797,14 @@ def marktscan_backward_tracking_job(
         )
         logger.info(
             "Marktscan-Erfolgsmessung: %d neue Messung(en) gestartet, %d geprüft, %d Erfolg(e), "
-            "%d kein Erfolg, %d Schnellerfolg(e)",
+            "%d kein Erfolg, %d Schnellerfolg(e)%s",
             result["neue_messungen"], result["geprueft"], result["erfolge"], result["kein_erfolg"],
             len(result["schnellerfolge"]),
+            # Seit 2026-08-09: der Preisabruf ist fail-soft (ein 504 hat vorher
+            # den ganzen Lauf beendet). Ohne diesen Zusatz sähe ein Lauf mit
+            # gescheitertem Abruf aus wie ein ruhiger Lauf mit 0 Prüfungen.
+            f" - ACHTUNG Preisabruf fehlgeschlagen: {result['preis_abruf_fehler']}"
+            if result.get("preis_abruf_fehler") else "",
         )
         _notify_marktscan_schnellerfolg(result["schnellerfolge"], config_dict)
     except Exception as exc:

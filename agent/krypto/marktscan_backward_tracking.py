@@ -204,9 +204,39 @@ def run_marktscan_backward_tracking(
         kein_erfolg = 0
         schnellerfolge = []
         offene = db.get_offene_marktscan_messungen(conn)
+        preis_abruf_fehler = None
         if offene:
             coingecko_ids = sorted({c.coingecko_id for c in offene})
-            preise = coingecko_client.get_simple_prices(coingecko_ids, vs_currencies=("usd",))
+            # EIN gebuendelter Abruf fuer ALLE offenen Messungen - und genau
+            # deshalb muss er fail-soft sein (2026-08-09, echter Vorfall):
+            # CoinGecko lieferte ein "504 Gateway Timeout" auf eine Anfrage mit
+            # 28 IDs, die Exception lief bis scheduler/background.py durch und
+            # beendete die GESAMTE Erfolgsmessung - inklusive der oben bereits
+            # gestarteten neuen Messungen.
+            #
+            # WARUM HIER UND NICHT IM CLIENT: api/zai.py haelt als bewusste
+            # Entscheidung fest, dass Timeout/5xx/Verbindungsfehler NICHT
+            # wiederholt werden - "P-8 (kein Hard-Fail, Aufrufer faengt die
+            # Exception ab)". Die Annahme stimmte hier nicht: der Aufrufer fing
+            # nichts ab. Repariert wird deshalb die Annahme, nicht der Client.
+            #
+            # FAIL-SOFT, ABER NICHT FAIL-SILENT: der Grund geht als Zaehler in
+            # das Ergebnis und damit in die Log-Zeile des Jobs. Ein Ausfall, den
+            # niemand sieht, ist von "es gab nichts zu pruefen" nicht zu
+            # unterscheiden (Memory feedback_fail_soft_ist_fail_silent).
+            # Unverarbeitete Messungen bleiben offen - der naechste Lauf prueft
+            # sie erneut, kein Datenverlust (P-10).
+            try:
+                preise = coingecko_client.get_simple_prices(coingecko_ids, vs_currencies=("usd",))
+            except Exception as exc:  # noqa: BLE001
+                preis_abruf_fehler = f"{type(exc).__name__}: {str(exc)[:160]}"
+                logger.warning(
+                    "Marktscan-Erfolgsmessung: Preisabruf fuer %d offene Messung(en) "
+                    "fehlgeschlagen (%s) - keine davon geprueft, sie bleiben offen und "
+                    "werden im naechsten Lauf erneut versucht.",
+                    len(coingecko_ids), preis_abruf_fehler,
+                )
+                preise = {}
             regime_result = None
             for candidate in offene:
                 preis_daten = preise.get(candidate.coingecko_id)
@@ -252,6 +282,10 @@ def run_marktscan_backward_tracking(
         return {
             "neue_messungen": neue_messungen, "geprueft": geprueft,
             "erfolge": erfolge, "kein_erfolg": kein_erfolg, "schnellerfolge": schnellerfolge,
+            # None, solange der Preisabruf durchging - sonst der Grund. Steht in
+            # der Log-Zeile des Jobs, damit ein stiller Ausfall nicht wie ein
+            # ruhiger Lauf aussieht.
+            "preis_abruf_fehler": preis_abruf_fehler,
         }
     finally:
         conn.close()
