@@ -1,0 +1,1 @@
+A json_object: 4 gueltig, 34.6s | B json_schema: 5 gueltig, 20.8s -> SCHEMA

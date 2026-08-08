@@ -1,0 +1,80 @@
+{
+ "nvidia/nemotron-3-ultra-550b-a55b:free": {
+  "ok": 2,
+  "format": 0,
+  "transport": 1,
+  "median": "390s"
+ },
+ "inclusionai/ling-3.0-tiny:free": {
+  "ok": 0,
+  "format": 0,
+  "transport": 3,
+  "median": "-"
+ },
+ "poolside/laguna-s-2.1:free": {
+  "ok": 0,
+  "format": 0,
+  "transport": 3,
+  "median": "-"
+ },
+ "poolside/laguna-xs-2.1:free": {
+  "ok": 3,
+  "format": 0,
+  "transport": 0,
+  "median": "19s"
+ },
+ "google/gemma-4-26b-a4b-it:free": {
+  "ok": 1,
+  "format": 1,
+  "transport": 1,
+  "median": "109s"
+ },
+ "nvidia/nemotron-3-super-120b-a12b:free": {
+  "ok": 2,
+  "format": 1,
+  "transport": 0,
+  "median": "41s"
+ },
+ "cohere/north-mini-code:free": {
+  "ok": 1,
+  "format": 0,
+  "transport": 2,
+  "median": "542s"
+ },
+ "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free": {
+  "ok": 1,
+  "format": 2,
+  "transport": 0,
+  "median": "76s"
+ },
+ "nvidia/nemotron-3-nano-30b-a3b:free": {
+  "ok": 0,
+  "format": 2,
+  "transport": 1,
+  "median": "-"
+ },
+ "openai/gpt-oss-20b:free": {
+  "ok": 2,
+  "format": 1,
+  "transport": 0,
+  "median": "53s"
+ },
+ "nvidia/nemotron-3.5-content-safety:free": {
+  "ok": 0,
+  "format": 3,
+  "transport": 0,
+  "median": "-"
+ },
+ "nvidia/nemotron-nano-12b-v2-vl:free": {
+  "ok": 0,
+  "format": 1,
+  "transport": 2,
+  "median": "-"
+ },
+ "nvidia/nemotron-nano-9b-v2:free": {
+  "ok": 1,
+  "format": 2,
+  "transport": 0,
+  "median": "94s"
+ }
+}

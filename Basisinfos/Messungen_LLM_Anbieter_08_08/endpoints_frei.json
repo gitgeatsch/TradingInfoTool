@@ -1,0 +1,90 @@
+{
+ "nvidia/nemotron-3-ultra-550b-a55b:free": [
+  [
+   "Nvidia",
+   99.68553078774538
+  ]
+ ],
+ "inclusionai/ling-3.0-tiny:free": [
+  [
+   "Novita",
+   97.51131221719457
+  ]
+ ],
+ "poolside/laguna-s-2.1:free": [
+  [
+   "Poolside",
+   99.99117776797529
+  ]
+ ],
+ "poolside/laguna-xs-2.1:free": [
+  [
+   "Poolside",
+   100
+  ]
+ ],
+ "google/gemma-4-26b-a4b-it:free": [
+  [
+   "Darkbloom",
+   96.05830903790088
+  ],
+  [
+   "Google AI Studio",
+   99.35897435897436
+  ]
+ ],
+ "google/gemma-4-31b-it:free": [
+  [
+   "Google AI Studio",
+   100
+  ]
+ ],
+ "nvidia/nemotron-3-super-120b-a12b:free": [
+  [
+   "Nvidia",
+   99.28120690375695
+  ]
+ ],
+ "cohere/north-mini-code:free": [
+  [
+   "Cohere",
+   97.36892278360342
+  ]
+ ],
+ "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free": [
+  [
+   "Nvidia",
+   99.1160220994475
+  ]
+ ],
+ "nvidia/nemotron-3-nano-30b-a3b:free": [
+  [
+   "Nvidia",
+   96.7316153362665
+  ]
+ ],
+ "openai/gpt-oss-20b:free": [
+  [
+   "Darkbloom",
+   97.42566610889433
+  ]
+ ],
+ "nvidia/nemotron-3.5-content-safety:free": [
+  [
+   "Nvidia",
+   99.05417024935511
+  ]
+ ],
+ "nvidia/nemotron-nano-12b-v2-vl:free": [
+  [
+   "Nvidia",
+   63.36274001037883
+  ]
+ ],
+ "nvidia/nemotron-nano-9b-v2:free": [
+  [
+   "Nvidia",
+   97.6928895612708
+  ]
+ ]
+}
