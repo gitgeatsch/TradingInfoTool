@@ -16,11 +16,9 @@ Nutzung von Prompt/Antwort fuer Google-Produktverbesserung der REGULAERE
 Free-Tier-Deal, kein optionales Bonus-Programm zum Abwaehlen (siehe Memory)."""
 from __future__ import annotations
 
-import time
-from collections import deque
-
 import requests
 
+from api.llm_basis import Minutenfenster, extrahiere_inhalt
 from database.api_health import track_api_health
 
 BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
@@ -46,17 +44,14 @@ class GeminiClient:
     def __init__(self, api_key: str, session: requests.Session | None = None):
         self._api_key = api_key
         self._session = session or requests.Session()
-        self._call_timestamps_minute: deque[float] = deque()
+        # Gemeinsame, THREAD-SICHERE Drossel (2026-08-09, api/llm_basis.py).
+        # Die vorherige Fassung stand hier viermal identisch in vier Clients
+        # und arbeitete ohne Lock - aufgerufen aus bis zu sechs gleichzeitigen
+        # Pipeline-Threads war das Limit eine Empfehlung, keine Grenze.
+        self._drossel = Minutenfenster(RATE_LIMIT_PER_MINUTE)
 
     def _respect_rate_limit(self) -> None:
-        now = time.monotonic()
-        while self._call_timestamps_minute and now - self._call_timestamps_minute[0] > 60:
-            self._call_timestamps_minute.popleft()
-        if len(self._call_timestamps_minute) >= RATE_LIMIT_PER_MINUTE:
-            sleep_for = 60 - (now - self._call_timestamps_minute[0])
-            if sleep_for > 0:
-                time.sleep(sleep_for)
-        self._call_timestamps_minute.append(time.monotonic())
+        self._drossel.warte_auf_slot()
 
     @track_api_health("gemini")
     def chat(
@@ -74,4 +69,4 @@ class GeminiClient:
         response = self._session.post(BASE_URL, json=payload, headers=headers, timeout=60)
         response.raise_for_status()
         data = response.json()
-        return data["choices"][0]["message"]["content"]
+        return extrahiere_inhalt(data, "Gemini")

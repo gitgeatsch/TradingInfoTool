@@ -58,11 +58,10 @@ Abbuchung.
 from __future__ import annotations
 
 import logging
-import threading
-import time
 
 import requests
 
+from api.llm_basis import Mindestabstand, extrahiere_inhalt
 from database.api_health import track_api_health
 
 logger = logging.getLogger(__name__)
@@ -206,19 +205,19 @@ class OpenRouterClient:
     def __init__(self, api_key: str, session: requests.Session | None = None):
         self._api_key = api_key
         self._session = session or requests.Session()
-        self._lock = threading.Lock()
-        self._letzter_call = 0.0
+        # Seit 2026-08-09 aus api/llm_basis.py statt eigener Fassung - die
+        # ANDERE Drossel-Achse als bei den uebrigen Clients (Abstand zwischen
+        # zwei Aufrufen statt Volumen je Minute), deshalb Mindestabstand und
+        # nicht Minutenfenster. Beide stehen dort nebeneinander, damit niemand
+        # versehentlich die falsche kopiert.
+        self._drossel = Mindestabstand(MIN_ABSTAND_SEKUNDEN)
         # Welches Modell hat zuletzt tatsaechlich geantwortet? Ohne das waere
         # die Rotation eine stille Qualitaetsaenderung: in der DB stuende ein
         # 550B-Modell, geantwortet haette vielleicht ein 20B.
         self.letztes_modell: str | None = None
 
     def _respect_rate_limit(self) -> None:
-        with self._lock:
-            wartezeit = MIN_ABSTAND_SEKUNDEN - (time.monotonic() - self._letzter_call)
-            if wartezeit > 0:
-                time.sleep(wartezeit)
-            self._letzter_call = time.monotonic()
+        self._drossel.warte_auf_slot()
 
     @track_api_health("openrouter")
     def chat(
@@ -293,18 +292,10 @@ class OpenRouterClient:
         response = self._session.post(BASE_URL, json=payload, headers=headers, timeout=90)
         response.raise_for_status()
         daten = response.json()
-        # OpenRouter liefert Upstream-Fehler teilweise mit HTTP 200 und einem
-        # `error`-Objekt STATT `choices` aus - `raise_for_status()` sieht davon
-        # nichts. Ohne diesen Zweig endete das in `KeyError: 'choices'`: die
-        # Rotation ging zwar weiter, aber im Log stand ein Feldname statt des
-        # Grundes, und der Circuit Breaker konnte "402" nicht als dauerhafte
-        # Fehlerklasse erkennen, weil im Text kein 402 mehr vorkam
-        # (gemessen 2026-08-07, agent/provider_sperre.py::ist_dauerhafter_fehler).
-        if "choices" not in daten:
-            fehler = daten.get("error") or daten
-            raise RuntimeError(
-                f"OpenRouter/{model}: HTTP 200 ohne 'choices' - "
-                f"{str(fehler)[:300]}"
-            )
+        # Der Guard steht seit 2026-08-09 in api/llm_basis.py und gilt fuer
+        # ALLE fuenf Clients - er war hier zuerst eingebaut worden und fehlte
+        # in den anderen vier. Der Modellname geht mit in die Meldung, weil bei
+        # der Rotation sonst unklar bliebe, welcher Eintrag ausgefallen ist.
+        inhalt = extrahiere_inhalt(daten, f"OpenRouter/{model}")
         self.letztes_modell = model
-        return daten["choices"][0]["message"]["content"]
+        return inhalt
