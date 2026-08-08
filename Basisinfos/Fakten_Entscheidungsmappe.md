@@ -1228,28 +1228,29 @@ Kurshistorie heraus — **vor** dem ersten Aufruf, nicht danach.
 | Nachweis | Bootstrap-Vertrauensbereich der gepaarten Differenz **ohne die Null** |
 | „Tendenz" gilt nur | wenn sie beim Aufstocken hält oder wächst |
 
-#### WARNUNG: die Stichprobe überspannt einen Verhaltensbruch (gefunden 09.08.)
+#### Hinweis: die Stichprobe überspannt zwei Vorschlagsregime (geprüft 09.08.)
 
-Der SHORT-Anteil der Hebel-Signale kippt am **31.07.** an einem einzigen Tag von
-90–99 % LONG auf 77 % SHORT, und steigt bis zum 07.08. auf 95 %. **Der Markt
-erklärt das nicht** — die Makro-Lage ist über den Bruch flach, und bei
-identischer Marktbreite (80 % bzw. 79 % der Symbole negativ) liegt der
-SHORT-Anteil am 29.07. bei 15,6 %, am 31.07. bei 77,4 %.
+    Zeitraum          ALLE Signale              nur ERÖFFNEN
+    bis 30.07.        1011L/80S  ( 7 % SHORT)   119L/32S  (21 % SHORT)
+    31.07.–04.08.      114L/294S (72 % SHORT)     7L/0S   ( 0 % SHORT)
+    ab 05.08.           44L/362S (89 % SHORT)     2L/40S  (95 % SHORT)
 
-Beide Trigger-Zweige kippen gleichzeitig, die gescreenten Kandidaten zeigen
-keinen Ausschlag. Der Bruch sitzt zwischen Screening und Signalerzeugung; die
-Ursache ist **offen**.
+Zwei getrennte Verschiebungen: am **31.07.** kippen die *Vorschläge* (SHORT von
+7 % auf 72 %) — aber **293 von 294 fing das Nur-Long-Veto**, die Einstiege
+blieben bei 0 % SHORT. Die *Einstiege* kippen erst am **05.08.**, und das ist
+die dokumentierte Filterentfernung.
 
-> **Für diesen Lauf heißt das:** die Stichprobe 23.07.–01.08. überspannt den
-> Bruch, und der 31.07. allein stellt 34,8 % der Fälle. Der gepaarte Aufbau
-> schützt den *Vergleich* (beide Arme sehen denselben Fall), aber die Aussage
-> gilt für eine Mischung aus zwei Verhaltensregimen.
+> **Für diesen Lauf heißt das:** der gepaarte Aufbau ist nicht betroffen — beide
+> Arme sehen denselben Faktensatz, und die damalige `action` spielt keine Rolle.
+> Die Faktensätze stammen aber aus zwei Vorschlagsregimen, und der 31.07. stellt
+> 34,8 % davon.
 >
 > `werte_fakt_nachweis_neu_aus.py --ohne-tag 2026-07-31` beantwortet ohne einen
-> einzigen neuen Aufruf, ob der Befund von diesem Tag abhängt. **Das gehört vor
-> jede Interpretation des Ergebnisses.**
+> einzigen neuen Aufruf, ob es darauf ankommt. **Das gehört vor jede
+> Interpretation des Ergebnisses.**
 
-Vollständig in der Memory-Datei `project_richtungsbruch_31_07_unerklaert`.
+Herleitung samt zweier eigener Messfehler auf dem Weg dorthin in der
+Memory-Datei `project_richtungsbruch_31_07_unerklaert`.
 
 #### Die Clusterung ist die härteste Einschränkung dieses Laufs
 
