@@ -171,16 +171,21 @@ def main() -> None:
         zai_client = None
         logger.info("Kein ZAI_API_KEY gesetzt - Z.ai-Fallback-Stufe deaktiviert.")
 
-    # OPENROUTER FUER DIE GEGENPRUEFUNG (2026-08-07). Siehe api/openrouter.py -
-    # kurz: Mistral ist kostenpflichtig geworden, danach trug Gemini allein alle
-    # 142 Signale. OpenRouter bringt Redundanz ueber offen gewichtete Modelle mit
-    # grossem Kontext.
+    # OPENROUTER (2026-08-07 fuer die Gegenpruefung, 2026-08-09 zusaetzlich fuer
+    # die Signal-Kette). Siehe api/openrouter.py - kurz: Mistral ist
+    # kostenpflichtig geworden, danach trug Gemini allein alle 142 Signale.
     #
-    # AUSDRUECKLICH NUR FUER DIE GEGENPRUEFUNG. Die freien Endpunkte verlangen
-    # aktiviertes Logging/Training; der Nutzer hat das am 07.08. fuer den
-    # SCHLANKEN Gegenpruefungs-Faktensatz freigegeben - nicht fuer den
-    # SYSTEM_PROMPT, der mit ~9.100 Token das Regelwerk enthaelt. Deshalb wird
-    # dieser Client NICHT an den Budget-Allocator uebergeben.
+    # ZWEI GETRENNTE SCHALTER, ABSICHTLICH:
+    #   gegenpruefung.openrouter_aktiv     -> ersetzt Z.ai bei der Gegenpruefung
+    #   budget_allocator.openrouter_aktiv  -> dritte Stufe der Signal-Kette
+    # Das sind zwei verschiedene Entscheidungen an zwei verschiedenen Stellen
+    # der Pipeline. Einen umzulegen darf den anderen nicht mitnehmen.
+    #
+    # Der Datenschutz-Grund, der den Client bis zum 08.08. aus der Signal-Kette
+    # heraushielt, ist ENTFALLEN: Gemini hat laut eigener Doku nicht abwaehlbare
+    # Trainings-Nutzung und trug 100 % der Signale - das Regelwerk war also
+    # laengst Trainingsmaterial. Nutzer-Entscheidung 08.08.: Trainings-Nutzung
+    # fuer die Signal-Kette akzeptiert, fuer beide Anbieter gemeinsam.
     openrouter_api_key = os.environ.get("OPENROUTER_API_KEY")
     # Der Key allein schaltet NICHTS um (2026-08-07). Die .env wird als Ganzes
     # zwischen Desktop und Notebook synchronisiert - ein Schluessel in einer
@@ -209,6 +214,29 @@ def main() -> None:
             logger.info(
                 "Kein OPENROUTER_API_KEY gesetzt - Gegenpruefung laeuft wie bisher ueber Z.ai."
             )
+
+    # DRITTE STUFE DER SIGNAL-KETTE (2026-08-09). EIGENE Client-Instanz, nicht
+    # dieselbe wie fuer die Gegenpruefung: der Client haelt einen Mindestabstand
+    # von 3 s als Instanz-Zustand. Eine geteilte Instanz wuerde die
+    # Gegenpruefungs-Threads und die Signal-Kette gegenseitig ausbremsen, und
+    # `letztes_modell` (welches Modell hat geantwortet) wuerde sich zwischen
+    # beiden Verwendungen ueberschreiben - die Provider-Auswertung waere dann
+    # gelogen.
+    kette_openrouter_aktiv = bool(
+        (config.load_config().get("budget_allocator") or {}).get("openrouter_aktiv", False)
+    )
+    # STAND 2026-08-09: der Schalter ist da und wird gelesen, die VERDRAHTUNG in
+    # budget_allocator/multi_asset_batch fehlt noch. Bewusst so stehen gelassen
+    # statt halb verdrahtet: ein Client, der uebergeben aber nirgends benutzt
+    # wird, ist eine stille Attrappe - genau das Muster, das in diesem Projekt
+    # schon zweimal jemanden in die Irre gefuehrt hat. Deshalb sagt das Log
+    # ausdruecklich, dass NICHTS passiert, solange die Kette nicht gebaut ist.
+    if openrouter_api_key and kette_openrouter_aktiv:
+        logger.warning(
+            "budget_allocator.openrouter_aktiv=true, aber die Signal-Kette ist noch NICHT "
+            "verdrahtet - OpenRouter wird als Analyst nicht benutzt. Der Schalter wirkt erst, "
+            "wenn Teil C umgesetzt ist (geplante Reihenfolge Gemini -> OpenRouter -> Mistral)."
+        )
 
     gemini_api_key = os.environ.get("GEMINI_API_KEY")
     if gemini_api_key:
