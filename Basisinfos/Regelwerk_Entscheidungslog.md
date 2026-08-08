@@ -15712,3 +15712,60 @@ haben eine Wache gegen den leeren Lauf.
 Ketten, und **zwei** Gates kennen ihn nicht: Zeile 2747 für den Krypto-Allocator
 und Zeile 2859 für den Multi-Asset-Batch. C3 ist damit wie C2 produktiv
 verhaltensneutral. C4 ist die Stufe, ab der der Schalter wirklich wirkt.
+
+## Nachtrag (2026-08-09): C4 — der Hard Switch ist umgelegt
+
+`budget_allocator.openrouter_aktiv: true`. OpenRouter ist ab dem nächsten Start
+zweite Stufe **beider** Ketten: Gemini → OpenRouter → Mistral, im Krypto-Allocator
+wie im Multi-Asset-Batch. Nutzer-Entscheidung: ein sauberer Umstieg, keine
+schrittweise Umstellung.
+
+**Der Gegenprüfungs-Schalter bleibt auf `false`.** `gegenpruefung.openrouter_aktiv`
+ist ausdrücklich eine zweite, eigene Entscheidung (dort würde Z.ai ersetzt) und
+wurde nicht mitgenommen.
+
+### Sieben Berührungspunkte, und die Falle darin
+
+`main.py` baut jetzt eine **eigene** Client-Instanz für die Kette — nicht
+dieselbe wie für die Gegenprüfung. Der Client hält den 3-s-Mindestabstand als
+Instanz-Zustand, und `letztes_modell` merkt sich, welches Modell geantwortet
+hat; eine geteilte Instanz würde beide Verwendungen gegenseitig ausbremsen und
+die Provider-Auswertung verfälschen. Die Warnung aus `0753f4e` ist entfallen.
+
+In `scheduler/background.py`: beide Job-Signaturen, beide Gates (2747 Krypto,
+2859 Multi-Asset), beide Aufrufe, die Nachhol-Funktion und `build_scheduler`.
+
+**Die Falle:** beide Jobs werden mit **positionalen** `args` registriert. Ein
+neuer Parameter an der falschen Stelle der Signatur verschiebt lautlos alle
+nachfolgenden — der Job liefe weiter, nur mit vertauschten Clients. Weder ein
+Compile-Check noch ein Signaturvergleich sieht das. Deshalb prüft
+`teste_kette_reihenfolge.py` jetzt die tatsächliche **Zuordnung**:
+`build_scheduler()` wird mit unterscheidbaren Markern aufgerufen, die
+`add_job`-Aufrufe abgefangen, und jede `args`-Liste per `inspect` an die echte
+Signatur gebunden. Landet ein Marker auf dem falschen Parameter, fällt es auf.
+
+### Die Testlücke, die den Breaker-Defekt hat überleben lassen
+
+Prüfung G in `teste_provider_sperre.py` ist ein Text-Grep über den Quelltext —
+sie stellt fest, *dass* beide Ketten `provider_sperre` verdrahten. Sie war
+während des gesamten Zeitraums grün, in dem die Vorbelegung in
+`multi_asset_batch.py` wirkungslos war. Zwei Konsequenzen:
+
+1. G trägt jetzt ihre Grenze ausdrücklich im Kommentar und verweist auf den
+   funktionalen Gegenbeweis. Neu ist **G2**, die die Fehlerklasse benennt: eine
+   geschlossene Verbindung liefert eine leere Sperre statt eines Fehlers.
+2. Der funktionale Beweis deckt jetzt **beide** Ketten ab — ein dauerhafter
+   Fehler in `api_health_status` bei kerngesundem Client muss zu null
+   Aufrufversuchen führen. Eine Prüfung, die nur eine der beiden Ketten abdeckt,
+   ist genau der Grund, warum der Defekt zwei Tage überlebt hat.
+
+`teste_kette_reihenfolge.py` hat damit **31 Zusicherungen** über drei Teile:
+Krypto-Kette, Multi-Asset-Kette, Scheduler-Verdrahtung. Alle bestanden.
+
+### Was jetzt noch offen ist: die Formatfrage
+
+Der Hard Switch ändert die **Kette**, nicht das **Format**. Alle zehn
+Aufrufstellen senden weiter `{"type": "json_object"}`. Die Entscheidung über
+striktes `json_schema` steht getrennt an und ist bewusst nicht mitgelaufen: zwei
+Verhaltensänderungen gleichzeitig, und morgen wäre nicht zuordenbar, welche
+gewirkt hat.

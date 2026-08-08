@@ -940,7 +940,7 @@ def _letzter_faelliger_multi_asset_termin(now: datetime) -> datetime:
 
 def multi_asset_batch_catchup_if_missed(
     conn_factory, watchlist_provider, coingecko_client, gemini_client=None, mistral_client=None,
-    zai_client=None,
+    zai_client=None, openrouter_client=None,
 ) -> None:
     """2026-07-30, Nutzer-Fund: waehrend intensiver Entwicklungsarbeit startete
     die App an 27./28./29.07. auffaellig oft neu (11/11/4x) - der 2x/Tag-Cron
@@ -985,6 +985,7 @@ def multi_asset_batch_catchup_if_missed(
     multi_asset_batch_job(
         conn_factory, watchlist_provider, coingecko_client,
         gemini_client=gemini_client, mistral_client=mistral_client, zai_client=zai_client,
+        openrouter_client=openrouter_client,
     )
 
 
@@ -2648,7 +2649,7 @@ def _refresh_hebel_position_liquidation_prices(conn) -> None:
 def hebel_screening_job(
     coingecko_client, kraken_client, conn_factory, watchlist_provider, bitpanda_api_key=None,
     groq_client=None, gemini_client=None, fred_api_key=None,
-    mistral_client=None, zai_client=None,
+    mistral_client=None, zai_client=None, openrouter_client=None,
 ) -> bool:
     """`watchlist_provider` siehe refresh_prices_job()-Docstring (2026-07-23).
 
@@ -2744,7 +2745,10 @@ def hebel_screening_job(
         # gegated, weil Groq urspruenglich die einzige zwingende Voraussetzung
         # war. Jetzt gilt Mistral/Gemini/Zai als Basis (mind. einer muss
         # gesetzt sein) - Groq ist komplett aus der Kette entfernt.
-        if any(c is not None for c in (mistral_client, gemini_client, zai_client)):
+        # 2026-08-09 (C4): openrouter_client gehoert mit ins Gate. Ohne ihn
+        # bliebe der Allocator stehen, wenn OpenRouter der EINZIGE konfigurierte
+        # Analyst ist - ein Zustand, den der Hard Switch moeglich macht.
+        if any(c is not None for c in (mistral_client, gemini_client, zai_client, openrouter_client)):
             from agent.krypto.budget_allocator import run_budget_allocator
 
             # E-Mail-Latenz-Fix (2026-07-23, echter Fund: ein einzelner Batch mit
@@ -2816,6 +2820,7 @@ def hebel_screening_job(
                 conn_factory, watchlist, coingecko_client, kraken_client,
                 fred_api_key, config_dict, gemini_client=gemini_client, mistral_client=mistral_client,
                 zai_client=zai_client, on_signal_ready=_on_signal_ready,
+                openrouter_client=openrouter_client,
             )
             logger.info(
                 "Budget-Allocator: Hebel %d, Marktscan %d, Spot %d verarbeitet, %d fehlgeschlagen, "
@@ -2826,7 +2831,8 @@ def hebel_screening_job(
                 dict(allocation.budget_erschoepft) or "keiner",
             )
         else:
-            logger.info("Budget-Allocator übersprungen (kein Mistral-/Gemini-/Z.ai-Client konfiguriert)")
+            logger.info(
+                "Budget-Allocator übersprungen (kein Mistral-/Gemini-/OpenRouter-/Z.ai-Client konfiguriert)")
     except Exception as exc:
         logger.exception("Hebel-Screening fehlgeschlagen")
         _notify_job_failure("hebel_screening", f"Hebel-Screening fehlgeschlagen: {exc}")
@@ -2838,7 +2844,7 @@ def hebel_screening_job(
 
 def multi_asset_batch_job(
     conn_factory, watchlist_provider, coingecko_client, gemini_client=None, mistral_client=None,
-    zai_client=None,
+    zai_client=None, openrouter_client=None,
 ) -> bool:
     """Multi-Asset-Batch (2026-07-18, siehe agent/multi_asset_batch.py Modul-
     Docstring fuer die volle Architektur-Begruendung) - automatische Signal-
@@ -2856,8 +2862,12 @@ def multi_asset_batch_job(
     watchlist = watchlist_provider()
     _job_started_at["multi_asset_batch"] = time.monotonic()
     try:
-        if mistral_client is None and gemini_client is None:
-            logger.info("Multi-Asset-Batch übersprungen (kein Mistral-/Gemini-Client konfiguriert)")
+        # 2026-08-09 (C4): openrouter_client gehoert mit ins Gate - sonst
+        # stuende der Batch still, wenn OpenRouter der einzige konfigurierte
+        # Analyst ist.
+        if mistral_client is None and gemini_client is None and openrouter_client is None:
+            logger.info(
+                "Multi-Asset-Batch übersprungen (kein Mistral-/Gemini-/OpenRouter-Client konfiguriert)")
             return True
 
         import config as config_module
@@ -2867,6 +2877,7 @@ def multi_asset_batch_job(
         result = run_multi_asset_batch(
             conn_factory, watchlist, coingecko_client, config_dict,
             gemini_client=gemini_client, mistral_client=mistral_client, zai_client=zai_client,
+            openrouter_client=openrouter_client,
         )
         # Nachhol-Mechanismus (2026-07-30, siehe multi_asset_batch_catchup_if_missed()):
         # erst NACH erfolgreichem Abschluss von run_multi_asset_batch() gesetzt - bricht
@@ -3022,7 +3033,7 @@ def staleness_watchdog_job(conn_factory, watchlist_provider) -> None:
 def build_scheduler(
     coingecko_client, kraken_client, db_conn_factory, watchlist_provider,
     groq_client=None, gemini_client=None, fred_api_key=None, bitpanda_api_key=None,
-    mistral_client=None, zai_client=None,
+    mistral_client=None, zai_client=None, openrouter_client=None,
 ) -> BackgroundScheduler:
     watchlist = watchlist_provider()
     scheduler = BackgroundScheduler()
@@ -3161,6 +3172,7 @@ def build_scheduler(
         args=[
             coingecko_client, kraken_client, db_conn_factory, watchlist_provider, bitpanda_api_key,
             groq_client, gemini_client, fred_api_key, mistral_client, zai_client,
+            openrouter_client,
         ],
         id="hebel_screening",
         next_run_time=_staggered_start(3),
@@ -3180,7 +3192,8 @@ def build_scheduler(
         hour=MULTI_ASSET_BATCH_CRON_HOURS,
         minute=0,
         day_of_week="mon-fri",
-        args=[db_conn_factory, watchlist_provider, coingecko_client, gemini_client, mistral_client, zai_client],
+        args=[db_conn_factory, watchlist_provider, coingecko_client, gemini_client, mistral_client,
+              zai_client, openrouter_client],
         id="multi_asset_batch",
     )
     # MS-3: erster CronTrigger im Projekt (bisherige Jobs nutzen nur "interval") -
@@ -3316,6 +3329,7 @@ def build_scheduler(
     multi_asset_batch_catchup_if_missed(
         db_conn_factory, watchlist_provider, coingecko_client,
         gemini_client=gemini_client, mistral_client=mistral_client, zai_client=zai_client,
+        openrouter_client=openrouter_client,
     )
     # Automatischer VOLLER Bestandsabgleich (2026-07-11 als reiner Cash-Sync
     # eingefuehrt, 2026-07-16 auf den kompletten Bestandsabgleich erweitert, siehe

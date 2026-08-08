@@ -225,18 +225,24 @@ def main() -> None:
     kette_openrouter_aktiv = bool(
         (config.load_config().get("budget_allocator") or {}).get("openrouter_aktiv", False)
     )
-    # STAND 2026-08-09: der Schalter ist da und wird gelesen, die VERDRAHTUNG in
-    # budget_allocator/multi_asset_batch fehlt noch. Bewusst so stehen gelassen
-    # statt halb verdrahtet: ein Client, der uebergeben aber nirgends benutzt
-    # wird, ist eine stille Attrappe - genau das Muster, das in diesem Projekt
-    # schon zweimal jemanden in die Irre gefuehrt hat. Deshalb sagt das Log
-    # ausdruecklich, dass NICHTS passiert, solange die Kette nicht gebaut ist.
+    # SEIT 2026-08-09 (C4) VOLLSTAENDIG VERDRAHTET. Bis dahin stand hier nur eine
+    # Warnung, weil ein uebergebener, aber nirgends benutzter Client eine stille
+    # Attrappe gewesen waere. Jetzt benutzen ihn beide Ketten
+    # (budget_allocator.py und multi_asset_batch.py), jeweils als zweite Stufe
+    # zwischen Gemini und Mistral.
     if openrouter_api_key and kette_openrouter_aktiv:
-        logger.warning(
-            "budget_allocator.openrouter_aktiv=true, aber die Signal-Kette ist noch NICHT "
-            "verdrahtet - OpenRouter wird als Analyst nicht benutzt. Der Schalter wirkt erst, "
-            "wenn Teil C umgesetzt ist (geplante Reihenfolge Gemini -> OpenRouter -> Mistral)."
+        kette_openrouter_client = OpenRouterClient(api_key=openrouter_api_key)
+        logger.info(
+            "OpenRouter ist zweite Stufe der Signal-Kette (Gemini -> OpenRouter -> Mistral), "
+            "eigene Client-Instanz getrennt von der Gegenpruefung."
         )
+    else:
+        kette_openrouter_client = None
+        if openrouter_api_key and not kette_openrouter_aktiv:
+            logger.info(
+                "OpenRouter-Key vorhanden, aber budget_allocator.openrouter_aktiv=false - "
+                "die Signal-Kette laeuft ohne ihn (Gemini -> Mistral)."
+            )
 
     gemini_api_key = os.environ.get("GEMINI_API_KEY")
     if gemini_api_key:
@@ -357,6 +363,12 @@ def main() -> None:
         bitpanda_api_key=bitpanda_api_key,
         mistral_client=mistral_client,
         zai_client=gegenpruefung_client,
+        # EIGENE Instanz, nicht `gegenpruefung_client` (2026-08-09, C4): der
+        # OpenRouter-Client haelt einen Mindestabstand von 3 s als
+        # Instanz-Zustand, und `letztes_modell` merkt sich, welches Modell
+        # geantwortet hat. Eine geteilte Instanz wuerde beide Verwendungen
+        # gegenseitig ausbremsen und die Provider-Auswertung verfaelschen.
+        openrouter_client=kette_openrouter_client,
     )
     bg_scheduler.start()
 

@@ -125,6 +125,17 @@ pruefe("F1 uebersprungene Versuche gezaehlt", b["gesamt_uebersprungen"] == 9, st
 pruefe("F2 mit Grund", "402" in b["gesperrt"]["mistral"], b["gesperrt"]["mistral"][:60])
 
 print("\nG) BEIDE KETTEN BENUTZEN DASSELBE MODUL")
+# ACHTUNG, GRENZE DIESER PRUEFUNG (2026-08-09): G ist STRUKTURELL - sie liest
+# den Quelltext und stellt fest, DASS das Modul verdrahtet ist. Sie sagt nichts
+# darueber, ob die VORBELEGUNG tatsaechlich wirkt.
+#
+# Das ist keine theoretische Einschraenkung: in multi_asset_batch.py wurde
+# `vorbelegte_sperre()` vom 07. bis 09.08. mit einer bereits GESCHLOSSENEN
+# Verbindung aufgerufen. Die Funktion faengt jede Exception ab und lieferte
+# eine leere Sperre - G war die ganze Zeit gruen. Der funktionale Gegenbeweis
+# steht in teste_kette_reihenfolge.py (Laeufe M5 und Krypto-Pendant): ein
+# dauerhafter Fehler in api_health_status bei KERNGESUNDEM Client muss zu null
+# Aufrufversuchen fuehren. Diese Datei prueft das Modul, jene die Ketten.
 import io as _io
 for pfad in ("agent/krypto/budget_allocator.py", "agent/multi_asset_batch.py"):
     quelle = _io.open(pfad, encoding="utf-8").read()
@@ -133,6 +144,17 @@ for pfad in ("agent/krypto/budget_allocator.py", "agent/multi_asset_batch.py"):
            and "sperre.ist_gesperrt(provider_name)" in quelle
            and "sperre.melde_fehlschlag(provider_name" in quelle,
            "zwei Kopien wuerden garantiert auseinanderlaufen")
+
+print("\nG2) DIE FEHLERKLASSE, DIE G NICHT SIEHT")
+# Ein geschlossener Connection-Handle liefert eine LEERE Sperre statt eines
+# Fehlers. Hier festgehalten, damit die Fehlerklasse benannt ist und niemand
+# den fail-soft-Zweig fuer harmlos haelt.
+import sqlite3 as _sq
+_zu = _sq.connect(":memory:")
+_zu.close()
+pruefe("G2 geschlossene Verbindung -> leere Sperre, kein Absturz",
+       vorbelegte_sperre(_zu, ("mistral",), JETZT).gesperrt == {},
+       "fail-soft - und genau deshalb war der Defekt in multi_asset_batch.py unsichtbar")
 
 print("\nH) FEHLENDE TABELLE TOETET NICHTS")
 class KaputteConn:

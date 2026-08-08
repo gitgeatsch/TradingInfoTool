@@ -1157,12 +1157,21 @@ budget_allocator:
                                         # Last aus der Gegenpruefung ist rein informativ auf der
                                         # Remote-Steuer-Seite sichtbar, bewusst OHNE Tagesdeckel.
   # --- OpenRouter in der Signal-Kette (2026-08-09) ---------------------------
-  # BEWUSST AUS. Der API-Key allein darf nichts umschalten (die .env wird als
-  # Ganzes zwischen Desktop und Notebook synchronisiert), und dieser Schalter
-  # ist ABSICHTLICH getrennt von `gegenpruefung.openrouter_aktiv` - das sind
-  # zwei verschiedene Entscheidungen an zwei verschiedenen Stellen der Pipeline.
-  # Eine davon umzulegen, darf die andere nicht mitnehmen.
-  openrouter_aktiv: false
+  # AN seit 2026-08-09 (C4, Nutzer-Entscheidung "sauberer Hard Switch"). Der
+  # API-Key allein schaltet weiterhin NICHTS um - die .env wird als Ganzes
+  # zwischen Desktop und Notebook synchronisiert, ein Schluessel in einer Datei
+  # ist keine Betriebsentscheidung. Erst dieser Schalter aktiviert die zweite
+  # Kettenstufe.
+  #
+  # ABSICHTLICH GETRENNT von `gegenpruefung.openrouter_aktiv` - das sind zwei
+  # verschiedene Entscheidungen an zwei verschiedenen Stellen der Pipeline. Der
+  # Gegenpruefungs-Schalter steht weiterhin auf false; ihn umzulegen ist eine
+  # eigene Entscheidung (Z.ai wuerde dort ersetzt).
+  #
+  # Erreichbarkeit vor dem Umlegen gemessen (09.08., produktive Parameter, jedes
+  # Modell einzeln): nemotron-3-super-120b 1,0 s OK, gpt-oss-20b 3,3 s OK,
+  # gemma-4-31b-it weiterhin 429 - ungeprueft, nicht widerlegt.
+  openrouter_aktiv: true
   openrouter_taegliches_budget: 400      # OpenRouter deckelt freie Modelle bei 1.000
                                         # Anfragen/Tag (dauerhaft, weil an "credits
                                         # purchased all time" haengend). Davon braucht die

@@ -378,6 +378,100 @@ pruefe(o.aufrufe == 0,
 pruefe(set(erg.provider_je_symbol.values()) == {"mistral"},
        "MA: Mistral hat trotz gesundem OpenRouter uebernommen")
 
+# Dieselbe Frage fuer die KRYPTO-Kette. Der Defekt lag nur in
+# multi_asset_batch.py, aber eine Pruefung, die nur eine der beiden Ketten
+# abdeckt, ist genau der Grund, warum er zwei Tage ueberlebt hat. Der
+# api_health_status-Eintrag von oben gilt weiter.
+g = Attrappe("gemini", "503 Service Unavailable")
+o, m = Attrappe("openrouter"), Attrappe("mistral")
+erg, prot = lauf("KRYPTO-Kette: 402 in api_health_status, Client gesund - "
+                 "Vorbelegung muss ihn sperren",
+                 gemini=g, openrouter=o, mistral=m)
+pruefe(o.aufrufe == 0,
+       "Krypto: Breaker-VORBELEGUNG greift auch hier - OpenRouter nicht gefragt")
+pruefe(set(erg.provider_je_call.values()) == {"mistral"},
+       "Krypto: Mistral hat trotz gesundem OpenRouter uebernommen")
+
+
+# ============================================================================
+# TEIL 3: kommt der Client ueberhaupt bis zu den Jobs? (Teil C4)
+# ============================================================================
+# DIE FALLE, DIE HIER BEWACHT WIRD: hebel_screening_job und
+# multi_asset_batch_job werden mit POSITIONALEN args registriert. Ein neuer
+# Parameter an der falschen Stelle der Signatur verschiebt lautlos alle
+# nachfolgenden - der Job liefe weiter, nur mit vertauschten Clients. Ein
+# reiner Compile-Check sieht das nicht, und ein Signaturvergleich auch nicht.
+#
+# Geprueft wird deshalb die tatsaechliche Zuordnung: build_scheduler() wird mit
+# unterscheidbaren Markern aufgerufen, die add_job-Aufrufe werden abgefangen,
+# und dann wird jede args-Liste per inspect an die ECHTE Signatur gebunden.
+# Landet ein Marker auf dem falschen Parameter, faellt es hier auf.
+
+import inspect  # noqa: E402
+
+import scheduler.background as bg  # noqa: E402
+
+print("\n" + "=" * 74)
+print("TEIL 3: Verdrahtung bis in die Scheduler-Jobs")
+print("=" * 74)
+
+registriert = {}
+
+
+class _JobFalle:
+    def add_job(self, func, *a, **kw):
+        registriert[kw.get("id")] = (func, kw.get("args") or [])
+
+    def start(self):
+        pass
+
+    def __getattr__(self, name):
+        # add_listener, configure, ... - alles, was build_scheduler sonst noch
+        # am Scheduler aufruft, wird stillschweigend geschluckt. Diese Falle
+        # interessiert nur, WAS an add_job() uebergeben wird.
+        return lambda *a, **kw: None
+
+
+MARKER = {name: f"<{name}>" for name in
+          ("gemini", "mistral", "zai", "openrouter", "groq", "coingecko", "kraken")}
+
+alt_sched = bg.BackgroundScheduler
+alt_bt = bg.backward_tracking_catchup_if_missed
+alt_ma = bg.multi_asset_batch_catchup_if_missed
+bg.BackgroundScheduler = _JobFalle
+# Die beiden Nachhol-Pruefungen laufen in build_scheduler() SYNCHRON und wuerden
+# echte Arbeit anstossen - fuer diese Frage irrelevant, also stillgelegt.
+bg.backward_tracking_catchup_if_missed = lambda *a, **kw: None
+bg.multi_asset_batch_catchup_if_missed = lambda *a, **kw: None
+try:
+    bg.build_scheduler(
+        MARKER["coingecko"], MARKER["kraken"], db.get_connection, config.get_watchlist,
+        groq_client=MARKER["groq"], gemini_client=MARKER["gemini"], fred_api_key=None,
+        bitpanda_api_key=None, mistral_client=MARKER["mistral"], zai_client=MARKER["zai"],
+        openrouter_client=MARKER["openrouter"],
+    )
+finally:
+    bg.BackgroundScheduler = alt_sched
+    bg.backward_tracking_catchup_if_missed = alt_bt
+    bg.multi_asset_batch_catchup_if_missed = alt_ma
+
+for job_id in ("hebel_screening", "multi_asset_batch"):
+    func, args = registriert.get(job_id, (None, []))
+    if func is None:
+        pruefe(False, f"C4: Job '{job_id}' wurde gar nicht registriert")
+        continue
+    gebunden = inspect.signature(func).bind(*args)
+    gebunden.apply_defaults()
+    zuordnung = gebunden.arguments
+    print(f"\n  {job_id}: {len(args)} positionale Argumente")
+    falsch = [f"{p}={v}" for p, v in zuordnung.items()
+              if isinstance(v, str) and v.startswith("<") and v != f"<{p.replace('_client', '')}>"]
+    pruefe(zuordnung.get("openrouter_client") == MARKER["openrouter"],
+           f"C4: {job_id} bekommt den OpenRouter-Client am richtigen Parameter")
+    pruefe(not falsch,
+           f"C4: {job_id} - kein Client auf dem falschen Parameter gelandet"
+           + (f" (verrutscht: {falsch})" if falsch else ""))
+
 # --- Ergebnis ---------------------------------------------------------------
 print("\n" + "=" * 74)
 if fehler:
