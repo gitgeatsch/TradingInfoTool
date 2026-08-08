@@ -79,6 +79,7 @@ def _lade_faelle(export_pfad: str, reihen: dict, horizont: int,
             diagnose["zu_kurz_beobachtet"] += 1
             continue
         diagnose["brauchbar"] += 1
+        fakten["_fall_id"] = x["id"]
         faelle.append({"id": x["id"], "symbol": x["symbol"], "created_at": tag,
                        "richtung": x.get("richtung"),
                        "action_damals": x.get("action"), "fakten": fakten})
@@ -116,7 +117,30 @@ def _trocken_provider():
     return modell
 
 
-def _echter_provider(protokoll: list, arm_name: str):
+def _lade_bekannte_antworten(pfad: str | None) -> dict:
+    """Antworten eines frueheren Laufs, als {(arm, fall_id): antwort}.
+
+    WOZU. 488 Aufrufe am Stueck reissen das Ratenlimit - die Messung vom 09.08.
+    brach nach rund 25 schnellen Aufrufen ein. Ohne Wiederaufnahme waere jeder
+    Abbruch ein Totalverlust, und der zweite Versuch wuerde dieselben Fragen
+    erneut stellen.
+
+    Ein Transportfehler gilt dabei ausdruecklich NICHT als beantwortet
+    (Methodik-Nachtrag 09.08., Punkt 3): sonst zementiert der erste misslungene
+    Lauf seine eigenen Luecken."""
+    if not pfad or not pathlib.Path(pfad).exists():
+        return {}
+    daten = json.loads(pathlib.Path(pfad).read_text(encoding="utf-8"))
+    bekannt = {}
+    for e in daten.get("rohantworten", []):
+        if "antwort" not in e or e.get("fall_id") is None:
+            continue          # Transport- und Formfehler: erneut versuchen
+        bekannt[(e["arm"], e["fall_id"])] = e["antwort"]
+    return bekannt
+
+
+def _echter_provider(protokoll: list, arm_name: str, bekannt: dict,
+                     pause_sekunden: float):
     """Echter Hebel-Prompt gegen Gemini. Jede Rohantwort wandert ins Protokoll."""
     import config as config_module
     from agent.krypto.hebel_analyst import call_llm_for_hebel_signal
@@ -129,7 +153,19 @@ def _echter_provider(protokoll: list, arm_name: str):
         raise SystemExit("GEMINI_API_KEY fehlt - .env pruefen.")
     client = GeminiClient(schluessel)
 
+    zaehler = [0]
+
     def modell(fakten):
+        fall_id = fakten.get("_fall_id")
+        vorhanden = bekannt.get((arm_name, fall_id))
+        if vorhanden is not None:
+            protokoll.append({"arm": arm_name, "fall_id": fall_id,
+                              "antwort": vorhanden, "quelle": "wiederverwendet"})
+            return vorhanden
+        # Drossel: der freie Endpunkt bricht bei schnellen Serien ein.
+        if zaehler[0]:
+            time.sleep(pause_sekunden)
+        zaehler[0] += 1
         try:
             antwort = call_llm_for_hebel_signal(client, fakten)
         except Exception as exc:
@@ -139,11 +175,13 @@ def _echter_provider(protokoll: list, arm_name: str):
             # ein Formfehler dagegen endet real in einem HALTEN-Signal.
             if any(w in str(exc) or w in name for w in
                    ("429", "Timeout", "timeout", "Connection", "503", "502")):
-                protokoll.append({"arm": arm_name, "fehler": "transport", "typ": name})
+                protokoll.append({"arm": arm_name, "fall_id": fall_id,
+                                  "fehler": "transport", "typ": name})
                 raise nw.TransportFehler(str(exc)) from exc
-            protokoll.append({"arm": arm_name, "fehler": "form", "typ": name})
+            protokoll.append({"arm": arm_name, "fall_id": fall_id,
+                              "fehler": "form", "typ": name})
             return {"kein_json": True}
-        protokoll.append({"arm": arm_name, "antwort": {
+        protokoll.append({"arm": arm_name, "fall_id": fall_id, "antwort": {
             k: v for k, v in antwort.items() if k != "_raw_response"}})
         return antwort
 
@@ -161,6 +199,10 @@ def main() -> int:
                    help="Leerlauf-Wache: darunter wird gar nicht erst angerufen")
     p.add_argument("--trocken", action="store_true")
     p.add_argument("--ausgabe", default="fakt_nachweis.json")
+    p.add_argument("--fortsetzen", help="Protokoll eines abgebrochenen Laufs")
+    p.add_argument("--pause", type=float, default=1.5,
+                   help="Sekunden zwischen zwei Aufrufen (freier Endpunkt "
+                        "bricht bei schnellen Serien ein)")
     args = p.parse_args()
 
     conn = sqlite3.connect(f"file:{args.db}?mode=ro", uri=True)
@@ -210,6 +252,11 @@ def main() -> int:
               f"{aufrufe * 5.5 / 60:.0f} Minuten seriell)")
     print()
 
+    bekannt = _lade_bekannte_antworten(args.fortsetzen)
+    if bekannt:
+        print(f"Wiederaufnahme: {len(bekannt)} Antworten aus {args.fortsetzen} "
+              f"werden wiederverwendet, nicht erneut angefragt.")
+        print()
     protokoll: list = []
     beginn = time.time()
     ergebnisse = {}

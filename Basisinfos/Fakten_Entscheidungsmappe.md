@@ -1228,6 +1228,39 @@ Kurshistorie heraus — **vor** dem ersten Aufruf, nicht danach.
 | Nachweis | Bootstrap-Vertrauensbereich der gepaarten Differenz **ohne die Null** |
 | „Tendenz" gilt nur | wenn sie beim Aufstocken hält oder wächst |
 
+#### Die Clusterung ist die härteste Einschränkung dieses Laufs
+
+Methodik 2.5 ist hier bindend: *„Bei geclusterten Beobachtungen ist die EFFEKTIVE
+Stichprobengröße die Anzahl distinkter Symbole, nicht die Roh-Zeilenzahl."*
+
+| | |
+|---|---|
+| Roh-n | 122 Fälle |
+| distinkte Symbole | **12** |
+| größtes Symbol | LINK, 14,8 % — **unter** der 25-%-Grenze |
+| Top-3 | 40,2 % |
+
+Kriterium (b) ist erfüllt, Kriterium (a) — n ≥ 50 — auf Symbolebene **nicht**.
+
+**Warum der Lauf trotzdem aussagekräftig ist, und wo seine Grenze liegt.** Der
+Vergleich ist **gepaart**: beide Arme sehen denselben Faktensatz, dasselbe
+Symbol, denselben Tag. Der Symbol-Effekt kürzt sich damit heraus — anders als
+bei einem Querschnittsvergleich von Trefferquoten, für den 2.5 geschrieben
+wurde. Was sich *nicht* herauskürzt, ist die Korrelation der Differenzen
+innerhalb eines Symbols: achtzehn LINK-Fälle aus derselben Marktbewegung sind
+keine achtzehn unabhängigen Beobachtungen.
+
+Deshalb zieht das Vertrauensintervall **ganze Symbole statt einzelner Fälle**
+(Cluster-Bootstrap, genau das „analog zu clustered standard errors", auf das
+2.5 verweist). Das Intervall wird dadurch breiter — und das ist die ehrliche
+Breite.
+
+> **Was daraus folgt:** ein Befund aus diesem Lauf ist **hypothesengenerierend**,
+> nicht operationalisierbar. Er darf keine Schwelle verschieben und kein Gate
+> begründen. Für eine Einführung oder Rücknahme braucht es die Replikation auf
+> einem anderen Zeitraum oder anderen Symbolen — 2.5 verlangt das ausdrücklich
+> für informell nacheinander getestete Hypothesen.
+
 #### Vier Gegenprüfungen, ohne die kein Ergebnis berichtet wird
 
 1. **A/A′-Nullabgleich.** Zwei identische Arme liefern die Eigenstreuung. Ohne

@@ -128,6 +128,8 @@ class Nachweis:
     gepaarte_faelle: int = 0
     ci_unten: float | None = None
     ci_oben: float | None = None
+    symbole: int = 0
+    groesstes_symbol_anteil: float | None = None
 
 
 def zonen_aus_antwort(antwort: dict) -> dict | None:
@@ -157,6 +159,44 @@ def zonen_aus_antwort(antwort: dict) -> dict | None:
         return None
     return {"entry": entry, "stop": stop, "ziel": ziel, "risiko": risiko,
             "ist_short": ist_short, "crv": chance / risiko}
+
+
+def _cluster_bootstrap(werte: list[float], gruppen: list,
+                       ziehungen: int = 2000) -> tuple[float | None, float | None]:
+    """95-%-Intervall des Mittelwerts, gezogen ueber GRUPPEN statt Einzelwerte.
+
+    Reproduzierbar ohne `random`: die Ziehung folgt einer festen
+    Zahlenfolge. Zwei Laeufe auf denselben Daten liefern damit dasselbe
+    Intervall - sonst waere ein Grenzbefund davon abhaengig, wann man ihn
+    berechnet hat."""
+    nach_gruppe: dict = {}
+    for w, g in zip(werte, gruppen):
+        nach_gruppe.setdefault(g, []).append(w)
+    namen = sorted(nach_gruppe)
+    k = len(namen)
+    if k < 2:
+        return None, None
+    mittel = []
+    zustand = 12345
+    for _ in range(ziehungen):
+        gezogen: list[float] = []
+        for _ in range(k):
+            zustand = (1103515245 * zustand + 12345) % (2 ** 31)
+            # HOEHERE Bits verwenden. Die niederwertigen Bits eines linearen
+            # Kongruenzgenerators haben sehr kurze Perioden - das unterste Bit
+            # wechselt stur ab. Mit `zustand % k` und k=2 zog der Bootstrap
+            # deshalb IMMER dieselbe Folge A,B,A,B: jede Ziehung ergab exakt
+            # denselben Mittelwert, das Intervall war null breit. Bei zwoelf
+            # Clustern fiel es nicht auf, bei zweien sofort - gefunden von
+            # teste_nachweisrahmen.py, Fall J1.
+            gezogen.extend(nach_gruppe[namen[(zustand >> 16) % k]])
+        if gezogen:
+            mittel.append(statistics.mean(gezogen))
+    if not mittel:
+        return None, None
+    mittel.sort()
+    return (mittel[int(0.025 * len(mittel))],
+            mittel[min(int(0.975 * len(mittel)), len(mittel) - 1)])
 
 
 def _ist_eroeffnung(antwort: dict) -> bool:
@@ -242,12 +282,26 @@ def nachweisrahmen(provider: Callable[[dict], dict], faelle: list[dict],
     rauschboden = (statistics.pstdev(rausch_deltas) if len(rausch_deltas) > 1
                    else None)
 
+    # --- CLUSTER-BOOTSTRAP ueber SYMBOLE, nicht ueber Faelle ----------------
+    #
+    # Methodik 2.5, verbindlich: "Bei geclusterten Beobachtungen ist die
+    # EFFEKTIVE Stichprobengroesse die Anzahl distinkter Symbole, nicht die
+    # Roh-Zeilenzahl - analog zu clustered standard errors in der Oekonometrie."
+    #
+    # Die Paarung neutralisiert den groessten Teil des Symbol-Effekts: beide
+    # Arme sehen denselben Faktensatz, dasselbe Symbol, denselben Tag. Was sie
+    # NICHT neutralisiert, ist die Korrelation der Differenzen INNERHALB eines
+    # Symbols - achtzehn LINK-Faelle aus derselben Marktbewegung sind nicht
+    # achtzehn unabhaengige Beobachtungen. Ein Bootstrap ueber Faelle wuerde
+    # daraus eine Praezision ableiten, die es nicht gibt.
+    #
+    # Deshalb werden ganze SYMBOLE gezogen. Die Grundmenge des ersten Laufs hat
+    # 122 Faelle auf 12 Symbolen - das Intervall wird dadurch deutlich breiter,
+    # und das ist die ehrliche Breite.
+    symbole = [faelle[i].get("symbol") for i in gemeinsam]
     ci_unten = ci_oben = None
-    if len(deltas) >= 2:
-        from agent.krypto.backward_tracking import bootstrap_unsicherheit
-        boot = bootstrap_unsicherheit(deltas)
-        ci_unten = boot.get("expectancy_ci_unten")
-        ci_oben = boot.get("expectancy_ci_oben")
+    if len(set(symbole)) >= 2:
+        ci_unten, ci_oben = _cluster_bootstrap(deltas, symbole)
 
     q_a = None
     if a1.eroeffnen_quote is not None and a2.eroeffnen_quote is not None:
@@ -288,7 +342,11 @@ def nachweisrahmen(provider: Callable[[dict], dict], faelle: list[dict],
                     eroeffnen_einbruch_pp=einbruch,
                     urteil=urteil, begruendung=grund,
                     gepaarte_faelle=len(gemeinsam),
-                    ci_unten=ci_unten, ci_oben=ci_oben)
+                    ci_unten=ci_unten, ci_oben=ci_oben,
+                    symbole=len(set(symbole)),
+                    groesstes_symbol_anteil=(
+                        max(symbole.count(x) for x in set(symbole)) / len(symbole)
+                        if symbole else None))
 
 
 def bericht(n: Nachweis) -> str:
@@ -310,7 +368,14 @@ def bericht(n: Nachweis) -> str:
                  f"(gepaart ueber {n.gepaarte_faelle} Faelle)")
     if n.ci_unten is not None:
         z.append(f"  Vertrauensbereich:         "
-                 f"[{n.ci_unten:+.3f}; {n.ci_oben:+.3f}]")
+                 f"[{n.ci_unten:+.3f}; {n.ci_oben:+.3f}]  "
+                 f"(Bootstrap ueber SYMBOLE, Methodik 2.5)")
+    if n.symbole:
+        anteil = ("-" if n.groesstes_symbol_anteil is None
+                  else f"{n.groesstes_symbol_anteil:.1%}")
+        warn = "   ACHTUNG >25 %" if (n.groesstes_symbol_anteil or 0) > 0.25 else ""
+        z.append(f"  Effektive Stichprobe:      {n.symbole} Symbole "
+                 f"(Roh-n {n.gepaarte_faelle}), groesstes {anteil}{warn}")
     if n.eroeffnen_einbruch_pp is not None:
         z.append(f"  EROEFFNEN-Einbruch:        {n.eroeffnen_einbruch_pp:+.1f} pp")
     z.append("")

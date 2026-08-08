@@ -52,13 +52,21 @@ def schreibe(symbol, closes):
         for d, c in zip(TAGE, closes)])
 
 
-schreibe("RAUF", [100.0 + i * 2 for i in range(40)])    # steigt deutlich
+# MEHRERE Symbole, nicht eines. Der Cluster-Bootstrap zieht Symbole (Methodik
+# 2.5: "die effektive Stichprobengroesse ist die Anzahl distinkter Symbole") -
+# eine Fixture mit einem einzigen Symbol koennte gar kein Intervall bilden und
+# haette den Rahmen faelschlich als kaputt erscheinen lassen. Sechs steigende
+# Symbole bilden die reale Lage nach: 122 Faelle auf 12 Symbolen.
+RAUF_SYMBOLE = [f"RAUF{i}" for i in range(6)]
+for _j, _sym in enumerate(RAUF_SYMBOLE):
+    schreibe(_sym, [100.0 + i * (1.5 + 0.2 * _j) for i in range(40)])
 schreibe("RUNTER", [100.0 - i * 1.5 for i in range(40)])  # faellt deutlich
 from agent.krypto.backward_tracking import lade_kursreihen
 REIHEN = lade_kursreihen(conn)
 
 FAELLE_RAUF = [{"fakten": {"kurs": 100.0, "extra": {"wert": 1}},
-                "symbol": "RAUF", "created_at": TAGE[0]} for _ in range(12)]
+                "symbol": RAUF_SYMBOLE[i % len(RAUF_SYMBOLE)],
+                "created_at": TAGE[0]} for i in range(12)]
 
 
 def _antwort(entry, stop, ziel, action="ERÖFFNEN"):
@@ -107,8 +115,13 @@ pruefe("C1 Gegenrichtung wird ebenso erkannt",
 # --- D) Der EROEFFNEN-Waechter hat VORRANG ----------------------------------
 # Ohne den Fakt haelt das Modell fast immer - und vermeidet dadurch Verluste.
 # Die R-Bilanz sieht damit BESSER aus. Genau das darf nicht als Erfolg gelten.
+RUNTER_SYMBOLE = [f"RUNTER{i}" for i in range(4)]
+for _j, _sym in enumerate(RUNTER_SYMBOLE):
+    schreibe(_sym, [100.0 - i * (1.2 + 0.2 * _j) for i in range(40)])
+REIHEN = lade_kursreihen(conn)
 FAELLE_RUNTER = [{"fakten": {"kurs": 100.0, "extra": {"wert": 1}},
-                  "symbol": "RUNTER", "created_at": TAGE[0]} for _ in range(12)]
+                  "symbol": RUNTER_SYMBOLE[i % len(RUNTER_SYMBOLE)],
+                  "created_at": TAGE[0]} for i in range(12)]
 
 
 def haelt_ohne_fakt(fakten):
@@ -209,10 +222,14 @@ def rauschend(breite, versatz):
     return modell
 
 
-# Rauschen breit, Effekt klein -> darf NICHT als Wirkung durchgehen.
-n = nw.nachweisrahmen(rauschend(breite=6.0, versatz=0.3), FAELLE_RAUF,
+# KEIN Effekt, nur Rauschen -> darf keinen Alarm ausloesen. Das ist die
+# entscheidende Eigenschaft: der gepaarte Vergleich ist maechtiger als ein
+# Mittelwertvergleich und findet schon kleine SYSTEMATISCHE Versaetze. Genau
+# deshalb muss geprueft werden, dass er bei Abwesenheit eines Effekts still
+# bleibt - ein empfindliches Verfahren ohne diese Gegenprobe waere gefaehrlich.
+n = nw.nachweisrahmen(rauschend(breite=6.0, versatz=0.0), FAELLE_RAUF,
                       "extra.wert", REIHEN)
-pruefe("I1 kleiner Effekt unter breitem Rauschen bleibt IM RAUSCHEN",
+pruefe("I1 reines Rauschen ohne Effekt loest KEINEN Alarm aus",
        n.urteil == "IM RAUSCHEN",
        f"{n.urteil} (Rauschen {n.rauschboden_r:.3f}, Wirkung {n.wirkung_r:+.3f})")
 pruefe("I2 der Rauschboden ist diesmal NICHT null - die Grenze wurde gepruefT",
@@ -224,6 +241,22 @@ n = nw.nachweisrahmen(rauschend(breite=1.0, versatz=4.5), FAELLE_RAUF,
 pruefe("I3 grosser Effekt bei schmalem Rauschen wird als TENDENZ erkannt",
        n.urteil.startswith("TENDENZ"),
        f"{n.urteil} (Rauschen {n.rauschboden_r:.3f}, Wirkung {n.wirkung_r:+.3f})")
+
+# --- J) Der Cluster-Bootstrap ist konservativer als der naive ---------------
+# Die Werte muessen sich ZWISCHEN den Clustern unterscheiden - sonst ist jede
+# Ziehung gleich und die Breite null. Genau das war der erste Entwurf.
+werte = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5]
+viele = [f"S{i}" for i in range(12)]          # 12 Cluster, je 1 Wert
+wenige = ["A"] * 6 + ["B"] * 6                 # 2 Cluster, je 6 Werte
+cu_v, co_v = nw._cluster_bootstrap(werte, viele)
+cu_w, co_w = nw._cluster_bootstrap(werte, wenige)
+pruefe("J1 wenige Cluster ergeben ein BREITERES Intervall",
+       (co_w - cu_w) > (co_v - cu_v),
+       f"2 Cluster {co_w - cu_w:.3f} gegen 12 Cluster {co_v - cu_v:.3f}")
+pruefe("J2 ein einzelnes Cluster liefert kein Intervall",
+       nw._cluster_bootstrap(werte, ["A"] * 12) == (None, None))
+pruefe("J3 zwei Laeufe liefern dasselbe Intervall (reproduzierbar)",
+       nw._cluster_bootstrap(werte, viele) == (cu_v, co_v))
 
 print()
 print(nw.bericht(nw.nachweisrahmen(enger_ohne_fakt, FAELLE_RAUF, "extra.wert", REIHEN)))
