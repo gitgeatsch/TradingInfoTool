@@ -29,6 +29,7 @@ from agent.krypto.backward_tracking import (
     OUTCOME_STOP_LOSS,
     OUTCOME_TAKE_PROFIT,
     OUTCOME_UEBERHOLT,
+    _zonen_schwelle,
     gap_bewusster_fill,
     persistiere_offenes_mfe,
 )
@@ -157,13 +158,27 @@ def check_hebel_signal_outcome(
     if signal.action not in _TRACKABLE_HEBEL_ACTIONS:
         return OUTCOME_NICHT_ANWENDBAR, {}
 
-    take_profit_threshold = signal.take_profit_usd_von
-    stop_loss_threshold = signal.stop_loss_usd_von
+    # Richtung ZUERST - die Zonenkante haengt daran (2026-08-09). Vorher standen
+    # die beiden Schwellen oberhalb dieser Zeile und nahmen fuer BEIDE
+    # Richtungen die `_von`-Kante. Bei SHORT ist das die falsche: der Stop liegt
+    # ueber dem Einstieg, konservativ ist dort `_bis`. Das Gate rechnet seit
+    # jeher mit `_bis` (_zonen_absolut), der Tracker rechnete mit `_von` -
+    # dieselbe Position wurde also nach zwei verschiedenen Massstaeben
+    # genehmigt und bewertet. Herleitung und Messwerte im Docstring von
+    # backward_tracking._zonen_schwelle().
+    #
+    # Diese Datei traegt die Hauptlast des Defekts: 134 der 167 aufgeloesten
+    # SHORT-Zeilen stehen in hebel_signals.
+    ist_short = signal.richtung == "SHORT"
+
+    take_profit_threshold = _zonen_schwelle(
+        signal.take_profit_usd_von, signal.take_profit_usd_bis, None, ist_short)
+    stop_loss_threshold = _zonen_schwelle(
+        signal.stop_loss_usd_von, signal.stop_loss_usd_bis, None, ist_short)
     if take_profit_threshold is None or stop_loss_threshold is None:
         return OUTCOME_NICHT_ANWENDBAR, {}
 
     liquidation_threshold = signal.liquidationspreis_geschaetzt_usd
-    ist_short = signal.richtung == "SHORT"
 
     asset = next((a for a in watchlist if a.symbol == signal.symbol), None)
     if asset is None:
@@ -328,10 +343,14 @@ def check_hebel_signal_selbst_halten_outcome(
     if not _hat_hebel_selbst_halten_these(signal):
         return OUTCOME_NICHT_ANWENDBAR, {}
 
-    take_profit_threshold = signal.take_profit_usd_von
-    stop_loss_threshold = signal.stop_loss_usd_von
-    liquidation_threshold = signal.liquidationspreis_geschaetzt_usd
+    # Richtung zuerst, dann die Kante - siehe check_hebel_signal_outcome()
+    # und backward_tracking._zonen_schwelle().
     ist_short = signal.richtung == "SHORT"
+    take_profit_threshold = _zonen_schwelle(
+        signal.take_profit_usd_von, signal.take_profit_usd_bis, None, ist_short)
+    stop_loss_threshold = _zonen_schwelle(
+        signal.stop_loss_usd_von, signal.stop_loss_usd_bis, None, ist_short)
+    liquidation_threshold = signal.liquidationspreis_geschaetzt_usd
 
     asset = next((a for a in watchlist if a.symbol == signal.symbol), None)
     if asset is None:
@@ -456,10 +475,14 @@ def check_hebel_signal_veto_shadow_outcome(
     if not _hat_hebel_veto_schatten_these(signal):
         return OUTCOME_NICHT_ANWENDBAR, {}
 
-    take_profit_threshold = signal.take_profit_usd_von
-    stop_loss_threshold = signal.stop_loss_usd_von
-    liquidation_threshold = signal.liquidationspreis_geschaetzt_usd
+    # Richtung zuerst, dann die Kante - siehe check_hebel_signal_outcome()
+    # und backward_tracking._zonen_schwelle().
     ist_short = signal.richtung == "SHORT"
+    take_profit_threshold = _zonen_schwelle(
+        signal.take_profit_usd_von, signal.take_profit_usd_bis, None, ist_short)
+    stop_loss_threshold = _zonen_schwelle(
+        signal.stop_loss_usd_von, signal.stop_loss_usd_bis, None, ist_short)
+    liquidation_threshold = signal.liquidationspreis_geschaetzt_usd
 
     asset = next((a for a in watchlist if a.symbol == signal.symbol), None)
     if asset is None:

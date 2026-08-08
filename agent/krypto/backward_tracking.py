@@ -250,8 +250,62 @@ class BackwardTrackingResult:
 
 def _threshold(von_value: float | None, point_value: float | None) -> float | None:
     """Von/Bis-Zone bevorzugt (neue Signale), Fallback auf den alten Punktwert
-    (Bestandszeilen vor der Kurszonen-Slice, siehe Signal-Dataclass-Kommentar)."""
+    (Bestandszeilen vor der Kurszonen-Slice, siehe Signal-Dataclass-Kommentar).
+
+    NUR NOCH FUER ANWESENHEITSPRUEFUNGEN und die Richtungsableitung. Wer eine
+    Schwelle zum AUSLOESEN braucht, nimmt _zonen_schwelle() - siehe dort."""
     return von_value if von_value is not None else point_value
+
+
+def _zonen_schwelle(von_value: float | None, bis_value: float | None,
+                    point_value: float | None, ist_short: bool) -> float | None:
+    """Ausloese-Schwelle einer Preiszone, RICHTUNGSABHAENGIG (2026-08-09).
+
+    DER DEFEKT, DEN DAS BEHEBT. Eine Zone hat zwei Kanten. Bei LONG liegt die
+    konservative jeweils bei `_von` (Stop darunter, Ziel darueber) - da fielen
+    beide Konventionen zusammen und niemandem fiel etwas auf. Bei SHORT ist es
+    gespiegelt: der Stop liegt UEBER dem Einstieg, das Ziel darunter, und
+    konservativ ist dann `_bis` auf beiden Seiten.
+
+    `_zonen_absolut()` spiegelt seit jeher korrekt - daraus entsteht das CRV,
+    das ueber die Mindestgrenze 2,0 entscheidet. Die Outcome-Tracker nahmen
+    dagegen ueber `_threshold()` fuer BEIDE Richtungen die `_von`-Kante. Damit
+    genehmigte das System einen Trade nach der einen Rechnung und bewertete ihn
+    nach einer anderen.
+
+    WAS DABEI HERAUSKAM, an einem echten Fall (NEAR, hebel_signals id=407):
+
+        entry 1,91   stop_von 1,96 / stop_bis 2,09   ziel_von 1,61 / ziel_bis 1,78
+
+        Z-2 (Gate):     risiko 0,18   chance 0,13   ->  CRV   0,72
+        Tracker (alt):  risiko 0,05   chance 0,30   ->  R    +6,00
+
+    Bei einem CRV von 0,72 sind +6,00 R nicht erreichbar - die Zahl war ein
+    Artefakt zweier Konventionen. Auf sechs Nachkommastellen reproduziert, ebenso
+    bei HYPE id=598 (+9,4348) und XLM id=691 (+8,1606).
+
+    GEMESSEN: 144 von 167 aufgeloesten SHORT-Zeilen (86,2 %) tragen abweichende
+    Kanten, R ueberhoeht um Median 1,29x, maximal 3,78x. Bei LONG aendert sich
+    nichts - dort waren beide Konventionen schon immer identisch.
+
+    Der zweite, schwerere Teil betrifft nicht die Zahl, sondern den Handel: mit
+    der nahen Kante loeste der Stop eines SHORT frueher aus als das Risiko, das
+    bei der Positionsgroesse eingeplant war. Genau deshalb faellt die
+    Entscheidung auf die Gate-Konvention und nicht umgekehrt (Nutzer-
+    Entscheidung 09.08., "Variante A").
+
+    Fallback-Kette wie bei _threshold(): fehlt die richtungsrichtige Kante,
+    greift die andere, dann der alte Punktwert. Anwesenheitspruefungen bleiben
+    dadurch gueltig."""
+    if ist_short:
+        erste, zweite = bis_value, von_value
+    else:
+        erste, zweite = von_value, bis_value
+    if erste is not None:
+        return erste
+    if zweite is not None:
+        return zweite
+    return point_value
 
 
 def _entry_mid(signal) -> float | None:
@@ -366,8 +420,12 @@ def check_signal_outcome(
 
     ist_short = richtung_aus_action(signal.action) == "SHORT"
 
-    take_profit_threshold = _threshold(signal.take_profit_usd_von, signal.take_profit_usd)
-    stop_loss_threshold = _threshold(signal.stop_loss_usd_von, signal.stop_loss_usd)
+    take_profit_threshold = _zonen_schwelle(
+        signal.take_profit_usd_von, signal.take_profit_usd_bis,
+        signal.take_profit_usd, ist_short)
+    stop_loss_threshold = _zonen_schwelle(
+        signal.stop_loss_usd_von, signal.stop_loss_usd_bis,
+        signal.stop_loss_usd, ist_short)
     if take_profit_threshold is None or stop_loss_threshold is None:
         return OUTCOME_NICHT_ANWENDBAR, {}
 
@@ -584,8 +642,12 @@ def check_signal_veto_shadow_outcome(
 
     ist_short = _richtung_aus_zonen(signal) == "SHORT"
 
-    take_profit_threshold = _threshold(signal.take_profit_usd_von, signal.take_profit_usd)
-    stop_loss_threshold = _threshold(signal.stop_loss_usd_von, signal.stop_loss_usd)
+    take_profit_threshold = _zonen_schwelle(
+        signal.take_profit_usd_von, signal.take_profit_usd_bis,
+        signal.take_profit_usd, ist_short)
+    stop_loss_threshold = _zonen_schwelle(
+        signal.stop_loss_usd_von, signal.stop_loss_usd_bis,
+        signal.stop_loss_usd, ist_short)
 
     asset = next((a for a in watchlist if a.symbol == signal.symbol), None)
     if asset is None:
@@ -687,8 +749,12 @@ def check_signal_selbst_halten_outcome(
 
     ist_short = _richtung_aus_zonen(signal) == "SHORT"
 
-    take_profit_threshold = _threshold(signal.take_profit_usd_von, signal.take_profit_usd)
-    stop_loss_threshold = _threshold(signal.stop_loss_usd_von, signal.stop_loss_usd)
+    take_profit_threshold = _zonen_schwelle(
+        signal.take_profit_usd_von, signal.take_profit_usd_bis,
+        signal.take_profit_usd, ist_short)
+    stop_loss_threshold = _zonen_schwelle(
+        signal.stop_loss_usd_von, signal.stop_loss_usd_bis,
+        signal.stop_loss_usd, ist_short)
 
     asset = next((a for a in watchlist if a.symbol == signal.symbol), None)
     if asset is None:

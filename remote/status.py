@@ -132,7 +132,56 @@ def _gecacht(fn):
     def huelle(*args, **kwargs):
         return _zwischengespeichert(fn.__name__, lambda: fn(*args, **kwargs))
 
+    # Marke fuer den Waechter in teste_status_cache.py. Ohne sie liesse sich von
+    # aussen nicht unterscheiden, ob ein Getter zwischengespeichert wird.
+    huelle._ist_gecacht = True
     return huelle
+
+
+# Getter, die BEWUSST live bleiben. Der Waechter in teste_status_cache.py
+# verlangt, dass jeder `_get_*` entweder @_gecacht traegt ODER hier steht - ein
+# neuer Getter kann damit nicht mehr unbemerkt ungecacht in die Seite geraten.
+#
+# WARUM DIESE LISTE EXISTIERT. Am 07.08. kamen drei Karten an einem Tag dazu
+# (themenfeld_erfolg 0,28-0,47 s, hedge_wirksamkeit 0,11 s, wartende_themen
+# 0,003 s). Keine davon war fuer sich auffaellig, zusammen schoben sie den
+# Abruf von rund 0,9 s auf 1,39 s - ueber die Schwelle, ab der das Notebook bei
+# 2-Sekunden-Takt nicht mehr hinterherkommt. Niemand hat an die Last gedacht,
+# ich eingeschlossen, weil die Voreinstellung "ungecacht" war.
+#
+# Dieselbe Klasse ist in dieser Datei schon zweimal dokumentiert (_safe():
+# "264 Fehlschlaege in ~9 Minuten"; _SYSTEMGUETE_CACHE: "damit ueberlappten
+# sich die Anfragen"). Zweimal wurde der Einzelfall behoben. Die Liste dreht
+# die Voreinstellung um: absichern ist der Normalfall, live die Ausnahme mit
+# Begruendung.
+_LIVE_GETTER = frozenset({
+    # Der Nutzer beobachtet diese Zahl waehrend eines laufenden Signal-Laufs -
+    # ein bis zu 15 Minuten alter Wert waere hier eine Falschaussage.
+    "_get_budget_heute",
+    # Wird direkt nach einem von Hand angestossenen Marktscan gelesen.
+    "_get_marktscan_last",
+    # Ampel ueber die Erreichbarkeit der Datenquellen. Ein zwischengespeicherter
+    # Ausfall waere das Gegenteil ihres Zwecks.
+    "_get_api_health",
+    # Verbrauchszaehler, aendert sich mit jedem Abruf gegen CoinGecko.
+    "_get_coingecko_quota",
+    # Liest den zuletzt gespeicherten Portfolio-/Z-3-Stand, ist selbst billig
+    # und haengt am uebergebenen Portfoliowert statt an der Datenbank.
+    "_get_z3_und_bewertung",
+    # Reine Konfigurationsanzeige ohne Datenbankzugriff.
+    "_get_parameter_overview",
+})
+
+
+# Obergrenze fuer einen vollstaendigen Statusaufbau. Kein Abbruch - eine
+# Warnung. Der Vorfall vom 09.08. lief voellig lautlos ab: 94 % CPU ueber
+# Stunden, kein einziger Logeintrag, weil normale Lesezugriffe nichts melden.
+# Diese Zeile ist die Spur, die damals gefehlt hat.
+#
+# 1,0 s ist die Haelfte des Abruftakts von 2,0 s aus remote/server.py. Wird sie
+# gerissen, ist die Seite auf dem Weg in die Ueberlappung - auf einem
+# langsameren Geraet ist sie dann laengst drin.
+_BUILD_STATUS_WARNSCHWELLE_SEKUNDEN = 1.0
 
 
 def leere_aggregat_cache() -> None:
@@ -292,7 +341,32 @@ class RemoteStatus:
         }
 
 
-def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path, error_tail_lines: int = 5) -> RemoteStatus:
+def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path,
+                 error_tail_lines: int = 5) -> RemoteStatus:
+    """Vollstaendiger Statusaufbau, mit Laufzeit-Wache.
+
+    Die Wache ist die Spur, die am 09.08. gefehlt hat: das Notebook lief
+    stundenlang bei 94 % CPU, ohne dass irgendetwas im Log stand - normale
+    Lesezugriffe melden nichts. Reisst ein Aufbau die Schwelle, steht es ab
+    jetzt da, samt der Aufschluesselung, welche Karte es war.
+
+    Bewusst nur eine WARNUNG. Ein Abbruch waere schlechter als eine langsame
+    Seite: die Fernsteuerung wird gerade dann gebraucht, wenn etwas klemmt."""
+    beginn = time.monotonic()
+    ergebnis = _build_status_roh(conn, watchlist, log_path, error_tail_lines)
+    dauer = time.monotonic() - beginn
+    if dauer > _BUILD_STATUS_WARNSCHWELLE_SEKUNDEN:
+        logger.warning(
+            "Statusaufbau dauerte %.2f s (Schwelle %.2f s, Abruftakt der Seite "
+            "2,0 s). Bei Ueberschreitung des Takts ueberlappen die Anfragen und "
+            "verzoegern sich gegenseitig weiter. Pruefen, ob eine neue Karte "
+            "ohne @_gecacht dazugekommen ist - siehe _LIVE_GETTER.",
+            dauer, _BUILD_STATUS_WARNSCHWELLE_SEKUNDEN,
+        )
+    return ergebnis
+
+
+def _build_status_roh(conn: sqlite3.Connection, watchlist: list, log_path: Path, error_tail_lines: int = 5) -> RemoteStatus:
     latest_prices = db.get_latest_prices(conn)
     # Klassifikations-Redesign (2026-07-16): "gehalten" live aus den echten
     # Bestaenden (Spot) UND offenen Hebel-Positionen abgeleitet statt eines
@@ -674,6 +748,14 @@ def _get_systemguete(conn: sqlite3.Connection, watchlist: list) -> dict:
     # allerersten Aufruf None - die Karte bleibt dann eine Runde leer und
     # fuellt sich beim naechsten Refresh zwei Sekunden spaeter).
     return _SYSTEMGUETE_CACHE["wert"]
+
+
+# Eigener Zwischenspeicher, deshalb kein @_gecacht: diese Karte rechnet im
+# HINTERGRUND-THREAD und liefert solange den vorigen Wert, damit der Statusabruf
+# nie auf sie wartet (Stundentakt, siehe _SYSTEMGUETE_CACHE). Der Waechter in
+# teste_status_cache.py kennt nur die Marke - ohne diese Zeile meldete er die
+# Karte zu Recht als ungeschuetzt. Er hat sie beim ersten Lauf gefunden.
+_get_systemguete._ist_gecacht = True
 
 
 def _systemguete_neu_berechnen(watchlist: list) -> None:

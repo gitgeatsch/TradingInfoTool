@@ -1090,6 +1090,40 @@ ist **ungemessen, nicht widerlegt** und geht in keine Quote ein.
 > Anfragen, der Server kam nicht mehr hinterher"*. Beide Male wurde der
 > Einzelfall behoben, nicht die Klasse.
 
+### Nach jeder Änderung an Zonen, Schwellen oder Outcome-Trackern
+
+| Skript | Auslöser |
+|---|---|
+| `teste_zonen_kante.py` | **Nach jeder Änderung an `_zonen_absolut()`, `_zonen_schwelle()`, `_threshold()` oder an einem der sechs Outcome-Checker.** Sichert, dass Gate und Bewertung dieselbe Zonenkante nehmen — getrennt für SHORT und LONG, mit Gegenprobe gegen die alte Konvention. Prüft außerdem, dass **beide** Tracker-Dateien umgestellt sind. |
+| `korrigiere_short_zonenkante.py` | Einmalig, nach dem Umstellen der Kante: rechnet gespeicherte SHORT-Ausgänge über die **produktiven** Checker neu. Trockenlauf ist der Standard, `--anwenden` verlangt zusätzlich `--backup-vorhanden`. |
+
+> **Der Defekt (09.08.).** Eine Preiszone hat zwei Kanten. `_zonen_absolut()` —
+> Quelle des CRV, das über die Mindestgrenze 2,0 entscheidet — spiegelt bei
+> SHORT auf `_bis` (Stop weiter weg, Ziel näher, beides konservativ). Die
+> Outcome-Tracker nahmen für **beide** Richtungen `_von`. Ein Trade wurde damit
+> nach der einen Rechnung genehmigt und nach einer anderen bewertet: NEAR
+> id=407 hatte ein CRV von 0,72 und bekam **+6,00 R** gutgeschrieben.
+>
+> **Bei LONG fallen beide Konventionen zusammen** — deshalb ist es über Wochen
+> nicht aufgefallen, und deshalb hat auch die Pfad-Bewerter-Abnahme mit 97 %
+> nichts gemerkt: die aufgelöste Grundmenge ist überwiegend LONG.
+>
+> Wirkung der Korrektur: 29 Zeilen, Summe **−43,17 → −59,22 R**. Fünf ändern den
+> Status, vier davon von Stop-Loss auf Take-Profit. **Die alte Konvention hat den
+> Veto-Schatten-Arm geschmeichelt** — also ausgerechnet die Population, die
+> beantworten soll, was das Gate gekostet hat.
+
+**Zwei methodische Lehren aus diesem Fix:**
+
+1. **Der Trockenlauf hat den unvollständigen Fix gefunden, nicht der Test.** Nach
+   der ersten Runde meldete er 5 Änderungen statt der erwarteten Größenordnung —
+   `hebel_backward_tracking.py` hat **drei** Checker, umgestellt war einer. Ein
+   Trockenlauf gegen echte Daten gehört vor jedes Schreiben, gerade wenn man die
+   erwartete Größenordnung vorher ausgerechnet hat.
+2. **Zwei unabhängige Rechenwege haben sich bestätigt.** Die Vorab-Simulation
+   über `simuliere_signal` schätzte −15,22 R, die produktiven Checker lieferten
+   −16,05 R. Solche Konvergenz ist die billigste verfügbare Kontrolle.
+
 ### Bei Verdacht auf Datenfehler
 
 | Skript | Auslöser |

@@ -166,5 +166,83 @@ finally:
     bt.compute_systemguete = original
     rs.leere_aggregat_cache()
 
+# --- E) DER WAECHTER: kein Getter darf unbemerkt ungecacht sein -------------
+#
+# Das ist der eigentliche Schutz. A bis D sichern, dass der Zwischenspeicher
+# funktioniert - E sichert, dass ihn niemand vergisst. Am 07.08. kamen drei
+# Karten an einem Tag dazu, keine fuer sich auffaellig, zusammen schoben sie
+# den Abruf ueber die Schwelle. Genau das kann ab jetzt nicht mehr passieren,
+# ohne dass dieser Test rot wird.
+alle = [n for n in dir(rs) if n.startswith("_get_")]
+pruefe("E1 es gibt ueberhaupt Getter zu pruefen (Leerlauf-Wache)", len(alle) >= 20,
+       f"{len(alle)} gefunden")
+
+unversorgt = []
+for name in alle:
+    fn = getattr(rs, name)
+    if not callable(fn):
+        continue
+    if getattr(fn, "_ist_gecacht", False):
+        continue
+    if name in rs._LIVE_GETTER:
+        continue
+    unversorgt.append(name)
+pruefe("E2 jeder Getter ist entweder @_gecacht oder in _LIVE_GETTER",
+       not unversorgt, ", ".join(unversorgt) if unversorgt else "alle versorgt")
+
+# Gegenprobe: ein frisch dazugekommener Getter MUSS auffallen. Ohne diese
+# Zeile wuerde E2 auch bestehen, wenn die Pruefung selbst nichts finden kann.
+rs._get_frisch_erfundene_karte = lambda conn: {"neu": True}
+try:
+    neu_unversorgt = [
+        n for n in dir(rs)
+        if n.startswith("_get_") and callable(getattr(rs, n))
+        and not getattr(getattr(rs, n), "_ist_gecacht", False)
+        and n not in rs._LIVE_GETTER
+    ]
+    pruefe("E3 Gegenprobe: eine neue, unversorgte Karte wird erkannt",
+           neu_unversorgt == ["_get_frisch_erfundene_karte"],
+           ", ".join(neu_unversorgt))
+finally:
+    del rs._get_frisch_erfundene_karte
+
+# _LIVE_GETTER darf keine Namen fuehren, die es nicht mehr gibt - sonst
+# schuetzt der Waechter eine Karte, die laengst umbenannt wurde.
+verwaist = [n for n in rs._LIVE_GETTER if not hasattr(rs, n)]
+pruefe("E4 _LIVE_GETTER enthaelt keine verwaisten Namen",
+       not verwaist, ", ".join(verwaist) if verwaist else "keine")
+
+# --- F) Die Laufzeit-Wache meldet sich ---------------------------------------
+import logging
+
+gefangen = []
+
+
+class _Sammler(logging.Handler):
+    def emit(self, record):
+        gefangen.append(record.getMessage())
+
+
+rs.logger.addHandler(_Sammler())
+alt_schwelle = rs._BUILD_STATUS_WARNSCHWELLE_SEKUNDEN
+alt_roh = rs._build_status_roh
+try:
+    rs._build_status_roh = lambda *a, **k: (time.sleep(0.05), "status")[1]
+
+    rs._BUILD_STATUS_WARNSCHWELLE_SEKUNDEN = 10.0
+    gefangen.clear()
+    rs.build_status(None, [], None)
+    pruefe("F1 unterhalb der Schwelle wird nicht gewarnt", not gefangen,
+           f"{len(gefangen)} Meldungen")
+
+    rs._BUILD_STATUS_WARNSCHWELLE_SEKUNDEN = 0.01
+    gefangen.clear()
+    rs.build_status(None, [], None)
+    pruefe("F2 oberhalb der Schwelle wird gewarnt", len(gefangen) == 1,
+           gefangen[0][:60] if gefangen else "keine Meldung")
+finally:
+    rs._build_status_roh = alt_roh
+    rs._BUILD_STATUS_WARNSCHWELLE_SEKUNDEN = alt_schwelle
+
 print("\n" + ("ALLE TESTS BESTANDEN" if not fehler else f"FEHLER: {fehler}"))
 raise SystemExit(1 if fehler else 0)
