@@ -1026,3 +1026,101 @@ Alles andere ist **bewusst nachgelagert**, und zwar nicht aus Aufwandsgründen:
 > gegen den heutigen Stand als Ganzes — Dreiarm-Design mit Rauschboden, gepaart,
 > ERÖFFNEN-Quote als Pflicht-Wächter.
 
+
+---
+
+## 9. Nachweisverfahren für neue Fakten — der Plan vom 2026-08-09
+
+**Anlass.** Nutzer-Vorgabe: *„wichtig wäre nur dass du als Fachexperte prüfst
+wie wir die neuen Informationen sauber integrieren und einen ‚Nachweis'
+erhalten ob es eine Verbesserung oder Verschlechterung ist — einfach nur
+Einbauen hast du selbst eigentlich abgelehnt."*
+
+### Der methodische Mangel, der diesen Plan nötig macht
+
+Das bestehende Drei-Arm-Verfahren (Abschnitt 7) beweist, **dass** ein Fakt das
+Verhalten ändert. Es kann nicht beweisen, **dass die Änderung eine Verbesserung
+ist.** Gemessen wurde am 05./06.08. die *Wirkung auf den Stop-Abstand* — eine
+Stellgröße, kein Ergebnis. Der Befund lautete „das Modell wählt engere Stops";
+ob engere Stops hier besser sind, sagt die Messung nicht. Der vorhandene
+Backtest (`backtest_llm1_historisch.py`) misst die Zonenqualität und ist auf der
+ERÖFFNEN/HALTEN-Achse bei 94–100 % gesättigt.
+
+**Es fehlt der Bewerter, der aus einer geänderten Entscheidung ein Ergebnis
+macht.** Ohne ihn bleibt jede Fakt-Einführung „einbauen und hoffen".
+
+Zweiter Engpass, der daran hängt: das nötige n von **212** (aus dem
+Kosten-/Ausstiegs-Test) ist mit aufgelösten Signalen unerreichbar — 5,2 %
+Auflösungsquote, ~1,2/Tag. Ein Bewerter, der auch unaufgelöste Signale gegen den
+echten Kursverlauf auswertet, hebt die Stichprobe von 92 auf potenziell ~1.400.
+Er ist damit nicht nur der Nachweis, sondern die einzige Möglichkeit, überhaupt
+genug Fälle zu bekommen.
+
+### Stufe 0 — Gegenprüfung der einen dokumentierten Widersprüchlichkeit
+
+Blocker #617: der Docstring von `basislinie_erwartungswert()` begründet die
+Konstruktion mit *„Zufallseinstieg verliert systematisch, −0,11 bis −0,26 R"*,
+der Export liefert **+0,081 R**. Mindestens eine der beiden Zahlen ist falsch,
+und der Signalbeitrag −0,379 R steht deshalb unter ausdrücklicher Sperre.
+Solange das offen ist, ist die Basislinie weder als Fakt noch als Maßstab
+verwendbar. Reine Auswertung, kein Bau.
+
+### Stufe 1 — Der Pfad-Bewerter, validiert
+
+OHLC-Verlauf + Entry/Stop/Ziel → Ergebnis in R.
+
+> **Abnahmekriterium: er muss die 92 bekannten Ausgänge reproduzieren.**
+> Reproduziert er sie nicht, ist er für die anderen ~1.400 nicht
+> vertrauenswürdig.
+
+### Stufe 2 — Stichprobe verbreitern
+
+Der validierte Bewerter über die unaufgelösten Signale. Erst danach ist n=212
+erreichbar. **Offene Vorbedingung, gehört in jedes spätere Ergebnis:** 19,2 %
+der Hebel-Signale (338) tragen Symbole ohne jede Kursreihe — CANTON, KAIA,
+KAITO, SUPRA, XNO, darunter das verlustreichste Symbol überhaupt — und 30,2 %
+haben weder Entry noch Stop hinterlegt. Die Lücke ist nicht zufällig verteilt.
+
+### Stufe 3 — Nachweisrahmen je Fakt
+
+Bestehendes Drei-Arm-Design (A1/A2 identisch + B, gepaart auf denselben
+Faktensätzen) **plus** Bewertung beider Arme durch den Bewerter aus Stufe 1.
+Entscheidungsregel und nötiges n werden **vor** dem Lauf festgeschrieben.
+Rauschboden ~4,5 pp ist die Messgrenze.
+
+**Betriebsdefinition von „Tendenz" (Nutzer-Entscheidung 09.08.):** Ein Fakt darf
+auf Tendenz eingeführt werden, ohne vollen Nachweis — der aktuelle Zustand mit
+null Signalen ist nicht tragbar, und das Ausstiegsverfahren führt „fehlender
+Wirkungsnachweis" ohnehin als **keinen** Rücknahmegrund.
+
+> Eine Tendenz zählt aber nur, wenn sie beim **Vergrößern der Stichprobe hält
+> oder wächst — nicht wenn sie schrumpft.**
+
+Begründung aus eigenen Daten, zweimal unabhängig: Regel-Ablation +0,281/+0,182
+bei 12 Ankern → +0,014/−0,013 bei 28. Kosten-Fakt −0,734 bei 12 → −0,334 bei 24.
+Beide schrumpften. Die Rücknahmebedingung wird **vor** der Einführung
+schriftlich festgelegt.
+
+### Stufe 4 — Fakten, einer nach dem anderen
+
+**Erster Kandidat: die Hebel-CRV-Bänder.** Begründung ist die in Abschnitt 8
+gemessene Pipeline-Asymmetrie — der Hebel-Analyst *setzt* das CRV und kennt nur
+die Mindestgrenze aus Regel 5, während Spot seit 03.08. die vollen Bänder hat,
+bei n=19 gegen n=124 Datenbasis. Bestes Band 2,5–3,0 mit +34,5 pp über
+Basislinie und EW +0,571 R.
+
+**Falle beim Bauen:** nur `abstand_zur_basislinie_pp` darf in den Fakt — die
+absolute Quote im Band ≥ 4,0 ist der am 03.08. widerrufene
+Trunkierungs-Artefakt.
+
+**Sequenzbedingung:** eigene HALTEN-Bilanz und Konfidenz-Versatz **nicht
+parallel** — dieselbe Familie wie `systemguete`, das unter Beobachtung steht;
+zwei Selbstbewertungs-Fakten gleichzeitig machen einen negativen Befund
+unzuordenbar.
+
+### Vorgeschaltet, weil billiger als alles andere
+
+Bevor „null Signale" als Qualitätsproblem behandelt wird, muss die **mechanische
+Ursache** ausgeschlossen sein: `llm_aufrufe_heute` im nächsten Export zeigt in
+einer Zahl, ob überhaupt noch LLM-Aufrufe stattfinden. Finden keine statt, hilft
+kein einziger neuer Fakt.
