@@ -1265,7 +1265,33 @@ def _format_performance_gruppen(gruppen: dict[tuple[str, str], dict], watchlist:
 
 def compute_provider_performance(conn, watchlist: list | None = None) -> dict:
     """Provider-Performance-Aggregation (2026-07-15, Nutzer-Wunsch: Groq/Cerebras/
-    Gemini nach echter Trefferquote statt nur Kapazitaet vergleichen). Liest ALLE
+    Gemini nach echter Trefferquote statt nur Kapazitaet vergleichen).
+
+    ⚠ DIESE TABELLE IST KEIN ANBIETERVERGLEICH (gemessen 2026-08-09). Die
+    Anbieter loesen einander in der Kette AB, sie laufen nicht parallel - ihre
+    Zeitraeume ueberlappen sich deshalb nicht einen einzigen Tag:
+
+        cerebras   n= 9   14.07 .. 17.07   +0,523 R
+        groq       n= 1   14.07 .. 14.07   +3,841 R
+        mistral    n=82   17.07 .. 05.08   -0,491 R
+
+    Was hier als "Anbieter-Unterschied" erscheint, ist ueberwiegend ein
+    KALENDER-Unterschied. Die Gegenprobe INNERHALB von Mistral (Anbieter also
+    konstant) zeigt denselben Verfall: -0,010 R in der Woche ab dem 15.07.
+    gegen -0,601 R ab dem 22.07.
+
+    Zweiter Vorbehalt, gleicher Messtag: die 92 aufgeloesten Signale liegen auf
+    nur 23 Symbolen, und FUENF davon (KAIA/NEAR/BTC/XLM/HYPE, 32 Signale,
+    ausnahmslos Verluste) tragen 102 % des Gesamtminus. Auf Symbolebene liegt
+    der Mittelwert bei -0,136 R statt -0,344 R - die Differenz ist reine
+    Wiederholung ueber Cooldown-Re-Signale, kein Urteilsunterschied.
+
+    Fuer einen echten Anbietervergleich braeuchte es entweder ueberlappende
+    Zeitraeume (zwei Anbieter gleichzeitig auf denselben Kandidaten) oder einen
+    Ruecktest auf identischen Faktensaetzen. Bis dahin: als Betriebsuebersicht
+    lesen, nicht als Qualitaetsurteil.
+
+    Liest ALLE
     bereits aufgeloesten Signale (take_profit_erreicht/stop_loss_erreicht, bei
     Hebel zusaetzlich liquidation_wahrscheinlich) aus signals UND hebel_signals,
     gruppiert nach (tier, provider_from_label(...)). Spot und Hebel bleiben
