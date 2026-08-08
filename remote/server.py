@@ -715,7 +715,7 @@ function renderThemenfeldErfolg(t) {
     if (!e.messbar) {
       x += '<div class="row"><span>' + name + ' <span class="muted-text">(' +
         (e.richtung_anzeige || e.richtung) +
-        ")</span></span><span class=\"muted-text\">nicht messbar</span></div>";
+        ')</span></span><span class="muted-text">nicht messbar</span></div>';
       x += '<div class="row"><span class="muted-text">↳ ' + (e.grund || "") + "</span></div>";
       continue;
     }
