@@ -1480,6 +1480,21 @@ def main() -> None:
             "mistral": db.count_real_llm_calls_today_by_provider(conn, "mistral:"),
             "gemini": db.count_real_llm_calls_today_by_provider(conn, "gemini:"),
         }
+        # ECHTE AUFRUFE daneben (2026-08-09, Teil B). BEIDE Zahlen, nicht statt:
+        # `llm_calls_heute` zaehlt Signal-ZEILEN und beantwortet "welcher
+        # Anbieter hat dieses Signal erzeugt" - das ist fuers Qualitaets-
+        # Tracking richtig. `llm_aufrufe_heute` zaehlt HTTP-Aufrufe und
+        # beantwortet "wieviel Kontingent haben wir verbraucht".
+        #
+        # Der Unterschied ist genau der Defekt vom 07.08.: dort stand
+        # mistral auf 0 (keine Zeile erzeugt), waehrend real ueber 140
+        # vergebliche Aufrufe liefen. Erst NEBENEINANDER wird das sichtbar -
+        # eine grosse Luecke zwischen beiden Zahlen heisst "viele Aufrufe ohne
+        # Ergebnis", also Fehlschlaege oder Wiederholungen.
+        llm_aufrufe_heute = {
+            p: db.get_llm_budget_zaehler(conn, p)
+            for p in ("groq", "mistral", "gemini", "zai", "openrouter")
+        }
         signal_volumen_heute = {
             "spot": db.count_real_signals_today(conn),
             "hebel": db.count_real_hebel_signals_today(conn),
@@ -1764,6 +1779,7 @@ def main() -> None:
         "holdings_check": [row_to_dict(r) for r in holdings],
         "api_health": api_health,
         "llm_calls_heute": llm_calls_heute,
+        "llm_aufrufe_heute": llm_aufrufe_heute,
         "signal_volumen_heute": signal_volumen_heute,
         "provider_performance": provider_performance,
         "konfidenz_kalibrierung": konfidenz_kalibrierung,
@@ -1845,7 +1861,8 @@ def main() -> None:
     print(f"Geschrieben: {ziel_datei}")
     print(f"  Holdings: {len(holdings)}, Hebel-Signale: {len(hebel_rows)}, "
           f"Spot-Signale: {len(spot_rows)}, Hebel-Positionen: {len(hebel_positions)}")
-    print(f"  LLM-Calls heute: {llm_calls_heute}")
+    print(f"  LLM-Calls heute (Signalzeilen): {llm_calls_heute}")
+    print(f"  LLM-Aufrufe heute (echte HTTP-Calls): {llm_aufrufe_heute}")
     print(f"  Deep-Dive ({DEEP_DIVE_SYMBOL}): {len(deep_signale)} Signale, "
           f"{len(deep_positionen)} Positionen, {len(deep_trigger)} Trigger, "
           f"{len(deep_preis)} Preispunkte")
