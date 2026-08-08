@@ -15515,3 +15515,59 @@ laufnachgewiesen — nur nicht angeschlossen. Der Breakeven-Abstand
 (Trefferquote − `1/(1+CRV)`) über mehr Daten ist die Leitgröße, die die Frage
 „nützt die KI-Ebene?" beantworten kann. Das ist ein eigener Arbeitsblock, kein
 Nebenprodukt der Anbieterwahl.
+
+## Nachtrag (2026-08-09): Konfidenz ist nicht invers — und die Verluste gehören drei verschiedenen Ebenen
+
+### Meine Hypothese war falsch
+
+Der zeitliche Trend (Konfidenz 52 → 70 %, Trefferquote 22 → 0 %) legte eine
+invertierte Kalibrierung nahe. Der querschnittliche Test widerlegt sie:
+
+    Korrelation Konfidenz x realisiertes CRV:  r = +0,073  (n=92)
+    Bänder:  <=55 n=37 -0,244R (19%) | 65-69 n=36 -0,617R (11%) | >=70 n=14 +0,325R (29%)
+
+Es sind **zwei unabhängige Driften** — der Markt wurde schlechter *und* das
+Modell selbstsicherer. Innerhalb eines Zeitraums ist hohe Konfidenz nicht
+schlechter (Juli-Fenster: ≥70-Band +0,52 R gegen ≤55-Band +0,27 R).
+**Das Mindestkonfidenz-Gate bleibt, es richtet keinen Schaden an.**
+
+Nebenbefund: bei r ≈ 0 (KI grob ±0,20 bei n=92) filtert das Gate auf einer
+Variablen ohne nachgewiesene Trennschärfe. Das ist *kein Nachweis von
+Trennschärfe*, nicht *bewiesen wirkungslos* — und ausdrücklich kein Argument
+zum Lockern.
+
+### Die MFE-Zerlegung — Ursache statt Ergebnis
+
+Methode entspricht der MFE/MAE-Analyse (Sweeney 1996): nicht „hat verloren",
+sondern „wie weit lief der Trade zu unseren Gunsten, bevor er scheiterte".
+Werkzeug liegt seit dem 30.07. im Code (`compute_sl_mfe_analyse()`) und war
+**nie aufgerufen worden**.
+
+    ALLE VERLUSTE (n=77)
+       Richtung war FALSCH   (MFE < 0,25R):  17 = 22 %
+       knapp daneben      (0,25-1,0R):  29 = 38 %
+       Richtung war RICHTIG  (MFE >= 1R):  31 = 40 %   <- Ausstiegsproblem
+    KAIA ALLEIN (11 Signale, 0 Treffer)
+       Richtung war FALSCH:  9 = 82 %   |   MFE >= 1R: 0 = 0 %   |   Median MFE -0,01R
+
+**KAIA ist der Gegenfall zum Gesamtmuster**: der Kurs bewegte sich elfmal kein
+einziges Mal nennenswert in unsere Richtung. Kein Ausstiegsproblem, kein
+Urteilsproblem — der Trigger feuert, ohne dass der Kurs reagiert. Das ist
+Screening, oberhalb des LLM.
+
+### Nutzer-Entscheidung: kein „Vorgängertrade"-Fakt im Prompt
+
+Begründung des Nutzers: *„mit der Zusatzinfo vorheriger Trade war ein
+Fehlschlag wird es nur konservativer durch die Info OHNE zu lernen — was soll
+man ohne tatsächlicher Begründung lernen können?"* Der Einwand trägt: ein
+Ergebnis ohne Ursache ist kein Lernsignal, und es entstünde ein
+Rückkopplungskreis, in dem das Modell seine eigenen Fehler als Eingabe
+zurückbekommt.
+
+### Was die Zerlegung NICHT ist
+
+Sie ist eine **Diagnose, kein Plan**. „40 % erreichten 1R" heißt nicht „40 %
+sind einholbar": der naheliegende Griff (Breakeven-Lock) wurde am 01.08.
+geprüft und verworfen, weil er 63 % der Gewinner kostete. Jede künftige
+Ausstiegsregel muss auf beiden Seiten gemessen werden — was sie bei Verlierern
+rettet UND was sie bei Gewinnern kostet. Netto-R, nicht gerettetes R.
