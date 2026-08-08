@@ -175,3 +175,65 @@ def als_response_format(schema: dict, name: str) -> dict:
     erwarten. Alle fuenf Clients reichen `response_format` unveraendert durch."""
     return {"type": "json_schema",
             "json_schema": {"name": name, "strict": True, "schema": schema}}
+
+
+JSON_OBJECT = {"type": "json_object"}
+
+# WELCHER ANBIETER BEKOMMT DAS STRIKTE SCHEMA - gemessen am 2026-08-09, je
+# Anbieter drei Arme (A json_object, A' Wiederholung als Rauschpegel,
+# B json_schema) auf denselben echten Faktensaetzen.
+#
+#   OpenRouter  STRIKT. Einziger Anbieter mit echten Formfehlern: 2/38 und 2/20
+#               in den json_object-Armen, 0 unter Schema. Die EROEFFNEN-Quote
+#               bleibt unberuehrt (100 % / 100 % / 97 %), der Urteilseffekt
+#               liegt im Rauschen (1 bewertbare Abweichung bei n=36).
+#
+#   Gemini      json_object. DISQUALIFIZIERT durch den EROEFFNEN-Waechter: die
+#               Quote bricht von 76 % (A und A' identisch) auf 61 % ein, 16 pp.
+#               Und es gaebe nichts zu gewinnen - 38/38 formgueltig in allen
+#               drei Armen. Bei 35 Verlierern gegen 3 Gewinner sieht "vermeidet
+#               Verluste" gut aus und ist doch nur Nichthandeln.
+#
+#   Z.ai        json_object. Unter Schema 3 bzw. 1 JSONDecodeError statt 0 - es
+#               liefert dann GAR KEIN JSON mehr - und bei temperature=0.0 die
+#               2,3-fache Dauer. Auf beiden Achsen schlechter.
+#
+#   Mistral     json_object. Ungemessen (402 bis ca. 31.08.), bleibt beim
+#               heutigen Verhalten.
+#
+# KEIN KOMPLETTUMSTIEG also, sondern strikt genau dort, wo es etwas repariert.
+_STRIKT_FUER_MODULE = ("openrouter",)
+
+
+def response_format_fuer(llm_client, analyst_modulname: str) -> dict:
+    """Das `response_format` fuer DIESEN Client und DIESEN Analysten.
+
+    Warum die Fallunterscheidung hier und nicht an den zehn Aufrufstellen: es
+    ist EINE Entscheidung. Zehnmal ausgeschrieben waeren es zehn Gelegenheiten
+    auseinanderzulaufen - dasselbe Argument, mit dem die Schemata abgeleitet
+    statt geschrieben werden.
+
+    `analyst_modulname` ist `__name__` des aufrufenden Analysten. Ueber
+    `sys.modules` aufgeloest, damit dieses Modul die Analysten nicht importieren
+    muss (das waere zirkulaer, weil sie es hier importieren).
+
+    Faellt irgendetwas aus - unbekannter Analyst, Schema-Luecke - wird
+    `json_object` geliefert. Das ist der heutige Produktivzustand: im
+    Zweifelsfall unveraendert weiterlaufen, nicht ausfallen.
+    """
+    import sys
+
+    modul_des_clients = type(llm_client).__module__
+    if not modul_des_clients.rsplit(".", 1)[-1] in _STRIKT_FUER_MODULE:
+        return JSON_OBJECT
+    analyst = sys.modules.get(analyst_modulname)
+    if analyst is None:
+        return JSON_OBJECT
+    try:
+        schema = baue_signal_schema(analyst)
+    except SchemaLuecke:
+        # Ein neues Pflichtfeld ohne hinterlegte Form. Lieber json_object als
+        # ein Schema, das die Antwort auf ein unvollstaendiges Vokabular
+        # zwingt - der Validator wuerde sie hinterher ablehnen.
+        return JSON_OBJECT
+    return als_response_format(schema, analyst_modulname.rsplit(".", 1)[-1])

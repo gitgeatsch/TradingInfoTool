@@ -18,6 +18,8 @@ bewusst NICHT in dieser Runde, siehe dortige Begruendung)."""
 from __future__ import annotations
 
 import json
+
+from agent import llm_schema
 import logging
 
 import numpy as np
@@ -711,7 +713,11 @@ def call_llm_for_signal(llm_client, facts: dict, max_retries: int = 2) -> dict:
         raw = llm_client.chat(
             messages,
             temperature=0.2,
-            response_format={"type": "json_object"},
+            # ANBIETERABHAENGIG seit 2026-08-09: OpenRouter bekommt das
+            # strikte Schema, alle anderen unveraendert json_object. Die
+            # Entscheidung samt Messwerten steht in agent/llm_schema.py -
+            # hier bewusst nur der Aufruf, damit sie EINMAL existiert.
+            response_format=llm_schema.response_format_fuer(llm_client, __name__),
         )
         try:
             parsed = json.loads(raw)

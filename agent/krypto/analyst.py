@@ -14,6 +14,8 @@ von risk_gate.post_check() korrigiert - vermeidet doppelte Veto-Logik in zwei Da
 from __future__ import annotations
 
 import json
+
+from agent import llm_schema
 import logging
 from datetime import datetime, timezone
 
@@ -1108,7 +1110,11 @@ def call_groq_for_signal(groq_client, facts: dict, max_retries: int = 2) -> dict
         raw = groq_client.chat(
             messages,
             temperature=0.2,
-            response_format={"type": "json_object"},
+            # ANBIETERABHAENGIG seit 2026-08-09: OpenRouter bekommt das
+            # strikte Schema, alle anderen unveraendert json_object. Die
+            # Entscheidung samt Messwerten steht in agent/llm_schema.py -
+            # hier bewusst nur der Aufruf, damit sie EINMAL existiert.
+            response_format=llm_schema.response_format_fuer(groq_client, __name__),
         )
         try:
             parsed = json.loads(raw)
