@@ -15645,3 +15645,70 @@ Zeile 2747 (`any(c is not None for c in (mistral, gemini, zai))`) kennt ihn
 nicht. **C2 ist damit produktiv verhaltensneutral** — der Parameter hat den
 Vorgabewert `None`. Offen bleiben C3 (dasselbe in `agent/multi_asset_batch.py`)
 und C4 (main.py → `build_scheduler` → Job-Argumente, plus das Gate oben).
+
+## Nachtrag (2026-08-09): Teil C3 — und ein Breaker, der nie gegriffen hat
+
+`agent/multi_asset_batch.py` läuft jetzt dieselbe Kette wie der Krypto-Allocator:
+**Gemini → OpenRouter → Mistral**. Zwei Ketten mit verschiedener Reihenfolge
+wären nicht zu erklären. Die beiden Vorbehalte aus C2 gelten unverändert und
+stehen dort noch einmal als Kommentar: der Laufzähler untererfasst OpenRouter um
+bis zu Faktor drei (Modell-Rotation), und `api_health_status` wird mit der
+Gegenprüfung geteilt.
+
+### Der eigentliche Fund: die Breaker-Vorbelegung war wirkungslos
+
+Beim Umbau fiel die Reihenfolge auf:
+
+    182:        conn.close()
+    ...
+    188:    sperre = provider_sperre.vorbelegte_sperre(conn, ("mistral", "gemini"))
+
+Die Verbindung war geschlossen, bevor sie benutzt wurde. `vorbelegte_sperre()`
+fängt jede Exception ab und liefert dann eine **leere** Sperre — sichtbar nur
+als `logger.info`. Empirisch belegt gegen eine DB-Kopie mit einem echten 402 in
+`api_health_status`:
+
+    A) mit OFFENER Verbindung:       gesperrt: {'mistral': 'seit 0.0 h dauerhaft fehlerhaft: 402 ...'}
+    B) mit GESCHLOSSENER Verbindung: gesperrt: NICHTS
+
+**Das war ein echter Defekt, kein bewusster Entwurf** — gegengeprüft am
+Entscheidungslog vom 07.08., der den Breaker beschreibt: *„Die Sperre wirkt über
+Laufgrenzen — und das ist der eigentliche Punkt"*, benutzt von **beiden** Ketten,
+und *„Der wichtigste [Test] ist C1: die Sperre greift schon VOR dem ersten
+Versuch eines neuen Laufs."* Die Vorbelegung sollte hier wirken; sie tat es seit
+dem 07.08. nicht. Im Krypto-Allocator stand dieselbe Zeile korrekt innerhalb des
+`try`-Blocks — deshalb fiel es nie auf.
+
+Das ist wieder das Muster aus dem 06.08.: **der Fehler war da, aber er war
+leise.** `teste_provider_sperre.py` prüft bis heute nur, *dass* das Modul in
+beiden Ketten verdrahtet ist, nicht *dass* die Vorbelegung dort wirkt — die
+Prüfung G war strukturell, nicht funktional.
+
+### Was ausdrücklich KEIN Defekt war
+
+`MultiAssetBatchResult.budget_erschoepft` wurde nie gesetzt. Der erste Eindruck
+war „totes Feld"; die Gegenprüfung am C1-Commit sagt etwas anderes: C1 hat das
+Feld **einen Tag zuvor neu angelegt**, ausdrücklich als reine Formangleichung an
+`AllocationResult` — *„C1 ist reine Form, keine Logik. Die Kettenreihenfolge und
+OpenRouter kommen in C2/C3."* Es war also nicht kaputt, sondern noch nicht an
+der Reihe. Jetzt ist es an der Reihe, und damit es nicht ins Leere schreibt,
+zeigt die Log-Zeile in `scheduler/background.py` es auch an — der Krypto-Zweig
+tut das längst. Ohne das ist eine **übersprungene** Stufe von einer
+**gescheiterten** nicht zu unterscheiden.
+
+### Geprüft
+
+`teste_kette_reihenfolge.py` hat jetzt zwei Teile — sechs Läufe über die echte
+`run_budget_allocator()`, fünf über die echte `run_multi_asset_batch()`,
+zusammen **24 Zusicherungen**, alle bestanden. Der schärfste ist M5: ein 402
+steht in `api_health_status`, der OpenRouter-Client selbst ist **kerngesund** —
+greift die Vorbelegung, wird er gar nicht erst gefragt (0 Aufrufe, Mistral
+übernimmt alle 13 Kandidaten). Vor dem Fix hätte er alles bedient. Beide Blöcke
+haben eine Wache gegen den leeren Lauf.
+
+### Offen bleibt C4
+
+`scheduler/background.py` übergibt `openrouter_client` an keine der beiden
+Ketten, und **zwei** Gates kennen ihn nicht: Zeile 2747 für den Krypto-Allocator
+und Zeile 2859 für den Multi-Asset-Batch. C3 ist damit wie C2 produktiv
+verhaltensneutral. C4 ist die Stufe, ab der der Schalter wirklich wirkt.

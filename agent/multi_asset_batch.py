@@ -130,7 +130,16 @@ def run_multi_asset_batch(
     gemini_client=None,
     mistral_client=None,
     zai_client=None,
+    openrouter_client=None,
 ) -> MultiAssetBatchResult:
+    """Kettenreihenfolge seit 2026-08-09: Gemini -> OpenRouter -> Mistral -
+    identisch zu agent/krypto/budget_allocator.py, Begruendung steht dort im
+    Modul-Docstring. Zwei Ketten mit verschiedener Reihenfolge waeren nicht zu
+    erklaeren und wuerden garantiert auseinanderlaufen.
+
+    Ob OpenRouter mitspielt, entscheidet allein, ob hier ein Client ankommt -
+    dieselbe Bauart wie bei `mistral_client`/`gemini_client`. Der Schalter
+    `budget_allocator.openrouter_aktiv` wird in main.py ausgewertet."""
     result = MultiAssetBatchResult()
     cfg = config_dict.get("multi_asset_batch", {})
     if not cfg.get("aktiv", True):
@@ -145,6 +154,7 @@ def run_multi_asset_batch(
     ba_cfg = config_dict.get("budget_allocator", {})
     mistral_budget = ba_cfg.get("mistral_taegliches_budget", 150)
     gemini_budget = ba_cfg.get("gemini_taegliches_budget", 200)
+    openrouter_budget = ba_cfg.get("openrouter_taegliches_budget", 400)
 
     conn = conn_factory()
     try:
@@ -174,18 +184,47 @@ def run_multi_asset_batch(
         # ECHTE AUFRUFE statt erzeugter Datensaetze (2026-08-09, Teil B) -
         # identisch zu budget_allocator.py, siehe dortige Begruendung. Beide
         # Ketten muessen denselben Zaehler lesen, sonst laufen sie auseinander.
+        #
+        # OPENROUTER STEHT HIER MIT DEMSELBEN VORBEHALT WIE IM KRYPTO-ALLOCATOR
+        # (2026-08-09, Teil C3): der DB-Zaehler ist richtig - `zaehle_aufruf()`
+        # sitzt in `_ein_call()` und zaehlt jeden HTTP-Aufruf der Modell-
+        # Rotation einzeln. Die Hochzaehlung INNERHALB dieses Laufs unten
+        # addiert dagegen +1 je erzeugtem Signal und liegt damit bis zu dreimal
+        # zu niedrig. Bewusst nicht repariert: beim naechsten Lauf wird ohnehin
+        # wieder aus der DB gelesen, die Abweichung lebt maximal einen Lauf.
         tages_verbraucht = {
             "mistral": db.get_llm_budget_zaehler(conn, "mistral"),
             "gemini": db.get_llm_budget_zaehler(conn, "gemini"),
+            "openrouter": db.get_llm_budget_zaehler(conn, "openrouter"),
         }
+        # DER BREAKER WIRD VOR DER SCHLEIFE AUS api_health_status VORBELEGT:
+        # eine Sperre, die erst nach drei Fehlschlaegen greift und beim
+        # naechsten Lauf vergessen ist, verhindert bei ein bis zwei Kandidaten
+        # je Lauf fast nichts.
+        #
+        # DIESE ZEILE STAND BIS ZUM 2026-08-09 UNTERHALB DES `finally`-BLOCKS -
+        # also NACH `conn.close()`. `vorbelegte_sperre()` faengt jede Exception
+        # ab und liefert dann eine leere Sperre, sichtbar nur als logger.info:
+        # die Vorbelegung hat in dieser Kette folglich NIE gegriffen, waehrend
+        # sie im Krypto-Allocator seit dem 07.08. funktionierte. Empirisch
+        # belegt (offene Verbindung sperrt Mistral, geschlossene sperrt nichts).
+        # Genau das Muster aus Memory feedback_fail_soft_ist_fail_silent - der
+        # Fehler war da, aber er war leise. `teste_provider_sperre.py` prueft
+        # bisher nur, DASS das Modul hier verdrahtet ist, nicht dass es wirkt.
+        #
+        # OPENROUTER TEILT SICH `api_health_status` MIT DER GEGENPRUEFUNG -
+        # beide unter der Quelle "openrouter". Ein dauerhafter Fehler dort
+        # sperrt auch diese Kette. Das ist gewollt: 401/402/403 sind
+        # Kontofragen und gelten fuer jede Verwendung desselben Schluessels.
+        sperre = provider_sperre.vorbelegte_sperre(
+            conn, ("mistral", "gemini", "openrouter"))
     finally:
         conn.close()
-    tages_budget = {"mistral": mistral_budget, "gemini": gemini_budget}
-
-    # Der Breaker wird VOR der Schleife aus api_health_status vorbelegt: eine
-    # Sperre, die erst nach drei Fehlschlaegen greift und beim naechsten Lauf
-    # vergessen ist, verhindert bei ein bis zwei Kandidaten je Lauf fast nichts.
-    sperre = provider_sperre.vorbelegte_sperre(conn, ("mistral", "gemini"))
+    tages_budget = {
+        "mistral": mistral_budget,
+        "gemini": gemini_budget,
+        "openrouter": openrouter_budget,
+    }
 
     def _mit_conn(fn):
         """Eigene Connection je Call (gleiches Muster wie budget_allocator.py::
@@ -224,20 +263,37 @@ def run_multi_asset_batch(
             # Parameter nicht - daher nur fuer Aktien/Rohstoffe/Themen-ETF.
             else {"war_re_evaluierung_faellig": asset.symbol in re_eval_symbole}
         )
+        # REIHENFOLGE Gemini -> OpenRouter -> Mistral (2026-08-09, Teil C3) -
+        # identisch zum Krypto-Allocator.
         calls = []
-        if mistral_client is not None:
-            calls.append(("mistral", lambda a=asset, fn=pipeline_fn, kw=extra_kwargs: _mit_conn(
-                lambda c: fn(a, watchlist, c, mistral_client, coingecko_client, zai_client=zai_client, **kw)
-            )))
         if gemini_client is not None:
             calls.append(("gemini", lambda a=asset, fn=pipeline_fn, kw=extra_kwargs: _mit_conn(
                 lambda c: fn(a, watchlist, c, gemini_client, coingecko_client, zai_client=zai_client, **kw)
+            )))
+        if openrouter_client is not None:
+            calls.append(("openrouter", lambda a=asset, fn=pipeline_fn, kw=extra_kwargs: _mit_conn(
+                lambda c: fn(a, watchlist, c, openrouter_client, coingecko_client, zai_client=zai_client, **kw)
+            )))
+        if mistral_client is not None:
+            calls.append(("mistral", lambda a=asset, fn=pipeline_fn, kw=extra_kwargs: _mit_conn(
+                lambda c: fn(a, watchlist, c, mistral_client, coingecko_client, zai_client=zai_client, **kw)
             )))
 
         ok = False
         last_exc: Exception | None = None
         for provider_name, call_fn in calls:
             if provider_name in tages_budget and tages_verbraucht[provider_name] >= tages_budget[provider_name]:
+                # KEIN Fehler, der hier repariert wird - eine Ergaenzung, die C1
+                # bewusst aufgeschoben hat. C1 legte `budget_erschoepft` in
+                # MultiAssetBatchResult neu an, ausdruecklich als reine
+                # Formangleichung an AllocationResult ("C1 ist reine Form, keine
+                # Logik. Die Kettenreihenfolge und OpenRouter kommen in C2/C3").
+                # Das Feld war also nicht tot, sondern noch nicht an der Reihe.
+                # Hier ist es an der Reihe: ohne diese Zeile ist eine
+                # UEBERSPRUNGENE Stufe von aussen nicht von einer GESCHEITERTEN
+                # zu unterscheiden - genau der Unterschied, wegen dem der
+                # Krypto-Allocator sie fuehrt.
+                result.budget_erschoepft[provider_name] = True
                 continue
             # CIRCUIT BREAKER (2026-08-07): siehe agent/provider_sperre.py.
             # Ohne ihn versuchte jeder Kandidat zuerst Mistral, kassierte 402

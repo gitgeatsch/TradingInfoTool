@@ -2877,11 +2877,17 @@ def multi_asset_batch_job(
             db.set_multi_asset_batch_last_run_iso(last_run_conn, datetime.now().isoformat())
         finally:
             last_run_conn.close()
+        # `budget_erschoepft` steht seit 2026-08-09 (C3) mit in der Zeile - der
+        # Krypto-Allocator loggt es laengst, hier fehlte es. Ein Feld zu fuellen,
+        # das niemand liest, waere eine stille Attrappe; und eine UEBERSPRUNGENE
+        # Stufe ist von aussen sonst nicht von einer GESCHEITERTEN zu
+        # unterscheiden.
         logger.info(
             "Multi-Asset-Batch: %d verarbeitet, %d fehlgeschlagen, %d Cooldown-uebersprungen, "
-            "Calls je Anbieter %s",
+            "Calls je Anbieter %s, Budget erschöpft: %s",
             len(result.verarbeitet), len(result.fehlgeschlagen), result.uebersprungen_cooldown,
             dict(result.calls_verbraucht) or "keine",
+            dict(result.budget_erschoepft) or "keiner",
         )
         if result.ergebnis_objekt:
             try:

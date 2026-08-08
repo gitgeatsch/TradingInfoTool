@@ -247,6 +247,137 @@ pruefe(set(erg.provider_je_call.values()) == {"mistral"},
 pruefe("openrouter" not in erg.provider_je_call.values(),
        "kein Kandidat wurde openrouter zugeschrieben")
 
+
+# ============================================================================
+# TEIL 2: dieselbe Kette in agent/multi_asset_batch.py (Teil C3)
+# ============================================================================
+# Zwei Ketten mit verschiedener Reihenfolge waeren nicht zu erklaeren - deshalb
+# hier dieselben Fragen noch einmal, an der ECHTEN run_multi_asset_batch().
+
+import agent.multi_asset_batch as ma  # noqa: E402
+
+ma_lauf_nr = 0
+
+
+def ma_lauf(titel, *, gemini, openrouter, mistral, openrouter_budget=400):
+    global ma_lauf_nr
+    ma_lauf_nr += 1
+    protokoll: list[str] = []
+
+    def rekorder(asset, watchlist, conn, client, coingecko_client=None, **kw):
+        protokoll.append(client.name)
+        client.aufrufe += 1
+        if client.fehler_text is not None:
+            raise RuntimeError(client.fehler_text)
+
+        class _Ergebnis:
+            gate_passed = True
+            action = "HALTEN"
+            position_size_usd = 0.0
+
+        return _Ergebnis()
+
+    cfg = dict(BASIS_CONFIG)
+    cfg["multi_asset_batch"] = {
+        **BASIS_CONFIG.get("multi_asset_batch", {}),
+        "aktiv": True,
+        "cooldown_stunden_gehalten": 0,
+        "cooldown_stunden_beobachtet": 0,
+    }
+    cfg["budget_allocator"] = {
+        **BASIS_CONFIG.get("budget_allocator", {}),
+        "openrouter_taegliches_budget": openrouter_budget,
+        "gemini_taegliches_budget": 10_000,
+        "mistral_taegliches_budget": 10_000,
+    }
+
+    alt = ma._pipeline_fuer
+    ma._pipeline_fuer = lambda asset: rekorder
+    try:
+        ergebnis = ma.run_multi_asset_batch(
+            db.get_connection, WATCHLIST, None, cfg,
+            gemini_client=gemini, mistral_client=mistral, zai_client=None,
+            openrouter_client=openrouter,
+        )
+    finally:
+        ma._pipeline_fuer = alt
+
+    print(f"\nM{ma_lauf_nr}. {titel}")
+    print(f"   Kandidaten verarbeitet: {len(ergebnis.provider_je_symbol)}")
+    print(f"   bedient von: {sorted(set(ergebnis.provider_je_symbol.values())) or 'niemandem'}")
+    print(f"   Aufrufversuche: {protokoll.count('gemini')}x gemini, "
+          f"{protokoll.count('openrouter')}x openrouter, "
+          f"{protokoll.count('mistral')}x mistral")
+    if ergebnis.budget_erschoepft:
+        print(f"   Budget erschoepft: {dict(ergebnis.budget_erschoepft)}")
+    return ergebnis, protokoll
+
+
+print("\n" + "=" * 74)
+print("TEIL 2: agent/multi_asset_batch.py")
+print("=" * 74)
+
+g, o, m = Attrappe("gemini"), Attrappe("openrouter"), Attrappe("mistral")
+erg, prot = ma_lauf("Alle drei gesund - Gemini muss ALLES bedienen",
+                    gemini=g, openrouter=o, mistral=m)
+MA_KANDIDATEN = len(erg.provider_je_symbol)
+pruefe(MA_KANDIDATEN >= 2,
+       f"mindestens 2 Multi-Asset-Kandidaten (sonst prueft der Test nichts) - {MA_KANDIDATEN}")
+pruefe(set(erg.provider_je_symbol.values()) == {"gemini"},
+       "MA: jeder Kandidat wurde von Gemini bedient")
+pruefe(o.aufrufe == 0 and m.aufrufe == 0,
+       "MA: OpenRouter und Mistral wurden gar nicht erst versucht")
+
+g, o, m = Attrappe("gemini", "503 Service Unavailable"), Attrappe("openrouter"), Attrappe("mistral")
+erg, prot = ma_lauf("Gemini faellt aus - OpenRouter muss uebernehmen",
+                    gemini=g, openrouter=o, mistral=m)
+pruefe(set(erg.provider_je_symbol.values()) == {"openrouter"},
+       "MA: OpenRouter hat uebernommen")
+pruefe(m.aufrufe == 0,
+       "MA: Mistral wurde nicht versucht - OpenRouter steht VOR ihm")
+
+g = Attrappe("gemini", "503 Service Unavailable")
+o, m = Attrappe("openrouter"), Attrappe("mistral")
+erg, prot = ma_lauf("OpenRouter-Budget auf 0 - Stufe muss UEBERSPRUNGEN werden",
+                    gemini=g, openrouter=o, mistral=m, openrouter_budget=0)
+pruefe(o.aufrufe == 0, "MA: OpenRouter wurde NICHT versucht")
+pruefe(erg.budget_erschoepft.get("openrouter") is True,
+       "MA: budget_erschoepft meldet openrouter (von C1 angelegt, in C3 gefuellt)")
+pruefe(set(erg.provider_je_symbol.values()) == {"mistral"}, "MA: Mistral hat uebernommen")
+
+g = Attrappe("gemini", "503 Service Unavailable")
+m = Attrappe("mistral")
+erg, prot = ma_lauf("Kein OpenRouter-Client - alte Kette muss unveraendert tragen",
+                    gemini=g, openrouter=None, mistral=m)
+pruefe(set(erg.provider_je_symbol.values()) == {"mistral"},
+       "MA: Gemini -> Mistral funktioniert weiterhin ohne OpenRouter")
+
+# --- Der eigentliche Befund: greift die Breaker-VORBELEGUNG hier ueberhaupt? -
+# Bis zum 2026-08-09 wurde `vorbelegte_sperre()` mit einer bereits
+# GESCHLOSSENEN Verbindung aufgerufen. Die Funktion faengt jede Exception ab
+# und liefert dann eine leere Sperre - der Fehlschlag war nur als logger.info
+# sichtbar. Dieser Lauf haette vorher zwangslaeufig bestanden AUSSEHEN muessen,
+# obwohl nichts vorbelegt war.
+#
+# Aufbau: ein dauerhafter Fehler steht in api_health_status, der Client selbst
+# ist aber KERNGESUND. Greift die Vorbelegung, wird OpenRouter gar nicht erst
+# gefragt. Greift sie nicht, bedient OpenRouter alles.
+_c = db.get_connection()
+db.record_api_health_error(_c, "openrouter", "HTTPError", "402 Client Error: Payment Required")
+_c.commit()
+_c.close()
+
+g = Attrappe("gemini", "503 Service Unavailable")
+o, m = Attrappe("openrouter"), Attrappe("mistral")
+erg, prot = ma_lauf("402 steht in api_health_status, Client ist gesund - "
+                    "Vorbelegung muss ihn trotzdem sperren",
+                    gemini=g, openrouter=o, mistral=m)
+pruefe(o.aufrufe == 0,
+       "MA: Breaker-VORBELEGUNG greift - OpenRouter gar nicht erst gefragt "
+       "(vor dem Fix haette er alles bedient)")
+pruefe(set(erg.provider_je_symbol.values()) == {"mistral"},
+       "MA: Mistral hat trotz gesundem OpenRouter uebernommen")
+
 # --- Ergebnis ---------------------------------------------------------------
 print("\n" + "=" * 74)
 if fehler:
