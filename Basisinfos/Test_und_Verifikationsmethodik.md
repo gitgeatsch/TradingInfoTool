@@ -1148,6 +1148,48 @@ ist **ungemessen, nicht widerlegt** und geht in keine Quote ein.
 > inklusive der Zählung, dass wirklich alle sechs sie benutzen — dieselbe Falle
 > wie bei der Zonenkante, wo zunächst nur einer von drei umgestellt war.
 
+### Vor jeder Einführung oder Rücknahme eines Fakts
+
+| Skript | Auslöser |
+|---|---|
+| `bewerte_fakt_wirkung.py` | **Der Nachweisrahmen aus Mappe Kapitel 9, Stufe 3.** Drei Arme (A1/A2 identisch, B ohne den Fakt), und — das ist das Neue — **alle drei werden gegen die echte Kurshistorie bewertet**. Entscheidungsregel und Mindest-n stehen als Parameter fest, bevor der Lauf startet. |
+| `teste_nachweisrahmen.py` | Nach jeder Änderung am Rahmen. Fährt ihn gegen ein Modell mit **bekanntem** Verhalten — neun Lagen, die er unterscheiden können muss. |
+
+**Was Stufe 3 gegenüber `messe_prompt_nebeneffekte.py` hinzufügt.** Jenes misst
+seit dem 04.08. sauber, *ob* ein Fakt das Verhalten ändert — Uneinigkeit,
+Konfidenz, Stop-Abstand, CRV. Das sind **Stellgrößen**. Der Befund vom 05./06.08.
+lautete „das Modell wählt engere Stops"; ob engere Stops hier besser sind, sagt
+er nicht. Der Rahmen schließt das: jede Arm-Antwort geht durch den abgenommenen
+Pfad-Bewerter, verglichen wird in **R**.
+
+**Vier Regeln, die vor dem Lauf feststehen** und mit dem Ergebnis ausgegeben
+werden — eine Entscheidungsregel, die man nach dem Blick auf die Zahlen wählt,
+ist keine:
+
+1. **ERÖFFNEN-Wächter mit Vorrang** vor jeder Ergebnisbilanz (Einbruch ≥ 10 pp
+   ⇒ disqualifiziert, unabhängig vom R).
+2. **Rauschboden** aus A1↔A2; nur was darüber liegt, zählt.
+3. **Mindest-n 5** je Arm für das Wort „Tendenz" — darunter lautet das Urteil
+   *ungemessen*, ausdrücklich **kein** Negativbefund.
+4. **Maßstab ist CRV-Breakeven** `1/(1+CRV)`, nicht der Münzwurf.
+
+Transportfehler zählen getrennt und stehen in **keinem** Nenner; Formfehler
+zählen als HALTEN, weil die Pipeline sie real so behandelt.
+
+> **Zwei Funde beim Bau, beide durch die Gegenprobe erzwungen:**
+>
+> 1. **`messe_prompt_nebeneffekte._zonen_kennwerte()` verwirft jeden
+>    SHORT-Vorschlag stillschweigend** — es rechnet `risiko = entry − stop` und
+>    gibt bei SHORT `(None, None)`. Die bisherige Drei-Arm-Messung ist damit auf
+>    der halben Richtungsachse blind. Der neue Rahmen leitet die Richtung aus der
+>    Zonenlage ab und spiegelt die Kanten wie `_zonen_absolut()`.
+> 2. **Mein eigener erster Selbsttest bestand degeneriert.** Das nachgebildete
+>    Modell war deterministisch, der Rauschboden also exakt 0,000 R — und
+>    „im Rauschen" ist bei Rauschen 0 und Wirkung 0 trivial wahr. Dieselbe Falle
+>    wie bei `temperature=0,0`. Erst ein Modell mit reproduzierbarer Streuung
+>    prüft die Grenze wirklich (Fall I: Rauschen 0,605 R gegen Wirkung −0,484 R
+>    ⇒ im Rauschen; 0,080 gegen −4,011 ⇒ Tendenz).
+
 ### Bei Verdacht auf Datenfehler
 
 | Skript | Auslöser |
