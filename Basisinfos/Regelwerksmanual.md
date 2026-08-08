@@ -3136,3 +3136,72 @@ Verwandte Referenzdokumente:
 - `Fakten_Entscheidungsmappe.md` — welcher Fakt gehört ins Gate, welcher ans LLM
 - `Test_und_Verifikationsmethodik.md` — Statistik-Standards für jede Messung
 - `Regler_Signal_Pipeline_Abhaengigkeiten.md` — wie Stage 1/2/3 zusammenhängen
+
+---
+
+# Nachtrag 2026-08-09: LLM-Kette, Antwortformat und Tranchen für alle Klassen
+
+## Die Fallback-Kette lautet jetzt Gemini → OpenRouter → Mistral
+
+Gilt für **beide** Ketten — Krypto-Allocator und Multi-Asset-Batch. Begründet mit
+Durchsatz, Verfügbarkeit und Vertragslage, **ausdrücklich nicht** mit
+Urteilsqualität: dafür gibt es keine Daten (Gemini hatte null aufgelöste
+Signale).
+
+- **Gemini zuerst** — einziger Anbieter mit belegtem Durchsatz am echten
+  Signal-Prompt (5/5 gültig, Median 5,5 s). Der Grund für seine bisherige späte
+  Position (nicht abwählbare Trainings-Nutzung) ist durch die
+  Nutzer-Entscheidung vom 08.08. entfallen.
+- **OpenRouter zweitens** — `nemotron-3-super-120b`, echte Redundanz statt einer
+  zweiten Meinung. Läuft nur, wenn Gemini ausfällt.
+- **Mistral zuletzt** — kehrt ca. 31.08. zurück und würde den Primärplatz sonst
+  stillschweigend zurückerobern; sein Free-Plan ist ein 10-$-Monatsbudget
+  kontoweit.
+
+Der Schalter ist `budget_allocator.openrouter_aktiv` und **absichtlich getrennt**
+von `gegenpruefung.openrouter_aktiv` — zwei Entscheidungen an zwei Stellen der
+Pipeline. Die Gegenprüfung läuft weiterhin über Z.ai.
+
+## Das Antwortformat ist anbieterabhängig
+
+| Anbieter | Format | Grund (gemessen 09.08.) |
+|---|---|---|
+| **OpenRouter** | `json_schema` (strict) | Einziger mit echten Formfehlern (2/38 und 2/20), unter Schema 0. ERÖFFNEN-Quote unberührt |
+| **Gemini** | `json_object` | 38/38 formgültig — es gäbe nichts zu gewinnen, und striktes Schema kostet **16 pp** ERÖFFNEN-Quote |
+| **Z.ai** | `json_object` | Unter Schema liefert es **gar kein JSON** mehr, und bei t=0,0 die 2,3-fache Dauer |
+| **Mistral** | `json_object` | ungemessen (402 bis ca. 31.08.) |
+
+**Kein Komplettumstieg** — strikt genau dort, wo es etwas repariert. Die
+Entscheidung samt Messwerten steht in `agent/llm_schema.py`, die Formatwahl
+selbst an **einer** Stelle (`response_format_fuer()`).
+
+Ein Formfehler ist kein Schönheitsfehler: er endet in einem erzwungenen
+HALTEN-Signal, das sich nie auflösen kann und damit direkt in den Dead Loop
+einzahlt.
+
+## Regel 21 — Tranchen jetzt für alle Assetklassen
+
+Gestaffelter Kauf/Verkauf statt einer einzigen Zone, bisher nur Krypto-Spot,
+seit 09.08. auch Aktien, Rohstoffe, Themen-ETF und Hedge.
+
+**Zwei Bedingungen müssen zusammenkommen:**
+
+1. **Der Schalter je Asset** (Watchlist-Tab). Vorgabewert: an für BTC/ETH/SOL und
+   für die am 09.08. gehaltenen 13 Multi-Asset-Positionen. Der Schalter ist seit
+   09.08. für **jedes** Watchlist-Asset erreichbar — vorher war er auf drei
+   Symbole verdrahtet, für alle anderen hätte er nie gesetzt werden können.
+2. **Das Marktumfeld**, und hier unterscheiden sich die Klassen:
+   - **Krypto:** Regime `baer`, `krise_extrem` oder `seitwaerts` (BTC-basiert)
+   - **Nicht-Krypto:** Aktien-Bärenmarkt **oder** VIX ab „erhöht" (≥ 20).
+     **BTC wird für Multi-Asset ausdrücklich nicht als Basis verwendet.**
+
+Der Schalter ist die *Erlaubnis*, nicht die Garantie. Ein fehlerhafter
+Tranchen-Vorschlag wird verworfen und protokolliert — er darf ein sonst valides
+Signal nicht mitreißen.
+
+## Schwerpunkt-Priorität im Multi-Asset-Batch
+
+Assets in einem manuell gesetzten Schwerpunkt werden vorgezogen — als **stabile
+Partition**, nicht als Umsortierung nach Trendstärke. Letzteres täte das
+Gegenteil von antizyklisch, und genau dagegen war der Schwerpunkt gedacht.
+Wirkt nur auf die Reihenfolge, nicht auf die Auswahl.

@@ -1094,3 +1094,102 @@ Messgrößen, die inzwischen widerlegt sind.
 - `Regelwerksmanual.md` - dokumentiert einzelne, bereits umgesetzte Regeln/Fixes
   inklusive ihres Verifikationsstands: ab jetzt mit der Stufen-Bezeichnung aus
   Abschnitt 0 statt einem unscharfen "erledigt".
+
+---
+
+# Nachtrag 2026-08-09: vier Lehren, die an einem Tag teuer waren
+
+## 1. Der A/A′-Nullabgleich ist Pflicht, nicht Kür
+
+Ein Vergleich A gegen B sagt **nichts**, solange nicht bekannt ist, wie stark A
+gegen sich selbst streut. Der zweite Arm läuft mit **identischem** Aufbau, nur
+noch einmal.
+
+Real belegt: bei `nemotron-3-super-120b` produzierte der Nullabgleich **mehr**
+Richtungsdreher (4 von 34) als der Formatvergleich (3 von 36). Die erste
+Messung — ohne belastbaren Nullabgleich — hatte „das Schema dreht die
+Handelsrichtung" ergeben. **Falsch, und ohne den A′-Arm wäre der Fehlschluss
+stehengeblieben.**
+
+Bei `temperature=0.0` ist der Nullabgleich **degeneriert** (A gegen A′ = 100 %).
+Dann hat der Vergleich keinen Maßstab, und jede Abweichung sieht signifikant
+aus. In diesem Fall zusätzlich bei Produktionstemperatur messen.
+
+## 2. Der ERÖFFNEN-Wächter hat Vorrang vor jeder Abweichungsbilanz
+
+Bricht die ERÖFFNEN-Quote ein, ist die Maßnahme **disqualifiziert** — unabhängig
+davon, wie gut die Trefferbilanz aussieht.
+
+Warum: Bei einer Grundmenge aus überwiegend Verlierern (35 zu 3) ist
+Nichthandeln immer die punktbeste Strategie. Am 09.08. meldete die Auswertung
+für Gemini „7 von 10 Abweichungen zugunsten des strikten Schemas" — sechs davon
+waren „vermeidet Verlust" durch *Nichthandeln*, und dagegen stand ein verpasster
+Gewinn von +2,45 R. Der Wächter fing es: **ERÖFFNEN-Quote 76 % → 61 %,
+16 pp.** Ohne ihn wären 16 % der Signale vernichtet worden.
+
+> Das Ziel sind MEHR Signale, nicht weniger. Eine Kennzahl, die sich durch
+> weniger Handeln verbessern lässt, misst das Falsche.
+
+## 3. Transportfehler und Formfehler strikt trennen
+
+Ein 429, ein Timeout oder ein 5xx sagt **nichts** über die Eignung eines
+Formats, Modells oder Anbieters. Wer ihn in den Nenner nimmt, bestraft die
+geprüfte Sache für ein Ratenlimit.
+
+Real: Geminis 429-Serie wurde zunächst als „ungültig" gezählt und hätte das
+strikte Schema für ein Ratenlimit abgestraft. Ein Modell mit Transportfehlern
+ist **ungemessen, nicht widerlegt.**
+
+Folgeregel für Messläufe: Transportfehler dürfen bei der Wiederaufnahme **nicht
+als erledigt** gelten, sonst zementiert der erste missglückte Lauf seine eigenen
+Lücken.
+
+## 4. Das teuerste Muster: den eigenen Aufbau messen statt der Sache
+
+**Dreimal an einem Tag**, immer dieselbe Familie — die Kontrolle nicht geprüft,
+bevor das Ergebnis gelesen wurde:
+
+| Vorfall | Was gemessen wurde |
+|---|---|
+| Mini-Prompt ohne Feldliste | `json_object` konnte gar nicht bestehen — „Pflichtfeld fehlt" maß den Testaufbau |
+| Fallauswahl „20 neueste" | **null** davon hatten einen bekannten Ausgang; die Besser/Schlechter-Frage war unbeantwortbar, bevor der erste Aufruf lief |
+| Veraltete DB-Kopie | „0 % rechenbar" maß das Alter der Kopie (OHLC bis 19.07.), nicht die Datenlage |
+
+Dazu drei **falsche Alarme** aus fehlerhaften Prüfskripten (AST sah nur den
+Return-Namen; ein Regex hielt innere `"` für Stringanfänge und lieferte 54
+Falschmeldungen; ein Vergleich auf literale Escapes war schlicht falsch).
+
+> **Regel: jede Messung benennt ihre Kontrolle.** Wenn A und B nicht dieselbe
+> Eingabe sehen, ist das Ergebnis keine Aussage über den Prüfgegenstand. Und
+> bevor ein Befund berichtet wird: prüfen, ob das Prüfwerkzeug ihn überhaupt
+> finden *könnte*.
+
+## 5. Ein Test, der auf sauberem Code besteht, beweist nichts
+
+Jeder neue Wächter wird gegen den **kaputten** Zustand gefahren, bevor er zählt.
+Am 09.08. dreimal angewandt:
+
+- Prompt-gegen-Schema: gegen den Zustand vor dem Fix meldet er `antizyklisch`
+  als überzählig
+- Remote-JS-Syntax: gegen die kaputte Zeile meldet er Spalte 37 (der Browser
+  meldete 38)
+- Breaker-Vorbelegung: offene Verbindung sperrt, geschlossene sperrt nicht
+
+## 6. „Tendenz" braucht ein Mindest-n und muss beim Aufstocken halten
+
+Ein Fakt darf auf Tendenz eingeführt werden, ohne vollen Nachweis — der Zustand
+mit null Signalen ist nicht tragbar, und das Ausstiegsverfahren führt „fehlender
+Wirkungsnachweis" ohnehin als **keinen** Rücknahmegrund.
+
+> Eine Tendenz zählt aber nur, wenn sie beim Vergrößern der Stichprobe **hält
+> oder wächst — nicht wenn sie schrumpft.**
+
+Zweimal unabhängig belegt: Regel-Ablation +0,281/+0,182 bei 12 Ankern →
++0,014/−0,013 bei 28. Kosten-Fakt −0,734 bei 12 → −0,334 bei 24. Beide
+schrumpften. Mindestens **5** bewertbare Fälle, bevor das Wort fällt.
+
+## 7. Eine Wache gegen den leeren Lauf gehört in jeden Test
+
+Ohne Kandidaten sind alle Zusicherungen wahr, ohne dass etwas geprüft wurde.
+`teste_kette_reihenfolge.py` und `teste_allocator_prioritaet.py` prüfen deshalb
+ausdrücklich, dass genug Fälle vorliegen — 6 bzw. 13.
