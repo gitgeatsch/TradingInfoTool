@@ -15432,3 +15432,86 @@ Faktensatz und bekanntem Ausgang (alle Mistral, alle ERÖFFNEN, 35 Verlierer /
 ein Modell, das immer HALTEN sagt, mit 0,00 R — deshalb steht die HALTEN-Quote
 gleichwertig neben der R-Summe, zusammen mit vermiedenen Verlusten und
 verpassten Gewinnen.
+
+## Nachtrag (2026-08-09): Historischer Rücktest — ein ergebnisloser Test, und warum das keine Absage an die KI-Ebene ist
+
+### Der Aufbau
+
+Nutzer-Idee vom 08.08.: 38 echte Hebel-Entscheidungen, die Mistral getroffen
+hat und deren Ausgang feststeht (alle ERÖFFNEN, 35 Verlierer / 3 Gewinner,
+Summe −27,38 R), durch die Kandidaten neu spielen. Alle mit identischem
+`response_format` (striktes Schema, weil der Schema-Test es gewonnen hatte).
+
+### Die Korrektur vor der Auswertung
+
+Die Rohzahlen des Laufs sind **nicht vergleichbar**: Gemini kassierte 10
+HTTP-Fehler und war nur auf 28 Fällen auswertbar, nemotron auf 38, laguna auf
+36. Wer weniger Fälle beantwortet, sammelt mechanisch weniger Minus. Auf der
+**gemeinsamen Menge von 26 Fällen** (25 Verlierer, 1 Gewinner):
+
+| Modell | R-Summe | genommen | HALTEN | Treffer je genommen |
+|---|---|---|---|---|
+| Basislinie „alles nehmen" (= Mistral) | −22,82 | 26 | 0 % | 1/26 = 4 % |
+| `laguna-xs-2.1` | −8,00 | 8 | 69 % | 0/8 = 0 % |
+| Gemini | −16,27 | 16 | 38 % | 0/16 = 0 % |
+| `nemotron-super-120b` | −22,82 | 26 | 0 % | 1/26 = 4 % |
+
+Die R-Unterschiede erklären sich **vollständig durch die Ablehnungsquote**.
+Genau dafür war die HALTEN-Quote als Gegenkontrolle eingebaut — sie hat
+gegriffen.
+
+### Warum daraus NICHT folgt, dass die Modelle nichts können
+
+**Der Test hatte nie die Kraft, Können zu erkennen.** Bei einem einzigen
+Gewinner auf 26 Fällen trennt 0/16 gegen 1/26 nichts. Das ist ein ergebnisloser
+Test, kein Beleg für Abwesenheit von Können. Die erste Formulierung („kein
+Modell wählt besser als der Zufall") war zu stark und wird hiermit
+zurückgenommen.
+
+**Zudem war der Maßstab der falsche.** Der Nachtrag vom 04.08. hält bereits
+fest, dass der Münzwurf als Basislinie **strukturell falsch** ist: die Ziele
+sind asymmetrisch, eine 50-%-Quote bei CRV 3,27 entspräche +1,14 R — ein
+fantastisch profitables System, kein neutraler Vergleichspunkt. Richtig ist
+**CRV-Breakeven `1/(1+CRV)`**: 23,4 % gegen unsere realen 17,6 %, also eine
+Lücke von 6 Prozentpunkten.
+
+**Und die entscheidende Zahl steht seit dem 04.08. fest:** 50,0 % der Hebel-
+Signale erreichten unterwegs ≥ 1R, nur 17,6 % endeten im Plus. *Die Einstiege
+finden die Bewegung.* Verloren geht sie zwischen Maximum und Ausstieg. Die
+Aufgabe, die das LLM tatsächlich erledigt — Einstiegsauswahl — ist nach dieser
+Messung **nicht** die Verlustquelle.
+
+Dazu: das Bootstrap-Konfidenzintervall der SQN (−4,79 bis +0,34) **schließt die
+Null ein**. Die Systemgüte ist nicht signifikant negativ, und alle 86 Fälle
+stammen aus einem einzigen Monat und einer Marktphase.
+
+### Zwei Verhaltensbefunde, die bleiben
+
+- **`nemotron-super-120b` lehnt auf dieser Menge nie ab** (0 % HALTEN). Kein
+  Stempelautomat — im 20er-Härtetest lieferte es HALTEN, SCHLIESSEN und
+  HEBEL_SENKEN —, aber die 38 Fälle sind auf Eröffnungssituationen
+  vorselektiert, und dort eröffnet es ausnahmslos.
+- **`laguna-xs-2.1` hat eine andere Konfidenz-Skala**: 25–45 % gegen 55–68 %
+  bei Gemini und nemotron. Das ist praktisch bedeutsamer als die R-Zahl, weil
+  die Pipeline eine scharfe Mindestkonfidenz hat — ein systematisch 20 Punkte
+  tieferes Modell würde nach dem Gate anders gefiltert. Der Rückfall wäre ein
+  anderes System, nicht nur ein langsameres.
+
+### Folge für die Modellreihenfolge
+
+Sie lässt sich mit diesen Daten **nicht über Urteilsqualität** begründen, nur
+über Formattreue, Tempo und Konfidenz-Kompatibilität. Danach:
+`nemotron-super-120b` (16/20, 20,8 s mit Schema, Konfidenz wie Gemini) vor
+`laguna-xs-2.1` (15/20, 26,0 s, abweichende Konfidenz) vor `gpt-oss-20b`
+(5/10, 124,9 s). Begründung ausdrücklich: *verhält sich am ehesten wie das
+System, das validiert wurde* — nicht *urteilt besser*.
+
+### Was die Frage wirklich beantworten würde
+
+Drei fertige Mess-Funktionen haben laut Bestandsaufnahme vom 04.08. **null
+externe Aufrufer**: `compute_baseline_vergleich`, `compute_sl_mfe_analyse`,
+`compute_zai_uebereinstimmung_baseline`. Sie sind gebaut, dokumentiert und
+laufnachgewiesen — nur nicht angeschlossen. Der Breakeven-Abstand
+(Trefferquote − `1/(1+CRV)`) über mehr Daten ist die Leitgröße, die die Frage
+„nützt die KI-Ebene?" beantworten kann. Das ist ein eigener Arbeitsblock, kein
+Nebenprodukt der Anbieterwahl.
