@@ -1150,11 +1150,26 @@ Drei Einschränkungen, die vor dem Bau gemessen wurden und ins Ergebnis gehören
   jetzt, damit ein gesetzter Schwerpunkt überhaupt eine Wirkung *haben kann* —
   bis dahin ist er ein No-Op, und der Test prüft ausdrücklich auch das.
 
-**Die eigentliche Achsenfrage bleibt offen und ist eine Nutzer-Entscheidung:**
-sollen Krypto-Assets ein Themenfeld bekommen? Krypto stellt 44 von 57 Assets und
-trägt praktisch die gesamte Signalproduktion (87 von 87 am 08.08.) — solange es
-im Themenkonzept nicht vertreten ist, erreicht „Vom Themenfeld zum Signal" die
-Klasse mit den Daten nicht.
+**Die Achsenfrage ist am 09.08. ENTSCHIEDEN, nicht offen.** Meine
+Formulierung „Krypto fehlt eine Achse" war falsch: Krypto hat eine, sie heißt
+nur anders. Der Budget-Allocator sortiert nach `score_gesamt` und legt darüber
+die SLA-Reservierung — überfällige Kandidaten nach echter Wartezeit, als
+Garantie statt als Score-Boost. **Krypto fehlt keine Priorisierung, sondern eine
+themenbasierte** — und die braucht es nur, wenn man Krypto nach Unterthemen
+steuern will.
+
+**Nutzer-Entscheidung 09.08.: Thema bestätigt, Umsetzung vertagt.** Statt zu
+bauen wurde die *Naht* gezogen: die Regel steht jetzt zentral in
+`agent/schwerpunkt_prioritaet.py` und gilt für jede Assetklasse, sobald eine
+zweite sie braucht. Die Krypto-Kette ruft sie ausdrücklich **nicht** auf — ein
+Aufruf ohne `hauptgruppe`-Daten wäre ein toter Aufruf, also genau die stille
+Attrappe, die dieses Projekt schon zweimal in die Irre geführt hat.
+
+**Ausgangspunkt für später, falls es soweit kommt** (Nutzer-Hinweis 09.08.): die
+Achse wären die zugrundeliegenden **Narrative**, mit **BTC gegen Altcoins als
+Grundgruppe**, danach feinere Narrative innerhalb der Altcoins. Der technische
+Teil ist eine Zeile; der Aufwand liegt in der Taxonomie, und die bildet eine
+Anlagesicht ab, keine Datenstruktur.
 
 `teste_allocator_prioritaet.py`, 9 Prüfungen gegen 13 echte Kandidaten: leere
 Liste ist ein No-Op, Hauptgruppen-Schwerpunkt zieht drei Assets vor,
