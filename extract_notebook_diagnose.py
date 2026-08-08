@@ -1475,10 +1475,20 @@ def main() -> None:
         # "cerebras" bewusst entfernt (2026-07-20) - api/cerebras.py wurde
         # geloescht, der Zaehler war seither dauerhaft 0 und eine
         # irrefuehrende Alt-Referenz.
+        # SIGNAL-ERZEUGENDE ANBIETER. Seit 2026-08-09 (C4) gehoert OpenRouter
+        # dazu - er ist zweite Stufe beider Ketten. Ohne diesen Eintrag waeren
+        # von ihm erzeugte Signale in der Zeilen-Zaehlung unsichtbar, waehrend
+        # `llm_aufrufe_heute` sie sehr wohl zeigt: die Luecke zwischen beiden
+        # Zahlen ist die Diagnose, und sie waere fuer OpenRouter unlesbar
+        # gewesen (alle Aufrufe, keine Zeilen).
+        #
+        # `zai` fehlt hier ABSICHTLICH: Z.ai erzeugt keine Signale, es macht
+        # ausschliesslich Gegenpruefungen (siehe agent/krypto/gegenpruefung.py).
+        # In `llm_aufrufe_heute` steht es trotzdem, weil es Kontingent
+        # verbraucht - die beiden Listen beantworten verschiedene Fragen.
         llm_calls_heute = {
-            "groq": db.count_real_llm_calls_today_by_provider(conn, "groq:"),
-            "mistral": db.count_real_llm_calls_today_by_provider(conn, "mistral:"),
-            "gemini": db.count_real_llm_calls_today_by_provider(conn, "gemini:"),
+            p: db.count_real_llm_calls_today_by_provider(conn, f"{p}:")
+            for p in ("groq", "mistral", "gemini", "openrouter")
         }
         # ECHTE AUFRUFE daneben (2026-08-09, Teil B). BEIDE Zahlen, nicht statt:
         # `llm_calls_heute` zaehlt Signal-ZEILEN und beantwortet "welcher
