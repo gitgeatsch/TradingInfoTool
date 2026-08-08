@@ -113,6 +113,25 @@ class ArmBilanz:
             return None
         return sum(1 for r in self.r_werte if r > 0) / len(self.r_werte)
 
+    @property
+    def abstand_zum_zufall_pp(self) -> float | None:
+        """Trefferquote minus CRV-Breakeven, in Prozentpunkten.
+
+        DIE UEBERGEORDNETE FRAGE, nicht eine Nebenkennzahl. Stehende Vorgabe:
+        "die LLM-Loesung MUSS zwingend den Zufall schlagen und messbar werden".
+        Der Fakt-Vergleich beantwortet, ob ein einzelner Baustein das Ergebnis
+        VERSCHIEBT - diese Zahl beantwortet, ob die Ebene ueberhaupt einen
+        Abstand zum Zufall hat.
+
+        Der Massstab ist bewusst NICHT der Muenzwurf: bei asymmetrischen Zielen
+        ist 50 % kein neutraler Punkt. Ein Einstieg mit CRV 3,0 muss nur 25 %
+        seiner Ziele erreichen, um bei null zu stehen - genau das ist
+        1/(1+CRV). Positiv heisst: die Auswahl traegt. Null oder negativ heisst:
+        sie traegt nicht, unabhaengig davon wie gut die Trefferquote klingt."""
+        if self.trefferquote is None or self.breakeven_quote is None:
+            return None
+        return (self.trefferquote - self.breakeven_quote) * 100.0
+
 
 @dataclass
 class Nachweis:
@@ -352,14 +371,17 @@ def nachweisrahmen(provider: Callable[[dict], dict], faelle: list[dict],
 def bericht(n: Nachweis) -> str:
     z = [f"FAKT: {n.fakt}", ""]
     z.append(f"  {'Arm':4} {'eroeffnet':>9} {'gehalten':>9} {'Form':>5} "
-             f"{'Transp':>7} {'bewertet':>9} {'Mittel R':>9} {'Treffer':>8} {'Breakeven':>10}")
+             f"{'Transp':>7} {'bewertet':>9} {'Mittel R':>9} {'Treffer':>8} "
+             f"{'Breakeven':>10} {'ggn Zufall':>11}")
     for arm in (n.a1, n.a2, n.b):
         m = "-" if arm.mittel_r is None else f"{arm.mittel_r:+.3f}"
         t = "-" if arm.trefferquote is None else f"{arm.trefferquote:.1%}"
         be = "-" if arm.breakeven_quote is None else f"{arm.breakeven_quote:.1%}"
+        az = ("-" if arm.abstand_zum_zufall_pp is None
+              else f"{arm.abstand_zum_zufall_pp:+.1f} pp")
         z.append(f"  {arm.name:4} {arm.eroeffnet:>9} {arm.gehalten:>9} "
                  f"{arm.formfehler:>5} {arm.transportfehler:>7} "
-                 f"{len(arm.r_werte):>9} {m:>9} {t:>8} {be:>10}")
+                 f"{len(arm.r_werte):>9} {m:>9} {t:>8} {be:>10} {az:>11}")
     z.append("")
     if n.rauschboden_r is not None:
         z.append(f"  Eigenstreuung (A1-A2):     {n.rauschboden_r:.3f} R")
@@ -379,6 +401,16 @@ def bericht(n: Nachweis) -> str:
     if n.eroeffnen_einbruch_pp is not None:
         z.append(f"  EROEFFNEN-Einbruch:        {n.eroeffnen_einbruch_pp:+.1f} pp")
     z.append("")
-    z.append(f"  URTEIL: {n.urteil}")
+    # Die uebergeordnete Frage zuerst - sie haengt nicht am geprueften Fakt.
+    az = n.a1.abstand_zum_zufall_pp
+    if az is not None:
+        urteil_zufall = ("SCHLAEGT den Zufall" if az > 0 else
+                         "schlaegt den Zufall NICHT")
+        z.append(f"  ABSTAND ZUM ZUFALL (Arm A1, unabhaengig vom Fakt): "
+                 f"{az:+.1f} pp - {urteil_zufall}")
+        z.append(f"          Trefferquote gegen CRV-Breakeven 1/(1+CRV). "
+                 f"Das ist die uebergeordnete Frage.")
+        z.append("")
+    z.append(f"  URTEIL zum Fakt: {n.urteil}")
     z.append(f"          {n.begruendung}")
     return "\n".join(z)

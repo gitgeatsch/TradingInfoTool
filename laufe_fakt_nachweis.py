@@ -1,15 +1,19 @@
 """Fuehrt den Nachweisrahmen aus Stufe 3 gegen ECHTE Faktensaetze aus.
 
-    python laufe_fakt_nachweis.py --db <kopie.db> --export <diagnose.json> \
-        --fakt liquiditaetszonen --trocken          # Verdrahtung pruefen
-    python laufe_fakt_nachweis.py --db ... --export ... --fakt liquiditaetszonen
+    python laufe_fakt_nachweis.py --db <kopie.db> --fakt liquiditaetszonen --trocken
+    python laufe_fakt_nachweis.py --db <kopie.db> --fakt liquiditaetszonen \
+        --fakt antizyklisch --pause 2.0 --ausgabe lauf.json
 
 WAS DAS SKRIPT TUT UND WARUM ES SO GEBAUT IST
 
 Es verbindet drei Teile, die einzeln schon abgenommen sind: die gespeicherten
-Faktensaetze aus dem Notebook-Export, die Kursreihen aus einer DB-Kopie, und
-`bewerte_fakt_wirkung.nachweisrahmen()`. Der eigene Beitrag ist die Auswahl der
-Faelle - und die ist der heikelste Teil des ganzen Verfahrens.
+Faktensaetze aus `hebel_signals.facts_json`, die Kursreihen aus derselben
+DB-Kopie, und `bewerte_fakt_wirkung.nachweisrahmen()`. Der eigene Beitrag ist
+die Auswahl der Faelle - und die ist der heikelste Teil des ganzen Verfahrens.
+
+NICHT aus dem Notebook-Export: der fuehrt nur eine geschichtete Stichprobe
+(268 von 1.203, 14-Tage-Fenster) fuer eine andere Frage. Aus der DB kommen
+600 statt 122 Faelle und 17 statt 12 Symbole - siehe _lade_faelle().
 
 DIE FALLAUSWAHL IST KEINE FORMALIE. Am 09.08. wurde eine Messung wertlos, weil
 die 20 NEUESTEN Faktensaetze genommen wurden - per Konstruktion die am
@@ -54,35 +58,67 @@ import bewerte_fakt_wirkung as nw
 from agent.krypto.backward_tracking import lade_kursreihen
 
 
-def _lade_faelle(export_pfad: str, reihen: dict, horizont: int,
-                 fakt: str) -> tuple[list[dict], dict]:
-    """Faktensaetze, die den Fakt tragen UND voll beobachtbar sind."""
-    daten = json.load(open(export_pfad, encoding="utf-8"))
-    roh = daten["hebel_faktensaetze"]["eintraege"]
+def _lade_faelle(conn, reihen: dict, horizont: int, fakt: str,
+                 deckel_je_symbol: int) -> tuple[list[dict], dict]:
+    """Faktensaetze aus der DATENBANK, die den Fakt tragen und voll beobachtbar sind.
+
+    WARUM AUS DER DB UND NICHT AUS DEM EXPORT (Korrektur 2026-08-09). Der erste
+    Entwurf zog aus `hebel_faktensaetze` im Notebook-Export - und das ist eine
+    GESCHICHTETE STICHPROBE fuer einen anderen Zweck: 268 gezogen, 935 bewusst
+    NICHT gezogen, rollierendes Fenster von 14 Tagen, je Zelle (Tag x action)
+    zwoelf Stueck. Sie beantwortet "kommt ein neuer Fakt-Block im Betrieb an",
+    nicht "wie wirkt ein Fakt".
+
+    Der Unterschied ist gross, und er trifft genau die Groesse, auf die es
+    ankommt:
+
+        aus dem Export:  122 Faelle auf 12 Symbolen
+        aus der DB:      600 Faelle auf 17 Symbolen (Horizont 7)
+
+    `hebel_signals` fuehrt `facts_json` auf ALLEN 1.905 Zeilen ueber 33 Symbole.
+
+    DECKEL JE SYMBOL statt blindem Kuerzen. Die effektive Stichprobengroesse ist
+    die Zahl distinkter Symbole (Methodik 2.5) - und die bleibt bei JEDEM Deckel
+    gleich (17). Ein Deckel kostet also fast keine Aussagekraft, senkt aber die
+    Laufzeit erheblich UND die Konzentration des groessten Symbols (ohne Deckel
+    15,5 %, bei 15 nur noch 7,5 %). Gezogen wird ueber den Zeitraum verteilt,
+    nicht die ersten N - sonst haengt alles an einer Marktphase."""
     diagnose = Counter()
-    faelle = []
-    for x in roh:
+    je_symbol: dict[str, list] = {}
+    for r in conn.execute("SELECT id, symbol, created_at, action, richtung, "
+                          "facts_json FROM hebel_signals ORDER BY created_at"):
         diagnose["gesamt"] += 1
-        fakten = x["facts_json"]
-        if isinstance(fakten, str):
-            fakten = json.loads(fakten)
+        try:
+            fakten = json.loads(r["facts_json"])
+        except (TypeError, json.JSONDecodeError):
+            diagnose["kein_faktensatz"] += 1
+            continue
         if fakt.split(".")[0] not in fakten:
             diagnose["ohne_fakt"] += 1
             continue
-        reihe = reihen.get(x["symbol"])
+        reihe = reihen.get(r["symbol"])
         if not reihe:
             diagnose["ohne_kursreihe"] += 1
             continue
-        tag = str(x["created_at"])[:10]
-        folgetage = sum(1 for p in reihe if p["date"] >= tag)
-        if folgetage < horizont + 1:
+        tag = str(r["created_at"])[:10]
+        if sum(1 for p in reihe if p["date"] >= tag) < horizont + 1:
             diagnose["zu_kurz_beobachtet"] += 1
             continue
-        diagnose["brauchbar"] += 1
-        fakten["_fall_id"] = x["id"]
-        faelle.append({"id": x["id"], "symbol": x["symbol"], "created_at": tag,
-                       "richtung": x.get("richtung"),
-                       "action_damals": x.get("action"), "fakten": fakten})
+        fakten["_fall_id"] = r["id"]
+        je_symbol.setdefault(r["symbol"], []).append(
+            {"id": r["id"], "symbol": r["symbol"], "created_at": tag,
+             "richtung": r["richtung"], "action_damals": r["action"],
+             "fakten": fakten})
+
+    faelle = []
+    for symbol, eigene in sorted(je_symbol.items()):
+        if deckel_je_symbol and len(eigene) > deckel_je_symbol:
+            schritt = max(1, len(eigene) // deckel_je_symbol)
+            eigene = eigene[::schritt][:deckel_je_symbol]
+            diagnose["durch_deckel_gekuerzt"] += 1
+        faelle.extend(eigene)
+    diagnose["brauchbar"] = len(faelle)
+    diagnose["symbole"] = len(je_symbol)
     return faelle, diagnose
 
 
@@ -191,7 +227,10 @@ def _echter_provider(protokoll: list, arm_name: str, bekannt: dict,
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--db", required=True, help="KOPIE der Produktions-DB")
-    p.add_argument("--export", required=True, help="notebook_diagnose.json")
+    p.add_argument("--deckel-je-symbol", type=int, default=15,
+                   help="hoechstens so viele Faelle je Symbol (0 = kein Deckel). "
+                        "Kostet keine Symbole und damit fast keine Aussagekraft, "
+                        "senkt aber Laufzeit und Konzentration deutlich")
     p.add_argument("--fakt", action="append", required=True,
                    help="Fakt-Pfad, mehrfach angebbar (A-Arme werden geteilt)")
     p.add_argument("--horizont", type=int, default=7)
@@ -209,14 +248,20 @@ def main() -> int:
     conn.row_factory = sqlite3.Row
     reihen = lade_kursreihen(conn)
 
-    faelle, diagnose = _lade_faelle(args.export, reihen, args.horizont, args.fakt[0])
-    print("FALLAUSWAHL")
-    for k in ("gesamt", "ohne_fakt", "ohne_kursreihe", "zu_kurz_beobachtet", "brauchbar"):
+    faelle, diagnose = _lade_faelle(conn, reihen, args.horizont, args.fakt[0],
+                                   args.deckel_je_symbol)
+    print("FALLAUSWAHL (Quelle: hebel_signals.facts_json, NICHT der Export)")
+    for k in ("gesamt", "kein_faktensatz", "ohne_fakt", "ohne_kursreihe",
+              "zu_kurz_beobachtet", "brauchbar"):
         print(f"  {k:22} {diagnose[k]:5}")
     if faelle:
+        z = Counter(f["symbol"] for f in faelle)
         r = Counter(f["richtung"] for f in faelle)
+        groesste = max(z.values()) / len(faelle)
         print(f"  {'Richtung':22} {dict(r)}")
-        print(f"  {'Symbole':22} {len({f['symbol'] for f in faelle}):5}")
+        print(f"  {'Symbole':22} {len(z):5}   <- die EFFEKTIVE Stichprobe (Methodik 2.5)")
+        print(f"  {'groesstes Symbol':22} {groesste:5.1%}"
+              + ("   ACHTUNG >25 %" if groesste > 0.25 else "   (unter der 25-%-Grenze)"))
     print()
 
     if len(faelle) < args.mindestfaelle:
@@ -230,6 +275,8 @@ def main() -> int:
         "fakten": args.fakt,
         "horizont": args.horizont,
         "faelle": len(faelle),
+        "symbole": len({f["symbol"] for f in faelle}),
+        "deckel_je_symbol": args.deckel_je_symbol,
         "richtungen": dict(Counter(f["richtung"] for f in faelle)),
         "regel": {
             "eroeffnen_einbruch_pp": 10.0,
@@ -247,12 +294,44 @@ def main() -> int:
     aufrufe = len(faelle) * (2 + len(args.fakt))
     print(f"Geplante Aufrufe: {len(faelle)} Faelle x (2 A-Arme + {len(args.fakt)} "
           f"B-Arm(e)) = {aufrufe}")
+    if len({f["symbol"] for f in faelle}) < 50:
+        print(f"  HINWEIS: {len({f['symbol'] for f in faelle})} Symbole liegen unter "
+              f"der n>=50-Schwelle aus Methodik 2.5. Ein Befund aus diesem Lauf "
+              f"ist HYPOTHESENGENERIEREND, nicht operationalisierbar - er darf "
+              f"keine Schwelle verschieben und kein Gate begruenden.")
     if not args.trocken:
         print("  (bei ~5,5 s Median entspricht das rund "
               f"{aufrufe * 5.5 / 60:.0f} Minuten seriell)")
     print()
 
     bekannt = _lade_bekannte_antworten(args.fortsetzen)
+
+    # DER TROCKENLAUF MUSS AUCH DEN ECHTEN ZWEIG BERUEHREN (2026-08-09).
+    # Der erste echte Lauf brach nach null LLM-Aufrufen mit einem TypeError ab:
+    # `_echter_provider()` hatte zwei Argumente mehr bekommen, die Aufrufstelle
+    # war nicht mitgezogen. Der Trockenlauf konnte das nicht finden - er nimmt
+    # den ANDEREN Zweig des Ternaers und faehrt nie am echten Provider vorbei.
+    #
+    # Ein Trockenlauf, der genau die Stelle auslaesst, die nur der echte Lauf
+    # benutzt, prueft die Verdrahtung nur zur Haelfte. Deshalb wird die Fabrik
+    # hier auch trocken AUFGEBAUT (sie setzt dabei keinen einzigen Aufruf ab) -
+    # ein Signaturfehler faellt damit im Trockenlauf auf, nicht erst nach dem
+    # Start.
+    import inspect
+    noetig = set(inspect.signature(_echter_provider).parameters)
+    print(f"Signaturpruefung _echter_provider: {sorted(noetig)}")
+    if args.trocken:
+        try:
+            _echter_provider(protokoll_probe := [], "probe", {}, 0.0)
+            print("  OK - die echte Provider-Fabrik laesst sich aufbauen "
+                  "(kein Aufruf abgesetzt)")
+        except SystemExit as exc:
+            print(f"  HINWEIS - Fabrik nicht aufbaubar: {exc}")
+        except TypeError as exc:
+            print(f"  ABBRUCH - Signaturfehler, der echte Lauf wuerde sofort "
+                  f"scheitern: {exc}")
+            return 3
+    print()
     if bekannt:
         print(f"Wiederaufnahme: {len(bekannt)} Antworten aus {args.fortsetzen} "
               f"werden wiederverwendet, nicht erneut angefragt.")
@@ -262,7 +341,7 @@ def main() -> int:
     ergebnisse = {}
     for fakt in args.fakt:
         provider = _trocken_provider() if args.trocken else \
-            _echter_provider(protokoll, fakt)
+            _echter_provider(protokoll, fakt, bekannt, args.pause)
         n = nw.nachweisrahmen(provider, faelle, fakt, reihen,
                               horizont=args.horizont,
                               eroeffnen_einbruch_pp=vorab["regel"]["eroeffnen_einbruch_pp"],
