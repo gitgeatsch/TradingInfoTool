@@ -1154,6 +1154,9 @@ ist **ungemessen, nicht widerlegt** und geht in keine Quote ein.
 |---|---|
 | `bewerte_fakt_wirkung.py` | **Der Nachweisrahmen aus Mappe Kapitel 9, Stufe 3.** Drei Arme (A1/A2 identisch, B ohne den Fakt), und — das ist das Neue — **alle drei werden gegen die echte Kurshistorie bewertet**. Entscheidungsregel und Mindest-n stehen als Parameter fest, bevor der Lauf startet. |
 | `teste_nachweisrahmen.py` | Nach jeder Änderung am Rahmen. Fährt ihn gegen ein Modell mit **bekanntem** Verhalten — neun Lagen, die er unterscheiden können muss. |
+| `pruefe_nachweis_robustheit.py` | **Nach jedem abgeschlossenen Lauf, vor jeder Interpretation.** Fährt dieselbe Auswertung über sieben Schnitte (ohne den größten Tag, Tages-Deckel, je Richtung, zwei Horizonte) und stellt die Urteile nebeneinander. Kein einziger neuer Aufruf. Stimmen alle überein, ist der Befund robust; kippt einer, gehört genau der in die Ergebnisdarstellung. |
+| `werte_fakt_nachweis_neu_aus.py` | Einzelner Schnitt aus dem gespeicherten Protokoll — `--ohne-tag`, `--deckel-je-tag`, `--nur-richtung`, `--horizont`. Ein Messlauf kostet 800 Aufrufe, eine Neuauswertung Sekunden. |
+| `pruefe_nachweis_grundmenge.py` | **Vor** dem Lauf: zehn Fragen an die Grundmenge, alle unabhängig vom Ergebnis beantwortbar. Trägt der Fakt Inhalt? Ändert das Entfernen den Prompt wirklich? Liegt ein Datum im Faktensatz nach seinem Zeitstempel (Lookahead)? Streut die Stichprobe über Zeit und Symbole? |
 | `laufe_fakt_nachweis.py` | Der eigentliche Lauf gegen echte Faktensätze. **Immer zuerst mit `--trocken`** — der Trockenlauf hat schon zwei eigene Fehler gefunden. Speichert jede Rohantwort, teilt die A-Arme über mehrere Fakten, bricht unter 30 brauchbaren Fällen ab, ohne einen Aufruf abzusetzen. |
 
 > **Der gepaarte Vergleich ist nicht optional.** Die erste Fassung des Rahmens
