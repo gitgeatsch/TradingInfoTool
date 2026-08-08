@@ -308,6 +308,55 @@ def _zonen_schwelle(von_value: float | None, bis_value: float | None,
     return point_value
 
 
+def lade_ohlc_auf_signal_skala(conn, symbol: str, entry: float | None,
+                               min_date: str) -> list:
+    """OHLC-Historie eines Symbols - aber nur, wenn sie zum Signal PASST.
+
+    DIE LUECKE, DIE DAS SCHLIESST (2026-08-09). Am 06.08. bekam
+    `simuliere_signal()` eine Plausibilitaetsschranke gegen den
+    Instrumenten-Verwechsler: liegt der Einstieg um mehr als Faktor 3 neben der
+    Kursreihe, wird nicht bewertet. Sie sitzt aber im SIMULATIONS-Pfad. Der
+    LIVE-Tracker hatte keine - und der schreibt die Ergebnisse, die in jeder
+    Systemguete landen.
+
+    Wie teuer das war: `OD7C` #2361 stieg bei 34,63 ein und wurde gegen die
+    Kupfer-Futures-Reihe bei ~6,30 USD/lb bewertet. Ergebnis **+20,37 R** - der
+    einzige nennenswerte Wert der Assetklasse Rohstoffe, und er hat die
+    Kennzahl monatelang getragen. Die Reihe ist laengst korrigiert, das
+    gespeicherte Ergebnis blieb.
+
+    ZWEI REPARATUREN GAB ES BEREITS, und beide greifen hier nicht:
+    die Schranke von 06.08. (falscher Pfad) und
+    `korrigiere_rohstoff_outcome.py` (Kriterium ist ein Stichtag, und
+    `geprueft_am` ist inzwischen juenger). Ein Kriterium, das auf einem Datum
+    beruht, veraltet mit dem Datum.
+
+    Leere Liste, wenn die Skalen nicht zusammenpassen. Der Aufrufer faellt
+    dadurch in seinen bestehenden Zweig fuer "keine OHLC-Daten" - er bewertet
+    also nicht falsch, sondern gar nicht. Lieber kein Ergebnis als ein
+    erfundenes; dieselbe Abwaegung wie bei der Schranke von 06.08.
+
+    Grenze bewusst weit (Faktor 3): echte Gaps, Splits und Waehrungswechsel
+    bleiben auswertbar, nur die Groessenordnungs-Verwechslung faellt heraus."""
+    rows = db.get_ohlc_history(conn, symbol, "USD", min_date=min_date)
+    if not rows or not entry or entry <= 0:
+        return rows
+    erster = next((r.close for r in rows if getattr(r, "close", None)), None)
+    if not erster or erster <= 0:
+        return rows
+    verhaeltnis = max(entry / erster, erster / entry)
+    if verhaeltnis > 3.0:
+        logger.warning(
+            "%s: Signal-Einstieg %.4f und Kursreihe %.4f liegen auf "
+            "verschiedenen Skalen (Faktor %.2f) - NICHT bewertet. Typische "
+            "Ursache: die Historie wurde ueber einen Proxy-Ticker geholt und "
+            "unter dem echten Symbol abgelegt.",
+            symbol, entry, erster, verhaeltnis,
+        )
+        return []
+    return rows
+
+
 def _entry_mid(signal) -> float | None:
     von = signal.entry_usd_von
     bis = signal.entry_usd_bis
@@ -485,7 +534,8 @@ def check_signal_outcome(
             return low <= take_profit_threshold, high >= stop_loss_threshold
         return high >= take_profit_threshold, low <= stop_loss_threshold
 
-    ohlc_rows = db.get_ohlc_history(conn, signal.symbol, "USD", min_date=min_date)
+    ohlc_rows = lade_ohlc_auf_signal_skala(
+        conn, signal.symbol, entry_mid, min_date)
     if len(ohlc_rows) >= 1:
         datenquelle = "real"
         for row in ohlc_rows:
@@ -695,7 +745,8 @@ def check_signal_veto_shadow_outcome(
             return low <= take_profit_threshold, high >= stop_loss_threshold
         return high >= take_profit_threshold, low <= stop_loss_threshold
 
-    ohlc_rows = db.get_ohlc_history(conn, signal.symbol, "USD", min_date=min_date)
+    ohlc_rows = lade_ohlc_auf_signal_skala(
+        conn, signal.symbol, entry_mid, min_date)
     if len(ohlc_rows) >= 1:
         for row in ohlc_rows:
             day = row.date
@@ -802,7 +853,8 @@ def check_signal_selbst_halten_outcome(
             return low <= take_profit_threshold, high >= stop_loss_threshold
         return high >= take_profit_threshold, low <= stop_loss_threshold
 
-    ohlc_rows = db.get_ohlc_history(conn, signal.symbol, "USD", min_date=min_date)
+    ohlc_rows = lade_ohlc_auf_signal_skala(
+        conn, signal.symbol, entry_mid, min_date)
     if len(ohlc_rows) >= 1:
         for row in ohlc_rows:
             day = row.date

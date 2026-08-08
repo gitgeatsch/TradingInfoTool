@@ -139,5 +139,52 @@ pruefe("B4 einzelner Balken liefert None statt einer erfundenen Dichte",
        sim_einzel is not None and sim_einzel.get("balkenabstand_median") is None,
        str(None if sim_einzel is None else sim_einzel.get("balkenabstand_median")))
 
+# --- C) Die Skalen-Schranke gilt jetzt auch im LIVE-Pfad (09.08.) ------------
+#
+# Die Schranke vom 06.08. sass nur in simuliere_signal() - also im
+# SIMULATIONS-Pfad. Der Live-Tracker, der die Ergebnisse in die Datenbank
+# schreibt, hatte keine. Genau darueber kam OD7C #2361 mit +20,37 R in die
+# Systemguete: Einstieg 34,63, bewertet gegen die Kupfer-Futures-Reihe bei 6,30.
+#
+# A4 oben prueft den Simulations-Pfad, C1 hier den Live-Pfad. Beide brauchen es
+# einzeln - dass der eine geschuetzt ist, sagt nichts ueber den anderen.
+from agent.krypto.backward_tracking import lade_ohlc_auf_signal_skala
+
+# TESTSKALA liegt bei 6,30 (siehe oben). Ein Signal mit Einstieg 34,63 gehoert
+# zu einem anderen Instrument.
+rows_falsch = lade_ohlc_auf_signal_skala(conn, "TESTSKALA", 34.63, TAGE[0])
+pruefe("C1 Live-Pfad verweigert die Bewertung bei Skalenbruch (Faktor 5,5)",
+       rows_falsch == [], f"{len(rows_falsch)} Zeilen zurueckgegeben")
+
+# GEGENPROBE: bei passender Skala muessen die Daten ankommen. Ohne sie koennte
+# die Funktion einfach immer [] liefern und C1 bestuende trotzdem.
+rows_passend = lade_ohlc_auf_signal_skala(conn, "TESTSKALA", 6.50, TAGE[0])
+pruefe("C2 Gegenprobe: bei passender Skala kommen die Daten durch",
+       len(rows_passend) > 0, f"{len(rows_passend)} Zeilen")
+
+# Faktor 2,5 muss weiterhin durchgehen - echte Gaps und Splits sollen
+# auswertbar bleiben, nur die Groessenordnungs-Verwechslung faellt heraus.
+rows_knapp = lade_ohlc_auf_signal_skala(conn, "TESTSKALA", 6.30 * 2.5, TAGE[0])
+pruefe("C3 Faktor 2,5 bleibt auswertbar (Gaps/Splits nicht abwuergen)",
+       len(rows_knapp) > 0, f"{len(rows_knapp)} Zeilen")
+
+# Ohne Einstieg kann nichts geprueft werden - dann darf die Funktion nicht
+# stillschweigend alles verwerfen.
+rows_ohne = lade_ohlc_auf_signal_skala(conn, "TESTSKALA", None, TAGE[0])
+pruefe("C4 ohne Einstiegspreis wird nicht verworfen", len(rows_ohne) > 0,
+       f"{len(rows_ohne)} Zeilen")
+
+# Und alle sechs Checker muessen die Wache benutzen, nicht nur einer - dieselbe
+# Falle wie bei der Zonenkante, wo zunaechst nur einer von drei umgestellt war.
+import pathlib as _pl
+
+for _datei, _erwartet in (("agent/krypto/backward_tracking.py", 3),
+                          ("agent/krypto/hebel_backward_tracking.py", 3)):
+    _text = _pl.Path(_datei).read_text(encoding="utf-8")
+    _n = _text.count("lade_ohlc_auf_signal_skala(\n")
+    pruefe(f"C5 {_datei} holt OHLC ueber die Wache", _n >= _erwartet,
+           f"{_n} von {_erwartet} Stellen")
+
 print("\n" + ("ALLE TESTS BESTANDEN" if not fehler else f"FEHLER: {fehler}"))
 conn.close()
+raise SystemExit(1 if fehler else 0)

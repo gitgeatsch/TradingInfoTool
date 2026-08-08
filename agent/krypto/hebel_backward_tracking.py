@@ -30,6 +30,7 @@ from agent.krypto.backward_tracking import (
     OUTCOME_TAKE_PROFIT,
     OUTCOME_UEBERHOLT,
     _zonen_schwelle,
+    lade_ohlc_auf_signal_skala,
     gap_bewusster_fill,
     persistiere_offenes_mfe,
 )
@@ -257,7 +258,8 @@ def check_hebel_signal_outcome(
         return None
 
     day = None
-    ohlc_rows = db.get_ohlc_history(conn, signal.symbol, "USD", min_date=min_date)
+    ohlc_rows = lade_ohlc_auf_signal_skala(
+        conn, signal.symbol, entry_mid, min_date)
     if len(ohlc_rows) >= 1:
         datenquelle = "real"
         for row in ohlc_rows:
@@ -427,7 +429,8 @@ def check_hebel_signal_selbst_halten_outcome(
         return None
 
     day = None
-    ohlc_rows = db.get_ohlc_history(conn, signal.symbol, "USD", min_date=min_date)
+    ohlc_rows = lade_ohlc_auf_signal_skala(
+        conn, signal.symbol, entry_mid, min_date)
     if len(ohlc_rows) >= 1:
         for row in ohlc_rows:
             result = _check_day(row.high, row.low, row.date, row.open)
@@ -559,7 +562,8 @@ def check_hebel_signal_veto_shadow_outcome(
         return None
 
     day = None
-    ohlc_rows = db.get_ohlc_history(conn, signal.symbol, "USD", min_date=min_date)
+    ohlc_rows = lade_ohlc_auf_signal_skala(
+        conn, signal.symbol, entry_mid, min_date)
     if len(ohlc_rows) >= 1:
         for row in ohlc_rows:
             result = _check_day(row.high, row.low, row.date, row.open)

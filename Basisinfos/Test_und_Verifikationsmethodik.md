@@ -1124,6 +1124,30 @@ ist **ungemessen, nicht widerlegt** und geht in keine Quote ein.
    über `simuliere_signal` schätzte −15,22 R, die produktiven Checker lieferten
    −16,05 R. Solche Konvergenz ist die billigste verfügbare Kontrolle.
 
+### Nach jedem Eingriff an Kursreihen, Tickern oder Symbolzuordnungen
+
+| Skript | Auslöser |
+|---|---|
+| `pruefe_outcome_plausibilitaet.py` | **Nach jeder Symboltrennung, Ticker-Änderung oder Reihen-Rekonstruktion — und routinemäßig bei jedem Export.** Rechnet aus dem gespeicherten R-Wert den Ausstiegspreis zurück und prüft, ob er in der Spanne liegt, die die Kursreihe überhaupt hergibt. Findet damit Ergebnisse, die gegen eine **andere** Reihe entstanden sind. Trockenlauf ist der Standard. |
+
+> **Warum ein datumsbasiertes Kriterium hier nicht reicht.** `OD7C` #2361 trug
+> **+20,37 R** — Einstieg 34,63, bewertet gegen die Kupfer-Futures-Reihe bei
+> ~6,30. Es gab dafür bereits zwei Reparaturen, und **keine hat gegriffen**:
+> die Plausibilitätsschranke vom 06.08. sitzt im *Simulations*-Pfad, nicht im
+> Live-Tracker; und `korrigiere_rohstoff_outcome.py` prüft `geprueft_am <
+> 2026-08-06`, während dieses Feld inzwischen auf dem 08.08. steht.
+>
+> **Ein Kriterium, das auf einem Datum beruht, veraltet mit dem Datum.** Die
+> Rückrechnung des Ausstiegspreises prüft sich dagegen selbst und findet auch
+> den nächsten Fall dieser Familie. Gemessen: 2 Treffer unter 820 Zeilen, keine
+> Fehlalarme — und gegen drei absichtlich verdorbene Zeilen alle drei gefunden.
+>
+> **Die Ursache ist geschlossen:** `lade_ohlc_auf_signal_skala()` bringt die
+> Schranke jetzt auch in den Live-Pfad, an allen **sechs** Checkern beider
+> Tracker-Dateien. Geprüft von `teste_simuliere_signal_zeilentypen.py` (C1–C5),
+> inklusive der Zählung, dass wirklich alle sechs sie benutzen — dieselbe Falle
+> wie bei der Zonenkante, wo zunächst nur einer von drei umgestellt war.
+
 ### Bei Verdacht auf Datenfehler
 
 | Skript | Auslöser |
