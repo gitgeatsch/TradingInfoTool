@@ -508,7 +508,7 @@ SCHEMA:
   "hebel_vorschlag": <Zahl oder null bei HALTEN/SCHLIESSEN>,
   "trade_thesis_typ": "einmal_trade|swing_strategie",
   "top_gruende": [
-    {"rang": 1, "kategorie": "technisch|fundamental|makro|risiko|antizyklisch", "text": "<Text>"},
+    {"rang": 1, "kategorie": "technisch|fundamental|makro|risiko", "text": "<Text>"},
     {"rang": 2, "kategorie": "...", "text": "<Text>"},
     {"rang": 3, "kategorie": "...", "text": "<Text>"},
     {"rang": 4, "kategorie": "...", "text": "<Text>"},
