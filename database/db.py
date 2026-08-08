@@ -3978,6 +3978,33 @@ def get_api_call_counter(conn: sqlite3.Connection, source: str, monat: str | Non
     return row["anzahl"] if row else 0
 
 
+def get_llm_budget_zaehler(conn: sqlite3.Connection, provider: str) -> int:
+    """Tages-Budgetzaehler eines LLM-Anbieters - ECHTE AUFRUFE (2026-08-09).
+
+    Warum nicht `count_real_llm_calls_today_by_provider()`: das zaehlt
+    Signal-ZEILEN. Ein fehlgeschlagener Aufruf erzeugt keine Zeile und blieb
+    damit unsichtbar - am 07.08. stand Mistrals Zaehler den ganzen Tag auf 0,
+    waehrend jeder Kandidat dort ein 402 kassierte, und
+    `mistral_budget_erschoepft` konnte nie True werden.
+
+    RUECKFALL statt Absturz: `api_call_kontingent_taeglich` existiert erst seit
+    2026-08-01. Auf einer aelteren Datei (alte Sicherung, fremde Kopie) wuerde
+    ein harter Zugriff den ganzen Allocator mitnehmen - fuer einen Zaehler.
+    Deshalb faellt die Funktion auf den alten Zaehler zurueck und schreibt eine
+    WARNUNG: der Lauf geht weiter, aber die Ursache steht im Log statt still zu
+    bleiben (siehe Memory feedback_fail_soft_ist_fail_silent).
+    """
+    try:
+        return get_api_call_counter_taeglich(conn, provider)
+    except sqlite3.OperationalError as exc:
+        logger.warning(
+            "Budget-Zaehler: api_call_kontingent_taeglich nicht lesbar (%s) - falle auf den "
+            "alten Datensatz-Zaehler zurueck. Der zaehlt FEHLGESCHLAGENE Aufrufe NICHT mit, "
+            "das Tagesbudget greift also zu spaet. init_db() legt die Tabelle an.", exc,
+        )
+        return count_real_llm_calls_today_by_provider(conn, f"{provider}:")
+
+
 def get_api_call_counter_taeglich(conn: sqlite3.Connection, source: str, tag: str | None = None) -> int:
     """Tages-Pendant zu get_api_call_counter() (2026-08-01) - 0, wenn fuer
     den Tag noch kein einziger Call gezaehlt wurde."""

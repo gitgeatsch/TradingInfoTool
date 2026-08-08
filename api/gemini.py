@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import requests
 
-from api.llm_basis import Minutenfenster, extrahiere_inhalt
+from api.llm_basis import Minutenfenster, extrahiere_inhalt, zaehle_aufruf
 from database.api_health import track_api_health
 
 BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
@@ -62,6 +62,7 @@ class GeminiClient:
         response_format: dict | None = None,
     ) -> str:
         self._respect_rate_limit()
+        zaehle_aufruf("gemini")
         headers = {"Authorization": f"Bearer {self._api_key}"}
         payload = {"model": model, "messages": messages, "temperature": temperature}
         if response_format is not None:

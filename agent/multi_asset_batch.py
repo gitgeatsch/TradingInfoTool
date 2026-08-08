@@ -168,9 +168,12 @@ def run_multi_asset_batch(
                 faellige.append(asset)
             else:
                 result.uebersprungen_cooldown += 1
+        # ECHTE AUFRUFE statt erzeugter Datensaetze (2026-08-09, Teil B) -
+        # identisch zu budget_allocator.py, siehe dortige Begruendung. Beide
+        # Ketten muessen denselben Zaehler lesen, sonst laufen sie auseinander.
         tages_verbraucht = {
-            "mistral": db.count_real_llm_calls_today_by_provider(conn, "mistral:"),
-            "gemini": db.count_real_llm_calls_today_by_provider(conn, "gemini:"),
+            "mistral": db.get_llm_budget_zaehler(conn, "mistral"),
+            "gemini": db.get_llm_budget_zaehler(conn, "gemini"),
         }
     finally:
         conn.close()

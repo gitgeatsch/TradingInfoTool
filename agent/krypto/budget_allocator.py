@@ -545,9 +545,22 @@ def run_budget_allocator(
         # Echte Tages-Zaehler (2026-07-14-Fix) - EINMAL pro Lauf aus der DB
         # gelesen, statt einer lokalen Variable, die bei jedem 15-Min-Lauf
         # auf 0 zurueckgesetzt wurde (siehe Modul-Docstring).
+        # ECHTE AUFRUFE statt erzeugter Datensaetze (2026-08-09, Teil B).
+        #
+        # `count_real_llm_calls_today_by_provider()` zaehlt Signal-ZEILEN. Ein
+        # fehlgeschlagener Aufruf erzeugt keine Zeile - am 07.08. stand Mistrals
+        # Zaehler den ganzen Tag auf 0, waehrend jeder Kandidat dort vergeblich
+        # anklopfte und ein 402 kassierte. `mistral_budget_erschoepft` konnte
+        # nie True werden. Fuer das QUALITAETS-Tracking ist "Datensaetze"
+        # richtig (wer hat dieses Signal erzeugt), als BUDGET-Zaehler ist es
+        # falsch - deshalb zwei getrennte Zaehler.
+        #
+        # `get_api_call_counter_taeglich()` existierte bereits (seit 2026-08-01
+        # fuer CoinGecko) und zaehlt echte Aufrufe; geschrieben wird in
+        # api/llm_basis.py::zaehle_aufruf().
         tages_verbraucht = {
-            "mistral": db.count_real_llm_calls_today_by_provider(conn, "mistral:"),
-            "gemini": db.count_real_llm_calls_today_by_provider(conn, "gemini:"),
+            "mistral": db.get_llm_budget_zaehler(conn, "mistral"),
+            "gemini": db.get_llm_budget_zaehler(conn, "gemini"),
         }
         # CIRCUIT BREAKER, vorbelegt aus api_health_status (2026-08-07).
         #

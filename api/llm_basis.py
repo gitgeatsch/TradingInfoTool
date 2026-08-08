@@ -17,9 +17,12 @@ Oberklasse haben und auch keine bekommen sollen.
 """
 from __future__ import annotations
 
+import logging
 import threading
 import time
 from collections import deque
+
+logger = logging.getLogger(__name__)
 
 # Anbieter liefern Upstream-Fehler teilweise mit HTTP 200 und einem
 # `error`-Objekt STATT `choices` aus - `raise_for_status()` sieht davon nichts.
@@ -59,6 +62,41 @@ def extrahiere_inhalt(daten: dict, anbieter: str) -> str:
             f"{anbieter}: '{_ERWARTET}' vorhanden, aber unerwartet aufgebaut "
             f"({type(exc).__name__}) - {str(daten)[:300]}"
         ) from exc
+
+
+def zaehle_aufruf(source: str) -> None:
+    """Zaehlt EINEN tatsaechlichen HTTP-Aufruf an einen LLM-Anbieter.
+
+    WARUM DAS NOETIG IST (Teil B des Umbaus, 2026-08-09).
+    `db.count_real_llm_calls_today_by_provider()` zaehlt DATENSAETZE - also
+    erzeugte Signale. Ein fehlgeschlagener Aufruf erzeugt keine Zeile und ist
+    damit unsichtbar. Am 07.08. stand Mistrals Zaehler den ganzen Tag auf 0,
+    waehrend jeder einzelne Kandidat dort vergeblich anklopfte und ein
+    402 kassierte; `mistral_budget_erschoepft` konnte nie True werden.
+
+    Fuer das QUALITAETS-Tracking ist "Datensaetze" richtig (welcher Anbieter hat
+    dieses Signal erzeugt). Als BUDGET-Zaehler ist es falsch. Deshalb zwei
+    getrennte Zaehler statt eines umgedeuteten.
+
+    HIER und nicht im `track_api_health`-Decorator, weil OpenRouter innerhalb
+    EINES `chat()` durch mehrere Modelle rotiert - jeder dieser Versuche ist
+    ein eigener HTTP-Aufruf und zaehlt gegen das Tageslimit des Anbieters.
+    Am Decorator haengend wuerde eine Rotation ueber drei Modelle als ein
+    einziger Aufruf gezaehlt.
+
+    Zaehlt VOR dem Aufruf, damit ein Fehlschlag mitzaehlt - genau das war der
+    Defekt. Fehler beim Zaehlen duerfen den Aufruf nie toeten (P-10).
+    """
+    import database.db as db          # lokal: api/ soll beim Import nicht auf DB warten
+
+    try:
+        conn = db.get_connection()
+        try:
+            db.increment_api_call_counter(conn, source)
+        finally:
+            conn.close()
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("Aufrufzaehler fuer %s nicht geschrieben: %s", source, exc)
 
 
 class Minutenfenster:

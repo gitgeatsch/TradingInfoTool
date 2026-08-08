@@ -61,7 +61,7 @@ import logging
 
 import requests
 
-from api.llm_basis import Mindestabstand, extrahiere_inhalt
+from api.llm_basis import Mindestabstand, extrahiere_inhalt, zaehle_aufruf
 from database.api_health import track_api_health
 
 logger = logging.getLogger(__name__)
@@ -276,6 +276,11 @@ class OpenRouterClient:
                 f"kostenlosen Varianten gedacht (siehe Modul-Docstring)."
             )
         self._respect_rate_limit()
+        # HIER, nicht in chat(): eine Rotation ueber drei Modelle sind drei
+        # HTTP-Aufrufe und zaehlen dreimal gegen OpenRouters Tageslimit von
+        # 1.000 Anfragen. Am chat()-Eingang gezaehlt waere das EIN Aufruf -
+        # der Zaehler laege genau dann zu niedrig, wenn es eng wird.
+        zaehle_aufruf("openrouter")
         headers = {
             "Authorization": f"Bearer {self._api_key}",
             # OpenRouter bittet um diese beiden Felder zur Zuordnung; sie sind
