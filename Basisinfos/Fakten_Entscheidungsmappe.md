@@ -1058,28 +1058,82 @@ genug Fälle zu bekommen.
 
 ### Stufe 0 — Gegenprüfung der einen dokumentierten Widersprüchlichkeit
 
-Blocker #617: der Docstring von `basislinie_erwartungswert()` begründet die
-Konstruktion mit *„Zufallseinstieg verliert systematisch, −0,11 bis −0,26 R"*,
-der Export liefert **+0,081 R**. Mindestens eine der beiden Zahlen ist falsch,
-und der Signalbeitrag −0,379 R steht deshalb unter ausdrücklicher Sperre.
-Solange das offen ist, ist die Basislinie weder als Fakt noch als Maßstab
-verwendbar. Reine Auswertung, kein Bau.
+**ERLEDIGT (2026-08-09) — es gab keinen Widerspruch mehr.** Die Formulierung
+oben beschrieb einen Stand, der seit dem 03.08. überholt war.
+
+Der Docstring von `basislinie_erwartungswert()` löst ihn selbst auf, Abschnitt
+„KORREKTUR DER KORREKTUR": die **−0,11 bis −0,26 R** stammen aus der Basislinie
+von `analyse_crv_gate_survivorship.py`, die schon immer aus dem *Signalfenster*
+zog; die **+0,081 R** waren der Wert aus der *vollen Historie*. Beide Zahlen
+sind richtig, sie messen verschiedene Fenster. Seit
+`_BASISLINIE_NUR_SIGNALFENSTER = True` sind beide Rechnungen deckungsgleich.
+
+Gegengeprüft am Export vom 09.08.:
+
+| Gruppe | Expectancy | Basislinie | Signalbeitrag |
+|---|---|---|---|
+| hebel/real | −0,149 R | **−0,094 R** (n=958) | **−0,055 R** |
+| krypto/real | −0,159 R | −0,298 R (n=679) | +0,139 R |
+
+Kein +0,081 R, und der Signalbeitrag liegt bei −0,055 R statt −0,379 R. **Die
+Sperre auf dem Signalbeitrag ist damit gegenstandslos.**
+
+Was echt offen bleibt, ist ein *anderer* Punkt, den derselbe Docstring
+ausdrücklich als „unverändert offen" führt: die **Auflösungs-Asymmetrie**.
+Auch sie ist inzwischen auf der Signalseite adressiert —
+`_SYSTEMGUETE_MARK_TO_MARKET` bewertet unaufgelöste Signale zum Schlusskurs,
+sodass beide Seiten des Vergleichs denselben Fall gleich behandeln.
+
+> **Lehre:** dieser Plan hätte mit einer Auswertung begonnen, deren Ergebnis
+> seit sechs Tagen im Code stand. Die stehende Vorgabe *„vor jedem Eingriff die
+> interne Doku prüfen"* gilt auch für den eigenen Plan.
 
 ### Stufe 1 — Der Pfad-Bewerter, validiert
 
-OHLC-Verlauf + Entry/Stop/Ziel → Ergebnis in R.
+**ERLEDIGT (2026-08-09) — der Bewerter existierte bereits und ist jetzt
+geprüft.**
 
-> **Abnahmekriterium: er muss die 92 bekannten Ausgänge reproduzieren.**
+`simuliere_signal()` (`agent/krypto/backward_tracking.py`) leistet genau das:
+OHLC-Verlauf + Entry/Stop/Ziel → Ergebnis in R, mit identischer Abbruch- und
+Fill-Logik wie das Backward-Tracking. Er war zudem **nicht nur ein
+Analysewerkzeug, sondern lief bereits produktiv** — über
+`_SYSTEMGUETE_MARK_TO_MARKET` speist er die ausgewiesene Systemgüte
+(50 Fälle über beide Tabellen, davon 39 bei hebel/real). Geprüft war er nie.
+
+> **Abnahmekriterium: er muss die bekannten Ausgänge reproduzieren.**
 > Reproduziert er sie nicht, ist er für die anderen ~1.400 nicht
 > vertrauenswürdig.
+
+**Ergebnis: 97 von 100 auswertbaren Fällen (97,0 %) — auf dichten Kursreihen
+82 von 82 (100,0 %).** Der gesamte Fehler liegt in der dünnen Population
+(15 von 18). Negativkontrolle 47,1 %. Werkzeug, Kontrollen und die zwei Lehren
+aus dem Lauf stehen in `Test_und_Verifikationsmethodik.md` 2.13
+(`pruefe_pfad_bewerter.py`).
 
 ### Stufe 2 — Stichprobe verbreitern
 
 Der validierte Bewerter über die unaufgelösten Signale. Erst danach ist n=212
-erreichbar. **Offene Vorbedingung, gehört in jedes spätere Ergebnis:** 19,2 %
-der Hebel-Signale (338) tragen Symbole ohne jede Kursreihe — CANTON, KAIA,
-KAITO, SUPRA, XNO, darunter das verlustreichste Symbol überhaupt — und 30,2 %
-haben weder Entry noch Stop hinterlegt. Die Lücke ist nicht zufällig verteilt.
+erreichbar. **Offene Vorbedingung, gehört in jedes spätere Ergebnis:** 30,2 %
+der Hebel-Signale haben weder Entry noch Stop hinterlegt. Die Lücke ist nicht
+zufällig verteilt.
+
+**Korrektur der zweiten Vorbedingung (2026-08-09, gemessen).** Hier stand
+bisher, 19,2 % der Hebel-Signale trügen Symbole *„ohne jede Kursreihe"* —
+CANTON, KAIA, KAITO, SUPRA, XNO. Das stimmt nicht mehr: diese Symbole **haben**
+eine Kursreihe, sie ist nur **dünn** — je 23 Punkte im Abstand von rund vier
+Tagen. Insgesamt neun Symbole (zusätzlich BRETT, EURCV, IO, VSN).
+
+Der Unterschied ist nicht kosmetisch. „Keine Reihe" heißt *nicht bewertbar*;
+„dünne Reihe" heißt *bewertbar, aber mit messbar schlechterer Reproduktion*
+(83,3 % gegen 100,0 %). Die betroffenen Fälle bleiben in der Stichprobe und
+tragen ihre Kennzeichnung mit — **Reichweite: 16,8 % der unaufgelösten
+Hebel-Signale, 2,6 % bei Spot.**
+
+**Folge für einen bestehenden Befund:** die KAIA-Diagnose (*„der Trigger feuert,
+der Kurs reagiert nie"*, Median-MFE −0,01 R bei 11 Signalen) ruht auf einer
+Vier-Tage-Balken-Reihe. Ein Median-MFE unterschätzt auf solchen Balken die
+tatsächliche Bewegung systematisch. Der Befund kippt dadurch nicht, ist aber
+schwächer belegt als bisher angenommen — bei der Wiedervorlage mitzuprüfen.
 
 ### Stufe 3 — Nachweisrahmen je Fakt
 

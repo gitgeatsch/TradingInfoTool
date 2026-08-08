@@ -1021,6 +1021,48 @@ Zwei Implementierungen derselben Simulation laufen garantiert auseinander
 | `datiere_einbruch.py` | Trennpunkt-Suche per Max-Statistik + Block-Permutation | 8 Skripten |
 | `extract_notebook_diagnose.py` | der Export selbst, inkl. `_db_backup()` | 2 Skripten |
 
+### Vor jeder Auswertung, die den Pfad-Bewerter benutzt
+
+| Skript | Auslöser |
+|---|---|
+| `pruefe_pfad_bewerter.py` | **Nach jeder Änderung an `simuliere_signal()`, `_zonen_absolut()`, `gap_bewusster_fill()` oder an der OHLC-Beschaffung — und vor jeder Auswertung, die auf dem Bewerter aufsetzt.** Fährt das Abnahmekriterium aus Mappe Kapitel 9 Stufe 1: reproduziert der Bewerter die bekannten Ausgänge? Läuft gegen eine **Kopie** der Produktions-DB (`--db`), nie gegen eine laufende Instanz. Enthält Leerlauf-Wache, Negativkontrolle (Start 180 Tage früher) und trennt *ungemessen* von *widerlegt*. |
+
+**Ergebnis des Erstlaufs (2026-08-09) — Stufe 1 gilt damit als bestanden:**
+
+| | n | reproduziert | |
+|---|---|---|---|
+| dichte Kursreihen (≤ 1,5 Tage je Balken) | 82 | **82** | **100,0 %** |
+| dünne Kursreihen (> 1,5 Tage) | 18 | 15 | 83,3 % |
+| **gesamt** | **100** | **97** | **97,0 %** |
+| Negativkontrolle (Start 180 Tage früher) | 104 | 49 | 47,1 % |
+
+Dazu 6 zensierte Fälle — die Reihe zeigt bis zu ihrem Ende keine Barriere. Das
+ist **ungemessen, nicht widerlegt** und geht in keine Quote ein.
+
+> **Die Grenze des Bewerters ist damit benannt und liegt nicht in seiner Logik,
+> sondern in der Balkendichte.** Er nimmt Tageskerzen an; „Stop schlägt Ziel am
+> selben Tag" ist auf einem Vier-Tage-Balken ein Münzwurf. Neun Symbole mit je
+> 23 Punkten sind betroffen (BRETT, CANTON, EURCV, IO, KAIA, KAITO, SUPRA, VSN,
+> XNO). Entscheidung 09.08.: **kennzeichnen statt ausschließen** —
+> `simuliere_signal()` liefert `balkenabstand_median` mit, jede Auswertung
+> berichtet getrennt. Ausschließen hätte 16,8 % der unaufgelösten Hebel-Signale
+> aus Stufe 2 entfernt, also genau die Fälle, wegen derer die Stichprobe
+> verbreitert wird.
+
+**Zwei Lehren aus dem Lauf selbst:**
+
+1. **Die erste Negativkontrolle war unbrauchbar.** Stop und Ziel zu vertauschen
+   ergab 83,0 % gegen 91,5 % — scheinbar ein Einbruch, tatsächlich ein
+   Artefakt: der getauschte „Stop" eines LONG liegt über dem Einstieg und wird
+   an Tag 0 getroffen, und 87 der 106 bekannten Ausgänge lauten
+   `stop_loss_erreicht`. Die kaputte Variante stimmte aus dem falschen Grund
+   zu. Erst der Datums-Versatz trennt (47,1 %). *Eine Kontrolle, die aus
+   Versehen richtig liegt, ist keine.*
+2. **Zensierte Ergebnisse zunächst als Abweichung gezählt** — das drückte das
+   Ergebnis von 97,0 auf 91,5 % und hätte drei Datenlücken als
+   Reproduktionsfehler ausgewiesen. Dieselbe Familie wie Punkt 3 des
+   Nachtrags 09.08.
+
 ### Bei Verdacht auf Datenfehler
 
 | Skript | Auslöser |

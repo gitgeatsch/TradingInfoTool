@@ -3382,6 +3382,52 @@ _CRV_BAENDER = ((0.0, 2.0), (2.0, 2.5), (2.5, 3.0), (3.0, 4.0), (4.0, None))
 _BAND_ERFOLGSKRITERIUM = "ziel_erreicht"
 
 
+def _balkenabstand_median(tage: list) -> float | None:
+    """Median-Abstand zwischen zwei Balken der gepruefen Reihe, in Tagen.
+
+    WOZU (2026-08-09, Abnahmelauf zu Mappe Kapitel 9 Stufe 1). Der Bewerter
+    nimmt implizit TAGESKERZEN an: die Reihenfolge innerhalb eines Balkens ist
+    unbekannt, deshalb gilt "Stop schlaegt Ziel am selben Tag" als konservative
+    Konvention. Bei einem Tagesbalken ist das eine milde Annahme. Bei einem
+    Balken, der VIER Tage zusammenfasst, ist es ein Muenzwurf.
+
+    Gemessen am 09.08. gegen die 106 bekannten Ausgaenge: der Bewerter
+    reproduziert 97 von 100 auswertbaren Faellen. ALLE DREI Fehlschlaege liegen
+    auf Reihen mit Median-Balkenabstand 4,0 Tage, alle 97 Treffer auf 1,0.
+    Betroffen sind neun Symbole mit je 23 Punkten (BRETT, CANTON, EURCV, IO,
+    KAIA, KAITO, SUPRA, VSN, XNO) - darunter KAIA, das verlustreichste Symbol
+    ueberhaupt.
+
+    KENNZEICHNEN STATT AUSSCHLIESSEN (Nutzer-Entscheidung 09.08.). Eine Schranke
+    analog zur Skalen-Plausibilitaet haette 16,8 % der unaufgeloesten
+    Hebel-Signale aus Stufe 2 entfernt - also genau die Faelle, wegen derer die
+    Stichprobe verbreitert wird. Stattdessen traegt jedes Ergebnis seine eigene
+    Balkendichte, und die auswertende Stelle berichtet getrennt.
+
+    Produktiv aendert das heute nichts: `_simuliere_zeile()` verlangt den vollen
+    Horizont, den eine 23-Punkte-Reihe nie erfuellt - 0 von 50 laufenden
+    Mark-to-Market-Faellen liegt auf einer duennen Reihe.
+
+    None bei weniger als zwei Balken."""
+    if len(tage) < 2:
+        return None
+    from datetime import date
+
+    def _tag(wert: str) -> date:
+        j, m, t = (int(x) for x in str(wert)[:10].split("-"))
+        return date(j, m, t)
+
+    try:
+        tage_sortiert = [_tag(p["date"]) for p in tage]
+    except (ValueError, TypeError, KeyError, IndexError):
+        return None
+    abstaende = [(tage_sortiert[i + 1] - tage_sortiert[i]).days
+                 for i in range(len(tage_sortiert) - 1)]
+    if not abstaende:
+        return None
+    return statistics.median(abstaende)
+
+
 def simuliere_signal(z: dict, reihe: list, ab_datum: str, horizont: int,
                      voller_horizont_noetig: bool = True) -> dict | None:
     """Ein Signal Tag fuer Tag gegen die Kurshistorie, ab `ab_datum`.
@@ -3406,8 +3452,12 @@ def simuliere_signal(z: dict, reihe: list, ab_datum: str, horizont: int,
     dadurch sind beide Seiten symmetrisch.
 
     Rueckgabe: `r` (R-Multiple), `ausgang` ('ziel'/'stop'/'offen'), `tag`
-    (0-basierter Tagesindex des Ereignisses) und `zensiert` (True, wenn bis zum
-    letzten beobachteten Tag keine Barriere getroffen wurde)."""
+    (0-basierter Tagesindex des Ereignisses), `zensiert` (True, wenn bis zum
+    letzten beobachteten Tag keine Barriere getroffen wurde) und
+    `balkenabstand_median` - die Balkendichte der gepruefen Reihe in Tagen.
+    Letzteres ist ein GUETEHINWEIS auf das Ergebnis selbst, kein Nebenwert:
+    oberhalb von etwa 1,5 Tagen wird die Konvention "Stop schlaegt Ziel"
+    unzuverlaessig, siehe _balkenabstand_median()."""
     tage = [p for p in reihe if p["date"] >= ab_datum][:horizont + 1]
     if voller_horizont_noetig and len(tage) < horizont + 1:
         return None
@@ -3451,6 +3501,7 @@ def simuliere_signal(z: dict, reihe: list, ab_datum: str, horizont: int,
                 e, erster, verhaeltnis,
             )
             return None
+    balken = _balkenabstand_median(tage)
     for i, p in enumerate(tage):
         hoch, tief, auf = p["high"], p["low"], p["open"]
         if hoch is None or tief is None:
@@ -3460,16 +3511,19 @@ def simuliere_signal(z: dict, reihe: list, ab_datum: str, horizont: int,
         if hit_stop:
             fill = gap_bewusster_fill(z["stop"], auf, ist_stop=True, ist_short=ist_short)
             return {"r": ((e - fill) if ist_short else (fill - e)) / risiko,
-                    "ausgang": "stop", "tag": i, "zensiert": False}
+                    "ausgang": "stop", "tag": i, "zensiert": False,
+                    "balkenabstand_median": balken}
         if hit_ziel:
             fill = gap_bewusster_fill(z["ziel"], auf, ist_stop=False, ist_short=ist_short)
             return {"r": ((e - fill) if ist_short else (fill - e)) / risiko,
-                    "ausgang": "ziel", "tag": i, "zensiert": False}
+                    "ausgang": "ziel", "tag": i, "zensiert": False,
+                    "balkenabstand_median": balken}
     schluss = tage[-1]["close"]
     if not schluss:
         return None
     return {"r": ((e - schluss) if ist_short else (schluss - e)) / risiko,
-            "ausgang": "offen", "tag": len(tage) - 1, "zensiert": True}
+            "ausgang": "offen", "tag": len(tage) - 1, "zensiert": True,
+            "balkenabstand_median": balken}
 
 
 def spot_symbole_je_tier(watchlist: list | None) -> dict[str, set[str]]:

@@ -100,5 +100,44 @@ try:
 except Exception as exc:
     pruefe("A7 basislinie_ziel_anteil laeuft mit Row", False, f"{type(exc).__name__}: {exc}")
 
+# --- B) Balkendichte-Kennzeichnung (09.08., Mappe Kapitel 9 Stufe 1) ---------
+#
+# Der Bewerter nimmt Tageskerzen an. Auf einer Reihe mit 4-Tage-Balken ist
+# "Stop schlaegt Ziel am selben Tag" keine konservative Konvention mehr,
+# sondern ein Muenzwurf - gemessen: 100,0 % Reproduktion auf dichten Reihen,
+# 83,3 % auf duennen. Das Feld macht diese Grenze fuer jeden Auswerter sichtbar.
+#
+# WICHTIG (Methodik-Nachtrag 09.08., Punkt 5): der Test muss gegen den Fall
+# fahren, den er erkennen soll. Ein Feld, das immer None oder immer 1.0
+# lieferte, wuerde B1 bestehen - deshalb prueft B2 die Gegenrichtung an einer
+# echt duennen Reihe, und B3 haelt fest, dass sich die beiden unterscheiden.
+DUENNE_TAGE = [(heute - timedelta(days=4 * (7 - i))).isoformat() for i in range(8)]
+db.upsert_ohlc_points(conn, [
+    OhlcPoint(symbol="TESTDUENN", currency="USD", date=d, open=c, high=c * 1.02,
+              low=c * 0.98, close=c, volume=100.0, fetched_at=JETZT)
+    for d, c in zip(DUENNE_TAGE, [100.0 + i for i in range(8)])])
+reihen = lade_kursreihen(conn)
+
+sim_dicht = simuliere_signal(zonen, reihen["TESTLONG"], TAGE[0], 10)
+pruefe("B1 dichte Reihe wird als 1,0 Tage gekennzeichnet",
+       sim_dicht is not None and sim_dicht.get("balkenabstand_median") == 1.0,
+       str(None if sim_dicht is None else sim_dicht.get("balkenabstand_median")))
+
+sim_duenn = simuliere_signal(zonen, reihen["TESTDUENN"], DUENNE_TAGE[0], 6)
+pruefe("B2 duenne Reihe wird als 4,0 Tage gekennzeichnet",
+       sim_duenn is not None and sim_duenn.get("balkenabstand_median") == 4.0,
+       str(None if sim_duenn is None else sim_duenn.get("balkenabstand_median")))
+
+pruefe("B3 beide Reihen sind unterscheidbar (Feld ist keine Konstante)",
+       sim_dicht is not None and sim_duenn is not None
+       and sim_dicht["balkenabstand_median"] != sim_duenn["balkenabstand_median"])
+
+# Einzelner Balken: kein Abstand berechenbar - None statt einer erfundenen Zahl
+sim_einzel = simuliere_signal(zonen, [dict(reihen["TESTLONG"][0])], TAGE[0], 10,
+                              voller_horizont_noetig=False)
+pruefe("B4 einzelner Balken liefert None statt einer erfundenen Dichte",
+       sim_einzel is not None and sim_einzel.get("balkenabstand_median") is None,
+       str(None if sim_einzel is None else sim_einzel.get("balkenabstand_median")))
+
 print("\n" + ("ALLE TESTS BESTANDEN" if not fehler else f"FEHLER: {fehler}"))
 conn.close()
