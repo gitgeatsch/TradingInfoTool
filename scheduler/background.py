@@ -2819,12 +2819,11 @@ def hebel_screening_job(
             )
             logger.info(
                 "Budget-Allocator: Hebel %d, Marktscan %d, Spot %d verarbeitet, %d fehlgeschlagen, "
-                "Mistral-Calls %d, Mistral-Budget erschöpft: %s, "
-                "Gemini-Calls %d, Gemini-Budget erschöpft: %s",
+                "Calls je Anbieter %s, Budget erschöpft: %s",
                 len(allocation.hebel_verarbeitet), len(allocation.marktscan_verarbeitet),
                 len(allocation.spot_verarbeitet), len(allocation.fehlgeschlagen),
-                allocation.mistral_calls_verbraucht, allocation.mistral_budget_erschoepft,
-                allocation.gemini_calls_verbraucht, allocation.gemini_budget_erschoepft,
+                dict(allocation.calls_verbraucht) or "keine",
+                dict(allocation.budget_erschoepft) or "keiner",
             )
         else:
             logger.info("Budget-Allocator übersprungen (kein Mistral-/Gemini-/Z.ai-Client konfiguriert)")
@@ -2880,9 +2879,9 @@ def multi_asset_batch_job(
             last_run_conn.close()
         logger.info(
             "Multi-Asset-Batch: %d verarbeitet, %d fehlgeschlagen, %d Cooldown-uebersprungen, "
-            "Mistral-Calls %d, Gemini-Calls %d",
+            "Calls je Anbieter %s",
             len(result.verarbeitet), len(result.fehlgeschlagen), result.uebersprungen_cooldown,
-            result.mistral_calls_verbraucht, result.gemini_calls_verbraucht,
+            dict(result.calls_verbraucht) or "keine",
         )
         if result.ergebnis_objekt:
             try:

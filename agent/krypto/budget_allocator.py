@@ -142,10 +142,14 @@ class AllocationResult:
     # Was hat der Circuit Breaker verhindert? Eine Sperre, die niemand sieht,
     # ist die naechste stille Fehlfunktion (Lehre 06.08.).
     provider_sperre_bericht: dict = field(default_factory=dict)
-    mistral_calls_verbraucht: int = 0
-    mistral_budget_erschoepft: bool = False
-    gemini_calls_verbraucht: int = 0
-    gemini_budget_erschoepft: bool = False
+    # DICTS statt Einzelfelder je Anbieter (2026-08-09, C1). Vier feste Felder
+    # bedeuteten, dass ein dritter Anbieter zwei weitere braucht - und dass die
+    # Zuweisung unten fuer JEDEN Anbieter einzeln ausgeschrieben werden muss.
+    # Genau dort war Z.ai 2026-07-27 als Karteileiche haengengeblieben.
+    # Geprueft, wer diese Felder liest: NUR zwei Log-Zeilen in
+    # scheduler/background.py - keine Persistenz, keine GUI, kein Export.
+    calls_verbraucht: dict[str, int] = field(default_factory=dict)
+    budget_erschoepft: dict[str, bool] = field(default_factory=dict)
     # 2026-07-14 (Empfehlungs-E-Mails): die echten Signal-/HebelSignal-Objekte
     # zu jedem schluessel aus hebel_verarbeitet/spot_verarbeitet - nur befuellt,
     # wenn provider_je_call[schluessel] ebenfalls gesetzt wurde (also ein
@@ -635,10 +639,7 @@ def run_budget_allocator(
         for provider_name, call_fn in calls:
             if provider_name in tages_budget:
                 if tages_verbraucht[provider_name] >= tages_budget[provider_name]:
-                    if provider_name == "mistral":
-                        result.mistral_budget_erschoepft = True
-                    elif provider_name == "gemini":
-                        result.gemini_budget_erschoepft = True
+                    result.budget_erschoepft[provider_name] = True
                     continue
             # CIRCUIT BREAKER (2026-08-07): siehe agent/provider_sperre.py.
             if sperre.ist_gesperrt(provider_name):
@@ -669,10 +670,7 @@ def run_budget_allocator(
                         logger.exception("on_signal_ready-Callback fuer %s fehlgeschlagen", schluessel)
                 if provider_name in tages_verbraucht:
                     tages_verbraucht[provider_name] += 1
-                    if provider_name == "mistral":
-                        result.mistral_calls_verbraucht = tages_verbraucht["mistral"]
-                    elif provider_name == "gemini":
-                        result.gemini_calls_verbraucht = tages_verbraucht["gemini"]
+                    result.calls_verbraucht[provider_name] = tages_verbraucht[provider_name]
                 return True
             except Exception as exc:
                 last_exc = exc

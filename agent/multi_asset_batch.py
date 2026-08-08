@@ -52,8 +52,11 @@ class MultiAssetBatchResult:
     uebersprungen_cooldown: int = 0
     provider_je_symbol: dict[str, str] = field(default_factory=dict)
     ergebnis_objekt: dict[str, object] = field(default_factory=dict)
-    mistral_calls_verbraucht: int = 0
-    gemini_calls_verbraucht: int = 0
+    # DICTS statt Einzelfelder je Anbieter (2026-08-09, C1) - identisch zu
+    # AllocationResult, siehe dortige Begruendung. Beide Ketten muessen
+    # dieselbe Form haben, sonst laufen sie auseinander.
+    calls_verbraucht: dict[str, int] = field(default_factory=dict)
+    budget_erschoepft: dict[str, bool] = field(default_factory=dict)
 
 
 def _kandidaten(watchlist: list) -> list:
@@ -251,10 +254,7 @@ def run_multi_asset_batch(
                 result.ergebnis_objekt[schluessel] = res
                 if provider_name in tages_verbraucht:
                     tages_verbraucht[provider_name] += 1
-                    if provider_name == "mistral":
-                        result.mistral_calls_verbraucht = tages_verbraucht["mistral"]
-                    elif provider_name == "gemini":
-                        result.gemini_calls_verbraucht = tages_verbraucht["gemini"]
+                    result.calls_verbraucht[provider_name] = tages_verbraucht[provider_name]
                 ok = True
                 break
             except Exception as exc:
