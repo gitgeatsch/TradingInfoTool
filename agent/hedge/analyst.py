@@ -19,6 +19,8 @@ from __future__ import annotations
 
 import json
 
+from agent import tranchen as tranchen_modul
+
 from agent import llm_schema
 import logging
 
@@ -157,7 +159,7 @@ generische Floskel wie "das Setup ist plausibel, aber X macht vorsichtig" - \
 jedes `kurzfazit` muss anders klingen, weil jedes Signal andere Daten hat). \
 WICHTIG: es gibt hierfuer KEINE feste Regel/Formel - du musst selbst \
 gewichten, wie stark die einzelnen Faktoren zaehlen.
-
+\n21. NUR wenn `tranchen_erlaubt` true ist, darfst du zusaetzlich zu `entry` das \noptionale Feld `tranchen` fuellen (gestaffelter Kauf/Verkauf statt einer einzigen \nZone) - bei `tranchen_erlaubt` false lasse `tranchen` IMMER null. 2 bis 5 Eintraege, \njeder mit `rang` (aufsteigend, 1 = naechste Zone), `anteil_prozent` (Summe genau 100) \nund `zone` (usd_von/usd_bis/eur_von/eur_bis). Die Tranchen ERSETZEN `entry` nicht, \nsie staffeln es.\n
 SCHEMA:
 {
   "action": "KAUFEN|VERKAUFEN|HALTEN|NACHKAUFEN",
@@ -173,6 +175,10 @@ SCHEMA:
   ],
   "long_reasoning": {"technisch": "<Markttrend-Einschaetzung>", "fundamental": "<Absicherungsbedarf-Einschaetzung>", "makro": "<Text>"},
   "position_size": {"usd": <Zahl oder null>, "eur": <Zahl oder null>, "note": "<Text>"},
+  "tranchen": null oder [
+    {"rang": 1, "anteil_prozent": <Zahl>, "zone": {"usd_von": <Zahl>, "usd_bis": <Zahl>, "eur_von": <Zahl>, "eur_bis": <Zahl>}, "trigger_bedingung": "<Text oder null>"},
+    ...
+  ],
   "entry": {"usd_von": <Zahl oder null>, "usd_bis": <Zahl oder null>, "eur_von": <Zahl oder null>, "eur_bis": <Zahl oder null>},
   "stop_loss": {"usd_von": <Zahl oder null>, "usd_bis": <Zahl oder null>, "eur_von": <Zahl oder null>, "eur_bis": <Zahl oder null>},
   "take_profit": {"usd_von": <Zahl oder null>, "usd_bis": <Zahl oder null>, "eur_von": <Zahl oder null>, "eur_bis": <Zahl oder null>},
@@ -244,6 +250,7 @@ def build_facts(
     historische_erfolgsquote: dict | None = None,
     letztes_signal=None,
     these_abgleich: dict | None = None,
+    tranchen_erlaubt: bool = False
 ) -> dict:
     wird_aktuell_gehalten = bool(holding and (holding.quantity or 0.0) > 0.0)
     vorherige_empfehlung_fact = build_wiederholung_fact(
@@ -266,6 +273,7 @@ def build_facts(
         "vorherige_empfehlung": vorherige_empfehlung_fact,
         "historische_erfolgsquote": historische_erfolgsquote,
         "portfolio_exposure": portfolio_exposure,
+        "tranchen_erlaubt": tranchen_erlaubt,
         "regime": {
             "regime": regime_result.regime,
             "liquiditaets_regime": regime_result.liquiditaets_regime,
@@ -415,6 +423,11 @@ def _validate(data: dict) -> dict:
         raise AnalystResponseInvalid(
             "halte_kriterium: mindestens eines von ziel_preis_usd/ziel_datum/bedingung_text muss gesetzt sein"
         )
+
+    # Seit 2026-08-09 dieselbe Pruefung wie Krypto-Spot, zentral in
+    # agent/tranchen.py. Ein fehlerhafter Vorschlag wird verworfen, nicht
+    # geworfen - er darf ein sonst valides Signal nicht mitreissen.
+    tranchen_modul.validiere_tranchen(data)
 
     return data
 

@@ -16,6 +16,8 @@ kein zweiter Berechnungsweg noetig), `indicators.calculations.build_technical_sn
 from __future__ import annotations
 
 import json
+
+from agent import tranchen as tranchen_modul
 import logging
 import os
 import threading
@@ -351,6 +353,13 @@ def generate_signal(
     except Exception:
         logger.exception("CRV-Baender-Fakt fehlgeschlagen - Signal laeuft ohne")
         fakt_crv_baender = None
+    # TRANCHEN (2026-08-09, Schritt 7) - gestaffelter Einstieg statt einer
+    # einzigen Zone. BEWUSST OHNE BTC-REGIME (Nutzer-Vorgabe): die Bedingung
+    # nutzt `equities_baermarkt_aktiv` und `vix_label`, die im Regime-Block
+    # dieser Klasse ohnehin stehen. Begruendung und Revisit-Bedingung in
+    # agent/tranchen.py::multi_asset_tranchen_erlaubt().
+    tranchen_erlaubt = tranchen_modul.multi_asset_tranchen_erlaubt(
+        regime_result, db.get_dca_erlaubt(conn, asset.symbol))
     facts = build_facts(
         asset, price_snap, holdings.get(asset.symbol), snapshot, confluence, regime_result,
         risk_result, fundamentals, price_age_minutes,
@@ -362,6 +371,7 @@ def generate_signal(
         analysten_trend_finnhub=analysten_trend_finnhub,
         short_interest_finra=short_interest_finra,
         these_abgleich=these_abgleich,
+        tranchen_erlaubt=tranchen_erlaubt,
     )
 
     try:
@@ -445,6 +455,10 @@ def generate_signal(
         long_reasoning_fundamental=long_reasoning.get("fundamental"),
         long_reasoning_makro=long_reasoning.get("makro"),
         position_size_usd=position_size.get("usd"),
+        tranchen_json=(
+            json.dumps(corrected["tranchen"], ensure_ascii=False)
+            if corrected.get("tranchen") else None
+        ),
         position_size_eur=eur_aus_usd(position_size.get("usd"), eur_usd_fx_rate),
         position_size_note=position_size.get("note"),
         entry_usd_von=entry.get("usd_von"),

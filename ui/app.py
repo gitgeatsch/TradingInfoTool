@@ -487,8 +487,13 @@ class TradingInfoToolApp(tk.Tk):
         conn = self._db_conn_factory()
         try:
             latest_prices = db.get_latest_prices(conn)
+            # Seit 2026-08-09 fuer JEDES Watchlist-Asset, nicht mehr nur
+            # BTC/ETH/SOL: Tranchen gelten inzwischen auch fuer Aktien/
+            # Rohstoffe/Themen-ETF/Hedge. Vorher war der Schalter fuer diese
+            # Assets gar nicht erreichbar - die Flagge haette also nie gesetzt
+            # werden koennen.
             dca_erlaubt_by_symbol = {
-                sym: db.get_dca_erlaubt(conn, sym) for sym in ("BTC", "ETH", "SOL")
+                a.symbol: db.get_dca_erlaubt(conn, a.symbol) for a in self._watchlist
             }
             # Hebel-Pruefung-Toggle (2026-07-18) - fuer ALLE Krypto-Assets
             # relevant (nicht nur BTC/ETH/SOL wie beim Tranchen-Toggle), da
@@ -603,9 +608,12 @@ class TradingInfoToolApp(tk.Tk):
             if bitpanda_fehlt:
                 tags.append("bitpanda_fehlt")  # zuletzt hinzugefuegt = hoehere Prioritaet bei ttk-Tag-Kollision
 
-            # AZ-4-Tranchen-Toggle (2026-07-12, 2026-07-18 um SOL erweitert): nur
-            # fuer BTC/ETH/SOL relevant (siehe agent/krypto/pipeline.py::
-            # generate_signal() tranchen_erlaubt-Berechnung).
+            # Tranchen-Toggle (2026-07-12, seit 2026-08-09 fuer alle Klassen).
+            # Ob Tranchen dann TATSAECHLICH vorgeschlagen werden, entscheidet
+            # zusaetzlich die Regime-Bedingung je Klasse - Krypto ueber das
+            # BTC-Regime, Multi-Asset ueber Aktien-Baermarkt/VIX (siehe
+            # agent/tranchen.py). Dieser Schalter ist die Erlaubnis, nicht die
+            # Garantie.
             if asset.symbol in dca_erlaubt_by_symbol:
                 tranchen_text = "An" if dca_erlaubt_by_symbol[asset.symbol] else "Aus"
             else:

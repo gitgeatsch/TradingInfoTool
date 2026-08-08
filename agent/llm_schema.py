@@ -83,6 +83,15 @@ _FORECAST = {
 }
 _POSITION_SIZE = {"type": "object", "properties": {
     "usd": NUM, "eur": NUM, "note": TXTN}}
+_TRANCHEN = {"type": ["array", "null"], "minItems": 2, "maxItems": 5, "items": {
+    "type": "object",
+    "properties": {
+        "rang": {"type": "integer", "minimum": 1},
+        "anteil_prozent": {"type": "number"},
+        "zone": _SPANNE,
+        "trigger_bedingung": TXTN,
+    },
+    "required": ["rang", "anteil_prozent", "zone"]}}
 
 
 class SchemaLuecke(RuntimeError):
@@ -119,6 +128,11 @@ def baue_signal_schema(analyst_modul) -> dict:
         # Regel, die es abbilden soll.
         "long_reasoning": {"type": "object"},
         "position_size": _POSITION_SIZE,
+        # OPTIONAL, steht bewusst NICHT in REQUIRED_TOP_LEVEL_FIELDS: `tranchen`
+        # darf null sein (und muss es, wenn `tranchen_erlaubt` false ist). Ohne
+        # Eintrag hier wuesste ein Modell unter striktem Schema aber nicht,
+        # welche Form erlaubt ist.
+        "tranchen": _TRANCHEN,
         "entry": _SPANNE, "stop_loss": _SPANNE, "take_profit": _SPANNE,
         "halte_kriterium": _halte_kriterium(M._HALTE_KRITERIUM_BUCKETS),
         "key_risks": {"type": "array", "items": TXT},
@@ -136,9 +150,20 @@ def baue_signal_schema(analyst_modul) -> dict:
             f"agent/llm_schema.py::baue_signal_schema() ergaenzen - ein "
             f"permissives Teilschema waere Scheinabdeckung.")
 
+    # OPTIONALE Felder: in `properties`, aber NICHT in `required`. `tranchen`
+    # darf null sein und muss es, wenn `tranchen_erlaubt` false ist - es steht
+    # deshalb bewusst in keiner REQUIRED_TOP_LEVEL_FIELDS-Liste. Ohne diesen
+    # Zusatz fiele es aus dem Schema heraus (properties wird aus den
+    # Pflichtfeldern gebaut) und ein Modell unter striktem Schema wuesste die
+    # erlaubte Form nicht.
+    eigenschaften = {f: bekannt[f] for f in pflichtfelder}
+    for optional in ("tranchen",):
+        if optional not in eigenschaften:
+            eigenschaften[optional] = bekannt[optional]
+
     return {
         "type": "object",
-        "properties": {f: bekannt[f] for f in pflichtfelder},
+        "properties": eigenschaften,
         "required": list(pflichtfelder),
     }
 

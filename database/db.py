@@ -1558,7 +1558,17 @@ def set_cash_reserve_fiat_eur(conn: sqlite3.Connection, value_eur: float) -> Non
     conn.commit()
 
 
-_DCA_ERLAUBT_DEFAULT_SYMBOLS = {"BTC", "ETH", "SOL"}
+# Vorgabewert des Tranchen-Toggles. Krypto: die drei groessten/liquidesten
+# (2026-07-12/18). Multi-Asset: die am 2026-08-09 GEHALTENEN Positionen
+# (Nutzer-Entscheidung "an fuer die gehaltenen") - damit uebertraegt sich die
+# Krypto-Begruendung, nicht nur der Schalter. Eine explizite Zeile in
+# asset_dca_settings schlaegt diesen Vorgabewert jederzeit; der Schalter dafuer
+# steht seit 2026-08-09 fuer JEDES Watchlist-Asset in ui/app.py.
+_DCA_ERLAUBT_DEFAULT_SYMBOLS = {
+    "BTC", "ETH", "SOL",
+    "VST", "PLTR", "OD7N", "OD7H", "OD7C", "OD7L",
+    "VVMX", "X136", "EXH3", "CEBS", "ISOC", "3QSS", "DBPK",
+}
 
 
 def get_dca_erlaubt(conn: sqlite3.Connection, symbol: str) -> bool:

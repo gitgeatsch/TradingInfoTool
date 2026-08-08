@@ -15,6 +15,8 @@ from __future__ import annotations
 
 import json
 
+from agent import tranchen
+
 from agent import llm_schema
 import logging
 from datetime import datetime, timezone
@@ -1056,39 +1058,10 @@ def _validate(data: dict, asset_symbol: str) -> dict:
     # tatsaechlichen Order-Status ueber die Bitpanda-API zu verfolgen (siehe
     # Regelwerksmanual Kap. 4), die Info bleibt bewusst unverbindlich. Ein fehlerhafter
     # Tranchen-Vorschlag darf deshalb nicht das sonst valide Gesamtsignal scheitern lassen.
-    tranchen = data.get("tranchen")
-    if tranchen is not None:
-        try:
-            if not isinstance(tranchen, list) or not (2 <= len(tranchen) <= 5):
-                raise ValueError(f"tranchen muss 2-5 Einträge enthalten: {tranchen!r}")
-            ranks_seen = set()
-            anteil_summe = 0.0
-            for eintrag in tranchen:
-                if not isinstance(eintrag, dict):
-                    raise ValueError(f"tranchen-Eintrag ist kein Objekt: {eintrag!r}")
-                rang = eintrag.get("rang")
-                if not isinstance(rang, int) or rang in ranks_seen:
-                    raise ValueError(f"tranchen.rang ungültig oder doppelt: {rang!r}")
-                ranks_seen.add(rang)
-                anteil = float(eintrag.get("anteil_prozent"))
-                anteil_summe += anteil
-                eintrag["anteil_prozent"] = anteil
-                zone = eintrag.get("zone")
-                if not isinstance(zone, dict):
-                    raise ValueError(f"tranchen.zone fehlt/kein Objekt: {zone!r}")
-                for currency in ("usd", "eur"):
-                    von, bis = zone.get(f"{currency}_von"), zone.get(f"{currency}_bis")
-                    if von is None or bis is None:
-                        raise ValueError(f"tranchen.zone.{currency}_von/{currency}_bis fehlt")
-                    von, bis = float(von), float(bis)
-                    if von > bis:
-                        raise ValueError(f"tranchen.zone.{currency}_von > {currency}_bis ({von} > {bis})")
-                    zone[f"{currency}_von"], zone[f"{currency}_bis"] = von, bis
-            if not (99.5 <= anteil_summe <= 100.5):
-                raise ValueError(f"tranchen.anteil_prozent-Summe nicht ~100: {anteil_summe}")
-        except (ValueError, TypeError) as exc:
-            logger.warning("tranchen-Vorschlag verworfen (fehlerhaft, kein Signal-Fehler): %s", exc)
-            data["tranchen"] = None
+    # Seit 2026-08-09 zentral in agent/tranchen.py - dieselbe Pruefung gilt
+    # jetzt auch fuer Aktien/Rohstoffe/Themen-ETF/Hedge. Verhalten unveraendert,
+    # nur nicht mehr viermal kopiert.
+    tranchen.validiere_tranchen(data, asset_symbol)
 
     _pruefe_kreuzkontamination(data, asset_symbol)
 

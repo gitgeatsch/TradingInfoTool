@@ -23,6 +23,8 @@ from __future__ import annotations
 
 import json
 
+from agent import tranchen as tranchen_modul
+
 from agent import llm_schema
 import logging
 
@@ -267,7 +269,7 @@ zu rutschen - ein CRV, das nur durch einen zu nahen Stop entsteht, \
 zerstoert genau den Vorteil, den die Zahl beschreibt. Fehlt der Fakt, \
 liegen fuer diese Assetklasse noch keine belastbaren Zahlen vor; erfinde \
 nichts.
-
+\n21. NUR wenn `tranchen_erlaubt` true ist, darfst du zusaetzlich zu `entry` das \noptionale Feld `tranchen` fuellen (gestaffelter Kauf/Verkauf statt einer einzigen \nZone) - bei `tranchen_erlaubt` false lasse `tranchen` IMMER null. 2 bis 5 Eintraege, \njeder mit `rang` (aufsteigend, 1 = naechste Zone), `anteil_prozent` (Summe genau 100) \nund `zone` (usd_von/usd_bis/eur_von/eur_bis). Die Tranchen ERSETZEN `entry` nicht, \nsie staffeln es.\n
 SCHEMA:
 {
   "action": "KAUFEN|VERKAUFEN|HALTEN|NACHKAUFEN",
@@ -283,6 +285,10 @@ SCHEMA:
   ],
   "long_reasoning": {"technisch": "<Text>", "fundamental": "<Text>", "makro": "<Text>"},
   "position_size": {"usd": <Zahl oder null>, "eur": <Zahl oder null>, "note": "<Text>"},
+  "tranchen": null oder [
+    {"rang": 1, "anteil_prozent": <Zahl>, "zone": {"usd_von": <Zahl>, "usd_bis": <Zahl>, "eur_von": <Zahl>, "eur_bis": <Zahl>}, "trigger_bedingung": "<Text oder null>"},
+    ...
+  ],
   "entry": {"usd_von": <Zahl oder null>, "usd_bis": <Zahl oder null>, "eur_von": <Zahl oder null>, "eur_bis": <Zahl oder null>},
   "stop_loss": {"usd_von": <Zahl oder null>, "usd_bis": <Zahl oder null>, "eur_von": <Zahl oder null>, "eur_bis": <Zahl oder null>},
   "take_profit": {"usd_von": <Zahl oder null>, "usd_bis": <Zahl oder null>, "eur_von": <Zahl oder null>, "eur_bis": <Zahl oder null>},
@@ -362,6 +368,7 @@ def build_facts(
     historischer_makro_vergleich: dict | None = None,
     letztes_signal=None,
     these_abgleich: dict | None = None,
+    tranchen_erlaubt: bool = False
 ) -> dict:
     macd_val = technical_snapshot.macd
     macd_facts = None
@@ -457,6 +464,7 @@ def build_facts(
             },
             "nicht_verfuegbar": nicht_verfuegbar,
         },
+        "tranchen_erlaubt": tranchen_erlaubt,
         "regime": {
             "liquiditaets_regime": regime_result.liquiditaets_regime,
             "liquiditaets_regime_begruendung": regime_result.liquiditaets_regime_begruendung,
@@ -655,6 +663,11 @@ def _validate(data: dict) -> dict:
         )
 
     _pruefe_kreuzkontamination(data)
+
+    # Seit 2026-08-09 dieselbe Pruefung wie Krypto-Spot, zentral in
+    # agent/tranchen.py. Ein fehlerhafter Vorschlag wird verworfen, nicht
+    # geworfen - er darf ein sonst valides Signal nicht mitreissen.
+    tranchen_modul.validiere_tranchen(data)
 
     return data
 

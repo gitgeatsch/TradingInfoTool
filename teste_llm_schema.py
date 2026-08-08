@@ -56,8 +56,16 @@ for name, (schema, modul) in schemata.items():
                     or getattr(modul, "REQUIRED_TOP_LEVEL_FIELDS"))
     pruefe(schema["required"] == erwartet, f"B {name} required == Validator",
            f"{len(erwartet)} Felder")
-    pruefe(set(schema["properties"]) == set(erwartet),
-           f"B {name} keine Form ohne Pflichtfeld und umgekehrt")
+    # `tranchen` ist ABSICHTLICH in properties, aber nicht in required - es
+    # darf null sein und muss es, wenn `tranchen_erlaubt` false ist. Der Test
+    # prueft deshalb: jedes Pflichtfeld hat eine Form, und ueberzaehlig sind
+    # nur die bewusst optionalen.
+    OPTIONAL = {"tranchen"}
+    pruefe(set(erwartet) <= set(schema["properties"]),
+           f"B {name} jedes Pflichtfeld hat eine Form")
+    pruefe(set(schema["properties"]) - set(erwartet) <= OPTIONAL,
+           f"B {name} keine unerklaerte Zusatzform",
+           str(set(schema["properties"]) - set(erwartet) - OPTIONAL) or "keine")
 
 print("\nC) DIE VOKABULARE KOMMEN AUS DEN VALIDATOR-KONSTANTEN")
 for name, (schema, modul) in schemata.items():
