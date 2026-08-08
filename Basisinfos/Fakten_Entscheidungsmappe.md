@@ -1228,6 +1228,29 @@ Kurshistorie heraus — **vor** dem ersten Aufruf, nicht danach.
 | Nachweis | Bootstrap-Vertrauensbereich der gepaarten Differenz **ohne die Null** |
 | „Tendenz" gilt nur | wenn sie beim Aufstocken hält oder wächst |
 
+#### WARNUNG: die Stichprobe überspannt einen Verhaltensbruch (gefunden 09.08.)
+
+Der SHORT-Anteil der Hebel-Signale kippt am **31.07.** an einem einzigen Tag von
+90–99 % LONG auf 77 % SHORT, und steigt bis zum 07.08. auf 95 %. **Der Markt
+erklärt das nicht** — die Makro-Lage ist über den Bruch flach, und bei
+identischer Marktbreite (80 % bzw. 79 % der Symbole negativ) liegt der
+SHORT-Anteil am 29.07. bei 15,6 %, am 31.07. bei 77,4 %.
+
+Beide Trigger-Zweige kippen gleichzeitig, die gescreenten Kandidaten zeigen
+keinen Ausschlag. Der Bruch sitzt zwischen Screening und Signalerzeugung; die
+Ursache ist **offen**.
+
+> **Für diesen Lauf heißt das:** die Stichprobe 23.07.–01.08. überspannt den
+> Bruch, und der 31.07. allein stellt 34,8 % der Fälle. Der gepaarte Aufbau
+> schützt den *Vergleich* (beide Arme sehen denselben Fall), aber die Aussage
+> gilt für eine Mischung aus zwei Verhaltensregimen.
+>
+> `werte_fakt_nachweis_neu_aus.py --ohne-tag 2026-07-31` beantwortet ohne einen
+> einzigen neuen Aufruf, ob der Befund von diesem Tag abhängt. **Das gehört vor
+> jede Interpretation des Ergebnisses.**
+
+Vollständig in der Memory-Datei `project_richtungsbruch_31_07_unerklaert`.
+
 #### Die Clusterung ist die härteste Einschränkung dieses Laufs
 
 Methodik 2.5 ist hier bindend: *„Bei geclusterten Beobachtungen ist die EFFEKTIVE
