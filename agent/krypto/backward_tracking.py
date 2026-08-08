@@ -1267,7 +1267,7 @@ def compute_provider_performance(conn, watchlist: list | None = None) -> dict:
     """Provider-Performance-Aggregation (2026-07-15, Nutzer-Wunsch: Groq/Cerebras/
     Gemini nach echter Trefferquote statt nur Kapazitaet vergleichen).
 
-    ⚠ DIESE TABELLE IST KEIN ANBIETERVERGLEICH (gemessen 2026-08-09). Die
+    ACHTUNG - DIESE TABELLE IST KEIN ANBIETERVERGLEICH (gemessen 2026-08-09). Die
     Anbieter loesen einander in der Kette AB, sie laufen nicht parallel - ihre
     Zeitraeume ueberlappen sich deshalb nicht einen einzigen Tag:
 
