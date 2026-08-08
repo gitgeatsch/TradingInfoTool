@@ -1118,7 +1118,7 @@ tut.
 | **4** | **Wartende Vorschläge sichtbar machen** (S-3) — plus Layout-Fix im Schwerpunkte-Tab | S-3 | klein | **ERLEDIGT 07.08.** |
 | **5** | **Erfolgsmaß je Themenfeld** (G-2) — **nicht** als Systemgüte je Hauptgruppe, siehe unten | G-2 | mittel | **ERLEDIGT 07.08.** |
 | **6** | **Allocator-Priorität** (S-4: übergewichtete Themenfelder bevorzugt) — setzt Schritt 3 voraus | S-4 | mittel | **ERLEDIGT 09.08.** — stabile Partition in `multi_asset_batch`, Reichweite offen benannt (siehe unten) |
-| **7** | **Rollout-Entscheidungen** der vier offenen Fakten (antizyklisch, tranchen_erlaubt, liquiditaetszonen, signal_stabilitaet) | H-7 | klein je Fakt | offen |
+| **7** | **Rollout-Entscheidungen** der vier offenen Fakten | H-7 | klein je Fakt | **ERLEDIGT 09.08.** — drei waren bereits entschieden, nur nicht vermerkt; `tranchen_erlaubt` gebaut |
 
 **Warum Schritt 5 anders gebaut wurde als geplant:** die Messung vor dem Bau
 ergab 101 aufgelöste Signale — und **kein einziges** davon gehört zu einem
@@ -1208,6 +1208,37 @@ ist ein Hinweis darauf, dass die **Datierung** fehlt, nicht der Deckel.
 - **P-2/P-3** (RM-3, Risikoparameter je Klasse) — reine Zahlenentscheidungen,
   die der Nutzer treffen muss.
 
+
+**Nachtrag 09.08. — Schritt 7 aufgeloest: drei von vier waren längst entschieden.**
+Die Recherche vor dem Bau ergab, dass „vier offene Rollout-Entscheidungen" den
+Stand überzeichnete. Nur eine war offen.
+
+| Fakt | Befund | Ergebnis |
+|---|---|---|
+| **`antizyklisch`** | Datenquelle ist `KRAKEN_FUTURES_SYMBOL_MAP` — Funding-Rate, Open Interest, Long-Konten-Anteil. Der Aktien-Analyst dokumentiert den Ausschluss bereits wörtlich: *„keine Optionen-/Futures-Positionierungsdaten für Einzelaktien verfügbar"* | **KEIN Rollout** — mangels Daten nicht möglich, war nie offen |
+| **`liquiditaetszonen`** | Scope-Entscheidung vom 23.07.: *„Krypto Spot + Hebel only — nicht Aktien/Rohstoffe/Hedge/Themen-ETF (24/7-Markt + hoher Retail-/Hebel-Anteil = klassische Marketmaker-Dynamik-Annahme)."* Dazu Stufe 2 per Backtest verworfen (130 Ereignisse, p = 0,53) | **KEIN Rollout** — die Prämisse gilt für die anderen Klassen nicht |
+| **`signal_stabilitaet`** | Technisch ausrollbar, misst Konfidenz-Streuung über die letzten N Bewertungen. **Aber:** Krypto läuft alle 15 Minuten, Multi-Asset 2×/Tag. Derselbe Parameter `anzahl_zyklen: 5` bedeutet einmal 75 Minuten, einmal 2,5 Tage | **ZURÜCKGESTELLT** — baubar, aber nicht mit demselben Parameter; der Fakt müsste die Zeitspanne nennen statt der Zyklenzahl. Bei Aktien 4 Schatten-Trades und ETF 0 liefert er ohnehin `None`. Niedrige Priorität |
+| **`tranchen_erlaubt`** | Nur im Krypto-Spot; der Aktien-Analyst vermerkt *„AZ-4-Tranchen (Phase 1 bewusst minimal gehalten)"* — aufgeschoben, nicht ausgeschlossen | **GEBAUT 09.08.** für alle vier Klassen, siehe unten |
+
+**`tranchen_erlaubt` — die ganze Kette, zehn Stationen.** Nutzer-Vorgabe: *„bitte
+die Funktion von vorne bis hinten umsetzen, sonst hängt wieder eine unfertige
+Funktionalität im System."* Umgesetzt: Vorgabewert für die 13 gehaltenen
+Symbole, Schalter in der Oberfläche für **jedes** Watchlist-Asset (er war auf
+`("BTC","ETH","SOL")` verdrahtet — die Flagge hätte für alle anderen nie gesetzt
+werden können), Herkunftsbedingung, Prompt-Regel, JSON-Vorlage, Fakt,
+Validierung, Persistenz, E-Mail (bereits geteilt) und das abgeleitete Schema.
+
+**Kein BTC als Basis** (Nutzer-Vorgabe): die Bedingung nutzt
+`equities_baermarkt_aktiv` und `vix_label`, beide stehen im Regime-Block dieser
+Klassen ohnehin. Nutzer-Einordnung: *„bei Multiassets haben wir noch nicht alles
+beisammen, aber die Indexwerte sind nicht falsch"* — als Revisit-Bedingung zu M6
+im Docstring vermerkt.
+
+**Die Validierung steht jetzt zentral** (`agent/tranchen.py`) statt viermal
+kopiert; Krypto-Spot wurde verhaltensneutral mit umgestellt.
+
+**Zur Erwartung:** die Bedingung feuert nach dem Deploy zunächst *nicht* — der
+VIX stand am 08.08. bei 14,9 („ruhig"). Das ist beabsichtigt.
 
 ## Quellen (extern)
 
