@@ -149,6 +149,7 @@ class Nachweis:
     ci_oben: float | None = None
     symbole: int = 0
     groesstes_symbol_anteil: float | None = None
+    wild_cluster_p: float | None = None
 
 
 def zonen_aus_antwort(antwort: dict) -> dict | None:
@@ -216,6 +217,71 @@ def _cluster_bootstrap(werte: list[float], gruppen: list,
     mittel.sort()
     return (mittel[int(0.025 * len(mittel))],
             mittel[min(int(0.975 * len(mittel)), len(mittel) - 1)])
+
+
+def _wild_cluster_p_wert(werte: list[float], gruppen: list,
+                         ziehungen: int = 2000) -> float | None:
+    """p-Wert fuer "Mittelwert = 0" per WILD CLUSTER BOOTSTRAP-t.
+
+    WARUM ZUSAETZLICH ZUM INTERVALL (Recherche 09.08., Methodik 2.14 A).
+    Cameron/Gelbach/Miller zeigen, dass cluster-robuste Verfahren eine GROSSE
+    Zahl von Clustern unterstellen und bei **fuenf bis dreissig** Clustern
+    ueber-ablehnen - Ablehnungsraten von 10 % statt der nominellen 5 %. Genau
+    dort liegen wir: 17 Symbole beim Fakt-Nachweis, 23 bis 41 bei den
+    Zufallsvergleichen.
+
+    Der empfohlene Ausweg ist nicht, ganze Cluster neu zu ziehen (das tut
+    `_cluster_bootstrap`), sondern ihre Residuen mit einem zufaelligen
+    VORZEICHEN zu multiplizieren und die Teststatistik unter der Nullhypothese
+    neu zu rechnen. Beide Zahlen nebeneinander zu berichten ist ehrlicher als
+    eine: weichen sie stark ab, ist das Ergebnis grenzwertig.
+
+    Rademacher-Vorzeichen je Cluster, Varianz cluster-robust. Reproduzierbar
+    ohne `random` - dieselbe Begruendung wie bei `_cluster_bootstrap`, und
+    dieselbe Falle vermieden: die niederwertigen Bits eines linearen
+    Kongruenzgenerators sind nicht zufaellig, deshalb `>> 16`."""
+    nach_gruppe: dict = {}
+    for w, g in zip(werte, gruppen):
+        nach_gruppe.setdefault(g, []).append(w)
+    namen = sorted(nach_gruppe)
+    if len(namen) < 2 or len(werte) < 3:
+        return None
+
+    def _t(daten: dict) -> float | None:
+        alle = [x for g in namen for x in daten[g]]
+        n = len(alle)
+        if n < 2:
+            return None
+        m = statistics.mean(alle)
+        # Cluster-robuste Varianz des Mittelwerts: die Abweichungen werden JE
+        # CLUSTER aufsummiert, bevor quadriert wird - so schlaegt die
+        # Korrelation innerhalb eines Symbols durch.
+        var = sum(sum(x - m for x in daten[g]) ** 2 for g in namen) / (n * n)
+        if var <= 0:
+            return None
+        return m / (var ** 0.5)
+
+    t_beob = _t(nach_gruppe)
+    if t_beob is None:
+        return None
+
+    zustand = 987654321
+    extremer = 0
+    gueltig = 0
+    for _ in range(ziehungen):
+        probe: dict = {}
+        for g in namen:
+            zustand = (1103515245 * zustand + 12345) % (2 ** 31)
+            vorzeichen = 1.0 if ((zustand >> 16) & 1) else -1.0
+            # Nullhypothese aufgepraegt: die Werte SELBST sind die Residuen.
+            probe[g] = [vorzeichen * x for x in nach_gruppe[g]]
+        t_stern = _t(probe)
+        if t_stern is None:
+            continue
+        gueltig += 1
+        if abs(t_stern) >= abs(t_beob):
+            extremer += 1
+    return (extremer / gueltig) if gueltig else None
 
 
 def _ist_eroeffnung(antwort: dict) -> bool:
@@ -318,9 +384,11 @@ def nachweisrahmen(provider: Callable[[dict], dict], faelle: list[dict],
     # 122 Faelle auf 12 Symbolen - das Intervall wird dadurch deutlich breiter,
     # und das ist die ehrliche Breite.
     symbole = [faelle[i].get("symbol") for i in gemeinsam]
-    ci_unten = ci_oben = None
+    ci_unten = ci_oben = wild_p = None
     if len(set(symbole)) >= 2:
         ci_unten, ci_oben = _cluster_bootstrap(deltas, symbole)
+        # Zweite, konservativere Sicht - siehe _wild_cluster_p_wert().
+        wild_p = _wild_cluster_p_wert(deltas, symbole)
 
     q_a = None
     if a1.eroeffnen_quote is not None and a2.eroeffnen_quote is not None:
@@ -342,6 +410,12 @@ def nachweisrahmen(provider: Callable[[dict], dict], faelle: list[dict],
             f"KEIN Negativbefund.")
     elif wirkung is None or ci_unten is None or ci_oben is None:
         urteil, grund = "UNGEMESSEN", "Kein gepaarter Vergleich moeglich."
+    elif (wild_p is not None and wild_p > 0.05) and not (ci_unten <= 0.0 <= ci_oben):
+        urteil, grund = "GRENZWERTIG", (
+            f"Die beiden Verfahren widersprechen sich: das Intervall "
+            f"[{ci_unten:+.3f}; {ci_oben:+.3f}] schliesst die Null aus, der "
+            f"Wild-Cluster-Test aber nicht (p = {wild_p:.3f}). Bei 5-30 "
+            f"Clustern ist der Wild-Test der verlaesslichere - kein Nachweis.")
     elif ci_unten <= 0.0 <= ci_oben:
         urteil, grund = "IM RAUSCHEN", (
             f"Wirkung {wirkung:+.3f} R, Vertrauensbereich "
@@ -352,8 +426,9 @@ def nachweisrahmen(provider: Callable[[dict], dict], faelle: list[dict],
         richtung = "verschlechtert" if wirkung < 0 else "verbessert"
         urteil, grund = f"TENDENZ: Fakt {richtung} das Ergebnis", (
             f"Wirkung {wirkung:+.3f} R, Vertrauensbereich "
-            f"[{ci_unten:+.3f}; {ci_oben:+.3f}] ohne die Null, bei "
-            f"{len(gemeinsam)} gepaarten Faellen. Gilt NUR als Tendenz: sie "
+            f"[{ci_unten:+.3f}; {ci_oben:+.3f}] ohne die Null, "
+            f"Wild-Cluster-Test p = {wild_p if wild_p is None else round(wild_p, 3)}, "
+            f"bei {len(gemeinsam)} gepaarten Faellen. Gilt NUR als Tendenz: sie "
             f"muss beim Aufstocken der Stichprobe halten oder wachsen.")
 
     return Nachweis(fakt=fakt_pfad, a1=a1, a2=a2, b=b,
@@ -362,6 +437,7 @@ def nachweisrahmen(provider: Callable[[dict], dict], faelle: list[dict],
                     urteil=urteil, begruendung=grund,
                     gepaarte_faelle=len(gemeinsam),
                     ci_unten=ci_unten, ci_oben=ci_oben,
+                    wild_cluster_p=wild_p,
                     symbole=len(set(symbole)),
                     groesstes_symbol_anteil=(
                         max(symbole.count(x) for x in set(symbole)) / len(symbole)
@@ -392,6 +468,9 @@ def bericht(n: Nachweis) -> str:
         z.append(f"  Vertrauensbereich:         "
                  f"[{n.ci_unten:+.3f}; {n.ci_oben:+.3f}]  "
                  f"(Bootstrap ueber SYMBOLE, Methodik 2.5)")
+    if n.wild_cluster_p is not None:
+        z.append(f"  Wild-Cluster-Test:         p = {n.wild_cluster_p:.3f}"
+                 f"   (konservativer bei 5-30 Clustern, Methodik 2.14 A)")
     if n.symbole:
         anteil = ("-" if n.groesstes_symbol_anteil is None
                   else f"{n.groesstes_symbol_anteil:.1%}")

@@ -258,6 +258,34 @@ pruefe("J2 ein einzelnes Cluster liefert kein Intervall",
 pruefe("J3 zwei Laeufe liefern dasselbe Intervall (reproduzierbar)",
        nw._cluster_bootstrap(werte, viele) == (cu_v, co_v))
 
+# --- K) Der Wild-Cluster-Test ist konservativer -----------------------------
+# Methodik 2.14 A: bei 5-30 Clustern lehnen cluster-robuste Verfahren zu oft
+# ab. Der Wild-Cluster-Test korrigiert das. Beide Zahlen nebeneinander sind
+# ehrlicher als eine - weichen sie ab, ist das Ergebnis grenzwertig.
+kein_effekt = [0.1, -0.1, 0.05, -0.05] * 4
+gruppen16 = [f"S{i}" for i in range(16)]
+p_kein = nw._wild_cluster_p_wert(kein_effekt, gruppen16)
+pruefe("K1 reines Rauschen -> hoher p-Wert", p_kein is not None and p_kein > 0.2,
+       f"p = {p_kein}")
+
+klarer_effekt = [2.0 + 0.1 * i for i in range(16)]
+p_klar = nw._wild_cluster_p_wert(klarer_effekt, gruppen16)
+pruefe("K2 klarer, gleichgerichteter Effekt -> kleiner p-Wert",
+       p_klar is not None and p_klar < 0.05, f"p = {p_klar}")
+
+pruefe("K3 unter zwei Clustern kein Ergebnis",
+       nw._wild_cluster_p_wert([1.0, 2.0], ["A", "A"]) is None)
+pruefe("K4 reproduzierbar", nw._wild_cluster_p_wert(kein_effekt, gruppen16) == p_kein)
+
+# Und die Gegenprobe zur Motivation: bei WENIGEN Clustern muss der Wild-Test
+# zurueckhaltender sein als das naive Intervall ueber Faelle.
+wenig = [1.0, 1.05, 0.95, 1.02] * 2          # 8 Werte, klar positiv
+g4 = ["A", "A", "B", "B", "C", "C", "D", "D"]  # nur 4 Cluster
+p_wenig = nw._wild_cluster_p_wert(wenig, g4)
+pruefe("K5 bei vier Clustern bleibt der Test zurueckhaltend",
+       p_wenig is not None and p_wenig > 0.01,
+       f"p = {p_wenig} trotz durchgehend positiver Werte")
+
 print()
 print(nw.bericht(nw.nachweisrahmen(enger_ohne_fakt, FAELLE_RAUF, "extra.wert", REIHEN)))
 print("\n" + ("ALLE TESTS BESTANDEN" if not fehler else f"FEHLER: {fehler}"))

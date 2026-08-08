@@ -1275,6 +1275,176 @@ Messgrößen, die inzwischen widerlegt sind.
 
 ---
 
+## 2.14 Externe Methodenlage — wie die Fachliteratur unsere Probleme löst (Nachtrag 2026-08-09)
+
+**Anlass:** Nutzer-Vorgabe, *„eine Detailrecherche wie die aktuelle Lehrmeinung
+bzw. moderne Methoden mit unseren Problemen umgehen"*. Sortiert nach unseren
+Problemen, nicht nach Autoren — und mit der ehrlichen Angabe, was wir davon
+schon haben, was fehlt, und was wir bewusst nicht brauchen.
+
+### A. Unser Problem: 17 bis 33 Symbole, und daraus ein Vertrauensintervall
+
+**Was wir tun:** Cluster-Bootstrap über Symbole (seit 09.08.), weil die
+Beobachtungen innerhalb eines Symbols korreliert sind.
+
+**Was die Literatur sagt — und es ist eine Warnung an uns.** Cameron, Gelbach
+und Miller zeigen, dass Cluster-Verfahren „presume the number of clusters is
+large" und dass Standardtests bei **fünf bis dreißig Clustern über-ablehnen**.
+Genau in dieser Spanne liegen wir (17 bis 41). Der empfohlene Ausweg ist der
+**Wild Cluster Bootstrap-t**: statt ganze Cluster neu zu ziehen, werden ihre
+Residuen mit einem zufälligen Vorzeichen multipliziert und die Teststatistik
+unter der Nullhypothese neu gerechnet. Damit sinken Ablehnungsraten von 10 %
+auf die nominellen 5 %.
+
+> **Folge für uns:** unser jetziges Intervall ist eher zu ENG. Ein Befund, der
+> knapp signifikant aussieht, ist es vermutlich nicht. Das ist die richtige
+> Fehlerrichtung für Vorsicht, aber es gehört benannt — und der Wild-Variante
+> gehört der Vorzug, sobald ein Ergebnis an der Grenze entscheidet.
+
+### B. Unser Problem: viele Varianten probiert, die beste behalten
+
+**Was wir tun:** Methodik 2.5 verlangt bereits, dass informell nacheinander
+getestete Hypothesen als Multiple-Testing gelten.
+
+**Was die Literatur ergänzt:** Bailey und López de Prado formalisieren das im
+**Deflated Sharpe Ratio** — er korrigiert die Kennzahl um Selektionsverzerrung,
+Stichprobenlänge und Nicht-Normalität, indem er berücksichtigt, dass der Sieger
+aus einer Menge von Versuchen stammt, nicht isoliert gemessen wurde. Dazu die
+**Probability of Backtest Overfitting**: die Wahrscheinlichkeit, eine
+überangepasste Strategie zu wählen, wächst rasch mit der Zahl der Versuche.
+
+> **Folge für uns:** wir zählen unsere Versuche nicht. Wenn wir zwanzig Fakten
+> nacheinander durch den Nachweisrahmen schicken, ist der beste davon per
+> Konstruktion geschmeichelt. Ein **Versuchszähler je Fragestellung** wäre der
+> billigste wirksame Schutz — noch nicht gebaut.
+
+### C. Unser Problem: überlappende Beobachtungsfenster
+
+Unsere Signale überlappen: dasselbe Symbol, Fenster von 7 bis 14 Tagen, oft
+mehrere Signale in derselben Woche. Zwei Beobachtungen teilen sich damit einen
+Teil ihres Kursverlaufs.
+
+**Der Standard dafür ist Purging und Embargo** (López de Prado): Trainingsdaten,
+deren Label-Fenster in den Testbereich hineinreichen, werden entfernt, und ein
+Band nach dem Testintervall wird zusätzlich gesperrt. **Combinatorial Purged
+Cross-Validation (CPCV)** erzeugt daraus viele chronologie-treue Aufteilungen
+und liefert eine **Verteilung** von Ergebnissen statt einer einzigen Zahl.
+
+> **Folge für uns:** unser Drei-Arm-Verfahren ist davon nicht betroffen — es
+> vergleicht gepaart auf demselben Fall, die Überlappung kürzt sich heraus.
+> Betroffen ist alles, was Signale als unabhängige Beobachtungen zählt, also
+> jede Trefferquote und jede Basislinie. Das erklärt zusätzlich, warum unsere
+> Intervalle eher zu eng sind.
+
+### D. Unser Problem: „noch nicht genug n" — und dann doch hinschauen
+
+Das Muster zieht sich durch das ganze Projekt: eine Frage wartet auf n≥50, in
+der Zwischenzeit wird trotzdem hingesehen, und jeder Blick erhöht still die
+Fehlerwahrscheinlichkeit.
+
+**Die moderne Antwort sind E-Werte und anytime-valid inference.** E-Werte sind
+nichtnegative Statistiken mit Erwartungswert höchstens eins unter der
+Nullhypothese; die zugehörigen E-Prozesse bleiben **unter beliebigem Peeking
+gültig**. Dieselbe Schwelle kontrolliert den Fehler erster Art, egal wann und
+wie oft man hinsieht — man darf jederzeit stoppen, ohne die Stichprobengröße
+vorher festzulegen.
+
+> **Folge für uns:** das passt exakt auf unsere Lage — Signale tropfen mit rund
+> 1,2 pro Tag ein, und die Frage „reicht es schon?" stellt sich dauernd. Ein
+> E-Wert-Prozess je offener Frage würde das Warten auf feste n-Schwellen
+> ersetzen. **Der aussichtsreichste noch nicht gebaute Baustein dieser Liste.**
+
+### E. Unser Problem: das LLM antwortet auf identische Eingaben verschieden
+
+Gemessen: 8 bis 12 % Richtungsdreher bei identischer Eingabe.
+
+**Die Literatur bestätigt, dass das nicht wegkonfigurierbar ist.** Nichtdeterminismus bleibt selbst bei Temperatur 0 bestehen — Batch-Reihenfolge auf
+der GPU, Attention-Kernel, Fließkomma-Nichtassoziativität und Lastverteilung
+zwischen Rechenzentren tragen dazu bei. Temperatur 0 ist eine Heuristik, keine
+Garantie.
+
+**Der etablierte Umgang ist Self-Consistency:** mehrfach abfragen und die
+häufigste Antwort nehmen. Das reduziert die Streuung und kostet Aufrufe.
+Bemerkenswert für uns: Eingaben **nahe der Entscheidungsgrenze** streuen
+deutlich stärker als eindeutige — die Instabilität ist also selbst ein Signal
+für „knapper Fall".
+
+> **Folge für uns:** ein Mehrheitsentscheid aus drei Abfragen würde die
+> Richtungsdreher dämpfen und verdreifacht die Kosten. Der billigere Weg: die
+> **Uneinigkeit als Fakt behandeln** — dreht das Modell bei Wiederholung, ist
+> der Fall knapp, und knappe Fälle gehören nicht gehandelt. Das wäre ein Gate
+> aus einer Größe, die wir schon messen können.
+
+### F. Unser eigentliches Problem: schlägt die Ebene den Zufall?
+
+**Der Stand der Forschung ist ernüchternd und entlastet uns zugleich.**
+Aktuelle Benchmarks für LLM-Handelsagenten (StockBench, Agent Market Arena,
+InvestorBench, DeepFund) kommen übereinstimmend zu dem Schluss, dass Agenten
+passive Vergleichsmaßstäbe **nicht** zuverlässig schlagen; über zehn führende
+Modelle hinweg stammen die kumulierten Renditen aus Markt- und Stilexposition,
+**nicht aus Selektions-Alpha**.
+
+> **Folge für uns:** unser gemessener Abstand von −7 bis −10 pp gegen den
+> CRV-Breakeven ist kein Zeichen dafür, dass wir etwas besonders falsch gebaut
+> hätten. Er entspricht dem, was die Literatur für diese Aufgabenklasse
+> berichtet. Das ist kein Trost, aber es verschiebt die richtige Frage: nicht
+> *„wie machen wir das LLM besser"*, sondern *„wofür ist es überhaupt das
+> richtige Werkzeug"*.
+
+### G. Die Antwort der Literatur auf genau diese Lage: Meta-Labeling
+
+López de Prado trennt **Richtung** (die Seite) von **Ausführung** (ob und wie
+groß). Ein primäres Modell erzeugt die Richtung; ein sekundäres Modell sagt
+**nicht** die Richtung voraus, sondern ob die Vorhersage des primären Modells
+genommen werden soll. Es tauscht Recall gegen Precision, hebt den F1-Wert und
+senkt Fehlsignale und Transaktionskosten.
+
+> **Warum das auf uns besonders gut passt — und die Messlage es stützt:**
+>
+> 1. Wir haben bereits ein primäres Modell: den Trigger-/Screening-Zweig.
+>    Gemessen erreicht der naive `trendfolge`-Zweig **18,5 %** bei n=81 — über
+>    der Gesamtquote von 16,0 %. Die Mechanik ist also nicht das Schwächste.
+> 2. Die Richtung ist die instabilste Größe, die wir haben (8–12 % Dreher).
+>    Genau sie dem LLM abzunehmen, spielt seine Schwäche aus.
+> 3. „Nehmen oder nicht" ist eine binäre Frage mit einem klaren Erfolgsmaß
+>    (Precision), und sie ist mit **viel weniger** Fällen messbar als
+>    Zonenqualität.
+>
+> **Das ist die konkreteste Umbau-Option, die aus dieser Recherche folgt.** Sie
+> ist keine Entscheidung dieses Nachtrags — sie gehört dem Nutzer vorgelegt.
+
+### Was wir davon schon haben
+
+| Baustein | Stand |
+|---|---|
+| Triple-Barrier-Methode | seit jeher, Ziel/Stop/Zeitlimit |
+| Aalen-Johansen für konkurrierende Ereignisse | `kumulative_inzidenz()`, 03.08. |
+| Block-Bootstrap über Symbole | `_block_bootstrap_ziel_anteil()`, 03.08. |
+| Multiple-Testing-Bewusstsein | Methodik 2.5, seit 29.07. |
+| Kein Vorausschauen im Backtest | `backtest_llm1_historisch._reihe_bis()`, 04.08. |
+| **Wild Cluster Bootstrap** | **fehlt** — unsere Intervalle sind zu eng |
+| **Versuchszähler / DSR** | **fehlt** — wir zählen unsere Versuche nicht |
+| **E-Werte / anytime-valid** | **fehlt** — würde das Warten auf n-Schwellen ersetzen |
+| **Meta-Labeling** | **fehlt** — die naheliegendste Architekturoption |
+
+### Quellen
+
+- [Bailey/López de Prado, The Deflated Sharpe Ratio (SSRN)](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2460551)
+- [Cameron/Gelbach/Miller, Bootstrap-Based Improvements for Inference with Clustered Errors (REStat 2008)](https://direct.mit.edu/rest/article/90/3/414/57731/Bootstrap-Based-Improvements-for-Inference-with)
+- [MacKinnon/Webb, The Wild Bootstrap for Few (Treated) Clusters](http://qed.econ.queensu.ca/pub/faculty/mackinnon/working-papers/qed_wp_1364.pdf)
+- [Purged cross-validation (Übersicht)](https://en.wikipedia.org/wiki/Purged_cross-validation)
+- [Combinatorial Purged Cross-Validation, QuantInsti](https://blog.quantinsti.com/cross-validation-embargo-purging-combinatorial/)
+- [Ramdas et al., Game-Theoretic Statistics and Safe Anytime-Valid Inference](https://projecteuclid.org/journals/statistical-science/volume-38/issue-4/Game-Theoretic-Statistics-and-Safe-Anytime-Valid-Inference/10.1214/23-STS894.pdf)
+- [Anytime Validity is Free: Inducing Sequential Tests (2025)](https://arxiv.org/pdf/2501.03982)
+- [StockBench: Can LLM Agents Trade Stocks Profitably in Real-world Markets?](https://stockbench.github.io/)
+- [When Agents Trade: Live Multi-Market Trading Arena for LLM Agents (WWW 2026)](https://dl.acm.org/doi/10.1145/3774904.3792821)
+- [Meta-Labeling (Übersicht)](https://en.wikipedia.org/wiki/Meta-Labeling)
+- [Hudson & Thames, Does Meta Labeling Add to Signal Efficacy?](https://hudsonthames.org/does-meta-labeling-add-to-signal-efficacy-triple-barrier-method/)
+- [Why LLMs Are Not Deterministic Even at Temperature 0](https://www.qanswer.ai/blog/llm-non-determinism-temperature-zero)
+- [A Practical Guide for Evaluating LLMs and LLM-Reliant Systems (arXiv 2506.13023)](https://arxiv.org/pdf/2506.13023)
+
+---
+
 ## 3. Verwandte Dokumente
 
 - [[Fakten_Entscheidungsmappe.md]] - Entscheidungsraster für Fakten/Prompt-Regeln
