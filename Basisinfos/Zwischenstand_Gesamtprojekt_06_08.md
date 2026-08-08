@@ -1117,7 +1117,7 @@ tut.
 | **3** | **Manuelle Schwerpunkte mit garantiertem Raum** (`schwerpunkte.manuell`, Schalter im Thesen-Tab) | Nutzer-Vorgabe 07.08. | klein | **ERLEDIGT 07.08.** |
 | **4** | **Wartende Vorschläge sichtbar machen** (S-3) — plus Layout-Fix im Schwerpunkte-Tab | S-3 | klein | **ERLEDIGT 07.08.** |
 | **5** | **Erfolgsmaß je Themenfeld** (G-2) — **nicht** als Systemgüte je Hauptgruppe, siehe unten | G-2 | mittel | **ERLEDIGT 07.08.** |
-| **6** | **Allocator-Priorität** (S-4: übergewichtete Themenfelder bevorzugt) — setzt Schritt 3 voraus | S-4 | mittel | offen |
+| **6** | **Allocator-Priorität** (S-4: übergewichtete Themenfelder bevorzugt) — setzt Schritt 3 voraus | S-4 | mittel | **ERLEDIGT 09.08.** — stabile Partition in `multi_asset_batch`, Reichweite offen benannt (siehe unten) |
 | **7** | **Rollout-Entscheidungen** der vier offenen Fakten (antizyklisch, tranchen_erlaubt, liquiditaetszonen, signal_stabilitaet) | H-7 | klein je Fakt | offen |
 
 **Warum Schritt 5 anders gebaut wurde als geplant:** die Messung vor dem Bau
@@ -1129,6 +1129,37 @@ seit `gesetzt_am`) plus die **Wirkungskette** — bei Energie haben 2 von 22 Ass
 überhaupt eine Kursreihe, und genau das ist die eigentliche Engstelle. Die
 Absicherung bleibt draußen: ein Hedge, der verliert während das Portfolio steigt,
 hat funktioniert.
+
+**Nachtrag 09.08. — was Schritt 6 geworden ist, und was er NICHT leistet.**
+Umgesetzt als **stabile Partition** in `agent/multi_asset_batch.py`:
+Schwerpunkt-Assets nach vorn, alle anderen behalten ihre Reihenfolge.
+Ausdrücklich **kein** Sortieren nach Trendstärke oder Score — genau davor warnt
+dieser Plan, weil das ohne die manuellen Schwerpunkte das Gegenteil von
+antizyklisch täte.
+
+Drei Einschränkungen, die vor dem Bau gemessen wurden und ins Ergebnis gehören:
+
+- **Reichweite 13 von 57 Assets.** Nur 7 ETF, 4 Rohstoffe und 2 Aktien tragen
+  überhaupt eine `hauptgruppe` — **kein einziges Krypto-Asset**. Die Krypto-Kette
+  kann davon nicht profitieren, weil dort nichts zuzuordnen ist.
+- **Reihenfolge, nicht Auswahl.** Der Batch hat keinen Stückzahl-Deckel; alle
+  Fälligen werden ohnehin verarbeitet. Spürbar wird die Priorität erst, wenn
+  mitten im Lauf ein Anbieter-Tagesbudget ausläuft oder der Circuit Breaker
+  zuschlägt.
+- **Derzeit inert.** `schwerpunkte.manuell` ist leer. Der Mechanismus existiert
+  jetzt, damit ein gesetzter Schwerpunkt überhaupt eine Wirkung *haben kann* —
+  bis dahin ist er ein No-Op, und der Test prüft ausdrücklich auch das.
+
+**Die eigentliche Achsenfrage bleibt offen und ist eine Nutzer-Entscheidung:**
+sollen Krypto-Assets ein Themenfeld bekommen? Krypto stellt 44 von 57 Assets und
+trägt praktisch die gesamte Signalproduktion (87 von 87 am 08.08.) — solange es
+im Themenkonzept nicht vertreten ist, erreicht „Vom Themenfeld zum Signal" die
+Klasse mit den Daten nicht.
+
+`teste_allocator_prioritaet.py`, 9 Prüfungen gegen 13 echte Kandidaten: leere
+Liste ist ein No-Op, Hauptgruppen-Schwerpunkt zieht drei Assets vor,
+Unterkategorie-Schwerpunkt genau zwei, die Menge bleibt gleich, und die übrigen
+behalten ihre Reihenfolge.
 
 **Was Schritt 2 verändert hat, und was dabei kippte:** die Spezifikation stand
 in *beiden* Halbsätzen auf dem Kopf — im Code ein hartes Limit, in der GUI gar

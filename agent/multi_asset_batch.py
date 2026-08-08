@@ -57,6 +57,11 @@ class MultiAssetBatchResult:
     # dieselbe Form haben, sonst laufen sie auseinander.
     calls_verbraucht: dict[str, int] = field(default_factory=dict)
     budget_erschoepft: dict[str, bool] = field(default_factory=dict)
+    # Wie viele Faellige lagen in einem manuellen Schwerpunkt und wurden
+    # vorgezogen (2026-08-09, Schritt 6). Steht in der Log-Zeile des Jobs -
+    # eine Priorisierung, die niemand sieht, ist von keiner nicht zu
+    # unterscheiden.
+    vorgezogen_schwerpunkt: int = 0
 
 
 def _kandidaten(watchlist: list) -> list:
@@ -181,6 +186,60 @@ def run_multi_asset_batch(
                 faellige.append(asset)
             else:
                 result.uebersprungen_cooldown += 1
+        # SCHRITT 6 - ALLOCATOR-PRIORITAET (S-4, 2026-08-09).
+        #
+        # Die Luecke, die das schliesst, steht im Gesamtkonzept als
+        # "Signal mit Fokus: der Allocator kennt die Thesen nicht". Ein manuell
+        # gesetzter Schwerpunkt hatte bis hierher UEBERHAUPT KEINE Wirkung auf
+        # die Verarbeitung - Schritt 3 hat den Schalter gebaut, angeschlossen
+        # war er nirgends ("die Schutzwirkung ist gegenstandslos geworden, sie
+        # wird erst in Schritt 6 wieder greifen").
+        #
+        # STABILE PARTITION, KEIN RE-SORT. Schwerpunkt-Assets kommen nach vorn,
+        # alle anderen behalten ihre bisherige Reihenfolge, und innerhalb beider
+        # Gruppen aendert sich nichts. Bewusst NICHT nach Trendstaerke oder
+        # Score sortiert - das Gesamtkonzept warnt ausdruecklich: ein Allocator,
+        # der nach Trendstaerke priorisiert, tut ohne die manuellen Schwerpunkte
+        # systematisch das Gegenteil von antizyklisch.
+        #
+        # WAS DAS AENDERT UND WAS NICHT: nur die REIHENFOLGE, nicht die Auswahl
+        # - dieser Batch hat keinen Stueckzahl-Deckel, es werden ohnehin alle
+        # Faelligen verarbeitet. Spuerbar wird die Prioritaet erst, wenn mitten
+        # im Lauf ein Anbieter-Tagesbudget auslaeuft oder der Circuit Breaker
+        # zuschlaegt: dann bekommen die vorderen noch ein Signal, die hinteren
+        # nicht.
+        #
+        # REICHWEITE, offen benannt: nur 13 der 57 Watchlist-Assets tragen
+        # ueberhaupt eine `hauptgruppe` (7 ETF, 4 Rohstoffe, 2 Aktien) - KEIN
+        # einziges Krypto-Asset. Die Krypto-Kette kann davon also nicht
+        # profitieren, weil dort nichts zuzuordnen ist. Ob Krypto-Assets ein
+        # Themenfeld bekommen sollen, ist eine inhaltliche Entscheidung und
+        # bleibt offen.
+        #
+        # Bei leerer `schwerpunkte.manuell`-Liste ist die Partition ein No-Op -
+        # `ist_manueller_schwerpunkt()` liefert dann durchgehend False und die
+        # Reihenfolge bleibt Zeichen fuer Zeichen dieselbe.
+        import config as _config
+
+        # EINE Schleife statt zweier Listenfilter: `a not in bevorzugt` wuerde
+        # Dataclass-Objekte ueber `==` vergleichen und bei wertgleichen Assets
+        # das falsche Element aussortieren.
+        bevorzugt, uebrige = [], []
+        for a in faellige:
+            ziel = bevorzugt if _config.ist_manueller_schwerpunkt(
+                getattr(a, "hauptgruppe", None),
+                getattr(a, "unterkategorie", None)) else uebrige
+            ziel.append(a)
+        if bevorzugt:
+            gesamt = len(faellige)
+            faellige = bevorzugt + uebrige
+            result.vorgezogen_schwerpunkt = len(bevorzugt)
+            logger.info(
+                "Multi-Asset-Batch: %d von %d faelligen Assets liegen in einem "
+                "manuellen Schwerpunkt und werden vorgezogen (%s).",
+                len(bevorzugt), gesamt,
+                ", ".join(a.symbol for a in bevorzugt),
+            )
         # ECHTE AUFRUFE statt erzeugter Datensaetze (2026-08-09, Teil B) -
         # identisch zu budget_allocator.py, siehe dortige Begruendung. Beide
         # Ketten muessen denselben Zaehler lesen, sonst laufen sie auseinander.

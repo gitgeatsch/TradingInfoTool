@@ -2900,8 +2900,9 @@ def multi_asset_batch_job(
         # unterscheiden.
         logger.info(
             "Multi-Asset-Batch: %d verarbeitet, %d fehlgeschlagen, %d Cooldown-uebersprungen, "
-            "Calls je Anbieter %s, Budget erschöpft: %s",
+            "%d wegen Schwerpunkt vorgezogen, Calls je Anbieter %s, Budget erschöpft: %s",
             len(result.verarbeitet), len(result.fehlgeschlagen), result.uebersprungen_cooldown,
+            result.vorgezogen_schwerpunkt,
             dict(result.calls_verbraucht) or "keine",
             dict(result.budget_erschoepft) or "keiner",
         )
