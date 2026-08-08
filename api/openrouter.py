@@ -151,11 +151,45 @@ FREE_SUFFIX = ":free"
 # 429 ("temporarily rate-limited"), also gedrosselt und nicht abweisend. Faellt
 # es beim ersten echten Einsatz mit 400 aus, gehoert es aus demselben Grund
 # heraus wie ling.
+#
+# ENDSTAND 2026-08-09 nach Screening (13 Modelle), Haertetests und dem
+# historischen Ruecktest gegen 38 Mistral-Entscheidungen mit bekanntem Ausgang.
+# Sortiert nach AEHNLICHKEIT ZU GEMINI, nicht nach Bestenliste - ein Rueckfall
+# soll sich verhalten wie das System, das validiert wurde:
+#
+#                            gueltig   Median   Konfidenz    Richtung   Uebereinst.
+#   nemotron-3-super-120b    16/20     20,8 s   Median 65 %  14L/12S    77 % Richtung
+#   gpt-oss-20b               5/10    124,9 s   55-70 %      -          -
+#   gemma-4-31b                 -         -     -            -          -
+#   (Gemini als Referenz)      5/5      5,5 s   Median 65 %  16L/10S    -
+#
+# RAUS, obwohl es die BESTE R-Zahl hatte: `poolside/laguna-xs-2.1:free`
+# (-8,00 R gegen Mistrals -22,82 R auf derselben Menge). Der Grund steht in
+# den Verhaltenszahlen, nicht im Ergebnis:
+#   * 24 von 26 Entscheidungen LONG - es differenziert die Richtung praktisch
+#     nicht (Gemini 16/10, nemotron 14/12)
+#   * Konfidenz-Median 42,5 % gegen Geminis 65,0 % - 22,5 Punkte tiefer, und
+#     die Pipeline hat eine scharfe Mindestkonfidenz. Der Rueckfall waere
+#     anders GEFILTERT, nicht nur langsamer.
+#   * nur 46 % Aktions-Uebereinstimmung mit Gemini
+# Seine gute R-Zahl kam aus 69 % Ablehnung, nicht aus Auswahl: 0 von 8
+# genommenen Faellen war ein Gewinner.
+#
+# RAUS: `google/gemma-4-26b-a4b-it:free` - 0/5 und 1/3 am echten Signal-Prompt,
+# Upstream-Timeouts nach ~24 s (Darkbloom-Endpunkt).
+#
+# NICHT belegt und deshalb nicht behauptet: dass nemotron BESSER urteilt. Auf
+# den 26 gemeinsamen Faellen wies KEIN Modell eine bessere Trefferquote als die
+# Basislinie auf - bei einem einzigen Gewinner hatte der Test dafuer aber auch
+# keine Kraft.
 FREE_MODELLE = (
-    "google/gemma-4-26b-a4b-it:free",   # 262.144 Kontext,  5,2 s - schnellster
-    "openai/gpt-oss-20b:free",          # 131.072 Kontext, 12,7 s - einziges,
-                                        #   das den vollen Signal-Prompt trug
-    "google/gemma-4-31b-it:free",       # 262.144 Kontext, 429 am 07. UND 08.08.
+    "nvidia/nemotron-3-super-120b-a12b:free",  # 262.144 Kontext, Nvidia-Endpunkt
+                                        #   99 % Uptime, structured_outputs
+    "openai/gpt-oss-20b:free",          # 131.072 Kontext - trug den vollen
+                                        #   Prompt, aber langsam und 5/10
+    "google/gemma-4-31b-it:free",       # Google AI Studio, 100 % Uptime, aber
+                                        #   am 07. UND 08.08. durchgehend 429 -
+                                        #   UNGEPRUEFT, reine Reserve
 )
 
 # Rueckwaertskompatibel: einzelne Aufrufer und Tests nennen weiterhin ein Modell.
