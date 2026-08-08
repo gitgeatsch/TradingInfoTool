@@ -6,6 +6,8 @@ from __future__ import annotations
 
 import logging
 import sqlite3
+import threading
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -32,6 +34,110 @@ _TREFFER_EINSTUFUNGEN = {"kaufkandidat", "watchlist_wuerdig"}
 # vollstaendig - dort gehoeren sie hin, weil alte Auswertungen sonst ihre
 # Vergleichsgrundlage verlieren.
 _ENTFERNTE_PROVIDER = ("groq", "cerebras")
+
+
+# ---------------------------------------------------------------------------
+# Zwischenspeicher fuer die teuren Aggregate (2026-08-09)
+#
+# DER VORFALL. Das Notebook stand dauerhaft bei ~94 % CPU, `python.exe` allein
+# bei 70,9 %, dazu 1,0 MB/s Dauer-Leselast auf der Platte - ohne einen einzigen
+# Fehler im Log, weil es sich um voellig normale Lesezugriffe handelt.
+#
+# DIE URSACHE IST EINE RECHENAUFGABE JE ANFRAGE. `remote/server.py` laesst die
+# Seite per `setInterval(refreshStatus, 2000)` alle zwei Sekunden abrufen, und
+# `build_status()` rechnet dabei jedes Mal saemtliche Aggregate neu. Gemessen am
+# 09.08. auf einer Kopie der Produktions-DB, MIT bereits vorgewaermtem
+# Systemguete-Cache:
+#
+#     build_status() gesamt                1,39 s   je Abruf, Takt 2,0 s
+#       _get_themenfeld_erfolg             0,473 s
+#       _get_gesamt_signalqualitaet        0,123 s
+#       _get_ausstiegs_empfehlungen        0,120 s
+#       _get_hedge_wirksamkeit             0,101 s
+#       _get_provider_sendezaehler         0,101 s
+#
+# Schon am DESKTOP bleiben damit nur 30 % Luft. Das Notebook (i5-4300U von 2013)
+# muss lediglich 1,5-mal langsamer sein, damit ein Abruf laenger dauert als der
+# Takt - ab da ueberlappen die Anfragen, und jede verzoegert die naechste
+# weiter. Genau dieser Ausfall ist am 03.08. schon einmal aufgetreten und wurde
+# damals NUR fuer die Systemguete behoben (siehe _SYSTEMGUETE_CACHE unten).
+#
+# WARUM EIN ZWISCHENSPEICHER NICHTS KOSTET. Alle betroffenen Groessen speisen
+# sich aus den `outcome_*`-Spalten oder der Kurshistorie. Erstere schreibt nur
+# der taegliche Backward-Tracking-Lauf um 06:00, letztere der Preis-Refresh alle
+# 15 Minuten. Zwischen zwei Laeufen KANN sich das Ergebnis nicht aendern; 1.800
+# Neuberechnungen je Stunde liefern 1.800-mal dieselbe Zahl.
+#
+# Die Frist ist bewusst an den Preis-Refresh gekoppelt und nicht an die Stunde
+# der Systemguete: keine Karte ist damit aelter als ein Refresh-Zyklus.
+_AGGREGAT_CACHE_SEKUNDEN = 900
+_AGGREGAT_CACHE: dict[str, tuple[float, object]] = {}
+_AGGREGAT_SPERREN: dict[str, threading.Lock] = {}
+_AGGREGAT_SPERREN_LOCK = threading.Lock()
+
+
+def _zwischengespeichert(schluessel: str, fn, sekunden: float = _AGGREGAT_CACHE_SEKUNDEN):
+    """Ergebnis von `fn()` je Schluessel hoechstens einmal pro `sekunden`.
+
+    JE SCHLUESSEL EINE SPERRE, und die Berechnung laeuft INNERHALB davon. Das
+    ist der Punkt: treffen waehrend einer laufenden Berechnung weitere Anfragen
+    ein - und genau das passiert bei 2-Sekunden-Takt und einer Rechenzeit
+    darueber -, warten sie und nehmen anschliessend den frischen Wert. Ohne die
+    Sperre wuerde jede eintreffende Anfrage dieselbe Rechnung ein weiteres Mal
+    anstossen und die Ueberlastung verstaerken, statt sie zu beenden.
+
+    Eine globale Sperre waere falsch: sie wuerde voneinander unabhaengige
+    Aggregate serialisieren.
+    """
+    jetzt = time.monotonic()
+    eintrag = _AGGREGAT_CACHE.get(schluessel)
+    if eintrag is not None and jetzt - eintrag[0] < sekunden:
+        return eintrag[1]
+
+    with _AGGREGAT_SPERREN_LOCK:
+        sperre = _AGGREGAT_SPERREN.setdefault(schluessel, threading.Lock())
+
+    with sperre:
+        # Zweite Pruefung: waehrend des Wartens auf die Sperre kann ein anderer
+        # Aufrufer die Berechnung bereits erledigt haben.
+        eintrag = _AGGREGAT_CACHE.get(schluessel)
+        jetzt = time.monotonic()
+        if eintrag is not None and jetzt - eintrag[0] < sekunden:
+            return eintrag[1]
+        wert = fn()
+        _AGGREGAT_CACHE[schluessel] = (time.monotonic(), wert)
+        return wert
+
+
+def _gecacht(fn):
+    """Markiert einen Getter als "aendert sich nur beim Datenlauf".
+
+    Als Dekorator statt als Aufruf im Rumpf, damit an der Funktionsdefinition
+    ABLESBAR ist, dass sie zwischengespeichert wird - und damit die Entscheidung
+    nicht in einem Lambda mitten im Code verschwindet.
+
+    WELCHE GETTER IHN BEKOMMEN: alle, die aus den `outcome_*`-Spalten oder der
+    Kurshistorie aggregieren. Die schreibt nur das taegliche Backward-Tracking
+    bzw. der 15-Minuten-Preis-Refresh.
+
+    WELCHE IHN BEWUSST NICHT BEKOMMEN: `_get_budget_heute` (der Nutzer schaut
+    beim Beobachten eines Laufs genau auf diese Zahl), `_get_marktscan_last`
+    (wird direkt nach einem angestossenen Scan gelesen), `_get_api_health` und
+    `_get_coingecko_quota`. Sie sind zusammen unter 0,1 s und muessen live sein
+    - ein Zwischenspeicher waere hier kein Gewinn, sondern eine Luege.
+    """
+    import functools
+
+    @functools.wraps(fn)
+    def huelle(*args, **kwargs):
+        return _zwischengespeichert(fn.__name__, lambda: fn(*args, **kwargs))
+
+    return huelle
+
+
+def leere_aggregat_cache() -> None:
+    """Nur fuer Tests und fuer den erzwungenen Neuaufbau nach einem Datenlauf."""
+    _AGGREGAT_CACHE.clear()
 
 
 def _ohne_entfernte_provider(daten):
@@ -326,6 +432,7 @@ def _get_coingecko_quota(conn: sqlite3.Connection) -> dict | None:
     }
 
 
+@_gecacht
 def _get_provider_performance(conn: sqlite3.Connection, watchlist: list) -> dict:
     """Sichtbarkeit fuer die Backward-Tracking-Provider-Performance (2026-07-15,
     siehe agent/krypto/backward_tracking.py::compute_provider_performance()) -
@@ -339,6 +446,7 @@ def _get_provider_performance(conn: sqlite3.Connection, watchlist: list) -> dict
     return _ohne_entfernte_provider(compute_provider_performance(conn, watchlist))
 
 
+@_gecacht
 def _get_offene_signale_uebersicht(conn: sqlite3.Connection, watchlist: list) -> dict:
     """Ergaenzt _get_provider_performance() um Sichtbarkeit fuer noch nicht
     aufgeloeste, aber bereits trackbare Signale (2026-07-24, Nutzer-Fund: die
@@ -350,6 +458,7 @@ def _get_offene_signale_uebersicht(conn: sqlite3.Connection, watchlist: list) ->
     return compute_offene_signale_uebersicht(conn, watchlist)
 
 
+@_gecacht
 def _get_konfidenz_kalibrierung(conn: sqlite3.Connection, watchlist: list) -> dict:
     """Konfidenz-Kalibrierungskurve (2026-07-26, Punkt 3 des Regime-Persistenz-
     Folge-Vorschlags) - reiner Lesezugriff, siehe agent/krypto/
@@ -360,6 +469,7 @@ def _get_konfidenz_kalibrierung(conn: sqlite3.Connection, watchlist: list) -> di
     return compute_konfidenz_kalibrierung(conn, watchlist)
 
 
+@_gecacht
 def _get_richtungstreffer_quote(conn: sqlite3.Connection, watchlist: list) -> dict:
     """Richtungstreffer-Quote-Karte (2026-07-27, Performance-Messung-
     Expertenanalyse, Nutzer-Wunsch "bitte nicht auf der Remoteseite vergessen")
@@ -382,6 +492,7 @@ def _get_richtungstreffer_quote(conn: sqlite3.Connection, watchlist: list) -> di
     }
 
 
+@_gecacht
 def _get_marktscan_erfolgsquote(conn: sqlite3.Connection) -> dict | None:
     """Marktscan-Erfolgsquote-Karte (2026-07-30, Erfolgsmessung Teil 2) - reiner
     Lesezugriff auf agent/krypto/marktscan_backward_tracking.py::
@@ -393,6 +504,7 @@ def _get_marktscan_erfolgsquote(conn: sqlite3.Connection) -> dict | None:
     return compute_marktscan_erfolgsquote(conn)
 
 
+@_gecacht
 def _get_zai_richtung_performance(conn: sqlite3.Connection, watchlist: list) -> dict:
     """Z.ais UNABHAENGIGE Richtungs-Erfolgsquote (2026-07-27, Nutzer-Wunsch:
     "ZAI unabhaengig mit seinen unterschiedlichen Entscheidungen und deren
@@ -418,6 +530,7 @@ def _get_zai_richtung_performance(conn: sqlite3.Connection, watchlist: list) -> 
     return compute_zai_richtung_performance(conn, watchlist, schwelle)
 
 
+@_gecacht
 def _get_veto_schatten_performance(conn: sqlite3.Connection, watchlist: list) -> dict:
     """Gruppe C ("Veto-Schatten", 2026-07-28) - reiner Lesezugriff auf
     agent/krypto/backward_tracking.py::compute_veto_shadow_performance(). Wie
@@ -430,6 +543,7 @@ def _get_veto_schatten_performance(conn: sqlite3.Connection, watchlist: list) ->
     return _ohne_entfernte_provider(compute_veto_shadow_performance(conn, watchlist))
 
 
+@_gecacht
 def _get_richtungsverteilung(conn: sqlite3.Connection, watchlist: list) -> dict:
     """LONG gegen SHORT seit dem Nur-Long-Umbau (2026-08-05) - NEUE Karte.
 
@@ -445,6 +559,7 @@ def _get_richtungsverteilung(conn: sqlite3.Connection, watchlist: list) -> dict:
     return compute_richtungsverteilung(conn, watchlist)
 
 
+@_gecacht
 def _get_veto_schatten_performance_nach_grund(conn: sqlite3.Connection, watchlist: list) -> dict:
     """R-5.10-Konfidenzschwellen-Nachtrag (2026-07-30) - reiner Lesezugriff auf
     agent/krypto/backward_tracking.py::compute_veto_shadow_performance_nach_grund().
@@ -499,10 +614,30 @@ def _get_veto_schatten_performance_nach_grund(conn: sqlite3.Connection, watchlis
 # aktualisierten Werte. Ein Stundentakt loest das an der Wurzel: der Wert ist
 # hoechstens eine Stunde alt, die Berechnung laeuft statt 288x nur noch 24x
 # am Tag.
-_SYSTEMGUETE_CACHE: dict = {"stand": 0.0, "wert": None, "laeuft": False}
+_SYSTEMGUETE_CACHE: dict = {"stand": 0.0, "wert": None, "laeuft": False,
+                            "fehler_stand": 0.0}
 _SYSTEMGUETE_CACHE_SEKUNDEN = 3600
 
+# WARTEZEIT NACH EINEM FEHLSCHLAG (2026-08-09). Der Zwischenspeicher oben
+# schuetzt nur den ERFOLGSFALL: schlaegt die Berechnung fehl, bleibt `wert` auf
+# None, `frisch` damit dauerhaft False - und `laeuft` wird im finally wieder
+# freigegeben. Der naechste Statusabruf startet die Berechnung also sofort neu,
+# bei 2-Sekunden-Takt also alle zwei Sekunden, jedes Mal ueber die volle
+# Kurshistorie.
+#
+# Das ist kein hypothetischer Fall. Am 06.08. stand genau dieser Kreis im Log:
+# 1.069 Fehlschlaege in der Stunde 12:00 und 16 weitere bis 13:19, alle mit
+# demselben AttributeError, bis der ausloesende Fehler behoben war - rund
+# achtzehn vergebliche Vollberechnungen je Minute auf einem Zweikern-Notebook.
+#
+# Der Kommentar im except-Zweig sagte "beim naechsten Abruf wird es erneut
+# versucht". Richtig gedacht fuer einen einmaligen Ausrutscher, falsch fuer
+# einen dauerhaften Fehler - und dauerhaft ist der haeufigere Fall, weil ein
+# Programmierfehler nicht von selbst verschwindet.
+_SYSTEMGUETE_FEHLER_PAUSE_SEKUNDEN = 300
 
+
+@_gecacht
 def _get_ausstiegs_empfehlungen(conn, watchlist: list) -> dict:
     """Offene Signale, deren Stop nachgezogen gehoert (2026-08-04).
 
@@ -524,13 +659,14 @@ def _get_systemguete(conn: sqlite3.Connection, watchlist: list) -> dict:
     Ergebnis wird zwischengespeichert und im HINTERGRUND erneuert - der
     Statusabruf wartet nie auf die Berechnung. Begruendung bei
     _SYSTEMGUETE_CACHE."""
-    import threading
-    import time
-
     jetzt = time.monotonic()
     frisch = (_SYSTEMGUETE_CACHE["wert"] is not None
               and jetzt - _SYSTEMGUETE_CACHE["stand"] < _SYSTEMGUETE_CACHE_SEKUNDEN)
-    if not frisch and not _SYSTEMGUETE_CACHE["laeuft"]:
+    # Nach einem Fehlschlag eine Weile gar nicht erst antreten - siehe
+    # _SYSTEMGUETE_FEHLER_PAUSE_SEKUNDEN.
+    pausiert = (jetzt - _SYSTEMGUETE_CACHE["fehler_stand"]
+                < _SYSTEMGUETE_FEHLER_PAUSE_SEKUNDEN)
+    if not frisch and not pausiert and not _SYSTEMGUETE_CACHE["laeuft"]:
         _SYSTEMGUETE_CACHE["laeuft"] = True
         threading.Thread(target=_systemguete_neu_berechnen, args=(watchlist,),
                          daemon=True).start()
@@ -559,12 +695,16 @@ def _systemguete_neu_berechnen(watchlist: list) -> None:
         _SYSTEMGUETE_CACHE["stand"] = time.monotonic()
     except Exception:
         # Nicht durchreichen: ein Fehler hier darf den Statusabruf nicht
-        # beeinflussen. Beim naechsten Abruf wird es erneut versucht.
+        # beeinflussen. Erneut versucht wird erst nach der Fehler-Pause - ohne
+        # sie liefe die Berechnung im Takt der Seitenabrufe weiter ins Leere
+        # (06.08.: 1.085 Fehlschlaege, siehe _SYSTEMGUETE_FEHLER_PAUSE_SEKUNDEN).
+        _SYSTEMGUETE_CACHE["fehler_stand"] = time.monotonic()
         logger.exception("Systemguete-Neuberechnung im Hintergrund fehlgeschlagen")
     finally:
         _SYSTEMGUETE_CACHE["laeuft"] = False
 
 
+@_gecacht
 def _get_selbst_gewaehltes_halten_performance(conn: sqlite3.Connection, watchlist: list) -> dict:
     """Gruppe C, Gegenfall zum Veto-Schatten (2026-07-31) - reiner Lesezugriff
     auf agent/krypto/backward_tracking.py::compute_selbst_halten_performance().
@@ -576,6 +716,7 @@ def _get_selbst_gewaehltes_halten_performance(conn: sqlite3.Connection, watchlis
     return compute_selbst_halten_performance(conn, watchlist)
 
 
+@_gecacht
 def _get_selbst_gewaehltes_halten_performance_nach_grund(conn: sqlite3.Connection, watchlist: list) -> dict:
     """Wie _get_selbst_gewaehltes_halten_performance(), aber nach (tier,
     top_grund_1_kategorie) statt (tier, provider) aufgeschluesselt (2026-07-31,
@@ -585,6 +726,7 @@ def _get_selbst_gewaehltes_halten_performance_nach_grund(conn: sqlite3.Connectio
     return compute_selbst_halten_performance_nach_grund(conn, watchlist)
 
 
+@_gecacht
 def _get_zai_richtung_performance_schatten(conn: sqlite3.Connection, watchlist: list) -> dict:
     """Gruppe C, Z.ai-Anteil (2026-07-28) - reiner Lesezugriff auf
     compute_zai_richtung_performance_schatten(). Misst Z.ais unabhaengiges
@@ -601,6 +743,7 @@ def _get_zai_richtung_performance_schatten(conn: sqlite3.Connection, watchlist: 
     return compute_zai_richtung_performance_schatten(conn, watchlist, schwelle)
 
 
+@_gecacht
 def _get_gesamt_signalqualitaet(conn: sqlite3.Connection, watchlist: list) -> dict:
     """"Gesamt-Signalqualitaet, unabhaengig vom Risk-Gate" (2026-07-28, Nutzer-
     Einsicht: Gruppe C ist eigentlich Real+Schatten zusammen) - reiner
@@ -611,6 +754,7 @@ def _get_gesamt_signalqualitaet(conn: sqlite3.Connection, watchlist: list) -> di
     return _ohne_entfernte_provider(compute_gesamt_signalqualitaet(conn, watchlist))
 
 
+@_gecacht
 def _get_provider_sendezaehler(conn: sqlite3.Connection, watchlist: list) -> dict:
     """Rohe Sendeanzahl je Provider (2026-07-28, Nutzer-Frage "wie oft hat
     Gemini ueberhaupt welche Signale gesendet?") - reiner Lesezugriff auf
@@ -621,6 +765,7 @@ def _get_provider_sendezaehler(conn: sqlite3.Connection, watchlist: list) -> dic
     return _ohne_entfernte_provider(compute_provider_sendezaehler(conn, watchlist))
 
 
+@_gecacht
 def _get_regime_status(conn: sqlite3.Connection) -> dict | None:
     """Regime-Status-Karte (2026-07-17) - reiner Lesezugriff auf den zuletzt
     PERSISTIERTEN Regime-Stand, kein neuer Live-Recompute (siehe
@@ -677,6 +822,7 @@ def _get_z3_und_bewertung(conn: sqlite3.Connection, portfolio_value_eur: float |
     }
 
 
+@_gecacht
 def _get_hedge_wirksamkeit(conn: sqlite3.Connection, watchlist: list) -> dict | None:
     """Hat die Absicherung gewirkt? Siehe agent/portfolio_historie.py::
     compute_hedge_wirksamkeit() - SQN/Expectancy sind fuer diese Klasse die
@@ -690,6 +836,7 @@ def _get_hedge_wirksamkeit(conn: sqlite3.Connection, watchlist: list) -> dict | 
     return compute_hedge_wirksamkeit(conn, ab_datum=ab, watchlist=watchlist)
 
 
+@_gecacht
 def _get_themenfeld_erfolg(conn: sqlite3.Connection) -> dict | None:
     """Traf die Richtungsaussage der These? Siehe agent/themenfeld_erfolg.py -
     eine These ist eine Aussage ueber einen Korb, keine Trade-Folge, deshalb
@@ -699,6 +846,7 @@ def _get_themenfeld_erfolg(conn: sqlite3.Connection) -> dict | None:
     return compute_themenfeld_erfolg(conn)
 
 
+@_gecacht
 def _get_wartende_themen(conn: sqlite3.Connection) -> dict | None:
     """Welche Themen-Vorschlaege warten, und wann werden sie reif? (2026-08-07)
 

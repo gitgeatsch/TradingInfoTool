@@ -1063,6 +1063,33 @@ ist **ungemessen, nicht widerlegt** und geht in keine Quote ein.
    Reproduktionsfehler ausgewiesen. Dieselbe Familie wie Punkt 3 des
    Nachtrags 09.08.
 
+### Bei Verdacht auf Dauerlast
+
+| Skript | Auslöser |
+|---|---|
+| `teste_status_cache.py` | **Nach jeder Änderung an `remote/status.py`s Zwischenspeicher, am Abruftakt in `remote/server.py` oder wenn ein neuer `_get_*`-Getter dazukommt.** Sichert, dass die Statusseite ihre teuren Aggregate nicht je Abruf neu rechnet. Vier Prüfungen, **jede mit Gegenprobe gegen den kaputten Zustand**: Cache greift (ohne ihn 5 statt 1 Berechnung), Frist läuft ab, zehn gleichzeitige Abrufe rechnen **einmal** (ohne Sperre zehnmal), und die Fehler-Pause verhindert den Neustart-Kreis (ohne sie ein Versuch je Abruf). |
+
+> **Der Vorfall dahinter (09.08.).** Das Notebook stand dauerhaft bei ~94 % CPU,
+> `python.exe` allein bei 70,9 %, dazu 1,0 MB/s Dauer-Leselast — **ohne einen
+> einzigen Fehler im Log**, weil es normale Lesezugriffe waren. Die Seite ruft
+> alle 2,0 s ab, ein Abruf kostete gemessen 1,39 s am Desktop. Auf dem Notebook
+> reicht Faktor 1,5, damit die Anfragen überlappen und sich gegenseitig weiter
+> verzögern. Nach dem Fix: **0,117 s, 92 % weniger** — trägt bis Faktor 10.
+>
+> **Die Lehre ist nicht der Cache, sondern die Suchrichtung.** Zwei meiner
+> Hypothesen waren falsch und wurden durch Messung widerlegt (Drive-Sync: 0,1 %
+> CPU laut Task-Manager; Systemgüte-Neuberechnung: 2,2 s, bei Stundentakt unter
+> 2 %). Erst die Frage *„was passiert bei jedem Abruf, und wie oft wird
+> abgerufen?"* führte hin. **Dauerlast ohne Logspur ist normale Arbeit in zu
+> hoher Frequenz, nicht ein Defekt** — und die Frequenz steht im Frontend, nicht
+> im Backend.
+>
+> Dasselbe Muster ist in derselben Datei schon zweimal dokumentiert: der
+> `_safe()`-Docstring nennt *„264 Fehlschläge in ~9 Minuten … weil die Seite alle
+> paar Sekunden pollt"*, der Systemgüte-Cache *„damit überlappten sich die
+> Anfragen, der Server kam nicht mehr hinterher"*. Beide Male wurde der
+> Einzelfall behoben, nicht die Klasse.
+
 ### Bei Verdacht auf Datenfehler
 
 | Skript | Auslöser |
