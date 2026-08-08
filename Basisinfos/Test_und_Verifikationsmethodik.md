@@ -1154,6 +1154,26 @@ ist **ungemessen, nicht widerlegt** und geht in keine Quote ein.
 |---|---|
 | `bewerte_fakt_wirkung.py` | **Der Nachweisrahmen aus Mappe Kapitel 9, Stufe 3.** Drei Arme (A1/A2 identisch, B ohne den Fakt), und — das ist das Neue — **alle drei werden gegen die echte Kurshistorie bewertet**. Entscheidungsregel und Mindest-n stehen als Parameter fest, bevor der Lauf startet. |
 | `teste_nachweisrahmen.py` | Nach jeder Änderung am Rahmen. Fährt ihn gegen ein Modell mit **bekanntem** Verhalten — neun Lagen, die er unterscheiden können muss. |
+| `laufe_fakt_nachweis.py` | Der eigentliche Lauf gegen echte Faktensätze. **Immer zuerst mit `--trocken`** — der Trockenlauf hat schon zwei eigene Fehler gefunden. Speichert jede Rohantwort, teilt die A-Arme über mehrere Fakten, bricht unter 30 brauchbaren Fällen ab, ohne einen Aufruf abzusetzen. |
+
+> **Der gepaarte Vergleich ist nicht optional.** Die erste Fassung des Rahmens
+> verglich zwei Einzelzahlen — den Abstand der A-Mittelwerte gegen den Abstand
+> B↔A. Beide sind *eine* Ziehung. Im Trockenlauf mit einem Modell **ohne jede
+> Fakt-Abhängigkeit** meldete das prompt „TENDENZ: Fakt verschlechtert das
+> Ergebnis" (−0,078 R gegen 0,067 R). Ein Fehlalarm aus reinem Münzwurf,
+> dieselbe Familie wie „Tendenz auf n=1".
+>
+> Seit der Umstellung auf **gepaarte Differenzen je Fall plus
+> Bootstrap-Intervall** lautet dasselbe Urteil korrekt *im Rauschen* (+0,014 R,
+> [−0,088; +0,112] über 48 gepaarte Fälle). Beide Arme haben denselben
+> Faktensatz gesehen — nur dann ist ihre Differenz eine Aussage über den Fakt
+> und nicht über die Fallauswahl.
+>
+> **Und der zweite Trockenlauf-Fund:** ein falscher Preisschlüssel im
+> Testmodell (`aktuell_usd` statt `usd`) ließ die Plausibilitätsschranke fast
+> alles verwerfen — 16 statt 97 bewertbare Fälle. Wäre der echte Lauf so
+> gestartet, hätte er eine viel zu kleine Stichprobe geliefert und wäre für
+> nichts verbrannt worden.
 
 **Was Stufe 3 gegenüber `messe_prompt_nebeneffekte.py` hinzufügt.** Jenes misst
 seit dem 04.08. sauber, *ob* ein Fakt das Verhalten ändert — Uneinigkeit,

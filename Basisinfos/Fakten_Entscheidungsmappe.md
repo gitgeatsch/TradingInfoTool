@@ -1172,6 +1172,93 @@ parallel** — dieselbe Familie wie `systemguete`, das unter Beobachtung steht;
 zwei Selbstbewertungs-Fakten gleichzeitig machen einen negativen Befund
 unzuordenbar.
 
+### Stufe 4 — der erste Lauf, vollständig festgelegt (Stand 2026-08-09)
+
+**Der in Stufe 4 genannte Erstkandidat ist hinfällig.** Die Hebel-CRV-Bänder
+sind **seit dem 06.08. live** (`hebel_pipeline.py:309`), der Fakt kommt an: vier
+Bänder, Grundlage n=197, ein belastbares Band (CRV 2,5–3,0, +30,8 pp). Die
+beschriebene Asymmetrie ist sogar **umgekehrt** — Spot bekommt heute *keinen*
+Fakt, Hebel schon.
+
+Messbar ist er trotzdem nicht, und der Grund gehört festgehalten:
+
+| | |
+|---|---|
+| Faktensätze mit dem Fakt | 51 — alle ab dem Rollout-Tag 06.08. |
+| Richtung | **51× SHORT, 0× LONG** |
+| Folgetage im Kurs | Median 2, maximal 3 |
+| bei Horizont ≥ 4 | **alle 51 zensiert** |
+
+> Ein Fakt, der gerade erst ausgerollt wurde, kann per Konstruktion nur von den
+> jüngsten Fällen getragen werden — und deren Ausgänge existieren noch nicht.
+> Das ist dieselbe Falle wie „Fallauswahl schließt die Frage aus" (Methodik,
+> Nachtrag 09.08., Punkt 4). **Wiedervorlage um den 20.08.**, dann haben die 51
+> ihre 14 Tage.
+
+#### Was stattdessen geprüft wird, und warum
+
+**Erstkandidat: `liquiditaetszonen`.** Drei Gründe, in dieser Reihenfolge:
+
+1. **Es gibt eine unabhängige Vorerwartung.** Stufe 2 dieses Fakts wurde am
+   23.07. per Backtest verworfen (130 Ereignisse, p = 0,53). Meldet der Rahmen
+   „im Rauschen", bestätigt das einen anders gewonnenen Befund — das ist die
+   beste Kalibrierung, die ein Messverfahren bei seinem ersten Einsatz bekommen
+   kann. Ein Verfahren zuerst dort einzusetzen, wo man die Antwort schon ahnt,
+   prüft das Verfahren mit.
+2. Sauber abgrenzbarer Block, in **100 %** der brauchbaren Fälle vorhanden.
+3. Ein negativer Befund wäre handlungsrelevant: der Fakt steht in sechs Prompts.
+
+**Zweitkandidat: `antizyklisch`** — der größte Block, und nach der
+Schritt-7-Entscheidung („kein Rollout mangels Daten für die anderen Klassen")
+ist offen, ob er wenigstens bei Krypto trägt.
+
+#### Die Grundmenge, hart gefiltert
+
+122 von 268 Faktensätzen decken bei **Horizont 7** die volle Beobachtungsdauer
+ab; 104 LONG, 18 SHORT, 12 Symbole. Die übrigen 146 fallen wegen zu kurzer
+Kurshistorie heraus — **vor** dem ersten Aufruf, nicht danach.
+
+#### Die Entscheidungsregel steht vor dem Lauf fest
+
+| Regel | Wert |
+|---|---|
+| ERÖFFNEN-Wächter (Vorrang vor allem) | Einbruch ≥ 10 pp ⇒ disqualifiziert |
+| Mindestzahl gepaarter Fälle | 5 |
+| Maßstab | CRV-Breakeven `1/(1+CRV)` |
+| Nachweis | Bootstrap-Vertrauensbereich der gepaarten Differenz **ohne die Null** |
+| „Tendenz" gilt nur | wenn sie beim Aufstocken hält oder wächst |
+
+#### Vier Gegenprüfungen, ohne die kein Ergebnis berichtet wird
+
+1. **A/A′-Nullabgleich.** Zwei identische Arme liefern die Eigenstreuung. Ohne
+   sie ist jede Zahl unbrauchbar.
+2. **Gepaart je Fall, nicht über Mittelwerte.** Der erste Entwurf verglich zwei
+   Einzelzahlen und produzierte im Trockenlauf einen **Fehlalarm**: das
+   nachgebildete Modell hatte keine Fakt-Abhängigkeit, gemeldet wurde trotzdem
+   „TENDENZ: verschlechtert" (−0,078 R gegen 0,067 R Rauschboden). Seit der
+   Umstellung auf gepaarte Differenzen mit Bootstrap-Intervall lautet dasselbe
+   Urteil korrekt **im Rauschen** (+0,014 R, [−0,088; +0,112], 48 Fälle).
+3. **Trockenlauf mit nachgebildetem Modell vor jedem echten Lauf.** Er hat schon
+   zwei eigene Fehler gefunden: den Fehlalarm oben und einen falschen Preis-
+   schlüssel im Testmodell, der die bewertbare Menge von 97 auf 16 gedrückt und
+   damit eine viel zu kleine Stichprobe vorgetäuscht hätte.
+4. **Leerlauf-Wache.** Unter 30 brauchbaren Fällen wird **kein einziger Aufruf**
+   abgesetzt.
+
+#### Was gespeichert wird, damit nicht zweimal gemessen werden muss
+
+* **Jede Rohantwort** landet im Protokoll. Eine Neuauswertung mit anderem
+  Horizont, anderer Entscheidungsregel oder nach einem gefundenen
+  Auswertungsfehler braucht **keinen neuen Aufruf**.
+* **Die A-Arme sind fakt-unabhängig** und werden über mehrere geprüfte Fakten
+  hinweg geteilt: k Fakten kosten `2 + k` Arme statt `3k`. Bei zwei Fakten sind
+  das vier statt sechs Durchläufen.
+* **Transportfehler** stehen in keinem Nenner und gelten bei der Wiederaufnahme
+  nicht als erledigt — sonst zementiert der erste missglückte Lauf seine Lücken.
+
+**Umfang des ersten Laufs:** 122 Fälle × 3 Arme = **366 Aufrufe**, bei Geminis
+gemessenem Median von 5,5 s rund 35 Minuten seriell.
+
 ### Vorgeschaltet, weil billiger als alles andere
 
 Bevor „null Signale" als Qualitätsproblem behandelt wird, muss die **mechanische

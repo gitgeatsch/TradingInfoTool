@@ -77,6 +77,10 @@ class ArmBilanz:
     r_werte: list[float] = field(default_factory=list)
     crvs: list[float] = field(default_factory=list)
     nicht_bewertbar: int = 0
+    # R je Fall-Index. Noetig fuer den GEPAARTEN Vergleich: nur wenn beide Arme
+    # denselben Fall bewertet haben, ist ihre Differenz eine Aussage ueber den
+    # Fakt und nicht ueber die Fallauswahl.
+    r_je_fall: dict = field(default_factory=dict)
 
     @property
     def entscheidungen(self) -> int:
@@ -121,6 +125,9 @@ class Nachweis:
     eroeffnen_einbruch_pp: float | None
     urteil: str
     begruendung: str
+    gepaarte_faelle: int = 0
+    ci_unten: float | None = None
+    ci_oben: float | None = None
 
 
 def zonen_aus_antwort(antwort: dict) -> dict | None:
@@ -164,7 +171,7 @@ def bewerte_arm(name: str, provider: Callable[[dict], dict],
 
     `faelle` sind dicts mit `fakten`, `symbol`, `created_at`."""
     bilanz = ArmBilanz(name=name)
-    for fall in faelle:
+    for idx, fall in enumerate(faelle):
         try:
             antwort = provider(fall["fakten"])
         except TransportFehler:
@@ -192,6 +199,7 @@ def bewerte_arm(name: str, provider: Callable[[dict], dict],
             continue
         bilanz.r_werte.append(sim["r"])
         bilanz.crvs.append(z["crv"])
+        bilanz.r_je_fall[idx] = sim["r"]
     return bilanz
 
 
@@ -209,13 +217,37 @@ def nachweisrahmen(provider: Callable[[dict], dict], faelle: list[dict],
     ohne = [{**f, "fakten": _entferne_pfad(f["fakten"], fakt_pfad)} for f in faelle]
     b = bewerte_arm("B", provider, ohne, reihen, horizont)
 
-    m1, m2, mb = a1.mittel_r, a2.mittel_r, b.mittel_r
-    rauschboden = abs(m1 - m2) if (m1 is not None and m2 is not None) else None
-    # Wirkung gegen den MITTELWERT beider A-Arme - ein einzelner Arm waere
-    # selbst nur eine Ziehung aus dem Rauschen.
-    wirkung = None
-    if mb is not None and m1 is not None and m2 is not None:
-        wirkung = mb - (m1 + m2) / 2.0
+    # --- GEPAART rechnen, nicht ueber Mittelwerte ---------------------------
+    #
+    # WARUM DAS NOETIG WAR. Die erste Fassung verglich zwei Zahlen: den Abstand
+    # der A-Mittelwerte (Rauschboden) gegen den Abstand von B zu A (Wirkung).
+    # Beide sind EINE Ziehung. Der Trockenlauf vom 09.08. hat den Fehler
+    # sofort gezeigt: das nachgebildete Modell hatte KEINE Fakt-Abhaengigkeit,
+    # die wahre Wirkung war also null - gemeldet wurde "TENDENZ: Fakt
+    # verschlechtert das Ergebnis" (-0,078 R gegen Rauschboden 0,067 R). Ein
+    # Fehlalarm aus reinem Muenzwurf, dieselbe Familie wie "Tendenz auf n=1".
+    #
+    # Jetzt wird JE FALL verglichen - beide Arme haben denselben Faktensatz
+    # gesehen, ihre Differenz ist also eine Aussage ueber den Fakt und nicht
+    # ueber die Fallauswahl. Aus den gepaarten Differenzen kommt ein
+    # Bootstrap-Intervall; einschliesst es die Null, ist nichts nachgewiesen.
+    gemeinsam = sorted(set(a1.r_je_fall) & set(a2.r_je_fall) & set(b.r_je_fall))
+    deltas = [b.r_je_fall[i] - (a1.r_je_fall[i] + a2.r_je_fall[i]) / 2.0
+              for i in gemeinsam]
+    rausch_deltas = [a1.r_je_fall[i] - a2.r_je_fall[i] for i in gemeinsam]
+
+    wirkung = statistics.mean(deltas) if deltas else None
+    # Rauschboden: wie weit streuen zwei IDENTISCHE Arme gegeneinander? Als
+    # Streuungsmass, nicht als Differenz zweier Mittelwerte.
+    rauschboden = (statistics.pstdev(rausch_deltas) if len(rausch_deltas) > 1
+                   else None)
+
+    ci_unten = ci_oben = None
+    if len(deltas) >= 2:
+        from agent.krypto.backward_tracking import bootstrap_unsicherheit
+        boot = bootstrap_unsicherheit(deltas)
+        ci_unten = boot.get("expectancy_ci_unten")
+        ci_oben = boot.get("expectancy_ci_oben")
 
     q_a = None
     if a1.eroeffnen_quote is not None and a2.eroeffnen_quote is not None:
@@ -230,29 +262,33 @@ def nachweisrahmen(provider: Callable[[dict], dict], faelle: list[dict],
             f"EROEFFNEN-Quote bricht um {einbruch:.1f} pp ein "
             f"(Grenze {eroeffnen_einbruch_pp:.1f} pp). Der Waechter hat Vorrang "
             f"vor jeder Ergebnisbilanz - das Ziel sind MEHR Signale.")
-    elif min(len(a1.r_werte), len(a2.r_werte), len(b.r_werte)) < mindest_bewertbar:
+    elif len(gemeinsam) < mindest_bewertbar:
         urteil, grund = "UNGEMESSEN", (
-            f"Zu wenige bewertbare Faelle (A1 {len(a1.r_werte)}, A2 "
-            f"{len(a2.r_werte)}, B {len(b.r_werte)}; noetig {mindest_bewertbar} "
-            f"je Arm). Kein Urteil - und ausdruecklich KEIN Negativbefund.")
-    elif wirkung is None or rauschboden is None:
-        urteil, grund = "UNGEMESSEN", "Kein Mittelwert in mindestens einem Arm."
-    elif abs(wirkung) <= rauschboden:
+            f"Nur {len(gemeinsam)} Faelle wurden von ALLEN DREI Armen bewertet "
+            f"(noetig {mindest_bewertbar}). Kein Urteil - und ausdruecklich "
+            f"KEIN Negativbefund.")
+    elif wirkung is None or ci_unten is None or ci_oben is None:
+        urteil, grund = "UNGEMESSEN", "Kein gepaarter Vergleich moeglich."
+    elif ci_unten <= 0.0 <= ci_oben:
         urteil, grund = "IM RAUSCHEN", (
-            f"Wirkung {wirkung:+.3f} R liegt innerhalb des Eigenrauschens "
-            f"{rauschboden:.3f} R (A1 gegen A2). Nicht unterscheidbar von zwei "
-            f"identischen Laeufen.")
+            f"Wirkung {wirkung:+.3f} R, Vertrauensbereich "
+            f"[{ci_unten:+.3f}; {ci_oben:+.3f}] schliesst die Null ein. Nicht "
+            f"unterscheidbar von zwei identischen Laeufen "
+            f"(Eigenstreuung {rauschboden:.3f} R).")
     else:
         richtung = "verschlechtert" if wirkung < 0 else "verbessert"
         urteil, grund = f"TENDENZ: Fakt {richtung} das Ergebnis", (
-            f"Wirkung {wirkung:+.3f} R gegen Rauschboden {rauschboden:.3f} R. "
-            f"Gilt NUR als Tendenz: sie muss beim Aufstocken der Stichprobe "
-            f"halten oder wachsen, nicht schrumpfen.")
+            f"Wirkung {wirkung:+.3f} R, Vertrauensbereich "
+            f"[{ci_unten:+.3f}; {ci_oben:+.3f}] ohne die Null, bei "
+            f"{len(gemeinsam)} gepaarten Faellen. Gilt NUR als Tendenz: sie "
+            f"muss beim Aufstocken der Stichprobe halten oder wachsen.")
 
     return Nachweis(fakt=fakt_pfad, a1=a1, a2=a2, b=b,
                     rauschboden_r=rauschboden, wirkung_r=wirkung,
                     eroeffnen_einbruch_pp=einbruch,
-                    urteil=urteil, begruendung=grund)
+                    urteil=urteil, begruendung=grund,
+                    gepaarte_faelle=len(gemeinsam),
+                    ci_unten=ci_unten, ci_oben=ci_oben)
 
 
 def bericht(n: Nachweis) -> str:
@@ -268,9 +304,13 @@ def bericht(n: Nachweis) -> str:
                  f"{len(arm.r_werte):>9} {m:>9} {t:>8} {be:>10}")
     z.append("")
     if n.rauschboden_r is not None:
-        z.append(f"  Rauschboden (A1 gegen A2): {n.rauschboden_r:.3f} R")
+        z.append(f"  Eigenstreuung (A1-A2):     {n.rauschboden_r:.3f} R")
     if n.wirkung_r is not None:
-        z.append(f"  Wirkung (B gegen A):       {n.wirkung_r:+.3f} R")
+        z.append(f"  Wirkung (B gegen A):       {n.wirkung_r:+.3f} R "
+                 f"(gepaart ueber {n.gepaarte_faelle} Faelle)")
+    if n.ci_unten is not None:
+        z.append(f"  Vertrauensbereich:         "
+                 f"[{n.ci_unten:+.3f}; {n.ci_oben:+.3f}]")
     if n.eroeffnen_einbruch_pp is not None:
         z.append(f"  EROEFFNEN-Einbruch:        {n.eroeffnen_einbruch_pp:+.1f} pp")
     z.append("")
