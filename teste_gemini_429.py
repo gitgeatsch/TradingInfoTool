@@ -19,7 +19,25 @@ from __future__ import annotations
 
 import sys
 
-import api.gemini as G
+import database.api_health as _health
+import database.db as _db
+
+# DIE DB ABKLEMMEN, BEVOR api.gemini importiert wird.
+#
+# `chat()` traegt `@track_api_health("gemini")`, und der Dekorator schreibt bei
+# JEDEM Aufruf in die echte Datenbank - auch wenn die Session eine Attrappe
+# ist. Die erste Fassung dieses Tests hat damit einen ERFUNDENEN
+# "HTTP 400: Ungueltiges Schema" in `api_health_status` hinterlassen und die
+# Gesundheitsdaten des Anbieters verfaelscht. Ein Test, der Diagnosedaten
+# beschreibt, macht die Diagnose kaputt, die er schuetzen soll.
+#
+# Nicht den Dekorator patchen - der sitzt beim Import fest. Stattdessen die
+# beiden Schreibfunktionen, die er benutzt.
+_health.db.record_api_health_error = lambda *a, **kw: None
+_health.db.record_api_health_success = lambda *a, **kw: None
+_db.increment_api_call_counter = lambda *a, **kw: 0
+
+import api.gemini as G  # noqa: E402
 
 _ok, _fehler = 0, []
 
