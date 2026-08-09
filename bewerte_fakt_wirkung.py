@@ -290,15 +290,35 @@ def _ist_eroeffnung(antwort: dict) -> bool:
                                                       "VERKAUFEN"}
 
 
-def bewerte_arm(name: str, provider: Callable[[dict], dict],
-                faelle: list[dict], reihen: dict, horizont: int) -> ArmBilanz:
+def bewerte_arm(name: str, provider: Callable, faelle: list[dict],
+                reihen: dict, horizont: int) -> ArmBilanz:
     """Ein Arm ueber alle Faelle: fragen, Zonen lesen, gegen den Kurs bewerten.
 
-    `faelle` sind dicts mit `fakten`, `symbol`, `created_at`."""
+    `faelle` sind dicts mit `fakten`, `symbol`, `created_at`.
+
+    DER ARMNAME WIRD DURCHGEREICHT (Korrektur 2026-08-09). `provider` bekommt
+    ihn als zweites Argument, sofern er es annimmt. Ohne das kann ein Provider,
+    der Antworten protokolliert, A1, A2 und B nicht auseinanderhalten - und
+    genau das ist im ersten echten Lauf passiert: das Protokoll fuehrte alle
+    drei Arme unter dem FAKTNAMEN. Eine Wiederaufnahme daraus haette allen drei
+    Armen dieselbe Antwort gegeben und sie stillschweigend gleichgemacht:
+    Rauschboden null, Wirkung null, Urteil "im Rauschen" - ein perfekt
+    plausibles Ergebnis aus einem kaputten Protokoll.
+
+    Rueckwaertskompatibel: Provider mit nur einem Parameter werden weiterhin
+    ohne den Armnamen aufgerufen."""
+    import inspect
+
+    try:
+        nimmt_arm = len(inspect.signature(provider).parameters) >= 2
+    except (TypeError, ValueError):
+        nimmt_arm = False
+
     bilanz = ArmBilanz(name=name)
     for idx, fall in enumerate(faelle):
         try:
-            antwort = provider(fall["fakten"])
+            antwort = (provider(fall["fakten"], name) if nimmt_arm
+                       else provider(fall["fakten"]))
         except TransportFehler:
             bilanz.transportfehler += 1
             continue

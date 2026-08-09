@@ -191,11 +191,16 @@ def _echter_provider(protokoll: list, arm_name: str, bekannt: dict,
 
     zaehler = [0]
 
-    def modell(fakten):
+    def modell(fakten, arm=None):
+        # `arm` kommt seit 09.08. von bewerte_arm() und ist A1/A2/B. Ohne ihn
+        # landeten im ersten echten Lauf alle drei Arme unter demselben
+        # Schluessel (dem FAKTNAMEN) - eine Wiederaufnahme daraus haette sie
+        # stillschweigend gleichgemacht.
+        schluessel_arm = f"{arm_name}/{arm}" if arm else arm_name
         fall_id = fakten.get("_fall_id")
-        vorhanden = bekannt.get((arm_name, fall_id))
+        vorhanden = bekannt.get((schluessel_arm, fall_id))
         if vorhanden is not None:
-            protokoll.append({"arm": arm_name, "fall_id": fall_id,
+            protokoll.append({"arm": schluessel_arm, "fall_id": fall_id,
                               "antwort": vorhanden, "quelle": "wiederverwendet"})
             return vorhanden
         # Drossel: der freie Endpunkt bricht bei schnellen Serien ein.
@@ -211,13 +216,13 @@ def _echter_provider(protokoll: list, arm_name: str, bekannt: dict,
             # ein Formfehler dagegen endet real in einem HALTEN-Signal.
             if any(w in str(exc) or w in name for w in
                    ("429", "Timeout", "timeout", "Connection", "503", "502")):
-                protokoll.append({"arm": arm_name, "fall_id": fall_id,
+                protokoll.append({"arm": schluessel_arm, "fall_id": fall_id,
                                   "fehler": "transport", "typ": name})
                 raise nw.TransportFehler(str(exc)) from exc
-            protokoll.append({"arm": arm_name, "fall_id": fall_id,
+            protokoll.append({"arm": schluessel_arm, "fall_id": fall_id,
                               "fehler": "form", "typ": name})
             return {"kein_json": True}
-        protokoll.append({"arm": arm_name, "fall_id": fall_id, "antwort": {
+        protokoll.append({"arm": schluessel_arm, "fall_id": fall_id, "antwort": {
             k: v for k, v in antwort.items() if k != "_raw_response"}})
         return antwort
 

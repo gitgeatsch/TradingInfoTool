@@ -286,6 +286,33 @@ pruefe("K5 bei vier Clustern bleibt der Test zurueckhaltend",
        p_wenig is not None and p_wenig > 0.01,
        f"p = {p_wenig} trotz durchgehend positiver Werte")
 
+# --- L) Der Armname erreicht den Provider ----------------------------------
+# Der erste echte Lauf (09.08.) protokollierte alle drei Arme unter demselben
+# Schluessel, weil der Provider nicht wusste, welcher Arm er gerade ist. Eine
+# Wiederaufnahme daraus haette A1, A2 und B stillschweigend gleichgemacht:
+# Rauschboden null, Wirkung null, Urteil "im Rauschen" - ein plausibles
+# Ergebnis aus einem kaputten Protokoll. Das ist die gefaehrlichste Sorte
+# Fehler, weil nichts daran auffaellt.
+gesehen = []
+
+
+def merkt_sich_arm(fakten, arm=None):
+    gesehen.append(arm)
+    return _antwort(100.0, 95.0, 115.0)
+
+
+nw.nachweisrahmen(merkt_sich_arm, FAELLE_RAUF[:3], "extra.wert", REIHEN)
+pruefe("L1 der Provider sieht A1, A2 und B getrennt",
+       set(gesehen) == {"A1", "A2", "B"}, str(sorted(set(gesehen))))
+
+# Gegenprobe: ein Provider mit nur EINEM Parameter muss weiter funktionieren -
+# sonst braeche jedes bestehende Skript.
+alt_stil = []
+n_alt = nw.nachweisrahmen(lambda f: (alt_stil.append(1), _antwort(100.0, 95.0, 115.0))[1],
+                          FAELLE_RAUF[:3], "extra.wert", REIHEN)
+pruefe("L2 Provider im alten Stil (ein Parameter) laeuft weiter",
+       len(alt_stil) == 9, f"{len(alt_stil)} Aufrufe")
+
 print()
 print(nw.bericht(nw.nachweisrahmen(enger_ohne_fakt, FAELLE_RAUF, "extra.wert", REIHEN)))
 print("\n" + ("ALLE TESTS BESTANDEN" if not fehler else f"FEHLER: {fehler}"))
