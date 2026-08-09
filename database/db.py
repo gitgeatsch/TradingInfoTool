@@ -3948,7 +3948,8 @@ def aktueller_monat_utc() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m")
 
 
-def increment_api_call_counter(conn: sqlite3.Connection, source: str) -> int:
+def increment_api_call_counter(conn: sqlite3.Connection, source: str,
+                               tag: str | None = None) -> int:
     """Kontingent-Tracking (2026-07-31, siehe api_call_kontingent-Tabellen-
     Kommentar). Erhoeht den Zaehler fuer `source` im aktuellen UTC-Monat um 1
     und gibt den neuen Stand zurueck (fuer den Aufrufer, der ggf. sofort eine
@@ -3956,9 +3957,16 @@ def increment_api_call_counter(conn: sqlite3.Connection, source: str) -> int:
 
     Erhoeht zusaetzlich den Tages-Zaehler (2026-08-01, siehe api_call_
     kontingent_taeglich-Tabellenkommentar) - gleicher Aufrufer, gleiche
-    Transaktion, kein zweiter Fehlerpunkt."""
+    Transaktion, kein zweiter Fehlerpunkt.
+
+    `tag` ist seit 2026-08-09 ueberschreibbar. Grund: Googles Free-Tier-
+    Kontingent setzt zu Mitternacht PAZIFIK zurueck, nicht zu Mitternacht UTC -
+    sieben bis acht Stunden Versatz. Ein UTC-Tageszaehler steht in genau dem
+    Fenster auf 0, in dem Google noch den Vortag zaehlt. Wer gegen ein echtes
+    Anbieter-Kontingent buchen will, reicht dessen Tagesschluessel herein;
+    alle bestehenden Aufrufer bleiben unveraendert auf UTC."""
     monat = aktueller_monat_utc()
-    tag = heutiges_datum_utc()
+    tag = tag or heutiges_datum_utc()
     conn.execute(
         "INSERT INTO api_call_kontingent (source, monat, anzahl) VALUES (?, ?, 1) "
         "ON CONFLICT(source, monat) DO UPDATE SET anzahl = anzahl + 1",

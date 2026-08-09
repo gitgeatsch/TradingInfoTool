@@ -165,6 +165,10 @@ _LIVE_GETTER = frozenset({
     "_get_api_health",
     # Verbrauchszaehler, aendert sich mit jedem Abruf gegen CoinGecko.
     "_get_coingecko_quota",
+    # Dito fuer die LLM-Tagesbudgets. Eine zwischengespeicherte Zahl waere
+    # hier besonders schaedlich: wer nachsieht, weil die Signale ausbleiben,
+    # bekaeme den Stand von vor zwei Minuten.
+    "_get_llm_kontingent",
     # Liest den zuletzt gespeicherten Portfolio-/Z-3-Stand, ist selbst billig
     # und haengt am uebergebenen Portfoliowert statt an der Datenbank.
     "_get_z3_und_bewertung",
@@ -293,6 +297,12 @@ class RemoteStatus:
     # CoinGecko-Monats-Kontingent (2026-07-31, echte 80%-Warnmail ausgeloest,
     # siehe scheduler/background.py::coingecko_quota_check_job()).
     coingecko_quota: dict | None = None
+    # LLM-Tageskontingent je MODELL (2026-08-09). Am 09.08. haben Messlaeufe am
+    # Desktop unbemerkt Geminis Tagesbudget aufgebraucht und die Produktion am
+    # Notebook stillgelegt - das Kontingent haengt am Schluessel, nicht am
+    # Geraet. Es gab keine Stelle, an der man das haette sehen koennen; der
+    # Verbrauch musste hinterher aus Logdateien rekonstruiert werden.
+    llm_kontingent: dict | None = None
     # Wartende Themen-Vorschlaege (2026-08-07, S-3). Die Statusverteilung
     # "14 beobachtung" sagt nichts ueber den Vorlauf - diese Karte sagt, WANN
     # etwas reif wird und wie viele am selben Tag.
@@ -336,6 +346,7 @@ class RemoteStatus:
             "selbst_gewaehltes_halten_performance_nach_grund": self.selbst_gewaehltes_halten_performance_nach_grund,
             "marktscan_erfolgsquote": self.marktscan_erfolgsquote,
             "coingecko_quota": self.coingecko_quota,
+            "llm_kontingent": self.llm_kontingent,
             "wartende_themen": self.wartende_themen,
             "themenfeld_erfolg": self.themenfeld_erfolg,
         }
@@ -463,6 +474,7 @@ def _build_status_roh(conn: sqlite3.Connection, watchlist: list, log_path: Path,
         ),
         marktscan_erfolgsquote=_safe(_get_marktscan_erfolgsquote, conn),
         coingecko_quota=_safe(_get_coingecko_quota, conn),
+        llm_kontingent=_safe(_get_llm_kontingent, conn),
         wartende_themen=_safe(_get_wartende_themen, conn),
         themenfeld_erfolg=_safe(_get_themenfeld_erfolg, conn),
     )
@@ -504,6 +516,51 @@ def _get_coingecko_quota(conn: sqlite3.Connection) -> dict | None:
         # muessen.
         "anzahl_heute": db.get_api_call_counter_taeglich(conn, "coingecko"),
     }
+
+
+def _get_llm_kontingent(conn: sqlite3.Connection) -> dict | None:
+    """Geminis Tagesbudget je MODELL - reiner Lesezugriff, keine neue Logik.
+
+    WARUM DIESE KARTE EXISTIERT (2026-08-09). Am 09.08. haben Messlaeufe am
+    Desktop Geminis Tagesbudget aufgebraucht; die Produktion am Notebook stand
+    danach den Rest des Tages. Das Kontingent haengt am API-SCHLUESSEL, nicht
+    am Geraet - beide Rechner schoepfen aus demselben Topf. Es gab keine
+    Stelle, an der das sichtbar gewesen waere: der Verbrauch musste hinterher
+    aus Logdateien geschaetzt werden.
+
+    DREI EIGENHEITEN, die die CoinGecko-Karte nicht hat:
+
+      je MODELL   Google begrenzt `...PerProjectPerModel...`. Ein erschoepftes
+                  Modell sagt nichts ueber das Geschwistermodell aus.
+      Pazifik     Der Zaehler laeuft auf Googles Tagesgrenze (Mitternacht
+                  Pazifik), nicht auf UTC. Ein UTC-Datum stuende hier zwischen
+                  02:00 und 09:00 MESZ faelschlich auf 0.
+      gemessen    Die 500 stammen aus Googles eigenem Fehlerkoerper
+                  (pruefe_gemini_verhalten.py, 09.08.), nicht aus Recherche.
+
+    None, wenn heute noch kein Aufruf gebucht wurde - dann gibt es nichts zu
+    zeigen und die Karte bleibt leer, statt ein falsches "0 von 500" zu
+    behaupten, das auch "wir zaehlen gerade nicht" bedeuten koennte."""
+    from api.gemini import TAGESBUDGET_JE_MODELL, _kontingent_tag
+
+    tag = _kontingent_tag()
+    zeilen = conn.execute(
+        "SELECT source, anzahl FROM api_call_kontingent_taeglich "
+        "WHERE tag = ? AND source LIKE 'gemini:%' ORDER BY anzahl DESC",
+        (tag,),
+    ).fetchall()
+    if not zeilen:
+        return None
+    modelle = []
+    for r in zeilen:
+        anzahl = r["anzahl"]
+        modelle.append({
+            "modell": r["source"].split(":", 1)[1],
+            "anzahl": anzahl,
+            "limit": TAGESBUDGET_JE_MODELL,
+            "prozent": round(anzahl / TAGESBUDGET_JE_MODELL * 100, 1),
+        })
+    return {"tag_pazifik": tag, "modelle": modelle}
 
 
 @_gecacht

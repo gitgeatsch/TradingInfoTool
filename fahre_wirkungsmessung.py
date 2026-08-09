@@ -42,48 +42,77 @@ def melde(text: str) -> None:
     print(f"[{time.strftime('%H:%M:%S')}] {text}", flush=True)
 
 
-def stufe_1_kontingent(versuche: int = 3, abstand: float = 7.0) -> bool:
-    """Kommt ueberhaupt ein Aufruf durch?
+def stufe_1_modellwahl(bedarf: int) -> str | None:
+    """Welches Modell hat heute genug Budget fuer diesen Lauf?
 
-    Drei Aufrufe mit 7 s Abstand - unter der dokumentierten 10/min-Drossel und
-    damit ein fairer Test. Am 09.08. abends kamen bei 8 s und 10 s Abstand
-    NULL von acht durch; wenn hier auch nichts geht, ist der Tageswechsel
-    nicht erfolgt und jede weitere Stufe waere Verschwendung."""
+    NEU AM 09.08., nachdem die Messung ergab, dass Google
+    `...PerDayPerProjectPerModel...` begrenzt: 500 Aufrufe pro Tag, pro
+    Projekt, pro MODELL. Drei Folgerungen stecken in dieser Funktion:
+
+      je Modell   Ein erschoepftes Modell heisst nicht erschoepfter Zugang.
+                  `gemini-3.5-flash-lite` war unberuehrt, waehrend unser
+                  Produktionsmodell am Anschlag stand.
+      am Schluessel  Das Budget haengt nicht am Geraet. Ein Messlauf am
+                  Desktop nimmt der Produktion am Notebook direkt Kontingent
+                  weg - deshalb steht das PRODUKTIONSMODELL hier hinten und
+                  nicht vorn. Die Messung weicht aus, nicht die Produktion.
+      vorher rechnen  `bedarf` wird gegen den Zaehler geprueft, BEVOR der
+                  erste Aufruf faellt. Am 09.08. lief ein Lauf drei Stunden
+                  gegen ein leeres Budget.
+
+    Was hier bewusst NICHT steht: `gemini-flash-lite-latest`. Der Alias
+    wechselt unangekuendigt das Modell (siehe api/gemini.py-Kommentar). In
+    einem unbeaufsichtigten Lauf waere ein Modellwechsel mitten in der Messung
+    ein stiller Bruch der Vergleichbarkeit - genau die Sorte Fehler, die diese
+    Messung finden soll."""
     import os
 
     import requests
 
     import config as config_module
-    from api.gemini import BASE_URL, DEFAULT_MODEL
+    from api.gemini import DEFAULT_MODEL, GeminiClient
     config_module.load_env()
     schluessel = os.environ.get("GEMINI_API_KEY")
     if not schluessel:
         melde("ABBRUCH Stufe 1: GEMINI_API_KEY fehlt.")
-        return False
-    ok = 0
-    for i in range(versuche):
+        return None
+
+    client = GeminiClient(schluessel)
+    kandidaten = ("gemini-3.5-flash-lite", DEFAULT_MODEL)
+    melde(f"Stufe 1: Bedarf {bedarf} Aufrufe.")
+    for modell in kandidaten:
+        stand = client.budget_status(modell)
+        rolle = "Produktionsmodell" if modell == DEFAULT_MODEL else "Ausweichmodell"
+        melde(f"  {modell} ({rolle}): {stand['verbraucht']}/{stand['budget']} "
+              f"verbraucht am {stand['tag_pazifik']}, "
+              f"{stand['verfuegbar']} frei")
+        if stand["verfuegbar"] < bedarf:
+            melde("      zu wenig - naechster Kandidat.")
+            continue
+        # Der Zaehler kann zu niedrig stehen (Aufrufe von einem anderen Geraet
+        # auf demselben Schluessel sieht er nicht). Deshalb zusaetzlich EIN
+        # echter Aufruf gegen den nativen Endpunkt - der sagt im Fehlerfall
+        # selbst, welches Kontingent gerissen ist.
+        url = ("https://generativelanguage.googleapis.com/v1beta/models/"
+               f"{modell}:generateContent")
         try:
             antwort = requests.post(
-                BASE_URL,
-                json={"model": DEFAULT_MODEL, "temperature": 0.1,
-                      "messages": [{"role": "user", "content": "OK"}]},
-                headers={"Authorization": f"Bearer {schluessel}"}, timeout=45)
+                url, headers={"x-goog-api-key": schluessel},
+                json={"contents": [{"parts": [{"text": "hi"}]}],
+                      "generationConfig": {"maxOutputTokens": 1}}, timeout=45)
         except Exception as exc:  # noqa: BLE001
-            melde(f"  Probe {i + 1}: Netzwerkfehler {type(exc).__name__}")
-            time.sleep(abstand)
+            melde(f"      Netzwerkfehler {type(exc).__name__} - naechster.")
             continue
         if antwort.status_code == 200:
-            ok += 1
-        else:
-            melde(f"  Probe {i + 1}: HTTP {antwort.status_code} "
-                  f"{antwort.text[:120]}")
-        time.sleep(abstand)
-    melde(f"Stufe 1: {ok} von {versuche} Probeaufrufen erfolgreich.")
-    if ok < versuche:
-        melde("ABBRUCH: das Kontingent traegt keinen Dauerlauf. Kein "
-              "weiterer Versuch - das kostet nur, was morgen fehlt.")
-        return False
-    return True
+            melde(f"      Probeaufruf OK -> dieser Lauf nutzt {modell}.")
+            return modell
+        melde(f"      Probeaufruf HTTP {antwort.status_code} - "
+              f"{antwort.text[:200]}")
+        time.sleep(3)
+
+    melde("ABBRUCH Stufe 1: kein Modell hat heute genug Budget. Kein "
+          "weiterer Versuch - das kostet nur, was die Produktion braucht.")
+    return None
 
 
 def _lauf(name: str, argumente: list[str], zeitlimit: int) -> tuple[bool, str]:
@@ -111,13 +140,27 @@ def main() -> int:
     melde("WIRKUNGSMESSUNG - vier Stufen, jede ein Tor")
     melde("=" * 70)
 
-    if not args.ohne_kontingentprobe and not stufe_1_kontingent():
-        return 1
+    # Bedarf = Anker x Arme, plus Vorflug (2 x 5) und ein wenig Luft fuer die
+    # Wiederholung bei ungueltiger Antwort (gemessen ~1,3 Versuche je Fall).
+    bedarf = int((args.anker + 2) * 5 * 1.35)
+    modell = None
+    if not args.ohne_kontingentprobe:
+        modell = stufe_1_modellwahl(bedarf)
+        if modell is None:
+            return 1
+    modell_argumente = ["--modell", modell] if modell else []
+    if modell and modell != "gemini-3.1-flash-lite":
+        melde(f"HINWEIS: die Messung laeuft auf {modell}, nicht auf dem "
+              f"Produktionsmodell - dessen Budget bleibt der Produktion. "
+              f"Preis: der Befund gilt streng genommen fuer dieses Modell; "
+              f"die Uebertragung ist eine Annahme. Der ARM-VERGLEICH bleibt "
+              f"gueltig, weil alle Arme dasselbe Modell sehen.")
 
     melde("--- Stufe 2: Vorflug (2 Anker x 5 Arme)")
     ok, ausgabe = _lauf("Vorflug", [
         "messe_umbau_wirkung.py", "--anker", "2", "--je-symbol", "1",
         "--anbieter", "gemini", "--pause", "0.2", "--trotzdem-weiter",
+        *modell_argumente,
         "--ausgabe", str(AUSGABE / "wirkung_vorflug.json")], zeitlimit=900)
     if not ok:
         melde(f"ABBRUCH Stufe 2: {ausgabe[-300:] if ausgabe else 'unbekannt'}")
@@ -133,6 +176,7 @@ def main() -> int:
     ok, ausgabe = _lauf("Hauptlauf", [
         "messe_umbau_wirkung.py", "--anker", str(args.anker),
         "--je-symbol", "5", "--anbieter", "gemini", "--pause", "0.2",
+        *modell_argumente,
         "--ausgabe", str(AUSGABE / "wirkung.json")],
         zeitlimit=60 * 90)
     if not ok:

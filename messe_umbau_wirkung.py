@@ -143,6 +143,12 @@ def main() -> int:
     p.add_argument("--trocken", action="store_true")
     p.add_argument("--anbieter", choices=("gemini", "openrouter"),
                    default="gemini")
+    # 2026-08-09: Geminis Kontingent ist PRO MODELL (500/Tag). Ein erschoepftes
+    # Modell heisst nicht erschoepfter Zugang - das Geschwistermodell hat einen
+    # eigenen Topf. Ohne diese Option musste ein Messlauf warten, bis unser
+    # Produktionsmodell wieder frei war, und nahm ihm dann das Budget weg.
+    p.add_argument("--modell", default=None,
+                   help="Gemini-Modell; ohne Angabe das Vorgabemodell")
     p.add_argument("--db", default="C:/Users/Geatsch/AppData/Local/Temp/claude/"
                    "D--CLAUDE-Projects-SoftwareProjekte-TradingInfoTool/"
                    "9e774fdd-5a46-48f6-9d20-e6614cad35af/scratchpad/prod_kopie.db")
@@ -283,24 +289,43 @@ def main() -> int:
             from api.openrouter import OpenRouterClient
             client = OpenRouterClient(os.environ["OPENROUTER_API_KEY"])
         else:
-            from api.gemini import GeminiClient
+            from api.gemini import DEFAULT_MODEL, GeminiClient
             client = GeminiClient(os.environ["GEMINI_API_KEY"])
+            modell = args.modell or DEFAULT_MODEL
+            stand = client.budget_status(modell)
+            print(f"\nTagesbudget {modell}: {stand['verbraucht']} von "
+                  f"{stand['budget']} verbraucht ({stand['tag_pazifik']}, "
+                  f"Pazifik), {stand['verfuegbar']} frei")
+            # Der Bedarf steht VOR dem Lauf fest - also auch vorher pruefen,
+            # ob er hineinpasst. Am 09.08. lief ein Lauf drei Stunden gegen ein
+            # leeres Budget, weil niemand vorher gerechnet hat.
+            bedarf = args.anker * 5
+            if stand["verfuegbar"] < bedarf:
+                print(f"[FEHLER] Bedarf {bedarf} Aufrufe, verfuegbar "
+                      f"{stand['verfuegbar']}. ABBRUCH - ein angefangener Lauf "
+                      f"waere weder auswertbar noch umsonst.")
+                return 1
         fmt = llm_schema.response_format_fuer(client, "agent.krypto.hebel_analyst")
         # Den Anbieter NICHT hartkodiert nennen - eine Anzeige, die "gemini"
         # sagt, waehrend OpenRouter laeuft, ist der Anfang eines falschen
         # Schlusses. Genau das ist am 09.08. passiert.
-        print(f"\nAnbieter {args.anbieter}, Antwortformat {fmt.get('type')}")
+        print(f"\nAnbieter {args.anbieter}"
+              + (f" / {args.modell}" if args.modell else "")
+              + f", Antwortformat {fmt.get('type')}")
 
         def frage(fakten, sym):
             letzter = None
             for _ in range(3):
                 time.sleep(args.pause)
                 try:
+                    zusatz = ({"model": args.modell}
+                              if args.modell and args.anbieter == "gemini"
+                              else {})
                     roh = client.chat(
                         [{"role": "system", "content": SYSTEM_PROMPT},
                          {"role": "user",
                           "content": json.dumps(fakten, ensure_ascii=False)}],
-                        temperature=0.2, response_format=fmt)
+                        temperature=0.2, response_format=fmt, **zusatz)
                     return _validate_hebel(json.loads(roh), sym)
                 except (json.JSONDecodeError, ValueError) as exc:
                     letzter = exc

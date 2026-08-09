@@ -64,7 +64,35 @@ def extrahiere_inhalt(daten: dict, anbieter: str) -> str:
         ) from exc
 
 
-def zaehle_aufruf(source: str) -> None:
+def verbrauch_heute(source: str, tag: str | None = None) -> int:
+    """Wie viele Aufrufe heute schon auf `source` gebucht sind.
+
+    Gegenstueck zu `zaehle_aufruf()` fuer einen Waechter, der VOR dem Aufruf
+    entscheidet. `tag` erlaubt den Tagesschluessel des Anbieters statt UTC
+    (Gemini setzt zu Mitternacht Pazifik zurueck).
+
+    Gibt 0 zurueck, wenn die Zaehlung nicht lesbar ist - ein Waechter, der
+    wegen eines fehlenden Zaehlers die Produktion anhaelt, waere schlimmer als
+    der ungezaehlte Aufruf. Der Aufrufer sieht am Rueckgabewert 0 nicht, ob
+    "noch nichts verbraucht" oder "nicht messbar" gilt; deshalb protokolliert
+    diese Funktion den Unterschied."""
+    import database.db as db          # lokal, s.u.
+
+    try:
+        conn = db.get_connection()
+        try:
+            return db.get_api_call_counter_taeglich(conn, source, tag)
+        finally:
+            conn.close()
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "Verbrauchszaehler fuer %s nicht lesbar (%s) - der Tageswaechter "
+            "arbeitet blind und laesst durch. init_db() legt "
+            "api_call_kontingent_taeglich an.", source, exc)
+        return 0
+
+
+def zaehle_aufruf(source: str, tag: str | None = None) -> None:
     """Zaehlt EINEN tatsaechlichen HTTP-Aufruf an einen LLM-Anbieter.
 
     WARUM DAS NOETIG IST (Teil B des Umbaus, 2026-08-09).
@@ -92,7 +120,7 @@ def zaehle_aufruf(source: str) -> None:
     try:
         conn = db.get_connection()
         try:
-            db.increment_api_call_counter(conn, source)
+            db.increment_api_call_counter(conn, source, tag)
         finally:
             conn.close()
     except Exception as exc:  # noqa: BLE001

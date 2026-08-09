@@ -431,3 +431,74 @@ unbegründeten Einseitigkeit — nicht ein bewiesenes Plus. Wer mehr behauptet,
 | `messe_regimephasen_llm.py` + `teste_regimephasen.py` | Marktphasen-Simulation (26 Prüfungen) |
 | `pruefe_regimephasen_vorflug.py` | Vorflugkontrolle für neu gebaute Clients |
 | `pruefe_llm_stabilitaet.py` | Rauschboden je Anbieter vor jedem großen Lauf |
+| `pruefe_gemini_verhalten.py` + `teste_gemini_tagesbudget.py` | Geminis echte Grenzen aus dem Fehlerkörper lesen (27 Prüfungen) |
+
+---
+
+## 7. Nachtrag 09.08. abends — warum die Produktion einen Tag stand
+
+**Gemessen, nicht recherchiert** (`pruefe_gemini_verhalten.py`, ein Aufruf):
+
+```
+quotaId    GenerateRequestsPerDayPerProjectPerModel-FreeTier
+Grenzwert  500
+```
+
+Drei Eigenschaften, die wir alle drei falsch hatten:
+
+| | bisherige Annahme | gemessen |
+|---|---|---|
+| **PerDay** | „nur ein Burst-Limit, Warten hilft" | Tageslimit — Warten hilft bis morgen früh nicht |
+| **PerProject** | Kontingent hängt am Gerät | hängt am **Schlüssel**: Desktop-Messläufe nehmen der Produktion direkt Budget weg |
+| **PerModel** | ein Topf für Gemini | **je Modell ein eigener Topf**; `gemini-3.5-flash-lite` war unberührt |
+
+### Warum wir es zwei Tage nicht gesehen haben
+
+Ich hatte behauptet, der OpenAI-Kompatibilitäts-Endpunkt verschlucke diese
+Angabe. **Das war falsch.** Er liefert dieselbe `QuotaFailure`, nur als
+JSON-**Liste** statt als Objekt. Unser Client hat den Fehlerkörper schlicht nie
+gelesen — `raise_for_status()` und fertig. Die Antwort stand in jedem einzelnen
+429 des Tages. Das war unsere Blindheit, nicht Googles Auskunftsverweigerung.
+
+### Warum das bestehende Tagesbudget nicht gegriffen hat
+
+`gemini_taegliches_budget` (Vorgabe 200) existiert seit dem 14.07. in
+`budget_allocator.py:446`. Vier Gründe, warum es die 500 nicht verhindert hat:
+
+1. Es sitzt im **Allocator** — Messskripte bauen sich einen `GeminiClient`
+   direkt und gehen vollständig daran vorbei. **Genau so sind die 500 gefallen.**
+2. Es zählt auf **UTC-Tag**, Google setzt auf **Pazifik-Mitternacht** zurück —
+   sieben Stunden Versatz, in denen der Zähler fälschlich auf 0 steht.
+3. Es zählt je **Anbieter**, begrenzt wird je **Modell**.
+4. Sein Zähler liest `api_call_kontingent_taeglich` — **die Tabelle fehlte in
+   der Desktop-DB**, der Aufruf scheiterte still (P-10) und fiel auf den
+   Datensatz-Zähler zurück, der Fehlschläge nicht mitzählt.
+
+### Was jetzt gebaut ist
+
+| Ort | Änderung |
+|---|---|
+| `api/gemini.py` | Fehlerkörper wird geparst; `PerDay` wirft sofort `TageskontingentErschoepft` statt dreimal zu wiederholen; Tageswächter **im Client**, je Modell, auf Pazifik-Tag; `budget_status()` für Vorflugkontrollen |
+| `api/llm_basis.py` | `verbrauch_heute()`; `zaehle_aufruf()` nimmt einen Tagesschlüssel |
+| `database/db.py` | `increment_api_call_counter()` nimmt einen Tagesschlüssel — bestehende Aufrufer unverändert auf UTC |
+| Desktop-DB | die drei fehlenden `api_call_kontingent*`-Tabellen angelegt |
+| `remote/status.py` + `server.py` | Karte „Gemini-Tageskontingent je Modell", ungecacht |
+| `fahre_wirkungsmessung.py` | Stufe 1 **wählt** das Modell nach Budget; Produktionsmodell steht hinten, damit die Messung ausweicht und nicht die Produktion |
+| `messe_umbau_wirkung.py` | `--modell`; rechnet den Bedarf **vor** dem Lauf gegen das Budget |
+
+**Geprüft:** 27 + 16 Prüfungen mit Gegenkontrollen, dazu die Kette gegen die
+echte API (erschöpftes Modell → typisierter Abbruch ohne Wiederholung; freies
+Modell → Antwort) und ein echter Prompt auf `gemini-3.5-flash-lite`: 5 Arme,
+0 Fehler, alle Messfelder befüllt, Antwortformat `json_object`.
+
+### Was offen bleibt
+
+- **Warum vereinzelte Einzelaufrufe durchkamen**, während acht Aufrufe mit
+  10 s Abstand komplett scheiterten, erklärt ein hartes Tageslimit nicht.
+  Keine vierte Vermutung ohne Messung.
+- **Die Tagesgrenze von `gemini-3.5-flash-lite` ist unbelegt.** Google nennt
+  den Grenzwert nur im *Fehler*körper; ein erfolgreicher Aufruf sagt nichts.
+  Vermutlich ebenfalls 500 — belegen ließe es sich nur durch Aufbrauchen.
+- **Der Zähler beginnt bei null.** Er kennt die heute bereits verbrauchten
+  Aufrufe nicht und weiß nichts von einem zweiten Gerät am selben Schlüssel.
+  Deshalb hat Stufe 1 **zwei** Ebenen: Zähler *und* echter Probeaufruf.
