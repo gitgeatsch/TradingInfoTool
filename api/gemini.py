@@ -16,6 +16,10 @@ Nutzung von Prompt/Antwort fuer Google-Produktverbesserung der REGULAERE
 Free-Tier-Deal, kein optionales Bonus-Programm zum Abwaehlen (siehe Memory)."""
 from __future__ import annotations
 
+import logging
+import re
+import time
+
 import requests
 
 from api.llm_basis import Minutenfenster, extrahiere_inhalt, zaehle_aufruf
@@ -39,6 +43,44 @@ DEFAULT_MODEL = "gemini-3.1-flash-lite"
 # Nachbarschaft fuer den vollen Testkontext.
 RATE_LIMIT_PER_MINUTE = 10
 
+logger = logging.getLogger(__name__)
+
+# Wie oft ein 429 wiederholt wird, bevor er durchgereicht wird. Drei Versuche
+# decken den beobachteten Fall ab (Server empfiehlt ~40 s) und begrenzen die
+# Wartezeit auf gut zwei Minuten je Aufruf - laenger wuerde einen Messlauf
+# unkalkulierbar machen, ohne die Ausbeute noch nennenswert zu heben.
+_MAX_VERSUCHE_BEI_429 = 3
+
+# Obergrenze fuer eine einzelne Wartezeit. Schlaegt der Server etwas
+# Absurdes vor (oder liefert gar nichts), wird nicht minutenlang blockiert.
+_MAX_WARTEZEIT_SEKUNDEN = 65.0
+_VORGABE_WARTEZEIT_SEKUNDEN = 20.0
+
+
+def _wartezeit_aus_antwort(response) -> float:
+    """Wie lange der Server selbst zu warten empfiehlt.
+
+    Google liefert die Angabe an zwei Stellen und in zwei Formen: als
+    `Retry-After`-Header und im Fehlerkoerper (`"retryDelay": "40s"` bzw.
+    im Klartext "Please retry in 40.56s"). Geraten wird hier nichts - fehlt
+    beides, gilt eine konservative Vorgabe."""
+    kopf = response.headers.get("Retry-After") if response is not None else None
+    if kopf:
+        try:
+            return min(float(kopf), _MAX_WARTEZEIT_SEKUNDEN)
+        except (TypeError, ValueError):
+            pass
+    text = (response.text or "") if response is not None else ""
+    for muster in (r'"retryDelay"\s*:\s*"([\d.]+)s"',
+                   r"retry in ([\d.]+)\s*s"):
+        treffer = re.search(muster, text)
+        if treffer:
+            try:
+                return min(float(treffer.group(1)) + 1.0, _MAX_WARTEZEIT_SEKUNDEN)
+            except ValueError:
+                pass
+    return _VORGABE_WARTEZEIT_SEKUNDEN
+
 
 class GeminiClient:
     def __init__(self, api_key: str, session: requests.Session | None = None):
@@ -61,13 +103,48 @@ class GeminiClient:
         temperature: float = 0.3,
         response_format: dict | None = None,
     ) -> str:
-        self._respect_rate_limit()
-        zaehle_aufruf("gemini")
         headers = {"Authorization": f"Bearer {self._api_key}"}
         payload = {"model": model, "messages": messages, "temperature": temperature}
         if response_format is not None:
             payload["response_format"] = response_format
-        response = self._session.post(BASE_URL, json=payload, headers=headers, timeout=60)
-        response.raise_for_status()
-        data = response.json()
-        return extrahiere_inhalt(data, "Gemini")
+
+        # WIEDERHOLUNG BEI 429 (2026-08-09). Der Nutzer hat den Widerspruch
+        # bemerkt: "wenn das Kontingent erschoepft waere duerfte nichts
+        # durchgehen - du hast geprueft alles ok und dann wieder Fehler?"
+        # Nachgemessen, drei rohe Aufrufe in drei Sekunden: 200, 200, 429.
+        # Es ist also KEIN hartes Tageskontingent, sondern (mindestens) ein
+        # Burst-Limit - und der Server sagt selbst, wie lange man warten soll.
+        #
+        # Vorher flog der 429 als HTTPError durch alle Wiederholungsschleifen
+        # der Messlaeufe, weil die nur JSONDecodeError/ValueError fangen. Ein
+        # einzelner Lauf verlor dadurch 19 Messpunkte, und zwar geballt am
+        # Ende - also NICHT zufaellig verteilt, sondern systematisch bei den
+        # spaetesten Ankern. Ein stiller Selektionsfehler.
+        letzte = None
+        for versuch in range(_MAX_VERSUCHE_BEI_429):
+            self._respect_rate_limit()
+            zaehle_aufruf("gemini")
+            response = self._session.post(BASE_URL, json=payload,
+                                          headers=headers, timeout=60)
+            if response.status_code != 429:
+                # Fehler ANDERER Art bekommen jetzt Statuscode und Body in die
+                # Meldung. Vorher stand dort nur "HTTPError" - und genau daran
+                # habe ich am 09.08. zweimal geraten statt gelesen.
+                if not response.ok:
+                    raise requests.HTTPError(
+                        f"Gemini HTTP {response.status_code}: "
+                        f"{response.text[:400]}", response=response)
+                return extrahiere_inhalt(response.json(), "Gemini")
+            letzte = response
+            wartezeit = _wartezeit_aus_antwort(response)
+            if versuch + 1 >= _MAX_VERSUCHE_BEI_429:
+                break
+            logger.info("Gemini 429 - warte %.1f s und versuche erneut "
+                        "(%d von %d)", wartezeit, versuch + 2,
+                        _MAX_VERSUCHE_BEI_429)
+            time.sleep(wartezeit)
+
+        raise requests.HTTPError(
+            f"Gemini HTTP 429 nach {_MAX_VERSUCHE_BEI_429} Versuchen: "
+            f"{(letzte.text if letzte is not None else '')[:400]}",
+            response=letzte)

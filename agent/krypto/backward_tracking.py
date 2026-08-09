@@ -3261,6 +3261,111 @@ def compute_offene_signale_uebersicht(conn, watchlist: list | None = None) -> di
 _MIN_SAMPLE_FUER_AUSSAGE = 15
 
 
+# Wie viele Beobachtungen die NEUTRALE Annahme wiegt (2026-08-09, Nutzer-
+# Vorschlag: "eine neutrale Ausgangsposition die sich ohnehin selbst durch den
+# Betrieb kalibriert"). 50 ist das untere Ende dessen, was die Literatur je
+# Setup fuer eine belastbare Erwartungswert-Aussage verlangt (50-100); unsere
+# 94 Signale gelten fuer den GESAMTEN Track-Record ueber alle Symbole, die
+# SHORT-Seite hat davon nur 20.
+PSEUDO_STICHPROBE = 50
+
+# Die CRV-Pflichtgrenze - Quelle fuer den Breakeven, wenn noch keine eigenen
+# Signale vorliegen. Bewusst hier gespiegelt statt importiert: risk_gate.py
+# importiert dieses Modul, ein Rueckimport waere zirkulaer. Der Wert wird in
+# `teste_trefferquote_bezug.py` gegen die Quelle geprueft, damit er nicht
+# auseinanderlaeuft.
+_CRV_MINIMUM = 2.0
+
+# Ab wie vielen ausgewerteten Trades die Systemguete OHNE Gewichtung lesbar
+# ist. War bis 09.08. die Schwelle, unter der der Fakt GAR NICHT geliefert
+# wurde; seither wird er auch darunter geliefert - mit Gewicht und dem
+# ausdruecklichen Vermerk `belastbar: false`.
+_MIN_N_SYSTEMGUETE_BELASTBAR = 30
+
+
+def _spalte(row, name: str):
+    """Spaltenwert oder None - `sqlite3.Row` wirft sonst IndexError.
+
+    Noetig, weil `compute_win_rate_fact()` fuer Hebel UND Spot laeuft und die
+    Spot-Tabelle keine `richtung`-Spalte hat. Ein `try/except` an jeder
+    Aufrufstelle waere dieselbe Logik dreimal."""
+    try:
+        return row[name]
+    except (IndexError, KeyError):
+        return None
+
+
+def einordnung_gegen(wert: float | None, referenz: float | None,
+                     toleranz: float) -> str | None:
+    """Die KATEGORIALE Zwillingsform zu einer Zahl.
+
+    WARUM ZUSAETZLICH ZUR ZAHL, nicht statt ihr. Dieses Projekt haelt an drei
+    Stellen dasselbe fest: *"ein Modell, das rechnen soll, rechnet falsch;
+    eines, das nachschlagen soll, schlaegt nach"* - daher Baender statt Kurve
+    (Regel 32/36), Tabelle statt Formel (Kosten-Fakt) und beim
+    `btc_zu_ema50`-Fakt ausdruecklich "zwei Formen mit Absicht: Prozentwert
+    UND kategoriale Einordnung". Extern gestuetzt: Modelle sind beim
+    Schliessen ueber stetige Groessen schwach, kategoriale Labels tragen
+    zuverlaessiger; und schon bei zwei Zahlen ist ihre Arithmetik nicht
+    verlaesslich.
+
+    Die Trefferquote und die Systemguete hatten diese Zwillingsform bisher
+    nicht - das Modell musste den Vergleich selbst ziehen. Genau der Vergleich
+    ist die Aussage."""
+    if wert is None or referenz is None:
+        return None
+    abstand = wert - referenz
+    if abs(abstand) <= toleranz:
+        return "auf Hoehe der Basislinie"
+    if abstand > 0:
+        return ("deutlich ueber der Basislinie" if abstand > 3 * toleranz
+                else "ueber der Basislinie")
+    return ("deutlich unter der Basislinie" if abstand < -3 * toleranz
+            else "unter der Basislinie")
+
+
+def schrumpfe_zu_neutral(gemessen: float | None, n: int | None,
+                         neutral: float | None,
+                         k: float = PSEUDO_STICHPROBE) -> dict | None:
+    """Gewichteter Uebergang vom neutralen Anker zum Messwert.
+
+        gewichtet = n/(n+k) * gemessen + k/(n+k) * neutral
+
+    WOZU. Eine Kennzahl aus wenigen Beobachtungen tritt mit voller Autoritaet
+    auf, obwohl sie sie nicht hat. Genau das ist bei uns der Fall: 94 Signale
+    gesamt, davon 20 SHORT - und die Literatur verlangt 50-100 JE SETUP. Der
+    Fakt "Trefferquote 16 %" liest sich fuer das Modell wie eine Tatsache und
+    hat am 09.08. gemessen die LONG-Konfidenz um bis zu 33 Punkte gedrueckt,
+    die SHORT-Konfidenz um null.
+
+    Die Schrumpfung macht die Unsicherheit EXPLIZIT statt sie dem Leser zu
+    ueberlassen: bei wenig Daten sagt der Fakt fast nichts, mit jedem
+    aufgeloesten Signal wandert er zum Messwert. Kein Schwellwert, keine
+    Klippe - dieselbe Bewegung, die dieses Projekt beim CRV schon vollzogen
+    hat ("ein glatter Verlauf verlangt glatte Behandlung").
+
+    ZWINGEND DAZU (sonst ist es Beschoenigung statt Kalibrierung): der Aufrufer
+    gibt IMMER beide Zahlen weiter, die rohe und die gewichtete, plus das
+    Gewicht. Der `systemguete`-Docstring warnt zu Recht davor, eine
+    unerfreuliche Zahl weicher zu machen - hier wird nichts ersetzt, es kommt
+    nur die Einordnung dazu.
+
+    Rueckgabe: dict mit `roh`, `gewichtet`, `gewicht`, `neutral`, `n`, `k` -
+    oder None, wenn eine Eingabe fehlt. Bewusst kein Ersatzwert.
+    """
+    if gemessen is None or neutral is None or n is None or n < 0 or k <= 0:
+        return None
+    gewicht = n / (n + k)
+    return {
+        "roh": round(float(gemessen), 4),
+        "gewichtet": round(gewicht * gemessen + (1 - gewicht) * neutral, 4),
+        "gewicht": round(gewicht, 3),
+        "neutral": round(float(neutral), 4),
+        "n": int(n),
+        "k": k,
+    }
+
+
 def compute_win_rate_fact(conn, tier: str, erlaubte_symbole: set[str] | None = None) -> dict | None:
     """Grobe Gesamt-Trefferquote (2026-07-18, Item E) fuer `build_facts()`/
     `build_hebel_facts()` - liest bereits aufgeloeste Signale (take_profit_erreicht/
@@ -3285,35 +3390,216 @@ def compute_win_rate_fact(conn, tier: str, erlaubte_symbole: set[str] | None = N
     table = _tabelle_fuer_tier(tier, "compute_win_rate_fact()")
     placeholders = ", ".join("?" for _ in _RESOLVED_OUTCOMES)
     rows = conn.execute(
-        f"SELECT symbol, outcome_status FROM {table} WHERE outcome_status IN ({placeholders})",
+        # `*` statt zweier Spalten (2026-08-09): fuer die Bezugsgroesse unten
+        # wird das CRV je Zeile gebraucht, und das kommt aus den Zonenspalten
+        # ueber `_zonen_absolut()` - dieselbe Quelle wie ueberall sonst, damit
+        # keine zweite Zonenformel entsteht.
+        f"SELECT * FROM {table} WHERE outcome_status IN ({placeholders})",
         _RESOLVED_OUTCOMES,
     ).fetchall()
     if erlaubte_symbole is not None:
         rows = [r for r in rows if r["symbol"] in erlaubte_symbole]
     total = len(rows)
     if total == 0:
-        return None
+        # AUSGANGSWERT STATT NICHTS (2026-08-09, Nutzer-Vorgabe: *"ein
+        # Ausgangswert kann unabhaengig von der Assetklasse sein - die Regel
+        # gilt hier nicht mehr mit der Schrumpfung"*).
+        #
+        # DIE ALTE REGEL UND WARUM SIE HIER NICHT MEHR GREIFT. Am 18.07. wurde
+        # festgelegt: "jede andere Assetklasse bekommt ihre EIGENE
+        # Trefferquote statt einer fremden geliehenen Zahl." Das war richtig -
+        # gegen eine geliehene Zahl MIT VOLLER AUTORITAET. Der Einwand galt
+        # der Autoritaet, nicht der Existenz. Ein Ausgangswert mit GEWICHT 0
+        # behauptet nichts; er nennt nur die Latte und weicht der eigenen
+        # Messung, sobald es eine gibt.
+        #
+        # DIE LATTE BRAUCHT KEINE DATEN. Sie folgt aus unserer eigenen
+        # CRV-Pflichtgrenze - einer Regel, nicht einer Beobachtung. Damit
+        # bekommen auch Aktien, Themen-ETF und Hedge ab dem ersten Tag einen
+        # lesbaren Bezugsrahmen statt gar nichts. Vorher fiel der Bezugsrahmen
+        # mit der Zahl weg, obwohl er von ihr unabhaengig ist.
+        breakeven_ohne_daten = round(100.0 / (1.0 + _CRV_MINIMUM), 1)
+        return {
+            "anzahl_ausgewertete_signale": 0,
+            "trefferquote_pct": None,
+            "treffer": 0,
+            "fehlschlaege": 0,
+            "crv_median": None,
+            "breakeven_trefferquote_pct": breakeven_ohne_daten,
+            "vorsprung_vor_breakeven_pp": None,
+            "trefferquote_gewichtet": breakeven_ohne_daten,
+            "gewicht": 0.0,
+            "einordnung": None,
+            "je_richtung": None,
+            "nicht_enthalten_ueberholt": 0,
+            "belastbar": False,
+            "hinweis": (
+                f"NOCH KEINE eigenen ausgewerteten Signale in dieser "
+                f"Assetklasse. Der genannte Wert ist der neutrale "
+                f"Ausgangswert, KEINE Messung: bei der Pflichtgrenze CRV "
+                f"{_CRV_MINIMUM:.1f} liegt der Breakeven bei "
+                f"{breakeven_ohne_daten:.1f} % - die Latte, gegen die eine "
+                f"kuenftige Trefferquote gehoert, weder gut noch schlecht. "
+                f"Gewicht 0: er sagt ueber die bisherige Leistung nichts aus "
+                f"und weicht jedem ausgewerteten Signal."),
+        }
 
     treffer = sum(1 for r in rows if r["outcome_status"] == OUTCOME_TAKE_PROFIT)
     fehlschlaege = total - treffer
     trefferquote_pct = round(100.0 * treffer / total, 1)
 
+    # --- BEZUGSGROESSE (2026-08-09) -------------------------------------
+    #
+    # WARUM. Eine Trefferquote ohne Bezug ist bedeutungslos: sie faellt mit
+    # steigendem CRV ZWANGSLAEUFIG, weil das Ziel CRV-mal weiter liegt als der
+    # Stop. Genau deshalb haelt crv_baender_kontext_fuer_prompt() seit dem
+    # 06.08. fest: "NUR DER ABSTAND ZUR BASISLINIE GEHT IN DEN FAKT, NIE DIE
+    # ABSOLUTE QUOTE." Diese Funktion war die letzte Stelle, die den Grundsatz
+    # noch verletzte - sie lieferte die nackte Quote (16,0 %) ohne die Latte,
+    # gegen die sie gehoert (bei CRV 2,0 sind das 33,3 %).
+    #
+    # GEMESSEN am 09.08. (Gemini, 36 Anker, gepaart, Rauschboden 0,83 Punkte):
+    # die nackte Quote druckt die LONG-Konfidenz um bis zu 33 Punkte und die
+    # SHORT-Konfidenz um NULL - eine gerichtete Wirkung ohne sachliche
+    # Grundlage (LONG-Trefferquote 16,2 % gegen SHORT 15,0 %). Mit Bezugsrahmen
+    # schrumpft die Wirkung um rund 5 Punkte, und die Selbstzustimmung
+    # ueberlebt (4,3 % statt 0,0 %).
+    #
+    # Die Zahlen selbst bleiben unveraendert - es wird nichts beschoenigt,
+    # sondern nur der Massstab danebengelegt. "Kontext liefern, Urteil
+    # offenlassen."
+    crvs = []
+    for r in rows:
+        z = _zonen_absolut(r)
+        if z and z.get("crv"):
+            crvs.append(z["crv"])
+    crv_median = statistics.median(crvs) if crvs else None
+    breakeven_pct = round(100.0 / (1.0 + crv_median), 1) if crv_median else None
+    vorsprung_pp = (round(trefferquote_pct - breakeven_pct, 1)
+                    if breakeven_pct is not None else None)
+
+    # Wie viele Signale sind aus der Rechnung GEFALLEN, weil sie durch eine
+    # neuere Analyse ersetzt wurden? Sie sind weder Treffer noch Fehlschlag -
+    # das gehoert dazugesagt, sonst liest sich die Quote vollstaendiger als
+    # sie ist. (30,3 % der abgeschlossenen Hebel-Signale, Stand 09.08.)
+    ueberholt = conn.execute(
+        f"SELECT symbol FROM {table} WHERE outcome_status = ?",
+        (OUTCOME_UEBERHOLT,),
+    ).fetchall()
+    if erlaubte_symbole is not None:
+        ueberholt = [r for r in ueberholt if r["symbol"] in erlaubte_symbole]
+
+    teile = []
     if total < _MIN_SAMPLE_FUER_AUSSAGE:
-        hinweis = (
+        teile.append(
             f"Basiert auf nur {total} bisher ausgewerteten Signalen - statistisch "
             "NICHT belastbar (Mindeststichprobe fuer eine verlaessliche Aussage: "
             f"{_MIN_SAMPLE_FUER_AUSSAGE}). Nur als sehr grobe Orientierung "
             "verwenden, keinesfalls die Konfidenz allein darauf stuetzen."
         )
     else:
-        hinweis = f"Basiert auf {total} bisher ausgewerteten Signalen."
+        teile.append(f"Basiert auf {total} bisher ausgewerteten Signalen.")
+    if breakeven_pct is not None:
+        teile.append(
+            f"Zur Einordnung: diese Quote ist NICHT mit 50 % zu vergleichen, "
+            f"sondern mit dem Breakeven der eigenen Zielsetzung. Bei einem "
+            f"Median-CRV von {crv_median:.2f} liegt er bei {breakeven_pct:.1f} % "
+            f"(1/(1+CRV)). Der Abstand betraegt damit {vorsprung_pp:+.1f} "
+            f"Prozentpunkte. Eine niedrige absolute Quote bei hohem CRV ist "
+            f"rechnerisch normal und fuer sich genommen kein Qualitaetsurteil."
+        )
+    if ueberholt:
+        teile.append(
+            f"{len(ueberholt)} Signale sind NICHT enthalten, weil sie vor dem "
+            f"Erreichen einer Zone durch eine neuere Analyse ersetzt wurden - "
+            f"sie zaehlen weder als Treffer noch als Fehlschlag."
+        )
+
+    # --- JE RICHTUNG, MIT SCHRUMPFUNG (2026-08-09) ----------------------
+    #
+    # WARUM JE RICHTUNG. Der gepoolte Wert ist ein globales negatives Urteil
+    # ohne Zuordnung - und das Modell legt es einseitig auf LONG. Gemessen am
+    # 09.08.: die Trefferquote druckt die LONG-Konfidenz um bis zu 33 Punkte
+    # und die SHORT-Konfidenz um NULL, obwohl LONG mit 16,2 % Trefferquote
+    # sogar leicht BESSER liegt als SHORT mit 15,0 %. Wer beide Zahlen zeigt,
+    # nimmt dem Modell die Grundlage zum Raten.
+    #
+    # WARUM MIT SCHRUMPFUNG. Genau hier wird die Stichprobe duenn: SHORT hat
+    # rund 20 aufgeloeste Signale. Eine ungeschrumpfte 15-%-Quote aus 20
+    # Faellen traete mit derselben Autoritaet auf wie eine aus 200. Die
+    # Schrumpfung zum jeweiligen Breakeven macht die Unsicherheit explizit und
+    # kalibriert sich mit jedem weiteren Signal von selbst.
+    # ALS TABELLE, nicht als Dict von Dicts. Ein Dict je Richtung ergibt drei
+    # Verschachtelungsebenen; eine LISTE gleichfoermiger flacher Saetze ist
+    # zwei - und sie ist genau die Form, die dieses Projekt an anderer Stelle
+    # schon bevorzugt ("Tabelle statt Formel", Kosten-Fakt). Die Richtung wird
+    # zum Feld, statt Schluessel zu sein.
+    je_richtung = []
+    for ri in ("LONG", "SHORT"):
+        teil = [r for r in rows if (_spalte(r, "richtung") or "").upper() == ri]
+        if not teil:
+            continue
+        t_treffer = sum(1 for r in teil
+                        if r["outcome_status"] == OUTCOME_TAKE_PROFIT)
+        t_quote = round(100.0 * t_treffer / len(teil), 1)
+        t_crvs = [z["crv"] for z in (_zonen_absolut(r) for r in teil)
+                  if z and z.get("crv")]
+        t_crv = statistics.median(t_crvs) if t_crvs else None
+        t_break = round(100.0 / (1.0 + t_crv), 1) if t_crv else None
+        # FLACH und je Richtung SELBSTERKLAEREND: Wert, Latte, Abstand,
+        # gewichteter Wert und Gewicht stehen nebeneinander. Vorher lag der
+        # gewichtete Wert eine Ebene tiefer in einem `geschrumpft`-Dict, das
+        # zusaetzlich `roh`/`neutral`/`n` doppelte - drei Ebenen tief und
+        # viermal dieselbe Zahl. Benchmarks skalieren ihre Schwierigkeit an
+        # genau dieser Verschachtelungstiefe.
+        t_g = schrumpfe_zu_neutral(t_quote, len(teil), t_break)
+        je_richtung.append({
+            "richtung": ri,
+            "anzahl": len(teil),
+            "trefferquote_pct": t_quote,
+            "crv_median": round(t_crv, 2) if t_crv else None,
+            "breakeven_trefferquote_pct": t_break,
+            "vorsprung_vor_breakeven_pp": (round(t_quote - t_break, 1)
+                                           if t_break is not None else None),
+            "trefferquote_gewichtet": t_g["gewichtet"] if t_g else None,
+            "gewicht": t_g["gewicht"] if t_g else None,
+            "einordnung": einordnung_gegen(t_quote, t_break, 3.0),
+        })
+    if len(je_richtung) > 1:
+        teile.append(
+            "Je Richtung getrennt ausgewiesen - ein Gesamtwert ohne "
+            "Richtungszuordnung laedt dazu ein, ihn einer Richtung zuzuschlagen. "
+            "Die Werte unter `geschrumpft` sind zum jeweiligen Breakeven hin "
+            "gewichtet: bei wenigen Signalen zaehlt der Messwert wenig, mit "
+            "jedem weiteren mehr (`gewicht` sagt wie viel). Die rohen Zahlen "
+            "stehen unveraendert daneben - es wird nichts ersetzt, nur "
+            "eingeordnet."
+        )
 
     return {
         "anzahl_ausgewertete_signale": total,
         "trefferquote_pct": trefferquote_pct,
         "treffer": treffer,
         "fehlschlaege": fehlschlaege,
-        "hinweis": hinweis,
+        # Die neuen Felder sind der eigentliche Fakt - die absolute Quote
+        # bleibt nur stehen, weil sie eine Tatsache ist, nicht weil sie taugt.
+        "crv_median": round(crv_median, 2) if crv_median else None,
+        "breakeven_trefferquote_pct": breakeven_pct,
+        "vorsprung_vor_breakeven_pp": vorsprung_pp,
+        "trefferquote_gewichtet": (_g["gewichtet"] if
+                                   (_g := schrumpfe_zu_neutral(
+                                       trefferquote_pct, total, breakeven_pct))
+                                   else None),
+        "gewicht": _g["gewicht"] if _g else None,
+        # Die KATEGORIALE Zwillingsform - siehe einordnung_gegen().
+        "einordnung": einordnung_gegen(trefferquote_pct, breakeven_pct, 3.0),
+        # In BEIDEN Zweigen vorhanden (n=0 und normal). Ein Feld, das mal da
+        # ist und mal nicht, ist schlimmer als keines: das Modell kann aus
+        # seinem Fehlen nichts schliessen.
+        "belastbar": total >= _MIN_SAMPLE_FUER_AUSSAGE,
+        "je_richtung": je_richtung or None,
+        "nicht_enthalten_ueberholt": len(ueberholt),
+        "hinweis": " ".join(teile),
     }
 
 
@@ -4744,9 +5030,53 @@ def systemguete_kontext_fuer_prompt(conn, watchlist: list | None = None,
         return None
     real = ((guete or {}).get(tier) or {}).get("real") or {}
     n = real.get("anzahl_bewertet")
-    if not isinstance(n, int) or n < 30:
+    # AUSGANGSWERT STATT WEGLASSEN (2026-08-09, Nutzer-Vorgabe: *"es soll einen
+    # Ausgangswert geben und dann kalibrieren"*).
+    #
+    # Vorher: `n < 30 -> None`. Damit bekam die Spot-Familie mit 23
+    # ausgewerteten Trades GAR NICHTS - und bei 30 auf einen Schlag eine Zahl
+    # in voller Autoritaet. Eine harte Schwelle auf einer glatten Groesse, also
+    # dieselbe Klippe, die beim Regime schon als Konstruktionsfehler erkannt
+    # wurde ("ein glatter Verlauf verlangt glatte Behandlung").
+    #
+    # DIE URSPRUENGLICHE BEGRUENDUNG WAR RICHTIG - damals. Der alte Docstring
+    # sagte: "eine Systemguete aus fuenf Signalen waere irrefuehrender als gar
+    # keine." Das galt, SOLANGE ES KEINE SCHRUMPFUNG GAB. Jetzt begrenzt sich
+    # eine duenne Zahl selbst: bei n=5 liegt das Gewicht bei 0,09, der
+    # gewichtete Wert also praktisch auf der Basislinie, und `gewicht` steht
+    # ausdruecklich im Fakt.
+    #
+    # Die alte Schwelle bleibt als `belastbar`-Kennzeichen erhalten - sie ist
+    # weiter die Grenze, ab der man die Zahl OHNE Gewichtung lesen darf.
+    if not isinstance(n, int) or n < 1:
         return None
+    belastbar = n >= _MIN_N_SYSTEMGUETE_BELASTBAR
     ew = real.get("expectancy_r")
+    # --- BASISLINIE UND UNSICHERHEIT DURCHREICHEN (2026-08-09) ----------
+    #
+    # DER FUND: `compute_systemguete()` rechnet beides laengst - und diese
+    # Funktion warf es weg. Das Modell las "Erwartungswert -0,149 R" als
+    # blanke Tatsache, ohne zu erfahren, dass
+    #   (a) ein MECHANISCHER Einstieg im selben Zeitraum -0,094 R verloren
+    #       haette, unser eigener Beitrag also -0,055 R betraegt, und
+    #   (b) das Vertrauensintervall der Schaetzung die NULL enthaelt
+    #       ([-0,407; +0,147]) - die Zahl ist statistisch nicht von "kein
+    #       Effekt" zu unterscheiden.
+    #
+    # Damit gilt hier derselbe Grundsatz wie bei den CRV-Baendern und der
+    # Trefferquote: NUR DER ABSTAND ZUR BASISLINIE IST DIE AUSSAGE. Eine
+    # absolute Zahl ohne Basislinie laedt dazu ein, den Markt dem System
+    # anzulasten.
+    #
+    # GEMESSEN am 09.08.: der Fakt in seiner alten Form druckte die
+    # LONG-Konfidenz um 4,9 bis 30,0 Punkte und die SHORT-Konfidenz um NULL -
+    # eine gerichtete Wirkung, fuer die die Zahl selbst keine Grundlage gibt.
+    # Nichts davon wird hier beschoenigt: die rohe Zahl bleibt an erster
+    # Stelle stehen. Es kommt nur dazu, was zu ihrer Einordnung gehoert.
+    def _z(name, stellen=3):
+        wert = real.get(name)
+        return round(wert, stellen) if isinstance(wert, (int, float)) else None
+
     return {
         "anzahl_ausgewerteter_trades": n,
         "erwartungswert_r": round(ew, 3) if isinstance(ew, (int, float)) else None,
@@ -4754,10 +5084,76 @@ def systemguete_kontext_fuer_prompt(conn, watchlist: list | None = None,
         "sqn_einordnung": real.get("sqn_einordnung"),
         "profit_factor": (round(real["profit_factor"], 2)
                           if isinstance(real.get("profit_factor"), (int, float)) else None),
+        # Die Basislinie: was ein MECHANISCHER Einstieg im selben Zeitraum
+        # gebracht haette, und der Abstand unserer Signale dazu.
+        "basislinie_erwartungswert_r": _z("basislinie_erwartungswert_r"),
+        "signalbeitrag_r": _z("signalbeitrag_r"),
+        "basislinie_anzahl": real.get("basislinie_anzahl"),
+        # --- SCHRUMPFUNG MIT DEM RICHTIGEN ANKER (2026-08-09) -----------
+        #
+        # Nutzer-Einwand, und er trifft: *"Null ist schwachsinn das kann nicht
+        # funktionieren."* Genau so ist es. Ein Erwartungswert von 0 R hiesse
+        # "ein System, das weder gewinnt noch verliert" - das gibt es in
+        # diesem Markt nicht. Ein MECHANISCHER Einstieg verliert im selben
+        # Zeitraum -0,094 R. Gegen Null zu schrumpfen wuerde ein schlechtes
+        # System besser aussehen lassen, als der Markt ueberhaupt zulaesst -
+        # das waere Beschoenigung.
+        #
+        # Die beiden Anker sind deshalb verschieden, und beide folgen
+        # derselben Frage: "was nehme ich an, wenn ich NICHTS weiss?"
+        #
+        #   Erwartungswert -> die BASISLINIE. Ohne Information nimmt man an,
+        #                     man liefert wie ein mechanischer Einstieg.
+        #   Signalbeitrag  -> NULL. Ohne Information nimmt man an, man fuegt
+        #                     dem Markt nichts hinzu. Hier ist die Null der
+        #                     richtige Anker, weil der Beitrag eine DIFFERENZ
+        #                     ist und nicht ein Niveau.
+        # FLACH, wie bei der Trefferquote: der gewichtete Wert und sein
+        # Gewicht stehen NEBEN dem rohen und der Basislinie, nicht eine Ebene
+        # tiefer in einem Dict, das beide nochmal doppelt.
+        "erwartungswert_gewichtet": (
+            _ew["gewichtet"] if (_ew := schrumpfe_zu_neutral(
+                _z("expectancy_r"), n, _z("basislinie_erwartungswert_r")))
+            else None),
+        "signalbeitrag_gewichtet": (
+            _sb["gewichtet"] if (_sb := schrumpfe_zu_neutral(
+                _z("signalbeitrag_r"), n, 0.0)) else None),
+        "gewicht": _ew["gewicht"] if _ew else (_sb["gewicht"] if _sb else None),
+        # Kategoriale Zwillingsform. Toleranz 0,02 R - darunter ist der
+        # Unterschied zur Basislinie kleiner als die Kostenspanne eines
+        # einzelnen Trades und damit keine Aussage.
+        "einordnung": einordnung_gegen(
+            _z("expectancy_r"), _z("basislinie_erwartungswert_r"), 0.02),
+        # DIE eigentliche Aussage des Intervalls, als Ja/Nein statt als zwei
+        # Zahlen, die das Modell mit der Null vergleichen muesste.
+        "ci_enthaelt_null": (
+            None if _z("expectancy_ci_unten") is None
+            else bool(_z("expectancy_ci_unten") <= 0 <= _z("expectancy_ci_oben"))),
+        # Die Unsicherheit der eigenen Schaetzung.
+        "erwartungswert_ci": (
+            [_z("expectancy_ci_unten"), _z("expectancy_ci_oben")]
+            if _z("expectancy_ci_unten") is not None else None),
+        "aufloesungsquote": _z("aufloesungsquote", 2),
+        "belastbar": belastbar,
+        "vorlaeufig_hinweis": (
+            None if belastbar else
+            f"VORLAEUFIG: nur {n} ausgewertete Trades (belastbar ab "
+            f"{_MIN_N_SYSTEMGUETE_BELASTBAR}). Lies die gewichteten Werte, "
+            f"nicht die rohen - das Gewicht sagt, wie viel der Messwert "
+            f"ueberhaupt zaehlt. Bei kleinem n liegt er nahe an der "
+            f"Basislinie, und genau das ist die ehrliche Aussage: noch "
+            f"nicht unterscheidbar."),
         "lesehilfe": (
             "Erwartungswert in R = durchschnittliches Ergebnis je Signal, gemessen "
             "an tatsaechlich eroeffneten Trades dieser Kategorie. Ein negativer Wert "
-            "heisst, dass die bisherigen Signale im Schnitt Geld gekostet haben."
+            "heisst, dass die bisherigen Signale im Schnitt Geld gekostet haben. "
+            "WICHTIG zur Einordnung: `basislinie_erwartungswert_r` ist das Ergebnis "
+            "eines MECHANISCHEN Einstiegs im selben Zeitraum - liegt sie ebenfalls "
+            "im Minus, war der Markt teuer, nicht nur die Auswahl. Der eigene "
+            "Beitrag ist `signalbeitrag_r`, also der Abstand dazu. Und "
+            "`erwartungswert_ci` ist der Vertrauensbereich der Schaetzung: "
+            "enthaelt er die Null, ist der Wert statistisch nicht von 'kein "
+            "Effekt' zu unterscheiden."
         ),
         "wie_du_das_nutzt": (
             "Das ist Kalibrierungs-Kontext, KEINE Handlungsanweisung und kein Grund, "

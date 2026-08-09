@@ -543,11 +543,44 @@ def compute_risikofaktoren_hebel(
                 "gesamten Hebel-Track-Record, nicht spezifisch fuer dieses Symbol.",
             ))
         elif quote is not None:
-            bewertung = "negativ" if quote < 30 else ("positiv" if quote >= 60 else "neutral")
+            # SCHWELLE CRV-RELATIV STATT FEST (2026-08-09).
+            #
+            # Vorher: `quote < 30` -> "negativ", `>= 60` -> "positiv". Beide
+            # Zahlen ohne jeden Bezug. Das ist derselbe Fehler, den
+            # crv_baender_kontext_fuer_prompt() im eigenen Docstring benennt:
+            # "NUR DER ABSTAND ZUR BASISLINIE GEHT IN DEN FAKT, NIE DIE
+            # ABSOLUTE QUOTE" - die absolute Quote faellt mit steigendem CRV
+            # zwangslaeufig. Bei unserem Median-CRV von 2,74 liegt der
+            # Breakeven bei 26,7 %; eine feste 30er-Schwelle waere dort fast
+            # zufaellig richtig und bei CRV 1,5 (Breakeven 40 %) grob falsch.
+            #
+            # Die Bewertung haengt jetzt am ABSTAND zum Breakeven derselben
+            # Zielsetzung. `compute_win_rate_fact()` liefert ihn mit; fehlt er
+            # (aeltere gespeicherte Fakten), gilt die alte feste Schwelle
+            # weiter - kein Ausfall, nur keine Verbesserung.
+            vorsprung = historische_erfolgsquote.get("vorsprung_vor_breakeven_pp")
+            breakeven = historische_erfolgsquote.get("breakeven_trefferquote_pct")
+            if vorsprung is None:
+                bewertung = ("negativ" if quote < 30
+                             else ("positiv" if quote >= 60 else "neutral"))
+                begruendung = (
+                    f"Basiert auf {anzahl} bisher ausgewerteten Hebel-Signalen "
+                    "(gesamter Track-Record, nicht symbolspezifisch). Kein "
+                    "Breakeven-Bezug verfuegbar, feste Schwelle angewandt."
+                )
+            else:
+                bewertung = ("negativ" if vorsprung < 0
+                             else ("positiv" if vorsprung >= 10 else "neutral"))
+                begruendung = (
+                    f"Basiert auf {anzahl} bisher ausgewerteten Hebel-Signalen "
+                    f"(gesamter Track-Record, nicht symbolspezifisch). "
+                    f"Breakeven der eigenen Zielsetzung: {breakeven:.1f}% - "
+                    f"Abstand {vorsprung:+.1f} Prozentpunkte. Die absolute "
+                    f"Quote allein ist ohne CRV-Bezug nicht bewertbar."
+                )
             faktoren.append(Risikofaktor(
                 f"Historische Trefferquote {quote:.0f}% (n={anzahl})", bewertung,
-                f"Basiert auf {anzahl} bisher ausgewerteten Hebel-Signalen (gesamter "
-                "Track-Record, nicht symbolspezifisch).",
+                begruendung,
             ))
 
     # 2026-07-22, echter LINK-Fund (Nutzer-Screenshot): der rohe Funding-Rate-

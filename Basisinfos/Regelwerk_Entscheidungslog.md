@@ -15769,3 +15769,118 @@ Aufrufstellen senden weiter `{"type": "json_object"}`. Die Entscheidung über
 striktes `json_schema` steht getrennt an und ist bewusst nicht mitgelaufen: zwei
 Verhaltensänderungen gleichzeitig, und morgen wäre nicht zuordenbar, welche
 gewirkt hat.
+
+---
+
+## Nachtrag (2026-08-09): Trefferquote und Systemgüte bekommen ihre Bezugsgröße — die letzten zwei Stellen, die absolute Zahlen einspeisten
+
+**Auslöser:** die Deadloop-Untersuchung. Gemessen wurde, welcher eingespeiste
+Fakt die Bewertung abwürgt — mit einem faktoriellen Aufbau, gepaart je Anker,
+gegen einen Rauschboden aus zwei Armen mit identischer Eingabe.
+
+### Der Befund
+
+**Gemini, 36 Anker, 7 Arme, 251 gültige Aufrufe. Rauschboden 0,83
+Konfidenzpunkte.** Konfidenzwirkung je Regime, gepaart gegen die Grundlinie:
+
+| Fakt | BULLE LONG | SEITWÄRTS LONG | BÄR LONG | SHORT, alle Regimes |
+|---|---|---|---|---|
+| `systemguete` | −4,89 | −14,55 | −30,00 | **±0,00** |
+| `historische_erfolgsquote` | −16,90 | −26,11 | −33,33 | ±0,00 / −5,00 |
+
+**Beide treffen LONG in jedem Regime — auch im Bullenmarkt — und SHORT in
+keinem.** Alle Bootstrap-Intervalle der Gesamtwirkung schließen die Null aus.
+
+**Zwei Gegenprüfungen schließen die naheliegenden Erklärungen aus:**
+
+1. *LONGs kommen aus einem schwächeren Trigger-Zweig?* **Widerlegt** —
+   `kontra`-Anteil 8,9 % bei LONG gegen 10,1 % bei SHORT.
+2. *LONGs waren tatsächlich schlechter?* **Widerlegt** — LONG 16,2 %
+   Trefferquote und −0,368 R gegen SHORT 15,0 % und −0,321 R.
+
+**Der Regime-Flag dagegen ist NICHT ursächlich.** Ein sauberer 2×2-Lauf mit
+Trigger-Richtung (36 Anker) zeigt: im Bullen bestraft er SHORT (−5,45,
+Intervall ohne Null), im Bären **gar nichts** (LONG +1,11). Er bleibt
+unangetastet.
+
+### Die Änderung — kein neues Konzept, sondern ein nachgezogener Grundsatz
+
+`crv_baender_kontext_fuer_prompt()` hält seit dem 06.08. fest: *„NUR DER
+ABSTAND ZUR BASISLINIE GEHT IN DEN FAKT, NIE DIE ABSOLUTE QUOTE."* Zwei
+Stellen verletzten das bis heute.
+
+**1. `compute_win_rate_fact()`** liefert jetzt zusätzlich:
+`crv_median`, `breakeven_trefferquote_pct` (= `1/(1+CRV)`),
+`vorsprung_vor_breakeven_pp`, `je_richtung` mit eigenem Breakeven je Richtung,
+`geschrumpft` (Gewichtung zum Breakeven, Pseudo-Stichprobe 50) und
+`nicht_enthalten_ueberholt`.
+
+An echten Zahlen: statt „16,0 %" liest das Modell jetzt „16,0 % gegen einen
+Breakeven von 26,7 % bei Median-CRV 2,74, Abstand −10,7 pp; 43 Signale sind
+nicht enthalten, weil sie vorher durch eine neuere Analyse ersetzt wurden."
+Je Richtung: LONG 16,2 % gegen Breakeven 28,2 % (Gewicht 0,60 → 21,04),
+SHORT 15,0 % gegen 24,9 % (Gewicht 0,29 → 22,07). **Nach Schrumpfung liegen
+beide fast gleichauf** — dem Modell fehlt damit die Grundlage, ein globales
+Minus einer Richtung zuzuschlagen.
+
+**2. `hebel_risk_gate.py`** bewertet die Trefferquote nicht mehr gegen feste
+30/60, sondern gegen den Abstand zum Breakeven. Dieselbe Quote von 25 % ist
+bei CRV 2,0 „negativ" und bei CRV 4,0 „neutral". Fehlt das Breakeven-Feld
+(ältere gespeicherte Fakten), gilt die alte Schwelle weiter.
+
+**3. `systemguete_kontext_fuer_prompt()`** reicht durch, was
+`compute_systemguete()` **längst berechnet und diese Funktion wegwarf**:
+Basislinie (−0,094 R), Signalbeitrag (−0,055 R), Vertrauensbereich
+(**[−0,407; +0,147] — enthält die Null**) und Auflösungsquote. Das Modell las
+bisher „−0,149 R, das System verliert", ohne zu erfahren, dass ein
+mechanischer Einstieg im selben Zeitraum ebenfalls verloren hätte und dass die
+Zahl statistisch nicht von „kein Effekt" zu unterscheiden ist.
+
+Hier bewusst **keine** Schrumpfung: das Vertrauensintervall ist die echte
+Unsicherheit, nicht eine Prior-Näherung. Durchreichen schlägt Rechnen.
+
+### Rollout
+
+`compute_win_rate_fact()` wird von **allen sechs Pipelines** aufgerufen — die
+Anreicherung wirkt überall. Alle sechs Analyst-Prompts weisen bereits an, den
+`hinweis` zu lesen; **keine Prompt-Änderung nötig**. Die feste 30/60-Schwelle
+existierte nur im Hebel-Gate. `systemguete` bleibt Hebel-only (dokumentiert:
+n zu klein in den übrigen Tiers).
+
+### Was ausdrücklich NICHT belegt ist
+
+**Dass der Umbau den Ertrag verbessert.** Der Wirkungslauf (OpenRouter, 36
+Anker, 5 Arme) zeigte in allen sechs Gesamtgrößen die richtige Richtung, aber:
+**kein einziger R-Effekt überlebt das Entfernen seines größten
+Beitragssymbols** (`G_alt` hing zu 30,2 % an BTC, ohne BTC p=0,105 statt
+0,053), `dyn_r` und Zielquote stammen aus denselben Zonen (nicht zwei
+unabhängige Belege), und bei vier Armen gegen die Grundlinie trifft unter
+reinem Zufall in ~19 % der Fälle einer die 5-%-Schwelle.
+
+**Die Begründung für den Umbau ist deshalb NICHT ein Ertragsgewinn, sondern
+ein belegter Defekt:** eine gerichtete Wirkung auf LONG, die durch die
+Ergebnisdaten nicht gedeckt ist. Der Umbau nimmt nichts weg — die Rohzahlen
+stehen unverändert im Fakt; es kommt Einordnung dazu.
+
+### Revisit-Bedingung
+
+Bleibt die LONG-`ja`-Quote nach **60 aufgelösten Signalen** bei 0 % (heute:
+0 von 452), war die Diagnose unvollständig. Nächster Verdächtiger ist dann
+**Prompt-Regel 26** — sie erlaubt ausdrücklich, dass ein „bereits laufender
+Regime-Konflikt" ein negatives Selbsturteil trägt, *„selbst wenn
+confidence_pct hoch ist"*.
+
+### Verworfen und warum
+
+- **`systemguete` entfernen** statt einordnen: die Mappe 7.4b nennt „ein
+  weiterhin fehlender Wirkungsnachweis" ausdrücklich als **keinen**
+  Ausstiegsgrund. Kleinste wirksame Änderung ist Einordnung, nicht Entfernung.
+- **Schrumpfung auch bei der Systemgüte**: das Vertrauensintervall liefert die
+  Unsicherheit direkt und ehrlicher.
+- **Regime-Flag anfassen**: gemessen nicht ursächlich (siehe oben).
+
+### Tests
+
+`teste_schrumpfung.py` (19), `teste_trefferquote_bezug.py` (21),
+`teste_gemini_429.py` (16), `teste_auswertbarkeit.py` (12) — jede Zusicherung
+mit Gegenkontrolle. Details in `Basisinfos/Arbeitsstand_Deadloop_09_08.md`.
