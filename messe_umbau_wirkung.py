@@ -74,11 +74,19 @@ RAUSCHBODEN = {"gemini": 0.83, "openrouter": 2.20}
 
 # Welche Felder die NEUE Form der Trefferquote ausmachen - genau diese werden
 # fuer die Alt-Variante entfernt. Die Rohzahlen bleiben in beiden identisch.
+# NACHGEZOGEN nach dem Struktur-Umbau vom 09.08.: `geschrumpft` wurde flach
+# aufgeloest, deshalb heissen die Felder jetzt anders. Die Eingriffskontrolle
+# hat den Lauf korrekt abgebrochen, als die Liste veraltet war - genau dafuer
+# ist sie da.
 NEU_QUOTE = ("crv_median", "breakeven_trefferquote_pct",
-             "vorsprung_vor_breakeven_pp", "geschrumpft", "je_richtung",
+             "vorsprung_vor_breakeven_pp", "trefferquote_gewichtet",
+             "gewicht", "einordnung", "belastbar", "je_richtung",
              "nicht_enthalten_ueberholt")
 NEU_GUETE = ("basislinie_erwartungswert_r", "signalbeitrag_r",
-             "basislinie_anzahl", "erwartungswert_ci", "aufloesungsquote")
+             "basislinie_anzahl", "erwartungswert_ci", "aufloesungsquote",
+             "erwartungswert_gewichtet", "signalbeitrag_gewichtet",
+             "gewicht", "einordnung", "ci_enthaelt_null", "belastbar",
+             "vorlaeufig_hinweis")
 
 # Der alte Hinweis-Text, wortgleich aus der Fassung vor dem Umbau. Ihn
 # nachzubauen statt zu zitieren waere ein anderer Reiz und damit ein anderer

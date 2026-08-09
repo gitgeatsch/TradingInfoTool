@@ -3426,10 +3426,18 @@ def compute_win_rate_fact(conn, tier: str, erlaubte_symbole: set[str] | None = N
             "fehlschlaege": 0,
             "crv_median": None,
             "breakeven_trefferquote_pct": breakeven_ohne_daten,
-            "vorsprung_vor_breakeven_pp": None,
+            # STATT NULL EIN AUSGANGSWERT. Die neutrale Annahme fuer "wie
+            # weit ueber der Latte" ist NULL PROZENTPUNKTE - derselbe Anker
+            # wie beim Signalbeitrag der Systemguete, und aus demselben
+            # Grund: ohne Information nimmt man an, man liegt weder darueber
+            # noch darunter. Ein `None` waere hier kein ehrliches "unbekannt",
+            # sondern eine Luecke, aus der das Modell nichts schliessen kann.
+            "vorsprung_vor_breakeven_pp": 0.0,
             "trefferquote_gewichtet": breakeven_ohne_daten,
             "gewicht": 0.0,
-            "einordnung": None,
+            # Die kategoriale Zwillingsform sagt AUSDRUECKLICH, dass hier
+            # nichts gemessen wurde - statt gar nichts zu sagen.
+            "einordnung": "noch keine eigene Messung - Ausgangswert",
             "je_richtung": None,
             "nicht_enthalten_ueberholt": 0,
             "belastbar": False,
@@ -5048,8 +5056,53 @@ def systemguete_kontext_fuer_prompt(conn, watchlist: list | None = None,
     #
     # Die alte Schwelle bleibt als `belastbar`-Kennzeichen erhalten - sie ist
     # weiter die Grenze, ab der man die Zahl OHNE Gewichtung lesen darf.
-    if not isinstance(n, int) or n < 1:
+    # Vor dem Waechter definiert, weil auch der n=0-Zweig ihn braucht.
+    def _z(name, stellen=3):
+        wert = real.get(name)
+        return round(wert, stellen) if isinstance(wert, (int, float)) else None
+
+    # `None` heisst hier dasselbe wie 0: die Assetklasse taucht in der
+    # Auswertung gar nicht auf, weil nie ein Signal bewertet wurde. Vorher
+    # fiel sie damit durch `isinstance(n, int)` und bekam GAR KEINEN Fakt -
+    # Aktien und Themen-ETF blieben so ohne Ausgangswert, obwohl genau fuer
+    # sie einer gebaut wurde.
+    if n is None:
+        n = 0
+    if not isinstance(n, int) or n < 0:
         return None
+    if n == 0:
+        # AUSGANGSWERT STATT NICHTS, wie bei der Trefferquote. Ohne eigene
+        # Trades gibt es keinen Messwert - aber die neutrale Annahme laesst
+        # sich benennen, und sie ist lesbarer als ein fehlender Block.
+        return {
+            "anzahl_ausgewerteter_trades": 0,
+            "erwartungswert_r": None,
+            "sqn": None, "sqn_einordnung": None, "profit_factor": None,
+            "basislinie_erwartungswert_r": _z("basislinie_erwartungswert_r"),
+            "signalbeitrag_r": None,
+            "basislinie_anzahl": real.get("basislinie_anzahl"),
+            "erwartungswert_anker": (
+                "basislinie" if _z("basislinie_erwartungswert_r") is not None
+                else "null_kein_vorteil"),
+            "erwartungswert_gewichtet": (
+                _z("basislinie_erwartungswert_r")
+                if _z("basislinie_erwartungswert_r") is not None else 0.0),
+            "signalbeitrag_gewichtet": 0.0,
+            "gewicht": 0.0,
+            "einordnung": "noch keine eigene Messung - Ausgangswert",
+            "ci_enthaelt_null": None,
+            "erwartungswert_ci": None,
+            "aufloesungsquote": None,
+            "belastbar": False,
+            "vorlaeufig_hinweis": (
+                "NOCH KEINE eigenen ausgewerteten Trades in dieser "
+                "Assetklasse. Die genannten Werte sind der neutrale "
+                "Ausgangspunkt, KEINE Messung - Gewicht 0. Sie sagen ueber "
+                "die bisherige Leistung nichts aus und weichen jedem "
+                "ausgewerteten Trade."),
+            "lesehilfe": None,
+            "belegt": False,
+        }
     belastbar = n >= _MIN_N_SYSTEMGUETE_BELASTBAR
     ew = real.get("expectancy_r")
     # --- BASISLINIE UND UNSICHERHEIT DURCHREICHEN (2026-08-09) ----------
@@ -5073,10 +5126,6 @@ def systemguete_kontext_fuer_prompt(conn, watchlist: list | None = None,
     # eine gerichtete Wirkung, fuer die die Zahl selbst keine Grundlage gibt.
     # Nichts davon wird hier beschoenigt: die rohe Zahl bleibt an erster
     # Stelle stehen. Es kommt nur dazu, was zu ihrer Einordnung gehoert.
-    def _z(name, stellen=3):
-        wert = real.get(name)
-        return round(wert, stellen) if isinstance(wert, (int, float)) else None
-
     return {
         "anzahl_ausgewerteter_trades": n,
         "erwartungswert_r": round(ew, 3) if isinstance(ew, (int, float)) else None,
@@ -5111,9 +5160,28 @@ def systemguete_kontext_fuer_prompt(conn, watchlist: list | None = None,
         # FLACH, wie bei der Trefferquote: der gewichtete Wert und sein
         # Gewicht stehen NEBEN dem rohen und der Basislinie, nicht eine Ebene
         # tiefer in einem Dict, das beide nochmal doppelt.
+        # ANKER MIT RUECKFALL (2026-08-09). Erste Wahl ist die Basislinie -
+        # was ein mechanischer Einstieg im selben Zeitraum brachte. Fehlt sie
+        # (unter 200 Ziehungen: Aktien, Themen-ETF, Hedge), faellt der Anker
+        # auf NULL zurueck, also "kein Vorteil angenommen".
+        #
+        # Das ist NICHT der Fall, der am 09.08. zu Recht verworfen wurde. Dort
+        # ging es darum, einen GEMESSENEN Wert gegen Null zu schrumpfen und
+        # ihn damit besser aussehen zu lassen, als der Markt zulaesst. Hier
+        # gibt es keine Basislinie, und "kein Vorteil" ist die neutrale
+        # Annahme - kein Schoenrechnen, sondern das Eingestaendnis, den
+        # Marktpreis fuer diese Assetklasse nicht zu kennen.
+        #
+        # VORBEHALT, der dazugehoert: in einem Markt, in dem mechanische
+        # Einstiege verlieren, ist 0 R leicht optimistisch. Ohne gemessene
+        # Basislinie waere jede andere Zahl aber erfunden.
+        "erwartungswert_anker": ("basislinie" if _z("basislinie_erwartungswert_r")
+                                 is not None else "null_kein_vorteil"),
         "erwartungswert_gewichtet": (
             _ew["gewichtet"] if (_ew := schrumpfe_zu_neutral(
-                _z("expectancy_r"), n, _z("basislinie_erwartungswert_r")))
+                _z("expectancy_r"), n,
+                _z("basislinie_erwartungswert_r")
+                if _z("basislinie_erwartungswert_r") is not None else 0.0))
             else None),
         "signalbeitrag_gewichtet": (
             _sb["gewichtet"] if (_sb := schrumpfe_zu_neutral(

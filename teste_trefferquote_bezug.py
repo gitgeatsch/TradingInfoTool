@@ -254,9 +254,15 @@ pruefe("E8g Gegenkontrolle: ueber der Schwelle KEIN Vorlaeufig-Vermerk",
        guete(VOLL)["belastbar"] is True
        and guete(VOLL)["vorlaeufig_hinweis"] is None)
 # Und die untere Grenze bleibt: ohne einen einzigen Trade gibt es nichts.
+# GEAENDERT am 09.08.: auch bei null Trades wird jetzt ein Ausgangswert
+# geliefert statt None - siehe Abschnitt H. Hier bleibt die Zusicherung, dass
+# dabei KEIN Messwert erfunden wird.
 LEER = {"hebel": {"real": {**VOLL["hebel"]["real"], "anzahl_bewertet": 0}}}
-pruefe("E9g Gegenkontrolle: bei NULL Trades weiterhin None",
-       guete(LEER) is None)
+_leer = guete(LEER)
+pruefe("E9 bei NULL Trades kommt ein Ausgangswert, kein None",
+       _leer is not None and _leer["gewicht"] == 0.0)
+pruefe("E9g Gegenkontrolle: dabei wird KEIN Erwartungswert erfunden",
+       _leer["erwartungswert_r"] is None, str(_leer["erwartungswert_r"]))
 
 print("\nF  Der ANKER der Schrumpfung - Null waere falsch")
 f = guete(VOLL)
@@ -288,13 +294,46 @@ pruefe("F3g Gegenkontrolle: Anker Null wuerde beschoenigen - und wird "
 pruefe("F4 die ROHEN Werte bleiben unveraendert daneben stehen",
        f["erwartungswert_r"] == -0.149 and f["signalbeitrag_r"] == -0.055)
 
-# Und ohne Basislinie darf gar nicht geschrumpft werden - lieber kein Wert
-# als einer mit geratenem Anker.
+# GEAENDERT am 09.08.: ohne Basislinie wird jetzt gegen NULL geschrumpft
+# ("kein Vorteil angenommen") statt gar nicht. Vorher stand hier `is None` -
+# der Test hat die Verhaltensaenderung korrekt gefangen. Der Anker wird
+# benannt, damit erkennbar bleibt, welcher gilt.
 f2 = guete(OHNE)
-pruefe("F4g Gegenkontrolle: ohne Basislinie keine Schrumpfung des "
-       "Erwartungswerts",
-       f2["erwartungswert_gewichtet"] is None,
-       str(f2["erwartungswert_gewichtet"]))
+pruefe("F4g ohne Basislinie: Anker faellt auf Null zurueck, wird aber BENANNT",
+       f2["erwartungswert_anker"] == "null_kein_vorteil"
+       and f2["erwartungswert_gewichtet"] is not None,
+       f"{f2['erwartungswert_anker']} -> {f2['erwartungswert_gewichtet']}")
+
+print("\nH  SYSTEMGUETE: Ausgangswert auch ohne Basislinie")
+
+h0 = guete({"hebel": {"real": {"anzahl_bewertet": 0}}})
+pruefe("H1 der Fakt faellt bei n=0 NICHT mehr weg", h0 is not None)
+pruefe("H2 Anker ist die Null, und das steht ausdruecklich da",
+       h0["erwartungswert_anker"] == "null_kein_vorteil"
+       and h0["erwartungswert_gewichtet"] == 0.0,
+       f"{h0['erwartungswert_anker']} -> {h0['erwartungswert_gewichtet']}")
+pruefe("H3 Gewicht 0 - der Wert behauptet nichts", h0["gewicht"] == 0.0)
+pruefe("H4 KEIN erfundener Erwartungswert", h0["erwartungswert_r"] is None)
+pruefe("H5 der Hinweis sagt, dass es keine Messung ist",
+       "KEINE Messung" in (h0["vorlaeufig_hinweis"] or ""))
+
+h1 = guete({"hebel": {"real": {"anzahl_bewertet": 40, "expectancy_r": -0.20,
+                               "sqn": -1.0, "profit_factor": 0.8}}})
+pruefe("H6 mit Trades aber ohne Basislinie -> Anker Null, Gewicht > 0",
+       h1["erwartungswert_anker"] == "null_kein_vorteil" and h1["gewicht"] > 0,
+       f"{h1['erwartungswert_anker']}, Gewicht {h1['gewicht']}")
+
+# GEGENKONTROLLE: WO eine Basislinie existiert, MUSS sie der Anker sein -
+# sonst waere der Rueckfall zum Regelfall geworden und wuerde beschoenigen.
+hv = guete(VOLL)
+pruefe("H6g Gegenkontrolle: mit Basislinie ist SIE der Anker, nicht die Null",
+       hv["erwartungswert_anker"] == "basislinie",
+       str(hv["erwartungswert_anker"]))
+pruefe("H7g Gegenkontrolle: der Anker wird BENANNT - ohne dieses Feld waere "
+       "nicht erkennbar, welcher gilt",
+       "erwartungswert_anker" in h0 and "erwartungswert_anker" in hv)
+pruefe("H8g Gegenkontrolle: negatives n liefert weiterhin None",
+       guete({"hebel": {"real": {"anzahl_bewertet": -1}}}) is None)
 
 print("\nG  STRUKTUR - flach, selbsterklaerend, keine Doppelungen")
 q = compute_win_rate_fact(_db([
