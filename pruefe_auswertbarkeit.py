@@ -62,6 +62,36 @@ def _gepaarte_schluessel(a: list[dict], b: list[dict],
     return len(gemeinsam), len({s for s, _ in gemeinsam})
 
 
+def _hoechstens_noch(n: int, bisher: int, geplant: int) -> int:
+    """Wie viele Faelle am Ende NOCH MOEGLICH sind - nicht, wie viele zu
+    erwarten sind.
+
+    WOZU DIE UNTERSCHEIDUNG (2026-08-09, an einem echten Lauf aufgefallen).
+    Ein Waechter darf einen Lauf nur dann toeten, wenn die Frage auch im
+    guenstigsten Fall unbeantwortbar bleibt. Fuer diese Entscheidung taugt der
+    Punktschaetzer `n * geplant/bisher` nicht: bei NULL beobachteten Faellen
+    liefert er eine harte Null, obwohl null Treffer in fuenf Versuchen
+    ueberhaupt nichts ausschliessen.
+
+    Nach der Dreierregel liegt die 95%-Obergrenze der Rate bei 0 Treffern in
+    `bisher` Versuchen bei 3/bisher. Ueber 60 geplante Anker sind das nach
+    fuenf Ankern bis zu 36 moegliche Faelle - nicht null.
+
+    DER FALL: am 09.08. hat der Waechter einen Lauf nach fuenf Ankern
+    abgebrochen, weil noch kein einziges SHORT-Signal aufgetreten war. Die
+    Regel war richtig, der Schaetzer war es nicht. Ab etwa 23 Ankern ohne
+    einen einzigen Fall traegt der Abbruch dann tatsaechlich (3/23 x 60 = 7,
+    unter der Mindestgroesse 8) - und genau dort greift er jetzt auch.
+
+    Fuer n > 0 bleibt es beim Punktschaetzer: dort ist er informativ, und
+    diese Fassung ist gegen echte Daten geprueft."""
+    if bisher <= 0:
+        return geplant
+    if n == 0:
+        return int(min(1.0, 3.0 / bisher) * geplant)
+    return int(n * geplant / bisher)
+
+
 def pruefe_auswertbarkeit(ergebnis: dict[str, list[dict]], *, grundlinie: str,
                           geplant: int, bisher: int,
                           richtungen_noetig: bool = False,
@@ -127,13 +157,26 @@ def pruefe_auswertbarkeit(ergebnis: dict[str, list[dict]], *, grundlinie: str,
             if schlechteste is None:
                 continue
             arm, n, sym = schlechteste
-            hoch = int(n * faktor)
-            if hoch < min_zelle:
+            hoch = int(n * faktor)                       # zu erwarten
+            moeglich = _hoechstens_noch(n, bisher, geplant)   # noch moeglich
+            if moeglich < min_zelle:
+                # Erst HIER ist die Frage nachweislich unbeantwortbar: selbst
+                # die optimistische Obergrenze reicht nicht mehr.
                 tragfaehig = False
                 zeilen.append(
                     f"{richtung}-Zellen zu duenn (schwaechster Arm {arm}: "
-                    f"{n} gepaart, hochgerechnet {hoch}, Minimum {min_zelle}). "
-                    f"Die Richtungsaussage wird NICHT erreichbar sein.")
+                    f"{n} gepaart nach {bisher} Ankern, hochgerechnet {hoch}, "
+                    f"selbst im guenstigsten Fall nur {moeglich}, Minimum "
+                    f"{min_zelle}). Die Richtungsaussage wird NICHT "
+                    f"erreichbar sein.")
+            elif hoch < min_zelle:
+                # Noch nichts gesehen, aber noch nichts ausgeschlossen. Das
+                # ist eine Warnung, kein Abbruch - der naechste Pruefpunkt
+                # entscheidet erneut.
+                zeilen.append(
+                    f"{richtung}-Zellen bisher {n} nach {bisher} Ankern - "
+                    f"erwartet {hoch}, moeglich bis {moeglich}, Minimum "
+                    f"{min_zelle}. Noch nicht entschieden.")
             elif hoch < min_zelle * 2:
                 zeilen.append(f"{richtung}-Zellen knapp: hochgerechnet {hoch} "
                               f"- Richtungsaussage wird schwach bleiben")

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import sys
 
-from pruefe_auswertbarkeit import pruefe_auswertbarkeit
+from pruefe_auswertbarkeit import _hoechstens_noch, pruefe_auswertbarkeit
 
 _ok, _fehler = 0, []
 
@@ -39,6 +39,11 @@ def lauf(n_anker, long_anteil, arme=("A1", "X"), symbole=10):
     Waechter richtig lag: null SHORT ist tatsaechlich nicht auswertbar.
     Ein Testdatengenerator, der die Eigenschaft nicht herstellt, die er
     behauptet, prueft nichts.
+
+    NACHTRAG 09.08. abends: der Satz "null SHORT ist tatsaechlich nicht
+    auswertbar" oben stimmt SO NICHT. Null SHORT nach fuenf Ankern sagt
+    ueber sechzig Anker nichts aus - siehe Abschnitt G und
+    pruefe_auswertbarkeit._hoechstens_noch().
     """
     aus = {a: [] for a in arme}
     n_long = round(n_anker * long_anteil)
@@ -51,10 +56,22 @@ def lauf(n_anker, long_anteil, arme=("A1", "X"), symbole=10):
 
 print("A  Der Realfall vom 09.08. - der Grund, warum es diese Datei gibt")
 
-# Nach 5 von 36 Ankern, LONG-Anteil ~8 % (nemotron): 0 bis 1 LONG-Faelle.
+# Nach 5 von 36 Ankern, LONG-Anteil ~8 % (nemotron): NULL LONG-Faelle.
+#
+# KORREKTUR 09.08. abends. Diese Datei behauptete urspruenglich, der Waechter
+# haette hier "nach fuenf Ankern" abgebrochen - und ich habe das so berichtet.
+# Das war zu stark: bei 8 % sieht man in fuenf Ankern null Faelle, und null
+# Treffer in fuenf Versuchen schliessen nichts aus. Der Abbruch beruhte auf
+# einem Punktschaetzer, der bei n=0 eine harte Null behauptet (siehe
+# Abschnitt G). Nach der Reparatur greift der Schutz beim ZEHNTEN Anker -
+# immer noch weit vor den drei Stunden, aber eben nicht beim fuenften.
 u = pruefe_auswertbarkeit(lauf(5, 0.08), grundlinie="A1", geplant=36, bisher=5,
                           richtungen_noetig=True)
-pruefe("A1 bricht nach 5 Ankern ab, weil LONG nie gross genug wird",
+pruefe("A1 nach 5 Ankern ist noch NICHTS ausgeschlossen - kein Abbruch",
+       u.tragfaehig, u.bericht().replace("\n", " | ")[:120])
+u = pruefe_auswertbarkeit(lauf(10, 0.08), grundlinie="A1", geplant=36,
+                          bisher=10, richtungen_noetig=True)
+pruefe("A1b nach 10 Ankern mit 1 LONG-Fall greift der Schutz",
        not u.tragfaehig, u.bericht().replace("\n", " | ")[:120])
 
 # GEGENKONTROLLE: derselbe Aufbau mit Geminis LONG-Anteil (~58 %) muss
@@ -119,6 +136,53 @@ pruefe("F1 vor dem ersten Anker kein Urteil",
 pruefe("F2 fehlende Grundlinie bricht ab",
        not pruefe_auswertbarkeit({"X": [zeile("S1", 1)]}, grundlinie="A1",
                                  geplant=36, bisher=5).tragfaehig)
+
+print("\nG  Null Beobachtungen sind kein Beweis fuer eine Nullrate")
+#
+# DER FALL (09.08. abends, echter Lauf): die Wirkungsmessung wurde nach FUENF
+# Ankern getoetet, weil noch kein einziges SHORT-Signal aufgetreten war. Der
+# Punktschaetzer n * geplant/bisher liefert bei n=0 eine harte Null - obwohl
+# null Treffer in fuenf Versuchen gar nichts ausschliessen. Nach der
+# Dreierregel liegt die 95%-Obergrenze der Rate bei 3/5, ueber 60 Anker also
+# bis zu 36 moegliche Faelle.
+#
+# Die REGEL war richtig (einen aussichtslosen Lauf toeten), der SCHAETZER
+# nicht. Repariert wird der Schaetzer, nicht die Regel.
+
+u = pruefe_auswertbarkeit(lauf(5, 1.0), grundlinie="A1", geplant=60, bisher=5,
+                          richtungen_noetig=True)
+pruefe("G1 bei 0 von 5 wird NICHT abgebrochen", u.tragfaehig)
+pruefe("G2 aber es wird gemeldet, nicht verschwiegen",
+       "Noch nicht entschieden" in u.bericht(),
+       u.bericht().replace("\n", " | ")[:120])
+
+# GEGENKONTROLLE: irgendwann traegt der Abbruch. 3/30 x 60 = 6 < 8.
+pruefe("G2g Gegenkontrolle: bei 0 von 30 WIRD abgebrochen",
+       not pruefe_auswertbarkeit(lauf(30, 1.0), grundlinie="A1", geplant=60,
+                                 bisher=30, richtungen_noetig=True).tragfaehig)
+# Die Kante: 3/22 x 60 = 8 (reicht), 3/23 x 60 = 7 (reicht nicht).
+pruefe("G3 Kante 22 Anker: gerade noch moeglich",
+       pruefe_auswertbarkeit(lauf(22, 1.0), grundlinie="A1", geplant=60,
+                             bisher=22, richtungen_noetig=True).tragfaehig)
+pruefe("G3g Gegenkontrolle Kante 23 Anker: nicht mehr moeglich",
+       not pruefe_auswertbarkeit(lauf(23, 1.0), grundlinie="A1", geplant=60,
+                                 bisher=23, richtungen_noetig=True).tragfaehig)
+
+print("\nH  Der Schaetzer selbst")
+pruefe("H1 0 von 5 auf 60 -> bis zu 36 moeglich",
+       _hoechstens_noch(0, 5, 60) == 36, str(_hoechstens_noch(0, 5, 60)))
+pruefe("H2 0 von 30 auf 60 -> nur noch 6",
+       _hoechstens_noch(0, 30, 60) == 6, str(_hoechstens_noch(0, 30, 60)))
+# GEGENKONTROLLE: fuer n > 0 darf sich NICHTS geaendert haben - diese Fassung
+# ist gegen echte Daten geprueft, und die Reparatur soll sie nicht anfassen.
+pruefe("H2g Gegenkontrolle: bei n>0 bleibt es beim Punktschaetzer",
+       all(_hoechstens_noch(n, b, g) == int(n * g / b)
+           for n, b, g in ((5, 10, 60), (3, 5, 36), (12, 20, 60), (1, 30, 60))))
+# GEGENKONTROLLE: die Obergrenze darf die geplante Zahl nie ueberschreiten -
+# sonst behauptet der Waechter mehr Faelle, als es ueberhaupt Anker gibt.
+pruefe("H3g Gegenkontrolle: nie mehr als geplant",
+       _hoechstens_noch(0, 2, 60) == 60 and _hoechstens_noch(0, 1, 36) == 36,
+       f"{_hoechstens_noch(0, 2, 60)}, {_hoechstens_noch(0, 1, 36)}")
 
 print("\n" + "=" * 70)
 print(f"{_ok} Pruefungen bestanden, {len(_fehler)} fehlgeschlagen")
