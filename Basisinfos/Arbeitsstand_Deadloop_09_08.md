@@ -502,3 +502,57 @@ Modell → Antwort) und ein echter Prompt auf `gemini-3.5-flash-lite`: 5 Arme,
 - **Der Zähler beginnt bei null.** Er kennt die heute bereits verbrauchten
   Aufrufe nicht und weiß nichts von einem zweiten Gerät am selben Schlüssel.
   Deshalb hat Stufe 1 **zwei** Ebenen: Zähler *und* echter Probeaufruf.
+
+---
+
+## 8. Wirkungsmessung gefahren (09.08., 23:24–23:37) — halbes Ergebnis
+
+Auf `gemini-3.5-flash-lite` (eigener 500er-Topf, Produktionsbudget unberührt),
+25 Anker × 5 Arme, **125 Aufrufe, 0 Fehler**. Rauschboden 0,83.
+
+| Fakt | alt | neu | Besserung | Urteil |
+|---|---|---|---|---|
+| **Trefferquote (Q)** | −15,14 | −9,68 | **+5,45** | über dem Rauschboden — **wirksam** |
+| **Systemgüte (G)** | −2,83 | −3,88 | −1,05 | darunter — **kein Nachweis** |
+
+Der Trefferquote-Umbau drückt die LONG-Konfidenz um 5,45 Punkte weniger, das
+Sechsfache des Rauschbodens. Der Systemgüte-Umbau bewirkt nichts — die alte
+Form drückte dort ohnehin nur −2,83.
+
+**Warum die Zwischenzahlen kein Ergebnis waren:** nach 5 Ankern stand die
+Systemgüte bei **+15,50 „WIRKSAM"**. Bei 25 Ankern bleibt −1,05. Genau davor
+war gewarnt worden, bevor die Zahl bekannt war.
+
+### Drei Defekte, die dieser Lauf aufgedeckt hat
+
+**1. Der Auswertbarkeits-Wächter tötete auf Nullbeobachtungen.** `0 × 60/5 = 0`
+→ „unerreichbar". Null Treffer in fünf Versuchen schließen aber nichts aus;
+nach der Dreierregel wären bis zu 36 Fälle möglich gewesen. Repariert ist der
+**Schätzer**, nicht die Regel (`_hoechstens_noch()`): bei n=0 die Dreierregel,
+bei n>0 unverändert der Punktschätzer. **Korrektur einer früheren Aussage:**
+„der Wächter hätte den nemotron-Lauf nach fünf Ankern gestoppt" war zu stark —
+mit dem korrigierten Schätzer greift er beim zehnten.
+
+**2. Die Ankerliste war nach Datum sortiert — also nach Phase.** Die Bärenphase
+ist die jüngste, ihre Anker standen am Ende. Der Abbruch bei 25 lieferte
+`BULLE 17, SEITWAERTS 8, BAER 0` — ausgerechnet die Phase fehlte, in der die
+Produktion läuft. Jetzt reihum verschränkt (`verschraenke_phasen()`): jeder
+Anfang der Liste ist phasenausgewogen. Dieselbe Fehlerklasse wie der
+Stichproben-Alias aus D1g, eine Ebene höher.
+
+**3. Folgefehler aus 2:** ohne Bärenanker wählte der Grundlinienarm 25 von 25
+mal LONG → keine gepaarte SHORT-Zelle → die **Kontrollbedingung der Messregel
+war nicht prüfbar**. Der Bewerter behauptete trotzdem „SHORT bleibt". Korrigiert:
+er meldet jetzt „Regel zur HÄLFTE erfüllt — ob der Umbau die Asymmetrie auflöst
+oder nur verschiebt, ist offen".
+
+### Damit gilt
+
+Der Befund **+5,45 auf die Trefferquote** steht — aber **für Bullen- und
+Seitwärtsphasen**, gemessen auf `gemini-3.5-flash-lite`. Nicht für die
+Bärenphase, in der die Produktion tatsächlich läuft, und nicht für das
+Produktionsmodell. Die Wiederholung mit phasenausgewogener Stichprobe steht aus.
+
+**Geprüft:** 22 (Auswertbarkeit) + 14 (Phasenverschränkung) Prüfungen mit
+Gegenkontrollen; die Gegenkontrolle reproduziert den echten Ausfall exakt
+(alte Fassung bei 25 Ankern: `BULLE 20, SEITWAERTS 5, BAER 0`).

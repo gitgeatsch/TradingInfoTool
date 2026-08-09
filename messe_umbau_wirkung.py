@@ -64,6 +64,55 @@ import messe_regimephasen_llm as M
 
 ARME = ("A1", "Q_alt", "Q_neu", "G_alt", "G_neu")
 
+
+def verschraenke_phasen(je_phase: dict, phasen, label: dict, reihen: dict,
+                        hoechstens: int) -> list:
+    """Anker REIHUM ueber die Phasen einsammeln, nicht Phase fuer Phase.
+
+    DER FALL (09.08. abends, echter Lauf). Die vorherige Fassung haengte die
+    Phasen aneinander und sortierte alles nach DATUM. Die Baerenphase ist die
+    juengste - ihre Anker standen damit am ENDE der Liste. Als der Lauf nach
+    25 von 60 Ankern abbrach, enthielt die Stichprobe:
+
+        BULLE 17, SEITWAERTS 8, BAER 0
+
+    Ausgerechnet die Phase, in der die Produktion tatsaechlich laeuft, fehlte
+    vollstaendig. Und weil der Grundlinienarm in Bullen- und Seitwaertsphasen
+    durchgehend LONG waehlt (25 von 25), gab es keine einzige gepaarte
+    SHORT-Zelle - die Kontrollbedingung der Messregel war nicht pruefbar.
+    Beide Defekte hatten dieselbe Wurzel.
+
+    Reihum heisst: erst bekommt jede Phase einen Anker, dann jede einen
+    zweiten, und so fort. Damit ist JEDER ANFANG der Liste phasenausgewogen,
+    und ein frueher Abbruch verzerrt die Mischung nicht mehr.
+
+    Das ist dieselbe Lehre wie beim Stichproben-Alias, den die Gegenkontrolle
+    D1g in messe_regimephasen_llm.waehle_anker() gefunden hat - eine
+    Sortierung, die unter Kuerzung systematisch etwas abschneidet. Dort waren
+    es Symbole, hier Phasen: eine Ebene hoeher, gleicher Fehler.
+
+    Innerhalb einer Phase bleibt die Datumssortierung - sie macht den Lauf
+    nachvollziehbar und schneidet nichts ab, weil reihum gezogen wird."""
+    je_phase_sortiert = {}
+    for phase in phasen:
+        eintraege = [(phase, label[phase], sym, i)
+                     for sym, i in je_phase.get(phase, [])]
+        eintraege.sort(key=lambda x: (reihen[x[2]][x[3]].date, x[2]))
+        je_phase_sortiert[phase] = eintraege
+
+    anker: list = []
+    runde = 0
+    while len(anker) < hoechstens:
+        vorher = len(anker)
+        for phase in phasen:
+            eintraege = je_phase_sortiert[phase]
+            if runde < len(eintraege) and len(anker) < hoechstens:
+                anker.append(eintraege[runde])
+        if len(anker) == vorher:      # keine Phase hat mehr Nachschub
+            break
+        runde += 1
+    return anker
+
 # JE ANBIETER SEIN EIGENER RAUSCHBODEN - gemessen am 09.08. mit
 # `pruefe_llm_stabilitaet.py`, 12 Anker x 3 Wiederholungen bei bitgleicher
 # Eingabe. Den Gemini-Wert auf einen OpenRouter-Lauf anzuwenden waere ein
@@ -171,13 +220,7 @@ def main() -> int:
     btc = reihen["BTC"]
     fest = M.stabile_tage(M.btc_phasen(btc))
     je_phase = M.waehle_anker(reihen, fest, args.anker, args.je_symbol)
-    anker = []
-    for phase in M.ARME:
-        for sym, i in je_phase[phase]:
-            anker.append((phase, M.LABEL[phase], sym, i))
-    anker.sort(key=lambda x: (reihen[x[2]][x[3]].date, x[2]))
-    if len(anker) > args.anker:
-        anker = anker[::max(1, len(anker) // args.anker)][:args.anker]
+    anker = verschraenke_phasen(je_phase, M.ARME, M.LABEL, reihen, args.anker)
 
     print(f"Anker {len(anker)}, {len({a[2] for a in anker})} Symbole, "
           f"Phasen {dict(Counter(a[0] for a in anker))}")
@@ -407,7 +450,20 @@ def main() -> int:
               + (f"   SHORT-Drift {short_drift:+.2f}" if short_drift is not None
                  else "   SHORT nicht vergleichbar"))
         if besserung > boden:
-            if short_drift is not None and short_drift < -boden:
+            if short_drift is None:
+                # KORREKTUR 09.08. abends. Hier stand vorher dasselbe
+                # "WIRKSAM: ... SHORT bleibt" wie im vollstaendig geprueften
+                # Fall - eine Behauptung ueber SHORT, die gar nicht geprueft
+                # WERDEN konnte. Ein halbes Ergebnis las sich damit wie ein
+                # ganzes. Die vorab festgelegte Regel hat zwei Bedingungen;
+                # ist eine davon nicht pruefbar, ist sie nicht erfuellt,
+                # sondern offen.
+                print("    -> WIRKSAM AUF LONG, ABER die SHORT-Kontrolle war "
+                      "nicht pruefbar (keine gepaarten SHORT-Zellen). Die "
+                      "Regel ist damit zur HAELFTE erfuellt: ob der Umbau "
+                      "die Asymmetrie aufloest oder nur verschiebt, ist "
+                      "offen.")
+            elif short_drift < -boden:
                 print("    -> WIRKSAM, ABER: SHORT bewegt sich gegenlaeufig. "
                       "Die Asymmetrie waere gedreht, nicht aufgeloest.")
             else:
