@@ -150,10 +150,13 @@ def main() -> None:
     mistral_api_key = os.environ.get("MISTRAL_API_KEY")
     if mistral_api_key:
         mistral_client = MistralClient(api_key=mistral_api_key)
-        logger.info("Mistral API-Key gefunden - zweite Fallback-Stufe im Budget-Allocator verfügbar.")
+        logger.info(
+            "Mistral API-Key gefunden - DRITTE und letzte Stufe der "
+            "Signal-Kette (Gemini -> OpenRouter -> Mistral)."
+        )
     else:
-        # P-8: Mistral ist rein additiv (erste, optionale Fallback-Stufe) -
-        # ohne Key bleibt die Kette bei Gemini/Z.ai wie zuvor.
+        # P-8: Mistral ist rein additiv (letzte, optionale Stufe) - ohne Key
+        # endet die Kette bei OpenRouter.
         mistral_client = None
         logger.info("Kein MISTRAL_API_KEY gesetzt - Mistral-Fallback-Stufe deaktiviert.")
 
@@ -161,15 +164,15 @@ def main() -> None:
     if zai_api_key:
         zai_client = ZaiClient(api_key=zai_api_key)
         logger.info(
-            "Z.ai API-Key gefunden - letzte Fallback-Stufe (nach Gemini) im "
-            "Budget-Allocator verfügbar (2026-07-20, unverifizierte Kapazitaet, siehe Memory "
+            "Z.ai API-Key gefunden - GEGENPRUEFUNG, NICHT Teil der "
+            "Signal-Kette (2026-07-20, unverifizierte Kapazitaet, siehe Memory "
             "reference_llm_provider_recherche_uebersicht.md)."
         )
     else:
-        # P-8: Z.ai ist rein additiv (letzte Fallback-Stufe) - ohne Key
-        # bleibt die Kette bei Mistral->Gemini wie zuvor.
+        # P-8: Z.ai ist rein additiv (Gegenpruefung) - ohne Key bleibt die
+        # Signal-Kette unveraendert, nur die Gegenpruefung entfaellt.
         zai_client = None
-        logger.info("Kein ZAI_API_KEY gesetzt - Z.ai-Fallback-Stufe deaktiviert.")
+        logger.info("Kein ZAI_API_KEY gesetzt - Z.ai-Gegenpruefung deaktiviert.")
 
     # OPENROUTER (2026-08-07 fuer die Gegenpruefung, 2026-08-09 zusaetzlich fuer
     # die Signal-Kette). Siehe api/openrouter.py - kurz: Mistral ist
@@ -177,7 +180,7 @@ def main() -> None:
     #
     # ZWEI GETRENNTE SCHALTER, ABSICHTLICH:
     #   gegenpruefung.openrouter_aktiv     -> ersetzt Z.ai bei der Gegenpruefung
-    #   budget_allocator.openrouter_aktiv  -> dritte Stufe der Signal-Kette
+    #   budget_allocator.openrouter_aktiv  -> ZWEITE Stufe der Signal-Kette
     # Das sind zwei verschiedene Entscheidungen an zwei verschiedenen Stellen
     # der Pipeline. Einen umzulegen darf den anderen nicht mitnehmen.
     #
@@ -247,10 +250,12 @@ def main() -> None:
     gemini_api_key = os.environ.get("GEMINI_API_KEY")
     if gemini_api_key:
         gemini_client = GeminiClient(api_key=gemini_api_key)
-        logger.info("Gemini API-Key gefunden - letzte Fallback-Stufe im Budget-Allocator verfügbar.")
+        logger.info(
+            "Gemini API-Key gefunden - ERSTE Stufe der Signal-Kette "
+            "(Gemini -> OpenRouter -> Mistral), 500 Aufrufe/Tag je Modell."
+        )
     else:
-        # P-8: Gemini ist rein additiv (letzte, optionale Fallback-Stufe) - ohne
-        # Key bleibt die Kette entsprechend kuerzer.
+        # P-8: ohne Gemini-Key beginnt die Kette bei OpenRouter.
         gemini_client = None
         logger.info("Kein GEMINI_API_KEY gesetzt - Gemini-Fallback-Stufe deaktiviert.")
 
