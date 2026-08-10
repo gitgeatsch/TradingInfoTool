@@ -107,25 +107,64 @@ def _bewegung(c: np.ndarray, i: int) -> list[str]:
     return [f"Kursentwicklung: {', '.join(teile)}."] if teile else []
 
 
+# Ein Niveau, das direkt am Kurs liegt, ist keine Marke - es ist Rauschen.
+# Im Trockenlauf vom 10.08. meldete die erste Fassung fuer JEDEN Prueffall
+# "Widerstand 0,0 Schwankungsbreiten hoeher": bei taeglichen Fraktalen liegt
+# immer ein Swing direkt daneben. Zwei Schranken beheben das.
+NIVEAU_MIN_ABSTAND_ATR = 0.5   # naeher als das ist keine eigene Marke
+NIVEAU_CLUSTER_ATR = 0.3       # was enger beieinander liegt, ist EIN Niveau
+
+
+def _cluster(punkte: list, atr: float) -> list[tuple[float, int]]:
+    """Fasst nahe beieinanderliegende Swings zu einem Niveau zusammen.
+
+    Ein Kurs, der dreimal an derselben Stelle gedreht hat, hat dort EINE Marke -
+    und ihre Staerke steckt in der Zahl der Beruehrungen, nicht in drei
+    Eintraegen. Gibt (Preis, Beruehrungen) zurueck."""
+    if not punkte:
+        return []
+    aus = []
+    for p in sorted(punkte):
+        if aus and abs(p - aus[-1][0]) <= NIVEAU_CLUSTER_ATR * atr:
+            preis, n = aus[-1]
+            aus[-1] = ((preis * n + p) / (n + 1), n + 1)
+        else:
+            aus.append((p, 1))
+    return aus
+
+
 def _niveaus(c: np.ndarray, h: np.ndarray, l: np.ndarray, i: int,
              atr: float, kurs_eur: float, kurs_quelle: float) -> list[str]:
-    """Block 4 - wo liegen Widerstand und Unterstuetzung, in ATR und in EUR."""
+    """Block 4 - Widerstand und Unterstuetzung, in ATR und in EUR.
+
+    Genannt wird das naechste Niveau, das WEIT GENUG entfernt ist, um eine
+    Marke zu sein - und mit der Zahl seiner Beruehrungen, denn ein dreimal
+    bestaetigtes Niveau ist etwas anderes als ein einmaliger Wendepunkt."""
     hi, lo = _swings(h, l, i)
-    if not hi and not lo:
+    if (not hi and not lo) or atr <= 0:
         return []
     faktor = kurs_eur / kurs_quelle if kurs_quelle else 1.0
-    punkte = [h[j] for j in hi] + [l[j] for j in lo]
-    drueber = [p for p in punkte if p > c[i]]
-    drunter = [p for p in punkte if p < c[i]]
+    kurs = float(c[i])
+    grenze = NIVEAU_MIN_ABSTAND_ATR * atr
+    niveaus = _cluster([float(h[j]) for j in hi] + [float(l[j]) for j in lo], atr)
+
     aus = []
+    drueber = [(p, n) for p, n in niveaus if p - kurs >= grenze]
     if drueber:
-        w = min(drueber)
-        aus.append(f"Der naechste Widerstand liegt {(w - c[i]) / atr:.1f} "
-                   f"Schwankungsbreiten hoeher, bei {w * faktor:.4f} EUR.")
+        p, n = min(drueber, key=lambda x: x[0])
+        aus.append(f"Der naechste Widerstand liegt {(p - kurs) / atr:.1f} "
+                   f"Schwankungsbreiten hoeher, bei {p * faktor:.4f} EUR "
+                   f"({n}-mal beruehrt).")
+    drunter = [(p, n) for p, n in niveaus if kurs - p >= grenze]
     if drunter:
-        u = max(drunter)
-        aus.append(f"Die naechste Unterstuetzung liegt {(c[i] - u) / atr:.1f} "
-                   f"Schwankungsbreiten tiefer, bei {u * faktor:.4f} EUR.")
+        p, n = max(drunter, key=lambda x: x[0])
+        aus.append(f"Die naechste Unterstuetzung liegt {(kurs - p) / atr:.1f} "
+                   f"Schwankungsbreiten tiefer, bei {p * faktor:.4f} EUR "
+                   f"({n}-mal beruehrt).")
+    if not aus:
+        # Auch das ist eine Aussage: der Kurs steht im freien Feld.
+        aus.append(f"Im Umkreis von {NIVEAU_MIN_ABSTAND_ATR:.1f} "
+                   f"Schwankungsbreiten liegt keine markante Marke.")
     return aus
 
 
