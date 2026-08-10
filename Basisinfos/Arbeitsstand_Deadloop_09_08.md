@@ -946,3 +946,85 @@ Merkmalstabelle begann grundlos bei Index 250 statt 200 (48 von 80 Ankern
 fielen heraus, systematisch die frühen); Nachbarn nach Beginndatum statt nach
 Auflösungsdatum gefiltert (Leckage); Urteilszeile prüfte nur eine Richtung und
 hätte ein gesichert schlechteres Ergebnis als „kein Befund" ausgegeben.
+
+---
+
+## 7. Der Rollen-Umbau — gebaut und am echten Fall geprüft (10.08. abends)
+
+### 7.1 Was gebaut wurde
+
+Nach dem Grundbefund aus Abschnitt 6 wurde die LLM-Ebene neu aufgesetzt. Der
+Nutzer benannte den Defekt präzise: **„Gate haben wir, LLM produziert auch
+Ergebnisse — der Defekt ist das LLM, Eingang und Ausgang."**
+
+| Baustein | Datei | Kern |
+|---|---|---|
+| Ausgang | `agent/empfehlung_vertrag.py` | keine Empfehlung ohne Betrag, Kurse, tragende Begründung |
+| Eingang Asset | `agent/lagebeschreibung.py` | Aussagen statt Zahlen, **Bestand an erster Stelle** |
+| Eingang Markt | `agent/marktbreite.py` | Anteil über 50-/200-Tage-Linie mit historischem Bezug |
+| Rolle A | `agent/rolle_analyst.py` | Marktlage → Höchstbetrag. 1.147 Zeichen |
+| Rolle BC | `agent/rolle_trader.py` | Aufbau + Bestand → Handlung. 2.036 Zeichen |
+| Milde | `agent/antwort_normalisierung.py` | Formfehler korrigieren, Sinnfehler ablehnen |
+| Durchlauf | `pruefe_rollenkette.py` | drei Stufen: trocken / ein Fall / Prüfsteine |
+
+**Prompt: 3.183 Zeichen gegen 34.611 im Altsystem.** Rund 42 Aufrufe täglich
+statt 40 — Variante 2 (Trader und Entscheider in einem Aufruf), nachdem der
+erste Entwurf mit Selbstkonsistenz auf 162 kam.
+
+### 7.2 Die vier Prüfsteine — echte Signale mit bekanntem Ausgang
+
+```
+BTC  KAUFEN     14.07.  → NICHTS_TUN   hätte −2,3 % vermieden
+KAS  TAUSCHEN   14.07.  → NICHTS_TUN   hätte −8,9 % vermieden
+KAS  NACHKAUFEN 15.07.  → NICHTS_TUN   hätte −8,6 % vermieden
+GRIFFAIN HALTEN 21.07.  → NICHTS_TUN   +33,8 % wieder verpasst
+```
+
+**Der Kerndefekt ist behoben.** In allen drei Fällen erscheint der Bestand als
+hochgewichteter Gegenbeleg — *„Bestand mit −16,8 % im Minus bei 3453 EUR
+Einsatz"*. Im Altsystem stand dieselbe Information in den Risiken und hat die
+Empfehlung nie erreicht; genau deshalb kaufte KAS am 15.07. in eine
+Verlustposition nach.
+
+Kein einziger `_warnung`-Marker: Das Hedging, das die Zusammenlegung von Rolle B
+und C riskierte, trat nicht auf.
+
+### 7.3 Das System reagiert — Gegentest bei maximaler Marktbreite
+
+Der Einwand gegen 7.2 lautet: vier Mal NICHTS_TUN könnte auch ein blindes
+System sein. Der Gegentest am breitesten Zeitpunkt der Historie widerlegt das:
+
+```
+Marktbreite  20 %  → Rolle A: höchstens 100 EUR → NICHTS_TUN
+Marktbreite 100 %  → Rolle A: höchstens 500 EUR → NACHKAUFEN 500 EUR
+```
+
+Die Kette überträgt also: Rolle A deckelt, Rolle BC folgt.
+
+### 7.4 Und der Befund, der schwerer wiegt als der Test
+
+**In der gesamten Historie gibt es keinen Zeitpunkt mit breitem Markt, an dem
+ein Einstieg 20 Tage später im Plus gewesen wäre.**
+
+| Marktbreite über 50-Tage-Linie | Zeitpunkte | Median-Rendite 20 Tage danach |
+|---|---|---|
+| über 45 % | 15 | **−0,6 % bis −20,4 %** |
+| 100 % (13.05., 23.05., 22.07.2025) | 3 | −14,0 %, −10,9 %, −12,2 % |
+
+**Je breiter der Markt, desto schlechter der Einstieg.** Das ist keine Anomalie,
+sondern deckt sich mit der externen Recherche: Krypto zeigt Momentum auf 2–4
+Wochen und **Umkehr jenseits eines Monats**.
+
+Zwei Konsequenzen:
+
+1. **Der Test „erkennt das System Chancen?" ist mit diesen Daten nicht
+   durchführbar** — es gab in 16 Monaten keine. Das erklärt auch, warum alle
+   vier Prüfsteine zu NICHTS_TUN führen: es war fast immer richtig.
+2. **Die Marktbreite als Eingangsgröße für Rolle A ist zu hinterfragen.** Sie
+   wirkt in unseren Daten invers. Die Rolle folgt ihr aktuell im Wortsinn — bei
+   100 % Breite erlaubt sie den größten Betrag, und genau dort war die
+   Folgerendite am schlechtesten.
+
+**Nicht weitergebaut wird an diesem Punkt.** Ob die Marktbreite umgedreht,
+ersetzt oder mit dem Momentum-Fenster kombiniert gehört, ist eine
+Konzeptentscheidung — keine Reparatur.

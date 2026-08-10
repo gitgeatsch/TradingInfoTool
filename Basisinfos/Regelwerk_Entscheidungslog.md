@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (202 Einträge)
+## Index nach Thema (203 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -15942,3 +15942,52 @@ Merkmalstabelle begann grundlos bei Index 250 (48 von 80 Ankern fielen heraus,
 systematisch die frühen); Nachbarn nach Beginn- statt Auflösungsdatum gefiltert
 (Leckage); Urteilszeile prüfte nur eine Richtung und hätte ein gesichert
 schlechteres Ergebnis als „kein Befund" ausgegeben.
+
+---
+
+## Nachtrag 203 — 2026-08-10: Die LLM-Ebene neu aufgesetzt, Rollen getrennt
+
+**Thema:** Rollenkonzept · Ein- und Ausgang · Validierung · Marktbreite
+
+**Anlass.** Nutzerbefund: *„Gate haben wir, LLM produziert auch Ergebnisse — der
+Defekt ist das LLM, Eingang und Ausgang."* Belegt an einem echten Signal (KAS,
+15.07., Konfidenz 78 %): NACHKAUFEN ohne Betrag, ohne Kurs, ohne Stop; die
+Begründung relativierte sich selbst; die Prognose („bleibt seitwärts")
+widersprach der Aktion; und die Verlustposition (−14,6 %) stand in den Risiken,
+ohne die Empfehlung zu erreichen.
+
+**Gebaut** (Details in `Arbeitsstand_Deadloop_09_08.md` Abschnitt 7):
+Vertrag mit Validator, Lagebeschreibung, Marktbreite, zwei Rollen-Prompts,
+Schema-Ableitung, milde Normalisierung, Durchlauf-Skript. Prompt 3.183 Zeichen
+gegen 34.611. Rund 42 Aufrufe täglich statt 40.
+
+**Geprüft an vier echten Signalen mit bekanntem Ausgang:** drei Verlust-
+Empfehlungen werden zu NICHTS_TUN, der Bestand erscheint als hochgewichteter
+Gegenbeleg. Eine verpasste Chance bleibt verpasst.
+
+**NEUER BEFUND, der über den Umbau hinausgeht:** In der gesamten Historie gibt
+es keinen Zeitpunkt mit breitem Markt, an dem ein Einstieg 20 Tage später im
+Plus gewesen wäre. 15 Zeitpunkte über 45 % Marktbreite, Median-Rendite danach
+−0,6 % bis −20,4 %; bei 100 % Breite −14,0 / −10,9 / −12,2 %. Je breiter, desto
+schlechter — deckt sich mit der Recherche (Momentum 2–4 Wochen, Umkehr jenseits
+davon). **Die Marktbreite wirkt in unseren Daten invers**, und Rolle A folgt ihr
+aktuell im Wortsinn.
+
+**Verworfen und warum:**
+- *Selbstkonsistenz (3 Abfragen)*: der Beleg dafür stammt von der Richtungswahl,
+  einer Aufgabe, die Rolle BC nicht mehr hat. Vervierfacht das Kontingent für
+  eine Vermutung.
+- *Trader und Entscheider getrennt*: verdoppelt die Aufrufe. Von den drei
+  belegten Einwänden gegen mehrere Rollen in einem Aufruf greift nur das
+  Hedging — und dagegen wirken getrennte Ausgabefelder plus Validator. Im
+  ersten echten Lauf trat es nicht auf.
+- *Strenge Validierung*: die erste Fassung lehnte „250 EUR" und „bullisch" ab.
+  Nutzereinwand: *„damit wir nichts blocken."* Umgebaut auf korrigieren /
+  degradieren / warnen; es bleiben vier harte Ablehnungsgründe.
+- *Blöcke endgültig streichen* (`systemguete`, `signal_stabilitaet` u. a.): die
+  Begründungen stammen aus dem ALTEN Aufbau. Startkonfiguration ohne sie, jeder
+  **einzeln zuschaltbar**, Frage im neuen Aufbau neu zu messen.
+
+**Offen:** Rang unter Kandidaten, Position Swapping — und die Konzeptfrage, ob
+die Marktbreite umgedreht, ersetzt oder mit dem Momentum-Fenster kombiniert
+gehört.
