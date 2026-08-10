@@ -108,6 +108,16 @@ class Kerze:
     high: float
     low: float
     close: float
+    # UMSATZ (10.08.2026). Er stand die ganze Zeit in der Exportdatei - 7.690 von
+    # 7.690 Punkten fuehren ihn - und wurde hier weggeworfen. Die Praxisliteratur
+    # nennt ihn als einen der zentralen Bestaetigungsfaktoren: institutionelle
+    # Akkumulation zeigt sich als stetiger Umsatz ueber mehrere Sitzungen, nicht
+    # als ein einzelner Ausbruchstag.
+    #
+    # Mit Vorgabewert, damit die zweite Stelle, die Kerzen baut, unveraendert
+    # bleibt - und weil `None` etwas anderes heisst als `0.0`: nicht vorhanden
+    # gegen tatsaechlich kein Handel.
+    volume: float | None = None
 
 
 def _arg(name: str, default: int) -> int:
@@ -128,7 +138,8 @@ def lade_reihen() -> dict[str, list[Kerze]]:
                  and p.get("close") and p.get("high") and p.get("low")]
             if len(g) > len(reihen.get(s, [])):
                 reihen[s] = [Kerze(str(p["date"])[:10], float(p.get("open") or p["close"]),
-                                   float(p["high"]), float(p["low"]), float(p["close"]))
+                                   float(p["high"]), float(p["low"]), float(p["close"]),
+                                   None if p.get("volume") is None else float(p["volume"]))
                              for p in sorted(g, key=lambda x: str(x["date"])[:10])]
     return reihen
 
