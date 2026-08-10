@@ -664,6 +664,15 @@ function renderApiHealthGroup(sourceKeys, apiHealth) {
       } else if (entry.status === "fehler") {
         statusClass = "err";
         statusText = "Fehler (" + fmtRelativeTime(entry.last_error_at) + ")";
+      } else if (entry.status === "budget_leer") {
+        // WEDER GRUEN NOCH ROT (2026-08-10). Der Anbieter ist gesund, liefert
+        // aber bis Mitternacht Pazifik (09:00 MESZ) nichts mehr. Gruen waere
+        // gelogen - wer nachsieht, weil Signale ausbleiben, braucht genau
+        // diese Zeile. Rot waere auch gelogen und hat am 09.08. die Diagnose
+        // zwei Tage in die falsche Richtung geschickt.
+        statusClass = "stale";
+        statusText = "Tagesbudget leer, Reset 09:00 (" +
+          fmtRelativeTime(entry.last_error_at) + ")";
       }
     }
     return '<div class="row"><span>' + key + '</span><span class="' + statusClass + '">' +

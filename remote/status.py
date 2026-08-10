@@ -490,7 +490,68 @@ def _get_api_health(conn: sqlite3.Connection) -> dict:
     wurde - Groq und Cerebras stehen dort mit ihrem letzten Stand von vor der
     Entfernung und erschienen auf der Seite sonst als dauerhaft stille
     Quellen."""
-    return _ohne_entfernte_provider(db.get_api_health_status(conn))
+    return _kontingent_statt_stoerung(
+        _ohne_entfernte_provider(db.get_api_health_status(conn)))
+
+
+def _pazifik_tag_von(zeitstempel: str | None) -> str | None:
+    """Auf welchen KONTINGENT-Tag faellt dieser UTC-Zeitstempel?
+
+    Googles Free-Tier setzt zu Mitternacht Pazifik zurueck, nicht zu
+    Mitternacht UTC. Ein Fehler von 06:34 UTC gehoert damit noch zum Vortag."""
+    if not zeitstempel:
+        return None
+    from datetime import datetime
+    try:
+        from zoneinfo import ZoneInfo
+        zone = ZoneInfo("America/Los_Angeles")
+    except Exception:  # noqa: BLE001
+        from datetime import timedelta, timezone
+        zone = timezone(timedelta(hours=-8))
+    try:
+        return datetime.fromisoformat(zeitstempel).astimezone(zone).strftime("%Y-%m-%d")
+    except (TypeError, ValueError):
+        return None
+
+
+def _kontingent_statt_stoerung(daten: dict) -> dict:
+    """Ein leeres Tagesbudget ist kein Defekt - und ab morgen keine Nachricht.
+
+    ZWEI PROBLEME, beide am 10.08. an der echten Statusseite gesehen.
+
+    ERSTENS FEHLTE EIN ZUSTAND. Seit der Dekorator ein erschoepftes Budget
+    nicht mehr als Stoerung protokolliert, steht der Anbieter auf "OK" -
+    obwohl er den ganzen Tag nichts liefert. Wer nachsieht, weil die Signale
+    ausbleiben, findet eine gruene Ampel und sucht den Fehler woanders. Das
+    ist nicht besser als das falsche Rot vorher, nur leiser.
+
+    ZWEITENS BLIEB EIN ALTER EINTRAG EWIG ROT. `api_health_status` haelt je
+    Quelle nur den LETZTEN Zustand. Ein Kontingent-Fehler von gestern stand
+    dort weiter als "Fehler", obwohl das Budget laengst zurueckgesetzt ist -
+    und liess sich nur von Hand loeschen. Ein Zustand, der sich selbst
+    ueberlebt, gehoert automatisch aufgeloest, nicht per Kommando.
+
+    Beides haengt am Kontingent-TAG (Mitternacht Pazifik): derselbe Eintrag
+    bedeutet heute "Budget leer" und morgen "nicht mehr relevant"."""
+    try:
+        from api.gemini import _erschoepft, _kontingent_tag
+    except Exception:  # noqa: BLE001
+        return daten
+    heute = _kontingent_tag()
+    for eintrag in daten.values():
+        if eintrag.get("last_error_type") != "TageskontingentErschoepft":
+            continue
+        if _pazifik_tag_von(eintrag.get("last_error_at")) == heute:
+            eintrag["status"] = "budget_leer"
+        else:
+            eintrag["status"] = ("ok" if eintrag.get("last_success_at")
+                                 else "unbekannt")
+            eintrag["veralteter_kontingentfehler"] = True
+    # Der prozesslokale Merker kennt Faelle, die (noch) keinen DB-Eintrag
+    # haben - der Dekorator schreibt fuer sie ja bewusst nichts mehr.
+    if any(tag == heute for _, tag in _erschoepft) and "gemini" in daten:
+        daten["gemini"]["status"] = "budget_leer"
+    return daten
 
 
 def _get_coingecko_quota(conn: sqlite3.Connection) -> dict | None:

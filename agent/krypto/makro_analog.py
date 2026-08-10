@@ -265,12 +265,50 @@ def find_historical_analogs(
     if len(historie) < 2:
         return None, []
 
-    aktuell = historie[-1]
+    # DER LETZTE VOLLSTAENDIGE MONAT, NICHT DER LETZTE (2026-08-10).
+    #
+    # DER FALL: am 10.08. meldete der Job "noch keine auswertbare Historie (zu
+    # fruehe Datenlage)" - bei 1.185 gespeicherten Monaten ab 1927-12. Die
+    # Historie war nie das Problem. Der LAUFENDE Monat hatte 2 von 6
+    # Dimensionen belegt:
+    #
+    #     2026-06   dxy ✓  fed ✓  10y ✓  cpi ✓  wti ✓  spx ✓   = 6
+    #     2026-07   dxy ✓  fed ✓  10y ✓  cpi -  wti ✓  spx ✓   = 5
+    #     2026-08   dxy -  fed -  10y ✓  cpi -  wti -  spx ✓   = 2
+    #
+    # Unter `mindest_dimensionen` (3) faellt damit JEDER Kandidat durch den
+    # Ueberlappungsfilter, `analoge` bleibt leer, und der Aufrufer bekommt
+    # None. Das ist kein Rand-, sondern der REGELFALL: der laufende Monat ist
+    # strukturell unvollstaendig, weil Monatsaggregate erst nach Monatsende
+    # entstehen und der CPI ohnehin nachlaeuft. Der Vergleich war damit einen
+    # grossen Teil jedes Monats still - und meldete dabei die falsche Ursache.
+    #
+    # Jetzt wird der juengste Monat genommen, der GENUG Dimensionen hat.
+    # Zurueckgegeben wird er unveraendert als `aktuell`, damit der Aufrufer
+    # sieht, WELCHER Monat verglichen wurde - der Monatsname steht im Fakt.
     dim_stats = _dimension_stats(historie)
+    aktuell = None
+    for kandidat in reversed(historie):
+        belegt = sum(1 for d in KONSTELLATIONS_DIMENSIONEN
+                     if getattr(kandidat, d, None) is not None)
+        if belegt >= mindest_dimensionen:
+            aktuell = kandidat
+            break
+    if aktuell is None:
+        # Jetzt stimmt die Aussage "keine auswertbare Datenlage" tatsaechlich:
+        # KEIN einziger Monat hat genug Dimensionen.
+        return None, []
     if not dim_stats:
         return aktuell, []
 
-    grenzmonat_index = len(historie) - 1 - mindest_abstand_monate
+    # Der Ausschlussbereich zaehlt ab dem VERGLEICHSMONAT, nicht ab dem Ende
+    # der Historie (2026-08-10). Solange `aktuell` immer der letzte Eintrag
+    # war, fiel beides zusammen; seit der Vergleichsmonat zurueckspringen kann,
+    # waere die Fassung von vorher um genau diese Differenz verschoben - und
+    # liesse Monate als "unabhaengige Analoge" zu, die naeher am
+    # Vergleichsmonat liegen als der geforderte Mindestabstand.
+    aktuell_index = historie.index(aktuell)
+    grenzmonat_index = aktuell_index - mindest_abstand_monate
     kandidaten = historie[: max(0, grenzmonat_index + 1)]
 
     bewertet = []
