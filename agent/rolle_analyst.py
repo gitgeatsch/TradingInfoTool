@@ -77,28 +77,53 @@ class AnalystAntwortUngueltig(ValueError):
 
 
 def validiere(antwort: dict) -> dict:
+    """Prueft die Marktlage-Antwort. KORRIGIERT Formfehler, lehnt Sinnfehler ab.
+
+    Der Unterschied (Nutzereinwand 10.08.: "damit wir nichts blocken"): wer
+    "breit" statt "breit_getragen" sagt oder 250 statt 300, hat die Aufgabe
+    verstanden und die Konvention verfehlt. Das wird zurechtgerueckt und
+    protokolliert. Abgelehnt wird nur, was in sich unbrauchbar ist."""
+    from agent.antwort_normalisierung import (Protokoll, naechste_tranche,
+                                              naechstes_wort, kuerze_liste)
+
     if not isinstance(antwort, dict):
         raise AnalystAntwortUngueltig("Antwort ist kein Objekt")
     fehlend = [f for f in REQUIRED_FELDER if antwort.get(f) in (None, "", [])]
     if fehlend:
         raise AnalystAntwortUngueltig(f"Felder fehlen oder sind leer: {fehlend}")
-    if antwort["traegt"] not in TRAGFAEHIGKEIT:
+
+    prot = Protokoll()
+
+    wort, hinweis = naechstes_wort(antwort["traegt"], TRAGFAEHIGKEIT)
+    if wort is None:
+        # Keine Aehnlichkeit zu einer der drei Kategorien: das Modell hat eine
+        # eigene erfunden. Das ist ein Sinnfehler, kein Tippfehler.
         raise AnalystAntwortUngueltig(
-            f"traegt={antwort['traegt']!r}, erlaubt {TRAGFAEHIGKEIT}")
-    try:
-        betrag = int(float(antwort["max_tranche_eur"]))
-    except (TypeError, ValueError):
-        raise AnalystAntwortUngueltig(
-            f"max_tranche_eur={antwort['max_tranche_eur']!r} ist keine Zahl")
-    if betrag not in TRANCHEN_EUR:
-        raise AnalystAntwortUngueltig(
-            f"max_tranche_eur={betrag}, erlaubt {TRANCHEN_EUR} - das Modell "
-            f"waehlt eine Tranche, es rechnet keine aus")
+            f"traegt={antwort['traegt']!r} passt zu keiner Kategorie {TRAGFAEHIGKEIT}")
+    antwort["traegt"] = wort
+    prot.dazu(hinweis)
+
+    betrag, hinweis = naechste_tranche(antwort["max_tranche_eur"], TRANCHEN_EUR)
+    if betrag is None:
+        raise AnalystAntwortUngueltig(hinweis or "max_tranche_eur unbrauchbar")
+    antwort["max_tranche_eur"] = betrag
+    prot.dazu(hinweis)
+
     belege = antwort["belege"]
-    if not isinstance(belege, list) or not 2 <= len(belege) <= 4:
-        raise AnalystAntwortUngueltig(
-            f"belege: {len(belege) if isinstance(belege, list) else '?'} Stueck, "
-            f"erwartet 2 bis 4")
-    if any(not str(b).strip() for b in belege):
-        raise AnalystAntwortUngueltig("leerer Beleg in der Liste")
+    if not isinstance(belege, list):
+        raise AnalystAntwortUngueltig("belege ist keine Liste")
+    belege = [b for b in belege if str(b).strip()]
+    if not belege:
+        raise AnalystAntwortUngueltig("kein einziger brauchbarer Beleg")
+    # Zu WENIGE Belege werden NICHT abgelehnt - eine duenne Begruendung kann
+    # richtig sein, und der Nutzer sieht die Zahl ohnehin. Zu viele werden
+    # gekuerzt, nicht verworfen.
+    if len(belege) < 2:
+        prot.dazu(f"nur {len(belege)} Beleg statt der erbetenen zwei")
+    belege, hinweis = kuerze_liste(belege, 4, "Belege")
+    prot.dazu(hinweis)
+    antwort["belege"] = belege
+
+    if prot:
+        antwort["_korrekturen"] = str(prot)
     return antwort

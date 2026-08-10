@@ -47,7 +47,10 @@ from __future__ import annotations
 
 from agent.empfehlung_vertrag import AKTIONEN, TRANCHEN_EUR
 
-BELEG_RICHTUNGEN = ("dafuer", "dagegen")
+# "neutral" fehlte in der ersten Fassung - ein Beleg, der weder fuer noch
+# gegen spricht, ist legitim und haeufig. Ihn nicht anzubieten hiesse, das
+# Modell zu einer Zuordnung zu zwingen, die es nicht treffen kann.
+BELEG_RICHTUNGEN = ("dafuer", "dagegen", "neutral")
 BELEG_GEWICHTE = ("hoch", "mittel", "gering")
 
 REQUIRED_FELDER = (
@@ -91,7 +94,7 @@ Entscheidung als falsch erweisen? Ein Kurs, ein Datum, ein Ereignis - nichts \
 Allgemeines.
 
 Antworte AUSSCHLIESSLICH mit JSON:
-{"belege": [{"fakt": "<kurz, mit Wert>", "richtung": "dafuer|dagegen", \
+{"belege": [{"fakt": "<kurz, mit Wert>", "richtung": "dafuer|dagegen|neutral", \
 "gewicht": "hoch|mittel|gering"}],
  "unabhaengige_faktoren": <zahl>,
  "aktion": "KAUFEN|NACHKAUFEN|REDUZIEREN|VERKAUFEN|NICHTS_TUN",
@@ -114,6 +117,8 @@ def validiere(antwort: dict, symbol: str = "?",
     `max_tranche_eur` ist die Obergrenze aus Rolle A. Sie wird hier geprueft und
     nicht dem Modell ueberlassen: eine Obergrenze, die nur im Prompt steht und
     nicht kontrolliert wird, ist eine Bitte."""
+    from agent.antwort_normalisierung import (Protokoll, kappe_auf,
+                                              kuerze_liste, naechstes_wort)
     from agent.empfehlung_vertrag import validiere as vertrag_validieren
 
     if not isinstance(antwort, dict):
@@ -122,46 +127,69 @@ def validiere(antwort: dict, symbol: str = "?",
     if fehlend:
         raise TraderAntwortUngueltig(f"{symbol}: Felder fehlen: {fehlend}")
 
-    belege = antwort["belege"]
-    if not isinstance(belege, list) or not 2 <= len(belege) <= 8:
-        raise TraderAntwortUngueltig(
-            f"{symbol}: belege {len(belege) if isinstance(belege, list) else '?'}, "
-            f"erwartet 2 bis 8")
-    for b in belege:
-        if not isinstance(b, dict):
-            raise TraderAntwortUngueltig(f"{symbol}: Beleg ist kein Objekt")
-        if b.get("richtung") not in BELEG_RICHTUNGEN:
-            raise TraderAntwortUngueltig(
-                f"{symbol}: Beleg-richtung={b.get('richtung')!r}, "
-                f"erlaubt {BELEG_RICHTUNGEN}")
-        if b.get("gewicht") not in BELEG_GEWICHTE:
-            raise TraderAntwortUngueltig(
-                f"{symbol}: Beleg-gewicht={b.get('gewicht')!r}, "
-                f"erlaubt {BELEG_GEWICHTE}")
-        if not str(b.get("fakt") or "").strip():
-            raise TraderAntwortUngueltig(f"{symbol}: Beleg ohne Fakt")
+    prot = Protokoll()
 
+    # --- Belege: Form zurechtruecken, nicht verwerfen ----------------------
+    belege = antwort["belege"]
+    if not isinstance(belege, list):
+        raise TraderAntwortUngueltig(f"{symbol}: belege ist keine Liste")
+    sauber = []
+    for b in belege:
+        if not isinstance(b, dict) or not str(b.get("fakt") or "").strip():
+            prot.dazu("Beleg ohne Fakt verworfen")
+            continue
+        r, hinweis = naechstes_wort(b.get("richtung"), BELEG_RICHTUNGEN)
+        if r is None:
+            # Erfundene Richtung: als neutral werten statt den Beleg oder die
+            # ganze Antwort zu verlieren. Der Fakt bleibt lesbar, sein Vorzeichen
+            # ist dann eben unbestimmt.
+            r = "neutral"
+            hinweis = f"Beleg-Richtung {b.get('richtung')!r} als neutral gewertet"
+        prot.dazu(hinweis)
+        g, hinweis2 = naechstes_wort(b.get("gewicht"), BELEG_GEWICHTE)
+        if g is None:
+            g = "mittel"
+            hinweis2 = f"Beleg-Gewicht {b.get('gewicht')!r} als mittel gewertet"
+        prot.dazu(hinweis2)
+        sauber.append({"fakt": str(b["fakt"]).strip(), "richtung": r, "gewicht": g})
+    if not sauber:
+        raise TraderAntwortUngueltig(f"{symbol}: kein einziger brauchbarer Beleg")
+    # Zu WENIGE werden nicht abgelehnt - ein einzelner starker Beleg kann eine
+    # richtige Entscheidung tragen, und die Zahl steht ohnehin in der Ausgabe.
+    if len(sauber) < 2:
+        prot.dazu(f"nur {len(sauber)} Beleg statt der erbetenen zwei")
+    sauber, hinweis = kuerze_liste(sauber, 8, "Belege")
+    prot.dazu(hinweis)
+    antwort["belege"] = sauber
+
+    # --- Unabhaengige Faktoren: hart, weil logisch pruefbar ----------------
     try:
-        faktoren = int(antwort["unabhaengige_faktoren"])
+        faktoren = int(float(antwort["unabhaengige_faktoren"]))
     except (TypeError, ValueError):
         raise TraderAntwortUngueltig(
             f"{symbol}: unabhaengige_faktoren ist keine Zahl")
-    # Mehr unabhaengige Faktoren als Belege ist logisch unmoeglich - und ein
-    # verlaesslicher Hinweis darauf, dass das Modell die Frage nicht beantwortet,
-    # sondern eine Zahl geraten hat.
-    if not 0 <= faktoren <= len(belege):
-        raise TraderAntwortUngueltig(
-            f"{symbol}: {faktoren} unabhaengige Faktoren bei {len(belege)} "
-            f"Belegen - unmoeglich")
+    if faktoren < 0:
+        raise TraderAntwortUngueltig(f"{symbol}: {faktoren} unabhaengige Faktoren")
+    if faktoren > len(sauber):
+        # Mehr unabhaengige Faktoren als Belege ist unmoeglich. Frueher eine
+        # Ablehnung - jetzt gedeckelt: die Zahl war falsch, die Analyse deshalb
+        # nicht wertlos. Der Deckel steht im Protokoll und ist damit sichtbar.
+        prot.dazu(f"{faktoren} unabhaengige Faktoren bei {len(sauber)} Belegen "
+                  f"auf {len(sauber)} gedeckelt")
+        faktoren = len(sauber)
+    antwort["unabhaengige_faktoren"] = faktoren
 
-    if max_tranche_eur is not None and antwort.get("tranche_eur"):
-        try:
-            gewaehlt = int(float(antwort["tranche_eur"]))
-        except (TypeError, ValueError):
-            gewaehlt = None
-        if gewaehlt and gewaehlt > max_tranche_eur:
+    # --- Betrag: an der Obergrenze aus Rolle A kappen, nicht verwerfen -----
+    if antwort.get("tranche_eur") is not None:
+        betrag, hinweis = kappe_auf(antwort["tranche_eur"], max_tranche_eur,
+                                    TRANCHEN_EUR)
+        if betrag is None:
             raise TraderAntwortUngueltig(
-                f"{symbol}: tranche_eur {gewaehlt} ueberschreitet die Obergrenze "
-                f"{max_tranche_eur} aus der Marktlage")
+                f"{symbol}: {hinweis or 'tranche_eur unbrauchbar'}")
+        antwort["tranche_eur"] = betrag
+        prot.dazu(hinweis)
 
+    if prot:
+        antwort["_korrekturen"] = ((antwort.get("_korrekturen", "") + "; ")
+                                   if antwort.get("_korrekturen") else "") + str(prot)
     return vertrag_validieren(antwort, symbol)
