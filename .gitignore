@@ -74,3 +74,13 @@ Basisinfos/LLM_*.json
 Basisinfos/LLM_*.csv
 Basisinfos/LLM_*.md
 export_*.py
+
+# Messartefakte (2026-08-10). `messe_umbau_wirkung.py` schreibt per Vorgabe
+# nach ./umbau.json - ein Trockenlauf im Projektordner legt die Datei also
+# genau dort ab, wo git sie einsammelt. 107 KB Rohmessung sind beim Merge am
+# 10.08. so ins Repo gelangt. Die Auswertung gehoert in Basisinfos, die
+# Rohdaten in den Scratchpad.
+umbau.json
+wirkung.json
+wirkung_vorflug.json
+kettennaht*.json
