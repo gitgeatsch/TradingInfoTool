@@ -680,3 +680,56 @@ ohnehin nur noch dritte Stufe der Kette ist.
 Docstring ausdrücklich davor, aus dem Konsistenzurteil auf den Handelsausgang
 zu schließen — „das wäre eine Kategorienverwechslung, LLM2 ist ein
 Konsistenzprüfer und kein Prognosemodell".
+
+### Nachweis: `regime` unterdrückt die Richtung (gemessen 10.08., 20 Anker gepaart)
+
+Derselbe Faktensatz, ein Feld Unterschied, `messe_zai_ohne_regime.py`:
+
+| Richtung | MIT `regime` | OHNE `regime` |
+|---|---|---|
+| LONG | **0** | **2** |
+| SHORT | 11 | 7 |
+| NEUTRAL | 9 | 11 |
+
+**Sechs von zwanzig Ankern ändern ihr Urteil — alle sechs in dieselbe Richtung,
+keiner gegenläufig.** Vorzeichentest **p = 0,031**.
+`SHORT→NEUTRAL` 4×, `NEUTRAL→LONG` 2×.
+
+Z.ai nennt die Ursache in der eigenen Begründung:
+
+```
+GRIFFAIN   mit regime : NEUTRAL — "Gemischte Signale: baerisches Regime,
+                                   aber bullischer RSI"
+           ohne regime: LONG    — "Bullische Indikatoren ueberwiegen leicht"
+```
+
+**Grenzen:** n=20, zwei LONG-Fälle absolut — belastbar ist die RICHTUNG des
+Effekts, nicht seine Größe. Und Arm A hatte fünf Felder statt der sieben der
+Produktion (`trend`, `funding_rate_vorzeichen` in `facts_json` nicht an den
+erwarteten Pfaden). Ist `trend` ebenfalls durchgehend bärisch, ist der
+gemessene Effekt eine **Untergrenze**.
+
+### Der zweite konstante Fakt: `optionsmarkt_skew`
+
+Über dieselben 1.022 Fälle: **1.022 × negativ, 0 × positiv.** Die
+unterschiedlichen Zahlenwerte je Tag (−12,29/−12,28/−12,27) sind Tagesdrift
+desselben Marktwertes, keine Symbolunterschiede. Negativer Skew = Puts teurer
+= bärisch. Und der Wert stammt vom **BTC**-Optionsmarkt, nicht vom bewerteten
+Symbol — dieselbe Bezugsgrößen-Lücke, die für den Primär-Prompt notiert ist.
+
+**Damit trugen von Z.ais sechs Fakten ZWEI eine konstante Richtungsaussage.**
+`symbol` trägt keine. Übrig bleiben `rsi`, `technische_konfluenz` und `trend`
+als tatsächlich symbolabhängige Information.
+
+### Antwort auf „sollen MUSS-Faktoren wie beim Primär-LLM dazu?"
+
+**Nein — nicht mehr Fakten, sondern informative.** Bekäme Z.ai denselben
+Faktensatz wie LLM1, wäre es ein zweiter Durchlauf derselben Analyse: seine
+Zustimmung würde nichts mehr bedeuten, weil beide dieselben Fehler machten.
+Der Wert einer Gegenprüfung liegt in der Unabhängigkeit ihrer Eingaben. Dazu
+kommt Z.ais eigene Grenze (kleine Prompts, begrenzte Frequenz).
+
+Die Prüffrage vor jedem Feld lautet deshalb nicht „ist es wichtig?", sondern:
+**trägt es symbolabhängige Information — oder ist es über alle Fälle
+konstant?** Ein konstanter Fakt in einem Sechs-Felder-Satz ist kein Kontext,
+er ist ein Daumen auf der Waage.
