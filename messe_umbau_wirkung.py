@@ -58,7 +58,7 @@ import time
 from collections import Counter
 
 from backtest_llm1_historisch import baue_historische_fakten, lade_reihen
-from messe_kettennaht_eingriffe import _gepaart
+from messe_kettennaht_eingriffe import _gepaart, _vergleich
 from pruefe_auswertbarkeit import pruefe_auswertbarkeit
 import messe_regimephasen_llm as M
 
@@ -300,12 +300,38 @@ def main() -> int:
             # daempft LONG stark, die umgebaute Fassung schwaecher, SHORT
             # bleibt unberuehrt. So wird die Auswertung an einem Fall mit
             # bekannter Antwort geprueft statt an einer Attrappe.
+            # GEGEN VERALTEN GEBAUT (2026-08-10). Hier stand `"geschrumpft" in
+            # q` - ein Feldname, den der Struktur-Umbau vom 09.08. flach
+            # aufgeloest hat. Seither war die Bedingung IMMER falsch: Q_alt und
+            # Q_neu bekamen dieselbe Strafe, der Trockenlauf simulierte gar
+            # keinen Unterschied mehr und konnte die Auswertung nicht laenger
+            # an einem Fall mit bekannter Antwort pruefen. Ein stiller Ausfall
+            # der Selbstkontrolle, genau wie die veraltete Feldliste, die die
+            # Eingriffskontrolle schon einmal abgefangen hat.
+            #
+            # Jetzt gegen die Feldlisten selbst geprueft, nicht gegen einen
+            # abgeschriebenen Namen: taucht IRGENDEINES der neuen Felder auf,
+            # ist es die neue Form. Damit kann diese Stelle nicht mehr
+            # veralten, ohne dass die Eingriffskontrolle es zuerst meldet.
             strafe = 0.0
             if q:
-                strafe += 6.0 if "geschrumpft" in q else 18.0
+                strafe += 6.0 if any(f in q for f in NEU_QUOTE) else 18.0
             if g:
-                strafe += 4.0 if "signalbeitrag_r" in g else 12.0
-            kurz = (((n * 40503) >> 8) % 100) < 35
+                strafe += 4.0 if any(f in g for f in NEU_GUETE) else 12.0
+            # DIE RICHTUNG HAENGT AM ANKER, NICHT AM AUFRUF (Reparatur
+            # 10.08.). Vorher wurde sie aus dem Aufrufzaehler gewuerfelt -
+            # damit bekam DERSELBE Anker in verschiedenen Armen verschiedene
+            # Richtungen, und die gepaarte Richtungsauswertung pruefte Unsinn.
+            # In echt waehlt das Modell fuer denselben Anker meist dieselbe
+            # Richtung; der Umbau verschiebt sie nur an einem Teil der Faelle.
+            schluessel = (sum(ord(c) * (k + 1) for k, c in enumerate(sym))
+                          + int(preis * 1e6) % 9973)
+            basis = ((schluessel * 40503) >> 8) % 100
+            # Der ERWARTETE Effekt, gegen den die Auswertung geprueft wird:
+            # die neue Fassung dreht einen Teil der SHORT-Faelle auf LONG.
+            neue_form = (any(f in q for f in NEU_QUOTE)
+                         or any(f in g for f in NEU_GUETE))
+            kurz = basis < (35 - (8 if neue_form else 0))
             konf = 68 + ((n * 7) % 5) - 2 - (0 if kurz else strafe)
             r = -1.0 if kurz else 1.0
             s = 0.05 + streu * 0.04
@@ -412,13 +438,59 @@ def main() -> int:
                       "uebergehen - dann aber bewusst.")
                 break
 
+    def nur(arm: str, richtung: str | None):
+        return [x for x in ergebnis[arm]
+                if richtung is None or x.get("richtung") == richtung]
+
     def wirkung(arm: str, richtung: str | None = None):
-        za = [x for x in ergebnis["A1"]
-              if richtung is None or x.get("richtung") == richtung]
-        zb = [x for x in ergebnis[arm]
-              if richtung is None or x.get("richtung") == richtung]
-        d, s = _gepaart(za, zb, "konfidenz")
+        d, s = _gepaart(nur("A1", richtung), nur(arm, richtung), "konfidenz")
         return (statistics.fmean(d) if d else None), len(d)
+
+    def besserung_mit_unsicherheit(alt: str, neu: str, richtung: str | None):
+        """Die Besserung MIT Streuung ueber Symbole - nicht als nackte Zahl.
+
+        WARUM DIREKT alt GEGEN neu (2026-08-10). Die Regel fragt nach dem
+        Unterschied ZWISCHEN den beiden Fassungen. Ihn als Differenz zweier
+        Mittelwerte gegen A1 zu bilden, stimmt nur, solange beide Arme auf
+        exakt denselben Ankern gepaart sind - faellt in einem Arm eine Zelle
+        aus, vergleicht man zwei verschieden zusammengesetzte Mengen. Direkt
+        gepaart kann das nicht passieren.
+
+        WARUM MIT INTERVALL. Bis zum 09.08. lautete das Urteil `besserung >
+        Rauschboden` - ein Mittelwert gegen eine feste Zahl, ohne jede
+        Angabe, wie sicher dieser Mittelwert ist. Der Rauschboden misst die
+        Wiederholstreuung EINER Antwort; er sagt nichts darueber, wie stark
+        der Effekt zwischen SYMBOLEN schwankt. Genau diese Schwankung ist
+        hier die Fehlerquelle, und `_gepaart` liefert die Symbolzuordnung
+        laengst mit - sie wurde bisher weggeworfen.
+
+        Cluster-Bootstrap ueber Symbole plus Wild-Cluster-p-Wert, weil wir mit
+        rund 17 Symbolen genau in dem Bereich liegen, fuer den
+        Cameron/Gelbach/Miller das Ueber-Ablehnen zeigen."""
+        return _vergleich(nur(alt, richtung), nur(neu, richtung), "konfidenz")
+
+    def traegt_ein_symbol_alles(alt: str, neu: str, richtung: str | None):
+        """Bricht die Besserung zusammen, wenn EIN Symbol wegfaellt?
+
+        Stehende Vorgabe: kein einzelnes Symbol darf einen Effekt tragen. Ohne
+        diese Pruefung kann ein einziger Ausreisser - ein Rohstoff mit
+        kaputter Kursreihe, ein Wert mit extremer Volatilitaet - ein Urteil
+        allein herbeifuehren. Hier wird jedes Symbol einmal weggelassen und
+        der groesste Ausschlag berichtet."""
+        d, s = _gepaart(nur(alt, richtung), nur(neu, richtung), "konfidenz")
+        if len(set(s)) < 3:
+            return None
+        gesamt = statistics.fmean(d)
+        schlimmste, wert = None, gesamt
+        for weg in set(s):
+            rest = [x for x, sym in zip(d, s) if sym != weg]
+            if len(rest) < 2:
+                continue
+            ohne = statistics.fmean(rest)
+            if abs(ohne - gesamt) > abs(wert - gesamt):
+                schlimmste, wert = weg, ohne
+        return {"gesamt": gesamt, "ohne_symbol": schlimmste, "dann": wert,
+                "symbole": len(set(s))}
 
     print("\n" + "=" * 76)
     print("KONFIDENZ-WIRKUNG gegen die Grundlinie A1, getrennt nach Richtung")
@@ -433,6 +505,57 @@ def main() -> int:
             zeile += f" {(f'{w:+7.2f} (n={n:2})' if w is not None else '      - '):>18}"
         print(zeile)
 
+    # DIE RICHTUNGSWAHL SELBST - ergaenzt am 10.08., vor dem Lauf.
+    #
+    # WARUM DAS DIE EIGENTLICHE FRAGE IST. Der Deadloop besteht darin, dass
+    # keine LONG-Signale ENTSTEHEN - nicht darin, dass ihre Konfidenz zu
+    # niedrig ausfaellt. Die Konfidenz ist ein Stellvertreter; die
+    # Richtungswahl ist das Ziel. Sie wurde bisher gar nicht ausgewertet.
+    #
+    # UND SIE IST UNBEDINGT MESSBAR. Der Konfidenzvergleich je Richtung muss
+    # auf Anker einschraenken, bei denen BEIDE Fassungen dieselbe Richtung
+    # gewaehlt haben - er bedingt damit auf ein Ergebnis, das die Behandlung
+    # selbst beeinflusst, und verliert genau die Faelle, in denen der Umbau am
+    # meisten bewirkt hat. Der LONG-Anteil kennt dieses Problem nicht.
+    print("\n" + "=" * 76)
+    print("RICHTUNGSWAHL - das eigentliche Ziel, ungefiltert")
+    anteile = {}
+    for arm in ARME:
+        zeilen_arm = ergebnis[arm]
+        n_long = sum(1 for z in zeilen_arm if z.get("richtung") == "LONG")
+        anteile[arm] = (n_long / len(zeilen_arm) * 100) if zeilen_arm else None
+        print(f"  {arm:8} LONG {n_long:3} von {len(zeilen_arm):3} = "
+              + (f"{anteile[arm]:5.1f} %" if anteile[arm] is not None else "  -"))
+
+    def richtungswechsel(alt: str, neu: str) -> dict:
+        """Wie viele Anker wechseln die Richtung - und in welche?"""
+        idx = {(z["symbol"], z["datum"]): z.get("richtung") for z in ergebnis[alt]}
+        nach_long = nach_short = gleich = 0
+        for z in ergebnis[neu]:
+            vorher = idx.get((z["symbol"], z["datum"]))
+            if vorher is None:
+                continue
+            jetzt = z.get("richtung")
+            if vorher == jetzt:
+                gleich += 1
+            elif jetzt == "LONG":
+                nach_long += 1
+            elif vorher == "LONG":
+                nach_short += 1
+        return {"nach_LONG": nach_long, "nach_SHORT": nach_short,
+                "unveraendert": gleich}
+
+    for alt, neu, name in (("Q_alt", "Q_neu", "Trefferquote"),
+                           ("G_alt", "G_neu", "Systemguete")):
+        w = richtungswechsel(alt, neu)
+        netto = w["nach_LONG"] - w["nach_SHORT"]
+        print(f"  {name}: {w['nach_LONG']} Anker wechseln zu LONG, "
+              f"{w['nach_SHORT']} zu SHORT, {w['unveraendert']} unveraendert "
+              f"-> netto {netto:+d} LONG")
+        kz.setdefault("_richtung", {})[name] = {
+            "wechsel": w, "netto_long": netto,
+            "anteil_alt": anteile.get(alt), "anteil_neu": anteile.get(neu)}
+
     print("\n=== URTEIL nach der vorab festgelegten Regel ===")
     for alt, neu, name in (("Q_alt", "Q_neu", "Trefferquote"),
                            ("G_alt", "G_neu", "Systemguete")):
@@ -443,12 +566,48 @@ def main() -> int:
         if wl_a is None or wl_n is None:
             print(f"  {name}: zu wenige gepaarte LONG-Faelle")
             continue
-        besserung = wl_n - wl_a
-        short_drift = (ws_n - ws_a) if (ws_a is not None and ws_n is not None) else None
+        # Direkt gepaart statt als Differenz zweier Mittelwerte - und mit
+        # Intervall statt als nackte Zahl (siehe Funktionsdokumentation).
+        v_long = besserung_mit_unsicherheit(alt, neu, "LONG")
+        v_short = besserung_mit_unsicherheit(alt, neu, "SHORT")
+        konz = traegt_ein_symbol_alles(alt, neu, "LONG")
+        besserung = v_long["wirkung"] if v_long else (wl_n - wl_a)
+        short_drift = v_short["wirkung"] if v_short else None
         print(f"  {name}: LONG {wl_a:+.2f} -> {wl_n:+.2f}  "
               f"Besserung {besserung:+.2f}"
               + (f"   SHORT-Drift {short_drift:+.2f}" if short_drift is not None
                  else "   SHORT nicht vergleichbar"))
+        if v_long:
+            print(f"      95%-Intervall ueber {v_long['symbole']} Symbole "
+                  f"[{v_long['ci_unten']:+.2f}, {v_long['ci_oben']:+.2f}], "
+                  f"Wild-Cluster-p {v_long['wild_p']}")
+        if konz and konz["ohne_symbol"]:
+            print(f"      ohne {konz['ohne_symbol']}: {konz['dann']:+.2f} "
+                  f"(statt {konz['gesamt']:+.2f})")
+        kz.setdefault("_nachweis", {})[name] = {
+            "long": v_long, "short": v_short, "konzentration": konz}
+
+        # DIE REGEL, ergaenzt VOR dem Lauf am 10.08. und danach nicht mehr
+        # angefasst: zur bisherigen Bedingung (Besserung ueber dem
+        # Rauschboden) kommt, dass das 95-%-Intervall die Null NICHT
+        # einschliessen darf. Das ist strenger als vorher, nicht lockerer -
+        # bisher konnte ein Mittelwert ohne jede Streuungsangabe ein "WIRKSAM"
+        # ausloesen.
+        interval_traegt = v_long is None or (v_long["ci_unten"] or 0) > 0
+        if besserung > boden and not interval_traegt:
+            print(f"    -> NICHT nachweisbar: die Besserung liegt zwar ueber "
+                  f"dem Rauschboden, aber das 95-%-Intervall schliesst die "
+                  f"Null ein. Ueber Symbole hinweg ist der Effekt nicht "
+                  f"stabil.")
+            continue
+        if konz and konz["ohne_symbol"] and besserung > boden:
+            if (konz["dann"] - konz["gesamt"]) * (1 if konz["gesamt"] > 0 else -1) < 0 \
+                    and abs(konz["dann"]) < boden:
+                print(f"    -> NICHT nachweisbar: ohne das einzelne Symbol "
+                      f"{konz['ohne_symbol']} faellt die Besserung auf "
+                      f"{konz['dann']:+.2f} und damit unter den Rauschboden. "
+                      f"Ein Symbol traegt das Ergebnis.")
+                continue
         if besserung > boden:
             if short_drift is None:
                 # KORREKTUR 09.08. abends. Hier stand vorher dasselbe

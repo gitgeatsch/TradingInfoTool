@@ -35,6 +35,25 @@ def track_api_health(source: str) -> Callable[[F], F]:
             try:
                 result = fn(*args, **kwargs)
             except Exception as exc:
+                # EIN LEERES TAGESKONTINGENT IST KEINE STOERUNG (2026-08-10).
+                #
+                # Gefunden vom Produktions-Rauchtest, Stufe F: ein erschoepftes
+                # Gemini-Tagesbudget schrieb hier einen Fehlereintrag und
+                # stellte damit die Anbieter-Ampel der Statusseite auf Rot -
+                # obwohl der Anbieter kerngesund ist und nur das Budget des
+                # Tages verbraucht. Genau diese Verwechslung hat am 09.08. die
+                # Diagnose zwei Tage gekostet.
+                #
+                # Die Reparatur im budget_allocator griff zu spaet: dieser
+                # Dekorator sitzt am Client und schreibt, lange bevor die
+                # Fallback-Kette den Fehler ueberhaupt zu sehen bekommt.
+                #
+                # ENTENTYPISIERT statt per Import: `api.gemini` importiert
+                # dieses Modul bereits: ein Import in die Gegenrichtung waere
+                # ein Zyklus. Die Ausnahme traegt deshalb ein Merkmal, und
+                # jeder andere Client kann es genauso setzen.
+                if getattr(exc, "ist_kontingent_erschoepft", False):
+                    raise
                 conn = db.get_connection()
                 try:
                     db.record_api_health_error(conn, source, type(exc).__name__, str(exc)[:200])

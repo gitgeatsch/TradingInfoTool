@@ -113,15 +113,31 @@ def main() -> int:
             if not os.environ.get("GEMINI_API_KEY"):
                 pruefe("D1 GEMINI_API_KEY vorhanden", False)
                 return 1
+            # DEN ZUSTAND VOR DEM AUFRUF FESTHALTEN. Stufe F fragt, ob der
+            # Aufruf einen NEUEN Fehlereintrag erzeugt hat - das laesst sich
+            # nur im Vergleich beantworten. Ein alter Eintrag von gestern
+            # darf nicht als heutiger Fehlschlag durchgehen.
+            def _health():
+                r = conn.execute(
+                    "SELECT last_error_at, last_error_type, last_error_message "
+                    "FROM api_health_status WHERE source = 'gemini'").fetchone()
+                return (r["last_error_at"], r["last_error_type"],
+                        r["last_error_message"]) if r else (None, None, None)
+
+            vorher = _health()
             k = GeminiClient(os.environ["GEMINI_API_KEY"])
             stand = k.budget_status()
             print(f"      Zaehler dieses Geraets: {stand['verbraucht']}/"
                   f"{stand['budget']} am {stand['tag_pazifik']} (Pazifik)")
             try:
                 k.chat([{"role": "user", "content": "OK"}])
-                hinweis("Gemini antwortet - das Tagesbudget ist NICHT leer. "
-                        "Der Ausweich-Fall laesst sich gerade nicht "
-                        "herstellen; dieser Teil beweist heute nichts.")
+                hinweis("D NICHT PRUEFBAR - KEIN BESTANDENER TEST: Gemini "
+                        "antwortet, das Tagesbudget ist NICHT leer. Der "
+                        "Ausweich-Fall laesst sich damit gerade nicht "
+                        "herstellen. Das ist WEDER ein Erfolg NOCH ein "
+                        "Fehlschlag - der Beweis, dass die Produktion bei "
+                        "leerem Budget auf OpenRouter ausweicht, steht "
+                        "weiterhin AUS.")
                 gemini_leer = False
             except TageskontingentErschoepft as exc:
                 pruefe("D1 leeres Tagesbudget wird als solches erkannt", True,
@@ -152,19 +168,29 @@ def main() -> int:
             print("\nF  Wurde daraus faelschlich eine STOERUNG?")
             # Der entscheidende Unterschied: ein leeres Budget darf die Ampel
             # der Statusseite NICHT auf Rot stellen. Der Anbieter ist gesund.
-            zeilen = conn.execute(
-                "SELECT source, status, fehler_text FROM api_health_status "
-                "WHERE source LIKE '%gemini%'").fetchall()
-            schlecht = [z for z in zeilen
-                        if (z["status"] or "").lower() not in ("ok", "gesund", "")]
+            # REPARIERT 10.08. Hier stand `SELECT source, status, fehler_text`
+            # - beide Spalten existieren nicht. Die Tabelle fuehrt
+            # `last_error_at/_type/_message`. Der Fehler ist mir nicht
+            # aufgefallen, weil mein eigener Testlauf mit --ohne-aufrufe lief
+            # und diesen Block ueberhaupt nicht erreichte: eine Codezeile, die
+            # nie ausgefuehrt wurde, ging in die Produktion. Der Rauchtest hat
+            # als Erstes seinen eigenen Autor erwischt.
+            #
+            # Die Reparatur macht die Pruefung schaerfer: entscheidend ist
+            # nicht, OB ein Fehlereintrag existiert (der kann von gestern
+            # sein), sondern ob DIESER Aufruf einen NEUEN erzeugt hat.
+            nachher = _health()
             if gemini_leer:
-                pruefe("F1 kein Gemini-Stoerungseintrag trotz leeren Budgets",
-                       not schlecht,
-                       "; ".join(f"{z['source']}={z['status']}: "
-                                 f"{(z['fehler_text'] or '')[:60]}"
-                                 for z in schlecht) or "sauber")
+                neuer_eintrag = nachher[0] != vorher[0]
+                pruefe("F1 das leere Budget erzeugt KEINEN neuen "
+                       "Stoerungseintrag", not neuer_eintrag,
+                       f"vorher {vorher[0]} -> nachher {nachher[0]}"
+                       + (f" ({nachher[1]}: {(nachher[2] or '')[:60]})"
+                          if neuer_eintrag else ""))
             else:
-                hinweis("nicht pruefbar - Gemini war nicht leer.")
+                hinweis("F NICHT PRUEFBAR - Gemini war nicht leer, also gab "
+                        "es nichts, was faelschlich als Stoerung haette "
+                        "verbucht werden koennen.")
     finally:
         conn.close()
 
@@ -173,6 +199,22 @@ def main() -> int:
           f"{len(_warnung)} Hinweise")
     for f in _fehler:
         print(f"   FEHLER: {f}")
+    # DIE ENTSCHEIDENDE AUSSAGE ZUM SCHLUSS, unmissverstaendlich.
+    #
+    # Der erste Bericht vom NB (10.08.) hat den Hinweis "Gemini antwortet"
+    # als BESTANDENEN Test D gelistet - also genau umgekehrt. Ein "nicht
+    # pruefbar" darf sich nicht wie ein Erfolg lesen, sonst gilt der Ausweg
+    # auf OpenRouter als bewiesen, obwohl er nie ausprobiert wurde.
+    nicht_pruefbar = [w for w in _warnung if "NICHT PRUEFBAR" in w]
+    if nicht_pruefbar:
+        print("\n" + "!" * 72)
+        print("ACHTUNG: der WICHTIGSTE Teil wurde NICHT geprueft.")
+        for w in nicht_pruefbar:
+            print(f"   {w}")
+        print("Der Beweis, dass die Produktion bei leerem Gemini-Budget auf")
+        print("OpenRouter ausweicht, steht damit AUS - er ist nur moeglich,")
+        print("solange das Budget tatsaechlich leer ist (vor 09:00 MESZ).")
+        print("!" * 72)
     if not _fehler:
         print("\nDie Produktion kann laufen. Was dieser Test NICHT prueft: ob "
               "ein vollstaendiger Signallauf durchgeht - dafuer die App "

@@ -120,6 +120,55 @@ def stufe_1_modellwahl(bedarf: int, festgelegt: str | None = None) -> str | None
     return None
 
 
+def stufe_2b_groesse(vorflug: pathlib.Path, geplant: int,
+                     min_zelle: int = 8) -> int | None:
+    """Wie viele Anker braucht es, damit die SHORT-Kontrolle erreichbar ist?
+
+    DER GRUND (10.08.). Die Messung hat zweimal ihr Ziel verfehlt, und beide
+    Male an derselben Stelle: der Grundlinienarm waehlte zu selten SHORT, also
+    entstand keine einzige gepaarte SHORT-Zelle, also war die
+    Kontrollbedingung der vorab festgelegten Regel nicht pruefbar. Bemerkt
+    wurde das jedes Mal ERST IM LAUF - nach 25 Ankern und 125 Aufrufen.
+
+    Der Vorflug misst den SHORT-Anteil an acht Ankern. Daraus laesst sich
+    ausrechnen, wie gross der Hauptlauf sein muss, BEVOR er startet.
+
+    KONSERVATIV GERECHNET: verwendet wird nicht der beobachtete Anteil,
+    sondern eine UNTERE Schranke davon (halber Anteil, mindestens aber die
+    Dreierregel-Untergrenze). Ein zu klein geschaetzter Bedarf ist der
+    teurere Fehler - er kostet einen ganzen Lauf.
+
+    Gibt None zurueck, wenn sich nichts sagen laesst: bei NULL beobachteten
+    SHORT-Faellen in acht Ankern ist der Anteil nach oben durch 3/8 begrenzt,
+    nach unten aber durch nichts. Dann ist die Groesse nicht bestimmbar, und
+    der Aufrufer erfaehrt das, statt eine erfundene Zahl zu bekommen."""
+    import json
+    try:
+        daten = json.loads(vorflug.read_text(encoding="utf-8"))
+    except Exception as exc:  # noqa: BLE001
+        melde(f"Stufe 2b: Vorflugdatei nicht lesbar ({exc}) - Groesse bleibt "
+              f"bei {geplant}.")
+        return None
+    a1 = (daten.get("zeilen") or {}).get("A1") or []
+    if not a1:
+        melde("Stufe 2b: keine Grundlinienzeilen im Vorflug - Groesse bleibt.")
+        return None
+    n_short = sum(1 for z in a1 if z.get("richtung") == "SHORT")
+    anteil = n_short / len(a1)
+    melde(f"Stufe 2b: Grundlinie waehlt SHORT in {n_short} von {len(a1)} "
+          f"Vorflug-Ankern ({anteil * 100:.0f} %).")
+    if n_short == 0:
+        melde("      Bei null Faellen laesst sich die noetige Groesse NICHT "
+              "berechnen - null Treffer in acht Versuchen schliessen nichts "
+              "aus, taugen aber auch nicht als Schaetzung. Der Lauf geht mit "
+              "der geplanten Groesse weiter; der Auswertbarkeits-Waechter "
+              "entscheidet unterwegs.")
+        return None
+    sicher = max(anteil / 2.0, 1.0 / len(a1) / 2.0)
+    import math
+    return int(math.ceil(min_zelle / sicher))
+
+
 def _lauf(name: str, argumente: list[str], zeitlimit: int) -> tuple[bool, str]:
     melde(f"{name} startet ...")
     try:
@@ -146,6 +195,14 @@ def main() -> int:
     # Geprueft wird das gesetzte Modell trotzdem - Budget und Probeaufruf.
     p.add_argument("--modell", default=None,
                    help="Gemini-Modell festnageln statt es waehlen zu lassen")
+    # NUR STUFE 1 UND 2 (10.08.). Die Frage, an der die Messung zweimal
+    # gescheitert ist, laesst sich fuer 40 Aufrufe vorab beantworten: waehlt
+    # der Grundlinienarm oft genug SHORT, damit die Kontrollbedingung
+    # ueberhaupt erreichbar wird? Ohne diese Vorabklaerung startet der
+    # Hauptlauf mit unbekannter Erfolgsaussicht - und 280 Aufrufe sind ein
+    # teurer Weg, "nein" zu erfahren.
+    p.add_argument("--nur-vorflug", action="store_true",
+                   help="Stufe 1+2 fahren, Groesse berechnen, dann anhalten")
     args = p.parse_args()
 
     melde("=" * 70)
@@ -154,7 +211,7 @@ def main() -> int:
 
     # Bedarf = Anker x Arme, plus Vorflug (2 x 5) und ein wenig Luft fuer die
     # Wiederholung bei ungueltiger Antwort (gemessen ~1,3 Versuche je Fall).
-    bedarf = int((args.anker + 2) * 5 * 1.35)
+    bedarf = int((args.anker + 8) * 5 * 1.35)
     modell = args.modell
     if not args.ohne_kontingentprobe:
         modell = stufe_1_modellwahl(bedarf, args.modell)
@@ -169,12 +226,18 @@ def main() -> int:
               f"die Uebertragung ist eine Annahme. Der ARM-VERGLEICH bleibt "
               f"gueltig, weil alle Arme dasselbe Modell sehen.")
 
-    melde("--- Stufe 2: Vorflug (2 Anker x 5 Arme)")
+    melde("--- Stufe 2: Vorflug (8 Anker x 5 Arme)")
+    # ACHT statt zwei (10.08.). Zwei Anker reichen, um zu pruefen, dass der
+    # Prompt verarbeitet wird - aber nicht, um die Frage zu beantworten, an
+    # der die Messung zweimal gescheitert ist: WIE OFT waehlt der
+    # Grundlinienarm ueberhaupt SHORT? Davon haengt ab, wie viele Anker es
+    # braucht, damit die Kontrollbedingung erreichbar ist. Acht Anker kosten
+    # 40 Aufrufe und ersparen im Zweifel einen Lauf, der nach 25 abbricht.
     ok, ausgabe = _lauf("Vorflug", [
-        "messe_umbau_wirkung.py", "--anker", "2", "--je-symbol", "1",
+        "messe_umbau_wirkung.py", "--anker", "8", "--je-symbol", "2",
         "--anbieter", "gemini", "--pause", "0.2", "--trotzdem-weiter",
         *modell_argumente,
-        "--ausgabe", str(AUSGABE / "wirkung_vorflug.json")], zeitlimit=900)
+        "--ausgabe", str(AUSGABE / "wirkung_vorflug.json")], zeitlimit=1800)
     if not ok:
         melde(f"ABBRUCH Stufe 2: {ausgabe[-300:] if ausgabe else 'unbekannt'}")
         return 2
@@ -185,9 +248,34 @@ def main() -> int:
         return 2
     melde("Stufe 2 bestanden: Prompt wird verarbeitet, Arme stimmen.")
 
-    melde(f"--- Stufe 3: Hauptlauf ({args.anker} Anker x 5 Arme)")
+    anker = args.anker
+    noetig = stufe_2b_groesse(AUSGABE / "wirkung_vorflug.json", args.anker)
+    if noetig is not None and noetig > args.anker:
+        melde(f"Stufe 2b: {args.anker} Anker reichen fuer die "
+              f"SHORT-Kontrolle NICHT - noetig waeren rund {noetig}.")
+        # Mehr Anker heisst mehr Aufrufe. Passt das noch ins Budget?
+        import os
+
+        import config as config_module
+        from api.gemini import GeminiClient
+        config_module.load_env()
+        frei = GeminiClient(os.environ["GEMINI_API_KEY"]).budget_status(
+            modell or "gemini-3.1-flash-lite")["verfuegbar"]
+        moeglich = int(frei / (5 * 1.35))
+        if moeglich >= noetig:
+            anker = noetig
+            melde(f"      Budget traegt es ({frei} frei) - erhoeht auf "
+                  f"{anker} Anker.")
+        else:
+            anker = max(args.anker, moeglich)
+            melde(f"      Budget traegt nur {moeglich} Anker ({frei} frei). "
+                  f"Der Lauf geht mit {anker} weiter, die SHORT-Kontrolle "
+                  f"wird damit VORAUSSICHTLICH NICHT erreichbar sein - das "
+                  f"ist vorab bekannt und kein Befund des Laufs.")
+
+    melde(f"--- Stufe 3: Hauptlauf ({anker} Anker x 5 Arme)")
     ok, ausgabe = _lauf("Hauptlauf", [
-        "messe_umbau_wirkung.py", "--anker", str(args.anker),
+        "messe_umbau_wirkung.py", "--anker", str(anker),
         "--je-symbol", "5", "--anbieter", "gemini", "--pause", "0.2",
         *modell_argumente,
         "--ausgabe", str(AUSGABE / "wirkung.json")],

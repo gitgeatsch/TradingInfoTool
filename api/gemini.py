@@ -140,6 +140,13 @@ class TageskontingentErschoepft(requests.HTTPError):
     unterscheiden kann, ohne im Meldungstext zu suchen - ein Messlauf soll
     hier abbrechen statt stundenlang gegen eine geschlossene Tuer zu laufen."""
 
+    # Merkmal fuer `database.api_health.track_api_health` (2026-08-10): ein
+    # leeres Tagesbudget darf die Anbieter-Ampel NICHT auf Rot stellen. Als
+    # Merkmal statt per Import, weil `api.gemini` bereits `database.api_health`
+    # importiert - die Gegenrichtung waere ein Zyklus. Jeder andere Client kann
+    # dasselbe Merkmal setzen und wird genauso behandelt.
+    ist_kontingent_erschoepft = True
+
     def __init__(self, nachricht: str, modell: str, response=None):
         super().__init__(nachricht, response=response)
         self.modell = modell
