@@ -296,7 +296,26 @@ _VOLLSTAENDIGKEITS_SPALTEN = (
     # nicht_anwendbar fuer alle "ja"/"nein"-Faelle.
     "fazit_folgen, fazit_kurzfazit, fazit_konsistenz_hinweis"
 )
+# NACHGEZOGEN 2026-08-10 (Nutzer: "stelle sicher, dass das NB-Analyseskript
+# auch auf dem aktuellen Stand ist"). Der Abgleich PRAGMA table_info gegen
+# diese Listen ergab acht bzw. elf nicht erfasste Spalten. Seither prueft
+# `_spaltendrift()` das bei JEDEM Export selbst - diese Listen sollen nicht
+# noch einmal unbemerkt altern.
+#
+# BEWUSST AUSGESCHLOSSEN, damit die Unterscheidung "Absicht" gegen "vergessen"
+# nicht wieder verwischt:
+#   facts_json, *_raw_response   Rohdaten, seit 2026-07-18 ausgeschlossen; fuer
+#                                einen Einzelfall ist der Doppelklick-Dialog
+#                                in der App der bessere Weg.
+#   long_reasoning_*             die Langfassung der Begruendung. short_
+#                                reasoning ist erfasst; beide zu exportieren
+#                                verdoppelt den Textanteil ohne neue Aussage.
 _HEBEL_SIGNAL_SPALTEN = (
+    # 2026-08-10: pipeline_version sagt, WELCHE Fassung dieses Signal erzeugt
+    # hat - ohne sie ist ein Vorher/Nachher-Vergleich ueber einen Umbau hinweg
+    # nicht sauber trennbar. hebel_trigger_id wurde an einer Stelle einzeln
+    # nachgeladen, fehlte aber in der Hauptausgabe.
+    "pipeline_version, hebel_trigger_id, liquidationspreis_geschaetzt_eur, "
     "id, symbol, created_at, richtung, action, hebel_vorschlag, hebel_final, "
     "hebel_korrektur_hinweis, trade_thesis_typ, trigger_zweig, trigger_score, "
     "confidence_pct, short_reasoning, entry_eur_von, entry_eur_bis, "
@@ -372,6 +391,14 @@ _HEBEL_SIGNAL_SPALTEN = (
     # Abschnitt 8b, Punkt B1.
 )
 _SPOT_SIGNAL_SPALTEN = (
+    # 2026-08-10, sechs Nachtraege. regime_source stand bereits in der
+    # HEBEL-Liste und fehlte hier - ausgerechnet auf der Seite, auf der der
+    # Regime-Konflikt der Spot-Familie repariert wurde; ohne das Feld laesst
+    # sich nicht nachvollziehen, woher das Regime kam. holding_duration und
+    # war_re_evaluierung_faellig haengen unmittelbar an den offenen Fragen zu
+    # Haltedauer und Ueberholung.
+    "pipeline_version, regime_source, holding_duration, holding_duration_reason, "
+    "tauschen_target_symbol, war_re_evaluierung_faellig, "
     "id, symbol, created_at, action, confidence_pct, short_reasoning, "
     "entry_eur_von, entry_eur_bis, stop_loss_eur_von, stop_loss_eur_bis, "
     "take_profit_eur_von, take_profit_eur_bis, "
@@ -1115,6 +1142,110 @@ def _coingecko_kontingent(conn) -> dict:
     }
 
 
+# Spalten, die ABSICHTLICH nicht exportiert werden. Wer hier etwas eintraegt,
+# trifft eine Entscheidung; wer es vergisst, wird von `_spaltendrift()`
+# erinnert. Genau diese Unterscheidung war bis zum 10.08. verwischt.
+_BEWUSST_OHNE = ("facts_json", "raw_response", "long_reasoning_")
+
+# Tabellen, die bewusst nicht als Ganzes exportiert werden, mit Grund.
+_TABELLEN_OHNE = {
+    "price_cache": "120k+ Zeilen Rohcache - Volumen ohne Diagnosewert",
+    "groq_exhaustion_status": "Groq ist aus dem Projekt entfernt (Memory "
+                              "project_groq_historie) - tote Tabelle",
+    "api_call_kontingent_warnung_gesendet": "reine Entprellung der Warnmails",
+    "meta": "Schemaversion - steht bereits in den Metadaten des Exports",
+}
+
+
+def _konfiguration_und_makro(conn) -> dict:
+    """Die vier Tabellen, die der Export bis zum 10.08. gar nicht kannte.
+
+    Gefunden ueber `_spaltendrift()` selbst - der Waechter hat als Erstes auf
+    seine eigenen Luecken gezeigt.
+
+      asset_bitpanda_override   Von Hand gesetzte Zuordnungen. Eine Diagnose,
+                                die sie nicht kennt, liest Bestaende falsch
+                                und sucht den Fehler in der Logik.
+      asset_dca_settings        Sparplan-Einstellungen je Asset.
+      makro_analog_ergebnis     Ergebnis des Makro-Konstellationsvergleichs -
+                                bisher nur in der App sichtbar.
+      makro_historie_monat      Die Zeitreihe dahinter. VOLLSTAENDIG waeren es
+                                1.185 Zeilen; exportiert werden die letzten
+                                36 Monate plus die Spannweite, damit die
+                                Groessenordnung nachvollziehbar bleibt, ohne
+                                den Export aufzublaehen.
+    """
+    def hole(sql, *args):
+        try:
+            return [row_to_dict(r) for r in conn.execute(sql, args).fetchall()]
+        except Exception as exc:  # noqa: BLE001
+            return [{"nicht_lesbar": str(exc)}]
+
+    monate = hole("SELECT * FROM makro_historie_monat "
+                  "ORDER BY monat DESC LIMIT 36")
+    try:
+        spanne = conn.execute(
+            "SELECT MIN(monat) a, MAX(monat) b, COUNT(*) n "
+            "FROM makro_historie_monat").fetchone()
+        spannweite = {"von": spanne["a"], "bis": spanne["b"],
+                      "monate_gesamt": spanne["n"]}
+    except Exception as exc:  # noqa: BLE001
+        spannweite = {"nicht_lesbar": str(exc)}
+    return {
+        "asset_bitpanda_override": hole("SELECT * FROM asset_bitpanda_override"),
+        "asset_dca_settings": hole("SELECT * FROM asset_dca_settings"),
+        "makro_analog_ergebnis": hole(
+            "SELECT * FROM makro_analog_ergebnis ORDER BY rowid DESC LIMIT 20"),
+        "makro_historie_spannweite": spannweite,
+        "makro_historie_letzte_36": monate,
+    }
+
+
+def _spaltendrift(conn) -> dict:
+    """Was steht in der Datenbank, das dieser Export NICHT mitnimmt?
+
+    DER ANLASS (Nutzer, 10.08.): *"stelle sicher, dass das NB-Analyseskript
+    auch auf dem aktuellen Stand ist."* Der Abgleich ergab acht nicht erfasste
+    Spalten bei den Hebel-Signalen und elf bei Spot - darunter
+    `pipeline_version` (ohne die ein Vorher/Nachher-Vergleich ueber einen
+    Umbau hinweg nicht trennbar ist) und `regime_source`, das auf der
+    Hebel-Seite laengst erfasst war und auf der Spot-Seite fehlte.
+
+    Das Skript hat seit 2026-07-18 den Anspruch, EIN versioniertes Skript
+    statt zweier driftender Kopien zu sein. Gedriftet ist es trotzdem - nur
+    gegen das SCHEMA statt gegen eine Zweitkopie, und deshalb unbemerkt.
+
+    Diese Funktion macht die Drift zu einer Zeile im Export. Sie meldet, was
+    fehlt, statt es zu ergaenzen: welche Spalte gebraucht wird, ist eine
+    inhaltliche Entscheidung. Bewusste Ausschluesse stehen in `_BEWUSST_OHNE`
+    und tauchen hier nicht auf - wer etwas dort eintraegt, hat entschieden."""
+    aus: dict = {"spalten": {}, "tabellen": {}}
+    for tabelle, spalten in (("hebel_signals", _HEBEL_SIGNAL_SPALTEN),
+                             ("signals", _SPOT_SIGNAL_SPALTEN)):
+        try:
+            vorhanden = [r[1] for r in conn.execute(
+                f"PRAGMA table_info({tabelle})")]
+        except Exception as exc:  # noqa: BLE001
+            aus["spalten"][tabelle] = {"nicht_lesbar": str(exc)}
+            continue
+        fehlend = [s for s in vorhanden if s not in spalten
+                   and not any(e in s for e in _BEWUSST_OHNE)]
+        aus["spalten"][tabelle] = {
+            "spalten_gesamt": len(vorhanden), "nicht_exportiert": fehlend}
+
+    alle = {r[0] for r in conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' "
+        "AND name NOT LIKE 'sqlite_%'")}
+    quelle = Path(__file__).read_text(encoding="utf-8")
+    aus["tabellen"] = {
+        "gesamt": len(alle),
+        "nicht_erwaehnt": sorted(t for t in alle if t not in quelle
+                                 and t not in _TABELLEN_OHNE),
+        "bewusst_ohne": _TABELLEN_OHNE,
+    }
+    return aus
+
+
 def _llm_kontingent(conn) -> dict:
     """Neu (2026-08-10) - derselbe blinde Fleck wie oben, einen Anbieter
     weiter.
@@ -1621,6 +1752,14 @@ def main() -> None:
             llm_kontingent = _llm_kontingent(conn)
         except Exception as exc:  # noqa: BLE001
             llm_kontingent = {"nicht_verfuegbar": str(exc)}
+        try:
+            konfiguration_und_makro = _konfiguration_und_makro(conn)
+        except Exception as exc:  # noqa: BLE001
+            konfiguration_und_makro = {"nicht_verfuegbar": str(exc)}
+        try:
+            spaltendrift = _spaltendrift(conn)
+        except Exception as exc:  # noqa: BLE001
+            spaltendrift = {"nicht_verfuegbar": str(exc)}
 
         # Fail-soft: eine fehlende Kategorie-Konfiguration darf den Export
         # nicht toeten (Lehre 06.08.) - aber sie muss im Export SICHTBAR
@@ -1908,6 +2047,8 @@ def main() -> None:
         "ohlc_aktualitaet_je_symbol": ohlc_aktualitaet_je_symbol,
         "coingecko_kontingent": coingecko_kontingent,
         "llm_kontingent": llm_kontingent,
+        "konfiguration_und_makro": konfiguration_und_makro,
+        "spaltendrift": spaltendrift,
         "deep_dive": {
             "symbol": DEEP_DIVE_SYMBOL,
             "hebel_signals": [row_to_dict(r) for r in deep_signale],
@@ -2003,6 +2144,23 @@ def main() -> None:
               f"Grenze {llm_kontingent['tagesgrenze_je_modell']}/Tag je Modell): "
               + (", ".join(f"{z['source']}={z['anzahl']}" for z in heute)
                  or "heute noch kein Aufruf gebucht"))
+    if "nicht_verfuegbar" not in spaltendrift:
+        offen = {k: v.get("nicht_exportiert") or []
+                 for k, v in spaltendrift["spalten"].items()}
+        summe = sum(len(v) for v in offen.values())
+        t_offen = spaltendrift["tabellen"]["nicht_erwaehnt"]
+        if summe or t_offen:
+            print(f"  SCHEMA-DRIFT: {summe} Spalten und {len(t_offen)} Tabellen "
+                  f"sind weder exportiert noch als bewusster Ausschluss "
+                  f"vermerkt.")
+            for tab, sp in offen.items():
+                if sp:
+                    print(f"      {tab}: {', '.join(sp)}")
+            if t_offen:
+                print(f"      Tabellen: {', '.join(t_offen)}")
+        else:
+            print("  Schema-Drift: keine - jede Spalte ist exportiert oder "
+                  "als bewusster Ausschluss vermerkt.")
 
     # DB-Backup ganz zum Schluss (2026-08-06). Reihenfolge ist Absicht: der
     # Export ist zu diesem Zeitpunkt geschrieben, ein fehlgeschlagenes Backup
