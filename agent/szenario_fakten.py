@@ -39,7 +39,17 @@ from __future__ import annotations
 # Hilfsgroesse, die sonst nirgends vorkommt.
 STOP_IN_ATR = 1.5
 ZIEL_IN_ATR = 3.0
-HORIZONT_KERZEN = 7
+# ZWANZIG, nicht sieben (Stufe-0-Trockenlauf, 10.08.). Bei sieben Kerzen
+# erreichte in 60 echten Faellen KEIN EINZIGER das Ziel - die Basisrate fuer
+# "ziel" waere 0 % gewesen und der Ausgang unschaetzbar. Ein Ziel in 3 ATR
+# Entfernung braucht mehr als eine Woche.
+#
+# Die Wahl fiel ueber einen Rasterlauf (Stop 0,75/1,0/1,5 ATR x Horizont
+# 7/14/20/30) auf die AUSGEWOGENSTE Ausgangsverteilung - 21 % Ziel, 49 % Stop,
+# 30 % keines. Ausgewogen heisst hier: am schwersten durch blosses Raten der
+# Basisrate zu schlagen, also der informativste Test. Getroffen wurde sie,
+# BEVOR ein Modell gelaufen war; sie kann also kein Ergebnis beguenstigen.
+HORIZONT_KERZEN = 20
 
 
 def baue_zonen(kurs: float, atr: float, richtung: str) -> dict | None:
@@ -188,3 +198,63 @@ def enthaelt_werturteile(fakten: dict) -> list[str]:
 
     geh(fakten)
     return treffer
+
+
+# --- Die Wahrheit ----------------------------------------------------------
+AUSGAENGE = ("ziel", "stop", "keines")
+
+
+def loese_auf(reihe, idx: int, zonen: dict,
+              horizont: int = HORIZONT_KERZEN) -> str | None:
+    """Was wurde ZUERST erreicht - Ziel, Stop, oder keines im Horizont?
+
+    Die Gegenprobe zur Schaetzung. Sie liest ausschliesslich die Kursreihe und
+    kennt weder Modell noch Empfehlung - deshalb ist sie als Wahrheit
+    brauchbar, anders als das gespeicherte Handelsergebnis, das an den vom
+    Modell selbst gesetzten Zonen haengt.
+
+    INNERHALB EINER KERZE laesst sich die Reihenfolge nicht aufloesen: Hoch und
+    Tief stehen ohne Zeitstempel nebeneinander. Wird in derselben Kerze beides
+    beruehrt, gilt der STOP als zuerst erreicht - die pessimistische Annahme.
+    Andernfalls wuerde jeder volatile Tag als Gewinn gezaehlt, und die
+    Trefferquote waere systematisch zu hoch. Dieselbe Konvention verwendet das
+    Backward-Tracking.
+
+    Gibt None zurueck, wenn der Horizont ueber das Ende der Reihe hinausragt -
+    dann ist der Fall (noch) nicht auswertbar und darf nicht mitzaehlen.
+    """
+    if idx + horizont >= len(reihe) or not zonen:
+        return None
+    long = zonen["richtung"] == "LONG"
+    ziel, stop = zonen["ziel"], zonen["stop"]
+    for k in reihe[idx + 1: idx + 1 + horizont]:
+        hoch, tief = getattr(k, "high", None), getattr(k, "low", None)
+        if hoch is None or tief is None:
+            continue
+        stop_beruehrt = (tief <= stop) if long else (hoch >= stop)
+        ziel_beruehrt = (hoch >= ziel) if long else (tief <= ziel)
+        if stop_beruehrt:
+            return "stop"          # auch wenn beides - siehe Docstring
+        if ziel_beruehrt:
+            return "ziel"
+    return "keines"
+
+
+def brier(verteilung: dict, eingetreten: str) -> float | None:
+    """Brier-Score fuer drei sich ausschliessende Ausgaenge. 0 ist perfekt.
+
+    Summe der quadrierten Abweichungen zwischen geschaetzter Wahrscheinlichkeit
+    und Eintreten (1 oder 0). Wertebereich 0 bis 2. Der Standardmassstab fuer
+    Wahrscheinlichkeitsprognosen seit Brier 1950 - bewusst nicht selbst
+    erfunden, damit unsere Zahlen mit der Literatur vergleichbar bleiben.
+    """
+    if eingetreten not in AUSGAENGE or not verteilung:
+        return None
+    summe = 0.0
+    for name, schluessel in zip(AUSGAENGE,
+                                ("ziel_zuerst_pct", "stop_zuerst_pct", "keines_pct")):
+        p = verteilung.get(schluessel)
+        if p is None:
+            return None
+        summe += (float(p) / 100.0 - (1.0 if name == eingetreten else 0.0)) ** 2
+    return round(summe, 4)
