@@ -77,48 +77,60 @@ class AnalystAntwortUngueltig(ValueError):
 
 
 def validiere(antwort: dict) -> dict:
-    """Prueft die Marktlage-Antwort. KORRIGIERT Formfehler, lehnt Sinnfehler ab.
+    """Prueft die Marktlage. LEHNT FAST NICHTS AB - degradiert feldweise.
 
-    Der Unterschied (Nutzereinwand 10.08.: "damit wir nichts blocken"): wer
-    "breit" statt "breit_getragen" sagt oder 250 statt 300, hat die Aufgabe
-    verstanden und die Konvention verfehlt. Das wird zurechtgerueckt und
-    protokolliert. Abgelehnt wird nur, was in sich unbrauchbar ist."""
+    Nutzereinwand 10.08., zweite Runde: *"bin fast der Meinung hier noch weniger
+    restriktiv zu sein - z.B. wenn statt Bullenmarkt 'bullisch' steht finde ich
+    etwas hart."*
+
+    Er hat recht, und "bullisch" ist das beste Beispiel: das ist keine
+    Vokabel-Abweichung, sondern eine ANDERE FRAGE beantwortet - Richtung statt
+    Breite. Trotzdem koennen `lage`, `belege` und der Betrag brauchbar sein. Die
+    ganze Antwort dafuer wegzuwerfen ist unverhaeltnismaessig.
+
+    DESHALB BLEIBT NUR EIN HARTER GRUND: ohne einen brauchbaren Betrag hat diese
+    Rolle nichts geliefert - sie existiert, um genau diese eine Zahl zu setzen.
+    Alles andere wird zurechtgerueckt, ersetzt oder vermerkt.
+
+    `traegt` faellt bei Unzuordenbarkeit auf "gemischt" zurueck. Das ist KEINE
+    Unknown-Option durch die Hintertuer: das Modell sieht drei echte Kategorien,
+    der Rueckfall passiert im Code und steht im Protokoll."""
     from agent.antwort_normalisierung import (Protokoll, naechste_tranche,
                                               naechstes_wort, kuerze_liste)
 
     if not isinstance(antwort, dict):
         raise AnalystAntwortUngueltig("Antwort ist kein Objekt")
-    fehlend = [f for f in REQUIRED_FELDER if antwort.get(f) in (None, "", [])]
-    if fehlend:
-        raise AnalystAntwortUngueltig(f"Felder fehlen oder sind leer: {fehlend}")
 
     prot = Protokoll()
 
-    wort, hinweis = naechstes_wort(antwort["traegt"], TRAGFAEHIGKEIT)
-    if wort is None:
-        # Keine Aehnlichkeit zu einer der drei Kategorien: das Modell hat eine
-        # eigene erfunden. Das ist ein Sinnfehler, kein Tippfehler.
+    # --- Der EINZIGE harte Grund -------------------------------------------
+    if antwort.get("max_tranche_eur") in (None, ""):
         raise AnalystAntwortUngueltig(
-            f"traegt={antwort['traegt']!r} passt zu keiner Kategorie {TRAGFAEHIGKEIT}")
-    antwort["traegt"] = wort
-    prot.dazu(hinweis)
-
+            "ohne max_tranche_eur hat diese Rolle nichts geliefert")
     betrag, hinweis = naechste_tranche(antwort["max_tranche_eur"], TRANCHEN_EUR)
     if betrag is None:
         raise AnalystAntwortUngueltig(hinweis or "max_tranche_eur unbrauchbar")
     antwort["max_tranche_eur"] = betrag
     prot.dazu(hinweis)
 
-    belege = antwort["belege"]
-    if not isinstance(belege, list):
-        raise AnalystAntwortUngueltig("belege ist keine Liste")
-    belege = [b for b in belege if str(b).strip()]
+    # --- Alles andere wird gerettet ----------------------------------------
+    wort, hinweis = naechstes_wort(antwort.get("traegt"), TRAGFAEHIGKEIT)
+    if wort is None:
+        wort = "gemischt"
+        hinweis = (f"traegt={antwort.get('traegt')!r} passt zu keiner Kategorie - "
+                   f"als 'gemischt' gewertet")
+    antwort["traegt"] = wort
+    prot.dazu(hinweis)
+
+    if not str(antwort.get("lage") or "").strip():
+        antwort["lage"] = ""
+        prot.dazu("keine Lagebeschreibung geliefert")
+
+    belege = antwort.get("belege")
+    belege = [b for b in belege if str(b).strip()] if isinstance(belege, list) else []
     if not belege:
-        raise AnalystAntwortUngueltig("kein einziger brauchbarer Beleg")
-    # Zu WENIGE Belege werden NICHT abgelehnt - eine duenne Begruendung kann
-    # richtig sein, und der Nutzer sieht die Zahl ohnehin. Zu viele werden
-    # gekuerzt, nicht verworfen.
-    if len(belege) < 2:
+        prot.dazu("keine Belege geliefert")
+    elif len(belege) < 2:
         prot.dazu(f"nur {len(belege)} Beleg statt der erbetenen zwei")
     belege, hinweis = kuerze_liste(belege, 4, "Belege")
     prot.dazu(hinweis)

@@ -123,11 +123,13 @@ def validiere(antwort: dict, symbol: str = "?",
 
     if not isinstance(antwort, dict):
         raise TraderAntwortUngueltig(f"{symbol}: Antwort ist kein Objekt")
-    fehlend = [f for f in REQUIRED_FELDER if antwort.get(f) in (None, "", [])]
-    if fehlend:
-        raise TraderAntwortUngueltig(f"{symbol}: Felder fehlen: {fehlend}")
 
     prot = Protokoll()
+    # Fehlende Felder werden VERMERKT, nicht abgelehnt - der Vertrag entscheidet
+    # danach, was ohne sie noch traegt. Nur `aktion` ist dort hart.
+    fehlend = [f for f in REQUIRED_FELDER if antwort.get(f) in (None, "", [])]
+    if fehlend:
+        prot.dazu(f"ohne Angabe: {', '.join(fehlend)}")
 
     # --- Belege: Form zurechtruecken, nicht verwerfen ----------------------
     belege = antwort["belege"]
@@ -164,12 +166,17 @@ def validiere(antwort: dict, symbol: str = "?",
 
     # --- Unabhaengige Faktoren: hart, weil logisch pruefbar ----------------
     try:
-        faktoren = int(float(antwort["unabhaengige_faktoren"]))
+        faktoren = int(float(antwort.get("unabhaengige_faktoren")))
     except (TypeError, ValueError):
-        raise TraderAntwortUngueltig(
-            f"{symbol}: unabhaengige_faktoren ist keine Zahl")
+        # Keine Zahl geliefert: die Belege sind trotzdem da und zaehlbar. Als
+        # Rueckfall gilt jeder Beleg als eigener Faktor - das ist die
+        # groesszuegige Annahme, aber sie steht im Protokoll und faellt auf.
+        faktoren = len(sauber)
+        prot.dazu(f"unabhaengige_faktoren {antwort.get('unabhaengige_faktoren')!r} "
+                  f"unbrauchbar - auf {faktoren} gesetzt")
     if faktoren < 0:
-        raise TraderAntwortUngueltig(f"{symbol}: {faktoren} unabhaengige Faktoren")
+        faktoren = 0
+        prot.dazu("negative Faktorenzahl auf 0 gesetzt")
     if faktoren > len(sauber):
         # Mehr unabhaengige Faktoren als Belege ist unmoeglich. Frueher eine
         # Ablehnung - jetzt gedeckelt: die Zahl war falsch, die Analyse deshalb

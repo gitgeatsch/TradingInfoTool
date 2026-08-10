@@ -20,10 +20,24 @@ Verlust nach.
 Der Nutzer dazu: *"ich brauche konkrete Handlungsempfehlung und Begruendung"* und
 *"mit +1R fange ich nichts an - EURO und Prozent bitte"*.
 
-WAS DIESE DATEI TUT: sie schreibt fest, was eine Antwort enthalten muss, und lehnt
-ab, was das nicht erfuellt - so wie `szenario_analyst._validate_szenario()` es fuer
-die Verteilung tut. Eine Empfehlung ohne Betrag ist keine Empfehlung, sondern eine
-Meinung.
+WAS DIESE DATEI TUT: sie schreibt fest, was eine Antwort enthalten muss - und
+holt nach, was fehlt, statt zu verwerfen.
+
+DREI STUFEN, nach dem Einwand des Nutzers am 10.08. ("damit wir nichts blocken"):
+
+  KORRIGIEREN   fehlender oder verfehlter Betrag -> kleinste Tranche
+  DEGRADIEREN   Kauf ohne Ausstieg oder mit Stop ueber dem Einstieg ->
+                die Handlung wird auf NICHTS_TUN zurueckgenommen, die Analyse
+                bleibt erhalten. Das ist gefaehrlich, nicht nur unvollstaendig.
+  WARNEN        eine Begruendung, die sich selbst zurueckzieht -> Vermerk
+
+ABGELEHNT WIRD NUR: eine Antwort ohne `aktion` oder mit einer erfundenen. Ohne
+sie gibt es keine Empfehlung, und es gibt nichts, was man daraus retten koennte.
+
+Jede Nachbesserung steht IN der Antwort (`_korrekturen`, `_degradiert`,
+`_warnung`, `_luecken`) und geht in den Datensatz. Haeufen sich dieselben,
+ist das ein Befund ueber den PROMPT - dann gehoert er repariert, nicht die
+Antwort weggeworfen.
 
 WAS SIE BEWUSST NICHT TUT: Positionsgroessen rechnen. Der Nutzer setzt den Betrag
 selbst (100/300/500 EUR, seit 02.08. festgehalten) - aus geringem Kapital und noch
@@ -80,48 +94,76 @@ def validiere(antwort: dict, symbol: str = "?") -> dict:
     if not isinstance(antwort, dict):
         raise EmpfehlungUngueltig(f"{symbol}: Antwort ist kein Objekt")
 
-    fehlend = [f for f in REQUIRED_FELDER if not str(antwort.get(f) or "").strip()]
-    if fehlend:
-        raise EmpfehlungUngueltig(f"{symbol}: Felder fehlen oder sind leer: {fehlend}")
+    # NUR `aktion` ist hart: ohne sie gibt es keine Empfehlung. Fehlt eine
+    # Begruendung oder ein Gegengrund, ist die Antwort duerftig - aber eine
+    # duerftige Empfehlung ist mehr wert als gar keine, und die Luecke steht
+    # sichtbar im Protokoll.
+    if not str(antwort.get("aktion") or "").strip():
+        raise EmpfehlungUngueltig(f"{symbol}: ohne 'aktion' gibt es keine Empfehlung")
+    luecken = [f for f in REQUIRED_FELDER
+               if f != "aktion" and not str(antwort.get(f) or "").strip()]
+    if luecken:
+        for f in luecken:
+            antwort.setdefault(f, "")
+        antwort["_luecken"] = f"ohne Angabe: {', '.join(luecken)}"
 
-    aktion = antwort["aktion"]
+    # Schreibweise vereinheitlichen - "kaufen", "Kaufen", " KAUFEN " sind
+    # dieselbe Aktion. SYNONYME werden bewusst NICHT geraten: der Unterschied
+    # zwischen VERKAUFEN und REDUZIEREN ist Geld, und ein falsch geratenes Wort
+    # waere hier teurer als eine abgelehnte Antwort. Das ist die einzige Stelle
+    # im ganzen Vertrag, an der Strenge billiger ist als Grosszuegigkeit.
+    aktion = str(antwort["aktion"]).strip().upper().replace(" ", "_").replace("-", "_")
     if aktion not in AKTIONEN:
         raise EmpfehlungUngueltig(
-            f"{symbol}: aktion={aktion!r}, erlaubt {AKTIONEN}")
+            f"{symbol}: aktion={antwort['aktion']!r}, erlaubt {AKTIONEN}")
+    antwort["aktion"] = aktion
 
     # --- Der Betrag. Ohne ihn ist es eine Meinung, keine Empfehlung. --------
     if aktion in BRAUCHT_BETRAG:
         betrag = _zahl(antwort.get("tranche_eur"))
-        if betrag is None:
-            raise EmpfehlungUngueltig(
-                f"{symbol}: '{aktion}' ohne tranche_eur - eine Empfehlung ohne "
-                f"Betrag ist keine")
-        if int(betrag) not in TRANCHEN_EUR:
-            raise EmpfehlungUngueltig(
-                f"{symbol}: tranche_eur={betrag}, erlaubt {TRANCHEN_EUR} - "
-                f"das Modell waehlt eine Tranche, es rechnet keine aus")
+        if betrag is None or int(betrag) not in TRANCHEN_EUR:
+            # KLEINSTE TRANCHE statt Ablehnung. Das Modell hat gehandelt und
+            # den Betrag vergessen oder verfehlt - die kleinste Groesse ist die
+            # vorsichtige Antwort darauf und rettet die Analyse.
+            vorher = antwort.get("tranche_eur")
+            antwort["tranche_eur"] = min(TRANCHEN_EUR)
+            antwort["_korrekturen"] = ((antwort.get("_korrekturen", "") + "; ")
+                                       if antwort.get("_korrekturen") else "") + (
+                f"tranche_eur {vorher!r} auf {min(TRANCHEN_EUR)} gesetzt")
 
     # --- Kurs und Stop, beide in EUR. --------------------------------------
     if aktion in BRAUCHT_EINSTIEG:
-        for feld in ("einstieg_eur", "stop_eur"):
-            if _zahl(antwort.get(feld)) is None:
-                raise EmpfehlungUngueltig(
-                    f"{symbol}: '{aktion}' ohne {feld} - im KAS-Fall vom 15.07. "
-                    f"waren genau diese beiden Felder leer")
-        einstieg, stop = _zahl(antwort["einstieg_eur"]), _zahl(antwort["stop_eur"])
-        if stop >= einstieg:
-            raise EmpfehlungUngueltig(
-                f"{symbol}: stop_eur {stop} liegt nicht unter einstieg_eur "
-                f"{einstieg} - bei einem Kauf muss der Stop darunter liegen")
+        einstieg = _zahl(antwort.get("einstieg_eur"))
+        stop = _zahl(antwort.get("stop_eur"))
+        # HIER BLEIBT ES HART, aber als Degradierung statt Verwerfen: eine
+        # Kaufempfehlung ohne Ausstieg oder mit einem Stop ueber dem Einstieg
+        # ist gefaehrlich, nicht nur unvollstaendig. Die Analyse bleibt
+        # erhalten, die Handlung wird zurueckgenommen - der Nutzer sieht die
+        # Belege und weiss, warum daraus keine Order wurde.
+        grund = None
+        if einstieg is None or stop is None:
+            grund = "ohne Einstieg oder Ausstieg"
+        elif stop >= einstieg:
+            grund = f"Ausstieg {stop} liegt nicht unter dem Einstieg {einstieg}"
+        if grund:
+            antwort["aktion"] = "NICHTS_TUN"
+            antwort["_degradiert"] = (
+                f"'{aktion}' auf NICHTS_TUN zurueckgenommen: {grund}")
+            return antwort
 
-    # --- Die Begruendung muss die Aktion TRAGEN. ---------------------------
+    # --- Die Begruendung sollte die Aktion TRAGEN --------------------------
+    # WARNUNG STATT ABLEHNUNG (Nutzerentscheidung 10.08.): ein hedgender Text
+    # ist unschoen, aber eine verworfene Antwort ist schlimmer - sie erzeugt
+    # eine Wiederholung und am Ende kein Signal. Die Warnung geht mit der
+    # Antwort weiter und wird gezaehlt; haeufen sich diese Faelle, ist der
+    # Prompt schuld und gehoert repariert, nicht die Antwort weggeworfen.
     if aktion != "NICHTS_TUN":
-        b = str(antwort["begruendung"]).lower()
+        b = str(antwort.get("begruendung") or "").lower()
         treffer = [w for w in RELATIVIERER if w in b]
         if treffer:
-            raise EmpfehlungUngueltig(
-                f"{symbol}: die Begruendung zieht sich selbst zurueck ({treffer}) - "
-                f"Gegengruende gehoeren nach 'was_dagegen', wo sie sichtbar sind")
+            antwort["_warnung"] = (
+                f"die Begruendung zieht sich selbst zurueck ({', '.join(treffer)}) - "
+                f"Gegengruende gehoeren nach 'was_dagegen'")
     return antwort
 
 
