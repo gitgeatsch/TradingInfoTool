@@ -129,6 +129,17 @@ _INDEX_HTML = """<!doctype html>
   sichtbar, an welchem Tag der Verbrauch tatsaechlich ansteigt.</span></div>
 </div>
 
+<div class="card">
+  <div class="row"><span>Gemini-Tageskontingent je Modell</span><span id="llm-kontingent-tag">-</span></div>
+  <div id="llm-kontingent"></div>
+  <div class="row"><span class="muted-text">500 Aufrufe pro Tag, pro Projekt, pro MODELL - am 2026-08-09 aus
+  Googles eigenem Fehlerkoerper gemessen (GenerateRequestsPerDayPerProjectPerModel-FreeTier), nicht recherchiert.
+  Das Kontingent haengt am API-SCHLUESSEL, nicht am Geraet: Laeufe am Desktop nehmen der Produktion am Notebook
+  direkt Budget weg - genau so stand die Produktion am 09.08. einen Tag lang still, ohne dass es irgendwo
+  sichtbar war. Der Tag laeuft auf Googles Grenze (Mitternacht Pazifik, also 09:00 MESZ), nicht auf UTC.
+  Jedes Modell hat einen eigenen Topf.</span></div>
+</div>
+
 </div>
 
 <div class="section-header section-a">
@@ -959,6 +970,17 @@ async function refreshStatus() {
     el.textContent = q.anzahl.toLocaleString() + " / " + q.limit.toLocaleString() + " (" + q.prozent + "%)";
     el.className = q.prozent >= 80 ? "stale" : "ok";
     document.getElementById("coingecko-quota-heute").textContent = (q.anzahl_heute ?? 0).toLocaleString();
+  }
+
+  if (data.llm_kontingent) {
+    const k = data.llm_kontingent;
+    document.getElementById("llm-kontingent-tag").textContent = k.tag_pazifik + " (Pazifik)";
+    // Ampel bei 80 %: darunter ist Spielraum, darueber wird es fuer die
+    // Produktion eng - die Reihenfolge kommt schon sortiert aus der DB.
+    document.getElementById("llm-kontingent").innerHTML = (k.modelle || []).map(m =>
+      '<div class="row"><span>&nbsp;&nbsp;' + m.modell + '</span><span class="' +
+      (m.prozent >= 80 ? "stale" : "ok") + '">' + m.anzahl.toLocaleString() + " / " +
+      m.limit.toLocaleString() + " (" + m.prozent + "%)</span></div>").join("");
   }
 
   if (data.provider_performance) {

@@ -178,6 +178,32 @@ HEBEL_COOLDOWN_STUNDEN_AUSGEMUSTERT = 120.0  # 5 Tage
 
 logger = logging.getLogger(__name__)
 
+# Nur zum UNTERSCHEIDEN gebraucht: "Tagesbudget leer" verhaelt sich anders als
+# "Anbieter gestoert" (siehe _mit_fallback_chain). Der Import darf den
+# Allocator nie mitnehmen - `isinstance(x, ())` ist immer False, der Code
+# verhaelt sich dann exakt wie vor dem 09.08.
+try:
+    from api.gemini import TageskontingentErschoepft as _TageskontingentErschoepft
+except Exception:  # noqa: BLE001
+    _TageskontingentErschoepft = ()
+
+
+def _ist_kontingent_leer(exc: Exception) -> bool:
+    """Meldet der Anbieter ein leeres TAGESBUDGET - oder eine STOERUNG?
+
+    Von dieser Unterscheidung haengt das Verhalten der Fallback-Kette ab: ein
+    leeres Budget gilt bis Mitternacht (Pazifik) und rechtfertigt, den Anbieter
+    sofort und fuer den ganzen Lauf zu ueberspringen. Eine Stoerung ist ein
+    Gesundheitsereignis, gehoert in `api_health_status` und darf erst nach
+    mehreren Fehlschlaegen sperren.
+
+    DIE FALLE, gegen die hier ausdruecklich geprueft wird:
+    `TageskontingentErschoepft` erbt von `requests.HTTPError`. Wer hier auf
+    `HTTPError` pruefen wuerde, erklaerte JEDEN HTTP-Fehler zum leeren Budget -
+    ein 500er des Anbieters wuerde ihn dann bis morgen frueh aus der Kette
+    nehmen. Deshalb der enge Typ."""
+    return isinstance(exc, _TageskontingentErschoepft)
+
 
 @dataclass
 class AllocationResult:
@@ -674,6 +700,20 @@ def run_budget_allocator(
         "openrouter": openrouter_budget,
     }
 
+    # ANBIETER, DEREN TAGESKONTINGENT DER ANBIETER SELBST FUER LEER ERKLAERT
+    # HAT (2026-08-09). Das ist etwas anderes als der Zaehler darueber:
+    #
+    #   `tages_verbraucht` zaehlt, was DIESES GERAET verbraucht hat. Geminis
+    #   Kontingent haengt aber am API-SCHLUESSEL (500/Tag je Projekt UND je
+    #   Modell, gemessen am 09.08.). Laeuft ein Messlauf am Desktop, sieht der
+    #   Zaehler des Notebooks davon nichts und steht auf 0, waehrend Google
+    #   bereits abweist. Genau so stand die Produktion am 09.08. einen Tag.
+    #
+    # Der einzige verlaessliche Zeuge ist der Anbieter selbst - er sagt es im
+    # Fehlerkoerper. Wer hier landet, wird fuer den REST DES LAUFS
+    # uebersprungen, ohne dass ein weiterer Kandidat einen Aufruf verschwendet.
+    kontingent_leer: set[str] = set()
+
     tier1_n, tier2_n, tier3_n = _verteile_budget(
         len(hebel_kandidaten), len(marktscan_kandidaten), len(spot_kandidaten), budget_gesamt, spot_reserve,
     )
@@ -729,6 +769,8 @@ def run_budget_allocator(
         docs/budget_queue_design.md geforderte Qualitaets-Tracking)."""
         last_exc: Exception | None = None
         for provider_name, call_fn in calls:
+            if provider_name in kontingent_leer:
+                continue
             if provider_name in tages_budget:
                 if tages_verbraucht[provider_name] >= tages_budget[provider_name]:
                     result.budget_erschoepft[provider_name] = True
@@ -766,6 +808,28 @@ def run_budget_allocator(
                 return True
             except Exception as exc:
                 last_exc = exc
+                # LEERES TAGESKONTINGENT IST KEIN DEFEKT (2026-08-09).
+                #
+                # Zwei Gruende fuer die Sonderbehandlung:
+                #
+                #   1. Ohne sie braeuchte es DREI Fehlschlaege, bis der Circuit
+                #      Breaker greift - und jeder davon kostet einen Aufruf,
+                #      der garantiert scheitert. Hier steht nach dem ERSTEN
+                #      fest, dass es bis Mitternacht Pazifik so bleibt.
+                #   2. `sperre.melde_fehlschlag()` schreibt in
+                #      `api_health_status`. Ein erschoepftes Budget wuerde dort
+                #      als Anbieter-STOERUNG erscheinen, obwohl der Anbieter
+                #      kerngesund ist - und die Ampel auf der Statusseite
+                #      faelschlich auf Rot stellen. Genau diese Verwechslung
+                #      hat am 09.08. die Diagnose um zwei Tage verzoegert.
+                if _ist_kontingent_leer(exc):
+                    kontingent_leer.add(provider_name)
+                    result.budget_erschoepft[provider_name] = True
+                    logger.warning(
+                        "%s meldet sein Tageskontingent als erschoepft (%s) - "
+                        "fuer diesen Lauf uebersprungen, es uebernimmt der "
+                        "naechste Anbieter in der Kette.", provider_name, exc)
+                    continue
                 logger.info("%s-Call für %s fehlgeschlagen (%s)", provider_name, schluessel, exc)
                 sperre.melde_fehlschlag(provider_name, exc)
 

@@ -3029,6 +3029,65 @@ Ankunft im Produktivlauf ist Prüfpunkt des nächsten Exports.
 *Details, Herleitung und Katalog-Einträge: `Fakten_Entscheidungsmappe.md`,
 Abschnitte 4.3 und 7.*
 
+### Nachtrag (2026-08-09): beide Selbstbewertungs-Fakten bekommen ihre Bezugsgröße
+
+**Ist-Zustand seit 2026-08-09.** Regel 14 (Hebel) bzw. 23/17/18/19 (Spot-Familie)
+und Regel 31 Teil 2 sind unverändert — geändert hat sich, **was in den Fakten
+steht**, den diese Regeln lesen.
+
+**`historische_erfolgsquote`** liefert jetzt zusätzlich zur absoluten Quote:
+
+| Feld | Bedeutung |
+|---|---|
+| `crv_median` | Median-CRV der ausgewerteten Signale |
+| `breakeven_trefferquote_pct` | `1/(1+CRV)` — die Latte, gegen die die Quote gehört |
+| `vorsprung_vor_breakeven_pp` | der Abstand dazu |
+| `je_richtung` | LONG und SHORT getrennt, **je mit eigenem Breakeven** (nur Hebel — Spot hat keine Richtung) |
+| `geschrumpft` | zum Breakeven gewichtet, Pseudo-Stichprobe 50 |
+| `nicht_enthalten_ueberholt` | wie viele Signale aus der Rechnung fielen, weil eine neuere Analyse sie ersetzte |
+
+An echten Zahlen (Hebel, Stand 09.08.): statt „16,0 %" liest das Modell
+„16,0 % gegen einen Breakeven von 26,7 % bei Median-CRV 2,74, Abstand
+−10,7 pp; 43 Signale nicht enthalten". Spot bekommt seine **eigene** Latte aus
+seinem eigenen CRV-Profil: 25,0 % gegen 28,9 %, Abstand −3,9 pp.
+
+**`systemguete`** reicht jetzt durch, was `compute_systemguete()` längst
+berechnete und die Übergabefunktion wegwarf: `basislinie_erwartungswert_r`
+(−0,094 R), `signalbeitrag_r` (−0,055 R), `erwartungswert_ci`
+(**[−0,407; +0,147] — enthält die Null**) und `aufloesungsquote`.
+
+**Die Schrumpfung und ihre Anker.** Beide folgen der Frage „was nehme ich an,
+wenn ich nichts weiß?":
+
+| Größe | Anker | Begründung |
+|---|---|---|
+| Trefferquote | ihr Breakeven | ohne Information weder besser noch schlechter als die Zielgeometrie verlangt |
+| Erwartungswert | **die Basislinie** (−0,094 R) | ohne Information liefert man wie ein mechanischer Einstieg |
+| Signalbeitrag | **0** | ohne Information fügt man dem Markt nichts hinzu — der Beitrag ist eine Differenz, kein Niveau |
+
+> **Null ist beim Erwartungswert der falsche Anker** und wird bewusst nicht
+> verwendet: ein System mit 0 R gibt es in diesem Markt nicht, ein mechanischer
+> Einstieg verliert 0,094 R. Gegen Null zu schrumpfen ergäbe −0,108 statt
+> −0,134 R — um 0,026 R schöngerechnet.
+
+**Die Rohzahlen bleiben in allen Fällen unverändert im Fakt.** Es wird nichts
+ersetzt, nur eingeordnet.
+
+**Gate-Schwelle (nur Hebel).** `hebel_risk_gate.py` bewertet die Trefferquote
+nicht mehr gegen feste 30/60, sondern gegen den Abstand zum Breakeven:
+negativ unter dem Breakeven, positiv ab +10 pp darüber. Dieselbe Quote von
+25 % ist damit bei CRV 2,0 „negativ" und bei CRV 4,0 „neutral". Fehlt das
+Breakeven-Feld (ältere gespeicherte Fakten), gilt die alte Schwelle weiter.
+Die Spot-Familie hat keinen Trefferquoten-Zweig im Gate — bewusst, bei 12
+aufgelösten Signalen wäre das ein Gate auf Rauschen.
+
+**Warum:** gemessen am 09.08. drückten beide Fakten in ihrer alten Form die
+LONG-Konfidenz in **jedem** Regime (−4,89 bis −33,33) und die SHORT-Konfidenz
+in **keinem** — eine gerichtete Wirkung, die durch die Ergebnisse nicht
+gedeckt ist (LONG 16,2 % Trefferquote gegen SHORT 15,0 %). Herleitung,
+Gegenprüfungen und was ausdrücklich **nicht** belegt ist: Entscheidungslog
+2026-08-09 und `Basisinfos/Arbeitsstand_Deadloop_09_08.md`.
+
 ## 23. Regime: warum ein steigender Kurs bisher nichts änderte (2026-08-06)
 
 **Auslöser war eine Beobachtung des Nutzers:** „BTC ist drei Tage leicht

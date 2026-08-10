@@ -1259,6 +1259,10 @@ zählen als HALTEN, weil die Pipeline sie real so behandelt.
 | Skript | Auslöser |
 |---|---|
 | `messe_prompt_nebeneffekte.py` | **Dreiarm-Design mit Rauschboden** (A1/A2 identisch + B). Pflicht vor jeder Prompt-Aussage. |
+| `messe_regimephasen_llm.py` + `teste_regimephasen.py` | **Jede Frage der Form „liegt es am Modell oder am Markt?"** — siehe eigener Abschnitt 2.15 unten. |
+| `pruefe_llm_stabilitaet.py` | **Vor jedem Messlauf über mehr als ~50 Aufrufe.** Bitgleiche Eingabe mehrfach — sagt vorher, welche Effektgröße überhaupt nachweisbar ist. Abschnitt 2.16. |
+| `pruefe_regimephasen_vorflug.py` | **Vor jedem Lauf mit einem neu gebauten oder länger ungenutzten Client.** Schemabau, Anbieterweiche mit Gegenkontrolle, Faktensatz, Promptgröße, echter Aufruf, `_validate_hebel()`, Messfelder, Modellrotation. |
+| `messe_kettennaht_eingriffe.py` | **Fragen der Form „welcher eingespeiste Fakt würgt das Verhalten ab?"** — faktorielle Arme mit A1/A2-Rauschboden, additiv statt subtraktiv (der historische Faktensatz enthält die Produktionsfakten nicht). |
 | `backtest_llm1_historisch.py` | Misst **RICHTIGKEIT**, nicht nur Veränderung. Hat am 04.08. einen bereits gemeldeten Befund widerrufen. |
 | `teste_kosten_fakt.py`, `teste_regel28_echt.py` | Test an **echten** Faktensätzen aus dem Betrieb statt rekonstruierten. |
 | `agent/krypto/kanarienvogel.py` | **Gebaut, NICHT aktiviert.** Provider-Drift-Replay gegen eingefrorene Faktensätze. Aktivieren = eine Zeile. Auslöser: ein zweiter unerklärter Verhaltenssprung. |
@@ -1275,6 +1279,131 @@ Messgrößen, die inzwischen widerlegt sind.
 > **Regel für neue Skripte:** wer eines baut, das mehr als einmal laufen soll,
 > trägt es hier ein. Sonst ist es in zwei Wochen unauffindbar und wird
 > nachgebaut — mit abweichender Logik.
+
+---
+
+## 2.16 Anbieter-Stabilität — was gemessen ist und was NICHT gemessen wird (Nachtrag 2026-08-09)
+
+**Werkzeug:** `pruefe_llm_stabilitaet.py`. Auslöser: **vor jedem Messlauf über
+mehr als ~50 Aufrufe.** Fährt denselben Anker mehrfach mit bitgleicher Eingabe
+und misst Richtungsdreher, Konfidenz-Streuung, Fazit-Dreher und Dauer.
+
+**Warum vor und nicht nach dem Lauf:** ein Effekt, der kleiner ist als die
+Streuung bei identischer Eingabe, ist nicht nachweisbar — egal wie viele Anker
+man nachlegt. Diese Messung sagt vorher, welche Effektgröße überhaupt
+erreichbar ist.
+
+### Der Bezugswert
+
+`nvidia/nemotron-3-super-120b`: **4 Richtungsdreher von 34 Paaren = ~12 %** bei
+identischer Eingabe (08.08.). Der Rauschpegel produzierte damit mehr Dreher als
+der eigentliche Formatvergleich (3 von 36).
+
+**Stichprobengröße ist hier die Falle.** Eine Probe mit 3 Ankern × 5
+Wiederholungen ergab 0 Dreher — das widerlegt die 12 % **nicht**, denn bei
+einer echten Quote von 12 % ist „0 von 15" mit rund 15 % Wahrscheinlichkeit
+reiner Zufall. Wer die Quote prüfen will, braucht eine Größenordnung mehr Paare.
+
+### Was NICHT nochmal gemessen wird — und warum
+
+**OpenRouter unter `json_object` ist erledigt, nicht offen.** Gemessen am
+09.08.: Formgültigkeit 36/38 und 18/20 gegen **38/38 und 20/20** unter striktem
+`json_schema`. Die Entscheidung steht in `agent/llm_schema.py`
+(`_STRIKT_FUER_MODULE`), und wir würden die schlechtere Variante nie fahren.
+
+> **Ein Test einer Konfiguration, die wir ausschließen, erzeugt Zahlen und
+> keine Entscheidung.** Nutzer-Einwand 09.08., und er ist richtig: die Frage
+> „wäre die Instabilität unter `json_object` anders?" ändert nichts an dem, was
+> wir tun.
+
+**Die offene Lücke, ehrlich vermerkt statt geschlossen:** die 12-%-Messung vom
+08.08. hält fest, dass beide Arme *dasselbe* Format hatten — aber **nicht,
+welches**. Ob die Richtungsinstabilität unter striktem Schema genauso groß ist,
+ist damit formal ungemessen. Das bleibt als Vorbehalt stehen; es zu schließen
+wäre nur dann Arbeit wert, wenn eine Entscheidung davon abhinge.
+
+### Fairness zwischen Anbietern
+
+Jeder Anbieter läuft mit dem Format, das **für ihn entschieden** wurde
+(OpenRouter strikt, Gemini und Z.ai `json_object`) — nicht mit demselben. Ein
+Vergleich unter gleichem Format wäre ein Laborvergleich, den wir im Betrieb nie
+fahren.
+
+---
+
+## 2.15 Marktphasen-Simulation — das Verfahren gegen „Modell oder Markt?" (Nachtrag 2026-08-09)
+
+**Anlass:** Nutzer-Vorgabe 09.08., wörtlich — *„simuliere einfach eine andere
+Marktphase aus der Historie und wie die LLMs damals reagiert hätten"*.
+
+### Warum es diese Messung geben muss
+
+Ausnahmslos jedes Signal der Datenbank trägt `regime = "baer"` (1.391 Hebel,
+2.223 Spot, gemessen 06.08.). **Aus Produktionsdaten ist deshalb nie trennbar,
+ob ein Befund am Modell oder an der Marktphase liegt** — es gibt nur eine
+Phase. Jede Frage dieser Form ist mit Betriebsdaten unbeantwortbar und muss
+simuliert werden.
+
+Die Kursreihen reichen bis 2024-07 zurück und enthalten alle drei Phasen:
+bulle 35,1 %, bär 36,0 %, gemischt 28,8 % der Tage.
+
+### Abgrenzung zu den bestehenden Regime-Messungen — sie widersprechen sich nicht
+
+| Skript | ändert | Befund |
+|---|---|---|
+| `messe_regimewechsel_trockenlauf.py` | nichts, rechnet Gates nach | krise_extrem bricht den Durchlass auf 1/14 |
+| `teste_regime_llm.py` | nur **Label + Profil**, gleiche Marktdaten | **kein messbarer Effekt** (0,10–0,32× Rauschboden, n=19) |
+| `messe_regimephasen_llm.py` | **die Marktdaten selbst**, Label passend dazu | offen |
+
+Die ersten beiden fragen „macht das Wort im Prompt einen Unterschied?". Das
+neue fragt „macht der Markt einen Unterschied?". **CC2 wiederholt dabei
+absichtlich den Aufbau von `teste_regime_llm.py` auf einer neuen Stichprobe** —
+hält der Null-Befund von 06.08. dort nicht, ist das ein Widerspruch und gehört
+gemeldet, nicht verrechnet.
+
+### Die vier Gegenprüfungen, ohne die der Lauf nichts wert ist
+
+| | prüft | Abbruch bei |
+|---|---|---|
+| **CC1 Reproduktion** | trifft der BÄR-Arm die Produktion? (82,7 % SHORT, Stop-Median 8,25 %) | ja — trifft er nicht, misst der Aufbau nicht das System |
+| **CC2 Label gegen Daten** | Bullen-Anker mit erzwungenem `baer`-Label | nein, aber Widerspruch zu 06.08. gehört berichtet |
+| **CC3 Rauschboden** | dieselben Anker zweimal; `nemotron` dreht bei identischer Eingabe in ~12 % die Richtung | jeder Armunterschied darunter ist kein Befund |
+| **CC4 Konzentration** | trägt ein einzelnes Symbol den Armunterschied? | — |
+
+### Zwei Konstruktionsfallen, die hier konkret zugeschlagen haben
+
+**1. Der degenerierte Wächter.** Der erste Trockenlauf meldete CC3 mit „0 %
+Richtungsdreher" — weil der Mock deterministisch antwortete. Der Wächter hatte
+nichts geprüft und sah trotzdem gut aus. Derselbe Fehler war zwei Tage zuvor
+schon einmal passiert (Nachweisrahmen, Rauschboden 0 → „IM RAUSCHEN" bestand
+trivial). **Ein Mock muss die Eigenschaft nachbilden, die der Wächter messen
+soll**, sonst prüft der Selbsttest den Selbsttest.
+
+**2. Der Stichproben-Alias.** Die erste Fassung der Ankerwahl sortierte alle
+Kandidaten nach (Datum, Symbol) und lief mit fester Schrittweite darüber. Bei
+mehreren Symbolen pro Tag trifft eine feste Schrittweite dann **systematisch
+immer dasselbe Symbol**. Gefunden hat das nicht der Test, sondern seine
+Gegenkontrolle D1g („die übrigen Symbole kommen auch an"). Ohne sie wäre eine
+stille Symbolverzerrung in den echten Lauf gegangen, und CC4 hätte sie als
+„Konzentration" gemeldet, ohne die Ursache zu zeigen.
+
+### Was am Faktensatz überschrieben werden muss — und warum
+
+`baue_historische_fakten()` setzt `regime.wert` auf `"nicht rekonstruierbar"`.
+Das ist für diesen Lauf **falsch**: eine „Unknown"-Option löst laut `regime.py`
+Abstention aus — *„genau der Mechanismus, der bei uns die ERÖFFNEN-Quote von
+93 % auf 3 % gedrückt hat"*. Ein Arm mit „unbekannt" misst also den
+Abstention-Reflex, nicht die Marktphase.
+
+### Was NICHT gemessen wird, und warum
+
+Die vier Primärgrößen (ERÖFFNEN-Quote, LONG-Anteil, Anteil CRV ≥ 2,0,
+Stop-Abstand) sind **reine Verhaltensgrößen** — sie hängen an dem, was das
+Modell ausgibt, nicht daran, wie wir den späteren Verlauf bewerten. Das ist
+Absicht: das statische Halten bis zur Barriere wurde am 06.08. als falsches
+Instrument verworfen (`Konstruktion_Zeitskalen_06_08.md` V3), live läuft seit
+05.08. der Trailing-Stop ab +1R. Ergebnisgrößen (`ausgang`, `r`) werden
+mitgeschrieben, aber ausdrücklich **nachrangig** und mit diesem Vorbehalt.
 
 ---
 
