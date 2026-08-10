@@ -605,3 +605,78 @@ Richtungswahl-Auswertung, reparierter Trockenlauf-Mock, Stufe 2b) sind über
 sie nicht beschreibt. Inhaltlich sind sie geprüft und in Abschnitt 8
 dokumentiert; die Nachvollziehbarkeit hängt hier an dieser Datei, nicht am
 Commit-Titel.
+
+---
+
+## 10. LLM2: die Richtungs-Gegenprüfung urteilt über eine Konstante
+
+**Nutzer-Entscheidung 10.08.: `regime` aus `baue_objektive_fakten()` entfernen —
+NACH dem Messlauf.**
+
+### Der Befund
+
+Z.ais unabhängige Richtungsableitung über 1.022 Hebel-Signale:
+
+| Z.ais eigene Richtung | | Primärmodell auf denselben Fällen |
+|---|---|---|
+| NEUTRAL | 545 (53,3 %) | SHORT 665 (65,1 %) |
+| SHORT | 476 (46,6 %) | LONG 357 (34,9 %) |
+| **LONG** | **1 (0,1 %)** | |
+
+Von 357 LONG-Signalen des Primärmodells bestätigt Z.ai **eines**. Juli: 1 von
+463. August: **0 von 559**.
+
+### Die Ursache — nicht das Modell, der Faktensatz
+
+`leite_eigene_richtung()` bekommt genau sechs Fakten (`baue_objektive_fakten()`,
+`gegenpruefung.py:215`): `symbol`, `rsi`, `trend`, **`regime`**,
+`funding_rate_vorzeichen`, `technische_konfluenz`, `optionsmarkt_skew`.
+
+**`regime` war auf ALLEN 1.022 Fällen `baer` — 100,0 %.**
+
+Der Systemprompt verlangt „leite ALLEIN aus diesen Fakten deine eigene
+Markteinschätzung ab". Ein Modell, dem bei jedem Aufruf „Bärenmarkt" als Fakt
+mitgegeben wird, kommt praktisch nie auf LONG. Das Ergebnis ist die erwartbare
+Antwort auf die gestellte Frage — kein Bias im üblichen Sinn, sondern ein
+**Konstruktionsfehler des Faktensatzes**.
+
+Folge: die Richtungs-Gegenprüfung ist **für LONG-Signale wertlos**. Sie kann
+nur bestätigen, was das Regime ohnehin sagt. Passt zu
+[[project_regime_immer_baer_kein_vergleich]].
+
+### Zwei widerlegte Zwischenthesen (beide meine)
+
+**„Der Positions-Fallback vom 29.07. erzeugt die NEUTRALs."** Teilweise: 204
+der 545 NEUTRALs tragen den Vermerk „Positions-uneinheitlich". Aber **LONG war
+schon vor dem Fix null** (0 von 159 Fällen vor dem 29.07. 18:45). Der Fix ist
+nicht die Ursache.
+
+**„0,0 % Übereinstimmung."** Abfragefehler meinerseits —
+`zai_uebereinstimmung` ist Text (`ja`/`nein`), nicht 0/1. Echte Quote **33,6 %**
+(343 von 1.022), davon 342 aus SHORT-gegen-SHORT.
+
+### Was der Fix vom 29.07. wirklich tat
+
+Positions-Bias, nicht Richtungs-Bias: die Reihenfolge der JSON-Schlüssel
+beeinflusste das Urteil messbar („Lost in the Middle", live belegt mit zwei
+spiegelbildlichen Szenarien). Gegenmittel Position Swapping — zwei Aufrufe mit
+umgekehrter Faktenreihenfolge, bei Uneinigkeit NEUTRAL. Läuft nachweislich und
+ist sauber gebaut; es adressierte nur nie die Frage, die wir jetzt stellen.
+
+### Nebenbefund: die Widerspruchsquote misst LLM1, nicht LLM2
+
+Konsistenzprüfung (Kurzbegründung gegen harte Fakten), je Primäranbieter:
+
+| Anbieter | n | Widerspruch |
+|---|---|---|
+| `mistral:mistral-small-2506` | 727 | **41,3 %** |
+| `gemini:gemini-3.1-flash-lite` | 288 | **13,5 %** |
+
+Mistrals Begründung widerspricht den eigenen Eingabefakten **dreimal so oft**.
+Das ist eine Aussage über LLM1. Passend dazu, dass Mistral seit dem 07.08.
+ohnehin nur noch dritte Stufe der Kette ist.
+
+**Wichtig beim Weiterarbeiten:** `pruefe_gegenpruefung_trefferquote.py` warnt im
+Docstring ausdrücklich davor, aus dem Konsistenzurteil auf den Handelsausgang
+zu schließen — „das wäre eine Kategorienverwechslung, LLM2 ist ein
+Konsistenzprüfer und kein Prognosemodell".
