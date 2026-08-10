@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (203 Einträge)
+## Index nach Thema (204 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -15991,3 +15991,32 @@ aktuell im Wortsinn.
 **Offen:** Rang unter Kandidaten, Position Swapping — und die Konzeptfrage, ob
 die Marktbreite umgedreht, ersetzt oder mit dem Momentum-Fenster kombiniert
 gehört.
+
+
+---
+
+## Nachtrag 204 — 2026-08-10 spät: Kein Betrag mehr für die LLMs
+
+**Thema:** Rollenkonzept · Positionsgröße · Prüfsteine
+
+Rolle A wählte in der ersten Fassung einen Höchstbetrag (100/300/500 EUR). Eine
+erfundene Aufgabe: der Nutzer setzt seine Beträge selbst, und RM-1 bis RM-7 samt
+Cash-Reserve begrenzen sie deterministisch. Nutzereinwand: *„Risikomanagement ist
+keine Rolle sondern bereits implementiert.“*
+
+**Gegengeprüft gegen externe Standards, wie verlangt.** Belegt: LLMs sind bei der
+Positionsgröße am schwächsten und wirken am besten in hybriden Systemen mit
+quantitativen Risikoregeln; das Designmuster entkoppelt Richtungslogik von
+quantitativer Größenbestimmung. **Gilt für A und BC.**
+
+Umgebaut: der Betrag folgt deterministisch aus der Zahl unabhängiger Faktoren
+(3+ → 500, 2 → 300, 1 → 100, 0 → keine Handlung). Eine Setzung, als solche
+gekennzeichnet.
+
+**Prüfsteine danach:** 4 von 5 richtig, und erstmals eine aktive Handlung
+(KAS 14.07. REDUZIEREN 300 EUR, danach −8,9 % — richtig). Vor dem Umbau viermal
+NICHTS_TUN. Details in `Arbeitsstand_Deadloop_09_08.md` 7.5/7.6.
+
+**Offen und ausdrücklich nicht behauptet:** ob das System Kaufsignale liefert.
+Alle Prüfsteine liegen in fallenden Phasen; in 16 Monaten Historie gab es keinen
+Zeitpunkt, an dem ein Einstieg 20 Tage später im Plus war.

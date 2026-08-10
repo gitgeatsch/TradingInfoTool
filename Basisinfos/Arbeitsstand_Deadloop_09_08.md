@@ -1028,3 +1028,55 @@ Zwei Konsequenzen:
 **Nicht weitergebaut wird an diesem Punkt.** Ob die Marktbreite umgedreht,
 ersetzt oder mit dem Momentum-Fenster kombiniert gehört, ist eine
 Konzeptentscheidung — keine Reparatur.
+
+### 7.5 Prüfsteine NACH dem Betrags-Umbau (10.08. spät)
+
+*Abschnitt 7.2 bleibt stehen — er hält den Stand VOR dem Umbau fest, als Rolle A
+noch einen Höchstbetrag wählte. Dieser Abschnitt trägt den geprüften Stand.*
+
+**Der Umbau:** Weder Rolle A noch Rolle BC nennt noch einen Betrag. Er wird
+deterministisch aus der Zahl unabhängiger Faktoren abgeleitet (3+ → 500,
+2 → 300, 1 → 100, 0 → keine Handlung). Extern belegt: *„Statt LLMs die
+Positionsgröße eigenständig bestimmen zu lassen, sind sie am wirksamsten in
+hybriden Systemen mit traditionellen quantitativen Risikoregeln."* Das
+Designmuster entkoppelt Richtungslogik von quantitativer Größenbestimmung.
+
+| Fall | Altsystem | **nach Umbau** | war richtig? |
+|---|---|---|---|
+| BTC 14.07. → −2,3 % | KAUFEN | NICHTS_TUN | **ja** |
+| KAS 14.07. → −8,9 % | TAUSCHEN | **REDUZIEREN 300 EUR** | **ja** |
+| KAS 15.07. → −8,6 % | NACHKAUFEN | NICHTS_TUN | **ja** |
+| GRIFFAIN 21.07. → +33,8 % | HALTEN | NICHTS_TUN | nein, verpasst |
+| BTC 22.07.2025 → −12,2 % (Median) | — | NICHTS_TUN | **ja** |
+
+**Der Fortschritt gegenüber 7.2: eine aktive Handlung statt keiner.** Vor dem
+Umbau lieferten alle vier Prüfsteine NICHTS_TUN; jetzt greift das System bei
+KAS am 14.07. mit REDUZIEREN ein — und lag damit richtig. Die Begründung nennt
+konkrete Werte: *„Angesichts der schwachen Marktbreite und der ungebrochenen
+Abwärtsdynamik begrenze ich das Risiko durch Teilverkauf."*
+
+### 7.6 Was diese Ergebnisse NICHT zeigen
+
+**Nutzereinwand 10.08.: „oberes Ziel beachten — wenn du damit mehr Qualität und
+mehr Signale meinst, dann ok."** Die ehrliche Bilanz an diesem Maßstab:
+
+| Ziel | Stand |
+|---|---|
+| **mehr Qualität** | belegt — 4 von 5 richtig, die Handlung war richtig, Begründungen nennen Werte statt Allgemeinplätze |
+| **mehr Signale** | **offen** — auf der Verkaufsseite ja, auf der Kaufseite unentschieden |
+
+**Die eine Handlung ist ein Verkaufssignal.** Der Deadloop betraf handelbare
+**LONG**-Signale. Alle Prüfsteine liegen in fallenden Phasen — es gab dort keine
+Kaufgelegenheit, und deshalb ist die Frage *„produziert das System jetzt
+Kaufsignale?"* mit diesen Fällen **nicht beantwortbar**.
+
+Der Grund steht in 7.4: In 16 Monaten Historie gibt es keinen Zeitpunkt, an dem
+ein Einstieg 20 Tage später im Plus gewesen wäre. **Wir können mit diesen Daten
+nicht prüfen, ob das System Chancen erkennt — es gab keine.**
+
+**Ein Einzelbefund, der gemessen gehört statt geglaubt:** Am selben Fall
+(BTC, 22.07.2025) sagte das Modell vor dem Umbau NACHKAUFEN mit 500 EUR, danach
+NICHTS_TUN. Vermutung: ein vorgegebener Höchstbetrag liest sich als
+Handlungsaufforderung — passend zum Befund, dass Modelle Anweisungen auch dann
+folgen, wenn es zu Verlusten führt. **Ein Fall ist kein Beleg**; das ist eine
+Hypothese für eine gepaarte Messung, kein Ergebnis.
