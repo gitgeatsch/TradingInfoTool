@@ -733,3 +733,92 @@ Die Prüffrage vor jedem Feld lautet deshalb nicht „ist es wichtig?", sondern:
 **trägt es symbolabhängige Information — oder ist es über alle Fälle
 konstant?** Ein konstanter Fakt in einem Sechs-Felder-Satz ist kein Kontext,
 er ist ein Daumen auf der Waage.
+
+---
+
+## 11. Der Messtag 10.08. — drei Befunde, ein Mechanismus
+
+### Lauf A: die Wirkungsmessung auf dem Produktionsmodell
+
+50 Anker × 5 Arme auf `gemini-3.1-flash-lite`, **250 Zellen, null Fehler**,
+Phasen 17/17/16, deterministische Ankerauswahl.
+
+| | LONG-Konfidenz | 95%-Intervall (Cluster) | Wild-p | Richtungswahl |
+|---|---|---|---|---|
+| **Trefferquote** | −19,29 → −18,41 | [−2,86; +3,16] | **1,0** | 46 % → 48 % |
+| **Systemgüte** | −3,85 → **−8,86** | **[−9,41; −2,17]** | **0,02** | 56 % → **44 %** |
+
+Trefferquote-Umbau: **kein Effekt**. Systemgüte-Umbau: **nachweislich schädlich**
+— das Intervall schließt die Null aus, und ohne das stärkste Symbol wird der
+Effekt größer (−6,58 statt −5,48), also trägt ihn kein Einzelfall.
+
+**Damit ist die gestrige Zahl (+5,45 auf dem Ausweichmodell) widerlegt.**
+
+### Die Ursache: eine einzige Textzeile
+
+`messe_einordnung_wirkung.py`, 25 Anker, ein Feld Unterschied:
+
+```
+mit  einordnung:  6 von 25 LONG = 24,0 %
+ohne einordnung: 10 von 25 LONG = 40,0 %
+
+SHORT -> LONG   4        LONG -> SHORT   0
+Konfidenz -4,60 Punkte, 95%-Intervall [-7,39; -1,54], Wild-p 0,0305
+```
+
+**`einordnung: "unter der Basislinie"` kostet 4,6 Konfidenzpunkte und 16 pp
+LONG-Anteil.** Die Zahlen, aus denen dieses Urteil abgeleitet ist, stehen in
+BEIDEN Armen unverändert — und richten diesen Schaden nicht an.
+
+Durch Subtraktion: von den −5,48 des Gesamtumbaus entfallen etwa −4,6 auf die
+Textzeile, der Rest liegt im Rauschen. **Die Zahlen bewirken nichts, der Text
+bewirkt alles.**
+
+### Der Literaturvergleich bestätigt es wörtlich
+
+> „adversarial false audits can push them toward **unjustified conservatism**,
+> representing an alignment tax where **textual compliance is purchased at the
+> cost of distorted decision geometry**"
+
+Wir haben dem Modell mitgeteilt, sein Beitrag liege unter der Basislinie — ein
+Audit — und es wurde konservativer. Nicht weil die Daten es nahelegen, sondern
+weil ein Werturteil im Faktensatz stand.
+
+Ebenso belegt: **„prompt-level interventions leave these biases largely
+intact"** — was unsere Wochen der Darstellungsarbeit erklärt.
+
+### Die Nullmessung: hat die Richtungswahl überhaupt eine Kante?
+
+`messe_llm_gegen_regel.py`, nur ERÖFFNEN-Signale, Wahrheit ist die tatsächliche
+Kursbewegung in ATR-Vielfachen — ohne Bezug auf irgendeine Empfehlung.
+
+| Verfahren | 3 Kerzen | 7 Kerzen | 14 Kerzen |
+|---|---|---|---|
+| **LLM** | **29,8 %** | **27,7 %** | **25,0 %** |
+| Konfluenz-Mehrheit | 52,0 % | 40,7 % | 40,2 % |
+| Kurs vs EMA-200 | 61,8 % | 61,7 % | 63,5 % |
+| **immer SHORT** | 74,0 % | 80,9 % | 87,5 % |
+| n | 131 | 94 | 96 |
+
+**Das LLM liegt hinter JEDER Regel, über alle Horizonte.** 27,7 % ist dabei
+keine Zufallsquote (die wäre 50 %) — die Ausgabe ist systematisch, nur mit
+falschem Vorzeichen. Das Modell wendet eine Gegenbewegungs-Logik in einem
+Markt an, der weiter fiel. Passt zum Literaturbefund, dass LLMs
+**contrarian strategies** bevorzugen.
+
+**Zwei Messfehler auf dem Weg dorthin, beide meine:** erst die „tatsächliche
+Richtung" aus MFE und Primärrichtung abgeleitet (Zirkelschluss, ergab 98,6 %),
+dann die Richtungswahl an 1.668 HALTEN-Signalen gemessen, wo das Modell gar
+keine Entscheidung traf. Beide gefunden, weil das Ergebnis unmöglich aussah.
+
+### Was daraus folgt
+
+**Zahlen informieren, Text weist an.** Eine Zahl ist Datenmaterial, das das
+Modell abwägen kann. Ein Klartext-Urteil ist näher an einer Anweisung — es
+sagt dem Modell, was es schließen soll. Genau davor warnt unsere eigene Regel
+[[feedback_llm_synthese_kein_deterministischer_override]], nur in der anderen
+Richtung: wir haben ein Werturteil in den Faktensatz geschmuggelt.
+
+**Betroffen sind alle Felder desselben Bautyps:** `einordnung` (Trefferquote und
+Systemgüte), `sqn_einordnung` („kaum handelbar"), `hebel_korrektur_hinweis`,
+`eigenkapital_deckel_hinweis`, `ausfuehrbarkeit_hinweis`.
