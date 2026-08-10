@@ -273,6 +273,20 @@ def main() -> int:
                   f"wird damit VORAUSSICHTLICH NICHT erreichbar sein - das "
                   f"ist vorab bekannt und kein Befund des Laufs.")
 
+    if args.nur_vorflug:
+        melde("=" * 70)
+        melde("NUR VORFLUG - hier ist Schluss, wie angefordert.")
+        melde(f"ERGEBNIS: der Hauptlauf braucht {anker} Anker "
+              f"({int(anker * 5 * 1.35)} Aufrufe).")
+        if noetig is None:
+            melde("ABER: der SHORT-Anteil liess sich NICHT bestimmen. Ob der "
+                  "Hauptlauf seine Kontrollbedingung erreichen kann, ist "
+                  "damit offen - die Zahl oben ist die geplante Groesse, "
+                  "keine begruendete.")
+        melde("Nicht vergessen: dieser Vorflug hat Kontingent verbraucht, das "
+              "dem Hauptlauf und der Produktion fehlt.")
+        return 0
+
     melde(f"--- Stufe 3: Hauptlauf ({anker} Anker x 5 Arme)")
     ok, ausgabe = _lauf("Hauptlauf", [
         "messe_umbau_wirkung.py", "--anker", str(anker),
