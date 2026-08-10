@@ -1115,6 +1115,56 @@ def _coingecko_kontingent(conn) -> dict:
     }
 
 
+def _llm_kontingent(conn) -> dict:
+    """Neu (2026-08-10) - derselbe blinde Fleck wie oben, einen Anbieter
+    weiter.
+
+    Am 09.08. stand die Produktion einen ganzen Tag still, weil Messlaeufe am
+    Desktop Geminis Tagesbudget aufgebraucht hatten. Der Verbrauch liess sich
+    hinterher NUR aus Logdateien schaetzen - exakt die Muehsal, die der
+    Kommentar bei `_coingecko_kontingent()` fuer CoinGecko beschreibt.
+
+    DREI EIGENHEITEN gegenueber dem CoinGecko-Zaehler:
+
+      je MODELL     Google begrenzt `...PerDayPerProjectPerModel...`: 500
+                    Aufrufe pro Tag, pro Projekt, pro Modell (am 09.08. aus
+                    Googles eigenem Fehlerkoerper gemessen). Deshalb steht in
+                    `source` "gemini:<modell>", nicht nur "gemini".
+      Pazifik       Der Modellzaehler laeuft auf Googles Tagesgrenze
+                    (Mitternacht Pazifik), der Anbieterzaehler weiter auf UTC.
+                    Beide werden exportiert, damit der Versatz sichtbar ist
+                    statt zu verwirren.
+      geraetelokal  Das Kontingent haengt am API-SCHLUESSEL, nicht am Geraet.
+                    Dieser Zaehler sieht NUR, was dieses Geraet verbraucht hat.
+                    Steht er niedrig und der Anbieter weist trotzdem ab, ist
+                    das kein Widerspruch - dann ging das Budget woanders drauf.
+                    Genau dieser Fall war der 09.08.
+    """
+    zeilen = conn.execute(
+        "SELECT source, tag, anzahl FROM api_call_kontingent_taeglich "
+        "WHERE source LIKE 'gemini%' OR source LIKE 'openrouter%' "
+        "OR source LIKE 'mistral%' OR source LIKE 'zai%' "
+        "ORDER BY tag ASC, source ASC"
+    ).fetchall()
+    try:
+        from api.gemini import TAGESBUDGET_JE_MODELL, _kontingent_tag
+        heute_pazifik, grenze = _kontingent_tag(), TAGESBUDGET_JE_MODELL
+    except Exception:  # noqa: BLE001
+        heute_pazifik, grenze = None, None
+    heute = [row_to_dict(r) for r in zeilen if r["tag"] == heute_pazifik]
+    return {
+        "tag_pazifik": heute_pazifik,
+        "tagesgrenze_je_modell": grenze,
+        "heute_je_quelle": heute,
+        "taeglich_verlauf": [row_to_dict(r) for r in zeilen],
+        "lesehilfe": (
+            "source 'gemini:<modell>' zaehlt auf Googles Pazifik-Tag gegen "
+            "500/Tag je Modell; source 'gemini' zaehlt auf UTC-Tag und ist "
+            "der Wert, den der budget_allocator liest. Beide Zaehler sehen "
+            "NUR dieses Geraet - das Kontingent haengt am Schluessel."),
+    }
+
+
 # --- Log-Auszug (2026-07-18, siehe Modul-Docstring) ---------------------
 # Format aus main.py::logging.basicConfig(): "%(asctime)s %(levelname)s
 # %(name)s: %(message)s" - asctime ist "YYYY-MM-DD HH:MM:SS,mmm".
@@ -1564,6 +1614,13 @@ def main() -> None:
         oi_fakten_verlauf = _oi_fakten_verlauf(conn)
         ohlc_aktualitaet_je_symbol = _ohlc_aktualitaet_je_symbol(conn)
         coingecko_kontingent = _coingecko_kontingent(conn)
+        # Fail-soft: auf einer aelteren Datei fehlen die Zaehlertabellen
+        # (am Desktop war das am 09.08. der Fall und scheiterte STILL).
+        # Hier muss es sichtbar scheitern statt zu verschwinden.
+        try:
+            llm_kontingent = _llm_kontingent(conn)
+        except Exception as exc:  # noqa: BLE001
+            llm_kontingent = {"nicht_verfuegbar": str(exc)}
 
         # Fail-soft: eine fehlende Kategorie-Konfiguration darf den Export
         # nicht toeten (Lehre 06.08.) - aber sie muss im Export SICHTBAR
@@ -1850,6 +1907,7 @@ def main() -> None:
         "oi_fakten_verlauf": oi_fakten_verlauf,
         "ohlc_aktualitaet_je_symbol": ohlc_aktualitaet_je_symbol,
         "coingecko_kontingent": coingecko_kontingent,
+        "llm_kontingent": llm_kontingent,
         "deep_dive": {
             "symbol": DEEP_DIVE_SYMBOL,
             "hebel_signals": [row_to_dict(r) for r in deep_signale],
@@ -1937,6 +1995,14 @@ def main() -> None:
     print(f"  CoinGecko-Kontingent ({coingecko_kontingent['monat']}): "
           f"{coingecko_kontingent['monatliches_kontingent']} Calls, "
           f"{len(coingecko_kontingent['taeglich_verlauf'])} Tage mit Tageszaehler-Historie")
+    if "nicht_verfuegbar" in llm_kontingent:
+        print(f"  LLM-Kontingent: NICHT LESBAR - {llm_kontingent['nicht_verfuegbar']}")
+    else:
+        heute = llm_kontingent["heute_je_quelle"]
+        print(f"  LLM-Kontingent ({llm_kontingent['tag_pazifik']}, Pazifik, "
+              f"Grenze {llm_kontingent['tagesgrenze_je_modell']}/Tag je Modell): "
+              + (", ".join(f"{z['source']}={z['anzahl']}" for z in heute)
+                 or "heute noch kein Aufruf gebucht"))
 
     # DB-Backup ganz zum Schluss (2026-08-06). Reihenfolge ist Absicht: der
     # Export ist zu diesem Zeitpunkt geschrieben, ein fehlgeschlagenes Backup
