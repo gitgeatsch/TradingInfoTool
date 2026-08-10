@@ -8,12 +8,18 @@ mit zerstoerter LONG-Stichprobe, einer gegen ein erschoepftes Kontingent.
 
 DIE VIER STUFEN, jede mit eigenem Abbruch:
 
-    1 KONTINGENT   Drei Probeaufrufe mit korrektem Abstand. Kommt keiner
-                   durch, ist der Tageswechsel nicht erfolgt oder das Budget
-                   weiterhin leer - abbrechen, nichts weiter versuchen.
-    2 VORFLUG      2 Anker x 5 Arme. Prueft die Eingriffskontrollen, dass das
-                   Modell antwortet, dass die Antwort valide ist und dass die
-                   Messfelder befuellt sind.
+    1 MODELLWAHL   Zwei Tore je Kandidat: der Tageszaehler (reicht das Budget
+                   fuer DIESEN Lauf?) und ein echter Probeaufruf gegen den
+                   nativen Endpunkt (der sagt im Fehlerfall selbst, welches
+                   Kontingent gerissen ist). Kommt kein Modell durch, wird
+                   nichts weiter versucht.
+    2 VORFLUG      12 Anker x 5 Arme. Prueft die Eingriffskontrollen, dass
+                   das Modell antwortet, dass die Antwort valide ist und
+                   dass die Messfelder befuellt sind.
+    2b GROESSE     Aus dem SHORT-Anteil des Vorflugs folgt, wie gross der
+                   Hauptlauf sein muss, damit die Kontrollbedingung
+                   ueberhaupt erreichbar ist - VOR dem Hauptlauf, nicht
+                   nach 125 Aufrufen.
     3 HAUPTLAUF    60 Anker x 5 Arme. Der eingebaute Auswertbarkeits-Waechter
                    bricht nach wenigen Ankern ab, wenn die Zellen nicht
                    erreichbar werden.
@@ -31,6 +37,13 @@ import pathlib
 import subprocess
 import sys
 import time
+
+# Groesse des Vorflugs. ZWOELF statt acht (10.08., beim Doppelcheck gefunden):
+# acht Anker verteilen sich auf nur DREI Symbole, zwoelf auf fuenf - und die
+# Phasen liegen dann bei 4/4/4 statt 3/3/2. Der Vorflug schaetzt den
+# SHORT-Anteil, aus dem die Groesse des Hauptlaufs folgt; eine Schaetzung aus
+# drei Symbolen traegt diese Entscheidung nicht. Kostet 20 Aufrufe mehr.
+VORFLUG_ANKER = 12
 
 AUSGABE = pathlib.Path(
     "C:/Users/Geatsch/AppData/Local/Temp/claude/"
@@ -121,7 +134,8 @@ def stufe_1_modellwahl(bedarf: int, festgelegt: str | None = None) -> str | None
 
 
 def stufe_2b_groesse(vorflug: pathlib.Path, geplant: int,
-                     min_zelle: int = 8) -> int | None:
+                     min_zelle: int = 8,
+                     sicherheit: float = 0.80) -> int | None:
     """Wie viele Anker braucht es, damit die SHORT-Kontrolle erreichbar ist?
 
     DER GRUND (10.08.). Die Messung hat zweimal ihr Ziel verfehlt, und beide
@@ -130,16 +144,23 @@ def stufe_2b_groesse(vorflug: pathlib.Path, geplant: int,
     Kontrollbedingung der vorab festgelegten Regel nicht pruefbar. Bemerkt
     wurde das jedes Mal ERST IM LAUF - nach 25 Ankern und 125 Aufrufen.
 
-    Der Vorflug misst den SHORT-Anteil an acht Ankern. Daraus laesst sich
+    Der Vorflug misst den SHORT-Anteil an VORFLUG_ANKER Ankern. Daraus
     ausrechnen, wie gross der Hauptlauf sein muss, BEVOR er startet.
 
-    KONSERVATIV GERECHNET: verwendet wird nicht der beobachtete Anteil,
-    sondern eine UNTERE Schranke davon (halber Anteil, mindestens aber die
-    Dreierregel-Untergrenze). Ein zu klein geschaetzter Bedarf ist der
-    teurere Fehler - er kostet einen ganzen Lauf.
+    GERECHNET WIRD MIT EINER BENANNTEN WAHRSCHEINLICHKEIT, nicht mit einem
+    Sicherheitsabschlag. Bis zum 10.08. stand hier eine willkuerliche
+    Halbierung des beobachteten Anteils - sie klang vorsichtig und lieferte
+    bei 17 % SHORT einen Bedarf von 96 Ankern, also 648 Aufrufe und damit mehr
+    als ein ganzes Tagesbudget. Eine Vorsichtsregel, die die Messung
+    unmoeglich macht, ist keine Vorsicht.
+
+    Stattdessen: bei welchem n liegt P(mindestens `min_zelle` SHORT-Faelle)
+    ueber `sicherheit`? Binomial(n, beobachteter Anteil), exakt aufsummiert.
+    Das ist keine Garantie - es ist eine Zahl, die man nennen und pruefen
+    kann, und der Aufrufer bekommt sie ins Protokoll.
 
     Gibt None zurueck, wenn sich nichts sagen laesst: bei NULL beobachteten
-    SHORT-Faellen in acht Ankern ist der Anteil nach oben durch 3/8 begrenzt,
+    SHORT-Faellen ist der Anteil nach oben durch die Dreierregel begrenzt,
     nach unten aber durch nichts. Dann ist die Groesse nicht bestimmbar, und
     der Aufrufer erfaehrt das, statt eine erfundene Zahl zu bekommen."""
     import json
@@ -164,9 +185,29 @@ def stufe_2b_groesse(vorflug: pathlib.Path, geplant: int,
               "der geplanten Groesse weiter; der Auswertbarkeits-Waechter "
               "entscheidet unterwegs.")
         return None
-    sicher = max(anteil / 2.0, 1.0 / len(a1) / 2.0)
-    import math
-    return int(math.ceil(min_zelle / sicher))
+    # WIE GROSS MUSS n SEIN, DAMIT min_zelle WAHRSCHEINLICH ERREICHT WIRD?
+    #
+    # Hier stand bis zum 10.08. eine willkuerliche Halbierung des beobachteten
+    # Anteils ("konservativ"). Sie klang vorsichtig, war aber unbegruendet -
+    # und lieferte bei 17 % SHORT einen Bedarf von 96 Ankern (648 Aufrufe),
+    # also mehr als ein ganzes Tagesbudget. Eine Vorsichtsregel, die die
+    # Messung unmoeglich macht, ist keine Vorsicht, sondern ein Denkfehler.
+    #
+    # Stattdessen die Frage, die tatsaechlich zaehlt: bei welchem n liegt die
+    # Wahrscheinlichkeit, mindestens `min_zelle` SHORT-Faelle zu sehen, ueber
+    # `sicherheit`? Binomial(n, beobachteter Anteil), exakt aufsummiert. Das
+    # ist keine Garantie - es ist eine benannte Wahrscheinlichkeit, und der
+    # Aufrufer erfaehrt sie.
+    from math import comb
+    for n in range(min_zelle, 1001):
+        p_erreicht = sum(comb(n, k) * anteil**k * (1 - anteil)**(n - k)
+                         for k in range(min_zelle, n + 1))
+        if p_erreicht >= sicherheit:
+            melde(f"      {n} Anker geben rund {p_erreicht * 100:.0f} % "
+                  f"Chance auf mindestens {min_zelle} gepaarte SHORT-Zellen "
+                  f"(bei {anteil * 100:.0f} % beobachtetem Anteil).")
+            return n
+    return None
 
 
 def _lauf(name: str, argumente: list[str], zeitlimit: int) -> tuple[bool, str]:
@@ -211,7 +252,13 @@ def main() -> int:
 
     # Bedarf = Anker x Arme, plus Vorflug (2 x 5) und ein wenig Luft fuer die
     # Wiederholung bei ungueltiger Antwort (gemessen ~1,3 Versuche je Fall).
-    bedarf = int((args.anker + 8) * 5 * 1.35)
+    # NUR DEN TATSAECHLICHEN BEDARF PRUEFEN (10.08., Doppelcheck-Fund).
+    # Vorher wurde immer der Bedarf des GANZEN Laufs verlangt - bei 60 Ankern
+    # sind das 459 von 500. Ein Vorflug-Alleingang braucht aber nur 81. Waeren
+    # zum Startzeitpunkt schon 45 Aufrufe weg, haette Stufe 1 den Vorflug
+    # grundlos verweigert, obwohl er bequem hineinpasst.
+    bedarf = (int(VORFLUG_ANKER * 5 * 1.35) if args.nur_vorflug
+              else int((args.anker + VORFLUG_ANKER) * 5 * 1.35))
     modell = args.modell
     if not args.ohne_kontingentprobe:
         modell = stufe_1_modellwahl(bedarf, args.modell)
@@ -226,7 +273,7 @@ def main() -> int:
               f"die Uebertragung ist eine Annahme. Der ARM-VERGLEICH bleibt "
               f"gueltig, weil alle Arme dasselbe Modell sehen.")
 
-    melde("--- Stufe 2: Vorflug (8 Anker x 5 Arme)")
+    melde(f"--- Stufe 2: Vorflug ({VORFLUG_ANKER} Anker x 5 Arme)")
     # ACHT statt zwei (10.08.). Zwei Anker reichen, um zu pruefen, dass der
     # Prompt verarbeitet wird - aber nicht, um die Frage zu beantworten, an
     # der die Messung zweimal gescheitert ist: WIE OFT waehlt der
@@ -234,7 +281,8 @@ def main() -> int:
     # braucht, damit die Kontrollbedingung erreichbar ist. Acht Anker kosten
     # 40 Aufrufe und ersparen im Zweifel einen Lauf, der nach 25 abbricht.
     ok, ausgabe = _lauf("Vorflug", [
-        "messe_umbau_wirkung.py", "--anker", "8", "--je-symbol", "2",
+        "messe_umbau_wirkung.py", "--anker", str(VORFLUG_ANKER),
+        "--je-symbol", "1",
         "--anbieter", "gemini", "--pause", "0.2", "--trotzdem-weiter",
         *modell_argumente,
         "--ausgabe", str(AUSGABE / "wirkung_vorflug.json")], zeitlimit=1800)
@@ -267,11 +315,20 @@ def main() -> int:
             melde(f"      Budget traegt es ({frei} frei) - erhoeht auf "
                   f"{anker} Anker.")
         else:
-            anker = max(args.anker, moeglich)
-            melde(f"      Budget traegt nur {moeglich} Anker ({frei} frei). "
-                  f"Der Lauf geht mit {anker} weiter, die SHORT-Kontrolle "
-                  f"wird damit VORAUSSICHTLICH NICHT erreichbar sein - das "
-                  f"ist vorab bekannt und kein Befund des Laufs.")
+            # NICHT max() (Fehler bis 10.08.): der Lauf startete mit der
+            # geplanten Groesse weiter, obwohl das Budget sie nachweislich
+            # nicht traegt - und waere mitten drin am Kontingent gestorben.
+            # Es wird die groesste Zahl genommen, die noch hineinpasst.
+            anker = min(args.anker, moeglich) if moeglich > 0 else 0
+            if anker < 10:
+                melde(f"ABBRUCH: das Budget traegt nur {moeglich} Anker "
+                      f"({frei} frei) - darunter ist kein Lauf sinnvoll.")
+                return 1
+            melde(f"      Budget traegt nur {moeglich} Anker ({frei} frei), "
+                  f"noetig waeren {noetig}. Der Lauf geht mit {anker} weiter "
+                  f"- die SHORT-Kontrolle wird damit VORAUSSICHTLICH NICHT "
+                  f"erreichbar sein. Das ist VORAB bekannt und kein Befund "
+                  f"des Laufs; die LONG-Aussage bleibt gueltig.")
 
     if args.nur_vorflug:
         melde("=" * 70)
