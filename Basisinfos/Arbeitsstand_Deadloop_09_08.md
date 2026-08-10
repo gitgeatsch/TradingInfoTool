@@ -556,3 +556,52 @@ Produktionsmodell. Die Wiederholung mit phasenausgewogener Stichprobe steht aus.
 **Geprüft:** 22 (Auswertbarkeit) + 14 (Phasenverschränkung) Prüfungen mit
 Gegenkontrollen; die Gegenkontrolle reproduziert den echten Ausfall exakt
 (alte Fassung bei 25 Ankern: `BULLE 20, SEITWAERTS 5, BAER 0`).
+
+---
+
+## 9. Offene Fäden nach dem Produktionsstart 10.08.
+
+### Z.ai — der nächste blinde Fleck (Nutzer-Entscheidung: nach dem Messlauf)
+
+| Beleg | Wert |
+|---|---|
+| Aufrufe am 08.08. | **490** — mehr als Gemini (190) und Mistral (9) zusammen |
+| Aufrufe am 10.08. bis 07:00 | 22 |
+| `api_health_status` 05:00:46 | **429 Too Many Requests** |
+| Tagesdeckel im Allocator | **keiner** — die Statusseite schreibt es sogar hin: „kein Tagesdeckel" |
+
+Z.ai ist die Gegenprüfung, nicht Teil der Signal-Kette. Genau deshalb schaut
+niemand darauf: sie hat kein Budget, keinen Wächter, keine Sichtbarkeit — und
+läuft bereits in 429er. **Das ist dieselbe Ausgangslage wie bei Gemini vor dem
+09.08.**, nur eine Ebene weiter außen. Der Unterschied: bei Gemini kostete das
+Nichtwissen einen Produktionstag.
+
+Zu klären, in dieser Reihenfolge:
+1. Wie hoch ist Z.ais tatsächliches Limit? **Aus dem Fehlerkörper lesen**,
+   nicht recherchieren — dieselbe Methode, die bei Gemini die zwei Tage
+   Spekulation in einem Aufruf beendet hat (`pruefe_gemini_verhalten.py`).
+2. Zählt `zaehle_aufruf("zai")` vollständig? Der Zähler existiert, ein
+   Deckel nicht.
+3. Braucht die Gegenprüfung überhaupt 490 Aufrufe/Tag — oder läuft sie
+   mehrfach über dieselben Fälle?
+
+### Kleinere Fäden aus demselben Lauf
+
+- **ATR-Perzentil fällt aus** (`benötigt mind. 30 gültige ATR-Werte, nur 10`),
+  betroffenes Symbol im Logausschnitt nicht sichtbar. Degradiert sauber, kein
+  Absturz.
+- **`refresh_prices`: 44 von 57 Assets** aktualisiert — 13 ohne Aktualisierung,
+  Ursache offen.
+- **`OD7L` mit 131 Punkten** rekonstruiert, während OD7N/OD7H/OD7C je 520
+  bekamen.
+- **Open-Interest-Abrufe scheitern** für BEAMX, AKT, TURBO, CAT, GRIFFAIN —
+  Kleinstwerte, auf OKX/Bybit nicht gelistet. Erwartbar, kein Handlungsbedarf.
+
+### Nachtrag zur Versionierung
+
+Die Messungsumbauten (Cluster-Intervall, Konzentrationsprüfung,
+Richtungswahl-Auswertung, reparierter Trockenlauf-Mock, Stufe 2b) sind über
+`git add -A` in `33a2b11` mitgekommen — also unter einer Commit-Botschaft, die
+sie nicht beschreibt. Inhaltlich sind sie geprüft und in Abschnitt 8
+dokumentiert; die Nachvollziehbarkeit hängt hier an dieser Datei, nicht am
+Commit-Titel.
