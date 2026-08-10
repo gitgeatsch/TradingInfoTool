@@ -85,14 +85,24 @@ def _fakten_fuer(sym, reihe, i, richtung, klasse="krypto"):
     if not a or a <= 0:
         return None, None
     r = latest_value(rsi(closes))
+    # ECHTE RSI-Historie (Korrektur 10.08.): hier standen die SCHLUSSKURSE,
+    # womit das "Perzentil" nur noch verglich, ob der Kurs ueber 100 liegt -
+    # eine Konstante je Asset. Jetzt wird der RSI ueber ein gleitendes Fenster
+    # nachgerechnet.
+    rsi_hist = []
+    for ende in range(max(60, len(closes) - 250), len(closes)):
+        v = latest_value(rsi(closes[: ende + 1]))
+        if v is not None:
+            rsi_hist.append(float(v))
     f = baue_szenario_fakten(
         symbol=sym, assetklasse=klasse, kurs=float(closes[-1]), atr=float(a),
         richtung=richtung, rsi=r,
-        ema={"200": float(closes[-200:].mean())} if len(closes) >= 200 else
+        # SMA, nicht EMA - der Name sagt jetzt, was es ist.
+        sma={"200": float(closes[-200:].mean())} if len(closes) >= 200 else
             {"50": float(closes[-50:].mean())},
         konfluenz=None,
         atr_relativ_prozent=round(100.0 * a / closes[-1], 2),
-        rsi_historie=[float(x) for x in closes[-250:]],
+        rsi_historie=rsi_hist,
     )
     return f, baue_zonen(float(closes[-1]), float(a), richtung)
 
@@ -150,16 +160,26 @@ def main() -> int:
           + ", ".join(f"{k}={v:.1f}" for k, v in basisrate.items()))
 
     def grundlinie_regel(fall):
-        """Abstand zum EMA in ATR - die beste einfache Regel aus der
-        Nullmessung (Kurs vs EMA-200 traf 62 %)."""
+        """Abstand zum gleitenden Durchschnitt in ATR - die beste einfache
+        Regel aus der Nullmessung (Kurs vs Durchschnitt traf 62 %).
+
+        SUCHT ALLE VARIANTEN, nicht einen festen Namen. Beim Umbenennen von
+        `ema_200` auf `sma_200` haette ein fester Schluessel ins Leere
+        gegriffen, waere stillschweigend auf die Basisrate zurueckgefallen -
+        und die Grundlinie haette sich selbst geschlagen, ohne dass es
+        auffaellt. Faellt gar nichts, wird das GEZAEHLT statt verschwiegen."""
         ab = ((fall["fakten"].get("technik") or {}).get("abstand_in_atr") or {})
-        d = ab.get("ema_200", ab.get("ema_50"))
-        pro = (d is not None and d > 0) == (fall["richtung"] == "LONG")
+        d = next((ab[k] for k in ("sma_200", "ema_200", "sma_50", "ema_50")
+                  if ab.get(k) is not None), None)
         if d is None:
+            grundlinie_regel.ohne_wert += 1
             return dict(basisrate)
+        pro = (d > 0) == (fall["richtung"] == "LONG")
         return ({"ziel_zuerst_pct": 45, "stop_zuerst_pct": 25, "keines_pct": 30}
                 if pro else
                 {"ziel_zuerst_pct": 25, "stop_zuerst_pct": 45, "keines_pct": 30})
+
+    grundlinie_regel.ohne_wert = 0
 
     haeufigster = max(AUSGAENGE, key=lambda a: verteilung.get(a, 0))
     grundlinien = {
@@ -167,7 +187,7 @@ def main() -> int:
         f"immer '{haeufigster}'": lambda f: {
             s: (100.0 if a == haeufigster else 0.0)
             for a, s in zip(AUSGAENGE, SCHLUESSEL)},
-        "Regel: Abstand zum EMA": grundlinie_regel,
+        "Regel: Abstand zum Schnitt": grundlinie_regel,
     }
     ergebnisse: dict[str, list] = defaultdict(list)
     for name, fn in grundlinien.items():
@@ -182,6 +202,28 @@ def main() -> int:
             print(f"  {name:28s} Brier {statistics.fmean(w):.4f}  (n={len(w)})")
         print("\nKeine LLM-Aufrufe.")
         return 0
+
+    def sichere(stand: str) -> None:
+        """Zwischenstand wegschreiben - nach JEDEM Anbieter, nicht am Ende.
+
+        DER GRUND (10.08., am eigenen Lauf gemerkt): die Datei entstand erst
+        nach dem letzten Anbieter. Als Z.ai mit 120 s je Fall zwei Stunden
+        brauchte, haette ein Abbruch nicht nur Z.ai verworfen, sondern auch
+        die 160 fertigen Messpunkte von Gemini und OpenRouter - 25 Minuten
+        Laufzeit und 165 Aufrufe.
+
+        Dieselbe Bauweise hat schon am 09.08. zwei abgebrochene Laeufe ohne
+        verwertbare Datei enden lassen. Ein Ergebnis, das erst ganz am Schluss
+        materialisiert, ist bei jedem Abbruch weg."""
+        pathlib.Path(args.ausgabe).write_text(
+            json.dumps({"stand": stand,
+                        "faelle": [{k: v for k, v in f.items() if k != "fakten"}
+                                   for f in faelle],
+                        "ergebnisse": {k: v for k, v in ergebnisse.items()},
+                        "basisrate": basisrate},
+                       ensure_ascii=False, indent=1), encoding="utf-8")
+
+    sichere("nur Grundlinien")
 
     # --- Die Anbieter -------------------------------------------------------
     from agent import llm_schema
@@ -223,6 +265,8 @@ def main() -> int:
                       f"Fehler {sum(fehler.values())}  {je:.1f} s")
         if fehler:
             print(f"  Fehler: {dict(fehler)}")
+        sichere(f"bis einschliesslich {a_name}")
+        print(f"  Zwischenstand gesichert: {args.ausgabe}")
 
     # --- Auswertung ---------------------------------------------------------
     print("\n" + "=" * 74)
@@ -265,12 +309,7 @@ def main() -> int:
               f"{werte[beste]:.4f} gegen {basis_w:.4f}) -> NICHT ausrollen. "
               f"Die Schaetzung traegt keine Information ueber den Einzelfall.")
 
-    pathlib.Path(args.ausgabe).write_text(
-        json.dumps({"faelle": [{k: v for k, v in f.items() if k != "fakten"}
-                               for f in faelle],
-                    "ergebnisse": {k: v for k, v in ergebnisse.items()},
-                    "basisrate": basisrate},
-                   ensure_ascii=False, indent=1), encoding="utf-8")
+    sichere("vollstaendig")
     print(f"\nGeschrieben: {args.ausgabe}")
     return 0
 

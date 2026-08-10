@@ -149,42 +149,11 @@ _INDEX_HTML = """<!doctype html>
 </div>
 <div class="section-group group-a">
 
-<div class="card">
-  <div class="row"><strong>Provider-Performance (Spot, nach Assetklasse)</strong></div>
-  <div class="row"><span class="muted-text">Je LLM-Anbieter: wie viele SEINER Spot-Empfehlungen bereits abschliessend
-  entschieden sind (Kurs erreichte Take-Profit oder Stop-Loss) - je Assetklasse getrennt, weil unterschiedliche
-  Risikoprofile. Zeigt NUR reale, aufgeloeste Ergebnisse, kein Backtest. Zahl in Klammern: aufgeloest / insgesamt
-  gesendet.</span></div>
-  <div id="provider-performance-spot"></div>
-  <div class="row"><strong>Provider-Performance (Hebel)</strong></div>
-  <div class="row"><span class="muted-text">Gleiches Prinzip fuer Hebel-Positionen (zusaetzlich: Liquidation als
-  drittes moegliches Ergebnis). Angaben unter 15 aufgeloesten Signalen sind statistisch noch nicht belastbar.</span></div>
-  <div id="provider-performance-hebel"></div>
-</div>
 
-<div class="card">
-  <div class="row"><strong>Konfidenz-Kalibrierung (Spot, nach Assetklasse)</strong></div>
-  <div class="row"><span class="muted-text">Vergleicht je Konfidenz-Band (niedrig/mittel/hoch, gleiche Grenzen
-  wie der "Konfidenz X%"-Risikofaktor) die durchschnittlich VORHERGESAGTE Konfidenz mit der tatsaechlich
-  eingetretenen Trefferquote bereits abgeschlossener Signale - grosse Abweichungen (orange) deuten auf eine
-  nicht gut kalibrierte Konfidenzangabe hin.</span></div>
-  <div id="konfidenz-kalibrierung-spot"></div>
-  <div class="row"><strong>Konfidenz-Kalibrierung (Hebel)</strong></div>
-  <div id="konfidenz-kalibrierung-hebel"></div>
-</div>
 
-<div class="card">
-  <div class="row"><strong>Richtungstreffer-Quote (Mindestziel/MFE)</strong></div>
-  <div class="row"><span class="muted-text">Unabhaengig von der exakten Take-Profit-Zonen-Ausfuehrung - wie oft
-  war die Richtung wenigstens ZEITWEISE (Maximum Favorable Excursion) mindestens die Mindestziel-Schwelle wert?
-  Zaehlt auch spaeter ueberholte/abgelaufene Signale mit, wenn sie zwischenzeitlich in die richtige Richtung
-  liefen. Ø Tage bis Mindestziel nur bei ausreichender Stichprobe (n≥15) empirisch belastbar.</span></div>
-  <div class="row"><span class="muted-text"><b>Einordnung 06.08.:</b> MFE ist <b>kein Erfolgsmaß</b>, solange
-  der Stop-Abstand variiert - sie belohnt enge Stops systematisch, und genau die liefern gemessen −1,04 R.
-  Diese Karte beantwortet <i>"war die Richtung je richtig?"</i>, nicht <i>"war das Signal gut?"</i>. Für die
-  zweite Frage ist die Systemgüte (SQN/Expectancy) weiter unten zuständig.</span></div>
-  <div id="richtungstreffer-quote"></div>
-</div>
+
+
+
 
 <div class="card">
   <div class="row"><strong>Marktscan-Erfolgsquote (Kaufkandidaten/"heiße" Watchlist)</strong></div>
@@ -204,21 +173,7 @@ _INDEX_HTML = """<!doctype html>
 </div>
 <div class="section-group group-b">
 
-<div class="card">
-  <div class="row"><strong>Z.ai-Richtungs-Erfolgsquote (unabhaengig von Mistral)</strong></div>
-  <div class="row"><span class="muted-text">Misst NICHT, ob Z.ai mit Mistral uebereinstimmte (das zeigt das
-  Detail-Panel je Signal) - sondern ob Z.ais UNABHAENGIGE Richtungs-Ableitung (Call 2, ohne Mistrals Empfehlung
-  als Vorgabe) im Nachhinein mit der tatsaechlichen Kursbewegung uebereinstimmte. Relevant, weil SHORT-Signale
-  auf Bitpanda nicht ausfuehrbar sind und deshalb nicht gemailt werden - diese Quote zeigt, wie gut Z.ai
-  unabhaengig davon liegen wuerde. (BIS 05.08. stand hier, Hebel duerfe "strukturell nie SHORT empfehlen" -
-  das galt vor dem Nur-Long-Umbau und widersprach seither den beiden Erlaeuterungen weiter unten: beide
-  Richtungen laufen durch, SHORT wird nur nicht versendet.) Gleiche Basis wie die Richtungstreffer-Quote (Maximum Favorable Excursion,
-  nicht nur die exakte TP/SL-Zone) - zaehlt auch Signale mit, die spaeter ueberholt/abgelaufen sind aber
-  zwischenzeitlich klar in eine Richtung liefen. NEUTRAL-Urteile und Faelle ohne klare Marktbewegung zaehlen
-  nicht mit (analog zu HALTEN). Bezieht sich hier NUR auf real ausgefuehrte Empfehlungen - der Veto-Schatten-
-  Anteil steht in Gruppe C.</span></div>
-  <div id="zai-richtung-performance"></div>
-</div>
+
 
 </div>
 
@@ -229,45 +184,11 @@ _INDEX_HTML = """<!doctype html>
 </div>
 <div class="section-group group-c">
 
-<div class="card">
-  <div class="row"><strong>Veto-Schatten-Performance</strong></div>
-  <div class="row"><span class="muted-text">Das LLM wollte hier tatsaechlich handeln (Kaufen/Verkaufen/Eröffnen),
-  wurde aber durch einen deterministischen Risk-Gate-Veto (CRV-Pflicht, Bitpanda/Cash-Veto, Regime-
-  Mindestkonfidenz, Nur-Long-Deckel, ...) auf HALTEN zurueckgestuft - der Trade wurde NIE ausgefuehrt. Diese
-  Karte zeigt, wie diese rein hypothetischen Vorschlaege sich tatsaechlich entwickelt haetten, damit sie nicht
-  spurlos aus der Bewertung verschwinden.</span></div>
-  <div id="veto-schatten-performance-spot"></div>
-  <div class="row"><strong>&nbsp;&nbsp;davon Hebel</strong></div>
-  <div id="veto-schatten-performance-hebel"></div>
-</div>
 
-<div class="card">
-  <div class="row"><strong>Veto-Schatten-Performance nach Veto-Grund</strong></div>
-  <div class="row"><span class="muted-text">Wie oben, aber nach dem Veto-GRUND aufgeschluesselt statt nach
-  Provider (2026-07-30, R-5.10-Konfidenzschwellen-Nachtrag) - beantwortet die fuer eine Schwellen-Entscheidung
-  eigentliche Frage: schlagen sich Konfidenzschwellen-Vetos (R-5.10) anders als CRV&lt;2.0-Vetos, je
-  Assetklasse?</span></div>
-  <div class="row"><span class="muted-text"><b>Nachtrag 06.08.:</b> der Grund
-  <code>nur_long_historisch</code> beschreibt ein Veto, das es SEIT DEM 05.08. NICHT MEHR GIBT
-  (Nur-Long-Umbau: beide Richtungen laufen durch, SHORT wird nur nicht gemailt). Seine Fälle bleiben
-  als Historie stehen, es kommen aber keine neuen dazu - eine Trefferquote daraus beschreibt die
-  Vergangenheit, nicht das laufende System.</span></div>
-  <div id="veto-schatten-performance-nach-grund-spot"></div>
-  <div class="row"><strong>&nbsp;&nbsp;davon Hebel</strong></div>
-  <div id="veto-schatten-performance-nach-grund-hebel"></div>
-</div>
 
-<div class="card">
-  <div class="row"><strong>Systemgüte (SQN / Expectancy)</strong></div>
-  <div class="row"><span class="muted-text">Die Zielgröße des Systems, nicht nur eine Trefferquote
-  (2026-08-02, Herleitung in Basisinfos/Zielgroessen_und_Erfolgsmasse.md). <b>Expectancy</b> in R =
-  mittlerer Gewinn je riskierter Einheit, muss über 0 liegen. <b>SQN</b> = Mittelwert ÷ Streuung × √n
-  (Van Tharp): unter 1,5 kaum handelbar, 1,5-2 durchschnittlich, ab 2 gut - bestraft also Schwankung,
-  nicht nur einen schwachen Durchschnitt. Die <b>Auflösungsquote</b> steht bewusst daneben: Gruppen mit
-  weiten Stops werden kaum aufgelöst, ihre Quoten sind entsprechend selektiert.</span></div>
-    <div class="row"><span class="muted-text"><b>Signalbeitrag</b> (2026-08-03) ist die wichtigere Zahl, solange nur eine Marktphase beobachtet ist: Expectancy minus dem, was ein reiner Zufallseinstieg mit denselben Stop- und Zielabständen im selben Zeitraum gebracht hätte. Gemessen am 03.08. verliert dieser Zufallseinstieg 0,11 bis 0,26 R - ein negativer SQN heißt also nicht zwingend, dass das System nicht funktioniert, sondern kann schlicht die Marktphase sein. Positiver Signalbeitrag = die Signale tragen etwas bei, was der Zufall nicht hergibt.</span></div>
-  <div id="systemguete"></div>
-</div>
+
+
+
 
 <div class="card">
   <h2>Stop nachziehen &mdash; offene Signale mit ungesichertem Gewinn</h2>
@@ -275,42 +196,13 @@ _INDEX_HTML = """<!doctype html>
   <div id="ausstieg-empfehlungen"></div>
 </div>
 
-<div class="card">
-  <div class="row"><strong>Selbst gewähltes HALTEN - Schatten-Performance</strong></div>
-  <div class="row"><span class="muted-text">Das LLM hat sich HIER von sich aus (kein Gate/Veto)
-  gegen einen Trade entschieden, aber trotzdem eine hypothetische Zone angegeben (2026-07-31,
-  Regel 28/33) - zeigt, ob die eigene Zurueckhaltung im Nachhinein richtig war. Getrennt von der
-  Veto-Schatten-Karte oben, da dort das Gate entschieden hat, hier das LLM selbst.</span></div>
-  <div id="selbst-halten-performance-spot"></div>
-  <div class="row"><strong>&nbsp;&nbsp;davon Hebel</strong></div>
-  <div id="selbst-halten-performance-hebel"></div>
-</div>
 
-<div class="card">
-  <div class="row"><strong>Selbst gewähltes HALTEN nach Grund</strong></div>
-  <div id="selbst-halten-performance-nach-grund-spot"></div>
-  <div class="row"><strong>&nbsp;&nbsp;davon Hebel</strong></div>
-  <div id="selbst-halten-performance-nach-grund-hebel"></div>
-</div>
 
-<div class="card">
-  <div class="row"><strong>Z.ai-Richtungs-Erfolgsquote (Veto-Schatten)</strong></div>
-  <div class="row"><span class="muted-text">Wie die Z.ai-Karte in Gruppe B, aber NUR fuer die vetoten
-  Vorschlaege oben - gerade hier ist Z.ais unabhaengiges Urteil interessant, weil es auf einen Fall angewendet
-  wird, den das primaere Regelwerk selbst blockiert hat.</span></div>
-  <div id="zai-richtung-performance-schatten"></div>
-</div>
 
-<div class="card">
-  <div class="row"><strong>Gesamt-Signalqualitaet (unabhaengig vom Risk-Gate)</strong></div>
-  <div class="row"><span class="muted-text">Real ausgefuehrte Empfehlungen (Gruppe A) PLUS Veto-Schatten
-  zusammengefasst - beantwortet "wie gut waere das Modell insgesamt gelegen, wenn man das Risk-Gate ausblendet?".
-  Nur eine Anzeige-Zusammenfuehrung, keine eigene Datenquelle - Real und Schatten bleiben in der Datenbank
-  getrennt gespeichert.</span></div>
-  <div id="gesamt-signalqualitaet-spot"></div>
-  <div class="row"><strong>&nbsp;&nbsp;davon Hebel</strong></div>
-  <div id="gesamt-signalqualitaet-hebel"></div>
-</div>
+
+
+
+
 
 </div>
 
@@ -323,14 +215,7 @@ _INDEX_HTML = """<!doctype html>
   <div id="api-health-makro"></div>
 </div>
 
-<div class="card" id="richtungsverteilung-card" style="display:none">
-  <div class="row"><strong>Richtungsverteilung LONG / SHORT</strong></div>
-  <div class="row"><span class="muted-text">Seit dem Nur-Long-Umbau am 05.08. laufen BEIDE Richtungen
-  normal durch die Pipeline. SHORT wird nur nicht gemailt und im Hebel-Tab standardmäßig ausgeblendet -
-  gemessen wird es weiterhin. Diese Karte war bisher die einzige Sicht auf das, was das System tatsächlich
-  vorschlägt, und fehlte auf der Seite (nachgezogen 06.08.).</span></div>
-  <div id="richtungsverteilung-body"></div>
-</div>
+
 
 <div class="card" id="themenfeld-erfolg-card" style="display:none">
   <div class="row"><strong>Themenfelder — traf die Richtung?</strong></div>
@@ -459,40 +344,6 @@ function renderOffeneSignaleHinweis(offenInfo) {
     ' in Beobachtung' + alterText + '</span></div>';
 }
 
-function renderProviderPerformance(tierData, offenInfo, sendeData) {
-  const sendeD = sendeData || {};
-  // Provider-Sendezaehler-Fix (2026-07-28, Nutzer-Frage "wie oft hat Gemini
-  // ueberhaupt welche Signale gesendet?"): ein Provider mit Sendungen aber
-  // noch KEINEM aufgeloesten Signal war bisher komplett unsichtbar (nur
-  // tierData durchsucht) - jetzt Vereinigung beider Schluesselmengen, damit
-  // z.B. Gemini (selten eingesetzt) sichtbar bleibt, auch ohne Resolved-Wert.
-  const providers = Array.from(new Set(Object.keys(tierData).concat(Object.keys(sendeD))));
-  if (providers.length === 0) {
-    // 2026-07-21, Nutzer-Fund: "noch keine Daten" ohne Begruendung war nicht
-    // nachvollziehbar - erklaeren WARUM (keine aufgeloesten Signale, nicht:
-    // Feature kaputt/kein Tracking) statt nur den leeren Zustand zu melden.
-    return '<div class="row"><span class="muted-text">Noch keine abgeschlossenen Signale in dieser Kategorie ' +
-      '(Kurs hat bei keinem bisherigen Signal Take-Profit oder Stop-Loss erreicht) - kann je nach Marktlage ' +
-      'Tage bis Wochen dauern.</span></div>' + renderOffeneSignaleHinweis(offenInfo);
-  }
-  return providers.map(function(p) {
-    const d = tierData[p];
-    const gesendet = sendeD[p];
-    const gesendetText = gesendet !== undefined ? ' / ' + gesendet + ' gesendet' : '';
-    if (!d) {
-      return '<div class="row"><span>' + p + ' (0' + gesendetText + ')</span>' +
-        '<span class="muted-text">noch kein Signal aufgeloest</span></div>';
-    }
-    const winRate = d.win_rate !== null && d.win_rate !== undefined
-      ? Math.round(d.win_rate * 100) + "%" : "-";
-    const crv = d.avg_realisiertes_crv !== null && d.avg_realisiertes_crv !== undefined
-      ? d.avg_realisiertes_crv.toFixed(2) : "-";
-    const kleineStichprobe = d.anzahl_resolved < PROVIDER_PERF_MIN_SAMPLE
-      ? ' <span class="muted-text">(n&lt;' + PROVIDER_PERF_MIN_SAMPLE + ', noch nicht belastbar)</span>' : '';
-    return '<div class="row"><span>' + p + ' (' + d.anzahl_resolved + gesendetText + ')' + kleineStichprobe + '</span>' +
-      '<span>Win-Rate ' + winRate + ', &oslash; CRV ' + crv + '</span></div>';
-  }).join("") + renderOffeneSignaleHinweis(offenInfo);
-}
 
 // Assetklassen-Aufschluesselung (2026-07-20): compute_provider_performance()
 // poolt Spot-Signale seit dem Watchlist-Wiring nicht mehr unter einem
@@ -508,12 +359,6 @@ const SPOT_ASSETKLASSEN = [
   ["etf", "ETF (Themen)"], ["hedge", "Hedge (Absicherung)"],
 ];
 
-function renderSpotProviderPerformanceByAssetklasse(perfData, offeneData, sendeData) {
-  return SPOT_ASSETKLASSEN.map(function([key, label]) {
-    return '<div class="row"><span class="muted-text">' + label + '</span></div>' +
-      renderProviderPerformance(perfData[key] || {}, (offeneData || {})[key], (sendeData || {})[key]);
-  }).join("");
-}
 
 // Konfidenz-Kalibrierungskurve (2026-07-26, Punkt 3 des Regime-Persistenz-
 // Folge-Vorschlags - siehe agent/krypto/backward_tracking.py::
@@ -528,31 +373,7 @@ const KONFIDENZ_BUCKET_ORDER = [
 // Blickfang fuer "hier lohnt ein genauerer Blick".
 const KONFIDENZ_DIFFERENZ_AUFFAELLIG_PP = 15;
 
-function renderKonfidenzKalibrierungTier(tierData) {
-  if (!tierData || Object.keys(tierData).length === 0) {
-    return '<div class="row"><span class="muted-text">Noch keine abgeschlossenen Signale mit Konfidenzwert ' +
-      'in dieser Kategorie.</span></div>';
-  }
-  return KONFIDENZ_BUCKET_ORDER.map(function([key, label]) {
-    const b = tierData[key];
-    if (!b) return "";
-    const stichprobeHinweis = !b.ausreichend_stichprobe
-      ? ' <span class="muted-text">(n=' + b.anzahl + ', noch nicht belastbar)</span>'
-      : ' <span class="muted-text">(n=' + b.anzahl + ')</span>';
-    const auffaellig = Math.abs(b.differenz_prozentpunkte) >= KONFIDENZ_DIFFERENZ_AUFFAELLIG_PP;
-    return '<div class="row"><span>' + label + stichprobeHinweis + '</span>' +
-      '<span class="' + (auffaellig ? "stale" : "") + '">vorhergesagt &oslash; ' +
-      b.avg_vorhergesagte_konfidenz_pct.toFixed(1) + '% / tatsächlich ' +
-      b.tatsaechliche_trefferquote_pct.toFixed(1) + '%</span></div>';
-  }).join("");
-}
 
-function renderKonfidenzKalibrierungByAssetklasse(kalibData) {
-  return SPOT_ASSETKLASSEN.map(function([key, label]) {
-    return '<div class="row"><span class="muted-text">' + label + '</span></div>' +
-      renderKonfidenzKalibrierungTier(kalibData[key] || {});
-  }).join("");
-}
 
 // Richtungstreffer-Quote (2026-07-27, Mindestziel/MFE-Tracking - siehe
 // agent/krypto/backward_tracking.py::compute_richtungstreffer_quote()).
@@ -571,11 +392,6 @@ function renderRichtungstrefferQuoteTier(label, tierData) {
     '<div class="row"><span class="muted-text">' + zeitHinweis + '</span></div>';
 }
 
-function renderRichtungstrefferQuote(data) {
-  if (!data) return "";
-  return renderRichtungstrefferQuoteTier("Spot", data.spot) +
-    renderRichtungstrefferQuoteTier("Hebel", data.hebel);
-}
 
 // Marktscan-Erfolgsquote (2026-07-30, siehe agent/krypto/
 // marktscan_backward_tracking.py::compute_marktscan_erfolgsquote()).
@@ -628,12 +444,6 @@ function renderZaiRichtungPerformanceTier(label, tierData) {
     tierData.trefferquote_pct.toFixed(1) + '%</span></div>';
 }
 
-function renderZaiRichtungPerformance(data) {
-  if (!data) return "";
-  return ZAI_RICHTUNG_TIERS.map(function([key, label]) {
-    return renderZaiRichtungPerformanceTier(label, data[key]);
-  }).join("");
-}
 
 const API_HEALTH_GROUPS = {
   // MIT ROLLE, UND IN DER REIHENFOLGE DER KETTE (2026-08-10).
@@ -715,33 +525,6 @@ function fmtDateTime(iso) {
   return new Date(iso).toLocaleString("de-AT", { dateStyle: "medium", timeStyle: "short" });
 }
 
-function renderRichtungsverteilung(r) {
-  const pct = (v) => (v === null || v === undefined) ? "—" : v.toFixed(1) + " %";
-  let h = '<div class="row"><span>Zeitraum</span><span>ab ' + (r.ab_datum || "?") + "</span></div>";
-  h += '<div class="row"><span>SHORT-Anteil an allen Signalen</span><strong>' +
-    pct(r.short_anteil_pct) + "</strong></div>";
-  for (const [richtung, v] of Object.entries(r.richtungen || {})) {
-    h += '<div class="row" style="margin-top:6px"><strong>' + richtung + "</strong></div>";
-    h += '<div class="row"><span>Signale / davon ERÖFFNEN</span><span>' +
-      v.signale + " / " + v.eroeffnen + "</span></div>";
-    h += '<div class="row"><span>aufgelöst / davon Ziel erreicht</span><span>' +
-      v.aufgeloest + " / " + v.take_profit + "</span></div>";
-    // Trefferquote NUR zeigen, wenn sie belastbar ist. Eine Prozentzahl aus
-    // drei Fällen sieht genauso aus wie eine aus dreihundert - und wird auch so
-    // gelesen. Lieber die Fallzahl zeigen als eine Zahl, die Sicherheit
-    // vortäuscht (Methodik: unter 30 aufgelösten Fällen kein Ergebnis).
-    if (v.belastbar) {
-      h += '<div class="row"><span>Trefferquote / Erwartungswert</span><span>' +
-        pct(v.trefferquote_pct) + " / " +
-        (v.erwartungswert_r === null || v.erwartungswert_r === undefined
-          ? "—" : v.erwartungswert_r.toFixed(2) + " R") + "</span></div>";
-    } else {
-      h += '<div class="row"><span class="muted-text">noch nicht belastbar (' +
-        v.aufgeloest + " von 30 aufgelösten Fällen)</span></div>";
-    }
-  }
-  return h;
-}
 
 function renderThemenfeldErfolg(t) {
   if (!t.thesen || t.thesen.length === 0) {
@@ -1017,160 +800,22 @@ async function refreshStatus() {
       m.limit.toLocaleString() + " (" + m.prozent + "%)</span></div>").join("");
   }
 
-  if (data.provider_performance) {
-    const offen = data.offene_signale || {};
-    const sende = data.provider_sendezaehler || {};
-    document.getElementById("provider-performance-spot").innerHTML =
-      renderSpotProviderPerformanceByAssetklasse(data.provider_performance, offen, sende);
-    document.getElementById("provider-performance-hebel").innerHTML =
-      renderProviderPerformance(data.provider_performance.hebel || {}, offen.hebel, sende.hebel);
-  }
 
-  if (data.konfidenz_kalibrierung) {
-    document.getElementById("konfidenz-kalibrierung-spot").innerHTML =
-      renderKonfidenzKalibrierungByAssetklasse(data.konfidenz_kalibrierung);
-    document.getElementById("konfidenz-kalibrierung-hebel").innerHTML =
-      renderKonfidenzKalibrierungTier(data.konfidenz_kalibrierung.hebel || {});
-  }
 
-  if (data.richtungstreffer_quote) {
-    document.getElementById("richtungstreffer-quote").innerHTML =
-      renderRichtungstrefferQuote(data.richtungstreffer_quote);
-  }
 
   document.getElementById("marktscan-erfolgsquote").innerHTML =
     renderMarktscanErfolgsquote(data.marktscan_erfolgsquote);
 
-  if (data.zai_richtung_performance) {
-    document.getElementById("zai-richtung-performance").innerHTML =
-      renderZaiRichtungPerformance(data.zai_richtung_performance);
-  }
 
   // Gruppe C: Veto-Schatten + Gesamt (2026-07-28) - gleiche Render-Funktionen
   // wie Gruppe A/B, nur gegen die veto_schatten_*/gesamt_signalqualitaet-Felder.
-  if (data.veto_schatten_performance) {
-    document.getElementById("veto-schatten-performance-spot").innerHTML =
-      renderSpotProviderPerformanceByAssetklasse(data.veto_schatten_performance, {}, {});
-    document.getElementById("veto-schatten-performance-hebel").innerHTML =
-      renderProviderPerformance(data.veto_schatten_performance.hebel || {}, null, null);
-  }
 
   // R-5.10-Konfidenzschwellen-Nachtrag (2026-07-30) - gleiche Render-Funktionen
   // wie oben, nur gegen die nach Veto-Grund statt Provider gruppierten Daten.
-  if (data.veto_schatten_performance_nach_grund) {
-    document.getElementById("veto-schatten-performance-nach-grund-spot").innerHTML =
-      renderSpotProviderPerformanceByAssetklasse(data.veto_schatten_performance_nach_grund, {}, {});
-    document.getElementById("veto-schatten-performance-nach-grund-hebel").innerHTML =
-      renderProviderPerformance(data.veto_schatten_performance_nach_grund.hebel || {}, null, null);
-  }
 
   // Selbst-gewaehltes-HALTEN-Schatten-Tracking (2026-07-31) - Gegenfall zum
   // Veto-Schatten oben: kein Gate/Veto, das LLM hat sich selbst gegen einen
   // Trade entschieden. Gleiche Render-Funktionen, identisches Datenformat.
-  if (data.systemguete) {
-    document.getElementById("systemguete").innerHTML =
-      Object.keys(data.systemguete).sort().map(function (tier) {
-        return ["real", "schatten"].map(function (art) {
-          var k = data.systemguete[tier][art];
-          if (!k || !k.anzahl_bewertet) { return ""; }
-          var ew = k.expectancy_r === null ? "-" : (k.expectancy_r >= 0 ? "+" : "") + k.expectancy_r.toFixed(3);
-          // Bootstrap-Intervall direkt an den Punktwert (2026-08-03): "-0,299 R"
-          // liest sich exakt, beruht aber auf wenigen Trades. Das Intervall
-          // zeigt, wie weit der wahre Wert streuen kann.
-          if (k.expectancy_ci_unten !== null && k.expectancy_ci_unten !== undefined) {
-            ew += ' <span class="muted-text">[' + k.expectancy_ci_unten.toFixed(2) +
-                  " bis " + k.expectancy_ci_oben.toFixed(2) + "]</span>";
-          }
-          var sqn = k.sqn === null ? "-" : k.sqn.toFixed(2) + " (" + k.sqn_einordnung + ")";
-          var pf = k.profit_factor === null ? "-" : k.profit_factor.toFixed(2);
-          var auf = k.aufloesungsquote === null ? "-" : (k.aufloesungsquote * 100).toFixed(0) + "%";
-          var warn = k.sqn_belastbar ? "" : ' <span class="muted-text">[n&lt;30]</span>';
-          // Zweite Zeile: Signalbeitrag gegen die mechanische Basislinie
-          // (2026-08-03). Ohne diesen Bezugspunkt liest sich ein negativer SQN
-          // als kaputtes System, obwohl der Zufallseinstieg im selben Zeitraum
-          // noch mehr verliert - Begruendung in basislinie_erwartungswert().
-          // Erst ab anzahl_bewertet >= 30 (dieselbe Schwelle wie sqn_belastbar):
-          // ein Signalbeitrag aus 8 Trades gegen eine Basislinie aus tausenden
-          // Ziehungen suggeriert eine Genauigkeit, die er nicht hat - krypto/real
-          // stand am 03.08. mit n=8 bei "-1,069 R" auf dieser Karte.
-          var zusatz = "";
-          if (k.signalbeitrag_r !== null && k.signalbeitrag_r !== undefined
-              && k.sqn_belastbar) {
-            var sb = (k.signalbeitrag_r >= 0 ? "+" : "") + k.signalbeitrag_r.toFixed(3);
-            var blw = (k.basislinie_erwartungswert_r >= 0 ? "+" : "") +
-                      k.basislinie_erwartungswert_r.toFixed(3);
-            var chance = "";
-            if (k.anteil_positiv !== null && k.anteil_positiv !== undefined) {
-              chance = " | " + (k.anteil_positiv * 100).toFixed(0) +
-                       "% der Bootstrap-Ziehungen positiv";
-            }
-            // Zeitraum mit ausweisen: derselbe Parametersatz liefert je nach
-            // Fenster entgegengesetzte Vorzeichen, ohne die Angabe ist der
-            // Wert nicht nachvollziehbar.
-            var zeitraum = "";
-            if (k.basislinie_ab_datum && k.basislinie_bis_datum) {
-              zeitraum = ", " + k.basislinie_ab_datum + ".." + k.basislinie_bis_datum;
-            }
-            zusatz = '<div class="row"><span class="muted-text">&nbsp;&nbsp;&nbsp;&nbsp;' +
-              "Zufallseinstieg, gleiche Parameter (Stop " +
-              (k.basislinie_stop_rel * 100).toFixed(1) + "%, CRV " +
-              k.basislinie_crv.toFixed(2) + ", n=" + k.basislinie_anzahl +
-              zeitraum + "): " +
-              blw + " R" + chance + '</span><span class="' +
-              (k.signalbeitrag_r >= 0 ? "ok" : "warn") +
-              '">Signalbeitrag ' + sb + " R</span></div>";
-          }
-          // Mark-to-Market getrennt ausweisen (2026-08-03): seit Population A
-          // bekommen noch laufende Trades einen R-Wert zum Schlusskurs. Ohne
-          // die Angabe liest sich "n=111" als 111 abgeschlossene Trades,
-          // obwohl 25 davon noch offene Positionen sind.
-          var mtm = "";
-          if (k.anzahl_mark_to_market) {
-            mtm = ", davon " + k.anzahl_mark_to_market + " zum Schlusskurs bewertet";
-          }
-          // Dritte Zeile: Handelskosten (2026-08-04, Phase 0.2). Der EW oben
-          // ist BRUTTO - er entsteht aus Zonen, also aus reiner
-          // Preisbewegung. Ohne diese Zeile liest sich "EW -0,104 R" als die
-          // Luecke zum Break-even, obwohl Finanzierung und Schliessungsgebuehr
-          // noch fehlen. Herleitung in backward_tracking.py::kosten_in_r().
-          var kostenzeile = "";
-          if (k.kosten_r !== null && k.kosten_r !== undefined) {
-            var netto = k.expectancy_r_netto === null || k.expectancy_r_netto === undefined
-              ? "-" : (k.expectancy_r_netto >= 0 ? "+" : "") + k.expectancy_r_netto.toFixed(3);
-            var annahme = k.kosten_hebel
-              ? "Hebel " + k.kosten_hebel.toFixed(1) + ", "
-              : "";
-            if (k.kosten_median_haltedauer_tage !== null
-                && k.kosten_median_haltedauer_tage !== undefined) {
-              annahme += k.kosten_median_haltedauer_tage.toFixed(1) + " Tage gehalten";
-            }
-            // Unbelegte Saetze deutlich kennzeichnen: fuer Spot ist der Satz
-            // eine Annahme, weil die Gebuehr dort im Spread steckt und aus den
-            // eigenen Buchungen nicht messbar ist. Eine Zahl ohne diesen
-            // Hinweis wuerde wie ein Messwert gelesen.
-            var beleg = k.kosten_belegt
-              ? ""
-              : ' <span class="warn">[Satz nicht belegt]</span>';
-            kostenzeile = '<div class="row"><span class="muted-text">' +
-              "&nbsp;&nbsp;&nbsp;&nbsp;Handelskosten (" + annahme + "): -" +
-              k.kosten_r.toFixed(3) + " R" + beleg +
-              // Einfache Anfuehrungszeichen um dieses Fragment: der Block
-              // liegt in einem NICHT-rohen dreifach gequoteten Python-String.
-              // Ein rueckwaerts escaptes doppeltes Anfuehrungszeichen wuerde
-              // dort von Python aufgeloest und das JavaScript zerstoeren -
-              // genau so ist diese Zeile beim ersten Anlauf gebrochen.
-              '</span><span class="' +
-              (k.expectancy_r_netto >= 0 ? "ok" : "warn") +
-              '">EW netto ' + netto + " R</span></div>";
-          }
-          return '<div class="row"><span>' + tier + " / " + art +
-            ' <span class="muted-text">(n=' + k.anzahl_bewertet + mtm + ", " +
-            k.anzahl_offen + " offen, Auflösung " + auf + ")</span></span>" +
-            "<span>EW " + ew + " R (brutto), SQN " + sqn + ", PF " + pf + warn +
-            "</span></div>" + kostenzeile + zusatz;
-        }).join("");
-      }).join("") || '<div class="row"><span class="muted-text">noch keine bewerteten Trades</span></div>';
-  }
   if (data.ausstiegs_empfehlungen) {
     var ae = data.ausstiegs_empfehlungen;
     var liste = ae.empfehlungen || [];
@@ -1203,30 +848,8 @@ async function refreshStatus() {
     }
     document.getElementById("ausstieg-empfehlungen").innerHTML = html;
   }
-  if (data.selbst_gewaehltes_halten_performance) {
-    document.getElementById("selbst-halten-performance-spot").innerHTML =
-      renderSpotProviderPerformanceByAssetklasse(data.selbst_gewaehltes_halten_performance, {}, {});
-    document.getElementById("selbst-halten-performance-hebel").innerHTML =
-      renderProviderPerformance(data.selbst_gewaehltes_halten_performance.hebel || {}, null, null);
-  }
-  if (data.selbst_gewaehltes_halten_performance_nach_grund) {
-    document.getElementById("selbst-halten-performance-nach-grund-spot").innerHTML =
-      renderSpotProviderPerformanceByAssetklasse(data.selbst_gewaehltes_halten_performance_nach_grund, {}, {});
-    document.getElementById("selbst-halten-performance-nach-grund-hebel").innerHTML =
-      renderProviderPerformance(data.selbst_gewaehltes_halten_performance_nach_grund.hebel || {}, null, null);
-  }
 
-  if (data.zai_richtung_performance_schatten) {
-    document.getElementById("zai-richtung-performance-schatten").innerHTML =
-      renderZaiRichtungPerformance(data.zai_richtung_performance_schatten);
-  }
 
-  if (data.gesamt_signalqualitaet) {
-    document.getElementById("gesamt-signalqualitaet-spot").innerHTML =
-      renderSpotProviderPerformanceByAssetklasse(data.gesamt_signalqualitaet, {}, {});
-    document.getElementById("gesamt-signalqualitaet-hebel").innerHTML =
-      renderProviderPerformance(data.gesamt_signalqualitaet.hebel || {}, null, null);
-  }
 
   if (data.api_health) {
     for (const [elementId, sourceKeys] of Object.entries(API_HEALTH_GROUPS)) {
@@ -1234,11 +857,6 @@ async function refreshStatus() {
     }
   }
 
-  if (data.richtungsverteilung) {
-    document.getElementById("richtungsverteilung-card").style.display = "block";
-    document.getElementById("richtungsverteilung-body").innerHTML =
-      renderRichtungsverteilung(data.richtungsverteilung);
-  }
 
   if (data.themenfeld_erfolg) {
     document.getElementById("themenfeld-erfolg-card").style.display = "block";

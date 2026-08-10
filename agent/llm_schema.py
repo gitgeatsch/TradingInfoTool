@@ -267,6 +267,34 @@ def baue_szenario_schema(analyst) -> dict:
     }
 
 
+def baue_gegenpruefungs_schema(analyst) -> dict:
+    """Das strikte Schema fuer den Anwalt des Gegenteils (2026-08-10).
+
+    Winzig - vier Felder, zwei davon mit festem Vokabular. Trotzdem ein
+    eigener Bauer und nicht in `baue_szenario_schema()` mitgefuehrt: die
+    beiden Formen haben nichts gemeinsam ausser dem Anbieter, und ein Bauer
+    fuer zwei Formen waere an jeder Aenderung die schwaechste Stelle.
+
+    ABGELEITET aus den Konstanten des Gegenpruefers, wie ueberall hier."""
+    fehlend = [n for n in ("KORREKTUR_RICHTUNGEN", "STAERKEN",
+                           "REQUIRED_GEGENPRUEFUNG_FELDER")
+               if not hasattr(analyst, n)]
+    if fehlend:
+        raise SchemaLuecke(f"Gegenpruefer ohne Konstanten: {fehlend}")
+    return {
+        "type": "object",
+        "additionalProperties": False,
+        "required": list(analyst.REQUIRED_GEGENPRUEFUNG_FELDER),
+        "properties": {
+            "angriff": TXT,
+            "uebersehener_fakt": TXT,
+            "korrektur_richtung": {"type": "string",
+                                   "enum": list(analyst.KORREKTUR_RICHTUNGEN)},
+            "staerke": {"type": "string", "enum": list(analyst.STAERKEN)},
+        },
+    }
+
+
 JSON_OBJECT = {"type": "json_object"}
 
 # WELCHER ANBIETER BEKOMMT DAS STRIKTE SCHEMA - gemessen am 2026-08-09, je
@@ -324,6 +352,8 @@ def response_format_fuer(llm_client, analyst_modulname: str) -> dict:
         # eigenen Pflichtfeld-Konstante, nicht am Modulnamen.
         if hasattr(analyst, "REQUIRED_SZENARIO_TOP_LEVEL_FIELDS"):
             schema = baue_szenario_schema(analyst)
+        elif hasattr(analyst, "REQUIRED_GEGENPRUEFUNG_FELDER"):
+            schema = baue_gegenpruefungs_schema(analyst)
         else:
             schema = baue_signal_schema(analyst)
     except SchemaLuecke:

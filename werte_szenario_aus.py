@@ -90,9 +90,90 @@ def streuung(verteilungen) -> dict:
             for s in SCHLUESSEL}
 
 
+def wirtschaftlich(eintraege, wahrheiten, kosten_r: float) -> dict:
+    """Was die Empfehlungsregel TATSAECHLICH eingebracht haette.
+
+    WARUM DAS NEBEN DEM BRIER-SCORE STEHT. Beide Masse koennen sich
+    widersprechen, und beide Richtungen kommen vor:
+
+      * Gut kalibriert, wirtschaftlich nutzlos - der Schaetzer trifft, kommt
+        aber nie ueber die Handlungsschwelle. Nichts zu handeln ist korrekt
+        und bringt null.
+      * Schlecht kalibriert, wirtschaftlich brauchbar - er liegt im Mittel
+        daneben, aber die wenigen Faelle, in denen er stark wird, sind die
+        richtigen.
+
+    Der Brier-Score misst die Schaetzung, diese Rechnung misst die
+    ENTSCHEIDUNG. Nur letztere entscheidet ueber den Rollout."""
+    from agent.szenario_entscheidung import leite_empfehlung_ab, realisiertes_r
+
+    gehandelt, summe, gesperrt = 0, 0.0, 0
+    for e, w in zip(eintraege, wahrheiten):
+        if not e.get("verteilung"):
+            continue
+        emp = leite_empfehlung_ab(e["verteilung"], kosten_r=kosten_r,
+                                  unsicherheit=e.get("unsicherheit"))
+        if e.get("unsicherheit") in ("hoch",):
+            gesperrt += 1
+        if not emp["handeln"]:
+            continue
+        r = realisiertes_r(w)
+        if r is None:
+            continue
+        gehandelt += 1
+        summe += r - abs(kosten_r)
+    return {"trades": gehandelt, "summe_r": round(summe, 2),
+            "je_trade": round(summe / gehandelt, 3) if gehandelt else None,
+            "gesperrt": gesperrt}
+
+
+def bootstrap_je_trade(eintraege, wahrheiten, symbole, kosten_r: float,
+                       runden: int = 2000, seed: int = 20260810) -> tuple | None:
+    """Streubereich des R je Trade - CLUSTER-Bootstrap ueber Symbole.
+
+    WARUM UEBER SYMBOLE UND NICHT UEBER FAELLE. Je Symbol stecken mehrere
+    Anker in der Stichprobe, und die haengen zusammen: dasselbe Symbol in
+    derselben Marktphase liefert aehnliche Fakten und aehnliche Ausgaenge. Wer
+    einzelne Faelle zieht, tut so, als waeren es unabhaengige Beobachtungen,
+    und bekommt ein zu enges Intervall - er haelt Zufall fuer Befund.
+
+    Gezogen werden deshalb ganze Symbole mit allen ihren Faellen."""
+    import random
+    from agent.szenario_entscheidung import leite_empfehlung_ab, realisiertes_r
+
+    je_symbol = defaultdict(list)
+    for e, w, s in zip(eintraege, wahrheiten, symbole):
+        if not e.get("verteilung"):
+            continue
+        emp = leite_empfehlung_ab(e["verteilung"], kosten_r=kosten_r,
+                                  unsicherheit=e.get("unsicherheit"))
+        r = realisiertes_r(w)
+        if emp["handeln"] and r is not None:
+            je_symbol[s].append(r - abs(kosten_r))
+        else:
+            je_symbol.setdefault(s, [])
+    schluessel = list(je_symbol)
+    if len(schluessel) < 3:
+        return None
+    rng = random.Random(seed)
+    werte = []
+    for _ in range(runden):
+        gezogen = [r for k in rng.choices(schluessel, k=len(schluessel))
+                   for r in je_symbol[k]]
+        if gezogen:
+            werte.append(statistics.fmean(gezogen))
+    if len(werte) < runden // 2:
+        return None
+    werte.sort()
+    return (werte[int(0.025 * len(werte))], werte[int(0.975 * len(werte))],
+            len(schluessel))
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--datei", required=True)
+    p.add_argument("--kosten-r", type=float, default=0.0,
+                   help="Handelskosten je Trade in R (Standard 0 = brutto)")
     args = p.parse_args()
     d = json.loads(pathlib.Path(args.datei).read_text(encoding="utf-8"))
     wahrheiten = [f["wahrheit"] for f in d["faelle"]]
@@ -102,7 +183,7 @@ def main() -> int:
           + ", ".join(f"{a}={sum(1 for w in wahrheiten if w == a)}" for a in AUSGAENGE))
     print("\n" + "=" * 82)
     print(f"{'Verfahren':26} {'Brier':>8} {'Unsich.':>8} {'Aufloes.':>9} "
-          f"{'Verlaess.':>10} {'Streuung ziel':>14}")
+          f"{'Verlaess.':>10} {'Rest':>7} {'Streu.':>7}")
     print("-" * 82)
     for name, eintraege in d["ergebnisse"].items():
         w = [e["brier"] for e in eintraege if e.get("brier") is not None]
@@ -111,10 +192,47 @@ def main() -> int:
         vert = [e.get("verteilung") for e in eintraege]
         z = zerlege(vert, wahrheiten)
         st = streuung(vert)
-        print(f"{name:26} {statistics.fmean(w):8.4f} "
+        b = statistics.fmean(w)
+        # KONTROLLE: Brier = Unsicherheit - Aufloesung + Verlaesslichkeit gilt
+        # exakt nur ohne Fachbildung. Innerhalb eines Fachs streuen die
+        # genannten Wahrscheinlichkeiten noch, und dieser Anteil taucht in
+        # keinem der drei Glieder auf - er ist der Rest. Ein KLEINER Rest ist
+        # normal und ein gutes Zeichen; ein grosser hiesse, die Faecher sind
+        # zu grob und die Zerlegung waere nicht mehr aussagekraeftig.
+        rest = (b - (z["unsicherheit"] - z["aufloesung"]
+                     + z["verlaesslichkeit"])) if z else None
+        print(f"{name:26} {b:8.4f} "
               + (f"{z['unsicherheit']:8.4f} {z['aufloesung']:9.4f} "
-                 f"{z['verlaesslichkeit']:10.4f} " if z else f"{'-':>8} {'-':>9} {'-':>10} ")
-              + f"{st.get('ziel_zuerst_pct', 0):14.1f}")
+                 f"{z['verlaesslichkeit']:10.4f} {rest:+7.4f} "
+                 if z else f"{'-':>8} {'-':>9} {'-':>10} {'-':>7} ")
+              + f"{st.get('ziel_zuerst_pct', 0):7.1f}")
+
+    print("\n" + "=" * 82)
+    print(f"WIRTSCHAFTLICH (Kosten {args.kosten_r:.3f} R je Trade)")
+    print(f"{'Verfahren':26} {'Trades':>8} {'Summe R':>9} {'je Trade':>10} "
+          f"{'95 % Bereich je Trade':>24}")
+    print("-" * 82)
+    symbole = [f["symbol"] for f in d["faelle"]]
+    for name, eintraege in d["ergebnisse"].items():
+        b = wirtschaftlich(eintraege, wahrheiten, args.kosten_r)
+        je = f"{b['je_trade']:+.3f}" if b["je_trade"] is not None else "-"
+        bs = bootstrap_je_trade(eintraege, wahrheiten, symbole, args.kosten_r)
+        bereich = (f"[{bs[0]:+.3f} .. {bs[1]:+.3f}]" if bs else "-")
+        print(f"{name:26} {b['trades']:8d} {b['summe_r']:+9.2f} {je:>10} "
+              f"{bereich:>24}")
+
+    # GEGENPROBE: haette man JEDEN Fall gehandelt, muss sich die Summe direkt
+    # aus der Ausgangsverteilung ergeben. Weicht die Rechnung davon ab, ist
+    # nicht das Modell schlecht, sondern die Auswertung kaputt.
+    from agent.szenario_entscheidung import realisiertes_r
+    alle = [realisiertes_r(w) for w in wahrheiten]
+    soll = sum(r - abs(args.kosten_r) for r in alle if r is not None)
+    print("-" * 82)
+    print(f"{'ALLE Faelle gehandelt':26} {len(alle):8d} {soll:+9.2f} "
+          f"{soll / len(alle):+10.3f} {0:10d}   <- Gegenprobe")
+    print("  Ein Verfahren ist nur dann etwas wert, wenn es je Trade BESSER")
+    print("  liegt als diese Zeile - sonst waehlt es die Faelle nicht aus,")
+    print("  sondern verkleinert sie nur.")
 
     print("\n=== LESART ===")
     print("  Aufloesung nahe 0  -> der Schaetzer sagt fast immer dasselbe. Ihm")

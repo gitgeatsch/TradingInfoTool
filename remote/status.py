@@ -248,9 +248,7 @@ class RemoteStatus:
     jobs_running: dict[str, bool] = field(default_factory=dict)
     jobs_running_seit_minuten: dict[str, float | None] = field(default_factory=dict)
     budget_heute: dict | None = None
-    provider_performance: dict | None = None
     offene_signale: dict | None = None
-    konfidenz_kalibrierung: dict | None = None
     api_health: dict | None = None
     regime_status: dict | None = None
     # Z-3 und die Gegenprobe der Bewertung (2026-08-06) - siehe
@@ -260,37 +258,10 @@ class RemoteStatus:
     # fuer Absicherungen, siehe compute_hedge_wirksamkeit().
     hedge_wirksamkeit: dict | None = None
     parameter_overview: list[dict] | None = None
-    richtungstreffer_quote: dict | None = None
-    zai_richtung_performance: dict | None = None
-    # Veto-Schatten-Tracking (2026-07-28, siehe agent/krypto/backward_tracking.py::
-    # check_signal_veto_shadow_outcome()-Docstring) - 3-Gruppen-Anzeige-Redesign
-    # (Nutzer-Wunsch: "sauber in eigene Bereiche aufteilen mit einem bestimmten
-    # Zweck"). provider_sendezaehler ist bewusst UNABHAENGIG von der Veto-Schatten-
-    # Frage (behebt einen separaten, aelteren Fund: ein selten eingesetzter
-    # Provider wie Gemini kann in provider_performance komplett unsichtbar
-    # bleiben, solange kein Signal von ihm aufgeloest ist).
-    veto_schatten_performance: dict | None = None
-    zai_richtung_performance_schatten: dict | None = None
-    gesamt_signalqualitaet: dict | None = None
     provider_sendezaehler: dict | None = None
-    # R-5.10-Konfidenzschwellen-Nachtrag (2026-07-30, siehe Memory
-    # project_llm_optimierung_abdeckung_pruefung) - wie veto_schatten_
-    # performance, aber nach (tier, veto_grund) statt (tier, provider)
-    # gruppiert, damit kuenftige Schwellen-Entscheidungen ohne Ad-hoc-
-    # Analyse moeglich sind.
-    veto_schatten_performance_nach_grund: dict | None = None
-    richtungsverteilung: dict | None = None
-    # Selbst-gewaehltes-HALTEN-Schatten-Tracking (2026-07-31, siehe agent/
-    # krypto/backward_tracking.py::compute_selbst_halten_performance()-
-    # Docstring) - Gegenfall zum Veto-Schatten oben: kein Gate/Veto, das LLM
-    # hat sich selbst gegen einen Trade entschieden, aber trotzdem eine
-    # hypothetische Zone angegeben.
-    systemguete: dict | None = None
     # Trailing-Stop-Empfehlungen fuer offene Signale (2026-08-04,
     # Punkt 3.2). Advisory-only: rechnet und meldet, greift nicht ein.
     ausstiegs_empfehlungen: dict | None = None
-    selbst_gewaehltes_halten_performance: dict | None = None
-    selbst_gewaehltes_halten_performance_nach_grund: dict | None = None
     # Marktscan-Erfolgsmessung (2026-07-30, siehe agent/krypto/
     # marktscan_backward_tracking.py::compute_marktscan_erfolgsquote()).
     marktscan_erfolgsquote: dict | None = None
@@ -324,26 +295,14 @@ class RemoteStatus:
             "jobs_running": self.jobs_running,
             "jobs_running_seit_minuten": self.jobs_running_seit_minuten,
             "budget_heute": self.budget_heute,
-            "provider_performance": self.provider_performance,
             "offene_signale": self.offene_signale,
-            "konfidenz_kalibrierung": self.konfidenz_kalibrierung,
             "api_health": self.api_health,
             "regime_status": self.regime_status,
             "z3_und_bewertung": self.z3_und_bewertung,
             "hedge_wirksamkeit": self.hedge_wirksamkeit,
             "parameter_overview": self.parameter_overview,
-            "richtungstreffer_quote": self.richtungstreffer_quote,
-            "zai_richtung_performance": self.zai_richtung_performance,
-            "veto_schatten_performance": self.veto_schatten_performance,
-            "zai_richtung_performance_schatten": self.zai_richtung_performance_schatten,
-            "gesamt_signalqualitaet": self.gesamt_signalqualitaet,
             "provider_sendezaehler": self.provider_sendezaehler,
-            "veto_schatten_performance_nach_grund": self.veto_schatten_performance_nach_grund,
-            "richtungsverteilung": self.richtungsverteilung,
-            "systemguete": self.systemguete,
             "ausstiegs_empfehlungen": self.ausstiegs_empfehlungen,
-            "selbst_gewaehltes_halten_performance": self.selbst_gewaehltes_halten_performance,
-            "selbst_gewaehltes_halten_performance_nach_grund": self.selbst_gewaehltes_halten_performance_nach_grund,
             "marktscan_erfolgsquote": self.marktscan_erfolgsquote,
             "coingecko_quota": self.coingecko_quota,
             "llm_kontingent": self.llm_kontingent,
@@ -450,25 +409,14 @@ def _build_status_roh(conn: sqlite3.Connection, watchlist: list, log_path: Path,
         jobs_running=jobs_running,
         jobs_running_seit_minuten=jobs_running_seit_minuten,
         budget_heute=_safe(_get_budget_heute, conn),
-        provider_performance=_safe(_get_provider_performance, conn, watchlist),
         offene_signale=_safe(_get_offene_signale_uebersicht, conn, watchlist),
-        konfidenz_kalibrierung=_safe(_get_konfidenz_kalibrierung, conn, watchlist),
         api_health=_safe(_get_api_health, conn),
         regime_status=_safe(_get_regime_status, conn),
         z3_und_bewertung=_safe(_get_z3_und_bewertung, conn, portfolio_value_eur),
         hedge_wirksamkeit=_safe(_get_hedge_wirksamkeit, conn, watchlist),
         parameter_overview=_safe(_get_parameter_overview),
-        richtungstreffer_quote=_safe(_get_richtungstreffer_quote, conn, watchlist),
-        zai_richtung_performance=_safe(_get_zai_richtung_performance, conn, watchlist),
-        veto_schatten_performance=_safe(_get_veto_schatten_performance, conn, watchlist),
-        zai_richtung_performance_schatten=_safe(_get_zai_richtung_performance_schatten, conn, watchlist),
-        gesamt_signalqualitaet=_safe(_get_gesamt_signalqualitaet, conn, watchlist),
         provider_sendezaehler=_safe(_get_provider_sendezaehler, conn, watchlist),
-        veto_schatten_performance_nach_grund=_safe(_get_veto_schatten_performance_nach_grund, conn, watchlist),
-        richtungsverteilung=_safe(_get_richtungsverteilung, conn, watchlist),
-        systemguete=_safe(_get_systemguete, conn, watchlist),
         ausstiegs_empfehlungen=_safe(_get_ausstiegs_empfehlungen, conn, watchlist),
-        selbst_gewaehltes_halten_performance=_safe(_get_selbst_gewaehltes_halten_performance, conn, watchlist),
         selbst_gewaehltes_halten_performance_nach_grund=_safe(
             _get_selbst_gewaehltes_halten_performance_nach_grund, conn, watchlist,
         ),

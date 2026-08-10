@@ -86,17 +86,32 @@ def _in_atr(wert: float | None, bezug: float | None, atr: float | None):
 
 
 def _perzentil(werte, aktuell) -> int | None:
-    """Wo liegt der aktuelle Wert in seiner eigenen Geschichte? 0 bis 100."""
+    """Wo liegt der aktuelle Wert in seiner eigenen Geschichte? 0 bis 100.
+
+    DER WERTEBEREICH MUSS PASSEN, und das wird hier geprueft. Beim ersten Bau
+    (10.08.) wurde die KURSREIHE als RSI-Historie hereingereicht - ein RSI von
+    55 gegen Kurse um 65.000 verglichen. Ergebnis: 0 fuer jedes Asset ueber
+    100, 100 fuer jedes darunter. Ein Feld, das wie ein Perzentil aussieht und
+    in Wahrheit eine Konstante je Asset ist - genau der Defekt, den wir am
+    selben Tag bei `regime` und `optionsmarkt_skew` nachgewiesen haben.
+
+    Die Pruefung ist grob und soll es sein: liegt der aktuelle Wert weit
+    ausserhalb der Spannweite der Historie, passen die Reihen nicht zusammen,
+    und ein Perzentil waere eine Scheinaussage."""
     gueltig = [w for w in werte if isinstance(w, (int, float))]
     if len(gueltig) < 30 or aktuell is None:
         return None
+    tief, hoch = min(gueltig), max(gueltig)
+    if aktuell < tief or aktuell > hoch:
+        return None          # Reihen passen nicht zusammen - lieber nichts
     return int(round(100.0 * sum(1 for w in gueltig if w <= aktuell) / len(gueltig)))
 
 
 def baue_szenario_fakten(
     *, symbol: str, assetklasse: str, kurs: float, atr: float,
     richtung: str, rsi: float | None = None,
-    ema: dict | None = None, bollinger: dict | None = None,
+    ema: dict | None = None, sma: dict | None = None,
+    bollinger: dict | None = None,
     konfluenz: dict | None = None, atr_perzentil: int | None = None,
     atr_relativ_prozent: float | None = None,
     rsi_historie: list | None = None,
@@ -124,6 +139,8 @@ def baue_szenario_fakten(
         }
     for name, wert in (ema or {}).items():
         technik.setdefault("abstand_in_atr", {})[f"ema_{name}"] = _in_atr(kurs, wert, atr)
+    for name, wert in (sma or {}).items():
+        technik.setdefault("abstand_in_atr", {})[f"sma_{name}"] = _in_atr(kurs, wert, atr)
     for name, wert in (bollinger or {}).items():
         technik.setdefault("abstand_in_atr", {})[f"bollinger_{name}"] = _in_atr(kurs, wert, atr)
     if konfluenz:
