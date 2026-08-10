@@ -42,7 +42,7 @@ def melde(text: str) -> None:
     print(f"[{time.strftime('%H:%M:%S')}] {text}", flush=True)
 
 
-def stufe_1_modellwahl(bedarf: int) -> str | None:
+def stufe_1_modellwahl(bedarf: int, festgelegt: str | None = None) -> str | None:
     """Welches Modell hat heute genug Budget fuer diesen Lauf?
 
     NEU AM 09.08., nachdem die Messung ergab, dass Google
@@ -78,8 +78,13 @@ def stufe_1_modellwahl(bedarf: int) -> str | None:
         return None
 
     client = GeminiClient(schluessel)
-    kandidaten = ("gemini-3.5-flash-lite", DEFAULT_MODEL)
-    melde(f"Stufe 1: Bedarf {bedarf} Aufrufe.")
+    # Ein festgelegtes Modell wird NICHT ungeprueft genommen - es durchlaeuft
+    # dieselben zwei Tore (Zaehler und echter Probeaufruf). Festlegen heisst
+    # "nimm dieses oder gar keins", nicht "frag nicht nach".
+    kandidaten = ((festgelegt,) if festgelegt
+                  else ("gemini-3.5-flash-lite", DEFAULT_MODEL))
+    melde(f"Stufe 1: Bedarf {bedarf} Aufrufe."
+          + (f" Modell festgelegt auf {festgelegt}." if festgelegt else ""))
     for modell in kandidaten:
         stand = client.budget_status(modell)
         rolle = "Produktionsmodell" if modell == DEFAULT_MODEL else "Ausweichmodell"
@@ -134,6 +139,13 @@ def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--anker", type=int, default=60)
     p.add_argument("--ohne-kontingentprobe", action="store_true")
+    # Stufe 1 waehlt sonst das Ausweichmodell zuerst, um das Budget der
+    # Produktion zu schonen. Steht die Produktion ohnehin still, ist das
+    # PRODUKTIONSMODELL die bessere Wahl: dann entfaellt die Annahme, dass
+    # sich ein Befund von einem Modell auf ein anderes uebertraegt.
+    # Geprueft wird das gesetzte Modell trotzdem - Budget und Probeaufruf.
+    p.add_argument("--modell", default=None,
+                   help="Gemini-Modell festnageln statt es waehlen zu lassen")
     args = p.parse_args()
 
     melde("=" * 70)
@@ -143,13 +155,14 @@ def main() -> int:
     # Bedarf = Anker x Arme, plus Vorflug (2 x 5) und ein wenig Luft fuer die
     # Wiederholung bei ungueltiger Antwort (gemessen ~1,3 Versuche je Fall).
     bedarf = int((args.anker + 2) * 5 * 1.35)
-    modell = None
+    modell = args.modell
     if not args.ohne_kontingentprobe:
-        modell = stufe_1_modellwahl(bedarf)
+        modell = stufe_1_modellwahl(bedarf, args.modell)
         if modell is None:
             return 1
     modell_argumente = ["--modell", modell] if modell else []
-    if modell and modell != "gemini-3.1-flash-lite":
+    from api.gemini import DEFAULT_MODEL as _PRODUKTIONSMODELL
+    if modell and modell != _PRODUKTIONSMODELL:
         melde(f"HINWEIS: die Messung laeuft auf {modell}, nicht auf dem "
               f"Produktionsmodell - dessen Budget bleibt der Produktion. "
               f"Preis: der Befund gilt streng genommen fuer dieses Modell; "
