@@ -187,7 +187,14 @@ def validiere(antwort: dict, symbol: str = "?",
     antwort["unabhaengige_faktoren"] = faktoren
 
     # --- Betrag: an der Obergrenze aus Rolle A kappen, nicht verwerfen -----
-    if antwort.get("tranche_eur") is not None:
+    # Bei NICHTS_TUN wird der Betrag NICHT nachgebessert - im ersten echten Lauf
+    # lieferte das Modell dort eine 0, und die Korrektur machte daraus brav
+    # "100 EUR" fuer eine Handlung, die gar nicht stattfindet. Ein Betrag ohne
+    # Handlung ist Rauschen in der Anzeige.
+    if str(antwort.get("aktion") or "").strip().upper() == "NICHTS_TUN":
+        for feld in ("tranche_eur", "einstieg_eur", "stop_eur"):
+            antwort.pop(feld, None)
+    elif antwort.get("tranche_eur") is not None:
         betrag, hinweis = kappe_auf(antwort["tranche_eur"], max_tranche_eur,
                                     TRANCHEN_EUR)
         if betrag is None:
