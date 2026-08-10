@@ -59,6 +59,12 @@ def main() -> int:
     p.add_argument("--je-symbol", type=int, default=5)
     p.add_argument("--pause", type=float, default=0.2)
     p.add_argument("--modell", default="gemini-3.1-flash-lite")
+    # VERALLGEMEINERT (10.08.): dieselbe Anlage prueft jedes Klartext-Feld.
+    # `sqn_einordnung` ("kaum handelbar") stand in ALT- UND NEU-Arm, war also
+    # nie Teil der Wirkungsmessung - es koennte seit Wochen dieselbe Daempfung
+    # erzeugen, ohne dass wir es je gemessen haetten.
+    p.add_argument("--feld", default="einordnung",
+                   help="welches Feld entfernt wird")
     p.add_argument("--db", default=VORGABE_DB)
     p.add_argument("--trocken", action="store_true")
     p.add_argument("--ausgabe", default="einordnung.json")
@@ -69,7 +75,7 @@ def main() -> int:
     if not guete_neu:
         print("Systemguete-Fakt nicht baubar - Abbruch.")
         return 1
-    guete_ohne = {k: v for k, v in guete_neu.items() if k != "einordnung"}
+    guete_ohne = {k: v for k, v in guete_neu.items() if k != args.feld}
 
     reihen = lade_reihen()
     btc = reihen["BTC"]
@@ -81,11 +87,11 @@ def main() -> int:
 
     print("\n=== EINGRIFFSKONTROLLE ===")
     pruefungen = [
-        ("MIT-Arm traegt die einordnung", "einordnung" in guete_neu,
-         str(guete_neu.get("einordnung"))),
-        ("OHNE-Arm traegt sie NICHT", "einordnung" not in guete_ohne, ""),
+        (f"MIT-Arm traegt '{args.feld}'", args.feld in guete_neu,
+         str(guete_neu.get(args.feld))),
+        (f"OHNE-Arm traegt '{args.feld}' NICHT", args.feld not in guete_ohne, ""),
         ("sonst sind beide bitgleich",
-         {k: v for k, v in guete_neu.items() if k != "einordnung"} == guete_ohne, ""),
+         {k: v for k, v in guete_neu.items() if k != args.feld} == guete_ohne, ""),
         ("genau EIN Feld Unterschied",
          len(guete_neu) - len(guete_ohne) == 1,
          f"{len(guete_neu)} gegen {len(guete_ohne)}"),
@@ -200,7 +206,7 @@ def main() -> int:
             print(f"   (Intervall nicht berechenbar: {exc})")
 
     print("\n=== URTEIL ===")
-    print(f"  Ohne die einordnung wechseln {nach_long} Anker zu LONG und "
+    print(f"  Ohne '{args.feld}' wechseln {nach_long} Anker zu LONG und "
           f"{nach_short} zu SHORT.")
     if nach_long > nach_short:
         print("  -> Das KLARTEXT-URTEIL unterdrueckt LONG. Die Zahlen allein "

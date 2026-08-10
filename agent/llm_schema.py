@@ -202,6 +202,71 @@ def als_response_format(schema: dict, name: str) -> dict:
             "json_schema": {"name": name, "strict": True, "schema": schema}}
 
 
+def baue_szenario_schema(analyst) -> dict:
+    """Das strikte Schema fuer den Szenario-Schaetzer (2026-08-10).
+
+    EIGENER BAUER, nicht `baue_signal_schema()`: die Form ist grundverschieden.
+    Der Szenario-Schaetzer waehlt keine Aktion, setzt keine Zonen und vergibt
+    keine Konfidenz - er liefert eine VERTEILUNG ueber drei fest vorgegebene
+    Ausgaenge. Ein gemeinsamer Bauer muesste beide Formen abdecken und waere
+    an jeder Aenderung die schwaechste Stelle.
+
+    ABGELEITET, nicht geschrieben - dieselbe Regel wie oben: Vokabular und
+    Pflichtfelder kommen aus den Konstanten des Analysten, die auch sein
+    Validator liest. Ein Schema, das vom Validator abweicht, erzeugt Fehler
+    statt sie zu verhindern.
+
+    Die Prozentangaben sind hier NICHT nullbar: eine Verteilung mit einem
+    fehlenden Ausgang ist keine Verteilung. Bei den Signal-Analysten sind
+    Zahlen nullbar, weil dort ein fehlender Wert eine gueltige Aussage ist
+    ("kein Kursziel"); hier waere er ein kaputter Vertrag.
+    """
+    fehlend = [n for n in ("SZENARIEN", "BELEG_RICHTUNGEN", "BELEG_GEWICHTE",
+                           "UNSICHERHEIT_WERTE", "MIN_BELEGE", "MAX_BELEGE",
+                           "REQUIRED_SZENARIO_TOP_LEVEL_FIELDS")
+               if not hasattr(analyst, n)]
+    if fehlend:
+        raise SchemaLuecke(f"Szenario-Analyst ohne Konstanten: {fehlend}")
+
+    pflicht = list(analyst.REQUIRED_SZENARIO_TOP_LEVEL_FIELDS)
+    return {
+        "type": "object",
+        "additionalProperties": False,
+        "required": pflicht,
+        "properties": {
+            "belege": {
+                "type": "array",
+                "minItems": analyst.MIN_BELEGE,
+                "maxItems": analyst.MAX_BELEGE,
+                "items": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["fakt", "richtung", "gewicht"],
+                    "properties": {
+                        "fakt": TXT,
+                        "richtung": {"type": "string",
+                                     "enum": list(analyst.BELEG_RICHTUNGEN)},
+                        "gewicht": {"type": "string",
+                                    "enum": list(analyst.BELEG_GEWICHTE)},
+                    },
+                },
+            },
+            "szenarien": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": list(analyst.SZENARIEN),
+                "properties": {k: {"type": "number", "minimum": 0, "maximum": 100}
+                               for k in analyst.SZENARIEN},
+            },
+            "bedingung_ziel": TXT,
+            "widerlegung_ziel": TXT,
+            "staerkstes_gegenargument": TXT,
+            "unsicherheit": {"type": "string",
+                             "enum": list(analyst.UNSICHERHEIT_WERTE)},
+        },
+    }
+
+
 JSON_OBJECT = {"type": "json_object"}
 
 # WELCHER ANBIETER BEKOMMT DAS STRIKTE SCHEMA - gemessen am 2026-08-09, je
@@ -255,7 +320,12 @@ def response_format_fuer(llm_client, analyst_modulname: str) -> dict:
     if analyst is None:
         return JSON_OBJECT
     try:
-        schema = baue_signal_schema(analyst)
+        # Der Szenario-Schaetzer hat eine eigene Form - erkennbar an seiner
+        # eigenen Pflichtfeld-Konstante, nicht am Modulnamen.
+        if hasattr(analyst, "REQUIRED_SZENARIO_TOP_LEVEL_FIELDS"):
+            schema = baue_szenario_schema(analyst)
+        else:
+            schema = baue_signal_schema(analyst)
     except SchemaLuecke:
         # Ein neues Pflichtfeld ohne hinterlegte Form. Lieber json_object als
         # ein Schema, das die Antwort auf ein unvollstaendiges Vokabular
