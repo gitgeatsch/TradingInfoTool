@@ -323,6 +323,89 @@ JSON_OBJECT = {"type": "json_object"}
 _STRIKT_FUER_MODULE = ("openrouter",)
 
 
+def baue_lage_schema(analyst) -> dict:
+    """Rolle A - die Marktlage (2026-08-10).
+
+    Vier Felder. Die Tranche ist ein `enum` aus DREI ZAHLEN, nicht ein
+    Zahlentyp - das Schema erzwingt damit, was der Prompt verlangt: waehlen,
+    nicht rechnen. Ein `{"type": "number"}` haette 250 durchgelassen und die
+    Ablehnung dem Validator ueberlassen.
+
+    Ebenso `traegt`: drei feste Werte, KEINE Auffangkategorie. Eine
+    Mehrdeutigkeitsoption waere strukturell eine "Unknown"-Wahl, und die loest
+    Abstention aus - im eigenen System von 93 % auf 3 % gemessen."""
+    fehlend = [n for n in ("TRAGFAEHIGKEIT", "TRANCHEN_EUR", "REQUIRED_FELDER")
+               if not hasattr(analyst, n)]
+    if fehlend:
+        raise SchemaLuecke(f"Rolle A ohne Konstanten: {fehlend}")
+    return {
+        "type": "object",
+        "additionalProperties": False,
+        "required": list(analyst.REQUIRED_FELDER),
+        "properties": {
+            "lage": TXT,
+            "traegt": {"type": "string", "enum": list(analyst.TRAGFAEHIGKEIT)},
+            "max_tranche_eur": {"type": "number",
+                                "enum": list(analyst.TRANCHEN_EUR)},
+            "belege": {"type": "array", "minItems": 2, "maxItems": 4,
+                       "items": TXT},
+        },
+    }
+
+
+def baue_trader_schema(analyst) -> dict:
+    """Rolle BC - Aufbau beurteilen und handeln (2026-08-10).
+
+    ZWEI FELDERGRUPPEN mit unterschiedlichem Pflichtstatus, und das ist der
+    Grund, warum hier nicht alles in `required` steht: `tranche_eur`,
+    `einstieg_eur` und `stop_eur` sind nur bei einer Handlung noetig - bei
+    NICHTS_TUN waeren sie sinnlos. Diese Bedingung ("Pflicht, WENN aktion nicht
+    NICHTS_TUN ist") laesst sich in einem Schema nicht ausdruecken; sie steht
+    im Validator.
+
+    Dasselbe gilt fuer alles Uebrige, was der Validator prueft und das Schema
+    nicht kann: Stop unter Einstieg, unabhaengige Faktoren nicht mehr als
+    Belege, Tranche nicht ueber der Obergrenze aus Rolle A, und eine
+    Begruendung, die sich nicht selbst zurueckzieht. Das Schema fasst die FORM,
+    der Validator den SINN."""
+    fehlend = [n for n in ("BELEG_RICHTUNGEN", "BELEG_GEWICHTE",
+                           "REQUIRED_FELDER")
+               if not hasattr(analyst, n)]
+    if fehlend:
+        raise SchemaLuecke(f"Rolle BC ohne Konstanten: {fehlend}")
+    from agent.empfehlung_vertrag import AKTIONEN, TRANCHEN_EUR
+    return {
+        "type": "object",
+        "additionalProperties": False,
+        "required": list(analyst.REQUIRED_FELDER),
+        "properties": {
+            "belege": {
+                "type": "array", "minItems": 2, "maxItems": 8,
+                "items": {
+                    "type": "object", "additionalProperties": False,
+                    "required": ["fakt", "richtung", "gewicht"],
+                    "properties": {
+                        "fakt": TXT,
+                        "richtung": {"type": "string",
+                                     "enum": list(analyst.BELEG_RICHTUNGEN)},
+                        "gewicht": {"type": "string",
+                                    "enum": list(analyst.BELEG_GEWICHTE)},
+                    },
+                },
+            },
+            "unabhaengige_faktoren": {"type": "number"},
+            "aktion": {"type": "string", "enum": sorted(AKTIONEN)},
+            "tranche_eur": {"type": ["number", "null"],
+                            "enum": list(TRANCHEN_EUR) + [None]},
+            "einstieg_eur": NUM,
+            "stop_eur": NUM,
+            "begruendung": TXT,
+            "was_dagegen": TXT,
+            "umgeworfen_durch": TXT,
+        },
+    }
+
+
 def response_format_fuer(llm_client, analyst_modulname: str) -> dict:
     """Das `response_format` fuer DIESEN Client und DIESEN Analysten.
 
@@ -350,7 +433,15 @@ def response_format_fuer(llm_client, analyst_modulname: str) -> dict:
     try:
         # Der Szenario-Schaetzer hat eine eigene Form - erkennbar an seiner
         # eigenen Pflichtfeld-Konstante, nicht am Modulnamen.
-        if hasattr(analyst, "REQUIRED_SZENARIO_TOP_LEVEL_FIELDS"):
+        # Rolle A und BC werden an EINDEUTIGEN Konstanten erkannt, nicht am
+        # Modulnamen - `TRAGFAEHIGKEIT` gibt es nur bei der Marktlage,
+        # `unabhaengige_faktoren` nur beim Trader. Der Szenario-Schaetzer fuehrt
+        # ebenfalls ein `BELEG_RICHTUNGEN`, deshalb reicht das allein nicht.
+        if hasattr(analyst, "TRAGFAEHIGKEIT"):
+            schema = baue_lage_schema(analyst)
+        elif "unabhaengige_faktoren" in getattr(analyst, "REQUIRED_FELDER", ()):
+            schema = baue_trader_schema(analyst)
+        elif hasattr(analyst, "REQUIRED_SZENARIO_TOP_LEVEL_FIELDS"):
             schema = baue_szenario_schema(analyst)
         elif hasattr(analyst, "REQUIRED_GEGENPRUEFUNG_FELDER"):
             schema = baue_gegenpruefungs_schema(analyst)
