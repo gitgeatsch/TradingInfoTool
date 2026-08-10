@@ -1291,6 +1291,45 @@ Messgrößen, die inzwischen widerlegt sind.
 
 ---
 
+## 2.17 Vorhersagbarkeit prüfen, BEVOR aufbereitet wird (Nachtrag 2026-08-10)
+
+**Die Reihenfolge, die am 10.08. gefehlt hat.** Ein Merkmal wird erst dann in
+den Faktensatz aufgenommen, wenn geprüft ist, dass es Vorhersagekraft hat —
+nicht, weil die Praxisliteratur es nennt. Beides ist nötig: die Literatur sagt,
+*worauf* zu schauen ist; nur eine Messung sagt, ob es *bei unseren Daten* trägt.
+
+**Das Verfahren, ohne Kontingentbedarf:**
+
+| Skript | Frage |
+|---|---|
+| `pruefe_analogie.py` | trägt die Analogie auf den Messlauf-Ankern? |
+| `pruefe_analogie_gross.py` | dasselbe auf Tausenden Fällen, vektorisiert, Bootstrap |
+| `pruefe_trader_merkmale.py` | Trader-Merkmale gegen alte, Regression, walk-forward |
+
+**Drei Zusicherungen, die jedes solche Skript braucht** — alle drei sind am
+10.08. zuerst verletzt gewesen:
+
+1. **Keine stille Teilmenge.** `pruefe_analogie.py` wertete 32 von 80 Ankern
+   aus, weil die Merkmalstabelle grundlos bei Index 250 begann. Die Auswahl war
+   nicht zufällig, sondern systematisch die späten Anker — erkennbar daran,
+   dass die Basisrate auf 0,6478 statt 0,6272 lag. **Fehlende Fälle immer
+   zählen und ausgeben.**
+2. **Kausalität am Auflösungsdatum, nicht am Beginndatum.** Ein Vergleichsfall
+   von vor fünf Tagen löst sich erst in fünfzehn Tagen auf; ihn mitzuzählen
+   heißt, die Zukunft zu befragen. Jede Tabelle führt deshalb ein Feld
+   `bekannt_ab`.
+3. **Das Urteil muss in beide Richtungen prüfen.** Die erste Fassung testete
+   nur `Obergrenze < 0` und hätte ein gesichert *schlechteres* Ergebnis als
+   „kein Befund" ausgegeben. Drei Fälle, nicht zwei: besser, schlechter,
+   unentschieden.
+
+**Und die Gegenprobe, die am meisten sagt:** ein Nachbarschaftsverfahren über
+mehrere k laufen lassen. Nähert sich das Ergebnis mit wachsendem k der
+Basisrate *von unten* an, trägt die Ähnlichkeit nichts — das Verfahren wird
+genau in dem Maß besser, in dem es aufhört, Nachbarschaft zu benutzen.
+
+Befund und Zahlen: `Arbeitsstand_Deadloop_09_08.md` Abschnitt 6.
+
 ## 2.16 Anbieter-Stabilität — was gemessen ist und was NICHT gemessen wird (Nachtrag 2026-08-09)
 
 **Werkzeug:** `pruefe_llm_stabilitaet.py`. Auslöser: **vor jedem Messlauf über

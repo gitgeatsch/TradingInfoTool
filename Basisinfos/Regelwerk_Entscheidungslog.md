@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (201 Einträge)
+## Index nach Thema (202 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -15884,3 +15884,61 @@ confidence_pct hoch ist"*.
 `teste_schrumpfung.py` (19), `teste_trefferquote_bezug.py` (21),
 `teste_gemini_429.py` (16), `teste_auswertbarkeit.py` (12) — jede Zusicherung
 mit Gegenkontrolle. Details in `Basisinfos/Arbeitsstand_Deadloop_09_08.md`.
+
+---
+
+## Nachtrag 202 — 2026-08-10: Die Information ist nicht in den Kursdaten
+
+**Thema:** Grundbefund · Vorhersagbarkeit · Zonengeometrie · externe Methodenlage
+
+**Anlass.** Der Umbau der LLM-Ebene sollte den Faktensatz von vier Zahlen auf
+eine sprachliche Lagebeschreibung umstellen — begründet durch Recherche
+(sprachliche Zerlegung schlägt rohe Werte; Trader lesen Struktur, nicht
+nachlaufende Indikatoren). Vor dem Bau wurde geprüft, ob die geplanten Merkmale
+überhaupt Vorhersagekraft haben.
+
+**Gemessen** (8.441 Fälle, 20 Symbole, walk-forward, Cluster-Bootstrap, ohne
+Sprachmodell): Nächste Nachbarn und multinomiale Regression mit Quadrattermen,
+je auf den bisherigen Merkmalen und auf Price-Action-Merkmalen (Marktstruktur,
+Abstand zu Widerstand/Unterstützung, Position im Schwung, Reife).
+
+**Ergebnis: kein Verfahren schlägt die Basisrate.** Trader-Merkmale bei LONG
++0,0009 — das Modell reproduziert die Basisrate und sonst nichts. Die Analogie
+über ähnliche Vergangenheitsfälle ist gesichert *schlechter* (+0,1211,
+95 % [+0,094 .. +0,152]) und nähert sich der Basisrate mit wachsendem k von
+unten an.
+
+**Schwerer wiegt die Zonengeometrie.** LONG erreicht das Ziel in 22,5 % der
+Fälle; bei 3 ATR gegen 1,5 ATR ergibt das −0,115 R je Trade. Breakeven läge bei
+33 %. Der Aufbau verliert strukturell, bevor ein Modell etwas dazu sagt.
+
+**Externe Lage** bestätigt beides: Park/Irwin fanden über 9.000 technische
+Regeln nach Kosten und Data-Snooping-Korrektur nicht profitabel; die
+Krypto-Evidenz zu Momentum (2–4 Wochen) und Umkehr ist durchweg
+**querschnittlich** — Coins gegeneinander, nicht Einzeltitel gegen eine absolute
+Schwelle. Für unsere Barrierefrage gibt es kaum Evidenz. ATR-Ausstiege wirken
+bedingt, und variable Fenster schlagen feste.
+
+**Folge:** Umbau angehalten. Die geplante Lagebeschreibung würde Merkmale in
+Sprache übersetzen, von denen erwiesen ist, dass sie nichts tragen. Details,
+Zahlen und die drei offenen Richtungen (Zonengeometrie / Ausstieg statt
+Einstieg / Ranking statt Einzelfall) in `Arbeitsstand_Deadloop_09_08.md`
+Abschnitt 6.
+
+**Verworfen und warum:**
+- *Analogie trotzdem als beschreibendes Beiwerk mitgeben*: ein Feld ohne
+  Informationsgehalt ist genau der Bautyp, den der Konstanten-Wächter am selben
+  Tag viermal gefunden hat. Es kostet Platz und sieht nach Information aus.
+- *sklearn installieren* für ein stärkeres Verfahren: neue Abhängigkeit ohne
+  Rückfrage. Die Regression mit Quadrattermen auf vorhandenem scipy beantwortet
+  dieselbe Frage.
+- *Weitere Sprachmodell-Messungen*: die Frage liegt vor dem Modell, nicht in ihm.
+
+**Neue Werkzeuge:** `pruefe_analogie.py`, `pruefe_analogie_gross.py`,
+`pruefe_trader_merkmale.py` — alle ohne Kontingentbedarf.
+
+**Drei eigene Konstruktionsfehler, alle vor dem Ergebnis gefunden:**
+Merkmalstabelle begann grundlos bei Index 250 (48 von 80 Ankern fielen heraus,
+systematisch die frühen); Nachbarn nach Beginn- statt Auflösungsdatum gefiltert
+(Leckage); Urteilszeile prüfte nur eine Richtung und hätte ein gesichert
+schlechteres Ergebnis als „kein Befund" ausgegeben.

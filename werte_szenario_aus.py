@@ -234,6 +234,41 @@ def main() -> int:
     print("  liegt als diese Zeile - sonst waehlt es die Faelle nicht aus,")
     print("  sondern verkleinert sie nur.")
 
+    # --- Die Deadloop-Frage -------------------------------------------------
+    # Seit Wochen liefert das System keine handelbaren LONG-Signale. Bisher war
+    # das nicht sauber zu trennen: das Modell WAEHLTE die Richtung, also war
+    # jede Schieflage zugleich Ursache und Wirkung. Hier ist die Richtung
+    # VORGEGEBEN und beide Seiten stehen auf denselben Ankern mit derselben
+    # Zonengeometrie - ein LONG- und ein SHORT-Aufbau je Anker, gleich schwer
+    # gebaut. Damit ist der Vergleich zum ersten Mal fair.
+    richtungen = [f["richtung"] for f in d["faelle"]]
+    if len(set(richtungen)) > 1:
+        print("\n" + "=" * 82)
+        print("NACH RICHTUNG - dieselben Anker, dieselbe Zonengeometrie")
+        print(f"{'Verfahren':22} {'LONG Brier':>11} {'p(ziel) LONG':>13} "
+              f"{'SHORT Brier':>12} {'p(ziel) SHORT':>14}")
+        print("-" * 82)
+        for name, eintraege in d["ergebnisse"].items():
+            zeile = [name]
+            for r in ("LONG", "SHORT"):
+                w = [e["brier"] for e, x in zip(eintraege, richtungen)
+                     if x == r and e.get("brier") is not None]
+                p = [float(e["verteilung"]["ziel_zuerst_pct"])
+                     for e, x in zip(eintraege, richtungen)
+                     if x == r and e.get("verteilung")]
+                zeile.append(f"{statistics.fmean(w):.4f}" if w else "-")
+                zeile.append(f"{statistics.fmean(p):.1f} %" if p else "-")
+            print(f"{zeile[0]:22} {zeile[1]:>11} {zeile[2]:>13} "
+                  f"{zeile[3]:>12} {zeile[4]:>14}")
+        for r in ("LONG", "SHORT"):
+            tat = [w for w, x in zip(wahrheiten, richtungen) if x == r]
+            traf = sum(1 for w in tat if w == "ziel")
+            print(f"  TATSAECHLICH {r:5}: Ziel zuerst in {traf} von {len(tat)} "
+                  f"Faellen ({100.0 * traf / len(tat):.1f} %)")
+        print("  Sagt ein Verfahren fuer LONG deutlich weniger p(ziel) als")
+        print("  die tatsaechliche Quote hergibt, unterdrueckt es LONG - und")
+        print("  zwar unabhaengig vom Gate, das hier gar nicht mitspielt.")
+
     print("\n=== LESART ===")
     print("  Aufloesung nahe 0  -> der Schaetzer sagt fast immer dasselbe. Ihm")
     print("                        fehlt INFORMATION ueber den Einzelfall;")

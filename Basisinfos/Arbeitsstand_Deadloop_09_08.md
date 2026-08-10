@@ -822,3 +822,127 @@ Richtung: wir haben ein Werturteil in den Faktensatz geschmuggelt.
 **Betroffen sind alle Felder desselben Bautyps:** `einordnung` (Trefferquote und
 Systemgüte), `sqn_einordnung` („kaum handelbar"), `hebel_korrektur_hinweis`,
 `eigenkapital_deckel_hinweis`, `ausfuehrbarkeit_hinweis`.
+
+---
+
+## 6. Der Grundbefund vom 10.08. — die Information ist nicht da
+
+Bis hierher hat dieses Dokument nach einem Fehler im System gesucht: falsche
+Fakten, falsche Rollen, falsche Aufbereitung. Der 10.08. verschiebt die Frage
+eine Ebene tiefer.
+
+### 6.1 Was gemessen wurde
+
+Zwei voneinander unabhängige Verfahren auf denselben Daten, beide ohne
+Sprachmodell und ohne Kontingent:
+
+| Verfahren | was es findet |
+|---|---|
+| Nächste Nachbarn (k = 10 … 200) | lokale Ähnlichkeit: „ging es bei ähnlicher Lage ähnlich aus?" |
+| Multinomiale Regression mit Quadrattermen | Schwellen und Zusammenspiel mehrerer Merkmale |
+
+Zwei Merkmalsfamilien: die bisherigen (RSI, Abstand zum 200-Tage-Schnitt,
+Schwankungsbreite, Renditen 20/60) und die aus der Price-Action-Praxis
+(Marktstruktur höhere/tiefere Hochs und Tiefs, Abstand zu Widerstand und
+Unterstützung in ATR, Position im letzten Schwung, Reife der Bewegung).
+
+Beides zeitlich vorwärts geprüft, Bootstrap über Symbole, 8.441 Fälle.
+
+### 6.2 Das Ergebnis
+
+```
+LONG                    Brier    Basis    Differenz               Urteil
+  alte Merkmale         0,6351   0,6178   +0,0173 [+0,000..+0,035]  schlechter
+  Trader-Merkmale       0,6188   0,6178   +0,0009 [-0,007..+0,009]  kein Befund
+  beide                 0,6468   0,6178   +0,0290 [+0,011..+0,046]  schlechter
+
+SHORT
+  alte Merkmale         0,6217   0,6167   +0,0049 [-0,013..+0,023]  kein Befund
+  Trader-Merkmale       0,6308   0,6167   +0,0140 [+0,006..+0,022]  schlechter
+  beide                 0,6355   0,6167   +0,0188 [-0,001..+0,039]  kein Befund
+```
+
+**Kein einziges Verfahren schlägt die Basisrate.** Die Trader-Merkmale landen bei
+LONG auf +0,0009 — das Modell reproduziert die Basisrate und sonst nichts.
+
+Die Analogie über vergangene ähnliche Fälle, die als stärkster neuer Baustein
+geplant war, ist **gesichert schlechter** als die Basisrate (k = 10: +0,1211,
+95 % [+0,094 .. +0,152]) und nähert sich ihr mit wachsendem k von unten an — sie
+wird also genau in dem Maß besser, in dem sie aufhört, Nachbarschaft zu benutzen.
+
+### 6.3 Der Befund, der schwerer wiegt als die Vorhersagbarkeit
+
+LONG erreicht das Ziel in **22,5 %** der Fälle. Bei Ziel 3 ATR gegen Stop 1,5 ATR:
+
+```
+0,225 × (+2R) + 0,565 × (−1R) + 0,21 × 0R = −0,115 R je Trade
+```
+
+**Der Aufbau verliert strukturell, bevor ein Modell etwas dazu sagt.** Breakeven
+läge bei 33 % Trefferquote. Ein Verfahren müsste also nicht „besser als Zufall"
+sein, sondern gezielt die Fälle über 33 % herausfischen. Genau das gelingt
+keinem der geprüften.
+
+### 6.4 Was die externe Literatur dazu sagt (recherchiert 10.08.)
+
+1. **Technische Handelsregeln allgemein:** Park/Irwin prüften über 9.000 Regeln
+   aus 12 Systemen — nach Kosten und Data-Snooping-Korrektur nicht profitabel
+   (1985–2004). In US-Terminmärkten gab es substanzielle Gewinne 1978–1984, ab
+   1985 nicht mehr. **Unser Messergebnis ist der Normalfall, kein Systemdefekt.**
+2. **Krypto konkret:** Momentum wirkt auf 2–4 Wochen, Umkehr jenseits eines
+   Monats. Der letzte Tagesertrag ist ein starkes Signal — bei illiquiden Coins
+   als Umkehr, bei den größten als Momentum; die Liquidität dreht das Vorzeichen.
+   Unser 20-Tage-Horizont liegt im Momentum-Fenster.
+3. **Aber diese Evidenz ist durchweg QUERSCHNITTLICH.** Sie sagt: „Coins mit
+   Eigenschaft X schlagen Coins mit Eigenschaft Y" — ein Rangvergleich zur
+   selben Zeit. Wir fragen etwas anderes: „Erreicht dieser eine Coin sein
+   absolutes Ziel vor dem Stop?" Für diese Einzeltitel-Barrierefrage gibt es
+   kaum Evidenz.
+4. **ATR-Ausstiege wirken bedingt.** Schnellere Take-Profit-Signale sind nicht
+   besser als eine einfache Basisstrategie; am besten schneiden **gleitende und
+   variable** ATR-Fenster ab. Wir haben feste 1,5 und 3,0.
+
+### 6.5 Was daraus folgt
+
+Wir haben eine Fragestellung gewählt, für die kaum Evidenz existiert
+(Einzeltitel-Barriere), mit einer Geometrie, die dem Stand widerspricht (fest
+statt variabel), und dann gemessen, dass sie nicht funktioniert. Alle drei
+Punkte standen vorher in der Literatur.
+
+Damit sind die bisherigen Einzelbefunde erklärt, ohne dass es weiterer bedarf:
+dass das Sprachmodell die Basisrate nicht schlägt, dass die stumpfe Regel
+gleichauf liegt, dass die Konfidenz nicht ordnet, dass die Kalibrierung nur die
+halbe Strecke bringt. **Es war nie ein Modellproblem.**
+
+Es deckt sich mit dem Befund vom 04.08.: 50 % der Signale standen einmal bei
++1R, angekommen sind 17,6 %. Der Einstieg war schon damals nicht das Problem.
+
+### 6.6 Die offene Entscheidung
+
+Drei Richtungen, keine davon technisch, alle drei eine Produktentscheidung:
+
+1. **Zonengeometrie statt Vorhersage.** Anderer Horizont, anderes Verhältnis,
+   variable statt feste ATR-Fenster — die Literatur weist hier eher Wirkung aus
+   als bei besseren Merkmalen.
+2. **Ausstieg statt Einstieg.** 50 % gegen 17,6 % sagen, dass der Wert im Halten
+   und Herausgehen liegt, nicht im Auswählen.
+3. **Ranking statt Einzelfall.** Coins gegeneinander ranken, mit Liquidität als
+   unterscheidendem Merkmal — der Zuschnitt, für den die Krypto-Evidenz gilt.
+
+**Nicht weitergebaut wird bis zur Entscheidung.** Die geplante Lagebeschreibung
+würde Merkmale in Sprache übersetzen, von denen wir jetzt wissen, dass sie
+nichts tragen — schöner verpackte Leere.
+
+### 6.7 Werkzeuge (ohne Kontingentbedarf, wiederholbar)
+
+| Skript | Frage |
+|---|---|
+| `pruefe_analogie.py` | Analogie gegen die Basisrate auf den Messlauf-Ankern |
+| `pruefe_analogie_gross.py` | dasselbe auf Tausenden Fällen, vektorisiert, mit Bootstrap |
+| `pruefe_trader_merkmale.py` | Trader-Merkmale gegen alte, Regression, walk-forward |
+
+**Drei Konstruktionsfehler auf dem Weg, alle vor dem Ergebnis gefunden:**
+Merkmalstabelle begann grundlos bei Index 250 statt 200 (48 von 80 Ankern
+fielen heraus, systematisch die frühen); Nachbarn nach Beginndatum statt nach
+Auflösungsdatum gefiltert (Leckage); Urteilszeile prüfte nur eine Richtung und
+hätte ein gesichert schlechteres Ergebnis als „kein Befund" ausgegeben.
