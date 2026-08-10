@@ -208,9 +208,11 @@ _INDEX_HTML = """<!doctype html>
   <div class="row"><strong>Z.ai-Richtungs-Erfolgsquote (unabhaengig von Mistral)</strong></div>
   <div class="row"><span class="muted-text">Misst NICHT, ob Z.ai mit Mistral uebereinstimmte (das zeigt das
   Detail-Panel je Signal) - sondern ob Z.ais UNABHAENGIGE Richtungs-Ableitung (Call 2, ohne Mistrals Empfehlung
-  als Vorgabe) im Nachhinein mit der tatsaechlichen Kursbewegung uebereinstimmte. Relevant, weil Mistral bei
-  Hebel durch die Einstellung "Nur Long" strukturell nie SHORT empfehlen darf - diese Quote zeigt, wie gut Z.ai
-  unabhaengig davon liegen wuerde. Gleiche Basis wie die Richtungstreffer-Quote (Maximum Favorable Excursion,
+  als Vorgabe) im Nachhinein mit der tatsaechlichen Kursbewegung uebereinstimmte. Relevant, weil SHORT-Signale
+  auf Bitpanda nicht ausfuehrbar sind und deshalb nicht gemailt werden - diese Quote zeigt, wie gut Z.ai
+  unabhaengig davon liegen wuerde. (BIS 05.08. stand hier, Hebel duerfe "strukturell nie SHORT empfehlen" -
+  das galt vor dem Nur-Long-Umbau und widersprach seither den beiden Erlaeuterungen weiter unten: beide
+  Richtungen laufen durch, SHORT wird nur nicht versendet.) Gleiche Basis wie die Richtungstreffer-Quote (Maximum Favorable Excursion,
   nicht nur die exakte TP/SL-Zone) - zaehlt auch Signale mit, die spaeter ueberholt/abgelaufen sind aber
   zwischenzeitlich klar in eine Richtung liefen. NEUTRAL-Urteile und Faelle ohne klare Marktbewegung zaehlen
   nicht mit (analog zu HALTEN). Bezieht sich hier NUR auf real ausgefuehrte Empfehlungen - der Veto-Schatten-
@@ -634,7 +636,23 @@ function renderZaiRichtungPerformance(data) {
 }
 
 const API_HEALTH_GROUPS = {
-  "api-health-llm": ["mistral", "gemini", "zai"],
+  // MIT ROLLE, UND IN DER REIHENFOLGE DER KETTE (2026-08-10).
+  //
+  // Hier stand ["mistral", "gemini", "zai"] - OpenRouter fehlte vollstaendig,
+  // obwohl er seit dem 08.08. ZWEITE Stufe der Signal-Kette ist und am 10.08.
+  // saemtliche 21 Signale erzeugt hat, weil Geminis Tagesbudget leer war. Der
+  // einzige Anbieter, der gerade arbeitet, war auf der Statusseite unsichtbar.
+  //
+  // Die Rolle steht dabei, weil der blosse Name die falsche Frage beantwortet:
+  // "mistral: Fehler" sieht dramatisch aus, ist aber die dritte Stufe, die seit
+  // dem 402 ohnehin gesperrt ist - waehrend ein Ausfall der ersten Stufe die
+  // Produktion trifft. Ohne Rolle sind beide Zeilen gleich laut.
+  "api-health-llm": [
+    {key: "gemini", rolle: "Kette 1"},
+    {key: "openrouter", rolle: "Kette 2"},
+    {key: "mistral", rolle: "Kette 3"},
+    {key: "zai", rolle: "Gegenprüfung"},
+  ],
   "api-health-markt": ["coingecko", "kraken", "bitpanda", "yfinance"],
   "api-health-makro": [
     "fear_greed", "fred", "ecb", "china_pboc_lpr", "china_m2", "japan_boj",
@@ -653,7 +671,11 @@ function fmtRelativeTime(iso) {
 }
 
 function renderApiHealthGroup(sourceKeys, apiHealth) {
-  return sourceKeys.map(function(key) {
+  return sourceKeys.map(function(eintrag) {
+    // Zwei Formen zugelassen: schlichter Name (Markt-/Makro-Gruppen) oder
+    // {key, rolle} (LLM-Gruppe, seit 2026-08-10).
+    const key = (typeof eintrag === "string") ? eintrag : eintrag.key;
+    const rolle = (typeof eintrag === "string") ? null : eintrag.rolle;
     const entry = apiHealth[key];
     let statusClass = "";
     let statusText = "unbekannt";
@@ -675,7 +697,10 @@ function renderApiHealthGroup(sourceKeys, apiHealth) {
           fmtRelativeTime(entry.last_error_at) + ")";
       }
     }
-    return '<div class="row"><span>' + key + '</span><span class="' + statusClass + '">' +
+    const beschriftung = rolle
+      ? key + ' <span class="muted-text">(' + rolle + ')</span>'
+      : key;
+    return '<div class="row"><span>' + beschriftung + '</span><span class="' + statusClass + '">' +
       statusText + '</span></div>';
   }).join("");
 }
