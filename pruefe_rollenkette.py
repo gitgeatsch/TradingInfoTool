@@ -179,17 +179,15 @@ def lauf(symbol: str, datum: str | None, reihen: dict, anbieter: str | None,
     except Exception as e:
         print(f"\n[ROLLE A GESCHEITERT] {type(e).__name__}: {e}")
         return
-    zeige("AUSGABE ROLLE A", [f"lage: {a['lage']}", f"traegt: {a['traegt']}",
-                              f"max_tranche_eur: {a['max_tranche_eur']}"]
+    zeige("AUSGABE ROLLE A", [f"lage: {a['lage']}", f"traegt: {a['traegt']}"]
           + [f"beleg: {b}" for b in a["belege"]]
           + ([f"KORREKTUR: {a['_korrekturen']}"] if a.get("_korrekturen") else []))
 
-    bc_ein["marktlage_beurteilung"] = {"traegt": a["traegt"], "lage": a["lage"],
-                                       "hoechstbetrag_eur": a["max_tranche_eur"]}
+    bc_ein["marktlage_beurteilung"] = {"traegt": a["traegt"], "lage": a["lage"]}
     try:
         bc_roh = frage(client, modell, RT.SYSTEM_PROMPT_TRADER, bc_ein,
                        "agent.rolle_trader")
-        bc = RT.validiere(bc_roh, symbol, a["max_tranche_eur"])
+        bc = RT.validiere(bc_roh, symbol)
     except (EmpfehlungUngueltig, RT.TraderAntwortUngueltig) as e:
         print(f"\n[ABGELEHNT] {e}")
         return

@@ -82,6 +82,33 @@ class EmpfehlungUngueltig(ValueError):
     """Die Antwort ist keine Empfehlung - mit Angabe, woran es fehlt."""
 
 
+# Die Ableitung Faktoren -> Tranche. EINE SETZUNG, keine Messung - und als
+# solche gekennzeichnet, damit sie spaeter pruefbar bleibt.
+#
+# Warum sie hier steht und nicht im Modell: extern belegt sind LLMs bei der
+# Positionsgroesse am schwaechsten, und das Designmuster der Praxis entkoppelt
+# ausdruecklich "Richtungslogik" von "quantitativer Positionsgroessenbestimmung".
+# Das Modell liefert, was es kann - die Zahl der UNABHAENGIGEN Belege, also ob
+# drei Belege drei Dinge sagen oder dreimal dasselbe. Das Rechnen machen wir.
+#
+# Die Schwelle bei drei stammt aus der Praxisliteratur: drei bis vier
+# unabhaengige Faktoren sind der Bereich fuer einen tragfaehigen Aufbau, eins
+# bis zwei sind duenn.
+TRANCHE_JE_FAKTOREN = ((3, 500), (2, 300), (1, 100))
+
+
+def tranche_aus_faktoren(faktoren: int) -> int | None:
+    """Der Betrag folgt aus der Zahl unabhaengiger Belege - nicht aus dem Modell."""
+    try:
+        n = int(faktoren)
+    except (TypeError, ValueError):
+        return None
+    for schwelle, betrag in TRANCHE_JE_FAKTOREN:
+        if n >= schwelle:
+            return betrag
+    return None
+
+
 def _zahl(wert) -> float | None:
     try:
         return float(str(wert).replace(",", ".").strip())

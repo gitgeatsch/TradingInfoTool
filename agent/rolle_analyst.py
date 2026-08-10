@@ -9,15 +9,26 @@ Marktbeurteilung zur Nachbegruendung einer schon gefallenen Entscheidung wird.
 SIE LAEUFT EINMAL JE DURCHGANG, nicht je Asset. Bei 40 Coins ist das 1 Aufruf
 statt 40.
 
+SIE NENNT KEINEN BETRAG (Umbau 10.08. abends, nach Nutzereinwand). Die erste
+Fassung liess sie einen Hoechstbetrag waehlen - 100, 300 oder 500 EUR. Das war
+eine erfundene Aufgabe: der Nutzer setzt seine Betraege selbst, und das
+Risikomanagement ist deterministisch implementiert (RM-1 bis RM-7,
+Cash-Reserve, vier Positionsgroessen-Deckel). Ein Modell einen Betrag waehlen
+zu lassen, den ohnehin ein Gate begrenzt, fuegt nichts hinzu ausser einer
+Fehlerquelle.
+
+Extern belegt: *"Statt LLMs die Positionsgroesse eigenstaendig bestimmen zu
+lassen, sind sie am wirksamsten in hybriden Systemen, die LLM-Schlussfolgerung
+mit traditionellen quantitativen Risikoregeln verbinden."* Und das
+Designmuster dazu: eine zweistufige Struktur, die **Richtungslogik von der
+quantitativen Positionsgroessenbestimmung entkoppelt.**
+
 DREI ENTWURFSENTSCHEIDUNGEN GEGEN BEKANNTE BIAS-EFFEKTE:
 
-1. **KEINE "unklar"- oder "neutral"-Option.** Die einzige harte Ausgabe ist eine
-   Tranche - 100, 300 oder 500 EUR. Jede der drei ist eine HANDLUNGSGROESSE,
-   keine davon eine Enthaltung. Das ist Absicht: eine Mehrdeutigkeitskategorie
+1. **KEINE "unklar"-Option.** Die drei Kategorien von `traegt` sind
+   Beschreibungen, keine davon eine Enthaltung. Eine Mehrdeutigkeitskategorie
    waere strukturell eine "Unknown"-Option, und die loest laut Literatur
-   Abstention aus. Im eigenen System hat genau dieser Mechanismus die
-   EROEFFNEN-Quote von 93 % auf 3 % gedrueckt. Ob ueberhaupt gehandelt wird,
-   entscheidet Rolle BC - nicht diese hier.
+   Abstention aus - im eigenen System von 93 % auf 3 % gemessen.
 
 2. **KEINE KONFIDENZ.** Nirgends wird nach einer Sicherheit in Prozent gefragt.
    Verbalisierte Konfidenz ist extern belegt schlecht kalibriert, und im eigenen
@@ -28,16 +39,14 @@ DREI ENTWURFSENTSCHEIDUNGEN GEGEN BEKANNTE BIAS-EFFEKTE:
    uebermaessige Risikoaversion. Die Fakten tragen die Vorsicht, wo sie noetig
    ist; der Prompt tut es nicht.
 
-WARUM DIE TRANCHE UND NICHT EINE PROZENTZAHL: der Nutzer setzt seine
-Investitionssumme selbst - 100/300/500 EUR, seit 02.08. festgehalten. Das Modell
-WAEHLT aus dreien, es rechnet keine Positionsgroesse. Rechnen ist die Aufgabe,
-bei der Sprachmodelle nachweislich schwach sind.
+WAS SIE STATTDESSEN LIEFERT: eine Beschreibung. Sie muss die Zukunft nicht
+vorhersagen, um nuetzlich zu sein - dass nur 4 von 20 Coins ueber ihrer
+200-Tage-Linie stehen, ist ein Fakt, den der Trader gegen seine anderen Belege
+abwaegt. Genau das ist die Sprachaufgabe.
 """
 from __future__ import annotations
 
-TRANCHEN_EUR = (100, 300, 500)
-
-REQUIRED_FELDER = ("lage", "traegt", "max_tranche_eur", "belege")
+REQUIRED_FELDER = ("lage", "traegt", "belege")
 
 # Beschreibend, nicht wertend - und ohne Mittelweg-Kategorie. "gemischt" heisst
 # hier nicht "unklar", sondern benennt eine konkrete Konstellation: ein Teil des
@@ -68,7 +77,6 @@ tragen. Jede mit dem Wert, auf den sie sich stuetzt. Erfinde nichts hinzu.
 Antworte AUSSCHLIESSLICH mit JSON:
 {"lage": "<zwei bis drei Saetze>",
  "traegt": "breit_getragen|schmal_getragen|gemischt",
- "max_tranche_eur": 100|300|500,
  "belege": ["<Beobachtung mit Wert>", ...]}"""
 
 
@@ -95,8 +103,8 @@ def validiere(antwort: dict) -> dict:
     `traegt` faellt bei Unzuordenbarkeit auf "gemischt" zurueck. Das ist KEINE
     Unknown-Option durch die Hintertuer: das Modell sieht drei echte Kategorien,
     der Rueckfall passiert im Code und steht im Protokoll."""
-    from agent.antwort_normalisierung import (Protokoll, naechste_tranche,
-                                              naechstes_wort, kuerze_liste)
+    from agent.antwort_normalisierung import (Protokoll, naechstes_wort,
+                                              kuerze_liste)
 
     if not isinstance(antwort, dict):
         raise AnalystAntwortUngueltig("Antwort ist kein Objekt")
@@ -104,15 +112,11 @@ def validiere(antwort: dict) -> dict:
     prot = Protokoll()
 
     # --- Der EINZIGE harte Grund -------------------------------------------
-    if antwort.get("max_tranche_eur") in (None, ""):
+    # Ohne eine Lagebeschreibung hat diese Rolle nichts geliefert. Alles andere
+    # wird zurechtgerueckt.
+    if not str(antwort.get("lage") or "").strip() and not antwort.get("belege"):
         raise AnalystAntwortUngueltig(
-            "ohne max_tranche_eur hat diese Rolle nichts geliefert")
-    betrag, hinweis = naechste_tranche(antwort["max_tranche_eur"], TRANCHEN_EUR)
-    if betrag is None:
-        raise AnalystAntwortUngueltig(hinweis or "max_tranche_eur unbrauchbar")
-    antwort["max_tranche_eur"] = betrag
-    prot.dazu(hinweis)
-
+            "weder Lagebeschreibung noch Belege - nichts geliefert")
     # --- Alles andere wird gerettet ----------------------------------------
     wort, hinweis = naechstes_wort(antwort.get("traegt"), TRAGFAEHIGKEIT)
     if wort is None:

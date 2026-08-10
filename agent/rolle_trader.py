@@ -98,7 +98,6 @@ Antworte AUSSCHLIESSLICH mit JSON:
 "gewicht": "hoch|mittel|gering"}],
  "unabhaengige_faktoren": <zahl>,
  "aktion": "KAUFEN|NACHKAUFEN|REDUZIEREN|VERKAUFEN|NICHTS_TUN",
- "tranche_eur": 100|300|500,
  "einstieg_eur": <zahl>, "stop_eur": <zahl>,
  "begruendung": "<ein bis zwei Saetze>",
  "was_dagegen": "<der staerkste Gegengrund>",
@@ -114,9 +113,9 @@ def validiere(antwort: dict, symbol: str = "?",
     """Prueft die Rollen-eigenen Felder; der Handlungsteil laeuft danach durch
     `empfehlung_vertrag.validiere()`.
 
-    `max_tranche_eur` ist die Obergrenze aus Rolle A. Sie wird hier geprueft und
-    nicht dem Modell ueberlassen: eine Obergrenze, die nur im Prompt steht und
-    nicht kontrolliert wird, ist eine Bitte."""
+    `max_tranche_eur` wird nicht mehr verwendet - Rolle A nennt keinen Betrag
+    mehr. Der Parameter bleibt vorerst in der Signatur, damit bestehende
+    Aufrufer nicht brechen."""
     from agent.antwort_normalisierung import (Protokoll, kappe_auf,
                                               kuerze_liste, naechstes_wort)
     from agent.empfehlung_vertrag import validiere as vertrag_validieren
@@ -187,6 +186,23 @@ def validiere(antwort: dict, symbol: str = "?",
     antwort["unabhaengige_faktoren"] = faktoren
 
     # --- Betrag: an der Obergrenze aus Rolle A kappen, nicht verwerfen -----
+    # DER BETRAG KOMMT NICHT VOM MODELL (Umbau 10.08. abends). Er wird aus der
+    # Zahl unabhaengiger Faktoren abgeleitet - siehe `tranche_aus_faktoren()`.
+    # Nennt das Modell trotzdem einen, wird er verworfen, nicht uebernommen.
+    from agent.empfehlung_vertrag import tranche_aus_faktoren
+    antwort.pop("tranche_eur", None)
+    if str(antwort.get("aktion") or "").strip().upper() != "NICHTS_TUN":
+        betrag = tranche_aus_faktoren(faktoren)
+        if betrag is None:
+            # Kein einziger unabhaengiger Faktor: die Handlung traegt nicht.
+            antwort["_degradiert"] = (
+                f"'{antwort.get('aktion')}' auf NICHTS_TUN zurueckgenommen: "
+                f"kein unabhaengiger Faktor")
+            antwort["aktion"] = "NICHTS_TUN"
+        else:
+            antwort["tranche_eur"] = betrag
+            prot.dazu(f"{faktoren} unabhaengige Faktoren -> {betrag} EUR")
+
     # Bei NICHTS_TUN wird der Betrag NICHT nachgebessert - im ersten echten Lauf
     # lieferte das Modell dort eine 0, und die Korrektur machte daraus brav
     # "100 EUR" fuer eine Handlung, die gar nicht stattfindet. Ein Betrag ohne
@@ -194,14 +210,6 @@ def validiere(antwort: dict, symbol: str = "?",
     if str(antwort.get("aktion") or "").strip().upper() == "NICHTS_TUN":
         for feld in ("tranche_eur", "einstieg_eur", "stop_eur"):
             antwort.pop(feld, None)
-    elif antwort.get("tranche_eur") is not None:
-        betrag, hinweis = kappe_auf(antwort["tranche_eur"], max_tranche_eur,
-                                    TRANCHEN_EUR)
-        if betrag is None:
-            raise TraderAntwortUngueltig(
-                f"{symbol}: {hinweis or 'tranche_eur unbrauchbar'}")
-        antwort["tranche_eur"] = betrag
-        prot.dazu(hinweis)
 
     if prot:
         antwort["_korrekturen"] = ((antwort.get("_korrekturen", "") + "; ")

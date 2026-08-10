@@ -326,15 +326,16 @@ _STRIKT_FUER_MODULE = ("openrouter",)
 def baue_lage_schema(analyst) -> dict:
     """Rolle A - die Marktlage (2026-08-10).
 
-    Vier Felder. Die Tranche ist ein `enum` aus DREI ZAHLEN, nicht ein
-    Zahlentyp - das Schema erzwingt damit, was der Prompt verlangt: waehlen,
-    nicht rechnen. Ein `{"type": "number"}` haette 250 durchgelassen und die
-    Ablehnung dem Validator ueberlassen.
+    Drei Felder, KEIN Betrag (Umbau 10.08. abends): der Nutzer setzt seine
+    Betraege selbst, das Risikomanagement ist deterministisch, und extern
+    belegt sind Modelle bei der Positionsgroesse am schwaechsten. Das
+    Designmuster der Praxis entkoppelt Richtungslogik von quantitativer
+    Groessenbestimmung.
 
-    Ebenso `traegt`: drei feste Werte, KEINE Auffangkategorie. Eine
+    `traegt`: drei feste Werte, KEINE Auffangkategorie. Eine
     Mehrdeutigkeitsoption waere strukturell eine "Unknown"-Wahl, und die loest
     Abstention aus - im eigenen System von 93 % auf 3 % gemessen."""
-    fehlend = [n for n in ("TRAGFAEHIGKEIT", "TRANCHEN_EUR", "REQUIRED_FELDER")
+    fehlend = [n for n in ("TRAGFAEHIGKEIT", "REQUIRED_FELDER")
                if not hasattr(analyst, n)]
     if fehlend:
         raise SchemaLuecke(f"Rolle A ohne Konstanten: {fehlend}")
@@ -345,8 +346,6 @@ def baue_lage_schema(analyst) -> dict:
         "properties": {
             "lage": TXT,
             "traegt": {"type": "string", "enum": list(analyst.TRAGFAEHIGKEIT)},
-            "max_tranche_eur": {"type": "number",
-                                "enum": list(analyst.TRANCHEN_EUR)},
             "belege": {"type": "array", "minItems": 2, "maxItems": 4,
                        "items": TXT},
         },
@@ -356,8 +355,10 @@ def baue_lage_schema(analyst) -> dict:
 def baue_trader_schema(analyst) -> dict:
     """Rolle BC - Aufbau beurteilen und handeln (2026-08-10).
 
-    ZWEI FELDERGRUPPEN mit unterschiedlichem Pflichtstatus, und das ist der
-    Grund, warum hier nicht alles in `required` steht: `tranche_eur`,
+KEIN `tranche_eur` (Umbau 10.08. abends): der Betrag wird aus der Zahl
+    unabhaengiger Faktoren abgeleitet, nicht erfragt. Ein Feld im Schema waere
+    eine Einladung, ihn doch zu nennen.
+
     `einstieg_eur` und `stop_eur` sind nur bei einer Handlung noetig - bei
     NICHTS_TUN waeren sie sinnlos. Diese Bedingung ("Pflicht, WENN aktion nicht
     NICHTS_TUN ist") laesst sich in einem Schema nicht ausdruecken; sie steht
@@ -373,7 +374,7 @@ def baue_trader_schema(analyst) -> dict:
                if not hasattr(analyst, n)]
     if fehlend:
         raise SchemaLuecke(f"Rolle BC ohne Konstanten: {fehlend}")
-    from agent.empfehlung_vertrag import AKTIONEN, TRANCHEN_EUR
+    from agent.empfehlung_vertrag import AKTIONEN
     return {
         "type": "object",
         "additionalProperties": False,
@@ -395,8 +396,6 @@ def baue_trader_schema(analyst) -> dict:
             },
             "unabhaengige_faktoren": {"type": "number"},
             "aktion": {"type": "string", "enum": sorted(AKTIONEN)},
-            "tranche_eur": {"type": ["number", "null"],
-                            "enum": list(TRANCHEN_EUR) + [None]},
             "einstieg_eur": NUM,
             "stop_eur": NUM,
             "begruendung": TXT,
