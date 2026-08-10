@@ -104,25 +104,52 @@ rang                   Platz unter den vergleichbaren Kandidaten
 umgeworfen_durch       eine überprüfbare Beobachtung
 ```
 
-### Rolle C — Entscheider (Bestand und Handlung)
+### Rolle BC — Trader und Entscheider in EINEM Aufruf
 
-Je Asset. Sieht **nicht** die technischen Rohdaten — nur die Belege von B.
+**Warum zusammengelegt (Nutzerentscheidung 10.08.: 5-faches Kontingent ist nicht
+tragbar).** Die Recherche nennt drei Einwände gegen mehrere Perspektiven in einem
+Aufruf. Geprüft, welche hier greifen:
+
+| Einwand | trifft zu? |
+|---|---|
+| Schema-Konfusion bei mehreren JSON-Objekten | **nein** — wir erzeugen genau eines |
+| Anchoring — das Zweite haftet am Ersten | **nein, gewollt** — die Entscheidung SOLL auf den Belegen aufbauen |
+| Selbstvalidierung des eigenen Textes | **nein** — es wird nichts kritisiert, es wird gefolgert |
+| **Hedging — abwägende Beidseitigkeit** | **JA, der ernste Einwand** |
+
+Die Befunde betreffen Rollen, die einander **widersprechen** sollen. B und C
+widersprechen nicht, sie sind zwei Schritte derselben Aufgabe.
+
+**Gegen das Hedging-Risiko wirken zwei bereits gebaute Dinge:** der Vertrag trennt
+`begruendung` von `was_dagegen` (der Gegengrund hat einen eigenen Platz), und der
+Validator lehnt Relativierer ab — er hat den echten KAS-Text abgewiesen
+(*"die Begründung zieht sich selbst zurück (['aber weiterhin'])"*).
+
+Damit ist Hedging kein Risiko, sondern ein **messbarer Zustand**: häufen sich
+Validator-Ablehnungen wegen Relativierern, ist die Zusammenlegung widerlegt und C
+wird abgespalten.
+
+**EIN GEGENPRÜFER DARF NIEMALS IN DENSELBEN AUFRUF.** Dort greift die
+Selbstvalidierung voll. Falls er gebaut wird, zwingend als eigener Aufruf.
 
 | Block | woher | warum hier |
 |---|---|---|
-| `haltung.*` (Menge, Einstand EUR, G/V %) | vorhanden | **im KAS-Fall der entscheidende, ungenutzte Block** |
-| `vorherige_empfehlung` | vorhanden | nicht dasselbe zweimal empfehlen |
-| `risiko_check.kauf_erlaubt`, `veto_grund` | vorhanden | harte Sperren |
-| `kosten.*` | vorhanden | Spread und Gebühren in EUR |
-| Ergebnis von A (max_tranche) und B (Belege, Zonen) | — | die Vorentscheidungen |
+| **`haltung.*`** (Menge, Einstand EUR, G/V %) | vorhanden | **im KAS-Fall der entscheidende, ungenutzte Block — steht an ERSTER Position gegen B1** |
+| `technische_analyse.*` (Struktur, ATR, Support/Resistance, Confluence) | vorhanden | der Aufbau |
+| **Volumen** | seit 10.08. verfügbar, nie geliefert | Umsatzbestätigung |
+| `btc_relativwert.*` | vorhanden | relative Stärke |
+| `liquiditaetszonen.*`, `antizyklisch.*` | vorhanden | Liquidität und Positionierung |
+| `vorherige_empfehlung`, `risiko_check.*`, `kosten.*` | vorhanden | Sperren, Kosten, Wiederholungsschutz |
+| **Rang unter Kandidaten** | fehlt — muss gebaut werden | der Vergleich ist der Zuschnitt mit Evidenz |
+| Ergebnis von Rolle A | — | Kontext, nicht Rohdaten |
 
-**Ausgabe = der Vertrag** aus `agent/empfehlung_vertrag.py`:
+**Ausgabe = der Vertrag** aus `agent/empfehlung_vertrag.py`, plus die Belege:
 ```
-aktion · tranche_eur · einstieg_eur · stop_eur ·
+belege                 2–8 Stück: {fakt, richtung, gewicht}
+unabhaengige_faktoren  zählt NICHT dieselbe Sache dreimal
+aktion · tranche_eur · einstieg_eur · stop_eur
 begruendung · was_dagegen · umgeworfen_durch
 ```
-
----
 
 ## 4. Was zunächst NICHT übergeben wird — jeder Block einzeln zuschaltbar
 
@@ -157,28 +184,34 @@ in den Prompt.
 ```
 Budget-Allocator wählt Assets                          (unverändert)
         ↓
-ROLLE A — einmal je Durchgang
-  rein:  Marktlage-Blöcke + Marktbreite (neu)
+ROLLE A — 1-2× am Tag, NICHT je Asset
+  rein:  Marktlage-Blöcke + Marktbreite (neu) - kein einzelnes Asset
   raus:  neigung, max_tranche_eur, Begründung
         ↓  (Ergebnis, keine Rohdaten)
-ROLLE B — je Asset, 3 Abfragen (Selbstkonsistenz, B6)
-  rein:  Aufbau-Blöcke + Volumen (neu) + Rang (neu) + A-Ergebnis
-  raus:  Belege, unabhängige Faktoren, Einstieg, Stop, Rang
-        ↓
-ROLLE C — je Asset
-  rein:  Bestand, Kosten, Sperren + A-Deckel + B-Belege
-  raus:  DER VERTRAG (aktion, tranche_eur, Kurse, Begründung)
+ROLLE BC — 1× je Asset
+  rein:  Bestand ZUERST, dann Aufbau, Volumen, Rang, A-Ergebnis
+  raus:  Belege + DER VERTRAG
         ↓
 Validator lehnt ab, was den Vertrag nicht erfüllt      (gebaut, 10.08.)
         ↓
 E-Mail je Asset + GUI                                  (unverändert)
 ```
 
-**Aufrufe je Asset:** 3 (Rolle B) + 1 (Rolle C) = 4, plus 1 für Rolle A je
-Durchgang. Heute: 1. Das ist der Preis der Selbstkonsistenz und muss vor jedem
-Lauf gegen das Kontingent gerechnet werden.
+**Kontingent, an echten Zahlen** (Spitzentag 21.07.: 42 Signale, 45 Symbole):
 
----
+| Aufbau | Aufrufe je Tag | gegen heute |
+|---|---|---|
+| heute | ~40 | — |
+| **Variante 2 (A + BC)** | **~42** | **+5 %** |
+| Variante 1 (A + B + C) | ~82 | doppelt |
+| ursprünglicher Entwurf (A + 3×B + C) | ~162 | **4-fach — verworfen** |
+
+**Selbstkonsistenz gestrichen.** Sie stand im Referenzstandard, aber der Beleg
+dafür (nemotron dreht in ~12 % der Fälle) stammt von der RICHTUNGSWAHL - einer
+Aufgabe, die Rolle BC gar nicht mehr hat. Ein Befund von einer Aufgabe auf eine
+andere zu übertragen ist derselbe Fehler wie bei den Alt-System-Befunden.
+Verdreifacht die teuerste Stufe für eine Vermutung. Wird gemessen, wenn Rolle BC
+erkennbar schwankt - an wenigen Fällen, nicht im Dauerbetrieb.
 
 ## 6. Was noch gebaut werden muss
 
@@ -187,9 +220,9 @@ Lauf gegen das Kontingent gerechnet werden.
 | 1 | **Marktbreite** — Anteil der Assets über 50-/200-Tage-Linie | gering, Daten vorhanden |
 | 2 | **Volumen-Aussagen** in die Produktionspipeline | gebaut (`lagebeschreibung.py`), muss angeschlossen werden |
 | 3 | **Rang unter Kandidaten** | mittel — Vergleich über alle Kandidaten eines Durchgangs |
-| 4 | **Drei Prompts** statt einem | mittel |
-| 5 | **Position Swapping** für A und B | gering, Muster existiert bei LLM2 |
-| 6 | **Selbstkonsistenz** (3 Abfragen, Mehrheit) | gering |
+| 4 | **Zwei Prompts** statt einem (A und BC) | mittel |
+| 5 | **Position Swapping** für A und BC | gering, Muster existiert bei LLM2 |
+| 6 | ~~Selbstkonsistenz~~ | **gestrichen** — nicht belegt, vervierfacht das Kontingent |
 
 ---
 
@@ -204,6 +237,6 @@ Lauf gegen das Kontingent gerechnet werden.
    bei bärischem Regime. Kommt trotzdem NACHKAUFEN heraus, ist das Konzept
    widerlegt.
 5. **Ein echter Durchlauf** — ein Asset, alle Rollen, Antworten vollständig
-   ausgedruckt, zum Lesen. Kosten: 5 Aufrufe.
+   ausgedruckt, zum Lesen. Kosten: 2 Aufrufe.
 
 Erst danach wird über eine Messung gesprochen.
