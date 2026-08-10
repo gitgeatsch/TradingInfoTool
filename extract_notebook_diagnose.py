@@ -459,6 +459,57 @@ def haeufigkeit(rows, feld: str) -> dict:
     return dict(zaehler.most_common())
 
 
+# Zahlen in einem Veto-Text: ganzzahlig, mit Punkt/Komma, wissenschaftlich.
+_ZAHL_IM_TEXT = re.compile(r"-?\d+(?:[.,]\d+)?(?:[eE][-+]?\d+)?")
+
+
+def veto_muster(text: str | None, symbol: str | None = None) -> str | None:
+    """Der Veto-Grund OHNE die eingesetzten Werte - also das reine Muster.
+
+    DER FALL (10.08., an echten Exportdaten). Die Veto-Auswertung gruppiert
+    nach dem exakten Text. Weil die Pipelines ihre Gruende mit eingesetzten
+    Zahlen bauen, zerfaellt EIN Grund in beliebig viele Toepfe:
+
+        15 x "CRV 1.0 unter Minimum 2.0 (unveraendert ggue. Spot)"
+         9 x "CRV 1.0000000000000018 unter Minimum 2.0 (unveraendert ggue. Spot)"
+         7 x "CRV 1.4 unter Minimum 2.0 (unveraendert ggue. Spot)"
+         6 x "CRV None unter Minimum 2.0 (unveraendert ggue. Spot)"
+
+    Vier Zeilen fuer denselben Sachverhalt, und die Liste ist nach Haeufigkeit
+    sortiert und abgeschnitten - der groesste Grund kann dadurch komplett
+    unsichtbar bleiben, weil er sich auf zwanzig kleine Zeilen verteilt.
+    Genau das soll Punkt 6 des Kennzahlen-Katalogs verhindern ("insbesondere
+    NEUE oder sich haeufende Muster", Test_und_Verifikationsmethodik 2.1).
+
+    Dasselbe gilt fuer eingebettete SYMBOLE - `agent/hedge/pipeline.py` baut
+    z.B. "<symbol> ist nicht bei Bitpanda gelistet". Deshalb wird das Symbol
+    der jeweiligen ZEILE ersetzt, nicht geraten: nur so trifft es "OD7H" und
+    nicht zufaellig ein gleichnamiges Wort. Zuerst das Symbol, dann die
+    Zahlen - sonst zerlegte die Zahlenregel Symbole wie "OD7H" vorher.
+
+    ERSETZT DIE ROHZAEHLUNG NICHT. Der genaue Wert ist manchmal die
+    Information (welcher CRV genau?); das Muster beantwortet die andere Frage
+    (wie oft dieser Grund ueberhaupt?). Beide stehen im Export nebeneinander.
+    """
+    if not text:
+        return text
+    if symbol:
+        text = re.sub(rf"\b{re.escape(symbol)}\b", "<symbol>", text)
+    return _ZAHL_IM_TEXT.sub("<zahl>", text)
+
+
+def haeufigkeit_nach_muster(rows, feld: str) -> dict:
+    """Wie `haeufigkeit()`, aber nach Muster statt nach exaktem Text."""
+    zaehler: Counter = Counter()
+    for r in rows:
+        wert = r.get(feld) if hasattr(r, "get") else r[feld]
+        if not wert:
+            continue
+        symbol = r.get("symbol") if hasattr(r, "get") else None
+        zaehler[veto_muster(str(wert), symbol)] += 1
+    return dict(zaehler.most_common())
+
+
 def _gate_veto_analyse(rows: list[dict], feld: str, seit_tagen: int | None = None) -> dict:
     """Erweiterte Gate-/Risk-Veto-Auswertung (2026-07-28-Fund): haeufigkeit() aggregiert
     ausschliesslich global und ALL-TIME (signals/hebel_signals werden ohne Datumsfilter
@@ -2010,6 +2061,17 @@ def main() -> None:
             "hebel_risk_veto_reason": haeufigkeit(hebel_rows, "risk_veto_reason"),
             "spot_gate_reason": haeufigkeit(spot_rows, "gate_reason"),
             "spot_risk_veto_reason": haeufigkeit(spot_rows, "risk_veto_reason"),
+            # NACH MUSTER statt nach exaktem Text (2026-08-10). Die vier
+            # Zaehlungen darueber zerfallen, sobald ein Grund Zahlen oder
+            # Symbole enthaelt: "CRV 1.0 unter Minimum 2.0" und
+            # "CRV 1.4 unter Minimum 2.0" sind zwei Toepfe fuer denselben
+            # Sachverhalt. Weil die Anzeige nach Haeufigkeit sortiert und
+            # abschneidet, kann der GROESSTE Grund dadurch unsichtbar bleiben.
+            # Siehe veto_muster() fuer den Fall an echten Daten.
+            "hebel_gate_reason_muster": haeufigkeit_nach_muster(hebel_rows, "gate_reason"),
+            "hebel_risk_veto_reason_muster": haeufigkeit_nach_muster(hebel_rows, "risk_veto_reason"),
+            "spot_gate_reason_muster": haeufigkeit_nach_muster(spot_rows, "gate_reason"),
+            "spot_risk_veto_reason_muster": haeufigkeit_nach_muster(spot_rows, "risk_veto_reason"),
             # NEU (2026-07-28-Fund): Pro-Symbol-Aufschluesselung + Zeitfenster fuer
             # gate_reason (der Veto-Grund, der Live-Datenprobleme wie "Historie
             # veraltet" anzeigt - risk_veto_reason ist ueberwiegend erwartetes

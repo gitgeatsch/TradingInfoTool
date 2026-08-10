@@ -71,13 +71,37 @@ def main() -> None:
     zg = d.get("zai_gegenpruefung_verlauf", {})
     print(f"\n 5. Z.ai-Gegenpruefung: {len(zg)} Bloecke")
 
-    # 6 Gate-Vetos
-    print("\n 6. Gate-/Veto-Haeufigkeit (Hebel, letzte Tage):")
+    # 6 Gate-Vetos - NACH MUSTER, nicht nach exaktem Text.
+    #
+    # Punkt 6 des Katalogs verlangt "insbesondere NEUE oder sich haeufende
+    # Muster". Gezaehlt wurde bis zum 10.08. nach dem exakten Grundtext, und
+    # weil die Pipelines ihre Gruende mit eingesetzten Werten bauen, zerfiel
+    # EIN Grund in beliebig viele Toepfe ("CRV 1.0 unter Minimum 2.0",
+    # "CRV 1.4 unter Minimum 2.0", ...). Da diese Liste nach Haeufigkeit
+    # sortiert und nach acht Zeilen abschneidet, konnte der GROESSTE Grund
+    # dadurch komplett unsichtbar bleiben.
+    #
+    # Aeltere Exporte kennen den Muster-Schluessel noch nicht - fuer die wird
+    # er aus den Rohschluesseln abgeleitet, damit die Auswertung nicht erst
+    # auf einen neuen Export warten muss.
+    print("\n 6. Gate-/Veto-Haeufigkeit (Hebel, letzte Tage) - nach MUSTER:")
     gv = d.get("gate_veto_haeufigkeit", {})
-    fuer = gv.get("hebel_risk_veto_reason_letzte_tage") or gv.get("hebel_risk_veto_reason") or {}
+    fuer = gv.get("hebel_risk_veto_reason_muster")
+    roh = gv.get("hebel_risk_veto_reason_letzte_tage") or gv.get("hebel_risk_veto_reason") or {}
+    if not fuer and isinstance(roh, dict):
+        from extract_notebook_diagnose import veto_muster
+        abgeleitet: Counter = Counter()
+        for grund, n in roh.items():
+            if isinstance(n, int):
+                abgeleitet[veto_muster(str(grund))] += n
+        fuer = dict(abgeleitet.most_common())
+        print("      (aus den Rohschluesseln abgeleitet - Export ist aelter "
+              "als der Muster-Schluessel)")
     if isinstance(fuer, dict):
         for grund, n in sorted(fuer.items(), key=lambda x: -x[1] if isinstance(x[1], int) else 0)[:8]:
             print(f"      {n:5} x {str(grund)[:88]}")
+        if isinstance(roh, dict) and roh:
+            print(f"      [{len(roh)} Rohtexte -> {len(fuer)} Muster]")
 
     # 7 Log-Auffaelligkeiten
     lg = [l for l in d.get("log_auszug", []) if isinstance(l, str)]

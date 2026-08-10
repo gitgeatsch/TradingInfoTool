@@ -125,7 +125,16 @@ Modul-Import).
 5. Z.ai-Richtungs-/Konsistenz-Abgleich (`zai_gegenpruefung_verlauf`,
    `zai_richtung_performance`)
 6. Gate-Veto-Häufigkeit - insbesondere NEUE oder sich häufende Muster
-   (`gate_veto_haeufigkeit`)
+   (`gate_veto_haeufigkeit`). **NACH MUSTER lesen, nicht nach Rohtext**
+   (`*_reason_muster`, seit 2026-08-10): die Pipelines bauen ihre Gründe mit
+   eingesetzten Werten, dadurch zerfällt EIN Grund in beliebig viele Töpfe.
+   Am 10.08. an echten Daten: **722 Rohtexte → 5 Muster**, und die Rangfolge
+   kippte vollständig — `CRV <zahl> unter Minimum <zahl>` kam auf **804**
+   Fälle, während die Rohansicht als Spitzenzeile *15* zeigte und damit den
+   mit Abstand häufigsten Blocker verbarg (das Nur-Long-Veto lag bei 323).
+   Ursache: die Anzeige sortiert nach Häufigkeit und schneidet ab — ein auf
+   viele Einzeltexte verteilter Grund verschwindet unter der Schnittkante.
+   Die Rohzählung bleibt daneben bestehen, wenn der genaue Wert die Frage ist.
 7. App-Neustart-Häufigkeit / Log-Auffälligkeiten (`log_auszug` auf
    "Added job"/"Traceback"/"CRITICAL" durchsuchen)
 8. Wartezeit bis Auflösung je Outcome-Status (Median/Mittelwert, getrennt nach
