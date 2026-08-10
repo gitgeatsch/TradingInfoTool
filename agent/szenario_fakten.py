@@ -218,6 +218,74 @@ def enthaelt_werturteile(fakten: dict) -> list[str]:
 
 
 # --- Die Wahrheit ----------------------------------------------------------
+def finde_konstanten(faktensaetze: list, mindestens: int = 20) -> list[str]:
+    """Waechter: findet Felder, die ueber ALLE Faelle denselben Wert tragen.
+
+    WARUM ES DEN BRAUCHT. Drei Konstanten haben uns Wochen gekostet, und keine
+    war im Einzelfall zu sehen:
+
+      * `regime` war auf allen 1.022 Faellen "baer" - der Gegenpruefer las
+        eine Konstante mit Richtungsaussage und kam deshalb 1 von 1.022 Mal
+        auf LONG.
+      * `optionsmarkt_skew` war auf allen 1.022 Faellen negativ, weil dort ein
+        BTC-weiter Wert stand statt des Wertes des jeweiligen Assets.
+      * `perzentil_eigene_historie` war je Asset konstant, weil dem Perzentil
+        die Kursreihe statt der RSI-Reihe gereicht wurde.
+
+    Ein konstantes Feld ist schlimmer als ein fehlendes. Es kostet Platz im
+    Prompt, sieht nach Information aus, und wenn es eine Richtung nahelegt,
+    schiebt es JEDE Antwort in dieselbe Richtung. Fehlt es dagegen, steht das
+    in `nicht_verfuegbar` und das Modell weiss es.
+
+    ERLAUBT sind Konstruktionsparameter - die Zonengeometrie ist per
+    Definition fest, das RSI-Band ist [30, 70], und wer nur eine Assetklasse
+    misst, hat sie zwangslaeufig ueberall gleich. Alles andere ist ein Befund.
+
+    Er gehoert VOR die Modellaufrufe. Heute haetten wir sonst einen ganzen
+    Messlauf an einem toten Feld verbraucht - Kontingent, das nicht
+    zurueckkommt."""
+    # Die Namen stammen aus baue_zonen() - beim ersten Anlauf hatte ich sie
+    # geraten ("stop_in_atr" statt "stop_abstand_atr"), und der Waechter
+    # meldete prompt seine eigene Erlaubt-Liste als Befund.
+    ERLAUBT_PRAEFIX = ("aufbau.stop_abstand_atr", "aufbau.ziel_abstand_atr",
+                       "aufbau.crv", "aufbau.horizont_kerzen",
+                       "aufbau.richtung", "aufbau.hinweis",
+                       "asset.assetklasse", "technik.rsi_14.band",
+                       "nicht_verfuegbar")
+    saetze = [f for f in faktensaetze if isinstance(f, dict)]
+    if len(saetze) < mindestens:
+        return []
+
+    def flach(knoten, pfad="", aus=None):
+        aus = {} if aus is None else aus
+        if isinstance(knoten, dict):
+            for k, v in knoten.items():
+                flach(v, f"{pfad}.{k}" if pfad else str(k), aus)
+        elif isinstance(knoten, list):
+            aus[pfad] = repr(knoten)
+        else:
+            aus[pfad] = repr(knoten)
+        return aus
+
+    gesehen: dict[str, set] = {}
+    for f in saetze:
+        for pfad, wert in flach(f).items():
+            gesehen.setdefault(pfad, set()).add(wert)
+
+    treffer = []
+    for pfad, werte in sorted(gesehen.items()):
+        if len(werte) != 1 or pfad.startswith(ERLAUBT_PRAEFIX):
+            continue
+        # Ein Feld, das nur in wenigen Saetzen ueberhaupt vorkommt, ist nicht
+        # konstant - es ist selten. Der Unterschied ist wesentlich: Seltenheit
+        # ist erlaubt, Konstanz ueber die volle Stichprobe nicht.
+        vorkommen = sum(1 for f in saetze if pfad in flach(f))
+        if vorkommen < len(saetze):
+            continue
+        treffer.append(f"{pfad} = {next(iter(werte))} (alle {vorkommen} Faelle)")
+    return treffer
+
+
 AUSGAENGE = ("ziel", "stop", "keines")
 
 

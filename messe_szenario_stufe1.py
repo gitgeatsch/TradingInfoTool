@@ -48,7 +48,8 @@ import agent.szenario_analyst as SA
 import messe_regimephasen_llm as M
 from agent.szenario_fakten import (AUSGAENGE, HORIZONT_KERZEN,
                                    baue_szenario_fakten, baue_zonen, brier,
-                                   enthaelt_werturteile, loese_auf)
+                                   _perzentil, enthaelt_werturteile,
+                                   finde_konstanten, loese_auf)
 from backtest_llm1_historisch import lade_reihen
 from indicators.calculations import atr_wilder, latest_value, rsi
 from messe_umbau_wirkung import verschraenke_phasen
@@ -81,9 +82,17 @@ def _fakten_fuer(sym, reihe, i, richtung, klasse="krypto"):
     lows = np.array([k.low for k in reihe[: i + 1]], dtype=float)
     if len(closes) < 60:
         return None, None
-    a = latest_value(atr_wilder(highs, lows, closes))
+    atr_reihe = atr_wilder(highs, lows, closes)
+    a = latest_value(atr_reihe)
     if not a or a <= 0:
         return None, None
+    # ATR-PERZENTIL (Fund des Konstanten-Waechters, 10.08.): das Feld stand auf
+    # allen 80 Faellen None - ein Platz im Prompt ohne Inhalt. Die Historie lag
+    # die ganze Zeit vor, `atr_wilder` gibt die volle Reihe zurueck und nicht
+    # nur den letzten Wert. Es war nie eine fehlende Datenquelle, nur ein nicht
+    # ausgelesenes Feld.
+    atr_hist = [float(v) for v in np.asarray(atr_reihe.value, dtype=float)[-250:]
+                if v == v]
     r = latest_value(rsi(closes))
     # ECHTE RSI-Historie (Korrektur 10.08.): hier standen die SCHLUSSKURSE,
     # womit das "Perzentil" nur noch verglich, ob der Kurs ueber 100 liegt -
@@ -102,6 +111,7 @@ def _fakten_fuer(sym, reihe, i, richtung, klasse="krypto"):
             {"50": float(closes[-50:].mean())},
         konfluenz=None,
         atr_relativ_prozent=round(100.0 * a / closes[-1], 2),
+        atr_perzentil=_perzentil(atr_hist, float(a)),
         rsi_historie=rsi_hist,
     )
     return f, baue_zonen(float(closes[-1]), float(a), richtung)
@@ -143,6 +153,19 @@ def main() -> int:
             faelle.append({"symbol": sym, "datum": reihen[sym][i].date,
                            "phase": phase, "richtung": richtung,
                            "fakten": f, "wahrheit": wahrheit})
+
+    # VOR den Modellaufrufen, nicht danach: ein Feld, das ueber alle Faelle
+    # denselben Wert traegt, macht den ganzen Lauf wertlos - und das Kontingent
+    # kommt nicht zurueck. Kein Abbruch, weil eine Konstante auch harmlos sein
+    # kann; aber sie steht dann im Protokoll und nicht in der Rueckschau.
+    konstanten = finde_konstanten([f["fakten"] for f in faelle])
+    if konstanten:
+        print("\n[WARNUNG] Felder mit demselben Wert ueber ALLE Faelle:")
+        for k in konstanten:
+            print(f"  {k}")
+        print("  Ein konstantes Feld sieht nach Information aus, ist aber")
+        print("  keine - und wenn es eine Richtung nahelegt, schiebt es JEDE")
+        print("  Antwort in dieselbe. Pruefen, bevor das Ergebnis zaehlt.")
 
     print(f"Anker {len(anker)}, {len({a[2] for a in anker})} Symbole")
     print(f"Faelle (2 Richtungen je Anker): {len(faelle)}")
