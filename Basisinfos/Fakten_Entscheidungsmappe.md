@@ -1410,3 +1410,150 @@ nirgends steht, **wie** eine Aussage formuliert sein muss. Diese Formvorgabe
 kommt als Kapitel 11 (Regeln R-T1…R-T9), und der Punktfix an `_struktur()` ist
 dann ihr erster Anwendungsfall — **symmetrisch**, nicht in Richtung „mehr
 kaufen".
+
+---
+
+## 11. Die Kette und die Form der Fakten (Stand 2026-08-11)
+
+*Kapitel 4 beschreibt, WELCHE Fakten die alte Pipeline liefert. Kapitel 10,
+welche die Rollen-Ebene liefert. Beide sagen nichts darüber, **wie** ein Fakt
+formuliert sein muss — und genau dort saß der Defekt vom 11.08.
+(`Arbeitsstand_Deadloop_09_08.md` 7.9/7.11). Dieses Kapitel schließt das.*
+
+### 11.1 Die Kette in einem Bild
+
+```
+DETERMINISTISCH   Budget-Allocator waehlt Assets · Gate · Risiko · Positionsgroesse
+                  Einstieg/Stop aus ATR (Regeln 4/16) · mechanische Notbremse
+                        |   keine Betraege, keine Deckel an das Modell
+LAGEBILD          1-2x taeglich, KEIN Einzelasset
+                  raus: Lagebeschreibung, Tragfaehigkeit, Belege
+                        |   Ergebnis, keine Rohdaten
+BEFUND +          1x je Asset. Bestand zuerst.
+ENTSCHEIDUNG      raus: Belege · unabhaengige Faktoren · Aktion ·
+                        Begruendung · was_dagegen · umgeworfen_durch
+                        |
+VALIDATOR         korrigieren / degradieren / warnen - vier harte Gruende
+                        |
+BETRAG            deterministisch aus der Zahl unabhaengiger Faktoren
+                        |
+E-Mail je Asset + GUI
+```
+
+**Woran jede Stufe gemessen wird — getrennt, sonst schiebt man einer Stufe das
+Versagen einer anderen zu:**
+
+| Stufe | Maß | Warum getrennt |
+|---|---|---|
+| Gate | **Durchlässigkeit** — wie viele Handlungen wurden zu Nichthandeln? | sonst versteckt sich der Deadloop eine Ebene tiefer, wo er schwerer zu sehen ist. Der Regler-Audit fand 36 von 202 Schlüsseln wirkungslos |
+| Lagebild | Zuspitzung ohne Deckung (`waechter_zuspitzung`) | seine Ausgabe ist die Eingabe der nächsten Rolle und wurde nie geprüft |
+| Befund/Entscheidung | Handlungsquote **und** Erstdurchgang mit Stop | die Endrendite allein hat am 11.08. in die Irre geführt |
+| Kette gesamt | Zielquote gegen **33 %** (Breakeven bei 3 / 1,5 ATR) | die Basisrate liegt bei 22,5 % — das ist die Hürde, nicht „Gewinn" |
+
+### 11.2 Die Rollen — definiert über ihren exklusiven Eingang
+
+**Die Namen sind unsere Bezeichnung, nicht das, was im Prompt steht.**
+
+| Rolle | exklusiver Eingang | Frage | Ausgang |
+|---|---|---|---|
+| **Lagebild** | Marktdaten **ohne** Einzelwert | Wie ist das Umfeld? | Lage, Tragfähigkeit, Belege |
+| **Befund** | Aufbau des Einzelwerts, Umsatz, Niveaus, Rang | Was zeigt *dieser* Wert? | Belege mit Gewicht |
+| **Entscheidung** | **Bestand, Sperren, Kosten, vorherige Empfehlung** | Was tun wir, gegeben was wir halten? | Aktion, Begründung, Widerlegungskriterium |
+
+**Der exklusive Eingang IST die Rollendefinition.** Damit wird der Grundsatz
+„kein Block bei zwei Rollen" nicht nur eingehalten, sondern bedeutsam. Und
+Lagebild sieht kein Asset — deshalb kann es nicht vom Einzelfall her
+rationalisieren.
+
+**Zur Persona im Prompt** („Du bist ein erfahrener Händler"): Nutzer am 11.08. —
+*„nie im Prompt hängt vom Bedarf ab … wenn die Standards sagen wir brauchen die
+Rollen, ist es kein Verbot."* Sie bleibt deshalb **eingeschaltet** und ist
+einzeln schaltbar (`SYSTEM_PROMPT_TRADER_OHNE_PERSONA`). Eine offene, messbare
+Frage, keine Setzung.
+
+**Befund und Entscheidung sind heute EIN Aufruf.** Ob sie getrennt werden,
+entscheidet die Betragsmessung (8c.3/M1). Das Argument für die Trennung ist
+nicht Kontingent, sondern eine Eigenschaft: **Belege über den Markt dürfen nicht
+davon abhängen, was wir zufällig halten.** Ein Gegenprüfer läuft nie im selben
+Aufruf (R-A8).
+
+### 11.3 Welche Fakten wohin — das Unterscheidungskriterium
+
+> **Ein Marktfakt gehört in die BEURTEILUNG, wenn er zwischen Assets
+> unterscheidet. Wirkt er auf alle gleich, ist er ein RISIKOPARAMETER — und
+> Risiko ist deterministisch.**
+
+| Fakt | unterscheidet? | gehört wohin |
+|---|---|---|
+| Marktbreite, Fear & Greed, FOMC-/CPI-Termine | nein — an einem Tag für alle gleich | Risikoschicht |
+| freies Kapital, Depotwert, Deckel, Cash-Reserve, Drawdown-Grenze | nein | **nie an ein Modell** |
+| BTC-Dominanz, DXY | ja | Beurteilung |
+| **Lage des Assets zu SEINEM Benchmark** | ja, konstruktionsbedingt | Beurteilung — stärkster Kandidat |
+| Korrelation des Assets zu seinem Markt | ja — sagt, wie viel der Gesamtmarkt hier bedeutet | Beurteilung |
+| Bestand, G/V der Position | ja | **nur** Entscheidung |
+
+**In einem Satz: Das Modell sieht, was wahr ist. Es sieht nie, was wir bereit
+sind zu verlieren.**
+
+### 11.4 Marktbezug je Assetklasse — Benchmark statt Breite
+
+Die Marktbreite ist für dieses System **nicht baubar**, und das ist keine
+Ermessensfrage (7.15):
+
+| Klasse | Watchlist | mit Reihe | Breite möglich? | Benchmark |
+|---|---|---|---|---|
+| Krypto Spot | 44 | 34 | ja | BTC |
+| Krypto Hebel | dito | dito | ja | BTC + Funding, OI |
+| ETF | 7 | 6 | **nein** | je nach ETF, SPY als Näherung |
+| Rohstoffe | 4 | 3 | **nein** | die Futures-Referenzen |
+| Aktien | 2 | 2 | **nein** | **SPY — liegt seit 1993 in der DB** |
+
+Für vier von fünf Klassen fehlen schlicht die Mitglieder. Der gemischte Korb,
+der am VST-Anker Rohstoff-Futures und SPY als „Coins" zusammenrechnete, war der
+Notbehelf daraus.
+
+**Was für ein Einzelasset zählt, ist nicht der Zustand des Marktes, sondern die
+Lage des Assets *in* seinem Markt.** `btc_relativwert` ist dieses Prinzip für
+Krypto und existiert bereits.
+
+### 11.5 R-T1 bis R-T9 — die Form eines Fakts
+
+| # | Regel | Herkunft | Status |
+|---|---|---|---|
+| **R-T1** | **Jede Aussage nennt ihr Fenster.** Keine Behauptung ohne den Zeitraum, für den sie gilt | 7.9 | **tragend, eigene Messung** |
+| **R-T2** | **Kein absolutes Etikett, wo ein relatives möglich ist.** Nicht „intakter Abwärtstrend", sondern „auf Sicht von 8 Handelstagen fallend, über 60 Tage +37 %" | 7.9/7.11 | **tragend, eigene Messung** |
+| R-T3 | Keine Werturteile im Faktensatz | `einordnung`: 4,60 Konfidenzpunkte, 16 pp LONG | belegt, Wächter |
+| R-T4 | Keine Selbstauskünfte (Trefferquote, Systemgüte, Kalibrierung) | −5,48 Konfidenzpunkte | Hypothese (Altsystem) |
+| R-T5 | Relative Einheiten — ATR-Vielfache, % vom Schnitt | macht Fälle über Assets vergleichbar | belegt, praktiziert |
+| R-T6 | Kein konstantes Feld | `regime` „baer" auf 1.022 Fällen | belegt, Wächter |
+| R-T7 | Keine rohen Zahlenreihen | Tokenisierung, `kursverlauf[]` 90 Punkte | belegt |
+| **R-T8** | **Blöcke dürfen einander nicht widersprechen — und keine Zwischenausgabe darf zuspitzen, was die Eingabe nicht hergibt** | 7.9/7.14 | **neu, Wächter gebaut** |
+| R-T9 | Position ist Teil der Aussage — was zuerst steht, wiegt schwerer | B1, 3,2 pp bei 5,3× Rauschboden | belegt |
+
+**Externe Deckung, ehrlich:** Einen Standard für die Textform von Fakten an ein
+LLM gibt es **nicht** (Methodik 2.19.4). Gedeckt ist nur die Richtung —
+semantisch schlägt numerisch (Claude 3: 68,7 % gegen 61,3 %), und
+notationsübergreifende Zahlenvergleiche gelingen nur zu 50–70 %. **R-T1 und R-T2
+stehen auf unserer eigenen Messung**, nicht auf Literatur.
+
+### 11.6 Was das Modell NIE sieht — und warum
+
+| | Begründung |
+|---|---|
+| **Positionsgröße, Beträge, Deckel** | R-A2. Extern belegt: LLMs sind dort am schwächsten. Und der Betrags-Umbau zeigte: die Frage verschiebt sich von „ist Handeln gerechtfertigt?" zu „sind 500 Euro gerechtfertigt?" |
+| **Einstieg und Stop als Zahl** | Bauform B. Anchoring-Index 0,45 bei GPT-4, **Experten-Anker wirken am stärksten**, und keine Standard-Gegenmaßnahme half (Methodik 2.19.2). Ein aus ATR gerechneter Stop *ist* ein Experten-Anker |
+| **Risikoparameter jeder Art** | sie ändern nichts daran, ob der Aufbau gut ist — nur ob wir dürfen. Das ist die Aufgabe des Gates |
+
+**Was das Modell stattdessen zum Ausstieg liefert:** `umgeworfen_durch` — eine
+überprüfbare Beobachtung, die die These widerlegen würde. Live geprüft am
+11.08.: *„Ein Tagesschlusskurs über 2218,7467 EUR bei steigendem Volumen."*
+Konkret, maschinell auswertbar, **und heute von niemandem ausgewertet**
+(8c.2/K2). Das ist ein Urteil, keine Rechnung — deshalb gehört es zum Modell.
+
+### 11.7 Offen in diesem Kapitel
+
+- **Rang unter Kandidaten** — der Vergleich ist der Zuschnitt mit Evidenz, fehlt
+- **Nachrichten** — nach allem Gemessenen die einzige Kategorie, die noch eine
+  Kante enthalten kann. Sie gehören an **eine** Stelle: den Befund
+- Ob Befund und Entscheidung getrennte Aufrufe werden (8c.3/M1)
+- Ob die Persona bleibt (8c.3/M4)

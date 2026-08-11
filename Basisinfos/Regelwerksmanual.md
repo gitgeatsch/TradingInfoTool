@@ -3321,6 +3321,55 @@ nicht — der Nutzer sieht die Belege und den Grund.
 **R-A8 — Ein Gegenprüfer läuft niemals im selben Aufruf.** Dort greift die
 Selbstvalidierung: ein Modell bestätigt, was es gerade geschrieben hat.
 
+---
+
+### R-T1 bis R-T9 — die FORM eines Fakts (neu 2026-08-11)
+
+*Die R-A-Regeln sagen, wie die Rollen-Ebene arbeitet. Diese hier sagen, wie ein
+Fakt formuliert sein muss. Die Lücke wurde am 11.08. sichtbar: `_struktur()`
+trug ein absolutes Etikett („ein intakter Abwärtstrend") auf einem Fenster von
+wenigen Tagen, und das Modell folgte der Beschriftung statt der Zahl daneben.
+Herleitung und Belege: `Fakten_Entscheidungsmappe.md` Kapitel 11.5.*
+
+**R-T1 — Jede Aussage nennt ihr Fenster.** Keine Behauptung ohne den Zeitraum,
+für den sie gilt. „Die Marktstruktur zeigt tiefere Hochs" ist unvollständig;
+„auf Sicht der letzten 8 Handelstage" ist die Aussage.
+
+**R-T2 — Kein absolutes Etikett, wo ein relatives möglich ist.** Ein Wort wie
+„intakter Abwärtstrend" bekommt mehr Gewicht als die Zahl daneben. Gemessen über
+44 Symbole: das Aufwärts-Etikett stimmt nur in **42 %** der Fälle mit der
+60-Tage-Bewegung überein, das Abwärts-Etikett in 74 %. Korrekturen gehören
+**symmetrisch** — der häufigere Fehler ist „Aufwärtstrend" bei fallendem Fenster
+(11,39 % gegen 6,21 %).
+
+**R-T3 — Keine Werturteile im Faktensatz.** `enthaelt_werturteile()` prüft das.
+
+**R-T4 — Keine Selbstauskünfte des Systems** (Trefferquote, Systemgüte,
+Konfidenz-Kalibrierung). Status: Hypothese, am alten Aufbau gemessen.
+
+**R-T5 — Relative Einheiten statt absoluter.** ATR-Vielfache, Prozent vom
+Durchschnitt — das macht Fälle über Assets hinweg vergleichbar.
+
+**R-T6 — Kein konstantes Feld.** `finde_konstanten()` prüft das. Ein Feld, das
+über alle Fälle denselben Wert trägt, kann per Definition nicht unterscheiden —
+und schiebt, wenn es eine Richtung nahelegt, jede Antwort in dieselbe.
+
+**R-T7 — Keine rohen Zahlenreihen.** Tokenisierung zerlegt sie in bedeutungslose
+Fragmente.
+
+**R-T8 — Blöcke dürfen einander nicht widersprechen, und keine Zwischenausgabe
+darf zuspitzen, was die Eingabe nicht hergibt.** Neu und tragend: die bisherigen
+Wächter prüfen **Eingaben**. Die Ausgabe des Lagebilds ist die Eingabe der
+Entscheidung — und wurde nie geprüft. Beispiel vom 11.08.: aus „8 % über der
+50-Tage-Linie, in 46 % der Fälle war dieser Anteil niedriger" wurde „**extreme
+Schieflage mit starkem Abwärtsdruck**", und dieser Satz erreichte die
+Entscheidung als Beleg mit Gewicht *hoch*. Prüfung:
+`agent/waechter_zuspitzung.py`.
+
+**R-T9 — Position ist Teil der Aussage.** Was zuerst steht, wiegt schwerer
+(3,2 pp bei 5,3-fachem Rauschboden). „Bestand zuerst" ist der Anwendungsfall —
+mit der Einschränkung, dass genau das die Belege einfärben kann (offen, 8c.3/M3).
+
 **Vor jedem Lauf, ohne Modellaufruf:** Werturteil-Wächter
 (`enthaelt_werturteile`), Konstanten-Wächter (`finde_konstanten`),
 Kausalitätsprobe (Beschreibung aus voller Reihe gegen abgeschnittene, bitgleich).
