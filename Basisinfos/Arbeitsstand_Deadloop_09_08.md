@@ -2396,3 +2396,176 @@ Bewegungen, längere Haltedauern, oder eine andere Gebührenstruktur.
   Größe: bei 1.000 EUR fielen die ETF-Kosten von 0,52 auf rund 0,37 R — besser,
   aber weiterhin ein Vielfaches von 0,03.
 - Steuern und Slippage sind nicht enthalten.
+
+---
+
+## 7.24 Der Kostenhebel — für Krypto und ETF beantwortet, für den Rest nicht messbar (11.08. spät)
+
+**Werkzeug:** `messe_kostenhebel.py`, kein Modellaufruf. Frage: Gibt es diesen
+Aufbau in einer tragfähigen Variante? Kosten in R = Roundtrip % / Stopabstand %,
+also senkt **ausschließlich** ein größeres Stopvielfaches die Quote — bei Spot
+fällt keine Tagesgebühr an, die Haltedauer wirkt dort nicht.
+
+### Die Grundgesamtheit, die ich VOR dem Lauf hätte prüfen müssen
+
+```
+krypto     29 Symbole,  6.805 Anker      belastbar
+etf         6 Symbole, 12.260 Anker      belastbar
+aktien      2 Symbole,  3.003 Anker      UNBRAUCHBAR
+rohstoffe   3 Symbole,    150 Anker      UNBRAUCHBAR
+```
+
+**Aktien sind PLTR (+1.711 % über die Reihe) und VST (+1.140 %).** Eine
+Long-only-Barrierenstrategie auf zwei der besten Aktien des Jahrzehnts — sie
+stehen in der Watchlist, *weil* sie gelaufen sind. Der gemessene Wert von
++0,86 R ist reine Survivorship und wird hier **nicht** berichtet.
+
+**Rohstoffe** sind 150 stark überlappende Anker aus drei **rekonstruierten**
+ETC-Reihen à 520 Kerzen — bei 220 Vorlauf und 250 Horizont bleiben je Symbol
+rund 50 Anker, effektiv wenige unabhängige Beobachtungen.
+
+*Zweiter Fall an einem Tag, in dem ich eine Messung gebaut und gefahren habe,
+ohne vorher zu prüfen, ob die Grundgesamtheit die Frage trägt.*
+
+### Das Ergebnis, wo es trägt
+
+| Klasse | Stop | Stop % | Treffer | offen | Brutto | Kosten | **Netto** |
+|---|---|---|---|---|---|---|---|
+| krypto | 1,5 | 12,3 % | 26,3 % | 0,0 % | −0,211 | 0,244 | **−0,455** |
+| krypto | 3,0 | 24,5 % | 24,1 % | 0,9 % | −0,273 | 0,122 | **−0,395** |
+| krypto | 6,0 | 49,1 % | 11,1 % | 24,4 % | −0,531 | 0,061 | **−0,592** |
+| krypto | 15,0 | 122,7 % | 0,2 % | 95,9 % | −0,399 | 0,024 | **−0,424** |
+| etf | 1,5 | 1,8 % | 32,3 % | 3,7 % | +0,005 | 0,558 | **−0,553** |
+| etf | 6,0 | 7,2 % | 27,5 % | 12,8 % | −0,015 | 0,140 | **−0,155** |
+| etf | 15,0 | 17,9 % | 10,9 % | 61,7 % | +0,020 | 0,056 | **−0,036** |
+
+**Die Kosten fallen proportional — um den Faktor zehn von s=1,5 auf s=15. Der
+Bruttovorteil fällt schneller.** Bei s=6 bricht die Krypto-Trefferquote auf
+11 % ein, bei s=15 auf 0,2 %, und 96 % laufen in die Zeitschranke.
+
+**Es gibt keine Stop-Einstellung, bei der Krypto oder ETF positiv wird.**
+Positionsgröße hilft nur den Börsenklassen und nur begrenzt: ETF bei s=1,5 von
+−0,553 (400 EUR) auf −0,296 (5.000 EUR) — weiterhin negativ.
+
+### KORREKTUR an 7.23: „flach über alle Horizonte" war zu weit gefasst
+
+7.23 schloss aus den Horizonten 10 bis 60, der Erwartungswert sei flach bei rund
++0,03 R. **Bei 250 Tagen ist er −0,211.**
+
+Der Grund ist einleuchtend: Bei kurzem Horizont stehen die offenen Fälle bei
+durchschnittlich +0,28 R — aber das sind **unrealisierte** Buchgewinne. Über 250
+Tage lösen sie sich auf, überwiegend als Stop. **Ein kurzer Horizont verbucht
+Gewinne, die später ausgestoppt worden wären.**
+
+> **Einschränkung:** Die Grundgesamtheit unterscheidet sich mit — der
+> 250-Tage-Lauf verlangt längere Reihen und nutzt damit frühere Anker. Horizont
+> und Population wirken zusammen und lassen sich hier nicht trennen. Was
+> bleibt: „flach" war eine Verallgemeinerung aus einem schmalen Bereich und ist
+> zurückgenommen.
+
+### Was jetzt gilt
+
+**Der Aufbau trägt sich in keiner gemessenen Variante** — nicht bei anderem
+Stop, nicht bei anderer Größe, nicht bei anderem Horizont. Für Aktien und
+Rohstoffe ist die Frage mit den vorhandenen Daten **nicht beantwortbar**; dafür
+bräuchte es mehr Symbole, die nicht nach ihrem Erfolg in der Watchlist stehen.
+
+Das ist eine Entscheidungsgrundlage, keine Niederlage: Die verbleibenden Hebel
+liegen außerhalb der Geometrie — eine andere Gebührenstruktur, eine andere
+Assetauswahl, oder tatsächliche Vorhersagekraft aus Information, die nicht im
+Kurs steht.
+
+---
+
+## 7.25 Gegenprüfung aller Befunde des 11.08. — und was sie zusammen bedeuten
+
+**Nutzervorgabe:** *„mach für alle Prüfungen eine Gegenprüfung und eine
+Zusammenfassung, was das im Detail und für die Lösung insgesamt bedeutet."*
+Nach fünf Selbstkorrekturen an einem Tag ist das die richtige Reihenfolge.
+
+### Teil 1: Was hält der Gegenprüfung stand
+
+| # | Befund | Was ihn kippen könnte | Ergebnis |
+|---|---|---|---|
+| 1 | **97,7 % HALTEN** auf 2.957 Signalen | HALTEN könnte Nicht-Entscheidungen enthalten — bei Assets ohne Position ist „halten" kein Urteil | **hält.** Getrennt: im Bestand 51 Handlungen auf 1.736 (2,9 %), ohne Bestand 18 auf 1.221 (1,5 %). Beide Teilmengen zeigen dasselbe. `outcome_status='nicht_anwendbar'` bestätigt, dass HALTEN nie als Trade geführt wird. *Einschränkung: `holdings` ist der heutige Stand, nicht der zum Signalzeitpunkt* |
+| 2 | **Struktur-Etikett trägt keine Information** | Cluster-Bootstrap über 44 Symbole; Krypto-Symbole sind untereinander stark korreliert, die Intervalle könnten zu eng sein | **hält, und zwar erst recht.** Breitere Intervalle machen „kein Unterschied" wahrscheinlicher, nicht unwahrscheinlicher. Die schnelle Etikett-Fassung war gegen `_struktur()` geprüft: 291 Stichproben, 0 Abweichungen |
+| 3 | **ETF-Klasse war unsichtbar** | — | **hält.** Verifiziert durch Laden: 45 statt 39 beschreibbare Assets |
+| 4 | **4-Tage-Kerzen als Tageskerzen** | — | **hält.** 23 von 23 Abständen exakt 4 Tage |
+| 5 | **yfinance: 4 von 8 bestehen** | 15 % Toleranz ist gesetzt; ein richtiger Ticker mit 20 % Abweichung fiele durch | **hält.** Die Ablehnungen waren nicht knapp (99 %, 269 %, oder Reihe seit Jahren tot). Konservativ in die sichere Richtung |
+| 6 | **Kosten dominieren** | In 7.23 wurde EIN Brutto-Wert (+0,028) auf ALLE Klassen angewandt | **teilweise überholt.** 7.24 liefert die klassenweisen Bruttowerte; die Tabelle in 7.23 ist dadurch ersetzt. Die Richtung ändert sich nicht, die Höhe schon |
+| 7 | **Keine Stop-Einstellung hilft** | Nur das Verhältnis 2:1 getestet — ein anderes Verhältnis könnte helfen | **hält, siehe Teil 2 — es kann kein Verhältnis helfen** |
+| 8 | **„keines = 0 R" war gesetzt** | — | **hält** als Rechnung; die Größe der Korrektur hängt am Horizont (7.24) |
+
+### Teil 2: Die Erklärung, die alles zusammenbindet
+
+Für einen **driftfreien** Pfad mit Zielbarriere `+a` und Stopbarriere `−b` gilt:
+
+```
+P(Ziel zuerst) = b / (a + b)
+
+EW = a · b/(a+b)  −  b · a/(a+b)  =  0      EXAKT null, fuer JEDE Geometrie
+
+   Ziel 3 / Stop 1,5  →  33,3 %      Ziel 1 / Stop 1  →  50,0 %
+   Ziel 6 / Stop 3    →  33,3 %      Ziel 1 / Stop 2  →  66,7 %
+   ... alle mit Erwartungswert exakt 0
+```
+
+**Und gemessen, über 19.891 Anker, entschiedene Fälle: 34,0 % gegen theoretisch
+33,3 %.** Der Markt verhält sich auf dieser Granularität wie ein Martingal, auf
+0,7 Prozentpunkte genau.
+
+**Damit ist jeder Einzelbefund dieses Projekts ein Spezialfall derselben
+Tatsache:**
+
+| Befund | folgt daraus |
+|---|---|
+| Kein Verfahren schlägt die Basisrate (6.1/6.2) | die Basisrate **ist** der Martingalwert — es gibt nichts zu schlagen |
+| Die vier Zellen unterscheiden sich nicht (7.22) | kein Merkmal trägt Information, also auch nicht das Etikett |
+| Keine Stop-Einstellung hilft (7.24) | der Erwartungswert ist für **jede** Geometrie null |
+| Die Konfidenz ordnet nicht, die Kalibrierung bringt die halbe Strecke | es gibt keine Ordnung, die man treffen könnte |
+| Die Kosten entscheiden (7.23) | null minus Kosten ist negativ, zwangsläufig |
+
+**Das ist keine Messung mehr, das ist Arithmetik.** Ein Barrierensystem auf einem
+näherungsweise driftfreien Pfad hat brutto den Erwartungswert null — unabhängig
+von Zieldistanz, Stopweite, Verhältnis und Horizont. Nach Kosten ist es strikt
+negativ. Kein Prompt, kein Modell und keine Parametrierung ändert das.
+
+### Teil 3: Was das im Detail bedeutet
+
+1. **Die Geometriefrage ist geschlossen** — nicht durch Messrauschen, sondern
+   durch Mathematik. Weitere Stop-, Ziel- oder Horizontvarianten sind
+   verschwendete Zeit.
+2. **Die LLM-Ebene kann diese Lücke nicht schließen.** Sie müsste Information
+   liefern, die den Pfad *nicht driftfrei* macht. Genau das hat Abschnitt 6 für
+   alle kursbasierten Merkmale ausgeschlossen.
+3. **Die heute behobenen Defekte bleiben richtig** — falsche Beschriftungen,
+   unsichtbare Assets, falsche Kerzen und ein nie gebautes R-A2 gehören
+   beseitigt, unabhängig von der Ökonomie. Aber **keiner von ihnen war je der
+   Grund**, und das ist jetzt belegt statt vermutet.
+4. **Die Kostenquote ist der einzige Parameter mit Wirkung** — und sie ist bei
+   1,5 % je Seite (Bitpanda Krypto) so hoch, dass sie den Bruttovorteil um das
+   Sechs- bis Achtzehnfache übersteigt.
+
+### Teil 4: Was das für die Lösung insgesamt bedeutet
+
+**Es bleiben genau drei Wege, und nur drei:**
+
+| Weg | Was er verlangt | Stand |
+|---|---|---|
+| **A — Drift statt Timing** | Keine Vorhersage. Wer den Aufwärtsdrift eines Marktes einsammelt, braucht keine Barriere zu treffen. Akkumulation, DCA, Halten | **steht seit dem 07.08. als Punkt S2 auf der eigenen Liste** („Akkumulations-Messung für Spot, AZ-4 gegen DCA") und ist dort als *günstigster Punkt der ganzen Liste* markiert |
+| **B — Echte neue Information** | Etwas, das nicht im Kurs steht: Nachrichten, Meldungen, Positionierung. Nur so wird der Pfad nicht driftfrei | ungeprüft. Die einzige unerprobte Kategorie |
+| **C — Kosten senken** | Andere Gebührenstruktur oder andere Assets. Wirkt, reicht aber allein nicht: 0 minus weniger Kosten ist immer noch nicht positiv | begrenzt, nicht hinreichend |
+
+**Weg A ist der einzige, der ohne Vorhersagekraft auskommt** — und genau deshalb
+der einzige, der nach allem heute Gemessenen tragen kann. Er steht seit vier
+Tagen auf der eigenen Liste und wurde nie gemessen.
+
+**Weg B ist die einzige Chance, das Timing doch noch zu retten** — und die
+Rollen-Ebene, die heute gebaut und repariert wurde, ist genau die Stelle, an der
+Nachrichten hineinkämen. Die Arbeit war also nicht umsonst; sie war nur nie das
+Ergebnis, sondern die Vorbereitung.
+
+**Was ausdrücklich NICHT folgt:** dass das Projekt gescheitert ist. Es hat in
+sechs Wochen eine belastbare Antwort auf die Frage „funktioniert Timing mit
+Kursdaten" erarbeitet — die Antwort ist nein, und sie ist jetzt begründet statt
+vermutet. Das ist ein Ergebnis.

@@ -606,6 +606,51 @@ bleiben hier stehen, damit sie nicht ein drittes Mal als Idee auftauchen.
 
 ---
 
+## 8d. NEU PRIORISIERT nach dem Befund vom 11.08. abends
+
+> **8c bleibt stehen — es ist die Liste dessen, was gebaut und nicht im Betrieb
+> ist, und die gilt unverändert.** Was sich geändert hat, ist die REIHENFOLGE
+> und die Begründung. Grund: `Arbeitsstand_Deadloop_09_08.md` 7.25.
+
+### Der Befund in einem Satz
+
+Ein Barrierensystem auf einem näherungsweise driftfreien Pfad hat **brutto den
+Erwartungswert null — für jede Geometrie.** Theoretisch 33,3 % Zielquote bei
+3/1,5 ATR, gemessen 34,0 % über 19.891 Anker. Nach Kosten ist es strikt negativ.
+Kein Prompt, kein Modell, keine Parametrierung ändert das.
+
+### Was dadurch WEGFÄLLT
+
+| bisher | warum es entfällt |
+|---|---|
+| Weitere Stop-, Ziel- oder Horizontvarianten | der Erwartungswert ist für jede Geometrie null — das ist Arithmetik, keine Messfrage |
+| „Bessere Einstiege wählen" als Ziel | es gibt keine Ordnung, die man treffen könnte (6.1/6.2, 7.22) |
+| Der Struktur-Defekt als Deadloop-Ursache | 2,71 % der Tage, und die Zellen unterscheiden sich nicht |
+
+### Was BLEIBT, in neuer Reihenfolge
+
+| Rang | Punkt | warum jetzt hier |
+|---|---|---|
+| **1** | **S2 — Akkumulation gegen DCA messen** (Abschnitt 8, dort seit 07.08. als *„günstigster Punkt der ganzen Liste"* markiert) | **Der einzige Weg, der ohne Vorhersagekraft auskommt.** Wer Drift einsammelt, muss keine Barriere treffen. Daten liegen vollständig vor, es fehlt nur die Vergleichsrechnung |
+| **2** | **8c.4/C3 — Nachrichten in den Befund** | die einzige Kategorie, die den Pfad überhaupt nicht-driftfrei machen könnte. Die Rollen-Ebene ist genau die Stelle, an der sie hineinkommt |
+| **3** | **8c.1 — das Notebook-Paket ausrollen** | die Datenwege sind repariert; sie gehören in Betrieb, unabhängig von der Ökonomie |
+| **4** | **8c.2/K2 — `umgeworfen_durch` anschließen** | der Ausstieg existiert und wird nicht ausgewertet. Defektbeseitigung |
+| **5** | 8c.3/M1 — die Betragsfrage gepaart messen | **abgestuft.** Sie klärt einen Defekt (R-A2 war nicht gebaut), nicht mehr die Frage „trägt sich das System". Die Abbruchregel gilt weiter |
+| 6 | 8c.3/M2–M5, 8c.5 | Defektbeseitigung, keine Eile |
+
+### Der Grund für die Umstellung, ausdrücklich
+
+Die Punkte 3 bis 6 sind **Defektbeseitigung** — sie machen das System korrekt,
+nicht tragfähig. Die Punkte 1 und 2 sind die einzigen, die überhaupt eine Kante
+erzeugen könnten. Sie standen bisher hinten.
+
+**Was NICHT folgt:** dass das Bisherige umsonst war. Die Frage „funktioniert
+Timing mit Kursdaten" ist in sechs Wochen belastbar beantwortet worden — die
+Antwort ist nein, und sie ist jetzt begründet statt vermutet. Und die
+Rollen-Ebene, die dabei entstanden ist, ist die Voraussetzung für Weg 2.
+
+---
+
 ## 8b.7 Empfohlene Reihenfolge
 
 1. **QW2** (Export-Ergänzung `score_details_json` / `funding_rate_aktuell`) —
