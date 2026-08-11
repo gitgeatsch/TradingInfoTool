@@ -9,6 +9,15 @@
    Trennung generisch/systemabhängig bei den Bias-Effekten
 4. `Regelwerk_Entscheidungslog.md` Nachträge **202 bis 204**
 
+**Nachgezogen am 11.08., bei Detailfragen:**
+
+| Dokument | was dort neu steht |
+|---|---|
+| `Regelwerksmanual.md` | **R-A1 bis R-A8** — die Regeln der Rollen-Ebene |
+| `Fakten_Entscheidungsmappe.md` **Kap. 10** | der neue Faktensatz, was bewusst fehlt, der bekannte Defekt |
+| `Zielgroessen_und_Erfolgsmasse.md` | **Erfolgsmaß braucht den Stop** — +22,3 % Endrendite und trotzdem ausgestoppt |
+| `Test_und_Verifikationsmethodik.md` **2.18** | Prüfsteine aus der eigenen Historie, drei Zusicherungen |
+
 Alles Weitere nur bei Bedarf. `Fakten_Entscheidungsmappe.md` Abschnitt 4.2 ist
 die Bestandsaufnahme dessen, was das ALTE System dem Modell zeigt.
 

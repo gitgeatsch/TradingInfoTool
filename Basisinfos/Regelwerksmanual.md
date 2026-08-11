@@ -3264,3 +3264,50 @@ Assets in einem manuell gesetzten Schwerpunkt werden vorgezogen — als **stabil
 Partition**, nicht als Umsortierung nach Trendstärke. Letzteres täte das
 Gegenteil von antizyklisch, und genau dagegen war der Schwerpunkt gedacht.
 Wirkt nur auf die Reihenfolge, nicht auf die Auswahl.
+
+## Die Rollen-Ebene — Regeln des neuen LLM-Aufbaus (2026-08-11)
+
+*Geprüft, aber noch nicht verdrahtet. Die produktive Pipeline arbeitet
+unverändert nach den Regeln oben; diese hier gelten für `agent/rolle_*.py`.*
+
+**R-A1 — Rolle A kennt kein Asset.** Sie beurteilt ausschließlich die Marktlage
+und läuft ein- bis zweimal täglich, nicht je Asset. Damit kann sie eine
+Marktbeurteilung nicht nachträglich zur Rechtfertigung einer Einzelentscheidung
+formen.
+
+**R-A2 — Kein Modell nennt einen Betrag.** Weder Rolle A noch BC. Der Betrag
+folgt deterministisch aus der Zahl unabhängiger Belege (3+ → 500 EUR, 2 → 300,
+1 → 100, 0 → keine Handlung). Extern belegt: Sprachmodelle sind bei der
+Positionsgröße am schwächsten; das Praxismuster entkoppelt Richtungslogik von
+quantitativer Größenbestimmung. Das bestehende Risikomanagement (RM-1 bis RM-7,
+Cash-Reserve, Positionsgrößen-Deckel) bleibt unberührt und deterministisch.
+
+**R-A3 — Keine Konfidenz wird erfragt.** Verbalisierte Konfidenz ist extern
+belegt schlecht kalibriert und war es im eigenen System (77,5 % vorhergesagt
+gegen 33,3 % tatsächlich). An ihrer Stelle steht die Zahl **unabhängiger**
+Belege — ob drei Belege drei Dinge sagen oder dreimal dasselbe.
+
+**R-A4 — Keine Vorsichtssprache im Prompt.** Kein „sei zurückhaltend", kein
+„beachte die Risiken". Negative Rahmung treibt Modelle belegt in Risikoaversion.
+Die Fakten tragen die Vorsicht, der Prompt tut es nicht.
+
+**R-A5 — Formfehler korrigieren, Sinnfehler ablehnen.** Eine Ablehnung erzeugt
+eine Wiederholung und am Ende kein Signal — derselbe Deadloop an anderer Stelle.
+Es bleiben **vier** harte Ablehnungsgründe: Rolle A ohne brauchbaren Betrag
+(vor R-A2) bzw. ohne Lage und Belege; Rolle BC ohne `aktion` oder mit einer
+erfundenen. Alles andere wird korrigiert, degradiert oder vermerkt — sichtbar
+als `_korrekturen`, `_degradiert`, `_warnung`, `_luecken` **in der Antwort**.
+
+**R-A6 — Bei der Aktion wird die Schreibweise vereinheitlicht, aber kein Synonym
+geraten.** Der Unterschied zwischen VERKAUFEN und REDUZIEREN ist Geld.
+
+**R-A7 — Eine Kaufempfehlung ohne Ausstieg wird auf NICHTS_TUN
+zurückgenommen**, nicht verworfen. Die Analyse bleibt erhalten, die Handlung
+nicht — der Nutzer sieht die Belege und den Grund.
+
+**R-A8 — Ein Gegenprüfer läuft niemals im selben Aufruf.** Dort greift die
+Selbstvalidierung: ein Modell bestätigt, was es gerade geschrieben hat.
+
+**Vor jedem Lauf, ohne Modellaufruf:** Werturteil-Wächter
+(`enthaelt_werturteile`), Konstanten-Wächter (`finde_konstanten`),
+Kausalitätsprobe (Beschreibung aus voller Reihe gegen abgeschnittene, bitgleich).

@@ -1322,3 +1322,76 @@ Bevor „null Signale" als Qualitätsproblem behandelt wird, muss die **mechanis
 Ursache** ausgeschlossen sein: `llm_aufrufe_heute` im nächsten Export zeigt in
 einer Zahl, ob überhaupt noch LLM-Aufrufe stattfinden. Finden keine statt, hilft
 kein einziger neuer Fakt.
+
+---
+
+## 10. Der neue Faktensatz der Rollen-Ebene (Stand 2026-08-11)
+
+*Kapitel 4 beschreibt, was die ALTE Pipeline liefert — rund 20 Blöcke aus 156
+Knoten in einem Aufruf. Dieses Kapitel beschreibt, was die neue Rollen-Ebene
+liefert. Beide existieren nebeneinander; die alte ist produktiv, die neue
+geprüft, aber nicht verdrahtet.*
+
+### 10.1 Der Grundsatz: Aussagen, keine Zahlenliste
+
+Belegt (Recherche 10.08.): Tokenisierung zerlegt Zahlen in bedeutungslose
+Fragmente; semantischer Inhalt ist der Leistungstreiber; Trader lesen
+Marktstruktur, nicht nachlaufende Indikatoren. Statt
+
+```
+"abstand_in_atr": {"sma_200": -3.84}
+```
+
+liefert `agent/lagebeschreibung.py`
+
+```
+Der Kurs steht 3,8 Schwankungsbreiten unter dem 200-Tage-Schnitt.
+```
+
+### 10.2 Was Rolle BC sieht — sechs Blöcke, Bestand zuerst
+
+| Block | Quelle | neu? |
+|---|---|---|
+| **Bestand** (investiert, Wert, G/V in EUR und %) | `holdings` + Preis | steht jetzt an **erster** Position |
+| Marktstruktur (höhere/tiefere Hochs und Tiefs) | Williams-Fraktal, nur bestätigte Swings | **neu** |
+| Bewegung 5/20/60 Tage | `closes` | **neu** |
+| Niveaus: Widerstand/Unterstützung in ATR und EUR, mit Berührungszahl | geclusterte Swings, Mindestabstand 0,5 ATR | **neu** |
+| **Umsatz** (relativ zum 20-Tage-Schnitt, Auf-/Abwärtsanteil, Stetigkeit) | `price_history_ohlc.volume` | **neu — lag ungenutzt** |
+| Marktlage-Beurteilung von Rolle A | Rolle A | **neu** |
+
+**Der Bestand zuerst ist kein Formatdetail.** Im KAS-Signal vom 15.07. stand
+„−14,6 % auf der Position" in den *Risiken* und hat die Empfehlung nie erreicht;
+das Modell kaufte in eine Verlustposition nach.
+
+### 10.3 Was Rolle A sieht
+
+Marktbreite (Anteil über 50-/200-Tage-Linie mit historischem Bezug). **Kein
+einzelnes Asset** — damit kann sie nicht vom Einzelfall her rationalisieren.
+
+### 10.4 Was bewusst NICHT übergeben wird
+
+`historische_erfolgsquote` · `systemguete` · `signal_stabilitaet` ·
+`konfidenz_kalibrierung` · `disclaimers` · `regime.boden_zielzone_*` ·
+`strategien_aktiv` · `regime_profil.gewicht_*` · `kursverlauf[]` (90 Rohzahlen)
+
+**Kein Block ist endgültig verworfen.** Die Begründungen stammen überwiegend aus
+Messungen am ALTEN Aufbau; jeder ist **einzeln zuschaltbar**, und die Frage
+gehört im neuen Aufbau neu gemessen. Details:
+`Rollenkonzept_Entwurf_10_08.md` Abschnitt 4.
+
+### 10.5 KEIN BETRAG für die Modelle
+
+Weder Rolle A noch BC nennt eine Positionsgröße. Extern belegt: LLMs sind dort
+am schwächsten, und das Praxismuster entkoppelt Richtungslogik von
+quantitativer Größenbestimmung. Der Betrag folgt deterministisch aus der Zahl
+**unabhängiger** Belege — 3+ → 500, 2 → 300, 1 → 100, 0 → keine Handlung. Eine
+Setzung, als solche gekennzeichnet.
+
+### 10.6 Der bekannte Defekt (11.08., noch nicht behoben)
+
+`_struktur()` vergleicht die letzten **zwei** Swing-Punkte und nennt das
+Ergebnis „ein intakter Abwärtstrend". Bei einer Korrektur innerhalb eines
+Aufwärtstrends ist das falsch beschriftet — das Modell folgte der Beschriftung
+und gewichtete einen +37-%-Aufwärtstrend als *gering*. **Erklärt sechs von sechs
+verpassten Gelegenheiten.** Fix und Erfolgskontrolle:
+`Arbeitsstand_Deadloop_09_08.md` 7.9.

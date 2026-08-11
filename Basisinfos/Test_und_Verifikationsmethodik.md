@@ -1732,3 +1732,43 @@ schrumpften. Mindestens **5** bewertbare Fälle, bevor das Wort fällt.
 Ohne Kandidaten sind alle Zusicherungen wahr, ohne dass etwas geprüft wurde.
 `teste_kette_reihenfolge.py` und `teste_allocator_prioritaet.py` prüfen deshalb
 ausdrücklich, dass genug Fälle vorliegen — 6 bzw. 13.
+
+## 2.18 Prüfsteine aus der eigenen Historie (Nachtrag 2026-08-11)
+
+**Was ein Prüfstein ist und was nicht.** Ein Prüfstein ist ein echtes Signal aus
+der Vergangenheit, dessen Ausgang in der Kursreihe steht — nicht verhandelbar,
+nicht nachträglich gewählt. Er zeigt **grobe Fehlfunktion**, nicht Güte: vier
+Fälle beweisen nichts über eine Trefferquote, aber sie beweisen, dass ein
+Konzept einen bekannten Fehler nicht mehr macht.
+
+**Die vier vom 10.08.**, aus `signals` mit bekanntem Verlauf:
+
+```
+BTC  KAUFEN     14.07.  →  −2,3 %
+KAS  TAUSCHEN   14.07.  →  −8,9 %
+KAS  NACHKAUFEN 15.07.  →  −8,6 %   (Position stand −14,6 %)
+GRIFFAIN HALTEN 21.07.  →  +33,8 %  (verpasst)
+```
+
+**CAT ist als Prüfstein untauglich** (+44,5 %): seine FX-Ableitung war
+nachweislich kaputt, der Anstieg kann ein Datenartefakt sein. Ein Prüfstein aus
+einer defekten Reihe prüft die Reihe, nicht das Verfahren.
+
+**Drei Zusicherungen, die jedes Prüfstein-Skript braucht:**
+
+1. **Ausgang mit Stop rechnen**, nicht als Endrendite — siehe
+   `Zielgroessen_und_Erfolgsmasse.md`, Nachtrag 11.08. Ein Trade mit +22,3 %
+   Endrendite kann ausgestoppt worden sein.
+2. **Die Begründungen mitspeichern.** Das Skript vom 11.08. speicherte nur
+   Aktion und Betrag — die Ursache der sechs verpassten Fälle stand in den
+   Begründungen und musste mit zwei zusätzlichen Aufrufen nachgeholt werden.
+3. **Anker mit genug Zukunft wählen.** Für 20 Tage Horizont muss der Anker
+   mindestens 20 Handelstage vor dem Reihenende liegen — sonst fällt er still
+   heraus statt aufzufallen.
+
+**Werkzeuge:**
+
+| Skript | Frage |
+|---|---|
+| `pruefe_rollenkette.py` | läuft die Kette durch? drei Stufen: trocken / ein Fall / Prüfsteine |
+| `messe_betragsdeckel.py` | gepaarte Messung zweier Prompt-Varianten auf denselben Ankern |

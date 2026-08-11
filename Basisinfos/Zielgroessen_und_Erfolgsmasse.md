@@ -1309,3 +1309,42 @@ Beides steht nach dem nächsten Export bereit (`macro_historie`,
 Ein Prompt-Effekt von 0,10 R wäre in rund fünf Stunden nachweisbar. **Machbar
 — aber nur lohnend, wenn ein Effekt dieser Größe plausibel ist.** Nach zwei
 Läufen mit 0,009 R gemessener Wirkung ist er das nicht.
+
+---
+
+## Das Erfolgsmaß braucht den STOP — sonst zählt ein Verlust als Treffer (11.08.2026)
+
+**Mein Fehler in der gepaarten Betragsdeckel-Messung.** Ich hatte „richtig" an
+der **20-Tage-Endrendite** gemessen: Kauf richtig, wenn der Kurs nach 20 Tagen
+höher steht. Der Nutzer fragte nach, und die Nachrechnung mit Stop kippt das
+Bild vollständig:
+
+| Anker | 20-Tage-Rendite | zwischenzeitl. Tief | mit 1,5-ATR-Stop |
+|---|---|---|---|
+| BTC 2025-06-24 | +13,0 % | −0,9 % | ZIEL |
+| BTC 2025-12-25 | +11,2 % | −0,7 % | ZIEL |
+| BTC 2026-03-27 | +13,3 % | −2,1 % | ZIEL |
+| ETH 2025-06-24 | +23,1 % | −3,1 % | ZIEL |
+| ETH 2026-03-27 | +17,9 % | −2,8 % | ZIEL |
+| VST 2024-09-16 | +48,3 % | −0,6 % | ZIEL |
+| PLTR 2022-09-06 | +16,2 % | −2,1 % | keines |
+| **PLTR 2024-07-24** | **+22,3 %** | **−10,7 %** | **STOP** |
+
+Die letzte Zeile ist der Kern: **+22,3 % Endrendite, und der Trade wäre trotzdem
+ein Verlust gewesen.** Das Endrendite-Maß zählte ihn als Treffer — es war die
+einzige Handlung des Systems im ganzen Lauf, und die Bilanz sah dadurch nach
+„1 von 1 richtig" aus statt nach **0 von 1**.
+
+**Regel daraus, für jedes künftige Erfolgsmaß:**
+
+> Eine Handlung gilt nur dann als richtig, wenn sie **mit dem Stop, der zu ihr
+> gehört**, überlebt hätte. Die Endrendite eines Zeitfensters ist kein
+> Erfolgsmaß, sondern eine Kursbewegung.
+
+Das ist dieselbe Fehlerklasse wie bei
+`[[feedback_mfe_kein_erfolgsmass_bei_variablem_stop]]`: eine Kennzahl, die den
+Pfad ignoriert, misst nicht den Handel, sondern das Fenster.
+
+**Der Weg zurück ist billig:** Die Kursreihe liefert Hoch und Tief je Tag. Wer
+Einstieg, Stop und Ziel kennt, kann den Pfad durchlaufen und sieht, was zuerst
+kam — dieselbe Mechanik wie in `agent/szenario_fakten.py::loese_auf()`.
