@@ -1701,3 +1701,163 @@ dasselbe Ergebnis.
 | 5 | `umgeworfen_durch` anschließen | mittel | der Ausstieg |
 | 6 | Rang unter Kandidaten | mittel | steht seit dem Rollenkonzept offen |
 | — | **Nachrichten** | groß | die einzige echte dritte Quelle. Ohne sie bleibt der Standard unerfüllbar |
+
+---
+
+## 12.7 Quellenabsicherung — was wir wirklich bekommen können (geprüft 2026-08-11)
+
+**Nutzervorgabe:** *„davor noch alle Quellen sauber absichern — gehe in die
+Detailrecherche zu Krypto und prüfe breit und intensiv."* Deshalb wurde nicht
+gelesen, sondern **jeder Endpunkt einzeln aufgerufen**. Listicles zu freien APIs
+sind Werbung; eine Quelle gilt hier erst als vorhanden, wenn sie geantwortet hat.
+
+### Live getestet, alle mit Status 200
+
+| Quelle | liefert | je Symbol? | Key? |
+|---|---|---|---|
+| **Binance Futures** | Open Interest · Long/Short · **Funding** | ja | nein |
+| **Bybit** | Open Interest · **Funding** | ja | nein |
+| CoinMetrics Community | BTC-On-Chain (aktive Adressen u. a.) | nur BTC | nein |
+| DefiLlama | Stablecoin-Angebot | Marktebene | nein |
+| blockchain.info | BTC-Marktpreisreihe | nur BTC | nein |
+| Deribit | DVOL, Options-Skew | BTC/ETH | nein |
+| Alternative.me | Fear & Greed | Marktebene | nein |
+| CoinGecko keyless | **Entwickleraktivität je Coin** | ja | nein, **aber 429** |
+| CoinPaprika | Ticker, Preise | ja | nein |
+
+### Die Abdeckung, an unserer eigenen Watchlist gemessen
+
+```
+Binance USDT-Perpetuals gesamt   683      unsere Symbole dort   37 von 44
+Bybit Linear-Perpetuals gesamt   699      unsere Symbole dort   35 von 44
+mindestens eine der beiden                                      38 von 44  =  86 %
+
+ohne Derivatedaten:  CANTON · EURCV · FLOKI · SUPRA · VSN · XNO
+```
+
+**86 % unserer Krypto-Symbole haben Positionierungsdaten — kostenlos, ohne
+API-Key.** Das ist deutlich besser als zuvor angenommen; die Einschätzung
+„Krypto hat die schwächste Zweitquellenlage" war falsch.
+
+### DER FUND: Funding-Rate je Symbol ist frei verfügbar und wird nicht geholt
+
+`api/derivatives.py` holt **Open Interest** und **Long/Short**, aber **keine
+Funding-Rate**. Die kommt heute aus `api/kraken.py` — und Kraken deckt weniger
+Symbole ab als Binance und Bybit zusammen. Beide liefern sie je Symbol,
+kostenlos, keyless, live geprüft.
+
+### Was NICHT brauchbar ist
+
+| | Grund |
+|---|---|
+| CoinGecko `community_data` (Reddit) | **0 von 5** Coins mit belegten Werten; Telegram 2 von 5. Ein Feld, das überwiegend null ist, ist ein **konstantes Feld** (B10) und würde von `finde_konstanten()` zu Recht blockiert |
+| CoinDesk Data (ehem. CryptoCompare) | kostenloser Zugang **zum 21.05.2026 eingestellt** |
+
+### Betriebliche Warnung: CoinGecko keyless ist enger als beworben
+
+**Nach fünf Aufrufen mit 2,5 Sekunden Pause kam HTTP 429.** Die verbreitete
+Angabe „30 Aufrufe je Minute" hält in der Praxis nicht. Für 44 Coins bedeutet
+das: sehr langsames Takten, der Demo-Key, oder ein Abruf nur für die Symbole,
+die tatsächlich zur Entscheidung anstehen. **Das gehört in jede Aufwandsschätzung
+— und in den Vorflug jedes Laufs, der CoinGecko benutzt.**
+
+### Was das für die Entwicklerdaten heißt
+
+`commit_count_4_weeks`, `pull_requests_merged`, `pull_request_contributors` und
+`stars` sind **bei 4 von 5 geprüften Coins belegt** — und bei EURCV korrekt
+null, weil ein Stablecoin kein Entwicklungsprojekt ist. Sie sind damit
+**unabhängig vom Kurs und unterscheidend zwischen Assets** — beide Kriterien
+aus Kapitel 11.3 erfüllt.
+
+**Vorbehalt:** Entwicklungsaktivität ist ein **langsames** Merkmal. Sie ändert
+sich über Monate, nicht über Tage. Für eine Entscheidung über einen Einstieg in
+den nächsten Wochen ist sie eher ein Qualitäts- als ein Zeitpunktmerkmal. Das
+gehört bei der Zuordnung berücksichtigt — sie taugt für „welches Asset", nicht
+für „wann".
+
+---
+
+## 12.8 Zuordnung je Rolle und Assetklasse (2026-08-11)
+
+*Angewandtes Kriterium (Kap. 11.3): **unterscheidet der Fakt zwischen Assets →
+Beurteilung; wirkt er auf alle gleich → Lagebild oder Risikoschicht.** Alle
+Quellen sind in 12.7 einzeln live geprüft.*
+
+### LAGEBILD — je Klasse, die vier Standarddimensionen
+
+| Dimension | Krypto | Aktien / ETF | Rohstoffe |
+|---|---|---|---|
+| **Trend** | BTC als Benchmark | SPY (in der DB seit 1993) | Futures-Referenz |
+| **Volatilität** | **Deribit DVOL** | VIX (`yfinance_client`) | ATR-Perzentil der Referenz |
+| **Liquidität** | Stablecoin-Angebot (DefiLlama), Börsenzuflüsse (CoinMetrics) | Zinsen, CPI, M2 (`macro`) | DXY |
+| **Stimmung** | Fear & Greed (alternative.me), BTC-Dominanz | — | — |
+| ~~Breite~~ | **entfällt** — für 4 von 5 Klassen nicht berechenbar (Kap. 11.4) | | |
+
+**Heute im Lagebild: nur Marktbreite. Alle vier Zeilen oben fehlen vollständig.**
+
+### BEFUND — je Asset, nur was zwischen Assets unterscheidet
+
+| Klasse | dritter/vierter unabhängiger Faktor | Modul | Abdeckung |
+|---|---|---|---|
+| **Krypto Spot** | **Funding je Symbol** · Open Interest · Long/Short | `derivatives.py` (Funding **fehlt**, s. 12.7) | **38 von 44** |
+| | relative Stärke zu BTC | vorhanden (`btc_relativwert`) | alle |
+| | Entwickleraktivität | CoinGecko keyless | alle, aber **429-Grenze** |
+| **Krypto Hebel** | wie Spot, Funding wiegt schwerer (Haltekosten je Tag) | dito | dito |
+| **Aktien** | **Insidergeschäfte** (Form 4) | `sec_edgar.py` | je Aktie |
+| | **Short Interest** | `finra.py` | je Aktie |
+| | Analysten-Konsens-Verlauf | `finnhub.py` (Key) | je Aktie |
+| | Fundamentaldaten | `asset_quality.py` | je Wertpapier |
+| | relative Stärke zu SPY | zu bauen | alle |
+| **Rohstoffe** | **COT-Positionierung** | `cftc_cot.py`, kein Key | je Rohstoff |
+| | Lagerbestände | `eia.py` | nur Erdgas |
+| | relative Stärke zur Futures-Referenz | zu bauen | alle |
+| **ETF** | relative Stärke zu SPY | zu bauen | alle |
+| | *sonst nichts* | — | — |
+
+### ENTSCHEIDUNG — für alle Klassen gleich
+
+Bestand · Sperren · Kosten · vorherige Empfehlung · **`umgeworfen_durch` der
+vorherigen Empfehlung samt der Frage, ob es eingetreten ist**. Niemals Beträge,
+Deckel oder Niveaus als Zahl (Kap. 11.6).
+
+### Wie viele unabhängige Faktoren jede Klasse damit erreicht
+
+```
+Aktien       Preis · Umsatz · Insider/ShortInterest · Fundamentaldaten     4   erfuellt
+Krypto       Preis · Umsatz · Positionierung/Funding · (Entwicklung)       3-4 erfuellt
+Rohstoffe    Preis · Umsatz · COT-Positionierung · (Lagerbestaende)        3-4 erfuellt
+ETF          Preis · Umsatz                                               2   NICHT erfuellt
+```
+
+> **ETF ist die einzige Klasse, die den Standard nicht erreichen kann** — es gibt
+> keine dritte Quelle je ETF. Und es ist zugleich die Klasse mit der
+> schlechtesten Kostenquote (0,52 R, Arbeitsstand 7.23), weil der ATR-Stop dort
+> nur 1,9 % vom Kurs entfernt liegt.
+>
+> **Beide Befunde treffen dieselbe Klasse, unabhängig voneinander.** Das ist eine
+> Entscheidungsgrundlage: ETFs sind für diesen Aufbau strukturell ungeeignet.
+> Für ein Halten oder eine Akkumulation bleiben sie unberührt geeignet — das ist
+> eine andere Frage (8d, Rang 1).
+
+### Bekannte Lücken in dieser Zuordnung
+
+1. **6 Krypto-Symbole ohne Derivatedaten** (CANTON, EURCV, FLOKI, SUPRA, VSN,
+   XNO) bleiben bei zwei Faktoren. EURCV ist ein Stablecoin und braucht keine.
+2. **Entwickleraktivität ist ein langsames Merkmal** — sie ändert sich über
+   Monate. Sie taugt für *welches Asset*, nicht für *wann*.
+3. **CoinGecko-Taktung**: 429 nach fünf Aufrufen. Der Abruf gehört auf die
+   Symbole beschränkt, die tatsächlich zur Entscheidung anstehen.
+4. **`finnhub.py` und `eia.py` brauchen einen Key** — kostenlos, aber
+   einzurichten. Alle übrigen Quellen laufen keyless.
+5. **Relative Stärke zum Klassen-Benchmark** ist für Aktien, ETF und Rohstoffe
+   noch nicht gebaut; für Krypto existiert sie als `btc_relativwert`.
+
+### Reihenfolge
+
+| Rang | Schritt | warum |
+|---|---|---|
+| 1 | **Funding je Symbol in `derivatives.py`** | frei, keyless, 38 von 44, und der Baustein fehlt komplett |
+| 2 | Lagebild auf die vier Dimensionen bringen | heute ist nur die untaugliche Breite drin |
+| 3 | COT für Rohstoffe, Insider + Short Interest für Aktien | fertige Module, nie an die Rollen-Ebene angeschlossen |
+| 4 | Relative Stärke je Klasse | erster unterscheidender Fakt für Nicht-Krypto |
+| 5 | Entwickleraktivität | langsam, deshalb zuletzt |
