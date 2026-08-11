@@ -1861,3 +1861,66 @@ ETF          Preis · Umsatz                                               2   N
 | 3 | COT für Rohstoffe, Insider + Short Interest für Aktien | fertige Module, nie an die Rollen-Ebene angeschlossen |
 | 4 | Relative Stärke je Klasse | erster unterscheidender Fakt für Nicht-Krypto |
 | 5 | Entwickleraktivität | langsam, deshalb zuletzt |
+
+---
+
+## 12.9 Gebaut: Funding-Rate je Symbol (11.08.2026)
+
+**Rang 1 aus 12.8 umgesetzt.** `api/derivatives.py` holte bisher Open Interest
+und Long/Short, aber **keine Funding-Rate** — die kam ausschließlich aus
+`api/kraken.py`, das weniger Perpetuals listet.
+
+### Was neu ist
+
+```
+get_binance_funding_history(symbol, limit)   Binance zahlt alle 8 h, limit=100 ≈ 33 Tage
+get_bybit_funding_history(symbol, limit)     absteigend geliefert, aufsteigend zurueckgegeben
+get_funding_history(symbol, limit)           Binance zuerst, Bybit als Rueckfall
+summarize_funding(readings)                  der historische Bezug
+```
+
+**Genau eine Quelle je Symbol, kein Mitteln.** Zwei Börsen zu mitteln wäre eine
+Zahl, die es an keiner Börse gibt; das Feld `exchange` sagt, welche es war.
+
+**Die rohe Zahl ist kein Fakt.** Eine Funding-Rate von 0,0001 sagt einem Modell
+nichts — erst ihr Verhältnis zur eigenen Historie ist eine Aussage (R-T1: das
+Fenster nennen, R-T5: relative Einheiten). `summarize_funding()` liefert
+Perzentil, Anteil positiver Perioden und Mittel, **ohne Bewertung** (R-T3);
+dasselbe Muster wie `finra.summarize_short_interest()`.
+
+### Gemessene Abdeckung
+
+```
+39 von 44 Krypto-Symbolen  =  89 %      Binance 37 · Bybit 2
+ohne:  CANTON · EURCV · FLOKI · SUPRA · VSN
+```
+
+**Besser als die 38 aus der Vorabschätzung in 12.7** — der Rückfall über beide
+Börsen findet Symbole, die eine Prüfung gegen `exchangeInfo` übersieht (dort
+weichen Basissymbole ab, etwa mit `1000`-Präfix). Die Abdeckung wurde deshalb
+**nicht geschätzt, sondern durch Abruf aller 44 Symbole gemessen.**
+
+### Konstanten-Prüfung bestanden
+
+```
+9 verschiedene aktuelle Werte bei 13 gepruefte Symbolen
+Anteil positiver Funding-Perioden:  2 %  (CAT)  bis  100 %  (AKT)
+Perzentil der aktuellen Rate:       0 %          bis   98 %
+```
+
+**CAT hatte in 98 von 100 Perioden negatives Funding, BTC in 99 positives.** Das
+Feld unterscheidet stark zwischen Assets und ist damit ein Kandidat für den
+**Befund** (Kriterium aus Kap. 11.3), nicht für die Risikoschicht.
+
+### Was noch fehlt, bevor es wirkt
+
+Die Funktion ist gebaut und geprüft — **sie ist noch nicht an die Rollen-Ebene
+angeschlossen.** Dafür braucht es eine Aussage in `lagebeschreibung.py`, etwa:
+
+> *„Der Terminmarkt zahlt seit 100 Perioden überwiegend Longs an Shorts
+> (2 % positive Perioden); die aktuelle Rate liegt im untersten Zehntel ihrer
+> eigenen Historie."*
+
+Formuliert nach R-T1 (Fenster genannt), R-T2 (kein Etikett), R-T3 (keine
+Bewertung), R-T5 (relativ). **Erst dieser Satz macht aus der Zahl einen Fakt —
+und erst dann ist es der dritte unabhängige Faktor.**

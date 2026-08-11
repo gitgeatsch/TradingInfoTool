@@ -133,3 +133,117 @@ def get_okx_open_interest(inst_id: str = "BTC-USDT-SWAP", session: requests.Sess
     return OpenInterestReading(
         exchange="okx", symbol=inst_id, open_interest=float(entry["oi"]), open_interest_usd=float(entry["oiUsd"])
     )
+
+
+# --- FUNDING-RATE JE SYMBOL (2026-08-11) ------------------------------------
+#
+# DIE LUECKE, die das schliesst. Dieses Modul holte bisher Open Interest und
+# Long/Short, aber KEINE Funding-Rate - die kam ausschliesslich aus
+# `api/kraken.py`. Kraken listet weniger Perpetuals als Binance und Bybit:
+# an der eigenen Watchlist gemessen (11.08.) decken Binance und Bybit zusammen
+# 38 von 44 Krypto-Symbolen ab, kostenlos und ohne API-Key. Beide Endpunkte
+# wurden live geprueft.
+#
+# WARUM DIE FUNDING-RATE ZAEHLT: Sie ist einer der wenigen Fakten, die NICHT
+# aus unserer Kursreihe abgeleitet sind. Nach dem Fachstandard traegt ein Setup
+# drei bis vier UNABHAENGIGE Faktoren; unsere Eingabe liefert bisher zwei
+# (Preis und Umsatz), weil Struktur, Bewegung und Niveaus alle aus derselben
+# Kerzenreihe stammen. Die Positionierung am Terminmarkt ist eine dritte
+# Quelle - siehe Fakten_Entscheidungsmappe Kapitel 12.
+#
+# DIE ROHE ZAHL IST KEIN FAKT. Eine Funding-Rate von 0,0001 sagt einem Modell
+# nichts; erst ihr Verhaeltnis zur eigenen Historie ist eine Aussage (R-T1: das
+# Fenster nennen, R-T5: relative Einheiten). Deshalb liefert
+# `summarize_funding()` den Bezug mit - dasselbe Muster wie
+# `finra.summarize_short_interest()`.
+
+BINANCE_FUNDING_URL = "https://fapi.binance.com/fapi/v1/fundingRate"
+BYBIT_FUNDING_URL = "https://api.bybit.com/v5/market/funding/history"
+
+
+@dataclass
+class FundingRateReading:
+    exchange: str
+    symbol: str
+    zeitpunkt_ms: int
+    funding_rate: float
+
+
+@track_api_health("binance")
+def get_binance_funding_history(symbol: str = "BTCUSDT", limit: int = 100,
+                                session: requests.Session | None = None
+                                ) -> list[FundingRateReading]:
+    """Binance zahlt alle acht Stunden - `limit=100` sind rund 33 Tage."""
+    session = session or requests.Session()
+    r = session.get(BINANCE_FUNDING_URL,
+                    params={"symbol": symbol, "limit": limit}, timeout=15)
+    r.raise_for_status()
+    daten = r.json()
+    if not isinstance(daten, list) or not daten:
+        raise NoOpenInterestDataError(
+            f"binance: keine Funding-Daten fuer Symbol '{symbol}'")
+    return [FundingRateReading("binance", symbol, int(e["fundingTime"]),
+                               float(e["fundingRate"])) for e in daten]
+
+
+@track_api_health("bybit")
+def get_bybit_funding_history(symbol: str = "BTCUSDT", limit: int = 100,
+                              session: requests.Session | None = None
+                              ) -> list[FundingRateReading]:
+    """Bybit liefert absteigend; hier wird aufsteigend zurueckgegeben, damit
+    beide Boersen dasselbe Format haben und ein Aufrufer sie nicht
+    versehentlich verwechselt."""
+    session = session or requests.Session()
+    r = session.get(BYBIT_FUNDING_URL,
+                    params={"category": "linear", "symbol": symbol,
+                            "limit": limit}, timeout=15)
+    r.raise_for_status()
+    liste = ((r.json().get("result") or {}).get("list")) or []
+    _erstes_element(liste, "bybit", symbol)      # wirft bei leerer Antwort
+    gelesen = [FundingRateReading("bybit", symbol,
+                                  int(e["fundingRateTimestamp"]),
+                                  float(e["fundingRate"])) for e in liste]
+    return sorted(gelesen, key=lambda x: x.zeitpunkt_ms)
+
+
+def get_funding_history(symbol: str = "BTCUSDT", limit: int = 100,
+                        session: requests.Session | None = None
+                        ) -> list[FundingRateReading]:
+    """Binance zuerst, Bybit als Rueckfall - GENAU EINE Quelle je Symbol.
+
+    Zwei Boersen zu mitteln waere falsch: die Saetze unterscheiden sich real,
+    und ein Mittelwert waere eine Zahl, die es an keiner Boerse gibt. Wer die
+    Quelle braucht, liest sie am Feld `exchange` ab."""
+    for holen in (get_binance_funding_history, get_bybit_funding_history):
+        try:
+            werte = holen(symbol, limit, session)
+            if werte:
+                return werte
+        except Exception:                                        # noqa: BLE001
+            continue
+    return []
+
+
+def summarize_funding(readings: list[FundingRateReading]) -> dict | None:
+    """Der Bezug, der aus der Zahl eine Aussage macht - keine Bewertung.
+
+    Geliefert wird, WO die aktuelle Rate in ihrer eigenen Historie steht. Das
+    Urteil darueber bleibt dem Modell (R-T3: keine Werturteile im Faktensatz).
+    Das Vorzeichen ist die eigentliche Information: positiv heisst, dass Longs
+    die Shorts bezahlen - der Terminmarkt ist long positioniert."""
+    if not readings:
+        return None
+    werte = [r.funding_rate for r in readings]
+    aktuell = werte[-1]
+    sortiert = sorted(werte)
+    rang = sum(1 for w in sortiert if w < aktuell)
+    return {
+        "exchange": readings[-1].exchange,
+        "symbol": readings[-1].symbol,
+        "aktuell": aktuell,
+        "beobachtungen": len(werte),
+        "perzentil": int(round(100.0 * rang / len(werte))),
+        "anteil_positiv_pct": int(round(100.0 * sum(1 for w in werte if w > 0)
+                                        / len(werte))),
+        "mittel": sum(werte) / len(werte),
+    }
