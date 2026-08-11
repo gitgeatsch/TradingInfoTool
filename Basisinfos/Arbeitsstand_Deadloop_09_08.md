@@ -2304,3 +2304,95 @@ Auflösungspunkt ab. Bei 10 Tagen bleiben 36 % unentschieden.
    Zeitschranke erreicht, wird irgendwo geschlossen — nicht bei null. Bei
    Horizont 20 betrifft das 15 bis 21 % aller Fälle und trägt den Unterschied
    zwischen −0,014 und −0,115 R mit. Das gehört ausgerechnet, nicht gesetzt.
+
+---
+
+## 7.23 „keines = 0 R" war eine Setzung — und die Kosten sind der eigentliche Grund (11.08. spät)
+
+**Werkzeug:** `messe_zeitschranke.py`, kein Modellaufruf.
+
+### Befund 1: Offene Fälle sind kein neutraler Rest, sondern Überlebende
+
+Abschnitt 6.3 rechnet `0,225 × 2R + 0,565 × (−1R) = −0,115 R`. Die dritte
+Gruppe — weder Ziel noch Stop — taucht darin nicht auf und wird damit implizit
+mit **0 R** bewertet. Bei Horizont 20 sind das 15 bis 21 % aller Fälle.
+
+Gemessen, statt gesetzt:
+
+```
+Horizont 20: offene Faelle  Mittel +0,281 R · Median +0,146 R · 57,3 % im Plus
+   5. Perzentil -0,634    25. -0,158    50. +0,146    75. +0,723    95. +1,432
+```
+
+**Und das ist strukturell, nicht zufällig.** Ein Fall, der 20 Tage überlebt hat,
+ohne einen Stop bei 1,5 ATR zu berühren, ist ein **ausgewählter Überlebender** —
+der Stop liegt viel näher als das Ziel bei 3 ATR. Die Gruppe *muss* positiv
+verzerrt sein. Sie mit null zu bewerten unterschätzt den Erwartungswert
+systematisch in eine Richtung.
+
+### Befund 2: Damit verschwindet die Horizontabhängigkeit — und 7.22 korrigiert sich
+
+```
+Horizont    EW mit "keines = 0"    EW mit tatsaechlichem Kurs
+      10               -0,080                        +0,028
+      20               -0,014                        +0,028
+      30               +0,013                        +0,030
+      40               +0,021                        +0,031
+      60               +0,033                        +0,038
+```
+
+**Richtig bewertet ist der Erwartungswert über alle Horizonte flach bei rund
++0,03 R.** Der Vorzeichenwechsel zwischen 20 und 30 Tagen, den 7.22 als Befund
+meldete, war **ein Artefakt der Null-Annahme**, keine Eigenschaft des Marktes.
+Die Zeitschranke ist damit weit weniger kritisch als dort behauptet.
+
+### Befund 3: Die Kosten sind der Grund — und zwar um ein Vielfaches
+
+Die bisher zitierten **−0,233 R sind eine HEBEL-Zahl**: sie enthalten eine
+Tagesgebühr (Funding) und hängen an 2,6 Tagen Haltedauer. Bei Spot gibt es kein
+Funding. Die Sätze je Klasse stehen seit 07.08. in
+`agent/krypto/backward_tracking.py`.
+
+**Kosten in R = Roundtrip in % / Stopabstand in %** — der Stopabstand ist
+1,5 ATR und damit je Asset verschieden, deshalb je Anker gerechnet:
+
+| Klasse | Anker | Stop, Median | Kosten in R | Brutto-EW | **Netto-EW** |
+|---|---|---|---|---|---|
+| krypto | 12.795 | 11,7 % | 0,257 | +0,028 | **−0,230** |
+| aktien | 3.383 | 5,9 % | 0,170 | +0,028 | **−0,143** |
+| etf | 13.400 | 1,9 % | 0,521 | +0,028 | **−0,493** |
+| rohstoffe | 720 | 3,0 % | 0,335 | +0,028 | **−0,307** |
+
+**Die Kosten sind das Sechs- bis Achtzehnfache des Brutto-Erwartungswerts.**
+
+**ETF ist am schlechtesten, und der Grund ist lehrreich:** der Stopabstand
+beträgt dort nur 1,9 % des Kurses. Geringe Schwankung heißt enger ATR-Stop, und
+ein enger Stop heißt, dass jede Gebühr einen großen Teil des Risikobudgets
+frisst. Nicht die Kosten sind hoch, der Stop ist eng.
+
+### Was daraus folgt — und was nicht
+
+**Der Aufbau trägt sich nicht.** Das bestätigt die Schlussfolgerung aus
+Abschnitt 6 — **aber die Begründung dort ist die falsche.** Die Geometrie
+verliert brutto nicht (+0,03 R); es sind die Kosten.
+
+**Und die Geometrie lässt sich nicht daraus herausdrehen.** Damit die Kosten
+unter den Bruttovorteil fallen, müsste gelten
+`Stop % > Roundtrip % / 0,03` — bei Krypto also ein Stop von **100 % des
+Kurses**. Ein weiterer Stop senkt die Kosten in R, verschiebt aber die
+Trefferquote mit. **Es gibt keine Stop-Einstellung, die diesen Aufbau bei diesen
+Gebühren tragfähig macht.**
+
+Damit ist der Hebel **nicht** „bessere Einstiege wählen" — brutto ist der Aufbau
+ohnehin nahe null, und Abschnitt 6 hat gemessen, dass kein Verfahren die
+Basisrate schlägt. Der Hebel liegt bei **Kosten je R**: weniger und größere
+Bewegungen, längere Haltedauern, oder eine andere Gebührenstruktur.
+
+### Grenzen dieser Messung
+
+- Der **Brutto-EW ist der Gesamtwert**, für alle Klassen derselbe. Ein
+  klassenweiser Bruttowert wäre genauer und würde die Tabelle verschieben.
+- **400 EUR Referenzposition.** Bei Börsenwerten sinkt der Fixanteil mit der
+  Größe: bei 1.000 EUR fielen die ETF-Kosten von 0,52 auf rund 0,37 R — besser,
+  aber weiterhin ein Vielfaches von 0,03.
+- Steuern und Slippage sind nicht enthalten.
