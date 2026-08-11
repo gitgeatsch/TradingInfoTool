@@ -1129,3 +1129,63 @@ erklärbar.
 Modell bei +23 % Aufwärtsbewegung NICHTS_TUN sagt. Die Belege der abgelehnten
 Fälle liegen in `betragsdeckel*.json` und sind lesbar — dort steht die
 Begründung im Klartext.
+
+### 7.9 DIE URSACHE gefunden: eine falsch beschriftete Marktstruktur (11.08.)
+
+**Nutzerfrage: „wenn wir immer auf 20 Tage breiten Marktanstieg gehen, wird es
+u.U. nicht funktionieren?"** Die Prüfung gab ihm doppelt recht.
+
+**Erstens war mein Erfolgsmaß falsch.** Ich hatte „richtig" an der
+20-Tage-Endrendite gemessen. Mit Stop sieht es anders aus:
+
+```
+Anker                20T-Rendite   zwischenzeitl. Tief   mit 1,5-ATR-Stop
+BTC  2025-06-24          +13,0 %              −0,9 %      ZIEL
+BTC  2025-12-25          +11,2 %              −0,7 %      ZIEL
+BTC  2026-03-27          +13,3 %              −2,1 %      ZIEL
+ETH  2025-06-24          +23,1 %              −3,1 %      ZIEL
+ETH  2026-03-27          +17,9 %              −2,8 %      ZIEL
+VST  2024-09-16          +48,3 %              −0,6 %      ZIEL
+PLTR 2022-09-06          +16,2 %              −2,1 %      keines
+PLTR 2024-07-24          +22,3 %             −10,7 %      STOP
+```
+
+Die sechs verpassten Fälle waren **saubere Gelegenheiten** — Ziel erreicht, Stop
+nie in Gefahr. Und der einzige Fall, in dem das System kaufte, wäre
+**ausgestoppt** worden. Korrigierte Bilanz: nicht 1 von 1 richtig, sondern
+**0 von 1**.
+
+**Zweitens, und das ist die Ursache:** Der Faktensatz für ETH am 24.06.2025
+enthielt zwei Sätze, die sich widersprechen —
+
+```
+Die Marktstruktur zeigt tiefere Hochs und tiefere Tiefs
+  — ein intakter ABWÄRTSTREND.
+Kursentwicklung: 5 Tage −2,9 %, 20 Tage −6,1 %, 60 Tage +37,0 %
+```
+
+Das Modell folgte dem ersten und gewichtete den zweiten als **gering**:
+
+```
+dagegen  hoch    Intakter Abwaertstrend mit tieferen Hochs und Tiefs
+dagegen  hoch    Gesamtmarkt in Schwaechephase
+dafuer   mittel  Naechste Unterstuetzung
+dafuer   GERING  60-Tage-Entwicklung mit +37,0 % noch im groesseren Aufwaertstrend
+```
+
+**Der Fehler liegt in `agent/lagebeschreibung.py::_struktur()`.** Sie vergleicht
+die letzten **zwei** Swing-Punkte — wenige Tage — und belegt das Ergebnis mit
+einem absoluten Wort: *„ein intakter Abwärtstrend"*. Bei einer Korrektur
+innerhalb eines starken Aufwärtstrends ist das schlicht falsch beschriftet. Eine
+Rückwärtsbewegung von 6 % nach einem Anstieg von 37 % ist eine Kaufgelegenheit,
+kein Abwärtstrend.
+
+**Das erklärt sechs von sechs verpassten Gelegenheiten** — und zwar besser als
+jede Modellkritik. Nicht das Modell hat versagt; es hat einer irreführenden
+Beschriftung geglaubt, die ich geschrieben habe.
+
+**Der Fix (nicht mehr in dieser Sitzung gebaut):** Die Struktur relativ zur
+übergeordneten Bewegung formulieren, ohne absolutes Etikett. Etwa: *„Auf Sicht
+von zwei Wochen tiefere Hochs und Tiefs, innerhalb eines 60-Tage-Anstiegs von
++37 % — eine Korrektur im Aufwärtstrend."* Derselbe Fakt, ohne das Wort, das
+mehr Gewicht bekommt als die Zahl daneben.
