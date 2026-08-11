@@ -1,0 +1,394 @@
+{
+ "seed": 20260811,
+ "schwelle_pct": 10.0,
+ "vorlauf": 220,
+ "zukunft": 40,
+ "min_abstand": 40,
+ "max_je_symbol": 2,
+ "anker": [
+  {
+   "symbol": "EXH3",
+   "index": 1181,
+   "datum": "2012-08-17",
+   "bewegung_60t_pct": 10.3,
+   "zelle": "A",
+   "atr": 0.286805,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 16
+   }
+  },
+  {
+   "symbol": "ONDO",
+   "index": 694,
+   "datum": "2026-06-11",
+   "bewegung_60t_pct": 50.4,
+   "zelle": "A",
+   "atr": 0.040223,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 13
+   }
+  },
+  {
+   "symbol": "DBPK",
+   "index": 1474,
+   "datum": "2016-01-12",
+   "bewegung_60t_pct": 10.1,
+   "zelle": "A",
+   "atr": 0.105475,
+   "ausgang": {
+    "ereignis": "ZIEL",
+    "tag": 6
+   }
+  },
+  {
+   "symbol": "VVMX",
+   "index": 815,
+   "datum": "2024-12-03",
+   "bewegung_60t_pct": 37.7,
+   "zelle": "A",
+   "atr": 0.184887,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 1
+   }
+  },
+  {
+   "symbol": "ALGO",
+   "index": 401,
+   "datum": "2025-08-22",
+   "bewegung_60t_pct": 48.5,
+   "zelle": "A",
+   "atr": 0.020666,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 7
+   }
+  },
+  {
+   "symbol": "GRIFFAIN",
+   "index": 344,
+   "datum": "2026-01-02",
+   "bewegung_60t_pct": 20.6,
+   "zelle": "A",
+   "atr": 0.001925,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 17
+   }
+  },
+  {
+   "symbol": "ISOC",
+   "index": 1164,
+   "datum": "2016-05-16",
+   "bewegung_60t_pct": 19.6,
+   "zelle": "A",
+   "atr": 0.441975,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 1
+   }
+  },
+  {
+   "symbol": "VST",
+   "index": 1211,
+   "datum": "2021-07-29",
+   "bewegung_60t_pct": 19.9,
+   "zelle": "A",
+   "atr": 0.470057,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 4
+   }
+  },
+  {
+   "symbol": "APT",
+   "index": 574,
+   "datum": "2026-02-11",
+   "bewegung_60t_pct": -45.7,
+   "zelle": "B",
+   "atr": 0.122027,
+   "ausgang": {
+    "ereignis": "ZIEL",
+    "tag": 35
+   }
+  },
+  {
+   "symbol": "LINK",
+   "index": 480,
+   "datum": "2025-11-09",
+   "bewegung_60t_pct": -32.4,
+   "zelle": "B",
+   "atr": 1.409879,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 5
+   }
+  },
+  {
+   "symbol": "SEI",
+   "index": 242,
+   "datum": "2025-03-16",
+   "bewegung_60t_pct": -51.4,
+   "zelle": "B",
+   "atr": 0.022038,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 17
+   }
+  },
+  {
+   "symbol": "APT",
+   "index": 698,
+   "datum": "2026-06-15",
+   "bewegung_60t_pct": -32.4,
+   "zelle": "B",
+   "atr": 0.056989,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 9
+   }
+  },
+  {
+   "symbol": "AIOZ",
+   "index": 250,
+   "datum": "2026-03-18",
+   "bewegung_60t_pct": -36.0,
+   "zelle": "B",
+   "atr": 0.004404,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 4
+   }
+  },
+  {
+   "symbol": "VVMX",
+   "index": 728,
+   "datum": "2024-08-02",
+   "bewegung_60t_pct": -30.8,
+   "zelle": "B",
+   "atr": 0.203467,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 1
+   }
+  },
+  {
+   "symbol": "SUI",
+   "index": 571,
+   "datum": "2026-02-08",
+   "bewegung_60t_pct": -39.9,
+   "zelle": "B",
+   "atr": 0.111934,
+   "ausgang": {
+    "ereignis": "offen",
+    "tag": null
+   }
+  },
+  {
+   "symbol": "BEAMX",
+   "index": 518,
+   "datum": "2025-12-17",
+   "bewegung_60t_pct": -44.6,
+   "zelle": "B",
+   "atr": 0.000253,
+   "ausgang": {
+    "ereignis": "offen",
+    "tag": null
+   }
+  },
+  {
+   "symbol": "NEAR",
+   "index": 545,
+   "datum": "2026-01-13",
+   "bewegung_60t_pct": -21.4,
+   "zelle": "C",
+   "atr": 0.103846,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 2
+   }
+  },
+  {
+   "symbol": "SUI",
+   "index": 255,
+   "datum": "2025-03-29",
+   "bewegung_60t_pct": -36.8,
+   "zelle": "C",
+   "atr": 0.232243,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 8
+   }
+  },
+  {
+   "symbol": "KAS",
+   "index": 345,
+   "datum": "2025-10-30",
+   "bewegung_60t_pct": -36.0,
+   "zelle": "C",
+   "atr": 0.00588,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 5
+   }
+  },
+  {
+   "symbol": "ONDO",
+   "index": 582,
+   "datum": "2026-02-19",
+   "bewegung_60t_pct": -33.0,
+   "zelle": "C",
+   "atr": 0.022181,
+   "ausgang": {
+    "ereignis": "offen",
+    "tag": null
+   }
+  },
+  {
+   "symbol": "SEI",
+   "index": 449,
+   "datum": "2025-10-09",
+   "bewegung_60t_pct": -13.5,
+   "zelle": "C",
+   "atr": 0.017966,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 1
+   }
+  },
+  {
+   "symbol": "DBPK",
+   "index": 920,
+   "datum": "2013-10-28",
+   "bewegung_60t_pct": -11.8,
+   "zelle": "C",
+   "atr": 0.083412,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 15
+   }
+  },
+  {
+   "symbol": "BEAMX",
+   "index": 473,
+   "datum": "2025-11-02",
+   "bewegung_60t_pct": -31.5,
+   "zelle": "C",
+   "atr": 0.000641,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 2
+   }
+  },
+  {
+   "symbol": "DBPK",
+   "index": 281,
+   "datum": "2011-04-26",
+   "bewegung_60t_pct": -17.8,
+   "zelle": "C",
+   "atr": 0.332709,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 4
+   }
+  },
+  {
+   "symbol": "OD7H",
+   "index": 322,
+   "datum": "2025-10-22",
+   "bewegung_60t_pct": 21.7,
+   "zelle": "D",
+   "atr": 0.471528,
+   "ausgang": {
+    "ereignis": "ZIEL",
+    "tag": 36
+   }
+  },
+  {
+   "symbol": "AKT",
+   "index": 611,
+   "datum": "2026-03-20",
+   "bewegung_60t_pct": 26.4,
+   "zelle": "D",
+   "atr": 0.049956,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 7
+   }
+  },
+  {
+   "symbol": "PLTR",
+   "index": 836,
+   "datum": "2024-01-29",
+   "bewegung_60t_pct": 15.5,
+   "zelle": "D",
+   "atr": 0.69173,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 3
+   }
+  },
+  {
+   "symbol": "PLUME",
+   "index": 381,
+   "datum": "2026-05-09",
+   "bewegung_60t_pct": 19.5,
+   "zelle": "D",
+   "atr": 0.001164,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 3
+   }
+  },
+  {
+   "symbol": "EXH3",
+   "index": 1055,
+   "datum": "2012-02-20",
+   "bewegung_60t_pct": 13.2,
+   "zelle": "D",
+   "atr": 0.212958,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 4
+   }
+  },
+  {
+   "symbol": "W",
+   "index": 428,
+   "datum": "2025-09-18",
+   "bewegung_60t_pct": 28.1,
+   "zelle": "D",
+   "atr": 0.009179,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 4
+   }
+  },
+  {
+   "symbol": "VST",
+   "index": 1313,
+   "datum": "2021-12-22",
+   "bewegung_60t_pct": 34.1,
+   "zelle": "D",
+   "atr": 0.498945,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 20
+   }
+  },
+  {
+   "symbol": "NEAR",
+   "index": 705,
+   "datum": "2026-06-22",
+   "bewegung_60t_pct": 46.9,
+   "zelle": "D",
+   "atr": 0.231358,
+   "ausgang": {
+    "ereignis": "STOP",
+    "tag": 35
+   }
+  }
+ ]
+}

@@ -2168,3 +2168,139 @@ Der yfinance-Rückfall ist gebaut und geprüft, aber **nicht in
 CoinGecko-Rückfall nach Kraken. Das Einhängen ist eine Produktionsänderung und
 gehört auf das Notebook, zusammen mit einem `--schreiben`-Lauf für die vier
 bestätigten Symbole.
+
+---
+
+## 7.21 Die geschichtete Ankerpopulation — Grundlage aller offenen Messungen (11.08. spät)
+
+**Werkzeug:** `baue_ankerpopulation.py`, ohne Modellaufruf, reproduzierbar
+(fester Seed). Ausgabe: `ankerpopulation.json`.
+
+**Wozu.** Jede bisherige Messung lief auf Ankern, die **nach ihrem Ausgang**
+ausgewählt waren — die acht aus 7.8, weil sie zweistellige Gewinne brachten.
+Damit lässt sich zeigen, dass ein Fix etwas verbessert, aber **nie**, dass er
+nichts kaputt macht. Die vier Zellen aus 7.11 werden hier ausschließlich nach
+**Eingangsmerkmalen** geschichtet; der Ausgang wird erst **nach** der Auswahl
+gerechnet und mitgeschrieben.
+
+### Vier Schranken, jede aus einem bezahlten Fehler
+
+| Schranke | Wert | Herkunft |
+|---|---|---|
+| Vorlauf | 220 Kerzen | dieselbe wie in der Kette — sonst misst die Auswahl etwas anderes als der Betrieb liest |
+| Zukunft | 40 Handelstage | Methodik 2.18 Zusicherung 3 — sonst fällt ein Anker still heraus statt aufzufallen |
+| **Abstand** | 40 Tage zwischen Ankern **desselben** Symbols | Methodik 2.19.1: überlappende Auswertungsfenster verletzen die Unabhängigkeit. Ohne sie sind 32 Anker keine 32 Beobachtungen |
+| Symboldeckel | 2 je Zelle | fünf Symbole stellten einmal 102 % des Minus — eine Stichprobe, die an wenigen Symbolen hängt, misst diese Symbole |
+
+### Korrektur beim ersten Lauf: Referenzreihen waren drin
+
+Der erste Durchlauf zog `_ROHSTOFF_FUTURES_OD7C/H/L/N`,
+`_THEMEN_ETF_BENCHMARK_SPY` und `_HEDGE_INDEX_3QSS` — in Zelle A **vier von
+sechs Symbolen**. Das sind **Referenzreihen, keine handelbaren Assets**: wir
+handeln den ETC, nicht den Future, und SPY ist ein Maßstab. Sie sind zudem die
+längsten Reihen (bis 1993) und wären deshalb überproportional vertreten gewesen.
+
+Die Population ist jetzt auf **Watchlist-Symbole** beschränkt: 48 handelbare
+Reihen, 6 Referenzreihen ausgeschlossen.
+
+### Ergebnis
+
+```
+Kandidaten vor der Ziehung:  A 1447 · B 4585 · C 2020 · D 2674   (40-42 Symbole je Zelle)
+
+Gezogen, je 8:
+  A  Etikett abwaerts, 60T >= +10 %    ZIEL 1  STOP 7
+  B  Etikett abwaerts, 60T <= -10 %    ZIEL 1  STOP 5  offen 2
+  C  Etikett aufwaerts, 60T <= -10 %   ZIEL 0  STOP 7  offen 1
+  D  Etikett aufwaerts, 60T >= +10 %   ZIEL 1  STOP 7
+```
+
+**Die vier Zellen unterscheiden sich im Ausgang praktisch nicht.** Das
+Struktur-Etikett trägt in keiner Richtung Information über den weiteren Verlauf.
+
+> **n = 8 je Zelle — das ist kein Beleg.** Es zeigt in dieselbe Richtung wie
+> Abschnitt 6 (kein Verfahren schlägt die Basisrate) und wie 7.11, aber die
+> Stichprobe trägt keine eigene Aussage. Für einen Befund über die Zellen
+> müsste man alle 10.726 Kandidaten auswerten — was ohne Modellaufruf möglich
+> und der nächste billige Schritt wäre.
+
+**Die Gesamt-Zielquote von 3 von 32 (9,4 %)** liegt unter der Basisrate von
+22,5 % aus Abschnitt 6. Bei n = 32 ist das rund 1,8 Standardabweichungen —
+auffällig, aber nicht auszuschließen. Möglicher Grund: die Zellen verlangen
+|60-Tage| ≥ 10 %, wählen also **trendende** Lagen, und die verhalten sich
+anders als alle Tage. Das ist prüfbar, sobald die Vollauswertung läuft.
+
+### Wofür sie da ist
+
+`ankerpopulation.json` ist ab jetzt die Grundgesamtheit für **M1 bis M4**
+(Betragsfrage, Breite-Urteil, Bestandsblock, Persona — siehe
+`Zwischenstand_Gesamtprojekt_06_08.md` 8c.3). **Die acht Anker aus 7.8 werden
+für Wirkungsmessungen nicht mehr verwendet** — sie bleiben als Prüfsteine für
+grobe Fehlfunktion, mehr nicht.
+
+---
+
+## 7.22 Vollauswertung der Zellen — und ein Befund zum Horizont in 6.3 (11.08. spät)
+
+**Werkzeug:** `messe_zellen_ausgang.py`, kein Modellaufruf. 19.891 Anker über
+44 handelbare Symbole, Cluster-Bootstrap **über Symbole** (nicht über Anker —
+benachbarte Anker teilen ihr Auswertungsfenster, zehntausend Anker sind keine
+zehntausend Beobachtungen, Methodik 2.19.1).
+
+### Ergebnis 1: Die vier Zellen unterscheiden sich NICHT
+
+| Schwelle | A (Etikett falsch) | B (zu Recht) | C (Etikett falsch) | D (zu Recht) |
+|---|---|---|---|---|
+| ±5 % | 35,0 [28,5..39,7] | 34,5 [31,3..39,0] | 33,8 [29,5..38,8] | 36,1 [30,9..39,8] |
+| ±10 % | 34,0 [26,1..40,6] | 34,5 [31,6..38,4] | 32,4 [28,3..37,0] | 35,0 [29,3..39,2] |
+| ±20 % | 34,2 [23,1..44,0] | 33,8 [29,9..37,8] | 30,8 [25,9..35,7] | 31,1 [23,4..36,2] |
+| ±30 % | 30,0 [17,5..41,9] | 32,5 [27,8..37,5] | 24,3 [19,0..30,5] | 27,8 [18,7..34,8] |
+
+**Bei jeder Schwelle überlappen alle vier Intervalle deutlich.** Das
+Struktur-Etikett trägt in **keiner** Richtung Information über den weiteren
+Verlauf. Der Defekt aus 7.9 war echt — eine falsch beschriftete Tatsache —, aber
+**ohne Folgen für das Ergebnis**. Damit ist die Frage abgeschlossen; sie braucht
+keine weitere Messung.
+
+### Ergebnis 2: Der Erwartungswert hängt am Horizont, und der wurde nie abgeleitet
+
+Dieselbe Geometrie (Ziel 3,0 ATR, Stop 1,5 ATR), nur die Zeitschranke variiert:
+
+```
+Horizont   ZIEL %   STOP %   keines %   Ziel/entschieden   EW in R (keines = 0)
+      10     18,5     45,0       36,4             29,1 %                -0,080
+      20     27,9     57,2       14,8             32,8 %                -0,014   <- 6.3
+      30     31,0     60,7        8,3             33,8 %                +0,013
+      40     32,2     62,2        5,6             34,1 %                +0,021
+      60     33,3     63,4        3,2             34,5 %                +0,033
+```
+
+**Der Vorzeichenwechsel liegt zwischen 20 und 30 Tagen.** `HORIZONT_KERZEN = 20`
+(`agent/szenario_fakten.py:52`) ist eine Konstante, die **nie aus der
+Zieldistanz abgeleitet wurde**. Und 7.12 zeigt: bei 3 ATR lösen sich die Fälle
+erst bei **16 bis 19 Tagen** auf — die Schranke schneidet genau am
+Auflösungspunkt ab. Bei 10 Tagen bleiben 36 % unentschieden.
+
+### Was daraus NICHT folgt
+
+> **Abschnitt 6.3 ist damit nicht widerlegt.** Bei seinem Horizont von 20 Tagen
+> ist auch diese Messung **negativ** (−0,014 R) — die Richtung reproduziert
+> sich. Die Höhe nicht (22,5 % gegen 27,9 % Zielquote), und dafür gibt es einen
+> Grund, der nichts mit dem Horizont zu tun hat: **die Grundgesamtheit ist eine
+> andere.** Hier 48 handelbare Symbole samt Aktien, ETF und Rohstoffen; dort
+> 20 überwiegend krypto-lastige aus der Exportdatei.
+>
+> **Und diese Rechnung ist BRUTTO.** Das Kostenmodell vom 04.08. ergab netto
+> **−0,233 R**. Ein Brutto-Erwartungswert von +0,02 R bleibt danach deutlich
+> negativ. Die Schlussfolgerung „der Aufbau verliert" überlebt also
+> voraussichtlich — **nur nicht aus dem Grund, der in 6.3 steht.**
+
+### Zwei offene Fäden daraus
+
+1. **Die Zeitschranke gehört an die Zieldistanz gekoppelt**, nicht frei gesetzt.
+   Ein Ziel von 3 ATR braucht mehr Zeit als eines von 1 ATR. Heute ist beides
+   unabhängig konfiguriert.
+2. **„keines = 0 R" ist eine Annahme, keine Messung.** Ein Trade, der die
+   Zeitschranke erreicht, wird irgendwo geschlossen — nicht bei null. Bei
+   Horizont 20 betrifft das 15 bis 21 % aller Fälle und trägt den Unterschied
+   zwischen −0,014 und −0,115 R mit. Das gehört ausgerechnet, nicht gesetzt.
