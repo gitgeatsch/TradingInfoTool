@@ -129,6 +129,34 @@ def _arg(name: str, default: int) -> int:
     return default
 
 
+def lade_reihen_aus_db(db: str = "data/tradinginfotool.db") -> dict[str, list[Kerze]]:
+    """Kursreihen direkt aus der Datenbank - ohne den 125-MB-JSON-Umweg.
+
+    ANLASS (11.08.2026): `lade_reihen()` scheiterte mit MemoryError. Ursache war
+    nicht die Datei, sondern der freie Speicher - ein Browser hielt 22 von 34 GB.
+    Eine 125-MB-JSON braucht beim Parsen ein Vielfaches davon als
+    Python-Objekte; die Datenbank liefert dieselben Zeilen zeilenweise.
+
+    Die Exportdatei bleibt der Weg fuer Notebook-Analysen. Fuer alles, was auf
+    diesem Rechner laeuft, ist die DB die primaere Quelle und war es immer -
+    der JSON-Umweg stammt daher, dass die ersten Backtests am Notebook liefen.
+
+    Gleicher Filter wie das Original: nur USD, nur Zeilen mit close/high/low."""
+    import sqlite3
+    c = sqlite3.connect(db)
+    reihen: dict[str, list[Kerze]] = {}
+    q = ("select symbol, date, open, high, low, close, volume "
+         "from price_history_ohlc where currency='USD' "
+         "and close is not null and high is not null and low is not null "
+         "order by symbol, date")
+    for sym, datum, o, h, l, cl, v in c.execute(q):
+        reihen.setdefault(sym, []).append(
+            Kerze(str(datum)[:10], float(o if o is not None else cl),
+                  float(h), float(l), float(cl),
+                  None if v is None else float(v)))
+    return reihen
+
+
 def lade_reihen() -> dict[str, list[Kerze]]:
     d = json.load(io.open(ORDNER + r"\notebook_diagnose.json", encoding="utf-8"))
     reihen: dict[str, list[Kerze]] = {}

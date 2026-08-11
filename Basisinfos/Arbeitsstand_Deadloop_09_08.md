@@ -1080,3 +1080,52 @@ NICHTS_TUN. Vermutung: ein vorgegebener Höchstbetrag liest sich als
 Handlungsaufforderung — passend zum Befund, dass Modelle Anweisungen auch dann
 folgen, wenn es zu Verlusten führt. **Ein Fall ist kein Beleg**; das ist eine
 Hypothese für eine gepaarte Messung, kein Ergebnis.
+
+### 7.7 Gepaarte Messung zum Betragsdeckel — Hypothese widerlegt (11.08.)
+
+**13 Anker, zwei Arme, bitgleich dieselben Fakten.** Vier Assetklassen-Phasen,
+Krypto und Aktien, Aufwärts- wie Abwärtslagen.
+
+**In jedem einzelnen Fall identische Aktion mit und ohne Deckel.** Die
+Einzelfall-Beobachtung vom 10.08. (BTC 22.07.2025: mit Deckel NACHKAUFEN, ohne
+NICHTS_TUN) war Sampling-Zufall. Der Betragsdeckel wirkt **nicht** als
+Handlungsaufforderung.
+
+Der Umbau bleibt trotzdem richtig — aus dem belegten Grund, nicht aus diesem:
+LLMs sind bei der Positionsgröße am schwächsten, und das Designmuster der Praxis
+entkoppelt Richtungslogik von quantitativer Größenbestimmung.
+
+### 7.8 Der eigentliche Befund der Messung: das System kauft fast nie
+
+```
+BTC  2025-06-24  +13,0 %  →  REDUZIEREN   FALSCH
+BTC  2025-12-25  +11,2 %  →  NICHTS_TUN   verpasst
+BTC  2026-03-27  +13,3 %  →  NICHTS_TUN   verpasst
+ETH  2025-06-24  +23,1 %  →  NICHTS_TUN   verpasst
+ETH  2026-03-27  +17,9 %  →  NICHTS_TUN   verpasst
+VST  2024-09-16  +48,3 %  →  NICHTS_TUN   verpasst
+PLTR 2022-09-06  +16,2 %  →  NICHTS_TUN   verpasst
+PLTR 2024-07-24  +22,3 %  →  KAUFEN       RICHTIG
+```
+
+**Sieben von dreizehn Ankern brachten zweistellige Gewinne. Das System handelte
+bei einem davon — und lag richtig.**
+
+Zwei Konsequenzen:
+
+1. **Das Problem ist nicht die Qualität der Entscheidungen, sondern ihre Zahl.**
+   Trefferquote bei Käufen: 1 von 1. Handlungsquote: 2 von 13.
+2. **Die Erklärung aus 7.6 ist widerlegt.** Dort stand, es habe „keine
+   Kaufgelegenheiten gegeben". Die gab es — bei BTC, ETH, VST und PLTR, mit
+   +11 bis +48 %. Das System hat sie gesehen und nichts getan. Der Befund aus
+   7.4 (kein breiter Markt war je ein guter Einstieg) galt für die
+   **Marktbreite**, nicht für Einzelwerte.
+
+**Das ist der Deadloop, erstmals über Assetklassen hinweg gemessen** — nicht auf
+Altcoins beschränkt, nicht auf einen Zeitraum, nicht durch fehlende Gelegenheiten
+erklärbar.
+
+**Nächster Schritt, nicht mehr in dieser Sitzung:** Herausfinden, WARUM das
+Modell bei +23 % Aufwärtsbewegung NICHTS_TUN sagt. Die Belege der abgelehnten
+Fälle liegen in `betragsdeckel*.json` und sind lesbar — dort steht die
+Begründung im Klartext.

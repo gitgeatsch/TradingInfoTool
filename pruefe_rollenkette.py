@@ -76,8 +76,12 @@ def _kurs_eur(symbol: str, reihe, index: int) -> float | None:
     c = sqlite3.connect(DB)
     r = c.execute("select price_usd, price_eur from price_cache where symbol=?",
                   (symbol,)).fetchone()
-    if not r or not r[0]:
-        return None
+    # Aktien und ETF stehen NICHT im Preis-Cache - der fuehrt nur Krypto. Ohne
+    # Umrechnungskurs wird der Kurs in seiner Quellwaehrung genannt (USD). Fuer
+    # die Entscheidung ist das gleichwertig; nur die Beschriftung stimmt dann
+    # nicht, und das ist besser als ein Absturz mitten im Messlauf.
+    if not r or not r[0] or not r[1]:
+        return float(reihe[index].close)
     return float(reihe[index].close) * (float(r[1]) / float(r[0]))
 
 
