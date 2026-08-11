@@ -2650,3 +2650,77 @@ rettet den Timing-Ansatz nicht — aber sie ist der erste Schritt auf dem einzig
 Weg, der nach 7.25 noch offen ist: **Information, die nicht im Kurs steht.**
 
 Ein einzelner solcher Fakt reicht dafür nicht. Das war die Lehre dieses Laufs.
+
+---
+
+## 7.27 S2 gemessen: der antizyklische Vorteil ist Quotenreduktion, kein Timing (11.08. spät)
+
+**Werkzeug:** `messe_akkumulation.py`, kein Modellaufruf. 43 Symbole, wöchentlicher
+Takt, 100 EUR je Periode für **jede** Regel gleich. Wer nicht kauft, legt zurück —
+Warten bindet Kapital. Endmaß: Gesamtwert je bereitgestelltem EUR, also Stücke
+mal Schlusskurs **plus** nicht ausgegebene Barmittel. Kaufkosten einseitig
+enthalten (Krypto 1,5 %, Börse 1 EUR + 0,25 %).
+
+**S2 stand seit dem 07.08. als „günstigster Punkt der ganzen Liste" auf der
+Liste und war nie gemessen.**
+
+### Zwei Konstruktionsfehler, im ersten Lauf sichtbar geworden
+
+1. **`GESTAFFELT` war rechnerisch identisch zu DCA** (0 von 43 besser). Die
+   Regel gab immer das volle Budget aus und baute damit **nie eine Reserve** —
+   das Gegenteil dessen, was AZ-4 beschreibt („Cash-Reserve-Aufbau fürs
+   Nachkaufen"). Korrigiert: 0,5 im Normalfall, bis 4× bei Rückgang.
+2. **Die Kontrolle fehlte.** Ohne sie ist Timing nicht von bloßer
+   Quotenreduktion zu unterscheiden. Ergänzt: `HALBE_QUOTE` — investiert
+   konstant die Hälfte, ohne jede Regel.
+
+### Das Ergebnis
+
+| Klasse | n | DCA | **HALBE_QUOTE** | UNTER_SMA | RUECKGANG | GESTAFFELT |
+|---|---|---|---|---|---|---|
+| krypto | 32 | 0,713 | **0,856** | 0,803 | 0,741 | 0,713 |
+| etf | 6 | 1,374 | 1,180 | 1,170 | 1,114 | 1,306 |
+| rohstoffe | 3 | 1,039 | 1,014 | 1,006 | 1,005 | 1,001 |
+| aktien | 2 | **7,123** | 4,025 | 4,252 | 4,684 | 7,081 |
+| **gesamt** | 43 | 0,754 | **0,877** | 0,841 | 0,755 | 0,755 |
+
+```
+schlaegt DCA:   HALBE_QUOTE 72 %   UNTER_SMA 70 %   RUECKGANG 26 %   GESTAFFELT 14 %
+```
+
+**Die Kontrolle schlägt alles.** Einfach die Hälfte investieren — ohne Regel,
+ohne Indikator, ohne jede Beobachtung des Kurses — liefert mehr als jede
+antizyklische Regel.
+
+### Was das heißt
+
+**Der antizyklische Vorteil ist vollständig durch die Investitionsquote
+erklärt.** In einem fallenden Markt ist weniger investiert sein besser; das ist
+keine Timing-Leistung, sondern weniger Exponierung.
+
+Und die Gegenprobe steht in derselben Tabelle: **bei den beiden Aktien, die
+gestiegen sind, gewinnt DCA mit 7,123 gegen 4,025 haushoch.** Dort war *mehr*
+investiert sein besser.
+
+> **Die Rangfolge ist eine Funktion der Marktrichtung im Zeitraum, nicht der
+> Klugheit der Regel.** Wer daraus „antizyklisch ist besser" liest, hat den
+> Bärenmarkt gelesen, nicht die Strategie.
+
+### Damit ist S2 beantwortet
+
+**Die Zusatzannahme von AZ-4 — antizyklisch schlägt gleichmäßig — ist mit
+diesen Daten nicht belegt.** Keine der drei antizyklischen Regeln schlägt eine
+Kontrolle, die überhaupt nicht hinsieht.
+
+**Und der einfache Sparplan bleibt der Maßstab**, weil er die einzige Regel ist,
+die keine Annahme über die Marktrichtung trifft. Wer die Quote senkt, wettet auf
+fallende Kurse — das ist eine Prognose, nur eine unausgesprochene.
+
+### Grenzen
+
+- **Der Zeitraum dominiert.** Krypto umfasst rund zwei Jahre, überwiegend
+  fallend. In einem steigenden Zeitraum kehrte sich die Rangfolge um — genau
+  das zeigen die Aktien.
+- **Aktien n = 2** (PLTR, VST), beide Extremgewinner. Für sich genommen
+  unbrauchbar; sie dienen hier nur als Gegenprobe zur Richtungsabhängigkeit.
+- Steuern und Slippage fehlen; Kaufkosten sind enthalten.
