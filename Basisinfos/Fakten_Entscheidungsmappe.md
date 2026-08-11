@@ -1557,3 +1557,147 @@ Konkret, maschinell auswertbar, **und heute von niemandem ausgewertet**
   Kante enthalten kann. Sie gehören an **eine** Stelle: den Befund
 - Ob Befund und Entscheidung getrennte Aufrufe werden (8c.3/M1)
 - Ob die Persona bleibt (8c.3/M4)
+
+---
+
+## 12. Soll-Liste je Rolle — abgeleitet aus dem Fachstandard (2026-08-11)
+
+*Schritt für Schritt: erst der verifizierte Ist-Zustand, dann die
+Unabhängigkeitsrechnung, dann der Abgleich mit dem Standard (Methodik 2.21),
+erst danach die Soll-Liste. Kein Schritt aus dem Gedächtnis — der Ist-Zustand
+stammt aus `pruefe_rollenkette.py --trocken`.*
+
+### 12.1 Schritt 1 — Was jede Rolle HEUTE bekommt, verifiziert
+
+**LAGEBILD, vollständig — zwei Aussagen:**
+
+```
+Von 19 beobachteten Coins stehen 5 ueber ihrer 50-Tage-Linie (26 %).
+   In den letzten 250 Handelstagen war dieser Anteil in 60 % der Faelle niedriger.
+Von 19 beobachteten Coins stehen 1 ueber ihrer 200-Tage-Linie (5 %).
+   In den letzten 250 Handelstagen war dieser Anteil in 38 % der Faelle niedriger.
+```
+
+Kein Regime, kein DXY, kein Fear & Greed, keine Volatilität, keine Liquidität.
+**Nur Marktbreite** — und die ist für vier von fünf Assetklassen nicht
+berechenbar (Kap. 11.4).
+
+**BEFUND/ENTSCHEIDUNG, vollständig — neun Aussagen:**
+
+```
+1  Bestand
+2  Marktstruktur (Swing-Vergleich) mit Fenster
+3  Vergleich zur 60-Tage-Bewegung
+4  Kursentwicklung 5 / 20 / 60 Tage
+5  naechster Widerstand, in ATR und EUR, mit Beruehrungszahl
+6  naechste Unterstuetzung, dito
+7  Umsatz relativ zum 20-Tage-Schnitt
+8  Umsatzverteilung auf Auf- und Abwaertstage
+9  Umsatz-Stetigkeit ueber 10 Tage
++  Marktlage-Beurteilung aus dem Lagebild
+```
+
+### 12.2 Schritt 2 — Die Unabhängigkeitsrechnung
+
+Der Standard zählt **unabhängige** Faktoren, nicht Aussagen. Nach Quelle
+gruppiert:
+
+| Quelle | Aussagen | unabhängige Faktoren |
+|---|---|---|
+| Schlusskurse | 2, 3, 4 | **1** |
+| Swing-Hochs/-Tiefs (aus denselben Kerzen) | 2, 5, 6 | **1** — und teilt sich die Quelle mit der Struktur |
+| Umsatzreihe | 7, 8, 9 | **1** |
+| Depot | 1 | kein Marktfakt |
+
+**Neun Aussagen, zwei unabhängige Marktfakten: Preis und Umsatz.** Genau die
+„Illusion der Bestätigung" aus Methodik 2.21.5.
+
+### 12.3 Schritt 3 — Der Abgleich, und was er erklärt
+
+Der Standard verlangt **drei bis vier** unabhängige Faktoren. Verfügbar sind
+**zwei**. Und das Modell zählt das selbst richtig — aus acht echten Durchläufen
+(`degradierung.json`):
+
+```
+Faktoren = 3   ->  BTC 2026-03-27 REDUZIEREN · VST 2024-09-16 KAUFEN    beide gehandelt
+Faktoren = 2   ->  5x NICHTS_TUN, 1x REDUZIEREN                          fast nie
+```
+
+**Der einzige KAUFEN im ganzen Satz kam aus dem einzigen Fall mit drei
+Faktoren.**
+
+> **DAMIT IST DER DEADLOOP ERKLÄRT, UND ZWAR ANDERS ALS SECHS WOCHEN LANG
+> VERMUTET.** Er ist keine Fehlfunktion. Er ist das System, das den
+> Fachstandard korrekt auf eine unzureichende Eingabe anwendet. Ein Trader, der
+> bei zwei unabhängigen Faktoren nicht handelt, verhält sich diszipliniert.
+>
+> *n = 8 — ein starker Hinweis mit passendem Mechanismus, kein Beweis. Die
+> Prüfung wäre: über viele Fälle zählen, ob die Handlungsquote mit der Zahl der
+> Faktoren steigt.*
+
+**Die Folge:** Mehr Handlungen entstehen **nicht** durch einen besseren Prompt,
+sondern nur durch einen **dritten und vierten unabhängigen Faktor**. Und der
+kann nicht aus der Kursreihe kommen — dort ist alles schon eine Übersetzung
+desselben Fakts.
+
+### 12.4 Schritt 4 — Die Soll-Liste
+
+#### LAGEBILD
+
+| | Fakt | Begründung |
+|---|---|---|
+| **RAUS** | Marktbreite | für 4 von 5 Klassen nicht berechenbar; der Korb ist gemischt und wechselt seine Zusammensetzung (Arbeitsstand 7.15) |
+| **REIN** | **Volatilitätslage** je Klasse — heutige Schwankungsbreite gegen ihre eigene Historie | eine der vier Standarddimensionen, fehlt vollständig. Sie bestimmt laut Standard, wie wahrscheinlich ein Stop getroffen wird |
+| **REIN** | **Trendlage des Klassen-Benchmarks** — BTC für Krypto, SPY für Aktien/ETF, Futures für Rohstoffe | zweite Standarddimension; ersetzt die Breite durch etwas, das je Klasse existiert |
+| **REIN** | **Liquiditätslage** — Umsatzniveau des Benchmarks gegen seine Historie | dritte Dimension |
+| BLEIBT | historischer Bezug („in X % der Fälle niedriger") | die einzige Kalibrierung, die das Modell vor Zuspitzung schützt — und sie wirkt nur, wenn sie mitgeliefert wird (`mit_bezug=True`) |
+
+#### BEFUND
+
+| | Fakt | Begründung |
+|---|---|---|
+| BLEIBT | Marktstruktur mit Fenster, Kursentwicklung, Niveaus | **zusammen EIN Faktor** — sie bleiben, aber sie zählen als einer |
+| BLEIBT | Umsatz (drei Aussagen) | der zweite Faktor, seit 10.08. verfügbar |
+| **REIN** | **Lage zum Klassen-Benchmark** (relative Stärke) | unterscheidet zwischen Assets — das Kriterium aus Kap. 11.3 |
+| **REIN** | **Rang unter den Kandidaten des Durchgangs** | steht seit dem Rollenkonzept als Lücke; der Vergleich ist der Zuschnitt mit Evidenz |
+| **NICHT REIN** | Fibonacci | eigenständige Vorhersagekraft fraglich, stärkster Ankertyp, und aus derselben Kursreihe — erhöht die *gefühlte* Zahl der Belege ohne einen echten (Methodik 2.21.4) |
+| **NICHT REIN** | RSI, MACD, Stochastik nebeneinander | Multikollinearität; drei Werkzeuge derselben Kategorie sagen dasselbe |
+
+#### ENTSCHEIDUNG
+
+| | Fakt | Begründung |
+|---|---|---|
+| BLEIBT | Bestand zuerst | der KAS-Fall; offen bleibt, ob die Erststellung die Belege einfärbt (8c.3/M3) |
+| BLEIBT | Sperren, Kosten, vorherige Empfehlung | Portfoliozustand, unterscheidet zwischen Assets |
+| **REIN** | **`umgeworfen_durch` der VORHERIGEN Empfehlung, und ob es eingetreten ist** | der Ausstieg; heute wird das Feld erzeugt und nie gelesen (8c.2/K2) |
+| NIE | Beträge, Deckel, Positionsgröße, Einstieg/Stop als Zahl | R-A2 und Bauform B (Kap. 11.6) |
+
+### 12.5 Schritt 5 — Was fehlt und nicht aus dem Kurs kommen kann
+
+Die Soll-Liste oben bringt das Lagebild auf drei der vier Standarddimensionen
+und gibt dem Befund einen dritten unterscheidenden Fakt (relative Stärke). Sie
+löst aber **nicht** das Grundproblem:
+
+**Relative Stärke und Rang sind ebenfalls aus Kursreihen abgeleitet.** Sie
+unterscheiden zwischen Assets — das ist mehr, als die heutigen Fakten leisten —
+aber sie sind keine dritte Informationsquelle.
+
+**Eine echte dritte Quelle wäre:** Nachrichten, Meldungen, Fundamentaldaten,
+Positionierungsdaten. Erst damit sind drei bis vier *unabhängige* Faktoren
+überhaupt möglich, und erst dann kann der Standard erfüllt werden.
+
+**Das ist dieselbe Schlussfolgerung wie aus der Ökonomie-Rechnung (Arbeitsstand
+7.25), auf einem völlig anderen Weg erreicht.** Zwei unabhängige Herleitungen,
+dasselbe Ergebnis.
+
+### 12.6 Reihenfolge der Umsetzung
+
+| Rang | Schritt | Aufwand | warum hier |
+|---|---|---|---|
+| 1 | **Prüfen, ob die Handlungsquote mit der Faktorzahl steigt** — über viele Fälle statt über acht | gering, kein Modellaufruf nötig, wenn Faktorzahl mitgeschrieben wird | entscheidet, ob 12.3 trägt. **Vor allem anderen** |
+| 2 | Volatilität + Benchmark-Trend + Liquidität ins Lagebild | mittel | drei der vier Standarddimensionen, heute fehlt alles außer Breite |
+| 3 | Marktbreite raus | gering | sie ist nachweislich nicht berechenbar |
+| 4 | Relative Stärke zum Klassen-Benchmark in den Befund | mittel | erster unterscheidender Fakt je Asset |
+| 5 | `umgeworfen_durch` anschließen | mittel | der Ausstieg |
+| 6 | Rang unter Kandidaten | mittel | steht seit dem Rollenkonzept offen |
+| — | **Nachrichten** | groß | die einzige echte dritte Quelle. Ohne sie bleibt der Standard unerfüllbar |

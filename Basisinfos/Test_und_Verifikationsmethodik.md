@@ -1895,3 +1895,70 @@ diese Prüfung misst, überspringt 30 % der Watchlist stumm — und ein stumm
 
 **Die Schranke muss dieselbe sein wie in der Kette** (220 Kerzen). Eine Prüfung
 auf „Symbol vorhanden" übersieht HYPE mit 167 Kerzen.
+
+---
+
+## 2.21 Fachstandard je Rolle — was die Literatur verlangt (recherchiert 2026-08-11)
+
+**Nutzervorgabe:** *„was ist für mich ein guter Einstieg? sollte in der Literatur
+und Standards stehen — was bewertet der Analyst? Was braucht der Trader als
+Text? Braucht der Trader Fibonacci oder schadet die Angabe?"* Richtig gestellt:
+das ist Fachwissen, keine Geschmacksfrage, und gehört recherchiert statt erfragt.
+
+### 2.21.1 Was ein guter Einstieg ist
+
+| Kriterium | Standard |
+|---|---|
+| **Zahl der Belege** | **drei bis vier UNABHÄNGIGE Faktoren**; ab fünf sinkt die Leistung |
+| Ausrichtung | Setup zeigt in dieselbe Richtung wie die übergeordnete Struktur |
+| Mehrere Zeitebenen | Einstieg, Auslöser und Zone deuten gleich |
+| Chance/Risiko | mindestens 1:2 |
+
+### 2.21.2 Was der Marktanalyst beurteilt — vier Dimensionen
+
+**Trend · Volatilität · Breite · Liquidität/Makro.** Die Volatilität bestimmt
+dabei laut Standard, wie wahrscheinlich ein Stop getroffen wird, und wie
+Ausführungsqualität und Slippage ausfallen.
+
+### 2.21.3 Was der Trader als Text braucht
+
+- **Fünf oder mehr Indikatoren → schlechtere Ergebnisse als ein bis zwei klare
+  Regeln.**
+- Federal Reserve, Überlastungsindex bis 1885 zurück: mehr Information →
+  **sinkende Entscheidungsgenauigkeit**, geringeres Handelsvolumen.
+- Zwölf Indikatoren verlangsamen die Entscheidung messbar.
+
+### 2.21.4 Fibonacci — schadet die Angabe?
+
+**Nach dieser Lage überwiegt der Schaden.** Drei Gründe:
+
+1. **Eigenständige Vorhersagekraft fraglich.** Die empirischen Arbeiten sind
+   uneins; wo Effekte auftreten, verschwinden sie in jüngeren Teilperioden.
+   Einfache Widerstandsniveaus schneiden in einer Untersuchung besser ab.
+2. **Als Text an ein Modell ein Experten-Anker.** „61,8 % bei 2.184,32 EUR" ist
+   genau die Ankerklasse mit der stärksten Wirkung, und keine Gegenmaßnahme half
+   (2.19.2).
+3. **Aus derselben Kursreihe wie alles andere** — es erhöht die *gefühlte* Zahl
+   der Belege, ohne einen unabhängigen hinzuzufügen.
+
+*Redlich dagegen:* eine Arbeit findet, dass Fibonacci **in Kombination mit einem
+Vorhersagemodell** dessen Leistung verbessert. Als eigenständiger Beleg im Text
+taugt es nach dieser Lage nicht.
+
+### 2.21.5 Der Satz, der alles bindet
+
+> *„If indicators are not independent — if they're all derived from the same
+> underlying price data — their apparent agreement is an illusion. They're not
+> four independent votes; they're the same price data filtered through four
+> different lenses."*
+
+**Redundante Indikatoren erzeugen die „Illusion der Bestätigung".** Das ist
+genau der Mechanismus, gegen den `unabhaengige_faktoren` im Trader-Prompt steht
+— und die Recherche liefert damit die Begründung, die dort bisher fehlte.
+
+### Quellen
+
+Confluence-Standard (colibritrader, usetct) · Fibonacci empirisch
+(ScienceDirect S0957417421012495, arpgweb ijefr4(6)) · Marktregime
+(wallstreetcourier) · Multikollinearität (Shukla, MQL5; Earn2Trade) ·
+Informationsüberlastung (Federal Reserve IFDP; Pomegra)
