@@ -951,6 +951,28 @@ hätte ein gesichert schlechteres Ergebnis als „kein Befund" ausgegeben.
 
 ## 7. Der Rollen-Umbau — gebaut und am echten Fall geprüft (10.08. abends)
 
+> ## ⚠ VERSIONSZUORDNUNG — vor 7.2 bis 7.9 lesen (nachgetragen 11.08. abends)
+>
+> **Alle Messbefunde in 7.2 bis 7.9 wurden mit Prompt-Stand `2026-08-10b`
+> erhoben — also MIT der Betragsfrage in beiden Rollen.** Der Umbau vom 10.08.
+> entfernte das Betragsfeld aus Schema und Pflichtfeldern, ließ die Frage im
+> Prompt aber stehen. Das wurde erst am 11.08. abends bemerkt (7.10, Nachtrag
+> 205). Wer einen dieser Befunde weiterverwendet, muss ihn auf einem aktuellen
+> Prompt-Stand **wiederholen**, bevor er ihn als geltend behandelt.
+>
+> | Abschnitt | Befund | Status nach dem 11.08. |
+> |---|---|---|
+> | 7.2 / 7.5 | vier Prüfsteine, „4 von 5 richtig" | Stand `10b`, Erfolgsmaß **ohne Stop** gerechnet (7.9) — **beides zu wiederholen** |
+> | 7.3 | Gegentest Marktbreite 20 % / 100 % | Stand `10b`, Mechanik-Nachweis — bleibt aussagekräftig |
+> | 7.4 | Marktbreite wirkt invers | **kein LLM beteiligt** — unberührt |
+> | 7.7 | „Betragsdeckel wirkt nicht" | Stand `10b`; **beide** Arme enthielten die Betragsfrage. Verglichen wurde „darf sie melden" gegen „darf nicht", nicht „mit" gegen „ohne" |
+> | 7.8 | „das System kauft fast nie" | Stand `10b`, Anker nach Ausgang gewählt — Handlungsquote gilt, Trefferquote nicht |
+> | 7.9 | Ursache Struktur-Etikett | **zurückgestuft**, siehe 7.10 und 7.11 |
+>
+> **Die Namen in diesem Abschnitt sind veraltet.** „Rolle A" heißt jetzt
+> **Lagebild**, „Rolle B/BC" heißt **Befund** bzw. **Entscheidung**. Nur unsere
+> Bezeichnungen, nie im Prompt.
+
 ### 7.1 Was gebaut wurde
 
 Nach dem Grundbefund aus Abschnitt 6 wurde die LLM-Ebene neu aufgesetzt. Der
@@ -1189,3 +1211,960 @@ Beschriftung geglaubt, die ich geschrieben habe.
 von zwei Wochen tiefere Hochs und Tiefs, innerhalb eines 60-Tage-Anstiegs von
 +37 % — eine Korrektur im Aufwärtstrend."* Derselbe Fakt, ohne das Wort, das
 mehr Gewicht bekommt als die Zahl daneben.
+
+> **NACHTRAG 11.08. abends — die Behauptung „erklärt sechs von sechs" ist
+> zurückgestuft.** Sie beruht auf EINER gelesenen Begründung, nicht auf sechs
+> (siehe 7.10), und die Zellenzählung in 7.11 zeigt, dass dieser Defekt den
+> Deadloop **nicht** erklären kann. Der Fix bleibt richtig, seine erwartete
+> Wirkung ist aber klein und muss **symmetrisch** sein — der häufigere Fehler
+> ist das Gegenteil.
+
+---
+
+## 7.10 Die Belege existieren nicht — Rückstufung von „sechs von sechs" (11.08. abends)
+
+**Auftrag:** vor jedem weiteren Schritt prüfen, ob die Ursachenbehauptung aus 7.9
+trägt. Sie stützt sich darauf, dass die Begründungen der sechs verpassten Fälle
+gelesen wurden. Das Ergebnis der Prüfung:
+
+| Prüfung | Ergebnis |
+|---|---|
+| `betragsdeckel*.json` auf der Platte | **nicht vorhanden**, projektweite Suche |
+| je committet | **nein** (`git log --diff-filter=A` leer) |
+| in `.gitignore` ausgespart | **nein** — also nicht bewusst, sondern verloren |
+| Begründungen im Ergebnisformat | **nein** — `messe_betragsdeckel.py` speichert `aktion`, `betrag`, `deckel`, `faktoren`, `richtig` |
+| Lauf rekonstruierbar | **nein** — ein Commit, dort 6 Anker (VST ×3, PLTR ×3), kein BTC/ETH |
+
+**Die 13 Anker aus 7.7 und die 8 aus 7.8 stammen aus mehreren Läufen mit
+überschriebener ANKER-Liste.** Der Repo-Stand bildet keinen davon ab.
+
+**Damit gilt:** „erklärt sechs von sechs" steht auf **einer** gelesenen
+Begründung (ETH 24.06.2025, aus zwei nachgeholten Aufrufen). Der Satz in 7.8,
+die Belege lägen lesbar in `betragsdeckel*.json`, ist in **beiden** Teilen
+falsch. Zusicherung 2 aus Methodik 2.18 wurde geschrieben, aber nie umgesetzt.
+
+### Was die Prüfung dafür ohne Modellaufruf geklärt hat
+
+Die Bestandslage der acht Anker, direkt aus `holdings`:
+
+```
+BTC  2025-06-24  → REDUZIEREN   Bestand VORHANDEN (0,0506 @ 68.275 EUR)
+BTC  2025-12-25  → NICHTS_TUN   Bestand VORHANDEN
+BTC  2026-03-27  → NICHTS_TUN   Bestand VORHANDEN
+ETH  2025-06-24  → NICHTS_TUN   "nicht im Bestand" (Menge 0)
+ETH  2026-03-27  → NICHTS_TUN   "nicht im Bestand"
+VST  2024-09-16  → NICHTS_TUN   "nicht im Bestand" (kein Einstand)
+PLTR 2022-09-06  → NICHTS_TUN   "nicht im Bestand"
+PLTR 2024-07-24  → KAUFEN       "nicht im Bestand"
+```
+
+**Vier der sechs verpassten Gelegenheiten hatten keinen Bestand.** Die
+Hypothese, der hochgewichtete Bestandsblock unterdrücke die Handlung, scheidet
+für die historischen Anker damit aus — für den **Produktivbetrieb** (wo
+tatsächlich gehalten wird) bleibt sie offen. Zwei Populationen, keine Rivalen.
+
+### Zwei Funde, die über die Messung hinausgehen
+
+**FUND 1 — die Produktion meldet die Hälfte des Depots als „nicht im Bestand".**
+
+```
+28 Positionen tatsächlich gehalten
+14 davon meldete die Rollen-Ebene als "nicht im Bestand":
+   3QSS CEBS DBPK EXH3 ISOC OD7C OD7H OD7L OD7N PLTR VSN VST VVMX X136
+```
+
+`agent/lagebeschreibung.py::_bestand()` behandelte „Einstand fehlt" identisch mit
+„nicht investiert" und gab aus: *„VST ist nicht im Bestand."* Das ist **falsch,
+nicht unvollständig**. Das Modell entscheidet über einen Neukauf in der Annahme,
+wir hielten nichts — bei der Hälfte des Depots. Dieselbe Fehlerklasse wie der
+KAS-Fall vom 15.07., nur breiter.
+
+> **KORREKTUR am selben Abend — die Ursache ist eine andere und eindeutigere.**
+> Hier stand zuerst „14 Positionen **ohne Einstandspreis**". Das ist falsch:
+> **jede gehaltene Position hat einen Einstand, keine einzige ohne.** Die 14
+> führen ihn in `avg_buy_price_manual_eur` statt in `avg_buy_price_eur`.
+>
+> Der Fehler ist ein **Lesefehler**: `pruefe_rollenkette::_bestand()` fragte nur
+> die berechnete Spalte ab und umging damit die seit jeher etablierte
+> Vorrangregel `database/models.py::effective_avg_buy_price_eur` (manueller Wert
+> geht vor). Die Daten waren da, der Code hat nicht hingesehen.
+>
+> **Behoben 11.08.** — beide Spalten werden gelesen, manuell hat Vorrang. Als
+> Netz unterscheidet `lagebeschreibung::_bestand()` jetzt zusätzlich drei
+> Zustände statt zwei: nicht im Bestand · im Bestand ohne bekannten Einstand ·
+> im Bestand mit G/V. VST liefert danach: *„VST ist bereits im Bestand: 248 EUR
+> investiert, aktuell 148 EUR wert — 100 EUR im Minus (−40,3 %)."*
+
+**FUND 2 — `_kurs_eur()` liest immer die älteste Zeile.**
+`price_cache` hat **1.526 Zeilen für 55 Symbole** — eine Historie, kein Cache.
+`pruefe_rollenkette.py::_kurs_eur()` fragt ohne `ORDER BY` mit `fetchone()` ab
+und bekommt damit die älteste. Für VST/PLTR hat gerade die älteste Zeile keinen
+EUR-Kurs, während neuere ihn führen (139,20 / 111,10) → unnötiger Rückfall auf
+die Quellwährung. Bei Krypto wird ein veralteter Umrechnungskurs verwendet.
+Einzeiler-Fix.
+
+### Drei Konstruktionsfehler, die vor einem Neulauf zu beheben sind
+
+| | Fehler | Stelle |
+|---|---|---|
+| K1 | Erfolgsmaß ist die 20-Tage-**Endrendite** — das in 7.9 widerlegte Maß | `wahrheit()`, `war_richtig()` |
+| K2 | Begründungen werden nicht gespeichert | Ergebniszeile |
+| K3 | ANKER-Liste wird überschrieben statt versioniert | Modulkonstante |
+
+---
+
+## 7.11 Zellenzählung: der Struktur-Defekt erklärt den Deadloop NICHT (11.08. abends)
+
+**Frage:** Wie häufig ist die Konstellation aus 7.9 überhaupt — Etikett
+„Abwärtstrend" bei stark positiver 60-Tage-Bewegung? Ohne Modellaufruf, über
+44 Symbole und die ganze Historie (CAT ausgeschlossen, kaputte FX-Reihe).
+
+**Absicherung:** Die Fraktale werden einmal je Symbol vorberechnet (sonst
+quadratische Laufzeit). Gegenprobe gegen das Original `_struktur()`:
+**291 Stichproben, 0 Abweichungen.**
+
+**Zelle A — Etikett ABWÄRTS bei positiver 60-Tage-Bewegung:**
+
+| 60-Tage-Schwelle | Krypto | Aktien/Rohstoff |
+|---|---|---|
+| ≥ +10 % | 6,21 % | 3,32 % |
+| ≥ +20 % | 4,19 % | 1,12 % |
+| **≥ +30 %** (ETH-Fall lag bei +37 %) | **2,71 %** | 0,44 % |
+| ≥ +40 % | 1,73 % | 0,29 % |
+
+**Der Deadloop ist 115 von 118 Signalen — 97,5 %. Ein Defekt auf 3 % der Tage
+kann das nicht erklären.** Selbst bei der lockersten Schwelle sind es 6 %.
+
+**Der Widerspruch zu 7.9 löst sich auf:** Die acht Anker waren nach großen
+Gewinnen ausgewählt. Unter *solchen* Tagen ist eine Korrektur im Aufwärtstrend
+weit häufiger als unter allen Tagen. `_struktur()` kann diese sechs Fälle also
+erklären und für den Deadloop trotzdem fast bedeutungslos sein.
+
+### Die Spiegelzelle ist größer als die Defektzelle
+
+```
+Krypto   Zelle A (abwaerts-Etikett bei 60T ≥ +10 %)    6,21 %
+         Zelle C (aufwaerts-Etikett bei 60T ≤ −10 %)  11,39 %   ← fast doppelt
+```
+
+Das Etikett „intakter **Aufwärts**trend" während eines 60-Tage-Rückgangs ist der
+häufigere Fehler. **Ein Punktfix nur in Richtung „mehr kaufen" würde die
+kleinere Hälfte beheben und die größere verschärfen** — er schöbe in fallende
+Märkte hinein. Die Beschriftung muss symmetrisch korrigiert werden.
+
+### Das Aufwärts-Etikett ist unzuverlässig, nicht das Abwärts-Etikett
+
+```
+Krypto   abwaerts 35,3 %  aufwaerts 25,2 %  verengt 23,6 %  weitet 15,8 %
+Aktien   aufwaerts 35,6 % abwaerts  29,2 %  weitet  18,1 %  verengt 17,2 %
+
+Übereinstimmung des Etiketts mit der 60-Tage-Bewegung (Krypto):
+   "abwaerts"   26,2 / 35,3 = 74 %
+   "aufwaerts"  10,7 / 25,2 = 42 %   ← kaum besser als ein Münzwurf
+```
+
+**Korrektur einer Fehldeutung im Verlauf:** Zuerst hatte ich das häufige
+Abwärts-Etikett mit „zwei Jahre Bärenmarkt" erklärt. Das ist falsch —
+`Test_und_Verifikationsmethodik.md` hält fest, dass die **Kursreihen** alle drei
+Phasen enthalten (bulle 35,1 %, bär 36,0 %, gemischt 28,8 %). Ausnahmslos
+„baer" tragen die **Signale**, nicht die Reihen. Der Detektor ist also nicht zu
+bärisch — sein **Aufwärtsurteil** trägt nicht.
+
+### Was das am Plan ändert
+
+| | vorher | jetzt |
+|---|---|---|
+| `_struktur()`-Fix | Priorität 1, „erklärt den Deadloop" | echter Defekt, **begrenzte Wirkung**, symmetrisch zu fixen |
+| Ursache des Deadloops | gefunden | **wieder offen** — Kandidaten: Bestandsmechanismus (Produktion, FUND 1), Geometrie (6.3), Regime |
+| Textform-Regeln R-T1/R-T2 | Nebenprodukt | **das tragende Ergebnis** — ein Punktfix wirkt nachweislich in die falsche Richtung |
+
+**Werkzeug:** `zaehle_zellen.py` (Scratchpad, ohne Kontingentbedarf,
+wiederholbar; gehört bei Übernahme nach Methodik 2.13).
+
+---
+
+## 7.12 Degradierung widerlegt — und ein erster Hinweis auf die Betragsfrage (11.08. spät)
+
+**Frage:** `empfehlung_vertrag.validiere()` nimmt eine Kaufempfehlung ohne
+gültigen Ausstieg auf NICHTS_TUN zurück (R-A7). Alle bisherigen Skripte
+speicherten nur `aktion` — ein degradierter Kauf war von einem abgewogenen
+NICHTS_TUN nicht unterscheidbar. Damit konnte 7.8 („das System kauft fast nie")
+beides bedeuten.
+
+**Werkzeug:** `messe_degradierung.py`, Prompt-Stand `2026-08-11`, 16 Aufrufe.
+Behebt K1 (Erstdurchgang statt Endrendite), K2 (speichert Begründung, Belege,
+`_degradiert`, `_korrekturen`, Bestandslage, Prompt-Stand) und K3 (`ANKER_7_8`
+benannt und versioniert).
+
+### Ergebnis: null degradierte Käufe
+
+```
+ROH (was das Modell sagte):  REDUZIEREN 2, NICHTS_TUN 5, KAUFEN 1
+FINAL (nach dem Vertrag):    REDUZIEREN 2, NICHTS_TUN 5, KAUFEN 1
+DEGRADIERT: 0 von 8
+```
+
+**Die Hypothese ist für diese acht Anker widerlegt.** Jedes NICHTS_TUN stand
+schon in der Rohantwort. Der mechanische Pfad existiert im Code, aber er hat
+hier nicht gefeuert. Pfad geschlossen.
+
+### Der eigentliche Hinweis: drei Aktionen haben sich geändert
+
+| Anker | Bestand | Stand `10b` | Stand `2026-08-11` | Ausgang |
+|---|---|---|---|---|
+| BTC 2025-06-24 | ja | REDUZIEREN | REDUZIEREN | ZIEL |
+| BTC 2025-12-25 | ja | NICHTS_TUN | NICHTS_TUN | ZIEL |
+| BTC 2026-03-27 | ja | NICHTS_TUN | **REDUZIEREN** | ZIEL |
+| ETH 2025-06-24 | nein | NICHTS_TUN | NICHTS_TUN | ZIEL |
+| ETH 2026-03-27 | nein | NICHTS_TUN | NICHTS_TUN | ZIEL |
+| VST 2024-09-16 | nein | NICHTS_TUN | **KAUFEN** | ZIEL |
+| PLTR 2022-09-06 | nein | NICHTS_TUN | NICHTS_TUN | ZIEL |
+| PLTR 2024-07-24 | nein | KAUFEN | **NICHTS_TUN** | **STOP** |
+
+**Auf den beiden entscheidenden Fällen ging es in die richtige Richtung:** VST
+wird gekauft und erreicht das Ziel an Tag 4; PLTR 2024-07-24 wird nicht mehr
+gekauft und wäre an Tag 7 ausgestoppt worden. BTC 2026-03-27 ging in die
+falsche Richtung (REDUZIEREN vor einem Anstieg).
+
+> **DAS IST KEIN BELEG.** Der Lauf ist **nicht gepaart**, n = 8, die Anker sind
+> nach ihrem Ausgang ausgewählt, und B6 sagt, dass das Modell bei identischer
+> Eingabe in ~12 % der Fälle anders antwortet. Drei Änderungen bei acht Ankern
+> liegen im Bereich reiner Stichprobenstreuung. Es ist ein **Hinweis**, der die
+> gepaarte Messung rechtfertigt — nicht ihr Ergebnis.
+
+**Die ETH-Fälle bleiben NICHTS_TUN.** Das Entfernen der Betragsfrage hat sie
+nicht bewegt — konsistent mit 7.11: der Struktur-Defekt ist ein eigener,
+kleinerer Mangel.
+
+### Nebenbeobachtung zum Bestand (n = 3, Hinweis)
+
+```
+mit Bestand  (3):  REDUZIEREN, NICHTS_TUN, REDUZIEREN     — kein einziger Kauf
+ohne Bestand (5):  NICHTS_TUN x4, KAUFEN                  — der einzige Kauf
+```
+
+Beide REDUZIEREN traten ausschließlich dort auf, wo ein Bestand vorlag; der
+einzige Kauf dort, wo keiner vorlag. Bei n = 3 ist das nichts als ein Hinweis —
+aber es ist derselbe Mechanismus, der in 7.10 für die historischen Anker
+ausgeschlossen wurde und für den Produktivbetrieb offen blieb. Gepaart prüfbar:
+dieselben Fakten mit und ohne Bestandsblock.
+
+### Erstdurchgang: was der Horizont wirklich kostet
+
+```
+bis  5 Tage:  offen 7, ZIEL 1
+bis 10 Tage:  offen 6, ZIEL 1, STOP 1
+bis 20 Tage:  ZIEL 6, offen 1, STOP 1
+bis 40 Tage:  ZIEL 7, STOP 1
+```
+
+**Bei 3 ATR Zieldistanz lösen sich die Fälle bei 16 bis 19 Tagen auf.** Ein
+Horizont von 5 oder 10 Tagen erklärt das meiste zu „offen" — nicht zu
+„gescheitert". Die Zeitschranke gehört an die **Zieldistanz** gekoppelt, nicht
+frei gewählt. Der Einwand des Nutzers, 20 Tage seien womöglich zu lang, trifft
+für diese Zieldistanz nicht zu; er würde bei einem engeren Ziel zutreffen.
+
+---
+
+## 7.13 Ebene 1 umgesetzt — und ein Werturteil, das das System selbst erzeugt (11.08. spät)
+
+### Behoben
+
+| Fix | Datei | war |
+|---|---|---|
+| Einstand liest **beide** Spalten, manuell hat Vorrang | `pruefe_rollenkette::_bestand()` | nur `avg_buy_price_eur` → 14 Positionen als „nicht im Bestand" |
+| Drei Zustände statt zwei (Netz) | `lagebeschreibung::_bestand()` | „Einstand fehlt" = „nicht investiert" |
+| `order by fetched_at desc limit 1` | `pruefe_rollenkette::_kurs_eur()` | las die **älteste** `price_cache`-Zeile |
+| Struktur **ohne Etikett**, mit Fenster und Maßstab (R-T1/R-T2) | `lagebeschreibung::_struktur()` | „ein intakter Abwärtstrend" |
+| `umgeworfen_durch` wird mitgespeichert | `messe_degradierung.py` | fehlte — K2 galt auch für mich |
+
+### 0d Kausalitätsprobe — bestanden, nachdem sie richtig konstruiert war
+
+**24 Anker × 4 Zukunftslängen, 0 Abweichungen.** Kein Lookahead.
+
+Die **erste** Fassung der Probe schlug bei 18 von 18 an — und war selbst falsch
+gebaut: sie verglich die volle Reihe gegen `reihe[:i+1]` und stellte damit einen
+*abgeschlossenen* Tag einem *laufenden* gegenüber. `tag_vollstaendig = index <
+len(reihe) - 1` nimmt den laufenden Tag korrekt aus dem Umsatzfenster. Die
+richtige Probe hält den Tag abgeschlossen und variiert nur die Zukunft dahinter.
+
+> **Bemerkenswert bleibt die Folge:** Im Backtest sieht das Modell eine
+> Umsatzzeile mehr als in der Produktion am laufenden Tag. Beides ist für sich
+> richtig — aber **jede Messung auf historischen Ankern ist dadurch leicht
+> optimistisch** gegenüber dem Produktivverhalten. Bei Vergleichen mitdenken.
+
+### Der Struktur-Fix wirkt im Text, nicht in der Gewichtung
+
+ETH 2025-06-24, ein Durchlauf nach dem Fix. Eingabe jetzt ohne Etikett:
+
+```
+Auf Sicht der letzten 8 Handelstage zeigt die Marktstruktur tiefere Hochs und
+tiefere Tiefs; der letzte Wendepunkt liegt 2 Handelstage zurueck.
+Zum Vergleich: ueber 60 Handelstage steht der Kurs +37.0 %.
+```
+
+Ergebnis: weiterhin **NICHTS_TUN**. Und das Modell erfindet das Etikett selbst —
+*„die intakte Abwärtsstruktur verbietet einen Neueinstieg"*. Der 8-Tage-Beleg
+trägt Gewicht **hoch**, die +37 % landen in `was_dagegen`, also als Einwand
+gegen die eigene Entscheidung statt als Argument darin.
+
+**Das bestätigt 7.11 am Einzelfall:** der Etikettdefekt war nicht die Ursache.
+Der Fix bleibt richtig (die Beschriftung war falsch), aber er bewegt die
+Entscheidung nicht. *n = 1, B6-Drift ~12 % — als Beobachtung zu lesen, nicht als
+Messung.*
+
+### DER FUND: das Werturteil entsteht jetzt IM SYSTEM
+
+Eingabe an das Lagebild:
+
+```
+Von 13 beobachteten Coins stehen 1 ueber ihrer 50-Tage-Linie (8 %).
+In den letzten 250 Handelstagen war dieser Anteil in 46 % der Faelle NIEDRIGER.
+```
+
+Also ein **knapp durchschnittlicher** Wert — der Kalibrierungssatz sagt es
+ausdrücklich. Ausgabe:
+
+```
+"Der Gesamtmarkt befindet sich in einer EXTREMEN SCHIEFLAGE mit starkem
+ Abwaertsdruck."
+```
+
+Und dieser Satz erreicht die Entscheidung als Beleg mit Gewicht **hoch**:
+*„Gesamtmarkt in extremer Schieflage mit starkem Abwärtsdruck"*.
+
+**Die Architekturlücke:** `enthaelt_werturteile()` prüft **Eingaben**. Die
+Ausgabe des Lagebilds wird zur Eingabe der Entscheidung — und wird **nicht**
+geprüft. B2 (Werturteile im Faktensatz) ist damit nicht behoben, sondern nur
+verschoben: das Urteil wird jetzt vom System selbst erzeugt.
+
+**Warum das ein besserer Deadloop-Kandidat ist als alles bisher Untersuchte:**
+
+| Kandidat | Anteil der Aufrufe |
+|---|---|
+| Struktur-Etikett (7.9) | 2,71 % der Krypto-Tage |
+| Degradierung (7.12) | 0 von 8 |
+| Betragsfrage (Nachtrag 205) | 100 % — offen |
+| **Werturteil aus dem Lagebild** | **100 %, und es trägt Gewicht *hoch*** |
+
+**Nächster Schritt:** den Wächter auf die **Zwischenausgabe** anwenden — Lagebild
+→ Entscheidung. Kein Modellaufruf nötig, um zu zählen, wie oft die Ausgabe
+Wertwörter enthält, die die Eingabe nicht hergibt.
+
+---
+
+## 7.14 Wächter auf die Zwischenausgabe — und der Kandidat, der übrig bleibt (11.08. spät)
+
+**Neues Werkzeug:** `agent/waechter_zuspitzung.py`. Kein Nachbau von
+`enthaelt_werturteile()` — der prüft **Feldnamen in einem Dict**, dieser prüft
+**Freitext einer Zwischenausgabe**. Zwei Stufen (harte Gradwörter / weiche,
+kontextabhängige) und eine Deckungsprüfung gegen den historischen Bezug der
+Eingabe. Ohne Modellaufruf.
+
+### Ist-Zustand: 1 von 8 — meine Behauptung war falsch
+
+```
+BTC 2026-03-27   hart=['drastisch']   VERSTOSS   (Perzentil waere [24, 0] gewesen)
+uebrige 7        hart=[]              kein Verstoss
+```
+
+**Ich hatte aus dem einen ETH-Durchlauf auf „100 % der Aufrufe, mit Gewicht
+hoch" geschlossen. Das ist zurückgenommen** — die Rate liegt bei 1 von 8, nicht
+bei 8 von 8. Dritter Fall desselben Fehlers an einem Tag (n = 1
+verallgemeinert). Der Wächter hat ihn sofort sichtbar gemacht; genau dafür ist
+er da, und er bleibt als stehende Naht in der Kette.
+
+**Nachtrag zum ETH-Fall:** Der Durchlauf mit *„extremer Schieflage"* lief über
+`pruefe_rollenkette` mit `mit_bezug=True` und Perzentilen [40, 28] — mitten im
+unauffälligen Band. Das war also ein **echter** unbelegter Verstoß, und der
+Wächter erkennt ihn. Nur ist er selten, nicht die Regel.
+
+### Dritter Backtest/Live-Unterschied, gefunden dabei
+
+```
+pruefe_rollenkette / Produktion   mit_bezug=True    → Kalibrierungssatz vorhanden
+messe_betragsdeckel.py            mit_bezug=False   → fehlt
+messe_degradierung.py             mit_bezug=False   → aus dem ersten kopiert
+```
+
+**Alle Ankermessungen liefen ohne den Satz, der die Zuspitzung eindämmen soll.**
+Zusammen mit `tag_vollstaendig` (7.13) sind das drei Stellen, an denen Messung
+und Produktion dem Modell Unterschiedliches zeigen. Vor jedem Vergleich prüfen.
+
+### DER KANDIDAT, DER ÜBRIG BLEIBT: das Breite-Urteil
+
+| Anker | Perzentile | Lagebild | Aktion |
+|---|---|---|---|
+| BTC 2025-06-24 | [40, 28] | schmal_getragen | REDUZIEREN |
+| BTC 2026-03-27 | [24, 0] | schmal_getragen | REDUZIEREN |
+| ETH 2025-06-24 | [40, 28] | schmal_getragen | NICHTS_TUN |
+| ETH 2026-03-27 | [24, 0] | schmal_getragen | NICHTS_TUN |
+| BTC 2025-12-25 | [2, 2] | breit_getragen | NICHTS_TUN |
+| VST 2024-09-16 | [84, 8] | breit_getragen | **KAUFEN** |
+
+> **Einschränkung zuerst:** Die acht Anker sind **nach großen Gewinnen
+> ausgewählt**. Dass alle vier „schmal"-Fälle das Ziel erreichten, ist deshalb
+> **kein Beleg** — bei dieser Auswahl erreicht fast alles das Ziel. Die
+> Ausgangsspalte ist per Konstruktion nahezu konstant.
+
+**Was nicht an der Auswahl hängt:** vier „schmal_getragen" → kein einziger Kauf,
+zwei REDUZIEREN. Der einzige Kauf fällt auf einen „breit_getragen"-Anker. Die
+Kette **überträgt** das Breite-Urteil in die Handlungsrichtung — wie schon der
+Gegentest in 7.3 (20 % Breite → NICHTS_TUN, 100 % → NACHKAUFEN), hier an echten
+Ankern bestätigt.
+
+**Und die Richtung ist die gemessen falsche.** 7.4, unabhängig über die ganze
+Historie: kein Zeitpunkt mit breitem Markt war je ein guter Einstieg — 15
+Zeitpunkte über 45 % Breite, Median −0,6 % bis −20,4 %.
+
+| Kandidat | Anteil der Aufrufe | Status |
+|---|---|---|
+| Struktur-Etikett | 2,71 % | behoben, war nicht die Ursache (7.11/7.13) |
+| Degradierung | 0 von 8 | widerlegt (7.12) |
+| Zuspitzung | 1 von 8 | real, selten; Wächter steht |
+| Betragsfrage | 100 % | offen, gepaart zu messen |
+| **Breite-Urteil** | **100 %** | **überträgt (7.3) UND zeigt in die gemessen falsche Richtung (7.4)** |
+
+**Das ist der einzige Kandidat, dessen Existenz nicht mehr belegt werden muss.**
+7.3 zeigt die Übertragung, 7.4 die Richtung. Offen ist nur die **Größe** — und
+die gehört in denselben gepaarten Lauf wie die Betragsfrage.
+
+---
+
+## 7.15 Marktbreite ist für dieses System nicht baubar — und 16 Assets sind unsichtbar (11.08. spät)
+
+**Nutzervorgabe:** *„Alle ist — Krypto Spot, Hebel, Aktien, ETF und Rohstoffe
+(Bitpanda)."* Und: *„die Marktbreite sehe ich für das Einzelasset nicht so
+relevant."* Beides geprüft, beides bestätigt.
+
+### Der Defekt am konkreten Fall
+
+Am VST-Anker (Aktie, 16.09.2024) liefert das Lagebild:
+
+```
+"Von 10 beobachteten COINS stehen 6 ueber ihrer 200-Tage-Linie (60 %)."
+
+Die 10 sind:  CEBS · EXH3 · ISOC · PLTR · VST · VVMX
+              3 Rohstoff-Futures · SPY        —  kein einziger Coin
+```
+
+Krypto hat an diesem Datum keine 200 Tage Historie. Drei Fehler in einem Satz:
+
+1. **Gemischter Korb** — Krypto, Aktien, Rohstoff-Futures und ein S&P-ETF in
+   einer Zahl. Das ist die Breite von „was wir tracken und wovon Daten da sind".
+2. **Falsche Beschriftung** — „Coins" für einen Korb ohne Coins. Und das
+   beurteilte Asset steckt selbst im Korb.
+3. **Die Korbgröße wechselt** — 30 Symbole beim 50-Tage-Fenster, 10 beim
+   200-Tage-Fenster. Der Kalibrierungssatz („in 84 % der Fälle war dieser Anteil
+   niedriger") vergleicht deshalb gegen eine Historie mit **anderer
+   Zusammensetzung**. Das Perzentil ist bedeutungslos — und es ist genau der
+   Satz, der die Zuspitzung eindämmen sollte (7.14).
+
+Im selben Block stehen zwei gegenläufige Signale: 50-Tage-Breite im 84.
+Perzentil, 200-Tage-Breite im 8. — aus zwei verschieden großen Körben.
+
+### Warum eine Breite JE KLASSE ebenfalls nicht geht: es fehlen die Mitglieder
+
+| Klasse | Watchlist | mit Kursreihe | Breite möglich? |
+|---|---|---|---|
+| Krypto | 44 | 35 | ja |
+| ETF | 7 | 4 | **nein** |
+| Rohstoffe | 4 | **0** | **nein** |
+| Aktien | 2 | 2 | **nein** |
+
+**Für vier von fünf Klassen ist eine Marktbreite arithmetisch unmöglich.** Das
+ist keine Ermessensfrage, das ist eine Abzählung. Der gemischte Korb war der
+Notbehelf, der genau daraus entstanden ist.
+
+### Und der härtere Fund: 16 von 57 Assets sind für die Rollen-Ebene unsichtbar
+
+```
+Rohstoffe   OD7C OD7H OD7L OD7N   Reihen liegen unter _ROHSTOFF_FUTURES_OD7C/H/N
+                                  -> Schluessel passt nicht, OD7L fehlt ganz
+ETF         3QSS DBPK X136        keine Reihe
+Krypto      BRETT CANTON EURCV IO KAIA KAITO SUPRA VSN XNO   keine Reihe
+```
+
+`lade_reihen_aus_db()` liefert für diese Symbole `None` — **`beschreibe_lage()`
+kann sie nicht beschreiben, die Kette hat für sie keine Eingabe.** Für die
+gesamte Assetklasse Rohstoffe gilt das ausnahmslos, obwohl die Futures-Reihen
+in der Datenbank liegen. Direkte Bestätigung des Nutzerhinweises
+*„alle müssen funktionieren"*.
+
+### Was an die Stelle tritt: Benchmark je Klasse statt Breite
+
+Das Kriterium: **ein Marktfakt gehört in die Beurteilung, wenn er zwischen
+Assets unterscheidet. Wirkt er auf alle gleich, ist er ein Risikoparameter — und
+Risiko ist deterministisch.**
+
+| Fakt | unterscheidet? | gehört wohin |
+|---|---|---|
+| Marktbreite, Fear & Greed, FOMC-Termine | nein | Risikoschicht |
+| BTC-Dominanz, DXY | ja | Beurteilung |
+| **Lage des Assets zu SEINEM Benchmark** | ja, konstruktionsbedingt | **Beurteilung** |
+| Korrelation des Assets zu seinem Markt | ja — sagt, wie viel der Gesamtmarkt hier überhaupt bedeutet | Beurteilung |
+
+| Klasse | Benchmark | vorhanden? |
+|---|---|---|
+| Krypto Spot / Hebel | BTC (Hebel zusätzlich Funding, OI) | ja |
+| Aktien | SPY | **ja — `_THEMEN_ETF_BENCHMARK_SPY`, seit 1993** |
+| ETF | je nach ETF; SPY als Näherung | teilweise |
+| Rohstoffe | die Futures-Reihen selbst | ja, nach Schlüsselkorrektur |
+
+**Der Benchmark-Gedanke ist nicht neu** — SPY liegt bereits unter einem
+Benchmark-Namen in der Datenbank, und `btc_relativwert` ist dasselbe Prinzip für
+Krypto. Es ist ein Anschluss, keine Neuentwicklung.
+
+**Ehrlich dazu:** Das erzeugt keine Kante. Es entfernt eine falsche Eingabe und
+ersetzt sie durch eine unterscheidende. Der Grundbefund aus Abschnitt 6 bleibt.
+
+---
+
+## 7.16 Abdeckung geprüft: 17 von 57 Assets sind für die Kette unsichtbar (11.08. spät)
+
+**Neues Werkzeug:** `pruefe_abdeckung.py` — Vorflugkontrolle, kein Modellaufruf.
+Prüft je Assetklasse, welche Watchlist-Assets die Rollen-Ebene beschreiben kann,
+und **benennt den Grund**, wo sie es nicht kann.
+
+```
+aktien         2 von  2   (100 %)
+etf            4 von  7   ( 57 %)
+krypto        34 von 44   ( 77 %)
+rohstoffe      0 von  4   (  0 %)   ← die Kette läuft für diese Klasse nicht an
+--------------------------------
+beschreibbar  40 · nicht beschreibbar 17  (30 % der Watchlist)
+```
+
+**Es sind 17, nicht die zuerst gezählten 16:** HYPE hat 167 Kerzen und fällt
+unter die 220er-Schranke der Ankerprüfung. Eine Prüfung auf `symbol in reihen`
+hätte es übersehen — die Schranke gehört in die Prüfung, sonst misst sie etwas
+anderes als die Kette später liest.
+
+### Vier verschiedene Ursachen, nur eine davon ein Defekt
+
+| Gruppe | Zahl | Ursache | Handlung |
+|---|---|---|---|
+| **Rohstoffe** | 4 | ETC-Reihe wird von `agent/rohstoff/pipeline.py` aus der Futures-Referenz **rekonstruiert**; die Produktion steht seit 10.08. OD7L hat zusätzlich keine Futures-Referenz | Pipeline einmal laufen lassen — **Produktionsentscheidung des Nutzers** |
+| **Krypto** | 9 | nicht in `KRAKEN_PAIR_MAP` (35 Einträge). Kraken ist die OHLC-Quelle; Bitpanda listet sie, Kraken nicht. Die 9 stimmen **exakt** überein | zweite Quelle, oder bewusst ohne technische Analyse führen |
+| **ETF** | 3 | 3QSS, DBPK, X136 ohne OHLC-Historie | Quelle klären |
+| **HYPE** | 1 | erst 167 Kerzen — zu jung | löst sich von selbst |
+
+`KAITO` und `XNO` haben nicht einmal einen Preis im Cache — dort ist zu prüfen,
+ob sie noch in die Watchlist gehören.
+
+### Was ausdrücklich NICHT gemacht wurde
+
+Die Rohstoff-Lücke wurde **nicht** durch die Futures-Reihe gefüllt, obwohl sie
+mit 6.498 Kerzen direkt danebenliegt. Das wäre der Fehler vom 06.08. zurück:
+bis dahin lag die Futures-Historie unter dem ETC-Symbol, alles Nachgelagerte
+hielt sie für den ETC, und ein OD7C-Signal trug Kurse, die es an der Börse nie
+gab. `database/db.py` hält den richtigen Zustand fest: *„gilt als ohne Kurs —
+sichtbar statt falsch."*
+
+**Der eigentliche Defekt war nie die Lücke, sondern die Stille.** Die Kette
+übersprang diese Assets ohne Eintrag; in jeder Auswertung sieht ein stumm
+übersprungenes Asset aus wie „kein Signal", nicht wie „nicht geprüft". Genau die
+U-Boot-Wirkung, die der Nutzer benannt hat. Das Werkzeug macht sie sichtbar.
+
+### Regeln, die beim Bau galten
+
+- Ein Ersatzwert, der wie ein Kurs aussieht, ist schlimmer als eine Lücke — er
+  ist nicht als falsch erkennbar.
+- Der Hinweis „keine Historie" **unterscheidet zwischen Assets** und ist damit
+  kein konstantes Feld im Sinne von `finde_konstanten()`. Wäre er für alle
+  gleich, gehörte er nicht in den Faktensatz.
+- Für die Übergabe an ein Modell gilt die bestehende Konvention
+  `nicht_verfuegbar` — kein neues Vokabular.
+
+
+### KORREKTUR zu 7.16 (11.08., wenige Minuten später) — die Zahlen gelten für eine VERALTETE DB
+
+**Die Abdeckungszahlen oben sind auf dem Desktop erhoben, und dessen Daten enden
+am 19.07.2026.** Das steht so in der Übergabe und wurde beim Messen übersehen.
+
+```
+price_history_ohlc   jüngster Eintrag  2026-07-19
+price_cache          jüngster Eintrag  2026-07-19
+holdings             jüngster Eintrag  2026-07-19
+```
+
+**Was danach gebaut wurde und hier deshalb nie lief:**
+
+| Datum | Baustein | deckt ab |
+|---|---|---|
+| 03.08. | `api/coingecko_ohlc_fallback.py` | genau die 9 Krypto ohne Kraken-Listing — KAIA, KAITO, CANTON, SUPRA, IO, XNO, BRETT werden dort **namentlich** genannt |
+| — | `api/yfinance_history.py` | die Wertpapiere (3QSS, DBPK, VSN) |
+| 06.08. | Rohstoff-Migration + `_rekonstruiere_etc_reihe()` | die ETC-Reihen |
+
+Der Fallback ist **gebaut und angeschlossen** (`scheduler/background.py`, läuft
+nach Kraken). Die Lücke ist also mit hoher Wahrscheinlichkeit **kein
+Produktionszustand**, sondern der Datenstand vom 19.07.
+
+**Konsequenzen:**
+
+1. **Die 9 Krypto NICHT auf `nicht_verfuegbar` setzen.** Sie sind vermutlich seit
+   dem 03.08. gefüllt — nur nicht hier.
+2. **Die Rohstoff-Pipeline NICHT auf dem Desktop laufen lassen.** Sie würde ein
+   Symptom des veralteten Standes beheben, nicht eine echte Lücke — und sie
+   verstieße gegen die stehende Regel (drei dokumentierte Vorfälle).
+3. **`pruefe_abdeckung.py` gehört auf das Notebook** oder gegen einen frischen
+   Notebook-Export. Dort erst zeigt es die echte Abdeckung.
+
+**Was bestehen bleibt:** das Werkzeug selbst, die Schranke von 220 Kerzen (HYPE
+wäre sonst durchgerutscht), und der Grundsatz — eine Kette, die Assets stumm
+überspringt, macht „nicht geprüft" ununterscheidbar von „kein Signal". Nur die
+konkrete Liste gilt für den 19.07., nicht für heute.
+
+**Vierte Selbstkorrektur des Tages.** Alle vier wurden gefunden, bevor sie
+Schaden anrichteten — aber alle vier hatten dieselbe Wurzel: eine Zahl
+erhoben, ohne vorher zu prüfen, worauf sie erhoben wird.
+
+---
+
+## 7.17 Abdeckung auf ECHTEN Daten — zwei stille Defekte (11.08. spät)
+
+**Datenquelle:** `DB_Backups/tradinginfotool_2026-08-10_0554.db.gz` aus dem
+Austauschordner — der Snapshot vom Tag des Produktionsstopps, 190 MB entpackt,
+`integrity_check: ok`. Das Backup entsteht bei **jedem** Notebook-Export
+(`_db_backup()`, gebaut 06.08.), es musste also nichts angefordert werden.
+
+```
+                    Desktop (19.07.)   Notebook (10.08.)
+price_history_ohlc        85.280           110.835
+signals                      118             2.957
+```
+
+### Zuerst: der Deadloop-Befund hält der 25-fachen Stichprobe stand
+
+```
+Desktop     115 / 118  = 97,5 % HALTEN   (2 Wochen)
+Notebook   2888 / 2957 = 97,7 % HALTEN   (5 Wochen)
+
+Handlungen gesamt 69:  KAUFEN 24 · TAUSCHEN 22 · NACHKAUFEN 15 · VERKAUFEN 8
+```
+
+Die Kennzahl, auf der die ganze Erzählung steht, überlebt fast auf die
+Nachkommastelle. **Der Deadloop ist real und jetzt solide belegt.**
+
+### Rohstoffe: in der Produktion längst gelöst
+
+3 von 4 beschreibbar (OD7C/OD7H/OD7N, je 520 Kerzen). Die Pipeline hat die
+ETC-Reihen rekonstruiert. Nur OD7L fehlt — dort gibt es keine Futures-Referenz.
+**Der Auftrag „Pipeline einmal laufen lassen" war in der Produktion bereits
+erfüllt; nur der Desktop-Datenstand war alt.**
+
+### DEFEKT 1: Die gesamte Assetklasse ETF ist wegen eines Währungsfilters unsichtbar
+
+```
+3QSS  EUR   522 Kerzen              DBPK  EUR  4160  (ab 2010)
+CEBS  EUR   793                     EXH3  EUR  4722  (ab 2008)
+ISOC  EUR  3647                     VVMX  EUR  1236
+X136  EUR   157
+```
+
+**Die Daten sind da, reichlich und tief.** `lade_reihen_aus_db()` filtert
+`currency='USD'` — und die ETFs liegen ausschließlich in EUR. Damit sieht die
+Rollen-Ebene **keine einzige Zeile** davon. Kein fehlender Datensatz, ein
+Filter-Blindfleck.
+
+Das erklärt auch den Unterschied zum Desktop, wo 4 ETFs USD-Zeilen hatten: die
+Erfassung hat zwischenzeitlich auf EUR gewechselt.
+
+### DEFEKT 2: Der CoinGecko-Rückfall speichert 4-Tage-Kerzen, als wären es Tageskerzen
+
+```
+KAIA  24 Kerzen  2026-05-07 .. 2026-08-07  =  92 Tage
+Abstände zwischen allen Kerzen:  4 Tage, ausnahmslos (23 von 23)
+```
+
+Betroffen: KAIA, KAITO, CANTON, SUPRA, IO, XNO, BRETT. CoinGecko liefert auf dem
+freien Zugang für `days=90` **Vier-Tage-Kerzen**; sie landen in derselben
+Tabelle wie Krakens Tageskerzen, und `price_history_ohlc` führt **keine
+Granularitätsspalte**.
+
+**Folge:** Für diese sieben Symbole rechnet jeder „20-Tage"-Indikator in
+Wahrheit über **80 Kalendertage**. ATR, gleitende Durchschnitte, der
+Swing-Detektor, die 60-Tage-Bewegung — alles bezieht sich auf eine andere
+Zeitskala, ohne dass es irgendwo sichtbar wird. Genau die U-Boot-Wirkung: nichts
+stürzt ab, alles ist verschoben.
+
+Die 220-Kerzen-Schranke hat sie hier zufällig aufgefangen (24 < 220). **Ohne die
+Schranke wären sie in jede Messung eingegangen.**
+
+### Stand der Abdeckung auf echten Daten
+
+```
+aktien      2 von  2   (100 %)
+rohstoffe   3 von  4   ( 75 %)   OD7L ohne Futures-Referenz
+krypto     34 von 44   ( 77 %)   10 mit 4-Tage-Kerzen bzw. zu kurz
+etf         0 von  7   (  0 %)   Waehrungsfilter — Daten vorhanden
+------------------------------------------------
+beschreibbar 39 · nicht beschreibbar 18 (32 %)
+```
+
+**Korrektur an 7.16:** Die dort gemeldeten Ursachen galten für den Desktop-Stand
+vom 19.07. Auf echten Daten sind es andere — und zwei davon sind echte Defekte
+statt fehlender Backfills.
+
+---
+
+## 7.18 ETF-Filter behoben — und Entscheidungsvorlage zur Granularität (11.08. spät)
+
+### Behoben: der Währungsfilter
+
+`lade_reihen_aus_db()` filterte `currency='USD'`. Neu: **eine Währung je Symbol,
+USD bevorzugt, EUR als Rückfall.** Der Filter wird nicht einfach entfernt —
+Krypto liegt in **beiden** Währungen (44 USD, 35 EUR), ohne Auswahl käme dort
+jeder Tag doppelt heraus.
+
+```
+vorher   45 Symbole, ETF-Klasse unsichtbar
+nachher  63 Symbole (56 USD, 7 EUR)
+
+EXH3 4722 Kerzen ab 2008 · DBPK 4160 ab 2010 · ISOC 3647 ab 2011
+VVMX 1236 · CEBS 793 · 3QSS 522 · X136 157
+```
+
+**Zweite Stelle, die mitmusste:** `_kurs_eur()` rechnet Kurse nach EUR um. Bei
+einer Reihe, die bereits in EUR liegt, wäre das eine stille Doppelumrechnung —
+der Kurs sähe plausibel aus und läge um den Wechselkurs daneben. Die
+Vorrangregel steht deshalb an **einer** Stelle: `waehrung_je_symbol()`.
+
+Abdeckung danach: **45 von 57** statt 39. Keine Klasse mehr ohne Abdeckung.
+
+---
+
+### ENTSCHEIDUNGSVORLAGE: 4-Tage-Kerzen im Tageskerzen-Bestand
+
+**Der Befund (7.17).** Der CoinGecko-Rückfall liefert für sieben Symbole
+Kerzen im **Vier-Tage-Abstand** — KAIA, KAITO, CANTON, SUPRA, IO, XNO, BRETT.
+24 Kerzen über 92 Tage, Abstand ausnahmslos 4 Tage. Sie liegen in derselben
+Tabelle wie Krakens Tageskerzen, und `price_history_ohlc` führt **keine
+Granularitätsspalte**. Jeder „20-Tage"-Indikator rechnet dort über 80
+Kalendertage — ATR, gleitende Durchschnitte, Swing-Erkennung, 60-Tage-Bewegung.
+
+**Warum es heute nicht auffällt:** Die 220-Kerzen-Schranke fängt sie ab (24 <
+220). Das ist ein **Zufall**, kein Schutz — die Schranke prüft Länge, nicht
+Granularität. Wer sie senkt, holt sie zurück.
+
+| # | Option | dafür | dagegen |
+|---|---|---|---|
+| **A** | **Granularitätsspalte** in `price_history_ohlc` | ehrlich, dauerhaft, kein Datenverlust; jede Auswertung kann filtern | Schemaänderung; **jeder** Leser muss sie beachten — wer sie vergisst, rechnet weiter falsch. Ein Feld, das man beachten *muss*, ist selbst eine Falle |
+| **B** | Rückfall auf **echte Tageskerzen** umstellen | eine Zeitskala für alles | `/ohlc` liefert auf dem freien Zugang bei 90 Tagen 4-Tage-Kerzen; Tageswerte gäbe es nur über `/market_chart` — **ohne High/Low**, und genau die brauchen ATR und Swing-Erkennung |
+| **C** | Betroffene Symbole **ausschließen** | sofort, kein Risiko, ehrlich | sieben Assets ohne technische Analyse — darunter KAIA, laut Fallback-Modul **17,2 % aller Screening-Kandidaten** |
+| **D** | Status quo (Schranke fängt sie ab) | nichts zu tun | wirkt durch Zufall; kein Vermerk, keine Warnung. Genau der stille Zustand, den wir gerade abschaffen |
+
+**Empfehlung: eine Variante von A, aber ohne Schemaänderung.**
+
+Die Granularität steht **in den Daten selbst** — der Median-Abstand zwischen
+zwei Kerzen. Der Lader kann sie messen und eine Reihe, die nicht täglich ist,
+zurückweisen oder kennzeichnen. Vorteile gegenüber einer Spalte:
+
+- **keine Migration**, kein Feld, das jemand vergessen kann
+- **selbstprüfend** — die Regel gilt für jede Reihe, auch für künftige Quellen
+- die Erkennung ist eindeutig: Tageskerzen haben Median-Abstand 1 (auch bei
+  Aktien, wo das Wochenende einzelne 3-Tage-Lücken erzeugt), die
+  CoinGecko-Reihen haben 4
+
+Wirkung wäre dieselbe wie C — die sieben fallen heraus —, aber **begründet und
+sichtbar** statt zufällig, und die Regel greift automatisch, wenn eine Quelle
+später eine andere Granularität liefert.
+
+**Offen und zu prüfen:** Ob die 8.441-Fälle-Messung vom 10.08. (Abschnitt 6)
+diese Symbole enthielt. Lief sie über `lade_reihen()` auf der Exportdatei, sind
+4-Tage-Kerzen möglicherweise als Tageskerzen eingegangen. Das wäre ein Befund
+zu Abschnitt 6, nicht nur zur Rollen-Ebene.
+
+---
+
+## 7.19 Gegenprüfung der Entscheidungsvorlage — zwei eigene Fehler, ein besserer Weg (11.08. spät)
+
+**Nutzervorgabe:** *„mach noch eine Gegenprüfung zu deinen Befunden, vor allem A
+— u.U. gibt es eine Möglichkeit ohne mit den Kompromissen zu leben."* Die
+Prüfung hat zwei Aussagen von mir widerlegt und einen dritten Weg gefunden.
+
+### Fehler 1: „CoinGecko liefert keine Tageskerzen" — unbelegt behauptet
+
+Ich hatte das aus allgemeinem Wissen gesagt, nicht aus dem Code geprüft. Im
+Modul steht:
+
+```
+api/coingecko_ohlc_fallback.py:79
+  "CoinGecko liefert bei `days` <= 90 Tageskerzen; darueber werden es
+   Vier-Tage-Kerzen"
+api/coingecko_ohlc_fallback.py:83
+  ABRUF_TAGE = 90
+```
+
+**Der Code erwartet Tageskerzen und bekommt 4-Tage-Kerzen.** Ob die Grenze bei
+CoinGecko anders liegt als angenommen oder sich geändert hat — die Wirkung ist
+dieselbe: die Annahme steht als Kommentar da und stimmt nicht. Die
+Umwandlungsfunktion heißt `_rohdaten_zu_tageskerzen()` und behauptet es im
+Namen.
+
+### Fehler 2: es sind neun Symbole, nicht sieben
+
+Der Granularitätsprüfer über alle 63 Reihen:
+
+```
+Median-Abstand 1 Tag   54 Reihen   (inkl. Aktien mit Wochenendlücken, SPY)
+Median-Abstand 4 Tage   9 Reihen   BRETT CANTON EURCV IO KAIA KAITO SUPRA VSN XNO
+```
+
+**EURCV und VSN kommen dazu — und beide sollten laut dem Modulkopf gar nicht
+dort sein:** *„Wertpapiere (3QSS, DBPK, VSN) laufen über yfinance, Stablecoins
+(EURCV) brauchen keine Kerzen."* `braucht_fallback()` prüft aber nur
+Assetklasse, Kraken-Paar und CoinGecko-ID. VSN ist in der Watchlist als
+`krypto` geführt, also greift die Ausnahme nie; eine Stablecoin-Regel gibt es im
+Code überhaupt nicht. **Dritter Fall an einem Tag von „dokumentiert, nicht
+gebaut"** — nach R-A2 und Methodik-Zusicherung 2.
+
+### Der Weg ohne Kompromiss: yfinance, mit Preis-Gegenprobe
+
+`api/yfinance_history.py::get_full_ohlc_history()` ist laut eigenem Docstring
+**assetklassen-neutral**; `ETH-USD` steht als genutzter Ticker im Modulkopf. Nur
+der Aufrufer `backfill_all_aktien_ohlc()` filtert auf `assetklasse == "aktien"`.
+Dieselbe Lage wie beim CoinGecko-Rückfall: die Fähigkeit ist da, nur nicht
+angeschlossen.
+
+**Live geprüft, gegen unseren eigenen Preis aus `price_cache`:**
+
+| Symbol | unser Preis | yfinance | Abw. | Urteil | Tageskerzen |
+|---|---|---|---|---|---|
+| KAIA | 0,026990 | 0,027390 | 1,5 % | **passt** | 652 ab 2024-10-29 |
+| KAITO | 0,677982 | 0,656000 | 3,2 % | **passt** | 498 ab 2025-04-01 |
+| SUPRA | 0,000192 | 0,000189 | 1,8 % | **passt** | 612 ab 2024-12-08 |
+| XNO | 0,410082 | 0,381893 | 6,9 % | **passt** | 3198 ab 2017-11-09 |
+| IO | 0,12866 | — | — | kein aktueller Kurs | „Historie" endet 2022 |
+| BRETT | 0,00424 | — | — | kein aktueller Kurs | „Historie" endet 2023 |
+| HYPE | 54,21 | — | — | kein aktueller Kurs | „Historie" endet 08/2024 |
+
+**Vier von neun bekämen echte Tageskerzen, alle über der 220er-Schranke** — sie
+wären damit vollständig beschreibbar statt ausgeschlossen.
+
+**Und die Gegenprobe ist selbst der Schutz:** IO, BRETT und HYPE liefern bei
+Yahoo eine lange, plausibel aussehende Historie, die einem **anderen, toten
+Asset** gehört (unser IO ist io.net von 2024, Yahoos IO-USD endet 04/2022;
+HYPE ist Hyperliquid ab 11/2024, Yahoos HYPE-USD endet 08/2024). Ohne den
+Preisabgleich wäre das die schlimmste Sorte Fehler — eine falsche Kursreihe, die
+nicht als falsch erkennbar ist. Dasselbe Problem, das der CoinGecko-Client für
+`/search` bereits dokumentiert: *„das könnte still die falsche Coin-Historie
+laden."*
+
+### Gebaut: `granularitaet_je_symbol()`
+
+Median-Abstand zwischen zwei Kerzen, aus den Daten selbst — keine Spalte, keine
+Migration, nichts zu vergessen, gilt automatisch für jede künftige Quelle. Der
+Median statt des Mittelwerts, weil Aktien über das Wochenende 3-Tage-Lücken
+haben und trotzdem täglich sind. Verifiziert: 54 Reihen Median 1 (inkl. VST,
+PLTR, EXH3, SPY, BTC), 9 Reihen Median 4.
+
+### Die 8.441-Fälle-Messung ist NICHT betroffen
+
+`pruefe_trader_merkmale.py` und `pruefe_analogie.py` haben beide dieselbe
+Schranke:
+
+```
+if len(c) < 250: return []
+```
+
+Bei 24 Kerzen tragen die betroffenen Symbole **null Zeilen** bei. Der
+Grundbefund aus Abschnitt 6 steht unverändert.
+
+> **Aber aus demselben Zufall wie überall sonst:** Es schützt eine **Längen**-
+> schranke, keine Granularitätsprüfung. Lieferte eine Quelle je 300
+> Vier-Tage-Kerzen, gingen sie ungehindert ein. Deshalb gehört
+> `granularitaet_je_symbol()` in beide Messskripte, nicht nur in den Lader.
+
+### Korrigierte Empfehlung
+
+1. **yfinance für die vier bestätigten Symbole anschließen** — echte
+   Tageskerzen, lange Historie, kein Kompromiss. Mit **verpflichtender**
+   Preis-Gegenprobe, die falsche Ticker aussortiert.
+2. **Granularitätsprüfung als Wächter** — greift für den Rest und für alles
+   Künftige.
+3. Für CANTON, IO, BRETT, EURCV, VSN bleibt der ehrliche Zustand: keine
+   verwertbare Tageshistorie. EURCV ist ein Stablecoin und braucht keine.
+
+---
+
+## 7.20 Umgesetzt: yfinance-Rückfall mit Pflicht-Gegenprobe, Granularitätswächter in beiden Ladepfaden (11.08. spät)
+
+### Neu: `api/yfinance_krypto_fallback.py`
+
+Dritte OHLC-Quelle für Krypto ohne Kraken-Listing, mit fester Rangfolge:
+
+```
+1. Kraken      Boersenkurs, taeglich          KRAKEN_PAIR_MAP
+2. yfinance    taeglich, Ticker VERIFIZIERT   dieses Modul
+3. CoinGecko   Vier-Tage-Kerzen               nur wo 1 und 2 nichts liefern
+```
+
+**Die Tickerprüfung ist Pflicht, nicht Kür.** Zwei Prüfungen, beide müssen
+bestehen — und „keine Gegenprobe möglich" zählt als **nicht** bestanden:
+
+| Prüfung | wogegen |
+|---|---|
+| **Preis** — letzter yfinance-Schluss gegen unseren aus `price_cache`, Toleranz 15 % | ein anderes Asset fällt nicht knapp durch, sondern deutlich |
+| **Aktualität** — Reihe muss bis in die letzten 7 Tage reichen | ein totes Asset hat einen plausiblen Preis, nur eben von damals |
+
+**Trockenlauf gegen den Notebook-Snapshot:**
+
+```
+KAIA    0,026990 vs 0,027598   2,3 %    652 Kerzen   UEBERNEHMEN
+KAITO   0,677982 vs 0,657600   3,0 %    498          UEBERNEHMEN
+SUPRA   0,000192 vs 0,000189   2,0 %    612          UEBERNEHMEN
+XNO     0,410082 vs 0,382708   6,7 %   3198          UEBERNEHMEN
+
+BRETT   Reihe endet 2023-06-08 (1160 Tage alt)       abgelehnt
+CANTON  keine Daten bei Yahoo                        abgelehnt
+IO      268,9 % Abweichung, endet 2022-04-11         abgelehnt
+VSN      99,0 % Abweichung, endet 2023-03-29         abgelehnt
+```
+
+**VSN ist der Beleg dafür, dass die Prüfung Pflicht sein muss: 972 Kerzen — es
+hätte jede reine Längenprüfung bestanden.** Nur der Preisabgleich zeigt, dass es
+ein vollständig anderes Asset ist. Eine falsche Kursreihe ist die schlimmste
+Fehlerklasse dieses Projekts, weil sie nicht als falsch erkennbar ist.
+
+**EURCV** steht in `OHNE_KERZEN` — ein Stablecoin hat eine per Konstruktion
+flache Reihe, und die ist für jeden Indikator ein konstantes Feld (B10). Das
+stand als Absicht schon im CoinGecko-Modul und war dort nie implementiert.
+
+**Vorgabe ist `--trocken`.** Ein Schreibzugriff auf die Kursdaten ist eine
+Produktionshandlung und muss mit `--schreiben` ausdrücklich verlangt werden.
+Der Backfill selbst gehört auf das Notebook, nicht auf den Desktop.
+
+### Wächter in BEIDEN Ladepfaden
+
+`nur_tageskerzen()` — verwirft Reihen mit Median-Abstand > 1 und **nennt jede
+einzelne**:
+
+```
+DB: 9 Reihe(n) sind KEINE Tageskerzen und werden nicht geladen:
+    BRETT (4d), CANTON (4d), EURCV (4d), IO (4d), KAIA (4d), KAITO (4d),
+    SUPRA (4d), VSN (4d), XNO (4d)
+```
+
+Verifiziert: 63 → 54 Reihen, alle verbleibenden mit Median 1. Angeschlossen an
+`lade_reihen_aus_db()` **und** `lade_reihen()` — die Messskripte lesen über den
+zweiten, und dort schützte bisher nur die Längenschranke, und die nur zufällig.
+
+**Still verwerfen wäre derselbe Fehler wie das stumme Überspringen fehlender
+Assets** — deshalb die Warnung mit Namen und Granularität.
+
+### Was bewusst NICHT geändert wurde
+
+Der Währungsfilter in `lade_reihen()` (Exportpfad) bleibt auf USD. In der
+Datenbank war er ein Defekt — er machte die ETF-Klasse unsichtbar. Im Exportpfad
+wäre seine Änderung etwas anderes: sie veränderte die **Grundgesamtheit** der
+8.441-Fälle-Messung und machte deren Ergebnis unvergleichbar. Der Grund steht im
+Docstring, damit die nächste Person nicht „aufräumt".
+
+### Offen für den Betrieb
+
+Der yfinance-Rückfall ist gebaut und geprüft, aber **nicht in
+`scheduler/background.py` verdrahtet** — dort läuft heute nur der
+CoinGecko-Rückfall nach Kraken. Das Einhängen ist eine Produktionsänderung und
+gehört auf das Notebook, zusammen mit einem `--schreiben`-Lauf für die vier
+bestätigten Symbole.

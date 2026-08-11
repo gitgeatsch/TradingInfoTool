@@ -63,19 +63,48 @@ PRUEFSTEINE = (
 def _bestand(symbol: str):
     """Menge und Einstand aus dem Depot. Bei historischen Faellen eine
     NAEHERUNG: der heutige Bestand, nicht der von damals - Bestandshistorie
-    fuehren wir nicht. Steht so in der Ausgabe, damit niemand es vergisst."""
+    fuehren wir nicht. Steht so in der Ausgabe, damit niemand es vergisst.
+
+    KORREKTUR 11.08.: Hier stand nur `avg_buy_price_eur` - die BERECHNETE
+    Spalte. 14 der 28 gehaltenen Positionen pflegen ihren Einstand aber in
+    `avg_buy_price_manual_eur` (3QSS, CEBS, DBPK, EXH3, ISOC, OD7C/H/L/N, PLTR,
+    VSN, VST, VVMX, X136). Fuer sie kam None zurueck, und
+    `lagebeschreibung._bestand()` meldete daraufhin "X ist nicht im Bestand" -
+    dem Modell wurde gesagt, wir haetten nichts, waehrend wir halten.
+
+    Die Vorrangregel ist nicht neu erfunden, sie steht seit jeher in
+    `database/models.py::effective_avg_buy_price_eur`: der manuelle Wert ist
+    ein Override und geht vor."""
     c = sqlite3.connect(DB)
-    r = c.execute("select quantity, avg_buy_price_eur from holdings where symbol=?",
-                  (symbol,)).fetchone()
-    return (r or (None, None))
+    r = c.execute("select quantity, avg_buy_price_eur, avg_buy_price_manual_eur "
+                  "from holdings where symbol=?", (symbol,)).fetchone()
+    if not r:
+        return (None, None)
+    menge, berechnet, manuell = r
+    return (menge, manuell if manuell is not None else berechnet)
 
 
 def _kurs_eur(symbol: str, reihe, index: int) -> float | None:
     """EUR-Kurs am Ankertag. Die Reihen sind in USD; der Umrechnungsfaktor
     kommt aus dem Preis-Cache, der beide Waehrungen fuehrt."""
+    # ZWEITE KORREKTUR 11.08.: Liegt die REIHE bereits in EUR, darf hier nicht
+    # noch einmal umgerechnet werden. Seit die ETFs sichtbar sind (sie liegen
+    # ausschliesslich in EUR), waere das eine stille Doppelumrechnung - der
+    # Kurs sähe plausibel aus und wäre um den Wechselkurs daneben. Die
+    # Vorrangregel steht an EINER Stelle: `waehrung_je_symbol()`.
+    from backtest_llm1_historisch import waehrung_je_symbol
+    if waehrung_je_symbol(DB).get(symbol) == "EUR":
+        return float(reihe[index].close)
+
+    # KORREKTUR 11.08.: `price_cache` ist eine HISTORIE, kein Cache - 1.526
+    # Zeilen fuer 55 Symbole, Schluessel (symbol, fetched_at). Ohne Sortierung
+    # liefert `fetchone()` die AELTESTE Zeile. Fuer VST/PLTR fehlt dort gerade
+    # der EUR-Kurs, obwohl neuere Zeilen ihn fuehren (139,20 / 111,10) - der
+    # Rueckfall auf die Quellwaehrung war also unnoetig. Bei Krypto wurde ein
+    # veralteter Umrechnungskurs verwendet.
     c = sqlite3.connect(DB)
-    r = c.execute("select price_usd, price_eur from price_cache where symbol=?",
-                  (symbol,)).fetchone()
+    r = c.execute("select price_usd, price_eur from price_cache where symbol=? "
+                  "order by fetched_at desc limit 1", (symbol,)).fetchone()
     # Aktien und ETF stehen NICHT im Preis-Cache - der fuehrt nur Krypto. Ohne
     # Umrechnungskurs wird der Kurs in seiner Quellwaehrung genannt (USD). Fuer
     # die Entscheidung ist das gleichwertig; nur die Beschriftung stimmt dann

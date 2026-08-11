@@ -62,15 +62,39 @@ REQUIRED_FELDER = (
     "umgeworfen_durch",
 )
 
-SYSTEM_PROMPT_TRADER = """Du bist ein erfahrener Haendler und triffst eine \
-Entscheidung ueber genau einen Wert. Du bekommst seine Lage in Worten, deinen \
-aktuellen Bestand darin und eine Obergrenze fuer den Einsatz.
+# ZWEI SCHALTER, EINZELN (11.08. abends). Beide Fassungen entstehen aus
+# denselben Teilen, damit ein gepaarter Lauf genau EINEN Unterschied misst.
+#
+# (1) BETRAGSFRAGE - Befund. Der Umbau vom 10.08. entfernte `tranche_eur` aus
+#     Schema und Pflichtfeldern (siehe llm_schema.baue_trader_schema), liess
+#     aber den Satz in Punkt 3 stehen. Das Modell wurde also bei jedem Aufruf
+#     aufgefordert, eine Zahl zu nennen, die das Schema nicht entgegennimmt.
+#     R-A2 stand im Regelwerk und war nicht gebaut. Der Text bleibt als
+#     Vergleichsarm erhalten - wer ihn loescht, zerstoert die Messung vorher
+#     (Arbeitsstand 7.10, K3).
+#
+# (2) PERSONA - offene Frage, KEIN Verbot. Nutzer am 11.08.: *"nie im prompt
+#     haengt von dem Bedarf ab - das ist nur meine Meinung aber wenn die
+#     Standards sagen wir brauchen die Rollen ist es kein Verbot."* Deshalb
+#     bleibt die Persona VORERST eingeschaltet - der heutige Zustand wird nicht
+#     ohne Beleg geaendert. Recherche und gepaarte Messung entscheiden.
+_ANREDE = {
+    True:  "Du bist ein erfahrener Haendler und triffst eine Entscheidung ueber "
+           "genau einen Wert.",
+    False: "Du triffst eine Entscheidung ueber genau einen Wert.",
+}
+_EINGANG = {
+    True:  " Du bekommst seine Lage in Worten, deinen aktuellen Bestand darin "
+           "und eine Obergrenze fuer den Einsatz.",
+    False: " Du bekommst seine Lage in Worten und deinen aktuellen Bestand darin.",
+}
+_BETRAGSSATZ = (" Bei allem ausser NICHTS_TUN nenne den Betrag - 100, 300 oder "
+                "500 Euro, hoechstens die vorgegebene Obergrenze.")
 
-DEINE AUFGABE, in dieser Reihenfolge:
-
-1. BELEGE sammeln. Gehe die Angaben durch und notiere, was fuer einen Einstieg \
-spricht und was dagegen - je mit einem Gewicht (hoch/mittel/gering). Zwischen \
-zwei und acht. Nenne den Wert, auf den sich der Beleg stuetzt. Erfinde nichts.
+_SCHRITTE = """1. BELEGE sammeln. Gehe die Angaben durch und notiere, was fuer \
+einen Einstieg spricht und was dagegen - je mit einem Gewicht \
+(hoch/mittel/gering). Zwischen zwei und acht. Nenne den Wert, auf den sich der \
+Beleg stuetzt. Erfinde nichts.
 
 2. UNABHAENGIGE FAKTOREN zaehlen. Wie viele deiner Belege sagen wirklich \
 VERSCHIEDENE Dinge? Zwei Belege, die beide auf denselben Abwaertstrend zeigen, \
@@ -78,10 +102,9 @@ sind EIN Faktor, nicht zwei. Diese Zahl ist wichtiger als ihre Menge: drei bis \
 vier unabhaengige Faktoren tragen einen Aufbau, einer oder zwei nicht.
 
 3. HANDELN. Waehle: KAUFEN (neu aufbauen), NACHKAUFEN (bestehende Position \
-vergroessern), REDUZIEREN, VERKAUFEN oder NICHTS_TUN. Bei allem ausser \
-NICHTS_TUN nenne den Betrag - 100, 300 oder 500 Euro, hoechstens die vorgegebene \
-Obergrenze. Bei KAUFEN und NACHKAUFEN zusaetzlich den Einstiegskurs und den \
-Ausstiegskurs, beide in Euro; der Ausstieg liegt unter dem Einstieg.
+vergroessern), REDUZIEREN, VERKAUFEN oder NICHTS_TUN.{betrag} Bei KAUFEN und \
+NACHKAUFEN zusaetzlich den Einstiegskurs und den Ausstiegskurs, beide in Euro; \
+der Ausstieg liegt unter dem Einstieg.
 
 4. BEGRUENDUNG. Ein bis zwei Saetze, die deine Wahl TRAGEN. Keine Einschraenkung \
 im Nachsatz - was dagegen spricht, gehoert in das naechste Feld.
@@ -94,14 +117,40 @@ Entscheidung als falsch erweisen? Ein Kurs, ein Datum, ein Ereignis - nichts \
 Allgemeines.
 
 Antworte AUSSCHLIESSLICH mit JSON:
-{"belege": [{"fakt": "<kurz, mit Wert>", "richtung": "dafuer|dagegen|neutral", \
-"gewicht": "hoch|mittel|gering"}],
+{{"belege": [{{"fakt": "<kurz, mit Wert>", "richtung": "dafuer|dagegen|neutral", \
+"gewicht": "hoch|mittel|gering"}}],
  "unabhaengige_faktoren": <zahl>,
  "aktion": "KAUFEN|NACHKAUFEN|REDUZIEREN|VERKAUFEN|NICHTS_TUN",
  "einstieg_eur": <zahl>, "stop_eur": <zahl>,
  "begruendung": "<ein bis zwei Saetze>",
  "was_dagegen": "<der staerkste Gegengrund>",
- "umgeworfen_durch": "<eine ueberpruefbare Beobachtung>"}"""
+ "umgeworfen_durch": "<eine ueberpruefbare Beobachtung>"}}"""
+
+
+def _baue_prompt(mit_betragsfrage: bool, mit_persona: bool) -> str:
+    kopf = _ANREDE[mit_persona] + _EINGANG[mit_betragsfrage]
+    schritte = _SCHRITTE.format(betrag=_BETRAGSSATZ if mit_betragsfrage else "")
+    return f"{kopf}\n\nDEINE AUFGABE, in dieser Reihenfolge:\n\n{schritte}"
+
+
+SYSTEM_PROMPT_TRADER = _baue_prompt(mit_betragsfrage=False, mit_persona=True)
+
+# Nur fuer gepaarte Messungen. NICHT im Betrieb verwenden.
+SYSTEM_PROMPT_TRADER_MIT_BETRAG = _baue_prompt(mit_betragsfrage=True,
+                                               mit_persona=True)
+SYSTEM_PROMPT_TRADER_OHNE_PERSONA = _baue_prompt(mit_betragsfrage=False,
+                                                 mit_persona=False)
+
+# Siehe rolle_analyst.PROMPT_STAND - jeder Messbefund gehoert zu einem Stand.
+#
+#   2026-08-10a  erste Fassung, Betrag wird erfragt und ausgegeben
+#   2026-08-10b  `tranche_eur` aus Schema und Pflichtfeldern entfernt - ABER
+#                der Satz in Punkt 3 blieb stehen. Hierher gehoeren alle
+#                Befunde vom 10./11.08.
+#   2026-08-11   Betragssatz aus dem Betriebsprompt entfernt (schaltbar
+#                erhalten). Persona UNVERAENDERT eingeschaltet - offene Frage,
+#                kein Verbot; sie ist jetzt einzeln schaltbar und messbar.
+PROMPT_STAND = "2026-08-11"
 
 
 class TraderAntwortUngueltig(ValueError):

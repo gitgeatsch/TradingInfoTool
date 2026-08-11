@@ -59,6 +59,7 @@ from __future__ import annotations
 
 import io
 import json
+import logging
 import math
 import os
 import statistics
@@ -77,6 +78,8 @@ from indicators.calculations import (
 )
 
 ORDNER = r"K:\My Drive\Claude_Austauschordner\Notebook_Analysedaten"
+logger = logging.getLogger(__name__)
+
 HORIZONT = 14          # Bewertungsfenster in Tagen, wie im Backward-Tracking
 VORLAUF_MIN = 210      # genug fuer EMA200
 WARTE_SEKUNDEN = 1.5
@@ -129,7 +132,8 @@ def _arg(name: str, default: int) -> int:
     return default
 
 
-def lade_reihen_aus_db(db: str = "data/tradinginfotool.db") -> dict[str, list[Kerze]]:
+def lade_reihen_aus_db(db: str = "data/tradinginfotool.db",
+                       nur_taeglich: bool = True) -> dict[str, list[Kerze]]:
     """Kursreihen direkt aus der Datenbank - ohne den 125-MB-JSON-Umweg.
 
     ANLASS (11.08.2026): `lade_reihen()` scheiterte mit MemoryError. Ursache war
@@ -141,23 +145,127 @@ def lade_reihen_aus_db(db: str = "data/tradinginfotool.db") -> dict[str, list[Ke
     diesem Rechner laeuft, ist die DB die primaere Quelle und war es immer -
     der JSON-Umweg stammt daher, dass die ersten Backtests am Notebook liefen.
 
-    Gleicher Filter wie das Original: nur USD, nur Zeilen mit close/high/low."""
+    WAEHRUNG: eine je Symbol, USD bevorzugt, EUR als Rueckfall (11.08.2026).
+
+    Vorher stand hier `where currency='USD'`. Das war fuer Krypto, Aktien und
+    Rohstoffe richtig - und machte die GESAMTE Assetklasse ETF unsichtbar:
+
+        3QSS EUR 522 · CEBS EUR 793 · DBPK EUR 4160 (ab 2010) · EXH3 EUR 4722
+        (ab 2008) · ISOC EUR 3647 · VVMX EUR 1236 · X136 EUR 157
+
+    Die Daten waren da, tief und reichlich; der Filter hat sie weggeschnitten.
+    `beschreibe_lage()` bekam fuer sieben Assets nichts und die Kette
+    uebersprang sie stumm - ununterscheidbar von "kein Signal".
+
+    WARUM NICHT EINFACH DEN FILTER ENTFERNEN: Krypto liegt in BEIDEN Waehrungen
+    (44 USD, 35 EUR). Ohne Auswahl kaemen dort zwei Reihen ineinander verwoben
+    heraus - jeder Tag doppelt, mit verschiedenen Kursen. Deshalb genau eine
+    Waehrung je Symbol.
+
+    WER DIE WAEHRUNG BRAUCHT, muss sie erfragen koennen: `waehrung_je_symbol()`.
+    Eine EUR-Reihe darf nicht noch einmal nach EUR umgerechnet werden."""
     import sqlite3
     c = sqlite3.connect(db)
-    reihen: dict[str, list[Kerze]] = {}
-    q = ("select symbol, date, open, high, low, close, volume "
-         "from price_history_ohlc where currency='USD' "
+    q = ("select symbol, currency, date, open, high, low, close, volume "
+         "from price_history_ohlc where currency in ('USD','EUR') "
          "and close is not null and high is not null and low is not null "
-         "order by symbol, date")
-    for sym, datum, o, h, l, cl, v in c.execute(q):
-        reihen.setdefault(sym, []).append(
+         "order by symbol, currency, date")
+    je_waehrung: dict[tuple[str, str], list[Kerze]] = {}
+    for sym, cur, datum, o, h, l, cl, v in c.execute(q):
+        je_waehrung.setdefault((sym, cur), []).append(
             Kerze(str(datum)[:10], float(o if o is not None else cl),
                   float(h), float(l), float(cl),
                   None if v is None else float(v)))
-    return reihen
+    reihen: dict[str, list[Kerze]] = {}
+    for sym in {s for s, _ in je_waehrung}:
+        for cur in ("USD", "EUR"):          # Reihenfolge = Vorrang
+            if (sym, cur) in je_waehrung:
+                reihen[sym] = je_waehrung[(sym, cur)]
+                break
+    return nur_tageskerzen(reihen, "DB") if nur_taeglich else reihen
 
 
-def lade_reihen() -> dict[str, list[Kerze]]:
+def nur_tageskerzen(reihen: dict, quelle: str = "") -> dict:
+    """Entfernt Reihen, die keine Tageskerzen sind - und sagt WELCHE.
+
+    Der Wächter gehoert an JEDEN Ladepfad, nicht nur an einen. Am 11.08. hat
+    eine Laengenschranke (`len(c) < 250`) die Vier-Tage-Kerzen zufaellig
+    abgefangen, weil sie nur 24 Stueck waren. Das ist Glueck, kein Schutz:
+    lieferte eine Quelle je 300 Vier-Tage-Kerzen, gingen sie ungehindert ein.
+
+    STILL VERWERFEN WAERE DER GLEICHE FEHLER wie das stumme Ueberspringen
+    fehlender Assets - deshalb wird jede entfernte Reihe genannt."""
+    grob = {s: m for s, m in granularitaet_je_symbol(reihen).items() if m > 1}
+    if grob:
+        namen = ", ".join(f"{s} ({m}d)" for s, m in sorted(grob.items()))
+        logger.warning("%s%d Reihe(n) sind KEINE Tageskerzen und werden nicht "
+                       "geladen: %s", f"{quelle}: " if quelle else "",
+                       len(grob), namen)
+    return {s: r for s, r in reihen.items() if s not in grob}
+
+
+def granularitaet_je_symbol(reihen: dict) -> dict[str, int]:
+    """Median-Abstand zwischen zwei Kerzen, in Tagen. 1 = Tageskerzen.
+
+    WOZU (Befund 11.08.2026). `price_history_ohlc` mischt Quellen mit
+    verschiedener Granularitaet, ohne es zu vermerken. Der CoinGecko-Rueckfall
+    liefert fuer sieben Symbole VIER-TAGE-Kerzen - 24 Stueck ueber 92 Tage,
+    Abstand ausnahmslos 4 -, und sie liegen neben Krakens Tageskerzen in
+    derselben Tabelle. Jeder "20-Tage"-Indikator rechnet dort ueber 80
+    Kalendertage: ATR, gleitende Durchschnitte, Swing-Erkennung, die
+    60-Tage-Bewegung. Nichts stuerzt ab, alles ist verschoben.
+
+    WARUM MESSEN STATT EINE SPALTE. Eine Granularitaetsspalte muesste jeder
+    Leser beachten - und wer sie vergisst, rechnet weiter falsch. Ein Feld, das
+    man beachten MUSS, ist selbst eine Falle. Der Abstand steht dagegen in den
+    Daten selbst: er ist immer da, gilt fuer jede kuenftige Quelle und kann
+    nicht vergessen werden.
+
+    WARUM DER MEDIAN. Tageskerzen von Aktien haben ueber das Wochenende Luecken
+    von drei Tagen; der Median bleibt trotzdem 1. Ein Mittelwert waere dadurch
+    verschoben, ein Minimum blind fuer eine ueberwiegend grobe Reihe."""
+    from datetime import date
+    aus: dict[str, int] = {}
+    for sym, reihe in reihen.items():
+        if len(reihe) < 3:
+            aus[sym] = 0          # nicht bestimmbar
+            continue
+        tage = [date.fromisoformat(k.date[:10]) for k in reihe]
+        abstaende = sorted((tage[i + 1] - tage[i]).days
+                           for i in range(len(tage) - 1))
+        aus[sym] = abstaende[len(abstaende) // 2]
+    return aus
+
+
+def waehrung_je_symbol(db: str = "data/tradinginfotool.db") -> dict[str, str]:
+    """In welcher Waehrung liefert `lade_reihen_aus_db()` dieses Symbol?
+
+    Dieselbe Vorrangregel, an EINER Stelle. Wer das anderswo nachbaut, baut
+    frueher oder spaeter eine andere Regel - und dann rechnet eine Stelle um,
+    wo die andere es schon getan hat."""
+    import sqlite3
+    c = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+    vorhanden: dict[str, set] = {}
+    for sym, cur in c.execute(
+            "select distinct symbol, currency from price_history_ohlc "
+            "where currency in ('USD','EUR') and close is not null"):
+        vorhanden.setdefault(sym, set()).add(cur)
+    return {s: ("USD" if "USD" in w else "EUR") for s, w in vorhanden.items()}
+
+
+def lade_reihen(nur_taeglich: bool = True) -> dict[str, list[Kerze]]:
+    """Kursreihen aus der Notebook-Exportdatei.
+
+    `nur_taeglich` (11.08.2026) verwirft Reihen, die keine Tageskerzen sind -
+    derselbe Waechter wie in `lade_reihen_aus_db()`. Er gehoert an BEIDE
+    Ladepfade: die Messskripte lesen ueber diesen hier, und dort hat bisher nur
+    die Laengenschranke `len(c) < 250` zufaellig geschuetzt.
+
+    NICHT geaendert wurde der Waehrungsfilter (nur USD). In der Datenbank war er
+    ein Defekt - er machte die ETF-Klasse unsichtbar. Hier waere seine Aenderung
+    etwas anderes: sie veraenderte die GRUNDGESAMTHEIT der 8.441-Faelle-Messung
+    und machte deren Ergebnis unvergleichbar. Wer ihn anfasst, misst danach
+    etwas anderes - und muss das wissen und begruenden."""
     d = json.load(io.open(ORDNER + r"\notebook_diagnose.json", encoding="utf-8"))
     reihen: dict[str, list[Kerze]] = {}
     for q in ("preishistorie_signal_symbole", "preishistorie_ueberholte_symbole"):
@@ -169,7 +277,7 @@ def lade_reihen() -> dict[str, list[Kerze]]:
                                    float(p["high"]), float(p["low"]), float(p["close"]),
                                    None if p.get("volume") is None else float(p["volume"]))
                              for p in sorted(g, key=lambda x: str(x["date"])[:10])]
-    return reihen
+    return nur_tageskerzen(reihen, "Export") if nur_taeglich else reihen
 
 
 def _reihe_bis(reihe: list[Kerze], index: int) -> list[Kerze]:

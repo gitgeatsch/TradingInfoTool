@@ -1,0 +1,517 @@
+[
+ {
+  "symbol": "BTC",
+  "datum": "2025-06-24",
+  "prompt_stand": "2026-08-11",
+  "bestand_vorhanden": true,
+  "ausgang": {
+   "einstieg": 106100.0,
+   "ziel": 115426.0698,
+   "stop": 101436.9651,
+   "bis_5t": "offen",
+   "bis_10t": "offen",
+   "bis_20t": "ZIEL",
+   "bis_40t": "ZIEL",
+   "ereignis": "ZIEL",
+   "ereignis_tag": 16
+  },
+  "aktion_roh": "REDUZIEREN",
+  "aktion": "REDUZIEREN",
+  "degradiert": null,
+  "korrekturen": "2 unabhaengige Faktoren -> 300 EUR",
+  "einstieg_eur_modell": null,
+  "stop_eur_modell": null,
+  "unabhaengige_faktoren": 2,
+  "begruendung": "Angesichts des intakten Abwärtstrends und der breiten Marktschwäche sichere ich Gewinne ab und reduziere die bestehende Position.",
+  "was_dagegen": "Die kurzfristige 5-Tage- und 60-Tage-Entwicklung zeigt noch positive Vorzeichen.",
+  "belege": [
+   {
+    "fakt": "BTC im Bestand mit 4690 EUR Wert und +35.8 % Plus",
+    "richtung": "dafuer",
+    "gewicht": "hoch"
+   },
+   {
+    "fakt": "Intakter Abwärtstrend mit tieferen Hochs und Tiefs",
+    "richtung": "dagegen",
+    "gewicht": "hoch"
+   },
+   {
+    "fakt": "Gesamtmarkt in Schwächephase mit nur 29 % über der 200-Tage-Linie",
+    "richtung": "dagegen",
+    "gewicht": "hoch"
+   },
+   {
+    "fakt": "Umsatz beim 1.3-fachen des 20-Tage-Schnitts",
+    "richtung": "dafuer",
+    "gewicht": "mittel"
+   }
+  ],
+  "lage_text": "Der Gesamtmarkt befindet sich in einer anhaltenden Schwaechephase, da die grosse Mehrheit der beobachteten Werte unter ihren wichtigen Durchschnittslinien notiert. Lediglich 32 Prozent der Coins stehen ueber ihrer 50-Tage-Linie und nur 29 Prozent ueber der 200-Tage-Linie.",
+  "lage_traegt": "schmal_getragen",
+  "stand_text": [
+   "BTC ist bereits im Bestand: 3453 EUR investiert, aktuell 4690 EUR wert - 1237 EUR im Plus (+35.8 %).",
+   "Die Marktstruktur zeigt tiefere Hochs und tiefere Tiefs - ein intakter Abwaertstrend. Der letzte Wendepunkt liegt 2 Handelstage zurueck.",
+   "Kursentwicklung: 5 Tage +1.4 %, 20 Tage +1.3 %, 60 Tage +12.0 %.",
+   "Der naechste Widerstand liegt 0.9 Schwankungsbreiten hoeher, bei 95073.0714 EUR (3-mal beruehrt).",
+   "Die naechste Unterstuetzung liegt 0.7 Schwankungsbreiten tiefer, bei 90910.5425 EUR (1-mal beruehrt).",
+   "Der Umsatz liegt beim 1.3-fachen des 20-Tage-Schnitts.",
+   "Von den letzten 20 Tagen entfielen 49 % des Umsatzes auf Aufwaertstage - ohne klares Uebergewicht.",
+   "An 5 der letzten 10 Tage lag er ueber dem Schnitt - uneinheitlich."
+  ]
+ },
+ {
+  "symbol": "BTC",
+  "datum": "2025-12-25",
+  "prompt_stand": "2026-08-11",
+  "bestand_vorhanden": true,
+  "ausgang": {
+   "einstieg": 87198.0,
+   "ziel": 96276.8683,
+   "stop": 82658.5658,
+   "bis_5t": "offen",
+   "bis_10t": "offen",
+   "bis_20t": "ZIEL",
+   "bis_40t": "ZIEL",
+   "ereignis": "ZIEL",
+   "ereignis_tag": 19
+  },
+  "aktion_roh": "NICHTS_TUN",
+  "aktion": "NICHTS_TUN",
+  "degradiert": null,
+  "korrekturen": null,
+  "einstieg_eur_modell": null,
+  "stop_eur_modell": null,
+  "unabhaengige_faktoren": 2,
+  "begruendung": "Trotz des bestehenden Gewinns zeigt der Gesamtmarkt eine massive Schwaechephase bei gleichzeitig duenner Umsatzerholung, weshalb keine Bestandsvergroesserung angebracht ist.",
+  "was_dagegen": "Der uebergeordnet sehr schwache Gesamtmarkt und das geringe Handelsvolumen sprechen gegen einen Ausbau der Position.",
+  "belege": [
+   {
+    "fakt": "Bereits im Bestand mit +11.6 % Gewinn (3855 EUR Wert)",
+    "richtung": "dafuer",
+    "gewicht": "mittel"
+   },
+   {
+    "fakt": "Marktstruktur mit hoeheren Hochs und tieferen Tiefs, Wendepunkt vor 3 Tagen",
+    "richtung": "neutral",
+    "gewicht": "gering"
+   },
+   {
+    "fakt": "Kursentwicklung 60 Tage -23.9 %",
+    "richtung": "dagegen",
+    "gewicht": "hoch"
+   },
+   {
+    "fakt": "Naechste Unterstuetzung bei 74478.8130 EUR",
+    "richtung": "dafuer",
+    "gewicht": "mittel"
+   },
+   {
+    "fakt": "Umsatz beim 0.3-fachen des 20-Tage-Schnitts",
+    "richtung": "dagegen",
+    "gewicht": "mittel"
+   },
+   {
+    "fakt": "Gesamtmarkt in Schwaechephase mit nur 20 % ueber 50-Tage-Linie",
+    "richtung": "dagegen",
+    "gewicht": "hoch"
+   }
+  ],
+  "lage_text": "Der Gesamtmarkt befindet sich in einer ausgeprägten Schwächephase, da lediglich 20 Prozent der beobachteten Coins über ihrer 50-Tage-Linie notieren. Genauso verhält es sich mit dem langfristigen Trend, bei dem ebenfalls nur 8 von 41 Werten (20 Prozent) über ihrer 200-Tage-Linie stehen.",
+  "lage_traegt": "breit_getragen",
+  "stand_text": [
+   "BTC ist bereits im Bestand: 3453 EUR investiert, aktuell 3855 EUR wert - 401 EUR im Plus (+11.6 %).",
+   "Die Marktstruktur zeigt hoehere Hochs bei tieferen Tiefs - die Spanne weitet sich. Der letzte Wendepunkt liegt 3 Handelstage zurueck.",
+   "Kursentwicklung: 5 Tage -1.3 %, 20 Tage -2.4 %, 60 Tage -23.9 %.",
+   "Der naechste Widerstand liegt 0.6 Schwankungsbreiten hoeher, bei 77804.3101 EUR (4-mal beruehrt).",
+   "Die naechste Unterstuetzung liegt 0.7 Schwankungsbreiten tiefer, bei 74478.8130 EUR (2-mal beruehrt).",
+   "Der Umsatz liegt beim 0.3-fachen des 20-Tage-Schnitts.",
+   "Von den letzten 20 Tagen entfielen 44 % des Umsatzes auf Aufwaertstage - ohne klares Uebergewicht.",
+   "An 5 der letzten 10 Tage lag er ueber dem Schnitt - uneinheitlich."
+  ]
+ },
+ {
+  "symbol": "BTC",
+  "datum": "2026-03-27",
+  "prompt_stand": "2026-08-11",
+  "bestand_vorhanden": true,
+  "ausgang": {
+   "einstieg": 66358.3,
+   "ziel": 75152.4111,
+   "stop": 61961.2445,
+   "bis_5t": "offen",
+   "bis_10t": "offen",
+   "bis_20t": "ZIEL",
+   "bis_40t": "ZIEL",
+   "ereignis": "ZIEL",
+   "ereignis_tag": 18
+  },
+  "aktion_roh": "REDUZIEREN",
+  "aktion": "REDUZIEREN",
+  "degradiert": null,
+  "korrekturen": "3 unabhaengige Faktoren -> 500 EUR",
+  "einstieg_eur_modell": null,
+  "stop_eur_modell": null,
+  "unabhaengige_faktoren": 3,
+  "begruendung": "Angesichts der massiven Schwaeche im Gesamtmarkt und der drastischen 60-Tage-Verluste bei Bitcoin sichere ich das verbleibende Kapital durch eine Reduzierung der Position ab.",
+  "was_dagegen": "Die nahe Unterstuetzung bei 56091.9896 EUR koennte primaer als Boden fuer eine Erholung halten.",
+  "belege": [
+   {
+    "fakt": "BTC Kursverlust 60 Tage -24.8 %",
+    "richtung": "dagegen",
+    "gewicht": "hoch"
+   },
+   {
+    "fakt": "Marktbreite schwach mit 24 % ueber 50-Tage-Linie",
+    "richtung": "dagegen",
+    "gewicht": "hoch"
+   },
+   {
+    "fakt": "Nahe Unterstuetzung bei 56091.9896 EUR (4-mal beruehrt)",
+    "richtung": "dafuer",
+    "gewicht": "mittel"
+   },
+   {
+    "fakt": "Verengende Marktstruktur mit hoeheren Tiefs",
+    "richtung": "dafuer",
+    "gewicht": "mittel"
+   },
+   {
+    "fakt": "Umsatz beim 1.3-fachen des 20-Tage-Schnitts",
+    "richtung": "dafuer",
+    "gewicht": "gering"
+   }
+  ],
+  "lage_text": "Der Gesamtmarkt befindet sich in einer deutlichen Schwächephase, da nur 24 Prozent der beobachteten Coins über ihrer 50-Tage-Linie notieren. Noch drastischer zeigt sich der langfristige Abwärtstrend, bei dem lediglich 17 Prozent der Werte über ihrer 200-Tage-Linie stehen.",
+  "lage_traegt": "schmal_getragen",
+  "stand_text": [
+   "BTC ist bereits im Bestand: 3453 EUR investiert, aktuell 2933 EUR wert - 520 EUR im Minus (-15.1 %).",
+   "Die Marktstruktur zeigt tiefere Hochs bei hoeheren Tiefs - die Spanne verengt sich. Der letzte Wendepunkt liegt 2 Handelstage zurueck.",
+   "Kursentwicklung: 5 Tage -2.2 %, 20 Tage -1.4 %, 60 Tage -24.8 %.",
+   "Der naechste Widerstand liegt 0.9 Schwankungsbreiten hoeher, bei 60186.9648 EUR (4-mal beruehrt).",
+   "Die naechste Unterstuetzung liegt 0.7 Schwankungsbreiten tiefer, bei 56091.9896 EUR (4-mal beruehrt).",
+   "Der Umsatz liegt beim 1.3-fachen des 20-Tage-Schnitts.",
+   "Von den letzten 20 Tagen entfielen 55 % des Umsatzes auf Aufwaertstage - ohne klares Uebergewicht.",
+   "An 5 der letzten 10 Tage lag er ueber dem Schnitt - uneinheitlich."
+  ]
+ },
+ {
+  "symbol": "ETH",
+  "datum": "2025-06-24",
+  "prompt_stand": "2026-08-11",
+  "bestand_vorhanden": false,
+  "ausgang": {
+   "einstieg": 2448.24,
+   "ziel": 2896.5784,
+   "stop": 2224.0708,
+   "bis_5t": "offen",
+   "bis_10t": "offen",
+   "bis_20t": "ZIEL",
+   "bis_40t": "ZIEL",
+   "ereignis": "ZIEL",
+   "ereignis_tag": 16
+  },
+  "aktion_roh": "NICHTS_TUN",
+  "aktion": "NICHTS_TUN",
+  "degradiert": null,
+  "korrekturen": null,
+  "einstieg_eur_modell": 0.0,
+  "stop_eur_modell": 0.0,
+  "unabhaengige_faktoren": 2,
+  "begruendung": "Der intakte Abwaertstrend und die breite Marktsschwaeche lassen einen Neueinstieg aktuell nicht ratsam erscheinen, da zu wenig unabhaengige Faktoren fuer einen Boden sprechen.",
+  "was_dagegen": "Die Unterstuetzung bei 2032.07 EUR koennte unerwartet halten und eine schnelle Erholung einleiten.",
+  "belege": [
+   {
+    "fakt": "Marktstruktur zeigt intakten Abwaertstrend mit tieferen Hochs und Tiefs",
+    "richtung": "dagegen",
+    "gewicht": "hoch"
+   },
+   {
+    "fakt": "Gesamtmarkt in Schwaechephase mit nur 29% ueber 200-Tage-Linie",
+    "richtung": "dagegen",
+    "gewicht": "hoch"
+   },
+   {
+    "fakt": "Naechste Unterstuetzung erst 0.8 Schwankungsbreiten tiefer bei 2032.07 EUR",
+    "richtung": "dafuer",
+    "gewicht": "mittel"
+   },
+   {
+    "fakt": "Mittelfristige Performance von 60 Tagen noch mit +37.0 % im Plus",
+    "richtung": "dafuer",
+    "gewicht": "gering"
+   }
+  ],
+  "lage_text": "Der Gesamtmarkt befindet sich in einer anhaltenden Schwaechephase, da die Mehrheit der beobachteten Coins unter ihren wichtigen gleitenden Durchschnitten notiert. Konkret stehen lediglich 32 Prozent ueber ihrer 50-Tage-Linie und nur 29 Prozent ueber ihrer 200-Tage-Linie.",
+  "lage_traegt": "schmal_getragen",
+  "stand_text": [
+   "ETH ist nicht im Bestand.",
+   "Die Marktstruktur zeigt tiefere Hochs und tiefere Tiefs - ein intakter Abwaertstrend. Der letzte Wendepunkt liegt 2 Handelstage zurueck.",
+   "Kursentwicklung: 5 Tage -2.9 %, 20 Tage -6.1 %, 60 Tage +37.0 %.",
+   "Der naechste Widerstand liegt 0.6 Schwankungsbreiten hoeher, bei 2217.8447 EUR (9-mal beruehrt).",
+   "Die naechste Unterstuetzung liegt 0.8 Schwankungsbreiten tiefer, bei 2032.0717 EUR (5-mal beruehrt).",
+   "Der Umsatz liegt beim 1.1-fachen des 20-Tage-Schnitts.",
+   "Von den letzten 20 Tagen entfielen 42 % des Umsatzes auf Aufwaertstage - ohne klares Uebergewicht.",
+   "An 4 der letzten 10 Tage lag er ueber dem Schnitt - uneinheitlich."
+  ]
+ },
+ {
+  "symbol": "ETH",
+  "datum": "2026-03-27",
+  "prompt_stand": "2026-08-11",
+  "bestand_vorhanden": false,
+  "ausgang": {
+   "einstieg": 1991.66,
+   "ziel": 2339.7784,
+   "stop": 1817.6008,
+   "bis_5t": "offen",
+   "bis_10t": "offen",
+   "bis_20t": "ZIEL",
+   "bis_40t": "ZIEL",
+   "ereignis": "ZIEL",
+   "ereignis_tag": 17
+  },
+  "aktion_roh": "NICHTS_TUN",
+  "aktion": "NICHTS_TUN",
+  "degradiert": null,
+  "korrekturen": null,
+  "einstieg_eur_modell": null,
+  "stop_eur_modell": null,
+  "unabhaengige_faktoren": 2,
+  "begruendung": "Trotz positiver Volumensignale an Aufwaertstagen spricht das uebergreifende Marktumfeld mit starker Schwaeche unter den gleitenden Durchschnitten gegen einen Neueinstieg.",
+  "was_dagegen": "Nur 17 Prozent der Coins ueber der 200-Tage-Linie zeigen ein intaktes Baerenmarkt-Umfeld.",
+  "belege": [
+   {
+    "fakt": "Marktstruktur mit enger werdender Spanne und letztem Wendepunkt vor 2 Handelstagen",
+    "richtung": "dafuer",
+    "gewicht": "mittel"
+   },
+   {
+    "fakt": "Naechste Unterstuetzung bei 1666.2292 EUR (0.7 Schwankungsbreiten tiefer)",
+    "richtung": "dafuer",
+    "gewicht": "hoch"
+   },
+   {
+    "fakt": "62 % des Umsatzes der letzten 20 Tage entfielen auf Aufwaertstage",
+    "richtung": "dafuer",
+    "gewicht": "mittel"
+   },
+   {
+    "fakt": "Grosse Mehrheit der Marktwerte unter wichtigen Durchschnitten (nur 17 % ueber 200-Tage-Linie)",
+    "richtung": "dagegen",
+    "gewicht": "hoch"
+   },
+   {
+    "fakt": "Langfristige Schwaeche mit 60-Tage-Performance von -31.9 %",
+    "richtung": "dagegen",
+    "gewicht": "hoch"
+   }
+  ],
+  "lage_text": "Der Markt befindet sich in einer anhaltenden Schwaechephase, da die grosse Mehrheit der beobachteten Werte unter ihren wichtigen Durchschnittslinien notiert. Lediglich 24 % der Coins stehen ueber ihrer 50-Tage-Linie und nur 17 % ueber der 200-Tage-Linie.",
+  "lage_traegt": "schmal_getragen",
+  "stand_text": [
+   "ETH ist nicht im Bestand.",
+   "Die Marktstruktur zeigt tiefere Hochs bei hoeheren Tiefs - die Spanne verengt sich. Der letzte Wendepunkt liegt 2 Handelstage zurueck.",
+   "Kursentwicklung: 5 Tage -3.0 %, 20 Tage +1.1 %, 60 Tage -31.9 %.",
+   "Der naechste Widerstand liegt 0.9 Schwankungsbreiten hoeher, bei 1834.9170 EUR (6-mal beruehrt).",
+   "Die naechste Unterstuetzung liegt 0.7 Schwankungsbreiten tiefer, bei 1666.2292 EUR (4-mal beruehrt).",
+   "Der Umsatz liegt beim 0.9-fachen des 20-Tage-Schnitts.",
+   "Von den letzten 20 Tagen entfielen 62 % des Umsatzes auf Aufwaertstage - ueberwiegend auf Aufwaertstagen.",
+   "An 7 der letzten 10 Tage lag er ueber dem Schnitt - stetig ueber mehrere Sitzungen."
+  ]
+ },
+ {
+  "symbol": "VST",
+  "datum": "2024-09-16",
+  "prompt_stand": "2026-08-11",
+  "bestand_vorhanden": false,
+  "ausgang": {
+   "einstieg": 88.3142,
+   "ziel": 99.9715,
+   "stop": 82.4856,
+   "bis_5t": "ZIEL",
+   "bis_10t": "ZIEL",
+   "bis_20t": "ZIEL",
+   "bis_40t": "ZIEL",
+   "ereignis": "ZIEL",
+   "ereignis_tag": 4
+  },
+  "aktion_roh": "KAUFEN",
+  "aktion": "KAUFEN",
+  "degradiert": null,
+  "korrekturen": "3 unabhaengige Faktoren -> 500 EUR",
+  "einstieg_eur_modell": 86.5,
+  "stop_eur_modell": 85.0,
+  "unabhaengige_faktoren": 3,
+  "begruendung": "Der starke Impuls mit hohem Volumen und deutlichem Kaufdruck zeigt eine Trendwende trotz des vorherigen Abwärtstrends. Ein Einstieg nahe der Unterstützung nutzt diese Dynamik.",
+  "was_dagegen": "Die übergeordnete Marktstruktur zeigt weiterhin tiefere Hochs und tiefere Tiefs.",
+  "belege": [
+   {
+    "fakt": "Marktstruktur zeigt tiefere Hochs und tiefere Tiefs",
+    "richtung": "dagegen",
+    "gewicht": "hoch"
+   },
+   {
+    "fakt": "Kursentwicklung 5 Tage +19.3 % und 20 Tage +12.7 %",
+    "richtung": "dafuer",
+    "gewicht": "hoch"
+   },
+   {
+    "fakt": "Umsatz liegt beim 1.5-fachen des 20-Tage-Schnitts",
+    "richtung": "dafuer",
+    "gewicht": "mittel"
+   },
+   {
+    "fakt": "64 % des Umsatzes auf Aufwaertstage in den letzten 20 Tagen",
+    "richtung": "dafuer",
+    "gewicht": "mittel"
+   },
+   {
+    "fakt": "Nächste Unterstützung bei 86.0947 EUR",
+    "richtung": "dafuer",
+    "gewicht": "gering"
+   }
+  ],
+  "lage_text": "Der Markt zeigt sich von einer robusten Seite, da die Mehrheit der beobachteten Coins sowohl kurz- als auch langfristig über ihren gleitenden Durchschnitten notiert. Konkret stehen 80 Prozent über der 50-Tage-Linie und 60 Prozent über der 200-Tage-Linie.",
+  "lage_traegt": "breit_getragen",
+  "stand_text": [
+   "VST ist nicht im Bestand.",
+   "Die Marktstruktur zeigt tiefere Hochs und tiefere Tiefs - ein intakter Abwaertstrend. Der letzte Wendepunkt liegt 5 Handelstage zurueck.",
+   "Kursentwicklung: 5 Tage +19.3 %, 20 Tage +12.7 %, 60 Tage +1.4 %.",
+   "Der naechste Widerstand liegt 1.2 Schwankungsbreiten hoeher, bei 92.8047 EUR (2-mal beruehrt).",
+   "Die naechste Unterstuetzung liegt 0.6 Schwankungsbreiten tiefer, bei 86.0947 EUR (4-mal beruehrt).",
+   "Der Umsatz liegt beim 1.5-fachen des 20-Tage-Schnitts.",
+   "Von den letzten 20 Tagen entfielen 64 % des Umsatzes auf Aufwaertstage - ueberwiegend auf Aufwaertstagen.",
+   "An 6 der letzten 10 Tage lag er ueber dem Schnitt - stetig ueber mehrere Sitzungen."
+  ]
+ },
+ {
+  "symbol": "PLTR",
+  "datum": "2022-09-06",
+  "prompt_stand": "2026-08-11",
+  "bestand_vorhanden": false,
+  "ausgang": {
+   "einstieg": 7.28,
+   "ziel": 8.6567,
+   "stop": 6.5917,
+   "bis_5t": "offen",
+   "bis_10t": "offen",
+   "bis_20t": "offen",
+   "bis_40t": "ZIEL",
+   "ereignis": "ZIEL",
+   "ereignis_tag": 35
+  },
+  "aktion_roh": "NICHTS_TUN",
+  "aktion": "NICHTS_TUN",
+  "degradiert": null,
+  "korrekturen": null,
+  "einstieg_eur_modell": 0,
+  "stop_eur_modell": 0,
+  "unabhaengige_faktoren": 2,
+  "begruendung": "Der uebergeordnete Abwaertstrend und die negativen Momentum-Werte bieten kein tragfähiges Fundament für einen Neueinstieg.",
+  "was_dagegen": "Die Naehe zur Unterstuetzung bei 6.4400 EUR koennte eine unerwartete Gegenbewegung einleiten.",
+  "belege": [
+   {
+    "fakt": "PLTR ist nicht im Bestand.",
+    "richtung": "neutral",
+    "gewicht": "hoch"
+   },
+   {
+    "fakt": "Marktstruktur mit tieferen Hochs und tieferen Tiefs.",
+    "richtung": "dagegen",
+    "gewicht": "hoch"
+   },
+   {
+    "fakt": "Kursentwicklung 20 Tage -25.9 %.",
+    "richtung": "dagegen",
+    "gewicht": "hoch"
+   },
+   {
+    "fakt": "Naechste Unterstuetzung bei 6.4400 EUR.",
+    "richtung": "dafuer",
+    "gewicht": "mittel"
+   },
+   {
+    "fakt": "Umsatz beim 0.8-fachen des 20-Tage-Schnitts.",
+    "richtung": "dagegen",
+    "gewicht": "gering"
+   }
+  ],
+  "lage_text": "Der Gesamtmarkt zeigt sich in einer neutralen Verfassung ohne klare Impulse. Die vorliegenden Kennzahlen liefern keine signifikanten Ausschlaege in die eine oder andere Richtung.",
+  "lage_traegt": "gemischt",
+  "stand_text": [
+   "PLTR ist nicht im Bestand.",
+   "Die Marktstruktur zeigt tiefere Hochs und tiefere Tiefs - ein intakter Abwaertstrend. Der letzte Wendepunkt liegt 3 Handelstage zurueck.",
+   "Kursentwicklung: 5 Tage -6.8 %, 20 Tage -25.9 %, 60 Tage -16.1 %.",
+   "Der naechste Widerstand liegt 0.7 Schwankungsbreiten hoeher, bei 7.5800 EUR (1-mal beruehrt).",
+   "Die naechste Unterstuetzung liegt 1.8 Schwankungsbreiten tiefer, bei 6.4400 EUR (1-mal beruehrt).",
+   "Der Umsatz liegt beim 0.8-fachen des 20-Tage-Schnitts.",
+   "Von den letzten 20 Tagen entfielen 20 % des Umsatzes auf Aufwaertstage - ueberwiegend auf Abwaertstagen.",
+   "An 1 der letzten 10 Tage lag er ueber dem Schnitt - auf einzelne Tage konzentriert."
+  ]
+ },
+ {
+  "symbol": "PLTR",
+  "datum": "2024-07-24",
+  "prompt_stand": "2026-08-11",
+  "bestand_vorhanden": false,
+  "ausgang": {
+   "einstieg": 26.6,
+   "ziel": 30.2667,
+   "stop": 24.7666,
+   "bis_5t": "offen",
+   "bis_10t": "STOP",
+   "bis_20t": "STOP",
+   "bis_40t": "STOP",
+   "ereignis": "STOP",
+   "ereignis_tag": 7
+  },
+  "aktion_roh": "NICHTS_TUN",
+  "aktion": "NICHTS_TUN",
+  "degradiert": null,
+  "korrekturen": null,
+  "einstieg_eur_modell": 0,
+  "stop_eur_modell": 0,
+  "unabhaengige_faktoren": 2,
+  "begruendung": "Obwohl der uebergeordnete Trend intakt ist, zeigt der kurzfristige Abwaertstrend in Kombination mit einer schwaecheren Marktbreite keinen klaren Einstiegspunkt.",
+  "was_dagegen": "Nur 30 % der beobachteten Werte stehen ueber ihrer 50-Tage-Linie.",
+  "belege": [
+   {
+    "fakt": "PLTR Marktstruktur zeigt intakten Aufwaertstrend mit hoeheren Hochs und Tiefs",
+    "richtung": "dafuer",
+    "gewicht": "hoch"
+   },
+   {
+    "fakt": "Kursentwicklung 20 Tage +8.3 % und 60 Tage +18.1 %",
+    "richtung": "dafuer",
+    "gewicht": "mittel"
+   },
+   {
+    "fakt": "Naechste Unterstuetzung bei 25.5675 EUR (6-mal beruehrt)",
+    "richtung": "dafuer",
+    "gewicht": "mittel"
+   },
+   {
+    "fakt": "Kurzfristiger Ruecksetzer: 5 Tage -5.7 %",
+    "richtung": "dagegen",
+    "gewicht": "mittel"
+   },
+   {
+    "fakt": "Gemischte Marktverfassung und nur 30 % ueber 50-Tage-Linie",
+    "richtung": "dagegen",
+    "gewicht": "hoch"
+   }
+  ],
+  "lage_text": "Der Markt befindet sich in einer gemischten Verfassung mit einem kurzfristigen Abwärtstrend, während die langfristige Basis stabiler wirkt. Lediglich 30 % der beobachteten Coins notieren über ihrer 50-Tage-Linie, wohingegen 70 % über ihrer 200-Tage-Linie stehen.",
+  "lage_traegt": "gemischt",
+  "stand_text": [
+   "PLTR ist nicht im Bestand.",
+   "Die Marktstruktur zeigt hoehere Hochs und hoehere Tiefs - ein intakter Aufwaertstrend. Der letzte Wendepunkt liegt 4 Handelstage zurueck.",
+   "Kursentwicklung: 5 Tage -5.7 %, 20 Tage +8.3 %, 60 Tage +18.1 %.",
+   "Der naechste Widerstand liegt 0.7 Schwankungsbreiten hoeher, bei 27.3950 EUR (4-mal beruehrt).",
+   "Die naechste Unterstuetzung liegt 0.8 Schwankungsbreiten tiefer, bei 25.5675 EUR (6-mal beruehrt).",
+   "Der Umsatz liegt beim 1.1-fachen des 20-Tage-Schnitts.",
+   "Von den letzten 20 Tagen entfielen 57 % des Umsatzes auf Aufwaertstage - ohne klares Uebergewicht.",
+   "An 7 der letzten 10 Tage lag er ueber dem Schnitt - stetig ueber mehrere Sitzungen."
+  ]
+ }
+]

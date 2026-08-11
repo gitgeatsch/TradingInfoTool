@@ -16020,3 +16020,167 @@ NICHTS_TUN. Details in `Arbeitsstand_Deadloop_09_08.md` 7.5/7.6.
 **Offen und ausdrücklich nicht behauptet:** ob das System Kaufsignale liefert.
 Alle Prüfsteine liegen in fallenden Phasen; in 16 Monaten Historie gab es keinen
 Zeitpunkt, an dem ein Einstieg 20 Tage später im Plus war.
+
+---
+
+## Nachtrag 205 — 2026-08-11 abends: Zwei Behauptungen zurückgestuft, ein ungebauter Regelsatz gefunden
+
+**Anlass, Nutzervorgabe:** *„bevor wir den `_struktur()`-Fix machen brauchen wir
+eine saubere Erfolgskontrolle über alle Assets."* Die Prüfung hat den Fix nicht
+vorbereitet, sondern seine Begründung widerlegt.
+
+### 1. „Erklärt sechs von sechs" — zurückgestuft auf einen Fall
+
+Die Behauptung aus Nachtrag 204/`Arbeitsstand` 7.9 stützt sich darauf, dass die
+Begründungen der sechs verpassten Anker gelesen wurden. Geprüft:
+
+- `betragsdeckel*.json` existiert nicht, wurde nie committet, steht nicht in
+  `.gitignore` — sie ist verloren, nicht bewusst ausgespart.
+- `messe_betragsdeckel.py` speichert **keine Begründungen** (nur `aktion`,
+  `betrag`, `deckel`, `faktoren`, `richtig`). Zusicherung 2 aus Methodik 2.18
+  wurde geschrieben, aber nie umgesetzt.
+- Ein einziger Commit, dort **6** Anker (VST ×3, PLTR ×3), kein BTC/ETH. Die
+  13 bzw. 8 Anker stammen aus mehreren Läufen mit überschriebener Liste.
+
+**Es wurde EINE Begründung gelesen (ETH 24.06.2025), nicht sechs.**
+
+### 2. Der Struktur-Defekt erklärt den Deadloop nicht — gemessen
+
+Zellenzählung über 44 Symbole und die ganze Historie, ohne Modellaufruf
+(Gegenprobe gegen `_struktur()`: 291 Stichproben, 0 Abweichungen).
+
+| Etikett ABWÄRTS bei 60-Tage… | Krypto | Aktien/Rohstoff |
+|---|---|---|
+| ≥ +10 % | 6,21 % | 3,32 % |
+| ≥ +30 % (ETH-Fall: +37 %) | **2,71 %** | 0,44 % |
+
+**Der Deadloop ist 115 von 118 Signalen — 97,5 %.** Ein Defekt auf 3 % der Tage
+kann ihn nicht erklären. Kein Widerspruch zu den sechs Ankern: die waren nach
+großen Gewinnen ausgewählt, und unter solchen Tagen ist eine Korrektur im
+Aufwärtstrend weit häufiger als unter allen.
+
+**Die Spiegelzelle ist größer:** „Aufwärtstrend" bei fallendem 60-Tage-Fenster
+= **11,39 %** (Krypto, ≤ −10 %). Das Aufwärts-Etikett stimmt nur in **42 %** mit
+der 60-Tage-Bewegung überein, das Abwärts-Etikett in 74 %. **Ein Punktfix in
+Richtung „mehr kaufen" verschärft die größere Hälfte.** Die Beschriftung gehört
+symmetrisch korrigiert — als Anwendungsfall einer Formregel, nicht als Punktfix.
+
+**Verworfene Zwischenthese (meine):** das häufige Abwärts-Etikett sei „zwei Jahre
+Bärenmarkt". Falsch — `Test_und_Verifikationsmethodik.md` hält fest, dass die
+**Kursreihen** alle drei Phasen enthalten (bulle 35,1 %, bär 36,0 %, gemischt
+28,8 %). Ausnahmslos „baer" tragen die **Signale**, nicht die Reihen.
+
+### 3. R-A2 stand im Regelwerk und war nicht gebaut
+
+Der Betrags-Umbau vom 10.08. (Nachtrag 204) entfernte `tranche_eur` /
+`max_tranche_eur` aus Schema und Pflichtfeldern — **ließ aber die Prompt-Frage
+in beiden Rollen stehen**:
+
+```
+Lagebild:              "3. HOECHSTBETRAG: Welcher Einzelbetrag ist ... 100, 300 oder 500 Euro?"
+Befund/Entscheidung:   "nenne den Betrag - 100, 300 oder 500 Euro, hoechstens die vorgegebene Obergrenze"
+```
+
+Der Modul-Docstring von `rolle_analyst.py` („SIE NENNT KEINEN BETRAG") und der
+Prompt zwölf Zeilen darunter widersprachen einander; der Validator-Docstring
+beschrieb ebenfalls noch die alte Fassung. **Beide Modelle wurden seit dem
+10.08. bei jedem Aufruf aufgefordert, eine Zahl zu nennen, die das Schema nicht
+entgegennimmt.**
+
+**Als Deadloop-Kandidat ernster als der Struktur-Defekt:** er betrifft **100 %**
+der Aufrufe, nicht 3 %, und verschiebt die Frage von *„ist eine Handlung
+gerechtfertigt?"* zu *„sind 500 Euro gerechtfertigt?"*. Deckt sich mit B4
+(Überladung → Lähmung) und dem externen Befund zur Positionsgröße.
+**Hypothese — gepaart zu prüfen.**
+
+**Folge für Nachtrag 204:** Der dortige Befund „der Betragsdeckel wirkt nicht"
+verglich nicht „mit Betragsfrage" gegen „ohne", sondern „darf sie melden" gegen
+„darf nicht". Der an Befund/Entscheidung durchgereichte Deckel unterschied sich
+sauber — insofern bleibt die Aussage gültig, aber sie ist enger als sie klingt.
+
+### 4. Zwei Funde, die die Produktion betreffen
+
+- **14 von 28 gehaltenen Positionen haben keinen Einstandspreis.**
+  `lagebeschreibung.py::_bestand()` behandelt „Einstand fehlt" wie „nicht
+  investiert" und meldet dem Modell *„X ist nicht im Bestand."* Das ist falsch,
+  nicht unvollständig — dieselbe Fehlerklasse wie der KAS-Fall vom 15.07.
+- **`_kurs_eur()` liest immer die älteste `price_cache`-Zeile** (1.526 Zeilen für
+  55 Symbole, `fetchone()` ohne `ORDER BY`). Für VST/PLTR fehlt gerade dort der
+  EUR-Kurs, während neuere Zeilen ihn führen. Einzeiler-Fix.
+
+### 5. Was gebaut wurde
+
+Beide Prompts werden aus gemeinsamen Teilen zusammengesetzt; die Schalter sind
+einzeln isoliert, damit ein gepaarter Lauf genau **einen** Unterschied misst.
+
+| Konstante | Zweck |
+|---|---|
+| `SYSTEM_PROMPT_ANALYST` / `_TRADER` | Betrieb — **ohne** Betragsfrage. R-A2 erstmals gebaut |
+| `…_MIT_BETRAG` | Vergleichsarm der gepaarten Messung |
+| `SYSTEM_PROMPT_TRADER_OHNE_PERSONA` | zweiter Schalter, siehe unten |
+| `PROMPT_STAND` | Versionsstempel mit Änderungsprotokoll |
+
+**Die alte Fassung wurde nicht gelöscht, sondern schaltbar gemacht.** Wer den
+Vergleichsarm löscht, zerstört die Messung, bevor sie läuft — derselbe Fehler
+wie die überschriebene ANKER-Liste.
+
+**Die Persona bleibt eingeschaltet.** Nutzer am 11.08.: *„nie im prompt hängt von
+dem Bedarf ab — das ist nur meine Meinung, aber wenn die Standards sagen wir
+brauchen die Rollen, ist es kein Verbot."* Der Ist-Zustand wird nicht ohne Beleg
+geändert; sie ist jetzt einzeln messbar.
+
+### 6. Namensfestlegung
+
+Die Rollen heißen ab sofort **Lagebild** (Umfeld, sieht kein Asset), **Befund**
+(Belege zu einem Wert) und **Entscheidung** (Handlung, gegeben den Bestand) —
+statt A/B/C und statt Berufsbezeichnungen. **Nur unsere Bezeichnung, nie im
+Prompt.** Definiert über den exklusiven Eingang: was nur diese Rolle sieht, ist
+das, was sie zur Rolle macht.
+
+**Ob Befund und Entscheidung getrennte Aufrufe werden, bleibt offen** — erst wird
+der Betragsfund gemessen. Die Zusammenlegung war eine Folgerung des Assistenten,
+nicht eine Vorgabe des Nutzers; dessen Vorgabe vom 10.08. betraf das Kontingent.
+
+### 7. Versionszuordnung von Messbefunden
+
+Nutzereinwand: *„die alte Lösung auch in der Doku und den Messbefunden sauber
+trennen, sonst vermischen wir etwas."* Deshalb gilt ab jetzt:
+
+```
+2026-08-10a   erste Fassung der Rollen-Ebene, Betrag wird erfragt UND ausgegeben
+2026-08-10b   Schema/Pflichtfelder ohne Betrag - Prompt-Frage blieb stehen
+              >>> ALLE Befunde vom 10./11.08. gehören hierher, auch 7.7 <<<
+2026-08-11    Betragsfrage aus dem Betriebsprompt entfernt, schaltbar erhalten
+```
+
+Ein Befund ohne Prompt-Stand ist nicht zuordenbar und damit nicht
+wiederverwendbar. Details: `Arbeitsstand_Deadloop_09_08.md` 7.10 und 7.11.
+
+---
+
+## Nachtrag 206 — 2026-08-11 spät: Degradierung widerlegt, Recherche zu vier Messfragen
+
+**1. Degradierungs-Hypothese widerlegt.** `messe_degradierung.py`, Prompt-Stand
+`2026-08-11`, 16 Aufrufe: **0 von 8** degradierte Käufe. Jedes NICHTS_TUN stand
+schon in der Rohantwort des Modells. Der Pfad „ungültiger Stop ⇒ NICHTS_TUN"
+(R-A7) existiert im Code, hat hier aber nicht gefeuert. Details: Arbeitsstand 7.12.
+
+**2. Erster Hinweis auf die Betragsfrage.** Gegenüber Stand `10b` änderten sich
+drei von acht Aktionen — VST NICHTS_TUN → KAUFEN (Ziel an Tag 4), PLTR
+2024-07-24 KAUFEN → NICHTS_TUN (wäre an Tag 7 ausgestoppt worden), BTC
+2026-03-27 NICHTS_TUN → REDUZIEREN (falsche Richtung). **Nicht gepaart, n = 8,
+Anker nach Ausgang gewählt, B6-Drift ~12 %** — ein Hinweis, kein Beleg.
+
+**3. Horizont an die Zieldistanz gekoppelt.** Bei 3 ATR lösen sich die Fälle bei
+16–19 Tagen auf; bei 5 oder 10 Tagen ist das meiste „offen", nicht „gescheitert".
+Der Verdacht, 20 Tage seien zu lang, trifft für diese Zieldistanz nicht zu.
+
+**4. Recherche zu vier Messfragen** — vollständig in
+`Test_und_Verifikationsmethodik.md` 2.19. Kurz:
+
+| Frage | Ergebnis |
+|---|---|
+| Erstdurchgang | Konstruktion bestätigt; **aber überlappende Labels verletzen IID** — die Intervalle der 8.441-Fälle-Messung sind zu eng |
+| Niveaus als „Leitplanke" | **dagegen** — Experten-Anker wirken am stärksten, keine Gegenmaßnahme half. **Bauform B** |
+| Bestandsblock | **Literatur widersprüchlich** — muss bei uns gepaart gemessen werden |
+| Textform | **kein Standard**; Richtung gedeckt, R-T1/R-T2 bleiben eigene Regeln |

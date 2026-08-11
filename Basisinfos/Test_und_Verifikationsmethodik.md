@@ -1772,3 +1772,126 @@ einer defekten Reihe prüft die Reihe, nicht das Verfahren.
 |---|---|
 | `pruefe_rollenkette.py` | läuft die Kette durch? drei Stufen: trocken / ein Fall / Prüfsteine |
 | `messe_betragsdeckel.py` | gepaarte Messung zweier Prompt-Varianten auf denselben Ankern |
+
+---
+
+## 2.19 Externe Methodenlage zu vier Messfragen (recherchiert 2026-08-11)
+
+**Anlass, Nutzervorgabe:** *„Recherche zuerst am Anfang vor der Messung, damit
+die Basis stimmt und potentielle Fehler der Messung vermieden werden — seriöse
+Quellen."* Vier Fragen, bei denen eine falsche Annahme die Messung entwertet.
+
+### 2.19.1 Erstdurchgang — Konstruktion bestätigt, eine Annahme verletzt
+
+Das Drei-Barrieren-Verfahren (López de Prado, *Advances in Financial Machine
+Learning*) labelt nach der zuerst berührten Grenze — oben, unten, Zeit. **Unsere
+Konstruktion in `messe_degradierung.py::erstdurchgang()` entspricht dem Standard.**
+
+**Was wir übersehen haben: überlappende Labels verletzen die IID-Annahme.**
+Benachbarte Anker teilen ihr Auswertungsfenster; der 24.06. und der 25.06.
+schauen auf fast dieselbe Zukunft. Die Standardantwort ist **average uniqueness
+weighting** — je Beobachtung messen, wie viel ihres Informationsgehalts
+einzigartig ist, und danach gewichten.
+
+> **Folge für die Messung vom 10.08. (Arbeitsstand 6.1/6.2):** Die 8.441 Fälle
+> sind **keine 8.441 unabhängigen Beobachtungen**. Die effektive Stichprobe ist
+> kleiner, die dort berichteten Konfidenzintervalle sind **zu eng**. Der Befund
+> („kein Verfahren schlägt die Basisrate") kippt dadurch nicht — ein
+> Nullergebnis wird durch weniger Power nicht stärker. Aber die Intervalle
+> dürfen nicht mehr als eng zitiert werden, und jede künftige Messung dieser
+> Bauart braucht die Gewichtung.
+
+### 2.19.2 Anker — gegen die „Leitplanke", mit einer Einschränkung
+
+Anchoring ist bei Sprachmodellen gemessen: GPT-4 erreicht einen Anchoring-Index
+von **0,45** (Menschen 0,61 auf demselben Datensatz), 62 Fragen, drei Modelle,
+je 30 Durchläufe (arXiv 2412.06593).
+
+Zwei Details entscheiden unsere Bauformfrage:
+
+| Beobachtung | Bedeutung für uns |
+|---|---|
+| **Experten-Anker wirken am stärksten** — alle 12 Fragen mit Experten-Anker zeigten die Verschiebung, p < 0,05 | ein aus ATR gerechneter Stop **ist** ein Experten-Anker |
+| **Irrelevante Anker wirkten gar nicht** | die Stärke hängt an der wahrgenommenen Autorität, nicht an der Zahl |
+| **Keine Standard-Gegenmaßnahme half** — weder Chain-of-Thought noch „ignoriere den Anker" noch Reflexion | wir könnten es nicht wegprompten |
+
+**Entscheidung: Bauform B** — das Modell sieht die gerechneten Niveaus **nicht**.
+Bauform C („Leitplanke") führt die stärkste bekannte Ankerklasse ein.
+
+> **Einschränkung, ausdrücklich:** Gemessen wurde an *numerischen
+> Schätzaufgaben*. Unsere Ausgabe ist kategorial (KAUFEN/NICHTS_TUN). Ein Befund
+> von einer Aufgabe auf eine andere zu übertragen ist derselbe Fehler wie bei
+> den Alt-System-Befunden. Starkes Argument, kein Beweis für unseren Fall.
+
+**Nebenbefund (arXiv 2507.20957, sechs Modelle):** Konfirmationsneigung in der
+Anlageanalyse — selbst bei maximaler Gegenevidenz lagen die Flip-Raten **unter
+60 %**. Das dämpft die Erwartung, eine getrennte Entscheidungs-Rolle würde einen
+einmal gefassten Befund noch umwerfen.
+
+### 2.19.3 Bestand — die Literatur entscheidet es NICHT
+
+**Widersprüchliche Lage, und das ist selbst das Ergebnis:**
+
+- *Dafür:* LLM-Agenten zeigen Referenzpunkt-Verhalten (Kaufpreis, Allzeithoch
+  verschieben die Risikobereitschaft); eine Arbeit misst eine Reduktion des
+  Dispositionseffekts um **64,5 % / 72,7 %** nach Fine-Tuning — er war also
+  vorher da. Bei GPT-4 trat die Reduktion nicht auf.
+- *Dagegen:* Henning et al. (Caltech/Virginia Tech, sechs Modelle, arXiv
+  2502.15800) finden *„textbook-rational"* Verhalten mit nur gedämpfter
+  Blasenbildung — die menschlichen Verzerrungen tauchten dort **nicht** auf.
+
+**Konsequenz: keine importierbare Annahme.** Die Frage, ob der Bestandsblock die
+Entscheidung färbt, muss **bei uns** gepaart gemessen werden — dieselben Fakten
+mit und ohne Block. Der n=3-Hinweis aus 7.12 bleibt ein Hinweis.
+
+### 2.19.4 Textform — kein Standard, aber die Richtung ist gedeckt
+
+Einen etablierten Standard „wie formuliert man Fakten für ein LLM" gibt es
+**nicht**. Konvergente Einzelbefunde:
+
+```
+semantische gegen numerische Fragen, gleicher Wissensbereich:
+   Claude 3   68,7 %  gegen  61,3 %
+   GPT-4      68,4 %  gegen  56,7 %
+notationsuebergreifender Zahlenvergleich:   50-70 %  (knapp ueber Zufall)
+Matrixdaten in natuerliche Sprache umschreiben:  hebt die Leistung deutlich
+```
+
+**Grundsatz 10.1 der Faktenmappe („Aussagen statt Zahlenliste") ist gestützt.**
+**R-T1 und R-T2 sind es nicht** — sie stehen auf unserer eigenen Messung aus
+Arbeitsstand 7.11 und werden als eigene Regeln geführt, nicht als
+Standardübernahme. Eine Quelle zu behaupten, wo keine ist, wäre derselbe Fehler
+wie die drei quellenlosen Recherchen vom 29.07.
+
+### Quellen
+
+- López de Prado, *Advances in Financial Machine Learning* (Drei-Barrieren,
+  average uniqueness)
+- arXiv 2412.06593 — Anchoring Bias in Large Language Models: An Experimental Study
+- arXiv 2507.20957 — Your AI, Not Your View: The Bias of LLMs in Investment Analysis
+- arXiv 2510.12189 — Agent-Based Simulation of a Financial Market with LLMs
+- arXiv 2502.15800 — Henning et al., LLM Trading: Agent Behavior in Experimental
+  Asset Markets
+- J. Comput. Soc. Sci. 10.1007/s42001-026-00465-4 — LLM agents and
+  path-dependent market dynamics
+- PMC12279315 — Numerical vs. Semantic Medical Knowledge Benchmark
+- arXiv 2602.07812 — LLMs Know More About Numbers than They Can Say
+
+
+---
+
+## 2.20 Werkzeug: Abdeckungsprüfung vor jedem Lauf (Nachtrag 2026-08-11)
+
+`pruefe_abdeckung.py` — kein Modellaufruf. Prüft je Assetklasse, welche
+Watchlist-Assets die Rollen-Ebene beschreiben kann, und benennt bei jedem
+Ausfall den **Grund** (keine Historie · zu wenige Kerzen · ETC-Reihe fehlt,
+Futures-Referenz vorhanden · weder Historie noch Preis).
+
+**Gehört vor jeden Mess- und Produktionslauf.** Stand 11.08.: 17 von 57 Assets
+nicht beschreibbar, die Klasse `rohstoffe` vollständig ohne Abdeckung. Wer ohne
+diese Prüfung misst, überspringt 30 % der Watchlist stumm — und ein stumm
+übersprungenes Asset sieht in der Auswertung aus wie „kein Signal", nicht wie
+„nicht geprüft".
+
+**Die Schranke muss dieselbe sein wie in der Kette** (220 Kerzen). Eine Prüfung
+auf „Symbol vorhanden" übersieht HYPE mit 167 Kerzen.

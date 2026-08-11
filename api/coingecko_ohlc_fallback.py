@@ -186,11 +186,29 @@ def fuelle_ohlc_aus_coingecko(client, conn, asset,
                           reason="; ".join(fehler) if fehler else None)
 
 
-def fuelle_alle_ohlc_luecken(client, conn, watchlist) -> list[FallbackResult]:
+def fuelle_alle_ohlc_luecken(client, conn, watchlist,
+                             ausgenommen: set | None = None) -> list[FallbackResult]:
     """Alle Watchlist-Assets, die den Fallback brauchen. Reine Ergaenzung -
-    Assets mit Kraken-Listing werden nicht angefasst."""
+    Assets mit Kraken-Listing werden nicht angefasst.
+
+    `ausgenommen` (11.08.2026): Symbole, die eine BESSERE Quelle bereits
+    bedient hat. Seit dem yfinance-Rueckfall (api/yfinance_krypto_fallback.py)
+    gibt es eine dritte Quelle mit echten TAGESKERZEN; dieser hier liefert
+    gemessen Vier-Tage-Kerzen. Wo yfinance geliefert hat, darf CoinGecko nicht
+    darueberschreiben.
+
+    Die Aktualitaetspruefung in `fuelle_ohlc_aus_coingecko()` wuerde das faktisch
+    schon verhindern - aber nur, solange die Reihenfolge im Aufrufer stimmt. Eine
+    stille Reihenfolgeabhaengigkeit ist genau die Fehlerklasse, die dieses
+    Projekt teuer bezahlt hat: sie faellt nicht auf, sie verschiebt nur. Deshalb
+    steht die Ausnahme hier ausdruecklich und nicht als Nebenwirkung."""
     ergebnisse = []
+    ausgenommen = ausgenommen or set()
     for asset in watchlist or []:
+        if asset.symbol in ausgenommen:
+            logger.info("CoinGecko-OHLC-Fallback fuer %s uebersprungen - von "
+                        "einer Quelle mit Tageskerzen bedient", asset.symbol)
+            continue
         if not braucht_fallback(asset):
             continue
         ergebnis = fuelle_ohlc_aus_coingecko(client, conn, asset)

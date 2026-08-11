@@ -60,9 +60,22 @@ def _bestand(symbol: str, menge: float | None, einstand_eur: float | None,
     """Block 1 - was ich halte. Im KAS-Fall der fehlende Block.
 
     Bewusst der erste: die Frage "kaufen oder nicht" hat eine voellig andere
-    Antwort, je nachdem ob man nichts haelt oder bereits mit Verlust drinsteht."""
-    if not menge or not einstand_eur or not kurs_eur:
+    Antwort, je nachdem ob man nichts haelt oder bereits mit Verlust drinsteht.
+
+    DREI ZUSTAENDE STATT ZWEI (11.08.). Vorher galt "kein Einstand" als "nicht
+    im Bestand" - eine Falschaussage, keine Luecke: das Modell entschied ueber
+    einen Neukauf in der Annahme, wir haetten nichts. Ausloeser war ein
+    Lesefehler eine Ebene tiefer (nur die berechnete Einstandsspalte, nicht die
+    manuell gepflegte). Der ist behoben; diese Fallunterscheidung bleibt als
+    Netz, damit derselbe Fehler nie wieder als "nicht im Bestand" erscheint."""
+    if not menge:
         return [f"{symbol} ist nicht im Bestand."]
+    if not einstand_eur or not kurs_eur:
+        # Wir HALTEN - nur Einstand oder Kurs fehlen. Das ist eine andere
+        # Aussage als "nicht investiert", und das Modell muss sie kennen.
+        return [f"{symbol} ist im Bestand ({menge:.4f} Stueck), aber Einstand "
+                f"oder aktueller Kurs fehlen - Gewinn und Verlust dieser "
+                f"Position sind unbekannt."]
     investiert = menge * einstand_eur
     wert = menge * kurs_eur
     diff = wert - investiert
@@ -74,24 +87,57 @@ def _bestand(symbol: str, menge: float | None, einstand_eur: float | None,
     ]
 
 
-def _struktur(h: np.ndarray, l: np.ndarray, i: int) -> list[str]:
-    """Block 2 - Marktstruktur. Was ein Trader zuerst liest."""
+def _struktur(c: np.ndarray, h: np.ndarray, l: np.ndarray, i: int) -> list[str]:
+    """Block 2 - Marktstruktur, MIT ihrem Massstab (Regeln R-T1 und R-T2).
+
+    DER DEFEKT, DEN DAS BEHEBT (Arbeitsstand 7.9). Hier stand ein ABSOLUTES
+    Etikett - "ein intakter Abwaertstrend" - auf einem Vergleich der letzten
+    ZWEI Wendepunkte, also weniger Tage. Bei ETH am 24.06.2025 stand daneben
+    "60 Tage +37,0 %"; das Modell gewichtete das Etikett hoch und die Zahl
+    gering und sagte NICHTS_TUN. Der Kurs erreichte danach sein Ziel.
+
+    SYMMETRISCH KORRIGIERT, ausdruecklich nicht in Richtung "mehr kaufen".
+    Die Zaehlung ueber 44 Symbole und die ganze Historie (Arbeitsstand 7.11)
+    zeigt, dass der HAEUFIGERE Fehler das Gegenteil ist:
+
+        "Aufwaerts"-Etikett bei 60-Tage <= -10 %   11,39 % der Krypto-Tage
+        "Abwaerts"-Etikett  bei 60-Tage >= +10 %    6,21 %
+
+        Uebereinstimmung mit der 60-Tage-Bewegung:
+            "abwaerts"   74 %
+            "aufwaerts"  42 %   <- kaum besser als ein Muenzwurf
+
+    Ein Fix nur in die Richtung, die die verpassten Kaeufe erzeugt hat, haette
+    die groessere Haelfte verschaerft - er schoebe in fallende Maerkte hinein.
+
+    DESHALB: KEIN Etikett mehr, in keine Richtung. Genannt wird die
+    Beobachtung, ihr Fenster (R-T1) und der uebergeordnete Massstab daneben.
+    Das Gewichten ist Aufgabe des Modells, nicht der Beschriftung."""
     hi, lo = _swings(h, l, i)
     if len(hi) < 2 or len(lo) < 2:
         return []
     hoch_steigt = h[hi[-1]] > h[hi[-2]]
     tief_steigt = l[lo[-1]] > l[lo[-2]]
     if hoch_steigt and tief_steigt:
-        s = "hoehere Hochs und hoehere Tiefs - ein intakter Aufwaertstrend"
+        s = "hoehere Hochs und hoehere Tiefs"
     elif not hoch_steigt and not tief_steigt:
-        s = "tiefere Hochs und tiefere Tiefs - ein intakter Abwaertstrend"
+        s = "tiefere Hochs und tiefere Tiefs"
     elif hoch_steigt:
-        s = "hoehere Hochs bei tieferen Tiefs - die Spanne weitet sich"
+        s = "hoehere Hochs bei tieferen Tiefs"
     else:
-        s = "tiefere Hochs bei hoeheren Tiefs - die Spanne verengt sich"
+        s = "tiefere Hochs bei hoeheren Tiefs"
+    # Die Spanne, ueber die der Vergleich ueberhaupt reicht: vom frueheren der
+    # beiden vorletzten Wendepunkte bis heute. Ohne diese Zahl klingt eine
+    # Aussage ueber wenige Tage wie eine ueber jeden Zeitraum.
+    spanne = i - min(hi[-2], lo[-2])
     seit = i - max(hi[-1], lo[-1])
-    return [f"Die Marktstruktur zeigt {s}. Der letzte Wendepunkt liegt "
-            f"{seit} Handelstage zurueck."]
+    aus = [f"Auf Sicht der letzten {spanne} Handelstage zeigt die Marktstruktur "
+           f"{s}; der letzte Wendepunkt liegt {seit} Handelstage zurueck."]
+    if i >= 60:
+        b60 = 100.0 * (c[i] / c[i - 60] - 1.0)
+        aus.append(f"Zum Vergleich: ueber 60 Handelstage steht der Kurs "
+                   f"{b60:+.1f} %.")
+    return aus
 
 
 def _bewegung(c: np.ndarray, i: int) -> list[str]:
@@ -242,7 +288,7 @@ def beschreibe_lage(*, symbol: str, reihe: list, index: int,
 
     aus: list[str] = []
     aus += _bestand(symbol, menge, einstand_eur, kurs_eur)
-    aus += _struktur(h, l, i)
+    aus += _struktur(c, h, l, i)
     aus += _bewegung(c, i)
     aus += _niveaus(c, h, l, i, atr, kurs_eur, float(c[i]))
     aus += _volumen(c, v, i, tag_vollstaendig)

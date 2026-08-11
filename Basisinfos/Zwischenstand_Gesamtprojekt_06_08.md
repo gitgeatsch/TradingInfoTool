@@ -539,6 +539,73 @@ Entscheidung, nicht auf Arbeit.
 
 ---
 
+## 8c. FERTIGBAU-PLAN der Rollen-Ebene (Stand 2026-08-11 abends)
+
+> **Nutzervorgabe 11.08.: „das Fertigbauen planen und nicht vergessen."** Diese
+> Liste ist der Ort dafür. Alles hier ist **gebaut und geprüft, aber noch nicht
+> im Betrieb** — oder bewusst offen gelassen. Details je Punkt in
+> `Arbeitsstand_Deadloop_09_08.md`, Abschnitte 7.10 bis 7.20.
+
+### 8c.1 Gehört auf das NOTEBOOK (Produktionshandlungen)
+
+Der Desktop darf das nicht — drei dokumentierte Vorfälle, siehe die stehende
+Regel. Alles hier als **ein** Deployment-Paket, nicht einzeln.
+
+| # | Was | Stand |
+|---|---|---|
+| P1 | **yfinance-Rückfall ausrollen** — `api/yfinance_krypto_fallback.py` + Einhängung in `scheduler/background.py` | gebaut, verdrahtet, trocken geprüft |
+| P2 | Erster Lauf: KAIA · KAITO · SUPRA · XNO bekommen echte Tageskerzen | erfolgt automatisch beim ersten `refresh_ohlc_job` |
+| P3 | `pruefe_abdeckung.py` auf dem Notebook laufen lassen | Desktop-Zahlen gelten nur für den 19.07. |
+| P4 | **OD7L** — keine Futures-Referenz, als einziger Rohstoff ohne Reihe | ungeklärt |
+
+### 8c.2 Gebaut, aber NICHT an die Kette angeschlossen
+
+| # | Was | warum es zählt |
+|---|---|---|
+| K1 | **Die gesamte Rollen-Ebene** (Lagebild · Befund · Entscheidung) läuft nicht in der Produktion | dort läuft weiter das Altsystem mit 34.611 Zeichen |
+| K2 | **`umgeworfen_durch` wird erzeugt und nie ausgewertet** | das ist das thesenbasierte **Ausstiegskriterium**. Live geprüft: die Texte sind maschinell prüfbar („Tagesschlusskurs über 2218,75 EUR bei steigendem Volumen") |
+| K3 | **`agent/waechter_zuspitzung.py`** prüft die Zwischenausgabe auf unbelegte Zuspitzung | gebaut, Ist-Zustand gemessen (1 von 8), noch nicht in der Kette |
+| K4 | Granularitätswarnung erscheint im Log — die **Messskripte** sollten sie in ihrem Kopf mitausgeben | sonst liest man sie leicht über |
+
+### 8c.3 Offene Messungen — je mit vorab festgelegter Abbruchregel
+
+| # | Hypothese | Umfang |
+|---|---|---|
+| M1 | **Betragsfrage** senkt die Handlungsquote | 4 Zellen × 8 Anker × 2 Arme × 2 Wdh. ≈ 256 Aufrufe. Abbruchregel steht (Arbeitsstand 7.x) |
+| M2 | **Breite-Urteil** — Größe des Effekts | Übertragung (7.3) und falsche Richtung (7.4) sind belegt, nur die Größe fehlt |
+| M3 | **Bestandsblock** färbt die Entscheidung | Literatur widersprüchlich (Methodik 2.19.3) — nur eigene Messung entscheidet |
+| M4 | **Persona** im Prompt | offene Frage, kein Verbot. Schalter gebaut |
+| M5 | **`unabhaengige_faktoren`** — ist die Zahl stabil? | sie trägt seit dem Umbau die Positionsgröße und wurde nie geprüft |
+
+**Vor jedem dieser Läufe:** `pruefe_abdeckung.py`, Wächter, Kausalitätsprobe.
+Und die **Uniqueness-Gewichtung** (Methodik 2.19.1) — ohne sie sind die
+Konfidenzintervalle zu eng.
+
+### 8c.4 Konzeptarbeit, die vor dem Weiterbauen liegt
+
+| # | Was | Grund |
+|---|---|---|
+| C1 | **Kapitel 11 der Faktenmappe** — Kette Gate → Lagebild → Befund/Entscheidung, Rollenabgrenzung über den exklusiven Eingang, Regeln R-T1…R-T9 | die Formvorgabe fehlt bis heute; 10.1 hat nur einen Grundsatz |
+| C2 | **Marktlage und Historie je Assetklasse** — Benchmark statt Marktbreite | Breite ist für 4 von 5 Klassen arithmetisch unmöglich (7.15). Benchmarks vorhanden: BTC, SPY, Futures-Reihen |
+| C3 | **Nachrichten in die LLM-Ebene** | nach allem Gemessenen die einzige Kategorie, die noch eine Kante enthalten kann |
+
+### 8c.5 Kleinere Defekte, benannt und offen
+
+| # | Was |
+|---|---|
+| D1 | `api/coingecko_ohlc_fallback.py:79` behauptet „bei `days` ≤ 90 Tageskerzen" — gemessen sind es Vier-Tage-Kerzen. Der Kommentar ist die Fehlerquelle |
+| D2 | `braucht_fallback()` implementiert die im eigenen Modulkopf dokumentierten Ausnahmen nicht (VSN als Wertpapier, EURCV als Stablecoin). Wirkt heute nur noch als verschwendeter Abruf, weil der Granularitätswächter die Kerzen ohnehin verwirft |
+| D3 | `_rohdaten_zu_tageskerzen()` heißt so, liefert aber keine Tageskerzen |
+| D4 | Drei Backtest/Live-Unterschiede: `tag_vollstaendig`, `mit_bezug` in den Messskripten, und der Währungsfilter im Exportpfad (bewusst so belassen, siehe Docstring) |
+
+### 8c.6 Was NICHT auf dieser Liste steht, und warum
+
+Der `_struktur()`-Fix ist **erledigt** (7.13) — und hat die Entscheidung nicht
+bewegt. Die Degradierungs-Hypothese ist **widerlegt** (7.12, 0 von 8). Beide
+bleiben hier stehen, damit sie nicht ein drittes Mal als Idee auftauchen.
+
+---
+
 ## 8b.7 Empfohlene Reihenfolge
 
 1. **QW2** (Export-Ergänzung `score_details_json` / `funding_rate_aktuell`) —

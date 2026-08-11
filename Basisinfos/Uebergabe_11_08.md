@@ -60,15 +60,37 @@ Kursentwicklung: 5 Tage −2,9 %, 20 Tage −6,1 %, 60 Tage +37,0 %
 ```
 
 Das Modell gewichtete den +37-%-Aufwärtstrend als **gering** und die zweiwöchige
-Korrektur als **hoch**. Das erklärt **sechs von sechs** verpassten Gelegenheiten.
+Korrektur als **hoch**.
+
+> **ÜBERHOLT am 11.08. abends — siehe `Arbeitsstand_Deadloop_09_08.md` 7.10/7.11.**
+> Hier stand: *„Das erklärt sechs von sechs verpasste Gelegenheiten"* und der
+> Defekt sei die Ursache des Deadloops. **Beides ist zurückgestuft:**
+>
+> - Die Behauptung beruht auf **einer** gelesenen Begründung, nicht auf sechs.
+>   Die `betragsdeckel*.json` existiert nicht, wurde nie committet, und das
+>   Skript speichert die Begründungen gar nicht (7.10).
+> - Die Konstellation tritt auf **2,71 %** der Krypto-Tage auf (60T ≥ +30 %),
+>   auf 6,21 % bei ≥ +10 %. Der Deadloop ist 97,5 %. **Der Defekt kann ihn
+>   nicht erklären** (7.11).
+> - Der **häufigere** Fehler ist das Gegenteil: „Aufwärtstrend" bei fallendem
+>   60-Tage-Fenster, 11,39 %. Ein Punktfix in Richtung „mehr kaufen" verschärft
+>   die größere Hälfte.
+>
+> Der Fix bleibt richtig — als **Textwahrheits-Defekt**, symmetrisch, und als
+> Sonderfall der Regeln R-T1/R-T2. Nicht als Kur gegen den Deadloop.
 
 **Der Fix:** Struktur relativ zur übergeordneten Bewegung formulieren, ohne
 absolutes Etikett. Etwa: *„Auf Sicht von zwei Wochen tiefere Hochs und Tiefs,
 innerhalb eines 60-Tage-Anstiegs von +37 % — eine Korrektur im Aufwärtstrend."*
 
 **Danach:** Die acht Anker aus 7.8/7.9 erneut laufen lassen (16 Aufrufe) und
-prüfen, ob aus den sechs NICHTS_TUN Käufe werden. Das ist die direkte
-Erfolgskontrolle — und die Ausgänge sind bekannt.
+prüfen, ob aus den sechs NICHTS_TUN Käufe werden.
+
+> **Diese Erfolgskontrolle allein genügt nicht.** Die acht Anker sind **nach
+> ihrem Ausgang ausgewählt** — ein Fix, der `_struktur()` einfach immer
+> „Aufwärtstrend" sagen ließe, bekäme darin 6 von 6. Es braucht die
+> Gegenzellen (Etikett zu Recht negativ), sonst misst die Kontrolle keine
+> Falsch-Positiven.
 
 ---
 

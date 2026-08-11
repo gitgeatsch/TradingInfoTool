@@ -1392,6 +1392,21 @@ Setzung, als solche gekennzeichnet.
 `_struktur()` vergleicht die letzten **zwei** Swing-Punkte und nennt das
 Ergebnis „ein intakter Abwärtstrend". Bei einer Korrektur innerhalb eines
 Aufwärtstrends ist das falsch beschriftet — das Modell folgte der Beschriftung
-und gewichtete einen +37-%-Aufwärtstrend als *gering*. **Erklärt sechs von sechs
-verpassten Gelegenheiten.** Fix und Erfolgskontrolle:
+und gewichtete einen +37-%-Aufwärtstrend als *gering*. Fix und Erfolgskontrolle:
 `Arbeitsstand_Deadloop_09_08.md` 7.9.
+
+**Zurückgestuft am 11.08. abends (7.10/7.11).** Hier stand „erklärt sechs von
+sechs verpasste Gelegenheiten". Das beruhte auf **einer** gelesenen Begründung;
+die Ergebnisdatei existiert nicht und speicherte Begründungen ohnehin nicht.
+Die Zellenzählung über 44 Symbole ergibt: die Konstellation betrifft **2,71 %**
+der Krypto-Tage (60T ≥ +30 %) — der Deadloop ist 97,5 %. **Der Defekt erklärt
+ihn nicht.** Der **häufigere** Fehler ist das Gegenteil („Aufwärtstrend" bei
+fallendem 60-Tage-Fenster, 11,39 %); das Aufwärtsurteil stimmt nur in 42 % der
+Fälle mit der 60-Tage-Bewegung überein, das Abwärtsurteil in 74 %.
+
+**Konsequenz für dieses Kapitel:** Der Defekt ist ein Sonderfall einer
+allgemeineren Lücke — 10.1 regelt, dass Fakten *Aussagen* sein sollen, aber
+nirgends steht, **wie** eine Aussage formuliert sein muss. Diese Formvorgabe
+kommt als Kapitel 11 (Regeln R-T1…R-T9), und der Punktfix an `_struktur()` ist
+dann ihr erster Anwendungsfall — **symmetrisch**, nicht in Richtung „mehr
+kaufen".

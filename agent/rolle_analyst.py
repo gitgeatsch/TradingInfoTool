@@ -53,31 +53,79 @@ REQUIRED_FELDER = ("lage", "traegt", "belege")
 # Marktes traegt, ein anderer nicht. Das ist eine Aussage, keine Enthaltung.
 TRAGFAEHIGKEIT = ("breit_getragen", "schmal_getragen", "gemischt")
 
-SYSTEM_PROMPT_ANALYST = """Du beurteilst die Lage eines Marktes - nicht ein \
-einzelnes Wertpapier. Du bekommst Kennzahlen ueber die Gesamtheit der \
-beobachteten Werte und das uebergeordnete Umfeld.
+_KOPF = """Du beurteilst die Lage eines Marktes - nicht ein einzelnes \
+Wertpapier. Du bekommst Kennzahlen ueber die Gesamtheit der beobachteten Werte \
+und das uebergeordnete Umfeld.
 
-DEINE AUFGABE, in dieser Reihenfolge:
+DEINE AUFGABE, in dieser Reihenfolge:"""
 
-1. LAGE: Beschreibe in zwei bis drei Saetzen, was diesen Markt gerade \
-kennzeichnet. Nenne die Zahlen, auf die du dich stuetzt, beim Namen.
-
-2. TRAGFAEHIGKEIT: Wird die aktuelle Bewegung von vielen Werten getragen \
-(breit_getragen), von wenigen (schmal_getragen), oder tragen einige Teile des \
-Marktes waehrend andere zurueckbleiben (gemischt)?
-
-3. HOECHSTBETRAG: Welcher Einzelbetrag ist in dieser Lage angemessen - 100, 300 \
-oder 500 Euro? Das ist eine Obergrenze fuer eine einzelne Position, keine \
-Empfehlung zu handeln. Ob ueberhaupt gehandelt wird, entscheidet ein anderer \
-Schritt.
-
-4. BELEGE: Zwei bis vier Beobachtungen aus den Daten, die deine Einschaetzung \
-tragen. Jede mit dem Wert, auf den sie sich stuetzt. Erfinde nichts hinzu.
-
-Antworte AUSSCHLIESSLICH mit JSON:
+_SCHLUSS = """Antworte AUSSCHLIESSLICH mit JSON:
 {"lage": "<zwei bis drei Saetze>",
  "traegt": "breit_getragen|schmal_getragen|gemischt",
  "belege": ["<Beobachtung mit Wert>", ...]}"""
+
+_LAGE = ("LAGE", "Beschreibe in zwei bis drei Saetzen, was diesen Markt gerade "
+                 "kennzeichnet. Nenne die Zahlen, auf die du dich stuetzt, beim "
+                 "Namen.")
+_TRAGFAEHIGKEIT = ("TRAGFAEHIGKEIT",
+                   "Wird die aktuelle Bewegung von vielen Werten getragen "
+                   "(breit_getragen), von wenigen (schmal_getragen), oder tragen "
+                   "einige Teile des Marktes waehrend andere zurueckbleiben "
+                   "(gemischt)?")
+_BELEGE = ("BELEGE", "Zwei bis vier Beobachtungen aus den Daten, die deine "
+                     "Einschaetzung tragen. Jede mit dem Wert, auf den sie sich "
+                     "stuetzt. Erfinde nichts hinzu.")
+
+# DER BETRAGSBLOCK IST NICHT GELOESCHT, SONDERN SCHALTBAR (11.08. abends).
+#
+# Befund: Der Umbau vom 10.08. entfernte das Schemafeld und die Pflichtfelder,
+# liess aber DIESEN Prompt-Punkt stehen. Beide Rollen wurden seither bei jedem
+# Aufruf aufgefordert, eine Zahl zu nennen, die das Schema nicht entgegennimmt -
+# der Modul-Docstring oben ("SIE NENNT KEINEN BETRAG") und der Prompt darunter
+# widersprachen einander. R-A2 stand im Regelwerk und war nicht gebaut.
+#
+# Warum schaltbar statt weg: Diese Fassung ist der VERGLEICHSARM der gepaarten
+# Messung, die die Wirkung der Betragsfrage beziffern soll. Wer den Text
+# loescht, zerstoert den Arm, bevor er gebraucht wird - derselbe Fehler wie die
+# ueberschriebene ANKER-Liste (Arbeitsstand 7.10, K3). Nach der Messung
+# entscheidet der Nutzer ueber die endgueltige Entfernung.
+_BETRAGSFRAGE = ("HOECHSTBETRAG",
+                 "Welcher Einzelbetrag ist in dieser Lage angemessen - 100, 300 "
+                 "oder 500 Euro? Das ist eine Obergrenze fuer eine einzelne "
+                 "Position, keine Empfehlung zu handeln. Ob ueberhaupt gehandelt "
+                 "wird, entscheidet ein anderer Schritt.")
+
+
+def _baue_prompt(mit_betragsfrage: bool) -> str:
+    """Beide Fassungen aus denselben Teilen - sie duerfen sich NUR im
+    Betragsblock unterscheiden.
+
+    Von Hand gepflegte Zwillingstexte driften auseinander; dann misst ein
+    gepaarter Lauf zwei Unterschiede und schreibt beide dem einen zu."""
+    schritte = [_LAGE, _TRAGFAEHIGKEIT, _BELEGE]
+    if mit_betragsfrage:
+        schritte.insert(2, _BETRAGSFRAGE)   # vor BELEGE, wie die Fassung 10.08.
+    teile = [f"{i}. {kopf}: {text}" for i, (kopf, text) in enumerate(schritte, 1)]
+    return "\n\n".join([_KOPF, *teile, _SCHLUSS])
+
+
+SYSTEM_PROMPT_ANALYST = _baue_prompt(mit_betragsfrage=False)
+
+# Nur fuer die gepaarte Messung. NICHT im Betrieb verwenden.
+SYSTEM_PROMPT_ANALYST_MIT_BETRAG = _baue_prompt(mit_betragsfrage=True)
+
+# JEDER MESSBEFUND GEHOERT ZU EINEM PROMPT-STAND (Nutzereinwand 11.08.: die
+# alte Loesung muss in Doku UND Messbefunden sauber getrennt bleiben). Ein
+# Messskript schreibt diesen Wert in seine Ausgabe; ein Befund ohne Stand ist
+# nicht zuordenbar und damit nicht wiederverwendbar.
+#
+#   2026-08-10a  erste Fassung der Rollen-Ebene, Lagebild nennt einen Betrag
+#   2026-08-10b  Betrags-Umbau: `max_tranche_eur` aus Schema und Pflichtfeldern
+#                entfernt - ABER die Prompt-Frage blieb stehen (unbemerkt).
+#                Alle Befunde vom 10./11.08. gehoeren hierher, auch 7.7.
+#   2026-08-11   Betragsfrage aus dem Betriebsprompt entfernt, als schaltbarer
+#                Vergleichsarm erhalten. R-A2 erstmals tatsaechlich gebaut.
+PROMPT_STAND = "2026-08-11"
 
 
 class AnalystAntwortUngueltig(ValueError):
@@ -93,12 +141,16 @@ def validiere(antwort: dict) -> dict:
 
     Er hat recht, und "bullisch" ist das beste Beispiel: das ist keine
     Vokabel-Abweichung, sondern eine ANDERE FRAGE beantwortet - Richtung statt
-    Breite. Trotzdem koennen `lage`, `belege` und der Betrag brauchbar sein. Die
-    ganze Antwort dafuer wegzuwerfen ist unverhaeltnismaessig.
+    Breite. Trotzdem koennen `lage` und `belege` brauchbar sein. Die ganze
+    Antwort dafuer wegzuwerfen ist unverhaeltnismaessig.
 
-    DESHALB BLEIBT NUR EIN HARTER GRUND: ohne einen brauchbaren Betrag hat diese
-    Rolle nichts geliefert - sie existiert, um genau diese eine Zahl zu setzen.
-    Alles andere wird zurechtgerueckt, ersetzt oder vermerkt.
+    DESHALB BLEIBT NUR EIN HARTER GRUND: weder Lagebeschreibung noch Belege -
+    dann hat diese Rolle nichts geliefert. Alles andere wird zurechtgerueckt,
+    ersetzt oder vermerkt.
+
+    (Korrigiert 11.08.: hier stand "ohne einen brauchbaren Betrag ... sie
+    existiert, um genau diese eine Zahl zu setzen". Das beschrieb die Fassung
+    VOR dem Betrags-Umbau vom 10.08. und widersprach dem Code darunter.)
 
     `traegt` faellt bei Unzuordenbarkeit auf "gemischt" zurueck. Das ist KEINE
     Unknown-Option durch die Hintertuer: das Modell sieht drei echte Kategorien,

@@ -3275,12 +3275,25 @@ und läuft ein- bis zweimal täglich, nicht je Asset. Damit kann sie eine
 Marktbeurteilung nicht nachträglich zur Rechtfertigung einer Einzelentscheidung
 formen.
 
-**R-A2 — Kein Modell nennt einen Betrag.** Weder Rolle A noch BC. Der Betrag
-folgt deterministisch aus der Zahl unabhängiger Belege (3+ → 500 EUR, 2 → 300,
-1 → 100, 0 → keine Handlung). Extern belegt: Sprachmodelle sind bei der
-Positionsgröße am schwächsten; das Praxismuster entkoppelt Richtungslogik von
-quantitativer Größenbestimmung. Das bestehende Risikomanagement (RM-1 bis RM-7,
-Cash-Reserve, Positionsgrößen-Deckel) bleibt unberührt und deterministisch.
+**R-A2 — Kein Modell nennt einen Betrag.** Weder Lagebild noch
+Befund/Entscheidung. Der Betrag folgt deterministisch aus der Zahl unabhängiger
+Belege (3+ → 500 EUR, 2 → 300, 1 → 100, 0 → keine Handlung). Extern belegt:
+Sprachmodelle sind bei der Positionsgröße am schwächsten; das Praxismuster
+entkoppelt Richtungslogik von quantitativer Größenbestimmung. Das bestehende
+Risikomanagement (RM-1 bis RM-7, Cash-Reserve, Positionsgrößen-Deckel) bleibt
+unberührt und deterministisch.
+
+> **GEBAUT ERST AM 11.08.2026 — vom 10.08. bis dahin galt diese Regel nur auf
+> dem Papier.** Der Umbau vom 10.08. entfernte `tranche_eur` /
+> `max_tranche_eur` aus Schema und Pflichtfeldern, **ließ aber die Frage in
+> beiden Prompts stehen**. Beide Modelle wurden bei jedem Aufruf aufgefordert,
+> eine Zahl zu nennen, die das Schema nicht entgegennimmt — der Modul-Docstring
+> und der Prompt darunter widersprachen einander. Seit 11.08. ist die Frage aus
+> den Betriebsprompts entfernt und nur noch als Vergleichsarm schaltbar
+> (`SYSTEM_PROMPT_*_MIT_BETRAG`). **Alle Messbefunde vom 10./11.08. gehören zum
+> Prompt-Stand `2026-08-10b` und wurden folglich MIT der Betragsfrage
+> erhoben** — siehe `Regelwerk_Entscheidungslog.md` Nachtrag 205 und
+> `Arbeitsstand_Deadloop_09_08.md` 7.10/7.11.
 
 **R-A3 — Keine Konfidenz wird erfragt.** Verbalisierte Konfidenz ist extern
 belegt schlecht kalibriert und war es im eigenen System (77,5 % vorhergesagt
