@@ -1,0 +1,482 @@
+[
+ {
+  "symbol": "ONDO",
+  "index": 694,
+  "datum": "2026-06-11",
+  "bewegung_60t_pct": 50.4,
+  "zelle": "A",
+  "atr": 0.040223,
+  "ausgang": {
+   "ereignis": "STOP",
+   "tag": 13
+  },
+  "ohne": {
+   "faktoren": 2,
+   "aktion": "NICHTS_TUN",
+   "belege": 4,
+   "begruendung": "Der schwache Gesamtmarkt und die negative kurzfristige Trendstruktur auf ONDO bieten keine Grundlage fuer einen Neueinstieg."
+  },
+  "mit": {
+   "faktoren": 2,
+   "aktion": "NICHTS_TUN",
+   "belege": 6,
+   "begruendung": "Der Gesamtmarkt zeigt extreme Schwaeche und ONDO bildet kurzfristig tiefere Hochs und tiefere Tiefs bei geringem Volumen, weshalb ein Einstieg unangebracht ist."
+  }
+ },
+ {
+  "symbol": "ALGO",
+  "index": 401,
+  "datum": "2025-08-22",
+  "bewegung_60t_pct": 48.5,
+  "zelle": "A",
+  "atr": 0.020666,
+  "ausgang": {
+   "ereignis": "STOP",
+   "tag": 7
+  },
+  "ohne": {
+   "faktoren": 3,
+   "aktion": "KAUFEN",
+   "belege": 5,
+   "begruendung": "Der starke mittelfristige Trend und das erhoehte Volumen bei Aufwaertstagen rechtfertigen einen Neueinstieg an der soliden Unterstuetzung."
+  },
+  "mit": {
+   "faktoren": 3,
+   "aktion": "KAUFEN",
+   "belege": 5,
+   "begruendung": "Der starke mittelfristige Aufwärtstrend und das hohe Volumen bei Aufwärtstagen rechtfertigen einen Neueinstieg nahe der Unterstützung."
+  }
+ },
+ {
+  "symbol": "GRIFFAIN",
+  "index": 344,
+  "datum": "2026-01-02",
+  "bewegung_60t_pct": 20.6,
+  "zelle": "A",
+  "atr": 0.001925,
+  "ausgang": {
+   "ereignis": "STOP",
+   "tag": 17
+  },
+  "ohne": {
+   "faktoren": 2,
+   "aktion": "NICHTS_TUN",
+   "belege": 5,
+   "begruendung": "Trotz starker kurzfristiger Impulse und hohem Volumen sprechen die fallende Marktstruktur auf Sicht von 13 Tagen und das schwache Gesamtmarktumfeld gegen einen Neueinstieg."
+  },
+  "mit": {
+   "faktoren": 2,
+   "aktion": "NICHTS_TUN",
+   "belege": 5,
+   "begruendung": "Trotz kurzfristiger relativer Staerke zeigen die extrem ueberhitzten Finanzierungsraten und der schwache Gesamtmarkt erhebliche Risiken fuer einen Neueinstieg."
+  }
+ },
+ {
+  "symbol": "APT",
+  "index": 574,
+  "datum": "2026-02-11",
+  "bewegung_60t_pct": -45.7,
+  "zelle": "B",
+  "atr": 0.122027,
+  "ausgang": {
+   "ereignis": "ZIEL",
+   "tag": 35
+  },
+  "ohne": {
+   "faktoren": 2,
+   "aktion": "NICHTS_TUN",
+   "belege": 6,
+   "begruendung": "Der Wert befindet sich in einem intakten, volumenunterstuetzten Abwärtstrend innerhalb eines extrem schwachen Gesamtmarktes."
+  },
+  "mit": {
+   "faktoren": 2,
+   "aktion": "NICHTS_TUN",
+   "belege": 7,
+   "begruendung": "Der starke Abwaertstrend, das hohe Verkaufsvolumen und das negative Marktumfeld lassen keinen Neueinstieg zu."
+  }
+ },
+ {
+  "symbol": "LINK",
+  "index": 480,
+  "datum": "2025-11-09",
+  "bewegung_60t_pct": -32.4,
+  "zelle": "B",
+  "atr": 1.409879,
+  "ausgang": {
+   "ereignis": "STOP",
+   "tag": 5
+  },
+  "ohne": {
+   "faktoren": 2,
+   "aktion": "REDUZIEREN",
+   "belege": 5,
+   "begruendung": "Angesichts der intakten übergeordneten Abwärtsstruktur und des geringen Volumens sichere ich Gewinne ab und reduziere die Position."
+  },
+  "mit": {
+   "faktoren": 2,
+   "aktion": "REDUZIEREN",
+   "belege": 5,
+   "begruendung": "Trotz des aktuellen Plus im Bestand dominiert ein intakter übergeordneter Abwärtstrend bei schwachem Volumen, was gegen einen Haltezeitpunkt spricht. Ich reduziere die Position, um Gewinne zu sichern."
+  }
+ },
+ {
+  "symbol": "SEI",
+  "index": 242,
+  "datum": "2025-03-16",
+  "bewegung_60t_pct": -51.4,
+  "zelle": "B",
+  "atr": 0.022038,
+  "ausgang": {
+   "ereignis": "STOP",
+   "tag": 17
+  },
+  "ohne": {
+   "faktoren": 2,
+   "aktion": "REDUZIEREN",
+   "belege": 5,
+   "begruendung": "Der anhaltende Abwärtstrend im Rahmen einer extrem schwachen Gesamtmarktlage rechtfertigt kein Halten der Position mehr. Ich reduziere das Engagement, um weiteres Verlustpotenzial zu begrenzen."
+  },
+  "mit": {
+   "faktoren": 3,
+   "aktion": "NICHTS_TUN",
+   "belege": 6,
+   "begruendung": "Trotz extrem niedriger Finanzierungsrate und naher Unterstuetzung spricht der intakte Abwaertstrend bei schwachem Gesamtmarkt gegen jeden Neueinstieg oder Ausbau."
+  }
+ },
+ {
+  "symbol": "APT",
+  "index": 698,
+  "datum": "2026-06-15",
+  "bewegung_60t_pct": -32.4,
+  "zelle": "B",
+  "atr": 0.056989,
+  "ausgang": {
+   "ereignis": "STOP",
+   "tag": 9
+  },
+  "ohne": {
+   "faktoren": 2,
+   "aktion": "NICHTS_TUN",
+   "belege": 6,
+   "begruendung": "Der uebergeordnete Abwärtstrend und das schwache Marktumfeld lassen trotz der juengsten Erholung keinen verlässlichen Einstieg zu."
+  },
+  "mit": {
+   "faktoren": 3,
+   "aktion": "NICHTS_TUN",
+   "belege": 6,
+   "begruendung": "Der anhaltende Abwärtstrend und der schwache Gesamtmarkt überwiegen die kurzfristige Erholung deutlich."
+  }
+ },
+ {
+  "symbol": "AIOZ",
+  "index": 250,
+  "datum": "2026-03-18",
+  "bewegung_60t_pct": -36.0,
+  "zelle": "B",
+  "atr": 0.004404,
+  "ausgang": {
+   "ereignis": "STOP",
+   "tag": 4
+  },
+  "ohne": {
+   "faktoren": 2,
+   "aktion": "NICHTS_TUN",
+   "belege": 5,
+   "begruendung": "Der uebergordnete Abwaertstrend ueber 60 Tage und die negativen Marktstrukturen ueberwiegen trotz leichter kurzfristiger Erholungstendenzen."
+  },
+  "mit": {
+   "faktoren": 3,
+   "aktion": "NICHTS_TUN",
+   "belege": 5,
+   "begruendung": "Trotz leichter kurzfristiger Erholungstendenzen und positiver Umsatzverteilung spricht der uebergeordnete Abwärtstrend gegen einen Einstieg."
+  }
+ },
+ {
+  "symbol": "SUI",
+  "index": 571,
+  "datum": "2026-02-08",
+  "bewegung_60t_pct": -39.9,
+  "zelle": "B",
+  "atr": 0.111934,
+  "ausgang": {
+   "ereignis": "offen",
+   "tag": null
+  },
+  "ohne": {
+   "faktoren": 2,
+   "aktion": "NICHTS_TUN",
+   "belege": 5,
+   "begruendung": "Aufgrund des klaren Abwaertstrends ueber alle Zeitebenen und der breiten Markt Schwaeche gibt es keinen tragfaehigen Aufbau."
+  },
+  "mit": {
+   "faktoren": 2,
+   "aktion": "NICHTS_TUN",
+   "belege": 6,
+   "begruendung": "Der Trend zeigt klar abwaerts bei schwachem Volumen und einem extrem schwaechelnden Gesamtmarkt, weshalb kein Neueinstieg gerechtfertigt ist."
+  }
+ },
+ {
+  "symbol": "BEAMX",
+  "index": 518,
+  "datum": "2025-12-17",
+  "bewegung_60t_pct": -44.6,
+  "zelle": "B",
+  "atr": 0.000253,
+  "ausgang": {
+   "ereignis": "offen",
+   "tag": null
+  },
+  "ohne": {
+   "faktoren": 2,
+   "aktion": "NICHTS_TUN",
+   "belege": 5,
+   "begruendung": "Trotz des massiven Verlusts im Bestand fehlt jeglicher Hinweis auf eine Bodenbildung im uebergreifenden Abwaertstrend."
+  },
+  "mit": {
+   "faktoren": 2,
+   "aktion": "NICHTS_TUN",
+   "belege": 4,
+   "begruendung": "Trotz des massiven Verlusts im Bestand zeigt der Trend steil nach unten und der Gesamtmarkt bietet keinerlei Unterstützung für einen Neukauf."
+  }
+ },
+ {
+  "symbol": "NEAR",
+  "index": 545,
+  "datum": "2026-01-13",
+  "bewegung_60t_pct": -21.4,
+  "zelle": "C",
+  "atr": 0.103846,
+  "ausgang": {
+   "ereignis": "STOP",
+   "tag": 2
+  },
+  "ohne": {
+   "faktoren": 3,
+   "aktion": "KAUFEN",
+   "belege": 6,
+   "begruendung": "Der starke Umsatz und die dynamische kurzfristige Erholung rechtfertigen einen Neueinstieg in Trendrichtung. Der Stopp wird knapp unter die naechste Unterstuetzung bei 1.4901 EUR platziert."
+  },
+  "mit": {
+   "faktoren": 3,
+   "aktion": "KAUFEN",
+   "belege": 5,
+   "begruendung": "Die kurzfristige Marktstruktur zeigt klare Stärke mit steigenden Hochs und Tiefs, gestützt durch hohes Volumen an Aufwärtstagen. Dies rechtfertigt einen Neueinstieg in die Erholungsbewegung."
+  }
+ },
+ {
+  "symbol": "SUI",
+  "index": 255,
+  "datum": "2025-03-29",
+  "bewegung_60t_pct": -36.8,
+  "zelle": "C",
+  "atr": 0.232243,
+  "ausgang": {
+   "ereignis": "STOP",
+   "tag": 8
+  },
+  "ohne": {
+   "faktoren": 2,
+   "aktion": "NICHTS_TUN",
+   "belege": 5,
+   "begruendung": "Trotz kurzfristig positiver Marktstruktur spricht der extrem schwache Gesamtmarkt und das geringe Volumen gegen einen Neueinstieg."
+  },
+  "mit": {
+   "faktoren": 2,
+   "aktion": "NICHTS_TUN",
+   "belege": 5,
+   "begruendung": "Obwohl kurzfristig hoehere Hochs vorliegen, spricht der massiv schwache Gesamtmarkt und die geringe Liquiditaet gegen einen Neueinstieg."
+  }
+ },
+ {
+  "symbol": "KAS",
+  "index": 345,
+  "datum": "2025-10-30",
+  "bewegung_60t_pct": -36.0,
+  "zelle": "C",
+  "atr": 0.00588,
+  "ausgang": {
+   "ereignis": "STOP",
+   "tag": 5
+  },
+  "ohne": {
+   "faktoren": 2,
+   "aktion": "NICHTS_TUN",
+   "belege": 5,
+   "begruendung": "Obwohl kurzfristig hoehere Hochs gebildet werden, sprechen der schwaechelnde Gesamtmarkt und der niedrige Umsatz gegen eine Vergroesserung der Position."
+  },
+  "mit": {
+   "faktoren": 2,
+   "aktion": "NICHTS_TUN",
+   "belege": 4,
+   "begruendung": "Trotz kurzfristig intakter Marktstruktur fehlt bei geringem Volumen und verhaltenem Gesamtmarkt die Dynamik fuer einen Ausbau der bestehenden Position."
+  }
+ },
+ {
+  "symbol": "ONDO",
+  "index": 582,
+  "datum": "2026-02-19",
+  "bewegung_60t_pct": -33.0,
+  "zelle": "C",
+  "atr": 0.022181,
+  "ausgang": {
+   "ereignis": "offen",
+   "tag": null
+  },
+  "ohne": {
+   "faktoren": 2,
+   "aktion": "NICHTS_TUN",
+   "belege": 5,
+   "begruendung": "Trotz kurzfristig hoeherer Tiefs sprechen der schwere mittelfristige Abwaertstrend, der sehr duenne Umsatz und die extreme Marktschwaeche gegen einen Neueinstieg."
+  },
+  "mit": {
+   "faktoren": 2,
+   "aktion": "NICHTS_TUN",
+   "belege": 4,
+   "begruendung": "Trotz kurzfristig positiver Marktstruktur sprechen der schwache Gesamtmarkt und das sehr geringe Handelsvolumen gegen einen Neueinstieg."
+  }
+ },
+ {
+  "symbol": "SEI",
+  "index": 449,
+  "datum": "2025-10-09",
+  "bewegung_60t_pct": -13.5,
+  "zelle": "C",
+  "atr": 0.017966,
+  "ausgang": {
+   "ereignis": "STOP",
+   "tag": 1
+  },
+  "ohne": {
+   "faktoren": 3,
+   "aktion": "NACHKAUFEN",
+   "belege": 5,
+   "begruendung": "Die kurzfristige Marktstruktur zeigt hoehere Hochs und Tiefs bei ueberdurchschnittlichem Umsatz, waehrend die bestehende Position bereits profitabel laeuft."
+  },
+  "mit": {
+   "faktoren": 3,
+   "aktion": "NACHKAUFEN",
+   "belege": 6,
+   "begruendung": "Der Wert zeigt kurzfristig hoehere Tiefs und eine robuste Volumensunterstuetzung, weshalb die bestehende Position leicht ausgebaut werden kann. Der Weg zum Widerstand ist frei."
+  }
+ },
+ {
+  "symbol": "BEAMX",
+  "index": 473,
+  "datum": "2025-11-02",
+  "bewegung_60t_pct": -31.5,
+  "zelle": "C",
+  "atr": 0.000641,
+  "ausgang": {
+   "ereignis": "STOP",
+   "tag": 2
+  },
+  "ohne": {
+   "faktoren": 2,
+   "aktion": "NICHTS_TUN",
+   "belege": 5,
+   "begruendung": "Obwohl sich kurzfristig eine stabilere Marktstruktur zeigt, verhindern der schwache Umsatz und der intakte uebergeordnete Abwärtstrend einen weiteren Kapitaleinsatz."
+  },
+  "mit": {
+   "faktoren": 2,
+   "aktion": "NICHTS_TUN",
+   "belege": 5,
+   "begruendung": "Trotz kurzfristig hoeherer Tiefs fehlt bei sehr schwachem Umsatz und uebergeordnetem Abwärtstrend die Basis fuer einen Nachkauf."
+  }
+ },
+ {
+  "symbol": "AKT",
+  "index": 611,
+  "datum": "2026-03-20",
+  "bewegung_60t_pct": 26.4,
+  "zelle": "D",
+  "atr": 0.049956,
+  "ausgang": {
+   "ereignis": "STOP",
+   "tag": 7
+  },
+  "ohne": {
+   "faktoren": 3,
+   "aktion": "KAUFEN",
+   "belege": 5,
+   "begruendung": "Die starke kurzfristige Momentum-Struktur mit steigenden Hochs und Tiefs sowie erhöhtem Volumen auf Aufwärtstagen rechtfertigt einen Neueinstieg trotz des schwachen Gesamtmarkts."
+  },
+  "mit": {
+   "faktoren": 3,
+   "aktion": "KAUFEN",
+   "belege": 4,
+   "begruendung": "Der starke kurzfristige Momentum-Anstieg mit erhöhtem Volumen bietet trotz des breiten Abwärtstrends eine attraktive Chance für einen Neueinstieg."
+  }
+ },
+ {
+  "symbol": "PLUME",
+  "index": 381,
+  "datum": "2026-05-09",
+  "bewegung_60t_pct": 19.5,
+  "zelle": "D",
+  "atr": 0.001164,
+  "ausgang": {
+   "ereignis": "STOP",
+   "tag": 3
+  },
+  "ohne": {
+   "faktoren": 3,
+   "aktion": "KAUFEN",
+   "belege": 6,
+   "begruendung": "Die starke kurzfristige Dynamik mit hohem Volumen und steigenden Hochs rechtfertigt den Aufbau einer neuen Position. Das Chance-Risiko-Verhaeltnis bis zum naechsten Widerstand ist positiv."
+  },
+  "mit": {
+   "faktoren": 3,
+   "aktion": "KAUFEN",
+   "belege": 5,
+   "begruendung": "Die starke kurzfristige Marktdynamik und der signifikante Volumenschub bei steigenden Kursen rechtfertigen einen Neueinstieg in PLUME. Der Stopp wird an der naechsten Unterstuetzung platziert."
+  }
+ },
+ {
+  "symbol": "W",
+  "index": 428,
+  "datum": "2025-09-18",
+  "bewegung_60t_pct": 28.1,
+  "zelle": "D",
+  "atr": 0.009179,
+  "ausgang": {
+   "ereignis": "STOP",
+   "tag": 4
+  },
+  "ohne": {
+   "faktoren": 3,
+   "aktion": "KAUFEN",
+   "belege": 5,
+   "begruendung": "Der starke Aufwaertstrend wird von hohem Volumen und einem bullischen Gesamtmarkt untermauert, weshalb ein Neueinstieg gerechtfertigt ist. Die positive Dynamik der letzten Tage bietet eine gute Ausgangslage."
+  },
+  "mit": {
+   "faktoren": 3,
+   "aktion": "KAUFEN",
+   "belege": 6,
+   "begruendung": "Der Wert zeigt eine impulsive Trendfortsetzung bei extrem hohem Volumen und starkem Gesamtmarkt, was den Aufbau einer neuen Position rechtfertigt."
+  }
+ },
+ {
+  "symbol": "NEAR",
+  "index": 705,
+  "datum": "2026-06-22",
+  "bewegung_60t_pct": 46.9,
+  "zelle": "D",
+  "atr": 0.231358,
+  "ausgang": {
+   "ereignis": "STOP",
+   "tag": 35
+  },
+  "ohne": {
+   "faktoren": 2,
+   "aktion": "NICHTS_TUN",
+   "belege": 5,
+   "begruendung": "Trotz kurzfristig besserer Marktstruktur drueckt das extrem schwache Gesamtmarktumfeld und der geringe Umsatz auf das Chance-Risiko-Verhaeltnis."
+  },
+  "mit": {
+   "faktoren": 2,
+   "aktion": "NICHTS_TUN",
+   "belege": 5,
+   "begruendung": "Trotz positiver kurzfristiger Marktstruktur und guenstiger Finanzierungsrate verhindert der extrem schwache Gesamtmarkt bei geringem Volumen einen Neueinstieg."
+  }
+ }
+]

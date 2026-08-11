@@ -171,12 +171,21 @@ class FundingRateReading:
 
 @track_api_health("binance")
 def get_binance_funding_history(symbol: str = "BTCUSDT", limit: int = 100,
-                                session: requests.Session | None = None
+                                session: requests.Session | None = None,
+                                endzeit_ms: int | None = None
                                 ) -> list[FundingRateReading]:
-    """Binance zahlt alle acht Stunden - `limit=100` sind rund 33 Tage."""
+    """Binance zahlt alle acht Stunden - `limit=100` sind rund 33 Tage.
+
+    `endzeit_ms` schneidet KAUSAL ab (2026-08-11): fuer einen historischen Anker
+    darf nur gelesen werden, was bis dahin bekannt war. Ohne diese Schranke
+    saehe eine Messung an einem Anker von 2025 die Finanzierung von heute - der
+    Lookahead-Fehler, den `_reihe_bis()` bei den Kursen von Anfang an
+    verhindert."""
     session = session or requests.Session()
-    r = session.get(BINANCE_FUNDING_URL,
-                    params={"symbol": symbol, "limit": limit}, timeout=15)
+    params = {"symbol": symbol, "limit": limit}
+    if endzeit_ms:
+        params["endTime"] = int(endzeit_ms)
+    r = session.get(BINANCE_FUNDING_URL, params=params, timeout=15)
     r.raise_for_status()
     daten = r.json()
     if not isinstance(daten, list) or not daten:
@@ -188,15 +197,17 @@ def get_binance_funding_history(symbol: str = "BTCUSDT", limit: int = 100,
 
 @track_api_health("bybit")
 def get_bybit_funding_history(symbol: str = "BTCUSDT", limit: int = 100,
-                              session: requests.Session | None = None
+                              session: requests.Session | None = None,
+                              endzeit_ms: int | None = None
                               ) -> list[FundingRateReading]:
     """Bybit liefert absteigend; hier wird aufsteigend zurueckgegeben, damit
     beide Boersen dasselbe Format haben und ein Aufrufer sie nicht
     versehentlich verwechselt."""
     session = session or requests.Session()
-    r = session.get(BYBIT_FUNDING_URL,
-                    params={"category": "linear", "symbol": symbol,
-                            "limit": limit}, timeout=15)
+    params = {"category": "linear", "symbol": symbol, "limit": limit}
+    if endzeit_ms:
+        params["endTime"] = int(endzeit_ms)
+    r = session.get(BYBIT_FUNDING_URL, params=params, timeout=15)
     r.raise_for_status()
     liste = ((r.json().get("result") or {}).get("list")) or []
     _erstes_element(liste, "bybit", symbol)      # wirft bei leerer Antwort
@@ -207,7 +218,8 @@ def get_bybit_funding_history(symbol: str = "BTCUSDT", limit: int = 100,
 
 
 def get_funding_history(symbol: str = "BTCUSDT", limit: int = 100,
-                        session: requests.Session | None = None
+                        session: requests.Session | None = None,
+                        endzeit_ms: int | None = None
                         ) -> list[FundingRateReading]:
     """Binance zuerst, Bybit als Rueckfall - GENAU EINE Quelle je Symbol.
 
@@ -216,7 +228,7 @@ def get_funding_history(symbol: str = "BTCUSDT", limit: int = 100,
     Quelle braucht, liest sie am Feld `exchange` ab."""
     for holen in (get_binance_funding_history, get_bybit_funding_history):
         try:
-            werte = holen(symbol, limit, session)
+            werte = holen(symbol, limit, session, endzeit_ms)
             if werte:
                 return werte
         except Exception:                                        # noqa: BLE001

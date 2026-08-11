@@ -264,10 +264,45 @@ def _volumen(c: np.ndarray, v: np.ndarray, i: int,
     return aus
 
 
+def _finanzierung(zusammenfassung: dict | None) -> list[str]:
+    """Block 6 - die Positionierung am Terminmarkt (11.08.2026).
+
+    DER ERSTE FAKT IN DIESER BESCHREIBUNG, DER NICHT AUS UNSERER KURSREIHE
+    STAMMT. Struktur, Bewegung und Niveaus sind derselbe Fakt in drei
+    Uebersetzungen; der Umsatz ist der zweite. Der Fachstandard verlangt drei
+    bis vier UNABHAENGIGE Faktoren (Methodik 2.21.1), und genau daran fehlte es:
+    das Modell zaehlte in 72 % der Faelle nur ein bis zwei.
+
+    FORM NACH DEN TEXTREGELN:
+      R-T1  das Fenster wird genannt - "die letzten 100 Perioden"
+      R-T2  kein Etikett wie "stark long positioniert"
+      R-T3  keine Bewertung; die Richtung wird SACHLICH aufgeloest
+            ("Longs zahlen Shorts"), weil "positive Rate" ohne diese Erklaerung
+            kein Fakt, sondern Fachjargon ist
+      R-T5  relativ - Perzentil und Anteil statt der rohen Zahl. 0,0001 sagt
+            einem Modell nichts
+
+    KEINE ZEILE, WENN KEINE DATEN. Ein Satz "keine Finanzierungsdaten" waere
+    fuer alle Aktien, ETF und Rohstoffe identisch - ein konstantes Feld im Sinne
+    von B10, das Platz kostet und nichts unterscheidet."""
+    if not zusammenfassung:
+        return []
+    n = zusammenfassung.get("beobachtungen") or 0
+    if n < 20:
+        return []
+    pos = zusammenfassung.get("anteil_positiv_pct")
+    p = zusammenfassung.get("perzentil")
+    return [f"Am Terminmarkt war die Finanzierungsrate in {pos} % der letzten "
+            f"{n} Perioden positiv - dann zahlen die Long-Positionen an die "
+            f"Short-Positionen. Die aktuelle Rate liegt im {p}. Perzentil "
+            f"dieser {n} Perioden."]
+
+
 def beschreibe_lage(*, symbol: str, reihe: list, index: int,
                     kurs_eur: float, atr: float,
                     menge: float | None = None,
-                    einstand_eur: float | None = None) -> list[str]:
+                    einstand_eur: float | None = None,
+                    finanzierung: dict | None = None) -> list[str]:
     """Die Lage als Aussagen - der EINZIGE Weg von Kursdaten zur Beschreibung.
 
     Streng kausal: es wird nur `reihe[:index+1]` gelesen. Die Kausalitaetsprobe
@@ -292,4 +327,5 @@ def beschreibe_lage(*, symbol: str, reihe: list, index: int,
     aus += _bewegung(c, i)
     aus += _niveaus(c, h, l, i, atr, kurs_eur, float(c[i]))
     aus += _volumen(c, v, i, tag_vollstaendig)
+    aus += _finanzierung(finanzierung)
     return aus

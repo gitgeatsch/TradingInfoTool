@@ -2569,3 +2569,84 @@ Ergebnis, sondern die Vorbereitung.
 sechs Wochen eine belastbare Antwort auf die Frage „funktioniert Timing mit
 Kursdaten" erarbeitet — die Antwort ist nein, und sie ist jetzt begründet statt
 vermutet. Das ist ein Ergebnis.
+
+---
+
+## 7.26 Der kausale Test zum dritten Faktor — NEGATIV, und er widerlegt meine eigene Konstruktion (11.08. spät)
+
+**Werkzeug:** `messe_dritter_faktor.py`. Gepaart, 20 Krypto-Anker aus der
+geschichteten Population, bitgleich bis auf **einen Satz** — die
+Finanzierungsrate am Terminmarkt, kausal am Ankertag abgeschnitten. Ein Lagebild
+je Anker für beide Arme, damit der Lauf genau **einen** Unterschied misst.
+
+### Das Ergebnis
+
+```
+ARM OHNE   Faktoren im Schnitt 2,30   {2: 14, 3: 6}   Handlungen 8/20   Kaeufe 6
+ARM MIT    Faktoren im Schnitt 2,45   {2: 11, 3:  9}   Handlungen 7/20   Kaeufe 6
+
+Aktion geaendert: 1 von 20   —   SEI 2025-03-16  REDUZIEREN -> NICHTS_TUN
+```
+
+**Die Faktorzahl stieg, die Handlungsquote nicht.** Drei Anker gingen von zwei
+auf drei Faktoren; bei keinem wurde daraus ein Kauf. Die einzige Änderung ging
+in Richtung *weniger* Handlung.
+
+### Der naheliegende Einwand, geprüft und ebenfalls negativ
+
+Vielleicht war der neue Fakt zu **neutral** — ein Perzentil von 39 argumentiert
+für nichts. Also nachgesehen, wo er stark in eine Richtung zeigt:
+
+```
+9 von 20 Ankern mit extremer Finanzierung (Perzentil <= 15 oder >= 85)
+   ALGO 7 % · GRIFFAIN 99 % · APT 2 % · SEI 10 % · APT 14 % · KAS 15 %
+   SEI 14 % · W 5 % · NEAR 6 %
+Auch dort: genau eine Aenderung, und die in die Gegenrichtung.
+```
+
+**Auch ein Fakt, der klar in eine Richtung zeigt, ändert die Entscheidung nicht.**
+
+### Was damit widerlegt ist — meine eigene Konstruktion von heute Nachmittag
+
+Faktenmappe 12.3 schloss aus der Korrelation (bei drei Faktoren 78 %
+Handlungsquote, bei zwei 18 %, p = 0,0035): *„Der Deadloop ist keine
+Fehlfunktion, sondern das System, das den Fachstandard korrekt auf eine
+unzureichende Eingabe anwendet."*
+
+**Diese Erklärung ist widerlegt.** Wird ein echter dritter unabhängiger Faktor
+hinzugefügt, steigt die Handlungsquote **nicht**. Die Korrelation war das
+Modell, das in sich stimmig antwortet: Es entscheidet auf dem Kursbild und
+berichtet eine Faktorzahl, die dazu passt. **Die Zahl beschreibt die
+Entscheidung, sie treibt sie nicht.**
+
+Ich hatte das als Einschränkung notiert („Faktorzahl und Aktion stammen aus
+demselben Aufruf") und trotzdem eine Erklärung darauf gebaut. Der Test war
+richtig angesetzt — die Schlussfolgerung davor war zu früh.
+
+### Was daraus folgt
+
+Damit ist **jede** geprüfte Einzelerklärung für den Deadloop gefallen:
+
+| Erklärung | Prüfung | Ergebnis |
+|---|---|---|
+| Struktur-Etikett | 19.891 Anker, Zellenvergleich | 2,71 % der Tage, Zellen unterscheiden sich nicht |
+| Degradierung durch ungültigen Stop | 8 Anker, roh gegen final | 0 von 8 |
+| Betragsfrage | noch offen | — |
+| Zu wenige unabhängige Faktoren | **gepaart, 20 Anker** | **kein Effekt** |
+
+**Was bleibt, ist die Erklärung aus 7.25:** Im Kursverlauf ist auf dieser
+Granularität nichts zu finden — 34,0 % gemessen gegen 33,3 % theoretisch bei
+einem reinen Zufallspfad. Ein Modell, das darin selten einen Handlungsgrund
+findet, verhält sich **richtig**. Die niedrige Handlungsquote ist kein Defekt
+und auch nicht die Folge eines fehlenden Faktors, sondern die zutreffende
+Antwort auf eine Eingabe ohne verwertbaren Inhalt.
+
+### Was der neue Baustein trotzdem wert ist
+
+Die Finanzierungsrate bleibt im Code. Sie ist der **erste Fakt in dieser Kette,
+der nicht aus unserer Kursreihe stammt**, sie ist korrekt nach R-T1/T2/T3/T5
+formuliert, kausal abgeschnitten und deckt 89 % der Krypto-Symbole ab. Sie
+rettet den Timing-Ansatz nicht — aber sie ist der erste Schritt auf dem einzigen
+Weg, der nach 7.25 noch offen ist: **Information, die nicht im Kurs steht.**
+
+Ein einzelner solcher Fakt reicht dafür nicht. Das war die Lehre dieses Laufs.
