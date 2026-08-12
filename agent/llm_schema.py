@@ -195,11 +195,95 @@ def baue_richtung_schema(gegenpruefung_modul) -> dict:
     }
 
 
+def _nullbar(teilschema: dict) -> dict:
+    """Macht ein Teilschema null-faehig, ohne es sonst zu veraendern.
+
+    Bei einem `enum` muss `null` MIT in die Liste - sonst waere der Typ zwar
+    nullbar, der Wert aber nicht erlaubt, und das Modell haette keine gueltige
+    Wahl mehr."""
+    t = teilschema.get("type")
+    if t is None:
+        return teilschema
+    typen = list(t) if isinstance(t, list) else [t]
+    if "null" in typen:
+        return teilschema
+    neu = dict(teilschema)
+    neu["type"] = typen + ["null"]
+    if "enum" in neu and None not in neu["enum"]:
+        neu["enum"] = list(neu["enum"]) + [None]
+    return neu
+
+
+def erzwinge_strikt_vertrag(schema: dict) -> dict:
+    """Bringt ein Schema in die Form, die `strict: true` verlangt.
+
+    DER VERTRAG, extern belegt (OpenAI Structured Outputs, von Groq und
+    OpenRouter uebernommen): *jedes* Objekt braucht `additionalProperties:
+    false`, und **alle** Eigenschaften muessen in `required` stehen. Optionale
+    Felder werden NICHT durch Weglassen aus `required` abgebildet, sondern
+    durch einen null-faehigen Typ - das Modell liefert dann ausdruecklich
+    `null` statt das Feld auszulassen.
+
+    WARUM DAS HIER STEHT UND NICHT IN NEUN BAUERN. Es ist eine Eigenschaft des
+    TRANSPORTS, nicht der einzelnen Ausgabeform - genau wie `strict: True`
+    selbst, das zwei Zeilen tiefer gesetzt wird. Neunmal ausgeschrieben waeren
+    es neun Gelegenheiten auseinanderzulaufen.
+
+    DER ANLASS (12.08.2026, Gegenpruefung zu Paket 1). Gemessen ueber alle
+    Ausgabeformen:
+
+        Lagebild        0 Verstoesse
+        Trader          4
+        Krypto-Spot    31 in 11 Objekten
+        Hebel          28 in 10
+        Aktien         31 in 11
+        Hedge          31 in 11
+
+    Betroffen waren vor allem die Kurs-Spannen (`entry`, `stop_loss`,
+    `take_profit` mit je vier Feldern und gar keinem `required`), die
+    Positionsgroesse und die Tranchen. Ein Anbieter hinter OpenRouter, der den
+    Vertrag durchsetzt, weist so ein Schema zurueck - und OpenRouter ist genau
+    der Pfad, der produktiv noch nicht sauber gelaufen ist (Nutzerhinweis
+    12.08.). Der Fehler war also nicht sichtbar, weil der Weg kaum begangen
+    wurde.
+
+    SEMANTISCH AENDERT SICH NICHTS: was vorher weggelassen werden durfte, darf
+    jetzt `null` sein. Die Validatoren pruefen ohnehin auf `None` und leere
+    Werte, nicht auf Abwesenheit des Schluessels."""
+    if not isinstance(schema, dict):
+        return schema
+    aus = dict(schema)
+
+    items = aus.get("items")
+    if isinstance(items, dict):
+        aus["items"] = erzwinge_strikt_vertrag(items)
+
+    props = aus.get("properties")
+    if isinstance(props, dict):
+        pflicht = set(aus.get("required") or [])
+        neu_props = {}
+        for feld, teil in props.items():
+            teil = erzwinge_strikt_vertrag(teil)
+            # Nur was vorher OPTIONAL war, wird null-faehig gemacht. Ein echtes
+            # Pflichtfeld bleibt unberuehrt - sonst duerfte das Modell es
+            # plotzlich weglassen, und der Zwang waere weg.
+            neu_props[feld] = teil if feld in pflicht else _nullbar(teil)
+        aus["properties"] = neu_props
+        aus["required"] = list(props)
+        aus["additionalProperties"] = False
+    return aus
+
+
 def als_response_format(schema: dict, name: str) -> dict:
     """Verpackt ein Schema so, wie die OpenAI-kompatiblen Endpunkte es
-    erwarten. Alle fuenf Clients reichen `response_format` unveraendert durch."""
+    erwarten. Alle fuenf Clients reichen `response_format` unveraendert durch.
+
+    Der Strikt-Vertrag wird HIER erzwungen (12.08.2026) - siehe
+    `erzwinge_strikt_vertrag()`. Damit kann kein Bauer ihn versehentlich
+    verletzen, auch keiner, den es noch nicht gibt."""
     return {"type": "json_schema",
-            "json_schema": {"name": name, "strict": True, "schema": schema}}
+            "json_schema": {"name": name, "strict": True,
+                            "schema": erzwinge_strikt_vertrag(schema)}}
 
 
 def baue_szenario_schema(analyst) -> dict:
@@ -455,10 +539,23 @@ def response_format_fuer(llm_client, analyst_modulname: str) -> dict:
         # Der Szenario-Schaetzer hat eine eigene Form - erkennbar an seiner
         # eigenen Pflichtfeld-Konstante, nicht am Modulnamen.
         # Rolle A und BC werden an EINDEUTIGEN Konstanten erkannt, nicht am
-        # Modulnamen - `TRAGFAEHIGKEIT` gibt es nur bei der Marktlage,
+        # Modulnamen - `lage` gibt es nur in den Pflichtfeldern der Marktlage,
         # `unabhaengige_faktoren` nur beim Trader. Der Szenario-Schaetzer fuehrt
         # ebenfalls ein `BELEG_RICHTUNGEN`, deshalb reicht das allein nicht.
-        if hasattr(analyst, "TRAGFAEHIGKEIT"):
+        #
+        # ERKENNUNGSMERKMAL GEWECHSELT (12.08.2026). Hier stand
+        # `hasattr(analyst, "TRAGFAEHIGKEIT")` - und genau diese Konstante wurde
+        # am selben Tag mit der Marktbreite entfernt (siehe rolle_analyst.py).
+        # Die Folge war kein sanfter Rueckfall, sondern ein AttributeError:
+        # Rolle A fiel durch alle Zweige bis zu `baue_signal_schema()`, das
+        # `REQUIRED_TOP_LEVEL_FIELDS` verlangt. JEDER strikte Aufruf der
+        # Marktlage waere abgestuerzt.
+        #
+        # `REQUIRED_FELDER` ist das haltbarere Merkmal: es ist die Konstante,
+        # aus der das Schema ohnehin gebaut wird. Verschwindet sie, gibt es
+        # nichts mehr zu bauen - Merkmal und Inhalt koennen nicht mehr
+        # auseinanderlaufen.
+        if "lage" in getattr(analyst, "REQUIRED_FELDER", ()):
             schema = baue_lage_schema(analyst)
         elif "unabhaengige_faktoren" in getattr(analyst, "REQUIRED_FELDER", ()):
             schema = baue_trader_schema(analyst)
@@ -472,5 +569,25 @@ def response_format_fuer(llm_client, analyst_modulname: str) -> dict:
         # Ein neues Pflichtfeld ohne hinterlegte Form. Lieber json_object als
         # ein Schema, das die Antwort auf ein unvollstaendiges Vokabular
         # zwingt - der Validator wuerde sie hinterher ablehnen.
+        return JSON_OBJECT
+    except AttributeError as e:
+        # DER DOCSTRING VERSPRACH DAS SCHON, DER CODE HIELT ES NICHT (Fund vom
+        # 12.08.): "Faellt irgendetwas aus - unbekannter Analyst, Schema-Luecke
+        # - wird json_object geliefert." Ein Analystenmodul, dessen Konstanten
+        # sich geaendert haben, faellt aber durch alle Zweige bis in
+        # `baue_signal_schema()` und stirbt dort an einem fehlenden Attribut.
+        #
+        # Genau das ist am 12.08. passiert und haette die Marktlage im strikten
+        # Modus komplett lahmgelegt. Das Erkennungsmerkmal ist repariert; DIESE
+        # Klammer ist das Netz darunter, damit derselbe Fehlertyp beim naechsten
+        # Umbau eine Verschlechterung ist und kein Ausfall.
+        #
+        # Bewusst mit Log: ein stiller Rueckfall auf json_object ist genau die
+        # Sorte fail-soft, die als fail-silent endet.
+        import logging
+        logging.getLogger(__name__).warning(
+            "Kein striktes Schema fuer %s (%s: %s) - json_object. Der Analyst "
+            "fuehrt nicht die Konstanten, die der Verteiler erwartet.",
+            analyst_modulname, type(e).__name__, e)
         return JSON_OBJECT
     return als_response_format(schema, analyst_modulname.rsplit(".", 1)[-1])
