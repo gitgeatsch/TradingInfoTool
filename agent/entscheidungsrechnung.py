@@ -154,6 +154,43 @@ def _stop_aus_atr(kurs: float, atr: float) -> tuple[float, str]:
     return ziel, f"{GRENZEN['stop_ziel_atr']:g} x ATR"
 
 
+def _ziel(kurs: float, abstand: float, atr: float,
+          widerstand: tuple[float, int] | None = None) -> tuple[float, float, str]:
+    """Der Zielkurs, die daraus folgende CRV und die Regel dahinter.
+
+    WARUM NICHT EINFACH 2 R. Ein mechanisches 2-R-Ziel weiss nichts davon, ob
+    auf dem Weg dorthin eine Marke liegt, an der schon dreimal verkauft wurde.
+    Der Praxisstandard setzt das Ziel KURZ UNTER den naechsten Widerstand -
+    dort stehen die Verkaufsauftraege, und wer die letzten Cent mitnehmen will,
+    bekommt gar nichts. `_niveaus()` liefert diese Marken samt Zahl der
+    Beruehrungen; ein dreimal bestaetigtes Niveau ist etwas anderes als ein
+    einmaliger Wendepunkt.
+
+    UND DANN KANN DAS GESCHAEFT DARAN SCHEITERN. Liegt der Widerstand so nah,
+    dass davor keine 2,0 mehr uebrig bleiben, ist der Aufbau nicht schlecht
+    beschrieben - er ist arithmetisch zu klein. Das wird AUSGEWIESEN, nicht
+    stillschweigend auf 2,0 hochgerechnet: `crv` traegt dann den echten Wert
+    und `crv_erreicht` ist False. Ein Ziel, das hinter einer Mauer liegt, ist
+    kein Ziel.
+
+    Liegt der Widerstand jenseits des mechanischen Ziels, bleibt es beim
+    mechanischen - dann steht die Mauer nicht im Weg."""
+    ziel_mech = kurs + GRENZEN["crv"] * abstand
+    if not widerstand:
+        return ziel_mech, GRENZEN["crv"], "kein Widerstand in Reichweite"
+
+    preis, beruehrungen = float(widerstand[0]), int(widerstand[1])
+    if not (kurs < preis < ziel_mech):
+        return ziel_mech, GRENZEN["crv"], "naechster Widerstand liegt dahinter"
+
+    # Kurz DAVOR aussteigen, nicht daran. Ein Viertel Schwankungsbreite ist
+    # dieselbe Breite wie die Einstiegszone - keine neue Groesse.
+    ziel = preis - GRENZEN["zone_atr"] * atr
+    crv = (ziel - kurs) / abstand if abstand > 0 else 0.0
+    return ziel, crv, (f"vor dem Widerstand bei {_eur(preis)} EUR "
+                       f"({beruehrungen}-mal beruehrt)")
+
+
 def _haltedauer_tage(weg: float, atr: float) -> int:
     """Geschaetzte Handelstage bis zum Ziel.
 
@@ -176,7 +213,8 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
            instrument: str = "spot", betrag_wunsch_eur: float | None = None,
            topf_frei_eur: float | None = None,
            umgeworfen_preis_eur: float | None = None,
-           umgeworfen_tage: int | None = None) -> dict:
+           umgeworfen_tage: int | None = None,
+           widerstand: tuple[float, int] | None = None) -> dict:
     """Alle Zahlen eines Einstiegs aus drei Eingaben: Kurs, ATR, Risikobudget.
 
     `risiko_eur` ist der Betrag, den DIESER eine Handel im schlechtesten Fall
@@ -196,6 +234,7 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
     kurs, atr, risiko_eur = float(kurs), float(atr), float(risiko_eur)
     abstand, stop_regel = _stop_abstand(kurs, atr, umgeworfen_preis_eur)
     stop_rel = abstand / kurs
+    ziel, crv, ziel_regel = _ziel(kurs, abstand, atr, widerstand)
 
     e = {
         "einstieg_eur": round(kurs, 2),
@@ -204,15 +243,15 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
         "stop_eur": round(kurs - abstand, 2),
         "stop_relativ": round(stop_rel, 5),
         "stop_regel": stop_regel,
-        "ziel_eur": round(kurs + GRENZEN["crv"] * abstand, 2),
-        "ziel_von_eur": round(kurs + GRENZEN["crv"] * abstand
-                              - GRENZEN["zone_atr"] * atr, 2),
-        "ziel_bis_eur": round(kurs + GRENZEN["crv"] * abstand
-                              + GRENZEN["zone_atr"] * atr, 2),
-        "crv": GRENZEN["crv"],
+        "ziel_eur": round(ziel, 2),
+        "ziel_von_eur": round(ziel - GRENZEN["zone_atr"] * atr, 2),
+        "ziel_bis_eur": round(ziel + GRENZEN["zone_atr"] * atr, 2),
+        "crv": round(crv, 2),
+        "crv_erreicht": crv >= GRENZEN["crv"] - 1e-9,
+        "ziel_regel": ziel_regel,
         "haltedauer_tage": (min(int(umgeworfen_tage), GRENZEN["tage_max"])
                             if isinstance(umgeworfen_tage, int) and umgeworfen_tage > 0
-                            else _haltedauer_tage(GRENZEN["crv"] * abstand, atr)),
+                            else _haltedauer_tage(ziel - kurs, atr)),
         "haltedauer_quelle": ("Frist des Modells"
                               if isinstance(umgeworfen_tage, int) and umgeworfen_tage > 0
                               else "geschaetzt aus Weg und Schwankung"),
@@ -262,24 +301,33 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
     # Was der Handel WIRKLICH riskiert, nachdem die Deckel gegriffen haben -
     # nicht das Budget, das hineingegeben wurde.
     e["verlust_am_stop_eur"] = round(betrag * e["hebel"] * stop_rel, 2)
-    e["gewinn_am_ziel_eur"] = round(betrag * e["hebel"] * GRENZEN["crv"] * stop_rel, 2)
+    e["gewinn_am_ziel_eur"] = round(betrag * e["hebel"] * crv * stop_rel, 2)
     return e
+
+
+def _eur(wert: float, stellen: int = 0) -> str:
+    """Deutsche Schreibweise - siehe signal_mail.eur() fuer die Begruendung."""
+    return f"{wert:,.{stellen}f}".translate(str.maketrans(",.", ".,"))
 
 
 def saetze(e: dict) -> list[str]:
     """Die Rechnung in der Form, in der sie in die E-Mail gehoert."""
-    z = [f"Einstiegszone   {e['einstieg_von_eur']:,.0f} bis {e['einstieg_bis_eur']:,.0f} EUR",
-         f"Stop            {e['stop_eur']:,.0f} EUR  ({100 * e['stop_relativ']:.1f} % - {e['stop_regel']})",
-         f"Take-Profit     {e['ziel_von_eur']:,.0f} bis {e['ziel_bis_eur']:,.0f} EUR  "
-         f"(CRV {e['crv']:.1f})",
+    z = [f"Einstiegszone   {_eur(e['einstieg_von_eur'])} bis {_eur(e['einstieg_bis_eur'])} EUR",
+         f"Stop            {_eur(e['stop_eur'])} EUR  ({_eur(100 * e['stop_relativ'], 1)} % - {e['stop_regel']})",
+         f"Take-Profit     {_eur(e['ziel_von_eur'])} bis {_eur(e['ziel_bis_eur'])} EUR  "
+         f"(CRV {_eur(e['crv'], 1)} - {e['ziel_regel']})"]
+    if not e["crv_erreicht"]:
+        z.append(f"                !! Der Weg bis dorthin traegt nur CRV "
+                 f"{_eur(e['crv'], 1)}, verlangt sind {_eur(GRENZEN['crv'], 1)}")
+    z += [
          f"Haltedauer      etwa {e['haltedauer_tage']} Handelstage "
          f"({e.get('haltedauer_quelle', 'geschaetzt')})",
-         f"Betrag          {e['betrag_eur']:,.0f} EUR"
+         f"Betrag          {_eur(e['betrag_eur'])} EUR"
          + (f"  - begrenzt durch {e['betrag_gedeckelt_durch']}"
             if e.get("betrag_gedeckelt_durch") else "")]
     if e["hebel"] > 1:
-        z.append(f"Hebel           {e['hebel']:.1f}x  (Grenze: {e['hebel_grenze']}; "
-                 f"Liquidation etwa {e['liquidation_etwa_eur']:,.0f} EUR)")
-    z.append(f"Am Stop verlieren Sie {e['verlust_am_stop_eur']:,.0f} EUR, "
-             f"am Ziel gewinnen Sie {e['gewinn_am_ziel_eur']:,.0f} EUR.")
+        z.append(f"Hebel           {_eur(e['hebel'], 1)}x  (Grenze: {e['hebel_grenze']}; "
+                 f"Liquidation etwa {_eur(e['liquidation_etwa_eur'])} EUR)")
+    z.append(f"Am Stop verlieren Sie {_eur(e['verlust_am_stop_eur'])} EUR, "
+             f"am Ziel gewinnen Sie {_eur(e['gewinn_am_ziel_eur'])} EUR.")
     return z

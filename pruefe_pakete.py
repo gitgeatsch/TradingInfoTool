@@ -1002,10 +1002,86 @@ def paket_10() -> None:
            "'geschaetzt' waere hier falsch - die Zahl kam vom Modell")
 
 
+
+def paket_11() -> None:
+    """Take-Profit an der Struktur und die Mail an den Nutzer."""
+    P = "11"
+    from agent import entscheidungsrechnung as ER
+    from agent import signal_mail as SM
+    from agent import trefferbilanz as TB
+
+    weit = ER.rechne(kurs=55500, atr=1677, risiko_eur=75, instrument="hebel",
+                     betrag_wunsch_eur=500, topf_frei_eur=500,
+                     umgeworfen_preis_eur=51000, widerstand=(70000, 2))
+    nah = ER.rechne(kurs=55500, atr=1677, risiko_eur=75, instrument="hebel",
+                    betrag_wunsch_eur=500, topf_frei_eur=500,
+                    umgeworfen_preis_eur=51000, widerstand=(62000, 3))
+    pruefe(P, "ein Widerstand hinter dem Ziel aendert nichts",
+           weit["crv"] == ER.GRENZEN["crv"] and weit["crv_erreicht"])
+    pruefe(P, "ein Widerstand VOR dem Ziel zieht es davor",
+           nah["ziel_eur"] < 62000 and nah["crv"] < ER.GRENZEN["crv"],
+           "dort stehen die Verkaufsauftraege - wer die letzten Cent "
+           "mitnehmen will, bekommt gar nichts")
+    pruefe(P, "und die zu kleine CRV wird AUSGEWIESEN, nicht hochgerechnet",
+           not nah["crv_erreicht"]
+           and any("verlangt sind" in z for z in ER.saetze(nah)),
+           "ein Ziel hinter einer Mauer ist kein Ziel")
+    pruefe(P, "der Gewinn folgt der ECHTEN CRV, nicht der angestrebten",
+           nah["gewinn_am_ziel_eur"] < weit["gewinn_am_ziel_eur"])
+    pruefe(P, "die Haltedauer folgt dem ECHTEN Weg",
+           ER.rechne(kurs=55500, atr=1677, risiko_eur=75, instrument="spot",
+                     widerstand=(62000, 3))["haltedauer_tage"]
+           < ER.rechne(kurs=55500, atr=1677, risiko_eur=75,
+                       instrument="spot")["haltedauer_tage"])
+
+    # DIE ABSCHNITTE DUERFEN EINANDER NICHT WIDERSPRECHEN (R-T8 sinngemaess).
+    # Die erste Fassung der Mail wies in Abschnitt 2 "CRV 1,4" aus und verglich
+    # in Abschnitt 4 gegen die 34 % von CRV 2,0.
+    pruefe(P, "die Basisrate folgt der Geometrie des Signals",
+           TB.basisrate_fuer(1.35) > TB.basisrate_fuer(2.0) > TB.basisrate_fuer(3.0),
+           "ein engeres Ziel wird HAEUFIGER erreicht - sonst widersprechen "
+           "sich Abschnitt 2 und Abschnitt 4")
+    b = TB.bewerte({}, TB.merkmale(), kosten_r=0.3, crv=1.35)
+    pruefe(P, "bewerte() rechnet Basisrate UND Breakeven mit derselben CRV",
+           abs(b["basisrate"] - TB.basisrate_fuer(1.35)) < 1e-9
+           and abs(b["breakeven"] - TB.breakeven(0.3, 1.35)) < 1e-9)
+
+    # DEUTSCHE ZAHLEN. "55,500.00 EUR" liest sich als fuenfundfuenfzigeinhalb.
+    pruefe(P, "Betraege stehen in deutscher Schreibweise",
+           SM.eur(55500.0, 2) == "55.500,00",
+           SM.eur(55500.0, 2))
+    txt = " ".join(ER.saetze(nah))
+    pruefe(P, "auch Prozente und Hebel tragen ein Komma",
+           "8,1 %" in txt and "1,9x" in txt, txt[:80])
+    pruefe(P, "die Zielregel wird nicht doppelt genannt",
+           " ".join(ER.saetze(weit)).count("CRV 2,0") == 1,
+           "'CRV 2.0 - CRV 2.0 - naechster Widerstand liegt dahinter'")
+
+    # DIE MAIL: vier Abschnitte, der Coin zuerst.
+    betreff, text = SM.baue_mail(
+        symbol="BTC", name="Bitcoin", kurs_eur=55500.0, instrument="hebel",
+        strategie="swing", rechnung=weit,
+        urteil={"aktion": "KAUFEN", "begruendung": "x", "was_dagegen": "y",
+                "umgeworfen_durch": "z", "unabhaengige_faktoren": 3,
+                "belege": [{"fakt": "a", "richtung": "dafuer", "gewicht": "hoch"}]},
+        coin_fakten=["Bitcoin notiert tiefer."], einordnung=["Einordnung."])
+    for nr, name in ((1, "DER COIN"), (2, "DIE RECHNUNG"),
+                     (3, "DAS URTEIL DES MODELLS"), (4, "EINORDNUNG")):
+        pruefe(P, f"Abschnitt {nr} heisst '{name}'", f"--- {nr}. {name} ---" in text)
+    pruefe(P, "der Coin steht VOR der Rechnung",
+           text.index("1. DER COIN") < text.index("2. DIE RECHNUNG"),
+           "Nutzer: 'Info Teil zum Coin und dann die wichtigen Abschnitte'")
+    pruefe(P, "keine Konfidenz in Prozent mehr",
+           "Konfidenz" not in text,
+           "im eigenen System 77,5 % vorhergesagt gegen 33,3 % tatsaechlich")
+    pruefe(P, "der Betreff nennt Symbol, Aktion und Instrument",
+           betreff == "TradingInfoTool: BTC - KAUFEN (Hebel)", betreff)
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10}
+          "10": paket_10, "11": paket_11}
 
 
 def main() -> int:

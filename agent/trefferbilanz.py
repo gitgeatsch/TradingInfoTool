@@ -90,24 +90,6 @@ AUFGELOEST = _RESOLVED_OUTCOMES
 # ueberhaupt steht.
 
 
-def breakeven(kosten_r: float = 0.0, crv: float = CRV) -> float:
-    """Welche Trefferquote traegt sich gerade noch?
-
-        EW = p * CRV - (1 - p) * 1 - Kosten = 0
-        =>  p = (1 + Kosten) / (1 + CRV)
-
-    Ohne Kosten und bei CRV 2,0 sind das 33,3 % - genau die Zahl, gegen die
-    dieses Projekt seit Wochen rechnet. MIT den gemessenen Krypto-Kosten von
-    0,230 R sind es 41,0 %, und die Basisrate liegt bei 34,0 %.
-
-    Diese Rechnung reproduziert also den bekannten Befund, statt ihn zu
-    behaupten: brutto knapp positiv, netto negativ - die Kosten kippen das
-    Vorzeichen."""
-    return (1.0 + max(0.0, float(kosten_r))) / (1.0 + float(crv))
-
-
-# Kosten je Seite, aus `backward_tracking._KOSTEN_*` uebernommen. Krypto ueber
-# Bitpanda ist prozentual und im Kurs enthalten.
 # NICHT ABSCHREIBEN - IMPORTIEREN. Diese Saetze standen hier zuerst als eigene
 # Zahlen, und eine davon war falsch: Spread 0,0015 statt 0,0025 in der Quelle.
 # Eine abgeschriebene Konstante ist eine Kopie, die stillschweigend veraltet -
@@ -115,13 +97,37 @@ def breakeven(kosten_r: float = 0.0, crv: float = CRV) -> float:
 # autoritativen Saetze stehen seit 07.08. in `backward_tracking.py`, dort werden
 # auch die Backtests damit gerechnet; jede Abweichung hier hiesse, dass Signal
 # und Nachmessung mit verschiedenen Gebuehren rechnen.
-from agent.krypto.backward_tracking import (
+from agent.krypto.backward_tracking import (          # noqa: E402
     _KOSTEN_KRYPTO_JE_SEITE, _KOSTEN_BOERSE_FIX_EUR,
     _KOSTEN_BOERSE_SPREAD_JE_SEITE)
 
 KOSTEN_JE_SEITE = {"krypto": _KOSTEN_KRYPTO_JE_SEITE,
                    "boerse_fix_eur": _KOSTEN_BOERSE_FIX_EUR,
                    "boerse_spread": _KOSTEN_BOERSE_SPREAD_JE_SEITE}
+
+
+def basisrate_fuer(crv: float = CRV, basisrate: float = BASISRATE) -> float:
+    """Die Grundwahrscheinlichkeit fuer EINE Geometrie - nicht fuer alle.
+
+    NOTWENDIG SEIT DEM STRUKTUR-ZIEL (12.08.). Solange das Ziel mechanisch bei
+    CRV 2,0 lag, war die Basisrate eine Konstante. Haengt das Ziel am naechsten
+    Widerstand, ist sie es nicht mehr - und ein Text, der in Abschnitt 2
+    "CRV 1,4" ausweist und in Abschnitt 4 gegen die 34 % von CRV 2,0 vergleicht,
+    widerspricht sich selbst. Genau daran ist die erste Fassung der Mail
+    aufgefallen.
+
+    Theoretisch gilt 1/(1+CRV). Gemessen sind es 34,0 % statt der theoretischen
+    33,3 % - ein Faktor von 1,02 ueber 19.891 Anker. Dieser Faktor wird auf
+    andere Geometrien uebertragen; das ist eine Annahme, aber eine kleine und
+    eine sichtbare. Die Alternative waere, fuer jede CRV neu zu messen."""
+    theorie_hier = 1.0 / (1.0 + max(0.0, float(crv)))
+    theorie_gemessen = 1.0 / (1.0 + CRV)
+    return theorie_hier * (basisrate / theorie_gemessen)
+
+
+def breakeven(kosten_r: float = 0.0, crv: float = CRV) -> float:
+    """Der Trefferanteil, ab dem sich der Handel nach Gebuehren traegt."""
+    return (1.0 + max(0.0, kosten_r)) / (1.0 + max(0.0, float(crv)))
 
 
 def kosten_r_aus_stop(einstieg: float, stop: float, klasse: str = "krypto",
@@ -245,13 +251,19 @@ def zaehle(conn: sqlite3.Connection, quelle_kette: str | None = "rollen") -> dic
     return aus
 
 
-def bewerte(bilanz: dict, schluessel: tuple, kosten_r: float = 0.0) -> dict:
-    """Die Zahlen fuer EINEN Fall - und der Satz, der daraus wird."""
+def bewerte(bilanz: dict, schluessel: tuple, kosten_r: float = 0.0,
+            crv: float = CRV) -> dict:
+    """Die Zahlen fuer EINEN Fall - und der Satz, der daraus wird.
+
+    `crv` (12.08.): seit das Ziel am naechsten Widerstand haengt, ist die
+    Geometrie nicht mehr fuer jedes Signal dieselbe. Basisrate UND Breakeven
+    muessen derselben folgen, sonst widersprechen sich die Abschnitte."""
     e = bilanz.get(schluessel) or {"treffer": 0, "faelle": 0, "abgelaufen": 0}
-    p = geschrumpft(e["treffer"], e["faelle"])
-    schwelle = breakeven(kosten_r)
+    basis = basisrate_fuer(crv)
+    p = geschrumpft(e["treffer"], e["faelle"], basisrate=basis)
+    schwelle = breakeven(kosten_r, crv)
     gesamt = e["faelle"] + e.get("abgelaufen", 0)
-    return {"basisrate": BASISRATE, "faelle": e["faelle"],
+    return {"basisrate": basis, "crv": crv, "faelle": e["faelle"],
             "treffer": e["treffer"], "wahrscheinlichkeit": p,
             "breakeven": schwelle, "traegt": p > schwelle,
             "belastbar": e["faelle"] >= GEWICHT_MITTELWERT,
@@ -260,6 +272,11 @@ def bewerte(bilanz: dict, schluessel: tuple, kosten_r: float = 0.0) -> dict:
             # Anteil abgelaufener Faelle heisst, dass die Quote nur ein
             # Bruchstueck beschreibt (Arbeitsstand 7.23: 15-21 %).
             "anteil_entschieden": (e["faelle"] / gesamt) if gesamt else None}
+
+
+def _de(wert: float, stellen: int = 1) -> str:
+    """Komma statt Punkt - siehe signal_mail.eur()."""
+    return f"{wert:,.{stellen}f}".translate(str.maketrans(",.", ".,"))
 
 
 def satz(bewertung: dict, einstieg=None, stop=None,
@@ -291,16 +308,16 @@ def satz(bewertung: dict, einstieg=None, stop=None,
                        else 100.0 * (2 * KOSTEN_JE_SEITE["boerse_fix_eur"]
                                      / float(einsatz_eur or 500.0)
                                      + 2 * KOSTEN_JE_SEITE["boerse_spread"]))
-        zeilen.append(f"Ihr Stop liegt {stop_pct:.1f} % unter dem Einstieg - "
+        zeilen.append(f"Ihr Stop liegt {_de(stop_pct)} % unter dem Einstieg - "
                       f"so viel riskieren Sie.")
-        zeilen.append(f"Kauf und Verkauf zusammen kosten {gebuehr_pct:.1f} % "
+        zeilen.append(f"Kauf und Verkauf zusammen kosten {_de(gebuehr_pct)} % "
                       f"des Einsatzes"
                       + (f", bei {einsatz_eur:.0f} EUR also rund "
                          f"{gebuehr_pct / 100 * float(einsatz_eur):.0f} EUR."
                          if einsatz_eur else "."))
         verhaeltnis = gebuehr_pct / stop_pct
         zeilen.append(
-            f"Die Gebuehren sind damit {verhaeltnis:.1f}-mal so gross wie Ihr "
+            f"Die Gebuehren sind damit {_de(verhaeltnis)}-mal so gross wie Ihr "
             f"Risiko." if verhaeltnis >= 1 else
             f"Die Gebuehren fressen {100 * verhaeltnis:.0f} % Ihres Risikos auf.")
         zeilen.append("")
