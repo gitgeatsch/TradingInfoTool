@@ -44,11 +44,22 @@ DIE FUENF ECKPUNKTE, alle an der Quelle gemessen:
    schreiben, ohne dass etwas bricht. Dass die E-Mail "Konfidenz X %" in eine
    Ueberschrift schreibt, ist ein Anzeigeproblem und gehoert zu Paket 12.
 
-4  `facts_json` WAR BEI 78 VON 118 SIGNALEN LEER. Die Fakten, auf denen die
-   Empfehlung steht, fehlten bei zwei Dritteln. Fuer die neue Kette ist das
-   Pflicht: der Faktensatz, den das Modell gesehen hat, wird MITGESCHRIEBEN.
-   Ohne ihn ist eine Empfehlung im Nachhinein nicht mehr pruefbar - und der
-   Nutzer hat mehrfach verlangt, die Grundlage zu sehen.
+4  `facts_json` IST BEI 78 VON 118 SIGNALEN LEER - UND DAS IST KORREKT.
+   KORREKTUR 12.08. abends: hier stand, die Fakten "fehlten bei zwei
+   Dritteln". Das war falsch gelesen. Nachgezaehlt nach Gate-Zustand:
+
+       HALTEN, gate=0, "Preis veraltet"     72 von 72 leer
+       HALTEN, gate=0, Stablecoin/Historie   6 von  6 leer
+       HALTEN, gate=1                        0 von 37 leer
+       KAUFEN/NACHKAUFEN/TAUSCHEN, gate=1    0 von  3 leer
+
+   JEDES Signal, das das Gate passiert hat, traegt seine Fakten - ausnahmslos.
+   Die leeren sind Abweisungen VOR der Analyse; dort gab es nie Fakten, weil
+   die Pipeline vorher anhaelt (`_fixed_signal(facts=None)`). Eine Zahl ohne
+   ihre Schichtung ist keine Diagnose.
+
+   Fuer die neue Kette bleibt es trotzdem Pflicht, den Faktensatz
+   mitzuschreiben - ohne ihn ist eine Empfehlung im Nachhinein nicht pruefbar.
 
 5  ROLLE 1 IST EINE ZEILE JE DURCHGANG, NICHT JE SIGNAL. Das Lagebild in 44
    Signalzeilen zu kopieren waere 44-fache Redundanz, und bei einer spaeteren

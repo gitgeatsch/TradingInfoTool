@@ -396,7 +396,7 @@ python pruefe_pakete.py            # alle Pakete
 python pruefe_pakete.py --paket 1  # nur eines
 ```
 
-Stand: **189 Prüfungen** über Paket 0–12, alle bestanden.
+Stand: **197 Prüfungen** über Paket 0–12, alle bestanden.
 
 **Nummern-Korrektur 12.08. abends:** die Diskussion hat die Reihenfolge verschoben. Die Prüfpakete 10–12 tragen jetzt den Inhalt, der wirklich gebaut wurde; „Gate" und „Z1 + Z.ai" stehen als **12c/12d** weiter offen und sind **übersprungen, nicht erledigt**. Kein LLM-Aufruf, kein
 Netzwerk, keine Schreibzugriffe — sie darf jederzeit laufen.
@@ -895,3 +895,93 @@ Kategorien bestehen den Maßstab:
 | `liquiditaetszonen` | Stufe 2 wurde bereits verworfen; die Zonen-Grafik zeigt nicht Einstieg/Stop/Ziel (12.6) |
 | `trigger`, `systemguete` | interne Zustände. `systemguete` gehört inhaltlich in Abschnitt 4 (Einordnung), nicht in den Faktenblock |
 | `disclaimers` | Rechtstext, kein Fakt |
+
+---
+
+# 13. Der „leere Fakten"-Befund — untersucht, und er war keiner (12.08.2026)
+
+## 13.1 Was ich gemeldet hatte, und warum es falsch war
+
+Beim Anschluss der Zusatzinfo fiel auf: **78 von 118 gespeicherten Spot-Signalen
+tragen `facts_json = {}`.** Ich habe das als Defekt gemeldet — *„die Fakten, auf
+denen die Empfehlung steht, fehlten bei zwei Dritteln"* — und dieselbe Aussage
+stand seit dem Vormittag auch in `agent/signal_abbildung.py`, Punkt 4.
+
+**Beides war falsch.** Nachgezählt nach Gate-Zustand:
+
+| Aktion | Gate | Grund | leer |
+|---|---|---|---|
+| HALTEN | 0 | Preis veraltet oder nicht vorhanden | **72 / 72** |
+| HALTEN | 0 | Stablecoin, keine Historie | 6 / 6 |
+| HALTEN | **1** | — | **0 / 37** |
+| KAUFEN, NACHKAUFEN, TAUSCHEN | 1 | — | **0 / 3** |
+
+**Jedes Signal, das das Gate passiert hat, trägt seine Fakten — ausnahmslos.**
+Die leeren sind Abweisungen *vor* der Analyse: dort gab es nie Fakten, weil die
+Pipeline vorher anhält. `_fixed_signal(facts=None)` ist genau dafür gebaut.
+
+**Die Lehre ist eine Zahl ohne ihre Schichtung.** „78 von 118" klingt nach
+Befund und war eine Verwechslung von zwei Grundgesamtheiten. Der Fehler ist
+derselbe wie beim CRV-Gate am 02.08. (Survivorship) — nur diesmal von mir und
+nicht in einer Messung, sondern in einem Nebensatz. Als Prüfung gesichert:
+`gate_passed=1` ⟹ `facts_json` nicht leer.
+
+## 13.2 Was die Zahl WIRKLICH zeigt
+
+72 Abweisungen wegen „Preis veraltet" verteilen sich auf **43 Symbole, darunter
+BTC dreizehnmal**. Das trifft nicht Exoten, sondern alles. Der Grund ist eine
+zeitliche Lücke, nicht ein Datenproblem einzelner Werte:
+
+| | |
+|---|---|
+| Schwelle `PRICE_STALE_THRESHOLD_MINUTES` | **30 Minuten** (zwei Scheduler-Takte) |
+| Letzter Preis im Cache | **2026-07-19 12:50** |
+| Letzte „Preis veraltet"-Abweisung | **2026-07-21 16:04** |
+
+Signale je Tag, nach Gate:
+
+| Tag | durch | abgewiesen |
+|---|---|---|
+| 07.–15.07. | 40 | 36 |
+| **21.07.** | **0** | **42** |
+
+**Am 21.07. wurde jedes einzelne Asset abgewiesen**, weil der Preis-Cache seit
+zwei Tagen nicht mehr geschrieben wurde. Das Gate hat dabei exakt richtig
+gehandelt: es hat sich geweigert, auf veralteten Preisen zu analysieren, statt
+ein Ergebnis zu liefern, das gut aussieht. Das ist *fail-loud* und der
+erwünschte Zustand.
+
+## 13.3 Die echte Lücke — und sie ist ein alter Bekannter
+
+**Der Staleness-Watchdog deckt den Preis-Cache nicht ab.**
+`scheduler/background.py` prüft im laufenden Betrieb zwei Dinge und stößt bei
+beiden einen Nachhol-Lauf an:
+
+| geprüft | Nachhol-Lauf | Meldung an den Nutzer |
+|---|---|---|
+| Kurs-**Historie** | ja, `refresh_history` | nein, nur `logger.info` |
+| Kraken-**OHLC** | ja, `refresh_ohlc` | nein, nur `logger.info` |
+| **Preis-Cache** | **nein** | **nein** |
+
+Ausgefallen ist genau das, was nicht überwacht wird. Und weil ein Lauf ohne
+Signale von einem Lauf ohne Gelegenheiten nicht zu unterscheiden ist, war der
+21.07. für den Nutzer **unsichtbar**: keine Mail, kein Hinweis, nur Stille.
+
+Das ist wörtlich das Muster aus `feedback_fail_soft_ist_fail_silent` — nur
+eine Ebene höher: nicht ein Wert fällt still aus, sondern der ganze Lauf.
+
+## 13.4 Vorschlag, nicht umgesetzt
+
+Drei Punkte, in dieser Reihenfolge — **bewusst nicht mitgebaut**, weil sie das
+Betriebsverhalten ändern und die Produktion für den Umbau steht:
+
+1. **Preis-Cache in den Watchdog.** Dieselbe Mechanik wie für Historie und
+   OHLC, dieselbe Schwelle. Der billigste der drei Punkte.
+2. **Ein Lauf, der ALLES abweist, ist eine Meldung wert.** Nicht je Asset —
+   einmal je Lauf, mit dem häufigsten Grund. Ein Signal-loser Lauf und ein
+   ausgefallener Lauf sehen heute gleich aus.
+3. **Abweisungen gehören nicht in die Signaltabelle.** 72 von 118 Zeilen sind
+   keine Empfehlungen, sondern Datenausfälle. Solange sie dort stehen, ist
+   jede Auszählung über `signals` erklärungsbedürftig — und genau daran bin
+   ich heute selbst hängengeblieben. Der teuerste der drei Punkte, weil er
+   Schema und Auswertungen berührt; deshalb zuletzt.

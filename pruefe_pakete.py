@@ -1309,6 +1309,24 @@ def paket_12() -> None:
            "kgv" in FQ.abbilden({"fundamentaldaten": {"kurs_gewinn": 12}},
                                 bereich="aktien")[1])
 
+    # ---- DIE INVARIANTE, die aus der Untersuchung des "leeren Fakten"-Befunds
+    # folgt: wer das Gate passiert, traegt seine Fakten. Ausnahmslos.
+    con3 = sqlite3.connect("data/tradinginfotool.db")
+    verletzt = con3.execute(
+        "SELECT COUNT(*) FROM signals WHERE gate_passed=1 AND LENGTH(facts_json)<=2"
+    ).fetchone()[0]
+    leer_ohne_gate = con3.execute(
+        "SELECT COUNT(*) FROM signals WHERE gate_passed=0 AND LENGTH(facts_json)<=2"
+    ).fetchone()[0]
+    con3.close()
+    pruefe(P, "jedes Signal MIT Gate traegt seine Fakten",
+           verletzt == 0,
+           "die 78 leeren sind Abweisungen VOR der Analyse - dort gab es nie "
+           "Fakten. Meine erste Meldung ('Defekt') war eine Zahl ohne ihre "
+           "Schichtung")
+    pruefe(P, "und die leeren sind alle Abweisungen",
+           leer_ohne_gate == 78, f"{leer_ohne_gate} statt 78")
+
     # ---- DER CHART ----
     from ui.signal_chart import render_signal_chart
     plan = dict(einstieg_von=64363.0, einstieg_bis=65230.0, stop=60462.0,
