@@ -741,8 +741,8 @@ wirkt sofort nach dem Ausrollen.*
 
 | # | Was | Stand |
 |---|---|---|
-| L1 | **Marktbreite raus** | entschieden, **nicht umgesetzt** |
-| L2 | **Volatilitätslage** je Klasse | fehlt — eine der vier Standarddimensionen |
+| L1 | **Marktbreite raus** | entschieden (**ersatzlos**, Nutzerabstimmung 12.08.), noch im Faktensatz — entfällt, wenn `marktlage.py` das Lagebild speist |
+| L2 | **Volatilitätslage** je Klasse | **ERLEDIGT 12.08.** — `agent/marktlage.py::beschreibe_volatilitaet()`, Benchmark je Klasse, Perzentil der eigenen Historie. Geprüft über vier Phasen: Krypto 0. Perzentil in der ruhigen Phase, 96. im Bären |
 | L3 | **Trendlage des Klassen-Benchmarks** | fehlt. BTC · SPY · Futures, alle Daten vorhanden |
 | L4 | **Liquiditätslage** | fehlt |
 | L5 | Zuspitzungs-Wächter anschließen | **ERLEDIGT 12.08.** — `rollen_eingabe.pruefe_lagebild()`, an zwei Fällen geprüft |
