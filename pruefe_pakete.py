@@ -927,9 +927,85 @@ def paket_9() -> None:
            "damit konkurrieren keine zwei Zahlen mehr um dieselbe Deutung")
 
 
+
+def paket_10() -> None:
+    """Die Berechnung der Entscheidung - kann der alte Fehler noch entstehen?
+
+    Nutzer 12.08.: *"sonst gibt es wieder Empfehlungen mit 1500 Euro und 1,5
+    Prozent Stop loss."* Genau diese beiden Zahlen sind hier die Pruefung."""
+    P = "10"
+    from agent import entscheidungsrechnung as ER
+
+    # DIE BEIDEN ZAHLEN AUS DEM AUFTRAG, jede an ihrer eigenen Grenze.
+    e = ER.rechne(kurs=55500, atr=1677, risiko_eur=75, instrument="hebel",
+                  betrag_wunsch_eur=1500, topf_frei_eur=500)
+    pruefe(P, "1.500 EUR Wunsch kommen nicht durch",
+           e["betrag_eur"] <= 500 and e["betrag_gedeckelt_durch"] == "Topf",
+           "der Topf ist ein Deckel, kein Richtwert")
+    a, regel = ER._stop_abstand(55500, 1677, 54800)
+    pruefe(P, "ein 1,26-%-Stop kommt nicht durch",
+           a / 55500 >= ER.GRENZEN["stop_min_relativ"] and "Rauschen" in regel,
+           "gemessen 0,0 % Trefferquote ueber 9 Trades unter 2 %")
+
+    # OBERGRENZE - die gab es vorher NICHT. Ein zu weiter Stop faellt durch
+    # jede Untergrenze und ruiniert die Rechnung trotzdem.
+    a2, regel2 = ER._stop_abstand(55500, 1677, 38000)
+    pruefe(P, "ein 31-%-Stop kommt ebenfalls nicht durch",
+           a2 / 55500 <= ER.GRENZEN["stop_max_relativ"] + 1e-9,
+           "eine Untergrenze allein reicht nicht - 'vorsichtig' faellt niemandem auf")
+
+    # DIE FRAGE ENTSCHEIDET, NICHT DIE ZAHL: das Modell darf den Stop setzen,
+    # wenn es ihn als Widerlegung seiner These nennt - innerhalb der Klemme.
+    a3, regel3 = ER._stop_abstand(55500, 1677, 51000)
+    pruefe(P, "ein plausibler Widerlegungspreis wird uebernommen",
+           abs(a3 - 4500) < 1e-6 and "Widerlegungspreis" in regel3,
+           "auf 'was widerlegt dich?' antwortet das Modell mit einem Urteil, "
+           "nicht mit einem geschaetzten Risikoparameter")
+
+    # KEIN STILLES DURCHRUTSCHEN.
+    for fehlt, kwargs in (("ATR", dict(kurs=100, atr=None, risiko_eur=50)),
+                          ("Kurs", dict(kurs=None, atr=3.0, risiko_eur=50)),
+                          ("Budget", dict(kurs=100, atr=3.0, risiko_eur=None))):
+        try:
+            ER.rechne(instrument="spot", **kwargs)
+            ok = False
+        except ER.RechnungBlockiert:
+            ok = True
+        pruefe(P, f"ohne {fehlt} gibt es KEINE Empfehlung", ok,
+               "eine Rechnung, die bei fehlender Eingabe 'irgendwas' liefert, "
+               "ist gefaehrlicher als gar keine")
+
+    # REIHENFOLGE: erst Deckel, dann Hebel. Vorher blieb das halbe Budget liegen.
+    pruefe(P, "nach dem Deckel wird das Risikobudget genutzt",
+           abs(e["verlust_am_stop_eur"] - 75) <= 5,
+           "erst falsch herum gebaut: der Hebel stand auf dem WUNSCHbetrag, "
+           "nach dem Topf-Deckel lagen 38 statt 75 EUR im Risiko")
+
+    # RM-11 bleibt wirksam, auch wenn das Risikobudget mehr erlauben wuerde.
+    eng = ER.rechne(kurs=100, atr=1.0, risiko_eur=400, instrument="hebel",
+                    betrag_wunsch_eur=500, topf_frei_eur=500)
+    pruefe(P, "der Liquidationsabstand deckelt den Hebel",
+           eng["hebel"] <= ER.max_safe_hebel(100 * eng["stop_relativ"], 0.09) + 1e-9,
+           "sonst greift Bitpandas Zwangsliquidation VOR dem eigenen Stop")
+
+    # KEIN WIDERSPRUCH ZWISCHEN KOPF UND CODE (R-T8 sinngemaess).
+    kopfzeile = ER.__doc__ or ""
+    pruefe(P, "der Modulkopf behauptet nicht mehr 'das Modell traegt nichts bei'",
+           "ES TRAEGT TROTZDEM ZWEI ZAHLEN BEI" in kopfzeile,
+           "der Satz stand noch da, nachdem der Widerlegungspreis verdrahtet war")
+
+    # DER TEXT SAGT, WOHER DIE HALTEDAUER KOMMT.
+    mit_frist = ER.rechne(kurs=55500, atr=1677, risiko_eur=75, instrument="spot",
+                          umgeworfen_tage=14)
+    pruefe(P, "die Haltedauer nennt ihre Quelle",
+           "Frist des Modells" in " ".join(ER.saetze(mit_frist)),
+           "'geschaetzt' waere hier falsch - die Zahl kam vom Modell")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
-          "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9}
+          "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
+          "10": paket_10}
 
 
 def main() -> int:
