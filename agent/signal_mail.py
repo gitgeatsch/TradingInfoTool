@@ -34,6 +34,10 @@ from agent import entscheidungsrechnung as ER
 
 TRENNER = "-" * 68
 
+# Nur bei diesen Aktionen wird ueberhaupt eine Position eroeffnet oder
+# vergroessert - nur dort ergibt eine Einstiegsrechnung Sinn.
+AKTIONEN_MIT_EINSTIEG = ("KAUFEN", "NACHKAUFEN")
+
 
 def eur(wert: float, stellen: int = 0) -> str:
     """Deutsche Schreibweise: Punkt als Tausender, Komma als Dezimaltrenner.
@@ -54,6 +58,8 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
               instrument: str, strategie: str,
               rechnung: dict, urteil: dict,
               coin_fakten: list[str] | None = None,
+              faktenblock: list[str] | None = None,
+              marken: list[str] | None = None,
               lage_fakten: list[str] | None = None,
               bestand: str | None = None,
               einordnung: list[str] | None = None,
@@ -78,14 +84,34 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
             ""]
 
     # 1. DER COIN. Was der Wert gerade tut - ohne Empfehlung, ohne Wertung.
-    eins = list(coin_fakten or [])
+    #
+    # REIHENFOLGE NACH NUTZERVORGABE (12.08.): *"Das fuer mich wichtige zuerst,
+    # also Widerstand 62K Euro und danach die 3,9 Schwankung."* Erst der
+    # Bestand (habe ich das ueberhaupt?), dann die Marken in Euro, dann der
+    # gemessene Faktenblock, zuletzt das Umfeld. Absolute Zahlen vor
+    # relativen - das ist die Regel der NUTZER-Schiene, nicht die des Modells.
+    eins = []
     if bestand:
         eins.append(bestand)
+    if marken:
+        eins += marken
+    if faktenblock:
+        eins += ([""] if eins else []) + faktenblock
+    eins += list(coin_fakten or [])
     if lage_fakten:
         eins += ["", "Umfeld:"] + [f"  {z}" for z in lage_fakten]
 
     # 2. DIE RECHNUNG. Alle Zahlen, jede mit ihrer Regel dahinter.
-    zwei = ER.saetze(rechnung)
+    #
+    # ABER NUR, WENN GEHANDELT WIRD. Die erste Fassung zeigte bei NICHTS_TUN
+    # eine vollstaendige Einstiegsplanung - Zone, Stop, Ziel, Betrag, Hebel -
+    # unter einer Ueberschrift, die "tu nichts" sagt. Das ist derselbe
+    # Widerspruch zwischen zwei Bloecken, den R-T8 fuer die Fakten verbietet,
+    # und er wiegt hier schwerer: eine ausgerechnete Zone liest sich wie eine
+    # Empfehlung, egal was darueber steht.
+    zwei = ER.saetze(rechnung) if aktion in AKTIONEN_MIT_EINSTIEG else [
+        f"Kein Einstieg geplant - die Empfehlung lautet {aktion}.",
+        "Zone, Stop und Ziel werden erst gerechnet, wenn gehandelt wird."]
 
     # 3. DAS URTEIL. Der Text des Modells, unveraendert. Die Belege zuletzt -
     # sie sind Beleg, nicht Aussage.

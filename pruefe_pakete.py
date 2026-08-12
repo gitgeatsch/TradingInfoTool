@@ -1184,6 +1184,98 @@ def paket_12() -> None:
            "die erste Fassung las sich, als sei die Quote die Aussicht DIESES "
            "Signals - sie ist die Verteilung, in die es faellt")
 
+    # ---- ANSCHLUSS AN DIE MAIL, mit echten Werten ----
+    import sqlite3
+    from agent import entscheidungsrechnung as ER
+    from agent import signal_mail as SM
+    con = sqlite3.connect("data/tradinginfotool.db")
+    reihe = con.execute("SELECT high,low,close,volume FROM price_history_ohlc "
+                        "WHERE symbol='BTC' AND currency='USD' ORDER BY date").fetchall()
+    con.close()
+    hh = [r[0] for r in reihe]; ll = [r[1] for r in reihe]
+    cc = [r[2] for r in reihe]; vv = [r[3] or 0 for r in reihe]
+    echt = FB.werte_aus_reihe(hh, ll, cc, vv, i=len(cc) - 2)
+
+    pruefe(P, "die Kernwerte lassen sich aus echten Kursen rechnen",
+           echt and all(echt.get(k) is not None for k in
+                        ("atr_relativ", "schwankung_perzentil", "rueckgang_60t",
+                         "momentum_perzentil", "volumen_relativ")),
+           str(sorted(echt)) if echt else "leer")
+
+    # DIE KOPIE WIRD GEGEN DIE MESSUNG GEPRUEFT, nicht behauptet. Die
+    # Definitionen stehen zweimal (Modul + Messskript); ohne diese Pruefung
+    # waere das genau die Kopie, die still veraltet - wie die Kostensaetze.
+    import numpy as np
+    from messe_top_fakten import merkmale as _mess_merkmale
+    _m, _a = _mess_merkmale(np.array(hh), np.array(ll), np.array(cc), np.array(vv))
+    j = len(cc) - 2
+    pruefe(P, "Modul und Messskript rechnen dieselben Werte",
+           abs(echt["atr_relativ"] - _a[j] / cc[j]) < 1e-9
+           and abs(echt["rueckgang_60t"] - _m["Rueckgang seit 60-Tage-Hoch"][j]) < 1e-9
+           and abs(echt["schwankung_perzentil"]
+                   - _m["Schwankungsbreite (Perzentil)"][j]) < 1e-9,
+           "sonst misst die Mail etwas anderes als die Messung, auf die sie "
+           "sich beruft")
+
+    # DER LAUFENDE TAG HAT WENIGER UMSATZ - ohne Schalter haette JEDE Live-Mail
+    # "Volumen UNGUENSTIG" gemeldet. An echten BTC-Daten: 0,2-faches Mittel.
+    offen = FB.werte_aus_reihe(hh, ll, cc, vv, tag_vollstaendig=False)
+    pruefe(P, "am laufenden Tag entfaellt das Volumen",
+           offen.get("volumen_relativ") is None
+           and "Volumen" in " ".join(FB.baue("krypto_spot", kern_werte=offen)),
+           "der letzte Tag stand beim 0,2-fachen des Mittels - ein "
+           "systematischer Fehler in jeder einzelnen Nachricht")
+
+    pruefe(P, "ein Wert gegen sich selbst wird weggelassen",
+           FB.zusatz("krypto_spot", {"btc_relativwert_pct": 0.0}, "BTC") == []
+           and FB.zusatz("krypto_spot", {"btc_relativwert_pct": 2.0}, "ETH") != [],
+           "'Gegen Bitcoin 0,0 % staerker' - fuer Bitcoin selbst")
+
+    # KEINE ZAHL ZWEIMAL. Die Liquidation stand in Zusatzinfo UND Rechnung,
+    # mit verschiedenen Werten - der Fehler der alten Mail (Umbauplan 12.5).
+    pruefe(P, "die Liquidation steht nur in der Rechnung",
+           "liquidation_eur" not in FB.ZUSATZ_JE_BEREICH["krypto_hebel"],
+           "erste Fassung: 35.638 EUR in der Zusatzinfo gegen 30.238 EUR in "
+           "der Rechnung - dieselbe Groesse, zwei Zahlen")
+
+    # KEIN EINSTIEGSPLAN OHNE EINSTIEG.
+    r = ER.rechne(kurs=64797, atr=1750, risiko_eur=75, instrument="hebel",
+                  betrag_wunsch_eur=500, topf_frei_eur=500)
+    for aktion, erwartet in (("NICHTS_TUN", False), ("VERKAUFEN", False),
+                             ("KAUFEN", True), ("NACHKAUFEN", True)):
+        _, txt = SM.baue_mail(symbol="BTC", name="Bitcoin", kurs_eur=64797,
+                              instrument="hebel", strategie="swing", rechnung=r,
+                              urteil={"aktion": aktion, "begruendung": "x"})
+        hat_zone = "Einstiegszone" in txt
+        pruefe(P, f"bei {aktion} {'steht' if erwartet else 'fehlt'} die Einstiegszone",
+               hat_zone == erwartet,
+               "eine ausgerechnete Zone liest sich wie eine Empfehlung, egal "
+               "was darueber steht")
+
+
+    # ---- DER CHART ----
+    from ui.signal_chart import render_signal_chart
+    plan = dict(einstieg_von=64363.0, einstieg_bis=65230.0, stop=60462.0,
+                ziel_von=71705.0, ziel_bis=72572.0)
+    png = render_signal_chart(symbol="BTC", kurse_eur=cc[-120:], **plan)
+    pruefe(P, "der Chart entsteht und ist ein PNG",
+           png and png[1:4] == b"PNG" and len(png) > 5000,
+           f"{len(png) if png else 0} Bytes")
+    pruefe(P, "OHNE Plan gibt es KEINEN Chart",
+           render_signal_chart(symbol="BTC", kurse_eur=cc[-120:]) is None,
+           "ein Kursverlauf ohne eingezeichneten Plan ist Dekoration - genau "
+           "der Vorwurf an den alten Zonen-Chart")
+    pruefe(P, "bei zu kurzer Reihe ebenfalls nicht",
+           render_signal_chart(symbol="BTC", kurse_eur=cc[-5:], **plan) is None)
+
+    pruefe(P, "der Faktenblock steht in Abschnitt 1, vor der Rechnung",
+           (lambda t: t.index("Schwankung") < t.index("2. DIE RECHNUNG"))(
+               SM.baue_mail(symbol="BTC", name="B", kurs_eur=64797,
+                            instrument="spot", strategie="einstieg", rechnung=r,
+                            urteil={"aktion": "KAUFEN"},
+                            faktenblock=FB.baue("krypto_spot", kern_werte=echt))[1]))
+
+
 
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,

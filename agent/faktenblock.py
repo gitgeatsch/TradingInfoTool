@@ -87,7 +87,12 @@ KATEGORIEN = ("Kosten", "Positionierung", "Fundamental", "Vorausschauend")
 # der sechs build_facts() (Umbauplan 12.2). Bewusst je Bereich verschieden,
 # weil die Datenlage es ist.
 ZUSATZ_JE_BEREICH = {
-    "krypto_hebel": ("funding_eur_tag", "liquidation_eur", "put_skew",
+    # LIQUIDATION STEHT HIER NICHT. Sie gehoert der Rechnung (Abschnitt 2),
+    # die sie aus dem gewaehlten Hebel ableitet. In der ersten Fassung stand
+    # sie an beiden Stellen - und mit VERSCHIEDENEN Zahlen, weil die eine aus
+    # einem Fakt und die andere aus der Rechnung kam. Genau der Fehler, den
+    # die alte Hebel-Mail hatte (Umbauplan 12.5).
+    "krypto_hebel": ("funding_eur_tag", "put_skew",
                      "retail_long_pct", "btc_relativwert_pct"),
     "krypto_spot": ("btc_relativwert_pct",),
     "aktien": ("kgv", "insider_saldo", "short_interest_pct", "analysten_trend"),
@@ -162,6 +167,80 @@ def _de(wert: float, stellen: int = 0) -> str:
     return f"{float(wert):,.{stellen}f}".translate(str.maketrans(",.", ".,"))
 
 
+ATR_FENSTER = 14
+RUECKBLICK = 250
+MOMENTUM_FENSTER = 60
+VOLUMEN_FENSTER = 20
+
+
+def werte_aus_reihe(hoch, tief, schluss, volumen, i: int | None = None,
+                    tag_vollstaendig: bool = True) -> dict:
+    """Die sechs Zahlen des Kerns aus einer OHLCV-Reihe.
+
+    DIESE DEFINITIONEN MUESSEN DENEN DER MESSUNG ENTSPRECHEN. Sie stehen ein
+    zweites Mal hier, weil `messe_top_fakten.py` ein Messskript ist und die
+    Produktion nicht davon abhaengen soll - aber eine zweite Fassung ist genau
+    die Sorte Kopie, die still veraltet (siehe die Kostensaetze, 12.08.).
+    DESHALB GIBT ES EINE PRUEFUNG, DIE BEIDE AUF ECHTEN DATEN VERGLEICHT statt
+    die Gleichheit nur zu behaupten.
+
+    Das Perzentil laeuft ueber ein RUECKWAERTS-Fenster von 250 Tagen. Ein
+    Perzentil ueber die ganze Reihe kennt die Zukunft - es weiss, wie hoch die
+    Schwankung spaeter noch steigen wird.
+
+    `tag_vollstaendig=False` LAESST DAS VOLUMEN WEG, und das ist keine
+    Feinheit. Der laufende Tag hat naturgemaess weniger Umsatz als ein ganzer;
+    an echten BTC-Daten stand das Volumen des letzten Tages beim 0,2-fachen des
+    Mittels, also im untersten Perzentil. Ohne diesen Schalter haette JEDE
+    Live-Mail "Volumen UNGUENSTIG" gemeldet - ein systematischer Fehler in
+    jeder einzelnen Nachricht, und einer, der wie ein Befund aussieht.
+    `lagebeschreibung._volumen()` kennt dieselbe Falle seit laengerem."""
+    import numpy as np
+
+    h = np.asarray(hoch, float); l = np.asarray(tief, float)
+    c = np.asarray(schluss, float); v = np.asarray(volumen, float)
+    i = len(c) - 1 if i is None else i
+    if i < RUECKBLICK + ATR_FENSTER:
+        return {}
+
+    def atr_bei(k):
+        tr = np.maximum(h[k - ATR_FENSTER + 1:k + 1] - l[k - ATR_FENSTER + 1:k + 1],
+                        np.maximum(np.abs(h[k - ATR_FENSTER + 1:k + 1] - c[k - ATR_FENSTER:k]),
+                                   np.abs(l[k - ATR_FENSTER + 1:k + 1] - c[k - ATR_FENSTER:k])))
+        return float(tr.mean())
+
+    reihe = np.array([atr_bei(k) / c[k] for k in range(i - RUECKBLICK, i + 1)])
+    atr_rel = reihe[-1]
+
+    fenster_v = v[i - VOLUMEN_FENSTER:i]
+    vol_rel = (float(v[i] / fenster_v.mean())
+               if tag_vollstaendig and fenster_v.mean() > 0 else None)
+
+    def rueckgang_bei(k):
+        hoechst = c[k - MOMENTUM_FENSTER:k + 1].max()
+        return float(c[k] / hoechst - 1) if hoechst > 0 else 0.0
+
+    rueck = np.array([rueckgang_bei(k) for k in range(i - RUECKBLICK, i + 1)])
+
+    def vol_rel_bei(k):
+        m = v[k - VOLUMEN_FENSTER:k].mean()
+        return float(v[k] / m) if m > 0 else np.nan
+
+    vols = np.array([vol_rel_bei(k) for k in range(i - RUECKBLICK, i + 1)])
+
+    def rang(reihe_, wert):
+        vor = reihe_[:-1]
+        vor = vor[~np.isnan(vor)]
+        return float((vor < wert).mean()) if len(vor) > 30 else None
+
+    return {"atr_relativ": float(atr_rel),
+            "schwankung_perzentil": rang(reihe, atr_rel),
+            "rueckgang_60t": float(rueck[-1]),
+            "momentum_perzentil": rang(rueck, rueck[-1]),
+            "volumen_relativ": vol_rel,
+            "volumen_perzentil": rang(vols, vols[-1]) if vol_rel else None}
+
+
 def _urteil(perzentil: float, hoch_ist_gut: bool) -> str:
     """Fuenftel -> eines von drei Woertern.
 
@@ -225,7 +304,7 @@ def kern(*, atr_relativ: float | None = None,
     return zeilen, luecken
 
 
-def zusatz(bereich: str, werte: dict) -> list[str]:
+def zusatz(bereich: str, werte: dict, symbol: str | None = None) -> list[str]:
     """Die optionalen Fakten des Bereichs - nur die, fuer die ein Wert vorliegt.
 
     NICHTS WIRD ERFUNDEN und nichts wird als Luecke gemeldet: Zusatzinfo ist
@@ -235,13 +314,17 @@ def zusatz(bereich: str, werte: dict) -> list[str]:
         w = werte.get(schluessel)
         if w is None or (isinstance(w, str) and not w.strip()):
             continue
+        # "Gegen Bitcoin 0,0 % staerker" - fuer Bitcoin selbst. Ein Wert gegen
+        # sich selbst ist keine Aussage, sondern eine Tautologie mit Zahl.
+        if schluessel == "btc_relativwert_pct" and (symbol or "").upper() == "BTC":
+            continue
         kategorie, bau, bedeutung = _ZUSATZ[schluessel]
         aus += [f"[{kategorie}] {bau(w)}", f"  {bedeutung}"]
     return aus
 
 
-def baue(bereich: str, *, kern_werte: dict, zusatz_werte: dict | None = None
-         ) -> list[str]:
+def baue(bereich: str, *, kern_werte: dict, zusatz_werte: dict | None = None,
+         symbol: str | None = None) -> list[str]:
     """Der ganze Block. Kern zuerst, Zusatzinfo als solche gekennzeichnet."""
     zeilen, luecken = kern(**kern_werte)
     if luecken:
@@ -251,7 +334,7 @@ def baue(bereich: str, *, kern_werte: dict, zusatz_werte: dict | None = None
                        + ("Ein Punkt weniger steht" if len(luecken) == 1
                           else f"{len(luecken)} Punkte weniger stehen")
                        + " damit hinter dieser Empfehlung."]
-    z = zusatz(bereich, zusatz_werte or {})
+    z = zusatz(bereich, zusatz_werte or {}, symbol)
     if z:
         zeilen += ["", "ZUSATZINFO - nicht gemessen, zur eigenen Einordnung:", ""]
         zeilen += z

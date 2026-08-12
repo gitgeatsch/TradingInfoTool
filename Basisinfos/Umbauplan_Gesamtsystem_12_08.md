@@ -396,7 +396,9 @@ python pruefe_pakete.py            # alle Pakete
 python pruefe_pakete.py --paket 1  # nur eines
 ```
 
-Stand: **153 Prüfungen** über Paket 0–11, alle bestanden. Kein LLM-Aufruf, kein
+Stand: **189 Prüfungen** über Paket 0–12, alle bestanden.
+
+**Nummern-Korrektur 12.08. abends:** die Diskussion hat die Reihenfolge verschoben. Die Prüfpakete 10–12 tragen jetzt den Inhalt, der wirklich gebaut wurde; „Gate" und „Z1 + Z.ai" stehen als **12c/12d** weiter offen und sind **übersprungen, nicht erledigt**. Kein LLM-Aufruf, kein
 Netzwerk, keine Schreibzugriffe — sie darf jederzeit laufen.
 
 > **Regel für neue Pakete:** wer ein Paket baut, hängt seine Prüfungen dort an
@@ -439,9 +441,12 @@ Take-Profit -> Backward-Tracking misst -> Trefferbilanz -> die Zahl in der Mail
 | **7** | **Backward-Tracking** | **ERLEDIGT 12.08.** — der Bruch war eine **Währung**: das Tracking lädt USD-Kerzen und vergleicht `entry_usd`/`stop_loss_usd`/`take_profit_usd`, die neue Kette schrieb nur EUR → `_zonen_mittel` gab `(None, None, None)`, jedes Signal wäre für immer unaufgelöst geblieben. Jetzt **USD-Spiegelung mit eingefrorenem Kurs** (misst die Asset-Bewegung, nicht die des Wechselkurses). Nebenbei gefunden: die Spanne war **14,4 % zu breit**, weil der ATR aus der USD-Reihe auf EUR-Kurse angewandt wurde |
 | **8** | **Trefferbilanz / Schrumpfung** (§6.4) | **ERLEDIGT 12.08.** — `agent/trefferbilanz.py`. Die Formel **reproduziert** den bekannten Befund, statt ihn zu behaupten: ohne Kosten exakt 33,3 %, mit Krypto-Kosten 41,0 % gegen eine Basisrate von 34,0 % → trägt nicht. **Abgelaufene Fälle werden ausgewiesen, nicht verrechnet** (7.23 — „keines = 0 R" ist eine Setzung, betrifft 15–21 %). Die Bilanz **verwirft nichts**: sie rechnet und beschreibt |
 | **9** | **Live-Lauf auf `gemini-3.1-flash-lite`** | Wortlaut zeigen. **Nicht 3.5** — alle bisherigen Messungen liefen auf 3.5 |
-| **10** | **Gate** | Konfidenz-Schwelle entfällt (E3); Durchlässigkeit je Stufe zählen; Faktorzahl im Veto-Schatten |
-| **11** | **Z1 + Z.ai** | Z1 verdrahten; Z.ai auf die neuen Fakten und die 5 Aktionen |
-| **12** | **E-Mail + GUI** | Entscheider-Block, Fakten sichtbar machen, Hebel-Tab, **Regime-Tab auf den Score + Override** (E4) |
+| **10** | **Berechnung der Entscheidung** | **ERLEDIGT 12.08.** — `entscheidungsrechnung.py`: Zone, Stop, Ziel, Haltedauer, Betrag, Hebel; jede Zahl mit Formel, Quelle und ZWEI Grenzen. Stop aus `umgeworfen_preis_eur` des Modells, geklemmt durch RM-1b/1c und die neue Obergrenze |
+| **11** | **Take-Profit + Mail** | **ERLEDIGT 12.08.** — Ziel am nächsten Widerstand statt mechanisch 2 R, zu kleine CRV wird ausgewiesen; `signal_mail.py` mit vier Abschnitten |
+| **12** | **Faktenblock + Chart** | **ERLEDIGT 12.08.** — `faktenblock.py` (drei gemessene Familien + Zusatzinfo je Bereich), an echte Kursreihen angeschlossen; `ui/signal_chart.py` ersetzt beide alten Charts |
+| **12b** | **GUI** | **OFFEN** — der zweite Teil des ursprünglichen Pakets 12: Hebel-Tab, **Regime-Tab auf den Score + Override** (E4). Von der Mail nicht berührt |
+| **12c** | **Gate** | **OFFEN, ÜBERSPRUNGEN** — Konfidenz-Schwelle entfällt (E3); Durchlässigkeit je Stufe zählen; Faktorzahl im Veto-Schatten |
+| **12d** | **Z1 + Z.ai** | **OFFEN, ÜBERSPRUNGEN** — Z1 verdrahten; Z.ai auf die neuen Fakten und die 5 Aktionen |
 | **13** | **Hebel** (E2) | Richtung, Hebelfaktor, 7 Aktionen, Finanzierung, Liquidationsabstand |
 | **14** | **Hedge** (E1b) | eigene Rolle, Portfolio-Fakten statt Einzeltitel-Technik |
 | **15** | **Rollout** | ein Paket, Notebook, Checkliste 8e.3 |
