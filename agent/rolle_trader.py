@@ -137,8 +137,10 @@ _KURSSATZ = {
     True:  " Bei KAUFEN und NACHKAUFEN zusaetzlich den Einstiegskurs und den "
            "Ausstiegskurs, beide in Euro; der Ausstieg liegt unter dem "
            "Einstieg.",
-    False: " Nenne KEINEN Einstiegs- und keinen Ausstiegskurs - es wird "
-           "gestaffelt gekauft, einen einzelnen Zeitpunkt gibt es nicht.",
+    False: " Nenne KEINEN Einstiegs- und keinen Stopkurs - es wird gestaffelt "
+           "ueber die Zeit gekauft, einen einzelnen Zeitpunkt gibt es nicht "
+           "und ein fallender Kurs verbilligt die Position, statt sie zu "
+           "beenden. Punkt 6 traegt hier das einzige Ausstiegskriterium.",
 }
 
 

@@ -35,10 +35,23 @@ INSTRUMENTE = ("spot", "hebel", "absicherung")
 #
 #   einstieg      ein Zeitpunkt, ein Ziel, ein Stop. Erfolg = Ziel vor Stop
 #   swing         wie einstieg, aber mit Haltekriterium und nachgezogenem Stop
-#   akkumulation  gestaffelt ueber Zeit. KEIN Stop, KEIN Einstiegszeitpunkt -
-#                 und deshalb ein ANDERES Erfolgsmass (Endvermoegen statt
-#                 Trefferquote). Das ist der Grund, warum sie nicht einfach
-#                 eine Variante von `einstieg` ist.
+#   akkumulation  gestaffelt ueber Zeit. Sie hat SEHR WOHL ein Ziel - nur
+#                 kein nahes: gekauft wird in der Erwartung hoeherer Kurse auf
+#                 lange Sicht (Nutzerkorrektur 12.08.: "bei Akkumulation gibt
+#                 es eigentlich kein NICHT-Ziel, sondern nur kein NAHES Ziel").
+#
+#                 Was fehlt, ist nicht die Erwartung, sondern der ABBRUCH: ein
+#                 fallender Kurs beendet die Position nicht, er verbilligt sie.
+#                 Ein Stop wuerde die Strategie in ihrem besten Moment
+#                 abbrechen. Deshalb kein Stop und kein einzelner Zeitpunkt -
+#                 und deshalb ein ANDERES Erfolgsmass: Durchschnittskurs und
+#                 Endvermoegen statt "Ziel vor Stop".
+#
+#                 FOLGE, die leicht zu uebersehen ist: `umgeworfen_durch` ist
+#                 hier nicht ein Feld unter vielen, sondern das EINZIGE
+#                 Ausstiegskriterium. Wo Einstieg und Swing einen Stop haben,
+#                 hat die Akkumulation nur die Frage "wann traegt die Erwartung
+#                 nicht mehr".
 STRATEGIEN = ("einstieg", "swing", "akkumulation")
 
 # WELCHE PAARE SINNVOLL SIND, und warum die uebrigen fehlen:
@@ -60,9 +73,12 @@ ERLAUBTE_PAARE = {
     "absicherung": ("einstieg",),
 }
 
-# Braucht diese Kombination einen Einstiegskurs und einen Stop?
-# Bei Akkumulation NICHT: es gibt keinen einzelnen Einstiegszeitpunkt, den man
-# nennen koennte, und ein Stop wuerde die Staffelung aufheben.
+# Braucht diese Kombination einen Einstiegskurs und einen STOP?
+#
+# Die Frage ist NICHT "gibt es ein Ziel" - das hat auch die Akkumulation, nur
+# kein nahes. Die Frage ist, ob es einen einzelnen Zeitpunkt und einen Abbruch
+# gibt. Bei Akkumulation nicht: ein Stop wuerde die Staffelung genau dann
+# aufheben, wenn sie am guenstigsten kauft.
 _MIT_KURSEN = {("spot", "akkumulation"): False}
 
 
@@ -110,8 +126,12 @@ _SATZ_STRATEGIE = {
                 "Ausstiegskurs.",
     "swing": "Die Position soll ueber mehrere Wochen gehalten und laufend "
              "nachgezogen werden.",
-    "akkumulation": "Es wird ueber die Zeit gestaffelt gekauft. Es gibt keinen "
-                    "einzelnen Einstiegszeitpunkt und keinen Ausstiegskurs.",
+    "akkumulation": "Es wird ueber die Zeit gestaffelt gekauft, in der "
+                    "Erwartung hoeherer Kurse auf lange Sicht. Ein fallender "
+                    "Kurs beendet diese Position nicht - er verbilligt sie. "
+                    "Deshalb gibt es hier keinen einzelnen Einstiegszeitpunkt "
+                    "und keinen Stop; beendet wird sie erst, wenn die "
+                    "Erwartung selbst nicht mehr traegt.",
 }
 
 
