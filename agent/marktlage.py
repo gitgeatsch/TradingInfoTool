@@ -141,6 +141,146 @@ def beschreibe_volatilitaet(reihen: dict, klasse: str, datum: str) -> list[str]:
             f"Handelstage."]
 
 
+FENSTER_LIQUIDITAET = 21    # rund ein Handelsmonat - Amihuds eigene Mittelung
+
+
+def _amihud(c: np.ndarray, v: np.ndarray) -> np.ndarray:
+    """Amihud (2002): wie stark bewegt sich der Kurs je gehandeltem Euro?
+
+    ILLIQ = |Tagesrendite| / Umsatz in Waehrung. Der Umsatz in WAEHRUNG, nicht
+    in Stueck - `volume` traegt bei Binance Coins, bei yfinance Aktien, bei
+    Futures Kontrakte. Erst `volume * close` macht daraus eine vergleichbare
+    Groesse, und erst das Perzentil macht sie ueber Assetklassen lesbar."""
+    r = np.abs(np.diff(c) / c[:-1])
+    umsatz = v[1:] * c[1:]
+    mit = np.full(len(c), np.nan)
+    gut = np.isfinite(r) & np.isfinite(umsatz) & (umsatz > 0)
+    mit[1:][gut] = r[gut] / umsatz[gut]
+    return mit
+
+
+def _corwin_schultz(h: np.ndarray, l: np.ndarray) -> np.ndarray:
+    """Corwin/Schultz (2012): der effektive Spread aus Tageshoch und -tief.
+
+    GEBAUT, GEMESSEN, VERWORFEN (12.08.) - siehe Arbeitsstand 7.30. Die
+    Funktion bleibt, weil sie die Messung traegt, die zur Ablehnung gefuehrt
+    hat. `beschreibe_liquiditaet()` ruft sie NICHT.
+
+    Der Gedanke ist elegant: die Tagesspanne enthaelt sowohl echte Volatilitaet
+    als auch den Spread, aber beide skalieren VERSCHIEDEN mit der Zeit -
+    Volatilitaet mit der Wurzel der Dauer, der Spread gar nicht. Wer die
+    Ein-Tages-Spanne mit der Zwei-Tages-Spanne vergleicht, kann beides trennen.
+
+    An unseren Daten scheitert das aus drei unabhaengigen Gruenden:
+
+        NIVEAU       geschaetzt 0,73 % fuer BTC (real ~0,01-0,05 %) und 0,25 %
+                     fuer SPY (real ~0,003-0,01 %) - Faktor 20 bis 70. Eine
+                     Kostenangabe, die um das Fuenfzigfache danebenliegt, ist
+                     schlimmer als keine
+        DEGENERIERT  36 % (Krypto) bis 58 % (Rohstoffe) aller Tage landen auf
+                     der Null-Konvention, mit der das Verfahren negative
+                     Schaetzwerte abfaengt
+        DOPPLUNG     Korrelation 0,65-0,68 zum Volatilitaets-Perzentil, das L2
+                     ohnehin nennt - ein zweiter Satz, der den ersten wiederholt
+
+    Der Grund fuer alle drei ist derselbe: bei liquiden Titeln wird die
+    Tagesspanne von Volatilitaet dominiert, nicht vom Spread. Das Verfahren
+    versagt genau dort, wo Spreads klein sind - also bei uns."""
+    n = len(h)
+    s = np.full(n, np.nan)
+    wurzel2 = np.sqrt(2.0)
+    nenner = 3.0 - 2.0 * wurzel2
+    for t in range(1, n):
+        h1, l1, h2, l2 = h[t - 1], l[t - 1], h[t], l[t]
+        # 170 Rohstoff-Zeilen tragen high <= low. Ein Logarithmus daraus waere
+        # nicht negativ, sondern bedeutungslos - solche Paare fallen raus.
+        if not all(np.isfinite(x) and x > 0 for x in (h1, l1, h2, l2)):
+            continue
+        if h1 <= l1 or h2 <= l2:
+            continue
+        beta = np.log(h1 / l1) ** 2 + np.log(h2 / l2) ** 2
+        gamma = np.log(max(h1, h2) / min(l1, l2)) ** 2
+        alpha = ((np.sqrt(2.0 * beta) - np.sqrt(beta)) / nenner
+                 - np.sqrt(gamma / nenner))
+        wert = 2.0 * (np.exp(alpha) - 1.0) / (1.0 + np.exp(alpha))
+        s[t] = max(0.0, wert)       # Konvention des Verfahrens
+    return s
+
+
+def beschreibe_liquiditaet(reihen: dict, klasse: str, datum: str) -> list[str]:
+    """Dimension 3 von vier: wie teuer ist es gerade, hier zu handeln?
+
+    WARUM DIESE DIMENSION BEI UNS MEHR WIEGT ALS ANDERSWO. Der Netto-Erwartungs-
+    wert ist ueber alle Klassen negativ, waehrend der Brutto-Wert bei +0,028 R
+    steht (7.23/7.24) - **die Kosten entscheiden, nicht die Richtung.** Eine
+    Aussage ueber die Handelskosten ist damit keine Randnotiz des Lagebilds,
+    sondern die Groesse, an der unsere Rechnung haengt.
+
+    EINE AUSSAGE, NICHT ZWEI - drei Kandidaten geprueft, zwei gemessen
+    verworfen (Arbeitsstand 7.30):
+
+        Amihud (2002)           Korr. 0,35-0,50 zur Volatilitaet,
+                                Korr. 0,02/-0,06 zum Umsatz        BLEIBT
+        reiner Umsatz           Korr. 0,78/0,57 zur Volatilitaet    verworfen
+        Corwin/Schultz (2012)   Korr. 0,65-0,68, Niveau um Faktor
+                                20-70 falsch, 36-58 % degeneriert  verworfen
+
+    AMIHUD, *Illiquidity and stock returns*, Journal of Financial Markets 2002.
+    Ueber 11.000 Zitierungen; allein 2009-2015 ueber 120 Arbeiten in den
+    fuehrenden Fachzeitschriften. Misst, wie stark der Kurs je gehandeltem Euro
+    ausschlaegt - was also eine Order kostet, die den Markt bewegt.
+
+    DAS ENTSCHEIDENDE AN DER MESSUNG war nicht die Naehe zur Volatilitaet,
+    sondern die Ferne zum Umsatz: **0,02 beziehungsweise -0,06**. Das Verhaeltnis
+    traegt etwas, das weder in der Schwankungsbreite noch im Handelsvolumen
+    steht. Der reine Umsatz waere die schlechteste Wahl gewesen - er korreliert
+    mit 0,78 STAERKER mit der Volatilitaet als Amihud selbst.
+
+    Die verbleibende Ueberlappung von 0,35-0,50 ist offen zu benennen: Zaehler
+    ist die Tagesrendite, und die steckt auch in der Volatilitaet. Illiquide
+    Maerkte SIND schwankungsfreudiger - das ist eine Eigenschaft von Maerkten,
+    kein Fehler des Masses. Wir behaupten deshalb nirgends, hier stuende ein
+    von L2 unabhaengiger Faktor.
+
+    ALS PERZENTIL, ohne absolute Zahl. Die Rohgroesse liegt zwischen Assets um
+    Zehnerpotenzen auseinander, und jede Skalierung ("je Million Euro Umsatz")
+    waere eine willkuerliche Wahl, die eine Genauigkeit vortaeuscht.
+
+    STRENG KAUSAL: gelesen wird nur bis zum Ankertag."""
+    sym = BENCHMARK.get(klasse)
+    reihe = reihen.get(sym) if sym else None
+    if not reihe:
+        return []
+    i = _bis(reihe, datum, vorlauf=FENSTER_HISTORIE)
+    if i is None:
+        return []
+    c = np.array([k.close for k in reihe[:i + 1]], dtype=float)
+    v = np.array([(k.volume or 0.0) for k in reihe[:i + 1]], dtype=float)
+    name = BENCHMARK_NAME.get(sym, sym)
+
+    illiq = _amihud(c, v)
+    # Geglaettet ueber einen Handelsmonat, wie Amihud selbst mittelt. Ein
+    # einzelner Tag mit duennem Umsatz waere ein Ausreisser, keine Lage.
+    geglaettet = np.full(len(illiq), np.nan)
+    for t in range(FENSTER_LIQUIDITAET, len(illiq)):
+        stueck = illiq[t - FENSTER_LIQUIDITAET + 1:t + 1]
+        if np.any(np.isfinite(stueck)):
+            geglaettet[t] = np.nanmean(stueck)
+    gueltig = geglaettet[np.isfinite(geglaettet)]
+    aktuell = geglaettet[-1]
+    if not np.isfinite(aktuell) or len(gueltig) < FENSTER_HISTORIE // 2:
+        return []
+    fenster = gueltig[-FENSTER_HISTORIE:]
+    p = _perzentil(fenster, float(aktuell))
+    # Der Nachsatz ist eine DEFINITION des Masses, kein Urteil ueber die Lage.
+    # Ohne ihn ist die Zahl nicht benutzbar, und eine unbenutzbare Zahl im
+    # Faktensatz ist schlechter als gar keine.
+    return [f"{name} verzeichnet je gehandeltem Euro Umsatz eine Kursbewegung "
+            f"im {p}. Perzentil der letzten {len(fenster)} Handelstage, "
+            f"gemittelt ueber {FENSTER_LIQUIDITAET} Handelstage; je hoeher "
+            f"dieser Wert, desto weniger Umsatz loest eine Kursbewegung aus."]
+
+
 def beschreibe_trend(reihen: dict, klasse: str, datum: str) -> list[str]:
     """Dimension 2 von vier: wo steht dieser Markt, und wo kam er her?
 

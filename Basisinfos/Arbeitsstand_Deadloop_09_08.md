@@ -2922,3 +2922,95 @@ Fenster**, der sachlich zulässig ist.
 weiter zu machen, damit der eigene Text hindurchpasst, ist die Umkehrung seines
 Zwecks — und der nächste, der eine Ausnahme braucht, findet dann schon eine vor.
 Der Preis war ein Wort.
+
+---
+
+## 7.30 L4 — die Liquiditätslage. Drei Kandidaten, zwei gemessen verworfen (12.08.)
+
+**Warum diese Dimension bei uns schwerer wiegt als anderswo.** Der
+Netto-Erwartungswert ist über alle Klassen negativ, während der Brutto-Wert bei
++0,028 R steht (7.23/7.24) — **die Kosten entscheiden, nicht die Richtung.**
+Eine Aussage über die Handelskosten ist damit keine Randnotiz des Lagebilds,
+sondern die Größe, an der unsere ganze Rechnung hängt.
+
+Die Datenlage trägt beide Standardmaße: Volumen zu 99–100 % vorhanden,
+High/Low gültig bis auf 170 Rohstoff-Zeilen mit `high ≤ low`.
+
+### Die Messung, die entschieden hat
+
+Alle drei Kandidaten wurden gebaut und über die volle Historie gegen die
+Volatilität und gegen den Umsatz gerechnet — als **Perzentile**, also genau in
+der Form, in der sie im Faktensatz stünden.
+
+| Maß | Korr. zur Volatilität | Korr. zum Umsatz | Urteil |
+|---|---|---|---|
+| **Amihud (2002)** | 0,35 … 0,50 | **0,02 / −0,06** | **bleibt** |
+| reiner Umsatz | **0,78 / 0,57** | — | verworfen |
+| Corwin/Schultz (2012) | 0,65 … 0,68 | — | verworfen |
+
+**Der Umsatz wäre die schlechteste Wahl gewesen** — er korreliert mit 0,78
+stärker mit der Volatilität als Amihud selbst. Das Handelsvolumen springt, wenn
+sich der Markt bewegt; ein Umsatzsatz wäre Volatilität in Verkleidung gewesen.
+
+**Corwin/Schultz fällt aus drei unabhängigen Gründen:**
+
+| | |
+|---|---|
+| **Niveau** | geschätzt 0,73 % für BTC (real ~0,01–0,05 %) und 0,25 % für SPY (real ~0,003–0,01 %) — **Faktor 20 bis 70**. Eine Kostenangabe, die um das Fünfzigfache danebenliegt, ist schlimmer als keine |
+| **Degeneriert** | 36 % (Krypto) bis 58 % (Rohstoffe) aller Tage landen auf der Null-Konvention, mit der das Verfahren negative Schätzwerte abfängt |
+| **Dopplung** | Korrelation 0,65–0,68 zum Volatilitäts-Perzentil, das L2 ohnehin nennt |
+
+Der Grund für alle drei ist derselbe: **bei liquiden Titeln wird die Tagesspanne
+von Volatilität dominiert, nicht vom Spread.** Das Verfahren versagt genau dort,
+wo Spreads klein sind — also bei uns. Die Funktion bleibt im Code, weil sie die
+Messung trägt, die zur Ablehnung geführt hat; `beschreibe_liquiditaet()` ruft
+sie nicht.
+
+### Was bleibt
+
+**Amihud**, *Illiquidity and stock returns*, Journal of Financial Markets 2002 —
+über 11.000 Zitierungen, allein 2009–2015 über 120 Arbeiten in den führenden
+Fachzeitschriften. Misst, wie stark der Kurs je gehandeltem Euro ausschlägt.
+
+**Das Entscheidende an der Messung war nicht die Nähe zur Volatilität, sondern
+die Ferne zum Umsatz: 0,02 beziehungsweise −0,06.** Das Verhältnis trägt etwas,
+das weder in der Schwankungsbreite noch im Handelsvolumen steht.
+
+Die verbleibende Überlappung von 0,35–0,50 benenne ich offen: Zähler ist die
+Tagesrendite, und die steckt auch in der Volatilität. Illiquide Märkte *sind*
+schwankungsfreudiger — das ist eine Eigenschaft von Märkten, kein Fehler des
+Maßes. **Wir behaupten deshalb nirgends, hier stünde ein von L2 unabhängiger
+Faktor.**
+
+Ausgeliefert wird ein **Perzentil ohne absolute Zahl**. Die Rohgröße liegt
+zwischen Assets um Zehnerpotenzen auseinander, und jede Skalierung („je Million
+Euro Umsatz") wäre eine willkürliche Wahl, die Genauigkeit vortäuscht.
+
+### Der Beleg, dass das Maß etwas Eigenes trägt
+
+Am Anker 2026-07-19 sagt das Lagebild für Krypto:
+
+> Bitcoin schwankt täglich um 2,7 % des Kurses; das liegt im **17. Perzentil**
+> der letzten 250 Handelstage.
+> Bitcoin verzeichnet je gehandeltem Euro Umsatz eine Kursbewegung im
+> **97. Perzentil** der letzten 250 Handelstage.
+
+**Ruhiger Markt, aber dünn.** Eine Divergenz, die ein reines Volatilitätsmaß
+nie zeigen könnte — und genau die Lage, in der ein Stop billig aussieht und
+teuer ausgeführt wird.
+
+### Geprüft — `pruefe_marktlage.py` (aus `pruefe_trendlage.py` erweitert)
+
+| Prüfung | Ergebnis |
+|---|---|
+| **Form** — Fenster genannt, keine Gradwörter | 1.314 Aussagen über L2+L3+L4, **0 beanstandet** |
+| **Kausalität** | 4 Zukunftslängen × alle Anker, **0 Abweichungen** |
+| **Breite** | vier Klassen, je 4 Aussagen |
+| **R-T6, kein konstantes Feld** | Perzentile 0 … 100, Median 34 |
+
+### Ein Nachsatz, der eine Definition ist und kein Urteil
+
+Die Aussage endet mit „je höher dieser Wert, desto weniger Umsatz löst eine
+Kursbewegung aus". Das ist die **Definition des Maßes**, nicht seine Bewertung —
+ohne sie ist die Zahl nicht benutzbar, und eine unbenutzbare Zahl im Faktensatz
+ist schlechter als gar keine. R-T3 verbietet Werturteile, nicht Erklärungen.

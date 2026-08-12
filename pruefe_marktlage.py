@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Prueft L3 (Trendlage) an echten Daten - Form, Kausalitaet, Unterscheidungskraft.
+"""Prueft das Lagebild (L2 Volatilitaet, L3 Trend, L4 Liquiditaet) an echten Daten.
 
 Vier Pruefungen, und die vierte ist die eigentliche:
 
@@ -11,7 +11,7 @@ Vier Pruefungen, und die vierte ist die eigentliche:
                     kurze faellt - und wie beschreiben wir sie? Das ist der
                     Fall, den `_struktur()` "intakter Abwaertstrend" nannte
 
-Lauf:  python pruefe_trendlage.py
+Lauf:  python pruefe_marktlage.py
 """
 from __future__ import annotations
 
@@ -22,7 +22,8 @@ from collections import defaultdict
 sys.path.insert(0, ".")
 
 from agent.marktlage import (BENCHMARK, TREND_KURZ, TREND_LANG,
-                             beschreibe_trend, beschreibe_volatilitaet)
+                             beschreibe_liquiditaet, beschreibe_trend,
+                             beschreibe_volatilitaet)
 from database.models import OhlcPoint
 
 DB = "data/tradinginfotool.db"
@@ -58,8 +59,9 @@ def main() -> int:
         datum = reihe[-1].date
         saetze = beschreibe_trend(reihen, klasse, datum)
         vola = beschreibe_volatilitaet(reihen, klasse, datum)
+        liq = beschreibe_liquiditaet(reihen, klasse, datum)
         print(f"\n   {klasse.upper()}   ({len(reihe)} Kerzen, Anker {datum})")
-        for s in saetze + vola:
+        for s in saetze + vola + liq:
             print(f"      - {s}")
         if len(saetze) != 2:
             print(f"      !! {len(saetze)} statt 2 Trendaussagen"); fehler += 1
@@ -77,6 +79,7 @@ def main() -> int:
         reihe = reihen.get(BENCHMARK[klasse]) or []
         for i in range(TREND_LANG, len(reihe), 53):
             alle += beschreibe_trend(reihen, klasse, reihe[i].date)
+            alle += beschreibe_liquiditaet(reihen, klasse, reihe[i].date)
     schlimm = 0
     for s in alle:
         hart, weich = finde_grade(s)
