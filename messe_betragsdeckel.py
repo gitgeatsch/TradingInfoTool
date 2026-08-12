@@ -134,7 +134,7 @@ def lauf_arm(client, modell, symbol, reihe, idx, reihen, mit_deckel: bool):
         bc_ein["marktlage_beurteilung"]["hoechstbetrag_eur"] = deckel
     bc_roh = frage(client, modell, RT.SYSTEM_PROMPT_TRADER, bc_ein,
                    "agent.rolle_trader")
-    return RT.validiere(bc_roh, symbol), deckel
+    return RT.validiere(bc_roh, symbol, atr=_atr(reihe, idx)), deckel
 
 
 def main() -> int:

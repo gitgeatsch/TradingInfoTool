@@ -415,6 +415,14 @@ KEIN `tranche_eur` (Umbau 10.08. abends): der Betrag wird aus der Zahl
             "begruendung": TXT,
             "was_dagegen": TXT,
             "umgeworfen_durch": TXT,
+            # Der Falsifikator, maschinenlesbar (12.08.2026, Paket 1). Der
+            # Freitext bleibt fuehrend - diese beiden Felder machen ihn
+            # PRUEFBAR. Nur so kann eine spaetere Stufe (V1) beantworten, ob
+            # die Entscheidung inzwischen widerlegt ist, statt einen Satz zu
+            # lesen. Beide duerfen null sein: nicht jede Beobachtung hat einen
+            # Kurs oder ein Datum, und eine erzwungene Zahl waere erfunden.
+            "umgeworfen_preis_eur": {"type": ["number", "null"]},
+            "umgeworfen_bis": {"type": ["string", "null"]},
         },
     }
 

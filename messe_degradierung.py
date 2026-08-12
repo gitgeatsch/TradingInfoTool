@@ -139,7 +139,7 @@ def lauf(client, modell, symbol, reihe, idx, reihen) -> dict:
                     "agent.rolle_trader")
     # Die ROHE Aktion vor dem Vertrag - nur so ist ein degradierter Kauf sichtbar.
     aktion_roh = str(ent_roh.get("aktion") or "?").upper()
-    ent = RT.validiere(dict(ent_roh), symbol)
+    ent = RT.validiere(dict(ent_roh), symbol, atr=_atr(reihe, idx))
 
     return {
         "aktion_roh": aktion_roh,

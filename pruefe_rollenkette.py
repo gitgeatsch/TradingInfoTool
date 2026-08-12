@@ -177,7 +177,7 @@ def lauf(symbol: str, datum: str | None, reihen: dict, anbieter: str | None,
     try:
         bc_roh = frage(client, modell, RT.SYSTEM_PROMPT_TRADER, bc_ein,
                        "agent.rolle_trader")
-        bc = RT.validiere(bc_roh, symbol)
+        bc = RT.validiere(bc_roh, symbol, atr=_atr(reihe, index))
     except (EmpfehlungUngueltig, RT.TraderAntwortUngueltig) as e:
         print(f"\n[ABGELEHNT] {e}")
         return

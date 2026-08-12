@@ -387,8 +387,8 @@ Take-Profit -> Backward-Tracking misst -> Trefferbilanz -> die Zahl in der Mail
 
 | # | Paket | Inhalt |
 |---|---|---|
-| **0** | **Bereinigungen, vorgezogen** | Symbolliste `("BTC","ETH","SOL")` raus (E1a) · Hedge ohne Tranchen · Kommentarleiche `background.py:258` (erledigt 12.08.) |
-| **1** | **Ausgabefelder vollständig** | TP (abgeleitet), Einstieg/Stop als Spanne, Haltekriterium strukturiert, Richtung + Hebelfaktor |
+| **0** | **Bereinigungen** | **ERLEDIGT 12.08.** — Symbolliste `("BTC","ETH","SOL")` raus (sie überstimmte den Schalter) · Hedge ohne Tranchen (Regel stand mit umgekehrtem Vorzeichen) · Kommentarleiche `background.py:258` |
+| **1** | **Ausgabefelder** | **ERLEDIGT 12.08.** — `leite_zonen_ab()`: Zielkurs aus CRV 2,0, Spannen aus 0,25 ATR um Einstieg/Stop/Ziel; Falsifikator maschinenlesbar (`umgeworfen_preis_eur`, `umgeworfen_bis`). In `validiere()` verdrahtet, alle **sieben** Aufrufer reichen den ATR durch. **Richtung + Hebelfaktor gehören zu Paket 13**, nicht hierher |
 | **2** | **Instrument + Strategie als Eingabe** | an Rolle 2/3; Strategie-abhängige Faktenblöcke |
 | **3** | **Rolle 1 urteilt je Assetklasse** | plus Regime-Score als Fakt |
 | **4** | **Thesen-Abgleich in die Rollen-Kette** | der dritte unabhängige Faktor (§5.3) |

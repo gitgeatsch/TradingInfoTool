@@ -134,7 +134,7 @@ def main() -> int:
                    "marktlage_beurteilung": {"lage": lage["lage"], "gleichlauf": lage.get("gleichlauf")}}
             ent = RT.validiere(dict(PR.frage(client, modell,
                                              RT.SYSTEM_PROMPT_TRADER, ein,
-                                             "agent.rolle_trader")), sym)
+                                             "agent.rolle_trader")), sym, atr=atr)
             f["neu"] = ent.get("aktion")
             f["faktoren"] = ent.get("unabhaengige_faktoren")
             f["begruendung"] = ent.get("begruendung")

@@ -114,7 +114,8 @@ deine Entscheidung nicht; er gehoert dazu.
 
 6. UMGEWORFEN DURCH. Welche einzelne, ueberpruefbare Beobachtung wuerde deine \
 Entscheidung als falsch erweisen? Ein Kurs, ein Datum, ein Ereignis - nichts \
-Allgemeines.
+Allgemeines. Nenne, wo es sich sagen laesst, den Kurs und das Datum \
+ZUSAETZLICH als eigene Felder - sonst null.
 
 Antworte AUSSCHLIESSLICH mit JSON:
 {{"belege": [{{"fakt": "<kurz, mit Wert>", "richtung": "dafuer|dagegen|neutral", \
@@ -124,7 +125,9 @@ Antworte AUSSCHLIESSLICH mit JSON:
  "einstieg_eur": <zahl>, "stop_eur": <zahl>,
  "begruendung": "<ein bis zwei Saetze>",
  "was_dagegen": "<der staerkste Gegengrund>",
- "umgeworfen_durch": "<eine ueberpruefbare Beobachtung>"}}"""
+ "umgeworfen_durch": "<eine ueberpruefbare Beobachtung>",
+ "umgeworfen_preis_eur": <zahl oder null>,
+ "umgeworfen_bis": "<YYYY-MM-DD oder null>"}}"""
 
 
 def _baue_prompt(mit_betragsfrage: bool, mit_persona: bool) -> str:
@@ -150,7 +153,74 @@ SYSTEM_PROMPT_TRADER_OHNE_PERSONA = _baue_prompt(mit_betragsfrage=False,
 #   2026-08-11   Betragssatz aus dem Betriebsprompt entfernt (schaltbar
 #                erhalten). Persona UNVERAENDERT eingeschaltet - offene Frage,
 #                kein Verbot; sie ist jetzt einzeln schaltbar und messbar.
-PROMPT_STAND = "2026-08-11"
+#   2026-08-12   Paket 1: der Falsifikator bekommt zwei maschinenlesbare
+#                Felder (`umgeworfen_preis_eur`, `umgeworfen_bis`). Zielkurs
+#                und die Spannen um Einstieg/Stop werden ABGELEITET, nicht
+#                erfragt - siehe `leite_zonen_ab()`. Die Frage an das Modell
+#                ist damit unveraendert bis auf Punkt 6.
+PROMPT_STAND = "2026-08-12"
+
+
+# --- Die abgeleiteten Zonen (Paket 1, 12.08.2026) -------------------------
+#
+# DREI ZAHLEN, DIE DER NUTZER BRAUCHT und die das Modell NICHT nennt:
+# Zielkurs, und je eine Spanne um Einstieg und Stop ("bei ca.").
+#
+# WARUM ABGELEITET STATT ERFRAGT - und das ist kein Geschmack, sondern eine
+# Voraussetzung fuer die Erfolgsmessung. Die gesamte Trefferbilanz laeuft auf
+# der Geometrie 3 ATR Ziel / 1,5 ATR Stop (so in `baue_ankerpopulation.py`,
+# `messe_degradierung.py`, `messe_zeitschranke.py`). Nennt das Modell den
+# Zielkurs frei, weicht die Geometrie je Signal ab - und dann sind zwei
+# Trefferquoten nicht mehr vergleichbar. Ohne feste Geometrie gibt es keine
+# Kalibrierungstabelle und damit keine ehrliche Zahl fuer die E-Mail
+# (Umbauplan 6.3).
+#
+# Das Modell entscheidet weiterhin RICHTUNG, EINSTIEG und RISIKOABSTAND - also
+# das Wesentliche. Dieselbe Linie wie beim Betrag: das Modell urteilt, die Zahl
+# leitet sich ab.
+#
+# 3,0 / 1,5 = 2,0, und exakt dieser Wert steht als `risiko.crv_minimum` in der
+# config (Z-2). Die Ableitung reproduziert also die Messgeometrie, statt eine
+# zweite danebenzustellen.
+CRV_ZIEL = 2.0
+
+# Die Spanne ist eine TOLERANZ, keine Prognose. Ein Kurs bewegt sich innerhalb
+# eines Tages um Bruchteile des ATR; ein Viertel davon ist die Breite, in der
+# "bei ca." ehrlich ist. Bewusst symmetrisch und bewusst klein - eine breite
+# Spanne sieht vorsichtig aus und macht jede Angabe unpruefbar.
+BAND_ATR = 0.25
+
+
+def leite_zonen_ab(antwort: dict, atr: float | None,
+                   crv: float = CRV_ZIEL) -> dict:
+    """Ergaenzt Zielkurs und die Spannen um Einstieg und Stop.
+
+    Aendert die Punktwerte des Modells NICHT - `einstieg_eur` und `stop_eur`
+    bleiben unberuehrt daneben stehen. Wer den Punkt braucht, findet ihn; wer
+    die Spanne braucht, auch.
+
+    Ohne ATR gibt es keine Spanne (aber sehr wohl ein Ziel - das haengt nur an
+    Einstieg und Stop). Fehlt einer der beiden Punkte, passiert gar nichts:
+    eine erfundene Zone waere schlimmer als keine."""
+    ein = antwort.get("einstieg_eur")
+    stop = antwort.get("stop_eur")
+    if not isinstance(ein, (int, float)) or not isinstance(stop, (int, float)):
+        return antwort
+    if ein <= 0 or stop <= 0 or stop >= ein:
+        # Stop ueber Einstieg ist ein Widerspruch, den der Vertrag ohnehin
+        # beanstandet - hier wird er nicht durch eine Rechnung kaschiert.
+        return antwort
+
+    risiko = float(ein) - float(stop)
+    antwort["ziel_eur"] = round(float(ein) + crv * risiko, 8)
+
+    if isinstance(atr, (int, float)) and atr > 0:
+        band = BAND_ATR * float(atr)
+        for feld, mitte in (("einstieg", ein), ("stop", stop),
+                            ("ziel", antwort["ziel_eur"])):
+            antwort[f"{feld}_eur_von"] = round(max(0.0, float(mitte) - band), 8)
+            antwort[f"{feld}_eur_bis"] = round(float(mitte) + band, 8)
+    return antwort
 
 
 class TraderAntwortUngueltig(ValueError):
@@ -158,9 +228,17 @@ class TraderAntwortUngueltig(ValueError):
 
 
 def validiere(antwort: dict, symbol: str = "?",
-              max_tranche_eur: int | None = None) -> dict:
+              max_tranche_eur: int | None = None,
+              atr: float | None = None) -> dict:
     """Prueft die Rollen-eigenen Felder; der Handlungsteil laeuft danach durch
     `empfehlung_vertrag.validiere()`.
+
+    `atr` (12.08.2026, Paket 1): wird durchgereicht an `leite_zonen_ab()`.
+    Die Ableitung steht ABSICHTLICH hier drin und nicht in einer Funktion, die
+    der Aufrufer zusaetzlich rufen muss - eine Ergaenzung, die man vergessen
+    kann, fehlt irgendwann in genau einem der sechs Pfade. Ohne `atr` entsteht
+    der Zielkurs trotzdem (er haengt nur an Einstieg und Stop), nur die Spannen
+    fehlen.
 
     `max_tranche_eur` wird nicht mehr verwendet - Rolle A nennt keinen Betrag
     mehr. Der Parameter bleibt vorerst in der Signatur, damit bestehende
@@ -257,8 +335,15 @@ def validiere(antwort: dict, symbol: str = "?",
     # "100 EUR" fuer eine Handlung, die gar nicht stattfindet. Ein Betrag ohne
     # Handlung ist Rauschen in der Anzeige.
     if str(antwort.get("aktion") or "").strip().upper() == "NICHTS_TUN":
-        for feld in ("tranche_eur", "einstieg_eur", "stop_eur"):
+        for feld in ("tranche_eur", "einstieg_eur", "stop_eur",
+                     "ziel_eur", "einstieg_eur_von", "einstieg_eur_bis",
+                     "stop_eur_von", "stop_eur_bis",
+                     "ziel_eur_von", "ziel_eur_bis"):
             antwort.pop(feld, None)
+    else:
+        # ZONEN ABLEITEN, erst NACH der Faktoren- und Degradierungslogik: eine
+        # auf NICHTS_TUN zurueckgenommene Handlung soll keinen Zielkurs tragen.
+        leite_zonen_ab(antwort, atr)
 
     if prot:
         antwort["_korrekturen"] = ((antwort.get("_korrekturen", "") + "; ")
