@@ -106,6 +106,50 @@ def breakeven(kosten_r: float = 0.0, crv: float = CRV) -> float:
     return (1.0 + max(0.0, float(kosten_r))) / (1.0 + float(crv))
 
 
+# Kosten je Seite, aus `backward_tracking._KOSTEN_*` uebernommen. Krypto ueber
+# Bitpanda ist prozentual und im Kurs enthalten.
+KOSTEN_JE_SEITE = {"krypto": 0.015, "boerse_fix_eur": 1.0, "boerse_spread": 0.0015}
+
+
+def kosten_r_aus_stop(einstieg: float, stop: float, klasse: str = "krypto",
+                      position_eur: float | None = None) -> float | None:
+    """Die Kosten in R fuer DIESES Signal - aus seinem eigenen Stopabstand.
+
+    DER LIVE-LAUF VOM 12.08. HAT GEZEIGT, WARUM DAS NOETIG IST. Das Modell
+    waehlte fuer BTC einen Stop von 1.000 EUR auf 55.500 - das sind 1,80 % und
+    nur 0,60 ATR. Die Folge:
+
+        Stopabstand          stop_rel   Kosten in R   Breakeven
+        1.000 EUR (Modell)      1,80 %       1,67 R      88,8 %
+        2.516 EUR (1,5 ATR)     4,53 %       0,66 R      55,4 %
+        7.000 EUR              12,61 %       0,24 R      41,3 %
+
+    Bei 1.000 EUR verschlingen die Gebuehren MEHR ALS DIE GANZE CHANCE - der
+    Trade ist rechnerisch unmoeglich, bevor irgendeine Marktmeinung ins Spiel
+    kommt. Und der Stopabstand ist die einzige Groesse, die das entscheidet.
+
+    EINE KLASSENKONSTANTE WAERE HIER FALSCH. Die dokumentierten -0,230 R fuer
+    Krypto gelten fuer einen Stop um 13 %; auf 1,8 % sind es 1,67 R. Wer den
+    Klassenwert nimmt, rechnet fuer dieses Signal um das Siebenfache zu
+    guenstig.
+
+    ANDERS ALS DIE TREFFERQUOTE IST DAS KEIN SCHAETZWERT: die Gebuehren stehen
+    fest, der Stopabstand steht im Signal. Diese Zahl ist gerechnet, nicht
+    kalibriert."""
+    if not einstieg or not stop or einstieg <= 0 or stop >= einstieg:
+        return None
+    stop_rel = (einstieg - stop) / einstieg
+    if klasse == "krypto":
+        kosten_rel = 2.0 * KOSTEN_JE_SEITE["krypto"]
+    else:
+        # Boerse: Fixgebuehr je Seite plus Spread. Die Fixgebuehr macht die
+        # Kosten positionsgroessen-ABHAENGIG - sie kuerzt sich nicht heraus.
+        groesse = float(position_eur) if position_eur else 500.0
+        kosten_rel = (2.0 * KOSTEN_JE_SEITE["boerse_fix_eur"] / groesse
+                      + 2.0 * KOSTEN_JE_SEITE["boerse_spread"])
+    return kosten_rel / stop_rel
+
+
 def geschrumpft(treffer: int, faelle: int,
                 basisrate: float = BASISRATE,
                 gewicht: int = GEWICHT_MITTELWERT) -> float:
@@ -214,16 +258,42 @@ def satz(bewertung: dict) -> list[str]:
     b = bewertung
     zeilen = [
         f"Grundwahrscheinlichkeit dieser Geometrie: {100 * b['basisrate']:.0f} %",
-        f"Fuer die Kosten zu schlagen sind:         {100 * b['breakeven']:.0f} %",
     ]
     if b["belastbar"]:
-        zeilen.insert(1, f"Diese Konstellation traf bisher in:        "
-                         f"{100 * b['wahrscheinlichkeit']:.0f} %  (n = {b['faelle']})")
-        zeilen.append("--> Erwartungswert positiv." if b["traegt"]
-                      else "--> Erwartungswert negativ - der Trade traegt sich "
-                           "rechnerisch nicht.")
+        zeilen.append(f"Diese Konstellation traf bisher in:        "
+                      f"{100 * b['wahrscheinlichkeit']:.0f} %  (n = {b['faelle']})")
     else:
-        zeilen.insert(1, f"Diese Konstellation: erst {b['faelle']} Faelle - "
-                         f"keine belastbare Abweichung von der Basisrate")
-        zeilen.append("--> Noch keine eigene Messung. Es gilt die Basisrate.")
+        zeilen.append(f"Diese Konstellation: erst {b['faelle']} Faelle - keine "
+                      f"belastbare Abweichung von der Basisrate")
+    zeilen.append(f"Fuer die Kosten zu schlagen sind:         "
+                  f"{100 * b['breakeven']:.0f} %")
+
+    # DER VERGLEICH GILT IMMER - korrigiert nach dem Live-Lauf vom 12.08.
+    #
+    # Die erste Fassung sagte bei duenner Datenlage nur "noch keine eigene
+    # Messung, es gilt die Basisrate" - AUCH bei einem Breakeven von 113 %.
+    # Das war falsch: bei 113 % braucht es keine Kalibrierung, um zu wissen,
+    # dass es nicht geht.
+    #
+    # Die Fallzahl entscheidet, ob wir eine KONSTELLATIONS-EIGENE Quote
+    # behaupten duerfen. Sie entscheidet NICHT, ob wir vergleichen duerfen -
+    # die Basisrate steht auf 19.891 Ankern, nicht auf null.
+    if b["breakeven"] >= 1.0:
+        zeilen.append("--> RECHNERISCH UNMOEGLICH: die Kosten verschlingen mehr "
+                      "als die ganze Chance. Ein engerer Stop macht es "
+                      "schlimmer, nicht besser.")
+    elif b["traegt"]:
+        zeilen.append("--> Erwartungswert positiv."
+                      + ("" if b["belastbar"] else " Auf der Basisrate - eine "
+                         "eigene Messung gibt es noch nicht."))
+    else:
+        zeilen.append(f"--> Erwartungswert NEGATIV: "
+                      f"{100 * b['wahrscheinlichkeit']:.0f} % gegen "
+                      f"{100 * b['breakeven']:.0f} % noetig."
+                      + ("" if b["belastbar"] else " Gemessen auf der "
+                         "Basisrate; eine eigene Quote gibt es noch nicht."))
+    if b.get("abgelaufen"):
+        zeilen.append(f"    ({b['abgelaufen']} weitere Faelle liefen ohne "
+                      f"Entscheidung aus - die Quote steht auf "
+                      f"{100 * (b['anteil_entschieden'] or 0):.0f} % der Faelle)")
     return zeilen

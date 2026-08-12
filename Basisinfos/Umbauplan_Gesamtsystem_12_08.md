@@ -396,7 +396,7 @@ python pruefe_pakete.py            # alle Pakete
 python pruefe_pakete.py --paket 1  # nur eines
 ```
 
-Stand: **114 Prüfungen** über Paket 0–8, alle bestanden. Kein LLM-Aufruf, kein
+Stand: **125 Prüfungen** über Paket 0–9, alle bestanden. Kein LLM-Aufruf, kein
 Netzwerk, keine Schreibzugriffe — sie darf jederzeit laufen.
 
 > **Regel für neue Pakete:** wer ein Paket baut, hängt seine Prüfungen dort an

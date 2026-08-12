@@ -263,10 +263,27 @@ def beschreibe_stimmung(stimmung: dict, datum: str) -> list[str]:
     aktuell = float(werte[-1])
     fenster = werte[-FENSTER_HISTORIE:]
     p = _perzentil(fenster, aktuell)
-    return [f"Die Anlegerstimmung zu Bitcoin steht bei {aktuell:.0f} von 100; "
-            f"das liegt im {p}. Perzentil der letzten {len(fenster)} "
-            f"Messungen. Ein niedriger Wert bedeutet Zurueckhaltung, ein hoher "
-            f"Risikobereitschaft."]
+    # DIE REIHENFOLGE IST DAS ERGEBNIS EINES LIVE-LAUFS (12.08.). Die erste
+    # Fassung lautete: "steht bei 27 von 100; das liegt im 74. Perzentil ...
+    # Ein niedriger Wert bedeutet Zurueckhaltung." Das Modell machte daraus:
+    # "liegt mit 27 von 100 im 74. Perzentil, was auf ausgepraegte
+    # Zurueckhaltung hindeutet" - und verband damit die RELATIVE Zahl mit einer
+    # Deutung, die nur fuer die ABSOLUTE gilt.
+    #
+    # Der Fehler lag im Satz, nicht im Modell: er stellte eine niedrige
+    # absolute Zahl neben eine hohe relative und haengte die Erklaerung an die
+    # absolute. Wer das schnell liest, verbindet die Erklaerung mit der
+    # letztgenannten Zahl.
+    #
+    # Jetzt steht das Perzentil zuerst - wie in jedem anderen Fakt hier - und
+    # der Schlusssatz sagt die relative Aussage NOCH EINMAL in Worten, ohne
+    # Zahl. Damit gibt es keine zwei Zahlen mehr, die um dieselbe Deutung
+    # konkurrieren.
+    hoeher = 100 - p
+    return [f"Die Anlegerstimmung zu Bitcoin liegt im {p}. Perzentil der "
+            f"letzten {len(fenster)} Messungen; auf der Skala von 0 bis 100 "
+            f"steht sie bei {aktuell:.0f}. An {hoeher} % der Tage dieses "
+            f"Zeitraums war sie zuversichtlicher als heute."]
 
 
 def beschreibe_marktlage(reihen: dict, datum: str, stimmung: dict | None = None,

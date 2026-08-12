@@ -45,7 +45,14 @@ import agent.rolle_trader as RT
 from agent.empfehlung_vertrag import EmpfehlungUngueltig, cash_hinweis
 from agent.lagebeschreibung import beschreibe_lage
 from agent.szenario_fakten import enthaelt_werturteile, finde_konstanten
-from backtest_llm1_historisch import lade_reihen
+# AUS DER DATENBANK, NICHT AUS DEM EXPORT (Paket 9, 12.08.2026). Der
+# JSON-Export traegt 41 Reihen und ausgerechnet ZWEI der drei
+# Leitmaerkte nicht (SPY, OD7C). Der Live-Lauf lieferte deshalb ein
+# krypto-only Lagebild und `gleichlauf: unbekannt` - und das faellt
+# nur auf, wenn man die Ausgabe LIEST. Der Faktenbauer benutzt die
+# Datenbank; ein Pruefskript, das eine andere Quelle liest, prueft
+# etwas anderes als das, was laeuft.
+from backtest_llm1_historisch import lade_reihen_aus_db as lade_reihen
 from indicators.calculations import atr_wilder, latest_value
 
 import agent.rollen_eingabe as RE
@@ -80,7 +87,8 @@ def _atr(reihe, i: int) -> float:
     return RE.atr_bis(reihe, i)
 
 
-def baue_eingaben(symbol: str, datum: str | None, reihen: dict) -> tuple[dict, dict]:
+def baue_eingaben(symbol: str, datum: str | None,
+                  reihen: dict) -> tuple[dict, dict, float]:
     """Die Eingaben beider Rollen - jetzt ueber `rollen_eingabe.baue_fall()`.
 
     Vorher baute diese Funktion sie selbst zusammen. Damit fehlte hier die
@@ -99,15 +107,36 @@ def baue_eingaben(symbol: str, datum: str | None, reihen: dict) -> tuple[dict, d
         idx = len(reihe) - 1
     sitzung = requests.Session()
     sitzung.headers["User-Agent"] = "TradingInfoTool"
-    return RE.baue_fall(symbol=symbol, reihe=reihe, index=idx, reihen=reihen,
-                        db=DB, session=sitzung)
+    a_ein, bc_ein = RE.baue_fall(symbol=symbol, reihe=reihe, index=idx,
+                                 reihen=reihen, db=DB, session=sitzung)
+    # DER ATR IN EUR, fuer die Zonen-Ableitung (Paket 7). Er reist NEBEN der
+    # Eingabe mit, nicht darin - `lauf()` kennt weder Reihe noch Index, und ihn
+    # dort neu zu berechnen hiesse, dieselbe Groesse an zwei Stellen zu bilden.
+    #
+    # NICHT IN `bc_ein`: der gesamte Dict geht als Nachricht an das Modell
+    # (`frage(..., bc_ein, ...)`). Ein Schluessel darin waere ein Fakt, den
+    # niemand gesetzt hat - und ein Unterstrich davor macht ihn nicht
+    # unsichtbar. Mein erster Anlauf hatte genau das getan, samt eines
+    # Kommentars, der das Gegenteil behauptete.
+    return a_ein, bc_ein, RE.atr_eur(symbol, reihe, idx, DB)
 
 
 def _client(name: str):
     import os
     import config as config_module
     config_module.load_env()
+    if name == "gemini":
+        # DAS PRODUKTIONSMODELL (Paket 9, 12.08.2026). Bis heute kannte dieses
+        # Skript nur "gemini35" - und weil ich das dort gelesen habe, stand in
+        # meinem Bericht, die Kette laufe auf 3.5. Die Quelle sagt 3.1
+        # (api/gemini.py::DEFAULT_MODEL). Ein Skript ist eine VERWENDUNG,
+        # keine Festlegung.
+        from api.gemini import DEFAULT_MODEL, GeminiClient
+        return GeminiClient(os.environ["GEMINI_API_KEY"]), DEFAULT_MODEL
     if name == "gemini35":
+        # NUR FUER MESSUNGEN. Eigener Kontingent-Topf, deshalb nuetzlich fuer
+        # Laeufe, die der Produktion nichts wegnehmen sollen - aber KEIN Befund
+        # von hier gilt ohne Wiederholung fuer die Produktion.
         from api.gemini import GeminiClient
         return GeminiClient(os.environ["GEMINI_API_KEY"]), "gemini-3.5-flash-lite"
     if name == "openrouter":
@@ -140,7 +169,7 @@ def zeige(titel: str, zeilen) -> None:
 
 def lauf(symbol: str, datum: str | None, reihen: dict, anbieter: str | None,
          erwartet: str | None = None) -> None:
-    a_ein, bc_ein = baue_eingaben(symbol, datum, reihen)
+    a_ein, bc_ein, atr_e = baue_eingaben(symbol, datum, reihen)
 
     print("\n" + "=" * 78)
     print(f"{symbol}  {datum or 'heute'}" + (f"   [{erwartet}]" if erwartet else ""))
@@ -164,12 +193,17 @@ def lauf(symbol: str, datum: str | None, reihen: dict, anbieter: str | None,
     try:
         a_roh = frage(client, modell, RA.SYSTEM_PROMPT_ANALYST, a_ein,
                       "agent.rolle_analyst")
-        a = RE.stempel_gleichlauf(RA.validiere(a_roh), reihen, anker)
+        # `datum` kann None sein (= heute); dann das letzte Datum der
+        # Reihe nehmen - der Gleichlauf braucht einen Ankertag.
+        tag = datum or max(k.date for r in reihen.values() for k in r[-1:])
+        a = RE.stempel_gleichlauf(RA.validiere(a_roh), reihen, tag)
     except Exception as e:
         print(f"\n[ROLLE A GESCHEITERT] {type(e).__name__}: {e}")
         return
     zeige("AUSGABE ROLLE A", [f"lage: {a['lage']}",
                               f"gleichlauf (gerechnet): {a['gleichlauf']}"]
+          + [f"klasse {k['klasse']:<10}{k['einstufung']:<12}{k['warum']}"
+             for k in (a.get("klassen") or [])]
           + [f"beleg: {b}" for b in a["belege"]]
           + ([f"KORREKTUR: {a['_korrekturen']}"] if a.get("_korrekturen") else []))
 
@@ -177,7 +211,7 @@ def lauf(symbol: str, datum: str | None, reihen: dict, anbieter: str | None,
     try:
         bc_roh = frage(client, modell, RT.SYSTEM_PROMPT_TRADER, bc_ein,
                        "agent.rolle_trader")
-        bc = RT.validiere(bc_roh, symbol, atr=RE.atr_eur(symbol, reihe, index))
+        bc = RT.validiere(bc_roh, symbol, atr=atr_e)
     except (EmpfehlungUngueltig, RT.TraderAntwortUngueltig) as e:
         print(f"\n[ABGELEHNT] {e}")
         return
@@ -205,6 +239,27 @@ def lauf(symbol: str, datum: str | None, reihen: dict, anbieter: str | None,
         if bc.get(marker):
             zeilen.append(f"{marker.upper()}: {bc[marker]}")
     zeige("AUSGABE ROLLE BC", zeilen)
+
+    # --- DER ENTSCHEIDER (Paket 8) -----------------------------------------
+    # Er steht am Ende, weil er alles davor voraussetzt - und weil genau das
+    # in der E-Mail stehen soll. Er entscheidet nichts: er rechnet und sagt es.
+    from agent import trefferbilanz as TB
+    ein, stop = bc.get("einstieg_eur"), bc.get("stop_eur")
+    kosten = TB.kosten_r_aus_stop(ein, stop)
+    if kosten is None:
+        zeige("ENTSCHEIDER", ["keine Zonen - keine Kostenrechnung moeglich"])
+        return
+    con = sqlite3.connect(DB)
+    try:
+        bilanz = TB.zaehle(con)
+    finally:
+        con.close()
+    schluessel = TB.merkmale(
+        unabhaengige_faktoren=bc.get("unabhaengige_faktoren"))
+    zeige("ENTSCHEIDER",
+          [f"Stopabstand {100 * (ein - stop) / ein:.2f} % des Kurses "
+           f"-> Kosten {kosten:.2f} R"]
+          + TB.satz(TB.bewerte(bilanz, schluessel, kosten_r=kosten)))
 
 
 def main() -> int:

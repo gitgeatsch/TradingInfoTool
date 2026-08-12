@@ -861,9 +861,70 @@ def paket_8() -> None:
            "selbst verwirft, macht seine eigene Wirkung unsichtbar")
 
 
+# ---------------------------------------------------------------- Paket 9 ---
+def paket_9() -> None:
+    """Live-Lauf auf dem Produktionsmodell - was er gefunden hat."""
+    P = "9"
+    from api.gemini import DEFAULT_MODEL
+    from agent import trefferbilanz as TB
+    from agent import marktlage as ML
+    import agent.rollen_eingabe as RE
+
+    pruefe(P, "das Produktionsmodell ist 3.1, nicht 3.5",
+           DEFAULT_MODEL == "gemini-3.1-flash-lite", DEFAULT_MODEL)
+    kette = _quelltext("pruefe_rollenkette.py")
+    pruefe(P, "das Pruefskript kennt den Anbieter 'gemini'",
+           'name == "gemini"' in kette and "DEFAULT_MODEL" in kette)
+
+    # FUND 1: das Skript lud aus dem JSON-Export - dort fehlen ZWEI der drei
+    # Leitmaerkte. Der erste Live-Lauf lieferte ein krypto-only Lagebild.
+    pruefe(P, "das Pruefskript laedt aus der Datenbank, nicht aus dem Export",
+           "lade_reihen_aus_db as lade_reihen" in kette,
+           "der Export traegt 41 Reihen und ausgerechnet SPY und OD7C nicht")
+    from backtest_llm1_historisch import lade_reihen_aus_db
+    fehlend = [s for s in set(ML.BENCHMARK.values())
+               if s not in lade_reihen_aus_db()]
+    pruefe(P, "alle drei Leitmaerkte sind ladbar", not fehlend, str(fehlend))
+
+    # FUND 2: die Kosten in R haengen fast ausschliesslich am Stopabstand -
+    # und den waehlt das Modell frei. Der Live-Lauf gab 1,26 %.
+    eng = TB.kosten_r_aus_stop(55500, 54900)
+    weit = TB.kosten_r_aus_stop(55500, 48500)
+    pruefe(P, "ein enger Stop vervielfacht die Kosten in R",
+           eng > 5 * weit, f"1,26 % -> {eng:.2f} R gegen 12,6 % -> {weit:.2f} R")
+    pruefe(P, "der Breakeven wird je SIGNAL gerechnet, nicht je Klasse",
+           TB.breakeven(eng) > 1.0 and TB.breakeven(weit) < 0.5,
+           "die dokumentierten -0,230 R gelten fuer einen Stop um 13 %; auf "
+           "1,8 % sind es 1,67 R - der Klassenwert waere siebenfach zu guenstig")
+    pruefe(P, "Stop >= Einstieg gibt keine Kosten statt einer Division",
+           TB.kosten_r_aus_stop(100, 100) is None)
+
+    # FUND 3: der Vergleich gilt IMMER, auch ohne eigene Faelle.
+    unmoeglich = TB.satz(TB.bewerte({}, TB.merkmale(), kosten_r=eng))
+    pruefe(P, "ein unmoeglicher Breakeven wird auch OHNE Faelle benannt",
+           any("UNMOEGLICH" in z for z in unmoeglich),
+           "die erste Fassung sagte nur 'noch keine eigene Messung' - auch "
+           "bei 113 % Breakeven")
+    negativ = TB.satz(TB.bewerte({}, TB.merkmale(), kosten_r=weit))
+    pruefe(P, "ein negativer Erwartungswert wird auch OHNE Faelle benannt",
+           any("NEGATIV" in z for z in negativ),
+           "die Fallzahl entscheidet, ob wir eine eigene QUOTE behaupten - "
+           "nicht, ob wir vergleichen duerfen")
+
+    # FUND 4: der Stimmungssatz lud zur Verwechslung ein.
+    satz = ML.beschreibe_stimmung(RE.lade_stimmung(), "2026-07-17")
+    pruefe(P, "der Stimmungssatz nennt das Perzentil ZUERST",
+           satz and satz[0].index("Perzentil") < satz[0].index("Skala"),
+           "die erste Fassung stellte eine niedrige absolute Zahl neben eine "
+           "hohe relative - das Modell verband die Deutung mit der falschen")
+    pruefe(P, "er wiederholt die relative Aussage in Worten",
+           satz and "zuversichtlicher als heute" in satz[0],
+           "damit konkurrieren keine zwei Zahlen mehr um dieselbe Deutung")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
-          "6": paket_6, "7": paket_7, "8": paket_8}
+          "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9}
 
 
 def main() -> int:
