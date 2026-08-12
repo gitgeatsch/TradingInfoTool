@@ -335,6 +335,43 @@ risiko:
   stop_loss_pflicht: true              # RM-5: jede Position braucht einen Stop-Loss
   trailing_stop_erlaubt: true          # RM-6: Gewinnsicherung
   # RM-3: maximale Allokation je Assetklasse (detailliert statt pauschal)
+  # TOEPFE JE ZWECK (Paket 5, 2026-08-12). Nutzervorgabe: "Absicherung soll
+  # nicht ausgeschlossen werden, sondern es benoetigt eine Sonderstellung, ohne
+  # dass die anderen Handlungen beeinflusst werden."
+  #
+  # DIE REGEL: ein Topf begrenzt sich SELBST. Sein Fuellstand veraendert keinen
+  # anderen. Ein niedriger Absicherungsgrad ERZEUGT einen Hedge-Vorschlag - er
+  # unterdrueckt keinen Kauf.
+  #
+  # KEINE BEGRENZUNG IST HIER EINE AUFTEILUNG: 100 + 10 + 10 heisst nicht
+  # "120 % investiert", sondern "Spot bis 100 %, Hebel hoechstens 10 %,
+  # Absicherung hoechstens 10 %". Wer daraus eine Aufteilung machte, haette
+  # wieder eine Verrechnung.
+  #
+  # KEINE DIESER ZAHLEN IST GEMESSEN - Startwerte, die der Nutzer setzt. Der
+  # Fachstandard (Core-Satellite mit Risikobudget) gibt die STRUKTUR vor, nicht
+  # die Hoehe. Die in der Literatur genannten 0,5-2 % fuer Absicherung gelten
+  # fuer OPTIONEN (Praemie) - unsere 3QSS/DBPK sind gehebelte inverse ETFs mit
+  # Rebalancing-Zerfall; die Zahl waere von falscher Herkunft.
+  # ABSOLUT IN EURO, NICHT IN PROZENT - und das ist der Kern.
+  # Nutzereinwand 12.08.: "das Portfolio ist 70 Prozent im Minus und koennte
+  # somit von sich aus schon ein Blocker sein, da man hier ein 2 oder 3x
+  # insgesamt benoetigt fuer einen Gewinn."
+  # Ein Prozentdeckel schrumpft mit dem Verlust: bei -70 % waere jeder Topf nur
+  # noch 30 % gross, waehrend die Erholung +233 % braucht. Er bremst also am
+  # staerksten, wenn Handeln am noetigsten ist - und er braucht bei jeder
+  # Entscheidung einen Portfoliowert, dessen Ausfall dann alles sperrt.
+  # Leer heisst KEINE Begrenzung.
+  toepfe_deckel_eur:
+    spot:                              # leer - die RM-Regeln begrenzen die
+                                       # Einzelposition; ein zweiter Deckel
+                                       # waere nur eine zweite Blockadestelle
+    hebel: 500                         # der einzige Deckel: die einzige
+                                       # Position, die MEHR verlieren kann als
+                                       # ihren Einsatz. Entspricht dem schon
+                                       # bestehenden hebel.eigenkapital_richtwert_eur
+    absicherung:                       # leer - Schutz wird nicht gedeckelt
+
   max_allokation_pro_klasse_prozent:
     krypto: 100                        # [OFFEN] aktuell nur Krypto im Einsatz
     aktien: 0

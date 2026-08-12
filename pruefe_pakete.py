@@ -448,8 +448,86 @@ def paket_4() -> None:
            f"{len(alle)} Aussagen; Makro rahmt alle drei Maerkte zugleich")
 
 
+# ---------------------------------------------------------------- Paket 5 ---
+def paket_5() -> None:
+    """Getrennte Toepfe - ein Topf begrenzt sich SELBST, und keiner blockiert."""
+    P = "5"
+    import inspect
+    import config as C
+    from agent import handelsauftrag as HA
+    from agent import toepfe as T
+    cfg = C.load_config()
+
+    pruefe(P, "die Konfiguration kennt alle drei Toepfe",
+           set(T.deckel_eur(cfg)) == set(T.TOEPFE), str(T.deckel_eur(cfg)))
+    pruefe(P, "jedes Instrument gehoert genau EINEM Topf",
+           sorted(T.TOPF_FUER_INSTRUMENT) == sorted(HA.INSTRUMENTE)
+           and len(set(T.TOPF_FUER_INSTRUMENT.values())) == len(HA.INSTRUMENTE),
+           "sonst waere die Trennung keine")
+
+    # DIE WICHTIGSTE PRUEFUNG DES PAKETS, und sie prueft eine SIGNATUR.
+    # Nutzereinwand 12.08.: "das Portfolio ist 70 Prozent im Minus und koennte
+    # somit von sich aus schon ein Blocker sein." Ein Prozentdeckel schrumpft
+    # mit dem Verlust und bremst am staerksten, wenn Handeln noetig ist.
+    # Solange keine dieser Funktionen einen Portfoliowert SIEHT, kann das nicht
+    # passieren - das ist strenger als jede Wertpruefung.
+    ohne_portfolio = all(
+        not any("portfolio" in p for p in inspect.signature(f).parameters)
+        for f in (T.budget_eur, T.frei_eur, T.deckel_eur))
+    pruefe(P, "keine Funktion kennt den Portfoliowert", ohne_portfolio,
+           "ein Prozentdeckel auf -70 % waere nur noch 30 % gross, waehrend "
+           "die Erholung +233 % braucht")
+    pruefe(P, "die Deckel sind absolut in Euro",
+           all(v is None or v > 1 for v in T.deckel_eur(cfg).values()),
+           "ein Wert wie 10 waere ein Prozentsatz, kein Betrag")
+
+    # KERNPROBE: kein Fuellstand veraendert einen anderen Topf.
+    basis = {i: T.frei_eur(i, 0, cfg) for i in T.TOEPFE}
+    unabhaengig = all(
+        T.frei_eur(anderer, 0, cfg) == basis[anderer]
+        for voll in T.TOEPFE for anderer in T.TOEPFE if anderer != voll)
+    pruefe(P, "ein voller Topf veraendert KEINEN anderen", unabhaengig,
+           "Nutzervorgabe: 'es kommen keine Kaufpositionen rein, weil Hedge "
+           "gering ist' - genau das darf nicht passieren")
+
+    pruefe(P, "Schutz wird NICHT gedeckelt",
+           T.budget_eur("absicherung", cfg) is None,
+           "wer im fallenden Markt absichern will und an eine Obergrenze "
+           "stoesst, hat sie am falschen Ende")
+    pruefe(P, "Spot wird nicht doppelt gedeckelt",
+           T.budget_eur("spot", cfg) is None,
+           "die RM-Regeln begrenzen die Einzelposition bereits")
+    pruefe(P, "der Hebel behaelt als EINZIGER einen Deckel",
+           T.budget_eur("hebel", cfg) is not None
+           and T.frei_eur("hebel", 99999, cfg) == 0.0,
+           "die einzige Position, die MEHR verlieren kann als ihren Einsatz")
+
+    for falsch in ("", None, "futures", "Spot-Hebel"):
+        try:
+            T.topf_fuer(falsch)
+            pruefe(P, f"unbekanntes Instrument {falsch!r} wirft", False,
+                   "STILLER RUECKFALL auf spot")
+        except T.TopfUnbekannt:
+            pruefe(P, f"unbekanntes Instrument {falsch!r} wirft", True)
+
+    pruefe(P, "Absicherungsbedarf = Exposure / Hebelfaktor",
+           T.absicherung_bedarf_eur(6000, 3.0) == 2000.0,
+           "keine Prozentzahl aus der Optionsliteratur - 3QSS/DBPK sind "
+           "gehebelte inverse ETFs, kein Praemiengeschaeft")
+    pruefe(P, "Hebelfaktor 0 ergibt 0 statt Division durch null",
+           T.absicherung_bedarf_eur(6000, 0) == 0.0)
+
+    quelle = _quelltext("agent/toepfe.py")
+    pruefe(P, "uebergreifende Groessen stehen NAMENTLICH",
+           "UEBERGREIFEND" in quelle,
+           "damit sich an keiner zweiten Stelle eine Verrechnung einschleicht")
+    pruefe(P, "kein Prozentdeckel mehr im aktiven Code",
+           "toepfe_anteil_prozent" not in quelle and "VORGABE_ANTEIL" not in quelle,
+           "die erste Fassung rechnete Prozente vom Portfolio")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
-          "2": paket_2, "3": paket_3, "4": paket_4}
+          "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5}
 
 
 def main() -> int:
