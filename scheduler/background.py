@@ -251,15 +251,17 @@ def refresh_ohlc_job(client, conn_factory, watchlist_provider,
                      coingecko_client=None) -> None:
     """`watchlist_provider` siehe refresh_prices_job()-Docstring (2026-07-23).
 
-    ZWEITE QUELLE seit 03.08.: Krypto-Assets ohne Kraken-Listing bekamen bisher
-    GAR KEINE Kerzen - stillschweigend, weil backfill_ohlc() sie als
-    "kein Kraken-Listing" ueberspringt. Betroffen waren elf Symbole, darunter
-    KAIA mit 17,2 % aller Hebel-Screening-Kandidaten. Der CoinGecko-Rueckfall
-    (api/coingecko_ohlc_fallback.py) schliesst das; er laeuft NACH Kraken und
-    ruehrt nur Assets an, die dort leer ausgehen. `coingecko_client=None`
-    schaltet ihn ab - dann verhaelt sich der Job wie vor dem 03.08.
+    DIE LUECKE, die eine zweite Quelle noetig macht: Krypto-Assets ohne
+    Kraken-Listing bekamen GAR KEINE Kerzen - stillschweigend, weil
+    backfill_ohlc() sie als "kein Kraken-Listing" ueberspringt. Betroffen waren
+    elf Symbole, darunter KAIA mit 17,2 % aller Hebel-Screening-Kandidaten.
 
-    RUECKFALL SEIT 12.08.: BOERSEN-KLINES statt CoinGecko und yfinance.
+    RUECKFALL SEIT 12.08.: BOERSEN-KLINES (`api/boersen_klines.py`). Er laeuft
+    NACH Kraken und ruehrt nur Symbole ohne Kraken-Paar an.
+
+    Der Parameter `coingecko_client` wird NICHT MEHR VERWENDET. Er steht noch in
+    der Signatur, damit bestehende Aufrufer nicht brechen; der Job ignoriert
+    ihn. Wer ihn entfernt, muss `build_scheduler()` mit anfassen.
 
     Beide Vorgaenger waren die schlechtere Wahl. CoinGecko liefert ueber /ohlc
     GAR KEINE Tageskerzen (gemessen: Vier-Tage-Abstand, abgelegt neben Krakens
