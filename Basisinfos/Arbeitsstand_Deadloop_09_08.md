@@ -2724,3 +2724,104 @@ fallende Kurse — das ist eine Prognose, nur eine unausgesprochene.
 - **Aktien n = 2** (PLTR, VST), beide Extremgewinner. Für sich genommen
   unbrauchbar; sie dienen hier nur als Gegenprobe zur Richtungsabhängigkeit.
 - Steuern und Slippage fehlen; Kaufkosten sind enthalten.
+
+---
+
+## 7.28 Der Deadloop ist aufgehoben — und was die Marktphasen zeigen (12.08.)
+
+### Zuerst der Fehler, der die ganze Ursachensuche vom 11.08. entwertet
+
+**Nutzereinwand:** *„du hast in kurzer Zeit gesagt — keine Änderung des
+Deadloops und dann wieder das Gegenteil."* Berechtigt. Vermischt wurden:
+
+```
+97,7 % HALTEN       gemessen am ALTEN Produktivsystem (2.957 Signale)
+34-40 % Handlung    gemessen an der NEUEN Rollen-Ebene (geschichtete Anker)
+```
+
+Und dazwischen wurde den ganzen 11.08. nach **Ursachen für das Verhalten des
+Altsystems** gesucht, indem an der **neuen** Kette manipuliert wurde. Dass jede
+Erklärung ins Leere lief — Struktur-Etikett, Degradierung, Faktorzahl — war die
+logische Folge: gesucht wurde die Ursache eines Phänomens, das das getestete
+System gar nicht zeigt.
+
+### Der Abgleich, auf DENSELBEN Fällen
+
+50 Produktionsfälle, zufällig gezogen (Seed 20260812), ohne Schichtung nach
+Aktion. Im Altsystem ausnahmslos HALTEN.
+
+```
+ALT    0 Handlungen =   0,0 %   {HALTEN: 50}
+NEU   17 Handlungen =  34,0 %   {NICHTS_TUN 33, REDUZIEREN 14, VERKAUFEN 2, NACHKAUFEN 1}
+```
+
+**Das erklärte Ziel des Umbaus — der Deadloop muss weg — ist erreicht.**
+
+Aber: **16 der 17 Handlungen sind Verkäufe.** Das System handelt, aber fast nur
+in eine Richtung.
+
+### Marktphasen: das System reagiert, aber nicht wie erwartet
+
+48 Fälle über vier Phasen, 22 Symbole konstant gehalten, Phasen am BTC-Verlauf
+abgelesen. **Vorab notierte Erwartung:** eine brauchbare Kette kauft im Bullen
+häufiger als im Bären.
+
+```
+Phase          n   Kaeufe  Verkaeufe   nichts   Kurs danach
+BULLE         12        1          0       11     - 6,5 %
+SEITWAERTS    12        5          1        6     - 4,8 %
+BAER          12        3          1        8     -19,3 %
+WENDE         12        1          3        8     - 0,5 %
+```
+
+**Das System reagiert** — die Zeilen sind deutlich verschieden, die Eingabe
+wirkt. **Aber es kauft im Bullen am seltensten.**
+
+> **Dieser Lauf kann „richtungsblind" nicht von „zu Recht vorsichtig"
+> unterscheiden.** In **allen vier** Phasen war die Folgerendite negativ. Die
+> Phasen beschreiben die Vergangenheit vor dem Anker; das anwählbare
+> Bullenfenster endet an einem lokalen Hoch, also folgt auf die meisten
+> Bullen-Anker ein Rückgang. Dass dort kaum gekauft wurde, war gemessen am
+> Verlauf **richtig**.
+
+### Nach dem FOLGENDEN Verlauf gruppiert — die Ausgangsmessung
+
+Dieselben 48 Fälle, gruppiert nach dem, was tatsächlich in den nächsten 20 Tagen
+geschah (Bewertungsraster, kein Auswahlkriterium — die Eingabe des Modells
+bleibt unberührt):
+
+```
+was danach geschah            n   Kaeufe  Verkaeufe   nichts
+STARK AUF  (>= +10 %)         6        1          0        5
+leicht auf ( +3..10 %)        7        1          2        4
+seitwaerts ( -3..+3 %)        7        2          1        4
+leicht ab  ( -3..-10 %)      10        1          1        8
+STARK AB   (<= -10 %)        18        5          1       12
+
+Kaufquote wenn es danach STARK STIEG:  1/6  = 17 %
+Kaufquote wenn es danach STARK FIEL:   5/18 = 28 %
+```
+
+**Der Punktschätzer zeigt in die falsche Richtung** — mehr Käufe vor starken
+Rückgängen als vor starken Anstiegen. **Bei n = 6 gegen n = 18 ist das aber
+nicht von Zufall zu unterscheiden.** Die Messung stellt fest, dass keine
+Trennschärfe sichtbar ist; sie kann nicht belegen, dass keine da ist.
+
+### Warum diese Zahl NICHT als Qualitätsurteil taugt
+
+**Nutzerfrage:** *„bin mir nicht sicher, ob wir bei den Rolleninformationen
+schon eine Basisqualität erreicht haben."* Die Antwort ist **nein**, und das
+lässt sich konkret machen:
+
+| | Stand am 12.08. |
+|---|---|
+| Lagebild | **eine** von vier Standarddimensionen; Trend, Volatilität, Liquidität fehlen. Die eine vorhandene (Breite) ist für 4 von 5 Klassen nicht berechenbar |
+| Zuspitzung | ungeprüft — aus einem 64.-Perzentil-Wert wurde „extrem schwacher Gesamtmarkt". Wächter gebaut, nicht eingehängt |
+| unabhängige Quellen | **zwei** (Preis, Umsatz). Standard: drei bis vier. Funding gebaut, nicht angeschlossen |
+| relative Stärke, Rang | seit 10.08. als Lücke benannt, nicht gebaut |
+| `umgeworfen_durch` | wird erzeugt und nie gelesen |
+
+**Eine Qualitätsmessung auf dieser Eingabe benotet die Eingabe, nicht die
+Kette.** Die Zahlen oben sind deshalb als **Ausgangsmessung** festgehalten — das
+„Vorher", gegen das eine vervollständigte Eingabe später zu vergleichen ist.
+Nicht als Urteil.

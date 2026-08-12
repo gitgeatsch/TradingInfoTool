@@ -1,0 +1,482 @@
+[
+ {
+  "phase": "BULLE",
+  "symbol": "ONDO",
+  "index": 250,
+  "datum": "2025-03-24",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "schmal_getragen",
+  "rendite_20t": -4.1
+ },
+ {
+  "phase": "BULLE",
+  "symbol": "QNT",
+  "index": 298,
+  "datum": "2025-05-11",
+  "aktion": "NACHKAUFEN",
+  "faktoren": 3,
+  "lage_traegt": "gemischt",
+  "rendite_20t": 8.8
+ },
+ {
+  "phase": "BULLE",
+  "symbol": "NEAR",
+  "index": 240,
+  "datum": "2025-03-14",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "schmal_getragen",
+  "rendite_20t": -4.0
+ },
+ {
+  "phase": "BULLE",
+  "symbol": "IMX",
+  "index": 258,
+  "datum": "2025-04-01",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "schmal_getragen",
+  "rendite_20t": -11.9
+ },
+ {
+  "phase": "BULLE",
+  "symbol": "AVAX",
+  "index": 221,
+  "datum": "2025-02-23",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "gemischt",
+  "rendite_20t": -22.0
+ },
+ {
+  "phase": "BULLE",
+  "symbol": "FLOKI",
+  "index": 304,
+  "datum": "2025-05-17",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "gemischt",
+  "rendite_20t": -8.9
+ },
+ {
+  "phase": "BULLE",
+  "symbol": "AKT",
+  "index": 256,
+  "datum": "2025-03-30",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "breit_getragen",
+  "rendite_20t": -11.5
+ },
+ {
+  "phase": "BULLE",
+  "symbol": "NEAR",
+  "index": 263,
+  "datum": "2025-04-06",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "schmal_getragen",
+  "rendite_20t": 21.6
+ },
+ {
+  "phase": "BULLE",
+  "symbol": "FLOKI",
+  "index": 233,
+  "datum": "2025-03-07",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "breit_getragen",
+  "rendite_20t": -1.8
+ },
+ {
+  "phase": "BULLE",
+  "symbol": "NEAR",
+  "index": 220,
+  "datum": "2025-02-22",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "gemischt",
+  "rendite_20t": -24.7
+ },
+ {
+  "phase": "BULLE",
+  "symbol": "LINK",
+  "index": 244,
+  "datum": "2025-03-18",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "schmal_getragen",
+  "rendite_20t": -17.8
+ },
+ {
+  "phase": "BULLE",
+  "symbol": "SOL",
+  "index": 270,
+  "datum": "2025-04-13",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "schmal_getragen",
+  "rendite_20t": 14.4
+ },
+ {
+  "phase": "SEITWAERTS",
+  "symbol": "BTC",
+  "index": 412,
+  "datum": "2025-09-02",
+  "aktion": "REDUZIEREN",
+  "faktoren": 2,
+  "lage_traegt": "gemischt",
+  "rendite_20t": 1.4
+ },
+ {
+  "phase": "SEITWAERTS",
+  "symbol": "ETH",
+  "index": 421,
+  "datum": "2025-09-11",
+  "aktion": "NACHKAUFEN",
+  "faktoren": 3,
+  "lage_traegt": "breit_getragen",
+  "rendite_20t": -2.5
+ },
+ {
+  "phase": "SEITWAERTS",
+  "symbol": "SOL",
+  "index": 413,
+  "datum": "2025-09-03",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "gemischt",
+  "rendite_20t": 1.2
+ },
+ {
+  "phase": "SEITWAERTS",
+  "symbol": "SOL",
+  "index": 439,
+  "datum": "2025-09-29",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "gemischt",
+  "rendite_20t": -11.8
+ },
+ {
+  "phase": "SEITWAERTS",
+  "symbol": "XLM",
+  "index": 399,
+  "datum": "2025-08-20",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 3,
+  "lage_traegt": "gemischt",
+  "rendite_20t": -8.0
+ },
+ {
+  "phase": "SEITWAERTS",
+  "symbol": "IMX",
+  "index": 397,
+  "datum": "2025-08-18",
+  "aktion": "KAUFEN",
+  "faktoren": 3,
+  "lage_traegt": "gemischt",
+  "rendite_20t": -7.2
+ },
+ {
+  "phase": "SEITWAERTS",
+  "symbol": "BEAMX",
+  "index": 428,
+  "datum": "2025-09-18",
+  "aktion": "NACHKAUFEN",
+  "faktoren": 3,
+  "lage_traegt": "breit_getragen",
+  "rendite_20t": 17.1
+ },
+ {
+  "phase": "SEITWAERTS",
+  "symbol": "RENDER",
+  "index": 418,
+  "datum": "2025-09-28",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "gemischt",
+  "rendite_20t": -28.1
+ },
+ {
+  "phase": "SEITWAERTS",
+  "symbol": "W",
+  "index": 438,
+  "datum": "2025-09-28",
+  "aktion": "KAUFEN",
+  "faktoren": 3,
+  "lage_traegt": "gemischt",
+  "rendite_20t": -32.5
+ },
+ {
+  "phase": "SEITWAERTS",
+  "symbol": "SEI",
+  "index": 402,
+  "datum": "2025-08-23",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "breit_getragen",
+  "rendite_20t": 6.2
+ },
+ {
+  "phase": "SEITWAERTS",
+  "symbol": "INJ",
+  "index": 428,
+  "datum": "2025-09-18",
+  "aktion": "KAUFEN",
+  "faktoren": 3,
+  "lage_traegt": "breit_getragen",
+  "rendite_20t": -14.1
+ },
+ {
+  "phase": "SEITWAERTS",
+  "symbol": "TAO",
+  "index": 381,
+  "datum": "2025-08-02",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "gemischt",
+  "rendite_20t": 11.0
+ },
+ {
+  "phase": "BAER",
+  "symbol": "W",
+  "index": 663,
+  "datum": "2026-05-11",
+  "aktion": "KAUFEN",
+  "faktoren": 3,
+  "lage_traegt": "gemischt",
+  "rendite_20t": -27.8
+ },
+ {
+  "phase": "BAER",
+  "symbol": "NEAR",
+  "index": 589,
+  "datum": "2026-02-26",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "schmal_getragen",
+  "rendite_20t": 22.8
+ },
+ {
+  "phase": "BAER",
+  "symbol": "AKT",
+  "index": 552,
+  "datum": "2026-01-20",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "schmal_getragen",
+  "rendite_20t": -19.9
+ },
+ {
+  "phase": "BAER",
+  "symbol": "APT",
+  "index": 542,
+  "datum": "2026-01-10",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "gemischt",
+  "rendite_20t": -20.0
+ },
+ {
+  "phase": "BAER",
+  "symbol": "IMX",
+  "index": 700,
+  "datum": "2026-06-17",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "schmal_getragen",
+  "rendite_20t": -4.4
+ },
+ {
+  "phase": "BAER",
+  "symbol": "ETH",
+  "index": 673,
+  "datum": "2026-05-21",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 3,
+  "lage_traegt": "gemischt",
+  "rendite_20t": -24.0
+ },
+ {
+  "phase": "BAER",
+  "symbol": "RENDER",
+  "index": 492,
+  "datum": "2025-12-11",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "schmal_getragen",
+  "rendite_20t": -20.2
+ },
+ {
+  "phase": "BAER",
+  "symbol": "ALGO",
+  "index": 518,
+  "datum": "2025-12-17",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "schmal_getragen",
+  "rendite_20t": 27.7
+ },
+ {
+  "phase": "BAER",
+  "symbol": "ALGO",
+  "index": 570,
+  "datum": "2026-02-07",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "schmal_getragen",
+  "rendite_20t": -11.3
+ },
+ {
+  "phase": "BAER",
+  "symbol": "BTC",
+  "index": 491,
+  "datum": "2025-11-20",
+  "aktion": "REDUZIEREN",
+  "faktoren": 2,
+  "lage_traegt": "schmal_getragen",
+  "rendite_20t": 6.4
+ },
+ {
+  "phase": "BAER",
+  "symbol": "XLM",
+  "index": 446,
+  "datum": "2025-10-06",
+  "aktion": "NACHKAUFEN",
+  "faktoren": 3,
+  "lage_traegt": "breit_getragen",
+  "rendite_20t": -19.2
+ },
+ {
+  "phase": "BAER",
+  "symbol": "ALGO",
+  "index": 483,
+  "datum": "2025-11-12",
+  "aktion": "KAUFEN",
+  "faktoren": 3,
+  "lage_traegt": "gemischt",
+  "rendite_20t": -19.4
+ },
+ {
+  "phase": "WENDE",
+  "symbol": "SOL",
+  "index": 725,
+  "datum": "2026-07-12",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "schmal_getragen",
+  "rendite_20t": -6.5
+ },
+ {
+  "phase": "WENDE",
+  "symbol": "XLM",
+  "index": 697,
+  "datum": "2026-06-14",
+  "aktion": "REDUZIEREN",
+  "faktoren": 3,
+  "lage_traegt": "gemischt",
+  "rendite_20t": 8.0
+ },
+ {
+  "phase": "WENDE",
+  "symbol": "TURBO",
+  "index": 688,
+  "datum": "2026-07-02",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "schmal_getragen",
+  "rendite_20t": -6.0
+ },
+ {
+  "phase": "WENDE",
+  "symbol": "ETH",
+  "index": 697,
+  "datum": "2026-06-14",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "gemischt",
+  "rendite_20t": 3.1
+ },
+ {
+  "phase": "WENDE",
+  "symbol": "IMX",
+  "index": 710,
+  "datum": "2026-06-27",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "schmal_getragen",
+  "rendite_20t": 4.4
+ },
+ {
+  "phase": "WENDE",
+  "symbol": "AKT",
+  "index": 693,
+  "datum": "2026-06-10",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "breit_getragen",
+  "rendite_20t": 3.1
+ },
+ {
+  "phase": "WENDE",
+  "symbol": "SEI",
+  "index": 709,
+  "datum": "2026-06-26",
+  "aktion": "VERKAUFEN",
+  "faktoren": 2,
+  "lage_traegt": "schmal_getragen",
+  "rendite_20t": -11.4
+ },
+ {
+  "phase": "WENDE",
+  "symbol": "SUI",
+  "index": 702,
+  "datum": "2026-06-19",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "gemischt",
+  "rendite_20t": 0.0
+ },
+ {
+  "phase": "WENDE",
+  "symbol": "APT",
+  "index": 719,
+  "datum": "2026-07-06",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "schmal_getragen",
+  "rendite_20t": -0.5
+ },
+ {
+  "phase": "WENDE",
+  "symbol": "BEAMX",
+  "index": 725,
+  "datum": "2026-07-12",
+  "aktion": "NICHTS_TUN",
+  "faktoren": 2,
+  "lage_traegt": "schmal_getragen",
+  "rendite_20t": -8.5
+ },
+ {
+  "phase": "WENDE",
+  "symbol": "QNT",
+  "index": 727,
+  "datum": "2026-07-14",
+  "aktion": "REDUZIEREN",
+  "faktoren": 2,
+  "lage_traegt": "schmal_getragen",
+  "rendite_20t": -9.5
+ },
+ {
+  "phase": "WENDE",
+  "symbol": "BTC",
+  "index": 733,
+  "datum": "2026-07-20",
+  "aktion": "NACHKAUFEN",
+  "faktoren": 3,
+  "lage_traegt": "schmal_getragen",
+  "rendite_20t": -0.5
+ }
+]

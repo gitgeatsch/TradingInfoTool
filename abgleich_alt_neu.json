@@ -1,0 +1,452 @@
+[
+ {
+  "symbol": "LINK",
+  "datum": "2026-07-18",
+  "alt": "HALTEN",
+  "index": 731,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Trotz kurzfristig steigender Hochs und Tiefs spricht die uebergeordnet schwache Marktbreite mit nur 29 Prozent der Coins ueber der 50-Tage-Linie gegen eine Aufstockung der bestehenden, im Minus befindlichen Position."
+ },
+ {
+  "symbol": "AVAX",
+  "datum": "2026-07-19",
+  "alt": "HALTEN",
+  "index": 732,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Der schwache Gesamtmarkt und der erhebliche Abwaertstrend der letzten Monate lassen keinen profitablen Neueinstieg zu."
+ },
+ {
+  "symbol": "TURBO",
+  "datum": "2026-07-28",
+  "alt": "HALTEN",
+  "index": 714,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Trotz leichter Anzeichen von Marktstrukturverbesserung und erhöhtem Volumen spricht die extreme Schwäche des Gesamtmarktes gegen jede Aktion, weshalb die bestehende, stark im Minus befindliche Position unverändert gehalten wird."
+ },
+ {
+  "symbol": "RENDER",
+  "datum": "2026-08-02",
+  "alt": "HALTEN",
+  "index": 726,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Der uebergreifende Abwaertstrend und die extrem schwache Marktbreite verhindern jeden Neueinstieg in RENDER."
+ },
+ {
+  "symbol": "SOL",
+  "datum": "2026-07-27",
+  "alt": "HALTEN",
+  "index": 740,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Der Gesamtmarkt zeigt fundamentale Schwaeche und die Marktstruktur von SOL bietet mangels stabiler Faktoren keinen attraktiven Einstieg."
+ },
+ {
+  "symbol": "KAS",
+  "datum": "2026-07-24",
+  "alt": "HALTEN",
+  "index": 612,
+  "neu": "REDUZIEREN",
+  "faktoren": 2,
+  "begruendung": "Der anhaltende Abwärtstrend in Kombination mit einem extrem schwachen Gesamtmarkt und sinkenden Umsätzen lässt weiteres Verlustpotenzial erwarten, weshalb ich die Position verkleinere."
+ },
+ {
+  "symbol": "BIO",
+  "datum": "2026-07-17",
+  "alt": "HALTEN",
+  "index": 528,
+  "neu": "REDUZIEREN",
+  "faktoren": 2,
+  "begruendung": "Der Wert zeigt anhaltende Schwaeche bei sehr geringem Volumen und intaktem Abwaertstrend, weshalb Verluste begrenzt werden muessen."
+ },
+ {
+  "symbol": "ASTER",
+  "datum": "2026-08-04",
+  "alt": "HALTEN",
+  "index": 288,
+  "neu": "REDUZIEREN",
+  "faktoren": 2,
+  "begruendung": "Der anhaltende Abwaertstrend bei schwachem Volumen und der insgesamt desolate Gesamtmarkt rechtfertigen keine Aufstockung, weshalb die Position verkleinert werden sollte, um Kapital zu sichern."
+ },
+ {
+  "symbol": "XLM",
+  "datum": "2026-07-23",
+  "alt": "HALTEN",
+  "index": 736,
+  "neu": "NICHTS_TUN",
+  "faktoren": 3,
+  "begruendung": "Der bestehende Gewinn bietet Puffer, aber die schwaechelnde Marktbreite und der kurzfristige Abwärtstrend mahnen zur Geduld."
+ },
+ {
+  "symbol": "VST",
+  "datum": "2026-08-04",
+  "alt": "HALTEN",
+  "index": 2469,
+  "neu": "NICHTS_TUN",
+  "faktoren": 3,
+  "begruendung": "Trotz hohem Volumen und kurzfristiger Marktstruktur stabilisiert sich VST in einem insgesamt extrem schwaechlichen Gesamtmarkt nicht ausreichend fuer einen Nachkauf."
+ },
+ {
+  "symbol": "VST",
+  "datum": "2026-07-30",
+  "alt": "HALTEN",
+  "index": 2466,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Trotz vorhandener Unterstuetzung spricht der schwache Gesamtmarkt und der kurzfristige Kursrutsch gegen einen Ausbau der Position."
+ },
+ {
+  "symbol": "QNT",
+  "datum": "2026-07-23",
+  "alt": "HALTEN",
+  "index": 736,
+  "neu": "REDUZIEREN",
+  "faktoren": 2,
+  "begruendung": "Der anhaltende Abwärtstrend im Asset und der schwache Gesamtmarkt rechtfertigen keine Aufstockung, daher wird die Position verkleinert, um Kapital zu schützen."
+ },
+ {
+  "symbol": "MON",
+  "datum": "2026-07-23",
+  "alt": "HALTEN",
+  "index": 241,
+  "neu": "REDUZIEREN",
+  "faktoren": 2,
+  "begruendung": "Der uebergeordnete Abwaertstrend des Gesamtmarktes und die negative Bestandsentwicklung erfordern eine Begrenzung des Risikos durch Teilverkauf."
+ },
+ {
+  "symbol": "MON",
+  "datum": "2026-07-23",
+  "alt": "HALTEN",
+  "index": 241,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Der uebergreifende Abwaertstrend der letzten Tage und der schwaechelnde Gesamtmarkt verhindern trotz kurzfristiger Erholung einen sinnvollen Neueinstieg oder Nachkauf."
+ },
+ {
+  "symbol": "TURBO",
+  "datum": "2026-07-18",
+  "alt": "HALTEN",
+  "index": 704,
+  "neu": "VERKAUFEN",
+  "faktoren": 2,
+  "begruendung": "Der Wert zeigt einen intakten Abwaertstrend bei extrem ausgetrocknetem Volumen und massivem Verlust im Bestand, weshalb restliches Kapital gesichert werden muss."
+ },
+ {
+  "symbol": "BEAMX",
+  "datum": "2026-07-27",
+  "alt": "HALTEN",
+  "index": 740,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Trotz des tiefen Kurses sprechen die schwache Gesamtmarktphase und das geringe Volumen gegen einen Ausbau der bestehenden Position."
+ },
+ {
+  "symbol": "QNT",
+  "datum": "2026-07-25",
+  "alt": "HALTEN",
+  "index": 738,
+  "neu": "REDUZIEREN",
+  "faktoren": 2,
+  "begruendung": "Der uebergreifende Abwaertstrend und die negative Marktbreite belasten die Position stark, weshalb das Verlustrisiko begrenzt werden muss."
+ },
+ {
+  "symbol": "TAO",
+  "datum": "2026-07-23",
+  "alt": "HALTEN",
+  "index": 736,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Der anhaltende Abwärtstrend und ein schwacher Gesamtmarkt sprechen gegen einen Neueinstieg, obwohl eine Unterstützung in Reichweite ist."
+ },
+ {
+  "symbol": "TURBO",
+  "datum": "2026-08-04",
+  "alt": "HALTEN",
+  "index": 721,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Obwohl kurzfristig eine Stabilisierung und erhoehter Umsatz vorliegen, reicht die Datenbasis mit nur zwei unabhaengigen Faktoren nicht fuer einen Nachkauf aus."
+ },
+ {
+  "symbol": "INJ",
+  "datum": "2026-08-08",
+  "alt": "HALTEN",
+  "index": 752,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Der Trend ist intakt abwaerts gerichtet und der Gesamtmarkt zeigt eine zu schwache Verfassung fuer einen Neuanfang."
+ },
+ {
+  "symbol": "KAS",
+  "datum": "2026-07-23",
+  "alt": "HALTEN",
+  "index": 611,
+  "neu": "REDUZIEREN",
+  "faktoren": 2,
+  "begruendung": "Der uebergreifende Abwaertstrend im Gesamtmarkt und die negative Marktstruktur von KAS sprechen gegen ein Halten des vollen Volumens, weshalb Verluste begrenzt werden sollten."
+ },
+ {
+  "symbol": "ISOC",
+  "datum": "2026-08-04",
+  "alt": "HALTEN",
+  "index": 3643,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Obwohl die Marktstruktur kurzfristig hoehere Tiefs zeigt, verhindert die breite Schwaeche des Gesamtmarktes und das duenne Volumen jeden Ausbau der Position."
+ },
+ {
+  "symbol": "VST",
+  "datum": "2026-08-07",
+  "alt": "HALTEN",
+  "index": 2472,
+  "neu": "REDUZIEREN",
+  "faktoren": 2,
+  "begruendung": "Der uebergeordnete Abwärtstrend im Markt und die schwache kurzfristige Kursstruktur rechtfertigen keine Aufstockung des Verlustgeschäfts. Eine Reduzierung begrenzt das Risiko in einem schwaechelnden Umfeld."
+ },
+ {
+  "symbol": "BIO",
+  "datum": "2026-07-18",
+  "alt": "HALTEN",
+  "index": 529,
+  "neu": "REDUZIEREN",
+  "faktoren": 2,
+  "begruendung": "Der anhaltende Abwaertstrend bei extrem duennem Volumen und schwachem Gesamtmarkt laesst keine Erholung erwarten, weshalb der Verlust begrenzt werden sollte."
+ },
+ {
+  "symbol": "FLOKI",
+  "datum": "2026-08-04",
+  "alt": "HALTEN",
+  "index": 748,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Trotz kurzer Stabilisierung und solider Volumenaktivitaet an einigen Tagen spricht der extrem angeschlagene Gesamtmarkt und der uebergeordnete Abwaertstrend gegen einen Neueinstieg."
+ },
+ {
+  "symbol": "ETH",
+  "datum": "2026-07-24",
+  "alt": "HALTEN",
+  "index": 737,
+  "neu": "REDUZIEREN",
+  "faktoren": 2,
+  "begruendung": "Angesichts des extrem schwachen Gesamtmarktes und der geringen Trendstaerke reduziere ich die bestehende Position, um Kapital zu sichern."
+ },
+ {
+  "symbol": "BNB",
+  "datum": "2026-07-29",
+  "alt": "HALTEN",
+  "index": 463,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Trotz erhöhtem Volumen und einer nahen Unterstützung sprechen der intakte Abwärtstrend und die breite Marktschwäche gegen einen Neueinstieg."
+ },
+ {
+  "symbol": "MORPHO",
+  "datum": "2026-08-04",
+  "alt": "HALTEN",
+  "index": 621,
+  "neu": "NACHKAUFEN",
+  "faktoren": 3,
+  "begruendung": "Der uebergeordnete Trend zeigt ueber 60 Tage Stabilitaet und der Kurs naehert sich einer starken Unterstuetzung bei 1.5739 EUR, was einen risikoarmen Nachkauf rechtfertigt."
+ },
+ {
+  "symbol": "AVAX",
+  "datum": "2026-08-02",
+  "alt": "HALTEN",
+  "index": 746,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Trotz ansteigender Volumensignale im kurzfristigen Trend blockiert der massiv schwache Gesamtmarkt einen Neueinstieg."
+ },
+ {
+  "symbol": "BNB",
+  "datum": "2026-07-23",
+  "alt": "HALTEN",
+  "index": 457,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Der schwaechelnde Gesamtmarkt und der geringe Umsatz sprechen gegen einen Neueinstieg in BNB."
+ },
+ {
+  "symbol": "CEBS",
+  "datum": "2026-07-30",
+  "alt": "HALTEN",
+  "index": 786,
+  "neu": "REDUZIEREN",
+  "faktoren": 2,
+  "begruendung": "Wegen der extremen Gesamtmarktsschwaeche und dem nahen Widerstand sichere ich den kleinen Gewinn."
+ },
+ {
+  "symbol": "BIO",
+  "datum": "2026-07-29",
+  "alt": "HALTEN",
+  "index": 540,
+  "neu": "VERKAUFEN",
+  "faktoren": 2,
+  "begruendung": "Der Wert befindet sich in einem intakten Abwärtstrend bei stark schwindendem Volumen, während der Gesamtmarkt ausgeprägte Schwäche zeigt."
+ },
+ {
+  "symbol": "APT",
+  "datum": "2026-07-21",
+  "alt": "HALTEN",
+  "index": 734,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Der uebergreifende Abwaertstrend und die schwache Marktbreite bieten keine ausreichende Basis fuer einen Neueinstieg."
+ },
+ {
+  "symbol": "AVAX",
+  "datum": "2026-07-27",
+  "alt": "HALTEN",
+  "index": 740,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Angesichts des schwachen Gesamtmarktes und der negativen mittelfristigen Dynamik besteht kein Anlass fuer einen Neueinstieg."
+ },
+ {
+  "symbol": "W",
+  "datum": "2026-07-21",
+  "alt": "HALTEN",
+  "index": 734,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Der uebergeordnete Abwaertstrend und die schwaechelnde Marktbreite bieten keinen tragfaehigen Boden fuer einen Neueinstieg."
+ },
+ {
+  "symbol": "LINK",
+  "datum": "2026-08-07",
+  "alt": "HALTEN",
+  "index": 751,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Trotz des hohen Verlusts fehlen bei schmalem Volumen und intaktem Abwaertstrend die unabhaengigen Faktoren fuer einen Nachkauf oder eine Veraenderung."
+ },
+ {
+  "symbol": "KAS",
+  "datum": "2026-07-15",
+  "alt": "HALTEN",
+  "index": 603,
+  "neu": "REDUZIEREN",
+  "faktoren": 2,
+  "begruendung": "Der schwache Gesamtmarkt und die intakte Abwärtsstruktur auf Sicht der letzten Handelstage rechtfertigen keine Aufstockung, weshalb das Risiko verringert wird."
+ },
+ {
+  "symbol": "VIRTUAL",
+  "datum": "2026-07-18",
+  "alt": "HALTEN",
+  "index": 521,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Trotz kurzfristiger Erholungstendenzen spricht das schmal getragene Marktumfeld mit uebergeordnetem Abwaertstrend gegen einen Neueinstieg."
+ },
+ {
+  "symbol": "SOL",
+  "datum": "2026-07-23",
+  "alt": "HALTEN",
+  "index": 736,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Der uebergeordnete Abwaertstrend im Gesamtmarkt und die fallenden Hochs und Tiefs der letzten 10 Tage sprechen gegen einen Neueinstieg."
+ },
+ {
+  "symbol": "PLUME",
+  "datum": "2026-07-30",
+  "alt": "HALTEN",
+  "index": 463,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Trotz kurzfristig intakter Marktstruktur ueberwiegen der schwache Gesamtmarkt und der nahe Widerstand, sodass ein Einstieg unzureichend getragen ist."
+ },
+ {
+  "symbol": "SUI",
+  "datum": "2026-08-04",
+  "alt": "HALTEN",
+  "index": 748,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Der uebergreifende Abwaertstrend und die geringe Marktbreite sprechen gegen einen Neueinstieg zum aktuellen Zeitpunkt."
+ },
+ {
+  "symbol": "ALGO",
+  "datum": "2026-08-06",
+  "alt": "HALTEN",
+  "index": 750,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Der uebergreifende Marktdruck und der nahe Widerstand bei schmalem Volumen sprechen gegen einen Neueinstieg."
+ },
+ {
+  "symbol": "AKT",
+  "datum": "2026-07-19",
+  "alt": "HALTEN",
+  "index": 732,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Der starke Abwaertstrend des Werts und die negative Gesamtmarktverfassung bieten kein tragfaehiges Fundament fuer einen Einstieg."
+ },
+ {
+  "symbol": "ASTER",
+  "datum": "2026-07-31",
+  "alt": "HALTEN",
+  "index": 284,
+  "neu": "REDUZIEREN",
+  "faktoren": 2,
+  "begruendung": "Der anhaltende Abwaertstrend bei ASTER im Kombination mit einer extremen Gesamtmarktschwaeche raten zur Schadensbegrenzung und Positionsverkleinerung."
+ },
+ {
+  "symbol": "GRIFFAIN",
+  "datum": "2026-08-03",
+  "alt": "HALTEN",
+  "index": 557,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Trotz der kurzfristigen Erholung von 10.9% spricht der massiv schwache Gesamtmarkt mit historischen Tiefstaenden gegen einen Neueinstieg."
+ },
+ {
+  "symbol": "MORPHO",
+  "datum": "2026-07-29",
+  "alt": "HALTEN",
+  "index": 615,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Trotz kurzfristig steigender Hochs spricht die breite Marktschwaeche gegen einen Ausbau der Position, weshalb der Bestand unveraendert gehalten wird."
+ },
+ {
+  "symbol": "APT",
+  "datum": "2026-07-31",
+  "alt": "HALTEN",
+  "index": 744,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Trotz kurzfristiger Strukturzeichen reicht die Anzahl unabhaengiger positiver Faktoren nicht aus, um in einem extrem schwachen Gesamtmarkt einen Einstieg zu rechtfertigen."
+ },
+ {
+  "symbol": "SOL",
+  "datum": "2026-07-23",
+  "alt": "HALTEN",
+  "index": 736,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Der uebergeordnete Abwaertstrend des Gesamtmarktes und die fallenden Hochs und Tiefs bei SOL verhindern trotz naher Unterstuetzung einen Neueinstieg."
+ },
+ {
+  "symbol": "NEAR",
+  "datum": "2026-07-29",
+  "alt": "HALTEN",
+  "index": 742,
+  "neu": "NICHTS_TUN",
+  "faktoren": 2,
+  "begruendung": "Der Gesamtmarkt ist schwach und die Kursentwicklung zeigt ueber 20 und 60 Tage abwaerts gerichtete Tendenzen, sodass ein neuer Einstieg unangebracht ist."
+ },
+ {
+  "symbol": "XLM",
+  "datum": "2026-07-30",
+  "alt": "HALTEN",
+  "index": 743,
+  "neu": "REDUZIEREN",
+  "faktoren": 2,
+  "begruendung": "Trotz leichter Gewinne im Bestand zeigt der uebergordnete Gesamtmarkt extreme Schwaeche und der Umsatz ist duenn, weshalb Gewinne gesichert werden sollten."
+ }
+]
