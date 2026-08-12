@@ -1253,6 +1253,62 @@ def paket_12() -> None:
                "was darueber steht")
 
 
+    # ---- ZUSATZINFO AUS DEN ECHTEN PIPELINE-FAKTEN ----
+    import json as _json
+    from agent import faktenblock_quellen as FQ
+
+    con2 = sqlite3.connect("data/tradinginfotool.db")
+    saetze = [_json.loads(r[0]) for r in con2.execute(
+        "SELECT facts_json FROM hebel_signals WHERE facts_json IS NOT NULL").fetchall()]
+    con2.close()
+    getroffen = set()
+    for satz in saetze:
+        w, _ = FQ.abbilden(satz, bereich="krypto_hebel", position_eur=500, hebel=3)
+        getroffen |= set(w)
+    pruefe(P, "aus echten Hebel-Fakten kommen Finanzierung und Retail-Konsens",
+           {"funding_eur_tag", "retail_long_pct"} <= getroffen,
+           f"gefunden: {sorted(getroffen)}")
+
+    # DER PFAD WIRD GEGEN DIE ECHTE BAUFORM GEHALTEN, nicht gegen meine
+    # Annahme. Meine ersten Pfade hiessen `relativ_30d_prozent` und
+    # `relativ_prozent` - beides existiert nicht, und 0 von 40 Faktensaetzen
+    # trafen. Hier wird der Fakt wirklich gebaut und darin gesucht.
+    from indicators.calculations import BtcRelativwert
+    from agent.krypto.btc_relativwert import btc_relativwert_fakt
+    echt_fakt = btc_relativwert_fakt(
+        BtcRelativwert(korrelation=0.5, beta=1.1, relativstaerke_pct=-3.2,
+                       fenster_tage_beta=90, fenster_tage_relativstaerke=30,
+                       n_datenpunkte=120), {})
+    w2, fehlt2 = FQ.abbilden({"btc_relativwert": echt_fakt},
+                             bereich="krypto_spot")
+    pruefe(P, "der btc_relativwert-Pfad trifft die echte Bauform",
+           w2.get("btc_relativwert_pct") == -3.2,
+           f"gebaut: {sorted(echt_fakt)}")
+
+    # DIE FINANZIERUNG LAEUFT AUF DAS GEHEBELTE VOLUMEN, nicht auf den Einsatz.
+    roh = {"antizyklisch": {"funding_rate_aktuell": -2.85e-05}}
+    e1, _ = FQ.abbilden(roh, bereich="krypto_hebel", position_eur=500, hebel=1)
+    e3, _ = FQ.abbilden(roh, bereich="krypto_hebel", position_eur=500, hebel=3)
+    pruefe(P, "die Finanzierung skaliert mit dem Hebel",
+           abs(e3["funding_eur_tag"] - 3 * e1["funding_eur_tag"]) < 0.02,
+           "bei Hebel 3 laufen drei Euro Volumen je Euro Eigenkapital - wer "
+           "das weglaesst, meldet ein Drittel der tatsaechlichen Kosten")
+    ohne_groesse, fehlt3 = FQ.abbilden(roh, bereich="krypto_hebel")
+    pruefe(P, "ohne Positionsgroesse KEINE Finanzierungsangabe",
+           "funding_eur_tag" not in ohne_groesse
+           and "funding_eur_tag" in fehlt3,
+           "ein Prozentsatz je Stunde ist fuer den Nutzer keine Information")
+
+    # LEERE FAKTEN SIND EIN DEFEKT, KEIN NORMALZUSTAND.
+    w4, fehlt4 = FQ.abbilden({}, bereich="krypto_hebel")
+    pruefe(P, "leere Fakten melden ALLE Schluessel als fehlend",
+           w4 == {} and set(fehlt4) == set(FB.ZUSATZ_JE_BEREICH["krypto_hebel"]),
+           "78 von 118 gespeicherten Spot-Signalen tragen '{}' - wer das als "
+           "'nichts vorhanden' liest, haelt einen Defekt fuer normal")
+    pruefe(P, "ein falscher Pfad meldet sich als fehlend",
+           "kgv" in FQ.abbilden({"fundamentaldaten": {"kurs_gewinn": 12}},
+                                bereich="aktien")[1])
+
     # ---- DER CHART ----
     from ui.signal_chart import render_signal_chart
     plan = dict(einstieg_von=64363.0, einstieg_bis=65230.0, stop=60462.0,

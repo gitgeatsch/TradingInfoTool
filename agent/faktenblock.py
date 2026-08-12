@@ -128,8 +128,10 @@ _ZUSATZ = {
         lambda w: f"Gegen Bitcoin {_de(w, 1)} % "
                   f"{'staerker' if w >= 0 else 'schwaecher'} in 30 Tagen",
         "Trennt 'dieser Wert steigt' von 'der ganze Markt steigt'. "
-        "ACHTUNG: haengt teilweise mit der Kursentwicklung oben zusammen, "
-        "ist also kein voll eigenstaendiger Punkt."),
+        "ACHTUNG, zweifach: haengt teilweise mit der Kursentwicklung oben "
+        "zusammen, und `btc_relativwert.py` nennt sich selbst einen "
+        "'mehrmonatigen Hintergrundwert - KEINE Aussage ueber die naechsten "
+        "Tage'. Als Hintergrund lesen, nicht als Ausloeser."),
     "kgv": ("Fundamental",
         lambda w: f"Kurs-Gewinn-Verhaeltnis {_de(w, 1)}",
         "Wie viele Jahresgewinne im Kurs stecken. Niedriger ist guenstiger "
