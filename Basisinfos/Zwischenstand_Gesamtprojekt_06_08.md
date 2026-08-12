@@ -786,6 +786,52 @@ wirkt sofort nach dem Ausrollen.*
 | B3 | Produktion wieder starten | steht seit 10.08. bewusst |
 | B4 | `pruefe_abdeckung.py` auf dem Notebook | Desktop-Zahlen gelten nur für den 19.07. |
 
+### STUFE 0b — STRATEGIE *(neue Lücke, 12.08.)*
+
+> **Nutzerfrage:** *„wie oder wann wird über die Kauf- oder Verkaufsstrategie
+> entschieden — am Gate, LLM oder durch mich beim Handeln?"*
+>
+> **Am Code geprüft: nirgends.** Das Gate entscheidet, ob eine Handlung
+> **erlaubt** ist. Das LLM entscheidet **fallweise**, welche. Der Nutzer
+> entscheidet über die **Ausführung**. Eine übergeordnete Absicht kennt keine
+> der drei Stellen.
+>
+> `strategien_aktiv` in der `config.yaml` wird an das alte LLM gereicht; die
+> Faktenmappe hält dazu fest: *„Liste ohne jede Anweisung. Keine Regel, kein
+> Gate."* Es ändert nichts.
+>
+> **Die Strategie wird also nicht entschieden — sie entsteht** als Summe vieler
+> Einzelurteile. Sichtbar am 12.08.: 16 von 17 Handlungen der neuen Kette waren
+> Verkäufe. Niemand hat entschieden, dass wir ein verkaufendes System sind.
+
+| # | Was | Stand |
+|---|---|---|
+| S1 | **Strategie als Setzung, nicht als Urteil** | fehlt. Nach dem Kriterium aus Kap. 11.3 gehört sie in die **deterministische** Schicht: sie wirkt auf alle Assets gleich |
+| S2 | Umsetzung: die Strategie schränkt die **angebotenen Aktionen** ein | „wir akkumulieren" → VERKAUFEN entfällt · „wir bauen Risiko ab" → KAUFEN entfällt · „neutral" → alles offen |
+
+**Die Achsen, die der Nutzer nennt (12.08.): Spot ↔ Hebel und Swing ↔ Einmalkauf.**
+
+| Achse | bestimmt |
+|---|---|
+| **Spot ↔ Hebel** | Kostenstruktur (bei Hebel eine Gebühr **je Tag**, bei Spot nicht), Haltedauer, Pipeline |
+| **Swing ↔ Einmalkauf** | ob es überhaupt einen Ausstieg gibt, welcher Horizont gilt, ob ein Stop greift — **und woran der Erfolg gemessen wird** |
+
+> **DIE STRATEGIE ENTSCHEIDET, WELCHE MESSUNG GÜLTIG IST.** Ein Swing wird an
+> Ziel und Stop innerhalb von N Tagen gemessen. Ein Einmalkauf hat weder Ziel
+> noch Stop — dort zählen Einstiegspreis und langfristiger Verlauf.
+>
+> **Das erklärt einen Fehler in den Messungen vom 11./12.08.:** Alles wurde mit
+> dem Barrieren-Maßstab gerechnet (3 ATR Ziel, 1,5 ATR Stop, 20 Tage) — das ist
+> der **Swing**-Maßstab. Die daraus gezogene Schlussfolgerung „der Aufbau trägt
+> sich nicht" (7.23, 7.24) gilt damit **für Swing-Handel**. Für einen
+> Einmalkauf ist die Rechnung nicht die falsche Antwort, sondern die falsche
+> Frage — dort ist S2/Akkumulation (7.27) der zuständige Maßstab.
+>
+> **Vor jeder weiteren Messung ist deshalb festzulegen, welche Strategie sie
+> unterstellt.** Sonst misst sie wieder eine, die niemand gewählt hat.
+| S3 | Wer setzt sie und wie oft? | offen — Nutzerentscheidung, Regelwerk, oder Rolle Lagebild |
+| S4 | Verhältnis zu AZ-4 | AZ-4 *ist* eine Strategie („antizyklisch akkumulieren") und lebt heute in der Regime-Logik des Altsystems, nicht in der neuen Kette. Ihre Zusatzannahme ist zudem widerlegt (7.27) |
+
 ### STUFE 1 — GATE
 
 | # | Was | Stand |
