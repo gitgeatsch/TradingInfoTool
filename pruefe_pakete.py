@@ -737,9 +737,133 @@ def paket_7() -> None:
            "neue Signale werden automatisch mitgemessen")
 
 
+# ---------------------------------------------------------------- Paket 8 ---
+def paket_8() -> None:
+    """Trefferbilanz - die Zahl fuer die E-Mail."""
+    P = "8"
+    import sqlite3
+    from agent import trefferbilanz as TB
+    from agent.krypto import backward_tracking as BT
+
+    # DIE STRENGSTE PRUEFUNG: die Formel muss den BEKANNTEN Befund ergeben,
+    # nicht behaupten. Ohne Kosten bei CRV 2,0 sind es 1/3 - genau die Zahl,
+    # gegen die dieses Projekt seit Wochen rechnet.
+    pruefe(P, "Breakeven ohne Kosten ist exakt 1/(1+CRV)",
+           abs(TB.breakeven(0.0) - 1.0 / (1.0 + TB.CRV)) < 1e-12,
+           f"{100*TB.breakeven(0.0):.1f} % bei CRV {TB.CRV}")
+    pruefe(P, "die Krypto-Kosten kippen das Vorzeichen",
+           TB.BASISRATE > TB.breakeven(0.0) and TB.BASISRATE < TB.breakeven(0.230),
+           f"brutto traegt es (34,0 > {100*TB.breakeven(0.0):.1f}), "
+           f"netto nicht (34,0 < {100*TB.breakeven(0.230):.1f})")
+
+    # SCHRUMPFUNG
+    pruefe(P, "ohne Faelle exakt die Basisrate",
+           abs(TB.geschrumpft(0, 0) - TB.BASISRATE) < 1e-12,
+           "der Nutzervorschlag: 'mit einem Mittelwert anfangen'")
+    viel = TB.geschrumpft(600, 1000)
+    pruefe(P, "bei vielen Faellen traegt die Messung selbst",
+           abs(viel - 0.60) < 0.02, f"1000 Faelle, 60 % -> {100*viel:.1f} %")
+    mittel = TB.geschrumpft(12, 20)
+    pruefe(P, "dazwischen wird vorsichtig angepasst",
+           TB.BASISRATE < mittel < 0.60,
+           f"20 Faelle, 60 % -> {100*mittel:.1f} % (zwischen 34 und 60)")
+    pruefe(P, "mehr Treffer als Faelle wird gedeckelt",
+           TB.geschrumpft(99, 10) == TB.geschrumpft(10, 10),
+           "eine Quote ueber 100 % waere ein stiller Datenfehler")
+
+    # MERKMALE: nur was zum Signalzeitpunkt feststand
+    import inspect
+    pars = set(inspect.signature(TB.merkmale).parameters)
+    pruefe(P, "kein Merkmal stammt aus dem Ausgang",
+           not any(w in p for p in pars for w in ("outcome", "crv", "ergebnis",
+                                                  "treffer", "realisiert")),
+           f"sonst waere die Tabelle ein Blick in die Zukunft: {sorted(pars)}")
+    pruefe(P, "fehlende Angaben bekommen ein EIGENES Band",
+           TB.merkmale(unabhaengige_faktoren=None)[0] is None
+           and TB.merkmale(unabhaengige_faktoren=0)[0] == 0,
+           "sie stillschweigend einzusortieren hiesse, Faelle zu zaehlen, die "
+           "dort nicht hingehoeren")
+    pruefe(P, "die Baender sind grob genug",
+           len({TB.merkmale(unabhaengige_faktoren=n)[0] for n in range(0, 9)}) == 4,
+           "eine Tabelle mit tausend Zellen hat in jeder drei Faelle")
+
+    # DIE KONSTANTEN SIND IMPORTIERT, NICHT ABGESCHRIEBEN. Die erste Fassung
+    # hatte zwei von vier falsch - und `zaehle()` haette still nichts gefunden.
+    pruefe(P, "Ausgangs-Konstanten stammen aus backward_tracking",
+           TB.TREFFER == (BT.OUTCOME_TAKE_PROFIT,)
+           and TB.AUFGELOEST is BT._RESOLVED_OUTCOMES,
+           "abgeschrieben waren sie falsch: 'stop_erreicht' statt "
+           "'stop_loss_erreicht'")
+
+    con = sqlite3.connect("data/tradinginfotool.db")
+    try:
+        bilanz = TB.zaehle(con)
+        pruefe(P, "zaehle() laeuft gegen die echte Tabelle", isinstance(bilanz, dict),
+               f"{len(bilanz)} Konstellationen - noch keine aufgeloesten "
+               f"Signale der neuen Kette, das ist der erwartete Startzustand")
+        # Ketten NICHT vermischen: die alte hatte andere Fakten und Prompts.
+        alt_bilanz = TB.zaehle(con, quelle_kette="alt")
+        pruefe(P, "die Ketten werden getrennt gezaehlt",
+               isinstance(alt_bilanz, dict),
+               "ihre Quote sagt nichts ueber diese")
+    finally:
+        con.close()
+
+    # DER SATZ FUER DIE E-MAIL sagt bei duenner Lage, dass sie duenn ist.
+    duenn = TB.bewerte({}, TB.merkmale(unabhaengige_faktoren=4), kosten_r=0.230)
+    text = " ".join(TB.satz(duenn))
+    pruefe(P, "bei wenigen Faellen nennt der Satz keine erfundene Quote",
+           "0 Faelle" in text and "Basisrate" in text,
+           "ein '41 %' auf vierzehn Faellen waere erfundene Genauigkeit")
+    dick = TB.bewerte({TB.merkmale(unabhaengige_faktoren=4):
+                       {"treffer": 130, "faelle": 300, "abgelaufen": 0}},
+                      TB.merkmale(unabhaengige_faktoren=4), kosten_r=0.230)
+    pruefe(P, "bei belastbarer Lage nennt er Quote UND Urteil",
+           dick["belastbar"] and "Erwartungswert" in " ".join(TB.satz(dick)))
+
+    # ABGELAUFENE werden AUSGEWIESEN, nicht verrechnet (Arbeitsstand 7.23).
+    mit_abgelaufen = TB.bewerte(
+        {TB.merkmale(unabhaengige_faktoren=4):
+         {"treffer": 20, "faelle": 50, "abgelaufen": 50}},
+        TB.merkmale(unabhaengige_faktoren=4))
+    pruefe(P, "abgelaufene Faelle werden ausgewiesen",
+           mit_abgelaufen["abgelaufen"] == 50
+           and abs(mit_abgelaufen["anteil_entschieden"] - 0.5) < 1e-9,
+           "'keines = 0 R' ist eine Setzung, keine Messung - sie betrifft "
+           "15-21 % aller Faelle und darf nicht still verrechnet werden")
+
+    # DIE BILANZ VERWIRFT NICHTS - als VERHALTENS-, nicht als Textpruefung.
+    # Die erste Fassung suchte nach "return None" im Quelltext und schlug an:
+    # sie fand das legitime `return None` in `band()`, also genau das "None
+    # bekommt ein eigenes Band", das zwei Zeilen darueber geprueft wird. Eine
+    # Textsuche kann Absicht nicht von Versehen unterscheiden.
+    fehlgeschlagen = []
+    for name, ruf in (
+            ("breakeven mit unsinnigen Kosten", lambda: TB.breakeven(-5.0)),
+            ("geschrumpft mit negativen Zahlen", lambda: TB.geschrumpft(-3, -7)),
+            ("merkmale ohne jede Angabe", lambda: TB.merkmale()),
+            ("bewerte auf leerer Bilanz",
+             lambda: TB.bewerte({}, TB.merkmale())),
+            ("satz auf leerer Bewertung",
+             lambda: TB.satz(TB.bewerte({}, TB.merkmale())))):
+        try:
+            ruf()
+        except Exception as e:                               # noqa: BLE001
+            fehlgeschlagen.append(f"{name}: {type(e).__name__}")
+    pruefe(P, "keine Funktion wirft, auch bei unsinniger Eingabe nicht",
+           not fehlgeschlagen, str(fehlgeschlagen))
+
+    pruefe(P, "`traegt` ist eine AUSSAGE, keine Sperre",
+           isinstance(TB.bewerte({}, TB.merkmale()).get("traegt"), bool)
+           and TB.satz(TB.bewerte({}, TB.merkmale())),
+           "die Bewertung kommt immer zurueck - wer sie anschliesst, "
+           "entscheidet, was ein Unterschreiten ausloest. Ein Waechter, der "
+           "selbst verwirft, macht seine eigene Wirkung unsichtbar")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
-          "6": paket_6, "7": paket_7}
+          "6": paket_6, "7": paket_7, "8": paket_8}
 
 
 def main() -> int:
