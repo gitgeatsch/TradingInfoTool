@@ -981,7 +981,15 @@ teuer gelernt.*
 - [ ] `git fetch` vor dem Push — das Notebook hatte schon eigene Commits
 - [ ] Als **ein** Paket ausrollen, nicht in Einzelteilen
 - [ ] `pruefe_abdeckung.py` auf dem Notebook — Desktop-Zahlen gelten für den 19.07.
-- [ ] yfinance-Übernahme erst `--trocken`, dann `--schreiben`
+- [ ] **Börsen-Klines**-Übernahme erst `--trocken`, dann `--schreiben` (nicht
+      mehr yfinance — der ist seit 12.08. abgeschaltet, ebenso CoinGecko)
+- [ ] **`python lade_historie_nach.py BTC --schreiben` auf dem Notebook.**
+      Die Datenbank steht in `.gitignore` — die 2.526 nachgeladenen BTC-Zeilen
+      vom 12.08. liegen **nur auf dem Desktop**. Das Skript reist über Git, die
+      Daten nicht. Gefahrlos wiederholbar: es schreibt ausschließlich Tage
+      **vor** dem ältesten vorhandenen Datum, ein zweiter Lauf tut nichts
+- [ ] Danach prüfen: `SELECT quelle, COUNT(*) … WHERE symbol='BTC'` muss
+      `binance_historie` **und** `gemessen` zeigen — die Naht gehört sichtbar
 - [ ] Nach dem ersten OHLC-Lauf: Granularitätswarnung im Log lesen
 - [ ] Werturteil-, Konstanten- und Zuspitzungs-Wächter grün, sonst Abbruch
 - [ ] Kausalitätsprobe auf `lagebeschreibung.py`

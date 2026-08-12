@@ -3102,3 +3102,95 @@ Aktien, ETF und Rohstoffe haben keine Wochenendzeilen, Krypto schon. Innerhalb
 eines Lagebilds ist der Krypto-Wert an einem Wochenende deshalb strenger zu
 lesen als die anderen drei — festgehalten, nicht korrigiert: **thin trading am
 Wochenende ist eine Tatsache über den Markt, kein Messfehler.**
+
+---
+
+## 7.32 L6 — die BTC-Historie reicht jetzt bis 2017. Damit sind Marktphasen zum ersten Mal messbar (12.08.)
+
+**Der Anlass kam aus L3.** Beim Bau der Trendlage fiel auf, dass BTC nur bis zum
+17.07.2024 zurückreicht — 733 Kerzen. Damit fehlten der Bärenmarkt 2022 und das
+Hoch 2021 vollständig. **Was in früheren Messungen als „Bärenphase" simuliert
+wurde, war der Rückgang seit Juli 2025:** ein Jahr, keine Marktphasen.
+
+Der Grund lag an der Quelle, nicht am Markt. Krakens OHLC-Endpunkt liefert rund
+720 Kerzen und kennt kein Blättern in die Vergangenheit. Binance kennt es
+(`endTime`) und liefert 1.000 Kerzen je Abruf.
+
+### Die Naht — gemessen, bevor geschrieben wurde
+
+Der Bestand kommt von Kraken, die Ergänzung von Binance. Das berührt die Regel
+„genau **eine** Quelle je Symbol" aus `api/boersen_klines.py`, deshalb die
+Abgrenzung:
+
+Die Regel richtet sich gegen **Verschränkung** — zwei Quellen, die denselben
+Zeitraum bedienen und einander zeilenweise überschreiben. Das ergäbe eine Reihe,
+die es an keiner Börse gab. Hier gibt es einen sauberen zeitlichen Schnitt: vor
+dem 17.07.2024 Binance, danach Kraken, **kein Tag doppelt.**
+
+| Naht über 733 überlappende Tage | |
+|---|---|
+| Median-Abweichung | **0,039 %** |
+| p95 | 0,143 % |
+| Maximum | 0,617 % |
+
+Das liegt unter dem, was zwei Abrufzeitpunkte an *derselben* Börse
+auseinanderbringen. **Trotzdem ist die Herkunft markiert:** die nachgeladenen
+Zeilen tragen `quelle='binance_historie'`.
+
+| quelle | Zeilen | Zeitraum |
+|---|---|---|
+| `binance_historie` | 2.526 | 2017-08-17 … 2024-07-16 |
+| `gemessen` | 733 | 2024-07-17 … 2026-07-19 |
+
+**Eine Naht, die man in den Daten sieht, ist eine andere Sache als eine, die man
+später suchen muss.**
+
+Lückenprobe über die ganze Reihe: 3.259 Kerzen, Median-Abstand 1, **größte Lücke
+1** — kein Loch.
+
+### Nur USD, und warum das reicht
+
+Binance führt BTCEUR erst seit dem 17.11.2023 — dort wäre nichts zu holen.
+`lade_reihen_aus_db()` wählt für BTC ohnehin USD (eine Währung je Symbol, USD
+bevorzugt), die Rollen-Ebene bekommt also die volle Reihe.
+
+### Der Ertrag: sechs Marktphasen, sechs verschiedene Beschreibungen
+
+| Datum | Jahr | Lage in der Spanne | Volatilität |
+|---|---|---|---|
+| 2021-04-14 Hoch | **+443,0 %** | 1,0 % unter dem Hoch | 41. Perzentil |
+| 2021-11-09 zweites Hoch | +38,4 % | 0,9 % unter dem Hoch | **1. Perzentil** |
+| 2022-06-18 Tief | **−67,0 %** | **0,0 % über dem Tief** | **100. Perzentil** |
+| 2022-11-21 nach FTX | −61,6 % | 0,0 % über dem Tief | 64. Perzentil |
+| 2023-10-15 Seitwärts | +16,8 % / Quartal −5,5 % | 13,7 % unter dem Hoch | 4. Perzentil |
+| 2024-03-13 Ausbruch | +140,8 % | 0,0 % unter dem Hoch | 91. Perzentil |
+
+**Das alte System sagte zu allen sechs „höhere Hochs und höhere Tiefs".**
+
+Die zweite Zeile ist der interessanteste Einzelbefund: **am Hoch im November
+2021 stand die Volatilität im 1. Perzentil.** Die Ruhe vor dem Fall — ein Signal,
+das im alten Faktensatz nirgends vorkam.
+
+Der Korrekturfall (Jahr steigend, Quartal fallend) liegt über die volle Historie
+bei **25,3 %** — die 26,5 % aus 7.29 waren auf einem Jahr gemessen und halten.
+
+### Was auf dem Notebook zu tun ist
+
+`data/tradinginfotool.db` steht in `.gitignore`. **Die 2.526 Zeilen liegen nur
+auf dem Desktop.** Das Skript reist über Git, die Daten nicht — deshalb ist L6
+als wiederholbares Skript gebaut und nicht als einmalige Aktion:
+
+```
+python lade_historie_nach.py BTC              # Trockenlauf
+python lade_historie_nach.py BTC --schreiben
+```
+
+Gefahrlos wiederholbar: es schreibt ausschließlich Tage **vor** dem ältesten
+vorhandenen Datum, fasst also nie eine bestehende Zeile an. Ein zweiter Lauf tut
+nichts. Steht in der Ausroll-Checkliste 8e.3.
+
+> **Ein Fehlversuch, der nichts kaputtgemacht hat, und warum:** der erste
+> Schreiblauf brach ab, weil `database.db` Spalten über den Namen liest und
+> eine `sqlite3.Row`-Factory voraussetzt. Der Abbruch kam in der
+> Schema-Migration — **vor** jedem Schreibzugriff. Der Bestand war danach
+> unverändert bei 733 Zeilen, nachgeprüft.
