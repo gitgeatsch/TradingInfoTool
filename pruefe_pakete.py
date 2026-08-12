@@ -296,7 +296,95 @@ def paket_2() -> None:
     pruefe(P, "kein Gradwort im Auftragstext", not schlimm, str(schlimm))
 
 
-PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()), "2": paket_2}
+# ---------------------------------------------------------------- Paket 3 ---
+def paket_3() -> None:
+    """Urteil je Assetklasse, und die Anlegerstimmung als Fakt."""
+    P = "3"
+    import sqlite3
+    from agent import marktlage as ML
+    from agent import rolle_analyst as RA
+    from agent import llm_schema
+    import agent.rollen_eingabe as RE
+
+    con = sqlite3.connect("file:data/tradinginfotool.db?mode=ro", uri=True)
+    n, a1, b1 = con.execute(
+        "SELECT COUNT(*), MIN(date), MAX(date) FROM macro_snapshot "
+        "WHERE fear_greed_value IS NOT NULL").fetchone()
+    con.close()
+    pruefe(P, "Stimmungs-Historie ist nachgeladen", n and n > 2000,
+           f"{n} Tage {a1} .. {b1} - vorher waren es 10")
+
+    stimmung = RE.lade_stimmung()
+    satz = ML.beschreibe_stimmung(stimmung, "2026-07-17")
+    pruefe(P, "Stimmungssatz entsteht", len(satz) == 1)
+    if satz:
+        t = satz[0]
+        pruefe(P, "er nennt Bitcoin, nicht 'den Kryptomarkt'",
+               "Bitcoin" in t and "Kryptomarkt" not in t,
+               "der Index ist ausdruecklich BTC-only")
+        pruefe(P, "er traegt kein Etikett der Quelle",
+               not any(w in t for w in ("Extreme Fear", "Extreme Greed",
+                                        "Fear", "Greed")),
+               "ein absolutes Etikett wiegt schwerer als die Zahl daneben (R-T2)")
+        pruefe(P, "er nennt sein Fenster (R-T1)", "Messungen" in t)
+
+    # Kausalitaet: ein Tag NACH dem Anker darf nichts aendern.
+    mit_zukunft = dict(stimmung)
+    mit_zukunft["2026-08-01"] = 99
+    pruefe(P, "Stimmung ist kausal abgeschnitten",
+           ML.beschreibe_stimmung(mit_zukunft, "2026-07-17") == satz)
+
+    # STELLUNG IM FAKTENSATZ - an ECHTEN Reihen, nicht an einer leeren.
+    # Die erste Fassung dieser Pruefung uebergab {"BTC": []} und war damit
+    # trivial wahr: ohne Reihen entsteht kein Satz, und ein leerer Vergleich
+    # besteht immer. Eine Pruefung, die nicht scheitern kann, ist keine.
+    from backtest_llm1_historisch import lade_reihen_aus_db
+    alle = ML.beschreibe_marktlage(lade_reihen_aus_db(), "2026-07-17", stimmung)
+    ort_stimmung = next((i for i, z in enumerate(alle) if "Anlegerstimmung" in z), None)
+    ort_aktien = next((i for i, z in enumerate(alle) if "US-Aktienmarkt" in z), None)
+    pruefe(P, "die Stimmung steht im Kryptoblock, nicht am Ende",
+           ort_stimmung is not None and ort_aktien is not None
+           and ort_stimmung < ort_aktien,
+           f"Stimmung an Position {ort_stimmung}, Aktienblock ab {ort_aktien} "
+           f"von {len(alle)} - sonst faerbt ein Krypto-Index auf Aktien ab")
+
+    # Das Urteil je Klasse
+    pruefe(P, "`klassen` ist Pflichtfeld", "klassen" in RA.REQUIRED_FELDER)
+    sch = llm_schema.baue_lage_schema(RA)
+    pruefe(P, "Schema kennt `klassen` mit Aufzaehlung",
+           set(sch["properties"]["klassen"]["items"]["properties"]["einstufung"]["enum"])
+           == set(RA.EINSTUFUNGEN))
+
+    a = RA.validiere({"lage": "x", "belege": ["a", "b"],
+                      "klassen": [{"klasse": "Aktien", "einstufung": "guenstig", "warum": "w"},
+                                  {"klasse": "gold", "einstufung": "guenstig", "warum": "w"},
+                                  {"klasse": "aktien", "einstufung": "unguenstig", "warum": "doppelt"}]})
+    pruefe(P, "Schreibweise wird normalisiert, Unbekanntes verworfen",
+           [e["klasse"] for e in a["klassen"]] == ["aktien"],
+           "eine erfundene Zuordnung waere schlimmer als eine fehlende")
+    pruefe(P, "Doppelte Klasse wird verworfen",
+           str(a.get("_korrekturen", "")).count("verworfen") == 2)
+    pruefe(P, "Fehlende Klassen werden VERMERKT", "ohne Einstufung" in str(a.get("_korrekturen")))
+
+    class _K:
+        date, open, high, low, close, volume = "2026-07-17", 1.0, 1.0, 1.0, 1.0, 1.0
+    lage = {"lage": "x", "gleichlauf": "uneinheitlich",
+            "klassen": [{"klasse": "krypto", "einstufung": "unguenstig", "warum": "w"},
+                        {"klasse": "aktien", "einstufung": "guenstig", "warum": "w"}]}
+    fuer = lambda kl: (RE.baue_befund_eingabe(
+        symbol="X", reihe=[_K()] * 300, index=299, kurs_eur=1.0, atr=0.04,
+        lagebild=lage, assetklasse=kl)["marktlage_beurteilung"].get("klasse") or {})
+    pruefe(P, "der Trader bekommt NUR das Urteil seiner Klasse",
+           fuer("krypto").get("klasse") == "krypto",
+           "alle drei zu schicken hiesse, ihm Maerkte vorzulegen, ueber die er "
+           "nicht entscheidet - und was dasteht, wiegt (R-T9)")
+    pruefe(P, "etf folgt aktien", fuer("etf").get("klasse") == "aktien")
+    pruefe(P, "fehlt das Urteil, kommt keines statt eines falschen",
+           fuer("rohstoffe") == {})
+
+
+PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
+          "2": paket_2, "3": paket_3}
 
 
 def main() -> int:

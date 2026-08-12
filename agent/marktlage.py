@@ -141,7 +141,70 @@ def beschreibe_volatilitaet(reihen: dict, klasse: str, datum: str) -> list[str]:
             f"Handelstage."]
 
 
-def beschreibe_marktlage(reihen: dict, datum: str) -> list[str]:
+def beschreibe_stimmung(stimmung: dict, datum: str) -> list[str]:
+    """Dimension 4: was fuehlt der Markt gerade - und wie ungewoehnlich ist das?
+
+    WAS DER INDEX WIRKLICH IST - und was ich zuerst falsch behauptet habe.
+    Ich hatte ihn als "der einzige Fakt, der nicht aus der Kursreihe stammt"
+    eingefuehrt. Die Quelle (alternative.me) sagt etwas anderes:
+
+        Volatilitaet         25 %   AUS KURSDATEN - ueberlappt mit L2
+        Momentum/Volumen     25 %   AUS KURSDATEN - ueberlappt mit L4
+        Social Media         15 %   unabhaengig
+        Umfragen             15 %   PAUSIERT
+        BTC-Dominanz         10 %   unabhaengig
+        Google Trends        10 %   unabhaengig
+
+    Rund die Haelfte ist konstruktionsbedingt Kursdaten. Die Behauptung war zu
+    stark.
+
+    TROTZDEM TRAEGT ER, und das ist gemessen statt behauptet - Stimmungs-
+    Perzentil gegen das, was wir ohnehin zeigen, ueber 2.837 gemeinsame Tage:
+
+        Volatilitaets-Perzentil (L2)    r = -0,26
+        Liquiditaets-Perzentil  (L4)    r = -0,28
+        Jahresbewegung          (L3)    r = +0,01
+
+    Die Bestandteile ueberlappen, das Ergebnis nicht - und mit dem TREND ist es
+    praktisch unkorreliert. Ein Markt kann 40 % im Plus und aengstlich sein.
+    Genau diese Achse fehlt allen anderen Fakten.
+
+    NUR BITCOIN, ausdruecklich: *"the current index is for bitcoin only"*. Das
+    passt, weil unser Krypto-Leitmarkt ebenfalls BTC ist - aber es ist KEINE
+    Aussage ueber Altcoins, und der Satz sagt deshalb "Bitcoin", nicht
+    "der Kryptomarkt".
+
+    WARUM NICHT DER REGIME-SCORE, obwohl der Umbauplan ihn nennt. Der Score ist
+    zur Haelfte Kursabstand zur EMA50/200 - und genau diese Lage steht in L3
+    bereits, als Jahres- und Quartalsbewegung und als Position in der
+    Jahresspanne. Ihn zusaetzlich als Score zu liefern hiesse, dieselbe
+    Information ein zweites Mal ins Gewicht zu legen. Was am Score NEU ist, ist
+    seine andere Haelfte: die Stimmung. Also liefern wir die, nicht das Gemisch.
+    Der Score behaelt seine Aufgabe als Regler im Regime-Tab (E4) - dort ist er
+    ein Bedienelement, kein Fakt.
+
+    OHNE ETIKETT. Die Quelle liefert zu jedem Wert eine Beschriftung
+    ("Extreme Fear"). Sie wird bewusst NICHT weitergegeben: ein absolutes
+    Etikett bekommt mehr Gewicht als die Zahl daneben (R-T2), und genau so hat
+    `_struktur()` den Deadloop gebaut.
+
+    STRENG KAUSAL: nur Tage bis zum Ankertag."""
+    if not stimmung:
+        return []
+    tage = sorted(t for t in stimmung if t <= datum)
+    if len(tage) < FENSTER_HISTORIE // 2:
+        return []
+    werte = np.array([float(stimmung[t]) for t in tage], dtype=float)
+    aktuell = float(werte[-1])
+    fenster = werte[-FENSTER_HISTORIE:]
+    p = _perzentil(fenster, aktuell)
+    return [f"Die Anlegerstimmung zu Bitcoin steht bei {aktuell:.0f} von 100; "
+            f"das liegt im {p}. Perzentil der letzten {len(fenster)} "
+            f"Messungen. Ein niedriger Wert bedeutet Zurueckhaltung, ein hoher "
+            f"Risikobereitschaft."]
+
+
+def beschreibe_marktlage(reihen: dict, datum: str, stimmung: dict | None = None) -> list[str]:
     """Das VOLLSTAENDIGE Lagebild - was die Rolle Lagebild als Eingabe bekommt.
 
     EIN AUFRUF, ALLE KLASSEN. Die Alternative waere ein Lagebild je Klasse
@@ -169,6 +232,11 @@ def beschreibe_marktlage(reihen: dict, datum: str) -> list[str]:
         aus += (beschreibe_trend(reihen, klasse, datum)
                 + beschreibe_volatilitaet(reihen, klasse, datum)
                 + beschreibe_liquiditaet(reihen, klasse, datum))
+        # Die Stimmung gehoert ZUM KRYPTOBLOCK, nicht ans Ende. Fear & Greed
+        # ist ein Krypto-Index; als eigener Satz am Schluss wuerde er wie eine
+        # marktweite Aussage aussehen und auf Aktien und Rohstoffe abfaerben.
+        if klasse == "krypto":
+            aus += beschreibe_stimmung(stimmung or {}, datum)
     return aus
 
 

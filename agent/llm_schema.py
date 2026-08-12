@@ -444,6 +444,25 @@ def baue_lage_schema(analyst) -> dict:
         "required": list(analyst.REQUIRED_FELDER),
         "properties": {
             "lage": TXT,
+            # Urteil je Assetklasse (Paket 3). `minItems` bewusst NICHT auf die
+            # Zahl der Klassen gesetzt: fehlt eine, soll der Validator es
+            # VERMERKEN, nicht das Schema die ganze Antwort verwerfen. Das
+            # Schema fasst die Form, der Validator den Sinn.
+            "klassen": {
+                "type": "array", "minItems": 1,
+                "maxItems": len(analyst.KLASSEN),
+                "items": {
+                    "type": "object", "additionalProperties": False,
+                    "required": ["klasse", "einstufung", "warum"],
+                    "properties": {
+                        "klasse": {"type": "string",
+                                   "enum": list(analyst.KLASSEN)},
+                        "einstufung": {"type": "string",
+                                       "enum": list(analyst.EINSTUFUNGEN)},
+                        "warum": TXT,
+                    },
+                },
+            },
             "belege": {"type": "array", "minItems": 2, "maxItems": 4,
                        "items": TXT},
         },

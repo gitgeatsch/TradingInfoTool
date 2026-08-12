@@ -55,7 +55,33 @@ def baue_lagebild_eingabe(reihen: dict, datum: str) -> dict:
     haette er nach der Streichung jeden Grad als unbelegt gemeldet, auch den
     wahren."""
     from agent.marktlage import beschreibe_marktlage
-    return {"marktlage": beschreibe_marktlage(reihen, datum)}
+    return {"marktlage": beschreibe_marktlage(reihen, datum, lade_stimmung())}
+
+
+def lade_stimmung(db: str = "data/tradinginfotool.db") -> dict:
+    """Fear & Greed je Tag - die einzige Groesse des Lagebilds, die NICHT aus
+    der Kursreihe stammt.
+
+    FAIL-SOFT UND GEZAEHLT: faellt die Tabelle aus, kommt ein leeres dict und
+    der Satz entfaellt. Das ist richtig - ein Satz "keine Stimmungsdaten" waere
+    ueber alle Anker identisch und damit ein konstantes Feld (R-T6). Der
+    Aufrufer sieht am fehlenden Satz, dass etwas fehlt.
+
+    Historie nachgeladen am 12.08. mit `lade_fear_greed_nach.py`: 3.111 Tage ab
+    2018-02-01. Vorher waren es 10 - die Tabelle wurde erst am 07.07.2026
+    angelegt, in der Produktion ebenso (an fuenf Notebook-Sicherungen
+    geprueft)."""
+    import sqlite3
+    try:
+        con = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+        try:
+            return {t: v for t, v in con.execute(
+                "SELECT date, fear_greed_value FROM macro_snapshot "
+                "WHERE fear_greed_value IS NOT NULL")}
+        finally:
+            con.close()
+    except Exception:                                        # noqa: BLE001
+        return {}
 
 
 def stempel_gleichlauf(antwort: dict, reihen: dict, datum: str) -> dict:
@@ -82,7 +108,8 @@ def baue_befund_eingabe(*, symbol: str, reihe: list, index: int,
                         finanzierung: dict | None = None,
                         lagebild: dict | None = None,
                         instrument: str = "spot",
-                        strategie: str = "einstieg") -> dict:
+                        strategie: str = "einstieg",
+                        assetklasse: str | None = None) -> dict:
     """Eingabe fuer Befund und Entscheidung - alle Bloecke an einer Stelle.
 
     `instrument`/`strategie` (12.08.2026, Paket 2): WAS gehandelt wird und WIE.
@@ -117,6 +144,15 @@ def baue_befund_eingabe(*, symbol: str, reihe: list, index: int,
         beurteilung = {"lage": lagebild.get("lage")}
         if lagebild.get("gleichlauf"):
             beurteilung["gleichlauf"] = lagebild["gleichlauf"]
+        # NUR DAS URTEIL ZUR EIGENEN KLASSE (Paket 3). Alle drei zu schicken
+        # hiesse, dem Trader zwei Maerkte vorzulegen, ueber die er nicht
+        # entscheidet - und was dasteht, wiegt (R-T9). `etf` folgt `aktien`,
+        # weil beide denselben Leitmarkt haben.
+        klasse = {"etf": "aktien"}.get(assetklasse, assetklasse)
+        for eintrag in (lagebild.get("klassen") or []):
+            if eintrag.get("klasse") == klasse:
+                beurteilung["klasse"] = eintrag
+                break
         aus["marktlage_beurteilung"] = beurteilung
     return aus
 

@@ -51,7 +51,35 @@ Unterschied benennen.
 """
 from __future__ import annotations
 
-REQUIRED_FELDER = ("lage", "belege")
+REQUIRED_FELDER = ("lage", "klassen", "belege")
+
+# DAS URTEIL JE ASSETKLASSE (Paket 3, 12.08.2026).
+#
+# WARUM DAS KEIN RUECKFALL ZUR MARKTBREITE IST. Am selben Tag wurde `traegt`
+# ENTFERNT - und jetzt kommt ein Kategoriefeld zurueck. Der Unterschied traegt:
+#
+#   `traegt` fragte nach MARKTBREITE, und in den Fakten stand keine. Das
+#           Modell haette erfinden muessen.
+#   `klassen` fragt nach genau den Fakten, die dastehen: Trend, Volatilitaet,
+#           Liquiditaet und Stimmung je Leitmarkt.
+#
+# Ein Urteil ueber Vorhandenes ist erlaubt; ein Urteil ueber Fehlendes ist
+# Erfindung.
+#
+# UND ES IST NICHT BERECHENBAR - das ist die zweite Bedingung (Betrags-Lehre
+# R-A2: was wir selbst rechnen koennen, geben wir vor). Die RICHTUNG waere
+# berechenbar, deshalb fragen wir nicht danach; `gleichlauf` liefert sie
+# deterministisch. Gefragt ist die ABWAEGUNG mehrerer Kennzahlen gegeneinander -
+# ein steigender Jahrestrend bei duenner Liquiditaet und aengstlicher Stimmung
+# ist genau der Fall, den keine Formel entscheidet.
+KLASSEN = ("krypto", "aktien", "rohstoffe")
+
+# Beschreibend, drei Stufen, KEINE Enthaltung. "gemischt" heisst hier nicht
+# "unklar", sondern benennt eine konkrete Konstellation: ein Teil der Kennzahlen
+# spricht dafuer, ein anderer dagegen. Eine Mehrdeutigkeitskategorie waere
+# strukturell eine "Unknown"-Option, und die loest laut Literatur Abstention aus
+# - im eigenen System von 93 % auf 3 % gemessen.
+EINSTUFUNGEN = ("guenstig", "gemischt", "unguenstig")
 
 # DAS FELD `traegt` IST WEG (12.08.2026) - und das ist die Nachbesserung eines
 # eigenen halben Schnitts, keine neue Idee.
@@ -91,18 +119,27 @@ REQUIRED_FELDER = ("lage", "belege")
 
 _KOPF = """Du beurteilst die Lage mehrerer Maerkte - nicht ein einzelnes \
 Wertpapier. Du bekommst je Leitmarkt Kennzahlen zu Trend, Schwankungsbreite \
-und Handelbarkeit, jeweils im Vergleich zu seiner eigenen Vergangenheit.
+und Handelbarkeit, jeweils im Vergleich zu seiner eigenen Vergangenheit, und \
+fuer Bitcoin zusaetzlich die Anlegerstimmung.
 
 DEINE AUFGABE, in dieser Reihenfolge:"""
 
 _SCHLUSS = """Antworte AUSSCHLIESSLICH mit JSON:
 {"lage": "<zwei bis drei Saetze>",
+ "klassen": [{"klasse": "krypto|aktien|rohstoffe",
+              "einstufung": "guenstig|gemischt|unguenstig",
+              "warum": "<ein Halbsatz mit der Zahl, die dich traegt>"}],
  "belege": ["<Beobachtung mit Wert>", ...]}"""
 
 _LAGE = ("LAGE", "Beschreibe in zwei bis drei Saetzen, was diese Maerkte "
                  "gerade kennzeichnet - auch, wo sie sich voneinander "
                  "unterscheiden. Nenne die Zahlen, auf die du dich stuetzt, "
                  "beim Namen.")
+_KLASSEN = ("JE MARKT", "Sage fuer JEDEN der genannten Leitmaerkte, ob das "
+            "Umfeld fuer einen NEUEN Einstieg derzeit guenstig, gemischt oder "
+            "unguenstig ist - krypto, aktien und rohstoffe. Dazu ein Halbsatz "
+            "mit der Zahl, die dich traegt. Nenne keine Richtung und keine "
+            "Prognose; es geht um das Umfeld, nicht um den Kursverlauf.")
 _BELEGE = ("BELEGE", "Zwei bis vier Beobachtungen aus den Daten, die deine "
                      "Einschaetzung tragen. Jede mit dem Wert, auf den sie sich "
                      "stuetzt. Erfinde nichts hinzu.")
@@ -133,7 +170,7 @@ def _baue_prompt(mit_betragsfrage: bool) -> str:
 
     Von Hand gepflegte Zwillingstexte driften auseinander; dann misst ein
     gepaarter Lauf zwei Unterschiede und schreibt beide dem einen zu."""
-    schritte = [_LAGE, _BELEGE]
+    schritte = [_LAGE, _KLASSEN, _BELEGE]
     if mit_betragsfrage:
         # An den Platz VOR _BELEGE, wie in der Fassung vom 10.08. Stand hier
         # `insert(2)`, was richtig war, solange die Liste drei Schritte hatte.
@@ -164,7 +201,10 @@ SYSTEM_PROMPT_ANALYST_MIT_BETRAG = _baue_prompt(mit_betragsfrage=True)
 #                rein) UND die Marktbreite-Frage aus dem Prompt entfernt. Das
 #                Feld `traegt` entfaellt. KEIN Befund von vorher ist auf diesen
 #                Stand uebertragbar - weder Eingabe noch Frage sind dieselben.
-PROMPT_STAND = "2026-08-12"
+#   2026-08-12b  Paket 3: Urteil je Assetklasse (`klassen`) als drittes
+#                Pflichtfeld, und die Anlegerstimmung zu Bitcoin als Fakt im
+#                Kryptoblock.
+PROMPT_STAND = "2026-08-12b"
 
 
 class AnalystAntwortUngueltig(ValueError):
@@ -211,6 +251,28 @@ def validiere(antwort: dict) -> dict:
         raise AnalystAntwortUngueltig(
             "weder Lagebeschreibung noch Belege - nichts geliefert")
     # --- Alles andere wird gerettet ----------------------------------------
+    # --- Urteil je Assetklasse: retten, nicht ablehnen ---------------------
+    roh = antwort.get("klassen")
+    sauber, gesehen = [], set()
+    for eintrag in (roh if isinstance(roh, list) else []):
+        if not isinstance(eintrag, dict):
+            continue
+        k, _ = naechstes_wort(eintrag.get("klasse"), KLASSEN)
+        e, _ = naechstes_wort(eintrag.get("einstufung"), EINSTUFUNGEN)
+        if k is None or e is None or k in gesehen:
+            # Unzuordenbar oder doppelt: WEG, nicht geraten. Eine erfundene
+            # Zuordnung waere schlimmer als eine fehlende - die naechste Rolle
+            # bekaeme ein Urteil ueber einen Markt, den niemand beurteilt hat.
+            prot.dazu(f"Klasseneintrag verworfen: {eintrag!r}")
+            continue
+        gesehen.add(k)
+        sauber.append({"klasse": k, "einstufung": e,
+                       "warum": str(eintrag.get("warum") or "").strip()})
+    fehlend = [k for k in KLASSEN if k not in gesehen]
+    if fehlend:
+        prot.dazu(f"ohne Einstufung: {', '.join(fehlend)}")
+    antwort["klassen"] = sauber
+
     if "traegt" in antwort:
         prot.dazu(f"unerwartetes Feld traegt={antwort.pop('traegt')!r} entfernt "
                   f"- die Rolle beurteilt seit 12.08. keine Marktbreite mehr")
