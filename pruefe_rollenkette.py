@@ -164,15 +164,16 @@ def lauf(symbol: str, datum: str | None, reihen: dict, anbieter: str | None,
     try:
         a_roh = frage(client, modell, RA.SYSTEM_PROMPT_ANALYST, a_ein,
                       "agent.rolle_analyst")
-        a = RA.validiere(a_roh)
+        a = RE.stempel_gleichlauf(RA.validiere(a_roh), reihen, anker)
     except Exception as e:
         print(f"\n[ROLLE A GESCHEITERT] {type(e).__name__}: {e}")
         return
-    zeige("AUSGABE ROLLE A", [f"lage: {a['lage']}", f"traegt: {a['traegt']}"]
+    zeige("AUSGABE ROLLE A", [f"lage: {a['lage']}",
+                              f"gleichlauf (gerechnet): {a['gleichlauf']}"]
           + [f"beleg: {b}" for b in a["belege"]]
           + ([f"KORREKTUR: {a['_korrekturen']}"] if a.get("_korrekturen") else []))
 
-    bc_ein["marktlage_beurteilung"] = {"traegt": a["traegt"], "lage": a["lage"]}
+    bc_ein["marktlage_beurteilung"] = {"lage": a["lage"], "gleichlauf": a.get("gleichlauf")}
     try:
         bc_roh = frage(client, modell, RT.SYSTEM_PROMPT_TRADER, bc_ein,
                        "agent.rolle_trader")

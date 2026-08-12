@@ -25,10 +25,13 @@ quantitativen Positionsgroessenbestimmung entkoppelt.**
 
 DREI ENTWURFSENTSCHEIDUNGEN GEGEN BEKANNTE BIAS-EFFEKTE:
 
-1. **KEINE "unklar"-Option.** Die drei Kategorien von `traegt` sind
-   Beschreibungen, keine davon eine Enthaltung. Eine Mehrdeutigkeitskategorie
-   waere strukturell eine "Unknown"-Option, und die loest laut Literatur
-   Abstention aus - im eigenen System von 93 % auf 3 % gemessen.
+1. **KEINE "unklar"-Option.** Es gibt ueberhaupt keine Kategorie mehr, die
+   das Modell waehlen muesste (Umbau 12.08., Begruendung unten bei
+   REQUIRED_FELDER). Damit ist die Gefahr, die dieser Punkt abwehren sollte,
+   an der Wurzel weg: eine Mehrdeutigkeitskategorie waere strukturell eine
+   "Unknown"-Option gewesen, und die loest laut Literatur Abstention aus - im
+   eigenen System von 93 % auf 3 % gemessen. Das Verbot gilt weiter fuer jede
+   Kategorie, die hier je wieder eingefuehrt wird.
 
 2. **KEINE KONFIDENZ.** Nirgends wird nach einer Sicherheit in Prozent gefragt.
    Verbalisierte Konfidenz ist extern belegt schlecht kalibriert, und im eigenen
@@ -40,38 +43,66 @@ DREI ENTWURFSENTSCHEIDUNGEN GEGEN BEKANNTE BIAS-EFFEKTE:
    ist; der Prompt tut es nicht.
 
 WAS SIE STATTDESSEN LIEFERT: eine Beschreibung. Sie muss die Zukunft nicht
-vorhersagen, um nuetzlich zu sein - dass nur 4 von 20 Coins ueber ihrer
-200-Tage-Linie stehen, ist ein Fakt, den der Trader gegen seine anderen Belege
-abwaegt. Genau das ist die Sprachaufgabe.
+vorhersagen, um nuetzlich zu sein - dass Bitcoin 39 % unter seinem
+Vorjahresstand liegt, WAEHREND der breite US-Aktienmarkt 20 % darueber steht,
+ist ein Fakt, den der Trader gegen seine anderen Belege abwaegt. Genau das ist
+die Sprachaufgabe: aus vier Kennzahlen je Leitmarkt drei Saetze machen, die den
+Unterschied benennen.
 """
 from __future__ import annotations
 
-REQUIRED_FELDER = ("lage", "traegt", "belege")
+REQUIRED_FELDER = ("lage", "belege")
 
-# Beschreibend, nicht wertend - und ohne Mittelweg-Kategorie. "gemischt" heisst
-# hier nicht "unklar", sondern benennt eine konkrete Konstellation: ein Teil des
-# Marktes traegt, ein anderer nicht. Das ist eine Aussage, keine Enthaltung.
-TRAGFAEHIGKEIT = ("breit_getragen", "schmal_getragen", "gemischt")
+# DAS FELD `traegt` IST WEG (12.08.2026) - und das ist die Nachbesserung eines
+# eigenen halben Schnitts, keine neue Idee.
+#
+# WAS PASSIERT WAR. L1 hat die Marktbreite aus der EINGABE gestrichen, weil ihr
+# Korb zu 25 % aus Nicht-Coins bestand und ihre Bezugsgroesse wanderte
+# (Arbeitsstand 7.31). Die FRAGE danach blieb aber im Prompt stehen:
+#
+#     "TRAGFAEHIGKEIT: Wird die aktuelle Bewegung von vielen Werten getragen
+#      (breit_getragen), von wenigen (schmal_getragen) ...?"
+#
+# Damit stand im selben Prompt eine Pflichtfrage nach Marktbreite, ein
+# Faktensatz ohne jede Breite - und drei Zeilen weiter der Satz "Erfinde nichts
+# hinzu". Der Prompt widersprach sich selbst und zwang zur Erfindung. Genau die
+# Naht, die ein glatter Schnitt nicht haben darf.
+#
+# WARUM KEIN ERSATZ-ETIKETT. Zwei Faelle, beide sprechen dagegen:
+#
+#   berechenbar      Ob die drei Benchmarks gleich- oder gegenlaeufig sind,
+#                    steht in den Zahlen. Was wir selbst rechnen koennen, geben
+#                    wir vor - das ist dieselbe Entscheidung wie beim Betrag
+#                    (R-A2): ein Modell etwas waehlen zu lassen, das ohnehin
+#                    feststeht, fuegt nur eine Fehlerquelle hinzu.
+#   nicht berechenbar  Dann faende das Modell es auch nicht in den Fakten und
+#                    muesste es erfinden.
+#
+# Es bleibt kein Fall uebrig, in dem ein kategorisches Modellurteil hier etwas
+# beitraegt. Dazu kommt die Bilanz dieses Projekts mit Kategorien: `regime` war
+# ueber 1.022 Faelle konstant "baer", die Marktbreite wirkte INVERS, und das
+# Struktur-Etikett hat den Deadloop gebaut. Kein einziges kategorisches Feld hat
+# sich bisher als nuetzlich messen lassen.
+#
+# MESSBAR BLEIBT ES TROTZDEM. `agent/marktlage.py::gleichlauf()` rechnet die
+# Konstellation deterministisch aus denselben Fakten - zaehlbar wie ein
+# Modellfeld, aber ohne Erfindungsrisiko. Wer spaeter ein Modellurteil hier
+# will, muss vorher messen, dass es etwas hinzufuegt.
 
-_KOPF = """Du beurteilst die Lage eines Marktes - nicht ein einzelnes \
-Wertpapier. Du bekommst Kennzahlen ueber die Gesamtheit der beobachteten Werte \
-und das uebergeordnete Umfeld.
+_KOPF = """Du beurteilst die Lage mehrerer Maerkte - nicht ein einzelnes \
+Wertpapier. Du bekommst je Leitmarkt Kennzahlen zu Trend, Schwankungsbreite \
+und Handelbarkeit, jeweils im Vergleich zu seiner eigenen Vergangenheit.
 
 DEINE AUFGABE, in dieser Reihenfolge:"""
 
 _SCHLUSS = """Antworte AUSSCHLIESSLICH mit JSON:
 {"lage": "<zwei bis drei Saetze>",
- "traegt": "breit_getragen|schmal_getragen|gemischt",
  "belege": ["<Beobachtung mit Wert>", ...]}"""
 
-_LAGE = ("LAGE", "Beschreibe in zwei bis drei Saetzen, was diesen Markt gerade "
-                 "kennzeichnet. Nenne die Zahlen, auf die du dich stuetzt, beim "
-                 "Namen.")
-_TRAGFAEHIGKEIT = ("TRAGFAEHIGKEIT",
-                   "Wird die aktuelle Bewegung von vielen Werten getragen "
-                   "(breit_getragen), von wenigen (schmal_getragen), oder tragen "
-                   "einige Teile des Marktes waehrend andere zurueckbleiben "
-                   "(gemischt)?")
+_LAGE = ("LAGE", "Beschreibe in zwei bis drei Saetzen, was diese Maerkte "
+                 "gerade kennzeichnet - auch, wo sie sich voneinander "
+                 "unterscheiden. Nenne die Zahlen, auf die du dich stuetzt, "
+                 "beim Namen.")
 _BELEGE = ("BELEGE", "Zwei bis vier Beobachtungen aus den Daten, die deine "
                      "Einschaetzung tragen. Jede mit dem Wert, auf den sie sich "
                      "stuetzt. Erfinde nichts hinzu.")
@@ -102,9 +133,13 @@ def _baue_prompt(mit_betragsfrage: bool) -> str:
 
     Von Hand gepflegte Zwillingstexte driften auseinander; dann misst ein
     gepaarter Lauf zwei Unterschiede und schreibt beide dem einen zu."""
-    schritte = [_LAGE, _TRAGFAEHIGKEIT, _BELEGE]
+    schritte = [_LAGE, _BELEGE]
     if mit_betragsfrage:
-        schritte.insert(2, _BETRAGSFRAGE)   # vor BELEGE, wie die Fassung 10.08.
+        # An den Platz VOR _BELEGE, wie in der Fassung vom 10.08. Stand hier
+        # `insert(2)`, was richtig war, solange die Liste drei Schritte hatte.
+        # Seit dem Wegfall von TRAGFAEHIGKEIT sind es zwei - `insert(2)` haette
+        # den Block ans ENDE gehaengt und den Vergleichsarm still verschoben.
+        schritte.insert(len(schritte) - 1, _BETRAGSFRAGE)
     teile = [f"{i}. {kopf}: {text}" for i, (kopf, text) in enumerate(schritte, 1)]
     return "\n\n".join([_KOPF, *teile, _SCHLUSS])
 
@@ -125,7 +160,11 @@ SYSTEM_PROMPT_ANALYST_MIT_BETRAG = _baue_prompt(mit_betragsfrage=True)
 #                Alle Befunde vom 10./11.08. gehoeren hierher, auch 7.7.
 #   2026-08-11   Betragsfrage aus dem Betriebsprompt entfernt, als schaltbarer
 #                Vergleichsarm erhalten. R-A2 erstmals tatsaechlich gebaut.
-PROMPT_STAND = "2026-08-11"
+#   2026-08-12   Eingabe komplett getauscht (Marktbreite raus, marktlage.py
+#                rein) UND die Marktbreite-Frage aus dem Prompt entfernt. Das
+#                Feld `traegt` entfaellt. KEIN Befund von vorher ist auf diesen
+#                Stand uebertragbar - weder Eingabe noch Frage sind dieselben.
+PROMPT_STAND = "2026-08-12"
 
 
 class AnalystAntwortUngueltig(ValueError):
@@ -152,9 +191,11 @@ def validiere(antwort: dict) -> dict:
     existiert, um genau diese eine Zahl zu setzen". Das beschrieb die Fassung
     VOR dem Betrags-Umbau vom 10.08. und widersprach dem Code darunter.)
 
-    `traegt` faellt bei Unzuordenbarkeit auf "gemischt" zurueck. Das ist KEINE
-    Unknown-Option durch die Hintertuer: das Modell sieht drei echte Kategorien,
-    der Rueckfall passiert im Code und steht im Protokoll."""
+    `traegt` GIBT ES NICHT MEHR (12.08.). Hier stand eine Regel fuer seinen
+    Rueckfall auf "gemischt"; das Feld ist mit dem Marktbreite-Schnitt entfallen
+    (Begruendung im Kopf dieser Datei). Kommt es trotzdem in einer Antwort vor -
+    etwa weil ein Modell einen alten Prompt gesehen hat - wird es entfernt und
+    vermerkt, statt still mitgeschleppt zu werden."""
     from agent.antwort_normalisierung import (Protokoll, naechstes_wort,
                                               kuerze_liste)
 
@@ -170,13 +211,9 @@ def validiere(antwort: dict) -> dict:
         raise AnalystAntwortUngueltig(
             "weder Lagebeschreibung noch Belege - nichts geliefert")
     # --- Alles andere wird gerettet ----------------------------------------
-    wort, hinweis = naechstes_wort(antwort.get("traegt"), TRAGFAEHIGKEIT)
-    if wort is None:
-        wort = "gemischt"
-        hinweis = (f"traegt={antwort.get('traegt')!r} passt zu keiner Kategorie - "
-                   f"als 'gemischt' gewertet")
-    antwort["traegt"] = wort
-    prot.dazu(hinweis)
+    if "traegt" in antwort:
+        prot.dazu(f"unerwartetes Feld traegt={antwort.pop('traegt')!r} entfernt "
+                  f"- die Rolle beurteilt seit 12.08. keine Marktbreite mehr")
 
     if not str(antwort.get("lage") or "").strip():
         antwort["lage"] = ""

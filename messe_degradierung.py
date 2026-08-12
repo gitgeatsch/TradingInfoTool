@@ -127,15 +127,14 @@ def lauf(client, modell, symbol, reihe, idx, reihen) -> dict:
     lage_ein = RE.baue_lagebild_eingabe(reihen, anker)
     lage_roh = frage(client, modell, RA.SYSTEM_PROMPT_ANALYST, lage_ein,
                      "agent.rolle_analyst")
-    lage = RA.validiere(lage_roh)
+    lage = RE.stempel_gleichlauf(RA.validiere(lage_roh), reihen, anker)
 
     stand = beschreibe_lage(symbol=symbol, reihe=reihe, index=idx,
                             kurs_eur=_kurs_eur(symbol, reihe, idx) or 0.0,
                             atr=_atr(reihe, idx), menge=menge,
                             einstand_eur=einstand)
     ent_ein = {"asset": symbol, "stand": stand,
-               "marktlage_beurteilung": {"traegt": lage["traegt"],
-                                         "lage": lage["lage"]}}
+               "marktlage_beurteilung": {"lage": lage["lage"], "gleichlauf": lage.get("gleichlauf")}}
     ent_roh = frage(client, modell, RT.SYSTEM_PROMPT_TRADER, ent_ein,
                     "agent.rolle_trader")
     # Die ROHE Aktion vor dem Vertrag - nur so ist ein degradierter Kauf sichtbar.
@@ -157,7 +156,7 @@ def lauf(client, modell, symbol, reihe, idx, reihen) -> dict:
         "umgeworfen_durch": ent.get("umgeworfen_durch"),
         "belege": ent.get("belege"),
         "lage_text": lage.get("lage"),
-        "lage_traegt": lage.get("traegt"),
+        "lage_gleichlauf": lage.get("gleichlauf"),
         "stand_text": stand,
     }
 

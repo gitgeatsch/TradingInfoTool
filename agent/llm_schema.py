@@ -332,20 +332,34 @@ def baue_lage_schema(analyst) -> dict:
     Designmuster der Praxis entkoppelt Richtungslogik von quantitativer
     Groessenbestimmung.
 
-    `traegt`: drei feste Werte, KEINE Auffangkategorie. Eine
+    ZWEI FELDER SEIT DEM 12.08., nicht mehr drei. Hier stand `traegt` mit drei
+    festen Werten - eine Marktbreite-Kategorie. Sie ist mit der Marktbreite
+    entfallen (Begruendung in `rolle_analyst.py`), und das Schema haette es
+    beim naechsten strikten Lauf als erstes gemerkt: `analyst.TRAGFAEHIGKEIT`
+    gibt es nicht mehr, die Luecken-Pruefung unten haette abgebrochen.
+
+    DASS SIE ABGEBROCHEN HAETTE, IST DER PUNKT. `SchemaLuecke` ist genau dafuer
+    da - ein Schema, das stillschweigend ein Feld weniger verlangt, waere die
+    gefaehrlichere Variante gewesen. Der Waechter hat funktioniert; die
+    Anpassung hier ist seine Antwort, keine Umgehung.
+
+    Was die frueheren drei Werte begruendete, gilt unveraendert fuer jede
+    Kategorie, die hier je wieder auftaucht: KEINE Auffangkategorie. Eine
     Mehrdeutigkeitsoption waere strukturell eine "Unknown"-Wahl, und die loest
     Abstention aus - im eigenen System von 93 % auf 3 % gemessen."""
-    fehlend = [n for n in ("TRAGFAEHIGKEIT", "REQUIRED_FELDER")
-               if not hasattr(analyst, n)]
-    if fehlend:
-        raise SchemaLuecke(f"Rolle A ohne Konstanten: {fehlend}")
+    if not hasattr(analyst, "REQUIRED_FELDER"):
+        raise SchemaLuecke("Rolle A ohne Konstanten: ['REQUIRED_FELDER']")
+    if hasattr(analyst, "TRAGFAEHIGKEIT"):
+        raise SchemaLuecke(
+            "Rolle A traegt wieder TRAGFAEHIGKEIT - das Feld wurde am 12.08. "
+            "mit der Marktbreite gestrichen. Wer es zurueckholt, muss auch "
+            "dieses Schema und `rollen_eingabe` anfassen.")
     return {
         "type": "object",
         "additionalProperties": False,
         "required": list(analyst.REQUIRED_FELDER),
         "properties": {
             "lage": TXT,
-            "traegt": {"type": "string", "enum": list(analyst.TRAGFAEHIGKEIT)},
             "belege": {"type": "array", "minItems": 2, "maxItems": 4,
                        "items": TXT},
         },

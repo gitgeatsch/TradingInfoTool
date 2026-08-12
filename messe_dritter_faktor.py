@@ -148,8 +148,7 @@ def main() -> int:
             for arm, fin in (("ohne", None), ("mit", a["_funding"])):
                 ein = {"asset": sym,
                        "stand": beschreibe_lage(**gemeinsam, finanzierung=fin),
-                       "marktlage_beurteilung": {"traegt": lage["traegt"],
-                                                 "lage": lage["lage"]}}
+                       "marktlage_beurteilung": {"lage": lage["lage"], "gleichlauf": lage.get("gleichlauf")}}
                 ent = RT.validiere(dict(PR.frage(
                     client, modell, RT.SYSTEM_PROMPT_TRADER, ein,
                     "agent.rolle_trader")), sym)

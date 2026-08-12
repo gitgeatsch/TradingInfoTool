@@ -129,7 +129,7 @@ def lauf_arm(client, modell, symbol, reihe, idx, reihen, mit_deckel: bool):
         a_roh.pop("max_tranche_eur", None)
     a = RA.validiere(a_roh)
 
-    bc_ein["marktlage_beurteilung"] = {"traegt": a["traegt"], "lage": a["lage"]}
+    bc_ein["marktlage_beurteilung"] = {"lage": a["lage"], "gleichlauf": a.get("gleichlauf")}
     if deckel:
         bc_ein["marktlage_beurteilung"]["hoechstbetrag_eur"] = deckel
     bc_roh = frage(client, modell, RT.SYSTEM_PROMPT_TRADER, bc_ein,

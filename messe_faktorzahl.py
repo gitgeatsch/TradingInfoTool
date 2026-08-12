@@ -117,8 +117,7 @@ def main() -> int:
                                     kurs_eur=PR._kurs_eur(sym, r, i) or 0.0,
                                     atr=atr, menge=menge, einstand_eur=einstand)
             ein = {"asset": sym, "stand": stand,
-                   "marktlage_beurteilung": {"traegt": lage["traegt"],
-                                             "lage": lage["lage"]}}
+                   "marktlage_beurteilung": {"lage": lage["lage"], "gleichlauf": lage.get("gleichlauf")}}
             roh = PR.frage(client, modell, RT.SYSTEM_PROMPT_TRADER, ein,
                            "agent.rolle_trader")
             ent = RT.validiere(dict(roh), sym)

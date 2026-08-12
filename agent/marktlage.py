@@ -172,6 +172,58 @@ def beschreibe_marktlage(reihen: dict, datum: str) -> list[str]:
     return aus
 
 
+GLEICHLAUF = ("gleichlaeufig_aufwaerts", "gleichlaeufig_abwaerts",
+              "uneinheitlich", "unbekannt")
+
+
+def gleichlauf(reihen: dict, datum: str) -> dict:
+    """Laufen die Leitmaerkte in dieselbe Richtung? BERECHNET, nicht erfragt.
+
+    WOFUER DAS DA IST. Bis zum 12.08. gab die Rolle Lagebild ein Feld `traegt`
+    an die naechste Rolle weiter - eine Marktbreite-Kategorie. Die Marktbreite
+    ist gestrichen (7.31), die Kategorie damit auch. Was bleibt, ist der Bedarf
+    dahinter: die naechste Rolle und jede Messung brauchen etwas ZAEHLBARES,
+    nicht nur Prosa. Ein Lagebild, das ueber Wochen dasselbe sagt, faellt in
+    einer Kategorie sofort auf und in drei Saetzen Fliesstext erst spaet.
+
+    WARUM BERECHNET STATT ERFRAGT - dieselbe Entscheidung wie beim Betrag
+    (R-A2). Ob drei Jahresrenditen dasselbe Vorzeichen haben, steht in den
+    Zahlen. Ein Modell danach zu fragen, fuegt nichts hinzu ausser der
+    Moeglichkeit, dass es sich irrt.
+
+    DIE DRITTE VERWENDUNG ist die interessanteste: dieser Wert ist der
+    FESTPUNKT, gegen den ein Gegenpruefer die Prosa des Lagebilds haelt. Sagt
+    das Modell "die Maerkte bewegen sich im Gleichschritt", waehrend hier
+    `uneinheitlich` steht, ist das ein pruefbarer Widerspruch statt einer
+    Geschmacksfrage (R-T8)."""
+    richtungen = {}
+    gesehen: set[str] = set()
+    for klasse in BENCHMARK:
+        sym = BENCHMARK[klasse]
+        if sym in gesehen:
+            continue
+        reihe = reihen.get(sym)
+        if not reihe:
+            continue
+        i = _bis(reihe, datum, vorlauf=TREND_LANG)
+        if i is None:
+            continue
+        gesehen.add(sym)
+        jetzt = float(reihe[i].close)
+        davor = float(reihe[i - TREND_LANG].close)
+        if not (np.isfinite(jetzt) and np.isfinite(davor) and davor > 0):
+            continue
+        richtungen[sym] = jetzt / davor - 1.0
+    if len(richtungen) < 2:
+        # Mit einem einzigen Markt gibt es keinen Gleichlauf. "unbekannt" ist
+        # hier keine Enthaltung, sondern die zutreffende Aussage.
+        return {"wert": "unbekannt", "maerkte": len(richtungen), "je_markt": richtungen}
+    positiv = sum(1 for r in richtungen.values() if r >= 0)
+    wert = ("gleichlaeufig_aufwaerts" if positiv == len(richtungen) else
+            "gleichlaeufig_abwaerts" if positiv == 0 else "uneinheitlich")
+    return {"wert": wert, "maerkte": len(richtungen), "je_markt": richtungen}
+
+
 FENSTER_LIQUIDITAET = 21    # rund ein Handelsmonat - Amihuds eigene Mittelung
 
 

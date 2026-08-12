@@ -58,13 +58,40 @@ def baue_lagebild_eingabe(reihen: dict, datum: str) -> dict:
     return {"marktlage": beschreibe_marktlage(reihen, datum)}
 
 
+def stempel_gleichlauf(antwort: dict, reihen: dict, datum: str) -> dict:
+    """Haengt den gerechneten Gleichlauf an die ANTWORT der Rolle Lagebild.
+
+    WARUM AN DIE ANTWORT UND NICHT AN DIE EINGABE. Der gesamte Eingabe-Dict
+    geht als Nachricht an das Modell. Stuende der Gleichlauf dort, waere er
+    eine abgeleitete Wiederholung der Zahlen, die zwei Zeilen darueber schon
+    stehen - eine vierte Kennzahl, die nichts Neues traegt, aber Gewicht
+    bekommt (R-T9). Das Modell soll die drei Jahresrenditen selbst lesen.
+
+    Gebraucht wird der Wert danach: von der naechsten Rolle als zaehlbarer
+    Festpunkt neben der Prosa, von jeder Messung als Verteilung, und vom
+    Gegenpruefer als Bezug, gegen den ein Widerspruch pruefbar wird."""
+    from agent.marktlage import gleichlauf
+    antwort["gleichlauf"] = gleichlauf(reihen, datum)["wert"]
+    return antwort
+
+
 def baue_befund_eingabe(*, symbol: str, reihe: list, index: int,
                         kurs_eur: float, atr: float,
                         menge: float | None = None,
                         einstand_eur: float | None = None,
                         finanzierung: dict | None = None,
                         lagebild: dict | None = None) -> dict:
-    """Eingabe fuer Befund und Entscheidung - alle Bloecke an einer Stelle."""
+    """Eingabe fuer Befund und Entscheidung - alle Bloecke an einer Stelle.
+
+    `lagebild` ist die ANTWORT der Rolle Lagebild. Weitergereicht wird ihre
+    Prosa (`lage`) und, wenn vorhanden, der deterministische `gleichlauf` -
+    NICHT mehr das Feld `traegt`. Das war eine Marktbreite-Kategorie und ist
+    mit der Marktbreite entfallen (Begruendung in `rolle_analyst.py`).
+
+    Der Unterschied ist nicht nur ein Feldname: `traegt` kam aus dem Modell und
+    konnte falsch sein, `gleichlauf` ist gerechnet. Wo beides nebeneinander
+    steht - gerechneter Festpunkt und Modellprosa -, wird ein Widerspruch
+    pruefbar statt zur Geschmacksfrage (R-T8)."""
     from agent.lagebeschreibung import beschreibe_lage
     aus = {"asset": symbol,
            "stand": beschreibe_lage(symbol=symbol, reihe=reihe, index=index,
@@ -72,8 +99,10 @@ def baue_befund_eingabe(*, symbol: str, reihe: list, index: int,
                                     einstand_eur=einstand_eur,
                                     finanzierung=finanzierung)}
     if lagebild:
-        aus["marktlage_beurteilung"] = {"traegt": lagebild.get("traegt"),
-                                        "lage": lagebild.get("lage")}
+        beurteilung = {"lage": lagebild.get("lage")}
+        if lagebild.get("gleichlauf"):
+            beurteilung["gleichlauf"] = lagebild["gleichlauf"]
+        aus["marktlage_beurteilung"] = beurteilung
     return aus
 
 

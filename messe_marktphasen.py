@@ -160,10 +160,11 @@ def main() -> int:
         r = reihen[sym]
         try:
             if tag not in lagebilder:
-                lagebilder[tag] = RA.validiere(PR.frage(
-                    client, modell, RA.SYSTEM_PROMPT_ANALYST,
-                    RE.baue_lagebild_eingabe(reihen, tag),
-                    "agent.rolle_analyst"))
+                lagebilder[tag] = RE.stempel_gleichlauf(
+                    RA.validiere(PR.frage(
+                        client, modell, RA.SYSTEM_PROMPT_ANALYST,
+                        RE.baue_lagebild_eingabe(reihen, tag),
+                        "agent.rolle_analyst")), reihen, tag)
             lage = lagebilder[tag]
             menge, einstand = PR._bestand(sym)
             hh = np.array([k.high for k in r[:i + 1]], dtype=float)
@@ -175,14 +176,13 @@ def main() -> int:
                                             kurs_eur=PR._kurs_eur(sym, r, i) or 0.0,
                                             atr=atr, menge=menge,
                                             einstand_eur=einstand),
-                   "marktlage_beurteilung": {"traegt": lage["traegt"],
-                                             "lage": lage["lage"]}}
+                   "marktlage_beurteilung": {"lage": lage["lage"], "gleichlauf": lage.get("gleichlauf")}}
             ent = RT.validiere(dict(PR.frage(client, modell,
                                              RT.SYSTEM_PROMPT_TRADER, ein,
                                              "agent.rolle_trader")), sym)
             a["aktion"] = ent.get("aktion")
             a["faktoren"] = ent.get("unabhaengige_faktoren")
-            a["lage_traegt"] = lage.get("traegt")
+            a["lage_gleichlauf"] = lage.get("gleichlauf")
             # Ausgang: was der Kurs danach tat - NACH der Entscheidung gelesen
             j = min(i + 20, len(r) - 1)
             a["rendite_20t"] = round(100.0 * (r[j].close / r[i].close - 1), 1)
