@@ -680,6 +680,64 @@ In der Produktion läuft weiter das Altsystem mit 34.611 Zeichen Prompt.
 
 ---
 
+
+## 8e.0 WAS GESCHNITTEN WIRD — die Abgrenzung
+
+> **Nutzerdefinition 12.08.:** *„Unter Altsystem meine ich Funktionen, welche
+> falsch gebaut sind oder durch eine neue bessere ersetzt werden — mit Fokus auf
+> das LLM, aber auch auf andere Komponenten, welche nachweislich nicht korrekt
+> sind. Es soll ein glatter Schnitt werden."*
+>
+> **Nicht betroffen:** das deterministische Risikomanagement (RM-1 bis RM-7,
+> Cash-Reserve, Positionsgrößen-Deckel, Vetos). Es ist nicht defekt und ist
+> ausdrücklich die Schicht, in die Risiko gehört (Kap. 11.3).
+>
+> **Ein glatter Schnitt verträgt keine Umgehungen.** Wo ein Defekt nur
+> umfahren wurde, geht die Naht später wieder auf. Die Liste unten trennt
+> deshalb drei Zustände: **behoben · umgangen · offen.**
+
+### A — BEHOBEN, der Schnitt ist gemacht
+
+| Was war falsch | Beleg | behoben |
+|---|---|---|
+| `_struktur()` trug ein absolutes Etikett auf wenigen Tagen | 7.9 | 11.08. |
+| Betragsfrage in beiden Prompts, R-A2 dokumentiert und nie gebaut | Nachtrag 205 | 11.08. |
+| `lade_reihen_aus_db()` filterte USD — ETF-Klasse unsichtbar | 7.17 | 11.08. |
+| `_bestand()` las nur die berechnete Einstandsspalte — 14 von 28 Positionen als „nicht im Bestand" gemeldet | 7.10 | 11.08. |
+| `_kurs_eur()` las die älteste `price_cache`-Zeile | 7.10 | 11.08. |
+| EUR-Reihen wurden ein zweites Mal nach EUR umgerechnet | 7.20 | 11.08. |
+| Zwei Messskripte riefen die Marktbreite ohne Kalibrierungssatz | 7.14 | 12.08. |
+| Helfer lagen in einem Skript, sieben Skripte importierten daraus | 8e.1 | 12.08. |
+
+### B — UMGANGEN, NICHT BEHOBEN — hier ist der Schnitt noch nicht glatt
+
+| Was falsch ist | wie es heute umfahren wird | was ein glatter Schnitt verlangt |
+|---|---|---|
+| **CoinGecko-Rückfall liefert Vier-Tage-Kerzen** und legt sie als Tageskerzen ab. Die Funktion heißt `_rohdaten_zu_tageskerzen()`, der Kommentar behauptet „bei `days` ≤ 90 Tageskerzen" — beides falsch | Granularitätswächter verwirft sie beim Laden; yfinance bedient 39 von 44 Symbolen vorher | **Die Quelle korrigieren oder abschalten.** Solange sie schreibt, stehen falsch beschriftete Kerzen in der Produktionsdatenbank |
+| **`braucht_fallback()`** implementiert die im eigenen Modulkopf dokumentierten Ausnahmen nicht — VSN (Wertpapier) und EURCV (Stablecoin) bekommen trotzdem Kerzen | Granularitätswächter fängt sie ab | Ausnahmen im Code umsetzen, nicht nur im Docstring |
+
+### C — OFFEN, noch nicht angefasst
+
+| Was falsch oder unbelegt ist | Beleg |
+|---|---|
+| **Marktbreite** — gemischter Korb, wechselnde Zusammensetzung, für 4 von 5 Klassen nicht berechenbar, Richtung invers | 7.4, 7.15 |
+| **`HORIZONT_KERZEN = 20`** — nie aus der Zieldistanz abgeleitet; bei 3 ATR lösen sich Fälle erst bei 16–19 Tagen auf | 7.12, 7.22 |
+| **„keines = 0 R"** in der Erwartungswert-Rechnung — eine Setzung, keine Messung; betrifft 15–21 % aller Fälle | 7.23 |
+| **Uniqueness-Gewichtung fehlt** — die Konfidenzintervalle der 8.441-Fälle-Messung sind zu eng | Methodik 2.19.1 |
+| **`tag_vollstaendig`-Divergenz** — im Backtest sieht das Modell eine Umsatzzeile mehr als live | 7.13 |
+| **Kein Gegenprüfer in der neuen Kette** — die alte hatte Z.ai, die neue nichts | 8e.2/Z1 |
+| **Z.ai urteilte über eine Konstante** (`regime` auf 1.022 Fällen „baer") | Arbeitsstand 10 |
+| **Kein Gate in der neuen Kette** — in keiner Messung dabei | 8e.2/G1 |
+
+### Die Regel für den Schnitt
+
+**Ein Defekt gilt erst als geschnitten, wenn die falsche Funktion weg ist —
+nicht, wenn eine spätere Stufe ihn abfängt.** Ein Wächter ist ein Netz, keine
+Reparatur. Netze gehören trotzdem gespannt: sie fangen den nächsten Fehler, den
+noch niemand kennt.
+
+---
+
 ## 8e.1 DETAILÄNDERUNGEN — was seit dem 10.08. geändert wurde
 
 *Getrennt danach, ob die Produktion es beim nächsten Lauf merkt. Diese Trennung
