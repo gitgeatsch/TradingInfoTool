@@ -1,0 +1,334 @@
+# -*- coding: utf-8 -*-
+"""Kumulative Gegenpruefung ueber ALLE Pakete des Umbauplans (12.08.2026).
+
+NUTZERVORGABE, die diese Datei erzwungen hat: *"mache rueckwirkend ueber alle
+Pakete pro neuem Paket eine Gegenpruefung, sonst verlieren wir den Faden."*
+
+Der Punkt ist die RUECKWIRKUNG. Jedes Paket einmal zu pruefen und danach nie
+wieder heisst, dass Paket 5 Paket 1 still zerbricht - und genau das ist an
+diesem Tag zweimal passiert:
+
+  * Der Marktbreite-Schnitt (L1) entfernte `TRAGFAEHIGKEIT`, woran der
+    Schema-Verteiler die Rolle Lagebild erkannte. Jeder strikte Aufruf waere
+    mit einem AttributeError gestorben. Gefunden erst bei der Gegenpruefung zu
+    Paket 1 - also einen Umbau spaeter.
+  * Zwei neue Felder in Paket 1 vergroesserten einen Strikt-Vertrag-Verstoss,
+    den es vorher schon gab (4 statt 2 Felder). Die volle Fluche zeigte 28-31
+    Verstoesse je Signal-Analyst.
+
+Beides waere von einem Lauf DIESER Datei gefangen worden.
+
+    python pruefe_pakete.py            alle Pakete
+    python pruefe_pakete.py --paket 1  nur eines
+
+REGEL FUER NEUE PAKETE: Wer ein Paket baut, haengt seine Pruefungen hier an -
+und laesst die ALTEN mitlaufen. Eine Pruefung, die nur am Tag ihrer Entstehung
+lief, ist eine Notiz, kein Netz.
+
+Kein LLM-Aufruf, kein Netzwerk, keine Schreibzugriffe. Diese Datei darf jederzeit
+laufen.
+"""
+from __future__ import annotations
+
+import argparse
+import io
+import re
+import sys
+
+sys.path.insert(0, ".")
+
+_ERGEBNISSE: list[tuple[str, str, bool, str]] = []
+
+
+def pruefe(paket: str, name: str, bedingung, detail: str = "") -> None:
+    _ERGEBNISSE.append((paket, name, bool(bedingung), detail))
+
+
+def _quelltext(pfad: str) -> str:
+    """Nur der AKTIVE Code - Kommentarzeilen fliegen raus.
+
+    Notwendig, weil dieses Projekt Entferntes ausfuehrlich im Kommentar
+    festhaelt. Ein `grep` faende die geloeschte Zeile in ihrer eigenen
+    Grabinschrift wieder - genau dieser Fehler ist am 12.08. passiert (der
+    Nur-Long-Vorfilter galt als aktiv, weil ein Kommentar seine Entfernung
+    beschrieb)."""
+    roh = io.open(pfad, encoding="utf-8").read()
+    return "\n".join(z for z in roh.split("\n")
+                     if not z.strip().startswith("#"))
+
+
+# ---------------------------------------------------------------- Paket 0 ---
+def paket_0() -> None:
+    """Bereinigungen: Symbolliste raus, Hedge ohne Tranchen."""
+    P = "0"
+    code = _quelltext("agent/krypto/pipeline.py")
+    pruefe(P, "Symbolliste ('BTC','ETH','SOL') nicht mehr im aktiven Code",
+           not re.search(r'asset\.symbol\s+in\s+\("BTC",\s*"ETH",\s*"SOL"\)', code),
+           "sie ueberstimmte den Toggle des Nutzers")
+
+    pruefe(P, "Tranchen haengen weiterhin am Regime UND am Toggle",
+           "get_dca_erlaubt" in code and "regime_result.regime in" in code,
+           "die Regime-Bedingung darf nicht mitentfernt worden sein")
+
+    hedge = _quelltext("agent/hedge/pipeline.py")
+    pruefe(P, "Hedge setzt tranchen_erlaubt = False",
+           re.search(r"tranchen_erlaubt\s*=\s*False", hedge) is not None,
+           "die Staffelungsregel wirkte dort mit umgekehrtem Vorzeichen")
+    pruefe(P, "Hedge ruft multi_asset_tranchen_erlaubt() NICHT mehr",
+           "multi_asset_tranchen_erlaubt" not in hedge)
+
+    # KEIN VERHALTENSWECHSEL ohne Zutun des Nutzers - der eigentliche Punkt.
+    import sqlite3
+
+    import database.db as db
+    con = sqlite3.connect("data/tradinginfotool.db")
+    con.row_factory = sqlite3.Row
+    krypto = ("BTC", "ETH", "SOL", "LINK", "AVAX", "SUI", "TAO")
+    gleich = all(db.get_dca_erlaubt(con, s) == (s in ("BTC", "ETH", "SOL"))
+                 for s in krypto)
+    con.close()
+    pruefe(P, "Krypto-Verhalten unveraendert ohne Zutun des Nutzers", gleich,
+           "die Whitelist begrenzt weiterhin auf BTC/ETH/SOL")
+
+
+# ---------------------------------------------------------------- Paket 1 ---
+def paket_1() -> None:
+    """Ausgabefelder: Zielkurs und Spannen abgeleitet, Falsifikator pruefbar."""
+    P = "1"
+    from agent import rolle_trader as RT
+
+    # DIE GEOMETRIE ist der Kern: Stop 1,5 ATR unter Einstieg, Ziel 3,0 ATR
+    # darueber. Weicht sie ab, sind zwei Trefferquoten nicht mehr vergleichbar
+    # und die Kalibrierungstabelle (Paket 8) kann nicht entstehen.
+    atr = 4.0
+    r = RT.leite_zonen_ab({"aktion": "KAUFEN", "einstieg_eur": 100.0,
+                           "stop_eur": 100.0 - 1.5 * atr}, atr)
+    pruefe(P, "Ziel liegt exakt 3,0 ATR ueber dem Einstieg",
+           abs(r.get("ziel_eur", 0) - (100.0 + 3.0 * atr)) < 1e-9,
+           f"ziel={r.get('ziel_eur')}, erwartet {100.0 + 3.0 * atr}")
+    pruefe(P, "Spanne betraegt 0,25 ATR je Seite",
+           abs(r.get("einstieg_eur_bis", 0) - r.get("einstieg_eur_von", 0)
+               - 0.5 * atr) < 1e-9)
+
+    grund = {"belege": [{"fakt": "a", "richtung": "dafuer", "gewicht": "hoch"},
+                        {"fakt": "b", "richtung": "dafuer", "gewicht": "mittel"}],
+             "unabhaengige_faktoren": 2, "aktion": "KAUFEN",
+             "einstieg_eur": 100.0, "stop_eur": 94.0,
+             "begruendung": "x", "was_dagegen": "y", "umgeworfen_durch": "z"}
+    ohne = RT.validiere({**grund, "aktion": "NICHTS_TUN"}, "X", atr=atr)
+    pruefe(P, "NICHTS_TUN traegt keine Zone",
+           not any(k in ohne for k in ("ziel_eur", "einstieg_eur", "stop_eur")))
+
+    pruefe(P, "Stop >= Einstieg erzeugt KEINE Zone",
+           "ziel_eur" not in RT.leite_zonen_ab(
+               {"einstieg_eur": 94.0, "stop_eur": 100.0}, atr),
+           "der Widerspruch gehoert dem Vertrag, nicht einer Rechnung")
+
+    winzig = RT.leite_zonen_ab({"einstieg_eur": 0.000191,
+                                "stop_eur": 0.000179}, 0.000008)
+    pruefe(P, "Winzige Kurse bleiben unterscheidbar",
+           winzig.get("einstieg_eur_von") != winzig.get("einstieg_eur_bis"),
+           "SUPRA steht bei 0,000191")
+
+    from agent import llm_schema
+    s = llm_schema.baue_trader_schema(RT)
+    pruefe(P, "Falsifikator ist maschinenlesbar",
+           {"umgeworfen_preis_eur", "umgeworfen_bis"} <= set(s["properties"]),
+           "ohne sie kann V1 nicht pruefen, ob eine Entscheidung widerlegt ist")
+
+    # ALLE Aufrufer muessen den ATR durchreichen - sonst ist das Feature
+    # gebaut und in genau einem Pfad nicht aktiv.
+    import glob
+    ohne_atr = []
+    for d in sorted(glob.glob("messe_*.py") + ["pruefe_rollenkette.py"]):
+        t = _quelltext(d)
+        for m in re.finditer(r"RT\.validiere\(", t):
+            rest = t[m.end():m.end() + 260]
+            if "atr=" not in rest.split("\n\n")[0]:
+                ohne_atr.append(d)
+    pruefe(P, "Jeder Aufrufer reicht den ATR durch", not ohne_atr,
+           f"ohne: {sorted(set(ohne_atr))}" if ohne_atr else "")
+
+
+# ------------------------------------------------- Paket 1: Strikt-Vertrag ---
+def _strikt_verstoesse(schema, pfad="wurzel", aus=None) -> list:
+    aus = aus if aus is not None else []
+    if isinstance(schema, dict):
+        if isinstance(schema.get("properties"), dict):
+            p = set(schema["properties"])
+            r = set(schema.get("required") or [])
+            if p - r:
+                aus.append((pfad, sorted(p - r)))
+            if schema.get("additionalProperties") is not False:
+                aus.append((pfad, ["additionalProperties nicht false"]))
+            for k, v in schema["properties"].items():
+                _strikt_verstoesse(v, f"{pfad}.{k}", aus)
+        if isinstance(schema.get("items"), dict):
+            _strikt_verstoesse(schema["items"], f"{pfad}[]", aus)
+    return aus
+
+
+def paket_1_schema() -> None:
+    """Der Strikt-Vertrag - er gilt fuer JEDE Ausgabeform, nicht nur die neuen.
+
+    Belegt (OpenAI Structured Outputs, von Groq und OpenRouter uebernommen):
+    bei `strict: true` braucht jedes Objekt `additionalProperties: false` UND
+    alle Eigenschaften in `required`. Vor dem 12.08. verletzten das alle sechs
+    Signal-Schemata mit 28-31 Verstoessen - unentdeckt, weil OpenRouter der
+    Pfad ist, der produktiv noch nicht sauber gelaufen ist."""
+    P = "1"
+    from agent import llm_schema
+
+    class _OpenRouter:
+        pass
+    _OpenRouter.__module__ = "api.openrouter"
+    client = _OpenRouter()
+
+    module = ["agent.rolle_analyst", "agent.rolle_trader",
+              "agent.krypto.analyst", "agent.krypto.hebel_analyst",
+              "agent.aktien.analyst", "agent.hedge.analyst",
+              "agent.rohstoff.analyst", "agent.themen_etf.analyst"]
+    for name in module:
+        __import__(name)
+    fehler = {}
+    for name in module:
+        fmt = llm_schema.response_format_fuer(client, name)
+        sch = (fmt.get("json_schema") or {}).get("schema")
+        if sch is None:
+            fehler[name] = ["kein striktes Schema - Verteiler erkennt die Form nicht"]
+            continue
+        v = _strikt_verstoesse(sch)
+        if v:
+            fehler[name] = v[:3]
+    pruefe(P, f"Strikt-Vertrag ueber alle {len(module)} Ausgabeformen",
+           not fehler, "; ".join(f"{k}: {v}" for k, v in fehler.items()))
+
+    # Der Verteiler muss die beiden Rollen an haltbaren Merkmalen erkennen.
+    for name, erwartet in (("agent.rolle_analyst", {"lage", "belege"}),
+                           ("agent.rolle_trader", {"aktion", "belege"})):
+        sch = (llm_schema.response_format_fuer(client, name)
+               .get("json_schema") or {}).get("schema") or {}
+        pruefe(P, f"Verteiler erkennt {name.rsplit('.', 1)[-1]}",
+               erwartet <= set(sch.get("properties") or {}),
+               "am 12.08. brach genau das - das Merkmal war eine Konstante, "
+               "die derselbe Umbau entfernt hat")
+
+
+# ---------------------------------------------------------------- Paket 2 ---
+def paket_2() -> None:
+    """Instrument und Strategie als Vorgabe an Rolle 2/3."""
+    P = "2"
+    from agent import handelsauftrag as HA
+    from agent import rolle_trader as RT
+    import agent.rollen_eingabe as RE
+
+    erlaubt = sum(len(v) for v in HA.ERLAUBTE_PAARE.values())
+    gesamt = len(HA.INSTRUMENTE) * len(HA.STRATEGIEN)
+    geworfen = 0
+    for i in HA.INSTRUMENTE:
+        for s in HA.STRATEGIEN:
+            try:
+                HA.pruefe(i, s)
+            except HA.AuftragUngueltig:
+                geworfen += 1
+    pruefe(P, f"{gesamt - erlaubt} Kombinationen werden abgelehnt",
+           geworfen == gesamt - erlaubt,
+           "hebel x akkumulation, absicherung x swing/akkumulation")
+
+    for falsch in ("", None, "futures", "dca", "long", "spot-hebel"):
+        try:
+            HA.pruefe(falsch, "einstieg")
+            pruefe(P, f"unbekanntes Instrument {falsch!r} wird abgelehnt", False,
+                   "STILLER RUECKFALL - bewertete einen Hebel-Trade wie Spot")
+        except HA.AuftragUngueltig:
+            pruefe(P, f"unbekanntes Instrument {falsch!r} wird abgelehnt", True)
+
+    # SCHREIBWEISE WIRD NORMALISIERT, und das ist gewollt: `pruefe()` macht
+    # `.strip().lower()`. "Hebel" aus einem Aufrufer ist eindeutig das
+    # Hebel-Instrument, kein Tippfehler.
+    #
+    # Diese Pruefung stand zuerst falsch herum - sie erwartete, dass "Hebel"
+    # abgelehnt wird. In der ersten Gegenpruefung fiel das nicht auf, weil ich
+    # es mit `akkumulation` gepaart hatte: dort warf schon die KOMBINATION, und
+    # der Testfall sah bestanden aus. Genau dafuer gibt es diese Datei.
+    pruefe(P, "Schreibweise wird normalisiert (' Hebel ' -> hebel)",
+           HA.pruefe("  Hebel  ", " Swing ") == ("hebel", "swing"))
+
+    pruefe(P, "Strategie aendert den Prompt wirklich",
+           RT.prompt_fuer("spot", "einstieg") != RT.prompt_fuer("spot", "akkumulation"))
+    pruefe(P, "Vorgabefall bleibt bitgleich SYSTEM_PROMPT_TRADER",
+           RT.prompt_fuer() == RT.SYSTEM_PROMPT_TRADER,
+           "alle Messbefunde bis zum 12.08. haengen daran")
+
+    # Nutzerkorrektur 12.08.: Akkumulation hat ein Ziel, nur kein nahes.
+    satz = " ".join(HA.beschreibe("spot", "akkumulation")).lower()
+    pruefe(P, "Akkumulationssatz nennt die Erwartung, nicht nur ihr Fehlen",
+           "erwartung" in satz and "verbilligt" in satz,
+           "vorher stand dort nur 'kein Ausstiegskurs' - das klang wie 'kein Ziel'")
+    pruefe(P, "Akkumulations-Prompt verweist auf den Falsifikator",
+           "punkt 6" in RT.prompt_fuer("spot", "akkumulation").lower(),
+           "er ist dort das EINZIGE Ausstiegskriterium")
+
+    grund = {"belege": [{"fakt": "a", "richtung": "dafuer", "gewicht": "hoch"},
+                        {"fakt": "b", "richtung": "dafuer", "gewicht": "mittel"}],
+             "unabhaengige_faktoren": 2, "aktion": "KAUFEN",
+             "einstieg_eur": 100.0, "stop_eur": 94.0,
+             "begruendung": "x", "was_dagegen": "y", "umgeworfen_durch": "z"}
+    akk = RT.validiere(dict(grund), "X", atr=4.0,
+                       instrument="spot", strategie="akkumulation")
+    pruefe(P, "Akkumulation traegt keine Kurse und keinen Zielkurs",
+           not any(k in akk for k in ("einstieg_eur", "stop_eur", "ziel_eur")),
+           "sonst laese die Erfolgsmessung sie spaeter als Trefferquote")
+    pruefe(P, "die Entfernung wird VERMERKT, nicht stillschweigend",
+           "entfernt" in str(akk.get("_korrekturen") or ""))
+
+    class _Kerze:
+        date, open, high, low, close, volume = "2026-07-17", 1.0, 1.0, 1.0, 1.0, 1.0
+    ein = RE.baue_befund_eingabe(symbol="X", reihe=[_Kerze()] * 300, index=299,
+                                 kurs_eur=1.0, atr=0.04,
+                                 instrument="hebel", strategie="swing")
+    pruefe(P, "der Auftrag steht VOR dem Stand (R-T9)",
+           list(ein).index("auftrag") < list(ein).index("stand"))
+
+    from agent.waechter_zuspitzung import finde_grade
+    schlimm = [(i, s) for i in HA.INSTRUMENTE for s in HA.ERLAUBTE_PAARE[i]
+               for satz in HA.beschreibe(i, s) if any(finde_grade(satz))]
+    pruefe(P, "kein Gradwort im Auftragstext", not schlimm, str(schlimm))
+
+
+PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()), "2": paket_2}
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--paket", default=None, help="nur dieses Paket pruefen")
+    a = ap.parse_args()
+    laufen = [a.paket] if a.paket else sorted(PAKETE)
+    for p in laufen:
+        if p not in PAKETE:
+            print(f"[FEHLER] Paket {p} kennt diese Datei nicht - "
+                  f"bekannt: {sorted(PAKETE)}")
+            return 2
+        PAKETE[p]()
+
+    letztes = None
+    schlecht = 0
+    for paket, name, ok, detail in _ERGEBNISSE:
+        if paket != letztes:
+            print(f"\n--- PAKET {paket} " + "-" * 56)
+            letztes = paket
+        print(f"  {'OK  ' if ok else 'FEHL'}  {name}")
+        if detail and not ok:
+            print(f"        {detail}")
+        elif detail and ok:
+            print(f"        ({detail})")
+        schlecht += 0 if ok else 1
+
+    print("\n" + "=" * 68)
+    print(f"{len(_ERGEBNISSE)} Pruefungen, "
+          + ("ALLE BESTANDEN" if not schlecht else f"{schlecht} FEHLGESCHLAGEN"))
+    return 1 if schlecht else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

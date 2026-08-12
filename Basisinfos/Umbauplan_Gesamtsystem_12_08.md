@@ -375,6 +375,48 @@ Signalkette**.
 
 ---
 
+## 8a. Die Gegenprüfung läuft KUMULATIV — `pruefe_pakete.py`
+
+**Nutzervorgabe 12.08.:** *„mache rückwirkend über alle Pakete pro neuem Paket
+eine Gegenprüfung, sonst verlieren wir den Faden."*
+
+Der Punkt ist die **Rückwirkung**. Jedes Paket einmal zu prüfen und danach nie
+wieder heißt, dass Paket 5 Paket 1 still zerbricht — und genau das ist am
+12.08. **zweimal** passiert:
+
+| | |
+|---|---|
+| Der Marktbreite-Schnitt entfernte `TRAGFAEHIGKEIT` — daran erkannte der Schema-Verteiler die Rolle Lagebild. Jeder strikte Aufruf wäre mit `AttributeError` gestorben | gefunden **einen Umbau später** |
+| Zwei neue Felder vergrößerten einen Strikt-Vertrag-Verstoß, den es vorher schon gab. Die volle Fläche zeigte **28–31 Verstöße je Signal-Analyst** | vorher nie geprüft |
+
+**Beides hätte ein Lauf dieser Datei gefangen.**
+
+```bash
+python pruefe_pakete.py            # alle Pakete
+python pruefe_pakete.py --paket 1  # nur eines
+```
+
+Stand: **31 Prüfungen** über Paket 0–2, alle bestanden. Kein LLM-Aufruf, kein
+Netzwerk, keine Schreibzugriffe — sie darf jederzeit laufen.
+
+> **Regel für neue Pakete:** wer ein Paket baut, hängt seine Prüfungen dort an
+> **und lässt die alten mitlaufen.** Eine Prüfung, die nur am Tag ihrer
+> Entstehung lief, ist eine Notiz, kein Netz.
+
+Ein Detail, das die Datei schon bewiesen hat: sie liest **nur aktiven Code**,
+Kommentarzeilen fliegen raus. Dieses Projekt hält Entferntes ausführlich im
+Kommentar fest — ein `grep` fände die gelöschte Zeile in ihrer eigenen
+Grabinschrift wieder. Genau dieser Fehler ist am 12.08. passiert, als der
+Nur-Long-Vorfilter als aktiv galt, weil ein Kommentar seine Entfernung
+beschrieb.
+
+Und beim ersten Lauf hat sie einen Fehler **in einer meiner eigenen Prüfungen**
+gefunden: `"Hebel"` galt dort als ungültig, obwohl `pruefe()` die Schreibweise
+absichtlich normalisiert. In der Einzelprüfung war das verdeckt, weil der
+Testfall mit `akkumulation` gepaart war — dort warf schon die Kombination.
+
+---
+
 ## 9. Reihenfolge — Arbeitspakete
 
 Die Reihenfolge folgt einer Zwangskette:
