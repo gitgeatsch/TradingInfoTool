@@ -827,7 +827,7 @@ wirkt sofort nach dem Ausrollen.*
 | # | Was | Stand |
 |---|---|---|
 | B1 | **Rollen-Ebene in die Produktion einhängen** | **nicht begonnen** — kein Aufrufer außerhalb der Messskripte |
-| B2 | yfinance-Rückfall ausrollen | verdrahtet, gepusht, **nicht ausgerollt** |
+| B2 | **Börsen-Klines ausrollen** | verdrahtet, gepusht, **nicht ausgerollt**. Ersetzt den yfinance-Rückfall vom 11.08. *und* den CoinGecko-Rückfall — beide abgeschaltet. An echten Daten geprüft (8e.0 B) |
 | B3 | Produktion wieder starten | steht seit 10.08. bewusst |
 | B4 | `pruefe_abdeckung.py` auf dem Notebook | Desktop-Zahlen gelten nur für den 19.07. |
 
@@ -892,7 +892,8 @@ wirkt sofort nach dem Ausrollen.*
 |---|---|---|
 | L1 | **Marktbreite raus** | entschieden (**ersatzlos**, Nutzerabstimmung 12.08.), noch im Faktensatz — entfällt, wenn `marktlage.py` das Lagebild speist |
 | L2 | **Volatilitätslage** je Klasse | **ERLEDIGT 12.08.** — `agent/marktlage.py::beschreibe_volatilitaet()`, Benchmark je Klasse, Perzentil der eigenen Historie. Geprüft über vier Phasen: Krypto 0. Perzentil in der ruhigen Phase, 96. im Bären |
-| L3 | **Trendlage des Klassen-Benchmarks** | fehlt. BTC · SPY · Futures, alle Daten vorhanden |
+| L3 | **Trendlage des Klassen-Benchmarks** | **ERLEDIGT 12.08.** — `beschreibe_trend()`, zwei Aussagen aus zwei Quellen (Moskowitz/Ooi/Pedersen 2012 · George/Hwang 2004). Vier Prüfungen bestanden, `pruefe_trendlage.py`. **Befund:** die alte Strukturaussage unterscheidet ein +92 %-Jahr nicht von einem −50 %-Jahr — auf 100 % der Tage (Arbeitsstand 7.29) |
+| L6 | **BTC-Historie nachladen** | **NEU 12.08.** — BTC reicht nur bis 17.07.2024. Bärenmarkt 2022 und Hoch 2021 fehlen; was als Bärenphase gemessen wurde, ist der Rückgang seit Juli 2025. Binance-Klines liefern mit `endTime` auch ältere Kerzen |
 | L4 | **Liquiditätslage** | fehlt |
 | L5 | Zuspitzungs-Wächter anschließen | **ERLEDIGT 12.08.** — `rollen_eingabe.pruefe_lagebild()`, an zwei Fällen geprüft |
 
