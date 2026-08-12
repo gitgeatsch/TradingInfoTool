@@ -55,7 +55,8 @@ def baue_lagebild_eingabe(reihen: dict, datum: str) -> dict:
     haette er nach der Streichung jeden Grad als unbelegt gemeldet, auch den
     wahren."""
     from agent.marktlage import beschreibe_marktlage
-    return {"marktlage": beschreibe_marktlage(reihen, datum, lade_stimmung())}
+    return {"marktlage": beschreibe_marktlage(reihen, datum, lade_stimmung(),
+                                              lade_makro())}
 
 
 def lade_stimmung(db: str = "data/tradinginfotool.db") -> dict:
@@ -99,6 +100,36 @@ def stempel_gleichlauf(antwort: dict, reihen: dict, datum: str) -> dict:
     from agent.marktlage import gleichlauf
     antwort["gleichlauf"] = gleichlauf(reihen, datum)["wert"]
     return antwort
+
+
+def lade_makro(db: str = "data/tradinginfotool.db") -> dict:
+    """Netto-Liquiditaet und Zinskurven-Spread je Tag - die einzigen Fakten des
+    Lagebilds, die mit KEINER unserer Kursreihen zu tun haben.
+
+    Aus der DATENBANK, nicht live. Ein heute geholter Makrowert in einem Anker
+    von 2022 waere ein Leck, kein Fakt. Historie nachgeladen am 12.08. mit
+    `lade_makro_historie_nach.py`: 501 Wochenwerte Liquiditaet ab 2017-01 und
+    2.414 Tageswerte Zinsen.
+
+    FAIL-SOFT: faellt etwas aus, entfaellt der Satz. Ein Satz "keine
+    Makrodaten" waere ueber alle Anker identisch und damit ein konstantes Feld
+    (R-T6)."""
+    import sqlite3
+    try:
+        con = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+        try:
+            liq = {t: v for t, v in con.execute(
+                "SELECT date, netto_liquiditaet_mrd FROM macro_snapshot "
+                "WHERE netto_liquiditaet_mrd IS NOT NULL")}
+            zins = {t: round(z - k, 4) for t, z, k in con.execute(
+                "SELECT date, rendite_10j_pct, rendite_kurz_pct FROM "
+                "macro_snapshot WHERE rendite_10j_pct IS NOT NULL "
+                "AND rendite_kurz_pct IS NOT NULL")}
+            return {"liquiditaet": liq, "zinskurve": zins}
+        finally:
+            con.close()
+    except Exception:                                        # noqa: BLE001
+        return {}
 
 
 def baue_befund_eingabe(*, symbol: str, reihe: list, index: int,

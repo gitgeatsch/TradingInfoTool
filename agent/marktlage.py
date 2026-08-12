@@ -141,6 +141,71 @@ def beschreibe_volatilitaet(reihen: dict, klasse: str, datum: str) -> list[str]:
             f"Handelstage."]
 
 
+FENSTER_LIQUIDITAET_WOCHEN = 26     # ein halbes Jahr, das Fenster der Quelle
+
+
+def beschreibe_makro(makro: dict, datum: str) -> list[str]:
+    """Zwei Fakten, die mit KEINER unserer Kursreihen zu tun haben.
+
+    Das ist der eigentliche Gewinn von Paket 4. Trend, Volatilitaet und
+    Liquiditaet lesen alle dieselben Kerzen; die Stimmung ist zur Haelfte auch
+    Kurs. Diese beiden nicht:
+
+        NETTO-LIQUIDITAET   Fed-Bilanz minus Treasury General Account minus
+                            Reverse-Repo (FRED: WALCL, WTREGEN, RRPONTSYD).
+                            Wie viel Geld dem Finanzsystem tatsaechlich zur
+                            Verfuegung steht.
+        ZINSKURVE           zehnjaehrige gegen kurzfristige US-Rendite
+                            (^TNX, ^IRX). Der Standardmassstab fuer die
+                            Steilheit - und ein negativer Abstand ist das am
+                            haeufigsten untersuchte Rezessionssignal ueberhaupt.
+
+    WOHER DIE FUNKTION KOMMT. Beide Groessen rechnet `kategorie_thesen.py`
+    laengst - aber nur INNERHALB eines Thesen-Abgleichs, und der liefert heute
+    nichts: 13 von 57 Assets tragen eine Hauptgruppe, die Tabelle `thesen` hat
+    null Zeilen. Der Codepfad lief, die Ausgabe war leer.
+
+    Was dort thesenabhaengig ist, ist allein das URTEIL
+    (`_einschaetzung_aus_richtung(bullisch, these.richtung)`). Die Daten sind
+    es nicht. Also nehmen wir die Daten und lassen das Urteil weg - was ohnehin
+    richtiger ist: die These stammt vom Nutzer, und sie einem Modell als Fakt
+    vorzulegen waere ein Anker (Ankerindex 0,45, Experten-Anker am staerksten).
+
+    STRENG KAUSAL: `makro` traegt gespeicherte Historie, kein Live-Abruf. Ein
+    heute geholter Makrowert in einem Anker von 2022 waere kein Fakt, sondern
+    ein Leck - er truege die Zukunft in die Vergangenheit."""
+    if not makro:
+        return []
+    aus = []
+
+    liq = {t: v for t, v in (makro.get("liquiditaet") or {}).items() if t <= datum}
+    if len(liq) > FENSTER_LIQUIDITAET_WOCHEN:
+        tage = sorted(liq)
+        jetzt = float(liq[tage[-1]])
+        davor = float(liq[tage[-1 - FENSTER_LIQUIDITAET_WOCHEN]])
+        if davor:
+            richtung, betrag = _richtung(100.0 * (jetzt / davor - 1.0))
+            aus.append(
+                f"Die Netto-Liquiditaet des US-Finanzsystems betraegt "
+                f"{jetzt:,.0f} Mrd. USD und liegt damit {betrag:.1f} % "
+                f"{richtung} ihrem Stand von vor "
+                f"{FENSTER_LIQUIDITAET_WOCHEN} Wochen."
+                .replace(",", "."))
+
+    zins = {t: v for t, v in (makro.get("zinskurve") or {}).items() if t <= datum}
+    if len(zins) >= FENSTER_HISTORIE // 2:
+        tage = sorted(zins)
+        spreads = np.array([zins[t] for t in tage], dtype=float)
+        aktuell = float(spreads[-1])
+        fenster = spreads[-FENSTER_HISTORIE:]
+        p = _perzentil(fenster, aktuell)
+        aus.append(
+            f"Der Abstand zwischen zehnjaehriger und kurzfristiger US-Rendite "
+            f"betraegt {aktuell:+.2f} Prozentpunkte; das liegt im {p}. "
+            f"Perzentil der letzten {len(fenster)} Handelstage.")
+    return aus
+
+
 def beschreibe_stimmung(stimmung: dict, datum: str) -> list[str]:
     """Dimension 4: was fuehlt der Markt gerade - und wie ungewoehnlich ist das?
 
@@ -204,7 +269,8 @@ def beschreibe_stimmung(stimmung: dict, datum: str) -> list[str]:
             f"Risikobereitschaft."]
 
 
-def beschreibe_marktlage(reihen: dict, datum: str, stimmung: dict | None = None) -> list[str]:
+def beschreibe_marktlage(reihen: dict, datum: str, stimmung: dict | None = None,
+                         makro: dict | None = None) -> list[str]:
     """Das VOLLSTAENDIGE Lagebild - was die Rolle Lagebild als Eingabe bekommt.
 
     EIN AUFRUF, ALLE KLASSEN. Die Alternative waere ein Lagebild je Klasse
@@ -223,7 +289,11 @@ def beschreibe_marktlage(reihen: dict, datum: str, stimmung: dict | None = None)
     Marktlage zuerst beantworten muss; die Liquiditaet praezisiert, was ein
     Handeln darin kostet."""
     gesehen: set[str] = set()
-    aus: list[str] = []
+    # DAS MAKRO STEHT ZUERST (R-T9: was zuerst steht, wiegt schwerer). Es ist
+    # der RAHMEN, in dem alle Leitmaerkte stehen - anders als die uebrigen
+    # Fakten gilt es fuer alle drei zugleich. Am Ende gelesen saehe es aus wie
+    # eine Fussnote zum Rohstoffblock.
+    aus: list[str] = list(beschreibe_makro(makro or {}, datum))
     for klasse in BENCHMARK:
         sym = BENCHMARK[klasse]
         if sym in gesehen:

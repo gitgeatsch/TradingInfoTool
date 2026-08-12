@@ -383,8 +383,73 @@ def paket_3() -> None:
            fuer("rohstoffe") == {})
 
 
+# ---------------------------------------------------------------- Paket 4 ---
+def paket_4() -> None:
+    """Makro-Fakten: die einzigen, die mit keiner Kursreihe zu tun haben."""
+    P = "4"
+    import sqlite3
+    from agent import marktlage as ML
+    import agent.rollen_eingabe as RE
+
+    con = sqlite3.connect("file:data/tradinginfotool.db?mode=ro", uri=True)
+    nl = con.execute("SELECT COUNT(netto_liquiditaet_mrd), MIN(date), MAX(date) "
+                     "FROM macro_snapshot WHERE netto_liquiditaet_mrd IS NOT NULL"
+                     ).fetchone()
+    nz = con.execute("SELECT COUNT(rendite_10j_pct) FROM macro_snapshot "
+                     "WHERE rendite_10j_pct IS NOT NULL").fetchone()[0]
+    con.close()
+    pruefe(P, "Makro-Historie ist nachgeladen", nl[0] > 400 and nz > 2000,
+           f"{nl[0]} Liquiditaets-Wochenwerte ({nl[1]} .. {nl[2]}), {nz} Zinstage")
+
+    makro = RE.lade_makro()
+    saetze = ML.beschreibe_makro(makro, "2026-07-17")
+    pruefe(P, "beide Makro-Saetze entstehen", len(saetze) == 2, str(saetze))
+
+    # KAUSALITAET - der teuerste denkbare Fehler bei Makrodaten. Ein live
+    # geholter Wert in einem Anker von 2022 truege die Zukunft rueckwaerts.
+    verfaelscht = {"liquiditaet": dict(makro["liquiditaet"]),
+                   "zinskurve": dict(makro["zinskurve"])}
+    verfaelscht["liquiditaet"]["2026-08-05"] = 99999.0
+    verfaelscht["zinskurve"]["2026-08-11"] = 9.99
+    pruefe(P, "Makro ist kausal abgeschnitten",
+           ML.beschreibe_makro(verfaelscht, "2026-07-17") == saetze,
+           "ein Wert NACH dem Anker darf die Aussage nicht aendern")
+
+    # UNTERSCHEIDET ES? Ein konstantes Feld waere wertlos (R-T6).
+    proben = {d: ML.beschreibe_makro(makro, d)
+              for d in ("2021-11-09", "2022-06-17", "2023-10-13", "2026-07-17")}
+    pruefe(P, "die Makrolage unterscheidet die Epochen",
+           len({tuple(v) for v in proben.values()}) == len(proben),
+           "2022 muss die Straffung zeigen, 2021 nicht")
+
+    # KEIN ANKER: die These des Nutzers darf NICHT in den Faktensatz.
+    text = " ".join(saetze).lower()
+    pruefe(P, "keine Nutzer-These im Faktensatz",
+           not any(w in text for w in ("these", "gestuetzt", "widerspricht",
+                                       "einschaetzung", "erwartung des")),
+           "die These stammt vom Nutzer - sie als Fakt vorzulegen waere ein "
+           "Anker (Index 0,45, Experten-Anker am staerksten)")
+
+    from agent.waechter_zuspitzung import finde_grade
+    schlimm = [z for z in saetze if any(finde_grade(z))]
+    pruefe(P, "kein Gradwort in der Makrolage", not schlimm, str(schlimm))
+    pruefe(P, "beide Saetze nennen ihr Fenster (R-T1)",
+           all(("Wochen" in z or "Handelstage" in z) for z in saetze))
+
+    pruefe(P, "fail-soft ohne Daten", ML.beschreibe_makro({}, "2026-07-17") == [],
+           "ein Satz 'keine Makrodaten' waere ueber alle Anker gleich (R-T6)")
+
+    # STELLUNG: das Makro rahmt ALLE Leitmaerkte und steht deshalb vorn.
+    from backtest_llm1_historisch import lade_reihen_aus_db
+    alle = ML.beschreibe_marktlage(lade_reihen_aus_db(), "2026-07-17",
+                                   RE.lade_stimmung(), makro)
+    pruefe(P, "die Makrolage steht VOR dem ersten Leitmarkt",
+           alle[:2] == saetze,
+           f"{len(alle)} Aussagen; Makro rahmt alle drei Maerkte zugleich")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
-          "2": paket_2, "3": paket_3}
+          "2": paket_2, "3": paket_3, "4": paket_4}
 
 
 def main() -> int:
