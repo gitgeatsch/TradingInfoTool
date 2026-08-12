@@ -49,6 +49,8 @@ from agent.szenario_fakten import enthaelt_werturteile, finde_konstanten
 from backtest_llm1_historisch import lade_reihen
 from indicators.calculations import atr_wilder, latest_value
 
+import agent.rollen_eingabe as RE
+
 DB = "data/tradinginfotool.db"
 
 # Symbol, Datum, was das alte System sagte, was danach geschah
@@ -60,70 +62,33 @@ PRUEFSTEINE = (
 )
 
 
+# HELFER LIEGEN JETZT IN agent/rollen_eingabe.py (12.08.2026).
+#
+# Sie standen hier - in einem SKRIPT -, und sieben Messskripte importierten sie
+# von hier und bogen die Modulkonstante `DB` um. Ein Skript als Bibliothek zu
+# benutzen funktioniert, bis jemand es ausfuehrt oder umbenennt. Die Logik liegt
+# jetzt im Modul; hier stehen nur noch Weiterleitungen, damit bestehende
+# Aufrufe und das Umbiegen von `DB` unveraendert weiterlaufen.
 def _bestand(symbol: str):
-    """Menge und Einstand aus dem Depot. Bei historischen Faellen eine
-    NAEHERUNG: der heutige Bestand, nicht der von damals - Bestandshistorie
-    fuehren wir nicht. Steht so in der Ausgabe, damit niemand es vergisst.
-
-    KORREKTUR 11.08.: Hier stand nur `avg_buy_price_eur` - die BERECHNETE
-    Spalte. 14 der 28 gehaltenen Positionen pflegen ihren Einstand aber in
-    `avg_buy_price_manual_eur` (3QSS, CEBS, DBPK, EXH3, ISOC, OD7C/H/L/N, PLTR,
-    VSN, VST, VVMX, X136). Fuer sie kam None zurueck, und
-    `lagebeschreibung._bestand()` meldete daraufhin "X ist nicht im Bestand" -
-    dem Modell wurde gesagt, wir haetten nichts, waehrend wir halten.
-
-    Die Vorrangregel ist nicht neu erfunden, sie steht seit jeher in
-    `database/models.py::effective_avg_buy_price_eur`: der manuelle Wert ist
-    ein Override und geht vor."""
-    c = sqlite3.connect(DB)
-    r = c.execute("select quantity, avg_buy_price_eur, avg_buy_price_manual_eur "
-                  "from holdings where symbol=?", (symbol,)).fetchone()
-    if not r:
-        return (None, None)
-    menge, berechnet, manuell = r
-    return (menge, manuell if manuell is not None else berechnet)
+    return RE.bestand(symbol, DB)
 
 
 def _kurs_eur(symbol: str, reihe, index: int) -> float | None:
-    """EUR-Kurs am Ankertag. Die Reihen sind in USD; der Umrechnungsfaktor
-    kommt aus dem Preis-Cache, der beide Waehrungen fuehrt."""
-    # ZWEITE KORREKTUR 11.08.: Liegt die REIHE bereits in EUR, darf hier nicht
-    # noch einmal umgerechnet werden. Seit die ETFs sichtbar sind (sie liegen
-    # ausschliesslich in EUR), waere das eine stille Doppelumrechnung - der
-    # Kurs sähe plausibel aus und wäre um den Wechselkurs daneben. Die
-    # Vorrangregel steht an EINER Stelle: `waehrung_je_symbol()`.
-    from backtest_llm1_historisch import waehrung_je_symbol
-    if waehrung_je_symbol(DB).get(symbol) == "EUR":
-        return float(reihe[index].close)
-
-    # KORREKTUR 11.08.: `price_cache` ist eine HISTORIE, kein Cache - 1.526
-    # Zeilen fuer 55 Symbole, Schluessel (symbol, fetched_at). Ohne Sortierung
-    # liefert `fetchone()` die AELTESTE Zeile. Fuer VST/PLTR fehlt dort gerade
-    # der EUR-Kurs, obwohl neuere Zeilen ihn fuehren (139,20 / 111,10) - der
-    # Rueckfall auf die Quellwaehrung war also unnoetig. Bei Krypto wurde ein
-    # veralteter Umrechnungskurs verwendet.
-    c = sqlite3.connect(DB)
-    r = c.execute("select price_usd, price_eur from price_cache where symbol=? "
-                  "order by fetched_at desc limit 1", (symbol,)).fetchone()
-    # Aktien und ETF stehen NICHT im Preis-Cache - der fuehrt nur Krypto. Ohne
-    # Umrechnungskurs wird der Kurs in seiner Quellwaehrung genannt (USD). Fuer
-    # die Entscheidung ist das gleichwertig; nur die Beschriftung stimmt dann
-    # nicht, und das ist besser als ein Absturz mitten im Messlauf.
-    if not r or not r[0] or not r[1]:
-        return float(reihe[index].close)
-    return float(reihe[index].close) * (float(r[1]) / float(r[0]))
+    return RE.kurs_eur(symbol, reihe, index, DB)
 
 
 def _atr(reihe, i: int) -> float:
-    h = np.array([k.high for k in reihe[:i + 1]], dtype=float)
-    l = np.array([k.low for k in reihe[:i + 1]], dtype=float)
-    c = np.array([k.close for k in reihe[:i + 1]], dtype=float)
-    return float(latest_value(atr_wilder(h, l, c)) or 0.0)
+    return RE.atr_bis(reihe, i)
 
 
 def baue_eingaben(symbol: str, datum: str | None, reihen: dict) -> tuple[dict, dict]:
-    """Die Eingaben beider Rollen. KEIN Block erscheint bei beiden - das ist die
-    Grundregel des Rollenkonzepts und wird unten geprueft."""
+    """Die Eingaben beider Rollen - jetzt ueber `rollen_eingabe.baue_fall()`.
+
+    Vorher baute diese Funktion sie selbst zusammen. Damit fehlte hier die
+    Finanzierungsrate, obwohl sie gebaut war: es gab keine gemeinsame Stelle,
+    an der man sie haette anschliessen koennen. Genau deshalb liegt der Aufbau
+    jetzt im Modul."""
+    import requests
     reihe = reihen.get(symbol)
     if not reihe:
         raise SystemExit(f"[FEHLER] keine Kursreihe fuer {symbol}")
@@ -133,18 +98,10 @@ def baue_eingaben(symbol: str, datum: str | None, reihen: dict) -> tuple[dict, d
             raise SystemExit(f"[FEHLER] {symbol} hat keine Daten ab {datum}")
     else:
         idx = len(reihe) - 1
-    anker = reihe[idx].date
-
-    a_ein = {"marktlage": beschreibe_marktbreite(reihen, anker)}
-    menge, einstand = _bestand(symbol)
-    kurs = _kurs_eur(symbol, reihe, idx)
-    bc_ein = {
-        "asset": symbol,
-        "stand": beschreibe_lage(symbol=symbol, reihe=reihe, index=idx,
-                                 kurs_eur=kurs or 0.0, atr=_atr(reihe, idx),
-                                 menge=menge, einstand_eur=einstand),
-    }
-    return a_ein, bc_ein
+    sitzung = requests.Session()
+    sitzung.headers["User-Agent"] = "TradingInfoTool"
+    return RE.baue_fall(symbol=symbol, reihe=reihe, index=idx, reihen=reihen,
+                        db=DB, session=sitzung)
 
 
 def _client(name: str):

@@ -111,3 +111,88 @@ def pruefe_lagebild(ausgabe: dict, eingabe: dict) -> dict:
         ausgabe["_zuspitzung"] = (
             f"unbelegte Gradbehauptung {ergebnis['hart']} - {ergebnis['grund']}")
     return ergebnis
+
+
+# --- Geteilte Helfer (12.08.2026) -------------------------------------------
+#
+# WARUM SIE HIERHER WANDERN. Bis heute standen `_bestand`, `_kurs_eur`, `_atr`,
+# `frage` und `_client` in `pruefe_rollenkette.py` - einem SKRIPT. Sieben
+# Messskripte importierten sie von dort und bogen dessen Modulkonstante `DB`
+# um. Ein Skript als Bibliothek zu benutzen funktioniert, bis jemand es
+# ausfuehrt oder umbenennt.
+#
+# Sie liegen jetzt hier, wo auch die Eingabe entsteht. `pruefe_rollenkette`
+# importiert sie zurueck, damit bestehende Aufrufe unveraendert bleiben.
+
+DB = "data/tradinginfotool.db"
+
+
+def bestand(symbol: str, db: str | None = None):
+    """Menge und wirksamer Einstand. NAEHERUNG bei historischen Faellen: der
+    heutige Bestand, nicht der von damals - Bestandshistorie fuehren wir nicht.
+
+    Liest BEIDE Einstandsspalten. Die manuelle geht vor - dieselbe Vorrangregel
+    wie `database/models.py::effective_avg_buy_price_eur`. Ohne sie meldete die
+    Kette 14 von 28 gehaltenen Positionen als "nicht im Bestand"."""
+    import sqlite3
+    c = sqlite3.connect(f"file:{db or DB}?mode=ro", uri=True)
+    r = c.execute("select quantity, avg_buy_price_eur, avg_buy_price_manual_eur "
+                  "from holdings where symbol=?", (symbol,)).fetchone()
+    if not r:
+        return (None, None)
+    menge, berechnet, manuell = r
+    return (menge, manuell if manuell is not None else berechnet)
+
+
+def kurs_eur(symbol: str, reihe, index: int, db: str | None = None):
+    """EUR-Kurs am Ankertag.
+
+    Liegt die REIHE bereits in EUR, wird NICHT umgerechnet - sonst waere es
+    eine stille Doppelumrechnung um den Wechselkurs. Und `price_cache` ist eine
+    Historie, kein Cache: ohne `order by` kaeme die aelteste Zeile."""
+    import sqlite3
+    from backtest_llm1_historisch import waehrung_je_symbol
+    pfad = db or DB
+    if waehrung_je_symbol(pfad).get(symbol) == "EUR":
+        return float(reihe[index].close)
+    c = sqlite3.connect(f"file:{pfad}?mode=ro", uri=True)
+    r = c.execute("select price_usd, price_eur from price_cache where symbol=? "
+                  "order by fetched_at desc limit 1", (symbol,)).fetchone()
+    if not r or not r[0] or not r[1]:
+        return float(reihe[index].close)
+    return float(reihe[index].close) * (float(r[1]) / float(r[0]))
+
+
+def atr_bis(reihe, index: int) -> float:
+    """ATR aus `reihe[:index+1]` - streng kausal."""
+    from indicators.calculations import atr_wilder, latest_value
+    h = np.array([k.high for k in reihe[:index + 1]], dtype=float)
+    l = np.array([k.low for k in reihe[:index + 1]], dtype=float)
+    c = np.array([k.close for k in reihe[:index + 1]], dtype=float)
+    return float(latest_value(atr_wilder(h, l, c)) or 0.0)
+
+
+def baue_fall(*, symbol: str, reihe: list, index: int, reihen: dict,
+              lagebild: dict | None = None, db: str | None = None,
+              session=None, finanz_zwischenspeicher: dict | None = None,
+              mit_finanzierung: bool = True) -> tuple[dict, dict]:
+    """Beide Eingaben fuer EINEN Fall - die einzige Stelle, die das tut.
+
+    Rueckgabe: (lagebild_eingabe, befund_eingabe). Wer das Lagebild schon hat,
+    uebergibt es als `lagebild` und ignoriert den ersten Rueckgabewert.
+
+    `mit_finanzierung=False` ist der Vergleichsarm fuer gepaarte Messungen -
+    er darf nicht heimlich abweichen, deshalb steht er hier und nicht im
+    Aufrufer."""
+    datum = reihe[index].date
+    menge, einstand = bestand(symbol, db)
+    fin = (hole_finanzierung(symbol, datum, session, finanz_zwischenspeicher)
+           if mit_finanzierung else None)
+    return (
+        baue_lagebild_eingabe(reihen, datum),
+        baue_befund_eingabe(symbol=symbol, reihe=reihe, index=index,
+                            kurs_eur=kurs_eur(symbol, reihe, index, db) or 0.0,
+                            atr=atr_bis(reihe, index), menge=menge,
+                            einstand_eur=einstand, finanzierung=fin,
+                            lagebild=lagebild),
+    )

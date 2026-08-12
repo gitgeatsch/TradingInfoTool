@@ -745,7 +745,7 @@ wirkt sofort nach dem Ausrollen.*
 | L2 | **Volatilitätslage** je Klasse | fehlt — eine der vier Standarddimensionen |
 | L3 | **Trendlage des Klassen-Benchmarks** | fehlt. BTC · SPY · Futures, alle Daten vorhanden |
 | L4 | **Liquiditätslage** | fehlt |
-| L5 | Zuspitzungs-Wächter anschließen | gebaut und geprüft, **von keinem Skript genutzt** |
+| L5 | Zuspitzungs-Wächter anschließen | **ERLEDIGT 12.08.** — `rollen_eingabe.pruefe_lagebild()`, an zwei Fällen geprüft |
 
 **Heute liefert das Lagebild zwei Sätze, beide Marktbreite. Eine von vier Dimensionen.**
 
@@ -753,7 +753,7 @@ wirkt sofort nach dem Ausrollen.*
 
 | # | Was | Stand |
 |---|---|---|
-| E1 | **Finanzierungsrate anschließen** | gebaut, 89 % Abdeckung, **kein Skript nutzt es** |
+| E1 | **Finanzierungsrate anschließen** | **ERLEDIGT 12.08.** — im Faktensatz sichtbar, Vergleichsarm über `mit_finanzierung=False` |
 | E2 | **Relative Stärke zum Klassen-Benchmark** | fehlt für Aktien/ETF/Rohstoffe |
 | E3 | **Rang unter den Kandidaten** | seit 10.08. benannt, nicht gebaut |
 | E4 | Insider · Short Interest · COT · Fundamentaldaten | **Module fertig**, nie angeschlossen |
@@ -788,7 +788,7 @@ wirkt sofort nach dem Ausrollen.*
 
 | # | Was | Stand |
 |---|---|---|
-| Q1 | **Die 7 Messskripte auf `rollen_eingabe` umstellen** | Modul gebaut, **0 Nutzer** |
+| Q1 | Die Messskripte auf `rollen_eingabe` umstellen | **teilweise 12.08.** — Helfer und `baue_eingaben` umgestellt, die sechs Messskripte importieren sie über `pruefe_rollenkette` weiter mit. Eigene Aufbauten dort noch offen |
 | Q2 | Uniqueness-Gewichtung in die Messwerkzeuge | nicht gebaut |
 | Q3 | Granularitätswächter | **gebaut**, beide Ladepfade |
 | Q4 | Abdeckungsprüfung | **gebaut** |
