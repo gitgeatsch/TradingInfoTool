@@ -713,8 +713,19 @@ In der Produktion läuft weiter das Altsystem mit 34.611 Zeichen Prompt.
 
 | Was falsch ist | wie es heute umfahren wird | was ein glatter Schnitt verlangt |
 |---|---|---|
-| **CoinGecko-Rückfall liefert Vier-Tage-Kerzen** und legt sie als Tageskerzen ab. Die Funktion heißt `_rohdaten_zu_tageskerzen()`, der Kommentar behauptet „bei `days` ≤ 90 Tageskerzen" — beides falsch | Granularitätswächter verwirft sie beim Laden; yfinance bedient 39 von 44 Symbolen vorher | **Die Quelle korrigieren oder abschalten.** Solange sie schreibt, stehen falsch beschriftete Kerzen in der Produktionsdatenbank |
-| **`braucht_fallback()`** implementiert die im eigenen Modulkopf dokumentierten Ausnahmen nicht — VSN (Wertpapier) und EURCV (Stablecoin) bekommen trotzdem Kerzen | Granularitätswächter fängt sie ab | Ausnahmen im Code umsetzen, nicht nur im Docstring |
+| ~~CoinGecko-Rückfall liefert Vier-Tage-Kerzen als Tageskerzen~~ | — | **BEHOBEN 12.08.** — `_ist_taeglich()` prüft den Median-Abstand **an der Quelle** und verwirft. Live geprüft: 23 Rohzeilen, Median 4 Tage, 0 gespeichert. Der falsche Kommentar ist korrigiert und als falsch markiert stehengeblieben |
+| ~~`braucht_fallback()` ohne die dokumentierten Ausnahmen~~ | — | **BEHOBEN 12.08.** — `OHNE_KERZEN = (EURCV, VSN, 3QSS, DBPK)`, live geprüft |
+
+> **FOLGE, die eine Entscheidung braucht:** CoinGecko bietet über `/ohlc`
+> **überhaupt keine** Tageskerzen an — die Granularität hängt am `days`-Wert und
+> keine Stufe ergibt einen Tagesabstand. Der Rückfall ist damit faktisch
+> **wirkungslos**: er ruft ab, prüft, verwirft — und kostet je Symbol und Lauf
+> einen Aufruf aus einem knappen Kontingent (322/Tag, an aktiven Tagen zu 96 %
+> ausgeschöpft).
+>
+> **Ein wirklich glatter Schnitt hieße abschalten.** yfinance bedient 39 von 44
+> Symbolen; die übrigen fünf haben keine brauchbare Tageshistorie — „sichtbar
+> statt falsch". **Nicht eigenmächtig entfernt, Nutzerentscheidung.**
 
 ### C — OFFEN, noch nicht angefasst
 

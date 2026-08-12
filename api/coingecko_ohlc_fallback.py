@@ -68,7 +68,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 
 import database.db as db
 from api.kraken import KRAKEN_PAIR_MAP
@@ -76,6 +76,16 @@ from database.models import OhlcPoint
 
 logger = logging.getLogger(__name__)
 
+# KORRIGIERT 12.08.2026 - der Kommentar hier war FALSCH und hat einen Defekt
+# verdeckt: er behauptete, CoinGecko liefere bei `days` <= 90 Tageskerzen.
+# Gemessen liefert es bei days=90 VIER-TAGE-Kerzen (24 Stueck ueber 92 Tage,
+# Abstand ausnahmslos 4). Die Annahme stand als Kommentar da, stimmte nicht,
+# und die Umwandlungsfunktion hiess `_rohdaten_zu_tageskerzen()` - sie
+# behauptete es also auch im Namen. Ergebnis: Vier-Tage-Kerzen lagen neben
+# Krakens Tageskerzen in derselben Tabelle, ohne Vermerk, und jeder
+# "20-Tage"-Indikator rechnete dort ueber 80 Kalendertage.
+#
+# Alter, falscher Kommentar (aufbewahrt, damit die Annahme nicht wiederkehrt):
 # CoinGecko liefert bei `days` <= 90 Tageskerzen; darueber werden es Vier-Tage-
 # Kerzen. 90 ist damit der groesste Wert, der noch die benoetigte Aufloesung
 # hat. Fuer den taeglichen Lauf waere weniger genug, aber der erste Lauf fuellt
@@ -83,6 +93,16 @@ logger = logging.getLogger(__name__)
 ABRUF_TAGE = 90
 # Assetklassen, fuer die CoinGecko ueberhaupt die richtige Quelle ist.
 KRYPTO_KLASSEN = ("krypto",)
+
+# DIE DOKUMENTIERTEN AUSNAHMEN, endlich umgesetzt (12.08.2026). Der Modulkopf
+# nennt sie seit dem 03.08.: "Wertpapiere (3QSS, DBPK, VSN) laufen ueber
+# yfinance, Stablecoins (EURCV) brauchen keine Kerzen." `braucht_fallback()`
+# prueft aber nur die Assetklasse - und VSN ist in der Watchlist als `krypto`
+# gefuehrt, die Ausnahme griff also nie. Eine Stablecoin-Regel gab es gar nicht.
+#
+# Beide bekamen dadurch Kerzen, die sie nicht brauchen: EURCV ist per
+# Konstruktion flach und damit fuer jeden Indikator ein konstantes Feld (B10).
+OHNE_KERZEN = ("EURCV", "VSN", "3QSS", "DBPK")
 
 
 @dataclass
@@ -100,6 +120,8 @@ def braucht_fallback(asset) -> bool:
     tun, ohne Krypto-Klasse waere CoinGecko die falsche Quelle, und ohne ID
     laesst sich der Coin dort nicht adressieren."""
     if getattr(asset, "assetklasse", None) not in KRYPTO_KLASSEN:
+        return False
+    if getattr(asset, "symbol", None) in OHNE_KERZEN:
         return False
     if KRAKEN_PAIR_MAP.get(asset.symbol) is not None:
         return False
@@ -126,7 +148,33 @@ def _rohdaten_zu_tageskerzen(raw: list) -> list[dict]:
             continue
         je_tag[tag] = {"date": tag, "open": float(o), "high": float(h),
                        "low": float(l), "close": float(c)}
-    return [je_tag[t] for t in sorted(je_tag)]
+    kerzen = [je_tag[t] for t in sorted(je_tag)]
+    return kerzen if _ist_taeglich(kerzen) else []
+
+
+def _ist_taeglich(kerzen: list[dict]) -> bool:
+    """Sind das wirklich TAGESkerzen? Prueft den Median-Abstand.
+
+    DIE QUELLE PRUEFT SICH SELBST (12.08.2026). Bisher fing erst der Lader
+    diese Reihen ab (`backtest_llm1_historisch.nur_tageskerzen`). Das ist ein
+    Netz, keine Reparatur: die falsch beschrifteten Kerzen standen weiterhin in
+    der Produktionsdatenbank, und jeder Leser, der das Netz nicht kennt, liest
+    sie als Tageskerzen.
+
+    Ein glatter Schnitt verlangt, dass die falsche Funktion aufhoert, falsche
+    Daten zu erzeugen - nicht, dass eine spaetere Stufe sie abfaengt."""
+    if len(kerzen) < 3:
+        return True                     # zu kurz zum Beurteilen, nicht zum Ablehnen
+    tage = [date.fromisoformat(k["date"]) for k in kerzen]
+    abstaende = sorted((tage[i + 1] - tage[i]).days for i in range(len(tage) - 1))
+    median = abstaende[len(abstaende) // 2]
+    if median > 1:
+        logger.warning(
+            "CoinGecko lieferte Kerzen im Median-Abstand von %d Tagen - das sind "
+            "KEINE Tageskerzen und werden nicht gespeichert. Erwartet wurde 1.",
+            median)
+        return False
+    return True
 
 
 def fuelle_ohlc_aus_coingecko(client, conn, asset,
