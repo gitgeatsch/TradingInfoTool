@@ -890,11 +890,11 @@ wirkt sofort nach dem Ausrollen.*
 
 | # | Was | Stand |
 |---|---|---|
-| L1 | **Marktbreite raus** | entschieden (**ersatzlos**, Nutzerabstimmung 12.08.), noch im Faktensatz — entfällt, wenn `marktlage.py` das Lagebild speist |
+| L1 | **Marktbreite raus** | **ERLEDIGT 12.08.** — ersatzlos, nach Review (Arbeitsstand 7.31). `agent/marktbreite.py` hat **keinen Aufrufer mehr**; sechs `messe_*.py` gehen jetzt über `baue_lagebild_eingabe()`. **Pflicht-Begleitfix:** `waechter_zuspitzung` kennt jetzt beide Schreibweisen — sonst hätte er nach der Streichung jeden Grad als unbelegt gemeldet, auch den wahren |
 | L2 | **Volatilitätslage** je Klasse | **ERLEDIGT 12.08.** — `agent/marktlage.py::beschreibe_volatilitaet()`, Benchmark je Klasse, Perzentil der eigenen Historie. Geprüft über vier Phasen: Krypto 0. Perzentil in der ruhigen Phase, 96. im Bären |
 | L3 | **Trendlage des Klassen-Benchmarks** | **ERLEDIGT 12.08.** — `beschreibe_trend()`, zwei Aussagen aus zwei Quellen (Moskowitz/Ooi/Pedersen 2012 · George/Hwang 2004). Vier Prüfungen bestanden, `pruefe_trendlage.py`. **Befund:** die alte Strukturaussage unterscheidet ein +92 %-Jahr nicht von einem −50 %-Jahr — auf 100 % der Tage (Arbeitsstand 7.29) |
-| L6 | **BTC-Historie nachladen** | **NEU 12.08.** — BTC reicht nur bis 17.07.2024. Bärenmarkt 2022 und Hoch 2021 fehlen; was als Bärenphase gemessen wurde, ist der Rückgang seit Juli 2025. Binance-Klines liefern mit `endTime` auch ältere Kerzen |
-| L4 | **Liquiditätslage** | fehlt |
+| L6 | **BTC-Historie nachladen** | **ERLEDIGT 12.08.** — 2.526 Zeilen ab 2017-08-17 von Binance, Naht zu Kraken gemessen (Median 0,039 %), Herkunft als `binance_historie` markiert. **Auf dem Notebook noch auszuführen** (8e.3) — die DB reist nicht über Git. Arbeitsstand 7.32 |
+| L4 | **Liquiditätslage** | **ERLEDIGT 12.08.** — Amihud (2002) als Perzentil. Drei Kandidaten gebaut, zwei gemessen verworfen: reiner Umsatz (Korr. 0,78 zur Volatilität) und Corwin/Schultz (Niveau um Faktor 20–70 falsch, 36–58 % degeneriert). Arbeitsstand 7.30 |
 | L5 | Zuspitzungs-Wächter anschließen | **ERLEDIGT 12.08.** — `rollen_eingabe.pruefe_lagebild()`, an zwei Fällen geprüft |
 
 **Heute liefert das Lagebild zwei Sätze, beide Marktbreite. Eine von vier Dimensionen.**
