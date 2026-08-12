@@ -711,21 +711,52 @@ In der Produktion läuft weiter das Altsystem mit 34.611 Zeichen Prompt.
 
 ### B — UMGANGEN, NICHT BEHOBEN — hier ist der Schnitt noch nicht glatt
 
-| Was falsch ist | wie es heute umfahren wird | was ein glatter Schnitt verlangt |
-|---|---|---|
-| ~~CoinGecko-Rückfall liefert Vier-Tage-Kerzen als Tageskerzen~~ | — | **BEHOBEN 12.08.** — `_ist_taeglich()` prüft den Median-Abstand **an der Quelle** und verwirft. Live geprüft: 23 Rohzeilen, Median 4 Tage, 0 gespeichert. Der falsche Kommentar ist korrigiert und als falsch markiert stehengeblieben |
-| ~~`braucht_fallback()` ohne die dokumentierten Ausnahmen~~ | — | **BEHOBEN 12.08.** — `OHNE_KERZEN = (EURCV, VSN, 3QSS, DBPK)`, live geprüft |
+> **Dieser Abschnitt ist seit dem 12.08. leer.** Beide Einträge sind nach oben
+> in A gewandert — nicht, weil ein Wächter sie abfängt, sondern weil die
+> falschen Quellen abgeschaltet sind.
 
-> **FOLGE, die eine Entscheidung braucht:** CoinGecko bietet über `/ohlc`
-> **überhaupt keine** Tageskerzen an — die Granularität hängt am `days`-Wert und
-> keine Stufe ergibt einen Tagesabstand. Der Rückfall ist damit faktisch
-> **wirkungslos**: er ruft ab, prüft, verwirft — und kostet je Symbol und Lauf
-> einen Aufruf aus einem knappen Kontingent (322/Tag, an aktiven Tagen zu 96 %
-> ausgeschöpft).
->
-> **Ein wirklich glatter Schnitt hieße abschalten.** yfinance bedient 39 von 44
-> Symbolen; die übrigen fünf haben keine brauchbare Tageshistorie — „sichtbar
-> statt falsch". **Nicht eigenmächtig entfernt, Nutzerentscheidung.**
+**Was hier stand und wie es geschnitten wurde.** Der CoinGecko-Rückfall lieferte
+Vier-Tage-Kerzen und legte sie unbeschriftet neben Krakens Tageskerzen ab; ein
+Granularitätswächter verwarf sie beim Laden. Das war eine Umgehung: die Quelle
+schrieb weiter, sie wurde nur nicht mehr gelesen.
+
+Auf Nutzervorgabe *(„schalte den CoinGecko-Rückfall ab und mach einen glatten
+Schnitt auf die richtigen Daten — aber mach davor eine Gegenprüfung ob es eine
+bessere Lösung gibt")* wurde vor dem Schnitt gemessen. Die Gegenprüfung fand eine
+bessere Lösung — und sie ersetzt auch den yfinance-Rückfall vom Vortag:
+
+| Kombination | Deckung | ohne |
+|---|---|---|
+| Kraken allein | 35/42 | |
+| Kraken + yfinance (11.08.) | 39/42 | BRETT, CANTON, IO |
+| **Kraken + Binance/Bybit Spot** | **41/42** | CANTON |
+| Kraken + Binance/Bybit + yfinance | 41/42 | yfinance fügt **nichts** hinzu |
+
+**Der Ausschlag gibt nicht die Deckung, sondern die Eindeutigkeit.** yfinance
+riet den Ticker `<SYM>-USD`; drei von acht gehörten einem anderen, toten Asset.
+Bei den Börsen fragen wir nach ihrem eigenen Paar `KAIAUSDT` — was zurückkommt,
+*ist* dieses Paar. **Ein ganzer Fehlerpfad entfällt, statt abgesichert zu
+werden.** Kontrast an IO: yfinance 269 % Preisabweichung (falsches Asset),
+Börsen 8,9 % (richtiges Asset, zwei Tage Kursbewegung).
+
+**An echten Daten geprüft (12.08., auf Nutzerverlangen vor dem Ausrollen):**
+
+| Symbol | Kerzen | Abweichung zum eigenen Preis |
+|---|---|---|
+| KAIA | 651 | 1,1 % |
+| BRETT | 847 | 3,6 % ← yfinance lieferte hier ein totes Asset |
+| IO | 793 | 8,9 % ← dito |
+| SUPRA | 624 | 0,5 % |
+| KAITO | 539 | 7,7 % |
+| XNO | 1000 | 6,8 % |
+| CANTON | 0 | an keiner Börse gelistet |
+
+Kraken 35 + Börsen 6 = **41 von 44**; bewusst ohne EURCV (Stablecoin) und VSN
+(Wertpapier); ungedeckt bleibt allein CANTON — **sichtbar statt falsch.**
+
+Beide Vorgänger bleiben im Repo, aber unverdrahtet und im Modulkopf als abgelöst
+markiert. Wer sie in einem Jahr wieder erwägt, findet dort die Messung statt der
+Annahme.
 
 ### C — OFFEN, noch nicht angefasst
 
@@ -759,13 +790,16 @@ wirkt sofort nach dem Ausrollen.*
 
 | Änderung | Datei | Wirkung beim nächsten Lauf |
 |---|---|---|
-| **yfinance-Rückfall vor CoinGecko** | `api/yfinance_krypto_fallback.py` (neu) + `scheduler/background.py` | Der OHLC-Job holt für Krypto ohne Kraken-Listing zuerst yfinance. **Ändert Kursdaten**, die alles Weitere nutzt. Tickerprüfung ist Pflicht — 3 von 8 Yahoo-Tickern gehören einem toten Asset |
-| **`ausgenommen`-Parameter** | `api/coingecko_ohlc_fallback.py` | CoinGecko überschreibt nicht mehr, was yfinance geliefert hat |
+| **Börsen-Klines als einziger Krypto-Rückfall** | `api/boersen_klines.py` (neu) + `scheduler/background.py` | Der OHLC-Job ruft für Krypto ohne Kraken-Listing **nur noch** Binance, ersatzweise Bybit. **Ändert Kursdaten**, die alles Weitere nutzt: 6 Symbole bekommen erstmals echte Tageskerzen, 539–1.000 Stück statt 24 Vier-Tage-Kerzen |
+| **CoinGecko-Rückfall abgeschaltet** | `api/coingecko_ohlc_fallback.py` | Nicht mehr importiert. Spart je Lauf bis zu 9 Aufrufe aus einem Kontingent, das an aktiven Tagen zu 96 % ausgeschöpft war |
+| **yfinance-Krypto-Rückfall abgeschaltet** | `api/yfinance_krypto_fallback.py` | Nicht mehr importiert — trug in der Messung **null** zusätzliche Symbole bei, brachte aber den Fehlerpfad „geratener Ticker" mit |
 | Funding-Funktionen | `api/derivatives.py` | **gebaut, aber nicht gerufen** — keine Wirkung, bis ein Aufrufer sie nutzt |
 
-> **Vor dem Ausrollen zu prüfen:** ob die yfinance-Übernahme die vier bestätigten
-> Symbole (KAIA, KAITO, SUPRA, XNO) tatsächlich befüllt und die fünf abgelehnten
-> unberührt lässt. `--trocken` zeigt es ohne Schreibzugriff.
+> **Vor dem Ausrollen geprüft (12.08.):** alle sechs bedienbaren Symbole liefern,
+> Preise weichen 0,5–8,9 % vom eigenen `price_cache` ab (dieser ist zwei Tage
+> älter), Median-Kerzenabstand 1 Tag. `fuelle_luecken(..., trocken=True)` zeigt
+> das ohne Schreibzugriff — **die Vorgabe bleibt `trocken=True`**, ein Schreiben
+> in die Kursdaten ist eine Produktionshandlung.
 
 ### B — ISOLIERT, wirkt erst mit dem Einhängen der Rollen-Ebene
 

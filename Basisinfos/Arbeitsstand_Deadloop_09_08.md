@@ -2825,3 +2825,100 @@ lässt sich konkret machen:
 Kette.** Die Zahlen oben sind deshalb als **Ausgangsmessung** festgehalten — das
 „Vorher", gegen das eine vervollständigte Eingabe später zu vergleichen ist.
 Nicht als Urteil.
+
+---
+
+## 7.29 L3 — die Trendlage. Was gefehlt hat, war nicht das Etikett, sondern der Jahreshorizont (12.08.)
+
+**Erst die Korrektur an meiner eigenen Annahme.** Ich bin in diese Aufgabe mit
+der Erwartung gegangen, L3 räume den Etikettenfehler ab — „intakter
+Abwärtstrend" auf einem Fenster von wenigen Tagen (7.9). Gemessen über die
+gesamte BTC-Historie: **`_struktur()` vergibt heute null Abwärts-Etiketten.**
+Der Fix vom 11.08. sitzt. Diese Begründung für L3 trägt nicht.
+
+**Die echte Lücke ist eine andere, und sie ist größer.** `_struktur()` schaut
+über 9 bis 15 Handelstage und stellt einen 60-Tage-Vergleich daneben. Ein
+Jahreshorizont kommt im gesamten Lagebild nicht vor. Was das bedeutet, zeigt
+die Aufschlüsselung aller vier Strukturformulierungen über 483 BTC-Tage:
+
+| ALTE Strukturaussage | Tage | Jahresbewegung von … bis | Lage in der Jahresspanne |
+|---|---|---|---|
+| höhere Hochs und höhere Tiefs | 162 | −44 % … **+92 %** | 3 % … 100 % |
+| tiefere Hochs und tiefere Tiefs | 148 | −50 % … **+82 %** | 0 % … 100 % |
+| tiefere Hochs bei höheren Tiefs | 110 | −45 % … +68 % | 0 % … 100 % |
+| höhere Hochs bei tieferen Tiefs | 63 | −45 % … +75 % | 0 % … 100 % |
+
+**Alle vier decken den vollen Wertebereich ab — auf 100 % der Tage.** Ein Satz,
+der ein +92 %-Jahr und ein −50 %-Jahr gleich beschreibt, trägt auf dieser Achse
+null Information. Er ist nicht falsch, er ist blind.
+
+Am konkreten Paar:
+
+| | 2025-03-24 | 2026-07-19 |
+|---|---|---|
+| ALT | „höhere Hochs und höhere Tiefs", 13 Tage | „höhere Hochs und höhere Tiefs", 9 Tage |
+| Jahr | **+36,5 %** | **−37,6 %** |
+| Lage in der Spanne | 17,6 % unter dem Hoch, 62,2 % über dem Tief | 37,6 % unter dem Hoch, **9,9 %** über dem Tief |
+
+Zwei entgegengesetzte Lagen, dieselbe Beschreibung.
+
+### Was gebaut wurde — `agent/marktlage.py::beschreibe_trend()`
+
+Zwei Aussagen, zwei Quellen, zwei verschiedene Fragen:
+
+1. **Bewegung** — Moskowitz/Ooi/Pedersen, *Time Series Momentum*, JFE 2012. Die
+   eigene Zwölf-Monats-Rendite sagt die künftige mit vorher; belegt an 58
+   Futures und Forwards über 25 Jahre, positiv in **jeder** Anlageklasse und in
+   **jedem einzelnen** Kontrakt. Das breitest belegte Trendmaß, das es gibt —
+   und es ist eine Zahl, kein Etikett. Daneben dasselbe über 60 Handelstage.
+2. **Lage in der Spanne** — George/Hwang, *The 52-Week High and Momentum
+   Investing*, JF 2004. Die Nähe zum Jahreshoch schlägt die vergangene Rendite
+   als Vorhersagegröße, profitabel in 18 von 20 Märkten. Wir nennen **beide**
+   Ränder: „12 % unter dem Hoch" allein lässt offen, ob das Tief 5 % oder 60 %
+   entfernt liegt.
+
+**Der Vergleich beider Fenster ist der eigentliche Inhalt.** Laufen sie
+auseinander, ist das eine Korrektur — und dieser Fall ist **26,5 % aller
+BTC-Tage**, über ein Viertel. Er war bisher nur als 60-Tage-Zahl sichtbar, ohne
+den Bezug, der ihn als Korrektur lesbar macht.
+
+### Verworfen, mit Begründung
+
+**Abstand zur 200-Tage-Linie (Faber 2007).** Zwei Gründe. Er verleitet zur
+Binärlesung „darüber/darunter" — und genau ein solches Etikett hat den Deadloop
+gebaut. Und er misst weitgehend dasselbe wie (1) aus derselben Kursreihe; drei
+Kennzahlen aus einer Quelle sind der Standardfehler *illusion of confirmation*,
+nicht drei Faktoren.
+
+**Perzentil über 250-Tage-Renditen.** Bräuchte 500 Handelstage Vorlauf. BTC hat
+in unserer Datenbank **733 Kerzen ab 17.07.2024** — die Aussage wäre für zwei
+Drittel der Krypto-Historie nicht berechenbar, während sie für Aktien (8.423
+Kerzen) immer käme. Eine Kennzahl, die je Klasse mal da ist und mal nicht, ist
+schlimmer als eine schlichtere, die überall gleich aussieht.
+
+> **Nebenbefund, der woanders hingehört:** BTC reicht nur bis 17.07.2024
+> zurück. Für die Marktphasen-Simulation heißt das: **den Bärenmarkt 2022 und
+> das Hoch 2021 haben wir nicht.** Was als „Bärenphase" gemessen wurde, ist der
+> Rückgang seit Juli 2025. Zu prüfen, ob die Historie nachladbar ist —
+> Binance-Klines liefern 1.000 Kerzen je Abruf, mit `endTime` auch ältere.
+
+### Geprüft — `pruefe_trendlage.py`
+
+| Prüfung | Ergebnis |
+|---|---|
+| **Form** — Fenster genannt, keine Gradwörter | 876 Aussagen über die ganze Historie, **0 beanstandet** |
+| **Kausalität** — ändert Zukunft die Aussage? | 4 Zukunftslängen × alle Anker, **0 Abweichungen** |
+| **Breite** — kommt sie je Klasse? | krypto · aktien · etf · rohstoffe, je 2 Aussagen |
+| **Korrekturfall** | 26,5 % der Tage, Beispiel gelesen |
+
+### Eine Regel, die dabei entstanden ist
+
+Der Wächter `waechter_zuspitzung` schlug auf „höchster Schlusskurs" an —
+„hoechst" steht in der HART-Liste als Steigerungswort („höchst bemerkenswert"),
+der Teilstring trifft aber auch den **gemessenen Superlativ über ein benanntes
+Fenster**, der sachlich zulässig ist.
+
+**Geändert wurde der Satz, nicht der Wächter** („Schlusskurs-Hoch"). Ein Netz
+weiter zu machen, damit der eigene Text hindurchpasst, ist die Umkehrung seines
+Zwecks — und der nächste, der eine Ausnahme braucht, findet dann schon eine vor.
+Der Preis war ein Wort.
