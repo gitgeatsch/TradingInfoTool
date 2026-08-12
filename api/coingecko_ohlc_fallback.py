@@ -1,4 +1,17 @@
-"""OHLC-Rueckfallquelle fuer Krypto-Assets ohne Kraken-Listing (2026-08-03).
+"""ABGELOEST AM 12.08.2026 - NICHT MEHR VERDRAHTET.
+
+Ersetzt durch `api/boersen_klines.py`. Der Grund steht unten im Detail: dieser
+Endpunkt liefert ueber /ohlc GAR KEINE Tageskerzen. Gemessen wurden
+Vier-Tage-Kerzen, die neben Krakens Tageskerzen in derselben Tabelle lagen -
+jeder "20-Tage"-Indikator rechnete dort ueber 80 Kalendertage.
+
+Das Modul bleibt im Repo, weil sein Kopf festhaelt, WARUM diese Quelle
+ungeeignet ist. Wer sie in einem Jahr wieder in Betracht zieht, findet hier die
+Messung statt der Annahme.
+
+--- urspruenglicher Kopf ---
+
+OHLC-Rueckfallquelle fuer Krypto-Assets ohne Kraken-Listing (2026-08-03).
 
 DIE LUECKE, die das schliesst. price_history_ohlc wird ausschliesslich aus
 Kraken befuellt (api/kraken_history.py), und zwar nur fuer Symbole aus der fest

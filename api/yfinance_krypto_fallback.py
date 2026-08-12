@@ -1,5 +1,24 @@
 # -*- coding: utf-8 -*-
-"""Echte TAGESKERZEN fuer Krypto ohne Kraken-Listing (2026-08-11).
+"""ABGELOEST AM 12.08.2026 - NICHT MEHR VERDRAHTET.
+
+Ersetzt durch `api/boersen_klines.py`, und zwar aus einem Grund, den die
+Gegenpruefung erst am naechsten Tag zutage foerderte: Binance und Bybit decken
+41 von 42 Symbolen ab statt 39, liefern 1.000 Kerzen je Abruf, und brauchen
+KEINE Ticker-Gegenprobe - wir fragen die Boerse nach ihrem eigenen Paar, es
+kann also kein anderes Asset kommen.
+
+Genau daran krankte dieser Ansatz: `<SYM>-USD` ist geraten. Drei von acht
+Tickern gehoerten einem anderen, toten Asset. Die Preisprobe fing das ab - aber
+ein Fehlerpfad, den man absichern muss, ist schlechter als einer, den es nicht
+gibt. Beispiel IO: hier 269 % Abweichung (falsches Asset), ueber die Boersen
+8,9 % (richtiges Asset, zwei Tage Kursbewegung).
+
+Das Modul bleibt im Repo - die Tickerpruefung ist ein brauchbares Muster, falls
+je wieder eine Quelle mit geratenen Symbolen gebraucht wird.
+
+--- urspruenglicher Kopf ---
+
+Echte TAGESKERZEN fuer Krypto ohne Kraken-Listing (2026-08-11).
 
 DIE LUECKE, die das schliesst - und warum es dafuer eine dritte Quelle braucht.
 

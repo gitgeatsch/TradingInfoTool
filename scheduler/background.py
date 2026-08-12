@@ -259,15 +259,21 @@ def refresh_ohlc_job(client, conn_factory, watchlist_provider,
     ruehrt nur Assets an, die dort leer ausgehen. `coingecko_client=None`
     schaltet ihn ab - dann verhaelt sich der Job wie vor dem 03.08.
 
-    DRITTE QUELLE seit 11.08., und sie laeuft VOR der zweiten. Gemessen liefert
-    der CoinGecko-Rueckfall Vier-Tage-Kerzen statt Tageskerzen - sie landen ohne
-    Granularitaetsvermerk neben Krakens Tageskerzen, und jeder "20-Tage"-
-    Indikator rechnet dort ueber 80 Kalendertage. `api/yfinance_krypto_fallback.py`
-    liefert fuer einen Teil dieser Symbole echte Tageskerzen mit langer Historie;
-    was er bedient, wird CoinGecko ausdruecklich ausgenommen.
+    RUECKFALL SEIT 12.08.: BOERSEN-KLINES statt CoinGecko und yfinance.
 
-    DAMIT GILT DIE RANGFOLGE:  Kraken -> yfinance -> CoinGecko.
-    Jede Stufe ruehrt nur an, was die vorherige nicht bedient hat."""
+    Beide Vorgaenger waren die schlechtere Wahl. CoinGecko liefert ueber /ohlc
+    GAR KEINE Tageskerzen (gemessen: Vier-Tage-Abstand, abgelegt neben Krakens
+    Tageskerzen ohne Vermerk). yfinance liefert Tageskerzen, aber ueber einen
+    GERATENEN Ticker `<SYM>-USD` - drei von acht gehoerten einem anderen, toten
+    Asset.
+
+    `api/boersen_klines.py` fragt Binance und Bybit nach IHREM eigenen Paar.
+    Deckung 41 von 42 statt 39, Median-Abstand geprueft 1 Tag, 1.000 Kerzen je
+    Abruf, dieselbe API wie fuer Funding und Open Interest - und keine
+    Ticker-Gegenprobe noetig, weil keine Verwechslung moeglich ist.
+
+    DAMIT GILT DIE RANGFOLGE:  Kraken -> Binance/Bybit.
+    Genau EINE Quelle je Symbol."""
     watchlist = watchlist_provider()
     conn = conn_factory()
     try:
@@ -288,62 +294,29 @@ def refresh_ohlc_job(client, conn_factory, watchlist_provider,
         # Bewusst im else-Zweig und mit eigenem try: ein Fehler in der
         # Rueckfallquelle darf den erfolgreichen Kraken-Lauf nicht als
         # fehlgeschlagen melden.
-        # DRITTE QUELLE seit 11.08., VOR CoinGecko: echte Tageskerzen.
-        #
-        # Gemessen am 11.08. liefert der CoinGecko-Rueckfall VIER-Tage-Kerzen
-        # (24 Stueck ueber 92 Tage, Abstand ausnahmslos 4) - sein eigener
-        # Kommentar nimmt Tageskerzen an, und die Umwandlungsfunktion heisst
-        # `_rohdaten_zu_tageskerzen()`. Sie liegen neben Krakens Tageskerzen in
-        # derselben Tabelle, ohne Granularitaetsvermerk: jeder "20-Tage"-
-        # Indikator rechnet dort ueber 80 Kalendertage.
-        #
-        # yfinance liefert fuer einen Teil dieser Symbole echte Tageskerzen mit
-        # langer Historie (KAIA 652, KAITO 498, SUPRA 612, XNO 3198). Deshalb
-        # laeuft er ZUERST; was er bedient, wird CoinGecko ausdruecklich
-        # ausgenommen - nicht nur ueber dessen Aktualitaetspruefung, die eine
-        # stille Reihenfolgeabhaengigkeit waere.
-        #
-        # Die Tickerpruefung dort ist Pflicht: drei von acht Yahoo-Tickern
-        # gehoeren einem ANDEREN, toten Asset (VSN mit 972 Kerzen haette jede
-        # Laengenpruefung bestanden). Ohne bestandene Preis- und
-        # Aktualitaetsprobe wird nichts uebernommen.
-        von_yfinance: set = set()
+        # RUECKFALL: Boersen-Klines. Ersetzt CoinGecko (liefert keine
+        # Tageskerzen) und yfinance (geratener Ticker, drei von acht falsch).
+        # Beide Module bleiben im Repo, sind aber nicht mehr verdrahtet - ihre
+        # Docstrings halten fest, WARUM sie ungeeignet sind.
         try:
-            from api.yfinance_krypto_fallback import fuelle_luecken
+            from api.boersen_klines import fuelle_luecken
 
-            yf_ergebnisse = fuelle_luecken(conn, watchlist, trocken=False)
-            von_yfinance = {e.symbol for e in yf_ergebnisse if e.bestanden}
-            if yf_ergebnisse:
+            rf = fuelle_luecken(conn, watchlist, trocken=False)
+            bedient = [z for z in rf if z["kerzen"] > 0]
+            if rf:
                 logger.info(
-                    "yfinance-OHLC-Rueckfall: %d/%d Symbole uebernommen "
-                    "(Tageskerzen), %d wegen Tickerpruefung abgelehnt",
-                    len(von_yfinance), len(yf_ergebnisse),
-                    len(yf_ergebnisse) - len(von_yfinance),
-                )
+                    "Boersen-Klines-Rueckfall: %d/%d Symbole befuellt, "
+                    "%d Kerzen (Symbole ohne Kraken-Listing)",
+                    len(bedient), len(rf), sum(z["kerzen"] for z in rf))
+                for z in rf:
+                    if not z["kerzen"]:
+                        logger.info("  %s: an keiner Boerse gelistet",
+                                    z["symbol"])
         except Exception as exc:
-            logger.exception("yfinance-OHLC-Rueckfall fehlgeschlagen")
+            logger.exception("Boersen-Klines-Rueckfall fehlgeschlagen")
             _notify_job_failure(
-                "refresh_ohlc_yfinance",
-                f"yfinance-OHLC-Rueckfall fehlgeschlagen: {exc}")
-
-        if coingecko_client is not None:
-            try:
-                from api.coingecko_ohlc_fallback import fuelle_alle_ohlc_luecken
-
-                fb = fuelle_alle_ohlc_luecken(coingecko_client, conn, watchlist,
-                                              ausgenommen=von_yfinance)
-                if fb:
-                    logger.info(
-                        "CoinGecko-OHLC-Rueckfall: %d/%d Assets befuellt, %d Kerzen "
-                        "(Symbole ohne Kraken-Listing)",
-                        sum(1 for r in fb if r.points_upserted > 0), len(fb),
-                        sum(r.points_upserted for r in fb),
-                    )
-            except Exception as exc:
-                logger.exception("CoinGecko-OHLC-Rueckfall fehlgeschlagen")
-                _notify_job_failure(
-                    "refresh_ohlc_fallback",
-                    f"CoinGecko-OHLC-Rueckfall fehlgeschlagen: {exc}")
+                "refresh_ohlc_fallback",
+                f"Boersen-Klines-Rueckfall fehlgeschlagen: {exc}")
     finally:
         conn.close()
 
