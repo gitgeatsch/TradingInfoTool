@@ -130,15 +130,20 @@ def multi_asset_tranchen_erlaubt(regime_result, dca_flag: bool) -> bool:
     Aktien-Baermarkt ODER ein VIX, der Stress anzeigt. `seitwaerts` hat kein
     Pendant und wird deshalb nicht nachgebildet statt geraten.
 
+    HEDGE RUFT DIESE FUNKTION NICHT MEHR (12.08.2026, Umbauplan Paket 0 /
+    E1a). Der Zweifel unten hat sich bestaetigt und ist entschieden:
+    `agent/hedge/pipeline.py` setzt `tranchen_erlaubt = False`, mit
+    Begruendung an der Aufrufstelle. Die drei uebrigen Multi-Asset-Pipelines
+    (aktien, rohstoff, themen_etf) nutzen sie unveraendert.
+
     VORLAEUFIG, mit Revisit-Bedingung (Nutzer-Einordnung 2026-08-09): *"bei
     Multiassets haben wir noch nicht alles beisammen, aber die Indexwerte sind
     nicht falsch."* S&P-Baermarkt und VIX sind also eine tragfaehige, aber
     nicht endgueltige Referenz. Wiedervorlage zusammen mit M6 (eigenes
     Regime-Konzept je Nicht-Krypto-Klasse) - dort steht auch die Frage, ob
-    Rohstoffe und Hedge dieselbe Referenz brauchen wie Aktien. Fuer Hedge ist
-    sie sogar potenziell invers: DBPK/3QSS sind Short-Produkte, fuer die ein
-    Baermarkt das GUTE Umfeld ist. Das ist hier bewusst nicht vorweggenommen -
-    Tranchen sind ein Einstiegs-Staffelungshinweis, kein Richtungsurteil.
+    Rohstoffe dieselbe Referenz brauchen wie Aktien. Fuer Hedge war sie
+    potenziell invers: DBPK/3QSS sind Short-Produkte, fuer die ein Baermarkt
+    das GUTE Umfeld ist - genau deshalb ist Hedge jetzt draussen.
     """
     if not dca_flag:
         return False

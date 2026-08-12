@@ -747,13 +747,24 @@ def generate_signal(
     historische_erfolgsquote = compute_win_rate_fact(conn, "spot", erlaubte_symbole=_hedge_symbole)
     these_abgleich = kategorie_thesen.build_these_abgleich_fact(conn, asset)
 
-    # TRANCHEN (2026-08-09, Schritt 7) - gestaffelter Einstieg statt einer
-    # einzigen Zone. BEWUSST OHNE BTC-REGIME (Nutzer-Vorgabe): die Bedingung
-    # nutzt `equities_baermarkt_aktiv` und `vix_label`, die im Regime-Block
-    # dieser Klasse ohnehin stehen. Begruendung und Revisit-Bedingung in
-    # agent/tranchen.py::multi_asset_tranchen_erlaubt().
-    tranchen_erlaubt = tranchen_modul.multi_asset_tranchen_erlaubt(
-        regime_result, db.get_dca_erlaubt(conn, asset.symbol))
+    # KEINE TRANCHEN FUER ABSICHERUNG (12.08.2026, Umbauplan Paket 0 / E1a,
+    # Nutzerentscheidung).
+    #
+    # Bis heute lief hier `multi_asset_tranchen_erlaubt(regime_result,
+    # db.get_dca_erlaubt(...))` wie in den drei anderen Multi-Asset-Pipelines.
+    # Der Zweifel stand schon im Regelwerk selbst - `agent/tranchen.py`
+    # vermerkt woertlich: "Fuer Hedge ist sie sogar potenziell invers:
+    # DBPK/3QSS sind Short-Produkte, fuer die ein Baermarkt das GUTE Umfeld
+    # ist."
+    #
+    # Genau das ist der Punkt. Die Tranchen-Bedingung staffelt den Einstieg,
+    # WEIL das Umfeld ungemuetlich ist (Aktien-Baermarkt oder VIX-Stress). Fuer
+    # ein Short-Produkt ist dasselbe Umfeld der Grund, VOLL dabei zu sein - die
+    # Regel stand also mit umgekehrtem Vorzeichen im Signal.
+    #
+    # Absicherung behaelt ihre Sonderstellung (Umbauplan 6a): eigener Topf,
+    # eigene Ausloeser, keine Verrechnung mit den anderen Handlungen.
+    tranchen_erlaubt = False
     facts = build_facts(
         asset, price_snap, holdings.get(asset.symbol), SYMBOL_ZU_HEBEL_FAKTOR[asset.symbol],
         SYMBOL_ZU_REFERENZ_INDEX[asset.symbol], portfolio_exposure, regime_result, price_age_minutes,

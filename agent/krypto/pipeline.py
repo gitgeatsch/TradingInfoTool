@@ -712,15 +712,30 @@ def generate_signal(
             fetched = fetched.replace(tzinfo=timezone.utc)
         price_age_minutes = (datetime.now(timezone.utc) - fetched).total_seconds() / 60
 
-    # AZ-4-Tranchen (2026-07-12, 2026-07-18 um SOL erweitert): nur Regime
-    # baer/krise_extrem/seitwaerts + BTC/ETH/SOL + per-Asset-Toggle
-    # (ui/app.py Watchlist-Tab, Default an fuer BTC/ETH/SOL) - siehe
-    # Regelwerksmanual Kap. 4. Bewusst weiterhin eine feste Liste statt
-    # "alle core-Assets" - Tranchen sind fuer die groessten, liquidesten
-    # Positionen gedacht, keine pauschale Ausweitung auf jedes core-Asset.
+    # AZ-4-Tranchen: Regime baer/krise_extrem/seitwaerts + per-Asset-Toggle
+    # (ui/app.py Watchlist-Tab) - siehe Regelwerksmanual Kap. 4.
+    #
+    # SYMBOLLISTE ENTFERNT (12.08.2026, Umbauplan Paket 0 / E1a). Hier stand
+    # zusaetzlich `asset.symbol in ("BTC", "ETH", "SOL")`, begruendet mit
+    # "Tranchen sind fuer die groessten, liquidesten Positionen gedacht".
+    #
+    # Das war nicht nur eine Dopplung, sondern hat den Schalter UEBERSTIMMT:
+    # `db.get_dca_erlaubt()` haelt seinen Vorgabewert ohnehin in einer
+    # Whitelist (`_DCA_ERLAUBT_DEFAULT_SYMBOLS`, dieselben drei Symbole plus
+    # die gehaltenen Multi-Asset-Positionen), und eine explizite Zeile in
+    # `asset_dca_settings` schlaegt diesen Vorgabewert. Schaltete der Nutzer
+    # DCA fuer ein viertes Asset ein, lieferte `get_dca_erlaubt()` korrekt
+    # True - und diese Zeile warf es stumm wieder weg.
+    #
+    # Nutzervorgabe 12.08.: "ich moechte selbst entscheiden, bei welchen
+    # Assets die Strategie angewendet wird - ueberall moeglich, aber nur dort
+    # Signale erzeugen, wo ich das selektiv moechte." EIN Steuerelement, nicht
+    # zwei.
+    #
+    # KEIN VERHALTENSWECHSEL ohne Zutun des Nutzers: die Whitelist begrenzt
+    # weiterhin auf dieselben Symbole, solange keine explizite Zeile existiert.
     tranchen_erlaubt = (
         regime_result.regime in ("baer", "krise_extrem", "seitwaerts")
-        and asset.symbol in ("BTC", "ETH", "SOL")
         and db.get_dca_erlaubt(conn, asset.symbol)
     )
 
