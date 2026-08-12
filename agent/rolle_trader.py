@@ -258,6 +258,80 @@ def leite_zonen_ab(antwort: dict, atr: float | None,
     return antwort
 
 
+# ---------------------------------------------------------------------------
+# STOP-UNTERGRENZE - RM-1b UND RM-1c, PORTIERT (12.08.2026, Nachtrag zu Paket 9)
+#
+# WARUM DAS HIER STEHEN MUSS. Der Live-Lauf lieferte einen Stop von rund 1 % des
+# Kurses. Das ist keine Feinheit, sondern gemessen der schlechteste Fall, den es
+# gibt (Backtest 28.07., 61 aufgeloeste Trades):
+#
+#     Stopabstand    n     Trefferquote   realisiertes CRV
+#     < 2 %          9         0,0 %            -1,00
+#     2 - 5 %       36        16,7 %            -0,41
+#     5 - 10 %      16        31,2 %            +0,31
+#
+# Monoton, ohne Ausnahme. Und genau deshalb gibt es seit 02.08. zwei Regeln -
+# nur wirkten sie ausschliesslich in `agent/krypto/risk_gate.py`. Die neue
+# Rollen-Kette hatte KEINE Untergrenze; sie ist an der alten Kette vorbei
+# gebaut worden und hat diese Leitplanke dabei verloren. Das Nachziehen ist
+# Wiederherstellung des Produktionsstands, nicht neue Strenge.
+#
+# ZWEI GRENZEN, ES GILT DIE STRENGERE:
+#   RM-1b  Stop < 2,5 % des Kurses      - strukturell: Gebuehren, Spread, Rauschen
+#   RM-1c  Stop < 0,75 x ATR            - symbolrelativ: 2,5 % koennen fuer DIESES
+#                                         Symbol trotzdem im Rauschen liegen
+#
+# WARUM DAS KEIN VERSTOSS gegen "kein deterministischer Override des LLM-
+# Werturteils" ist: jene Regel schuetzt die qualitative Synthese und nennt
+# CRV-Floor und Positionsgroessen-Deckel ausdruecklich als erlaubte Gegen-
+# beispiele - harte, objektive Finanzfakten. Ein Stopabstand ist Geometrie. Das
+# Modell darf weiterhin sagen, die Lage sei guenstig; es darf nur nicht ein
+# Risiko behaupten, das kleiner ist als das Grundrauschen des Marktes.
+#
+# ES WIRD NICHT STILL KORRIGIERT. Der Punktwert des Modells bleibt stehen, der
+# Befund kommt als eigenes Feld daneben. Wer die Zahl des Modells sehen will,
+# findet sie; die Entscheidung darueber faellt sichtbar.
+STOP_MIN_RELATIV = 0.025          # RM-1b
+STOP_MIN_ATR_FAKTOR = 0.75        # RM-1c
+
+
+def pruefe_stopabstand(antwort: dict, atr: float | None = None,
+                       min_relativ: float = STOP_MIN_RELATIV,
+                       min_atr_faktor: float = STOP_MIN_ATR_FAKTOR) -> dict:
+    """Traegt `stop_zu_eng` und `stop_min_eur` in die Antwort ein.
+
+    Ohne Einstieg oder Stop passiert nichts - bei Akkumulation etwa gibt es
+    beide gar nicht, und ein Befund ueber eine Zahl, die es nicht gibt, waere
+    schlimmer als keiner."""
+    ein = antwort.get("einstieg_eur")
+    stop = antwort.get("stop_eur")
+    if not isinstance(ein, (int, float)) or not isinstance(stop, (int, float)):
+        return antwort
+    if ein <= 0 or stop <= 0 or stop >= ein:
+        return antwort
+
+    grenzen = [float(ein) * (1.0 - min_relativ)]          # RM-1b
+    if isinstance(atr, (int, float)) and atr > 0:
+        grenzen.append(float(ein) - min_atr_faktor * float(atr))   # RM-1c
+    # DIE STRENGERE GRENZE IST DIE NIEDRIGSTE STOPMARKE. Erst falsch herum
+    # gebaut (`max`), und der Fehler war nur an gedruckten Zahlen zu sehen:
+    # RM-1b verlangt 2,5 % Abstand, RM-1c bei ATR 1.677 nur 2,27 % - `max`
+    # nahm die HOEHERE Marke und damit den GERINGEREN geforderten Abstand,
+    # also die schwaechere der beiden Regeln. Wer beide erfuellen will, muss
+    # unter die tiefste Marke.
+    untergrenze = min(grenzen)
+
+    antwort["stop_abstand_relativ"] = round((float(ein) - float(stop)) / float(ein), 6)
+    antwort["stop_min_eur"] = round(untergrenze, 8)
+    antwort["stop_zu_eng"] = bool(float(stop) > untergrenze)
+    if antwort["stop_zu_eng"]:
+        antwort["stop_zu_eng_grund"] = (
+            f"RM-1b: unter {100 * min_relativ:g} % des Kurses"
+            if untergrenze == grenzen[0] else
+            f"RM-1c: unter {min_atr_faktor:g} x ATR")
+    return antwort
+
+
 class TraderAntwortUngueltig(ValueError):
     """Die Antwort erfuellt ihren Vertrag nicht."""
 
@@ -390,6 +464,14 @@ def validiere(antwort: dict, symbol: str = "?",
             # eine auf NICHTS_TUN zurueckgenommene Handlung traegt keinen
             # Zielkurs.
             leite_zonen_ab(antwort, atr)
+            # RM-1b/RM-1c NACH der Ableitung: das Ziel haengt am Stop des
+            # Modells, und der bleibt stehen. Der Befund kommt daneben.
+            pruefe_stopabstand(antwort, atr)
+            if antwort.get("stop_zu_eng"):
+                prot.dazu(f"Stopabstand "
+                          f"{100 * antwort['stop_abstand_relativ']:.2f} % - "
+                          f"{antwort.get('stop_zu_eng_grund', 'zu eng')} "
+                          f"(Untergrenze {antwort['stop_min_eur']:.8g} EUR)")
         else:
             # Akkumulation: der Prompt hat ausdruecklich KEINE Kurse verlangt.
             # Kommen trotzdem welche, sind sie eine Antwort auf eine nicht

@@ -813,13 +813,18 @@ def paket_8() -> None:
     duenn = TB.bewerte({}, TB.merkmale(unabhaengige_faktoren=4), kosten_r=0.230)
     text = " ".join(TB.satz(duenn))
     pruefe(P, "bei wenigen Faellen nennt der Satz keine erfundene Quote",
-           "0 Faelle" in text and "Basisrate" in text,
-           "ein '41 %' auf vierzehn Faellen waere erfundene Genauigkeit")
+           "erst 0 eigene Faelle" in text
+           and "zu wenige fuer eine eigene Zahl" in text
+           and "von hundert" in text,
+           "ein '41 %' auf vierzehn Faellen waere erfundene Genauigkeit - und "
+           "der Satz muss SAGEN, dass er die Erfahrungsrate benutzt")
     dick = TB.bewerte({TB.merkmale(unabhaengige_faktoren=4):
                        {"treffer": 130, "faelle": 300, "abgelaufen": 0}},
                       TB.merkmale(unabhaengige_faktoren=4), kosten_r=0.230)
     pruefe(P, "bei belastbarer Lage nennt er Quote UND Urteil",
-           dick["belastbar"] and "Erwartungswert" in " ".join(TB.satz(dick)))
+           dick["belastbar"]
+           and "In genau dieser Konstellation" in " ".join(TB.satz(dick))
+           and "300 Faelle" in " ".join(TB.satz(dick)))
 
     # ABGELAUFENE werden AUSGEWIESEN, nicht verrechnet (Arbeitsstand 7.23).
     mit_abgelaufen = TB.bewerte(
@@ -902,12 +907,12 @@ def paket_9() -> None:
     # FUND 3: der Vergleich gilt IMMER, auch ohne eigene Faelle.
     unmoeglich = TB.satz(TB.bewerte({}, TB.merkmale(), kosten_r=eng))
     pruefe(P, "ein unmoeglicher Breakeven wird auch OHNE Faelle benannt",
-           any("UNMOEGLICH" in z for z in unmoeglich),
+           any("KANN NICHT AUFGEHEN" in z for z in unmoeglich),
            "die erste Fassung sagte nur 'noch keine eigene Messung' - auch "
            "bei 113 % Breakeven")
     negativ = TB.satz(TB.bewerte({}, TB.merkmale(), kosten_r=weit))
     pruefe(P, "ein negativer Erwartungswert wird auch OHNE Faelle benannt",
-           any("NEGATIV" in z for z in negativ),
+           any("Traegt sich NICHT" in z for z in negativ),
            "die Fallzahl entscheidet, ob wir eine eigene QUOTE behaupten - "
            "nicht, ob wir vergleichen duerfen")
 

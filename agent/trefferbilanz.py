@@ -108,7 +108,20 @@ def breakeven(kosten_r: float = 0.0, crv: float = CRV) -> float:
 
 # Kosten je Seite, aus `backward_tracking._KOSTEN_*` uebernommen. Krypto ueber
 # Bitpanda ist prozentual und im Kurs enthalten.
-KOSTEN_JE_SEITE = {"krypto": 0.015, "boerse_fix_eur": 1.0, "boerse_spread": 0.0015}
+# NICHT ABSCHREIBEN - IMPORTIEREN. Diese Saetze standen hier zuerst als eigene
+# Zahlen, und eine davon war falsch: Spread 0,0015 statt 0,0025 in der Quelle.
+# Eine abgeschriebene Konstante ist eine Kopie, die stillschweigend veraltet -
+# genau der Fall, den die Regel "immer an der Quelle pruefen" meint. Die
+# autoritativen Saetze stehen seit 07.08. in `backward_tracking.py`, dort werden
+# auch die Backtests damit gerechnet; jede Abweichung hier hiesse, dass Signal
+# und Nachmessung mit verschiedenen Gebuehren rechnen.
+from agent.krypto.backward_tracking import (
+    _KOSTEN_KRYPTO_JE_SEITE, _KOSTEN_BOERSE_FIX_EUR,
+    _KOSTEN_BOERSE_SPREAD_JE_SEITE)
+
+KOSTEN_JE_SEITE = {"krypto": _KOSTEN_KRYPTO_JE_SEITE,
+                   "boerse_fix_eur": _KOSTEN_BOERSE_FIX_EUR,
+                   "boerse_spread": _KOSTEN_BOERSE_SPREAD_JE_SEITE}
 
 
 def kosten_r_aus_stop(einstieg: float, stop: float, klasse: str = "krypto",
@@ -249,49 +262,77 @@ def bewerte(bilanz: dict, schluessel: tuple, kosten_r: float = 0.0) -> dict:
             "anteil_entschieden": (e["faelle"] / gesamt) if gesamt else None}
 
 
-def satz(bewertung: dict) -> list[str]:
-    """Der Entscheider-Block fuer die E-Mail - drei Zahlen und ein Urteil.
+def satz(bewertung: dict, einstieg=None, stop=None,
+         einsatz_eur=None, klasse: str = "krypto") -> list[str]:
+    """Der Entscheider-Block fuer die E-Mail.
+
+    IN EURO UND PROZENT, NICHT IN R. Nutzereinwand 12.08.: *"Kosten in 2,77 R -
+    damit fange ich nichts an."* Zu Recht: R ist eine interne Einheit. Der
+    Nutzer sieht einen Einsatz in Euro und einen Stop in Prozent; in diesen
+    Groessen muss die Aussage stehen.
+
+    Die Rechnung dahinter ist dieselbe, nur ausgesprochen:
+
+        Gebuehren 3 % vom Einsatz, Stop 1,3 % entfernt
+        -> die Gebuehren sind mehr als doppelt so gross wie das ganze Risiko
 
     BEI WENIGEN FAELLEN SAGT ER DAS AUCH. Ein "41 %" auf vierzehn Faellen waere
-    eine erfundene Genauigkeit; die ehrliche Aussage ist dann, dass wir es noch
-    nicht wissen."""
+    erfundene Genauigkeit. Die Fallzahl entscheidet aber NUR, ob wir eine
+    konstellations-eigene Quote behaupten - nicht, ob wir vergleichen duerfen.
+    Die Basisrate steht auf 19.891 Ankern."""
     b = bewertung
-    zeilen = [
-        f"Grundwahrscheinlichkeit dieser Geometrie: {100 * b['basisrate']:.0f} %",
-    ]
-    if b["belastbar"]:
-        zeilen.append(f"Diese Konstellation traf bisher in:        "
-                      f"{100 * b['wahrscheinlichkeit']:.0f} %  (n = {b['faelle']})")
-    else:
-        zeilen.append(f"Diese Konstellation: erst {b['faelle']} Faelle - keine "
-                      f"belastbare Abweichung von der Basisrate")
-    zeilen.append(f"Fuer die Kosten zu schlagen sind:         "
-                  f"{100 * b['breakeven']:.0f} %")
+    zeilen = []
 
-    # DER VERGLEICH GILT IMMER - korrigiert nach dem Live-Lauf vom 12.08.
-    #
-    # Die erste Fassung sagte bei duenner Datenlage nur "noch keine eigene
-    # Messung, es gilt die Basisrate" - AUCH bei einem Breakeven von 113 %.
-    # Das war falsch: bei 113 % braucht es keine Kalibrierung, um zu wissen,
-    # dass es nicht geht.
-    #
-    # Die Fallzahl entscheidet, ob wir eine KONSTELLATIONS-EIGENE Quote
-    # behaupten duerfen. Sie entscheidet NICHT, ob wir vergleichen duerfen -
-    # die Basisrate steht auf 19.891 Ankern, nicht auf null.
-    if b["breakeven"] >= 1.0:
-        zeilen.append("--> RECHNERISCH UNMOEGLICH: die Kosten verschlingen mehr "
-                      "als die ganze Chance. Ein engerer Stop macht es "
-                      "schlimmer, nicht besser.")
-    elif b["traegt"]:
-        zeilen.append("--> Erwartungswert positiv."
-                      + ("" if b["belastbar"] else " Auf der Basisrate - eine "
-                         "eigene Messung gibt es noch nicht."))
+    # Zuerst das Konkrete, wenn wir es haben: was kostet der Trade, gemessen
+    # an dem, was er riskiert.
+    if einstieg and stop and einstieg > stop > 0:
+        stop_pct = 100.0 * (einstieg - stop) / einstieg
+        gebuehr_pct = (100.0 * 2 * KOSTEN_JE_SEITE["krypto"] if klasse == "krypto"
+                       else 100.0 * (2 * KOSTEN_JE_SEITE["boerse_fix_eur"]
+                                     / float(einsatz_eur or 500.0)
+                                     + 2 * KOSTEN_JE_SEITE["boerse_spread"]))
+        zeilen.append(f"Ihr Stop liegt {stop_pct:.1f} % unter dem Einstieg - "
+                      f"so viel riskieren Sie.")
+        zeilen.append(f"Kauf und Verkauf zusammen kosten {gebuehr_pct:.1f} % "
+                      f"des Einsatzes"
+                      + (f", bei {einsatz_eur:.0f} EUR also rund "
+                         f"{gebuehr_pct / 100 * float(einsatz_eur):.0f} EUR."
+                         if einsatz_eur else "."))
+        verhaeltnis = gebuehr_pct / stop_pct
+        zeilen.append(
+            f"Die Gebuehren sind damit {verhaeltnis:.1f}-mal so gross wie Ihr "
+            f"Risiko." if verhaeltnis >= 1 else
+            f"Die Gebuehren fressen {100 * verhaeltnis:.0f} % Ihres Risikos auf.")
+        zeilen.append("")
+
+    zeilen.append(f"Von hundert solchen Einstiegen erreichen erfahrungsgemaess "
+                  f"{100 * b['basisrate']:.0f} das Ziel vor dem Stop.")
+    if b["belastbar"]:
+        zeilen.append(f"In genau dieser Konstellation waren es bisher "
+                      f"{100 * b['wahrscheinlichkeit']:.0f} von hundert "
+                      f"({b['faelle']} Faelle).")
     else:
-        zeilen.append(f"--> Erwartungswert NEGATIV: "
-                      f"{100 * b['wahrscheinlichkeit']:.0f} % gegen "
-                      f"{100 * b['breakeven']:.0f} % noetig."
-                      + ("" if b["belastbar"] else " Gemessen auf der "
-                         "Basisrate; eine eigene Quote gibt es noch nicht."))
+        zeilen.append(f"Fuer genau diese Konstellation liegen erst "
+                      f"{b['faelle']} eigene Faelle vor - zu wenige fuer eine "
+                      f"eigene Zahl.")
+    zeilen.append(f"Damit sich der Trade nach Gebuehren traegt, muessten es "
+                  f"{100 * b['breakeven']:.0f} von hundert sein.")
+
+    if b["breakeven"] >= 1.0:
+        zeilen.append("--> DAS KANN NICHT AUFGEHEN. Selbst wenn JEDER Einstieg "
+                      "sein Ziel erreichte, blieben die Gebuehren groesser als "
+                      "der Gewinn. Ein weiterer Stop wuerde helfen, ein "
+                      "engerer macht es schlimmer.")
+    elif b["traegt"]:
+        zeilen.append("--> Traegt sich."
+                      + ("" if b["belastbar"] else " Gemessen an der "
+                         "Erfahrungsrate - eine eigene Zahl gibt es noch nicht."))
+    else:
+        zeilen.append(f"--> Traegt sich NICHT: "
+                      f"{100 * b['wahrscheinlichkeit']:.0f} erreichen das Ziel, "
+                      f"noetig waeren {100 * b['breakeven']:.0f}."
+                      + ("" if b["belastbar"] else " Gemessen an der "
+                         "Erfahrungsrate; eine eigene Zahl gibt es noch nicht."))
     if b.get("abgelaufen"):
         zeilen.append(f"    ({b['abgelaufen']} weitere Faelle liefen ohne "
                       f"Entscheidung aus - die Quote steht auf "
