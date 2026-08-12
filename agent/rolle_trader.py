@@ -102,9 +102,7 @@ sind EIN Faktor, nicht zwei. Diese Zahl ist wichtiger als ihre Menge: drei bis \
 vier unabhaengige Faktoren tragen einen Aufbau, einer oder zwei nicht.
 
 3. HANDELN. Waehle: KAUFEN (neu aufbauen), NACHKAUFEN (bestehende Position \
-vergroessern), REDUZIEREN, VERKAUFEN oder NICHTS_TUN.{betrag} Bei KAUFEN und \
-NACHKAUFEN zusaetzlich den Einstiegskurs und den Ausstiegskurs, beide in Euro; \
-der Ausstieg liegt unter dem Einstieg.
+vergroessern), REDUZIEREN, VERKAUFEN oder NICHTS_TUN.{betrag}{kurse}
 
 4. BEGRUENDUNG. Ein bis zwei Saetze, die deine Wahl TRAGEN. Keine Einschraenkung \
 im Nachsatz - was dagegen spricht, gehoert in das naechste Feld.
@@ -130,12 +128,47 @@ Antworte AUSSCHLIESSLICH mit JSON:
  "umgeworfen_bis": "<YYYY-MM-DD oder null>"}}"""
 
 
-def _baue_prompt(mit_betragsfrage: bool, mit_persona: bool) -> str:
+# SCHRITT 3 HAENGT AN DER STRATEGIE (Paket 2, 12.08.2026). Bei Akkumulation
+# gibt es keinen einzelnen Einstiegszeitpunkt und keinen Stop - danach zu
+# fragen hiesse, eine Zahl zu verlangen, die es nicht gibt. Genau dieser Fehler
+# ist am 12.08. schon einmal passiert: die Marktbreite war aus den Fakten raus,
+# die Frage danach stand noch im Prompt, daneben der Satz "erfinde nichts".
+_KURSSATZ = {
+    True:  " Bei KAUFEN und NACHKAUFEN zusaetzlich den Einstiegskurs und den "
+           "Ausstiegskurs, beide in Euro; der Ausstieg liegt unter dem "
+           "Einstieg.",
+    False: " Nenne KEINEN Einstiegs- und keinen Ausstiegskurs - es wird "
+           "gestaffelt gekauft, einen einzelnen Zeitpunkt gibt es nicht.",
+}
+
+
+def _baue_prompt(mit_betragsfrage: bool, mit_persona: bool,
+                 mit_kursen: bool = True) -> str:
     kopf = _ANREDE[mit_persona] + _EINGANG[mit_betragsfrage]
-    schritte = _SCHRITTE.format(betrag=_BETRAGSSATZ if mit_betragsfrage else "")
+    schritte = _SCHRITTE.format(
+        betrag=_BETRAGSSATZ if mit_betragsfrage else "",
+        kurse=_KURSSATZ[mit_kursen])
     return f"{kopf}\n\nDEINE AUFGABE, in dieser Reihenfolge:\n\n{schritte}"
 
 
+def prompt_fuer(instrument: str = "spot", strategie: str = "einstieg", *,
+                mit_persona: bool = True, mit_betragsfrage: bool = False) -> str:
+    """Der Prompt fuer GENAU diesen Auftrag.
+
+    Die Kombination wird GEPRUEFT, nicht geraten - `handelsauftrag.pruefe()`
+    wirft bei einem unvorgesehenen Paar. Ein stiller Rueckfall auf "spot" waere
+    hier besonders teuer: er wuerde einen Hebel-Trade wie einen Spot-Trade
+    bewerten - dieselben Fakten, aber ohne die Finanzierungskosten, die ihn
+    erst teuer machen."""
+    from agent import handelsauftrag
+    i, st = handelsauftrag.pruefe(instrument, strategie)
+    return _baue_prompt(mit_betragsfrage=mit_betragsfrage,
+                        mit_persona=mit_persona,
+                        mit_kursen=handelsauftrag.mit_kursen(i, st))
+
+
+# Der Vorgabefall bleibt Spot/Einstieg - alle bisherigen Aufrufer und alle
+# Messbefunde bis zum 12.08. gehoeren hierher.
 SYSTEM_PROMPT_TRADER = _baue_prompt(mit_betragsfrage=False, mit_persona=True)
 
 # Nur fuer gepaarte Messungen. NICHT im Betrieb verwenden.
@@ -229,9 +262,17 @@ class TraderAntwortUngueltig(ValueError):
 
 def validiere(antwort: dict, symbol: str = "?",
               max_tranche_eur: int | None = None,
-              atr: float | None = None) -> dict:
+              atr: float | None = None,
+              instrument: str = "spot", strategie: str = "einstieg") -> dict:
     """Prueft die Rollen-eigenen Felder; der Handlungsteil laeuft danach durch
     `empfehlung_vertrag.validiere()`.
+
+    `instrument`/`strategie` (12.08.2026, Paket 2): entscheiden, ob Einstiegs-
+    und Ausstiegskurs ueberhaupt zur Sache gehoeren. Bei Akkumulation gehoeren
+    sie es nicht - und wenn das Modell sie trotz gegenteiliger Anweisung
+    liefert, werden sie hier ENTFERNT statt in eine Zielzone weitergerechnet.
+    Sonst entstuende ein Zielkurs fuer eine Strategie, die keinen hat, und die
+    Erfolgsmessung wuerde ihn spaeter als Trefferquote lesen.
 
     `atr` (12.08.2026, Paket 1): wird durchgereicht an `leite_zonen_ab()`.
     Die Ableitung steht ABSICHTLICH hier drin und nicht in einer Funktion, die
@@ -341,9 +382,21 @@ def validiere(antwort: dict, symbol: str = "?",
                      "ziel_eur_von", "ziel_eur_bis"):
             antwort.pop(feld, None)
     else:
-        # ZONEN ABLEITEN, erst NACH der Faktoren- und Degradierungslogik: eine
-        # auf NICHTS_TUN zurueckgenommene Handlung soll keinen Zielkurs tragen.
-        leite_zonen_ab(antwort, atr)
+        from agent import handelsauftrag
+        if handelsauftrag.mit_kursen(*handelsauftrag.pruefe(instrument, strategie)):
+            # ZONEN ABLEITEN, erst NACH der Faktoren- und Degradierungslogik:
+            # eine auf NICHTS_TUN zurueckgenommene Handlung traegt keinen
+            # Zielkurs.
+            leite_zonen_ab(antwort, atr)
+        else:
+            # Akkumulation: der Prompt hat ausdruecklich KEINE Kurse verlangt.
+            # Kommen trotzdem welche, sind sie eine Antwort auf eine nicht
+            # gestellte Frage - vermerkt, nicht weitergerechnet.
+            uebrig = [f for f in ("einstieg_eur", "stop_eur")
+                      if antwort.pop(f, None) is not None]
+            if uebrig:
+                prot.dazu(f"{', '.join(uebrig)} entfernt - bei Strategie "
+                          f"'{strategie}' gibt es keinen einzelnen Einstieg")
 
     if prot:
         antwort["_korrekturen"] = ((antwort.get("_korrekturen", "") + "; ")

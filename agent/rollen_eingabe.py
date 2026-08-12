@@ -80,8 +80,16 @@ def baue_befund_eingabe(*, symbol: str, reihe: list, index: int,
                         menge: float | None = None,
                         einstand_eur: float | None = None,
                         finanzierung: dict | None = None,
-                        lagebild: dict | None = None) -> dict:
+                        lagebild: dict | None = None,
+                        instrument: str = "spot",
+                        strategie: str = "einstieg") -> dict:
     """Eingabe fuer Befund und Entscheidung - alle Bloecke an einer Stelle.
+
+    `instrument`/`strategie` (12.08.2026, Paket 2): WAS gehandelt wird und WIE.
+    Vorgabe, keine Frage - der Aufrufer weiss es immer, weil Spot und Hebel
+    getrennte Pipelines sind. Die Vorgabewerte sind der bisherige stille
+    Zustand (spot/einstieg), damit kein Aufrufer bricht; wer Hebel bewertet,
+    MUSS ihn nennen, sonst fehlen die Finanzierungskosten in der Beurteilung.
 
     `lagebild` ist die ANTWORT der Rolle Lagebild. Weitergereicht wird ihre
     Prosa (`lage`) und, wenn vorhanden, der deterministische `gleichlauf` -
@@ -92,8 +100,15 @@ def baue_befund_eingabe(*, symbol: str, reihe: list, index: int,
     konnte falsch sein, `gleichlauf` ist gerechnet. Wo beides nebeneinander
     steht - gerechneter Festpunkt und Modellprosa -, wird ein Widerspruch
     pruefbar statt zur Geschmacksfrage (R-T8)."""
+    from agent.handelsauftrag import beschreibe as beschreibe_auftrag
     from agent.lagebeschreibung import beschreibe_lage
     aus = {"asset": symbol,
+           # DER AUFTRAG STEHT ZUERST (Paket 2, R-T9: was zuerst steht, wiegt
+           # schwerer). Er ist die BEDINGUNG, unter der alles Weitere zu lesen
+           # ist - dieselben Kursfakten bedeuten bei 3x Hebel etwas anderes als
+           # bei einem Spot-Einmalkauf. Ein Haendler, der das nicht weiss,
+           # urteilt ueber einen Trade, den er nicht kennt.
+           "auftrag": beschreibe_auftrag(instrument, strategie),
            "stand": beschreibe_lage(symbol=symbol, reihe=reihe, index=index,
                                     kurs_eur=kurs_eur, atr=atr, menge=menge,
                                     einstand_eur=einstand_eur,
