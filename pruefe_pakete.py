@@ -526,8 +526,114 @@ def paket_5() -> None:
            "die erste Fassung rechnete Prozente vom Portfolio")
 
 
+# ---------------------------------------------------------------- Paket 6 ---
+def paket_6() -> None:
+    """Feldabbildung Rollen-Kette -> signals."""
+    P = "6"
+    import json
+    import sqlite3
+    from agent import rolle_trader as RT
+    from agent import signal_abbildung as SA
+    from agent.krypto.analyst import REQUIRED_ACTIONS as ALT
+    from agent.empfehlung_vertrag import AKTIONEN as NEU
+
+    # ECKPUNKT 1: erweitern statt abbilden. HALTEN und NICHTS_TUN sind NICHT
+    # dasselbe - wer beides in eine Spalte wirft, kann hinterher nie mehr
+    # unterscheiden, ob eine Position gehalten oder ein Einstieg verweigert
+    # wurde. Genau diese Unterscheidung IST der Deadloop.
+    pruefe(P, "das Vokabular enthaelt beide Welten vollstaendig",
+           set(ALT) | set(NEU) == set(SA.AKTIONEN),
+           f"alt {sorted(set(ALT)-set(NEU))}, neu {sorted(set(NEU)-set(ALT))}")
+    pruefe(P, "HALTEN und NICHTS_TUN bleiben GETRENNT",
+           "HALTEN" in SA.AKTIONEN and "NICHTS_TUN" in SA.AKTIONEN,
+           "HALTEN = Bestand behalten, NICHTS_TUN = auch nicht kaufen")
+
+    con = sqlite3.connect("data/tradinginfotool.db")
+    try:
+        # ECKPUNKT 2: die fuenf heimatlosen Felder haben jetzt Spalten.
+        SA.migriere(con)
+        spalten = {r[1] for r in con.execute("PRAGMA table_info(signals)")}
+        fehlen = set(SA.SPALTEN_SIGNAL) - spalten
+        pruefe(P, "alle neuen Spalten sind angelegt", not fehlen, str(fehlen))
+        pruefe(P, "die Migration ist idempotent", SA.migriere(con) == [],
+               "ein zweiter Lauf darf nichts anlegen")
+        tabellen = {r[0] for r in con.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'")}
+        pruefe(P, "die Lagebild-Tabelle existiert", "lagebilder" in tabellen,
+               "ECKPUNKT 5: eine Zeile je Durchgang statt 44-facher Redundanz")
+
+        # ECKPUNKT 3: nur fuenf Spalten sind Pflicht - die neue Kette bedient
+        # sie alle, ohne eine Zahl zu erfinden.
+        pflicht = {r[1] for r in con.execute("PRAGMA table_info(signals)")
+                   if r[3] and r[4] is None and not r[5]}
+        antwort = RT.validiere(
+            {"belege": [{"fakt": "a", "richtung": "dafuer", "gewicht": "hoch"},
+                        {"fakt": "b", "richtung": "dafuer", "gewicht": "mittel"}],
+             "unabhaengige_faktoren": 2, "aktion": "KAUFEN",
+             "einstieg_eur": 100.0, "stop_eur": 94.0, "begruendung": "x",
+             "was_dagegen": "y", "umgeworfen_durch": "z"}, "BTC", atr=4.0)
+        felder = SA.felder_aus_entscheidung(antwort, fakten={"asset": "BTC"},
+                                            lagebild_id=1, prompt_stand="x")
+        # symbol/created_at/gate_passed setzt der Aufrufer - action und
+        # facts_json muss die Abbildung liefern.
+        pruefe(P, "die Abbildung liefert action und facts_json",
+               {"action", "facts_json"} <= set(felder),
+               f"Pflichtspalten der Tabelle: {sorted(pflicht)}")
+
+        # ECKPUNKT 4: der Faktensatz ist PFLICHT - er war bei 78 von 118
+        # Altsignalen leer.
+        pruefe(P, "der Faktensatz wird mitgeschrieben",
+               json.loads(felder["facts_json"]) == {"asset": "BTC"},
+               "ohne ihn ist eine Empfehlung im Nachhinein nicht pruefbar")
+        leer = SA.felder_aus_entscheidung(antwort, fakten={})
+        pruefe(P, "auch ein LEERER Faktensatz wird geschrieben, nicht weggelassen",
+               "facts_json" in leer,
+               "sonst faellt die Pflichtspalte still weg")
+
+        # Was bewusst leer bleibt, darf NICHT mit Ersatzwerten gefuellt werden.
+        pruefe(P, "keine erfundene Konfidenz, kein Regime",
+               not ({"confidence_pct", "regime"} & set(felder)),
+               "eine Zahl, die niemand gerechnet hat, ist schlimmer als eine "
+               "leere Spalte")
+
+        # Zonen nur, wenn es sie gibt.
+        ohne = SA.felder_aus_entscheidung(
+            RT.validiere({**antwort, "aktion": "NICHTS_TUN"}, "BTC", atr=4.0),
+            fakten={})
+        pruefe(P, "NICHTS_TUN traegt keine Kurszonen",
+               not any(k.startswith(("entry_", "stop_loss_", "take_profit_"))
+                       for k in ohne),
+               "ein Nullwert waere dort eine Aussage, die niemand getroffen hat")
+
+        # Die abgeleiteten Zonen landen in den RICHTIGEN Spalten.
+        pruefe(P, "Ziel landet in take_profit_eur_von/bis",
+               felder.get("take_profit_eur_von") == 111.0
+               and felder.get("take_profit_eur_bis") == 113.0,
+               "das Backward-Tracking liest genau diese Spalten")
+
+        # ECKPUNKT 5 in Betrieb
+        lid = SA.schreibe_lagebild(
+            con, datum="2026-01-01",
+            antwort={"lage": "x", "belege": ["a"], "klassen": [], "gleichlauf": "x"},
+            fakten=["f1"], prompt_stand="p", modell="m")
+        zeile = con.execute("SELECT fakten_json, gleichlauf FROM lagebilder "
+                            "WHERE id=?", (lid,)).fetchone()
+        pruefe(P, "das Lagebild speichert seinen eigenen Faktensatz",
+               json.loads(zeile[0]) == ["f1"],
+               "die Antwort ist ohne die gesehenen Fakten nicht erklaerbar")
+        con.execute("DELETE FROM lagebilder WHERE id=?", (lid,))
+        con.commit()
+
+        pruefe(P, "die Kette ist unterscheidbar",
+               felder.get("quelle_kette") == "rollen",
+               "ohne diese Spalte laesst sich keine Messung nach Ketten trennen")
+    finally:
+        con.close()
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
-          "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5}
+          "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
+          "6": paket_6}
 
 
 def main() -> int:
