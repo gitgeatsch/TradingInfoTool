@@ -396,7 +396,7 @@ python pruefe_pakete.py            # alle Pakete
 python pruefe_pakete.py --paket 1  # nur eines
 ```
 
-Stand: **125 Prüfungen** über Paket 0–9, alle bestanden. Kein LLM-Aufruf, kein
+Stand: **153 Prüfungen** über Paket 0–11, alle bestanden. Kein LLM-Aufruf, kein
 Netzwerk, keine Schreibzugriffe — sie darf jederzeit laufen.
 
 > **Regel für neue Pakete:** wer ein Paket baut, hängt seine Prüfungen dort an
@@ -570,3 +570,165 @@ Und ein dritter, den der Nutzer korrigiert hat: ich hatte „das Modell soll ein
 Wahrscheinlichkeit nennen" mit „das Modell soll urteilen" vermengt und deshalb
 eine Tabelle als **Ersatz** für ein Urteil vorgeschlagen, das gar nicht ersetzt
 werden muss. **Die Kalibrierung misst das Urteil — sie ersetzt es nicht.**
+
+---
+
+# 12. Die deterministische Schiene in der E-Mail (12.08.2026, abends)
+
+## 12.1 Warum es diesen Abschnitt gibt
+
+Die erste Fassung der neuen Mail war dem Nutzer zu dünn: *„Modell Urteil — Info
+ist mehr als schlank … Als erster Wurf ok, aber hier müssen wir nachschärfen."*
+
+Mein erster Vorschlag war falsch: **die Faktenlage für das LLM verbreitern**
+(MACD, RSI, Funding, Optionsmarkt zurück in den Prompt), damit die Belege Zahlen
+tragen. Der Nutzer hat das korrigiert:
+
+> *„ganz wichtig — nein, es sollen keine Zahlen in die Ablaufkette bzw. LLM —
+> aber als Info bzw. wo als Fakt vorhanden und sinnvoll ergänzen
+> (deterministische Schiene kombiniert)."*
+
+Das ist die bessere Lösung, und sie lässt **Kapitel 11.6 der
+Fakten-Entscheidungsmappe unangetastet**. Es gibt ab hier **zwei Schienen**:
+
+| | wer liest es | welche Regeln gelten |
+|---|---|---|
+| **Faktentext** | das Sprachmodell | R-T1…R-T9: relativ vor absolut, benanntes Fenster, keine rohen Zahlenreihen |
+| **Faktenblock** | der Nutzer | Lesbarkeit: **absolut zuerst**, Etikett statt Perzentil, eine Währung |
+
+**Das war der eigentliche Denkfehler der ersten Mail:** ich hatte die Sätze für
+das *Modell* in die Mail übernommen. Daher stand dort „3,9 Schwankungsbreiten
+höher, bei 62.000 EUR" statt „62.000 EUR, das sind 3,9 Schwankungsbreiten" — und
+daher stand dort ein Perzentil, wo ein Etikett hingehört. R-T1 und R-T2 wurden
+für ein Modell hergeleitet, das absolute Zahlen nicht einordnen kann. **Der
+Nutzer kann das.**
+
+## 12.2 Bestandsaufnahme — was vorliegt
+
+Erhoben aus den sechs `build_facts()` der bestehenden Pipelines. **40 Schlüssel,
+sehr ungleich verteilt:**
+
+| | Spot | Hebel | Aktien | Rohst. | ETF | Hedge |
+|---|---|---|---|---|---|---|
+| Schlüssel gesamt | 21 | 21 | 17 | 16 | 14 | 11 |
+
+**In allen sechs vorhanden — nur fünf:** `preis`, `regime`,
+`historische_erfolgsquote`, `historischer_makro_vergleich`, `disclaimers`.
+
+**Je Bereich eigen** — und das ist der Grund, warum der Block nicht einheitlich
+sein kann (Nutzer: *„sollte u.U. je Assetklasse bzw. Bereich unterschiedlich
+sein"*):
+
+| Bereich | was es NUR dort gibt |
+|---|---|
+| **Krypto Hebel** | `optionsmarkt` (Put-Skew), `kosten` (Funding), `hebel_kontext`, `ausstiegsregel`, `systemguete`, `trigger`, `position_aktuell` |
+| **Krypto (beide)** | `btc_relativwert`, `liquiditaetszonen`, `markt_kontext`, `antizyklisch`, `regime_profil`, `signal_stabilitaet` |
+| **Aktien** | `fundamentaldaten`, `analysten_trend_finnhub`, `insider_trading`, `short_interest_finra` |
+| **Rohstoffe** | `lagerbestaende`, `positionierung`, `makro_ueberlagerung` |
+| **Themen-ETF** | `sektor_rotation` |
+| **Hedge** | `portfolio_exposure`, `hedge_instrument` |
+
+## 12.3 Was fehlt
+
+**Die neue Rollen-Kette kennt elf Faktenfamilien** (Makro, Trend, Volatilität,
+Liquidität, Stimmung, Gleichlauf · Bestand, Struktur, Bewegung, Niveaus,
+Volumen). Die alte Kette trug 40 Schlüssel. **Der Unterschied ist kein Verlust,
+solange er auf der deterministischen Schiene wieder ankommt** — er darf nur
+nicht im Prompt landen.
+
+Offen und zu klären:
+
+1. **`retail_konsens` — gefunden, und der Fund bestätigt die Zwei-Schienen-
+   Trennung.** Er steckt in `antizyklisch`, gespeist aus
+   `api/derivatives.py::get_binance_long_short_ratio()` → `long_account_pct`.
+   Und in `agent/krypto/hebel_analyst.py:156` steht wörtlich, er *„gehört
+   NIEMALS in `top_gruende`"*. Es gibt also bereits eine Regel, die ihn aus der
+   Begründung des Modells heraushält — **genau der Fakt, der auf die
+   deterministische Schiene gehört und nirgends sonst hin.**
+
+   Grenzen, die mitgeschrieben gehören: **nur Binance**, **nur Krypto**, und es
+   ist der *Konten*-Anteil, nicht der positionsgewichtete. Für Aktien,
+   Rohstoffe und ETF gibt es kein Gegenstück — der Block kann also auch aus
+   diesem Grund nicht einheitlich sein.
+2. **Währungseinheit.** Die alte Hebel-Mail mischt EUR und USD ohne Kennzeichen
+   (siehe 12.5). Der Faktenblock braucht **eine** Währung.
+3. **Welche der 40 tragen überhaupt etwas?** Der Regler-Audit vom 04.08. fand
+   36 von 202 Schlüsseln wirkungslos. Ein Fakt in der Mail, den niemand nutzt,
+   ist Füllstoff — genau der Vorwurf, der die Risikofaktoren-Legende gekostet
+   hat.
+
+## 12.4 Die Meinung des Marktanalysten — ja, aber nur mit Zahl
+
+Nutzerfrage: *„u.U. kann man auch die Meinung des Marktanalysten hinzugeben,
+wenn diese sinnvolle Daten enthält."*
+
+Rolle A liefert dreierlei: **Lage in Prosa**, **Urteil je Assetklasse**, und je
+Urteil einen **Beleg mit Zahl**. Aufgenommen wird das Urteil **samt Beleg** —
+das ist eine begründete Einordnung. Die freie Prosa daneben nicht: sie stünde
+als zweite Meinung neben dem Urteil aus Abschnitt 3 und könnte ihm
+widersprechen. **R-T8 gilt auch für die Mail:** zwei Blöcke derselben Nachricht
+dürfen einander nicht widersprechen.
+
+## 12.5 Prüfbefund zur alten Mail — zwei Währungen, nicht gekennzeichnet
+
+Der Nutzer hat einen Screen der alten Hebel-Mail (05.08., HYPE LONG) zur
+Prüfung gegeben. Sie enthält einen Fehler, der jeden Zahlenvergleich darin
+entwertet:
+
+| steht dort | Einheit | in EUR |
+|---|---|---|
+| Abschnitt 1: `Entry: 49,74-49,91 EUR` | EUR | 49,8 |
+| LLM-Text: *„Fibonacci-Level 0.382 bei 57.28"* | **USD** | 49,9 |
+| LLM-Text: *„Buyside-Zone bei 65.61"* | **USD** | 57,2 |
+| Grafik: *„Buy-Side-Zone: 57.05 EUR"* | EUR | 57,05 |
+| Fazit: *„Entry 57.3, Stop 54.6, TP 65.6"* | **USD** | 49,9 / 47,6 / 57,2 |
+
+Dieselbe Zone heißt im Text **65,61** und in der Grafik **57,05 EUR**; das Fazit
+nennt einen Entry, den Abschnitt 1 nicht kennt. Der Faktor ist durchgehend
+1,147. Dazu zwei kleinere Widersprüche: **CRV 2,89** gegen **3,0** im Fazit, und
+**Stop-Abstand 4,7 %** gegen **4,9 %**.
+
+Derselbe Fehlertyp wie in `leite_zonen_ab` (ATR aus USD auf EUR-Niveaus, am
+12.08. gefunden). **Für die neue Mail ist das eine Pflichtprüfung.**
+
+## 12.6 Die Charts
+
+| | Urteil |
+|---|---|
+| **Signal-Stabilität** (Konfidenzverlauf) | **raus.** Er plottet genau die Größe, die wegen 77,5 % vorhergesagt gegen 33,3 % gemessen gestrichen wird. Das Verlaufsbild einer unkalibrierten Zahl ist doppelt irreführend |
+| **Liquiditätszonen** | **raus in dieser Form.** Er zeigt die Buy-Side-Zone, aber **nicht Einstieg, Stop und Ziel** — also gerade nicht das, was zu tun wäre. Dazu überlappende Beschriftungen und der Währungsfehler aus 12.5 |
+| **NEU: ein Chart** | 90 Tage Kurs mit **Einstiegszone, Stop, Ziel** als Bänder, plus Widerstand und Unterstützung. Damit wird Abschnitt 2 auf einen Blick prüfbar: liegt der Stop unter einer echten Marke, steht das Ziel vor der Mauer? |
+
+## 12.7 Sentiment — gemessen, und die Vermutung hält nicht
+
+Nutzerthese, ausdrücklich als unbewiesen gekennzeichnet: *„sehr schlechtes
+Sentiment ist oft für DCA oder Spot (längerfristig) gut, eher schlecht bei
+Hebel."* Gemessen an BTC über **3.087 Tage mit Kurs UND Stimmung** (2018-02 bis
+2026-07), `messe_sentiment_je_horizont.py`:
+
+**Kurz, 10 Tage** — Basis 26,0 % Trefferquote:
+
+| Stimmung | n | Treffer | ggü. Basis |
+|---|---|---|---|
+| extreme Angst | 673 | 19,7 % | **−6,3 pp** |
+| Angst | 869 | 23,1 % | −2,9 pp |
+| neutral | 451 | 21,9 % | −4,1 pp |
+| Gier | 740 | 29,7 % | +3,7 pp |
+| extreme Gier | 330 | **38,3 %** | **+12,3 pp** |
+
+Monoton — und **in die Gegenrichtung der These**. Auf 90 Tagen läuft es gleich
+herum, dort trägt die Messung aber wenig: in 3.087 Tagen stecken nur rund **33
+unabhängige** 90-Tage-Fenster, die Bänder sind entsprechend breit.
+
+**Warum es so herauskommt, und warum es kein Widerspruch zur Literatur ist:**
+Fear & Greed ist zur Hälfte aus dem Kurs abgeleitet (Volatilität 25 %,
+Marktdynamik/Volumen 25 %), dazu BTC-Dominanz 10 %. Er misst weniger eine
+Stimmung als einen **Trend**. Der Befund ist damit Time Series Momentum
+(Moskowitz/Ooi/Pedersen 2012), nicht Sentiment-Contrarian (Baker/Wurgler) — und
+die Contrarian-Literatur arbeitet mit **Umfragen** und mit **Aktien**, beides
+trifft hier nicht zu.
+
+**Folgen für die Mail:** „Angst" darf nicht als Gelegenheit dargestellt werden.
+Und der Index gehört als das benannt, was er ist — **Bitcoin**, nicht der
+Kryptomarkt. Im Faktenblock steht der Absolutwert mit Etikett
+(*„Fear & Greed für Bitcoin: 27 von 100 — Angst"*), nicht das Perzentil.
