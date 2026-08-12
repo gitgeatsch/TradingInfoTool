@@ -1924,3 +1924,226 @@ angeschlossen.** Dafür braucht es eine Aussage in `lagebeschreibung.py`, etwa:
 Formuliert nach R-T1 (Fenster genannt), R-T2 (kein Etikett), R-T3 (keine
 Bewertung), R-T5 (relativ). **Erst dieser Satz macht aus der Zahl einen Fakt —
 und erst dann ist es der dritte unabhängige Faktor.**
+
+---
+
+# 13. Abgleich Code ↔ Doku über die ganze Ablaufkette (12.08.2026)
+
+*Auf Nutzerverlangen: „gib mir je Abschnitt der Ablaufkette aus, was diese
+macht, warum, was bekommt der nächste Abschnitt — sowie wo entsteht die
+Detail-Information (eMail, GUI) für den Benutzer."*
+
+**Jede Aussage hier ist an der QUELLE geprüft, nicht aus einem Aufrufer
+abgeleitet.** Diese Regel entstand am selben Tag aus einem eigenen Fehler
+(13.0).
+
+## 13.0 Der Fehler, der die Regel erzwungen hat
+
+Ich hatte berichtet, die neue Rollen-Kette laufe auf `gemini-3.5-flash-lite`.
+Gelesen hatte ich das in **einem Prüfskript**.
+
+| Fundstelle | Modell |
+|---|---|
+| `api/gemini.py:35` — `DEFAULT_MODEL` | **`gemini-3.1-flash-lite`** ← die Produktion |
+| `pruefe_rollenkette.py:112` | `gemini-3.5-flash-lite` ← nur mein Skript |
+
+`3.5` steht in sechs Messskripten und **nirgends sonst**. Der Nutzer hat es
+bemerkt, nicht ich.
+
+> **Folge, die bleibt: alle Messungen der neuen Kette liefen auf 3.5, die
+> Produktion läuft auf 3.1.** Ein Befund überträgt sich nicht automatisch
+> zwischen Modellen. Jede Zahl aus den Läufen vom 10.–12.08. braucht eine
+> Wiederholung auf 3.1, bevor sie für die Produktion gilt.
+
+**Nutzervorgabe daraus:** *„immer an der Quelle prüfen sonst haben wir ein
+Problem."* Ein Skript ist eine **Verwendung**, keine Festlegung.
+
+## 13.1 Es gibt ZWEI Ketten — und nur eine ist verdrahtet
+
+| | Aufrufer in `scheduler/background.py`? |
+|---|---|
+| **ALT**: `szenario_fakten` + `krypto/analyst` + Pipelines | **ja** — das ist die Produktion |
+| **NEU**: `rolle_analyst` + `rolle_trader` + `rollen_eingabe` | **nein** — null Aufrufer außerhalb von `messe_*.py` und `pruefe_*.py` |
+
+Geprüft per Import-Suche über das ganze Repo. Alles, was in diesem Dokument
+über die neue Kette steht, beschreibt damit einen **Bauzustand, keinen
+Betrieb.**
+
+## 13.2 Abschnitt für Abschnitt
+
+### A — Datenbeschaffung
+- **Was:** Kurse (Kraken, ersatzweise Binance/Bybit), Makro, Derivate, On-Chain
+- **Warum:** ohne echte Tageskerzen rechnet jeder Fensterindikator falsch — der
+  Vier-Tage-Kerzen-Fehler stand Wochen unbemerkt in der Datenbank
+- **Weitergabe:** `price_history_ohlc`
+- **Nutzer sieht:** nichts
+
+### B — Faktenbildung: aus Zahlen werden Sätze
+- **Was:** `agent/marktlage.py` (12 Aussagen, marktweit) und
+  `agent/lagebeschreibung.py` (je Asset)
+- **Warum:** die Rollenanalyse vom 10.08. — das LLM wird wegen **Sprache**
+  gebraucht, nicht wegen Zahlen
+- **Weitergabe:** `rollen_eingabe.baue_lagebild_eingabe()` /
+  `baue_befund_eingabe()` — die einzigen Stellen, an denen Rolleneingaben
+  entstehen
+- **Nutzer sieht:** **nichts — und das ist eine Lücke.** Die Fakten, auf denen
+  jede Empfehlung steht, tauchen in keiner Mail auf. Der Nutzer sieht das
+  Urteil, nicht seine Grundlage
+
+### C — Rolle 1 · Lagebild *(1 Aufruf je Durchgang, nicht je Asset)*
+- **Was:** 12 Aussagen → 2–3 Sätze + 2–4 Belege
+- **Warum:** kennt kein Asset und kann deshalb nicht vom Einzelfall her
+  rationalisieren — der häufigste Weg, auf dem eine Marktbeurteilung zur
+  Nachbegründung einer schon gefallenen Entscheidung wird
+- **Weitergabe an Rolle 2:** `{"lage": <Prosa>, "gleichlauf": <gerechnet>}`
+- **Nutzer sieht:** heute nichts
+
+### D — Rolle 2+3 · Befund + Entscheidung *(1 Aufruf je Asset)*
+- **Was:** sechs Schritte — Belege sammeln → unabhängige Faktoren zählen →
+  handeln → begründen → Gegengrund → Falsifikator
+- **Warum zusammengelegt:** getrennt wären es zwei Aufrufe je Asset. Bei 44
+  Assets 88 statt 44
+- **Weitergabe:** `aktion`, `belege`, `unabhaengige_faktoren`, `begruendung`,
+  `was_dagegen`, `umgeworfen_durch`
+
+**Aufrufrechnung:** 1 + 44 = **45 Aufrufe je Durchgang.** Prompt-Umfang alt
+34.611 Zeichen, neu 705 + 1.871 = **2.576** (Faktor 13).
+
+### E — Gate / Risikomanagement
+- **Was:** RM-1…RM-7, Cash-Reserve, vier Positionsgrößen-Deckel, Vetos —
+  deterministisch
+- **Warum:** Risiko gehört nicht ins Modell (Kap. 11.3), extern belegt
+- **Status:** **in keiner Messung der neuen Kette dabei** (G1 offen)
+
+### F — Speichern
+- **Was:** Tabelle `signals`, **112 Spalten**
+- **Problem:** die Spalten gehören der **alten** Kette (13.3)
+
+### G — E-Mail: hier entsteht die Nutzer-Information
+Gebaut in `scheduler/background.py:2064` (`_notify_spot_signal`):
+
+```
+Aktion / Regime / Berechnet · Anbieter
+--- 1. MATHEMATISCH BERECHNET ---
+    Entry, Stop-Loss, Take-Profit, Mindestziel, Positionsgröße, Tranchen
+--- 2. LLM-BEWERTUNG (Konfidenz X %) ---
+    short_reasoning, Top-Gründe 1-5, Gegenargument, Key-Risks,
+    Haltekriterium, Forecast bull/base/bear
+--- 3. KONKLUSION (RISIKOFAKTOREN) ---
+    Legende, Fazit
+● Z.ai-Gegenprüfung der Begründung: <Urteil> - <Kurzbegründung>
+● Z.ai eigene Richtungseinschätzung: <Richtung> (stimmt überein/weicht ab)
++ Liquiditätszonen-PNG
+```
+
+### H — GUI
+`ui/app.py` Signale-Tab, Formatierer in `ui/formatting.py` — **eigene Kopien**,
+getrennt von den E-Mail-Formatierern in `background.py`. Doppelpflege ist
+gewollt (unterschiedlicher Textkontext), aber jede Änderung muss an **beiden**
+Stellen passieren.
+
+## 13.3 Die Naht, die beim Umschalten bricht
+
+**Die E-Mail ist auf die Ausgabe der ALTEN Kette gebaut.** Drei Felder passen
+nicht:
+
+| E-Mail erwartet | neue Kette liefert |
+|---|---|
+| `Konfidenz X %` — **fest in der Abschnittsüberschrift** | **nichts.** Konfidenz wurde bewusst gestrichen: vorhergesagt 77,5 % gegen tatsächlich 33,3 % |
+| `Regime` | nichts — über 1.022 Fälle konstant „baer" |
+| Top-Gründe 1–5, Risikofaktoren, Forecast bull/base/bear | `belege`, `was_dagegen`, `umgeworfen_durch` |
+
+Und umgekehrt: **`unabhaengige_faktoren` und `umgeworfen_durch` haben in den
+112 Spalten kein Zuhause.** Ausgerechnet `umgeworfen_durch` ist der
+Falsifikator, den V1 auswerten soll.
+
+> **Für den glatten Schnitt heißt das:** B1 („Rollen-Ebene einhängen") ist nicht
+> ein Aufruf, den man umlegt. Es sind drei Arbeiten: Feld-Abbildung neue Kette →
+> `signals`, E-Mail-Text auf die neuen Felder, GUI auf die neuen Felder.
+
+## 13.4 Z1 — der deterministische Prüfer, aufgeschlüsselt
+
+Vier Regeln. Alle prüfen **Zusagen, die wörtlich im Prompt stehen**.
+
+| Regel | prüft | fängt | Ebene |
+|---|---|---|---|
+| **Z-1 Zahlendeckung** | Jede Zahl der Ausgabe steht in der Eingabe (Toleranz 0,55 fürs Runden) | „Erfinde nichts hinzu" — der Beleg mit erfundenem Wert | je Fall |
+| **Z-2 Richtungstreue** | Behauptete Gleich-/Gegenläufigkeit gegen den gerechneten `gleichlauf` | „die Märkte im Gleichschritt", während BTC −39 % und SPY +20 % steht | je Fall |
+| **Z-3 Zuspitzung** | delegiert an `waechter_zuspitzung` | „extreme Schieflage" bei Perzentil 46 | je Fall |
+| **Z-4 Leerlauf** | wie viele **verschiedene** Ausgaben über einen ganzen Lauf | ein Lagebild, das immer dasselbe sagt (R-T6) | je Lauf |
+
+**Warum deterministisch und nicht als LLM:** ein prüfendes Modell hätte
+dieselbe Schwäche wie das geprüfte und keinen Festpunkt außerhalb; die Güte
+eines LLM ist bei uns vorab nicht messbar (Mistral −27,38 R über 38 Fälle ohne
+Vorwarnung); und es kostet je Anker einen Aufruf aus der knappsten Ressource.
+
+**Was Z1 NICHT kann, klar gesagt:** es prüft die **Treue zur Eingabe**, nicht
+die **Güte des Urteils**. Ob „uneinheitliche Märkte" ein guter Grund ist, nichts
+zu tun, sagt es nicht — das entscheidet eine Wirkungsmessung, kein Wächter.
+
+## 13.5 Z.ai — was überlebt und was fällt
+
+**Die vom Nutzer gewünschte Form ist bereits gebaut** — nicht als Idee, als
+laufender Code: `agent/krypto/gegenpruefung.py`, aufgerufen in
+`agent/krypto/pipeline.py:1080`, fünf DB-Spalten, E-Mail-Formatierer,
+GUI-Formatierer.
+
+### Die Architektur ist richtig und überlebt
+
+1. **Sie prüft nicht die Entscheidung, sondern den Widerspruch.** Nicht „war
+   KAUFEN richtig?" — das wäre eine zweite, primitivere Bewertung, die die
+   Primäranalyse unterläuft — sondern: *widerspricht die Begründung den harten
+   Zahlen?* Freitext gegen Zahlen ist die eine Sache, die ein LLM kann und eine
+   Python-Regel nicht.
+2. **Der Richtungs-Abgleich ist anti-anker gebaut.** `baue_objektive_fakten()`
+   lässt `action`, `richtung` und `confidence_pct` bewusst weg. Die
+   Übereinstimmung wird **in Python** verglichen, nicht vom Modell beurteilt.
+3. **Wirkungsfrei by construction**, nicht per Konvention: der Aufruf läuft im
+   `threading.Thread(daemon=True)` **nach** `insert_signal`. Er *kann* das
+   Signal nicht ändern.
+
+### Der Faktensatz fällt — Nutzereinwand, an der Quelle bestätigt
+
+*„ich denke die alte ZAI prüfung ist auch auf den alten und falschen prompts
+gelaufen."* Geprüft in `baue_objektive_fakten()`. Z.ai bekommt fünf Dinge:
+
+| Fakt | Zustand nach unseren eigenen Messungen |
+|---|---|
+| `rsi` | in Ordnung |
+| `funding_rate_vorzeichen` | in Ordnung |
+| **`regime`** | **über 1.022 Fälle konstant „baer"** — ein Urteil gegen ein Feld, das nie variierte (R-T6) |
+| **`trend`** | ein **absolutes Etikett** (`EMA-Ordnung.detail`) — der R-T2-Defekt, der den Deadloop gebaut hat |
+| **`technische_konfluenz`** | „8 bullisch / 3 bärisch von 11" — Indikatorzählung **aus derselben Kursreihe**: *illusion of confirmation* |
+
+In den Konsistenz-Check geht zusätzlich `confidence_pct` — 77,5 % vorhergesagt
+gegen 33,3 % tatsächlich.
+
+**Drei von fünf nutzbaren Fakten sind defekt.** Damit fällt auch die
+Kalibrierung: der Befund „bei eindeutigen Fakten stabil, bei grenzwertigen
+5/6 SHORT" beschreibt Z.ais Verhalten **auf genau diesem Faktensatz** und ist
+nicht übertragbar.
+
+> **Nicht messbar auf diesem Rechner:** in der Desktop-Datenbank stehen **0**
+> Signale mit `zai_gegenpruefung_urteil`. Die Verteilung liegt auf dem Notebook.
+
+### Bilanz
+
+| überlebt | fällt |
+|---|---|
+| asynchron nach dem Insert · Anti-Anker · Vergleich in Python · zwei getrennte Aufrufe · E-Mail- und GUI-Weg · Prompt-Länge (1.340 Zeichen, richtige Größenordnung) | der Faktensatz (3 von 5 defekt) · der Prompt (fragt nach Ziel/Stop-Wahrscheinlichkeiten, die die neue Kette nicht produziert) · die Kalibrierungsmessung |
+
+### Was zu bauen ist
+
+- `pruefe_konsistenz()` gegen `begruendung` statt `short_reasoning`, und gegen
+  die **neuen** Fakten (Prosa aus `marktlage.py` / `lagebeschreibung.py`)
+- `leite_eigene_richtung()` auf die fünf Aktionen (KAUFEN, NACHKAUFEN,
+  REDUZIEREN, VERKAUFEN, NICHTS_TUN) statt LONG/SHORT/NEUTRAL — weiter **ohne**
+  `aktion` in der Eingabe
+- Der gemessene Vorbehalt bleibt gültig und muss neu gemessen werden: bei
+  grenzwertigen Fakten schwankt Z.ai. Solange die Prüfung **beobachtend**
+  bleibt, ist das tragbar; bei Wirkung wäre es untragbar
+
+**Z1 und Z.ai ersetzen einander nicht.** Z1 fängt **Erfindung** (kostenlos,
+kann sich nicht irren), Z.ai fängt **Denkfehler** (ein Aufruf, kann sich irren).
+Beide gehören in die Mail — Z1 als stille Fußzeile, Z.ai als die zwei Zeilen,
+die der Nutzer heute schon kennt.
