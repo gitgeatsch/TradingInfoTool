@@ -1,0 +1,258 @@
+# -*- coding: utf-8 -*-
+"""Der deterministische Faktenblock fuer die E-Mail (Paket 12, 12.08.2026).
+
+DIE ZWEITE SCHIENE. Nutzer am 12.08.: *"ganz wichtig - nein, es sollen keine
+Zahlen in die Ablaufkette bzw. LLM - aber als Info bzw. wo als Fakt vorhanden
+und sinnvoll ergaenzen (deterministische Schiene kombiniert)."*
+
+    Faktentext  -> das Modell  -> R-T1..R-T9: relativ vor absolut
+    Faktenblock -> der Nutzer  -> ABSOLUT ZUERST, Etikett statt Perzentil
+
+Der Denkfehler der ersten Mail war, die Saetze fuer das MODELL zu uebernehmen.
+Daher stand dort "3,9 Schwankungsbreiten hoeher, bei 62.000 EUR" statt
+umgekehrt. R-T1/R-T2 wurden fuer ein Modell hergeleitet, das absolute Zahlen
+nicht einordnen kann - der Nutzer kann das.
+
+JEDE ZEILE SAGT DREI DINGE. Nutzer, 12.08.: *"so gestalten, dass es fuer mich
+lesbar ist und klar, was die Information tatsaechlich besagt (kurze
+Beschreibung, mit was ist gut und was ist schlecht)."* Also:
+
+    Schwankung   3,0 % je Tag                             GUENSTIG
+      Wie stark der Kurs taeglich schwingt, gemessen an seinem eigenen Jahr.
+      Ruhig ist besser - ueber alle Einstiege gemessen: 29,5 % Treffer am
+      guten Ende gegen 17,8 % am anderen, Schnitt 23,5 %.
+
+Der Wirkungssatz spricht ausdruecklich ueber ALLE Einstiege, nicht ueber
+diesen. Die erste Fassung lautete "ruhige Einstiege erreichten ihr Ziel in
+29,5 % der Faelle" - das liest sich, als sei es die Aussicht DIESES Signals.
+Sie ist es nicht: es ist die gemessene Verteilung, in die dieses Signal faellt.
+
+Der Wert allein ist nicht benutzbar - "Perzentil 74" war genau der Einwand.
+Die Wirkung allein auch nicht. Erst beides zusammen ist eine Information.
+
+DER KERN SIND DREI FAMILIEN, NICHT ZEHN (Umbauplan 12.8, gemessen an 37
+Symbolen und 20.494 Ankern gegen die Geometrie, die die App vorschlaegt).
+
+MOMENTUM ERSCHEINT GENAU EINMAL. Rueckgang seit 60-Tage-Hoch, Abstand zur
+50-Tage-Linie, Trend 20 Tage und RSI 14 haengen mit 0,59 bis 0,89 zusammen -
+EIN Faktor, nicht vier. Wer sie einzeln auffuehrt, laesst einen Aufbau viermal
+so gut belegt aussehen, wie er ist. Fear & Greed gehoert in dieselbe Familie
+(zur Haelfte aus dem Kurs abgeleitet), nicht daneben.
+
+ZUSATZINFO - DER MASSSTAB. Nutzer: *"kein Beiwerk ohne Sinn."* Sinnvoll ist,
+was eine Dimension aufmacht, die die drei Familien NICHT abdecken. Ein weiteres
+kursabgeleitetes Mass tut das nicht. Vier Kategorien bestehen: KOSTEN,
+POSITIONIERUNG, FUNDAMENTAL, VORAUSSCHAUEND.
+
+WAS FEHLT, WIRD BENANNT. Ein Kernfakt ohne Wert erscheint als Luecke, nicht als
+Leerzeile - sonst sieht ein Signal mit zwei Fakten aus wie eines mit dreien.
+"""
+from __future__ import annotations
+
+BASIS_TREFFER = 23.5        # ueber alle 20.494 Anker (Umbauplan 12.8)
+
+# Die drei gemessenen Familien. `hoch_ist_gut` sagt, an welchem Ende der gute
+# Fall liegt; `gut`/`schlecht` sind die gemessenen Trefferquoten dort.
+KERN = {
+    "schwankung": {
+        "titel": "Schwankung",
+        "hoch_ist_gut": False, "gut": 29.5, "schlecht": 17.8,
+        "was": "Wie stark der Kurs taeglich schwingt, gemessen an seinem "
+               "eigenen Jahr.",
+        "richtung": "Ruhig ist besser",
+    },
+    "momentum": {
+        "titel": "Kurs",
+        "hoch_ist_gut": True, "gut": 28.0, "schlecht": 18.9,
+        "was": "Wie weit der Kurs unter seinem Hoch der letzten drei Monate "
+               "steht.",
+        "richtung": "Nahe am Hoch ist besser",
+    },
+    "volumen": {
+        "titel": "Volumen",
+        "hoch_ist_gut": True, "gut": 27.1, "schlecht": 22.5,
+        "was": "Wie viel heute gehandelt wird, verglichen mit den letzten "
+               "20 Tagen.",
+        "richtung": "Viel Umsatz ist besser",
+    },
+}
+
+# Urteil aus dem Fuenftel. Bewusst drei Stufen statt fuenf - "leicht
+# unterdurchschnittlich" ist keine Entscheidungshilfe.
+_URTEIL = ("GUENSTIG", "MITTEL", "UNGUENSTIG")
+
+KATEGORIEN = ("Kosten", "Positionierung", "Fundamental", "Vorausschauend")
+
+# Welche Zusatzinfo in welchem Bereich vorkommen kann - aus der Bestandsaufnahme
+# der sechs build_facts() (Umbauplan 12.2). Bewusst je Bereich verschieden,
+# weil die Datenlage es ist.
+ZUSATZ_JE_BEREICH = {
+    "krypto_hebel": ("funding_eur_tag", "liquidation_eur", "put_skew",
+                     "retail_long_pct", "btc_relativwert_pct"),
+    "krypto_spot": ("btc_relativwert_pct",),
+    "aktien": ("kgv", "insider_saldo", "short_interest_pct", "analysten_trend"),
+    "rohstoffe": ("lagerbestand_trend", "cot_netto_pct"),
+    "themen_etf": (),
+    "hedge": ("portfolio_exposure_eur",),
+}
+
+# Je Zusatzinfo: Kategorie, der Satz mit dem Wert, und WAS SIE BESAGT samt
+# Richtung. Ohne den zweiten Teil ist es Beiwerk - genau das, was nicht sein
+# soll.
+_ZUSATZ = {
+    "funding_eur_tag": ("Kosten",
+        lambda w: f"Finanzierung {_de(w, 2)} EUR je Tag, bei zehn Tagen "
+                  f"{_de(10 * w, 2)} EUR",
+        "Was der Hebel taeglich kostet. Weniger ist besser - bei langer "
+        "Haltedauer frisst diese Gebuehr den Vorteil des Hebels auf."),
+    "liquidation_eur": ("Kosten",
+        lambda w: f"Zwangsliquidation bei etwa {_de(w)} EUR",
+        "Ab hier schliesst die Boerse die Position selbst. Weit weg ist "
+        "besser - liegt sie naeher als der Stop, greift sie zuerst."),
+    "put_skew": ("Vorausschauend",
+        lambda w: f"Absicherung nach unten ist {_de(abs(w), 1)} Punkte "
+                  f"{'teurer' if w < 0 else 'billiger'} als nach oben",
+        "Was andere fuer Absicherung zahlen - der einzige Fakt hier, der "
+        "nicht aus der Vergangenheit stammt. Teurer heisst: der Markt "
+        "erwartet eher Rueckschlaege."),
+    "retail_long_pct": ("Positionierung",
+        lambda w: f"{_de(w)} % der Privatkonten stehen long (Binance)",
+        "Wie die Masse positioniert ist. Extremwerte ueber 75 % gelten als "
+        "Warnsignal - wer schon gekauft hat, kann nicht mehr kaufen."),
+    "btc_relativwert_pct": ("Positionierung",
+        lambda w: f"Gegen Bitcoin {_de(w, 1)} % "
+                  f"{'staerker' if w >= 0 else 'schwaecher'} in 30 Tagen",
+        "Trennt 'dieser Wert steigt' von 'der ganze Markt steigt'. "
+        "ACHTUNG: haengt teilweise mit der Kursentwicklung oben zusammen, "
+        "ist also kein voll eigenstaendiger Punkt."),
+    "kgv": ("Fundamental",
+        lambda w: f"Kurs-Gewinn-Verhaeltnis {_de(w, 1)}",
+        "Wie viele Jahresgewinne im Kurs stecken. Niedriger ist guenstiger "
+        "bewertet - sagt nichts ueber das Timing."),
+    "insider_saldo": ("Positionierung",
+        lambda w: f"Insider haben zuletzt netto "
+                  f"{'gekauft' if w > 0 else 'verkauft'} "
+                  f"({_de(abs(w))} Meldungen)",
+        "Was die Fuehrungskraefte mit eigenem Geld tun. Kaeufe gelten als "
+        "das aussagekraeftigere Signal - verkauft wird aus vielen Gruenden."),
+    "short_interest_pct": ("Positionierung",
+        lambda w: f"{_de(w, 1)} % der Aktien sind leerverkauft",
+        "Wie viele auf fallende Kurse setzen. Hohe Werte schneiden in beide "
+        "Richtungen: mehr Skepsis, aber auch Rueckkaufdruck bei Anstiegen."),
+    "analysten_trend": ("Positionierung",
+        lambda w: f"Analystenurteile: {w}",
+        "Wohin die Einschaetzungen zuletzt gewandert sind. Der schwaechste "
+        "der vier Punkte hier - als Hintergrund brauchbar, als Grund nicht."),
+    "lagerbestand_trend": ("Fundamental",
+        lambda w: f"Lagerbestaende: {w}",
+        "Angebot und Nachfrage direkt. Fallende Bestaende sprechen fuer "
+        "steigende Preise."),
+    "cot_netto_pct": ("Positionierung",
+        lambda w: f"Terminmarkt: Grossanleger netto {_de(w, 1)} % long",
+        "Wie die professionelle Seite positioniert ist. Extreme in beide "
+        "Richtungen gelten als Wendehinweis."),
+    "portfolio_exposure_eur": ("Positionierung",
+        lambda w: f"Abzusicherndes Volumen {_de(w)} EUR",
+        "Keine Meinung, sondern die Rechengrundlage der Absicherung."),
+}
+
+
+def _de(wert: float, stellen: int = 0) -> str:
+    """Deutsche Schreibweise - Punkt als Tausender, Komma als Dezimaltrenner."""
+    return f"{float(wert):,.{stellen}f}".translate(str.maketrans(",.", ".,"))
+
+
+def _urteil(perzentil: float, hoch_ist_gut: bool) -> str:
+    """Fuenftel -> eines von drei Woertern.
+
+    Das unterste und das oberste Fuenftel sind die gemessenen Enden; alles
+    dazwischen ist MITTEL. Feiner zu unterscheiden hiesse, Genauigkeit zu
+    behaupten, die die Messung nicht hergibt."""
+    p = min(1.0, max(0.0, float(perzentil)))
+    gut_ende = p >= 0.8 if hoch_ist_gut else p <= 0.2
+    schlecht_ende = p <= 0.2 if hoch_ist_gut else p >= 0.8
+    return _URTEIL[0] if gut_ende else (_URTEIL[2] if schlecht_ende else _URTEIL[1])
+
+
+def _block(schluessel: str, wert_text: str, perzentil: float) -> list[str]:
+    k = KERN[schluessel]
+    urteil = _urteil(perzentil, k["hoch_ist_gut"])
+    return [f"{k['titel']:<12} {wert_text:<40} {urteil}",
+            f"  {k['was']}",
+            f"  {k['richtung']} - ueber alle Einstiege gemessen: "
+            f"{_de(k['gut'], 1)} % Treffer am guten Ende gegen "
+            f"{_de(k['schlecht'], 1)} % am anderen, Schnitt {_de(BASIS_TREFFER, 1)} %."]
+
+
+def kern(*, atr_relativ: float | None = None,
+         schwankung_perzentil: float | None = None,
+         rueckgang_60t: float | None = None,
+         momentum_perzentil: float | None = None,
+         volumen_relativ: float | None = None,
+         volumen_perzentil: float | None = None) -> tuple[list[str], list[str]]:
+    """Die drei gemessenen Familien. Gibt (Zeilen, Luecken) zurueck.
+
+    Jede Familie braucht ZWEI Angaben: den Wert zum Anzeigen und das Perzentil
+    zum Einordnen. Das Perzentil erscheint NICHT im Text - es bestimmt nur das
+    Urteilswort. Genau so war die Messung aufgebaut (Fuenftel), und genau so
+    ist der Nutzereinwand beantwortet: die Zahl, die er lesen kann, steht da;
+    die, die er nicht lesen kann, wirkt im Hintergrund."""
+    zeilen, luecken = [], []
+
+    if atr_relativ is None or schwankung_perzentil is None:
+        luecken.append("Schwankung")
+    else:
+        zeilen += _block("schwankung", f"{_de(100 * atr_relativ, 1)} % je Tag",
+                         schwankung_perzentil)
+
+    if rueckgang_60t is None or momentum_perzentil is None:
+        luecken.append("Kursentwicklung")
+    else:
+        zeilen += [""] if zeilen else []
+        zeilen += _block(
+            "momentum",
+            "auf dem Hoch der letzten 60 Tage" if rueckgang_60t >= -0.001 else
+            f"{_de(abs(100 * rueckgang_60t), 1)} % unter dem 60-Tage-Hoch",
+            momentum_perzentil)
+
+    if volumen_relativ is None or volumen_perzentil is None:
+        luecken.append("Volumen")
+    else:
+        zeilen += [""] if zeilen else []
+        zeilen += _block("volumen",
+                         f"das {_de(volumen_relativ, 1)}-fache des Mittels",
+                         volumen_perzentil)
+    return zeilen, luecken
+
+
+def zusatz(bereich: str, werte: dict) -> list[str]:
+    """Die optionalen Fakten des Bereichs - nur die, fuer die ein Wert vorliegt.
+
+    NICHTS WIRD ERFUNDEN und nichts wird als Luecke gemeldet: Zusatzinfo ist
+    freiwillig, ihr Fehlen ist keine Aussage. Anders als beim Kern."""
+    aus = []
+    for schluessel in ZUSATZ_JE_BEREICH.get(bereich, ()):
+        w = werte.get(schluessel)
+        if w is None or (isinstance(w, str) and not w.strip()):
+            continue
+        kategorie, bau, bedeutung = _ZUSATZ[schluessel]
+        aus += [f"[{kategorie}] {bau(w)}", f"  {bedeutung}"]
+    return aus
+
+
+def baue(bereich: str, *, kern_werte: dict, zusatz_werte: dict | None = None
+         ) -> list[str]:
+    """Der ganze Block. Kern zuerst, Zusatzinfo als solche gekennzeichnet."""
+    zeilen, luecken = kern(**kern_werte)
+    if luecken:
+        # EINE LUECKE IST EINE AUSSAGE. Ein Signal mit zwei Fakten darf nicht
+        # aussehen wie eines mit dreien.
+        zeilen += ["", f"Keine Angabe zu: {', '.join(luecken)}. "
+                       + ("Ein Punkt weniger steht" if len(luecken) == 1
+                          else f"{len(luecken)} Punkte weniger stehen")
+                       + " damit hinter dieser Empfehlung."]
+    z = zusatz(bereich, zusatz_werte or {})
+    if z:
+        zeilen += ["", "ZUSATZINFO - nicht gemessen, zur eigenen Einordnung:", ""]
+        zeilen += z
+    return zeilen

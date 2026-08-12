@@ -1078,10 +1078,117 @@ def paket_11() -> None:
            betreff == "TradingInfoTool: BTC - KAUFEN (Hebel)", betreff)
 
 
+
+def paket_12() -> None:
+    """Der deterministische Faktenblock - Kern, Zusatzinfo, Lesbarkeit."""
+    P = "12"
+    from agent import faktenblock as FB
+
+    voll = dict(atr_relativ=0.0302, schwankung_perzentil=0.18,
+                rueckgang_60t=-0.012, momentum_perzentil=0.86,
+                volumen_relativ=1.4, volumen_perzentil=0.72)
+    text = "\n".join(FB.baue("krypto_hebel", kern_werte=voll,
+                             zusatz_werte=dict(funding_eur_tag=0.29,
+                                               liquidation_eur=25500,
+                                               put_skew=-9.99,
+                                               retail_long_pct=55)))
+
+    # DIE KERNREGEL AUS 12.8: Momentum erscheint GENAU EINMAL. Die vier Masse
+    # haengen mit 0,59 bis 0,89 zusammen - wer sie einzeln auffuehrt, laesst
+    # einen Aufbau viermal so gut belegt aussehen, wie er ist.
+    pruefe(P, "der Kern hat genau drei Familien",
+           len(FB.KERN) == 3 and set(FB.KERN) == {"schwankung", "momentum", "volumen"})
+    for wort in ("RSI", "50-Tage-Linie", "Trend 20", "Fear", "Greed"):
+        pruefe(P, f"'{wort}' erscheint NICHT als eigener Faktor",
+               wort not in text,
+               "vier Momentum-Masse sind EIN Faktor (Rangkorrelation 0,59-0,89)")
+
+    # DER NUTZEREINWAND: "74. Perzentil ist fuer mich nicht lesbar."
+    pruefe(P, "im Text steht kein Perzentil", "erzentil" not in text,
+           "das Perzentil bestimmt nur das Urteilswort, es erscheint nicht")
+    pruefe(P, "jede Kernzeile traegt ein Urteilswort",
+           sum(text.count(u) for u in FB._URTEIL) >= 3)
+
+    # ABSOLUT ZUERST (Umbauplan 12.1) - der Wert vor der Einordnung.
+    kopf = [z for z in text.split("\n") if z.startswith("Schwankung")][0]
+    pruefe(P, "der Absolutwert steht vor dem Urteil",
+           kopf.index("3,0 %") < kopf.index("GUENSTIG"),
+           "R-T1/R-T2 gelten fuer das MODELL, nicht fuer den Nutzer")
+
+    # "KEIN BEIWERK OHNE SINN": jede Zusatzinfo erklaert sich.
+    zus = FB.zusatz("krypto_hebel", dict(funding_eur_tag=0.29, put_skew=-9.99))
+    pruefe(P, "jede Zusatzinfo hat eine Bedeutungszeile",
+           len(zus) == 4 and all(zus[i + 1].startswith("  ") for i in (0, 2)),
+           "Nutzer: 'kein Beiwerk ohne Sinn'")
+    pruefe(P, "jede Zusatzinfo nennt ihre Kategorie",
+           all(any(z.startswith(f"[{k}]") for k in FB.KATEGORIEN)
+               for z in zus[::2]))
+    pruefe(P, "es gibt genau vier Kategorien",
+           set(k for k, _, _ in FB._ZUSATZ.values()) <= set(FB.KATEGORIEN)
+           and len(FB.KATEGORIEN) == 4,
+           "Kosten, Positionierung, Fundamental, Vorausschauend - alles "
+           "andere waere ein weiterer Momentum-Vertreter")
+
+    # JE BEREICH VERSCHIEDEN - das war der Grund fuer die Bestandsaufnahme.
+    pruefe(P, "die Zusatzinfo unterscheidet sich je Bereich",
+           FB.ZUSATZ_JE_BEREICH["krypto_hebel"] != FB.ZUSATZ_JE_BEREICH["aktien"]
+           and len(set(FB.ZUSATZ_JE_BEREICH)) == 6,
+           "nur fuenf von 40 Faktenschluesseln kommen in allen sechs "
+           "Pipelines vor (Umbauplan 12.2)")
+    pruefe(P, "ein unbekannter Schluessel erzeugt nichts",
+           FB.zusatz("krypto_hebel", {"gibt_es_nicht": 5}) == []
+           and FB.zusatz("mondbasis", {"kgv": 12}) == [])
+
+    # LUECKEN SIND EINE AUSSAGE, fehlende Zusatzinfo ist keine.
+    ohne = "\n".join(FB.baue("aktien", kern_werte=dict(
+        atr_relativ=0.014, schwankung_perzentil=0.55)))
+    pruefe(P, "fehlende Kernfakten werden benannt",
+           "Keine Angabe zu" in ohne and "Kursentwicklung" in ohne
+           and "Volumen" in ohne,
+           "sonst sieht ein Signal mit einem Fakt aus wie eines mit dreien")
+    pruefe(P, "und im Singular richtig formuliert",
+           "Ein Punkt weniger steht" in "\n".join(FB.baue(
+               "aktien", kern_werte=dict(atr_relativ=0.014,
+                                         schwankung_perzentil=0.55,
+                                         rueckgang_60t=-0.02,
+                                         momentum_perzentil=0.5))))
+    pruefe(P, "fehlende Zusatzinfo wird NICHT gemeldet",
+           "Keine Angabe" not in "\n".join(FB.baue("krypto_hebel",
+                                                   kern_werte=voll)),
+           "Zusatzinfo ist freiwillig - ihr Fehlen ist keine Aussage")
+
+    # DAS URTEIL FOLGT DER GEMESSENEN RICHTUNG, nicht dem Bauchgefuehl.
+    pruefe(P, "niedrige Schwankung ist GUENSTIG, hohe UNGUENSTIG",
+           FB._urteil(0.1, False) == "GUENSTIG"
+           and FB._urteil(0.9, False) == "UNGUENSTIG",
+           "gemessen 29,5 gegen 17,8 % (Umbauplan 12.8)")
+    pruefe(P, "nahe am Hoch ist GUENSTIG, weit darunter UNGUENSTIG",
+           FB._urteil(0.9, True) == "GUENSTIG"
+           and FB._urteil(0.1, True) == "UNGUENSTIG")
+    pruefe(P, "die Mitte ist MITTEL, nicht gerundet",
+           FB._urteil(0.5, True) == "MITTEL" and FB._urteil(0.5, False) == "MITTEL",
+           "feiner zu unterscheiden hiesse, Genauigkeit zu behaupten, die die "
+           "Messung nicht hergibt")
+
+    # DEUTSCHE ZAHLEN, EINE WAEHRUNG - der Befund aus der alten Mail (12.5).
+    pruefe(P, "Zahlen stehen in deutscher Schreibweise",
+           FB._de(25500) == "25.500" and FB._de(0.29, 2) == "0,29")
+    pruefe(P, "im Block steht keine zweite Waehrung",
+           "USD" not in text,
+           "die alte Hebel-Mail mischte EUR und USD ohne Kennzeichen")
+
+    # KOPF UND CODE DUERFEN EINANDER NICHT WIDERSPRECHEN (wie in Paket 10).
+    pruefe(P, "der Modulkopf zeigt den Wortlaut, den der Code erzeugt",
+           "ueber alle Einstiege gemessen" in (FB.__doc__ or "")
+           and "ueber alle Einstiege gemessen" in text,
+           "die erste Fassung las sich, als sei die Quote die Aussicht DIESES "
+           "Signals - sie ist die Verteilung, in die es faellt")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11}
+          "10": paket_10, "11": paket_11, "12": paket_12}
 
 
 def main() -> int:
