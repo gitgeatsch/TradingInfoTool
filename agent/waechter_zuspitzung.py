@@ -66,7 +66,22 @@ WEICH = (
 # aussergewoehnlich. Innerhalb ist sie es nicht.
 BAND_UNAUFFAELLIG = (15, 85)
 
-_BEZUG = re.compile(r"in\s+(\d{1,3})\s*%\s+der\s+Faelle\s+niedriger", re.I)
+# ZWEI SCHREIBWEISEN, weil das Lagebild seine Sprache gewechselt hat (12.08.).
+#
+#   1  Die Marktbreite sagte "in 66 % der Faelle war dieser Anteil niedriger".
+#      Sie wird mit L1 gestrichen - das Muster bleibt, damit aeltere Laeufe und
+#      gespeicherte Faelle weiter pruefbar sind.
+#   2  `agent/marktlage.py` sagt "im 97. Perzentil der letzten 250 Handelstage".
+#
+# WARUM DAS EINE PFLICHTAENDERUNG WAR und keine Kosmetik: ohne Muster 2 haette
+# `deckung()` nach der Streichung LEER zurueckgegeben, und leer heisst hier
+# "kein Massstab" - also gilt jedes Gradwort als unbelegt. Das scheitert sicher,
+# aber falsch: bei einem echten 97. Perzentil DARF das Modell deutlich werden.
+# Ein Waechter, der auch das Wahre verbietet, wird umgangen statt befolgt.
+_BEZUG = re.compile(
+    r"in\s+(\d{1,3})\s*%\s+der\s+Faelle\s+niedriger"     # alte Marktbreite
+    r"|im\s+(\d{1,3})\.\s*perzentil",                    # marktlage.py
+    re.I)
 
 
 def _normal(text: str) -> str:
@@ -85,7 +100,10 @@ def finde_grade(text: str) -> tuple[list[str], list[str]]:
 def deckung(eingabe) -> list[int]:
     """Die Perzentile, die die Eingabe nennt. Leer heisst: kein Massstab."""
     text = " ".join(eingabe) if isinstance(eingabe, (list, tuple)) else str(eingabe)
-    return [int(m) for m in _BEZUG.findall(_normal(text))]
+    # `findall` liefert je Treffer ein Tupel mit einer gefuellten Gruppe -
+    # welche, haengt von der Schreibweise ab.
+    return [int(g) for treffer in _BEZUG.findall(_normal(text))
+            for g in (treffer if isinstance(treffer, tuple) else (treffer,)) if g]
 
 
 def pruefe(ausgabe: str, eingabe) -> dict:

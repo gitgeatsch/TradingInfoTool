@@ -29,15 +29,33 @@ import numpy as np
 
 
 def baue_lagebild_eingabe(reihen: dict, datum: str) -> dict:
-    """Eingabe fuer das Lagebild. MIT historischem Bezug, immer.
+    """Eingabe fuer das Lagebild - seit 12.08. aus `agent/marktlage.py`.
 
-    `mit_bezug=True` ist hier nicht optional: der Satz "in X % der Faelle war
-    dieser Anteil niedriger" ist die einzige Kalibrierung, die das Modell vor
-    einer Zuspitzung schuetzt. Zwei Messungen liefen ohne ihn, und in genau
-    einer davon wurde aus einem knapp durchschnittlichen Wert eine "extreme
-    Schieflage"."""
-    from agent.marktbreite import beschreibe_marktbreite
-    return {"marktlage": beschreibe_marktbreite(reihen, datum, mit_bezug=True)}
+    DIE MARKTBREITE IST HIER RAUS (L1). Sie stand hier bis heute, und der
+    Vorgaengertext an dieser Stelle begruendete sorgfaeltig, warum ihr
+    historischer Bezug unverzichtbar sei - "die einzige Kalibrierung, die das
+    Modell vor einer Zuspitzung schuetzt". Der Satz stimmte, solange es nichts
+    anderes gab. Gemessen hat die Marktbreite nicht getragen:
+
+        SUBJEKT FALSCH  "Von 44 beobachteten Coins" - 11 davon sind keine
+                        Coins (PLTR, VST, CAT, vier ETF, drei Rohstoff-
+                        Referenzen, SPY). Ein Viertel des Korbs
+        EIN KORB FUER   dieselbe Zahl ging an jede Assetklasse; eine
+        ALLE            Aktienentscheidung sah eine "Coin"-Breite
+        BEZUG WANDERT   der historische Vergleich misst gegen einen Korb, den
+                        es nie gab: vor 250 Handelstagen 34 Reihen, heute 44 -
+                        23 % kamen seither dazu. Die Kalibrierung stand auf
+                        einer Bezugsgroesse, die sich mitbewegt
+        RICHTUNG INVERS kein Zeitpunkt mit breitem Markt war je ein guter
+                        Einstieg (Arbeitsstand 7.4)
+
+    DIE KALIBRIERUNG GEHT NICHT VERLOREN, sie wandert: L2 und L4 liefern
+    Perzentile der eigenen Historie, L3 nennt Zahlen mit benanntem Fenster.
+    `waechter_zuspitzung` musste dafuer die neue Schreibweise lernen - ohne das
+    haette er nach der Streichung jeden Grad als unbelegt gemeldet, auch den
+    wahren."""
+    from agent.marktlage import beschreibe_marktlage
+    return {"marktlage": beschreibe_marktlage(reihen, datum)}
 
 
 def baue_befund_eingabe(*, symbol: str, reihe: list, index: int,

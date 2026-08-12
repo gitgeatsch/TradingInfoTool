@@ -141,6 +141,37 @@ def beschreibe_volatilitaet(reihen: dict, klasse: str, datum: str) -> list[str]:
             f"Handelstage."]
 
 
+def beschreibe_marktlage(reihen: dict, datum: str) -> list[str]:
+    """Das VOLLSTAENDIGE Lagebild - was die Rolle Lagebild als Eingabe bekommt.
+
+    EIN AUFRUF, ALLE KLASSEN. Die Alternative waere ein Lagebild je Klasse
+    gewesen, also vier Aufrufe statt einem. Dagegen sprechen zwei Dinge: das
+    Kontingent, und - schwerer - dass die Lage der einen Klasse zur Lage der
+    anderen gehoert. Dass der US-Aktienmarkt 19,7 % ueber seinem Vorjahresstand
+    steht, WAEHREND Bitcoin 39 % darunter liegt, ist selbst eine Aussage ueber
+    den Markt. Vier getrennte Aufrufe koennten sie nicht treffen.
+
+    ENTDOPPELT UEBER DEN BENCHMARK, nicht ueber die Klasse: `aktien` und `etf`
+    zeigen auf dieselbe Reihe. Ohne Entdopplung stuenden vier Saetze zweimal da
+    - und ein doppelter Satz wiegt doppelt (R-T9), ohne doppelt wahr zu sein.
+
+    REIHENFOLGE, absichtlich: Trend, dann Volatilitaet, dann Liquiditaet. Was
+    zuerst steht, wiegt schwerer (R-T9). Der Trend ist die Frage, die eine
+    Marktlage zuerst beantworten muss; die Liquiditaet praezisiert, was ein
+    Handeln darin kostet."""
+    gesehen: set[str] = set()
+    aus: list[str] = []
+    for klasse in BENCHMARK:
+        sym = BENCHMARK[klasse]
+        if sym in gesehen:
+            continue
+        gesehen.add(sym)
+        aus += (beschreibe_trend(reihen, klasse, datum)
+                + beschreibe_volatilitaet(reihen, klasse, datum)
+                + beschreibe_liquiditaet(reihen, klasse, datum))
+    return aus
+
+
 FENSTER_LIQUIDITAET = 21    # rund ein Handelsmonat - Amihuds eigene Mittelung
 
 

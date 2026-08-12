@@ -35,6 +35,15 @@ die Aufwaertsphasen, die im Krypto-Zeitraum fehlen - VST +48,3 %, PLTR +22,3 %.
 
     python messe_betragsdeckel.py --anbieter gemini35
 """
+# GESTRICHEN AM 12.08. (L1). Dieses Skript rief `beschreibe_marktbreite()`
+# direkt. Nach dem Tausch waere es ein Skript, das eine ANDERE Lage misst als
+# die Produktion - genau die Umgehung, die ein glatter Schnitt ausschliessen
+# soll. Es geht jetzt ueber `rollen_eingabe.baue_lagebild_eingabe()`, die
+# einzige Stelle, an der die Eingabe des Lagebilds entsteht.
+#
+# WICHTIG FUER ALTE ERGEBNISSE: alles, was vor dem 12.08. mit diesem Skript
+# gemessen wurde, traegt die Marktbreite. Ein Vergleich alt/neu ueber diese
+# Grenze hinweg misst den Umbau mit, nicht die Sache.
 from __future__ import annotations
 
 import argparse
@@ -48,8 +57,8 @@ import numpy as np
 import agent.rolle_analyst as RA
 import agent.rolle_trader as RT
 from agent.empfehlung_vertrag import EmpfehlungUngueltig
+import agent.rollen_eingabe as RE
 from agent.lagebeschreibung import beschreibe_lage
-from agent.marktbreite import beschreibe_marktbreite
 from backtest_llm1_historisch import lade_reihen_aus_db
 from indicators.calculations import atr_wilder, latest_value
 from pruefe_rollenkette import _bestand, _client, _kurs_eur, frage
@@ -102,7 +111,7 @@ def war_richtig(aktion: str, rendite: float) -> bool | None:
 
 def lauf_arm(client, modell, symbol, reihe, idx, reihen, mit_deckel: bool):
     anker = reihe[idx].date
-    a_ein = {"marktlage": beschreibe_marktbreite(reihen, anker, mit_bezug=False)}
+    a_ein = RE.baue_lagebild_eingabe(reihen, anker)
     menge, einstand = _bestand(symbol)
     bc_ein = {"asset": symbol,
               "stand": beschreibe_lage(symbol=symbol, reihe=reihe, index=idx,

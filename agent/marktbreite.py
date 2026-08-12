@@ -1,5 +1,36 @@
 # -*- coding: utf-8 -*-
-"""Wie breit ist der Markt getragen? - Eingang fuer Rolle A (10.08.2026).
+"""GESTRICHEN AM 12.08.2026 (L1) - KEIN AUFRUFER MEHR.
+
+Ersatzlos, nach Nutzerabstimmung und einem Review, der vier Befunde ergab:
+
+    SUBJEKT FALSCH   der Satz beginnt mit "Von 44 beobachteten Coins" - 11
+                     davon sind keine Coins (PLTR, VST, CAT, vier ETF, drei
+                     Rohstoff-Referenzen, SPY). Ein Viertel des Korbs
+    EIN KORB FUER    dieselbe Zahl ging an JEDE Assetklasse. Eine
+    ALLE KLASSEN     Aktienentscheidung sah eine "Coin"-Breite
+    BEZUG WANDERT    "in X % der Faelle war dieser Anteil niedriger" vergleicht
+                     gegen einen Korb, den es nie gab: vor 250 Handelstagen 34
+                     Reihen, heute 44 - 23 % kamen seither dazu. Ausgerechnet
+                     die Kalibrierung stand auf einer wandernden Bezugsgroesse
+    RICHTUNG INVERS  kein Zeitpunkt mit breitem Markt war je ein guter Einstieg
+                     (Arbeitsstand 7.4)
+
+An die Stelle tritt `agent/marktlage.py` - Trend, Volatilitaet und Liquiditaet
+je Klassen-Benchmark, jede Aussage als Perzentil der EIGENEN Historie.
+
+DIE KALIBRIERUNG GING NICHT VERLOREN, sie wanderte mit: `waechter_zuspitzung`
+kennt seit dem 12.08. beide Schreibweisen. Ohne diese Begleitaenderung haette
+die Streichung den Waechter still entwertet - er haette nach jedem Umbau
+"kein Massstab" gemeldet und damit auch wahre Grade verboten.
+
+Die Datei bleibt, weil ihr Kopf die Messung traegt. Wer Marktbreite in einem
+Jahr wieder erwaegt, findet hier, woran sie gescheitert ist - und was ein
+brauchbarer Korb koennen muesste: eine Klasse, feste Zusammensetzung, genug
+Mitglieder.
+
+--- urspruenglicher Kopf ---
+
+Wie breit ist der Markt getragen? - Eingang fuer Rolle A (10.08.2026).
 
 WARUM DIESER FAKT FEHLT. Das System kennt heute `regime.wert` ("baer"),
 Fear & Greed und den BTC-Abstand zur EMA50. Alle drei beschreiben BTC oder die

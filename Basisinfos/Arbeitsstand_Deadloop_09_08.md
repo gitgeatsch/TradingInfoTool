@@ -3014,3 +3014,91 @@ Die Aussage endet mit „je höher dieser Wert, desto weniger Umsatz löst eine
 Kursbewegung aus". Das ist die **Definition des Maßes**, nicht seine Bewertung —
 ohne sie ist die Zahl nicht benutzbar, und eine unbenutzbare Zahl im Faktensatz
 ist schlechter als gar keine. R-T3 verbietet Werturteile, nicht Erklärungen.
+
+---
+
+## 7.31 L1 — die Marktbreite ist gestrichen. Der Review, der sie geprüft hat, und der Fund, der die Streichung fast still beschädigt hätte (12.08.)
+
+**Der Nutzer hat vor der Streichung einen Review verlangt** — *„ich bin dafür,
+aber das ist eine Meinung."* Der Review hat die Streichung bestätigt und dabei
+etwas gefunden, das ohne ihn untergegangen wäre.
+
+### Vier Befunde, alle gemessen
+
+| Befund | Zahl |
+|---|---|
+| **Das Subjekt des Satzes ist falsch.** „Von 44 beobachteten **Coins**" — 11 davon sind keine Coins: PLTR, VST, CAT, vier ETFs (CEBS, EXH3, ISOC, VVMX), drei Rohstoff-Futures-Referenzen, SPY | **25 % des Korbs** |
+| **Ein Korb für alle Klassen.** Dieselbe Zahl ging an jede Assetklasse — eine Aktienentscheidung sah eine „Coin"-Breite | — |
+| **Der historische Bezug wandert.** „In X % der Fälle war dieser Anteil niedriger" vergleicht gegen einen Korb, den es nie gab: 2024-07 zehn Reihen, 2025-07 vierunddreißig, heute vierundvierzig | **23 % des heutigen Korbs kamen in 250 Handelstagen dazu** |
+| **Richtung invers** — kein Zeitpunkt mit breitem Markt war je ein guter Einstieg | 7.4 |
+
+Der dritte Punkt wiegt am schwersten, und zwar aus einem Grund, der im Code
+stand: `baue_lagebild_eingabe()` begründete den historischen Bezug als **„die
+einzige Kalibrierung, die das Modell vor einer Zuspitzung schützt"**. Genau
+dieser Schutz stand auf einer Bezugsgröße, die sich mit dem Messwert mitbewegt.
+
+### Der Fund, der die Streichung begleiten musste
+
+`waechter_zuspitzung.deckung()` liest die Deckung per Regex aus **dem Wortlaut
+der Marktbreite** — `in (\d+) % der Faelle niedriger`. Nach der Streichung hätte
+er nichts mehr gefunden:
+
+```
+Deckung aus der ALTEN Eingabe: [66]
+Deckung aus der NEUEN Eingabe: []      <-- leer
+```
+
+Und leer heißt in diesem Wächter *„die Eingabe nennt keinen historischen Bezug —
+kein Maßstab"*, also gilt **jedes** Gradwort als unbelegt. Das scheitert zwar
+sicher (zu streng, nicht zu lasch), aber es wäre falsch: bei einem echten
+97. Perzentil **darf** das Modell deutlich werden. **Ein Wächter, der auch das
+Wahre verbietet, wird umgangen statt befolgt.**
+
+Der Wächter kennt jetzt beide Schreibweisen — die alte bleibt drin, damit
+gespeicherte Fälle und ältere Läufe prüfbar bleiben.
+
+### Was das Lagebild jetzt bekommt
+
+**Zwölf Aussagen statt zwei**, drei Benchmarks à vier — entdoppelt über den
+Benchmark, nicht über die Klasse (`aktien` und `etf` zeigen auf dieselbe Reihe;
+ohne Entdopplung stünden vier Sätze zweimal da, und ein doppelter Satz wiegt
+doppelt, ohne doppelt wahr zu sein).
+
+**Ein Aufruf, alle Klassen.** Vier Aufrufe hätten das Kontingent vervierfacht —
+und, schwerer, sie könnten eine Aussage nicht treffen, die erst im Vergleich
+entsteht: dass der US-Aktienmarkt 19,7 % über seinem Vorjahresstand steht,
+*während* Bitcoin 39 % darunter liegt.
+
+Reihenfolge Trend → Volatilität → Liquidität, nach R-T9: der Trend ist die
+Frage, die eine Marktlage zuerst beantworten muss; die Liquidität präzisiert,
+was ein Handeln darin kostet.
+
+### Der glatte Schnitt reicht bis in die Messskripte
+
+Sechs `messe_*.py` riefen `beschreibe_marktbreite()` direkt. Nach dem Tausch
+wären das Skripte, die eine **andere Lage messen als die Produktion** — genau
+die Umgehung, die ein glatter Schnitt ausschließen soll. Alle sechs gehen jetzt
+über `rollen_eingabe.baue_lagebild_eingabe()`, die einzige Stelle, an der die
+Eingabe des Lagebilds entsteht. `agent/marktbreite.py` hat **keinen Aufrufer
+mehr**.
+
+> **Für alte Ergebnisse:** alles, was vor dem 12.08. mit diesen Skripten
+> gemessen wurde, trägt die Marktbreite. Ein Vergleich alt/neu über diese Grenze
+> hinweg misst den Umbau mit, nicht die Sache.
+
+### Eine gemessene Eigenschaft, die zu kennen ist
+
+Der Liquiditäts-Perzentilwert springt bei Krypto am Wochenende: BTC stand am
+17.07. bei 64, am 19.07. bei 97. Der Sprung ist **echt** — der Umsatz brach von
+108 auf 24 Mio ein, bei ähnlicher Kursbewegung. Insgesamt ist die Aussage so
+ruhig wie L2:
+
+| | Liquidität | Volatilität (L2) |
+|---|---|---|
+| tägliche Perzentiländerung, Median | 2,0 … 4,0 | 2,0 … 2,8 |
+| p90 | 10,0 … 13,5 | 7,5 … 10,8 |
+
+Aktien, ETF und Rohstoffe haben keine Wochenendzeilen, Krypto schon. Innerhalb
+eines Lagebilds ist der Krypto-Wert an einem Wochenende deshalb strenger zu
+lesen als die anderen drei — festgehalten, nicht korrigiert: **thin trading am
+Wochenende ist eine Tatsache über den Markt, kein Messfehler.**

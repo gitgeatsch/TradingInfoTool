@@ -38,6 +38,15 @@ DREI ENTWURFSENTSCHEIDUNGEN
 
     python messe_dritter_faktor.py --db <pfad> --trocken
 """
+# GESTRICHEN AM 12.08. (L1). Dieses Skript rief `beschreibe_marktbreite()`
+# direkt. Nach dem Tausch waere es ein Skript, das eine ANDERE Lage misst als
+# die Produktion - genau die Umgehung, die ein glatter Schnitt ausschliessen
+# soll. Es geht jetzt ueber `rollen_eingabe.baue_lagebild_eingabe()`, die
+# einzige Stelle, an der die Eingabe des Lagebilds entsteht.
+#
+# WICHTIG FUER ALTE ERGEBNISSE: alles, was vor dem 12.08. mit diesem Skript
+# gemessen wurde, traegt die Marktbreite. Ein Vergleich alt/neu ueber diese
+# Grenze hinweg misst den Umbau mit, nicht die Sache.
 from __future__ import annotations
 
 import argparse
@@ -66,7 +75,6 @@ def main() -> int:
     import agent.rolle_analyst as RA
     import agent.rolle_trader as RT
     from agent.lagebeschreibung import beschreibe_lage
-    from agent.marktbreite import beschreibe_marktbreite
     from api.derivatives import get_funding_history, summarize_funding
     from backtest_llm1_historisch import lade_reihen_aus_db
     from indicators.calculations import atr_wilder, latest_value
@@ -127,8 +135,7 @@ def main() -> int:
             # EIN Lagebild fuer beide Arme
             lage = RA.validiere(PR.frage(
                 client, modell, RA.SYSTEM_PROMPT_ANALYST,
-                {"marktlage": beschreibe_marktbreite(reihen, a["datum"],
-                                                     mit_bezug=True)},
+                RE.baue_lagebild_eingabe(reihen, a["datum"]),
                 "agent.rolle_analyst"))
             menge, einstand = PR._bestand(sym)
             hh = np.array([k.high for k in r[:i + 1]], dtype=float)

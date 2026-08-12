@@ -44,7 +44,6 @@ import agent.rolle_analyst as RA
 import agent.rolle_trader as RT
 from agent.empfehlung_vertrag import EmpfehlungUngueltig, cash_hinweis
 from agent.lagebeschreibung import beschreibe_lage
-from agent.marktbreite import beschreibe_marktbreite
 from agent.szenario_fakten import enthaelt_werturteile, finde_konstanten
 from backtest_llm1_historisch import lade_reihen
 from indicators.calculations import atr_wilder, latest_value
