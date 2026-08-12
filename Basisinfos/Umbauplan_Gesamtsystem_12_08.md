@@ -732,3 +732,161 @@ trifft hier nicht zu.
 Und der Index gehört als das benannt, was er ist — **Bitcoin**, nicht der
 Kryptomarkt. Im Faktenblock steht der Absolutwert mit Etikett
 (*„Fear & Greed für Bitcoin: 27 von 100 — Angst"*), nicht das Perzentil.
+
+## 12.8 Welche Fakten tragen — gemessen statt behauptet
+
+Nutzerauftrag: *„damit es keine Überhand nimmt — u.U. kannst du die 10 Top
+Fakten (laut modernen Methoden) mit relevanten Zusatzinfos heranziehen, damit
+ich etwas anfangen kann."*
+
+„Laut modernen Methoden" hätte ich aus der Literatur abschreiben können —
+Momentum, 52-Wochen-Hoch, Amihud, alles belegt. Das wäre aber eine Aussage über
+**andere** Märkte und andere Zeiträume. Gemessen wurde deshalb an unseren
+eigenen Reihen; die Literatur deutet das Ergebnis, sie ersetzt es nicht.
+`messe_top_fakten.py`, **37 Symbole, 63.389 Zeilen, 20.494 auswertbare Anker.**
+
+**Maßstab ist die Geometrie, die die App vorschlägt** — Stop 2,5 × ATR, Ziel
+CRV 2,0, Fenster 10 Handelstage. Ein Merkmal trägt, wenn das oberste Fünftel
+eine andere Trefferquote hat als das unterste. Basis über alle Anker: **23,5 %.**
+
+**Zwei Hürden, beide nötig:** ein Bootstrap-Band ohne Null (Cluster über
+**Symbole**, nicht über Anker) **und** eine monotone Ordnung. Zwölf Merkmale
+sind zwölf Tests — bei zwölf Versuchen sieht eines zufällig gut aus, aber ein
+Zickzack über die Fünftel hat keinen Mechanismus, sondern Rauschen.
+
+### Das Ergebnis
+
+| Merkmal | unterstes | oberstes | Spanne | monoton | Band |
+|---|---|---|---|---|---|
+| **Schwankungsbreite (Perzentil)** | 29,5 % | 17,8 % | **−11,7 pp** | 3/4 | −15,8 … −8,6 |
+| **Rückgang seit 60-Tage-Hoch** | 18,9 % | 28,0 % | **+9,1 pp** | **4/4** | +0,9 … +15,0 |
+| **Abstand zur 50-Tage-Linie** | 19,6 % | 27,7 % | +8,1 pp | 3/4 | +0,0 … +14,9 |
+| Stand im Jahresbereich | 20,3 % | 27,8 % | +7,4 pp | 3/4 | −4,3 … +14,6 ✗ |
+| **Trend 20 Tage** | 18,9 % | 25,6 % | +6,6 pp | 3/4 | +0,8 … +12,2 |
+| **RSI 14** | 20,2 % | 26,4 % | +6,2 pp | **4/4** | +0,2 … +10,7 |
+| Trend 60 Tage | 21,9 % | 26,9 % | +5,0 pp | 3/4 | −2,3 … +10,1 ✗ |
+| **Volumen zum Mittel** | 22,5 % | 27,1 % | +4,5 pp | 3/4 | +1,4 … +7,4 |
+| Illiquidität (Amihud) | 23,9 % | 20,6 % | −3,3 pp | 2/4 ✗ | −6,6 … −0,1 |
+| Tagesspanne (Perzentil) | 20,9 % | 22,4 % | +1,5 pp | 2/4 ✗ | −8,1 … −1,9 ⚠ |
+| Abstand zum Allzeithoch | 26,7 % | 27,7 % | +1,0 pp | 1/4 ✗ | −9,7 … +8,3 ✗ |
+| Trend 250 Tage | 22,4 % | 23,1 % | +0,7 pp | 1/4 ✗ | −7,3 … +5,3 ✗ |
+
+**Es sind nicht zehn, es sind sechs.** Zehn zu nennen hieße, vier
+Rauschmerkmale mitzuschleppen — genau die Überhand, die vermieden werden soll.
+
+### Und die sechs sind drei — mit Beleg
+
+Rangkorrelation zwischen den sechs, Median über 37 Symbole:
+
+| | Schwank. | Rückgang | 50-Tage | Trend 20 | RSI | Volumen |
+|---|---|---|---|---|---|---|
+| **Schwankungsbreite** | — | −0,23 | −0,22 | −0,21 | −0,19 | −0,01 |
+| **Rückgang 60T-Hoch** | −0,23 | — | **0,89** | **0,71** | **0,59** | 0,10 |
+| **Abstand 50-Tage-Linie** | −0,22 | 0,89 | — | **0,83** | **0,72** | 0,10 |
+| **Trend 20 Tage** | −0,21 | 0,71 | 0,83 | — | **0,78** | 0,13 |
+| **RSI 14** | −0,19 | 0,59 | 0,72 | 0,78 | — | 0,10 |
+| **Volumen zum Mittel** | −0,01 | 0,10 | 0,10 | 0,13 | 0,10 | — |
+
+Die vier Momentum-Maße hängen zu **0,59 bis 0,89** zusammen — **ein** Faktor,
+nicht vier. Volumen ist mit 0,01 bis 0,13 praktisch unabhängig von allem.
+
+| Familie | Richtung | stärkster Vertreter |
+|---|---|---|
+| **Schwankung** | niedrig ist besser | Schwankungsbreite im Perzentil, −11,7 pp |
+| **Kurzfrist-Momentum** | steigend ist besser | Rückgang seit 60-Tage-Hoch, +9,1 pp (4/4) |
+| **Volumen** | hoch ist besser | Volumen zum Mittel, +4,5 pp |
+
+**Das ist genau die Unterscheidung, nach der der Prompt fragt** — „wie viele
+deiner Belege sagen wirklich VERSCHIEDENE Dinge?". Vier Momentum-Belege sind
+**ein** Faktor. Wer sie einzeln in den Faktenblock schreibt, lässt einen Aufbau
+viermal so gut belegt aussehen, wie er ist.
+
+### Zur Schwankungsbreite — Nutzereinwand, und er trägt
+
+Nutzer: *„ein hoher Parameter ist ein Warnsignal, normal — dann wäre das
+interessant."* Genau so ist es, und die Korrelationsmatrix belegt es:
+
+Ich hatte zwei Zweifel notiert. **Beide sind ausgeräumt:**
+
+1. *Ist es mechanisch?* Nein. Beide Barrieren stehen in ATR-Vielfachen, der
+   ATR-Pegel kürzt sich heraus. Gemessen wird der ATR **relativ zur eigenen
+   Vergangenheit** — also Ausdehnung gegen Beruhigung.
+2. *Ist es Momentum von hinten?* Der Zusammenhang „Volatilität steigt, wenn
+   Kurse fallen" (Leverage-Effekt, Black 1976) ist da — aber mit **−0,2**
+   schwach. Der weitaus größte Teil des Signals ist eigenständig.
+
+**Damit ist die Schwankungsbreite das stärkste EINZELNE Merkmal, das wir haben,
+und zugleich das konventionellste.** Hohe Schwankung ist ein Warnsignal — die
+Messung sagt, wie teuer es ist: 17,8 gegen 29,5 %.
+
+### Was das mit der Sentiment-Messung zu tun hat
+
+**Es ist dieselbe Messung.** Fear & Greed ist zur Hälfte aus dem Kurs abgeleitet;
+„Gier" heißt „der Kurs ist zuletzt gestiegen". Der Sentiment-Befund aus 12.7
+(+12,3 pp für extreme Gier) und der Momentum-Befund hier sind **ein** Befund.
+Fear & Greed gehört damit in die **Momentum-Familie**, nicht daneben.
+
+### Zwei Dinge, die auffallen
+
+**1. Langfrist-Momentum trägt NICHT.** „Trend 250 Tage" landet mit +0,7 pp und
+1/4 auf dem letzten Platz — und genau dieser Horizont ist es, für den Time
+Series Momentum (Moskowitz/Ooi/Pedersen 2012) belegt ist. Der Unterschied liegt
+im Maßstab: TSMOM misst **Renditen über Monate**, hier wird eine
+**Barrierenauflösung über 10 Tage** gemessen. Das ist nicht dieselbe Frage; das
+Ergebnis widerlegt die Literatur nicht, es sagt nur, dass ihr Befund für unsere
+Geometrie nichts hergibt.
+
+**2. „Tagesspanne" ist ein Methoden-Warnsignal, kein Fakt.** Ihre Spanne ist
+**+1,5 pp, das Bootstrap-Band liegt aber vollständig im Negativen** (−8,1 …
+−1,9). Punktschätzer und geclusterte Schätzung widersprechen sich — der
+gepoolte Wert entsteht durch die **Zusammensetzung** der Symbole, nicht durch
+das Merkmal. Wer nur die Spanne gelesen hätte, hätte das Vorzeichen verkehrt
+übernommen. Raus.
+
+## 12.9 Zusatzinfo — der Maßstab, und was ihn besteht
+
+Nutzerpräzisierung: *„du hast recht mit Füllstoff — aber das wäre die Aufgabe:
+welche Faktoren sind als Zusatzinfo sinnvoll, und ich kann diese nutzen, wenn
+ich möchte — also kein Beiwerk ohne Sinn natürlich."*
+
+**Der Maßstab folgt aus 12.8: eine Zusatzinfo ist sinnvoll, wenn sie eine
+Dimension aufmacht, die die drei Familien NICHT abdecken.** Ein weiteres aus
+dem Kurs abgeleitetes Maß tut das nicht — es wäre der fünfte Momentum-Vertreter
+und würde einen Aufbau besser belegt aussehen lassen, als er ist. Vier
+Kategorien bestehen den Maßstab:
+
+| Kategorie | warum sie etwas Neues sagt |
+|---|---|
+| **Kosten** | ändert die Rechnung selbst, nicht die Einschätzung — und wird tatsächlich bezahlt |
+| **Positionierung** | wer steht wie im Markt. Aus dem Kurs nicht ableitbar |
+| **Fundamentaldaten** | Substanz statt Kursverlauf. Vollständig unabhängig |
+| **vorausschauende Marktpreise** | was ANDERE für die Zukunft zahlen — die einzige Kategorie mit Blick nach vorn |
+
+### Je Bereich, mit Begründung
+
+| Bereich | Zusatzinfo | Kategorie | warum sie nutzt |
+|---|---|---|---|
+| **Krypto Hebel** | Funding in EUR/Tag | Kosten | bei 25 Tagen Haltedauer entscheidet sie über Gewinn oder Verlust (12.x) |
+| | Liquidationspreis | Kosten/Risiko | sicherheitskritisch: greift die Zwangsliquidation vor dem eigenen Stop? |
+| | Put-Skew (Optionsmarkt) | vorausschauend | der einzige Fakt im ganzen System, der nicht aus der Vergangenheit stammt |
+| | Retail-Konsens (Binance) | Positionierung | steht die Mehrheit schon dort, wo wir hinwollen? Nur Krypto, nur Binance, Konten-Anteil |
+| **Krypto beide** | BTC-Relativwert | Positionierung | trennt „der Coin steigt" von „der Markt steigt". **Achtung: teils Momentum** |
+| | Fear & Greed (Bitcoin) | — | **gehört in die Momentum-Familie**, nicht daneben (12.8) |
+| **Aktien** | Fundamentaldaten | Fundamental | unabhängig vom Kurs, klassisch belegt |
+| | Insider-Trading | Positionierung | wer es am besten wissen kann, handelt sichtbar |
+| | Short-Interest (FINRA) | Positionierung | Gegenposition, aus dem Kurs nicht ableitbar |
+| | Analysten-Trend | Positionierung | schwächster der vier — als Info brauchbar, als Faktor nicht |
+| **Rohstoffe** | Lagerbestände | Fundamental | Angebot und Nachfrage direkt |
+| | Positionierung (COT) | Positionierung | wer hält welche Seite |
+| **Themen-ETF** | Sektor-Rotation | — | **relative Stärke = Momentum**, kein eigener Faktor |
+| **Hedge** | Portfolio-Exposure | — | keine Meinung, sondern die Rechengrundlage |
+
+### Was den Maßstab NICHT besteht
+
+| | warum raus |
+|---|---|
+| `regime_profil` | das Regime stand über 1.022 Fälle durchgehend auf „baer" — ein konstantes Feld trägt keine Information (R-T6) |
+| `signal_stabilitaet` | misst den Verlauf der Konfidenz, und die ist gestrichen |
+| `liquiditaetszonen` | Stufe 2 wurde bereits verworfen; die Zonen-Grafik zeigt nicht Einstieg/Stop/Ziel (12.6) |
+| `trigger`, `systemguete` | interne Zustände. `systemguete` gehört inhaltlich in Abschnitt 4 (Einordnung), nicht in den Faktenblock |
+| `disclaimers` | Rechtstext, kein Fakt |
