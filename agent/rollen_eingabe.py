@@ -292,6 +292,47 @@ def kurs_eur(symbol: str, reihe, index: int, db: str | None = None):
     return float(reihe[index].close) * (float(r[1]) / float(r[0]))
 
 
+def fx_eur_je_usd(symbol: str, reihe, index: int, db: str | None = None) -> float:
+    """Wieviel EUR ist ein USD dieser Reihe wert? 1,0, wenn die Reihe EUR ist.
+
+    DIESELBE QUELLE wie `kurs_eur()` - sonst haetten wir zwei Umrechnungen, die
+    auseinanderlaufen koennen. Hier steht sie einmal und wird von dort benutzt."""
+    import sqlite3
+    from backtest_llm1_historisch import waehrung_je_symbol
+    pfad = db or DB
+    if waehrung_je_symbol(pfad).get(symbol) == "EUR":
+        return 1.0
+    c = sqlite3.connect(f"file:{pfad}?mode=ro", uri=True)
+    try:
+        r = c.execute("select price_usd, price_eur from price_cache "
+                      "where symbol=? order by fetched_at desc limit 1",
+                      (symbol,)).fetchone()
+    finally:
+        c.close()
+    if not r or not r[0] or not r[1]:
+        return 1.0
+    return float(r[1]) / float(r[0])
+
+
+def atr_eur(symbol: str, reihe, index: int, db: str | None = None) -> float:
+    """ATR in DERSELBEN Waehrung wie `kurs_eur()`.
+
+    WOZU DIE ZWEITE FASSUNG - gefunden bei der Gegenpruefung zu Paket 7.
+    `atr_bis()` rechnet aus der Kursreihe, und die liegt bei ALLEN 45 Symbolen
+    in USD. `kurs_eur()` liefert dagegen EUR. Beide wurden bisher zusammen
+    weitergereicht:
+
+        `beschreibe_lage()`   RICHTIG - sie rechnet durchgehend in der
+                              Quellwaehrung und rechnet nur die ANZEIGE um
+        `leite_zonen_ab()`    FALSCH - die Spanne war 0,25 x ATR(USD) auf
+                              EUR-Kurse. Gemessen an BTC: 882,85 statt 771,92
+                              EUR, also 14,4 % zu breit
+
+    Das Ziel war nie betroffen: es folgt CRV x Risiko und ist damit
+    waehrungsfrei. Nur die Spanne stimmte nicht."""
+    return atr_bis(reihe, index) * fx_eur_je_usd(symbol, reihe, index, db)
+
+
 def atr_bis(reihe, index: int) -> float:
     """ATR aus `reihe[:index+1]` - streng kausal."""
     from indicators.calculations import atr_wilder, latest_value

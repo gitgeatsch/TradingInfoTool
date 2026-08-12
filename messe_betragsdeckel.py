@@ -116,7 +116,7 @@ def lauf_arm(client, modell, symbol, reihe, idx, reihen, mit_deckel: bool):
     bc_ein = {"asset": symbol,
               "stand": beschreibe_lage(symbol=symbol, reihe=reihe, index=idx,
                                        kurs_eur=_kurs_eur(symbol, reihe, idx) or 0.0,
-                                       atr=_atr(reihe, idx), menge=menge,
+                                       atr=RE.atr_eur(symbol, reihe, idx), menge=menge,
                                        einstand_eur=einstand)}
     prompt_a = RA.SYSTEM_PROMPT_ANALYST + (DECKEL_ZUSATZ if mit_deckel else "")
     a_roh = frage(client, modell, prompt_a, a_ein, "agent.rolle_analyst")
@@ -134,7 +134,7 @@ def lauf_arm(client, modell, symbol, reihe, idx, reihen, mit_deckel: bool):
         bc_ein["marktlage_beurteilung"]["hoechstbetrag_eur"] = deckel
     bc_roh = frage(client, modell, RT.SYSTEM_PROMPT_TRADER, bc_ein,
                    "agent.rolle_trader")
-    return RT.validiere(bc_roh, symbol, atr=_atr(reihe, idx)), deckel
+    return RT.validiere(bc_roh, symbol, atr=RE.atr_eur(symbol, reihe, idx)), deckel
 
 
 def main() -> int:

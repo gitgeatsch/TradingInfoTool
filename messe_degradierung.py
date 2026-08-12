@@ -131,7 +131,7 @@ def lauf(client, modell, symbol, reihe, idx, reihen) -> dict:
 
     stand = beschreibe_lage(symbol=symbol, reihe=reihe, index=idx,
                             kurs_eur=_kurs_eur(symbol, reihe, idx) or 0.0,
-                            atr=_atr(reihe, idx), menge=menge,
+                            atr=RE.atr_eur(symbol, reihe, idx), menge=menge,
                             einstand_eur=einstand)
     ent_ein = {"asset": symbol, "stand": stand,
                "marktlage_beurteilung": {"lage": lage["lage"], "gleichlauf": lage.get("gleichlauf")}}
@@ -139,7 +139,7 @@ def lauf(client, modell, symbol, reihe, idx, reihen) -> dict:
                     "agent.rolle_trader")
     # Die ROHE Aktion vor dem Vertrag - nur so ist ein degradierter Kauf sichtbar.
     aktion_roh = str(ent_roh.get("aktion") or "?").upper()
-    ent = RT.validiere(dict(ent_roh), symbol, atr=_atr(reihe, idx))
+    ent = RT.validiere(dict(ent_roh), symbol, atr=RE.atr_eur(symbol, reihe, idx))
 
     return {
         "aktion_roh": aktion_roh,

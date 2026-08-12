@@ -113,6 +113,11 @@ def main() -> int:
             ll = np.array([k.low for k in r[:i + 1]], dtype=float)
             cc = np.array([k.close for k in r[:i + 1]], dtype=float)
             atr = float(latest_value(atr_wilder(hh, ll, cc)) or 0.0)
+            # DIE ZONEN BRAUCHEN DEN ATR IN EUR (Paket 7): die Kurse, die
+            # das Modell nennt, sind EUR - der ATR aus der Reihe ist USD.
+            # `beschreibe_lage` bekommt weiterhin den USD-Wert, weil sie
+            # durchgehend in der Quellwaehrung rechnet.
+            atr_e = atr * RE.fx_eur_je_usd(sym, r, i)
             stand = beschreibe_lage(symbol=sym, reihe=r, index=i,
                                     kurs_eur=PR._kurs_eur(sym, r, i) or 0.0,
                                     atr=atr, menge=menge, einstand_eur=einstand)
@@ -120,7 +125,7 @@ def main() -> int:
                    "marktlage_beurteilung": {"lage": lage["lage"], "gleichlauf": lage.get("gleichlauf")}}
             roh = PR.frage(client, modell, RT.SYSTEM_PROMPT_TRADER, ein,
                            "agent.rolle_trader")
-            ent = RT.validiere(dict(roh), sym, atr=atr)
+            ent = RT.validiere(dict(roh), sym, atr=atr_e)
             zeile.update({
                 "faktoren": ent.get("unabhaengige_faktoren"),
                 "aktion": ent.get("aktion"),

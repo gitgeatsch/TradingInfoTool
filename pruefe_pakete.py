@@ -653,9 +653,93 @@ def paket_6() -> None:
         con.close()
 
 
+# ---------------------------------------------------------------- Paket 7 ---
+def paket_7() -> None:
+    """Backward-Tracking: die Erfolgsmessung greift wieder."""
+    P = "7"
+    import warnings
+    warnings.filterwarnings("ignore")
+    from agent.krypto.backward_tracking import _zonen_mittel
+    from agent import rolle_trader as RT
+    from agent import signal_abbildung as SA
+    import agent.rollen_eingabe as RE
+
+    grund = {"belege": [{"fakt": "a", "richtung": "dafuer", "gewicht": "hoch"},
+                        {"fakt": "b", "richtung": "dafuer", "gewicht": "mittel"}],
+             "unabhaengige_faktoren": 2, "aktion": "KAUFEN",
+             "einstieg_eur": 87.44, "stop_eur": 82.19, "begruendung": "x",
+             "was_dagegen": "y", "umgeworfen_durch": "z"}
+    a = RT.validiere(dict(grund), "BTC", atr=3.5)
+
+    class _Signal:
+        def __init__(self, felder):
+            for k, v in felder.items():
+                setattr(self, k, v)
+
+    # OHNE USD-SPIEGELUNG BLEIBT DAS SIGNAL FUER IMMER UNAUFGELOEST. Das
+    # Backward-Tracking laedt `price_history_ohlc WHERE currency = 'USD'` und
+    # vergleicht gegen entry_usd/stop_loss_usd/take_profit_usd.
+    ohne = _zonen_mittel(_Signal(SA.felder_aus_entscheidung(a, fakten={})))
+    pruefe(P, "ohne Umrechnungskurs bleiben die USD-Zonen leer",
+           all(z is None for z in ohne),
+           "genau das war der Bruch: die neue Kette schrieb nur EUR")
+
+    mit = _zonen_mittel(_Signal(SA.felder_aus_entscheidung(
+        a, fakten={}, eur_je_usd=0.8744)))
+    pruefe(P, "mit Kurs loest das Tracking die Zonen auf",
+           all(z is not None for z in mit), str(mit))
+    pruefe(P, "die Umrechnung ist verhaeltnistreu",
+           abs((mit[2] - mit[0]) / (mit[0] - mit[1]) - 2.0) < 1e-6,
+           f"CRV bleibt 2,0 - gemessen {(mit[2]-mit[0])/(mit[0]-mit[1]):.4f}")
+
+    felder = SA.felder_aus_entscheidung(a, fakten={}, eur_je_usd=0.8744)
+    pruefe(P, "der Umrechnungskurs wird MITGESCHRIEBEN",
+           felder.get("fx_eur_je_usd") == 0.8744,
+           "sonst liesse sich spaeter nicht nachrechnen, wie die USD-Zonen "
+           "entstanden sind")
+    pruefe(P, "EUR-Zonen bleiben unveraendert daneben stehen",
+           felder.get("entry_eur_von") == a["einstieg_eur_von"],
+           "die E-Mail zeigt EUR, das Tracking rechnet USD")
+
+    # DER WAEHRUNGSFEHLER IN DER SPANNE (gefunden bei dieser Gegenpruefung).
+    # `atr_bis` rechnet aus der Kursreihe, und die liegt bei ALLEN 45 Symbolen
+    # in USD - `kurs_eur` liefert dagegen EUR.
+    from backtest_llm1_historisch import lade_reihen_aus_db, waehrung_je_symbol
+    w = waehrung_je_symbol("data/tradinginfotool.db")
+    pruefe(P, "alle Reihen liegen in USD - der ATR also auch",
+           set(w.values()) == {"USD"}, str(set(w.values())))
+    r = lade_reihen_aus_db()["BTC"]
+    i = len(r) - 1
+    fx = RE.fx_eur_je_usd("BTC", r, i)
+    pruefe(P, "atr_eur ist der umgerechnete atr_bis",
+           abs(RE.atr_eur("BTC", r, i) - RE.atr_bis(r, i) * fx) < 1e-9,
+           f"Kurs {fx:.4f}")
+    pruefe(P, "der Umrechnungskurs ist plausibel", 0.5 < fx < 1.5,
+           f"EUR je USD = {fx:.4f} - alles ausserhalb waere ein Datenfehler")
+
+    # Kein Aufrufer darf mehr den USD-ATR an die Zonen geben.
+    import glob
+    falsch = []
+    for d in sorted(glob.glob("messe_*.py") + ["pruefe_rollenkette.py"]):
+        t = _quelltext(d)
+        for m in re.finditer(r"RT\.validiere\(", t):
+            rest = t[m.end():m.end() + 320].split(chr(10) + chr(10))[0]
+            if "atr=" in rest and "atr_e" not in rest and "atr_eur" not in rest:
+                falsch.append(d)
+    pruefe(P, "kein Aufrufer gibt den USD-ATR an die Zonen", not falsch,
+           f"noch mit USD-ATR: {sorted(set(falsch))}" if falsch else
+           "die Spanne war sonst 14,4 % zu breit")
+
+    # Das Tracking filtert NICHT nach Kette - neue Zeilen werden erfasst.
+    tracking = _quelltext("agent/krypto/backward_tracking.py")
+    pruefe(P, "das Tracking filtert nicht nach Kette",
+           "quelle_kette" not in tracking,
+           "neue Signale werden automatisch mitgemessen")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
-          "6": paket_6}
+          "6": paket_6, "7": paket_7}
 
 
 def main() -> int:

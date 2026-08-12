@@ -89,6 +89,10 @@ SPALTEN_SIGNAL = {
     "lagebild_id": "INTEGER",
     "prompt_stand": "TEXT",                 # jeder Befund gehoert zu einem
                                             # Prompt-Stand (Nutzervorgabe 11.08.)
+    "fx_eur_je_usd": "REAL",                # der EINGEFRORENE Kurs (Paket 7).
+                                            # Ohne ihn liesse sich spaeter nicht
+                                            # nachrechnen, wie die USD-Zonen
+                                            # entstanden sind
 }
 
 _LAGEBILDER = """
@@ -151,7 +155,8 @@ def schreibe_lagebild(conn: sqlite3.Connection, *, datum: str, antwort: dict,
 
 def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
                             lagebild_id: int | None = None,
-                            prompt_stand: str | None = None) -> dict:
+                            prompt_stand: str | None = None,
+                            eur_je_usd: float | None = None) -> dict:
     """Die Spaltenwerte fuer EIN Signal aus der Antwort der Rollen-Kette.
 
     SCHREIBT NICHT - der Aufrufer entscheidet, ob und wann. Diese Trennung ist
@@ -190,10 +195,33 @@ def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
     # Die Zonen nur, wenn es sie gibt - bei NICHTS_TUN und bei Akkumulation
     # entfallen sie, und ein Nullwert waere dort eine Aussage, die niemand
     # getroffen hat.
-    for feld, spalten in (("einstieg", "entry_eur"), ("stop", "stop_loss_eur"),
-                          ("ziel", "take_profit_eur")):
+    #
+    # UND ZUSAETZLICH IN USD (Paket 7). Das Backward-Tracking laedt
+    # `price_history_ohlc WHERE currency = 'USD'` und vergleicht gegen
+    # `entry_usd`/`stop_loss_usd`/`take_profit_usd`. Ein Signal mit nur
+    # EUR-Zonen bliebe deshalb fuer immer unaufgeloest - der Faden zur
+    # Erfolgsmessung waere gerissen, und ohne sie gibt es keine Trefferbilanz
+    # (Paket 8) und damit keine Zahl fuer die E-Mail.
+    #
+    # DER KURS WIRD ZUM SIGNALZEITPUNKT EINGEFROREN, und das ist Absicht:
+    # so misst der Ausgang die Bewegung des ASSETS, nicht die des Wechselkurses.
+    # Wer spaeter mit dem dann gueltigen Kurs zurueckrechnete, mische
+    # FX-Rauschen in jede Trefferquote. Dieselbe Linie faehrt die alte Kette
+    # bereits mit `eur_aus_usd(..., eur_usd_fx_rate)`.
+    #
+    # Ohne Kurs KEINE USD-Spalten - ein geratener Umrechnungsfaktor waere
+    # schlimmer als eine leere Spalte.
+    for feld, eur_spalte, usd_spalte in (
+            ("einstieg", "entry_eur", "entry_usd"),
+            ("stop", "stop_loss_eur", "stop_loss_usd"),
+            ("ziel", "take_profit_eur", "take_profit_usd")):
         for rand in ("von", "bis"):
             wert = antwort.get(f"{feld}_eur_{rand}")
-            if wert is not None:
-                aus[f"{spalten}_{rand}"] = wert
+            if wert is None:
+                continue
+            aus[f"{eur_spalte}_{rand}"] = wert
+            if eur_je_usd:
+                aus[f"{usd_spalte}_{rand}"] = round(float(wert) / float(eur_je_usd), 8)
+    if eur_je_usd:
+        aus["fx_eur_je_usd"] = float(eur_je_usd)
     return {k: v for k, v in aus.items() if v is not None}
