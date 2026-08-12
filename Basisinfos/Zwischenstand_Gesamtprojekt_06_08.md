@@ -651,6 +651,126 @@ Rollen-Ebene, die dabei entstanden ist, ist die Voraussetzung für Weg 2.
 
 ---
 
+
+## 8e. GESAMTREVIEW — was zu bauen ist, Stand 12.08.2026
+
+> **Nutzervorgabe:** *„mach ein Review aller Bereiche und Abschnitte die zu bauen
+> sind für den Gesamtplan, damit wir nichts vergessen."* Gegliedert nach der
+> Ablaufkette, nicht nach Dringlichkeit — Vollständigkeit vor Reihenfolge. Der
+> Ist-Zustand ist am Code geprüft, nicht erinnert.
+
+### Der wichtigste Satz vorweg
+
+**Die neue Rollen-Ebene läuft in null Produktionspfaden.** Geprüft: sieben
+Messskripte nutzen sie, `scheduler/`, `ui/` und `main.py` kennen sie nicht. In
+der Produktion läuft weiter das Altsystem mit 34.611 Zeichen Prompt.
+
+---
+
+### STUFE 0 — Betrieb
+
+| # | Was | Stand |
+|---|---|---|
+| B1 | **Rollen-Ebene in die Produktion einhängen** | **nicht begonnen** — kein Aufrufer außerhalb der Messskripte |
+| B2 | yfinance-Rückfall ausrollen | verdrahtet, gepusht, **nicht ausgerollt** |
+| B3 | Produktion wieder starten | steht seit 10.08. bewusst |
+| B4 | `pruefe_abdeckung.py` auf dem Notebook | Desktop-Zahlen gelten nur für den 19.07. |
+
+### STUFE 1 — GATE
+
+| # | Was | Stand |
+|---|---|---|
+| G1 | **Gate mit der neuen Kette zusammen testen** | **nie geschehen.** Alle Messungen liefen ohne Gate |
+| G2 | **Durchlässigkeit je Stufe messen** | nicht gebaut. Ohne sie versteckt sich der Deadloop eine Ebene tiefer |
+| G3 | Vorfilter oder Nachfilter? | offen. Ein Vorfilter ist unsichtbar — was er wegschneidet, sieht das Modell nie |
+| G4 | Veto-Schatten für die Rollen-Ebene | existiert für Hebel, für die neue Kette ungeprüft |
+
+### STUFE 2 — LAGEBILD
+
+| # | Was | Stand |
+|---|---|---|
+| L1 | **Marktbreite raus** | entschieden, **nicht umgesetzt** |
+| L2 | **Volatilitätslage** je Klasse | fehlt — eine der vier Standarddimensionen |
+| L3 | **Trendlage des Klassen-Benchmarks** | fehlt. BTC · SPY · Futures, alle Daten vorhanden |
+| L4 | **Liquiditätslage** | fehlt |
+| L5 | Zuspitzungs-Wächter anschließen | gebaut und geprüft, **von keinem Skript genutzt** |
+
+**Heute liefert das Lagebild zwei Sätze, beide Marktbreite. Eine von vier Dimensionen.**
+
+### STUFE 3 — BEFUND / ENTSCHEIDUNG
+
+| # | Was | Stand |
+|---|---|---|
+| E1 | **Finanzierungsrate anschließen** | gebaut, 89 % Abdeckung, **kein Skript nutzt es** |
+| E2 | **Relative Stärke zum Klassen-Benchmark** | fehlt für Aktien/ETF/Rohstoffe |
+| E3 | **Rang unter den Kandidaten** | seit 10.08. benannt, nicht gebaut |
+| E4 | Insider · Short Interest · COT · Fundamentaldaten | **Module fertig**, nie angeschlossen |
+| E5 | Befund und Entscheidung trennen? | offen — Argument ist der Bestandsblock |
+| E6 | Persona im Prompt behalten? | offen, schaltbar gebaut, nie gemessen |
+| E7 | Fibonacci | **entschieden: kommt nicht rein** |
+
+### STUFE 4 — VALIDATOR, BETRAG, AUSSTIEG
+
+| # | Was | Stand |
+|---|---|---|
+| V1 | **`umgeworfen_durch` auswerten** | wird erzeugt, prüfbar formuliert, **nie gelesen**. Das ist der Ausstieg |
+| V2 | Degradierte Käufe sichtbar machen | entschieden mit vier Sicherungen, nicht gebaut |
+| V3 | Betrag deterministisch | **gebaut** |
+| V4 | Zeitschranke an die Zieldistanz koppeln | offen |
+
+### STUFE 5 — LLM2 / GEGENPRÜFUNG
+
+| # | Was | Stand |
+|---|---|---|
+| Z1 | **Gegenprüfer für die neue Kette** | **existiert nicht.** Alte Kette hat Z.ai, neue nichts |
+| Z2 | Falls gebaut: eigener Aufruf | R-A8, entschieden |
+
+### STUFE 6 — AUSGABE
+
+| # | Was | Stand |
+|---|---|---|
+| A1 | E-Mail je Asset aus der neuen Kette | unverändert vom Altsystem |
+| A2 | GUI-Anzeige | unverändert |
+
+### QUERSCHNITT
+
+| # | Was | Stand |
+|---|---|---|
+| Q1 | **Die 7 Messskripte auf `rollen_eingabe` umstellen** | Modul gebaut, **0 Nutzer** |
+| Q2 | Uniqueness-Gewichtung in die Messwerkzeuge | nicht gebaut |
+| Q3 | Granularitätswächter | **gebaut**, beide Ladepfade |
+| Q4 | Abdeckungsprüfung | **gebaut** |
+| Q5 | OD7L ohne Futures-Referenz | ungeklärt |
+| Q6 | 5 Krypto ohne Funding | bleiben bei zwei Faktoren |
+| Q7 | ETF strukturell ungeeignet | Befund: 2 Faktoren, 0,52 R Kosten. Nutzerentscheidung |
+
+### OFFENE MESSUNGEN
+
+| # | Frage | Umfang |
+|---|---|---|
+| M1 | Betragsfrage — letzte ungeprüfte Einzelerklärung | ~256 Aufrufe, Abbruchregel steht |
+| M2 | Bestandsblock färbt die Belege? | gepaart |
+| M3 | Persona | gepaart |
+| M4 | **Qualität nach Vervollständigung** gegen die Ausgangsmessung vom 12.08. | erst wenn L1–L4 und E1–E3 stehen |
+
+### GRUNDSÄTZLICH OFFEN
+
+| | Befund | Folge |
+|---|---|---|
+| Timing | 34,0 % gegen 33,3 % bei reinem Zufall | keine gemessene Kante aus Kursdaten |
+| Kosten | 0,17–0,52 R gegen +0,03 R brutto | keine Geometrie trägt sich |
+| Akkumulation | antizyklisch schlägt die Kontrolle nicht | AZ-4-Zusatzannahme unbelegt |
+| **Nachrichten** | **einzige unerprobte Kategorie** | die einzige mögliche dritte Quelle |
+
+### Was am 12.08. gesichert ist
+
+- **Der Deadloop ist aufgehoben** — 34 % gegen 0 % auf denselben 50 Fällen
+- **Das System reagiert auf die Information** — Phasenzeilen deutlich verschieden
+- **Die Basisqualität der Rolleninformationen ist NICHT erreicht** — eine von vier
+  Dimensionen, zwei von drei bis vier Quellen
+
+---
+
 ## 8b.7 Empfohlene Reihenfolge
 
 1. **QW2** (Export-Ergänzung `score_details_json` / `funding_rate_aktuell`) —
