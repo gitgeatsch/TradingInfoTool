@@ -541,12 +541,34 @@ def paket_6() -> None:
     # dasselbe - wer beides in eine Spalte wirft, kann hinterher nie mehr
     # unterscheiden, ob eine Position gehalten oder ein Einstieg verweigert
     # wurde. Genau diese Unterscheidung IST der Deadloop.
-    pruefe(P, "das Vokabular enthaelt beide Welten vollstaendig",
-           set(ALT) | set(NEU) == set(SA.AKTIONEN),
-           f"alt {sorted(set(ALT)-set(NEU))}, neu {sorted(set(NEU)-set(ALT))}")
-    pruefe(P, "HALTEN und NICHTS_TUN bleiben GETRENNT",
-           "HALTEN" in SA.AKTIONEN and "NICHTS_TUN" in SA.AKTIONEN,
-           "HALTEN = Bestand behalten, NICHTS_TUN = auch nicht kaufen")
+    # NICHTS_TUN -> HALTEN. Korrigiert nach Nutzereinwand: auf der Ebene des
+    # ASSETS ist beides dieselbe Aktion (kein Trade, Stand bleibt). Der
+    # Unterschied, den ich zuerst behauptet hatte, steckt im KONTEXT (halte ich
+    # es oder nicht) - und der steht im Bestand, nicht im Aktionsnamen.
+    pruefe(P, "NICHTS_TUN erreicht die Datenbank NIE",
+           "NICHTS_TUN" not in SA.AKTIONEN and SA.UMBENENNUNG["NICHTS_TUN"] == "HALTEN",
+           "zwei Etiketten fuer dasselbe Ergebnis zwaengen jede Auswertung, "
+           "beide zu kennen - sonst zaehlt sie die halbe Wahrheit")
+    pruefe(P, "jeder Altwert bleibt gueltig", set(ALT) <= set(SA.AKTIONEN),
+           "solange die alte Kette laeuft, muessen ihre Werte gueltig bleiben")
+    pruefe(P, "jede neue Aktion hat ein Ziel im Vokabular",
+           all(SA.UMBENENNUNG.get(a, a) in SA.AKTIONEN for a in NEU))
+    pruefe(P, "REDUZIEREN bleibt eigenstaendig",
+           "REDUZIEREN" in SA.AKTIONEN and "REDUZIEREN" not in SA.UMBENENNUNG,
+           "Teilverkauf ist kein Vollverkauf - die Position wird kleiner statt "
+           "geschlossen, und das ist ein anderer Ausgang")
+
+    grund_a = {"belege": [{"fakt": "a", "richtung": "dafuer", "gewicht": "hoch"},
+                          {"fakt": "b", "richtung": "dafuer", "gewicht": "mittel"}],
+               "unabhaengige_faktoren": 2, "einstieg_eur": 100.0,
+               "stop_eur": 94.0, "begruendung": "x", "was_dagegen": "y",
+               "umgeworfen_durch": "z"}
+    abbild = {a: SA.felder_aus_entscheidung(
+        RT.validiere({**grund_a, "aktion": a}, "X", atr=4.0), fakten={})["action"]
+        for a in NEU}
+    pruefe(P, "die Abbildung greift wirklich",
+           abbild["NICHTS_TUN"] == "HALTEN" and abbild["KAUFEN"] == "KAUFEN"
+           and abbild["REDUZIEREN"] == "REDUZIEREN", str(abbild))
 
     con = sqlite3.connect("data/tradinginfotool.db")
     try:

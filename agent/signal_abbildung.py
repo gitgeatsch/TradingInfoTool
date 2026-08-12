@@ -9,13 +9,32 @@ DIE FUENF ECKPUNKTE, alle an der Quelle gemessen:
        nur alt     HALTEN · TAUSCHEN
        nur neu     NICHTS_TUN · REDUZIEREN
 
-   ENTSCHEIDUNG: erweitern, nicht abbilden. `HALTEN` und `NICHTS_TUN` sind
-   NICHT dasselbe - HALTEN heisst "den Bestand behalten", NICHTS_TUN heisst
-   auch "nicht kaufen". Wer beides in eine Spalte wirft, kann hinterher nie
-   mehr unterscheiden, ob das System eine Position gehalten oder einen Einstieg
-   verweigert hat. Genau diese Unterscheidung ist der Deadloop.
-   `signals.action` traegt keine CHECK-Bedingung (geprueft) - die Erweiterung
-   kostet keine Tabellenumstellung.
+   NICHTS_TUN WIRD AUF HALTEN ABGEBILDET - korrigiert am 12.08. nach
+   Nutzereinwand, und meine erste Begruendung war falsch.
+
+   Ich hatte geschrieben, die beiden seien verschieden: "HALTEN heisst den
+   Bestand behalten, NICHTS_TUN heisst auch nicht kaufen." Der Nutzer:
+   *"auf z.B. Assets haette ich diese analog verstanden - beides bedeutet beim
+   Asset keine Aktion, aktueller Stand bleibt so."*
+
+   Er hat recht. Der Unterschied, den ich meinte, steckt NICHT IN DER AKTION,
+   sondern im KONTEXT - halte ich das Asset oder nicht. Und der Kontext steht
+   laengst woanders: im Bestand (`menge`, `einstand`), der bei jedem Signal
+   mitgeschrieben wird. Zwei Etiketten fuer dasselbe Ergebnis verdoppeln eine
+   Information, die schon da ist.
+
+   Und es waere SCHAEDLICH fuer genau die Messung, die ich schuetzen wollte:
+   laege in der alten Kette HALTEN und in der neuen NICHTS_TUN, muesste jede
+   Auswertung beide kennen - sonst zaehlt sie die halbe Wahrheit.
+
+   DIE UNTERSCHEIDUNG, AUF DIE ES BEIM DEADLOOP ANKOMMT, ist ohnehin eine
+   andere: selbst gewaehlt gegen degradiert. Dafuer gibt es `original_action`
+   und `ist_reines_llm_halten`, und die neue Kette vermerkt eine Ruecknahme in
+   `_degradiert`.
+
+   REDUZIEREN BLEIBT EIGENSTAENDIG. Ein Teilverkauf ist kein Vollverkauf - die
+   Position wird kleiner statt geschlossen, und das ist ein anderer Ausgang.
+   TAUSCHEN bleibt als Altwert fuer bestehende Zeilen gueltig.
 
 2  FUENF FELDER HATTEN KEIN ZUHAUSE. Sie bekommen eigene Spalten, additiv und
    idempotent wie jede Migration hier.
@@ -46,7 +65,15 @@ from datetime import datetime, timezone
 # die alte Kette laeuft, muessen ihre Werte gueltig bleiben.
 AKTIONEN_ALT = ("HALTEN", "KAUFEN", "NACHKAUFEN", "TAUSCHEN", "VERKAUFEN")
 AKTIONEN_NEU = ("KAUFEN", "NACHKAUFEN", "NICHTS_TUN", "REDUZIEREN", "VERKAUFEN")
-AKTIONEN = tuple(sorted(set(AKTIONEN_ALT) | set(AKTIONEN_NEU)))
+
+# Was die neue Kette sagt -> was in der Spalte steht. Nur EIN Eintrag, und der
+# ist begruendet (siehe Eckpunkt 1): gleiche Aktion, gleiches Ergebnis.
+UMBENENNUNG = {"NICHTS_TUN": "HALTEN"}
+
+# Das Vokabular der SPALTE nach der Abbildung. NICHTS_TUN steht bewusst NICHT
+# darin - es erreicht die Datenbank nie.
+AKTIONEN = tuple(sorted(
+    set(AKTIONEN_ALT) | {UMBENENNUNG.get(a, a) for a in AKTIONEN_NEU}))
 
 # Neue Spalten auf `signals`. Namen bewusst mit `rolle_`-Praefix, wo eine
 # Verwechslung mit einem Altfeld moeglich waere - `begruendung` gaebe es sonst
@@ -145,7 +172,7 @@ def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
     hat."""
     aktion = str(antwort.get("aktion") or "").strip().upper()
     aus = {
-        "action": aktion,
+        "action": UMBENENNUNG.get(aktion, aktion),
         "quelle_kette": "rollen",
         "prompt_stand": prompt_stand,
         "lagebild_id": lagebild_id,
