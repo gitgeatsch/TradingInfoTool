@@ -652,20 +652,72 @@ Rollen-Ebene, die dabei entstanden ist, ist die Voraussetzung für Weg 2.
 ---
 
 
-## 8e. GESAMTREVIEW — was zu bauen ist, Stand 12.08.2026
+## 8e. UMSETZUNGSPLAN PRODUKTION — laufend fortzuschreiben
 
-> **Nutzervorgabe:** *„mach ein Review aller Bereiche und Abschnitte die zu bauen
-> sind für den Gesamtplan, damit wir nichts vergessen."* Gegliedert nach der
-> Ablaufkette, nicht nach Dringlichkeit — Vollständigkeit vor Reihenfolge. Der
-> Ist-Zustand ist am Code geprüft, nicht erinnert.
+> **Nutzervorgabe 12.08.:** *„die noch offenen Punkte und Detailänderungen zum
+> Gesamtplan für die Umsetzung in der Produktion sollen laufend aktualisiert
+> werden und kein Bereich vergessen werden."*
+>
+> **PFLEGEREGEL — dieser Abschnitt ist eine lebende Datei, kein Bericht.**
+> 1. Jede Änderung an Code, der die Produktion berührt, kommt in 8e.1 —
+>    **bevor** sie committet wird, nicht danach.
+> 2. Jeder erledigte Baupunkt wird in 8e.2 **abgehakt statt gelöscht**. Die
+>    Begründung ist oft wertvoller als der Punkt.
+> 3. Ein Punkt gilt erst als erledigt, wenn der **Code** es bestätigt — nicht
+>    das Dokument. Am 11.08. war R-A2 seit einem Tag „erledigt" und nie gebaut.
+> 4. Der Ist-Zustand wird **geprüft, nicht erinnert.** Jede Zahl hier ist am
+>    Code oder an den Daten erhoben.
 
-### Der wichtigste Satz vorweg
+### Der Satz, der die Lage beschreibt
 
-**Die neue Rollen-Ebene läuft in null Produktionspfaden.** Geprüft: sieben
-Messskripte nutzen sie, `scheduler/`, `ui/` und `main.py` kennen sie nicht. In
-der Produktion läuft weiter das Altsystem mit 34.611 Zeichen Prompt.
+**Die neue Rollen-Ebene läuft in null Produktionspfaden.** Geprüft am 12.08.
+über die tatsächlichen Importe: `lagebeschreibung`, `rolle_analyst`,
+`rolle_trader`, `waechter_zuspitzung`, `rollen_eingabe`, `empfehlung_vertrag`
+und `marktbreite` haben **je null** Importe aus `scheduler/`, `ui/`, `main.py`,
+`agent/krypto/`, `agent/aktien/`, `agent/rohstoff/`, `remote/`.
+
+In der Produktion läuft weiter das Altsystem mit 34.611 Zeichen Prompt.
 
 ---
+
+## 8e.1 DETAILÄNDERUNGEN — was seit dem 10.08. geändert wurde
+
+*Getrennt danach, ob die Produktion es beim nächsten Lauf merkt. Diese Trennung
+ist der Kern: was isoliert ist, kann nichts kaputtmachen; was im Pfad liegt,
+wirkt sofort nach dem Ausrollen.*
+
+### A — WIRKT in der Produktion, sobald das Notebook zieht
+
+| Änderung | Datei | Wirkung beim nächsten Lauf |
+|---|---|---|
+| **yfinance-Rückfall vor CoinGecko** | `api/yfinance_krypto_fallback.py` (neu) + `scheduler/background.py` | Der OHLC-Job holt für Krypto ohne Kraken-Listing zuerst yfinance. **Ändert Kursdaten**, die alles Weitere nutzt. Tickerprüfung ist Pflicht — 3 von 8 Yahoo-Tickern gehören einem toten Asset |
+| **`ausgenommen`-Parameter** | `api/coingecko_ohlc_fallback.py` | CoinGecko überschreibt nicht mehr, was yfinance geliefert hat |
+| Funding-Funktionen | `api/derivatives.py` | **gebaut, aber nicht gerufen** — keine Wirkung, bis ein Aufrufer sie nutzt |
+
+> **Vor dem Ausrollen zu prüfen:** ob die yfinance-Übernahme die vier bestätigten
+> Symbole (KAIA, KAITO, SUPRA, XNO) tatsächlich befüllt und die fünf abgelehnten
+> unberührt lässt. `--trocken` zeigt es ohne Schreibzugriff.
+
+### B — ISOLIERT, wirkt erst mit dem Einhängen der Rollen-Ebene
+
+| Änderung | Datei | was sie bewirkt |
+|---|---|---|
+| Währungsregel, eine je Symbol | `backtest_llm1_historisch.py` | ETF-Klasse überhaupt sichtbar (7 Symbole, bis 4.722 Kerzen) |
+| Granularitätswächter | dito, beide Ladepfade | 9 Reihen mit Vier-Tage-Kerzen werden verworfen und **benannt** |
+| Einstand aus **beiden** Spalten | `pruefe_rollenkette.py` | 14 Positionen werden nicht mehr als „nicht im Bestand" gemeldet |
+| `ORDER BY fetched_at DESC` | dito | nicht mehr die älteste `price_cache`-Zeile |
+| Keine EUR-Doppelumrechnung | dito | seit die ETFs sichtbar sind, sonst um den Wechselkurs daneben |
+| `_struktur()` ohne Etikett, mit Fenster | `agent/lagebeschreibung.py` | R-T1/R-T2 |
+| Drei Bestandszustände statt zwei | dito | „im Bestand, Einstand unbekannt" ist eine eigene Aussage |
+| Finanzierungsblock | dito | erster Fakt, der nicht aus der Kursreihe stammt |
+| Betragsfrage aus beiden Prompts | `rolle_analyst.py`, `rolle_trader.py` | R-A2 erstmals gebaut. Alte Fassung schaltbar erhalten |
+| `PROMPT_STAND` | dito | jeder Messbefund ist einem Stand zuordenbar |
+| Zuspitzungs-Wächter | `agent/waechter_zuspitzung.py` (neu) | prüft die **Naht** zwischen den Rollen |
+| Eine Stelle für die Rollen-Eingabe | `agent/rollen_eingabe.py` (neu) | **0 Nutzer** — die sieben Messskripte bauen sie weiter selbst |
+
+---
+
+## 8e.2 BAUPUNKTE — nach der Ablaufkette
 
 ### STUFE 0 — Betrieb
 
@@ -768,6 +820,26 @@ der Produktion läuft weiter das Altsystem mit 34.611 Zeichen Prompt.
 - **Das System reagiert auf die Information** — Phasenzeilen deutlich verschieden
 - **Die Basisqualität der Rolleninformationen ist NICHT erreicht** — eine von vier
   Dimensionen, zwei von drei bis vier Quellen
+
+---
+
+## 8e.3 AUSROLL-CHECKLISTE
+
+*Abzuarbeiten, wenn die Rollen-Ebene in die Produktion geht. Jeder Punkt einmal
+teuer gelernt.*
+
+- [ ] `git fetch` vor dem Push — das Notebook hatte schon eigene Commits
+- [ ] Als **ein** Paket ausrollen, nicht in Einzelteilen
+- [ ] `pruefe_abdeckung.py` auf dem Notebook — Desktop-Zahlen gelten für den 19.07.
+- [ ] yfinance-Übernahme erst `--trocken`, dann `--schreiben`
+- [ ] Nach dem ersten OHLC-Lauf: Granularitätswarnung im Log lesen
+- [ ] Werturteil-, Konstanten- und Zuspitzungs-Wächter grün, sonst Abbruch
+- [ ] Kausalitätsprobe auf `lagebeschreibung.py`
+- [ ] Gate-Durchlässigkeit **von Anfang an** mitzählen — sonst verschiebt sich
+      der Deadloop eine Ebene tiefer, unbemerkt
+- [ ] Erste Signale der neuen Kette **lesen**, nicht nur zählen (Lehre vom 10.08.)
+- [ ] Kontingent vor dem Start: Gemini 500/Tag je Modell, Reset 09:00 MESZ.
+      Ein Desktop-Lauf nimmt der Produktion Kontingent weg, sobald sie läuft
 
 ---
 
