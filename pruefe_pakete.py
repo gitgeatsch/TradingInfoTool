@@ -2344,10 +2344,94 @@ def paket_13() -> None:
            "Unterstuetzung" in kurz_u["ziel_regel"])
 
 
+
+def gesamtpruefung() -> None:
+    """Der Abgleich ALLER Pakete gegeneinander (13.08.2026).
+
+    WOZU, wenn jedes Paket seine eigene Gegenpruefung hat: die Paketpruefungen
+    sehen jeweils EIN Paket. Widersprueche entstehen aber ZWISCHEN ihnen - und
+    genau drei sind so entstanden, alle durch Paket 13 und keine davon von den
+    23 Pruefungen des Pakets selbst bemerkt."""
+    P = "gesamt"
+    import os
+    import re as _re
+    from agent.empfehlung_vertrag import AKTIONEN, AKTIONEN_HEBEL
+    from agent import signal_abbildung as SA
+    from agent import signal_mail as SM
+    from agent import trefferbilanz as TB, entscheidungsrechnung as ER
+    from agent import ausstiegsrechnung as AR
+    from agent.krypto import backward_tracking as BT
+    from agent.krypto.ausstiegsregel import AUSLOESE_R
+    from agent.krypto.hebel_analyst import REQUIRED_HEBEL_ACTIONS
+
+    # --- VOKABULAR: sagen alle Pakete dasselbe? ---
+    pruefe(P, "das Hebel-Vokabular deckt sich mit der alten Kette",
+           set(AKTIONEN_HEBEL) == set(REQUIRED_HEBEL_ACTIONS))
+    pruefe(P, "JEDE Aktion beider Instrumente erreicht die Datenbank",
+           all(SA.UMBENENNUNG.get(a, a) in SA.AKTIONEN
+               for a in tuple(AKTIONEN) + tuple(AKTIONEN_HEBEL)),
+           "Paket 13 gab dem Hebel sieben Aktionen; signal_abbildung kannte "
+           "nur die fuenf der Spot-Kette - ein Hebel-Signal waere beim "
+           "Schreiben gescheitert, und zwar erst im Betrieb")
+    pruefe(P, "die Mail zeigt auch bei ERÖFFNEN eine Rechnung",
+           "ERÖFFNEN" in SM.AKTIONEN_MIT_EINSTIEG,
+           "sonst stuende dort 'Kein Einstieg geplant' und daneben eine "
+           "ausgerechnete Zone im Nichts")
+    pruefe(P, "das Vokabular wird importiert, nicht abgeschrieben",
+           "AKTIONEN as AKTIONEN_NEU" in _quelltext("agent/signal_abbildung.py"),
+           "hier stand eine Handkopie der fuenf Spot-Aktionen - dieselbe "
+           "Sorte Kopie wie die Kostensaetze am 12.08.")
+
+    # --- KONSTANTEN: eine Quelle oder mehrere? ---
+    pruefe(P, "die Kostensaetze kommen aus EINER Quelle",
+           TB.KOSTEN_JE_SEITE["krypto"] == BT._KOSTEN_KRYPTO_JE_SEITE)
+    pruefe(P, "das CRV ist in Rechnung und Bilanz dasselbe",
+           ER.GRENZEN["crv"] == TB.CRV)
+    pruefe(P, "die Ausstiegsschwelle ist importiert, nicht kopiert",
+           AR.AUSLOESE_R is AUSLOESE_R)
+    pruefe(P, "die Stop-Untergrenzen stimmen mit der config ueberein",
+           ER.GRENZEN["stop_min_relativ"] == 0.025
+           and ER.GRENZEN["stop_min_atr"] == 0.75,
+           "RM-1b/RM-1c - wer die config aendert, muss hier mitziehen")
+
+    # --- EINHEITEN: eine Waehrung, eine Schreibweise? ---
+    for datei in ("agent/signal_mail.py", "agent/faktenblock.py",
+                  "agent/ausstiegsrechnung.py", "agent/entscheidungsrechnung.py"):
+        pruefe(P, f"{datei.split('/')[-1]} schreibt Zahlen deutsch",
+               "maketrans" in _quelltext(datei),
+               "zwei Schreibweisen in einer Nachricht sind der Fehler aus "
+               "Umbauplan 12.5")
+
+    # --- ERREICHBARKEIT: was ist gebaut und ruft niemand? ---
+    module = ["entscheidungsrechnung", "faktenblock", "faktenblock_quellen",
+              "signal_mail", "ausstiegsrechnung", "rollen_gate",
+              "gegenpruefer_rollen", "trefferbilanz", "handelsauftrag",
+              "signal_abbildung", "toepfe", "marktlage", "rolle_analyst",
+              "rolle_trader", "rollen_eingabe"]
+    quellen = {}
+    for wurzel in ("agent", "ui", "scheduler"):
+        for pfad, _, dateien in os.walk(wurzel):
+            for d in dateien:
+                if d.endswith(".py"):
+                    voll = os.path.join(pfad, d).replace(chr(92), "/")
+                    quellen[voll] = _quelltext(voll)
+    ohne_betrieb = []
+    for m in module:
+        rufer = [p for p, t in quellen.items()
+                 if _re.search(rf"{m}", t) and not p.endswith(f"{m}.py")]
+        if not any(p.startswith(("scheduler/", "ui/")) for p in rufer):
+            ohne_betrieb.append(m)
+    pruefe(P, "die fehlende Verdrahtung ist VOLLSTAENDIG, nicht teilweise",
+           len(ohne_betrieb) == len(module),
+           f"{len(ohne_betrieb)} von {len(module)} ohne Betriebsaufrufer. "
+           f"Das ist der offene Punkt B1 und KEIN neuer Fund - aber solange "
+           f"es ALLE sind, gibt es keine halb verdrahtete Kette, in der "
+           f"unklar waere, welcher Weg gilt")
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13}
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung}
 
 
 def main() -> int:

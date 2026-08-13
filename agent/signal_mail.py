@@ -71,7 +71,13 @@ TRENNER = "-" * 68
 
 # Nur bei diesen Aktionen wird ueberhaupt eine Position eroeffnet oder
 # vergroessert - nur dort ergibt eine Einstiegsrechnung Sinn.
-AKTIONEN_MIT_EINSTIEG = ("KAUFEN", "NACHKAUFEN")
+#
+# ERÖFFNEN ERGAENZT (Gesamtpruefung 13.08.). Paket 13 hat dem Hebel sieben
+# Aktionen gegeben, aber diese Liste kannte weiter nur die Spot-Woerter -
+# ein Hebel-Einstieg haette in der Mail gestanden als "Kein Einstieg
+# geplant", mit ausgerechneter Zone daneben im Nichts. Gefunden nicht beim
+# Bauen von 13, sondern erst beim Abgleich ALLER Pakete gegeneinander.
+AKTIONEN_MIT_EINSTIEG = ("KAUFEN", "NACHKAUFEN", "ERÖFFNEN")
 
 
 def eur(wert: float, stellen: int = 0) -> str:

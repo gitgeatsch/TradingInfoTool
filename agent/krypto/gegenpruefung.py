@@ -430,6 +430,20 @@ _SHORT_ACTIONS = {"VERKAUFEN", "TAUSCHEN", "REDUZIEREN"}  # TAUSCHEN nur Krypto-
 # haengt das Ergebnis davon ab, WO in der Kette geprueft wird.
 _KEINE_RICHTUNG = {"HALTEN", "NICHTS_TUN"}
 
+# DIE SIEBEN HEBEL-AKTIONEN STEHEN HIER BEWUSST NICHT (Gesamtpruefung 13.08.).
+# Bei Hebel gibt es ein ECHTES `richtung`-Feld - LONG oder SHORT stehen im
+# Signal, und `fuehre_beide_calls_im_hintergrund()` bekommt sie direkt. Aus der
+# Aktion eine Richtung abzuleiten waere dort nicht nur unnoetig, sondern
+# falsch: SCHLIESSEN einer SHORT-Position ist eine Kaufhandlung, waehrend die
+# These baerisch war.
+#
+# WARUM ES TROTZDEM HIER STEHT: die Gesamtpruefung hat gemeldet, dass die
+# sieben Aktionen unbekannt sind, und das sah wie eine Luecke aus. Ist es
+# nicht - aber "gilt zufaellig" und "ist entschieden" sehen im Code gleich aus,
+# solange es niemand hinschreibt.
+HEBEL_AKTIONEN_OHNE_ABLEITUNG = ("ERÖFFNEN", "HEBEL_ERHÖHEN", "HEBEL_SENKEN",
+                                 "TEILVERKAUF", "SCHLIESSEN")
+
 
 def richtung_aus_action(action: str, ist_hedge_invertiert: bool = False) -> str | None:
     """Deterministisches Mapping Action -> erwartete Richtung fuer Call 2 bei

@@ -75,7 +75,14 @@ from datetime import datetime, timezone
 # Das vereinigte Vokabular. `signals.action` traegt jetzt beide Welten - solange
 # die alte Kette laeuft, muessen ihre Werte gueltig bleiben.
 AKTIONEN_ALT = ("HALTEN", "KAUFEN", "NACHKAUFEN", "TAUSCHEN", "VERKAUFEN")
-AKTIONEN_NEU = ("KAUFEN", "NACHKAUFEN", "NICHTS_TUN", "REDUZIEREN", "VERKAUFEN")
+#
+# IMPORTIERT STATT ABGESCHRIEBEN (Gesamtpruefung 13.08.). Hier stand eine
+# HANDKOPIE der fuenf Spot-Aktionen. Als Paket 13 dem Hebel sieben Aktionen
+# gab, wusste diese Datei nichts davon - ein Hebel-Signal der neuen Kette
+# waere beim Schreiben an der eigenen Vokabularpruefung gescheitert, und zwar
+# erst im Betrieb. Dieselbe Sorte Kopie wie die Kostensaetze am 12.08.
+from agent.empfehlung_vertrag import AKTIONEN as AKTIONEN_NEU
+from agent.empfehlung_vertrag import AKTIONEN_HEBEL
 
 # Was die neue Kette sagt -> was in der Spalte steht. Nur EIN Eintrag, und der
 # ist begruendet (siehe Eckpunkt 1): gleiche Aktion, gleiches Ergebnis.
@@ -84,7 +91,9 @@ UMBENENNUNG = {"NICHTS_TUN": "HALTEN"}
 # Das Vokabular der SPALTE nach der Abbildung. NICHTS_TUN steht bewusst NICHT
 # darin - es erreicht die Datenbank nie.
 AKTIONEN = tuple(sorted(
-    set(AKTIONEN_ALT) | {UMBENENNUNG.get(a, a) for a in AKTIONEN_NEU}))
+    set(AKTIONEN_ALT)
+    | {UMBENENNUNG.get(a, a) for a in AKTIONEN_NEU}
+    | {UMBENENNUNG.get(a, a) for a in AKTIONEN_HEBEL}))
 
 # Neue Spalten auf `signals`. Namen bewusst mit `rolle_`-Praefix, wo eine
 # Verwechslung mit einem Altfeld moeglich waere - `begruendung` gaebe es sonst
