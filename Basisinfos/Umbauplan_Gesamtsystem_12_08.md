@@ -1006,3 +1006,80 @@ Betriebsverhalten ändern und die Produktion für den Umbau steht:
    jede Auszählung über `signals` erklärungsbedürftig — und genau daran bin
    ich heute selbst hängengeblieben. Der teuerste der drei Punkte, weil er
    Schema und Auswertungen berührt; deshalb zuletzt.
+
+---
+
+# 14. Abschluss-Checkliste: was NACH dem letzten Paket noch fehlt
+
+**Nutzervorgabe 13.08.:** *„vergiss nicht am Ende der Umsetzung die
+Dokumentationen und Zentraldokumente nachzutragen und ggf. auch die
+Analysestandards nachzuziehen mit dem NB-Export-Skript."*
+
+Steht hier und nicht im Gedächtnis, weil genau das am 12./13.08. schon einmal
+liegengeblieben ist: vier laufend fortzuschreibende Dokumente standen seit dem
+11.08. still, und es fiel erst auf, als der Nutzer danach fragte.
+
+## 14.1 Zentraldokumente — wer ist wofür zuständig
+
+Die Landkarte steht in `feedback_doku_struktur_zuordnung`. **Diese vier sind
+bei JEDER Änderung mitzuziehen:**
+
+| Datei | was hinein muss |
+|---|---|
+| `Regelwerk_Entscheidungslog.md` | Nachtrag je Fix und Messung, **Index-Zähler und Themenzeile mit** |
+| `Regelwerksmanual.md` | der IST-Zustand, sobald sich eine Regel ändert |
+| `Test_und_Verifikationsmethodik.md` | jedes neue Prüfskript in 2.13 |
+| `Fakten_Entscheidungsmappe.md` | jeder neue oder entfernte Fakt |
+| `Zielgroessen_und_Erfolgsmasse.md` | Änderungen an Messung oder Zielgrößen |
+
+## 14.2 Der Notebook-Export kennt den Umbau nicht — nachgezählt
+
+`extract_notebook_diagnose.py` exportiert heute 18 Tabellen. **Vom gesamten
+Umbau ist keine einzige dabei:**
+
+| | im Export |
+|---|---|
+| Tabelle `lagebilder` (Paket 6) | **nein** |
+| Tabelle `gate_durchlaessigkeit` (12c) | **nein** |
+| Spalte `quelle_kette` | **nein** |
+| Spalte `rolle_begruendung` | **nein** |
+| Spalte `umgeworfen_preis_eur` / `_bis` | **nein** |
+| Spalte `unabhaengige_faktoren` | **nein** |
+
+**Ohne diese Felder ist der Umbau von außen unsichtbar.** Jede spätere
+Auswertung liefe auf den Altdaten und käme zu den Schlüssen der alten Kette —
+genau die Falle, die `pruefe_export_vollcheck.py` unter Frage D beschreibt
+(*„fehlen relevante Informationen, die eine spätere Auswertung kippen
+würden?"*).
+
+## 14.3 Die Analysestandards, die mitzuziehen sind
+
+| Skript | was zu ergänzen ist |
+|---|---|
+| `extract_notebook_diagnose.py` | die zwei Tabellen und die neuen `signals`-Spalten |
+| `pruefe_export_standard.py` | der 15-Punkte-Katalog aus Methodik 2.1 kennt die Durchlässigkeit nicht — sie ist der aussagekräftigste neue Wert |
+| `pruefe_export_vollcheck.py` | Frage C („wo steht jeder Messpunkt") muss die Rollen-Kette mit aufnehmen |
+
+## 14.4 Was in den Dokumenten noch fehlt (Stand 13.08. abends)
+
+Nachgezogen sind Kapitel 12, 12.8, 12.9, 13 im Umbauplan sowie die fünf
+Zentraldokumente für die Pakete 10–14. **Offen ist alles ab 12b:**
+
+- **12b/12c/12d und 13** stehen bisher nur im Umbauplan und in den
+  Commit-Nachrichten — nicht im Entscheidungslog, nicht im Manual
+- **Die Gesamtprüfung** und ihre drei Funde sind nirgends in der Methodik
+- **Die neuen Prüfskript-Pakete** (`--paket gesamt`) fehlen im Werkzeugkasten
+- **Der Ausstieg** (Paket 14) ist im Manual beschrieben, aber die
+  Take-Profit-Nachlese und die Näherungswarnung kamen danach
+
+## 14.5 Reihenfolge am Ende
+
+1. **Erst der Betrieb** (B1) — solange nichts läuft, beschreibt jede Doku eine
+   Vermutung
+2. **Dann der Export**, sonst ist der erste Betriebslauf nicht auswertbar
+3. **Dann die Zentraldokumente**, mit den echten Zahlen aus 1 und 2 statt mit
+   den erwarteten
+4. **Zuletzt die Analysestandards** — sie prüfen, was in 2 und 3 entstanden ist
+
+**Diese Reihenfolge ist nicht beliebig.** Wer die Doku vor dem ersten Lauf
+schreibt, dokumentiert eine Absicht und muss sie danach zweimal korrigieren.
