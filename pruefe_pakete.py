@@ -1509,7 +1509,12 @@ def paket_14() -> None:
            eigen["falsifikator_eigenstaendig"] is True)
 
     # FRIST.
-    ab = lauf(hoechstkurs=ein + 1.4 * 4500, umgeworfen_bis="2026-08-01")
+    # Der Kurs muss UEBER dem nachgezogenen Stop liegen, sonst greift zu Recht
+    # SCHLIESSEN und die Frist ist nicht mehr die Ueberschrift. Der erste
+    # Testfall hatte 55.500 gegen einen Trailing-Stop von 57.300 - er war mit
+    # der spaeter gebauten Regel unvereinbar, und genau das hat sie gemeldet.
+    ab = lauf(kurs_aktuell=59000, hoechstkurs=ein + 1.4 * 4500,
+              umgeworfen_bis="2026-08-01")
     pruefe(P, "eine abgelaufene Frist steht in der UEBERSCHRIFT",
            "FRIST ABGELAUFEN" in ab["empfehlung"],
            "in der ersten Fassung stand sie nur unter den Gruenden - eine "
