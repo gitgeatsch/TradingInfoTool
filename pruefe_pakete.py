@@ -1454,10 +1454,110 @@ def paket_13() -> None:
            "es auf True, OHNE dass eine Modellantwort vorliegt")
 
 
+
+def paket_14() -> None:
+    """Der Ausstieg - Trailing, Widerlegungspreis, Frist."""
+    P = "14"
+    from agent import ausstiegsrechnung as AR
+    from agent.krypto import ausstiegsregel as AREGEL
+
+    ein, stop = 55500.0, 51000.0          # Risiko 4.500
+
+    def lauf(**kw):
+        basis = dict(einstieg=ein, stop_original=stop, kurs_aktuell=ein,
+                     heute="2026-08-13")
+        basis.update(kw)
+        return AR.bewerte(**basis)
+
+    # DIE MESSGRUNDLAGE WIRD IMPORTIERT, NICHT NACHGEBAUT. Behavioural
+    # geprueft: dasselbe Ergebnis wie die Originalregel, nicht "der Import
+    # steht im Quelltext".
+    e = lauf(hoechstkurs=ein + 1.8 * 4500)
+    original = AREGEL.stopempfehlung(ein, stop, ein + 1.8 * 4500)
+    pruefe(P, "der Trailing-Stop kommt aus der gemessenen Regel",
+           abs(e["stop_empfohlen"] - original.stop_empfohlen) < 1e-9
+           and abs(e["gesicherte_r"] - original.gesicherte_r) < 1e-9,
+           "sie ist an 495 aufgeloesten Signalen gemessen (+0,092 R, "
+           "Bootstrap [+0,051; +0,131]) - eine zweite Fassung waere die Sorte "
+           "Kopie, die still veraltet")
+    pruefe(P, "unter der Ausloeseschwelle zieht er nicht",
+           lauf(hoechstkurs=ein + 0.5 * 4500)["trailing_aktiv"] is False)
+
+    # DER GRENZFALL BEI GENAU 1 R IST DER VERWORFENE BREAKEVEN-LOCK - und er
+    # wird benannt, nicht wegdefiniert.
+    grenz = lauf(hoechstkurs=ein + 1.0 * 4500)
+    pruefe(P, "bei genau +1 R sichert der Stop null - und das steht dabei",
+           abs(grenz["gesicherte_r"]) < 0.01
+           and any("sichert noch nichts" in g for g in grenz["gruende"]),
+           "das IST der Breakeven-Lock, der am 01.08. verworfen wurde - aber "
+           "die +0,092 R sind MIT diesem Randfall gemessen")
+
+    # WIDERLEGUNGSPREIS - die K2-Luecke. Er stand bisher nur im Schema.
+    falsch = lauf(kurs_aktuell=50900, umgeworfen_preis_eur=51000)
+    pruefe(P, "ein erreichter Widerlegungspreis fuehrt zu SCHLIESSEN",
+           falsch["falsifiziert"] and falsch["empfehlung"] == AR.SCHLIESSEN,
+           "die Fakten-Entscheidungsmappe: 'heute von niemandem ausgewertet'")
+    pruefe(P, "ein NICHT erreichter nicht",
+           lauf(kurs_aktuell=56000, umgeworfen_preis_eur=51000)["falsifiziert"] is False)
+    pruefe(P, "faellt er mit dem Stop zusammen, wird das gesagt",
+           falsch["falsifikator_eigenstaendig"] is False
+           and any("beide sagen dasselbe" in g for g in falsch["gruende"]),
+           "in der neuen Kette wird der Stop AUS diesem Preis abgeleitet - "
+           "dann ist die Pruefung keine zweite Absicherung")
+    eigen = lauf(kurs_aktuell=52000, umgeworfen_preis_eur=52500)
+    pruefe(P, "und wo er eigenstaendig ist, ebenfalls",
+           eigen["falsifikator_eigenstaendig"] is True)
+
+    # FRIST.
+    ab = lauf(hoechstkurs=ein + 1.4 * 4500, umgeworfen_bis="2026-08-01")
+    pruefe(P, "eine abgelaufene Frist steht in der UEBERSCHRIFT",
+           "FRIST ABGELAUFEN" in ab["empfehlung"],
+           "in der ersten Fassung stand sie nur unter den Gruenden - eine "
+           "Position mit abgelaufener Begruendung sah aus wie jede andere")
+    pruefe(P, "eine laufende Frist nicht",
+           "FRIST" not in lauf(umgeworfen_bis="2026-12-01")["empfehlung"])
+    pruefe(P, "SCHLIESSEN wird von der Frist nicht verwaessert",
+           lauf(kurs_aktuell=50900, umgeworfen_preis_eur=51000,
+                umgeworfen_bis="2026-08-01")["empfehlung"] == AR.SCHLIESSEN)
+
+    # WAS NICHT PRUEFBAR IST, WIRD NICHT BEHAUPTET.
+    text = " ".join(AR.saetze(lauf(
+        umgeworfen_durch="Ein Tagesschluss unter 51.000 EUR bei steigendem Volumen.")))
+    pruefe(P, "die Prosa-Bedingung wird gezeigt, nicht ausgewertet",
+           "Selbst zu pruefen" in text and "nicht automatisch ausgewertet" in text,
+           "'bei steigendem Volumen' ist nicht zuverlaessig maschinell pruefbar")
+
+    # SHORT.
+    kurz = AR.bewerte(einstieg=100.0, stop_original=110.0, kurs_aktuell=112.0,
+                      ist_short=True, umgeworfen_preis_eur=111.0, heute="2026-08-13")
+    pruefe(P, "bei SHORT faellt die These nach OBEN",
+           kurz["falsifiziert"] is True)
+    pruefe(P, "und bei LONG nicht bei demselben Kurs",
+           AR.bewerte(einstieg=100.0, stop_original=90.0, kurs_aktuell=112.0,
+                      umgeworfen_preis_eur=111.0, heute="2026-08-13")["falsifiziert"] is False)
+
+    # KEIN ERGEBNIS OHNE GRUNDLAGE.
+    for fehlt, kw in (("Einstieg", dict(einstieg=None)),
+                      ("Originalstop", dict(stop_original=None)),
+                      ("plausibles R", dict(stop_original=ein + 100))):
+        pruefe(P, f"ohne {fehlt} gibt es keine Ausstiegsaussage",
+               lauf(**kw) is None,
+               "ohne R gibt es weder Trailing noch Stand noch Vergleich")
+
+    # EINE SCHREIBWEISE.
+    zahlen = " ".join(AR.saetze(lauf(kurs_aktuell=50900,
+                                     umgeworfen_preis_eur=50901,
+                                     hoechstkurs=ein + 1.8 * 4500)))
+    pruefe(P, "alle Betraege in deutscher Schreibweise",
+           "50.901,00" in zahlen and "50,901.00" not in zahlen,
+           "die erste Fassung schickte die ganze Zeile durch translate - "
+           "daneben stand '50,901.00 EUR' unuebersetzt")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13}
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14}
 
 
 def main() -> int:
