@@ -64,6 +64,12 @@ GRENZEN = {
     "crv": 2.0,                     # risiko.crv_minimum
     "zone_atr": 0.25,               # Breite der Einstiegszone, halbe Seite
 
+    # DIE CRV-ABSTUFUNG, aus der alten Kette uebernommen (13.08.2026) -
+    # identisch zu `risiko.crv_positionsgroesse_spreizung` und `..._voll_ab`.
+    # Begruendung in `_crv_faktor()`.
+    "crv_spreizung": 5.0,
+    "crv_voll_ab": 6.0,
+
     "hebel_max": 10.0,              # Bitpanda Margin: 2x-10x
     "liquidations_marge": 0.09,     # RM-11, config risiko.hebel.*_sicherheitsmarge_relativ
 
@@ -225,6 +231,37 @@ def _haltedauer_tage(weg: float, atr: float) -> int:
     return int(min(GRENZEN["tage_max"], max(1, round((weg / atr) ** 2))))
 
 
+def _crv_faktor(crv: float, instrument: str) -> float:
+    """Wieviel der vollen Groesse bei diesem CRV - stufenlos von 1/Spreizung
+    bei CRV 2,0 auf 1,0 bei CRV 6,0.
+
+    AUS DER ALTEN KETTE UEBERNOMMEN, und zwar als EINZIGE ihrer
+    Positionsgroessen-Regeln. Der Grund ist eine Messung an 298 Spot-Signalen,
+    die in `risk_gate.py` dokumentiert ist:
+
+        SQN           +0,63  ->  +1,36
+        Summe         +9,8 R ->  +23,1 R
+        Rueckschlag   36,3 R ->  27,1 R
+
+    Besseres Ergebnis bei KLEINEREM Risiko. Vor der Abstufung bekamen ein CRV
+    von 2,5 und eines von 6,0 dieselbe Groesse.
+
+    NUR SPOT, und das ist keine Nachlaessigkeit. Dieselbe Untersuchung fand
+    beim Hebel die GEGENLAEUFIGE Antwort (Gate behalten, SQN +3,25 gegen +1,25
+    fuer jede Groessen-Variante). Sie dort anzuwenden hiesse, eine Messung
+    gegen ihr eigenes Ergebnis zu uebertragen.
+
+    SICHER DURCH BAUFORM: der Faktor ist hoechstens 1,0, kann also nur
+    verkleinern. Eine Ueberexposition ist ausgeschlossen, nicht bloss
+    unwahrscheinlich. Abschalten ueber `crv_spreizung = 1.0`."""
+    spreizung, voll_ab = GRENZEN["crv_spreizung"], GRENZEN["crv_voll_ab"]
+    if instrument == "hebel" or spreizung <= 1.0 or voll_ab <= GRENZEN["crv"]:
+        return 1.0
+    spanne = max(0.0, min(1.0, (crv - GRENZEN["crv"]) / (voll_ab - GRENZEN["crv"])))
+    sockel = 1.0 / spreizung
+    return sockel + (1.0 - sockel) * spanne
+
+
 def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
            instrument: str = "spot", betrag_wunsch_eur: float | None = None,
            topf_frei_eur: float | None = None,
@@ -291,6 +328,13 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
         # Ohne Hebel gibt es keinen Wunsch, nur eine Rechnung: der Einsatz
         # folgt vollstaendig aus Risikobudget und Stopabstand.
         betrag = risiko_eur / stop_rel
+    # DIE CRV-ABSTUFUNG ZUERST, dann die Deckel. Sie beschreibt, wieviel der
+    # Aufbau VERDIENT; Topf und Hoechstbetrag, wieviel er BEKOMMEN darf. Zwei
+    # verschiedene Fragen, und die zweite gehoert nach der ersten.
+    _faktor = _crv_faktor(crv, instrument)
+    if _faktor < 1.0:
+        betrag, grund = betrag * _faktor, f"CRV-Abstufung ({crv:.2f})"
+    e["crv_groessenfaktor"] = round(_faktor, 3)
     if topf_frei_eur is not None and betrag > float(topf_frei_eur):
         betrag, grund = float(topf_frei_eur), "Topf"
     if betrag > GRENZEN["betrag_max_eur"]:

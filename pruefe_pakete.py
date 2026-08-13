@@ -3420,6 +3420,95 @@ def paket_15() -> None:
            "Platz war da, benutzt hat ihn niemand")
     pruefe(P, "und im Spot-Gate in die Kuerzungsnotiz",
            "DA . vermerk" in _nur_code("agent/krypto/risk_gate.py"))
+
+    # ------------------------------------------------------------------
+    # L. DIE UEBERNAHMEN AUS DER ALTEN KETTE (Vollumstieg, 13.08.).
+    #
+    # Der Nutzer hat den glatten Schnitt entschieden: eine Kette je Assetklasse,
+    # kein Parallelbetrieb. Was die alte Kette BESSER konnte, muss vorher
+    # herueber - sonst ist der Schnitt ein Rueckschritt mit Zahlen.
+    from agent import entscheidungsrechnung as ER
+    from agent import faktenblock as FB
+    from agent import rollen_lauf as RL2
+
+    # L1 DIE CRV-ABSTUFUNG - die einzige GEMESSENE Groessenregel der alten Kette.
+    pruefe(P, "bei CRV 2,0 nur ein Fuenftel der vollen Groesse",
+           abs(ER._crv_faktor(2.0, "spot") - 0.2) < 1e-9,
+           f"Spreizung {ER.GRENZEN['crv_spreizung']} -> Sockel 1/5")
+    pruefe(P, "ab CRV 6,0 die volle Groesse",
+           ER._crv_faktor(6.0, "spot") == 1.0
+           and ER._crv_faktor(9.0, "spot") == 1.0,
+           "oberhalb wird nicht weiter belohnt")
+    pruefe(P, "dazwischen stufenlos, nicht in Spruengen",
+           ER._crv_faktor(2.0, "spot") < ER._crv_faktor(3.0, "spot")
+           < ER._crv_faktor(4.5, "spot") < ER._crv_faktor(6.0, "spot"),
+           "vorher bekamen CRV 2,5 und CRV 6,0 dieselbe Groesse")
+    pruefe(P, "der Faktor kann NIE vergroessern",
+           all(ER._crv_faktor(c / 10, "spot") <= 1.0 for c in range(0, 200)),
+           "sicher durch Bauform - eine Ueberexposition ist ausgeschlossen, "
+           "nicht bloss unwahrscheinlich")
+    # DIE WICHTIGSTE DIESER PRUEFUNGEN.
+    pruefe(P, "beim HEBEL wirkt sie NICHT",
+           all(ER._crv_faktor(c / 10, "hebel") == 1.0 for c in range(20, 100)),
+           "dieselbe Untersuchung fand beim Hebel die GEGENLAEUFIGE Antwort "
+           "(SQN +3,25 gegen +1,25). Sie dort anzuwenden hiesse, eine Messung "
+           "gegen ihr eigenes Ergebnis zu uebertragen")
+    pruefe(P, "sie laesst sich abschalten, ohne Code zu aendern",
+           ER._crv_faktor.__doc__ and "crv_spreizung" in ER._crv_faktor.__doc__,
+           "Abschalten ueber crv_spreizung = 1.0")
+    _r = ER.rechne(kurs=100.0, atr=3.0, risiko_eur=150.0, instrument="spot",
+                   umgeworfen_preis_eur=94.0)
+    pruefe(P, "der Faktor steht in der Rechnung und ist nachlesbar",
+           "crv_groessenfaktor" in _r,
+           "eine Kuerzung, die niemand sieht, ist der unsichtbare Filter")
+    # DER SCHLUESSEL HEISST `betrag_gedeckelt_durch`, nicht `betrag_grund` -
+    # nachgesehen statt geraten, nachdem die erste Fassung genau daran scheiterte.
+    pruefe(P, "und der Grund nennt den CRV",
+           "CRV-Abstufung" in str(_r.get("betrag_gedeckelt_durch") or ""),
+           f"Faktor {_r['crv_groessenfaktor']}, "
+           f"Grund {_r.get('betrag_gedeckelt_durch')}")
+
+    # L2 DIE KOSTENKLASSE - der latente Defekt aus Kapitel 17.3.
+    pruefe(P, "Krypto und Boerse bekommen verschiedene Kostenklassen",
+           RL2._kostenklasse("krypto") == "krypto"
+           and RL2._kostenklasse("aktien") == "boerse",
+           "bei der ersten Aktie haette der Entscheider sonst mit "
+           "Krypto-Gebuehren (1,5 % je Seite) statt Boersengebuehren "
+           "gerechnet - der Breakeven waere grob falsch gewesen")
+    _kr = TB.kosten_r_aus_stop(100.0, 95.0, klasse="krypto", position_eur=250)
+    _bo = TB.kosten_r_aus_stop(100.0, 95.0, klasse="boerse", position_eur=250)
+    pruefe(P, "und die Zahlen unterscheiden sich wirklich",
+           abs(_kr - _bo) > 0.05,
+           f"Krypto {_kr:.3f} R gegen Boerse {_bo:.3f} R bei 250 EUR")
+    pruefe(P, "die Kette uebergibt Klasse UND Positionsgroesse",
+           "klasse = _kostenklasse ( assetklasse )" in _nur_code(
+               "agent/rollen_lauf.py")
+           and "position_eur = rechnung" in _nur_code("agent/rollen_lauf.py"),
+           "ohne die Groesse waere die Fixgebuehr auf 500 EUR geschaetzt - "
+           "bei einer 250-EUR-Tranche das Doppelte danebengelegen")
+
+    # L3 DER BEREICH FOLGT DER KLASSE.
+    for _k, _erw in (("krypto", "krypto_spot"), ("aktien", "aktien"),
+                     ("hedge", "hedge")):
+        pruefe(P, f"Bereich fuer {_k}", RL2._bereich(_k, "spot") == _erw,
+               f"-> {RL2._bereich(_k, 'spot')}")
+    pruefe(P, "nur Krypto wird nach Instrument getrennt",
+           RL2._bereich("krypto", "hebel") == "krypto_hebel"
+           and RL2._bereich("aktien", "hebel") == "aktien",
+           "Finanzierung und Liquidation gibt es nur beim Hebel")
+    pruefe(P, "jeder Bereich existiert im Faktenblock",
+           all(RL2._bereich(k, i) in FB.ZUSATZ_JE_BEREICH
+               for k in RL2.KLASSEN for i in ("spot", "hebel")),
+           str(sorted({RL2._bereich(k, i) for k in RL2.KLASSEN
+                       for i in ("spot", "hebel")}
+                      - set(FB.ZUSATZ_JE_BEREICH))))
+    pruefe(P, "eine unbekannte Assetklasse bricht den Lauf ab",
+           _wirft(lambda: RL2.fuehre_lauf(conn=c, reihen={"X": []}, symbole=[],
+                                          betriebsart="trocken",
+                                          assetklasse="krytpo"),
+                  RL2.LaufAbgebrochen),
+           "ein Tippfehler soll auffallen und nicht vierzigmal in einen "
+           "unbekannten Bereich laufen")
     c.close()
 
 

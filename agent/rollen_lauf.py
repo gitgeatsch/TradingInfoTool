@@ -38,6 +38,33 @@ TROCKEN, PROBE, SCHARF = "trocken", "probe", "scharf"
 BETRIEBSARTEN = (TROCKEN, PROBE, SCHARF)
 
 
+# Die Klassen, die der Lagebild-Analyst kennt, plus die beiden Bereiche, die
+# es nur im Faktenblock gibt. NICHT aus `rolle_analyst.KLASSEN` abgeleitet: dort
+# stehen die LEITMAERKTE, ueber die geurteilt wird, hier die Klassen, in denen
+# gehandelt wird. Zwei Listen, zwei Bedeutungen - sie sehen nur gleich aus.
+KLASSEN = ("krypto", "aktien", "rohstoffe", "themen_etf", "hedge")
+
+
+def _bereich(assetklasse: str, instrument: str) -> str:
+    """Der Faktenblock-Bereich. Nur Krypto ist nach Instrument getrennt.
+
+    `faktenblock.ZUSATZ_JE_BEREICH` fuehrt `krypto_spot` und `krypto_hebel`
+    getrennt (Finanzierung und Liquidation gibt es nur beim Hebel), die uebrigen
+    Klassen als EINEN Bereich. Diese Funktion bildet genau das ab - statt den
+    Namen an zwei Stellen zusammenzusetzen und darauf zu hoffen."""
+    return f"krypto_{instrument}" if assetklasse == "krypto" else assetklasse
+
+
+def _kostenklasse(assetklasse: str) -> str:
+    """Krypto rechnet in Prozent, alles andere hat eine Fixgebuehr.
+
+    Der Unterschied ist nicht kosmetisch: die Fixgebuehr macht die Kosten
+    POSITIONSGROESSEN-ABHAENGIG. Bei 200 EUR liegt der Breakeven um ueber fuenf
+    Prozentpunkte hoeher als bei 1.000 EUR - bei Krypto kuerzt sich der Betrag
+    heraus."""
+    return "krypto" if assetklasse == "krypto" else "boerse"
+
+
 class LaufAbgebrochen(RuntimeError):
     """Der Lauf kann nicht sinnvoll fortgesetzt werden."""
 
@@ -129,7 +156,8 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                 antworten: dict | None = None,
                 config: dict | None = None,
                 db: str = "data/tradinginfotool.db",
-                versand=None, zai_client=None) -> dict:
+                versand=None, zai_client=None,
+                assetklasse: str = "krypto") -> dict:
     """Ein vollstaendiger Durchgang ueber alle Symbole.
 
     `antworten` ist die Aufzeichnung fuer den Trockenlauf:
@@ -173,8 +201,15 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
     except AuftragUngueltig as exc:
         raise LaufAbgebrochen(f'Auftrag ungueltig: {exc}') from exc
 
+    # DIE ASSETKLASSE WIRD EINMAL GEPRUEFT, wie der Auftrag. Ein Tippfehler
+    # soll den Lauf abbrechen und nicht vierzigmal in einen unbekannten
+    # Faktenblock-Bereich laufen.
+    assetklasse = str(assetklasse or "").strip().lower()
+    if assetklasse not in KLASSEN:
+        raise LaufAbgebrochen(
+            f"Assetklasse {assetklasse!r} unbekannt - erlaubt {KLASSEN}")
     ergebnis = {"betriebsart": betriebsart, "signale": [], "mails": [],
-                "fehler": []}
+                "fehler": [], "assetklasse": assetklasse}
     # EINMAL JE LAUF, nicht je Asset - 45 Symbole waeren sonst 45 Abfragen ueber
     # dieselbe Tabelle. Dass die Bilanz waehrend des Laufs nicht mitwaechst, ist
     # richtig so: alle Assets eines Durchgangs sollen gegen denselben
@@ -252,6 +287,7 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                        config=config, aufgezeichnet=aufgezeichnet,
                        instrument=instrument, strategie=strategie,
                        ergebnis=ergebnis, versand=versand,
+                       assetklasse=assetklasse,
                        module=(AR, ER, FB, FQ, Z1, RT, RE, SA, SM, TO, TB,
                                ZM, BE, WH),
                        zai_client=zai_client, bilanz=bilanz,
@@ -279,7 +315,8 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                durchlauf, betriebsart, client, modell, conn, db, config,
                instrument, strategie,
                aufgezeichnet, ergebnis, versand, module, fehlertypen,
-               pruefe_auftrag, zai_client=None, bilanz=None) -> None:
+               pruefe_auftrag, zai_client=None, bilanz=None,
+               assetklasse="krypto") -> None:
     """Ein Asset durch alle Stufen. Wirft, wenn es nicht weitergeht."""
     AR, ER, FB, FQ, Z1, RT, RE, SA, SM, TO, TB, ZM, BE, WH = module
 
@@ -403,7 +440,14 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                               [k.close for k in reihe],
                               [getattr(k, "volume", 0) or 0 for k in reihe],
                               i=idx, tag_vollstaendig=(idx < len(reihe) - 1))
-    kosten_r = TB.kosten_r_aus_stop(kurs_e, rechnung["stop_eur"])
+    # DIE KOSTENKLASSE MUSS MIT (17.3). Vorher lief das auf die Vorgabe
+    # "krypto" hinaus - bei der ersten Aktie haette der Entscheider mit
+    # Krypto-Gebuehren (1,5 % je Seite) statt Boersengebuehren (1 EUR fix
+    # + 0,25 % Spread) gerechnet, und der Breakeven waere grob falsch
+    # gewesen, ohne dass irgendetwas meldet.
+    kosten_r = TB.kosten_r_aus_stop(
+        kurs_e, rechnung["stop_eur"], klasse=_kostenklasse(assetklasse),
+        position_eur=rechnung["betrag_eur"])
     # DIE EIGENE BILANZ, NICHT EIN LEERES DICT. Bis zum 13.08. stand hier
     # `TB.bewerte({}, ...)` - der Entscheider las eine leere Tabelle und fiel
     # damit IMMER auf die Basisrate zurueck, auch wenn Faelle vorlagen. Zusammen
@@ -422,10 +466,10 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # --- Die Mail ---
     # UND HIER `faktenblock_quellen` - das zweite Modul ohne Aufrufer.
     zusatz, _fehlt = FQ.abbilden(bc_ein.get("fakten_roh"),
-                                 bereich=f"krypto_{instrument}",
+                                 bereich=_bereich(assetklasse, instrument),
                                  position_eur=rechnung["betrag_eur"],
                                  hebel=rechnung.get("hebel"))
-    block = FB.baue(f"krypto_{instrument}", kern_werte=kern,
+    block = FB.baue(_bereich(assetklasse, instrument), kern_werte=kern,
                     zusatz_werte=zusatz, symbol=symbol) if kern else []
     # DIE MAIL ALS BAUPLAN, NICHT ALS FERTIGER TEXT. Die Zeilen der zweiten
     # Meinung entstehen erst, wenn Z.ai geantwortet hat - und darauf wartet
