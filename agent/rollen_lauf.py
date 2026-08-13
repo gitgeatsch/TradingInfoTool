@@ -406,6 +406,9 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # `belegt_eur=0.0` - der Topf meldete sich bei JEDEM Signal als vollstaendig
     # frei, und der Deckel konnte nie greifen. Im Live-Lauf bekamen drei
     # Hebel-Signale je 500 EUR aus einem 500-EUR-Topf.
+    # RM-4: was nach der Reserve ueberhaupt noch einsetzbar ist. Im
+    # Trockenlauf None - er hat keine Verbindung zu einer echten Lage.
+    cash_frei = TO.cash_frei_eur(conn, config) if betriebsart != TROCKEN else None
     frei = TO.frei_eur(instrument, config=config,
                        belegt_eur=(TO.belegt_eur(conn, instrument)
                                    if betriebsart != TROCKEN else 0.0))
@@ -417,7 +420,7 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                              risiko_eur=BE.risiko_eur(instrument, strategie, config),
                              instrument=instrument,
                              betrag_wunsch_eur=BE.einsatz_eur(instrument, strategie, config),
-                             topf_frei_eur=frei,
+                             topf_frei_eur=frei, cash_frei_eur=cash_frei,
                              umgeworfen_preis_eur=befund.get("umgeworfen_preis_eur"),
                              # DIE RICHTUNG KOMMT VOM MODELL (Paket 13) und
                              # dreht Stop, Ziel und Liquidation. Bei Spot gibt

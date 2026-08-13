@@ -3430,6 +3430,7 @@ def paket_15() -> None:
     from agent import entscheidungsrechnung as ER
     from agent import faktenblock as FB
     from agent import rollen_lauf as RL2
+    from agent import toepfe as TO
 
     # L1 DIE CRV-ABSTUFUNG - die einzige GEMESSENE Groessenregel der alten Kette.
     pruefe(P, "bei CRV 2,0 nur ein Fuenftel der vollen Groesse",
@@ -3509,6 +3510,57 @@ def paket_15() -> None:
                   RL2.LaufAbgebrochen),
            "ein Tippfehler soll auffallen und nicht vierzigmal in einen "
            "unbekannten Bereich laufen")
+    # ------------------------------------------------------------------
+    # M. CASH-RESERVE RM-4, ABSOLUT (O-1, 13.08.).
+    #
+    # `toepfe.UEBERGREIFEND = ("cash_reserve",)` fuehrt sie als DIE eine Regel,
+    # die ueber Toepfe hinweg wirkt - dokumentiert seit Paket 5 und bis heute
+    # nirgends gebaut. Genau die Sorte Luecke, die eine Doku nicht findet, weil
+    # sie ja stimmt.
+    pruefe(P, "die Reserve ist absolut, nicht prozentual",
+           isinstance(TO.VORGABE_RESERVE_EUR, float),
+           "die prozentuale Haelfte der alten Regel braucht den Portfoliowert, "
+           "den diese Kette absichtlich nicht kennt")
+    pruefe(P, "Stablecoins sind eine explizite Liste, keine Namensheuristik",
+           "USDC" in TO.STABLECOINS and len(TO.STABLECOINS) < 12,
+           "ein Token mit 'USD' im Namen ist noch kein Stablecoin - ein falsch "
+           "mitgezaehlter Bestand machte die Reserve wertlos")
+    _frei = TO.cash_frei_eur(c)
+    pruefe(P, "sie rechnet an echten Daten eine Zahl aus",
+           _frei is not None and _frei >= 0, f"{_frei}")
+    # UND SIE HAENGT NICHT AN DER ZEILENFABRIK DER VERBINDUNG. Ohne
+    # `sqlite3.Row` warf der Lesezugriff und die Funktion gab None zurueck -
+    # also KEINE Begrenzung. Ein still ausfallender Schutz ist schlimmer als
+    # ein fehlender, weil niemand ihn vermisst.
+    import sqlite3 as _sq3
+    _alt = c.row_factory
+    c.row_factory = None
+    pruefe(P, "auch ohne sqlite3.Row liefert sie denselben Wert",
+           TO.cash_frei_eur(c) == _frei, f"{TO.cash_frei_eur(c)} gegen {_frei}")
+    c.row_factory = _alt
+    # SIE BEGRENZT, SIE VERHINDERT NICHT - das steht so in der Regel.
+    _mit = ER.rechne(kurs=100.0, atr=3.0, risiko_eur=150.0, instrument="spot",
+                     umgeworfen_preis_eur=94.0, cash_frei_eur=300.0)
+    _ohne = ER.rechne(kurs=100.0, atr=3.0, risiko_eur=150.0, instrument="spot",
+                      umgeworfen_preis_eur=94.0)
+    pruefe(P, "knappes Cash macht die Position kleiner",
+           _mit["betrag_eur"] < _ohne["betrag_eur"], 
+           f"{_mit['betrag_eur']} gegen {_ohne['betrag_eur']} EUR")
+    pruefe(P, "und sagt das auch mit eigenem Grund",
+           "Cash" in str(_mit.get("betrag_gedeckelt_durch") or ""),
+           "waeren Topf und Cash EIN Wert, sagte die Notiz 'Topf', wo in "
+           "Wahrheit das Geld fehlt")
+    pruefe(P, "ohne ermittelbares Cash gibt es KEINE Sperre",
+           ER.rechne(kurs=100.0, atr=3.0, risiko_eur=150.0, instrument="spot",
+                     umgeworfen_preis_eur=94.0,
+                     cash_frei_eur=None)["betrag_eur"] > 0,
+           "eine Reserve, die wegen einer fehlenden Zahl ALLES sperrt, waere "
+           "schlimmer als keine")
+    pruefe(P, "der Trockenlauf fragt das Cash gar nicht ab",
+           "if betriebsart != TROCKEN else None" in _nur_code(
+               "agent/rollen_lauf.py"),
+           "er hat keine Verbindung zu einer echten Lage")
+
     c.close()
 
 

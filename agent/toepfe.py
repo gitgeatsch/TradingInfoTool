@@ -145,6 +145,79 @@ def deckel_eur(config: dict | None = None) -> dict[str, float | None]:
     return aus
 
 
+# Was als sofort verfuegbares Geld zaehlt. Fiat steht in `meta` (manuell
+# gepflegt, die App sieht es sonst nirgends), Stablecoins stehen als Bestand.
+#
+# BEWUSST EINE KURZE, EXPLIZITE LISTE statt einer Heuristik ueber den Namen.
+# Ein Token, das zufaellig "USD" im Namen traegt, ist noch kein Stablecoin -
+# und ein falsch mitgezaehlter Bestand macht die Reserve wertlos.
+STABLECOINS = ("EURCV", "USDC", "USDT", "DAI", "EURC", "EURT")
+
+# Die Reserve, die NICHT investiert wird. Absolut in Euro - die alte Kette
+# rechnet zusaetzlich 10 % vom Portfoliowert, und genau den kennt diese Kette
+# absichtlich nicht (siehe `budget_eur`). Der feste Betrag ist die Haelfte der
+# Regel, die ohne Portfoliobewertung auskommt.
+VORGABE_RESERVE_EUR = 2000.0
+
+
+def cash_frei_eur(conn, config: dict | None = None) -> float | None:
+    """Wieviel Geld darf ueberhaupt noch eingesetzt werden - RM-4, absolut.
+
+    DIE EINE UEBERGREIFENDE REGEL (siehe `UEBERGREIFEND` unten) - und sie war
+    bis zum 13.08. dokumentiert und NIRGENDS GEBAUT. Der Kommentar dort
+    beschrieb sie samt Wirkung, im Code gab es sie nicht.
+
+    SIE BEGRENZT, SIE VERHINDERT NICHT. Das steht so in der Beschreibung der
+    Regel, und es ist der Unterschied zwischen einem Deckel und einem Veto:
+    knappes Cash macht Positionen kleiner, es macht keine Assetklasse
+    unmoeglich.
+
+    ABSOLUT STATT PROZENTUAL, aus demselben Grund wie alle Deckel hier: ein
+    Prozentsatz auf ein Portfolio mit 60-Prozent-Positionen schrumpft genau
+    dann, wenn wieder gehandelt werden muesste. Die Haelfte der alten Regel
+    (`cash_reserve_min_fixed_eur`) kommt ohne Portfoliowert aus - die andere
+    (`cash_reserve_min_prozent`) nicht, und sie bleibt deshalb draussen.
+
+    `None` heisst: nicht ermittelbar, also keine Begrenzung. Eine Reserve, die
+    wegen einer fehlenden Zahl ALLES sperrt, waere schlimmer als keine."""
+    import sqlite3 as _sq
+
+    from database import db as DB
+
+    # DIE ZEILENFABRIK MUSS PASSEN, sonst faellt RM-4 STILL aus.
+    #
+    # `db.get_cash_reserve_fiat_eur()` liest `row["value"]` - das setzt
+    # `sqlite3.Row` voraus. Eine Verbindung ohne diese Einstellung liefert
+    # Tupel, der Zugriff wirft, und diese Funktion gaebe `None` zurueck: KEINE
+    # BEGRENZUNG. Die Reserve verschwaende dann lautlos, und zwar genau bei dem
+    # Aufrufer, der es am wenigsten merkt.
+    #
+    # Gefunden in der eigenen Gegenpruefung, weil die Testverbindung sie nicht
+    # setzt - im Betrieb tut `db.get_connection()` es. Ein Fehler, der nur
+    # ausserhalb der Produktion auftritt, ist trotzdem einer.
+    _vorher = conn.row_factory
+    try:
+        conn.row_factory = _sq.Row
+        fiat = float(DB.get_cash_reserve_fiat_eur(conn) or 0.0)
+    except Exception:                                        # noqa: BLE001
+        return None
+    finally:
+        conn.row_factory = _vorher
+    stabil = 0.0
+    try:
+        for sym, menge in conn.execute(
+                "SELECT symbol, quantity FROM holdings WHERE quantity > 0"):
+            if str(sym).upper() in STABLECOINS:
+                # 1:1 angesetzt. Ein Stablecoin, der von 1 abweicht, hat ein
+                # groesseres Problem als diese Rechnung.
+                stabil += float(menge or 0.0)
+    except Exception:                                        # noqa: BLE001
+        pass
+    reserve = ((config or {}).get("risiko") or {}).get(
+        "cash_reserve_min_fixed_eur", VORGABE_RESERVE_EUR)
+    return max(0.0, fiat + stabil - float(reserve))
+
+
 def belegt_eur(conn, instrument: str) -> float:
     """Was in DIESEM Topf schon steckt - offene Signale der eigenen Kette.
 

@@ -265,6 +265,7 @@ def _crv_faktor(crv: float, instrument: str) -> float:
 def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
            instrument: str = "spot", betrag_wunsch_eur: float | None = None,
            topf_frei_eur: float | None = None,
+           cash_frei_eur: float | None = None,
            umgeworfen_preis_eur: float | None = None,
            umgeworfen_tage: int | None = None,
            widerstand: tuple[float, int] | None = None,
@@ -337,6 +338,11 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
     e["crv_groessenfaktor"] = round(_faktor, 3)
     if topf_frei_eur is not None and betrag > float(topf_frei_eur):
         betrag, grund = float(topf_frei_eur), "Topf"
+    # RM-4 MIT EIGENEM GRUND, nicht in den Topf hineingerechnet. Beide
+    # begrenzen, aber aus verschiedenen Anlaessen - waeren sie ein Wert, sagte
+    # die Notiz "Topf", wo in Wahrheit das Geld fehlt.
+    if cash_frei_eur is not None and betrag > float(cash_frei_eur):
+        betrag, grund = float(cash_frei_eur), "Cash-Reserve (RM-4)"
     if betrag > GRENZEN["betrag_max_eur"]:
         betrag, grund = GRENZEN["betrag_max_eur"], "Hoechstbetrag"
     if betrag < GRENZEN["betrag_min_eur"]:
