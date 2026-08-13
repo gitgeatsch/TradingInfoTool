@@ -1096,7 +1096,8 @@ def post_check_hebel(
         # konnte hebel_pipeline.py auch nie den konkreten Eigenkapital-
         # Nachschuss berechnen).
         hebel_vorschlag = result.get("hebel_vorschlag")
-        deckel_kandidaten = _hebel_deckel_kandidaten()
+        from agent import daempfer as DA
+        deckel_kandidaten, _ = DA.teile(_hebel_deckel_kandidaten())
         deckel_werte = [wert for _, wert in deckel_kandidaten]
         hebel_final = min([hebel_vorschlag] + deckel_werte) if hebel_vorschlag is not None else None
         if hebel_final is not None and hebel_vorschlag is not None and hebel_final < hebel_vorschlag:
@@ -1200,17 +1201,24 @@ def post_check_hebel(
                 action = "HALTEN"
             else:
                 hebel_vorschlag = result.get("hebel_vorschlag")
-                deckel_kandidaten = _hebel_deckel_kandidaten(
-                    crv=crv, sl_abstand_relativ=sl_abstand_relativ,
-                )
+                deckel_kandidaten, _stillgelegt = DA.teile(
+                    _hebel_deckel_kandidaten(
+                        crv=crv, sl_abstand_relativ=sl_abstand_relativ))
                 deckel_werte = [wert for _, wert in deckel_kandidaten]
                 hebel_final = min([hebel_vorschlag] + deckel_werte) if hebel_vorschlag is not None else None
 
                 if hebel_final is not None and hebel_vorschlag is not None and hebel_final < hebel_vorschlag:
                     bindender_grund, _ = min(deckel_kandidaten, key=lambda paar: paar[1])
+                    # `hebel_korrektur_hinweis` EXISTIERT SEIT JEHER UND WAR
+                    # IN ALLEN ZEILEN LEER (nachgezaehlt 13.08.). Der Platz war
+                    # da, benutzt hat ihn niemand - jetzt steht hier auch, was
+                    # stillgelegt wurde und gegriffen HAETTE.
+                    _v = DA.vermerk(bindender_grund, deckel_kandidaten,
+                                    _stillgelegt)
                     result["hebel_korrektur_hinweis"] = (
                         f"KI schlug {hebel_vorschlag:.2f}x vor, auf {hebel_final:.2f}x reduziert "
                         f"(bindender Grund: {bindender_grund})."
+                        + (f" [{_v}]" if _v else "")
                     )
                 else:
                     result["hebel_korrektur_hinweis"] = None

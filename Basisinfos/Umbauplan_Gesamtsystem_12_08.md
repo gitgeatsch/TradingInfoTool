@@ -1444,3 +1444,79 @@ Damit nichts verlorengeht, ausdrücklich auf Nutzerwunsch:
 **O-4 ist die Weiche.** Solange sie offen ist, bleiben vier Schutzregeln
 unbaubar — und zwar nicht aus Nachlässigkeit, sondern weil die Entscheidung
 noch aussteht.
+
+
+---
+
+# 17. Die Multi-Asset-Schiene — geplant, bevor gebaut wird (13.08.2026)
+
+**Nutzerfrage:** *„sind die weiteren Assets — Aktien, ETF, Rohstoffe, etc. im
+Plan bzw. bereits zum Teil im Umbau berücksichtigt?"* — und der Auftrag,
+**vorher die gesamte Kette durchzuprüfen**, ob etwas vergessen wurde.
+
+## 17.1 Der Befund: mehr ist fertig als erwartet
+
+Stufe für Stufe am Code geprüft, nicht am Plan:
+
+| Stufe | Stand | Beleg |
+|---|---|---|
+| Auftrag | **klassenfrei** | Instrumente und Strategien kennen keine Assetklasse |
+| Lagebild (Rolle A) | **fertig** | `KLASSEN = ("krypto", "aktien", "rohstoffe")` |
+| Faktenblock, Zusatz | **fertig** | sechs Bereiche: aktien · hedge · krypto_hebel · krypto_spot · rohstoffe · themen_etf |
+| Faktenblock, Kern | **klassenfrei** | Schwankung/Momentum/Volumen aus der reinen Kursreihe |
+| Quellen-Abbildung | **fertig** | 10 Pfade inkl. KGV, COT-Netto, Insider-Saldo, Analysten-Trend |
+| Kostenmodell | **fertig** | `krypto` · `boerse_fix_eur` · `boerse_spread` |
+| Töpfe | **klassenfrei** | nach **Zweck** getrennt, nicht nach Klasse — das trägt jede Klasse |
+| Beträge | nur spot/hebel/absicherung | je Instrument, nicht je Klasse |
+| Cooldown | nur spot/hebel/absicherung | dito |
+
+**Die Kette ist von Anfang an klassenfähig gebaut worden.** Was fehlt, ist die
+Verdrahtung, nicht das Material.
+
+## 17.2 Was konkret fehlt — drei Zeilen und zwei Entscheidungen
+
+**Fest verdrahtet auf Krypto sind genau zwei Stellen:**
+
+```
+rollen_lauf.py:425   bereich=f"krypto_{instrument}"
+rollen_lauf.py:428   block = FB.baue(f"krypto_{instrument}", ...)
+```
+
+**Nicht übergeben wird, obwohl das Ziel es kann:**
+
+| Größe | Ziel | Folge heute |
+|---|---|---|
+| `assetklasse` | `rollen_eingabe.baue_befund_eingabe` | der Faktentext nennt die Klasse nicht |
+| `klasse` | `trefferbilanz.kosten_r_aus_stop` | **siehe 17.3** |
+
+**Die Kursreihen sind kein Problem:** `rollen_lauf` bekommt `reihen` vom
+Aufrufer und ist selbst quellenfrei. Eine andere Klasse heißt: ein anderer
+Lader, kein anderer Lauf.
+
+## 17.3 Ein latenter Defekt, gefunden bei dieser Prüfung
+
+`kosten_r_aus_stop()` hat die Vorgabe `klasse="krypto"` — und `rollen_lauf`
+übergibt nichts. **Solange nur Krypto läuft, stimmt das zufällig.** Sobald eine
+Aktie durch dieselbe Kette geht, rechnet der Entscheider mit
+**Krypto-Gebühren** (1,5 % je Seite) statt mit Börsengebühren (1 € fix +
+0,25 % Spread) — und der Breakeven wäre grob falsch, ohne dass irgendetwas
+meldet.
+
+**Das ist kein Fehler von heute, sondern eine Zeitbombe für den Tag der
+Erweiterung.** Sie gehört vor die erste fremde Assetklasse, nicht danach.
+
+## 17.4 Reihenfolge
+
+1. **`klasse` und `assetklasse` durchreichen** — behebt 17.3, bevor es zum
+   Fehler werden kann. Klein und sofort.
+2. **`bereich` aus der Assetklasse bilden** statt aus `"krypto_"` — dann greift
+   die Zusatzinfo je Bereich, die es schon gibt.
+3. **Beträge und Cooldown je Klasse**, falls gewünscht — heute hängen beide am
+   Instrument. Für Aktien wären andere Werte plausibel; das ist eine
+   Nutzerentscheidung, keine Verdrahtung.
+4. **Je Klasse ein Lader für die Kursreihen** — der einzige echte Neubau, und
+   er liegt außerhalb der Kette.
+
+**Nicht enthalten und bewusst offen:** ob die alte Kette für Aktien, Rohstoffe,
+Themen-ETF und Hedge **parallel weiterläuft** oder abgelöst wird. Solange sie
+läuft, gilt jede Änderung an ihren Dämpfern (Kap. 16.5) auch für diese vier.

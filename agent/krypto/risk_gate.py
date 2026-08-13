@@ -1378,6 +1378,18 @@ def post_check(
                         max_usd * faktor,
                     ))
 
+            # STILLGELEGTE DAEMPFER ZAEHLEN, WIRKEN ABER NICHT (13.08.2026).
+            #
+            # Nur zwei sind es, und beide beruhen auf einer Groesse, die wir als
+            # wertlos GEMESSEN haben: die Konfidenz (r = +0,073, faktisch
+            # konstant) und das Regime (ueber 1.022 Faelle konstant "baer"). Ein
+            # Daempfer auf einer Konstanten ist ein verkleideter
+            # Pauschalabschlag. Alles andere bleibt wirksam - insbesondere die
+            # CRV-Abstufung, die an 298 Signalen gemessen wurde und den
+            # Rueckschlag SENKT (siehe agent/daempfer.py).
+            from agent import daempfer as DA
+            _alle_kandidaten = list(deckel_kandidaten)
+            deckel_kandidaten, _nur_gezaehlt = DA.teile(deckel_kandidaten)
             if deckel_kandidaten:
                 bindender_grund, effective_max_usd = min(deckel_kandidaten, key=lambda paar: paar[1])
                 scale_ratio = effective_max_usd / max_usd if max_usd else 1.0
@@ -1398,6 +1410,12 @@ def post_check(
                 )
                 if bindender_grund:
                     clamp_note = f"{clamp_note} Bindender Grund: {bindender_grund}."
+                # WAS STILLGELEGT WURDE, STEHT MIT DA. Ohne diese Zeile waere
+                # die Stilllegung genau der unsichtbare Eingriff, gegen den
+                # dieses Projekt sonst argumentiert - nur andersherum.
+                _v = DA.vermerk(bindender_grund, _alle_kandidaten, _nur_gezaehlt)
+                if _v:
+                    clamp_note = f"{clamp_note} [{_v}]"
                 if rm1_korrektur_hinweise:
                     # RM-1-exakt/RM-1d haben die Basis schon vor den Anteils-Deckeln
                     # gesenkt - ohne diesen Zusatz waere im Signal nicht erkennbar,

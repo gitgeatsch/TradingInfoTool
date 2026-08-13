@@ -3358,6 +3358,68 @@ def paket_15() -> None:
                    (_sid3,)).fetchone()
     pruefe(P, "und beide stehen danach wirklich in der Zeile",
            tuple(_z) == ("SHORT", 4.5), str(tuple(_z)))
+
+    # ------------------------------------------------------------------
+    # K. DAEMPFER: ZWEI STILLGELEGT, DER REST ZAEHLT MIT (13.08.).
+    from agent import daempfer as DA
+
+    # DER NAME IST DER SCHLUESSEL - und deshalb muss er im Gate WOERTLICH
+    # vorkommen. Eine Umbenennung dort waere sonst eine stille
+    # Wiederaktivierung, und niemand wuerde es merken.
+    _gates = (_quelltext("agent/krypto/risk_gate.py")
+              + _quelltext("agent/krypto/hebel_risk_gate.py"))
+    for _name in DA.STILLGELEGT:
+        pruefe(P, f"'{_name}' kommt im Gate woertlich vor", _name in _gates,
+               "sonst waere die Stilllegung wirkungslos und unbemerkt")
+
+    _k = [("Konfidenz-Skalierung (70%, Sockel 50%)", 300.0),
+          ("CRV-Abstufung (2.30: 60 %)", 600.0),
+          ("Regime-Richtungs-Konflikt", 3.0),
+          ("hohe Bear-Szenario-Wahrscheinlichkeit (40%)", 500.0)]
+    _w, _g = DA.teile(_k)
+    pruefe(P, "die zwei stillgelegten sind aus der Auswahl raus",
+           {x[0].split(" (")[0] for x in _g}
+           == {"Konfidenz-Skalierung", "Regime-Richtungs-Konflikt"},
+           f"{[x[0] for x in _g]}")
+    pruefe(P, "der GEMESSENE Daempfer bleibt wirksam",
+           any(x[0].startswith("CRV-Abstufung") for x in _w),
+           "an 298 Spot-Signalen gemessen: SQN +0,63 -> +1,36, Rueckschlag "
+           "36,3 -> 27,1 R. Ihn stillzulegen hiesse, eine belegte "
+           "Verbesserung wegzuwerfen")
+    pruefe(P, "die ungemessenen bleiben ebenfalls wirksam",
+           any("Bear-Szenario" in x[0] for x in _w),
+           "sie verkleinern nur - und abschalten waere eine "
+           "Verhaltensaenderung an einer LAUFENDEN Kette (Aktien, Rohstoffe, "
+           "Themen-ETF, Hedge)")
+    pruefe(P, "der stillgelegte kann den Deckel nicht mehr binden",
+           min(_w, key=lambda p: p[1])[1] == 500.0,
+           "ohne die Trennung haette der Regime-Konflikt mit 3.0 gewonnen")
+
+    _v = DA.vermerk(min(_w, key=lambda p: p[1])[0], _k, _g)
+    pruefe(P, "der Vermerk sagt, was gegriffen HAETTE",
+           "stillgelegt_haetten_gegriffen=" in _v
+           and "Konfidenz-Skalierung" in _v, _v[:90])
+    pruefe(P, "und was tatsaechlich gebunden hat",
+           _v.startswith("bindend="), _v[:60])
+    pruefe(P, "ohne jeden Kandidaten gibt es keinen leeren Vermerk",
+           DA.vermerk(None, [], []) is None,
+           "eine Zeile 'bindend=' ohne Inhalt saehe aus wie ein Befund")
+
+    # DIE VORHANDENE, IMMER LEERE SPALTE WIRD ENDLICH BEFUELLT.
+    # ZWEI QUELLEN, UND DAS IST DER PUNKT: der Spaltenname ist eine
+    # ZEICHENKETTE, und `_nur_code()` entfernt genau die. Er muss im Rohtext
+    # gesucht werden, der Aufruf im Code. Meine erste Fassung suchte beides im
+    # Code-Text und meldete einen Defekt, den es nicht gab - derselbe Helfer,
+    # der heute Vormittag drei falsche Alarme BEHOBEN hat, hat hier einen
+    # erzeugt. Ein Werkzeug loest keine Sorgfaltsfrage, es verschiebt sie.
+    pruefe(P, "der Vermerk landet in hebel_korrektur_hinweis",
+           "hebel_korrektur_hinweis" in _quelltext(
+               "agent/krypto/hebel_risk_gate.py")
+           and "DA . vermerk" in _nur_code("agent/krypto/hebel_risk_gate.py"),
+           "die Spalte gibt es seit jeher und war in ALLEN Zeilen leer - der "
+           "Platz war da, benutzt hat ihn niemand")
+    pruefe(P, "und im Spot-Gate in die Kuerzungsnotiz",
+           "DA . vermerk" in _nur_code("agent/krypto/risk_gate.py"))
     c.close()
 
 
