@@ -2777,7 +2777,23 @@ def hebel_screening_job(
         # 2026-08-09 (C4): openrouter_client gehoert mit ins Gate. Ohne ihn
         # bliebe der Allocator stehen, wenn OpenRouter der EINZIGE konfigurierte
         # Analyst ist - ein Zustand, den der Hard Switch moeglich macht.
-        if any(c is not None for c in (mistral_client, gemini_client, zai_client, openrouter_client)):
+        # DER SCHNITT (14.08.2026). Ist Krypto auf die Rollen-Kette umgestellt,
+        # laeuft der Allocator fuer diese Klasse NICHT MEHR - sonst gaebe es
+        # fuer dasselbe Asset zwei Empfehlungen, und der Nutzer muesste
+        # entscheiden, welcher er glaubt. Genau das war der Grund fuer den
+        # glatten Schnitt.
+        #
+        # Der Schalter steht in `config.yaml` unter `rollen_kette.aktiv_fuer`.
+        # Vorgabe ist LEER: das blosse Einspielen dieses Codes stellt nichts um.
+        from scheduler.rollen_job import bedient_neue_kette
+        # `config_dict` heisst die Variable in diesem Gueltigkeitsbereich -
+        # nachgesehen, nicht geraten.
+        if bedient_neue_kette("krypto", config_dict):
+            logger.info(
+                "Budget-Allocator uebersprungen - Krypto laeuft ueber die "
+                "Rollen-Kette (rollen_kette.aktiv_fuer). Eine Klasse, eine "
+                "Kette.")
+        elif any(c is not None for c in (mistral_client, gemini_client, zai_client, openrouter_client)):
             from agent.krypto.budget_allocator import run_budget_allocator
 
             # E-Mail-Latenz-Fix (2026-07-23, echter Fund: ein einzelner Batch mit

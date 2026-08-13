@@ -52,6 +52,30 @@ logger = logging.getLogger(__name__)
 # unkalkulierbar machen, ohne die Ausbeute noch nennenswert zu heben.
 _MAX_VERSUCHE_BEI_429 = 3
 
+# VORUEBERGEHEND NICHT VERFUEGBAR - ein anderer Fall als 429 (13.08.2026).
+#
+# GEMESSEN IM WATCHLIST-PROBELAUF: Gemini antwortete zweimal hintereinander mit
+# HTTP 503 ("This model is currently experiencing high demand. Spikes in demand
+# are usually temporary. Please try again later.") - einmal bei 1 von 25
+# Aufrufen, einmal bei 2 von 25. Rund 8 % Ausfall, und zwar OHNE unser Zutun.
+#
+# Bis dahin flog jeder 503 als HTTPError durch: das Symbol war fuer den ganzen
+# Lauf verloren, und in der Durchlaessigkeitstabelle stand ein Fehlschlag, der
+# gar keiner war.
+#
+# WARUM ANDERE ZAHLEN ALS BEIM 429. Ein 429 heisst "zu schnell" - da hilft
+# genau die Wartezeit, die der Anbieter nennt. Ein 503 heisst "gerade zu viele
+# andere" - da hilft ein kurzer Moment, und wenn nicht, hilft auch die zehnte
+# Wiederholung nicht. Deshalb kurz und wenige Versuche: drei Anlaeufe mit 2 und
+# 4 Sekunden kosten hoechstens 6 Sekunden je Symbol.
+#
+# DER ZAEHLER LAEUFT MIT, und das ist Absicht: jeder Versuch geht wirklich
+# hinaus. Lieber zu vorsichtig gezaehlt als ein Tagesbudget, das in Wahrheit
+# schon knapper ist als gedacht.
+_MAX_VERSUCHE_BEI_503 = 3
+_WARTEZEIT_503_SEKUNDEN = 2.0
+_VORUEBERGEHEND = (500, 502, 503, 504)
+
 # Obergrenze fuer eine einzelne Wartezeit. Schlaegt der Server etwas
 # Absurdes vor (oder liefert gar nichts), wird nicht minutenlang blockiert.
 _MAX_WARTEZEIT_SEKUNDEN = 65.0
@@ -261,7 +285,11 @@ class GeminiClient:
                 modell=model)
 
         letzte = None
-        for versuch in range(_MAX_VERSUCHE_BEI_429):
+        # ZWEI ZAEHLER, ZWEI GRUENDE. Der 429-Zaehler laeuft ueber die Schleife,
+        # der 503-Zaehler daneben - sonst verbrauchte ein voruebergehender
+        # Fehler die Versuche, die fuer die Ratenbegrenzung gedacht sind.
+        versuch_503 = versuch_429 = 0
+        for _ in range(_MAX_VERSUCHE_BEI_429 + _MAX_VERSUCHE_BEI_503):
             self._respect_rate_limit()
             # ZWEI Buchungen, absichtlich. "gemini" auf UTC-Tag ist der
             # bestehende Zaehler, den der budget_allocator liest - unveraendert,
@@ -282,6 +310,17 @@ class GeminiClient:
                     f"erschoepft ({grenzen}). Google setzt zu Mitternacht "
                     f"Pazifik zurueck; ein anderes Modell hat ein eigenes "
                     f"Budget.", modell=model, response=response)
+            # VORUEBERGEHENDE ANBIETERFEHLER: kurz warten und noch einmal.
+            if (response.status_code in _VORUEBERGEHEND
+                    and versuch_503 + 1 < _MAX_VERSUCHE_BEI_503):
+                versuch_503 += 1
+                pause = _WARTEZEIT_503_SEKUNDEN * versuch_503
+                logger.info(
+                    "Gemini HTTP %d (voruebergehend) - warte %.1f s und "
+                    "versuche erneut (%d von %d)", response.status_code,
+                    pause, versuch_503 + 1, _MAX_VERSUCHE_BEI_503)
+                time.sleep(pause)
+                continue
             if response.status_code != 429:
                 # Fehler ANDERER Art bekommen jetzt Statuscode und Body in die
                 # Meldung. Vorher stand dort nur "HTTPError" - und genau daran
@@ -292,11 +331,12 @@ class GeminiClient:
                         f"{response.text[:400]}", response=response)
                 return extrahiere_inhalt(response.json(), "Gemini")
             letzte = response
+            versuch_429 += 1
             wartezeit = _wartezeit_aus_antwort(response)
-            if versuch + 1 >= _MAX_VERSUCHE_BEI_429:
+            if versuch_429 >= _MAX_VERSUCHE_BEI_429:
                 break
             logger.info("Gemini 429 - warte %.1f s und versuche erneut "
-                        "(%d von %d)", wartezeit, versuch + 2,
+                        "(%d von %d)", wartezeit, versuch_429 + 1,
                         _MAX_VERSUCHE_BEI_429)
             time.sleep(wartezeit)
 

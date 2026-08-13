@@ -3611,6 +3611,119 @@ def paket_15() -> None:
            "die Tabelle zeigt sonst auf die falsche Stelle - und das ist der "
            "einzige Zweck, den sie hat")
 
+    # ------------------------------------------------------------------
+    # O. VORUEBERGEHENDE ANBIETERFEHLER (503) - gemessen, nicht vermutet.
+    #
+    # Im Watchlist-Probelauf antwortete Gemini zweimal mit HTTP 503 ("high
+    # demand"): 1 von 25 und 2 von 25 Aufrufen, rund 8 % Ausfall OHNE unser
+    # Zutun. Bis dahin flog jeder 503 durch - das Symbol war fuer den ganzen
+    # Lauf verloren, und in der Durchlaessigkeitstabelle stand ein Fehlschlag,
+    # der gar keiner war.
+    import json as _j2
+    import api.gemini as _G
+    import database.api_health as _AH
+
+    class _Antwort:
+        def __init__(self, code, body=None):
+            self.status_code, self.ok = code, code < 400
+            self._b = body or {}
+            self.text = _j2.dumps(self._b)
+            self.headers = {}
+
+        def json(self):
+            return self._b
+
+    class _Sitzung:
+        def __init__(self, folge):
+            self.folge, self.n = folge, 0
+
+        def post(self, *a, **k):
+            r = self.folge[min(self.n, len(self.folge) - 1)]
+            self.n += 1
+            return _Antwort(*r)
+
+    _GUT = {"choices": [{"message": {"content": "{}"}}]}
+    _alt_sleep, _alt_zaehl = _G.time.sleep, _G.zaehle_aufruf
+    _alt_health = _AH.track_api_health
+    # NICHT IN DIE PRODUKTIVDATEI SCHREIBEN. `track_api_health` bucht sonst je
+    # Aufruf einen Gesundheitsstand - im ersten Anlauf ist mir das
+    # durchgerutscht, und es ist genau der Fehler, den der Trockenlauf-Grundsatz
+    # dieser Kette verhindern soll.
+    _G.time.sleep = lambda s: None
+    _G.zaehle_aufruf = lambda *a, **k: None
+    try:
+        _c = _G.GeminiClient("x", session=_Sitzung([(503,), (503,), (200, _GUT)]))
+        _c.chat([{"role": "user", "content": "hi"}])
+        pruefe(P, "zwei 503 hintereinander werden ueberstanden",
+               _c._session.n == 3,
+               f"{_c._session.n} Anlaeufe - vorher war das Symbol verloren")
+        _c2 = _G.GeminiClient("x", session=_Sitzung([(503,)]))
+        pruefe(P, "ein dauerhafter 503 wirft nach begrenzten Versuchen",
+               _wirft(lambda: _c2.chat([{"role": "user", "content": "hi"}]),
+                      Exception) and _c2._session.n == _G._MAX_VERSUCHE_BEI_503,
+               f"{_c2._session.n} Anlaeufe - wenn ein kurzer Moment nicht hilft, "
+               f"hilft auch die zehnte Wiederholung nicht")
+        _c3 = _G.GeminiClient("x", session=_Sitzung([(400, {"e": 1})]))
+        _wirft(lambda: _c3.chat([{"role": "user", "content": "hi"}]), Exception)
+        pruefe(P, "ein 400 wird NICHT wiederholt", _c3._session.n == 1,
+               "ein fehlerhafter Antrag wird beim zweiten Mal nicht richtig")
+    finally:
+        _G.time.sleep, _G.zaehle_aufruf = _alt_sleep, _alt_zaehl
+        _AH.track_api_health = _alt_health
+    pruefe(P, "die 429-Versuche werden davon nicht aufgebraucht",
+           "versuch_503 = versuch_429 = 0" in _nur_code("api/gemini.py"),
+           "zwei Gruende, zwei Zaehler - sonst nimmt ein Anbieterausfall die "
+           "Versuche, die fuer die Ratenbegrenzung gedacht sind")
+
+    # ------------------------------------------------------------------
+    # P. DER SCHNITT: eine Klasse, eine Kette (14.08.).
+    from scheduler import rollen_job as RJ
+
+    pruefe(P, "die Vorgabe stellt NICHTS um",
+           RJ.aktiv_fuer() == () and not RJ.bedient_neue_kette("krypto"),
+           "ein Modul, das beim blossen Einspielen die Produktion umstellt, "
+           "nimmt dem Nutzer die Entscheidung ab, die er treffen wollte")
+    _cfg = {"rollen_kette": {"aktiv_fuer": ["Krypto"]}}
+    pruefe(P, "der Schalter wirkt und ist schreibweisen-tolerant",
+           RJ.bedient_neue_kette("krypto", _cfg),
+           "'Krypto' und 'krypto' sollen nicht zwei verschiedene Dinge sein")
+    pruefe(P, "und er wirkt NUR fuer die genannte Klasse",
+           not RJ.bedient_neue_kette("aktien", _cfg)
+           and not RJ.bedient_neue_kette("hedge", _cfg),
+           "Aktien brauchen noch eine Kursquelle, Hedge das Paket 14")
+
+    # DIE EIGENTLICHE ZUSICHERUNG: nie zwei Ketten fuer dasselbe Asset.
+    # WIEDER DIE ZEICHENKETTEN-FALLE: `_nur_code()` entfernt Literale, also
+    # auch das "krypto" im Aufruf. Dritter Fall heute - der Helfer ist richtig,
+    # meine Verwendung war es zweimal nicht. Gesucht wird deshalb im ROHTEXT.
+    pruefe(P, "der Allocator fragt VOR dem Lauf, ob die Klasse umgestellt ist",
+           'bedient_neue_kette("krypto", config_dict)' in _quelltext(
+               "scheduler/background.py"),
+           "sonst gaebe es fuer dasselbe Asset zwei Empfehlungen, und der "
+           "Nutzer muesste entscheiden, welcher er glaubt")
+    _roh = _quelltext("scheduler/background.py")
+    _i_frage = _roh.find('bedient_neue_kette("krypto", config_dict)')
+    _i_alloc = _roh.find("from agent.krypto.budget_allocator import run_budget_allocator")
+    pruefe(P, "die Frage steht VOR dem Import des alten Weges",
+           -1 < _i_frage < _i_alloc,
+           f"{_i_frage} gegen {_i_alloc} - danach waere sie wirkungslos")
+    pruefe(P, "der uebersprungene Lauf sagt WARUM",
+           "Eine Klasse, eine " in _roh,
+           "ein stiller Sprung sieht aus wie ein Ausfall")
+
+    # DAS JOB-MODUL SELBST.
+    pruefe(P, "die Betriebsart ist von Haus aus `probe`, nicht `scharf`",
+           "betriebsart: str = \"probe\"" in _quelltext("scheduler/rollen_job.py"),
+           "wer Mails verschicken will, sagt es ausdruecklich")
+    pruefe(P, "die Verbindung wird im JOB geoeffnet und geschlossen",
+           "conn_factory ( )" in _nur_code("scheduler/rollen_job.py")
+           and "conn . close ( )" in _nur_code("scheduler/rollen_job.py"),
+           "rollen_lauf oeffnet grundsaetzlich keine - hier ist der Ort, an "
+           "dem klar ist, welche Datenbank gemeint ist")
+    pruefe(P, "Sammelposten werden nicht als Asset gehandelt",
+           'not s.startswith("_")' in _quelltext("scheduler/rollen_job.py"),
+           "_ROHSTOFF_FUTURES_* ist kein handelbares Asset")
+
     c.close()
 
 
