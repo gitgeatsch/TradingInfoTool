@@ -2659,10 +2659,89 @@ def _wirft(fn, typ) -> bool:
         return True
 
 
+
+def paket_export() -> None:
+    """Der Notebook-Export kennt die Rollen-Kette (13.08.2026)."""
+    P = "Export"
+    import sqlite3
+    import sys as _sys
+
+    # DAS EXPORTSKRIPT LIEST `sys.argv` BEIM IMPORT (Zeile 221:
+    # `int(sys.argv[2])`). Von hier aus stehen dort die eigenen Argumente -
+    # `--paket Export` - und der Import stirbt an einem int(). Deshalb waehrend
+    # des Imports leeren und danach zuruecklegen. Das Skript selbst zu aendern
+    # waere der groessere Eingriff fuer den kleineren Nutzen.
+    _argv = _sys.argv
+    _sys.argv = [_argv[0]]
+    try:
+        import extract_notebook_diagnose as EX
+    finally:
+        _sys.argv = _argv
+    from agent import rollen_gate as RG, signal_abbildung as SA
+
+    # Eine Kopie MIT den neuen Tabellen - die Produktivdatei hat sie noch
+    # nicht, weil die Migration nur im Betrieb laeuft.
+    q = sqlite3.connect("data/tradinginfotool.db")
+    c = sqlite3.connect(":memory:"); q.backup(c); q.close(); c.row_factory = sqlite3.Row
+    SA.migriere(c); RG.migriere(c)
+
+    drift = EX._spaltendrift(c)
+    pruefe(P, "keine Tabelle ist mehr unerwaehnt",
+           drift["tabellen"]["nicht_erwaehnt"] == [],
+           f"offen: {drift['tabellen']['nicht_erwaehnt']}")
+    offen = drift["spalten"].get("signals", {}).get("nicht_exportiert") or []
+    pruefe(P, "keine signals-Spalte ist mehr unexportiert", offen == [],
+           f"offen: {offen}")
+    pruefe(P, "die acht Spalten der Rollen-Kette sind namentlich drin",
+           all(sp in EX._SPOT_SIGNAL_SPALTEN for sp in
+               ("quelle_kette", "lagebild_id", "prompt_stand", "fx_eur_je_usd",
+                "unabhaengige_faktoren", "umgeworfen_durch",
+                "umgeworfen_preis_eur", "umgeworfen_bis")),
+           "ohne sie ist der gesamte Umbau von aussen unsichtbar")
+
+    # DIE STUFEN WERDEN AUSGEPACKT, nicht als JSON-Klumpen abgelegt.
+    RG.schreibe(c, _beispiel_durchlauf(RG), "2026-08-13T07:00:00+00:00")
+    r = EX._rollen_kette(c)
+    pruefe(P, "beide Tabellen erscheinen im Export",
+           "lagebilder" in r and "gate_durchlaessigkeit" in r)
+    lauf = r["gate_durchlaessigkeit"]["laeufe"][0]
+    pruefe(P, "die Durchlaessigkeit ist entfaltet, nicht als JSON-String",
+           isinstance(lauf.get("verloren"), dict)
+           and isinstance(lauf.get("bestanden"), dict),
+           "wer im Notebook fragt 'wo verlieren wir', soll nicht erst einen "
+           "String parsen")
+    pruefe(P, "die Faktorzahlen reisen mit",
+           lauf.get("faktorzahlen") == [2, 3],
+           "sie sind der offene Punkt aus Kapitel 15 - ohne Export nicht "
+           "nachpruefbar")
+    pruefe(P, "und die Z1-Befunde ebenfalls", "z1_verstoesse" in lauf)
+
+    # FAIL-SOFT: auf einer aelteren Datei fehlen die Tabellen.
+    alt = sqlite3.connect(":memory:")
+    alt.execute("CREATE TABLE meta (schema_version INTEGER)")
+    r2 = EX._rollen_kette(alt)
+    pruefe(P, "eine alte Datei ohne die Tabellen bricht nichts ab",
+           "nicht_vorhanden" in r2["lagebilder"]
+           and "nicht_vorhanden" in r2["gate_durchlaessigkeit"],
+           "ein fehlender Export ist kein Grund, den ganzen Lauf zu verlieren")
+    alt.close(); c.close()
+
+
+def _beispiel_durchlauf(RG):
+    d = RG.Durchlauf("rollen")
+    for i, sym in enumerate(("A", "B")):
+        d.beginne(sym)
+        d.bestanden(sym, "auftrag")
+        d.faktorzahl(2 + i)
+        if i:
+            d.verloren(sym, "aktion", "NICHTS_TUN")
+    return d
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1}
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export}
 
 
 def main() -> int:

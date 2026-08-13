@@ -408,6 +408,14 @@ _SPOT_SIGNAL_SPALTEN = (
     "entry_usd_von, entry_usd_bis, entry_usd, "
     "stop_loss_usd_von, stop_loss_usd_bis, stop_loss_usd, "
     "take_profit_usd_von, take_profit_usd_bis, take_profit_usd, "
+    # DIE ROLLEN-KETTE (2026-08-13, Paket 0-14 + B1). Der eigene Drift-
+    # Waechter hat diese acht Spalten gemeldet - er zeigt wie schon am
+    # 10.08. als Erstes auf die eigenen Luecken. Ohne sie ist der gesamte
+    # Umbau von aussen unsichtbar: eine Auswertung liefe auf den Altdaten
+    # und kaeme zu den Schluessen der alten Kette.
+    "quelle_kette, lagebild_id, prompt_stand, fx_eur_je_usd, "
+    "unabhaengige_faktoren, umgeworfen_durch, umgeworfen_preis_eur, "
+    "umgeworfen_bis, "
     "regime, gate_passed, gate_reason, "
     "risk_veto, risk_veto_reason, cash_veto, cash_veto_reason, groq_model, "
     "outcome_status, outcome_geprueft_am, outcome_entschieden_am, "
@@ -1208,6 +1216,67 @@ _TABELLEN_OHNE = {
 }
 
 
+def _rollen_kette(conn) -> dict:
+    """Die zwei Tabellen der neuen Kette - vom Drift-Waechter selbst gemeldet.
+
+    WOZU. Bis heute exportierte dieses Skript 18 Tabellen und kannte vom
+    gesamten LLM-Umbau nichts. Jede Auswertung waere auf den Altdaten gelaufen
+    und haette die Schluesse der ALTEN Kette bestaetigt - genau die Falle, die
+    `pruefe_export_vollcheck.py` unter Frage D beschreibt.
+
+      lagebilder              EINE Zeile je Lauf, nicht je Signal. Das
+                              Lagebild in 44 Signalzeilen zu kopieren waere
+                              44-fache Redundanz (siehe signal_abbildung).
+      gate_durchlaessigkeit   WO die Kette Signale verliert. Der
+                              aussagekraeftigste neue Wert ueberhaupt: ein
+                              Lauf mit 45 hinein und 0 heraus sah bisher
+                              identisch aus, egal an welcher Stufe es
+                              verschwand.
+
+    Beide fail-soft: auf einer aelteren Datei gibt es sie nicht, und ein
+    fehlender Export ist kein Grund, den ganzen Lauf zu verlieren."""
+    aus: dict = {}
+    vorhanden = {r[0] for r in conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table'")}
+
+    if "lagebilder" in vorhanden:
+        zeilen = [dict(r) for r in conn.execute(
+            "SELECT * FROM lagebilder ORDER BY id DESC LIMIT 60")]
+        aus["lagebilder"] = {"anzahl_gesamt": conn.execute(
+            "SELECT COUNT(*) FROM lagebilder").fetchone()[0],
+            "juengste": zeilen}
+    else:
+        aus["lagebilder"] = {"nicht_vorhanden": "Tabelle fehlt (aeltere Datei)"}
+
+    if "gate_durchlaessigkeit" in vorhanden:
+        zeilen = [dict(r) for r in conn.execute(
+            "SELECT * FROM gate_durchlaessigkeit ORDER BY id DESC LIMIT 30")]
+        # DIE STUFEN AUSGEPACKT, nicht nur als JSON-Klumpen. Wer im Notebook
+        # fragt "wo verlieren wir", soll nicht erst einen String parsen.
+        import json as _json
+        entfaltet = []
+        for z in zeilen:
+            try:
+                d = _json.loads(z.get("daten_json") or "{}")
+            except Exception:                                    # noqa: BLE001
+                d = {}
+            entfaltet.append({
+                "lauf": z.get("lauf"), "erfasst_am": z.get("erfasst_am"),
+                "hinein": z.get("hinein"), "heraus": z.get("heraus"),
+                "bestanden": d.get("bestanden"), "verloren": d.get("verloren"),
+                "gruende": d.get("gruende"),
+                "faktorzahlen": d.get("faktorzahlen"),
+                "z1_verstoesse": d.get("z1_verstoesse")})
+        aus["gate_durchlaessigkeit"] = {
+            "anzahl_gesamt": conn.execute(
+                "SELECT COUNT(*) FROM gate_durchlaessigkeit").fetchone()[0],
+            "laeufe": entfaltet}
+    else:
+        aus["gate_durchlaessigkeit"] = {
+            "nicht_vorhanden": "Tabelle fehlt (aeltere Datei)"}
+    return aus
+
+
 def _konfiguration_und_makro(conn) -> dict:
     """Die vier Tabellen, die der Export bis zum 10.08. gar nicht kannte.
 
@@ -1808,6 +1877,10 @@ def main() -> None:
         except Exception as exc:  # noqa: BLE001
             konfiguration_und_makro = {"nicht_verfuegbar": str(exc)}
         try:
+            rollen_kette = _rollen_kette(conn)
+        except Exception as exc:  # noqa: BLE001
+            rollen_kette = {"nicht_verfuegbar": str(exc)}
+        try:
             spaltendrift = _spaltendrift(conn)
         except Exception as exc:  # noqa: BLE001
             spaltendrift = {"nicht_verfuegbar": str(exc)}
@@ -2110,6 +2183,7 @@ def main() -> None:
         "coingecko_kontingent": coingecko_kontingent,
         "llm_kontingent": llm_kontingent,
         "konfiguration_und_makro": konfiguration_und_makro,
+        "rollen_kette": rollen_kette,
         "spaltendrift": spaltendrift,
         "deep_dive": {
             "symbol": DEEP_DIVE_SYMBOL,
