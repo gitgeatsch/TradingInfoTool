@@ -2428,10 +2428,138 @@ def gesamtpruefung() -> None:
            f"es ALLE sind, gibt es keine halb verdrahtete Kette, in der "
            f"unklar waere, welcher Weg gilt")
 
+
+def paket_b1() -> None:
+    """B1 - der eine Ort, an dem die Kette zusammengesetzt wird."""
+    P = "B1"
+    import sqlite3
+    from agent import rollen_lauf as RL, rollen_eingabe as RE
+
+    # DIE SCHUTZSCHALTER SIND WICHTIGER ALS DER DURCHLAUF.
+    q = sqlite3.connect("data/tradinginfotool.db")
+    con = sqlite3.connect(":memory:"); q.backup(con); q.close()
+    for name, kw, mit_conn in (
+            ("eine unbekannte Betriebsart", {"betriebsart": "halbscharf"}, True),
+            ("probe ohne Modell-Client", {"betriebsart": "probe"}, True),
+            ("scharf ohne Modell-Client", {"betriebsart": "scharf"}, True),
+            ("ein Lauf ohne Verbindung", {"betriebsart": "trocken"}, False)):
+        try:
+            RL.fuehre_lauf(conn=con if mit_conn else None, reihen={},
+                           symbole=[], **kw)
+            ok = False
+        except RL.LaufAbgebrochen:
+            ok = True
+        pruefe(P, f"{name} wird abgewiesen", ok,
+               "ein Weg, den man erst nachtraeglich absichert, ist in der "
+               "Zwischenzeit ungesichert")
+    pruefe(P, "ein Trockenlauf OHNE Aufzeichnung bricht ab",
+           _wirft(lambda: RL.fuehre_lauf(conn=con, reihen={}, symbole=[],
+                                         betriebsart="trocken"),
+                  RL.LaufAbgebrochen),
+           "ein leerer Durchlauf saehe aus wie ein Erfolg")
+
+    # DATUM -> TAGE. Der Fehler, den der erste Trockenlauf gefunden hat.
+    pruefe(P, "ein Datum wird in Tage umgerechnet",
+           RL._tage_bis("2026-09-15", "2026-09-01") == 14,
+           "das Modell liefert `umgeworfen_bis` als Datum, die Rechnung "
+           "erwartet `umgeworfen_tage` als Zahl - zwei Pakete, zwei Einheiten")
+    pruefe(P, "ein Datum in der Vergangenheit gibt None, nicht negativ",
+           RL._tage_bis("2026-08-01", "2026-09-01") is None,
+           "eine abgelaufene Frist ist keine Haltedauer, sondern ein Fall "
+           "fuer den Ausstieg")
+    pruefe(P, "ein unbrauchbares Datum gibt None",
+           RL._tage_bis("morgen", "2026-09-01") is None
+           and RL._tage_bis(None, None) is None)
+
+    # DER ECHTE TROCKENLAUF - gegen echte Kursreihen, ohne einen Modellaufruf.
+    from backtest_llm1_historisch import lade_reihen_aus_db as lade
+    reihen = lade("data/tradinginfotool.db")
+    symbole = [s for s in ("BTC", "ETH", "LINK") if s in reihen]
+    pruefe(P, "die Kursreihen liegen vor", len(symbole) == 3, str(symbole))
+
+    def befund(sym, kauft):
+        r = reihen[sym]; i = len(r) - 1
+        k = RE.kurs_eur(sym, r, i, "data/tradinginfotool.db")
+        a = RE.atr_eur(sym, r, i, "data/tradinginfotool.db")
+        return {"aktion": "KAUFEN" if kauft else "NICHTS_TUN",
+                "belege": [{"fakt": "Schwankung niedrig", "richtung": "dafuer",
+                            "gewicht": "hoch"}],
+                "unabhaengige_faktoren": 2,
+                "begruendung": "Die Schwankung geht zurueck.",
+                "was_dagegen": "Abstand zum Hoch.",
+                "umgeworfen_durch": "Tagesschluss unter dem Jahrestief.",
+                **({"einstieg_eur": round(k, 2),
+                    "stop_eur": round(k - 2.5 * a, 2)} if kauft else {})}
+
+    antworten = {"lagebild": {"lage": "Die Maerkte zeigen eine Divergenz.",
+                              "klassen": [{"klasse": "krypto",
+                                           "einstufung": "unguenstig",
+                                           "warum": "Bitcoin steht tief."}],
+                              "belege": ["Bitcoin steht tief."]},
+                 "befund": {s: befund(s, s == "BTC") for s in symbole}}
+    def _inhalt(pfad):
+        """Der INHALT aller Tabellen, nicht die Bytes der Datei.
+
+        Ein Byte-Vergleich war die erste Fassung - und er schlug fehl, obwohl
+        KEINE Zeile geschrieben wurde: SQLite ordnet beim Oeffnen Seiten um,
+        und der Aenderungszaehler im Header wandert mit. Die Pruefung haette
+        einen Fehler gemeldet, wo keiner war, und beim naechsten Mal haette
+        man sie deshalb weggelassen."""
+        import hashlib as _h
+        c = sqlite3.connect(pfad)
+        namen = [r[0] for r in c.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")]
+        h = _h.md5()
+        for n in namen:
+            for zeile in c.execute(f'SELECT * FROM "{n}"'):
+                h.update(repr(zeile).encode("utf-8", "replace"))
+        c.close()
+        return h.hexdigest()
+
+    vorher = _inhalt("data/tradinginfotool.db")
+    erg = RL.fuehre_lauf(conn=con, reihen=reihen, symbole=symbole,
+                         betriebsart="trocken", antworten=antworten)
+    pruefe(P, "der Trockenlauf laeuft ohne Fehler durch",
+           not erg["fehler"], str(erg["fehler"][:2]))
+    pruefe(P, "und schreibt KEINE Zeile in die Produktivdatenbank",
+           _inhalt("data/tradinginfotool.db") == vorher,
+           "die Verbindung wird uebergeben, nie hier geoeffnet - aber die "
+           "Fakten-Module lesen mit ihrer eigenen Vorgabe, und das muss "
+           "LESEN bleiben")
+    pruefe(P, "er schreibt auch in die Kopie nichts",
+           not erg["signale"],
+           "trocken heisst: kein Modellaufruf, kein Schreiben, keine Mail")
+    d = erg["durchlauf"]
+    pruefe(P, "jedes Symbol hat alle Stufen durchlaufen",
+           d.hinein == len(symbole) and d.bestanden_je_stufe["urteil"] == len(symbole))
+    pruefe(P, "ein NICHTS_TUN faellt bei der Aktion heraus",
+           d.verloren_je_stufe["aktion"] == len(symbole) - 1)
+    pruefe(P, "fuer den Einstieg entsteht eine Mail", len(erg["mails"]) == 1)
+    pruefe(P, "der Entscheider zaehlt, nimmt aber nichts heraus",
+           d.heraus == 1 and d.verloren_je_stufe["entscheider"] >= 0)
+
+    # EIN FEHLENDES SYMBOL WIRD GEZAEHLT, NICHT UEBERSPRUNGEN.
+    erg2 = RL.fuehre_lauf(conn=con, reihen=reihen, symbole=symbole + ["GIBTSNICHT"],
+                          betriebsart="trocken", antworten=antworten)
+    pruefe(P, "ein Symbol ohne Kursreihe wird als Verlust gezaehlt",
+           erg2["durchlauf"].verloren_je_stufe["fakten"] == 1,
+           "stilles Ueberspringen waere derselbe Fehler wie ein Filter, der "
+           "seine Wirkung verbirgt")
+    con.close()
+
+
+def _wirft(fn, typ) -> bool:
+    try:
+        fn()
+        return False
+    except typ:
+        return True
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung}
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1}
 
 
 def main() -> int:
