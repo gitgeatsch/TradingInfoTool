@@ -1992,6 +1992,36 @@ def paket_12b() -> None:
     finally:
         config_module.set_regime_score_override(vorher)
 
+
+    # DIE CONFIG DARF SICH BEIM SCHREIBEN NICHT VERAENDERN, ausser im Wert.
+    # Am 13.08. hat genau das die Datei zerlegt: 1.933 LF-Zeilen wurden zu
+    # 1.955 CRLF plus 19.426 verirrten CR, der Diff war unlesbar, die Datei
+    # musste aus dem letzten guten Stand wiederhergestellt werden.
+    vor_bytes = open("Basisinfos/config.yaml", "rb").read()
+    try:
+        config_module.set_regime_score_override(0.6)
+        zwischen = open("Basisinfos/config.yaml", "rb").read()
+        config_module.set_regime_score_override(vorher)
+    finally:
+        config_module.set_regime_score_override(vorher)
+    nach_bytes = open("Basisinfos/config.yaml", "rb").read()
+    pruefe(P, "nach Hin und Zurueck ist die Datei BYTE-IDENTISCH",
+           vor_bytes == nach_bytes,
+           f"{len(vor_bytes)} -> {len(nach_bytes)} Bytes")
+    pruefe(P, "und der Schreibvorgang aendert nur den Wert",
+           abs(len(zwischen) - len(vor_bytes)) <= 1
+           and zwischen.count(b"
+") == vor_bytes.count(b"
+"),
+           "die erste Fassung baute den Kommentar neu zusammen und zerstoerte "
+           "damit die Ausrichtung der ganzen Datei")
+    pruefe(P, "die Zeilenenden bleiben einheitlich",
+           nach_bytes.count(b"
+") == nach_bytes.count(b"
+"),
+           "write_text uebersetzt unter Windows jedes \n in \r\n - die "
+           "Warnung steht seit dem 09.07. in derselben Datei")
+
     for schlecht in (1.5, -0.1, "abc"):
         try:
             config_module.set_regime_score_override(schlecht)

@@ -5,7 +5,7 @@ ANTHROPIC_API_KEY/GITHUB_TOKEN-Gebrauch hier, das bleibt Phase 3 vorbehalten (P-
 lokale Autonomie, Claude nur optional)."""
 from __future__ import annotations
 
-import shutil
+import reimport shutil
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -1151,37 +1151,50 @@ def set_regime_score_override(new_value: float | None) -> bool:
 
 
 def _setze_top_level_skalar(schluessel: str, roher_wert: str) -> bool:
-    """Schreibt EINEN Top-Level-Skalar in die config.yaml.
+    """Schreibt EINEN Skalar in die config.yaml - und laesst alles andere in
+    Ruhe, byte-genau.
 
-    Herausgezogen aus `set_regime_manueller_override()`, damit der
-    Score-Override nicht dieselbe Schreib-/Rollback-Mechanik ein zweites Mal
-    mitbringt - eine zweite Fassung waere genau die Kopie, die still veraltet."""
+    ZWEI FALLEN, BEIDE SELBST HINEINGETAPPT (13.08.2026):
+
+    1. WRITE_TEXT statt WRITE_BYTES. Die Warnung steht seit dem 09.07. weiter
+       oben in dieser Datei: write_text uebersetzt unter Windows jedes "
+" in
+       "
+". Ergebnis war eine config.yaml mit 19.426 verirrten CR, ein
+       unlesbarer Diff und eine Wiederherstellung aus dem letzten guten Stand.
+    2. DEN KOMMENTAR NEU ZUSAMMENGEBAUT. Die erste Fassung zerlegte die Zeile
+       in Wert und Kommentar und setzte sie mit festem Abstand wieder zusammen -
+       damit war die Ausrichtung der ganzen Datei dahin, und jeder Schreibvorgang
+       aenderte die Datei ein Stueck weiter.
+
+    DESHALB: nur der WERT wird ersetzt. Einzug, Abstand, Kommentar und
+    Zeilenende bleiben exakt, wie sie waren."""
     original_bytes = CONFIG_PATH.read_bytes()
-    newline_style = "\r\n" if b"\r\n" in original_bytes else "\n"
     original_text = original_bytes.decode("utf-8")
     lines = original_text.splitlines(keepends=True)
     idx = next((i for i, line in enumerate(lines)
                 if line.strip().startswith(f"{schluessel}:")), None)
     if idx is None:
         return False
-    zeile = lines[idx]
-    einzug = zeile[:len(zeile) - len(zeile.lstrip())]
-    kommentar = ""
-    if "#" in zeile:
-        kommentar = "  " + zeile.split("#", 1)[1].rstrip("\r\n").strip()
-        kommentar = f"  #{kommentar[1:]}" if kommentar.startswith("  #") else f"  # {kommentar.strip()}"
-    neu_zeile = f"{einzug}{schluessel}: {roher_wert}{kommentar}{newline_style}"
-    if neu_zeile == zeile:
+
+    # Gruppe 1 = Einzug + Schluessel + ": ", Gruppe 2 = der Wert,
+    # Gruppe 3 = alles danach (Abstand, Kommentar, Zeilenende) - unangetastet.
+    treffer = re.match(rf"^(\s*{re.escape(schluessel)}:\s*)(\S+)(.*)$",
+                       lines[idx], re.DOTALL)
+    if treffer is None:
         return False
+    neu_zeile = f"{treffer.group(1)}{roher_wert}{treffer.group(3)}"
+    if neu_zeile == lines[idx]:
+        return False
+
     lines[idx] = neu_zeile
     sicherung = CONFIG_PATH.with_suffix(CONFIG_PATH.suffix + ".bak")
     sicherung.write_bytes(original_bytes)
     try:
-        CONFIG_PATH.write_text("".join(lines), encoding="utf-8")
+        CONFIG_PATH.write_bytes("".join(lines).encode("utf-8"))
         # CACHE INVALIDIEREN. `load_config()` haelt ein Modul-Global; ohne das
         # las derselbe Prozess nach dem Schreiben weiter den alten Wert - im
-        # Test stand "geschrieben: True" neben "gelesen: None". Alle anderen
-        # Schreibfunktionen hier tun dasselbe.
+        # Test stand "geschrieben: True" neben "gelesen: None".
         global _config_cache
         _config_cache = None
     except Exception:
