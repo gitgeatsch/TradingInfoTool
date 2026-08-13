@@ -539,6 +539,7 @@ def determine_regime(
     btc_snapshot: TechnicalSnapshot,
     macro_history: list[MacroSnapshot],
     manual_override: str,
+    manual_override_score: float | None = None,
     fed_funds_history: list[float] | None = None,
     m2_us_history: list[float] | None = None,
     m2_eurozone_history: list[float] | None = None,
@@ -615,6 +616,21 @@ def determine_regime(
     # dieser Stelle bereits vorliegen.
     _btc_letzter = btc_closes[-1] if len(btc_closes) else None
     _score = regime_score(_btc_letzter, ema50, ema200, fgi_value)
+    # SCORE-OVERRIDE (E4, 2026-08-13). Der bisherige Override setzte das
+    # ETIKETT - vier Schubladen. Der Score ist feiner aufgeloest und bestimmt
+    # seit dem 06.08. die Mindestkonfidenz; ihn zu setzen ist derselbe Hebel
+    # mit feinerer Aufloesung, nicht ein zweiter.
+    #
+    # ADDITIV: der Etikett-Override bleibt unveraendert bestehen. Beide
+    # gleichzeitig waeren zwei Wahrheiten - deshalb prueft `config.py` das.
+    # EXPLIZITER PARAMETER, KEIN CONFIG-DICT. Die erste Fassung griff auf ein
+    # `config` zu, das diese Funktion gar nicht bekommt - `determine_regime()`
+    # nimmt `manual_override` als Wert, nicht die Konfiguration. Ein Aufrufer,
+    # der den Score setzen will, muss ihn uebergeben; damit ist auch sichtbar,
+    # wer ihn setzt.
+    if (isinstance(manual_override_score, (int, float))
+            and 0.0 <= float(manual_override_score) <= 1.0):
+        _score = float(manual_override_score)
     _abstand50 = (
         round((_btc_letzter / ema50 - 1.0) * 100.0, 2)
         if _btc_letzter is not None and ema50 else None

@@ -1117,6 +1117,79 @@ def set_email_nur_bitpanda_gelistet(new_value: bool) -> bool:
     return _set_top_level_skalar("nur_bitpanda_gelistet", "true" if new_value else "false", block_scope="email")
 
 
+def set_regime_score_override(new_value: float | None) -> bool:
+    """Setzt `regime.manueller_override_score` (E4, 2026-08-13).
+
+    DERSELBE HEBEL, FEINERE AUFLOESUNG. Der Etikett-Override kennt vier
+    Schubladen; der Score ist stetig und bestimmt seit dem 06.08. die
+    Mindestkonfidenz ueber vier Stuetzstellen. Ihn zu setzen ist deshalb kein
+    zweiter Eingriff, sondern derselbe mit mehr Aufloesung.
+
+    NICHT BEIDE GLEICHZEITIG. Ein gesetztes Etikett UND ein gesetzter Score
+    waeren zwei Wahrheiten ueber denselben Zustand - und es waere nicht
+    ablesbar, welche gilt. Wer den Score setzt, muss das Etikett auf 'none'
+    stellen; das wird hier geprueft und nicht stillschweigend aufgeloest.
+
+    `None` schaltet den Override ab. Gleiches Schreib-/Rollback-Muster wie
+    `set_regime_manueller_override()`."""
+    if new_value is not None:
+        try:
+            wert = float(new_value)
+        except (TypeError, ValueError):
+            raise ValueError(f"Score-Override muss eine Zahl sein: {new_value!r}")
+        if not 0.0 <= wert <= 1.0:
+            raise ValueError(f"Score-Override liegt ausserhalb 0.00-1.00: {wert}")
+        etikett = load_config().get("regime", {}).get("manueller_override", "none")
+        if etikett and etikett != "none":
+            raise ValueError(
+                f"Es ist bereits ein Etikett-Override aktiv ('{etikett}'). Beide "
+                f"gleichzeitig waeren zwei Wahrheiten - erst auf 'Kein Override' "
+                f"stellen, dann den Score setzen.")
+    return _setze_top_level_skalar(
+        "manueller_override_score",
+        "null" if new_value is None else f"{float(new_value):.2f}")
+
+
+def _setze_top_level_skalar(schluessel: str, roher_wert: str) -> bool:
+    """Schreibt EINEN Top-Level-Skalar in die config.yaml.
+
+    Herausgezogen aus `set_regime_manueller_override()`, damit der
+    Score-Override nicht dieselbe Schreib-/Rollback-Mechanik ein zweites Mal
+    mitbringt - eine zweite Fassung waere genau die Kopie, die still veraltet."""
+    original_bytes = CONFIG_PATH.read_bytes()
+    newline_style = "\r\n" if b"\r\n" in original_bytes else "\n"
+    original_text = original_bytes.decode("utf-8")
+    lines = original_text.splitlines(keepends=True)
+    idx = next((i for i, line in enumerate(lines)
+                if line.strip().startswith(f"{schluessel}:")), None)
+    if idx is None:
+        return False
+    zeile = lines[idx]
+    einzug = zeile[:len(zeile) - len(zeile.lstrip())]
+    kommentar = ""
+    if "#" in zeile:
+        kommentar = "  " + zeile.split("#", 1)[1].rstrip("\r\n").strip()
+        kommentar = f"  #{kommentar[1:]}" if kommentar.startswith("  #") else f"  # {kommentar.strip()}"
+    neu_zeile = f"{einzug}{schluessel}: {roher_wert}{kommentar}{newline_style}"
+    if neu_zeile == zeile:
+        return False
+    lines[idx] = neu_zeile
+    sicherung = CONFIG_PATH.with_suffix(CONFIG_PATH.suffix + ".bak")
+    sicherung.write_bytes(original_bytes)
+    try:
+        CONFIG_PATH.write_text("".join(lines), encoding="utf-8")
+        # CACHE INVALIDIEREN. `load_config()` haelt ein Modul-Global; ohne das
+        # las derselbe Prozess nach dem Schreiben weiter den alten Wert - im
+        # Test stand "geschrieben: True" neben "gelesen: None". Alle anderen
+        # Schreibfunktionen hier tun dasselbe.
+        global _config_cache
+        _config_cache = None
+    except Exception:
+        CONFIG_PATH.write_bytes(original_bytes)
+        raise
+    return True
+
+
 def set_regime_manueller_override(new_value: str) -> bool:
     """Setzt den TOP-LEVEL Skalar `regime.manueller_override` (RG-8, Basisinfos/
     config.yaml Zeile ~1005) - bisher ein reines "Uboot" (nur per Hand in der

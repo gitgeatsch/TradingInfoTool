@@ -1946,10 +1946,92 @@ def paket_12c() -> None:
     _c.close()
 
 
+
+def paket_12b() -> None:
+    """GUI: Regime-Tab auf den Score, Override auf den Score (E4)."""
+    P = "12b"
+    import config as config_module
+    from ui.regime_view import _SCORE_LESEHILFE, _score_einordnung
+    from agent.krypto import regime as RGM
+
+    # DIE LESEHILFE MUSS DIE ECHTEN STUETZSTELLEN SEIN, nicht erfundene.
+    pruefe(P, "die Lesehilfe stammt aus den echten Stuetzstellen",
+           tuple(p for p, _ in _SCORE_LESEHILFE)
+           == tuple(p for p, _ in RGM._SCORE_STUETZSTELLEN),
+           "sonst zeigt die GUI eine Skala, die die Rechnung nicht kennt")
+    pruefe(P, "und ordnet einen Wert dem naechsten Punkt zu",
+           "voll baerisch" in _score_einordnung(0.30)
+           and "aufwaerts" in _score_einordnung(0.95)
+           and _score_einordnung(None) == "nicht verfuegbar")
+
+    # DER OVERRIDE WIRKT AUF DEN SCORE - behavioural, nicht im Quelltext gesucht.
+    import inspect
+    sig = inspect.signature(RGM.determine_regime)
+    pruefe(P, "determine_regime nimmt einen Score-Override entgegen",
+           "manual_override_score" in sig.parameters
+           and sig.parameters["manual_override_score"].default is None,
+           "mit Vorgabewert - sonst brechen alle bestehenden Aufrufer")
+    pruefe(P, "und der einzige Aufrufer uebergibt ihn per Schluesselwort",
+           "manual_override_score=config_dict.get" in _quelltext("agent/krypto/pipeline.py"),
+           "der Parameter steht in der Signatur VOR anderen Vorgaben - ein "
+           "positioneller Aufruf wuerde sie verschieben")
+
+    # SCHREIBEN UND LESEN, gegen die echte Datei, danach zurueckgesetzt.
+    vorher = config_module.load_config().get("regime", {}).get(
+        "manueller_override_score")
+    try:
+        config_module.set_regime_score_override(0.6)
+        gelesen = config_module.load_config()["regime"]["manueller_override_score"]
+        pruefe(P, "ein gesetzter Score wird sofort wieder gelesen",
+               gelesen == 0.6,
+               "der Cache ist ein Modul-Global - ohne Invalidierung stand "
+               "'geschrieben: True' neben 'gelesen: None'")
+        config_module.set_regime_score_override(None)
+        pruefe(P, "und laesst sich abschalten",
+               config_module.load_config()["regime"]["manueller_override_score"] is None)
+    finally:
+        config_module.set_regime_score_override(vorher)
+
+    for schlecht in (1.5, -0.1, "abc"):
+        try:
+            config_module.set_regime_score_override(schlecht)
+            ok = False
+        except ValueError:
+            ok = True
+        finally:
+            config_module.set_regime_score_override(vorher)
+        pruefe(P, f"'{schlecht}' wird abgewiesen", ok,
+               "0.00 bis 1.00, sonst nichts")
+
+    # NICHT BEIDE OVERRIDES GLEICHZEITIG - zwei Wahrheiten ueber denselben
+    # Zustand, und es waere nicht ablesbar, welche gilt.
+    etikett_vorher = config_module.load_config()["regime"]["manueller_override"]
+    try:
+        config_module.set_regime_manueller_override("baer")
+        try:
+            config_module.set_regime_score_override(0.5)
+            ok = False
+        except ValueError as exc:
+            ok = "Etikett-Override" in str(exc)
+        pruefe(P, "Score-Override neben aktivem Etikett-Override wird abgewiesen",
+               ok, "beide gleichzeitig waeren zwei Wahrheiten")
+    finally:
+        config_module.set_regime_manueller_override(etikett_vorher)
+        config_module.set_regime_score_override(vorher)
+
+    # DER SCORE-OVERRIDE MUSS AUCH WIRKEN, nicht nur schreibbar sein.
+    ansicht = _quelltext("ui/regime_view.py")
+    pruefe(P, "der Tab zeigt den Score und die Mindestkonfidenz",
+           "regime_score_stetig" in ansicht
+           and "regime_min_konfidenz_stetig" in ansicht,
+           "das Etikett stand ueber 1.022 Faelle konstant auf 'baer' - der "
+           "Score ist die Groesse, die wirklich wirkt")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c}
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b}
 
 
 def main() -> int:

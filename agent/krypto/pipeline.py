@@ -529,6 +529,11 @@ def compute_current_regime(conn, coingecko_client, watchlist, fred_api_key: str 
 
     regime_result = determine_regime(
         btc_closes, btc_snapshot, macro_history, config_dict["regime"]["manueller_override"],
+        # E4 (2026-08-13): der Score-Override, falls gesetzt. Nur ueber
+        # Schluesselwort - der Parameter steht in der Signatur VOR den anderen
+        # Vorgaben, und ein positioneller Aufruf wuerde sie verschieben.
+        manual_override_score=config_dict.get("regime", {}).get(
+            "manueller_override_score"),
         fed_funds_history=liquidity_context["fed_funds_history"],
         m2_us_history=liquidity_context["m2_us_history"],
         m2_eurozone_history=liquidity_context["m2_eurozone_history"],

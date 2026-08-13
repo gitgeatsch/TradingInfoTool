@@ -32,6 +32,27 @@ _OVERRIDE_LABELS = {"none": "Kein Override (automatisch)", **_REGIME_LABELS}
 _OVERRIDE_VALUES_BY_LABEL = {label: value for value, label in _OVERRIDE_LABELS.items()}
 _OVERRIDE_COMBO_VALUES = [_OVERRIDE_LABELS[v] for v in ("none",) + REGIME_STATES]
 
+# E4 (2026-08-13): der Score ist die feinere Aufloesung desselben Hebels.
+# Das Etikett kennt vier Schubladen; der Score ist stetig und bestimmt seit
+# dem 06.08. die Mindestkonfidenz ueber vier Stuetzstellen. Sie stehen hier
+# als LESEHILFE - der Nutzer soll sehen, was ein Wert bedeutet, statt eine
+# nackte Zahl zwischen 0 und 1 zu schieben.
+_SCORE_LESEHILFE = (
+    (0.00, "voll defensiv (wie Krise)"),
+    (0.35, "voll baerisch"),
+    (0.65, "neutral (wie Seitwaerts)"),
+    (1.00, "aufwaerts (wie Bulle)"),
+)
+
+
+def _score_einordnung(score: float | None) -> str:
+    """Der naechstgelegene Stuetzpunkt als Wort. Keine Interpolation im Text -
+    'zwischen voll baerisch und neutral' waere praeziser und unleserlicher."""
+    if score is None:
+        return "nicht verfuegbar"
+    punkt, wort = min(_SCORE_LESEHILFE, key=lambda p: abs(p[0] - float(score)))
+    return f"{float(score):.2f} - {wort}"
+
 
 class RegimeView(ttk.Frame):
     def __init__(self, parent, db_conn_factory):
@@ -54,6 +75,15 @@ class RegimeView(ttk.Frame):
         self._reason_label.pack(anchor="w")
 
         self._detail_labels: dict[str, ttk.Label] = {}
+        # DER SCORE STEHT UEBER DEN EINZELWERTEN. Das Etikett stand ueber
+        # 1.022 Faelle konstant auf "baer" - der Score variiert 0,250-0,750 und
+        # ist die Groesse, die tatsaechlich wirkt (E4).
+        self._score_label = ttk.Label(status_frame, text="", font=("", 10, "bold"))
+        self._score_label.pack(anchor="w", pady=(4, 0))
+        self._score_hilfe = ttk.Label(status_frame, text="", wraplength=760,
+                                      justify="left", foreground="#666666")
+        self._score_hilfe.pack(anchor="w")
+
         for key in ("btc_trend", "fear_greed", "dominanz", "zyklus_risiko", "liquiditaet", "regime_konflikt"):
             lbl = ttk.Label(status_frame, text="", wraplength=760, justify="left")
             lbl.pack(anchor="w")
@@ -82,6 +112,16 @@ class RegimeView(ttk.Frame):
             "dem ersten Tag nach der Rückkehr zu 'Kein Override' hoch.",
             wraplength=760, justify="left",
         ).pack(anchor="w", pady=(4, 0))
+
+        score_row = ttk.Frame(override_frame)
+        score_row.pack(anchor="w", pady=(6, 0))
+        ttk.Label(score_row, text="Score-Override (E4):").pack(side="left")
+        self._score_var = tk.StringVar()
+        ttk.Entry(score_row, textvariable=self._score_var, width=8).pack(
+            side="left", padx=(6, 0))
+        ttk.Label(score_row, text="0.00-1.00, leer = aus").pack(side="left", padx=(6, 0))
+        ttk.Button(score_row, text="Anwenden",
+                   command=self._on_score_apply).pack(side="left", padx=(6, 0))
 
         ttk.Separator(self, orient="horizontal").pack(fill="x", padx=8, pady=6)
 
@@ -125,6 +165,8 @@ class RegimeView(ttk.Frame):
 
         current_override = config_dict.get("regime", {}).get("manueller_override", "none")
         self._override_var.set(_OVERRIDE_LABELS.get(current_override, _OVERRIDE_LABELS["none"]))
+        score_override = config_dict.get("regime", {}).get("manueller_override_score")
+        self._score_var.set("" if score_override is None else f"{float(score_override):.2f}")
 
     def _on_override_apply(self) -> None:
         selected_label = self._override_var.get()
@@ -144,11 +186,30 @@ class RegimeView(ttk.Frame):
             )
         self.refresh()
 
+    def _on_score_apply(self) -> None:
+        roh = self._score_var.get().strip().replace(",", ".")
+        wert = None if not roh else roh
+        try:
+            geaendert = config_module.set_regime_score_override(
+                None if wert is None else float(wert))
+        except (config_module.WatchlistWriteError, ValueError) as exc:
+            messagebox.showerror("Score-Override", f"Fehlgeschlagen: {exc}")
+            return
+        if geaendert:
+            messagebox.showinfo(
+                "Score-Override",
+                ("Score-Override abgeschaltet." if wert is None else
+                 f"Regime-Score auf {float(wert):.2f} gesetzt.")
+                + " Wirkt ab dem nächsten Pipeline-Lauf (kein Neustart nötig).")
+        self.refresh()
+
     def _render_regime_status(self, status: dict | None) -> None:
         if status is None:
             self._stand_label.config(text="Stand: noch kein Signal vorhanden")
             self._regime_label.config(text="Regime: -", foreground=theme.default_text_color())
             self._reason_label.config(text="")
+            self._score_label.config(text="Regime-Score: -")
+            self._score_hilfe.config(text="")
             for lbl in self._detail_labels.values():
                 lbl.config(text="")
             return
@@ -156,6 +217,16 @@ class RegimeView(ttk.Frame):
         created_at = status.get("created_at")
         stand = format_zeitpunkt_lokal(created_at)
         self._stand_label.config(text=f"Stand: {stand}")
+
+        score = status.get("regime_score_stetig")
+        min_konf = status.get("regime_min_konfidenz_stetig")
+        self._score_label.config(
+            text=f"Regime-Score: {_score_einordnung(score)}"
+                 + (f"   -> Mindestkonfidenz {min_konf:.0f} %"
+                    if min_konf is not None else ""))
+        self._score_hilfe.config(
+            text="Stuetzstellen: "
+                 + " · ".join(f"{p:.2f} {w}" for p, w in _SCORE_LESEHILFE))
 
         regime = status["regime"]
         label = _REGIME_LABELS.get(regime, regime)
