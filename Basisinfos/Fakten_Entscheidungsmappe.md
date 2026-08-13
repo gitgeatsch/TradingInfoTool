@@ -2227,7 +2227,16 @@ mit einem Fakt aus wie eines mit dreien.
 
 **Zusatzinfo ist freiwillig** — ihr Fehlen wird nicht gemeldet.
 
-**Am laufenden Tag entfällt das Volumen.** Sein Umsatz ist naturgemäß kleiner
+**~~Am laufenden Tag entfällt das Volumen.~~ ÜBERHOLT 13.08.** — richtig war
+die Absicht, falsch die Folge: weil *jedes* Live-Signal auf dem jüngsten Tag
+rechnet, fehlte damit eine von **drei** gemessenen Familien in **jeder**
+Nachricht. Der Faktenblock versprach drei Punkte und lieferte zwei (gefunden
+in der Gegenprüfung zu Stufe C). **Jetzt kommt das Volumen vom letzten
+vollständigen Tag** und trägt den Zusatz „(Vortag)“ — ein ganzer Tag statt
+eines angefangenen. Die ursprüngliche Begründung bleibt gültig und steht
+hier weiter:
+
+Der Umsatz des laufenden Tages ist naturgemäß kleiner
 als der eines ganzen Tages; an echten BTC-Daten stand er beim 0,2-fachen des
 Mittels. Ohne diesen Schalter hätte **jede** Live-Mail „Volumen UNGÜNSTIG"
 gemeldet — ein systematischer Fehler in jeder einzelnen Nachricht, und einer,

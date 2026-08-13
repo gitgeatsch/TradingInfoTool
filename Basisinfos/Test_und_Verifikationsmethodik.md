@@ -1973,7 +1973,7 @@ Ergänzt 2.13. Drei neue Skripte, und eine geänderte Arbeitsweise.
 
 | Skript | Auslöser | was es beantwortet |
 |---|---|---|
-| `pruefe_pakete.py` | **nach jedem Paket, immer kumulativ** | Hält alles Gebaute noch? `--paket N` für eines. Stand 13.08.: **288 Prüfungen über Paket 0–14 und 12c** |
+| `pruefe_pakete.py` | **nach jedem Paket, immer kumulativ** | Hält alles Gebaute noch? `--paket N` für eines, `--paket gesamt` für den Abgleich *zwischen* den Paketen, `--paket B1` für den Orchestrator, `--paket Export` für den Notebook-Export. Stand 13.08. abends: **395 Prüfungen** |
 | `messe_sentiment_je_horizont.py` | einmalig, bei Fragen zur Stimmung | Wirkt Fear & Greed je Horizont verschieden? BTC, 3.087 Tage |
 | `messe_top_fakten.py` | einmalig, bei Fragen „welcher Fakt trägt?" | 12 Merkmale gegen die Geometrie der App, 37 Symbole, 20.494 Anker |
 | `pruefe_rollenkette.py` | vor jedem Live-Lauf | die Kette an echten Ankern, mit Wortlaut |
@@ -2043,3 +2043,49 @@ dann gilt die geclusterte. „Tagesspanne": Spanne **+1,5 pp**, Bootstrap-Band
 **vollständig negativ** (−8,1 … −1,9). Der gepoolte Wert entstand aus der
 Zusammensetzung der Symbole. Wer nur die Spanne liest, übernimmt das Vorzeichen
 verkehrt. **Ein solcher Widerspruch ist ein Ausschlusskriterium, kein Detail.**
+
+
+---
+
+## 2.21 Was die ersten echten Läufe über das Messen gelehrt haben (13.08.2026)
+
+**Ein Lauf, den man nicht nachlesen kann, muss wiederholt werden.** Der erste
+Stufe-C-Lauf schrieb in eine Kopie **im Speicher** — mit dem Prozessende war er
+weg, und die zehn Signale ließen sich nicht ansehen. 46 Aufrufe für nichts.
+Seither: Datei-Kopie, und die Mails als JSON daneben, weil sie nur im Speicher
+entstehen.
+
+**Einzelläufe sind keine Messung.** Zwei Läufe, dieselben Daten, dasselbe
+Modell, zwei Minuten Abstand: erst 10 Einstiege mit einem Durchkommer, dann 9
+ohne. Jede Aussage über die Kette braucht mehrere Läufe oder mehr Anker.
+
+**Ein Trockenlauf muss in jedem Sinn trocken sein.** Der erste schrieb in die
+Produktivdatenbank — nicht durch eigenes Zutun, sondern weil `baue_fall()` die
+Finanzierungsrate übers Netz holt und jeder externe Aufruf seinen
+Gesundheitsstand bucht. **Wer „kein Schreiben" sagt, muss auch „kein Netz"
+sagen.**
+
+**Eine Prüfung, die Fehler meldet, wo keine sind, wird weggelassen.** Die
+Prüfung „schreibt nichts in die Produktivdatei" verglich die **Bytes** und
+schlug an, obwohl keine Zeile geschrieben wurde: SQLite ordnet beim Öffnen
+Seiten um. Jetzt vergleicht sie den **Inhalt aller Tabellen**.
+
+**Der Drift-Wächter des Exports hat die Exportarbeit selbst erledigt.** Gegen
+die Datenbank des Stufe-C-Laufs gehalten, nannte er exakt die zwei Tabellen und
+acht Spalten, die fehlten — dieselbe Liste, die Kapitel 14 des Umbauplans von
+Hand aufgestellt hatte. **Ein Wächter, der auf die eigenen Lücken zeigt, ist
+mehr wert als eine Liste, die jemand pflegen muss.**
+
+### Zwei Fallen beim Schreiben von Prüfskripten
+
+**`open(ziel,"w").write(... open(quelle).read())` kürzt das Ziel, bevor das
+Argument ausgewertet wird.** Wirft das Argument, ist die Datei leer. So gingen
+am 13.08. 1.085 Zeilen Umbauplan verloren (aus dem letzten Commit
+wiederhergestellt). **Erst lesen, dann prüfen, zuletzt schreiben** — und eine
+Längenprüfung davor.
+
+**`skript.py 2>&1 | tail -2 && git push` prüft die Pipe, nicht das Skript.**
+`tail` liefert immer Exitcode 0. Dreimal am selben Tag passiert; zweimal wurde
+mit roter Prüfung gepusht, einmal mit einer Prüfdatei, die nicht mehr parste.
+**Der Exitcode gehört in eine eigene Variable, bevor irgendetwas committet
+wird.**

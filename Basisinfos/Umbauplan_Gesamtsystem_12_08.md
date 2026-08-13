@@ -396,7 +396,7 @@ python pruefe_pakete.py            # alle Pakete
 python pruefe_pakete.py --paket 1  # nur eines
 ```
 
-Stand: **358 Prüfungen** über Paket 0–14, 12b/12c/12d und die Gesamtprüfung, alle bestanden.
+Stand: **395 Prüfungen** über Paket 0–14, 12b/12c/12d, die Gesamtprüfung, B1 und den Export, alle bestanden.
 
 **Nummern-Korrektur 12.08. abends:** die Diskussion hat die Reihenfolge verschoben. Die Prüfpakete 10–12 tragen jetzt den Inhalt, der wirklich gebaut wurde; „Gate" und „Z1 + Z.ai" stehen als **12c/12d** weiter offen und sind **übersprungen, nicht erledigt**. Kein LLM-Aufruf, kein
 Netzwerk, keine Schreibzugriffe — sie darf jederzeit laufen.
@@ -1032,10 +1032,20 @@ bei JEDER Änderung mitzuziehen:**
 | `Fakten_Entscheidungsmappe.md` | jeder neue oder entfernte Fakt |
 | `Zielgroessen_und_Erfolgsmasse.md` | Änderungen an Messung oder Zielgrößen |
 
-## 14.2 Der Notebook-Export kennt den Umbau nicht — nachgezählt
+## 14.2 ~~Der Notebook-Export kennt den Umbau nicht~~ — ERLEDIGT 13.08. abends
 
-`extract_notebook_diagnose.py` exportiert heute 18 Tabellen. **Vom gesamten
-Umbau ist keine einzige dabei:**
+**Der Bestandsaufnahme unten ist abgeholfen:** `_rollen_kette(conn)` exportiert
+beide Tabellen, die acht `signals`-Spalten sind ergänzt, die Stufen der
+Durchlässigkeit stehen **entfaltet** statt als JSON-Klumpen. Der Drift-Wächter
+des Exports meldet gegen die Datenbank des Stufe-C-Laufs **keine offene Tabelle
+und keine offene Spalte** mehr — und er war es auch, der die Liste unten
+bestätigt hat, Punkt für Punkt. **Ein Wächter, der auf die eigenen Lücken zeigt,
+ist mehr wert als eine Liste, die jemand pflegen muss.**
+
+Die ursprüngliche Zählung bleibt als Beleg stehen:
+
+`extract_notebook_diagnose.py` exportierte 18 Tabellen. **Vom gesamten
+Umbau war keine einzige dabei:**
 
 | | im Export |
 |---|---|
@@ -1056,21 +1066,45 @@ würden?"*).
 
 | Skript | was zu ergänzen ist |
 |---|---|
-| `extract_notebook_diagnose.py` | die zwei Tabellen und die neuen `signals`-Spalten |
+| ~~`extract_notebook_diagnose.py`~~ | **ERLEDIGT 13.08.** — beide Tabellen, acht Spalten, Stufen entfaltet |
 | `pruefe_export_standard.py` | der 15-Punkte-Katalog aus Methodik 2.1 kennt die Durchlässigkeit nicht — sie ist der aussagekräftigste neue Wert |
 | `pruefe_export_vollcheck.py` | Frage C („wo steht jeder Messpunkt") muss die Rollen-Kette mit aufnehmen |
 
-## 14.4 Was in den Dokumenten noch fehlt (Stand 13.08. abends)
+## 14.4 ~~Was in den Dokumenten noch fehlt~~ — NACHGEZOGEN 13.08. abends
 
-Nachgezogen sind Kapitel 12, 12.8, 12.9, 13 im Umbauplan sowie die fünf
-Zentraldokumente für die Pakete 10–14. **Offen ist alles ab 12b:**
+Die Liste unten ist abgearbeitet. Was jetzt wo steht:
 
-- **12b/12c/12d und 13** stehen bisher nur im Umbauplan und in den
-  Commit-Nachrichten — nicht im Entscheidungslog, nicht im Manual
-- **Die Gesamtprüfung** und ihre drei Funde sind nirgends in der Methodik
-- **Die neuen Prüfskript-Pakete** (`--paket gesamt`) fehlen im Werkzeugkasten
-- **Der Ausstieg** (Paket 14) ist im Manual beschrieben, aber die
-  Take-Profit-Nachlese und die Näherungswarnung kamen danach
+| | wo |
+|---|---|
+| 12b/12c/12d, 13, B1, die zwei Läufe | `Regelwerk_Entscheidungslog.md`, Nachtrag 13.08. abends + zwei Indexzeilen |
+| IST-Zustand Betrieb, Gate, Hebel, Z1 | `Regelwerksmanual.md`, Nachtrag 13.08. abends |
+| Was die Läufe über das **Messen** lehrten | `Test_und_Verifikationsmethodik.md` **2.21** |
+| `--paket gesamt` / `B1` / `Export` | Methodik 2.13, Werkzeugkasten-Zeile |
+| Die neun Einstiege mit ihrem Breakeven | `Zielgroessen_und_Erfolgsmasse.md`, Nachtrag 13.08. abends |
+| Volumen vom Vortag statt Ausfall | `Fakten_Entscheidungsmappe.md` Kap. 14, als überholt markiert |
+
+**Drei eigene Aussagen sind dabei als überholt gekennzeichnet worden**, nicht
+gelöscht — wer eine Aussage streicht, nimmt der nächsten Lesung die Möglichkeit
+zu sehen, dass sie einmal galt und warum sie fiel:
+
+1. „Das Modell wählt **immer** den engsten erlaubten Stop" — aus n=2
+   verallgemeinert, hält über n=10 nicht (Median 5,3 %)
+2. „Am laufenden Tag entfällt das Volumen" — Absicht richtig, Folge falsch:
+   eine von drei Familien fehlte damit in **jeder** Nachricht
+3. „78 von 118 Signalen haben leere Fakten" — Zahl richtig, Deutung falsch
+   (Kap. 13 dieses Plans)
+
+**Offen bleibt nur der letzte Schritt der Reihenfolge unten:** die beiden
+Prüfskripte aus 14.3 (`pruefe_export_standard.py`, `pruefe_export_vollcheck.py`)
+kennen die Durchlässigkeit noch nicht.
+
+Die ursprüngliche Lückenliste, als Beleg:
+
+- **12b/12c/12d und 13** standen nur im Umbauplan und in den Commit-Nachrichten
+- **Die Gesamtprüfung** und ihre drei Funde waren nirgends in der Methodik
+- **Die neuen Prüfskript-Pakete** fehlten im Werkzeugkasten
+- **Der Ausstieg** war im Manual beschrieben, aber die Take-Profit-Nachlese und
+  die Näherungswarnung kamen danach
 
 ## 14.5 Reihenfolge am Ende
 
@@ -1083,6 +1117,11 @@ Zentraldokumente für die Pakete 10–14. **Offen ist alles ab 12b:**
 
 **Diese Reihenfolge ist nicht beliebig.** Wer die Doku vor dem ersten Lauf
 schreibt, dokumentiert eine Absicht und muss sie danach zweimal korrigieren.
+
+**Stand 13.08. abends: 1 bis 3 sind erledigt, 4 ist offen.** Und die
+Reihenfolge hat sich bezahlt gemacht — die Doku trägt jetzt die neun echten
+Stopabstände, die zwei auseinandergehenden Läufe und den Befund zur Faktorzahl.
+Vor dem Lauf hätte an all diesen Stellen eine Erwartung gestanden.
 
 ---
 

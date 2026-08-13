@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (209 Einträge)
+## Index nach Thema (211 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -237,7 +237,9 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-07-21** — Marktscan-Dedup-Bug behoben - "immer dieselben Coins" (APE/EIGEN)
 - **2026-07-30** — Screener × Schwerpunkte — geplante, noch nicht umgesetzte Kandidaten-Benachrichtigung (echter Gap, kein Bug)
 
-### Betrieb / Scheduler / Infrastruktur (8)
+### Betrieb / Scheduler / Infrastruktur (9)
+
+- **2026-08-13** — `rollen_lauf.py` als einziger Ort, an dem die Kette zusammengesetzt wird; drei Betriebsarten (trocken/probe/scharf), Verbindung wird übergeben statt geöffnet
 
 - **2026-07-19** — "Info-Leichen" - automatischer Verfall
 - **2026-07-19** — Konsistenz-Ausweitung des Verfall-Fixes
@@ -248,7 +250,9 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-08-06** — FX-Ableitung: Spannweite durch Interquartilsabstand ersetzt (4 statt 91 gueltige Tage); Z-3 arithmetisch bestaetigt
 - **2026-08-06** — CAT: die EUR-Seite ist kaputt (Renditekorrelation 0,149 gegen Median 0,992) - Ursache Illiquiditaet, kein aktueller Schaden
 
-### Methodik / Audits / Synthesen (13)
+### Methodik / Audits / Synthesen (14)
+
+- **2026-08-13** — Gesamtprüfung des LLM-Umbaus: drei Widersprüche ZWISCHEN den Paketen, die keine Paketprüfung finden konnte; zwei echte Läufe zeigen den Deadloop weg und ein Rechenproblem darunter
 
 - **2026-07-17** — Spot-Regelwerk-Konsistenzprüfung nach dem Hebel-Fix
 - **2026-07-19** — Konsistenzprüfung über ALLE
@@ -16271,3 +16275,75 @@ nicht zu unterscheiden. Behoben in Paket 13.
 | Breitere Faktenlage für das LLM (MACD, RSI, Funding in den Prompt) | Nutzerkorrektur: Zahlen gehören **nicht** in die Kette. Stattdessen die deterministische Schiene daneben — Kap. 11.6 bleibt unangetastet |
 | Faktorzahl als scharfer Filter | zeigte in der Messung keinen Effekt (7.26); ein unbelegter Filter verkleinert die Kalibrier-Stichprobe |
 | Breakeven-Randfall bei genau +1 R entschärfen | die +0,092 R der Ausstiegsregel sind **mit** diesem Randfall gemessen — ihn herauszunehmen entwertet die Messung. Benannt statt wegdefiniert |
+
+
+---
+
+## Nachtrag (2026-08-13, abends): B1, zwei echte Läufe, und was sie zeigen
+
+**Der Umbau ist im Betrieb angekommen — und hat sein eigenes Ergebnis
+geliefert.** Chronologie der Pakete steht im vorigen Nachtrag; hier steht, was
+seither gebaut und *gemessen* wurde.
+
+### Gebaut
+
+| | |
+|---|---|
+| **12b** | Regime-Tab zeigt den Score samt Stützstellen, Override setzt ihn |
+| **12c** | `rollen_gate.py` — Konfidenz entfällt, Durchlässigkeit je Stufe |
+| **12d** | Z1 verdrahtet; Z.ai kennt alle fünf Aktionen |
+| **13** | Hebel: sieben Aktionen, Richtung vom Modell, Faktor gerechnet |
+| **B1** | `rollen_lauf.py` — der eine Ort, an dem die Kette zusammengesetzt wird |
+| **Export** | zwei Tabellen und acht Spalten ergänzt |
+
+### Die Gesamtprüfung fand drei Widersprüche ZWISCHEN den Paketen
+
+Keiner davon wurde von den 23 Prüfungen des Pakets bemerkt, das sie verursacht
+hat — genau dafür gibt es diese Ebene.
+
+1. **Die Mail hätte jeden Hebel-Einstieg unterdrückt** — `AKTIONEN_MIT_EINSTIEG`
+   kannte nur die Spot-Wörter.
+2. **Ein Hebel-Signal wäre beim Schreiben gescheitert** — `signal_abbildung`
+   führte eine **Handkopie** der fünf Spot-Aktionen. Jetzt importiert.
+3. **Z.ai kannte die sieben Aktionen nicht — und das ist richtig so**, stand
+   aber nirgends. „Gilt zufällig" und „ist entschieden" sehen im Code gleich
+   aus, solange es niemand hinschreibt.
+
+### Zwei echte Läufe (Stufe B und C)
+
+| | Symbole | Aufrufe | Dauer | Fehler |
+|---|---|---|---|---|
+| Stufe B | 5 | 6 | 17 s | 0 |
+| Stufe C (2×) | 45 | 46 | ~2 min | 0 |
+
+**Der Deadloop ist weg:** 9 bis 10 Einstiege aus 20 beurteilten Assets. Die
+alte Kette sagte in 98,2 % der Fälle HALTEN.
+
+**Und neun von zehn Einstiegen tragen sich nicht** — Breakeven 45 bis 73 %
+gegen eine Basisrate von 34 %. Das ist kein Fehler, sondern Arithmetik:
+Basisrate `1/(1+CRV)` gegen Breakeven `(1+Kosten)/(1+CRV)`, derselbe Nenner.
+
+**Der Umbau hat ein Modellproblem beseitigt und ein Rechenproblem freigelegt.**
+
+### Neue Befunde aus den Läufen
+
+- **Die Faktorzahl ist die Entscheidung noch einmal.** Nur zwei Werte (2 und
+  3); Faktorzahl 3 → 82 % Einstieg, Faktorzahl 2 → 0 %. Sie ist der Ersatz für
+  die gestrichene Konfidenz und hat dasselbe Problem in anderer Gestalt.
+  **Vor dem Produktivgang zu lösen** (Umbauplan Kap. 15).
+- **Acht von neun Stops kommen aus dem Widerlegungspreis des Modells**, nur
+  einer wurde geklemmt. Die Verdrahtung aus Paket 10 wirkt durchgehend.
+- **Zwei Läufe, zwei Ergebnisse** — dieselben Daten, dasselbe Modell, zwei
+  Minuten Abstand: erst 10 Einstiege mit einem Durchkommer, dann 9 ohne.
+  **Einzelläufe sind keine Messung.**
+- **Der Ankertag ist das jüngste Datum irgendeines Symbols.** Im Testlauf
+  fielen 25 von 45 daran aus, weil die Produktion seit dem 21.07. steht — ein
+  Artefakt des Datenstands, keine Eigenschaft der Kette.
+
+### Korrigierte eigene Aussagen
+
+| Aussage | Stand | Korrektur |
+|---|---|---|
+| „Das Modell wählt **immer** den engsten erlaubten Stop" | n=2 | **hält nicht.** Median 5,3 % über 10 Einstiege, nur 1 an der Klemme |
+| „Am laufenden Tag entfällt das Volumen" | Absicht richtig | **Folge falsch:** eine von drei Familien fehlte in jeder Nachricht |
+| „78 von 118 Signalen haben leere Fakten" (12.08.) | Zahl richtig | **Deutung falsch:** alle 78 sind Abweisungen *vor* der Analyse |

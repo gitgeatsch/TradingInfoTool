@@ -1413,3 +1413,35 @@ Sie sinkt mit **weiterem** Stop und **fernerem** Ziel:
 
 **Das ist die Geometrie des Trendfolgens** — und dieselbe Richtung wie S2
 (Drift statt Timing).
+
+
+---
+
+# Nachtrag 2026-08-13 (abends): die ersten gemessenen Einstiege
+
+**Neun Einstiege aus einem echten Lauf, mit ihrem erforderlichen Trefferanteil:**
+
+| Stopabstand | nötig | Basisrate |
+|---|---|---|
+| 2,5 % | **73 %** | 34 % |
+| 2,9 % | 68 % | 34 % |
+| 4,1 % | 57 % | 34 % |
+| 4,6 – 5,6 % | 45 – 52 % | 34 % |
+| 9,3 % | 52 % | 34 % |
+
+**Selbst der beste braucht 45 %.** Über beide Läufe passierte genau ein Signal
+den Entscheider — und es hatte den weitesten Stop.
+
+**Acht von neun Stops stammen aus dem Widerlegungspreis des Modells**, nur
+einer wurde durch RM-1b/1c geklemmt. Der Falsifikator *ist* faktisch der Stop.
+
+## Was das für die Kennzahlen bedeutet
+
+Die Trefferbilanz fällt heute **immer** auf die Basisrate zurück, weil `n = 0`
+für jede Konstellation. Solange das so ist, kann der Entscheider strukturell
+nur „nein" sagen — die Basisrate liegt per Konstruktion unter dem Breakeven.
+
+**Der Produktivgang lohnt sich deshalb nicht, um zu handeln, sondern um Fälle
+zu sammeln.** Erst mit echten Ausgängen kann eine Konstellation je über den
+Breakeven kommen. Das ist der Meta-Labeling-Weg, und er braucht Zeit, nicht
+Code.

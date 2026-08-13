@@ -3520,3 +3520,62 @@ möglichen Kriterien auseinanderlaufen.
 
 R-T1/R-T2 wurden für ein Modell hergeleitet, das absolute Zahlen nicht
 einordnen kann. Der Nutzer kann das.
+
+
+---
+
+# Nachtrag 2026-08-13 (abends): Betrieb, Gate und Hebel
+
+Ergänzt den Nachtrag vom selben Tag. Dort steht der IST-Zustand der *Regeln*,
+hier der des *Betriebs*.
+
+## Wie ein Lauf gestartet wird
+
+`agent/rollen_lauf.py` ist der einzige Ort, an dem die Kette zusammengesetzt
+wird. Drei Betriebsarten:
+
+| | Modellaufruf | Netz | Schreiben | Mail |
+|---|---|---|---|---|
+| **trocken** | nein | **nein** | nein | nein |
+| **probe** | ja | ja | in die übergebene Verbindung | gebaut, nicht verschickt |
+| **scharf** | ja | ja | ja | verschickt |
+
+**Die Verbindung wird übergeben, nie im Modul geöffnet** — wer den Lauf
+startet, entscheidet, auf welche Datenbank er wirkt. Ein unvorgesehenes
+Instrument/Strategie-Paar bricht **vor** der Schleife ab.
+
+**Trocken heißt auch: kein Netz.** `baue_fall()` holt sonst die
+Finanzierungsrate, und jeder externe Aufruf bucht seinen Gesundheitsstand in
+`api_health_status` — ein Trockenlauf schriebe damit in die Produktivdatenbank.
+
+## Das Gate zählt, es filtert nicht
+
+Acht Stufen: Auftrag · Fakten · Lagebild · Urteil · Aktion · Geometrie ·
+Risikoschicht · Entscheider. **Die letzte zählt nur** — sie meldet, dass sich
+ein Trade rechnerisch nicht trägt, und nimmt ihn nicht heraus.
+
+**Die Konfidenz-Schwelle ist ersatzlos entfallen.** Ihr Ersatz ist der
+Entscheider selbst, nicht eine neue Schwelle.
+
+**Die Faktorzahl wird mitgeschrieben, nicht scharf geschaltet** — und seit dem
+13.08. ist auch klar, warum sie es nicht sein *kann*: sie nimmt nur zwei Werte
+an und sagt die Aktion fast vollständig voraus (Umbauplan Kap. 15).
+
+## Hebel
+
+Sieben Aktionen statt fünf, in der Schreibweise der alten Kette. **Das Modell
+nennt die Richtung, das System rechnet den Faktor** — der folgt aus
+Risikobudget und Liquidationsabstand.
+
+**Die Richtung wird nicht geraten.** Fehlt sie bei ERÖFFNEN oder NACHKAUFEN,
+wird die Antwort abgewiesen: bei der Tranche ist die kleinste Größe die
+vorsichtige Antwort, bei der Richtung gibt es keine.
+
+Bei SHORT drehen **Stop, Ziel und Liquidation** — die Liquidation ist dabei die
+stillste: läge sie unter dem Einstieg, könnte sie nie greifen.
+
+## Z1 zählt, es verwirft nicht
+
+Vier Regeln (Zahlendeckung · Richtungstreue · Zuspitzung · Leerlauf). Ein
+Verstoß wird in der Durchlässigkeit vermerkt und steht in der Mail — er nimmt
+nichts aus dem Lauf. Über 20 echte Antworten: **null Verstöße.**
