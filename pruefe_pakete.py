@@ -1351,10 +1351,113 @@ def paket_12() -> None:
 
 
 
+
+def paket_13() -> None:
+    """Die drei Punkte aus der Datenausfall-Untersuchung (13.08.2026)."""
+    P = "13"
+    import sqlite3
+    import staleness
+    import database.db as db
+    from scheduler import background as BG
+
+    # PUNKT 1: der Preis-Cache steht jetzt im Watchdog.
+    quelle = _quelltext("scheduler/background.py")
+    pruefe(P, "der Watchdog prueft auch den Preis-Cache",
+           "_preis_daten_veraltet" in quelle
+           and "preise_veraltet, preise_gesamt = _preis_daten_veraltet" in quelle,
+           "er prueft seit 23.07. Historie und OHLC - ausgefallen ist am 19.07. "
+           "genau das, was er NICHT prueft")
+    pruefe(P, "und stoesst den Nachhol-Lauf an",
+           'modify_job("refresh_prices"' in quelle)
+
+    class _Asset:
+        def __init__(self, s): self.symbol = s
+
+    class _Con:
+        def __init__(self, alter_minuten):
+            from datetime import datetime, timezone, timedelta
+            self.zeit = (datetime.now(timezone.utc)
+                         - timedelta(minutes=alter_minuten)).isoformat()
+
+    def _preise(alter_minuten, symbole):
+        from datetime import datetime, timezone, timedelta
+        z = (datetime.now(timezone.utc) - timedelta(minutes=alter_minuten)).isoformat()
+        class _P:
+            def __init__(self, t): self.fetched_at = t
+        return {s: _P(z) for s in symbole}
+
+    echte = db.get_latest_prices
+    try:
+        db.get_latest_prices = lambda conn: _preise(5, ["BTC", "ETH", "SOL"])
+        BG.db.get_latest_prices = db.get_latest_prices
+        frisch = BG._preis_daten_veraltet(None, [_Asset(s) for s in ("BTC","ETH","SOL")])
+        db.get_latest_prices = lambda conn: _preise(600, ["BTC", "ETH", "SOL"])
+        BG.db.get_latest_prices = db.get_latest_prices
+        alt = BG._preis_daten_veraltet(None, [_Asset(s) for s in ("BTC","ETH","SOL")])
+        db.get_latest_prices = lambda conn: _preise(600, ["BTC"])
+        BG.db.get_latest_prices = db.get_latest_prices
+        teils = BG._preis_daten_veraltet(None, [_Asset(s) for s in ("BTC","ETH","SOL")])
+    finally:
+        db.get_latest_prices = echte
+        BG.db.get_latest_prices = echte
+    pruefe(P, "frische Preise gelten nicht als veraltet", frisch == (0, 3), str(frisch))
+    pruefe(P, "10 Stunden alte Preise schon", alt == (3, 3), str(alt))
+    pruefe(P, "ein fehlender Preis zaehlt als veraltet", teils == (3, 3), str(teils))
+
+    # PUNKT 2: nur der TOTALausfall meldet sich, und nur einmal je Sperrfrist.
+    BG._datenausfall_zuletzt = None
+    gesendet = []
+    import api.email_notify as EN
+    echt_send = EN.send_notification_email
+    try:
+        EN.send_notification_email = lambda b, t, e=None: gesendet.append((b, t)) or True
+        teilausfall = BG._melde_datenausfall(2, 3)
+        total_1 = BG._melde_datenausfall(3, 3)
+        total_2 = BG._melde_datenausfall(3, 3)
+        winzig = BG._melde_datenausfall(2, 2)
+    finally:
+        EN.send_notification_email = echt_send
+        BG._datenausfall_zuletzt = None
+    pruefe(P, "ein TEILausfall meldet sich nicht", teilausfall is False,
+           "eine Nachricht, die bei jedem einzelnen veralteten Asset feuert, "
+           "wird nach drei Tagen weggeklickt und ist dann auch still")
+    pruefe(P, "ein TOTALausfall meldet sich", total_1 is True and len(gesendet) == 1)
+    pruefe(P, "aber nur einmal je Sperrfrist", total_2 is False and len(gesendet) == 1,
+           f"{BG.DATENAUSFALL_SPERRE_MINUTEN} Minuten")
+    pruefe(P, "unter drei Werten gibt es keine Meldung", winzig is False,
+           "bei zwei Assets ist 'alle veraltet' keine Aussage")
+    pruefe(P, "die Meldung sagt, WARUM man es sonst nicht merkt",
+           gesendet and "ohne Gelegenheiten" in gesendet[0][1].lower()
+           or gesendet and "Gelegenheiten" in gesendet[0][1],
+           gesendet[0][1][:80] if gesendet else "nichts gesendet")
+
+    # PUNKT 3: ein benanntes Praedikat statt drei stillschweigender.
+    con = sqlite3.connect("data/tradinginfotool.db"); con.row_factory = sqlite3.Row
+    try:
+        z = db.zaehle_signale(con)
+        pruefe(P, "Empfehlungen und Abweisungen werden getrennt gezaehlt",
+               z["empfehlungen"] == 40 and z["abweisungen"] == 78,
+               f"{z['empfehlungen']} / {z['abweisungen']}")
+        pruefe(P, "und die Abweisungsgruende stehen dabei",
+               z["abweisungsgruende"]
+               and "Preis veraltet" in z["abweisungsgruende"][0][0]
+               and z["abweisungsgruende"][0][1] == 72)
+        pruefe(P, "der Waechter meldet heute keine Abweichung",
+               db.pruefe_signal_kriterien(con) == [],
+               "die drei Kriterien sind auf den echten Daten deckungsgleich - "
+               "sie KOENNEN aber auseinanderlaufen (AnalystResponseInvalid)")
+    finally:
+        con.close()
+    pruefe(P, "das Praedikat ist EINES und es ist benannt",
+           db.IST_EMPFEHLUNG == "groq_raw_response IS NOT NULL",
+           "gate_passed waere falsch: der AnalystResponseInvalid-Fallback setzt "
+           "es auf True, OHNE dass eine Modellantwort vorliegt")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12}
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13}
 
 
 def main() -> int:

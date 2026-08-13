@@ -3001,6 +3001,88 @@ def _history_data_is_stale(conn, watchlist) -> bool:
         return False
 
 
+def _preis_daten_veraltet(conn, watchlist) -> tuple[int, int]:
+    """(veraltete Preise, geprueft) - PUNKT 1 der Untersuchung vom 12.08.
+
+    WARUM ES DAS BISHER NICHT GAB. Der Staleness-Watchdog prueft seit 23.07.
+    die Kurs-Historie und die Kraken-OHLC-Reihen. Den PREIS-CACHE prueft er
+    nicht - und genau der ist am 19.07. stehengeblieben. Am 21.07. wurden
+    daraufhin 42 von 42 Assets am P-10-Gate abgewiesen, kein einziger
+    LLM-Aufruf fand statt, und niemand hat es gemerkt.
+
+    Das ist derselbe Vorfall wie der, der den Watchdog ueberhaupt ausgeloest
+    hat (siehe STALENESS_RECHECK_INTERVAL_MINUTES: 390 Signale in einer Nacht).
+    Damals wurde die Historie abgesichert - der Preis-Cache blieb offen.
+
+    Anders als bei Historie und OHLC wird hier GEZAEHLT statt beim ersten
+    Treffer abgebrochen: ob ein Asset veraltet ist oder alle, ist der
+    Unterschied zwischen einem Einzelausfall und einem Totalausfall, und nur
+    der zweite rechtfertigt eine Nachricht."""
+    try:
+        preise = db.get_latest_prices(conn)
+        veraltet = gesamt = 0
+        for asset in watchlist:
+            schnappschuss = preise.get(asset.symbol)
+            gesamt += 1
+            if schnappschuss is None or staleness.is_price_stale(schnappschuss.fetched_at):
+                veraltet += 1
+        return veraltet, gesamt
+    except Exception:
+        logger.exception("Staleness-Check fuer den Preis-Cache fehlgeschlagen")
+        return 0, 0
+
+
+# PUNKT 2: ein Lauf, der ALLES abweist, ist eine Meldung wert.
+#
+# Bisher war ein Lauf ohne Signale von einem Lauf ohne Gelegenheiten nicht zu
+# unterscheiden - beides ist Stille. Genau deshalb blieb der 21.07. unsichtbar.
+# Gemeldet wird NUR der Totalausfall, und nur einmal je Sperrfrist: eine
+# Nachricht, die bei jedem einzelnen veralteten Asset feuert, wird nach drei
+# Tagen weggeklickt und ist dann auch still.
+DATENAUSFALL_SPERRE_MINUTEN = 180
+_datenausfall_zuletzt: float | None = None
+
+
+def _melde_datenausfall(veraltet: int, gesamt: int) -> bool:
+    """True, wenn eine Nachricht rausging."""
+    global _datenausfall_zuletzt
+    if gesamt < 3 or veraltet < gesamt:
+        return False
+    if (_datenausfall_zuletzt is not None
+            and time.monotonic() - _datenausfall_zuletzt < DATENAUSFALL_SPERRE_MINUTEN * 60):
+        return False
+    from api.email_notify import send_notification_email
+    import config as config_module
+
+    text = chr(10).join([
+        f"Fuer ALLE {gesamt} beobachteten Werte ist der zuletzt gespeicherte "
+        f"Preis aelter als {staleness.PRICE_STALE_THRESHOLD_MINUTES} Minuten.",
+        "",
+        "Was das heisst: die Analyse laeuft nicht. Das Datenqualitaets-Gate "
+        "weist jeden Wert ab, bevor ein Modell ueberhaupt gefragt wird - "
+        "richtig so, aber es entstehen keine Signale.",
+        "",
+        "Ohne diese Nachricht waere das nicht zu erkennen: ein Lauf ohne "
+        "Signale sieht aus wie ein Lauf ohne Gelegenheiten.",
+        "",
+        "Ein Nachhol-Lauf fuer die Kursabfrage ist automatisch angestossen. "
+        "Kommt diese Nachricht erneut, hakt die Quelle selbst (CoinGecko-"
+        "Kontingent, Netz, API-Schluessel).",
+    ])
+    try:
+        empfaenger = config_module.get_config().get("benachrichtigung", {}).get("email")
+    except Exception:
+        empfaenger = None
+    try:
+        send_notification_email(
+            "TradingInfoTool: KEINE ANALYSE - alle Kurse veraltet", text, empfaenger)
+        _datenausfall_zuletzt = time.monotonic()
+        return True
+    except Exception:
+        logger.exception("Datenausfall-Meldung konnte nicht gesendet werden")
+        return False
+
+
 def _ohlc_data_is_stale(conn, watchlist) -> bool:
     """Analog zu _history_data_is_stale(), fuer den Kraken-OHLC-Job. Prueft nur
     Assets/Waehrungen mit echtem Kraken-Listing (KRAKEN_PAIR_MAP) - fehlende
@@ -3038,6 +3120,7 @@ def staleness_watchdog_job(conn_factory, watchlist_provider) -> None:
     try:
         history_stale = _history_data_is_stale(conn, watchlist)
         ohlc_stale = _ohlc_data_is_stale(conn, watchlist)
+        preise_veraltet, preise_gesamt = _preis_daten_veraltet(conn, watchlist)
     finally:
         conn.close()
     if history_stale:
@@ -3049,6 +3132,18 @@ def staleness_watchdog_job(conn_factory, watchlist_provider) -> None:
             _scheduler_ref.modify_job("refresh_history", next_run_time=datetime.now())
         except Exception:
             logger.exception("Staleness-Watchdog: Nachhol-Lauf fuer refresh_history konnte nicht ausgeloest werden")
+    if preise_veraltet:
+        logger.info(
+            "Staleness-Watchdog: %d von %d Preisen veraltet - sofortiger "
+            "Nachhol-Lauf ausgeloest", preise_veraltet, preise_gesamt)
+        try:
+            _scheduler_ref.modify_job("refresh_prices", next_run_time=datetime.now())
+        except Exception:
+            logger.exception("Staleness-Watchdog: Nachhol-Lauf fuer refresh_prices "
+                             "konnte nicht ausgeloest werden")
+        if _melde_datenausfall(preise_veraltet, preise_gesamt):
+            logger.warning("Datenausfall gemeldet: %d von %d Preisen veraltet",
+                           preise_veraltet, preise_gesamt)
     if ohlc_stale:
         logger.info(
             "Staleness-Watchdog: Kraken-OHLC-Historie waehrend laufendem Betrieb veraltet "

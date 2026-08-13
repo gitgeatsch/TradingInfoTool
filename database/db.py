@@ -3043,6 +3043,76 @@ def update_marktscan_candidate_groq_writeup(
     conn.commit()
 
 
+# ---------------------------------------------------------------------------
+# PUNKT 3 der Untersuchung vom 12.08.: Abweisungen sind keine Empfehlungen.
+#
+# DER VORSCHLAG WAR, SIE AUS DER TABELLE ZU NEHMEN - UMGESETZT IST ETWAS
+# ANDERES, und der Grund ist eine Messung. In `signals` stehen 118 Zeilen,
+# davon 78 Abweisungen des Datenqualitaets-Gates (Preis veraltet, Stablecoin,
+# keine Historie). Sie zu verschieben haette Schema, UI und alle Auswertungen
+# beruehrt. Vorher nachgesehen, wie die Produktion heute zaehlt:
+#
+#     get_latest_signals_per_symbol()   WHERE groq_raw_response IS NOT NULL
+#     count_real_signals_today()        WHERE groq_raw_response IS NOT NULL
+#
+# DIE TRENNUNG EXISTIERT ALSO SCHON - sie ist nur nirgends benannt, und jede
+# Abfrage waehlt ihr eigenes Kriterium. Auf den echten Daten sind alle drei
+# deckungsgleich (0 Abweichungen von 118):
+#
+#     gate_passed=1  <->  groq_raw_response IS NOT NULL  <->  facts_json != '{}'
+#
+# ABER SIE KOENNEN AUSEINANDERLAUFEN, und das steht seit laengerem im
+# Docstring von get_latest_signals_per_symbol(): der
+# AnalystResponseInvalid-Fallback setzt `gate_passed=True`, OHNE dass eine
+# Modellantwort vorliegt. Wer nach `gate_passed` filtert, zaehlt diesen Fall
+# als Empfehlung mit.
+#
+# DESHALB: EIN Praedikat, benannt und begruendet, plus ein Waechter, der Alarm
+# schlaegt, wenn die drei Kriterien auseinanderlaufen. Eine Tabellenwanderung
+# haette das Problem verschoben, nicht geloest - die Frage "was zaehlt als
+# Empfehlung" waere dieselbe geblieben.
+IST_EMPFEHLUNG = "groq_raw_response IS NOT NULL"
+
+
+def zaehle_signale(conn: sqlite3.Connection, seit: str | None = None) -> dict:
+    """Empfehlungen und Abweisungen getrennt, mit den Gruenden.
+
+    Wer ueber `signals` zaehlt, ohne zu trennen, bekommt eine Zahl, die zu zwei
+    Dritteln aus Datenausfaellen besteht. Genau das ist am 12.08. passiert - in
+    einer Analyse, nicht im Betrieb, aber der Fehler waere derselbe."""
+    wo = f" AND created_at >= '{seit}'" if seit else ""
+    empf = conn.execute(
+        f"SELECT COUNT(*) FROM signals WHERE {IST_EMPFEHLUNG}{wo}").fetchone()[0]
+    abw = conn.execute(
+        f"SELECT COUNT(*) FROM signals WHERE NOT ({IST_EMPFEHLUNG}){wo}").fetchone()[0]
+    gruende = conn.execute(
+        f"SELECT COALESCE(gate_reason,'ohne Grund') g, COUNT(*) n FROM signals "
+        f"WHERE NOT ({IST_EMPFEHLUNG}){wo} GROUP BY g ORDER BY n DESC").fetchall()
+    return {"empfehlungen": empf, "abweisungen": abw,
+            "abweisungsgruende": [(r[0], r[1]) for r in gruende]}
+
+
+def pruefe_signal_kriterien(conn: sqlite3.Connection) -> list[str]:
+    """Laufen die drei Kriterien auseinander? Liste der Abweichungen, leer = gut.
+
+    Ein Waechter, kein Filter. Solange die drei uebereinstimmen, ist die Wahl
+    des Praedikats folgenlos; sobald nicht, entscheidet sie ueber jede Zahl im
+    System - und dann soll es auffallen, statt still zu wirken."""
+    abweichungen = []
+    n = conn.execute(
+        f"SELECT COUNT(*) FROM signals WHERE (gate_passed=1) != ({IST_EMPFEHLUNG})"
+    ).fetchone()[0]
+    if n:
+        abweichungen.append(f"{n} Signale: gate_passed weicht von der Modellantwort ab "
+                            f"(AnalystResponseInvalid-Fallback?)")
+    n2 = conn.execute(
+        f"SELECT COUNT(*) FROM signals WHERE ({IST_EMPFEHLUNG}) "
+        f"AND (facts_json IS NULL OR LENGTH(facts_json)<=2)").fetchone()[0]
+    if n2:
+        abweichungen.append(f"{n2} Empfehlungen ohne Fakten - im Nachhinein nicht pruefbar")
+    return abweichungen
+
+
 def get_latest_prices(conn: sqlite3.Connection) -> dict[str, PriceSnapshot]:
     rows = conn.execute(
         """
