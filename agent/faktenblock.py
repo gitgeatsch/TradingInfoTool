@@ -214,9 +214,21 @@ def werte_aus_reihe(hoch, tief, schluss, volumen, i: int | None = None,
     reihe = np.array([atr_bei(k) / c[k] for k in range(i - RUECKBLICK, i + 1)])
     atr_rel = reihe[-1]
 
-    fenster_v = v[i - VOLUMEN_FENSTER:i]
-    vol_rel = (float(v[i] / fenster_v.mean())
-               if tag_vollstaendig and fenster_v.mean() > 0 else None)
+    # DER LETZTE VOLLSTAENDIGE TAG STATT GAR KEINER (Gegenpruefung 13.08.).
+    #
+    # Die erste Fassung liess das Volumen beim laufenden Tag einfach weg -
+    # richtig gedacht, aber in der Praxis bedeutet es: JEDES Live-Signal
+    # rechnet auf dem juengsten Tag, also fehlte eine der DREI gemessenen
+    # Familien in JEDER Nachricht. Der Faktenblock versprach drei Punkte und
+    # lieferte zwei.
+    #
+    # Der Umsatz von GESTERN ist kein perfekter Ersatz, aber er ist ein
+    # ganzer Tag - und ungleich mehr wert als eine Luecke. Dass er von
+    # gestern ist, steht im Text.
+    ende = i if tag_vollstaendig else i - 1
+    fenster_v = v[ende - VOLUMEN_FENSTER:ende]
+    vol_rel = (float(v[ende] / fenster_v.mean())
+               if ende > VOLUMEN_FENSTER and fenster_v.mean() > 0 else None)
 
     def rueckgang_bei(k):
         hoechst = c[k - MOMENTUM_FENSTER:k + 1].max()
@@ -228,7 +240,7 @@ def werte_aus_reihe(hoch, tief, schluss, volumen, i: int | None = None,
         m = v[k - VOLUMEN_FENSTER:k].mean()
         return float(v[k] / m) if m > 0 else np.nan
 
-    vols = np.array([vol_rel_bei(k) for k in range(i - RUECKBLICK, i + 1)])
+    vols = np.array([vol_rel_bei(k) for k in range(ende - RUECKBLICK, ende + 1)])
 
     def rang(reihe_, wert):
         vor = reihe_[:-1]
@@ -240,6 +252,7 @@ def werte_aus_reihe(hoch, tief, schluss, volumen, i: int | None = None,
             "rueckgang_60t": float(rueck[-1]),
             "momentum_perzentil": rang(rueck, rueck[-1]),
             "volumen_relativ": vol_rel,
+            "volumen_von_gestern": bool(not tag_vollstaendig),
             "volumen_perzentil": rang(vols, vols[-1]) if vol_rel else None}
 
 
@@ -270,6 +283,7 @@ def kern(*, atr_relativ: float | None = None,
          rueckgang_60t: float | None = None,
          momentum_perzentil: float | None = None,
          volumen_relativ: float | None = None,
+         volumen_von_gestern: bool = False,
          volumen_perzentil: float | None = None) -> tuple[list[str], list[str]]:
     """Die drei gemessenen Familien. Gibt (Zeilen, Luecken) zurueck.
 
@@ -301,7 +315,12 @@ def kern(*, atr_relativ: float | None = None,
     else:
         zeilen += [""] if zeilen else []
         zeilen += _block("volumen",
-                         f"das {_de(volumen_relativ, 1)}-fache des Mittels",
+                         f"das {_de(volumen_relativ, 1)}-fache des Mittels"
+                         # WOHER DIE ZAHL KOMMT, STEHT DABEI. Am laufenden Tag
+                         # ist es der Umsatz von gestern - ein ganzer Tag statt
+                         # eines angefangenen. Das zu verschweigen hiesse, eine
+                         # Zahl von gestern als heutige auszugeben.
+                         + (" (Vortag)" if volumen_von_gestern else ""),
                          volumen_perzentil)
     return zeilen, luecken
 

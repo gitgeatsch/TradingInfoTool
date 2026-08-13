@@ -1220,11 +1220,17 @@ def paket_12() -> None:
     # DER LAUFENDE TAG HAT WENIGER UMSATZ - ohne Schalter haette JEDE Live-Mail
     # "Volumen UNGUENSTIG" gemeldet. An echten BTC-Daten: 0,2-faches Mittel.
     offen = FB.werte_aus_reihe(hh, ll, cc, vv, tag_vollstaendig=False)
-    pruefe(P, "am laufenden Tag entfaellt das Volumen",
-           offen.get("volumen_relativ") is None
-           and "Volumen" in " ".join(FB.baue("krypto_spot", kern_werte=offen)),
-           "der letzte Tag stand beim 0,2-fachen des Mittels - ein "
-           "systematischer Fehler in jeder einzelnen Nachricht")
+    voll = FB.werte_aus_reihe(hh, ll, cc, vv, i=len(cc) - 2, tag_vollstaendig=True)
+    pruefe(P, "der UNFERTIGE Tag wird nie als Volumen genommen",
+           abs(offen["volumen_relativ"] - voll["volumen_relativ"]) < 1e-9,
+           "der letzte Tag stand beim 0,2-fachen des Mittels - haette man ihn "
+           "genommen, meldete JEDE Nachricht 'Volumen UNGUENSTIG'")
+    pruefe(P, "stattdessen kommt der letzte VOLLSTAENDIGE Tag",
+           offen.get("volumen_relativ") is not None
+           and offen.get("volumen_von_gestern") is True,
+           "die erste Fassung liess ihn ganz weg - damit fehlte eine von DREI "
+           "gemessenen Familien in jeder einzelnen Nachricht (Gegenpruefung "
+           "Stufe C, 13.08.)")
 
     pruefe(P, "ein Wert gegen sich selbst wird weggelassen",
            FB.zusatz("krypto_spot", {"btc_relativwert_pct": 0.0}, "BTC") == []
@@ -1252,6 +1258,36 @@ def paket_12() -> None:
                "eine ausgerechnete Zone liest sich wie eine Empfehlung, egal "
                "was darueber steht")
 
+
+    # ---- GEGENPRUEFUNG STUFE C (13.08.): das Volumen fehlte in JEDEM Signal ----
+    #
+    # Der Faktenblock verspricht DREI gemessene Familien. Weil jedes Live-Signal
+    # auf dem juengsten Tag rechnet und der als unvollstaendig gilt, fiel das
+    # Volumen immer weg - geliefert wurden zwei. Jetzt kommt es vom letzten
+    # VOLLSTAENDIGEN Tag, und das steht dabei.
+    from backtest_llm1_historisch import lade_reihen_aus_db as _lade
+    _r = _lade("data/tradinginfotool.db")["BTC"]
+    _i = len(_r) - 1
+    _args = ([k.high for k in _r], [k.low for k in _r], [k.close for k in _r],
+             [getattr(k, "volume", 0) or 0 for k in _r])
+    heute = FB.werte_aus_reihe(*_args, i=_i, tag_vollstaendig=False)
+    gestern = FB.werte_aus_reihe(*_args, i=_i - 1, tag_vollstaendig=True)
+    pruefe(P, "am laufenden Tag gibt es trotzdem ein Volumen",
+           heute.get("volumen_relativ") is not None,
+           "vorher fehlte damit eine von DREI Familien in JEDER Nachricht")
+    pruefe(P, "und es ist das des Vortags",
+           abs(heute["volumen_relativ"] - gestern["volumen_relativ"]) < 1e-9,
+           f"{heute.get('volumen_relativ')} gegen {gestern.get('volumen_relativ')}")
+    pruefe(P, "die Herkunft steht im Text",
+           heute.get("volumen_von_gestern") is True
+           and "(Vortag)" in " ".join(FB.baue("krypto_spot", kern_werte=heute)),
+           "eine Zahl von gestern als heutige auszugeben waere schlimmer als "
+           "die Luecke")
+    pruefe(P, "am abgeschlossenen Tag steht kein Zusatz",
+           gestern.get("volumen_von_gestern") is False
+           and "(Vortag)" not in " ".join(FB.baue("krypto_spot", kern_werte=gestern)))
+    pruefe(P, "und der Block meldet keine Luecke mehr",
+           "Keine Angabe" not in " ".join(FB.baue("krypto_spot", kern_werte=heute)))
 
     # ---- ZUSATZINFO AUS DEN ECHTEN PIPELINE-FAKTEN ----
     import json as _json

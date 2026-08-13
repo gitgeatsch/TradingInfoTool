@@ -337,14 +337,36 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
 
 
 def _frage(client, modell, system_prompt, eingabe, modulname):
-    """Der Modellaufruf. Absichtlich duenn - die Kette soll nicht wissen,
-    welcher Anbieter dahintersteht."""
+    """Der Modellaufruf - in der Form, die die Clients wirklich haben.
+
+    MEINE ERSTE FASSUNG WAR ERFUNDEN: sie rief
+    `client.chat(modell=..., system=..., nachricht=...)`. Kein Client dieses
+    Projekts hat diese Schnittstelle - sie nehmen eine NACHRICHTENLISTE und
+    geben Text zurueck. Der Trockenlauf konnte das nicht finden, weil er
+    `_frage()` nie aufruft; es waere erst beim ersten echten Aufruf
+    hochgekommen, mit verbrauchtem Kontingent.
+
+    Die Form ist woertlich die von `pruefe_rollenkette.frage()`, die seit dem
+    12.08. gegen echte Antworten laeuft. Eine eigene Variante daneben waere
+    die naechste Stelle zum Auseinanderlaufen.
+
+    JSON WIRD AUS DEM TEXT GESCHNITTEN, nicht erwartet: Modelle setzen
+    gelegentlich einen Satz davor. Fehlt eine Struktur ganz, ist das ein
+    Fehler und keine leere Antwort.
+    """
     import json
 
-    from agent.llm_schema import als_response_format
+    from agent import llm_schema
 
-    antwort = client.chat(
-        modell=modell, system=system_prompt,
-        nachricht=json.dumps(eingabe, ensure_ascii=False),
-        response_format=als_response_format(modulname))
-    return antwort if isinstance(antwort, dict) else json.loads(antwort)
+    fmt = llm_schema.response_format_fuer(client, modulname)
+    roh = client.chat(
+        [{"role": "system", "content": system_prompt},
+         {"role": "user", "content": json.dumps(eingabe, ensure_ascii=False)}],
+        **({"model": modell} if modell else {}), response_format=fmt,
+        temperature=0.2)
+    text = roh if isinstance(roh, str) else str(roh)
+    anfang, ende = text.find("{"), text.rfind("}")
+    if anfang < 0 or ende < anfang:
+        raise LaufAbgebrochen(
+            f"keine JSON-Struktur in der Antwort von {modulname}: {text[:180]}")
+    return json.loads(text[anfang:ende + 1])
