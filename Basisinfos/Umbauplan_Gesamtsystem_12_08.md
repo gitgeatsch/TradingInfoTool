@@ -1377,11 +1377,48 @@ Dämpfer *verwerfen* nicht, sie *verkleinern*. Und:
 Das ist derselbe Einwand, den dieses Projekt gegen jeden unsichtbaren Filter
 erhebt — nur diesmal gegen die eigene alte Kette.
 
-**Empfehlung: nicht blind stilllegen, sondern stilllegen MIT ZÄHLER.** Die
-Dämpfungsfaktoren auf 1,0 setzen (keine Wirkung), aber mitzählen, wann sie
-gegriffen HÄTTEN — das Muster des Veto-Schatten-Trackings, das es hier bereits
-gibt. Nach ein paar Wochen ist entschieden, ob sie etwas taugen; heute wäre es
-eine Behauptung in die eine oder andere Richtung.
+### KORREKTUR am selben Abend, beim Umsetzen
+
+**Zwei Aussagen von mir waren falsch, und die zweite dreht die Empfehlung.**
+
+**1. „Die Wirkung wird nirgends aufgezeichnet" — ungenau.** Die Spalten gibt es:
+`hebel_signals.eigenkapital_deckel_hinweis` und `hebel_korrektur_hinweis`. Sie
+sind nur **in allen Zeilen leer**. (`signals.position_size_note` ist zu 40 von
+118 gefüllt, enthält aber Fließtext des Modells, nicht den Vermerk des
+Dämpfers.) Der Platz ist also da und wird nicht benutzt — die Reparatur ist
+Füllen, nicht Anlegen.
+
+**2. „Nicht blind stilllegen, sondern mit Zähler" — zu pauschal.** Im Code steht
+eine Messung, die ich vorher nicht gelesen hatte. Zur stufenlosen CRV-Abstufung
+bei Spot, an **298 Spot-Signalen**:
+
+| | vorher | nachher |
+|---|---|---|
+| SQN | +0,63 | **+1,36** |
+| Summe | +9,8 R | **+23,1 R** |
+| Rückschlag | 36,3 R | **27,1 R** |
+
+**Besseres Ergebnis bei kleinerem Risiko.** Dieser Dämpfer ist gemessen und er
+wirkt. Ihn stillzulegen hieße, eine belegte Verbesserung wegzuwerfen.
+
+### Die Empfehlung, die daraus folgt
+
+**Nur stilllegen, was auf einer Größe beruht, die wir als wertlos GEMESSEN
+haben** — alles andere behalten und mit einem Zähler versehen:
+
+| Dämpfer | beruht auf | gemessen | Empfehlung |
+|---|---|---|---|
+| Konfidenz-Skalierung | Konfidenz | r = +0,073, faktisch konstant | **stilllegen** |
+| Regime-Konflikt → 3× | Regime | über 1.022 Fälle konstant „baer" | **stilllegen** |
+| CRV-Spreizung / CRV knapp | CRV | SQN +0,63 → +1,36 | **behalten** |
+| Gegenszenario → 50 % | Gegenszenario-Wahrscheinlichkeit | ungemessen | behalten **+ Zähler** |
+| technischer Konflikt → 60 % | Konfluenz | ungemessen | behalten **+ Zähler** |
+| Retail-Konsens → 3× | Retail-Positionierung | ungemessen | behalten **+ Zähler** |
+| kontra-konservativ 0,6 | AZ-7-Kontra | ungemessen | behalten **+ Zähler** |
+
+Der Zähler schreibt in die **vorhandenen leeren Spalten**. Nach einigen Wochen
+ist für jeden ungemessenen Dämpfer entschieden, ob er etwas taugt — statt es
+heute in die eine oder andere Richtung zu behaupten.
 
 **Wichtig dabei:** die alte Kette bedient weiterhin **Aktien, Rohstoffe,
 Themen-ETF und Hedge**. Ein Abschalten ist dort eine echte Verhaltensänderung

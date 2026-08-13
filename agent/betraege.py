@@ -1,0 +1,123 @@
+# -*- coding: utf-8 -*-
+"""Wieviel wird eingesetzt, und wieviel davon darf weg sein (13.08.2026).
+
+DIE FRAGE DES NUTZERS, die dieses Modul erzwungen hat: *„was ist das Problem
+genau mit meinem Betrag"* - nachdem in `rollen_lauf` `risiko_eur=75.0` und
+`betrag_wunsch_eur=500.0` fest verdrahtet standen. Zahlen, die niemand
+hergeleitet hatte und die jedes Signal gleich gross machten.
+
+DIE UMPARAMETRISIERUNG IST DER KERN. Statt eines absoluten Risikobetrags steht
+hier ein ANTEIL VOM EINSATZ:
+
+    Risiko in Euro  =  Einsatz × Verlustanteil
+    Hebel           =  Verlustanteil ÷ Kursverlust bis Stop
+
+Der Hebel haengt damit am ANTEIL, nicht am Betrag: 500 oder 1.000 EUR ergeben
+denselben Hebel, nur doppeltes Volumen. Einsatz und Hebel sind getrennt
+einstellbar - vorher waren sie es nicht.
+
+WARUM DAS DIE RICHTIGE GROESSE IST, in den Worten des Nutzers: *„ich setze
+meist zwischen 2 und 8 Prozent - glaube aber Kursverlust und nicht
+Kapitalverlust und nicht als Teil des Gesamtportfolios"*. Er beschreibt damit
+zwei verschiedene Dinge, und das System braucht beide getrennt:
+
+    2-8 % Kursverlust     der STOPABSTAND. Wird laengst gerechnet - gemessen
+                          Median 5,3 %, Spanne 2,5-9,3 %. Deckt sich mit seiner
+                          Einschaetzung, ohne dass jemand es abgestimmt haette.
+    15-20 % vom Einsatz   der KAPITALVERLUST. Steht hier.
+
+KEIN PORTFOLIOWERT, aus demselben Grund wie bei den Toepfen (Paket 5): ein
+Prozentsatz auf ein Depot mit 60-Prozent-Positionen schrumpft genau dann, wenn
+wieder gehandelt werden muesste. Der Nutzer hat es unabhaengig davon selbst
+gesagt - *„nicht als Teil des Gesamtportfolios"*.
+
+DER EINSATZ HAENGT AN DER STRATEGIE, NICHT AM INSTRUMENT. Ein Einmalkauf
+schiebt keine zweite Tranche nach und darf deshalb groesser sein als ein
+DCA-Schritt. Die Kette unterscheidet `einstieg` / `swing` / `akkumulation`
+seit Paket 2 - hier wird die Unterscheidung endlich benutzt.
+"""
+from __future__ import annotations
+
+# Alle Werte am 13.08.2026 vom Nutzer festgelegt. Wer sie aendert, aendert sie
+# in `config.yaml` unter `risiko.rollen_kette` - hier stehen nur die Vorgaben.
+#
+#   spot.akkumulation   250   *"deine Annahme einer Tranche ist mit 200-250
+#                             ganz gut"* - oberes Ende
+#   spot.einstieg       800   *"wuerde bei Einmalkauf eher 500 bis 800
+#                             ansetzen"* - oberes Ende, weil ein Einmalkauf
+#                             keine zweite Tranche nachschiebt
+#   spot.swing          400   NICHT vom Nutzer genannt. Zwischen Tranche und
+#                             Einmalkauf, weil ein Swing kuerzer laeuft als ein
+#                             Einstieg und laenger als ein DCA-Schritt. Die
+#                             einzige geratene Zahl hier - und sie steht als
+#                             solche da.
+#   hebel.*            1000   *"bei Hebel wuerde ich eher 500 nehmen"*, spaeter
+#                             *"eine Hebelposition vorerst 1000"*
+VORGABE_EINSATZ_EUR: dict[str, dict[str, float]] = {
+    "spot": {"einstieg": 800.0, "swing": 400.0, "akkumulation": 250.0},
+    "hebel": {"einstieg": 1000.0, "swing": 1000.0, "akkumulation": 1000.0},
+    # Die Absicherung bemisst sich am abzusichernden Exposure, nicht an einem
+    # Wunschbetrag (siehe `toepfe.einsatz_fuer_absicherung`). Der Wert hier ist
+    # nur die Rueckfallgroesse, wenn kein Exposure bekannt ist.
+    "absicherung": {"einstieg": 500.0, "swing": 500.0, "akkumulation": 500.0},
+}
+
+# Wieviel vom EINSATZ darf im schlechtesten Fall verloren gehen.
+#
+# *"Verlust Margin ca. 15 -20 Prozent bin mir aber nicht sicher"* - unteres Ende
+# genommen, weil eine zu grosse Zahl hier direkt den Hebel hochtreibt.
+#
+# BEI SPOT OHNE STOP-ORDER IST DAS KEINE ORDER, SONDERN EINE RECHENGROESSE. Der
+# Nutzer haelt Spot *"aktuell auch ohne StopLoss"* - der Wert bestimmt dort nur
+# die Groesse, nicht eine Verkaufsanweisung.
+VORGABE_VERLUSTANTEIL: dict[str, float] = {
+    "spot": 0.15,
+    "hebel": 0.15,
+    "absicherung": 0.15,
+}
+
+
+class BetragUnbekannt(ValueError):
+    """Kein Einsatz fuer dieses Paar - wirft, statt still 500 zu nehmen."""
+
+
+def _cfg(config: dict | None, name: str) -> dict:
+    return ((config or {}).get("risiko") or {}).get("rollen_kette", {}).get(name) or {}
+
+
+def einsatz_eur(instrument: str, strategie: str,
+                config: dict | None = None) -> float:
+    """Der gewuenschte Einsatz fuer DIESES Paar aus Instrument und Strategie.
+
+    WIRFT BEI EINEM UNBEKANNTEN PAAR, statt auf einen Vorgabewert zu fallen.
+    Ein stiller Rueckfall waere genau der Fehler, den `handelsauftrag.pruefe()`
+    eine Ebene hoeher verhindert: ein Paar, das niemand vorgesehen hat, soll
+    auffallen und nicht mit 500 EUR weiterlaufen."""
+    i, s = str(instrument or "").strip().lower(), str(strategie or "").strip().lower()
+    ueber = _cfg(config, "einsatz_eur")
+    tabelle = {**VORGABE_EINSATZ_EUR.get(i, {}), **(ueber.get(i) or {})}
+    if s not in tabelle:
+        raise BetragUnbekannt(
+            f"kein Einsatz fuer {instrument!r}/{strategie!r} - bekannt: "
+            f"{sorted(VORGABE_EINSATZ_EUR)} x {sorted(VORGABE_EINSATZ_EUR['spot'])}")
+    return float(tabelle[s])
+
+
+def verlustanteil(instrument: str, config: dict | None = None) -> float:
+    """Welcher Anteil des Einsatzes darf im schlechtesten Fall weg sein."""
+    i = str(instrument or "").strip().lower()
+    ueber = _cfg(config, "verlustanteil")
+    wert = ueber.get(i, VORGABE_VERLUSTANTEIL.get(i))
+    if wert is None:
+        raise BetragUnbekannt(f"kein Verlustanteil fuer {instrument!r}")
+    return float(wert)
+
+
+def risiko_eur(instrument: str, strategie: str,
+               config: dict | None = None) -> float:
+    """Der Euro-Betrag, den dieser Handel hoechstens kosten darf.
+
+    DIE EINE STELLE, an der aus Anteil und Einsatz ein Betrag wird. Ihn
+    anderswo noch einmal zu rechnen hiesse, die Beziehung zwischen beiden an
+    zwei Orten zu pflegen."""
+    return einsatz_eur(instrument, strategie, config) * verlustanteil(instrument, config)

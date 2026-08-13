@@ -101,8 +101,19 @@ VORGABE_DECKEL_EUR: dict[str, float | None] = {
     "spot": None,           # die RM-Regeln begrenzen die Einzelposition; ein
                             # zweiter Deckel darueber waere nur eine zweite
                             # Stelle, an der etwas blockieren kann
-    "hebel": 500.0,         # = hebel.eigenkapital_richtwert_eur, der bereits
-                            # bestehende absolute Richtwert
+    "hebel": 3000.0,        # NUTZERENTSCHEIDUNG 13.08.: *"Hebeltopf gesamt
+                            # kann 3000 Euro sein, eine Hebelposition vorerst
+                            # 1000"* - drei Positionen gleichzeitig.
+                            #
+                            # VORHER 500, gleichgesetzt mit
+                            # `hebel.eigenkapital_richtwert_eur`. Das war eine
+                            # Verwechslung zweier Ebenen: jener Wert ist der
+                            # Richtwert je POSITION, dieser der Deckel fuer den
+                            # GANZEN Topf. Bei 500/500 waere genau eine
+                            # Hebel-Position moeglich gewesen - im Live-Lauf vom
+                            # 13.08. bekamen drei Signale je 500 EUR, zusammen
+                            # 1.500 in einem 500er Topf. Moeglich nur, weil
+                            # `belegt_eur=0.0` fest verdrahtet war.
     "absicherung": None,    # Schutz wird nicht gedeckelt
 }
 
@@ -132,6 +143,40 @@ def deckel_eur(config: dict | None = None) -> dict[str, float | None]:
         wert = cfg.get(t, VORGABE_DECKEL_EUR[t])
         aus[t] = None if wert in (None, "") else float(wert)
     return aus
+
+
+def belegt_eur(conn, instrument: str) -> float:
+    """Was in DIESEM Topf schon steckt - offene Signale der eigenen Kette.
+
+    BIS ZUM 13.08. GAB ES DAS NICHT. `rollen_lauf` uebergab fest `0.0`, der
+    Topf meldete sich bei jedem Signal als vollstaendig frei, und der Deckel
+    konnte nie greifen: im Live-Lauf bekamen drei Hebel-Signale je 500 EUR aus
+    einem 500-EUR-Topf. Der Parametername sagte die ganze Zeit, was gebraucht
+    wird - gefuellt hat ihn niemand.
+
+    WORAN EIN HEBEL-SIGNAL ERKANNT WIRD: an der Spalte `hebel`. Sie wird nur
+    gesetzt, wenn ein Hebelfaktor gerechnet wurde - `signals` hat keine
+    Instrumentspalte, und eine einzufuehren waere eine zweite Wahrheit neben
+    einer, die schon eindeutig ist.
+
+    NUR OFFENE POSITIONEN. Ein aufgeloestes Signal belegt nichts mehr.
+
+    Fail-soft: ohne die Spalten (aeltere Datei) gilt der Topf als leer. Das ist
+    die Richtung, in die ein Fehler hier fallen DARF - ein Topf, der sich wegen
+    eines Schemafehlers als voll meldet, sperrt lautlos alles."""
+    try:
+        spalten = {r[1] for r in conn.execute("PRAGMA table_info(signals)")}
+        if not {"quelle_kette", "hebel", "position_size_eur"} <= spalten:
+            return 0.0
+        bedingung = ("hebel IS NOT NULL" if topf_fuer(instrument) == "hebel"
+                     else "hebel IS NULL")
+        zeile = conn.execute(
+            f"SELECT COALESCE(SUM(position_size_eur), 0) FROM signals "
+            f"WHERE quelle_kette = 'rollen' AND outcome_status IS NULL "
+            f"AND {bedingung}").fetchone()
+        return float(zeile[0] or 0.0)
+    except Exception:                                        # noqa: BLE001
+        return 0.0
 
 
 def budget_eur(instrument: str, config: dict | None = None) -> float | None:

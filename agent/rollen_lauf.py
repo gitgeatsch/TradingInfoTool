@@ -158,7 +158,8 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                        rolle_trader as RT, rollen_eingabe as RE,
                        rollen_gate as RG, signal_abbildung as SA,
                        signal_mail as SM, toepfe as TO, trefferbilanz as TB,
-                       zweite_meinung as ZM)
+                       wiederholung as WH, zweite_meinung as ZM,
+                       betraege as BE)
     from agent.empfehlung_vertrag import EmpfehlungUngueltig
     from agent.handelsauftrag import AuftragUngueltig, pruefe as pruefe_auftrag
 
@@ -251,7 +252,8 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                        config=config, aufgezeichnet=aufgezeichnet,
                        instrument=instrument, strategie=strategie,
                        ergebnis=ergebnis, versand=versand,
-                       module=(AR, ER, FB, FQ, Z1, RT, RE, SA, SM, TO, TB, ZM),
+                       module=(AR, ER, FB, FQ, Z1, RT, RE, SA, SM, TO, TB,
+                               ZM, BE, WH),
                        zai_client=zai_client, bilanz=bilanz,
                        fehlertypen=(EmpfehlungUngueltig, AuftragUngueltig,
                                     RT.TraderAntwortUngueltig),
@@ -279,7 +281,7 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                aufgezeichnet, ergebnis, versand, module, fehlertypen,
                pruefe_auftrag, zai_client=None, bilanz=None) -> None:
     """Ein Asset durch alle Stufen. Wirft, wenn es nicht weitergeht."""
-    AR, ER, FB, FQ, Z1, RT, RE, SA, SM, TO, TB, ZM = module
+    AR, ER, FB, FQ, Z1, RT, RE, SA, SM, TO, TB, ZM, BE, WH = module
 
     # --- Stufe: Auftrag --- (schon vor der Schleife geprueft)
     durchlauf.bestanden(symbol, "auftrag")
@@ -343,14 +345,41 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         return
     durchlauf.bestanden(symbol, "aktion")
 
+    # --- Cooldown: dasselbe Asset nicht in Serie ---
+    #
+    # Die eigene Messung dieses Projekts: fuenf Symbole trugen 102 % des Minus,
+    # und die Ursache war die WIEDERHOLUNG. Die alte Kette fuehrt dafuer acht
+    # Einstellungen; die Rollen-Kette las bis zum 13.08. keine davon.
+    #
+    # GEZAEHLT ALS VERLUST AUF DER AKTIONSSTUFE, nicht als eigene Stufe: es ist
+    # dieselbe Frage ("wird hier eingestiegen"), nur mit einem anderen Grund.
+    # Eine neunte Stufe haette die Durchlaessigkeitstabelle aller frueheren
+    # Laeufe unvergleichbar gemacht.
+    if betriebsart != TROCKEN:
+        sperre = WH.gesperrt_bis(conn, symbol, instrument, config=config)
+        if sperre:
+            durchlauf.verloren(symbol, "aktion", f"Cooldown bis {sperre[:16]}")
+            return
+
     # --- Stufe: Geometrie + Risikoschicht ---
     # HIER HAENGT `toepfe` ENDLICH DRAN. Bis zum 13.08. war das Modul gebaut
     # und von nichts aufgerufen; `entscheidungsrechnung` bekam den Deckel als
     # Parameter, den niemand fuellte.
-    frei = TO.frei_eur(instrument, belegt_eur=0.0, config=config)
+    # DER BESTAND DES TOPFES, nicht die Null. Bis zum 13.08. stand hier fest
+    # `belegt_eur=0.0` - der Topf meldete sich bei JEDEM Signal als vollstaendig
+    # frei, und der Deckel konnte nie greifen. Im Live-Lauf bekamen drei
+    # Hebel-Signale je 500 EUR aus einem 500-EUR-Topf.
+    frei = TO.frei_eur(instrument, config=config,
+                       belegt_eur=(TO.belegt_eur(conn, instrument)
+                                   if betriebsart != TROCKEN else 0.0))
+    # DIE BETRAEGE KOMMEN AUS `betraege`, NICHT AUS DIESER ZEILE. Vorher standen
+    # hier 75.0 und 500.0 - Zahlen, die niemand hergeleitet hatte und die jedes
+    # Signal gleich gross machten.
     try:
-        rechnung = ER.rechne(kurs=kurs_e, atr=atr_e, risiko_eur=75.0,
-                             instrument=instrument, betrag_wunsch_eur=500.0,
+        rechnung = ER.rechne(kurs=kurs_e, atr=atr_e,
+                             risiko_eur=BE.risiko_eur(instrument, strategie, config),
+                             instrument=instrument,
+                             betrag_wunsch_eur=BE.einsatz_eur(instrument, strategie, config),
                              topf_frei_eur=frei,
                              umgeworfen_preis_eur=befund.get("umgeworfen_preis_eur"),
                              # DIE RICHTUNG KOMMT VOM MODELL (Paket 13) und
