@@ -1550,6 +1550,85 @@ def paket_14() -> None:
                "ohne R gibt es weder Trailing noch Stand noch Vergleich")
 
 
+    # ---- MFE AUS DEM BACKWARD-TRACKING, UND DIE SAMMEL-MAIL ----
+    import sqlite3 as _sq
+    from agent.krypto.backward_tracking import (
+        compute_ausstiegs_empfehlungen as _sammle, OUTCOME_OFFEN as _OFFEN)
+
+    # Kopie im Speicher - die Produktivdatei wird nur gelesen. In ihr gibt es
+    # KEINE offene Position und keinen einzigen MFE-Wert; die Kette liesse
+    # sich dort nicht pruefen, und "geprueft 0" haette wie Erfolg ausgesehen.
+    _q = _sq.connect("data/tradinginfotool.db")
+    _c = _sq.connect(":memory:"); _q.backup(_c); _q.close(); _c.row_factory = _sq.Row
+    _c.execute("DELETE FROM signals"); _c.execute("DELETE FROM price_cache")
+    _f = ("symbol, created_at, action, gate_passed, risk_veto, facts_json, "
+          "outcome_status, outcome_max_realisiertes_crv, entry_usd_von, "
+          "entry_usd_bis, stop_loss_usd_von, stop_loss_usd_bis, "
+          "take_profit_usd_von, umgeworfen_preis_eur, umgeworfen_bis")
+    for _sym, _mfe, _e, _s, _tp, _fa, _bis in (
+            ("BTC", 1.8, 60000, 55000, 70000, 50000, "2026-12-01"),
+            ("ETH", 0.3, 3000, 2700, 3600, 2950, "2026-12-01"),
+            ("SOL", 2.4, 200, 180, 240, None, "2026-12-01"),
+            ("APT", 0.4, 10, 9, 12, None, "2026-08-01"),
+            ("INJ", 0.2, 20, 18, 24, None, None)):
+        _c.execute(f"INSERT INTO signals ({_f}) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                   (_sym, "2026-08-01T10:00:00+00:00", "KAUFEN", 1, 0, "{}",
+                    _OFFEN, _mfe, _e, _e, _s, _s, _tp, _fa, _bis))
+    for _sym, _k in (("BTC", 58000), ("ETH", 2900), ("SOL", 235),
+                     ("APT", 10.5), ("INJ", 20.4)):
+        _c.execute("INSERT INTO price_cache (symbol, coingecko_id, price_usd, "
+                   "price_eur, fetched_at) VALUES (?,?,?,?,?)",
+                   (_sym, _sym.lower(), _k, _k * 0.87, "2026-08-13T10:00:00+00:00"))
+    _c.commit()
+    _r = _sammle(_c, [], {})
+    _nach = {a["symbol"]: a for a in _r["alle"]}
+
+    pruefe(P, "der MFE kommt aus dem Backward-Tracking",
+           len(_r["alle"]) == 5
+           and abs(_nach["BTC"]["mfe_r"] - 1.8) < 1e-9,
+           "`outcome_max_realisiertes_crv` wird seit 02.08. auch fuer OFFENE "
+           "Signale fortgeschrieben - er muss nicht neu gerechnet werden")
+    pruefe(P, "auch Positionen UNTER der Ausloeseschwelle werden geprueft",
+           "ETH" in _nach and _nach["ETH"]["mfe_r"] < 1.0,
+           "vorher stand dort ein `continue` - eine Position im Minus loest "
+           "den Trailing-Stop per Definition nicht aus, und genau dort ist "
+           "der Widerlegungspreis am wichtigsten")
+    pruefe(P, "und ihr Widerlegungspreis greift",
+           _nach["ETH"]["empfehlung"] == AR.SCHLIESSEN)
+    pruefe(P, "die Reihenfolge ist Dringlichkeit, nicht Buchgewinn",
+           [a["symbol"] for a in _r["alle"][:2]] == ["BTC", "ETH"]
+           and _nach["SOL"]["mfe_r"] > _nach["ETH"]["mfe_r"],
+           "SOL hat den groessten Buchgewinn und steht trotzdem hinten - "
+           "der groesste ungesicherte Gewinn ist nicht der dringendste Fall")
+
+    _betreff, _text = AR.sammel_mail(_r["alle"], _r["geprueft"])
+    pruefe(P, "der Betreff nennt die faelligen zuerst",
+           _betreff == "TradingInfoTool: 2 faellig, 1 Stop nachziehen", _betreff)
+    for _t in ("JETZT SCHLIESSEN (2)", "STOP NACHZIEHEN (1)",
+               "BEGRUENDUNG ABGELAUFEN (1)", "OHNE HANDLUNGSBEDARF (1)"):
+        pruefe(P, f"die Mail hat den Block '{_t}'", _t in _text)
+    pruefe(P, "was nichts braucht, steht in EINER Zeile",
+           "INJ +2,0 %" in _text and _text.count("INJ") == 1,
+           "wer zwoelf Positionen haelt, soll nicht zwoelf Absaetze lesen, "
+           "um die zwei zu finden, die zaehlen")
+    pruefe(P, "im Text steht kein R mehr",
+           " R" not in _text.replace("+1 R", ""),
+           "R ist eine interne Einheit - derselbe Einwand wie bei den Kosten")
+    pruefe(P, "Prozente und Kurse deutsch",
+           "-3,3 %" in _text and "64.000 USD" in _text)
+    pruefe(P, "das Datum ist lesbar, nicht technisch",
+           "seit 01.08." in _text and "seit 2026-08-01" not in _text)
+
+    # KEINE MAIL OHNE ANLASS.
+    _ruhig = [a for a in _r["alle"] if a["symbol"] == "INJ"]
+    pruefe(P, "laeuft alles, kommt KEINE Mail",
+           AR.sammel_mail(_ruhig) is None,
+           "eine Nachricht, die taeglich 'alles in Ordnung' sagt, wird nach "
+           "einer Woche nicht mehr gelesen - und dann auch die eine nicht, "
+           "die zaehlt")
+    pruefe(P, "und ohne Positionen erst recht nicht", AR.sammel_mail([]) is None)
+    _c.close()
+
     # ---- DER AUSSTIEG IN DER MAIL ----
     from agent import entscheidungsrechnung as _ER
     from agent import signal_mail as _SM

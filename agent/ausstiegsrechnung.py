@@ -124,7 +124,15 @@ def bewerte(*, einstieg: float | None, stop_original: float | None,
          "stop_empfohlen": empf.stop_empfohlen if empf and empf.aktiv else None,
          "gesicherte_r": empf.gesicherte_r if empf and empf.aktiv else None,
          "trailing_begruendung": empf.begruendung if empf else None,
-         "umgeworfen_durch": umgeworfen_durch}
+         "umgeworfen_durch": umgeworfen_durch,
+         # IN PROZENT, NICHT NUR IN R. Nutzer am 12.08. zu den Kosten: "damit
+         # fange ich nichts an" - dasselbe gilt hier. R ist eine interne
+         # Einheit; Prozent versteht jeder und ist waehrungsfrei.
+         "stand_prozent": ((einstieg - kurs_aktuell) if ist_short
+                           else (kurs_aktuell - einstieg)) / einstieg
+                          if kurs_aktuell else None,
+         "mfe_prozent": (risiko * float(mfe_r) / einstieg
+                         if mfe_r is not None else None)}
 
     # 1b. IST DER NACHGEZOGENE STOP SCHON UNTERSCHRITTEN?
     #
@@ -235,3 +243,124 @@ def saetze(e: dict) -> list[str]:
               "  Diese Bedingung hat das Modell genannt; sie enthaelt mehr als "
               "einen Kurs und wird deshalb nicht automatisch ausgewertet."]
     return z
+
+
+# ---------------------------------------------------------------------------
+# DIE SAMMEL-MAIL fuer alle offenen Positionen (13.08.2026).
+#
+# NUTZEREINWAND: *"bekomme heute schon ein Stop-nachziehen-Mail mit vielen
+# Werten, das macht es unuebersichtlich."* Die alte Fassung listet je Position
+# eine Zeile dieser Art:
+#
+#     SOL        SHORT (hebel, seit 2026-08-05)
+#         stand bei 10.63 R - Stop von 145.2 auf 132.8 nachziehen, sichert 9.63 R
+#
+# Vier Zahlen, zwei davon in einer internen Einheit, kein Satz. Vier Aenderungen:
+#
+#   1. NACH DRINGLICHKEIT GRUPPIERT, nicht nach Buchgewinn sortiert. Der
+#      groesste ungesicherte Gewinn ist nicht automatisch der dringendste Fall -
+#      eine faellige Position ist es immer.
+#   2. PROZENT STATT R. Dieselbe Begruendung wie bei den Kosten am 12.08.
+#   3. EIN SATZ JE POSITION statt einer Wertereihe. Was ist zu tun, an welcher
+#      Marke, und was steht auf dem Spiel.
+#   4. WAS NICHTS BRAUCHT, STEHT IN EINER ZEILE. Wer zwoelf Positionen haelt,
+#      soll nicht zwoelf Absaetze lesen, um die zwei zu finden, die zaehlen.
+GRUPPEN = ((SCHLIESSEN, "JETZT SCHLIESSEN"),
+           (STOP_NACHZIEHEN, "STOP NACHZIEHEN"))
+
+
+def _prozent(wert: float | None, stellen: int = 1) -> str:
+    return "-" if wert is None else f"{100 * wert:+.{stellen}f} %".replace(".", ",")
+
+
+def _kurs(wert: float | None, waehrung: str = "USD") -> str:
+    if wert is None:
+        return "-"
+    stellen = 2 if abs(wert) < 100 else 0
+    return f"{wert:,.{stellen}f}".translate(str.maketrans(",.", ".,")) + f" {waehrung}"
+
+
+def _absatz(e: dict, waehrung: str = "USD") -> list[str]:
+    # Datum lesbar, nicht technisch: "seit 01.08." statt "seit 2026-08-01".
+    seit = str(e.get("seit", ""))
+    if len(seit) == 10 and seit[4] == "-":
+        seit = f"{seit[8:10]}.{seit[5:7]}."
+    kopf = (f"  {e['symbol']:<6} {e.get('richtung','?')}, {e.get('tier','?')}, "
+            f"seit {seit or '?'}")
+    z = [kopf]
+    if e.get("stop_bereits_unterschritten"):
+        z.append(f"      Der nachgezogene Stop bei {_kurs(e['stop_empfohlen'], waehrung)} "
+                 f"haette greifen muessen - der Kurs steht bei "
+                 f"{_kurs(e.get('kurs_usd'), waehrung)}.")
+    if e.get("falsifiziert"):
+        z.append(f"      Der Kurs hat die Marke erreicht, bei der das Modell seine "
+                 f"eigene Begruendung fuer widerlegt erklaerte "
+                 f"({_kurs(e.get('umgeworfen_preis_eur'), waehrung)}).")
+    if e.get("stop_empfohlen") is not None and not e.get("stop_bereits_unterschritten"):
+        z.append(f"      Stop auf {_kurs(e['stop_empfohlen'], waehrung)} nachziehen.")
+    if e.get("frist_abgelaufen"):
+        z.append(f"      Die Begruendung galt bis {e.get('frist')} und ist abgelaufen.")
+    if e.get("stand_prozent") is not None:
+        hoch = e.get("mfe_prozent")
+        z.append(f"      Stand {_prozent(e['stand_prozent'])}"
+                 + (f", hoechster Buchgewinn {_prozent(hoch)}"
+                    if hoch is not None else ""))
+    return z
+
+
+def sammel_mail(alle: list, geprueft: int | None = None,
+                waehrung: str = "USD") -> tuple[str, str] | None:
+    """(Betreff, Text) - oder None, wenn nichts zu melden ist.
+
+    KEINE MAIL OHNE ANLASS. Laeuft alles, kommt nichts. Eine Nachricht, die
+    taeglich sagt 'alles in Ordnung', wird nach einer Woche nicht mehr
+    gelesen - und dann auch die eine nicht, die zaehlt."""
+    if not alle:
+        return None
+    nach_gruppe = {schluessel: [e for e in alle
+                                if e["empfehlung"].split(" · ")[0] == schluessel]
+                   for schluessel, _ in GRUPPEN}
+    rest = [e for e in alle
+            if e["empfehlung"].split(" · ")[0] not in dict(GRUPPEN)]
+    faellig = len(nach_gruppe[SCHLIESSEN])
+    nachziehen = len(nach_gruppe[STOP_NACHZIEHEN])
+    if not faellig and not nachziehen and not any(e.get("frist_abgelaufen") for e in rest):
+        return None
+
+    teile = []
+    if faellig:
+        teile.append(f"{faellig} faellig")
+    if nachziehen:
+        teile.append(f"{nachziehen} Stop nachziehen")
+    betreff = "TradingInfoTool: " + ", ".join(teile or ["Positionen pruefen"])
+
+    zeilen = []
+    for schluessel, titel in GRUPPEN:
+        gruppe = nach_gruppe[schluessel]
+        if not gruppe:
+            continue
+        zeilen += [f"{titel} ({len(gruppe)})", ""]
+        for e in gruppe:
+            zeilen += _absatz(e, waehrung) + [""]
+
+    abgelaufen = [e for e in rest if e.get("frist_abgelaufen")]
+    if abgelaufen:
+        zeilen += [f"BEGRUENDUNG ABGELAUFEN ({len(abgelaufen)})",
+                   "  Kein Handlungszwang - aber der Grund, diese Positionen zu "
+                   "halten, ist nicht mehr belegt.", ""]
+        for e in abgelaufen:
+            zeilen += _absatz(e, waehrung) + [""]
+
+    ruhig = [e for e in rest if not e.get("frist_abgelaufen")]
+    if ruhig:
+        # EINE ZEILE, NICHT EIN ABSATZ JE POSITION.
+        zeilen += [f"OHNE HANDLUNGSBEDARF ({len(ruhig)})",
+                   "  " + ", ".join(f"{e['symbol']} {_prozent(e.get('stand_prozent'))}"
+                                    for e in ruhig), ""]
+    zeilen += ["-" * 68,
+               "Warum der Ausstieg zaehlt: die Haelfte aller Signale stand "
+               "unterwegs einmal im Gewinn - nur 17,6 % endeten dort. "
+               "(86 real bewertete Signale, 04.08.)",
+               "Alles hier ist eine EMPFEHLUNG - es wird nichts ausgefuehrt.",
+               "Abschalten: config.yaml risiko.ausstieg_trailing_ausloese_r auf 0."]
+    return betreff, "\n".join(zeilen)

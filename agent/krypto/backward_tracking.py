@@ -4717,6 +4717,10 @@ def compute_richtungstreffer_quote(
     }
 
 
+_AR_SCHLIESSEN = "SCHLIESSEN"
+_AR_NACHZIEHEN = "STOP NACHZIEHEN"
+
+
 def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
                                    config: dict | None = None) -> dict:
     """Offene Signale, bei denen der Trailing-Stop nachgezogen gehoert.
@@ -4742,7 +4746,7 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
     'parameter': {...}} zurueck, absteigend nach MFE - der groesste
     ungesicherte Buchgewinn zuerst."""
     ausloese, abstand, aktiv = parameter_aus_config(config or {})
-    ergebnis: dict = {"empfehlungen": [], "geprueft": 0,
+    ergebnis: dict = {"empfehlungen": [], "alle": [], "geprueft": 0,
                       "parameter": {"ausloese_r": ausloese, "abstand_r": abstand,
                                     "aktiv": aktiv}}
     if not aktiv:
@@ -4751,6 +4755,13 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
 
     assetklasse_by_symbol = _assetklasse_index(
         watchlist, "compute_ausstiegs_empfehlungen()")
+    # Der aktuelle Kurs wird fuer den Widerlegungspreis gebraucht - der
+    # Trailing-Stop allein kommt ohne ihn aus.
+    try:
+        preise = db.get_latest_prices(conn)
+    except Exception:
+        logger.exception("Kurse fuer die Ausstiegspruefung nicht ladbar")
+        preise = {}
     for tabelle, ist_hebel in (("signals", False), ("hebel_signals", True)):
         spalten = {r[1] for r in conn.execute(f"PRAGMA table_info({tabelle})")}
         if "outcome_max_realisiertes_crv" not in spalten:
@@ -4762,7 +4773,10 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
         ) if c in spalten]
         felder = ("symbol, created_at, outcome_status, "
                   "outcome_max_realisiertes_crv"
-                  + "".join(f", {c}" for c in zonen_spalten))
+                  + "".join(f", {c}" for c in zonen_spalten)
+                  + "".join(f", {c}" for c in
+                            ("umgeworfen_preis_eur", "umgeworfen_bis",
+                             "umgeworfen_durch") if c in spalten))
         rows = conn.execute(
             f"SELECT {felder} FROM {tabelle} "
             f"WHERE outcome_status = ? AND outcome_max_realisiertes_crv IS NOT NULL "
@@ -4774,6 +4788,44 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
             z = _zonen_absolut(row)
             if z is None:
                 continue
+            # VOLLE AUSSTIEGSPRUEFUNG FUER JEDE OFFENE POSITION (13.08.2026).
+            #
+            # Bisher stand hier nur der Trailing-Stop, und darunter ein
+            # `continue` fuer alles, was ihn nicht ausgeloest hat. Damit wurde
+            # eine Position unter +1 R NIE geprueft - auch nicht darauf, ob der
+            # Kurs den Preis erreicht hat, bei dem das Modell seine eigene
+            # Begruendung fuer widerlegt erklaerte. Genau dort ist die Pruefung
+            # aber am wichtigsten: eine Position im Minus hat den Trailing-Stop
+            # per Definition nicht ausgeloest.
+            #
+            # WAEHRUNG: die Zonen stehen in USD (`entry_usd_*`), die Mail
+            # spricht EUR. Umgerechnet wird HIER, mit demselben Kurs fuer alle
+            # Werte einer Zeile - zwei Waehrungen nebeneinander sind der
+            # dokumentierte Fehler aus Umbauplan 12.5.
+            from agent import ausstiegsrechnung as _AR
+
+            kurs_usd = (preise.get(row["symbol"]).price_usd
+                        if preise.get(row["symbol"]) else None)
+            voll = _AR.bewerte(
+                einstieg=z["entry"], stop_original=z["stop"],
+                kurs_aktuell=kurs_usd,
+                mfe_r=row["outcome_max_realisiertes_crv"],
+                ist_short=z["ist_short"],
+                umgeworfen_preis_eur=(row["umgeworfen_preis_eur"]
+                                      if "umgeworfen_preis_eur" in spalten else None),
+                umgeworfen_bis=(row["umgeworfen_bis"]
+                                if "umgeworfen_bis" in spalten else None),
+                umgeworfen_durch=(row["umgeworfen_durch"]
+                                  if "umgeworfen_durch" in spalten else None),
+                ausloese_r=ausloese, abstand_r=abstand)
+            if voll:
+                ergebnis["alle"].append({
+                    "symbol": row["symbol"], "seit": str(row["created_at"])[:10],
+                    "richtung": "SHORT" if z["ist_short"] else "LONG",
+                    "tier": TIER_HEBEL if ist_hebel else _tier_fuer_spot_symbol(
+                        row["symbol"], assetklasse_by_symbol),
+                    "kurs_usd": kurs_usd, **voll})
+
             e = stopempfehlung_aus_mfe(
                 z["entry"], z["stop"], row["outcome_max_realisiertes_crv"],
                 ist_short=z["ist_short"], ausloese_r=ausloese, abstand_r=abstand)
@@ -4793,6 +4845,12 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
                 "begruendung": e.begruendung,
             })
     ergebnis["empfehlungen"].sort(key=lambda x: -x["mfe_r"])
+    # Dringlichstes zuerst: SCHLIESSEN, dann STOP NACHZIEHEN, dann der Rest -
+    # nicht nach Buchgewinn. Der groesste ungesicherte Gewinn ist nicht
+    # automatisch der dringendste Fall.
+    _rang = {_AR_SCHLIESSEN: 0, _AR_NACHZIEHEN: 1}
+    ergebnis["alle"].sort(key=lambda x: (
+        _rang.get(x["empfehlung"].split(" · ")[0], 2), -(x.get("mfe_r") or 0)))
     return ergebnis
 
 
