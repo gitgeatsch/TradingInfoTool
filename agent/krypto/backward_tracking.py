@@ -4717,6 +4717,16 @@ def compute_richtungstreffer_quote(
     }
 
 
+def _eur_je_usd(schnappschuss) -> float | None:
+    """Aus derselben Cache-Zeile, nicht aus einer zweiten Quelle."""
+    try:
+        if schnappschuss and schnappschuss.price_usd and schnappschuss.price_eur:
+            return float(schnappschuss.price_eur) / float(schnappschuss.price_usd)
+    except Exception:
+        pass
+    return None
+
+
 _AR_SCHLIESSEN = "SCHLIESSEN"
 _AR_NACHZIEHEN = "STOP NACHZIEHEN"
 
@@ -4762,6 +4772,21 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
     except Exception:
         logger.exception("Kurse fuer die Ausstiegspruefung nicht ladbar")
         preise = {}
+    # ECHTER BESTAND GEGEN BLOSSE SIGNALVERFOLGUNG (Nutzerfund 13.08.):
+    # *"Diese Aktionen sind teilweise fiktiv."* Richtig - `signals` enthaelt
+    # EMPFEHLUNGEN, nicht Positionen. Von 45 Signal-Symbolen lagen 28 gar nicht
+    # im Bestand; dort waere "SCHLIESSEN" eine Anweisung fuer etwas, das es
+    # nicht gibt. Was gehalten wird, steht in `holdings` und `hebel_positions`.
+    try:
+        gehalten = {r[0] for r in conn.execute(
+            "SELECT symbol FROM holdings WHERE quantity > 0")}
+    except Exception:
+        gehalten = set()
+    try:
+        gehalten |= {r[0] for r in conn.execute(
+            "SELECT symbol FROM hebel_positions WHERE status = 'offen'")}
+    except Exception:
+        pass
     for tabelle, ist_hebel in (("signals", False), ("hebel_signals", True)):
         spalten = {r[1] for r in conn.execute(f"PRAGMA table_info({tabelle})")}
         if "outcome_max_realisiertes_crv" not in spalten:
@@ -4824,7 +4849,13 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
                     "richtung": "SHORT" if z["ist_short"] else "LONG",
                     "tier": TIER_HEBEL if ist_hebel else _tier_fuer_spot_symbol(
                         row["symbol"], assetklasse_by_symbol),
-                    "kurs_usd": kurs_usd, **voll})
+                    "kurs_usd": kurs_usd,
+                    # EUR ist die Waehrung des Nutzers. Der Faktor kommt aus
+                    # DERSELBEN Zeile des Preis-Caches (price_eur/price_usd) -
+                    # eine zweite Umrechnungsquelle waere eine zweite Wahrheit.
+                    "eur_je_usd": _eur_je_usd(preise.get(row["symbol"])),
+                    "ist_bestand": row["symbol"] in gehalten,
+                    **voll})
 
             e = stopempfehlung_aus_mfe(
                 z["entry"], z["stop"], row["outcome_max_realisiertes_crv"],

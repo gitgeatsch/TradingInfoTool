@@ -280,24 +280,36 @@ def _kurs(wert: float | None, waehrung: str = "USD") -> str:
     return f"{wert:,.{stellen}f}".translate(str.maketrans(",.", ".,")) + f" {waehrung}"
 
 
-def _absatz(e: dict, waehrung: str = "USD") -> list[str]:
+def _in_eur(e: dict, wert: float | None) -> float | None:
+    """USD-Zone in EUR. None, wenn der Faktor fehlt - lieber keine Zahl als
+    eine in der falschen Waehrung. Genau das war der Fehler der alten
+    Hebel-Mail (Umbauplan 12.5)."""
+    faktor = e.get("eur_je_usd")
+    return None if wert is None or not faktor else float(wert) * float(faktor)
+
+
+def _absatz(e: dict, waehrung: str = "EUR") -> list[str]:
     # Datum lesbar, nicht technisch: "seit 01.08." statt "seit 2026-08-01".
     seit = str(e.get("seit", ""))
     if len(seit) == 10 and seit[4] == "-":
         seit = f"{seit[8:10]}.{seit[5:7]}."
-    kopf = (f"  {e['symbol']:<6} {e.get('richtung','?')}, {e.get('tier','?')}, "
-            f"seit {seit or '?'}")
+    # RICHTUNG NUR, WO ES EINE WAHL GIBT. "LONG, spot" ist doppelt gemoppelt -
+    # eine Spot-Position kann gar nicht short sein (Nutzerfund 13.08.).
+    tier = e.get("tier", "?")
+    art = (f"{e.get('richtung','?')} mit Hebel" if tier == "hebel"
+           else "Spot" if tier == "spot" else str(tier))
+    kopf = f"  {e['symbol']:<6} {art}, seit {seit or '?'}"
     z = [kopf]
     if e.get("stop_bereits_unterschritten"):
-        z.append(f"      Der nachgezogene Stop bei {_kurs(e['stop_empfohlen'], waehrung)} "
+        z.append(f"      Der nachgezogene Stop bei {_kurs(_in_eur(e, e['stop_empfohlen']), waehrung)} "
                  f"haette greifen muessen - der Kurs steht bei "
-                 f"{_kurs(e.get('kurs_usd'), waehrung)}.")
+                 f"{_kurs(_in_eur(e, e.get('kurs_usd')), waehrung)}.")
     if e.get("falsifiziert"):
         z.append(f"      Der Kurs hat die Marke erreicht, bei der das Modell seine "
                  f"eigene Begruendung fuer widerlegt erklaerte "
-                 f"({_kurs(e.get('umgeworfen_preis_eur'), waehrung)}).")
+                 f"({_kurs(_in_eur(e, e.get('umgeworfen_preis_eur')), waehrung)}).")
     if e.get("stop_empfohlen") is not None and not e.get("stop_bereits_unterschritten"):
-        z.append(f"      Stop auf {_kurs(e['stop_empfohlen'], waehrung)} nachziehen.")
+        z.append(f"      Stop auf {_kurs(_in_eur(e, e['stop_empfohlen']), waehrung)} nachziehen.")
     if e.get("frist_abgelaufen"):
         z.append(f"      Die Begruendung galt bis {e.get('frist')} und ist abgelaufen.")
     if e.get("stand_prozent") is not None:
@@ -309,22 +321,44 @@ def _absatz(e: dict, waehrung: str = "USD") -> list[str]:
 
 
 def sammel_mail(alle: list, geprueft: int | None = None,
-                waehrung: str = "USD") -> tuple[str, str] | None:
+                waehrung: str = "EUR") -> tuple[str, str] | None:
     """(Betreff, Text) - oder None, wenn nichts zu melden ist.
 
-    KEINE MAIL OHNE ANLASS. Laeuft alles, kommt nichts. Eine Nachricht, die
-    taeglich sagt 'alles in Ordnung', wird nach einer Woche nicht mehr
-    gelesen - und dann auch die eine nicht, die zaehlt."""
+    ZWEI WELTEN, UND SIE WERDEN GETRENNT. Nutzerfund 13.08.: *"Diese Aktionen
+    sind teilweise fiktiv."* Genau so ist es. `signals` enthaelt EMPFEHLUNGEN,
+    nicht Positionen - von 45 Signal-Symbolen lagen 28 gar nicht im Bestand.
+    Fuer die waere "SCHLIESSEN" eine Anweisung fuer etwas, das es nicht gibt.
+
+        IHR BESTAND       `holdings` / `hebel_positions` - hier ist die
+                          Empfehlung eine Handlung
+        SIGNALVERFOLGUNG  offene Signale ohne Bestand - hier ist sie ein
+                          MESSPUNKT. Die These ist gefallen, gekauft wurde nie
+
+    UND NUR DER BESTAND LOEST EINE MAIL AUS. Wer fuer eine nie eroeffnete
+    Position geweckt wird, hoert nach der dritten Mail auf hinzusehen.
+
+    WAS "SCHLIESSEN" NICHT HEISST - Nutzerfrage 13.08.: *"Wenn da steht jetzt
+    schliessen, ist das Gewinnzone erreicht?"* NEIN, im Gegenteil. Wer sein
+    Ziel erreicht, wird vom Backward-Tracking als `take_profit` aufgeloest und
+    ist dann nicht mehr offen - er taucht hier NIE auf. Diese Mail meldet
+    ausschliesslich: Gewinn geht zurueck, These gefallen, oder Frist vorbei.
+    Der Satz steht auch im Kopf der Mail."""
     if not alle:
         return None
-    nach_gruppe = {schluessel: [e for e in alle
-                                if e["empfehlung"].split(" · ")[0] == schluessel]
-                   for schluessel, _ in GRUPPEN}
-    rest = [e for e in alle
-            if e["empfehlung"].split(" · ")[0] not in dict(GRUPPEN)]
-    faellig = len(nach_gruppe[SCHLIESSEN])
-    nachziehen = len(nach_gruppe[STOP_NACHZIEHEN])
-    if not faellig and not nachziehen and not any(e.get("frist_abgelaufen") for e in rest):
+    bestand = [e for e in alle if e.get("ist_bestand")]
+    verfolgung = [e for e in alle if not e.get("ist_bestand")]
+
+    def gruppiere(liste):
+        nach = {k: [e for e in liste
+                    if e["empfehlung"].split(" · ")[0] == k] for k, _ in GRUPPEN}
+        rest = [e for e in liste
+                if e["empfehlung"].split(" · ")[0] not in dict(GRUPPEN)]
+        return nach, rest
+
+    nach, rest = gruppiere(bestand)
+    faellig, nachziehen = len(nach[SCHLIESSEN]), len(nach[STOP_NACHZIEHEN])
+    abgelaufen = [e for e in rest if e.get("frist_abgelaufen")]
+    if not faellig and not nachziehen and not abgelaufen:
         return None
 
     teile = []
@@ -332,35 +366,48 @@ def sammel_mail(alle: list, geprueft: int | None = None,
         teile.append(f"{faellig} faellig")
     if nachziehen:
         teile.append(f"{nachziehen} Stop nachziehen")
-    betreff = "TradingInfoTool: " + ", ".join(teile or ["Positionen pruefen"])
+    if abgelaufen and not teile:
+        teile.append(f"{len(abgelaufen)} Begruendung abgelaufen")
+    betreff = "TradingInfoTool: " + ", ".join(teile)
 
-    zeilen = []
+    zeilen = [
+        "Diese Mail meldet NUR Handlungsbedarf bei bestehenden Positionen.",
+        "Ein erreichtes Kursziel steht NICHT hier - es wird als erledigt "
+        "verbucht und taucht gar nicht auf.",
+        "Alles hier ist eine EMPFEHLUNG; es wird nichts ausgefuehrt.",
+        ""]
     for schluessel, titel in GRUPPEN:
-        gruppe = nach_gruppe[schluessel]
-        if not gruppe:
+        if not nach[schluessel]:
             continue
-        zeilen += [f"{titel} ({len(gruppe)})", ""]
-        for e in gruppe:
+        zeilen += [f"{titel} ({len(nach[schluessel])})", ""]
+        for e in nach[schluessel]:
             zeilen += _absatz(e, waehrung) + [""]
-
-    abgelaufen = [e for e in rest if e.get("frist_abgelaufen")]
     if abgelaufen:
         zeilen += [f"BEGRUENDUNG ABGELAUFEN ({len(abgelaufen)})",
                    "  Kein Handlungszwang - aber der Grund, diese Positionen zu "
                    "halten, ist nicht mehr belegt.", ""]
         for e in abgelaufen:
             zeilen += _absatz(e, waehrung) + [""]
-
     ruhig = [e for e in rest if not e.get("frist_abgelaufen")]
     if ruhig:
-        # EINE ZEILE, NICHT EIN ABSATZ JE POSITION.
         zeilen += [f"OHNE HANDLUNGSBEDARF ({len(ruhig)})",
                    "  " + ", ".join(f"{e['symbol']} {_prozent(e.get('stand_prozent'))}"
                                     for e in ruhig), ""]
+
+    # DIE SIGNALVERFOLGUNG ZULETZT UND ALS SOLCHE BENANNT.
+    v_nach, v_rest = gruppiere(verfolgung)
+    v_faellig = v_nach[SCHLIESSEN]
+    if v_faellig:
+        zeilen += [f"SIGNALVERFOLGUNG - KEIN BESTAND ({len(v_faellig)})",
+                   "  Hier ist nichts zu tun: diese Positionen wurden nie "
+                   "eroeffnet. Die These ist gefallen, und das wird gezaehlt, "
+                   "damit die Trefferquote stimmt.",
+                   "  " + ", ".join(e["symbol"] for e in v_faellig), ""]
+
     zeilen += ["-" * 68,
                "Warum der Ausstieg zaehlt: die Haelfte aller Signale stand "
                "unterwegs einmal im Gewinn - nur 17,6 % endeten dort. "
                "(86 real bewertete Signale, 04.08.)",
-               "Alles hier ist eine EMPFEHLUNG - es wird nichts ausgefuehrt.",
+               "Taeglich um 07:15, nach dem Backward-Tracking um 6:00.",
                "Abschalten: config.yaml risiko.ausstieg_trailing_ausloese_r auf 0."]
-    return betreff, "\n".join(zeilen)
+    return betreff, chr(10).join(zeilen)

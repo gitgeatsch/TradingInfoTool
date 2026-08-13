@@ -1579,6 +1579,11 @@ def paket_14() -> None:
         _c.execute("INSERT INTO price_cache (symbol, coingecko_id, price_usd, "
                    "price_eur, fetched_at) VALUES (?,?,?,?,?)",
                    (_sym, _sym.lower(), _k, _k * 0.87, "2026-08-13T10:00:00+00:00"))
+    # ETH liegt bewusst NICHT im Bestand - reine Signalverfolgung.
+    _c.execute("DELETE FROM holdings")
+    for _sym in ("BTC", "SOL", "APT", "INJ"):
+        _c.execute("INSERT INTO holdings (symbol, quantity, updated_at) "
+                   "VALUES (?,?,?)", (_sym, 1.0, "2026-08-13"))
     _c.commit()
     _r = _sammle(_c, [], {})
     _nach = {a["symbol"]: a for a in _r["alle"]}
@@ -1603,8 +1608,44 @@ def paket_14() -> None:
 
     _betreff, _text = AR.sammel_mail(_r["alle"], _r["geprueft"])
     pruefe(P, "der Betreff nennt die faelligen zuerst",
-           _betreff == "TradingInfoTool: 2 faellig, 1 Stop nachziehen", _betreff)
-    for _t in ("JETZT SCHLIESSEN (2)", "STOP NACHZIEHEN (1)",
+           _betreff == "TradingInfoTool: 1 faellig, 1 Stop nachziehen", _betreff)
+
+    # ECHTER BESTAND GEGEN SIGNALVERFOLGUNG - Nutzerfund: "die Aktionen sind
+    # teilweise fiktiv". Von 45 Signal-Symbolen lagen 28 nicht im Bestand.
+    pruefe(P, "was nicht im Bestand liegt, steht getrennt",
+           "SIGNALVERFOLGUNG - KEIN BESTAND (1)" in _text
+           and _nach["ETH"]["ist_bestand"] is False
+           and _nach["BTC"]["ist_bestand"] is True)
+    pruefe(P, "und traegt keine Handlungsanweisung",
+           "nie eroeffnet" in _text
+           and _text.index("JETZT SCHLIESSEN") < _text.index("SIGNALVERFOLGUNG"),
+           "'SCHLIESSEN' fuer eine Position, die es nicht gibt, ist eine "
+           "Anweisung ins Leere")
+    _nur_verfolgung = [a for a in _r["alle"] if not a["ist_bestand"]]
+    pruefe(P, "eine fiktive Position loest KEINE Mail aus",
+           AR.sammel_mail(_nur_verfolgung) is None,
+           "wer fuer eine nie eroeffnete Position geweckt wird, hoert nach der "
+           "dritten Mail auf hinzusehen")
+
+    # WAS "SCHLIESSEN" NICHT HEISST.
+    pruefe(P, "die Mail sagt, dass ein erreichtes Ziel NICHT hier steht",
+           "erreichtes Kursziel steht NICHT hier" in _text,
+           "Nutzerfrage: 'ist das Gewinnzone erreicht?' - nein, im Gegenteil: "
+           "wer sein Ziel erreicht, wird als take_profit aufgeloest und ist "
+           "dann nicht mehr offen")
+    pruefe(P, "und wie oft sie kommt",
+           "Taeglich um 07:15" in _text)
+
+    # EUR STATT USD, und die Richtung nur, wo es eine Wahl gibt.
+    pruefe(P, "die Kurse stehen in EUR",
+           "EUR" in _text and "USD" not in _text,
+           "der Faktor kommt aus DERSELBEN Cache-Zeile (price_eur/price_usd) - "
+           "eine zweite Umrechnung waere eine zweite Wahrheit")
+    pruefe(P, "bei Spot steht keine Richtung",
+           "Spot, seit" in _text and "LONG, spot" not in _text,
+           "eine Spot-Position kann gar nicht short sein")
+
+    for _t in ("JETZT SCHLIESSEN (1)", "STOP NACHZIEHEN (1)",
                "BEGRUENDUNG ABGELAUFEN (1)", "OHNE HANDLUNGSBEDARF (1)"):
         pruefe(P, f"die Mail hat den Block '{_t}'", _t in _text)
     pruefe(P, "was nichts braucht, steht in EINER Zeile",
@@ -1615,7 +1656,9 @@ def paket_14() -> None:
            " R" not in _text.replace("+1 R", ""),
            "R ist eine interne Einheit - derselbe Einwand wie bei den Kosten")
     pruefe(P, "Prozente und Kurse deutsch",
-           "-3,3 %" in _text and "64.000 USD" in _text)
+           "-3,3 %" in _text and "55.680 EUR" in _text,
+           "die Pruefung erwartete '64.000 USD' - der Wert vor der "
+           "EUR-Umstellung. 64.000 x 0,87 = 55.680")
     pruefe(P, "das Datum ist lesbar, nicht technisch",
            "seit 01.08." in _text and "seit 2026-08-01" not in _text)
 
