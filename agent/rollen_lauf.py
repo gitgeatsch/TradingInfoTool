@@ -124,6 +124,16 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
 
     ergebnis = {"betriebsart": betriebsart, "signale": [], "mails": [],
                 "fehler": []}
+    # EINMAL JE LAUF, nicht je Asset - 45 Symbole waeren sonst 45 Abfragen ueber
+    # dieselbe Tabelle. Dass die Bilanz waehrend des Laufs nicht mitwaechst, ist
+    # richtig so: alle Assets eines Durchgangs sollen gegen denselben
+    # Kenntnisstand bewertet werden, sonst haenge das Urteil an der Reihenfolge.
+    try:
+        bilanz = TB.zaehle(conn, quelle_kette="rollen")
+    except Exception as exc:                                 # noqa: BLE001
+        ergebnis["fehler"].append(f"Trefferbilanz nicht lesbar: {exc}")
+        bilanz = {}
+    ergebnis["bilanz_zellen"] = len(bilanz)
     durchlauf = RG.Durchlauf("rollen")
     ergebnis["durchlauf"] = durchlauf
     aufgezeichnet = antworten or {}
@@ -182,7 +192,7 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                        instrument=instrument, strategie=strategie,
                        ergebnis=ergebnis, versand=versand,
                        module=(AR, ER, FB, FQ, Z1, RT, RE, SA, SM, TO, TB, ZM),
-                       zai_client=zai_client,
+                       zai_client=zai_client, bilanz=bilanz,
                        fehlertypen=(EmpfehlungUngueltig, AuftragUngueltig,
                                     RT.TraderAntwortUngueltig),
                        pruefe_auftrag=pruefe_auftrag)
@@ -207,7 +217,7 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                durchlauf, betriebsart, client, modell, conn, db, config,
                instrument, strategie,
                aufgezeichnet, ergebnis, versand, module, fehlertypen,
-               pruefe_auftrag, zai_client=None) -> None:
+               pruefe_auftrag, zai_client=None, bilanz=None) -> None:
     """Ein Asset durch alle Stufen. Wirft, wenn es nicht weitergeht."""
     AR, ER, FB, FQ, Z1, RT, RE, SA, SM, TO, TB, ZM = module
 
@@ -296,9 +306,24 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     durchlauf.bestanden(symbol, "risikoschicht")
 
     # --- Stufe: Entscheider - ZAEHLT, verwirft nicht ---
+    #
+    # DIE FAMILIEN WERDEN HIER GEBRAUCHT, nicht erst in der Mail: sie sind seit
+    # 15.1 der Konstellationsschluessel. Deshalb steht die Berechnung jetzt vor
+    # dem Entscheider statt darunter - dieselben Werte, eine Stelle.
+    kern = FB.werte_aus_reihe([k.high for k in reihe], [k.low for k in reihe],
+                              [k.close for k in reihe],
+                              [getattr(k, "volume", 0) or 0 for k in reihe],
+                              i=idx, tag_vollstaendig=(idx < len(reihe) - 1))
     kosten_r = TB.kosten_r_aus_stop(kurs_e, rechnung["stop_eur"])
-    bewertung = TB.bewerte({}, TB.merkmale(
-        unabhaengige_faktoren=befund.get("unabhaengige_faktoren")),
+    # DIE EIGENE BILANZ, NICHT EIN LEERES DICT. Bis zum 13.08. stand hier
+    # `TB.bewerte({}, ...)` - der Entscheider las eine leere Tabelle und fiel
+    # damit IMMER auf die Basisrate zurueck, auch wenn Faelle vorlagen. Zusammen
+    # mit dem fehlenden Schreiben (Schritt 1) waren das zwei Luecken in Reihe:
+    # nichts wurde gezaehlt, und das Nichts wurde auch nicht gelesen.
+    bewertung = TB.bewerte(bilanz or {}, TB.merkmale(
+        vola_perzentil=TB._prozent((kern or {}).get("schwankung_perzentil")),
+        spanne_perzentil=TB._prozent((kern or {}).get("momentum_perzentil")),
+        gleichlauf=TB._band_grob((kern or {}).get("volumen_perzentil"))),
         kosten_r=kosten_r or 0.0, crv=rechnung["crv"])
     if not bewertung["traegt"]:
         durchlauf.verloren(symbol, "entscheider", "traegt sich nicht")
@@ -306,10 +331,6 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         durchlauf.bestanden(symbol, "entscheider")
 
     # --- Die Mail ---
-    kern = FB.werte_aus_reihe([k.high for k in reihe], [k.low for k in reihe],
-                              [k.close for k in reihe],
-                              [getattr(k, "volume", 0) or 0 for k in reihe],
-                              i=idx, tag_vollstaendig=(idx < len(reihe) - 1))
     # UND HIER `faktenblock_quellen` - das zweite Modul ohne Aufrufer.
     zusatz, _fehlt = FQ.abbilden(bc_ein.get("fakten_roh"),
                                  bereich=f"krypto_{instrument}",

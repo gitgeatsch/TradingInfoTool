@@ -778,14 +778,23 @@ def paket_8() -> None:
            not any(w in p for p in pars for w in ("outcome", "crv", "ergebnis",
                                                   "treffer", "realisiert")),
            f"sonst waere die Tabelle ein Blick in die Zukunft: {sorted(pars)}")
+    # BEIDE PRUEFUNGEN LIEFEN URSPRUENGLICH AN DER FAKTORZAHL - dem einzigen
+    # Merkmal, das der Schluessel damals hatte. Seit 15.1 ist sie draussen; das
+    # gepruefte VERHALTEN (eigenes Band fuer Fehlendes, grobe Einteilung) gilt
+    # unveraendert und wird jetzt an der Schwankung geprueft.
     pruefe(P, "fehlende Angaben bekommen ein EIGENES Band",
-           TB.merkmale(unabhaengige_faktoren=None)[0] is None
-           and TB.merkmale(unabhaengige_faktoren=0)[0] == 0,
+           TB.merkmale(vola_perzentil=None)[0] is None
+           and TB.merkmale(vola_perzentil=0)[0] == 0,
            "sie stillschweigend einzusortieren hiesse, Faelle zu zaehlen, die "
            "dort nicht hingehoeren")
     pruefe(P, "die Baender sind grob genug",
-           len({TB.merkmale(unabhaengige_faktoren=n)[0] for n in range(0, 9)}) == 4,
+           len({TB.merkmale(vola_perzentil=n)[0] for n in range(0, 100, 5)}) == 4,
            "eine Tabelle mit tausend Zellen hat in jeder drei Faelle")
+    pruefe(P, "die Faktorzahl geht NICHT mehr in den Schluessel ein",
+           TB.merkmale(unabhaengige_faktoren=2)
+           == TB.merkmale(unabhaengige_faktoren=3),
+           "sie wiederholt die Entscheidung (Faktorzahl 3 -> 82 % Einstieg) "
+           "und haette jede Zelle halbiert - `belastbar` verlangt 50 Faelle")
 
     # DIE KONSTANTEN SIND IMPORTIERT, NICHT ABGESCHRIEBEN. Die erste Fassung
     # hatte zwei von vier falsch - und `zaehle()` haette still nichts gefunden.
@@ -2887,9 +2896,13 @@ def paket_15() -> None:
     # nicht im vierten. Meine erste Erwartung war 3 - die Pruefung meldete einen
     # Defekt, der keiner war. Erwartungen an eine Einteilung rechnet man nach,
     # man schaetzt sie nicht.
+    # DIE PLAETZE SIND GERUECKT (15.1): ohne die Faktorzahl steht die
+    # Schwankung an Position 0, das Momentum an 1, das Volumen an 2.
     pruefe(P, "12. Perzentil ins unterste Band, 74. ins dritte von vier",
-           schluessel[1] == 0 and schluessel[2] == 2,
-           f"Grenzen (25, 50, 75) -> ergaben {schluessel[1]} und {schluessel[2]}")
+           schluessel[0] == 0 and schluessel[1] == 2,
+           f"Grenzen (25, 50, 75) -> ergaben {schluessel[0]} und {schluessel[1]}")
+    pruefe(P, "der Schluessel hat genau drei Plaetze",
+           len(schluessel) == 3, f"{schluessel}")
 
     # EIN SIGNAL OHNE FAMILIEN DARF NICHT IN DIESELBE ZELLE FALLEN wie eines
     # mit gemessenen. `None` ist ein eigenes Band - sonst zaehlte man Faelle
@@ -3221,6 +3234,42 @@ def paket_15() -> None:
            and "temperature = 0.0" in _nur_code("agent/krypto/gegenpruefung.py"),
            "ein Urteil ueber ein Urteil soll bei gleicher Eingabe gleich "
            "ausfallen - sonst misst man Sampling-Rauschen")
+
+    # ------------------------------------------------------------------
+    # H. DER ENTSCHEIDER LIEST SEINE EIGENE BILANZ (15.1).
+    #
+    # Bis zum 13.08. stand in rollen_lauf `TB.bewerte({}, ...)` - ein LEERES
+    # Dict. Zusammen mit dem fehlenden Schreiben waren das zwei Luecken in
+    # Reihe: nichts wurde gezaehlt, und das Nichts wurde auch nicht gelesen.
+    _lauf = _nur_code("agent/rollen_lauf.py")
+    pruefe(P, "der Lauf zaehlt seine eigene Bilanz",
+           "TB . zaehle ( conn" in _lauf,
+           "sonst faellt der Entscheider IMMER auf die Basisrate zurueck, "
+           "auch wenn Faelle vorliegen")
+    pruefe(P, "und der Entscheider bekommt sie auch",
+           "TB . bewerte ( bilanz" in _lauf,
+           "das leere Dict war der zweite Teil derselben Luecke")
+    pruefe(P, "gezaehlt wird EINMAL je Lauf, nicht je Asset",
+           _lauf.find("TB . zaehle ( conn") < _lauf.find("for symbol in symbole"),
+           "45 Symbole waeren sonst 45 Abfragen ueber dieselbe Tabelle - und "
+           "eine mitwachsende Bilanz haenge das Urteil an der Reihenfolge")
+
+    # BEIDE SEITEN MUESSEN DENSELBEN SCHLUESSEL BAUEN. Wuerde die Zaehlung
+    # anders schluesseln als die Live-Bewertung, ginge JEDER Nachschlag ins
+    # Leere - lautlos, und alles fiele auf die Basisrate zurueck.
+    _b = TB.zaehle(c, quelle_kette="rollen")
+    _live = TB.merkmale(
+        vola_perzentil=TB._prozent(familien["schwankung_perzentil"]),
+        spanne_perzentil=TB._prozent(familien["momentum_perzentil"]),
+        gleichlauf=TB._band_grob(familien["volumen_perzentil"]))
+    pruefe(P, "Zaehlung und Live-Bewertung treffen dieselbe Zelle",
+           _live in _b,
+           f"live {_live} gegen gezaehlt {list(_b)[:3]} - ein Nachschlag ins "
+           f"Leere waere lautlos und saehe aus wie 'keine Daten'")
+    pruefe(P, "und die Bewertung findet die Faelle dann auch",
+           TB.bewerte(_b, _live)["faelle"] >= 1,
+           "der Beweis, dass die Kette von der eigenen Historie lernen KANN - "
+           "vorher war das strukturell unmoeglich")
     c.close()
 
 

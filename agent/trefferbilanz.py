@@ -226,13 +226,29 @@ def merkmale(*, unabhaengige_faktoren=None, vola_perzentil=None,
         # 0-1, 2, 3, 4+ - die Praxisliteratur nennt drei bis vier unabhaengige
         # Faktoren als Bereich fuer einen tragfaehigen Aufbau.
         #
-        # ACHTUNG, GEMESSEN 13.08.: dieses Merkmal WIEDERHOLT die Entscheidung.
-        # Ueber 20 echte Urteile nimmt es nur zwei Werte an (2 und 3), und
-        # Faktorzahl 3 bedeutete in 82 % einen Einstieg, Faktorzahl 2 in 0 %.
-        # Es bleibt im Schluessel, aber es darf nicht mehr allein darin stehen -
-        # ein Meta-Modell, dessen einziges Merkmal die Ausgabe des
-        # Primaermodells ist, kann nichts hinzufuegen.
-        band(unabhaengige_faktoren, (2, 3, 4)),
+        # DIE FAKTORZAHL IST HIER RAUS (15.1, 13.08.) - der Parameter bleibt,
+        # damit Aufrufer sich nicht aendern muessen, aber er geht NICHT in den
+        # Schluessel ein. Sie wird weiter auf der Signalzeile mitgeschrieben.
+        #
+        # DREI GRUENDE, in der Reihenfolge ihres Gewichts:
+        #
+        # 1. SIE WIEDERHOLT DIE ENTSCHEIDUNG. Ueber 20 echte Urteile nimmt sie
+        #    nur zwei Werte an (2 und 3); Faktorzahl 3 bedeutete in 82 % einen
+        #    Einstieg, Faktorzahl 2 in 0 %. Ein Merkmal, das die Ausgabe des
+        #    Primaermodells wiederholt, trennt keine Marktlagen, sondern
+        #    Entscheidungen, die schon gefallen sind.
+        # 2. SIE HALBIERT JEDE ZELLE. Gemessen an 42 echten Symbolen belegen
+        #    die drei Familien 17 Zellen. Ein binaeres viertes Merkmal macht
+        #    daraus bis zu 34 - jede Zelle fuellt sich halb so schnell, und
+        #    `belastbar` verlangt 50 Faelle.
+        # 3. DER PLAN WOLLTE SIE DETERMINISTISCH AUS DEN FAMILIEN RECHNEN
+        #    (Kap. 15.1). Seit die Familien SELBST die anderen drei Plaetze
+        #    sind, waere das eine vierte Achse, die von den ersten dreien
+        #    vollstaendig bestimmt ist - mehr Zellen, keine Information.
+        #
+        # Ob sie ZUSAETZLICH zu den Familien etwas traegt, ist jetzt messbar,
+        # weil beides auf der Signalzeile steht. Vorher war die Frage nicht
+        # einmal stellbar.
         band(vola_perzentil, (25, 50, 75)),
         band(spanne_perzentil, (25, 50, 75)),
         gleichlauf,
@@ -282,7 +298,6 @@ def zaehle(conn: sqlite3.Connection, quelle_kette: str | None = "rollen") -> dic
             + f" FROM signals WHERE {bedingung}", werte):
         hat = dict(zip(optional, row[1:]))
         schluessel = merkmale(
-            unabhaengige_faktoren=hat.get("unabhaengige_faktoren"),
             vola_perzentil=_prozent(hat.get("schwankung_perzentil")),
             spanne_perzentil=_prozent(hat.get("momentum_perzentil")),
             # VOLUMEN AUF DEN VIERTEN PLATZ, der bisher `gleichlauf` hiess und
