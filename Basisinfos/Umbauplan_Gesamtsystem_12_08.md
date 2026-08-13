@@ -1083,3 +1083,82 @@ Zentraldokumente für die Pakete 10–14. **Offen ist alles ab 12b:**
 
 **Diese Reihenfolge ist nicht beliebig.** Wer die Doku vor dem ersten Lauf
 schreibt, dokumentiert eine Absicht und muss sie danach zweimal korrigieren.
+
+---
+
+# 15. Vor dem Produktivgang zu behandeln (Stand 13.08.2026 abends)
+
+Was hier steht, ist **nicht** die Rollout-Checkliste (die ist Kapitel 14),
+sondern die Liste der offenen **inhaltlichen** Punkte. Sie stammt aus den
+Stufen B und C — dem ersten und zweiten echten Lauf der neuen Kette.
+
+## 15.1 Die Faktorzahl ist die Entscheidung noch einmal
+
+Gemessen an 20 echten Urteilen:
+
+| | |
+|---|---|
+| Werte insgesamt | nur **2 und 3** — nie 1, nie 4, nie 5 |
+| Faktorzahl 3 | 11× → **9 davon Einstiege (82 %)** |
+| Faktorzahl 2 | 9× → **0 Einstiege** |
+
+Sie ist der Ersatz für die gestrichene Konfidenz (E3) — und hat **dasselbe
+Problem in anderer Gestalt**: Wer die Zahl kennt, kennt die Entscheidung. Ein
+Filter darauf wäre ein Filter auf die Entscheidung selbst.
+
+**Aussichtsreichster Weg: sie deterministisch bilden.** Die Belege tragen
+`richtung` und `gewicht`; Unabhängigkeit ließe sich über die drei gemessenen
+Familien rechnen (Schwankung / Momentum / Volumen, Kap. 12.8) statt sie zu
+erfragen. Dann wäre sie per Konstruktion unabhängig von der Aktion — und die
+Sprachaufgabe bliebe, wo sie hingehört: bei der **Zuordnung** eines Belegs zu
+einer Familie, nicht bei der Zählung.
+
+## 15.2 Neun von zehn Einstiegen tragen sich nicht
+
+Das ist kein Fehler, sondern das Ergebnis. Über beide Läufe:
+
+| Stopabstand | erforderliche Trefferquote |
+|---|---|
+| 2,5 % | 73 % |
+| 4,1 % | 57 % |
+| 5,5 % | 52 % |
+| 9,3 % | 52 % |
+| **Basisrate** | **34 %** |
+
+Selbst der beste Einstieg braucht 45 %. **Die Kette ist technisch fertig und
+wirtschaftlich nicht.** Der Umbau hat den Deadloop beseitigt und damit
+sichtbar gemacht, dass darunter ein Rechenproblem liegt — kein Modellproblem.
+
+Die drei bekannten Auswege bleiben unverändert: **Drift statt Timing (S2, nie
+gemessen) · Nachrichten · Kosten.**
+
+## 15.3 Zwei Läufe, zwei Ergebnisse
+
+Dieselben Daten, dasselbe Modell, zwei Minuten Abstand:
+
+| | Einstiege | durch den Entscheider |
+|---|---|---|
+| Lauf 1 | 10 | 1 |
+| Lauf 2 | 9 | 0 |
+
+**Einzelläufe sind keine Messung.** Wer aus einem Lauf eine Zahl ableitet,
+misst das Rauschen mit. Für jede Aussage über die Kette braucht es mehrere
+Läufe oder mehr Anker — das gilt auch für alles in diesem Kapitel.
+
+## 15.4 `signal_mail` hat keine Wartemechanik für Z.ai
+
+Solange nur `probe` läuft, folgenlos. **Vor `scharf` muss sie gebaut sein** —
+sonst kehrt der Fund vom 28.07. zurück (Krypto-Spot hatte gar keinen
+Wartemechanismus, und die Mail ging ohne die Gegenprüfungszeilen raus, obwohl
+das Urteil zum Versandzeitpunkt vorlag). Der Weg steht fest:
+`_sende_signal_email_mit_zai_wartezeit()`.
+
+## 15.5 Kleinere offene Punkte
+
+- **Sechs von neun Begründungen enthalten keine Zahl.** Die Belege tragen
+  Werte, der tragende Satz nicht. Ob das ein Mangel ist, ist offen.
+- **Der Ankertag ist das jüngste Datum irgendeines Symbols.** Im Testlauf
+  fielen 25 von 45 daran aus. Im Betrieb harmlos — aber wenn eine Quelle
+  ausfällt, verschiebt sie den Anker für alle.
+- **Der Hebel-Weg ist nie live gelaufen.** Paket 13 ist geprüft und im
+  Trockenlauf gefahren, aber nie mit echtem Modell.
