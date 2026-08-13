@@ -2010,15 +2010,11 @@ def paket_12b() -> None:
            f"{len(vor_bytes)} -> {len(nach_bytes)} Bytes")
     pruefe(P, "und der Schreibvorgang aendert nur den Wert",
            abs(len(zwischen) - len(vor_bytes)) <= 1
-           and zwischen.count(b"
-") == vor_bytes.count(b"
-"),
+           and zwischen.count(b"\n") == vor_bytes.count(b"\n"),
            "die erste Fassung baute den Kommentar neu zusammen und zerstoerte "
            "damit die Ausrichtung der ganzen Datei")
     pruefe(P, "die Zeilenenden bleiben einheitlich",
-           nach_bytes.count(b"
-") == nach_bytes.count(b"
-"),
+           nach_bytes.count(b"\r\n") == nach_bytes.count(b"\n"),
            "write_text uebersetzt unter Windows jedes \n in \r\n - die "
            "Warnung steht seit dem 09.07. in derselben Datei")
 
