@@ -101,8 +101,8 @@ VERSCHIEDENE Dinge? Zwei Belege, die beide auf denselben Abwaertstrend zeigen, \
 sind EIN Faktor, nicht zwei. Diese Zahl ist wichtiger als ihre Menge: drei bis \
 vier unabhaengige Faktoren tragen einen Aufbau, einer oder zwei nicht.
 
-3. HANDELN. Waehle: KAUFEN (neu aufbauen), NACHKAUFEN (bestehende Position \
-vergroessern), REDUZIEREN, VERKAUFEN oder NICHTS_TUN.{betrag}{kurse}
+3. HANDELN.{handeln}\
+{betrag}{kurse}
 
 4. BEGRUENDUNG. Ein bis zwei Saetze, die deine Wahl TRAGEN. Keine Einschraenkung \
 im Nachsatz - was dagegen spricht, gehoert in das naechste Feld.
@@ -119,7 +119,7 @@ Antworte AUSSCHLIESSLICH mit JSON:
 {{"belege": [{{"fakt": "<kurz, mit Wert>", "richtung": "dafuer|dagegen|neutral", \
 "gewicht": "hoch|mittel|gering"}}],
  "unabhaengige_faktoren": <zahl>,
- "aktion": "KAUFEN|NACHKAUFEN|REDUZIEREN|VERKAUFEN|NICHTS_TUN",
+ "aktion": "<eine der oben genannten>",{richtungsfeld}
  "einstieg_eur": <zahl>, "stop_eur": <zahl>,
  "begruendung": "<ein bis zwei Saetze>",
  "was_dagegen": "<der staerkste Gegengrund>",
@@ -133,6 +133,32 @@ Antworte AUSSCHLIESSLICH mit JSON:
 # fragen hiesse, eine Zahl zu verlangen, die es nicht gibt. Genau dieser Fehler
 # ist am 12.08. schon einmal passiert: die Marktbreite war aus den Fakten raus,
 # die Frage danach stand noch im Prompt, daneben der Satz "erfinde nichts".
+# SCHRITT 3 HAENGT AM INSTRUMENT (Paket 13, 13.08.2026). Eine gehebelte
+# Position kennt zwei Zuege, die es bei Spot nicht gibt: den Hebel aendern,
+# ohne die Position zu aendern.
+#
+# DIE RICHTUNG WIRD GEFRAGT, DER HEBELFAKTOR NICHT. Die Richtung ist ein
+# URTEIL - faellt der Wert oder steigt er. Der Faktor ist ein Risikoparameter,
+# und Kapitel 11.6 haelt fest, dass die nicht vom Modell kommen: er folgt aus
+# Risikobudget und Liquidationsabstand und wird gerechnet.
+_HANDELN = {
+    "spot": (" Waehle: KAUFEN (neu aufbauen), NACHKAUFEN (bestehende Position "
+             "vergroessern), REDUZIEREN, VERKAUFEN oder NICHTS_TUN."),
+    "hebel": (" Waehle GENAU EINE: ERÖFFNEN (neue Position), NACHKAUFEN "
+              "(vergroessern), HEBEL_ERHÖHEN, HEBEL_SENKEN, TEILVERKAUF, "
+              "SCHLIESSEN oder HALTEN."
+              " Bei ERÖFFNEN und NACHKAUFEN nenne ZUSAETZLICH die Richtung: "
+              "LONG, wenn du steigende Kurse erwartest, SHORT bei fallenden."
+              " Nenne KEINEN Hebelfaktor - der folgt aus dem Risikobudget und "
+              "dem Abstand zur Zwangsliquidation und wird gerechnet, nicht "
+              "geschaetzt."),
+}
+
+# Das Richtungsfeld erscheint NUR bei Hebel im Antwortschema. Ein Feld, das
+# bei Spot nie gefuellt wird, waere eine Frage nach etwas, das es dort nicht
+# gibt - derselbe Fehler wie die Kursfrage bei Akkumulation (12.08.).
+_RICHTUNGSFELD = {"spot": "", "hebel": "\n \"richtung\": \"LONG|SHORT\","}
+
 _KURSSATZ = {
     True:  " Bei KAUFEN und NACHKAUFEN zusaetzlich den Einstiegskurs und den "
            "Ausstiegskurs, beide in Euro; der Ausstieg liegt unter dem "
@@ -145,9 +171,12 @@ _KURSSATZ = {
 
 
 def _baue_prompt(mit_betragsfrage: bool, mit_persona: bool,
-                 mit_kursen: bool = True) -> str:
+                 mit_kursen: bool = True,
+                 instrument: str = "spot") -> str:
     kopf = _ANREDE[mit_persona] + _EINGANG[mit_betragsfrage]
     schritte = _SCHRITTE.format(
+        handeln=_HANDELN.get(instrument, _HANDELN["spot"]),
+        richtungsfeld=_RICHTUNGSFELD.get(instrument, ""),
         betrag=_BETRAGSSATZ if mit_betragsfrage else "",
         kurse=_KURSSATZ[mit_kursen])
     return f"{kopf}\n\nDEINE AUFGABE, in dieser Reihenfolge:\n\n{schritte}"
@@ -166,7 +195,8 @@ def prompt_fuer(instrument: str = "spot", strategie: str = "einstieg", *,
     i, st = handelsauftrag.pruefe(instrument, strategie)
     return _baue_prompt(mit_betragsfrage=mit_betragsfrage,
                         mit_persona=mit_persona,
-                        mit_kursen=handelsauftrag.mit_kursen(i, st))
+                        mit_kursen=handelsauftrag.mit_kursen(i, st),
+                        instrument=i)
 
 
 # Der Vorgabefall bleibt Spot/Einstieg - alle bisherigen Aufrufer und alle
@@ -485,4 +515,7 @@ def validiere(antwort: dict, symbol: str = "?",
     if prot:
         antwort["_korrekturen"] = ((antwort.get("_korrekturen", "") + "; ")
                                    if antwort.get("_korrekturen") else "") + str(prot)
-    return vertrag_validieren(antwort, symbol)
+    # DAS INSTRUMENT GEHT MIT (Paket 13). Ohne es prueft der Vertrag ein
+    # Hebel-Signal gegen das Spot-Vokabular und wirft bei ERÖFFNEN -
+    # dieselbe Antwort waere je nach Aufrufer gueltig oder nicht.
+    return vertrag_validieren(antwort, symbol, instrument=instrument)

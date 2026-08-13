@@ -469,7 +469,7 @@ def baue_lage_schema(analyst) -> dict:
     }
 
 
-def baue_trader_schema(analyst) -> dict:
+def baue_trader_schema(analyst, instrument: str = "spot") -> dict:
     """Rolle BC - Aufbau beurteilen und handeln (2026-08-10).
 
 KEIN `tranche_eur` (Umbau 10.08. abends): der Betrag wird aus der Zahl
@@ -491,7 +491,7 @@ KEIN `tranche_eur` (Umbau 10.08. abends): der Betrag wird aus der Zahl
                if not hasattr(analyst, n)]
     if fehlend:
         raise SchemaLuecke(f"Rolle BC ohne Konstanten: {fehlend}")
-    from agent.empfehlung_vertrag import AKTIONEN
+    from agent.empfehlung_vertrag import AKTIONEN, RICHTUNGEN, aktionen_fuer
     return {
         "type": "object",
         "additionalProperties": False,
@@ -512,7 +512,14 @@ KEIN `tranche_eur` (Umbau 10.08. abends): der Betrag wird aus der Zahl
                 },
             },
             "unabhaengige_faktoren": {"type": "number"},
-            "aktion": {"type": "string", "enum": sorted(AKTIONEN)},
+            # DAS VOKABULAR HAENGT AM INSTRUMENT (Paket 13, 13.08.2026).
+            # Hebel kennt sieben Aktionen statt fuenf; ein Schema mit dem
+            # falschen Enum laesst das Modell gar nicht erst antworten.
+            "aktion": {"type": "string",
+                       "enum": sorted(aktionen_fuer(instrument))},
+            **({"richtung": {"type": "string",
+                             "enum": sorted(RICHTUNGEN)}}
+               if instrument == "hebel" else {}),
             "einstieg_eur": NUM,
             "stop_eur": NUM,
             "begruendung": TXT,

@@ -2225,10 +2225,129 @@ def paket_12d() -> None:
            "28.07. zurueck")
 
 
+
+def paket_13() -> None:
+    """Hebel: Richtung, sieben Aktionen, Hebelfaktor gerechnet."""
+    P = "13"
+    from agent import entscheidungsrechnung as ER
+    from agent import llm_schema, rolle_trader
+    from agent.empfehlung_vertrag import (AKTIONEN, AKTIONEN_HEBEL, RICHTUNGEN,
+                                          EmpfehlungUngueltig, aktionen_fuer,
+                                          validiere)
+    from agent.krypto.hebel_analyst import REQUIRED_HEBEL_ACTIONS
+
+    # DAS VOKABULAR IST DAS DER ALTEN KETTE - sonst braeuchte es eine
+    # Abbildung, und jede Abbildung ist eine Stelle zum Auseinanderlaufen.
+    pruefe(P, "die sieben Hebel-Aktionen sind die der alten Kette",
+           set(AKTIONEN_HEBEL) == set(REQUIRED_HEBEL_ACTIONS),
+           f"neu {sorted(AKTIONEN_HEBEL)} gegen alt {sorted(REQUIRED_HEBEL_ACTIONS)}")
+    pruefe(P, "Spot behaelt seine fuenf", len(aktionen_fuer("spot")) == 5
+           and set(aktionen_fuer("spot")) == set(AKTIONEN))
+    pruefe(P, "und Hebel hat sieben", len(aktionen_fuer("hebel")) == 7)
+
+    basis = {"begruendung": "x", "was_dagegen": "y", "umgeworfen_durch": "z"}
+
+    # DIE RICHTUNG IST PFLICHT, WO SIE ETWAS BEDEUTET - und nur dort.
+    ok = validiere({**basis, "aktion": "ERÖFFNEN", "richtung": "short",
+                    "tranche_eur": 300}, "BTC", "hebel")
+    pruefe(P, "ERÖFFNEN mit Richtung wird angenommen und vereinheitlicht",
+           ok["aktion"] == "ERÖFFNEN" and ok["richtung"] == "SHORT")
+    for aktion in ("ERÖFFNEN", "NACHKAUFEN"):
+        try:
+            validiere({**basis, "aktion": aktion, "tranche_eur": 300}, "BTC", "hebel")
+            fehlt = False
+        except EmpfehlungUngueltig:
+            fehlt = True
+        pruefe(P, f"{aktion} OHNE Richtung wird abgewiesen", fehlt,
+               "bei der Tranche ist die kleinste Groesse die vorsichtige "
+               "Antwort - bei der Richtung gibt es keine: LONG statt SHORT "
+               "ist nicht 'weniger', sondern das Gegenteil")
+    pruefe(P, "HALTEN braucht keine Richtung",
+           validiere({**basis, "aktion": "HALTEN"}, "BTC", "hebel")["aktion"] == "HALTEN")
+    try:
+        validiere({**basis, "aktion": "ERÖFFNEN", "tranche_eur": 300}, "BTC", "spot")
+        getrennt = False
+    except EmpfehlungUngueltig:
+        getrennt = True
+    pruefe(P, "eine Hebel-Aktion ist bei Spot ungueltig", getrennt,
+           "ohne das Instrument haette dieselbe Antwort je nach Aufrufer "
+           "gegolten oder nicht")
+
+    # DER PROMPT FRAGT DIE RICHTUNG, ABER NICHT DEN FAKTOR (Kapitel 11.6).
+    p_hebel = rolle_trader.prompt_fuer("hebel", "einstieg")
+    p_spot = rolle_trader.prompt_fuer("spot", "einstieg")
+    pruefe(P, "der Hebel-Prompt nennt alle sieben Aktionen",
+           all(a in p_hebel for a in AKTIONEN_HEBEL))
+    pruefe(P, "er fragt nach LONG oder SHORT",
+           "LONG" in p_hebel and "SHORT" in p_hebel)
+    pruefe(P, "und verbietet ausdruecklich den Hebelfaktor",
+           "KEINEN Hebelfaktor" in p_hebel,
+           "der Faktor folgt aus Risikobudget und Liquidationsabstand - "
+           "Kapitel 11.6: Risikoparameter kommen nicht vom Modell")
+    pruefe(P, "der Spot-Prompt bleibt unveraendert bei fuenf",
+           "NICHTS_TUN" in p_spot and "HEBEL_SENKEN" not in p_spot
+           and "LONG" not in p_spot)
+
+    # DAS SCHEMA HAENGT AM INSTRUMENT.
+    sch_h = llm_schema.baue_trader_schema(rolle_trader, "hebel")
+    sch_s = llm_schema.baue_trader_schema(rolle_trader, "spot")
+    ph = sch_h.get("properties", sch_h)
+    ps = sch_s.get("properties", sch_s)
+    pruefe(P, "das Hebel-Schema erlaubt sieben Aktionen",
+           len(ph["aktion"]["enum"]) == 7)
+    pruefe(P, "und traegt das Richtungsfeld", "richtung" in ph
+           and set(ph["richtung"]["enum"]) == set(RICHTUNGEN))
+    pruefe(P, "das Spot-Schema traegt es NICHT", "richtung" not in ps,
+           "ein Feld, das bei Spot nie gefuellt wird, waere eine Frage nach "
+           "etwas, das es dort nicht gibt")
+
+    # DIE ARITHMETIK DREHT SICH BEI SHORT - alle vier Groessen.
+    kurs = 55500.0
+    lang = ER.rechne(kurs=kurs, atr=1677, risiko_eur=75, instrument="hebel",
+                     betrag_wunsch_eur=500, topf_frei_eur=500)
+    kurz = ER.rechne(kurs=kurs, atr=1677, risiko_eur=75, instrument="hebel",
+                     betrag_wunsch_eur=500, topf_frei_eur=500, ist_short=True)
+    pruefe(P, "bei LONG liegt der Stop unter dem Einstieg",
+           lang["stop_eur"] < kurs < lang["ziel_eur"])
+    pruefe(P, "bei SHORT darueber - und das Ziel darunter",
+           kurz["stop_eur"] > kurs > kurz["ziel_eur"])
+    pruefe(P, "die Liquidation dreht mit",
+           lang["liquidation_etwa_eur"] < kurs < kurz["liquidation_etwa_eur"],
+           "sonst stuende bei einem SHORT eine Liquidation unter dem "
+           "Einstieg - dort kann sie nie greifen")
+    pruefe(P, "das CRV bleibt in beiden Richtungen positiv",
+           abs(lang["crv"] - kurz["crv"]) < 1e-9 and kurz["crv"] > 0)
+
+    # DER WIDERLEGUNGSPREIS LIEGT BEI SHORT UEBER DEM KURS.
+    kurz_w = ER.rechne(kurs=kurs, atr=1677, risiko_eur=75, instrument="hebel",
+                       betrag_wunsch_eur=500, topf_frei_eur=500,
+                       ist_short=True, umgeworfen_preis_eur=60000)
+    pruefe(P, "ein Widerlegungspreis UEBER dem Kurs setzt den SHORT-Stop",
+           abs(kurz_w["stop_eur"] - 60000) < 1e-6,
+           "wer das vergisst, bekommt einen negativen Abstand und faellt "
+           "still auf den ATR-Stop zurueck")
+    kurz_falsch = ER.rechne(kurs=kurs, atr=1677, risiko_eur=75,
+                            instrument="hebel", betrag_wunsch_eur=500,
+                            topf_frei_eur=500, ist_short=True,
+                            umgeworfen_preis_eur=51000)
+    pruefe(P, "ein Preis auf der falschen Seite faellt auf den ATR-Stop zurueck",
+           "ATR" in kurz_falsch["stop_regel"])
+
+    # DIE MARKE IM WEG IST BEI SHORT EINE UNTERSTUETZUNG.
+    kurz_u = ER.rechne(kurs=kurs, atr=1677, risiko_eur=75, instrument="hebel",
+                       betrag_wunsch_eur=500, topf_frei_eur=500,
+                       ist_short=True, widerstand=(50000, 3))
+    pruefe(P, "eine Unterstuetzung vor dem SHORT-Ziel zieht es davor",
+           kurz_u["ziel_eur"] > 50000 and kurz_u["crv"] < 2.0,
+           "bei LONG ist die Mauer oben, bei SHORT unten")
+    pruefe(P, "und der Text nennt sie beim Namen",
+           "Unterstuetzung" in kurz_u["ziel_regel"])
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d}
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13}
 
 
 def main() -> int:

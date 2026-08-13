@@ -84,7 +84,8 @@ class RechnungBlockiert(ValueError):
 
 
 def _stop_abstand(kurs: float, atr: float,
-                  umgeworfen_preis_eur: float | None = None) -> tuple[float, str]:
+                  umgeworfen_preis_eur: float | None = None,
+                  ist_short: bool = False) -> tuple[float, str]:
     """Der Stopabstand in Euro, plus die Regel, die ihn bestimmt hat.
 
     DIE TRADINGSTANDARDS KENNEN ZWEI SCHULEN, und die Praxis kombiniert sie:
@@ -123,9 +124,15 @@ def _stop_abstand(kurs: float, atr: float,
                       GRENZEN["stop_min_atr"] * atr)
     max_abstand = GRENZEN["stop_max_relativ"] * kurs
 
-    if (isinstance(umgeworfen_preis_eur, (int, float))
-            and 0 < umgeworfen_preis_eur < kurs):
-        abstand = kurs - float(umgeworfen_preis_eur)
+    # BEI SHORT LIEGT DER WIDERLEGUNGSPREIS UEBER DEM KURS (Paket 13). Die
+    # These "es faellt" ist widerlegt, wenn es steigt - der Abstand wird
+    # deshalb andersherum gebildet. Wer das vergisst, bekommt bei jedem
+    # SHORT einen negativen Abstand und faellt still auf den ATR-Stop zurueck.
+    if isinstance(umgeworfen_preis_eur, (int, float)) and umgeworfen_preis_eur > 0:
+        abstand = ((float(umgeworfen_preis_eur) - kurs) if ist_short
+                   else (kurs - float(umgeworfen_preis_eur)))
+        if abstand <= 0:
+            return _stop_aus_atr(kurs, atr)
         if abstand < min_abstand:
             return min_abstand, "Widerlegungspreis lag im Rauschen - RM-1b/1c"
         if abstand > max_abstand:
@@ -155,7 +162,8 @@ def _stop_aus_atr(kurs: float, atr: float) -> tuple[float, str]:
 
 
 def _ziel(kurs: float, abstand: float, atr: float,
-          widerstand: tuple[float, int] | None = None) -> tuple[float, float, str]:
+          widerstand: tuple[float, int] | None = None,
+          ist_short: bool = False) -> tuple[float, float, str]:
     """Der Zielkurs, die daraus folgende CRV und die Regel dahinter.
 
     WARUM NICHT EINFACH 2 R. Ein mechanisches 2-R-Ziel weiss nichts davon, ob
@@ -175,19 +183,27 @@ def _ziel(kurs: float, abstand: float, atr: float,
 
     Liegt der Widerstand jenseits des mechanischen Ziels, bleibt es beim
     mechanischen - dann steht die Mauer nicht im Weg."""
-    ziel_mech = kurs + GRENZEN["crv"] * abstand
+    richtung = -1.0 if ist_short else 1.0
+    ziel_mech = kurs + richtung * GRENZEN["crv"] * abstand
     if not widerstand:
         return ziel_mech, GRENZEN["crv"], "kein Widerstand in Reichweite"
 
     preis, beruehrungen = float(widerstand[0]), int(widerstand[1])
-    if not (kurs < preis < ziel_mech):
+    # Bei SHORT ist die Marke im Weg eine UNTERSTUETZUNG, und sie liegt
+    # zwischen Ziel und Kurs - also andersherum eingeklammert.
+    dazwischen = (ziel_mech < preis < kurs) if ist_short else (kurs < preis < ziel_mech)
+    if not dazwischen:
         return ziel_mech, GRENZEN["crv"], "naechster Widerstand liegt dahinter"
 
     # Kurz DAVOR aussteigen, nicht daran. Ein Viertel Schwankungsbreite ist
     # dieselbe Breite wie die Einstiegszone - keine neue Groesse.
-    ziel = preis - GRENZEN["zone_atr"] * atr
-    crv = (ziel - kurs) / abstand if abstand > 0 else 0.0
-    return ziel, crv, (f"vor dem Widerstand bei {_eur(preis)} EUR "
+    ziel = preis - richtung * GRENZEN["zone_atr"] * atr
+    crv = richtung * (ziel - kurs) / abstand if abstand > 0 else 0.0
+    # BEI SHORT IST DIE MARKE IM WEG EINE UNTERSTUETZUNG. Sie "Widerstand" zu
+    # nennen waere nicht nur unsauber - es waere die falsche Richtung: ein
+    # Widerstand liegt ueber dem Kurs, diese Marke liegt darunter.
+    marke = "der Unterstuetzung" if ist_short else "dem Widerstand"
+    return ziel, crv, (f"vor {marke} bei {_eur(preis)} EUR "
                        f"({beruehrungen}-mal beruehrt)")
 
 
@@ -214,7 +230,8 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
            topf_frei_eur: float | None = None,
            umgeworfen_preis_eur: float | None = None,
            umgeworfen_tage: int | None = None,
-           widerstand: tuple[float, int] | None = None) -> dict:
+           widerstand: tuple[float, int] | None = None,
+           ist_short: bool = False) -> dict:
     """Alle Zahlen eines Einstiegs aus drei Eingaben: Kurs, ATR, Risikobudget.
 
     `risiko_eur` ist der Betrag, den DIESER eine Handel im schlechtesten Fall
@@ -232,15 +249,16 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
         raise RechnungBlockiert(f"{', '.join(fehlt)} fehlt - keine Empfehlung")
 
     kurs, atr, risiko_eur = float(kurs), float(atr), float(risiko_eur)
-    abstand, stop_regel = _stop_abstand(kurs, atr, umgeworfen_preis_eur)
+    abstand, stop_regel = _stop_abstand(kurs, atr, umgeworfen_preis_eur, ist_short)
     stop_rel = abstand / kurs
-    ziel, crv, ziel_regel = _ziel(kurs, abstand, atr, widerstand)
+    ziel, crv, ziel_regel = _ziel(kurs, abstand, atr, widerstand, ist_short)
 
     e = {
+        "ist_short": bool(ist_short),
         "einstieg_eur": round(kurs, 2),
         "einstieg_von_eur": round(kurs - GRENZEN["zone_atr"] * atr, 2),
         "einstieg_bis_eur": round(kurs + GRENZEN["zone_atr"] * atr, 2),
-        "stop_eur": round(kurs - abstand, 2),
+        "stop_eur": round(kurs - (-abstand if ist_short else abstand), 2),
         "stop_relativ": round(stop_rel, 5),
         "stop_regel": stop_regel,
         "ziel_eur": round(ziel, 2),
@@ -292,7 +310,9 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
             "Risikobudget" if hebel <= hebel_noetig + 1e-9
             else ("RM-11 Liquidationsabstand" if sicher < GRENZEN["hebel_max"]
                   else "Hoechsthebel"))
-        e["liquidation_etwa_eur"] = round(kurs * (1 - 1 / hebel), 2)
+        # Bei SHORT liegt die Liquidation UEBER dem Einstieg.
+        e["liquidation_etwa_eur"] = round(
+            kurs * (1 + 1 / hebel) if ist_short else kurs * (1 - 1 / hebel), 2)
     else:
         e["hebel"] = 1.0
 

@@ -53,6 +53,34 @@ from __future__ import annotations
 
 AKTIONEN = ("KAUFEN", "NACHKAUFEN", "REDUZIEREN", "VERKAUFEN", "NICHTS_TUN")
 
+# HEBEL HAT SIEBEN AKTIONEN, NICHT FUENF (Paket 13, 13.08.2026). Eine gehebelte
+# Position kennt zwei Zuege, die es bei Spot nicht gibt: den Hebel aendern,
+# ohne die Position zu aendern. Genau dafuer stehen HEBEL_ERHOEHEN und
+# HEBEL_SENKEN.
+#
+# DIE SCHREIBWEISE IST DIE DER ALTEN KETTE, samt Umlauten. `hebel_analyst.
+# REQUIRED_HEBEL_ACTIONS` schreibt "ERÖFFNEN" und "HEBEL_ERHÖHEN", und die
+# neue Kette schreibt in dieselbe Tabelle `hebel_signals`. Eine zweite
+# Schreibweise haette eine Abbildung noetig gemacht - und jede Abbildung ist
+# eine Stelle, an der zwei Vokabulare auseinanderlaufen koennen.
+AKTIONEN_HEBEL = ("ERÖFFNEN", "NACHKAUFEN", "HEBEL_ERHÖHEN", "HEBEL_SENKEN",
+                  "TEILVERKAUF", "SCHLIESSEN", "HALTEN")
+
+# Nur diese eroeffnen oder vergroessern eine Position - nur sie brauchen eine
+# Richtung und eine Einstiegsrechnung.
+HEBEL_MIT_EINSTIEG = ("ERÖFFNEN", "NACHKAUFEN")
+
+# Die Richtung ist die EINZIGE zusaetzliche Angabe, die das Modell fuer Hebel
+# liefert. Der Hebelfaktor NICHT: er folgt aus Risikobudget und
+# Liquidationsabstand (entscheidungsrechnung), und Kapitel 11.6 haelt fest,
+# dass Risikoparameter nicht vom Modell kommen.
+RICHTUNGEN = ("LONG", "SHORT")
+
+
+def aktionen_fuer(instrument: str = "spot") -> tuple:
+    """Das Aktionsvokabular des Instruments. EINE Stelle, kein Duplikat."""
+    return AKTIONEN_HEBEL if instrument == "hebel" else AKTIONEN
+
 # Die Tranchen aus der Praxis des Nutzers. Eine AUSWAHL, keine Rechnung.
 TRANCHEN_EUR = (100, 300, 500)
 
@@ -116,7 +144,8 @@ def _zahl(wert) -> float | None:
         return None
 
 
-def validiere(antwort: dict, symbol: str = "?") -> dict:
+def validiere(antwort: dict, symbol: str = "?",
+              instrument: str = "spot") -> dict:
     """Prueft den Vertrag. Wirft, wenn die Antwort keine Empfehlung ist."""
     if not isinstance(antwort, dict):
         raise EmpfehlungUngueltig(f"{symbol}: Antwort ist kein Objekt")
@@ -140,10 +169,24 @@ def validiere(antwort: dict, symbol: str = "?") -> dict:
     # waere hier teurer als eine abgelehnte Antwort. Das ist die einzige Stelle
     # im ganzen Vertrag, an der Strenge billiger ist als Grosszuegigkeit.
     aktion = str(antwort["aktion"]).strip().upper().replace(" ", "_").replace("-", "_")
-    if aktion not in AKTIONEN:
+    erlaubt = aktionen_fuer(instrument)
+    if aktion not in erlaubt:
         raise EmpfehlungUngueltig(
-            f"{symbol}: aktion={antwort['aktion']!r}, erlaubt {AKTIONEN}")
+            f"{symbol}: aktion={antwort['aktion']!r}, erlaubt {erlaubt}")
     antwort["aktion"] = aktion
+
+    # --- Die Richtung. Nur bei Hebel, und nur wo sie etwas bedeutet. ----
+    if instrument == "hebel" and aktion in HEBEL_MIT_EINSTIEG:
+        richtung = str(antwort.get("richtung") or "").strip().upper()
+        if richtung not in RICHTUNGEN:
+            # KEINE VORSICHTIGE ANNAHME. Bei der Tranche ist die kleinste
+            # Groesse die vorsichtige Antwort; bei der Richtung gibt es
+            # keine - LONG statt SHORT ist nicht "weniger", sondern das
+            # Gegenteil. Wer sie nicht nennt, hat nicht entschieden.
+            raise EmpfehlungUngueltig(
+                f"{symbol}: {aktion} ohne Richtung - erlaubt {RICHTUNGEN}, "
+                f"bekommen {antwort.get('richtung')!r}")
+        antwort["richtung"] = richtung
 
     # --- Der Betrag. Ohne ihn ist es eine Meinung, keine Empfehlung. --------
     if aktion in BRAUCHT_BETRAG:
