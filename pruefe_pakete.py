@@ -1607,8 +1607,8 @@ def paket_14() -> None:
            "der groesste ungesicherte Gewinn ist nicht der dringendste Fall")
 
     _betreff, _text = AR.sammel_mail(_r["alle"], _r["geprueft"])
-    pruefe(P, "der Betreff nennt die faelligen zuerst",
-           _betreff == "TradingInfoTool: 1 faellig, 1 Stop nachziehen", _betreff)
+    pruefe(P, "der Betreff nennt Handlungsbedarf, Nahes zuerst",
+           _betreff == "TradingInfoTool: 1 nah am Ziel, 1 faellig", _betreff,)
 
     # ECHTER BESTAND GEGEN SIGNALVERFOLGUNG - Nutzerfund: "die Aktionen sind
     # teilweise fiktiv". Von 45 Signal-Symbolen lagen 28 nicht im Bestand.
@@ -1645,22 +1645,28 @@ def paket_14() -> None:
            "Spot, seit" in _text and "LONG, spot" not in _text,
            "eine Spot-Position kann gar nicht short sein")
 
-    for _t in ("JETZT SCHLIESSEN (1)", "STOP NACHZIEHEN (1)",
+    # SOL steht seit der Naeherungswarnung unter "ZIEL IN REICHWEITE" statt
+    # unter "STOP NACHZIEHEN" - die handlungsnaehere Gruppe gewinnt.
+    for _t in ("ZIEL IN REICHWEITE (1)", "JETZT SCHLIESSEN (1)",
                "BEGRUENDUNG ABGELAUFEN (1)", "OHNE HANDLUNGSBEDARF (1)"):
         pruefe(P, f"die Mail hat den Block '{_t}'", _t in _text)
     pruefe(P, "was nichts braucht, steht in EINER Zeile",
            "INJ +2,0 %" in _text and _text.count("INJ") == 1,
            "wer zwoelf Positionen haelt, soll nicht zwoelf Absaetze lesen, "
            "um die zwei zu finden, die zaehlen")
-    pruefe(P, "im Text steht kein R mehr",
-           " R" not in _text.replace("+1 R", ""),
-           "R ist eine interne Einheit - derselbe Einwand wie bei den Kosten")
+    import re as _re
+    pruefe(P, "keine ZAHL wird in R angegeben",
+           not _re.search(r"[\d,]\s*R", _text),
+           "die erste Fassung dieser Pruefung suchte schlicht ' R' und traf "
+           "damit ' REICHWEITE' und ' Ruecklauf' - ein Textfund ist noch "
+           "keine Aussage")
     pruefe(P, "Prozente und Kurse deutsch",
            "-3,3 %" in _text and "55.680 EUR" in _text,
            "die Pruefung erwartete '64.000 USD' - der Wert vor der "
            "EUR-Umstellung. 64.000 x 0,87 = 55.680")
     pruefe(P, "das Datum ist lesbar, nicht technisch",
-           "seit 01.08." in _text and "seit 2026-08-01" not in _text)
+           "seit 01.08." in _text and "2026-08-01" not in _text,
+           "auch die Fristzeile - dort stand 'galt bis 2026-08-01'")
 
 
     # ---- ZIEL ERREICHT, ABER NOCH IM BESTAND (Nutzerfund 13.08.) ----
@@ -1705,6 +1711,64 @@ def paket_14() -> None:
            AR.sammel_mail([], ziel_erreicht=_r2["ziel_erreicht"]) is not None,
            "ohne das waere die einzige Nachricht mit Geld darin die einzige, "
            "die nicht verschickt wird")
+
+
+    # ---- NAEHERUNGSWARNUNG ----
+    #
+    # Die naheliegende Antwort auf "ich erfahre es erst am naechsten Morgen"
+    # waere ein engerer Takt. Sie ist falsch: eine Mail alle 15 Minuten wird
+    # nach zwei Tagen ignoriert, und schneller als der Markt ist man trotzdem
+    # nicht. Das Ziel steht im Voraus fest - es gehoert als Auftrag zur Boerse.
+    for _kurs, _erwartet in ((58000, False), (66000, False),
+                             (69000, True), (71000, False)):
+        _n = AR.bewerte(einstieg=60000, stop_original=55000, ziel=70000,
+                        kurs_aktuell=_kurs, mfe_r=0.5, heute="2026-08-13")
+        pruefe(P, f"bei Kurs {_kurs} ist das Ziel "
+                  f"{'in' if _erwartet else 'NICHT in'} Reichweite",
+               _n["ziel_in_reichweite"] is _erwartet,
+               "ueber 100 % ist das Ziel durchlaufen - dann greift die "
+               "Nachlese, nicht die Warnung" if _kurs == 71000 else
+               f"Schwelle {100 * AR.ZIEL_NAH_ANTEIL:.0f} % des Weges")
+    _nah = AR.bewerte(einstieg=60000, stop_original=55000, ziel=70000,
+                      kurs_aktuell=69000, mfe_r=0.5, heute="2026-08-13")
+    pruefe(P, "die Warnung nennt den Auftrag, nicht nur die Gefahr",
+           any("VERKAUFSAUFTRAG" in g for g in _nah["gruende"]),
+           "'pass auf' hilft nicht - 'hinterlege einen Auftrag bei X' schon, "
+           "danach ist der Ruecklauf ueber Nacht wirkungslos")
+
+    # JEDE POSITION GENAU EINMAL. Erste Fassung: LINK stand unter "Ziel in
+    # Reichweite" UND unter "Stop nachziehen".
+    _c.execute("DELETE FROM signals"); _c.execute("DELETE FROM price_cache")
+    _c.execute("DELETE FROM holdings")
+    _fz = ("symbol, created_at, action, gate_passed, risk_veto, facts_json, "
+           "outcome_status, outcome_max_realisiertes_crv, entry_usd_von, "
+           "entry_usd_bis, stop_loss_usd_von, stop_loss_usd_bis, take_profit_usd_von")
+    for _sym, _mfe, _e, _s, _tp in (("LINK", 1.9, 20, 18, 26),
+                                    ("SOL", 1.5, 200, 180, 260)):
+        _c.execute(f"INSERT INTO signals ({_fz}) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                   (_sym, "2026-08-01T10:00:00+00:00", "KAUFEN", 1, 0, "{}",
+                    _OFFEN, _mfe, _e, _e, _s, _s, _tp))
+    for _sym, _k in (("LINK", 25.5), ("SOL", 230)):
+        _c.execute("INSERT INTO price_cache (symbol, coingecko_id, price_usd, "
+                   "price_eur, fetched_at) VALUES (?,?,?,?,?)",
+                   (_sym, _sym.lower(), _k, _k * 0.87, "2026-08-13T10:00:00+00:00"))
+        _c.execute("INSERT INTO holdings (symbol, quantity, updated_at) "
+                   "VALUES (?,?,?)", (_sym, 1.0, "2026-08-13"))
+    _c.commit()
+    _r3 = _sammle(_c, [], {})
+    _b4, _t4 = AR.sammel_mail(_r3["alle"], ziel_erreicht=_r3["ziel_erreicht"])
+    pruefe(P, "eine Position steht in GENAU EINER Gruppe",
+           _t4.count("LINK  ") == 1 and _t4.count("SOL   ") == 1,
+           "erste Fassung: LINK stand unter 'Ziel in Reichweite' UND unter "
+           "'Stop nachziehen' - zwei Absaetze fuer dieselbe Position")
+    pruefe(P, "und der Betreff zaehlt sie nicht doppelt",
+           _b4 == "TradingInfoTool: 1 nah am Ziel, 1 Stop nachziehen", _b4)
+    pruefe(P, "der Zielkurs steht im Absatz",
+           "22,62 EUR" in _t4 and "Verkaufsauftrag dort hinterlegen" in _t4)
+    pruefe(P, "der Stop-Hinweis geht dabei nicht verloren",
+           "Stop auf 18,97 EUR nachziehen" in _t4,
+           "die Naehe zum Ziel ist die handlungsnaehere Aussage, aber die "
+           "Stop-Marke gilt weiter")
 
     # KEINE MAIL OHNE ANLASS.
     _ruhig = [a for a in _r["alle"] if a["symbol"] == "INJ"]

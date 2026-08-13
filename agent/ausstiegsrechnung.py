@@ -59,6 +59,20 @@ from datetime import date, datetime
 from agent.krypto.ausstiegsregel import (
     ABSTAND_R, AUSLOESE_R, stopempfehlung, stopempfehlung_aus_mfe)
 
+# NAEHERUNGSWARNUNG. Ab wieviel des Weges vom Einstieg zum Ziel wird gewarnt?
+#
+# WARUM NICHT EINFACH OEFTER MAILEN. Der Nutzereinwand war, dass man vom
+# erreichten Ziel erst am naechsten Morgen erfaehrt - bei einem Ruecklauf ueber
+# Nacht ist das Geld dann weg. Die naheliegende Antwort waere ein engerer Takt.
+# Sie ist falsch: eine Mail alle 15 Minuten wird nach zwei Tagen ignoriert, und
+# selbst dann ist man nicht schneller als der Markt.
+#
+# DIE RICHTIGE ANTWORT IST EIN VERKAUFSAUFTRAG. Das Ziel steht im Voraus fest -
+# es laesst sich bei der Boerse hinterlegen. Die Warnung sagt deshalb nicht
+# "pass auf", sondern "hinterlege jetzt einen Auftrag bei X". Danach braucht es
+# die Mail gar nicht mehr, und der Ruecklauf ueber Nacht ist wirkungslos.
+ZIEL_NAH_ANTEIL = 0.75
+
 # Die Empfehlungen, absteigend nach Dringlichkeit.
 SCHLIESSEN = "SCHLIESSEN"
 STOP_NACHZIEHEN = "STOP NACHZIEHEN"
@@ -89,6 +103,7 @@ def bewerte(*, einstieg: float | None, stop_original: float | None,
             hoechstkurs: float | None = None, mfe_r: float | None = None,
             stop_aktuell: float | None = None, ist_short: bool = False,
             umgeworfen_preis_eur: float | None = None,
+            ziel: float | None = None,
             umgeworfen_bis=None, umgeworfen_durch: str | None = None,
             heute=None, ausloese_r: float = AUSLOESE_R,
             abstand_r: float = ABSTAND_R) -> dict | None:
@@ -133,6 +148,17 @@ def bewerte(*, einstieg: float | None, stop_original: float | None,
                           if kurs_aktuell else None,
          "mfe_prozent": (risiko * float(mfe_r) / einstieg
                          if mfe_r is not None else None)}
+
+    # 1a. NAEHERT SICH DER KURS DEM ZIEL?
+    e["ziel"] = ziel
+    e["weg_zum_ziel"] = None
+    e["ziel_in_reichweite"] = False
+    if ziel and kurs_aktuell and abs(ziel - einstieg) > 1e-12:
+        anteil = (kurs_aktuell - einstieg) / (ziel - einstieg)
+        e["weg_zum_ziel"] = anteil
+        # Nur nach OBEN warnen: ein Anteil ueber 1,0 hiesse, das Ziel ist
+        # schon durchlaufen - dann greift die Nachlese, nicht die Warnung.
+        e["ziel_in_reichweite"] = bool(ZIEL_NAH_ANTEIL <= anteil < 1.0)
 
     # 1b. IST DER NACHGEZOGENE STOP SCHON UNTERSCHRITTEN?
     #
@@ -193,6 +219,12 @@ def bewerte(*, einstieg: float | None, stop_original: float | None,
             f"Die Begruendung galt bis {e['frist']} und ist abgelaufen. Das "
             f"heisst nicht, dass die Position falsch ist - es heisst, dass der "
             f"Grund, sie zu halten, nicht mehr belegt ist.")
+    if e["ziel_in_reichweite"] and not e["falsifiziert"] and not e["stop_bereits_unterschritten"]:
+        gruende.append(
+            f"Der Kurs hat {100 * e['weg_zum_ziel']:.0f} % des Weges zum Ziel "
+            f"({_de(ziel)}) zurueckgelegt. HINTERLEGEN SIE JETZT EINEN "
+            f"VERKAUFSAUFTRAG DORT - dann brauchen Sie keine Mail mehr, und "
+            f"ein Ruecklauf ueber Nacht kostet nichts.")
     if e["trailing_aktiv"]:
         gruende.append(e["trailing_begruendung"])
         # BEI GENAU +1 R SICHERT DER NACHGEZOGENE STOP NULL - er steht dann
@@ -308,10 +340,17 @@ def _absatz(e: dict, waehrung: str = "EUR") -> list[str]:
         z.append(f"      Der Kurs hat die Marke erreicht, bei der das Modell seine "
                  f"eigene Begruendung fuer widerlegt erklaerte "
                  f"({_kurs(_in_eur(e, e.get('umgeworfen_preis_eur')), waehrung)}).")
+    if e.get("ziel_in_reichweite"):
+        z.append(f"      {100 * e['weg_zum_ziel']:.0f} % des Weges zum Ziel "
+                 f"({_kurs(_in_eur(e, e.get('ziel')), waehrung)}) sind "
+                 f"zurueckgelegt - Verkaufsauftrag dort hinterlegen.")
     if e.get("stop_empfohlen") is not None and not e.get("stop_bereits_unterschritten"):
         z.append(f"      Stop auf {_kurs(_in_eur(e, e['stop_empfohlen']), waehrung)} nachziehen.")
     if e.get("frist_abgelaufen"):
-        z.append(f"      Die Begruendung galt bis {e.get('frist')} und ist abgelaufen.")
+        _f = str(e.get("frist") or "")
+        if len(_f) == 10 and _f[4] == "-":
+            _f = f"{_f[8:10]}.{_f[5:7]}.{_f[:4]}"
+        z.append(f"      Die Begruendung galt bis {_f} und ist abgelaufen.")
     if e.get("stand_prozent") is not None:
         hoch = e.get("mfe_prozent")
         z.append(f"      Stand {_prozent(e['stand_prozent'])}"
@@ -361,10 +400,14 @@ def sammel_mail(alle: list, geprueft: int | None = None,
         return nach, rest
 
     nach, rest = gruppiere(bestand)
-    faellig, nachziehen = len(nach[SCHLIESSEN]), len(nach[STOP_NACHZIEHEN])
+    faellig = len(nach[SCHLIESSEN])
+    _nah_vorab = {id(e) for e in bestand if e.get("ziel_in_reichweite")
+                  and e["empfehlung"].split(" · ")[0] != SCHLIESSEN}
+    nachziehen = len([e for e in nach[STOP_NACHZIEHEN] if id(e) not in _nah_vorab])
     abgelaufen = [e for e in rest if e.get("frist_abgelaufen")]
     ziel_erreicht = list(ziel_erreicht or [])
-    if not faellig and not nachziehen and not abgelaufen and not ziel_erreicht:
+    if (not faellig and not nachziehen and not abgelaufen and not ziel_erreicht
+            and not any(e.get("ziel_in_reichweite") for e in bestand)):
         return None
 
     teile = []
@@ -372,6 +415,8 @@ def sammel_mail(alle: list, geprueft: int | None = None,
     # die einzige, bei der Geld auf dem Tisch liegt.
     if ziel_erreicht:
         teile.append(f"{len(ziel_erreicht)} Ziel erreicht")
+    if _nah_vorab:
+        teile.append(f"{len(_nah_vorab)} nah am Ziel")
     if faellig:
         teile.append(f"{faellig} faellig")
     if nachziehen:
@@ -401,11 +446,25 @@ def sammel_mail(alle: list, geprueft: int | None = None,
                        + (f" - das {_de(crv, 1)}-fache des eingesetzten Risikos"
                           if crv else "")]
         zeilen.append("")
+    # JEDE POSITION GENAU EINMAL. Die Naehe zum Ziel ist die handlungsnaehere
+    # Aussage - dort steht ein Auftrag an, nicht nur eine Marke. Der
+    # Stop-Hinweis laeuft im selben Absatz mit, siehe `_absatz()`.
+    nah = [e for e in bestand if e.get("ziel_in_reichweite")
+           and e["empfehlung"].split(" · ")[0] != SCHLIESSEN]
+    _nah_ids = {id(e) for e in nah}
+    if nah:
+        zeilen += [f"ZIEL IN REICHWEITE ({len(nah)})",
+                   "  Hinterlegen Sie jetzt einen Verkaufsauftrag beim "
+                   "Zielkurs. Danach brauchen Sie diese Mail nicht mehr - und "
+                   "ein Ruecklauf ueber Nacht kostet nichts.", ""]
+        for e in nah:
+            zeilen += _absatz(e, waehrung) + [""]
     for schluessel, titel in GRUPPEN:
-        if not nach[schluessel]:
+        gruppe = [e for e in nach[schluessel] if id(e) not in _nah_ids]
+        if not gruppe:
             continue
-        zeilen += [f"{titel} ({len(nach[schluessel])})", ""]
-        for e in nach[schluessel]:
+        zeilen += [f"{titel} ({len(gruppe)})", ""]
+        for e in gruppe:
             zeilen += _absatz(e, waehrung) + [""]
     if abgelaufen:
         zeilen += [f"BEGRUENDUNG ABGELAUFEN ({len(abgelaufen)})",
@@ -413,7 +472,8 @@ def sammel_mail(alle: list, geprueft: int | None = None,
                    "halten, ist nicht mehr belegt.", ""]
         for e in abgelaufen:
             zeilen += _absatz(e, waehrung) + [""]
-    ruhig = [e for e in rest if not e.get("frist_abgelaufen")]
+    ruhig = [e for e in rest if not e.get("frist_abgelaufen")
+             and not e.get("ziel_in_reichweite")]
     if ruhig:
         zeilen += [f"OHNE HANDLUNGSBEDARF ({len(ruhig)})",
                    "  " + ", ".join(f"{e['symbol']} {_prozent(e.get('stand_prozent'))}"

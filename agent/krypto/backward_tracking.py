@@ -4840,7 +4840,7 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
                         if preise.get(row["symbol"]) else None)
             voll = _AR.bewerte(
                 einstieg=z["entry"], stop_original=z["stop"],
-                kurs_aktuell=kurs_usd,
+                kurs_aktuell=kurs_usd, ziel=z.get("ziel"),
                 mfe_r=row["outcome_max_realisiertes_crv"],
                 ist_short=z["ist_short"],
                 umgeworfen_preis_eur=(row["umgeworfen_preis_eur"]
