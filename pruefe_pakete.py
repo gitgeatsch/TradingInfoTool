@@ -3561,6 +3561,56 @@ def paket_15() -> None:
                "agent/rollen_lauf.py"),
            "er hat keine Verbindung zu einer echten Lage")
 
+    # ------------------------------------------------------------------
+    # N. WAS DER WATCHLIST-PROBELAUF GEFUNDEN HAT (13.08., 25 Symbole).
+    #
+    # Beides nur in einem VOLLEN Lauf sichtbar - acht Symbole hatten es nicht
+    # gezeigt.
+
+    # N1 DIE 1,0 VON SPOT DARF NICHT AUF DIE SIGNALZEILE.
+    _spot = SA.felder_aus_entscheidung({"aktion": "KAUFEN"}, fakten={},
+                                       rechnung={"hebel": 1.0})
+    pruefe(P, "ein Spot-Signal traegt KEINEN Hebel", "hebel" not in _spot,
+           "`toepfe.belegt_eur()` trennt die Toepfe an genau dieser Spalte - "
+           "neun Spot-Signale trugen 2.250 EUR in den HEBEL-Topf")
+    _heb = SA.felder_aus_entscheidung({"aktion": "ERÖFFNEN", "richtung": "LONG"},
+                                      fakten={}, rechnung={"hebel": 3.3})
+    pruefe(P, "ein echter Hebel steht weiterhin da", _heb.get("hebel") == 3.3)
+    pruefe(P, "und die Topftrennung greift danach richtig",
+           "hebel IS NULL" in _quelltext("agent/toepfe.py")
+           and "hebel IS NOT NULL" in _quelltext("agent/toepfe.py"),
+           "die Spalte ist der Diskriminator - sie muss eindeutig bleiben")
+
+    # N2 DIE FEHLERSTUFE GEHOERT ZUM SYMBOL, nicht zum Lauf.
+    _d = RG.Durchlauf("t")
+    for _s, _bis in (("A", "urteil"), ("B", "risikoschicht")):
+        _d.beginne(_s)
+        for _st, _ in RG.STUFEN:
+            _d.bestanden(_s, _st)
+            if _st == _bis:
+                break
+    pruefe(P, "jedes Symbol merkt sich seine eigene letzte Stufe",
+           _d.letzte_stufe == {"A": "urteil", "B": "risikoschicht"},
+           f"{_d.letzte_stufe} - im Probelauf brach RENDER im URTEIL ab und "
+           f"wurde als Verlust der RISIKOSCHICHT gezaehlt, weil andere Symbole "
+           f"dort schon durch waren")
+    # UND DER VERLUST GEHOERT AN DIE STUFE, AN DER GEARBEITET WURDE.
+    pruefe(P, "wer im Urteil abstuerzt, verliert im Urteil - nicht im Lagebild",
+           _d.naechste_stufe("A") == "aktion"
+           and _d.naechste_stufe("B") == "entscheider",
+           f"A {_d.naechste_stufe('A')}, B {_d.naechste_stufe('B')} - im "
+           f"zweiten Probelauf starben zwei Symbole am Gemini-503 waehrend des "
+           f"Trader-Aufrufs und wurden eine Stufe zu frueh gebucht")
+    pruefe(P, "ein Symbol ohne bestandene Stufe faellt auf die erste",
+           _d.naechste_stufe("gibtsnicht") == RG.STUFEN_NAMEN[0])
+    pruefe(P, "und an der letzten Stufe laeuft es nicht ueber",
+           _d.naechste_stufe("B") in RG.STUFEN_NAMEN)
+    pruefe(P, "der Lauf liest sie auch aus",
+           "durchlauf . naechste_stufe ( symbol )" in _nur_code(
+               "agent/rollen_lauf.py"),
+           "die Tabelle zeigt sonst auf die falsche Stelle - und das ist der "
+           "einzige Zweck, den sie hat")
+
     c.close()
 
 

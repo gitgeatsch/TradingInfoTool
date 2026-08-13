@@ -259,7 +259,15 @@ def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
     # DER HEBELFAKTOR KOMMT AUS DER RECHNUNG, nicht aus der Antwort. Das Modell
     # nennt die Richtung, das System rechnet den Faktor (Paket 13) - er darf
     # deshalb auch nur von dort kommen.
-    if rechnung and rechnung.get("hebel"):
+    #
+    # NUR ECHTE HEBEL, NICHT DIE 1,0 VON SPOT (gefunden im Watchlist-Probelauf
+    # 13.08.). `entscheidungsrechnung` setzt fuer Spot `hebel = 1.0`, damit
+    # Verlust und Gewinn mit derselben Formel gerechnet werden koennen. Auf der
+    # Signalzeile ist diese 1,0 aber KEINE Information, sondern ein Fehler mit
+    # Folgen: `toepfe.belegt_eur()` trennt die Toepfe an genau dieser Spalte
+    # (`hebel IS NULL` = Spot). Neun Spot-Signale trugen damit 2.250 EUR in den
+    # HEBEL-Topf, und der haette sich nach zwei Laeufen als voll gemeldet.
+    if rechnung and float(rechnung.get("hebel") or 0) > 1.0:
         aus["hebel"] = float(rechnung["hebel"])
     # Die Zonen nur, wenn es sie gibt - bei NICHTS_TUN und bei Akkumulation
     # entfallen sie, und ein Nullwert waere dort eine Aussage, die niemand

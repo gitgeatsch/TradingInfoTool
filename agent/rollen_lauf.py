@@ -299,11 +299,15 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
             # gezaehlt und benannt - stilles Ueberspringen waere derselbe
             # Fehler wie ein Filter, der seine Wirkung verbirgt.
             ergebnis["fehler"].append(f"{symbol}: {type(exc).__name__}: {exc}")
-            # DIE STUFE MUSS STIMMEN. Der erste Trockenlauf zaehlte einen
-            # Fehler aus der GEOMETRIE als Urteilsverlust - die Tabelle haette
-            # auf die falsche Stelle gezeigt, und genau dafuer gibt es sie.
-            letzte = next((st for st, _ in reversed(RG.STUFEN)
-                           if durchlauf.bestanden_je_stufe.get(st)), "auftrag")
+            # DIE STUFE MUSS STIMMEN - JE SYMBOL, nicht global.
+            #
+            # Die erste Fassung suchte die letzte Stufe, auf der IRGENDEIN
+            # Symbol bestanden hatte. Im Watchlist-Probelauf vom 13.08. brach
+            # RENDER mit einem Gemini-503 im URTEIL ab und wurde als Verlust
+            # der RISIKOSCHICHT gezaehlt - weil andere Symbole dort schon durch
+            # waren. Die Tabelle zeigte auf die falsche Stelle, und das ist der
+            # einzige Zweck, den sie hat.
+            letzte = durchlauf.naechste_stufe(symbol)
             durchlauf.verloren(symbol, letzte, type(exc).__name__)
 
     if betriebsart != TROCKEN:

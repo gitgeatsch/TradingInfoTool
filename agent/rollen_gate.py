@@ -89,6 +89,7 @@ class Durchlauf:
         # WORAUF DIE Z1-BILANZ BERUHT (15.5a). "Null Verstoesse" heisst wenig,
         # wenn die Regel nichts zu pruefen hatte: sechs von neun echten
         # Begruendungen enthielten keine einzige Zahl.
+        self.letzte_stufe: dict[str, str] = {}
         self.z1_zahlen_geprueft = 0
         self.z1_ausgaben_ohne_zahl = 0
         self._offen: set = set()
@@ -101,6 +102,10 @@ class Durchlauf:
         self._pruefe(stufe)
         if symbol in self._offen:
             self.bestanden_je_stufe[stufe] += 1
+            # WIE WEIT DIESES SYMBOL GEKOMMEN IST. Gebraucht, wenn ein Asset
+            # mit einer Ausnahme abbricht: die Stufe muss stimmen, sonst zeigt
+            # die Tabelle auf die falsche Stelle - und genau dafuer gibt es sie.
+            self.letzte_stufe[symbol] = stufe
 
     def verloren(self, symbol: str, stufe: str, grund: str = "") -> None:
         self._pruefe(stufe)
@@ -121,6 +126,23 @@ class Durchlauf:
         Effekt - sie zu filtern waere ein unbelegter Filter."""
         if isinstance(anzahl, int) and anzahl >= 0:
             self.faktorzahlen.append(anzahl)
+
+    def naechste_stufe(self, symbol: str) -> str:
+        """Die Stufe, an der dieses Symbol GERADE ARBEITET.
+
+        NICHT die letzte bestandene - die naechste. Wer beim Modellaufruf der
+        Urteilsstufe abstuerzt, hat das Lagebild bestanden und ist am URTEIL
+        gescheitert; die Tabelle muss auf das Urteil zeigen.
+
+        Gefunden im zweiten Watchlist-Probelauf (13.08.): zwei Symbole starben
+        an einem Gemini-503 waehrend des Trader-Aufrufs und wurden als Verlust
+        des LAGEBILDS gebucht - eine Stufe zu frueh. Dieselbe Falle wie vorher,
+        nur um eins verschoben."""
+        letzte = self.letzte_stufe.get(symbol)
+        if letzte is None:
+            return STUFEN_NAMEN[0]
+        i = STUFEN_NAMEN.index(letzte)
+        return STUFEN_NAMEN[min(i + 1, len(STUFEN_NAMEN) - 1)]
 
     def z1_zahlen(self, geprueft: int) -> None:
         """Wie viele Zahlen Z-1 an dieser Ausgabe pruefen KONNTE."""
