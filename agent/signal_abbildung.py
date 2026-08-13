@@ -129,6 +129,12 @@ SPALTEN_SIGNAL = {
     "schwankung_perzentil": "REAL",         # -11,7 pp (ruhig ist besser)
     "momentum_perzentil": "REAL",           # +9,1 pp
     "volumen_perzentil": "REAL",            # +4,5 pp
+    # WIE EINIG SICH DIE ZWEITE MEINUNG WAR (13.08., Kapitel 15). Gemessen
+    # kippt das Richtungsurteil von Z.ai bei IDENTISCHER Eingabe in 30 % der
+    # Faelle (`messe_namensanker.py`, 20 Symbole). Seither werden drei Stimmen
+    # geholt; diese Spalte haelt fest, wie viele davon das Urteil trugen.
+    # Ohne sie sieht ein Muenzwurf spaeter aus wie ein Befund.
+    "zai_stimmen": "INTEGER",
 }
 
 _LAGEBILDER = """

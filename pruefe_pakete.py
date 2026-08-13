@@ -2702,13 +2702,13 @@ def paket_export() -> None:
     offen = drift["spalten"].get("signals", {}).get("nicht_exportiert") or []
     pruefe(P, "keine signals-Spalte ist mehr unexportiert", offen == [],
            f"offen: {offen}")
-    pruefe(P, "die elf Spalten der Rollen-Kette sind namentlich drin",
+    pruefe(P, "die zwoelf Spalten der Rollen-Kette sind namentlich drin",
            all(sp in EX._SPOT_SIGNAL_SPALTEN for sp in
                ("quelle_kette", "lagebild_id", "prompt_stand", "fx_eur_je_usd",
                 "unabhaengige_faktoren", "umgeworfen_durch",
                 "umgeworfen_preis_eur", "umgeworfen_bis",
                 "schwankung_perzentil", "momentum_perzentil",
-                "volumen_perzentil")),
+                "volumen_perzentil", "zai_stimmen")),
            "ohne sie ist der gesamte Umbau von aussen unsichtbar")
 
     # DIE STUFEN WERDEN AUSGEPACKT, nicht als JSON-Klumpen abgelegt.
@@ -3270,6 +3270,65 @@ def paket_15() -> None:
            TB.bewerte(_b, _live)["faelle"] >= 1,
            "der Beweis, dass die Kette von der eigenen Historie lernen KANN - "
            "vorher war das strukturell unmoeglich")
+
+    # ------------------------------------------------------------------
+    # I. DREI STIMMEN STATT ZWEI (nach der Messung vom 13.08.).
+    #
+    # `messe_namensanker.py` hat ueber 20 Symbole gezeigt: bei IDENTISCHER
+    # Eingabe und temperature 0.0 kippt das Richtungsurteil in 30 % der Faelle.
+    # Der alte Zweierabgleich fiel bei Uneinigkeit auf NEUTRAL zurueck - bei
+    # diesem Rauschen ueberwiegend ZUFAELLIG, nicht wegen der Anordnung.
+    class _Fest:
+        def __init__(self, folge): self.folge, self.n = folge, 0
+        def chat(self, m, **k):
+            r = self.folge[self.n % len(self.folge)]
+            self.n += 1
+            return ('{"eigene_richtung": "%s", "kurzbegruendung": "x"}' % r
+                    if r else "kaputt")
+
+    _einig = ZM.mehrheit(_Fest(["SHORT"]), {"asset": "X", "stand": ["a", "b"]})
+    pruefe(P, "drei gleiche Stimmen ergeben 3 von 3",
+           _einig["stimmen"] == 3 and _einig["von"] == 3
+           and _einig["eigene_richtung"] == "SHORT", str(_einig))
+    _knapp = ZM.mehrheit(_Fest(["SHORT", "NEUTRAL", "SHORT"]),
+                         {"asset": "X", "stand": ["a", "b"]})
+    pruefe(P, "zwei von drei gewinnen, und die Knappheit bleibt sichtbar",
+           _knapp["eigene_richtung"] == "SHORT" and _knapp["stimmen"] == 2,
+           f"{_knapp} - ein 2:1 darf nicht aussehen wie ein 3:0")
+    pruefe(P, "und die Mail sagt es auch",
+           "2 von 3, uneinheitlich" in ZM.zeilen(_knapp)[0],
+           ZM.zeilen(_knapp)[0])
+    pruefe(P, "bei Einigkeit steht kein Warnwort da",
+           "uneinheitlich" not in ZM.zeilen(_einig)[0], ZM.zeilen(_einig)[0])
+    pruefe(P, "faellt jede Stimme aus, gibt es kein Urteil",
+           ZM.mehrheit(_Fest([None]), {"asset": "X", "stand": ["a"]}) is None,
+           "eine erfundene Richtung waere schlimmer als keine")
+    pruefe(P, "eine ausgefallene Stimme kippt den Rest nicht",
+           (ZM.mehrheit(_Fest([None, "LONG", "LONG"]),
+                        {"asset": "X", "stand": ["a"]}) or {}).get("von") == 2,
+           "gezaehlt wird, was zurueckkam - nicht, was gefragt wurde")
+
+    _zm2 = _nur_code("agent/zweite_meinung.py")
+    pruefe(P, "die mittlere Stimme laeuft auf umgekehrter Satzreihenfolge",
+           "kehre_saetze_um ( fakten ) if i == 1 else fakten" in _zm2,
+           "so steckt der alte Positionstest weiter drin, ohne einen eigenen "
+           "Aufruf zu kosten")
+    pruefe(P, "die Kette ruft NICHT mehr die Zweierfassung",
+           "leite_eigene_richtung_positionsrobust" not in _zm2,
+           "sie faellt bei Uneinigkeit auf NEUTRAL zurueck und verwischt "
+           "genau das, was jetzt sichtbar sein soll")
+    pruefe(P, "die alte Zweierfassung bleibt fuer die alten Pipelines",
+           "def leite_eigene_richtung_positionsrobust" in
+           _quelltext("agent/krypto/gegenpruefung.py"))
+
+    # DIE STIMMENZAHL LANDET IN EINER EIGENEN SPALTE, nicht im Freitext.
+    ZM.schreibe(c, sid, {"urteil": "konsistent", "eigene_richtung": "LONG",
+                         "stimmen": 2, "von": 3})
+    pruefe(P, "zai_stimmen steht auf der Signalzeile",
+           c.execute("SELECT zai_stimmen FROM signals WHERE id = ?",
+                     (sid,)).fetchone()[0] == 2,
+           "jede spaetere Auswertung muss nach der Einigkeit filtern koennen, "
+           "ohne einen Freitext zu zerlegen")
     c.close()
 
 

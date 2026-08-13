@@ -52,9 +52,11 @@ Kopie wuerde sein Z.ai-Ergebnis dort hineinschreiben, auf eine `signal_id`, die
 in der Produktivdatei ein anderes Signal bezeichnet. Diese Kette bekommt ihre
 Verbindung uebergeben, und das gilt auch fuer den Nebenweg.
 
-DER PREIS: 3 sequenzielle Z.ai-Aufrufe je Einstieg (1 Konsistenz + 2 fuer die
-positionsrobuste Richtung), typisch 12-25 s je Aufruf. Deshalb der Deckel unten
-- lieber eine Mail ohne die Gegenpruefungszeilen als keine Mail (P-8)."""
+DER PREIS: 4 sequenzielle Z.ai-Aufrufe je Einstieg (1 Konsistenz + 3 Stimmen
+fuer die Richtung, siehe `mehrheit()`). GEMESSEN am 13.08. ueber 60 Aufrufe:
+34 s je Aufruf, nicht die dokumentierten 12-25 s. Vier Aufrufe sind damit rund
+137 s gegen einen Deckel von 240 s - es passt, aber mit weniger Luft als bisher
+angenommen. Wer die Stimmenzahl erhoeht, muss diese Rechnung mitziehen."""
 from __future__ import annotations
 
 import logging
@@ -163,6 +165,60 @@ def nur_markt(faktentext: dict) -> dict:
     return aus
 
 
+STIMMEN = 3
+
+
+def mehrheit(client, fakten: dict) -> dict | None:
+    """Drei Stimmen, die Mehrheit gilt - und wie knapp sie war, steht dabei.
+
+    GEMESSEN AM 13.08. (`messe_namensanker.py`, 20 Symbole, 60 Aufrufe): bei
+    IDENTISCHER Eingabe und `temperature=0.0` kippt das Richtungsurteil in
+    30 % der Faelle. Nicht bei Grenzfaellen - im Schnitt.
+
+        A gegen A' (nichts geaendert) : 6/20 = 30 %
+        A gegen B  (Name geaendert)   : 3/20 = 15 %
+
+    Der Namenseffekt lag also UNTER dem Eigenrauschen; die eigentliche
+    Nachricht der Messung war das Rauschen selbst.
+
+    WAS DAS FUER DIE ALTE MECHANIK BEDEUTET. `leite_eigene_richtung_
+    positionsrobust()` ruft ZWEIMAL und faellt bei Uneinigkeit auf NEUTRAL
+    zurueck - gedacht als Test, ob die Anordnung der Fakten das Urteil dreht.
+    Bei 30 % Eigenrauschen passiert dieser Rueckfall aber ueberwiegend
+    ZUFAELLIG. Der Test misst nicht, was auf ihm steht.
+
+    WAS HIER STATTDESSEN PASSIERT: drei Stimmen, davon eine auf umgekehrter
+    Satzreihenfolge. Beides zusammen - Anordnung und Wiederholung - beantwortet
+    die Frage, die im Betrieb zaehlt: IST DIESES URTEIL BELASTBAR? Warum es das
+    nicht ist, waere eine eigene Untersuchung; fuer die Mail genuegt, dass die
+    Knappheit sichtbar wird.
+
+    DIE STIMMENZAHL WIRD MITGELIEFERT UND NICHT VERSTECKT. Ein 2:1 darf nicht
+    aussehen wie ein 3:0 - sonst steht ein Muenzwurf als Befund in der Mail.
+
+    Gibt None, wenn keine einzige Stimme zurueckkam."""
+    from agent.krypto import gegenpruefung as G
+
+    stimmen, begruendungen = [], []
+    for i in range(STIMMEN):
+        # DIE MITTLERE STIMME AUF UMGEKEHRTER REIHENFOLGE - so steckt der alte
+        # Positionstest weiter drin, ohne einen eigenen Aufruf zu kosten.
+        eingabe = kehre_saetze_um(fakten) if i == 1 else fakten
+        r = G.leite_eigene_richtung(client, eingabe, temperature=0.0,
+                                    system_prompt=SYSTEM_RICHTUNG)
+        if r and r.get("eigene_richtung"):
+            stimmen.append(r["eigene_richtung"])
+            if r.get("kurzbegruendung"):
+                begruendungen.append(r["kurzbegruendung"])
+    if not stimmen:
+        return None
+    haeufigste = max(set(stimmen), key=stimmen.count)
+    return {"eigene_richtung": haeufigste,
+            "stimmen": stimmen.count(haeufigste),
+            "von": len(stimmen),
+            "kurzbegruendung": begruendungen[0] if begruendungen else None}
+
+
 def kehre_saetze_um(faktentext: dict) -> dict:
     """Umkehr fuer den Positions-Bias-Test - auf SATZEBENE.
 
@@ -225,16 +281,15 @@ def hole(*, faktentext: dict, urteil: dict, zai_client,
         try:
             # OHNE Aktion und Begruendung - siehe Modul-Docstring. Der
             # Faktentext geht unveraendert hinein.
-            # NUR MARKTFAKTEN, und die Umkehr auf Satzebene - beides oben
+            # NUR MARKTFAKTEN, und DREI Stimmen statt zwei - beides oben
             # begruendet. Die Konsistenzpruefung darueber bekommt bewusst
             # den vollen Text.
-            r = G.leite_eigene_richtung_positionsrobust(
-                zai_client, nur_markt(faktentext),
-                system_prompt=SYSTEM_RICHTUNG,
-                umkehr_fn=kehre_saetze_um)
+            r = mehrheit(zai_client, nur_markt(faktentext))
             if r:
                 aus["eigene_richtung"] = r.get("eigene_richtung")
                 aus["richtung_kurzbegruendung"] = r.get("kurzbegruendung")
+                aus["stimmen"] = r.get("stimmen")
+                aus["von"] = r.get("von")
                 erwartet = G.richtung_aus_action(aktion)
                 # KEIN VERGLEICH OHNE VERGLEICHSBASIS. Bei HALTEN/NICHTS_TUN
                 # liefert `richtung_aus_action()` bewusst None - dort ein
@@ -271,6 +326,14 @@ def schreibe(conn, signal_id: int, ergebnis: dict) -> bool:
             ergebnis.get("kurzbegruendung"), ergebnis.get("eigene_richtung"),
             ergebnis.get("uebereinstimmung"),
             ergebnis.get("richtung_kurzbegruendung"))
+        # DIE STIMMENZAHL IN EINER EIGENEN SPALTE, nicht im Begruendungstext.
+        # Bei 30 % Eigenrauschen ist der Unterschied zwischen 3:0 und 2:1 die
+        # wichtigste Zusatzangabe, die es hier gibt - jede spaetere Auswertung
+        # muss danach filtern koennen, ohne einen Freitext zu zerlegen.
+        if ergebnis.get("stimmen"):
+            conn.execute("UPDATE signals SET zai_stimmen = ? WHERE id = ?",
+                         (int(ergebnis["stimmen"]), signal_id))
+            conn.commit()
         return True
     except Exception:                                        # noqa: BLE001
         logger.info("Z.ai-Ergebnis nicht schreibbar (P-8)", exc_info=True)
@@ -294,8 +357,15 @@ def zeilen(ergebnis: dict) -> list[str]:
     if ergebnis.get("eigene_richtung"):
         satz = ("Ohne unsere Empfehlung zu kennen, liest dasselbe Modell die "
                 f"Lage als {ergebnis['eigene_richtung']}")
+        # DIE KNAPPHEIT GEHOERT IN DIE ZEILE. Bei 30 % Eigenrauschen (gemessen
+        # 13.08.) ist ein 2-von-3 ein Muenzwurf, ein 3-von-3 eine Aussage - und
+        # der Leser kann beides nicht unterscheiden, wenn es nicht dasteht.
+        st, von = ergebnis.get("stimmen"), ergebnis.get("von")
+        if st and von:
+            satz += f" ({st} von {von}" + (", uneinheitlich" if st < von else "")
+            satz += ")"
         if ergebnis.get("richtung_kurzbegruendung"):
-            satz += f" ({ergebnis['richtung_kurzbegruendung']})"
+            satz += f", Begruendung: {ergebnis['richtung_kurzbegruendung']}"
         # WIDERSPRUCH ZUERST BENANNT, nicht in einem Nebensatz versteckt.
         if ergebnis.get("uebereinstimmung") == "nein":
             satz += " - das WIDERSPRICHT der Empfehlung oben"

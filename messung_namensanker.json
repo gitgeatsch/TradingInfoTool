@@ -1,0 +1,122 @@
+[
+ {
+  "symbol": "AIOZ",
+  "A": "NEUTRAL",
+  "A_wdh": "NEUTRAL",
+  "B": "NEUTRAL"
+ },
+ {
+  "symbol": "AKT",
+  "A": "SHORT",
+  "A_wdh": "SHORT",
+  "B": "SHORT"
+ },
+ {
+  "symbol": "ALGO",
+  "A": "NEUTRAL",
+  "A_wdh": "SHORT",
+  "B": "SHORT"
+ },
+ {
+  "symbol": "APT",
+  "A": "NEUTRAL",
+  "A_wdh": "NEUTRAL",
+  "B": "NEUTRAL"
+ },
+ {
+  "symbol": "ASTER",
+  "A": "NEUTRAL",
+  "A_wdh": "SHORT",
+  "B": "NEUTRAL"
+ },
+ {
+  "symbol": "AVAX",
+  "A": "NEUTRAL",
+  "A_wdh": "NEUTRAL",
+  "B": "NEUTRAL"
+ },
+ {
+  "symbol": "BEAMX",
+  "A": "NEUTRAL",
+  "A_wdh": "NEUTRAL",
+  "B": "NEUTRAL"
+ },
+ {
+  "symbol": "BIO",
+  "A": "NEUTRAL",
+  "A_wdh": "NEUTRAL",
+  "B": "NEUTRAL"
+ },
+ {
+  "symbol": "BNB",
+  "A": "LONG",
+  "A_wdh": "NEUTRAL",
+  "B": "NEUTRAL"
+ },
+ {
+  "symbol": "BTC",
+  "A": "NEUTRAL",
+  "A_wdh": "NEUTRAL",
+  "B": "NEUTRAL"
+ },
+ {
+  "symbol": "CAT",
+  "A": "NEUTRAL",
+  "A_wdh": "NEUTRAL",
+  "B": "NEUTRAL"
+ },
+ {
+  "symbol": "CEBS",
+  "A": "SHORT",
+  "A_wdh": "SHORT",
+  "B": "SHORT"
+ },
+ {
+  "symbol": "ETH",
+  "A": "LONG",
+  "A_wdh": "NEUTRAL",
+  "B": "NEUTRAL"
+ },
+ {
+  "symbol": "EXH3",
+  "A": "NEUTRAL",
+  "A_wdh": "NEUTRAL",
+  "B": "NEUTRAL"
+ },
+ {
+  "symbol": "FLOKI",
+  "A": "SHORT",
+  "A_wdh": "SHORT",
+  "B": "SHORT"
+ },
+ {
+  "symbol": "GRIFFAIN",
+  "A": "NEUTRAL",
+  "A_wdh": "NEUTRAL",
+  "B": "NEUTRAL"
+ },
+ {
+  "symbol": "HYPE",
+  "A": "LONG",
+  "A_wdh": "NEUTRAL",
+  "B": "LONG"
+ },
+ {
+  "symbol": "IMX",
+  "A": "NEUTRAL",
+  "A_wdh": "LONG",
+  "B": "NEUTRAL"
+ },
+ {
+  "symbol": "INJ",
+  "A": "LONG",
+  "A_wdh": "LONG",
+  "B": "LONG"
+ },
+ {
+  "symbol": "ISOC",
+  "A": "LONG",
+  "A_wdh": "LONG",
+  "B": "LONG"
+ }
+]
