@@ -2726,6 +2726,52 @@ def paket_export() -> None:
            "ein fehlender Export ist kein Grund, den ganzen Lauf zu verlieren")
     alt.close(); c.close()
 
+    # ----------------------------------------------------------------
+    # DIE ANALYSESTANDARDS. Ein Export, den keine Pruefung liest, ist ein
+    # Datenhaufen - erst der Katalog macht daraus eine Diagnose.
+    std = io.open("pruefe_export_standard.py", encoding="utf-8").read()
+    voll = io.open("pruefe_export_vollcheck.py", encoding="utf-8").read()
+
+    pruefe(P, "der Kennzahlen-Katalog hat Punkt 16 (Durchlaessigkeit)",
+           '16. Rollen-Kette' in std and 'd.get("rollen_kette")' in std,
+           "Punkte 1-15 messen AUFGELOESTE Signale - dieser misst, ob "
+           "ueberhaupt eines entsteht")
+    pruefe(P, "er meldet den Deadloop-Zustand", "Deadloop-Zustand" in std)
+    pruefe(P, "er meldet Einstiege, die sich nicht tragen",
+           "Einstiege, keiner traegt " in std
+           and "sich nach Kosten - Basisrate" in std)
+    pruefe(P, "er meldet die Faktorzahl mit nur zwei Werten",
+           "sie ist die Entscheidung noch " in std,
+           "offener Punkt aus Kapitel 15")
+    pruefe(P, "die Konfidenz-Kalibrierung ist als NUR-ALTDATEN gekennzeichnet",
+           "nur ALTE Kette" in std,
+           "die neue Kette erhebt keine Konfidenz mehr (E3) - ein leerer "
+           "Block dort ist kein Fehlstand")
+
+    pruefe(P, "der Vollcheck zeigt die Durchlaessigkeit je Lauf (C6)",
+           "C6 DIE ROLLEN-KETTE" in voll)
+    pruefe(P, "und fragt, ob die neuen Felder ueberhaupt mitkommen (D6/D7)",
+           "D6  Felder der Rollen-Kette" in voll
+           and "D7  Block 'rollen_kette'" in voll,
+           "ein fehlendes Feld sieht im Export aus wie ein leeres")
+
+    # DIESE PRUEFUNG HAETTE DEN FEHLER GEFANGEN, DEN SIE MEINT. Der erste Wurf
+    # von D6 listete `rolle_begruendung` - so heisst die Spalte im Umbauplan
+    # Kap. 14.2, aber nirgends im Code. Der Vollcheck meldete daraufhin eine
+    # Luecke, die es nicht gibt, und haette jede Auswertung auf eine falsche
+    # Faehrte geschickt. Ein Plan ist eine Absicht, keine Festlegung.
+    import re as _re
+    genannt = set(_re.findall(r'"(\w+)"',
+                              voll.split('neu = (')[1].split(')')[0]))
+    pruefe(P, "die Feldnamen in D6 stammen aus dem Code, nicht aus dem Plan",
+           genannt <= set(SA.SPALTEN_SIGNAL),
+           f"nicht im Code: {sorted(genannt - set(SA.SPALTEN_SIGNAL))}")
+    pruefe(P, "D6 fragt nicht nach facts_json",
+           "facts_json" not in voll.split("D6")[1].split("OFFENE PUNKTE")[0]
+           or "bewusst\n    # ausgeschlossen" in voll,
+           "das ist im Export absichtlich ausgeschlossen - danach zu fragen "
+           "erzeugt eine Dauermeldung ohne Ursache")
+
 
 def _beispiel_durchlauf(RG):
     d = RG.Durchlauf("rollen")

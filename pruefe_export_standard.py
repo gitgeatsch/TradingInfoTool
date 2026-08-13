@@ -55,7 +55,13 @@ def main() -> None:
     print(f"\n 3. Provider-Performance: {len(pp)} Gruppen")
 
     # 4 Konfidenz-Kalibrierung
-    print("\n 4. Konfidenz-Kalibrierung (vorhergesagt vs. tatsaechlich):")
+    #
+    # BETRIFFT NUR ALTDATEN. Die neue Rollen-Kette erhebt keine Konfidenz mehr
+    # (E3, 13.08.) - sie hing mit dem Ergebnis nicht zusammen (r = +0,073,
+    # n = 92) und war faktisch konstant. Der Block bleibt, weil die Altsignale
+    # weiter im Export stehen; fuer Signale mit quelle_kette='rollen' ist er
+    # leer, und das ist kein Fehlstand. Der Nachfolger steht unter Punkt 16.
+    print("\n 4. Konfidenz-Kalibrierung (nur ALTE Kette, siehe 16.):")
     for tier, baender in (d.get("konfidenz_kalibrierung") or {}).items():
         for band, w in (baender or {}).items():
             if not isinstance(w, dict):
@@ -181,6 +187,56 @@ def main() -> None:
     print(f"\n15. Watchlist-Stammdaten: {len(ws)} Symbole")
     if not ws:
         melde("watchlist_stammdaten FEHLT - jede Spot-Auswertung waere ein Mischtopf")
+
+    # 16 ROLLEN-KETTE - der aussagekraeftigste neue Wert ueberhaupt.
+    #
+    # WOZU. Ein Lauf mit 45 Symbolen hinein und 0 Signalen heraus sah bisher
+    # identisch aus, egal an welcher Stufe es verschwand: am Ankertag, am
+    # Urteil, an der Geometrie oder an der Rechnung. Die Durchlaessigkeit sagt
+    # WO - und damit, ob ein Fund ein Modell- oder ein Rechenproblem ist.
+    rk = d.get("rollen_kette") or {}
+    laeufe = (rk.get("gate_durchlaessigkeit") or {}).get("laeufe") or []
+    print(f"\n16. Rollen-Kette: {len(laeufe)} Laeufe, "
+          f"{(rk.get('lagebilder') or {}).get('anzahl_gesamt', 0)} Lagebilder")
+    if not rk:
+        print("      (Export ist aelter als der Umbau - kein Fehlstand)")
+    for lauf in laeufe[:3]:
+        best = lauf.get("bestanden") or {}
+        verl = lauf.get("verloren") or {}
+        print(f"      {str(lauf.get('erfasst_am'))[:16]} "
+              f"{lauf.get('hinein')} hinein -> {lauf.get('heraus')} heraus")
+        for stufe in ("auftrag", "fakten", "lagebild", "urteil", "aktion",
+                      "geometrie", "risikoschicht", "entscheider"):
+            if stufe in best or stufe in verl:
+                print(f"        {stufe:14s} bestanden {best.get(stufe, 0):3} "
+                      f"| verloren {verl.get(stufe, 0):3}")
+
+    for lauf in laeufe[:3]:
+        wann = str(lauf.get("erfasst_am"))[:16]
+        best = lauf.get("bestanden") or {}
+        # a) Der Deadloop ist zurueck: Urteile ja, Aktionen nein.
+        if best.get("urteil", 0) >= 10 and best.get("aktion", 0) == 0:
+            melde(f"{wann}: {best['urteil']} Urteile, aber 0 Aktionen - "
+                  "das ist der Deadloop-Zustand von vor dem Umbau")
+        # b) Das Rechenproblem: Einstiege ja, aber keiner traegt sich.
+        if best.get("risikoschicht", 0) >= 5 and best.get("entscheider", 0) == 0:
+            melde(f"{wann}: {best['risikoschicht']} Einstiege, keiner traegt "
+                  "sich nach Kosten - Basisrate gegen Breakeven pruefen")
+        # c) Die Faktorzahl sagt die Aktion voraus (Umbauplan Kap. 15).
+        #    `faktorzahlen` ist eine LISTE je Urteil, kein Zaehldict - erst
+        #    beim Nachlesen von rollen_gate.als_json() gesehen, und eine
+        #    .items()-Annahme haette hier still nie gemeldet.
+        fz = lauf.get("faktorzahlen")
+        if isinstance(fz, list) and len(fz) >= 10 and len(set(fz)) <= 2:
+            melde(f"{wann}: Faktorzahl nimmt ueber {len(fz)} Urteile nur "
+                  f"{sorted(set(fz))} an - sie ist die Entscheidung noch "
+                  "einmal, offener Punkt vor Produktivgang")
+        # d) Z1 zaehlt nur, aber gezaehlt wird es. Dict Symbol -> Regelliste.
+        z1 = lauf.get("z1_verstoesse")
+        if isinstance(z1, dict) and z1:
+            regeln: Counter = Counter(r for liste in z1.values() for r in liste)
+            melde(f"{wann}: Z1-Befund bei {len(z1)} Ausgabe(n) - "
+                  f"{dict(regeln.most_common())}. Verwirft nichts, steht aber")
 
     # Zusatz: sind die neuen Fakt-Bloecke angekommen?
     fk = d.get("hebel_faktensaetze") or {}

@@ -16347,3 +16347,9 @@ Basisrate `1/(1+CRV)` gegen Breakeven `(1+Kosten)/(1+CRV)`, derselbe Nenner.
 | „Das Modell wählt **immer** den engsten erlaubten Stop" | n=2 | **hält nicht.** Median 5,3 % über 10 Einstiege, nur 1 an der Klemme |
 | „Am laufenden Tag entfällt das Volumen" | Absicht richtig | **Folge falsch:** eine von drei Familien fehlte in jeder Nachricht |
 | „78 von 118 Signalen haben leere Fakten" (12.08.) | Zahl richtig | **Deutung falsch:** alle 78 sind Abweisungen *vor* der Analyse |
+| Spaltenname `rolle_begruendung` (Umbauplan 14.2) | im Plan | **existiert im Code nicht** — die Spalte heißt `umgeworfen_durch`. Der Vollcheck meldete dadurch eine Lücke, die es nicht gibt |
+
+**Der letzte Punkt ist der lehrreichste**, weil er dieselbe Bewegung ist wie
+der Fund vom Vormittag: eine Absicht aus einem Plan abgelesen und für den
+Stand gehalten. Jetzt prüft `pruefe_pakete.py --paket Export`, dass jeder in
+D6 genannte Feldname wirklich in `signal_abbildung.SPALTEN_SIGNAL` steht.

@@ -173,6 +173,26 @@ def main() -> None:
     print(f"      Richtungsverteilung seit {rv.get('ab_datum')}: "
           f"SHORT-Anteil {rv.get('short_anteil_pct')} %")
 
+    # C6 DIE ROLLEN-KETTE - seit dem Umbau der wichtigste Messpunkt (13.08.).
+    #
+    # Die Zeilen darueber messen AUFGELOESTE Signale. Die Kette misst, ob
+    # ueberhaupt eines entsteht - und das war fast zwei Wochen lang die
+    # eigentliche Frage: 98,2 % HALTEN heisst n=0 fuer alles darunter.
+    rk = d.get("rollen_kette") or {}
+    laeufe = (rk.get("gate_durchlaessigkeit") or {}).get("laeufe") or []
+    if not laeufe:
+        print("      Rollen-Kette: keine Laeufe im Export "
+              "(Datei aelter als der Umbau, oder die Kette lief nicht)")
+    for lauf in laeufe[:5]:
+        best = lauf.get("bestanden") or {}
+        fz = lauf.get("faktorzahlen")
+        print(f"      {str(lauf.get('erfasst_am'))[:16]} "
+              f"{lauf.get('hinein'):>3} hinein | Urteil {best.get('urteil', 0):>3} "
+              f"| Einstieg {best.get('aktion', 0):>3} "
+              f"| gerechnet {best.get('risikoschicht', 0):>3} "
+              f"| traegt sich {best.get('entscheider', 0):>3}"
+              + (f" | Faktorzahl {sorted(set(fz))}" if isinstance(fz, list) and fz else ""))
+
     # ------------------------------------------------------------ D
     kopf("D) FEHLENDE INFORMATIONEN, die eine Auswertung kippen wuerden")
     psy = d.get("preishistorie_signal_symbole") or {}
@@ -191,6 +211,45 @@ def main() -> None:
     zeile(len(mh) >= 30, f"D4  Makro-Historie {len(mh)} Zeilen - begrenzt jedes Mischen mit Kursdaten")
     fx = sum(1 for l in lg if "Spannweite" in l)
     zeile(fx == 0, f"D5  Verworfene FX-Ableitungen im Log: {fx}", warnung=fx > 0)
+
+    # D6 KOMMEN DIE FELDER DER NEUEN KETTE MIT?
+    #
+    # GENAU DIE FALLE, DIE DIESER ABSCHNITT MEINT. Bis zum 13.08. exportierte
+    # `extract_notebook_diagnose.py` 18 Tabellen und vom gesamten LLM-Umbau
+    # keine einzige. Jede Auswertung waere auf den Altdaten gelaufen und haette
+    # die Schluesse der ALTEN Kette bestaetigt - ohne dass irgendwo ein Fehler
+    # gemeldet worden waere. Ein fehlendes Feld sieht aus wie ein leeres.
+    # DIE NAMEN STAMMEN AUS `agent/signal_abbildung.py`, NICHT AUS DEM PLAN.
+    # Der erste Wurf listete `rolle_begruendung` - so heisst die Spalte im
+    # Umbauplan Kap. 14.2, aber nirgends im Code. Die Pruefung meldete daher
+    # eine Luecke, die es nicht gibt. Immer an der Quelle nachsehen; ein Plan
+    # ist eine Absicht, keine Festlegung.
+    neu = ("quelle_kette", "lagebild_id", "prompt_stand",
+           "unabhaengige_faktoren", "umgeworfen_durch",
+           "umgeworfen_preis_eur", "umgeworfen_bis")
+    beispiel = (ss or hs or [{}])[0]
+    fehlend = [f for f in neu if f not in beispiel]
+    zeile(not fehlend,
+          f"D6  Felder der Rollen-Kette in den Signalzeilen: "
+          f"{'alle ' + str(len(neu)) + ' da' if not fehlend else 'FEHLEN: ' + ', '.join(fehlend)}",
+          warnung=bool(fehlend))
+    zeile("rollen_kette" in d,
+          "D7  Block 'rollen_kette' im Export (Lagebilder + Durchlaessigkeit)",
+          warnung="rollen_kette" not in d)
+    # Ein Signal der neuen Kette ohne `lagebild_id` ist eine stumme Zeile: das
+    # Urteil stuende da, die Marktlage dazu waere nicht mehr auffindbar.
+    # (Nach `facts_json` wird hier NICHT gefragt - das ist im Export bewusst
+    # ausgeschlossen, siehe Kopf von extract_notebook_diagnose.)
+    aus_kette = [s for s in (ss + hs) if s.get("quelle_kette") == "rollen"]
+    if aus_kette:
+        ohne = [s for s in aus_kette if not s.get("lagebild_id")]
+        zeile(not ohne,
+              f"D8  Signale aus der neuen Kette: {len(aus_kette)}, davon "
+              f"{len(ohne)} ohne lagebild_id",
+              warnung=bool(ohne))
+    else:
+        print(f"{JA}D8  noch kein Signal mit quelle_kette='rollen' "
+              f"({len(ss) + len(hs)} Altsignale) - erwartet vor dem Scharfgang")
 
     print()
     print("=" * 92)

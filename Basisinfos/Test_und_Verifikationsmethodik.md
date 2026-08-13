@@ -170,7 +170,22 @@ Modul-Import).
     Aufschlüsselung der Spot-Familie nach Assetklasse. Fehlt der Block, ist
     jede Spot-Auswertung ein Mischtopf (Fehler vom 29.07.).
 
-Diese fünfzehn Punkte werden IMMER kurz durchgegangen, auch wenn der Anlass für den
+16. **Durchlässigkeit der Rollen-Kette** (`rollen_kette`, neu 13.08.2026) — je
+    Lauf: wie viele Symbole hinein, und **an welcher der acht Stufen** sie
+    verloren gehen. **Der aussagekräftigste Wert des ganzen Katalogs**, weil er
+    eine Frage beantwortet, die keine andere Kennzahl stellt: alle Punkte 1–15
+    messen *aufgelöste* Signale, dieser misst, ob überhaupt eines entsteht. Ein
+    Lauf mit 45 hinein und 0 heraus sah bis heute identisch aus, egal ob es am
+    Ankertag, am Urteil, an der Geometrie oder an der Rechnung scheiterte.
+
+    Drei Muster sind zu melden: **viele Urteile, null Aktionen** (der Deadloop
+    ist zurück) · **Einstiege gerechnet, keiner trägt sich** (Rechenproblem,
+    nicht Modellproblem) · **die Faktorzahl nimmt nur zwei Werte an** (sie ist
+    dann die Entscheidung noch einmal, Umbauplan Kap. 15). `Punkt 4
+    (Konfidenz-Kalibrierung) betrifft nur noch die ALTE Kette` — die neue
+    erhebt keine Konfidenz mehr.
+
+Diese sechzehn Punkte werden IMMER kurz durchgegangen, auch wenn der Anlass für den
 Export etwas anderes war - Auffälligkeiten ausserhalb der eigentlichen Fragestellung
 nicht ignorieren (siehe z.B. den ISOC/X136-Ticker-Fund, der nebenbei beim
 Durchgehen von Punkt 6 auffiel).
@@ -1011,8 +1026,8 @@ immer „ich will X wissen", nie „welches Skript gibt es".
 
 | Skript | Beantwortet |
 |---|---|
-| `pruefe_export_standard.py` | Der feste 15-Punkte-Katalog aus 2.1. **Sind die Kennzahlen auffällig?** Meldet Abweichungen, nicht Vollständigkeit. |
-| `pruefe_export_vollcheck.py` | **Stimmt das, was wir glauben gebaut zu haben?** Wirken die Fixes im Betrieb, läuft Backward-Tracking/Schatten-Messung/Monitoring, hängen Signale, fehlen Daten. |
+| `pruefe_export_standard.py` | Der feste Katalog aus 2.1, seit 13.08. **16 Punkte** — neu Punkt 16, die Durchlässigkeit der Rollen-Kette. **Sind die Kennzahlen auffällig?** Meldet Abweichungen, nicht Vollständigkeit. |
+| `pruefe_export_vollcheck.py` | **Stimmt das, was wir glauben gebaut zu haben?** Wirken die Fixes im Betrieb, läuft Backward-Tracking/Schatten-Messung/Monitoring, hängen Signale, fehlen Daten. Seit 13.08. auch C6 (Durchlässigkeit je Lauf) und D6–D8 (kommen die sieben Felder der neuen Kette mit). |
 
 > **Beide sind nötig, sie überlappen nicht.** Der Nur-Long-Umbau hätte in jedem
 > Kennzahlen-Katalog unauffällig ausgesehen — er berührt die Kennzahlen gar
@@ -1973,7 +1988,7 @@ Ergänzt 2.13. Drei neue Skripte, und eine geänderte Arbeitsweise.
 
 | Skript | Auslöser | was es beantwortet |
 |---|---|---|
-| `pruefe_pakete.py` | **nach jedem Paket, immer kumulativ** | Hält alles Gebaute noch? `--paket N` für eines, `--paket gesamt` für den Abgleich *zwischen* den Paketen, `--paket B1` für den Orchestrator, `--paket Export` für den Notebook-Export. Stand 13.08. abends: **395 Prüfungen** |
+| `pruefe_pakete.py` | **nach jedem Paket, immer kumulativ** | Hält alles Gebaute noch? `--paket N` für eines, `--paket gesamt` für den Abgleich *zwischen* den Paketen, `--paket B1` für den Orchestrator, `--paket Export` für den Notebook-Export. Stand 13.08. abends: **404 Prüfungen** |
 | `messe_sentiment_je_horizont.py` | einmalig, bei Fragen zur Stimmung | Wirkt Fear & Greed je Horizont verschieden? BTC, 3.087 Tage |
 | `messe_top_fakten.py` | einmalig, bei Fragen „welcher Fakt trägt?" | 12 Merkmale gegen die Geometrie der App, 37 Symbole, 20.494 Anker |
 | `pruefe_rollenkette.py` | vor jedem Live-Lauf | die Kette an echten Ankern, mit Wortlaut |

@@ -396,7 +396,7 @@ python pruefe_pakete.py            # alle Pakete
 python pruefe_pakete.py --paket 1  # nur eines
 ```
 
-Stand: **395 Prüfungen** über Paket 0–14, 12b/12c/12d, die Gesamtprüfung, B1 und den Export, alle bestanden.
+Stand: **404 Prüfungen** über Paket 0–14, 12b/12c/12d, die Gesamtprüfung, B1, den Export und die Analysestandards, alle bestanden.
 
 **Nummern-Korrektur 12.08. abends:** die Diskussion hat die Reihenfolge verschoben. Die Prüfpakete 10–12 tragen jetzt den Inhalt, der wirklich gebaut wurde; „Gate" und „Z1 + Z.ai" stehen als **12c/12d** weiter offen und sind **übersprungen, nicht erledigt**. Kein LLM-Aufruf, kein
 Netzwerk, keine Schreibzugriffe — sie darf jederzeit laufen.
@@ -1067,8 +1067,8 @@ würden?"*).
 | Skript | was zu ergänzen ist |
 |---|---|
 | ~~`extract_notebook_diagnose.py`~~ | **ERLEDIGT 13.08.** — beide Tabellen, acht Spalten, Stufen entfaltet |
-| `pruefe_export_standard.py` | der 15-Punkte-Katalog aus Methodik 2.1 kennt die Durchlässigkeit nicht — sie ist der aussagekräftigste neue Wert |
-| `pruefe_export_vollcheck.py` | Frage C („wo steht jeder Messpunkt") muss die Rollen-Kette mit aufnehmen |
+| ~~`pruefe_export_standard.py`~~ | **ERLEDIGT 13.08.** — **Punkt 16**: Durchlässigkeit je Stufe, plus drei Meldungen (Deadloop zurück · Einstiege tragen sich nicht · Faktorzahl nimmt nur zwei Werte an). Punkt 4 als *nur Altdaten* gekennzeichnet |
+| ~~`pruefe_export_vollcheck.py`~~ | **ERLEDIGT 13.08.** — C6 (eine Zeile je Lauf: hinein → Urteil → Einstieg → gerechnet → trägt sich) und D6–D8 (kommen die sieben Felder mit, ist der Block da, hat jedes Kettensignal sein Lagebild) |
 
 ## 14.4 ~~Was in den Dokumenten noch fehlt~~ — NACHGEZOGEN 13.08. abends
 
@@ -1094,9 +1094,11 @@ zu sehen, dass sie einmal galt und warum sie fiel:
 3. „78 von 118 Signalen haben leere Fakten" — Zahl richtig, Deutung falsch
    (Kap. 13 dieses Plans)
 
-**Offen bleibt nur der letzte Schritt der Reihenfolge unten:** die beiden
-Prüfskripte aus 14.3 (`pruefe_export_standard.py`, `pruefe_export_vollcheck.py`)
-kennen die Durchlässigkeit noch nicht.
+**Auch die Analysestandards sind nachgezogen** (14.3) — und der Probelauf
+gegen die Datenbank des Stufe-C-Laufs meldete sofort beides, was er melden
+sollte: *„9 Einstiege, keiner trägt sich nach Kosten“* und *„Faktorzahl nimmt
+über 20 Urteile nur [2, 3] an“*. **Eine Prüfung, die an echten Daten nichts
+findet, ist keine bestandene Prüfung, sondern eine unerprobte.**
 
 Die ursprüngliche Lückenliste, als Beleg:
 
@@ -1118,7 +1120,7 @@ Die ursprüngliche Lückenliste, als Beleg:
 **Diese Reihenfolge ist nicht beliebig.** Wer die Doku vor dem ersten Lauf
 schreibt, dokumentiert eine Absicht und muss sie danach zweimal korrigieren.
 
-**Stand 13.08. abends: 1 bis 3 sind erledigt, 4 ist offen.** Und die
+**Stand 13.08. abends: alle vier erledigt.** Und die
 Reihenfolge hat sich bezahlt gemacht — die Doku trägt jetzt die neun echten
 Stopabstände, die zwei auseinandergehenden Läufe und den Befund zur Faktorzahl.
 Vor dem Lauf hätte an all diesen Stellen eine Erwartung gestanden.
