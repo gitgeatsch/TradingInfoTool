@@ -8,11 +8,13 @@
 
 ---
 
-## Index nach Thema (211 Einträge)
+## Index nach Thema (212 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
-### Regelwerk / deterministische Gates (43)
+### Regelwerk / deterministische Gates (44)
+
+- **2026-08-13** — Beträge auf **Anteil vom Einsatz** umgestellt statt absolutem Risikobetrag; Spot je Strategie (Tranche 250 €, Einmalkauf 800 €), Hebel 1.000 € bei 3.000 € Topf und 15 % Verlustanteil. Prüfung der alten Kette: 195 von 253 Schlüsseln ungelesen, sechs Werte doppelt gepflegt, acht Schutzfunktionen fehlen
 
 - **2026-08-12** — Stop-Untergrenze RM-1b/1c in die neue Rollen-Kette portiert; erstmals auch eine OBERGRENZE (25 %)
 - **2026-08-12** — Berechnung der Entscheidung: jede Zahl mit Formel, Quelle und zwei Grenzen; Stop aus dem Widerlegungspreis des Modells
@@ -16353,3 +16355,49 @@ Basisrate `1/(1+CRV)` gegen Breakeven `(1+Kosten)/(1+CRV)`, derselbe Nenner.
 der Fund vom Vormittag: eine Absicht aus einem Plan abgelesen und für den
 Stand gehalten. Jetzt prüft `pruefe_pakete.py --paket Export`, dass jeder in
 D6 genannte Feldname wirklich in `signal_abbildung.SPALTEN_SIGNAL` steht.
+
+
+---
+
+## Nachtrag (2026-08-13, spät): Beträge, Töpfe und die Prüfung der alten Kette
+
+**Vollständig in `Umbauplan_Gesamtsystem_12_08.md` Kapitel 16.** Hier nur, was
+entschieden wurde und warum.
+
+### Entschieden
+
+| Größe | Wert | Begründung |
+|---|---|---|
+| Spot `akkumulation` | 250 € je Tranche | Nutzerangabe |
+| Spot `einstieg` | 800 € | ein Einmalkauf schiebt keine zweite Tranche nach |
+| Hebel Einsatz | 1.000 € | Nutzerangabe |
+| Hebel Topf | 3.000 € | drei Positionen gleichzeitig |
+| Hebel Verlustanteil | 15 % vom Einsatz | Nutzerangabe 15–20 %, unteres Ende |
+
+**Die Umparametrisierung ist der eigentliche Fortschritt:** statt `risiko_eur`
+(ein absoluter Betrag, den niemand herleiten konnte) jetzt ein **Anteil vom
+Einsatz**. Damit hängt der Hebel nicht mehr am Betrag — 500 oder 1.000 € ergeben
+denselben Hebel, nur doppeltes Volumen.
+
+**Kein Deckel je Asset, keine Kern/Satellit-Rolle.** Der Nutzer will das
+vorerst nicht; vorgemerkt ist seine Marktkapitalisierungs-Staffel, die ohne
+Pflegeaufwand auskommt.
+
+### Verworfen — und warum
+
+**„1.000 € Deckel je Asset" (mein erster Vorschlag).** Er erfand eine Ebene, die
+das System nicht hat, und hätte BTC mit über 2.500 € Bestand jeden weiteren Kauf
+verboten. Der Nutzereinwand hat ihn gekippt.
+
+**„Prozentsatz vom Portfolio" als Risikomaß.** Die neue Rechnung will absolute
+Euro, aus demselben Grund wie die Töpfe: ein Prozentsatz auf ein Depot mit
+60-Prozent-Verlusten schrumpft genau dann, wenn wieder gehandelt werden müsste.
+
+### Befunde der Prüfung
+
+- **195 von 253 Konfigurationsschlüsseln** liest die alte Kette und die neue nicht
+- **Sechs Werte werden an zwei Stellen gepflegt** und stimmen nur zufällig noch überein
+- **Acht Schutzfunktionen fehlen ganz**, angeführt vom **Cooldown** (8 Schlüssel)
+- **`UEBERGREIFEND = ("cash_reserve",)`** steht als die eine übergreifende Regel in `toepfe.py` — **dokumentiert und nirgends gebaut**
+- Über 118 + 5 Signale gab es **nur 5 Vetos**, alle von der gestrichenen Konfidenz-Schwelle oder dem CRV-Minimum
+- **Die Wirkung der Dämpfer wird nirgends aufgezeichnet** — hätten sie gegriffen, wäre es unsichtbar

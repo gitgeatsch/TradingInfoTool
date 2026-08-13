@@ -1203,3 +1203,207 @@ das Urteil zum Versandzeitpunkt vorlag). Der Weg steht fest:
   ausfällt, verschiebt sie den Anker für alle.
 - **Der Hebel-Weg ist nie live gelaufen.** Paket 13 ist geprüft und im
   Trockenlauf gefahren, aber nie mit echtem Modell.
+
+
+---
+
+# 16. Betraege, Toepfe und die Pruefung der alten Kette (13.08.2026, abends)
+
+**Nutzervorgabe, die das ausgeloest hat:** *„vergiss nicht ... ziehe jedenfalls
+alle Punkte inkl. der offenen in der Doku und Zentraldokumenten nach damit
+nichts verloren geht"* — nachdem beim Durchgehen auffiel, wie viel im System
+**dokumentiert und nicht gebaut** ist.
+
+## 16.1 Die Frage, die alles ausgelöst hat
+
+Vor dem Produktivgang stand ein Nebenbefund: `risiko_eur=75.0` und
+`betrag_wunsch_eur=500.0` sind in `rollen_lauf` fest verdrahtet. Die
+Rückfrage des Nutzers — *„was ist das Problem genau mit meinem Betrag"* — hat
+drei Ebenen freigelegt, die vorher niemand getrennt hatte.
+
+### Die drei Deckel, die es wirklich gibt
+
+| Deckel | begrenzt | Wert vorher | Ebene |
+|---|---|---|---|
+| `betrag_max_eur` | **eine einzelne Empfehlung** | 1.000 € | pro Trade |
+| `betrag_min_eur` | Mindestgröße | 100 € | pro Trade |
+| Topf **spot** | alle Spot-Positionen zusammen | **keiner** | pro Instrument |
+| Topf **hebel** | alle Hebel-Positionen zusammen | 500 € | pro Instrument |
+| — | **pro Asset** | **existiert nicht** | — |
+
+**Einen Deckel je Asset hat das System nie gehabt.** Mein erster Vorschlag
+(„1.000 € je Asset") hat eine Ebene erfunden — und hätte BTC mit über 2.500 €
+Bestand jeden weiteren Kauf verboten. Der Nutzereinwand war berechtigt.
+
+### Was der Nutzer wirklich meint, wenn er „2 bis 8 Prozent" sagt
+
+*„glaube aber Kursverlust und nicht Kapitalverlust und nicht als Teil des
+Gesamtportfolios"* — und damit ist die richtige Größe benannt:
+
+| gemeint | im System | Stand |
+|---|---|---|
+| 2–8 % **Kursverlust** | der **Stopabstand** | wird längst gerechnet: Median 5,3 %, Spanne 2,5–9,3 % |
+| 15–20 % **Verlust vom Einsatz** | der Kapitalverlust | stand als fixe 75 € da |
+
+Die gemessenen Stopabstände decken sich mit seiner Einschätzung — das ist eine
+unabhängige Bestätigung der Mechanik, kein Zufall.
+
+Und die 15 % waren bereits implizit da: `500 € · 3× Hebel · 5 % Kursverlust =
+75 € = 15 % vom Einsatz`.
+
+## 16.2 Die Umparametrisierung: Anteil statt Betrag
+
+```
+Risiko in Euro  =  Einsatz × Verlustanteil
+Hebel           =  Verlustanteil ÷ Kursverlust bis Stop
+```
+
+**Der Hebel hängt am ANTEIL, nicht am Einsatz.** Von 500 auf 1.000 € zu gehen
+ändert ihn nicht (bei 5 % Stop bleibt es 3,0×) — es verdoppelt nur den
+Euro-Verlust von 75 auf 150 €. Diese Entkopplung ist der eigentliche Gewinn:
+Einsatz und Hebel sind getrennt einstellbar.
+
+**Kein Depotwert, keine Prozente vom Gesamtportfolio** — dieselbe Linie wie bei
+den Töpfen, und aus demselben Grund: bei Positionen, die 60 % im Minus stehen,
+schrumpft ein Prozentsatz genau dann, wenn wieder gehandelt werden müsste.
+
+## 16.3 Entschieden am 13.08.
+
+| | Größe | Wert |
+|---|---|---|
+| Spot `akkumulation` | Tranche je Signal | **250 €** |
+| Spot `einstieg` | Einmalkauf | **800 €** |
+| Spot | Topf-Deckel | **keiner** (unverändert) |
+| Hebel | Einsatz je Signal | **1.000 €** |
+| Hebel | Topf gesamt | **3.000 €** (drei Positionen) |
+| Hebel | Verlustanteil vom Einsatz | **15 %** |
+| beide | **Cooldown** | aus der Konfiguration |
+
+**Der Betrag hängt an der STRATEGIE, nicht am Instrument.** Die Kette
+unterscheidet `einstieg` · `swing` · `akkumulation` seit Paket 2 — ein
+Einmalkauf schiebt keine zweite Tranche nach und darf deshalb größer sein.
+
+**Bewusst NICHT eingeführt:** ein Deckel je Asset und die Kern/Satellit-Rolle.
+Der Nutzer will das vorerst nicht. Vorgemerkt für später ist **seine** Variante,
+und sie ist besser als die von mir vorgeschlagene:
+
+| Stufe | Deckel je Asset |
+|---|---|
+| BTC, ETH | keiner |
+| Highcap | 2.500 € |
+| Midcap | 1.500 € |
+| Lowcap | 800 € |
+| Smallcap | 500 € |
+
+**Warum seine besser ist:** Kern/Satellit hätte eine Entscheidung je Asset
+verlangt, 57-mal von Hand und bei jedem neuen wieder. Die
+Marktkapitalisierungs-Staffel leitet sich aus einer Zahl ab, die schon da ist
+(`price_cache.market_cap_usd`, 1.279 Zeilen, BTC 1.298 Mrd bis SUPRA 7 Mio).
+**Null Pflege.**
+
+## 16.4 Die Prüfung der alten Kette — was ihr fehlt und was doppelt ist
+
+Auf Nutzerwunsch vollständig durchgegangen: **253 Konfigurationsschlüssel, 195
+liest die alte Kette und die neue nicht.** Der Großteil sind eigene Teilsysteme
+(Marktscan, Budget-Allocator, Screening). Was bleibt:
+
+### A — sechs Werte werden an ZWEI Stellen gepflegt
+
+| Konfiguration | Kopie in der neuen Kette | Wert |
+|---|---|---|
+| `sl_abstand_min_atr_faktor` | `GRENZEN["stop_min_atr"]` | 0,75 |
+| `sl_abstand_eng_schwelle_relativ` | `GRENZEN["stop_min_relativ"]` | 0,025 |
+| `hebel.max_hebel` | `GRENZEN["hebel_max"]` | 10 |
+| `hebel.liquidations_sicherheitsmarge_relativ` | `GRENZEN["liquidations_marge"]` | 0,09 |
+| `hebel.eigenkapital_richtwert_eur` | `toepfe.VORGABE_DECKEL_EUR` | 500 |
+| `ausstieg_trailing_ausloese_r` | `ausstiegsregel.AUSLOESE_R` | 1,0 |
+
+Alle sechs stimmen **heute** überein. Ändert jemand die Konfiguration, folgt die
+neue Kette nicht — dieselbe Fehlerart wie die Kostensätze (12.08.), `gemini-3.5`
+(12.08.) und `rolle_begruendung` (13.08.).
+
+### B — acht Schutzfunktionen fehlen ganz
+
+| | fehlt | Einstellungen |
+|---|---|---|
+| 1 | **Cooldown** | 8 Schlüssel: Hebel 3,5 h · Spot 15 h · Kern 8 h · ausgemustert 120 h · Re-Evaluierung 1 h · Position 3 h · Multi-Asset 8/72 h |
+| 2 | **Cash-Reserve (RM-4)** | `cash_reserve_min_prozent: 10`, `cash_reserve_min_fixed_eur: 2000` |
+| 3 | **Allokation je Asset (RM-2)** | 25 % · Kern 35 % · Small Cap 12 % |
+| 4 | **Drawdown-Notbremse (Z-3)** | `ziele.max_drawdown_prozent: 15` |
+| 5 | **Positionsgrößen-Dämpfer** | Gegenszenario → 50 % · technischer Konflikt → 60 % · CRV knapp → 60 % |
+| 6 | **Hebel-Dämpfer** | Regime-Konflikt → 3× · Retail-Konsens → 3× · kontra-konservativ 0,6 · Funding-Rate |
+| 7 | **Gleichzeitige Positionen** | `ziel_gleichzeitige_positionen: 5` |
+| 8 | **Signal-Stabilität** | 4 Schlüssel |
+
+**Punkt 3 ist die Asset-Deckel-Frage in anderer Gestalt:** die alte Kette HAT
+einen Deckel je Asset, als Prozentsatz vom Portfolio. Die vom Nutzer
+vorgemerkte Marktkapitalisierungs-Staffel ist derselbe Gedanke in absoluten
+Euro — und passt damit besser zur Linie der neuen Kette.
+
+### Die Klammer um 2, 3, 4 und 7
+
+**Alle vier brauchen den Portfoliowert — und den kennt die neue Kette
+absichtlich nicht.** `toepfe.py` sagt es selbst: *„Keine Funktion kennt den
+Portfoliowert, also kann eine fehlende Bewertung nichts sperren."*
+
+Dieselbe Datei führt `UEBERGREIFEND = ("cash_reserve",)` als **die eine** Regel,
+die über Töpfe hinweg wirken soll. **Sie ist dokumentiert und nirgends gebaut.**
+Genau das ist die Sorte Lücke, die der Nutzer meint.
+
+**Der Ausweg ist der, den die Töpfe schon gehen:** dieselben Regeln in absoluten
+Euro. „Mindestens 2.000 € Cash" statt „10 % des Portfolios" — die Kette bleibt
+portfolioblind, der Schutz wirkt trotzdem.
+
+## 16.5 Die Dämpfer — gemessen, nicht vermutet
+
+Nutzerfrage: *„ich würde u.U. sogar andenken die vorhandenen Dämpfer vorerst
+sauber stillzulegen"*.
+
+**Was die Daten sagen**, über 118 Spot- und 5 Hebel-Signale:
+
+```
+signals       118 Zeilen,  4 mit risk_veto_reason -> 4x Konfidenz-Schwelle (R-5.10)
+hebel_signals   5 Zeilen,  1 mit risk_veto_reason -> 1x CRV unter Minimum
+```
+
+**Alle vier Vetos stammen von der Regel, die längst gestrichen ist** (E3,
+Konfidenz). Von den Dämpfern taucht keiner auf — **aber das beweist nichts**:
+Dämpfer *verwerfen* nicht, sie *verkleinern*. Und:
+
+> **Ihre Wirkung wird nirgends aufgezeichnet.** Es gibt keine Spalte, die
+> festhält, dass eine Position halbiert wurde. Hätten sie gegriffen, könnten
+> wir es nicht sehen.
+
+Das ist derselbe Einwand, den dieses Projekt gegen jeden unsichtbaren Filter
+erhebt — nur diesmal gegen die eigene alte Kette.
+
+**Empfehlung: nicht blind stilllegen, sondern stilllegen MIT ZÄHLER.** Die
+Dämpfungsfaktoren auf 1,0 setzen (keine Wirkung), aber mitzählen, wann sie
+gegriffen HÄTTEN — das Muster des Veto-Schatten-Trackings, das es hier bereits
+gibt. Nach ein paar Wochen ist entschieden, ob sie etwas taugen; heute wäre es
+eine Behauptung in die eine oder andere Richtung.
+
+**Wichtig dabei:** die alte Kette bedient weiterhin **Aktien, Rohstoffe,
+Themen-ETF und Hedge**. Ein Abschalten ist dort eine echte Verhaltensänderung
+an einem laufenden System, nicht eine Aufräumarbeit.
+
+## 16.6 Was offen bleibt — das Register
+
+Damit nichts verlorengeht, ausdrücklich auf Nutzerwunsch:
+
+| | offener Punkt | woher |
+|---|---|---|
+| O-1 | **Cash-Reserve absolut** bauen (RM-4) | 16.4 B-2, entschieden als eigener Schritt |
+| O-2 | **Dämpfer stilllegen mit Zähler** | 16.5, Empfehlung liegt vor |
+| O-3 | **Marktkapitalisierungs-Staffel** je Asset | 16.3, vom Nutzer vorgemerkt |
+| O-4 | **Portfoliowert: ja oder nein?** — davon hängen RM-2, Z-3 und `ziel_gleichzeitige_positionen` ab | 16.4, Klammer |
+| O-5 | **Spot-Mail nennt einen „Stop", den es nicht gibt** — bei Spot ohne Stop-Order ist der Widerlegungspreis eine Beobachtungsmarke | 16.1 |
+| O-6 | **`belegt_eur=0.0`** fest verdrahtet — der Topf meldet sich immer als leer | 16.1 |
+| O-7 | **Faktorzahl-Frage anders stellen** („welcher Beleg würde allein genügen") | Kap. 15.1 |
+| O-8 | **Konsistenzprüfung von Z.ai auf Rauschen messen** — nur die Richtung ist gemessen (30 %) | Kap. 15 |
+| O-9 | **Signal-Stabilität** (4 Konfigurationsschlüssel) — nach dem 30-%-Rauschbefund interessant | 16.4 B-8 |
+| O-10 | **Paket 14 Hedge, 15 Rollout, 16 Kategorie-Synthese** | Paketliste |
+
+**O-4 ist die Weiche.** Solange sie offen ist, bleiben vier Schutzregeln
+unbaubar — und zwar nicht aus Nachlässigkeit, sondern weil die Entscheidung
+noch aussteht.
