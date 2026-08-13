@@ -1839,10 +1839,117 @@ def paket_14() -> None:
            "daneben stand '50,901.00 EUR' unuebersetzt")
 
 
+
+def paket_12c() -> None:
+    """Das Gate: Konfidenz raus, Durchlaessigkeit zaehlen, Faktorzahl nur mitschreiben."""
+    P = "12c"
+    import sqlite3
+    from agent import rollen_gate as RG
+
+    # DIE KONFIDENZ-SCHWELLE KOMMT IN DER NEUEN KETTE NICHT VOR. Sie fiel
+    # nicht durch Wahl, sondern als Folge: r = +0,073 (n = 92) gegen das
+    # realisierte CRV, und das Regime stand ueber 1.022 Faelle konstant auf
+    # "baer" - die Schwelle also faktisch immer bei 75.
+    for datei in ("agent/rollen_gate.py", "agent/trefferbilanz.py",
+                  "agent/entscheidungsrechnung.py", "agent/rolle_trader.py"):
+        quelle = _quelltext(datei)
+        import re as _re
+        # NICHT DAS WORT SUCHEN, SONDERN DEN VERGLEICH. Die erste Fassung fand
+        # "confidence_pct" im Docstring, der erklaert, warum es die Groesse
+        # nicht mehr gibt - derselbe Fehler wie bei der " R"-Suche: ein
+        # Textfund ist noch keine Aussage.
+        _vergleich = _re.search(
+            r"(confidence_pct|min_konfidenz\w*)\s*(<|>|<=|>=|==)", quelle)
+        pruefe(P, f"{datei.split('/')[-1]} VERGLEICHT keine Konfidenz",
+               _vergleich is None,
+               "eine konstante Schwelle auf einer nutzlosen Groesse "
+               "(r = +0,073 gegen das realisierte CRV)")
+    pruefe(P, "keine der Stufen heisst 'konfidenz'",
+           not any("konfidenz" in s for s in RG.STUFEN_NAMEN))
+
+    # DAS ZAEHLWERK GREIFT NICHT EIN. Ein Zaehler, der selbst verwirft,
+    # faelscht seine eigene Messung.
+    d = RG.Durchlauf("test")
+    for i in range(10):
+        sym = f"S{i}"
+        d.beginne(sym)
+        d.bestanden(sym, "auftrag")
+        if i < 3:
+            d.verloren(sym, "fakten", "keine Historie")
+            continue
+        for stufe in ("fakten", "lagebild", "urteil", "aktion", "geometrie",
+                      "risikoschicht"):
+            d.bestanden(sym, stufe)
+        d.verloren(sym, "entscheider", "traegt sich nicht")
+    pruefe(P, "der Entscheider zaehlt, aber nimmt nichts heraus",
+           d.verloren_je_stufe["entscheider"] == 7 and d.heraus == 7,
+           "'Was diese Datei nicht tut: sie verwirft nichts' - ein Waechter, "
+           "der selbst verwirft, macht seine eigene Wirkung unsichtbar")
+    pruefe(P, "eine echte Stufe nimmt sehr wohl heraus",
+           d.verloren_je_stufe["fakten"] == 3 and d.hinein == 10)
+
+    # WER RAUS IST, WIRD IN SPAETEREN STUFEN NICHT MEHR GEZAEHLT.
+    d2 = RG.Durchlauf()
+    d2.beginne("X"); d2.verloren("X", "fakten", "weg")
+    d2.bestanden("X", "urteil")
+    pruefe(P, "ein ausgeschiedenes Asset zaehlt spaeter nicht mit",
+           d2.bestanden_je_stufe["urteil"] == 0,
+           "sonst stuende ein Asset in einer Stufe, die es nie erreicht hat")
+
+    # DIE FAKTORZAHL WIRD MITGESCHRIEBEN, NICHT GEFILTERT.
+    d3 = RG.Durchlauf()
+    for n in (1, 2, 5):
+        d3.beginne(f"F{n}")
+        d3.faktorzahl(n)
+        for stufe in RG.STUFEN_NAMEN:
+            d3.bestanden(f"F{n}", stufe)
+    pruefe(P, "die Faktorzahl wird gezaehlt",
+           d3.faktorzahlen == [1, 2, 5])
+    pruefe(P, "und filtert NICHTS - auch ein einzelner Faktor kommt durch",
+           d3.heraus == 3,
+           "die Faktorzahl zeigte in der Messung KEINEN Effekt (7.26); ein "
+           "unbelegter Filter ist schlechter als keiner")
+    pruefe(P, "der Bericht sagt selbst, dass sie nicht filtert",
+           any("kein Filter" in z for z in d3.bericht()))
+
+    # DER BERICHT ZEIGT, WO DIE KETTE VERLIERT - der eigentliche Zweck.
+    bericht = " ".join(d.bericht())
+    pruefe(P, "der Bericht markiert die groesste Verlustquelle",
+           "<- hier" in bericht,
+           "ein Lauf mit 40 hinein und 0 heraus sieht identisch aus, egal ob "
+           "das Gate abwies, das Modell NICHTS_TUN sagte oder die Geometrie "
+           "nicht rechenbar war")
+    pruefe(P, "und nennt die Gruende je Stufe",
+           "keine Historie" in bericht)
+
+    # EINE UNBEKANNTE STUFE IST EIN FEHLER, KEIN STILLES NICHTS.
+    try:
+        RG.Durchlauf().bestanden("X", "gibt_es_nicht")
+        ok = False
+    except ValueError:
+        ok = True
+    pruefe(P, "eine unbekannte Stufe fliegt auf", ok,
+           "ein Tippfehler im Stufennamen wuerde sonst still nichts zaehlen "
+           "- und die Tabelle saehe aus wie ein Befund")
+
+    # PERSISTENZ: additiv und idempotent.
+    _q = sqlite3.connect("data/tradinginfotool.db")
+    _c = sqlite3.connect(":memory:"); _q.backup(_c); _q.close()
+    erst = RG.migriere(_c)
+    zweit = RG.migriere(_c)
+    pruefe(P, "die Migration legt die Tabelle an und ist idempotent",
+           erst and not zweit, f"{erst} / {zweit}")
+    kennung = RG.schreibe(_c, d, "2026-08-13T07:00:00+00:00")
+    zeile = _c.execute(f"SELECT hinein, heraus FROM {RG.TABELLE} WHERE id=?",
+                       (kennung,)).fetchone()
+    pruefe(P, "und der Lauf laesst sich nachlesen", zeile == (10, 7), str(zeile))
+    _c.close()
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14}
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c}
 
 
 def main() -> int:
