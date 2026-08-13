@@ -2702,13 +2702,13 @@ def paket_export() -> None:
     offen = drift["spalten"].get("signals", {}).get("nicht_exportiert") or []
     pruefe(P, "keine signals-Spalte ist mehr unexportiert", offen == [],
            f"offen: {offen}")
-    pruefe(P, "die zwoelf Spalten der Rollen-Kette sind namentlich drin",
+    pruefe(P, "die vierzehn Spalten der Rollen-Kette sind namentlich drin",
            all(sp in EX._SPOT_SIGNAL_SPALTEN for sp in
                ("quelle_kette", "lagebild_id", "prompt_stand", "fx_eur_je_usd",
                 "unabhaengige_faktoren", "umgeworfen_durch",
                 "umgeworfen_preis_eur", "umgeworfen_bis",
                 "schwankung_perzentil", "momentum_perzentil",
-                "volumen_perzentil", "zai_stimmen")),
+                "volumen_perzentil", "zai_stimmen", "richtung", "hebel")),
            "ohne sie ist der gesamte Umbau von aussen unsichtbar")
 
     # DIE STUFEN WERDEN AUSGEPACKT, nicht als JSON-Klumpen abgelegt.
@@ -3329,6 +3329,35 @@ def paket_15() -> None:
                      (sid,)).fetchone()[0] == 2,
            "jede spaetere Auswertung muss nach der Einigkeit filtern koennen, "
            "ohne einen Freitext zu zerlegen")
+
+    # ------------------------------------------------------------------
+    # J. RICHTUNG UND HEBELFAKTOR UEBERLEBEN DAS SCHREIBEN (15.5c).
+    #
+    # Gefunden im ERSTEN Live-Lauf des Hebel-Wegs am 13.08. - und nur dort zu
+    # finden: vier echte Hebel-Signale landeten RICHTUNGSLOS in der Datenbank,
+    # weil `signals` keine solche Spalte kannte (nur `hebel_signals`, die
+    # Tabelle der alten Kette). Ein SHORT sah aus wie ein LONG.
+    _mit = SA.felder_aus_entscheidung(
+        {"aktion": "ERÖFFNEN", "richtung": "SHORT", "begruendung": "x"},
+        fakten={}, rechnung={"hebel": 4.5})
+    pruefe(P, "die Richtung des Modells landet in den Feldern",
+           _mit.get("richtung") == "SHORT",
+           "sie ist bei EROEFFNEN und NACHKAUFEN Pflicht und dreht Stop, Ziel "
+           "und Liquidation - ohne sie ist ein Hebel-Signal nicht lesbar")
+    pruefe(P, "der Hebelfaktor kommt aus der RECHNUNG",
+           _mit.get("hebel") == 4.5,
+           "das Modell nennt die Richtung, das System rechnet den Faktor "
+           "(Paket 13) - er darf nur von dort kommen")
+    _ohne = SA.felder_aus_entscheidung({"aktion": "KAUFEN"}, fakten={})
+    pruefe(P, "bei Spot steht keine Richtung da",
+           "richtung" not in _ohne and "hebel" not in _ohne,
+           "ein eingetragenes LONG waere eine Behauptung, die niemand "
+           "aufgestellt hat")
+    _sid3 = SA.schreibe_signal(c, _mit, symbol="TESTH")
+    _z = c.execute("SELECT richtung, hebel FROM signals WHERE id = ?",
+                   (_sid3,)).fetchone()
+    pruefe(P, "und beide stehen danach wirklich in der Zeile",
+           tuple(_z) == ("SHORT", 4.5), str(tuple(_z)))
     c.close()
 
 

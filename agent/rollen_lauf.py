@@ -70,6 +70,56 @@ def _jetzt() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+# Wie viele Symbole am Ankertag eine Kerze haben muessen. 0,6 ist bewusst
+# grosszuegig: die Schranke soll den TOTALAUSFALL abfangen, nicht bei jedem
+# fehlenden Kleinwert anhalten.
+MINDEST_DECKUNG = 0.6
+
+
+def _ankertag(reihen: dict, mindest_deckung: float = MINDEST_DECKUNG,
+              blick_tage: int = 10) -> tuple:
+    """Der Tag, auf dem der Lauf ankert - und wie gut er gedeckt ist.
+
+    DER FEHLER, DEN DAS BEHEBT (15.5b). Vorher stand hier schlicht das MAXIMUM
+    ueber alle Symbole. Damit setzt EIN einziges Symbol den Anker fuer alle -
+    aktualisiert eine Quelle und 44 nicht, faellt der ganze Rest an der
+    Faktenstufe heraus, und der Lauf sieht aus wie ein ruhiger Tag statt wie
+    ein Datenausfall.
+
+    GEMESSEN AM 13.08. am echten Bestand:
+
+        2026-07-19   20 von 45  (44 %)   <- das Maximum, und der alte Anker
+        2026-07-17   29 von 45  (64 %)
+        2026-07-13   44 von 45  (98 %)
+
+    IM GESUNDEN BETRIEB AENDERT SICH NICHTS. Sind alle Reihen aktuell, ist der
+    juengste Tag zu 100 % gedeckt und wird gewaehlt - genau wie vorher. Die
+    Regel greift nur, wenn sie gebraucht wird.
+
+    LIEBER EINEN TAG AELTER ALS EINE HANDVOLL SYMBOLE. Ein Lauf ueber 44 Assets
+    auf vorgestrigen Kursen sagt mehr als einer ueber 20 auf gestrigen - und
+    vor allem sagt er nicht faelschlich, es sei nichts los gewesen.
+
+    Gibt `(tag, gedeckt, gesamt)` zurueck; `tag` ist None, wenn kein Tag im
+    Blickfenster die Schranke erreicht - dann bricht der Aufrufer ab."""
+    if not reihen:
+        return None, 0, 0
+    gesamt = len(reihen)
+    kandidaten = sorted({k.date for r in reihen.values()
+                         for k in r[-blick_tage:]}, reverse=True)
+    bester = (None, 0)
+    for tag in kandidaten:
+        gedeckt = sum(1 for r in reihen.values()
+                      if any(k.date == tag for k in r[-blick_tage:]))
+        if gedeckt > bester[1]:
+            bester = (tag, gedeckt)
+        if gedeckt >= mindest_deckung * gesamt:
+            return tag, gedeckt, gesamt
+    # NICHTS ERREICHT DIE SCHRANKE - der beste Tag wird trotzdem GENANNT, damit
+    # die Fehlermeldung eine Zahl hat statt nur ein "zu wenig".
+    return None, bester[1], gesamt
+
+
 def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                 betriebsart: str = TROCKEN,
                 instrument: str = "spot",
@@ -144,12 +194,22 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
     # Lagebild-Eingabe VOR der Pruefung auf die Aufzeichnung - bei leeren
     # Kursreihen stuerzte sie dort ab, statt mit einer Begruendung
     # abzubrechen. Ein Absturz sagt nicht, was fehlt.
-    tag = datum or max((k.date for r in reihen.values() for k in r[-1:]),
-                       default=None)
-    if not reihen or tag is None:
+    if datum:
+        tag, gedeckt, gesamt = datum, len(reihen), len(reihen)
+    else:
+        tag, gedeckt, gesamt = _ankertag(reihen)
+    ergebnis["ankertag"] = {"tag": tag, "gedeckt": gedeckt, "gesamt": gesamt}
+    if not reihen:
         raise LaufAbgebrochen(
             "keine Kursreihen - ohne sie gibt es weder ein Lagebild noch "
             "einen Ankertag, und ein Lauf ohne Anker vergleicht nichts.")
+    if tag is None:
+        raise LaufAbgebrochen(
+            f"kein Ankertag mit ausreichender Deckung - bestenfalls {gedeckt} "
+            f"von {gesamt} Symbolen ({100 * gedeckt / gesamt:.0f} %, noetig "
+            f"{100 * MINDEST_DECKUNG:.0f} %). Das ist ein Datenausfall, kein "
+            f"ruhiger Tag - ein Lauf darauf saehe aus wie das eine und waere "
+            f"das andere.")
     if betriebsart == TROCKEN and aufgezeichnet.get("lagebild") is None:
         raise LaufAbgebrochen(
             "Trockenlauf ohne aufgezeichnetes Lagebild - es gibt nichts zu "
@@ -372,6 +432,9 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         befund, fakten=bc_ein, lagebild_id=lagebild_id,
         prompt_stand=getattr(RT, "PROMPT_STAND", "?"),
         eur_je_usd=RE.fx_eur_je_usd(symbol, reihe, idx, db),
+        # DIE RECHNUNG MIT - sie traegt den Hebelfaktor, den das Modell nicht
+        # nennt und nicht nennen soll.
+        rechnung=rechnung,
         # DIE DREI GEMESSENEN FAMILIEN - dieselben Werte, die oben schon in den
         # Faktenblock der Mail gingen. Sie sind das einzige Material fuer den
         # Konstellationsschluessel, das NICHT die Entscheidung wiederholt.

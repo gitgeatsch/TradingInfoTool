@@ -135,6 +135,22 @@ SPALTEN_SIGNAL = {
     # geholt; diese Spalte haelt fest, wie viele davon das Urteil trugen.
     # Ohne sie sieht ein Muenzwurf spaeter aus wie ein Befund.
     "zai_stimmen": "INTEGER",
+    # RICHTUNG UND HEBELFAKTOR (15.5c, 13.08.) - gefunden im ERSTEN Live-Lauf
+    # des Hebel-Wegs, und nur dort zu finden.
+    #
+    # Paket 13 hat dem Hebel die Richtung gegeben: das Modell nennt sie, sie
+    # ist bei EROEFFNEN und NACHKAUFEN Pflicht und wird nie geraten, und sie
+    # dreht Stop, Ziel und Liquidation. Beim Schreiben fiel sie trotzdem
+    # heraus - `signals` kannte keine solche Spalte (nur `hebel_signals`, die
+    # Tabelle der ALTEN Kette). Vier echte Hebel-Signale landeten damit
+    # richtungslos in der Datenbank; ein SHORT sah aus wie ein LONG.
+    #
+    # Der Hebelfaktor genauso: er wird aus Risikobudget und
+    # Liquidationsabstand gerechnet und war danach weg. Aus den Zonen laesst
+    # sich die Richtung notfalls zurueckrechnen (`_richtung_aus_zonen`), der
+    # Faktor nicht - und ohne ihn ist ein Ausgang nicht bewertbar.
+    "richtung": "TEXT",
+    "hebel": "REAL",
 }
 
 _LAGEBILDER = """
@@ -199,7 +215,8 @@ def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
                             lagebild_id: int | None = None,
                             prompt_stand: str | None = None,
                             eur_je_usd: float | None = None,
-                            familien: dict | None = None) -> dict:
+                            familien: dict | None = None,
+                            rechnung: dict | None = None) -> dict:
     """Die Spaltenwerte fuer EIN Signal aus der Antwort der Rollen-Kette.
 
     SCHREIBT NICHT - der Aufrufer entscheidet, ob und wann. Diese Trennung ist
@@ -234,7 +251,16 @@ def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
         # im Nachhinein nicht mehr pruefbar.
         "facts_json": json.dumps(fakten or {}, ensure_ascii=False),
         "position_size_eur": antwort.get("tranche_eur"),
+        # NUR WENN DAS MODELL SIE GENANNT HAT. Bei Spot gibt es keine
+        # Richtung - dort waere ein eingetragenes "LONG" eine Behauptung, die
+        # niemand aufgestellt hat.
+        "richtung": antwort.get("richtung"),
     }
+    # DER HEBELFAKTOR KOMMT AUS DER RECHNUNG, nicht aus der Antwort. Das Modell
+    # nennt die Richtung, das System rechnet den Faktor (Paket 13) - er darf
+    # deshalb auch nur von dort kommen.
+    if rechnung and rechnung.get("hebel"):
+        aus["hebel"] = float(rechnung["hebel"])
     # Die Zonen nur, wenn es sie gibt - bei NICHTS_TUN und bei Akkumulation
     # entfallen sie, und ein Nullwert waere dort eine Aussage, die niemand
     # getroffen hat.

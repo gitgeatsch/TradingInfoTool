@@ -112,16 +112,33 @@ def pruefe_zahlendeckung(ausgabe: dict, eingabe) -> dict:
     vorhanden = _zahlen(quelle)
     text = " ".join([str(ausgabe.get("lage") or "")]
                     + [str(b) for b in (ausgabe.get("belege") or [])])
-    ungedeckt = []
+    ungedeckt, geprueft = [], 0
     for z in _zahlen(text):
         if abs(z) in _HARMLOS or abs(z) != abs(z):      # NaN-sicher
             continue
+        geprueft += 1
         if not any(abs(z - v) <= TOLERANZ for v in vorhanden):
             ungedeckt.append(z)
-    return {"regel": "Z-1", "ungedeckt": ungedeckt,
+    # WIE VIELE ZAHLEN ES UEBERHAUPT ZU PRUEFEN GAB (15.5a, 13.08.).
+    #
+    # Ohne diese Angabe ist "kein Verstoss" zweideutig: es kann heissen "alle
+    # Zahlen gedeckt" ODER "es stand gar keine Zahl da". Gezaehlt an neun
+    # echten Antworten enthielten SECHS keine einzige Zahl im tragenden Satz -
+    # die Werte stehen in den Belegen darunter. Diese Regel lief dort also
+    # LEER, und die Null-Verstoss-Bilanz der Kette ist entsprechend schwaecher
+    # belegt, als sie aussieht.
+    #
+    # Daraus folgt AUSDRUECKLICH NICHT, dass Begruendungen Zahlen enthalten
+    # muessten. Ein Modell zu Zahlen im Fliesstext zu draengen erzeugt genau
+    # die vorgetaeuschte Genauigkeit, die dieses Projekt an anderer Stelle
+    # gerade entfernt hat. Es folgt nur: die Bilanz muss sagen, worauf sie
+    # beruht.
+    return {"regel": "Z-1", "ungedeckt": ungedeckt, "geprueft": geprueft,
             "verstoss": bool(ungedeckt),
             "grund": (f"{len(ungedeckt)} Zahl(en) stehen nicht in der Eingabe: "
-                      f"{ungedeckt}") if ungedeckt else "alle Zahlen gedeckt"}
+                      f"{ungedeckt}") if ungedeckt else
+                     (f"{geprueft} Zahl(en) gedeckt" if geprueft else
+                      "keine Zahl im Text - nichts zu pruefen")}
 
 
 def pruefe_richtungstreue(ausgabe: dict, gleichlauf_wert: str | None) -> dict:
@@ -228,6 +245,14 @@ def pruefe_und_zaehle(ausgabe: dict, eingabe, *, symbol: str,
     GIBT DAS ERGEBNIS ZURUECK, VERWIRFT NICHTS. Der Aufrufer sieht `verstoss`
     und entscheidet; hier wird nur festgehalten."""
     ergebnis = pruefe(ausgabe, eingabe, gleichlauf_wert)
+    if durchlauf is not None and hasattr(durchlauf, "z1_zahlen"):
+        # Auch wenn NICHTS zu pruefen war - gerade dann.
+        # DIE STRUKTUR VON `pruefe()` NACHGESEHEN, NICHT GERATEN: sie gibt
+        # `{"verstoss", "verletzt", "einzeln"}` - die Regeln stehen unter
+        # `einzeln`, nicht unter ihrem Namen auf oberster Ebene.
+        _z1 = next((e for e in (ergebnis.get("einzeln") or [])
+                    if isinstance(e, dict) and e.get("regel") == "Z-1"), {})
+        durchlauf.z1_zahlen(_z1.get("geprueft", 0))
     if durchlauf is not None:
         if ergebnis["verstoss"]:
             # BESTANDEN UND VERMERKT. `verloren()` waere falsch: die Stufe ist

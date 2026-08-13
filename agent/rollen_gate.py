@@ -86,6 +86,11 @@ class Durchlauf:
         # Sie nehmen NICHTS aus dem Lauf - ein Treuebruch ist ein Befund
         # an der Ausgabe, kein Ausscheiden.
         self.z1_verstoesse: dict[str, list] = {}
+        # WORAUF DIE Z1-BILANZ BERUHT (15.5a). "Null Verstoesse" heisst wenig,
+        # wenn die Regel nichts zu pruefen hatte: sechs von neun echten
+        # Begruendungen enthielten keine einzige Zahl.
+        self.z1_zahlen_geprueft = 0
+        self.z1_ausgaben_ohne_zahl = 0
         self._offen: set = set()
 
     def beginne(self, symbol: str) -> None:
@@ -116,6 +121,12 @@ class Durchlauf:
         Effekt - sie zu filtern waere ein unbelegter Filter."""
         if isinstance(anzahl, int) and anzahl >= 0:
             self.faktorzahlen.append(anzahl)
+
+    def z1_zahlen(self, geprueft: int) -> None:
+        """Wie viele Zahlen Z-1 an dieser Ausgabe pruefen KONNTE."""
+        self.z1_zahlen_geprueft += int(geprueft or 0)
+        if not geprueft:
+            self.z1_ausgaben_ohne_zahl += 1
 
     def z1_verstoss(self, symbol: str, regeln: list) -> None:
         """Nur vermerken. Siehe gegenpruefer_rollen.pruefe_und_zaehle()."""
@@ -173,7 +184,9 @@ class Durchlauf:
                            "verloren": self.verloren_je_stufe,
                            "gruende": self.gruende,
                            "faktorzahlen": self.faktorzahlen,
-                           "z1_verstoesse": self.z1_verstoesse},
+                           "z1_verstoesse": self.z1_verstoesse,
+                           "z1_zahlen_geprueft": self.z1_zahlen_geprueft,
+                           "z1_ausgaben_ohne_zahl": self.z1_ausgaben_ohne_zahl},
                           ensure_ascii=False)
 
 
