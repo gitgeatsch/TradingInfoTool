@@ -396,7 +396,7 @@ python pruefe_pakete.py            # alle Pakete
 python pruefe_pakete.py --paket 1  # nur eines
 ```
 
-Stand: **197 Prüfungen** über Paket 0–12, alle bestanden.
+Stand: **358 Prüfungen** über Paket 0–14, 12b/12c/12d und die Gesamtprüfung, alle bestanden.
 
 **Nummern-Korrektur 12.08. abends:** die Diskussion hat die Reihenfolge verschoben. Die Prüfpakete 10–12 tragen jetzt den Inhalt, der wirklich gebaut wurde; „Gate" und „Z1 + Z.ai" stehen als **12c/12d** weiter offen und sind **übersprungen, nicht erledigt**. Kein LLM-Aufruf, kein
 Netzwerk, keine Schreibzugriffe — sie darf jederzeit laufen.
@@ -444,10 +444,10 @@ Take-Profit -> Backward-Tracking misst -> Trefferbilanz -> die Zahl in der Mail
 | **10** | **Berechnung der Entscheidung** | **ERLEDIGT 12.08.** — `entscheidungsrechnung.py`: Zone, Stop, Ziel, Haltedauer, Betrag, Hebel; jede Zahl mit Formel, Quelle und ZWEI Grenzen. Stop aus `umgeworfen_preis_eur` des Modells, geklemmt durch RM-1b/1c und die neue Obergrenze |
 | **11** | **Take-Profit + Mail** | **ERLEDIGT 12.08.** — Ziel am nächsten Widerstand statt mechanisch 2 R, zu kleine CRV wird ausgewiesen; `signal_mail.py` mit vier Abschnitten |
 | **12** | **Faktenblock + Chart** | **ERLEDIGT 12.08.** — `faktenblock.py` (drei gemessene Familien + Zusatzinfo je Bereich), an echte Kursreihen angeschlossen; `ui/signal_chart.py` ersetzt beide alten Charts |
-| **12b** | **GUI** | **OFFEN** — der zweite Teil des ursprünglichen Pakets 12: Hebel-Tab, **Regime-Tab auf den Score + Override** (E4). Von der Mail nicht berührt |
-| **12c** | **Gate** | **OFFEN, ÜBERSPRUNGEN** — Konfidenz-Schwelle entfällt (E3); Durchlässigkeit je Stufe zählen; Faktorzahl im Veto-Schatten |
-| **12d** | **Z1 + Z.ai** | **OFFEN, ÜBERSPRUNGEN** — Z1 verdrahten; Z.ai auf die neuen Fakten und die 5 Aktionen |
-| **13** | **Hebel** (E2) | Richtung, Hebelfaktor, 7 Aktionen, Finanzierung, Liquidationsabstand |
+| **12b** | **GUI** | **ERLEDIGT 13.08.** — Regime-Tab zeigt den Score samt Stützstellen, der Override setzt ihn. *Die E4-Zeile „Score als Fakt an Rolle 1" ist begründet abgelehnt: der Score besteht aus 0,5 × EMA50-Abstand + 0,5 × Fear & Greed und liegt damit vollständig in der Momentum-Familie (Kap. 12.8)* |
+| **12c** | **Gate** | **ERLEDIGT 13.08.** — `rollen_gate.py`: Konfidenz-Schwelle entfällt, Durchlässigkeit je Stufe (acht Stufen, die letzte zählt nur), Faktorzahl nur mitgeschrieben |
+| **12d** | **Z1 + Z.ai** | **ERLEDIGT 13.08.** — Z1 verdrahtet (zählen, nicht verwerfen); Z.ai kennt alle fünf Aktionen — REDUZIEREN fiel bis dahin still durch — und bekommt die Faktensätze der neuen Kette |
+| **13** | **Hebel** (E2) | **ERLEDIGT 13.08.** — sieben Aktionen, Richtung vom Modell, Hebelfaktor gerechnet; Stop, Ziel und Liquidation drehen bei SHORT. Finanzierung und Liquidationsabstand standen bereits in Faktenblock und Rechnung |
 | **14** | **Hedge** (E1b) | eigene Rolle, Portfolio-Fakten statt Einzeltitel-Technik |
 | **15** | **Rollout** | ein Paket, Notebook, Checkliste 8e.3 |
 | **16** | **Kategorie-Synthese** | eigene Stufe, kein Signalweg |
