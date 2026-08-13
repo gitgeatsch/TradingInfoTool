@@ -27,6 +27,40 @@ WAS SICH GEGENUEBER DER ALTEN MAIL AENDERT, und warum:
 DIE REIHENFOLGE IST EINE AUSSAGE. Erst der Wert (worum geht es), dann die
 Rechnung (was waere zu tun), dann das Urteil (warum), dann die Einordnung (was
 ist es wert). Wer nach zwei Abschnitten aufhoert zu lesen, hat das Wichtigste.
+
+ABLAUFKETTE UND WARTEFREQUENZEN (Nutzerhinweis 13.08.2026).
+
+DIESE DATEI BAUT NUR DEN TEXT. Wer sie verschickt, muss die Reihenfolge der
+Aufrufe kennen - sonst geht die Mail raus, bevor die Ergebnisse da sind, die
+sie zeigen soll. Genau das ist in der ALTEN Kette zweimal passiert: Screenshot-
+Fund 26.07. bei Hebel, Nutzer-Fund 28.07. bei Krypto-Spot - dort gab es GAR
+KEINEN Wartemechanismus.
+
+Die Zahlen, an der Quelle abgelesen:
+
+    Gemini            10 Aufrufe/Minute (api/gemini.RATE_LIMIT_PER_MINUTE)
+    OpenRouter        Mindestabstand 3 s -> hoechstens 20/Minute
+    Z.ai              120/Minute, aber 150 s Timeout JE CALL
+    Z.ai je Signal    DREI sequenzielle Calls (1 Konsistenz + 2 positionsrobust)
+    E-Mail wartet     240 s, Poll alle 3 s (_ZAI_EMAIL_WARTE_MAX_SEKUNDEN)
+
+ZWEI FOLGERUNGEN, BEIDE UNBEQUEM:
+
+1. DIE WARTEZEIT DECKT DEN SCHLIMMSTEN FALL NICHT. 3 x 150 s = 450 s gegen
+   240 s. Das ist KEIN Defekt, sondern eine Entscheidung (P-8): bei einem
+   Z.ai-Timeout geht die Mail OHNE die Gegenpruefungszeilen raus statt gar
+   nicht. Typisch sind 12-25 s je Call, also 36-75 s - der Normalfall passt
+   bequem. Wer die Timeouts aendert, muss diese Rechnung mitziehen.
+
+2. DIE ROLLEN-KETTE IST DURCH GEMINI GETAKTET, nicht durch Z.ai. Rolle A
+   laeuft EINMAL je Lauf, Rolle BC einmal je Asset - bei 40 Assets sind das
+   41 Aufrufe und damit mindestens 4,1 Minuten, bevor das letzte Signal
+   ueberhaupt existiert.
+
+WAS HIER NOCH FEHLT: diese Datei hat KEINE eigene Wartemechanik. Solange sie
+keinen Produktionsaufrufer hat, ist das folgenlos - beim Verdrahten muss sie
+denselben Weg nehmen wie `_sende_signal_email_mit_zai_wartezeit()`, sonst
+kehrt der Fund vom 28.07. zurueck.
 """
 from __future__ import annotations
 

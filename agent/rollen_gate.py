@@ -82,6 +82,10 @@ class Durchlauf:
         self.verloren_je_stufe = {s: 0 for s in STUFEN_NAMEN}
         self.gruende: dict[str, dict[str, int]] = {s: {} for s in STUFEN_NAMEN}
         self.faktorzahlen: list[int] = []
+        # Z1-BEFUNDE (Paket 12d): je Symbol die verletzten Regeln.
+        # Sie nehmen NICHTS aus dem Lauf - ein Treuebruch ist ein Befund
+        # an der Ausgabe, kein Ausscheiden.
+        self.z1_verstoesse: dict[str, list] = {}
         self._offen: set = set()
 
     def beginne(self, symbol: str) -> None:
@@ -113,6 +117,11 @@ class Durchlauf:
         if isinstance(anzahl, int) and anzahl >= 0:
             self.faktorzahlen.append(anzahl)
 
+    def z1_verstoss(self, symbol: str, regeln: list) -> None:
+        """Nur vermerken. Siehe gegenpruefer_rollen.pruefe_und_zaehle()."""
+        if regeln:
+            self.z1_verstoesse[symbol] = list(regeln)
+
     def _pruefe(self, stufe: str) -> None:
         if stufe not in self.bestanden_je_stufe:
             raise ValueError(f"unbekannte Stufe '{stufe}' - bekannt: "
@@ -143,6 +152,14 @@ class Durchlauf:
                                    key=lambda x: -x[1])[:3]:
                 z.append(f"        {n}x {grund}")
         z.append(f"heraus          {self.heraus:>4}")
+        if self.z1_verstoesse:
+            von = len(self.z1_verstoesse)
+            regeln: dict = {}
+            for liste in self.z1_verstoesse.values():
+                for r in liste:
+                    regeln[r] = regeln.get(r, 0) + 1
+            z.append(f"Treuepruefung Z1: {von} Ausgabe(n) mit Befund - "
+                     + ", ".join(f"{r} {n}x" for r, n in sorted(regeln.items())))
         if self.faktorzahlen:
             schnitt = sum(self.faktorzahlen) / len(self.faktorzahlen)
             z.append(f"unabhaengige Faktoren: Schnitt {schnitt:.1f} ueber "
@@ -155,7 +172,8 @@ class Durchlauf:
                            "bestanden": self.bestanden_je_stufe,
                            "verloren": self.verloren_je_stufe,
                            "gruende": self.gruende,
-                           "faktorzahlen": self.faktorzahlen},
+                           "faktorzahlen": self.faktorzahlen,
+                           "z1_verstoesse": self.z1_verstoesse},
                           ensure_ascii=False)
 
 

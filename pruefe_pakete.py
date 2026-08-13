@@ -1352,6 +1352,7 @@ def paket_12() -> None:
 
 
 
+
 def paket_13() -> None:
     """Die drei Punkte aus der Datenausfall-Untersuchung (13.08.2026)."""
     P = "13"
@@ -2054,10 +2055,140 @@ def paket_12b() -> None:
            "Score ist die Groesse, die wirklich wirkt")
 
 
+
+def paket_12d() -> None:
+    """Z1 verdrahtet, Z.ai auf die fuenf Aktionen."""
+    P = "12d"
+    from agent import gegenpruefer_rollen as Z1
+    from agent import rollen_gate as RG
+    from agent.empfehlung_vertrag import AKTIONEN
+    from agent.krypto.gegenpruefung import richtung_aus_action
+
+    # Z.AI KENNT DIE NEUEN AKTIONEN. REDUZIEREN stand in KEINER Menge und fiel
+    # still auf None - jedes Reduzieren-Signal ueberging die Richtungspruefung.
+    erwartet = {"KAUFEN": "LONG", "NACHKAUFEN": "LONG",
+                "REDUZIEREN": "SHORT", "VERKAUFEN": "SHORT",
+                "NICHTS_TUN": None}
+    for aktion, richtung in erwartet.items():
+        pruefe(P, f"{aktion} -> {richtung}",
+               richtung_aus_action(aktion) == richtung,
+               "REDUZIEREN ist ein TEILverkauf - baerisch auf dieses Symbol"
+               if aktion == "REDUZIEREN" else "")
+    pruefe(P, "JEDE Aktion des Vertrags ist abgedeckt",
+           set(erwartet) == set(AKTIONEN),
+           f"Vertrag: {sorted(AKTIONEN)}")
+    pruefe(P, "NICHTS_TUN und HALTEN bedeuten dasselbe",
+           richtung_aus_action("NICHTS_TUN") == richtung_aus_action("HALTEN") is None,
+           "sonst haengt das Ergebnis davon ab, WO in der Kette geprueft wird "
+           "- vor oder nach signal_abbildung.UMBENENNUNG")
+    pruefe(P, "beim Hedge dreht auch REDUZIEREN um",
+           richtung_aus_action("REDUZIEREN", ist_hedge_invertiert=True) == "LONG")
+
+    # Z1 IST VERDRAHTET - und der Modulkopf behauptet nichts anderes mehr.
+    pruefe(P, "der Modulkopf sagt VERDRAHTET",
+           "STAND: VERDRAHTET" in (Z1.__doc__ or ""),
+           "er sagte 'GEBAUT, NICHT VERDRAHTET. Kein Aufrufer.' - genau das "
+           "war Paket 12d")
+
+    eingabe = ["Bitcoin notiert 39,0 % unter seinem Schlusskurs von vor 250 "
+               "Handelstagen.", "Der Gleichlauf ist uneinheitlich."]
+    gut = {"lage": "Bitcoin liegt rund 39 % im Minus.", "belege": []}
+    erfunden = {"lage": "Bitcoin liegt 62 % im Minus, die Maerkte laufen im "
+                        "Gleichschritt.", "belege": []}
+
+    d = RG.Durchlauf("test")
+    for sym, ausgabe in (("BTC", gut), ("ETH", erfunden)):
+        d.beginne(sym)
+        d.bestanden(sym, "auftrag")
+        Z1.pruefe_und_zaehle(ausgabe, eingabe, symbol=sym, durchlauf=d,
+                             gleichlauf_wert="uneinheitlich")
+    pruefe(P, "eine erfundene Zahl schlaegt an (Z-1)",
+           "ETH" in d.z1_verstoesse and "Z-1" in d.z1_verstoesse["ETH"])
+    pruefe(P, "eine falsche Richtungsbehauptung ebenfalls (Z-2)",
+           "Z-2" in d.z1_verstoesse["ETH"],
+           "'die Maerkte laufen im Gleichschritt' gegen gerechnet "
+           "'uneinheitlich'")
+    pruefe(P, "eine treue Ausgabe schlaegt NICHT an",
+           "BTC" not in d.z1_verstoesse)
+
+    # ZAEHLEN, NICHT VERWERFEN - die Entscheidung, die der Modulkopf verlangt.
+    pruefe(P, "ein Z1-Befund nimmt NICHTS aus dem Lauf",
+           d.heraus == 2 and d.bestanden_je_stufe["lagebild"] == 2,
+           "ein Waechter, der selbst verwirft, macht seine eigene Wirkung "
+           "unsichtbar - und das System hat monatelang nicht gekauft")
+    pruefe(P, "aber er steht im Bericht",
+           any("Treuepruefung Z1" in z for z in d.bericht()))
+    pruefe(P, "und im JSON des Laufs", "z1_verstoesse" in d.als_json())
+
+    # DIE MAIL SCHWEIGT, WENN NICHTS IST.
+    pruefe(P, "ohne Befund kein Satz in der Mail",
+           Z1.satz(Z1.pruefe(gut, eingabe, "uneinheitlich")) == [],
+           "eine Fussnote 'alle Zahlen gedeckt' unter jeder Nachricht waere "
+           "Fuellstoff")
+    mit = Z1.satz(Z1.pruefe(erfunden, eingabe, "uneinheitlich"))
+    pruefe(P, "mit Befund nennt sie die Regel und den Grund",
+           any("Z-1" in z for z in mit) and any("62.0" in z for z in mit))
+    pruefe(P, "und sagt, was sie NICHT bedeutet",
+           any("kein Urteil ueber die Empfehlung" in z for z in mit),
+           "Z1 prueft die Treue zur Eingabe, nicht die Guete des Urteils")
+
+    # Z-4 laeuft ueber den LAUF, nicht ueber den Fall.
+    pruefe(P, "identische Ausgaben ueber viele Anker schlagen an (Z-4)",
+           Z1.zaehle_leerlauf([gut, gut, gut])["verstoss"] is True,
+           "ein Lagebild, das immer dasselbe sagt (R-T6)")
+    pruefe(P, "verschiedene nicht",
+           Z1.zaehle_leerlauf([gut, erfunden])["verstoss"] is False)
+
+    # ---- ABLAUFKETTE UND WARTEFREQUENZEN (Nutzerhinweis 13.08.) ----
+    #
+    # Die Mail zeigt Z.ai-Zeilen, die zum Versandzeitpunkt noch gar nicht da
+    # sein muessen. In der alten Kette ist genau das zweimal passiert.
+    import re as _re2
+
+    def _konst(datei, name):
+        t = _quelltext(datei)
+        m = _re2.search(rf"^{name}\s*=\s*([\d.]+)", t, _re2.M)
+        return float(m.group(1)) if m else None
+
+    zai_timeout = _konst("api/zai.py", "REQUEST_TIMEOUT_SECONDS")
+    warte_max = _konst("scheduler/background.py", "_ZAI_EMAIL_WARTE_MAX_SEKUNDEN")
+    poll = _konst("scheduler/background.py", "_ZAI_EMAIL_POLL_INTERVALL_SEKUNDEN")
+    gemini_rate = _konst("api/gemini.py", "RATE_LIMIT_PER_MINUTE")
+
+    pruefe(P, "alle Taktgroessen sind auffindbar",
+           None not in (zai_timeout, warte_max, poll, gemini_rate),
+           f"zai={zai_timeout} warte={warte_max} poll={poll} gemini={gemini_rate}")
+    pruefe(P, "die Mail wartet laenger als EIN Z.ai-Call dauert",
+           warte_max > zai_timeout,
+           f"{warte_max} s gegen {zai_timeout} s - sonst ginge die Mail bei "
+           f"jedem einzelnen langsamen Call ohne Gegenpruefung raus")
+    pruefe(P, "sie deckt den schlimmsten Fall NICHT ab - und das ist bekannt",
+           3 * zai_timeout > warte_max,
+           f"3 Calls x {zai_timeout} s = {3 * zai_timeout} s gegen "
+           f"{warte_max} s. KEIN Defekt, sondern P-8: lieber ohne "
+           f"Z.ai-Zeilen als gar nicht")
+    pruefe(P, "das Poll-Intervall ist deutlich kleiner als die Wartezeit",
+           poll * 10 <= warte_max,
+           "sonst waere die Wartezeit faktisch ein fester Sleep")
+    pruefe(P, "der Takt der Rollen-Kette haengt an Gemini, nicht an Z.ai",
+           gemini_rate < _konst("api/zai.py", "RATE_LIMIT_PER_MINUTE"),
+           f"41 Aufrufe bei 40 Assets / {gemini_rate:.0f} pro Minute = "
+           f"mindestens {41 / gemini_rate:.1f} Minuten")
+
+    # DIE ABHAENGIGKEIT MUSS AN DER MAIL STEHEN, nicht nur im Kopf des Prueflings.
+    mail_quelle = _quelltext("agent/signal_mail.py")
+    pruefe(P, "signal_mail nennt die Abhaengigkeit und die fehlende Wartemechanik",
+           "_ZAI_EMAIL_WARTE_MAX_SEKUNDEN" in mail_quelle
+           and "KEINE eigene Wartemechanik" in mail_quelle,
+           "beim Verdrahten muss sie denselben Weg nehmen wie "
+           "_sende_signal_email_mit_zai_wartezeit(), sonst kehrt der Fund vom "
+           "28.07. zurueck")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b}
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d}
 
 
 def main() -> int:

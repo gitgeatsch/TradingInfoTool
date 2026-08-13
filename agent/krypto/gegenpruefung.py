@@ -416,7 +416,19 @@ def pruefe_konsistenz(zai_client, fakten: dict, begruendungstext: str | None) ->
 
 
 _LONG_ACTIONS = {"KAUFEN", "NACHKAUFEN"}
-_SHORT_ACTIONS = {"VERKAUFEN", "TAUSCHEN"}  # TAUSCHEN nur Krypto-Spot-exklusiv
+# REDUZIEREN ERGAENZT (Paket 12d, 2026-08-13). Die neue Rollen-Kette kennt
+# fuenf Aktionen: KAUFEN, NACHKAUFEN, REDUZIEREN, VERKAUFEN, NICHTS_TUN.
+# REDUZIEREN stand in KEINER der beiden Mengen und fiel deshalb still
+# durch `richtung_aus_action()` auf None - JEDES Reduzieren-Signal
+# ueberging die Z.ai-Richtungspruefung, ohne dass es irgendwo auffiel.
+# Es ist ein TEILverkauf: baerische Erwartung an dieses Symbol.
+_SHORT_ACTIONS = {"VERKAUFEN", "TAUSCHEN", "REDUZIEREN"}  # TAUSCHEN nur Krypto-Spot
+
+# NICHTS_TUN IST DAS NEUE HALTEN. `signal_abbildung.UMBENENNUNG` bildet es
+# beim Schreiben auf HALTEN ab; wer die Antwort VOR der Abbildung prueft,
+# sieht aber noch das Original. Beide muessen dasselbe bedeuten - sonst
+# haengt das Ergebnis davon ab, WO in der Kette geprueft wird.
+_KEINE_RICHTUNG = {"HALTEN", "NICHTS_TUN"}
 
 
 def richtung_aus_action(action: str, ist_hedge_invertiert: bool = False) -> str | None:
@@ -425,10 +437,10 @@ def richtung_aus_action(action: str, ist_hedge_invertiert: bool = False) -> str 
     ein echtes `richtung`-Feld wie Hebel). Siehe Modul-Docstring
     "Vollstaendige Vereinheitlichung" fuer die volle Begruendung.
 
-    HALTEN (und jede unbekannte Action) liefert None - kein Vergleich, analog
+    HALTEN/NICHTS_TUN (und jede unbekannte Action) liefert None - kein Vergleich, analog
     dazu, dass bestimmte Hebel-Aktionen ebenfalls Sonderbehandlung erfahren.
     KAUFEN/NACHKAUFEN = bullische Erwartung an das Asset selbst -> LONG.
-    VERKAUFEN/TAUSCHEN = baerische Erwartung an das Asset selbst -> SHORT
+    VERKAUFEN/TAUSCHEN/REDUZIEREN = baerische Erwartung an das Asset selbst -> SHORT
     (TAUSCHEN: das Ziel-Asset wird gekauft, aber DIESES Symbol wird als
     schwaecher bewertet - bearish auf dieses Symbol).
 
@@ -437,7 +449,7 @@ def richtung_aus_action(action: str, ist_hedge_invertiert: bool = False) -> str 
     verarbeitet - kein Symbol-Lookup noetig): KAUFEN/NACHKAUFEN (Hedge
     aufbauen/verstaerken) -> SHORT (baerische Gesamtmarkterwartung),
     VERKAUFEN -> LONG."""
-    if action == "HALTEN":
+    if action in _KEINE_RICHTUNG:
         return None
     ist_long = action in _LONG_ACTIONS
     ist_short = action in _SHORT_ACTIONS

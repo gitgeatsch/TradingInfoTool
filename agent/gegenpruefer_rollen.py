@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 """Z1 - der TREUE-Pruefer der neuen Rollen-Kette (12.08.2026).
 
-STAND: GEBAUT, NICHT VERDRAHTET. Kein Aufrufer. Wer ihn einhaengt, muss
-entscheiden, was ein Verstoss ausloest - dieses Modul entscheidet es nicht.
+STAND: VERDRAHTET (Paket 12d, 13.08.2026). `pruefe_und_zaehle()` haengt
+ihn in die Durchlaessigkeitszaehlung; `satz()` bringt einen Befund in die
+Mail. WAS EIN VERSTOSS AUSLOEST, ist damit entschieden: ZAEHLEN, NICHT
+VERWERFEN - dieselbe Begruendung wie beim Entscheider und beim Gate. Ein
+Waechter, der selbst verwirft, macht seine eigene Wirkung unsichtbar.
 
 NAME KORRIGIERT NACH NUTZEREINWAND. Er hiess hier zuerst "der Gegenpruefer der
 neuen Kette". Das war vereinnahmend: der Gegenpruefer dieses Projekts ist die
@@ -193,3 +196,62 @@ def zaehle_leerlauf(ausgaben: list[dict]) -> dict:
             "verstoss": verschieden <= 1,
             "grund": (f"{verschieden} verschiedene Ausgaben auf "
                       f"{len(ausgaben)} Anker")}
+
+
+# ---------------------------------------------------------------------------
+# VERDRAHTUNG (Paket 12d, 2026-08-13)
+#
+# Bis hierher stand ueber diesem Modul: "GEBAUT, NICHT VERDRAHTET. Kein
+# Aufrufer." Genau das war Paket 12d. Der Modulkopf oben sagt auch, was beim
+# Einhaengen zu entscheiden ist: WAS EIN VERSTOSS AUSLOEST. Die Antwort steht
+# im selben Absatz - "eine Messung zaehlt, der Betrieb verwirft" - und fuer
+# diese Kette lautet sie: ZAEHLEN, NICHT VERWERFEN.
+#
+# Warum nicht verwerfen: dieselbe Begruendung wie beim Entscheider und beim
+# Gate. Ein Waechter, der selbst verwirft, macht seine eigene Wirkung
+# unsichtbar - man sieht nur noch, was durchkam, nie was er weggenommen hat.
+# Und das System hat monatelang nicht gekauft; ein weiterer stiller Filter ist
+# genau das Risiko, das gerade beseitigt wurde.
+#
+# Was ein Verstoss STATTDESSEN tut: er wird in der Durchlaessigkeit vermerkt
+# (Stufe "lagebild" bzw. "urteil") und steht in der Mail. Sichtbar, zaehlbar,
+# rueckwirkend pruefbar.
+def pruefe_und_zaehle(ausgabe: dict, eingabe, *, symbol: str,
+                      durchlauf=None, stufe: str = "lagebild",
+                      gleichlauf_wert: str | None = None) -> dict:
+    """Z-1 bis Z-3 fuer EINE Ausgabe, plus Eintrag in die Durchlaessigkeit.
+
+    `durchlauf` ist ein `rollen_gate.Durchlauf` oder None. Ohne ihn prueft die
+    Funktion nur - das ist der Fall in Messlaeufen, wo es keine Stufenzaehlung
+    gibt.
+
+    GIBT DAS ERGEBNIS ZURUECK, VERWIRFT NICHTS. Der Aufrufer sieht `verstoss`
+    und entscheidet; hier wird nur festgehalten."""
+    ergebnis = pruefe(ausgabe, eingabe, gleichlauf_wert)
+    if durchlauf is not None:
+        if ergebnis["verstoss"]:
+            # BESTANDEN UND VERMERKT. `verloren()` waere falsch: die Stufe ist
+            # durchlaufen, die Ausgabe liegt vor. Ein Treuebruch ist ein
+            # BEFUND an ihr, kein Ausscheiden - sonst zaehlte die
+            # Durchlaessigkeit etwas anderes als sie behauptet.
+            durchlauf.bestanden(symbol, stufe)
+            durchlauf.z1_verstoss(symbol, ergebnis["verletzt"])
+        else:
+            durchlauf.bestanden(symbol, stufe)
+    return ergebnis
+
+
+def satz(ergebnis: dict) -> list[str]:
+    """Der Z1-Befund fuer die Mail - nur wenn es etwas zu sagen gibt.
+
+    Eine Fussnote "alle Zahlen gedeckt" unter jeder Nachricht waere Fuellstoff;
+    wer nichts findet, schweigt."""
+    if not ergebnis or not ergebnis.get("verstoss"):
+        return []
+    z = ["Treuepruefung der Eingabe (Z1) hat angeschlagen:"]
+    for einzeln in ergebnis.get("einzeln", []):
+        if einzeln.get("verstoss"):
+            z.append(f"  {einzeln['regel']}: {einzeln.get('grund', '')}")
+    z.append("  Das ist kein Urteil ueber die Empfehlung, sondern ueber ihre "
+             "Treue zu den uebergebenen Zahlen.")
+    return z
