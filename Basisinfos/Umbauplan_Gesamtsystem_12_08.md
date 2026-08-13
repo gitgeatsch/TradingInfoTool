@@ -549,12 +549,33 @@ Der Tab ist **kein Anzeigefeld, sondern ein Bedienelement** — manueller Overri
 | | heute | künftig |
 |---|---|---|
 | Anzeige | Etikett „baer" (konstant) | **Regime-Score 0,00–1,00** + die vier Stützstellen als Lesehilfe |
-| Wirkung | `min_konfidenz` + Konflikt-Veto | Score als **Fakt** an Rolle 1; Konflikt-Veto kehrt zurück, sobald es wieder eine Richtung gibt (Hebel, Paket 2) |
+| Wirkung | `min_konfidenz` + Konflikt-Veto | **Score geht NICHT als Fakt an Rolle 1 — Begründung unten.** Konflikt-Veto kehrt zurück, sobald es wieder eine Richtung gibt (Hebel, Paket 13) |
 | **Override** | setzt das Etikett | **setzt den Score** — derselbe Hebel, feinere Auflösung |
 
 Der Score ist gebaut, variiert 0,250–0,750 und trennt die Marktphasen. Der
 Override wird dadurch **mächtiger**, nicht schwächer: statt vier Schubladen ein
 Regler.
+
+**Korrektur 13.08. beim Umsetzen von 12b: die Zeile „Score als Fakt an Rolle 1"
+wird NICHT umgesetzt — und der Grund ist eine eigene Messung.** Der Score
+besteht laut `regime.regime_score()` aus:
+
+    0,5 × Preis (Abstand zu EMA50, EMA200 mit halbem Gewicht)
+  + 0,5 × Fear & Greed
+
+**Beides liegt vollständig in der Momentum-Familie** (Kap. 12.8): der Abstand
+zur 50-Tage-Linie ist einer der vier Momentum-Vertreter (Rangkorrelation 0,59
+bis 0,89 untereinander), und Fear & Greed gehört ebenfalls dorthin, weil er zur
+Hälfte aus dem Kurs abgeleitet ist.
+
+Ihn als eigenen Fakt an Rolle 1 zu geben, hieße einen **fünften
+Momentum-Vertreter** danebenzustellen — und würde einen Aufbau besser belegt
+aussehen lassen, als er ist. Genau das verhindert die Regel „Momentum erscheint
+genau einmal".
+
+**Die anderen beiden Zeilen sind umgesetzt:** die Anzeige zeigt den Score samt
+Stützstellen, und der Override setzt ihn.
+
 
 ---
 

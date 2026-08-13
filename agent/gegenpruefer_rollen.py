@@ -255,3 +255,80 @@ def satz(ergebnis: dict) -> list[str]:
     z.append("  Das ist kein Urteil ueber die Empfehlung, sondern ueber ihre "
              "Treue zu den uebergebenen Zahlen.")
     return z
+
+
+# ---------------------------------------------------------------------------
+# Z.AI AUF DEN FAKTEN DER NEUEN KETTE (Paket 12d, 13.08.2026)
+#
+# DAS PROBLEM. `gegenpruefung.baue_objektive_fakten()` erwartet das Vokabular
+# der ALTEN Kette: `rsi`, `trend_label`, `regime`, `funding_rate_stunde`,
+# drei Confluence-Zaehler, `optionsmarkt_skew`. Die neue Kette produziert
+# nichts davon - sie liefert SAETZE (Lagebild L1-L6, Befund je Asset). Wer die
+# alte Funktion mit der neuen Kette aufruft, bekommt ein fast leeres
+# Faktenpaket und einen Richtungsabgleich ohne Grundlage.
+#
+# DIE LOESUNG IST KEINE UEBERSETZUNG ZURUECK. Aus Saetzen wieder RSI-Zahlen zu
+# gewinnen waere Rueckbau; die neue Kette hat die Zahlen bewusst nicht im
+# Prompt (Kapitel 11.6). Stattdessen bekommt Z.ai, was die neue Kette WIRKLICH
+# hat: die Faktensaetze selbst.
+#
+# WAS BEWUSST NICHT MITGEHT - dieselbe Anker-Vermeidung wie in der alten
+# Fassung: keine `aktion`, keine `richtung`, kein Betrag, keine Zone. Z.ai soll
+# aus den Fakten eine EIGENE Richtung ableiten; wer ihr die Antwort zeigt,
+# misst nur noch das Echo.
+_VERBOTEN_FUER_RICHTUNG = ("aktion", "richtung", "einstieg_eur", "stop_eur",
+                           "ziel_eur", "tranche_eur", "betrag_eur",
+                           "confidence_pct", "konfidenz", "unabhaengige_faktoren")
+
+
+def objektive_fakten_aus_rollen(symbol: str, lagebild_saetze, befund_saetze,
+                                gleichlauf_wert: str | None = None) -> dict:
+    """Faktenpaket fuer `gegenpruefung.leite_eigene_richtung()` aus den Saetzen
+    der neuen Kette.
+
+    Gibt bewusst SAETZE statt Kennzahlen zurueck - das ist das Format, das die
+    neue Kette hat. Z.ai bekommt damit dieselbe Grundlage wie Rolle BC, nur
+    ohne deren Antwort.
+
+    `gleichlauf_wert` ist die einzige GERECHNETE Groesse, die mitgeht: sie ist
+    ein Festpunkt ausserhalb des Modells und genau deshalb wertvoll fuer einen
+    Gegenpruefer."""
+    def sauber(saetze):
+        # ERST None AUSSORTIEREN, DANN str(). Andersherum wird aus `None` der
+        # String "None" - der ist nicht leer, rutscht durch und stuende dann
+        # woertlich in den Fakten, die an Z.ai gehen.
+        return [str(s).strip() for s in (saetze or [])
+                if s is not None and str(s).strip()]
+
+    fakten = {"symbol": symbol,
+              "marktlage": sauber(lagebild_saetze),
+              "asset_fakten": sauber(befund_saetze)}
+    if gleichlauf_wert:
+        fakten["gleichlauf_gerechnet"] = gleichlauf_wert
+    return fakten
+
+
+def enthaelt_anker(fakten: dict) -> list[str]:
+    """Welche verbotenen Schluessel stecken drin? Leer = sauber.
+
+    EIN WAECHTER, KEIN FILTER - er entfernt nichts. Wer beim Bauen des
+    Faktenpakets eine Aktion mitschickt, soll das sehen, nicht stillschweigend
+    korrigiert bekommen: die naechste Stelle wuerde denselben Fehler machen."""
+    treffer = []
+    for schluessel in _VERBOTEN_FUER_RICHTUNG:
+        if schluessel in fakten:
+            treffer.append(schluessel)
+    # Auch in den Saetzen selbst - eine Aktion im Klartext ist derselbe Anker
+    # wie ein Feld, das so heisst.
+    # WORTGRENZEN, KEIN SUBSTRING. Die erste Fassung fand "KAUFEN" in
+    # "NACHKAUFEN" und meldete zwei Anker, wo einer stand. Ein Waechter, der
+    # falsch Alarm schlaegt, wird nach dem dritten Mal ignoriert - und dann
+    # auch der richtige Alarm.
+    import re
+
+    text = " ".join(str(w) for w in fakten.values() if not isinstance(w, dict)).upper()
+    from agent.empfehlung_vertrag import AKTIONEN
+    for aktion in AKTIONEN:
+        if re.search(rf"\b{aktion}\b", text):
+            treffer.append(f"Aktion '{aktion}' im Klartext")
+    return treffer

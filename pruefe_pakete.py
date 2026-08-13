@@ -2155,6 +2155,46 @@ def paket_12d() -> None:
     poll = _konst("scheduler/background.py", "_ZAI_EMAIL_POLL_INTERVALL_SEKUNDEN")
     gemini_rate = _konst("api/gemini.py", "RATE_LIMIT_PER_MINUTE")
 
+
+    # ---- Z.AI AUF DEN FAKTEN DER NEUEN KETTE ----
+    #
+    # GEGENPRUEFUNG 12d: die Aktionen waren angepasst, die FAKTEN nicht.
+    # `baue_objektive_fakten()` erwartet rsi/trend_label/regime/funding - die
+    # neue Kette produziert nichts davon, sondern Saetze.
+    bau = Z1.objektive_fakten_aus_rollen
+    f = bau("BTC", ["Bitcoin notiert 39,0 % unter dem Stand von vor 250 Tagen."],
+            ["Der naechste Widerstand liegt bei 62.000 EUR."], "uneinheitlich")
+    pruefe(P, "das Faktenpaket traegt die SAETZE der neuen Kette",
+           f["marktlage"] and f["asset_fakten"] and f["symbol"] == "BTC",
+           "aus Saetzen wieder RSI-Zahlen zu gewinnen waere Rueckbau - die "
+           "neue Kette hat sie bewusst nicht (Kapitel 11.6)")
+    pruefe(P, "der gerechnete Gleichlauf geht mit",
+           f.get("gleichlauf_gerechnet") == "uneinheitlich",
+           "die einzige Groesse, die ein Festpunkt AUSSERHALB des Modells ist")
+    pruefe(P, "leere Saetze fallen raus",
+           bau("BTC", ["", "  ", None], [])["marktlage"] == [])
+
+    # ANKER-VERMEIDUNG: Z.ai soll eine EIGENE Richtung ableiten.
+    pruefe(P, "ein sauberes Paket meldet keinen Anker",
+           Z1.enthaelt_anker(f) == [])
+    mit_feld = dict(f); mit_feld["aktion"] = "KAUFEN"
+    pruefe(P, "eine mitgeschickte Aktion faellt auf",
+           "aktion" in Z1.enthaelt_anker(mit_feld),
+           "wer der Gegenpruefung die Antwort zeigt, misst nur noch das Echo")
+    pruefe(P, "auch eine Aktion im KLARTEXT",
+           Z1.enthaelt_anker(bau("BTC", ["Die Empfehlung lautet KAUFEN."], []))
+           == ["Aktion 'KAUFEN' im Klartext"])
+    pruefe(P, "und 'KAUFEN' wird NICHT in 'NACHKAUFEN' gefunden",
+           Z1.enthaelt_anker(bau("BTC", ["Die Empfehlung lautet NACHKAUFEN."], []))
+           == ["Aktion 'NACHKAUFEN' im Klartext"],
+           "die erste Fassung meldete zwei Anker, wo einer stand - ein "
+           "Waechter, der falsch Alarm schlaegt, wird ignoriert, und dann "
+           "auch der richtige Alarm")
+    pruefe(P, "der Waechter entfernt nichts",
+           "aktion" in mit_feld,
+           "wer stillschweigend korrigiert wird, macht denselben Fehler "
+           "an der naechsten Stelle wieder")
+
     pruefe(P, "alle Taktgroessen sind auffindbar",
            None not in (zai_timeout, warte_max, poll, gemini_rate),
            f"zai={zai_timeout} warte={warte_max} poll={poll} gemini={gemini_rate}")
