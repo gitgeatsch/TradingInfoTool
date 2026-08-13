@@ -72,6 +72,8 @@ def _jetzt() -> str:
 
 def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                 betriebsart: str = TROCKEN,
+                instrument: str = "spot",
+                strategie: str = "einstieg",
                 datum: str | None = None,
                 client=None, modell: str | None = None,
                 antworten: dict | None = None,
@@ -108,6 +110,16 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                        signal_mail as SM, toepfe as TO, trefferbilanz as TB)
     from agent.empfehlung_vertrag import EmpfehlungUngueltig
     from agent.handelsauftrag import AuftragUngueltig, pruefe as pruefe_auftrag
+
+    # DER AUFTRAG WIRD EINMAL GEPRUEFT, NICHT JE ASSET (13.08.). Vorher stand
+    # hier fest `("spot", "einstieg")` - ein Hebel-Lauf war damit gar nicht
+    # moeglich, obwohl Paket 13 alles dafuer gebaut hatte. Die Pruefung gehoert
+    # VOR die Schleife: ein unvorgesehenes Paar soll den Lauf abbrechen, nicht
+    # vierzigmal dasselbe melden.
+    try:
+        instrument, strategie = pruefe_auftrag(instrument, strategie)
+    except AuftragUngueltig as exc:
+        raise LaufAbgebrochen(f'Auftrag ungueltig: {exc}') from exc
 
     ergebnis = {"betriebsart": betriebsart, "signale": [], "mails": [],
                 "fehler": []}
@@ -166,6 +178,7 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                        durchlauf=durchlauf, betriebsart=betriebsart,
                        client=client, modell=modell, conn=conn, db=db,
                        config=config, aufgezeichnet=aufgezeichnet,
+                       instrument=instrument, strategie=strategie,
                        ergebnis=ergebnis, versand=versand,
                        module=(AR, ER, FB, FQ, Z1, RT, RE, SA, SM, TO, TB),
                        fehlertypen=(EmpfehlungUngueltig, AuftragUngueltig,
@@ -190,13 +203,13 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
 
 def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                durchlauf, betriebsart, client, modell, conn, db, config,
+               instrument, strategie,
                aufgezeichnet, ergebnis, versand, module, fehlertypen,
                pruefe_auftrag) -> None:
     """Ein Asset durch alle Stufen. Wirft, wenn es nicht weitergeht."""
     AR, ER, FB, FQ, Z1, RT, RE, SA, SM, TO, TB = module
 
-    # --- Stufe: Auftrag ---
-    instrument, strategie = pruefe_auftrag("spot", "einstieg")
+    # --- Stufe: Auftrag --- (schon vor der Schleife geprueft)
     durchlauf.bestanden(symbol, "auftrag")
 
     # --- Stufe: Fakten ---
@@ -268,6 +281,10 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                              instrument=instrument, betrag_wunsch_eur=500.0,
                              topf_frei_eur=frei,
                              umgeworfen_preis_eur=befund.get("umgeworfen_preis_eur"),
+                             # DIE RICHTUNG KOMMT VOM MODELL (Paket 13) und
+                             # dreht Stop, Ziel und Liquidation. Bei Spot gibt
+                             # es sie nicht - dort ist LONG die einzige Lage.
+                             ist_short=(befund.get("richtung") == "SHORT"),
                              umgeworfen_tage=_tage_bis(
                                  befund.get("umgeworfen_bis"), tag))
     except ER.RechnungBlockiert as exc:

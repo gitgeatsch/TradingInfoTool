@@ -2545,6 +2545,73 @@ def paket_b1() -> None:
            erg2["durchlauf"].verloren_je_stufe["fakten"] == 1,
            "stilles Ueberspringen waere derselbe Fehler wie ein Filter, der "
            "seine Wirkung verbirgt")
+
+    # ---- DER AUFTRAG KOMMT VON AUSSEN (13.08.) ----
+    #
+    # Vorher stand im Lauf fest ("spot", "einstieg") - ein Hebel-Lauf war gar
+    # nicht moeglich, obwohl Paket 13 alles dafuer gebaut hatte.
+    def _antwort(sym, aktion, richtung=None):
+        rr = reihen[sym]; ii = len(rr) - 1
+        kk = RE.kurs_eur(sym, rr, ii, "data/tradinginfotool.db")
+        aa = RE.atr_eur(sym, rr, ii, "data/tradinginfotool.db")
+        d = {"aktion": aktion,
+             "belege": [{"fakt": "x", "richtung": "dafuer", "gewicht": "hoch"}],
+             "unabhaengige_faktoren": 2, "begruendung": "y",
+             "was_dagegen": "z", "umgeworfen_durch": "w"}
+        if richtung:
+            d["richtung"] = richtung
+        if aktion in ("KAUFEN", "ERÖFFNEN"):
+            d |= {"einstieg_eur": round(kk, 2), "stop_eur": round(kk - 2.5 * aa, 2)}
+        return d
+
+    def _lauf(inst, aktion, richtung=None, sym="ETH"):
+        ant = {"lagebild": antworten["lagebild"],
+               "befund": {sym: _antwort(sym, aktion, richtung)}}
+        return RL.fuehre_lauf(conn=con, reihen=reihen, symbole=[sym],
+                              betriebsart="trocken", instrument=inst,
+                              strategie="einstieg", antworten=ant)
+
+    pruefe(P, "ein Spot-Lauf erzeugt eine Mail",
+           len(_lauf("spot", "KAUFEN")["mails"]) == 1)
+    pruefe(P, "ein Hebel-Lauf ebenfalls",
+           len(_lauf("hebel", "ERÖFFNEN", "LONG")["mails"]) == 1,
+           "vorher war er gar nicht moeglich")
+    pruefe(P, "ein unvorgesehenes Paar bricht den Lauf ab - VOR der Schleife",
+           _wirft(lambda: RL.fuehre_lauf(conn=con, reihen=reihen, symbole=[],
+                                         betriebsart="trocken",
+                                         instrument="hebel",
+                                         strategie="akkumulation",
+                                         antworten=antworten),
+                  RL.LaufAbgebrochen),
+           "sonst meldete er vierzigmal dasselbe")
+
+    # DIE RICHTUNG DREHT DURCH DIE GANZE KETTE - alle drei Groessen.
+    def _marken(text):
+        aus = {}
+        for zeile in text.split(chr(10)):
+            z = zeile.strip()
+            for name, wort in (("stop", "Stop "), ("ziel", "Take-Profit"),
+                               ("liq", "Liquidation etwa")):
+                if wort in z and name not in aus:
+                    zahlen = [t for t in z.replace("(", " ").replace(")", " ").split()
+                              if t.replace(".", "").replace(",", "").isdigit()]
+                    if zahlen:
+                        aus[name] = float(zahlen[0].replace(".", "").replace(",", "."))
+        return aus
+
+    kurs_eth = RE.kurs_eur("ETH", reihen["ETH"], len(reihen["ETH"]) - 1,
+                           "data/tradinginfotool.db")
+    lang = _marken(_lauf("hebel", "ERÖFFNEN", "LONG")["mails"][0]["text"])
+    kurz = _marken(_lauf("hebel", "ERÖFFNEN", "SHORT")["mails"][0]["text"])
+    pruefe(P, "bei LONG liegt der Stop unter dem Kurs, bei SHORT darueber",
+           lang["stop"] < kurs_eth < kurz["stop"],
+           f"LONG {lang.get('stop')} / SHORT {kurz.get('stop')} bei {kurs_eth:.0f}")
+    pruefe(P, "das Ziel dreht mit",
+           lang["ziel"] > kurs_eth > kurz["ziel"])
+    pruefe(P, "und die Liquidation auch",
+           lang["liq"] < kurs_eth < kurz["liq"],
+           "sonst stuende bei einem SHORT eine Liquidation unter dem "
+           "Einstieg - dort kann sie nie greifen")
     con.close()
 
 
