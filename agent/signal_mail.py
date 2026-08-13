@@ -57,10 +57,21 @@ ZWEI FOLGERUNGEN, BEIDE UNBEQUEM:
    41 Aufrufe und damit mindestens 4,1 Minuten, bevor das letzte Signal
    ueberhaupt existiert.
 
-WAS HIER NOCH FEHLT: diese Datei hat KEINE eigene Wartemechanik. Solange sie
-keinen Produktionsaufrufer hat, ist das folgenlos - beim Verdrahten muss sie
-denselben Weg nehmen wie `_sende_signal_email_mit_zai_wartezeit()`, sonst
-kehrt der Fund vom 28.07. zurueck.
+DIESE DATEI HAT KEINE EIGENE WARTEMECHANIK - und behaelt auch keine. Sie
+formatiert, sie wartet nicht. Seit dem 13.08. steht die Wartestufe dort, wo die
+Reihenfolge ohnehin liegt:
+
+    agent/zweite_meinung.py   ruft Z.ai und deckelt die Wartezeit
+    agent/rollen_lauf.py      schreiben -> Z.ai -> warten -> BAUEN -> senden
+
+Der Bauplan wird deshalb erst aufgerufen, wenn die Zeilen der zweiten Meinung
+vorliegen. Anders als in der alten Kette wird NICHT gepollt: dort startet der
+Z.ai-Thread anderswo und der Versand hat keinen Griff darauf, hier gehoeren
+beide Seiten demselben Aufrufer.
+
+WER DIESE DATEI KUENFTIG WOANDERS EINHAENGT, muss dieselbe Reihenfolge nehmen -
+sonst kehrt der Fund vom 28.07. zurueck: die Mail ging ohne die
+Gegenpruefungszeilen raus, obwohl das Urteil zum Versandzeitpunkt vorlag.
 """
 from __future__ import annotations
 

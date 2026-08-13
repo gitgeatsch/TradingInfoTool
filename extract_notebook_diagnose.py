@@ -416,6 +416,12 @@ _SPOT_SIGNAL_SPALTEN = (
     "quelle_kette, lagebild_id, prompt_stand, fx_eur_je_usd, "
     "unabhaengige_faktoren, umgeworfen_durch, umgeworfen_preis_eur, "
     "umgeworfen_bis, "
+    # DIE DREI GEMESSENEN FAKTENFAMILIEN (13.08., Kapitel 15). Sie sind das
+    # Material fuer den Konstellationsschluessel der Trefferbilanz - ohne sie
+    # im Export laesst sich spaeter NICHT nachrechnen, ob das Meta-Modell auf
+    # etwas anderem beruht als der Faktorzahl (die die Entscheidung nur
+    # wiederholt). Wieder vom eigenen Drift-Waechter gemeldet.
+    "schwankung_perzentil, momentum_perzentil, volumen_perzentil, "
     "regime, gate_passed, gate_reason, "
     "risk_veto, risk_veto_reason, cash_veto, cash_veto_reason, groq_model, "
     "outcome_status, outcome_geprueft_am, outcome_entschieden_am, "

@@ -226,7 +226,9 @@ def main() -> None:
     # ist eine Absicht, keine Festlegung.
     neu = ("quelle_kette", "lagebild_id", "prompt_stand",
            "unabhaengige_faktoren", "umgeworfen_durch",
-           "umgeworfen_preis_eur", "umgeworfen_bis")
+           "umgeworfen_preis_eur", "umgeworfen_bis",
+           "schwankung_perzentil", "momentum_perzentil",
+           "volumen_perzentil")
     beispiel = (ss or hs or [{}])[0]
     fehlend = [f for f in neu if f not in beispiel]
     zeile(not fehlend,

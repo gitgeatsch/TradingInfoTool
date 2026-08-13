@@ -178,6 +178,27 @@ def geschrumpft(treffer: int, faelle: int,
     return (k + gewicht * basisrate) / (n + gewicht)
 
 
+def _prozent(wert):
+    """Perzentil 0..1 auf die 0..100-Skala, die `merkmale()` erwartet.
+
+    `faktenblock.werte_aus_reihe()` liefert einen ANTEIL (0,74), die Grenzen in
+    `merkmale()` sind PROZENTE (25, 50, 75). Ohne diese Zeile faenden alle
+    Werte im untersten Band - und die Tabelle saehe gefuellt aus, waehrend sie
+    nur eine Spalte breit waere."""
+    return None if wert is None else float(wert) * 100.0
+
+
+def _band_grob(wert):
+    """Anteil in drei Baender: unten / mitte / oben. Als Text, weil dieser
+    Platz im Schluessel bisher `gleichlauf` trug und dort Etiketten standen -
+    eine Zahl daneben waere beim Lesen einer alten Tabelle nicht zu
+    unterscheiden."""
+    if wert is None:
+        return None
+    w = float(wert)
+    return "vol_hoch" if w >= 0.75 else ("vol_tief" if w < 0.25 else "vol_mitte")
+
+
 def merkmale(*, unabhaengige_faktoren=None, vola_perzentil=None,
              spanne_perzentil=None, gleichlauf=None) -> tuple:
     """Der Schluessel, unter dem gezaehlt wird.
@@ -204,6 +225,13 @@ def merkmale(*, unabhaengige_faktoren=None, vola_perzentil=None,
     return (
         # 0-1, 2, 3, 4+ - die Praxisliteratur nennt drei bis vier unabhaengige
         # Faktoren als Bereich fuer einen tragfaehigen Aufbau.
+        #
+        # ACHTUNG, GEMESSEN 13.08.: dieses Merkmal WIEDERHOLT die Entscheidung.
+        # Ueber 20 echte Urteile nimmt es nur zwei Werte an (2 und 3), und
+        # Faktorzahl 3 bedeutete in 82 % einen Einstieg, Faktorzahl 2 in 0 %.
+        # Es bleibt im Schluessel, aber es darf nicht mehr allein darin stehen -
+        # ein Meta-Modell, dessen einziges Merkmal die Ausgabe des
+        # Primaermodells ist, kann nichts hinzufuegen.
         band(unabhaengige_faktoren, (2, 3, 4)),
         band(vola_perzentil, (25, 50, 75)),
         band(spanne_perzentil, (25, 50, 75)),
@@ -231,14 +259,37 @@ def zaehle(conn: sqlite3.Connection, quelle_kette: str | None = "rollen") -> dic
         bedingung += " AND quelle_kette = ?"
         werte.append(quelle_kette)
 
+    # DIE DREI GEMESSENEN FAMILIEN FUELLEN DIE UEBRIGEN PLAETZE (13.08.).
+    #
+    # Bis heute fuellte diese Funktion EINEN der vier Plaetze - die Faktorzahl,
+    # und von der ist gemessen, dass sie die Entscheidung nur wiederholt. Die
+    # drei Familien rechnet `faktenblock.werte_aus_reihe()` ohnehin je Asset zum
+    # Signalzeitpunkt; sie standen bisher nur im Mailtext und waren danach weg.
+    #
+    # `schwankung` -> `vola`, `momentum` -> `spanne`: die Plaetze des
+    # Schluessels heissen aelter als die Familien. Umbenennen wuerde jeden
+    # bestehenden Schluessel ungueltig machen, also bleibt der Name und die
+    # Zuordnung steht hier - beim `momentum_perzentil` ist "spanne" ohnehin
+    # naeher an dem, was gemessen wird (Rueckgang vom Hoechststand).
+    optional = [s for s in ("unabhaengige_faktoren", "schwankung_perzentil",
+                            "momentum_perzentil", "volumen_perzentil")
+                if s in spalten]
+
     aus: dict[tuple, dict] = {}
-    hat_faktoren = "unabhaengige_faktoren" in spalten
     for row in conn.execute(
             "SELECT outcome_status"
-            + (", unabhaengige_faktoren" if hat_faktoren else "")
+            + "".join(f", {s}" for s in optional)
             + f" FROM signals WHERE {bedingung}", werte):
+        hat = dict(zip(optional, row[1:]))
         schluessel = merkmale(
-            unabhaengige_faktoren=row[1] if hat_faktoren else None)
+            unabhaengige_faktoren=hat.get("unabhaengige_faktoren"),
+            vola_perzentil=_prozent(hat.get("schwankung_perzentil")),
+            spanne_perzentil=_prozent(hat.get("momentum_perzentil")),
+            # VOLUMEN AUF DEN VIERTEN PLATZ, der bisher `gleichlauf` hiess und
+            # nie gefuellt wurde. Ein Band statt des Rohwerts, damit der
+            # Schluessel grob bleibt - vier Merkmale mit je vier Baendern sind
+            # schon 256 Zellen.
+            gleichlauf=_band_grob(hat.get("volumen_perzentil")))
         e = aus.setdefault(schluessel,
                            {"treffer": 0, "faelle": 0, "abgelaufen": 0})
         if row[0] == OUTCOME_ABGELAUFEN:

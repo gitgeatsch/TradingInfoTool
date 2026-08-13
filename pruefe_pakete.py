@@ -2253,11 +2253,12 @@ def paket_12d() -> None:
 
     # DIE ABHAENGIGKEIT MUSS AN DER MAIL STEHEN, nicht nur im Kopf des Prueflings.
     mail_quelle = _quelltext("agent/signal_mail.py")
-    pruefe(P, "signal_mail nennt die Abhaengigkeit und die fehlende Wartemechanik",
+    pruefe(P, "signal_mail nennt die Abhaengigkeit und wo die Wartestufe sitzt",
            "_ZAI_EMAIL_WARTE_MAX_SEKUNDEN" in mail_quelle
-           and "KEINE eigene Wartemechanik" in mail_quelle,
-           "beim Verdrahten muss sie denselben Weg nehmen wie "
-           "_sende_signal_email_mit_zai_wartezeit(), sonst kehrt der Fund vom "
+           and "agent/zweite_meinung.py" in mail_quelle
+           and "KEINE EIGENE WARTEMECHANIK" in mail_quelle,
+           "sie formatiert, sie wartet nicht - wer sie woanders einhaengt, "
+           "muss dieselbe Reihenfolge nehmen, sonst kehrt der Fund vom "
            "28.07. zurueck")
 
 
@@ -2692,11 +2693,13 @@ def paket_export() -> None:
     offen = drift["spalten"].get("signals", {}).get("nicht_exportiert") or []
     pruefe(P, "keine signals-Spalte ist mehr unexportiert", offen == [],
            f"offen: {offen}")
-    pruefe(P, "die acht Spalten der Rollen-Kette sind namentlich drin",
+    pruefe(P, "die elf Spalten der Rollen-Kette sind namentlich drin",
            all(sp in EX._SPOT_SIGNAL_SPALTEN for sp in
                ("quelle_kette", "lagebild_id", "prompt_stand", "fx_eur_je_usd",
                 "unabhaengige_faktoren", "umgeworfen_durch",
-                "umgeworfen_preis_eur", "umgeworfen_bis")),
+                "umgeworfen_preis_eur", "umgeworfen_bis",
+                "schwankung_perzentil", "momentum_perzentil",
+                "volumen_perzentil")),
            "ohne sie ist der gesamte Umbau von aussen unsichtbar")
 
     # DIE STUFEN WERDEN AUSGEPACKT, nicht als JSON-Klumpen abgelegt.
@@ -2784,10 +2787,342 @@ def _beispiel_durchlauf(RG):
     return d
 
 
+def paket_15() -> None:
+    """Kapitel 15, Schritt 1: die Versandkette und das Material fuers Meta-Labeling."""
+    P = "15"
+    import sqlite3
+    import threading
+    import time as _time
+    from agent import rollen_gate as RG, signal_abbildung as SA
+    from agent import trefferbilanz as TB, zweite_meinung as ZM
+    from database.db import _SIGNAL_COLUMNS
+
+    # ------------------------------------------------------------------
+    # A. DAS SCHREIBEN - die Luecke, an der die ganze Kette haengt.
+    q = sqlite3.connect("data/tradinginfotool.db")
+    c = sqlite3.connect(":memory:"); q.backup(c); q.close()
+    SA.migriere(c); RG.migriere(c)
+
+    NEUE = ("quelle_kette", "lagebild_id", "prompt_stand", "fx_eur_je_usd",
+            "unabhaengige_faktoren", "umgeworfen_durch", "umgeworfen_preis_eur",
+            "umgeworfen_bis", "schwankung_perzentil", "momentum_perzentil",
+            "volumen_perzentil")
+
+    # DIE BEGRUENDUNG DER FUNKTION, ALS PRUEFUNG. Faellt diese hier um, ist
+    # `schreibe_signal()` ueberfluessig geworden - dann gehoert sie weg, nicht
+    # daneben. Eine zweite Schreibfunktion ohne Grund ist eine Fehlerquelle.
+    pruefe(P, "db.insert_signal koennte KEINE der elf neuen Spalten schreiben",
+           not any(sp in _SIGNAL_COLUMNS for sp in NEUE),
+           "genau deshalb gibt es schreibe_signal() - der Weg ueber die alte "
+           "Funktion haette sie still fallen lassen, ohne Fehler")
+
+    antwort = {"aktion": "KAUFEN", "begruendung": "Bodenbildung",
+               "was_dagegen": "duenner Umsatz", "unabhaengige_faktoren": 3,
+               "umgeworfen_durch": "Bruch der Marke",
+               "umgeworfen_preis_eur": 90.0, "umgeworfen_bis": "2026-09-01",
+               "einstieg_eur_von": 100.0, "stop_eur_von": 90.0,
+               "ziel_eur_von": 130.0, "tranche_eur": 500.0}
+    familien = {"schwankung_perzentil": 0.12, "momentum_perzentil": 0.74,
+                "volumen_perzentil": 0.81}
+    felder = SA.felder_aus_entscheidung(
+        antwort, fakten={"asset": "TESTX"}, lagebild_id=7,
+        prompt_stand="p1", eur_je_usd=0.8744, familien=familien)
+    sid = SA.schreibe_signal(c, felder, symbol="TESTX")
+    pruefe(P, "schreibe_signal legt eine Zeile an und gibt die Kennung",
+           isinstance(sid, int) and sid > 0)
+
+    zeile = c.execute("SELECT * FROM signals WHERE id = ?", (sid,)).fetchone()
+    namen = [d[0] for d in c.execute(
+        "SELECT * FROM signals WHERE id = ?", (sid,)).description]
+    hat = dict(zip(namen, zeile))
+    fehlend = [sp for sp in NEUE if hat.get(sp) is None]
+    pruefe(P, "alle elf neuen Spalten stehen wirklich in der Zeile",
+           not fehlend, f"leer geblieben: {fehlend}")
+    pruefe(P, "die Pflichtfelder der Tabelle sind gefuellt",
+           all(hat.get(sp) is not None for sp in
+               ("symbol", "created_at", "action", "gate_passed", "facts_json")),
+           "sonst schlaegt der INSERT erst im Betrieb fehl")
+    pruefe(P, "quelle_kette trennt die neue von der alten Kette",
+           hat.get("quelle_kette") == "rollen",
+           "ohne sie waere jede spaetere Messung ein Mischtopf")
+
+    # DIE PERZENTILE UNVERAENDERT, nicht schon hier in Baender gelegt. Wer den
+    # Rohwert speichert, kann die Bandgrenzen spaeter noch aendern; wer das Band
+    # speichert, hat sich fuer immer festgelegt.
+    pruefe(P, "die Perzentile stehen als Wert da, nicht als Band",
+           abs(hat.get("momentum_perzentil") - 0.74) < 1e-9,
+           f"gespeichert: {hat.get('momentum_perzentil')}")
+
+    # ------------------------------------------------------------------
+    # B. DER KONSTELLATIONSSCHLUESSEL - vier Plaetze, bisher einer gefuellt.
+    pruefe(P, "0,74 wird zu Perzentil 74, nicht zu 0,74",
+           TB._prozent(0.74) == 74.0,
+           "die Grenzen in merkmale() sind PROZENTE - ohne die Umrechnung "
+           "faenden ALLE Werte im untersten Band, und die Tabelle saehe "
+           "gefuellt aus, waehrend sie eine Spalte breit waere")
+
+    # DIE KONSTANTEN SELBST, NICHT IHRE WERTE ABGESCHRIEBEN. Der erste Wurf
+    # dieser Pruefung setzte 'take_profit' - richtig heisst es
+    # 'take_profit_erreicht', und die Pruefung meldete daraufhin einen Defekt,
+    # den es nicht gibt. Dritter Fall derselben Bewegung an einem Tag: eine
+    # Zeichenkette aus dem Gedaechtnis statt aus der Quelle.
+    c.execute("UPDATE signals SET outcome_status = ? WHERE id = ?",
+              (TB.TREFFER[0], sid))
+    c.commit()
+    bilanz = TB.zaehle(c, quelle_kette="rollen")
+    pruefe(P, "das geschriebene Signal erscheint in der Trefferbilanz",
+           sum(e["faelle"] for e in bilanz.values()) >= 1,
+           "vor dem 13.08. lieferte zaehle() dauerhaft {} - der Entscheider "
+           "rechnete nicht mit wenig Daten, sondern mit null")
+    schluessel = next(iter(bilanz), None)
+    if schluessel is None:
+        pruefe(P, "ohne Bilanz sind die folgenden Pruefungen nicht pruefbar",
+               False, "abgebrochen statt gruen gemeldet")
+        c.close(); return
+    pruefe(P, "der Schluessel hat mehr als ein gefuelltes Merkmal",
+           sum(1 for x in schluessel if x is not None) >= 3,
+           f"Schluessel {schluessel} - die Faktorzahl allein wiederholt nur "
+           f"die Entscheidung (Faktorzahl 3 -> 82 % Einstieg)")
+    # DIE BANDGRENZEN SIND (25, 50, 75), ALSO LIEGT 74 IM DRITTEN BAND (Index 2),
+    # nicht im vierten. Meine erste Erwartung war 3 - die Pruefung meldete einen
+    # Defekt, der keiner war. Erwartungen an eine Einteilung rechnet man nach,
+    # man schaetzt sie nicht.
+    pruefe(P, "12. Perzentil ins unterste Band, 74. ins dritte von vier",
+           schluessel[1] == 0 and schluessel[2] == 2,
+           f"Grenzen (25, 50, 75) -> ergaben {schluessel[1]} und {schluessel[2]}")
+
+    # EIN SIGNAL OHNE FAMILIEN DARF NICHT IN DIESELBE ZELLE FALLEN wie eines
+    # mit gemessenen. `None` ist ein eigenes Band - sonst zaehlte man Faelle
+    # zusammen, ueber die man Verschiedenes weiss.
+    ohne = SA.felder_aus_entscheidung(antwort, fakten={}, familien=None)
+    sid2 = SA.schreibe_signal(c, ohne, symbol="TESTY")
+    verlust = next(s for s in TB.AUFGELOEST if s not in TB.TREFFER)
+    c.execute("UPDATE signals SET outcome_status = ? WHERE id = ?",
+              (verlust, sid2)); c.commit()
+    b2 = TB.zaehle(c, quelle_kette="rollen")
+    pruefe(P, "ohne gemessene Familien entsteht ein EIGENER Schluessel",
+           len(b2) >= 2, f"Schluessel: {list(b2)}")
+
+    # ------------------------------------------------------------------
+    # C. DIE ZWEITE MEINUNG (Z.ai) - Text hinein, kein Zahlenwerk.
+    pruefe(P, "ohne Z.ai-Client faellt die Stufe still aus, ohne Fehler",
+           ZM.hole(faktentext={}, urteil={}, zai_client=None) == {},
+           "P-8: die Gegenpruefung ist eine Zusatzinformation, keine Bedingung")
+
+    class _Haenger:
+        def chat(self, *a, **k):
+            _time.sleep(30)
+            return "{}"
+
+    begonnen = _time.monotonic()
+    aus = ZM.hole(faktentext={"a": 1}, urteil={"aktion": "KAUFEN"},
+                  zai_client=_Haenger(), warte_max_s=0.4)
+    gedauert = _time.monotonic() - begonnen
+    pruefe(P, "ein haengendes Z.ai haelt die Mail nicht auf",
+           gedauert < 5 and aus == {},
+           f"{gedauert:.1f}s gewartet - 3 x 150 s Timeout gegen 240 s Deckel "
+           f"ist bekannt und gewollt (P-8), aber es muss ENDEN")
+
+    class _HalbKaputt:
+        """Erster Aufruf wirft, die uebrigen antworten."""
+        def __init__(self): self.n = 0
+        def chat(self, *a, **k):
+            self.n += 1
+            if self.n == 1:
+                raise RuntimeError("Netz weg")
+            return '{"eigene_richtung": "SHORT", "kurzbegruendung": "schwach"}'
+
+    aus2 = ZM.hole(faktentext={"a": 1}, urteil={"aktion": "KAUFEN"},
+                   zai_client=_HalbKaputt(), warte_max_s=20)
+    pruefe(P, "faellt die Konsistenzpruefung aus, laeuft der Richtungsabgleich",
+           aus2.get("eigene_richtung") == "SHORT" and "urteil" not in aus2,
+           f"bekommen: {aus2} - ein gemeinsamer try-Block haette beide verloren")
+    pruefe(P, "und der Widerspruch wird als solcher gebucht",
+           aus2.get("uebereinstimmung") == "nein",
+           "KAUFEN gegen SHORT ist eine Abweichung, keine Uebereinstimmung")
+
+    # KEIN VERGLEICH OHNE VERGLEICHSBASIS.
+    aus3 = ZM.hole(faktentext={"a": 1}, urteil={"aktion": "NICHTS_TUN"},
+                   zai_client=_HalbKaputt(), warte_max_s=20)
+    pruefe(P, "bei NICHTS_TUN wird KEINE Uebereinstimmung behauptet",
+           "uebereinstimmung" not in aus3,
+           "richtung_aus_action() liefert dort bewusst None - ein 'nein' waere "
+           "eine Abweichung von einer Richtung, die niemand behauptet hat")
+
+    pruefe(P, "ohne Ergebnis entsteht KEINE leere Mailzeile", ZM.zeilen({}) == [],
+           "ein Abschnitt 'Zweite Meinung: -' saehe aus wie ein Befund und "
+           "waere ein Ausfall - der Leser kann beides nicht unterscheiden")
+    zeilen = ZM.zeilen(aus2)
+    pruefe(P, "der Widerspruch steht in der Mail und wird benannt",
+           any("WIDERSPRICHT" in z for z in zeilen), f"{zeilen}")
+
+    # ------------------------------------------------------------------
+    # D. DIE REIHENFOLGE - der eigentliche Fund vom 28.07.
+    lauf = _quelltext("agent/rollen_lauf.py")
+    i_schreib = lauf.find("SA.schreibe_signal(")
+    i_zai = lauf.find("ZM.hole(")
+    i_send = lauf.find("versand(eintrag[")
+    pruefe(P, "schreiben -> Z.ai -> versenden, in dieser Reihenfolge",
+           -1 < i_schreib < i_zai < i_send,
+           f"Positionen {i_schreib}/{i_zai}/{i_send} - ginge die Mail vorher "
+           f"raus, kehrte der Fund vom 28.07. zurueck")
+    pruefe(P, "die Mail wird ERST NACH der zweiten Meinung endgueltig gebaut",
+           'eintrag["betreff"], eintrag["text"] = baue(ZM.zeilen(' in lauf,
+           "sonst muesste man Zeilen in einen fertigen Text flicken und die "
+           "Abschnittsreihenfolge an zwei Orten pflegen")
+    pruefe(P, "Z.ai bekommt den Faktentext, nicht die Rechnung",
+           "ZM.hole(faktentext=bc_ein" in lauf and "rechnung" not in
+           lauf[i_zai:i_zai + 200],
+           "Stop, Ziel, Betrag und CRV liegen auf der deterministischen "
+           "Schiene - Nutzervorgabe 13.08.: Text, keine Zahlenangaben")
+
+    # NUR DER CODE, NICHT DIE BEGRUENDUNG. Dieses Modul erklaert in seinem
+    # Docstring ausfuehrlich, was es NICHT tut - eine Textsuche wuerde genau
+    # diese Erklaerungen als Verstoss melden.
+    zm = _nur_code("agent/zweite_meinung.py")
+    pruefe(P, "die Trefferbilanz erreicht Z.ai NICHT",
+           "trefferbilanz" not in zm.lower() and "bewertung" not in zm
+           and "TB." not in zm,
+           "die Tabelle entsteht AUS den Urteilen des Modells - sie ihm "
+           "zurueckzugeben macht aus einer Messung eine Rueckkopplung")
+
+    # DIE GEFAEHRLICHSTE ZEILE, DIE NICHT DA SEIN DARF.
+    pruefe(P, "die Kette ruft NICHT fuehre_beide_calls_im_hintergrund()",
+           "fuehre_beide_calls_im_hintergrund" not in zm
+           and "fuehre_beide_calls_im_hintergrund" not in
+           _nur_code("agent/rollen_lauf.py"),
+           "jene Funktion oeffnet ihre Verbindung mit db.get_connection(), "
+           "fest auf die PRODUKTIVDATEI - ein Probelauf gegen eine Kopie "
+           "schriebe sein Ergebnis dort auf eine fremde signal_id")
+    pruefe(P, "das Ergebnis geht durch die UEBERGEBENE Verbindung",
+           "def schreibe ( conn" in zm and "get_connection" not in zm,
+           "der Nachweis laeuft ueber den reinen Code - im Docstring steht "
+           "get_connection() als Begruendung, warum es hier NICHT benutzt wird")
+
+    # Die Wartezeit muss laenger sein als EIN Z.ai-Aufruf, sonst waere sie
+    # sinnlos - dieselbe Rechnung wie in der alten Kette.
+    zai_timeout = _konst_aus("api/zai.py", "REQUEST_TIMEOUT_SECONDS")
+    if zai_timeout:
+        pruefe(P, "der Deckel ist groesser als ein einzelner Z.ai-Aufruf",
+               ZM.WARTE_MAX_SEKUNDEN > zai_timeout,
+               f"{ZM.WARTE_MAX_SEKUNDEN} s gegen {zai_timeout} s")
+
+    # PROBE WARTET AUCH. Eine Mechanik, die nur scharf laeuft, ist genau dort
+    # zum ersten Mal erprobt, wo ein Fehler eine echte Mail kostet.
+    pruefe(P, "auch die Probe durchlaeuft die zweite Meinung",
+           lauf.find("if betriebsart == TROCKEN:\n        return") < i_zai,
+           "nur der Trockenlauf steigt vorher aus")
+
+    # ------------------------------------------------------------------
+    # E. DER GANZE WEG, EINMAL DURCH - probe, aber ohne einen einzigen echten
+    # Aufruf. Ein Client, der aufgezeichnete Antworten zurueckgibt, prueft
+    # genau das, was der Trockenlauf NICHT erreicht: das Schreiben, die zweite
+    # Meinung und die Reihenfolge. Kosten: null Kontingent.
+    from agent import rollen_lauf as RL, rollen_eingabe as RE
+    from backtest_llm1_historisch import lade_reihen_aus_db as lade
+    reihen = lade("data/tradinginfotool.db")
+    symbole = [s for s in ("BTC", "ETH", "LINK") if s in reihen]
+
+    def _befund(sym, kauft):
+        r = reihen[sym]; i = len(r) - 1
+        k = RE.kurs_eur(sym, r, i, "data/tradinginfotool.db")
+        a = RE.atr_eur(sym, r, i, "data/tradinginfotool.db")
+        return {"aktion": "KAUFEN" if kauft else "NICHTS_TUN",
+                "belege": [{"fakt": "Schwankung niedrig", "richtung": "dafuer",
+                            "gewicht": "hoch"}],
+                "unabhaengige_faktoren": 2,
+                "begruendung": "Die Schwankung geht zurueck.",
+                "was_dagegen": "Abstand zum Hoch.",
+                "umgeworfen_durch": "Tagesschluss unter dem Jahrestief.",
+                **({"einstieg_eur": round(k, 2),
+                    "stop_eur": round(k - 2.5 * a, 2)} if kauft else {})}
+
+    _lagebild = {"lage": "Die Maerkte zeigen eine Divergenz.",
+                 "klassen": [{"klasse": "krypto", "einstufung": "unguenstig",
+                              "warum": "Bitcoin steht tief."}],
+                 "belege": ["Bitcoin steht tief."]}
+
+    class _Aufzeichnung:
+        """Aufgezeichnete Antworten in der Form eines ECHTEN Clients.
+
+        DIE FORM IST DER PUNKT. Ein erfundenes Client-Interface hat am 13.08.
+        schon einmal bis zum ersten echten Aufruf ueberlebt - dieser hier nimmt
+        eine NACHRICHTENLISTE und gibt Text, wie `_frage()` es erwartet."""
+        def __init__(self):
+            self.aufrufe = 0
+
+        def chat(self, messages, **k):
+            import json as _j
+            self.aufrufe += 1
+            inhalt = messages[-1]["content"]
+            if self.aufrufe == 1:
+                return _j.dumps(_lagebild, ensure_ascii=False)
+            sym = next((s for s in symbole if s in inhalt), symbole[0])
+            return _j.dumps(_befund(sym, sym == "BTC"), ensure_ascii=False)
+
+    klient = _Aufzeichnung()
+    vor = c.execute("SELECT COUNT(*) FROM signals "
+                    "WHERE quelle_kette='rollen'").fetchone()[0]
+    erg = RL.fuehre_lauf(conn=c, reihen=reihen, symbole=symbole,
+                         betriebsart="probe", client=klient, modell="test",
+                         zai_client=None)
+    pruefe(P, "der Probelauf laeuft ohne Fehler durch",
+           not erg["fehler"], str(erg["fehler"][:2]))
+    nach = c.execute("SELECT COUNT(*) FROM signals "
+                     "WHERE quelle_kette='rollen'").fetchone()[0]
+    pruefe(P, "und schreibt eine Signalzeile - erstmals ueberhaupt",
+           nach > vor, f"{vor} -> {nach}")
+    pruefe(P, "die Mail traegt die Kennung des geschriebenen Signals",
+           any(m.get("signal_id") for m in erg["mails"]),
+           "ohne sie liesse sich eine verschickte Mail spaeter keinem "
+           "Datensatz zuordnen")
+    neu = c.execute(
+        "SELECT schwankung_perzentil, momentum_perzentil, volumen_perzentil, "
+        "lagebild_id FROM signals WHERE quelle_kette='rollen' "
+        "ORDER BY id DESC LIMIT 1").fetchone()
+    pruefe(P, "die drei Familien und das Lagebild stehen an der Zeile",
+           all(w is not None for w in neu), f"gespeichert: {neu}")
+    pruefe(P, "ohne Z.ai-Client bleibt die Mail ohne Gegenpruefungszeilen",
+           not any("zweite_meinung" in m for m in erg["mails"]),
+           "P-8 - kein Client heisst kein Abschnitt, nicht ein leerer")
+    c.close()
+
+
+def _nur_code(pfad: str) -> str:
+    """Der Quelltext OHNE Kommentare und ohne Zeichenketten.
+
+    WOFUER, an vier echten Fehlschlaegen gelernt. Eine Pruefung wie
+    `"fuehre_beide_calls_im_hintergrund" not in quelle` schlaegt an, sobald der
+    Modul-Docstring ERKLAERT, warum diese Funktion bewusst NICHT gerufen wird.
+    Je besser eine Datei begruendet, was sie nicht tut, desto sicherer meldet
+    eine solche Pruefung einen Defekt, den es nicht gibt.
+
+    Dasselbe schon zweimal am 13.08.: `" R"` traf "REICHWEITE", und
+    `"confidence_pct"` traf den Docstring, der dessen Entfernung begruendet.
+
+    Faellt das Zerlegen aus (Syntaxfehler waehrend eines Umbaus), kommt der
+    Rohtext zurueck - lieber ein zu strenger Treffer als eine stumme Pruefung."""
+    import io as _io
+    import tokenize as _tok
+    try:
+        with _io.open(pfad, "rb") as f:
+            return " ".join(
+                tok.string for tok in _tok.tokenize(f.readline)
+                if tok.type not in (_tok.COMMENT, _tok.STRING))
+    except Exception:                                        # noqa: BLE001
+        return _quelltext(pfad)
+
+
+def _konst_aus(datei, name):
+    import re
+    m = re.search(rf"^{name}\s*=\s*([0-9.]+)", _quelltext(datei), re.M)
+    return float(m.group(1)) if m else None
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export}
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15}
 
 
 def main() -> int:

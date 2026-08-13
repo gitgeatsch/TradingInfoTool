@@ -79,7 +79,7 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                 antworten: dict | None = None,
                 config: dict | None = None,
                 db: str = "data/tradinginfotool.db",
-                versand=None) -> dict:
+                versand=None, zai_client=None) -> dict:
     """Ein vollstaendiger Durchgang ueber alle Symbole.
 
     `antworten` ist die Aufzeichnung fuer den Trockenlauf:
@@ -107,7 +107,8 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                        gegenpruefer_rollen as Z1, rolle_analyst as RA,
                        rolle_trader as RT, rollen_eingabe as RE,
                        rollen_gate as RG, signal_abbildung as SA,
-                       signal_mail as SM, toepfe as TO, trefferbilanz as TB)
+                       signal_mail as SM, toepfe as TO, trefferbilanz as TB,
+                       zweite_meinung as ZM)
     from agent.empfehlung_vertrag import EmpfehlungUngueltig
     from agent.handelsauftrag import AuftragUngueltig, pruefe as pruefe_auftrag
 
@@ -180,7 +181,8 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                        config=config, aufgezeichnet=aufgezeichnet,
                        instrument=instrument, strategie=strategie,
                        ergebnis=ergebnis, versand=versand,
-                       module=(AR, ER, FB, FQ, Z1, RT, RE, SA, SM, TO, TB),
+                       module=(AR, ER, FB, FQ, Z1, RT, RE, SA, SM, TO, TB, ZM),
+                       zai_client=zai_client,
                        fehlertypen=(EmpfehlungUngueltig, AuftragUngueltig,
                                     RT.TraderAntwortUngueltig),
                        pruefe_auftrag=pruefe_auftrag)
@@ -205,9 +207,9 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                durchlauf, betriebsart, client, modell, conn, db, config,
                instrument, strategie,
                aufgezeichnet, ergebnis, versand, module, fehlertypen,
-               pruefe_auftrag) -> None:
+               pruefe_auftrag, zai_client=None) -> None:
     """Ein Asset durch alle Stufen. Wirft, wenn es nicht weitergeht."""
-    AR, ER, FB, FQ, Z1, RT, RE, SA, SM, TO, TB = module
+    AR, ER, FB, FQ, Z1, RT, RE, SA, SM, TO, TB, ZM = module
 
     # --- Stufe: Auftrag --- (schon vor der Schleife geprueft)
     durchlauf.bestanden(symbol, "auftrag")
@@ -315,25 +317,66 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                                  hebel=rechnung.get("hebel"))
     block = FB.baue(f"krypto_{instrument}", kern_werte=kern,
                     zusatz_werte=zusatz, symbol=symbol) if kern else []
-    betreff, text = SM.baue_mail(
-        symbol=symbol, name=symbol, kurs_eur=kurs_e, instrument=instrument,
-        strategie=strategie, rechnung=rechnung, urteil=befund,
-        faktenblock=block, modell=modell, zeitpunkt=tag,
-        einordnung=TB.satz(bewertung, einstieg=kurs_e,
-                           stop=rechnung["stop_eur"],
-                           einsatz_eur=rechnung["betrag_eur"])
-        + Z1.satz(z1))
-    ergebnis["mails"].append({"symbol": symbol, "betreff": betreff, "text": text})
+    # DIE MAIL ALS BAUPLAN, NICHT ALS FERTIGER TEXT. Die Zeilen der zweiten
+    # Meinung entstehen erst, wenn Z.ai geantwortet hat - und darauf wartet
+    # die Kette bis zu vier Minuten. Sie danach in einen fertigen String
+    # hineinzuflicken hiesse, die Reihenfolge der Abschnitte an zwei Orten zu
+    # pflegen; ein Bauplan kennt sie an einem.
+    def baue(zweite_zeilen: list) -> tuple:
+        return SM.baue_mail(
+            symbol=symbol, name=symbol, kurs_eur=kurs_e, instrument=instrument,
+            strategie=strategie, rechnung=rechnung, urteil=befund,
+            faktenblock=block, modell=modell, zeitpunkt=tag,
+            einordnung=TB.satz(bewertung, einstieg=kurs_e,
+                               stop=rechnung["stop_eur"],
+                               einsatz_eur=rechnung["betrag_eur"])
+            + Z1.satz(z1) + list(zweite_zeilen))
 
-    # --- Schreiben und Versenden ---
-    if betriebsart != "trocken":
-        felder = SA.felder_aus_entscheidung(
-            befund, fakten=bc_ein, lagebild_id=lagebild_id,
-            prompt_stand=getattr(RT, "PROMPT_STAND", "?"),
-            eur_je_usd=RE.fx_eur_je_usd(symbol, reihe, idx, db))
-        ergebnis["signale"].append({"symbol": symbol, "felder": felder})
-    if betriebsart == "scharf" and versand is not None:
-        versand(betreff, text)
+    betreff, text = baue([])
+    eintrag = {"symbol": symbol, "betreff": betreff, "text": text}
+    ergebnis["mails"].append(eintrag)
+
+    # --- Schreiben ----------------------------------------------------------
+    #
+    # HIER ENTSTEHT DIE SIGNALZEILE - bis zum 13.08. entstand sie NIE. Die
+    # Felder wurden gebaut und in `ergebnis` gelegt, geschrieben hat sie
+    # niemand. Folge: `trefferbilanz.zaehle()` selektiert
+    # `WHERE quelle_kette = 'rollen'` und lieferte dauerhaft {} - der
+    # Entscheider rechnete nicht "mit wenig Daten", sondern mit null, und die
+    # 34 % waren nie eine geschrumpfte Schaetzung, sondern der unberuehrte
+    # Mittelwert.
+    if betriebsart == TROCKEN:
+        return
+    felder = SA.felder_aus_entscheidung(
+        befund, fakten=bc_ein, lagebild_id=lagebild_id,
+        prompt_stand=getattr(RT, "PROMPT_STAND", "?"),
+        eur_je_usd=RE.fx_eur_je_usd(symbol, reihe, idx, db),
+        # DIE DREI GEMESSENEN FAMILIEN - dieselben Werte, die oben schon in den
+        # Faktenblock der Mail gingen. Sie sind das einzige Material fuer den
+        # Konstellationsschluessel, das NICHT die Entscheidung wiederholt.
+        familien=kern)
+    signal_id = SA.schreibe_signal(conn, felder, symbol=symbol)
+    eintrag["signal_id"] = signal_id
+    ergebnis["signale"].append({"symbol": symbol, "id": signal_id,
+                                "felder": felder})
+
+    # --- Zweite Meinung, dann versenden -------------------------------------
+    #
+    # DIE REIHENFOLGE IST DER GANZE PUNKT: schreiben -> Z.ai -> warten ->
+    # Mail bauen -> versenden. Ginge die Mail vorher raus, kehrte der Fund vom
+    # 28.07. zurueck - die BTC-SHORT-Mail ohne Gegenpruefungszeilen, obwohl das
+    # Urteil zum Versandzeitpunkt vorlag.
+    #
+    # AUCH IN `probe`, nicht erst in `scharf`. Eine Wartemechanik, die nur im
+    # scharfen Betrieb laeuft, ist genau dort zum ersten Mal erprobt, wo ein
+    # Fehler eine echte Mail kostet.
+    zweite = ZM.hole(faktentext=bc_ein, urteil=befund, zai_client=zai_client)
+    if zweite:
+        ZM.schreibe(conn, signal_id, zweite)
+        eintrag["zweite_meinung"] = zweite
+        eintrag["betreff"], eintrag["text"] = baue(ZM.zeilen(zweite))
+    if betriebsart == SCHARF and versand is not None:
+        versand(eintrag["betreff"], eintrag["text"])
 
 
 def _frage(client, modell, system_prompt, eingabe, modulname):

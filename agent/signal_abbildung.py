@@ -113,6 +113,22 @@ SPALTEN_SIGNAL = {
                                             # Ohne ihn liesse sich spaeter nicht
                                             # nachrechnen, wie die USD-Zonen
                                             # entstanden sind
+    # DIE DREI GEMESSENEN FAKTENFAMILIEN (13.08., Schritt 1 zu Kapitel 15).
+    #
+    # WARUM SIE AUF DIE SIGNALZEILE GEHOEREN und nicht nur in die Mail:
+    # `trefferbilanz.merkmale()` hat VIER Plaetze im Konstellationsschluessel,
+    # gefuellt wurde bisher EINER - die Faktorzahl. Und von der ist gemessen,
+    # dass sie die Entscheidung nur wiederholt (Faktorzahl 3 -> 82 % Einstieg,
+    # Faktorzahl 2 -> 0 %). Ein Meta-Modell, dessen einziges Merkmal die
+    # Ausgabe des Primaermodells ist, kann nichts hinzufuegen.
+    #
+    # `faktenblock.werte_aus_reihe()` rechnet diese drei ohnehin je Asset zum
+    # Signalzeitpunkt - sie standen bisher NUR im Mailtext und waren danach
+    # weg. Perzentile, nicht Rohwerte: der Vergleichsmassstab ist das eigene
+    # Jahr des Symbols, sonst waere BTC nicht mit einem Kleinwert vergleichbar.
+    "schwankung_perzentil": "REAL",         # -11,7 pp (ruhig ist besser)
+    "momentum_perzentil": "REAL",           # +9,1 pp
+    "volumen_perzentil": "REAL",            # +4,5 pp
 }
 
 _LAGEBILDER = """
@@ -176,7 +192,8 @@ def schreibe_lagebild(conn: sqlite3.Connection, *, datum: str, antwort: dict,
 def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
                             lagebild_id: int | None = None,
                             prompt_stand: str | None = None,
-                            eur_je_usd: float | None = None) -> dict:
+                            eur_je_usd: float | None = None,
+                            familien: dict | None = None) -> dict:
     """Die Spaltenwerte fuer EIN Signal aus der Antwort der Rollen-Kette.
 
     SCHREIBT NICHT - der Aufrufer entscheidet, ob und wann. Diese Trennung ist
@@ -244,4 +261,62 @@ def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
                 aus[f"{usd_spalte}_{rand}"] = round(float(wert) / float(eur_je_usd), 8)
     if eur_je_usd:
         aus["fx_eur_je_usd"] = float(eur_je_usd)
+    # DIE DREI FAMILIEN, wenn sie gerechnet wurden. `werte_aus_reihe()` liefert
+    # `None`, solange die Reihe zu kurz fuer einen Rang ist - dann bleibt die
+    # Spalte leer, und `merkmale()` legt sie in ein eigenes Band. Eine 0 waere
+    # hier eine Aussage ("niedrigstes Perzentil"), die niemand gemessen hat.
+    for name in ("schwankung_perzentil", "momentum_perzentil",
+                 "volumen_perzentil"):
+        wert = (familien or {}).get(name)
+        if wert is not None:
+            aus[name] = float(wert)
     return {k: v for k, v in aus.items() if v is not None}
+
+
+def schreibe_signal(conn: sqlite3.Connection, felder: dict, *,
+                    symbol: str, erstellt_am: str | None = None) -> int:
+    """Eine Signalzeile aus der Rollen-Kette. Gibt die Kennung zurueck.
+
+    WARUM HIER UND NICHT `db.insert_signal()` - das ist der Kern:
+    `db._SIGNAL_COLUMNS` kennt KEINE der elf Spalten, die dieses Modul anlegt.
+    Der Weg ueber die alte Funktion wuerde `quelle_kette`, `lagebild_id`,
+    `umgeworfen_*`, `unabhaengige_faktoren` und die drei Familien
+    STILLSCHWEIGEND fallen lassen - und zwar ohne Fehler, weil sie schlicht
+    nicht in der Spaltenliste stehen. Die Spalten existieren seit dem 13.08.,
+    der Export exportiert sie, eine Pruefung bestaetigt den Export - und
+    fuellen konnte sie bis heute niemand.
+
+    `models.Signal` bleibt bewusst unangetastet: die alte Kette baut dieses
+    Objekt an sechs Stellen, und eine Erweiterung dort haette sechs
+    Aufrufer zu tragen, die von der neuen Kette nichts wissen.
+
+    SCHREIBT NUR, WAS ES KENNT. Die Spaltenliste kommt aus der Tabelle selbst,
+    nicht aus einer Konstante hier - so kann diese Funktion nicht an einer
+    Spalte scheitern, die eine spaetere Migration wieder entfernt, und sie
+    kann auch keine erfinden."""
+    migriere(conn)
+    vorhanden = {r[1] for r in conn.execute("PRAGMA table_info(signals)")}
+    werte = {k: v for k, v in (felder or {}).items()
+             if k in vorhanden and v is not None}
+
+    # DIE PFLICHTFELDER DER TABELLE. Ohne sie schlaegt der INSERT fehl, und
+    # zwar erst zur Laufzeit im Betrieb - deshalb hier gesetzt, nicht gehofft.
+    werte["symbol"] = symbol
+    werte["created_at"] = erstellt_am or datetime.now(timezone.utc).isoformat()
+    werte.setdefault("facts_json", "{}")
+    # `gate_passed` MEINT IN DIESER KETTE ETWAS ANDERES als in der alten, und
+    # das gehoert hierher statt in eine Auswertung: geschrieben wird eine Zeile
+    # nur, wenn sie alle VERWERFENDEN Stufen des Gates passiert hat (Auftrag
+    # bis Risikoschicht). Der Entscheider zaehlt nur und nimmt nichts heraus -
+    # eine Zeile mit `gate_passed = 1` kann sich also trotzdem nicht tragen.
+    # `quelle_kette` trennt beide Bedeutungen fuer jede spaetere Abfrage.
+    werte.setdefault("gate_passed", 1)
+    werte.setdefault("quelle_kette", "rollen")
+
+    spalten = list(werte)
+    cur = conn.execute(
+        f"INSERT INTO signals ({', '.join(spalten)}) "
+        f"VALUES ({', '.join('?' for _ in spalten)})",
+        [werte[s] for s in spalten])
+    conn.commit()
+    return int(cur.lastrowid)
