@@ -3085,6 +3085,60 @@ def paket_15() -> None:
     pruefe(P, "ohne Z.ai-Client bleibt die Mail ohne Gegenpruefungszeilen",
            not any("zweite_meinung" in m for m in erg["mails"]),
            "P-8 - kein Client heisst kein Abschnitt, nicht ein leerer")
+
+    # ------------------------------------------------------------------
+    # F. WAS DIE GEGENPRUEFUNG AN ECHTEN DATEN GEFUNDEN HAT (13.08.).
+    #
+    # Beides waere ohne einen Blick in einen ECHTEN Faktentext unentdeckt
+    # geblieben - keine Pruefung auf Vorsatz haette es gezeigt.
+    from agent.krypto import gegenpruefung as G
+    from agent.lagebeschreibung import _kurs
+
+    # F1 DIE PROMPTS MUESSEN BESCHREIBEN, WAS WIRKLICH ANKOMMT.
+    for name, prompt in (("Konsistenz", ZM.SYSTEM_KONSISTENZ),
+                         ("Richtung", ZM.SYSTEM_RICHTUNG)):
+        fremd = [w for w in ("Funding-Rate", "Optionsmarkt", "rsi", "RSI",
+                             "technische Indikatoren", "Marktregime")
+                 if w in prompt]
+        pruefe(P, f"der {name}-Prompt kuendigt nichts an, was die Kette nicht "
+                  f"schickt", not fremd, f"genannt, aber nie geliefert: {fremd}")
+    pruefe(P, "der alte Richtungs-Prompt tut genau das - deshalb ein eigener",
+           "Funding-Rate" in G.SYSTEM_PROMPT_RICHTUNG,
+           "ein Modell, dem man eine Struktur ankuendigt, die es nicht "
+           "vorfindet, antwortet trotzdem - und man sieht der Antwort nicht "
+           "an, dass sie auf einer falschen Erwartung beruht")
+    pruefe(P, "der alte Konsistenz-Prompt erklaert `richtung`/`action`",
+           "richtung" in G.SYSTEM_PROMPT and "Hebel-Signal" in G.SYSTEM_PROMPT,
+           "beides Felder, die im Faktentext der Kette nicht vorkommen")
+    zm_code = _nur_code("agent/zweite_meinung.py")
+    pruefe(P, "die Kette uebergibt ihre EIGENEN Prompts",
+           "system_prompt = SYSTEM_KONSISTENZ" in zm_code
+           and "system_prompt = SYSTEM_RICHTUNG" in zm_code,
+           "ohne die Uebergabe griffen still die alten")
+    pruefe(P, "und die alten bleiben fuer die sechs alten Pipelines gueltig",
+           "system_prompt or SYSTEM_PROMPT" in _nur_code(
+               "agent/krypto/gegenpruefung.py"),
+           "der Parameter ist optional - kein Aufrufer musste geaendert werden")
+
+    # F2 KEINE VORGETAEUSCHTE GENAUIGKEIT IM FAKTENTEXT.
+    pruefe(P, "ein fuenfstelliger Kurs bekommt keine vier Nachkommastellen",
+           _kurs(57402.8132) == "57.403",
+           f"vorher stand dort '57402.8132 EUR' - die Marke stammt aus einem "
+           f"Cluster von Hochs und Tiefs und ist auf hundert Euro genau, "
+           f"nicht auf einen Zehntelcent")
+    pruefe(P, "ein Kleinwert behaelt seine Stellen",
+           _kurs(0.00034567) == "0.000346",
+           "die Genauigkeit haengt an der Groessenordnung, nicht an einer "
+           "Konstante - sonst waere die Marke fuer ein Token unbrauchbar")
+    import json as _json
+    import re as _re
+    _, _bc = RE.baue_fall(symbol=symbole[0], reihe=reihen[symbole[0]],
+                          index=len(reihen[symbole[0]]) - 1, reihen=reihen,
+                          db="data/tradinginfotool.db", mit_finanzierung=False)
+    _text = _json.dumps(_bc, ensure_ascii=False)
+    _uebergenau = _re.findall(r"\d{4,}\.\d{3,}", _text)
+    pruefe(P, "auch im ECHTEN Faktentext steht keine solche Zahl mehr",
+           not _uebergenau, f"gefunden: {_uebergenau[:3]}")
     c.close()
 
 

@@ -66,6 +66,59 @@ logger = logging.getLogger(__name__)
 # Gegenpruefungszeilen raus statt gar nicht.
 WARTE_MAX_SEKUNDEN = 240
 
+# ---------------------------------------------------------------------------
+# EIGENE PROMPTS, WEIL DIE ALTEN EINE ANDERE FAKTENFORM BESCHREIBEN.
+#
+# GEFUNDEN IN DER GEGENPRUEFUNG ZU DIESEM SCHRITT, an einem echten Faktentext.
+# Die Prompts der alten Kette versprechen dem Modell etwas, das die Rollen-
+# Kette gar nicht schickt:
+#
+#   SYSTEM_PROMPT_RICHTUNG  "technische Indikatoren, Marktregime,
+#                           Funding-Rate, Optionsmarkt-Daten" - die Kette
+#                           liefert KEINEN dieser vier Bloecke.
+#   SYSTEM_PROMPT           spricht von einem "Krypto-Hebel-Signal" und
+#                           erklaert ueber die halbe Laenge die Bedeutung von
+#                           `richtung`/`action` - beides Felder, die im
+#                           Faktentext nicht vorkommen.
+#
+# Ein Modell, dem man eine Struktur ankuendigt, die es nicht vorfindet, liefert
+# trotzdem eine Antwort - und man sieht ihr nicht an, dass sie auf einer
+# falschen Erwartung beruht. Genau deshalb sind es zwei eigene Prompts und
+# keine Wiederverwendung.
+#
+# WAS SIE BESCHREIBEN, ist die Form, die `rollen_eingabe.baue_fall()` wirklich
+# baut: benannte Bloecke aus GANZEN SAETZEN (`auftrag`, `stand`), relativ vor
+# absolut, keine rohen Zahlenreihen.
+
+SYSTEM_KONSISTENZ = (
+    "Du bekommst Marktfakten zu einem Krypto-Wert als benannte Bloecke aus "
+    "ganzen Saetzen, dazu einen kurzen Begruendungstext, der fuer eine "
+    "Handelsentscheidung vorgebracht wurde. Deine einzige Aufgabe: pruefe, ob "
+    "der Begruendungstext den gegebenen Fakten WIDERSPRICHT - unabhaengig "
+    "davon, wie ueberzeugend er klingt. Die Fakten sind die einzige "
+    "Wahrheitsquelle, der Text ist eine zu pruefende Behauptung. Bezieht sich "
+    "der Text auf etwas, das nicht in den Fakten steht, ist das KEIN "
+    "Widerspruch - dir fehlt dann nur Kontext. Erfinde NIEMALS eigene Fakten. "
+    "Die Fakten nennen bewusst keine Kursziele, keine Stopkurse und keine "
+    "Positionsgroessen; dass sie fehlen, ist kein Widerspruch. "
+    "Antworte AUSSCHLIESSLICH mit JSON, exakt diese zwei Felder: "
+    '{"urteil": "konsistent" oder "widerspruch", "kurzbegruendung": '
+    '"<= 12 Woerter"}.')
+
+SYSTEM_RICHTUNG = (
+    "Du bekommst ausschliesslich Marktfakten zu einem Krypto-Wert als benannte "
+    "Bloecke aus ganzen Saetzen: Kursentwicklung ueber mehrere Fenster, "
+    "Marktstruktur, naechste Unterstuetzung und Widerstand, Umsatzverteilung, "
+    "gegebenenfalls ein bestehender Bestand. Du kennst KEINE Empfehlung eines "
+    "anderen Modells. Deine Aufgabe: leite ALLEIN aus diesen Fakten deine "
+    "eigene Markteinschaetzung ab - LONG (bullisch), SHORT (baerisch) oder "
+    "NEUTRAL (keine klare Tendenz). Ein bestehender Bestand und sein Gewinn "
+    "oder Verlust sagen NICHTS ueber die kuenftige Richtung - beziehe ihn "
+    "nicht ein. Erfinde NIEMALS eigene Fakten, nutze nur die gegebenen. "
+    "Antworte AUSSCHLIESSLICH mit JSON, exakt diese zwei Felder: "
+    '{"eigene_richtung": "LONG" oder "SHORT" oder "NEUTRAL", '
+    '"kurzbegruendung": "<= 12 Woerter"}.')
+
 
 def hole(*, faktentext: dict, urteil: dict, zai_client,
          warte_max_s: float = WARTE_MAX_SEKUNDEN) -> dict:
@@ -94,7 +147,8 @@ def hole(*, faktentext: dict, urteil: dict, zai_client,
         # ein gemeinsamer Block wuerde beim ersten Fehler beide verlieren.
         try:
             k = G.pruefe_konsistenz(zai_client, faktentext,
-                                    urteil.get("begruendung"))
+                                    urteil.get("begruendung"),
+                                    system_prompt=SYSTEM_KONSISTENZ)
             if k:
                 aus["urteil"] = k.get("urteil")
                 aus["kurzbegruendung"] = k.get("kurzbegruendung")
@@ -104,7 +158,8 @@ def hole(*, faktentext: dict, urteil: dict, zai_client,
         try:
             # OHNE Aktion und Begruendung - siehe Modul-Docstring. Der
             # Faktentext geht unveraendert hinein.
-            r = G.leite_eigene_richtung_positionsrobust(zai_client, faktentext)
+            r = G.leite_eigene_richtung_positionsrobust(
+                zai_client, faktentext, system_prompt=SYSTEM_RICHTUNG)
             if r:
                 aus["eigene_richtung"] = r.get("eigene_richtung")
                 aus["richtung_kurzbegruendung"] = r.get("kurzbegruendung")

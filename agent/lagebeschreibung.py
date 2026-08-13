@@ -161,6 +161,32 @@ NIVEAU_MIN_ABSTAND_ATR = 0.5   # naeher als das ist keine eigene Marke
 NIVEAU_CLUSTER_ATR = 0.3       # was enger beieinander liegt, ist EIN Niveau
 
 
+def _kurs(wert: float) -> str:
+    """Ein Kurs in der Genauigkeit, die er verdient.
+
+    GEFUNDEN IN DER GEGENPRUEFUNG ZUR ZWEITEN MEINUNG (13.08.). Vorher stand
+    hier fest `:.4f` - fuer BTC ergab das "57402.8132 EUR". Vier Nachkommastellen
+    auf einen fuenfstelligen Kurs sind VORGETAEUSCHTE GENAUIGKEIT: die Marke
+    stammt aus einem Cluster von Hochs und Tiefs, sie ist auf hundert Euro genau
+    und nicht auf einen Zehntelcent. Ein Modell liest so etwas als exakt und
+    ankert daran.
+
+    Umgekehrt braucht ein Token bei 0,00034 EUR die Stellen wirklich - deshalb
+    haengt die Genauigkeit an der Groessenordnung und nicht an einer Konstante.
+
+    Betrifft NICHT nur Z.ai: dieselbe Zeile geht auch an die Rolle BC."""
+    w = abs(float(wert))
+    if w >= 1000:
+        return f"{wert:,.0f}".replace(",", ".")
+    if w >= 100:
+        return f"{wert:.1f}"
+    if w >= 1:
+        return f"{wert:.2f}"
+    if w >= 0.01:
+        return f"{wert:.4f}"
+    return f"{wert:.6f}"
+
+
 def _cluster(punkte: list, atr: float) -> list[tuple[float, int]]:
     """Fasst nahe beieinanderliegende Swings zu einem Niveau zusammen.
 
@@ -199,13 +225,13 @@ def _niveaus(c: np.ndarray, h: np.ndarray, l: np.ndarray, i: int,
     if drueber:
         p, n = min(drueber, key=lambda x: x[0])
         aus.append(f"Der naechste Widerstand liegt {(p - kurs) / atr:.1f} "
-                   f"Schwankungsbreiten hoeher, bei {p * faktor:.4f} EUR "
+                   f"Schwankungsbreiten hoeher, bei {_kurs(p * faktor)} EUR "
                    f"({n}-mal beruehrt).")
     drunter = [(p, n) for p, n in niveaus if kurs - p >= grenze]
     if drunter:
         p, n = max(drunter, key=lambda x: x[0])
         aus.append(f"Die naechste Unterstuetzung liegt {(kurs - p) / atr:.1f} "
-                   f"Schwankungsbreiten tiefer, bei {p * faktor:.4f} EUR "
+                   f"Schwankungsbreiten tiefer, bei {_kurs(p * faktor)} EUR "
                    f"({n}-mal beruehrt).")
     if not aus:
         # Auch das ist eine Aussage: der Kurs steht im freien Feld.

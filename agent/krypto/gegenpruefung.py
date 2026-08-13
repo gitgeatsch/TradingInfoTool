@@ -262,7 +262,9 @@ SYSTEM_PROMPT_RICHTUNG = (
 _GUELTIGE_RICHTUNGEN = {"LONG", "SHORT", "NEUTRAL"}
 
 
-def leite_eigene_richtung(zai_client, objektive_fakten: dict, temperature: float = 0.0) -> dict | None:
+def leite_eigene_richtung(zai_client, objektive_fakten: dict,
+                          temperature: float = 0.0,
+                          system_prompt: str | None = None) -> dict | None:
     """Zweiter, GETRENNTER Z.ai-Call (siehe Modul-Docstring Punkt 2) - leitet
     unabhaengig von der Primaer-Empfehlung eine eigene Richtung her. Gibt
     None zurueck, wenn `zai_client` nicht konfiguriert ist oder der Call
@@ -283,7 +285,7 @@ def leite_eigene_richtung(zai_client, objektive_fakten: dict, temperature: float
 
     user_content = json.dumps({"fakten": objektive_fakten}, ensure_ascii=False)
     messages = [
-        {"role": "system", "content": SYSTEM_PROMPT_RICHTUNG},
+        {"role": "system", "content": system_prompt or SYSTEM_PROMPT_RICHTUNG},
         {"role": "user", "content": user_content},
     ]
     try:
@@ -315,7 +317,9 @@ def _kehre_objektive_fakten_um(objektive_fakten: dict) -> dict:
     return {k: objektive_fakten[k] for k in neue_reihenfolge}
 
 
-def leite_eigene_richtung_positionsrobust(zai_client, objektive_fakten: dict) -> dict | None:
+def leite_eigene_richtung_positionsrobust(
+        zai_client, objektive_fakten: dict,
+        system_prompt: str | None = None) -> dict | None:
     """Positions-Bias-robuste Fassung von `leite_eigene_richtung()` (2026-07-29,
     Regelwerk-Audit Stufe 3 Punkt 4 Folgefrage - Nutzer-Wunsch, den Fund
     "sehr genau" umzusetzen, siehe project_regelwerk_audit_29_07.md).
@@ -353,8 +357,11 @@ def leite_eigene_richtung_positionsrobust(zai_client, objektive_fakten: dict) ->
     hintergrund()` schreibt davon unveraendert nur EIN DB-Update,
     `backward_tracking.py::bewerte_zai_richtung()` liest nur das gespeicherte
     Endergebnis und ist von dieser Aenderung nicht betroffen."""
-    ergebnis_a = leite_eigene_richtung(zai_client, objektive_fakten)
-    ergebnis_b = leite_eigene_richtung(zai_client, _kehre_objektive_fakten_um(objektive_fakten))
+    ergebnis_a = leite_eigene_richtung(zai_client, objektive_fakten,
+                                       system_prompt=system_prompt)
+    ergebnis_b = leite_eigene_richtung(
+        zai_client, _kehre_objektive_fakten_um(objektive_fakten),
+        system_prompt=system_prompt)
 
     if ergebnis_a is None and ergebnis_b is None:
         return None
@@ -378,7 +385,9 @@ def leite_eigene_richtung_positionsrobust(zai_client, objektive_fakten: dict) ->
     }
 
 
-def pruefe_konsistenz(zai_client, fakten: dict, begruendungstext: str | None) -> dict | None:
+def pruefe_konsistenz(zai_client, fakten: dict,
+                      begruendungstext: str | None,
+                      system_prompt: str | None = None) -> dict | None:
     """Ruft Z.ai fuer die Konsistenzpruefung auf. Gibt None zurueck, wenn
     `zai_client` nicht konfiguriert ist, kein Begruendungstext vorliegt (nichts
     zu pruefen) oder der Call fehlschlaegt (P-8, faengt Netzwerkfehler UND
@@ -396,7 +405,7 @@ def pruefe_konsistenz(zai_client, fakten: dict, begruendungstext: str | None) ->
         {"fakten": fakten, "begruendungstext": begruendungstext}, ensure_ascii=False,
     )
     messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": system_prompt or SYSTEM_PROMPT},
         {"role": "user", "content": user_content},
     ]
     try:
