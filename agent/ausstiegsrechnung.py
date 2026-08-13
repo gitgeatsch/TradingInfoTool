@@ -321,7 +321,8 @@ def _absatz(e: dict, waehrung: str = "EUR") -> list[str]:
 
 
 def sammel_mail(alle: list, geprueft: int | None = None,
-                waehrung: str = "EUR") -> tuple[str, str] | None:
+                waehrung: str = "EUR",
+                ziel_erreicht: list | None = None) -> tuple[str, str] | None:
     """(Betreff, Text) - oder None, wenn nichts zu melden ist.
 
     ZWEI WELTEN, UND SIE WERDEN GETRENNT. Nutzerfund 13.08.: *"Diese Aktionen
@@ -343,8 +344,12 @@ def sammel_mail(alle: list, geprueft: int | None = None,
     ist dann nicht mehr offen - er taucht hier NIE auf. Diese Mail meldet
     ausschliesslich: Gewinn geht zurueck, These gefallen, oder Frist vorbei.
     Der Satz steht auch im Kopf der Mail."""
-    if not alle:
-        return None
+    # NICHT AN `alle` ABBRECHEN. Die erste Fassung stieg hier aus, wenn es
+    # keine offene Position gab - und schnitt damit genau den Fall ab, fuer
+    # den diese Mail gebaut wurde: ein erreichtes Ziel OHNE weitere offene
+    # Position haette keine Nachricht ergeben. Die einzige Nachricht mit Geld
+    # darin waere die einzige gewesen, die nicht verschickt wird.
+    alle = list(alle or [])
     bestand = [e for e in alle if e.get("ist_bestand")]
     verfolgung = [e for e in alle if not e.get("ist_bestand")]
 
@@ -358,10 +363,15 @@ def sammel_mail(alle: list, geprueft: int | None = None,
     nach, rest = gruppiere(bestand)
     faellig, nachziehen = len(nach[SCHLIESSEN]), len(nach[STOP_NACHZIEHEN])
     abgelaufen = [e for e in rest if e.get("frist_abgelaufen")]
-    if not faellig and not nachziehen and not abgelaufen:
+    ziel_erreicht = list(ziel_erreicht or [])
+    if not faellig and not nachziehen and not abgelaufen and not ziel_erreicht:
         return None
 
     teile = []
+    # DAS ERREICHTE ZIEL ZUERST - es ist die einzige gute Nachricht hier und
+    # die einzige, bei der Geld auf dem Tisch liegt.
+    if ziel_erreicht:
+        teile.append(f"{len(ziel_erreicht)} Ziel erreicht")
     if faellig:
         teile.append(f"{faellig} faellig")
     if nachziehen:
@@ -372,10 +382,25 @@ def sammel_mail(alle: list, geprueft: int | None = None,
 
     zeilen = [
         "Diese Mail meldet NUR Handlungsbedarf bei bestehenden Positionen.",
-        "Ein erreichtes Kursziel steht NICHT hier - es wird als erledigt "
-        "verbucht und taucht gar nicht auf.",
+        "Ein erreichtes Kursziel steht GANZ OBEN - dort liegt Geld auf dem "
+        "Tisch, das Sie selbst holen muessen.",
         "Alles hier ist eine EMPFEHLUNG; es wird nichts ausgefuehrt.",
         ""]
+    if ziel_erreicht:
+        zeilen += [f"ZIEL ERREICHT - VERKAUFEN ({len(ziel_erreicht)})",
+                   "  Diese Positionen haben ihr Kursziel erreicht und liegen "
+                   "noch im Depot. Das System verbucht sie als erledigt - "
+                   "verkauft wird dadurch nichts.", ""]
+        for e in ziel_erreicht:
+            crv = e.get("crv")
+            am = str(e.get("am", ""))
+            if len(am) == 10 and am[4] == "-":
+                am = f"{am[8:10]}.{am[5:7]}."
+            art = ("mit Hebel" if e.get("tier") == "hebel" else "Spot")
+            zeilen += [f"  {e['symbol']:<6} {art}, Ziel erreicht am {am or '?'}"
+                       + (f" - das {_de(crv, 1)}-fache des eingesetzten Risikos"
+                          if crv else "")]
+        zeilen.append("")
     for schluessel, titel in GRUPPEN:
         if not nach[schluessel]:
             continue

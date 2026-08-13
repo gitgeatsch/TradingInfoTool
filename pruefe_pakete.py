@@ -1628,11 +1628,11 @@ def paket_14() -> None:
            "dritten Mail auf hinzusehen")
 
     # WAS "SCHLIESSEN" NICHT HEISST.
-    pruefe(P, "die Mail sagt, dass ein erreichtes Ziel NICHT hier steht",
-           "erreichtes Kursziel steht NICHT hier" in _text,
-           "Nutzerfrage: 'ist das Gewinnzone erreicht?' - nein, im Gegenteil: "
-           "wer sein Ziel erreicht, wird als take_profit aufgeloest und ist "
-           "dann nicht mehr offen")
+    pruefe(P, "die Mail sagt, wo ein erreichtes Ziel steht",
+           "erreichtes Kursziel steht GANZ OBEN" in _text,
+           "diese Pruefung erwartete zuerst das Gegenteil ('steht NICHT "
+           "hier') - richtig war das, solange es die Take-Profit-Nachlese "
+           "nicht gab. Der Nutzereinwand hat beides geaendert")
     pruefe(P, "und wie oft sie kommt",
            "Taeglich um 07:15" in _text)
 
@@ -1661,6 +1661,50 @@ def paket_14() -> None:
            "EUR-Umstellung. 64.000 x 0,87 = 55.680")
     pruefe(P, "das Datum ist lesbar, nicht technisch",
            "seit 01.08." in _text and "seit 2026-08-01" not in _text)
+
+
+    # ---- ZIEL ERREICHT, ABER NOCH IM BESTAND (Nutzerfund 13.08.) ----
+    #
+    # Bisher passierte beim Zielerreichen nur ein logger.info(). Das Tracking
+    # verbuchte "gewonnen" - und der Wert lag weiter im Depot.
+    from agent.krypto.backward_tracking import OUTCOME_TAKE_PROFIT as _TP
+    _c.execute(
+        "INSERT INTO signals (symbol, created_at, action, gate_passed, risk_veto, "
+        "facts_json, outcome_status, outcome_entschieden_am, "
+        "outcome_realisiertes_crv, entry_usd_von, stop_loss_usd_von, "
+        "take_profit_usd_von) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+        ("BTC", "2026-07-01T10:00:00+00:00", "KAUFEN", 1, 0, "{}", _TP,
+         "2026-08-13", 2.0, 20, 18, 26))
+    _c.execute("INSERT INTO signals (symbol, created_at, action, gate_passed, "
+               "risk_veto, facts_json, outcome_status, outcome_entschieden_am, "
+               "outcome_realisiertes_crv, entry_usd_von, stop_loss_usd_von, "
+               "take_profit_usd_von) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+               ("ETH", "2026-07-01T10:00:00+00:00", "KAUFEN", 1, 0, "{}", _TP,
+                "2026-08-13", 2.0, 20, 18, 26))
+    _c.commit()
+    _r2 = _sammle(_c, [], {}, seit_tag="2026-08-11")
+    _erreicht = {z["symbol"] for z in _r2["ziel_erreicht"]}
+    pruefe(P, "ein erreichtes Ziel im BESTAND wird gemeldet",
+           "BTC" in _erreicht,
+           "bisher passierte beim Zielerreichen nur ein logger.info() - das "
+           "Tracking verbuchte 'gewonnen', der Wert lag weiter im Depot")
+    pruefe(P, "ein erreichtes Ziel OHNE Bestand nicht",
+           "ETH" not in _erreicht,
+           "ETH liegt nicht in `holdings` - dort ist das Ziel ein Messpunkt, "
+           "kein Verkaufsauftrag")
+    _b3, _t3 = AR.sammel_mail(_r2["alle"], ziel_erreicht=_r2["ziel_erreicht"])
+    pruefe(P, "es steht GANZ OBEN in der Mail",
+           _t3.index("ZIEL ERREICHT") < _t3.index("JETZT SCHLIESSEN"),
+           "es ist die einzige gute Nachricht hier und die einzige, bei der "
+           "Geld auf dem Tisch liegt")
+    pruefe(P, "und im Betreff zuerst",
+           _b3.startswith("TradingInfoTool: 1 Ziel erreicht"), _b3)
+    pruefe(P, "die Mail sagt, dass verkauft werden muss",
+           "liegen noch im Depot" in _t3 and "verkauft wird dadurch nichts" in _t3)
+    pruefe(P, "ein erreichtes Ziel ALLEIN loest schon eine Mail aus",
+           AR.sammel_mail([], ziel_erreicht=_r2["ziel_erreicht"]) is not None,
+           "ohne das waere die einzige Nachricht mit Geld darin die einzige, "
+           "die nicht verschickt wird")
 
     # KEINE MAIL OHNE ANLASS.
     _ruhig = [a for a in _r["alle"] if a["symbol"] == "INJ"]

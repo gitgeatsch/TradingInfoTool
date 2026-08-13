@@ -4732,7 +4732,8 @@ _AR_NACHZIEHEN = "STOP NACHZIEHEN"
 
 
 def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
-                                   config: dict | None = None) -> dict:
+                                   config: dict | None = None,
+                                   seit_tag: str | None = None) -> dict:
     """Offene Signale, bei denen der Trailing-Stop nachgezogen gehoert.
 
     ADVISORY-ONLY (P-7). Rechnet und meldet, greift nicht ein - der Nutzer
@@ -4756,6 +4757,12 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
     'parameter': {...}} zurueck, absteigend nach MFE - der groesste
     ungesicherte Buchgewinn zuerst."""
     ausloese, abstand, aktiv = parameter_aus_config(config or {})
+    # Nachlese-Fenster fuer erreichte Ziele: standardmaessig die letzten zwei
+    # Tage. Ein Tag waere zu knapp - faellt ein Lauf aus, bliebe der Verkauf
+    # ungemeldet, und genau das soll die Nachlese verhindern.
+    if seit_tag is None:
+        from datetime import date, timedelta
+        seit_tag = (date.today() - timedelta(days=2)).isoformat()
     ergebnis: dict = {"empfehlungen": [], "alle": [], "geprueft": 0,
                       "parameter": {"ausloese_r": ausloese, "abstand_r": abstand,
                                     "aktiv": aktiv}}
@@ -4875,6 +4882,51 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
                 "sichert_r": round(e.gesicherte_r, 3),
                 "begruendung": e.begruendung,
             })
+    # ---- ZIEL ERREICHT, ABER NOCH IM BESTAND (Nutzerfund 13.08.) ----
+    #
+    # DIE LUECKE: *"Take-Profit steht nicht mehr hier, wenn im Bestand - ok,
+    # aber zuvor sollte ich doch informiert werden, dass eine Aktion - Verkauf
+    # - ansteht, oder?"* Genau. Bisher passierte beim Zielerreichen dies:
+    #
+    #     logger.info("Backward-Tracking: %d Take-Profit, ...")
+    #
+    # Ein Logeintrag. Keine Nachricht. Das Tracking verbucht "gewonnen" - und
+    # der Wert liegt weiter im Depot, waehrend der Kurs zurueckkommen kann.
+    # Das ist dieselbe Luecke wie die 50/17,6-Prozent-Zahl, nur an ihrem
+    # oberen Ende: dort geben Positionen Gewinne zurueck, hier wird der
+    # Gewinn nicht einmal gemeldet.
+    #
+    # DAS TRACKING LAEUFT UM 6:00, DIESER JOB UM 7:15 - zum Zeitpunkt der Mail
+    # ist das Signal also nicht mehr `offen` und faellt aus der Schleife oben
+    # heraus. Deshalb wird hier ein zweites Mal nachgesehen, nach Ausgang
+    # statt nach Zustand.
+    ergebnis["ziel_erreicht"] = []
+    for tabelle, ist_hebel in (("signals", False), ("hebel_signals", True)):
+        spalten = {r[1] for r in conn.execute(f"PRAGMA table_info({tabelle})")}
+        if not {"outcome_status", "outcome_entschieden_am"} <= spalten:
+            continue
+        try:
+            rows = conn.execute(
+                f"SELECT symbol, outcome_entschieden_am, outcome_realisiertes_crv "
+                f"FROM {tabelle} WHERE outcome_status = ? "
+                f"AND outcome_entschieden_am >= ?",
+                (OUTCOME_TAKE_PROFIT, seit_tag)).fetchall()
+        except Exception:
+            logger.exception("Take-Profit-Nachlese fuer %s fehlgeschlagen", tabelle)
+            continue
+        for row in rows:
+            # NUR WAS WIRKLICH IM DEPOT LIEGT. Ein erreichtes Ziel auf einem
+            # nie gekauften Signal ist ein Messpunkt, kein Verkaufsauftrag.
+            if row["symbol"] not in gehalten:
+                continue
+            ergebnis["ziel_erreicht"].append({
+                "symbol": row["symbol"],
+                "tier": TIER_HEBEL if ist_hebel else _tier_fuer_spot_symbol(
+                    row["symbol"], assetklasse_by_symbol),
+                "am": str(row["outcome_entschieden_am"])[:10],
+                "crv": row["outcome_realisiertes_crv"],
+                "ist_bestand": True})
+
     ergebnis["empfehlungen"].sort(key=lambda x: -x["mfe_r"])
     # Dringlichstes zuerst: SCHLIESSEN, dann STOP NACHZIEHEN, dann der Rest -
     # nicht nach Buchgewinn. Der groesste ungesicherte Gewinn ist nicht
