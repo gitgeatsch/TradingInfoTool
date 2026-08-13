@@ -1544,6 +1544,56 @@ def paket_14() -> None:
                lauf(**kw) is None,
                "ohne R gibt es weder Trailing noch Stand noch Vergleich")
 
+
+    # ---- DER AUSSTIEG IN DER MAIL ----
+    from agent import entscheidungsrechnung as _ER
+    from agent import signal_mail as _SM
+
+    _r = _ER.rechne(kurs=58000, atr=1677, risiko_eur=75, instrument="hebel",
+                    betrag_wunsch_eur=500, topf_frei_eur=500)
+
+    # EIN SCHON UNTERSCHRITTENER TRAILING-STOP. Gefunden an der fertigen Mail:
+    # dort stand "Stop auf 59.100 nachziehen" neben einem Kurs von 58.000.
+    spaet = lauf(kurs_aktuell=58000, hoechstkurs=ein + 1.8 * 4500)
+    pruefe(P, "ein bereits unterschrittener Trailing-Stop heisst SCHLIESSEN",
+           spaet["stop_bereits_unterschritten"] is True
+           and spaet["empfehlung"] == AR.SCHLIESSEN,
+           "die Marke ist dann kein Vorschlag fuer morgen, sondern ein "
+           "Ereignis von gestern")
+    pruefe(P, "ein noch nicht erreichter nicht",
+           lauf(kurs_aktuell=62000, hoechstkurs=ein + 1.8 * 4500)
+           ["stop_bereits_unterschritten"] is False)
+    pruefe(P, "und bei SHORT gilt es andersherum",
+           AR.bewerte(einstieg=100.0, stop_original=110.0, kurs_aktuell=97.0,
+                      hoechstkurs=100 - 1.8 * 10, ist_short=True,
+                      heute="2026-08-13")["stop_bereits_unterschritten"] is True)
+
+    _, txt = _SM.baue_mail(symbol="BTC", name="Bitcoin", kurs_eur=58000,
+                           instrument="hebel", strategie="swing", rechnung=_r,
+                           ausstieg=spaet,
+                           urteil={"aktion": "NACHKAUFEN", "begruendung": "x"})
+    pruefe(P, "kein Nachkauf auf eine Position, die geschlossen gehoert",
+           "Kein zusaetzlicher Einstieg" in txt and "Einstiegszone" not in txt,
+           "in der ersten Fassung standen 'Stop auf 59.100 nachziehen' und "
+           "'Einstiegszone 57.581 bis 58.419' untereinander - zwei Anweisungen "
+           "fuer dasselbe Asset, die einander ausschliessen")
+    betreff, _ = _SM.baue_mail(symbol="BTC", name="B", kurs_eur=58000,
+                               instrument="hebel", strategie="swing", rechnung=_r,
+                               ausstieg=spaet, urteil={"aktion": "NACHKAUFEN"})
+    pruefe(P, "ein faelliger Ausstieg steht im BETREFF",
+           betreff.startswith("TradingInfoTool: BTC - SCHLIESSEN"), betreff,)
+
+    ruhig = lauf(kurs_aktuell=62000, hoechstkurs=ein + 1.8 * 4500)
+    _, txt2 = _SM.baue_mail(symbol="BTC", name="B", kurs_eur=62000,
+                            instrument="hebel", strategie="swing", rechnung=_r,
+                            ausstieg=ruhig, urteil={"aktion": "NACHKAUFEN"})
+    pruefe(P, "sonst stehen Bestand UND Nachkauf getrennt nebeneinander",
+           "Bestehende Position:" in txt2 and "Zusaetzlicher Einstieg:" in txt2)
+    pruefe(P, "und der Abschnitt heisst dann DIE POSITION",
+           "--- 2. DIE POSITION ---" in txt2,
+           "bei einem Bestand ist die dringendere Frage, was mit ihm "
+           "geschieht - nicht, ob man noch mehr davon kauft")
+
     # EINE SCHREIBWEISE.
     zahlen = " ".join(AR.saetze(lauf(kurs_aktuell=50900,
                                      umgeworfen_preis_eur=50901,

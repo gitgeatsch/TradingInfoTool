@@ -30,6 +30,7 @@ ist es wert). Wer nach zwei Abschnitten aufhoert zu lesen, hat das Wichtigste.
 """
 from __future__ import annotations
 
+from agent import ausstiegsrechnung as AR
 from agent import entscheidungsrechnung as ER
 
 TRENNER = "-" * 68
@@ -57,6 +58,7 @@ def _abschnitt(titel: str, zeilen: list[str]) -> list[str]:
 def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
               instrument: str, strategie: str,
               rechnung: dict, urteil: dict,
+              ausstieg: dict | None = None,
               coin_fakten: list[str] | None = None,
               faktenblock: list[str] | None = None,
               marken: list[str] | None = None,
@@ -73,8 +75,10 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
     Darstellung."""
     titel = f"{name or symbol} ({symbol})"
     aktion = urteil.get("aktion", "?")
-    betreff = (f"TradingInfoTool: {symbol} - {aktion}"
-               f"{' (Hebel)' if instrument == 'hebel' else ''}")
+    dringend = (ausstieg or {}).get("empfehlung", "")
+    betreff = (f"TradingInfoTool: {symbol} - "
+               + (dringend if dringend.startswith(AR.SCHLIESSEN) else aktion)
+               + (" (Hebel)" if instrument == "hebel" else ""))
 
     kopf = [titel,
             f"Kurs {eur(kurs_eur, 2)} EUR"
@@ -109,9 +113,29 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
     # Widerspruch zwischen zwei Bloecken, den R-T8 fuer die Fakten verbietet,
     # und er wiegt hier schwerer: eine ausgerechnete Zone liest sich wie eine
     # Empfehlung, egal was darueber steht.
-    zwei = ER.saetze(rechnung) if aktion in AKTIONEN_MIT_EINSTIEG else [
-        f"Kein Einstieg geplant - die Empfehlung lautet {aktion}.",
-        "Zone, Stop und Ziel werden erst gerechnet, wenn gehandelt wird."]
+    # BEI EINER GEHALTENEN POSITION STEHT DER AUSSTIEG ZUERST. Das ist keine
+    # Formfrage: 50 % der Signale standen einmal bei +1 R, 17,6 % kamen an -
+    # bei einem Bestand ist die dringendere Frage, was mit ihm geschieht, und
+    # nicht, ob man noch mehr davon kauft.
+    zwei = []
+    if ausstieg:
+        zwei += ["Bestehende Position:"] + [f"  {z}" for z in AR.saetze(ausstieg)]
+    # KEIN NACHKAUF AUF EINE POSITION, DIE GESCHLOSSEN GEHOERT. In der ersten
+    # Fassung standen beide untereinander: "Stop auf 59.100 nachziehen" und
+    # daneben "Einstiegszone 57.581 bis 58.419" - zwei Anweisungen fuer
+    # dasselbe Asset, die einander ausschliessen.
+    ausstieg_dringend = (ausstieg or {}).get("empfehlung", "").startswith(AR.SCHLIESSEN)
+    if ausstieg_dringend and aktion in AKTIONEN_MIT_EINSTIEG:
+        zwei += ["", f"Kein zusaetzlicher Einstieg: der Ausstieg steht auf "
+                     f"{AR.SCHLIESSEN}, das Modell sagt {aktion}. Solange die "
+                     f"bestehende Position faellig ist, wird nicht nachgelegt."]
+    elif aktion in AKTIONEN_MIT_EINSTIEG:
+        zwei += ([""] if zwei else []) + (
+            ["Zusaetzlicher Einstieg:"] if ausstieg else []) + [
+            f"  {z}" if ausstieg else z for z in ER.saetze(rechnung)]
+    elif not ausstieg:
+        zwei = [f"Kein Einstieg geplant - die Empfehlung lautet {aktion}.",
+                "Zone, Stop und Ziel werden erst gerechnet, wenn gehandelt wird."]
 
     # 3. DAS URTEIL. Der Text des Modells, unveraendert. Die Belege zuletzt -
     # sie sind Beleg, nicht Aussage.
@@ -135,7 +159,7 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
     text = "\n".join(
         kopf
         + _abschnitt("1. DER COIN", eins)
-        + _abschnitt("2. DIE RECHNUNG", zwei)
+        + _abschnitt("2. DIE POSITION" if ausstieg else "2. DIE RECHNUNG", zwei)
         + _abschnitt("3. DAS URTEIL DES MODELLS", drei)
         + _abschnitt("4. EINORDNUNG", list(einordnung or []))
         + [TRENNER,

@@ -126,6 +126,23 @@ def bewerte(*, einstieg: float | None, stop_original: float | None,
          "trailing_begruendung": empf.begruendung if empf else None,
          "umgeworfen_durch": umgeworfen_durch}
 
+    # 1b. IST DER NACHGEZOGENE STOP SCHON UNTERSCHRITTEN?
+    #
+    # GEFUNDEN AN DER FERTIGEN MAIL, nicht am Modul. Dort stand "Stop auf
+    # 59.100 EUR nachziehen" neben einem Kurs von 58.000 - die Position waere
+    # laengst ausgestoppt gewesen. Der Trailing-Stop rechnet aus dem HOECHSTEN
+    # erreichten Kurs; faellt der Kurs danach unter die nachgezogene Marke,
+    # ist sie nicht mehr eine Empfehlung fuer morgen, sondern ein Ereignis von
+    # gestern.
+    #
+    # Die Ausstiegsregel selbst kann das nicht wissen - sie bekommt den
+    # aktuellen Kurs gar nicht, sie ist reine Stop-Arithmetik. Die Pruefung
+    # gehoert also hierher und nirgendwo sonst.
+    e["stop_bereits_unterschritten"] = bool(
+        e["stop_empfohlen"] is not None and kurs_aktuell
+        and (kurs_aktuell >= e["stop_empfohlen"] if ist_short
+             else kurs_aktuell <= e["stop_empfohlen"]))
+
     # 2. WIDERLEGUNGSPREIS. Bei LONG faellt die These, wenn der Kurs DARUNTER
     # schliesst; bei SHORT darueber.
     e["falsifiziert"] = False
@@ -150,6 +167,12 @@ def bewerte(*, einstieg: float | None, stop_original: float | None,
     # DIE EMPFEHLUNG. Reihenfolge ist Dringlichkeit, nicht Wichtigkeit:
     # eine gefallene These beendet den Handel, ein nachgezogener Stop nicht.
     gruende = []
+    if e["stop_bereits_unterschritten"]:
+        gruende.append(
+            f"Der nachgezogene Stop bei {_de(e['stop_empfohlen'])} EUR liegt "
+            f"BEREITS hinter dem aktuellen Kurs ({_de(kurs_aktuell)} EUR). Die "
+            f"Position haette danach schliessen muessen - die Marke ist kein "
+            f"Vorschlag fuer morgen, sondern ein Ereignis von gestern.")
     if e["falsifiziert"]:
         gruende.append(
             f"Der Kurs hat den Preis erreicht, bei dem das Modell seine eigene "
@@ -176,8 +199,9 @@ def bewerte(*, einstieg: float | None, stop_original: float | None,
                 "er sichert noch nichts, er begrenzt nur den Verlust auf null. "
                 "Erst darueber sichert jedes weitere R mit.")
 
-    grund_empfehlung = (SCHLIESSEN if e["falsifiziert"] else
-                        STOP_NACHZIEHEN if e["trailing_aktiv"] else HALTEN)
+    grund_empfehlung = (
+        SCHLIESSEN if (e["falsifiziert"] or e["stop_bereits_unterschritten"])
+        else STOP_NACHZIEHEN if e["trailing_aktiv"] else HALTEN)
     # Die abgelaufene Frist steht MIT in der Ueberschrift. In der ersten
     # Fassung stand sie nur unter den Gruenden - eine Position, deren
     # Begruendung abgelaufen ist, sah dort aus wie jede andere.
