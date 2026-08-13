@@ -319,7 +319,8 @@ def _kehre_objektive_fakten_um(objektive_fakten: dict) -> dict:
 
 def leite_eigene_richtung_positionsrobust(
         zai_client, objektive_fakten: dict,
-        system_prompt: str | None = None) -> dict | None:
+        system_prompt: str | None = None,
+        umkehr_fn=None) -> dict | None:
     """Positions-Bias-robuste Fassung von `leite_eigene_richtung()` (2026-07-29,
     Regelwerk-Audit Stufe 3 Punkt 4 Folgefrage - Nutzer-Wunsch, den Fund
     "sehr genau" umzusetzen, siehe project_regelwerk_audit_29_07.md).
@@ -359,8 +360,16 @@ def leite_eigene_richtung_positionsrobust(
     Endergebnis und ist von dieser Aenderung nicht betroffen."""
     ergebnis_a = leite_eigene_richtung(zai_client, objektive_fakten,
                                        system_prompt=system_prompt)
+    # DIE UMKEHR IST AUSTAUSCHBAR (13.08.2026, Kapitel 15). Die
+    # Standard-Umkehr dreht die SCHLUESSELREIHENFOLGE - das passt zur flachen
+    # Faktenform der alten Kette mit ihren sechs Schluesseln. Die Rollen-Kette
+    # schickt ZWEI Inhaltsbloecke, in denen der eigentliche Text als Satzliste
+    # steckt: dort dreht die Standard-Umkehr die Verpackung und laesst den
+    # Inhalt Satz fuer Satz gleich. Der zweite Aufruf kostete damit Kontingent
+    # und prueft fast dieselbe Eingabe noch einmal. Wer eine andere Faktenform
+    # schickt, gibt deshalb seine eigene Umkehr mit.
     ergebnis_b = leite_eigene_richtung(
-        zai_client, _kehre_objektive_fakten_um(objektive_fakten),
+        zai_client, (umkehr_fn or _kehre_objektive_fakten_um)(objektive_fakten),
         system_prompt=system_prompt)
 
     if ergebnis_a is None and ergebnis_b is None:

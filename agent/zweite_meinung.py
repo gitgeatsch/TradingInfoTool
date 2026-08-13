@@ -17,8 +17,14 @@ Verwechslung nicht ueber den Dateinamen zurueckkommt.
 WAS Z.AI SIEHT - Nutzervorgabe 13.08.: *"ohne Metalabels ... bzw.
 zahlenangaben, konstanten etc. also Text"*:
 
-    Konsistenz      Faktentext + Begruendungstext + Aktion
-    Eigene Richtung Faktentext ALLEIN
+    Konsistenz      Faktentext VOLLSTAENDIG + Begruendungstext
+    Eigene Richtung Faktentext OHNE `auftrag` und OHNE den Bestandssatz
+                    (`nur_markt()`, Begruendung dort)
+
+DIE BEIDEN AUFRUFE BEKOMMEN BEWUSST NICHT DASSELBE. Die Konsistenzpruefung
+haelt einen Begruendungstext gegen die Fakten - der DARF sich auf den Bestand
+beziehen. Der Richtungsabruf soll unabhaengig urteilen, und dafuer ist jeder
+Satz schaedlich, der von UNS handelt statt vom Markt.
 
 WAS ES NICHT SIEHT, und warum jeweils:
 
@@ -34,10 +40,10 @@ WAS ES NICHT SIEHT, und warum jeweils:
                                `baue_objektive_fakten()` in der alten Kette
                                schon durch Weglassen vermeidet.
 
-DER FAKTENTEXT WIRD UNVERAENDERT DURCHGEREICHT. Er ist bereits nach R-T1..R-T9
-gebaut: relativ vor absolut, benanntes Fenster, keine rohen Zahlenreihen. Ihn
-hier noch einmal umzubauen hiesse, dieselbe Regel an zwei Orten zu pflegen -
-und einer von beiden waere irgendwann der aeltere.
+DER FAKTENTEXT WIRD NICHT NEU GEBAUT, NUR GEFILTERT. Er entsteht nach
+R-T1..R-T9 in `rollen_eingabe`: relativ vor absolut, benanntes Fenster, keine
+rohen Zahlenreihen. Hier wird nur WEGGELASSEN, nie umformuliert - eine zweite
+Formulierungsstelle waere die naechste, die irgendwann die aeltere ist.
 
 WARUM DIESES MODUL NICHT `fuehre_beide_calls_im_hintergrund()` RUFT, obwohl es
 genau das zu tun scheint: jene Funktion oeffnet ihre Verbindung selbst, mit
@@ -106,18 +112,79 @@ SYSTEM_KONSISTENZ = (
     '"<= 12 Woerter"}.')
 
 SYSTEM_RICHTUNG = (
-    "Du bekommst ausschliesslich Marktfakten zu einem Krypto-Wert als benannte "
-    "Bloecke aus ganzen Saetzen: Kursentwicklung ueber mehrere Fenster, "
-    "Marktstruktur, naechste Unterstuetzung und Widerstand, Umsatzverteilung, "
-    "gegebenenfalls ein bestehender Bestand. Du kennst KEINE Empfehlung eines "
-    "anderen Modells. Deine Aufgabe: leite ALLEIN aus diesen Fakten deine "
-    "eigene Markteinschaetzung ab - LONG (bullisch), SHORT (baerisch) oder "
-    "NEUTRAL (keine klare Tendenz). Ein bestehender Bestand und sein Gewinn "
-    "oder Verlust sagen NICHTS ueber die kuenftige Richtung - beziehe ihn "
-    "nicht ein. Erfinde NIEMALS eigene Fakten, nutze nur die gegebenen. "
+    "Du bekommst ausschliesslich Marktfakten zu einem Krypto-Wert als Saetze: "
+    "Marktstruktur, Kursentwicklung ueber mehrere Fenster, naechste "
+    "Unterstuetzung und Widerstand, Umsatzverteilung. Du kennst KEINE "
+    "Empfehlung eines anderen Modells und KEINE Position. Deine Aufgabe: leite "
+    "ALLEIN aus diesen Fakten deine eigene Markteinschaetzung ab - LONG "
+    "(bullisch), SHORT (baerisch) oder NEUTRAL (keine klare Tendenz). "
+    "Erfinde NIEMALS eigene Fakten, nutze nur die gegebenen. "
     "Antworte AUSSCHLIESSLICH mit JSON, exakt diese zwei Felder: "
     '{"eigene_richtung": "LONG" oder "SHORT" oder "NEUTRAL", '
     '"kurzbegruendung": "<= 12 Woerter"}.')
+
+# Woran der Bestandssatz erkannt wird. Er ist der einzige im Block `stand`, der
+# von UNS handelt und nicht vom Markt - `lagebeschreibung._bestand()` baut ihn
+# in genau drei Formen ("ist nicht im Bestand", "ist im Bestand (...)",
+# "ist bereits im Bestand: ...").
+_BESTAND_MERKMAL = "im Bestand"
+
+
+def nur_markt(faktentext: dict) -> dict:
+    """Der Faktentext OHNE alles, was nicht vom Markt handelt.
+
+    NUR FUER DEN RICHTUNGSABRUF. Die Konsistenzpruefung bekommt weiter alles:
+    dort wird ein Begruendungstext gegen die Fakten gehalten, und der DARF sich
+    auf den Bestand beziehen ("wir liegen hier schon 17 % hinten").
+
+    ZWEI DINGE FLIEGEN RAUS, beide gefunden beim Vergleich des Prompts mit dem
+    echten Nutzinhalt:
+
+      auftrag        "Es geht um einen einzelnen Einstieg mit einem Ziel und
+                     einem Ausstiegskurs." Das ist eine ABSICHTSERKLAERUNG,
+                     kein Marktfakt - und sie sagt dem Modell, dass ein
+                     Einstieg erwogen wird. Genau der Anker, den dieser Aufruf
+                     vermeiden soll.
+      Bestandssatz   "BTC ist bereits im Bestand: 3453 EUR investiert ...
+                     609 EUR im Minus (-17,6 %)." Unsere Position, keine
+                     Marktevidenz - und im Block `stand` steht sie an ERSTER
+                     Stelle, also an der staerksten.
+
+    WARUM WEGLASSEN UND NICHT "IGNORIERE DAS" IN DEN PROMPT. Ein Modell
+    anzuweisen, Information zu uebergehen, die man ihm gerade gegeben hat, ist
+    der schwaechere Weg - die erste Fassung dieses Moduls hat genau das
+    versucht. Die alte Kette macht es richtig: `baue_objektive_fakten()`
+    LAESST `richtung`/`action`/`confidence` weg, statt sie zu erklaeren."""
+    aus = {k: v for k, v in (faktentext or {}).items() if k != "auftrag"}
+    stand = aus.get("stand")
+    if isinstance(stand, list):
+        aus["stand"] = [s for s in stand
+                        if _BESTAND_MERKMAL not in str(s)]
+    return aus
+
+
+def kehre_saetze_um(faktentext: dict) -> dict:
+    """Umkehr fuer den Positions-Bias-Test - auf SATZEBENE.
+
+    DIE STANDARD-UMKEHR GREIFT HIER INS LEERE. `_kehre_objektive_fakten_um()`
+    dreht die Schluesselreihenfolge; das passt zur flachen Faktenform der alten
+    Kette mit sechs Schluesseln. Gemessen am echten Nutzinhalt der Rollen-Kette:
+
+        vorher : ['asset', 'auftrag', 'stand']
+        nachher: ['stand', 'auftrag', 'asset']
+        'stand' danach identisch: True        <- die 8 Saetze bleiben gleich
+
+    Der zweite Aufruf prueft damit fast dieselbe Eingabe noch einmal und kostet
+    trotzdem Kontingent - von drei Z.ai-Aufrufen je Einstieg war einer
+    weitgehend wirkungslos.
+
+    Gedreht wird die Reihenfolge der SAETZE, nicht ihr Inhalt: der Test fragt,
+    ob dasselbe Material in anderer Anordnung dasselbe Urteil ergibt."""
+    aus = dict(faktentext or {})
+    for schluessel, wert in aus.items():
+        if isinstance(wert, list) and len(wert) > 1:
+            aus[schluessel] = list(reversed(wert))
+    return aus
 
 
 def hole(*, faktentext: dict, urteil: dict, zai_client,
@@ -158,8 +225,13 @@ def hole(*, faktentext: dict, urteil: dict, zai_client,
         try:
             # OHNE Aktion und Begruendung - siehe Modul-Docstring. Der
             # Faktentext geht unveraendert hinein.
+            # NUR MARKTFAKTEN, und die Umkehr auf Satzebene - beides oben
+            # begruendet. Die Konsistenzpruefung darueber bekommt bewusst
+            # den vollen Text.
             r = G.leite_eigene_richtung_positionsrobust(
-                zai_client, faktentext, system_prompt=SYSTEM_RICHTUNG)
+                zai_client, nur_markt(faktentext),
+                system_prompt=SYSTEM_RICHTUNG,
+                umkehr_fn=kehre_saetze_um)
             if r:
                 aus["eigene_richtung"] = r.get("eigene_richtung")
                 aus["richtung_kurzbegruendung"] = r.get("kurzbegruendung")

@@ -3139,6 +3139,88 @@ def paket_15() -> None:
     _uebergenau = _re.findall(r"\d{4,}\.\d{3,}", _text)
     pruefe(P, "auch im ECHTEN Faktentext steht keine solche Zahl mehr",
            not _uebergenau, f"gefunden: {_uebergenau[:3]}")
+
+    # ------------------------------------------------------------------
+    # G. PRUEFER GEGEN GEGENPRUEFER - alle vier Prompts gegen ihren echten
+    #    Nutzinhalt. Die Frage ist nicht "ist der Prompt gut", sondern:
+    #    BEKOMMT DAS MODELL, WAS IHM ANGEKUENDIGT WIRD - und sieht der
+    #    Gegenpruefer etwas anderes als der Pruefer, oder nur dasselbe nochmal?
+    import json as _j
+    from agent import rolle_analyst as RA, rolle_trader as RT
+    _tag = max(k.date for r in reihen.values() for k in r[-1:])
+    _a_ein = RE.baue_lagebild_eingabe(reihen, _tag)
+    _, _bc2 = RE.baue_fall(symbol=symbole[0], reihe=reihen[symbole[0]],
+                           index=len(reihen[symbole[0]]) - 1, reihen=reihen,
+                           db="data/tradinginfotool.db", mit_finanzierung=False)
+    _stufen = (
+        ("Analyst", RA.SYSTEM_PROMPT_ANALYST, _a_ein),
+        ("Trader", RT.prompt_fuer("spot", "einstieg"), _bc2),
+        ("Konsistenz", ZM.SYSTEM_KONSISTENZ, _bc2),
+        ("Richtung", ZM.SYSTEM_RICHTUNG, ZM.nur_markt(_bc2)))
+    # Begriff -> woran er im Nutzinhalt erkennbar waere.
+    _BEGRIFFE = {"Funding": "funding", "Optionsmarkt": "option", "RSI": "rsi",
+                 "Regime": "regime", "Indikator": "indikator",
+                 "Unterstuetzung": "unterst", "Widerstand": "widerstand",
+                 "Umsatz": "umsatz", "Marktstruktur": "marktstruktur",
+                 "Position": "bestand"}
+    for _name, _prompt, _ein in _stufen:
+        _txt = _j.dumps(_ein, ensure_ascii=False).lower()
+        _offen = [w for w, n in _BEGRIFFE.items()
+                  if w.lower() in _prompt.lower() and n not in _txt
+                  and f"KEINE {w}".lower() not in _prompt.lower()]
+        pruefe(P, f"{_name}: der Prompt kuendigt nichts an, was fehlt",
+               not _offen, f"angekuendigt, nicht geliefert: {_offen}")
+
+    # DER GEGENPRUEFER DARF NICHT MEHR SEHEN ALS DER PRUEFER, und der
+    # unabhaengige Richtungsabruf muss WENIGER sehen als die Konsistenzpruefung.
+    _voll = len(_j.dumps(_bc2, ensure_ascii=False))
+    _schmal = len(_j.dumps(ZM.nur_markt(_bc2), ensure_ascii=False))
+    pruefe(P, "der Richtungsabruf sieht WENIGER als die Konsistenzpruefung",
+           _schmal < _voll, f"{_schmal} gegen {_voll} Zeichen")
+    pruefe(P, "der Auftrag erreicht den Richtungsabruf nicht",
+           "auftrag" not in ZM.nur_markt(_bc2),
+           "'Es geht um einen einzelnen Einstieg' ist eine Absichtserklaerung, "
+           "kein Marktfakt - sie sagt dem Modell, was wir vorhaben")
+    _saetze = ZM.nur_markt(_bc2).get("stand") or []
+    pruefe(P, "und der Bestandssatz auch nicht",
+           not any("im Bestand" in s for s in _saetze),
+           "unsere Position ist keine Marktevidenz - und sie stand an ERSTER "
+           "Stelle, also an der staerksten")
+    pruefe(P, "die Marktsaetze bleiben aber alle da",
+           len(_saetze) >= len(_bc2.get("stand", [])) - 1,
+           f"{len(_saetze)} von {len(_bc2.get('stand', []))} - es darf genau "
+           f"der Bestandssatz fehlen, kein Marktfakt")
+
+    # DER POSITIONS-BIAS-TEST MUSS WIEDER ETWAS MESSEN.
+    _m = ZM.nur_markt(_bc2)
+    _u = ZM.kehre_saetze_um(_m)
+    pruefe(P, "die Umkehr aendert die Reihenfolge wirklich",
+           _j.dumps(_m["stand"]) != _j.dumps(_u["stand"]),
+           "die Standard-Umkehr dreht Schluessel - bei zwei Inhaltsbloecken "
+           "blieb der Text Satz fuer Satz gleich, und der zweite Aufruf "
+           "pruefte dieselbe Eingabe noch einmal")
+    pruefe(P, "und laesst den Inhalt unveraendert",
+           sorted(_m["stand"]) == sorted(_u["stand"]),
+           "gefragt wird, ob dasselbe Material anders angeordnet dasselbe "
+           "Urteil ergibt - nicht, ob anderes Material anderes ergibt")
+    pruefe(P, "die alte Umkehr bleibt fuer die alte Faktenform in Kraft",
+           "umkehr_fn or _kehre_objektive_fakten_um" in
+           _nur_code("agent/krypto/gegenpruefung.py"),
+           "die sechs alten Pipelines wurden nicht angefasst")
+
+    # ARBEITSTEILUNG DER DREI EBENEN - keine prueft, was eine andere prueft.
+    _z1 = _nur_code("agent/gegenpruefer_rollen.py")
+    pruefe(P, "Z1 prueft Text gegen AKTION (Richtungstreue)",
+           "def pruefe_richtungstreue" in _z1)
+    pruefe(P, "Z.ai prueft Text gegen FAKTEN - und bekommt die Aktion nicht",
+           "pruefe_konsistenz" in zm_code and "aktion" not in
+           zm_code.split("pruefe_konsistenz")[1].split(")")[0],
+           "sonst pruefen zwei Ebenen dasselbe und keine die Luecke dazwischen")
+    pruefe(P, "der Gegenpruefer laeuft deterministisch, der Pruefer nicht",
+           "temperature = 0.2" in _nur_code("agent/rollen_lauf.py")
+           and "temperature = 0.0" in _nur_code("agent/krypto/gegenpruefung.py"),
+           "ein Urteil ueber ein Urteil soll bei gleicher Eingabe gleich "
+           "ausfallen - sonst misst man Sampling-Rauschen")
     c.close()
 
 
