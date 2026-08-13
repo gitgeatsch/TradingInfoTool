@@ -2147,3 +2147,88 @@ nicht übertragbar.
 kann sich nicht irren), Z.ai fängt **Denkfehler** (ein Aufruf, kann sich irren).
 Beide gehören in die Mail — Z1 als stille Fußzeile, Z.ai als die zwei Zeilen,
 die der Nutzer heute schon kennt.
+
+
+---
+
+# 14. Die zweite Schiene: Fakten für den NUTZER (Nachtrag 2026-08-13)
+
+Kapitel 11.6 sagt, was das **Modell** nie sieht. Dieses Kapitel sagt, was der
+**Nutzer** sieht — und dass dafür andere Regeln gelten.
+
+    Faktentext  -> das Modell  -> R-T1..R-T9: relativ vor absolut
+    Faktenblock -> der Nutzer  -> ABSOLUT ZUERST, Etikett statt Perzentil
+
+**Der Anlass war ein eigener Denkfehler:** die erste Fassung der neuen E-Mail
+übernahm die Sätze für das *Modell*. Dort stand „3,9 Schwankungsbreiten höher,
+bei 62.000 EUR" statt umgekehrt, und ein Perzentil, wo ein Etikett hingehört.
+R-T1/R-T2 wurden für ein Modell hergeleitet, das absolute Zahlen nicht
+einordnen kann — **der Nutzer kann das.**
+
+## 14.1 Der Kern: drei Familien, nicht zehn
+
+Gemessen an 37 Symbolen und 20.494 Ankern gegen die Geometrie, die die App
+vorschlägt (`messe_top_fakten.py`). Basis 23,5 % Trefferquote.
+
+| Familie | Richtung | gemessen |
+|---|---|---|
+| **Schwankung** | niedrig ist besser | 29,5 % gegen 17,8 % |
+| **Kurzfrist-Momentum** | steigend ist besser | 28,0 % gegen 18,9 % |
+| **Volumen** | hoch ist besser | 27,1 % gegen 22,5 % |
+
+**Momentum erscheint genau EINMAL.** Rückgang seit 60-Tage-Hoch, Abstand zur
+50-Tage-Linie, Trend 20 Tage und RSI 14 korrelieren mit **0,59 bis 0,89** — ein
+Faktor, nicht vier. **Fear & Greed gehört in dieselbe Familie** (zur Hälfte aus
+dem Kurs abgeleitet), nicht daneben.
+
+## 14.2 Zusatzinfo — der Maßstab
+
+Nutzervorgabe: *„kein Beiwerk ohne Sinn."* **Sinnvoll ist, was eine Dimension
+aufmacht, die die drei Familien NICHT abdecken.** Ein weiteres kursabgeleitetes
+Maß tut das nicht — es wäre der fünfte Momentum-Vertreter. Vier Kategorien
+bestehen:
+
+| Kategorie | Beispiele |
+|---|---|
+| **Kosten** | Funding EUR/Tag, Liquidationspreis |
+| **Positionierung** | Retail-Konsens, Insider, Short-Interest, COT |
+| **Fundamentaldaten** | KGV, Lagerbestände |
+| **Vorausschauende Marktpreise** | Put-Skew — der einzige Fakt im System, der nicht aus der Vergangenheit stammt |
+
+**Durchgefallen:** `regime_profil` (über 1.022 Fälle konstant „baer" — R-T6),
+`signal_stabilitaet` (misst die gestrichene Konfidenz), `liquiditaetszonen`,
+`trigger`/`systemguete`.
+
+**Je Bereich verschieden, weil die Datenlage es ist:** von 40 Faktenschlüsseln
+der sechs `build_facts()` kommen nur **fünf** in allen sechs vor (`preis`,
+`regime`, `historische_erfolgsquote`, `historischer_makro_vergleich`,
+`disclaimers`).
+
+## 14.3 Jede Zeile sagt drei Dinge
+
+    Schwankung   3,0 % je Tag                             GUENSTIG
+      Wie stark der Kurs täglich schwingt, gemessen an seinem eigenen Jahr.
+      Ruhig ist besser - über alle Einstiege gemessen: 29,5 % Treffer am
+      guten Ende gegen 17,8 % am anderen, Schnitt 23,5 %.
+
+Wert, Urteil, Bedeutung mit Richtung. Der Wert allein ist nicht benutzbar
+(„Perzentil 74" war genau der Einwand), die Wirkung allein auch nicht.
+
+**Der Wirkungssatz spricht über ALLE Einstiege, nicht über diesen.** Die erste
+Fassung lautete „ruhige Einstiege erreichten ihr Ziel in 29,5 % der Fälle" —
+das liest sich wie die Aussicht *dieses* Signals. Es ist die Verteilung, in die
+es fällt.
+
+## 14.4 Was fehlt, wird benannt
+
+Ein Kernfakt ohne Wert erscheint als Lücke: *„Keine Angabe zu: Volumen. Ein
+Punkt weniger steht damit hinter dieser Empfehlung."* Sonst sieht ein Signal
+mit einem Fakt aus wie eines mit dreien.
+
+**Zusatzinfo ist freiwillig** — ihr Fehlen wird nicht gemeldet.
+
+**Am laufenden Tag entfällt das Volumen.** Sein Umsatz ist naturgemäß kleiner
+als der eines ganzen Tages; an echten BTC-Daten stand er beim 0,2-fachen des
+Mittels. Ohne diesen Schalter hätte **jede** Live-Mail „Volumen UNGÜNSTIG"
+gemeldet — ein systematischer Fehler in jeder einzelnen Nachricht, und einer,
+der wie ein Befund aussieht.

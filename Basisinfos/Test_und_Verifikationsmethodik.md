@@ -1962,3 +1962,84 @@ Confluence-Standard (colibritrader, usetct) · Fibonacci empirisch
 (ScienceDirect S0957417421012495, arpgweb ijefr4(6)) · Marktregime
 (wallstreetcourier) · Multikollinearität (Shukla, MQL5; Earn2Trade) ·
 Informationsüberlastung (Federal Reserve IFDP; Pomegra)
+
+---
+
+# 2.20 Werkzeugkasten-Nachtrag (2026-08-12/13): die Prüfskripte des Umbaus
+
+Ergänzt 2.13. Drei neue Skripte, und eine geänderte Arbeitsweise.
+
+## Die Skripte
+
+| Skript | Auslöser | was es beantwortet |
+|---|---|---|
+| `pruefe_pakete.py` | **nach jedem Paket, immer kumulativ** | Hält alles Gebaute noch? `--paket N` für eines. Stand 13.08.: **288 Prüfungen über Paket 0–14 und 12c** |
+| `messe_sentiment_je_horizont.py` | einmalig, bei Fragen zur Stimmung | Wirkt Fear & Greed je Horizont verschieden? BTC, 3.087 Tage |
+| `messe_top_fakten.py` | einmalig, bei Fragen „welcher Fakt trägt?" | 12 Merkmale gegen die Geometrie der App, 37 Symbole, 20.494 Anker |
+| `pruefe_rollenkette.py` | vor jedem Live-Lauf | die Kette an echten Ankern, mit Wortlaut |
+
+## Was diese Runde über das Prüfen selbst gelehrt hat
+
+**1. EIN TEXTFUND IST KEINE AUSSAGE.** Zwei eigene Prüfungen sind daran
+gescheitert, dass sie ein Wort suchten statt einer Eigenschaft:
+
+| Prüfung | suchte | fand fälschlich |
+|---|---|---|
+| „im Text steht kein R mehr" | `" R"` | „ **R**EICHWEITE", „ **R**ücklauf" |
+| „prüft keine Konfidenz" | `"confidence_pct"` | den Docstring, der erklärt, warum es die Größe *nicht mehr gibt* |
+
+**Regel daraus:** wo eine Eigenschaft gemeint ist, muss ein Muster geprüft
+werden (`Zahl gefolgt von R`, `Bezeichner gefolgt von Vergleichsoperator`) —
+nicht das Vorkommen einer Zeichenkette.
+
+**2. DIE GEDRUCKTE AUSGABE FINDET, WAS DER EINZELTEST NICHT FINDET.** Mehrere
+Fehler waren im Modul unsichtbar und erschienen erst, als zwei Blöcke in
+derselben Nachricht nebeneinander standen:
+
+- „Stop auf 59.100 nachziehen" neben einem Kurs von 58.000 — die Position wäre
+  längst ausgestoppt gewesen
+- daneben ein Nachkauf-Vorschlag für dasselbe Asset
+- die Liquidation zweimal mit **verschiedenen** Zahlen (35.638 gegen 30.238)
+- „55,500.00 EUR" — englische Tausendertrennung
+- dieselbe Position in zwei Gruppen der Ausstiegs-Mail
+
+**Regel daraus:** jedes ausgabeerzeugende Modul wird **an seiner fertigen
+Ausgabe** geprüft, nicht nur an seinen Rückgabewerten.
+
+**3. EINE KOPIE WIRD GEPRÜFT, NICHT BEHAUPTET.** Wo eine Definition zweimal
+stehen muss (Produktion darf nicht von einem Messskript abhängen), vergleicht
+eine Prüfung **beide auf echten Daten** — `faktenblock.werte_aus_reihe()` gegen
+`messe_top_fakten.merkmale()`, Abweichung < 1e-9. Ohne das wäre es genau die
+Kopie, die still veraltet (so geschehen bei den Kostensätzen: Spread 0,0015
+statt 0,0025).
+
+**4. GEGEN EINE KOPIE IM SPEICHER, WENN DIE ECHTEN DATEN FEHLEN.** Die
+Produktivdatenbank hat **keine offene Position und keinen einzigen MFE-Wert** —
+dort hätte „geprüft 0" wie Erfolg ausgesehen. Die Ausstiegskette wird deshalb
+gegen `sqlite3.connect(":memory:")` mit `backup()` geprüft; die Produktivdatei
+wird nur gelesen.
+
+**5. EINE ZAHL OHNE IHRE SCHICHTUNG IST KEINE DIAGNOSE.** „78 von 118 Signalen
+haben leere Fakten" klang nach Defekt und war eine Verwechslung zweier
+Grundgesamtheiten — alle 78 sind Abweisungen *vor* der Analyse. Nach
+Gate-Zustand aufgeschlüsselt löste sich der Befund auf. Derselbe Fehlertyp wie
+beim CRV-Gate am 02.08. (Survivorship).
+
+**6. EINE PRÜFUNG UND EIN PUSH GEHÖREN NICHT IN DENSELBEN BEFEHL.** Am 12.08.
+wurde ein Commit mit einer fehlgeschlagenen Prüfung gepusht, und die
+Commit-Nachricht behauptete „alle bestanden" — weil `pruefe_pakete.py && git
+push` in einer Zeile lief und das Ergebnis nicht gelesen wurde. Das macht eine
+Gegenprüfung wertlos.
+
+## Zwei Messfallen, neu belegt
+
+**Multiples Testen braucht eine zweite Hürde.** Zwölf Merkmale sind zwölf
+Tests; eines sieht zufällig gut aus. In `messe_top_fakten.py` muss ein Merkmal
+**beides** haben: ein Bootstrap-Band ohne Null **und** eine monotone Ordnung
+über die Fünftel. Ein Zickzack hat keinen Mechanismus, sondern Rauschen.
+
+**Punktschätzer und geclusterte Schätzung können sich widersprechen** — und
+dann gilt die geclusterte. „Tagesspanne": Spanne **+1,5 pp**, Bootstrap-Band
+**vollständig negativ** (−8,1 … −1,9). Der gepoolte Wert entstand aus der
+Zusammensetzung der Symbole. Wer nur die Spanne liest, übernimmt das Vorzeichen
+verkehrt. **Ein solcher Widerspruch ist ein Ausschlusskriterium, kein Detail.**

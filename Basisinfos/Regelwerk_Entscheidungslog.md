@@ -8,11 +8,16 @@
 
 ---
 
-## Index nach Thema (204 Einträge)
+## Index nach Thema (209 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
-### Regelwerk / deterministische Gates (39)
+### Regelwerk / deterministische Gates (43)
+
+- **2026-08-12** — Stop-Untergrenze RM-1b/1c in die neue Rollen-Kette portiert; erstmals auch eine OBERGRENZE (25 %)
+- **2026-08-12** — Berechnung der Entscheidung: jede Zahl mit Formel, Quelle und zwei Grenzen; Stop aus dem Widerlegungspreis des Modells
+- **2026-08-12** — Take-Profit am nächsten Widerstand statt mechanisch 2 R; zu kleine CRV wird ausgewiesen statt hochgerechnet
+- **2026-08-13** — Konfidenz-Schwelle entfällt ersatzlos (E3); Durchlässigkeit je Stufe wird gezählt, Faktorzahl nur mitgeschrieben
 
 - **2026-08-07** — Manuelle Schwerpunkte mit garantiertem Raum: eine gesetzte Überzeugung wird nicht von einem trendenden Thema verdrängt (Aufmerksamkeit, keine Richtungsvorgabe)
 
@@ -114,7 +119,9 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-07-31** — Multi-Asset Z.ai-Wartemechanismus statt Re-Fetch (Entscheidungskatalog Punkt 1)
 - **2026-08-01** — Spot-Verkaufs-Luecke Roadmap Schritt 4 (Z.ai-Re-Evaluierungs-Anzeige) - Roadmap-Praemisse korrigiert VOR de...
 
-### Backward-Tracking / Erfolgsmessung (12)
+### Backward-Tracking / Erfolgsmessung (13)
+
+- **2026-08-13** — Ausstieg vollständig: Trailing + Widerlegungspreis + Frist + Ziel-Nähe + Take-Profit-Nachlese. Der erreichte Take-Profit war bis dahin NUR ein logger.info()
 
 - **2026-07-19** — Backtracking-Aussagekraft-Audit - Überholt-Erkennung neutralisierte die eigene Ergebnisstatistik
 - **2026-07-20** — Provider-Performance-Karte nach Assetklasse aufgeschluesselt (Krypto/Aktien/Rohstoffe/ETF getrennt statt ge...
@@ -16184,3 +16191,83 @@ Der Verdacht, 20 Tage seien zu lang, trifft für diese Zieldistanz nicht zu.
 | Niveaus als „Leitplanke" | **dagegen** — Experten-Anker wirken am stärksten, keine Gegenmaßnahme half. **Bauform B** |
 | Bestandsblock | **Literatur widersprüchlich** — muss bei uns gepaart gemessen werden |
 | Textform | **kein Standard**; Richtung gedeckt, R-T1/R-T2 bleiben eigene Regeln |
+
+---
+
+## Nachtrag (2026-08-12/13): Pakete 10–14 und 12c — die Entscheidungs- und Ausstiegsschicht
+
+**Doku-Schuld offengelegt.** Diese Änderungen liefen zunächst nur in
+`Umbauplan_Gesamtsystem_12_08.md` (Kap. 12, 12.8, 12.9, 13). Der Nutzer hat am
+13.08. nachgefragt — zu Recht: laut Landkarte gehören sie **hierher**, ins
+Manual und in die Methodik. Nachgezogen.
+
+### Was gebaut wurde
+
+| Paket | Modul | Kern |
+|---|---|---|
+| **10** | `entscheidungsrechnung.py` | Zone, Stop, Ziel, Haltedauer, Betrag, Hebel — jede Zahl mit Formel, Quelle und **zwei** Grenzen |
+| **11** | `signal_mail.py` | Ziel am nächsten Widerstand statt mechanisch 2 R; Mail in vier Abschnitten |
+| **12** | `faktenblock.py`, `faktenblock_quellen.py`, `ui/signal_chart.py` | drei gemessene Familien + Zusatzinfo je Bereich; ein Chart ersetzt zwei |
+| **12c** | `rollen_gate.py` | Konfidenz-Schwelle entfällt; Durchlässigkeit je Stufe; Faktorzahl nur mitgeschrieben |
+| **13** | `staleness`-Erweiterung, `db.IST_EMPFEHLUNG` | Preis-Cache im Watchdog; Totalausfall meldet sich; ein benanntes Prädikat |
+| **14** | `ausstiegsrechnung.py` | Trailing + Widerlegungspreis + Frist + Ziel-Nähe + Take-Profit-Nachlese |
+
+### Die Messungen dieser Runde
+
+**Sentiment je Horizont** (`messe_sentiment_je_horizont.py`, BTC, 3.087 Tage,
+2018-02 bis 2026-07). Nutzerthese *„schlechtes Sentiment ist gut für DCA/Spot,
+schlecht bei Hebel"* — **widerlegt, monoton in die Gegenrichtung:**
+
+| Stimmung | n | Treffer 10 T | ggü. Basis 26,0 % |
+|---|---|---|---|
+| extreme Angst | 673 | 19,7 % | −6,3 pp |
+| extreme Gier | 330 | **38,3 %** | **+12,3 pp** |
+
+Deutung: Fear & Greed ist zur Hälfte aus dem Kurs abgeleitet — der Befund ist
+Time Series Momentum, nicht Sentiment-Contrarian. Die Contrarian-Literatur
+arbeitet mit Umfragen und Aktien.
+
+**Welche Fakten tragen** (`messe_top_fakten.py`, 37 Symbole, 20.494 Anker,
+Basis 23,5 %). Zwei Hürden: Bootstrap-Band ohne Null **und** monotone Ordnung.
+**Von zwölf Merkmalen bestehen sechs — und die sechs sind drei:**
+
+| Familie | Richtung | stärkster Vertreter |
+|---|---|---|
+| Schwankung | niedrig ist besser | Perzentil, −11,7 pp |
+| Kurzfrist-Momentum | steigend ist besser | Rückgang seit 60-Tage-Hoch, +9,1 pp |
+| Volumen | hoch ist besser | zum 20-Tage-Mittel, +4,5 pp |
+
+Die vier Momentum-Maße korrelieren mit **0,59 bis 0,89** — ein Faktor, nicht
+vier. **Langfrist-Momentum trägt NICHT** (+0,7 pp, 1/4 monoton), ausgerechnet
+der Horizont, für den TSMOM belegt ist: dort werden Renditen über Monate
+gemessen, hier eine Barrierenauflösung über 10 Tage.
+
+**Verworfen, mit Grund:** „Tagesspanne" — Spanne +1,5 pp, Bootstrap-Band aber
+**vollständig negativ** (−8,1 … −1,9). Punktschätzer und geclusterte Schätzung
+widersprechen sich; der gepoolte Wert entsteht aus der Zusammensetzung der
+Symbole. Wer nur die Spanne liest, übernimmt das Vorzeichen verkehrt.
+
+### Untersuchungen ohne Codeänderung
+
+**„78 von 118 Signalen haben leere Fakten" — war KEIN Defekt.** Nach
+Gate-Zustand aufgeschlüsselt: alle 78 sind Abweisungen *vor* der Analyse
+(Preis veraltet, Stablecoin, keine Historie); **jedes Signal mit bestandenem
+Gate trägt seine Fakten, 40 von 40.** Die Fehldiagnose war eine Zahl ohne ihre
+Schichtung — derselbe Fehlertyp wie beim CRV-Gate am 02.08. (Survivorship).
+
+**Was die Zahl wirklich zeigte:** am 21.07. wurden 42 von 42 Assets abgewiesen,
+weil der Preis-Cache seit dem 19.07. nicht mehr geschrieben wurde. Das Gate
+handelte richtig — aber der **Staleness-Watchdog deckt den Preis-Cache nicht
+ab** (nur Historie und Kraken-OHLC). Ausgefallen war genau das, was nicht
+überwacht wird, und ein Lauf ohne Signale ist von einem Lauf ohne Gelegenheiten
+nicht zu unterscheiden. Behoben in Paket 13.
+
+### Verworfene Optionen
+
+| Option | warum verworfen |
+|---|---|
+| Abweisungen aus `signals` in eine eigene Tabelle | die Trennung existiert bereits über `groq_raw_response IS NOT NULL`; eine Wanderung hätte Schema, UI und Auswertungen berührt und die Frage „was zählt als Empfehlung" unbeantwortet gelassen. Stattdessen **ein benanntes Prädikat plus Wächter** |
+| Häufigere Ausstiegs-Mails (15-Minuten-Takt) | wird nach zwei Tagen ignoriert, und schneller als der Markt ist man trotzdem nicht. Stattdessen: **Verkaufsauftrag beim Zielkurs hinterlegen** — dann ist der Rücklauf über Nacht wirkungslos |
+| Breitere Faktenlage für das LLM (MACD, RSI, Funding in den Prompt) | Nutzerkorrektur: Zahlen gehören **nicht** in die Kette. Stattdessen die deterministische Schiene daneben — Kap. 11.6 bleibt unangetastet |
+| Faktorzahl als scharfer Filter | zeigte in der Messung keinen Effekt (7.26); ein unbelegter Filter verkleinert die Kalibrier-Stichprobe |
+| Breakeven-Randfall bei genau +1 R entschärfen | die +0,092 R der Ausstiegsregel sind **mit** diesem Randfall gemessen — ihn herauszunehmen entwertet die Messung. Benannt statt wegdefiniert |

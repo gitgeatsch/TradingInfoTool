@@ -3373,3 +3373,150 @@ mit der Einschränkung, dass genau das die Belege einfärben kann (offen, 8c.3/M
 **Vor jedem Lauf, ohne Modellaufruf:** Werturteil-Wächter
 (`enthaelt_werturteile`), Konstanten-Wächter (`finde_konstanten`),
 Kausalitätsprobe (Beschreibung aus voller Reihe gegen abgeschnittene, bitgleich).
+
+---
+
+# Nachtrag 2026-08-13: Einstieg, Ausstieg und Gate der Rollen-Kette
+
+Was hier steht, ist der **IST-Zustand der Regeln** für die neue Rollen-Kette.
+Die Herleitung mit allen Messungen steht im `Regelwerk_Entscheidungslog.md`
+(Nachtrag 12./13.08.) und in `Umbauplan_Gesamtsystem_12_08.md` Kap. 12–13.
+
+## A. Wer welche Zahl bestimmt
+
+**Das Sprachmodell nennt keine Risikoparameter.** Es liefert ein Urteil in
+Worten — Richtung, Begründung, Gegengrund — und **zwei** Zahlen, und die auch
+nur, weil sie Urteile sind und keine Schätzungen:
+
+| Feld | was es ist |
+|---|---|
+| `umgeworfen_preis_eur` | der Kurs, bei dem das Modell seine eigene Begründung für widerlegt erklärt |
+| `umgeworfen_bis` | bis wann die Begründung gelten soll |
+
+**Alles andere rechnet das System** (`agent/entscheidungsrechnung.py`):
+Einstiegszone, Stop, Ziel, Haltedauer, Betrag, Hebel.
+
+> Der Unterschied liegt in der **Frage**, nicht in der Zahl. Auf „wo setzt du
+> den Stop?" antwortet ein Sprachmodell mit einem Risikoparameter, den es nicht
+> schätzen kann — im Live-Lauf 1,26 %, ein Band mit gemessen 0,0 % Trefferquote.
+> Auf „was widerlegt dich?" antwortet es mit einem Urteil über die eigene
+> Begründung.
+
+## B. Der Stop — drei Grenzen
+
+| | Wert | Quelle |
+|---|---|---|
+| **Zielwert** | 2,5 × ATR | zwischen den Praxisstandards (Chandelier 3×, Elder 2×) |
+| **Untergrenze RM-1b** | 2,5 % des Kurses | `risiko.sl_abstand_eng_schwelle_relativ` |
+| **Untergrenze RM-1c** | 0,75 × ATR | `risiko.sl_abstand_min_atr_faktor` |
+| **Obergrenze** | **25 % des Kurses** | **NEU 12.08.** |
+
+Es gilt die **strengere** der beiden Untergrenzen — also der *größere*
+geforderte Abstand, das heißt die *niedrigere* Stopmarke.
+
+**Warum es erstmals eine Obergrenze gibt:** ein Stop von 40 % fällt durch jede
+Untergrenze und ruiniert die Rechnung trotzdem — er macht die Position winzig
+und die Haltedauer unbegrenzt. Nur fällt er niemandem auf, weil er „vorsichtig"
+aussieht.
+
+**Der Widerlegungspreis setzt den Stop, wenn er innerhalb dieser Grenzen
+liegt.** Sonst gilt der Rauschboden bzw. die Obergrenze, und der Text sagt es
+(„Widerlegungspreis lag im Rauschen").
+
+## C. Das Ziel — an der Struktur, nicht an der Formel
+
+Das Ziel geht **kurz vor** den nächsten Widerstand (¼ ATR Abstand), nicht
+mechanisch auf CRV 2,0. Liegt der Widerstand jenseits des mechanischen Ziels,
+bleibt es beim mechanischen.
+
+**Reicht der Weg nicht für CRV 2,0, wird das ausgewiesen, nicht
+hochgerechnet.** Ein Ziel hinter einer Mauer ist kein Ziel.
+
+## D. Betrag und Hebel
+
+`Risiko = Betrag × Hebel × Stopabstand`. Zwei der drei sind vorgegeben
+(Risikobudget, Wunschbetrag), der dritte folgt. Bei Spot ist der Hebel 1, dann
+folgt der Betrag.
+
+**Reihenfolge: erst die Deckel auf den Einsatz, dann der Hebel.** Andersherum
+blieb nach einem greifenden Topf-Deckel die Hälfte des Risikobudgets ungenutzt.
+
+**Deckel:** Topf (absolut in Euro, nicht als Portfolio-Anteil), Höchstbetrag
+1.000 €, Mindestbetrag 100 €. Dazu RM-11 (Liquidationsabstand) und der
+Höchsthebel.
+
+**Kein Ergebnis ohne Grundlage:** fehlt Kurs, ATR oder Risikobudget, kommt
+**keine** Empfehlung — nicht eine geratene.
+
+## E. Der Ausstieg — fünf Wege, ein Termin
+
+`agent/ausstiegsrechnung.py`, täglich 07:15 nach dem Backward-Tracking (6:00).
+**Advisory-only:** es wird nichts ausgeführt.
+
+| Auslöser | Empfehlung | Neu? |
+|---|---|---|
+| Ziel zu **75 %** erreicht | ZIEL IN REICHWEITE → **Verkaufsauftrag hinterlegen** | neu 13.08. |
+| Ziel **erreicht**, Position noch im Depot | ZIEL ERREICHT — VERKAUFEN | neu 13.08. |
+| Nachgezogener Stop bereits unterschritten | JETZT SCHLIESSEN | neu 13.08. |
+| Widerlegungspreis erreicht | JETZT SCHLIESSEN | neu 13.08. |
+| MFE ≥ +1 R | STOP NACHZIEHEN (Trailing) | seit 05.08. |
+| Frist abgelaufen | Zusatz „· FRIST ABGELAUFEN" | neu 13.08. |
+
+**Der Trailing-Stop bleibt unverändert** — ab +1 R auf `MFE − 1 R`, nie
+zurückgenommen. Bei genau +1 R sichert er null (er steht auf dem Einstand);
+das ist der am 01.08. verworfene Breakeven-Lock, aber die gemessenen +0,092 R
+sind **mit** diesem Randfall gemessen. Er wird benannt, nicht wegdefiniert.
+
+**Nur echter Bestand löst eine Mail aus.** `signals` enthält Empfehlungen; von
+45 Signal-Symbolen lagen 28 nicht im Depot. Was dort nicht liegt, erscheint als
+Messpunkt unter „Signalverfolgung", nicht als Handlungsanweisung.
+
+**Was nicht maschinell prüfbar ist, wird nicht behauptet:** `umgeworfen_durch`
+ist Prosa und wird gezeigt, nicht ausgewertet.
+
+## F. Das Gate — was entfällt, was gezählt wird
+
+**Die Konfidenz-Schwelle ist ersatzlos entfallen.** Nicht durch Wahl, sondern
+als Folge: die neue Kette produziert keine Konfidenz. Sie hat auch nie gewirkt
+(r = +0,073 gegen das realisierte CRV, n = 92), und das Regime stand über 1.022
+Fälle konstant auf „baer" — die Schwelle also faktisch immer bei 75.
+
+**Der Ersatz ist der Entscheider:** die kalibrierte Trefferquote gegen den
+Kosten-Breakeven. Eine Mechanik statt zwei.
+
+**Die Faktorzahl wird mitgeschrieben, nicht scharf geschaltet** — sie zeigte in
+der Messung keinen Effekt.
+
+**Neu: die Durchlässigkeit wird je Stufe gezählt** (`agent/rollen_gate.py`,
+Tabelle `gate_durchlaessigkeit`). Acht Stufen, und die letzte zählt nur.
+Damit ist erstmals beantwortbar, *wo* die Kette Signale verliert.
+
+**Die RM-Schicht bleibt unangetastet** (RM-1…RM-7, Cash-Reserve,
+Positionsgrößen-Deckel).
+
+## G. Betriebsregeln
+
+**Der Staleness-Watchdog prüft jetzt auch den Preis-Cache**, nicht nur Historie
+und Kraken-OHLC. Ausgefallen war am 19.07. genau das, was nicht überwacht
+wurde — am 21.07. wurden daraufhin 42 von 42 Assets abgewiesen, ohne dass es
+jemand merkte.
+
+**Ein Lauf, der ALLES abweist, meldet sich** — einmal je drei Stunden, erst ab
+drei Werten. Ein Lauf ohne Signale ist sonst von einem Lauf ohne Gelegenheiten
+nicht zu unterscheiden.
+
+**Ein Prädikat für „Empfehlung":** `db.IST_EMPFEHLUNG` =
+`groq_raw_response IS NOT NULL`. `gate_passed` wäre falsch — der
+AnalystResponseInvalid-Fallback setzt es auf True, ohne dass eine Modellantwort
+vorliegt. `db.pruefe_signal_kriterien()` schlägt Alarm, sobald die drei
+möglichen Kriterien auseinanderlaufen.
+
+## H. Zwei Schienen, zwei Textregeln
+
+| | wer liest es | Regel |
+|---|---|---|
+| **Faktentext** | das Sprachmodell | R-T1…R-T9: relativ vor absolut, benanntes Fenster |
+| **Faktenblock / E-Mail** | der Nutzer | **absolut zuerst**, Etikett statt Perzentil, **eine** Währung, keine R-Angaben |
+
+R-T1/R-T2 wurden für ein Modell hergeleitet, das absolute Zahlen nicht
+einordnen kann. Der Nutzer kann das.

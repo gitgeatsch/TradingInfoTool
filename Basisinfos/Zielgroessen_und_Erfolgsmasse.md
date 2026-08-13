@@ -1348,3 +1348,68 @@ Pfad ignoriert, misst nicht den Handel, sondern das Fenster.
 **Der Weg zurück ist billig:** Die Kursreihe liefert Hoch und Tief je Tag. Wer
 Einstieg, Stop und Ziel kennt, kann den Pfad durchlaufen und sieht, was zuerst
 kam — dieselbe Mechanik wie in `agent/szenario_fakten.py::loese_auf()`.
+
+
+---
+
+# Nachtrag 2026-08-13: der Breakeven wird je SIGNAL gerechnet
+
+**Bisher stand ein Kostensatz je Assetklasse** (Krypto −0,230 R, Aktien
+−0,143 R, ETF −0,493 R, Rohstoffe −0,307 R). Der Live-Lauf vom 12.08. hat
+gezeigt, dass das für ein einzelnes Signal um ein Vielfaches danebenliegen
+kann:
+
+    Kosten in R = Roundtrip in % / Stopabstand in %
+
+Der Stopabstand ist die einzige Größe, die das entscheidet — und in der alten
+Kette wählte ihn das Modell frei:
+
+| Stopabstand | Kosten in R | Breakeven |
+|---|---|---|
+| 1,26 % (Modell, Live-Lauf) | 2,77 R | **126 %** |
+| 4,53 % (1,5 ATR) | 0,66 R | 55 % |
+| 12,61 % | 0,24 R | 41 % |
+
+**Bei 1,26 % verschlingen die Gebühren mehr als die ganze Chance** — der Trade
+ist rechnerisch unmöglich, bevor irgendeine Marktmeinung ins Spiel kommt. Die
+dokumentierten −0,230 R gelten für einen Stop um 13 %; wer den Klassenwert
+nimmt, rechnet hier um das Siebenfache zu günstig.
+
+**Seit 12.08. rechnet `trefferbilanz.kosten_r_aus_stop()` je Signal.** Anders
+als die Trefferquote ist das kein Schätzwert: die Gebühren stehen fest, der
+Stopabstand steht im Signal.
+
+## Die Basisrate folgt der Geometrie
+
+Solange das Ziel mechanisch bei CRV 2,0 lag, war die Basisrate eine Konstante
+(34,0 %). Seit das Ziel am nächsten Widerstand hängt, ist sie es nicht mehr —
+und ein Text, der in einem Abschnitt „CRV 1,4" ausweist und im nächsten gegen
+die 34 % von CRV 2,0 vergleicht, widerspricht sich selbst. Genau daran ist die
+erste Fassung der neuen E-Mail aufgefallen.
+
+`trefferbilanz.basisrate_fuer(crv)` skaliert mit `1/(1+CRV)` und trägt den
+gemessenen Faktor 1,02 mit (34,0 statt theoretisch 33,3 % über 19.891 Anker).
+**Basisrate und Breakeven werden immer aus derselben CRV gerechnet.**
+
+## Was die Arithmetik weiterhin sagt
+
+    Basisrate = 1/(1+CRV)        Breakeven = (1+Kosten)/(1+CRV)
+
+Derselbe Nenner. **Solange Kosten > 0 sind, liegt der Breakeven immer über der
+Basisrate** — bei jedem Stop, jedem Ziel, jedem Asset. Der Entscheider kann in
+dieser Form also nie „ja" sagen, solange er gegen die Basisrate vergleicht. Er
+wird erst dann etwas anderes melden, wenn eine Konstellation eine **eigene
+gemessene** Quote über dem Breakeven hat. Das ist der Meta-Labeling-Weg; er
+braucht Fälle.
+
+Die geforderte Kante ist `Kosten_R / (1+CRV)` Prozentpunkte über der Basisrate.
+Sie sinkt mit **weiterem** Stop und **fernerem** Ziel:
+
+| Stop | CRV 2 | CRV 3 | CRV 4 |
+|---|---|---|---|
+| 2,5 % | 40,0 pp | 30,0 pp | 24,0 pp |
+| 10 % | 10,0 pp | 7,5 pp | 6,0 pp |
+| 20 % | 5,0 pp | 3,7 pp | **3,0 pp** |
+
+**Das ist die Geometrie des Trendfolgens** — und dieselbe Richtung wie S2
+(Drift statt Timing).
