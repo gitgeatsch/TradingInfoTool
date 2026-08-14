@@ -5133,6 +5133,60 @@ def paket_15() -> None:
                "remote/server.py"),
            "sie wegzulassen hiesse, eine Zahl verschwinden zu lassen, ohne "
            "dass jemand sieht, dass sie verschwunden ist")
+
+    # ------------------------------------------------------------------
+    # AG. DIE DREI KLEINIGKEITEN AUS DEM BETRIEB (14.08.2026).
+    from api.kraken import KRAKEN_PAIR_MAP as _KM
+
+    # AG1 CANTON UND VSN HATTEN KEINE KURSREIHE - wegen eines TICKERS.
+    #
+    # Beide galten als "ohne Kraken-Listing". Der Rueckfall auf die
+    # Boersen-Klines fand sie ebenfalls nicht: Binance und Bybit antworten mit
+    # 400, OKX mit 51001. Der Grund war kein fehlendes Listing, sondern ein
+    # anderer Name: CoinGecko nennt fuer `canton-network` die Handelspaare, und
+    # dort heisst das Asset **CC**.
+    #
+    # NUTZERFRAGE DAZU, und sie war die richtige: "pruefe ob cc und canton
+    # ident sind". Preis-Gegenprobe am 14.08.:
+    #
+    #     Kraken CCUSD   0,096770 USD
+    #     CoinGecko      0,096751 USD    Abweichung 0,02 %
+    #     Kraken VSNUSD  0,035410 USD
+    #     CoinGecko      0,035603 USD    Abweichung 0,54 %
+    #
+    # Genau diese Probe hat am 11.08. den yfinance-Rueckfall zu Fall gebracht:
+    # von acht geratenen Tickern gehoerten DREI einem anderen, toten Asset -
+    # VSN mit 972 Kerzen haette jede Laengenpruefung bestanden.
+    pruefe(P, "CANTON und VSN haben eine Kraken-Zuordnung",
+           "CANTON" in _KM and "VSN" in _KM,
+           "beide standen als Deckungsluecke, obwohl Kraken sie fuehrt")
+    pruefe(P, "und CANTON uebersetzt auf einen ANDEREN Ticker",
+           _KM["CANTON"]["USD"] == "CCUSD"
+           and not _KM["CANTON"]["USD"].startswith("CANTON"),
+           "bei 33 von 35 Eintraegen sind unser Symbol und das der Boerse "
+           "gleich - deshalb faellt nicht auf, dass diese Zuordnung eine "
+           "UEBERSETZUNG ist, bis eines abweicht")
+    pruefe(P, "die Zuordnung nennt beide Waehrungen",
+           set(_KM["CANTON"]) >= {"USD", "EUR"}
+           and set(_KM["VSN"]) >= {"USD", "EUR"},
+           "die Reihe kommt in USD, der Nutzer rechnet in EUR")
+
+    # AG2 DIE VERBINDUNG WARTET JETZT, STATT ZU SCHEITERN.
+    pruefe(P, "die Datenbank bekommt eine Wartezeit und WAL",
+           "_SPERRE_WARTEN_SEKUNDEN = 30.0" in _quelltext("database/db.py")
+           and "journal_mode = WAL" in _quelltext("database/db.py"),
+           "SQLites Vorgabe sind fuenf Sekunden; seit dem Schnitt schreiben "
+           "Rollen-Kette, Backward-Tracking, Preis-Refresh und Z.ai-Faeden auf "
+           "dieselbe Datei, waehrend die Fernsteuerung alle fuenf Sekunden liest")
+    pruefe(P, "und WAL wird nur EINMAL gesetzt",
+           "_WAL_GESETZT" in _quelltext("database/db.py"),
+           "der Modus ist eine Eigenschaft der DATEI - ihn je Verbindung neu "
+           "zu setzen waere ein ueberfluessiger Schreibzugriff je Aufruf")
+    pruefe(P, "der Export benutzt die WAL-sichere Backup-API",
+           "conn.backup(" in _quelltext("extract_notebook_diagnose.py"),
+           "eine Dateikopie waere unter WAL heikel - die juengsten "
+           "Aenderungen stehen dann in `-wal`, nicht in der Hauptdatei. "
+           "Nachgesehen, BEVOR umgestellt wurde")
     c.close()
 
 

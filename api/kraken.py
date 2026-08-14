@@ -26,6 +26,30 @@ RATE_LIMIT_PER_MINUTE = 15  # konservativ; oeffentliche Endpunkte haben kein dok
 # KAIA, BRETT, IO, SUPRA, CANTON — fuer diese bleibt die Naeherung aus
 # indicators/calculations.py der einzige Weg.
 KRAKEN_PAIR_MAP = {
+    # CANTON UND VSN NACHGETRAGEN (14.08.2026) - und CANTON zeigt, warum die
+    # Luecke so lange bestand.
+    #
+    # Beide standen als "ohne Kraken-Listing" in der bekannten Deckungsluecke,
+    # und der Rueckfall auf die Boersen-Klines fand sie ebenfalls nicht:
+    # Binance und Bybit antworten mit 400, OKX mit 51001 (Paar unbekannt).
+    #
+    # DER GRUND WAR EIN TICKER, KEINE LISTE. CoinGecko nennt fuer
+    # `canton-network` die Handelspaare - und dort heisst das Asset **CC**,
+    # nicht CANTON. Kraken selbst bestaetigt CCUSD/CCEUR/CCUSDC/CCUSDT. Wer
+    # nach "CANTON" sucht, findet an keiner Boerse etwas; das Asset ist
+    # ueberall gelistet, nur unter einem anderen Namen.
+    #
+    # VSN heisst ueberall VSN und fehlte schlicht in dieser handgepflegten
+    # Liste (VSNUSD/VSNEUR, von Kraken bestaetigt).
+    #
+    # GENAU DAFUER IST DIESE ZUORDNUNG DA: sie uebersetzt UNSER Symbol in das
+    # der Boerse. Bei 33 von 35 Eintraegen sind beide gleich, und deshalb faellt
+    # nicht auf, dass es eine Uebersetzung ist - bis ein Asset kommt, bei dem
+    # sie sich unterscheiden.
+    #
+    # NACHGEPRUEFT AN DER QUELLE, nicht geraten: `/0/public/AssetPairs`.
+    "CANTON": {"USD": "CCUSD", "EUR": "CCEUR"},
+    "VSN": {"USD": "VSNUSD", "EUR": "VSNEUR"},
     "BTC": {"USD": "XBTUSD", "EUR": "XBTEUR"},
     "ETH": {"USD": "ETHUSD", "EUR": "ETHEUR"},
     "SOL": {"USD": "SOLUSD", "EUR": "SOLEUR"},

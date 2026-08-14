@@ -558,10 +558,63 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+# Wie lange ein Schreiber auf eine belegte Datenbank wartet, bevor er aufgibt.
+#
+# SQLites Vorgabe sind FUENF Sekunden, und die reichen hier nicht. Belegt seit
+# dem 31.07.: "database is locked" bei `hebel_screening`, 24 s nach einem
+# Neustart. Die Antwort war damals, die Job-Starts zu staffeln - das behebt den
+# Zusammenstoss beim Start, nicht den im Betrieb. Seit dem Schnitt schreiben
+# die Rollen-Kette, das Backward-Tracking, der Preis-Refresh und die
+# Z.ai-Faeden auf dieselbe Datei, waehrend die Fernsteuerung alle fuenf
+# Sekunden liest.
+#
+# DREISSIG SEKUNDEN SIND KEIN RATEN: der laengste gemessene Schreibvorgang ist
+# der OHLC-Refresh mit rund 20 s. Wer laenger wartet, wartet auf etwas, das
+# haengt - und dann ist der Fehler die richtige Antwort.
+_SPERRE_WARTEN_SEKUNDEN = 30.0
+
+# Ob der WAL-Modus schon gesetzt wurde. Er ist eine EIGENSCHAFT DER DATEI und
+# bleibt bestehen; ihn bei jeder Verbindung erneut zu setzen waere ein
+# ueberfluessiger Schreibzugriff je Aufruf.
+_WAL_GESETZT = False
+
+
 def get_connection() -> sqlite3.Connection:
+    """Eine Schreibverbindung auf die Produktionsdatenbank.
+
+    ZWEI EINSTELLUNGEN GEGEN "database is locked" (14.08.2026):
+
+    `busy_timeout` laesst einen Schreiber WARTEN statt sofort zu scheitern.
+    Ohne ihn gilt SQLites Vorgabe von fuenf Sekunden.
+
+    `journal_mode=WAL` trennt Leser und Schreiber: im Vorgabemodus sperrt ein
+    Schreibvorgang die ganze Datei, auch fuer Leser. Bei uns liest die
+    Fernsteuerung alle fuenf Sekunden, waehrend die Kette schreibt - das ist
+    genau die Konstellation, fuer die WAL gebaut ist.
+
+    WARUM DAS SICHER IST. Ein Dateikopie-Backup waere unter WAL heikel (die
+    juengsten Aenderungen stehen in `-wal`, nicht in der Hauptdatei). Der
+    Export benutzt aber `conn.backup()`, die Online-Backup-API von SQLite -
+    die kennt WAL und liefert eine in sich stimmige Kopie. Nachgesehen, bevor
+    umgestellt wurde.
+
+    FAIL-SOFT: schlaegt eine der Einstellungen fehl (aeltere SQLite, Datei auf
+    einem Netzlaufwerk - dort kann WAL nicht arbeiten), laeuft die Verbindung
+    unveraendert weiter. Eine Datenbank, die sich wegen einer
+    Geschwindigkeitseinstellung nicht oeffnen laesst, waere der schlechtere
+    Tausch."""
+    global _WAL_GESETZT
+
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=_SPERRE_WARTEN_SEKUNDEN)
     conn.row_factory = sqlite3.Row
+    try:
+        conn.execute(f"PRAGMA busy_timeout = {int(_SPERRE_WARTEN_SEKUNDEN * 1000)}")
+        if not _WAL_GESETZT:
+            conn.execute("PRAGMA journal_mode = WAL")
+            _WAL_GESETZT = True
+    except sqlite3.Error:
+        pass
     return conn
 
 
