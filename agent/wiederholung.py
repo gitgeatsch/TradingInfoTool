@@ -58,9 +58,23 @@ def gesperrt_bis(conn, symbol: str, instrument: str, *,
     anderen Logik mit anderem Vokabular; sie hier mitzuzaehlen hiesse, die neue
     Kette fuer Entscheidungen zu sperren, die sie nie getroffen hat.
 
-    NUR EINSTIEGE SPERREN. Ein NICHTS_TUN erzeugt keine Position und damit auch
-    keine Wiederholungsgefahr - es zu sperren wuerde die Kette daran hindern,
-    ihre Meinung zu aendern.
+    JEDES URTEIL SPERRT, nicht nur ein Einstieg - korrigiert am 14.08. nach
+    drei Probelaeufen.
+
+    Meine erste Fassung sperrte nur Einstiege, mit der Begruendung "ein
+    NICHTS_TUN erzeugt keine Position, also keine Wiederholungsgefahr". Das
+    stimmt fuer das RISIKO und ist fuer die KOSTEN falsch: von 25 Urteilen
+    waren 19 ein NICHTS_TUN, und die wurden bei jedem Lauf neu erfragt. Lauf 2
+    machte deshalb noch 17 Trader-Aufrufe statt 8.
+
+    ZWEI ZWECKE, EINE MECHANIK. Die Wiederholung ist die gemessene
+    Verlustquelle (fuenf Symbole trugen 102 % des Minus) - dafuer genuegten
+    Einstiege. Der Cooldown traegt seit dem 14.08. aber auch die Kosten, und
+    dort zaehlt jede Frage, die wir schon gestellt haben.
+
+    WAS ES BEDEUTET: haben wir vor drei Stunden "nichts tun" geurteilt, fragen
+    wir nicht in fuenfzehn Minuten noch einmal. Bei Spot mit 15 h Cooldown und
+    einer laengerfristigen Strategie ist das die richtige Antwort.
 
     Fail-soft: fehlt die Spalte (aeltere Datei), gibt es keine Sperre. Ein
     Cooldown, der wegen eines Schemafehlers ALLES sperrt, waere schlimmer als
@@ -73,7 +87,7 @@ def gesperrt_bis(conn, symbol: str, instrument: str, *,
             return None
         zeile = conn.execute(
             "SELECT MAX(created_at) FROM signals WHERE symbol = ? "
-            "AND quelle_kette = 'rollen' AND action NOT IN ('HALTEN', 'VERKAUFEN')",
+            "AND quelle_kette = 'rollen'",
             (symbol,)).fetchone()
     except Exception:                                        # noqa: BLE001
         return None

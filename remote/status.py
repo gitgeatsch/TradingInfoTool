@@ -606,7 +606,25 @@ def _get_konfidenz_kalibrierung(conn: sqlite3.Connection, watchlist: list) -> di
     die diese Karte beantwortet (haelt confidence_pct, was es verspricht?)."""
     from agent.krypto.backward_tracking import compute_konfidenz_kalibrierung
 
-    return compute_konfidenz_kalibrierung(conn, watchlist)
+    aus = compute_konfidenz_kalibrierung(conn, watchlist) or {}
+    # R-1 (14.08.2026): DIESE KARTE BETRIFFT NUR DIE ALTE KETTE.
+    #
+    # Die Rollen-Kette erhebt keine Konfidenz mehr - sie fiel am 12.08. als
+    # Folge, nicht als Wahl: r = +0,073 ueber 92 Faelle, und das Regime stand
+    # ueber 1.022 Faelle konstant auf "baer", die Schwelle also faktisch immer
+    # bei 75. Eine konstante Schwelle auf einer nutzlosen Groesse.
+    #
+    # OHNE DIESEN HINWEIS LIEST SICH DIE LEERE KARTE WIE EIN DEFEKT. Sie ist
+    # keiner - sie ist nur nicht mehr zustaendig. Und das ist der Unterschied,
+    # den ein Nutzer aus einer leeren Tabelle nicht ablesen kann.
+    if isinstance(aus, dict):
+        aus["_nur_alte_kette"] = True
+        aus["_hinweis"] = (
+            "Betrifft nur die ALTE Kette. Die Rollen-Kette (quelle_kette="
+            "'rollen') erhebt keine Konfidenz mehr - ihr Ersatz ist der "
+            "Entscheider: die kalibrierte Trefferquote gegen den "
+            "Kosten-Breakeven. Eine leere Karte ist hier kein Defekt.")
+    return aus
 
 
 @_gecacht

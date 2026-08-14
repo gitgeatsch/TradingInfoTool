@@ -103,6 +103,21 @@ def _verbraucht(quelle: str, modell: str | None) -> int:
     return verbrauch_heute(quelle)
 
 
+def _vorgabemodell(client) -> str | None:
+    """Wie heisst das Modell, das dieser Client von sich aus nimmt?
+
+    NICHT GERATEN, sondern am Modul abgelesen: `api/gemini.py` fuehrt
+    `DEFAULT_MODEL`. Ein Client ohne erkennbares Modell gibt None - dann steht
+    in der Zeile ehrlich nichts, statt einer Vermutung."""
+    modul = type(client).__module__
+    if "gemini" in modul:
+        from api.gemini import DEFAULT_MODEL
+        return DEFAULT_MODEL
+    if "openrouter" in modul:
+        return "openrouter"
+    return None
+
+
 def waehle_client(config: dict | None = None, *, clients: dict | None = None):
     """Welcher Topf ist noch offen - und wieviel darf dieser Lauf verbrauchen?
 
@@ -248,7 +263,12 @@ def fuehre_krypto_lauf(
         if client is None:
             return None
     else:
-        modell, rest = None, None
+        # DAS MODELL AUCH DANN BENENNEN, wenn ein Client direkt uebergeben
+        # wurde. Sonst stand auf 57 Signalzeilen `modell = None` - genau die
+        # Spalte, die es seit heute gibt, damit ein Rueckfall nicht lautlos
+        # mischt. Gefunden im Probelauf, nicht in einer Pruefung.
+        modell = getattr(client, "modell", None) or _vorgabemodell(client)
+        rest = None
 
     conn = conn_factory()
     try:

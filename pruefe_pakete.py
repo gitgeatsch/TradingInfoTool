@@ -3951,6 +3951,27 @@ def paket_15() -> None:
            "Mistral-Verhaltensbruch vom 31.07. zeigte 55,4 gegen 68,0 % bei "
            "bitgleichem Prompt")
     pruefe(P, "und der Lauf gibt es weiter", "modell=modell" in _l)
+    # GEFUNDEN IM PROBELAUF, nicht in einer Pruefung: wurde ein Client DIREKT
+    # uebergeben (statt ueber `clients=`), blieb das Modell unbekannt - 57
+    # Signalzeilen trugen `modell = None`, ausgerechnet in der Spalte, die es
+    # seit heute gibt, damit ein Rueckfall nicht lautlos mischt.
+    from api.gemini import DEFAULT_MODEL as _GDEF
+    from api.gemini import GeminiClient as _GC
+    pruefe(P, "auch ein direkt uebergebener Client wird benannt",
+           RJ2._vorgabemodell(_GC("x")) == _GDEF,
+           "am Modul abgelesen, nicht geraten - api/gemini.py fuehrt "
+           "DEFAULT_MODEL")
+    pruefe(P, "ein unbekannter Client bekommt KEINEN erfundenen Namen",
+           RJ2._vorgabemodell(object()) is None,
+           "dann steht in der Zeile ehrlich nichts statt einer Vermutung")
+
+    # DER COOLDOWN MUSS JEDES URTEIL SPERREN, nicht nur Einstiege.
+    _wh = _quelltext("agent/wiederholung.py")
+    pruefe(P, "der Cooldown zaehlt JEDES Urteil der eigenen Kette",
+           "action NOT IN" not in _wh,
+           "meine erste Fassung sperrte nur Einstiege - von 25 Urteilen waren "
+           "19 ein NICHTS_TUN, und die wurden bei jedem Lauf neu erfragt. "
+           "Lauf 2 machte deshalb noch 17 Trader-Aufrufe statt 0")
 
     # S6 DAS NEIN WIRD MESSBAR MITGESCHRIEBEN.
     pruefe(P, "ein NICHTS_TUN wird geschrieben statt verworfen",

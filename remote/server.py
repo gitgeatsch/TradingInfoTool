@@ -365,6 +365,16 @@ const SPOT_ASSETKLASSEN = [
 // compute_konfidenz_kalibrierung()). Bucket-Grenzen/Reihenfolge fest, damit
 // ein (noch) leeres Band sichtbar bleibt statt stillschweigend zu fehlen -
 // gleiches Prinzip wie SPOT_ASSETKLASSEN oben.
+//
+// R-1 (14.08.2026): NUR ALTE KETTE. Die Rollen-Kette erhebt keine Konfidenz
+// mehr (E3, 12.08.). Die Daten tragen dafuer `_nur_alte_kette` und `_hinweis`
+// - wer diese Karte rendert, zeigt den Hinweis mit an. Ohne ihn liest sich
+// eine leere Karte wie ein Defekt; sie ist nur nicht mehr zustaendig.
+function konfidenzHinweis(d) {
+  if (!d || !d._hinweis) return "";
+  return '<div class="row"><span class="muted-text">' + d._hinweis +
+    "</span></div>";
+}
 const KONFIDENZ_BUCKET_ORDER = [
   ["niedrig", "Niedrig (<55%)"], ["mittel", "Mittel (55-70%)"], ["hoch", "Hoch (≥70%)"],
 ];
