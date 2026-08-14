@@ -255,7 +255,19 @@ def _crv_faktor(crv: float, instrument: str) -> float:
     verkleinern. Eine Ueberexposition ist ausgeschlossen, nicht bloss
     unwahrscheinlich. Abschalten ueber `crv_spreizung = 1.0`."""
     spreizung, voll_ab = GRENZEN["crv_spreizung"], GRENZEN["crv_voll_ab"]
-    if instrument == "hebel" or spreizung <= 1.0 or voll_ab <= GRENZEN["crv"]:
+    # NUR SPOT - ausdruecklich, nicht "alles ausser Hebel" (14.08.2026).
+    #
+    # Die erste Fassung fragte `instrument == "hebel"` ab und traf damit auch
+    # die ABSICHERUNG: 500 EUR waeren bei CRV 2,0 auf 100 geschrumpft. Das ist
+    # in zweifacher Hinsicht falsch. Die Messung lief an 298 SPOT-Signalen, nie
+    # an Absicherungen. Und eine Absicherung bemisst sich am abzusichernden
+    # Exposure (`toepfe.einsatz_fuer_absicherung`), nicht an einem CRV - eine
+    # auf ein Fuenftel gekuerzte Absicherung schuetzt ein Fuenftel dessen, was
+    # sie soll. Das ist das Gegenteil einer Sicherheitsmassnahme.
+    #
+    # Eine Ausschlussliste faengt nur, was jemand vorhergesehen hat; eine
+    # Einschlussliste nur, was jemand gemessen hat. Hier ist die zweite richtig.
+    if instrument != "spot" or spreizung <= 1.0 or voll_ab <= GRENZEN["crv"]:
         return 1.0
     spanne = max(0.0, min(1.0, (crv - GRENZEN["crv"]) / (voll_ab - GRENZEN["crv"])))
     sockel = 1.0 / spreizung

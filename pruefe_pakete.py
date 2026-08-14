@@ -3449,6 +3449,17 @@ def paket_15() -> None:
            "sicher durch Bauform - eine Ueberexposition ist ausgeschlossen, "
            "nicht bloss unwahrscheinlich")
     # DIE WICHTIGSTE DIESER PRUEFUNGEN.
+    pruefe(P, "die ABSICHERUNG wird nicht mitgekuerzt",
+           all(ER._crv_faktor(c / 10, "absicherung") == 1.0
+               for c in range(20, 100)),
+           "eine Absicherung bemisst sich am abzusichernden Exposure, nicht an "
+           "einem CRV - auf ein Fuenftel gekuerzt schuetzt sie ein Fuenftel "
+           "dessen, was sie soll. Die erste Fassung fragte 'ausser Hebel' ab "
+           "und traf sie mit")
+    pruefe(P, "die Regel ist eine EINSCHLUSSliste",
+           'instrument != "spot"' in _quelltext("agent/entscheidungsrechnung.py"),
+           "eine Ausschlussliste faengt nur, was jemand vorhergesehen hat; "
+           "eine Einschlussliste nur, was jemand gemessen hat")
     pruefe(P, "beim HEBEL wirkt sie NICHT",
            all(ER._crv_faktor(c / 10, "hebel") == 1.0 for c in range(20, 100)),
            "dieselbe Untersuchung fand beim Hebel die GEGENLAEUFIGE Antwort "
