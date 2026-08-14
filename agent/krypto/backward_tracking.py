@@ -4803,7 +4803,16 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
             "stop_loss_usd_von", "stop_loss_usd_bis", "stop_loss_usd",
             "take_profit_usd_von", "take_profit_usd_bis", "take_profit_usd",
         ) if c in spalten]
-        felder = ("symbol, created_at, outcome_status, "
+        # DIE ID MUSS MIT (14.08.2026). Ohne sie kann die Ausstiegsmail nicht
+        # sagen, WELCHES Signal meldet - und mehrere offene Signale je Symbol
+        # sind der Normalfall, nicht die Ausnahme: am 14.08. hatten DBPK und
+        # OD7L je fuenf, 3QSS vier, MON und OD7C drei.
+        #
+        # DAS IST SO GEWOLLT. `_is_superseded()` raeumt aeltere Signale ab,
+        # aber erst nach der Mindestbeobachtung - sonst waere ein Signal tot,
+        # bevor es messbar wird. Solange beide offen sind, muss der Leser sie
+        # auseinanderhalten koennen.
+        felder = ("id, symbol, created_at, outcome_status, "
                   "outcome_max_realisiertes_crv"
                   + "".join(f", {c}" for c in zonen_spalten)
                   + "".join(f", {c}" for c in
@@ -4853,6 +4862,7 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
             if voll:
                 ergebnis["alle"].append({
                     "symbol": row["symbol"], "seit": str(row["created_at"])[:10],
+                "signal_id": row["id"], "ist_hebel": ist_hebel,
                     "richtung": "SHORT" if z["ist_short"] else "LONG",
                     "tier": TIER_HEBEL if ist_hebel else _tier_fuer_spot_symbol(
                         row["symbol"], assetklasse_by_symbol),
@@ -4873,6 +4883,7 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
                 "tier": TIER_HEBEL if ist_hebel else _tier_fuer_spot_symbol(
                     row["symbol"], assetklasse_by_symbol),
                 "symbol": row["symbol"],
+                "signal_id": row["id"], "ist_hebel": ist_hebel,
                 "seit": str(row["created_at"])[:10],
                 "richtung": "SHORT" if z["ist_short"] else "LONG",
                 "mfe_r": round(e.mfe_r, 3),

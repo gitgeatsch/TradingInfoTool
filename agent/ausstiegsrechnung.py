@@ -330,7 +330,31 @@ def _absatz(e: dict, waehrung: str = "EUR") -> list[str]:
     tier = e.get("tier", "?")
     art = (f"{e.get('richtung','?')} mit Hebel" if tier == "hebel"
            else "Spot" if tier == "spot" else str(tier))
-    kopf = f"  {e['symbol']:<6} {art}, seit {seit or '?'}"
+    # WELCHES SIGNAL MELDET HIER? (14.08.2026)
+    #
+    # NUTZERFRAGE: *"btc hat drei signale produziert 1x verkaufen 1x kaufen und
+    # dann 1x verkaufen - diese ueberschneiden sich und ich habe keine Ahnung
+    # 'wo und welches der Signale' jetzt z.B. schliessen meldet."*
+    #
+    # Das Beispiel war fiktiv, der Fall ist es nicht: am 14.08. hatten DBPK und
+    # OD7L je FUENF offene Signale, 3QSS vier, MON und OD7C drei. Der Kopf
+    # dieses Absatzes nannte bis heute nur Symbol, Art und Datum - drei
+    # Absaetze zum selben Symbol unterschieden sich damit im Tagesdatum, sonst
+    # in nichts.
+    #
+    # ZWEI KENNZEICHEN, weil sie verschiedene Fragen beantworten: der EINSTIEG
+    # sagt dem Leser, welche seiner Positionen gemeint ist ("die von 61.200"),
+    # die NUMMER macht es eindeutig, wenn zwei Signale denselben Einstieg
+    # haben. Die Nummer allein waere technisch und unbrauchbar, der Einstieg
+    # allein mehrdeutig.
+    kennung = []
+    if e.get("entry") is not None:
+        kennung.append(f"Einstieg {_kurs(_in_eur(e, e['entry']), waehrung)}")
+    if e.get("signal_id") is not None:
+        kennung.append(f"{'Hebel' if e.get('ist_hebel') else 'Spot'}-Signal "
+                       f"#{e['signal_id']}")
+    kopf = (f"  {e['symbol']:<6} {art}, seit {seit or '?'}"
+            + (" - " + ", ".join(kennung) if kennung else ""))
     z = [kopf]
     if e.get("stop_bereits_unterschritten"):
         z.append(f"      Der nachgezogene Stop bei {_kurs(_in_eur(e, e['stop_empfohlen']), waehrung)} "

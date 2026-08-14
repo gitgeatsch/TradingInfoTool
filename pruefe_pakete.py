@@ -4525,6 +4525,40 @@ def paket_15() -> None:
            "versand(*_sammel)" in _quelltext("agent/rollen_lauf.py"),
            "gebaut und nicht verschickt waere die Luecke von vorhin")
 
+    # WELCHES SIGNAL MELDET? Nutzerfrage 14.08. - mehrere offene Signale je
+    # Symbol sind der Normalfall (DBPK und OD7L je 5, 3QSS 4, MON/OD7C je 3).
+    # Der Absatzkopf nannte nur Symbol, Art und Tagesdatum.
+    from agent import ausstiegsrechnung as AR3
+    _e1 = {"symbol": "DBPK", "tier": "spot", "seit": "2026-08-01",
+           "entry": 61200.0, "signal_id": 2986, "ist_hebel": False,
+           "eur_je_usd": 1.0}
+    _e2 = dict(_e1, seit="2026-08-06", entry=59450.0, signal_id=3011)
+    _k1, _k2 = AR3._absatz(_e1)[0], AR3._absatz(_e2)[0]
+    pruefe(P, "zwei offene Signale zum selben Symbol sind unterscheidbar",
+           _k1 != _k2 and "#2986" in _k1 and "#3011" in _k2
+           and "61.200" in _k1 and "59.450" in _k2,
+           "Einstieg sagt WELCHE Position gemeint ist, die Nummer macht es "
+           "eindeutig - die Nummer allein waere technisch, der Einstieg "
+           "allein mehrdeutig")
+    pruefe(P, "die Ausstiegsabfrage holt die id ueberhaupt",
+           "felder = (\"id, symbol, created_at" in _quelltext(
+               "agent/krypto/backward_tracking.py"),
+           "ohne sie kann die Mail nicht sagen, welches Signal meldet")
+    # ZEITABLAUF UND UEBERHOLUNG SIND VERSCHIEDENE DINGE - und die Reihenfolge
+    # der Pruefung entscheidet, welches Etikett eine Zeile bekommt.
+    pruefe(P, "ueberholt wird VOR abgelaufen geprueft",
+           _quelltext("agent/krypto/backward_tracking.py").index(
+               "if _is_superseded(signal")
+           < _quelltext("agent/krypto/backward_tracking.py").index(
+               "elif _is_expired(signal"),
+           "ein Signal, das ein neueres abgeloest hat, ist ueberholt - nicht "
+           "'unentschieden abgelaufen'. Andersherum stuende die Ablösung als "
+           "Zeitablauf in der Bilanz")
+    pruefe(P, "der Zeitablauf steht als eigener Satz in der Mail",
+           "und ist abgelaufen." in _quelltext("agent/ausstiegsrechnung.py"),
+           "Nutzerfrage: 'wie unterscheide ich, ob nur ein Signal auslaeuft "
+           "weil die Zeit abgelaufen ist'")
+
     pruefe(P, "der Verkaufsversand laesst sich abschalten, das Buchen nicht",
            "verkauf_mailt" in _quelltext("agent/rollen_lauf.py")
            and "verkauf_nicht_gemailt" in _quelltext("agent/rollen_lauf.py"),
