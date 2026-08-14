@@ -131,7 +131,10 @@ def breakeven(kosten_r: float = 0.0, crv: float = CRV) -> float:
 
 
 def kosten_r_aus_stop(einstieg: float, stop: float, klasse: str = "krypto",
-                      position_eur: float | None = None) -> float | None:
+                      position_eur: float | None = None,
+                      instrument: str | None = None,
+                      hebel: float | None = None,
+                      tage: float | None = None) -> float | None:
     """Die Kosten in R fuer DIESES Signal - aus seinem eigenen Stopabstand.
 
     DER LIVE-LAUF VOM 12.08. HAT GEZEIGT, WARUM DAS NOETIG IST. Das Modell
@@ -158,6 +161,44 @@ def kosten_r_aus_stop(einstieg: float, stop: float, klasse: str = "krypto",
     if not einstieg or not stop or einstieg <= 0 or stop >= einstieg:
         return None
     stop_rel = (einstieg - stop) / einstieg
+
+    # VIER KOSTENARTEN, NICHT ZWEI (14.08.2026, Nutzerhinweis: "unterschiedliche
+    # Assets haben unterschiedliche Gebuehren, dies muss auch korrekt
+    # verarbeitet werden - du hast hier die Kosten in der Doku").
+    #
+    # ER HAT RECHT, UND DIE DOKU HATTE ES SCHON. `backward_tracking.kosten_in_r`
+    # fuehrt seit dem 07.08. alle vier:
+    #
+    #     Krypto      1,5 % je Seite (Mitte 0,99-2,49 %), im Kurs enthalten
+    #     Boerse      1 EUR fix je Trade + 0,25 % Spread je Seite
+    #     Hebel       Schliessungsgebuehr + TAGESSTAFFEL auf geliehenes Kapital
+    #     Hedge-ETP   zusaetzlich 0,8 % p.a. laufende Gebuehr, anteilig
+    #
+    # DIESE FUNKTION KANNTE NUR DIE ERSTEN ZWEI. Sie war damit eine zweite,
+    # aermere Definition derselben Sache - genau die Kopierfalle, die dieses
+    # Projekt mehrfach erwischt hat. Fuer einen Hebel-Trade fehlte die
+    # Tagesgebuehr auf das geliehene Kapital, fuer eine Absicherung die
+    # laufende ETP-Gebuehr, die ihre monatelange Haltedauer erst kostenwirksam
+    # macht.
+    #
+    # ALSO WIRD JETZT DELEGIERT, nicht nachgebaut. Der Preis ist ein Import aus
+    # `backward_tracking`; der Nutzen ist, dass es die Kostensaetze genau
+    # einmal gibt.
+    if instrument or tage is not None:
+        try:
+            from agent.krypto.backward_tracking import kosten_in_r
+
+            tier = ("hebel" if instrument == "hebel"
+                    else "hedge" if instrument == "absicherung"
+                    else "krypto" if klasse == "krypto" else "aktien")
+            aus = kosten_in_r(stop_rel, tier, float(tage or 0.0),
+                              hebel=hebel, position_eur=position_eur)
+            return aus.get("kosten_r")
+        except Exception:                                    # noqa: BLE001
+            # Fail-soft auf die einfache Rechnung: eine Kostenzahl, die zwei
+            # von vier Arten kennt, ist besser als keine.
+            pass
+
     if klasse == "krypto":
         kosten_rel = 2.0 * KOSTEN_JE_SEITE["krypto"]
     else:

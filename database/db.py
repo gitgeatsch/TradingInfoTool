@@ -4019,7 +4019,8 @@ def aktueller_monat_utc() -> str:
 
 
 def increment_api_call_counter(conn: sqlite3.Connection, source: str,
-                               tag: str | None = None) -> int:
+                               tag: str | None = None,
+                               schritt: int = 1) -> int:
     """Kontingent-Tracking (2026-07-31, siehe api_call_kontingent-Tabellen-
     Kommentar). Erhoeht den Zaehler fuer `source` im aktuellen UTC-Monat um 1
     und gibt den neuen Stand zurueck (fuer den Aufrufer, der ggf. sofort eine
@@ -4037,15 +4038,28 @@ def increment_api_call_counter(conn: sqlite3.Connection, source: str,
     alle bestehenden Aufrufer bleiben unveraendert auf UTC."""
     monat = aktueller_monat_utc()
     tag = tag or heutiges_datum_utc()
+    # `schritt` seit 14.08.2026 (O-25). Groq begrenzt nicht die Anfragen,
+    # sondern die TOKEN je Tag (100.000 gegen 1.000 Anfragen) - der bindende
+    # Wert ist der erste. Dieselbe Tabelle und dieselbe Transaktion dafuer zu
+    # nutzen ist richtig: es ist derselbe Vorgang, nur in einer anderen
+    # Einheit. Eine zweite Tabelle haette einen zweiten Fehlerpunkt und eine
+    # zweite Aufraeumregel gebraucht.
+    #
+    # Die EINHEIT steckt im `source`-Schluessel ("groq" gegen "groq:token") -
+    # wer beide vermischt, bekommt Unsinn, und das faellt sofort auf.
+    schritt = max(0, int(schritt))
+    if schritt == 0:
+        return get_api_call_counter(conn, source, monat)
     conn.execute(
-        "INSERT INTO api_call_kontingent (source, monat, anzahl) VALUES (?, ?, 1) "
-        "ON CONFLICT(source, monat) DO UPDATE SET anzahl = anzahl + 1",
-        (source, monat),
+        "INSERT INTO api_call_kontingent (source, monat, anzahl) VALUES (?, ?, ?) "
+        "ON CONFLICT(source, monat) DO UPDATE SET anzahl = anzahl + ?",
+        (source, monat, schritt, schritt),
     )
     conn.execute(
-        "INSERT INTO api_call_kontingent_taeglich (source, tag, anzahl) VALUES (?, ?, 1) "
-        "ON CONFLICT(source, tag) DO UPDATE SET anzahl = anzahl + 1",
-        (source, tag),
+        "INSERT INTO api_call_kontingent_taeglich (source, tag, anzahl) "
+        "VALUES (?, ?, ?) "
+        "ON CONFLICT(source, tag) DO UPDATE SET anzahl = anzahl + ?",
+        (source, tag, schritt, schritt),
     )
     conn.commit()
     row = conn.execute(

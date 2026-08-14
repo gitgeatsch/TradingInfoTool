@@ -4719,6 +4719,119 @@ def paket_15() -> None:
            "felder[\"gate_passed\"] = 1" in _quelltext("agent/rollen_lauf.py"),
            "sonst greift der Cooldown nicht und dasselbe Symbol bekaeme in "
            "fuenfzehn Minuten dieselbe Verkaufsmail")
+
+    # ------------------------------------------------------------------
+    # AB. GEGENPRUEFUNG DER UMSETZUNGEN VOM 14.08. (Nutzeranweisung).
+    #
+    # Nicht: "laeuft es durch" - das sagen die Bloecke oben. Sondern: haelt
+    # jede Aenderung das, was ihre Begruendung behauptet, und hat sie nichts
+    # kaputtgemacht, das vorher ging.
+    from agent import trefferbilanz as TB5
+    from api import llm_basis as LB5
+    from database import db as DB5
+
+    # AB1 DIE VIER KOSTENARTEN - der Kern des Nutzerhinweises.
+    #
+    # Die Doku fuehrt vier Kostenarten (Regelwerk-Entscheidungslog 07.08.),
+    # `trefferbilanz.kosten_r_aus_stop` kannte zwei. Jetzt delegiert sie an
+    # `backward_tracking.kosten_in_r` - EINE Definition statt zweier.
+    _k = lambda **kw: TB5.kosten_r_aus_stop(100.0, 95.0, position_eur=250, **kw)
+    _krypto = _k(klasse="krypto", instrument="spot", tage=2.0)
+    _boerse = _k(klasse="boerse", instrument="spot", tage=2.0)
+    pruefe(P, "Krypto und Boerse werden verschieden gerechnet",
+           _krypto is not None and _boerse is not None
+           and abs(_krypto - _boerse) > 0.2,
+           f"krypto {_krypto} gegen boerse {_boerse} - 1,5 % je Seite gegen "
+           "1 EUR fix + 0,25 % Spread")
+    _hebel_kurz = _k(klasse="krypto", instrument="hebel", hebel=3.0, tage=2.0)
+    _hebel_lang = _k(klasse="krypto", instrument="hebel", hebel=3.0, tage=30.0)
+    pruefe(P, "beim Hebel kostet die HALTEDAUER, nicht nur der Trade",
+           _hebel_lang > _hebel_kurz * 2,
+           f"2 Tage {_hebel_kurz:.3f} R gegen 30 Tage {_hebel_lang:.3f} R - "
+           "die Tagesstaffel auf geliehenes Kapital fehlte der neuen Kette "
+           "vollstaendig; sie rechnete pauschal mit dem Krypto-Satz")
+    _hedge_kurz = _k(klasse="boerse", instrument="absicherung", tage=2.0)
+    _hedge_lang = _k(klasse="boerse", instrument="absicherung", tage=180.0)
+    pruefe(P, "die Absicherung traegt ihre laufende ETP-Gebuehr",
+           _hedge_lang > _hedge_kurz,
+           f"2 Tage {_hedge_kurz:.3f} R gegen 180 Tage {_hedge_lang:.3f} R - "
+           "ohne sie erscheint eine ueber Monate gehaltene Absicherung "
+           "billiger als sie ist")
+    pruefe(P, "ohne Zusatzangaben bleibt die einfache Rechnung",
+           TB5.kosten_r_aus_stop(100.0, 95.0, klasse="krypto") is not None,
+           "sieben bestehende Aufrufer uebergeben weder Instrument noch "
+           "Haltedauer - sie duerfen nicht brechen")
+
+    # AB1b DIE AUSSTIEGSFUEHRUNG BRAUCHT DIE WATCHLIST.
+    #
+    # Gefunden in der Gegenpruefung an der eigenen Logzeile der Funktion:
+    # ohne Watchlist traegt jede Zeile `tier = "spot"`, und die
+    # Gruppenueberschriften der Ausstiegsmail waeren gebaut und wirkungslos.
+    pruefe(P, "die Ausstiegsfuehrung wird MIT Watchlist geholt",
+           "compute_ausstiegs_empfehlungen(conn, watchlist=_wl)" in _quelltext(
+               "agent/rollen_lauf.py"),
+           "sonst landet alles im Sammel-Topf 'spot' - die Funktion warnt "
+           "selbst davor, und niemand hoerte hin")
+
+    # AB1c DIE RECHNUNG RUNDETE JEDEN KURS AUF CENT.
+    #
+    # In der Gegenpruefung an einer echten Mail gefunden: KAS bei 0,02428 EUR
+    # bekam Zone 0,02 bis 0,02, Stop 0,02, Ziel 0,03 - Einstieg, Stop und Ziel
+    # fielen auf denselben Wert zusammen.
+    #
+    # UND DAS KORRIGIERT MEINEN EIGENEN BEFUND VON HEUTE FRUEH. Zur PLUME-Mail
+    # ("0 bis 0 EUR") schrieb ich, die Rechnung sei richtig und nur die
+    # Darstellung habe sie vernichtet. Das stimmte zur Haelfte: der
+    # Formatierer machte den Schaden sichtbar, verursacht hat ihn `round(x, 2)`
+    # in der Rechnung selbst.
+    from agent import entscheidungsrechnung as ER5
+    _r5 = ER5.rechne(kurs=0.0119, atr=0.0008, risiko_eur=24.0,
+                     instrument="spot", betrag_wunsch_eur=800.0)
+    pruefe(P, "ein Sub-Cent-Wert behaelt seine Geometrie",
+           _r5["einstieg_von_eur"] != _r5["einstieg_bis_eur"]
+           and _r5["stop_eur"] < _r5["einstieg_von_eur"]
+           and _r5["ziel_von_eur"] > _r5["einstieg_bis_eur"],
+           f"Zone {_r5['einstieg_von_eur']}-{_r5['einstieg_bis_eur']}, "
+           f"Stop {_r5['stop_eur']}, Ziel {_r5['ziel_von_eur']}")
+    _r6 = ER5.rechne(kurs=61234.0, atr=1450.0, risiko_eur=120.0,
+                     instrument="spot", betrag_wunsch_eur=800.0)
+    pruefe(P, "und ein grosser Kurs bekommt keine Scheingenauigkeit",
+           abs(_r6["stop_eur"] - round(_r6["stop_eur"], 2)) < 1e-9,
+           "sechs signifikante Stellen heissen bei 61.234 zwei Nachkomma - "
+           "die Regel greift nur, wo sie gebraucht wird")
+    pruefe(P, "Betraege bleiben auf Cent gerundet",
+           abs(_r6["risiko_eur"] - round(_r6["risiko_eur"], 2)) < 1e-9,
+           "ein Einsatz ist ein Eurobetrag, kein Kurs")
+
+    # AB2 DER TOKENZAEHLER (O-25).
+    pruefe(P, "der Zaehler kann in Schritten buchen",
+           "schritt: int = 1" in _quelltext("database/db.py"),
+           "Token sind derselbe Vorgang in einer anderen Einheit - dieselbe "
+           "Tabelle, dieselbe Transaktion")
+    with sqlite3.connect(":memory:") as _c5:
+        _c5.row_factory = sqlite3.Row
+        _c5.execute("CREATE TABLE api_call_kontingent (source TEXT, monat "
+                    "TEXT, anzahl INTEGER, PRIMARY KEY (source, monat))")
+        _c5.execute("CREATE TABLE api_call_kontingent_taeglich (source TEXT, "
+                    "tag TEXT, anzahl INTEGER, PRIMARY KEY (source, tag))")
+        DB5.increment_api_call_counter(_c5, "groq:token", schritt=1200)
+        _stand = DB5.increment_api_call_counter(_c5, "groq:token", schritt=900)
+        pruefe(P, "zwei Aufrufe ergeben 2.100 Token, nicht 2",
+               _stand == 2100, f"gezaehlt: {_stand}")
+        _eins = DB5.increment_api_call_counter(_c5, "groq")
+        pruefe(P, "und der Aufrufzaehler bleibt bei eins je Aufruf",
+               _eins == 1,
+               "die Einheit steckt im Schluessel - wer beide vermischt, "
+               "bekommt Unsinn, und das faellt sofort auf")
+    pruefe(P, "die Einheit ist am Schluessel erkennbar",
+           LB5.TOKEN_SUFFIX == ":token"
+           and "zaehle_token(\"groq\"" in _quelltext("api/groq.py"),
+           "damit niemand Token gegen Aufrufe vergleicht")
+    pruefe(P, "gebucht wird NACH dem Aufruf, nicht davor",
+           _quelltext("api/groq.py").index("zaehle_aufruf(\"groq\")")
+           < _quelltext("api/groq.py").index("zaehle_token(\"groq\""),
+           "die Tokenzahl steht erst in der Antwort; ein Fehlschlag "
+           "verbraucht keine Token")
     c.close()
 
 

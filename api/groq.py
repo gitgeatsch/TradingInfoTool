@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import requests
 
-from api.llm_basis import Minutenfenster, extrahiere_inhalt, zaehle_aufruf
+from api.llm_basis import (Minutenfenster, extrahiere_inhalt,
+                          zaehle_aufruf, zaehle_token)
 from database.api_health import track_api_health
 
 BASE_URL = "https://api.groq.com/openai/v1"
@@ -46,4 +47,19 @@ class GroqClient:
         )
         response.raise_for_status()
         data = response.json()
+        # DIE TOKEN AUS DER ANTWORT BUCHEN (O-25, 14.08.2026).
+        #
+        # Groqs bindende Free-Tier-Grenze sind 100.000 TOKEN je Tag, nicht die
+        # 1.000 Anfragen - bei rund 1.200 Token je Aufruf ist der Topf nach 83
+        # leer. `scheduler/rollen_job` rechnet das bisher aus einer gemessenen
+        # Konstante um; hier steht, was tatsaechlich verbraucht wurde.
+        #
+        # NACH dem Aufruf, anders als `zaehle_aufruf`: die Zahl steht erst in
+        # der Antwort. Ein Fehlschlag verbraucht keine Token, also fehlt dort
+        # auch nichts.
+        try:
+            _u = (data or {}).get("usage") or {}
+            zaehle_token("groq", int(_u.get("total_tokens") or 0))
+        except Exception:                                    # noqa: BLE001
+            pass                                             # P-10
         return extrahiere_inhalt(data, "Groq")

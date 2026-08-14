@@ -231,6 +231,42 @@ def _haltedauer_tage(weg: float, atr: float) -> int:
     return int(min(GRENZEN["tage_max"], max(1, round((weg / atr) ** 2))))
 
 
+def _runde_kurs(wert: float | None) -> float | None:
+    """Einen KURS runden - auf signifikante Stellen, nicht auf Cent.
+
+    DER DEFEKT, DEN DAS BEHEBT (14.08.2026, in der Gegenpruefung gefunden).
+    Jeder Kurs dieser Rechnung lief durch `round(x, 2)`. Fuer BTC ist das
+    richtig; fuer alles unter einem Euro vernichtet es die Geometrie:
+
+        KAS   Kurs 0,02428   ->  Zone 0,02 bis 0,02, Stop 0,02, Ziel 0,03
+        PLUME Kurs 0,0119    ->  Zone 0,01 bis 0,01, Stop 0,01
+
+    Einstieg, Stop und Ziel fallen auf denselben Wert zusammen. Die Zone hat
+    keine Breite mehr, der Stop liegt auf dem Einstieg, und das CRV, das
+    daneben steht, gehoert zu einer Rechnung, die es so nicht mehr gibt.
+
+    ICH HABE DAS HEUTE FRUEH FALSCH BERICHTET. Zur PLUME-Mail schrieb ich, die
+    Rechnung sei richtig gewesen und nur die Darstellung habe sie vernichtet.
+    Das stimmte nur zur Haelfte: `_eur()` hat die Anzeige zerstoert, aber die
+    Werte waren vorher schon auf Cent gerundet. Der Formatierer machte den
+    Schaden sichtbar, verursacht hat ihn diese Zeile.
+
+    BETRAEGE BLEIBEN BEI ZWEI STELLEN. Ein Einsatz von 160,00 EUR ist ein
+    Eurobetrag, kein Kurs - dort sind Cent die richtige Genauigkeit.
+
+    Sechs signifikante Stellen, weil die Zonenbreite bei kleinen Kursen in der
+    fuenften oder sechsten steht: bei 0,0119 EUR sind 0,25 ATR rund 0,0002."""
+    if wert is None:
+        return None
+    import math as _m
+
+    w = abs(float(wert))
+    if w == 0:
+        return 0.0
+    stellen = max(2, min(10, 6 - 1 - int(_m.floor(_m.log10(w)))))
+    return round(float(wert), stellen)
+
+
 def _crv_faktor(crv: float, instrument: str,
                 kostenklasse: str = "krypto") -> float:
     """Wieviel der vollen Groesse bei diesem CRV - stufenlos von 1/Spreizung
@@ -332,15 +368,15 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
 
     e = {
         "ist_short": bool(ist_short),
-        "einstieg_eur": round(kurs, 2),
-        "einstieg_von_eur": round(kurs - GRENZEN["zone_atr"] * atr, 2),
-        "einstieg_bis_eur": round(kurs + GRENZEN["zone_atr"] * atr, 2),
-        "stop_eur": round(kurs - (-abstand if ist_short else abstand), 2),
+        "einstieg_eur": _runde_kurs(kurs),
+        "einstieg_von_eur": _runde_kurs(kurs - GRENZEN["zone_atr"] * atr),
+        "einstieg_bis_eur": _runde_kurs(kurs + GRENZEN["zone_atr"] * atr),
+        "stop_eur": _runde_kurs(kurs - (-abstand if ist_short else abstand)),
         "stop_relativ": round(stop_rel, 5),
         "stop_regel": stop_regel,
-        "ziel_eur": round(ziel, 2),
-        "ziel_von_eur": round(ziel - GRENZEN["zone_atr"] * atr, 2),
-        "ziel_bis_eur": round(ziel + GRENZEN["zone_atr"] * atr, 2),
+        "ziel_eur": _runde_kurs(ziel),
+        "ziel_von_eur": _runde_kurs(ziel - GRENZEN["zone_atr"] * atr),
+        "ziel_bis_eur": _runde_kurs(ziel + GRENZEN["zone_atr"] * atr),
         "crv": round(crv, 2),
         "crv_erreicht": crv >= GRENZEN["crv"] - 1e-9,
         "ziel_regel": ziel_regel,

@@ -239,7 +239,25 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
     try:
         from agent.krypto.backward_tracking import compute_ausstiegs_empfehlungen
 
-        _f = compute_ausstiegs_empfehlungen(conn)
+        # MIT WATCHLIST - sonst warnt die Funktion selbst und wirft alle
+        # Spot-Signale in einen Sammel-Topf 'spot'. Gefunden in der
+        # Gegenpruefung vom 14.08., an ihrer eigenen Logzeile:
+        #
+        #   "compute_ausstiegs_empfehlungen() ohne watchlist aufgerufen -
+        #    keine Assetklassen-Aufschluesselung moeglich"
+        #
+        # Ohne sie traegt jede Zeile `tier = "spot"`, und die
+        # Gruppenueberschriften der Ausstiegsmail (Krypto-Spot, Aktien,
+        # Rohstoffe ...) waeren gebaut und wirkungslos - alles stuende unter
+        # "SPOT (nicht aufgeschluesselt)".
+        import config as _config_modul
+
+        _wl = None
+        try:
+            _wl = _config_modul.get_watchlist()
+        except Exception:                                    # noqa: BLE001
+            pass
+        _f = compute_ausstiegs_empfehlungen(conn, watchlist=_wl)
         for _e in (_f or {}).get("alle", []):
             ergebnis["fuehrung"][str(_e.get("symbol", "")).upper()] = _e
     except Exception as exc:                                 # noqa: BLE001
@@ -686,7 +704,12 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # gewesen, ohne dass irgendetwas meldet.
     kosten_r = TB.kosten_r_aus_stop(
         kurs_e, rechnung["stop_eur"], klasse=_kostenklasse(assetklasse),
-        position_eur=rechnung["betrag_eur"])
+        position_eur=rechnung["betrag_eur"],
+        # DIE DREI, DIE DIE UEBRIGEN KOSTENARTEN AUFSCHLIESSEN: das Instrument
+        # entscheidet die Art, der Hebel die Hoehe des geliehenen Kapitals, die
+        # Haltedauer die Tagesgebuehr und die laufende ETP-Gebuehr.
+        instrument=instrument, hebel=rechnung.get("hebel"),
+        tage=rechnung.get("haltedauer_tage"))
     # DIE EIGENE BILANZ, NICHT EIN LEERES DICT. Bis zum 13.08. stand hier
     # `TB.bewerte({}, ...)` - der Entscheider las eine leere Tabelle und fiel
     # damit IMMER auf die Basisrate zurueck, auch wenn Faelle vorlagen. Zusammen

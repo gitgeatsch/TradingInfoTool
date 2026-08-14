@@ -127,6 +127,49 @@ def zaehle_aufruf(source: str, tag: str | None = None) -> None:
         logger.debug("Aufrufzaehler fuer %s nicht geschrieben: %s", source, exc)
 
 
+# Der Schluessel, unter dem Token statt Aufrufe gebucht werden. Die Einheit
+# steckt im Namen, damit niemand die beiden Zahlen versehentlich vergleicht.
+TOKEN_SUFFIX = ":token"
+
+
+def zaehle_token(source: str, anzahl: int, tag: str | None = None) -> None:
+    """Bucht `anzahl` Token auf `source` (O-25, 14.08.2026).
+
+    WARUM ES DIESEN ZAEHLER GIBT. Bei Groq ist die bindende Free-Tier-Grenze
+    nicht die Anfragenzahl, sondern die TOKEN JE TAG: 1.000 RPD stehen 100.000
+    TPD gegenueber, und bei rund 1.200 Token je Aufruf ist der zweite Wert nach
+    83 Aufrufen erschoepft - einem Zwoelftel des ersten.
+
+    Bisher gab es dafuer nur eine Umrechnung im Code (`GROQ_AUFRUFE_JE_TAG`).
+    Die ist richtig, solange der Prompt so gross ist wie gemessen. Dieser
+    Zaehler misst stattdessen, was wirklich verbraucht wurde - auf
+    Nutzerwunsch gebaut, damit er da ist, wenn er gebraucht wird.
+
+    NUR ZAEHLEN, NICHT SPERREN. Ein Waechter, der auf dieser Zahl aufsetzt,
+    gehoert zum Aufrufer; hier waere er versteckt. Wer sperren will, liest
+    `token_heute()` und entscheidet selbst.
+
+    Fehler beim Zaehlen duerfen den Aufruf nie toeten (P-10)."""
+    import database.db as db
+
+    if not anzahl or int(anzahl) <= 0:
+        return
+    try:
+        conn = db.get_connection()
+        try:
+            db.increment_api_call_counter(conn, f"{source}{TOKEN_SUFFIX}", tag,
+                                          schritt=int(anzahl))
+        finally:
+            conn.close()
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("Tokenzaehler fuer %s nicht geschrieben: %s", source, exc)
+
+
+def token_heute(source: str, tag: str | None = None) -> int:
+    """Wie viele Token heute auf `source` gebucht sind. 0, wenn unlesbar."""
+    return verbrauch_heute(f"{source}{TOKEN_SUFFIX}", tag)
+
+
 class Minutenfenster:
     """Thread-sichere Volumen-Drossel: hoechstens `limit` Aufrufe je 60 s.
 
