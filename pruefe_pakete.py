@@ -4416,6 +4416,126 @@ def paket_15() -> None:
            f"nicht uebergeben: {_fehlt} - offen als O-19 bis O-23; diese "
            "Pruefung schlaegt an, sobald einer verdrahtet wird, damit die "
            "Liste nicht veraltet")
+
+    # ------------------------------------------------------------------
+    # AA. DIE VERKAUFSSEITE (14.08.2026) - der groesste Fund des Echtbetriebs.
+    #
+    # Elf von 45 Urteilen waren Verkaufsseite und keines hat den Nutzer
+    # erreicht: neun REDUZIEREN und zwei VERKAUFEN fielen in `_schreibe_nein()`
+    # und wurden als "reines LLM-Halten" gebucht. `AKTIONEN_MIT_EINSTIEG` kennt
+    # drei Woerter, alles andere galt als Nichtstun.
+    #
+    # NACHGERECHNET AM ECHTEN LAUF: alle elf hatten Bestand, zusammen ueber
+    # 1.400 EUR Gegenwert - darunter BTC mit 917 EUR.
+    from agent import verkaufsrechnung as VK4
+
+    pruefe(P, "Verkaufen und Nichtstun sind nicht mehr dasselbe",
+           VK4.ist_ausstieg("VERKAUFEN") and VK4.ist_ausstieg("REDUZIEREN")
+           and not VK4.ist_ausstieg("HALTEN")
+           and not VK4.ist_ausstieg("NICHTS_TUN"),
+           "drei Klassen statt zwei: Einstieg, Ausstieg, Nichts")
+    pruefe(P, "die Abzweigung steht VOR der Nein-Buchung",
+           _quelltext("agent/rollen_lauf.py").index("VK.ist_ausstieg(aktion)")
+           < _quelltext("agent/rollen_lauf.py").index(
+               "if aktion not in SM.AKTIONEN_MIT_EINSTIEG:"),
+           "sonst verschluckt dieselbe Zeile wieder alles, was nicht "
+           "'kaufen' heisst")
+
+    _voll = VK4.rechne(aktion="VERKAUFEN", menge=100.0, kurs_eur=2.0,
+                       einstand_eur=4.0)
+    _teil = VK4.rechne(aktion="REDUZIEREN", menge=100.0, kurs_eur=2.0,
+                       einstand_eur=4.0)
+    pruefe(P, "VERKAUFEN nimmt alles, REDUZIEREN ein Drittel",
+           _voll["menge_verkauf"] == 100.0
+           and abs(_teil["menge_verkauf"] - 100.0 / 3.0) < 1e-9,
+           "das Drittel ist GESETZT, nicht gemessen - die Umkehrung der "
+           "Tranche, bis eigene Ausstiegsdaten vorliegen")
+    pruefe(P, "das Ergebnis der Position wird mitgerechnet",
+           _voll["ergebnis_eur"] == -200.0
+           and _voll["ergebnis_prozent"] == -50.0,
+           "die Frage, die der Nutzer zuerst stellt - aber KEIN Grund fuer "
+           "die Entscheidung, sondern die Ausgangslage")
+    _gestakt = VK4.rechne(aktion="VERKAUFEN", menge=100.0, gestakt=60.0,
+                          kurs_eur=2.0)
+    pruefe(P, "der gestakte Teil wird abgezogen",
+           _gestakt["menge_verkauf"] == 40.0,
+           "eine Empfehlung ueber eine Menge, an die man nicht herankommt, "
+           "ist keine")
+    pruefe(P, "ohne Bestand gibt es keinen Auftrag",
+           VK4.rechne(aktion="VERKAUFEN", menge=0.0, kurs_eur=2.0) is None,
+           "ein VERKAUFEN auf etwas, das man nicht haelt, wird gebucht wie "
+           "ein HALTEN - und misst mit, wie oft das vorkommt")
+    pruefe(P, "ein zu kleiner Gegenwert wird benannt",
+           VK4.rechne(aktion="VERKAUFEN", menge=1.0, kurs_eur=9.95)["zu_klein"]
+           and not VK4.rechne(aktion="VERKAUFEN", menge=1.0,
+                              kurs_eur=100.0)["zu_klein"],
+           "QNT lag im echten Lauf bei 9,95 EUR - die Gebuehren stehen dort "
+           "in keinem Verhaeltnis")
+    _s = VK4.saetze(_voll)
+    pruefe(P, "die Verkaufsmail nennt Menge, Gegenwert und Stand",
+           any("Verkaufen" in x for x in _s)
+           and any("Gegenwert" in x for x in _s)
+           and any("Stand" in x for x in _s),
+           "wieviel wovon, und was bleibt uebrig - mehr braucht ein "
+           "Ausstieg nicht, und weniger reicht nicht")
+    # ELF EINZELMAILS WAEREN SCHLIMMER GEWESEN ALS DIE LUECKE. Nutzereinwand
+    # 14.08.: *"das ist zu viel"*. Eine Sammelmail je Lauf, nach Gegenwert
+    # sortiert - die Einstiegsmails bleiben einzeln, sie tragen eine Planung.
+    _posten = [{"symbol": "BTC", "begruendung": "Momentum kippt.",
+                "verkauf": VK4.rechne(aktion="REDUZIEREN", menge=0.05,
+                                      kurs_eur=54000.0, einstand_eur=68000.0)},
+               {"symbol": "SUPRA", "begruendung": "These gefallen.",
+                "verkauf": VK4.rechne(aktion="VERKAUFEN", menge=119592.0,
+                                      kurs_eur=0.000145, einstand_eur=0.0009)}]
+    _b, _txt = VK4.sammel_mail(_posten, modell="m", zeitpunkt="2026-08-14")
+    pruefe(P, "die Verkaufsseite kostet EINE Mail, nicht elf",
+           _b.count("Verkaufsvorschlaege") == 1 and "BTC" in _txt
+           and "SUPRA" in _txt,
+           "elf Einzelmails haetten die Kaufmails auf einundzwanzig gebracht "
+           "- und die Verkaufsseite ist die, die man nicht uebersehen darf")
+    # SORTIERT WIRD NACH DRINGLICHKEIT, NICHT NACH EURO - die dokumentierte
+    # Regel (`backward_tracking`, Zeile 4930): "Dringlichstes zuerst ... NICHT
+    # nach Buchgewinn. Der groesste ungesicherte Gewinn ist nicht automatisch
+    # der dringendste Fall." Meine erste Fassung sortierte nach Gegenwert, und
+    # diese Pruefung hat den Fehler mitgeschrieben.
+    pruefe(P, "das GANZ-Raus steht vor dem Teilverkauf",
+           _txt.index("SUPRA ") < _txt.index("BTC "),
+           "SUPRA soll ganz raus (17 EUR), BTC nur ein Drittel (900 EUR) - "
+           "'raus' ist dringender als 'weniger davon'")
+    _mit_f = [dict(_posten[0], fuehrung={"empfehlung": "SCHLIESSEN · faellig",
+                                         "mfe_r": 2.4}), _posten[1]]
+    _, _txt2 = VK4.sammel_mail(_mit_f)
+    pruefe(P, "sind sich beide Ebenen einig, steht das ganz oben",
+           _txt2.index("BTC ") < _txt2.index("SUPRA ")
+           and "Fuehrung: SCHLIESSEN" in _txt2,
+           "die deterministische Fuehrung sagt schliessen UND das Modell sagt "
+           "reduzieren - der einzige Fall, in dem beide dasselbe meinen")
+    pruefe(P, "die Fuehrung steht in DERSELBEN Mail",
+           "hoechster Stand +2,40 R" in _txt2,
+           "fuer BTC liefen am 14.08. zwei Ausstiegswege parallel - getrennt "
+           "gelesen sehen sie aus wie zwei Meinungen zum selben Symbol")
+    pruefe(P, "ohne Ausstieg gibt es keine Mail",
+           VK4.sammel_mail([]) is None,
+           "eine leere Sammelmail waere eine Benachrichtigung ueber nichts")
+    pruefe(P, "die Sammelmail sagt, was sie NICHT ist",
+           "KEINE GEWINNMITNAHME" in _txt,
+           "Nutzerfrage 13.08.: 'Wenn da steht jetzt schliessen, ist das "
+           "Gewinnzone erreicht?' - nein, im Gegenteil")
+    pruefe(P, "der Lauf verschickt die Sammelmail auch",
+           "versand(*_sammel)" in _quelltext("agent/rollen_lauf.py"),
+           "gebaut und nicht verschickt waere die Luecke von vorhin")
+
+    pruefe(P, "der Verkaufsversand laesst sich abschalten, das Buchen nicht",
+           "verkauf_mailt" in _quelltext("agent/rollen_lauf.py")
+           and "verkauf_nicht_gemailt" in _quelltext("agent/rollen_lauf.py"),
+           "0 von 1.142 in der alten Kette gegen 11 von 45 in der neuen - bis "
+           "das eingeordnet ist, soll man zaehlen koennen ohne zu mailen. Ein "
+           "Schalter, der die ZEILE unterdrueckt, waere wieder das Verschlucken")
+
+    pruefe(P, "die Ausstiegszeile wird geschrieben",
+           "felder[\"gate_passed\"] = 1" in _quelltext("agent/rollen_lauf.py"),
+           "sonst greift der Cooldown nicht und dasselbe Symbol bekaeme in "
+           "fuenfzehn Minuten dieselbe Verkaufsmail")
     c.close()
 
 

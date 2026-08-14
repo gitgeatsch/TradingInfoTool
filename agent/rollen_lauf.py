@@ -198,7 +198,7 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                        rollen_gate as RG, signal_abbildung as SA,
                        signal_mail as SM, toepfe as TO, trefferbilanz as TB,
                        wiederholung as WH, zweite_meinung as ZM,
-                       betraege as BE)
+                       betraege as BE, verkaufsrechnung as VK2)
     from agent.empfehlung_vertrag import EmpfehlungUngueltig
     from agent.handelsauftrag import AuftragUngueltig, pruefe as pruefe_auftrag
 
@@ -225,6 +225,28 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
     # dieselbe Tabelle. Dass die Bilanz waehrend des Laufs nicht mitwaechst, ist
     # richtig so: alle Assets eines Durchgangs sollen gegen denselben
     # Kenntnisstand bewertet werden, sonst haenge das Urteil an der Reihenfolge.
+    # DIE DETERMINISTISCHE AUSSTIEGSFUEHRUNG, einmal je Lauf.
+    #
+    # WOFUER SIE HIER GEBRAUCHT WIRD. Am 14.08. liefen fuer BTC zwei
+    # Ausstiegswege parallel: der taegliche 7:15-Job (Trailing, Ziel, Frist)
+    # und das REDUZIEREN aus dem 15-Minuten-Lauf. Getrennt verschickt sehen die
+    # beiden aus wie zwei Meinungen zum selben Symbol; nebeneinander sind sie
+    # zwei Befunde auf verschiedene Fragen. Deshalb traegt die Verkaufsmail den
+    # Stand der Fuehrung mit.
+    #
+    # REIN LESEND UND OHNE MODELLAUFRUF - es kostet kein Kontingent.
+    ergebnis["fuehrung"] = {}
+    try:
+        from agent.krypto.backward_tracking import compute_ausstiegs_empfehlungen
+
+        _f = compute_ausstiegs_empfehlungen(conn)
+        for _e in (_f or {}).get("alle", []):
+            ergebnis["fuehrung"][str(_e.get("symbol", "")).upper()] = _e
+    except Exception as exc:                                 # noqa: BLE001
+        # P-8: ohne die Fuehrung ist die Verkaufsmail aermer, nicht falsch.
+        ergebnis.setdefault("fehler", []).append(
+            f"Ausstiegsfuehrung nicht lesbar: {exc}")
+
     try:
         bilanz = TB.zaehle(conn, quelle_kette="rollen",
                            instrument=instrument)
@@ -368,6 +390,38 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
     # DER DECKEL IST DER Z.AI-DECKEL PLUS EINE MINUTE. Wer hier ewig wartet,
     # verlagert das Blockieren nur ans Ende; wer gar nicht wartet, verliert die
     # Gegenpruefung eines langsamen Signals.
+    # DIE EINE VERKAUFSMAIL - nach den Einstiegen, vor dem Warten auf Z.ai.
+    # Sie braucht kein zweites Modell (siehe verkaufsrechnung.sammel_mail) und
+    # soll deshalb nicht bis zu vier Minuten dahinter warten muessen.
+    _sammel = VK2.sammel_mail(ergebnis.get("ausstiege") or [],
+                              modell=modell, zeitpunkt=tag)
+    if _sammel:
+        ergebnis.setdefault("mails", []).append(
+            {"symbol": "(Sammel)", "betreff": _sammel[0], "text": _sammel[1],
+             "seite": "ausstieg"})
+        # DER SCHALTER FUER DIE RATENFRAGE (14.08.).
+        #
+        # Die alte Kette hat ueber ihre gesamte Historie NULL von 1.142
+        # Spot-Signalen als VERKAUFEN geurteilt (98,2 % HALTEN, Befund vom
+        # 01.08.). Die Rollen-Kette liefert elf in EINEM Lauf ueber 45 Symbole.
+        #
+        # Von null auf ein Viertel. Das ist entweder genau die Korrektur, die
+        # gesucht wurde - oder die Kalibrierung ist ins andere Extrem gekippt.
+        # Beantworten laesst sich das aus vorliegenden Daten, ohne einen
+        # Modellaufruf; bis dahin soll man die Urteile ZAEHLEN koennen, ohne
+        # sie verschicken zu muessen.
+        #
+        # WAS DIESER SCHALTER NICHT TUT: er unterdrueckt keine Zeile. Gebucht
+        # wird immer - sonst waere es wieder das Verschlucken, nur mit einem
+        # Schalter davor.
+        _mailt = ((config or {}).get("rollen_kette") or {}).get(
+            "verkauf_mailt", True)
+        if betriebsart == SCHARF and versand is not None and _mailt:
+            versand(*_sammel)
+        elif betriebsart == SCHARF and not _mailt:
+            ergebnis["verkauf_nicht_gemailt"] = len(
+                ergebnis.get("ausstiege") or [])
+
     for faden, kennung, eintrag in ergebnis.pop("_faeden", []):
         faden.join(timeout=ZM.WARTE_MAX_SEKUNDEN + 60)
         if faden.is_alive():
@@ -490,6 +544,61 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
 
     # --- Stufe: Aktion ---
     aktion = befund.get("aktion")
+
+    # --- Stufe: Ausstieg - DIE VERKAUFSSEITE (14.08.2026) ---------------
+    #
+    # ELF VON 45 URTEILEN DES ERSTEN ECHTBETRIEBS WAREN VERKAUFSSEITE, und
+    # keines hat den Nutzer erreicht: neun REDUZIEREN und zwei VERKAUFEN
+    # fielen in `_schreibe_nein()` und wurden als "reines LLM-Halten" gebucht.
+    # Verkaufen lag mit Nichtstun in einem Topf.
+    #
+    # DREI KLASSEN STATT ZWEI - Einstieg, Ausstieg, Nichts. Diese Abzweigung
+    # steht VOR der Nein-Buchung, denn sonst verschluckt dieselbe Zeile wieder
+    # alles, was nicht "kaufen" heisst.
+    # LOKALER IMPORT, weil `_ein_asset` eine eigene Funktion ist und den
+    # Sammelimport von `fuehre_lauf` NICHT sieht. Genau daran ist die erste
+    # Fassung gescheitert: `VK` war undefiniert, der breite Fehlerfang hat es
+    # geschluckt, und JEDES Symbol lief in den Fehlerzweig - die Pruefung
+    # "ein Hebel-Lauf erzeugt eine Mail" fiel als erste um.
+    from agent import verkaufsrechnung as VK
+
+    if VK.ist_ausstieg(aktion):
+        bestand_row = None
+        try:
+            bestand_row = next(
+                (h for h in db.get_all_holdings(conn)
+                 if str(h.symbol).upper() == str(symbol).upper()), None)
+        except Exception as exc:                             # noqa: BLE001
+            ergebnis.setdefault("fehler", []).append(
+                f"{symbol}: Bestand nicht lesbar: {exc}")
+        verkauf = VK.rechne(
+            aktion=aktion, menge=getattr(bestand_row, "quantity", 0.0) or 0.0,
+            kurs_eur=kurs_e,
+            einstand_eur=(getattr(bestand_row, "avg_buy_price_manual_eur", None)
+                          or getattr(bestand_row, "avg_buy_price_eur", None)),
+            gestakt=getattr(bestand_row, "staked_quantity", None))
+        if verkauf is None:
+            # KEIN BESTAND HEISST KEIN AUFTRAG. Ein VERKAUFEN auf etwas, das
+            # man nicht haelt, ist kein Fehler des Modells - es kennt den
+            # Bestand nicht. Es ist aber auch keine Handlung, also wird es
+            # gebucht wie ein HALTEN und misst mit, wie oft das vorkommt.
+            durchlauf.verloren(symbol, "aktion", f"{aktion} ohne Bestand")
+            if betriebsart != TROCKEN:
+                _schreibe_nein(symbol=symbol, befund=befund, kurs_e=kurs_e,
+                               atr_e=atr_e, tag=tag, reihe=reihe, idx=idx,
+                               lagebild_id=lagebild_id, instrument=instrument,
+                               strategie=strategie, conn=conn, db=db,
+                               config=config, modell=modell,
+                               ergebnis=ergebnis, module=module)
+            return
+        durchlauf.bestanden(symbol, "aktion")
+        _sende_ausstieg(
+            symbol=symbol, befund=befund, verkauf=verkauf, kurs_e=kurs_e,
+            instrument=instrument, strategie=strategie, tag=tag,
+            lagebild_id=lagebild_id, modell=modell, conn=conn, db=db,
+            betriebsart=betriebsart, versand=versand, ergebnis=ergebnis)
+        return
+
     if aktion not in SM.AKTIONEN_MIT_EINSTIEG:
         durchlauf.verloren(symbol, "aktion", aktion or "?")
         # DAS NEIN WIRD MITGESCHRIEBEN - und zwar AUFLOESBAR (14.08.).
@@ -713,6 +822,55 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                                  name=f"zweite-meinung-{symbol}")
         ergebnis.setdefault("_faeden", []).append((faden, signal_id, eintrag))
         faden.start()
+
+
+def _sende_ausstieg(*, symbol, befund, verkauf, kurs_e, instrument, strategie,
+                    tag, lagebild_id, modell, conn, db, betriebsart, versand,
+                    ergebnis) -> None:
+    """Einen Ausstieg VORMERKEN und seine Zeile schreiben - nicht mailen.
+
+    NUTZEREINWAND 14.08., waehrend dieser Umbau lief: *"45 Signale sind
+    durchgekommen - 9 Spot, Rest irgendwas z.B. Verkaufen - das ist zu viel."*
+
+    Meine erste Fassung hat genau das verschlimmert: elf Einzelmails fuer die
+    Verkaufsseite waeren zu den zehn Kaufmails dazugekommen. Einundzwanzig
+    Mails aus einem Lauf - und die Verkaufsseite ist die, die man nicht
+    uebersehen darf.
+
+    DESHALB SAMMELT DIESE FUNKTION NUR. Eine Mail je Lauf baut
+    `verkaufsrechnung.sammel_mail()` am Ende von `fuehre_lauf`, nach Gegenwert
+    sortiert. Die Einstiegsmails bleiben einzeln: sie sind seltener und tragen
+    eine vollstaendige Planung, die sich nicht buendeln laesst.
+
+    DIE ZEILE WIRD TROTZDEM SOFORT GESCHRIEBEN, nicht am Ende. Sonst greift der
+    Cooldown nicht, und ein zweiter Lauf im selben Fenster faende dasselbe
+    Symbol wieder frei."""
+    from agent import signal_abbildung as SA2
+
+    ergebnis.setdefault("ausstiege", []).append(
+        {"symbol": symbol, "verkauf": verkauf,
+         "begruendung": befund.get("begruendung"),
+         # DIE DETERMINISTISCHE FUEHRUNG ZU DIESEM SYMBOL, falls es eine gibt.
+         # Sie wird EINMAL je Lauf geholt (wie das Lagebild) und hier nur
+         # nachgeschlagen - 45 Symbole waeren sonst 45 Abfragen ueber
+         # dieselben Tabellen.
+         "fuehrung": (ergebnis.get("fuehrung") or {}).get(symbol.upper())})
+
+    if betriebsart == TROCKEN:
+        return
+    try:
+        felder = SA2.felder_aus_entscheidung(
+            befund, fakten={"asset": symbol}, lagebild_id=lagebild_id,
+            prompt_stand=None, eur_je_usd=None, familien=None,
+            rechnung=None, modell=modell)
+        # `gate_passed = 1`, weil es eine HANDLUNG ist - anders als die
+        # Nein-Buchung, die eine Messung ist.
+        felder["gate_passed"] = 1
+        felder["position_size_eur"] = round(float(verkauf["gegenwert_eur"]), 2)
+        SA2.schreibe_signal(conn, felder, symbol=symbol)
+    except Exception as exc:                                 # noqa: BLE001
+        ergebnis.setdefault("fehler", []).append(
+            f"{symbol}: Ausstiegszeile nicht geschrieben: {exc}")
 
 
 def _schreibe_nein(*, symbol, befund, kurs_e, atr_e, tag, reihe, idx,
