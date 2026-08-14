@@ -212,13 +212,52 @@ def baue_versand(config: dict | None = None):
     return versand
 
 
-def fuehre_krypto_lauf(
-    *, conn_factory, config, client=None, clients=None, zai_client=None,
-    versand=None,
+def fuehre_umlauf(*, conn_factory, config, clients=None, zai_client=None,
+                  versand=None, betriebsart: str = "probe",
+                  db: str = "data/tradinginfotool.db",
+                  strategie: str = "einstieg") -> list:
+    """EIN vollstaendiger Umlauf ueber alle umgestellten Bereiche.
+
+    DIE LUECKE, DIE ER SCHLIESST (14.08.): der Job rief bis hierher nur Krypto,
+    und zwar mit fest verdrahtetem `("spot", "hebel")`. Aktien, Rohstoffe,
+    Themen-ETF und die Absicherung waren damit von der neuen Kette nicht
+    erreichbar - der Schnitt haette sie stillgelegt, ohne sie zu ersetzen.
+
+    WAS EIN UMLAUF IST, steht in `assetklassen.laeufe()` - an EINER Stelle. Wer
+    hier eine eigene Liste baute, baute die naechste, die eine Gruppe vergisst;
+    genau so verlor der OHLC-Refresh am 06.08. die beiden
+    Absicherungsinstrumente.
+
+    JEDE GRUPPE EINZELN GESCHUETZT: was in einem Bereich abbricht, darf die
+    uebrigen nicht mitnehmen - dieselbe Regel wie fuer ein einzelnes Asset im
+    Lauf."""
+    from agent import assetklassen as AK
+
+    aus = []
+    for gruppe, instrument, symbole in AK.laeufe():
+        if not bedient_neue_kette(gruppe, config):
+            continue
+        try:
+            ergebnis = fuehre_bereich(
+                conn_factory=conn_factory, config=config, clients=clients,
+                zai_client=zai_client, versand=versand, gruppe=gruppe,
+                instrument=instrument, symbole=symbole, strategie=strategie,
+                betriebsart=betriebsart, db=db)
+            if ergebnis is not None:
+                aus.append((gruppe, instrument, ergebnis))
+        except Exception:                                    # noqa: BLE001
+            logger.exception("Rollen-Kette %s/%s fehlgeschlagen",
+                             gruppe, instrument)
+    return aus
+
+
+def fuehre_bereich(
+    *, conn_factory, config, clients=None, client=None, zai_client=None,
+    versand=None, gruppe: str = "krypto", symbole: list | None = None,
     instrument: str = "spot", strategie: str = "einstieg",
     betriebsart: str = "probe", db: str = "data/tradinginfotool.db",
 ) -> dict | None:
-    """Ein Durchgang der Rollen-Kette ueber die Krypto-Watchlist.
+    """Ein Durchgang der Rollen-Kette ueber EINEN Bereich.
 
     GIBT `None` ZURUECK, WENN DIE KLASSE NICHT UMGESTELLT IST - der Aufrufer
     laesst dann den alten Weg laufen. Kein Fehler, kein Log-Rauschen: das ist
@@ -233,17 +272,26 @@ def fuehre_krypto_lauf(
     verschickt. Wer sie verschicken will, sagt es ausdruecklich."""
     from agent import rollen_lauf as RL
 
-    if not bedient_neue_kette("krypto", config):
+    if not bedient_neue_kette(gruppe, config):
         return None
 
+    from agent import assetklassen as AK
     from backtest_llm1_historisch import lade_reihen_aus_db
 
     reihen = lade_reihen_aus_db(db)
-    # NUR ECHTE SYMBOLE. Die Reihen enthalten auch Sammelposten
-    # (`_ROHSTOFF_FUTURES_*`), die kein handelbares Asset sind.
-    symbole = [s for s in sorted(reihen) if not s.startswith("_")]
+    if symbole is None:
+        symbole = AK.gruppiere().get(gruppe, [])
+    # NUR SYMBOLE MIT KURSREIHE. Ein Asset ohne Reihe scheitert sonst an der
+    # Faktenstufe und faerbt die Durchlaessigkeit mit einem Verlust ein, der
+    # keine Aussage ueber den Markt ist, sondern ueber die Datenlage.
+    ohne_reihe = [s for s in symbole if s not in reihen]
+    symbole = [s for s in symbole if s in reihen]
+    if ohne_reihe:
+        logger.info("Rollen-Kette %s: %d Symbole ohne Kursreihe - %s",
+                    gruppe, len(ohne_reihe), ohne_reihe[:8])
     if not symbole:
-        logger.warning("Rollen-Kette: keine Symbole - Lauf entfaellt")
+        logger.warning("Rollen-Kette %s/%s: keine Symbole mit Kursreihe - "
+                       "Lauf entfaellt", gruppe, instrument)
         return None
 
     # DER VERSANDWEG WIRD HIER GEBAUT, nicht in der Kette - und NUR fuer den
@@ -277,7 +325,7 @@ def fuehre_krypto_lauf(
             instrument=instrument, strategie=strategie, client=client,
             modell=modell, max_aufrufe=rest,
             zai_client=zai_client, versand=versand, config=config, db=db,
-            assetklasse="krypto")
+            assetklasse=gruppe)
     finally:
         conn.close()
 
@@ -286,7 +334,7 @@ def fuehre_krypto_lauf(
     logger.info(
         "Rollen-Kette %s/%s (%s): Ankertag %s (%s von %s gedeckt), "
         "%s Signale, %s Mails, %s Fehler",
-        instrument, strategie, betriebsart, anker.get("tag"),
+        gruppe, instrument, betriebsart, anker.get("tag"),
         anker.get("gedeckt"), anker.get("gesamt"), len(ergebnis["signale"]),
         len(ergebnis["mails"]), len(ergebnis["fehler"]))
     if d is not None:

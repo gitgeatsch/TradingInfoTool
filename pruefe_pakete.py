@@ -3767,9 +3767,19 @@ def paket_15() -> None:
            and "conn . close ( )" in _nur_code("scheduler/rollen_job.py"),
            "rollen_lauf oeffnet grundsaetzlich keine - hier ist der Ort, an "
            "dem klar ist, welche Datenbank gemeint ist")
-    pruefe(P, "Sammelposten werden nicht als Asset gehandelt",
-           'not s.startswith("_")' in _quelltext("scheduler/rollen_job.py"),
-           "_ROHSTOFF_FUTURES_* ist kein handelbares Asset")
+    # SAMMELPOSTEN FALLEN JETZT FRUEHER HERAUS: sie stehen gar nicht in der
+    # Watchlist, also auch nicht in `assetklassen.gruppiere()`. Die Filterung
+    # nach dem Unterstrich im Job ist damit ueberfluessig geworden.
+    from agent import assetklassen as _AK2
+    pruefe(P, "Sammelposten sind in keiner Gruppe",
+           not any(s.startswith("_") for ss in _AK2.gruppiere().values()
+                   for s in ss),
+           "_ROHSTOFF_FUTURES_* steht nicht in der Watchlist und ist kein "
+           "handelbares Asset")
+    pruefe(P, "Symbole ohne Kursreihe werden gemeldet, nicht verrechnet",
+           "Symbole ohne Kursreihe" in _quelltext("scheduler/rollen_job.py"),
+           "sonst faerbten sie die Durchlaessigkeit mit einem Verlust ein, der "
+           "nichts ueber den Markt sagt, sondern ueber die Datenlage")
 
 
     # ------------------------------------------------------------------
@@ -3839,15 +3849,22 @@ def paket_15() -> None:
     # neuen NICHT - der Schalter haette lautlos gar nichts laufen lassen.
     _bg = _nur_code("scheduler/background.py")
     pruefe(P, "der Job ruft die neue Kette wirklich auf",
-           "fuehre_krypto_lauf (" in _bg,
+           "fuehre_umlauf (" in _bg,
            "die erste Fassung uebersprang nur den Allocator: kein Fehler, "
            "keine Signale, kein Grund")
-    pruefe(P, "und zwar fuer beide Instrumente",
-           'for instrument in ("spot", "hebel")' in _quelltext(
-               "scheduler/background.py"))
-    pruefe(P, "ein Instrument reisst das andere nicht mit",
-           "Rollen-Kette (%s) fehlgeschlagen" in _quelltext(
-               "scheduler/background.py"),
+    # KEINE FESTE LISTE MEHR (14.08.). Hier stand `("spot", "hebel")` - damit
+    # waren Aktien, Rohstoffe, Themen-ETF und die Absicherung von der neuen
+    # Kette gar nicht erreichbar: der Schnitt haette sie stillgelegt, ohne sie
+    # zu ersetzen.
+    pruefe(P, "der Job fuehrt einen UMLAUF, keine feste Instrumentliste",
+           'for instrument in ("spot", "hebel")' not in _quelltext(
+               "scheduler/background.py")
+           and "AK.laeufe()" in _quelltext("scheduler/rollen_job.py"),
+           "was ein Umlauf ist, steht in assetklassen.laeufe() - an EINER "
+           "Stelle")
+    pruefe(P, "eine Gruppe reisst die anderen nicht mit",
+           "Rollen-Kette %s/%s fehlgeschlagen" in _quelltext(
+               "scheduler/rollen_job.py"),
            "dieselbe Regel wie fuer ein einzelnes Asset im Lauf")
 
     # DIE BETRIEBSART - im Zweifel keine Mail.
@@ -4151,6 +4168,58 @@ def paket_15() -> None:
            _st.count("_get_konfidenz_kalibrierung") == 1,
            "definiert, nie gerufen - die Remote-Seite zeigt gar keine "
            "Konfidenz, anders als ich in Kapitel 18.6 geschrieben hatte")
+
+    # ------------------------------------------------------------------
+    # W. DER VOLLE UMLAUF - Punkte 1 bis 3 des Multi-Asset-Umstiegs (14.08.).
+    from agent import assetklassen as AK3
+    from agent import betraege as BE3
+    from agent import wiederholung as WH3
+
+    # W1 BETRAEGE UND COOLDOWN JE GRUPPE.
+    pruefe(P, "Krypto-Tranche bleibt 250, boersengehandelt 400",
+           BE3.einsatz_eur("spot", "akkumulation", None, "krypto") == 250.0
+           and BE3.einsatz_eur("spot", "akkumulation", None, "aktien") == 400.0,
+           "an der Boerse kostet 1 EUR fix je Seite - bei 250 EUR sind das "
+           "0,8 % allein an Fixkosten, bei Krypto kuerzt sich der Betrag heraus")
+    pruefe(P, "Krypto laeuft mit 15 h, Boersenwerte mit 24 h",
+           WH3.stunden("spot", None, "krypto") == 15.0
+           and WH3.stunden("spot", None, "aktien") == 24.0,
+           "Krypto handelt rund um die Uhr, eine Aktie nicht - ein "
+           "15-Stunden-Takt fragt dort mehrfach am selben Handelstag dasselbe")
+    pruefe(P, "die Konfiguration schlaegt beide Vorgaben",
+           WH3.stunden("spot", {"rollen_kette":
+                                {"cooldown_stunden_je_gruppe": {"aktien": 6}}},
+                       "aktien") == 6.0,
+           "das Spezifischere gewinnt, und die Konfiguration gewinnt immer "
+           "gegen den Code")
+    pruefe(P, "die Gruppe wird durch die Kette gereicht",
+           "gruppe=assetklasse" in _quelltext("agent/rollen_lauf.py"),
+           "sonst gaelte ueberall der Instrument-Wert")
+
+    # W2 DIE SERIEN DER BOERSENGEHANDELTEN WERTE haengen an den ALTEN Pipelines.
+    #
+    # DER TROCKENLAUF UEBER ALLE SECHS GRUPPEN hat es gezeigt: Hedge und
+    # Rohstoffe haben auf dem Desktop KEINE Kursreihe. Sie werden zur Laufzeit
+    # rekonstruiert - und die Funktion dafuer liegt in den Pipelines, die der
+    # Schnitt eines Tages stilllegen soll.
+    #
+    # ENTWARNUNG, ABER MIT NAGEL: der OHLC-Refresh ruft
+    # `_ensure_ohlc_backfilled` DIREKT aus den Pipeline-Modulen, unabhaengig von
+    # deren Signalerzeugung. Wer die Pipelines eines Tages loescht, nimmt den
+    # boersengehandelten Werten ihre Kursreihen mit - und zwar lautlos.
+    _bgq = _quelltext("scheduler/background.py")
+    pruefe(P, "der OHLC-Refresh holt die Rekonstruktion aus den Pipelines",
+           "_ensure_ohlc_backfilled as _rohstoff_ohlc" in _bgq
+           and "_ensure_ohlc_backfilled as _hedge_ohlc" in _bgq,
+           "die Signalerzeugung darf stillgelegt werden, diese Funktion NICHT")
+
+    # W3 DER UMLAUF SELBST.
+    pruefe(P, "der Umlauf faehrt sechs Kombinationen",
+           len(AK3.laeufe()) == 6, str([(g, i) for g, i, _ in AK3.laeufe()]))
+    pruefe(P, "und ueberspringt, was nicht umgestellt ist",
+           "if not bedient_neue_kette(gruppe, config):" in _quelltext(
+               "scheduler/rollen_job.py"),
+           "eine Klasse, eine Kette - auch waehrend der Umstellung")
     c.close()
 
 

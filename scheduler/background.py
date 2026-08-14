@@ -2793,29 +2793,25 @@ def hebel_screening_job(
             # nur UEBERSPRUNGEN - der Schalter haette damit gar nichts laufen
             # lassen, und zwar lautlos: kein Fehler, keine Signale, kein Grund.
             # Gefunden beim Umlegen selbst.
-            from scheduler.rollen_job import betriebsart_aus_config, fuehre_krypto_lauf
+            from scheduler.rollen_job import betriebsart_aus_config, fuehre_umlauf
             art = betriebsart_aus_config(config_dict)
             logger.info(
-                "Budget-Allocator uebersprungen - Krypto laeuft ueber die "
-                "Rollen-Kette (%s). Eine Klasse, eine Kette.", art)
-            for instrument in ("spot", "hebel"):
-                try:
-                    # ALLE TOEPFE UEBERGEBEN, nicht einen Client. Welcher
-                    # dran ist, entscheidet das Restkontingent - und diese
-                    # Entscheidung gehoert an EINE Stelle
-                    # (`rollen_job.waehle_client`), nicht in jeden Aufrufer.
-                    fuehre_krypto_lauf(
-                        conn_factory=conn_factory, config=config_dict,
-                        clients={"gemini": gemini_client,
-                                 "openrouter": openrouter_client},
-                        zai_client=zai_client,
-                        instrument=instrument, strategie="einstieg",
-                        betriebsart=art)
-                except Exception:
-                    # EIN INSTRUMENT DARF DAS ANDERE NICHT MITREISSEN - dieselbe
-                    # Regel wie fuer ein einzelnes Asset innerhalb des Laufs.
-                    logger.exception(
-                        "Rollen-Kette (%s) fehlgeschlagen", instrument)
+                "Budget-Allocator uebersprungen - die umgestellten Bereiche "
+                "laufen ueber die Rollen-Kette (%s). Eine Klasse, eine Kette.",
+                art)
+            # EIN UMLAUF UEBER ALLE UMGESTELLTEN BEREICHE, nicht eine feste
+            # Liste ("spot", "hebel"). Welche Bereiche es gibt, steht in
+            # `assetklassen.laeufe()`; welche umgestellt sind, in der
+            # Konfiguration. Jede Gruppe ist einzeln geschuetzt.
+            #
+            # ALLE TOEPFE UEBERGEBEN, nicht einen Client: welcher dran ist,
+            # entscheidet das Restkontingent, und diese Entscheidung gehoert an
+            # EINE Stelle (`rollen_job.waehle_client`).
+            fuehre_umlauf(
+                conn_factory=conn_factory, config=config_dict,
+                clients={"gemini": gemini_client,
+                         "openrouter": openrouter_client},
+                zai_client=zai_client, betriebsart=art)
         elif any(c is not None for c in (mistral_client, gemini_client, zai_client, openrouter_client)):
             from agent.krypto.budget_allocator import run_budget_allocator
 

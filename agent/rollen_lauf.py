@@ -457,7 +457,8 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         if not erlaubt:
             durchlauf.verloren(symbol, "auftrag", warum or "abgeschaltet")
             return
-        sperre = WH.gesperrt_bis(conn, symbol, instrument, config=config)
+        sperre = WH.gesperrt_bis(conn, symbol, instrument, config=config,
+                                 gruppe=assetklasse)
         if sperre:
             durchlauf.verloren(symbol, "urteil", f"Cooldown bis {sperre[:16]}")
             return
@@ -539,9 +540,11 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # Signal gleich gross machten.
     try:
         rechnung = ER.rechne(kurs=kurs_e, atr=atr_e,
-                             risiko_eur=BE.risiko_eur(instrument, strategie, config),
+                             risiko_eur=BE.risiko_eur(instrument, strategie,
+                                                      config, assetklasse),
                              instrument=instrument,
-                             betrag_wunsch_eur=BE.einsatz_eur(instrument, strategie, config),
+                             betrag_wunsch_eur=BE.einsatz_eur(
+                                 instrument, strategie, config, assetklasse),
                              topf_frei_eur=frei, cash_frei_eur=cash_frei,
                              umgeworfen_preis_eur=befund.get("umgeworfen_preis_eur"),
                              # DIE RICHTUNG KOMMT VOM MODELL (Paket 13) und

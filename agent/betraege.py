@@ -89,8 +89,28 @@ def _cfg(config: dict | None, name: str) -> dict:
     return ((config or {}).get("risiko") or {}).get("rollen_kette", {}).get(name) or {}
 
 
+# Abweichungen je GRUPPE (14.08.). Leer heisst: es gilt der Wert des
+# Instruments - und das ist der Normalfall.
+#
+# WARUM NICHT FUER JEDE GRUPPE EIN EIGENER WERT: der Nutzer hat Betraege fuer
+# Krypto genannt, nicht fuer Aktien. Sie einfach zu uebernehmen waere eine
+# Zahl mit falscher Herkunft; sie zu erfinden waere schlimmer. Der Haken haengt
+# hier bereit, gefuellt wird er, wenn jemand ihn fuellen kann.
+#
+# ROHSTOFFE UND THEMEN-ETF haben allerdings eine BOERSEN-FIXGEBUEHR (1 EUR je
+# Seite). Bei einer 250-EUR-Tranche sind das 0,8 % allein an Fixkosten - der
+# Breakeven liegt dort ueber fuenf Prozentpunkte hoeher als bei 1.000 EUR
+# (gemessen in `trefferbilanz.kosten_r_aus_stop`). Eine kleine Tranche ist dort
+# also teurer als bei Krypto, wo sich der Betrag herauskuerzt.
+VORGABE_EINSATZ_JE_GRUPPE: dict[str, dict[str, float]] = {
+    "aktien": {"einstieg": 800.0, "akkumulation": 400.0},
+    "rohstoffe": {"einstieg": 800.0, "akkumulation": 400.0},
+    "themen_etf": {"einstieg": 800.0, "akkumulation": 400.0},
+}
+
+
 def einsatz_eur(instrument: str, strategie: str,
-                config: dict | None = None) -> float:
+                config: dict | None = None, gruppe: str | None = None) -> float:
     """Der gewuenschte Einsatz fuer DIESES Paar aus Instrument und Strategie.
 
     WIRFT BEI EINEM UNBEKANNTEN PAAR, statt auf einen Vorgabewert zu fallen.
@@ -98,8 +118,15 @@ def einsatz_eur(instrument: str, strategie: str,
     eine Ebene hoeher verhindert: ein Paar, das niemand vorgesehen hat, soll
     auffallen und nicht mit 500 EUR weiterlaufen."""
     i, s = str(instrument or "").strip().lower(), str(strategie or "").strip().lower()
+    g = str(gruppe or "").strip().lower()
     ueber = _cfg(config, "einsatz_eur")
-    tabelle = {**VORGABE_EINSATZ_EUR.get(i, {}), **(ueber.get(i) or {})}
+    # REIHENFOLGE: Instrument-Vorgabe, dann Gruppen-Vorgabe, dann Konfiguration
+    # je Instrument, zuletzt je Gruppe. Das Spezifischere gewinnt, und die
+    # Konfiguration gewinnt immer gegen den Code.
+    tabelle = {**VORGABE_EINSATZ_EUR.get(i, {}),
+               **VORGABE_EINSATZ_JE_GRUPPE.get(g, {}),
+               **(ueber.get(i) or {}),
+               **((_cfg(config, "einsatz_eur_je_gruppe") or {}).get(g) or {})}
     if s not in tabelle:
         raise BetragUnbekannt(
             f"kein Einsatz fuer {instrument!r}/{strategie!r} - bekannt: "
@@ -117,11 +144,12 @@ def verlustanteil(instrument: str, config: dict | None = None) -> float:
     return float(wert)
 
 
-def risiko_eur(instrument: str, strategie: str,
-               config: dict | None = None) -> float:
+def risiko_eur(instrument: str, strategie: str, config: dict | None = None,
+               gruppe: str | None = None) -> float:
     """Der Euro-Betrag, den dieser Handel hoechstens kosten darf.
 
     DIE EINE STELLE, an der aus Anteil und Einsatz ein Betrag wird. Ihn
     anderswo noch einmal zu rechnen hiesse, die Beziehung zwischen beiden an
     zwei Orten zu pflegen."""
-    return einsatz_eur(instrument, strategie, config) * verlustanteil(instrument, config)
+    return (einsatz_eur(instrument, strategie, config, gruppe)
+            * verlustanteil(instrument, config))

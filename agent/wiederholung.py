@@ -39,18 +39,45 @@ VORGABE_STUNDEN: dict[str, float] = {
 
 _SCHLUESSEL = {"spot": "spot_cooldown_stunden", "hebel": "cooldown_stunden"}
 
+# Abweichungen je GRUPPE (14.08.). Boersengehandelte Werte bewegen sich
+# langsamer als Krypto und handeln nicht rund um die Uhr - ein 15-Stunden-Takt
+# fragt dort mehrfach am selben Handelstag dasselbe.
+#
+# 24 STUNDEN IST KEIN GEMESSENER WERT, sondern die Handelstagslogik: einmal je
+# Tag reicht fuer eine Position, die man ueber Wochen haelt. Bei Krypto bleibt
+# es bei 15 h, weil dort auch nachts und am Wochenende gehandelt wird.
+VORGABE_JE_GRUPPE: dict[str, float] = {
+    "aktien": 24.0,
+    "rohstoffe": 24.0,
+    "themen_etf": 24.0,
+    "hedge": 24.0,
+}
 
-def stunden(instrument: str, config: dict | None = None) -> float:
-    """Wie lange dasselbe Asset nach einem Signal gesperrt ist."""
+
+def stunden(instrument: str, config: dict | None = None,
+            gruppe: str | None = None) -> float:
+    """Wie lange dasselbe Asset nach einem Signal gesperrt ist.
+
+    Das Spezifischere gewinnt: Konfiguration je Gruppe, dann Konfiguration je
+    Instrument, dann Gruppen-Vorgabe, dann Instrument-Vorgabe."""
     i = str(instrument or "").strip().lower()
+    g = str(gruppe or "").strip().lower()
     ba = (config or {}).get("budget_allocator") or {}
+    je_gruppe = ((config or {}).get("rollen_kette") or {}).get(
+        "cooldown_stunden_je_gruppe") or {}
+    if g in je_gruppe:
+        return float(je_gruppe[g])
     schluessel = _SCHLUESSEL.get(i)
     wert = ba.get(schluessel) if schluessel else None
-    return float(wert if wert is not None else VORGABE_STUNDEN.get(i, 15.0))
+    if wert is not None:
+        return float(wert)
+    if g in VORGABE_JE_GRUPPE:
+        return float(VORGABE_JE_GRUPPE[g])
+    return float(VORGABE_STUNDEN.get(i, 15.0))
 
 
 def gesperrt_bis(conn, symbol: str, instrument: str, *,
-                 config: dict | None = None,
+                 config: dict | None = None, gruppe: str | None = None,
                  jetzt: str | None = None) -> str | None:
     """Bis wann ist `symbol` gesperrt? `None` heisst: frei.
 
@@ -97,7 +124,7 @@ def gesperrt_bis(conn, symbol: str, instrument: str, *,
         zuletzt = datetime.fromisoformat(str(zeile[0]))
         if zuletzt.tzinfo is None:
             zuletzt = zuletzt.replace(tzinfo=timezone.utc)
-        frei_ab = zuletzt + timedelta(hours=stunden(instrument, config))
+        frei_ab = zuletzt + timedelta(hours=stunden(instrument, config, gruppe))
         nun = (datetime.fromisoformat(jetzt) if jetzt
                else datetime.now(timezone.utc))
         if nun.tzinfo is None:
