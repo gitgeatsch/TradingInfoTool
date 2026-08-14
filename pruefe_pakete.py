@@ -3789,6 +3789,61 @@ def paket_15() -> None:
                   ER.RechnungBlockiert),
            "dann hat niemand eine Abstufung angewandt - es ist schlicht zu "
            "wenig Geld, und das gehoert gesagt")
+
+    # ------------------------------------------------------------------
+    # R. DER SCHALTER LIEGT UM (14.08.) - und der Job ruft die Kette WIRKLICH.
+    from agent import betraege as BE
+    from agent import handelsauftrag as HA
+
+    pruefe(P, "spot x swing ist gestrichen",
+           "swing" not in HA.ERLAUBTE_PAARE["spot"]
+           and _wirft(lambda: HA.pruefe("spot", "swing"), HA.AuftragUngueltig),
+           "Swing ist ueber einen nachgezogenen Stop definiert - der Nutzer "
+           "haelt Spot ohne Stop. Das Paar waere eine Aufgabe, die es in der "
+           "Praxis nicht gibt")
+    pruefe(P, "hebel x swing bleibt", HA.pruefe("hebel", "swing") is not None)
+    pruefe(P, "und es gibt keinen Betrag mehr fuer das gestrichene Paar",
+           _wirft(lambda: BE.einsatz_eur("spot", "swing"), BE.BetragUnbekannt),
+           "eine Zahl fuer ein unmoegliches Paar waere eine ohne Bedeutung")
+
+    # DER FUND BEIM UMLEGEN: der Job uebersprang den alten Weg und rief den
+    # neuen NICHT - der Schalter haette lautlos gar nichts laufen lassen.
+    _bg = _nur_code("scheduler/background.py")
+    pruefe(P, "der Job ruft die neue Kette wirklich auf",
+           "fuehre_krypto_lauf (" in _bg,
+           "die erste Fassung uebersprang nur den Allocator: kein Fehler, "
+           "keine Signale, kein Grund")
+    pruefe(P, "und zwar fuer beide Instrumente",
+           'for instrument in ("spot", "hebel")' in _quelltext(
+               "scheduler/background.py"))
+    pruefe(P, "ein Instrument reisst das andere nicht mit",
+           "Rollen-Kette (%s) fehlgeschlagen" in _quelltext(
+               "scheduler/background.py"),
+           "dieselbe Regel wie fuer ein einzelnes Asset im Lauf")
+
+    # DIE BETRIEBSART - im Zweifel keine Mail.
+    from scheduler.rollen_job import betriebsart_aus_config as _bart
+    pruefe(P, "ohne Angabe gilt probe", _bart({}) == "probe",
+           "eine Vorgabe, die verschickt, waere eine Entscheidung, die niemand "
+           "getroffen hat")
+    pruefe(P, "ein unbekannter Wert faellt auf probe zurueck",
+           _bart({"rollen_kette": {"betriebsart": "halbscharf"}}) == "probe",
+           "hier ist der Rueckfall richtig herum: im Zweifel keine Mail")
+    pruefe(P, "scharf wird als scharf gelesen",
+           _bart({"rollen_kette": {"betriebsart": "scharf"}}) == "scharf")
+
+    # UND DIE ECHTE KONFIGURATION SAGT, WAS SIE SAGEN SOLL.
+    import config as _cfgmod
+    _echt = _cfgmod.load_config()
+    pruefe(P, "die Konfiguration stellt Krypto auf die neue Kette",
+           RJ.bedient_neue_kette("krypto", _echt),
+           f"rollen_kette.aktiv_fuer = {RJ.aktiv_fuer(_echt)}")
+    pruefe(P, "und sie steht auf scharf", _bart(_echt) == "scharf",
+           "Nutzerentscheidung 14.08. - echte Mails im Probebetrieb")
+    pruefe(P, "der Versandweg ist gebaut, nicht None",
+           RJ.baue_versand(_echt) is not None,
+           "sonst schriebe der scharfe Lauf Signale, und die Mails blieben "
+           "liegen")
     c.close()
 
 

@@ -1938,3 +1938,23 @@ schwerpunkte:
 # Solange false: die Gegenpruefung laeuft unveraendert ueber Z.ai.
 gegenpruefung:
   openrouter_aktiv: false
+
+# --- Rollen-Kette (der Schnitt, 14.08.2026) --------------------------------
+#
+# `aktiv_fuer` sagt, welche Assetklassen die NEUE Kette bedient. Fuer genau
+# diese ueberspringt der Budget-Allocator seinen Lauf - eine Klasse, eine
+# Kette. Zwei Ketten fuer dasselbe Asset ergaeben zwei Empfehlungen, und
+# der Nutzer muesste entscheiden, welcher er glaubt.
+#
+# `betriebsart`:
+#   probe    Signale werden geschrieben, die Mail gebaut und geloggt -
+#            sie geht NICHT raus.
+#   scharf   wie probe, und die Mail geht raus.
+#
+# NUTZERENTSCHEIDUNG 14.08.: scharf. Begruendung: *"das aktuelle System ist
+# tot und wir stellen in einem Zug und mit glattem Schnitt um"* - es kann
+# also keine zweite Meinung zum selben Asset geben. Ziel ist, das Ergebnis
+# an echten Mails zu sehen und danach zu optimieren.
+rollen_kette:
+  aktiv_fuer: ["krypto"]
+  betriebsart: scharf

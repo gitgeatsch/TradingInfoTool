@@ -2789,10 +2789,27 @@ def hebel_screening_job(
         # `config_dict` heisst die Variable in diesem Gueltigkeitsbereich -
         # nachgesehen, nicht geraten.
         if bedient_neue_kette("krypto", config_dict):
+            # UND SIE LAEUFT AUCH WIRKLICH. Die erste Fassung hat den alten Weg
+            # nur UEBERSPRUNGEN - der Schalter haette damit gar nichts laufen
+            # lassen, und zwar lautlos: kein Fehler, keine Signale, kein Grund.
+            # Gefunden beim Umlegen selbst.
+            from scheduler.rollen_job import betriebsart_aus_config, fuehre_krypto_lauf
+            art = betriebsart_aus_config(config_dict)
             logger.info(
                 "Budget-Allocator uebersprungen - Krypto laeuft ueber die "
-                "Rollen-Kette (rollen_kette.aktiv_fuer). Eine Klasse, eine "
-                "Kette.")
+                "Rollen-Kette (%s). Eine Klasse, eine Kette.", art)
+            for instrument in ("spot", "hebel"):
+                try:
+                    fuehre_krypto_lauf(
+                        conn_factory=conn_factory, config=config_dict,
+                        client=gemini_client, zai_client=zai_client,
+                        instrument=instrument, strategie="einstieg",
+                        betriebsart=art)
+                except Exception:
+                    # EIN INSTRUMENT DARF DAS ANDERE NICHT MITREISSEN - dieselbe
+                    # Regel wie fuer ein einzelnes Asset innerhalb des Laufs.
+                    logger.exception(
+                        "Rollen-Kette (%s) fehlgeschlagen", instrument)
         elif any(c is not None for c in (mistral_client, gemini_client, zai_client, openrouter_client)):
             from agent.krypto.budget_allocator import run_budget_allocator
 

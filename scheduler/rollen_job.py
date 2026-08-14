@@ -63,6 +63,28 @@ def bedient_neue_kette(assetklasse: str, config: dict | None = None) -> bool:
     return str(assetklasse or "").strip().lower() in aktiv_fuer(config)
 
 
+ERLAUBTE_BETRIEBSARTEN = ("trocken", "probe", "scharf")
+
+
+def betriebsart_aus_config(config: dict | None = None) -> str:
+    """`probe` oder `scharf` - aus `rollen_kette.betriebsart`.
+
+    VORGABE IST `probe`. Wer echte Mails will, sagt es ausdruecklich in der
+    Konfiguration - eine Vorgabe, die verschickt, waere eine Entscheidung, die
+    niemand getroffen hat.
+
+    Ein unbekannter Wert faellt auf `probe` zurueck UND wird gemeldet. Hier ist
+    der Rueckfall richtig herum: im Zweifel keine Mail."""
+    wert = str(((config or {}).get("rollen_kette") or {}).get(
+        "betriebsart", "probe")).strip().lower()
+    if wert not in ERLAUBTE_BETRIEBSARTEN:
+        logger.warning(
+            "Unbekannte Betriebsart %r in rollen_kette.betriebsart - es gilt "
+            "'probe' (erlaubt: %s)", wert, ERLAUBTE_BETRIEBSARTEN)
+        return "probe"
+    return wert
+
+
 def baue_versand(config: dict | None = None):
     """Der Versandweg - oder `None`, wenn nicht verschickt werden soll.
 

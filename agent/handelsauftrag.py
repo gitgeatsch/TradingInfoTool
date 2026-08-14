@@ -67,8 +67,20 @@ STRATEGIEN = ("einstieg", "swing", "akkumulation")
 #   absicherung x akkum.   Entschieden am 12.08. (E1a): Absicherung bekommt
 #                          keine Tranchen - die Staffelungsregel wirkte dort
 #                          mit umgekehrtem Vorzeichen.
+#   spot x swing           NUTZERENTSCHEIDUNG 14.08. `swing` ist ueber den
+#                          NACHGEZOGENEN STOP definiert - und der Nutzer haelt
+#                          Spot ausdruecklich ohne Stop-Loss ("aktuell auch
+#                          ohne StopLoss"), laengerfristig, in Tranchen. Ein
+#                          Spot-Swing waere damit eine Kombination, die er nie
+#                          ausfuehrt; das Modell haette eine Aufgabe bekommen,
+#                          die es in der Praxis nicht gibt.
+#
+#                          VORERST, nicht grundsaetzlich: setzt er kuenftig
+#                          Trailing-Stops auf Spot, gehoert das Paar zurueck -
+#                          die Mechanik dafuer liegt in `ausstiegsrechnung`
+#                          bereits fertig.
 ERLAUBTE_PAARE = {
-    "spot": ("einstieg", "swing", "akkumulation"),
+    "spot": ("einstieg", "akkumulation"),
     "hebel": ("einstieg", "swing"),
     "absicherung": ("einstieg",),
 }

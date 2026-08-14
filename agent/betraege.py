@@ -46,15 +46,19 @@ from __future__ import annotations
 #   spot.einstieg       800   *"wuerde bei Einmalkauf eher 500 bis 800
 #                             ansetzen"* - oberes Ende, weil ein Einmalkauf
 #                             keine zweite Tranche nachschiebt
-#   spot.swing          400   NICHT vom Nutzer genannt. Zwischen Tranche und
-#                             Einmalkauf, weil ein Swing kuerzer laeuft als ein
-#                             Einstieg und laenger als ein DCA-Schritt. Die
-#                             einzige geratene Zahl hier - und sie steht als
-#                             solche da.
+#   spot.swing            -   GESTRICHEN 14.08. Es war die einzige geratene
+#                             Zahl hier, und das Paar gibt es nicht mehr:
+#                             Swing ist ueber einen nachgezogenen Stop
+#                             definiert, den der Nutzer auf Spot nicht setzt.
 #   hebel.*            1000   *"bei Hebel wuerde ich eher 500 nehmen"*, spaeter
 #                             *"eine Hebelposition vorerst 1000"*
 VORGABE_EINSATZ_EUR: dict[str, dict[str, float]] = {
-    "spot": {"einstieg": 800.0, "swing": 400.0, "akkumulation": 250.0},
+    # `swing` FEHLT HIER BEWUSST (14.08.): das Paar spot x swing ist in
+    # `handelsauftrag.ERLAUBTE_PAARE` gestrichen, weil Swing ueber einen
+    # nachgezogenen Stop definiert ist und der Nutzer Spot ohne Stop haelt.
+    # Ein Betrag fuer ein unmoegliches Paar waere eine Zahl ohne Bedeutung -
+    # und ausgerechnet die einzige, die ich geraten hatte.
+    "spot": {"einstieg": 800.0, "akkumulation": 250.0},
     "hebel": {"einstieg": 1000.0, "swing": 1000.0, "akkumulation": 1000.0},
     # Die Absicherung bemisst sich am abzusichernden Exposure, nicht an einem
     # Wunschbetrag (siehe `toepfe.einsatz_fuer_absicherung`). Der Wert hier ist
