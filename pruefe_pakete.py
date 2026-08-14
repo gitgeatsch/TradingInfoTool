@@ -5062,6 +5062,54 @@ def paket_15() -> None:
                "zaehlt dieses Skript die Verteilung, nicht den" in _b8,
                "die eigentliche Frage braucht Wochen - ein Skript, das den "
                "Unterschied verwischt, waere schlimmer als keines")
+
+    # ------------------------------------------------------------------
+    # AF. DIE REMOTE-KARTE ZEIGTE 0, WAEHREND DIE KETTE LIEF (14.08.2026).
+    #
+    # Nutzerfund an der laufenden Anlage:
+    #
+    #     LLM-Budget heute (Krypto)    0 / 180
+    #       davon Hebel                0
+    #     Z.ai-Gegenpruefung heute    10
+    #
+    # Zehn Z.ai-Aufrufe auf null Signale - zwei Zahlen auf derselben Karte,
+    # die einander widersprechen. Ursache: `count_real_signals_today()`
+    # filtert auf `groq_raw_response IS NOT NULL`, eine Spalte, die
+    # AUSSCHLIESSLICH die alte Kette schrieb. Und der Nenner 180 ist
+    # `budget_allocator.taegliches_budget_gesamt` - der Allocator wird seit
+    # dem Schnitt uebersprungen.
+    from remote import status as RS
+
+    pruefe(P, "der alte Zaehler ist blind fuer die neue Kette",
+           "groq_raw_response IS NOT NULL" in _quelltext("database/db.py"),
+           "die Spalte gibt es noch, sie wird nur nicht mehr geschrieben - "
+           "deshalb zaehlt die alte Karte strukturell null")
+    pruefe(P, "die neue Karte rechnet mit DER Funktion, die auch waehlt",
+           "from scheduler.rollen_job import (KETTE, RESERVE_ANTEIL, "
+           "_verbraucht)" in _quelltext("remote/status.py"),
+           "eine Anzeige, die anders rechnet als der Waechter, ist schlimmer "
+           "als keine")
+    with sqlite3.connect("file:data/tradinginfotool.db?mode=ro",
+                         uri=True) as _c9:
+        _c9.row_factory = sqlite3.Row
+        _rb = RS._get_rollen_budget(_c9)
+        pruefe(P, "sie nennt alle vier Toepfe der Rueckfallkette",
+               len(_rb["toepfe"]) == 4 and _rb["fehler"] is None,
+               f"{[t['quelle'] for t in _rb['toepfe']]}")
+        pruefe(P, "und zaehlt die Urteile ueber quelle_kette",
+               "signale_heute" in _rb and "davon_hebel" in _rb,
+               "nicht ueber eine Spalte der alten Kette")
+    import inspect as _i9
+    pruefe(P, "das Feld ist in RemoteStatus DEKLARIERT",
+           "rollen_budget" in {f for f in _i9.signature(
+               RS.RemoteStatus.__init__).parameters},
+           "am 13.08. wurde ein Feld durchgereicht, das die Klasse nicht "
+           "kannte - /api/status warf seitdem bei JEDEM Abruf einen TypeError")
+    pruefe(P, "die alte Kette bleibt sichtbar, aber benannt",
+           "ALTE KETTE (seit dem Schnitt ohne Aufrufer)" in _quelltext(
+               "remote/server.py"),
+           "sie wegzulassen hiesse, eine Zahl verschwinden zu lassen, ohne "
+           "dass jemand sieht, dass sie verschwunden ist")
     c.close()
 
 

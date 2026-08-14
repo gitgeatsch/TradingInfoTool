@@ -158,6 +158,7 @@ _LIVE_GETTER = frozenset({
     # Der Nutzer beobachtet diese Zahl waehrend eines laufenden Signal-Laufs -
     # ein bis zu 15 Minuten alter Wert waere hier eine Falschaussage.
     "_get_budget_heute",
+    "_get_rollen_budget",
     # Wird direkt nach einem von Hand angestossenen Marktscan gelesen.
     "_get_marktscan_last",
     # Ampel ueber die Erreichbarkeit der Datenquellen. Ein zwischengespeicherter
@@ -248,6 +249,10 @@ class RemoteStatus:
     jobs_running: dict[str, bool] = field(default_factory=dict)
     jobs_running_seit_minuten: dict[str, float | None] = field(default_factory=dict)
     budget_heute: dict | None = None
+    # DEKLARIERT, nicht nur uebergeben. Am 13.08. wurde hier ein Feld
+    # durchgereicht, das die Klasse nicht kannte - `/api/status` warf
+    # seitdem bei JEDEM Abruf einen TypeError und war tot.
+    rollen_budget: dict | None = None
     offene_signale: dict | None = None
     api_health: dict | None = None
     regime_status: dict | None = None
@@ -308,6 +313,7 @@ class RemoteStatus:
             "jobs_running": self.jobs_running,
             "jobs_running_seit_minuten": self.jobs_running_seit_minuten,
             "budget_heute": self.budget_heute,
+            "rollen_budget": self.rollen_budget,
             "offene_signale": self.offene_signale,
             "api_health": self.api_health,
             "regime_status": self.regime_status,
@@ -422,6 +428,7 @@ def _build_status_roh(conn: sqlite3.Connection, watchlist: list, log_path: Path,
         jobs_running=jobs_running,
         jobs_running_seit_minuten=jobs_running_seit_minuten,
         budget_heute=_safe(_get_budget_heute, conn),
+        rollen_budget=_safe(_get_rollen_budget, conn),
         offene_signale=_safe(_get_offene_signale_uebersicht, conn, watchlist),
         api_health=_safe(_get_api_health, conn),
         regime_status=_safe(_get_regime_status, conn),
@@ -1046,6 +1053,68 @@ def _get_parameter_overview() -> list[dict]:
     from agent.krypto.regelwerk_parameter import build_parameter_overview
 
     return build_parameter_overview(config_module.load_config())
+
+
+def _get_rollen_budget(conn: sqlite3.Connection) -> dict:
+    """Was die Rollen-Kette heute wirklich verbraucht - und wovon (14.08.2026).
+
+    WARUM DIE ALTE KARTE NICHT MEHR TAUGT. `_get_budget_heute()` zaehlt ueber
+    `count_real_signals_today()`, und die filtert auf
+    `groq_raw_response IS NOT NULL` - eine Spalte, die AUSSCHLIESSLICH die alte
+    Kette schrieb. Seit dem Schnitt steht dort deshalb 0, waehrend die Kette
+    laeuft. Nutzerfund am 14.08. an der laufenden Anlage:
+
+        LLM-Budget heute (Krypto)    0 / 180
+          davon Hebel                0
+          davon Marktscan            0
+          davon Spot-Rotation        0
+        Z.ai-Gegenpruefung heute    10
+
+    Zehn Z.ai-Aufrufe auf null Signale - die Zahlen widersprachen einander auf
+    derselben Karte. Und der Nenner ist auch tot: 180 ist
+    `budget_allocator.taegliches_budget_gesamt`, und der Allocator wird seit
+    dem Schnitt uebersprungen.
+
+    WAS STATTDESSEN BEGRENZT: die Tageskontingente der Anbieter. Sie sind die
+    einzige harte Grenze, die die Kette anhalten kann - `waehle_client()` faellt
+    der Reihe nach durch und gibt am Ende `(None, None, 0)`, also KEINEN Lauf.
+    Genau das gehoert auf die Karte, und zwar bevor es passiert.
+
+    KEINE NEUE ZAEHLLOGIK: dieselbe Funktion, die auch die Auswahl trifft
+    (`rollen_job._verbraucht`). Eine zweite waere die Kopierfalle - und eine
+    Anzeige, die anders rechnet als der Waechter, ist schlimmer als keine."""
+    aus = {"toepfe": [], "signale_heute": 0, "fehler": None}
+    try:
+        from scheduler.rollen_job import (KETTE, RESERVE_ANTEIL, _verbraucht)
+
+        for quelle, modell, budget in KETTE:
+            grenze = int(budget * (1.0 - RESERVE_ANTEIL))
+            verbraucht = _verbraucht(quelle, modell)
+            aus["toepfe"].append({
+                "quelle": quelle, "modell": modell or "(Vorgabe)",
+                "verbraucht": verbraucht, "grenze": grenze,
+                "rest": max(0, grenze - verbraucht)})
+        aus["rest_gesamt"] = sum(t["rest"] for t in aus["toepfe"])
+    except Exception as exc:                                 # noqa: BLE001
+        aus["fehler"] = f"{type(exc).__name__}: {exc}"
+
+    # Die Signale der neuen Kette - ueber `quelle_kette`, nicht ueber eine
+    # Spalte der alten.
+    try:
+        spalten = {r[1] for r in conn.execute("PRAGMA table_info(signals)")}
+        if "quelle_kette" in spalten:
+            heute = datetime.now(timezone.utc).strftime("%Y-%m-%dT00:00:00")
+            zeile = conn.execute(
+                "SELECT COUNT(*), SUM(hebel IS NOT NULL), "
+                "SUM(gate_passed = 1) FROM signals "
+                "WHERE quelle_kette = 'rollen' AND created_at >= ?",
+                (heute,)).fetchone()
+            aus["signale_heute"] = int(zeile[0] or 0)
+            aus["davon_hebel"] = int(zeile[1] or 0)
+            aus["davon_handlung"] = int(zeile[2] or 0)
+    except Exception as exc:                                 # noqa: BLE001
+        aus["fehler"] = aus["fehler"] or f"{type(exc).__name__}: {exc}"
+    return aus
 
 
 def _get_budget_heute(conn: sqlite3.Connection) -> dict:

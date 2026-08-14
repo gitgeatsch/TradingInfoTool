@@ -112,12 +112,20 @@ _INDEX_HTML = """<!doctype html>
 </div>
 
 <div class="card">
-  <div class="row"><span>LLM-Budget heute (Krypto)</span><span id="budget-total">-</span></div>
-  <div class="row"><span>&nbsp;&nbsp;davon Hebel</span><span id="budget-hebel">-</span></div>
-  <div class="row"><span>&nbsp;&nbsp;davon Marktscan</span><span id="budget-marktscan">-</span></div>
-  <div class="row"><span>&nbsp;&nbsp;davon Spot-Rotation</span><span id="budget-spot">-</span></div>
-  <div class="row"><span>Multi-Asset heute (Aktien/Rohstoffe/Hedge/ETF, separates Budget)</span><span id="budget-multi-asset">-</span></div>
-  <div class="row"><span>Z.ai-Gegenprüfung heute (Konsistenz+Richtung, kein Tagesdeckel)</span><span id="budget-zai-gegenpruefung">-</span></div>
+  <div class="row"><span><b>LLM-Kontingent heute (Rollen-Kette)</b></span><span id="rollen-rest">-</span></div>
+  <div class="row"><span>&nbsp;&nbsp;Gemini 3.1 (erster Topf)</span><span id="topf-gemini31">-</span></div>
+  <div class="row"><span>&nbsp;&nbsp;Gemini 3.5 (Rückfall)</span><span id="topf-gemini35">-</span></div>
+  <div class="row"><span>&nbsp;&nbsp;OpenRouter</span><span id="topf-openrouter">-</span></div>
+  <div class="row"><span>&nbsp;&nbsp;Groq (Token-Grenze, nicht Anfragen)</span><span id="topf-groq">-</span></div>
+  <div class="row"><span>Urteile der Rollen-Kette heute</span><span id="rollen-signale">-</span></div>
+  <div class="row"><span>&nbsp;&nbsp;davon Hebel / mit Handlung</span><span id="rollen-aufteilung">-</span></div>
+  <div class="row"><span>Z.ai-Gegenprüfung heute (kein Tagesdeckel)</span><span id="budget-zai-gegenpruefung">-</span></div>
+</div>
+
+<div class="card">
+  <div class="row"><span>ALTE KETTE (seit dem Schnitt ohne Aufrufer)</span><span id="budget-total">-</span></div>
+  <div class="row"><span>&nbsp;&nbsp;Hebel / Marktscan / Spot-Rotation</span><span id="budget-alt-drei">-</span></div>
+  <div class="row"><span>&nbsp;&nbsp;Multi-Asset</span><span id="budget-multi-asset">-</span></div>
 </div>
 
 <div class="card">
@@ -783,10 +791,31 @@ async function refreshStatus() {
 
   if (data.budget_heute) {
     const b = data.budget_heute;
+    // DIE ALTE KARTE ZAEHLTE UEBER `groq_raw_response IS NOT NULL` - eine
+    // Spalte, die nur die alte Kette schrieb. Seit dem Schnitt stand dort 0,
+    // waehrend die Kette lief; auf derselben Karte meldete Z.ai zehn Aufrufe.
+    // Zwei Zahlen, die einander widersprachen.
+    const rb = data.rollen_budget || {};
+    const toepfe = rb.toepfe || [];
+    const zeig = (id, i) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const t = toepfe[i];
+      el.textContent = t ? (t.verbraucht + " / " + t.grenze) : "-";
+    };
+    zeig("topf-gemini31", 0); zeig("topf-gemini35", 1);
+    zeig("topf-openrouter", 2); zeig("topf-groq", 3);
+    document.getElementById("rollen-rest").textContent =
+      (rb.rest_gesamt === undefined ? "-" : rb.rest_gesamt + " Aufrufe frei");
+    document.getElementById("rollen-signale").textContent = rb.signale_heute ?? "-";
+    document.getElementById("rollen-aufteilung").textContent =
+      (rb.davon_hebel ?? 0) + " / " + (rb.davon_handlung ?? 0);
+    // Die alte Kette bleibt sichtbar, aber als das, was sie ist: ohne
+    // Aufrufer. Sie wegzulassen hiesse, eine Zahl verschwinden zu lassen,
+    // ohne dass jemand sieht, dass sie verschwunden ist.
     document.getElementById("budget-total").textContent = b.verbraucht_gesamt + " / " + b.gesamt;
-    document.getElementById("budget-hebel").textContent = b.hebel;
-    document.getElementById("budget-marktscan").textContent = b.marktscan;
-    document.getElementById("budget-spot").textContent = b.spot;
+    document.getElementById("budget-alt-drei").textContent =
+      b.hebel + " / " + b.marktscan + " / " + b.spot;
     document.getElementById("budget-multi-asset").textContent = b.multi_asset_heute;
     document.getElementById("budget-zai-gegenpruefung").textContent = b.zai_gegenpruefung_heute;
   }
