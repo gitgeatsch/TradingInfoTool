@@ -86,7 +86,34 @@ class BetragUnbekannt(ValueError):
 
 
 def _cfg(config: dict | None, name: str) -> dict:
-    return ((config or {}).get("risiko") or {}).get("rollen_kette", {}).get(name) or {}
+    """Eine Einstellung der Rollen-Kette - aus BEIDEN moeglichen Orten.
+
+    DIE FALLE, DIE DAS BEHEBT (14.08.2026). Dieses Modul las unter
+    `risiko.rollen_kette.*`, alle uebrigen Leser der Kette unter
+    `rollen_kette.*` an oberster Stelle:
+
+        rollen_job     aktiv_fuer, betriebsart      -> rollen_kette.*
+        rollen_lauf    verkauf_mailt                -> rollen_kette.*
+        wiederholung   cooldown_stunden_je_gruppe   -> rollen_kette.*
+        betraege       einsatz_eur, verlustanteil   -> risiko.rollen_kette.*
+
+    UND `risiko.rollen_kette` GIBT ES IN DER config.yaml NICHT. Wer den Einsatz
+    fuer Aktien setzen wollte, haette ihn naheliegenderweise unter
+    `rollen_kette:` eingetragen - dorthin, wo `aktiv_fuer` und `betriebsart`
+    schon stehen - und es waere WIRKUNGSLOS geblieben. Ohne Fehlermeldung, denn
+    ein fehlender Schluessel ist hier legitim.
+
+    Gefunden bei der Nutzerfrage nach `verkauf_mailt`, also beim Nachsehen fuer
+    eine Erklaerung - nicht beim Bauen. Genau dafuer ist "immer an der Quelle
+    pruefen" da.
+
+    OBERSTE STELLE GEWINNT, weil dort alles andere steht. Der alte Ort bleibt
+    lesbar: eine bestehende Einstellung soll nicht durch das Aufraeumen
+    ausfallen."""
+    c = config or {}
+    oben = (c.get("rollen_kette") or {}).get(name) or {}
+    unten = ((c.get("risiko") or {}).get("rollen_kette") or {}).get(name) or {}
+    return {**unten, **oben}
 
 
 # Abweichungen je GRUPPE (14.08.). Leer heisst: es gilt der Wert des
@@ -122,9 +149,10 @@ def _cfg(config: dict | None, name: str) -> dict:
 # Geld in eine einzelne Aktie geht, ist eine Risikofrage und gehoert dem
 # Nutzer.
 #
-# UEBERSCHREIBBAR unter `risiko.rollen_kette.einsatz_eur_je_gruppe`
-# (der Pfad steht in `_cfg()` - ich hatte ihn hier zuerst verkuerzt
-# hingeschrieben, und die Pruefung ist genau darueber gestolpert), damit die
+# UEBERSCHREIBBAR unter `rollen_kette.einsatz_eur_je_gruppe`
+# (seit 14.08. auch dort - vorher las dieses Modul als EINZIGES unter
+# `risiko.rollen_kette.*`, einem Ort, den es in der config.yaml nicht gibt),
+# damit die
 # Entscheidung eine Konfigurationszeile ist und kein Codeeingriff.
 VORGABE_EINSATZ_JE_GRUPPE: dict[str, dict[str, float]] = {
     "aktien": {"einstieg": 800.0, "akkumulation": 400.0},

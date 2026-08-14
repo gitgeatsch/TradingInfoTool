@@ -4882,6 +4882,31 @@ def paket_15() -> None:
     # bewusst weg, und eine Pruefung, die Dokumentation prueft statt
     # Verhalten, ist die Falle, die dieses Skript schon dreimal getreten hat.
     # Geprueft wird, was die Zahl TUT.
+    # ALLE LESER DER ROLLEN-KETTE MUESSEN AM SELBEN ORT SUCHEN.
+    #
+    # `betraege` las als EINZIGES unter `risiko.rollen_kette.*`, alle uebrigen
+    # unter `rollen_kette.*` - und `risiko.rollen_kette` gibt es in der
+    # config.yaml nicht. Eine Einstellung dort waere wirkungslos geblieben,
+    # ohne Fehlermeldung.
+    pruefe(P, "der Einsatz laesst sich dort setzen, wo alles andere steht",
+           BE6.einsatz_eur(
+               "spot", "einstieg",
+               {"rollen_kette": {"einsatz_eur_je_gruppe":
+                                 {"aktien": {"einstieg": 500.0}}}},
+               "aktien") == 500.0,
+           "dort stehen aktiv_fuer und betriebsart - wer den Einsatz setzt, "
+           "sucht ihn daneben")
+    pruefe(P, "der alte Ort bleibt lesbar, der neue gewinnt",
+           BE6.einsatz_eur(
+               "spot", "einstieg",
+               {"rollen_kette": {"einsatz_eur_je_gruppe":
+                                 {"aktien": {"einstieg": 500.0}}},
+                "risiko": {"rollen_kette": {"einsatz_eur_je_gruppe":
+                                            {"aktien": {"einstieg": 600.0}}}}},
+               "aktien") == 500.0,
+           "eine bestehende Einstellung soll nicht durch das Aufraeumen "
+           "ausfallen")
+
     pruefe(P, "und die Entscheidung ist eine Konfigurationszeile",
            BE6.einsatz_eur("spot", "einstieg", None, "aktien") == 800.0
            and BE6.einsatz_eur(
