@@ -347,11 +347,58 @@ def beschreibe_lage(*, symbol: str, reihe: list, index: int,
                  dtype=float)
     i = len(c) - 1
 
-    aus: list[str] = []
-    aus += _bestand(symbol, menge, einstand_eur, kurs_eur)
-    aus += _struktur(c, h, l, i)
-    aus += _bewegung(c, i)
-    aus += _niveaus(c, h, l, i, atr, kurs_eur, float(c[i]))
-    aus += _volumen(c, v, i, tag_vollstaendig)
-    aus += _finanzierung(finanzierung)
-    return aus
+    return [satz for block in BLOCK_REIHENFOLGE
+            for satz in geteilt(symbol=symbol, reihe=reihe, index=index,
+                                kurs_eur=kurs_eur, atr=atr, menge=menge,
+                                einstand_eur=einstand_eur,
+                                finanzierung=finanzierung)[block]]
+
+
+# Die Bloecke in genau der Reihenfolge, in der sie im Prompt stehen. Sie ist
+# NICHT kosmetisch: R-T9 - was zuerst steht, wiegt schwerer.
+BLOCK_REIHENFOLGE = ("bestand", "struktur", "bewegung", "marken", "volumen",
+                     "finanzierung")
+
+
+def geteilt(*, symbol: str, reihe: list, index: int,
+            kurs_eur: float, atr: float,
+            menge: float | None = None,
+            einstand_eur: float | None = None,
+            finanzierung: dict | None = None) -> dict:
+    """Dieselben Saetze, aber nach Bloecken getrennt (14.08.2026).
+
+    WOFUER. Die Kaufmail kann Bestand, Marken und Coin-Fakten getrennt
+    darstellen (`signal_mail.baue_mail`), bekam aber keinen davon - die
+    Rollen-Kette uebergab nur den Faktenblock. Der Nutzer sah deshalb eine
+    Mail, die generisch wirkt, obwohl die Vorlage es nicht ist. Die Saetze
+    EXISTIEREN laengst; sie gingen bisher nur ans Modell.
+
+    WARUM NICHT DIE FLACHE LISTE ZERLEGEN. Man koennte `beschreibe_lage()`
+    aufrufen und die Saetze am Wortlaut auseinandersortieren ("faengt mit
+    'Der naechste Widerstand' an"). Das waere eine zweite, stillschweigende
+    Definition derselben Gliederung - und sie bricht, sobald jemand eine
+    Formulierung aendert, ohne dass eine Pruefung anschlaegt.
+
+    `beschreibe_lage()` RUFT JETZT DIESE FUNKTION und setzt sie zusammen. Damit
+    gibt es die Gliederung genau einmal, und der Prompt bleibt Zeichen fuer
+    Zeichen derselbe - was er muss, sonst waeren alle bisherigen Messungen
+    nicht mehr vergleichbar."""
+    tag_vollstaendig = index < len(reihe) - 1
+    hist = reihe[:index + 1]
+    leer = {b: [] for b in BLOCK_REIHENFOLGE}
+    if len(hist) < 60 or atr <= 0:
+        return leer
+    c = np.array([k.close for k in hist], dtype=float)
+    h = np.array([k.high for k in hist], dtype=float)
+    l = np.array([k.low for k in hist], dtype=float)
+    v = np.array([k.volume if k.volume is not None else np.nan for k in hist],
+                 dtype=float)
+    i = len(c) - 1
+    return {
+        "bestand": _bestand(symbol, menge, einstand_eur, kurs_eur),
+        "struktur": _struktur(c, h, l, i),
+        "bewegung": _bewegung(c, i),
+        "marken": _niveaus(c, h, l, i, atr, kurs_eur, float(c[i])),
+        "volumen": _volumen(c, v, i, tag_vollstaendig),
+        "finanzierung": _finanzierung(finanzierung),
+    }

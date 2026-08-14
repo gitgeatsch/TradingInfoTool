@@ -714,8 +714,61 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # die Kette bis zu vier Minuten. Sie danach in einen fertigen String
     # hineinzuflicken hiesse, die Reihenfolge der Abschnitte an zwei Orten zu
     # pflegen; ein Bauplan kennt sie an einem.
+    # --- O-19 bis O-23: die fuenf Bloecke, die an nichts angeschlossen waren
+    #
+    # `baue_mail` kann sechzehn Eingaben darstellen; die Kette uebergab elf.
+    # Bestand, Marken, Umfeld, Ausstieg und Coin-Fakten blieben leer - deshalb
+    # las sich die Mail generisch, obwohl die Vorlage es nicht ist.
+    #
+    # DIE SAETZE GAB ES LAENGST. Sie stehen im Faktentext, der ans Modell geht:
+    # neun Saetze je Asset, darunter "X ist nicht im Bestand", "Der naechste
+    # Widerstand liegt ... bei 0,0111 EUR". Sie wurden nur nie in die Mail
+    # gereicht. `lagebeschreibung.geteilt()` gibt jetzt dieselben Saetze nach
+    # Bloecken - dieselbe Quelle, kein zweiter Textweg.
+    _bloecke = {}
+    try:
+        from agent import lagebeschreibung as LB
+
+        # DIESELBE BESTANDSQUELLE WIE `baue_fall` (`rollen_eingabe.bestand()`),
+        # nicht eine zweite. Eine eigene Abfrage hier waere die Kopierfalle,
+        # die dieses Projekt schon mehrfach erwischt hat - und sie koennte dem
+        # Leser eine andere Menge zeigen als dem Modell.
+        _menge, _einstand = RE.bestand(symbol, db)
+        _bloecke = LB.geteilt(
+            symbol=symbol, reihe=reihe, index=idx, kurs_eur=kurs_e,
+            atr=atr_e, menge=_menge, einstand_eur=_einstand)
+    except Exception as exc:                                 # noqa: BLE001
+        ergebnis.setdefault("fehler", []).append(
+            f"{symbol}: Lagebloecke nicht lesbar: {exc}")
+
+    # DAS UMFELD - das Lagebild, das Rolle A einmal je Lauf rechnet. Es ging
+    # bisher NUR ins Modell; der Leser sah das Urteil, nicht die Lage.
+    _lage = []
+    _mb = (bc_ein.get("fakten_roh") or {}).get("marktlage_beurteilung") or {}
+    if _mb.get("lage"):
+        _lage.append(str(_mb["lage"]))
+    _kl = _mb.get("klasse") or {}
+    if _kl.get("beurteilung"):
+        _lage.append(f"{_kl.get('klasse', '?').capitalize()}: "
+                     f"{_kl['beurteilung']}")
+
     def baue(zweite_zeilen: list) -> tuple:
         return SM.baue_mail(
+            # DER BESTAND GANZ OBEN - Nutzervorgabe 12.08.: "Das fuer mich
+            # wichtige zuerst." Habe ich das ueberhaupt, ist die erste Frage.
+            bestand=(_bloecke.get("bestand") or [None])[0],
+            marken=_bloecke.get("marken") or None,
+            coin_fakten=((_bloecke.get("struktur") or [])
+                         + (_bloecke.get("bewegung") or [])
+                         + (_bloecke.get("volumen") or [])
+                         + (_bloecke.get("finanzierung") or [])) or None,
+            lage_fakten=_lage or None,
+            # DIE AUSSTIEGSFUEHRUNG ZU DIESEM SYMBOL. Sie wird ohnehin einmal
+            # je Lauf gelesen; hier kostet sie einen Nachschlag. Steht eine
+            # Position offen, gehoert ihre Behandlung VOR den Nachkauf -
+            # `baue_mail` ordnet das selbst (50 % standen bei +1 R, 17,6 %
+            # kamen an).
+            ausstieg=(ergebnis.get("fuehrung") or {}).get(symbol.upper()),
             symbol=symbol, name=symbol, kurs_eur=kurs_e, instrument=instrument,
             strategie=strategie, rechnung=rechnung, urteil=befund,
             faktenblock=block, modell=modell, zeitpunkt=tag,
@@ -741,7 +794,23 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             + Z1.satz(z1) + list(zweite_zeilen))
 
     betreff, text = baue([])
-    eintrag = {"symbol": symbol, "betreff": betreff, "text": text}
+    # O-24: DAS BILD ZUM GEPLANTEN TRADE. Einmal gerechnet, an beide
+    # Versandstellen gereicht (mit und ohne zweite Meinung).
+    _bilder = []
+    try:
+        from ui.trade_chart import render_trade_chart
+
+        _png = render_trade_chart(
+            reihe=reihe, index=idx, rechnung=rechnung, symbol=symbol,
+            marken=None,
+            fx_eur_je_usd=RE.fx_eur_je_usd(symbol, reihe, idx, db))
+        if _png:
+            _bilder.append({"png": _png, "alt": f"{symbol} - geplanter Trade",
+                            "filename": f"{symbol.lower()}_trade.png"})
+    except Exception as exc:                                 # noqa: BLE001
+        ergebnis.setdefault("fehler", []).append(f"{symbol}: Chart: {exc}")
+    eintrag = {"symbol": symbol, "betreff": betreff, "text": text,
+               "bilder": _bilder}
     ergebnis["mails"].append(eintrag)
 
     # --- Schreiben ----------------------------------------------------------
@@ -808,13 +877,15 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         # DIE MAIL GEHT AUCH RAUS, WENN Z.AI AUSFAELLT (P-8) - lieber ohne die
         # Gegenpruefungszeilen als gar nicht.
         if betriebsart == SCHARF and versand is not None:
-            versand(eintrag["betreff"], eintrag["text"])
+            versand(eintrag["betreff"], eintrag["text"],
+                    eintrag.get("bilder"))
 
     if zai_client is None:
         # Nichts zu warten - dann auch kein Faden. Ein Thread, der sofort
         # zurueckkehrt, ist nur Verwaltung.
         if betriebsart == SCHARF and versand is not None:
-            versand(eintrag["betreff"], eintrag["text"])
+            versand(eintrag["betreff"], eintrag["text"],
+                    eintrag.get("bilder"))
     else:
         import threading
 

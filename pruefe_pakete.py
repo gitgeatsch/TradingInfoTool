@@ -4410,12 +4410,46 @@ def paket_15() -> None:
     _blk = _q[_q.index("return SM.baue_mail("):]
     _blk = _blk[:_blk.index("betreff, text = baue")]
     _fehlt = sorted(p for p in _moegl if p not in set(_re3.findall(r"(\w+)=", _blk)))
-    pruefe(P, "die nicht verdrahteten Mailbloecke sind bekannt und gezaehlt",
-           _fehlt == ["ausstieg", "bestand", "coin_fakten", "lage_fakten",
-                      "marken"],
-           f"nicht uebergeben: {_fehlt} - offen als O-19 bis O-23; diese "
-           "Pruefung schlaegt an, sobald einer verdrahtet wird, damit die "
-           "Liste nicht veraltet")
+    # O-19 BIS O-23 ERLEDIGT (14.08.). Diese Pruefung stand vorher andersherum
+    # - sie zaehlte die fuenf NICHT verdrahteten Bloecke auf und sollte
+    # anschlagen, sobald einer angeschlossen wird. Genau das hat sie getan.
+    pruefe(P, "die Kaufmail bekommt JEDEN Block, den sie darstellen kann",
+           not _fehlt,
+           f"nicht uebergeben: {_fehlt} - die Vorlage ist nicht generisch, "
+           "sie wurde nur zu zwei Dritteln gefuettert")
+    pruefe(P, "die Bloecke kommen aus derselben Quelle wie der Prompt",
+           "LB . geteilt (" in _nur_code("agent/rollen_lauf.py")
+           and "RE . bestand ( symbol , db )" in _nur_code(
+               "agent/rollen_lauf.py"),
+           "die Saetze gingen laengst ans Modell - sie am Wortlaut zu "
+           "zerlegen waere eine zweite, stillschweigende Definition")
+    # DER PROMPT DARF SICH DABEI NICHT VERAENDERT HABEN - sonst waeren alle
+    # bisherigen Messungen nicht mehr vergleichbar.
+    import numpy as _np
+    from agent import lagebeschreibung as LB3
+
+    class _K:
+        def __init__(_s, i):
+            _s.close = 100.0 + i * 0.5
+            _s.high = _s.close * 1.01
+            _s.low = _s.close * 0.99
+            _s.volume = 1000.0 + i
+            _s.date = f"2026-01-{(i % 28) + 1:02d}"
+
+    _reihe = [_K(i) for i in range(90)]
+    _flach = LB3.beschreibe_lage(symbol="TST", reihe=_reihe, index=89,
+                                 kurs_eur=144.5, atr=1.2, menge=3.0,
+                                 einstand_eur=100.0)
+    _teil = LB3.geteilt(symbol="TST", reihe=_reihe, index=89, kurs_eur=144.5,
+                        atr=1.2, menge=3.0, einstand_eur=100.0)
+    pruefe(P, "beschreibe_lage() liefert genau die zusammengesetzten Bloecke",
+           _flach == [s for b in LB3.BLOCK_REIHENFOLGE for s in _teil[b]],
+           "der Prompt muss Zeichen fuer Zeichen derselbe bleiben - sonst "
+           "sind alle bisherigen Messungen nicht mehr vergleichbar")
+    pruefe(P, "und der Bestand ist der erste Block",
+           LB3.BLOCK_REIHENFOLGE[0] == "bestand" and _teil["bestand"],
+           "R-T9: was zuerst steht, wiegt schwerer - und die erste Frage des "
+           "Nutzers ist 'habe ich das ueberhaupt'")
 
     # ------------------------------------------------------------------
     # AA. DIE VERKAUFSSEITE (14.08.2026) - der groesste Fund des Echtbetriebs.
@@ -4584,6 +4618,45 @@ def paket_15() -> None:
            "und ist abgelaufen." in _quelltext("agent/ausstiegsrechnung.py"),
            "Nutzerfrage: 'wie unterscheide ich, ob nur ein Signal auslaeuft "
            "weil die Zeit abgelaufen ist'")
+
+    # O-24 DIE CHARTS. Die alte Kette haengte zwei Inline-Grafiken an; die
+    # Rollen-Kette reichte nur (betreff, text) durch - die Faehigkeit war da,
+    # der Weg fehlte.
+    from ui.trade_chart import render_trade_chart as _chart
+    import math as _math
+
+    class _KK:
+        def __init__(_s, i):
+            _s.close = 100 + 12 * _math.sin(i / 9)
+            _s.high, _s.low = _s.close * 1.01, _s.close * 0.99
+            _s.volume, _s.date = 1000.0, f"2026-05-{(i % 28) + 1:02d}"
+
+    _rr = [_KK(i) for i in range(120)]
+    _rech = {"einstieg_von_eur": 96.0, "einstieg_bis_eur": 98.5,
+             "stop_eur": 92.0, "ziel_von_eur": 108.0}
+    _png = _chart(reihe=_rr, index=119, rechnung=_rech, symbol="TST",
+                  fx_eur_je_usd=0.92)
+    pruefe(P, "der Trade wird als Bild gezeichnet",
+           bool(_png) and _png[1:4] == b"PNG" and len(_png) > 5000,
+           "Kurs, Einstiegszone, Stop und Ziel - die Frage, die aus Zahlen "
+           "allein schwer zu beantworten ist: liegt der Stop dort, wo der "
+           "Kurs schon oefter war?")
+    pruefe(P, "ohne Umrechnungsfaktor gibt es KEIN Bild",
+           _chart(reihe=_rr, index=119, rechnung=_rech, symbol="TST",
+                  fx_eur_je_usd=None) is None,
+           "die Reihe steht in USD, die Rechnung in EUR - beides ungefragt in "
+           "ein Bild zu legen ergibt richtige Form und falsche Skala. Ein "
+           "fehlendes Bild ist ein Mangel, ein falsches eine Falschaussage")
+    pruefe(P, "zu kurze Reihen ergeben kein Bild statt eines leeren",
+           _chart(reihe=_rr[:5], index=4, rechnung=_rech, symbol="TST",
+                  fx_eur_je_usd=0.92) is None)
+    pruefe(P, "der Versandweg nimmt Bilder an",
+           "def versand(betreff: str, text: str, bilder=None)" in _quelltext(
+               "scheduler/rollen_job.py")
+           and "inline_images=bilder or None" in _quelltext(
+               "scheduler/rollen_job.py"),
+           "send_notification_email kann das seit 23.07. - die Kette reichte "
+           "es nur nie durch")
 
     pruefe(P, "der Verkaufsversand laesst sich abschalten, das Buchen nicht",
            "verkauf_mailt" in _quelltext("agent/rollen_lauf.py")

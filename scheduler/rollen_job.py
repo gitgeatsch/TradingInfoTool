@@ -233,9 +233,19 @@ def baue_versand(config: dict | None = None):
             "bleibt liegen.")
         return None
 
-    def versand(betreff: str, text: str) -> bool:
+    def versand(betreff: str, text: str, bilder=None) -> bool:
+        """`bilder` ist O-24 (14.08.2026) - der Weg, der der Kette fehlte.
+
+        Die ALTE Kette haengte zwei Inline-Grafiken an (Liquiditaetszonen,
+        Signal-Stabilitaet). `send_notification_email` kann das seit dem
+        23.07. ueber `inline_images`; die Rollen-Kette reichte nur
+        `(betreff, text)` durch - die Faehigkeit war da, der Weg fehlte.
+
+        VORGABEWERT None, damit jeder bestehende Aufruf unveraendert
+        weiterlaeuft: der Verkaufs-Sammelversand schickt bewusst kein Bild."""
         try:
-            return bool(send_notification_email(betreff, text, empfaenger))
+            return bool(send_notification_email(betreff, text, empfaenger,
+                                                inline_images=bilder or None))
         except Exception:                                    # noqa: BLE001
             logger.exception("Versand fehlgeschlagen: %s", betreff)
             return False
