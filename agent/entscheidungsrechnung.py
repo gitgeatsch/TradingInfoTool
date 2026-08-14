@@ -231,7 +231,8 @@ def _haltedauer_tage(weg: float, atr: float) -> int:
     return int(min(GRENZEN["tage_max"], max(1, round((weg / atr) ** 2))))
 
 
-def _crv_faktor(crv: float, instrument: str) -> float:
+def _crv_faktor(crv: float, instrument: str,
+                kostenklasse: str = "krypto") -> float:
     """Wieviel der vollen Groesse bei diesem CRV - stufenlos von 1/Spreizung
     bei CRV 2,0 auf 1,0 bei CRV 6,0.
 
@@ -267,7 +268,32 @@ def _crv_faktor(crv: float, instrument: str) -> float:
     #
     # Eine Ausschlussliste faengt nur, was jemand vorhergesehen hat; eine
     # Einschlussliste nur, was jemand gemessen hat. Hier ist die zweite richtig.
-    if instrument != "spot" or spreizung <= 1.0 or voll_ab <= GRENZEN["crv"]:
+    # UND NUR KRYPTO - nachgetragen am 14.08.2026 (O-26).
+    #
+    # Die Messung lief auf 298 KRYPTO-Spot-Signalen. Die Abstufung galt aber
+    # fuer JEDES `instrument == "spot"`, also auch fuer Aktien, Rohstoffe und
+    # Themen-ETF. Dort ist die Kostenstruktur eine andere: 1 EUR fix je Seite
+    # statt 1,5 % vom Betrag. Bei einer Tranche von 400 EUR heisst das:
+    #
+    #     CRV 6,0   ->  400 EUR   Kosten 1,00 %
+    #     CRV 3,0   ->  160 EUR   Kosten 1,75 %
+    #     CRV 2,0   ->   80 EUR   Kosten 3,00 %
+    #
+    # Bei Krypto bleibt die Quote konstant - Kosten und Betrag skalieren
+    # gemeinsam. An der Boerse VERDREIFACHT die Abstufung sie: sie macht den
+    # Trade genau dann teuer, wenn das Modell am wenigsten ueberzeugt ist. Das
+    # ist die Umkehrung dessen, wofuer sie gemessen wurde.
+    #
+    # Eine Abstufung fuer boersengehandelte Werte braucht eine eigene Messung
+    # oder eine Untergrenze. Bis dahin gilt die Regel dort, wo sie gemessen
+    # wurde.
+    #
+    # IM BETRIEB AENDERT SICH HEUTE NICHTS: `rollen_kette.aktiv_fuer` steht
+    # auf ["krypto"]. Der Fehler waere erst beim Zuschalten der uebrigen
+    # Klassen aufgetreten - und dann als schleichende Kostenquote, nicht als
+    # Absturz.
+    if (instrument != "spot" or kostenklasse != "krypto"
+            or spreizung <= 1.0 or voll_ab <= GRENZEN["crv"]):
         return 1.0
     spanne = max(0.0, min(1.0, (crv - GRENZEN["crv"]) / (voll_ab - GRENZEN["crv"])))
     sockel = 1.0 / spreizung
@@ -281,6 +307,7 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
            umgeworfen_preis_eur: float | None = None,
            umgeworfen_tage: int | None = None,
            widerstand: tuple[float, int] | None = None,
+           kostenklasse: str = "krypto",
            ist_short: bool = False) -> dict:
     """Alle Zahlen eines Einstiegs aus drei Eingaben: Kurs, ATR, Risikobudget.
 
@@ -364,7 +391,7 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
     # DIE CRV-ABSTUFUNG ZUERST, dann die Deckel. Sie beschreibt, wieviel der
     # Aufbau VERDIENT; Topf und Hoechstbetrag, wieviel er BEKOMMEN darf. Zwei
     # verschiedene Fragen, und die zweite gehoert nach der ersten.
-    _faktor = _crv_faktor(crv, instrument)
+    _faktor = _crv_faktor(crv, instrument, kostenklasse)
     if _faktor < 1.0:
         betrag, grund = betrag * _faktor, f"CRV-Abstufung ({crv:.2f})"
     e["crv_groessenfaktor"] = round(_faktor, 3)

@@ -4302,6 +4302,56 @@ def paket_15() -> None:
     pruefe(P, "Groq steht als letzter in der Rueckfallkette",
            _KETTE[-1][0] == "groq" and len(_KETTE) == 4,
            "der 413-Grund ist entfallen: 34.611 -> 3.183 Zeichen Prompt")
+    # O-25: der Groq-Deckel ist eine TOKEN-Rechnung, keine Anfragenzahl.
+    # O-28: DER HEBEL-DURCHGANG WAR VOLLSTAENDIG BLOCKIERT.
+    #
+    # Der erste Echtbetrieb erzeugte 45 Urteile und KEIN einziges Hebel-Signal.
+    # Nicht, weil der Durchgang ausfiel - `assetklassen.laeufe()` faehrt
+    # krypto/spot VOR krypto/hebel ueber DIESELBEN 43 Symbole, und die Sperre
+    # fragte nur nach `symbol` und `quelle_kette`. Nach dem Spot-Durchgang war
+    # jedes Symbol gesperrt.
+    import sqlite3 as _sq3
+    from agent import wiederholung as WH4
+
+    _c4 = _sq3.connect(":memory:")
+    _c4.execute("CREATE TABLE signals (symbol TEXT, created_at TEXT, "
+                "quelle_kette TEXT, hebel REAL)")
+    _c4.execute("INSERT INTO signals VALUES ('BTC', ?, 'rollen', NULL)",
+                ("2026-08-14T07:14:00+00:00",))
+    _jetzt = "2026-08-14T07:30:00+00:00"
+    pruefe(P, "ein Spot-Urteil sperrt den Hebel NICHT",
+           WH4.gesperrt_bis(_c4, "BTC", "spot", jetzt=_jetzt) is not None
+           and WH4.gesperrt_bis(_c4, "BTC", "hebel", jetzt=_jetzt) is None,
+           "'soll ich BTC mit Hebel handeln' ist eine andere Frage als 'soll "
+           "ich eine Spot-Tranche nachlegen' - andere Geometrie, andere "
+           "Kosten, andere Haltedauer")
+    _c4.execute("INSERT INTO signals VALUES ('BTC', ?, 'rollen', 3.0)",
+                ("2026-08-14T07:20:00+00:00",))
+    pruefe(P, "und umgekehrt sperrt der Hebel sich selbst",
+           WH4.gesperrt_bis(_c4, "BTC", "hebel", jetzt=_jetzt) is not None,
+           "die Sperre muss innerhalb des Instruments weiter greifen - sie "
+           "ist die gemessene Verlustquelle (5 Symbole = 102 % des Minus)")
+    _c4.close()
+
+    # O-26: die CRV-Abstufung gilt dort, wo sie gemessen wurde.
+    from agent import entscheidungsrechnung as ER4
+    pruefe(P, "die CRV-Abstufung greift nur bei Krypto-Spot",
+           ER4._crv_faktor(2.0, "spot", "krypto") < 1.0
+           and ER4._crv_faktor(2.0, "spot", "boerse") == 1.0
+           and ER4._crv_faktor(2.0, "hebel", "krypto") == 1.0,
+           "gemessen an 298 KRYPTO-Spot-Signalen. An der Boerse kostet 1 EUR "
+           "fix je Seite - dort verdreifacht die Abstufung die Kostenquote "
+           "(1,00 -> 3,00 % bei 400 EUR Tranche) und macht den Trade teuer, "
+           "wenn das Modell am wenigsten ueberzeugt ist")
+
+    pruefe(P, "Groqs Deckel folgt der Tokengrenze, nicht der Anfragengrenze",
+           RJ2.GROQ_AUFRUFE_JE_TAG == int(RJ2.GROQ_TOKEN_JE_TAG
+                                          / RJ2.GROQ_TOKEN_JE_AUFRUF)
+           and RJ2.GROQ_AUFRUFE_JE_TAG < 100,
+           "RPD 1.000 klingt grosszuegig; bei ~1.200 Token je Aufruf sind die "
+           "100.000 TPD nach 83 erschoepft - einem Zwoelftel davon. Waechst "
+           "der Prompt, sinkt das Budget jetzt mit")
+
     pruefe(P, "und der Scheduler uebergibt den Client auch",
            '"groq": groq_client' in _quelltext("scheduler/background.py"),
            "ein Topf ohne Client wird stillschweigend uebersprungen - eine "

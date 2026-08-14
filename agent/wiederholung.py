@@ -112,9 +112,31 @@ def gesperrt_bis(conn, symbol: str, instrument: str, *,
         spalten = {r[1] for r in conn.execute("PRAGMA table_info(signals)")}
         if "quelle_kette" not in spalten:
             return None
+        # NACH INSTRUMENT GETRENNT (14.08.2026) - O-28.
+        #
+        # DER FUND: der erste Echtbetrieb erzeugte 45 Urteile und KEIN
+        # EINZIGES Hebel-Signal. Nicht, weil der Hebel-Durchgang ausfiel -
+        # er lief, und wurde vollstaendig vom Cooldown blockiert.
+        #
+        # `assetklassen.laeufe()` faehrt krypto/spot VOR krypto/hebel, ueber
+        # dieselben 43 Symbole. Die Sperre fragte nur nach `symbol` und
+        # `quelle_kette`; nach dem Spot-Durchgang war damit JEDES Symbol
+        # gesperrt, und der Hebel-Durchgang fand nichts mehr vor.
+        #
+        # UND DAS IST FACHLICH FALSCH, nicht nur technisch: "soll ich BTC mit
+        # Hebel handeln" ist eine andere Frage als "soll ich eine
+        # Spot-Tranche nachlegen". Andere Geometrie, andere Kosten, andere
+        # Haltedauer - die eine zu beantworten sperrt die andere nicht.
+        #
+        # DIESELBE UNTERSCHEIDUNG WIE IN DEN TOEPFEN, aus derselben Funktion:
+        # `hebel IS NOT NULL`. Eine zweite Definition waere die Kopierfalle.
+        from agent import toepfe as TP
+
+        bedingung = (TP.sql_bedingung(instrument)
+                     if "hebel" in spalten else "1=1")
         zeile = conn.execute(
             "SELECT MAX(created_at) FROM signals WHERE symbol = ? "
-            "AND quelle_kette = 'rollen'",
+            f"AND quelle_kette = 'rollen' AND {bedingung}",
             (symbol,)).fetchone()
     except Exception:                                        # noqa: BLE001
         return None

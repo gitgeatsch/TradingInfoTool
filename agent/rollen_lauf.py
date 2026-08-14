@@ -661,7 +661,8 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                              # dreht Stop, Ziel und Liquidation. Bei Spot gibt
                              # es sie nicht - dort ist LONG die einzige Lage.
                              ist_short=(befund.get("richtung") == "SHORT"),
-                             umgeworfen_tage=_tage_bis(
+                             kostenklasse=_kostenklasse(assetklasse),
+            umgeworfen_tage=_tage_bis(
                                  befund.get("umgeworfen_bis"), tag))
     except ER.RechnungBlockiert as exc:
         durchlauf.verloren(symbol, "geometrie", str(exc)[:40])
@@ -966,6 +967,7 @@ def _schreibe_nein(*, symbol, befund, kurs_e, atr_e, tag, reihe, idx,
             betrag_wunsch_eur=BE.einsatz_eur(instrument, strategie, config),
             umgeworfen_preis_eur=befund.get("umgeworfen_preis_eur"),
             ist_short=(befund.get("richtung") == "SHORT"),
+            kostenklasse=_kostenklasse(assetklasse),
             umgeworfen_tage=_tage_bis(befund.get("umgeworfen_bis"), tag))
         kern = FB.werte_aus_reihe(
             [k.high for k in reihe], [k.low for k in reihe],

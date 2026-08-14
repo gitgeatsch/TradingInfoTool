@@ -83,6 +83,35 @@ def bedient_neue_kette(assetklasse: str, config: dict | None = None) -> bool:
 # DIE RESERVE. Gewechselt wird bei 90 % des Topfes, nicht bei 100 %: der Rest
 # ist fuer Messlaeufe und Handbetrieb. Das Budget haengt am SCHLUESSEL, nicht am
 # Geraet - ein Desktop-Messlauf nimmt der Produktion direkt Kontingent weg.
+# GROQ RECHNET IN TOKEN, UNSER ZAEHLER IN ANFRAGEN (O-25, 14.08.2026).
+#
+# An der Quelle bestaetigt (console.groq.com/docs/rate-limits, "Free Plan
+# Limits", llama-3.3-70b-versatile):
+#
+#     RPM 30 | RPD 1.000 | TPM 12K | TPD 100K
+#
+# Die bindende Grenze ist nicht die, die man zuerst liest. 1.000 Anfragen
+# klingen grosszuegig; bei rund 1.200 Token je Aufruf sind die 100.000 TPD nach
+# etwa 83 erschoepft - einem Zwoelftel davon.
+#
+# `_verbraucht()` zaehlt ANFRAGEN, und einen Tokenzaehler gibt es nirgends im
+# Projekt (`llm_basis` bucht nur Aufrufe). Statt einen zu bauen, den heute
+# niemand braucht, wird die Umrechnung HIER hingeschrieben - mit dem Effekt,
+# dass sie mitwaechst: waechst der Prompt, sinkt das Budget automatisch, statt
+# dass 80 Aufrufe stillschweigend in eine Tokenwand laufen.
+#
+# DIE 1.200 SIND GEMESSEN, NICHT GESCHAETZT (14.08., am echten Prompt):
+#
+#     Rolle A  (Lagebild)  3.580 Zeichen  ~895 Token
+#     Rolle BC (Trader)    3.001 Zeichen  ~750 Token
+#     + Antwort                            ~300-400 Token
+#
+# WER DEN PROMPT AENDERT, MUSS DIESE ZAHL NEU MESSEN. Eine Pruefung haelt die
+# Rechnung fest, damit die Konstante nicht als Zufallszahl gelesen wird.
+GROQ_TOKEN_JE_TAG = 100_000
+GROQ_TOKEN_JE_AUFRUF = 1_200
+GROQ_AUFRUFE_JE_TAG = int(GROQ_TOKEN_JE_TAG / GROQ_TOKEN_JE_AUFRUF)   # 83
+
 KETTE = (
     ("gemini", "gemini-3.1-flash-lite", 500),
     ("gemini", "gemini-3.5-flash-lite", 500),
@@ -114,7 +143,7 @@ KETTE = (
     # Deckel von 80 bildet die Tokengrenze nur naeherungsweise ab. Solange Groq
     # der letzte Topf ist, genuegt das; wuerde er weiter nach vorn rutschen,
     # braeuchte er einen Tokenzaehler. Als offener Punkt vermerkt.
-    ("groq", None, 80),
+    ("groq", None, GROQ_AUFRUFE_JE_TAG),
 )
 RESERVE_ANTEIL = 0.10
 
