@@ -347,7 +347,8 @@ def build_status(conn: sqlite3.Connection, watchlist: list, log_path: Path,
     if dauer > _BUILD_STATUS_WARNSCHWELLE_SEKUNDEN:
         logger.warning(
             "Statusaufbau dauerte %.2f s (Schwelle %.2f s, Abruftakt der Seite "
-            "2,0 s). Bei Ueberschreitung des Takts ueberlappen die Anfragen und "
+            "5,0 s seit 14.08.). Bei Ueberschreitung des Takts ueberlappen die "
+            "Anfragen und "
             "verzoegern sich gegenseitig weiter. Pruefen, ob eine neue Karte "
             "ohne @_gecacht dazugekommen ist - siehe _LIVE_GETTER.",
             dauer, _BUILD_STATUS_WARNSCHWELLE_SEKUNDEN,

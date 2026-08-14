@@ -5105,6 +5105,29 @@ def paket_15() -> None:
                RS.RemoteStatus.__init__).parameters},
            "am 13.08. wurde ein Feld durchgereicht, das die Klasse nicht "
            "kannte - /api/status warf seitdem bei JEDEM Abruf einen TypeError")
+    # AF2 DER ABRUFTAKT DER STATUSSEITE.
+    #
+    # 20 Warnungen in 3 Minuten: Aufbau 1,24-2,71 s bei Takt 2,0 s. Die
+    # Spitzen fielen GENAU in das Fenster, in dem die Rollen-Kette lief -
+    # Konkurrenz um dieselbe Datenbank und dieselbe CPU, kein Defekt der Karte
+    # (Desktop: kalt 0,42 s, warm 0,03 s).
+    pruefe(P, "die Seite fragt seltener als der langsamste Aufbau dauert",
+           "setInterval(refreshStatus, 5000);" in _quelltext("remote/server.py"),
+           "gegen Konkurrenz hilft kein Zwischenspeicher - der Aufbau ist ja "
+           "schnell. Was hilft, ist seltener zu fragen")
+    pruefe(P, "der Takt in der Warnung stimmt mit dem echten ueberein",
+           "Abruftakt der Seite " in _quelltext("remote/status.py"),
+           "eine Warnung, die einen anderen Takt nennt als die Seite hat, "
+           "schickt die naechste Diagnose in die falsche Richtung")
+
+    # AF3 MISTRAL IST RAUS - 402 seit dem 07.08.
+    pruefe(P, "die Kategorie-Synthese ruft Mistral nicht mehr",
+           'llm_clients = [("gemini", gemini_client)]' in _quelltext(
+               "scheduler/background.py"),
+           "ein Fehler, der bei JEDEM Lauf auftritt und nichts bedeutet, ist "
+           "schlimmer als keiner - er trainiert das Auge, Fehlerzeilen zu "
+           "ueberlesen")
+
     pruefe(P, "die alte Kette bleibt sichtbar, aber benannt",
            "ALTE KETTE (seit dem Schnitt ohne Aufrufer)" in _quelltext(
                "remote/server.py"),

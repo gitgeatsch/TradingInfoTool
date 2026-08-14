@@ -964,7 +964,24 @@ async function refreshStatus() {
 }
 
 refreshStatus();
-setInterval(refreshStatus, 2000);
+// FUENF SEKUNDEN STATT ZWEI (14.08.2026).
+//
+// Im Log des Nutzers riss der Statusaufbau zwanzigmal in drei Minuten die
+// Warnschwelle: 1,24 bis 2,71 s bei einem Takt von 2,0 s. Ab da ueberlappen
+// die Anfragen, und jede verzoegert die naechste weiter.
+//
+// DIE URSACHE IST NICHT DIE SEITE. Am Desktop dauert ein Aufbau kalt 0,42 s
+// und warm 0,03 s - der Zwischenspeicher wirkt. Die Spitzen fielen GENAU in
+// das Fenster, in dem die Rollen-Kette lief (14:21:07 Hebel-Screening,
+// 14:21:13 Rollen-Kette): dieselbe Datenbank, dieselbe CPU eines i5-4300U von
+// 2013. Es ist Konkurrenz um die Maschine, kein Defekt der Karte.
+//
+// DESHALB DER TAKT UND NICHT NOCH EIN CACHE. Gegen Konkurrenz hilft kein
+// Zwischenspeicher - der Aufbau ist ja bereits schnell. Was hilft, ist,
+// seltener zu fragen. Fuenf Sekunden geben auch dem langsamsten gemessenen
+// Aufbau (2,71 s) noch das Doppelte an Luft, und eine Fernsteuerung, die man
+// beim Beobachten eines Laufs benutzt, braucht keine Zwei-Sekunden-Aufloesung.
+setInterval(refreshStatus, 5000);
 </script>
 </body>
 </html>

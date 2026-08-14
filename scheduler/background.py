@@ -899,7 +899,24 @@ def kategorie_synthese_job(conn_factory, mistral_client=None, groq_client=None, 
     wenn alle Provider fehlschlagen (run_kategorie_synthese() gibt dann None
     zurueck, alle Konsumenten (Fall-A/B-Moderation, Screener-Score-Bonus)
     degradieren auf ihr Vor-Schicht-2-Verhalten)."""
-    llm_clients = [("mistral", mistral_client), ("gemini", gemini_client)]
+    # MISTRAL IST RAUS (14.08.2026). Sein Free-Plan wurde am 07.08.
+    # kostenpflichtig; seitdem beantwortet er jeden Aufruf mit
+    # "402 Payment Required". Im Log des Nutzers vom 14.08.:
+    #
+    #     agent.kategorie_synthese: mistral-Call fuer Kategorie-Synthese
+    #     fehlgeschlagen: 402 Client Error: Payment Required
+    #     ...
+    #     Kategorie-Synthese: 19 Kategorien eingeordnet (gemini)
+    #
+    # Der Rueckfall auf Gemini funktionierte also jedes Mal - der Mistral-Ruf
+    # war reine Verzoegerung plus eine Fehlerzeile je Durchlauf. Ein Fehler,
+    # der bei JEDEM Lauf auftritt und nichts bedeutet, ist schlimmer als
+    # keiner: er trainiert das Auge, Fehlerzeilen zu ueberlesen.
+    #
+    # DER PARAMETER BLEIBT in der Signatur - der Scheduler uebergibt ihn, und
+    # ihn dort zu entfernen waere eine Aenderung an sechs Aufrufstellen fuer
+    # nichts. Wer Mistral wieder bezahlt, traegt ihn hier wieder ein.
+    llm_clients = [("gemini", gemini_client)]
     if not any(client is not None for _, client in llm_clients):
         logger.info("Kategorie-Synthese: kein LLM-Client konfiguriert, uebersprungen.")
         return
