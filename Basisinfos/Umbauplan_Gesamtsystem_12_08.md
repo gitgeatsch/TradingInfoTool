@@ -1794,3 +1794,95 @@ Abkündigung vom 14.08. betrifft `llama-3.1-8b-instant`; wir fahren
 | **O-16** | Spot und Absicherung in der Trefferbilanz nicht trennbar — erst relevant, wenn Hedge-Signale auflösen |
 | **O-17** | Einmalkauf-Betrag für börsengehandelte Werte ist übernommen (800 €), nicht entschieden |
 | **O-18** | `_ensure_ohlc_backfilled` darf beim Aufräumen der alten Pipelines nicht mitgelöscht werden |
+
+
+---
+
+## Kapitel 20 — Die erste Produktionsbewertung (14.08.2026)
+
+Neun Kaufmails ab 09:05, dann gestoppt. **Die Kritik war in jedem Punkt
+berechtigt**, und zwei Punkte waren schlimmer als die Beobachtung nahelegte.
+
+### 20.1 Der Lesepfad war seit der Migration tot
+
+`SPALTEN_SIGNAL` legte fünfzehn Spalten an `signals` an, `models.Signal` wuchs
+nicht mit, `_row_to_signal()` baut die Klasse aus `SELECT *`.
+
+**Es brach nicht beim ersten Rollen-Signal, sondern beim Anlegen der Spalten.**
+`SELECT *` liefert alle Spalten, egal was in der Zeile steht — also war *jedes*
+Signal unlesbar, auch jedes alte. Dreizehn Aufrufer von `get_latest_signal`.
+
+*Erledigt.* Die Klasse ist nachgezogen; eine Prüfung vergleicht künftig
+Tabellenspalten gegen Klassenfelder für `signals` **und** `hebel_signals`.
+
+### 20.2 KAUFEN ohne Einstieg — der Formatierer
+
+```
+Einstiegszone   0 bis 0 EUR
+Stop            0 EUR  (5,5 % - ...)
+Take-Profit     0 bis 0 EUR
+```
+
+PLUME steht bei 0,0119 EUR. Die Rechnung war richtig, die Darstellung hat sie
+vernichtet: `_eur()` hatte eine feste Stellenzahl. **In derselben Mail** stand
+korrekt „Widerstand bei 0.0119 EUR" — die Zahlen des Modells laufen nicht durch
+diesen Formatierer. Zwei Zahlenwege, einer davon kaputt.
+
+*Erledigt.* `signal_mail.preis()` rechnet in signifikanten Stellen. Betroffen
+war jeder Wert unter einem Euro, nicht nur Krypto.
+
+### 20.3 Zwei Stop-Abstände für denselben Stop
+
+| Block | Zahl | Bezugspunkt |
+|---|---|---|
+| 2. DIE RECHNUNG | 5,5 % | die Einstiegszone |
+| 4. EINORDNUNG | 11,2 % | der aktuelle Kurs |
+
+Beide für sich richtig — die Zone lag 6 % unter dem Kurs. Für den Leser ist es
+der schlimmere Widerspruch: er schätzt sein Risiko doppelt so hoch ein und
+sieht nicht, warum. *Erledigt* — die Einordnung rechnet gegen den geplanten
+Einstieg.
+
+### 20.4 Warum die Mail generisch wirkt — O-19 bis O-24
+
+`baue_mail` kann sechzehn Eingaben darstellen. Die Rollen-Kette übergibt elf.
+**Fünf Blöcke sind an nichts angeschlossen:**
+
+| Nr. | Block | Was fehlt dadurch |
+|---|---|---|
+| **O-19** | `bestand` | „Habe ich das überhaupt?" — nach Nutzervorgabe 12.08. die **erste** Zeile |
+| **O-20** | `marken` | Widerstand/Unterstützung **in Euro**, ebenfalls Vorgabe 12.08. |
+| **O-21** | `lage_fakten` | das Lagebild, das Rolle A einmal je Lauf rechnet, erreicht die Mail nie |
+| **O-22** | `ausstieg` | keine Ausstiegsführung für gehaltene Positionen |
+| **O-23** | `coin_fakten` | Coin-Ebene |
+| **O-24** | Charts | die alte Kette hängte zwei Inline-Grafiken an (Liquiditätszonen, Signal-Stabilität); `baue_versand()` reicht nur `(betreff, text)` durch |
+
+Die Vorlage ist nicht generisch — sie wird nur zu einem Drittel gefüttert.
+
+### 20.5 Was **kein** Defekt ist, aber so aussieht
+
+- **„Trägt sich NICHT: 34 erreichen das Ziel, nötig wären 42"** und trotzdem
+  KAUFEN. Das ist „zählen, nicht verwerfen" — der Entscheider ist ein
+  Messinstrument, kein Türsteher. Es ist die bekannte Arithmetik, kein neuer
+  Fehler. **Aber:** wenn neun von neun Mails das sagen, ist die Frage nicht
+  mehr, ob die Anzeige stimmt, sondern ob sich das Filtern lohnt.
+- **Z.ai meldet „widerspruch"** und die Mail geht raus — kein deterministischer
+  Override des LLM-Werturteils, so entschieden.
+- **160 EUR statt 800** — die CRV-Abstufung greift bei CRV 2,0 auf ein Fünftel.
+  Gemessen und gewollt; die Nebenwirkung steht in derselben Mail („Die Gebühren
+  fressen 27 % Ihres Risikos auf"). **O-26:** prüfen, ob Abstufung und
+  Kostenklasse zusammen einen Betrag erzeugen, der sich nie tragen kann.
+
+### 20.6 Groq an der Quelle — die bindende Grenze ist die zweite
+
+`console.groq.com/docs/rate-limits`, „Free Plan Limits", abgerufen 14.08.2026:
+
+    llama-3.3-70b-versatile    RPM 30 | RPD 1.000 | TPM 12K | TPD 100K
+
+1.000 Anfragen klingen großzügig; bei ~1.200 Token je Aufruf sind die 100.000
+TPD nach rund **83 Aufrufen** erschöpft — ein Zwölftel davon. Der Deckel von 80
+stimmt also, aber aus einem anderen Grund als der Zahl, die man zuerst liest.
+
+**O-25:** `_verbraucht` zählt Anfragen, nicht Token. Für Gemini und OpenRouter
+ist das die richtige Einheit, für Groq nicht. Solange Groq der letzte Topf ist,
+genügt die Näherung.
