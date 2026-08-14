@@ -2058,3 +2058,49 @@ einzelne Aktie geht, ist eine Risikofrage. Überschreibbar unter
 2. Meine erste Prüfung testete, ob ein **Kommentar** existiert. `_quelltext()`
    wirft Kommentarzeilen bewusst weg, und eine Prüfung, die Dokumentation statt
    Verhalten prüft, ist die Falle, die dieses Skript schon dreimal getreten hat.
+
+
+### 21.10 O-29 — die Ratenfrage, so weit sie heute beantwortbar ist
+
+Alte Kette: **0 von 1.142** Krypto-Spot-Signalen VERKAUFEN (98,2 % HALTEN).
+Neue Kette: **11 von 45** in einem Lauf. Werkzeug: `messe_verkaufsseite.py`.
+
+**Erstens: die Aktion hängt vollständig am Bestand.**
+
+| Aktion | im Bestand | nicht |
+|---|---|---|
+| HALTEN | 8 | 16 |
+| REDUZIEREN | 9 | 0 |
+| KAUFEN | 0 | 8 |
+| NACHKAUFEN | 2 | 0 |
+| VERKAUFEN | 2 | 0 |
+
+Perfekte Trennung — aber sie ist **erzwungen, nicht geurteilt**: man verkauft
+nicht, was man nicht hält, und ein Zukauf heißt NACHKAUFEN. Kein Qualitätsbeleg.
+
+**Zweitens: innerhalb des Bestands trennt kein gemessenes Merkmal.**
+
+| Merkmal | Verkauf | Halten | AUC | p |
+|---|---|---|---|---|
+| Buchergebnis % | −25,98 | −44,01 | 0,636 | 0,647 |
+| Schwankung | 0,04 | 0,02 | 0,500 | 0,963 |
+| Momentum | 0,60 | 0,68 | 0,329 | 0,472 |
+| Volumen | 0,34 | 0,34 | 0,567 | 1,000 |
+
+**Die Aufteilung ist durch nichts erklärt, was wir dem Modell gegeben haben.**
+
+Bemerkenswert ist die *Richtung* beim Buchergebnis: verkauft werden die
+**besseren** Positionen (Median −26 %), gehalten die **schlechteren** (−44 %) —
+MORPHO +3 %, XLM +4 %, X136 +14 % sollen raus, BRETT −92 %, BEAMX −89 %,
+KAIA −84 % bleiben. Das ist die Form des Dispositionseffekts. **Es ist nicht
+signifikant** (p = 0,647), also kein Befund — aber es ist die einzige sichtbare
+Tendenz, und sie zeigt in die unerwünschte Richtung.
+
+> ⚠️ **„Nicht unterscheidbar" heißt hier NICHT „zufällig bewiesen".** Bei 11
+> gegen 8 hat jeder Test wenig Trennschärfe. Der Unterschied ist der zwischen
+> einem Befund und einer offenen Frage — und das Skript druckt ihn mit aus.
+
+**Was offen bleibt:** ob die Verkäufe sich *tragen*. Dafür braucht es
+aufgelöste Ausgänge, also Wochen. `rollen_kette.verkauf_mailt` entscheidet, ob
+sie in der Zwischenzeit im Postfach landen oder nur in der Datenbank —
+**gebucht wird in beiden Fällen.**

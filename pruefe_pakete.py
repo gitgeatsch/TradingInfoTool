@@ -4892,6 +4892,57 @@ def paket_15() -> None:
                "aktien") == 500.0,
            "wieviel Geld in eine einzelne Aktie geht, ist eine Risikofrage "
            "und gehoert dem Nutzer - kein Codeeingriff dafuer")
+
+    # ------------------------------------------------------------------
+    # AD. O-29 - das Messwerkzeug fuer die Verkaufsseite (14.08.2026).
+    import messe_verkaufsseite as MV
+
+    # AD1 DIE STATISTIK MUSS STIMMEN, sonst ist der Befund wertlos.
+    pruefe(P, "AUC 0,5 bei identischen Gruppen",
+           MV._auc([1, 2, 3], [1, 2, 3]) == 0.5,
+           "kein Merkmal trennt sich von sich selbst")
+    pruefe(P, "AUC 1,0 bei perfekter Trennung",
+           MV._auc([10, 11, 12], [1, 2, 3]) == 1.0
+           and MV._auc([1, 2, 3], [10, 11, 12]) == 0.0)
+    pruefe(P, "der Permutationstest findet einen echten Unterschied",
+           MV._permutation([10, 11, 12, 13, 14, 15], [1, 2, 3, 4, 5, 6],
+                           ziehungen=2000) < 0.05,
+           "sonst wuerde er auch einen echten Befund verwerfen")
+    pruefe(P, "und findet keinen, wo keiner ist",
+           MV._permutation([1, 2, 3, 4, 5, 6], [1, 2, 3, 4, 5, 6],
+                           ziehungen=2000) > 0.5)
+    pruefe(P, "derselbe Datenstand ergibt dieselbe Zahl",
+           MV._permutation([1, 5, 9, 2], [3, 7, 4, 8], ziehungen=1000)
+           == MV._permutation([1, 5, 9, 2], [3, 7, 4, 8], ziehungen=1000),
+           "ein Test, dessen Ergebnis beim zweiten Lauf anders aussieht, "
+           "taugt nicht als Beleg - deshalb eine feste Saat")
+
+    # AD2 DER BERICHT MUSS DIE GRENZE SEINER AUSSAGE NENNEN.
+    _e = {"kreuz": {"REDUZIEREN": [9, 0], "HALTEN": [8, 16]},
+          "verkauf": [], "halten": [],
+          "merkmale": {"pl": {"median_verkauf": -26.0, "median_halten": -44.0,
+                              "auc": 0.64, "p": 0.65, "n": (11, 8)}}}
+    _txt = " | ".join(MV.bericht(_e))
+    pruefe(P, "der Bericht verwechselt 'nicht gezeigt' nicht mit 'zufaellig'",
+           "NICHT 'zufaellig bewiesen'" in _txt
+           and "wir koennen es nicht zeigen" in _txt,
+           "bei 11 gegen 8 hat jeder Test wenig Trennschaerfe - der "
+           "Unterschied ist der zwischen einem Befund und einer offenen Frage")
+    pruefe(P, "und er nennt, was er NICHT beantwortet",
+           "aufgeloeste" in _txt and "Wochen" in _txt,
+           "ob die Verkaeufe sich tragen, kann heute niemand sagen")
+    pruefe(P, "die erzwungene Trennung wird als solche benannt",
+           "erzwungen, nicht geurteilt" in _txt,
+           "kein Verkauf ohne Bestand ist kein Qualitaetsbeleg, sondern "
+           "eine Selbstverstaendlichkeit")
+
+    # AD3 GEGEN DIE ECHTE TABELLE.
+    with sqlite3.connect("file:data/tradinginfotool.db?mode=ro",
+                         uri=True) as _c7:
+        pruefe(P, "die Messung laeuft gegen die echte Datenbank",
+               isinstance(MV.messe(_c7), dict),
+               "sie liest price_cache, holdings und signals - drei Tabellen, "
+               "die sich unabhaengig voneinander aendern koennen")
     c.close()
 
 
