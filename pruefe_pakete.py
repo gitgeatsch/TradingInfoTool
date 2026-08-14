@@ -4272,7 +4272,7 @@ def paket_15() -> None:
 
     # X2 TREFFERBILANZ - NACH INSTRUMENT GETRENNT, NACH MODELL NICHT.
     pruefe(P, "Spot und Hebel landen nicht mehr in denselben Zellen",
-           TP2.sql_bedingung("spot") == "hebel IS NULL"
+           TP2.sql_bedingung("spot").startswith("hebel IS NULL")
            and TP2.sql_bedingung("hebel") == "hebel IS NOT NULL",
            "die CRV-Abstufung half bei Spot (SQN +0,63 -> +1,36) und schadete "
            "beim Hebel (+3,25 -> +1,25) - eine gemeinsame Bilanz haette das "
@@ -4832,6 +4832,66 @@ def paket_15() -> None:
            < _quelltext("api/groq.py").index("zaehle_token(\"groq\""),
            "die Tokenzahl steht erst in der Antwort; ein Fehlschlag "
            "verbraucht keine Token")
+
+    # ------------------------------------------------------------------
+    # AC. O-16 UND O-17 (14.08.2026).
+    from agent import toepfe as TP6
+    from agent import betraege as BE6
+    from agent import wiederholung as WH6
+    from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR as _HEDGE
+
+    # AC1 O-16: SPOT UND ABSICHERUNG SIND TRENNBAR.
+    #
+    # Beide haben `hebel IS NULL`. Die Unterscheidung kommt aus der EINEN
+    # Stelle, an der sie im Projekt steht - `SYMBOL_ZU_HEBEL_FAKTOR`. Hedge ist
+    # keine Assetklasse; die Watchlist fuehrt DBPK und 3QSS als `etf`, und nur
+    # ihre Mitgliedschaft dort macht sie zu Absicherungen.
+    pruefe(P, "die Trennung nennt die Hedge-Symbole beim Namen",
+           all(s in TP6.sql_bedingung("absicherung") for s in _HEDGE)
+           and all(s in TP6.sql_bedingung("spot") for s in _HEDGE)
+           and " NOT IN " in TP6.sql_bedingung("spot"),
+           f"aus SYMBOL_ZU_HEBEL_FAKTOR: {sorted(_HEDGE)} - keine zweite Liste")
+    pruefe(P, "und der Hebel bleibt unberuehrt",
+           TP6.sql_bedingung("hebel") == "hebel IS NOT NULL",
+           "er hat seinen eigenen, eindeutigen Unterscheider")
+
+    with sqlite3.connect(":memory:") as _c6:
+        _c6.execute("CREATE TABLE signals (symbol TEXT, created_at TEXT, "
+                    "quelle_kette TEXT, hebel REAL, position_size_eur REAL, "
+                    "outcome_status TEXT)")
+        for _s, _h, _p in (("BTC", None, 800.0), ("DBPK", None, 500.0),
+                           ("ETH", 3.0, 1000.0), ("3QSS", None, 300.0)):
+            _c6.execute("INSERT INTO signals VALUES (?,?,?,?,?,NULL)",
+                        (_s, "2026-08-14T07:00:00+00:00", "rollen", _h, _p))
+        pruefe(P, "eine Absicherung belegt kein Spot-Budget mehr",
+               TP6.belegt_eur(_c6, "spot") == 800.0
+               and TP6.belegt_eur(_c6, "absicherung") == 800.0
+               and TP6.belegt_eur(_c6, "hebel") == 1000.0,
+               "bis heute zaehlten offene Absicherungen gegen den SPOT-Topf. "
+               "Der hat einen Deckel, die Absicherung nicht - eine gehaltene "
+               "Hedge-Position hat also stillschweigend Spot-Budget belegt")
+        _j = "2026-08-14T08:00:00+00:00"
+        pruefe(P, "und der Cooldown trennt sie ebenfalls",
+               WH6.gesperrt_bis(_c6, "DBPK", "absicherung", jetzt=_j) is not None
+               and WH6.gesperrt_bis(_c6, "DBPK", "spot", jetzt=_j) is None,
+               "dieselbe Funktion, also automatisch dieselbe Trennung - das "
+               "ist der Gewinn daraus, dass es sie nur einmal gibt")
+
+    # AC2 O-17: DIE 800 SIND UEBERNOMMEN, NICHT ENTSCHIEDEN.
+    # KEIN CHECK AUF DEN KOMMENTAR. `_quelltext()` wirft Kommentarzeilen
+    # bewusst weg, und eine Pruefung, die Dokumentation prueft statt
+    # Verhalten, ist die Falle, die dieses Skript schon dreimal getreten hat.
+    # Geprueft wird, was die Zahl TUT.
+    pruefe(P, "und die Entscheidung ist eine Konfigurationszeile",
+           BE6.einsatz_eur("spot", "einstieg", None, "aktien") == 800.0
+           and BE6.einsatz_eur(
+               "spot", "einstieg",
+               {"risiko": {"rollen_kette": {
+                   "einsatz_eur_je_gruppe": {
+                       "aktien": {"einstieg": 500.0}}}}},
+               "aktien") == 500.0,
+           "wieviel Geld in eine einzelne Aktie geht, ist eine Risikofrage "
+           "und gehoert dem Nutzer - kein Codeeingriff dafuer")
     c.close()
 
 

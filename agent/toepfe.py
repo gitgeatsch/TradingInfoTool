@@ -71,13 +71,36 @@ def sql_bedingung(instrument: str) -> str:
     gesetzt, wenn ein Hebelfaktor gerechnet wurde. Eine zweite Spalte daneben
     waere eine zweite Wahrheit ueber dieselbe Sache.
 
-    WAS DAS KOSTET, offen gesagt: Spot und Absicherung sind so NICHT
-    unterscheidbar - beide haben `hebel IS NULL`. Fuer die Toepfe war das nie
-    ein Thema (die Absicherung hat ohnehin keinen Deckel); fuer die
-    Trefferbilanz heisst es, dass die beiden in einer Zelle landen. Das ist
-    eine bekannte Grenze, keine unbemerkte."""
-    return ("hebel IS NOT NULL" if topf_fuer(instrument) == "hebel"
-            else "hebel IS NULL")
+    O-16 ERLEDIGT (14.08.2026): Spot und Absicherung sind jetzt trennbar.
+    Beide haben `hebel IS NULL` - die Unterscheidung kommt aus der EINEN
+    Stelle, an der sie im Projekt steht: `hedge/pipeline.SYMBOL_ZU_HEBEL_FAKTOR`.
+
+    WARUM DAS OHNE WATCHLIST GEHT und ohne neue Spalte: die Liste ist statisch
+    (DBPK, 3QSS). Hedge ist keine Assetklasse - die Watchlist fuehrt beide als
+    `etf`, und ihre Mitgliedschaft in dieser Zuordnung ist das einzige, was sie
+    zu Absicherungen macht. Genau deshalb steht die Abgrenzung dort und nicht
+    hier.
+
+    WAS ES AENDERT, und das ist mehr als eine Bilanzfrage: bis heute zaehlten
+    offene Absicherungen gegen den SPOT-Topf. Der hat einen Deckel, die
+    Absicherung nicht - eine gehaltene Hedge-Position hat also stillschweigend
+    Spot-Budget belegt.
+
+    Fail-soft: kennt das Projekt die Liste nicht (Importfehler), bleibt es bei
+    der groben Trennung. Eine Bilanz mit zwei vermischten Instrumenten ist
+    schlechter als eine getrennte, aber besser als keine."""
+    if topf_fuer(instrument) == "hebel":
+        return "hebel IS NOT NULL"
+    try:
+        from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR
+
+        liste = ", ".join(f"'{s}'" for s in sorted(SYMBOL_ZU_HEBEL_FAKTOR))
+    except Exception:                                        # noqa: BLE001
+        return "hebel IS NULL"
+    if not liste:
+        return "hebel IS NULL"
+    art = "IN" if topf_fuer(instrument) == "absicherung" else "NOT IN"
+    return f"hebel IS NULL AND UPPER(symbol) {art} ({liste})"
 
 
 # `None` heisst KEINE BEGRENZUNG. Bei zweien von dreien ist das die Vorgabe.

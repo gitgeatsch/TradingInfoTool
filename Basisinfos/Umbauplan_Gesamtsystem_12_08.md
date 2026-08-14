@@ -1886,3 +1886,133 @@ stimmt also, aber aus einem anderen Grund als der Zahl, die man zuerst liest.
 **O-25:** `_verbraucht` zählt Anfragen, nicht Token. Für Gemini und OpenRouter
 ist das die richtige Einheit, für Groq nicht. Solange Groq der letzte Topf ist,
 genügt die Näherung.
+
+
+---
+
+## Kapitel 21 — Verkaufsseite, Kaufmail und die Gegenprüfung (14.08.2026)
+
+### 21.1 Die Verkaufsseite — drei Klassen statt zwei
+
+Von 45 Urteilen des ersten Echtbetriebs waren **elf Verkaufsseite, und keines
+erreichte den Nutzer**. `AKTIONEN_MIT_EINSTIEG` kennt drei Wörter; alles andere
+fiel in `_schreibe_nein()` und wurde als „reines LLM-Halten" gebucht.
+**Verkaufen lag mit Nichtstun in einem Topf.** Nachgerechnet: alle elf hatten
+Bestand, zusammen über 1.400 EUR, darunter BTC mit 917 EUR.
+
+| Klasse | Aktionen | Weg |
+|---|---|---|
+| Einstieg | KAUFEN, NACHKAUFEN, ERÖFFNEN | Einstiegsrechnung, Einzelmail |
+| **Ausstieg** | REDUZIEREN, VERKAUFEN, SCHLIESSEN | `verkaufsrechnung`, **eine** Sammelmail |
+| Nichts | HALTEN, NICHTS_TUN | Schattenbuchung, keine Mail |
+
+**Warum nicht `ausstiegsrechnung.py`:** die rechnet in R und verlangt Einstieg
+**und** Originalstop. Der Spot-Bestand hat keinen Stop — dort ist die
+Positionsgröße die einzige Risikosteuerung. Ohne Stop kein R.
+
+**Eine Mail, nicht elf** — die Regel stand seit 05.08. im `ausstiegs_job`:
+*„bei 15 offenen Empfehlungen wären 15 Mails Rauschen, und Rauschen wird
+ignoriert."* Sortiert nach **Dringlichkeit**, nicht nach Euro
+(`backward_tracking` 4930).
+
+### 21.2 Beide Ebenen in derselben Zeile
+
+Für BTC liefen zwei Ausstiegswege parallel — der tägliche 7:15-Job (Trailing,
+Ziel, Frist) und das Modellurteil aus dem 15-Minuten-Lauf. Getrennt verschickt
+sehen sie aus wie zwei Meinungen; sie beantworten aber verschiedene Fragen.
+
+```
+BTC   REDUZIEREN  ein Drittel   917,45 EUR   Stand -20,4 %
+      Führung: SCHLIESSEN · höchster Stand +2,40 R · Stop auf 52.100
+```
+
+### 21.3 Welches Signal meldet — und warum es überhaupt mehrere sind
+
+Am 14.08. hatten **DBPK und OD7L je fünf offene Signale**, 3QSS vier, MON und
+OD7C drei. Das ist gewollt: `_is_superseded()` räumt ältere ab, aber erst nach
+der Mindestbeobachtung. Der Absatzkopf nannte nur Symbol, Art und Tagesdatum —
+die Abfrage holte die `id` gar nicht.
+
+```
+DBPK   Spot, seit 01.08. - Einstieg 61.200 EUR, Spot-Signal #2986
+    aus der Mail "TradingInfoTool: DBPK - KAUFEN" vom 01.08.
+```
+
+Der Rückverweis nennt den Betreff **wörtlich** — er ist damit eine Suchzeile
+fürs Postfach, kein Klick ins System.
+
+**Zeitablauf gegen Ablösung**, beides deterministisch:
+`ueberholt_durch_neuere_analyse` wird **vor** `abgelaufen_unentschieden`
+geprüft — sonst stünde jede Ablösung als Zeitablauf in der Bilanz.
+
+**Gliederung:** Dringlichkeit als Block, die sechs Gruppen **innerhalb**.
+Umgekehrt stünde ein fälliger Ausstieg in Rohstoffen unter zwanzig
+Krypto-Zeilen. Untertitel erst ab vier Einträgen.
+
+### 21.4 O-19 bis O-24 — die Kaufmail
+
+Die fünf fehlenden Blöcke waren **keine fehlenden Daten**: die Sätze gehen
+längst ans Modell. `lagebeschreibung.geteilt()` gibt dieselben Blöcke einzeln,
+und `beschreibe_lage()` **ruft** sie — der Prompt bleibt zeichengleich, was er
+muss, sonst wären alle bisherigen Messungen unvergleichbar.
+
+**O-24:** der alte Chart bräuchte das gekürzte Faktum `liquiditaetszonen`.
+`ui/trade_chart.py` zeichnet stattdessen den Trade — Zone, Stop, Ziel im
+Kursverlauf. **Ohne Umrechnungsfaktor kein Bild:** USD-Reihe gegen EUR-Linien
+wäre richtige Form und falsche Skala.
+
+### 21.5 O-25, O-26, O-28
+
+**O-28 — der Hebel-Durchgang fiel nie aus, er war gesperrt.**
+`assetklassen.laeufe()` fährt krypto/spot **vor** krypto/hebel über dieselben
+43 Symbole; die Sperre fragte nur nach `symbol` und `quelle_kette`. Kein Fehler
+im Log — es sah aus wie ein ruhiger Tag.
+
+> ⚠️ **FOLGE, offen:** 385 Aufrufe/Tag gegen 450 nutzbare, davon **295 Hebel
+> (77 %)**. Die 3,5 h stammen aus einer Kette, in der ein *Trigger*
+> vorsortierte. Nutzerentscheidung 14.08.: **vorerst keine Änderung** — Hebel
+> sind kurzfristig und sollen bei offener Position häufiger bewertet werden.
+
+**O-26 — die CRV-Abstufung galt außerhalb ihrer Messung.** Gemessen an 298
+**Krypto**-Spot-Signalen, angewandt auf jedes `instrument == "spot"`. An der
+Börse verdreifacht sie die Kostenquote (400 EUR → 1,00 %, 80 EUR → 3,00 %) und
+macht den Trade teuer, wenn das Modell am wenigsten überzeugt ist.
+
+**O-25 — Groq rechnet in Token.** RPD 1.000 gegen TPD 100.000; bei ~1.200 Token
+je Aufruf bindet der zweite Wert nach 83. `GROQ_AUFRUFE_JE_TAG = int(100_000 /
+1_200)` wächst mit dem Prompt mit. Dazu ein echter Zähler:
+`llm_basis.zaehle_token()`, Schlüssel `:token`, gebucht **nach** dem Aufruf.
+
+### 21.6 Was die Gegenprüfung gefunden hat — und was sie widerlegt
+
+**Die Rechnung rundete jeden Kurs auf Cent.** `round(x, 2)` auf Einstieg, Stop
+und Ziel:
+
+```
+KAS    Kurs 0,02428  ->  Zone 0,02 bis 0,02, Stop 0,02, Ziel 0,03
+PLUME  Kurs 0,0119   ->  Zone 0,01 bis 0,01, Stop 0,01
+```
+
+> ⚠️ **KORREKTUR VON KAPITEL 20.2.** Dort steht, die Rechnung sei richtig
+> gewesen und nur die Darstellung habe sie vernichtet. **Das ist falsch.** Der
+> Formatierer machte den Schaden sichtbar; verursacht hat ihn `round(x, 2)` in
+> der Rechnung. Gefunden, weil die Gegenprüfung eine **echte Mail gerendert**
+> hat statt Funktionen zu prüfen.
+
+**Die Ausstiegsführung wurde ohne Watchlist geholt** — die Funktion warnt
+selbst davor. Ohne sie trägt jede Zeile `tier = "spot"`, und die
+Gruppenüberschriften aus 21.3 wären gebaut und wirkungslos gewesen.
+
+**Vier Kostenarten statt zwei.** `kosten_r_aus_stop` kannte Krypto und Börse;
+`backward_tracking.kosten_in_r` führt seit 07.08. alle vier und wird jetzt
+aufgerufen statt nachgebaut. Ein Hebel-Trade über 2 Tage kostet 0,088 R, über
+30 Tage 0,760 R — pauschal angesetzt waren 0,600 R.
+
+### 21.7 Offene Punkte
+
+| Nr. | Punkt | Stand |
+|---|---|---|
+| **O-16** | Spot und Absicherung in der Trefferbilanz nicht trennbar | offen |
+| **O-17** | Einmalkauf 800 € für Börsenwerte übernommen, nicht entschieden | offen |
+| **O-29** | **Ratenfrage:** 0 von 1.142 (alt) gegen 11 von 45 (neu) | vertagt bis Krypto stabil |
+| — | Hebel-Cooldown 3,5 h für alle 43 Symbole | bewusst unverändert |

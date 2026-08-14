@@ -102,6 +102,30 @@ def _cfg(config: dict | None, name: str) -> dict:
 # Breakeven liegt dort ueber fuenf Prozentpunkte hoeher als bei 1.000 EUR
 # (gemessen in `trefferbilanz.kosten_r_aus_stop`). Eine kleine Tranche ist dort
 # also teurer als bei Krypto, wo sich der Betrag herauskuerzt.
+# O-17: WOHER DIE 800 KOMMEN - und woher NICHT (14.08.2026).
+#
+# Die 800 sind von Krypto uebernommen, nicht fuer die Boerse entschieden. Der
+# Nutzer hat Betraege fuer Krypto genannt (Tranche 200-250, Hebel 1.000); fuer
+# Aktien, Rohstoffe und Themen-ETF gibt es keine Angabe.
+#
+# WAS DIE KOSTEN DAZU SAGEN, bei 5 % Stop und 1 EUR fix je Seite:
+#
+#     Betrag    Fixkostenanteil   Gesamtkosten   in R
+#      250 EUR         0,80 %         1,30 %     0,260
+#      400 EUR         0,50 %         1,00 %     0,200
+#      800 EUR         0,25 %         0,75 %     0,150
+#    1.000 EUR         0,20 %         0,70 %     0,140
+#
+# Die Kurve wird ab etwa 800 EUR flach - der Sprung von 250 auf 800 halbiert
+# die Kosten in R, der von 800 auf 1.500 spart nur noch 0,023 R. 800 liegt
+# also am Knick, und das ist ein Argument, aber KEINE Entscheidung: wieviel
+# Geld in eine einzelne Aktie geht, ist eine Risikofrage und gehoert dem
+# Nutzer.
+#
+# UEBERSCHREIBBAR unter `risiko.rollen_kette.einsatz_eur_je_gruppe`
+# (der Pfad steht in `_cfg()` - ich hatte ihn hier zuerst verkuerzt
+# hingeschrieben, und die Pruefung ist genau darueber gestolpert), damit die
+# Entscheidung eine Konfigurationszeile ist und kein Codeeingriff.
 VORGABE_EINSATZ_JE_GRUPPE: dict[str, dict[str, float]] = {
     "aktien": {"einstieg": 800.0, "akkumulation": 400.0},
     "rohstoffe": {"einstieg": 800.0, "akkumulation": 400.0},
