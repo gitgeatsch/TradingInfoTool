@@ -1638,12 +1638,32 @@ Kette stumm nichts mehr tut.
 | kennt | |
 |---|---|
 | `quelle_kette` · `lagebild` · `gate_durchlaessigkeit` · `unabhaengige_faktoren` · `zai_stimmen` | **nein** |
-| `confidence_pct` | **ja — und die neue Kette füllt sie nie** |
+| `confidence_pct` | **im Code ja — aber die Karte wird nirgends gerendert** |
+
+**Korrektur 14.08. nach dem ersten Startlog:** ich hatte hier geschrieben, die
+Remote-Ansicht *zeige* eine leere Konfidenzspalte. **Sie zeigt sie nicht.**
+`_get_konfidenz_kalibrierung` ist definiert und wird **nirgends aufgerufen**,
+`KONFIDENZ_BUCKET_ORDER` in `server.py` ebenso — die ganze Karte ist toter
+Code. R-1 bleibt als Kennzeichnung im Quelltext stehen, damit sie jemand
+vorfindet, der sie eines Tages verdrahtet; dringend war sie nicht.
+
+**Dafür war etwas anderes dringend, und es stand nicht in meinem Plan:**
 
 **Die Remote-Ansicht würde die neuen Signale anzeigen, aber ohne alles, was sie
 ausmacht — und mit einer Konfidenzspalte, die strukturell leer bleibt.** Dazu
 eine Kalibrierungskarte, die eine Frage beantwortet, die es nicht mehr gibt
 (*„hält confidence_pct, was es verspricht?"*).
+
+> **`/api/status` starb bei JEDEM Abruf.**
+> `TypeError: RemoteStatus.__init__() got an unexpected keyword argument
+> 'selbst_gewaehltes_halten_performance_nach_grund'` — der Konstruktoraufruf
+> übergab das Feld, die Klasse kannte es nicht, seit Commit `598753c`. Die
+> Fernsteuerung war **vollständig tot**, und zwar unbemerkt.
+
+**Warum es durch alle Netze fiel:** `_safe()` fängt Fehler der einzelnen
+*Karten* ab, nicht den Aufbau des Ergebnisobjekts. Die Laufzeitwache misst die
+*Dauer*, nicht das Gelingen. Und es gab keinen Testlauf, der den Status einmal
+wirklich **baut** — genau den gibt es jetzt.
 
 ### Plan für die Remote-Umstellung
 

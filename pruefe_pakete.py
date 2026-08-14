@@ -4096,6 +4096,61 @@ def paket_15() -> None:
            "Tabelle, sie steht in config.yaml")
     pruefe(P, "und die Warteschlange benutzt sie",
            "kern_symbole" in _quelltext("agent/warteschlange.py"))
+
+    # ------------------------------------------------------------------
+    # V. DIE REMOTE-SEITE BAUT UEBERHAUPT (14.08., aus dem ersten Startlog).
+    #
+    # `/api/status` starb bei JEDEM Abruf mit
+    #     TypeError: RemoteStatus.__init__() got an unexpected keyword argument
+    #                'selbst_gewaehltes_halten_performance_nach_grund'
+    # Der Konstruktoraufruf uebergab das Feld, die Klasse kannte es nicht - seit
+    # Commit 598753c. Die Fernsteuerung war vollstaendig tot.
+    #
+    # WARUM ES DURCH ALLE NETZE FIEL: `_safe()` faengt Fehler der einzelnen
+    # KARTEN ab, nicht den Aufbau des Ergebnisobjekts. Die Laufzeitwache misst
+    # die DAUER, nicht das Gelingen. Und es gab keinen Testlauf, der den Status
+    # einmal WIRKLICH baut - genau den macht diese Pruefung jetzt.
+    import dataclasses as _dc
+    from pathlib import Path as _P
+
+    import config as _cfg2
+    from remote.status import RemoteStatus, build_status
+
+    _felder = {f.name for f in _dc.fields(RemoteStatus)}
+    import re as _re2
+    _uebergeben = set(_re2.findall(r"^ {8}(\w+)=",
+                                   _quelltext("remote/status.py"), _re2.M))
+    _unbekannt = sorted(_uebergeben - _felder)
+    pruefe(P, "jedes uebergebene Feld ist in RemoteStatus deklariert",
+           not _unbekannt, f"nicht deklariert: {_unbekannt}")
+
+    # EIGENE VERBINDUNG MIT ZEILENFABRIK. Der Statusaufbau liest ueberall
+    # `row["spalte"]`; die Testverbindung liefert Tupel. Derselbe Stolperstein
+    # wie bei der Cash-Reserve heute frueh - die Zeilenfabrik ist in diesem
+    # Projekt eine stille Voraussetzung an vielen Stellen.
+    _alt_rf = c.row_factory
+    c.row_factory = sqlite3.Row
+    try:
+        _s = build_status(c, _cfg2.get_watchlist(), _P("tradinginfotool.log"))
+    finally:
+        c.row_factory = _alt_rf
+    pruefe(P, "der Status baut wirklich - nicht nur die einzelnen Karten",
+           isinstance(_s, RemoteStatus),
+           "das ist die Pruefung, die gefehlt hat: _safe() schuetzt die Karten, "
+           "nicht das Zusammensetzen")
+    # KORREKTUR MEINER EIGENEN R-1-PRAEMISSE (14.08.): ich hatte geschrieben,
+    # die Remote-Seite ZEIGE eine leere Konfidenzspalte. Sie zeigt sie nicht -
+    # `_get_konfidenz_kalibrierung` ist definiert und wird NIRGENDS aufgerufen,
+    # ebenso `KONFIDENZ_BUCKET_ORDER` in server.py. Die ganze Karte ist toter
+    # Code. Der Hinweis bleibt trotzdem drin: wer sie eines Tages verdrahtet,
+    # findet ihn vor, statt die Frage neu zu stellen.
+    _st = _quelltext("remote/status.py")
+    pruefe(P, "der R-1-Hinweis steht an der Konfidenz-Karte",
+           "_nur_alte_kette" in _st and "Rollen-Kette" in _st)
+    pruefe(P, "und die Karte ist tatsaechlich nicht verdrahtet",
+           _st.count("_get_konfidenz_kalibrierung") == 1,
+           "definiert, nie gerufen - die Remote-Seite zeigt gar keine "
+           "Konfidenz, anders als ich in Kapitel 18.6 geschrieben hatte")
     c.close()
 
 

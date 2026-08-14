@@ -262,6 +262,19 @@ class RemoteStatus:
     # Trailing-Stop-Empfehlungen fuer offene Signale (2026-08-04,
     # Punkt 3.2). Advisory-only: rechnet und meldet, greift nicht ein.
     ausstiegs_empfehlungen: dict | None = None
+    # Selbst gewaehltes HALTEN, aufgeschluesselt nach Grund (Schatten-Tracking).
+    #
+    # DAS FELD FEHLTE, und zwar seit `598753c` - der Konstruktoraufruf uebergab
+    # es, die Klasse kannte es nicht. Folge: JEDER Abruf von `/api/status`
+    # endete mit `TypeError: unexpected keyword argument`, die Fernsteuerung
+    # war vollstaendig tot. Gesehen im ersten Startlog des Notebooks am 14.08.
+    #
+    # WARUM ES NIEMAND GEMERKT HAT: `_safe()` faengt Fehler der einzelnen
+    # KARTEN ab, nicht den Aufbau des Ergebnisobjekts. Die Wache darueber misst
+    # die DAUER, nicht das Gelingen. Ein Aufbau, der gar nicht zustande kommt,
+    # faellt durch beide Netze - und `remote/status.py` hat keinen eigenen
+    # Testlauf, der ihn einmal wirklich baut.
+    selbst_gewaehltes_halten_performance_nach_grund: dict | None = None
     # Marktscan-Erfolgsmessung (2026-07-30, siehe agent/krypto/
     # marktscan_backward_tracking.py::compute_marktscan_erfolgsquote()).
     marktscan_erfolgsquote: dict | None = None
