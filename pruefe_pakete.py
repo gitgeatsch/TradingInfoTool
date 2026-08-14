@@ -2980,6 +2980,34 @@ def paket_15() -> None:
            -1 < i_schreib < i_zai < i_send,
            f"Positionen {i_schreib}/{i_zai}/{i_send} - ginge die Mail vorher "
            f"raus, kehrte der Fund vom 28.07. zurueck")
+    # EIN FADEN JE SIGNAL - die Lehre vom 23.07. (14.08. nachgezogen).
+    #
+    # EIGENE VARIABLE: `_l` wird erst weiter unten gesetzt, und `lauf` ist hier
+    # die TOKEN-Fassung ohne Zeichenketten - beide passen nicht.
+    _l = _quelltext("agent/rollen_lauf.py")
+    pruefe(P, "Z.ai laeuft in einem eigenen Faden je Signal",
+           "threading.Thread(target=_nacharbeit" in _l,
+           "synchron waeren es bei 12 Einstiegen 27 Minuten gegen einen Takt "
+           "von 15 - der Lauf haette sich selbst ueberholt")
+    pruefe(P, "im Faden wird NICHT geschrieben",
+           "ZM.schreibe" not in _l.split("def _nacharbeit")[1].split("if zai_client is None")[0],
+           "eine sqlite3-Verbindung ist nicht zwischen Threads teilbar, und "
+           "die Kette oeffnet grundsaetzlich keine eigene")
+    pruefe(P, "die Faeden werden vor dem Ende zusammengefuehrt",
+           'ergebnis.pop("_faeden", [])' in _l and "faden.join(" in _l,
+           "erst danach steht fest, was Z.ai gesagt hat")
+    pruefe(P, "und ein haengender Faden wird gemeldet statt ignoriert",
+           "nicht rechtzeitig fertig" in _l)
+    pruefe(P, "ohne Z.ai-Client gibt es gar keinen Faden",
+           "if zai_client is None:" in _l,
+           "ein Thread, der sofort zurueckkehrt, ist nur Verwaltung")
+    # AM VERHALTEN GEPRUEFT, NICHT AM KOMMENTAR: der Versand steht im Rumpf
+    # AUSSERHALB des try - ein Z.ai-Fehler kann ihn also nicht ueberspringen.
+    _rumpf = _l.split("def _nacharbeit")[1].split("if zai_client is None")[0]
+    pruefe(P, "die Mail geht auch raus, wenn Z.ai ausfaellt",
+           _rumpf.find("except Exception") < _rumpf.find("versand(eintrag["),
+           "lieber ohne die Gegenpruefungszeilen als gar nicht (P-8) - der "
+           "Versand steht NACH dem except, nicht darin")
     pruefe(P, "die Mail wird ERST NACH der zweiten Meinung endgueltig gebaut",
            'eintrag["betreff"], eintrag["text"] = baue(ZM.zeilen(' in lauf,
            "sonst muesste man Zeilen in einen fertigen Text flicken und die "

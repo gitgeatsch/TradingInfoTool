@@ -354,6 +354,23 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
             letzte = durchlauf.naechste_stufe(symbol)
             durchlauf.verloren(symbol, letzte, type(exc).__name__)
 
+    # DIE FAEDEN ZUSAMMENFUEHREN, BEVOR DER LAUF ENDET. Erst danach steht fest,
+    # was Z.ai gesagt hat - und geschrieben wird im Hauptfaden, weil die
+    # Verbindung nicht zwischen Threads teilbar ist.
+    #
+    # DER DECKEL IST DER Z.AI-DECKEL PLUS EINE MINUTE. Wer hier ewig wartet,
+    # verlagert das Blockieren nur ans Ende; wer gar nicht wartet, verliert die
+    # Gegenpruefung eines langsamen Signals.
+    for faden, kennung, eintrag in ergebnis.pop("_faeden", []):
+        faden.join(timeout=ZM.WARTE_MAX_SEKUNDEN + 60)
+        if faden.is_alive():
+            ergebnis.setdefault("fehler", []).append(
+                f"zweite Meinung fuer Signal {kennung} nicht rechtzeitig fertig")
+            continue
+        zweite = eintrag.get("zweite_meinung")
+        if zweite:
+            ZM.schreibe(conn, kennung, zweite)
+
     if betriebsart != TROCKEN:
         RG.schreibe(conn, durchlauf, _jetzt())
     return ergebnis
@@ -629,13 +646,47 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # AUCH IN `probe`, nicht erst in `scharf`. Eine Wartemechanik, die nur im
     # scharfen Betrieb laeuft, ist genau dort zum ersten Mal erprobt, wo ein
     # Fehler eine echte Mail kostet.
-    zweite = ZM.hole(faktentext=bc_ein, urteil=befund, zai_client=zai_client)
-    if zweite:
-        ZM.schreibe(conn, signal_id, zweite)
-        eintrag["zweite_meinung"] = zweite
-        eintrag["betreff"], eintrag["text"] = baue(ZM.zeilen(zweite))
-    if betriebsart == SCHARF and versand is not None:
-        versand(eintrag["betreff"], eintrag["text"])
+    # EIN FADEN JE SIGNAL - die Lehre vom 23.07., woertlich im alten Code:
+    #
+    #     "ein einzelner Kandidat mit langsamem externen Call durfte NIE
+    #      nachfolgende, laengst fertige Signale in derselben Charge blockieren"
+    #
+    # Meine erste Fassung rief Z.ai SYNCHRON in der Schleife. Bei 12 Einstiegen
+    # und 4 Z.ai-Aufrufen zu je ~34 s sind das 27 Minuten, im schlechtesten Fall
+    # 48 - bei einem Takt von 15. Der Lauf haette sich selbst ueberholt.
+    #
+    # WAS IM FADEN PASSIERT: Z.ai fragen, Mail bauen, Mail verschicken. Was
+    # NICHT: schreiben. Eine sqlite3-Verbindung ist nicht zwischen Threads
+    # teilbar, und die Kette oeffnet grundsaetzlich keine eigene - das Ergebnis
+    # wird deshalb eingesammelt und nach dem Zusammenfuehren im Hauptfaden
+    # geschrieben.
+    def _nacharbeit() -> None:
+        try:
+            zweite = ZM.hole(faktentext=bc_ein, urteil=befund,
+                             zai_client=zai_client)
+            if zweite:
+                eintrag["zweite_meinung"] = zweite
+                eintrag["betreff"], eintrag["text"] = baue(ZM.zeilen(zweite))
+        except Exception as exc:                             # noqa: BLE001
+            ergebnis.setdefault("fehler", []).append(
+                f"{symbol}: zweite Meinung: {exc}")
+        # DIE MAIL GEHT AUCH RAUS, WENN Z.AI AUSFAELLT (P-8) - lieber ohne die
+        # Gegenpruefungszeilen als gar nicht.
+        if betriebsart == SCHARF and versand is not None:
+            versand(eintrag["betreff"], eintrag["text"])
+
+    if zai_client is None:
+        # Nichts zu warten - dann auch kein Faden. Ein Thread, der sofort
+        # zurueckkehrt, ist nur Verwaltung.
+        if betriebsart == SCHARF and versand is not None:
+            versand(eintrag["betreff"], eintrag["text"])
+    else:
+        import threading
+
+        faden = threading.Thread(target=_nacharbeit, daemon=True,
+                                 name=f"zweite-meinung-{symbol}")
+        ergebnis.setdefault("_faeden", []).append((faden, signal_id, eintrag))
+        faden.start()
 
 
 def _schreibe_nein(*, symbol, befund, kurs_e, atr_e, tag, reihe, idx,
