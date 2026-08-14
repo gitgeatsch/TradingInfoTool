@@ -3539,10 +3539,17 @@ def paket_15() -> None:
            TO.cash_frei_eur(c) == _frei, f"{TO.cash_frei_eur(c)} gegen {_frei}")
     c.row_factory = _alt
     # SIE BEGRENZT, SIE VERHINDERT NICHT - das steht so in der Regel.
-    _mit = ER.rechne(kurs=100.0, atr=3.0, risiko_eur=150.0, instrument="spot",
+    # MIT AUSDRUECKLICHER TRANCHE. Ohne sie faellt der Betrag auf die
+    # Rueckfallgroesse, die CRV-Abstufung drueckt ihn auf die Mindestgroesse -
+    # und dann bindet der Cash-Deckel nicht mehr, obwohl er es sollte. Die
+    # Pruefung haette also nicht die Cash-Reserve gemessen, sondern die
+    # Abstufung (gefunden, als die Spot-Groesse am 14.08. auf die Tranche
+    # umgestellt wurde).
+    _mit = ER.rechne(kurs=100.0, atr=3.0, risiko_eur=1.0, instrument="spot",
+                     betrag_wunsch_eur=2000.0,
                      umgeworfen_preis_eur=94.0, cash_frei_eur=300.0)
-    _ohne = ER.rechne(kurs=100.0, atr=3.0, risiko_eur=150.0, instrument="spot",
-                      umgeworfen_preis_eur=94.0)
+    _ohne = ER.rechne(kurs=100.0, atr=3.0, risiko_eur=1.0, instrument="spot",
+                      betrag_wunsch_eur=2000.0, umgeworfen_preis_eur=94.0)
     pruefe(P, "knappes Cash macht die Position kleiner",
            _mit["betrag_eur"] < _ohne["betrag_eur"], 
            f"{_mit['betrag_eur']} gegen {_ohne['betrag_eur']} EUR")
@@ -3551,9 +3558,9 @@ def paket_15() -> None:
            "waeren Topf und Cash EIN Wert, sagte die Notiz 'Topf', wo in "
            "Wahrheit das Geld fehlt")
     pruefe(P, "ohne ermittelbares Cash gibt es KEINE Sperre",
-           ER.rechne(kurs=100.0, atr=3.0, risiko_eur=150.0, instrument="spot",
-                     umgeworfen_preis_eur=94.0,
-                     cash_frei_eur=None)["betrag_eur"] > 0,
+           ER.rechne(kurs=100.0, atr=3.0, risiko_eur=1.0, instrument="spot",
+                     betrag_wunsch_eur=2000.0, umgeworfen_preis_eur=94.0,
+                     cash_frei_eur=None)["betrag_eur"] > 300,
            "eine Reserve, die wegen einer fehlenden Zahl ALLES sperrt, waere "
            "schlimmer als keine")
     pruefe(P, "der Trockenlauf fragt das Cash gar nicht ab",
@@ -3724,6 +3731,53 @@ def paket_15() -> None:
            'not s.startswith("_")' in _quelltext("scheduler/rollen_job.py"),
            "_ROHSTOFF_FUTURES_* ist kein handelbares Asset")
 
+
+    # ------------------------------------------------------------------
+    # Q. SPOT RECHNET VON DER TRANCHE, NICHT VOM STOP (14.08.).
+    #
+    # Gefunden im ersten Lauf ueber den ECHTEN Job, an einer Mail:
+    #     Tranche 800 -> Risiko 800 x 15 % = 120 -> Betrag 120 / 2,5 % = 4.800
+    #     -> CRV-Abstufung x 0,2 = 960 EUR
+    # Dort stand 960, wo der Nutzer 800 gesagt hatte. Und bei 4 % Stop waeren es
+    # 600 gewesen: der Betrag haette am Stopabstand gehangen statt an seiner
+    # Entscheidung. Bei Spot OHNE Stop-Order gibt es keine Groesse, die aus dem
+    # Stop folgen koennte.
+    _b = [ER.rechne(kurs=100.0, atr=3.0, risiko_eur=1.0, instrument="spot",
+                    betrag_wunsch_eur=2000.0,
+                    umgeworfen_preis_eur=100.0 * (1 - s))["betrag_eur"]
+          for s in (0.025, 0.05, 0.09)]
+    pruefe(P, "der Spot-Betrag haengt NICHT mehr am Stopabstand",
+           len(set(_b)) == 1, f"{_b} - vorher waren es 4.800 / 2.400 / 1.333")
+    _r = ER.rechne(kurs=100.0, atr=3.0, risiko_eur=1.0, instrument="spot",
+                   betrag_wunsch_eur=2000.0, umgeworfen_preis_eur=95.0)
+    pruefe(P, "und das Risiko folgt umgekehrt aus Betrag und Stop",
+           abs(_r["risiko_eur"] - _r["betrag_eur"] * _r["stop_relativ"]) < 0.5
+           and "folgt aus" in str(_r.get("risiko_quelle")),
+           f"Risiko {_r['risiko_eur']} auf {_r['betrag_eur']} EUR bei "
+           f"{100 * _r['stop_relativ']:.1f} % Stop")
+    _h = ER.rechne(kurs=100.0, atr=3.0, risiko_eur=150.0, instrument="hebel",
+                   betrag_wunsch_eur=1000.0, umgeworfen_preis_eur=95.0)
+    pruefe(P, "beim HEBEL bleibt es beim Risikobudget",
+           _h["betrag_eur"] == 1000.0 and _h["risiko_eur"] == 150.0,
+           f"{_h['betrag_eur']} EUR bei {_h['hebel']}x - dort IST der Stop eine "
+           f"Order, und der Hebel folgt aus Budget und Abstand")
+
+    # DIE ABSTUFUNG DARF KEIN VETO WERDEN.
+    _klein = ER.rechne(kurs=100.0, atr=3.0, risiko_eur=1.0, instrument="spot",
+                       betrag_wunsch_eur=250.0, umgeworfen_preis_eur=96.0)
+    pruefe(P, "eine Tranche, die durch die Abstufung untergeht, wird angehoben",
+           _klein["betrag_eur"] == ER.GRENZEN["betrag_min_eur"]
+           and "angehoben" in str(_klein.get("betrag_gedeckelt_durch")),
+           f"{_klein['betrag_eur']} EUR - 250 x 0,2 waeren 50 gewesen, also "
+           f"unter der Mindestgroesse: JEDES Tranchen-Signal unter CRV 4,0 "
+           f"waere lautlos verschwunden")
+    pruefe(P, "ein zu kleiner WUNSCH bricht dagegen weiterhin ab",
+           _wirft(lambda: ER.rechne(kurs=100.0, atr=3.0, risiko_eur=1.0,
+                                    instrument="spot", betrag_wunsch_eur=50.0,
+                                    umgeworfen_preis_eur=96.0),
+                  ER.RechnungBlockiert),
+           "dann hat niemand eine Abstufung angewandt - es ist schlicht zu "
+           "wenig Geld, und das gehoert gesagt")
     c.close()
 
 

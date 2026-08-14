@@ -325,10 +325,30 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
     # diesem Einsatz liegt, entscheidet danach der Hebel.
     betrag = float(betrag_wunsch_eur) if betrag_wunsch_eur else GRENZEN["betrag_min_eur"] * 5
     grund = None
+    # BEI SPOT IST DER WUNSCH DIE ANTWORT, NICHT DIE RECHNUNG (14.08.2026).
+    #
+    # Hier stand: "Ohne Hebel gibt es keinen Wunsch, nur eine Rechnung: der
+    # Einsatz folgt vollstaendig aus Risikobudget und Stopabstand." Das ist die
+    # Lehrbuchantwort - und sie setzt eine STOP-ORDER voraus.
+    #
+    # DER NUTZER HAELT SPOT OHNE STOP-LOSS ("aktuell auch ohne StopLoss"),
+    # laengerfristig, in Tranchen. Ohne Stop gibt es keine Groesse, die aus ihm
+    # folgen koennte - die Tranche IST die Eingabe, und die 250 bzw. 800 EUR
+    # sind genau das, was er investieren will.
+    #
+    # GEFUNDEN IM ERSTEN LAUF UEBER DEN ECHTEN JOB, an einer Mail:
+    #     Tranche 800 -> Risiko 800 x 15 % = 120 -> Betrag 120 / 2,5 % = 4.800
+    #     -> CRV-Abstufung x 0,2 = 960 EUR
+    # In der Mail stand 960, wo der Nutzer 800 gesagt hatte - und bei 4 % Stop
+    # waeren es 600 gewesen. Der Betrag haette am Stopabstand gehangen statt an
+    # seiner Entscheidung.
+    #
+    # DAS RISIKO FOLGT JETZT UMGEKEHRT: Betrag x Stopabstand. Bei einer Position
+    # ohne Stop-Order ist es ohnehin eine Rechengroesse, keine Order.
     if instrument != "hebel":
-        # Ohne Hebel gibt es keinen Wunsch, nur eine Rechnung: der Einsatz
-        # folgt vollstaendig aus Risikobudget und Stopabstand.
-        betrag = risiko_eur / stop_rel
+        # Der WERT folgt erst nach den Deckeln - siehe unten. Hier steht nur,
+        # dass er folgt und nicht vorgegeben ist.
+        e["risiko_quelle"] = "folgt aus Betrag und Stopabstand"
     # DIE CRV-ABSTUFUNG ZUERST, dann die Deckel. Sie beschreibt, wieviel der
     # Aufbau VERDIENT; Topf und Hoechstbetrag, wieviel er BEKOMMEN darf. Zwei
     # verschiedene Fragen, und die zweite gehoert nach der ersten.
@@ -345,6 +365,27 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
         betrag, grund = float(cash_frei_eur), "Cash-Reserve (RM-4)"
     if betrag > GRENZEN["betrag_max_eur"]:
         betrag, grund = GRENZEN["betrag_max_eur"], "Hoechstbetrag"
+    # DIE ABSTUFUNG DARF NICHT ZUM STILLEN FILTER WERDEN (14.08.2026).
+    #
+    # Gerechnet an der Akkumulations-Tranche von 250 EUR: bei CRV 2,0 macht die
+    # CRV-Abstufung daraus 50 EUR - unter der Mindestgroesse, also
+    # `RechnungBlockiert`. Damit waere JEDES Tranchen-Signal unter CRV 4,0
+    # lautlos verschwunden, und in den gemessenen Laeufen lagen die meisten CRV
+    # bei genau 2,0.
+    #
+    # Ein Deckel, der ein Signal ganz zum Verschwinden bringt, ist kein Deckel
+    # mehr, sondern ein Veto - und ein unsichtbares dazu. Deshalb wird auf die
+    # Mindestgroesse ANGEHOBEN statt abgebrochen: die Empfehlung geht raus, in
+    # der kleinsten Groesse, die sich rechnet. Die Richtung der Abstufung bleibt
+    # erhalten, ihr unteres Ende ist nur abgeschnitten.
+    #
+    # ABGEBROCHEN WIRD WEITERHIN, wenn schon der WUNSCH zu klein war - dann hat
+    # niemand eine Abstufung angewandt, sondern es ist schlicht zu wenig Geld.
+    if (betrag < GRENZEN["betrag_min_eur"]
+            and grund and grund.startswith("CRV-Abstufung")
+            and float(betrag_wunsch_eur or 0) >= GRENZEN["betrag_min_eur"]):
+        betrag = GRENZEN["betrag_min_eur"]
+        grund = f"{grund}, auf Mindestgroesse angehoben"
     if betrag < GRENZEN["betrag_min_eur"]:
         raise RechnungBlockiert(
             f"Betrag {betrag:.0f} EUR unter der Mindestgroesse "
@@ -368,6 +409,15 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
 
     e["betrag_eur"] = round(betrag, 0)
     e["betrag_gedeckelt_durch"] = grund
+    # DAS RISIKO ERST JETZT, NACH ALLEN DECKELN (14.08.).
+    #
+    # Die erste Fassung rechnete es aus dem Betrag VOR der CRV-Abstufung: in
+    # der Pruefung stand "Risiko 100 EUR auf 400 EUR bei 5 % Stop" - das waeren
+    # 25 %, und niemand haette gesehen, dass die Zahl zu einer Groesse gehoert,
+    # die es nicht mehr gibt. `verlust_am_stop_eur` war die ganze Zeit richtig,
+    # weil es den Endbetrag nimmt; die beiden haetten sich widersprochen.
+    if instrument != "hebel":
+        e["risiko_eur"] = round(betrag * stop_rel, 2)
     # Was der Handel WIRKLICH riskiert, nachdem die Deckel gegriffen haben -
     # nicht das Budget, das hineingegeben wurde.
     e["verlust_am_stop_eur"] = round(betrag * e["hebel"] * stop_rel, 2)

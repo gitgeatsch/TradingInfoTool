@@ -63,6 +63,49 @@ def bedient_neue_kette(assetklasse: str, config: dict | None = None) -> bool:
     return str(assetklasse or "").strip().lower() in aktiv_fuer(config)
 
 
+def baue_versand(config: dict | None = None):
+    """Der Versandweg - oder `None`, wenn nicht verschickt werden soll.
+
+    WARUM NICHT EINFACH `send_notification_email` DURCHREICHEN. Drei Dinge
+    muessen zwischen der Kette und dem Postfach passieren, und keines davon
+    gehoert in `rollen_lauf`:
+
+      1. DER EMPFAENGER steht in der Konfiguration, nicht im Aufrufer.
+      2. DER SCHALTER `benachrichtigung.aktiv` muss gelten - er ist die Stelle,
+         an der der Nutzer den Versand insgesamt abstellt, und eine neue Kette
+         darf ihn nicht umgehen.
+      3. EIN FEHLSCHLAG DARF DEN LAUF NICHT BEENDEN. `send_notification_email`
+         faengt selbst schon alles ab (P-10), aber der fehlende Empfaenger
+         wuerde hier auffallen - und auch das soll den naechsten Kandidaten
+         nicht kosten.
+
+    Gibt eine Funktion `(betreff, text) -> bool` zurueck. `None` heisst: es wird
+    nicht verschickt, und der Aufrufer sieht das an genau dieser Stelle statt an
+    einer Ausnahme mitten im Lauf."""
+    from api.email_notify import send_notification_email
+
+    ben = ((config or {}).get("benachrichtigung") or {})
+    if not ben.get("aktiv", True):
+        logger.info("Versand aus: benachrichtigung.aktiv ist false")
+        return None
+    empfaenger = (ben.get("email") or {}).get("empfaenger") or ben.get("empfaenger")
+    if not empfaenger:
+        logger.warning(
+            "Versand aus: kein Empfaenger in der Konfiguration "
+            "(benachrichtigung.email.empfaenger) - die Kette laeuft, die Mail "
+            "bleibt liegen.")
+        return None
+
+    def versand(betreff: str, text: str) -> bool:
+        try:
+            return bool(send_notification_email(betreff, text, empfaenger))
+        except Exception:                                    # noqa: BLE001
+            logger.exception("Versand fehlgeschlagen: %s", betreff)
+            return False
+
+    return versand
+
+
 def fuehre_krypto_lauf(
     *, conn_factory, config, client, zai_client=None, versand=None,
     instrument: str = "spot", strategie: str = "einstieg",
@@ -95,6 +138,16 @@ def fuehre_krypto_lauf(
     if not symbole:
         logger.warning("Rollen-Kette: keine Symbole - Lauf entfaellt")
         return None
+
+    # DER VERSANDWEG WIRD HIER GEBAUT, nicht in der Kette - und NUR fuer den
+    # scharfen Betrieb. In `probe` bleibt er ausdruecklich None: eine Probe, die
+    # Mails verschickt, ist keine.
+    if versand is None and betriebsart == "scharf":
+        versand = baue_versand(config)
+        if versand is None:
+            logger.warning(
+                "Scharfer Lauf OHNE Versandweg - die Signale werden "
+                "geschrieben, die Mails bleiben liegen.")
 
     conn = conn_factory()
     try:
