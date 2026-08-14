@@ -416,6 +416,12 @@ _SPOT_SIGNAL_SPALTEN = (
     "quelle_kette, lagebild_id, prompt_stand, fx_eur_je_usd, "
     "unabhaengige_faktoren, umgeworfen_durch, umgeworfen_preis_eur, "
     "umgeworfen_bis, "
+    # DIE BELEGE SELBST (14.08.). Bis dahin ging nur ihre ANZAHL in die
+    # Datenbank und damit in den Export - "3 unabhaengige Faktoren" ohne die
+    # Angabe, welche. Die Frage "warum erfolgte die Entscheidung, sind die
+    # Parameter die richtigen" ist ohne diese Spalte nachtraeglich nicht zu
+    # beantworten (`messe_begruendungen.py`).
+    "belege_json, "
     # DIE DREI GEMESSENEN FAKTENFAMILIEN (13.08., Kapitel 15). Sie sind das
     # Material fuer den Konstellationsschluessel der Trefferbilanz - ohne sie
     # im Export laesst sich spaeter NICHT nachrechnen, ob das Meta-Modell auf

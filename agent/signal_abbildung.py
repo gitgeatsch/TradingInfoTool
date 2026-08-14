@@ -103,6 +103,25 @@ SPALTEN_SIGNAL = {
                                             # Spalte laesst sich spaeter keine
                                             # Messung nach Ketten trennen
     "unabhaengige_faktoren": "INTEGER",
+    # DIE BELEGE SELBST (14.08.2026) - bis heute ging nur ihre ANZAHL in die
+    # Datenbank.
+    #
+    # WAS DAS GEKOSTET HAT: die Mail zeigt "Belege (5, davon 3 unabhaengige
+    # Faktoren)" mit fuenf Zeilen aus Fakt, Richtung und Gewicht. Gespeichert
+    # wurde davon die Zahl 5 und die Zahl 3. Die Frage des Nutzers - *"warum
+    # erfolgte die Entscheidung, sind die Parameter die richtigen"* - ist damit
+    # nachtraeglich NICHT beantwortbar: wir wissen, dass das Modell drei
+    # unabhaengige Gruende hatte, aber nicht, welche.
+    #
+    # UND GENAU DARAUF LAEUFT DIE MESSUNG HINAUS. Welche unserer Fakten fuehren
+    # zu Urteilen, die sich tragen? Ohne die Belege ist das unbeantwortbar, und
+    # zwar dauerhaft - eine Zeile, die heute ohne sie geschrieben wird, laesst
+    # sich spaeter nicht nachruesten.
+    #
+    # ALS JSON, nicht als Spalten. Fuenf Belege mal drei Felder waeren fuenfzehn
+    # Spalten, deren Zahl vom Modell abhaengt; die alte Kette hat das mit
+    # `top_grund_1..5` gemacht und dabei den sechsten stillschweigend verloren.
+    "belege_json": "TEXT",
     "umgeworfen_durch": "TEXT",
     "umgeworfen_preis_eur": "REAL",
     "umgeworfen_bis": "TEXT",
@@ -306,6 +325,8 @@ def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
         "short_reasoning": antwort.get("begruendung"),
         "gegenargument": antwort.get("was_dagegen"),
         "unabhaengige_faktoren": antwort.get("unabhaengige_faktoren"),
+        "belege_json": (json.dumps(antwort["belege"], ensure_ascii=False)
+                        if antwort.get("belege") else None),
         "umgeworfen_durch": antwort.get("umgeworfen_durch"),
         "umgeworfen_preis_eur": antwort.get("umgeworfen_preis_eur"),
         "umgeworfen_bis": antwort.get("umgeworfen_bis"),

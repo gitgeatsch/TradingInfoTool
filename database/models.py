@@ -451,6 +451,11 @@ class Signal:
     # wieder still den Lesepfad kappt.
     quelle_kette: str | None = None            # 'rollen' | None (alte Kette)
     unabhaengige_faktoren: int | None = None
+    belege_json: str | None = None             # die Belege SELBST, nicht nur
+                                               # ihre Anzahl (14.08.) - sonst
+                                               # ist "warum erfolgte die
+                                               # Entscheidung" nachtraeglich
+                                               # unbeantwortbar
     umgeworfen_durch: str | None = None
     umgeworfen_preis_eur: float | None = None
     umgeworfen_bis: str | None = None

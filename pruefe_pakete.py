@@ -4968,6 +4968,81 @@ def paket_15() -> None:
                isinstance(MV.messe(_c7), dict),
                "sie liest price_cache, holdings und signals - drei Tabellen, "
                "die sich unabhaengig voneinander aendern koennen")
+
+    # ------------------------------------------------------------------
+    # AE. DIE BELEGE - warum erfolgte die Entscheidung (14.08.2026).
+    import json as _js
+    import messe_begruendungen as MB
+    from agent import signal_abbildung as SA7
+
+    # AE1 SIE MUESSEN UEBERHAUPT ERST GESPEICHERT WERDEN.
+    #
+    # Bis heute ging nur die ANZAHL in die Datenbank: die Mail zeigte "Belege
+    # (5, davon 3 unabhaengige Faktoren)", gespeichert wurden die 5 und die 3.
+    # Welche Fakten das Urteil getragen haben, war damit nachtraeglich NICHT
+    # beantwortbar - und laesst sich fuer bestehende Zeilen auch nicht
+    # nachruesten.
+    pruefe(P, "die Belege selbst gehen in die Signalzeile",
+           "belege_json" in SA7.SPALTEN_SIGNAL,
+           "eine Zeile, die heute ohne sie geschrieben wird, bleibt fuer "
+           "immer ohne sie")
+    _f7 = SA7.felder_aus_entscheidung(
+        {"aktion": "KAUFEN", "begruendung": "x", "unabhaengige_faktoren": 2,
+         "belege": [{"fakt": "Widerstand bei 0.0119 EUR",
+                     "richtung": "dagegen", "gewicht": "hoch"}]},
+        fakten={"asset": "X"}, lagebild_id=None, prompt_stand=None,
+        eur_je_usd=None, familien=None, rechnung=None, modell="m")
+    pruefe(P, "und kommen als lesbares JSON dort an",
+           _js.loads(_f7["belege_json"])[0]["fakt"].startswith("Widerstand"),
+           "als JSON statt als top_grund_1..5 - die alte Kette hat mit festen "
+           "Spalten den sechsten Grund stillschweigend verloren")
+    pruefe(P, "ohne Belege bleibt die Spalte leer statt '[]'",
+           SA7.felder_aus_entscheidung(
+               {"aktion": "NICHTS_TUN"}, fakten={"asset": "X"},
+               lagebild_id=None, prompt_stand=None, eur_je_usd=None,
+               familien=None, rechnung=None,
+               modell="m").get("belege_json") is None,
+           "eine leere Liste sieht in der Auswertung aus wie 'keine Gruende "
+           "genannt' - None heisst 'nicht gefragt'")
+
+    # AE2 DIE ZUORDNUNG ZUM FAKTENBLOCK.
+    #
+    # NICHT die Kategorien der alten Kette (technisch/fundamental/...): die
+    # kamen vom Modell und waeren eine zweite Selbstauskunft ueber eine erste.
+    # Gemessen wird, aus welchem UNSERER Bloecke der Beleg stammt - das ist
+    # die Frage "sind die Parameter die richtigen".
+    for _satz, _erwartet in (
+            ("Der naechste Widerstand liegt bei 0.0111 EUR", "marken"),
+            ("Am Terminmarkt war die Finanzierungsrate positiv", "finanzierung"),
+            ("Von den letzten 20 Tagen entfielen 85 % des Umsatzes auf "
+             "Aufwaertstage", "volumen"),
+            ("Die Marktstruktur zeigt hoehere Hochs", "struktur"),
+            ("Kursentwicklung: 5 Tage +6.7 %", "bewegung"),
+            ("BTC ist bereits im Bestand: 150 EUR investiert", "bestand"),
+            ("Ein Satz ohne bekannte Woerter", "unbekannt")):
+        pruefe(P, f"Beleg -> Block: {_erwartet}",
+               MB.block_fuer(_satz) == _erwartet,
+               f"{_satz[:48]!r} ergab {MB.block_fuer(_satz)!r}")
+    pruefe(P, "die Reihenfolge geht vom Spezifischen zum Generischen",
+           list(MB.BLOCK_WOERTER).index("volumen")
+           < list(MB.BLOCK_WOERTER).index("bewegung"),
+           "der erste Treffer gewinnt - 'bewegung' mit '20 tage' hat in der "
+           "ersten Fassung den Umsatzsatz geschluckt")
+
+    # AE3 DER BERICHT DARF VERTEILUNG NICHT MIT ERFOLG VERWECHSELN.
+    _leer = MB.messe.__wrapped__ if hasattr(MB.messe, "__wrapped__") else None
+    with sqlite3.connect(":memory:") as _c8:
+        _c8.execute("CREATE TABLE signals (quelle_kette TEXT, action TEXT, "
+                    "unabhaengige_faktoren INTEGER, outcome_status TEXT, "
+                    "belege_json TEXT)")
+        _c8.execute("INSERT INTO signals VALUES ('rollen','KAUFEN',2,NULL,?)",
+                    (_js.dumps([{"fakt": "Marktstruktur dreht",
+                                 "richtung": "dafuer", "gewicht": "hoch"}]),))
+        _b8 = " | ".join(MB.bericht(MB.messe(_c8)))
+        pruefe(P, "ohne aufgeloeste Ausgaenge sagt der Bericht das auch",
+               "zaehlt dieses Skript die Verteilung, nicht den" in _b8,
+               "die eigentliche Frage braucht Wochen - ein Skript, das den "
+               "Unterschied verwischt, waere schlimmer als keines")
     c.close()
 
 
