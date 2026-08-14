@@ -8,7 +8,7 @@
 
 ---
 
-## Index nach Thema (212 Einträge)
+## Index nach Thema (213 Einträge)
 
 Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten Thema einsortiert. Volltextsuche im Dokument bleibt der zuverlässigere Weg bei Detailfragen.
 
@@ -239,7 +239,9 @@ Ein Nachtrag kann mehrere Themen berühren — hier jeweils nach dem dominanten 
 - **2026-07-21** — Marktscan-Dedup-Bug behoben - "immer dieselben Coins" (APE/EIGEN)
 - **2026-07-30** — Screener × Schwerpunkte — geplante, noch nicht umgesetzte Kandidaten-Benachrichtigung (echter Gap, kein Bug)
 
-### Betrieb / Scheduler / Infrastruktur (9)
+### Betrieb / Scheduler / Infrastruktur (10)
+
+- **2026-08-14** — Kostensteuerung der Rollen-Kette: aus ~11.900 Aufrufen am Tag werden 319 (Cooldown vor den Aufruf, Lagebild 3 h, Warteschlange, Tagesbudget mit Rückfallkette). Querprüfung fand drei ignorierte GUI-Schalter je Asset und eine Remote-Seite, die die neue Kette nicht kennt
 
 - **2026-08-13** — `rollen_lauf.py` als einziger Ort, an dem die Kette zusammengesetzt wird; drei Betriebsarten (trocken/probe/scharf), Verbindung wird übergeben statt geöffnet
 
@@ -16401,3 +16403,51 @@ Euro, aus demselben Grund wie die Töpfe: ein Prozentsatz auf ein Depot mit
 - **`UEBERGREIFEND = ("cash_reserve",)`** steht als die eine übergreifende Regel in `toepfe.py` — **dokumentiert und nirgends gebaut**
 - Über 118 + 5 Signale gab es **nur 5 Vetos**, alle von der gestrichenen Konfidenz-Schwelle oder dem CRV-Minimum
 - **Die Wirkung der Dämpfer wird nirgends aufgezeichnet** — hätten sie gegriffen, wäre es unsichtbar
+
+
+---
+
+## Nachtrag (2026-08-14): Kostensteuerung, Gesamtprüfung und Querprüfung
+
+**Vollständig in `Umbauplan_Gesamtsystem_12_08.md` Kapitel 18.**
+
+### Der Anlass
+
+Nach dem Schnitt auf `scharf` fiel auf: die Kette macht bei jedem
+15-Minuten-Takt einen vollen Durchgang. **~11.900 Aufrufe am Tag gegen eine
+Gemini-Grenze von 500.** Meine erste Schätzung von 5.000 war zu niedrig — Z.ai
+allein macht 6.912 davon.
+
+### Gebaut — sechs Punkte, Ergebnis 319 Aufrufe/Tag
+
+Cooldown vor den Aufruf · Lagebild 3 h zwischengespeichert · Warteschlange mit
+fünf Stufen · Tagesbudget und Rückfallkette · Modell auf der Signalzeile ·
+NICHTS_TUN messbar mitgeschrieben.
+
+**Der große Hebel war der erste Punkt:** der Cooldown stand hinter dem
+Modellaufruf und verhinderte damit die Mail, nicht die Kosten.
+
+### Die Unterscheidung, die gefehlt hat
+
+Drei Arten von „nicht jetzt" waren in der Diskussion verschmolzen:
+**Kostenfilter** (wann), **Nutzerentscheidung** (will ich das handeln),
+**Qualitätsfilter** (ob es ein Signal ist). Nur der dritte trägt das
+Deadloop-Risiko. Die Nutzerfrage *„ich dachte das GATE ist bereits der Filter"*
+hat das freigelegt — nachgesehen liegen von acht Gate-Stufen drei vor dem
+Aufruf, und die Stufe mit dem größten Verlust liegt danach.
+
+### Gefunden
+
+- **Drei GUI-Schalter je Asset wurden ignoriert** (DCA, Hebel-Prüfung,
+  Bitpanda-Override). Die Kette erzeugte Signale, wo der Nutzer ausdrücklich
+  keine wollte — eine überstimmte Entscheidung, kein fehlendes Merkmal
+- **Die Remote-Seite kennt die neue Kette nicht** und zeigt eine
+  Konfidenzspalte, die strukturell leer bleibt
+- **`offen` bei Hebelpositionen war geraten** (`geschlossen_am IS NULL`); die
+  Quelle sagt `status = 'offen'`
+- **Der Bitpanda-Positions-Sync überlebt den Schnitt** — geprüft, weil der
+  Hebel-Bestand aus der API-Abfrage kommt und die Tabelle sonst leer bliebe
+
+### Alle 22 neuen Module haben einen Betriebsaufrufer
+
+Erstmals seit Beginn des Umbaus. Am 13.08. waren es null von 15.

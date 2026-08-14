@@ -3972,6 +3972,37 @@ def paket_15() -> None:
            "nein_fehler" in _l,
            "die Zeile ist eine Messung - wer hier abbricht, verliert ein "
            "Urteil, das ohnehin bezahlt ist")
+
+    # ------------------------------------------------------------------
+    # T. DIE SCHALTER DES NUTZERS (Querpruefung GUI/Einstellungen, 14.08.).
+    #
+    # Drei GUI-Schalter je Asset wurden von den alten Pipelines gelesen und von
+    # dieser Kette vollstaendig ignoriert. Sie erzeugte damit Signale, wo der
+    # Nutzer ausdruecklich keine wollte - eine UEBERSTIMMTE Entscheidung, nicht
+    # ein fehlendes Merkmal.
+    from agent import asset_schalter as AS
+
+    pruefe(P, "der Hebel-Schalter wird beim Hebel gelesen",
+           "get_hebel_pruefung_erlaubt" in _quelltext("agent/asset_schalter.py"))
+    pruefe(P, "der DCA-Schalter bei der Akkumulation",
+           "get_dca_erlaubt" in _quelltext("agent/asset_schalter.py"))
+    pruefe(P, "und die Kette fragt VOR dem Modellaufruf",
+           _l.find("darf_analysiert_werden") < _l.find("bc_roh = _frage("),
+           "ein Asset, das der Nutzer nicht handeln will, soll kein "
+           "Kontingent kosten")
+    pruefe(P, "eine Ablehnung wird als Auftragsverlust gebucht",
+           'durchlauf.verloren(symbol, "auftrag", warum' in _l,
+           "es ist eine Nutzerentscheidung, keine Marktlage - und das muss in "
+           "der Durchlaessigkeit unterscheidbar bleiben")
+    # FAIL-OPEN, NICHT FAIL-CLOSED.
+    _erl, _grund = AS.darf_analysiert_werden(None, "BTC", "spot", "einstieg")
+    pruefe(P, "ohne lesbare Schalter gilt ERLAUBT", _erl and _grund is None,
+           "ein Lesefehler darf nicht dazu fuehren, dass die Kette stumm "
+           "nichts mehr tut - das waere der Deadloop durch die Hintertuer")
+    pruefe(P, "der Bitpanda-Override schlaegt das Listing",
+           AS.ist_handelbar(None, "BTC", bitpanda_gelistet=True) is True
+           and AS.ist_handelbar(None, "BTC", bitpanda_gelistet=None) is True,
+           "die Listing-Abfrage kennt nicht jeden Sonderfall, der Nutzer schon")
     c.close()
 
 

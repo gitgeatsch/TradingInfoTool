@@ -1520,3 +1520,150 @@ Erweiterung.** Sie gehört vor die erste fremde Assetklasse, nicht danach.
 **Nicht enthalten und bewusst offen:** ob die alte Kette für Aktien, Rohstoffe,
 Themen-ETF und Hedge **parallel weiterläuft** oder abgelöst wird. Solange sie
 läuft, gilt jede Änderung an ihren Dämpfern (Kap. 16.5) auch für diese vier.
+
+
+---
+
+# 18. Die Kostensteuerung — und was drei Prüfungen dabei fanden (14.08.2026)
+
+**Der Anlass war eine Zahl.** Nach dem Schnitt auf `scharf` fiel auf, dass die
+Kette im 15-Minuten-Takt einen vollen Durchgang über alle Symbole macht:
+
+```
+96 Läufe × (1 Lagebild + 41 Trader) × 2 Instrumente + Z.ai  ≈  11.900 Aufrufe/Tag
+Gemini-Grenze                                                      500 Aufrufe/Tag
+```
+
+Nach knapp zwei Stunden wäre der Tag tot gewesen. **Meine erste Schätzung lautete
+5.000 — sie war falsch, weil ich Z.ai vergessen hatte** (6.912 davon).
+
+## 18.1 Der architektonische Unterschied, der das erklärt
+
+> **Die alte Kette filtert VOR dem LLM-Aufruf. Die neue filtert DANACH.**
+
+| | alt | neu |
+|---|---|---|
+| Was einen Aufruf auslöst | eine erkannte Konstellation | die Fälligkeit im Cooldown |
+| Wer sagt „hier ist etwas" | deterministisches Screening | das Modell |
+| Belegt durch Zahlen | 46 Kandidaten → **3** LLM-Aufrufe | 25 Aufrufe → 9 Einstiege |
+
+**Und das war Absicht, nicht Nachlässigkeit.** Genau die Vorfilter der alten
+Kette haben den Deadloop erzeugt (98,2 % HALTEN). Der Aufbau war für
+**Messläufe** richtig — für einen 15-Minuten-Takt ist er zu teuer.
+
+**Nutzerfrage dazu, die den Kern traf:** *„ich dachte das GATE ist bereits der
+Filter, der als erstes entscheidet, ob ein Trade bis zur Bewertung kommt."*
+
+Nachgesehen: von acht Gate-Stufen liegen drei vor dem Aufruf, und die filtern
+kaum. Die Stufe, an der 16 von 25 ausscheiden — `aktion` — liegt **danach**.
+**Das Gate ist ein Messinstrument, kein Türsteher.** Es wurde nie verschoben; ein
+erstes Gate hat diese Kette nie gehabt.
+
+## 18.2 Die drei Arten von „nicht jetzt" — die Unterscheidung, die gefehlt hat
+
+| | Frage | Beispiel | Deadloop-Risiko |
+|---|---|---|---|
+| **Kostenfilter** | *wann* schaue ich hin? | Cooldown, Budget, Reihenfolge | **keins** |
+| **Nutzerentscheidung** | *will ich* das handeln? | DCA-/Hebel-Schalter je Asset | **keins** |
+| **Qualitätsfilter** | *ob* es ein Signal ist | die alten Vorgates | **das war der Deadloop** |
+
+Nur der dritte ist gefährlich. Die ersten beiden verschieben oder setzen um —
+**kein Asset fällt dauerhaft heraus.**
+
+## 18.3 Was gebaut wurde
+
+| | | Wirkung |
+|---|---|---|
+| **1** | Cooldown **vor** den Trader-Aufruf | 4.800 → 66 Spot-Aufrufe/Tag |
+| **2** | Lagebild 3 h wiederverwendet | 192 → 48 |
+| **3** | Warteschlange, **fünf** Stufen | Reihenfolge, kein Ausschluss |
+| **4** | Tagesbudget + Rückfallkette 3.1 → 3.5 → OpenRouter | harte Grenze, 10 % Reserve |
+| **5** | Modell auf der Signalzeile | Voraussetzung für 4 |
+| **6** | NICHTS_TUN messbar mitgeschrieben | zweiter Messarm, **null Zusatzkosten** |
+
+**Ergebnis: 319 Aufrufe am Tag über alle fünf Assetklassen — 64 % des ersten
+Topfes, 16 % aller drei.**
+
+### Zur Reihenfolge, in zwei Nutzereinwänden geschärft
+
+*„in der Praxis ist eine bestehende Position bzw. bestimmte Assets wichtiger"* —
+und danach *„Bei Hebel soll der hebel bestand ganz oben sein."*
+
+Der zweite ist die scharfe Fassung: es genügt nicht, beide Bestände zu kennen.
+Die Regel heißt **„das eigene Instrument zuerst"** — eine offene Hebelposition
+hat einen Liquidationspreis, sie kann verschwinden; dasselbe Symbol im Spot
+steht einfach weiter da.
+
+### Zur Rückfallkette: der Grund ist Messbarkeit, nicht Durchsatz
+
+Ein Anbieterwechsel mischt **zwei Urteilsverteilungen in dieselbe
+Trefferbilanz**. Der Mistral-Verhaltensbruch vom 31.07. zeigte 55,4 gegen
+68,0 % bei **bitgleichem** Prompt. Deshalb das Geschwistermodell derselben
+Familie zuerst und der Fremdanbieter zuletzt — und deshalb ist Punkt 5 die
+Voraussetzung.
+
+## 18.4 Was die Gesamtprüfung der Kette ergab
+
+| Prüfung | Ergebnis |
+|---|---|
+| Hat jedes der **22** neuen Module einen Betriebsaufrufer? | **ja, ausnahmslos** |
+| Ruft der Scheduler die Kette — beide Instrumente, Betriebsart aus der Konfiguration, alle Töpfe? | **ja** |
+| Liest jemand die neuen Einstellungen? | **ja** |
+| Ehrt die Kette die **Asset-Schalter der GUI**? | **NEIN — drei Lücken** |
+
+## 18.5 Die Querprüfung GUI / Einstellungen / Assets — drei überstimmte Entscheidungen
+
+```
+asset_dca_settings.dca_erlaubt                    alte Kette: ja   neue: NEIN
+asset_hebel_settings.hebel_pruefung_erlaubt       alte Kette: ja   neue: NEIN
+asset_bitpanda_override.bitpanda_gelistet_override alte Kette: ja  neue: NEIN
+```
+
+**Die Kette erzeugte Signale, wo der Nutzer ausdrücklich keine wollte.** Seine
+Vorgabe steht wörtlich im alten Code (12.08.):
+
+> *„ich möchte selbst entscheiden, bei welchen Assets die Strategie angewendet
+> wird — überall möglich, aber nur dort Signale erzeugen, wo ich das selektiv
+> möchte."*
+
+Das ist schlimmer als ein fehlendes Merkmal — es ist eine **überstimmte
+Entscheidung**. Behoben in `agent/asset_schalter.py`, geprüft **vor** dem
+Modellaufruf, **fail-open**: ein Lesefehler darf nicht dazu führen, dass die
+Kette stumm nichts mehr tut.
+
+## 18.6 Die Remote-Seite — geprüft, noch nicht umgestellt
+
+`remote/server.py` (1.048 Zeilen) und `remote/status.py` (1.092):
+
+| kennt | |
+|---|---|
+| `quelle_kette` · `lagebild` · `gate_durchlaessigkeit` · `unabhaengige_faktoren` · `zai_stimmen` | **nein** |
+| `confidence_pct` | **ja — und die neue Kette füllt sie nie** |
+
+**Die Remote-Ansicht würde die neuen Signale anzeigen, aber ohne alles, was sie
+ausmacht — und mit einer Konfidenzspalte, die strukturell leer bleibt.** Dazu
+eine Kalibrierungskarte, die eine Frage beantwortet, die es nicht mehr gibt
+(*„hält confidence_pct, was es verspricht?"*).
+
+### Plan für die Remote-Umstellung
+
+| | Schritt |
+|---|---|
+| **R-1** | Die Konfidenz-Karte als **nur für die alte Kette** kennzeichnen — sie ist nicht falsch, nur nicht mehr zuständig |
+| **R-2** | Signalliste um `quelle_kette`, `modell`, `unabhaengige_faktoren` ergänzen |
+| **R-3** | Eine Karte **Durchlässigkeit** — wo verliert die Kette? Der aussagekräftigste neue Wert |
+| **R-4** | Z.ai-Stimmen anzeigen: „(2 von 3, uneinheitlich)" statt eines nackten Urteils |
+| **R-5** | Trefferbilanz-Stand sichtbar machen: wie viele Zellen sind belastbar? |
+
+**R-1 ist der einzige dringende Punkt** — eine leere Spalte, die früher etwas
+bedeutete, liest sich wie ein Defekt. Der Rest ist Komfort und kann nach dem
+Produktivgang kommen.
+
+## 18.7 Was offen bleibt
+
+| | | |
+|---|---|---|
+| **O-11** | Remote-Umstellung R-1 bis R-5 | R-1 vor dem Produktivgang |
+| **O-12** | Der Kontra-Verdacht im Hebel-Screening | alle drei LLM-Aufrufe gingen an `trendfolge`; der beste Kontra-Kandidat lag bei 69,1, der schwächste trendfolge bei 72,1. Bei n=46 ein Verdacht, kein Befund |
+| **O-13** | Der Screening-Score ist **nie gegen Ergebnisse gemessen** | er entscheidet heute nur die Reihenfolge — ein kalibrierter Vorfilter wäre erst möglich, wenn die Kette aufgelöste Signale liefert |
+| **O-14** | Stufe „vorgemerkt" der Warteschlange ist leer | es gibt keinen Ort in der Datenbank, an dem eine Vormerkung stünde |

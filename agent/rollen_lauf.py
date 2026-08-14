@@ -421,6 +421,19 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # zu einem Urteil gekommen; der Trichter bleibt damit monoton. Dass es der
     # Cooldown war und kein schlechtes Urteil, steht im Grund.
     if betriebsart != TROCKEN:
+        # DIE SCHALTER DES NUTZERS ZUERST (Querpruefung 14.08.). Drei
+        # GUI-Schalter je Asset - DCA, Hebel-Pruefung, Bitpanda-Override -
+        # wurden von den alten Pipelines gelesen und von dieser Kette
+        # vollstaendig ignoriert. Sie erzeugte damit Signale, wo der Nutzer
+        # ausdruecklich keine wollte. Seine Vorgabe steht woertlich im alten
+        # Code: *"ueberall moeglich, aber nur dort Signale erzeugen, wo ich das
+        # selektiv moechte."*
+        from agent import asset_schalter as AS
+        erlaubt, warum = AS.darf_analysiert_werden(conn, symbol, instrument,
+                                                   strategie)
+        if not erlaubt:
+            durchlauf.verloren(symbol, "auftrag", warum or "abgeschaltet")
+            return
         sperre = WH.gesperrt_bis(conn, symbol, instrument, config=config)
         if sperre:
             durchlauf.verloren(symbol, "urteil", f"Cooldown bis {sperre[:16]}")
