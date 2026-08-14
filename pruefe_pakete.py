@@ -4313,6 +4313,109 @@ def paket_15() -> None:
            _vm(_gq()) == _GM == "llama-3.3-70b-versatile",
            "sonst stuende auf 80 Zeilen 'modell = NULL' und die Mischung "
            "waere nicht mehr rekonstruierbar")
+
+    # ------------------------------------------------------------------
+    # Y. DER LESEPFAD - die Spalte, die niemand lesen konnte (14.08.2026).
+    #
+    # `SPALTEN_SIGNAL` legte fuenfzehn Spalten an `signals` an, `models.Signal`
+    # wuchs nicht mit, und `_row_to_signal()` baut die Klasse aus `SELECT *`:
+    #
+    #     TypeError: Signal.__init__() got an unexpected keyword argument
+    #                'quelle_kette'
+    #
+    # ES BRACH BEI DER MIGRATION, nicht beim ersten Rollen-Signal: `SELECT *`
+    # liefert alle Spalten, egal was in der Zeile steht. Damit war JEDES Signal
+    # unlesbar, auch jedes alte - dreizehn Aufrufer von `get_latest_signal`.
+    import inspect as _insp
+    from database.models import Signal as _Sig, HebelSignal as _HSig
+    from database import db as _DB2
+
+    with sqlite3.connect("file:data/tradinginfotool.db?mode=ro",
+                         uri=True) as _c3:
+        _c3.row_factory = sqlite3.Row
+        for _tab, _kls in (("signals", _Sig), ("hebel_signals", _HSig)):
+            _f = set(_insp.signature(_kls.__init__).parameters) - {"self"}
+            _sp = [r[1] for r in _c3.execute(f"PRAGMA table_info({_tab})")]
+            _fehlt = [s for s in _sp if s not in _f]
+            pruefe(P, f"jede Spalte von {_tab} hat ein Feld in {_kls.__name__}",
+                   not _fehlt,
+                   f"ohne Feld: {_fehlt} - die Klasse wird aus SELECT * "
+                   "gebaut, eine unbekannte Spalte kappt JEDEN Lesepfad")
+        _r3 = _c3.execute(
+            "SELECT * FROM signals ORDER BY id DESC LIMIT 1").fetchone()
+        if _r3 is not None:
+            pruefe(P, "_row_to_signal() laeuft gegen eine echte Zeile",
+                   _DB2._row_to_signal(_r3) is not None,
+                   "die Pruefung darueber vergleicht Namen - diese hier baut "
+                   "das Objekt wirklich, so wie die dreizehn Aufrufer es tun")
+    pruefe(P, "die neuen Spalten sind auch als Feld deklariert",
+           not (set(SA.SPALTEN_SIGNAL)
+                - (set(_insp.signature(_Sig.__init__).parameters) - {"self"})),
+           "SPALTEN_SIGNAL und models.Signal muessen zusammen wachsen")
+
+    # ------------------------------------------------------------------
+    # Z. DIE ERSTE PRODUKTIONSMAIL (PLUME, 14.08.2026 09:23) - drei Funde.
+    from agent import signal_mail as SM3
+    from agent.signal_mail import preis as _preis
+    from agent import entscheidungsrechnung as ER3
+
+    # Z1 DER KURS UNTER EINEM CENT WURDE ZU NULL.
+    #
+    #     Einstiegszone   0 bis 0 EUR
+    #     Stop            0 EUR  (5,5 % - ...)
+    #     Take-Profit     0 bis 0 EUR
+    #
+    # Eine Kaufempfehlung ohne Einstieg, ohne Stop, ohne Ziel - bei einer
+    # richtig gerechneten Rechnung. In DERSELBEN Mail stand "Widerstand bei
+    # 0.0119 EUR", weil die Zahlen des Modells nicht durch diesen Formatierer
+    # laufen. Zwei Zahlenwege, einer davon kaputt.
+    pruefe(P, "ein Kurs unter einem Cent bleibt lesbar",
+           _preis(0.0119) == "0,01190" and _preis(0.00004321) == "0,00004321",
+           f"0,0119 -> {_preis(0.0119)!r}")
+    pruefe(P, "und ein grosser Kurs bleibt gewohnt",
+           _preis(61234.5) == "61.234,50" and _preis(2.34) == "2,34",
+           "ab einem Euro sind zwei Stellen die gewohnte Schreibweise")
+    pruefe(P, "die Rechnung benutzt den Kursformatierer, nicht _eur",
+           "{preis(e['stop_eur'])}" in _quelltext(
+               "agent/entscheidungsrechnung.py")
+           and "{preis(e['einstieg_von_eur'])}" in _quelltext(
+               "agent/entscheidungsrechnung.py"),
+           "Betraege duerfen bei _eur bleiben - Kurse nicht. UND: dieser "
+           "Aufruf steht IN einem f-String, also findet ihn nur der Rohtext - "
+           "_nur_code wirft Zeichenketten weg. Dieselbe Falle zum vierten Mal.")
+
+    # Z2 ZWEI STOP-ABSTAENDE FUER DENSELBEN STOP.
+    #
+    #   2. DIE RECHNUNG   Stop  5,5 %  (gegen die Einstiegszone)
+    #   4. EINORDNUNG     Stop 11,2 %  (gegen den aktuellen Kurs)
+    #
+    # Beide fuer sich richtig - die Zone lag 6 % unter dem Kurs. Fuer den Leser
+    # ist es der schlimmere Widerspruch: er schaetzt sein Risiko doppelt so
+    # hoch ein wie geplant und sieht nicht, warum.
+    pruefe(P, "die Einordnung rechnet gegen den GEPLANTEN Einstieg",
+           'einstieg=rechnung.get("einstieg_von_eur")' in _quelltext(
+               "agent/rollen_lauf.py"),
+           "sie ordnet den geplanten Trade ein, nicht einen zum Marktpreis")
+
+    # Z3 FUENF INFORMATIONSBLOECKE DER MAIL SIND AN NICHTS ANGESCHLOSSEN.
+    #
+    # `baue_mail` kann Bestand, Marken in Euro, Umfeld, Ausstieg und
+    # Coin-Fakten darstellen. Die Rollen-Kette uebergibt keinen davon - darum
+    # liest sich die Mail generisch, obwohl die Vorlage es nicht ist. KEIN
+    # Defekt im Sinne eines Fehlers, aber der Grund fuer den Eindruck.
+    import inspect as _i3
+    import re as _re3
+    _moegl = [p for p in _i3.signature(SM3.baue_mail).parameters]
+    _q = _quelltext("agent/rollen_lauf.py")
+    _blk = _q[_q.index("return SM.baue_mail("):]
+    _blk = _blk[:_blk.index("betreff, text = baue")]
+    _fehlt = sorted(p for p in _moegl if p not in set(_re3.findall(r"(\w+)=", _blk)))
+    pruefe(P, "die nicht verdrahteten Mailbloecke sind bekannt und gezaehlt",
+           _fehlt == ["ausstieg", "bestand", "coin_fakten", "lage_fakten",
+                      "marken"],
+           f"nicht uebergeben: {_fehlt} - offen als O-19 bis O-23; diese "
+           "Pruefung schlaegt an, sobald einer verdrahtet wird, damit die "
+           "Liste nicht veraltet")
     c.close()
 
 

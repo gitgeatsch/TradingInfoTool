@@ -424,6 +424,50 @@ class Signal:
     zai_uebereinstimmung: str | None = None  # 'ja'|'nein'
     zai_richtung_kurzbegruendung: str | None = None
 
+    # ------------------------------------------------------------------
+    # DIE ROLLEN-KETTE (14.08.2026) - NACHGEZOGEN NACH EINEM ECHTEN AUSFALL.
+    #
+    # `signal_abbildung.SPALTEN_SIGNAL` hat diese fuenfzehn Spalten an die
+    # Tabelle angelegt. Die Klasse hier wurde nicht mitgezogen - und
+    # `_row_to_signal()` baut sie aus `SELECT *`:
+    #
+    #     TypeError: Signal.__init__() got an unexpected keyword argument
+    #                'quelle_kette'
+    #
+    # WAS DARAN DER EIGENTLICHE FEHLER IST: es brach nicht, als das erste
+    # Rollen-Signal geschrieben wurde, sondern schon bei der MIGRATION.
+    # `SELECT *` liefert alle Spalten, egal was in der Zeile steht - also war
+    # JEDES Signal ab diesem Moment unlesbar, auch jedes alte. Dreizehn
+    # Aufrufer von `get_latest_signal` hingen daran, darunter die Auswertung,
+    # die den Fehler gemeldet hat.
+    #
+    # DIE ANDERE OPTION WAERE FALSCH GEWESEN. Die Spalten vor `_row_to_signal`
+    # aus der Zeile zu werfen haette den Fehler auch beseitigt - und die Daten
+    # des Umbaus fuer jeden Leser dauerhaft unsichtbar gemacht. Wir haben sie
+    # geschrieben, um sie zu lesen.
+    #
+    # LEHRE: `SPALTEN_SIGNAL` und diese Klasse muessen zusammen wachsen. Genau
+    # das prueft jetzt `pruefe_pakete`, damit die naechste neue Spalte nicht
+    # wieder still den Lesepfad kappt.
+    quelle_kette: str | None = None            # 'rollen' | None (alte Kette)
+    unabhaengige_faktoren: int | None = None
+    umgeworfen_durch: str | None = None
+    umgeworfen_preis_eur: float | None = None
+    umgeworfen_bis: str | None = None
+    lagebild_id: int | None = None
+    prompt_stand: str | None = None
+    fx_eur_je_usd: float | None = None
+    schwankung_perzentil: float | None = None
+    momentum_perzentil: float | None = None
+    volumen_perzentil: float | None = None
+    zai_stimmen: int | None = None             # 3 = einstimmig, 2 = knapp
+    richtung: str | None = None
+    hebel: float | None = None                 # NUR bei Hebel gesetzt - die
+                                               # Spalte ist der Topf-
+                                               # Unterscheider, siehe
+                                               # toepfe.sql_bedingung()
+    modell: str | None = None
+
 
 @dataclass
 class MarktscanCandidate:

@@ -100,6 +100,47 @@ def eur(wert: float, stellen: int = 0) -> str:
     return f"{wert:,.{stellen}f}".translate(str.maketrans(",.", ".,"))
 
 
+def preis(wert: float) -> str:
+    """Ein KURS in deutscher Schreibweise - mit so vielen Stellen, wie er
+    braucht.
+
+    DER FUND, DER DIESE FUNKTION ERZWUNGEN HAT (14.08.2026, erste echte
+    Produktionsmail, PLUME bei 0,0119 EUR):
+
+        Einstiegszone   0 bis 0 EUR
+        Stop            0 EUR  (5,5 % - ...)
+        Take-Profit     0 bis 0 EUR
+
+    Die Rechnung war richtig, die Darstellung hat sie vernichtet. `_eur()`
+    hatte eine FESTE Stellenzahl - null fuer Kurse, zwei im Kopf der Mail. Bei
+    einem Wert unter einem Cent bleibt davon nichts uebrig, und der Nutzer
+    bekommt eine Kaufempfehlung ohne Einstieg, ohne Stop und ohne Ziel.
+
+    DASS ES NIEMANDEM AUFFIEL, hat einen Grund: die Zahlen im Urteilstext
+    stammen vom Modell und werden NICHT durch diesen Formatierer geschickt -
+    dort stand korrekt "Widerstand bei 0.0119 EUR". In derselben Mail. Zwei
+    Zahlenwege, einer davon kaputt.
+
+    DIE REGEL: mindestens vier signifikante Stellen, hoechstens acht
+    Nachkommastellen, und nie weniger als zwei. Ein Bitcoin-Kurs bleibt damit
+    "61.234,50", ein Sub-Cent-Wert wird "0,011900" statt "0".
+
+    NICHT NUR EIN KRYPTO-THEMA: dieselbe Falle trifft jeden Wert unter einem
+    Euro, also auch Small Caps und jeden Cent-Wert im Aktienteil."""
+    import math as _m
+
+    w = abs(float(wert))
+    if w >= 1.0 or w == 0:
+        # Ab einem Euro sind zwei Stellen die gewohnte Schreibweise - mehr
+        # waere Genauigkeit, die niemand braucht ("2,340 EUR" liest sich falsch).
+        stellen = 2
+    else:
+        # Darunter zaehlen SIGNIFIKANTE Stellen, nicht Nachkommastellen: bei
+        # 0,0119 sind vier davon fuenf Nachkommastellen, bei 0,000043 acht.
+        stellen = min(8, 4 - 1 - int(_m.floor(_m.log10(w))))
+    return f"{float(wert):,.{stellen}f}".translate(str.maketrans(",.", ".,"))
+
+
 def _abschnitt(titel: str, zeilen: list[str]) -> list[str]:
     if not zeilen:
         return []
@@ -132,7 +173,7 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
                + (" (Hebel)" if instrument == "hebel" else ""))
 
     kopf = [titel,
-            f"Kurs {eur(kurs_eur, 2)} EUR"
+            f"Kurs {preis(kurs_eur)} EUR"
             + (f" · {zeitpunkt}" if zeitpunkt else "")
             + (f" · Modell {modell}" if modell else ""),
             f"{instrument.capitalize()} / {strategie.capitalize()}",

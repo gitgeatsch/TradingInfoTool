@@ -99,14 +99,21 @@ KETTE = (
     # Wir fahren `llama-3.3-70b-versatile` - ein anderes Modell, kein
     # Handlungsbedarf aus der Mail.
     #
-    # 80 IST EINE ANNAHME, KEINE ABGELESENE ZAHL, und darum steht sie so
-    # niedrig. Die bindende Groq-Grenze im Free-Tier ist vermutlich nicht die
-    # Zahl der Anfragen, sondern die TOKEN JE TAG - bei ~1.200 Token je Aufruf
-    # waeren 100.000 TPD rund 83 Aufrufe. Wer diesen Topf ernsthaft nutzen
-    # will, liest den Wert vorher an der Quelle nach (Nutzervorgabe: vor jedem
-    # Lauf Limits, Kontingent, Dauer). Als LETZTER Topf ist zu niedrig der
-    # billige Fehler: er kostet ein paar Signale, waehrend zu hoch mitten im
-    # Lauf in einen harten Fehler laeuft.
+    # 80 IST AN DER QUELLE BESTAETIGT (console.groq.com/docs/rate-limits,
+    # abgerufen 14.08.2026, "Free Plan Limits"):
+    #
+    #     llama-3.3-70b-versatile   RPM 30 | RPD 1.000 | TPM 12K | TPD 100K
+    #
+    # UND DIE BINDENDE GRENZE IST NICHT DIE, DIE MAN ZUERST LIEST. 1.000
+    # Anfragen am Tag klingen grosszuegig; bei 750-900 Token Eingabe plus
+    # Antwort sind es rund 1.200 Token je Aufruf, und 100.000 TPD sind damit
+    # bei etwa 83 Aufrufen erschoepft - ein Zwoelftel der Anfragengrenze.
+    #
+    # WAS DAS FUER DEN ZAEHLER HEISST: `_verbraucht` zaehlt ANFRAGEN. Fuer
+    # Gemini und OpenRouter ist das die richtige Einheit, fuer Groq NICHT - der
+    # Deckel von 80 bildet die Tokengrenze nur naeherungsweise ab. Solange Groq
+    # der letzte Topf ist, genuegt das; wuerde er weiter nach vorn rutschen,
+    # braeuchte er einen Tokenzaehler. Als offener Punkt vermerkt.
     ("groq", None, 80),
 )
 RESERVE_ANTEIL = 0.10

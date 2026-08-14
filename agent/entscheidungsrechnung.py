@@ -442,11 +442,52 @@ def _eur(wert: float, stellen: int = 0) -> str:
     return f"{wert:,.{stellen}f}".translate(str.maketrans(",.", ".,"))
 
 
+def preis(wert: float) -> str:
+    """Ein KURS in deutscher Schreibweise - mit so vielen Stellen, wie er
+    braucht.
+
+    DER FUND, DER DIESE FUNKTION ERZWUNGEN HAT (14.08.2026, erste echte
+    Produktionsmail, PLUME bei 0,0119 EUR):
+
+        Einstiegszone   0 bis 0 EUR
+        Stop            0 EUR  (5,5 % - ...)
+        Take-Profit     0 bis 0 EUR
+
+    Die Rechnung war richtig, die Darstellung hat sie vernichtet. `_eur()`
+    hatte eine FESTE Stellenzahl - null fuer Kurse, zwei im Kopf der Mail. Bei
+    einem Wert unter einem Cent bleibt davon nichts uebrig, und der Nutzer
+    bekommt eine Kaufempfehlung ohne Einstieg, ohne Stop und ohne Ziel.
+
+    DASS ES NIEMANDEM AUFFIEL, hat einen Grund: die Zahlen im Urteilstext
+    stammen vom Modell und werden NICHT durch diesen Formatierer geschickt -
+    dort stand korrekt "Widerstand bei 0.0119 EUR". In derselben Mail. Zwei
+    Zahlenwege, einer davon kaputt.
+
+    DIE REGEL: mindestens vier signifikante Stellen, hoechstens acht
+    Nachkommastellen, und nie weniger als zwei. Ein Bitcoin-Kurs bleibt damit
+    "61.234,50", ein Sub-Cent-Wert wird "0,011900" statt "0".
+
+    NICHT NUR EIN KRYPTO-THEMA: dieselbe Falle trifft jeden Wert unter einem
+    Euro, also auch Small Caps und jeden Cent-Wert im Aktienteil."""
+    import math as _m
+
+    w = abs(float(wert))
+    if w >= 1.0 or w == 0:
+        # Ab einem Euro sind zwei Stellen die gewohnte Schreibweise - mehr
+        # waere Genauigkeit, die niemand braucht ("2,340 EUR" liest sich falsch).
+        stellen = 2
+    else:
+        # Darunter zaehlen SIGNIFIKANTE Stellen, nicht Nachkommastellen: bei
+        # 0,0119 sind vier davon fuenf Nachkommastellen, bei 0,000043 acht.
+        stellen = min(8, 4 - 1 - int(_m.floor(_m.log10(w))))
+    return f"{float(wert):,.{stellen}f}".translate(str.maketrans(",.", ".,"))
+
+
 def saetze(e: dict) -> list[str]:
     """Die Rechnung in der Form, in der sie in die E-Mail gehoert."""
-    z = [f"Einstiegszone   {_eur(e['einstieg_von_eur'])} bis {_eur(e['einstieg_bis_eur'])} EUR",
-         f"Stop            {_eur(e['stop_eur'])} EUR  ({_eur(100 * e['stop_relativ'], 1)} % - {e['stop_regel']})",
-         f"Take-Profit     {_eur(e['ziel_von_eur'])} bis {_eur(e['ziel_bis_eur'])} EUR  "
+    z = [f"Einstiegszone   {preis(e['einstieg_von_eur'])} bis {preis(e['einstieg_bis_eur'])} EUR",
+         f"Stop            {preis(e['stop_eur'])} EUR  ({_eur(100 * e['stop_relativ'], 1)} % - {e['stop_regel']})",
+         f"Take-Profit     {preis(e['ziel_von_eur'])} bis {preis(e['ziel_bis_eur'])} EUR  "
          f"(CRV {_eur(e['crv'], 1)} - {e['ziel_regel']})"]
     if not e["crv_erreicht"]:
         z.append(f"                !! Der Weg bis dorthin traegt nur CRV "
@@ -459,7 +500,7 @@ def saetze(e: dict) -> list[str]:
             if e.get("betrag_gedeckelt_durch") else "")]
     if e["hebel"] > 1:
         z.append(f"Hebel           {_eur(e['hebel'], 1)}x  (Grenze: {e['hebel_grenze']}; "
-                 f"Liquidation etwa {_eur(e['liquidation_etwa_eur'])} EUR)")
+                 f"Liquidation etwa {preis(e['liquidation_etwa_eur'])} EUR)")
     z.append(f"Am Stop verlieren Sie {_eur(e['verlust_am_stop_eur'])} EUR, "
              f"am Ziel gewinnen Sie {_eur(e['gewinn_am_ziel_eur'])} EUR.")
     return z

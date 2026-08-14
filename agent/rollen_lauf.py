@@ -610,7 +610,23 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             symbol=symbol, name=symbol, kurs_eur=kurs_e, instrument=instrument,
             strategie=strategie, rechnung=rechnung, urteil=befund,
             faktenblock=block, modell=modell, zeitpunkt=tag,
-            einordnung=TB.satz(bewertung, einstieg=kurs_e,
+            # DER GEPLANTE EINSTIEG, NICHT DER AKTUELLE KURS (14.08.2026,
+            # erste Produktionsmail). Die Mail nannte zwei Stop-Abstaende fuer
+            # denselben Stop, zwei Zeilen auseinander:
+            #
+            #   2. DIE RECHNUNG   Stop 5,5 %   (gegen die Einstiegszone)
+            #   4. EINORDNUNG     Stop 11,2 %  (gegen den aktuellen Kurs)
+            #
+            # Beide Zahlen waren fuer sich richtig - die Zone lag 6 % unter dem
+            # Kurs. Fuer den Leser ist es trotzdem ein Widerspruch, und zwar
+            # der schlimmere: er kann nicht sehen, welcher Bezugspunkt gemeint
+            # ist, und wuerde sein Risiko doppelt so hoch einschaetzen wie
+            # geplant. Die Einordnung gehoert an die Zahlen der RECHNUNG - sie
+            # ordnet den geplanten Trade ein, nicht einen, der jetzt zum
+            # Marktpreis stattfaende.
+            einordnung=TB.satz(bewertung,
+                               einstieg=rechnung.get("einstieg_von_eur")
+                               or kurs_e,
                                stop=rechnung["stop_eur"],
                                einsatz_eur=rechnung["betrag_eur"])
             + Z1.satz(z1) + list(zweite_zeilen))
