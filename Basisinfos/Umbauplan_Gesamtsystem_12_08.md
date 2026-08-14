@@ -2012,7 +2012,49 @@ aufgerufen statt nachgebaut. Ein Hebel-Trade über 2 Tage kostet 0,088 R, über
 
 | Nr. | Punkt | Stand |
 |---|---|---|
-| **O-16** | Spot und Absicherung in der Trefferbilanz nicht trennbar | offen |
-| **O-17** | Einmalkauf 800 € für Börsenwerte übernommen, nicht entschieden | offen |
+| **O-16** | Spot und Absicherung trennbar über `SYMBOL_ZU_HEBEL_FAKTOR` | **erledigt** |
+| **O-17** | Einmalkauf 800 € — Kostenbasis dokumentiert, Entscheidung offen | **beim Nutzer** |
 | **O-29** | **Ratenfrage:** 0 von 1.142 (alt) gegen 11 von 45 (neu) | vertagt bis Krypto stabil |
 | — | Hebel-Cooldown 3,5 h für alle 43 Symbole | bewusst unverändert |
+
+
+### 21.8 O-16 und O-17 (nachgetragen)
+
+**O-16 war mehr als eine Bilanzfrage.** Spot und Absicherung haben beide
+`hebel IS NULL` und lagen deshalb in denselben Zellen. Die Unterscheidung kommt
+jetzt aus der **einen** Stelle, an der sie im Projekt steht —
+`hedge/pipeline.SYMBOL_ZU_HEBEL_FAKTOR` (DBPK, 3QSS). Keine neue Spalte, keine
+Watchlist nötig: die Liste ist statisch, und Hedge ist keine Assetklasse.
+
+> ⚠️ **Der eigentliche Fund:** bis heute zählten offene Absicherungen gegen den
+> **Spot-Topf**. Der hat einen Deckel, die Absicherung nicht — eine gehaltene
+> Hedge-Position hat also stillschweigend Spot-Budget belegt. An einem Beispiel
+> gemessen: Spot meldete 1.600 statt 800 EUR belegt.
+
+Weil `sql_bedingung()` nur einmal existiert, trennt jetzt auch der **Cooldown**
+die beiden — ohne dass dort eine Zeile geändert werden musste.
+
+**O-17 — die Kostenbasis**, bei 5 % Stop und 1 € fix je Seite:
+
+| Betrag | Fixkostenanteil | Gesamtkosten | in R |
+|---|---|---|---|
+| 250 € | 0,80 % | 1,30 % | 0,260 |
+| 400 € | 0,50 % | 1,00 % | 0,200 |
+| **800 €** | **0,25 %** | **0,75 %** | **0,150** |
+| 1.000 € | 0,20 % | 0,70 % | 0,140 |
+| 1.500 € | 0,13 % | 0,63 % | 0,127 |
+
+Die Kurve wird ab etwa 800 € flach — der Sprung von 250 auf 800 halbiert die
+Kosten in R, der von 800 auf 1.500 spart nur noch 0,023 R. **800 liegt am
+Knick, und das ist ein Argument, keine Entscheidung:** wieviel Geld in eine
+einzelne Aktie geht, ist eine Risikofrage. Überschreibbar unter
+`risiko.rollen_kette.einsatz_eur_je_gruppe`.
+
+### 21.9 Zwei Lehren aus der Gegenprüfung dieses Schritts
+
+1. Ich hatte den Konfigurationspfad **verkürzt dokumentiert**
+   (`rollen_kette.*` statt `risiko.rollen_kette.*`) — die Prüfung ist genau
+   darüber gestolpert. An der Quelle steht `_cfg()`.
+2. Meine erste Prüfung testete, ob ein **Kommentar** existiert. `_quelltext()`
+   wirft Kommentarzeilen bewusst weg, und eine Prüfung, die Dokumentation statt
+   Verhalten prüft, ist die Falle, die dieses Skript schon dreimal getreten hat.
