@@ -4812,7 +4812,7 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
         # aber erst nach der Mindestbeobachtung - sonst waere ein Signal tot,
         # bevor es messbar wird. Solange beide offen sind, muss der Leser sie
         # auseinanderhalten koennen.
-        felder = ("id, symbol, created_at, outcome_status, "
+        felder = ("id, symbol, created_at, action, outcome_status, "
                   "outcome_max_realisiertes_crv"
                   + "".join(f", {c}" for c in zonen_spalten)
                   + "".join(f", {c}" for c in
@@ -4863,6 +4863,7 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
                 ergebnis["alle"].append({
                     "symbol": row["symbol"], "seit": str(row["created_at"])[:10],
                 "signal_id": row["id"], "ist_hebel": ist_hebel,
+                "ur_aktion": row["action"],
                     "richtung": "SHORT" if z["ist_short"] else "LONG",
                     "tier": TIER_HEBEL if ist_hebel else _tier_fuer_spot_symbol(
                         row["symbol"], assetklasse_by_symbol),
@@ -4884,6 +4885,7 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
                     row["symbol"], assetklasse_by_symbol),
                 "symbol": row["symbol"],
                 "signal_id": row["id"], "ist_hebel": ist_hebel,
+                "ur_aktion": row["action"],
                 "seit": str(row["created_at"])[:10],
                 "richtung": "SHORT" if z["ist_short"] else "LONG",
                 "mfe_r": round(e.mfe_r, 3),

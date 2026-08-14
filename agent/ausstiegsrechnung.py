@@ -320,6 +320,67 @@ def _in_eur(e: dict, wert: float | None) -> float | None:
     return None if wert is None or not faktor else float(wert) * float(faktor)
 
 
+# Die sechs Gruppen des Systems, in Lesereihenfolge. KEINE NEUEN ERFUNDEN -
+# Nutzervorgabe 14.08.: *"keine neue bauen sondern so wie von dir angefuehrt"*.
+# Die Schluessel sind die `tier`-Werte aus `backward_tracking`.
+GRUPPEN_ANZEIGE = (
+    ("hebel", "KRYPTO-HEBEL"),
+    ("krypto", "KRYPTO-SPOT"),
+    ("aktien", "AKTIEN"),
+    ("rohstoffe", "ROHSTOFFE"),
+    ("etf", "THEMEN-ETF"),
+    ("hedge", "ABSICHERUNG"),
+    ("spot", "SPOT (nicht aufgeschluesselt)"),
+    ("unbekannt", "AUSGEMUSTERT"),
+)
+_GRUPPEN_RANG = {k: i for i, (k, _) in enumerate(GRUPPEN_ANZEIGE)}
+
+# Ab wie vielen Eintraegen ein Block Untertitel je Gruppe bekommt.
+#
+# WARUM NICHT IMMER. Zwei Ebenen mal sechs Gruppen sind bis zu zwoelf
+# Ueberschriften. Bei drei Positionen im ganzen Block ist das mehr Geruest als
+# Inhalt - und widerspricht der Regel, die diese Mail traegt: *"Wer zwoelf
+# Positionen haelt, soll nicht zwoelf Absaetze lesen, um die zwei zu finden,
+# die zaehlen."* Unterhalb der Schwelle wird nur SORTIERT, nicht ueberschrieben.
+UNTERTITEL_AB = 4
+
+
+def _nach_gruppen(liste: list, waehrung: str = "EUR") -> list[str]:
+    """Einen Block nach Gruppen gliedern - Ueberschriften nur, wenn es lohnt.
+
+    DIE FACHLICHE ENTSCHEIDUNG DAHINTER (14.08.2026). Der Nutzer schlug vor,
+    die Mail primaer nach Bestand und Gruppe zu gliedern. Das ist richtig und
+    steht hier - aber NICHT als oberste Ebene.
+
+    Oberste Ebene bleibt die DRINGLICHKEIT. Wuerde zuerst nach Gruppe
+    gegliedert, stuende ein faelliger Ausstieg in Rohstoffen unter zwanzig
+    Krypto-Zeilen - und genau der ist der Grund, warum die Mail verschickt
+    wird. Die Gruppe beantwortet "wo in meinem Depot", die Dringlichkeit "was
+    zuerst"; bei einer Handlungsmail gewinnt die zweite Frage.
+
+    Also: Dringlichkeit als Block, Gruppe INNERHALB. Damit bleibt beides
+    lesbar, und kein dringender Fall verschwindet in einer ruhigen Gruppe."""
+    if not liste:
+        return []
+    geordnet = sorted(liste, key=lambda e: (
+        _GRUPPEN_RANG.get(e.get("tier"), len(_GRUPPEN_RANG)),
+        str(e.get("symbol", ""))))
+    if len(geordnet) < UNTERTITEL_AB:
+        aus = []
+        for e in geordnet:
+            aus += _absatz(e, waehrung) + [""]
+        return aus
+    aus = []
+    for schluessel, titel in GRUPPEN_ANZEIGE:
+        teil = [e for e in geordnet if e.get("tier") == schluessel]
+        if not teil:
+            continue
+        aus += [f"  [{titel}]", ""]
+        for e in teil:
+            aus += _absatz(e, waehrung) + [""]
+    return aus
+
+
 def _absatz(e: dict, waehrung: str = "EUR") -> list[str]:
     # Datum lesbar, nicht technisch: "seit 01.08." statt "seit 2026-08-01".
     seit = str(e.get("seit", ""))
@@ -328,8 +389,15 @@ def _absatz(e: dict, waehrung: str = "EUR") -> list[str]:
     # RICHTUNG NUR, WO ES EINE WAHL GIBT. "LONG, spot" ist doppelt gemoppelt -
     # eine Spot-Position kann gar nicht short sein (Nutzerfund 13.08.).
     tier = e.get("tier", "?")
-    art = (f"{e.get('richtung','?')} mit Hebel" if tier == "hebel"
-           else "Spot" if tier == "spot" else str(tier))
+    # NUR HEBEL ODER SPOT - der rohe Tier-Schluessel gehoert hier nicht hin.
+    #
+    # Bis heute stand hier `else str(tier)`, und weil `_tier_fuer_spot_symbol`
+    # die ASSETKLASSE zurueckgibt, las man "BTC krypto, seit 01.08." statt
+    # "BTC Spot". Aufgefallen erst, als die Gruppenueberschriften dazukamen:
+    # unter "[KRYPTO-SPOT]" noch einmal "krypto" zu schreiben ist doppelt UND
+    # falsch beschriftet. Die Klasse steht in der Ueberschrift, hier steht die
+    # HANDELSART - und davon gibt es genau zwei.
+    art = (f"{e.get('richtung', '?')} mit Hebel" if tier == "hebel" else "Spot")
     # WELCHES SIGNAL MELDET HIER? (14.08.2026)
     #
     # NUTZERFRAGE: *"btc hat drei signale produziert 1x verkaufen 1x kaufen und
@@ -355,7 +423,23 @@ def _absatz(e: dict, waehrung: str = "EUR") -> list[str]:
                        f"#{e['signal_id']}")
     kopf = (f"  {e['symbol']:<6} {art}, seit {seit or '?'}"
             + (" - " + ", ".join(kennung) if kennung else ""))
-    z = [kopf]
+    z_kopf = [kopf]
+    # DER RUECKVERWEIS AUF DIE URSPRUNGSMAIL (14.08.2026).
+    #
+    # NUTZERVORGABE: *"je Verkaufssignal eine Angabe von wann, fuer welches
+    # Mail (urspruengliches Signal) mit Referenz im Signal - ich gehe nicht auf
+    # die Suche zum urspruenglichen Signal."*
+    #
+    # Der Betreff der Ursprungsmail laesst sich exakt rekonstruieren -
+    # `signal_mail.baue_mail()` baut ihn als "TradingInfoTool: SYMBOL - AKTION"
+    # (plus " (Hebel)"). Ihn hier woertlich hinzuschreiben macht aus dem
+    # Rueckverweis eine Suchzeile fuer das Postfach: Betreff und Datum
+    # genuegen, es braucht keinen Klick ins System.
+    if e.get("ur_aktion"):
+        betreff = (f"TradingInfoTool: {e['symbol']} - {e['ur_aktion']}"
+                   + (" (Hebel)" if e.get("ist_hebel") else ""))
+        z_kopf.append(f'      aus der Mail "{betreff}" vom {seit or "?"}')
+    z = z_kopf
     if e.get("stop_bereits_unterschritten"):
         z.append(f"      Der nachgezogene Stop bei {_kurs(_in_eur(e, e['stop_empfohlen']), waehrung)} "
                  f"haette greifen muessen - der Kurs steht bei "
@@ -481,27 +565,32 @@ def sammel_mail(alle: list, geprueft: int | None = None,
                    "  Hinterlegen Sie jetzt einen Verkaufsauftrag beim "
                    "Zielkurs. Danach brauchen Sie diese Mail nicht mehr - und "
                    "ein Ruecklauf ueber Nacht kostet nichts.", ""]
-        for e in nah:
-            zeilen += _absatz(e, waehrung) + [""]
+        zeilen += _nach_gruppen(nah, waehrung)
     for schluessel, titel in GRUPPEN:
         gruppe = [e for e in nach[schluessel] if id(e) not in _nah_ids]
         if not gruppe:
             continue
         zeilen += [f"{titel} ({len(gruppe)})", ""]
-        for e in gruppe:
-            zeilen += _absatz(e, waehrung) + [""]
+        zeilen += _nach_gruppen(gruppe, waehrung)
     if abgelaufen:
         zeilen += [f"BEGRUENDUNG ABGELAUFEN ({len(abgelaufen)})",
                    "  Kein Handlungszwang - aber der Grund, diese Positionen zu "
                    "halten, ist nicht mehr belegt.", ""]
-        for e in abgelaufen:
-            zeilen += _absatz(e, waehrung) + [""]
+        zeilen += _nach_gruppen(abgelaufen, waehrung)
     ruhig = [e for e in rest if not e.get("frist_abgelaufen")
              and not e.get("ziel_in_reichweite")]
     if ruhig:
-        zeilen += [f"OHNE HANDLUNGSBEDARF ({len(ruhig)})",
-                   "  " + ", ".join(f"{e['symbol']} {_prozent(e.get('stand_prozent'))}"
-                                    for e in ruhig), ""]
+        # HIER BLEIBT ES BEI EINER ZEILE JE GRUPPE. Was nichts braucht, soll
+        # nicht durch Ueberschriften wichtig aussehen - aber nach Gruppe
+        # getrennt findet man sein Depot trotzdem wieder.
+        zeilen += [f"OHNE HANDLUNGSBEDARF ({len(ruhig)})"]
+        for schluessel, titel in GRUPPEN_ANZEIGE:
+            teil = [e for e in ruhig if e.get("tier") == schluessel]
+            if teil:
+                zeilen.append(f"  {titel}: " + ", ".join(
+                    f"{e['symbol']} {_prozent(e.get('stand_prozent'))}"
+                    for e in sorted(teil, key=lambda x: str(x.get("symbol")))))
+        zeilen.append("")
 
     # DIE SIGNALVERFOLGUNG ZULETZT UND ALS SOLCHE BENANNT.
     v_nach, v_rest = gruppiere(verfolgung)

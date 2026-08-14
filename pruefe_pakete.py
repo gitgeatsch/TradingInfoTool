@@ -4540,6 +4540,32 @@ def paket_15() -> None:
            "Einstieg sagt WELCHE Position gemeint ist, die Nummer macht es "
            "eindeutig - die Nummer allein waere technisch, der Einstieg "
            "allein mehrdeutig")
+    pruefe(P, "der Rueckverweis nennt die Ursprungsmail woertlich",
+           any('aus der Mail "TradingInfoTool: DBPK - KAUFEN"' in _z
+               for _z in AR3._absatz(dict(_e1, ur_aktion="KAUFEN"))),
+           "Betreff und Datum genuegen fuers Postfach - Nutzervorgabe: "
+           "'ich gehe nicht auf die Suche zum urspruenglichen signal'")
+    pruefe(P, "die Handelsart ist Spot oder Hebel, nie der Gruppenschluessel",
+           "Spot," in AR3._absatz(dict(_e1, tier="krypto"))[0]
+           and "mit Hebel" in AR3._absatz(
+               dict(_e1, tier="hebel", richtung="LONG"))[0],
+           "unter '[KRYPTO-SPOT]' noch einmal 'krypto' zu schreiben ist "
+           "doppelt und falsch beschriftet")
+    # GRUPPIERT WIRD INNERHALB DER DRINGLICHKEIT, NICHT DARUEBER.
+    _g = [dict(_e1, symbol=s, tier=k, empfehlung="SCHLIESSEN · faellig",
+               ist_bestand=True)
+          for s, k in (("BTC", "krypto"), ("ETH", "hebel"),
+                       ("OD7H", "rohstoffe"), ("X136", "aktien"))]
+    _txtg = " | ".join(AR3._nach_gruppen(_g))
+    pruefe(P, "ab vier Eintraegen bekommt ein Block Gruppentitel",
+           "[KRYPTO-HEBEL]" in _txtg and "[ROHSTOFFE]" in _txtg
+           and _txtg.index("[KRYPTO-HEBEL]") < _txtg.index("[KRYPTO-SPOT]"),
+           "sechs Gruppen in fester Lesereihenfolge - keine neuen erfunden")
+    pruefe(P, "darunter wird nur sortiert, nicht ueberschrieben",
+           "[KRYPTO-SPOT]" not in " | ".join(AR3._nach_gruppen(_g[:2])),
+           "zwei Ebenen mal sechs Gruppen sind zwoelf Ueberschriften - bei "
+           "drei Positionen mehr Geruest als Inhalt")
+
     pruefe(P, "die Ausstiegsabfrage holt die id ueberhaupt",
            "felder = (\"id, symbol, created_at" in _quelltext(
                "agent/krypto/backward_tracking.py"),
