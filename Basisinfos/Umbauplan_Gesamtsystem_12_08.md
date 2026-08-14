@@ -1687,3 +1687,110 @@ Produktivgang kommen.
 | **O-12** | Der Kontra-Verdacht im Hebel-Screening | alle drei LLM-Aufrufe gingen an `trendfolge`; der beste Kontra-Kandidat lag bei 69,1, der schwächste trendfolge bei 72,1. Bei n=46 ein Verdacht, kein Befund |
 | **O-13** | Der Screening-Score ist **nie gegen Ergebnisse gemessen** | er entscheidet heute nur die Reihenfolge — ein kalibrierter Vorfilter wäre erst möglich, wenn die Kette aufgelöste Signale liefert |
 | **O-14** | Stufe „vorgemerkt" der Warteschlange ist leer | es gibt keinen Ort in der Datenbank, an dem eine Vormerkung stünde |
+
+
+---
+
+## Kapitel 19 — Der Multi-Asset-Umlauf und die drei Entscheidungen (14.08.2026)
+
+### 19.1 Der Umlauf ersetzt die feste Liste
+
+Bis heute stand im Job `for instrument in ("spot", "hebel")`. Aktien,
+Rohstoffe, Themen-ETF und die Absicherung waren damit von der neuen Kette **gar
+nicht erreichbar** — der glatte Schnitt hätte sie stillgelegt, ohne sie zu
+ersetzen. Was ein Umlauf ist, steht jetzt an **einer** Stelle,
+`assetklassen.laeufe()`:
+
+| Gruppe | Instrument | Symbole | Tranche | Cooldown |
+|---|---|---|---|---|
+| aktien | spot | 2 | 400 € | 24 h |
+| hedge | absicherung | 2 | 500 € | 24 h |
+| krypto | spot | 43 | 250 € | 15 h |
+| krypto | hebel | 43 | 1.000 € | 3,5 h |
+| rohstoffe | spot | 4 | 400 € | 24 h |
+| themen_etf | spot | 5 | 400 € | 24 h |
+
+**Warum börsengehandelte Werte andere Zahlen bekommen:** an der Börse kostet
+1 € fix je Seite — bei 250 € sind das 0,8 % allein an Fixkosten, während sich
+der Betrag bei Krypto herauskürzt. Und Krypto handelt rund um die Uhr, eine
+Aktie nicht: ein 15-Stunden-Takt fragt dort mehrfach am selben Handelstag
+dasselbe.
+
+**24 h ist kein gemessener Wert**, sondern Handelstagslogik. Der Einmalkauf
+bleibt bei 800 €, weil der Nutzer Beträge für Krypto genannt hat und nicht für
+Aktien — eine erfundene Zahl wäre schlimmer als die übernommene.
+
+### 19.2 Trockenlauf über alle sechs Gruppen — und der Nagel darin
+
+Ohne einen einzigen Modellaufruf, und er findet, was ein echter Lauf teuer
+fände: `hedge` 0 von 2 Symbolen mit Kursreihe, `rohstoffe` 0 von 4, `krypto`
+32 von 43, `themen_etf` 4 von 5.
+
+**Der Grund ist wichtiger als der Befund.** Hedge- und Rohstoff-Reihen werden
+zur **Laufzeit rekonstruiert**, und die Funktion dafür liegt in den *alten*
+Pipelines. Auf dem Desktop fehlen sie, weil die Produktion hier am 21.07.
+stehenblieb — vor der Rekonstruktion. Auf dem Notebook existieren sie (Startlog
+14.08.: „Hedge-Reihe für 3QSS rekonstruiert: 520 Punkte").
+
+> ⚠️ **NAGEL FÜR DEN SCHNITT:** der OHLC-Refresh ruft
+> `_ensure_ohlc_backfilled` **direkt aus den Pipeline-Modulen**, unabhängig von
+> deren Signalerzeugung. Der Schnitt darf die **Signalerzeugung** stilllegen —
+> **diese Funktion nicht.** Wer die Pipelines eines Tages löscht, nimmt den
+> börsengehandelten Werten ihre Kursreihen mit, und zwar lautlos.
+
+### 19.3 Z.ai — die Annahme war falsch herum
+
+Die Sorge war „drei Stimmen nacheinander kosten Zeit". Der Engpass war das
+Gegenteil: `rollen_lauf` startet einen Faden **je Signal**, jeder ruft Z.ai auf.
+Bei zehn Signalen liefen zehn gleichzeitige Aufrufe gegen ein Limit von zwei —
+die Parallelität war längst da, nur unbegrenzt.
+
+`zweite_meinung.MAX_GLEICHZEITIG = 2`, als Semaphore **am Anbieter**, nicht am
+Lauf: dort gilt sie auch für jeden künftigen Aufrufer, der von der Grenze
+nichts weiß. Gemessen: 12 Fäden, Spitze 2. Wer binnen 180 s keinen Platz
+bekommt, wird als *übersprungen* gebucht — ein Ausfall darf nicht aussehen wie
+eine bestandene Prüfung.
+
+### 19.4 Trefferbilanz: nach Instrument getrennt, nach Modell nicht
+
+Spot und Hebel lagen in denselben Zellen. Das ist ein Fehler, keine
+Ungenauigkeit: ein Hebel-Trade hat einen Stop und löst binnen Stunden auf, eine
+Spot-Tranche hat keinen und läuft über Wochen. **Der Beleg liegt im Projekt** —
+die CRV-Abstufung hilft bei Spot (SQN +0,63 → +1,36) und schadet beim Hebel
+(+3,25 → +1,25). Eine gemeinsame Bilanz hätte das nie zeigen können.
+
+*Bekannte Grenze:* Spot und Absicherung sind über `hebel IS NULL` **nicht**
+trennbar. Eine Instrumentspalte wäre eine zweite Wahrheit neben einer, die
+schon eindeutig ist.
+
+**Nach Modell wird nicht gespalten**, und der Einwand des Nutzers ist der
+Grund: *„angenommen 3.5 weicht ab, dann haben wir diese Abweichung in ALLEN
+Hebeln"*. Genau deshalb hilft Spalten nicht — es würde die Zellen vierteln, und
+schlimmer: fällt der erste Topf aus, landet das Urteil in einer frischen,
+leeren Zelle. Der Entscheider stünde ohne Bilanz da, genau wenn etwas
+schiefgeht. Stattdessen `modell_mischung()` — die Spalte steht ohnehin auf jeder
+Zeile, jetzt ist sie ablesbar.
+
+### 19.5 Groq zurück in der Kette — als vierter Topf
+
+`gemini-3.1-flash-lite` → `gemini-3.5-flash-lite` → OpenRouter → **Groq**.
+
+Der Ausschlussgrund vom 26.07. ist entfallen: „413 Payload Too Large" bei einem
+Prompt von 34.611 Zeichen. Der Rollen-Umbau hat ihn auf 3.183 gekürzt
+(750–900 Token je Aufruf). **Nicht Groq hat sich geändert, sondern wir.** Die
+Abkündigung vom 14.08. betrifft `llama-3.1-8b-instant`; wir fahren
+`llama-3.3-70b-versatile`.
+
+> ⚠️ **80 ist eine Annahme, keine abgelesene Zahl.** Die bindende
+> Free-Tier-Grenze ist vermutlich nicht die Anfragenzahl, sondern die **Token
+> je Tag** — bei ~1.200 Token je Aufruf wären 100.000 TPD rund 83 Aufrufe. Vor
+> ernsthafter Nutzung an der Quelle nachlesen.
+
+### 19.6 Offene Punkte aus diesem Kapitel
+
+| Nr. | Punkt |
+|---|---|
+| **O-15** | Groq-Tageslimit an der Quelle prüfen (Anfragen *oder* Token) |
+| **O-16** | Spot und Absicherung in der Trefferbilanz nicht trennbar — erst relevant, wenn Hedge-Signale auflösen |
+| **O-17** | Einmalkauf-Betrag für börsengehandelte Werte ist übernommen (800 €), nicht entschieden |
+| **O-18** | `_ensure_ohlc_backfilled` darf beim Aufräumen der alten Pipelines nicht mitgelöscht werden |
