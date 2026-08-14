@@ -1033,6 +1033,27 @@ immer „ich will X wissen", nie „welches Skript gibt es".
 > Kennzahlen-Katalog unauffällig ausgesehen — er berührt die Kennzahlen gar
 > nicht. Umgekehrt findet der Vollcheck keine schleichende Kennzahlen-Drift.
 
+### Nach jedem Lauf der Rollen-Kette (neu 14.08.2026)
+
+| Skript | Beantwortet | Auslöser |
+|---|---|---|
+| `messe_verkaufsseite.py` | **Ist die Verkaufsseite ein Befund oder ein Münzwurf?** (O-29) Kreuztabelle Aktion × Bestand, dann AUC und Permutationstest über die gemessenen Merkmale. Kein Modellaufruf, feste Saat. | nach jedem Lauf — die Stichprobe wächst, und erst mit ihr bekommt der Test Trennschärfe |
+| `messe_begruendungen.py` | **Welche unserer Faktenblöcke tragen?** Ordnet jeden Beleg dem Block zu, aus dem er stammt (`lagebeschreibung.geteilt()`), und hält die Ausgänge dagegen. | sobald Signale **mit** `belege_json` aufgelöst sind |
+
+> **Warum eigenständig und nicht im Export.** Beim Bauen war mein erster
+> Reflex, sie in `extract_notebook_diagnose.py` einzuhängen — „Auswertungen
+> laufen über den Export". Das ist die falsche Richtung: 2.1a stellt **Rohdaten**
+> bereit (hier `belege_json`, dort ergänzt), 2.13 führt die **Auswertungen** als
+> Skripte mit Auslöser. Der Export ist ein BASIS-Werkzeug, das andere
+> importieren — würde er selbst zwei Analyseskripte importieren, hinge die
+> Datenbeschaffung an ihren Fehlern.
+
+> **Beide Skripte nennen ihre eigene Grenze.** `messe_verkaufsseite.py` druckt
+> aus, dass „nicht unterscheidbar" nicht „zufällig bewiesen" heißt;
+> `messe_begruendungen.py` trennt Verteilung von Erfolg, solange keine Zeile
+> mit Belegen aufgelöst ist. Prüfungen in `pruefe_pakete.py` halten beide Sätze
+> fest, damit sie niemand wegkürzt.
+
 ### Vier BASIS-Werkzeuge — importieren statt nachbauen
 
 Zwei Implementierungen derselben Simulation laufen garantiert auseinander

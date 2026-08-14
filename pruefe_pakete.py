@@ -5005,6 +5005,25 @@ def paket_15() -> None:
            "eine leere Liste sieht in der Auswertung aus wie 'keine Gruende "
            "genannt' - None heisst 'nicht gefragt'")
 
+    # AE1b DIE RICHTUNG DER ABHAENGIGKEIT (Methodik 2.13).
+    #
+    # Mein erster Reflex war, beide Messungen in `extract_notebook_diagnose.py`
+    # einzuhaengen - "Auswertungen laufen ueber den Export". Die Methodik sagt
+    # das Gegenteil: 2.1a stellt ROHDATEN bereit (hier `belege_json`), 2.13
+    # fuehrt die AUSWERTUNGEN als eigenstaendige Skripte mit Ausloeser. Der
+    # Export ist ein BASIS-Werkzeug, das andere importieren - wuerde er selbst
+    # zwei Analyseskripte importieren, hinge die Datenbeschaffung an ihren
+    # Fehlern.
+    pruefe(P, "der Export importiert keine Analyseskripte",
+           "messe_verkaufsseite" not in _quelltext("extract_notebook_diagnose.py")
+           and "messe_begruendungen" not in _quelltext(
+               "extract_notebook_diagnose.py"),
+           "die Abhaengigkeit laeuft ZUM Export hin, nicht von ihm weg")
+    pruefe(P, "aber die Rohdaten exportiert er",
+           "belege_json" in _quelltext("extract_notebook_diagnose.py"),
+           "2.1a: eine Frage, deren Rohdaten der Export nicht kennt, ist "
+           "nachtraeglich nicht beantwortbar")
+
     # AE2 DIE ZUORDNUNG ZUM FAKTENBLOCK.
     #
     # NICHT die Kategorien der alten Kette (technisch/fundamental/...): die
