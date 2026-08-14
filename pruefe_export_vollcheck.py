@@ -228,7 +228,8 @@ def main() -> None:
            "unabhaengige_faktoren", "umgeworfen_durch",
            "umgeworfen_preis_eur", "umgeworfen_bis",
            "schwankung_perzentil", "momentum_perzentil",
-           "volumen_perzentil", "zai_stimmen", "richtung", "hebel")
+           "volumen_perzentil", "zai_stimmen", "richtung", "hebel",
+           "modell")
     beispiel = (ss or hs or [{}])[0]
     fehlend = [f for f in neu if f not in beispiel]
     zeile(not fehlend,

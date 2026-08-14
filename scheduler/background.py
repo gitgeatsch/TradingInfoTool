@@ -2800,9 +2800,15 @@ def hebel_screening_job(
                 "Rollen-Kette (%s). Eine Klasse, eine Kette.", art)
             for instrument in ("spot", "hebel"):
                 try:
+                    # ALLE TOEPFE UEBERGEBEN, nicht einen Client. Welcher
+                    # dran ist, entscheidet das Restkontingent - und diese
+                    # Entscheidung gehoert an EINE Stelle
+                    # (`rollen_job.waehle_client`), nicht in jeden Aufrufer.
                     fuehre_krypto_lauf(
                         conn_factory=conn_factory, config=config_dict,
-                        client=gemini_client, zai_client=zai_client,
+                        clients={"gemini": gemini_client,
+                                 "openrouter": openrouter_client},
+                        zai_client=zai_client,
                         instrument=instrument, strategie="einstieg",
                         betriebsart=art)
                 except Exception:

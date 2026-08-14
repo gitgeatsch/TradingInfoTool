@@ -63,6 +63,75 @@ def bedient_neue_kette(assetklasse: str, config: dict | None = None) -> bool:
     return str(assetklasse or "").strip().lower() in aktiv_fuer(config)
 
 
+# --- DIE RUECKFALLKETTE ---------------------------------------------------
+#
+# Nutzerentscheidung 14.08., als Fachfrage gestellt und so beantwortet:
+#
+#     gemini-3.1-flash-lite  -> gemini-3.5-flash-lite -> OpenRouter
+#
+# DER GRUND IST NICHT DURCHSATZ, SONDERN MESSBARKEIT. Ein Anbieterwechsel
+# mitten am Tag mischt ZWEI Urteilsverteilungen in dieselbe Trefferbilanz -
+# und genau die Kalibrierung, auf die dieses Projekt seit Wochen wartet, waere
+# verunreinigt, bevor sie anfaengt.
+#
+# Das ist kein theoretisches Risiko: der Mistral-Verhaltensbruch vom 31.07.
+# zeigte 55,4 gegen 68,0 % bei BITGLEICHEM Prompt. Modelle unterscheiden sich
+# messbar. Deshalb zuerst das Geschwistermodell derselben Familie und der
+# Fremdanbieter erst, wenn beide Gemini-Toepfe leer sind - bei 319 Aufrufen
+# Bedarf am Tag waeren das drei Tage Ausfall am Stueck.
+#
+# DIE RESERVE. Gewechselt wird bei 90 % des Topfes, nicht bei 100 %: der Rest
+# ist fuer Messlaeufe und Handbetrieb. Das Budget haengt am SCHLUESSEL, nicht am
+# Geraet - ein Desktop-Messlauf nimmt der Produktion direkt Kontingent weg.
+KETTE = (
+    ("gemini", "gemini-3.1-flash-lite", 500),
+    ("gemini", "gemini-3.5-flash-lite", 500),
+    ("openrouter", None, 1000),
+)
+RESERVE_ANTEIL = 0.10
+
+
+def _verbraucht(quelle: str, modell: str | None) -> int:
+    from api.gemini import _kontingent_tag
+    from api.llm_basis import verbrauch_heute
+
+    if quelle == "gemini" and modell:
+        # DER PAZIFIK-TAG, nicht UTC. Google setzt zu Mitternacht Pazifik
+        # zurueck, und `api/gemini.py` bucht genau so - wer hier den UTC-Tag
+        # naehme, laese einen anderen Zaehler als den, der die Grenze abbildet.
+        return verbrauch_heute(f"gemini:{modell}", _kontingent_tag())
+    return verbrauch_heute(quelle)
+
+
+def waehle_client(config: dict | None = None, *, clients: dict | None = None):
+    """Welcher Topf ist noch offen - und wieviel darf dieser Lauf verbrauchen?
+
+    Gibt `(client, modellname, rest)` zurueck. `rest` ist der Deckel fuer
+    DIESEN Lauf; `fuehre_lauf` haelt an, wenn er erreicht ist.
+
+    `(None, None, 0)` heisst: alle Toepfe erschoepft. Der Aufrufer soll das
+    MELDEN und nicht weiterlaufen - ein Lauf ohne Kontingent wuerde jedes
+    Symbol an derselben Stelle scheitern lassen und die Durchlaessigkeit mit
+    Fehlern fuellen, die keine sind."""
+    clients = clients or {}
+    for quelle, modell, budget in KETTE:
+        client = clients.get(quelle)
+        if client is None:
+            continue
+        grenze = int(budget * (1.0 - RESERVE_ANTEIL))
+        rest = grenze - _verbraucht(quelle, modell)
+        if rest > 0:
+            if (quelle, modell) != KETTE[0][:2]:
+                logger.warning(
+                    "Rueckfall auf %s/%s - der vorige Topf ist bei %d %% "
+                    "seiner Grenze. Die Urteile dieses Laufs stammen damit von "
+                    "einem ANDEREN Modell; die Signalzeile haelt es fest.",
+                    quelle, modell, int(100 * (1 - RESERVE_ANTEIL)))
+            return client, modell, rest
+    logger.error("Alle LLM-Toepfe erschoepft - kein Lauf.")
+    return None, None, 0
+
+
 ERLAUBTE_BETRIEBSARTEN = ("trocken", "probe", "scharf")
 
 
@@ -129,7 +198,8 @@ def baue_versand(config: dict | None = None):
 
 
 def fuehre_krypto_lauf(
-    *, conn_factory, config, client, zai_client=None, versand=None,
+    *, conn_factory, config, client=None, clients=None, zai_client=None,
+    versand=None,
     instrument: str = "spot", strategie: str = "einstieg",
     betriebsart: str = "probe", db: str = "data/tradinginfotool.db",
 ) -> dict | None:
@@ -171,11 +241,21 @@ def fuehre_krypto_lauf(
                 "Scharfer Lauf OHNE Versandweg - die Signale werden "
                 "geschrieben, die Mails bleiben liegen.")
 
+    # WELCHER TOPF, UND WIEVIEL DARF DIESER LAUF? Beides kommt aus derselben
+    # Entscheidung - wer den Client waehlt, kennt auch dessen Restbudget.
+    if client is None:
+        client, modell, rest = waehle_client(config, clients=clients or {})
+        if client is None:
+            return None
+    else:
+        modell, rest = None, None
+
     conn = conn_factory()
     try:
         ergebnis = RL.fuehre_lauf(
             conn=conn, reihen=reihen, symbole=symbole, betriebsart=betriebsart,
             instrument=instrument, strategie=strategie, client=client,
+            modell=modell, max_aufrufe=rest,
             zai_client=zai_client, versand=versand, config=config, db=db,
             assetklasse="krypto")
     finally:

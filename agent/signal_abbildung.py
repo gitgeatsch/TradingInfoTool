@@ -151,6 +151,19 @@ SPALTEN_SIGNAL = {
     # Faktor nicht - und ohne ihn ist ein Ausgang nicht bewertbar.
     "richtung": "TEXT",
     "hebel": "REAL",
+    # WELCHES MODELL DAS URTEIL GEFAELLT HAT (14.08., Voraussetzung fuer die
+    # Rueckfallkette).
+    #
+    # `lagebilder` haelt sein Modell seit Paket 6 fest, die Signalzeile nicht.
+    # Sobald die Kette bei erschoepftem Kontingent auf ein anderes Modell
+    # ausweicht, mischten sich damit ZWEI Urteilsverteilungen lautlos in
+    # dieselbe Trefferbilanz - und genau die Kalibrierung, auf die alles
+    # wartet, waere verunreinigt, bevor sie anfaengt.
+    #
+    # Das ist keine Vermutung: der Mistral-Verhaltensbruch vom 31.07. zeigte
+    # 55,4 gegen 68,0 % bei BITGLEICHEM Prompt. Modelle unterscheiden sich
+    # messbar, also muss die Zeile sagen, welches gesprochen hat.
+    "modell": "TEXT",
 }
 
 _LAGEBILDER = """
@@ -211,12 +224,61 @@ def schreibe_lagebild(conn: sqlite3.Connection, *, datum: str, antwort: dict,
     return int(cur.lastrowid)
 
 
+def juengstes_lagebild(conn: sqlite3.Connection,
+                       max_alter_stunden: float) -> tuple | None:
+    """Das juengste Lagebild, wenn es noch frisch genug ist - sonst None.
+
+    WOZU. Rolle A beschreibt den GESAMTMARKT und laeuft einmal je Durchgang.
+    Bei einem 15-Minuten-Takt waeren das 96 Aufrufe am Tag je Instrument, fuer
+    eine Aussage, die sich in 15 Minuten nicht aendert. Mit drei Stunden
+    Haltbarkeit sind es acht.
+
+    DREI STUNDEN, NICHT ACHT (Nutzerentscheidung 14.08.). Das Lagebild speist
+    JEDEN Trader-Aufruf in seinem Fenster - je aelter es ist, desto mehr
+    Urteile haengen an einem veralteten Marktbild. Der Unterschied kostet 10
+    Aufrufe am Tag gegen ein Budget von 500.
+
+    Gibt `(id, antwort)` zurueck, wobei `antwort` die Form hat, die
+    `rolle_analyst.validiere()` liefert - der Aufrufer merkt nicht, ob es
+    gerade erfragt oder wiederverwendet wurde.
+
+    Fail-soft: bei fehlender Tabelle oder unlesbarem JSON gibt es kein
+    Zwischenergebnis, also wird neu gefragt. Ein kaputter Zwischenspeicher darf
+    hoechstens Geld kosten, nie ein falsches Marktbild liefern."""
+    from datetime import timedelta
+
+    try:
+        zeile = conn.execute(
+            "SELECT id, erstellt_am, lage, belege_json, klassen_json, "
+            "gleichlauf FROM lagebilder ORDER BY id DESC LIMIT 1").fetchone()
+    except Exception:                                        # noqa: BLE001
+        return None
+    if not zeile:
+        return None
+    kennung, erstellt, lage, belege, klassen, gleichlauf = tuple(zeile)
+    try:
+        wann = datetime.fromisoformat(str(erstellt))
+        if wann.tzinfo is None:
+            wann = wann.replace(tzinfo=timezone.utc)
+        if datetime.now(timezone.utc) - wann > timedelta(hours=max_alter_stunden):
+            return None
+        antwort = {"lage": lage,
+                   "belege": json.loads(belege or "[]"),
+                   "klassen": json.loads(klassen or "[]")}
+    except Exception:                                        # noqa: BLE001
+        return None
+    if gleichlauf:
+        antwort["gleichlauf"] = gleichlauf
+    return int(kennung), antwort
+
+
 def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
                             lagebild_id: int | None = None,
                             prompt_stand: str | None = None,
                             eur_je_usd: float | None = None,
                             familien: dict | None = None,
-                            rechnung: dict | None = None) -> dict:
+                            rechnung: dict | None = None,
+                            modell: str | None = None) -> dict:
     """Die Spaltenwerte fuer EIN Signal aus der Antwort der Rollen-Kette.
 
     SCHREIBT NICHT - der Aufrufer entscheidet, ob und wann. Diese Trennung ist
@@ -255,6 +317,7 @@ def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
         # Richtung - dort waere ein eingetragenes "LONG" eine Behauptung, die
         # niemand aufgestellt hat.
         "richtung": antwort.get("richtung"),
+        "modell": modell,
     }
     # DER HEBELFAKTOR KOMMT AUS DER RECHNUNG, nicht aus der Antwort. Das Modell
     # nennt die Richtung, das System rechnet den Faktor (Paket 13) - er darf

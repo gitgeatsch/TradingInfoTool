@@ -2702,13 +2702,14 @@ def paket_export() -> None:
     offen = drift["spalten"].get("signals", {}).get("nicht_exportiert") or []
     pruefe(P, "keine signals-Spalte ist mehr unexportiert", offen == [],
            f"offen: {offen}")
-    pruefe(P, "die vierzehn Spalten der Rollen-Kette sind namentlich drin",
+    pruefe(P, "die fuenfzehn Spalten der Rollen-Kette sind namentlich drin",
            all(sp in EX._SPOT_SIGNAL_SPALTEN for sp in
                ("quelle_kette", "lagebild_id", "prompt_stand", "fx_eur_je_usd",
                 "unabhaengige_faktoren", "umgeworfen_durch",
                 "umgeworfen_preis_eur", "umgeworfen_bis",
                 "schwankung_perzentil", "momentum_perzentil",
-                "volumen_perzentil", "zai_stimmen", "richtung", "hebel")),
+                "volumen_perzentil", "zai_stimmen", "richtung", "hebel",
+                "modell")),
            "ohne sie ist der gesamte Umbau von aussen unsichtbar")
 
     # DIE STUFEN WERDEN AUSGEPACKT, nicht als JSON-Klumpen abgelegt.
@@ -3844,6 +3845,133 @@ def paket_15() -> None:
            RJ.baue_versand(_echt) is not None,
            "sonst schriebe der scharfe Lauf Signale, und die Mails blieben "
            "liegen")
+
+    # ------------------------------------------------------------------
+    # S. DIE SECHS PUNKTE DER KOSTENSTEUERUNG (14.08.).
+    #
+    # Ohne sie macht die Kette im 15-Minuten-Takt ~11.900 Aufrufe am Tag gegen
+    # ein Gemini-Budget von 500. Mit ihnen 319.
+    from agent import warteschlange as WS
+    from scheduler import rollen_job as RJ2
+    _l = _quelltext("agent/rollen_lauf.py")
+
+    # S1 COOLDOWN VOR DEM AUFRUF - der groesste Hebel.
+    pruefe(P, "der Cooldown steht VOR dem Trader-Aufruf",
+           _l.find("WH.gesperrt_bis") < _l.find("bc_roh = _frage("),
+           "dahinter verhinderte er die Mail, nicht die Kosten - das Geld war "
+           "ausgegeben, wenn er griff")
+    pruefe(P, "und der Verlust wird auf der Urteilsstufe gebucht",
+           'durchlauf.verloren(symbol, "urteil", f"Cooldown' in _l,
+           "das Symbol hat Auftrag, Fakten und Lagebild bestanden und ist nie "
+           "zu einem Urteil gekommen - der Trichter bleibt monoton")
+
+    # S2 LAGEBILD ZWISCHENGESPEICHERT.
+    pruefe(P, "das Lagebild wird 3 h wiederverwendet",
+           RL2.LAGEBILD_HALTBAR_STUNDEN == 3.0,
+           "Nutzerentscheidung: nicht 8 h - es speist JEDEN Trader-Aufruf in "
+           "seinem Fenster")
+    pruefe(P, "und der Trockenlauf greift NICHT darauf zu",
+           "if betriebsart != TROCKEN:" in _l.split("juengstes_lagebild")[0][-200:],
+           "er soll die Verdrahtung pruefen, nicht davon abhaengen, was "
+           "zufaellig in der Datenbank liegt")
+    _alt = SA.juengstes_lagebild(c, 0.0)
+    pruefe(P, "ein zu altes Lagebild wird nicht wiederverwendet", _alt is None,
+           "bei Haltbarkeit 0 darf nichts durchkommen")
+
+    # S3 WARTESCHLANGE - Reihenfolge, kein Ausschluss.
+    _sym = ["ZZZ_UNBEKANNT", "BTC", "AAA_UNBEKANNT"]
+    _sortiert = WS.sortiere(c, _sym)
+    pruefe(P, "die Warteschlange schliesst NICHTS aus",
+           sorted(_sortiert) == sorted(_sym),
+           "sie sagt 'du zuerst', nie 'du nie' - ein Ausschluss waere die "
+           "Mechanik, die den Deadloop erzeugt hat")
+    pruefe(P, "Bestand kommt zuerst", _sortiert[0] == "BTC",
+           f"{_sortiert} - bei einer Position, die der Nutzer haelt, steht "
+           f"taeglich eine echte Entscheidung an")
+    pruefe(P, "eine leere Liste bleibt leer", WS.sortiere(c, []) == [])
+    # NUTZEREINWAND 14.08.: es gibt ZWEI Bestaende.
+    _ws = _quelltext("agent/warteschlange.py")
+    pruefe(P, "der Bestand umfasst Spot UND offenen Hebel",
+           "FROM holdings" in _ws and "FROM hebel_positions" in _ws,
+           "meine erste Fassung las nur `holdings` - beim Hebel waere der "
+           "wichtigste Fall uebersehen worden")
+    pruefe(P, "offen wird so definiert wie im Rest des Systems",
+           "status = 'offen'" in _ws,
+           "meine erste Fassung nahm `geschlossen_am IS NULL` - die Quelle "
+           "(db.get_open_hebel_positions, backward_tracking:4794) sagt "
+           "`status = 'offen'`. Beide Spalten existieren, ob sie immer "
+           "zusammenpassen weiss niemand")
+    # DIE LUECKE, NACH DER DER NUTZER GEFRAGT HAT: der Hebel-Bestand kommt aus
+    # der Bitpanda-Abfrage. Wenn der Schnitt den Sync mit uebersprungen haette,
+    # bliebe `hebel_positions` fuer immer leer.
+    _bgq = _quelltext("scheduler/background.py")
+    _i_job = _bgq.find("def hebel_screening_job(")
+    _i_sync = _bgq.find("bitpanda_api_key", _i_job)
+    _i_cut = _bgq.find('bedient_neue_kette("krypto", config_dict)')
+    pruefe(P, "der Bitpanda-Positions-Sync ueberlebt den Schnitt",
+           0 < _i_sync < _i_cut,
+           f"Sync bei {_i_sync}, Schnitt bei {_i_cut} - ohne ihn bliebe "
+           f"hebel_positions leer und der Hebel-Bestand unsichtbar")
+    pruefe(P, "und der Lauf reicht das Instrument durch",
+           "WS.sortiere(conn, symbole, instrument)" in _l,
+           "sonst sortierte ein Hebel-Lauf nach dem Spot-Bestand")
+
+    # S4 BUDGET UND RUECKFALLKETTE.
+    pruefe(P, "die Kette ist Gemini 3.1 -> 3.5 -> OpenRouter",
+           [m for _, m, _ in RJ2.KETTE] ==
+           ["gemini-3.1-flash-lite", "gemini-3.5-flash-lite", None],
+           "gleiche Familie zuerst: ein Anbieterwechsel mischt zwei "
+           "Urteilsverteilungen in dieselbe Trefferbilanz")
+    pruefe(P, "es bleibt eine Reserve", 0 < RJ2.RESERVE_ANTEIL < 0.5,
+           f"{RJ2.RESERVE_ANTEIL:.0%} - Messlaeufe nehmen der Produktion "
+           f"Kontingent weg, das Budget haengt am Schluessel")
+    pruefe(P, "ohne Client gibt es keinen Lauf",
+           RJ2.waehle_client({}) == (None, None, 0),
+           "ein Lauf ohne Kontingent liesse jedes Symbol an derselben Stelle "
+           "scheitern und fuellte die Durchlaessigkeit mit Scheinfehlern")
+
+    class _Klient:
+        def chat(self, *a, **k):
+            return "{}"
+
+    _cl, _mo, _rest = RJ2.waehle_client({}, clients={"gemini": _Klient()})
+    pruefe(P, "mit Kontingent kommt der erste Topf und ein Deckel",
+           _mo == "gemini-3.1-flash-lite" and _rest > 0, f"{_mo}, Rest {_rest}")
+    pruefe(P, "der Deckel zaehlt AUFRUFE, nicht Symbole",
+           'ergebnis["aufrufe"] >= max_aufrufe' in _l,
+           "ein Symbol am Cooldown kostet nichts und darf den Deckel nicht "
+           "verbrauchen")
+
+    # S5 DAS MODELL AUF DER SIGNALZEILE - Voraussetzung fuer S4.
+    _mf = SA.felder_aus_entscheidung({"aktion": "KAUFEN"}, fakten={},
+                                     modell="gemini-3.5-flash-lite")
+    pruefe(P, "die Signalzeile haelt das Modell fest",
+           _mf.get("modell") == "gemini-3.5-flash-lite",
+           "ohne sie mischte jeder Rueckfall lautlos - der "
+           "Mistral-Verhaltensbruch vom 31.07. zeigte 55,4 gegen 68,0 % bei "
+           "bitgleichem Prompt")
+    pruefe(P, "und der Lauf gibt es weiter", "modell=modell" in _l)
+
+    # S6 DAS NEIN WIRD MESSBAR MITGESCHRIEBEN.
+    pruefe(P, "ein NICHTS_TUN wird geschrieben statt verworfen",
+           "_schreibe_nein(" in _l,
+           "beide Arme werden gebraucht: ob das JA den Breakeven schlaegt, und "
+           "ob das NEIN besser ist als der Zufall")
+    pruefe(P, "es traegt die Marke des Schatten-Trackings",
+           'felder["ist_reines_llm_halten"] = 1' in _l,
+           "backward_tracking sucht genau danach (Zeile 1192)")
+    # DER RUMPF, NICHT DER AUFRUF. `split()[1]` traf die Argumentliste - die
+    # Funktion steht weiter unten in der Datei als ihre Aufrufstelle.
+    pruefe(P, "und gerechnete Zonen, sonst ist es unaufloesbar",
+           "take_profit_eur_von" in _l.split("def _schreibe_nein")[1][:3000],
+           "_hat_selbst_halten_these() verlangt Einstieg, Stop UND Ziel - ohne "
+           "sie bliebe die Zeile fuer immer offen")
+    pruefe(P, "es zaehlt NICHT als Signal", 'felder["gate_passed"] = 0' in _l,
+           "es ist eine Messung, keine Empfehlung")
+    pruefe(P, "und ein Fehlschlag haelt den Lauf nicht auf",
+           "nein_fehler" in _l,
+           "die Zeile ist eine Messung - wer hier abbricht, verliert ein "
+           "Urteil, das ohnehin bezahlt ist")
     c.close()
 
 

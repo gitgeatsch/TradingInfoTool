@@ -422,7 +422,7 @@ _SPOT_SIGNAL_SPALTEN = (
     # etwas anderem beruht als der Faktorzahl (die die Entscheidung nur
     # wiederholt). Wieder vom eigenen Drift-Waechter gemeldet.
     "schwankung_perzentil, momentum_perzentil, volumen_perzentil, "
-    "zai_stimmen, richtung, hebel, "
+    "zai_stimmen, richtung, hebel, modell, "
     "regime, gate_passed, gate_reason, "
     "risk_veto, risk_veto_reason, cash_veto, cash_veto_reason, groq_model, "
     "outcome_status, outcome_geprueft_am, outcome_entschieden_am, "
