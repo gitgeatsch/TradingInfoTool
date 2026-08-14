@@ -2104,3 +2104,99 @@ Tendenz, und sie zeigt in die unerwünschte Richtung.
 aufgelöste Ausgänge, also Wochen. `rollen_kette.verkauf_mailt` entscheidet, ob
 sie in der Zwischenzeit im Postfach landen oder nur in der Datenbank —
 **gebucht wird in beiden Fällen.**
+
+
+---
+
+## Kapitel 22 — Der erste Betriebstag, nach dem Neustart (14.08.2026)
+
+### 22.1 O-29 als Werkzeug, nicht als Auswertung
+
+`messe_verkaufsseite.py` — Kreuztabelle Aktion × Bestand, dann AUC und
+Permutationstest über die gemessenen Merkmale. Kein Modellaufruf, feste Saat.
+`messe_begruendungen.py` — ordnet jeden Beleg dem Faktenblock zu, aus dem er
+stammt, und hält die Ausgänge dagegen.
+
+**Beide stehen NEBEN dem Export, nicht darin** (Methodik 2.13). 2.1a stellt die
+**Rohdaten** bereit — dafür kam `belege_json` in den Export. Der Export ist ein
+Basis-Werkzeug, das andere importieren; würde er selbst Analyseskripte
+importieren, hinge die Datenbeschaffung an ihren Fehlern. Beide sind in 2.13
+mit Auslöser registriert.
+
+### 22.2 Die Belege gehen jetzt in die Datenbank
+
+Bis heute ging nur ihre **Anzahl** hinein. Die Mail zeigte „Belege (5, davon 3
+unabhängige Faktoren)" — gespeichert wurden die 5 und die 3. *Welche* Fakten
+das Urteil trugen, war damit nachträglich nicht beantwortbar, und für
+bestehende Zeilen bleibt es das: eine Zeile ohne Belege lässt sich nicht
+nachrüsten.
+
+### 22.3 Die Remote-Karte zeigte 0, während die Kette lief
+
+```
+LLM-Budget heute (Krypto)   0 / 180        Z.ai-Gegenprüfung heute   10
+```
+
+Zwei Zahlen auf derselben Karte, die einander widersprechen.
+`count_real_signals_today()` filtert auf `groq_raw_response IS NOT NULL` — eine
+Spalte, die **nur die alte Kette** schrieb. Und die 180 sind
+`budget_allocator.taegliches_budget_gesamt`, während das Log selbst meldet:
+*„Budget-Allocator übersprungen"*.
+
+Die Karte zeigt jetzt die **Anbieter-Kontingente** — die einzige harte Grenze,
+die die Kette anhalten kann. Gerechnet mit derselben Funktion, die auch
+auswählt.
+
+### 22.4 Zwei Aufräumsachen aus dem Log
+
+**Abruftakt 2 s → 5 s.** Zwanzig Warnungen in drei Minuten, Aufbau 1,24–2,71 s.
+Nachgemessen: am Desktop kalt 0,42 s, warm 0,03 s — der Cache wirkt. Die
+Spitzen fielen genau in das Fenster, in dem die Rollen-Kette lief. Es ist
+**Konkurrenz um die Maschine**, kein Defekt. Gegen Konkurrenz hilft kein Cache.
+
+**Mistral raus** aus der Kategorie-Synthese — 402 seit dem 07.08., der Rückfall
+auf Gemini funktionierte jedes Mal. Ein Fehler, der bei jedem Lauf auftritt und
+nichts bedeutet, trainiert das Auge, Fehlerzeilen zu überlesen.
+
+### 22.5 CANTON heißt an der Börse CC
+
+Binance 400, Bybit 0 Kerzen, OKX 51001 — drei Börsen, dreimal nichts. Statt
+eine vierte zu probieren: CoinGecko fragen, **wo** gehandelt wird. Antwort für
+`canton-network`: Kraken, OKX, Bybit, MEXC — unter dem Ticker **CC**.
+
+**Preis-Gegenprobe auf Nutzerfrage** („prüfe ob cc und canton ident sind"):
+
+| | Kraken | CoinGecko | Abweichung |
+|---|---|---|---|
+| CANTON | CCUSD 0,096770 | canton-network 0,096751 | **0,02 %** |
+| VSN | VSNUSD 0,035410 | vision-3 0,035603 | **0,54 %** |
+
+Dieselbe Probe hat am 11.08. den yfinance-Rückfall zu Fall gebracht — dort
+gehörten drei von acht geratenen Tickern einem anderen, toten Asset.
+
+Abgerufen: CANTON 278 Tageskerzen, VSN 395, Abstände genau 1 Tag. **EURCV ist
+kein Loch** (Cash-Äquivalent, korrekt ausgeschlossen), **ASTER** hat 313/328
+Kerzen — seine Lücke war die veraltete Desktop-Datenbank.
+
+### 22.6 „database is locked"
+
+`sqlite3.connect()` lief ohne Timeout (Vorgabe 5 s) und im
+Vorgabe-Journalmodus, in dem ein Schreibvorgang die **ganze Datei** sperrt.
+Jetzt `busy_timeout` 30 s und **WAL**. Vorher geprüft, dass der Export
+`conn.backup()` benutzt — die Online-Backup-API, die WAL kennt.
+
+### 22.7 Ein Rechenfehler von mir, und ein falscher Alarm
+
+> ⚠️ **O-30 — meine Budgetrechnung zählte Urteile, das Kontingent zählt
+> HTTP-Versuche.** `zaehle_aufruf` steht in `api/gemini.py` **innerhalb** der
+> Wiederholschleife; jeder 429- und 503-Versuch bucht mit. Bei 385 Urteilen
+> und im Schnitt 1,5 Versuchen sind das 578 Aufrufe — der erste Topf (450)
+> wäre leer. Meine Aussage „385 von 450, es passt" hat diesen Faktor nicht
+> berücksichtigt. **Muss am ersten vollen Betriebstag gemessen werden.**
+
+**Und ein Alarm, der keiner war:** OpenRouter tauchte auf Signalen auf, was
+nach erschöpften Gemini-Töpfen aussah. Der Nutzer hat es aufgelöst — es waren
+**keine Krypto-Signale**. Aktien, Rohstoffe, Themen-ETF und Hedge laufen weiter
+über die alte Kette (`multi_asset_batch_job`, Mo–Fr 9 und 19 Uhr), und die
+benutzt OpenRouter. Erwartetes Verhalten, solange `aktiv_fuer` nur `krypto`
+kennt.
