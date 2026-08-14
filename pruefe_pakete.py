@@ -4052,6 +4052,50 @@ def paket_15() -> None:
            AS.ist_handelbar(None, "BTC", bitpanda_gelistet=True) is True
            and AS.ist_handelbar(None, "BTC", bitpanda_gelistet=None) is True,
            "die Listing-Abfrage kennt nicht jeden Sonderfall, der Nutzer schon")
+
+    # ------------------------------------------------------------------
+    # U. DIE ASSETKLASSEN - Vorarbeit fuer den Multi-Asset-Umstieg (14.08.).
+    #
+    # DIE FALLE, DIE HIER ABGESICHERT WIRD, ist am 06.08. schon einmal
+    # zugeschnappt: ein Filter auf eine Assetklasse "hedge", die es nicht gibt,
+    # liess DBPK und 3QSS aus. Mein `KLASSEN`-Tupel hatte den Fehler wiederholt.
+    from agent import assetklassen as AK
+
+    pruefe(P, "die Watchlist kennt vier Assetklassen - hedge ist keine",
+           "hedge" not in AK.ASSETKLASSEN and set(AK.ASSETKLASSEN) ==
+           {"krypto", "aktien", "rohstoffe", "etf"},
+           f"{AK.ASSETKLASSEN} - DBPK und 3QSS stehen als `etf` in der "
+           f"Watchlist und sind nur ueber SYMBOL_ZU_HEBEL_FAKTOR erkennbar")
+    _g = AK.gruppiere()
+    pruefe(P, "etf zerfaellt in hedge und themen_etf",
+           "hedge" in _g and "themen_etf" in _g
+           and not (set(_g["hedge"]) & set(_g["themen_etf"])),
+           f"hedge {_g.get('hedge')}, themen_etf {_g.get('themen_etf')}")
+    pruefe(P, "jede Gruppe ist ein gueltiger Faktenblock-Bereich",
+           all(RL2._bereich(g, i) in FB.ZUSATZ_JE_BEREICH
+               for g, i, _ in AK.laeufe()),
+           str([RL2._bereich(g, i) for g, i, _ in AK.laeufe()]))
+    pruefe(P, "nur Krypto laeuft mit zwei Instrumenten",
+           [g for g, i, _ in AK.laeufe() if i == "hebel"] == ["krypto"],
+           "Hebel gibt es bei Bitpanda nur dort")
+    pruefe(P, "die Absicherung laeuft als `absicherung`, nicht als spot",
+           [i for g, i, _ in AK.laeufe() if g == "hedge"] == ["absicherung"])
+    _alle = {s for _, _, ss in AK.laeufe() for s in ss}
+    pruefe(P, "kein Symbol faellt zwischen die Gruppen",
+           len(_alle) >= 50, f"{len(_alle)} von 57 (Cash-Aequivalente raus)")
+    pruefe(P, "Cash-Aequivalente sind draussen",
+           "EURCV" not in _alle,
+           "ein Stablecoin zu beurteilen kostet einen Aufruf fuer eine Frage, "
+           "die sich nicht stellt")
+
+    # DIE KORREKTUR MEINER EIGENEN DOKUMENTATION.
+    pruefe(P, "die core-Rolle kommt aus der Watchlist, nicht aus einer Tabelle",
+           len(AK.kern_symbole()) >= 10 and "BTC" in AK.kern_symbole(),
+           "ich hatte die Stufe 'vorgemerkt' fuer leer erklaert, weil die "
+           "TABELLE `watchlist` keine Spalten hat - die Watchlist ist keine "
+           "Tabelle, sie steht in config.yaml")
+    pruefe(P, "und die Warteschlange benutzt sie",
+           "kern_symbole" in _quelltext("agent/warteschlange.py"))
     c.close()
 
 

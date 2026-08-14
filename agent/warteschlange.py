@@ -24,10 +24,12 @@ DIE VIER STUFEN:
     4  Screening-Rang    nur REIHENFOLGE, keine Aussage ueber Erfolg
     5  Wartezeit         wer am laengsten kein Urteil hatte
 
-STUFE 2 IST HEUTE LEER, und das steht hier statt in einem Nachtrag: die Tabelle
-`watchlist` hat in dieser Datenbank keine Spalten. Es gibt also keinen Ort, an
-dem eine Vormerkung stuende. Die Stufe bleibt im Code, damit sie einen Platz
-hat, wenn es ihn gibt - sie ist heute schlicht wirkungslos.
+STUFE 3 SIND DIE `core`-ASSETS DER WATCHLIST - dreizehn Stueck, darunter BTC,
+ETH und SOL. Ich hatte hier zuerst geschrieben, die Stufe sei leer, weil die
+Tabelle `watchlist` keine Spalten habe. Die Watchlist ist KEINE TABELLE: sie
+steht in `config.yaml`, und jedes Asset traegt dort eine `rolle`. Derselbe
+Fehler in klein wie beim Hedge - eine Annahme ueber die Datenquelle statt eines
+Blicks hinein.
 
 ZU STUFE 3, damit es nicht verwechselt wird: der Screening-Score
 (`hebel_triggers.score_gesamt`, 36-78) ist NICHT der Regime-Score. Der Regime-
@@ -113,18 +115,20 @@ def _bestaende(conn, instrument: str) -> tuple:
 
 
 def _vorgemerkt(conn) -> set:
-    """Manuell markierte Symbole. Heute leer - siehe Modul-Docstring."""
+    """Die `core`-Assets der Watchlist.
+
+    KORREKTUR MEINER EIGENEN DOKUMENTATION (14.08.): ich hatte hier geschrieben,
+    diese Stufe sei leer, weil die Tabelle `watchlist` keine Spalten habe. Die
+    Watchlist ist keine Tabelle - sie steht in `config.yaml`, und jedes Asset
+    traegt dort eine `rolle`. **Dreizehn sind `core`**, und der alte
+    Budget-Allocator benutzt genau dieses Merkmal (`budget_allocator.py:348`).
+
+    Eine Stufe, die ich fuer wirkungslos erklaert hatte, ist die zweitwichtigste
+    der ganzen Reihenfolge - sie enthaelt BTC, ETH, SOL und zehn weitere."""
+    from agent.assetklassen import kern_symbole
+
     try:
-        spalten = {r[1] for r in conn.execute("PRAGMA table_info(watchlist)")}
-    except Exception:                                        # noqa: BLE001
-        return set()
-    feld = next((s for s in ("vorgemerkt", "schwerpunkt", "favorit")
-                 if s in spalten), None)
-    if feld is None:
-        return set()
-    try:
-        return {str(r[0]).upper() for r in conn.execute(
-            f"SELECT symbol FROM watchlist WHERE {feld}")}
+        return kern_symbole()
     except Exception:                                        # noqa: BLE001
         return set()
 

@@ -38,10 +38,16 @@ TROCKEN, PROBE, SCHARF = "trocken", "probe", "scharf"
 BETRIEBSARTEN = (TROCKEN, PROBE, SCHARF)
 
 
-# Die Klassen, die der Lagebild-Analyst kennt, plus die beiden Bereiche, die
-# es nur im Faktenblock gibt. NICHT aus `rolle_analyst.KLASSEN` abgeleitet: dort
-# stehen die LEITMAERKTE, ueber die geurteilt wird, hier die Klassen, in denen
-# gehandelt wird. Zwei Listen, zwei Bedeutungen - sie sehen nur gleich aus.
+# Die BEREICHE, in denen gelaufen werden kann - nicht die Assetklassen.
+#
+# KORREKTUR 14.08.: hier stand dasselbe Tupel mit dem Etikett "Klassen", und
+# darin "hedge". Hedge IST KEINE ASSETKLASSE - die Watchlist kennt nur krypto,
+# aktien, rohstoffe und etf; DBPK und 3QSS stehen als `etf` darin. Genau dieser
+# Fehler hat am 06.08. schon einmal zugeschlagen: ein Filter auf eine
+# Assetklasse "hedge", die es nicht gibt, liess beide Instrumente aus.
+#
+# `agent/assetklassen.py` haelt die Zuordnung jetzt an EINER Stelle; diese
+# Liste hier ist nur noch die Menge der gueltigen BEREICHE.
 KLASSEN = ("krypto", "aktien", "rohstoffe", "themen_etf", "hedge")
 
 
