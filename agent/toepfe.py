@@ -59,6 +59,27 @@ TOEPFE = ("spot", "hebel", "absicherung")
 TOPF_FUER_INSTRUMENT = {"spot": "spot", "hebel": "hebel",
                         "absicherung": "absicherung"}
 
+def sql_bedingung(instrument: str) -> str:
+    """Woran eine Signalzeile ihrem Topf zugeordnet wird - als SQL-Fragment.
+
+    DIESE ZEILE STAND ZWEIMAL, und beim zweiten Mal fast. `belegt_eur` hatte
+    sie, und die Trefferbilanz brauchte am 14.08. dieselbe Unterscheidung -
+    eine Kopie waere die vierte in diesem Projekt gewesen, die irgendwann
+    auseinanderlaeuft.
+
+    ES GIBT KEINE INSTRUMENTSPALTE, und es soll keine geben: `hebel` wird nur
+    gesetzt, wenn ein Hebelfaktor gerechnet wurde. Eine zweite Spalte daneben
+    waere eine zweite Wahrheit ueber dieselbe Sache.
+
+    WAS DAS KOSTET, offen gesagt: Spot und Absicherung sind so NICHT
+    unterscheidbar - beide haben `hebel IS NULL`. Fuer die Toepfe war das nie
+    ein Thema (die Absicherung hat ohnehin keinen Deckel); fuer die
+    Trefferbilanz heisst es, dass die beiden in einer Zelle landen. Das ist
+    eine bekannte Grenze, keine unbemerkte."""
+    return ("hebel IS NOT NULL" if topf_fuer(instrument) == "hebel"
+            else "hebel IS NULL")
+
+
 # `None` heisst KEINE BEGRENZUNG. Bei zweien von dreien ist das die Vorgabe.
 #
 # ZWEI NUTZEREINWAENDE haben diese Zeilen geformt, und der zweite hat die erste
@@ -241,8 +262,7 @@ def belegt_eur(conn, instrument: str) -> float:
         spalten = {r[1] for r in conn.execute("PRAGMA table_info(signals)")}
         if not {"quelle_kette", "hebel", "position_size_eur"} <= spalten:
             return 0.0
-        bedingung = ("hebel IS NOT NULL" if topf_fuer(instrument) == "hebel"
-                     else "hebel IS NULL")
+        bedingung = sql_bedingung(instrument)
         zeile = conn.execute(
             f"SELECT COALESCE(SUM(position_size_eur), 0) FROM signals "
             f"WHERE quelle_kette = 'rollen' AND outcome_status IS NULL "

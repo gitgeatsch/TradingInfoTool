@@ -87,6 +87,27 @@ KETTE = (
     ("gemini", "gemini-3.1-flash-lite", 500),
     ("gemini", "gemini-3.5-flash-lite", 500),
     ("openrouter", None, 1000),
+    # GROQ ALS VIERTER TOPF (14.08.2026) - reaktiviert, weil sein Ausschluss-
+    # grund entfallen ist.
+    #
+    # Groq flog am 26.07. aus der Kette, weil zwei von drei echten Nutzlasten
+    # "413 Payload Too Large" bekamen: der Prompt war auf 34.611 Zeichen
+    # gewachsen. Der Rollen-Umbau hat ihn auf 3.183 gekuerzt, gemessen
+    # 750-900 Token je Aufruf. **Nicht Groq hat sich geaendert, sondern wir.**
+    #
+    # Die Abkuendigung vom 14.08. betrifft `llama-3.1-8b-instant` zum 16.08.
+    # Wir fahren `llama-3.3-70b-versatile` - ein anderes Modell, kein
+    # Handlungsbedarf aus der Mail.
+    #
+    # 80 IST EINE ANNAHME, KEINE ABGELESENE ZAHL, und darum steht sie so
+    # niedrig. Die bindende Groq-Grenze im Free-Tier ist vermutlich nicht die
+    # Zahl der Anfragen, sondern die TOKEN JE TAG - bei ~1.200 Token je Aufruf
+    # waeren 100.000 TPD rund 83 Aufrufe. Wer diesen Topf ernsthaft nutzen
+    # will, liest den Wert vorher an der Quelle nach (Nutzervorgabe: vor jedem
+    # Lauf Limits, Kontingent, Dauer). Als LETZTER Topf ist zu niedrig der
+    # billige Fehler: er kostet ein paar Signale, waehrend zu hoch mitten im
+    # Lauf in einen harten Fehler laeuft.
+    ("groq", None, 80),
 )
 RESERVE_ANTEIL = 0.10
 
@@ -112,6 +133,9 @@ def _vorgabemodell(client) -> str | None:
     modul = type(client).__module__
     if "gemini" in modul:
         from api.gemini import DEFAULT_MODEL
+        return DEFAULT_MODEL
+    if "groq" in modul:
+        from api.groq import DEFAULT_MODEL
         return DEFAULT_MODEL
     if "openrouter" in modul:
         return "openrouter"

@@ -74,6 +74,55 @@ logger = logging.getLogger(__name__)
 # Gegenpruefungszeilen raus statt gar nicht.
 WARTE_MAX_SEKUNDEN = 240
 
+# WIE VIELE Z.AI-AUFRUFE GLEICHZEITIG LAUFEN DUERFEN (14.08.2026).
+#
+# DIE ANNAHME WAR, die drei Stimmen liefen nacheinander und kosteten deshalb
+# Zeit. Sie tun es - aber das ist nicht die Stelle, an der es klemmt.
+#
+# `rollen_lauf` startet EINEN FADEN JE SIGNAL. Bei zehn Signalen laufen also
+# zehn Faeden, und jeder macht seine Aufrufe: der Andrang bei Z.ai ist die
+# ZAHL DER SIGNALE, nicht die Stimmenzahl. Wer glaubt, drei Stimmen seien das
+# Problem, sucht am falschen Ende - die Parallelitaet war schon da, nur
+# unbegrenzt.
+#
+# ZWEI GLEICHZEITIG ist die Zahl, die der Nutzer fuer Z.ai nennt. Sie hier zu
+# halten ist besser als in `rollen_lauf`: dort waere sie eine Regel ueber
+# Faeden, hier ist sie eine Eigenschaft des Anbieters - und gilt auch fuer
+# jeden kuenftigen Aufrufer, der von der Begrenzung nichts weiss.
+MAX_GLEICHZEITIG = 2
+_PLATZ = threading.Semaphore(MAX_GLEICHZEITIG)
+
+# Wie lange ein Faden auf einen freien Platz wartet, bevor er aufgibt.
+# Grosszuegig, weil ein Aufruf selten laenger als 30 s braucht - aber ENDLICH,
+# damit ein haengender Aufruf nicht die ganze Reihe blockiert.
+WARTE_AUF_PLATZ_SEKUNDEN = 180
+
+
+def _mit_platz(fn, *a, **kw):
+    """Ruft `fn` auf, sobald ein Z.ai-Platz frei ist.
+
+    GIBT AUF STATT ZU DRAENGELN. Bekommt der Faden binnen
+    `WARTE_AUF_PLATZ_SEKUNDEN` keinen Platz, wirft er `Andrang` - und der
+    Aufrufer bucht das als *uebersprungen*, nicht als *fehlgeschlagen*.
+
+    Der Unterschied ist der Grund fuer diese Klasse. "Fail-soft ist
+    fail-silent": ein Signal ohne Gegenpruefungszeilen sieht in der Mail
+    genauso aus wie eines, das die Pruefung bestanden hat. Wer nicht drankam,
+    muss sich vom Rest unterscheiden lassen - sonst zaehlen wir spaeter
+    Ausfaelle als Zustimmung."""
+    if not _PLATZ.acquire(timeout=WARTE_AUF_PLATZ_SEKUNDEN):
+        raise Andrang("kein Z.ai-Platz binnen "
+                      f"{WARTE_AUF_PLATZ_SEKUNDEN:.0f} s frei")
+    try:
+        return fn(*a, **kw)
+    finally:
+        _PLATZ.release()
+
+
+class Andrang(RuntimeError):
+    """Es war kein Platz frei - der Aufruf hat NICHT stattgefunden."""
+
+
 # ---------------------------------------------------------------------------
 # EIGENE PROMPTS, WEIL DIE ALTEN EINE ANDERE FAKTENFORM BESCHREIBEN.
 #
@@ -204,8 +253,8 @@ def mehrheit(client, fakten: dict) -> dict | None:
         # DIE MITTLERE STIMME AUF UMGEKEHRTER REIHENFOLGE - so steckt der alte
         # Positionstest weiter drin, ohne einen eigenen Aufruf zu kosten.
         eingabe = kehre_saetze_um(fakten) if i == 1 else fakten
-        r = G.leite_eigene_richtung(client, eingabe, temperature=0.0,
-                                    system_prompt=SYSTEM_RICHTUNG)
+        r = _mit_platz(G.leite_eigene_richtung, client, eingabe,
+                       temperature=0.0, system_prompt=SYSTEM_RICHTUNG)
         if r and r.get("eigene_richtung"):
             stimmen.append(r["eigene_richtung"])
             if r.get("kurzbegruendung"):
@@ -269,12 +318,15 @@ def hole(*, faktentext: dict, urteil: dict, zai_client,
         # Konsistenz-Aufruf aus, soll der Richtungsabgleich trotzdem laufen -
         # ein gemeinsamer Block wuerde beim ersten Fehler beide verlieren.
         try:
-            k = G.pruefe_konsistenz(zai_client, faktentext,
-                                    urteil.get("begruendung"),
-                                    system_prompt=SYSTEM_KONSISTENZ)
+            k = _mit_platz(G.pruefe_konsistenz, zai_client, faktentext,
+                           urteil.get("begruendung"),
+                           system_prompt=SYSTEM_KONSISTENZ)
             if k:
                 aus["urteil"] = k.get("urteil")
                 aus["kurzbegruendung"] = k.get("kurzbegruendung")
+        except Andrang as e:
+            aus["uebersprungen"] = str(e)
+            logger.info("Z.ai-Konsistenzpruefung uebersprungen: %s", e)
         except Exception:                                    # noqa: BLE001
             logger.info("Z.ai-Konsistenzpruefung fehlgeschlagen (P-8)",
                         exc_info=True)

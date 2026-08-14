@@ -3962,9 +3962,9 @@ def paket_15() -> None:
            "sonst sortierte ein Hebel-Lauf nach dem Spot-Bestand")
 
     # S4 BUDGET UND RUECKFALLKETTE.
-    pruefe(P, "die Kette ist Gemini 3.1 -> 3.5 -> OpenRouter",
-           [m for _, m, _ in RJ2.KETTE] ==
-           ["gemini-3.1-flash-lite", "gemini-3.5-flash-lite", None],
+    pruefe(P, "die Kette ist Gemini 3.1 -> 3.5 -> OpenRouter -> Groq",
+           [q for q, _, _ in RJ2.KETTE] == ["gemini", "gemini",
+                                            "openrouter", "groq"],
            "gleiche Familie zuerst: ein Anbieterwechsel mischt zwei "
            "Urteilsverteilungen in dieselbe Trefferbilanz")
     pruefe(P, "es bleibt eine Reserve", 0 < RJ2.RESERVE_ANTEIL < 0.5,
@@ -4220,6 +4220,99 @@ def paket_15() -> None:
            "if not bedient_neue_kette(gruppe, config):" in _quelltext(
                "scheduler/rollen_job.py"),
            "eine Klasse, eine Kette - auch waehrend der Umstellung")
+
+    # ------------------------------------------------------------------
+    # X. DIE DREI ENTSCHEIDUNGEN vom 14.08. - Z.ai, Trefferbilanz, Groq.
+    import threading as _th
+    from agent import zweite_meinung as ZM2
+    from agent import toepfe as TP2
+    from agent import trefferbilanz as TB2
+    from scheduler.rollen_job import KETTE as _KETTE, _vorgabemodell as _vm
+
+    # X1 Z.AI - DER ANDRANG WAR NICHT DIE STIMMENZAHL.
+    #
+    # Die Annahme war "drei Stimmen nacheinander kosten Zeit". Der Engpass war
+    # ein anderer: `rollen_lauf` startet einen Faden JE SIGNAL, und jeder ruft
+    # Z.ai auf. Bei zehn Signalen waren das zehn gleichzeitige Aufrufe gegen
+    # ein Limit von zwei - unbegrenzte Parallelitaet, nicht zu wenig.
+    _belegt, _spitze, _s = [0], [0], _th.Lock()
+
+    def _messe(_i):
+        with _s:
+            _belegt[0] += 1
+            _spitze[0] = max(_spitze[0], _belegt[0])
+        import time as _t
+        _t.sleep(0.05)
+        with _s:
+            _belegt[0] -= 1
+
+    _f = [_th.Thread(target=lambda i=i: ZM2._mit_platz(_messe, i))
+          for i in range(12)]
+    for _t2 in _f:
+        _t2.start()
+    for _t2 in _f:
+        _t2.join()
+    pruefe(P, "zwoelf Faeden erzeugen hoechstens zwei gleichzeitige Aufrufe",
+           0 < _spitze[0] <= ZM2.MAX_GLEICHZEITIG == 2,
+           f"gemessene Spitze {_spitze[0]} - die Aussage ist NIE MEHR ALS "
+           "zwei, nicht genau zwei: ob sich zwei Faeden begegnen, haengt am "
+           "Zeitverhalten der Maschine, die Obergrenze nicht")
+    pruefe(P, "die Bremse sitzt am Anbieter, nicht am Lauf",
+           "_mit_platz(G.leite_eigene_richtung" in _quelltext(
+               "agent/zweite_meinung.py")
+           and "_mit_platz(G.pruefe_konsistenz" in _quelltext(
+               "agent/zweite_meinung.py"),
+           "sonst gilt sie nur fuer den einen Aufrufer, der sie kennt")
+    pruefe(P, "wer keinen Platz bekam, wird als uebersprungen gebucht",
+           "Andrang" in _quelltext("agent/zweite_meinung.py")
+           and 'aus["uebersprungen"] =' in _quelltext(
+               "agent/zweite_meinung.py"),
+           "fail-soft ist fail-silent - ein Ausfall darf nicht aussehen wie "
+           "eine bestandene Pruefung")
+
+    # X2 TREFFERBILANZ - NACH INSTRUMENT GETRENNT, NACH MODELL NICHT.
+    pruefe(P, "Spot und Hebel landen nicht mehr in denselben Zellen",
+           TP2.sql_bedingung("spot") == "hebel IS NULL"
+           and TP2.sql_bedingung("hebel") == "hebel IS NOT NULL",
+           "die CRV-Abstufung half bei Spot (SQN +0,63 -> +1,36) und schadete "
+           "beim Hebel (+3,25 -> +1,25) - eine gemeinsame Bilanz haette das "
+           "nie zeigen koennen")
+    pruefe(P, "der Unterscheider steht an EINER Stelle",
+           "bedingung = sql_bedingung ( instrument )" in _nur_code(
+               "agent/toepfe.py"),
+           "er stand in belegt_eur und waere die vierte Kopie geworden")
+    pruefe(P, "der Lauf reicht sein Instrument an die Bilanz durch",
+           "TB . zaehle ( conn , quelle_kette = " in _nur_code(
+               "agent/rollen_lauf.py")
+           and "instrument = instrument )" in _nur_code(
+               "agent/rollen_lauf.py"),
+           "sonst waere die Trennung gebaut und unbenutzt")
+    with sqlite3.connect("file:data/tradinginfotool.db?mode=ro",
+                          uri=True) as _c2:
+        pruefe(P, "zaehle() nimmt das Instrument gegen die echte Tabelle",
+               isinstance(TB2.zaehle(_c2, instrument="hebel"), dict),
+               "der Filter darf die Abfrage nicht zerbrechen")
+        pruefe(P, "und die Modellmischung ist ablesbar",
+               isinstance(TB2.modell_mischung(_c2), dict),
+               "das Modell steht NICHT im Schluessel - eine Spaltung haette "
+               "die Zellen gefuenftelt und die Rueckfallkette in leere Zellen "
+               "laufen lassen, genau wenn etwas schiefgeht")
+
+    # X3 GROQ - VIERTER TOPF.
+    pruefe(P, "Groq steht als letzter in der Rueckfallkette",
+           _KETTE[-1][0] == "groq" and len(_KETTE) == 4,
+           "der 413-Grund ist entfallen: 34.611 -> 3.183 Zeichen Prompt")
+    pruefe(P, "und der Scheduler uebergibt den Client auch",
+           '"groq": groq_client' in _quelltext("scheduler/background.py"),
+           "ein Topf ohne Client wird stillschweigend uebersprungen - eine "
+           "Reaktivierung, die nur auf dem Papier stattfindet")
+    _gq = type("G", (), {})
+    _gq.__module__ = "api.groq"
+    from api.groq import DEFAULT_MODEL as _GM
+    pruefe(P, "ein Groq-Urteil traegt seinen Modellnamen",
+           _vm(_gq()) == _GM == "llama-3.3-70b-versatile",
+           "sonst stuende auf 80 Zeilen 'modell = NULL' und die Mischung "
+           "waere nicht mehr rekonstruierbar")
     c.close()
 
 

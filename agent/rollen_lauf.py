@@ -226,7 +226,8 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
     # richtig so: alle Assets eines Durchgangs sollen gegen denselben
     # Kenntnisstand bewertet werden, sonst haenge das Urteil an der Reihenfolge.
     try:
-        bilanz = TB.zaehle(conn, quelle_kette="rollen")
+        bilanz = TB.zaehle(conn, quelle_kette="rollen",
+                           instrument=instrument)
     except Exception as exc:                                 # noqa: BLE001
         ergebnis["fehler"].append(f"Trefferbilanz nicht lesbar: {exc}")
         bilanz = {}

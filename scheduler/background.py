@@ -2810,7 +2810,12 @@ def hebel_screening_job(
             fuehre_umlauf(
                 conn_factory=conn_factory, config=config_dict,
                 clients={"gemini": gemini_client,
-                         "openrouter": openrouter_client},
+                         "openrouter": openrouter_client,
+                         # Ein Topf, den niemand uebergibt, wird uebersprungen
+                         # (`waehle_client` prueft auf None). Die Kette zu
+                         # erweitern und den Client zu vergessen waere eine
+                         # Reaktivierung, die nur auf dem Papier stattfindet.
+                         "groq": groq_client},
                 zai_client=zai_client, betriebsart=art)
         elif any(c is not None for c in (mistral_client, gemini_client, zai_client, openrouter_client)):
             from agent.krypto.budget_allocator import run_budget_allocator

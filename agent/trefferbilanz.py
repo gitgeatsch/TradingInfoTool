@@ -255,7 +255,8 @@ def merkmale(*, unabhaengige_faktoren=None, vola_perzentil=None,
     )
 
 
-def zaehle(conn: sqlite3.Connection, quelle_kette: str | None = "rollen") -> dict:
+def zaehle(conn: sqlite3.Connection, quelle_kette: str | None = "rollen",
+           instrument: str | None = None) -> dict:
     """Treffer und Faelle je Konstellation, aus AUFGELOESTEN Signalen.
 
     Nur was einen Ausgang hat. Ein offenes Signal traegt keine Information
@@ -274,6 +275,24 @@ def zaehle(conn: sqlite3.Connection, quelle_kette: str | None = "rollen") -> dic
     if quelle_kette and "quelle_kette" in spalten:
         bedingung += " AND quelle_kette = ?"
         werte.append(quelle_kette)
+
+    # NACH INSTRUMENT TRENNEN (14.08.) - bis heute lagen Spot und Hebel in
+    # denselben Zellen.
+    #
+    # WARUM DAS EIN FEHLER WAR und nicht nur eine Ungenauigkeit: dieselbe
+    # Konstellation bedeutet bei den beiden NICHT dasselbe. Ein Hebel-Trade hat
+    # einen Stop und loest binnen Stunden auf; eine Spot-Tranche hat keinen und
+    # laeuft ueber Wochen. Ihre Trefferquoten in eine Zahl zu legen heisst,
+    # zwei Verteilungen zu mitteln, die nichts miteinander zu tun haben - und
+    # die Zahl, die herauskommt, beschreibt keine von beiden.
+    #
+    # Das Projekt hat genau diesen Befund schon: die CRV-Abstufung hilft bei
+    # Spot (SQN +0,63 -> +1,36) und schadet beim Hebel (+3,25 -> +1,25). Zwei
+    # Instrumente, entgegengesetztes Vorzeichen, EINE gemeinsame Bilanz - das
+    # haette sich nie zeigen koennen.
+    if instrument and "hebel" in spalten:
+        from agent import toepfe as TP
+        bedingung += f" AND {TP.sql_bedingung(instrument)}"
 
     # DIE DREI GEMESSENEN FAMILIEN FUELLEN DIE UEBRIGEN PLAETZE (13.08.).
     #
@@ -421,3 +440,48 @@ def satz(bewertung: dict, einstieg=None, stop=None,
                       f"Entscheidung aus - die Quote steht auf "
                       f"{100 * (b['anteil_entschieden'] or 0):.0f} % der Faelle)")
     return zeilen
+
+
+def modell_mischung(conn: sqlite3.Connection,
+                    quelle_kette: str | None = "rollen") -> dict:
+    """Welches Modell hat wieviele der gezaehlten Urteile gefaellt?
+
+    DIE ENTSCHEIDUNG, DIE DIESE FUNKTION ERSETZT (14.08.2026): das Modell geht
+    NICHT in den Schluessel der Trefferbilanz ein.
+
+    Der Einwand des Nutzers war der bessere: *"angenommen 3.5 weicht ab, dann
+    haben wir diese Abweichung in ALLEN Hebeln - nicht nur in einigen."* Genau
+    deshalb hilft es nicht, den Schluessel zu spalten. Es wuerde nur die Zellen
+    teilen - bei vier Toepfen in der Rueckfallkette (3.1, 3.5, OpenRouter,
+    Groq) braeuchte eine Zelle die vierfache Zahl an Faellen fuer dieselbe
+    Aussage. Zellen, die heute schon duenn sind, wuerden nie voll.
+
+    SCHLIMMER: es wuerde die Rueckfallkette brechen. Faellt der erste Topf aus,
+    landet das Urteil in einer FRISCHEN, LEEREN Zelle - der Entscheider stuende
+    ohne Bilanz da, und zwar genau in dem Moment, in dem etwas schiefgeht. Die
+    Nutzervorgabe war ausdruecklich, dass die Kette *"sauber zu OpenRouter bzw.
+    Groq skaliert"*; ein Schluessel je Modell taete das Gegenteil.
+
+    ALSO: nicht spalten - aber auch nicht blind sein. Die Spalte `modell` steht
+    auf jeder Signalzeile. Diese Funktion liest sie zurueck, und damit ist die
+    Frage *"traegt eine Bilanz in Wahrheit nur ein Modell?"* jederzeit
+    nachtraeglich beantwortbar, ohne dass der laufende Betrieb dafuer zahlt.
+
+    WAS MAN DAMIT TUT: kippt der Anteil eines Modells ueber einen Lauf hinweg,
+    ist die Bilanz eine gemischte - dann ist ein GEPAARTER Vergleich faellig
+    (dieselben Anker, beide Modelle), nicht eine Spaltung im Nachhinein."""
+    spalten = {r[1] for r in conn.execute("PRAGMA table_info(signals)")}
+    if "modell" not in spalten:
+        return {}
+    stati = list(AUFGELOEST) + [OUTCOME_ABGELAUFEN]
+    bedingung = "outcome_status IN ({})".format(",".join("?" for _ in stati))
+    werte = list(stati)
+    if quelle_kette and "quelle_kette" in spalten:
+        bedingung += " AND quelle_kette = ?"
+        werte.append(quelle_kette)
+    aus: dict[str, int] = {}
+    for row in conn.execute(
+            f"SELECT COALESCE(modell, '(unbekannt)'), COUNT(*) FROM signals "
+            f"WHERE {bedingung} GROUP BY 1", werte):
+        aus[str(row[0])] = int(row[1])
+    return aus
