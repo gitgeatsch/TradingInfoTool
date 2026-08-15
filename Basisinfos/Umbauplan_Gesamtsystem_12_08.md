@@ -2488,3 +2488,25 @@ zeigen soll.
 Und O-34 kommt vor O-33, weil es die teurere Frage ist. Ob wir Hedge-Instrumente
 bequem ergänzen können, ändert nichts an der Qualität der Empfehlungen. Ob die
 Fakten tragen, ändert alles.
+
+### 25.4 Drei Werte, die der Nutzer bewusst stehen lässt (15.08.2026)
+
+Vor dem Produktivgang zur Abstimmung gestellt, alle drei beantwortet mit
+**„vorerst so belassen"**. Das ist ausdrücklich **keine Bestätigung des
+Wertes** — es ist die Entscheidung, ihn nicht ohne Messgrundlage zu ändern.
+
+| Nr. | Wert | Stand |
+|---|---|---|
+| — | Hebel-Cooldown 3,5 h | bleibt; trägt 295 von 385 Aufrufen (77 %) |
+| **O-32** | Hebelfaktor 10,0 | *„in der Theorie möglich — ob ok, kann man noch nicht sagen"* |
+| **O-17** | Einmalkauf 800 € Börsenwerte | bleibt, übernommen aus Krypto |
+
+**Der Nutzer hat das 10,0×-Signal nie erhalten** — es entstand im Trockenlauf
+am Desktop. Ob 10-fach in der Produktion überhaupt auftritt, ist damit selbst
+noch eine offene Beobachtung, keine Feststellung.
+
+**Alle drei bleiben offen und werden entschieden, wenn es Zahlen gibt** — der
+Cooldown, sobald das Kontingent unter dem Vollumstieg gemessen ist; O-32,
+sobald ein echtes Hebel-Signal mit hohem Faktor aufgelöst ist; O-17, sobald
+Börsenwerte-Signale in der Produktion angekommen sind. Sie stehen damit in
+derselben Reihe wie die CRV-Abstufung: **stillgestellt, nicht kalibriert.**
