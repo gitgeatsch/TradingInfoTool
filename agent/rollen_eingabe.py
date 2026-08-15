@@ -140,7 +140,8 @@ def baue_befund_eingabe(*, symbol: str, reihe: list, index: int,
                         lagebild: dict | None = None,
                         instrument: str = "spot",
                         strategie: str = "einstieg",
-                        assetklasse: str | None = None) -> dict:
+                        assetklasse: str | None = None,
+                        gegenseite: str | None = None) -> dict:
     """Eingabe fuer Befund und Entscheidung - alle Bloecke an einer Stelle.
 
     `instrument`/`strategie` (12.08.2026, Paket 2): WAS gehandelt wird und WIE.
@@ -170,7 +171,9 @@ def baue_befund_eingabe(*, symbol: str, reihe: list, index: int,
            "stand": beschreibe_lage(symbol=symbol, reihe=reihe, index=index,
                                     kurs_eur=kurs_eur, atr=atr, menge=menge,
                                     einstand_eur=einstand_eur,
-                                    finanzierung=finanzierung)}
+                                    finanzierung=finanzierung,
+                                    instrument=instrument,
+                                    gegenseite=gegenseite)}
     if lagebild:
         beurteilung = {"lage": lagebild.get("lage")}
         if lagebild.get("gleichlauf"):
@@ -256,21 +259,93 @@ def pruefe_lagebild(ausgabe: dict, eingabe: dict) -> dict:
 DB = "data/tradinginfotool.db"
 
 
-def bestand(symbol: str, db: str | None = None):
+def bestand(symbol: str, db: str | None = None, instrument: str = "spot"):
     """Menge und wirksamer Einstand. NAEHERUNG bei historischen Faellen: der
     heutige Bestand, nicht der von damals - Bestandshistorie fuehren wir nicht.
 
     Liest BEIDE Einstandsspalten. Die manuelle geht vor - dieselbe Vorrangregel
     wie `database/models.py::effective_avg_buy_price_eur`. Ohne sie meldete die
-    Kette 14 von 28 gehaltenen Positionen als "nicht im Bestand"."""
+    Kette 14 von 28 gehaltenen Positionen als "nicht im Bestand".
+
+    DIE TABELLE FOLGT DEM INSTRUMENT (15.08.2026). Bis hierher stand hier
+    IMMER `holdings` - die Spot-Tabelle. Im Hebel-Lauf ging damit der
+    Spot-Bestand in den Prompt, und das Modell empfahl SCHLIESSEN fuer
+    Positionen, die es nie gab: 25 von 270 Aufrufen des ersten
+    Produktionsvormittags. Der Ausfuehrungspfad
+    (`rollen_lauf._ein_asset`) traf die Unterscheidung seit dem 14.08. bereits
+    richtig - nur die FAKTEN, auf die das Modell antwortet, taten es nicht.
+
+    EINE HEBELPOSITION FUEHRT KEINEN EINSTAND JE STUECK. `hebel_positions` hat
+    keine solche Spalte; der Buchwert steckt in `positionswert_eur`. Hier
+    kommt deshalb `None` zurueck und nicht eine gerechnete Zahl - dieselbe
+    Entscheidung wie im Ausfuehrungspfad, aus demselben Grund: eine erfundene
+    Einstandszahl waere schlimmer als eine fehlende."""
     import sqlite3
     c = sqlite3.connect(f"file:{db or DB}?mode=ro", uri=True)
-    r = c.execute("select quantity, avg_buy_price_eur, avg_buy_price_manual_eur "
-                  "from holdings where symbol=?", (symbol,)).fetchone()
+    try:
+        if str(instrument) == "hebel":
+            r = c.execute(
+                "select positionsmenge from hebel_positions "
+                "where symbol=? and status='offen' "
+                "order by eroeffnet_am asc limit 1", (symbol,)).fetchone()
+            return (r[0], None) if r else (None, None)
+        r = c.execute(
+            "select quantity, avg_buy_price_eur, avg_buy_price_manual_eur "
+            "from holdings where symbol=?", (symbol,)).fetchone()
+    except sqlite3.Error:
+        # FEHLT DIE TABELLE, IST DAS KEINE AUSSAGE UEBER DEN BESTAND. Ein
+        # leeres Ergebnis wuerde hier als "nicht im Bestand" gelesen - genau
+        # die Falschaussage, gegen die `_bestand()` seit dem 11.08. drei
+        # Zustaende fuehrt.
+        return (None, None)
     if not r:
         return (None, None)
     menge, berechnet, manuell = r
     return (menge, manuell if manuell is not None else berechnet)
+
+
+def gegenbestand_satz(symbol: str, db: str | None = None,
+                      instrument: str = "spot") -> str | None:
+    """Die ANDERE Seite desselben Assets - benannt, nicht verschwiegen.
+
+    WARUM SIE INS URTEIL GEHOERT. Der Nutzer am 15.08.2026:
+
+        "problem ist dass die trades unabhaengig sind und ich bin in einem
+        hebel bei LINK - also eine Empfehlung und dann kommt ein spot verkauf
+        rein."
+
+    Beide Laeufe urteilen ueber dasselbe Asset und wussten nichts voneinander.
+    Ein Urteil je Asset (statt je Instrument) waere die vollstaendige Loesung -
+    der Nutzer hat sie am 15.08. als zu komplex zurueckgestellt, und das zu
+    Recht, solange die Fakten noch nicht stimmen. Diese Zeile ist die kleine:
+    das Urteil bleibt getrennt, aber es faellt nicht mehr blind.
+
+    KEINE HANDLUNGSANWEISUNG. Der Satz stellt fest, was daneben liegt; was
+    daraus folgt, entscheidet das Modell. Eine Formulierung wie "deshalb nicht
+    kaufen" waere ein Regelwerk im Faktentext."""
+    import sqlite3
+    c = sqlite3.connect(f"file:{db or DB}?mode=ro", uri=True)
+    try:
+        if str(instrument) == "hebel":
+            r = c.execute("select quantity from holdings where symbol=?",
+                          (symbol,)).fetchone()
+            if not r or not r[0]:
+                return None
+            return (f"Unabhaengig davon liegen {float(r[0]):.4f} Stueck "
+                    f"{symbol} im Spot-Bestand. Das ist KEINE Hebelposition "
+                    f"und wird getrennt beurteilt.")
+        r = c.execute("select positionsmenge, hebel_effektiv, richtung "
+                      "from hebel_positions where symbol=? and status='offen' "
+                      "order by eroeffnet_am asc limit 1", (symbol,)).fetchone()
+        if not r or not r[0]:
+            return None
+        richtung = f" ({r[2]})" if r[2] else ""
+        hebel = f", Hebel {float(r[1]):.1f}" if r[1] else ""
+        return (f"Unabhaengig davon ist in {symbol} eine Hebelposition offen"
+                f"{richtung}: {float(r[0]):.4f} Stueck{hebel}. Sie wird "
+                f"getrennt beurteilt.")
+    except sqlite3.Error:
+        return None
 
 
 def kurs_eur(symbol: str, reihe, index: int, db: str | None = None):
@@ -345,7 +420,9 @@ def atr_bis(reihe, index: int) -> float:
 def baue_fall(*, symbol: str, reihe: list, index: int, reihen: dict,
               lagebild: dict | None = None, db: str | None = None,
               session=None, finanz_zwischenspeicher: dict | None = None,
-              mit_finanzierung: bool = True) -> tuple[dict, dict]:
+              mit_finanzierung: bool = True,
+              instrument: str = "spot", strategie: str = "einstieg",
+              assetklasse: str | None = None) -> tuple[dict, dict]:
     """Beide Eingaben fuer EINEN Fall - die einzige Stelle, die das tut.
 
     Rueckgabe: (lagebild_eingabe, befund_eingabe). Wer das Lagebild schon hat,
@@ -353,9 +430,26 @@ def baue_fall(*, symbol: str, reihe: list, index: int, reihen: dict,
 
     `mit_finanzierung=False` ist der Vergleichsarm fuer gepaarte Messungen -
     er darf nicht heimlich abweichen, deshalb steht er hier und nicht im
-    Aufrufer."""
+    Aufrufer.
+
+    `instrument`/`strategie`/`assetklasse` (15.08.2026): DIE LUECKE, DIE DAS
+    SCHLIESST. `baue_befund_eingabe()` kennt diese drei seit dem 12.08. und
+    baut daraus den AUFTRAG-Block - den ersten des Prompts, weil was zuerst
+    steht schwerer wiegt (R-T9). Diese Funktion nahm sie nicht entgegen, also
+    griffen dort die Vorgabewerte, und im Faktensatz JEDES Laufs stand:
+
+        "Gehandelt wird der Wert selbst, ohne Hebel und ohne laufende Kosten."
+
+    Auch im Hebel-Lauf. Auch im Absicherungslauf. Die Rolle bekam ihre
+    Anweisung getrennt und richtig (`rolle_trader.prompt_fuer(instrument, ...)`),
+    die FAKTEN widersprachen ihr - und `handelsauftrag.beschreibe()` nennt sich
+    selbst die BEDINGUNG, unter der alles Weitere zu lesen ist.
+
+    Gemessen am ersten Produktionsvormittag: 13 Hebel-Eroeffnungen entstanden
+    auf Fakten, die dem Modell sagten, es gebe keinen Hebel und keine
+    laufenden Kosten."""
     datum = reihe[index].date
-    menge, einstand = bestand(symbol, db)
+    menge, einstand = bestand(symbol, db, instrument)
     fin = (hole_finanzierung(symbol, datum, session, finanz_zwischenspeicher)
            if mit_finanzierung else None)
     return (
@@ -364,5 +458,8 @@ def baue_fall(*, symbol: str, reihe: list, index: int, reihen: dict,
                             kurs_eur=kurs_eur(symbol, reihe, index, db) or 0.0,
                             atr=atr_bis(reihe, index), menge=menge,
                             einstand_eur=einstand, finanzierung=fin,
-                            lagebild=lagebild),
+                            lagebild=lagebild, instrument=instrument,
+                            strategie=strategie, assetklasse=assetklasse,
+                            gegenseite=gegenbestand_satz(symbol, db,
+                                                         instrument)),
     )

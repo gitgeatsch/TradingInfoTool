@@ -2510,3 +2510,161 @@ Cooldown, sobald das Kontingent unter dem Vollumstieg gemessen ist; O-32,
 sobald ein echtes Hebel-Signal mit hohem Faktor aufgelöst ist; O-17, sobald
 Börsenwerte-Signale in der Produktion angekommen sind. Sie stehen damit in
 derselben Reihe wie die CRV-Abstufung: **stillgestellt, nicht kalibriert.**
+
+---
+
+## Kapitel 26 — Fünf Funde aus dem ersten Produktionslauf (15.08.2026)
+
+Der Nutzer nach Sichtung des Posteingangs:
+
+> *„dieses Bild im Maileingang ist fast so erschreckend wie wenn keine Mails
+> gekommen wären"*
+
+**26 Einstiegsempfehlungen über 10.400 EUR in 105 Minuten, bei 10.388 EUR
+Depotwert** — davon 5.200 EUR Doppelnennungen. Dreizehn Hebel-Eröffnungen
+fielen in 96 Sekunden.
+
+Die Mengenfrage ist damit gestellt, aber **nicht** hier beantwortet (26.6).
+Zuerst die Frage des Nutzers: *„Zuerst sollten wir wissen warum jetzt das
+Ganze Portfolio gehandelt wird."*
+
+### 26.1 Warum die Menge entstand — gemessen, nicht vermutet
+
+**Zwei Änderungen, beide gewollt, nie miteinander multipliziert.**
+
+| | alt | neu |
+|---|---|---|
+| Anteil der Assets, die vor das Modell kommen | 3,3 % | 60 % |
+| Handlungsquote des Modells | 1,8 % | 15 % |
+
+Die alte Kette bewertete jedes Asset zuerst deterministisch: 51.019
+Screenings → 7.588 Kandidaten (14,9 %) → 1.699 erreichten das Modell.
+`assetklassen.laeufe()` gibt **alle** Symbole der Gruppe zurück, ohne
+Bedingung; nur der Cooldown nimmt etwas weg (109 von 270 = 40 %).
+
+**Der Anlass ist die Uhr.** `hebel_trigger` kommt in keinem Modul der
+Rollen-Kette vor — und das Screening läuft weiter, schreibt seine Kandidaten
+in die Datenbank, und niemand liest sie.
+
+Im eingeschwungenen Zustand: 385 Urteile am Tag × 6,6 % ≈ **25
+Kaufempfehlungen täglich**.
+
+### 26.2 Der Faktensatz sagte im Hebel-Lauf „ohne Hebel"
+
+> ⚠️ **Der schwerste Fund.** `rollen_eingabe.baue_fall()` nahm `instrument`
+> gar nicht entgegen. `baue_befund_eingabe()` fiel damit auf seine
+> Vorgabewerte zurück, und im AUFTRAG-Block **jedes** Laufs stand:
+>
+> ```
+> Gehandelt wird der Wert selbst, ohne Hebel und ohne laufende Kosten.
+> ```
+>
+> Auch im Hebel-Lauf. Auch im Absicherungslauf.
+
+Die Rolle bekam ihre Anweisung getrennt und richtig
+(`rolle_trader.prompt_fuer(instrument, …)`) — die **Fakten widersprachen ihr**,
+und `handelsauftrag.beschreibe()` nennt sich selbst die *Bedingung, unter der
+alles Weitere zu lesen ist*. Sie steht bewusst zuerst, weil was zuerst steht
+schwerer wiegt (R-T9).
+
+**13 Hebel-Eröffnungen entstanden auf Fakten, die dem Modell sagten, es gebe
+keinen Hebel und keine laufenden Kosten.**
+
+### 26.3 Der Bestand kam immer aus der Spot-Tabelle
+
+`rollen_eingabe.bestand()` las `holdings` — auch im Hebel-Lauf. Im Prompt
+stand dann für LINK:
+
+```
+LINK ist bereits im Bestand: 1700 EUR investiert, aktuell 1093 EUR wert
+```
+
+Das Modell tat, was jeder täte, der das liest: **SCHLIESSEN**. Danach sah der
+Code korrekt in `hebel_positions` nach, fand nichts und verwarf.
+
+**22× SCHLIESSEN und 3× TEILVERKAUF „ohne Bestand" — 9 % aller Modellaufrufe.**
+
+Der Kommentar im Verwerfzweig sagte, das sei kein Fehler des Modells, es kenne
+den Bestand nicht. Das stimmte nicht: **es kannte einen Bestand, nur den
+falschen.**
+
+**Und die Gegenrichtung ist der LINK-Fall des Nutzers:**
+
+> *„problem ist dass die trades unabhängig sind und ich bin in einem hebel bei
+> LINK — also eine Empfehlung und dann kommt ein spot verkauf rein."*
+
+Ein Urteil je Asset wäre die vollständige Lösung; der Nutzer hat sie als zu
+komplex zurückgestellt, solange die Fakten nicht stimmen. Die kleine Lösung
+steht jetzt: **die andere Seite wird benannt statt verschwiegen.**
+
+```
+In LINK besteht keine offene Hebelposition.
+Unabhaengig davon liegen 141,8961 Stueck LINK im Spot-Bestand.
+Das ist KEINE Hebelposition und wird getrennt beurteilt.
+```
+
+### 26.4 Ein Hebel von 1,0 riskierte mehr als erlaubt
+
+`max(1.0, min(hebel_noetig, …))` war als Untergrenze gedacht und war eine
+stillschweigende Umdeutung. Fällt der nötige Faktor unter 1, heißt das: **die
+ungehebelte Position riskiert bereits mehr als das Budget hergibt.** Die
+Untergrenze hat den Überschuss nicht beseitigt, sondern verschwiegen.
+
+Gemessen am KAITO-Fall: 300 EUR bei 9,9 % Stop riskieren **29,70 EUR gegen ein
+Budget von 20**.
+
+Dazu kam eine zweite Ebene: `signal_abbildung` schrieb die Hebelspalte nur bei
+`hebel > 1.0`. KAITO und CAT landeten damit als **Spot** in der Datenbank —
+außerhalb von Hebel-Cooldown (`hebel IS NOT NULL`) und Hebel-Topf, mit dem
+Mailbetreff *ERÖFFNEN (Hebel)*.
+
+> ⚠️ **Meine erste Fassung sagte solche Fälle ab — und die eigene Prüfung 10
+> hat sie gestoppt:** dort liegt der nötige Faktor bei 0,99. Ein Prozent
+> Überschuss ist ein Rundungsrand, keine Pathologie. **Der Betrag folgt jetzt
+> dem Risikobudget** (300 → 202 EUR), der Faktor ist danach genau 1,0, und die
+> Spalte entscheidet sich am **Instrument** statt am Wert.
+
+### 26.5 Zwei kleinere, beide mit Folgen
+
+**Die Frist des Modells lag fast immer in der Vergangenheit.** Von 37 Werten
+für `umgeworfen_bis` lagen **36 vor dem Tag des Signals**, allein 29-mal der
+Füllwert `2024-12-31`. Gerechnet wurde nichts falsch — `_tage_bis()` fängt es
+ab. Aber `ausstiegsrechnung` führt die Frist als drittes Kriterium und setzt
+„· FRIST ABGELAUFEN" in die Überschrift. Am 15.08. traf das erst 1 von 40
+Positionen, **nur weil die alten Signale das Feld nicht hatten.**
+
+**ASTER stürzte bei jedem Lauf ab**, 16× seit dem 14.08. Der Wächter in
+`faktenblock.werte_aus_reihe()` prüfte `RUECKBLICK + ATR_FENSTER` = 264, die
+Momentum-Fenster brauchen aber `RUECKBLICK + MOMENTUM_FENSTER` = 310. **In der
+Lücke von 46 Kerzen wurde die Auswahl leer**, und `.max()` warf. ASTER stand
+bei 299, MON bei 264 — jedes Symbol durchläuft dieses Fenster, während seine
+Historie wächst.
+
+### 26.6 Was ausdrücklich NICHT entschieden ist
+
+Der Nutzer hat meinen ersten Vorschlag — einen Deckel je Umlauf — als
+**Pseudogate** zurückgewiesen, mit der Frage, auf die es keine Antwort gibt:
+*welche Trades sind wirklich GUT, und wie willst du das messen?* Ein
+Qualitätsrang wäre eine Behauptung gegen den eigenen Grundbefund (8.441 Fälle,
+kein Verfahren schlägt die Basisrate).
+
+> **Nutzervorgabe:** *„damit wir nicht wieder Einschränken damit es weniger
+> wird, sondern wir haben das System aufgemacht um besser zu werden."*
+
+Offen und zu schärfen, **nicht zu bauen**: die Gliederung der beiden
+Vorschläge — ein Urteil je Asset (zurückgestellt, optional) und der Anlass
+statt der Uhr (B1 vorhandenes Screening · B2 neu für alle Gruppen · B3 „es hat
+sich etwas geändert").
+
+### 26.7 Gegenprüfung
+
+| Prüfung | Ergebnis |
+|---|---|
+| Jeder Fix am auslösenden Fall | 27 von 27 |
+| Bestehende Paketprüfungen | **784, alle bestanden** (779 + 5 neue) |
+| Spot-Prompt gegen den Stand davor | **55 Symbole bitgleich** |
+| Hebel-Prompt | verändert, genau dort wo er falsch war |
+| Symbole, die noch abstürzen | 0 |
+
+Der bitgleiche Spot-Prompt ist die wichtigste Zeile dieser Tabelle: alle
+bisherigen Messungen bleiben vergleichbar.

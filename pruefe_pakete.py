@@ -3380,9 +3380,13 @@ def paket_15() -> None:
     # finden: vier echte Hebel-Signale landeten RICHTUNGSLOS in der Datenbank,
     # weil `signals` keine solche Spalte kannte (nur `hebel_signals`, die
     # Tabelle der alten Kette). Ein SHORT sah aus wie ein LONG.
+    # `instrument` IST SEIT DEM 15.08. DER DISKRIMINATOR, nicht der Wert.
+    # Vorher entschied `hebel > 1.0`, ob die Spalte gefuellt wird - das traf
+    # auch einen echten Hebel-Trade, dessen Faktor auf 1,0 faellt (KAITO und
+    # CAT am ersten Produktionsvormittag).
     _mit = SA.felder_aus_entscheidung(
         {"aktion": "ERÖFFNEN", "richtung": "SHORT", "begruendung": "x"},
-        fakten={}, rechnung={"hebel": 4.5})
+        fakten={}, rechnung={"hebel": 4.5}, instrument="hebel")
     pruefe(P, "die Richtung des Modells landet in den Feldern",
            _mit.get("richtung") == "SHORT",
            "sie ist bei EROEFFNEN und NACHKAUFEN Pflicht und dreht Stop, Ziel "
@@ -3396,6 +3400,23 @@ def paket_15() -> None:
            "richtung" not in _ohne and "hebel" not in _ohne,
            "ein eingetragenes LONG waere eine Behauptung, die niemand "
            "aufgestellt hat")
+    # DER FALL, DER AM 15.08. DURCHRUTSCHTE: ein echter Hebel-Trade mit Faktor
+    # genau 1,0. Er MUSS die Spalte tragen, sonst zaehlt ihn `toepfe` als Spot
+    # und der Hebel-Cooldown (`hebel IS NOT NULL`) findet ihn nie.
+    _eins = SA.felder_aus_entscheidung(
+        {"aktion": "ERÖFFNEN", "richtung": "LONG"},
+        fakten={}, rechnung={"hebel": 1.0}, instrument="hebel")
+    pruefe(P, "ein Hebel-Trade mit Faktor 1,0 traegt die Spalte trotzdem",
+           _eins.get("hebel") == 1.0,
+           "KAITO und CAT wurden so als Spot geschrieben - ausserhalb von "
+           "Hebel-Cooldown und Hebel-Topf, mit dem Betreff 'EROEFFNEN (Hebel)'")
+    # Und die Gegenprobe: derselbe Wert bei Spot bleibt draussen.
+    _spot_eins = SA.felder_aus_entscheidung(
+        {"aktion": "KAUFEN"}, fakten={}, rechnung={"hebel": 1.0},
+        instrument="spot")
+    pruefe(P, "derselbe Wert 1,0 bleibt bei Spot draussen",
+           "hebel" not in _spot_eins,
+           "sonst truege jedes Spot-Signal wieder in den Hebel-Topf")
     _sid3 = SA.schreibe_signal(c, _mit, symbol="TESTH")
     _z = c.execute("SELECT richtung, hebel FROM signals WHERE id = ?",
                    (_sid3,)).fetchone()
@@ -3647,8 +3668,19 @@ def paket_15() -> None:
            "`toepfe.belegt_eur()` trennt die Toepfe an genau dieser Spalte - "
            "neun Spot-Signale trugen 2.250 EUR in den HEBEL-Topf")
     _heb = SA.felder_aus_entscheidung({"aktion": "ERÖFFNEN", "richtung": "LONG"},
-                                      fakten={}, rechnung={"hebel": 3.3})
+                                      fakten={}, rechnung={"hebel": 3.3},
+                                      instrument="hebel")
     pruefe(P, "ein echter Hebel steht weiterhin da", _heb.get("hebel") == 3.3)
+    # UND DIE UMKEHRUNG VOM 15.08.: ein Spot-Lauf, dem jemand einen Faktor
+    # ueber 1,0 mitgibt, darf die Spalte trotzdem NICHT fuellen. Vorher haette
+    # allein der Wert entschieden - das Instrument ist die verlaessliche
+    # Angabe, nicht die Zahl.
+    _spot_hoch = SA.felder_aus_entscheidung(
+        {"aktion": "KAUFEN"}, fakten={}, rechnung={"hebel": 3.3},
+        instrument="spot")
+    pruefe(P, "und ein Spot-Lauf fuellt sie auch bei 3,3 nicht",
+           "hebel" not in _spot_hoch,
+           "das Instrument entscheidet, nicht der Wert")
     pruefe(P, "und die Topftrennung greift danach richtig",
            "hebel IS NULL" in _quelltext("agent/toepfe.py")
            and "hebel IS NOT NULL" in _quelltext("agent/toepfe.py"),
@@ -4528,10 +4560,27 @@ def paket_15() -> None:
            "sie wurde nur zu zwei Dritteln gefuettert")
     pruefe(P, "die Bloecke kommen aus derselben Quelle wie der Prompt",
            "LB . geteilt (" in _nur_code("agent/rollen_lauf.py")
-           and "RE . bestand ( symbol , db )" in _nur_code(
+           and "RE . bestand ( symbol , db , instrument )" in _nur_code(
                "agent/rollen_lauf.py"),
            "die Saetze gingen laengst ans Modell - sie am Wortlaut zu "
            "zerlegen waere eine zweite, stillschweigende Definition")
+    # UND BEIDE WEGE TRAGEN DAS INSTRUMENT (15.08.2026).
+    #
+    # `RE.bestand()` las bis dahin IMMER `holdings` - die Spot-Tabelle. Im
+    # Hebel-Lauf stand damit der Spot-Bestand im Prompt UND in der Mail; das
+    # Modell empfahl SCHLIESSEN fuer Positionen, die es nie gab (22x an einem
+    # Vormittag, 9 % aller Aufrufe). Die Angabe muss an BEIDEN Stellen
+    # ankommen - eine allein waere wieder ein halber Zustand.
+    _q_lauf = _nur_code("agent/rollen_lauf.py")
+    pruefe(P, "der Prompt-Weg kennt das Instrument",
+           "RE . baue_fall (" in _q_lauf
+           and "instrument = instrument" in _q_lauf,
+           "sonst stuende im AUFTRAG-Block 'ohne Hebel und ohne laufende "
+           "Kosten' - auch im Hebel-Lauf")
+    pruefe(P, "und der Mail-Weg kennt es auch",
+           "gegenbestand_satz ( symbol , db , instrument )" in _q_lauf,
+           "die andere Seite desselben Assets wird benannt statt "
+           "verschwiegen - der LINK-Fall des Nutzers")
     # DER PROMPT DARF SICH DABEI NICHT VERAENDERT HABEN - sonst waeren alle
     # bisherigen Messungen nicht mehr vergleichbar.
     import numpy as _np

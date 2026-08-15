@@ -528,6 +528,38 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
     if instrument == "hebel":
         hebel_noetig = risiko_eur / (betrag * stop_rel)
         sicher = max_safe_hebel(100 * stop_rel, GRENZEN["liquidations_marge"])
+        # DER BETRAG FOLGT DEM RISIKOBUDGET, NICHT DER HEBEL DEM BETRAG
+        # (15.08.2026).
+        #
+        # `max(1.0, ...)` war als Untergrenze gedacht und war eine
+        # STILLSCHWEIGENDE UMDEUTUNG: faellt der noetige Faktor unter 1, heisst
+        # das, die UNGEHEBELTE Position riskiert schon mehr als das Budget
+        # hergibt. Die Untergrenze hat den Ueberschuss nicht beseitigt, sondern
+        # verschwiegen - der Trade riskierte dann mehr als erlaubt.
+        #
+        # WARUM NICHT ABSAGEN. Das war meine erste Fassung, und die eigene
+        # Pruefung 10 hat sie gestoppt: dort liegt der noetige Faktor bei 0,99.
+        # Ein Prozent Ueberschuss ist ein Rundungsrand, keine Pathologie - und
+        # ein Urteil dafuer wegzuwerfen waere genau das Einschraenken, das
+        # nichts besser macht. Bei KAITO waren es 0,67; beide Faelle brauchen
+        # dieselbe Antwort, und die lautet: den Betrag kleiner machen.
+        #
+        # DANACH IST DER HEBEL GENAU 1,0 - und das wird jetzt auch so
+        # geschrieben und gesagt. Vorher fiel diese Zeile durch
+        # `signal_abbildung`s Filter `hebel > 1.0` und landete als SPOT in der
+        # Datenbank: ausserhalb von Hebel-Cooldown und Hebel-Topf, mit dem
+        # Mailbetreff "EROEFFNEN (Hebel)". Mail und Datenbank widersprachen
+        # sich; das ist seit heute am Instrument entschieden.
+        if hebel_noetig < 1.0:
+            betrag = risiko_eur / stop_rel
+            if betrag < _min:
+                raise RechnungBlockiert(
+                    f"Betrag {betrag:.0f} EUR unter der Mindestgroesse "
+                    f"{_min:.0f} EUR - das Risikobudget "
+                    f"({risiko_eur:.0f} EUR bei {100 * stop_rel:.1f} % Stop) "
+                    f"traegt hier keine handelbare Groesse")
+            grund = "Risikobudget (Hebel 1,0 - kein Hebel moeglich)"
+            hebel_noetig = 1.0
         hebel = max(1.0, min(hebel_noetig, sicher, GRENZEN["hebel_max"]))
         e["hebel"] = round(hebel, 1)
         e["hebel_grenze"] = (

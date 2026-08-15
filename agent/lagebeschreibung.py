@@ -56,7 +56,8 @@ def _swings(h: np.ndarray, l: np.ndarray, bis: int) -> tuple[list, list]:
 
 
 def _bestand(symbol: str, menge: float | None, einstand_eur: float | None,
-             kurs_eur: float | None) -> list[str]:
+             kurs_eur: float | None, instrument: str = "spot",
+             gegenseite: str | None = None) -> list[str]:
     """Block 1 - was ich halte. Im KAS-Fall der fehlende Block.
 
     Bewusst der erste: die Frage "kaufen oder nicht" hat eine voellig andere
@@ -67,15 +68,40 @@ def _bestand(symbol: str, menge: float | None, einstand_eur: float | None,
     einen Neukauf in der Annahme, wir haetten nichts. Ausloeser war ein
     Lesefehler eine Ebene tiefer (nur die berechnete Einstandsspalte, nicht die
     manuell gepflegte). Der ist behoben; diese Fallunterscheidung bleibt als
-    Netz, damit derselbe Fehler nie wieder als "nicht im Bestand" erscheint."""
+    Netz, damit derselbe Fehler nie wieder als "nicht im Bestand" erscheint.
+
+    ZWEI BESTAENDE STATT EINEM (15.08.2026, erster Produktionslauf). Dieser
+    Block sagte im HEBEL-Lauf "LINK ist bereits im Bestand: 4.100 EUR
+    investiert" - und meinte den SPOT-Bestand, weil `rollen_eingabe.bestand()`
+    nur `holdings` las. Das Modell hat daraufhin getan, was jeder tun wuerde,
+    der das liest: es empfahl SCHLIESSEN. Danach sah der Code in
+    `hebel_positions` nach, fand nichts und verwarf die Antwort.
+
+        22x SCHLIESSEN und 3x TEILVERKAUF "ohne Bestand" an einem Vormittag -
+        9 % aller Modellaufrufe, auf eine Frage mit falschen Fakten.
+
+    Der Kommentar im Verwerfzweig sagte, das sei kein Fehler des Modells, es
+    kenne den Bestand nicht. Das stimmte nicht: es kannte einen Bestand, nur
+    den falschen. Jetzt steht hier der Bestand DES INSTRUMENTS - und die
+    andere Seite wird ausdruecklich benannt statt verschwiegen, weil sie fuer
+    das Urteil zaehlt (`gegenseite`)."""
+    ist_hebel = str(instrument) == "hebel"
+    was = "eine offene Hebelposition" if ist_hebel else "im Bestand"
+    hinweis = [gegenseite] if gegenseite else []
     if not menge:
-        return [f"{symbol} ist nicht im Bestand."]
+        # KEIN "nicht im Bestand" IM HEBEL-LAUF. Der Satz waere dort mehrdeutig:
+        # er koennte den Spot-Bestand meinen, den es sehr wohl geben kann.
+        return ([f"In {symbol} besteht keine offene Hebelposition."]
+                if ist_hebel else [f"{symbol} ist nicht im Bestand."]) + hinweis
     if not einstand_eur or not kurs_eur:
         # Wir HALTEN - nur Einstand oder Kurs fehlen. Das ist eine andere
         # Aussage als "nicht investiert", und das Modell muss sie kennen.
-        return [f"{symbol} ist im Bestand ({menge:.4f} Stueck), aber Einstand "
+        # Bei einer Hebelposition ist das der REGELFALL und kein Mangel: sie
+        # fuehrt keinen Einstandspreis je Stueck, der Buchwert steckt im
+        # Positionswert (`hebel_positions` hat keine solche Spalte).
+        return [f"{symbol} hat {was} ({menge:.4f} Stueck), aber Einstand "
                 f"oder aktueller Kurs fehlen - Gewinn und Verlust dieser "
-                f"Position sind unbekannt."]
+                f"Position sind unbekannt."] + hinweis
     investiert = menge * einstand_eur
     wert = menge * kurs_eur
     diff = wert - investiert
@@ -84,7 +110,7 @@ def _bestand(symbol: str, menge: float | None, einstand_eur: float | None,
     return [
         f"{symbol} ist bereits im Bestand: {investiert:.0f} EUR investiert, "
         f"aktuell {wert:.0f} EUR wert - {abs(diff):.0f} EUR {lage} ({pct:+.1f} %).",
-    ]
+    ] + hinweis
 
 
 def _struktur(c: np.ndarray, h: np.ndarray, l: np.ndarray, i: int) -> list[str]:
@@ -328,7 +354,9 @@ def beschreibe_lage(*, symbol: str, reihe: list, index: int,
                     kurs_eur: float, atr: float,
                     menge: float | None = None,
                     einstand_eur: float | None = None,
-                    finanzierung: dict | None = None) -> list[str]:
+                    finanzierung: dict | None = None,
+                    instrument: str = "spot",
+                    gegenseite: str | None = None) -> list[str]:
     """Die Lage als Aussagen - der EINZIGE Weg von Kursdaten zur Beschreibung.
 
     Streng kausal: es wird nur `reihe[:index+1]` gelesen. Die Kausalitaetsprobe
@@ -351,7 +379,9 @@ def beschreibe_lage(*, symbol: str, reihe: list, index: int,
             for satz in geteilt(symbol=symbol, reihe=reihe, index=index,
                                 kurs_eur=kurs_eur, atr=atr, menge=menge,
                                 einstand_eur=einstand_eur,
-                                finanzierung=finanzierung)[block]]
+                                finanzierung=finanzierung,
+                                instrument=instrument,
+                                gegenseite=gegenseite)[block]]
 
 
 # Die Bloecke in genau der Reihenfolge, in der sie im Prompt stehen. Sie ist
@@ -364,7 +394,9 @@ def geteilt(*, symbol: str, reihe: list, index: int,
             kurs_eur: float, atr: float,
             menge: float | None = None,
             einstand_eur: float | None = None,
-            finanzierung: dict | None = None) -> dict:
+            finanzierung: dict | None = None,
+            instrument: str = "spot",
+            gegenseite: str | None = None) -> dict:
     """Dieselben Saetze, aber nach Bloecken getrennt (14.08.2026).
 
     WOFUER. Die Kaufmail kann Bestand, Marken und Coin-Fakten getrennt
@@ -395,7 +427,8 @@ def geteilt(*, symbol: str, reihe: list, index: int,
                  dtype=float)
     i = len(c) - 1
     return {
-        "bestand": _bestand(symbol, menge, einstand_eur, kurs_eur),
+        "bestand": _bestand(symbol, menge, einstand_eur, kurs_eur,
+                            instrument=instrument, gegenseite=gegenseite),
         "struktur": _struktur(c, h, l, i),
         "bewegung": _bewegung(c, i),
         "marken": _niveaus(c, h, l, i, atr, kurs_eur, float(c[i])),

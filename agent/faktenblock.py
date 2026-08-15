@@ -202,7 +202,25 @@ def werte_aus_reihe(hoch, tief, schluss, volumen, i: int | None = None,
     h = np.asarray(hoch, float); l = np.asarray(tief, float)
     c = np.asarray(schluss, float); v = np.asarray(volumen, float)
     i = len(c) - 1 if i is None else i
-    if i < RUECKBLICK + ATR_FENSTER:
+    # DAS GROESSTE FENSTER ENTSCHEIDET, NICHT DAS ERSTE (15.08.2026).
+    #
+    # Hier stand `RUECKBLICK + ATR_FENSTER` = 264. Die drei Perzentile blicken
+    # aber ueber RUECKBLICK Tage ZURUECK und rechnen an jedem davon ein
+    # eigenes Fenster: `rueckgang_bei(k)` greift auf `c[k - MOMENTUM_FENSTER :
+    # k + 1]`. Beim aeltesten k (= i - RUECKBLICK) braucht das also
+    # RUECKBLICK + MOMENTUM_FENSTER = 310 Kerzen.
+    #
+    # DAZWISCHEN LAG EINE LUECKE VON 46 KERZEN, und in der stuerzte es ab:
+    # ein negativer Startindex laesst numpy vom Reihenende zaehlen, die
+    # Auswahl wird LEER, und `.max()` auf einem leeren Feld wirft
+    #
+    #     ValueError: zero-size array to reduction operation maximum
+    #
+    # Gefunden an ASTER (299 Kerzen), 16-mal im Log seit dem 14.08. - gefangen
+    # vom breiten Fehlerfang, also fiel das Symbol bei JEDEM Lauf still aus.
+    # Das ist kein Einzelfall: JEDES Symbol durchlaeuft dieses Fenster,
+    # waehrend seine Historie waechst. MON stand an diesem Tag bei 264.
+    if i < RUECKBLICK + max(ATR_FENSTER, MOMENTUM_FENSTER, VOLUMEN_FENSTER):
         return {}
 
     def atr_bei(k):

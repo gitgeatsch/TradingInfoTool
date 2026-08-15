@@ -535,9 +535,22 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # `mit_finanzierung=False` steht dafuer schon im Modul bereit - es war als
     # Vergleichsarm fuer gepaarte Messungen gebaut und passt hier genau: der
     # Trockenlauf soll die VERDRAHTUNG pruefen, nicht die Boerse.
+    # INSTRUMENT, STRATEGIE UND ASSETKLASSE MUESSEN MIT (15.08.2026).
+    #
+    # Ohne sie fiel `baue_fall()` auf seine Vorgabewerte zurueck, und im
+    # AUFTRAG-Block jedes Laufs stand "ohne Hebel und ohne laufende Kosten" -
+    # auch dort, wo mit Hebel gehandelt wird. Der Rollenprompt war richtig, die
+    # Fakten widersprachen ihm, und die Fakten stehen zuerst (R-T9).
+    #
+    # Der Bestand haengt an derselben Angabe: mit ihr liest `RE.bestand()`
+    # `hebel_positions` statt `holdings`. Beides gehoert in EINEN Aufruf -
+    # zwei getrennte Wege waeren die naechste Stelle, an der eines von beiden
+    # vergessen wird.
     _, bc_ein = RE.baue_fall(symbol=symbol, reihe=reihe, index=idx,
                              reihen=reihen, db=db,
-                             mit_finanzierung=(betriebsart != "trocken"))
+                             mit_finanzierung=(betriebsart != "trocken"),
+                             instrument=instrument, strategie=strategie,
+                             assetklasse=assetklasse)
     atr_e = RE.atr_eur(symbol, reihe, idx, db)
     kurs_e = RE.kurs_eur(symbol, reihe, idx, db)
     durchlauf.bestanden(symbol, "fakten")
@@ -895,10 +908,15 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         # nicht eine zweite. Eine eigene Abfrage hier waere die Kopierfalle,
         # die dieses Projekt schon mehrfach erwischt hat - und sie koennte dem
         # Leser eine andere Menge zeigen als dem Modell.
-        _menge, _einstand = RE.bestand(symbol, db)
+        # UND MIT DEMSELBEN INSTRUMENT (15.08.2026). Sonst zeigte die Mail
+        # eines Hebel-Signals den Spot-Bestand - dieselbe Verwechslung wie im
+        # Prompt, nur an der Stelle, die der Nutzer liest.
+        _menge, _einstand = RE.bestand(symbol, db, instrument)
         _bloecke = LB.geteilt(
             symbol=symbol, reihe=reihe, index=idx, kurs_eur=kurs_e,
-            atr=atr_e, menge=_menge, einstand_eur=_einstand)
+            atr=atr_e, menge=_menge, einstand_eur=_einstand,
+            instrument=instrument,
+            gegenseite=RE.gegenbestand_satz(symbol, db, instrument))
     except Exception as exc:                                 # noqa: BLE001
         ergebnis.setdefault("fehler", []).append(
             f"{symbol}: Lagebloecke nicht lesbar: {exc}")
@@ -996,6 +1014,10 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         # DIE RECHNUNG MIT - sie traegt den Hebelfaktor, den das Modell nicht
         # nennt und nicht nennen soll.
         rechnung=rechnung,
+        # UND DAS INSTRUMENT - es entscheidet, ob die Hebelspalte gefuellt
+        # wird. Am WERT zu unterscheiden hat am 15.08. zwei echte Hebel-Trades
+        # als Spot in die Datenbank geschrieben.
+        instrument=instrument,
         # DIE DREI GEMESSENEN FAMILIEN - dieselben Werte, die oben schon in den
         # Faktenblock der Mail gingen. Sie sind das einzige Material fuer den
         # Konstellationsschluessel, das NICHT die Entscheidung wiederholt.

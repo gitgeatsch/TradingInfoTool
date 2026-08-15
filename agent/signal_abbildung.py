@@ -291,13 +291,45 @@ def juengstes_lagebild(conn: sqlite3.Connection,
     return int(kennung), antwort
 
 
+def _frist_oder_nichts(datum_text, heute=None):
+    """Eine Frist, die schon abgelaufen ist, ist keine Frist (15.08.2026).
+
+    GEMESSEN AM ERSTEN PRODUKTIONSLAUF: von 37 Fristen, die das Modell
+    genannt hat, lagen 36 in der VERGANGENHEIT - allein 29-mal der
+    Fuellwert "2024-12-31". Ein Datum, das vor dem Tag des Signals liegt, ist
+    keine Aussage ueber die Haltbarkeit der Begruendung, sondern ein Modell,
+    das ein Pflichtfeld gefuellt hat.
+
+    WARUM DAS NICHT FOLGENLOS BLIEB. `ausstiegsrechnung` fuehrt die Frist als
+    drittes Kriterium und setzt "· FRIST ABGELAUFEN" in die Ueberschrift der
+    Empfehlung. Am 15.08. traf das erst 1 von 40 Positionen - nur weil die
+    alten Signale das Feld gar nicht hatten. Mit jedem neuen Signal waere es
+    gewachsen, bis fast jede gehaltene Position eine abgelaufene Begruendung
+    gemeldet haette.
+
+    NICHT REPARIERT, SONDERN VERWORFEN. Ein Datum zu raten waere schlimmer:
+    `rollen_lauf._tage_bis()` faellt bei fehlender Frist auf die Schaetzung aus
+    Weg und Schwankung zurueck, und die ist gerechnet statt geraten."""
+    from datetime import date
+
+    if not datum_text:
+        return None
+    try:
+        ziel = date.fromisoformat(str(datum_text)[:10])
+    except (ValueError, TypeError):
+        return None
+    vergleich = heute or date.today()
+    return ziel.isoformat() if ziel > vergleich else None
+
+
 def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
                             lagebild_id: int | None = None,
                             prompt_stand: str | None = None,
                             eur_je_usd: float | None = None,
                             familien: dict | None = None,
                             rechnung: dict | None = None,
-                            modell: str | None = None) -> dict:
+                            modell: str | None = None,
+                            instrument: str | None = None) -> dict:
     """Die Spaltenwerte fuer EIN Signal aus der Antwort der Rollen-Kette.
 
     SCHREIBT NICHT - der Aufrufer entscheidet, ob und wann. Diese Trennung ist
@@ -329,7 +361,7 @@ def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
                         if antwort.get("belege") else None),
         "umgeworfen_durch": antwort.get("umgeworfen_durch"),
         "umgeworfen_preis_eur": antwort.get("umgeworfen_preis_eur"),
-        "umgeworfen_bis": antwort.get("umgeworfen_bis"),
+        "umgeworfen_bis": _frist_oder_nichts(antwort.get("umgeworfen_bis")),
         # DER FAKTENSATZ IST PFLICHT (Eckpunkt 4). Ohne ihn ist die Empfehlung
         # im Nachhinein nicht mehr pruefbar.
         "facts_json": json.dumps(fakten or {}, ensure_ascii=False),
@@ -351,7 +383,18 @@ def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
     # Folgen: `toepfe.belegt_eur()` trennt die Toepfe an genau dieser Spalte
     # (`hebel IS NULL` = Spot). Neun Spot-Signale trugen damit 2.250 EUR in den
     # HEBEL-Topf, und der haette sich nach zwei Laeufen als voll gemeldet.
-    if rechnung and float(rechnung.get("hebel") or 0) > 1.0:
+    # AM INSTRUMENT UNTERSCHEIDEN, NICHT AM WERT (15.08.2026).
+    #
+    # Die erste Fassung fragte `hebel > 1.0` - richtig gemeint, aber am
+    # falschen Merkmal. Sie traf auch einen ECHTEN Hebel-Trade, dessen
+    # sicherer Faktor auf 1,0 faellt: bei KAITO (9,9 % Stop) und CAT (17,4 %)
+    # drueckte `max_safe_hebel()` den Faktor auf den Boden, weil die
+    # Liquidation sonst vor dem Stop laege. Beide wurden als SPOT geschrieben,
+    # fielen damit aus dem Hebel-Cooldown (`hebel IS NOT NULL`) und aus dem
+    # Hebel-Topf - und trugen trotzdem den Mailbetreff "EROEFFNEN (Hebel)".
+    #
+    # Das Instrument ist bekannt und eindeutig; der Wert ist es nicht.
+    if str(instrument) == "hebel" and rechnung and rechnung.get("hebel"):
         aus["hebel"] = float(rechnung["hebel"])
     # Die Zonen nur, wenn es sie gibt - bei NICHTS_TUN und bei Akkumulation
     # entfallen sie, und ein Nullwert waere dort eine Aussage, die niemand
