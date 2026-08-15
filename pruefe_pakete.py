@@ -1875,8 +1875,34 @@ def paket_14() -> None:
     betreff, _ = _SM.baue_mail(symbol="BTC", name="B", kurs_eur=58000,
                                instrument="hebel", strategie="swing", rechnung=_r,
                                ausstieg=spaet, urteil={"aktion": "NACHKAUFEN"})
-    pruefe(P, "ein faelliger Ausstieg steht im BETREFF",
-           betreff.startswith("TradingInfoTool: BTC - SCHLIESSEN"), betreff,)
+    # UMGESCHRIEBEN 15.08.2026. Hier stand: "ein faelliger Ausstieg steht im
+    # BETREFF" - auch auf einer NACHKAUFEN-Mail. Die Sorge dahinter war
+    # richtig (eine dringende Meldung darf nicht hinter einer Kaufzeile
+    # verschwinden), die Umsetzung nicht: im Produktionslauf ging zweimal
+    #
+    #     Betreff:     TradingInfoTool: TURBO - SCHLIESSEN (Hebel)
+    #     Signalzeile: TURBO  EROEFFNEN  Hebel 3,8  500 EUR
+    #
+    # hinaus. Der Nutzer liest den Betreff und handelt danach.
+    #
+    # DIE DRINGLICHKEIT IST NICHT VERLOREN, sie steht jetzt an zwei besseren
+    # Stellen: im Abschnitt "2. DIE POSITION" ganz oben im Text, und - seit
+    # O-37 - erzeugt die Kette diese Mail gar nicht mehr, wenn ein echter
+    # Bestand zum Schliessen ansteht.
+    pruefe(P, "der Betreff nennt die Aktion DIESER Mail",
+           betreff.startswith("TradingInfoTool: BTC - NACHKAUFEN"), betreff)
+    pruefe(P, "und der faellige Ausstieg steht ganz oben im Text",
+           txt.index("Bestehende Position") < txt.index("3. DAS URTEIL"),
+           "sichtbar vor dem Urteil des Modells - nur nicht als Ueberschrift")
+    # BEI EINER NICHT-EINSTIEGSAKTION BLEIBT ER IM BETREFF: dort beschreibt er
+    # tatsaechlich, was zu tun ist.
+    _b_halten, _ = _SM.baue_mail(symbol="BTC", name="B", kurs_eur=58000,
+                                 instrument="hebel", strategie="swing",
+                                 rechnung=_r, ausstieg=spaet,
+                                 urteil={"aktion": "HALTEN"})
+    pruefe(P, "bei HALTEN steht er weiterhin im Betreff",
+           _b_halten.startswith("TradingInfoTool: BTC - SCHLIESSEN"),
+           _b_halten)
 
     ruhig = lauf(kurs_aktuell=62000, hoechstkurs=ein + 1.8 * 4500)
     _, txt2 = _SM.baue_mail(symbol="BTC", name="B", kurs_eur=62000,
@@ -4306,6 +4332,60 @@ def paket_15() -> None:
     # entfernt String-Literale mit den Kommentaren zusammen. Diese Falle hat
     # heute zum sechsten Mal zugeschlagen.
     _lqt = _quelltext("agent/rollen_lauf.py")
+    # T5 BETREFF, TEXT UND ZEILE SAGEN DASSELBE (O-37, 15.08.2026).
+    #
+    # Im Produktionslauf zweimal auseinandergelaufen:
+    #
+    #     Signalzeile: TURBO  EROEFFNEN  Hebel 3,8  500 EUR
+    #     Betreff:     TradingInfoTool: TURBO - SCHLIESSEN (Hebel)
+    #     Mailtext:    "Kein zusaetzlicher Einstieg ..."
+    #
+    # Drei Stimmen, zwei Meinungen - und gemessen wird die Zeile.
+    from agent import entscheidungsrechnung as ER11
+    from agent import signal_mail as SM11
+
+    _r11 = ER11.rechne(kurs=100.0, atr=3.0, risiko_eur=60.0,
+                       instrument="hebel", betrag_wunsch_eur=500.0)
+    _aus11 = {"empfehlung": "SCHLIESSEN", "gesicherte_r": 1.0,
+              "stop_empfohlen": 95.0, "frist": None, "frist_abgelaufen": False,
+              "trailing_aktiv": True, "falsifiziert": False,
+              "ist_bestand": True, "ist_hebel": True, "gruende": []}
+    for _akt, _erw in (("ERÖFFNEN", "ERÖFFNEN"), ("NACHKAUFEN", "NACHKAUFEN"),
+                       ("HALTEN", "SCHLIESSEN")):
+        _b11, _ = SM11.baue_mail(
+            symbol="TURBO", name="TURBO", kurs_eur=100.0, instrument="hebel",
+            strategie="einstieg", rechnung=_r11,
+            urteil={"aktion": _akt, "begruendung": "x"}, ausstieg=_aus11)
+        pruefe(P, f"Betreff bei {_akt} nennt {_erw}", f"- {_erw}" in _b11,
+               _b11)
+    # DIE DRINGLICHKEIT IST NICHT VERLOREN - sie steht im Text.
+    _b11, _t11 = SM11.baue_mail(
+        symbol="TURBO", name="TURBO", kurs_eur=100.0, instrument="hebel",
+        strategie="einstieg", rechnung=_r11,
+        urteil={"aktion": "ERÖFFNEN", "begruendung": "x"}, ausstieg=_aus11)
+    pruefe(P, "der faellige Ausstieg steht weiterhin im TEXT",
+           "Bestehende Position" in _t11 and "SCHLIESSEN" in _t11,
+           "sichtbar, nur nicht als Ueberschrift")
+    # UND DIE KETTE ERZEUGT DIESEN FALL GAR NICHT MEHR.
+    pruefe(P, "die Kette laesst keinen Einstieg auf faelligen Ausstieg zu",
+           "Ausstieg steht auf SCHLIESSEN" in _lqt,
+           "7 von 7 Symbolen mit SCHLIESSEN bekamen am 15.08. eine "
+           "Eroeffnungsempfehlung")
+    pruefe(P, "aber nur bei einem ECHTEN Bestand",
+           "_fuehrung . get ( \"ist_bestand\" )" in _nur_code(
+               "agent/rollen_lauf.py").replace('"ist_bestand"', '"ist_bestand"')
+           or "ist_bestand" in _lqt,
+           "von neun SCHLIESSEN-Zeilen bezogen sich nur drei auf einen Bestand")
+    pruefe(P, "die Fuehrung wird je Symbol UND Instrument nachgeschlagen",
+           "_fuehrung_zu ( ergebnis , symbol , instrument )" in _nur_code(
+               "agent/rollen_lauf.py"),
+           "TURBO stand zweimal in der Liste - einmal Spot, einmal Hebel")
+    pruefe(P, "und es gibt genau EINE Nachschlagestelle",
+           _nur_code("agent/rollen_lauf.py").count(
+               "_fuehrung_zu ( ergebnis , symbol , instrument )") == 3
+           and _nur_code("agent/rollen_lauf.py").count("def _fuehrung_zu") == 1,
+           "drei Aufrufer, eine Definition")
+
     pruefe(P, "und das Signal wird trotzdem geschrieben",
            "nicht_versendet" in _lqt and "mails_unterdrueckt" in _lqt,
            "das Signal bleibt erhalten und wird weiter gemessen - nur die "

@@ -168,8 +168,33 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
     titel = f"{name or symbol} ({symbol})"
     aktion = urteil.get("aktion", "?")
     dringend = (ausstieg or {}).get("empfehlung", "")
+    # DER BETREFF SAGT, WAS DIESE MAIL EMPFIEHLT (15.08.2026).
+    #
+    # Hier stand `dringend if dringend.startswith(SCHLIESSEN) else aktion` -
+    # ohne Ruecksicht darauf, ob die Mail ueberhaupt von einem Ausstieg
+    # handelt. Gemessen am Produktionslauf desselben Tages, zweimal:
+    #
+    #     Signalzeile: TURBO  EROEFFNEN  Hebel 3,8  500 EUR
+    #     Betreff:     TradingInfoTool: TURBO - SCHLIESSEN (Hebel)
+    #
+    # Der Nutzer liest "schliessen" und findet im Text einen Plan, 500 EUR
+    # gehebelt zu eroeffnen. Der Betreff ist das, wonach gehandelt wird - er
+    # darf nicht die Empfehlung einer ANDEREN Rechnung tragen.
+    #
+    # DIE DRINGLICHKEIT BLEIBT ERHALTEN, aber nur dort, wo sie die Aussage
+    # dieser Mail IST: bei HALTEN und NICHTS_TUN beschreibt die
+    # Ausstiegsempfehlung tatsaechlich, was zu tun ist. Bei einem Einstieg
+    # beschreibt sie das Gegenteil. Sie steht dann weiterhin im Text, unter
+    # "Bestehende Position" - sichtbar, nur nicht als Ueberschrift.
+    #
+    # SEIT O-37 KOMMT DIESER FALL OHNEHIN KAUM NOCH VOR: die Kette erzeugt
+    # keine Einstiegsmail mehr, wenn der Ausstieg auf SCHLIESSEN steht. Die
+    # Bedingung bleibt trotzdem hier - eine Darstellung, die sich auf eine
+    # Vorbedingung an anderer Stelle verlaesst, bricht beim naechsten Umbau.
+    _dringend_im_betreff = (dringend.startswith(AR.SCHLIESSEN)
+                            and aktion not in AKTIONEN_MIT_EINSTIEG)
     betreff = (f"TradingInfoTool: {symbol} - "
-               + (dringend if dringend.startswith(AR.SCHLIESSEN) else aktion)
+               + (dringend if _dringend_im_betreff else aktion)
                + (" (Hebel)" if instrument == "hebel" else ""))
 
     kopf = [titel,

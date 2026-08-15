@@ -2890,3 +2890,109 @@ entschieden, wenn es Zahlen gibt (Kapitel 25.4).
 | Kommen noch „SCHLIESSEN ohne Bestand"? Das waren 9 % der Aufrufe |
 | Verschieben sich die Ausstiegsempfehlungen? Der Stop in der Zeile ist seit 26.8 weiter, und `ausstiegsrechnung` rechnet darauf |
 | Läuft ASTER ohne Absturz durch |
+
+---
+
+## Kapitel 27 — Der Lauf nach den sieben Fixes (15.08.2026, NB-Export 13:04)
+
+### 27.1 Was die Fixes gebracht haben
+
+| | vor den Fixes | nach dem Pull |
+|---|---|---|
+| „SCHLIESSEN ohne Bestand" | 4 (**15 %** der Urteile) | **0** |
+| Signale heraus | 0 | 20 |
+| ASTER-Abstürze | 16 seit 14.08., zuletzt 08:45 | **keiner** |
+
+Alle drei greifen.
+
+### 27.2 TURBO war kein Phantom — der Betreff log
+
+```
+10:04:15 UTC   Signalzeile:  TURBO  ERÖFFNEN  hebel=3,8  500 EUR
+12:06:56 lokal Mailbetreff:  TURBO - SCHLIESSEN (Hebel)
+```
+
+Dieselbe Empfehlung, 2:41 Minuten auseinander — die Wartezeit auf Z.ai. Der
+Margin-Sync meldete um 12:00 ausdrücklich **0 Positionen**.
+
+Die Ursache stand in `signal_mail.py`: der Betreff übernahm die
+**deterministische Ausstiegsempfehlung**, sobald sie mit SCHLIESSEN beginnt —
+ohne Rücksicht darauf, ob die Mail überhaupt von einem Ausstieg handelt.
+
+> ⚠️ Der Nutzer liest „TURBO schließen" und findet im Text einen Plan, 500 €
+> gehebelt zu eröffnen. **Zweimal an einem Vormittag.**
+
+### 27.3 Drei Stimmen, zwei Meinungen
+
+Der Mailtext hatte längst recht — er schreibt in genau diesem Fall *„Kein
+zusätzlicher Einstieg: der Ausstieg steht auf SCHLIESSEN"* und zeigt Zone,
+Stop und Ziel gar nicht erst.
+
+**Die Signalzeile wurde trotzdem als ERÖFFNEN über 500 EUR geschrieben.**
+
+    Der Text sagte nein, die Datenbank sagte ja.
+
+Und gemessen wird die Datenbank: die Trefferbilanz hätte diese Zeilen als
+Einstiege gezählt, die nie empfohlen wurden.
+
+**Und es war kein Grenzfall.** Von den sieben Symbolen, deren
+Ausstiegsrechnung SCHLIESSEN sagte, bekamen **sieben** eine
+Eröffnungsempfehlung: ALGO, ETH, INJ, SUI, TAO, TURBO, VIRTUAL.
+
+### 27.4 Was gebaut wurde
+
+**Der Betreff nennt die Aktion dieser Mail.** Die Dringlichkeit bleibt, wo sie
+etwas aussagt: bei HALTEN und NICHTS_TUN beschreibt die Ausstiegsempfehlung
+tatsächlich, was zu tun ist. Bei einem Einstieg beschreibt sie das Gegenteil —
+dort steht sie weiter im Text, im Abschnitt „2. DIE POSITION" **vor** dem
+Urteil des Modells.
+
+**Kein Einstieg, wo der Ausstieg fällig ist.** Die Kette bucht das Urteil als
+Nein-Fall mit gerechneten Zonen — der Messwert bleibt, die widersprüchliche
+Mail entfällt.
+
+> Das ist **kein Qualitätsfilter** und braucht keine Prognose. Er behauptet
+> nicht, dass der Einstieg schlecht wäre — er stellt fest, dass die Nachricht
+> ihn ohnehin verweigert. Eine Empfehlung, die im eigenen Text zurückgenommen
+> wird, trägt keine Information.
+
+**Nur bei einem echten Bestand.** `ist_bestand` unterscheidet die offene
+Position von der alten Signalzeile: von den neun SCHLIESSEN-Zeilen bezogen
+sich **nur drei** auf einen tatsächlichen Bestand. Eine abgelaufene Empfehlung
+von vorletzter Woche darf keinen neuen Einstieg verhindern.
+
+**Und die Führung wird je Symbol UND Instrument nachgeschlagen.** Die Liste
+enthält eine Zeile je *Signal*, nicht je Position — TURBO stand zweimal darin
+(Spot und Hebel), VIRTUAL ebenfalls. Die alte Schleife schrieb beide in
+denselben Schlüssel; es gewann, was zufällig zuletzt kam. Drei Aufrufer, jetzt
+eine Nachschlagestelle.
+
+### 27.5 Was der Lauf sonst zeigte
+
+> ⚠️ **Elf SHORT-Signale, und die Mails sind hinausgegangen** — ONDO, NEAR,
+> RENDER, SOL, KAITO, ALGO, INJ, SUI. Im Betreff stand nichts davon.
+> **Bitpanda kann gehebelte Shorts nicht ausführen.** Der Fix lag zu diesem
+> Zeitpunkt fertig im Repo, der Nutzer hatte davor gepullt — deshalb null
+> Unterdrückungszeilen im Log.
+
+**Die Leerlaufwache schlug 11-mal an** („8 Aufrufe in Folge ohne Ergebnis").
+Sie tut, was sie soll — aber die meisten Umläufe enden vorzeitig. Das ist
+Cooldown plus NICHTS_TUN, und genau das Bild, auf das O-36 zielt.
+
+**Drei Symbole doppelt** im Mailfenster (HYPE, BEAMX, SOL) · **O-30 erneut**:
+Gemini 320 gesamt gegen 227 über die Einzelmodelle, Faktor 1,41 · **40 ×**
+`remote.status`: Statusaufbau über der eigenen Schwelle · **ein Job
+übersprungen** (12:13, `hebel_screening_job` lief noch).
+
+### 27.6 Gegenprüfung
+
+| | |
+|---|---|
+| Betreff und Text am echten TURBO-Fall | 11 von 11 |
+| Paketprüfungen | **813, alle bestanden** |
+| Bestehende Prüfung umgeschrieben | 1 — sie hielt das alte Betreffverhalten fest |
+
+Die umgeschriebene Prüfung verlangte *„ein fälliger Ausstieg steht im
+BETREFF"* — auch auf einer Kaufmail. Die Sorge dahinter war richtig, die
+Umsetzung nicht. Sie prüft jetzt beides: dass der Betreff die Aktion dieser
+Mail nennt **und** dass der fällige Ausstieg vor dem Urteil im Text steht.

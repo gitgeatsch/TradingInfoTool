@@ -102,6 +102,29 @@ def _tage_bis(datum_text, ab_tag: str | None) -> int | None:
     return tage if tage > 0 else None
 
 
+def _fuehrung_zu(ergebnis: dict, symbol: str, instrument: str) -> dict:
+    """Die Ausstiegsfuehrung zu DIESEM Symbol und DIESEM Instrument.
+
+    DIE EINE STELLE, an der nachgeschlagen wird - drei Aufrufer teilen sie
+    sich: die Sperre gegen einen Einstieg auf faelligem Ausstieg, die Mail und
+    die Verkaufssammlung. Vorher schlug jede fuer sich nach, und zwar nur nach
+    SYMBOL.
+
+    WARUM DAS NICHT REICHTE (15.08.2026). Die Liste enthaelt eine Zeile je
+    SIGNAL, nicht je Position. TURBO stand an diesem Tag zweimal darin - einmal
+    Spot, einmal Hebel -, VIRTUAL ebenfalls. Wer nur nach Symbol nachschlaegt,
+    bekommt, was zufaellig zuletzt geschrieben wurde, und die Mail zeigt unter
+    "Bestehende Position" womoeglich die des anderen Instruments.
+
+    STRENG, OHNE RUECKFALL AUF DAS ANDERE INSTRUMENT. Ein Hebel-Lauf, der die
+    Spot-Position als "bestehende Position" zeigt, ist genau die Verwechslung,
+    die am 15.08. schon den Bestandsblock getroffen hat. Was auf der anderen
+    Seite liegt, sagt `rollen_eingabe.gegenbestand_satz()` - benannt, aber
+    nicht als eigene Position ausgegeben."""
+    return ((ergebnis.get("fuehrung") or {})
+            .get((str(symbol).upper(), str(instrument))) or {})
+
+
 def _jetzt() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -287,8 +310,24 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
         except Exception:                                    # noqa: BLE001
             pass
         _f = compute_ausstiegs_empfehlungen(conn, watchlist=_wl)
+        # JE SYMBOL **UND** INSTRUMENT, nicht nur je Symbol (15.08.2026).
+        #
+        # Die Liste enthaelt eine Zeile je SIGNAL, nicht je Position - TURBO
+        # stand am 15.08. zweimal darin (einmal Spot, einmal Hebel), VIRTUAL
+        # ebenfalls. Die alte Schleife schrieb beide in denselben Schluessel:
+        # es gewann, was zufaellig zuletzt kam. Die Mail zeigte dann unter
+        # "Bestehende Position" moeglicherweise die des anderen Instruments.
+        #
+        # UND EINE ECHTE POSITION SCHLAEGT EINE ALTE SIGNALZEILE. `ist_bestand`
+        # unterscheidet beides: von den neun SCHLIESSEN-Zeilen jenes Tages
+        # bezogen sich nur drei auf einen tatsaechlichen Bestand.
         for _e in (_f or {}).get("alle", []):
-            ergebnis["fuehrung"][str(_e.get("symbol", "")).upper()] = _e
+            _sym = str(_e.get("symbol", "")).upper()
+            _inst = "hebel" if _e.get("ist_hebel") else "spot"
+            _bisher = ergebnis["fuehrung"].get((_sym, _inst))
+            if _bisher is None or (_e.get("ist_bestand")
+                                   and not _bisher.get("ist_bestand")):
+                ergebnis["fuehrung"][(_sym, _inst)] = _e
     except Exception as exc:                                 # noqa: BLE001
         # P-8: ohne die Fuehrung ist die Verkaufsmail aermer, nicht falsch.
         ergebnis.setdefault("fehler", []).append(
@@ -810,6 +849,50 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                            config=config, modell=modell, ergebnis=ergebnis,
                            module=module)
         return
+
+    # KEIN EINSTIEG, WO DER AUSSTIEG SCHON FAELLIG IST (O-37, 15.08.2026).
+    #
+    # GEMESSEN AM LAUF DESSELBEN TAGES, und es war kein Grenzfall: von den
+    # sieben Symbolen, deren deterministische Ausstiegsrechnung SCHLIESSEN
+    # sagte, bekamen **sieben** eine Eroeffnungsempfehlung - ALGO, ETH, INJ,
+    # SUI, TAO, TURBO, VIRTUAL.
+    #
+    # DIE MAIL WUSSTE ES LAENGST. `signal_mail.baue_mail()` schreibt in genau
+    # diesem Fall "Kein zusaetzlicher Einstieg: der Ausstieg steht auf
+    # SCHLIESSEN" und zeigt Zone, Stop und Ziel gar nicht erst. Die
+    # SIGNALZEILE wurde trotzdem als EROEFFNEN ueber 500 EUR geschrieben.
+    #
+    #     Der Text sagte nein, die Datenbank sagte ja.
+    #
+    # Und die Datenbank ist es, die spaeter gemessen wird: die Trefferbilanz
+    # haette diese Zeilen als Einstiege gezaehlt, die nie empfohlen wurden.
+    #
+    # DAS IST KEIN QUALITAETSFILTER und braucht keine Prognose. Er behauptet
+    # nicht, dass der Einstieg schlecht waere - er stellt fest, dass die
+    # Nachricht ihn ohnehin verweigert. Eine Empfehlung, die im eigenen Text
+    # zurueckgenommen wird, traegt keine Information.
+    #
+    # DAS URTEIL BLEIBT GEMESSEN: es wird als Nein-Fall geschrieben, mit
+    # gerechneten Zonen, genau wie ein NICHTS_TUN. Was wegfaellt, ist die
+    # widerspruechliche Mail - nicht der Messwert.
+    # NUR BEI EINEM ECHTEN BESTAND. `ist_bestand` unterscheidet die offene
+    # Position von der alten Signalzeile: von den neun SCHLIESSEN-Zeilen des
+    # 15.08. bezogen sich nur DREI auf einen tatsaechlichen Bestand. Eine
+    # abgelaufene Empfehlung von vorletzter Woche darf keinen neuen Einstieg
+    # verhindern - das waere eine Sperre ohne Gegenstand.
+    _fuehrung = _fuehrung_zu(ergebnis, symbol, instrument)
+    if (_fuehrung.get("ist_bestand")
+            and str(_fuehrung.get("empfehlung") or "").startswith("SCHLIESSEN")):
+        durchlauf.verloren(symbol, "aktion",
+                           f"{aktion}, aber Ausstieg steht auf SCHLIESSEN")
+        if betriebsart != TROCKEN:
+            _schreibe_nein(symbol=symbol, befund=befund, kurs_e=kurs_e,
+                           atr_e=atr_e, tag=tag, reihe=reihe, idx=idx,
+                           lagebild_id=lagebild_id, instrument=instrument,
+                           strategie=strategie, conn=conn, db=db,
+                           config=config, modell=modell, ergebnis=ergebnis,
+                           module=module)
+        return
     durchlauf.bestanden(symbol, "aktion")
 
 
@@ -964,7 +1047,7 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             # Position offen, gehoert ihre Behandlung VOR den Nachkauf -
             # `baue_mail` ordnet das selbst (50 % standen bei +1 R, 17,6 %
             # kamen an).
-            ausstieg=(ergebnis.get("fuehrung") or {}).get(symbol.upper()),
+            ausstieg=_fuehrung_zu(ergebnis, symbol, instrument) or None,
             symbol=symbol, name=symbol, kurs_eur=kurs_e, instrument=instrument,
             strategie=strategie, rechnung=rechnung, urteil=befund,
             faktenblock=block, modell=modell, zeitpunkt=tag,
@@ -1165,7 +1248,7 @@ def _sende_ausstieg(*, symbol, befund, verkauf, kurs_e, instrument, strategie,
          # Sie wird EINMAL je Lauf geholt (wie das Lagebild) und hier nur
          # nachgeschlagen - 45 Symbole waeren sonst 45 Abfragen ueber
          # dieselben Tabellen.
-         "fuehrung": (ergebnis.get("fuehrung") or {}).get(symbol.upper())})
+         "fuehrung": _fuehrung_zu(ergebnis, symbol, instrument) or None})
 
     if betriebsart == TROCKEN:
         return
