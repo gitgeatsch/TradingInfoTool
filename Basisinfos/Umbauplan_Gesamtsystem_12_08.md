@@ -3992,3 +3992,67 @@ Mit dem erhobenen Bestand sind zwei Punkte neu und gehören vor jede Ergänzung:
    Das ist kein Ergänzungswunsch, das ist eine stillschweigende Lücke.
 
 **Erst danach** kommt die Frage nach Auslöser, Handelbarkeit und Katalysator.
+
+### 34.6 Die Erhebung je Asset: acht von 56 urteilen unvollständig
+
+Nutzerfrage: *„haben alle Assets und Gruppen ausreichende Bewertungsgrundlagen
+und Parameter für alle Rollen?"* — **Nein.**
+
+| Gruppe | Assets | vollständig | unvollständig |
+|---|---|---|---|
+| aktien | 2 | 2 | – |
+| krypto | 43 | 41 | **2** |
+| themen_etf | 5 | 4 | **1** |
+| hedge | 2 | 1 | **1** |
+| **rohstoffe** | **4** | **0** | **4** |
+
+```
+hedge      3QSS      527 Kerzen   volumen fehlt, nur EINE Marke
+rohstoffe  OD7C      520          volumen fehlt
+rohstoffe  OD7H      520          volumen fehlt
+rohstoffe  OD7L      137          volumen fehlt, unter 250 Handelstagen
+rohstoffe  OD7N      520          volumen fehlt
+themen_etf X136      162          volumen fehlt, unter 250 Handelstagen
+krypto     CANTON      0          KEINE REIHE
+krypto     VSN         0          KEINE REIHE
+```
+
+**Drei verschiedene Arten von Lücke:**
+
+**Datenlage** — Zertifikate und ETP führen in unserer Reihe kein Volumen. Kein
+Fehler, aber der Faktensatz sagt es nicht: das Modell sieht keinen Volumensatz
+und liest das als *unauffällig* statt als *nicht vorhanden*.
+
+**Gar keine Grundlage** — CANTON und VSN stehen in der Watchlist, laufen durch
+die Kette und fallen an der Faktenstufe heraus.
+
+**Zu kurze Historie** — OD7L (137) und X136 (162) liegen unter den 250
+Handelstagen, die die Perzentile brauchen. Dieselbe Grenze, die ASTER betraf.
+
+> ⚠️ **Die erste Korrektur steht damit fest, noch vor jeder Erweiterung:**
+> eine fehlende Angabe gehört in den Faktentext. *„Für dieses Instrument liegt
+> kein Umsatz vor"* — sonst liest das Modell Abwesenheit als Unauffälligkeit.
+> Das ist der KAS-Fall in anderer Gestalt: dort fehlte der Bestand im Prompt,
+> und das Modell kaufte in eine Verlustposition nach.
+
+### 34.7 Die fünf Körbe für Schritt 2 (Nutzervorgabe)
+
+*„Wir müssen jedenfalls unterteilen in Krypto Spot und Hebel — Aktien,
+Rohstoffe und ETF."*
+
+| Korb | Assets | Auftrag | Besonderheit der Datenlage |
+|---|---|---|---|
+| **Krypto Spot** | 43 (41 vollständig) | ohne Hebel, ohne laufende Kosten | einzige Gruppe mit Funding **und** Volumen |
+| **Krypto Hebel** | dieselben 43, 25 nach Schalter | gehebelt, Finanzierung täglich, Zwangsauflösung | identische Fakten wie Spot — **nur der Auftrag trennt sie** |
+| **Aktien** | 2 | ohne Hebel | vollständig; Funding gibt es am Terminmarkt nicht |
+| **Rohstoffe** | 4 | ohne Hebel | **kein einziges vollständiges Asset** — Volumen fehlt durchgehend |
+| **ETF** | 5 + 2 Absicherung | ETF: ohne Hebel · Absicherung: eigener Auftrag + Exposure-Block | X136 und 3QSS ohne Volumen |
+
+**Der auffälligste Befund dieser Aufteilung:** Krypto Spot und Krypto Hebel
+bekommen **denselben Faktensatz**. Zwei Entscheidungen mit völlig
+verschiedener Geometrie — Liquidationsabstand, tägliche Finanzierung,
+Haltedauer — stehen auf identischen Fakten; unterschieden werden sie nur durch
+zwei Sätze im `auftrag`.
+
+Das ist die erste Frage für Schritt 2: **welche Parameter braucht ein
+Hebel-Urteil, die ein Spot-Urteil nicht braucht — und umgekehrt.**
