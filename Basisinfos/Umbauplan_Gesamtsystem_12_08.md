@@ -3887,3 +3887,108 @@ Die Praxisbegründung trägt die Entscheidung, sie ersetzt aber nicht den
 Nachweis. Deshalb bekommt jede dieser Ergänzungen eine eigene Spalte und wird
 gegen die Basisrate gemessen — sonst wiederholen wir die Geschichte der
 Konfidenz.
+
+---
+
+## Kapitel 34 — Schritt 1: Bestandserhebung je Rolle und Assetklasse (16.08.2026)
+
+**Nutzervorgabe zur Reihenfolge:** *„1. Zuerst Bestandserhebung. 2. Recherche
+und Analyse. 3. Schritt für Schritt Integration oder Anpassung von LLM1 und
+LLM2."* — und ausdrücklich: *„wir suchen nicht einfach, was wir dem LLM neu
+hinzufügen, weil wir es haben."*
+
+Kapitel 32 und 33 sind damit **vorgezogen** worden: sie enthalten Recherche und
+Bewertung, bevor der Bestand sauber erhoben war. Sie bleiben gültig, stehen
+aber sachlich **nach** diesem Kapitel.
+
+**Erhoben wird gerendert, nicht gelesen** (`erhebe_prompts.py`). Ein
+Code-Studium sagt, was gebaut ist; nur der gerenderte Satz sagt, was ankommt.
+
+### 34.1 Was ankommt — je Gruppe und Instrument
+
+| Gruppe / Instrument | bestand | struktur | bewegung | marken | volumen |
+|---|---|---|---|---|---|
+| aktien / spot | 1 | 2 | 1 | 2 | 2 |
+| **hedge / absicherung** | 1 | 2 | 1 | **1** | **0** |
+| krypto / spot | 1 | 2 | 1 | 2 | 2 |
+| krypto / hebel | 1 | 2 | 1 | 2 | 2 |
+| **rohstoffe / spot** | 1 | 2 | 1 | 2 | **0** |
+| themen_etf / spot | 1 | 2 | 1 | 2 | 2 |
+
+**Befund 1: es gibt keine Unterscheidung je Assetklasse — nur je Instrument.**
+
+Unterschiedlich ist ausschließlich der `auftrag`:
+
+```
+spot         "Gehandelt wird der Wert selbst, ohne Hebel und ohne laufende Kosten."
+hebel        "Gehandelt wird eine gehebelte Position. Die Finanzierung faellt an
+              JEDEM Tag an ... Zwangsaufloesung."
+absicherung  "Gehandelt wird ein Absicherungsinstrument. Es soll das uebrige
+              Portfolio abfedern, nicht selbst Gewinn erzielen."
+```
+
+Und der `bestand`, seit dem 15.08. je Instrument. **Sonst bekommt eine Aktie
+denselben Satzbau wie ein Memecoin** — dieselben Fenster (5/20/60), dieselben
+Wendepunkt-Regeln, dieselbe Markenlogik.
+
+> ⚠️ **Befund 2: bei `rohstoffe` und `hedge` fehlt der Volumenblock ganz** —
+> und niemand sagt es. Diese beiden Gruppen entscheiden mit **einem Block
+> weniger** als die übrigen, ohne dass der Faktensatz das erwähnt. Der Grund
+> ist die Datenlage (Zertifikate und ETP führen in unserer Reihe kein
+> Volumen), aber im Prompt sieht es aus wie „kein Befund" statt „nicht
+> vorhanden". Bei `hedge` fehlt zusätzlich eine der beiden Marken.
+
+### 34.2 LLM-Tauglichkeit: der Teil, der gelungen ist
+
+| Block | Sätze ohne Zahl | Zahl **mit** Bezug | Zahl **ohne** Bezug |
+|---|---|---|---|
+| bestand | 2 | 4 | **0** |
+| struktur | 0 | 12 | **0** |
+| bewegung | 0 | 6 | **0** |
+| marken | 0 | 11 | **0** |
+| volumen | 0 | 8 | **0** |
+
+**Keine einzige nackte Zahl.** Jede Zahl steht neben ihrem Maßstab:
+
+```
+"Der naechste Widerstand liegt 1.1 Schwankungsbreiten hoeher, bei 158.7 EUR
+ (3-mal beruehrt)."
+```
+
+Der Kurs allein wäre eine nackte Zahl — *„1,1 Schwankungsbreiten"* macht ihn
+lesbar, *„3-mal berührt"* gibt ihm Gewicht. Genau das, wofür
+`lagebeschreibung.py` gebaut wurde, und es hält.
+
+**Das ist der Maßstab für alles Weitere:** eine Ergänzung, die eine Zahl ohne
+Bezug bringt, verschlechtert den Prompt, auch wenn ihr Inhalt richtig ist.
+
+### 34.3 Rolle A — Marktanalyst
+
+Bekommt je Leitmarkt (krypto/aktien/rohstoffe): Trend über 250 und 60
+Handelstage, Abstand zu Hoch und Tief, tägliche Schwankung mit Perzentil,
+Umsatz je Bewegung mit Perzentil. Für Bitcoin zusätzlich die Anlegerstimmung.
+Dazu Netto-Liquidität und Zinskurven-Spread.
+
+**Keine Unterscheidung je Assetklasse ist hier richtig** — die Rolle beurteilt
+gerade die Unterschiede zwischen den Märkten.
+
+### 34.4 Rolle C — gibt es nicht
+
+Der Code kennt `Rolle A` und `Rolle BC`. Beurteilen und Handeln liegen in einem
+Aufruf; der „Bewerter" ist `trefferbilanz.bewerte()` — Arithmetik über die
+eigene Trefferbilanz, kein Urteil. **Z.ai** ist heute kein C, sondern ein
+zweiter B mit derselben Informationsgrenze.
+
+### 34.5 Was Schritt 2 damit zu tun hat
+
+Die Recherche in Kapitel 33 hat den Praxismaßstab (CSTI, Liquidität,
+Katalysator) — **aber sie wurde gegen einen angenommenen Bestand geführt.**
+Mit dem erhobenen Bestand sind zwei Punkte neu und gehören vor jede Ergänzung:
+
+1. **Die fehlende Klassendifferenzierung ist die größere Frage als jede
+   fehlende Kennzahl.** Ob ein Memecoin und eine Aktie dieselben Fenster
+   brauchen, ist eine Praxisfrage, die noch niemand gestellt hat.
+2. **Zwei Gruppen laufen mit weniger Blöcken** — und der Prompt sagt es nicht.
+   Das ist kein Ergänzungswunsch, das ist eine stillschweigende Lücke.
+
+**Erst danach** kommt die Frage nach Auslöser, Handelbarkeit und Katalysator.
