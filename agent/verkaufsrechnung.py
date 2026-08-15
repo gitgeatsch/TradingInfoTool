@@ -47,7 +47,34 @@ from __future__ import annotations
 # einmal zuschlug (der CRV-Faktor traf `absicherung` mit, weil er ueber
 # `!= "hebel"` definiert war).
 AKTIONEN_MIT_AUSSTIEG = ("REDUZIEREN", "VERKAUFEN", "SCHLIESSEN",
-                         "TEILVERKAUF", "HEBEL_SENKEN")
+                         "TEILVERKAUF")
+
+# DIE DRITTE KLASSE: die Position bleibt, ihr HEBEL aendert sich (O-31,
+# 15.08.2026).
+#
+# GEFUNDEN IM TROCKENLAUF ueber beide Instrumente, und der Fund war groesser
+# als erwartet. Gesucht war `HEBEL_ERHOEHEN`, das durch beide Listen fiel und
+# als "nichts" gebucht wurde - obwohl es Kapital bindet.
+#
+# DABEI KAM HERAUS, DASS `HEBEL_SENKEN` FALSCH EINSORTIERT WAR. Es stand in der
+# Ausstiegsliste und bekam damit den Satz:
+#
+#     "Verkaufen  0,206667 Stueck - ein Drittel der Position"
+#
+# Das ist keine fehlende Anweisung, sondern eine FALSCHE. Den Hebel zu senken
+# heisst, geliehenes Kapital zurueckzuzahlen - die Stueckzahl bleibt, das
+# Risiko sinkt. Wer diesem Satz folgt, verkauft ein Drittel seiner Position und
+# hat den Hebel danach immer noch.
+#
+# BEIDE AENDERN NICHT DIE MENGE, sondern den Kredit:
+#
+#     HEBEL_ERHOEHEN   mehr Kredit  -> groesseres Risiko, gleiche Stueckzahl
+#     HEBEL_SENKEN     Kredit zurueck -> kleineres Risiko, gleiche Stueckzahl
+#
+# Und beide setzen eine OFFENE POSITION voraus. Ohne sie gibt es keinen Hebel,
+# den man aendern koennte - dann ist das Urteil ein Messpunkt, kein Auftrag,
+# genau wie ein VERKAUFEN ohne Bestand.
+AKTIONEN_MIT_ANPASSUNG = ("HEBEL_ERHÖHEN", "HEBEL_SENKEN")
 
 # Was ein REDUZIEREN bedeutet, wenn das Modell keine Menge nennt.
 #
@@ -64,8 +91,56 @@ MINDEST_GEGENWERT_EUR = 25.0
 
 
 def ist_ausstieg(aktion: str | None) -> bool:
-    """Betrifft dieses Urteil eine bestehende Position?"""
+    """Wird bei diesem Urteil etwas VERKAUFT?"""
     return str(aktion or "").strip().upper() in AKTIONEN_MIT_AUSSTIEG
+
+
+def ist_anpassung(aktion: str | None) -> bool:
+    """Bleibt die Position und aendert sich nur ihr Hebel?"""
+    return str(aktion or "").strip().upper() in AKTIONEN_MIT_ANPASSUNG
+
+
+def betrifft_bestand(aktion: str | None) -> bool:
+    """Braucht dieses Urteil ueberhaupt eine bestehende Position?
+
+    Die eine Frage, die der Lauf stellen muss - beide Klassen setzen einen
+    Bestand voraus, und ohne ihn ist das Urteil ein Messpunkt."""
+    return ist_ausstieg(aktion) or ist_anpassung(aktion)
+
+
+def anpassung(*, aktion: str, menge: float, kurs_eur: float,
+              hebel_jetzt: float | None = None) -> dict | None:
+    """Eine Hebelaenderung - `None`, wenn keine Position offen ist.
+
+    KEINE MENGE, KEIN GEGENWERT. Das ist der ganze Unterschied zum Verkauf und
+    der Grund, warum diese Funktion getrennt steht: was sich aendert, ist der
+    Kredit, nicht der Bestand. Eine Zahl in Stueck waere hier eine
+    Falschaussage."""
+    menge = float(menge or 0.0)
+    if menge <= 0 or not kurs_eur or kurs_eur <= 0:
+        return None
+    a = str(aktion or "").strip().upper()
+    return {"aktion": a, "richtung": "hoch" if a == "HEBEL_ERHÖHEN" else "runter",
+            "menge": menge, "wert_gesamt_eur": menge * float(kurs_eur),
+            "hebel_jetzt": float(hebel_jetzt) if hebel_jetzt else None}
+
+
+def saetze_anpassung(e: dict) -> list[str]:
+    """Die Hebelaenderung fuer die Mail."""
+    from agent.signal_mail import eur
+
+    hoch = e["richtung"] == "hoch"
+    z = [f"Hebel {'ERHOEHEN' if hoch else 'SENKEN'}"
+         + (f" - aktuell {e['hebel_jetzt']:.1f}x".replace(".", ",")
+            if e.get("hebel_jetzt") else ""),
+         f"Die Position bleibt bestehen ({eur(e['wert_gesamt_eur'], 2)} EUR) - "
+         + ("es wird zusaetzliches Kapital geliehen."
+            if hoch else "ein Teil des geliehenen Kapitals wird zurueckgezahlt."),
+         "Die Stueckzahl aendert sich dabei NICHT."]
+    if hoch:
+        z.append("!! Mehr Hebel heisst naeher an der Liquidation. Vor der "
+                 "Ausfuehrung den Liquidationspreis pruefen.")
+    return z
 
 
 def rechne(*, aktion: str, menge: float, kurs_eur: float,
@@ -176,6 +251,11 @@ def _rang(p: dict) -> tuple:
     #     der einzige Fall, in dem sich beide Ebenen einig sind
     # 1 = ganze Position raus
     # 2 = Teilverkauf
+    # EINE HEBELAENDERUNG HAT KEINEN `anteil` - sie verkauft nichts. Sie steht
+    # hinter den Verkaeufen, weil sie die Position nicht aufloest: wer beides
+    # in einer Mail hat, muss zuerst wissen, was rausgeht.
+    if "anteil" not in v:
+        return (3, -float(v.get("wert_gesamt_eur") or 0.0))
     stufe = 1 if v["anteil"] >= 1.0 else 2
     if str((p.get("fuehrung") or {}).get("empfehlung", "")).startswith("SCHLIESSEN"):
         stufe = 0
@@ -214,11 +294,23 @@ def sammel_mail(alle: list, modell: str | None = None,
     if not alle:
         return None
     posten = sorted(alle, key=_rang)
-    summe = sum(p["verkauf"]["gegenwert_eur"] for p in posten)
-    ganz = sum(1 for p in posten if p["verkauf"]["anteil"] >= 1.0)
+    # NUR VERKAEUFE ZAEHLEN IN DIE SUMME. Eine Hebelaenderung bewegt kein Geld
+    # aus der Position heraus - sie in den Gegenwert einzurechnen wuerde eine
+    # Zahl erzeugen, die niemand irgendwo wiederfindet.
+    verkaeufe = [p for p in posten if "anteil" in p["verkauf"]]
+    anpassungen = [p for p in posten if "anteil" not in p["verkauf"]]
+    summe = sum(p["verkauf"]["gegenwert_eur"] for p in verkaeufe)
+    ganz = sum(1 for p in verkaeufe if p["verkauf"]["anteil"] >= 1.0)
 
-    kopf = [f"{len(posten)} Positionen zum Verkauf vorgeschlagen - "
-            f"{eur(summe, 2)} EUR Gegenwert"]
+    teile = []
+    if verkaeufe:
+        teile.append(f"{len(verkaeufe)} Positionen zum Verkauf vorgeschlagen - "
+                     f"{eur(summe, 2)} EUR Gegenwert")
+    if anpassungen:
+        teile.append(f"{len(anpassungen)} Hebelaenderung"
+                     + ("en" if len(anpassungen) > 1 else "")
+                     + " - die Position bleibt bestehen")
+    kopf = teile
     if zeitpunkt or modell:
         kopf.append(" · ".join(x for x in (zeitpunkt,
                                            f"Modell {modell}" if modell else None)
@@ -231,6 +323,18 @@ def sammel_mail(alle: list, modell: str | None = None,
     zeilen = list(kopf) + ["--- WAS ZU TUN IST ---"]
     for p in posten:
         v = p["verkauf"]
+        if "anteil" not in v:
+            # HEBELAENDERUNG - keine Menge, kein Gegenwert. Sie in die
+            # Verkaufsspalten zu pressen waere genau die Falschaussage, wegen
+            # der diese Klasse getrennt wurde.
+            richtung = "HOCH" if v["richtung"] == "hoch" else "RUNTER"
+            zeile = (f"{p['symbol']:<10} {'HEBEL ' + richtung:<11} "
+                     f"{'Position bleibt':<12} "
+                     f"{eur(v['wert_gesamt_eur'], 2):>10} EUR")
+            if v.get("hebel_jetzt"):
+                zeile += f"   aktuell {v['hebel_jetzt']:.1f}x".replace(".", ",")
+            zeilen.append(zeile)
+            continue
         art = "GANZ" if v["anteil"] >= 1.0 else "ein Drittel"
         zeile = f"{p['symbol']:<10} {v['aktion']:<11} {art:<12} " \
                 f"{eur(v['gegenwert_eur'], 2):>10} EUR"
@@ -266,7 +370,11 @@ def sammel_mail(alle: list, modell: str | None = None,
     for p in posten:
         zeilen.append(f"{p['symbol']}: {p.get('begruendung') or '(keine Begruendung)'}")
 
-    betreff = (f"TradingInfoTool: {len(posten)} Verkaufsvorschlaege "
-               f"({eur(summe, 0)} EUR"
-               + (f", davon {ganz} ganz" if ganz else "") + ")")
+    kern = []
+    if verkaeufe:
+        kern.append(f"{len(verkaeufe)} Verkaufsvorschlaege ({eur(summe, 0)} EUR"
+                    + (f", davon {ganz} ganz" if ganz else "") + ")")
+    if anpassungen:
+        kern.append(f"{len(anpassungen)}x Hebel aendern")
+    betreff = "TradingInfoTool: " + ", ".join(kern)
     return betreff, "\n".join(zeilen)

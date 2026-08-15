@@ -631,7 +631,7 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # "ein Hebel-Lauf erzeugt eine Mail" fiel als erste um.
     from agent import verkaufsrechnung as VK
 
-    if VK.ist_ausstieg(aktion):
+    if VK.betrifft_bestand(aktion):
         # DER BESTAND STEHT IN ZWEI TABELLEN, je nach Instrument (14.08.2026).
         #
         # DER FEHLER, DEN DAS BEHEBT. Meine erste Fassung sah IMMER in
@@ -701,9 +701,17 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         except Exception as exc:                             # noqa: BLE001
             ergebnis.setdefault("fehler", []).append(
                 f"{symbol}: Bestand nicht lesbar: {exc}")
-        verkauf = VK.rechne(aktion=aktion, menge=menge or 0.0,
-                            kurs_eur=kurs_e, einstand_eur=einstand,
-                            gestakt=gestakt)
+        # ZWEI KLASSEN HINTER EINER ABZWEIGUNG (O-31, 15.08.). Ein Verkauf
+        # aendert die MENGE, eine Hebelaenderung den KREDIT - beide setzen
+        # einen Bestand voraus, aber sie ergeben verschiedene Anweisungen.
+        if VK.ist_anpassung(aktion):
+            verkauf = VK.anpassung(
+                aktion=aktion, menge=menge or 0.0, kurs_eur=kurs_e,
+                hebel_jetzt=getattr(bestand_row, "hebel_effektiv", None))
+        else:
+            verkauf = VK.rechne(aktion=aktion, menge=menge or 0.0,
+                                kurs_eur=kurs_e, einstand_eur=einstand,
+                                gestakt=gestakt)
         if verkauf is None:
             # KEIN BESTAND HEISST KEIN AUFTRAG. Ein VERKAUFEN auf etwas, das
             # man nicht haelt, ist kein Fehler des Modells - es kennt den

@@ -4530,9 +4530,11 @@ def paket_15() -> None:
            VK4.ist_ausstieg("VERKAUFEN") and VK4.ist_ausstieg("REDUZIEREN")
            and not VK4.ist_ausstieg("HALTEN")
            and not VK4.ist_ausstieg("NICHTS_TUN"),
-           "drei Klassen statt zwei: Einstieg, Ausstieg, Nichts")
+           "seit 15.08. VIER Klassen: Einstieg, Ausstieg, Hebelanpassung, "
+           "Nichts - die dritte kam mit O-31 dazu")
     pruefe(P, "die Abzweigung steht VOR der Nein-Buchung",
-           _quelltext("agent/rollen_lauf.py").index("VK.ist_ausstieg(aktion)")
+           _quelltext("agent/rollen_lauf.py").index(
+               "VK.betrifft_bestand(aktion)")
            < _quelltext("agent/rollen_lauf.py").index(
                "if aktion not in SM.AKTIONEN_MIT_EINSTIEG:"),
            "sonst verschluckt dieselbe Zeile wieder alles, was nicht "
@@ -5370,6 +5372,85 @@ def paket_15() -> None:
                "agent/rollen_lauf.py"),
            "`db` ist in `_ein_asset` der Dateiname - eine Zeichenkette hat "
            "diese Methoden nicht")
+
+    # ------------------------------------------------------------------
+    # AK. O-31: DIE HEBELAENDERUNG IST EINE DRITTE KLASSE (15.08.2026).
+    #
+    # Gesucht war `HEBEL_ERHOEHEN`, das durch beide Listen fiel und als
+    # "nichts" gebucht wurde. Gefunden wurde mehr: `HEBEL_SENKEN` stand in der
+    # AUSSTIEGSliste und bekam damit den Satz
+    #
+    #     "Verkaufen 0,206667 Stueck - ein Drittel der Position"
+    #
+    # Das ist keine fehlende Anweisung, sondern eine FALSCHE. Den Hebel zu
+    # senken heisst, geliehenes Kapital zurueckzuzahlen - die Stueckzahl
+    # bleibt. Wer dem Satz folgt, verkauft ein Drittel und hat den Hebel danach
+    # immer noch.
+    from agent import verkaufsrechnung as VK11
+    from agent.empfehlung_vertrag import AKTIONEN_HEBEL as _AH
+
+    pruefe(P, "jede Hebel-Aktion hat genau eine Klasse",
+           all(sum((VK11.ist_ausstieg(a), VK11.ist_anpassung(a),
+                    a in SM3.AKTIONEN_MIT_EINSTIEG)) <= 1 for a in _AH),
+           "eine Aktion in zwei Klassen bekaeme zwei Anweisungen")
+    _ohne = [a for a in _AH
+             if not VK11.betrifft_bestand(a)
+             and a not in SM3.AKTIONEN_MIT_EINSTIEG]
+    pruefe(P, "keine Hebel-Aktion faellt mehr durch alle Raster",
+           _ohne == ["HALTEN"],
+           f"ohne Klasse: {_ohne} - nur HALTEN darf uebrigbleiben, denn es "
+           "aendert nichts")
+    pruefe(P, "beide Hebelaenderungen sind Anpassungen, kein Verkauf",
+           VK11.ist_anpassung("HEBEL_ERHÖHEN")
+           and VK11.ist_anpassung("HEBEL_SENKEN")
+           and not VK11.ist_ausstieg("HEBEL_SENKEN"),
+           "sie aendern den KREDIT, nicht die MENGE")
+
+    _an = VK11.anpassung(aktion="HEBEL_ERHÖHEN", menge=0.62, kurs_eur=2400.0,
+                         hebel_jetzt=3.0)
+    pruefe(P, "eine Anpassung nennt keine Verkaufsmenge",
+           "menge_verkauf" not in _an and "gegenwert_eur" not in _an,
+           "eine Zahl in Stueck waere hier eine Falschaussage")
+    _s11 = VK11.saetze_anpassung(_an)
+    pruefe(P, "und sagt ausdruecklich, dass die Stueckzahl bleibt",
+           any("Stueckzahl aendert sich dabei NICHT" in x for x in _s11),
+           "der Leser muss den Unterschied zum Verkauf sofort sehen")
+    pruefe(P, "beim Erhoehen steht die Liquidationswarnung dabei",
+           any("Liquidation" in x for x in _s11)
+           and not any("Liquidation" in x for x in VK11.saetze_anpassung(
+               VK11.anpassung(aktion="HEBEL_SENKEN", menge=0.62,
+                              kurs_eur=2400.0))),
+           "mehr Hebel heisst naeher an der Liquidation - weniger nicht")
+    pruefe(P, "ohne offene Position gibt es keine Anpassung",
+           VK11.anpassung(aktion="HEBEL_ERHÖHEN", menge=0.0,
+                          kurs_eur=2400.0) is None,
+           "ohne Position gibt es keinen Hebel, den man aendern koennte - "
+           "dann ist das Urteil ein Messpunkt, kein Auftrag")
+
+    # AK2 DIE SAMMELMAIL TRENNT BEIDES.
+    _mix = [{"symbol": "BTC", "begruendung": "a",
+             "verkauf": VK11.rechne(aktion="VERKAUFEN", menge=0.05,
+                                    kurs_eur=54000.0, einstand_eur=68000.0)},
+            {"symbol": "ETH", "begruendung": "b",
+             "verkauf": VK11.anpassung(aktion="HEBEL_SENKEN", menge=0.62,
+                                       kurs_eur=2400.0, hebel_jetzt=10.0)}]
+    _b11, _t11 = VK11.sammel_mail(_mix)
+    pruefe(P, "die Summe zaehlt nur Verkaeufe",
+           "2.700" in _t11 and "4.188" not in _t11,
+           "eine Hebelaenderung bewegt kein Geld aus der Position heraus - "
+           "sie in den Gegenwert einzurechnen ergaebe eine Zahl, die niemand "
+           "wiederfindet")
+    pruefe(P, "der Betreff nennt beide Arten getrennt",
+           "Verkaufsvorschlaege" in _b11 and "Hebel aendern" in _b11,
+           "wer nur 'Verkaufsvorschlaege' liest, uebersieht die Anpassung")
+    pruefe(P, "und die Anpassung steht HINTER den Verkaeufen",
+           _t11.index("BTC ") < _t11.index("ETH "),
+           "wer beides in einer Mail hat, muss zuerst wissen, was rausgeht")
+    pruefe(P, "der Lauf fragt nach BESTAND, nicht nach Ausstieg",
+           "VK.betrifft_bestand(aktion)" in _quelltext("agent/rollen_lauf.py")
+           and "VK.ist_anpassung(aktion)" in _quelltext("agent/rollen_lauf.py"),
+           "beide Klassen setzen eine Position voraus - die Abzweigung ist "
+           "dieselbe, die Anweisung dahinter nicht")
     c.close()
 
 
