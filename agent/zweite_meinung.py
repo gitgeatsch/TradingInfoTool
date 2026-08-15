@@ -363,7 +363,9 @@ def rolle_c(client, urteil: dict, conn=None, db: str | None = None) -> dict | No
     wort = str(a.get("einwand") or "").strip().lower()
     if wort not in ("ja", "nein", "unklar"):
         return None
-    return {"einwand": wort, "grund": str(a.get("grund") or "").strip()[:400]}
+    return {"einwand": wort,
+            "grund": str(a.get("grund") or "").strip()[:400],
+            "grundlage": saetze}
 
 
 def hole(*, faktentext: dict, urteil: dict, zai_client,
@@ -434,6 +436,7 @@ def hole(*, faktentext: dict, urteil: dict, zai_client,
             if r:
                 aus["einwand"] = r.get("einwand")
                 aus["einwand_grund"] = r.get("grund")
+                aus["grundlage"] = r.get("grundlage")
         except Exception:                                    # noqa: BLE001
             logger.info("Z.ai-Rolle C fehlgeschlagen (P-8)", exc_info=True)
 
@@ -490,23 +493,29 @@ def zeilen(ergebnis: dict) -> list[str]:
             satz += f": {ergebnis['kurzbegruendung']}"
         z.append(satz + ".")
     if ergebnis.get("einwand"):
-        # NUR EIN EINWAND IST EINE ZEILE WERT. "kein Einwand" ist die
-        # haeufigere und die uninteressante Antwort - sie als Satz zu
-        # schreiben waere ein konstantes Feld (R-T6) und saehe fuer den Leser
-        # aus wie eine Bestaetigung, die es nicht ist.
-        if ergebnis["einwand"] == "ja":
-            satz = ("Ein zweites Modell sieht in der Positionierung am "
-                    "Terminmarkt einen EINWAND")
-        elif ergebnis["einwand"] == "unklar":
-            satz = ("Ein zweites Modell kann die Positionierung am "
-                    "Terminmarkt nicht eindeutig lesen")
-        else:
-            satz = None
-        if satz:
-            if ergebnis.get("einwand_grund"):
-                satz += f": {ergebnis['einwand_grund']}"
-            z.append(satz + ".")
-            z.append("Es kennt dabei NUR die Positionierung, nicht die "
-                     "Kurslage - es ist eine zweite Quelle, keine zweite "
-                     "Meinung zum selben Chart.")
+        # IMMER EINE AUSSAGE, AUCH OHNE EINWAND (Nutzervorgabe 16.08.2026).
+        #
+        # Meine erste Fassung liess "kein Einwand" weg - aus Sorge vor einem
+        # konstanten Feld (R-T6). Der Nutzer hat widersprochen, und er hat
+        # recht: eine Gegenpruefung, die nur bei Widerspruch sichtbar ist,
+        # laesst den Leser im Unklaren, ob sie ueberhaupt gelaufen ist.
+        #
+        # DIE SORGE BLEIBT ABER BERECHTIGT, und sie ist hier anders geloest:
+        # die Bestaetigung nennt die Zahlen, auf die sie sich stuetzt. Damit
+        # ist sie KEIN konstantes Feld - der Text bewegt sich mit den Daten.
+        kopf = {
+            "ja": "EINWAND - die Positionierung spricht dagegen",
+            "nein": "kein Einwand - die Positionierung stuetzt den Handel",
+            "unklar": "nicht eindeutig - die Positionierung laesst beides zu",
+        }.get(ergebnis["einwand"])
+        if kopf:
+            z.append(kopf + (f": {ergebnis['einwand_grund']}"
+                             if ergebnis.get("einwand_grund") else "."))
+        # WORAUF ES BERUHT - die Saetze, die das zweite Modell gesehen hat.
+        # Ohne sie waere auch die Bestaetigung eine Behauptung.
+        for satz in (ergebnis.get("grundlage") or []):
+            z.append(f"  {satz}")
+        z.append("Dieses Modell kennt NUR die Positionierung am Terminmarkt, "
+                 "nicht die Kurslage - es ist eine zweite Quelle, keine "
+                 "zweite Meinung zum selben Chart.")
     return z

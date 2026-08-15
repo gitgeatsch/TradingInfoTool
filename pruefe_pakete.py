@@ -3020,10 +3020,28 @@ def paket_15() -> None:
            len(_mit) > 1 and "positionierung" in _mit[1].lower()
            and "nicht die kurslage" in _mit[1].lower(),
            "sonst liest es sich wie eine zweite Meinung zum selben Chart")
-    pruefe(P, "kein Einwand erzeugt KEINE Zeile",
-           ZM.zeilen({"einwand": "nein", "einwand_grund": "nichts"}) == [],
-           "'kein Einwand' als Satz waere ein konstantes Feld und saehe aus "
-           "wie eine Bestaetigung, die es nicht ist")
+    # UMGESCHRIEBEN 16.08.2026 auf Nutzervorgabe: die Gegenpruefung soll AUCH
+    # ohne Einwand etwas sagen - eine Pruefung, die nur bei Widerspruch
+    # sichtbar ist, laesst offen, ob sie ueberhaupt gelaufen ist.
+    #
+    # MEINE SORGE VOR EINEM KONSTANTEN FELD (R-T6) BLEIBT BERECHTIGT und ist
+    # anders geloest: die Bestaetigung nennt die Zahlen, auf die sie sich
+    # stuetzt. Damit bewegt sich der Text mit den Daten.
+    _ohne = ZM.zeilen({"einwand": "nein", "einwand_grund": "Funding gewohnt",
+                       "grundlage": ["Die Finanzierungsrate steht im 72. "
+                                     "Perzentil der letzten 400 Messungen."]})
+    pruefe(P, "auch ohne Einwand steht eine Aussage da",
+           _ohne and "kein Einwand" in _ohne[0], str(_ohne[:1]))
+    pruefe(P, "und sie nennt die Zahlen, auf denen sie beruht",
+           any("72. Perzentil" in z for z in _ohne),
+           "sonst waere die Bestaetigung ein konstantes Feld")
+    pruefe(P, "die Gegenpruefung hat einen EIGENEN Mailabschnitt",
+           "5. GEGENPRUEFUNG (zweites Modell)" in _quelltext(
+               "agent/signal_mail.py")
+           and "gegenpruefung=list(zweite_zeilen)" in _quelltext(
+               "agent/rollen_lauf.py"),
+           "hinten in der EINORDNUNG sah sie aus wie ein Nachsatz unserer "
+           "eigenen Rechnung - sie ist die Aussage einer anderen Quelle")
 
     # ------------------------------------------------------------------
     # D. DIE REIHENFOLGE - der eigentliche Fund vom 28.07.

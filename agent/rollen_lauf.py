@@ -1144,7 +1144,9 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                                or kurs_e,
                                stop=rechnung["stop_eur"],
                                einsatz_eur=rechnung["betrag_eur"])
-            + Z1.satz(z1) + list(zweite_zeilen))
+            + Z1.satz(z1),
+            # DIE ZWEITE STUFE IN IHREN EIGENEN ABSCHNITT.
+            gegenpruefung=list(zweite_zeilen))
 
     betreff, text = baue([])
     # O-24: DAS BILD ZUM GEPLANTEN TRADE. Einmal gerechnet, an beide

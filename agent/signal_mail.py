@@ -158,7 +158,8 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
               bestand: str | None = None,
               einordnung: list[str] | None = None,
               modell: str | None = None,
-              zeitpunkt: str | None = None) -> tuple[str, str]:
+              zeitpunkt: str | None = None,
+              gegenpruefung: list | None = None) -> tuple[str, str]:
     """Betreff und Text. Reine Formatierung - hier wird nichts gerechnet.
 
     `rechnung` kommt aus `entscheidungsrechnung.rechne()`, `urteil` ist die
@@ -279,6 +280,13 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
         + _abschnitt("2. DIE POSITION" if ausstieg else "2. DIE RECHNUNG", zwei)
         + _abschnitt("3. DAS URTEIL DES MODELLS", drei)
         + _abschnitt("4. EINORDNUNG", list(einordnung or []))
+        # EIGENE UEBERSCHRIFT (Nutzervorgabe 16.08.2026). Die Zeilen der
+        # zweiten Stufe standen bisher hinten in der EINORDNUNG - dort
+        # sahen sie aus wie ein Nachsatz unserer eigenen Rechnung. Sie
+        # sind aber die Aussage einer ANDEREN Quelle und gehoeren
+        # entsprechend abgesetzt.
+        + _abschnitt("5. GEGENPRUEFUNG (zweites Modell)",
+                     list(gegenpruefung or []))
         + [TRENNER,
            "Ausfuehrung manuell ueber die Bitpanda-App. Details im Hebel-Tab."
            if instrument == "hebel" else

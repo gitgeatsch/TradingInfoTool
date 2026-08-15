@@ -4323,3 +4323,95 @@ sehen.
 denen niemand mehr vergleichen kann. **Deshalb Phase I als EIN Stand**, nicht
 als fünf — sie sind alle grün, alle beschreibend, und ihre Einzelwirkung wäre
 bei dieser Signalzahl ohnehin nicht trennbar.
+
+---
+
+## Kapitel 37 — Rolle C in Betrieb: Anhaltspunkte, Bestätigung, eigener Abschnitt (16.08.2026)
+
+### 37.1 Hat Rolle C genug Anhaltspunkte?
+
+| | |
+|---|---|
+| Krypto-Assets | 44 |
+| **volle Positionierung** (3 von 3 Angaben) | **35** |
+| teilweise | 2 |
+| **gar keine — Rolle C fragt NICHT** | **7** |
+
+**Vier Anhaltspunkte je Frage:** Veränderung der offenen Kontrakte ·
+Finanzierungsrate als Perzentil der eigenen Historie · Anteil der Long-Konten ·
+**Marktregime mit Dauer** (heute ergänzt).
+
+Aktien, Rohstoffe und ETF haben keine Terminmarktdaten — dort wird **gar nicht
+gefragt**. Das ist gewollt: ein Modell, das über nichts urteilt, urteilt
+trotzdem, und das wäre die nächste Konstante.
+
+> ⚠️ **Beim Regime lag ich zweimal daneben.** Erst fragte ich eine Tabelle
+> `regime_status` ab — die es nicht gibt; das Regime steht auf der jüngsten
+> Signalzeile, die Dauer rechnet `regime.regime_persistenz_tage()`. Der
+> Fail-soft hat es gefangen, aber als dauerhaftes *„keine Angabe"*. Und in der
+> Korrektur fing ich Regime und Dauer gemeinsam — dadurch standen *„Regime
+> baer"* und *„keine Angabe zum Marktregime"* **nebeneinander in derselben
+> Ausgabe.** Jetzt getrennt gefangen.
+
+**Ehrlich zur Menge:** vier Anhaltspunkte sind dünn. Aus dem Plan fehlen noch
+Optionsmarkt (Deribit, 1.149 Fakten mit Gegenargument) und Nachrichten. Beide
+sind eigene Vorhaben.
+
+### 37.2 Auch ohne Einwand steht eine Aussage da
+
+Nutzervorgabe: *„wenn sie keinen Einwand hat, soll sie etwas anzeigen — und
+natürlich soll es auch eine Art Bestätigung sein."*
+
+Meine erste Fassung ließ „kein Einwand" weg, aus Sorge vor einem konstanten
+Feld (R-T6). **Der Einwand des Nutzers trifft:** eine Gegenprüfung, die nur bei
+Widerspruch sichtbar ist, lässt offen, ob sie überhaupt gelaufen ist.
+
+**Die Sorge bleibt trotzdem berechtigt und ist anders gelöst:** die Bestätigung
+**nennt die Zahlen, auf die sie sich stützt**. Damit bewegt sich der Text mit
+den Daten und ist kein konstantes Feld.
+
+```
+--- 5. GEGENPRUEFUNG (zweites Modell) ---
+kein Einwand - die Positionierung stuetzt den Handel: Funding im gewohnten Bereich
+  Die Finanzierungsrate steht im 72. Perzentil der letzten 400 Messungen - im gewohnten Bereich.
+  65 % der Konten stehen long; das ist das 90. Perzentil der eigenen Historie.
+Dieses Modell kennt NUR die Positionierung am Terminmarkt, nicht die Kurslage.
+```
+
+Drei Zustände, alle mit Begründung und Grundlage:
+
+| Antwort | Kopfzeile |
+|---|---|
+| ja | **EINWAND** — die Positionierung spricht dagegen |
+| nein | kein Einwand — die Positionierung stützt den Handel |
+| unklar | nicht eindeutig — die Positionierung lässt beides zu |
+
+### 37.3 Eigener Abschnitt statt Nachsatz
+
+Die Zeilen der zweiten Stufe standen bisher **hinten in „4. EINORDNUNG"** — dort
+sahen sie aus wie ein Nachsatz unserer eigenen Rechnung. Sie sind aber die
+Aussage einer **anderen Quelle** und stehen jetzt in **„5. GEGENPRÜFUNG
+(zweites Modell)"**.
+
+### 37.4 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **831, alle bestanden** |
+| freie Namen | 0 |
+| frühere Gegenprüfungen (37 · 23 · 12 · 10) | alle grün |
+
+Eine bestehende Prüfung hielt fest, dass „kein Einwand" **keine** Zeile
+erzeugt — sie war eine Stunde alt und von mir. Sie prüft jetzt das Gegenteil,
+**und zusätzlich, dass die Bestätigung ihre Zahlen nennt.**
+
+### 37.5 Was offen bleibt
+
+**Ob Rolle C etwas trägt, ist ungemessen** — wie alles andere auch. Sie bekommt
+eine eigene Spalte und wird gegen die Basisrate gemessen. Der Unterschied zum
+Vorgänger ist nicht, dass sie besser ist, sondern dass sie **überhaupt eine
+eigene Information hat**, über die sie urteilen kann.
+
+Und die Verteilung wird ab dem ersten Tag beobachtet: sagt sie in 95 % der
+Fälle „kein Einwand", ist sie dieselbe Konstante wie der Richtungsabgleich —
+nur mit anderen Worten.

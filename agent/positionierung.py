@@ -107,6 +107,42 @@ def lage(conn, symbol: str) -> dict:
         aus["long_perzentil"] = _perzentil(lang, lang[0])
     else:
         aus["fehlt"].append("Anteil der Long-Konten")
+
+    # DAS REGIME MIT SEINER DAUER (16.08.2026). Es ist gerechnet und stand
+    # bisher in keinem Prompt. Fuer Rolle C gehoert es hierher und NICHT zu
+    # Rolle BC: es beschreibt nicht diesen Wert, sondern den Rahmen, in dem
+    # jedes Urteil steht - und die Trennung der Informationsgrenzen ist die
+    # Konstruktionsbedingung der zweiten Stufe.
+    #
+    # DIE DAUER IST DER EIGENTLICHE PUNKT. "baer" allein ist ueber alle
+    # Signale eines Tages identisch und damit ein konstantes Feld (R-T6);
+    # "seit 27 Tagen" macht daraus eine Aussage, die sich bewegt.
+    # NICHT AUS EINER TABELLE - es gibt keine. Das Regime steht auf der
+    # juengsten Signalzeile, die Dauer rechnet `regime.regime_persistenz_tage()`.
+    # Meine erste Fassung fragte `regime_status` ab; die Tabelle existiert
+    # nicht, und der Fail-soft haette das stillschweigend als "keine Angabe"
+    # gemeldet - richtig gefangen, aber dauerhaft leer.
+    try:
+        r = conn.execute(
+            "SELECT regime FROM signals WHERE regime IS NOT NULL "
+            "ORDER BY created_at DESC LIMIT 1").fetchone()
+        if r and r[0]:
+            aus["regime"] = str(r[0])
+            # DIE DAUER SEPARAT - faellt sie aus, ist das Regime trotzdem da.
+            # Erste Fassung fing beides gemeinsam: die Zeile "Regime baer" UND
+            # "keine Angabe zum Marktregime" standen nebeneinander in derselben
+            # Ausgabe. Ein Widerspruch, den der Leser nicht aufloesen kann.
+            try:
+                from agent.krypto.regime import regime_persistenz_tage
+
+                aus["regime_tage"] = regime_persistenz_tage(conn, str(r[0]))
+            except Exception:                                # noqa: BLE001
+                pass
+        else:
+            aus["fehlt"].append("Marktregime")
+    except Exception as exc:                                 # noqa: BLE001
+        logger.info("Regime nicht lesbar: %s", exc)
+        aus["fehlt"].append("Marktregime")
     return aus
 
 
@@ -153,6 +189,12 @@ def saetze(e: dict) -> list[str]:
         satz = (f"{e['long_anteil_pct']:.0f} % der Konten stehen long")
         if lp is not None:
             satz += f"; das ist das {lp}. Perzentil der eigenen Historie"
+        z.append(satz + ".")
+
+    if e.get("regime"):
+        satz = f"Der Gesamtmarkt steht im Regime {e['regime']!r}"
+        if e.get("regime_tage") is not None:
+            satz += f", seit {e['regime_tage']} Tagen ununterbrochen"
         z.append(satz + ".")
 
     for f in (e.get("fehlt") or []):

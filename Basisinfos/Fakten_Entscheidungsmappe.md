@@ -2241,3 +2241,30 @@ als der eines ganzen Tages; an echten BTC-Daten stand er beim 0,2-fachen des
 Mittels. Ohne diesen Schalter hätte **jede** Live-Mail „Volumen UNGÜNSTIG"
 gemeldet — ein systematischer Fehler in jeder einzelnen Nachricht, und einer,
 der wie ein Befund aussieht.
+
+## Nachtrag (2026-08-16): Z.ai ist Rolle C - eine zweite QUELLE
+
+**Der Richtungsabgleich ist stillgelegt.** Er bekam dieselben Marktfakten wie
+Rolle BC und sollte daraus eine eigene Richtung ableiten - zwei Leser derselben
+Seite. Vier unabhängige Gründe, jeder für sich ausreichend:
+
+| | |
+|---|---|
+| keine eigene Quelle | *Homogeneous Debate* — teilen zwei Prüfer die Informationsgrenze, verliert die Prüfung ihren Wert |
+| er unterschied nicht | über 2.469 Prüfungen: SHORT 1.246, NEUTRAL 1.206, **LONG 17** — bei LONG-Signalen zwei Zustimmungen in 377 Fällen (R-T6) |
+| seine Zustimmung trennte nicht | 0 von 7 Treffern gegen 17,2 % bei Abweichung |
+| seine gemessene Güte war die Marktrichtung | wer im Bärenregime immer SHORT sagt, hat oft recht |
+
+Er kostete **drei von vier Aufrufen**; am 15.08. bekamen deshalb 35 von 39
+Signalen gar keine zweite Meinung.
+
+**An seiner Stelle steht Rolle C** mit eigener Grundlage: Veränderung der
+offenen Kontrakte, Finanzierungsrate als Perzentil der eigenen Historie, Anteil
+der Long-Konten, Marktregime mit Dauer. Ein Aufruf. Keine Frage ohne Grundlage —
+bei Aktien, Rohstoffen und ETF wird nicht gefragt.
+
+**Die Antwort steht immer in der Mail**, in einem eigenen Abschnitt, auch ohne
+Einwand — mit den Zahlen, auf die sie sich stützt. Nutzervorgabe vom 16.08.
+
+**Ungemessen wie alles andere:** eigene Spalte, gegen die Basisrate. Sagt sie in
+95 % der Fälle „kein Einwand", ist sie dieselbe Konstante wie ihr Vorgänger.
