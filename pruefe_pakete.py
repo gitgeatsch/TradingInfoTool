@@ -4188,6 +4188,52 @@ def paket_15() -> None:
            and AS.ist_handelbar(None, "BTC", bitpanda_gelistet=None) is True,
            "die Listing-Abfrage kennt nicht jeden Sonderfall, der Nutzer schon")
 
+    # T2 EIN CASH-AEQUIVALENT IST KEIN HEBEL-KANDIDAT (15.08.2026).
+    #
+    # Nutzerfund an der eigenen Oberflaeche: *"eurcv ist ueberhaupt ein
+    # stablecoin"*. `ui/app.py` baut die Spalte "Hebel-Pruefung" ausdruecklich
+    # nur fuer `krypto and not ist_cash_aequivalent` - EURCV steht dort mit
+    # "-". Die Kette kannte diese Bedingung nicht und fragte nur den Schalter;
+    # der hat fuer EURCV keine Zeile und liefert damit "erlaubt".
+    #
+    # Anzeige und Verhalten sagten Gegenteiliges. Aufgehalten hat es nur ein
+    # Datenmangel: EURCV hat keine Tageskerzen.
+    class _WLA:
+        def __init__(_s, sym, cash):
+            _s.symbol = sym
+            _s.ist_cash_aequivalent = cash
+
+    _wl_test = [_WLA("EURCV", True), _WLA("BTC", False)]
+    _e_cash, _g_cash = AS.darf_analysiert_werden(
+        None, "EURCV", "hebel", "einstieg", watchlist=_wl_test)
+    pruefe(P, "ein Stablecoin bekommt KEIN Hebel-Urteil",
+           _e_cash is False and "Cash" in (_g_cash or ""),
+           f"{_g_cash!r} - ein gehebelter Stablecoin ist kein Trade, sondern "
+           "ein Denkfehler mit laufenden Kosten")
+    _e_spot, _ = AS.darf_analysiert_werden(
+        None, "EURCV", "spot", "einstieg", watchlist=_wl_test)
+    pruefe(P, "im SPOT bleibt er erlaubt", _e_spot is True,
+           "Cash zu halten ist eine Lage, kein Fehler - nur hebeln kann man "
+           "es nicht")
+    _e_btc, _ = AS.darf_analysiert_werden(
+        None, "BTC", "hebel", "einstieg", watchlist=_wl_test)
+    pruefe(P, "und ein normales Asset bleibt unberuehrt", _e_btc is True)
+    # DIE VERDRAHTUNG - `_ein_asset` sieht `_wl` NICHT von selbst. Genau diese
+    # Falle hat am 14.08. `VK` erwischt: eine Variable aus `fuehre_lauf`, der
+    # breite Fehlerfang schluckt den NameError, und JEDES Symbol landet im
+    # Fehlerzweig.
+    import inspect as _i5
+    from agent import rollen_lauf as _RL5
+
+    pruefe(P, "die Watchlist wird an `_ein_asset` durchgereicht",
+           "watchlist" in _i5.signature(_RL5._ein_asset).parameters
+           and "assetklasse = assetklasse , watchlist = _wl" in _nur_code(
+               "agent/rollen_lauf.py"),
+           "sonst waere es ein NameError je Symbol, den niemand sieht")
+    pruefe(P, "und von dort an den Schalter",
+           "strategie , watchlist = watchlist" in _nur_code(
+               "agent/rollen_lauf.py"))
+
     # ------------------------------------------------------------------
     # U. DIE ASSETKLASSEN - Vorarbeit fuer den Multi-Asset-Umstieg (14.08.).
     #

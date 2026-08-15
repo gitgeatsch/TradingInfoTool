@@ -38,8 +38,40 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def _ist_cash_aequivalent(symbol: str, watchlist=None) -> bool:
+    """Ist das ein Stablecoin oder eine andere Cash-Vertretung?
+
+    DIE OBERFLAECHE WEISS DAS LAENGST, die Kette wusste es nicht (15.08.2026).
+    `ui/app.py` baut die Spalte "Hebel-Pruefung" ausdruecklich nur fuer
+    `a.assetklasse == "krypto" and not a.ist_cash_aequivalent` - EURCV steht
+    dort mit "-", also "kommt gar nicht in Frage".
+
+    `darf_analysiert_werden()` kannte diese Bedingung nicht und fragte nur den
+    Schalter. Der hat fuer EURCV keine Zeile und liefert damit "erlaubt".
+    Anzeige und Verhalten sagten Gegenteiliges: in der GUI ein Strich, in der
+    Kette ein Hebel-Kandidat.
+
+    NUR EIN DATENMANGEL HAT DAS AUFGEHALTEN. EURCV hat keine Tageskerzen und
+    fiel deshalb schon an der Faktenstufe heraus - das ist Zufall, keine
+    Regel. Ein gehebelter Stablecoin ist kein Trade, sondern ein Denkfehler mit
+    laufenden Kosten."""
+    import config as config_module
+
+    try:
+        if watchlist is None:
+            watchlist = config_module.get_watchlist()
+        sym = str(symbol or "").strip().upper()
+        for a in watchlist:
+            if str(a.symbol).strip().upper() == sym:
+                return bool(getattr(a, "ist_cash_aequivalent", False))
+    except Exception:                                        # noqa: BLE001
+        logger.debug("Cash-Aequivalenz nicht lesbar fuer %s", symbol)
+    return False
+
+
 def darf_analysiert_werden(conn, symbol: str, instrument: str,
-                           strategie: str) -> tuple[bool, str | None]:
+                           strategie: str, watchlist=None
+                           ) -> tuple[bool, str | None]:
     """Will der Nutzer fuer DIESES Paar ueberhaupt ein Urteil?
 
     Gibt `(erlaubt, grund)` zurueck. `grund` ist nur gesetzt, wenn abgelehnt -
@@ -55,6 +87,12 @@ def darf_analysiert_werden(conn, symbol: str, instrument: str,
     s = str(strategie or "").strip().lower()
 
     if i == "hebel":
+        # DIESELBE BEDINGUNG WIE DIE OBERFLAECHE, und sie steht VOR dem
+        # Schalter: wo die GUI "-" anzeigt, gibt es keine Entscheidung zu
+        # lesen. Der Schalter beantwortet "will der Nutzer das?", diese Zeile
+        # beantwortet "kann man das ueberhaupt fragen?".
+        if _ist_cash_aequivalent(sym, watchlist):
+            return False, "Cash-Aequivalent - kein Hebel-Kandidat"
         try:
             if not db.get_hebel_pruefung_erlaubt(conn, sym):
                 return False, "Hebel-Pruefung fuer dieses Asset abgeschaltet"

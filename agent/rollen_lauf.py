@@ -261,6 +261,11 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
     #
     # REIN LESEND UND OHNE MODELLAUFRUF - es kostet kein Kontingent.
     ergebnis["fuehrung"] = {}
+    # AUSSERHALB DES `try`, weil `_wl` weiter unten an `_ein_asset` geht
+    # (15.08.2026). Stuende die Zuweisung im Block und scheiterte der Import
+    # darueber, waere der Name spaeter nicht definiert - ein NameError, den der
+    # breite Fehlerfang je Symbol schlucken wuerde.
+    _wl = None
     try:
         from agent.krypto.backward_tracking import compute_ausstiegs_empfehlungen
 
@@ -277,7 +282,6 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
         # "SPOT (nicht aufgeschluesselt)".
         import config as _config_modul
 
-        _wl = None
         try:
             _wl = _config_modul.get_watchlist()
         except Exception:                                    # noqa: BLE001
@@ -405,7 +409,7 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                        config=config, aufgezeichnet=aufgezeichnet,
                        instrument=instrument, strategie=strategie,
                        ergebnis=ergebnis, versand=versand,
-                       assetklasse=assetklasse,
+                       assetklasse=assetklasse, watchlist=_wl,
                        module=(AR, ER, FB, FQ, Z1, RT, RE, SA, SM, TO, TB,
                                ZM, BE, WH),
                        zai_client=zai_client, bilanz=bilanz,
@@ -507,8 +511,14 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                instrument, strategie,
                aufgezeichnet, ergebnis, versand, module, fehlertypen,
                pruefe_auftrag, zai_client=None, bilanz=None,
-               assetklasse="krypto") -> None:
-    """Ein Asset durch alle Stufen. Wirft, wenn es nicht weitergeht."""
+               assetklasse="krypto", watchlist=None) -> None:
+    """Ein Asset durch alle Stufen. Wirft, wenn es nicht weitergeht.
+
+    `watchlist` wird DURCHGEREICHT, nicht hier geladen (15.08.2026). Meine
+    erste Fassung griff auf `_wl` zu - eine Variable aus `fuehre_lauf`, die
+    diese Funktion nicht sieht. Genau dieselbe Falle wie `VK` am 14.08.: der
+    breite Fehlerfang haette sie geschluckt, und JEDES Symbol waere in den
+    Fehlerzweig gelaufen."""
     AR, ER, FB, FQ, Z1, RT, RE, SA, SM, TO, TB, ZM, BE, WH = module
 
     # --- Stufe: Auftrag --- (schon vor der Schleife geprueft)
@@ -585,8 +595,11 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         # Code: *"ueberall moeglich, aber nur dort Signale erzeugen, wo ich das
         # selektiv moechte."*
         from agent import asset_schalter as AS
-        erlaubt, warum = AS.darf_analysiert_werden(conn, symbol, instrument,
-                                                   strategie)
+        # DIE WATCHLIST MIT, statt sie je Symbol neu zu laden. Sie liegt im
+        # Lauf ohnehin vor; ohne sie laese `_ist_cash_aequivalent()` die
+        # config.yaml bei jedem Asset erneut.
+        erlaubt, warum = AS.darf_analysiert_werden(
+            conn, symbol, instrument, strategie, watchlist=watchlist)
         if not erlaubt:
             durchlauf.verloren(symbol, "auftrag", warum or "abgeschaltet")
             return
