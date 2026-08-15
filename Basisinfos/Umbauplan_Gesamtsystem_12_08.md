@@ -3320,3 +3320,82 @@ Abstand zur vorigen Frage.
 
 **Erst dann steht die Entscheidung auf einer Messung statt auf einer
 Schätzung.** Das ist der ganze Zweck der Messvariante.
+
+
+---
+
+## Kapitel 31 — O-30: es gab keinen Mehrverbrauch (15.08.2026)
+
+### 31.1 Die Behauptung
+
+O-30 stand seit dem 14.08. so im Plan:
+
+> *„meine Budgetrechnung zählte URTEILE, das Kontingent zählt HTTP-VERSUCHE.
+> Die Buchung `zaehle_aufruf` steht INNERHALB der Wiederholschleife von
+> `api/gemini.py` — jeder 429- und 503-Versuch bucht mit."*
+
+Belegt hatte ich das mit zwei Zahlenpaaren: **195 gegen 102** (Faktor 1,9) und
+später **320 gegen 227** (Faktor 1,41).
+
+### 31.2 Beides war dieselbe Verschiebung
+
+| Tag | `gemini` (UTC) | Summe `gemini:*` (Pazifik) | Differenz |
+|---|---|---|---|
+| 14.08. | 802 | 895 | **−93** |
+| 15.08. | 320 | 227 | **+93** |
+
+**Exakt spiegelbildlich.** Die beiden Zähler buchen dieselben Ereignisse —
+beide stehen in derselben Wiederholschleife — und unterscheiden sich **nur in
+der Tagesgrenze**: `gemini` auf UTC, `gemini:<modell>` auf Googles Pazifik-Tag.
+Zwischen 00:00 und 09:00 CEST liegen die Aufrufe im UTC-Tag von heute und im
+Pazifik-Tag von gestern. Das sind die 93.
+
+> ⚠️ **Und die Erklärung stand die ganze Zeit im Export**, ein Feld weiter:
+> *„source `gemini:<modell>` zählt auf Googles Pazifik-Tag …; source `gemini`
+> zählt auf UTC-Tag."* Ich habe sie zweimal nicht gelesen und aus dem
+> Zahlenvergleich einen Befund gemacht.
+
+### 31.3 Was tatsächlich stimmt
+
+| | |
+|---|---|
+| Trader-Urteile im Pazifik-Tag 15.08. | 216 |
+| Gemini-Versuche im selben Fenster | 227 |
+| **Versuche je Urteil** | **1,051** |
+| Wiederholungen im Log | **0** |
+
+Die elf zusätzlichen Aufrufe sind die **Lagebild-Aufrufe**, nicht Retries. Es
+gab an diesem Tag keine einzige Wiederholung.
+
+**Die Budgetrechnung war im Kern richtig.** Der Aufschlag beträgt 5 %, nicht
+90 %.
+
+Und beide Wächter lesen bereits den richtigen Zähler — `api/gemini.py` und
+`scheduler/rollen_job.py` fragen `gemini:<modell>` auf dem Pazifik-Tag, also
+genau den, der Googles Grenze abbildet.
+
+### 31.4 Was trotzdem gebaut wurde
+
+Nicht am Zähler — der stimmt. Sondern an der Stelle, die mich zweimal in die
+Irre geführt hat: **der Export rechnet den Versatz jetzt selbst aus**
+(`tagesgrenzen_versatz`, je Tag) und die Lesehilfe sagt ausdrücklich, dass die
+beiden Zahlen **nicht vergleichbar** sind und eine Differenz **kein
+Mehrverbrauch** ist.
+
+> **Eine Erklärung, die daneben steht, wird überlesen.** Wer die Zahlen
+> vergleicht, findet die Antwort jetzt an derselben Stelle wie die Frage.
+
+### 31.5 Gegenprobe
+
+| | |
+|---|---|
+| Differenzen heben sich exakt auf | −93 / +93 |
+| beide Buchungen stehen in derselben Schleife | an der Quelle geprüft |
+| beide Wächter lesen den Pazifik-Zähler | geprüft |
+| Versuche je Urteil | 1,051 |
+| Wiederholungen im Betrieb | 0 |
+| Export rechnet und warnt | geprüft |
+
+**9 von 9**, dazu 823 Paketprüfungen.
+
+**O-30 ist damit geschlossen — nicht behoben, sondern widerlegt.**

@@ -1416,16 +1416,44 @@ def _llm_kontingent(conn) -> dict:
     except Exception:  # noqa: BLE001
         heute_pazifik, grenze = None, None
     heute = [row_to_dict(r) for r in zeilen if r["tag"] == heute_pazifik]
+
+    # DIE GEGENRECHNUNG GLEICH MIT (O-30, 15.08.2026).
+    #
+    # Die Lesehilfe unten sagt seit jeher, dass `gemini` auf den UTC-Tag zaehlt
+    # und `gemini:<modell>` auf den Pazifik-Tag. Trotzdem habe ich die beiden
+    # ZWEIMAL verglichen und daraus einen Mehrverbrauch abgeleitet - erst
+    # "Faktor 1,9", dann "1,41". Beides war dieselbe Verschiebung: am 14.08.
+    # fehlten der UTC-Summe 93 Aufrufe, am 15.08. hatte sie 93 zuviel.
+    #
+    # EINE ERKLAERUNG, DIE DANEBEN STEHT, WIRD UEBERLESEN. Deshalb rechnet der
+    # Export den Versatz jetzt selbst aus und benennt ihn. Wer die Zahlen
+    # vergleicht, findet die Antwort an derselben Stelle wie die Frage.
+    versatz = []
+    tage = sorted({r["tag"] for r in zeilen})
+    for t in tage[-7:]:
+        utc = sum(r["anzahl"] for r in zeilen
+                  if r["tag"] == t and r["source"] == "gemini")
+        pazifik = sum(r["anzahl"] for r in zeilen
+                      if r["tag"] == t and str(r["source"]).startswith("gemini:"))
+        if utc or pazifik:
+            versatz.append({"tag": t, "gemini_utc": utc,
+                            "gemini_pazifik_summe": pazifik,
+                            "differenz": utc - pazifik})
     return {
         "tag_pazifik": heute_pazifik,
         "tagesgrenze_je_modell": grenze,
         "heute_je_quelle": heute,
         "taeglich_verlauf": [row_to_dict(r) for r in zeilen],
+        "tagesgrenzen_versatz": versatz,
         "lesehilfe": (
             "source 'gemini:<modell>' zaehlt auf Googles Pazifik-Tag gegen "
             "500/Tag je Modell; source 'gemini' zaehlt auf UTC-Tag und ist "
             "der Wert, den der budget_allocator liest. Beide Zaehler sehen "
-            "NUR dieses Geraet - das Kontingent haengt am Schluessel."),
+            "NUR dieses Geraet - das Kontingent haengt am Schluessel. "
+            "ACHTUNG: die beiden sind NICHT vergleichbar - sie zaehlen "
+            "dieselben Aufrufe auf verschiedenen Tagesgrenzen. Der Unterschied "
+            "steht in `tagesgrenzen_versatz` und hebt sich ueber zwei Tage auf; "
+            "eine Differenz dort ist KEIN Mehrverbrauch."),
     }
 
 
