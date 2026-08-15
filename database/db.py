@@ -1362,6 +1362,77 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_rohstoff_futures_reihen_umziehen(conn)
     _bereinige_gemessene_etc_punkte(conn)
     import_holdings_manual_overrides(conn)
+    # MUSS VOR DEM ERSTEN KETTENLAUF STEHEN, und `init_db()` laeuft beim
+    # App-Start - also vor dem Scheduler. Andernfalls griffe die neue Vorgabe
+    # "aus" auf Symbole, deren Entscheidung noch nicht festgehalten ist.
+    _migrate_hebel_schalter_geradeziehen(conn)
+
+
+def _migrate_hebel_schalter_geradeziehen(conn: sqlite3.Connection) -> list[str]:
+    """Jedes Krypto-Asset bekommt EINE ausdrueckliche Hebel-Entscheidung.
+
+    DER UNGLEICHE STAND UND SEINE HERKUNFT (Nutzer, 15.08.2026):
+
+        "wir haben ohne Schalter angefangen und der ungleiche Stand kam damit
+         zustande. ja kann man machen default ist auf aus und der aktuelle
+         Bestand - bei Hebel muss gerade gezogen werden."
+
+    Der Schalter kam am 18.07. dazu, als schon 44 Krypto-Assets in der
+    Watchlist standen. Wer nie angefasst wurde, hatte keine Zeile - und die
+    Vorgabe lautete "an". Am 15.08. waren das ACHT Symbole: BNB, BTC, ETH,
+    HYPE, KAIA, SUI, TAO und EURCV. In der Oberflaeche standen sie als "An",
+    nicht unterscheidbar von einer getroffenen Entscheidung. Vier der zwoelf
+    Hebel-Signale jenes Vormittags kamen aus dieser Gruppe.
+
+    WAS DIESE MIGRATION TUT: sie schreibt fuer jedes Krypto-Asset OHNE Zeile
+    genau den Wert, der bisher GALT - "an". Damit aendert sich am Verhalten
+    nichts, aber es gibt keinen unentschiedenen Fall mehr.
+
+    WAS SIE AUSDRUECKLICH NICHT TUT: bestehende Zeilen anfassen. Wer "aus"
+    gesetzt hat, behaelt "aus".
+
+    UND ERST DANACH TRAEGT DIE NEUE VORGABE (siehe
+    `get_hebel_pruefung_erlaubt`): ab hier ist "keine Zeile" gleichbedeutend
+    mit "aus". Ein Asset, das neu in die Watchlist kommt, wird nicht mehr
+    stillschweigend gehebelt - der Nutzer schaltet es ein, wenn er will.
+
+    CASH-AEQUIVALENTE BLEIBEN AUSSEN VOR - dieselbe Bedingung wie in `ui/app.py`
+    und seit dem 15.08. auch in `agent/asset_schalter.py`. Fuer EURCV gibt es
+    keine Hebelfrage, also auch keine Antwort, die man festhalten muesste.
+
+    Idempotent: beim zweiten Lauf gibt es nichts mehr zu tun."""
+    try:
+        import config as config_module
+
+        watchlist = config_module.get_watchlist()
+    except Exception as exc:                                 # noqa: BLE001
+        # KEINE WATCHLIST HEISST KEINE MIGRATION, nicht "alles abschalten".
+        logger.info("Hebel-Schalter nicht geradegezogen (Watchlist nicht "
+                    "lesbar): %s", exc)
+        return []
+    try:
+        vorhanden = {str(r["symbol"]).upper() for r in conn.execute(
+            "SELECT symbol FROM asset_hebel_settings")}
+    except sqlite3.Error as exc:
+        logger.info("Hebel-Schalter nicht geradegezogen: %s", exc)
+        return []
+    ergaenzt: list[str] = []
+    for a in watchlist:
+        sym = str(getattr(a, "symbol", "")).strip().upper()
+        if (not sym or sym in vorhanden
+                or getattr(a, "assetklasse", None) != "krypto"
+                or getattr(a, "ist_cash_aequivalent", False)):
+            continue
+        conn.execute(
+            "INSERT OR IGNORE INTO asset_hebel_settings "
+            "(symbol, hebel_pruefung_erlaubt) VALUES (?, 1)", (sym,))
+        ergaenzt.append(sym)
+    if ergaenzt:
+        conn.commit()
+        logger.info("Hebel-Schalter geradegezogen: %d Symbole ausdruecklich "
+                    "auf 'an' gesetzt (bisher ohne Zeile) - %s",
+                    len(ergaenzt), ", ".join(sorted(ergaenzt)))
+    return ergaenzt
 
 
 def is_first_run(conn: sqlite3.Connection) -> bool:
@@ -1648,19 +1719,38 @@ def set_dca_erlaubt(conn: sqlite3.Connection, symbol: str, erlaubt: bool) -> Non
 
 
 def get_hebel_pruefung_erlaubt(conn: sqlite3.Connection, symbol: str) -> bool:
-    """Hebel-Pruefung-Toggle (2026-07-18) - per Asset umschaltbar, ob
-    agent/krypto/hebel_screening.py dieses Symbol ueberhaupt fuer neue
-    Hebel-Trigger screent. Default: an fuer ALLE Krypto-Assets (kein
-    Verhaltenswechsel ohne explizites Abschalten), solange keine explizite
-    Zeile existiert - anders als get_dca_erlaubt() (dort ist der Default
-    NUR fuer BTC/ETH/SOL an), da bisher jedes Krypto-Asset gescreent wurde
-    und dieser Toggle rein ein zusaetzliches Opt-out sein soll, keine
-    Verhaltensaenderung fuer bestehende Nutzer."""
+    """Hebel-Pruefung-Toggle (2026-07-18) - per Asset umschaltbar, ob dieses
+    Symbol ueberhaupt fuer Hebel beurteilt wird.
+
+    OPT-IN SEIT DEM 15.08.2026, VORHER OPT-OUT. Der Schalter kam am 18.07.
+    dazu und liess "keine Zeile" als "an" gelten - ausdruecklich, um das
+    Verhalten bestehender Nutzer nicht zu aendern. Damit war er technisch ein
+    Opt-out, sah in der Oberflaeche aber wie eine Liste getroffener
+    Entscheidungen aus: acht Symbole standen dort auf "An", ohne dass sie je
+    jemand eingeschaltet haette.
+
+    Nutzerentscheidung dazu (15.08.):
+
+        "der Schalter ist ein OPT IN ... wir haben ohne Schalter angefangen und
+         der ungleiche Stand kam damit zustande ... bei Hebel muss gerade
+         gezogen werden."
+
+    KEINE ZEILE HEISST JETZT AUS. Ein Asset, das neu in die Watchlist kommt,
+    wird nicht mehr stillschweigend gehebelt.
+
+    DASS DABEI NICHTS ABGESCHALTET WURDE, sichert
+    `_migrate_hebel_schalter_geradeziehen()`: sie hat den vorherigen Zustand
+    fuer alle acht ausdruecklich festgeschrieben, BEVOR diese Vorgabe greift.
+    Beide gehoeren zusammen - wer eine ohne die andere uebernimmt, schaltet
+    sieben laufende Assets still ab.
+
+    Anders als `get_dca_erlaubt()`, wo der Default nur fuer BTC/ETH/SOL an
+    ist: dort ist "an" eine Auswahl, hier ist es keine mehr."""
     row = conn.execute(
         "SELECT hebel_pruefung_erlaubt FROM asset_hebel_settings WHERE symbol = ?", (symbol,)
     ).fetchone()
     if row is None:
-        return True
+        return False
     return bool(row["hebel_pruefung_erlaubt"])
 
 

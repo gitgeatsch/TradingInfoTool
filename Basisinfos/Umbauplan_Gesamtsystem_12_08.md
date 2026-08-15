@@ -2753,3 +2753,61 @@ Modell, weil seine Reihe keine Tageskerzen hat. Dass ihn ein Datenmangel
 aufhält und keine Regel, ist Zufall.
 
 **Offen, gehört dem Nutzer:** ob die acht ohne Zeile bewusst mitlaufen sollen.
+
+### 26.10 Der Hebel-Schalter wird gerade gezogen — Opt-out wird Opt-in
+
+Nutzer, nach dem Blick in die eigene Oberfläche:
+
+> *„der Schalter ist ein OPT IN … wir haben ohne Schalter angefangen und der
+> ungleiche Stand kam damit zustande. ja kann man machen, default ist auf aus
+> und der aktuelle Bestand — bei Hebel muss gerade gezogen werden."*
+
+**Die Herkunft des ungleichen Stands.** Der Schalter kam am 18.07. dazu, als
+schon 44 Krypto-Assets in der Watchlist standen. Wer nie angefasst wurde, hatte
+keine Zeile — und „keine Zeile" galt als **an**, ausdrücklich so entworfen, um
+das Verhalten bestehender Nutzer nicht zu ändern.
+
+Damit war er technisch ein **Opt-out**, sah in der Oberfläche aber aus wie eine
+Liste getroffener Entscheidungen. Sieben Symbole standen auf „An", ohne dass
+sie je jemand eingeschaltet hätte: **BNB, BTC, ETH, HYPE, KAIA, SUI, TAO**.
+Vier der zwölf Hebel-Signale des Vormittags kamen aus dieser Gruppe.
+
+**Zwei Änderungen, die nur zusammen richtig sind:**
+
+| | |
+|---|---|
+| `_migrate_hebel_schalter_geradeziehen()` | schreibt für jedes Krypto-Asset ohne Zeile den bisher **geltenden** Wert — „an" |
+| `get_hebel_pruefung_erlaubt()` | gibt ohne Zeile jetzt **False** |
+
+> ⚠️ **Wer die Vorgabe umdreht ohne die Migration, schaltet sieben laufende
+> Assets still ab.** Deshalb läuft die Geradeziehung in `init_db()` — beim
+> App-Start, also vor dem Scheduler.
+
+**Am Verhalten ändert sich heute nichts.** Gegengeprüft an der NB-Kopie:
+
+```
+AUSGANGSLAGE: 43 Krypto-Assets, 7 ohne Zeile
+Migration hat 7 Zeilen ergaenzt: BNB, BTC, ETH, HYPE, KAIA, SUI, TAO
+
+OK  KEIN Symbol hat sich veraendert          ({})
+OK  kein bestehendes AUS wurde zu AN         (19 bleiben aus)
+OK  jedes Krypto-Asset hat jetzt eine Zeile  (kein unentschiedener Fall mehr)
+OK  EURCV (Cash) bekam KEINE Zeile
+OK  ein NEUES Asset ohne Zeile ist jetzt AUS
+OK  ein zweiter Lauf aendert nichts
+```
+
+**Was sich ab jetzt ändert:** ein Asset, das neu in die Watchlist kommt, wird
+**nicht mehr stillschweigend gehebelt**. Der Nutzer schaltet es ein, wenn er
+will — und in der Oberfläche ist ab sofort jedes „An" eine festgehaltene
+Entscheidung, keine Vorgabe.
+
+**Cash-Äquivalente bleiben außen vor.** Für EURCV gibt es keine Hebelfrage,
+also auch keine Antwort, die man festhalten müsste — dieselbe Bedingung wie in
+`ui/app.py` und seit 26.9 auch in der Kette.
+
+> **Nebenbefund, nicht behoben:** der Schalter wird im **Trockenlauf
+> übersprungen** (`if betriebsart != TROCKEN`). Kein Produktionsfehler — im
+> Gate stehen 34 Verluste mit genau dieser Begründung —, aber jeder
+> Trockenlauf überschätzt damit den Durchsatz, auch die, mit denen der
+> Vollumstieg geprüft wurde.

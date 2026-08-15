@@ -4234,6 +4234,33 @@ def paket_15() -> None:
            "strategie , watchlist = watchlist" in _nur_code(
                "agent/rollen_lauf.py"))
 
+    # T3 DER SCHALTER IST EIN OPT-IN (15.08.2026, Nutzerentscheidung).
+    #
+    # Er kam am 18.07. dazu, als 44 Krypto-Assets schon in der Watchlist
+    # standen, und liess "keine Zeile" als "an" gelten. In der Oberflaeche sah
+    # das aus wie eine Liste getroffener Entscheidungen; sieben Symbole standen
+    # dort auf "An", ohne dass sie je jemand eingeschaltet haette.
+    #
+    # ZWEI AENDERUNGEN, DIE NUR ZUSAMMEN RICHTIG SIND. Wer die Vorgabe umdreht
+    # ohne die Migration, schaltet BTC, ETH, BNB, HYPE, KAIA, SUI und TAO
+    # still ab - vier der zwoelf Hebel-Signale jenes Vormittags kamen daher.
+    import database.db as _DB5
+
+    pruefe(P, "ohne Zeile gilt AUS, nicht AN",
+           "if row is None : return False" in " ".join(
+               _nur_code("database/db.py").split(
+                   "def get_hebel_pruefung_erlaubt")[1][:400].split()),
+           "keine Zeile ist keine Zustimmung")
+    pruefe(P, "und die Geradeziehung laeuft VOR dem ersten Kettenlauf",
+           "_migrate_hebel_schalter_geradeziehen ( conn )" in _nur_code(
+               "database/db.py").split("def init_db")[1][:2000],
+           "init_db() laeuft beim App-Start, also vor dem Scheduler - sonst "
+           "griffe die neue Vorgabe auf noch unentschiedene Symbole")
+    pruefe(P, "sie ruehrt bestehende Zeilen NICHT an",
+           "INSERT OR IGNORE INTO asset_hebel_settings" in _quelltext(
+               "database/db.py"),
+           "wer 'aus' gesetzt hat, behaelt 'aus'")
+
     # ------------------------------------------------------------------
     # U. DIE ASSETKLASSEN - Vorarbeit fuer den Multi-Asset-Umstieg (14.08.).
     #
