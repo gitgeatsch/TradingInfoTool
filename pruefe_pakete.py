@@ -5290,8 +5290,8 @@ def paket_15() -> None:
     # Tatsaechlich sah mein Verkaufszweig immer in `holdings` nach, der
     # SPOT-Tabelle. Eine offene Hebelposition steht in `hebel_positions`.
     pruefe(P, "der Verkaufszweig kennt beide Bestandsquellen",
-           "db.get_open_hebel_positions(conn)" in _q9
-           and "db.get_all_holdings(conn)" in _q9,
+           "DBM.get_open_hebel_positions(conn)" in _q9
+           and "DBM.get_all_holdings(conn)" in _q9,
            "ein Hebel-Bestand ist keine Menge in holdings, sondern eine "
            "offene Position - EINE Regel auf zwei Wirklichkeiten angewandt, "
            "derselbe Fehler wie beim Cooldown und beim CRV-Faktor")
@@ -5308,6 +5308,68 @@ def paket_15() -> None:
            "ergebnis_prozent" not in _ohne and "ergebnis_prozent" in _mit,
            "eine Hebelposition fuehrt keinen Einstand je Stueck - die "
            "Rechnung laesst das Ergebnis dann weg, statt eine Zahl zu bilden")
+
+    # ------------------------------------------------------------------
+    # AJ. DER TROCKENLAUF UEBER BEIDE INSTRUMENTE (15.08.2026) - drei Funde.
+    import config as _cfgm
+    from agent import toepfe as TP10
+    from agent import betraege as BE10
+    from agent import entscheidungsrechnung as ER10
+
+    # AJ1 DIE ECHTE URSACHE DES HEBEL-STILLSTANDS.
+    #
+    # Gestern Abend habe ich sie in den Schattenbuchungen vermutet und
+    # `belegt_eur` umgebaut. GEMESSEN AN DEN ECHTEN DATEN WAR DAS FALSCH: der
+    # Topf stand vor UND nach dem Fix auf 0 EUR - Schattenzeilen tragen gar
+    # keinen `position_size_eur`.
+    #
+    # Die Ursache ist der DECKEL. Die Nutzerentscheidung vom 13.08. lautet
+    # 3.000 EUR; sie stand nur in `toepfe.VORGABE_DECKEL_EUR`, waehrend die
+    # config.yaml weiter 500 fuehrte - und die Konfiguration gewinnt. EIN
+    # Hebel-Signal fuellt einen 500er-Topf vollstaendig:
+    #
+    #     belegt   0 -> frei 500 -> Betrag 500 EUR
+    #     belegt 500 -> frei   0 -> BLOCKIERT (Betrag 0)
+    #
+    # Und blockiert wird an der Stufe "geometrie" - also NACH dem
+    # Modellaufruf. Ohne Zeile kein Cooldown, in 15 Minuten dasselbe von vorn.
+    _cfg10 = _cfgm.load_config()
+    pruefe(P, "der Hebel-Deckel folgt der Nutzerentscheidung",
+           TP10.budget_eur("hebel", _cfg10) == 3000.0,
+           "3.000 EUR laut Entscheidung 13.08. - die Konfiguration gewinnt "
+           "gegen den Code, also muss sie es sein, die den Wert traegt")
+    pruefe(P, "Code-Vorgabe und Konfiguration sagen dasselbe",
+           TP10.VORGABE_DECKEL_EUR["hebel"] == TP10.budget_eur("hebel", _cfg10),
+           "eine Vorgabe, die von der Konfiguration ueberstimmt wird, ist "
+           "kein Standard - sie ist eine zweite Wahrheit")
+
+    _ri10 = BE10.risiko_eur("hebel", "einstieg", _cfg10, "krypto")
+    _wu10 = BE10.einsatz_eur("hebel", "einstieg", _cfg10, "krypto")
+    _nach_einem = ER10.rechne(
+        kurs=2400.0, atr=70.0, risiko_eur=_ri10, instrument="hebel",
+        betrag_wunsch_eur=_wu10,
+        topf_frei_eur=TP10.frei_eur("hebel", 1000.0, _cfg10),
+        cash_frei_eur=1940.0)
+    pruefe(P, "nach EINEM Hebel-Signal bleibt der Topf offen",
+           _nach_einem["betrag_eur"] >= 100.0,
+           f"{_nach_einem['betrag_eur']:.0f} EUR - mit 500er-Deckel war hier "
+           "Schluss, und zwar nach dem Modellaufruf")
+
+    # AJ2 `db` IST DER PFAD, NICHT DAS MODUL.
+    #
+    # Der Trockenlauf ueber beide Instrumente hat es in der ersten Zeile
+    # gezeigt: "'str' object has no attribute 'get_all_holdings'". Mein
+    # Verkaufszweig rief Modulfunktionen auf einer Zeichenkette auf; der
+    # Fehler landete im breiten Fang als "Bestand nicht lesbar", und JEDES
+    # Verkaufsurteil wurde zu "ohne Bestand". Die Verkaufsseite war seit
+    # ihrem Bau tot.
+    pruefe(P, "der Verkaufszweig benutzt das Datenbankmodul",
+           "from database import db as DBM" in _quelltext("agent/rollen_lauf.py")
+           and "DBM.get_all_holdings(conn)" in _quelltext("agent/rollen_lauf.py")
+           and "DBM.get_open_hebel_positions(conn)" in _quelltext(
+               "agent/rollen_lauf.py"),
+           "`db` ist in `_ein_asset` der Dateiname - eine Zeichenkette hat "
+           "diese Methoden nicht")
     c.close()
 
 

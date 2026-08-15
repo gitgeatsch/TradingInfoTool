@@ -366,7 +366,19 @@ risiko:
     spot:                              # leer - die RM-Regeln begrenzen die
                                        # Einzelposition; ein zweiter Deckel
                                        # waere nur eine zweite Blockadestelle
-    hebel: 500                         # der einzige Deckel: die einzige
+    hebel: 3000                        # NUTZERENTSCHEIDUNG 13.08.2026:
+                                       # "Hebeltopf gesamt kann 3000 Euro
+                                       # sein, eine Hebelposition vorerst
+                                       # 1000." Stand bis zum 15.08. nur
+                                       # im Code (toepfe.VORGABE_DECKEL_EUR)
+                                       # - und die Konfiguration gewinnt.
+                                       # FOLGE: EIN Hebel-Signal fuellte den
+                                       # 500er-Topf, jedes weitere bekam
+                                       # Betrag 0 und fiel NACH dem
+                                       # Modellaufruf heraus - ohne Zeile,
+                                       # also ohne Cooldown, also alle 15
+                                       # Minuten von vorn.
+                                       # der einzige Deckel: die einzige
                                        # Position, die MEHR verlieren kann als
                                        # ihren Einsatz. Entspricht dem schon
                                        # bestehenden hebel.eigenkapital_richtwert_eur

@@ -649,11 +649,34 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         # DIESELBE QUELLE WIE DIE WARTESCHLANGE (`status = 'offen'`), die sie
         # ihrerseits von `db.get_open_hebel_positions()` hat - nachgesehen,
         # nicht geraten.
+        # `db` IST HIER DER PFAD, NICHT DAS MODUL (gefunden im Trockenlauf
+        # ueber beide Instrumente, 15.08.2026).
+        #
+        # `_ein_asset` bekommt `db: str = "data/tradinginfotool.db"` - den
+        # Dateinamen, den `rollen_eingabe` fuer seine eigenen Abfragen
+        # braucht. Mein Verkaufszweig rief darauf `db.get_all_holdings(conn)`
+        # auf, und eine Zeichenkette hat diese Methode nicht:
+        #
+        #     'str' object has no attribute 'get_all_holdings'
+        #
+        # Der Fehler landete im breiten Fehlerfang als "Bestand nicht lesbar",
+        # die Menge blieb None, und JEDES Verkaufsurteil wurde damit als "ohne
+        # Bestand" abgetan und zum Schatten gebucht. Die Verkaufsseite war
+        # seit ihrem Bau am 14.08. vollstaendig tot.
+        #
+        # UND GESTERN HABE ICH DARAUF EINEN FIX GESETZT. Im Gate stand "5x
+        # SCHLIESSEN ohne Bestand"; ich habe daraus geschlossen, dass die
+        # falsche TABELLE abgefragt wird, und auf `hebel_positions`
+        # umgestellt. Das war richtig - und es hat nichts geheilt, weil der
+        # Aufruf davor schon scheiterte. Ein Symptom kann zwei Ursachen haben,
+        # und die erste gefundene ist nicht automatisch die einzige.
+        from database import db as DBM
+
         bestand_row = None
         menge = einstand = gestakt = None
         try:
             if instrument == "hebel":
-                pos = next((p for p in db.get_open_hebel_positions(conn)
+                pos = next((p for p in DBM.get_open_hebel_positions(conn)
                             if str(p.symbol).upper() == str(symbol).upper()),
                            None)
                 if pos is not None:
@@ -666,7 +689,7 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                     # statt eine Zahl zu erfinden.
                     bestand_row = pos
             else:
-                h = next((x for x in db.get_all_holdings(conn)
+                h = next((x for x in DBM.get_all_holdings(conn)
                           if str(x.symbol).upper() == str(symbol).upper()),
                          None)
                 if h is not None:
