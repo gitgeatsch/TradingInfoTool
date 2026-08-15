@@ -1690,14 +1690,17 @@ def _ist_email_relevante_richtung(richtung: str | None) -> bool:
     KEIN VETO, KEINE ZUSTANDSAENDERUNG. Diese Funktion entscheidet nur ueber
     den Versand. Das Signal bleibt in der Datenbank vollstaendig erhalten -
     mit seiner echten `richtung` und seiner echten `action` - und wird
-    normal weiterverfolgt und gemessen."""
-    import config as config_module
+    normal weiterverfolgt und gemessen.
 
-    modus = config_module.load_config().get("budget_allocator", {}).get(
-        "hebel_richtung_modus", "beide")
-    if modus != "nur_long":
-        return True
-    return str(richtung or "").upper() != "SHORT"
+    DIE RECHNUNG STEHT SEIT DEM 15.08.2026 IN `agent/asset_schalter.py`, bei
+    den uebrigen Nutzerschaltern. Grund: die Rollen-Kette verschickt ueber ihr
+    eigenes `versand` und lief hier vorbei - ein SHORT der neuen Kette waere
+    trotz `nur_long` hinausgegangen. Sie dort nachzubauen waere die
+    Kopierfalle gewesen; jetzt fragen beide Ketten dieselbe Stelle. Dieser
+    Name bleibt, weil ein Dutzend Kommentare im Projekt auf ihn verweist."""
+    from agent.asset_schalter import mail_richtung_erlaubt
+
+    return mail_richtung_erlaubt(richtung)
 
 
 def _ist_email_relevantes_asset(

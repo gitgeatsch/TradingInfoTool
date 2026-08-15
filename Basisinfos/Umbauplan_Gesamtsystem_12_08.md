@@ -2811,3 +2811,82 @@ also auch keine Antwort, die man festhalten müsste — dieselbe Bedingung wie i
 > Gate stehen 34 Verluste mit genau dieser Begründung —, aber jeder
 > Trockenlauf überschätzt damit den Durchsatz, auch die, mit denen der
 > Vollumstieg geprüft wurde.
+
+### 26.11 Der Richtungsschalter — und warum mein erster Vorschlag falsch war
+
+Nutzerfrage: *„prüfe zusätzlich, ob der Schalter für short only in der GUI sauber integriert ist."*
+
+**Befund: er war in der Rollen-Kette gar nicht integriert.** `hebel_richtung_modus`
+stand in keinem ihrer Module. Gleichzeitig bietet der Trader-Prompt SHORT
+ausdrücklich an (`"richtung": "LONG|SHORT"`) — ein SHORT-Hebelsignal der neuen
+Kette wäre trotz `nur_long` verschickt worden.
+
+> ⚠️ **Mein erster Vorschlag war, SHORT im Prompt nicht anzubieten. Der Nutzer
+> hat gestoppt und auf die Doku verwiesen — zu Recht.** Genau dieser Zustand
+> bestand bis zum 05.08. und wurde in fünf Schritten entfernt, weil er
+> **313 SHORT-Vorschläge als „HALTEN" in die Datenbank gelegt** hatte. Beim
+> 31.07.-Bruch hat das einen ganzen Tag gekostet.
+
+**Die verbindliche Fassung** (Entscheidungslog, 05.08., Nutzervorgabe wörtlich):
+
+> der Schalter soll „NULL Einfluss auf die Funktionsweise im Hintergrund"
+> haben — SHORTs sollen lediglich nicht per E-Mail kommen und nicht in der GUI
+> erscheinen.
+
+Es blieben **genau zwei Lesestellen**, beide an der Präsentationsgrenze. Die
+Rollen-Kette brauchte die dritte — an derselben Grenze, nicht davor.
+
+**Gebaut:** `_ist_email_relevante_richtung()` ist nach
+`agent/asset_schalter.py` gezogen (`mail_richtung_erlaubt`), zu den übrigen
+Nutzerschaltern; `background.py` delegiert dorthin und behält seinen Namen,
+weil ein Dutzend Kommentare darauf verweisen. **Eine Definition, zwei Ketten.**
+
+In der Kette sitzt die Frage **nach** dem Schreiben des Signals: das Modell
+wurde gefragt, die Zeile steht mit echter `richtung` und echter `action`, das
+Gate zählt sie als durchgekommen, der Ausgang wird verfolgt. Nur die Mail
+unterbleibt — mit Logzeile und Vermerk in `mails_unterdrueckt`.
+
+**Beide Versandstellen** sind abgesichert (mit und ohne Z.ai) — eine allein
+hätte die Mail durchgelassen, sobald die zweite Meinung antwortet.
+
+### 26.12 Alle offenen Punkte, Stand 15.08.2026 abends
+
+**Zur Entscheidung beim Nutzer:**
+
+| Nr. | Punkt | Stand |
+|---|---|---|
+| **O-17** | Einmalkauf 800 € für Börsenwerte | vorerst so belassen |
+| **O-32** | Hebelfaktor 10,0 nie entschieden | vorerst so belassen |
+| — | Hebel-Cooldown 3,5 h (295 von 385 Aufrufen) | vorerst so belassen |
+
+Alle drei ausdrücklich **stillgestellt, nicht bestätigt** — sie werden
+entschieden, wenn es Zahlen gibt (Kapitel 25.4).
+
+**Gebaut, wartet auf Messung:**
+
+| Nr. | Punkt |
+|---|---|
+| **O-29** | Verkaufsrate — kein gemessenes Merkmal trennt Verkaufen von Halten |
+| **O-30** | Kontingent zählt HTTP-Versuche, die Budgetrechnung zählt Urteile (gemessen: 195 gegen 102, Faktor 1,9) |
+| — | CRV-Abstufung stillgelegt — messbar, sobald aufgelöste Signale vorliegen |
+| — | `stop_zu_eng` wird von **niemandem** gelesen. Nach 26.8 keine Lücke mehr, sondern eine Messgröße für O-34: **7 von 23** Modellvorschlägen lagen unter dem Grundrauschen |
+
+**Geplant, in dieser Reihenfolge:**
+
+| Nr. | Punkt |
+|---|---|
+| **O-34** | Die Fakten und Entscheidungen der LLM aufschlüsseln (`messe_begruendungen.py`) — **zuerst** |
+| **O-36** | **Anlass statt Uhr.** Fingerabdruck des Faktentextes; ist er zeichengleich, ist es dieselbe Frage. Dazu eine 24-Stunden-Decke, damit nie dauerhaft blockiert wird. **Zuerst nur messen, nicht sperren** — dann kennen wir die Wirkung, bevor wir sie einschalten |
+| **O-33** | Hedge-Instrumente ohne Codeeingriff |
+| **O-35** | **Der Hebel-Tab liest `hebel_signals` — die alte Tabelle.** Die neue Kette schreibt nach `signals`; auf der Hebelseite ist die Oberfläche seit dem Umstieg leer. Das ist zugleich die Anzeige-Hälfte des Richtungsschalters |
+| **O-37** | **Der Ausstieg läuft über zwei Schienen.** Der deterministische Ausstieg hatte TURBO bereits mit SCHLIESSEN; die LLM-Kette urteilte darüber noch einmal. Nutzervorgabe vom 14.08.: *„wenn ein Kurs den gewünschten Wert erreicht hat, brauche ich keine LLMs"* |
+| **O-38** | **Der Trockenlauf überspringt die Nutzerschalter** (`if betriebsart != TROCKEN`). Kein Produktionsfehler, aber jeder Trockenlauf überschätzt den Durchsatz — auch die, mit denen der Vollumstieg geprüft wurde |
+
+**Zu prüfen im nächsten Export:**
+
+| Punkt |
+|---|
+| **TURBO trug eine offene Hebelposition, obwohl der Nutzer keine hält.** `hebel_positions` wird ausschließlich vom Bitpanda-Margin-Sync geschrieben, und eine Verkaufsmail braucht zwingend Menge > 0 — um 06:19 gab es keine einzige offene Position. Verdacht: eine hängengebliebene Zeile (dafür existiert `fix_stuck_hebel_positions.py`). Nachzusehen: Status, `eroeffnet_am`, `letzte_transaktion_unix_timestamp`, `quelle_tags_json` und die Sync-Zeilen im Log |
+| Kommen noch „SCHLIESSEN ohne Bestand"? Das waren 9 % der Aufrufe |
+| Verschieben sich die Ausstiegsempfehlungen? Der Stop in der Zeile ist seit 26.8 weiter, und `ausstiegsrechnung` rechnet darauf |
+| Läuft ASTER ohne Absturz durch |

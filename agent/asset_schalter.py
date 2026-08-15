@@ -109,6 +109,52 @@ def darf_analysiert_werden(conn, symbol: str, instrument: str,
     return True, None
 
 
+def mail_richtung_erlaubt(richtung: str | None, config: dict | None = None) -> bool:
+    """Darf ein Hebel-Signal DIESER Richtung per E-Mail hinaus?
+
+    HIERHER GEZOGEN AM 15.08.2026, aus `scheduler/background.py`. Die
+    Rollen-Kette verschickt ueber ihr eigenes `versand` und lief an der
+    Funktion vorbei - ein SHORT der neuen Kette waere trotz `nur_long`
+    verschickt worden. Statt die Pruefung dort nachzubauen (die Kopierfalle,
+    die dieses Projekt mehrfach erwischt hat), steht sie jetzt bei den anderen
+    Nutzerschaltern, und BEIDE Ketten fragen dieselbe Stelle.
+
+    DIE VORGABE DES NUTZERS, woertlich vom 05.08.2026:
+
+        der Schalter soll "NULL Einfluss auf die Funktionsweise im
+        Hintergrund" haben - SHORTs sollen lediglich nicht per E-Mail kommen
+        und nicht in der GUI erscheinen.
+
+    UND DER GRUND IST MESSHYGIENE, nicht Ertrag. Bis zum 05.08. sass der Filter
+    VOR der Verarbeitung: zwei Vorfilter im Budget-Allocator warfen
+    SHORT-Kandidaten schon vor dem Modellaufruf weg, ein Veto im Risk-Gate
+    drehte `action` nachtraeglich auf HALTEN. Folge: **313 SHORT-Vorschlaege
+    lagen als "HALTEN" in der Datenbank** und haben bei der Ursachensuche zum
+    31.07.-Bruch wiederholt Populationen vermischt. Jede Auswertung ueber
+    Richtungen war strukturell verzerrt.
+
+    KEIN VETO, KEINE ZUSTANDSAENDERUNG. Diese Funktion entscheidet nur ueber
+    den Versand. Das Signal wird geschrieben, das Gate zaehlt es als
+    durchgekommen, der Ausgang wird normal verfolgt und gemessen - mit seiner
+    echten `richtung` und seiner echten `action`.
+
+    WER SIE AN EINER ANDEREN STELLE ALS DEM VERSAND AUFRUFT, baut den Fehler
+    von 2026-07-28 nach."""
+    import config as config_module
+
+    try:
+        cfg = config if config is not None else config_module.load_config()
+        modus = (cfg.get("budget_allocator", {})
+                 .get("hebel_richtung_modus", "beide"))
+    except Exception:                                        # noqa: BLE001
+        # FAIL-OPEN wie die uebrigen Schalter: ein Lesefehler darf keine
+        # Nachricht verschlucken.
+        return True
+    if modus != "nur_long":
+        return True
+    return str(richtung or "").upper() != "SHORT"
+
+
 def ist_handelbar(conn, symbol: str, bitpanda_gelistet=None) -> bool:
     """Kann der Nutzer das Asset ueberhaupt kaufen?
 

@@ -4261,6 +4261,56 @@ def paket_15() -> None:
                "database/db.py"),
            "wer 'aus' gesetzt hat, behaelt 'aus'")
 
+    # T4 DER RICHTUNGSSCHALTER WIRKT NUR AUF DEN VERSAND (15.08.2026).
+    #
+    # Nutzervorgabe vom 05.08., woertlich: der Schalter soll "NULL Einfluss auf
+    # die Funktionsweise im Hintergrund" haben - SHORTs sollen lediglich nicht
+    # per E-Mail kommen und nicht in der GUI erscheinen.
+    #
+    # DER GRUND IST MESSHYGIENE. Bis dahin sass der Filter VOR der
+    # Verarbeitung, und 313 SHORT-Vorschlaege lagen als "HALTEN" in der
+    # Datenbank - beim 31.07.-Bruch hat das einen ganzen Tag gekostet.
+    _nl = {"budget_allocator": {"hebel_richtung_modus": "nur_long"}}
+    _bd = {"budget_allocator": {"hebel_richtung_modus": "beide"}}
+    pruefe(P, "bei nur_long geht ein SHORT nicht per Mail raus",
+           AS.mail_richtung_erlaubt("SHORT", _nl) is False)
+    pruefe(P, "ein LONG geht weiterhin raus",
+           AS.mail_richtung_erlaubt("LONG", _nl) is True)
+    pruefe(P, "bei 'beide' geht auch ein SHORT raus",
+           AS.mail_richtung_erlaubt("SHORT", _bd) is True)
+    pruefe(P, "Spot ohne Richtung bleibt unberuehrt",
+           AS.mail_richtung_erlaubt(None, _nl) is True,
+           "Spot-Signale haben keine Hebel-Richtung - sie duerfen an diesem "
+           "Filter nicht haengenbleiben")
+    pruefe(P, "eine unlesbare Einstellung laesst durch",
+           AS.mail_richtung_erlaubt("SHORT", {"budget_allocator": None}),
+           "fail-open: lieber eine Mail zuviel als eine verschluckte")
+    # EINE DEFINITION, ZWEI KETTEN. Der alte Weg delegiert, statt eine zweite
+    # Rechnung zu fuehren.
+    import scheduler.background as _BG5
+
+    pruefe(P, "der alte Weg fragt DIESELBE Stelle",
+           _BG5._ist_email_relevante_richtung("SHORT")
+           == AS.mail_richtung_erlaubt("SHORT")
+           and "mail_richtung_erlaubt" in _quelltext("scheduler/background.py"),
+           "zwei Rechnungen zu derselben Frage laufen auseinander")
+    # UND ER GREIFT AUSSCHLIESSLICH AM VERSAND, nirgends frueher.
+    _lq = _nur_code("agent/rollen_lauf.py")
+    pruefe(P, "die Kette fragt ihn NACH dem Schreiben des Signals",
+           _lq.find("SA . schreibe_signal") < _lq.find("mail_richtung_erlaubt"),
+           "davor waere es wieder ein Veto - und die Messung waere verzerrt")
+    pruefe(P, "beide Versandstellen sind abgesichert",
+           _lq.count("and _mail_erlaubt ) :") == 2,
+           "eine allein liesse die Mail durch, sobald Z.ai antwortet")
+    # ZEICHENKETTEN BRAUCHEN `_quelltext`, nicht `_nur_code` - letzteres
+    # entfernt String-Literale mit den Kommentaren zusammen. Diese Falle hat
+    # heute zum sechsten Mal zugeschlagen.
+    _lqt = _quelltext("agent/rollen_lauf.py")
+    pruefe(P, "und das Signal wird trotzdem geschrieben",
+           "nicht_versendet" in _lqt and "mails_unterdrueckt" in _lqt,
+           "das Signal bleibt erhalten und wird weiter gemessen - nur die "
+           "Mail unterbleibt")
+
     # ------------------------------------------------------------------
     # U. DIE ASSETKLASSEN - Vorarbeit fuer den Multi-Asset-Umstieg (14.08.).
     #

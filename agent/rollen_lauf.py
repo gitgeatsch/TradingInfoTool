@@ -1040,6 +1040,44 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     ergebnis["signale"].append({"symbol": symbol, "id": signal_id,
                                 "felder": felder})
 
+    # --- Der Richtungsschalter, AUSSCHLIESSLICH am Versand (15.08.2026) ------
+    #
+    # DIE VORGABE DES NUTZERS vom 05.08., woertlich: der Schalter soll "NULL
+    # Einfluss auf die Funktionsweise im Hintergrund" haben - SHORTs sollen
+    # lediglich nicht per E-Mail kommen und nicht in der GUI erscheinen.
+    #
+    # ALLES DAVOR IST SCHON PASSIERT und bleibt so: das Modell wurde gefragt,
+    # das Signal steht mit echter `richtung` und echter `action` in der
+    # Datenbank, das Gate hat es als durchgekommen gezaehlt, der Ausgang wird
+    # normal verfolgt. NUR die Mail unterbleibt.
+    #
+    # WARUM NICHT FRUEHER - etwa im Prompt, indem man SHORT gar nicht anbietet:
+    # genau das war der Zustand bis zum 05.08., und er hat 313 SHORT-Vorschlaege
+    # als "HALTEN" in die Datenbank gelegt. Jede Auswertung ueber Richtungen war
+    # dadurch verzerrt, und beim 31.07.-Bruch hat es einen ganzen Tag gekostet.
+    # Der Schalter darf die MESSUNG nicht anfassen.
+    #
+    # UND DIE FUNKTION WIRD GEHOLT, NICHT NACHGEBAUT - sie steht bei den
+    # uebrigen Nutzerschaltern, und der alte Weg fragt dieselbe.
+    _mail_erlaubt = True
+    try:
+        from agent.asset_schalter import mail_richtung_erlaubt
+
+        _mail_erlaubt = mail_richtung_erlaubt(befund.get("richtung"), config)
+    except Exception as exc:                                 # noqa: BLE001
+        # FAIL-OPEN: lieber eine Mail zuviel als eine verschluckte.
+        ergebnis.setdefault("fehler", []).append(
+            f"{symbol}: Richtungsschalter nicht lesbar: {exc}")
+    if not _mail_erlaubt:
+        eintrag["nicht_versendet"] = "nur_long"
+        ergebnis.setdefault("mails_unterdrueckt", []).append(
+            {"symbol": symbol, "richtung": befund.get("richtung"),
+             "signal_id": signal_id})
+        logger.info(
+            "Mail fuer %s (%s) unterdrueckt - hebel_richtung_modus=nur_long. "
+            "Das Signal bleibt vollstaendig erhalten und wird weiter gemessen.",
+            symbol, befund.get("richtung") or "?")
+
     # --- Zweite Meinung, dann versenden -------------------------------------
     #
     # DIE REIHENFOLGE IST DER GANZE PUNKT: schreiben -> Z.ai -> warten ->
@@ -1076,14 +1114,16 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                 f"{symbol}: zweite Meinung: {exc}")
         # DIE MAIL GEHT AUCH RAUS, WENN Z.AI AUSFAELLT (P-8) - lieber ohne die
         # Gegenpruefungszeilen als gar nicht.
-        if betriebsart == SCHARF and versand is not None:
+        if (betriebsart == SCHARF and versand is not None
+                and _mail_erlaubt):
             versand(eintrag["betreff"], eintrag["text"],
                     eintrag.get("bilder"))
 
     if zai_client is None:
         # Nichts zu warten - dann auch kein Faden. Ein Thread, der sofort
         # zurueckkehrt, ist nur Verwaltung.
-        if betriebsart == SCHARF and versand is not None:
+        if (betriebsart == SCHARF and versand is not None
+                and _mail_erlaubt):
             versand(eintrag["betreff"], eintrag["text"],
                     eintrag.get("bilder"))
     else:
