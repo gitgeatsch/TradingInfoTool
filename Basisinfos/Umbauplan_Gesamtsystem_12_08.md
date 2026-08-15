@@ -2200,3 +2200,87 @@ nach erschöpften Gemini-Töpfen aussah. Der Nutzer hat es aufgelöst — es war
 über die alte Kette (`multi_asset_batch_job`, Mo–Fr 9 und 19 Uhr), und die
 benutzt OpenRouter. Erwartetes Verhalten, solange `aktiv_fuer` nur `krypto`
 kennt.
+
+
+---
+
+## Kapitel 23 — Der Trockenlauf über beide Instrumente (15.08.2026)
+
+### 23.1 Die Ursache des Hebel-Stillstands war der Deckel — nicht die Schatten
+
+Am 14.08. abends hatte ich sie in den Schattenbuchungen vermutet und
+`belegt_eur` umgebaut. **An den Daten widerlegt:**
+
+```
+Topf ohne Aktionsfilter (vor dem Fix):  0 EUR
+Topf mit  Aktionsfilter (nach dem Fix): 0 EUR
+```
+
+Schattenzeilen tragen gar keinen `position_size_eur` — sie konnten den Topf nie
+füllen. Der Fix bleibt richtig (ein Schatten ist keine Position), aber er hat
+die Ursache nicht berührt, und genau das hatte ich behauptet.
+
+**Der Beweis aus dem Export vom 15.08. 04:16:**
+
+```
+12:23  LINK  NACHKAUFEN  hebel 10.0  position_size_eur 500.0
+Hebel-Topf belegt: 500 EUR   Deckel laut config.yaml: 500 EUR
+```
+
+> ⚠️ **Die Nutzerentscheidung vom 13.08. lautete 3.000 EUR.** Sie stand nur in
+> `toepfe.VORGABE_DECKEL_EUR`; die `config.yaml` führte weiter 500 — und die
+> **Konfiguration gewinnt gegen den Code.** Ein einziges Signal füllte damit
+> den Topf, und ab 12:23 bekam jedes weitere Hebel-Symbol Betrag 0, blockiert
+> an der Stufe `geometrie` — also **nach** dem Modellaufruf. Ohne Zeile kein
+> Cooldown, alle 15 Minuten von vorn.
+
+**Bilanz des Betriebstags: 802 Gemini-Aufrufe, 47 Urteile — davon 1 nach 12:23.**
+
+Eine Prüfung verlangt jetzt, dass Code-Vorgabe und Konfiguration denselben Wert
+tragen. Eine Vorgabe, die von der Konfiguration überstimmt wird, ist kein
+Standard, sondern eine zweite Wahrheit.
+
+### 23.2 Die Verkaufsseite war seit ihrem Bau tot
+
+Der Trockenlauf zeigte es in der ersten Zeile:
+
+```
+'str' object has no attribute 'get_all_holdings'
+```
+
+`_ein_asset` bekommt `db: str = "data/tradinginfotool.db"` — den **Dateinamen**.
+Mein Verkaufszweig rief darauf Modulfunktionen auf; der Fehler landete im
+breiten Fang als „Bestand nicht lesbar", und **jedes** Verkaufsurteil wurde als
+„ohne Bestand" zum Schatten.
+
+> Und am 14.08. habe ich auf genau dieses Symptom einen Fix gesetzt: im Gate
+> stand „5x SCHLIESSEN ohne Bestand", ich schloss auf die falsche **Tabelle**
+> und stellte auf `hebel_positions` um. Das war richtig — und heilte nichts,
+> weil der Aufruf davor schon scheiterte. **Ein Symptom kann zwei Ursachen
+> haben, und die erste gefundene ist nicht automatisch die einzige.**
+
+Nach der Korrektur: Spot-Ausstiege 7 statt 0.
+
+### 23.3 Was der Trockenlauf sonst zeigt
+
+| Instrument | hinein | heraus | Ausstiege | Hauptverlust |
+|---|---|---|---|---|
+| Spot | 35 | 21 | 7 | 7× „ohne Bestand", 7× Vertragsverstoß (Testdaten) |
+| Hebel | 35 | 10 | 0 | 25× Aktion (HALTEN, SCHLIESSEN/HEBEL_SENKEN ohne Bestand, HEBEL_ERHÖHEN) |
+
+**O-31: `HEBEL_ERHÖHEN` fällt durch alle Raster.** Es steht weder in
+`AKTIONEN_MIT_EINSTIEG` noch in `AKTIONEN_MIT_AUSSTIEG` und wird als „nichts"
+gebucht — obwohl es Kapital bindet. 5 von 35 im Trockenlauf.
+
+**O-32: Hebelfaktor 10,0** beim LINK-Signal. Der Nutzer nannte am 13.08. „eine
+Hebelposition vorerst 1000" für den *Betrag*; ob 10× die gewollte Hebelhöhe
+ist, wurde nie entschieden.
+
+### 23.4 Der Export bestätigt zwei weitere Fehldeutungen
+
+„gemini gesamt 802 über 500er Limit" — **kein Limitbruch.** Die Grenze gilt je
+Modell: 3.1 bei 451, 3.5 bei 351, beide unter 500. Der Sammelzähler „gemini"
+ist der alte UTC-Zähler.
+
+„5 Job-Fehler durch Multi-Modell-Switching" — **keiner aus der Rollen-Kette:**
+3× FRED-Makroabruf, 2× die alte Kette bei OD7x.
