@@ -2402,3 +2402,89 @@ Bei 1,5 Versuchen je Urteil wären es 578 statt 385.
 | **O-30** | Kontingent zählt Versuche, Budgetrechnung zählt Urteile |
 | **O-32** | Hebelfaktor stand bei 10,0 — nie entschieden |
 | — | CRV-Abstufung: messbar, sobald aufgelöste Signale vorliegen |
+
+---
+
+## Kapitel 25 — Geplant nach dem ersten sauberen Produktionslauf (15.08.2026)
+
+Beide Punkte kommen vom Nutzer, in dieser Reihenfolge — der zweite **vor** dem
+ersten.
+
+### 25.1 Zuerst: die Fakten und Entscheidungen der LLM aufschlüsseln (O-34)
+
+> *„Zuvor müssen wir — wie bereits angekündigt — die Fakten und Entscheidungen
+> der LLM aufschlüsseln und bewerten, falls notwendig auch anpassen."*
+
+Das Werkzeug steht: **`messe_begruendungen.py`** ordnet jeden Beleg dem
+Faktenblock zu, aus dem er stammt, und hält die Ausgänge dagegen. Seit dem
+14.08. wird `belege_json` geschrieben — ohne diese Spalte wäre die Frage
+nachträglich nicht beantwortbar, und eine Zeile ohne Belege bleibt ohne Belege.
+
+**Was die Auswertung liefern wird:**
+
+| Block | Kauf | Verkauf | trägt sich |
+|---|---|---|---|
+| struktur · bewegung · marken · volumen · finanzierung · lagebild · bestand | | | |
+
+**Und was daraus folgen kann.** Trägt ein Block nichts bei, gehört er aus dem
+Faktentext — jede Zeile darin kostet Prompt und Aufmerksamkeit. Trägt einer
+auffällig viel, ist er der Kandidat für mehr Tiefe. Das ist die erste Änderung
+am Prompt, die auf einer **Messung** stehen würde statt auf einer Annahme.
+
+**Voraussetzung:** aufgelöste Signale *mit* Belegen. Das braucht Wochen; das
+Skript trennt Verteilung von Erfolg und sagt selbst, wenn es nur die erste hat.
+
+### 25.2 Danach: Hedge-Instrumente ohne Codeeingriff ergänzen (O-33)
+
+> *„berücksichtige im Plan einen nachgelagerten Punkt, um Börsenwerte (Hedge
+> über Nasdaq etc.) zu den Hedge-Positionen hinzufügen zu können, ohne dass wir
+> in den Code eingreifen müssen."*
+
+**Heute geht das nicht.** `hedge/pipeline.SYMBOL_ZU_HEBEL_FAKTOR` ist ein fest
+verdrahtetes Wörterbuch mit zwei Einträgen (DBPK 2×, 3QSS 3×), dazu
+`SYMBOL_ZU_REFERENZ_INDEX`. **Elf Module lesen es:**
+
+```
+absicherung_fakten · assetklassen · hedge/pipeline · krypto/backward_tracking
+multi_asset_batch · themen_etf/pipeline · toepfe · scheduler/background
+teste_hedge_wirksamkeit · ui/app · ui/signals_view
+```
+
+**Das ist die gute Nachricht.** Weil alle elf über *dieselbe* Stelle gehen,
+genügt es, **diese eine** aus der Konfiguration zu speisen — mit der
+Code-Liste als Rückfall. Kein Aufrufer muss angefasst werden.
+
+```yaml
+hedge:
+  instrumente:
+    3QSS: {hebel: 3, referenz: "Nasdaq-100"}
+    DBPK: {hebel: 2, referenz: "S&P 500"}
+```
+
+**Drei Dinge, die dabei nicht vergessen werden dürfen:**
+
+1. **Hedge ist keine Assetklasse.** Ein neues Instrument steht in der Watchlist
+   als `etf` und wird *nur* über diese Zuordnung zur Absicherung. Genau daran
+   ist der OHLC-Refresh am 06.08. gescheitert.
+2. **Der Hebelfaktor ist die Größenlogik**, nicht Schmuck: `benötigter Einsatz
+   = abzusicherndes Exposure / Hebelfaktor`. Ein falscher Faktor
+   über- oder unterhedgt still.
+3. **Ein neues Instrument braucht eine Kursreihe.** 3QSS und DBPK stehen in
+   EUR, nicht USD — und werden zur Laufzeit rekonstruiert. Wer eines ergänzt,
+   ohne das zu prüfen, bekommt eine Gruppe ohne Daten (Kapitel 19.2).
+
+**Warum nachgelagert:** solange die Absicherung aus zwei Instrumenten besteht,
+ist der Codeeingriff einmal im Jahr fällig. Die Konfigurierbarkeit lohnt, wenn
+mehr dazukommen — und sie sollte nicht zwischen Produktivgang und erster
+Messung geschoben werden.
+
+### 25.3 Die Reihenfolge, und warum sie so herum ist
+
+Beide Punkte sind **nach** dem ersten Produktionslauf ohne massive Fehler
+angesetzt — geprüft über NB-Export und Log. Der Grund ist derselbe wie am
+14.08.: jede Änderung während eines Laufs vermischt sich mit dem, was der Lauf
+zeigen soll.
+
+Und O-34 kommt vor O-33, weil es die teurere Frage ist. Ob wir Hedge-Instrumente
+bequem ergänzen können, ändert nichts an der Qualität der Empfehlungen. Ob die
+Fakten tragen, ändert alles.
