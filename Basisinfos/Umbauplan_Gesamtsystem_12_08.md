@@ -3225,3 +3225,98 @@ Keine Spot-Zeile dabei, je Paar die jüngste, `hebel` → `hebel_final`, `modell
 erfunden.
 
 **12 von 12 bestanden**, dazu 818 Paketprüfungen.
+
+
+---
+
+## Kapitel 30 — O-36: der Anlass, als Messung ohne Sperre (15.08.2026)
+
+### 30.1 Der Grundansatz kommt vom Nutzer
+
+> *„warum eine neue Bewertung und Signal, wenn sich nichts geändert hat … nach
+> einer 1. Bewertung kommt erst eine 2., wenn sich an den Grundlagen und
+> Kriterien etwas geändert hat … damit nichts blockiert wird, die Prüfung nur
+> eine bestimmte Zeit, z. B. 24 Stunden."*
+
+**Das ist kein Qualitätsfilter und braucht keine Prognose.** Er behauptet
+nicht, ein Trade werde gut — er stellt fest, dass dieselbe Frage auf denselben
+Daten keine neue ist. Der Unterschied ist entscheidend, weil dieses Projekt an
+8.441 Fällen gemessen hat, dass **kein Verfahren die Basisrate schlägt**. Ein
+Rang nach erwarteter Güte wäre eine Behauptung gegen den eigenen Grundbefund;
+*„das haben wir schon gefragt"* ist keine.
+
+Die Messgrundlage steht ebenfalls im Projekt: **ein Modell dreht bei
+bitgleicher Eingabe in etwa 12 % der Fälle die Richtung.**
+
+### 30.2 Der Fingerabdruck ist der Prompt selbst
+
+Keine Schwelle auf dem Kurs — die wäre wieder eine gesetzte Zahl. Der
+Faktentext rundet ohnehin (*„1.093 EUR wert", „−35,7 %"*), bildet also genau
+die Auflösung ab, die das Modell sieht. **Ist der Text zeichengleich, ist es
+wörtlich dieselbe Frage.**
+
+**Zwei Abdrücke, weil die richtige Definition noch nicht feststeht:**
+
+| | umfasst |
+|---|---|
+| `voll` | alles, was das Modell liest — samt Lagebild-Prosa |
+| `asset` | nur die Fakten dieses Assets, ohne Lagebild |
+
+Der Unterschied ist keine Feinheit: das Lagebild ist Modellprosa und wechselt
+alle drei Stunden. Nähme man es mit, wäre fast jede Frage „neu" und der Filter
+wirkungslos. **Welche der beiden die richtige ist, soll die Messung sagen und
+nicht ich.**
+
+### 30.3 Was gebaut wurde
+
+`agent/anlass.py` schreibt bei jedem Urteil eine Beobachtung: beide Abdrücke,
+ob sie mit der letzten innerhalb von 24 Stunden übereinstimmen, und den
+zeitlichen Abstand. Die Stufe sitzt **direkt vor dem Modellaufruf** — dort, wo
+später auch die Sperre säße. Wer die Wirkung woanders misst als da, wo er sie
+einbauen würde, misst etwas anderes.
+
+`messe_anlass.py` liest die Tabelle und beantwortet die Frage, die vor der
+Entscheidung fehlt:
+
+    Greift der Filter in 5 % der Fälle, lohnt er nicht.
+    Greift er in 60 %, stellt die Kette dieselbe Frage sechsmal.
+
+### 30.4 Sie sperrt nichts — und das ist statisch bewiesen
+
+> ⚠️ **Meine erste Gegenprüfung hat das Falsche geprüft.** Sie verglich zwei
+> Trockenläufe und stellte fest, dass sie gleich ausgehen. Nur läuft die Stufe
+> im Trockenlauf **gar nicht** (`if betriebsart != TROCKEN`, weil sie in die
+> Datenbank schreibt). Der Vergleich zeigte also, dass die *abgeschaltete*
+> Stufe nichts tut.
+
+Der belastbare Beweis ist statisch: **der Befund steht in `rollen_lauf.py` in
+keiner einzigen Bedingung.** Was in keiner Bedingung steht, kann nichts
+sperren — unabhängig von der Betriebsart. Sechs Erwähnungen von `anlass` in der
+Kette, alle Sammeln oder Fehlerbehandlung, keine Verzweigung.
+
+### 30.5 Gegenprüfung
+
+| | |
+|---|---|
+| gleiche Fakten → gleiche Abdrücke | OK |
+| neues Lagebild ändert `voll`, **nicht** `asset` | OK |
+| geänderte Assetfakten ändern **beide** | OK |
+| Reihenfolge der Schlüssel zählt nicht | OK |
+| erste Frage ist nie eine Wiederholung | OK |
+| dieselbe Frage 15 min später wäre gesperrt | OK |
+| **nach 24 h wieder eine neue Frage** | OK |
+| Spot und Hebel werden **getrennt** geführt | OK |
+| jede Frage wird mitgeschrieben, auch die gesperrten | OK |
+| **der Befund wird nirgends gelesen** | OK |
+
+**15 von 15**, dazu **823 Paketprüfungen** und null freie Namen.
+
+### 30.6 Was jetzt zu tun ist: nichts
+
+Die Stufe läuft mit, sobald die Produktion wieder anläuft. Nach ein paar Tagen
+sagt `messe_anlass.py`, wie oft der Filter gegriffen hätte — getrennt nach
+Instrument, mit den Symbolen, die sich am häufigsten wiederholen, und mit dem
+Abstand zur vorigen Frage.
+
+**Erst dann steht die Entscheidung auf einer Messung statt auf einer
+Schätzung.** Das ist der ganze Zweck der Messvariante.

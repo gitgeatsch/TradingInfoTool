@@ -676,6 +676,39 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         except Exception as exc:                             # noqa: BLE001
             ergebnis.setdefault("fehler", []).append(
                 f"{symbol}: Absicherungslage: {exc}")
+    # --- Stufe: Anlass - MISST, SPERRT NICHT (O-36, 15.08.2026) -------------
+    #
+    # HIER, WEIL HIER SPAETER DIE SPERRE SAESSE: der Faktensatz ist fertig, der
+    # Modellaufruf hat noch nicht stattgefunden. Wer die Wirkung an einer
+    # anderen Stelle misst als der, an der er sie einbauen wuerde, misst etwas
+    # anderes.
+    #
+    # NUTZERVORGABE: *"erstmal soviele Daten wie moeglich zulassen und spaeter
+    # selektiv einschraenken - bis wir ein Gefuehl haben, ob und wie die
+    # Bewertungen der Rollen zustandekamen."* Diese Stufe verliert deshalb
+    # NIEMANDEN. Sie schreibt mit, wie oft sie gegriffen haette.
+    #
+    # UND SIE ZAEHLT ZWEI ABDRUECKE: einen ueber alles, was das Modell liest,
+    # und einen ohne das Lagebild. Das Lagebild ist Modellprosa und wechselt
+    # alle drei Stunden - naehme man es mit, waere fast jede Frage "neu". Ob
+    # das der richtige Schnitt ist, soll die Messung sagen.
+    if betriebsart != TROCKEN:
+        try:
+            from agent import anlass as AN
+
+            ergebnis.setdefault("anlass", []).append(dict(
+                AN.beobachte(conn, symbol=symbol, instrument=instrument,
+                             fakten=bc_ein),
+                symbol=symbol, instrument=instrument))
+        except Exception as exc:                             # noqa: BLE001
+            # EINE MESSUNG DARF DEN BETRIEB NICHT ANHALTEN - aber sie muss
+            # sagen, wenn sie ausfaellt. Sonst ist sie ein stiller Ausfall,
+            # und davon hatte dieses Projekt heute genug.
+            logger.warning("Anlass-Messung fuer %s ausgefallen: %s",
+                           symbol, exc)
+            ergebnis.setdefault("fehler", []).append(
+                f"{symbol}: Anlass-Messung: {exc}")
+
     if betriebsart == "trocken":
         bc_roh = (aufgezeichnet.get("befund") or {}).get(symbol)
         if bc_roh is None:

@@ -2173,3 +2173,21 @@ benutzte `os` ohne Import — derselbe Fehler, den sie sucht.
 > trifft, und der breite Fehlerfang macht sie dort unsichtbar. Das ist
 > „Fail-soft ist fail-silent" in seiner teuersten Form: nicht ein Ausfall, den
 > man sieht, sondern eine Messung, die stillschweigend nicht stattfindet.
+
+# 2.22 Werkzeugkasten-Nachtrag (2026-08-15): der Anlassfilter, vor der Entscheidung gemessen
+
+| Skript | Frage | Auslöser |
+|---|---|---|
+| `messe_anlass.py` | **Wie oft hätte der Anlassfilter gegriffen?** Liest `anlass_beobachtung` und zählt je Instrument, wie oft der Faktensatz wörtlich derselbe war wie beim letzten Urteil innerhalb von 24 Stunden — getrennt nach `voll` (mit Lagebild) und `asset` (ohne). | ein paar Tage nach jedem Produktivgang, **bevor** über eine Sperre entschieden wird |
+
+**Warum eine Messvariante und nicht gleich die Sperre.** Nutzervorgabe:
+*„erstmal soviele Daten wie möglich zulassen und später selektiv
+einschränken."* `agent/anlass.py` schreibt mit, wie oft es gegriffen **hätte** —
+gesperrt wird nichts. Erst wenn die Zahl bekannt ist, lässt sich entscheiden,
+und zwar mit bekannter Wirkung statt geschätzter.
+
+> **Die Prüfung, dass sie nichts sperrt, muss statisch sein.** Mein erster
+> Anlauf verglich zwei Trockenläufe — die Stufe läuft dort aber gar nicht, weil
+> sie in die Datenbank schreibt. Der Vergleich zeigte, dass die
+> *abgeschaltete* Stufe nichts tut. Belastbar ist nur: der Befund steht in
+> `rollen_lauf.py` in keiner einzigen Bedingung (Paket T4c).

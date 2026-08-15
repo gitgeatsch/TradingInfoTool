@@ -4412,6 +4412,37 @@ def paket_15() -> None:
     pruefe(P, "keine Funktion greift auf einen fremden Namen zu",
            not _frei, str(_frei[:5]),)
 
+    # T4c DIE ANLASSSTUFE MISST UND SPERRT NICHT (O-36, 15.08.2026).
+    #
+    # Nutzervorgabe: *"erstmal soviele Daten wie moeglich zulassen und spaeter
+    # selektiv einschraenken."* Diese Pruefung ist der Beweis dafuer, und sie
+    # ist STATISCH - ein Laufvergleich taugt nicht, weil die Stufe im
+    # Trockenlauf gar nicht laeuft (sie schreibt in die Datenbank).
+    #
+    # STEHT DER BEFUND IN KEINER BEDINGUNG, kann er nichts sperren - egal in
+    # welcher Betriebsart.
+    from agent import anlass as AN4
+
+    _q4c = _quelltext("agent/rollen_lauf.py")
+    pruefe(P, "die Anlassmessung ist verdrahtet", "AN.beobachte" in _q4c)
+    pruefe(P, "aber ihr Befund wird nirgends gelesen",
+           "wuerde_sperren" not in _q4c and "gleich_asset" not in _q4c,
+           "was in keiner Bedingung steht, kann nichts sperren")
+    # ZWEI ABDRUECKE, und der Unterschied ist die eigentliche Erkenntnis.
+    _f = {"asset": "X", "stand": ["a"], "marktlage_beurteilung": {"lage": "A"}}
+    _v1, _a1 = AN4.fingerabdruecke(_f)
+    _v2, _a2 = AN4.fingerabdruecke(
+        dict(_f, marktlage_beurteilung={"lage": "B"}))
+    pruefe(P, "ein neues Lagebild aendert `voll`, nicht `asset`",
+           _v1 != _v2 and _a1 == _a2,
+           "sonst waere fast jede Frage 'neu' und der Filter wirkungslos")
+    _v3, _a3 = AN4.fingerabdruecke(dict(_f, stand=["b"]))
+    pruefe(P, "geaenderte Assetfakten aendern beide",
+           _v3 != _v1 and _a3 != _a1)
+    pruefe(P, "und es gibt eine Decke, damit nichts dauerhaft blockiert",
+           AN4.HOECHSTALTER_STUNDEN > 0,
+           f"{AN4.HOECHSTALTER_STUNDEN} h - Nutzervorgabe 'z.B. 24 Stunden'")
+
     # T5 BETREFF, TEXT UND ZEILE SAGEN DASSELBE (O-37, 15.08.2026).
     #
     # Im Produktionslauf zweimal auseinandergelaufen:
