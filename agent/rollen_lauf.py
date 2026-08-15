@@ -590,6 +590,27 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # --- Stufe: Urteil ---
     bc_ein["marktlage_beurteilung"] = {"lage": lagebild["lage"],
                                        "gleichlauf": gleichlauf}
+
+    # PAKET 14: DIE ABSICHERUNGSLAGE (15.08.2026).
+    #
+    # Nur fuer `absicherung`, und das ist der ganze Punkt: bei 3QSS und DBPK
+    # ist die Frage nicht, ob der Chart gut aussieht, sondern wieviel Risiko im
+    # Depot ungedeckt ist. Der Prompt fragt danach (`_HANDELN["absicherung"]`),
+    # also muss die Antwort auch in den Fakten stehen.
+    #
+    # SIE STEHT VOR DEM URTEIL, nicht danach - ein Faktum, das erst in der Mail
+    # auftaucht, hat die Entscheidung nicht beeinflusst.
+    _abs_lage = {}
+    if instrument == "absicherung":
+        try:
+            from agent import absicherung_fakten as AB
+
+            _abs_lage = AB.lage(conn, symbol)
+            if _abs_lage:
+                bc_ein["absicherungslage"] = AB.saetze(_abs_lage)
+        except Exception as exc:                             # noqa: BLE001
+            ergebnis.setdefault("fehler", []).append(
+                f"{symbol}: Absicherungslage: {exc}")
     if betriebsart == "trocken":
         bc_roh = (aufgezeichnet.get("befund") or {}).get(symbol)
         if bc_roh is None:
@@ -903,7 +924,10 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                          + (_bloecke.get("bewegung") or [])
                          + (_bloecke.get("volumen") or [])
                          + (_bloecke.get("finanzierung") or [])) or None,
-            lage_fakten=_lage or None,
+            # DIESELBEN SAETZE AN MODELL UND NUTZER. Bei der Absicherung
+            # steht die Portfoliolage VOR dem Marktumfeld: sie ist der Grund
+            # der Entscheidung, das Umfeld nur ihr Hintergrund.
+            lage_fakten=((bc_ein.get("absicherungslage") or []) + _lage) or None,
             # DIE AUSSTIEGSFUEHRUNG ZU DIESEM SYMBOL. Sie wird ohnehin einmal
             # je Lauf gelesen; hier kostet sie einen Nachschlag. Steht eine
             # Position offen, gehoert ihre Behandlung VOR den Nachkauf -

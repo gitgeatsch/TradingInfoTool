@@ -346,7 +346,34 @@ def zusatz(bereich: str, werte: dict, symbol: str | None = None) -> list[str]:
 
 def baue(bereich: str, *, kern_werte: dict, zusatz_werte: dict | None = None,
          symbol: str | None = None) -> list[str]:
-    """Der ganze Block. Kern zuerst, Zusatzinfo als solche gekennzeichnet."""
+    """Der ganze Block. Kern zuerst, Zusatzinfo als solche gekennzeichnet.
+
+    DIE ABSICHERUNG BEKOMMT DEN KERN NICHT (Paket 14, 15.08.2026).
+
+    GEFUNDEN IM TROCKENLAUF, an einer echten 3QSS-Mail:
+
+        Schwankung   4,9 % je Tag                    UNGUENSTIG
+          Ruhig ist besser - ueber alle Einstiege gemessen: 29,5 % Treffer
+          am guten Ende gegen 17,8 % am anderen.
+
+    Die drei Kernfamilien sind an EINSTIEGEN gemessen - an der Frage, ob ein
+    Kauf sein Ziel vor dem Stop erreicht. Ein Absicherungsinstrument wird nicht
+    gekauft, um zu steigen; es soll fallen, wenn das Depot faellt. "Ruhig ist
+    besser" auf 3QSS anzuwenden heisst, eine Trefferquote aus einer anderen
+    Grundgesamtheit als Messwert hinzuschreiben.
+
+    DAS IST SCHLIMMER ALS EINE FEHLENDE ANGABE. Eine Luecke sieht man; eine
+    Zahl mit falscher Herkunft liest sich wie ein Befund. Der Prompt fragt seit
+    Paket 14 nach dem Portfolio - die Mail muss dieselbe Frage stellen.
+
+    WAS BLEIBT: die Marken (wo liegt der Kurs) und die Portfoliolage aus
+    `absicherung_fakten`. Beides steht ueber `lage_fakten` bzw. `marken` in der
+    Mail und ist von dieser Aenderung unberuehrt."""
+    if bereich == "hedge":
+        z = zusatz(bereich, zusatz_werte or {}, symbol)
+        return (["Die gemessenen Einstiegs-Trefferquoten gelten hier NICHT - "
+                 "sie stammen von Kaufsignalen, und eine Absicherung wird "
+                 "nicht gekauft, um zu steigen."] + (z or []))
     zeilen, luecken = kern(**kern_werte)
     if luecken:
         # EINE LUECKE IST EINE AUSSAGE. Ein Signal mit zwei Fakten darf nicht

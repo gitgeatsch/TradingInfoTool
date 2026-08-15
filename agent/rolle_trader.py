@@ -152,6 +152,34 @@ _HANDELN = {
               " Nenne KEINEN Hebelfaktor - der folgt aus dem Risikobudget und "
               "dem Abstand zur Zwangsliquidation und wird gerechnet, nicht "
               "geschaetzt."),
+    # PAKET 14 (15.08.2026): DIE ABSICHERUNG FRAGT ANDERS.
+    #
+    # Bis heute lief sie durch den Spot-Satz - dieselbe Frage wie bei einem
+    # Kauf: ist der Chart gut. Bei 3QSS und DBPK ist das die falsche Frage.
+    # Ihr Chart IST das Spiegelbild des Nasdaq bzw. des S&P; ihn technisch zu
+    # bewerten heisst, den Index zu bewerten und das Ergebnis umzudrehen - eine
+    # Aussage, die das Lagebild schon trifft.
+    #
+    # WORUM ES WIRKLICH GEHT: das Depot traegt ein Risiko, und die Frage ist,
+    # wieviel davon man tragen will. Die Groessenlogik steht seit dem 07.08.
+    # fest - `benoetigter Einsatz = abzusicherndes Exposure / Hebelfaktor`.
+    #
+    # DER DECAY IST DER GRUND, WARUM "MEHR" NICHT IMMER BESSER IST. Ein
+    # gehebelter inverser ETF verliert taeglich durch Rebalancing, auch wenn
+    # der Index seitwaerts laeuft. Eine Absicherung, die man vergisst, kostet
+    # Geld ohne Gegenleistung - deshalb steht sie ausdruecklich im Satz.
+    "absicherung": (
+        " Du entscheidest ueber eine ABSICHERUNG, nicht ueber einen Trade."
+        " Die Frage ist NICHT, ob dieses Instrument steigen wird - es steigt,"
+        " wenn der Markt faellt, das ist seine Bauart."
+        " Die Frage ist, wieviel Risiko im Depot du tragen willst."
+        " Waehle: KAUFEN (Absicherung aufbauen), NACHKAUFEN (bestehende"
+        " ausweiten), REDUZIEREN, VERKAUFEN (Absicherung aufloesen) oder"
+        " NICHTS_TUN."
+        " Beziehe dich auf das ABZUSICHERNDE EXPOSURE und die bereits"
+        " bestehende Abdeckung, nicht auf die Kursentwicklung des Instruments."
+        " Beachte die laufende Gebuehr: eine Absicherung kostet auch dann,"
+        " wenn nichts passiert."),
 }
 
 # Das Richtungsfeld erscheint NUR bei Hebel im Antwortschema. Ein Feld, das

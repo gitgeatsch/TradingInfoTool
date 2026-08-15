@@ -5493,6 +5493,147 @@ def paket_15() -> None:
            and "VK.ist_anpassung(aktion)" in _quelltext("agent/rollen_lauf.py"),
            "beide Klassen setzen eine Position voraus - die Abzweigung ist "
            "dieselbe, die Anweisung dahinter nicht")
+
+    # ------------------------------------------------------------------
+    # AL. PAKET 14 - DIE ABSICHERUNG ALS EIGENE ROLLE (15.08.2026).
+    #
+    # Bis heute lief sie durch denselben Trader-Prompt wie ein Spot-Kauf:
+    # Marktstruktur, Widerstand, Momentum DES INSTRUMENTS. Bei 3QSS und DBPK
+    # ist das die falsche Frage - ihr Chart IST das Spiegelbild des Nasdaq bzw.
+    # des S&P. Ihn technisch zu bewerten heisst, den Index zu bewerten und das
+    # Ergebnis umzudrehen; das tut das Lagebild bereits.
+    from agent import absicherung_fakten as AB12
+    from agent import rolle_trader as RT12
+
+    pruefe(P, "die Absicherung hat einen eigenen Prompt",
+           RT12.prompt_fuer("absicherung", "einstieg")
+           != RT12.prompt_fuer("spot", "einstieg"),
+           "ein stiller Rueckfall auf Spot wuerde nach dem Chart fragen, wo "
+           "die Portfoliolage entscheidet")
+    _pa = RT12.prompt_fuer("absicherung", "einstieg")
+    pruefe(P, "und er sagt, worum es NICHT geht",
+           "nicht ueber einen Trade" in _pa
+           and "das ist seine Bauart" in _pa,
+           "das Instrument steigt, wenn der Markt faellt - danach zu fragen "
+           "waere die Frage nach dem Index, nur rueckwaerts")
+    pruefe(P, "er nennt Exposure und Abdeckung als Bezug",
+           "EXPOSURE" in _pa and "Abdeckung" in _pa,
+           "benoetigter Einsatz = abzusicherndes Exposure / Hebelfaktor "
+           "(toepfe.py, 07.08.)")
+    pruefe(P, "und die laufende Gebuehr steht drin",
+           "kostet auch dann" in _pa,
+           "ein gehebelter inverser ETF verliert taeglich durch Rebalancing - "
+           "eine vergessene Absicherung kostet Geld ohne Gegenleistung")
+
+    # AL2 DIE RECHNUNG - gegen echte Bestandsdaten.
+    with sqlite3.connect("file:data/tradinginfotool.db?mode=ro",
+                         uri=True) as _c12:
+        _c12.row_factory = sqlite3.Row
+        _l12 = AB12.lage(_c12, "3QSS")
+        pruefe(P, "die Absicherungslage laeuft gegen die echte Datenbank",
+               isinstance(_l12, dict),
+               "sie liest holdings, price_cache und die Watchlist")
+    # Und gegen einen gestellten Fall, bei dem jede Zahl nachrechenbar ist.
+    with sqlite3.connect(":memory:") as _c13:
+        _c13.row_factory = sqlite3.Row
+        _c13.execute("CREATE TABLE holdings (symbol TEXT, quantity REAL, "
+                     "updated_at TEXT, source TEXT, avg_buy_price_eur REAL, "
+                     "avg_buy_price_tracked_qty REAL, "
+                     "avg_buy_price_computed_at TEXT, "
+                     "avg_buy_price_manual_eur REAL, staked_quantity REAL)")
+        for _s, _q in (("BTC", 10.0), ("3QSS", 100.0), ("EURCV", 500.0)):
+            _c13.execute("INSERT INTO holdings VALUES (?,?,'','',NULL,NULL,"
+                         "NULL,NULL,NULL)", (_s, _q))
+
+        class _A:
+            def __init__(_s2, sym, cash=False):
+                _s2.symbol, _s2.ist_cash_aequivalent = sym, cash
+
+        _wl = [_A("BTC"), _A("3QSS"), _A("EURCV", True)]
+        _e13 = AB12.lage(_c13, "3QSS", kurse_eur={"BTC": 100.0, "3QSS": 10.0,
+                                                  "EURCV": 1.0},
+                         watchlist=_wl)
+        # BTC 10 x 100 = 1.000 Exposure. 3QSS 100 x 10 x Hebel 3 = 3.000
+        # Abdeckung. EURCV ist Cash und faellt heraus - ein Stablecoin faellt
+        # nicht und braucht keine Absicherung.
+        pruefe(P, "Exposure zaehlt weder Absicherung noch Cash mit",
+               _e13["exposure_eur"] == 1000.0,
+               f"{_e13['exposure_eur']} - erwartet 1.000 (nur BTC)")
+        pruefe(P, "die Abdeckung ist leverage-adjustiert",
+               _e13["abdeckung_eur"] == 3000.0,
+               f"{_e13['abdeckung_eur']} - 100 Stueck x 10 EUR x Hebel 3; "
+               "1 EUR in einem 3x-Short deckt 3 EUR Exposure")
+        pruefe(P, "bei Ueberdeckung ist nichts mehr offen",
+               _e13["noch_offen_eur"] == 0.0
+               and _e13["einsatz_fuer_volle_deckung_eur"] == 0.0,
+               "3.000 gegen 1.000 - eine negative Zahl waere hier sinnlos")
+        _saetze13 = AB12.saetze(_e13)
+        pruefe(P, "und die Saetze nennen den Referenzindex",
+               any("Nasdaq-100" in s for s in _saetze13),
+               "3QSS hebelt auf den Nasdaq - ohne den Index ist der "
+               "Hebelfaktor eine Zahl ohne Bezug")
+
+    # AL3 EIN FEHLENDER PREIS WIRD GESAGT, NICHT VERSCHLUCKT.
+    with sqlite3.connect(":memory:") as _c14:
+        _c14.row_factory = sqlite3.Row
+        _c14.execute("CREATE TABLE holdings (symbol TEXT, quantity REAL, "
+                     "updated_at TEXT, source TEXT, avg_buy_price_eur REAL, "
+                     "avg_buy_price_tracked_qty REAL, "
+                     "avg_buy_price_computed_at TEXT, "
+                     "avg_buy_price_manual_eur REAL, staked_quantity REAL)")
+        for _s, _q in (("BTC", 10.0), ("DBPK", 50.0)):
+            _c14.execute("INSERT INTO holdings VALUES (?,?,'','',NULL,NULL,"
+                         "NULL,NULL,NULL)", (_s, _q))
+        _e14 = AB12.lage(_c14, "3QSS", kurse_eur={"BTC": 100.0},
+                         watchlist=[_A("BTC"), _A("DBPK")])
+        pruefe(P, "eine gehaltene Absicherung ohne Preis wird gemeldet",
+               any("UNTERSCHAETZT" in u for u in (_e14.get("unsicher") or [])),
+               "genau der Fund vom 18.07.: sie wuerde als '0 Abdeckung' "
+               "durchgehen, und ein Aufbau daraufhin koennte unbemerkt "
+               "ueberhedgen")
+
+    # AL3b DIE MAIL DARF KEINE EINSTIEGS-TREFFERQUOTEN ZEIGEN.
+    #
+    # Im Trockenlauf an einer echten 3QSS-Mail gefunden:
+    #
+    #     Schwankung 4,9 % je Tag   UNGUENSTIG
+    #       "Ruhig ist besser - ueber alle Einstiege gemessen: 29,5 % Treffer"
+    #
+    # Die Kernfamilien sind an EINSTIEGEN gemessen - an der Frage, ob ein Kauf
+    # sein Ziel vor dem Stop erreicht. Eine Absicherung wird nicht gekauft, um
+    # zu steigen. Eine Zahl mit falscher Herkunft liest sich wie ein Befund;
+    # das ist schlimmer als eine fehlende Angabe.
+    from agent import faktenblock as FB12
+    # DIE ECHTEN PARAMETERNAMEN - `kern()` braucht neben den Perzentilen auch
+    # die absoluten Werte, sonst meldet es drei Luecken statt drei Familien.
+    # Meine erste Fassung hatte nur die Perzentile und pruefte damit den
+    # Luecken-Pfad statt den Kern.
+    _kern12 = {"atr_relativ": 0.049, "schwankung_perzentil": 0.8,
+               "rueckgang_60t": 0.27, "momentum_perzentil": 0.3,
+               "volumen_relativ": 1.1, "volumen_perzentil": 0.5}
+    _hedge_block = FB12.baue("hedge", kern_werte=_kern12)
+    pruefe(P, "die Absicherungsmail zeigt keine Einstiegs-Trefferquoten",
+           not any("Treffer am guten Ende" in z for z in _hedge_block),
+           "sie stammen von Kaufsignalen - eine andere Grundgesamtheit")
+    pruefe(P, "und sagt ausdruecklich, dass sie nicht gelten",
+           any("gelten hier NICHT" in z for z in _hedge_block),
+           "wegzulassen ohne es zu sagen waere die zweite Haelfte desselben "
+           "Fehlers - der Leser wuesste nicht, dass etwas fehlt")
+    pruefe(P, "die uebrigen Bereiche behalten ihre Kernfamilien",
+           any("Treffer am guten Ende" in z
+               for z in FB12.baue("krypto_spot", kern_werte=_kern12)),
+           "dort sind die Quoten an genau dieser Frage gemessen")
+
+    # AL4 DIE LAGE ERREICHT MODELL UND MAIL.
+    _rl12 = _quelltext("agent/rollen_lauf.py")
+    pruefe(P, "die Absicherungslage steht VOR dem Urteil",
+           _rl12.index("AB.lage(conn, symbol)")
+           < _rl12.index("bc_roh = _frage("),
+           "ein Faktum, das erst in der Mail auftaucht, hat die Entscheidung "
+           "nicht beeinflusst")
+    pruefe(P, "und dieselben Saetze gehen an den Nutzer",
+           'bc_ein.get("absicherungslage")' in _rl12,
+           "zwei Formulierungen derselben Zahl laufen auseinander")
     c.close()
 
 
