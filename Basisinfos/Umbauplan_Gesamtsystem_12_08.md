@@ -4056,3 +4056,145 @@ zwei Sätze im `auftrag`.
 
 Das ist die erste Frage für Schritt 2: **welche Parameter braucht ein
 Hebel-Urteil, die ein Spot-Urteil nicht braucht — und umgekehrt.**
+
+---
+
+## Kapitel 35 — Schritt 2: Korb für Korb gegen die Praxis (16.08.2026)
+
+Je Korb drei Fragen: **was liefern wir · was verlangt die Praxis für genau
+dieses Instrument · ist die Lücke LLM-tauglich zu schließen** (Satz mit Bezug,
+keine nackte Zahl).
+
+### 35.1 Krypto Hebel — die größte Lücke, und sie ist nicht klein
+
+**Was wir liefern:** denselben Faktensatz wie Spot — bestand, struktur,
+bewegung, marken, volumen, finanzierung. Unterschied: zwei Sätze im `auftrag`.
+
+**Was die Praxis verlangt** (Perpetual-Futures-Literatur, durchgängig):
+
+| | Praxis | bei uns |
+|---|---|---|
+| **Liquidationsabstand** | bei 10-fach genügt eine Gegenbewegung von rund 10 %, bei 25-fach vier — die zentrale Zahl der Entscheidung | **wird NACH dem Urteil gerechnet** |
+| **Finanzierung als Kostenbetrag** | bei 5-fach und 0,01 % je acht Stunden etwa 4,5 % der Margin im Monat; bei 0,05 % rund das Fünffache | nur als **Perzentiltext**, ohne Betrag |
+| **Finanzierung als Warnsignal** | extremes Funding geht scharfen Umkehrungen oft voraus | Perzentil vorhanden, **nicht als Signal benannt** |
+| **Open Interest, Kaskadenrisiko** | Liquidationsketten erklären, warum OI plötzlich verschwindet | **gerechnet, ungenutzt** (1.526 Fälle) |
+| **Haltedauer** | Perps erzwingen Entscheidungen — kein unbegrenztes Aussitzen | wird gerechnet, **Modell sieht sie nicht** |
+
+> ⚠️ **Der Kern:** das Modell wählt ERÖFFNEN, ohne den Liquidationsabstand und
+> ohne die tägliche Kostenhöhe zu kennen. Es liest einen **qualitativen
+> Warnsatz ohne jede Größe** — beides wird zwei Schritte später gerechnet und
+> steht dann in der Mail.
+>
+> Am AKT-Signal: Hebel 3,1×, Zwangsauflösung bei 0,3200 EUR, Stop bei 0,4475 —
+> ein komfortabler Abstand. **Aus Sicht des Modells war das Zufall**, es hat
+> ihn nicht beurteilt.
+
+**LLM-tauglich?** Ja, und sauber: *„Bei diesem Hebel läge die Zwangsauflösung
+16,7 % unter dem Einstieg, der Stop bei 4,8 %."* Zwei Zahlen, beide mit Bezug
+zueinander — genau die Form, die `lagebeschreibung` überall sonst hat.
+
+**Das Henne-Ei-Problem:** der Hebel folgt aus dem Stop, den das Modell nennt.
+Niemand kennt den Faktor, bevor das Modell geantwortet hat. **Ohne Umbau
+lösbar:** der Abstand bei den *Grenzhebeln* lässt sich vorher sagen — bei
+3-fach 33 %, bei 6-fach 17 %, bei 10-fach 10 %. Eine Tabelle statt eines
+Kreisbezugs.
+
+### 35.2 Krypto Spot — nah dran, mit einem Fremdkörper
+
+Die Praxis verlangt bei Spot: Struktur, Marken, Umsatzbestätigung, Trend über
+Ebenen, Liquidität, Katalysator. Kein Funding, keine Liquidation, keine
+Haltefrist.
+
+| | |
+|---|---|
+| **liefern wir** | Struktur, Marken, Bewegung, Volumen, Bestand — **vollständig** |
+| **Fremdkörper** | **Finanzierung.** Fällt bei Spot nicht an, wird aber in **63 %** der Spot-Urteile zitiert (O-34) |
+| **fehlt** | Handelbarkeit und Spread · Auslöser · Katalysator |
+
+Der Funding-Block ist hier nicht nur überflüssig, sondern **irreführend**: er
+beschreibt eine Zahlung zwischen Long- und Short-Positionen, die ein
+Spot-Käufer weder leistet noch erhält. Als *Stimmungsmaß* wäre er brauchbar —
+dann müsste er aber so formuliert sein und nicht als Kostenmechanik.
+
+### 35.3 Aktien — Daten vollständig, Termine fehlen
+
+Beide Assets haben alle Blöcke. Was die Praxis bei Einzelaktien zusätzlich
+verlangt und wir **nicht** liefern:
+
+| Praxis | bei uns |
+|---|---|
+| **Termine** — Quartalszahlen, Dividende | fehlt ganz |
+| Sektor- und Indexbezug | fehlt |
+| **Handelszeiten und -tage** | fehlt |
+| Fundamentaldaten | fehlt |
+
+**Bei Aktien ist der Katalysator kein Zusatz, sondern der Regelfall.** Ein
+Einstieg zwei Tage vor Quartalszahlen ist eine andere Entscheidung als
+derselbe Chart drei Wochen davor — das Modell kann den Unterschied nicht
+sehen.
+
+Die Handelszeiten sind der praktische Punkt: **die Kette läuft im
+15-Minuten-Takt, die Börse nicht.** Ein Aktiensignal um 23 Uhr ist bis zum
+nächsten Morgen kalt.
+
+### 35.4 Rohstoffe — kein einziges vollständiges Asset
+
+Alle vier ohne Volumenblock, OD7L zusätzlich unter 250 Handelstagen.
+
+**Und ein Punkt, den erst die Bestandserhebung sichtbar macht:** es sind
+**Zertifikate**, keine Rohstoffe. Der Faktensatz behandelt sie wie einen
+Kurswert — ein Zertifikat trägt aber einen Emittenten, einen Basiswert, ein
+Bezugsverhältnis und je nach Bauart einen Hebel oder eine Barriere.
+
+| Praxis bei Zertifikaten | bei uns |
+|---|---|
+| Basiswert und Bezugsverhältnis | fehlt |
+| Emittentenrisiko | fehlt |
+| Spread, Handelbarkeit außerhalb der Referenzzeit | fehlt |
+| Rollverluste bei Terminkontrakt-Basis | fehlt |
+
+**Die Gruppe mit der schwächsten Grundlage** — und die, bei der ich am
+wenigsten sagen kann, ohne die Papiere einzeln anzusehen. Sie gehört als
+eigener Rechercheschritt aufgesetzt.
+
+### 35.5 ETF und Absicherung — zwei verschiedene Dinge in einem Korb
+
+**Themen-ETF** (5 Stück): der Sektorbezug ist die tragende Information — ein
+Kupfer-ETF folgt dem Kupferpreis, nicht seinem eigenen Chart. Wir liefern nur
+den eigenen Chart.
+
+**Absicherung** (2 Stück) hat als einzige Gruppe einen **eigenen Faktenblock**:
+Exposure, Deckung, Hebelfaktor, laufende Gebühr — der Paket-14-Block vom
+15.08. **Die am besten zugeschnittene Gruppe im ganzen System.**
+
+| | fehlt |
+|---|---|
+| ETF | Referenzindex, Sektorbezug, TER, Spread |
+| Absicherung | Volumen (3QSS), zweite Marke |
+| beide | Handelszeiten |
+
+### 35.6 Was das in Summe ergibt
+
+| Korb | Zustand | größte Lücke |
+|---|---|---|
+| **Krypto Hebel** | **schlechteste Passung** | Liquidationsabstand und Kostenhöhe fehlen im Urteil |
+| Krypto Spot | gut, ein Fremdkörper | Funding gehört nicht hinein |
+| Aktien | Daten vollständig | Termine — bei Aktien der Regelfall |
+| **Rohstoffe** | **schwächste Grundlage** | Volumen durchgehend, Zertifikatsnatur ignoriert |
+| ETF / Absicherung | gemischt | Referenzindex · Absicherung am besten zugeschnitten |
+
+**Die Reihenfolge folgt aus der Lücke, nicht aus dem Aufwand:**
+
+1. **Krypto Hebel** — 77 % der Aufrufe und die größte Lücke. Liquidations­abstand
+   und Finanzierungshöhe in den Faktensatz.
+2. **Krypto Spot** — den Funding-Block herausnehmen oder umformulieren.
+3. **Fehlende Angaben benennen** — gruppenübergreifend, betrifft 8 Assets.
+4. **Aktien: Termine** — erste echte neue Datenquelle, klein abgegrenzt.
+5. **Rohstoffe** — eigener Rechercheschritt, Zertifikate statt Kurswerte.
+6. **ETF: Referenzindex** — für die Absicherung liegt er bereits vor.
+
+**Quellen:**
+[Perpetual Futures — Funding, Hebel, Liquidation](https://crypto.news/what-are-perpetual-futures-perps-funding-rates-and-liquidations-explained/) ·
+[Liquidationsmechanik](https://metamask.io/news/perpetual-futures-liquidation-mechanics) ·
+[Funding als Kosten und als Signal](https://metamask.io/news/perpetual-futures-funding-frequency-strategies) ·
+[Perps gegen Spot](https://metamask.io/news/crypto-spot-trading-vs-perpetual-futures)
