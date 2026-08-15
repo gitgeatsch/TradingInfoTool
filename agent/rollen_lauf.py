@@ -32,7 +32,10 @@ hier steht nur die Reihenfolge und die Frage, was ein Fehlschlag bedeutet.
 """
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
+
+logger = logging.getLogger(__name__)
 
 TROCKEN, PROBE, SCHARF = "trocken", "probe", "scharf"
 BETRIEBSARTEN = (TROCKEN, PROBE, SCHARF)
@@ -111,6 +114,28 @@ MINDEST_DECKUNG = 0.6
 # Wie lange ein Lagebild wiederverwendet wird. Nutzerentscheidung 14.08.:
 # drei Stunden, nicht acht - es speist JEDEN Trader-Aufruf in seinem Fenster.
 LAGEBILD_HALTBAR_STUNDEN = 3.0
+
+# Nach wie vielen Aufrufen IN FOLGE ohne Ergebnis ein Lauf aufgibt.
+#
+# DER FALL, DER DAS ERZWUNGEN HAT (14.08.2026, erster Betriebstag). Der
+# Hebel-Topf war durch Schattenbuchungen gefuellt; jedes Symbol bekam damit
+# Betrag 0 EUR und fiel an der Stufe "geometrie" heraus - NACH dem
+# Modellaufruf. Weil ein so verlorenes Symbol keine Zeile schreibt, griff auch
+# der Cooldown nie, und der naechste Lauf fragte dieselben vierzehn wieder.
+#
+#     698 Modellaufrufe fuer 46 Urteile, alle 15 Minuten von vorn.
+#     Ueber Nacht waeren es rund 3.900 gewesen.
+#
+# ACHT IST BEWUSST GROSSZUEGIG. Ein Lauf ueber 43 Symbole darf durchaus eine
+# Handvoll Fehlschlaege haben - schlechte Datenlage, ein Modell, das einmal
+# Unsinn liefert. Acht IN FOLGE sind kein Zufall mehr, sondern ein Zustand:
+# etwas Systematisches verhindert jedes Ergebnis, und jeder weitere Aufruf
+# bezahlt denselben Fehler noch einmal.
+#
+# WAS ER NICHT TUT: er verhindert den Fehler nicht. Er begrenzt, was er
+# kostet. Die Ursache steht danach im Gate - was sie beim ersten Mal auch tat,
+# nur hat niemand rechtzeitig hingesehen.
+LEERLAUF_ABBRUCH = 8
 
 
 def _ankertag(reihen: dict, mindest_deckung: float = MINDEST_DECKUNG,
@@ -370,6 +395,8 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
             ergebnis.setdefault("budget_gestoppt", []).append(symbol)
             continue
         durchlauf.beginne(symbol)
+        _vor_aufrufe = ergebnis["aufrufe"]
+        _vor_signale = len(ergebnis.get("signale") or [])
         try:
             _ein_asset(symbol=symbol, reihen=reihen, tag=tag, lagebild=lagebild,
                        lagebild_id=lagebild_id, gleichlauf=gleichlauf,
@@ -400,6 +427,26 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
             # einzige Zweck, den sie hat.
             letzte = durchlauf.naechste_stufe(symbol)
             durchlauf.verloren(symbol, letzte, type(exc).__name__)
+
+        # --- Leerlaufwache: hat dieser Aufruf etwas erbracht? -------------
+        #
+        # GEZAEHLT WIRD NUR, WO EIN AUFRUF STATTFAND. Ein gesperrtes Symbol
+        # kostet nichts und darf die Wache nicht ausloesen - sonst wuerde
+        # ausgerechnet der sparsame Fall den Lauf anhalten.
+        if ergebnis["aufrufe"] > _vor_aufrufe:
+            if len(ergebnis.get("signale") or []) > _vor_signale:
+                ergebnis["leerlauf"] = 0
+            else:
+                ergebnis["leerlauf"] = ergebnis.get("leerlauf", 0) + 1
+                if ergebnis["leerlauf"] >= LEERLAUF_ABBRUCH:
+                    ergebnis["abgebrochen"] = (
+                        f"{LEERLAUF_ABBRUCH} Aufrufe in Folge ohne Ergebnis - "
+                        f"Lauf angehalten. Die Ursache steht im Gate "
+                        f"(verloren_je_stufe); jeder weitere Aufruf haette "
+                        f"denselben Fehler noch einmal bezahlt.")
+                    logger.error("Rollen-Kette %s/%s: %s", assetklasse,
+                                 instrument, ergebnis["abgebrochen"])
+                    break
 
     # DIE FAEDEN ZUSAMMENFUEHREN, BEVOR DER LAUF ENDET. Erst danach steht fest,
     # was Z.ai gesagt hat - und geschrieben wird im Hauptfaden, weil die
@@ -533,8 +580,12 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         sperre = WH.gesperrt_bis(conn, symbol, instrument, config=config,
                                  gruppe=assetklasse)
         if sperre:
-            durchlauf.verloren(symbol, "urteil", f"Cooldown bis {sperre[:16]}")
+            # AUF DIE EIGENE STUFE, nicht auf "urteil" (14.08.). Hier wurde
+            # NICHT gefragt - das ist ein gesparter Aufruf, kein verworfener.
+            durchlauf.verloren(symbol, "wiederholung",
+                               f"Cooldown bis {sperre[:16]}")
             return
+    durchlauf.bestanden(symbol, "wiederholung")
 
     # --- Stufe: Urteil ---
     bc_ein["marktlage_beurteilung"] = {"lage": lagebild["lage"],
@@ -581,20 +632,55 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     from agent import verkaufsrechnung as VK
 
     if VK.ist_ausstieg(aktion):
+        # DER BESTAND STEHT IN ZWEI TABELLEN, je nach Instrument (14.08.2026).
+        #
+        # DER FEHLER, DEN DAS BEHEBT. Meine erste Fassung sah IMMER in
+        # `holdings` nach - der Spot-Tabelle. Ein Hebel-SCHLIESSEN auf eine
+        # tatsaechlich offene Position landete damit bei "ohne Bestand" und
+        # wurde als Schatten gebucht statt als Auftrag. Im Gate des ersten
+        # Betriebstags stand es als "5x SCHLIESSEN ohne Bestand" - und sah aus
+        # wie ein Modell, das Unsinn vorschlaegt.
+        #
+        # Es ist derselbe Fehler wie beim Cooldown und beim CRV-Faktor: EINE
+        # Regel auf zwei Instrumente angewandt, die verschiedene Wirklichkeiten
+        # haben. Ein Hebel-Bestand ist keine Menge in `holdings`, er ist eine
+        # offene Position in `hebel_positions`.
+        #
+        # DIESELBE QUELLE WIE DIE WARTESCHLANGE (`status = 'offen'`), die sie
+        # ihrerseits von `db.get_open_hebel_positions()` hat - nachgesehen,
+        # nicht geraten.
         bestand_row = None
+        menge = einstand = gestakt = None
         try:
-            bestand_row = next(
-                (h for h in db.get_all_holdings(conn)
-                 if str(h.symbol).upper() == str(symbol).upper()), None)
+            if instrument == "hebel":
+                pos = next((p for p in db.get_open_hebel_positions(conn)
+                            if str(p.symbol).upper() == str(symbol).upper()),
+                           None)
+                if pos is not None:
+                    # Eine Hebelposition fuehrt keine Stueckzahl im Sinne des
+                    # Spot-Bestands - `positionsmenge` ist das Gegenstueck.
+                    menge = getattr(pos, "positionsmenge", None)
+                    # Und keinen Einstandspreis je Stueck: der Buchwert steckt
+                    # im Positionswert. Ohne Einstand rechnet
+                    # `verkaufsrechnung` das Ergebnis schlicht nicht aus,
+                    # statt eine Zahl zu erfinden.
+                    bestand_row = pos
+            else:
+                h = next((x for x in db.get_all_holdings(conn)
+                          if str(x.symbol).upper() == str(symbol).upper()),
+                         None)
+                if h is not None:
+                    menge = getattr(h, "quantity", None)
+                    einstand = (getattr(h, "avg_buy_price_manual_eur", None)
+                                or getattr(h, "avg_buy_price_eur", None))
+                    gestakt = getattr(h, "staked_quantity", None)
+                    bestand_row = h
         except Exception as exc:                             # noqa: BLE001
             ergebnis.setdefault("fehler", []).append(
                 f"{symbol}: Bestand nicht lesbar: {exc}")
-        verkauf = VK.rechne(
-            aktion=aktion, menge=getattr(bestand_row, "quantity", 0.0) or 0.0,
-            kurs_eur=kurs_e,
-            einstand_eur=(getattr(bestand_row, "avg_buy_price_manual_eur", None)
-                          or getattr(bestand_row, "avg_buy_price_eur", None)),
-            gestakt=getattr(bestand_row, "staked_quantity", None))
+        verkauf = VK.rechne(aktion=aktion, menge=menge or 0.0,
+                            kurs_eur=kurs_e, einstand_eur=einstand,
+                            gestakt=gestakt)
         if verkauf is None:
             # KEIN BESTAND HEISST KEIN AUFTRAG. Ein VERKAUFEN auf etwas, das
             # man nicht haelt, ist kein Fehler des Modells - es kennt den

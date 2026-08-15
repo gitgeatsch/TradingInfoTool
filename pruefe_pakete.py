@@ -3899,16 +3899,29 @@ def paket_15() -> None:
     from agent import warteschlange as WS
     from scheduler import rollen_job as RJ2
     _l = _quelltext("agent/rollen_lauf.py")
+    from agent.rollen_gate import STUFEN_NAMEN as RG_STUFEN
 
     # S1 COOLDOWN VOR DEM AUFRUF - der groesste Hebel.
     pruefe(P, "der Cooldown steht VOR dem Trader-Aufruf",
            _l.find("WH.gesperrt_bis") < _l.find("bc_roh = _frage("),
            "dahinter verhinderte er die Mail, nicht die Kosten - das Geld war "
            "ausgegeben, wenn er griff")
-    pruefe(P, "und der Verlust wird auf der Urteilsstufe gebucht",
-           'durchlauf.verloren(symbol, "urteil", f"Cooldown' in _l,
-           "das Symbol hat Auftrag, Fakten und Lagebild bestanden und ist nie "
-           "zu einem Urteil gekommen - der Trichter bleibt monoton")
+    # KORRIGIERT 14.08.: bis heute buchte der Cooldown auf "urteil" - und
+    # dort steht auch der Verwurf einer geliefertern Antwort. "Wir haben nicht
+    # gefragt" und "die Antwort war unbrauchbar" sahen damit gleich aus,
+    # obwohl das eine nichts kostet und das andere einen Aufruf verbrennt. Am
+    # ersten Betriebstag hat genau diese Vermischung die Diagnose des
+    # Hebel-Stillstands um Stunden verzoegert.
+    pruefe(P, "der Cooldown bucht auf seine EIGENE Stufe",
+           'durchlauf.verloren(symbol, "wiederholung",' in _l
+           and "wiederholung" in RG_STUFEN,
+           "ein Kostenfilter darf in der Auswertung nicht aussehen wie ein "
+           "Qualitaetsfilter - das Projekt trennt drei Arten von 'nicht "
+           "jetzt', und nur die dritte traegt Deadloop-Risiko")
+    pruefe(P, "und sie steht VOR dem Urteil im Trichter",
+           RG_STUFEN.index("wiederholung") < RG_STUFEN.index("urteil"),
+           "wer gesperrt ist, kommt nie zu einem Urteil - der Trichter bleibt "
+           "monoton")
 
     # S2 LAGEBILD ZWISCHENGESPEICHERT.
     pruefe(P, "das Lagebild wird 3 h wiederverwendet",
@@ -5243,6 +5256,58 @@ def paket_15() -> None:
            "AKTIONEN_MIT_EINSTIEG" in _quelltext("agent/toepfe.py"),
            "eine Ausschlussliste faengt nur, was jemand vorhergesehen hat - "
            "und die naechste Aktion, die kein Kapital bindet, kommt bestimmt")
+
+    # ------------------------------------------------------------------
+    # AI. LEERLAUFWACHE UND DER ZWEITE BESTAND (14.08.2026, Abendrunde).
+    import agent.rollen_lauf as RL9
+    _q9 = _quelltext("agent/rollen_lauf.py")
+
+    # AI1 EIN LAUF, DER NUR NOCH VERBRENNT, HAELT SICH SELBST AN.
+    pruefe(P, "es gibt eine Grenze fuer Leerlauf in Folge",
+           isinstance(RL9.LEERLAUF_ABBRUCH, int) and 3 <= RL9.LEERLAUF_ABBRUCH <= 20,
+           f"{RL9.LEERLAUF_ABBRUCH} - grosszuegig genug fuer eine Handvoll "
+           "Fehlschlaege, streng genug gegen einen Zustand")
+    pruefe(P, "gezaehlt wird NUR, wo ein Aufruf stattfand",
+           'if ergebnis["aufrufe"] > _vor_aufrufe:' in _q9,
+           "ein gesperrtes Symbol kostet nichts und darf die Wache nicht "
+           "ausloesen - sonst hielte ausgerechnet der sparsame Fall den Lauf an")
+    pruefe(P, "ein Ergebnis setzt den Zaehler zurueck",
+           'ergebnis["leerlauf"] = 0' in _q9,
+           "acht IN FOLGE sind ein Zustand, acht verteilte sind Zufall")
+    pruefe(P, "der Abbruch nennt, wo die Ursache steht",
+           "verloren_je_stufe" in _q9 and 'ergebnis["abgebrochen"]' in _q9,
+           "die Wache verhindert den Fehler nicht, sie begrenzt was er kostet "
+           "- sie muss also sagen, wo man ihn findet")
+    pruefe(P, "und das Modul hat einen Logger dafuer",
+           "logger = logging.getLogger(__name__)" in _q9,
+           "die erste Fassung rief logger.error ohne Logger im Modul - beim "
+           "ersten Ausloesen haette die Wache selbst einen NameError geworfen")
+
+    # AI2 DER HEBEL-BESTAND STEHT IN EINER ANDEREN TABELLE.
+    #
+    # Im Gate des ersten Betriebstags stand "5x SCHLIESSEN ohne Bestand" auf
+    # dem HEBEL-Lauf - und sah aus wie ein Modell, das Unsinn vorschlaegt.
+    # Tatsaechlich sah mein Verkaufszweig immer in `holdings` nach, der
+    # SPOT-Tabelle. Eine offene Hebelposition steht in `hebel_positions`.
+    pruefe(P, "der Verkaufszweig kennt beide Bestandsquellen",
+           "db.get_open_hebel_positions(conn)" in _q9
+           and "db.get_all_holdings(conn)" in _q9,
+           "ein Hebel-Bestand ist keine Menge in holdings, sondern eine "
+           "offene Position - EINE Regel auf zwei Wirklichkeiten angewandt, "
+           "derselbe Fehler wie beim Cooldown und beim CRV-Faktor")
+    pruefe(P, "und nimmt beim Hebel die Positionsmenge",
+           'getattr(pos, "positionsmenge", None)' in _q9,
+           "`quantity` gibt es dort nicht - die Abfrage haette still 0 "
+           "geliefert und jedes SCHLIESSEN zum Schatten gemacht")
+    # VERHALTEN PRUEFEN, NICHT DEN KOMMENTAR. `_quelltext()` wirft
+    # Kommentarzeilen bewusst weg - das ist heute schon einmal aufgefallen.
+    _ohne = VK4.rechne(aktion="SCHLIESSEN", menge=100.0, kurs_eur=2.0)
+    _mit = VK4.rechne(aktion="SCHLIESSEN", menge=100.0, kurs_eur=2.0,
+                      einstand_eur=3.0)
+    pruefe(P, "ohne Einstandspreis wird keiner erfunden",
+           "ergebnis_prozent" not in _ohne and "ergebnis_prozent" in _mit,
+           "eine Hebelposition fuehrt keinen Einstand je Stueck - die "
+           "Rechnung laesst das Ergebnis dann weg, statt eine Zahl zu bilden")
     c.close()
 
 

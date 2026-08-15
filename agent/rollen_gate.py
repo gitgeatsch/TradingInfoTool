@@ -53,6 +53,24 @@ STUFEN = (
     ("auftrag", "Instrument und Strategie erlaubt"),
     ("fakten", "Faktenlage ausreichend"),
     ("lagebild", "Lagebild geliefert"),
+    # EIGENE STUFE SEIT 14.08.2026 - vorher buchte der Cooldown auf "urteil".
+    #
+    # DORT STANDEN ZWEI VOELLIG VERSCHIEDENE DINGE NEBENEINANDER:
+    #
+    #     "Cooldown bis 22:14"     wir haben NICHT GEFRAGT   - kostet nichts
+    #     <Validierungsfehler>     wir haben gefragt und die Antwort verworfen
+    #                              - kostet einen Modellaufruf
+    #
+    # In der Auswertung sahen beide gleich aus. Am ersten Betriebstag hat genau
+    # das die Diagnose um Stunden verzoegert: die Zusammenfassung zeigte
+    # "Verlust bei urteil", und ob dahinter 41 gesparte oder 41 verbrannte
+    # Aufrufe standen, war nicht zu sehen.
+    #
+    # DAS PROJEKT KENNT DIE UNTERSCHEIDUNG BEREITS - drei Arten von "nicht
+    # jetzt": Kostenfilter, Nutzerentscheidung, Qualitaetsfilter. Nur der
+    # dritte traegt Deadloop-Risiko. Sie in einer Stufe zu mischen macht genau
+    # die Messung unmoeglich, fuer die das Gate gebaut wurde.
+    ("wiederholung", "nicht kuerzlich schon gefragt"),
     ("urteil", "Urteil geliefert und vertragskonform"),
     ("aktion", "Aktion ist ein Einstieg"),
     ("geometrie", "Zonen rechenbar"),
