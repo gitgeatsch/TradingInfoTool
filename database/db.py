@@ -3876,6 +3876,79 @@ def get_latest_hebel_signal_per_symbol_and_richtung(conn: sqlite3.Connection) ->
     return {(row["symbol"], row["richtung"]): _row_to_hebel_signal(row) for row in rows}
 
 
+def get_latest_rollen_hebel_signal_per_symbol_and_richtung(
+    conn: sqlite3.Connection,
+) -> dict[tuple[str, str], HebelSignal]:
+    """Dasselbe fuer die ROLLEN-Kette, die in `signals` schreibt (O-35).
+
+    DER HEBEL-TAB WAR SEIT DEM UMSTIEG LEER. Er liest
+    `get_latest_hebel_signal_per_symbol_and_richtung()` - und die fragt
+    `hebel_signals`, die Tabelle der ALTEN Kette. Die neue schreibt nach
+    `signals` mit gesetzter `hebel`-Spalte, und dort hat nie jemand
+    nachgesehen. Der Nutzer hatte damit auf der Hebelseite kein
+    Analysewerkzeug mehr - genau der blinde Fleck, den der Nur-Long-Umbau am
+    05.08. beseitigen wollte (313 SHORT-Vorschlaege lagen unsichtbar als
+    "HALTEN" in der DB).
+
+    DERSELBE DISKRIMINATOR WIE UEBERALL: `agent.toepfe.sql_bedingung("hebel")`.
+    Eine eigene `hebel IS NOT NULL`-Kopie waere die vierte Wahrheit ueber
+    dieselbe Sache.
+
+    WAS FEHLT UND WARUM ES NICHT ERFUNDEN WIRD: von den 107 Feldern eines
+    `HebelSignal` fuellt die neue Kette 88. Die uebrigen 19 sind Groessen der
+    alten Pipeline - `trigger_score`, `eigenkapitalbedarf_eur`,
+    `liquidationspreis_geschaetzt_eur`, `kontrathese_*` -, die es dort nicht
+    gibt. Sie bleiben `None`; die Oberflaeche zeigt dann nichts statt einer
+    Zahl, die niemand gerechnet hat. Zwei Felder werden UMBENANNT, weil
+    dieselbe Sache anders heisst: `hebel` -> `hebel_final`, `modell` ->
+    `llm_model`.
+
+    NUR ZEILEN MIT RICHTUNG. Der Tab gruppiert nach (Symbol, Richtung); eine
+    Zeile ohne Richtung haette keinen Platz darin. Die Kette setzt sie fuer
+    jedes Hebel-Urteil - fehlt sie, ist das ein Fund und keine Anzeigefrage."""
+    import dataclasses
+
+    from agent.toepfe import sql_bedingung
+
+    bedingung = sql_bedingung("hebel")
+    try:
+        rows = conn.execute(
+            f"""
+            SELECT s.* FROM signals s
+            INNER JOIN (
+                SELECT symbol, richtung, MAX(created_at) AS max_created_at
+                FROM signals
+                WHERE quelle_kette = 'rollen' AND richtung IS NOT NULL
+                  AND {bedingung}
+                GROUP BY symbol, richtung
+            ) latest ON s.symbol = latest.symbol
+                AND s.richtung = latest.richtung
+                AND s.created_at = latest.max_created_at
+            WHERE s.quelle_kette = 'rollen' AND {bedingung}
+            """
+        ).fetchall()
+    except sqlite3.Error as exc:
+        logger.info("Rollen-Hebelsignale nicht lesbar: %s", exc)
+        return {}
+
+    felder = {f.name for f in dataclasses.fields(HebelSignal)}
+    aus: dict[tuple[str, str], HebelSignal] = {}
+    for row in rows:
+        roh = dict(row)
+        data = {k: v for k, v in roh.items() if k in felder}
+        data["hebel_final"] = roh.get("hebel")
+        data["llm_model"] = roh.get("modell")
+        data["gate_passed"] = bool(roh.get("gate_passed"))
+        data["risk_veto"] = bool(roh.get("risk_veto"))
+        data["kontrathese_zu_position"] = False
+        data["ist_reines_llm_halten"] = bool(
+            roh.get("ist_reines_llm_halten") or False)
+        data.setdefault("facts_json", roh.get("facts_json") or "{}")
+        data["gate_reason"] = roh.get("gate_reason")
+        aus[(roh["symbol"], roh["richtung"])] = HebelSignal(**data)
+    return aus
+
+
 def get_latest_hebel_signal_per_symbol_and_angefragte_richtung(
     conn: sqlite3.Connection,
 ) -> dict[tuple[str, str], HebelSignal]:

@@ -162,11 +162,12 @@ def btc_ema50_einordnung(abstand_prozent: float | None) -> str | None:
         if abstand_prozent < grenze:
             return name
     return "deutlich darueber"
-    for (x0, y0), (x1, y1) in zip(punkte, punkte[1:]):
-        if x0 <= score <= x1:
-            anteil = (score - x0) / (x1 - x0) if x1 > x0 else 0.0
-            return round(y0 + (y1 - y0) * anteil, 1)
-    return punkte[-1][1]
+
+# HIER STANDEN FUENF ZEILEN TOTER CODE (entfernt 15.08.2026): eine
+# Interpolation ueber `punkte` und `score`, beide in dieser Funktion nie
+# definiert, und hinter einem `return` - also nie ausgefuehrt. Ein Rest aus
+# einer anderen Funktion, der beim Kopieren stehen blieb. Gefunden mit der
+# Suche nach freien Namen; er war harmlos, aber er verdeckt die echten Funde.
 
 # RG-2 BTC-Matrix (Spezifikation Kap. 14): ordnet zusammen mit dem BTC-Trend die
 # BTC-Dominanz-Richtung ein, um Alt-Signale (nicht Core-Assets) im richtigen Kontext

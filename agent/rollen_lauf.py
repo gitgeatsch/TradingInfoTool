@@ -810,7 +810,8 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                                lagebild_id=lagebild_id, instrument=instrument,
                                strategie=strategie, conn=conn, db=db,
                                config=config, modell=modell,
-                               ergebnis=ergebnis, module=module)
+                               ergebnis=ergebnis, module=module,
+                               assetklasse=assetklasse)
             return
         durchlauf.bestanden(symbol, "aktion")
         _sende_ausstieg(
@@ -847,7 +848,7 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                            lagebild_id=lagebild_id, instrument=instrument,
                            strategie=strategie, conn=conn, db=db,
                            config=config, modell=modell, ergebnis=ergebnis,
-                           module=module)
+                           module=module, assetklasse=assetklasse)
         return
 
     # KEIN EINSTIEG, WO DER AUSSTIEG SCHON FAELLIG IST (O-37, 15.08.2026).
@@ -891,7 +892,7 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                            lagebild_id=lagebild_id, instrument=instrument,
                            strategie=strategie, conn=conn, db=db,
                            config=config, modell=modell, ergebnis=ergebnis,
-                           module=module)
+                           module=module, assetklasse=assetklasse)
         return
     durchlauf.bestanden(symbol, "aktion")
 
@@ -1269,8 +1270,28 @@ def _sende_ausstieg(*, symbol, befund, verkauf, kurs_e, instrument, strategie,
 
 def _schreibe_nein(*, symbol, befund, kurs_e, atr_e, tag, reihe, idx,
                    lagebild_id, instrument, strategie, conn, db, config,
-                   modell, ergebnis, module) -> None:
+                   modell, ergebnis, module, assetklasse="krypto") -> None:
     """Ein NICHTS_TUN als auflösbare Zeile - der Kontrollarm der Messung.
+
+    `assetklasse` IST PFLICHT UND STAND HIER NICHT (gefunden 15.08.2026, an
+    den Daten). Die Funktion rief `_kostenklasse(assetklasse)` auf - einen
+    Namen, den nur `_ein_asset` kennt. Sie ist eine eigene Funktion und sieht
+    ihn nicht.
+
+        NameError: name 'assetklasse' is not defined
+
+    DAS ZUM DRITTEN MAL DIESELBE FALLE, nach `VK` (14.08.) und `_wl`
+    (15.08.) - und dieses Mal am teuersten, weil sie nichts umbrachte,
+    sondern nur schwieg: der breite Fehlerfang unten legt sie in
+    `ergebnis["nein_fehler"]`, und das las niemand. Gemessen am Export:
+
+        809 Nein-Zeilen bis 14.08. 17:55, danach KEINE EINZIGE.
+
+    Zwei Vormittage mit 67 Nein-Urteilen haben null Zeilen erzeugt. Damit
+    fehlt genau der Arm, der die Frage des Nutzers beantworten sollte, ob das
+    NEIN des Modells besser ist als der Zufall.
+
+    DER FEHLER WIRD JETZT GELOGGT, nicht nur gesammelt - siehe unten.
 
     `ist_reines_llm_halten = 1` ist der Schluessel: `backward_tracking` sucht
     genau danach (Zeile 1192) und loest solche Zeilen ueber das
@@ -1300,6 +1321,12 @@ def _schreibe_nein(*, symbol, befund, kurs_e, atr_e, tag, reihe, idx,
             befund, fakten={"asset": symbol}, lagebild_id=lagebild_id,
             prompt_stand=getattr(RT, "PROMPT_STAND", "?"),
             eur_je_usd=RE.fx_eur_je_usd(symbol, reihe, idx, db),
+            # UND DAS INSTRUMENT (15.08.2026, zweite Haelfte desselben Fundes).
+            # Seit die Hebelspalte am INSTRUMENT haengt statt am Wert, bekam
+            # eine Nein-Zeile aus dem Hebel-Lauf keine - sie galt als Spot.
+            # Folge waere gewesen: der Hebel-Cooldown (`hebel IS NOT NULL`)
+            # findet sie nicht und fragt dasselbe Symbol alle 15 Minuten neu.
+            instrument=instrument,
             familien=kern, rechnung=rechnung, modell=modell)
         # DIE ZONEN KAMEN FRUEHER HIER NACHTRAEGLICH DAZU, weil
         # `felder_aus_entscheidung` sie aus der ANTWORT nahm und ein NICHTS_TUN
@@ -1316,6 +1343,14 @@ def _schreibe_nein(*, symbol, befund, kurs_e, atr_e, tag, reihe, idx,
         ergebnis.setdefault("nein_gemessen", []).append(
             {"symbol": symbol, "id": kennung})
     except Exception as exc:                                 # noqa: BLE001
+        # GELOGGT, NICHT NUR GESAMMELT (15.08.2026). `ergebnis["nein_fehler"]`
+        # las niemand - weder der Scheduler, der die Laufzeile schreibt, noch
+        # der Export. Zwei Vormittage lang schlug hier bei JEDEM Nein-Urteil
+        # ein NameError zu, und im Log stand kein Wort davon.
+        #
+        # "Fail-soft ist fail-silent" steht seit dem 02.08. als stehende
+        # Vorgabe im Projekt. Diese Stelle war der Beweis.
+        logger.error("Nein-Zeile fuer %s nicht geschrieben: %s", symbol, exc)
         ergebnis.setdefault("nein_fehler", []).append(f"{symbol}: {exc}")
 
 

@@ -4332,6 +4332,86 @@ def paket_15() -> None:
     # entfernt String-Literale mit den Kommentaren zusammen. Diese Falle hat
     # heute zum sechsten Mal zugeschlagen.
     _lqt = _quelltext("agent/rollen_lauf.py")
+    # T4b KEINE FUNKTION GREIFT AUF EINEN NAMEN ZU, DEN SIE NICHT KENNT.
+    #
+    # DREIMAL DIESELBE FALLE an zwei Tagen, jedes Mal eine Variable aus
+    # `fuehre_lauf` oder `_ein_asset`, benutzt in einer Funktion, die sie nicht
+    # sieht - und jedes Mal vom breiten Fehlerfang geschluckt:
+    #
+    #   14.08.  `VK`            jedes Symbol lief in den Fehlerzweig
+    #   15.08.  `_wl`           (vor dem Betrieb gefunden)
+    #   15.08.  `assetklasse`   ZWEI VORMITTAGE OHNE EINE EINZIGE NEIN-ZEILE
+    #
+    # Der dritte war der teuerste, weil er nichts umbrachte, sondern schwieg:
+    # 809 Nein-Zeilen bis 14.08. 17:55, danach keine. Damit fehlte der Arm der
+    # Messung, der sagen soll, ob das NEIN des Modells besser ist als Zufall.
+    #
+    # DIESE PRUEFUNG BRAUCHT KEIN AUSFUEHREN - sie liest den Syntaxbaum. Bei
+    # der Einfuehrung fand sie zusaetzlich zwei schlafende Fehler: `json` war
+    # in `scheduler/background.py` nirgends importiert, und `ui/app.py` rief
+    # `ist_hedge_instrument()` ohne Import.
+    import ast as _ast
+    import builtins as _bi
+    import os as _os
+
+    def _freie_namen(pfad: str) -> list[tuple[str, str]]:
+        with open(pfad, "r", encoding="utf-8") as f:
+            baum = _ast.parse(f.read(), filename=pfad)
+        modul = set(dir(_bi))
+        for k in baum.body:
+            if isinstance(k, (_ast.FunctionDef, _ast.AsyncFunctionDef,
+                              _ast.ClassDef)):
+                modul.add(k.name)
+            elif isinstance(k, (_ast.Import, _ast.ImportFrom)):
+                for a in k.names:
+                    modul.add((a.asname or a.name).split(".")[0])
+            elif isinstance(k, (_ast.Assign, _ast.AnnAssign, _ast.AugAssign,
+                                _ast.Try)):
+                for n in _ast.walk(k):
+                    if isinstance(n, _ast.Name):
+                        modul.add(n.id)
+                    elif isinstance(n, (_ast.Import, _ast.ImportFrom)):
+                        for a in n.names:
+                            modul.add((a.asname or a.name).split(".")[0])
+        offen = []
+        for k in baum.body:
+            if not isinstance(k, (_ast.FunctionDef, _ast.AsyncFunctionDef)):
+                continue
+            gebunden = set()
+            for n in _ast.walk(k):
+                if isinstance(n, _ast.Name) and isinstance(
+                        n.ctx, (_ast.Store, _ast.Del)):
+                    gebunden.add(n.id)
+                elif isinstance(n, _ast.arg):
+                    gebunden.add(n.arg)
+                elif isinstance(n, _ast.alias):
+                    gebunden.add((n.asname or n.name).split(".")[0])
+                elif isinstance(n, _ast.ExceptHandler) and n.name:
+                    gebunden.add(n.name)
+                elif isinstance(n, (_ast.FunctionDef, _ast.AsyncFunctionDef,
+                                    _ast.ClassDef)):
+                    gebunden.add(n.name)
+            benutzt = {n.id for n in _ast.walk(k)
+                       if isinstance(n, _ast.Name)
+                       and isinstance(n.ctx, _ast.Load)}
+            for name in sorted(benutzt - gebunden - modul):
+                offen.append((k.name, name))
+        return offen
+
+    _frei = []
+    for _o in ("agent", "scheduler", "database", "ui"):
+        for _w, _, _dn in _os.walk(_o):
+            for _n in sorted(_dn):
+                if _n.endswith(".py"):
+                    _p = _os.path.join(_w, _n)
+                    try:
+                        for _fn, _nm in _freie_namen(_p):
+                            _frei.append(f"{_p}::{_fn}() -> {_nm}")
+                    except SyntaxError:
+                        _frei.append(f"{_p}: nicht lesbar")
+    pruefe(P, "keine Funktion greift auf einen fremden Namen zu",
+           not _frei, str(_frei[:5]),)
+
     # T5 BETREFF, TEXT UND ZEILE SAGEN DASSELBE (O-37, 15.08.2026).
     #
     # Im Produktionslauf zweimal auseinandergelaufen:
@@ -4385,6 +4465,35 @@ def paket_15() -> None:
                "_fuehrung_zu ( ergebnis , symbol , instrument )") == 3
            and _nur_code("agent/rollen_lauf.py").count("def _fuehrung_zu") == 1,
            "drei Aufrufer, eine Definition")
+
+    # T6 DER HEBEL-TAB SIEHT BEIDE KETTEN (O-35, 15.08.2026).
+    #
+    # Er las ausschliesslich `hebel_signals` - die Tabelle der ALTEN Kette.
+    # Seit dem Vollumstieg entstanden die Hebel-Signale in `signals`, und auf
+    # der Hebelseite war die Oberflaeche LEER. Genau der blinde Fleck, den der
+    # Nur-Long-Umbau am 05.08. beseitigen wollte.
+    import database.db as _DB6
+
+    pruefe(P, "es gibt eine Abfrage fuer die Rollen-Hebelsignale",
+           hasattr(_DB6, "get_latest_rollen_hebel_signal_per_symbol_and_richtung"))
+    pruefe(P, "sie nutzt DENSELBEN Diskriminator wie die Toepfe",
+           "sql_bedingung" in _quelltext("database/db.py").split(
+               "def get_latest_rollen_hebel_signal_per_symbol_and_richtung")[1][:2000],
+           "eine eigene `hebel IS NOT NULL`-Kopie waere die vierte Wahrheit "
+           "ueber dieselbe Sache")
+    pruefe(P, "und der Tab fuehrt beide Quellen zusammen",
+           "get_latest_rollen_hebel_signal_per_symbol_and_richtung" in
+           _quelltext("ui/hebel_view.py")
+           and "created_at" in _nur_code("ui/hebel_view.py"),
+           "die juengere Zeile gewinnt je (Symbol, Richtung)")
+    # DIE ABBILDUNG ERFINDET NICHTS: was die neue Kette nicht rechnet, bleibt
+    # leer - `trigger_score`, `eigenkapitalbedarf_eur`, `liquidationspreis_*`.
+    _q6 = _quelltext("database/db.py").split(
+        "def get_latest_rollen_hebel_signal_per_symbol_and_richtung")[1][:3000]
+    pruefe(P, "sie benennt die zwei umbenannten Felder",
+           'data["hebel_final"] = roh.get("hebel")' in _q6
+           and 'data["llm_model"] = roh.get("modell")' in _q6,
+           "dieselbe Sache heisst in beiden Tabellen anders")
 
     pruefe(P, "und das Signal wird trotzdem geschrieben",
            "nicht_versendet" in _lqt and "mails_unterdrueckt" in _lqt,

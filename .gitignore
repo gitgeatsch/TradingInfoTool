@@ -84,3 +84,9 @@ umbau.json
 wirkung.json
 wirkung_vorflug.json
 kettennaht*.json
+
+# SQLite-Begleitdateien im WAL-Modus (2026-08-15). `*.db` oben trifft sie
+# NICHT - '.db-wal' endet nicht auf '.db'. Am 14.08. sind sie deshalb mit
+# einem `git add -A` ins Repo gelangt, Stunden nach dem WAL-Umbau.
+*.db-wal
+*.db-shm

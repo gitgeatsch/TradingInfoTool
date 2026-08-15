@@ -651,6 +651,13 @@ def kanarienvogel_job(mistral_client) -> None:
         return
 
     def frage(client, fakten, prompt):
+        # `json` WAR IN DIESEM MODUL NIRGENDS IMPORTIERT (gefunden 15.08.2026
+        # mit der Suche nach freien Namen). Aufgefallen ist es nie, weil der
+        # Kanarienvogel einen Mistral-Client braucht und Mistral seit dem
+        # 07.08. nicht mehr im Betrieb ist - die Zeile darueber kehrt vorher
+        # zurueck. Beim ersten echten Lauf waere es ein NameError gewesen.
+        import json
+
         roh = client.chat(
             [{"role": "system", "content": prompt},
              {"role": "user", "content": json.dumps(fakten, ensure_ascii=False)}],

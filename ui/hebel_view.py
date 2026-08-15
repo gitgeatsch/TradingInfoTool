@@ -255,6 +255,24 @@ class HebelView(ttk.Frame):
             # jeweils anderen Richtung stillschweigend aus der Liste verschwinden lassen,
             # sobald fuer dieselbe Symbol die andere Richtung neuer analysiert wurde.
             signals = db.get_latest_hebel_signal_per_symbol_and_richtung(conn)
+            # BEIDE KETTEN, NICHT NUR DIE ALTE (O-35, 15.08.2026).
+            #
+            # Diese Ansicht las ausschliesslich `hebel_signals` - die Tabelle
+            # der alten Kette. Die Rollen-Kette schreibt nach `signals` mit
+            # gesetzter `hebel`-Spalte. Seit dem Vollumstieg am 15.08. war der
+            # Tab damit auf der Hebelseite LEER, waehrend im Hintergrund
+            # weiterhin Hebel-Signale entstanden - der Nutzer hatte kein
+            # Werkzeug mehr, um sie anzusehen.
+            #
+            # DIE JUENGERE GEWINNT je (Symbol, Richtung). Solange beide Ketten
+            # Zeilen tragen, ist die neuere die gueltige Aussage; ein fester
+            # Vorrang einer Tabelle waere eine Behauptung ueber die Zeit.
+            for _schluessel, _sig in db.\
+                    get_latest_rollen_hebel_signal_per_symbol_and_richtung(
+                        conn).items():
+                _alt = signals.get(_schluessel)
+                if _alt is None or str(_sig.created_at) > str(_alt.created_at):
+                    signals[_schluessel] = _sig
             kandidaten = db.get_pending_hebel_candidates(conn)
             positions = db.get_open_hebel_positions(conn)
             # Anzeigefilter (2026-07-27) - NUR fuer die GUI-Darstellung, die

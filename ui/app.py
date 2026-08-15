@@ -1376,7 +1376,14 @@ def _validate_new_asset(
         # manuell eintraegt (hebel_faktor/referenz_index sind ohnehin
         # hartkodiert, das laesst sich nicht per UI abbilden).
         if assetklasse == "etf":
-            from agent.hedge.pipeline import SYMBOL_ZU_HEBEL_FAKTOR as _hedge_symbole
+            # `ist_hedge_instrument` MUSS HIER IMPORTIERT WERDEN (15.08.2026).
+            # Die Zeile stand nur in `_validate_asset_row()` - eine andere
+            # Funktion, die diese hier nicht sieht. Beim Anlegen eines
+            # ETF-Assets waere daraus ein NameError geworden. Gefunden mit der
+            # Suche nach freien Namen, nachdem dieselbe Falle an einem Tag
+            # dreimal zugeschlagen hatte.
+            from agent.hedge.pipeline import (
+                SYMBOL_ZU_HEBEL_FAKTOR as _hedge_symbole, ist_hedge_instrument)
             if not ist_hedge_instrument(symbol):
                 warnungen.append(
                     f"'{symbol}' wird als Themen-/Sektor-ETF behandelt (agent/themen_etf/). "

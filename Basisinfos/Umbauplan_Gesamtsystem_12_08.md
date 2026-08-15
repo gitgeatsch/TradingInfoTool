@@ -2996,3 +2996,115 @@ Die umgeschriebene Prüfung verlangte *„ein fälliger Ausstieg steht im
 BETREFF"* — auch auf einer Kaufmail. Die Sorge dahinter war richtig, die
 Umsetzung nicht. Sie prüft jetzt beides: dass der Betreff die Aktion dieser
 Mail nennt **und** dass der fällige Ausstieg vor dem Urteil im Text steht.
+
+
+---
+
+## Kapitel 28 — O-35, und ein Schweigen von zwei Vormittagen (15.08.2026)
+
+### 28.1 Der Fund, der O-35 unterbrach
+
+Beim Bauen der Hebel-Tab-Abfrage kam die Frage auf, ob Schattenzeilen aus dem
+Hebel-Lauf die Hebelspalte tragen. Die Antwort war schlimmer als erwartet:
+
+```
+Zeilen heute gesamt: 69   ·   gate_passed: alle 1
+ist_reines_llm_halten: keine einzige
+```
+
+Bei **67 Nein-Urteilen** im Gate. Und in der Historie:
+
+> **809 Nein-Zeilen bis 14.08. 17:55 — danach keine einzige.**
+
+Reproduziert:
+
+```
+SOL: name 'assetklasse' is not defined
+```
+
+`_schreibe_nein()` ist eine eigene Funktion und rief `_kostenklasse(assetklasse)`
+auf — einen Namen, den nur `_ein_asset` kennt. Der breite Fehlerfang legte das
+in `ergebnis["nein_fehler"]`, **und das liest niemand.**
+
+### 28.2 Zum dritten Mal dieselbe Falle
+
+| | Name | Wirkung |
+|---|---|---|
+| 14.08. | `VK` | jedes Symbol lief in den Fehlerzweig |
+| 15.08. | `_wl` | vor dem Betrieb gefunden |
+| 15.08. | **`assetklasse`** | **zwei Vormittage ohne eine einzige Nein-Zeile** |
+
+Der dritte war der teuerste, weil er nichts umbrachte, sondern schwieg. Damit
+fehlte genau der Arm, der die Frage des Nutzers beantworten sollte — *„sind die
+Signale Würfel mit Bonusinfo?"* — denn ob das **NEIN** des Modells besser ist
+als der Zufall, misst man nur an den Nein-Fällen.
+
+**Drei Konsequenzen:**
+
+1. `assetklasse` ist jetzt Parameter, an beiden Aufrufstellen übergeben.
+2. Der Fehler wird **geloggt**, nicht nur gesammelt. *„Fail-soft ist
+   fail-silent"* steht seit dem 02.08. als stehende Vorgabe — diese Stelle war
+   der Beweis.
+3. Und die Schattenzeile bekommt das **Instrument**: seit die Hebelspalte am
+   Instrument hängt statt am Wert, hätte eine Nein-Zeile aus dem Hebel-Lauf als
+   Spot gegolten — der Hebel-Cooldown hätte sie nie gefunden.
+
+### 28.3 Ein Werkzeug statt einer weiteren Reparatur
+
+`finde_freie_namen.py` liest den Syntaxbaum und vergleicht je Funktion die
+benutzten gegen die gebundenen Namen. Kein Ausführen, keine Abhängigkeiten
+(Methodik 2.21, als Dauerprüfung in Paket T4b).
+
+**Es fand zwei weitere schlafende Fehler:**
+
+- `json` war in `scheduler/background.py` **nirgends importiert**. Nie
+  aufgefallen, weil der Kanarienvogel einen Mistral-Client braucht und Mistral
+  seit dem 07.08. nicht mehr läuft.
+- `ui/app.py` rief `ist_hedge_instrument()` **ohne Import** — ein NameError
+  beim Anlegen eines ETF-Assets.
+
+Dazu fünf Zeilen toter Code in `regime.py`, hinter einem `return`.
+
+> Die Prüfung brauchte selbst zwei Anläufe: die erste Fassung benutzte `os`
+> ohne Import — genau der Fehler, den sie sucht.
+
+### 28.4 O-35 — der Hebel-Tab sieht beide Ketten
+
+Er las ausschließlich `hebel_signals`, die Tabelle der **alten** Kette. Die
+Rollen-Kette schreibt nach `signals` mit gesetzter `hebel`-Spalte. Seit dem
+Vollumstieg war der Tab auf der Hebelseite **leer**, während im Hintergrund
+weiter Hebel-Signale entstanden.
+
+`get_latest_rollen_hebel_signal_per_symbol_and_richtung()` liest sie, mit
+**demselben Diskriminator** wie die Töpfe (`toepfe.sql_bedingung("hebel")`) —
+eine eigene `hebel IS NOT NULL`-Kopie wäre die vierte Wahrheit über dieselbe
+Sache gewesen.
+
+**Was fehlt, wird nicht erfunden.** Von den 107 Feldern eines `HebelSignal`
+füllt die neue Kette 88; die übrigen 19 sind Größen der alten Pipeline
+(`trigger_score`, `eigenkapitalbedarf_eur`, `liquidationspreis_*`,
+`kontrathese_*`). Sie bleiben leer statt eine Zahl zu zeigen, die niemand
+gerechnet hat. Zwei werden umbenannt, weil dieselbe Sache anders heißt:
+`hebel` → `hebel_final`, `modell` → `llm_model`.
+
+**Die jüngere Zeile gewinnt** je (Symbol, Richtung) — ein fester Vorrang einer
+Tabelle wäre eine Behauptung über die Zeit.
+
+### 28.5 Und die WAL-Dateien, nochmal
+
+`*.db` in der `.gitignore` trifft `*.db-wal` **nicht** — „.db-wal" endet nicht
+auf „.db". Am 14.08. sind die Dateien deshalb mit einem `git add -A` ins Repo
+gelangt; ich hatte damals notiert, sie seien in die `.gitignore` aufgenommen.
+**Das stimmte nicht.** Jetzt stehen sie darin, mit Begründung.
+
+### 28.6 Gegenprüfung
+
+| | |
+|---|---|
+| Suche nach freien Namen | **0 Kandidaten** (vorher 7) |
+| Nein-Zeile Spot / Hebel | geschrieben, `hebel=None` / `hebel=2,1` |
+| Hebel-Tab, beide Quellen | zusammengeführt, jüngere gewinnt |
+| Paketprüfungen | **818, alle bestanden** |
+
+Die Nein-Zeile ist an beiden Instrumenten belegt: `ist_reines_llm_halten=1`,
+`gate_passed=0`, und im Hebel-Lauf mit gesetzter Hebelspalte.

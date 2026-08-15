@@ -2125,3 +2125,51 @@ Längenprüfung davor.
 mit roter Prüfung gepusht, einmal mit einer Prüfdatei, die nicht mehr parste.
 **Der Exitcode gehört in eine eigene Variable, bevor irgendetwas committet
 wird.**
+
+
+# 2.21 Werkzeugkasten-Nachtrag (2026-08-15): die Suche nach freien Namen
+
+Ergänzt 2.13 um ein Werkzeug, das aus einem Schaden entstanden ist.
+
+| Skript | Frage | Auslöser |
+|---|---|---|
+| `finde_freie_namen.py` | **Greift eine Funktion auf einen Namen zu, den sie nicht kennt?** Liest den Syntaxbaum von `agent/`, `scheduler/`, `database/` und `ui/` und vergleicht je Funktion die benutzten gegen die gebundenen Namen. Kein Ausführen, keine Abhängigkeiten. | nach jedem Umbau, der eine Funktion aufteilt oder eine Variable verschiebt — und vor jedem Produktivgang |
+
+**Warum es das gibt.** Dieselbe Falle schlug an zwei Tagen dreimal zu: jedes
+Mal eine Variable aus `fuehre_lauf` oder `_ein_asset`, benutzt in einer
+Funktion, die sie nicht sieht — und jedes Mal vom breiten Fehlerfang
+geschluckt.
+
+| | Name | Wirkung |
+|---|---|---|
+| 14.08. | `VK` | jedes Symbol lief in den Fehlerzweig |
+| 15.08. | `_wl` | vor dem Betrieb gefunden |
+| 15.08. | **`assetklasse`** | **zwei Vormittage ohne eine einzige Nein-Zeile** |
+
+Der dritte war der teuerste, weil er nichts umbrachte, sondern schwieg. Der
+Beweis steht in den Daten: **809 Nein-Zeilen bis 14.08. 17:55, danach keine.**
+Damit fehlte genau der Arm der Messung, der sagen soll, ob das NEIN des
+Modells besser ist als der Zufall — und im Log stand kein Wort davon, weil der
+Fehler nur in `ergebnis["nein_fehler"]` landete und das niemand las.
+
+**Bei der Einführung fand das Werkzeug zwei weitere schlafende Fehler:**
+
+- `json` war in `scheduler/background.py` nirgends importiert. Nie aufgefallen,
+  weil der Kanarienvogel einen Mistral-Client braucht und Mistral seit dem
+  07.08. nicht mehr läuft — die Zeile davor kehrt vorher zurück.
+- `ui/app.py` rief `ist_hedge_instrument()` ohne Import. Ein NameError beim
+  Anlegen eines ETF-Assets.
+
+Dazu fünf Zeilen toter Code in `agent/krypto/regime.py`, hinter einem `return`
+und auf zwei nie definierte Namen gestützt — harmlos, aber er verdeckt die
+echten Funde.
+
+**Als Dauerprüfung** liegt dieselbe Logik in `pruefe_pakete.py` (Paket T4b) und
+verlangt null Kandidaten. Sie brauchte selbst zwei Anläufe: die erste Fassung
+benutzte `os` ohne Import — derselbe Fehler, den sie sucht.
+
+> **Diese Klasse Fehler gehört nicht in einen Testlauf, sondern in eine
+> statische Prüfung.** Ein Trockenlauf findet sie nur, wenn er genau den Zweig
+> trifft, und der breite Fehlerfang macht sie dort unsichtbar. Das ist
+> „Fail-soft ist fail-silent" in seiner teuersten Form: nicht ein Ausfall, den
+> man sieht, sondern eine Messung, die stillschweigend nicht stattfindet.
