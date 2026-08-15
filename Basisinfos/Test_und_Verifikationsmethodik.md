@@ -2191,3 +2191,38 @@ und zwar mit bekannter Wirkung statt geschätzter.
 > sie in die Datenbank schreibt. Der Vergleich zeigte, dass die
 > *abgeschaltete* Stufe nichts tut. Belastbar ist nur: der Befund steht in
 > `rollen_lauf.py` in keiner einzigen Bedingung (Paket T4c).
+
+# 2.23 Werkzeugkasten-Nachtrag (2026-08-16): Phase I an ECHTEN Reihen prüfen
+
+| Skript | Frage | Auslöser |
+|---|---|---|
+| `pruefe_phase1.py` | **Greifen die vier Ergänzungen bei UNSEREN Assets?** Rendert den Faktensatz für jedes Symbol der Watchlist und prüft vier Abgrenzungen: Liquidationsabstand nur bei Hebel · Finanzierung in keinem Spot-Satz · Lücken-Satz genau dort, wo die Reihe ihn hergibt · Sektorbezug nur bei Themen-ETF, nicht bei den Absicherungen. Ohne Netz, nur lesend. | nach jeder Änderung an `lagebeschreibung.py` oder an der Verdrahtung in `rollen_eingabe.py` |
+
+**Warum es dieses Skript zusätzlich zu `pruefe_pakete.py` gibt.** Die
+Paketprüfungen laufen auf konstruierten Kerzen — sie sagen, ob die Logik
+stimmt, nicht ob sie greift. Genau dieser Unterschied hat am 16.08.
+zugeschlagen: die Abgrenzung des Sektorbezugs stand auf `assetklasse == "etf"`,
+der Aufrufer übergibt aber die **Gruppe** (`themen_etf`). Alle Unit-Prüfungen
+grün, im Betrieb hätte sie nie gegriffen. **Im gerenderten Faktensatz fehlte
+der Satz sofort sichtbar.**
+
+> ⚠️ **Zwei Lehren über das Aufsetzen dieser Prüfung selbst — beide meine
+> eigenen Fehler, beide an den Testdaten und nicht am Code:**
+>
+> **Ein Sollwert aus fremder Datenlage ist kein Sollwert.** Die erste Fassung
+> prüfte gegen die feste Liste unvollständiger Assets aus der Bestandserhebung.
+> Die ist an der Notebook-Datenbank erhoben; auf dem Entwicklungsrechner fehlen
+> sechs dieser Reihen ganz. Die Prüfung meldete einen Fehler, den es nicht gab
+> — und hätte drei echte Funde als „zuviel" verworfen. Geprüft wird jetzt gegen
+> die **Reihe selbst**, unabhängig nachgerechnet.
+>
+> **Degenerierte Testdaten erzeugen echte Fehlalarme.** Der Gegenfall („ein
+> vollständiges Asset bekommt keinen Lücken-Satz") lief auf einer streng
+> steigenden Reihe. Die hat keine Wendepunkte, also findet `_niveaus()` keine
+> Marke — und der Lücken-Block meldete das völlig zu Recht. Der Test brauchte
+> eine schwingende Reihe.
+
+**Neu gefunden, weil das Skript an echten Reihen läuft:** CAT (weniger als zwei
+Marken — dieselbe kaputte Kursreihe wie am 06.08.), HYPE (167 Handelstage), MON
+(232). Keines davon stand in der Bestandserhebung; alle drei sagen es jetzt
+selbst im Faktensatz.

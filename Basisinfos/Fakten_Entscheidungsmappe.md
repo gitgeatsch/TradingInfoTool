@@ -2268,3 +2268,57 @@ Einwand — mit den Zahlen, auf die sie sich stützt. Nutzervorgabe vom 16.08.
 
 **Ungemessen wie alles andere:** eigene Spalte, gegen die Basisrate. Sagt sie in
 95 % der Fälle „kein Einwand", ist sie dieselbe Konstante wie ihr Vorgänger.
+
+---
+
+## Nachtrag 16.08.2026 (abends) — Phase I: was der Trader jetzt zusätzlich sieht
+
+`PROMPT_STAND` **2026-08-12 → 2026-08-16**. Jeder Messbefund gehört zu einem
+Stand; die davor sind mit den neuen nicht vergleichbar.
+
+| # | Fakt | wer bekommt ihn | Art |
+|---|---|---|---|
+| **F-160** | Abstand zur Zwangsauflösung bei 3-, 6- und 10-fachem Hebel — in Prozent **und** in Schwankungsbreiten | Rolle BC, **nur Hebel** | gerechnet, `1/Hebel` |
+| **F-161** | Relative Stärke zum breiten Markt über 30 und 90 Handelstage | Rolle BC, **nur Themen-ETF** | gerechnet gegen SPY |
+| **F-162** | Benennung fehlender Angaben: kein Umsatz · unter zwei Marken · Historie unter 250 Tagen | Rolle BC, alle | abgeleitet aus den Blöcken |
+| **F-045** | Finanzierungsrate als Perzentil | Rolle BC **nur noch bei Hebel** — bei Spot jetzt allein Rolle C | unverändert |
+
+### Die vier Fragen zu F-160
+
+| | |
+|---|---|
+| **Ist er belegt?** | Ja — dieselbe Formel, mit der `entscheidungsrechnung` `liquidation_etwa_eur` rechnet. Keine zweite Definition |
+| **Trägt er?** | Ungemessen. Die Praxisliteratur nennt ihn die zentrale Zahl einer gehebelten Entscheidung; unsere eigene Messung steht aus |
+| **Ist er LLM-tauglich?** | Ja — Zahl mit Bezug. 33/17/10 % allein wären ein stehendes Feld (R-T6), erst die Schwankungsbreiten machen sie zu einer Aussage über *dieses* Asset |
+| **Was kostet er?** | Nichts. Er wird ohnehin gerechnet, nur bisher **nach** dem Urteil |
+
+### Der Wegfall bei Spot ist der ehrlichere Teil
+
+Die Finanzierung wurde in **63 %** der Spot-Urteile als Beleg zitiert (O-34) —
+für eine Zahlung, die ein Spot-Käufer weder leistet noch erhält. Sie war dort
+zugleich der **dritte unabhängige Faktor**; ihr Wegfall kann `unabhaengige_faktoren`
+von 3 auf 2 drücken und über `tranche_aus_faktoren()` den Betrag senken.
+
+**Es kann also weniger und kleinere Spot-Signale geben.** Das ist kein
+Einschränken: ein Faktor, der zur Sache nichts sagt, hat nie getragen. Und die
+Information ist nicht weg — Rolle C liest dieselbe Rate, für Spot wie für Hebel.
+
+### Zwei Altlasten, die dabei aufgefallen sind
+
+**Die Klassen-Einstufung erreichte zwei von fünf Gruppen nicht.** `{"etf":
+"aktien"}` war gegen die *Assetklasse* geschrieben, der Aufrufer übergibt die
+*Gruppe* — bei `themen_etf` und `hedge` fand die Zuordnung seit dem 12.08. nie
+einen Eintrag. Lautlos, weil ein fehlender Schlüssel kein Fehler ist.
+
+**Die Mail zeigte andere Schwankungsbreiten als der Prompt.** Der Mail-Weg
+rechnete die Blöcke ein zweites Mal und übergab den ATR in EUR, während der
+Prompt-Weg die Quellwährung übergibt — bei USD-Assets um den Wechselkurs
+daneben. Der zweite Aufruf ist gestrichen; Mail und Prompt benutzen jetzt
+dasselbe Objekt.
+
+### Was NICHT gebaut wurde
+
+**Regime und Persistenz für Rolle A** — der fünfte grüne Schritt des Plans. Er
+verletzt die Konstruktionsbedingung der zweiten Stufe: Rolle C hat beides seit
+dem Morgen des 16.08., und ein Parameter gehört zu genau einem Modell.
+Begründung und die offene Entscheidung stehen im Umbauplan, Kapitel 38.1.

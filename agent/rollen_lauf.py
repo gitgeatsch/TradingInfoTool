@@ -1055,26 +1055,30 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # Widerstand liegt ... bei 0,0111 EUR". Sie wurden nur nie in die Mail
     # gereicht. `lagebeschreibung.geteilt()` gibt jetzt dieselben Saetze nach
     # Bloecken - dieselbe Quelle, kein zweiter Textweg.
-    _bloecke = {}
-    try:
-        from agent import lagebeschreibung as LB
-
-        # DIESELBE BESTANDSQUELLE WIE `baue_fall` (`rollen_eingabe.bestand()`),
-        # nicht eine zweite. Eine eigene Abfrage hier waere die Kopierfalle,
-        # die dieses Projekt schon mehrfach erwischt hat - und sie koennte dem
-        # Leser eine andere Menge zeigen als dem Modell.
-        # UND MIT DEMSELBEN INSTRUMENT (15.08.2026). Sonst zeigte die Mail
-        # eines Hebel-Signals den Spot-Bestand - dieselbe Verwechslung wie im
-        # Prompt, nur an der Stelle, die der Nutzer liest.
-        _menge, _einstand = RE.bestand(symbol, db, instrument)
-        _bloecke = LB.geteilt(
-            symbol=symbol, reihe=reihe, index=idx, kurs_eur=kurs_e,
-            atr=atr_e, menge=_menge, einstand_eur=_einstand,
-            instrument=instrument,
-            gegenseite=RE.gegenbestand_satz(symbol, db, instrument))
-    except Exception as exc:                                 # noqa: BLE001
-        ergebnis.setdefault("fehler", []).append(
-            f"{symbol}: Lagebloecke nicht lesbar: {exc}")
+    # DIE BLOECKE, DIE DAS MODELL GELESEN HAT - nicht neu gerechnete.
+    #
+    # Bis heute stand hier ein ZWEITER `LB.geteilt()`-Aufruf. Er war am 14.08.
+    # richtig gebaut; seit dem 15.08. legt `baue_fall(bloecke_ziel=...)`
+    # dieselben Bloecke fuer den Anlassfilter ohnehin daneben, und damit war
+    # der zweite Aufruf eine Kopie - genau die Kopierfalle, gegen die sein
+    # eigener Kommentar argumentierte.
+    #
+    # ER LIEF AUSSERDEM AUSEINANDER, und zwar an zwei Stellen:
+    #
+    #   ATR IN DER FALSCHEN WAEHRUNG. Er bekam `atr_e` (EUR), waehrend
+    #   `baue_fall` `atr_bis()` (Quellwaehrung) uebergibt. `_niveaus()` rechnet
+    #   die Abstaende gegen die QUELLreihe - die Mail zeigte dem Leser also
+    #   andere Schwankungsbreiten als dem Modell, bei USD-Assets um den
+    #   Wechselkurs daneben. Derselbe Fehler wie am 12.08. in
+    #   `leite_zonen_ab()`, nur auf der Anzeigeseite.
+    #
+    #   NEUE BLOECKE FEHLTEN. Seit Phase I gibt es `hebelgeometrie`,
+    #   `referenz` und `luecken`. Der zweite Aufruf kannte weder den
+    #   Sektorbezug noch die Finanzierung - er haette sie stillschweigend
+    #   weggelassen, und die Mail waere aermer gewesen als der Prompt.
+    #
+    # EINE QUELLE, EINE RECHNUNG. Was das Modell liest, liest der Nutzer.
+    _bloecke = _bloecke_anlass or {}
 
     # DAS UMFELD - das Lagebild, das Rolle A einmal je Lauf rechnet. Es ging
     # bisher NUR ins Modell; der Leser sah das Urteil, nicht die Lage.
@@ -1093,10 +1097,17 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             # wichtige zuerst." Habe ich das ueberhaupt, ist die erste Frage.
             bestand=(_bloecke.get("bestand") or [None])[0],
             marken=_bloecke.get("marken") or None,
+            # DIE DREI NEUEN BLOECKE STEHEN HIER MIT DRIN (Phase I). Der
+            # Leser soll denselben Faktensatz sehen wie das Modell - und
+            # gerade der Luecken-Block gehoert ihm: er sagt, worueber diese
+            # Empfehlung NICHTS weiss.
             coin_fakten=((_bloecke.get("struktur") or [])
                          + (_bloecke.get("bewegung") or [])
+                         + (_bloecke.get("hebelgeometrie") or [])
+                         + (_bloecke.get("referenz") or [])
                          + (_bloecke.get("volumen") or [])
-                         + (_bloecke.get("finanzierung") or [])) or None,
+                         + (_bloecke.get("finanzierung") or [])
+                         + (_bloecke.get("luecken") or [])) or None,
             # DIESELBEN SAETZE AN MODELL UND NUTZER. Bei der Absicherung
             # steht die Portfoliolage VOR dem Marktumfeld: sie ist der Grund
             # der Entscheidung, das Umfeld nur ihr Hintergrund.

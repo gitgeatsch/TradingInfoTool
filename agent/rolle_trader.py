@@ -251,7 +251,38 @@ SYSTEM_PROMPT_TRADER_OHNE_PERSONA = _baue_prompt(mit_betragsfrage=False,
 #                und die Spannen um Einstieg/Stop werden ABGELEITET, nicht
 #                erfragt - siehe `leite_zonen_ab()`. Die Frage an das Modell
 #                ist damit unveraendert bis auf Punkt 6.
-PROMPT_STAND = "2026-08-12"
+#   2026-08-16   PHASE I. DIE FRAGE IST UNVERAENDERT - die FAKTEN sind es
+#                nicht. Wer hier nach einer Textaenderung sucht, findet keine;
+#                sie steht in `agent/lagebeschreibung.py`. Der Stand wird
+#                trotzdem HIER gefuehrt, weil jede Messung ihn von hier liest
+#                und ein zweiter Stand daneben die Zuordnung nur verdoppeln
+#                wuerde.
+#
+#                Vier Ergaenzungen, alle GRUEN (beschreibend, ohne Bewertung -
+#                die Klassifizierung steht in Umbauplan 36.1):
+#
+#                  1  Liquidationsabstand je Grenzhebel, in Prozent UND in
+#                     Schwankungsbreiten. Nur bei `instrument='hebel'`
+#                  2  Finanzierung NUR noch beim Hebel. Bei Spot faellt der
+#                     Block weg - er beschreibt eine Zahlung, die ein
+#                     Spot-Kaeufer weder leistet noch erhaelt, und wurde
+#                     trotzdem in 63 % der Spot-Urteile zitiert (O-34)
+#                  3  Fehlende Angaben werden BENANNT: kein Umsatz, weniger
+#                     als zwei Marken, Historie unter 250 Handelstagen.
+#                     Betrifft 8 von 56 Assets (Umbauplan 34.6)
+#                  4  Sektorbezug fuer Themen-ETF - relative Staerke zum
+#                     breiten Markt ueber 30 und 90 Handelstage
+#
+#                DER FUENFTE SCHRITT DES PLANS IST NICHT GEBAUT: Regime und
+#                Persistenz fuer Rolle A. Er verletzt die
+#                Konstruktionsbedingung der zweiten Stufe - Rolle C hat beides
+#                seit dem 16.08. frueh, und ein Parameter gehoert zu GENAU
+#                EINEM Modell. Begruendung im Umbauplan, Kapitel 38.
+#
+#                ALLE VIER IN EINEM STAND, nicht in vieren: fuenf Aenderungen
+#                an fuenf Tagen erzeugen fuenf Staende, zwischen denen niemand
+#                mehr vergleichen kann (Umbauplan 36.4).
+PROMPT_STAND = "2026-08-16"
 
 
 # --- Die abgeleiteten Zonen (Paket 1, 12.08.2026) -------------------------

@@ -25,7 +25,11 @@ entscheidet, was bei einem Ausfall geschieht.
 """
 from __future__ import annotations
 
+import logging
+
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 def baue_lagebild_eingabe(reihen: dict, datum: str) -> dict:
@@ -142,6 +146,7 @@ def baue_befund_eingabe(*, symbol: str, reihe: list, index: int,
                         strategie: str = "einstieg",
                         assetklasse: str | None = None,
                         gegenseite: str | None = None,
+                        referenz: dict | None = None,
                         bloecke_ziel: dict | None = None) -> dict:
     """Eingabe fuer Befund und Entscheidung - alle Bloecke an einer Stelle.
 
@@ -175,6 +180,7 @@ def baue_befund_eingabe(*, symbol: str, reihe: list, index: int,
                                     finanzierung=finanzierung,
                                     instrument=instrument,
                                     gegenseite=gegenseite,
+                                    referenz=referenz,
                                     bloecke_ziel=bloecke_ziel)}
     if lagebild:
         beurteilung = {"lage": lagebild.get("lage")}
@@ -184,7 +190,24 @@ def baue_befund_eingabe(*, symbol: str, reihe: list, index: int,
         # hiesse, dem Trader zwei Maerkte vorzulegen, ueber die er nicht
         # entscheidet - und was dasteht, wiegt (R-T9). `etf` folgt `aktien`,
         # weil beide denselben Leitmarkt haben.
-        klasse = {"etf": "aktien"}.get(assetklasse, assetklasse)
+        #
+        # ⚠️ DIESE ZUORDNUNG GRIFF FUER ZWEI GRUPPEN NIE (gefunden 16.08.2026
+        # beim Rendern, nicht beim Lesen). Sie war gegen die ASSETKLASSE der
+        # Watchlist geschrieben - `krypto | aktien | rohstoffe | etf` -, der
+        # Aufrufer `rollen_lauf` uebergibt aber die GRUPPE: `krypto | aktien |
+        # rohstoffe | themen_etf | hedge`. Genau die drei Begriffe, die
+        # `agent/assetklassen.py` in seinem Kopf auseinanderhaelt, weil sie
+        # sich aehnlich sehen und es nicht sind.
+        #
+        # FOLGE: bei `themen_etf` und `hedge` fand die Schleife keinen
+        # Eintrag, und die Einstufung des Leitmarkts fehlte im Prompt -
+        # lautlos, weil ein fehlender Schluessel kein Fehler ist. Drei von
+        # fuenf Gruppen bekamen sie, zwei nicht.
+        #
+        # BEIDE VOKABULARE STEHEN JETZT DRIN. `etf` bleibt fuer Aufrufer, die
+        # die Assetklasse uebergeben (die Messskripte tun das).
+        klasse = {"etf": "aktien", "themen_etf": "aktien",
+                  "hedge": "aktien"}.get(assetklasse, assetklasse)
         for eintrag in (lagebild.get("klassen") or []):
             if eintrag.get("klasse") == klasse:
                 beurteilung["klasse"] = eintrag
@@ -222,6 +245,103 @@ def hole_finanzierung(symbol: str, datum: str, session=None,
     if zwischenspeicher is not None:
         zwischenspeicher[schluessel] = ergebnis
     return ergebnis
+
+
+# --- Der Sektorbezug fuer Themen-ETF (Phase I, Schritt 4, 16.08.2026) -------
+#
+# NICHTS DAVON IST NEU. `agent/themen_etf/pipeline._compute_sektor_rotation()`
+# rechnet dieselbe Groesse gegen dieselbe Reihe, seit es Themen-ETF gibt. Sie
+# hing an der ALTEN Pipeline und hat die Rollen-Kette nie erreicht - der
+# haeufigste Befund dieses Projekts, und hier noch einmal.
+#
+# WARUM DIE RECHNUNG TROTZDEM HIER STEHT und nicht importiert wird: die dortige
+# Fassung liest die VOLLE Reihe aus der Datenbank und nimmt `[-1]`. In der
+# Rollen-Kette gibt es einen Ankertag, und ein Backtest, der die letzte Kerze
+# der Datenbank benutzt, liest die Zukunft. Die Formel ist dieselbe
+# (`etf_perf - benchmark_perf`), die Kausalitaet ist es nicht.
+BENCHMARK_SYMBOL = "_THEMEN_ETF_BENCHMARK_SPY"
+BENCHMARK_NAME = "der breite Markt (S&P-500-ETF)"
+
+# Wieviel Rueckstand die Benchmark-Reihe haben darf. Sie ist eine
+# BOERSENreihe: ueber ein langes Wochenende sind drei Tage normal, mehr als
+# eine Woche heisst, dass sie nicht mehr nachgefuehrt wird - und dann waere der
+# Vergleich eine Aussage ueber verschiedene Zeitpunkte.
+BENCHMARK_MAX_RUECKSTAND_TAGE = 7
+
+_benchmark_speicher: dict = {}
+
+
+def _benchmark_reihe(db: str | None = None) -> list:
+    """(Datum, Schluss) der Vergleichsreihe, aufsteigend. Einmal je Datei."""
+    import sqlite3
+    pfad = db or DB
+    if pfad in _benchmark_speicher:
+        return _benchmark_speicher[pfad]
+    reihe = []
+    try:
+        c = sqlite3.connect(f"file:{pfad}?mode=ro", uri=True)
+        try:
+            reihe = [(str(d), float(s)) for d, s in c.execute(
+                "SELECT date, close FROM price_history_ohlc WHERE symbol = ? "
+                "AND close IS NOT NULL ORDER BY date ASC", (BENCHMARK_SYMBOL,))]
+        finally:
+            c.close()
+    except Exception:                                        # noqa: BLE001
+        reihe = []
+    _benchmark_speicher[pfad] = reihe
+    return reihe
+
+
+def _stand_am(reihe: list, datum: str) -> tuple[str, float] | None:
+    """Der juengste Schlusskurs mit Datum <= `datum` - streng kausal.
+
+    NICHT der naechstgelegene. Ein Feiertag darf den Vergleich nach hinten
+    verschieben, niemals nach vorn: der naechstgelegene Wert waere an einem
+    Brueckentag der von MORGEN."""
+    import bisect
+    i = bisect.bisect_right([d for d, _ in reihe], str(datum)[:10]) - 1
+    return reihe[i] if i >= 0 else None
+
+
+def relative_staerke(reihe: list, index: int, db: str | None = None,
+                     fenster: tuple = (30, 90)) -> dict | None:
+    """Um wieviele Prozentpunkte lief dieser Wert besser als der breite Markt?
+
+    Gibt None, wenn die Vergleichsreihe fehlt, zu alt ist oder das Fenster
+    nicht in die eigene Historie passt. Dann entfaellt der Block - ein Satz
+    "kein Vergleich moeglich" waere fuer alle betroffenen ETF identisch, und
+    die fehlende Historie steht ohnehin schon im Luecken-Block."""
+    b = _benchmark_reihe(db)
+    if not b or index < 0 or index >= len(reihe):
+        return None
+    heute = str(reihe[index].date)[:10]
+    jetzt = _stand_am(b, heute)
+    if not jetzt:
+        return None
+    from datetime import date
+    try:
+        rueckstand = (date.fromisoformat(heute)
+                      - date.fromisoformat(jetzt[0])).days
+    except ValueError:
+        return None
+    if rueckstand > BENCHMARK_MAX_RUECKSTAND_TAGE:
+        logger.info("Vergleichsreihe %s haengt %d Tage zurueck - kein "
+                    "Sektorbezug", BENCHMARK_SYMBOL, rueckstand)
+        return None
+
+    aus: dict = {"name": BENCHMARK_NAME}
+    e1 = float(reihe[index].close)
+    for tage in fenster:
+        j = index - int(tage)
+        if j < 0:
+            continue
+        e0 = float(reihe[j].close)
+        frueher = _stand_am(b, str(reihe[j].date)[:10])
+        if e0 <= 0 or not frueher or frueher[1] <= 0:
+            continue
+        aus[f"rel_{tage}"] = round(100.0 * (e1 / e0 - 1.0)
+                                   - 100.0 * (jetzt[1] / frueher[1] - 1.0), 2)
+    return aus if len(aus) > 1 else None
 
 
 def pruefe_lagebild(ausgabe: dict, eingabe: dict) -> dict:
@@ -453,8 +573,44 @@ def baue_fall(*, symbol: str, reihe: list, index: int, reihen: dict,
     laufenden Kosten."""
     datum = reihe[index].date
     menge, einstand = bestand(symbol, db, instrument)
+    # DIE FINANZIERUNG WIRD NUR NOCH BEIM HEBEL GEHOLT (Phase I, Schritt 2).
+    #
+    # Der Satz entfaellt bei Spot ohnehin (`lagebeschreibung._finanzierung`),
+    # aber der AUFRUF stand weiter drin: bei jedem Spot-Lauf 43 Anfragen an
+    # Binance, bei Aktien, Rohstoffen und ETF elf weitere, die dort gar kein
+    # Symbol haben und ins Leere liefen. Jeder dieser Aufrufe bucht seinen
+    # Gesundheitsstand in `api_health_status`.
+    #
+    # FOLGE FUER GEPAARTE MESSUNGEN, ausdruecklich: `mit_finanzierung=False`
+    # ist ab jetzt NUR bei `instrument='hebel'` ein echter Vergleichsarm. Auf
+    # Spot erzeugen beide Arme denselben Prompt - eine Messung, die nichts
+    # misst. Pruefung P-I-2 haelt das fest, damit es nicht still passiert.
     fin = (hole_finanzierung(symbol, datum, session, finanz_zwischenspeicher)
-           if mit_finanzierung else None)
+           if (mit_finanzierung and str(instrument) == "hebel") else None)
+    # DER SEKTORBEZUG NUR FUER THEMEN-ETF.
+    #
+    # ⚠️ ERSTE FASSUNG PRUEFTE `== "etf"` UND HAETTE NIE GEGRIFFEN. Der
+    # Aufrufer uebergibt die GRUPPE (`themen_etf`/`hedge`), nicht die
+    # Assetklasse - siehe die ausfuehrliche Notiz in `baue_befund_eingabe()`.
+    # Gefunden hat es `erhebe_prompts.py`: im gerenderten Faktensatz stand
+    # kein Referenzsatz. Ein Code-Studium haette es nicht gezeigt, der
+    # gerenderte Satz zeigt es sofort.
+    #
+    # BEIDE VOKABULARE, und `ist_hedge_instrument()` bleibt als zweite
+    # Schranke stehen: kommt jemals wieder "etf" herein, muessen DBPK und 3QSS
+    # trotzdem draussen bleiben. Sie nennen ihren Referenzindex in ihrem
+    # eigenen Block (`absicherung_fakten.saetze()`); ein zweiter Bezug daneben
+    # waere derselbe Fakt in zwei Formulierungen.
+    ref = None
+    if str(assetklasse or "").lower() in ("etf", "themen_etf"):
+        try:
+            from agent.hedge.pipeline import ist_hedge_instrument
+
+            if not ist_hedge_instrument(symbol):
+                ref = relative_staerke(reihe, index, db)
+        except Exception:                                    # noqa: BLE001
+            logger.info("Sektorbezug fuer %s nicht ermittelbar", symbol,
+                        exc_info=True)
     return (
         baue_lagebild_eingabe(reihen, datum),
         baue_befund_eingabe(symbol=symbol, reihe=reihe, index=index,
@@ -465,5 +621,6 @@ def baue_fall(*, symbol: str, reihe: list, index: int, reihen: dict,
                             strategie=strategie, assetklasse=assetklasse,
                             gegenseite=gegenbestand_satz(symbol, db,
                                                          instrument),
+                            referenz=ref,
                             bloecke_ziel=bloecke_ziel),
     )

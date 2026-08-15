@@ -316,8 +316,30 @@ def _volumen(c: np.ndarray, v: np.ndarray, i: int,
     return aus
 
 
-def _finanzierung(zusammenfassung: dict | None) -> list[str]:
+def _finanzierung(zusammenfassung: dict | None,
+                  instrument: str = "spot") -> list[str]:
     """Block 6 - die Positionierung am Terminmarkt (11.08.2026).
+
+    NUR NOCH BEIM HEBEL (Phase I, Schritt 2, 16.08.2026). Bis heute stand
+    dieser Block in JEDEM Krypto-Prompt, auch im Spot-Lauf - und er beschreibt
+    eine Zahlung zwischen Long- und Short-Positionen am Terminmarkt, die ein
+    Spot-Kaeufer weder leistet noch erhaelt. Gemessen (O-34) wurde er trotzdem
+    in 63 % der Spot-Urteile als Beleg zitiert: ein Fakt, der zur Sache nichts
+    beitraegt, hat dort ein Sechstel der Begruendungen getragen.
+
+    DIE INFORMATION GEHT NICHT VERLOREN, sie wechselt die Stufe. Rolle C
+    (`agent/positionierung.py`) liest dieselbe Finanzierungsrate als
+    Perzentil - und zwar fuer Spot GENAUSO wie fuer Hebel. Damit ist die
+    Konstruktionsbedingung der zweiten Stufe erfuellt: bei Spot gehoert das
+    Funding jetzt zu GENAU EINEM Modell.
+
+    WAS DAS KOSTET, offen gesagt: Funding war bei Spot der einzige Fakt, der
+    nicht aus der eigenen Kursreihe stammte - also der dritte unabhaengige
+    Faktor, um den es am 11.08. ueberhaupt ging. Faellt er weg, faellt bei
+    manchem Spot-Urteil `unabhaengige_faktoren` von 3 auf 2, und daran haengt
+    ueber `tranche_aus_faktoren()` der Betrag. Das ist die richtige Folge und
+    keine unerwuenschte: ein Faktor, der zur Sache nichts sagt, hat nie
+    getragen - er wurde nur mitgezaehlt.
 
     DER ERSTE FAKT IN DIESER BESCHREIBUNG, DER NICHT AUS UNSERER KURSREIHE
     STAMMT. Struktur, Bewegung und Niveaus sind derselbe Fakt in drei
@@ -337,6 +359,8 @@ def _finanzierung(zusammenfassung: dict | None) -> list[str]:
     KEINE ZEILE, WENN KEINE DATEN. Ein Satz "keine Finanzierungsdaten" waere
     fuer alle Aktien, ETF und Rohstoffe identisch - ein konstantes Feld im Sinne
     von B10, das Platz kostet und nichts unterscheidet."""
+    if str(instrument) != "hebel":
+        return []
     if not zusammenfassung:
         return []
     n = zusammenfassung.get("beobachtungen") or 0
@@ -350,6 +374,150 @@ def _finanzierung(zusammenfassung: dict | None) -> list[str]:
             f"dieser {n} Perioden."]
 
 
+# Die drei Faktoren, an denen der Abstand zur Zwangsaufloesung abgelesen wird.
+# NICHT frei gewaehlt: 10 ist `entscheidungsrechnung.GRENZEN["hebel_max"]` und
+# zugleich die Obergrenze von Bitpanda Margin, 3 der kleinste Faktor, der in
+# der Praxis vorkommt, 6 die Mitte. Drei Punkte genuegen - die Kurve 1/h ist
+# monoton, und eine laengere Tabelle waere Zahlensalat statt Aussage.
+GRENZHEBEL = (3.0, 6.0, 10.0)
+
+
+def _hebelgeometrie(atr: float, close: float,
+                    instrument: str = "spot") -> list[str]:
+    """Wie weit die Zwangsaufloesung entfernt liegt - je Grenzhebel.
+
+    DIE GROESSTE LUECKE DES HEBEL-KORBS (Bestandserhebung 16.08., Kapitel
+    35.1). Das Modell waehlte EROEFFNEN, ohne den Liquidationsabstand zu
+    kennen - er wird zwei Schritte SPAETER gerechnet und steht dann in der
+    Mail. Am AKT-Signal lag er komfortabel; aus Sicht des Modells war das
+    Zufall, es hat ihn nicht beurteilt.
+
+    DAS HENNE-EI-PROBLEM UND SEINE LOESUNG. Der Faktor folgt aus dem
+    Stopabstand, den das Modell erst nennen wird - vorher kennt ihn niemand.
+    Der ABSTAND je Faktor steht aber schon fest: er ist `1/Hebel`, genau die
+    Formel, mit der `entscheidungsrechnung` spaeter `liquidation_etwa_eur`
+    rechnet. Eine Tabelle ueber drei Stuetzstellen statt eines Kreisbezugs.
+
+    WARUM DAS KEIN KONSTANTES FELD IST (R-T6). Die Prozentwerte 33/17/10 sind
+    ueber alle Assets gleich - fuer sich genommen waeren sie genau das
+    stehende Feld, das nichts unterscheidet. Die Schwankungsbreiten daneben
+    sind es nicht: bei einem ruhigen Wert sind 10 % viele ATR, bei einem
+    unruhigen wenige. ERST DIESER BEZUG macht die Zeile zu einer Aussage
+    ueber DIESES Asset - und er ist zugleich die Form, die `_niveaus()` fuer
+    Widerstand und Unterstuetzung ohnehin benutzt.
+
+    GRUEN, NICHT GELB. Der Satz beschreibt eine Geometrie und bewertet sie
+    nicht. Der Unterschied ist gemessen und teuer: der Kostenhinweis
+    ("kostet 4,5 % der Margin im Monat") liess die EROEFFNEN-Quote von 93 %
+    auf 3 % einbrechen. Deshalb steht hier KEIN Betrag und KEINE Warnung -
+    die Finanzierungshoehe ist Phase III und braucht einen gepaarten
+    Vergleich.
+
+    BEIDE ZAHLEN IN DER QUELLWAEHRUNG. `close` ist `c[i]`, nicht `kurs_eur` -
+    sonst waere das Verhaeltnis zum ATR um den Wechselkurs verfaelscht.
+    Derselbe Fehler ist am 12.08. in `leite_zonen_ab()` schon einmal
+    passiert (Spanne 14,4 % zu breit)."""
+    if str(instrument) != "hebel":
+        return []
+    if not close or close <= 0 or not atr or atr <= 0:
+        return []
+    teile = [f"bei {h:.0f}-fach {100.0 / h:.0f} %, also "
+             f"{(float(close) / h) / float(atr):.1f} Schwankungsbreiten"
+             for h in GRENZHEBEL]
+    return ["Der Abstand zur Zwangsaufloesung haengt allein am Hebelfaktor: "
+            + "; ".join(teile) + ".",
+            "Welcher Faktor es wird, folgt aus dem Risikobudget und dem "
+            "Stopabstand, den du nennst - gerechnet wird er nach deiner "
+            "Antwort."]
+
+
+def _referenz(referenz: dict | None) -> list[str]:
+    """Der Sektorbezug eines Themen-ETF - relative Staerke zum breiten Markt.
+
+    WARUM ES DEN BLOCK GIBT (Kapitel 35.5). *"Ein Kupfer-ETF folgt dem
+    Kupferpreis, nicht seinem eigenen Chart."* Bis heute lieferten wir nur
+    den eigenen Chart. Der Bezug zum breiten Markt ist die tragende
+    Information dieser Gruppe und die einzige, die sagt, ob eine Bewegung dem
+    Thema gehoert oder allen.
+
+    NICHTS NEU GEHOLT. Die Groesse gibt es seit langem - `themen_etf/
+    pipeline._compute_sektor_rotation()` rechnet sie gegen dieselbe
+    SPY-Reihe. Sie war nur an die alte Pipeline gebunden und hat die
+    Rollen-Kette nie erreicht. Das ist keine neue Datenquelle, sondern eine
+    Verdrahtung.
+
+    KEINE BEWERTUNG (R-T3). "Outperformance" und "in Rotation" sind Etiketten;
+    hier steht, um wieviel Prozentpunkte die Reihe besser oder schlechter lief,
+    ueber ein benanntes Fenster (R-T1).
+
+    FUER DIE ABSICHERUNG NICHT. DBPK und 3QSS nennen ihren Referenzindex
+    bereits in ihrem eigenen Block (`absicherung_fakten.saetze()`: "hebelt
+    3-fach auf den Nasdaq-100"). Die LAGE dieses Index gehoert nach der
+    Aufteilung LLM1/LLM2 zur zweiten Stufe, nicht hierher."""
+    if not referenz:
+        return []
+    z = []
+    for tage, schluessel in ((30, "rel_30"), (90, "rel_90")):
+        wert = referenz.get(schluessel)
+        if wert is None:
+            continue
+        wie = "besser" if wert >= 0 else "schlechter"
+        z.append(f"Ueber die letzten {tage} Handelstage lief dieser Wert "
+                 f"{abs(float(wert)):.1f} Prozentpunkte {wie} als "
+                 f"{referenz.get('name', 'der breite Markt')}.")
+    return z
+
+
+def _luecken(hist_laenge: int, volumen: list, marken: list) -> list[str]:
+    """Was FEHLT - benannt, statt stillschweigend weggelassen.
+
+    DIE ERSTE KORREKTUR AUS DER BESTANDSERHEBUNG (Kapitel 34.6): acht von 56
+    Assets urteilen unvollstaendig, und der Faktensatz sagt es nicht. Vier
+    Rohstoff-Zertifikate und 3QSS fuehren in unserer Reihe kein Volumen; das
+    Modell sieht dann keinen Volumensatz und liest Abwesenheit als
+    UNAUFFAELLIGKEIT statt als NICHT VORHANDEN.
+
+    Das ist der KAS-Fall in anderer Gestalt: dort fehlte der Bestand im
+    Prompt, und das Modell kaufte in eine Verlustposition nach. Ein Fakt, den
+    niemand nennt, wird nicht als fehlend gelesen - er wird gar nicht gelesen.
+
+    DIE SPANNUNG ZU R-T6 IST ECHT UND WIRD IN KAUF GENOMMEN. Fuer alle vier
+    Rohstoff-Zertifikate steht hier derselbe Satz - innerhalb der Gruppe also
+    ein konstantes Feld. Er unterscheidet aber die GRUPPEN voneinander, und
+    genau das ist seine Aufgabe: er sagt einem Urteil ueber OD7C, dass es auf
+    einem Block weniger steht als ein Urteil ueber SOL. R-T6 verbietet
+    stehende Felder, weil sie nichts trennen; dieses trennt.
+
+    KEINE HANDLUNGSANWEISUNG. "deshalb vorsichtiger sein" waere ein Regelwerk
+    im Faktentext und zugleich gelb im Sinne der Risikoklassen - der
+    Kostenhinweis hat gezeigt, was ein bewertender Zusatz anrichtet. Hier
+    steht nur, was fehlt."""
+    z = []
+    if not volumen:
+        # "WIRD KEIN UMSATZ AUSGEWIESEN", nicht "liegen keine Daten vor".
+        # Der Unterschied ist an ISOC aufgefallen: dort steht der Umsatz nicht
+        # auf NULL-Werten, sondern auf 2.517 gemeldeten Nullen. Beides fuehrt
+        # zu keinem Volumensatz, und beides heisst fuer das Urteil dasselbe -
+        # aber "keine Daten" waere fuer ISOC schlicht falsch, und ein Fakt,
+        # der ueber sich selbst die Unwahrheit sagt, ist schlimmer als keiner.
+        z.append("Fuer dieses Instrument wird KEIN Umsatz ausgewiesen. Das "
+                 "ist eine fehlende Angabe, kein unauffaelliger Umsatz - "
+                 "ueber die Beteiligung am Markt sagt diese Beschreibung "
+                 "nichts.")
+    if len(marken) < 2:
+        z.append("Es liess sich weniger als eine Marke oberhalb UND eine "
+                 "unterhalb bestimmen; die Lage zwischen zwei Niveaus ist "
+                 "hier also nur teilweise beschrieben.")
+    # 250 Handelstage: dieselbe Grenze, die `_volumen()` und `marktlage.py`
+    # fuer ihre Perzentile brauchen. Darunter ist ein Perzentil nicht falsch,
+    # aber es vergleicht gegen eine kuerzere Geschichte, als der Satz behauptet.
+    if hist_laenge < 250:
+        z.append(f"Die Kursreihe umfasst erst {hist_laenge} Handelstage. "
+                 f"Vergleiche ueber ein volles Jahr sind hier nicht moeglich; "
+                 f"alle Einordnungen stehen auf einer kuerzeren Geschichte.")
+    return z
+
+
 def beschreibe_lage(*, symbol: str, reihe: list, index: int,
                     kurs_eur: float, atr: float,
                     menge: float | None = None,
@@ -357,6 +525,7 @@ def beschreibe_lage(*, symbol: str, reihe: list, index: int,
                     finanzierung: dict | None = None,
                     instrument: str = "spot",
                     gegenseite: str | None = None,
+                    referenz: dict | None = None,
                     bloecke_ziel: dict | None = None) -> list[str]:
     """Die Lage als Aussagen - der EINZIGE Weg von Kursdaten zur Beschreibung.
 
@@ -397,7 +566,8 @@ def beschreibe_lage(*, symbol: str, reihe: list, index: int,
     bloecke = geteilt(symbol=symbol, reihe=reihe, index=index,
                       kurs_eur=kurs_eur, atr=atr, menge=menge,
                       einstand_eur=einstand_eur, finanzierung=finanzierung,
-                      instrument=instrument, gegenseite=gegenseite)
+                      instrument=instrument, gegenseite=gegenseite,
+                      referenz=referenz)
     if bloecke_ziel is not None:
         bloecke_ziel.clear()
         bloecke_ziel.update(bloecke)
@@ -406,8 +576,22 @@ def beschreibe_lage(*, symbol: str, reihe: list, index: int,
 
 # Die Bloecke in genau der Reihenfolge, in der sie im Prompt stehen. Sie ist
 # NICHT kosmetisch: R-T9 - was zuerst steht, wiegt schwerer.
-BLOCK_REIHENFOLGE = ("bestand", "struktur", "bewegung", "marken", "volumen",
-                     "finanzierung")
+#
+# DREI NEUE BLOECKE (Phase I, 16.08.2026) - und die RELATIVE Reihenfolge der
+# sechs alten bleibt unveraendert. Das ist Absicht: die neuen Bloecke sind
+# eingeschoben, nicht dazwischengemischt. Ein Vergleich zweier Prompt-Staende
+# soll den Unterschied als HINZUGEKOMMEN lesen koennen und nicht zusaetzlich
+# eine Umsortierung mitmessen muessen.
+#
+#   hebelgeometrie  direkt nach `marken` - es ist dieselbe Art Aussage
+#                   (ein Preisabstand in Schwankungsbreiten) und sie gehoert
+#                   neben Widerstand und Unterstuetzung gelesen
+#   referenz        daneben, aus demselben Grund: eine Einordnung von aussen
+#   luecken         ZULETZT. Was fehlt, soll gesagt sein - aber es darf nicht
+#                   schwerer wiegen als das, was da ist (R-T9)
+BLOCK_REIHENFOLGE = ("bestand", "struktur", "bewegung", "marken",
+                     "hebelgeometrie", "referenz", "volumen",
+                     "finanzierung", "luecken")
 
 
 def geteilt(*, symbol: str, reihe: list, index: int,
@@ -416,7 +600,8 @@ def geteilt(*, symbol: str, reihe: list, index: int,
             einstand_eur: float | None = None,
             finanzierung: dict | None = None,
             instrument: str = "spot",
-            gegenseite: str | None = None) -> dict:
+            gegenseite: str | None = None,
+            referenz: dict | None = None) -> dict:
     """Dieselben Saetze, aber nach Bloecken getrennt (14.08.2026).
 
     WOFUER. Die Kaufmail kann Bestand, Marken und Coin-Fakten getrennt
@@ -446,12 +631,22 @@ def geteilt(*, symbol: str, reihe: list, index: int,
     v = np.array([k.volume if k.volume is not None else np.nan for k in hist],
                  dtype=float)
     i = len(c) - 1
+    marken = _niveaus(c, h, l, i, atr, kurs_eur, float(c[i]))
+    volumen = _volumen(c, v, i, tag_vollstaendig)
     return {
         "bestand": _bestand(symbol, menge, einstand_eur, kurs_eur,
                             instrument=instrument, gegenseite=gegenseite),
         "struktur": _struktur(c, h, l, i),
         "bewegung": _bewegung(c, i),
-        "marken": _niveaus(c, h, l, i, atr, kurs_eur, float(c[i])),
-        "volumen": _volumen(c, v, i, tag_vollstaendig),
-        "finanzierung": _finanzierung(finanzierung),
+        "marken": marken,
+        "hebelgeometrie": _hebelgeometrie(atr, float(c[i]), instrument),
+        "referenz": _referenz(referenz),
+        "volumen": volumen,
+        "finanzierung": _finanzierung(finanzierung, instrument),
+        # DIE LUECKEN STEHEN AUF DEN FERTIGEN BLOECKEN, nicht auf den Rohdaten.
+        # Sonst gaebe es eine zweite Definition von "kein Volumen" - eine im
+        # Block und eine im Luecken-Satz -, und sie koennten auseinanderlaufen,
+        # ohne dass eine Pruefung anschlaegt. Dieselbe Ueberlegung wie bei
+        # `geteilt()` selbst.
+        "luecken": _luecken(len(hist), volumen, marken),
     }

@@ -5037,12 +5037,24 @@ def paket_15() -> None:
            not _fehlt,
            f"nicht uebergeben: {_fehlt} - die Vorlage ist nicht generisch, "
            "sie wurde nur zu zwei Dritteln gefuettert")
-    pruefe(P, "die Bloecke kommen aus derselben Quelle wie der Prompt",
-           "LB . geteilt (" in _nur_code("agent/rollen_lauf.py")
-           and "RE . bestand ( symbol , db , instrument )" in _nur_code(
-               "agent/rollen_lauf.py"),
-           "die Saetze gingen laengst ans Modell - sie am Wortlaut zu "
-           "zerlegen waere eine zweite, stillschweigende Definition")
+    # DIESELBE QUELLE - UND SEIT DEM 16.08. DASSELBE OBJEKT.
+    #
+    # Diese Pruefung stand bis heute auf einem ZWEITEN `LB.geteilt()`-Aufruf im
+    # Mail-Weg. Der war am 14.08. richtig, ist seit dem 15.08. aber eine Kopie:
+    # `baue_fall(bloecke_ziel=...)` legt dieselben Bloecke fuer den
+    # Anlassfilter ohnehin daneben. Und er lief auseinander - er bekam den ATR
+    # in EUR, waehrend der Prompt-Weg die Quellwaehrung uebergibt, sodass die
+    # Mail andere Schwankungsbreiten zeigte als das Modell gelesen hat.
+    #
+    # Die Pruefung testet jetzt die staerkere Form derselben Absicht: nicht
+    # "zwei Wege rechnen dasselbe", sondern "es gibt nur einen Weg".
+    _q_lauf0 = " ".join(_nur_code("agent/rollen_lauf.py").split())
+    pruefe(P, "die Bloecke der Mail SIND die Bloecke des Prompts",
+           "_bloecke = _bloecke_anlass" in _q_lauf0
+           and "bloecke_ziel = _bloecke_anlass" in _q_lauf0
+           and "LB . geteilt (" not in _q_lauf0,
+           "ein zweiter Aufruf waere eine Kopie - und die vom 14.08. ist mit "
+           "dem falschen ATR gelaufen (EUR statt Quellwaehrung)")
     # UND BEIDE WEGE TRAGEN DAS INSTRUMENT (15.08.2026).
     #
     # `RE.bestand()` las bis dahin IMMER `holdings` - die Spot-Tabelle. Im
@@ -5056,8 +5068,12 @@ def paket_15() -> None:
            and "instrument = instrument" in _q_lauf,
            "sonst stuende im AUFTRAG-Block 'ohne Hebel und ohne laufende "
            "Kosten' - auch im Hebel-Lauf")
-    pruefe(P, "und der Mail-Weg kennt es auch",
-           "gegenbestand_satz ( symbol , db , instrument )" in _q_lauf,
+    # DIE GEGENSEITE STEHT JETZT AN DER EINEN STELLE, an der die Bloecke
+    # entstehen - nicht mehr zusaetzlich im Mail-Weg. Sie erreicht die Mail
+    # ueber `_bloecke_anlass`, also durch dieselbe Rechnung wie den Prompt.
+    pruefe(P, "die Gegenseite wird genannt, mit Instrument",
+           "gegenbestand_satz ( symbol , db , instrument )"
+           in " ".join(_nur_code("agent/rollen_eingabe.py").split()),
            "die andere Seite desselben Assets wird benannt statt "
            "verschwiegen - der LINK-Fall des Nutzers")
     # DER PROMPT DARF SICH DABEI NICHT VERAENDERT HABEN - sonst waeren alle
@@ -5087,6 +5103,147 @@ def paket_15() -> None:
            LB3.BLOCK_REIHENFOLGE[0] == "bestand" and _teil["bestand"],
            "R-T9: was zuerst steht, wiegt schwerer - und die erste Frage des "
            "Nutzers ist 'habe ich das ueberhaupt'")
+
+    # ------------------------------------------------------------------
+    # PHASE I (16.08.2026) - vier gruene Ergaenzungen in EINEM Prompt-Stand.
+    #
+    # Alle vier sind BESCHREIBEND. Der Unterschied zu bewertend ist gemessen
+    # und teuer: der Kosten-/Ausfuehrbarkeitshinweis liess die EROEFFNEN-Quote
+    # von 93 % auf 3 % einbrechen (Umbauplan 36.1). Deshalb pruefen die Tests
+    # hier nicht nur, DASS die Saetze da sind, sondern auch, dass sie keine
+    # Handlungsanweisung tragen.
+    _fin = {"beobachtungen": 100, "anteil_positiv_pct": 61, "perzentil": 72}
+    _spot = LB3.geteilt(symbol="TST", reihe=_reihe, index=89, kurs_eur=144.5,
+                        atr=1.2, menge=3.0, einstand_eur=100.0,
+                        finanzierung=_fin, instrument="spot")
+    _heb = LB3.geteilt(symbol="TST", reihe=_reihe, index=89, kurs_eur=144.5,
+                       atr=1.2, menge=3.0, einstand_eur=100.0,
+                       finanzierung=_fin, instrument="hebel")
+
+    # SCHRITT 2 - die Finanzierung verlaesst den Spot-Prompt.
+    pruefe(P, "Finanzierung steht NUR noch im Hebel-Faktensatz",
+           not _spot["finanzierung"] and len(_heb["finanzierung"]) == 1,
+           "ein Spot-Kaeufer leistet und erhaelt keine Finanzierung - und "
+           "zitiert wurde sie trotzdem in 63 % der Spot-Urteile (O-34)")
+    # ROHTEXT, NICHT `_nur_code` - die Bedingung haengt an einer ZEICHENKETTE
+    # ("hebel"), und `_nur_code` wirft Zeichenketten weg. Dieselbe Falle zum
+    # fuenften Mal; sie steht deshalb hier ausdruecklich im Kommentar.
+    _roh_ein5 = " ".join(_quelltext("agent/rollen_eingabe.py").split())
+    pruefe(P, "und sie wird bei Spot gar nicht erst geholt",
+           'mit_finanzierung and str(instrument) == "hebel"' in _roh_ein5,
+           "sonst laufen je Spot-Durchgang 43 Anfragen an die Boerse fuer "
+           "einen Satz, den niemand mehr rendert - und jede bucht ihren "
+           "Gesundheitsstand in api_health_status")
+
+    # SCHRITT 1 - der Liquidationsabstand, und zwar mit DERSELBEN Formel, die
+    # `entscheidungsrechnung` spaeter fuer `liquidation_etwa_eur` benutzt.
+    # Zwei Definitionen desselben Abstands waeren genau die Sorte Kopie, die
+    # dieses Projekt mehrfach bezahlt hat.
+    from agent import entscheidungsrechnung as ER5
+
+    pruefe(P, "der Liquidationsabstand steht NUR im Hebel-Faktensatz",
+           not _spot["hebelgeometrie"] and len(_heb["hebelgeometrie"]) == 2,
+           "ein Spot-Kauf kann nicht zwangsaufgeloest werden - der Satz waere "
+           "dort schlicht falsch")
+    _kurs5, _hebel5 = 100.0, 10.0
+    pruefe(P, "und er benutzt dieselbe Formel wie die spaetere Rechnung",
+           abs((_kurs5 - _kurs5 * (1 - 1 / _hebel5)) / _kurs5
+               - 1.0 / _hebel5) < 1e-12
+           and 10.0 in LB3.GRENZHEBEL
+           and LB3.GRENZHEBEL[-1] == ER5.GRENZEN["hebel_max"],
+           "der groesste Stuetzpunkt MUSS der Hoechsthebel sein - sonst "
+           "beschreibt die Tabelle eine Lage, die es nicht geben kann")
+    pruefe(P, "der Abstand steht in Prozent UND in Schwankungsbreiten",
+           "Schwankungsbreiten" in _heb["hebelgeometrie"][0]
+           and "%" in _heb["hebelgeometrie"][0],
+           "33/17/10 % sind ueber alle Assets gleich und waeren allein ein "
+           "konstantes Feld (R-T6) - erst der ATR-Bezug macht daraus eine "
+           "Aussage ueber DIESES Asset")
+    pruefe(P, "und er nennt weder Kosten noch eine Empfehlung",
+           not any(w in " ".join(_heb["hebelgeometrie"]).lower()
+                   for w in ("kostet", "teuer", "gebuehr", "vorsichtig",
+                             "riskant", "solltest", "empfiehlt")),
+           "gruen heisst beschreibend. Der Kostenhinweis ist die gemessene "
+           "Grenze: 93 % auf 3 % EROEFFNEN")
+
+    # SCHRITT 3 - fehlende Angaben werden benannt statt weggelassen.
+    _ohne_v = [_K(i) for i in range(90)]
+    for _k in _ohne_v:
+        _k.volume = None
+    _luecke = LB3.geteilt(symbol="TST", reihe=_ohne_v, index=89,
+                          kurs_eur=144.5, atr=1.2)
+    pruefe(P, "fehlender Umsatz wird BENANNT, nicht verschwiegen",
+           not _luecke["volumen"] and any("KEIN Umsatz ausgewiesen" in s
+                                          for s in _luecke["luecken"]),
+           "das Modell liest Abwesenheit sonst als Unauffaelligkeit - der "
+           "KAS-Fall in anderer Gestalt (Umbauplan 34.6)")
+    pruefe(P, "und eine kurze Historie ebenso",
+           any("Handelstage" in s for s in LB3.geteilt(
+               symbol="TST", reihe=_reihe[:70], index=69, kurs_eur=144.5,
+               atr=1.2)["luecken"]),
+           "OD7L (137) und X136 (162) liegen unter den 250 Handelstagen, die "
+           "die Perzentile brauchen - dieselbe Grenze, die ASTER betraf")
+    # LANG GENUG UND MIT WENDEPUNKTEN. Zwei eigene Fehlschlaege in dieser
+    # Pruefung, beide an den Testdaten und nicht am Code:
+    #   * die 90-Kerzen-Reihe der uebrigen Tests ist selbst zu kurz und loest
+    #     den Historien-Satz aus
+    #   * eine streng steigende Reihe hat KEINE Swing-Punkte, also findet
+    #     `_niveaus()` keine Marke - und der Luecken-Block meldet das voellig
+    #     zu Recht
+    # Der Gegenfall braucht deshalb eine schwingende Reihe.
+    class _KS(_K):
+        def __init__(_s, i):
+            import math
+            _s.close = 100.0 + 0.3 * i + 8.0 * math.sin(i / 7.0)
+            _s.high = _s.close * 1.01
+            _s.low = _s.close * 0.99
+            _s.volume = 1000.0 + (i % 13) * 40
+            _s.date = f"2026-01-{(i % 28) + 1:02d}"
+
+    _lang = [_KS(i) for i in range(300)]
+    pruefe(P, "bei vollstaendigen Daten steht KEIN Luecken-Satz",
+           not LB3.geteilt(symbol="TST", reihe=_lang, index=299,
+                           kurs_eur=144.5, atr=1.2)["luecken"],
+           "sonst waere es ein stehendes Feld ueber alle Assets - genau das, "
+           "was R-T6 verbietet")
+
+    # SCHRITT 4 - der Sektorbezug, und die Abgrenzung, an der er haengt.
+    pruefe(P, "der Sektorbezug nennt sein Fenster und seinen Massstab",
+           all("Handelstage" in s and "Prozentpunkte" in s for s in
+               LB3._referenz({"name": "der breite Markt", "rel_30": -8.9,
+                              "rel_90": 15.9})),
+           "eine relative Staerke ohne Fenster und ohne Bezugsgroesse waere "
+           "eine nackte Zahl")
+    # ⚠️ DIESE ABGRENZUNG WAR IN MEINER ERSTEN FASSUNG FALSCH und haette nie
+    # gegriffen: der Aufrufer uebergibt die GRUPPE (`themen_etf`), nicht die
+    # Assetklasse (`etf`). `agent/assetklassen.py` haelt die drei Begriffe
+    # ausdruecklich auseinander - gefunden hat es das RENDERN, nicht das Lesen.
+    pruefe(P, "der Sektorbezug kennt das Gruppen-Vokabular",
+           'in ("etf", "themen_etf")' in _roh_ein5,
+           "`etf` allein haette nie gegriffen - `rollen_lauf` uebergibt die "
+           "Gruppe, und die heisst themen_etf")
+    pruefe(P, "und die Klassen-Einstufung ebenso",
+           '"themen_etf": "aktien"' in _roh_ein5
+           and '"hedge": "aktien"' in _roh_ein5,
+           "zwei von fuenf Gruppen bekamen die Einstufung des Leitmarkts "
+           "nicht - lautlos, weil ein fehlender Schluessel kein Fehler ist")
+
+    # DIE REIHENFOLGE DER ALTEN BLOECKE IST UNVERAENDERT. Die neuen sind
+    # eingeschoben, nicht dazwischengemischt - sonst muesste ein Vergleich
+    # zweier Prompt-Staende zusaetzlich eine Umsortierung mitmessen.
+    _alt = ("bestand", "struktur", "bewegung", "marken", "volumen",
+            "finanzierung")
+    pruefe(P, "die sechs alten Bloecke stehen weiter in ihrer Reihenfolge",
+           [b for b in LB3.BLOCK_REIHENFOLGE if b in _alt] == list(_alt)
+           and LB3.BLOCK_REIHENFOLGE[-1] == "luecken",
+           "und was FEHLT steht zuletzt - es darf nicht schwerer wiegen als "
+           "das, was da ist (R-T9)")
+    from agent import rolle_trader as RT5
+
+    pruefe(P, "der Prompt-Stand ist mitgezogen",
+           RT5.PROMPT_STAND == "2026-08-16",
+           "jeder Messbefund gehoert zu einem Stand - ohne den Sprung waeren "
+           "Messungen vor und nach Phase I nicht unterscheidbar")
 
     # ------------------------------------------------------------------
     # AA. DIE VERKAUFSSEITE (14.08.2026) - der groesste Fund des Echtbetriebs.

@@ -120,7 +120,7 @@ def main() -> int:
         if tauglich:
             print("Beispiel des neuen Satzes:")
             from agent.lagebeschreibung import _finanzierung
-            for s in _finanzierung(tauglich[0]["_funding"]):
+            for s in _finanzierung(tauglich[0]["_funding"], "hebel"):
                 print(f"  {tauglich[0]['symbol']}: {s}")
         print("\nTROCKEN - keine Aufrufe.")
         return 0
@@ -147,9 +147,17 @@ def main() -> int:
             # `beschreibe_lage` bekommt weiterhin den USD-Wert, weil sie
             # durchgehend in der Quellwaehrung rechnet.
             atr_e = atr * RE.fx_eur_je_usd(sym, r, i)
+            # `instrument="hebel"` AB DEM 16.08. ZWINGEND. Seit Phase I,
+            # Schritt 2, rendert `lagebeschreibung._finanzierung()` den Block
+            # NUR fuer den Hebel - bei Spot faellt er weg, weil ein
+            # Spot-Kaeufer keine Finanzierung zahlt. Ohne diese Angabe waeren
+            # beide Arme dieses Skripts wortgleich, und es wuerde den
+            # Unterschied zwischen "mit" und "ohne" messen, den es gar nicht
+            # mehr erzeugt: eine Messung, die still nichts misst.
             gemeinsam = dict(symbol=sym, reihe=r, index=i,
                              kurs_eur=PR._kurs_eur(sym, r, i) or 0.0, atr=atr,
-                             menge=menge, einstand_eur=einstand)
+                             menge=menge, einstand_eur=einstand,
+                             instrument="hebel")
             for arm, fin in (("ohne", None), ("mit", a["_funding"])):
                 ein = {"asset": sym,
                        "stand": beschreibe_lage(**gemeinsam, finanzierung=fin),

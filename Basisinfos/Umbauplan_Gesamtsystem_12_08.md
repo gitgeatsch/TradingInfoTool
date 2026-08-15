@@ -4415,3 +4415,215 @@ eigene Information hat**, über die sie urteilen kann.
 Und die Verteilung wird ab dem ersten Tag beobachtet: sagt sie in 95 % der
 Fälle „kein Einwand", ist sie dieselbe Konstante wie der Richtungsabgleich —
 nur mit anderen Worten.
+
+---
+
+## Kapitel 38 — Phase I: vier grüne Ergänzungen in EINEM Prompt-Stand (16.08.2026)
+
+`PROMPT_STAND` springt von **2026-08-12 auf 2026-08-16**. Alle Messbefunde
+davor gehören zum alten Stand und sind mit den neuen nicht vergleichbar — das
+ist der Preis und er war in 36.4 eingeplant.
+
+### 38.1 Der fünfte Schritt ist NICHT gebaut — und das ist der Plan, nicht die Umsetzung
+
+Kapitel 36 führt fünf grüne Schritte. Gebaut sind **vier**. Der fünfte —
+*Regime und Persistenz für Rolle A* — verletzt die Konstruktionsbedingung, die
+zwei Kapitel weiter oben im selben Dokument steht:
+
+> **Ein Parameter gehört zu GENAU EINEM Modell.** Geht er an beide, teilen sie
+> die Informationsgrenze — und die Prüfung ist wieder *Homogeneous Debate*.
+
+**Der Plan widerspricht sich hier selbst.** 36.2 ordnet „Regime und Persistenz"
+der **Rolle A** zu; die Tabelle in 36.3 führt „Regime-Persistenz" in derselben
+Zeile unter **LLM2**. Und Kapitel 37 hat es am Morgen des 16.08. in **Rolle C**
+gebaut, als vierten Anhaltspunkt.
+
+**Warum es bei Rolle C bleibt — und das ist kein Ausweichen:**
+
+| | |
+|---|---|
+| **Rolle A hat beide Zutaten schon** | Das Regime rechnet `regime_score()` aus BTC-Kurs gegen EMA50/200 **und** Fear & Greed. Rolle A bekommt den BTC-Trend über 250 und 60 Handelstage und die Anlegerstimmung — sie liest die Bestandteile bereits. Das Etikett obendrauf ist eine **vorverdaute Wertung**, keine neue Angabe |
+| **Und ein Etikett verstößt gegen R-T3** | *„Regime bär"* ist genau die Art Wort, die `lagebeschreibung` überall sonst vermeidet |
+| **Rolle C hat sonst nichts davon** | Sie sieht ausschließlich die Positionierung am Terminmarkt. Das Regime ist ihr einziger Kontext — und der einzige Weg, auf dem er sie erreicht |
+
+**Was ich dabei einräume:** das Regime ist aus **unserer** Kursreihe gerechnet.
+Streng genommen gehört es damit auf die LLM1-Seite, und die Zuweisung an Rolle C
+ist ein Kompromiss zugunsten einer Stufe, die sonst auf drei Anhaltspunkten
+steht. Sauber wird es erst, wenn Rolle C den Optionsmarkt und die Nachrichten
+hat — dann kann das Regime dorthin zurück, wo es hingehört.
+
+**Die Entscheidung gehört dem Nutzer.** Baue ich es zusätzlich in Rolle A, ist
+die Trennung der zweiten Stufe aufgehoben — das war der ganze Grund für Phase II
+vom selben Tag.
+
+### 38.2 Die vier gebauten Schritte
+
+| | Ergänzung | Rolle | wo |
+|---|---|---|---|
+| **1** | Liquidationsabstand je Grenzhebel | BC | `lagebeschreibung._hebelgeometrie` |
+| **2** | Finanzierung raus aus dem Spot-Prompt | BC | `lagebeschreibung._finanzierung` |
+| **3** | Fehlende Angaben benennen | BC | `lagebeschreibung._luecken` |
+| **4** | Sektorbezug für Themen-ETF | BC | `lagebeschreibung._referenz` |
+
+**Schritt 1 — der Liquidationsabstand.** Das Henne-Ei-Problem aus 35.1 ist
+umgangen, nicht gelöst: der Faktor folgt aus dem Stop, den das Modell erst
+nennen wird, aber der **Abstand je Faktor** steht vorher fest. Drei
+Stützstellen, dieselbe Formel `1/Hebel`, mit der `entscheidungsrechnung` später
+`liquidation_etwa_eur` rechnet:
+
+```
+Der Abstand zur Zwangsaufloesung haengt allein am Hebelfaktor: bei 3-fach
+33 %, also 5.6 Schwankungsbreiten; bei 6-fach 17 %, also 2.8; bei 10-fach
+10 %, also 1.7.
+Welcher Faktor es wird, folgt aus dem Risikobudget und dem Stopabstand, den
+du nennst - gerechnet wird er nach deiner Antwort.
+```
+
+**33/17/10 % sind über alle Assets gleich** — allein wären sie ein stehendes
+Feld (R-T6). Erst die Schwankungsbreiten daneben machen daraus eine Aussage
+über *dieses* Asset: bei einem ruhigen Wert sind 10 % viele ATR, bei einem
+unruhigen wenige.
+
+**Grün, nicht gelb:** kein Betrag, keine Warnung, kein „das ist riskant". Die
+Finanzierungshöhe bleibt Phase III — sie ist der Hinweis, der die
+ERÖFFNEN-Quote von 93 % auf 3 % gedrückt hat.
+
+**Schritt 2 — Funding verlässt den Spot-Prompt.**
+
+| | |
+|---|---|
+| bisher | in **jedem** Krypto-Prompt, auch Spot |
+| gemessen (O-34) | in **63 %** der Spot-Urteile als Beleg zitiert |
+| die Sache | eine Zahlung zwischen Long- und Short-Positionen, die ein Spot-Käufer weder leistet noch erhält |
+
+> ⚠️ **Was das kostet, offen gesagt.** Funding war bei Spot der einzige Fakt,
+> der nicht aus der eigenen Kursreihe stammte — der *dritte unabhängige Faktor*,
+> um den es am 11.08. überhaupt ging. Fällt er weg, sinkt bei manchem
+> Spot-Urteil `unabhaengige_faktoren` von 3 auf 2, und daran hängt über
+> `tranche_aus_faktoren()` der Betrag. **Es kann also weniger und kleinere
+> Spot-Signale geben.**
+>
+> Das ist trotzdem kein Einschränken: ein Faktor, der zur Sache nichts sagt,
+> hat nie getragen — er wurde nur mitgezählt. Und die Information ist nicht
+> weg, sie wechselt die Stufe: **Rolle C liest dieselbe Rate als Perzentil,
+> für Spot genauso wie für Hebel.** Damit gehört sie bei Spot ab jetzt zu
+> genau einem Modell.
+
+Nebenbei entfallen die Börsenabfragen: pro Spot-Durchgang 43, dazu elf für
+Aktien, Rohstoffe und ETF, die dort gar kein Symbol haben. Jede davon buchte
+ihren Gesundheitsstand in `api_health_status`.
+
+**Schritt 3 — was fehlt, wird benannt.**
+
+```
+Fuer dieses Instrument wird KEIN Umsatz ausgewiesen. Das ist eine fehlende
+Angabe, kein unauffaelliger Umsatz - ueber die Beteiligung am Markt sagt
+diese Beschreibung nichts.
+```
+
+Drei Fälle: kein Umsatz · weniger als zwei Marken · Historie unter 250
+Handelstagen. **Die Spannung zu R-T6 ist echt** — für alle vier
+Rohstoff-Zertifikate steht derselbe Satz, innerhalb der Gruppe also ein
+konstantes Feld. Er unterscheidet aber die **Gruppen**, und genau das ist seine
+Aufgabe: er sagt einem Urteil über OD7C, dass es auf einem Block weniger steht
+als eines über SOL. R-T6 verbietet stehende Felder, weil sie nichts trennen;
+dieses trennt.
+
+> **Wortlaut geändert nach einem Fund an ISOC.** Erst stand dort *„liegen keine
+> Umsatzdaten vor"*. ISOC hat aber Daten — **2.517 gemeldete Nullen**. Der Satz
+> hätte über sich selbst die Unwahrheit gesagt, und das ist schlimmer als kein
+> Satz.
+
+**Schritt 4 — der Sektorbezug.**
+
+```
+Ueber die letzten 30 Handelstage lief dieser Wert 8.9 Prozentpunkte
+schlechter als der breite Markt (S&P-500-ETF).
+```
+
+Nichts davon ist neu geholt: `themen_etf/pipeline._compute_sektor_rotation()`
+rechnet dieselbe Größe gegen dieselbe SPY-Reihe, seit es Themen-ETF gibt. Sie
+hing an der **alten** Pipeline und hat die Rollen-Kette nie erreicht — der
+häufigste Befund dieses Projekts, hier noch einmal.
+
+Die Rechnung steht trotzdem neu in `rollen_eingabe`, und zwar aus einem Grund:
+die alte Fassung nimmt `[-1]` aus der Datenbank. In der Rollen-Kette gibt es
+einen **Ankertag**, und wer die letzte Kerze der Datenbank benutzt, liest im
+Backtest die Zukunft. Die Formel ist dieselbe, die Kausalität ist es nicht.
+
+**Für die Absicherung nichts zu tun:** DBPK und 3QSS nennen ihren Referenzindex
+bereits (*„hebelt 3-fach auf den Nasdaq-100"*). Die **Lage** dieses Index
+gehört nach 36.3 zur zweiten Stufe.
+
+### 38.3 Drei Funde beim Verdrahten — alle drei gefunden durch RENDERN, nicht durch Lesen
+
+> ⚠️ **1. Die Abgrenzung des Sektorbezugs hätte NIE gegriffen.** Meine erste
+> Fassung prüfte `assetklasse == "etf"`. Der Aufrufer übergibt aber die
+> **Gruppe** — `themen_etf` bzw. `hedge`. `agent/assetklassen.py` hält die drei
+> Begriffe in seinem Kopf ausdrücklich auseinander, weil sie sich ähnlich sehen
+> und es nicht sind. Kein Test hätte angeschlagen; im gerenderten Faktensatz
+> fehlte der Satz sofort sichtbar.
+
+> ⚠️ **2. Derselbe Fehler steckte seit dem 12.08. in der Klassen-Einstufung.**
+> `klasse = {"etf": "aktien"}.get(assetklasse, assetklasse)` war ebenfalls gegen
+> die Assetklasse geschrieben. **Für `themen_etf` und `hedge` fand die Schleife
+> deshalb nie einen Eintrag** — die Einstufung des Leitmarkts fehlte in ihrem
+> Prompt, lautlos, weil ein fehlender Schlüssel kein Fehler ist. Drei von fünf
+> Gruppen bekamen sie, zwei nicht.
+
+> ⚠️ **3. Die Mail rechnete die Blöcke ein zweites Mal — mit dem falschen ATR.**
+> Der Mail-Weg rief `LB.geteilt()` erneut auf und übergab `atr_e` (**EUR**),
+> während der Prompt-Weg die Quellwährung übergibt. `_niveaus()` rechnet gegen
+> die Quellreihe — **die Mail zeigte dem Leser andere Schwankungsbreiten als
+> dem Modell**, bei USD-Assets um den Wechselkurs daneben. Derselbe Fehler wie
+> am 12.08. in `leite_zonen_ab()`, nur auf der Anzeigeseite.
+>
+> Behoben durch Streichen: seit dem 15.08. legt `baue_fall(bloecke_ziel=...)`
+> dieselben Blöcke für den Anlassfilter ohnehin daneben. **Die Mail benutzt
+> jetzt dasselbe Objekt wie der Prompt** — eine Quelle, eine Rechnung.
+
+### 38.4 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **845, alle bestanden** (14 neue) |
+| freie Namen | 0 |
+| `pruefe_phase1.py` an echten Reihen | **alle bestanden** |
+
+**Zwei Prüfungen mussten umgeschrieben werden**, weil sie den *alten*
+Mechanismus festhielten („es gibt einen zweiten `LB.geteilt()`-Aufruf"). Sie
+prüfen jetzt die stärkere Form derselben Absicht: **es gibt nur einen Weg.**
+
+> ⚠️ **Und meine eigene neue Prüfung war zweimal falsch aufgesetzt** — beide
+> Male an den Testdaten, nicht am Code:
+> * `pruefe_phase1` prüfte gegen die feste Liste aus 34.6. Die ist an einer
+>   **anderen Datenbank** erhoben: auf dem Entwicklungsrechner fehlen den vier
+>   Rohstoff-Zertifikaten, 3QSS und X136 die Reihen ganz. Die Prüfung meldete
+>   einen Fehler, den es nicht gab — und hätte drei echte Funde (CAT, HYPE,
+>   MON) als „zuviel" verworfen. **Ein Sollwert aus fremder Datenlage ist kein
+>   Sollwert.**
+> * In `pruefe_pakete` lief der Gegenfall auf einer streng steigenden Reihe —
+>   die hat keine Wendepunkte, also findet `_niveaus()` keine Marke, und der
+>   Lücken-Block meldete das völlig zu Recht.
+
+**Neu gefunden an echten Reihen:** CAT (weniger als zwei Marken — dieselbe
+kaputte Reihe wie am 06.08.), HYPE (167 Handelstage), MON (232). Alle drei
+sagen es jetzt selbst.
+
+### 38.5 Was ab morgen zu beobachten ist
+
+**Der Sektorbezug tickt von selbst** — die relative Stärke ändert sich täglich.
+Für die fünf Themen-ETF wird der Anlassfilter damit fast immer „geändert"
+melden, genau wie es die Finanzierung bei Krypto tat. `messe_anlass.py`
+schlüsselt das je Block auf und wird es zeigen.
+
+**Und die Gegenrichtung:** bei Spot fällt der Finanzierungsblock weg, der sich
+alle acht Stunden von selbst bewegte. Dort sollte der Filter **schärfer**
+werden. Beides in derselben Messung, beides ab dem ersten Lauf sichtbar.
+
+| offen | |
+|---|---|
+| Phase III | Aktientermine · Zertifikatsnatur · Finanzierungshöhe — **nur mit gepaartem Vergleich** |
+| Phase IV | Nachrichten und Katalysator |
+| Rohstoffe | eigener Rechercheschritt (35.4) |
+| Rolle A | Terminkalender, Stimmung über BTC hinaus |
