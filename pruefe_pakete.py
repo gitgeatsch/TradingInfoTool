@@ -2988,27 +2988,42 @@ def paket_15() -> None:
 
     aus2 = ZM.hole(faktentext={"a": 1}, urteil={"aktion": "KAUFEN"},
                    zai_client=_HalbKaputt(), warte_max_s=20)
-    pruefe(P, "faellt die Konsistenzpruefung aus, laeuft der Richtungsabgleich",
-           aus2.get("eigene_richtung") == "SHORT" and "urteil" not in aus2,
-           f"bekommen: {aus2} - ein gemeinsamer try-Block haette beide verloren")
-    pruefe(P, "und der Widerspruch wird als solcher gebucht",
-           aus2.get("uebereinstimmung") == "nein",
-           "KAUFEN gegen SHORT ist eine Abweichung, keine Uebereinstimmung")
-
-    # KEIN VERGLEICH OHNE VERGLEICHSBASIS.
-    aus3 = ZM.hole(faktentext={"a": 1}, urteil={"aktion": "NICHTS_TUN"},
-                   zai_client=_HalbKaputt(), warte_max_s=20)
-    pruefe(P, "bei NICHTS_TUN wird KEINE Uebereinstimmung behauptet",
-           "uebereinstimmung" not in aus3,
-           "richtung_aus_action() liefert dort bewusst None - ein 'nein' waere "
-           "eine Abweichung von einer Richtung, die niemand behauptet hat")
+    # UMGESCHRIEBEN 16.08.2026: der Richtungsabgleich ist entfernt, an seine
+    # Stelle tritt Rolle C mit EIGENER Faktengrundlage. Die Sorge dahinter
+    # bleibt gueltig und wird weiter geprueft: zwei getrennte try-Bloecke,
+    # damit ein Ausfall der einen Pruefung die andere nicht mitnimmt.
+    pruefe(P, "die Konsistenzpruefung und Rolle C sind getrennt gefangen",
+           _quelltext("agent/zweite_meinung.py").count(
+               "except Exception:                                    # noqa: BLE001") >= 2,
+           "ein gemeinsamer try-Block haette beim ersten Fehler beide verloren")
+    pruefe(P, "Rolle C bekommt eine EIGENE Grundlage, nicht den Faktentext",
+           "def rolle_c(client, urteil" in _quelltext("agent/zweite_meinung.py")
+           and "positionierung" in _quelltext("agent/zweite_meinung.py"),
+           "derselbe Faktentext waere wieder Homogeneous Debate")
+    pruefe(P, "und sie fragt gar nicht, wenn keine Positionierung vorliegt",
+           'len(lage.get("fehlt") or []) >= 3' in _quelltext(
+               "agent/zweite_meinung.py"),
+           "ein Modell, das ueber nichts urteilt, urteilt trotzdem - und das "
+           "waere die naechste Konstante")
 
     pruefe(P, "ohne Ergebnis entsteht KEINE leere Mailzeile", ZM.zeilen({}) == [],
            "ein Abschnitt 'Zweite Meinung: -' saehe aus wie ein Befund und "
            "waere ein Ausfall - der Leser kann beides nicht unterscheiden")
-    zeilen = ZM.zeilen(aus2)
-    pruefe(P, "der Widerspruch steht in der Mail und wird benannt",
-           any("WIDERSPRICHT" in z for z in zeilen), f"{zeilen}")
+    # UMGESCHRIEBEN 16.08.2026 auf Rolle C. Die Sorge bleibt dieselbe: ein
+    # Einwand darf nicht in einem Nebensatz verschwinden.
+    _mit = ZM.zeilen({"einwand": "ja",
+                      "einwand_grund": "Finanzierungsrate im 96. Perzentil"})
+    pruefe(P, "der Einwand steht in der Mail und wird benannt",
+           _mit and "EINWAND" in _mit[0] and "96. Perzentil" in _mit[0],
+           str(_mit))
+    pruefe(P, "und die Mail sagt, worauf er beruht",
+           len(_mit) > 1 and "positionierung" in _mit[1].lower()
+           and "nicht die kurslage" in _mit[1].lower(),
+           "sonst liest es sich wie eine zweite Meinung zum selben Chart")
+    pruefe(P, "kein Einwand erzeugt KEINE Zeile",
+           ZM.zeilen({"einwand": "nein", "einwand_grund": "nichts"}) == [],
+           "'kein Einwand' als Satz waere ein konstantes Feld und saehe aus "
+           "wie eine Bestaetigung, die es nicht ist")
 
     # ------------------------------------------------------------------
     # D. DIE REIHENFOLGE - der eigentliche Fund vom 28.07.
@@ -3355,37 +3370,21 @@ def paket_15() -> None:
             return ('{"eigene_richtung": "%s", "kurzbegruendung": "x"}' % r
                     if r else "kaputt")
 
-    _einig = ZM.mehrheit(_Fest(["SHORT"]), {"asset": "X", "stand": ["a", "b"]})
-    pruefe(P, "drei gleiche Stimmen ergeben 3 von 3",
-           _einig["stimmen"] == 3 and _einig["von"] == 3
-           and _einig["eigene_richtung"] == "SHORT", str(_einig))
-    _knapp = ZM.mehrheit(_Fest(["SHORT", "NEUTRAL", "SHORT"]),
-                         {"asset": "X", "stand": ["a", "b"]})
-    pruefe(P, "zwei von drei gewinnen, und die Knappheit bleibt sichtbar",
-           _knapp["eigene_richtung"] == "SHORT" and _knapp["stimmen"] == 2,
-           f"{_knapp} - ein 2:1 darf nicht aussehen wie ein 3:0")
-    pruefe(P, "und die Mail sagt es auch",
-           "2 von 3, uneinheitlich" in ZM.zeilen(_knapp)[0],
-           ZM.zeilen(_knapp)[0])
-    pruefe(P, "bei Einigkeit steht kein Warnwort da",
-           "uneinheitlich" not in ZM.zeilen(_einig)[0], ZM.zeilen(_einig)[0])
-    pruefe(P, "faellt jede Stimme aus, gibt es kein Urteil",
-           ZM.mehrheit(_Fest([None]), {"asset": "X", "stand": ["a"]}) is None,
-           "eine erfundene Richtung waere schlimmer als keine")
-    pruefe(P, "eine ausgefallene Stimme kippt den Rest nicht",
-           (ZM.mehrheit(_Fest([None, "LONG", "LONG"]),
-                        {"asset": "X", "stand": ["a"]}) or {}).get("von") == 2,
-           "gezaehlt wird, was zurueckkam - nicht, was gefragt wurde")
-
-    _zm2 = _nur_code("agent/zweite_meinung.py")
-    pruefe(P, "die mittlere Stimme laeuft auf umgekehrter Satzreihenfolge",
-           "kehre_saetze_um ( fakten ) if i == 1 else fakten" in _zm2,
-           "so steckt der alte Positionstest weiter drin, ohne einen eigenen "
-           "Aufruf zu kosten")
-    pruefe(P, "die Kette ruft NICHT mehr die Zweierfassung",
-           "leite_eigene_richtung_positionsrobust" not in _zm2,
-           "sie faellt bei Uneinigkeit auf NEUTRAL zurueck und verwischt "
-           "genau das, was jetzt sichtbar sein soll")
+    # DER RICHTUNGSABGLEICH IST STILLGELEGT (16.08.2026). `mehrheit()` bleibt
+    # als Code stehen - sie ist der Beleg dafuer, wie er funktioniert hat, und
+    # die 2.469 gemessenen Zeilen bleiben damit deutbar. Aber sie wird NICHT
+    # mehr aufgerufen, und genau das wird hier geprueft.
+    #
+    # Warum entfernt: SHORT 1.246, NEUTRAL 1.206, LONG 17 ueber 2.469
+    # Pruefungen; bei LONG-Signalen zwei Zustimmungen in 377 Faellen; und
+    # seine Zustimmung trennte die Ausgaenge nicht (0 von 7 gegen 17,2 %).
+    _zm_code = _nur_code("agent/zweite_meinung.py")
+    pruefe(P, "der Richtungsabgleich wird nicht mehr aufgerufen",
+           "mehrheit ( zai_client" not in _zm_code,
+           "vier Aufrufe je Signal, davon drei fuer ein fast konstantes Feld")
+    pruefe(P, "die Funktion bleibt aber lesbar",
+           "def mehrheit" in _zm_code,
+           "die 2.469 gemessenen Zeilen muessen deutbar bleiben")
     pruefe(P, "die alte Zweierfassung bleibt fuer die alten Pipelines",
            "def leite_eigene_richtung_positionsrobust" in
            _quelltext("agent/krypto/gegenpruefung.py"))

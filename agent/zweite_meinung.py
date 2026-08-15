@@ -292,6 +292,80 @@ def kehre_saetze_um(faktentext: dict) -> dict:
     return aus
 
 
+SYSTEM_ROLLE_C = """Du pruefst einen geplanten Handel - aber du siehst NICHT, worauf er sich stuetzt. Du bekommst ausschliesslich Angaben zur POSITIONIERUNG am Terminmarkt: offene Kontrakte, Finanzierungsrate und die Verteilung der Konten. Diese Angaben standen dem Entscheider NICHT zur Verfuegung.
+
+DEINE EINZIGE AUFGABE: sage, ob in DIESEN Angaben etwas gegen den geplanten Handel spricht.
+
+Antworte AUSSCHLIESSLICH mit JSON:
+{"einwand": "ja|nein|unklar", "grund": "<ein Satz, mit der Zahl, auf die du dich stuetzt>"}
+
+Kein Einwand ist eine gueltige Antwort und die haeufigere. Erfinde nichts hinzu; steht eine Angabe nicht da, ist sie kein Argument."""
+
+
+def rolle_c(client, urteil: dict, conn=None, db: str | None = None) -> dict | None:
+    """Rolle C - die Gegenrede mit EIGENER Informationsgrundlage (16.08.2026).
+
+    DER UNTERSCHIED ZUM ALTEN RICHTUNGSABGLEICH ist nicht die Frage, sondern
+    die Grundlage. Der alte bekam dieselben Marktfakten wie Rolle BC und sollte
+    daraus eine eigene Richtung ableiten - zwei Leser derselben Seite. Diese
+    Rolle bekommt, was BC NICHT hatte: die Positionierung am Terminmarkt.
+
+    EIN AUFRUF STATT DREI. Die drei Stimmen des Richtungsabgleichs waren der
+    Versuch, das Eigenrauschen eines Modells auszumitteln, das ohnehin nichts
+    Neues wusste. Bei einer eigenen Faktengrundlage ist die Frage konkret und
+    die Antwort pruefbar - Mehrheiten ersetzen keine Information.
+
+    SIE ENTSCHEIDET NICHTS. Der Einwand steht in der Mail und in der Zeile; er
+    kippt die Empfehlung nicht. Nutzervorgabe vom 29.07., unveraendert."""
+    # LOKALE IMPORTE: `rolle_c` ist eine Funktion auf Modulebene und
+    # sieht die Importe von `hole()` nicht. Genau diese Falle hat am
+    # 14./15.08. dreimal zugeschlagen - `VK`, `_wl`, `assetklasse` -,
+    # und `finde_freie_namen.py` hat sie hier sofort gemeldet.
+    import json
+
+    from agent import positionierung as PO
+    from api.llm_basis import extrahiere_inhalt
+
+    sym = str(urteil.get("symbol") or urteil.get("asset") or "").strip().upper()
+    if not sym:
+        return None
+    eigene = conn
+    try:
+        if eigene is None:
+            import sqlite3
+            eigene = sqlite3.connect(
+                f"file:{db or 'data/tradinginfotool.db'}?mode=ro", uri=True)
+        lage = PO.lage(eigene, sym)
+        saetze = PO.saetze(lage)
+    finally:
+        if conn is None and eigene is not None:
+            try:
+                eigene.close()
+            except Exception:                                # noqa: BLE001
+                pass
+    # KEINE FRAGE OHNE GRUNDLAGE. Liegt zu diesem Wert gar keine
+    # Positionierung vor - bei Aktien, ETF und Rohstoffen der Regelfall -,
+    # wird nicht gefragt. Ein Modell, das ueber nichts urteilt, urteilt
+    # trotzdem, und das waere die naechste Konstante.
+    if not saetze or len(lage.get("fehlt") or []) >= 3:
+        return None
+
+    eingabe = {
+        "geplant": {"aktion": urteil.get("aktion"),
+                    "richtung": urteil.get("richtung")},
+        "positionierung": saetze,
+    }
+    roh = client.chat(
+        [{"role": "system", "content": SYSTEM_ROLLE_C},
+         {"role": "user", "content": json.dumps(eingabe, ensure_ascii=False)}],
+        temperature=0.2, response_format={"type": "json_object"})
+    a = json.loads(extrahiere_inhalt(roh) if not isinstance(roh, str) else roh)
+    wort = str(a.get("einwand") or "").strip().lower()
+    if wort not in ("ja", "nein", "unklar"):
+        return None
+    return {"einwand": wort, "grund": str(a.get("grund") or "").strip()[:400]}
+
+
 def hole(*, faktentext: dict, urteil: dict, zai_client,
          warte_max_s: float = WARTE_MAX_SEKUNDEN) -> dict:
     """Beide Z.ai-Aufrufe, begrenzt auf `warte_max_s`. Nie eine Ausnahme.
@@ -331,28 +405,37 @@ def hole(*, faktentext: dict, urteil: dict, zai_client,
             logger.info("Z.ai-Konsistenzpruefung fehlgeschlagen (P-8)",
                         exc_info=True)
         try:
-            # OHNE Aktion und Begruendung - siehe Modul-Docstring. Der
-            # Faktentext geht unveraendert hinein.
-            # NUR MARKTFAKTEN, und DREI Stimmen statt zwei - beides oben
-            # begruendet. Die Konsistenzpruefung darueber bekommt bewusst
-            # den vollen Text.
-            r = mehrheit(zai_client, nur_markt(faktentext))
+            # HIER STAND DER RICHTUNGSABGLEICH - drei Stimmen auf DENSELBEN
+            # Marktfakten, die auch Rolle BC bekam. Entfernt am 16.08.2026,
+            # aus vier unabhaengigen Gruenden:
+            #
+            #   1. KEINE EIGENE QUELLE. Dasselbe Modell auf denselben
+            #      Kursdaten ist kein zweites Gutachten - die Literatur nennt
+            #      das "Homogeneous Debate": teilen zwei Pruefer die
+            #      Informationsgrenze, verliert die Pruefung ihren Wert.
+            #   2. ER UNTERSCHIED NICHT. Ueber 2.469 Pruefungen: SHORT 1.246,
+            #      NEUTRAL 1.206, LONG 17. Bei LONG-Signalen stimmte er in
+            #      ZWEI von 377 Faellen zu - ein fast konstantes Feld kann
+            #      nichts trennen (R-T6).
+            #   3. SEINE ZUSTIMMUNG TRENNTE DIE AUSGAENGE NICHT: 0 von 7
+            #      Treffern gegen 17,2 % bei Abweichung.
+            #   4. SEINE GEMESSENE GUETE WAR DIE MARKTRICHTUNG. Wer im
+            #      Baerenregime immer SHORT sagt, hat oft recht - das ist
+            #      keine Leistung des Pruefers.
+            #
+            # ER KOSTETE DREI VON VIER AUFRUFEN. Am 15.08. bekamen deshalb
+            # 35 von 39 Signalen GAR KEINE zweite Meinung - die Warteschlange
+            # war doppelt so lang wie die Wartezeit.
+            #
+            # AN SEINE STELLE TRITT ROLLE C: dieselbe Idee, aber mit einer
+            # EIGENEN Grundlage - der Positionierung am Terminmarkt, die
+            # Rolle BC nicht sieht.
+            r = rolle_c(zai_client, urteil)
             if r:
-                aus["eigene_richtung"] = r.get("eigene_richtung")
-                aus["richtung_kurzbegruendung"] = r.get("kurzbegruendung")
-                aus["stimmen"] = r.get("stimmen")
-                aus["von"] = r.get("von")
-                erwartet = G.richtung_aus_action(aktion)
-                # KEIN VERGLEICH OHNE VERGLEICHSBASIS. Bei HALTEN/NICHTS_TUN
-                # liefert `richtung_aus_action()` bewusst None - dort ein
-                # "nein" zu buchen hiesse, eine Abweichung zu zaehlen, wo gar
-                # keine Richtung behauptet wurde.
-                if erwartet is not None:
-                    aus["uebereinstimmung"] = (
-                        "ja" if r.get("eigene_richtung") == erwartet else "nein")
+                aus["einwand"] = r.get("einwand")
+                aus["einwand_grund"] = r.get("grund")
         except Exception:                                    # noqa: BLE001
-            logger.info("Z.ai-Richtungsabgleich fehlgeschlagen (P-8)",
-                        exc_info=True)
+            logger.info("Z.ai-Rolle C fehlgeschlagen (P-8)", exc_info=True)
 
     faden = threading.Thread(target=arbeite, daemon=True,
                              name="zweite-meinung")
@@ -406,22 +489,24 @@ def zeilen(ergebnis: dict) -> list[str]:
         if ergebnis.get("kurzbegruendung"):
             satz += f": {ergebnis['kurzbegruendung']}"
         z.append(satz + ".")
-    if ergebnis.get("eigene_richtung"):
-        satz = ("Ohne unsere Empfehlung zu kennen, liest dasselbe Modell die "
-                f"Lage als {ergebnis['eigene_richtung']}")
-        # DIE KNAPPHEIT GEHOERT IN DIE ZEILE. Bei 30 % Eigenrauschen (gemessen
-        # 13.08.) ist ein 2-von-3 ein Muenzwurf, ein 3-von-3 eine Aussage - und
-        # der Leser kann beides nicht unterscheiden, wenn es nicht dasteht.
-        st, von = ergebnis.get("stimmen"), ergebnis.get("von")
-        if st and von:
-            satz += f" ({st} von {von}" + (", uneinheitlich" if st < von else "")
-            satz += ")"
-        if ergebnis.get("richtung_kurzbegruendung"):
-            satz += f", Begruendung: {ergebnis['richtung_kurzbegruendung']}"
-        # WIDERSPRUCH ZUERST BENANNT, nicht in einem Nebensatz versteckt.
-        if ergebnis.get("uebereinstimmung") == "nein":
-            satz += " - das WIDERSPRICHT der Empfehlung oben"
-        elif ergebnis.get("uebereinstimmung") == "ja":
-            satz += " - das deckt sich"
-        z.append(satz + ".")
+    if ergebnis.get("einwand"):
+        # NUR EIN EINWAND IST EINE ZEILE WERT. "kein Einwand" ist die
+        # haeufigere und die uninteressante Antwort - sie als Satz zu
+        # schreiben waere ein konstantes Feld (R-T6) und saehe fuer den Leser
+        # aus wie eine Bestaetigung, die es nicht ist.
+        if ergebnis["einwand"] == "ja":
+            satz = ("Ein zweites Modell sieht in der Positionierung am "
+                    "Terminmarkt einen EINWAND")
+        elif ergebnis["einwand"] == "unklar":
+            satz = ("Ein zweites Modell kann die Positionierung am "
+                    "Terminmarkt nicht eindeutig lesen")
+        else:
+            satz = None
+        if satz:
+            if ergebnis.get("einwand_grund"):
+                satz += f": {ergebnis['einwand_grund']}"
+            z.append(satz + ".")
+            z.append("Es kennt dabei NUR die Positionierung, nicht die "
+                     "Kurslage - es ist eine zweite Quelle, keine zweite "
+                     "Meinung zum selben Chart.")
     return z
