@@ -286,10 +286,43 @@ def belegt_eur(conn, instrument: str) -> float:
         if not {"quelle_kette", "hebel", "position_size_eur"} <= spalten:
             return 0.0
         bedingung = sql_bedingung(instrument)
+        # NUR EINSTIEGE BELEGEN KAPITAL (14.08.2026 - die Ursache des
+        # Hebel-Stillstands am ersten Betriebstag).
+        #
+        # WAS PASSIERT IST. `_schreibe_nein()` schreibt fuer jedes
+        # NICHTS_TUN/HALTEN eine Zeile MIT `position_size_eur` und `hebel` -
+        # als Messpunkt, damit sich der Kontrollarm spaeter aufloesen laesst.
+        # Diese Funktion zaehlte sie als belegtes Kapital mit. Drei solche
+        # Schattenbuchungen zu je 1.000 EUR fuellen den Hebel-Topf (3.000 EUR)
+        # vollstaendig.
+        #
+        # DIE FOLGE WAR EINE SCHLEIFE, die sich selbst am Leben hielt:
+        #
+        #   Topf voll  ->  Betrag 0 EUR  ->  Verlust an der Stufe "geometrie"
+        #              ->  KEINE Zeile geschrieben
+        #              ->  Cooldown findet nichts
+        #              ->  naechster Lauf fragt dieselben Symbole wieder
+        #
+        # Gemessen am 14.08.: 14 von 41 Hebel-Symbolen je Lauf, alle vier
+        # Viertelstunden neu, 698 Modellaufrufe fuer 46 Urteile. Ohne den
+        # Stopp durch den Nutzer waeren es ueber Nacht rund 3.900 gewesen.
+        #
+        # EIN SCHATTEN IST KEINE POSITION. Er bindet kein Geld, weil nie
+        # gekauft wurde - er haelt nur fest, was passiert waere. Ihn im Topf
+        # mitzuzaehlen verwechselt die Messung mit der Sache.
+        #
+        # ALS EINSCHLUSSLISTE, nicht als Ausschluss: gezaehlt wird, was eine
+        # Position EROEFFNET. Ein Verkaufsvorschlag bindet ebenso wenig Kapital
+        # wie ein Schatten, und eine Liste des Erlaubten faengt auch die
+        # Aktionen, die es noch nicht gibt.
+        from agent.signal_mail import AKTIONEN_MIT_EINSTIEG
+
+        platzhalter = ", ".join("?" for _ in AKTIONEN_MIT_EINSTIEG)
         zeile = conn.execute(
             f"SELECT COALESCE(SUM(position_size_eur), 0) FROM signals "
             f"WHERE quelle_kette = 'rollen' AND outcome_status IS NULL "
-            f"AND {bedingung}").fetchone()
+            f"AND action IN ({platzhalter}) AND {bedingung}",
+            tuple(AKTIONEN_MIT_EINSTIEG)).fetchone()
         return float(zeile[0] or 0.0)
     except Exception:                                        # noqa: BLE001
         return 0.0

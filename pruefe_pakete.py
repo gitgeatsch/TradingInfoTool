@@ -4856,13 +4856,16 @@ def paket_15() -> None:
            "er hat seinen eigenen, eindeutigen Unterscheider")
 
     with sqlite3.connect(":memory:") as _c6:
+        # MIT `action` - seit dem 14.08. zaehlt der Topf nur EINSTIEGE, und
+        # eine offene Position stammt in der Wirklichkeit immer aus einem.
         _c6.execute("CREATE TABLE signals (symbol TEXT, created_at TEXT, "
-                    "quelle_kette TEXT, hebel REAL, position_size_eur REAL, "
-                    "outcome_status TEXT)")
+                    "action TEXT, quelle_kette TEXT, hebel REAL, "
+                    "position_size_eur REAL, outcome_status TEXT)")
         for _s, _h, _p in (("BTC", None, 800.0), ("DBPK", None, 500.0),
                            ("ETH", 3.0, 1000.0), ("3QSS", None, 300.0)):
-            _c6.execute("INSERT INTO signals VALUES (?,?,?,?,?,NULL)",
-                        (_s, "2026-08-14T07:00:00+00:00", "rollen", _h, _p))
+            _c6.execute("INSERT INTO signals VALUES (?,?,?,?,?,?,NULL)",
+                        (_s, "2026-08-14T07:00:00+00:00", "ERÖFFNEN" if _h else "KAUFEN", "rollen",
+                         _h, _p))
         pruefe(P, "eine Absicherung belegt kein Spot-Budget mehr",
                TP6.belegt_eur(_c6, "spot") == 800.0
                and TP6.belegt_eur(_c6, "absicherung") == 800.0
@@ -5187,6 +5190,59 @@ def paket_15() -> None:
            "eine Dateikopie waere unter WAL heikel - die juengsten "
            "Aenderungen stehen dann in `-wal`, nicht in der Hauptdatei. "
            "Nachgesehen, BEVOR umgestellt wurde")
+
+    # ------------------------------------------------------------------
+    # AH. DER HEBEL-STILLSTAND (14.08.2026) - die teuerste Zeile des Tages.
+    #
+    # Erster Betriebstag, Gate-Aufzeichnung um 19:58:
+    #
+    #     In:41  Out:0
+    #       Auftrag:    17x Hebel-Pruefung abgeschaltet   (Nutzerschalter, ok)
+    #       Aktion:     5x SCHLIESSEN ohne Bestand, 5x HALTEN
+    #       Geometrie:  14x Betrag 0 EUR < 10 EUR Minimum   <-- HIER
+    #
+    # `_schreibe_nein()` schreibt fuer jedes NICHTS_TUN eine Zeile MIT
+    # `position_size_eur` und `hebel` - als Messpunkt. `belegt_eur()` zaehlte
+    # sie als belegtes Kapital. DREI solche Schattenbuchungen zu 1.000 EUR
+    # fuellen den Hebel-Topf (3.000 EUR) vollstaendig.
+    #
+    # UND DANN HAELT SICH DIE SCHLEIFE SELBST AM LEBEN: Topf voll -> Betrag 0
+    # -> Verlust an der Stufe "geometrie" -> KEINE Zeile -> Cooldown findet
+    # nichts -> naechster Lauf fragt dieselben 14 Symbole wieder. Gemessen:
+    # 698 Modellaufrufe fuer 46 Urteile, alle 15 Minuten von vorn.
+    from agent import toepfe as TP8
+
+    with sqlite3.connect(":memory:") as _c10:
+        _c10.execute("CREATE TABLE signals (symbol TEXT, action TEXT, "
+                     "quelle_kette TEXT, hebel REAL, position_size_eur REAL, "
+                     "outcome_status TEXT, ist_reines_llm_halten INTEGER)")
+        for _s, _a in (("AAA", "NICHTS_TUN"), ("BBB", "HALTEN"),
+                       ("CCC", "SCHLIESSEN")):
+            _c10.execute("INSERT INTO signals VALUES (?,?,?,?,?,NULL,1)",
+                         (_s, _a, "rollen", 3.0, 1000.0))
+        pruefe(P, "Schattenbuchungen belegen KEIN Kapital",
+               TP8.belegt_eur(_c10, "hebel") == 0.0,
+               "ein Schatten bindet kein Geld, weil nie gekauft wurde - er "
+               "haelt nur fest, was passiert waere. Ihn im Topf mitzuzaehlen "
+               "verwechselt die Messung mit der Sache")
+        pruefe(P, "und ein Verkaufsvorschlag ebenfalls nicht",
+               TP8.belegt_eur(_c10, "hebel") == 0.0,
+               "SCHLIESSEN bindet kein Kapital - es gibt welches frei")
+        _c10.execute("INSERT INTO signals VALUES "
+                     "('DDD','ERÖFFNEN','rollen',3.0,1000.0,NULL,NULL)")
+        pruefe(P, "ein echter Einstieg dagegen schon",
+               TP8.belegt_eur(_c10, "hebel") == 1000.0,
+               "gezaehlt wird, was eine Position EROEFFNET")
+        _c10.execute("INSERT INTO signals VALUES "
+                     "('EEE','ERÖFFNEN','rollen',3.0,900.0,"
+                     "'take_profit_erreicht',NULL)")
+        pruefe(P, "ein aufgeloester Einstieg belegt nichts mehr",
+               TP8.belegt_eur(_c10, "hebel") == 1000.0,
+               "outcome_status IS NULL - die Position ist zu")
+    pruefe(P, "gezaehlt wird ueber eine EINSCHLUSSliste",
+           "AKTIONEN_MIT_EINSTIEG" in _quelltext("agent/toepfe.py"),
+           "eine Ausschlussliste faengt nur, was jemand vorhergesehen hat - "
+           "und die naechste Aktion, die kein Kapital bindet, kommt bestimmt")
     c.close()
 
 
