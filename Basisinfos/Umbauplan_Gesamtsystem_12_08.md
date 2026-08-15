@@ -2668,3 +2668,88 @@ sich etwas geändert").
 
 Der bitgleiche Spot-Prompt ist die wichtigste Zeile dieser Tabelle: alle
 bisherigen Messungen bleiben vergleichbar.
+
+### 26.8 Der sechste Fund — zwei Geometrien für dasselbe Signal
+
+Der Nutzer, nachdem der Fund benannt war:
+
+> *„ein ähnliches Problem hast du gestern bereits gefixed — offenbar ist der
+> Fehler verstreut."*
+
+Er hat recht, und das ist die eigentliche Lehre. Es gab **drei** Stellen:
+
+| Weg | las die Geometrie aus | Stand |
+|---|---|---|
+| Mail (`rollen_lauf`) | der **Rechnung** | 14.08. repariert |
+| Schattenbuchung (`_schreibe_nein`) | der Rechnung, **nachgeflickt** | Flicken |
+| **Hauptpfad (`signal_abbildung`)** | **dem Modell** | unbemerkt |
+
+Zwei Reparaturen an zwei Symptomen, und die Ursache stand unberührt dazwischen.
+Dasselbe Signal trug damit zwei Geometrien: eine, die der Nutzer liest, und
+eine, die in der Datenbank steht.
+
+**Gemessen an den 23 Einstiegen des Vormittags:**
+
+| | |
+|---|---|
+| Zeilen mit **engerem** Stop als die Mail | **19 von 23** |
+| Median-Faktor | 1,5× |
+| Äußerster Fall | ETH, 0,94 % gegen 2,50 % (2,7×) |
+| Zeilen unter RM-1b (2,5 %) | **7** |
+
+> ⚠️ **Korrektur meiner eigenen Zahl:** zuerst nannte ich Faktor 3 bis 7. Diese
+> Rechnung ließ `umgeworfen_preis_eur` weg — den Falsifikationspreis des
+> Modells, der in den Stop eingeht. Mit ihm sind es 1,5 im Median. Die
+> Richtung bleibt, die Größenordnung war zu hoch.
+
+**Warum es mehr als Unsauberkeit ist:** `stop_loss_*` wird von **17 Modulen**
+gelesen, darunter `backward_tracking` — die Erfolgsmessung. Sie hätte jedes
+Rollen-Signal an einem Stop gemessen, der nie empfohlen wurde, und die
+Trefferbilanz wäre systematisch zu schlecht ausgefallen. Die sieben Zeilen
+unter RM-1b gehören zu der Klasse, für die dieses Projekt **0,0 %
+Trefferquote über 9 Trades** gemessen hat.
+
+**Der Fix:** die Abbildung nimmt die Geometrie aus der Rechnung, für **beide**
+Wege; der Flicken im Schattenpfad fällt weg. Der Stop steht in `von` und `bis`
+gleichermaßen — eine Marke, an der geschlossen wird, hat keine zwei Kanten.
+Das Modell bleibt Rückfall für Zeilen ohne Rechnung, und seine Zahl ist nicht
+verloren: `umgeworfen_preis_eur` geht als **Eingabe** in genau diesen Stop.
+
+**Nebenbefund für O-34:** `stop_zu_eng` wird von **niemandem** gelesen —
+außerhalb von `rolle_trader.py` null Fundstellen. Nach diesem Fix ist das
+keine Lücke mehr, sondern eine Messgröße: wie oft schlägt das Modell einen
+Stop vor, der unter dem Grundrauschen liegt.
+
+> **Eine Prüfung hielt den ORT des Flickens fest statt die Tatsache** und
+> schlug deshalb an, obwohl die Sache besser gelöst ist. Sie prüft jetzt das
+> Verhalten. Eine Prüfung, die eine Stelle festschreibt, verbietet ihre
+> Verbesserung.
+
+### 26.9 Welche Krypto-Assets in den Hebel-Lauf gehen
+
+Nutzerfrage: *„nur jene welche in der GUI mit Hebel gekennzeichnet sind?"*
+
+**Ja** — Kette und Oberfläche fragen dieselbe Funktion
+(`asset_schalter.darf_analysiert_werden` und `ui/app.py`), es gibt keinen
+zweiten Weg. Die 19 abgeschalteten greifen nachweislich: 34 Gate-Verluste mit
+genau dieser Begründung, kein Signal von einem abgeschalteten Asset.
+
+| | Anzahl |
+|---|---|
+| Krypto in der Watchlist | 44 |
+| Schalter ausdrücklich **aus** | 19 |
+| Schalter ausdrücklich **an** | 17 |
+| **ohne jede Zeile** | **8** |
+| → gehen in den Hebel-Lauf | **25** |
+
+**Der Schalter ist ein Opt-out, kein Opt-in.** Ohne Zeile gilt „an"
+(`db.py:1653`, ausdrücklich so entworfen). Die GUI zeigt sie deshalb als „An" —
+ehrlich, aber vom Nutzer nie entschieden: BNB, BTC, ETH, HYPE, KAIA, SUI, TAO
+und **EURCV**.
+
+**Vier der zwölf Hebel-Signale des Vormittags stammen daraus** (BNB, ETH,
+HYPE, TAO). Und EURCV ist ein Euro-Stablecoin — er fällt nur deshalb nicht ins
+Modell, weil seine Reihe keine Tageskerzen hat. Dass ihn ein Datenmangel
+aufhält und keine Regel, ist Zufall.
+
+**Offen, gehört dem Nutzer:** ob die acht ohne Zeile bewusst mitlaufen sollen.
