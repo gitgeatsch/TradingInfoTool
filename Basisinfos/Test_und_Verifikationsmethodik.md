@@ -1038,7 +1038,7 @@ immer „ich will X wissen", nie „welches Skript gibt es".
 | Skript | Beantwortet | Auslöser |
 |---|---|---|
 | `messe_verkaufsseite.py` | **Ist die Verkaufsseite ein Befund oder ein Münzwurf?** (O-29) Kreuztabelle Aktion × Bestand, dann AUC und Permutationstest über die gemessenen Merkmale. Kein Modellaufruf, feste Saat. | nach jedem Lauf — die Stichprobe wächst, und erst mit ihr bekommt der Test Trennschärfe |
-| `messe_begruendungen.py` | **Welche unserer Faktenblöcke tragen?** Ordnet jeden Beleg dem Block zu, aus dem er stammt (`lagebeschreibung.geteilt()`), und hält die Ausgänge dagegen. | sobald Signale **mit** `belege_json` aufgelöst sind |
+| `messe_begruendungen.py` | **Welche unserer Faktenblöcke tragen?** Ordnet jeden Beleg dem Block zu, aus dem er stammt (`lagebeschreibung.geteilt()`), schlüsselt **je Instrument** auf (Belege je Zeile) und hält die Ausgänge dagegen. Weist den `unbekannt`-Anteil aus — steigt er, ist die **Zuordnung** veraltet, nicht die Datenlage schlecht. | nach jedem Lauf für die Verteilung; die Erfolgsspalte erst, sobald Signale **mit** `belege_json` aufgelöst sind |
 
 > **Warum eigenständig und nicht im Export.** Beim Bauen war mein erster
 > Reflex, sie in `extract_notebook_diagnose.py` einzuhängen — „Auswertungen

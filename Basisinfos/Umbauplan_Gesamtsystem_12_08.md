@@ -3108,3 +3108,120 @@ gelangt; ich hatte damals notiert, sie seien in die `.gitignore` aufgenommen.
 
 Die Nein-Zeile ist an beiden Instrumenten belegt: `ist_reines_llm_halten=1`,
 `gate_passed=0`, und im Hebel-Lauf mit gesetzter Hebelspalte.
+
+
+---
+
+## Kapitel 29 — O-34: welcher Faktenblock trägt? (15.08.2026)
+
+### 29.1 Zuerst die Zuordnung reparieren, dann messen
+
+Der erste Lauf meldete **19 % nicht zuordenbar** — und das Werkzeug sagt selbst,
+was das heißt: *steigt dieser Anteil, ist die Zuordnung veraltet und nicht etwa
+die Datenlage schlecht.* Die sechzig unzugeordneten Belege waren drei klar
+erkennbare Gruppen:
+
+| Gruppe | Beispiel aus dem Lauf | gehört zu |
+|---|---|---|
+| Lagebild-Prosa | *„der Krypto-Sektor befindet sich in einer Schwächephase"* | `lagebild` |
+| eigene Wortwahl des Modells | *„HYPE 60-Tage-Entwicklung bei −17,0"* | `bewegung` |
+| Absicherungssätze | *„Gesamtexposure von 8.915 EUR"* | **fehlte ganz** |
+
+Der dritte Fall ist der interessanteste: **Paket 14 ist vom 15.08., die
+Zuordnung vom 14.08.** Der Absicherungsblock existierte im Werkzeug nicht.
+
+Nach der Korrektur: **3 % nicht zuordenbar.** Erst damit ist die Rangfolge
+belastbar.
+
+### 29.2 Die Verteilung — 70 Signale, 319 Belege
+
+| Block | Kauf | Verkauf | Summe |
+|---|---|---|---|
+| struktur | 58 | 22 | **80** |
+| finanzierung | 44 | 12 | 56 |
+| bewegung | 38 | 12 | 50 |
+| marken | 33 | 13 | 46 |
+| volumen | 27 | 5 | 32 |
+| lagebild | 16 | 7 | 23 |
+| bestand | 4 | 16 | 20 |
+| unbekannt | 7 | 3 | 10 |
+| absicherung | 2 | 0 | 2 |
+
+### 29.3 Und die eigentliche Frage: WO wird zitiert?
+
+Die Gesamtliste sagt, wie oft — nicht wo. Deshalb schlüsselt das Werkzeug jetzt
+nach Instrument auf, **Belege je Zeile** (absolut gewinnt sonst die größere
+Gruppe):
+
+| Block | hebel | spot |
+|---|---|---|
+| struktur | 1,22 | 1,08 |
+| **finanzierung** | **1,00** | **0,63** |
+| bewegung | 0,66 | 0,76 |
+| marken | 0,75 | 0,58 |
+| volumen | 0,50 | 0,42 |
+| lagebild | 0,16 | **0,47** |
+| bestand | 0,03 | **0,50** |
+
+**Drei Befunde:**
+
+**Die Finanzierungsrate wird in 63 % der Spot-Entscheidungen zitiert.** Sie ist
+eine Größe des Terminmarkts — bei einem Spot-Kauf zahlt und bekommt man sie
+nicht. `baue_fall()` liefert den Block unabhängig vom Instrument, und das
+Modell nutzt ihn. Als Stimmungsmaß ist das vertretbar, als *Kostenargument*
+nicht. **Das ist der erste Kandidat für eine Prompt-Entscheidung** — und die
+erste, die auf einer Messung stünde statt auf einer Annahme.
+
+**Der Bestandsblock arbeitet genau richtig herum:** 0,50 je Spot-Zeile gegen
+0,03 im Hebel-Lauf. Nach dem Fix vom 15.08. sieht der Hebel-Lauf korrekt „keine
+offene Hebelposition" — es gibt dort schlicht nichts zu zitieren.
+
+**Das Lagebild wird im Spot dreimal häufiger zitiert als im Hebel** (0,47 gegen
+0,16). Es kostet acht Modellaufrufe am Tag. Ob sich das trägt, ist noch nicht
+entschieden — es speist auch den `gleichlauf`, nicht nur die Belege.
+
+### 29.4 Was noch nicht messbar ist
+
+**Ein einziges aufgelöstes Signal.** Die Erfolgsspalte steht im Bericht, aber
+sie sagt nichts: *„100 % Trefferquote"* über n = 1 ist keine Aussage. Die
+Verteilung ist da, der Erfolg braucht Wochen — genau die Trennung, die das
+Werkzeug von Anfang an ausweist.
+
+### 29.5 Gegenprüfung der beiden vorigen Umsetzungen — an echten Daten
+
+Nicht meine eigenen Tests wiederholt, sondern der Produktionslauf vom 15.08.
+durchgerechnet: **hätten die Änderungen dort genau das getan, was sie sollen?**
+
+**O-37, die Einstiegssperre:**
+
+```
+50 Einstiege am 15.08.
+  gesperrt worden waeren:              2  (ETH/spot, TURBO/hebel)
+  unveraendert durchgegangen:         48
+  OHNE die Bestandspruefung:          13
+```
+
+> ⚠️ **Korrektur einer eigenen Zahl.** Ich hatte gemeldet: *„von sieben
+> Symbolen mit SCHLIESSEN bekamen sieben eine Eröffnungsempfehlung"*. Das war
+> auf **Symbolebene** und schloss Ausstiegsempfehlungen zu **alten
+> Signalzeilen ohne Position** ein. Auf der Ebene, auf der die Sperre wirklich
+> arbeitet — (Symbol, Instrument) und echter Bestand —, sind es **2 von 50**.
+> Die Richtung des Befundes bleibt, die Größenordnung war zu hoch.
+
+Damit ist die Präzisierung nachträglich belegt: ohne `ist_bestand` hätte die
+Sperre **13 statt 2** Einstiege getroffen — der Rest wären alte Zeilen ohne
+Gegenstand gewesen.
+
+**O-35, der Hebel-Tab:**
+
+```
+115 Rollen-Zeilen, davon 32 mit Hebel und Richtung
+  erwartete Paare (Symbol, Richtung):  22
+  von der Abfrage geliefert:           22
+```
+
+Keine Spot-Zeile dabei, je Paar die jüngste, `hebel` → `hebel_final`, `modell`
+→ `llm_model`, und `trigger_score`/`eigenkapitalbedarf_eur` bleiben leer statt
+erfunden.
+
+**12 von 12 bestanden**, dazu 818 Paketprüfungen.
