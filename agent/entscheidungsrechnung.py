@@ -67,7 +67,13 @@ GRENZEN = {
     # DIE CRV-ABSTUFUNG, aus der alten Kette uebernommen (13.08.2026) -
     # identisch zu `risiko.crv_positionsgroesse_spreizung` und `..._voll_ab`.
     # Begruendung in `_crv_faktor()`.
-    "crv_spreizung": 5.0,
+    "crv_spreizung": 1.0,      # STILLGELEGT 15.08.2026 - siehe
+                               # _crv_faktor(). 5.0 war an 298 Signalen der
+                               # ALTEN Kette gemessen, als das Ziel mechanisch
+                               # bei CRV 2,0 lag. Seit dem Struktur-Ziel
+                               # (12.08.) faellt das CRV aus dem Chart, und die
+                               # Abstufung kuerzte damit fast jede Empfehlung
+                               # pauschal auf ein Fuenftel. 1.0 = ohne Wirkung.
     "crv_voll_ab": 6.0,
 
     "hebel_max": 10.0,              # Bitpanda Margin: 2x-10x
@@ -336,6 +342,35 @@ def _crv_faktor(crv: float, instrument: str,
     return sockel + (1.0 - sockel) * spanne
 
 
+# Die Mindestgroesse JE KOSTENKLASSE (15.08.2026).
+#
+# GEMESSEN, NICHT GESETZT. Kosten in R bei 5 % Stop:
+#
+#     Betrag      Krypto     Boerse
+#         25       0,600      1,700
+#        100       0,600      0,500
+#        400       0,600      0,200
+#
+# KRYPTO IST BETRAGSUNABHAENGIG - 1,5 % je Seite kuerzen sich heraus. Eine
+# Mindestgroesse aus Gebuehrengruenden hat dort GAR KEINE Grundlage; die 100
+# EUR stammen aus der Boersenlogik und galten dort mit, weil niemand sie
+# getrennt hat. Was bei Krypto bleibt, ist eine praktische Untergrenze: unter
+# 25 EUR lohnt der Aufwand nicht, aber das ist eine Aussage ueber den Menschen,
+# nicht ueber die Gebuehren.
+#
+# AN DER BOERSE bleibt es bei 100 EUR. Der Wert wird NICHT angehoben, obwohl
+# die Kostenquote dort erst ab rund 250 EUR ertraeglich wird - eine strengere
+# Grenze wuerde mehr Empfehlungen verschwinden lassen, und das ist die Richtung,
+# aus der wir gerade kommen. Die Kostenzahl steht stattdessen in der Mail.
+BETRAG_MIN_JE_KOSTENKLASSE = {"krypto": 25.0, "boerse": 100.0}
+
+
+def betrag_min_eur(kostenklasse: str = "krypto") -> float:
+    """Die kleinste sinnvolle Positionsgroesse fuer diese Kostenklasse."""
+    return BETRAG_MIN_JE_KOSTENKLASSE.get(
+        str(kostenklasse or "").strip().lower(), GRENZEN["betrag_min_eur"])
+
+
 def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
            instrument: str = "spot", betrag_wunsch_eur: float | None = None,
            topf_frei_eur: float | None = None,
@@ -431,13 +466,33 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
     if _faktor < 1.0:
         betrag, grund = betrag * _faktor, f"CRV-Abstufung ({crv:.2f})"
     e["crv_groessenfaktor"] = round(_faktor, 3)
-    if topf_frei_eur is not None and betrag > float(topf_frei_eur):
-        betrag, grund = float(topf_frei_eur), "Topf"
-    # RM-4 MIT EIGENEM GRUND, nicht in den Topf hineingerechnet. Beide
-    # begrenzen, aber aus verschiedenen Anlaessen - waeren sie ein Wert, sagte
-    # die Notiz "Topf", wo in Wahrheit das Geld fehlt.
-    if cash_frei_eur is not None and betrag > float(cash_frei_eur):
-        betrag, grund = float(cash_frei_eur), "Cash-Reserve (RM-4)"
+    # TOPF UND CASH AENDERN DEN BETRAG NICHT MEHR (15.08.2026).
+    #
+    # DIE TRENNLINIE, auf die sich der Nutzer und ich geeinigt haben:
+    #
+    #     Das System bemisst den EINZELNEN TRADE.
+    #     Die Aufteilung des PORTFOLIOS bemisst der Nutzer.
+    #
+    # Stop, Positionsgroesse aus Risiko und Hebel aus Liquidationsabstand
+    # folgen aus dem Trade allein - dafuer braucht es kein Portfoliowissen.
+    # Topf und Cash-Reserve brauchen es sehr wohl, und zwar Wissen, das dieses
+    # System NICHT HAT: ob der Nutzer die Empfehlungen von gestern ausgefuehrt
+    # hat. Es kennt seinen Bestand (Bitpanda-Sync), nicht seine Absicht.
+    #
+    # WAS DAS IN DER PRAXIS ANRICHTETE: der Hebel-Topf zaehlte EMPFEHLUNGEN.
+    # Ein einziges Signal (LINK, 500 EUR) fuellte den 500er-Topf, und ab da
+    # bekam jedes weitere Hebel-Symbol Betrag 0 - blockiert NACH dem
+    # Modellaufruf, ohne Zeile, also ohne Cooldown. 802 Modellaufrufe fuer 47
+    # Urteile an einem Tag.
+    #
+    # Die Zahlen bleiben und wandern in die MAIL, als Lagebild. Der Nutzer:
+    # "Deckel laufen nur als Info fuer den User mit im eMail."
+    if topf_frei_eur is not None:
+        e["topf_frei_eur"] = round(float(topf_frei_eur), 2)
+        e["topf_wuerde_ueberschreiten"] = betrag > float(topf_frei_eur)
+    if cash_frei_eur is not None:
+        e["cash_frei_eur"] = round(float(cash_frei_eur), 2)
+        e["cash_wuerde_ueberschreiten"] = betrag > float(cash_frei_eur)
     if betrag > GRENZEN["betrag_max_eur"]:
         betrag, grund = GRENZEN["betrag_max_eur"], "Hoechstbetrag"
     # DIE ABSTUFUNG DARF NICHT ZUM STILLEN FILTER WERDEN (14.08.2026).
@@ -456,16 +511,19 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
     #
     # ABGEBROCHEN WIRD WEITERHIN, wenn schon der WUNSCH zu klein war - dann hat
     # niemand eine Abstufung angewandt, sondern es ist schlicht zu wenig Geld.
-    if (betrag < GRENZEN["betrag_min_eur"]
-            and grund and grund.startswith("CRV-Abstufung")
-            and float(betrag_wunsch_eur or 0) >= GRENZEN["betrag_min_eur"]):
-        betrag = GRENZEN["betrag_min_eur"]
+    _min = betrag_min_eur(kostenklasse)
+    e["betrag_min_eur"] = _min
+    if (betrag < _min and grund and grund.startswith("CRV-Abstufung")
+            and float(betrag_wunsch_eur or 0) >= _min):
+        betrag = _min
         grund = f"{grund}, auf Mindestgroesse angehoben"
-    if betrag < GRENZEN["betrag_min_eur"]:
+    if betrag < _min:
+        # DIE EINZIGE HARTE GRENZE, die uebrig bleibt - und sie ist eine
+        # Eigenschaft des TRADES, nicht des Portfolios: unter dieser Groesse
+        # frisst die Gebuehr das Risikobudget. Deshalb darf sie bleiben.
         raise RechnungBlockiert(
-            f"Betrag {betrag:.0f} EUR unter der Mindestgroesse "
-            f"{GRENZEN['betrag_min_eur']:.0f} EUR - bei dieser Groesse frisst "
-            f"die Fixgebuehr das Risikobudget")
+            f"Betrag {betrag:.0f} EUR unter der Mindestgroesse {_min:.0f} EUR "
+            f"fuer die Kostenklasse {kostenklasse!r}")
 
     if instrument == "hebel":
         hebel_noetig = risiko_eur / (betrag * stop_rel)
@@ -566,4 +624,29 @@ def saetze(e: dict) -> list[str]:
                  f"Liquidation etwa {preis(e['liquidation_etwa_eur'])} EUR)")
     z.append(f"Am Stop verlieren Sie {_eur(e['verlust_am_stop_eur'])} EUR, "
              f"am Ziel gewinnen Sie {_eur(e['gewinn_am_ziel_eur'])} EUR.")
+
+    # DIE LAGE - Information, kein Eingriff (15.08.2026).
+    #
+    # Topf und Cash aendern den Betrag nicht mehr; sie stehen hier, damit der
+    # Nutzer die Portfolioentscheidung treffen kann, die das System nicht
+    # treffen darf. Es kennt seinen Bestand, nicht seine Absicht.
+    lage = []
+    if e.get("topf_frei_eur") is not None:
+        lage.append(f"Im Topf frei    {_eur(e['topf_frei_eur'])} EUR"
+                    + ("   !! diese Position wuerde ihn ueberschreiten"
+                       if e.get("topf_wuerde_ueberschreiten") else ""))
+    if e.get("cash_frei_eur") is not None:
+        lage.append(f"Cash frei       {_eur(e['cash_frei_eur'])} EUR"
+                    + ("   !! reicht fuer diese Position nicht"
+                       if e.get("cash_wuerde_ueberschreiten") else ""))
+    if lage:
+        z += [""] + lage + [
+            "Diese Zahlen begrenzen die Empfehlung NICHT - sie setzen voraus,",
+            "dass Sie die uebrigen Empfehlungen dieses Laufs nicht ausfuehren."]
+    if e.get("betrag_min_eur"):
+        z.append(f"Kleinste sinnvolle Groesse hier: "
+                 f"{_eur(e['betrag_min_eur'])} EUR "
+                 + ("(Krypto: die Gebuehr ist prozentual, der Betrag kuerzt "
+                    "sich heraus)" if e["betrag_min_eur"] <= 50 else
+                    "(Boerse: 1 EUR fix je Seite - kleiner lohnt nicht)"))
     return z

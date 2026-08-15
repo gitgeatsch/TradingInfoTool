@@ -948,9 +948,23 @@ def paket_10() -> None:
     # DIE BEIDEN ZAHLEN AUS DEM AUFTRAG, jede an ihrer eigenen Grenze.
     e = ER.rechne(kurs=55500, atr=1677, risiko_eur=75, instrument="hebel",
                   betrag_wunsch_eur=1500, topf_frei_eur=500)
-    pruefe(P, "1.500 EUR Wunsch kommen nicht durch",
-           e["betrag_eur"] <= 500 and e["betrag_gedeckelt_durch"] == "Topf",
-           "der Topf ist ein Deckel, kein Richtwert")
+    # UMGESCHRIEBEN 15.08.2026. Bis dahin verlangte diese Pruefung, dass der
+    # Topf den Betrag KAPPT. Genau das hat am 14.08. die Hebelkette
+    # stillgelegt: ein Signal fuellte den Topf, jedes weitere bekam Betrag 0 -
+    # blockiert NACH dem Modellaufruf, ohne Zeile, also ohne Cooldown.
+    #
+    # DIE TRENNLINIE SEIT DEM 15.08.: das System bemisst den einzelnen Trade,
+    # die Aufteilung des Portfolios bemisst der Nutzer. Der Topf braucht
+    # Wissen, das dieses System nicht hat - ob der Nutzer die Empfehlungen von
+    # gestern ausgefuehrt hat. Er MELDET jetzt, statt zu kappen.
+    pruefe(P, "der Topf aendert den Betrag NICHT mehr",
+           e["betrag_eur"] > 500,
+           f"{e['betrag_eur']} EUR - ein Deckel, der ein Signal verschwinden "
+           "laesst, ist ein unsichtbares Veto")
+    pruefe(P, "aber er meldet, dass er ueberschritten wuerde",
+           e.get("topf_frei_eur") == 500.0
+           and e.get("topf_wuerde_ueberschreiten") is True,
+           "die Zahl wandert in die Mail - der Nutzer entscheidet")
     a, regel = ER._stop_abstand(55500, 1677, 54800)
     pruefe(P, "ein 1,26-%-Stop kommt nicht durch",
            a / 55500 >= ER.GRENZEN["stop_min_relativ"] and "Rauschen" in regel,
@@ -3461,30 +3475,37 @@ def paket_15() -> None:
     from agent import rollen_lauf as RL2
     from agent import toepfe as TO
 
-    # L1 DIE CRV-ABSTUFUNG - die einzige GEMESSENE Groessenregel der alten Kette.
-    pruefe(P, "bei CRV 2,0 nur ein Fuenftel der vollen Groesse",
-           abs(ER._crv_faktor(2.0, "spot") - 0.2) < 1e-9,
-           f"Spreizung {ER.GRENZEN['crv_spreizung']} -> Sockel 1/5")
-    pruefe(P, "ab CRV 6,0 die volle Groesse",
-           ER._crv_faktor(6.0, "spot") == 1.0
-           and ER._crv_faktor(9.0, "spot") == 1.0,
-           "oberhalb wird nicht weiter belohnt")
-    pruefe(P, "dazwischen stufenlos, nicht in Spruengen",
-           ER._crv_faktor(2.0, "spot") < ER._crv_faktor(3.0, "spot")
-           < ER._crv_faktor(4.5, "spot") < ER._crv_faktor(6.0, "spot"),
-           "vorher bekamen CRV 2,5 und CRV 6,0 dieselbe Groesse")
-    pruefe(P, "der Faktor kann NIE vergroessern",
-           all(ER._crv_faktor(c / 10, "spot") <= 1.0 for c in range(0, 200)),
-           "sicher durch Bauform - eine Ueberexposition ist ausgeschlossen, "
-           "nicht bloss unwahrscheinlich")
-    # DIE WICHTIGSTE DIESER PRUEFUNGEN.
-    pruefe(P, "die ABSICHERUNG wird nicht mitgekuerzt",
-           all(ER._crv_faktor(c / 10, "absicherung") == 1.0
-               for c in range(20, 100)),
-           "eine Absicherung bemisst sich am abzusichernden Exposure, nicht an "
-           "einem CRV - auf ein Fuenftel gekuerzt schuetzt sie ein Fuenftel "
-           "dessen, was sie soll. Die erste Fassung fragte 'ausser Hebel' ab "
-           "und traf sie mit")
+    # L1 DIE CRV-ABSTUFUNG IST STILLGELEGT (15.08.2026).
+    #
+    # Sie war die einzige GEMESSENE Groessenregel der alten Kette - an 298
+    # Spot-Signalen, SQN +0,63 -> +1,36. Diese Pruefungen verlangten bis heute,
+    # dass sie WIRKT.
+    #
+    # WARUM SIE STILL IST. Gemessen wurde sie, als das Ziel MECHANISCH bei
+    # CRV 2,0 lag. Seit dem Struktur-Ziel (12.08.) haengt es am naechsten
+    # Widerstand - das CRV faellt aus dem Chart und ist keine Konstante mehr.
+    # Mit `crv_voll_ab = 6.0` traf der Regelfall CRV 2,0 den Sockel 1/5:
+    #
+    #     CRV 2,0 -> 160 von 800 EUR
+    #
+    # Das ist kein Regler mehr, sondern eine pauschale Kuerzung auf ein
+    # Fuenftel - aus einer Messung unter Bedingungen, die es nicht mehr gibt.
+    # Dieselbe Fehlerklasse wie dreimal am 14.08.
+    #
+    # SIE WIRD NICHT NEU KALIBRIERT, sondern stillgelegt. Eine neue Spreizung
+    # waere wieder eine Zahl ohne Messung. Messbar wird sie, sobald die neue
+    # Kette aufgeloeste Signale liefert - dann steht die Frage neu.
+    pruefe(P, "die CRV-Abstufung hat keine Wirkung mehr",
+           ER.GRENZEN["crv_spreizung"] == 1.0
+           and ER._crv_faktor(2.0, "spot", "krypto") == 1.0
+           and ER._crv_faktor(6.0, "spot", "krypto") == 1.0,
+           "1.0 = ohne Wirkung; der Faktor bleibt im Code, damit die Regel "
+           "wieder eingeschaltet werden kann, wenn sie gemessen ist")
+    pruefe(P, "und der Betrag folgt jetzt der Tranche",
+           ER.rechne(kurs=100.0, atr=3.0, risiko_eur=120.0, instrument="spot",
+                     betrag_wunsch_eur=800.0)["betrag_eur"] == 800.0,
+           "eine Zahl, die der Nutzer vorgegeben hat - und eine, die aus dem "
+           "Stop folgt. Mehr entscheidet das System nicht")
     pruefe(P, "die Regel ist eine EINSCHLUSSliste",
            'instrument != "spot"' in _quelltext("agent/entscheidungsrechnung.py"),
            "eine Ausschlussliste faengt nur, was jemand vorhergesehen hat; "
@@ -3504,10 +3525,11 @@ def paket_15() -> None:
            "eine Kuerzung, die niemand sieht, ist der unsichtbare Filter")
     # DER SCHLUESSEL HEISST `betrag_gedeckelt_durch`, nicht `betrag_grund` -
     # nachgesehen statt geraten, nachdem die erste Fassung genau daran scheiterte.
-    pruefe(P, "und der Grund nennt den CRV",
-           "CRV-Abstufung" in str(_r.get("betrag_gedeckelt_durch") or ""),
-           f"Faktor {_r['crv_groessenfaktor']}, "
-           f"Grund {_r.get('betrag_gedeckelt_durch')}")
+    pruefe(P, "und der Grund nennt keine Abstufung mehr",
+           ER.rechne(kurs=100.0, atr=3.0, risiko_eur=120.0, instrument="spot",
+                     betrag_wunsch_eur=800.0).get("betrag_gedeckelt_durch")
+           is None,
+           "stillgelegt heisst: sie taucht auch in der Begruendung nicht auf")
 
     # L2 DIE KOSTENKLASSE - der latente Defekt aus Kapitel 17.3.
     pruefe(P, "Krypto und Boerse bekommen verschiedene Kostenklassen",
@@ -3590,13 +3612,17 @@ def paket_15() -> None:
                      umgeworfen_preis_eur=94.0, cash_frei_eur=300.0)
     _ohne = ER.rechne(kurs=100.0, atr=3.0, risiko_eur=1.0, instrument="spot",
                       betrag_wunsch_eur=2000.0, umgeworfen_preis_eur=94.0)
-    pruefe(P, "knappes Cash macht die Position kleiner",
-           _mit["betrag_eur"] < _ohne["betrag_eur"], 
-           f"{_mit['betrag_eur']} gegen {_ohne['betrag_eur']} EUR")
-    pruefe(P, "und sagt das auch mit eigenem Grund",
-           "Cash" in str(_mit.get("betrag_gedeckelt_durch") or ""),
-           "waeren Topf und Cash EIN Wert, sagte die Notiz 'Topf', wo in "
-           "Wahrheit das Geld fehlt")
+    # UMGESCHRIEBEN 15.08.2026 - siehe Topf oben, dieselbe Trennlinie.
+    pruefe(P, "knappes Cash aendert den Betrag NICHT mehr",
+           _mit["betrag_eur"] == _ohne["betrag_eur"],
+           f"{_mit['betrag_eur']} gegen {_ohne['betrag_eur']} EUR - Cash ist "
+           "eine Portfoliofrage, und das System kennt den Bestand, nicht die "
+           "Absicht")
+    pruefe(P, "aber es meldet die Lage",
+           _mit.get("cash_frei_eur") == 300.0
+           and _mit.get("cash_wuerde_ueberschreiten") is True
+           and "cash_frei_eur" not in _ohne,
+           "ohne ermittelbares Cash steht auch keine Zeile in der Mail")
     pruefe(P, "ohne ermittelbares Cash gibt es KEINE Sperre",
            ER.rechne(kurs=100.0, atr=3.0, risiko_eur=1.0, instrument="spot",
                      betrag_wunsch_eur=2000.0, umgeworfen_preis_eur=94.0,
@@ -3812,22 +3838,35 @@ def paket_15() -> None:
            f"{_h['betrag_eur']} EUR bei {_h['hebel']}x - dort IST der Stop eine "
            f"Order, und der Hebel folgt aus Budget und Abstand")
 
-    # DIE ABSTUFUNG DARF KEIN VETO WERDEN.
-    _klein = ER.rechne(kurs=100.0, atr=3.0, risiko_eur=1.0, instrument="spot",
-                       betrag_wunsch_eur=250.0, umgeworfen_preis_eur=96.0)
-    pruefe(P, "eine Tranche, die durch die Abstufung untergeht, wird angehoben",
-           _klein["betrag_eur"] == ER.GRENZEN["betrag_min_eur"]
-           and "angehoben" in str(_klein.get("betrag_gedeckelt_durch")),
-           f"{_klein['betrag_eur']} EUR - 250 x 0,2 waeren 50 gewesen, also "
-           f"unter der Mindestgroesse: JEDES Tranchen-Signal unter CRV 4,0 "
-           f"waere lautlos verschwunden")
-    pruefe(P, "ein zu kleiner WUNSCH bricht dagegen weiterhin ab",
-           _wirft(lambda: ER.rechne(kurs=100.0, atr=3.0, risiko_eur=1.0,
-                                    instrument="spot", betrag_wunsch_eur=50.0,
-                                    umgeworfen_preis_eur=96.0),
+    # DIE MINDESTGROESSE JE KOSTENKLASSE (15.08.2026) - die EINZIGE harte
+    # Grenze, die uebrig bleibt, und die einzige, die eine Eigenschaft des
+    # TRADES ist statt des Portfolios.
+    pruefe(P, "Krypto hat eine niedrigere Mindestgroesse als die Boerse",
+           ER.betrag_min_eur("krypto") == 25.0
+           and ER.betrag_min_eur("boerse") == 100.0,
+           "bei Krypto kuerzt sich der Betrag heraus (1,5 % je Seite, "
+           "betragsunabhaengig) - die 100 EUR stammen aus der Boersenlogik "
+           "und galten dort mit, weil niemand sie getrennt hat")
+    pruefe(P, "eine 30-EUR-Position geht bei Krypto durch",
+           ER.rechne(kurs=100.0, atr=3.0, risiko_eur=1.8, instrument="spot",
+                     betrag_wunsch_eur=30.0,
+                     kostenklasse="krypto")["betrag_eur"] >= 25.0,
+           "vorher blockierte sie an einer Grenze, die fuer Fixgebuehren "
+           "gebaut war, die es dort nicht gibt")
+    pruefe(P, "dieselbe Position bricht an der Boerse ab",
+           _wirft(lambda: ER.rechne(kurs=100.0, atr=3.0, risiko_eur=1.8,
+                                    instrument="spot", betrag_wunsch_eur=30.0,
+                                    kostenklasse="boerse"),
                   ER.RechnungBlockiert),
-           "dann hat niemand eine Abstufung angewandt - es ist schlicht zu "
-           "wenig Geld, und das gehoert gesagt")
+           "1 EUR fix je Seite waeren dort 6,7 % - die Gebuehr fraesse das "
+           "Risikobudget")
+    pruefe(P, "und die Mindestgroesse steht in der Mail",
+           any("Kleinste sinnvolle Groesse" in z for z in ER.saetze(
+               ER.rechne(kurs=100.0, atr=3.0, risiko_eur=120.0,
+                         instrument="spot", betrag_wunsch_eur=800.0,
+                         kostenklasse="krypto"))),
+           "Nutzervorgabe 15.08.: die Anmerkung soll fuer den Nutzer "
+           "ersichtlich sein")
 
     # ------------------------------------------------------------------
     # R. DER SCHALTER LIEGT UM (14.08.) - und der Job ruft die Kette WIRKLICH.
@@ -4348,8 +4387,11 @@ def paket_15() -> None:
 
     # O-26: die CRV-Abstufung gilt dort, wo sie gemessen wurde.
     from agent import entscheidungsrechnung as ER4
-    pruefe(P, "die CRV-Abstufung greift nur bei Krypto-Spot",
-           ER4._crv_faktor(2.0, "spot", "krypto") < 1.0
+    # STILLGELEGT SEIT 15.08. - die Einschraenkung auf Krypto-Spot bleibt im
+    # Code stehen, damit sie beim Wiedereinschalten nicht neu gefunden werden
+    # muss. Geprueft wird jetzt, dass die Regel WIRKUNGSLOS ist.
+    pruefe(P, "die CRV-Abstufung ist ueberall wirkungslos",
+           ER4._crv_faktor(2.0, "spot", "krypto") == 1.0
            and ER4._crv_faktor(2.0, "spot", "boerse") == 1.0
            and ER4._crv_faktor(2.0, "hebel", "krypto") == 1.0,
            "gemessen an 298 KRYPTO-Spot-Signalen. An der Boerse kostet 1 EUR "
