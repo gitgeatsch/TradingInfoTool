@@ -2380,8 +2380,26 @@ nicht, liefe der Umlauf sonst lautlos gar nicht.
 | Lagebild | (3 h) | | | 8 |
 | **Summe** | | | | **385** |
 
-Erster Topf nutzbar 450, alle vier zusammen 1.874. Der Hebel trägt weiterhin
-77 % — der Vollumstieg kostet nur **16 zusätzliche Aufrufe**.
+**Bindend ist der erste Topf: 450 nutzbar.** Der Hebel trägt 77 % — der
+Vollumstieg kostet nur **16 zusätzliche Aufrufe**.
+
+> ⚠️ **Korrektur vom 15.08. abends.** Hier stand *„alle vier zusammen 1.874"*,
+> und dieselbe Summe stand als „Aufrufe frei" auf der Remote-Karte.
+> Arithmetisch richtig (450 + 450 + 900 + 74), als Aussage falsch: **die Töpfe
+> sind eine Rückfallkette, kein Vorrat.** OpenRouter und Groq kommen erst dran,
+> wenn Gemini erschöpft ist — und dahinter steht ein **anderes Modell**. Dieses
+> Projekt hat gemessen, dass das zählt: nemotron dreht bei bitgleicher Eingabe
+> in ~12 % der Fälle die Richtung, Mistral lag über 38 Fälle bei −27,38 R. Ein
+> Durchfallen in Topf 2 heißt, dass ein anderes Modell antwortet und die
+> Messreihe bricht.
+>
+> Und bei Groq ist die bindende Grenze nicht die Anfragenzahl, sondern
+> **100.000 Token am Tag** — bei ~1.200 je Aufruf sind das 83, ein Zwölftel der
+> 1.000 RPD.
+>
+> **Mit rund 405 Aufrufen Bedarf gegen 450 nutzbar liegt der Betrieb bei 90 %
+> des ersten Topfes.** Die Remote-Karte zeigt seitdem den ersten Topf mit Rest
+> vorn und die Kettensumme daneben.
 
 > ⚠️ **Dritter Fund, aus dieser Rechnung:** die Gruppen-Cooldowns waren **toter
 > Code**. `budget_allocator.spot_cooldown_stunden` (15) stand in der

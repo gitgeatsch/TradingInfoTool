@@ -805,8 +805,14 @@ async function refreshStatus() {
     };
     zeig("topf-gemini31", 0); zeig("topf-gemini35", 1);
     zeig("topf-openrouter", 2); zeig("topf-groq", 3);
+    // DER ERSTE TOPF MIT REST IST DIE GRENZE, nicht die Summe (15.08.2026).
+    // Hier stand `rest_gesamt` als "N Aufrufe frei" - 1.874 ueber alle vier
+    // Toepfe. Arithmetisch richtig, als Aussage falsch: die Toepfe sind eine
+    // Rueckfallkette, und hinter jedem steht ein anderes Modell.
     document.getElementById("rollen-rest").textContent =
-      (rb.rest_gesamt === undefined ? "-" : rb.rest_gesamt + " Aufrufe frei");
+      (rb.rest_aktiv === undefined ? "-"
+       : rb.rest_aktiv + " frei in " + (rb.topf_aktiv || "?")
+         + " · Kette gesamt " + (rb.rest_gesamt ?? "?"));
     document.getElementById("rollen-signale").textContent = rb.signale_heute ?? "-";
     document.getElementById("rollen-aufteilung").textContent =
       (rb.davon_hebel ?? 0) + " / " + (rb.davon_handlung ?? 0);

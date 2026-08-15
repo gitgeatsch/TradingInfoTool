@@ -4443,6 +4443,27 @@ def paket_15() -> None:
            AN4.HOECHSTALTER_STUNDEN > 0,
            f"{AN4.HOECHSTALTER_STUNDEN} h - Nutzervorgabe 'z.B. 24 Stunden'")
 
+    # T4d DIE KARTE ZEIGT DIE GRENZE, NICHT DIE SUMME (15.08.2026).
+    #
+    # Auf der Remote-Karte stand `rest_gesamt` als "N Aufrufe frei" - 1.874
+    # ueber alle vier Toepfe. Arithmetisch richtig, als Aussage falsch: die
+    # Toepfe sind eine RUECKFALLKETTE, kein Vorrat. OpenRouter und Groq kommen
+    # erst dran, wenn Gemini erschoepft ist, und dahinter steht ein anderes
+    # Modell - nemotron dreht bei bitgleicher Eingabe in ~12 % die Richtung.
+    #
+    # Nutzerfrage, die das aufdeckte: *"rechne nochmal nach, Reserve 1874
+    # verstehe ich nicht?"*
+    _rs = _quelltext("remote/status.py")
+    _sv = _quelltext("remote/server.py")
+    pruefe(P, "die Statusseite kennt den bindenden Topf",
+           "rest_aktiv" in _rs and "topf_aktiv" in _rs,
+           "der erste Topf MIT Rest ist die Grenze")
+    pruefe(P, "und die Karte zeigt ihn statt der Summe",
+           "rb.rest_aktiv" in _sv,
+           "die Summe bleibt daneben, aber als das, was sie ist")
+    pruefe(P, "die Summe wird nicht mehr als 'frei' beschriftet",
+           'rb.rest_gesamt + " Aufrufe frei"' not in _sv)
+
     # T5 BETREFF, TEXT UND ZEILE SAGEN DASSELBE (O-37, 15.08.2026).
     #
     # Im Produktionslauf zweimal auseinandergelaufen:

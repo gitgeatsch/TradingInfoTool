@@ -1095,7 +1095,23 @@ def _get_rollen_budget(conn: sqlite3.Connection) -> dict:
                 "quelle": quelle, "modell": modell or "(Vorgabe)",
                 "verbraucht": verbraucht, "grenze": grenze,
                 "rest": max(0, grenze - verbraucht)})
+        # DIE SUMME IST NICHT DIE GRENZE (15.08.2026, Nutzerfrage).
+        #
+        # `rest_gesamt` stand als "N Aufrufe frei" auf der Karte - die Summe
+        # ueber alle vier Toepfe, also 1.874. Das ist arithmetisch richtig und
+        # als Aussage falsch: die Toepfe sind eine RUECKFALLKETTE, kein Vorrat.
+        # OpenRouter und Groq kommen erst dran, wenn Gemini erschoepft ist, und
+        # dahinter steht ein ANDERES MODELL - dieses Projekt hat gemessen, dass
+        # das einen Unterschied macht (nemotron dreht bei bitgleicher Eingabe
+        # in ~12 % der Faelle die Richtung).
+        #
+        # WAS WIRKLICH BEGRENZT, ist der erste Topf mit Rest - der, aus dem der
+        # naechste Aufruf kommt. Er steht jetzt vorn; die Summe bleibt
+        # daneben, aber als das, was sie ist.
         aus["rest_gesamt"] = sum(t["rest"] for t in aus["toepfe"])
+        aktiv = next((t for t in aus["toepfe"] if t["rest"] > 0), None)
+        aus["rest_aktiv"] = aktiv["rest"] if aktiv else 0
+        aus["topf_aktiv"] = (aktiv["modell"] if aktiv else "keiner - erschoepft")
     except Exception as exc:                                 # noqa: BLE001
         aus["fehler"] = f"{type(exc).__name__}: {exc}"
 
