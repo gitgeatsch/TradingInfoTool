@@ -4425,6 +4425,16 @@ def paket_15() -> None:
 
     _q4c = _quelltext("agent/rollen_lauf.py")
     pruefe(P, "die Anlassmessung ist verdrahtet", "AN.beobachte" in _q4c)
+    # VOR DEM COOLDOWN, sonst misst sie die falsche Population. Ein Symbol
+    # hinter dem Cooldown hat mindestens 3,5 Stunden (Hebel) bzw. 15 (Spot)
+    # hinter sich - in dieser Zeit hat sich der Faktensatz fast immer bewegt.
+    # Der Filter haette fast nie gegriffen, und man haette daraus geschlossen,
+    # dass er nichts taugt.
+    pruefe(P, "die Anlassmessung sitzt VOR dem Cooldown",
+           _q4c.index("AN.beobachte") < _q4c.index("WH.gesperrt_bis"),
+           "sonst sieht sie nur Symbole, bei denen der Cooldown ohnehin schon "
+           "abgelaufen war - und erst so wird vergleichbar, ob der Anlass den "
+           "Cooldown ersetzen koennte")
     pruefe(P, "aber ihr Befund wird nirgends gelesen",
            "wuerde_sperren" not in _q4c and "gleich_asset" not in _q4c,
            "was in keiner Bedingung steht, kann nichts sperren")
@@ -4490,6 +4500,34 @@ def paket_15() -> None:
            "die Summe bleibt daneben, aber als das, was sie ist")
     pruefe(P, "die Summe wird nicht mehr als 'frei' beschriftet",
            'rb.rest_gesamt + " Aufrufe frei"' not in _sv)
+
+    # T4e EIN STOP, EIN PROZENTSATZ (16.08.2026, Nutzerfund am AKT-Signal).
+    #
+    #     2. DIE RECHNUNG   Stop 4,8 %   (gegen den Kurs)
+    #     4. EINORDNUNG     Stop 3,3 %   (gegen die UNTERE Kante der Zone)
+    #
+    # Der Fix vom 14.08. hatte die Einordnung richtig an die Rechnung gebunden,
+    # aber am falschen Punkt. Die Folgezeile erbt den Fehler: "die Gebuehren
+    # fressen 92 % Ihres Risikos" waren gegen die Zonenmitte 62 %.
+    # `_quelltext`, NICHT `_nur_code` - letzteres entfernt String-Literale
+    # mitsamt den Kommentaren, und genau der Feldname ist einer.
+    _q4e = _quelltext("agent/rollen_lauf.py")
+    pruefe(P, "die Einordnung misst gegen die MITTE der Einstiegszone",
+           'einstieg=rechnung.get("einstieg_eur")' in _q4e,
+           "die untere Kante laesst den Stop naeher aussehen, als er ist")
+    pruefe(P, "und nicht mehr gegen die untere Kante",
+           '"einstieg_von_eur" ) or kurs_e' not in _q4e)
+    # UND BEIDE ZAHLEN MUESSEN ZUSAMMENPASSEN.
+    from agent import entscheidungsrechnung as ER12
+
+    _e12 = ER12.rechne(kurs=0.4702, atr=0.0181, risiko_eur=150.0,
+                       instrument="hebel", betrag_wunsch_eur=1000.0)
+    _p_rechnung = 100.0 * _e12["stop_relativ"]
+    _p_einordnung = (100.0 * (_e12["einstieg_eur"] - _e12["stop_eur"])
+                     / _e12["einstieg_eur"])
+    pruefe(P, "beide Abschnitte nennen denselben Stopabstand",
+           abs(_p_rechnung - _p_einordnung) < 0.05,
+           f"{_p_rechnung:.2f} % gegen {_p_einordnung:.2f} %")
 
     # T5 BETREFF, TEXT UND ZEILE SAGEN DASSELBE (O-37, 15.08.2026).
     #
@@ -4954,8 +4992,11 @@ def paket_15() -> None:
     # Beide fuer sich richtig - die Zone lag 6 % unter dem Kurs. Fuer den Leser
     # ist es der schlimmere Widerspruch: er schaetzt sein Risiko doppelt so
     # hoch ein wie geplant und sieht nicht, warum.
+    # PRAEZISIERT 16.08.2026: der geplante Einstieg ist die MITTE der Zone,
+    # nicht ihre untere Kante - siehe T4e. Gegen die Kante gemessen sah der
+    # Stop um ein Drittel naeher aus, als er ist.
     pruefe(P, "die Einordnung rechnet gegen den GEPLANTEN Einstieg",
-           'einstieg=rechnung.get("einstieg_von_eur")' in _quelltext(
+           'einstieg=rechnung.get("einstieg_eur")' in _quelltext(
                "agent/rollen_lauf.py"),
            "sie ordnet den geplanten Trade ein, nicht einen zum Marktpreis")
 

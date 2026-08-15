@@ -649,6 +649,57 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         if not erlaubt:
             durchlauf.verloren(symbol, "auftrag", warum or "abgeschaltet")
             return
+    # --- Stufe: Anlass - MISST, SPERRT NICHT (O-36, 15.08.2026) -------------
+    #
+    # VOR DEM COOLDOWN, NICHT DANACH (korrigiert 15.08.2026 abends).
+    #
+    # Meine erste Fassung sass NACH der Wiederholungsstufe - und haette
+    # damit nur Symbole gesehen, bei denen der Cooldown ohnehin schon
+    # abgelaufen war: mindestens 3,5 Stunden beim Hebel, 15 beim Spot. In
+    # dieser Zeit hat sich der Faktensatz fast immer bewegt.
+    #
+    #     Der Filter haette fast nie gegriffen, und wir haetten daraus
+    #     geschlossen, dass er nichts taugt - obwohl wir die Population,
+    #     in der er wirkt, nie gemessen haetten.
+    #
+    # Der Nutzer hat genau das befuerchtet: *"woran es lag sollten wir
+    # morgen auch schon sehen koennen oder gar nicht wie ich befuerchte"*.
+    #
+    # HIER KOSTET SIE NICHTS. Die Messung braucht keinen Modellaufruf -
+    # nur einen Hash ueber Text, der ohnehin gebaut ist. Sie darf deshalb
+    # JEDES Symbol sehen, auch die, die der Cooldown gleich entfernt.
+    #
+    # UND ERST DAMIT WIRD DIE INTERESSANTE FRAGE BEANTWORTBAR: koennte der
+    # Anlassfilter den Cooldown ERSETZEN? Der Cooldown ist eine grobe
+    # Zeitregel, der Anlass eine genaue Aussage ueber dieselbe Sache. Wer
+    # nur hinter dem Cooldown misst, kann die beiden nie vergleichen.
+    #
+    # NUTZERVORGABE: *"erstmal soviele Daten wie moeglich zulassen und spaeter
+    # selektiv einschraenken - bis wir ein Gefuehl haben, ob und wie die
+    # Bewertungen der Rollen zustandekamen."* Diese Stufe verliert deshalb
+    # NIEMANDEN. Sie schreibt mit, wie oft sie gegriffen haette.
+    #
+    # UND SIE ZAEHLT ZWEI ABDRUECKE: einen ueber alles, was das Modell liest,
+    # und einen ohne das Lagebild. Das Lagebild ist Modellprosa und wechselt
+    # alle drei Stunden - naehme man es mit, waere fast jede Frage "neu". Ob
+    # das der richtige Schnitt ist, soll die Messung sagen.
+    if betriebsart != TROCKEN:
+        try:
+            from agent import anlass as AN
+
+            ergebnis.setdefault("anlass", []).append(dict(
+                AN.beobachte(conn, symbol=symbol, instrument=instrument,
+                             fakten=bc_ein, bloecke=_bloecke_anlass),
+                symbol=symbol, instrument=instrument))
+        except Exception as exc:                             # noqa: BLE001
+            # EINE MESSUNG DARF DEN BETRIEB NICHT ANHALTEN - aber sie muss
+            # sagen, wenn sie ausfaellt. Sonst ist sie ein stiller Ausfall,
+            # und davon hatte dieses Projekt heute genug.
+            logger.warning("Anlass-Messung fuer %s ausgefallen: %s",
+                           symbol, exc)
+            ergebnis.setdefault("fehler", []).append(
+                f"{symbol}: Anlass-Messung: {exc}")
+
         sperre = WH.gesperrt_bis(conn, symbol, instrument, config=config,
                                  gruppe=assetklasse)
         if sperre:
@@ -683,39 +734,6 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         except Exception as exc:                             # noqa: BLE001
             ergebnis.setdefault("fehler", []).append(
                 f"{symbol}: Absicherungslage: {exc}")
-    # --- Stufe: Anlass - MISST, SPERRT NICHT (O-36, 15.08.2026) -------------
-    #
-    # HIER, WEIL HIER SPAETER DIE SPERRE SAESSE: der Faktensatz ist fertig, der
-    # Modellaufruf hat noch nicht stattgefunden. Wer die Wirkung an einer
-    # anderen Stelle misst als der, an der er sie einbauen wuerde, misst etwas
-    # anderes.
-    #
-    # NUTZERVORGABE: *"erstmal soviele Daten wie moeglich zulassen und spaeter
-    # selektiv einschraenken - bis wir ein Gefuehl haben, ob und wie die
-    # Bewertungen der Rollen zustandekamen."* Diese Stufe verliert deshalb
-    # NIEMANDEN. Sie schreibt mit, wie oft sie gegriffen haette.
-    #
-    # UND SIE ZAEHLT ZWEI ABDRUECKE: einen ueber alles, was das Modell liest,
-    # und einen ohne das Lagebild. Das Lagebild ist Modellprosa und wechselt
-    # alle drei Stunden - naehme man es mit, waere fast jede Frage "neu". Ob
-    # das der richtige Schnitt ist, soll die Messung sagen.
-    if betriebsart != TROCKEN:
-        try:
-            from agent import anlass as AN
-
-            ergebnis.setdefault("anlass", []).append(dict(
-                AN.beobachte(conn, symbol=symbol, instrument=instrument,
-                             fakten=bc_ein, bloecke=_bloecke_anlass),
-                symbol=symbol, instrument=instrument))
-        except Exception as exc:                             # noqa: BLE001
-            # EINE MESSUNG DARF DEN BETRIEB NICHT ANHALTEN - aber sie muss
-            # sagen, wenn sie ausfaellt. Sonst ist sie ein stiller Ausfall,
-            # und davon hatte dieses Projekt heute genug.
-            logger.warning("Anlass-Messung fuer %s ausgefallen: %s",
-                           symbol, exc)
-            ergebnis.setdefault("fehler", []).append(
-                f"{symbol}: Anlass-Messung: {exc}")
-
     if betriebsart == "trocken":
         bc_roh = (aufgezeichnet.get("befund") or {}).get(symbol)
         if bc_roh is None:
@@ -1106,8 +1124,23 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             # geplant. Die Einordnung gehoert an die Zahlen der RECHNUNG - sie
             # ordnet den geplanten Trade ein, nicht einen, der jetzt zum
             # Marktpreis stattfaende.
+            # DIE MITTE DER ZONE, NICHT IHRE UNTERE KANTE (16.08.2026).
+            #
+            # Der Fix vom 14.08. hat die Einordnung richtig an die
+            # RECHNUNG gebunden - aber am falschen Punkt. `einstieg_von_eur`
+            # ist die untere Kante der Einstiegszone; gegen sie gemessen
+            # sieht der Stop naeher aus, als er ist. Am AKT-Signal:
+            #
+            #     2. DIE RECHNUNG   Stop 4,8 %   (gegen den Kurs)
+            #     4. EINORDNUNG     Stop 3,3 %   (gegen die untere Kante)
+            #
+            # Ein Drittel Unterschied auf derselben Mail - und die
+            # Folgezeile erbt ihn: "die Gebuehren fressen 92 % Ihres
+            # Risikos" waren mit der Zonenmitte 62 %.
+            #
+            # `einstieg_eur` IST die Mitte und liegt in derselben Rechnung.
             einordnung=TB.satz(bewertung,
-                               einstieg=rechnung.get("einstieg_von_eur")
+                               einstieg=rechnung.get("einstieg_eur")
                                or kurs_e,
                                stop=rechnung["stop_eur"],
                                einsatz_eur=rechnung["betrag_eur"])
