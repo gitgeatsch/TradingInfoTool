@@ -4198,3 +4198,128 @@ Exposure, Deckung, Hebelfaktor, laufende Gebühr — der Paket-14-Block vom
 [Liquidationsmechanik](https://metamask.io/news/perpetual-futures-liquidation-mechanics) ·
 [Funding als Kosten und als Signal](https://metamask.io/news/perpetual-futures-funding-frequency-strategies) ·
 [Perps gegen Spot](https://metamask.io/news/crypto-spot-trading-vs-perpetual-futures)
+
+---
+
+## Kapitel 36 — Gegenprüfung der Reihenfolge, Rollenzuordnung und die Aufteilung LLM1/LLM2 (16.08.2026)
+
+Drei Lücken in Kapitel 35, alle drei vom Nutzer benannt: die Reihenfolge ist
+nicht auf Risiko geprüft, die Lücken sind keiner Rolle zugeordnet, und die
+Aufteilung zwischen LLM1 und LLM2 fehlt ganz.
+
+### 36.1 Die Gegenprüfung — und sie dreht meine Reihenfolge um
+
+**Der Maßstab ist ein gemessener Vorfall dieses Projekts:**
+
+> **Ausführbarkeit / Kostenhinweis: gemessen und verworfen.** Der ehrliche
+> Hinweis ließ die ERÖFFNEN-Quote von **93 % auf 3 %** einbrechen. Das Modell
+> schlug dann gar nichts mehr vor, statt Alternativen zu suchen.
+
+Daraus die Risikoklassen:
+
+| | Art der Ergänzung | Risiko |
+|---|---|---|
+| **grün** | beschreibt die Lage, ohne sie zu bewerten | gering |
+| **gelb** | nennt Kosten, Ausführbarkeit oder ein Risiko | **gemessen gefährlich** |
+| **rot** | fordert das Modell zur Abwägung gegen einen Nachteil auf | belegt schädlich |
+
+**Und damit fällt meine Nummer 1 auseinander:**
+
+| Ergänzung | Klasse | warum |
+|---|---|---|
+| Liquidationsabstand als **Geometrie** | **grün** | *„bei 6-fach läge die Zwangsauflösung 17 % unter dem Einstieg"* — eine Lagebeschreibung wie der Widerstand |
+| Finanzierung als **Kostenbetrag** | **gelb/rot** | *„kostet 4,5 % der Margin im Monat"* ist wörtlich der Hinweis, der die Quote von 93 auf 3 % gedrückt hat |
+
+**Der Liquidationsabstand ist harmlos, die Kostenhöhe ist es nicht** — und ich
+hatte beide in einen Punkt geworfen.
+
+**Die geprüfte Reihenfolge:**
+
+| | Ergänzung | Klasse | Rolle |
+|---|---|---|---|
+| **1** | Liquidationsabstand bei den Grenzhebeln | grün | **BC** |
+| **2** | Funding aus dem Spot-Prompt entfernen | grün (Wegnahme) | **BC** |
+| **3** | Fehlende Angaben benennen (8 Assets) | grün | **BC** |
+| **4** | Referenzindex bei ETF und Absicherung | grün | **BC** |
+| **5** | Regime und Persistenz | grün | **A** |
+| **6** | Aktientermine, Handelszeiten | **gelb** | **BC** |
+| **7** | Zertifikatsnatur bei Rohstoffen | **gelb** | **BC** |
+| **8** | Finanzierung als Betrag beim Hebel | **rot** | **BC** |
+
+**Fünf grüne Schritte vor dem ersten gelben.** Das war in Kapitel 35 nicht so,
+und die Umstellung folgt nicht aus dem Aufwand, sondern aus einem Messwert.
+
+**Für gelb und rot gilt zusätzlich:** nicht in den Betrieb ohne gepaarten
+Vergleich auf denselben Ankern — ein Arm mit, einer ohne. Genau die Methode,
+mit der 93 → 3 % überhaupt gefunden wurde.
+
+### 36.2 Welche Lücke gehört zu welcher Rolle
+
+| Lücke | Rolle A (Marktanalyst) | Rolle BC (Trader) | Rolle C (Z.ai) | keine Rolle |
+|---|---|---|---|---|
+| Liquidationsabstand | | **X** | | |
+| Finanzierung als Betrag | | **X** (rot) | | |
+| Funding als Fremdkörper im Spot | | **X** (Wegnahme) | | |
+| Fehlende Angaben benennen | | **X** | | |
+| Referenzindex, Sektorbezug | | **X** | | |
+| Zertifikatsnatur | | **X** | | |
+| Aktientermine | | **X** | | |
+| Makro-Terminkalender | **X** | | | |
+| Regime und Persistenz | **X** | | | |
+| Stimmung über BTC hinaus | **X** | | | |
+| **Open Interest, Squeeze** | | | **X** | |
+| **Optionsmarkt** | | | **X** | |
+| **Nachrichten, Katalysator** | | | **X** | |
+| **Auslöser** | | | | **deterministisch, vor dem Aufruf** |
+| **Handelbarkeit, Spread** | | | | **deterministisch, als Filter** |
+
+**Zwei Lücken gehören keiner Rolle** — sie sind Bedingungen, keine
+Einschätzungen, und gehören auf die Rechenspur vor dem Modellaufruf.
+
+### 36.3 Die Aufteilung LLM1 / LLM2 — und die Regel, die sie trägt
+
+Das fehlte in Kapitel 35 vollständig, und es ist der Punkt, an dem die
+Gegenprüfung überhaupt erst funktioniert.
+
+> **Ein Parameter gehört zu GENAU EINEM Modell.** Geht er an beide, teilen sie
+> die Informationsgrenze — und die Prüfung ist wieder das, was sie heute ist:
+> *Homogeneous Debate*, zwei Leser derselben Seite.
+
+Das ist keine Sparregel, sondern die **Konstruktionsbedingung** der zweiten
+Stufe. Sie ist heute verletzt: Z.ai bekommt denselben Faktentext wie BC.
+
+| Korb | LLM1 — Rolle BC bekommt | LLM2 — Rolle C bekommt |
+|---|---|---|
+| **Krypto Hebel** | Struktur · Marken · Bewegung · Volumen · Bestand · Auftrag · **Liquidationsabstand** · Funding-**Perzentil** | **Open Interest / Squeeze-Zustand** · **Funding-Extremwert als Signal** · **Optionsmarkt** · Regime-Persistenz · geplante Aktion und Richtung |
+| **Krypto Spot** | dieselben, **ohne Funding** | **Funding als Stimmungsmaß** · Optionsmarkt · **Nachrichten** |
+| **Aktien** | Struktur · Marken · Bewegung · Volumen · Bestand · **Sektorbezug** | **Termine** (Quartalszahlen) · **Nachrichten** · Makrolage |
+| **Rohstoffe** | Struktur · Marken · Bewegung · Bestand · **Hinweis auf fehlendes Volumen** · **Basiswert** | **Emittent und Bauart** · Rollsituation · **Nachrichten zum Basiswert** |
+| **ETF / Absicherung** | Struktur · Marken · Bewegung · Bestand · **Referenzindex** · Exposure-Block | **Lage des Referenzindex** · **Nachrichten zum Sektor** |
+
+**Das Muster ist in allen fünf Körben dasselbe:** LLM1 bekommt, was aus der
+**Kursreihe und dem Depot** folgt. LLM2 bekommt, was **außerhalb** davon liegt
+— Positionierung, Termine, Nachrichten.
+
+Damit beantwortet sich auch die Frage nach zusätzlichen Parametern für Z.ai:
+**es sind nicht dieselben in anderer Form, sondern andere.** Und drei davon
+existieren bereits — Open Interest, Optionsmarkt, Regime —, zwei nicht:
+Termine und Nachrichten.
+
+### 36.4 Was das für die Reihenfolge bedeutet
+
+Die fünf grünen Schritte betreffen **ausschließlich LLM1**. Der Umbau von LLM2
+setzt voraus, dass die Trennung steht — sonst verschiebt man nur, was beide
+sehen.
+
+| Phase | betrifft | Inhalt |
+|---|---|---|
+| **I** | LLM1 | die fünf grünen Schritte, einer nach dem anderen |
+| **II** | LLM2 | Richtungsabgleich stilllegen, Positionierungsfakten aufbauen |
+| **III** | beide | gelb und rot, jeweils mit gepaartem Vergleich |
+| **IV** | LLM2 | Nachrichten — neue Quelle, eigenes Vorhaben |
+
+**Und eine Bedingung für Phase I:** jeder der fünf Schritte ändert den
+`PROMPT_STAND`. Fünf Änderungen an fünf Tagen erzeugen fünf Stände, zwischen
+denen niemand mehr vergleichen kann. **Deshalb Phase I als EIN Stand**, nicht
+als fünf — sie sind alle grün, alle beschreibend, und ihre Einzelwirkung wäre
+bei dieser Signalzahl ohnehin nicht trennbar.
