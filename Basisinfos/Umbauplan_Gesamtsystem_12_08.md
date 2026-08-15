@@ -2284,3 +2284,121 @@ ist der alte UTC-Zähler.
 
 „5 Job-Fehler durch Multi-Modell-Switching" — **keiner aus der Rollen-Kette:**
 3× FRED-Makroabruf, 2× die alte Kette bei OD7x.
+
+---
+
+## Kapitel 24 — Der Vollumstieg (15.08.2026)
+
+### 24.1 Die Trennlinie, auf der alles Weitere steht
+
+> **Das System bemisst den einzelnen Trade. Die Aufteilung des Portfolios
+> bemisst der Nutzer.**
+
+Stop, Positionsgröße aus Risiko und Hebel aus Liquidationsabstand folgen aus dem
+Trade allein. Topf und Cash-Reserve brauchen Wissen, das dieses System **nicht
+hat**: ob der Nutzer die Empfehlungen von gestern ausgeführt hat. Es kennt
+seinen Bestand (Bitpanda-Sync), nicht seine Absicht.
+
+| Begrenzung | misst | Verhalten |
+|---|---|---|
+| Cash (RM-4) | echtes Geld | meldet |
+| Topf | echte Positionen | meldet |
+| CRV-Abstufung | — | **stillgelegt** |
+| Mindestgröße je Kostenklasse | Trade-Eigenschaft | **einzige harte Grenze** |
+
+Die CRV-Abstufung ist **still, nicht neu kalibriert**: gemessen an 298 Signalen
+der *alten* Kette, als das Ziel mechanisch bei CRV 2,0 lag. Seit dem
+Struktur-Ziel fällt das CRV aus dem Chart, und der Regelfall traf den Sockel —
+160 von 800 EUR. Eine neue Spreizung wäre wieder eine Zahl ohne Messung.
+
+Die Mindestgröße ist **gemessen, nicht gesetzt**: Krypto 25 €, Börse 100 €.
+Krypto ist betragsunabhängig (1,5 % je Seite kürzen sich heraus) — eine
+Mindestgröße aus Gebührengründen hat dort keine Grundlage.
+
+### 24.2 Paket 14 — die Absicherung fragt nach dem Portfolio
+
+Der letzte nicht gebaute Baustein. Bis dahin lief sie durch den Spot-Prompt:
+Marktstruktur, Widerstand, Momentum **des Instruments**. Bei 3QSS und DBPK ist
+das die falsche Frage — ihr Chart *ist* das Spiegelbild des Nasdaq bzw. S&P.
+
+```
+Abzusicherndes Exposure: 8.804 EUR (alles außer Absicherungen und Cash).
+Davon bereits abgesichert: 1.337 EUR - das sind 15 %.
+Dieses Instrument hebelt 3-fach auf den Nasdaq-100; 1 EUR deckt 3 EUR.
+Für volle Deckung der offenen 7.467 EUR wären 2.489 EUR nötig.
+Laufende Gebühr etwa 0,8 % pro Jahr.
+```
+
+> ⚠️ **Halber Fehler im Trockenlauf gefunden:** die Mail zeigte weiter die
+> gemessenen Trefferquoten — *„Ruhig ist besser — über alle Einstiege gemessen:
+> 29,5 % Treffer"*. Diese sind an **Einstiegen** gemessen; eine Absicherung
+> wird nicht gekauft, um zu steigen. Eine Zahl mit falscher Herkunft liest sich
+> wie ein Befund. Der Faktenblock lässt sie für `hedge` jetzt weg **und sagt,
+> dass er es tut.**
+
+### 24.3 Inhaltliche Stichprobe — je Gruppe unabhängig nachgerechnet
+
+| Gruppe | Symbol | Kurs Mail / nachgerechnet | Stop Mail / 2,5×ATR | Kosten in R |
+|---|---|---|---|---|
+| aktien | PLTR | 150,77 / 150,77 | 132,82 / 132,82 | 0,063 |
+| hedge | 3QSS | 1,35 / 1,349 | 1,20 / 1,2016 | 0,082 |
+| krypto spot | AIOZ | 0,04176 / 0,041755 | 0,03464 / 0,034639 | 0,176 |
+| krypto hebel | AIOZ | 0,04176 / 0,041755 | 0,03464 / 0,034639 | 0,012 |
+| rohstoffe | OD7C | 30,09 / 30,0899 | 29,05 / 29,0523 | 0,218 |
+| themen_etf | CEBS | 9,64 / 9,643 | 8,96 / 8,9638 | 0,106 |
+
+**Keine Abweichung.** Nachgerechnet zu Fuß aus Kerze und Bestand, nicht über die
+Kette — eine Prüfung, die dieselbe Funktion aufruft, prüft nur, dass die
+Funktion sich selbst gleicht.
+
+### 24.4 Der Schnitt griff nur halb — zwei Funde
+
+> ⚠️ **`bedient_neue_kette` stand an genau EINER Stelle**, in
+> `hebel_screening_job`, und dort **fest auf „krypto"**. Der Multi-Asset-Batch —
+> der Aktien, Rohstoffe, Themen-ETF und die Absicherung bedient — kannte den
+> Schnitt **gar nicht**.
+>
+> `aktiv_fuer` auf alle sechs zu setzen hätte damit nicht umgestellt, sondern
+> **verdoppelt**: Rollen-Kette im 15-Minuten-Takt und Batch um 9 und 19 Uhr,
+> dieselben Symbole, beide mit Modellaufrufen und Mail. Genau der
+> Parallelbetrieb, den der Nutzer am 13.08. ausgeschlossen hat.
+
+Zweitens lautet die Startfrage jetzt *„ist irgendeine Gruppe umgestellt"* statt
+*„ist krypto umgestellt"*. Wäre Krypto eines Tages abgeschaltet und Aktien
+nicht, liefe der Umlauf sonst lautlos gar nicht.
+
+### 24.5 Budget mit allen sechs Gruppen
+
+| Gruppe | Instrument | Symbole | Cooldown | Aufrufe/Tag |
+|---|---|---|---|---|
+| aktien | spot | 2 | 24 h | 2 |
+| hedge | absicherung | 2 | 24 h | 2 |
+| krypto | spot | 43 | 15 h | 69 |
+| krypto | hebel | 43 | 3,5 h | **295** |
+| rohstoffe | spot | 4 | 24 h | 4 |
+| themen_etf | spot | 5 | 24 h | 5 |
+| Lagebild | (3 h) | | | 8 |
+| **Summe** | | | | **385** |
+
+Erster Topf nutzbar 450, alle vier zusammen 1.874. Der Hebel trägt weiterhin
+77 % — der Vollumstieg kostet nur **16 zusätzliche Aufrufe**.
+
+> ⚠️ **Dritter Fund, aus dieser Rechnung:** die Gruppen-Cooldowns waren **toter
+> Code**. `budget_allocator.spot_cooldown_stunden` (15) stand in der
+> config.yaml und wurde **vor** der Gruppen-Vorgabe (24) gefragt — die 24
+> Stunden vom 14.08. kamen nie zum Zug. Im Krypto-Betrieb unsichtbar, weil
+> Krypto ohnehin 15 h hat. **Eine Gruppe ist spezifischer als ein Instrument;**
+> innerhalb derselben Spezifität gewinnt weiterhin die Konfiguration.
+
+**O-30 bleibt offen:** das Kontingent zählt HTTP-**Versuche**, nicht Urteile.
+Bei 1,5 Versuchen je Urteil wären es 578 statt 385.
+
+### 24.6 Offene Punkte nach dem Vollumstieg
+
+| Nr. | Punkt |
+|---|---|
+| **O-17** | Einmalkauf 800 € für Börsenwerte — übernommen, nicht entschieden |
+| **O-29** | Ratenfrage der Verkaufsseite — 0 von 1.142 (alt) gegen 11 von 45 (neu) |
+| **O-30** | Kontingent zählt Versuche, Budgetrechnung zählt Urteile |
+| **O-32** | Hebelfaktor stand bei 10,0 — nie entschieden |
+| — | CRV-Abstufung: messbar, sobald aufgelöste Signale vorliegen |

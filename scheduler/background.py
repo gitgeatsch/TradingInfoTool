@@ -2805,7 +2805,19 @@ def hebel_screening_job(
         from scheduler.rollen_job import bedient_neue_kette
         # `config_dict` heisst die Variable in diesem Gueltigkeitsbereich -
         # nachgesehen, nicht geraten.
-        if bedient_neue_kette("krypto", config_dict):
+        # IRGENDEINE GRUPPE GENUEGT (15.08.2026) - vorher stand hier fest
+        # "krypto". Solange nur Krypto umgestellt war, machte das keinen
+        # Unterschied; ab dem Vollumstieg schon: waere Krypto eines Tages
+        # abgeschaltet und Aktien nicht, liefe der Umlauf gar nicht mehr an -
+        # lautlos, denn der Allocator uebernaehme wieder.
+        #
+        # WELCHE GRUPPE DANN WIRKLICH LAEUFT, entscheidet `fuehre_umlauf`
+        # ohnehin je Gruppe. Diese Zeile ist nur die Frage, ob ueberhaupt
+        # etwas umgestellt ist.
+        from agent import assetklassen as _AK2
+
+        if any(bedient_neue_kette(g, config_dict)
+               for g in {g for g, _, _ in _AK2.laeufe()}):
             # UND SIE LAEUFT AUCH WIRKLICH. Die erste Fassung hat den alten Weg
             # nur UEBERSPRUNGEN - der Schalter haette damit gar nichts laufen
             # lassen, und zwar lautlos: kein Fehler, keine Signale, kein Grund.
@@ -2948,6 +2960,38 @@ def multi_asset_batch_job(
     watchlist = watchlist_provider()
     _job_started_at["multi_asset_batch"] = time.monotonic()
     try:
+        # DER SCHNITT GILT AUCH HIER (15.08.2026) - er tat es bis heute NICHT.
+        #
+        # GEFUNDEN BEI DER GEGENPRUEFUNG ZUM VOLLUMSTIEG. `bedient_neue_kette`
+        # stand an genau EINER Stelle, in `hebel_screening_job`, und dort fest
+        # auf "krypto". Dieser Job hier - der Aktien, Rohstoffe, Themen-ETF und
+        # die Absicherung bedient - kannte den Schnitt gar nicht.
+        #
+        # `aktiv_fuer` auf alle sechs zu setzen haette damit nicht umgestellt,
+        # sondern VERDOPPELT: die Rollen-Kette im 15-Minuten-Takt und dieser
+        # Batch um 9 und 19 Uhr, beide auf dieselben Symbole, beide mit
+        # Modellaufrufen und beide mit Mail. Genau der Parallelbetrieb, den der
+        # Nutzer am 13.08. ausgeschlossen hat: "das aktuelle System ist tot und
+        # wir stellen in einem Zug und mit glattem Schnitt um."
+        #
+        # GEPRUEFT WIRD JE GRUPPE, nicht pauschal: solange EINE der vier noch
+        # auf der alten Kette steht, laeuft der Batch fuer sie weiter.
+        import config as _cfgm
+        from agent import assetklassen as _AK
+        from scheduler.rollen_job import bedient_neue_kette as _neu
+
+        _cfg = _cfgm.load_config()
+        _meine = {"aktien", "rohstoffe", "themen_etf", "hedge"}
+        _offen = sorted(g for g in _meine if not _neu(g, _cfg))
+        if not _offen:
+            logger.info(
+                "Multi-Asset-Batch uebersprungen - alle vier Bereiche laufen "
+                "ueber die Rollen-Kette. Eine Klasse, eine Kette.")
+            return True
+        if len(_offen) < len(_meine):
+            logger.info(
+                "Multi-Asset-Batch laeuft nur noch fuer %s - die uebrigen "
+                "sind auf die Rollen-Kette umgestellt.", ", ".join(_offen))
         # 2026-08-09 (C4): openrouter_client gehoert mit ins Gate - sonst
         # stuende der Batch still, wenn OpenRouter der einzige konfigurierte
         # Analyst ist.

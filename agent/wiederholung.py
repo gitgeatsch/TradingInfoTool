@@ -65,14 +65,33 @@ def stunden(instrument: str, config: dict | None = None,
     ba = (config or {}).get("budget_allocator") or {}
     je_gruppe = ((config or {}).get("rollen_kette") or {}).get(
         "cooldown_stunden_je_gruppe") or {}
+    # DAS SPEZIFISCHERE GEWINNT - und eine GRUPPE ist spezifischer als ein
+    # INSTRUMENT (korrigiert 15.08.2026).
+    #
+    # DER FEHLER, DEN DAS BEHEBT. Die erste Fassung fragte in dieser
+    # Reihenfolge: Konfiguration je Gruppe, dann Konfiguration je INSTRUMENT,
+    # dann Gruppen-Vorgabe. Weil `budget_allocator.spot_cooldown_stunden` in
+    # der config.yaml steht (15), kam die Gruppen-Vorgabe NIE zum Zug:
+    #
+    #     aktien/rohstoffe/themen_etf   gebaut 24 h, gelaufen 15 h
+    #
+    # Die 24 Stunden, die ich am 14.08. mit der Handelstagslogik begruendet
+    # habe, waren toter Code. Aufgefallen erst bei der Budget-Hochrechnung zum
+    # Vollumstieg - im Krypto-Betrieb war der Unterschied unsichtbar, weil
+    # Krypto ohnehin 15 h hat.
+    #
+    # DIE REGEL LAUTET JETZT: erst alles Gruppenspezifische (Konfiguration vor
+    # Code), dann alles Instrumentspezifische. Innerhalb derselben
+    # Spezifitaet gewinnt weiterhin die Konfiguration gegen den Code - das
+    # bleibt.
     if g in je_gruppe:
         return float(je_gruppe[g])
+    if g in VORGABE_JE_GRUPPE:
+        return float(VORGABE_JE_GRUPPE[g])
     schluessel = _SCHLUESSEL.get(i)
     wert = ba.get(schluessel) if schluessel else None
     if wert is not None:
         return float(wert)
-    if g in VORGABE_JE_GRUPPE:
-        return float(VORGABE_JE_GRUPPE[g])
     return float(VORGABE_STUNDEN.get(i, 15.0))
 
 

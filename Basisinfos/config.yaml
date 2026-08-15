@@ -1968,5 +1968,13 @@ gegenpruefung:
 # also keine zweite Meinung zum selben Asset geben. Ziel ist, das Ergebnis
 # an echten Mails zu sehen und danach zu optimieren.
 rollen_kette:
-  aktiv_fuer: ["krypto"]
+  # DER VOLLUMSTIEG (15.08.2026). Alle sechs Gruppen laufen ueber die
+  # Rollen-Kette; der Budget-Allocator und der Multi-Asset-Batch werden
+  # damit fuer JEDE Gruppe uebersprungen. "Eine Klasse, eine Kette."
+  #
+  # VORAUSSETZUNG WAR PAKET 14 - die Absicherung hatte bis zum 15.08.
+  # keine eigene Rolle und lief durch den Spot-Prompt. Sie zuzuschalten
+  # haette bedeutet, 3QSS und DBPK nach ihrem eigenen Chart zu bewerten,
+  # statt nach dem Risiko, das sie absichern sollen.
+  aktiv_fuer: ["krypto", "aktien", "rohstoffe", "themen_etf", "hedge"]
   betriebsart: scharf

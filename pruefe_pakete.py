@@ -3769,13 +3769,17 @@ def paket_15() -> None:
     # WIEDER DIE ZEICHENKETTEN-FALLE: `_nur_code()` entfernt Literale, also
     # auch das "krypto" im Aufruf. Dritter Fall heute - der Helfer ist richtig,
     # meine Verwendung war es zweimal nicht. Gesucht wird deshalb im ROHTEXT.
-    pruefe(P, "der Allocator fragt VOR dem Lauf, ob die Klasse umgestellt ist",
-           'bedient_neue_kette("krypto", config_dict)' in _quelltext(
+    # ANGEPASST 15.08.: die Frage lautet nicht mehr "ist krypto umgestellt",
+    # sondern "ist IRGENDEINE Gruppe umgestellt". Waere Krypto eines Tages
+    # abgeschaltet und Aktien nicht, liefe der Umlauf sonst lautlos gar nicht,
+    # und der Allocator uebernaehme wieder.
+    pruefe(P, "der Allocator fragt VOR dem Lauf, ob etwas umgestellt ist",
+           "if any(bedient_neue_kette(g, config_dict)" in _quelltext(
                "scheduler/background.py"),
            "sonst gaebe es fuer dasselbe Asset zwei Empfehlungen, und der "
            "Nutzer muesste entscheiden, welcher er glaubt")
     _roh = _quelltext("scheduler/background.py")
-    _i_frage = _roh.find('bedient_neue_kette("krypto", config_dict)')
+    _i_frage = _roh.find("if any(bedient_neue_kette(g, config_dict)")
     _i_alloc = _roh.find("from agent.krypto.budget_allocator import run_budget_allocator")
     pruefe(P, "die Frage steht VOR dem Import des alten Weges",
            -1 < _i_frage < _i_alloc,
@@ -4004,7 +4008,7 @@ def paket_15() -> None:
     _bgq = _quelltext("scheduler/background.py")
     _i_job = _bgq.find("def hebel_screening_job(")
     _i_sync = _bgq.find("bitpanda_api_key", _i_job)
-    _i_cut = _bgq.find('bedient_neue_kette("krypto", config_dict)')
+    _i_cut = _bgq.find("if any(bedient_neue_kette(g, config_dict)")
     pruefe(P, "der Bitpanda-Positions-Sync ueberlebt den Schnitt",
            0 < _i_sync < _i_cut,
            f"Sync bei {_i_sync}, Schnitt bei {_i_cut} - ohne ihn bliebe "
@@ -5634,6 +5638,57 @@ def paket_15() -> None:
     pruefe(P, "und dieselben Saetze gehen an den Nutzer",
            'bc_ein.get("absicherungslage")' in _rl12,
            "zwei Formulierungen derselben Zahl laufen auseinander")
+
+    # ------------------------------------------------------------------
+    # AM. DER VOLLUMSTIEG (15.08.2026) - und der Schnitt, der nur halb griff.
+    import config as _cfgm2
+    from agent import assetklassen as AK13
+    from scheduler.rollen_job import aktiv_fuer as _af, bedient_neue_kette as _bnk
+
+    _cfg13 = _cfgm2.load_config()
+    _gruppen13 = sorted({g for g, _, _ in AK13.laeufe()})
+    pruefe(P, "alle sechs Gruppen laufen ueber die Rollen-Kette",
+           all(_bnk(g, _cfg13) for g in _gruppen13),
+           f"noch alt: {[g for g in _gruppen13 if not _bnk(g, _cfg13)]}")
+
+    # DER FUND BEI DIESER GEGENPRUEFUNG. `bedient_neue_kette` stand an genau
+    # EINER Stelle - in `hebel_screening_job`, fest auf "krypto". Der
+    # Multi-Asset-Batch, der Aktien, Rohstoffe, Themen-ETF und die Absicherung
+    # bedient, kannte den Schnitt GAR NICHT.
+    #
+    # `aktiv_fuer` auf alle sechs zu setzen haette damit nicht umgestellt,
+    # sondern VERDOPPELT: Rollen-Kette im 15-Minuten-Takt und Batch um 9 und
+    # 19 Uhr, dieselben Symbole, beide mit Modellaufrufen und Mail. Genau der
+    # Parallelbetrieb, den der Nutzer am 13.08. ausgeschlossen hat.
+    _bg13 = _quelltext("scheduler/background.py")
+    # DER FUND AUS DER BUDGET-HOCHRECHNUNG: die Gruppen-Cooldowns waren toter
+    # Code. `budget_allocator.spot_cooldown_stunden` (15) steht in der
+    # config.yaml und wurde VOR der Gruppen-Vorgabe (24) gefragt - die 24
+    # Stunden, am 14.08. mit der Handelstagslogik begruendet, kamen nie zum
+    # Zug. Im Krypto-Betrieb unsichtbar, weil Krypto ohnehin 15 h hat.
+    from agent import wiederholung as WH13
+    pruefe(P, "eine GRUPPE ist spezifischer als ein INSTRUMENT",
+           WH13.stunden("spot", _cfg13, "aktien") == 24.0
+           and WH13.stunden("spot", _cfg13, "krypto") == 15.0,
+           f"aktien {WH13.stunden('spot', _cfg13, 'aktien')} h - eine Aktie "
+           "handelt nicht rund um die Uhr; ein 15-Stunden-Takt fragt dort "
+           "mehrfach am selben Handelstag dasselbe")
+    pruefe(P, "und die Konfiguration schlaegt den Code weiterhin",
+           WH13.stunden("spot", {"rollen_kette": {
+               "cooldown_stunden_je_gruppe": {"aktien": 6}}}, "aktien") == 6.0,
+           "innerhalb derselben Spezifitaet gewinnt die Konfiguration")
+
+    pruefe(P, "auch der Multi-Asset-Batch kennt den Schnitt",
+           "_offen = sorted(g for g in _meine if not _neu(g, _cfg))" in _bg13,
+           "sonst liefen beide Ketten auf dieselben Symbole - der "
+           "Parallelbetrieb, den der glatte Schnitt ausschliesst")
+    pruefe(P, "und er prueft JE GRUPPE, nicht pauschal",
+           '_meine = {"aktien", "rohstoffe", "themen_etf", "hedge"}' in _bg13,
+           "solange EINE der vier noch alt ist, muss er fuer sie weiterlaufen")
+    pruefe(P, "der Umlauf startet, sobald IRGENDEINE Gruppe umgestellt ist",
+           "for g in {g for g, _, _ in _AK2.laeufe()})" in _bg13,
+           "vorher stand dort fest 'krypto' - waere Krypto eines Tages "
+           "abgeschaltet und Aktien nicht, liefe der Umlauf lautlos gar nicht")
     c.close()
 
 
