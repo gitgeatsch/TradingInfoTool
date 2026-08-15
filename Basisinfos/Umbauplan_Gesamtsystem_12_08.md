@@ -3481,3 +3481,185 @@ Mehrverbrauch** ist.
 **9 von 9**, dazu 823 Paketprüfungen.
 
 **O-30 ist damit geschlossen — nicht behoben, sondern widerlegt.**
+
+
+---
+
+## Kapitel 32 — LLM-Optimierung, Fortsetzung: was die Rollen wissen und was ihnen fehlt (16.08.2026)
+
+**Auftrag des Nutzers:** erheben, welche Werte und Parameter wir je Asset und
+Handelsstrategie in die Prompts „übersetzen"; extern recherchieren, ob
+Marktanalyst, Trader und Bewerter haben, was man in der Praxis braucht; und
+dasselbe für die zweite Stufe (Z.ai) mit **anderen, selektierten** Werten.
+
+### 32.1 Der erste Befund: Rolle C gibt es nicht
+
+Der Nutzer: *„Es sollten drei sein — Marktanalyst 1. Stufe, 2. Stufe Trader und
+Bewerter — A, B und C."*
+
+**Der Code kennt nur A und BC.** In `llm_schema.py`, `entscheidungsrechnung.py`
+und `gegenpruefer_rollen.py` heißt die zweite Rolle durchgehend „Rolle BC".
+Beurteilen und Handeln wurden in **einen** Aufruf gelegt.
+
+Was heute „Bewerter" heißt, ist **keine LLM-Rolle**, sondern Arithmetik:
+`trefferbilanz.bewerte()` schlägt in der eigenen Trefferbilanz nach und rechnet
+Basisrate gegen Breakeven. Das ist wertvoll — aber es ist kein Urteil, sondern
+eine Division.
+
+> **Damit fehlt die Instanz, die B widerspricht.** In der Literatur ist genau
+> das der Punkt, an dem Mehragenten-Systeme ihren Nutzen ziehen: nicht durch
+> mehr Meinung, sondern durch eine Rolle, die *gegen* die vorliegende
+> Entscheidung argumentiert.
+
+### 32.2 Bestandsaufnahme: was heute in welchen Prompt geht
+
+**Rolle A — Marktanalyst (Lagebild), 1× je 3 Stunden, klassenübergreifend**
+
+| Eingabe | Quelle |
+|---|---|
+| je Leitmarkt: Trend 250/60 Handelstage, Abstand zu Hoch/Tief, tägliche Schwankung + Perzentil, Umsatz-je-Bewegung + Perzentil | `marktlage.py` aus Kursreihen |
+| Anlegerstimmung (Fear & Greed) — **nur Bitcoin** | `macro_snapshot` |
+| Netto-Liquidität, Zinskurven-Spread | `lade_makro()` |
+
+Ausgabe: Prosa · Einstufung je Klasse (günstig/gemischt/ungünstig) · 2–4 Belege.
+
+**Rolle BC — Trader, 1× je Asset und Umlauf**
+
+| Block | Inhalt | gilt für |
+|---|---|---|
+| `auftrag` | Instrument (spot/hebel/absicherung) + Strategie | alle |
+| `bestand` | Menge, Einstand, G/V — **je Instrument** seit 15.08. | alle |
+| `struktur` | Swing-Hochs/-Tiefs, Fenster benannt | alle |
+| `bewegung` | 5 / 20 / 60 Handelstage | alle |
+| `marken` | nächster Widerstand/Unterstützung in ATR, Berührungen | alle |
+| `volumen` | Tagesumsatz gegen 20-Tage-Mittel, Aufwärtstage-Anteil | alle |
+| `finanzierung` | Funding-Perzentil am Terminmarkt | **alle** — auch Spot |
+| `absicherungslage` | Exposure, Deckung, Hebelfaktor | nur `absicherung` |
+| Lagebild | Prosa + Einstufung **der eigenen Klasse** | alle |
+
+> ⚠️ **Erster Befund aus O-34:** der Finanzierungsblock geht in **jeden**
+> Prompt und wird in **63 % der Spot-Urteile** zitiert — obwohl er bei einem
+> Spot-Kauf weder anfällt noch zahlbar ist.
+
+**Was NICHT je Assetklasse oder Strategie unterschieden wird:** außer
+`auftrag`, `bestand` und `absicherungslage` **nichts.** Eine Aktie bekommt
+dieselben sechs Blöcke wie ein Memecoin — dieselben Fenster, dieselben
+Perzentile, dieselbe Sprache.
+
+### 32.3 Was das System rechnet und keiner Rolle gibt
+
+| Fakt | Bestand | im Prompt? |
+|---|---|---|
+| Optionsmarkt (Deribit) | 1.163 Fakten, **1.149 mit Gegenargument** | nein |
+| OI-Squeeze-Divergenz | 1.526 Fälle, fünf Zustände | nein |
+| Funding-Perzentil | 1.909 | ja (überall) |
+| Makro: DXY, Fed Funds, 10J-Rendite, CPI, Öl, S&P-Abweichung | laufend | nur A |
+| Regime + Persistenz | *bär*, seit 27 Tagen | nein |
+| BTC-Dominanz, Krypto-Relativwert | gebaut | nein |
+| Bitpanda-Handelbarkeit, Spread | gebaut | nein |
+
+**Der Umbau hat den Prompt von 34.611 auf 3.183 Zeichen gekürzt** — richtig
+gegen den Deadloop, aber die weggefallenen Fakten sind nie wieder bewertet
+worden.
+
+### 32.4 Externe Recherche — was Praxis und Literatur vorsehen
+
+**TradingAgents** (arXiv 2412.20138) bildet ein Handelshaus nach und trennt
+**vier Analysten**, die *verschiedene Quellen* lesen:
+
+| Rolle | bekommt |
+|---|---|
+| Fundamentalanalyst | Abschlüsse, Gewinne, Insider-Transaktionen |
+| Stimmungsanalyst | Social Media, Sentiment-Scores, Insider-Stimmung |
+| Nachrichtenanalyst | Nachrichten, **Makroindikatoren**, Ereignisse |
+| Technischer Analyst | OHLCV + ~60 Indikatoren |
+
+Darüber **Bull- und Bear-Forscher, die in Runden gegeneinander
+argumentieren**, ein Trader, und ein **Risiko-Team aus drei Haltungen**
+(risikofreudig, neutral, konservativ), das die Entscheidung des Traders prüft,
+bevor sie gilt.
+
+**FinMem** (arXiv 2311.13743) ergänzt eine geschichtete **Erinnerung** — der
+Agent hält vergangene Fälle mit unterschiedlicher Verfallszeit vor und zieht
+sie zur Entscheidung heran.
+
+**Und zur zweiten Stufe die deutlichste Fundstelle:** ein Modell, das seine
+eigene oder eine gleichartig erzeugte Ausgabe prüft, **rationalisiert
+nachträglich, statt unabhängig zu prüfen**. Der Begriff dafür ist *Homogeneous
+Debate*: teilen die Prüfer Modell, Trainingsverteilung oder **Informations­grenze**,
+sinkt die epistemische Vielfalt und die Prüfung verliert ihren Wert. Verlangt
+wird ein Prüfer mit **frischem Kontext und eigener Informationsquelle**.
+
+### 32.5 Was uns fehlt — und was davon wir haben könnten
+
+| Was die Praxis trennt | bei uns | Bewertung |
+|---|---|---|
+| Fundamentaldaten | fehlen ganz | bei Krypto kaum verfügbar, bei Aktien/ETF schon |
+| Nachrichten | **fehlen ganz** | Memory: „Nachrichten" ist einer von drei Wegen, die das Vorzeichen drehen können |
+| Stimmung | nur Fear & Greed, nur BTC, nur Rolle A | vorhanden, nicht verteilt |
+| Technik | **vollständig** | unsere Stärke |
+| Makro | nur Rolle A | gerechnet, beim Trader nicht |
+| Positionierung (OI, Funding, Optionen) | gerechnet, **ungenutzt** | die größte ungehobene Menge |
+| Bull/Bear-Streit | **fehlt** | wäre Rolle C |
+| Risikoprüfung als eigene Instanz | deterministisch | Arithmetik statt Urteil |
+| Erinnerung an frühere Fälle | Trefferbilanz als Zahl | keine Fallerinnerung |
+
+### 32.6 Mein Vorschlag als Fachexperte — in dieser Reihenfolge
+
+**Erst aufräumen, dann erweitern.** Jede neue Zeile im Prompt macht die
+bisherigen Messungen unvergleichbar; deshalb zuerst das, was nachweislich
+falsch ist.
+
+**Schritt 1 — Finanzierung nur dort, wo sie anfällt.** Gemessen, begründet,
+kostet nichts. Der Block gehört in den Hebel-Prompt, nicht in den Spot-Prompt.
+
+**Schritt 2 — Rolle C bauen, als Gegenrede.** Nicht als zweiter Trader,
+sondern als die Instanz, die der vorliegenden Entscheidung **widerspricht**:
+sie bekommt den Befund von B **und** die Fakten, die B nicht hatte, und nennt
+den stärksten Einwand. Das ist die Rolle, die der Nutzer immer gemeint hat —
+und die Literatur sagt, dass sie nur trägt, wenn sie eine **eigene
+Informationsgrundlage** hat.
+
+**Schritt 3 — die zweite Stufe (Z.ai) wird diese Rolle C.** Damit ist die
+Frage „was macht Z.ai" beantwortet: nicht dieselbe Frage noch einmal, sondern
+die Fakten, die sonst niemand liest.
+
+| Z.ai bekommt | Z.ai bekommt NICHT |
+|---|---|
+| Optionsmarkt-Gegenargument (Deribit) | die Kursstruktur, die B schon hatte |
+| OI-Squeeze-Zustand | die Begründung von B |
+| Funding-Extremwerte | das Lagebild |
+| Regime + Persistenz | |
+| geplante Aktion, Richtung, Hebel | |
+
+Eine Frage: **„Spricht in diesen Daten etwas gegen diesen Trade?"** Ein
+Aufruf statt vier.
+
+**Schritt 4 — Nachrichten.** Die einzige echte Informationsquelle, die uns
+ganz fehlt, und laut eigenem Grundbefund einer von drei Wegen, die das
+Vorzeichen drehen können. Aufwendig, deshalb zuletzt — aber nicht vergessen.
+
+### 32.7 Drei Bedingungen für jeden dieser Schritte
+
+**Es muss unterscheiden.** Der Richtungsabgleich sagte in 2.469 Prüfungen
+1.246× SHORT, 1.206× NEUTRAL und **17× LONG**. Ein Merkmal, das fast immer
+denselben Wert hat, kann nichts trennen — Regel R-T6. Jede neue Rolle wird ab
+Tag eins auf ihre Verteilung gemessen.
+
+**Es darf nicht überstimmen.** Ein Einwand steht in der Mail und in der Zeile;
+er kippt die Empfehlung nicht. Nutzervorgabe vom 29.07., unverändert gültig.
+
+**Es muss auflösbar sein.** Eigene Spalte, Ausgang verfolgt, Trefferquote gegen
+die Basisrate — wie jede andere Behauptung in diesem System.
+
+### 32.8 Was zuerst zu erheben ist, bevor gebaut wird
+
+Diese Aufstellung ist aus dem Code gezogen, nicht aus der Erinnerung. Was
+fehlt, ist die **Wirkungsmessung je Block**: O-34 misst, welcher Block zitiert
+wird, aber noch nicht, welcher etwas **ändert**. Dafür braucht es aufgelöste
+Signale mit Belegen — die laufen seit dem 14.08. auf.
+
+**Vor Schritt 2 und 3 steht deshalb die O-34-Auswertung mit Ausgängen.** Erst
+sie sagt, ob die vorhandenen Blöcke tragen — und eine Rolle C auf einer
+Faktenbasis zu bauen, von der wir nicht wissen, ob sie trägt, wäre derselbe
+Fehler noch einmal.
