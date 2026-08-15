@@ -39,6 +39,11 @@ def messe(conn: sqlite3.Connection, tage: float = 30.0) -> dict:
 
     je_instrument = defaultdict(lambda: {"n": 0, "voll": 0, "asset": 0})
     je_symbol = defaultdict(lambda: {"n": 0, "asset": 0})
+    # WELCHER BLOCK MACHT DIE FRAGE NEU? Nur die Faelle zaehlen, in denen
+    # es UEBERHAUPT eine Vorgaengerfrage im Fenster gab - sonst waere
+    # jede erste Frage eines Symbols eine "Aenderung aller Bloecke".
+    schuld = defaultdict(int)
+    mit_vorgaenger = 0
     abstaende = []
     for r in rows:
         i = str(r["instrument"])
@@ -50,10 +55,15 @@ def messe(conn: sqlite3.Connection, tage: float = 30.0) -> dict:
         je_symbol[s]["asset"] += int(r["wuerde_sperren_asset"] or 0)
         if r["alter_stunden"] is not None:
             abstaende.append(float(r["alter_stunden"]))
+            mit_vorgaenger += 1
+            for b in str(r["geaenderte_bloecke"] or "").split(","):
+                if b:
+                    schuld[b] += 1
     return {"fehlt": False, "n": len(rows),
             "je_instrument": {k: dict(v) for k, v in je_instrument.items()},
             "je_symbol": {k: dict(v) for k, v in je_symbol.items()},
-            "abstaende": abstaende, "tage": tage}
+            "abstaende": abstaende, "tage": tage,
+            "schuld": dict(schuld), "mit_vorgaenger": mit_vorgaenger}
 
 
 def bericht(e: dict) -> list[str]:
@@ -108,6 +118,23 @@ def bericht(e: dict) -> list[str]:
               f"  {'Symbol':10}{'Urteile':>9}{'davon gleich':>14}"]
         for q, s, v in schlimm:
             z.append(f"  {s:10}{v['n']:>9}{v['asset']:>10} ({100 * q:.0f}%)")
+
+    # WORAN LAG ES? Die Zahl allein sagt nicht, ob der Filter an echten
+    # Aenderungen scheitert oder an einer Groesse, die von selbst tickt.
+    if e.get("mit_vorgaenger"):
+        mv = e["mit_vorgaenger"]
+        z += ["", f"WAS DIE FRAGE NEU MACHT ({mv} Faelle mit "
+                  f"Vorgaengerfrage im Fenster)",
+              f"  {'Block':16}{'geaendert':>11}{'Anteil':>9}"]
+        for b, c in sorted(e.get("schuld", {}).items(),
+                           key=lambda x: -x[1]):
+            z.append(f"  {b:16}{c:>11}{100.0 * c / mv:>8.0f}%")
+        fin = e.get("schuld", {}).get("finanzierung", 0)
+        if fin > 0.5 * mv:
+            z.append("  ACHTUNG: die Finanzierung allein macht mehr als "
+                     "die Haelfte der Fragen neu - sie tickt bei Krypto")
+            z.append("  alle acht Stunden von selbst. Ein Filter OHNE "
+                     "diesen Block waere die naechste Messung wert.")
 
     z += ["", "ES WURDE NICHTS GESPERRT. Diese Zahlen sagen, was ein Filter",
           "getan HAETTE - die Entscheidung, ob er scharf geschaltet wird,",

@@ -356,8 +356,21 @@ def beschreibe_lage(*, symbol: str, reihe: list, index: int,
                     einstand_eur: float | None = None,
                     finanzierung: dict | None = None,
                     instrument: str = "spot",
-                    gegenseite: str | None = None) -> list[str]:
+                    gegenseite: str | None = None,
+                    bloecke_ziel: dict | None = None) -> list[str]:
     """Die Lage als Aussagen - der EINZIGE Weg von Kursdaten zur Beschreibung.
+
+    `bloecke_ziel` (15.08.2026) ist ein AUSGANG, kein Eingang: wird ein dict
+    uebergeben, stehen darin hinterher die Bloecke einzeln. Der Anlassfilter
+    (O-36) braucht sie, um sagen zu koennen, WELCHER Block eine Frage neu
+    gemacht hat - und er darf sie nicht ein zweites Mal rechnen, weil die
+    Finanzierung dafuer erneut an die Boerse muesste.
+
+    WARUM NICHT ALS RUECKGABEWERT: `beschreibe_lage()` gibt die flache Liste,
+    und die geht so in den Prompt. Ein zweiter Rueckgabewert haette jeden
+    Aufrufer gebrochen, ein zusaetzlicher SCHLUESSEL im Faktensatz waere im
+    Prompt gelandet und haette alle bisherigen Messungen unvergleichbar
+    gemacht.
 
     Streng kausal: es wird nur `reihe[:index+1]` gelesen. Die Kausalitaetsprobe
     (Beschreibung aus voller Reihe gegen abgeschnittene) muss bitgleiche
@@ -375,13 +388,20 @@ def beschreibe_lage(*, symbol: str, reihe: list, index: int,
                  dtype=float)
     i = len(c) - 1
 
-    return [satz for block in BLOCK_REIHENFOLGE
-            for satz in geteilt(symbol=symbol, reihe=reihe, index=index,
-                                kurs_eur=kurs_eur, atr=atr, menge=menge,
-                                einstand_eur=einstand_eur,
-                                finanzierung=finanzierung,
-                                instrument=instrument,
-                                gegenseite=gegenseite)[block]]
+    # EINMAL RECHNEN, ZWEIMAL BRAUCHEN. Vorher stand `geteilt()` INNERHALB
+    # der Schleife - also einmal je Block, sechsmal dieselbe Rechnung ueber
+    # dieselbe Reihe. Jetzt einmal, und das Ergebnis geht auf Wunsch nach
+    # draussen: der Anlassfilter braucht die Bloecke einzeln und darf sie
+    # nicht neu rechnen, weil die Finanzierung dafuer wieder an die Boerse
+    # muesste.
+    bloecke = geteilt(symbol=symbol, reihe=reihe, index=index,
+                      kurs_eur=kurs_eur, atr=atr, menge=menge,
+                      einstand_eur=einstand_eur, finanzierung=finanzierung,
+                      instrument=instrument, gegenseite=gegenseite)
+    if bloecke_ziel is not None:
+        bloecke_ziel.clear()
+        bloecke_ziel.update(bloecke)
+    return [satz for block in BLOCK_REIHENFOLGE for satz in bloecke[block]]
 
 
 # Die Bloecke in genau der Reihenfolge, in der sie im Prompt stehen. Sie ist

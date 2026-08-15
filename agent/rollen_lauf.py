@@ -595,11 +595,18 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # `hebel_positions` statt `holdings`. Beides gehoert in EINEN Aufruf -
     # zwei getrennte Wege waeren die naechste Stelle, an der eines von beiden
     # vergessen wird.
+    # DIE BLOECKE MIT ABGREIFEN, ohne sie zweimal zu rechnen (O-36,
+    # 15.08.2026). `bloecke_ziel` ist ein AUSGANG: der Faktensatz bleibt
+    # unveraendert - er geht so in den Prompt -, und daneben liegen die
+    # Bloecke einzeln fuer die Anlassmessung. Sie neu zu rechnen hiesse,
+    # die Finanzierungsrate ein zweites Mal von der Boerse zu holen.
+    _bloecke_anlass = {}
     _, bc_ein = RE.baue_fall(symbol=symbol, reihe=reihe, index=idx,
                              reihen=reihen, db=db,
                              mit_finanzierung=(betriebsart != "trocken"),
                              instrument=instrument, strategie=strategie,
-                             assetklasse=assetklasse)
+                             assetklasse=assetklasse,
+                             bloecke_ziel=_bloecke_anlass)
     atr_e = RE.atr_eur(symbol, reihe, idx, db)
     kurs_e = RE.kurs_eur(symbol, reihe, idx, db)
     durchlauf.bestanden(symbol, "fakten")
@@ -698,7 +705,7 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
 
             ergebnis.setdefault("anlass", []).append(dict(
                 AN.beobachte(conn, symbol=symbol, instrument=instrument,
-                             fakten=bc_ein),
+                             fakten=bc_ein, bloecke=_bloecke_anlass),
                 symbol=symbol, instrument=instrument))
         except Exception as exc:                             # noqa: BLE001
             # EINE MESSUNG DARF DEN BETRIEB NICHT ANHALTEN - aber sie muss

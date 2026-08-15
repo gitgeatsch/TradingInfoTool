@@ -4439,6 +4439,33 @@ def paket_15() -> None:
     _v3, _a3 = AN4.fingerabdruecke(dict(_f, stand=["b"]))
     pruefe(P, "geaenderte Assetfakten aendern beide",
            _v3 != _v1 and _a3 != _a1)
+    # JE BLOCK, damit die Messung sagt WORAN es lag (15.08.2026, auf
+    # Nutzerwunsch). Der Finanzierungsblock tickt bei Krypto alle acht Stunden
+    # von selbst - er koennte den Filter dort stumpf machen, wo er am meisten
+    # braechte, und dieselbe Zahl waere ohne Ursache nicht deutbar.
+    _b1 = {"struktur": ["a"], "finanzierung": ["40. Perzentil"]}
+    _b2 = dict(_b1, finanzierung=["55. Perzentil"])
+    _h1, _h2 = AN4.bloeckeabdruecke(_b1), AN4.bloeckeabdruecke(_b2)
+    pruefe(P, "nur der geaenderte Block bekommt einen neuen Abdruck",
+           _h1["struktur"] == _h2["struktur"]
+           and _h1["finanzierung"] != _h2["finanzierung"])
+    # UND DER PROMPT DARF SICH DABEI NICHT VERAENDERN: die Bloecke gehen als
+    # AUSGANG an der Messung vorbei, nicht als Schluessel in den Faktensatz.
+    import inspect as _i4
+
+    from agent import rollen_eingabe as RE3
+
+    pruefe(P, "die Bloecke sind ein Ausgang, kein Prompt-Feld",
+           "bloecke_ziel" in _i4.signature(RE3.baue_fall).parameters
+           and "bloecke_ziel" in _quelltext("agent/lagebeschreibung.py"),
+           "ein zusaetzlicher Schluessel im Faktensatz haette alle bisherigen "
+           "Messungen unvergleichbar gemacht")
+    pruefe(P, "und die Lage wird dafuer nur EINMAL gerechnet",
+           _nur_code("agent/lagebeschreibung.py").count(
+               "bloecke = geteilt (") == 1,
+           "vorher stand `geteilt()` in der Schleife - sechsmal dieselbe "
+           "Rechnung ueber dieselbe Reihe")
+
     pruefe(P, "und es gibt eine Decke, damit nichts dauerhaft blockiert",
            AN4.HOECHSTALTER_STUNDEN > 0,
            f"{AN4.HOECHSTALTER_STUNDEN} h - Nutzervorgabe 'z.B. 24 Stunden'")

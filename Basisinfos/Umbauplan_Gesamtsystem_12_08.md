@@ -3340,6 +3340,70 @@ Abstand zur vorigen Frage.
 Schätzung.** Das ist der ganze Zweck der Messvariante.
 
 
+
+### 30.7 Nachtrag: ein Abdruck je Block — und warum es keinen Modellaufruf braucht
+
+Nutzerfrage: *„warum brauchen wir einen LLM-Aufruf, das verstehe ich nicht — der
+Hash kann ja deterministisch gebildet werden, oder?"*
+
+**Richtig, und im Sperrbetrieb gibt es keinen.** Fingerabdruck rechnen, mit dem
+letzten vergleichen, bei Gleichheit zurückkehren — der Aufruf findet nie statt.
+Das ist die ganze Ersparnis; ein SHA-256 über ein paar Kilobyte kostet
+Mikrosekunden.
+
+**Dass heute trotzdem gerufen wird, liegt nicht an der Messung.** Die braucht
+den Aufruf nicht, sie braucht nur den Hash. Gerufen wird, weil die Signale
+weiter kommen sollen — *„erstmal so viele Daten wie möglich zulassen"*. Die
+Stufe ist fertig gebaut und nur an einer Stelle nicht verdrahtet: scharf
+schalten heißt, ein `if` mit `durchlauf.verloren(...)` und `return` zu
+ergänzen.
+
+**Die Anschlussfrage war die interessantere:** wenn eine Frage als „neu" gilt,
+woran lag es?
+
+Deshalb jetzt ein Abdruck **je Block** — bestand · struktur · bewegung · marken
+· volumen · finanzierung (und absicherung, wo es sie gibt). Die Beobachtung
+notiert, welche Blöcke sich geändert haben; `messe_anlass.py` zählt sie aus.
+
+> **Der Verdacht, den das prüfen soll:** der Finanzierungsblock ändert sich bei
+> Krypto **alle acht Stunden von selbst** — eine neue Funding-Periode
+> verschiebt die Perzentile, ohne dass am Chart etwas geschehen ist. Er könnte
+> den Filter ausgerechnet dort stumpf machen, wo er am meisten brächte. Und es
+> ist derselbe Block, der laut O-34 in **63 % der Spot-Urteile** zitiert wird,
+> obwohl er dort gar nicht anfällt.
+>
+> Ohne diese Aufschlüsselung wäre die Messung eine Zahl ohne Ursache. Der
+> Bericht warnt selbst, wenn die Finanzierung mehr als die Hälfte der Fragen
+> neu macht.
+
+**Zwei Dinge waren dabei zu beachten:**
+
+**Der Prompt darf sich nicht verändern.** Die Blöcke gehen als **Ausgang**
+(`bloecke_ziel`) an der Messung vorbei — nicht als zusätzlicher Schlüssel in
+den Faktensatz. Ein Feld mehr dort hätte alle bisherigen Messungen
+unvergleichbar gemacht. Geprüft: der Faktensatz ist mit und ohne Abgriff
+identisch.
+
+**Und die Lage wird nur einmal gerechnet.** `beschreibe_lage()` rief `geteilt()`
+bisher **innerhalb** der Schleife auf — sechsmal dieselbe Rechnung über
+dieselbe Reihe. Jetzt einmal, und das Ergebnis geht weiter. Die Blöcke neu zu
+rechnen wäre ohnehin ausgeschieden: die Finanzierung müsste dafür erneut an die
+Börse.
+
+### 30.8 Gegenprüfung, erweitert
+
+| | |
+|---|---|
+| je Block ein eigener Abdruck | OK |
+| nur der geänderte Block unterscheidet sich | OK |
+| die Messung nennt den schuldigen Block | `['finanzierung']` |
+| ein **weggefallener** Block zählt mit | `['marken']` |
+| beides steht in der Zeile | OK |
+| **Faktensatz mit und ohne Abgriff identisch** | OK |
+| die Blöcke kamen trotzdem an | 6 Blöcke |
+| der Befund wird nirgends gelesen | OK |
+
+**23 von 23**, dazu **829 Paketprüfungen** und null freie Namen.
 ---
 
 ## Kapitel 31 — O-30: es gab keinen Mehrverbrauch (15.08.2026)

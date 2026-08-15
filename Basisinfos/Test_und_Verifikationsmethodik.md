@@ -2178,7 +2178,7 @@ benutzte `os` ohne Import — derselbe Fehler, den sie sucht.
 
 | Skript | Frage | Auslöser |
 |---|---|---|
-| `messe_anlass.py` | **Wie oft hätte der Anlassfilter gegriffen?** Liest `anlass_beobachtung` und zählt je Instrument, wie oft der Faktensatz wörtlich derselbe war wie beim letzten Urteil innerhalb von 24 Stunden — getrennt nach `voll` (mit Lagebild) und `asset` (ohne). | ein paar Tage nach jedem Produktivgang, **bevor** über eine Sperre entschieden wird |
+| `messe_anlass.py` | **Wie oft hätte der Anlassfilter gegriffen?** Liest `anlass_beobachtung` und zählt je Instrument, wie oft der Faktensatz wörtlich derselbe war wie beim letzten Urteil innerhalb von 24 Stunden — getrennt nach `voll` (mit Lagebild) und `asset` (ohne) — **und je Block**, damit sichtbar wird, WORAN eine Frage neu wurde. | ein paar Tage nach jedem Produktivgang, **bevor** über eine Sperre entschieden wird |
 
 **Warum eine Messvariante und nicht gleich die Sperre.** Nutzervorgabe:
 *„erstmal soviele Daten wie möglich zulassen und später selektiv

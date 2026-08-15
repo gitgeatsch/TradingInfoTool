@@ -141,7 +141,8 @@ def baue_befund_eingabe(*, symbol: str, reihe: list, index: int,
                         instrument: str = "spot",
                         strategie: str = "einstieg",
                         assetklasse: str | None = None,
-                        gegenseite: str | None = None) -> dict:
+                        gegenseite: str | None = None,
+                        bloecke_ziel: dict | None = None) -> dict:
     """Eingabe fuer Befund und Entscheidung - alle Bloecke an einer Stelle.
 
     `instrument`/`strategie` (12.08.2026, Paket 2): WAS gehandelt wird und WIE.
@@ -173,7 +174,8 @@ def baue_befund_eingabe(*, symbol: str, reihe: list, index: int,
                                     einstand_eur=einstand_eur,
                                     finanzierung=finanzierung,
                                     instrument=instrument,
-                                    gegenseite=gegenseite)}
+                                    gegenseite=gegenseite,
+                                    bloecke_ziel=bloecke_ziel)}
     if lagebild:
         beurteilung = {"lage": lagebild.get("lage")}
         if lagebild.get("gleichlauf"):
@@ -422,7 +424,8 @@ def baue_fall(*, symbol: str, reihe: list, index: int, reihen: dict,
               session=None, finanz_zwischenspeicher: dict | None = None,
               mit_finanzierung: bool = True,
               instrument: str = "spot", strategie: str = "einstieg",
-              assetklasse: str | None = None) -> tuple[dict, dict]:
+              assetklasse: str | None = None,
+              bloecke_ziel: dict | None = None) -> tuple[dict, dict]:
     """Beide Eingaben fuer EINEN Fall - die einzige Stelle, die das tut.
 
     Rueckgabe: (lagebild_eingabe, befund_eingabe). Wer das Lagebild schon hat,
@@ -461,5 +464,6 @@ def baue_fall(*, symbol: str, reihe: list, index: int, reihen: dict,
                             lagebild=lagebild, instrument=instrument,
                             strategie=strategie, assetklasse=assetklasse,
                             gegenseite=gegenbestand_satz(symbol, db,
-                                                         instrument)),
+                                                         instrument),
+                            bloecke_ziel=bloecke_ziel),
     )

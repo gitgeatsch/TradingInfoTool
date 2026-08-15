@@ -68,6 +68,25 @@ def _hash(wert) -> str:
     return hashlib.sha256(roh.encode("utf-8")).hexdigest()[:32]
 
 
+def bloeckeabdruecke(bloecke: dict | None) -> dict:
+    """Ein Abdruck JE BLOCK - damit die Messung sagt, WELCHER es war.
+
+    NUTZERFRAGE, die das ausgeloest hat (15.08.2026): *"warum brauchen wir
+    einen LLM-Aufruf, der Hash kann ja deterministisch gebildet werden?"* Er
+    hat recht - und die Anschlussfrage ist die interessantere: wenn eine Frage
+    als "neu" gilt, WORAN lag es?
+
+    DER VERDACHT, DEN DAS PRUEFEN SOLL. Der Finanzierungsblock aendert sich bei
+    Krypto alle acht Stunden von selbst - eine neue Funding-Periode verschiebt
+    die Perzentile, ohne dass am Chart etwas geschehen ist. Er koennte den
+    Filter also ausgerechnet dort stumpf machen, wo er am meisten braechte. Und
+    es ist derselbe Block, der laut O-34 in 63 % der SPOT-Urteile zitiert wird,
+    obwohl er dort gar nicht anfaellt.
+
+    Ohne diese Aufschluesselung waere die Messung eine Zahl ohne Ursache."""
+    return {str(k): _hash(v) for k, v in (bloecke or {}).items()}
+
+
 def fingerabdruecke(fakten: dict) -> tuple[str, str]:
     """(voll, asset) - beide aus DEMSELBEN Faktensatz, den das Modell bekommt.
 
@@ -94,7 +113,18 @@ def _tabelle(conn: sqlite3.Connection) -> bool:
                    gleich_asset INTEGER NOT NULL,
                    alter_stunden REAL,
                    wuerde_sperren_voll INTEGER NOT NULL,
-                   wuerde_sperren_asset INTEGER NOT NULL)""")
+                   wuerde_sperren_asset INTEGER NOT NULL,
+                   bloecke_json TEXT,
+                   geaenderte_bloecke TEXT)""")
+        # NACHTRAEGLICH FUER BESTEHENDE TABELLEN. `CREATE TABLE IF NOT EXISTS`
+        # aendert eine vorhandene nicht - wer schon Beobachtungen hat, bekaeme
+        # sonst still keine Blockspalten.
+        vorhanden = {r[1] for r in conn.execute(
+            "PRAGMA table_info(anlass_beobachtung)")}
+        for spalte in ("bloecke_json", "geaenderte_bloecke"):
+            if spalte not in vorhanden:
+                conn.execute("ALTER TABLE anlass_beobachtung "
+                             f"ADD COLUMN {spalte} TEXT")
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_anlass_paar "
             "ON anlass_beobachtung (symbol, instrument, erfasst_am)")
@@ -105,7 +135,7 @@ def _tabelle(conn: sqlite3.Connection) -> bool:
 
 
 def beobachte(conn, *, symbol: str, instrument: str, fakten: dict,
-              jetzt: str | None = None,
+              bloecke: dict | None = None, jetzt: str | None = None,
               hoechstalter_stunden: float = HOECHSTALTER_STUNDEN) -> dict:
     """Schreibt eine Beobachtung und sagt, ob GESPERRT WORDEN WAERE.
 
@@ -116,9 +146,11 @@ def beobachte(conn, *, symbol: str, instrument: str, fakten: dict,
     weiter: eine Messung, die den Betrieb anhaelt, waere ihren Preis nicht
     wert."""
     voll, asset = fingerabdruecke(fakten)
+    je_block = bloeckeabdruecke(bloecke)
     aus = {"fingerabdruck_voll": voll, "fingerabdruck_asset": asset,
            "gleich_voll": False, "gleich_asset": False,
-           "alter_stunden": None,
+           "alter_stunden": None, "bloecke": je_block,
+           "geaenderte_bloecke": [],
            "wuerde_sperren_voll": False, "wuerde_sperren_asset": False}
     if conn is None or not _tabelle(conn):
         return aus
@@ -131,9 +163,10 @@ def beobachte(conn, *, symbol: str, instrument: str, fakten: dict,
         # DIE JUENGSTE BEOBACHTUNG INNERHALB DES FENSTERS. Aelteres zaehlt
         # nicht - genau dafuer gibt es die Decke.
         zeile = conn.execute(
-            "SELECT erfasst_am, fingerabdruck_voll, fingerabdruck_asset "
-            "FROM anlass_beobachtung WHERE symbol = ? AND instrument = ? "
-            "AND erfasst_am >= ? ORDER BY erfasst_am DESC LIMIT 1",
+            "SELECT erfasst_am, fingerabdruck_voll, fingerabdruck_asset, "
+            "bloecke_json FROM anlass_beobachtung WHERE symbol = ? "
+            "AND instrument = ? AND erfasst_am >= ? "
+            "ORDER BY erfasst_am DESC LIMIT 1",
             (str(symbol).upper(), str(instrument), grenze)).fetchone()
         if zeile is not None:
             frueher = (zeile["erfasst_am"] if hasattr(zeile, "keys")
@@ -150,6 +183,19 @@ def beobachte(conn, *, symbol: str, instrument: str, fakten: dict,
                 pass
             aus["gleich_voll"] = (v == voll)
             aus["gleich_asset"] = (a == asset)
+            # WELCHER BLOCK HAT SICH GEAENDERT? Das ist die Antwort auf
+            # "warum galt das als neue Frage" - ohne sie waere die
+            # Messung eine Zahl ohne Ursache. Ein Block, der neu
+            # DAZUKOMMT oder WEGFAELLT, zaehlt ebenfalls als Aenderung.
+            try:
+                frueher_bloecke = json.loads(
+                    (zeile["bloecke_json"] if hasattr(zeile, "keys")
+                     else zeile[3]) or "{}")
+            except (TypeError, ValueError):
+                frueher_bloecke = {}
+            aus["geaenderte_bloecke"] = sorted(
+                k for k in set(frueher_bloecke) | set(je_block)
+                if frueher_bloecke.get(k) != je_block.get(k))
             # INNERHALB DES FENSTERS UND GLEICH = waere gesperrt worden.
             aus["wuerde_sperren_voll"] = aus["gleich_voll"]
             aus["wuerde_sperren_asset"] = aus["gleich_asset"]
@@ -157,11 +203,14 @@ def beobachte(conn, *, symbol: str, instrument: str, fakten: dict,
             "INSERT INTO anlass_beobachtung (erfasst_am, symbol, instrument, "
             "fingerabdruck_voll, fingerabdruck_asset, gleich_voll, "
             "gleich_asset, alter_stunden, wuerde_sperren_voll, "
-            "wuerde_sperren_asset) VALUES (?,?,?,?,?,?,?,?,?,?)",
+            "wuerde_sperren_asset, bloecke_json, geaenderte_bloecke) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
             (nun.isoformat(), str(symbol).upper(), str(instrument), voll, asset,
              int(aus["gleich_voll"]), int(aus["gleich_asset"]),
              aus["alter_stunden"], int(aus["wuerde_sperren_voll"]),
-             int(aus["wuerde_sperren_asset"])))
+             int(aus["wuerde_sperren_asset"]),
+             json.dumps(je_block, ensure_ascii=False, sort_keys=True),
+             ",".join(aus["geaenderte_bloecke"]) or None))
         conn.commit()
     except sqlite3.Error as exc:
         logger.info("Anlass-Beobachtung fuer %s nicht geschrieben: %s",
