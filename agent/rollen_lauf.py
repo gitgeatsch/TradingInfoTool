@@ -1165,21 +1165,15 @@ def _schreibe_nein(*, symbol, befund, kurs_e, atr_e, tag, reihe, idx,
             prompt_stand=getattr(RT, "PROMPT_STAND", "?"),
             eur_je_usd=RE.fx_eur_je_usd(symbol, reihe, idx, db),
             familien=kern, rechnung=rechnung, modell=modell)
-        # DIE ZONEN AUS DER GEGENRECHNUNG. `felder_aus_entscheidung` nimmt sie
-        # aus der ANTWORT, und ein NICHTS_TUN nennt keine - deshalb hier aus der
-        # Rechnung nachgetragen, in genau den Spalten, die das Tracking liest.
-        for feld, wert in (("entry_eur_von", rechnung.get("einstieg_eur")),
-                           ("stop_loss_eur_von", rechnung.get("stop_eur")),
-                           ("take_profit_eur_von", rechnung.get("ziel_eur"))):
-            if wert is not None:
-                felder[feld] = wert
-        fx = felder.get("fx_eur_je_usd")
-        if fx:
-            for eur, usd in (("entry_eur_von", "entry_usd_von"),
-                             ("stop_loss_eur_von", "stop_loss_usd_von"),
-                             ("take_profit_eur_von", "take_profit_usd_von")):
-                if felder.get(eur) is not None:
-                    felder[usd] = round(float(felder[eur]) / float(fx), 8)
+        # DIE ZONEN KAMEN FRUEHER HIER NACHTRAEGLICH DAZU, weil
+        # `felder_aus_entscheidung` sie aus der ANTWORT nahm und ein NICHTS_TUN
+        # keine nennt. Das war ein Flicken an EINEM von zwei Wegen - der
+        # Hauptpfad schrieb weiter die Zahlen des Modells, und niemand sah,
+        # dass Mail und Zeile auseinanderliefen.
+        #
+        # SEIT DEM 15.08. NIMMT DIE ABBILDUNG SELBST die Rechnung, fuer beide
+        # Wege. Der Flicken ist damit weg, und es gibt die Geometrie einmal -
+        # samt USD-Umrechnung, die hier ebenfalls doppelt stand.
         felder["ist_reines_llm_halten"] = 1
         felder["gate_passed"] = 0        # es ist kein Signal, es ist eine Messung
         kennung = SA.schreibe_signal(conn, felder, symbol=symbol)

@@ -415,12 +415,51 @@ def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
     #
     # Ohne Kurs KEINE USD-Spalten - ein geratener Umrechnungsfaktor waere
     # schlimmer als eine leere Spalte.
+    # DIE GEOMETRIE KOMMT AUS DER RECHNUNG, NICHT AUS DER ANTWORT (15.08.2026).
+    #
+    # Hier stand `antwort.get(f"{feld}_eur_{rand}")` - also die Zahlen des
+    # MODELLS. Die Mail zeigt seit dem 14.08. die der RECHNUNG. Damit trug
+    # dasselbe Signal zwei Geometrien: eine, die der Nutzer liest, und eine,
+    # die in der Datenbank steht.
+    #
+    # GEMESSEN an den 23 Einstiegen des ersten Produktionsvormittags: die
+    # Zeile trug bei 19 von ihnen einen ENGEREN Stop als die Mail, im Median
+    # um den Faktor 1,5, im Aeussersten 2,8 (ETH 0,94 % gegen 2,50 %). Sieben
+    # Zeilen lagen unter RM-1b (2,5 %) - der Klasse, fuer die dieses Projekt
+    # 0,0 % Trefferquote ueber 9 Trades gemessen hat.
+    #
+    # WARUM DAS MEHR IST ALS EINE UNSAUBERKEIT: `stop_loss_*` wird von 17
+    # Modulen gelesen, darunter `backward_tracking` - die Erfolgsmessung. Sie
+    # haette jedes Rollen-Signal an einem Stop gemessen, der nie empfohlen
+    # wurde, und die Trefferbilanz waere systematisch zu schlecht ausgefallen.
+    #
+    # DER STOP IST EIN PUNKT, KEINE ZONE. `rechne()` liefert fuer Einstieg und
+    # Ziel je eine Spanne, fuer den Stop bewusst nur einen Wert - eine Marke,
+    # an der geschlossen wird, hat keine zwei Kanten. `von` und `bis` tragen
+    # ihn deshalb beide; `backward_tracking._zonen_schwelle()` bekommt damit
+    # zwei gleiche Kanten und keine Zweideutigkeit.
+    #
+    # DAS MODELL BLEIBT RUECKFALL - fuer Zeilen ohne Rechnung. Und seine
+    # Zahlen sind nicht verloren: `umgeworfen_preis_eur` steht daneben und
+    # geht als EINGABE in genau diesen Stop ein.
+    _geo = {}
+    if rechnung:
+        _geo = {
+            "einstieg_von": rechnung.get("einstieg_von_eur"),
+            "einstieg_bis": rechnung.get("einstieg_bis_eur"),
+            "stop_von": rechnung.get("stop_eur"),
+            "stop_bis": rechnung.get("stop_eur"),
+            "ziel_von": rechnung.get("ziel_von_eur"),
+            "ziel_bis": rechnung.get("ziel_bis_eur"),
+        }
     for feld, eur_spalte, usd_spalte in (
             ("einstieg", "entry_eur", "entry_usd"),
             ("stop", "stop_loss_eur", "stop_loss_usd"),
             ("ziel", "take_profit_eur", "take_profit_usd")):
         for rand in ("von", "bis"):
-            wert = antwort.get(f"{feld}_eur_{rand}")
+            wert = _geo.get(f"{feld}_{rand}")
+            if wert is None:
+                wert = antwort.get(f"{feld}_eur_{rand}")
             if wert is None:
                 continue
             aus[f"{eur_spalte}_{rand}"] = wert

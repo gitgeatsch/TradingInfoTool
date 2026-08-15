@@ -4116,10 +4116,40 @@ def paket_15() -> None:
            "backward_tracking sucht genau danach (Zeile 1192)")
     # DER RUMPF, NICHT DER AUFRUF. `split()[1]` traf die Argumentliste - die
     # Funktion steht weiter unten in der Datei als ihre Aufrufstelle.
+    # AM VERHALTEN GEPRUEFT, NICHT AM ORT (15.08.2026). Vorher stand hier
+    # `"take_profit_eur_von" in <Rumpf von _schreibe_nein>` - die Zeilen wurden
+    # dort nachtraeglich angeflickt. Seit die Abbildung die Geometrie selbst
+    # aus der Rechnung nimmt, steht der Flicken nicht mehr da, und die
+    # Textsuche schlug an, obwohl die Sache besser geloest ist. Eine Pruefung,
+    # die den Ort festhaelt statt die Tatsache, verbietet die Verbesserung.
+    from agent import entscheidungsrechnung as ER10
+    from agent import signal_abbildung as SA10
+
+    _r_nein = ER10.rechne(kurs=100.0, atr=3.0, risiko_eur=40.0,
+                          instrument="spot", betrag_wunsch_eur=500.0)
+    # EIN NICHTS_TUN NENNT KEINE ZAHLEN - genau das ist der Fall.
+    _f_nein = SA10.felder_aus_entscheidung({"aktion": "NICHTS_TUN"},
+                                           fakten={}, rechnung=_r_nein)
     pruefe(P, "und gerechnete Zonen, sonst ist es unaufloesbar",
-           "take_profit_eur_von" in _l.split("def _schreibe_nein")[1][:3000],
+           all(_f_nein.get(k) is not None for k in
+               ("entry_eur_von", "stop_loss_eur_von", "take_profit_eur_von")),
            "_hat_selbst_halten_these() verlangt Einstieg, Stop UND Ziel - ohne "
            "sie bliebe die Zeile fuer immer offen")
+    # UND SIE STAMMEN AUS DER RECHNUNG, nicht aus der Antwort (Fund 6 vom
+    # 15.08.): die Mail zeigte den gerechneten Stop, die Zeile den des
+    # Modells - bei 19 von 23 Einstiegen war der in der Zeile ENGER, im
+    # Median um Faktor 1,5. `backward_tracking` liest die Zeile.
+    _f_beide = SA10.felder_aus_entscheidung(
+        {"aktion": "KAUFEN", "stop_eur_von": 98.0, "stop_eur_bis": 99.0},
+        fakten={}, rechnung=_r_nein)
+    pruefe(P, "und zwar aus der RECHNUNG, nicht aus der Antwort",
+           _f_beide.get("stop_loss_eur_von") == _r_nein["stop_eur"],
+           f"Zeile {_f_beide.get('stop_loss_eur_von')}, Modell 98,0, "
+           f"Rechnung {_r_nein['stop_eur']} - sonst misst die Trefferbilanz "
+           "einen Stop, der nie empfohlen wurde")
+    pruefe(P, "der Stop ist dabei ein Punkt, keine Zone",
+           _f_beide.get("stop_loss_eur_von") == _f_beide.get("stop_loss_eur_bis"),
+           "eine Marke, an der geschlossen wird, hat keine zwei Kanten")
     pruefe(P, "es zaehlt NICHT als Signal", 'felder["gate_passed"] = 0' in _l,
            "es ist eine Messung, keine Empfehlung")
     pruefe(P, "und ein Fehlschlag haelt den Lauf nicht auf",
