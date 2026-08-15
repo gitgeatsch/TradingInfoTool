@@ -3663,3 +3663,227 @@ Signale mit Belegen — die laufen seit dem 14.08. auf.
 sie sagt, ob die vorhandenen Blöcke tragen — und eine Rolle C auf einer
 Faktenbasis zu bauen, von der wir nicht wissen, ob sie trägt, wäre derselbe
 Fehler noch einmal.
+
+
+---
+
+## Kapitel 33 — Reicht das, was unsere Rollen sehen? Ja/Nein je Rolle (16.08.2026)
+
+**Nutzervorgabe, wörtlich:** *„die Information sollte tragen, weil es in der
+Praxis so angewendet wird und ggf. auch in LLM-Lösungen … was sehen unsere
+Rollen aktuell an Info — reicht das heute z. B. einem Trader = ja/nein und
+entsprechend anpassen — der Auftrag muss analog für Z.ai durchgeführt werden."*
+
+Der Maßstab ist damit ausdrücklich **nicht** unsere eigene Ausgangsmessung,
+sondern die Praxis. Das ist ein zulässiger und hier der schnellere Weg: was
+Händler durchgängig verwenden, ist eine Vorannahme, die man nicht erst selbst
+beweisen muss.
+
+### 33.1 Der Maßstab aus der Praxis: CSTI
+
+Die Praxisliteratur beschreibt die Entscheidung als vier Fragen in fester
+Reihenfolge — *Condition · Setup · Trigger · Invalidation*:
+
+| | Frage | was gemeint ist |
+|---|---|---|
+| **C** | Bedingung | Ist das Umfeld überhaupt geeignet? Trend, Spanne, Volatilität, Nachrichtenlage |
+| **S** | Aufbau | Liegt die erwartete Kursstruktur vor? Rücklauf an eine Marke, Konsolidierung, Bruch |
+| **T** | **Auslöser** | Der genaue Anlass JETZT: Kerzenschluss, Bruch, Umsatzsprung |
+| **I** | Widerlegung | Welcher Kurs beweist, dass die Lesart falsch war? |
+
+Dazu als Auswahlkriterien durchgängig genannt: **Liquidität und Spread**,
+**Umsatzbestätigung**, **Katalysator** (Ereignis, Zahlen, Makrotermin),
+**Trendausrichtung über mehrere Zeitebenen**, und eine kleinere Position bei
+riskanterem Aufbau.
+
+**Und in den LLM-Lösungen:** der Trader in TradingAgents bekommt **Berichte,
+keine Rohindikatoren** — von vier Analysten mit *verschiedenen Quellen* — plus
+das Ergebnis eines Bull/Bear-Streits. Ein Risiko-Team prüft seine Entscheidung
+danach aus drei Haltungen.
+
+### 33.2 Rolle B/C — der Trader. Reicht es? **NEIN**
+
+| Praxis verlangt | bei uns | Urteil |
+|---|---|---|
+| **C** Bedingung | Lagebild, Einstufung der eigenen Klasse | **ja** |
+| **S** Aufbau | `struktur` + `marken`, mit benanntem Fenster | **ja** |
+| **T** **Auslöser** | — | **FEHLT** |
+| **I** Widerlegung | `umgeworfen_durch` + `umgeworfen_preis_eur`, Pflichtfeld | **ja, stark** |
+| Liquidität/Spread | — (`volumen` ist Relativumsatz, nicht Handelbarkeit) | **FEHLT** |
+| Umsatzbestätigung | `volumen`: Tagesumsatz gegen 20-Tage-Mittel, Aufwärtstage | ja |
+| **Katalysator** | — | **FEHLT** |
+| Trend über Zeitebenen | `bewegung` 5/20/60 Tage — als Zahlen, ohne Ausrichtungsaussage | teilweise |
+| Positionsgröße | **bewusst nicht beim Modell** — System rechnet aus Risiko | besser als Praxis |
+
+**Drei Lücken, und die erste ist die schwerste.**
+
+> ⚠️ **Der Auslöser fehlt vollständig — und das ist derselbe Befund wie O-36.**
+> Die Praxis trennt „der Aufbau liegt vor" von „jetzt ist der Moment". Unsere
+> Kette kennt nur den Aufbau; **den Moment gibt die Uhr vor.** Deshalb wird
+> dasselbe Asset alle 15 Minuten gefragt, und deshalb hat der Nutzer die
+> Anlassfrage überhaupt gestellt.
+>
+> Der alte Weg hatte den Auslöser: `hebel_screening` mit Trendfolge- und
+> Kontra-Zweig, Schwelle 70, gemessen 9,6 % Kandidaten. Er läuft weiter — und
+> **niemand liest ihn.**
+
+**Liquidität und Spread** entscheiden in der Praxis, ob ein Aufbau überhaupt
+handelbar ist. Wir rechnen die Handelbarkeit (Bitpanda-Listung, Override) und
+geben sie dem Modell nicht. Bei einem Titel wie SUPRA oder BEAMX ist das keine
+Nebensache.
+
+**Katalysator** ist die einzige Kategorie, die uns ganz fehlt — kein
+Ereignis, keine Zahlen, kein Makrotermin. Das deckt sich mit dem eigenen
+Grundbefund: *Nachrichten* sind einer von drei Wegen, die das Vorzeichen
+drehen können, und der einzige davon, den wir nie versucht haben.
+
+### 33.3 Rolle A — der Marktanalyst. Reicht es? **FAST**
+
+| Praxis verlangt | bei uns | Urteil |
+|---|---|---|
+| Trend je Leitmarkt | 250/60 Handelstage, Abstand Hoch/Tief | ja |
+| Volatilitätsregime | tägliche Schwankung + Perzentil | ja |
+| Handelbarkeit | Umsatz je Bewegung + Perzentil | ja |
+| Stimmung | Fear & Greed — **nur Bitcoin** | teilweise |
+| Makro | Netto-Liquidität, Zinskurve | ja |
+| **Terminkalender** | — | **FEHLT** |
+| Regime + Persistenz | gerechnet (*bär*, 27 Tage), **nicht im Prompt** | FEHLT |
+
+Zwei kleine Lücken, beide billig: die Stimmung liegt für mehr als BTC vor, und
+Regime samt Persistenz ist gerechnet und wird nicht gereicht. Ein
+**Terminkalender** (FOMC, CPI) wäre neu — aber genau das, was die Praxis unter
+„post-news condition" versteht.
+
+### 33.4 Z.ai — Rolle C. Reicht es? **NEIN, und zwar grundsätzlich**
+
+Heute bekommt Z.ai **dieselben Marktfakten wie der Trader** und beantwortet
+dieselbe Frage. Das ist nach der Literatur der Fehlerfall — *Homogeneous
+Debate*: gleiche Informationsgrenze, keine epistemische Vielfalt, und ein
+Modell, das eine gleichartig erzeugte Ausgabe prüft, **rationalisiert
+nachträglich statt unabhängig zu prüfen**.
+
+Die Messung bestätigt es: **17× LONG in 2.469 Prüfungen.**
+
+**Was Z.ai stattdessen bekommen sollte — die Auswahl:**
+
+| Z.ai bekommt | warum |
+|---|---|
+| **Optionsmarkt-Gegenargument** (Deribit) | 1.149 von 1.163 Fakten tragen bereits ein Gegenargument — und B sieht keines davon |
+| **OI-Squeeze-Zustand** | fünf Zustände, 1.526 Fälle; sagt etwas über Positionierung, das keine Kerze hergibt |
+| **Funding-Extremwerte** | dieselbe Familie, aber als Extremwert statt als Perzentiltext |
+| **Regime + Persistenz** | 27 Tage bär — der Kontext, in dem jedes Urteil steht |
+| **Handelbarkeit/Spread** | ob der Trade überhaupt ausführbar ist |
+| die geplante Aktion, Richtung, Hebel | damit der Einwand konkret wird |
+
+| Z.ai bekommt NICHT | warum |
+|---|---|
+| Kursstruktur, Marken, Bewegung | hatte B schon — das wäre wieder dieselbe Grenze |
+| die Begründung von B | sonst prüft es den Text statt der Sache |
+| das Lagebild | Modellprosa, kein Fakt |
+
+**Eine Frage:** *„Spricht in diesen Daten etwas gegen diesen Trade?"* — ein
+Aufruf statt vier.
+
+### 33.5 Was daraus folgt, in dieser Reihenfolge
+
+| | Schritt | Aufwand |
+|---|---|---|
+| **1** | **Finanzierung nur im Hebel-Prompt** — gemessen, falsch platziert | klein |
+| **2** | **Handelbarkeit und Spread in den Trader-Prompt** — gerechnet, ungenutzt | klein |
+| **3** | **Regime + Persistenz in Rolle A**, Stimmung über BTC hinaus | klein |
+| **4** | **Auslöser zurückholen** — das vorhandene Screening als Anlass lesen, zusammen mit O-36 | mittel |
+| **5** | **Z.ai auf Rolle C umbauen** — Positionierung statt Kursdaten | mittel |
+| **6** | **Katalysator/Nachrichten** — die einzige ganz fehlende Quelle | groß |
+
+**Die Schritte 1 bis 3 ändern den Prompt** und machen damit frühere Messungen
+unvergleichbar. Das ist unvermeidlich und muss im `PROMPT_STAND` vermerkt
+werden — jeder Messbefund gehört zu einem Stand, sonst ist er nicht
+zuordenbar.
+
+### 33.6 Was ich als Fachexperte dazu sage
+
+**Die drei Lücken beim Trader sind keine Feinheiten.** Ein Händler, der Aufbau
+und Widerlegung kennt, aber weder Auslöser noch Handelbarkeit noch Anlass,
+trifft eine gut begründete Entscheidung **zum falschen Zeitpunkt an einem
+möglicherweise nicht handelbaren Titel**. Genau das beschreibt der
+Produktionslauf vom 15.08.: 26 Empfehlungen über 10.400 EUR in 105 Minuten,
+ausgelöst von der Uhr.
+
+**Und die Positionsgröße ist der eine Punkt, an dem wir besser sind als die
+Praxis.** In TradingAgents entscheidet der Trader über die Größe; bei uns folgt
+sie aus Risiko und Stopabstand. Das ist richtig so und sollte nicht angetastet
+werden — es ist Arithmetik, keine Meinung.
+
+**Quellen:** [TradingAgents](https://arxiv.org/html/2412.20138v1) ·
+[FinMem](https://arxiv.org/abs/2311.13743) ·
+[CSTI-Rahmen und Auswahlkriterien](https://www.smbtraining.com/blog/the-ultimate-swing-trading-guide-for-beginners-developing-traders) ·
+[Verification Paradox](https://yaihq.com/research/verification-paradox-agents-cannot-validate-themselves)
+
+### 33.7 Meine Meinung: das meiste gehört NICHT in den Prompt
+
+Nutzerfrage: *„sollten unsere Rollen diese aus der Praxis haben oder nicht —
+weil LLMs dies nicht können?"*
+
+**Meine Antwort: die Rollen sollen die Praxis abbilden — aber die wenigsten
+dieser Punkte gehören ins Modell.** Der Trennstrich ist nicht „wichtig oder
+nicht", sondern:
+
+> **Ist es eine berechenbare Bedingung — oder ein Urteil über Sprache und
+> Zusammenhang?**
+
+Das Erste gehört auf die deterministische Spur. Nur das Zweite ins Modell.
+
+**Und dafür hat dieses Projekt die härteste Beweislage, die es hat.** Jedes Mal,
+wenn das Modell eine ZAHL liefern sollte, war sie schlecht:
+
+| Zahl vom Modell | gemessen |
+|---|---|
+| Konfidenz | 77,5 % vorhergesagt gegen 33,3 % eingetreten — sagt nichts vorher |
+| Frist (`umgeworfen_bis`) | **36 von 37** lagen in der Vergangenheit |
+| Einstieg/Stop als Zonen | bei **19 von 23** enger als die Rechnung, 7 unter RM-1b |
+| Richtung (Z.ai) | **17× LONG** in 2.469 Prüfungen |
+| Hebelfaktor | wird gar nicht erst gefragt — und das war richtig |
+
+Jedes Mal, wenn es SPRACHE liefern sollte — Begründung, Gegengrund,
+Widerlegungsbedingung —, war es brauchbar.
+
+**Daraus folgt Punkt für Punkt:**
+
+| Lücke | gehört wohin | warum |
+|---|---|---|
+| **Auslöser** | **deterministisch, vor dem Aufruf** | „Kurs schließt über X bei Umsatz Y" ist eine Bedingung, keine Einschätzung. Der alte Weg hatte das richtig: Screening rechnet, nur Kandidaten kommen zum Modell |
+| **Handelbarkeit/Spread** | **deterministisch, als Filter** | ob ein Titel handelbar ist, ist eine Tatsache. Ein Modell zu fragen, ob 3 % Spread zuviel sind, wäre eine Meinung über eine Rechnung, die wir schon haben |
+| Trend über Zeitebenen | deterministisch, als Satz | rechenbar; als Satz in den Faktentext, nicht als Frage |
+| Regime + Persistenz | deterministisch, als Satz | dito — billig, aber wenig zu erwarten: es ist aus denselben Kursdaten abgeleitet |
+| **Katalysator/Nachrichten** | **ins Modell** | **hier und nur hier ist das LLM überlegen** — Text lesen und einordnen kann kein Regelwerk |
+
+**Und das ändert meinen Z.ai-Vorschlag.** Ich hatte Optionsmarkt, OI-Squeeze
+und Funding-Extreme für Rolle C vorgeschlagen. Ehrlich betrachtet ist der
+größte Teil davon **eine Regel, keine Frage**:
+
+    Funding im 95. Perzentil UND geplante Richtung LONG  ->  Einwand
+    Long-Squeeze-Verdacht UND geplante Richtung LONG     ->  Einwand
+
+Das ist deterministisch, kostenlos, sofort messbar und immer verfügbar. Ein
+Modell dafür zu bezahlen wäre derselbe Fehler wie beim Richtungsabgleich —
+nur mit anderen Zahlen.
+
+> **Die ehrliche Konsequenz: Rolle C sollte die Nachrichten- und
+> Katalysator-Rolle sein, nicht die Zahlen-Rolle.** Die Positionierungsfakten
+> werden deterministische Einwände im Faktentext — sichtbar für B, ohne
+> zusätzlichen Aufruf.
+
+**Was das für die Reihenfolge heißt:** die Schritte 1 bis 4 bleiben, werden
+aber überwiegend **Rechnung statt Prompt**. Schritt 5 (Z.ai-Umbau) wird kleiner
+— die Zahlen wandern in die Regel — und Schritt 6 (Nachrichten) rückt von
+„zuletzt, weil aufwendig" auf **„der eigentliche Grund, überhaupt ein zweites
+Modell zu betreiben"**.
+
+**Ein Vorbehalt, den ich nenne, weil er zählt:** dass ein Modell mit den
+richtigen Fakten besser urteilt, ist bei uns **nicht gemessen** — dieses
+Projekt hat an 8.441 Fällen gezeigt, dass kein Verfahren die Basisrate
+schlägt, und alle bisherigen Prompt-Erweiterungen haben daran nichts geändert.
+Die Praxisbegründung trägt die Entscheidung, sie ersetzt aber nicht den
+Nachweis. Deshalb bekommt jede dieser Ergänzungen eine eigene Spalte und wird
+gegen die Basisrate gemessen — sonst wiederholen wir die Geschichte der
+Konfidenz.
