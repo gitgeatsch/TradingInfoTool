@@ -2242,7 +2242,7 @@ Mittels. Ohne diesen Schalter hätte **jede** Live-Mail „Volumen UNGÜNSTIG"
 gemeldet — ein systematischer Fehler in jeder einzelnen Nachricht, und einer,
 der wie ein Befund aussieht.
 
-## Nachtrag (2026-08-16): Z.ai ist Rolle C - eine zweite QUELLE
+## Nachtrag (2026-08-16): Z.ai ist Rolle G - eine zweite QUELLE
 
 **Der Richtungsabgleich ist stillgelegt.** Er bekam dieselben Marktfakten wie
 Rolle BC und sollte daraus eine eigene Richtung ableiten - zwei Leser derselben
@@ -2258,7 +2258,7 @@ Seite. Vier unabhängige Gründe, jeder für sich ausreichend:
 Er kostete **drei von vier Aufrufen**; am 15.08. bekamen deshalb 35 von 39
 Signalen gar keine zweite Meinung.
 
-**An seiner Stelle steht Rolle C** mit eigener Grundlage: Veränderung der
+**An seiner Stelle steht Rolle G** mit eigener Grundlage: Veränderung der
 offenen Kontrakte, Finanzierungsrate als Perzentil der eigenen Historie, Anteil
 der Long-Konten, Marktregime mit Dauer. Ein Aufruf. Keine Frage ohne Grundlage —
 bei Aktien, Rohstoffen und ETF wird nicht gefragt.
@@ -2281,7 +2281,7 @@ Stand; die davor sind mit den neuen nicht vergleichbar.
 | **F-160** | Abstand zur Zwangsauflösung bei 3-, 6- und 10-fachem Hebel — in Prozent **und** in Schwankungsbreiten | Rolle BC, **nur Hebel** | gerechnet, `1/Hebel` |
 | **F-161** | Relative Stärke zum breiten Markt über 30 und 90 Handelstage | Rolle BC, **nur Themen-ETF** | gerechnet gegen SPY |
 | **F-162** | Benennung fehlender Angaben: kein Umsatz · unter zwei Marken · Historie unter 250 Tagen | Rolle BC, alle | abgeleitet aus den Blöcken |
-| **F-045** | Finanzierungsrate als Perzentil | Rolle BC **nur noch bei Hebel** — bei Spot jetzt allein Rolle C | unverändert |
+| **F-045** | Finanzierungsrate als Perzentil | Rolle BC **nur noch bei Hebel** — bei Spot jetzt allein Rolle G | unverändert |
 
 ### Die vier Fragen zu F-160
 
@@ -2301,7 +2301,7 @@ von 3 auf 2 drücken und über `tranche_aus_faktoren()` den Betrag senken.
 
 **Es kann also weniger und kleinere Spot-Signale geben.** Das ist kein
 Einschränken: ein Faktor, der zur Sache nichts sagt, hat nie getragen. Und die
-Information ist nicht weg — Rolle C liest dieselbe Rate, für Spot wie für Hebel.
+Information ist nicht weg — Rolle G liest dieselbe Rate, für Spot wie für Hebel.
 
 ### Zwei Altlasten, die dabei aufgefallen sind
 
@@ -2319,6 +2319,6 @@ dasselbe Objekt.
 ### Was NICHT gebaut wurde
 
 **Regime und Persistenz für Rolle A** — der fünfte grüne Schritt des Plans. Er
-verletzt die Konstruktionsbedingung der zweiten Stufe: Rolle C hat beides seit
+verletzt die Konstruktionsbedingung der zweiten Stufe: Rolle G hat beides seit
 dem Morgen des 16.08., und ein Parameter gehört zu genau einem Modell.
 Begründung und die offene Entscheidung stehen im Umbauplan, Kapitel 38.1.

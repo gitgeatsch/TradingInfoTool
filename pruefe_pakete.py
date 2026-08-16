@@ -2992,10 +2992,22 @@ def paket_15() -> None:
     # Stelle tritt Rolle G mit EIGENER Faktengrundlage. Die Sorge dahinter
     # bleibt gueltig und wird weiter geprueft: zwei getrennte try-Bloecke,
     # damit ein Ausfall der einen Pruefung die andere nicht mitnimmt.
-    pruefe(P, "die Konsistenzpruefung und Rolle G sind getrennt gefangen",
-           _quelltext("agent/zweite_meinung.py").count(
-               "except Exception:                                    # noqa: BLE001") >= 2,
-           "ein gemeinsamer try-Block haette beim ersten Fehler beide verloren")
+    # SEIT DEM 17.08. GIBT ES NUR NOCH EINEN AUFRUF. Diese Pruefung verlangte
+    # zwei getrennte Fehlerfaenge - richtig, solange die Konsistenzpruefung
+    # danebenlief. Sie ist entfernt (Nutzer 16.08.: "war nie meine
+    # Anforderung"), also prueft dieselbe Absicht jetzt das Uebrige: der EINE
+    # Aufruf unterscheidet "kein Platz" von "fehlgeschlagen".
+    _zm_q = _quelltext("agent/zweite_meinung.py")
+    pruefe(P, "Rolle G trennt uebersprungen von fehlgeschlagen",
+           "except Andrang as e:" in _zm_q
+           and 'aus["uebersprungen"]' in _zm_q
+           and "Rolle G fehlgeschlagen (P-8)" in _zm_q,
+           "wer nicht drankam, darf spaeter nicht als Zustimmung zaehlen")
+    pruefe(P, "die Konsistenzpruefung wird NICHT mehr gerufen",
+           "_mit_platz(G.pruefe_konsistenz" not in _zm_q
+           and "nennt die Begruendung" not in _zm_q,
+           "sie stand auf derselben Informationsgrenze wie Rolle BC (R-R2) "
+           "und war vom Nutzer abgelehnt - ihr Prompt bleibt lesbar stehen")
     pruefe(P, "Rolle G bekommt eine EIGENE Grundlage, nicht den Faktentext",
            "def rolle_g(client, urteil" in _quelltext("agent/zweite_meinung.py")
            and "positionierung" in _quelltext("agent/zweite_meinung.py"),
@@ -3226,10 +3238,17 @@ def paket_15() -> None:
            "richtung" in G.SYSTEM_PROMPT and "Hebel-Signal" in G.SYSTEM_PROMPT,
            "beides Felder, die im Faktentext der Kette nicht vorkommen")
     zm_code = _nur_code("agent/zweite_meinung.py")
-    pruefe(P, "die Kette uebergibt ihre EIGENEN Prompts",
-           "system_prompt = SYSTEM_KONSISTENZ" in zm_code
-           and "system_prompt = SYSTEM_RICHTUNG" in zm_code,
-           "ohne die Uebergabe griffen still die alten")
+    # BEIDE ALTEN AUFRUFE SIND WEG - der Richtungsabgleich am 16.08., die
+    # Konsistenzpruefung am 17.08. Die Pruefung "uebergibt sie ihre eigenen
+    # Prompts" hat damit keinen Aufrufer mehr. Was BLEIBT und wichtiger ist:
+    # die Prompts duerfen nicht verschwinden, sonst ist die Begruendung weg.
+    pruefe(P, "die abgeschalteten Prompts bleiben lesbar stehen",
+           "SYSTEM_KONSISTENZ = (" in _quelltext("agent/zweite_meinung.py")
+           and "def mehrheit(" in _quelltext("agent/zweite_meinung.py"),
+           "wer sie je wieder anschliesst, soll finden, warum sie ausgingen")
+    pruefe(P, "und Rolle G hat ihren eigenen",
+           "SYSTEM_ROLLE_G" in zm_code,
+           "ohne eigenen Prompt griffe still einer der alten")
     pruefe(P, "und die alten bleiben fuer die sechs alten Pipelines gueltig",
            "system_prompt or SYSTEM_PROMPT" in _nur_code(
                "agent/krypto/gegenpruefung.py"),
@@ -3327,9 +3346,15 @@ def paket_15() -> None:
     _z1 = _nur_code("agent/gegenpruefer_rollen.py")
     pruefe(P, "Z1 prueft Text gegen AKTION (Richtungstreue)",
            "def pruefe_richtungstreue" in _z1)
-    pruefe(P, "Z.ai prueft Text gegen FAKTEN - und bekommt die Aktion nicht",
-           "pruefe_konsistenz" in zm_code and "aktion" not in
-           zm_code.split("pruefe_konsistenz")[1].split(")")[0],
+    # Z1 UND ROLLE G PRUEFEN VERSCHIEDENES, und das war der Sinn dieser
+    # Pruefung. Sie stand auf `pruefe_konsistenz`; seit dem 17.08. gibt es
+    # die nicht mehr. Die Trennung selbst gilt weiter - und ist SCHAERFER
+    # geworden, weil Rolle G nicht einmal mehr denselben Faktentext sieht.
+    pruefe(P, "Z1 prueft gegen die Aktion, Rolle G gegen eigene Fakten",
+           "def pruefe_richtungstreue" in _z1
+           and "positionierung" in _quelltext("agent/zweite_meinung.py")
+           and "faktentext" not in _quelltext(
+               "agent/zweite_meinung.py").split("def rolle_g")[1][:2000],
            "sonst pruefen zwei Ebenen dasselbe und keine die Luecke dazwischen")
     pruefe(P, "der Gegenpruefer laeuft deterministisch, der Pruefer nicht",
            "temperature = 0.2" in _nur_code("agent/rollen_lauf.py")
@@ -4821,12 +4846,16 @@ def paket_15() -> None:
            f"gemessene Spitze {_spitze[0]} - die Aussage ist NIE MEHR ALS "
            "zwei, nicht genau zwei: ob sich zwei Faeden begegnen, haengt am "
            "Zeitverhalten der Maschine, die Obergrenze nicht")
+    # ⚠️ DIESE PRUEFUNG HAT AM 17.08. EINE REGRESSION GEFANGEN, die ich gerade
+    # eingebaut hatte. Der Andrangdeckel umschloss NUR die Konsistenzpruefung -
+    # weder der Richtungsabgleich noch Rolle G liefen je durch ihn. Mit dem
+    # Entfernen der Konsistenzpruefung waere er ersatzlos verschwunden, und
+    # `rollen_lauf` startet EINEN FADEN JE SIGNAL: zehn Signale, zehn
+    # gleichzeitige Z.ai-Aufrufe. Genau der Zustand vom 14.08.
     pruefe(P, "die Bremse sitzt am Anbieter, nicht am Lauf",
-           "_mit_platz(G.leite_eigene_richtung" in _quelltext(
-               "agent/zweite_meinung.py")
-           and "_mit_platz(G.pruefe_konsistenz" in _quelltext(
-               "agent/zweite_meinung.py"),
-           "sonst gilt sie nur fuer den einen Aufrufer, der sie kennt")
+           "_mit_platz(rolle_g" in _quelltext("agent/zweite_meinung.py"),
+           "sonst gilt sie nur fuer den einen Aufrufer, der sie kennt - und "
+           "seit dem 16.08. kannte sie keiner mehr")
     pruefe(P, "wer keinen Platz bekam, wird als uebersprungen gebucht",
            "Andrang" in _quelltext("agent/zweite_meinung.py")
            and 'aus["uebersprungen"] =' in _quelltext(

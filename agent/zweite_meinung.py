@@ -14,17 +14,24 @@ DER NAME IST ABSICHT. Es gibt in diesem Projekt bereits `gegenpruefer_rollen`
 Zwei Ebenen, zwei Fragen. `zweite_meinung` heisst dieses Modul, damit die
 Verwechslung nicht ueber den Dateinamen zurueckkommt.
 
-WAS Z.AI SIEHT - Nutzervorgabe 13.08.: *"ohne Metalabels ... bzw.
-zahlenangaben, konstanten etc. also Text"*:
+WAS Z.AI HEUTE SIEHT - EIN Aufruf, EIGENE Fakten (Stand 17.08.2026):
 
-    Konsistenz      Faktentext VOLLSTAENDIG + Begruendungstext
-    Eigene Richtung Faktentext OHNE `auftrag` und OHNE den Bestandssatz
-                    (`nur_markt()`, Begruendung dort)
+    Rolle G   die Positionierung am Terminmarkt aus `positionierung.py`:
+              offene Kontrakte, Finanzierungsrate als Perzentil, Anteil der
+              Long-Konten, Marktregime mit Dauer. NICHTS davon steht im
+              Faktentext von Rolle BC.
 
-DIE BEIDEN AUFRUFE BEKOMMEN BEWUSST NICHT DASSELBE. Die Konsistenzpruefung
-haelt einen Begruendungstext gegen die Fakten - der DARF sich auf den Bestand
-beziehen. Der Richtungsabruf soll unabhaengig urteilen, und dafuer ist jeder
-Satz schaedlich, der von UNS handelt statt vom Markt.
+⚠️ ZWEI AUFRUFE SIND WEGGEFALLEN, und der Kopf hat es zwei Tage lang nicht
+gesagt. Wer hier las, fand eine Konstruktion beschrieben, die es nicht mehr
+gibt:
+
+    Richtungsabgleich   stillgelegt 16.08. - 17x LONG in 2.469 Pruefungen,
+                        dieselben Fakten wie Rolle BC (Homogeneous Debate)
+    Konsistenzpruefung  entfernt 17.08. - vom Nutzer am 16.08. abgelehnt
+                        ("war nie meine Anforderung") und ebenfalls auf der
+                        Informationsgrenze von Rolle BC
+
+Beide Prompts stehen unten lesbar; aufgerufen wird keiner mehr.
 
 WAS ES NICHT SIEHT, und warum jeweils:
 
@@ -52,11 +59,15 @@ Kopie wuerde sein Z.ai-Ergebnis dort hineinschreiben, auf eine `signal_id`, die
 in der Produktivdatei ein anderes Signal bezeichnet. Diese Kette bekommt ihre
 Verbindung uebergeben, und das gilt auch fuer den Nebenweg.
 
-DER PREIS: 4 sequenzielle Z.ai-Aufrufe je Einstieg (1 Konsistenz + 3 Stimmen
-fuer die Richtung, siehe `mehrheit()`). GEMESSEN am 13.08. ueber 60 Aufrufe:
-34 s je Aufruf, nicht die dokumentierten 12-25 s. Vier Aufrufe sind damit rund
-137 s gegen einen Deckel von 240 s - es passt, aber mit weniger Luft als bisher
-angenommen. Wer die Stimmenzahl erhoeht, muss diese Rechnung mitziehen."""
+DER PREIS: EIN Z.ai-Aufruf je Einstieg. Gemessen am 13.08. ueber 60 Aufrufe
+34 s je Aufruf - gegen einen Deckel von 240 s ist das reichlich Luft.
+
+    bis 16.08.   4 Aufrufe (1 Konsistenz + 3 Stimmen)  ~137 s
+    seit 17.08.  1 Aufruf  (Rolle G)                    ~34 s
+
+DAS WAR NICHT DER GRUND, ABER DIE FOLGE: am 15.08. bekamen 35 von 39 Signalen
+GAR KEINE zweite Meinung, weil die Warteschlange doppelt so lang war wie die
+Wartezeit."""
 from __future__ import annotations
 
 import logging
@@ -302,7 +313,8 @@ Antworte AUSSCHLIESSLICH mit JSON:
 Kein Einwand ist eine gueltige Antwort und die haeufigere. Erfinde nichts hinzu; steht eine Angabe nicht da, ist sie kein Argument."""
 
 
-def rolle_g(client, urteil: dict, conn=None, db: str | None = None) -> dict | None:
+def rolle_g(client, urteil: dict, conn=None, db: str | None = None,
+            symbol: str | None = None) -> dict | None:
     """Rolle G - die Gegenrede mit EIGENER Informationsgrundlage (16.08.2026).
 
     DER UNTERSCHIED ZUM ALTEN RICHTUNGSABGLEICH ist nicht die Frage, sondern
@@ -326,8 +338,33 @@ def rolle_g(client, urteil: dict, conn=None, db: str | None = None) -> dict | No
     from agent import positionierung as PO
     from api.llm_basis import extrahiere_inhalt
 
-    sym = str(urteil.get("symbol") or urteil.get("asset") or "").strip().upper()
+    # ⚠️ DAS SYMBOL KOMMT VOM AUFRUFER, NICHT AUS DEM URTEIL (17.08.2026).
+    #
+    # DIESE ZEILE HAT ROLLE G VOLLSTAENDIG TOTGELEGT, vom ersten Tag an.
+    # `urteil` ist die validierte Antwort von Rolle BC, und die traegt WEDER
+    # `symbol` NOCH `asset` - nachgezaehlt sind es 20 Schluessel, das Symbol
+    # ist keiner davon. `sym` war also immer leer, und die Funktion kehrte in
+    # der zweiten Zeile zurueck. Kein Fehler, kein Logeintrag, keine Zeile in
+    # der Mail: die zweite Stufe war seit ihrem Bau am 16.08. ein Aufruf, der
+    # nie stattfand.
+    #
+    # GEFUNDEN VON `simuliere_kette.py`, NICHT VON DEN 853 PAKETPRUEFUNGEN.
+    # Die pruefen `lage()`, `saetze()` und `zeilen()` einzeln, und alle drei
+    # sind in Ordnung. Erst der Lauf von Anfang bis Ende hat gefragt, ob der
+    # Abschnitt in der fertigen Mail steht - und er stand in keiner einzigen.
+    #
+    # Das ist dieselbe Lehre wie beim Sektorbezug und bei der Regime-Dauer,
+    # zum dritten Mal an einem Tag: was in jedem Einzelteil stimmt, kann als
+    # Ganzes reissen.
+    #
+    # DER RUECKFALL AUF DAS URTEIL BLEIBT STEHEN - er kostet nichts und
+    # bedient Aufrufer, die ein angereichertes Urteil uebergeben. Aber der
+    # Betriebspfad verlaesst sich nicht mehr darauf.
+    sym = str(symbol or urteil.get("symbol") or urteil.get("asset")
+              or "").strip().upper()
     if not sym:
+        logger.info("Rolle G ohne Symbol - uebersprungen. Der Aufrufer muss "
+                    "es uebergeben; das Urteil von Rolle BC traegt keines.")
         return None
     eigene = conn
     try:
@@ -369,6 +406,7 @@ def rolle_g(client, urteil: dict, conn=None, db: str | None = None) -> dict | No
 
 
 def hole(*, faktentext: dict, urteil: dict, zai_client,
+         symbol: str | None = None,
          warte_max_s: float = WARTE_MAX_SEKUNDEN) -> dict:
     """Beide Z.ai-Aufrufe, begrenzt auf `warte_max_s`. Nie eine Ausnahme.
 
@@ -390,22 +428,29 @@ def hole(*, faktentext: dict, urteil: dict, zai_client,
     aus: dict = {}
 
     def arbeite() -> None:
-        # ZWEI GETRENNTE try-BLOECKE, kein gemeinsamer. Faellt der
-        # Konsistenz-Aufruf aus, soll der Richtungsabgleich trotzdem laufen -
-        # ein gemeinsamer Block wuerde beim ersten Fehler beide verlieren.
-        try:
-            k = _mit_platz(G.pruefe_konsistenz, zai_client, faktentext,
-                           urteil.get("begruendung"),
-                           system_prompt=SYSTEM_KONSISTENZ)
-            if k:
-                aus["urteil"] = k.get("urteil")
-                aus["kurzbegruendung"] = k.get("kurzbegruendung")
-        except Andrang as e:
-            aus["uebersprungen"] = str(e)
-            logger.info("Z.ai-Konsistenzpruefung uebersprungen: %s", e)
-        except Exception:                                    # noqa: BLE001
-            logger.info("Z.ai-Konsistenzpruefung fehlgeschlagen (P-8)",
-                        exc_info=True)
+        # ⚠️ HIER STAND DIE KONSISTENZPRUEFUNG - entfernt am 17.08.2026.
+        #
+        # SIE HAETTE AM 16.08. GEHEN SOLLEN und ist beim Umbau uebersehen
+        # worden. Der Nutzer war unmissverstaendlich:
+        #
+        #     "Also das was ich bekomme ist eine Konsistenzpruefung von was -
+        #      dass die Informationen der Text konsistent ist, das brauche ich
+        #      nicht - war nie meine Anforderung. Anforderung war immer eine
+        #      Gegenpruefung einer zweiten Stelle."
+        #
+        # Ich habe darauf Rolle G gebaut und die alte Pruefung WEITERLAUFEN
+        # LASSEN. Sie kostete seither einen Z.ai-Aufruf je Signal und schrieb
+        # in jede Mail die Zeile "Ein zweites Modell nennt die Begruendung ...".
+        #
+        # UND SIE VERLETZT DIE KONSTRUKTIONSBEDINGUNG IN REINFORM (R-R2). Sie
+        # bekommt den VOLLSTAENDIGEN Faktentext von Rolle BC plus deren
+        # Begruendung - identische Informationsgrenze, also der Fall, in dem
+        # die Debatte nachweislich ein Martingal bildet. Sie war damit nicht
+        # nur unerwuenscht, sondern konstruktiv wertlos.
+        #
+        # `SYSTEM_KONSISTENZ` und `gegenpruefung.pruefe_konsistenz` bleiben
+        # lesbar stehen - wie `mehrheit()` seit dem 16.08. Wer sie je wieder
+        # anschliesst, findet hier, warum sie abgeschaltet wurde.
         try:
             # HIER STAND DER RICHTUNGSABGLEICH - drei Stimmen auf DENSELBEN
             # Marktfakten, die auch Rolle BC bekam. Entfernt am 16.08.2026,
@@ -432,11 +477,34 @@ def hole(*, faktentext: dict, urteil: dict, zai_client,
             # AN SEINE STELLE TRITT ROLLE C: dieselbe Idee, aber mit einer
             # EIGENEN Grundlage - der Positionierung am Terminmarkt, die
             # Rolle BC nicht sieht.
-            r = rolle_g(zai_client, urteil)
+            # DAS SYMBOL DURCHREICHEN - siehe die Notiz in `rolle_g`.
+            # Ohne diesen Wert kehrt sie in der zweiten Zeile zurueck,
+            # und das ist sie vom 16. bis zum 17.08. auch.
+            # ⚠️ DURCH `_mit_platz`, NICHT DIREKT (17.08.2026).
+            #
+            # Der Andrangdeckel `MAX_GLEICHZEITIG = 2` haengt an dieser
+            # Funktion - und er umschloss bis heute NUR die
+            # Konsistenzpruefung. Weder der Richtungsabgleich noch Rolle G
+            # liefen je durch ihn. Solange die Konsistenzpruefung mitlief,
+            # fiel das nicht auf; mit ihrer Entfernung waere der Deckel
+            # ersatzlos verschwunden, und `rollen_lauf` startet EINEN FADEN
+            # JE SIGNAL: bei zehn Signalen zehn gleichzeitige Z.ai-Aufrufe.
+            #
+            # Genau der Zustand vom 14.08., der zu dieser Klasse gefuehrt hat.
+            # Gefunden von der Paketpruefung, nicht von mir - sie bestand auf
+            # "die Bremse sitzt am Anbieter, nicht am Lauf".
+            r = _mit_platz(rolle_g, zai_client, urteil,
+                           symbol=symbol or faktentext.get('asset'))
             if r:
                 aus["einwand"] = r.get("einwand")
                 aus["einwand_grund"] = r.get("grund")
                 aus["grundlage"] = r.get("grundlage")
+        except Andrang as e:
+            # UEBERSPRUNGEN IST NICHT FEHLGESCHLAGEN. Wer nicht drankam, muss
+            # sich vom Rest unterscheiden lassen - sonst zaehlen wir Ausfaelle
+            # spaeter als Zustimmung.
+            aus["uebersprungen"] = str(e)
+            logger.info("Rolle G uebersprungen: %s", e)
         except Exception:                                    # noqa: BLE001
             logger.info("Z.ai-Rolle G fehlgeschlagen (P-8)", exc_info=True)
 
@@ -487,11 +555,13 @@ def zeilen(ergebnis: dict) -> list[str]:
     if not ergebnis:
         return []
     z: list[str] = []
-    if ergebnis.get("urteil"):
-        satz = f"Ein zweites Modell nennt die Begruendung {ergebnis['urteil']}"
-        if ergebnis.get("kurzbegruendung"):
-            satz += f": {ergebnis['kurzbegruendung']}"
-        z.append(satz + ".")
+    # ⚠️ HIER STAND DIE KONSISTENZZEILE - "Ein zweites Modell nennt die
+    # Begruendung schluessig". Entfernt am 17.08.2026 zusammen mit dem Aufruf,
+    # der sie erzeugte: der Nutzer hat sie am 16.08. ausdruecklich abgelehnt
+    # ("war nie meine Anforderung"), und sie stand auf derselben
+    # Informationsgrenze wie Rolle BC. `urteil`/`kurzbegruendung` bleiben im
+    # Ergebnis-dict zulaessig, damit alte Zeilen aus der Datenbank weiterhin
+    # lesbar sind - erzeugt werden sie nicht mehr.
     if ergebnis.get("einwand"):
         # IMMER EINE AUSSAGE, AUCH OHNE EINWAND (Nutzervorgabe 16.08.2026).
         #

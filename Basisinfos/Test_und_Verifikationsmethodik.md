@@ -2226,3 +2226,32 @@ der Satz sofort sichtbar.**
 Marken — dieselbe kaputte Kursreihe wie am 06.08.), HYPE (167 Handelstage), MON
 (232). Keines davon stand in der Bestandserhebung; alle drei sagen es jetzt
 selbst im Faktensatz.
+
+# 2.24 Werkzeugkasten-Nachtrag (2026-08-17): die Kette von Anfang bis Ende
+
+| Skript | Frage | Ausloeser |
+|---|---|---|
+| `simuliere_kette.py` | **Laeuft die Abrufkette durch, und kommen die Saetze am Ende an?** Betriebsart `probe` gegen eine KOPIE der Datenbank, echte Reihen/Fakten/Rechnung/Schreiben/Mailaufbau, Attrappe nur fuer die drei Modellaufrufe. Spielt je Instrument JEDE Aktion des Vokabulars durch. | nach jeder Aenderung an der Rollen-Kette, **vor** jedem Produktivgang |
+
+**Warum zusaetzlich zu den 855 Paketpruefungen.** Die sind statisch und pruefen
+Teile. An einem einzigen Tag haben sie viermal etwas nicht gefunden, das beim
+Durchlaufen sofort sichtbar war - zuletzt, dass **Rolle G nie gelaufen ist**:
+`urteil.get("symbol")` war immer leer, die Funktion kehrte in der zweiten Zeile
+zurueck, ohne Fehler und ohne Logzeile.
+
+> **Eine Kette, die in jedem Einzelteil stimmt, kann als Ganzes reissen.**
+
+**Was das Skript prueft, was ein Trockenlauf nicht kann.** `trocken`
+ueberspringt genau die Stufen, um die es geht: es schreibt nicht, misst den
+Anlass nicht und ruft Rolle G nicht. Deshalb `probe` - und deshalb gegen eine
+Kopie, weil die Kette dann wirklich schreibt.
+
+> ⚠️ **Die Abdeckungsliste ist wichtiger als die Fehlerzahl.** Der erste
+> Durchgang meldete "0 Fehler" und hatte den Hebel nie beruehrt: seit dem 15.08.
+> ist `hebel_pruefung_erlaubt` standardmaessig falsch, also fielen alle
+> Hebel-Symbole an der Auftragsstufe heraus - **77 % der Produktionsaufrufe,
+> ungeprueft, gemeldet als gruen**. Das Skript schaltet den Schalter jetzt in
+> der Kopie ein und druckt aus, welche Koerbe es NICHT geprueft hat.
+
+**Der Satz, der daraus folgt:** eine Stufe gilt erst als gebaut, wenn
+`simuliere_kette.py` sie **in der fertigen Mail** nachweist.

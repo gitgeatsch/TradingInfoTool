@@ -3503,6 +3503,8 @@ dasselbe für die zweite Stufe (Z.ai) mit **anderen, selektierten** Werten.
 
 ### 32.1 Der erste Befund: Rolle C gibt es nicht
 
+> ⚠️ **UMBENANNT 17.08.2026.** Was dieses Kapitel „Rolle C" nennt, heisst seit dem 17.08. **Rolle G — Gegenprüfer**. Der Buchstabe C war doppelt vergeben: das C in **„Rolle BC"** ist der Entscheider in LLM1 und hat mit Z.ai nichts zu tun. Der Kapiteltext bleibt im Wortlaut von damals stehen.
+
 Der Nutzer: *„Es sollten drei sein — Marktanalyst 1. Stufe, 2. Stufe Trader und
 Bewerter — A, B und C."*
 
@@ -5281,3 +5283,125 @@ ist der Entscheider in LLM1. `Rolle BC` bleibt unangetastet.
 | 2 | **Rolle G: Rohstoffe (CFTC) und Aktien (FINRA)** — dort ist das Basis-Set vollständig erfüllbar | additiv |
 | 3 | **Fundamentaldaten und Termine zu BC** — als **Tausch**, nicht als Ergänzung | grün/gelb |
 | 4 | Klasse 2 (`struktur` ↔ `marken`) | **erst nach der Blockmessung** |
+
+---
+
+## Kapitel 43 — Die Abrufkette von Anfang bis Ende, simuliert (17.08.2026)
+
+**Nutzervorgabe:** *„die Abrufkette prüfen und simulieren bzw. testen — von
+Anfang bis zum Ende."* Ergebnis: `simuliere_kette.py`, und der erste Lauf hat
+gefunden, dass **Rolle G nie gelaufen ist.**
+
+### 43.1 Warum eine Simulation, wo es 855 Prüfungen gibt
+
+Die Paketprüfungen sind **statisch**. Sie lesen Quelltext und rufen einzelne
+Funktionen — und haben an einem einzigen Tag viermal etwas nicht gefunden, das
+beim Durchlaufen sofort sichtbar wurde:
+
+| | gefunden durch |
+|---|---|
+| Sektorbezug greift nie (`etf` statt `themen_etf`) | Rendern |
+| Klassen-Einstufung erreicht 2 von 5 Gruppen nie | Rendern |
+| Mail rechnet Blöcke neu, mit ATR in EUR | Lesen |
+| **Rolle G läuft nie** | **Simulation** |
+
+> **Eine Kette, die in jedem Einzelteil stimmt, kann als Ganzes reissen.**
+
+**Aufbau:** Betriebsart `probe` gegen eine **Kopie** der Datenbank, echte
+Kursreihen, echte Fakten, echte Rechnung, echtes Schreiben, echter Mailaufbau —
+**Attrappe nur für die drei Modellaufrufe**. Die Attrappe spielt je Instrument
+**jede** Aktion des Vokabulars durch, `NICHTS_TUN` wie `ERÖFFNEN`.
+
+### 43.2 Der Fund: Rolle G hat nie stattgefunden
+
+```python
+sym = str(urteil.get("symbol") or urteil.get("asset") or "").strip().upper()
+if not sym:
+    return None
+```
+
+`urteil` ist die validierte Antwort von Rolle BC. Nachgezählt trägt sie **20
+Schlüssel — `symbol` ist keiner davon**, `asset` auch nicht.
+
+> **`sym` war immer leer. Die Funktion kehrte in der zweiten Zeile zurück.**
+> Kein Fehler, kein Logeintrag, keine Zeile in der Mail. Die zweite Stufe war
+> seit ihrem Bau am 16.08. ein Aufruf, der nie stattfand.
+
+Und gestern habe ich sie für fertig erklärt: Anhaltspunkte gemessen (44
+Assets), Bestätigungszweig gebaut, Mailabschnitt geprüft, 831 Prüfungen grün.
+**Alles davon war richtig — und alles davon prüfte Teile.**
+
+**Behoben:** das Symbol kommt vom Aufrufer. Der Rückfall auf das Urteil bleibt
+stehen, der Betriebspfad verlässt sich nicht mehr darauf.
+
+### 43.3 Drei weitere Funde derselben Runde
+
+> ⚠️ **Die Konsistenzprüfung lief noch — obwohl sie am 16.08. abgelehnt wurde.**
+> Nutzer, wörtlich: *„das brauche ich nicht — war nie meine Anforderung."* Ich
+> habe darauf Rolle G gebaut und die alte Prüfung **weiterlaufen lassen**: ein
+> Z.ai-Aufruf je Signal und in jeder Mail die Zeile *„Ein zweites Modell nennt
+> die Begründung …"*.
+>
+> Sie verletzt zudem R-R2 in Reinform — voller Faktentext von Rolle BC **plus**
+> deren Begründung, also identische Informationsgrenze. Entfernt; Prompt bleibt
+> lesbar stehen.
+
+> ⚠️ **Der Andrangdeckel hing an genau dieser Prüfung.** `MAX_GLEICHZEITIG = 2`
+> wirkte nur über `_mit_platz(G.pruefe_konsistenz, …)`. Weder der
+> Richtungsabgleich noch Rolle G liefen je hindurch. Mit dem Entfernen wäre er
+> **ersatzlos verschwunden** — und `rollen_lauf` startet einen Faden je Signal.
+> Zehn Signale, zehn gleichzeitige Aufrufe: der Zustand vom 14.08.
+>
+> **Gefangen von der eigenen Paketprüfung**, die auf *„die Bremse sitzt am
+> Anbieter, nicht am Lauf"* bestand.
+
+> ⚠️ **Der Modulkopf beschrieb zwei Tage lang eine Konstruktion, die es nicht
+> mehr gab** — „Eigene Richtung", „`mehrheit()`", „4 sequenzielle Aufrufe je
+> Einstieg". Wer dort las, las den Stand vom 13.08.
+
+**Und die Umbenennung war unvollständig:** „Rolle C" stand noch fünfmal in der
+Fakten-Entscheidungsmappe und in Umbauplan Kapitel 32 — beides von mir selbst,
+am Tag zuvor geschrieben.
+
+### 43.4 Was die Simulation NICHT geprüft hat
+
+**Diese Zeilen sind wichtiger als die Fehlerzahl.** Ein Lauf, der die Hälfte
+der Körbe überspringt und „0 Fehler" meldet, ist die gefährlichste Sorte grün —
+und genau das war der erste Durchgang.
+
+| | |
+|---|---|
+| gelaufen | aktien/spot · krypto/spot · **krypto/hebel** · themen_etf/spot |
+| **übersprungen** | **hedge/absicherung** und **rohstoffe/spot** — im Entwicklungsbestand fehlen die Kursreihen |
+
+> **Der Hebel lief im ersten Durchgang auch nicht.** Seit dem 15.08. ist
+> `hebel_pruefung_erlaubt` standardmässig **falsch**, also fielen alle
+> Hebel-Symbole an der Auftragsstufe heraus — und der Lauf meldete „0 Fehler",
+> ohne 77 % der Produktionsaufrufe berührt zu haben. Die Simulation schaltet
+> den Schalter jetzt **in der Kopie** ein.
+
+### 43.5 Was am Ende ankommt
+
+```
+4 Gruppen, 8 Signale, 9 Mails, 0 Fehler, 0 Luecken
+signals: KAUFEN 3 · NACHKAUFEN 4 · REDUZIEREN 1 · HEBEL_ERHÖHEN 1 · ERÖFFNEN 1
+anlass_beobachtung: 10 Zeilen
+```
+
+Geprüft wird nicht nur, **dass** nichts abstürzt, sondern **dass die Sätze
+ankommen**: der `verlauf`-Block in jeder Mail, der Liquidationsabstand in jeder
+Hebel-Mail, Rolle G bei **Krypto** — und bei Aktien und ETF ausdrücklich
+**NICHT**, weil dort keine Positionierungsdaten vorliegen (R-R3/G5).
+
+### 43.6 Reihenfolge, neu begründet
+
+| | | warum jetzt |
+|---|---|---|
+| **1** | ~~Rolle G ans Laufen bringen~~ | **erledigt** — sie war der Blocker für alles Weitere |
+| **2** | **Rohstoffe und Absicherung in die Simulation** | zwei von sechs Körben sind ungeprüft; das ist die grössere Lücke als jede neue Quelle |
+| **3** | D-1 `.docx`-Pendants, D-2 Abhängigkeitsmatrix | Dokumentation, blockiert nichts |
+| **4** | Rolle G für Rohstoffe (CFTC) | braucht eine Persistenzschicht — COT wird nicht gespeichert |
+
+**Und ein Satz, der ab jetzt gilt:** eine Stufe gilt erst als gebaut, wenn
+`simuliere_kette.py` sie **in der fertigen Mail** nachweist. Rolle G war drei
+Tage lang „fertig".
