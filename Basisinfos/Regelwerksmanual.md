@@ -3708,6 +3708,51 @@ Trefferquote gegenüber ein bis zwei klaren Regeln; ab zwölf verlangsamt sich d
 Entscheidung messbar. Budgets: Rolle A **16**, Rolle BC **14**, Rolle G **8**
 Aussagen.
 
+## R-R6 Ein Fakt, eine Rolle — und welche, entscheidet der Belegstand (neu 2026-08-16)
+
+**Nutzerfrage:** *„warum kann dieser Fakt nicht in A und G sein — welche Regel
+spricht dagegen?"*
+
+**Der Grund ist mechanisch, keine Ordnungsvorschrift.** Das Lagebild der Rolle A
+geht als `marktlage_beurteilung` in die Eingabe der Rolle BC
+(`rollen_lauf.py:799`). Was in A steht, **weiß BC**.
+
+| Fakt steht in | BC weiß ihn | G hat etwas, das BC fehlt |
+|---|---|---|
+| nur A | ja | nein |
+| **nur G** | nein | **ja** |
+| A **und** G | ja | **nein** |
+
+> Steht ein Fakt in beiden, ist die zweite Stufe an dieser Stelle keine
+> Gegenprüfung mehr, sondern eine zweite Lesung derselben Information — und
+> genau das war der Zustand, der **17 × LONG in 2.469 Prüfungen** erzeugt hat.
+
+**Literaturgrundlage:** gleiche Informationsgrenze → die Debatte bildet ein
+**Martingal**; LLM-Fehler korrelieren über **60 %**; es hilft ausschließlich
+**konstruierte** Informationsasymmetrie.
+
+### Welche Rolle — nach Belegstand, nicht nach Nützlichkeit
+
+**Rolle G ist einseitig gebaut:** sie kann nur einwenden, nie befürworten
+(Nutzervorgabe 29.07.). Rolle A wirkt über BC **in beide Richtungen**.
+
+| Belegstand (P2) | Kanal | warum |
+|---|---|---|
+| **Rang 1** — bei uns gemessen | **A / BC** | darf in beide Richtungen wirken |
+| **Rang 2** — Praxis, unbelegt | **G** | setzt nur eine Fahne, die ein Mensch liest |
+| **Rang 3** — Vermutung | **gar nicht** | nicht aufnahmefähig |
+
+**Angewandt am Börsenfluss (16.08.):** Rang 2 → bleibt in **G**. Die Platzierung
+gilt bis zur ersten Messung — trägt er, gehört er nach A; unterscheidet er
+nichts, fliegt er ganz raus.
+
+> ⚠️ **Die Trennlinie verläuft NICHT zwischen einzeln und marktweit.** Auch
+> Terminmarktdaten sind Marktaggregate. Sie verläuft zwischen **Positionierung**
+> (G) und **Marktlage** (A). Das Regime fiel nicht wegen seiner Marktweite
+> heraus, sondern weil es ein **Etikett** war (R-T12).
+
+---
+
 ## R-R5 Textregeln, unverändert gültig
 
 R-T1 Fenster nennen · R-T2 kein Etikett · R-T3 keine Wertung · R-T5 relativ

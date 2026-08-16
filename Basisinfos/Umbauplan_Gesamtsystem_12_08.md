@@ -7750,3 +7750,160 @@ Produktionslog:
 **Aus einer gelöschten Prüfung wird nichts gelernt.** Die beiden Zusicherungen,
 die das Regime verlangten, prüfen jetzt das Gegenteil: dass es nicht
 zurückkommt.
+
+---
+
+## Kapitel 62 — Warum ein Fakt nicht in zwei Rollen stehen kann, und wo der Börsenfluss hingehört (16.08.2026 abends)
+
+**Nutzerfrage:** *„warum kann dieser Fakt nicht in A und G sein — welche Regel
+spricht dagegen? … gibt es einen fachlich sachlichen Grund, diesen Parameter in
+Rolle A umzuhängen oder doch eher bei G lassen — bewerte, wie wertvoll er vom
+Inhalt ist. Ist er hoch, dann umhängen zu A; wenn nicht, dann zur Gegenprüfung."*
+
+**Beides beantwortet, und die zweite Antwort korrigiert meine eigene Empfehlung
+vom selben Abend.**
+
+### 62.1 Warum nicht beides — der Mechanismus, nicht die Vorschrift
+
+**Alles, was in Rolle A steht, erreicht Rolle BC.** Nachgesehen im Code, nicht
+angenommen:
+
+```python
+# agent/rollen_lauf.py:799
+bc_ein["marktlage_beurteilung"] = {"lage": lagebild["lage"], ...}
+```
+
+Das Lagebild ist die **Antwort** der Rolle A und wird als Beurteilung in die
+Eingabe der Rolle BC gelegt (`rollen_eingabe.baue_befund_eingabe`, Zeile 220 ff.).
+
+**Daraus folgt zwingend:**
+
+| Fakt steht in | BC weiß ihn | G hat etwas, das BC fehlt |
+|---|---|---|
+| nur A | **ja** | nein |
+| nur G | nein | **ja** |
+| **A und G** | **ja** | **nein** |
+
+> **Steht ein Fakt in beiden, ist die zweite Stufe an dieser Stelle keine
+> Gegenprüfung mehr, sondern eine zweite Lesung derselben Information.**
+
+**Und genau das war der Zustand, den der Umbau beseitigt hat.** Rolle G bekam
+früher denselben Faktentext wie BC — Ergebnis: **17 × LONG in 2.469 Prüfungen.**
+Ein Prüfer ohne eigene Grundlage bestätigt.
+
+**Die Literatur sagt dasselbe, und sie ist der Grund für R-R2:**
+
+- teilen zwei Prüfer Modell **und** Informationsgrenze, bildet die Debatte ein
+  **Martingal** — sie fügt im Erwartungswert nichts hinzu
+- LLM-Fehler korrelieren zu **über 60 %**
+- was hilft, ist ausschließlich **konstruierte Informationsasymmetrie**
+
+**R-R2 ist damit keine Ordnungsvorschrift, sondern die Umsetzung dieses
+Mechanismus.** „Ein Parameter gehört zu genau einem Modell" heißt: die
+Asymmetrie wird gebaut, nicht gehofft.
+
+> **Die Nutzerformulierung trifft es exakt:** *„unabhängige Quelle, 2× dieselbe
+> Information."* Zwei Quellen sind es nur, solange sie nicht beide dasselbe
+> Modell erreichen.
+
+### 62.2 Der Wert des Börsenflusses — auf unserer eigenen Leiter
+
+**P2, Eignungsleiter:**
+
+| Rang | | Börsenfluss |
+|---|---|---|
+| 1 | **bei uns gemessen** | **nein** |
+| 2 | in der Praxis angewendet | **ja** — Börsenzuflüsse sind Standardwerkzeug der Kryptoanalyse |
+| 3 | Vermutung | besser als das |
+
+**Rang 2, bei uns unbelegt.**
+
+**Gemessen ist nur seine Streuung** (Kapitel 61.4), nicht seine Wirkung:
+
+| | |
+|---|---|
+| verschiedene Aussagen über 365 Tage | **4** |
+| häufigste Einzelaussage | 48 % |
+| Richtungsverteilung | Abfluss 57 % / Zufluss 43 % |
+| Extremtage | 18 % |
+
+**Er unterscheidet zwischen Tagen — ob er dabei etwas Richtiges unterscheidet,
+weiß niemand.**
+
+### 62.3 Die Nutzerregel, angewandt
+
+> *„ist er hoch, dann umhängen zu A; wenn nicht, dann zur Gegenprüfung G"*
+
+**Die Regel ist gut, und sie hat einen Grund, den sie nicht ausspricht:**
+
+**Rolle G ist einseitig gebaut.** Sie kann nur einwenden, nie befürworten —
+*„sie entscheidet nichts; der Einwand steht in der Mail und in der Zeile, er
+kippt die Empfehlung nicht"* (Nutzervorgabe 29.07., unverändert).
+
+**Rolle A dagegen wirkt in beide Richtungen**, weil ihr Lagebild in BCs
+Entscheidung eingeht.
+
+> **Daraus folgt die Regel von selbst:** ein Fakt mit **belegtem** Wert gehört
+> dorthin, wo er in beide Richtungen wirken darf. Ein Fakt mit **unbelegtem**
+> Wert gehört in den Kanal, der nur eine Fahne setzt, die ein Mensch liest.
+
+**Rang 2 ist nicht Rang 1. Also G.**
+
+### 62.4 Zwei Sachargumente, die ich zu schwach gewichtet hatte
+
+**Erstens: Börsenflüsse SIND Positionierung.** Münzen, die auf eine Börse
+wandern, liegen dort, wo man sie verkaufen kann. Das ist keine Marktstimmung,
+sondern die aggregierte Aufstellung der Halter — Rolle Gs erklärter Auftrag.
+
+**Mein Argument „marktweit ⇒ gehört zu A" war zu grob.** Auch die
+Terminmarktdaten sind Marktaggregate; sie sind nur je Symbol erhoben. Die
+Trennlinie verläuft nicht zwischen *einzeln* und *marktweit*, sondern zwischen
+**Positionierung** (G) und **Marktlage** (A).
+
+> **Das Regime war kategorial etwas anderes:** ein Bewertungs**etikett**, keine
+> Messung. Es fiel nicht wegen seiner Marktweite heraus, sondern weil es ein
+> fertiges Urteil war — und über 2.549 von 2.549 Fällen dasselbe.
+
+**Zweitens: in Rolle A wäre er eine SECHSTE Dimension** neben Trend,
+Volatilität, Liquidität, Makro und Stimmung. Das ist eine eigene
+Aufnahmeentscheidung durch P1–P7, kein Umhängen.
+
+### 62.5 Entscheidung
+
+**Der Börsenfluss bleibt in Rolle G.** Nichts zu ändern.
+
+> ⚠️ **Das korrigiert meine Empfehlung von wenige Minuten zuvor** („umhängen
+> nach Rolle A"). Sie stand auf dem Argument „marktweit gehört zum Rahmen" —
+> und das ist genau die Begründung, mit der ich am selben Tag das **Regime** in
+> Rolle G gerechtfertigt hatte. Ein Argument, das zwei entgegengesetzte
+> Platzierungen stützt, trägt keine von beiden.
+
+### 62.6 Was offen bleibt — und wie es entschieden wird
+
+| | |
+|---|---|
+| **Konstanz im Lauf** | er ist über alle Kryptosymbole wortgleich, kann also nur alle gemeinsam schieben. Bei einem Positionierungsaggregat vertretbar — sichtbar über **N5** |
+| **G2 hängt allein am Terminmarkt** | der Fluss deckt G1, nie G2. So im Code kodiert (`SYMBOLSPEZIFISCH_G`) |
+| **die eigentliche Frage** | **Einwandrate gegen Fluss-Perzentil**, sobald Rolle G genug Läufe hat |
+
+**Und die Messung entscheidet in beide Richtungen:**
+
+- trägt er (**Rang 1**) → er gehört in den Hauptpfad, also nach A
+- unterscheidet er nichts → er fliegt ganz raus, nicht nur um
+
+> **Damit ist die Platzierung kein Dauerurteil, sondern der Stand bis zur
+> ersten Messung.**
+
+### 62.7 Die Regel, die daraus folgt
+
+**R-R6** (neu): *Ein Fakt steht in genau einer Rolle — und welche, entscheidet
+sein Belegstand, nicht seine Nützlichkeit.*
+
+| Belegstand | Kanal | Begründung |
+|---|---|---|
+| **Rang 1** (gemessen) | **A / BC** | darf in beide Richtungen wirken |
+| **Rang 2** (Praxis) | **G** | setzt nur eine Fahne, die ein Mensch liest |
+| **Rang 3** (Vermutung) | **gar nicht** | nicht aufnahmefähig (P2) |
+
+**Nie in beiden.** A erreicht BC — ein Fakt in A und G ist ein Fakt, den der
+Prüfer und der Geprüfte teilen, und dann prüft niemand mehr.
