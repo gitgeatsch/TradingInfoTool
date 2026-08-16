@@ -4663,3 +4663,128 @@ kann. Der Fehlerfang **zählt** jetzt statt zu schlucken.
 In-Memory-Datenbank ohne `row_factory` muss `lage()` eine Dauer liefern, der
 Satz muss sie tragen, und die Verbindung des Aufrufers muss hinterher
 unverändert sein. **848 Prüfungen, alle bestanden.**
+
+---
+
+## Kapitel 40 — Der weitere Plan für LLM1 und LLM2 (16.08.2026, abends)
+
+**Nutzerbefund, der das auslöst:** *„Z.ai ist nur Krypto only — also
+unzureichend."* Er trifft. Rolle C fragt heute bei 44 von 56 Assets; die
+übrigen zwölf bekommen **keine** Gegenprüfung, und zwar nicht, weil dort keine
+zweite Quelle existiert.
+
+### 40.1 Der Befund, der den ganzen Plan trägt
+
+**Die Positionierungsdaten für Aktien, Rohstoffe und Optionen sind gebaut, live
+verifiziert — und hängen an den ALTEN Pipelines.**
+
+| Gruppe | zweite Quelle außerhalb der Kursreihe | wo sie liegt | in Rolle C? |
+|---|---|---|:--:|
+| Krypto | Open Interest · Funding · Long-Konten (Binance) | `positionierung.py` | **ja** |
+| Krypto | **Deribit DVOL + Options-Skew** | `krypto/optionsmarkt.py` | nein |
+| **Aktien** | **FINRA Short Interest** (VST/PLTR live geprüft, 205 bzw. 138 Punkte) | `api/finra.py` → `aktien/pipeline.py` | nein |
+| **Aktien** | **SEC Form 4 Insider-Käufe** | `api/sec_edgar.py` → dieselbe | nein |
+| **Aktien** | **Finnhub Analysten-Trend** (Richtung des Konsens) | `api/finnhub.py` → dieselbe | nein |
+| **Rohstoffe** | **CFTC COT „Managed Money"** — alle vier Symbole gemappt | `api/cftc_cot.py` → `rohstoff/pipeline.py` | nein |
+| **Rohstoffe** | **EIA-Lagerbestände** (Erdgas) | `api/eia.py` → dieselbe | nein |
+| ETF / Absicherung | COT auf E-mini S&P 500 / Nasdaq-100 | **nicht gemappt** — die API kann es, wir fragen nicht | nein |
+
+> **Das ist derselbe Befund wie beim Sektorbezug heute Mittag und wie beim
+> Auslöser aus `hebel_screening`:** nicht fehlende Daten, sondern fehlende
+> Verdrahtung. Es ist der häufigste Fund dieses Projekts.
+
+**Und alle sieben passen zur Konstruktionsbedingung**: sie beschreiben, wie
+*andere* aufgestellt sind — nicht, was der Chart sagt. Genau das, was Rolle BC
+strukturell nicht sieht.
+
+### 40.2 Was je Rolle offen ist — nach Klasse sortiert
+
+**Rolle A (Marktanalyst) — zwei kleine Lücken, beide grün**
+
+| | Lücke | Datenlage |
+|---|---|---|
+| A-1 | Stimmung über BTC hinaus | liegt vor, wird nur für BTC gerendert |
+| A-2 | Makro-Terminkalender (FOMC, CPI) | **keine Quelle** |
+
+**Rolle BC (Trader) — drei Lücken, alle im Betrieb spürbar**
+
+| | Lücke | Klasse | Datenlage |
+|---|---|---|---|
+| B-1 | **Auslöser** — der Anlass ist die Uhr | grün | `hebel_screening` rechnet ihn, **niemand liest ihn** |
+| B-2 | Handelbarkeit und Spread | **gelb** | gerechnet (Bitpanda-Listung, Override) |
+| B-3 | Aktientermine · Zertifikatsnatur · Finanzierungshöhe | **gelb/rot** | teils vorhanden |
+
+**Rolle C (Z.ai) — die große Lücke ist die Abdeckung**
+
+| | Lücke | Datenlage |
+|---|---|---|
+| C-1 | **44 von 56 Assets, Rest ohne Gegenprüfung** | sieben Quellen gebaut, keine verdrahtet |
+| C-2 | Optionsmarkt bei Krypto | gebaut |
+| C-3 | Nachrichten / Katalysator | **keine Quelle** |
+
+### 40.3 Der Plan — vier Phasen, Reihenfolge nach Risiko
+
+> **Die Reihenfolge folgt nicht dem Aufwand.** Maßstab bleibt der gemessene
+> Vorfall: der Kosten-/Ausführbarkeitshinweis ließ die ERÖFFNEN-Quote von 93 %
+> auf 3 % einbrechen. Grün vor gelb, gelb nur mit gepaartem Vergleich.
+
+#### Phase V — Rolle C bekommt alle Assetklassen *(als nächstes)*
+
+Rein additiv: **kein Prompt von LLM1 wird angefasst**, `PROMPT_STAND` bleibt.
+Damit ist es der einzige Schritt, der die laufende Messung nicht zerschneidet.
+
+| Schritt | Gruppe | Quelle | Aufwand |
+|---|---|---|---|
+| **V-1** | **Rohstoffe** | CFTC COT — alle vier Symbole bereits gemappt | klein |
+| **V-2** | **Aktien** | FINRA Short Interest + SEC Form 4 | mittel |
+| **V-3** | **Krypto** | Deribit DVOL + Skew als fünfter Anhaltspunkt | klein |
+| **V-4** | **ETF / Absicherung** | COT auf den Referenzindex — Marktnamen erst verifizieren | mittel |
+
+**Eine Regel für alle vier:** was Rolle C bekommt, darf **nicht** in den
+Faktentext von BC. Sonst ist die zweite Stufe wieder, was sie bis gestern war.
+
+> ⚠️ **V-2 hat einen Haken, der vorher zu klären ist.** Finnhub und EIA
+> brauchen einen API-Key. Ein Schlüssel gehört ins Gerät, nicht ins Repo —
+> und Schlüssel werden zwischen den Geräten **nicht** übertragen.
+
+#### Phase VI — der Auslöser (B-1)
+
+**Die größte Lücke bei BC, und die Daten liegen bereit.** `hebel_screening`
+führt Trendfolge- und Kontra-Zweig mit Schwelle 70, gemessen **9,6 %
+Kandidaten** — er läuft weiter, und niemand liest ihn.
+
+Der Anlass gehört **vor** den Modellaufruf, nicht in den Prompt: er ist eine
+Bedingung, keine Einschätzung (36.2). Zusammen mit O-36 auszuwerten — die
+Anlassmessung sagt bis dahin, wie oft dieselbe Frage wiederholt wird.
+
+#### Phase VII — gelb und rot, nur gepaart
+
+| | | Arm A | Arm B |
+|---|---|---|---|
+| VII-1 | Handelbarkeit/Spread (B-2) | ohne | mit |
+| VII-2 | Aktientermine | ohne | mit |
+| VII-3 | Zertifikatsnatur bei Rohstoffen | ohne | mit |
+| VII-4 | **Finanzierungshöhe als Betrag** (rot) | ohne | mit |
+
+Gleiche Anker, gleicher Anbieter, gleicher Stand — die Methode, mit der 93 → 3 %
+überhaupt gefunden wurde.
+
+#### Phase VIII — Nachrichten (C-3)
+
+Die einzige Kategorie, für die **gar keine Quelle** existiert, und laut eigenem
+Grundbefund einer von drei Wegen, die das Vorzeichen drehen können. Eigenes
+Vorhaben, eigene Recherche.
+
+### 40.4 Was den Plan blockieren kann
+
+| | |
+|---|---|
+| **Kontingent** | jede neue Quelle ist ein Aufruf je Signal. Vor jedem Schritt: Limits, Kontingent, Dauer |
+| **API-Schlüssel** | Finnhub und EIA brauchen einen — pro Gerät, nie übertragen |
+| **Messbarkeit** | Phase V ändert LLM1 nicht und ist damit messfreundlich. Ab Phase VI wird jede Änderung zu einem neuen Stand |
+| **Rolle C ist selbst ungemessen** | ob sie überhaupt trägt, weiß niemand. **Nach ein paar Betriebstagen zuerst ihre Verteilung ansehen** — sagt sie in 95 % „kein Einwand", ist die Ausweitung auf vier Assetklassen die Ausweitung einer Konstante |
+
+> **Der letzte Punkt ist der wichtigste.** Vier Gruppen anzuschließen, bevor
+> bekannt ist, ob die eine funktioniert, wäre Bauen statt Messen. **V-1 ist
+> klein genug, um beides zu tun:** Rohstoffe anschließen, dann eine Woche
+> Verteilung, dann entscheiden.
