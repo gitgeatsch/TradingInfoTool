@@ -5521,3 +5521,110 @@ Zeitüberschreitung. Mit einem Aufruf statt vier sollte das verschwinden.
 | **A2b** | der Ausstiegs-Job ist in 72 Stunden nicht gelaufen |
 | **Signalzahl** | 30 ERÖFFNEN am 16.08., in zwei Wellen zu je ~15 in drei Minuten |
 | **Fehlalarm-Muster** | `pruefe_export_standard.py` meldet „11970 Tracebacks im Log-Fenster" **ohne Zeitbezug**. Eine grosse Zahl aus 36 Minuten von vor zwei Tagen liest sich wie ein akuter Ausfall |
+
+---
+
+## Kapitel 45 — A2b geklärt, und die Basislinie vor dem glatten Schnitt (17.08.2026)
+
+### 45.1 A2b: der Ausstiegs-Job ist NICHT defekt — er hatte keine Gelegenheit
+
+| | |
+|---|---|
+| Zeitplan | **Cron, täglich 07:15 lokal** |
+| Schalter | **aktiv** (`risiko.ausstieg_trailing_ausloese_r = 1,0`) |
+| Ausführungen im 48-h-Fenster | **0** |
+| Misfire-Meldung | **keine** |
+
+**Der Grund steht in den Loglücken:**
+
+```
+2026-08-14 21:58 bis 2026-08-15 07:57    599 min   ← 07:15 liegt darin
+2026-08-16 06:46 bis 2026-08-16 07:55     69 min   ← 07:15 liegt darin
+```
+
+**An beiden Tagen lief die App zur Cron-Zeit nicht.**
+
+> ⚠️ **Und das ist der eigentliche Befund, größer als A2b:**
+>
+> **Die App war 24,6 von 48 Stunden aus — 51 %.** 16 Fenster über zehn
+> Minuten, elf Neustarts.
+
+**Damit erklären sich alle „Jobs, die nie laufen" auf einen Schlag:**
+
+| Job | Ausführungen | Takt |
+|---|---|---|
+| `refresh_prices_job` | 107× | 15 min |
+| `hebel_screening_job` | 106× | 15 min |
+| `refresh_ohlc_job` | **1×** | **24 h** |
+| `backward_tracking_job` | **1×** | lang |
+| `portfolio_wert_job` | **1×** | lang |
+| `ausstiegs_job` | **0×** | **Cron 07:15** |
+
+**Kurze Takte treffen, lange nicht.** Ein 24-Stunden-Job kann nicht laufen,
+wenn die längste ununterbrochene Laufzeit darunter liegt — und der Takt bei
+jedem Neustart neu beginnt. Ein fester Cron trifft nur, wenn die App zufällig
+gerade oben ist.
+
+**Das ist die gemeinsame Wurzel des Kursstillstands (44.1) und von A2b.** Der
+Frischefix von heute macht den Start robust und ist richtig; er behebt aber
+nicht, dass das Notebook — laut Projektbeschreibung ein **24/7-Server** — zur
+Hälfte nicht läuft.
+
+**Was NICHT zu tun ist:** den Cron auf ein kurzes Intervall stellen. Der Job
+schickt eine Mail; ein 15-Minuten-Takt wäre Mailflut. Die saubere Lösung
+braucht einen **Zeitstempel des letzten Laufs**, damit beim Start nachgeholt
+werden kann, was heute noch nicht lief. Das berührt das Schema und ist deshalb
+eine Entscheidung, keine Nebenbei-Korrektur.
+
+### 45.2 Die Basislinie — `messe_basislinie.py`
+
+**Nutzervorgabe:** *„halte den alten Stand fest … um einen Vergleich bzw.
+Anhaltspunkte für nach dem LLM-Umbau zu haben."*
+
+Festgehalten in `Basisinfos/basislinie_vor_schnitt.json`, Stand **NB-Export
+16.08. 09:41**.
+
+**Durchsatz und Gegenprüfung:**
+
+| Tag | Signale | Einstiege | Konsistenz | Richtungsabgleich |
+|---|---|---|---|---|
+| 14.08. | 46 | 11 | 11 | 2 |
+| 15.08. | **180** | **92** | 57 | 30 |
+| 16.08. | 59 | 34 | 25 | **0** |
+
+**Aktionen:**
+
+```
+14.08.  HALTEN 24 · REDUZIEREN 9 · KAUFEN 8 · NACHKAUFEN 3 · VERKAUFEN 2
+15.08.  ERÖFFNEN 67 · HALTEN 62 · REDUZIEREN 24 · KAUFEN 14 · NACHKAUFEN 11
+16.08.  ERÖFFNEN 30 · HALTEN 21 · NACHKAUFEN 4 · REDUZIEREN 4
+```
+
+> **67 ERÖFFNEN an einem Tag.** Das ist die Zahl, über die zu reden ist — und
+> sie steht jetzt fest, samt Datum und Herkunft.
+
+**Datenlage, unter Vorbehalt lesen:** 61 von 63 Reihen endeten am **14.08.**
+Jede Aussage über Signalqualität aus diesem Fenster steht darauf, dass die
+Charts bis zu zwei Tage alt waren.
+
+**Was die Basislinie festhält:** Betrieb (Laufzeit, Ausfallfenster),
+Jobausführungen, Signale und Aktionen je Tag, Abdeckung der Gegenprüfung,
+Alter der Kursreihen, Durchlässigkeit je Stufe, Systemgüte,
+Richtungsverteilung, LLM-Aufrufe, Gate-Vetos.
+
+**Was sie NICHT tut: bewerten.** Sie schreibt Zahlen mit Datum und Herkunft.
+
+### 45.3 Warum es diese Basislinie geben muss
+
+In vier Tagen hat die Kette den Prompt-Stand **zweimal** gewechselt, den
+Richtungsabgleich stillgelegt, die Konsistenzprüfung entfernt und Rolle G
+überhaupt erst zum Laufen gebracht. **Wer danach misst, misst gegen nichts** —
+jede Zahl sähe anders aus, und niemand könnte sagen, ob besser oder nur anders.
+
+**Drei Vergleiche, die erst dadurch möglich werden:**
+
+| Frage | Vorher-Wert |
+|---|---|
+| Sinkt die Signalzahl, oder steigt nur der HALTEN-Anteil? | 67 ERÖFFNEN gegen 62 HALTEN am 15.08. |
+| Erreicht Rolle G mehr Einstiege als die alte Prüfung? | Konsistenz 25 von 34 (74 %), Rolle G **0** |
+| Läuft die Kette überhaupt öfter? | 51 % Ausfallzeit, `refresh_ohlc` 1× in 48 h |
