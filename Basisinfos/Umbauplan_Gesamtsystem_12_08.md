@@ -6968,3 +6968,115 @@ dreimal zählt, wäre eine Selbsttäuschung im Code.
 | **1** | **`funding_rate`/`long_account_pct` unter fremdem Börsenetikett** | `compute_funding_rate_percentile` liest sie aus den Binance-Zeilen — ein Eingriff trifft das Hebel-Screening in der Produktion |
 | **2** | echte Funding-Divergenz | `get_bybit_funding_history` existiert und ist live geprüft; kostet einen zusätzlichen Abruf je Symbol und Lauf |
 | 3 | Long-Anteil je Börse | Bybit/OKX haben Endpunkte, gebaut ist keiner |
+
+---
+
+## Kapitel 57 — Die breite Suche: die unerwartete Quelle war der eigene Ordner (16.08.2026)
+
+**Nutzeridee:** *„zu den Themen-ETF können wir hier selbst Daten erhalten durch
+die BP-API … versuche die Recherche etwas breiter für die bestehenden Lücken,
+u.U. werden die Daten über einen kostenlosen Anbieter verfügbar gemacht, mit dem
+man nicht rechnet, da die Quelle primär andere Daten bereitstellt."*
+
+**Der Gedanke trägt — und er hat zweimal getroffen.**
+
+### 57.1 Bitpanda: nein, und zwar aus einem strukturellen Grund
+
+`api/bitpanda.py` gibt es seit dem 09.07. `GET /v3/assets` ist öffentlich,
+ohne Schlüssel, 3.238 Einträge über alle Anlageklassen. **Aber es ist ein
+Verzeichnis**, kein Marktdatendienst: Symbol, Name, Gruppe, Handelbarkeit. Der
+authentifizierte Teil (`/v1/wallets`, `/v1/trades`) liefert **unser eigenes**
+Depot, nicht die Positionierung anderer.
+
+> Eine Brokerschnittstelle kennt den Markt nicht — sie kennt ihren Kunden.
+> Für die Handelbarkeit ist sie die richtige Quelle, und dafür ist sie im
+> Einsatz. Für Rolle G ist sie strukturell blind.
+
+### 57.2 Der eigentliche Fund: sechs fertige Clients für genau diese Lücken
+
+**Es musste gar nichts recherchiert werden — es liegt im Ordner `api/`:**
+
+| Client | seit | liefert | kostenlos, Schlüssel |
+|---|---|---|---|
+| **`onchain.py`** | 08.07. | **CoinMetrics**: MVRV, NUPL, Realized Price, **Börsen-Zuflüsse**, Stablecoin-Angebot | ja, **keiner** |
+| `deribit.py` | 26.07. | DVOL, Options-Skew (BTC) | ja, keiner |
+| `cftc_cot.py` | 18.07. | COT „Managed Money", Rohstoffe | ja, keiner |
+| `finra.py` | 19.07. | Short Interest, Aktien | ja, keiner |
+| `sec_edgar.py` | 19.07. | Form 4 Insider, Aktien | ja, keiner |
+| `finnhub.py` | 19.07. | Analysten-Trend, Aktien | ja, Schlüssel |
+
+> **`onchain.py` ist die Antwort auf die Krypto-Lücke, nach der Kapitel 55
+> gesucht hat.** Börsen-Zuflüsse und MVRV sind eine **andere Informationsart**
+> als Terminmarkt-Positionierung — nicht bloß eine zweite Stichprobe. Genau das,
+> was G1 dem SINN nach verlangt und was drei Börsen nicht leisten.
+
+**Die Lückenschließung ist damit überwiegend kein Beschaffungs-, sondern ein
+Verdrahtungsproblem.**
+
+### 57.3 Der zweite Treffer für die ETF-Lücke — mit harter Grenze
+
+**yfinance ist primär eine Kursquelle und trägt trotzdem Fondsdaten:**
+
+| Symbol | Fondsvolumen | NAV |
+|---|---:|---:|
+| VVMX | 1.063.055.872 | — |
+| EXH3 | 328.757.344 | 65,52 |
+| CEBS | 486.353.088 | 11,161 |
+| DBPK | 47.249.068 | 0,1504 |
+| 3QSS · X136 · ISOC | — | — |
+| OD7C/H/L/N | — | — |
+
+**Das Fondsvolumen über die Zeit IST der Fondsfluss** — die Größe, die bei
+Massive/ETF Global ab 99 $/Monat kostet (Kapitel 55.2).
+
+**Aber drei Einschränkungen, und die dritte ist die wichtigste:**
+
+**Erstens: 4 von 13.** Drei ETFs tragen nichts (ISIN- bzw. München/Mailand-
+Notierungen), die vier Rohstoff-Zertifikate strukturell nicht — ein Zertifikat
+ist kein Fonds und hat kein Fondsvolumen. **Eine Teillösung, kein Lückenschluss.**
+
+**Zweitens: keine Historie.** yfinance liefert den Momentanwert. Die Reihe muss
+ab dem ersten Tag selbst aufgebaut werden — dasselbe Persistenzproblem wie beim
+COT.
+
+**Drittens — und hier wäre es beinahe schiefgegangen:**
+
+> ⚠️ **Der NAV steht in gemischten Währungen.** Gegen unsere Kursreihe gerechnet:
+>
+> | | Kurs | NAV | Verhältnis |
+> |---|---:|---:|---:|
+> | EXH3 | 65,56 EUR | 65,52 | 1,00 |
+> | DBPK | 0,1304 EUR | 0,1504 | **1,153** |
+> | CEBS | 9,643 EUR | 11,161 | **1,157** |
+>
+> **Zwei „Abschläge von 13 %" — und EUR/USD steht bei rund 1,16.** Das ist kein
+> Abschlag, das ist der Wechselkurs. Ein naiv gebauter Prämien-Fakt hätte dem
+> Modell reine Währungsumrechnung als Marktsignal geliefert.
+
+**Dieselbe Klasse wie der Scheinwert von 51.000 EUR bei OD7H und wie die
+kaputte CAT-Reihe:** ein Feld ist da, sieht plausibel aus, und trägt eine
+andere Größe als sein Name behauptet. **Deshalb hier nichts gebaut.**
+
+### 57.4 Was die breite Suche NICHT gefunden hat
+
+**Keine kostenlose Positionierungsquelle für europäische Themen-ETF.** FINRA
+Short Interest deckt **US-Listings** ab — unsere ETFs notieren in Frankfurt,
+München und Mailand. Die Idee, FINRA als unerwartete ETF-Quelle zu nutzen,
+scheitert an der Börse, nicht am Preis.
+
+### 57.5 Die Reihenfolge, neu sortiert
+
+**Kapitel 55.4 hat die Reihenfolge nach Aufwand sortiert. Nach diesem Kapitel
+sortiert sie sich nach Informationsart:**
+
+| | Schritt | schliesst | Aufwand |
+|---|---|---|---|
+| ~~1~~ | ~~Börsendivergenz~~ | **erledigt** (Kap. 56) | — |
+| **2** | **`onchain.py` an Rolle G** | **G1 für Krypto, dem SINN nach** | klein — Client fertig |
+| 3 | `cftc_cot.py` an Rolle G | Rohstoffe | mittel — braucht Persistenz |
+| 4 | `finra.py` + `sec_edgar.py` an Rolle G | Aktien | mittel |
+| 5 | Fondsvolumen-Reihe aufbauen | ETF, **teilweise** | klein, wirkt erst in Wochen |
+| — | NAV-Prämie | — | **gesperrt**, bis die Währung je Fonds feststeht |
+
+**Schritt 2 ist jetzt der erste** — nicht weil er der billigste ist, sondern
+weil er als einziger eine zweite **Informationsart** bringt.
