@@ -1997,3 +1997,18 @@ anlass:
   #   eine neue Lage ist oder Rauschen.
   ignoriere_bloecke: []
   mindest_bloecke: 1
+
+# Mindestgrundlage je Rolle (16.08.2026) - R-R1 bis R-R3 als Code.
+#
+# MELDEN IST DIE VORGABE, SPERREN DIE AUSNAHME. Ein Modul, das beim
+# blossen Einspielen eine Rolle stilllegt, nimmt dem Nutzer die
+# Entscheidung ab - und Rolle G erfuellt ihre eigene Mindestgrundlage
+# HEUTE NICHT (eine Quelle statt zwei, siehe Umbauplan 40).
+#
+# Der Anlass: Rolle A urteilte tagelang mit 12 statt 15 Aussagen, weil
+# zwei Makro-Spalten auf dem Notebook fehlten - und niemand sah es.
+mindestkriterien:
+  melden: true
+  # Welche Rollen NICHT urteilen duerfen, wenn ihre Grundlage
+  # unvollstaendig ist. Erlaubt: A, BC, G. Leer = nichts sperrt.
+  sperren: []

@@ -6542,3 +6542,116 @@ niemand liest ihn — und als Prompt-Parameter durch P4 gesperrt (Kapitel 43).
 | Simulation gegen NB-Backup | 6 Gruppen, 0 Fehler, 0 Lücken |
 | `pruefe_phase1.py` | bestanden |
 | Warnung funktional geprüft | schlägt gegen das NB-Backup an, schweigt bei vollständigen Daten |
+
+---
+
+## Kapitel 54 — Die Mindestkriterien als Code (16.08.2026, abends)
+
+**Nutzerfrage:** *„sind die neuen Mindestkriterien bereits implementiert und
+geprüft?"* — **Nein, sie standen als Text.** Und genau diese Lücke hat am
+selben Tag zugeschlagen: Rolle A urteilte in der Produktion mit **12 statt 15**
+Aussagen, weil zwei Makro-Spalten auf dem Notebook fehlten. `lade_makro()` ist
+fail-soft, der Satz entfiel lautlos.
+
+> **Eine Rolle, deren Mindestgrundlage niemand prüft, urteilt auch dann weiter,
+> wenn ihr ein Drittel fehlt — und die Ausgabe sieht genauso aus.**
+
+`agent/mindestkriterien.py` prüft jetzt alle drei Rollen an **einer** Stelle.
+
+### 54.1 Was je Rolle verlangt wird
+
+| Rolle | Kriterium | heute |
+|---|---|---|
+| **A** | Trend · Volatilität · Liquidität · **Makro** · **Stimmung** | **erfüllt**, seit die Nachladeläufe auf dem NB liefen (3.115 / 502 / 2.417) |
+| **BC** | Auftrag · Lage · Block `bestand` · Block `verlauf` | erfüllt |
+| **G** | **zwei unabhängige QUELLEN** (R-R3/G1) | **nicht erfüllt — eine** |
+
+**Drei Dinge sind bewusst NICHT Kriterium:**
+
+**Die Breite** bei Rolle A — sie ist am 12.08. ersatzlos gestrichen worden. Sie
+zu verlangen hiesse, etwas zu fordern, das wir entfernt haben.
+
+**Der Auslöser** bei Rolle BC — er fehlt strukturell und hat eine eigene Phase.
+Eine Warnung bei **jedem** Urteil liest niemand.
+
+**Das Regime** als Quelle bei Rolle G — es wird aus BTC-Kurs und Fear & Greed
+gerechnet, und beides sieht Rolle A bereits. Es steht bei G, weil sie sonst
+gar nichts hätte, aber es ist **keine fremde** Quelle.
+
+### 54.2 Rolle G zählt QUELLEN, nicht Zahlen
+
+```
+Quellen heute -> ['terminmarkt']
+fehlt         -> ['G1: 1 von 2 unabhaengigen Quellen (terminmarkt)']
+mit COT       -> ['terminmarkt', 'cot'] | fehlt: nichts
+```
+
+Open Interest, Finanzierungsrate und Long-Konten stammen aus **einer** Tabelle
+und beschreiben dieselbe Menge Menschen auf derselben Börse. **Drei Zahlen,
+eine Quelle.**
+
+Vorher stand dort `len(fehlt) >= 3` — eine grobe Regel, die zufällig
+funktionierte, weil die drei Zahlen alle da oder alle weg sind. Sie bleibt als
+unterste Grenze erhalten (G5: ohne jede Grundlage wird nicht gefragt).
+
+### 54.3 Melden ist die Vorgabe, Sperren die Ausnahme
+
+```yaml
+mindestkriterien:
+  melden: true
+  sperren: []      # A, BC, G - leer = nichts sperrt
+```
+
+**Ein Modul, das beim blossen Einspielen eine Rolle stilllegt, nimmt dem Nutzer
+die Entscheidung ab** — dieselbe Regel wie bei `rollen_kette.aktiv_fuer` und
+`anlass.aktiv`. Hier wäre sie besonders teuer: **Rolle G erfüllt ihre eigene
+Mindestgrundlage heute nicht** und wäre sofort stillgelegt.
+
+**Je Rolle schaltbar**, nicht als ein Schalter für alle — die drei haben sehr
+verschiedene Lücken.
+
+### 54.4 Der Gegentest, und was er gefunden hat
+
+| Konfiguration | Signale | Rolle-G-Aufrufe |
+|---|---:|---:|
+| ohne sperren | 1 | 1 |
+| **`sperren=[G]`** | **1** | **0** |
+| `sperren=[BC]` | 1 | 1 |
+
+Das Signal bleibt, wenn G gesperrt wird — **richtig, denn Rolle G kippt
+nichts.** Und `sperren=[BC]` ändert nichts, weil BC seine Grundlage erfüllt.
+
+> ⚠️ **Der erste Gegentest war falsch aufgesetzt.** Beide Läufe gingen auf
+> dieselben Symbole, und der **Cooldown des ersten** erklärte die Null des
+> zweiten. Erst mit Zurückdatieren vor jedem Lauf wurde der Vergleich gültig.
+
+> ⚠️ **Und dann fand er einen echten Fehler:** `sperren=[G]` änderte nichts.
+> `rolle_g` hatte den Parameter, aber `hole()` reichte ihn nicht durch — **die
+> Konfiguration erreichte die Rolle nie.** Zum zweiten Mal an einem Tag
+> dasselbe Muster wie beim Symbol, das Rolle G tagelang totlegte. Eine eigene
+> Prüfung hält den Weg jetzt offen.
+
+### 54.5 Was die Prüfungen im Betrieb zeigen
+
+Aus dem Ende-zu-Ende-Lauf gegen das NB-Backup:
+
+```
+Rolle G (PLTR):  G1: 0 von 2 Quellen (keine); G2: keine symbolspezifische Quelle
+Rolle G (ASTER): G1: 1 von 2 Quellen (terminmarkt)
+Rolle G (OD7H):  G1: 0 von 2 Quellen (keine); G2: keine symbolspezifische Quelle
+```
+
+**Damit steht schwarz auf weiss, was bisher nur im Plan stand:** Aktien,
+Rohstoffe und ETF haben für die Gegenprüfung **gar keine** Grundlage, Krypto
+hat die Hälfte.
+
+### 54.6 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **898, alle bestanden** (12 neue) |
+| freie Namen | 0 |
+| Simulation NB-Backup | 6 Gruppen, 0 Fehler, 0 Lücken |
+| Simulation Entwicklungsstand | 4 Gruppen, 0 Fehler |
+| `pruefe_phase1.py` | bestanden |
+| Sperr-Gegentest | je Rolle nachgewiesen |

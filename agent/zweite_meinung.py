@@ -314,7 +314,8 @@ Kein Einwand ist eine gueltige Antwort und die haeufigere. Erfinde nichts hinzu;
 
 
 def rolle_g(client, urteil: dict, conn=None, db: str | None = None,
-            symbol: str | None = None) -> dict | None:
+            symbol: str | None = None,
+            db_config: dict | None = None) -> dict | None:
     """Rolle G - die Gegenrede mit EIGENER Informationsgrundlage (16.08.2026).
 
     DER UNTERSCHIED ZUM ALTEN RICHTUNGSABGLEICH ist nicht die Frage, sondern
@@ -384,7 +385,28 @@ def rolle_g(client, urteil: dict, conn=None, db: str | None = None,
     # Positionierung vor - bei Aktien, ETF und Rohstoffen der Regelfall -,
     # wird nicht gefragt. Ein Modell, das ueber nichts urteilt, urteilt
     # trotzdem, und das waere die naechste Konstante.
-    if not saetze or len(lage.get("fehlt") or []) >= 3:
+    if not saetze:
+        return None
+    # MINDESTGRUNDLAGE (R-R3, 16.08.2026 abends). Hier stand `len(fehlt) >= 3`
+    # - eine grobe Regel, die zufaellig funktionierte: die drei Terminmarkt-
+    # zahlen kommen aus EINER Tabelle und sind alle da oder alle weg.
+    #
+    # `mindestkriterien` zaehlt stattdessen QUELLEN. Das ist die Bedingung, um
+    # die es geht: die Pruefung traegt nur, wenn der Pruefer Information hat,
+    # die dem Urteilenden fehlt - drei Zahlen aus einer Tabelle sind eine.
+    #
+    # ⚠️ HEUTE ERFUELLT ROLLE G IHRE EIGENE MINDESTGRUNDLAGE NICHT: eine
+    # Quelle statt zwei. Deshalb wird nur GEMELDET, nicht gesperrt - sonst
+    # legte diese Zeile die Rolle beim Einspielen still. Wer sperren will,
+    # traegt "G" in `config.yaml mindestkriterien.sperren` ein.
+    from agent import mindestkriterien as MK
+
+    if MK.melde("G", MK.pruefe_g(lage), db_config, bezug=sym):
+        return None
+    # DIE ALTE GROBE SCHRANKE BLEIBT als unterste Grenze: liegt zu einem Wert
+    # GAR NICHTS vor, wird nicht gefragt (G5). Ein Modell, das ueber nichts
+    # urteilt, urteilt trotzdem.
+    if len(lage.get("fehlt") or []) >= 3:
         return None
 
     eingabe = {
@@ -406,7 +428,7 @@ def rolle_g(client, urteil: dict, conn=None, db: str | None = None,
 
 
 def hole(*, faktentext: dict, urteil: dict, zai_client,
-         symbol: str | None = None,
+         symbol: str | None = None, config: dict | None = None,
          warte_max_s: float = WARTE_MAX_SEKUNDEN) -> dict:
     """Beide Z.ai-Aufrufe, begrenzt auf `warte_max_s`. Nie eine Ausnahme.
 
@@ -493,8 +515,14 @@ def hole(*, faktentext: dict, urteil: dict, zai_client,
             # Genau der Zustand vom 14.08., der zu dieser Klasse gefuehrt hat.
             # Gefunden von der Paketpruefung, nicht von mir - sie bestand auf
             # "die Bremse sitzt am Anbieter, nicht am Lauf".
+            # ⚠️ `config` MUSS MIT. Der Parameter stand in `rolle_g`, der
+            # Weg dorthin fehlte - `mindestkriterien.sperren` erreichte die
+            # Rolle nie. Der Gegentest hat es gezeigt: mit `sperren=[G]`
+            # aenderte sich nichts. Zum zweiten Mal an einem Tag dasselbe
+            # Muster wie beim Symbol.
             r = _mit_platz(rolle_g, zai_client, urteil,
-                           symbol=symbol or faktentext.get('asset'))
+                           symbol=symbol or faktentext.get('asset'),
+                           db_config=config)
             if r:
                 aus["einwand"] = r.get("einwand")
                 aus["einwand_grund"] = r.get("grund")

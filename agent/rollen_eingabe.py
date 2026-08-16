@@ -32,7 +32,8 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 
-def baue_lagebild_eingabe(reihen: dict, datum: str) -> dict:
+def baue_lagebild_eingabe(reihen: dict, datum: str,
+                          config: dict | None = None) -> dict:
     """Eingabe fuer das Lagebild - seit 12.08. aus `agent/marktlage.py`.
 
     DIE MARKTBREITE IST HIER RAUS (L1). Sie stand hier bis heute, und der
@@ -83,17 +84,17 @@ def baue_lagebild_eingabe(reihen: dict, datum: str) -> dict:
     #
     # "Fail-soft ist fail-silent" - hier mit einer Zeile geheilt, die sagt,
     # WELCHE Dimension fehlt und nicht nur, dass etwas fehlt.
-    fehlend = [name for name, wort in (
-        ("Netto-Liquiditaet", "Netto-Liquiditaet"),
-        ("Zinskurve", "zehnjaehriger"),
-        ("Anlegerstimmung", "Anlegerstimmung"))
-        if not any(wort in s for s in saetze)]
+    # SEIT 16.08. ABENDS UEBER `mindestkriterien`, nicht mehr ad hoc hier.
+    # Dieselbe Pruefung fuer alle drei Rollen an einer Stelle - eine zweite
+    # Liste daneben waere die naechste, die irgendwann die aeltere ist.
+    from agent import mindestkriterien as MK
+
+    fehlend = MK.pruefe_a(saetze)
     if fehlend:
+        MK.melde("A", fehlend, config, bezug=f"{len(saetze)} Aussagen")
         logger.warning(
-            "Lagebild ohne %s - %d Aussagen statt der erwarteten %d. "
             "Pruefen, ob `lade_makro_historie_nach.py` und "
-            "`lade_fear_greed_nach.py` auf DIESEM Geraet gelaufen sind.",
-            ", ".join(fehlend), len(saetze), len(saetze) + len(fehlend))
+            "`lade_fear_greed_nach.py` auf DIESEM Geraet gelaufen sind.")
     return {"marktlage": saetze}
 
 

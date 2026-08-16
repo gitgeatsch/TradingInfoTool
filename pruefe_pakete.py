@@ -5593,6 +5593,84 @@ def paket_15() -> None:
            "sonst steht sie mit '0 bestanden, 0 verloren' da, obwohl "
            "Symbole sie passiert haben - ein Trichterloch")
 
+    # ------------------------------------------------------------------
+    # DIE MINDESTGRUNDLAGEN ALS CODE (16.08.2026 abends, R-R1 bis R-R3).
+    #
+    # Sie standen seit heute frueh als TEXT im Regelwerksmanual - und genau
+    # diese Luecke hat am selben Tag zugeschlagen: Rolle A urteilte in der
+    # Produktion mit 12 statt 15 Aussagen, weil zwei Makro-Spalten auf dem
+    # Notebook fehlten. `lade_makro()` ist fail-soft, der Satz entfiel lautlos.
+    from agent import mindestkriterien as MK9
+
+    _voll_a = ["Bitcoin steht 5 % ueber dem von vor 250 Handelstagen.",
+               "Bitcoin schwankt taeglich um 2 % des Kurses.",
+               "Bitcoin verzeichnet je gehandeltem Euro Umsatz eine Bewegung.",
+               "Die Netto-Liquiditaet des US-Finanzsystems betraegt 5.987 Mrd.",
+               "Der Abstand zwischen zehnjaehriger und kurzfristiger Rendite.",
+               "Die Anlegerstimmung zu Bitcoin liegt im 77. Perzentil."]
+    pruefe(P, "Rolle A: vollstaendiges Lagebild meldet nichts",
+           MK9.pruefe_a(_voll_a) == [],
+           "eine Warnung, die immer kommt, liest niemand")
+    pruefe(P, "und der echte Produktionsausfall wird erkannt",
+           MK9.pruefe_a(_voll_a[:3]) == ["Makro", "Stimmung"],
+           "genau die zwei Dimensionen, die am 16.08. in der Produktion "
+           "fehlten - und die als 'erfuellt' dokumentiert waren")
+    pruefe(P, "die Breite wird NICHT verlangt",
+           not any(n == "Breite" for n, _ in MK9.DIMENSIONEN_A),
+           "sie ist am 12.08. ersatzlos gestrichen worden - sie zu "
+           "verlangen hiesse, etwas zu fordern, das wir entfernt haben")
+    pruefe(P, "Rolle BC: Auftrag und Bestand sind Pflicht",
+           MK9.pruefe_bc({"stand": ["y"]}, None) == ["auftrag"]
+           and "Block bestand" in MK9.pruefe_bc(
+               {"auftrag": ["x"], "stand": ["y"]},
+               {"bestand": [], "verlauf": ["b"]}),
+           "der KAS-Fall: das Modell kaufte in eine Verlustposition nach, "
+           "weil der Bestand nicht in seiner Grundlage vorkam")
+    pruefe(P, "aber der Ausloeser wird NICHT verlangt",
+           "ausloeser" not in MK9.PFLICHT_BC
+           and "trigger" not in MK9.PFLICHT_BC,
+           "er fehlt strukturell und hat eine eigene Phase - eine Warnung "
+           "bei JEDEM Urteil waere Rauschen")
+    # ROLLE G ZAEHLT QUELLEN, NICHT ZAHLEN.
+    _g_heute = {"oi_aenderung_pct": -1.4, "funding_perzentil": 72,
+                "long_anteil_pct": 65, "regime": "baer"}
+    pruefe(P, "Rolle G: drei Zahlen aus einer Tabelle sind EINE Quelle",
+           MK9.quellen_g(_g_heute) == ["terminmarkt"],
+           "sie beschreiben dieselbe Menge Menschen auf derselben Boerse")
+    pruefe(P, "und das Regime zaehlt NICHT als fremde Quelle",
+           "regime" not in str(MK9.QUELLEN_G),
+           "es wird aus BTC-Kurs und Fear & Greed gerechnet - beides sieht "
+           "Rolle A bereits")
+    pruefe(P, "heute erfuellt Rolle G ihre Mindestgrundlage NICHT",
+           MK9.pruefe_g(_g_heute) != [],
+           "eine Quelle statt zwei - dokumentiert, nicht behoben")
+    pruefe(P, "mit einer zweiten Quelle ist sie erfuellt",
+           MK9.pruefe_g(dict(_g_heute, cot_perzentil=94)) == [],
+           "CFTC COT waere die naechste - gebaut, nicht verdrahtet")
+    # SPERREN NUR AUF ANSAGE.
+    pruefe(P, "die Vorgabe sperrt NICHTS",
+           MK9.melde("G", ["x"], None) is False
+           and MK9.konfig(None)["sperren"] == (),
+           "sonst legte das blosse Einspielen Rolle G still - sie erfuellt "
+           "ihre eigene Grundlage heute nicht")
+    # ⚠️ DER WEG ZUR ROLLE MUSS OFFEN SEIN, nicht nur der Parameter da.
+    # Beim Gegentest aenderte `sperren=[G]` nichts: `rolle_g` hatte den
+    # Parameter, aber `hole()` reichte ihn nicht durch. Zum zweiten Mal an
+    # einem Tag dasselbe Muster wie beim Symbol - deshalb eine eigene Pruefung.
+    _q_zm = _quelltext("agent/zweite_meinung.py")
+    pruefe(P, "die Konfiguration erreicht Rolle G wirklich",
+           "config: dict | None = None" in _q_zm
+           and "db_config=config" in _q_zm
+           and "config=config" in _quelltext("agent/rollen_lauf.py"),
+           "ein Parameter ohne Weg dorthin ist wirkungslos - und der "
+           "Gegentest sah aus, als wirke die Sperre nicht")
+    pruefe(P, "und sperrt je Rolle, wenn der Nutzer es sagt",
+           MK9.melde("G", ["x"], {"mindestkriterien": {"sperren": ["G"]}})
+           is True
+           and MK9.melde("A", ["x"], {"mindestkriterien": {"sperren": ["G"]}})
+           is False,
+           "die drei Rollen haben sehr verschiedene Luecken")
+
     import staleness as ST5
 
     pruefe(P, "Krypto hat eine eigene, engere Frischeschwelle",

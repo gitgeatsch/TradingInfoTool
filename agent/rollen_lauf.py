@@ -371,7 +371,7 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
             "Trockenlauf ohne aufgezeichnetes Lagebild - es gibt nichts zu "
             "pruefen, und ein leerer Durchlauf saehe aus wie ein Erfolg.")
 
-    a_ein = RE.baue_lagebild_eingabe(reihen, tag)
+    a_ein = RE.baue_lagebild_eingabe(reihen, tag, config)
 
     # DAS LAGEBILD WIEDERVERWENDEN, SOLANGE ES FRISCH IST (14.08.).
     #
@@ -609,6 +609,23 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                              bloecke_ziel=_bloecke_anlass)
     atr_e = RE.atr_eur(symbol, reihe, idx, db)
     kurs_e = RE.kurs_eur(symbol, reihe, idx, db)
+
+    # MINDESTGRUNDLAGE VON ROLLE BC (16.08.2026 abends, R-R1).
+    #
+    # Geprueft wird, was ohne Ausnahme dastehen MUSS - Auftrag, Lage, Bestand,
+    # Verlauf. NICHT die volle CSTI-Liste: Ausloeser, Handelbarkeit und
+    # Katalysator fehlen strukturell und haben eine eigene Phase. Eine Warnung,
+    # die bei jedem Urteil kommt, liest niemand.
+    #
+    # MELDEN IST DIE VORGABE. Gesperrt wird nur, wenn "BC" in
+    # `config.yaml mindestkriterien.sperren` steht.
+    from agent import mindestkriterien as MK
+
+    _mk_fehlt = MK.pruefe_bc(bc_ein, _bloecke_anlass or None)
+    if MK.melde("BC", _mk_fehlt, config, bezug=f"{symbol}/{instrument}"):
+        durchlauf.verloren(symbol, "fakten",
+                           "Mindestgrundlage: " + "; ".join(_mk_fehlt))
+        return
     durchlauf.bestanden(symbol, "fakten")
     durchlauf.bestanden(symbol, "lagebild")
 
@@ -1315,7 +1332,8 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     def _nacharbeit() -> None:
         try:
             zweite = ZM.hole(faktentext=bc_ein, urteil=befund,
-                             symbol=symbol, zai_client=zai_client)
+                             symbol=symbol, zai_client=zai_client,
+                             config=config)
             if zweite:
                 eintrag["zweite_meinung"] = zweite
                 eintrag["betreff"], eintrag["text"] = baue(ZM.zeilen(zweite))

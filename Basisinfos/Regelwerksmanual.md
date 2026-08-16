@@ -3629,7 +3629,7 @@ Verhalten.
 | G4 | jede Aussage als **Perzentil oder Extremwert**, nie als Rohwert |
 | G5 | liegt zu einem Wert **keine** Grundlage vor, wird **nicht gefragt** |
 
-**G1 ist heute nicht erfüllt** — die drei Terminmarktzahlen stammen aus einer
+**IMPLEMENTIERT SEIT 16.08. abends** in `agent/mindestkriterien.py` - geprueft wird bei jedem Aufruf, gemeldet immer, gesperrt nur auf Ansage (`config.yaml mindestkriterien.sperren`). **G1 ist heute nicht erfüllt** — die drei Terminmarktzahlen stammen aus einer
 Tabelle. Der Zustand ist dokumentiert, nicht behoben; die Schwelle ist
 vorläufig „höchstens zwei fehlende Angaben".
 
