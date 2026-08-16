@@ -6268,3 +6268,141 @@ Lücke ist die stille Herabstufung.
 | Ende-zu-Ende-Simulation | 0 Fehler, 0 Lücken |
 | `pruefe_phase1.py` | bestanden |
 | `.docx` | 6 von 6 aktuell |
+
+---
+
+## Kapitel 52 — Punkt 2: alle sechs Körbe laufen durch die Simulation (16.08.2026)
+
+**Der Anlass:** `simuliere_kette.py` übersprang **Rohstoffe** und
+**Absicherung** — im Entwicklungsbestand fehlen ihre Kursreihen — und meldete
+trotzdem „0 Fehler". Zwei von sechs Körben liefen scharf und waren in keinem
+Testlauf. **Dieselbe Konstellation, die Rolle G drei Tage lang „fertig"
+aussehen liess.**
+
+**Gelöst mit den Reihen aus dem NB-Backup** (`DB_Backups/` neben dem Export,
+entsteht bei jedem NB-Export automatisch).
+
+```
+python simuliere_kette.py --db <entpacktes NB-Backup>
+6 Gruppen durchlaufen, 12 Signale, 14 Mails, 0 Fehler, 0 Luecken
+```
+
+### 52.1 Der erste Lauf prüfte einen Produktionsstand, nicht die Kette
+
+| Gruppe | Modellaufrufe |
+|---|---|
+| hedge/absicherung | **0** |
+| themen_etf/spot | **0** |
+| aktien/spot | 1 |
+
+**Der echte Cooldown sperrte.** Im NB-Backup stehen Produktionssignale von
+heute — jedes Symbol war bis zum 17.08. gesperrt:
+
+```
+nicht kuerzlich schon gefragt   0   (2 verloren)
+      1x Cooldown bis 2026-08-17T04:43
+      1x Cooldown bis 2026-08-17T06:15
+```
+
+**Die Simulation datiert die Signale in der KOPIE jetzt um 30 Tage zurück** —
+zurückdatiert, nicht gelöscht: die Zeilen werden für Bestand, Trefferbilanz und
+Ausstiegsführung gebraucht. Danach laufen alle sechs Gruppen vollständig.
+
+> **Ohne diesen Schritt hätte der Test bestätigt, dass der Cooldown
+> funktioniert — und nichts über die Kette gesagt.**
+
+### 52.2 Ein Trichterloch, das dabei auffiel
+
+```
+Faktensatz hat sich geaendert    0   (0 verloren)
+```
+
+Zwei Symbole hatten die Anlass-Stufe passiert, und sie stand mit **null zu
+null** da. Meine Änderung von heute Mittag buchte beide Stufen gemeinsam am
+Ende — griff der Cooldown, kehrte die Funktion vorher zurück, und die
+Anlass-Stufe wurde nie gebucht.
+
+**Genau das, was die eigene Stufe verhindern sollte:** eine Zahl, deren Summe
+nicht mehr aufgeht. Jetzt wird `anlass` **vor** dem Cooldown gebucht.
+
+> ⚠️ **Und ein Kommentar von mir war falsch.** Ich hatte geschrieben, ein
+> doppelter Aufruf zähle nicht doppelt, weil `Durchlauf` Mengen führe.
+> Nachgesehen: `bestanden_je_stufe[stufe] += 1` ist ein **Zähler**. Der Guard
+> für den Trockenlauf ist damit zwingend, nicht kosmetisch.
+
+### 52.3 Was in den beiden neuen Körben ankommt
+
+**Absicherung (DBPK):**
+
+```
+--- 1. DIE ABSICHERUNG ---
+Auf Sicht der letzten 17 Handelstage zeigt die Marktstruktur tiefere Hochs ...
+Kursentwicklung im selben Rahmen: 5 Tage -0.7 %, 20 Tage -8.6 %, 60 Tage -6.1 %.
+Es liess sich weniger als eine Marke oberhalb UND eine unterhalb bestimmen ...
+  Abzusicherndes Exposure: 8.898 EUR (alles im Depot ausser Absicherungen und Cash).
+  Davon bereits abgesichert: 1.341 EUR - das sind 15 %.
+  Dieses Instrument hebelt 2-fach auf den S&P 500; 1 EUR darin deckt 2 EUR Exposure.
+  Laufende Gebuehr etwa 0,8 % pro Jahr - eine Absicherung kostet auch dann, wenn nichts passiert.
+```
+
+**Rohstoffe (OD7H):**
+
+```
+--- 1. DER WERT ---
+Kursentwicklung im selben Rahmen: 5 Tage +1.1 %, 20 Tage +9.4 %, 60 Tage -2.6 %.
+Fuer dieses Instrument wird KEIN Umsatz ausgewiesen. Das ist eine fehlende
+Angabe, kein unauffaelliger Umsatz ...
+```
+
+**Beide Lücken-Sätze aus Phase I stehen zum ersten Mal in einer echten Mail** —
+die fehlende Marke bei der Absicherung, der fehlende Umsatz beim Zertifikat.
+Bis heute war nur bewiesen, dass die Funktion sie erzeugt.
+
+### 52.4 „DER COIN" stand über einem WisdomTree-Zertifikat
+
+> ⚠️ Die Mailüberschrift war fest `1. DER COIN` — aus der Zeit, als die Kette
+> nur Krypto bediente. Seit dem Vollumstieg stand sie über **OD7H** (Zertifikat
+> auf Gold) und **DBPK** (inverser S&P-ETF).
+
+Kein Defekt der Kette — aber ein Etikett, das dem Leser etwas anderes sagt, als
+vor ihm liegt. Dieselbe Regel wie bei den Faktensätzen.
+
+| Instrument | Überschrift |
+|---|---|
+| spot, hebel | **1. DER WERT** |
+| absicherung | **1. DIE ABSICHERUNG** |
+
+Die Absicherung bekommt einen eigenen Namen, weil sie ausdrücklich **kein**
+Trade ist — der Prompt sagt es dem Modell, die Mail sagt es jetzt dem Leser.
+
+### 52.5 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **886, alle bestanden** (8 neue) |
+| freie Namen | 0 |
+| Simulation gegen NB-Backup | **6 Gruppen**, 12 Signale, 14 Mails, 0 Fehler, 0 Lücken |
+| Simulation gegen Entwicklungsstand | 4 Gruppen, 0 Fehler |
+| `pruefe_phase1.py` | bestanden |
+
+**Eine bestehende Prüfung hat die Änderung gefangen** — Paket 11 verlangte
+`1. DER COIN` in der gerenderten Mail. Sie prüft jetzt dieselbe Absicht
+(Reihenfolge und Vollständigkeit) am neuen Namen, plus die eigene Überschrift
+der Absicherung.
+
+> ⚠️ **Zwei eigene Fehler in dieser einen neuen Prüfung**, beide an der
+> Testeingabe: ein selbstgebautes `rechnung`-dict ohne `einstieg_von_eur`, und
+> **keine Fakten übergeben** — dann bleibt Abschnitt 1 leer, und `_abschnitt()`
+> lässt ihn zu Recht ganz weg. Der Test suchte eine Überschrift, die es ohne
+> Inhalt gar nicht geben darf.
+>
+> Derselbe Typ wie die streng steigende Testreihe und der Blockname mit
+> Leerzeichen: **die Eingabe stellt den Fall nicht her, den sie prüfen will.**
+
+### 52.6 Was das für die Arbeitsweise heisst
+
+**Die Simulation läuft ab jetzt gegen das NB-Backup**, nicht gegen den
+Entwicklungsbestand. Dort fehlen sechs Reihen (Rohstoffe, 3QSS, X136), und
+genau die Gruppen mit den dünnsten Daten wären ungeprüft geblieben.
+
+Das Backup liegt bei jedem Export daneben und muss nicht angefordert werden.

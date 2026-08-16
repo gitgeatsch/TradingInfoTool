@@ -1088,12 +1088,36 @@ def paket_11() -> None:
                 "umgeworfen_durch": "z", "unabhaengige_faktoren": 3,
                 "belege": [{"fakt": "a", "richtung": "dafuer", "gewicht": "hoch"}]},
         coin_fakten=["Bitcoin notiert tiefer."], einordnung=["Einordnung."])
-    for nr, name in ((1, "DER COIN"), (2, "DIE RECHNUNG"),
+    # ⚠️ ABSCHNITT 1 HEISST SEIT DEM 16.08. "DER WERT", nicht "DER COIN" -
+    # die Kette bedient seit dem Vollumstieg sechs Gruppen, und die alte
+    # Ueberschrift stand ueber einem WisdomTree-Zertifikat und einem inversen
+    # S&P-ETF. Diese Pruefung hat die Aenderung korrekt gefangen; sie prueft
+    # jetzt dieselbe ABSICHT (Reihenfolge und Vollstaendigkeit) am neuen Namen.
+    for nr, name in ((1, "DER WERT"), (2, "DIE RECHNUNG"),
                      (3, "DAS URTEIL DES MODELLS"), (4, "EINORDNUNG")):
         pruefe(P, f"Abschnitt {nr} heisst '{name}'", f"--- {nr}. {name} ---" in text)
-    pruefe(P, "der Coin steht VOR der Rechnung",
-           text.index("1. DER COIN") < text.index("2. DIE RECHNUNG"),
+    pruefe(P, "der Wert steht VOR der Rechnung",
+           text.index("1. DER WERT") < text.index("2. DIE RECHNUNG"),
            "Nutzer: 'Info Teil zum Coin und dann die wichtigen Abschnitte'")
+    # ZWEI EIGENE FEHLER IN DIESER EINEN PRUEFUNG, beide an der Testeingabe:
+    #   * ein selbstgebautes `rechnung`-dict ohne `einstieg_von_eur`
+    #   * KEINE Fakten uebergeben - dann bleibt Abschnitt 1 leer, und
+    #     `_abschnitt()` laesst ihn zu Recht ganz weg. Der Test suchte eine
+    #     Ueberschrift, die es ohne Inhalt gar nicht geben darf.
+    # Beides derselbe Typ wie die streng steigende Testreihe: die Eingabe
+    # stellt den Fall nicht her, den sie pruefen will.
+    pruefe(P, "und die Absicherung bekommt ihre eigene Ueberschrift",
+           "--- 1. DIE ABSICHERUNG ---" in SM.baue_mail(
+               symbol="DBPK", name="DBPK", kurs_eur=55500.0,
+               instrument="absicherung", strategie="einstieg", rechnung=weit,
+               coin_fakten=["Abzusicherndes Exposure: 8.898 EUR."],
+               urteil={"aktion": "KAUFEN", "begruendung": "x",
+                       "was_dagegen": "y", "umgeworfen_durch": "z",
+                       "unabhaengige_faktoren": 3,
+                       "belege": [{"fakt": "a", "richtung": "dafuer",
+                                   "gewicht": "hoch"}]})[1],
+           "sie ist ausdruecklich KEIN Trade - der Prompt sagt es dem Modell, "
+           "die Mail sagt es dem Leser")
     pruefe(P, "keine Konfidenz in Prozent mehr",
            "Konfidenz" not in text,
            "im eigenen System 77,5 % vorhergesagt gegen 33,3 % tatsaechlich")
@@ -5538,6 +5562,36 @@ def paket_15() -> None:
            or _q8.count('PROMPT_STAND') >= 3,
            "`befund` ist die Antwort von Rolle BC und entsteht aus demselben "
            "Prompt - ein eigener Stand waere eine Erfindung")
+
+    # ------------------------------------------------------------------
+    # PUNKT 2 (16.08.2026): Rohstoffe und Absicherung laufen jetzt durch die
+    # Simulation. Beide waren scharf und in keinem Testlauf - dieselbe
+    # Konstellation, die Rolle G drei Tage lang 'fertig' aussehen liess.
+    from agent import signal_mail as SM9
+
+    pruefe(P, "die Mailueberschrift folgt dem Instrument",
+           SM9._ueberschrift_wert("spot") == "1. DER WERT"
+           and SM9._ueberschrift_wert("absicherung") == "1. DIE ABSICHERUNG",
+           "'DER COIN' stand ueber einem WisdomTree-Zertifikat und einem "
+           "inversen S&P-ETF - ein Etikett, das dem Leser etwas anderes "
+           "sagt, als vor ihm liegt")
+    pruefe(P, "und 'COIN' steht nirgends mehr als Ueberschrift",
+           '"1. DER COIN"' not in _quelltext("agent/signal_mail.py"),
+           "die Kette bedient seit dem Vollumstieg sechs Gruppen")
+    # DIE SIMULATION MUSS DEN PRODUKTIONS-COOLDOWN NEUTRALISIEREN.
+    _q9 = _quelltext("simuliere_kette.py")
+    pruefe(P, "die Simulation datiert den Cooldown zurueck",
+           "-30 days" in _q9,
+           "gegen ein NB-Backup sperrt der echte Cooldown jedes Symbol - "
+           "die Simulation praefte dann einen Produktionsstand, nicht die "
+           "Kette. Gemessen: hedge und themen_etf kamen mit 0 Aufrufen durch")
+    # UND DIE ANLASS-STUFE MUSS VOR DEM COOLDOWN GEBUCHT WERDEN.
+    _q9b = _quelltext("agent/rollen_lauf.py")
+    pruefe(P, "die Anlass-Stufe wird VOR dem Cooldown gebucht",
+           _q9b.index('durchlauf.bestanden(symbol, "anlass")')
+           < _q9b.index("WH.gesperrt_bis"),
+           "sonst steht sie mit '0 bestanden, 0 verloren' da, obwohl "
+           "Symbole sie passiert haben - ein Trichterloch")
 
     import staleness as ST5
 

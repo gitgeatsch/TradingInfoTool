@@ -2255,3 +2255,15 @@ Kopie, weil die Kette dann wirklich schreibt.
 
 **Der Satz, der daraus folgt:** eine Stufe gilt erst als gebaut, wenn
 `simuliere_kette.py` sie **in der fertigen Mail** nachweist.
+
+**NACHTRAG 16.08. abends: gegen das NB-BACKUP laufen lassen, nicht gegen den Entwicklungsbestand.**
+
+```bash
+python simuliere_kette.py --db <entpacktes NB-Backup>
+```
+
+Im Entwicklungsbestand fehlen sechs Kursreihen - **Rohstoffe, 3QSS und X136**. Genau die Gruppen mit der duennsten Datenlage wurden deshalb uebersprungen, und der Lauf meldete trotzdem „0 Fehler“.
+
+> ⚠️ **Die Simulation datiert die Signale in der KOPIE um 30 Tage zurueck.** Ohne das sperrt der echte Cooldown des Produktionsstands jedes Symbol - der Test bestaetigt dann, dass der Cooldown funktioniert, und sagt nichts ueber die Kette. Gemessen: hedge und themen_etf kamen mit **0 Modellaufrufen** durch.
+
+Das Backup liegt bei jedem Export in `Claude_Austauschordner/DB_Backups/` und muss nicht angefordert werden.

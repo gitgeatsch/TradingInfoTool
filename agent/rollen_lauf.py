@@ -720,6 +720,15 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         if _anlass_sperrt:
             durchlauf.verloren(symbol, "anlass", _anlass_grund)
             return
+        # ⚠️ HIER BUCHEN, NICHT ERST NACH DEM COOLDOWN (16.08.2026, gefunden
+        # von `simuliere_kette.py` gegen echte Produktionsdaten).
+        #
+        # Meine erste Fassung buchte beide Stufen gemeinsam am Ende. Griff der
+        # Cooldown, kehrte die Funktion vorher zurueck - und die Anlass-Stufe
+        # stand mit "0 bestanden, 0 verloren" da, obwohl zwei Symbole sie
+        # passiert hatten. Ein Trichterloch, dessen Summe nicht mehr aufgeht:
+        # genau das, was die eigene Stufe verhindern sollte.
+        durchlauf.bestanden(symbol, "anlass")
 
         sperre = WH.gesperrt_bis(conn, symbol, instrument, config=config,
                                  gruppe=assetklasse)
@@ -729,10 +738,17 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             durchlauf.verloren(symbol, "wiederholung",
                                f"Cooldown bis {sperre[:16]}")
             return
-    # BEIDE STUFEN AUSSERHALB DES `if`. Im Trockenlauf laeuft weder die
-    # Anlassmessung noch der Cooldown - gebucht werden muessen sie trotzdem,
-    # sonst klafft im Trichter ein Loch und die Summe stimmt nicht mehr.
-    durchlauf.bestanden(symbol, "anlass")
+    # IM TROCKENLAUF laeuft weder die Anlassmessung noch der Cooldown -
+    # gebucht werden muessen beide trotzdem, sonst klafft im Trichter ein
+    # Loch. Im scharfen Betrieb hat `anlass` oben schon gebucht.
+    #
+    # ⚠️ DER GUARD IST ZWINGEND, nicht kosmetisch. Ich hatte hier zuerst
+    # geschrieben, ein zweiter Aufruf zaehle nicht doppelt, weil `Durchlauf`
+    # Mengen fuehre. Nachgesehen: `bestanden_je_stufe[stufe] += 1` ist ein
+    # ZAEHLER. Ohne den Guard staende im scharfen Betrieb die doppelte Zahl -
+    # und der Trichter waere wieder falsch, nur in die andere Richtung.
+    if betriebsart == TROCKEN:
+        durchlauf.bestanden(symbol, "anlass")
     durchlauf.bestanden(symbol, "wiederholung")
 
     # --- Stufe: Urteil ---

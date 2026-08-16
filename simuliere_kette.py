@@ -239,6 +239,28 @@ def main() -> int:
     print(f"Quelle : {a.db}")
     print(f"KOPIE  : {db}   <- hierhin wird geschrieben, nie in die Quelle")
 
+    # --- DEN PRODUKTIONS-COOLDOWN IN DER KOPIE ZURUECKDATIEREN -----------
+    #
+    # NOETIG, SEIT DIE SIMULATION GEGEN DAS NB-BACKUP LAEUFT. Dort stehen
+    # echte Signale von heute - der Cooldown sperrt dann JEDES Symbol, und die
+    # Simulation prueft nicht mehr die Kette, sondern einen Produktionsstand.
+    # Gemessen beim ersten Lauf: hedge und themen_etf kamen mit "0 Aufrufe"
+    # durch, weil beide Symbole bis zum 17.08. gesperrt waren.
+    #
+    # ZURUECKDATIERT, NICHT GELOESCHT: die Zeilen werden fuer Bestand,
+    # Trefferbilanz und Ausstiegsfuehrung gebraucht. Nur ihr Alter aendert
+    # sich - und zwar NUR in der Kopie.
+    with _verbindung(db) as c0:
+        for tabelle in ("signals", "hebel_signals"):
+            try:
+                c0.execute(f"UPDATE {tabelle} SET created_at = "
+                           f"datetime(created_at, '-30 days')")
+            except sqlite3.Error:
+                pass
+        c0.commit()
+    print("Cooldown in der Kopie um 30 Tage zurueckdatiert - sonst prueft "
+          "die Simulation einen Produktionsstand statt der Kette.")
+
     reihen = lade_reihen_aus_db(db)
     gesamt = {"gruppen": 0, "signale": 0, "mails": 0, "fehler": [],
               "luecken": [], "gruppen_gelaufen": [],

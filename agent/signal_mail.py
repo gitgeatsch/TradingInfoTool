@@ -147,6 +147,20 @@ def _abschnitt(titel: str, zeilen: list[str]) -> list[str]:
     return [f"--- {titel} ---", *zeilen, ""]
 
 
+# Wie der erste Abschnitt heisst. Frueher fest "DER COIN" - siehe die Notiz
+# an der Verwendungsstelle. "DER WERT" traegt fuer alles, die Absicherung
+# bekommt ihren eigenen Namen, weil sie ausdruecklich KEIN Trade ist
+# (`rolle_trader._HANDELN["absicherung"]`: "Du entscheidest ueber eine
+# ABSICHERUNG, nicht ueber einen Trade").
+UEBERSCHRIFT_WERT = {
+    "absicherung": "1. DIE ABSICHERUNG",
+}
+
+
+def _ueberschrift_wert(instrument: str | None) -> str:
+    return UEBERSCHRIFT_WERT.get(str(instrument or ""), "1. DER WERT")
+
+
 def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
               instrument: str, strategie: str,
               rechnung: dict, urteil: dict,
@@ -205,7 +219,7 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
             f"{instrument.capitalize()} / {strategie.capitalize()}",
             ""]
 
-    # 1. DER COIN. Was der Wert gerade tut - ohne Empfehlung, ohne Wertung.
+    # 1. DER WERT. Was er gerade tut - ohne Empfehlung, ohne Wertung.
     #
     # REIHENFOLGE NACH NUTZERVORGABE (12.08.): *"Das fuer mich wichtige zuerst,
     # also Widerstand 62K Euro und danach die 3,9 Schwankung."* Erst der
@@ -276,7 +290,16 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
 
     text = "\n".join(
         kopf
-        + _abschnitt("1. DER COIN", eins)
+        # ⚠️ NICHT MEHR FEST "DER COIN" (16.08.2026). Die Ueberschrift stand
+        # aus der Zeit, als die Kette nur Krypto bediente - seit dem
+        # Vollumstieg stand sie ueber einem WisdomTree-Zertifikat (OD7H) und
+        # ueber einem inversen S&P-ETF (DBPK). Gefunden, als die Simulation
+        # zum ersten Mal Rohstoffe und Absicherung durchlaufen liess.
+        #
+        # Kein Defekt der Kette - aber ein Etikett, das dem Leser etwas
+        # anderes sagt, als vor ihm liegt. Dieselbe Regel wie bei den
+        # Faktensaetzen: was dasteht, muss stimmen.
+        + _abschnitt(_ueberschrift_wert(instrument), eins)
         + _abschnitt("2. DIE POSITION" if ausstieg else "2. DIE RECHNUNG", zwei)
         + _abschnitt("3. DAS URTEIL DES MODELLS", drei)
         + _abschnitt("4. EINORDNUNG", list(einordnung or []))
