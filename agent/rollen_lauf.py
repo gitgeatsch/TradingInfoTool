@@ -676,7 +676,14 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # gerade stand. Es hat Auftrag, Fakten und Lagebild bestanden und ist nie
     # zu einem Urteil gekommen; der Trichter bleibt damit monoton. Dass es der
     # Cooldown war und kein schlechtes Urteil, steht im Grund.
-    if betriebsart != TROCKEN:
+    # ⚠️ AUCH IM TROCKENLAUF (O-38, 16.08.2026). Hier stand
+    # `if betriebsart != TROCKEN` - und `asset_schalter` ist ein REINER
+    # LESER, es gab also nie einen Grund dafuer. Die Folge: jeder
+    # Trockenlauf liess Assets durch, die der Nutzer ausdruecklich
+    # abgeschaltet hat, und meldete einen Durchsatz, den der scharfe
+    # Betrieb nie erreicht. Auch die Laeufe, mit denen der Vollumstieg
+    # geprueft wurde.
+    if True:
         # DIE SCHALTER DES NUTZERS ZUERST (Querpruefung 14.08.). Drei
         # GUI-Schalter je Asset - DCA, Hebel-Pruefung, Bitpanda-Override -
         # wurden von den alten Pipelines gelesen und von dieser Kette
@@ -728,12 +735,19 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # alle drei Stunden - naehme man es mit, waere fast jede Frage "neu". Ob
     # das der richtige Schnitt ist, soll die Messung sagen.
     _anlass_sperrt, _anlass_grund = False, ""
-    if betriebsart != TROCKEN:
+    # ⚠️ AUCH IM TROCKENLAUF, ABER OHNE ZU SCHREIBEN (O-38, 16.08.2026).
+    # Diese Stufe war ausgenommen, weil sie eine Zeile anlegt. Das Urteil
+    # braucht sie aber nicht - `schreiben=False` rechnet den Fingerabdruck,
+    # liest den Vergleich und legt nichts an. Ohne das kannte der
+    # Trockenlauf die schaerfste Stufe der Kette nicht: sie hat am 16.08.
+    # 35 von 41 Kryptosymbolen gestoppt.
+    if True:
         try:
             from agent import anlass as AN
 
             _beob = AN.beobachte(conn, symbol=symbol, instrument=instrument,
-                                 fakten=bc_ein, bloecke=_bloecke_anlass)
+                                 fakten=bc_ein, bloecke=_bloecke_anlass,
+                                 schreiben=betriebsart != TROCKEN)
             ergebnis.setdefault("anlass", []).append(dict(
                 _beob, symbol=symbol, instrument=instrument))
             # SEIT 16.08.2026 SPERRT SIE - wenn der Nutzer sie einschaltet.

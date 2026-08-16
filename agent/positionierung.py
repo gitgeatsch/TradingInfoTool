@@ -418,7 +418,13 @@ def lage(conn, symbol: str, assetklasse: str | None = None) -> dict:
     aus: dict = {"symbol": sym, "fehlt": []}
 
     oi = _reihe(conn, sym, "open_interest")
-    fund = _reihe(conn, sym, "funding_rate")
+    # ⚠️ NICHT MEHR ueber `_reihe`: die Finanzierungsrate stammt von KRAKEN
+    # und stand bis zum 16.08. unter allen drei Boersenetiketten. Seit die
+    # Etiketten stimmen, weiss genau eine Stelle, wo sie liegt - und sie
+    # deckt den Uebergang von den Altzeilen mit ab.
+    from database import db as _DB
+
+    fund = _DB.lies_funding_reihe(conn, sym)
     lang = _reihe(conn, sym, "long_account_pct")
 
     if oi:

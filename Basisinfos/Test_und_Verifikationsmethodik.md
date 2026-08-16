@@ -2370,3 +2370,45 @@ zwischen zwei Freitagen sieben Tage alt, ohne dass etwas fehlt.
 
 > Der Export meldet unbekannte Tabellen selbst unter `nicht_erwaehnt` — wer eine
 > neue Tabelle anlegt und den Abschnitt vergisst, sieht es beim nächsten Export.
+
+## 2.29 Ein Schalter des Nutzers fällt ZU, nicht auf (neu 2026-08-16)
+
+**Auslöser:** jede Stelle, die eine ausdrückliche Nutzerentscheidung liest.
+
+```python
+        try:
+            if not db.get_hebel_pruefung_erlaubt(conn, sym):
+                return False, "abgeschaltet"
+        except Exception:
+            logger.debug(...)      # ⚠️ und dann ging es WEITER
+```
+
+Ohne `conn.row_factory = sqlite3.Row` wirft der Leser, der Fang schluckt es auf
+**debug**, und ein **abgeschaltetes** Asset wird trotzdem beurteilt.
+
+| | zu prüfen |
+|---|---|
+| **Richtung** | ein Lesefehler darf nie „erlaubt" bedeuten |
+| **Lautstärke** | `warning`, nicht `debug` — auf debug erscheint nichts in einem Log |
+| **Testverbindung** | mit Zeilenfabrik, wie `db.get_connection()` sie setzt |
+
+> Dieselbe Klasse wie die Regime-Dauer, und in der Wirkung schlimmer: dort
+> fehlte ein Halbsatz, hier wird eine ausdrückliche Entscheidung übergangen.
+
+## 2.30 Der Trockenlauf muss dieselben Stufen sehen (neu 2026-08-16, O-38)
+
+Ein Trockenlauf, der Stufen überspringt, **überschätzt den Durchsatz** — und
+zwar rückwirkend auch in jeder Messung, die mit ihm gemacht wurde.
+
+| Stufe | Umgang |
+|---|---|
+| **reine Leser** (Nutzerschalter) | laufen immer — es gab nie einen Grund, sie auszunehmen |
+| **schreibende Stufen** (Anlass) | laufen mit `schreiben=False` |
+
+> **Ein Trockenlauf, der schreibt, verändert die Grundlage des nächsten
+> scharfen Laufs.** Das Urteil braucht den Schreibvorgang nicht: Fingerabdruck
+> rechnen, Vergleich lesen, Zeile weglassen.
+
+**Grössenordnung:** die Anlass-Stufe stoppte am 16.08. **35 von 41**
+Kryptosymbolen. Ein Trockenlauf ohne sie meldet eine Zahl, die es im Betrieb
+nicht gibt.

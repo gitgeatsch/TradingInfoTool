@@ -93,18 +93,38 @@ def darf_analysiert_werden(conn, symbol: str, instrument: str,
         # beantwortet "kann man das ueberhaupt fragen?".
         if _ist_cash_aequivalent(sym, watchlist):
             return False, "Cash-Aequivalent - kein Hebel-Kandidat"
+        # ⚠️ EIN LESEFEHLER HEISST NICHT "ERLAUBT" (16.08.2026).
+        #
+        # Hier stand ein `logger.debug` und danach ging es weiter - ein
+        # nicht lesbarer Schalter liess das Asset also DURCH. Nachgestellt:
+        # ohne `conn.row_factory = sqlite3.Row` wirft
+        # `get_hebel_pruefung_erlaubt` einen TypeError, und ein
+        # ausdruecklich ABGESCHALTETES Asset wurde trotzdem beurteilt.
+        #
+        # Die Vorgabe des Nutzers laesst das nicht zu: *"ueberall moeglich,
+        # aber nur dort Signale erzeugen, wo ich das selektiv moechte."*
+        # Wer nicht lesen kann, was gewollt ist, darf es nicht annehmen.
+        #
+        # UND DIE MELDUNG GEHT AUF WARNUNG. Auf `debug` erschien sie in
+        # keinem Log - dieselbe Klasse wie die Regime-Dauer, die aus genau
+        # demselben Grund (fehlende Zeilenfabrik) tagelang fehlte.
         try:
             if not db.get_hebel_pruefung_erlaubt(conn, sym):
                 return False, "Hebel-Pruefung fuer dieses Asset abgeschaltet"
-        except Exception:                                    # noqa: BLE001
-            logger.debug("hebel_pruefung_erlaubt nicht lesbar fuer %s", sym)
+        except Exception as exc:                             # noqa: BLE001
+            logger.warning("Hebel-Schalter fuer %s nicht lesbar (%s) - "
+                           "Asset wird NICHT beurteilt", sym, exc)
+            return False, "Hebel-Schalter nicht lesbar"
 
     if s == "akkumulation":
+        # Dieselbe Regel wie beim Hebelschalter darueber.
         try:
             if not db.get_dca_erlaubt(conn, sym):
                 return False, "DCA fuer dieses Asset abgeschaltet"
-        except Exception:                                    # noqa: BLE001
-            logger.debug("dca_erlaubt nicht lesbar fuer %s", sym)
+        except Exception as exc:                             # noqa: BLE001
+            logger.warning("DCA-Schalter fuer %s nicht lesbar (%s) - "
+                           "Asset wird NICHT beurteilt", sym, exc)
+            return False, "DCA-Schalter nicht lesbar"
 
     return True, None
 

@@ -90,11 +90,41 @@ def fetch_and_store_oi_snapshot(conn, asset, kraken_client) -> bool:
     except Exception as exc:
         logger.info("Binance-Long-Short-Ratio-Abruf fuer %s fehlgeschlagen: %s", binance_symbol, exc)
 
+    # ⚠️ JEDE ZEILE SAGT, WOHER IHRE DATEN STAMMEN (16.08.2026).
+    #
+    # BIS HEUTE trugen ALLE DREI Boersenzeilen dieselbe Finanzierungsrate (von
+    # KRAKEN) und denselben Long-Anteil (von BINANCE). Nachgezaehlt am
+    # Produktionsbestand: `long_account_pct` und `funding_rate` weichen an
+    # 41.547 bzw. 40.033 gemeinsamen Zeitpunkten in KEINEM einzigen Fall
+    # voneinander ab - nur `open_interest` ist echt je Boerse (41.551 von
+    # 41.551 verschieden).
+    #
+    # DAS WAR EINE BEWUSSTE ABKUERZUNG, kein Versehen: der Docstring von
+    # `compute_funding_rate_percentile` haelt sie ausdruecklich fest
+    # ("derselbe Kraken-Wert liegt redundant in allen 3 Boersen-Zeilen, daher
+    # reicht EINE Boerse als Quelle"). Sie war tragbar, solange nur EIN Leser
+    # existierte, der es wusste.
+    #
+    # ZERBROCHEN IST SIE MIT ROLLE G. `positionierung.py` liest seit dem
+    # 16.08. je Boerse und nimmt die Spalte woertlich. Wer dort
+    # `exchange='bybit'` filtert, bekam Kraken- und Binance-Daten unter
+    # falschem Etikett - und in einem Faktensatz fuer ein Sprachmodell.
+    #
+    # DIE FINANZIERUNGSRATE BEKOMMT IHRE EIGENE ZEILE, weil Kraken keine der
+    # drei Boersen ist. Ein `open_interest` steht dort nicht - die Spalte ist
+    # nullbar, und eine erfundene Null waere schlimmer als eine Leerstelle.
+    if funding_rate is not None:
+        db.insert_oi_snapshot(conn, OpenInterestSnapshot(
+            symbol=asset.symbol, exchange="kraken", open_interest=None,
+            open_interest_usd=None, funding_rate=funding_rate,
+            long_account_pct=None, fetched_at=fetched_at,
+        ))
+
     try:
         oi = get_binance_open_interest(binance_symbol)
         db.insert_oi_snapshot(conn, OpenInterestSnapshot(
             symbol=asset.symbol, exchange="binance", open_interest=oi.open_interest,
-            open_interest_usd=oi.open_interest_usd, funding_rate=funding_rate,
+            open_interest_usd=oi.open_interest_usd, funding_rate=None,
             long_account_pct=long_account_pct, fetched_at=fetched_at,
         ))
         mindestens_eine_boerse_erfolgreich = True
@@ -105,8 +135,8 @@ def fetch_and_store_oi_snapshot(conn, asset, kraken_client) -> bool:
         oi = get_bybit_open_interest(binance_symbol)
         db.insert_oi_snapshot(conn, OpenInterestSnapshot(
             symbol=asset.symbol, exchange="bybit", open_interest=oi.open_interest,
-            open_interest_usd=oi.open_interest_usd, funding_rate=funding_rate,
-            long_account_pct=long_account_pct, fetched_at=fetched_at,
+            open_interest_usd=oi.open_interest_usd, funding_rate=None,
+            long_account_pct=None, fetched_at=fetched_at,
         ))
         mindestens_eine_boerse_erfolgreich = True
     except Exception as exc:
@@ -116,8 +146,8 @@ def fetch_and_store_oi_snapshot(conn, asset, kraken_client) -> bool:
         oi = get_okx_open_interest(f"{asset.symbol}-USDT-SWAP")
         db.insert_oi_snapshot(conn, OpenInterestSnapshot(
             symbol=asset.symbol, exchange="okx", open_interest=oi.open_interest,
-            open_interest_usd=oi.open_interest_usd, funding_rate=funding_rate,
-            long_account_pct=long_account_pct, fetched_at=fetched_at,
+            open_interest_usd=oi.open_interest_usd, funding_rate=None,
+            long_account_pct=None, fetched_at=fetched_at,
         ))
         mindestens_eine_boerse_erfolgreich = True
     except Exception as exc:
@@ -176,17 +206,25 @@ def classify_squeeze_divergenz(
     return "abbau_deleveraging" if oi_change_pct < 0 else "long_squeeze_verdacht"
 
 
-def compute_funding_rate_percentile(conn, symbol: str, exchange: str = "binance") -> IndicatorResult:
+def compute_funding_rate_percentile(conn, symbol: str, exchange: str | None = None) -> IndicatorResult:
     """DB-Fetch-Wrapper um indicators/calculations.py::funding_rate_percentile()
     (2026-07-28, Abschnitt 6 Fakten-Entscheidungsmappe) - liest die komplette
     Funding-Rate-Historie eines Symbols aus open_interest_snapshot (derselbe
-    Kraken-Wert liegt redundant in allen 3 Boersen-Zeilen, siehe
-    fetch_and_store_oi_snapshot()-Docstring, daher reicht EINE Boerse als
-    Quelle), filtert None-Luecken (Kraken-Abruf kann pro Tick fehlgeschlagen
-    sein) und delegiert die eigentliche Perzentil-Berechnung."""
-    history = db.get_oi_history(conn, symbol, exchange)
+    Kraken-Wert lag bis zum 16.08.2026 redundant in allen 3 Boersen-Zeilen)
+    und delegiert die eigentliche Perzentil-Berechnung.
+
+    ⚠️ SEIT 16.08.2026 STEHT DER WERT UNTER SEINER EIGENEN QUELLE. Die
+    Redundanz war tragbar, solange nur dieser eine Leser existierte und von
+    ihr wusste; mit Rolle G kam einer dazu, der die Spalte woertlich nimmt.
+    `db.lies_funding_reihe()` weiss als EINZIGE Stelle, wo der Wert liegt,
+    und deckt den Uebergang von den rund 40.000 Altzeilen mit ab.
+
+    Der Parameter `exchange` bleibt fuer Aufrufer erhalten, die ausdruecklich
+    eine bestimmte Zeile wollen - ohne ihn gilt die Quellenreihenfolge."""
     werte = np.array(
-        [h.funding_rate for h in history if h.funding_rate is not None], dtype=float,
+        db.lies_funding_reihe(conn, symbol) if exchange is None else
+        [h.funding_rate for h in db.get_oi_history(conn, symbol, exchange)
+         if h.funding_rate is not None], dtype=float,
     )
     return funding_rate_percentile(werte)
 

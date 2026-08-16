@@ -245,8 +245,16 @@ def _tabelle(conn: sqlite3.Connection) -> bool:
 
 def beobachte(conn, *, symbol: str, instrument: str, fakten: dict,
               bloecke: dict | None = None, jetzt: str | None = None,
-              hoechstalter_stunden: float = HOECHSTALTER_STUNDEN) -> dict:
+              hoechstalter_stunden: float = HOECHSTALTER_STUNDEN,
+              schreiben: bool = True) -> dict:
     """Schreibt eine Beobachtung und sagt, ob GESPERRT WORDEN WAERE.
+
+    `schreiben=False` FUER DEN TROCKENLAUF (O-38, 16.08.2026). Bis heute
+    uebersprang der Trockenlauf diese Stufe ganz - weil sie schreibt. Damit
+    kannte er die Sperre nicht und meldete einen Durchsatz, den der scharfe
+    Betrieb nie erreicht. Das Urteil braucht den Schreibvorgang aber nicht:
+    der Fingerabdruck wird gerechnet, der Vergleich gelesen, nur die neue
+    Zeile entfaellt.
 
     SPERRT SELBST NICHT - der Rueckgabewert ist eine Feststellung, kein Veto.
     Der Aufrufer darf ihn heute nur mitzaehlen.
@@ -308,6 +316,11 @@ def beobachte(conn, *, symbol: str, instrument: str, fakten: dict,
             # INNERHALB DES FENSTERS UND GLEICH = waere gesperrt worden.
             aus["wuerde_sperren_voll"] = aus["gleich_voll"]
             aus["wuerde_sperren_asset"] = aus["gleich_asset"]
+        if not schreiben:
+            # KEINE ZEILE, ABER DAS VOLLE URTEIL. Ein Trockenlauf, der
+            # schreibt, veraendert die Grundlage des naechsten scharfen
+            # Laufs - genau der Fehler, den `probe` vermeiden soll.
+            return aus
         conn.execute(
             "INSERT INTO anlass_beobachtung (erfasst_am, symbol, instrument, "
             "fingerabdruck_voll, fingerabdruck_asset, gleich_voll, "

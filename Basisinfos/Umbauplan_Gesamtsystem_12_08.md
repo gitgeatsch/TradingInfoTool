@@ -8027,3 +8027,145 @@ Quelle, dann die Wirkung.** Wer bei der Quelle anfängt, baut ein Etikett ein.
 **Kein Code, nur Zuordnung.** Gebaut wird nichts — die Schiene bleibt hinten.
 Aber sie steht jetzt an der richtigen Stelle, bevor jemand sie nach dem alten
 Modulkopf in die falsche Rolle baut.
+
+---
+
+## Kapitel 64 — Ehrliche Börsenetiketten, ein sehender Trockenlauf, und ein Schalter, der nach der falschen Seite fiel (16.08.2026 nachts)
+
+### 64.1 Punkt 2: jede Zeile sagt jetzt, woher ihre Daten stammen
+
+**Der Zustand bis heute:** alle drei Börsenzeilen trugen dieselbe
+Finanzierungsrate (von **Kraken**) und denselben Long-Anteil (von **Binance**).
+
+| Feld | gemeinsame Zeitpunkte | davon verschieden |
+|---|---:|---:|
+| `long_account_pct` | 41.547 | **0** |
+| `funding_rate` | 40.033 | **0** |
+| `open_interest` | 41.551 | **41.551** |
+
+> **Es war eine bewusste Abkürzung, kein Versehen.** Der Docstring von
+> `compute_funding_rate_percentile` hält sie ausdrücklich fest: *„derselbe
+> Kraken-Wert liegt redundant in allen 3 Börsen-Zeilen, daher reicht EINE
+> Börse als Quelle."*
+
+**Zerbrochen ist sie mit Rolle G.** `positionierung.py` liest seit heute früh
+je Börse und nimmt die Spalte wörtlich — wer dort `exchange='bybit'` filtert,
+bekam Kraken- und Binance-Daten unter falschem Etikett, **in einem Faktensatz
+für ein Sprachmodell**.
+
+**Was jetzt gilt:**
+
+| Zeile | trägt |
+|---|---|
+| `kraken` | Finanzierungsrate — **neue, eigene Zeile**, weil Kraken keine der drei Börsen ist |
+| `binance` | Open Interest **und** Long-Anteil (beides echt von dort) |
+| `bybit`, `okx` | **nur** Open Interest |
+
+**Ein Leser für alle:** `db.lies_funding_reihe()`. Vorher las jeder Aufrufer
+selbst `WHERE exchange = 'binance'`; drei Leser hätten drei Übergänge bedeutet,
+und einer davon wäre vergessen worden.
+
+**Der Übergang ist eingebaut und befristet.** Rund 40.000 Altzeilen tragen den
+Wert noch unter den Börsenetiketten; ist die `kraken`-Reihe zu kurz, wird dort
+nachgesehen. Bei einem 15-Minuten-Takt greift der Rückfall nach gut acht
+Stunden nicht mehr.
+
+**Nachgewiesen an echten Daten, alle drei Fälle:**
+
+| | |
+|---|---|
+| Altbestand allein | 400 Werte gelesen, Rolle-G-Perzentil **28 — unverändert** |
+| 48 `kraken`-Zeilen | 48 Werte, alle aus der neuen Quelle → **Vorrang** |
+| 10 `kraken`-Zeilen | 400 Werte → **Rückfall greift** |
+
+### 64.2 Punkt 3 (O-38): der Trockenlauf sieht jetzt beide Nutzerstufen
+
+**Zwei Stellen standen unter `if betriebsart != TROCKEN`, und die Gründe waren
+verschieden:**
+
+| Stufe | warum übersprungen | Korrektur |
+|---|---|---|
+| **Nutzerschalter** (DCA, Hebel-Prüfung, Bitpanda-Override) | **gar kein Grund** — `asset_schalter` ist ein reiner Leser | läuft jetzt immer |
+| **Anlass-Sperre** | sie **schreibt** eine Beobachtung | läuft mit `schreiben=False` |
+
+> **Das Urteil braucht den Schreibvorgang nicht:** der Fingerabdruck wird
+> gerechnet, der Vergleich gelesen, nur die neue Zeile entfällt. **Ein
+> Trockenlauf, der schreibt, verändert die Grundlage des nächsten scharfen
+> Laufs** — genau das soll `probe` vermeiden.
+
+**Wie groß der Unterschied ist, zeigt derselbe Tag:** die Anlass-Stufe hat am
+16.08. **35 von 41** Kryptosymbolen gestoppt. Ein Trockenlauf, der sie nicht
+kennt, meldet einen Durchsatz, den der scharfe Betrieb nie erreicht — **auch
+die Läufe, mit denen der Vollumstieg geprüft wurde.**
+
+### 64.3 Der Fund, den erst diese Korrektur sichtbar gemacht hat
+
+**Der Schalter des Nutzers fiel nach OFFEN.**
+
+```python
+        try:
+            if not db.get_hebel_pruefung_erlaubt(conn, sym):
+                return False, "Hebel-Pruefung ... abgeschaltet"
+        except Exception:
+            logger.debug("hebel_pruefung_erlaubt nicht lesbar fuer %s", sym)
+        # ... und dann ging es WEITER
+```
+
+**Nachgestellt:** ohne `conn.row_factory = sqlite3.Row` wirft der Leser einen
+`TypeError`, der Fang schluckt ihn auf **debug**-Ebene — und ein ausdrücklich
+**abgeschaltetes** Asset wurde trotzdem beurteilt.
+
+| Zeilenfabrik | Schalter | Ergebnis |
+|---|---|---|
+| `sqlite3.Row` | AUS | wird nicht beurteilt ✓ |
+| `None` | AUS | **wird beurteilt** ✗ |
+
+> ⚠️ **Dieselbe Klasse wie die Regime-Dauer** (`row["tag"]` ohne Zeilenfabrik,
+> vom breiten `except` verschluckt) — und in der Wirkung schlimmer: dort fehlte
+> ein Halbsatz, hier wird eine **ausdrückliche Entscheidung des Nutzers**
+> übergangen. *„Überall möglich, aber nur dort Signale erzeugen, wo ich das
+> selektiv möchte."*
+
+**Die Produktion ist nicht betroffen** — `db.get_connection()` setzt die
+Zeilenfabrik. Es war eine Falle für jeden Aufrufer, der eine einfache
+Verbindung öffnet; `simuliere_kette.py` und die Paketprüfungen taten genau das.
+
+**Behoben: beide Schalter fallen jetzt ZU**, und die Meldung geht auf
+**Warnung** statt debug. Wer nicht lesen kann, was gewollt ist, darf es nicht
+annehmen.
+
+### 64.4 Drei Prüfungen mussten mit — und zwei davon aus demselben Grund
+
+> ⚠️ **Zum siebten Mal diese Woche: die Eingabe stellte den Fall nicht her.**
+
+| Prüfung | was fehlte |
+|---|---|
+| „ein Hebel-Lauf erzeugt eine Mail" | **kein Schalter gesetzt.** `get_hebel_pruefung_erlaubt` ist seit dem 15.08. **Opt-in** — keine Zeile heißt AUS. Der Trockenlauf hatte das verdeckt |
+| „ein normales Asset bleibt unberührt" | rief mit `conn=None` — mit fail-closed korrekterweise ein Nein. Die Prüfung meint die **Cash**-Regel und braucht einen Bestand, in dem der Schalter beantwortbar ist |
+| Testverbindung | **ohne Zeilenfabrik**, anders als jede Produktionsverbindung |
+
+**Nicht die Zusicherung gelockert, sondern den Fall hergestellt.** Und die
+neuen Prüfungen halten beides fest: dass ein abgeschaltetes Asset auch trocken
+keine Mail erzeugt, dass der Trockenlauf dabei **nichts schreibt**, und dass
+ohne lesbare Schalter gar nicht beurteilt wird.
+
+### 64.5 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **919, alle bestanden** (3 neue) |
+| freie Namen | 0 |
+| `pruefe_zahlen_in_prompts.py` | Selbsttest 9/9, 344 Sätze, kein Befund |
+| `pruefe_phase1.py` | bestanden |
+| Simulation | 6 Gruppen, 12 Signale, 14 Mails, **0 Fehler** |
+| Funding-Übergang | drei Fälle einzeln belegt (siehe 64.1) |
+| Schalter fail-closed | mit und ohne Zeilenfabrik gegengeprüft |
+
+### 64.6 Was von der Liste bleibt
+
+| | Punkt | Stand |
+|---|---|---|
+| 1 | **51 % Ausfallzeit** | Betrieb, nicht Code — bleibt oben |
+| 4 | TURBO-Phantomposition | im nächsten Export nachsehen |
+| 5 | **O-33** Hedge-Instrumente ohne Codeeingriff | offen |
+| 6 | `job_laeufe` in den Export | offen |

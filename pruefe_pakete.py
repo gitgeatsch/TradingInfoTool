@@ -2547,7 +2547,13 @@ def paket_b1() -> None:
 
     # DIE SCHUTZSCHALTER SIND WICHTIGER ALS DER DURCHLAUF.
     q = sqlite3.connect("data/tradinginfotool.db")
+    # ⚠️ WIE DIE PRODUKTION, MIT ZEILENFABRIK (16.08.2026). Ohne sie
+    # scheitert JEDER Leser, der `row["spalte"]` benutzt - und seit die
+    # Nutzerschalter zufallen statt aufzugehen, blockiert das den ganzen
+    # Lauf. `db.get_connection()` setzt sie; ein Test ohne sie prueft eine
+    # Verbindung, die es im Betrieb nicht gibt.
     con = sqlite3.connect(":memory:"); q.backup(con); q.close()
+    con.row_factory = sqlite3.Row
     for name, kw, mit_conn in (
             ("eine unbekannte Betriebsart", {"betriebsart": "halbscharf"}, True),
             ("probe ohne Modell-Client", {"betriebsart": "probe"}, True),
@@ -2674,6 +2680,22 @@ def paket_b1() -> None:
             d |= {"einstieg_eur": round(kk, 2), "stop_eur": round(kk - 2.5 * aa, 2)}
         return d
 
+    # ⚠️ DIE NUTZERSCHALTER MUESSEN GESETZT WERDEN (O-38, 16.08.2026).
+    #
+    # Bis heute uebersprang der Trockenlauf sie ganz, und dieser Test kam
+    # ohne aus. Seit sie auch trocken gelesen werden, faellt "ETH" durch:
+    # `get_hebel_pruefung_erlaubt` ist seit dem 15.08. OPT-IN, keine Zeile
+    # heisst AUS - also korrektes Produktionsverhalten, das der Trockenlauf
+    # bis heute verdeckt hat.
+    #
+    # NICHT DIE ZUSICHERUNG LOCKERN, SONDERN DEN FALL HERSTELLEN. Zum
+    # siebten Mal diese Woche derselbe Typ: die Eingabe erzeugte nicht die
+    # Lage, die sie pruefen wollte.
+    import database.db as _db_mod
+
+    _db_mod.set_hebel_pruefung_erlaubt(con, "ETH", True)
+    _db_mod.set_dca_erlaubt(con, "ETH", True)
+
     def _lauf(inst, aktion, richtung=None, sym="ETH"):
         ant = {"lagebild": antworten["lagebild"],
                "befund": {sym: _antwort(sym, aktion, richtung)}}
@@ -2686,6 +2708,27 @@ def paket_b1() -> None:
     pruefe(P, "ein Hebel-Lauf ebenfalls",
            len(_lauf("hebel", "ERÖFFNEN", "LONG")["mails"]) == 1,
            "vorher war er gar nicht moeglich")
+    # --- O-38: DER TROCKENLAUF SIEHT DIE NUTZERSTUFEN (16.08.2026) -----
+    #
+    # Er uebersprang die Schalter des Nutzers und die Anlass-Stufe ganz.
+    # Jeder Trockenlauf ueberschaetzte damit den Durchsatz - auch die, mit
+    # denen der Vollumstieg geprueft wurde.
+    _db_mod.set_hebel_pruefung_erlaubt(con, "ETH", False)
+    pruefe(P, "ein abgeschaltetes Asset erzeugt AUCH TROCKEN keine Mail",
+           len(_lauf("hebel", "ERÖFFNEN", "LONG")["mails"]) == 0,
+           "asset_schalter ist ein reiner Leser - es gab nie einen Grund, "
+           "ihn trocken zu ueberspringen, und der Nutzer hatte abgewaehlt")
+    _db_mod.set_hebel_pruefung_erlaubt(con, "ETH", True)
+
+    _vor_anlass = con.execute(
+        "SELECT COUNT(*) FROM anlass_beobachtung").fetchone()[0]
+    _lauf("spot", "KAUFEN")
+    pruefe(P, "aber er SCHREIBT dabei keine Anlass-Zeile",
+           con.execute("SELECT COUNT(*) FROM anlass_beobachtung"
+                       ).fetchone()[0] == _vor_anlass,
+           "ein Trockenlauf, der schreibt, veraendert die Grundlage des "
+           "naechsten scharfen Laufs - genau das soll er nicht")
+
     pruefe(P, "ein unvorgesehenes Paar bricht den Lauf ab - VOR der Schleife",
            _wirft(lambda: RL.fuehre_lauf(conn=con, reihen=reihen, symbole=[],
                                          betriebsart="trocken",
@@ -4307,9 +4350,27 @@ def paket_15() -> None:
     pruefe(P, "im SPOT bleibt er erlaubt", _e_spot is True,
            "Cash zu halten ist eine Lage, kein Fehler - nur hebeln kann man "
            "es nicht")
-    _e_btc, _ = AS.darf_analysiert_werden(
-        None, "BTC", "hebel", "einstieg", watchlist=_wl_test)
-    pruefe(P, "und ein normales Asset bleibt unberuehrt", _e_btc is True)
+    # ⚠️ MIT ECHTER VERBINDUNG (16.08.2026). Hier stand `None` - und seit
+    # die Nutzerschalter bei einem Lesefehler ZUFALLEN statt aufzugehen,
+    # ist "keine Datenbank" korrekterweise ein Nein. Diese Pruefung meint
+    # aber die CASH-Regel; sie braucht deshalb einen Bestand, in dem der
+    # Schalter tatsaechlich beantwortbar ist.
+    _mem_sch = sqlite3.connect(":memory:")
+    _mem_sch.row_factory = sqlite3.Row
+    _db_sch = __import__("database.db", fromlist=["db"])
+    _db_sch.init_db(_mem_sch)
+    _db_sch.set_hebel_pruefung_erlaubt(_mem_sch, "BTC", True)
+    _e_btc, _g_btc = AS.darf_analysiert_werden(
+        _mem_sch, "BTC", "hebel", "einstieg", watchlist=_wl_test)
+    pruefe(P, "und ein normales Asset bleibt unberuehrt", _e_btc is True,
+           f"{_g_btc!r}")
+    pruefe(P, "OHNE lesbare Schalter wird NICHT beurteilt",
+           AS.darf_analysiert_werden(
+               None, "BTC", "hebel", "einstieg",
+               watchlist=_wl_test)[0] is False,
+           "wer nicht lesen kann, was der Nutzer will, darf es nicht "
+           "annehmen - vorher lief das Asset bei jedem Lesefehler durch")
+    _mem_sch.close()
     # DIE VERDRAHTUNG - `_ein_asset` sieht `_wl` NICHT von selbst. Genau diese
     # Falle hat am 14.08. `VK` erwischt: eine Variable aus `fuehre_lauf`, der
     # breite Fehlerfang schluckt den NameError, und JEDES Symbol landet im

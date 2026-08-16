@@ -4252,6 +4252,44 @@ def update_signal_zai_gegenpruefung(
 #   3. NACHVOLLZIEHBARKEIT: was das Modell damals sah, laesst sich spaeter
 #      nur nachlesen, wenn es jemand aufgeschrieben hat. Genau daran ist die
 #      Bewertung der Signale vom 14.08. gescheitert.
+# Woher die Finanzierungsrate stammt - Kraken, seit dem 16.08. auch so
+# beschriftet. Die Reihenfolge ist der UEBERGANG: rund 40.000 Altzeilen tragen
+# den Wert noch unter den drei Boersenetiketten. Faellt die kraken-Reihe zu
+# kurz aus, wird dort nachgesehen.
+FUNDING_QUELLEN = ("kraken", "binance")
+FUNDING_MINDESTREIHE = 30
+
+
+def lies_funding_reihe(conn: sqlite3.Connection, symbol: str,
+                       grenze: int = 400) -> list:
+    """Die Finanzierungsrate eines Symbols - ABSTEIGEND, juengste zuerst.
+
+    EINE DEFINITION FUER ALLE LESER. Vor dem 16.08. las jeder Aufrufer selbst
+    `WHERE exchange = 'binance'`, weil dort derselbe Kraken-Wert lag wie in
+    allen anderen Zeilen. Seit die Etiketten stimmen, gibt es genau eine
+    Stelle, die weiss, wo der Wert steht - sonst waere der Uebergang drei
+    Uebergaenge, und einer davon wuerde vergessen.
+
+    ⚠️ DER RUECKFALL IST BEFRISTET. Sobald die kraken-Reihe lang genug ist
+    (bei einem 15-Minuten-Takt nach gut acht Stunden), greift er nicht mehr.
+    Wer ihn in ein paar Wochen entfernt, aendert nichts am Verhalten."""
+    for quelle in FUNDING_QUELLEN:
+        try:
+            zeilen = [r[0] for r in conn.execute(
+                "SELECT funding_rate FROM open_interest_snapshot "
+                "WHERE symbol = ? AND exchange = ? AND funding_rate IS NOT NULL "
+                "ORDER BY fetched_at DESC LIMIT ?",
+                (str(symbol).upper(), quelle, int(grenze)))]
+        except sqlite3.Error as exc:
+            logger.info("Funding %s/%s nicht lesbar: %s", symbol, quelle, exc)
+            continue
+        if len(zeilen) >= FUNDING_MINDESTREIHE:
+            return zeilen
+        if zeilen and quelle == FUNDING_QUELLEN[-1]:
+            return zeilen
+    return []
+
+
 def schreibe_externe_reihe(conn: sqlite3.Connection, quelle: str,
                            schluessel: str, punkte: list) -> int:
     """`punkte` sind (datum, wert)-Paare. Gibt die Zahl der Zeilen zurueck.
