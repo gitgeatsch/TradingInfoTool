@@ -1711,3 +1711,59 @@ VIX stand am 08.08. bei 14,9 („ruhig"). Das ist beabsichtigt.
 - [SQN und Mindest-Stichprobengröße, JournalPlus](https://journalplus.co/metrics/system-quality-number/)
 - [Crypto CFD vs. Spot — Gebühren und Eigentum, Volity](https://volity.io/crypto/crypto-cfd-vs-crypto-spot/)
 - [Versteckte Kosten von Krypto-Hebel, YieldFund](https://yieldfund.com/leverage-trading-in-crypto-what-are-the-hidden-costs/)
+
+---
+
+## 8c. Offene Punkte — Stand 17.08.2026 (LLM-Ebene)
+
+**Abschnitt 8 und 8b bleiben stehen.** Sie tragen die Begründungen; hier steht,
+was von der LLM-Ebene nach dem Umbau vom 15.–17.08. offen ist. Diese Liste ist
+**die** Liste — Umbauplan Kapitel 40 und 42.5 verweisen hierher, statt sie zu
+verdoppeln.
+
+### Vor dem nächsten Produktivgang
+
+| # | offen | Klasse | wo |
+|---|---|---|---|
+| L-1 | **Rolle G erreicht ihre Mindestgrundlage nicht** — eine Quelle statt zwei (R-R3, G1) | dokumentiert, nicht behoben | Regelwerksmanual R-R3 |
+| L-2 | **Rolle G ist krypto-only** — 12 von 56 Assets ohne jede Gegenprüfung | offen | Umbauplan 40.1 |
+| L-3 | **Auslöser fehlt bei Rolle BC** (CSTI-T) — der Anlass ist die Uhr | offen, **nicht** als Prompt-Parameter lösbar | Umbauplan 42.5 |
+
+### Rolle G je Assetklasse — Quellen sind gebaut, nicht verdrahtet
+
+| Klasse | Quelle 1 | Quelle 2 | Hindernis |
+|---|---|---|---|
+| Rohstoffe | CFTC COT (4 Symbole gemappt) | EIA | **COT wird nicht persistiert** — Live-Abruf je Signal wäre eine neue Abhängigkeit im 34-s-Fenster |
+| Aktien | FINRA Short Interest | SEC Form 4 | Historie je Symbol für Perzentile ungeprüft |
+| ETF / Absicherung | COT auf Index-Futures | Nachrichten | **Marktnamen unverifiziert** |
+| Krypto | Binance OI/Funding/Long ✓ | fehlt — zweite Terminbörse | Deribit ist global, nicht symbolspezifisch |
+
+### Rolle BC — Lücken je Korb
+
+| Korb | fehlt | Klasse |
+|---|---|---|
+| Krypto Hebel | Kostenhöhe · Haltedauer | **rot / gelb** |
+| Aktien | **Termine · Fundamentaldaten** · Handelszeiten | grün/gelb — Daten in `api/yfinance_client.py`, **keiner Rolle zugeordnet** |
+| Rohstoffe | Volumen · Zertifikatsnatur · Basiswert · Emittent | eigener Rechercheschritt |
+| Themen-ETF | TER · Spread | gelb |
+| alle | Handelbarkeit und Spread | **gelb** — der nächste Verwandte hat ERÖFFNEN von 93 auf 3 % gedrückt |
+
+### Rolle A
+
+| # | offen | Klasse |
+|---|---|---|
+| A-5 | Stimmung über BTC hinaus — **VIX liegt vor, aber nur ein Wert in der Historie** | grün, blockiert durch Datenlage |
+| A-6 | Makro-Terminkalender (FOMC, CPI) | grün, **keine Quelle** |
+
+### Erst nach der ersten Blockmessung
+
+| # | | warum |
+|---|---|---|
+| K-2 | `struktur` ↔ `marken` zusammenlegen | beide lesen dieselben Swing-Punkte, sagen aber Verschiedenes. Ob sie sich gegenseitig ersetzen, entscheidet `messe_begruendungen.py` — nicht eine Vermutung |
+
+### Dokumentation
+
+| # | offen |
+|---|---|
+| D-1 | **Die drei `.docx`-Pendants sind vom 02.08.** — `Fakten_Entscheidungsmappe`, `Regelwerksmanual`, `Test_und_Verifikationsmethodik` liegen als `.md` auf dem 17.08. Zwei Wochen Rückstand, nicht heute entstanden |
+| D-2 | `Regler_Signal_Pipeline_Abhaengigkeiten.md` **kennt die Rollen-Kette nicht** — kein Treffer für `lagebeschreibung`, `rollen_eingabe`, Rolle A/BC. Die Regel „vor jeder Prompt-Änderung prüfen" läuft dort ins Leere |

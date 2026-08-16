@@ -16451,3 +16451,131 @@ Aufruf, und die Stufe mit dem größten Verlust liegt danach.
 ### Alle 22 neuen Module haben einen Betriebsaufrufer
 
 Erstmals seit Beginn des Umbaus. Am 13.08. waren es null von 15.
+
+---
+
+## Nachtrag (2026-08-15 bis 17): Vollumstieg, Rolle G, Phase I, Aufnahmekriterium
+
+**Thema:** Rollenzuordnung · Informationsgrenze · Redundanz · Aufnahmekriterium ·
+Dokumentationsstruktur
+
+> ⚠️ **Dieser Nachtrag holt drei Tage nach.** Der letzte Eintrag stammt vom
+> 14.08.; alles seither stand nur im Umbauplan und in Code-Kommentaren. Die
+> Landkarte verlangt einen Eintrag **nach jedem Fix und jeder Messung** — das
+> ist hier nicht geschehen und wird mit diesem Nachtrag korrigiert.
+
+### 15.08. — Vollumstieg auf sechs Gruppen
+
+Trennlinie *„System bemisst den Trade, Nutzer das Portfolio"*. Drei Funde: der
+Schnitt griff nur halb, Gruppen-Cooldowns waren toter Code, WAL-Dateien waren
+eingecheckt. Paket 14 (Absicherung mit eigenem Faktenblock) gebaut.
+
+### 16.08. früh — Phase II: Z.ai wird eine zweite QUELLE
+
+**Der Richtungsabgleich ist stillgelegt.** Vier unabhängige Gründe:
+
+| | |
+|---|---|
+| keine eigene Quelle | *Homogeneous Debate* — gleiche Informationsgrenze |
+| er unterschied nicht | 2.469 Prüfungen: SHORT 1.246, NEUTRAL 1.206, **LONG 17** |
+| Zustimmung trennte nicht | 0 von 7 Treffern gegen 17,2 % bei Abweichung |
+| gemessene Güte = Marktrichtung | im Bärenregime immer SHORT zu sagen ist keine Leistung |
+
+An seine Stelle tritt die Positionierung am Terminmarkt (`agent/positionierung.py`):
+offene Kontrakte, Finanzierungsrate als Perzentil, Anteil der Long-Konten. Ein
+Aufruf statt vier.
+
+**Verworfen:** die Konsistenzprüfung als Ersatz. Nutzer: *„das brauche ich nicht
+— war nie meine Anforderung."*
+
+### 16.08. mittags — Rolle G in Betrieb
+
+44 Krypto-Assets, davon **35 mit voller Positionierung, 7 ohne jede** → dort wird
+nicht gefragt. Regime mit Dauer als vierter Anhaltspunkt ergänzt.
+
+**Zwei eigene Fehler beim Regime:** erst eine Tabelle `regime_status` abgefragt,
+die es nicht gibt; dann Regime und Dauer gemeinsam gefangen, sodass *„Regime
+baer"* und *„keine Angabe zum Marktregime"* nebeneinander standen.
+
+**Bestätigung auch ohne Einwand** — Nutzervorgabe. Die R-T6-Sorge ist anders
+gelöst: die Bestätigung **nennt die Zahlen**, auf die sie sich stützt.
+
+### 16.08. nachmittags — Phase I, vier grüne Ergänzungen, EIN Prompt-Stand
+
+`PROMPT_STAND` 2026-08-12 → 2026-08-16.
+
+| | | Rolle |
+|---|---|---|
+| 1 | Liquidationsabstand je Grenzhebel, in Prozent **und** Schwankungsbreiten | BC |
+| 2 | Finanzierung **nur noch** beim Hebel — bei Spot zitiert in 63 % der Urteile für eine Zahlung, die dort nicht anfällt | BC |
+| 3 | Fehlende Angaben werden benannt (8 von 56 Assets) | BC |
+| 4 | Sektorbezug für Themen-ETF, kausal am Ankertag | BC |
+
+**Nicht gebaut: Regime/Persistenz für Rolle A** — Rolle G hat beides, und ein
+Parameter gehört zu genau einem Modell.
+
+**Drei Funde beim Verdrahten, alle durch RENDERN statt Lesen:**
+* der Sektorbezug hätte nie gegriffen — `etf` statt `themen_etf`
+* dieselbe Verwechslung seit dem 12.08. in der Klassen-Einstufung: **zwei von
+  fünf Gruppen** bekamen die Leitmarkt-Einstufung nie
+* die Mail rechnete die Blöcke ein zweites Mal, mit dem ATR in **EUR** statt in
+  der Quellwährung — sie zeigte andere Schwankungsbreiten als das Modell las
+
+### 16.08. abends — die Regime-Dauer kam im Betrieb nie an
+
+`regime_persistenz_tage()` braucht `conn.row_factory = sqlite3.Row`; `rolle_g`
+öffnet eine gewöhnliche Verbindung. Der `TypeError` verschwand im breiten
+`except`. **Ohne Dauer ist das Regime ein konstantes Feld (R-T6)** — genau der
+Schaden, gegen den es eingebaut wurde. Zeilenfabrik geliehen statt übernommen.
+
+### 16.08. spät — das Aufnahmekriterium (Umbauplan 41)
+
+Nutzervorgabe: *„nicht weil ihn eine Quelle liefert."* Sieben Prüfungen,
+billigster Ausschlussgrund zuerst; P2 mit den Rängen **gemessen > Praxis >
+Vermutung**; Budget je Rolle, weil Aufnehmen Aufmerksamkeit verdrängt.
+
+**Recherche bestätigt und korrigiert:**
+* die Konstruktionsbedingung ist ein Satz — bei identischen Eingaben bildet die
+  Debatte ein **Martingal**, LLM-Fehler korrelieren zu über 60 %
+* **Nachrichten und Fundamentaldaten** sind laut Ablationsstudie die tragenden
+  Quellen — unsere größte Lücke stand ganz hinten im Plan
+* COT trägt **nur am Extremwert** → gehört als Perzentil in den Prompt
+* Deribit ist BTC als marktweites Barometer, innerhalb Krypto für jeden Coin
+  derselbe Satz — keine symbolspezifische Quelle
+
+### 17.08. — Klasse 1 und die Rollennamen
+
+**Die 60-Tage-Bewegung stand in zwei Blöcken**, bitgleich gerechnet: `struktur`
+und `bewegung`, **42 von 42 Reihen identisch**. Zwei Schäden — eine doppelt
+genannte Zahl wiegt schwerer (R-T9 über Wiederholung statt Position), und ein
+Beleg, der sie zitiert, war **keinem Block zuordenbar**; die Blockmessung lief
+durch genau den Fehler, den sie messen sollte.
+
+Gelöst durch Zusammenlegen zu `verlauf`, nicht durch Löschen — die Nachbarschaft
+von Strukturaussage und 60-Tage-Zahl war der Fix vom 11.08. (ETH-Fall).
+
+**Rolle A, derselbe Fehler bedingt:** der Abstand zum Hoch fällt mit dem
+250-Tage-Trend zusammen, wenn das Hoch am Fensteranfang liegt. Nicht gestrichen,
+sondern aufgewertet: der Satz nennt jetzt, **wann** Hoch und Tief lagen.
+
+**Z.ai heißt ab jetzt Rolle G.** „Rolle C" war doppelt vergeben — das C in
+„Rolle BC" ist der Entscheider in LLM1.
+
+**Verworfen: den Auslöser in den BC-Prompt zu geben.** Der Kontra-Zweig des
+Screenings besteht aus Funding-Extremwert, Long-Konten-Anteil und
+RSI-Wendeanzeichen — **das ist Rolle G's Datengrundlage, vorverdichtet zu einem
+Score.** BC bekäme damit ihre Belege in komprimierter Form, und Rolle G könnte
+nicht mehr unabhängig widersprechen. Der Auslöser bleibt eine **Bedingung vor
+dem Aufruf**, kein Prompt-Parameter — das war in Umbauplan 36.2 eine
+organisatorische Setzung und ist jetzt eine begründete.
+
+### 17.08. — Dokumentationsstruktur, auf Nutzerfrage geprüft
+
+**Befund: es gab zwei Rollendokumente, und das ältere galt als Zielbild.**
+`Rollenkonzept_Entwurf_10_08.md` ordnet Funding, OI-Squeeze und Long/Short der
+**Rolle B** zu, kennt keine zweite Stufe, führt die Marktbreite als Bauaufgabe
+und lässt Rolle A einen Betrag deckeln — vier Punkte, die nicht mehr gelten. Es
+trägt jetzt einen Standvermerk und bleibt als Begründungsquelle stehen; die
+Einleitung des Umbauplans, die es zum Zielbild erklärte, ist korrigiert.
+
+**Verbindlich für WER urteilt ist ab sofort `Regelwerksmanual.md` R-R1…R-R5.**

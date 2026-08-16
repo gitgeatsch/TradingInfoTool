@@ -144,3 +144,20 @@ Verwandte Dokumente: `Fakten_Entscheidungsmappe.md` (Frage-1-4-Raster für
 einzelne Fakten, komplementär zu dieser stufenübergreifenden Sicht),
 `Test_und_Verifikationsmethodik.md` (Statistik-Standards für jede Messung,
 die von diesen Abhängigkeiten betroffen ist).
+
+---
+
+> ## ⚠️ STANDVERMERK 17.08.2026 — diese Matrix kennt die Rollen-Kette NICHT
+>
+> Geprüft auf Nutzerfrage: kein einziger Treffer für `lagebeschreibung`,
+> `rollen_eingabe`, `rolle_analyst`, `rolle_trader` oder `Rolle A`/`Rolle BC`.
+> Sie beschreibt die **alte** Kette.
+>
+> Die Landkarte verlangt, diese Datei *„vor jeder Regler- oder
+> Prompt-Änderung“* zu prüfen. Für die Rollen-Kette läuft das ins Leere —
+> **das ist keine Entwarnung, sondern eine Lücke** (offener Punkt D-2 in
+> `Zwischenstand_Gesamtprojekt_06_08.md`, Abschnitt 8c).
+>
+> Bis sie nachgezogen ist, tragen `pruefe_pakete.py` (853 Prüfungen) und
+> `finde_freie_namen.py` diese Rolle für die neue Kette — statisch, nicht als
+> Abhängigkeitskarte.

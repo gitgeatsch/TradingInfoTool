@@ -1,9 +1,18 @@
 # Umbauplan Gesamtsystem — von der Rollen-Ebene zur Empfehlung (12.08.2026)
 
-*Der Masterplan für den Umbau. Er löst `Rollenkonzept_Entwurf_10_08.md` nicht
-ab, sondern setzt darauf auf: das Rollenkonzept sagt, WER urteilt; dieser Plan
-sagt, WAS jede Rolle bekommt, was sie liefert, und wie daraus eine Empfehlung
-für den Nutzer wird.*
+*Der Masterplan für den Umbau: WAS jede Rolle bekommt, was sie liefert, und
+wie daraus eine Empfehlung für den Nutzer wird.*
+
+> ⚠️ **Korrigiert am 17.08.2026.** Hier stand, dieser Plan löse
+> `Rollenkonzept_Entwurf_10_08.md` *„nicht ab, sondern setze darauf auf: das
+> Rollenkonzept sagt, WER urteilt"*. Das galt am 12.08. und gilt nicht mehr —
+> jenes Dokument ordnet Funding, OI-Squeeze und Long/Short der **Rolle B** zu
+> und kennt keine zweite Stufe. Genau diese Zuordnung wurde am 16.08.
+> rückgängig gemacht.
+>
+> **WER urteilt, steht seit dem 17.08. verbindlich im `Regelwerksmanual.md`,
+> Abschnitt R-R1 bis R-R5.** Das Rollenkonzept trägt einen Standvermerk und
+> bleibt als Begründungsquelle stehen.
 
 ---
 

@@ -1,5 +1,38 @@
 # Rollenkonzept — Ein- und Ausgang je Rolle (ENTWURF, 2026-08-10)
 
+> ## ⚠️ STANDVERMERK 17.08.2026 — dieses Dokument ist ÜBERHOLT
+>
+> **Der Text unten bleibt vollständig stehen.** Seine Begründungen sind der
+> wertvollere Teil, und mehrere davon gelten unverändert — allen voran die
+> Grundregel *„kein Block erscheint bei zwei Rollen"*, die inzwischen als
+> **Konstruktionsbedingung** im Regelwerksmanual steht (R-R2).
+>
+> **Er beschreibt aber nicht mehr, WER urteilt.** Der Umbauplan sagt in seiner
+> Einleitung, er löse dieses Dokument *„nicht ab, sondern setze darauf auf"* —
+> das galt am 12.08. und gilt für die Rollenzuordnung **nicht mehr.**
+>
+> **VERBINDLICH IST SEIT 17.08.: `Regelwerksmanual.md`, Abschnitt R-R1 bis R-R5.**
+>
+> | unten steht | gilt heute | seit |
+> |---|---|---|
+> | Rolle A gibt `max_tranche_eur` aus und deckelt den Entscheider | **abgeschafft** — Rolle A nennt keinen Betrag; er folgt aus der Zahl unabhängiger Faktoren | 10.08. |
+> | **Marktbreite** fehlt und muss gebaut werden (Bauliste Nr. 1) | **ersatzlos gestrichen** — Subjekt falsch, Bezugskorb wandert, Richtung gemessen **invers** | 12.08. |
+> | Rolle B bekommt `antizyklisch.*` — Funding, OI-Squeeze, Long/Short | **falsch und heute schädlich.** Genau diese Fakten sind seit dem 16.08. **exklusiv Rolle G**. In Rolle BC wären sie die Verletzung der Konstruktionsbedingung — zwei Prüfer mit derselben Informationsgrenze bilden ein Martingal | 16.08. |
+> | „Rolle B" als eigene Rolle neben „Rolle BC" | es gibt **A** und **BC**; B und C liegen seit dem 10.08. in einem Aufruf | 10.08. |
+> | LLM2 kommt nicht vor | es gibt **Rolle G — Gegenprüfer**, mit eigener Informationsgrundlage und eigener Mindestgrundlage (R-R3) | 16./17.08. |
+> | Ausgabe `neigung`, `lage_text` | heute `lage`, `klassen`, `belege` | 12.08. |
+>
+> **Wer aus diesem Dokument baut, ohne den Standvermerk zu lesen, baut den
+> Homogeneous-Debate-Fehler nach** — es ist genau die Zuordnung, die am 16.08.
+> rückgängig gemacht wurde.
+>
+> Aktueller Stand: `Regelwerksmanual.md` R-R1…R-R5 (Regeln) ·
+> `Umbauplan_Gesamtsystem_12_08.md` Kapitel 41–42 (Basis-Sets und
+> Aufnahmekriterium) · `Fakten_Entscheidungsmappe.md` (welcher Fakt zu wem).
+
+---
+
+
 **Status: Entwurf zur Abstimmung.** Nichts davon ist gebaut. Wird erst nach
 Freigabe umgesetzt und dann in `Fakten_Entscheidungsmappe.md` überführt.
 
