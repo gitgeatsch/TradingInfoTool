@@ -5374,24 +5374,26 @@ def paket_15() -> None:
         _mem.execute("INSERT INTO hebel_signals VALUES "
                      "('baer', 'regelbasiert', ?)", (f"{_t} 09:00:00",))
     _lage5 = PO5.lage(_mem, "TST")
-    pruefe(P, "Rolle G bekommt die Regime-DAUER, nicht nur das Regime",
-           _lage5.get("regime") == "baer"
-           and isinstance(_lage5.get("regime_tage"), int)
-           and _lage5["regime_tage"] >= 3,
-           "ohne Dauer ist 'Regime baer' ueber alle Signale eines Tages "
-           "identisch - ein konstantes Feld (R-T6), und damit genau das, "
-           "wogegen es eingebaut wurde")
-    pruefe(P, "und die Verbindung des Aufrufers bleibt, wie sie war",
+    # ⚠️ HIER STANDEN ZWEI PRUEFUNGEN, DIE DAS MARKTREGIME VERLANGTEN.
+    # Herausgenommen am 16.08. abends - sie sicherten etwas ab, das gegen vier
+    # eigene Regeln verstiess (R-T2 Etikett, R-T3 Werturteil, R-T6 konstant,
+    # P3 aus unseren eigenen Daten gerechnet). Der Nutzer hat es an einer
+    # echten Mail gesehen: das Modell gab den Regimesatz WOERTLICH als Einwand
+    # zurueck, waehrend jeder echte Positionierungsfakt "im gewohnten Bereich"
+    # sagte.
+    #
+    # AUS DER ZUSICHERUNG WIRD EINE GEGENWACHE. Eine geloeschte Pruefung
+    # verhindert nichts; diese hier schlaegt an, wenn das Regime je
+    # zurueckkommt - und `finde_konstanten` traegt den Fall seit Wochen im
+    # Docstring, ohne dass es genuetzt haette.
+    pruefe(P, "das Marktregime erreicht Rolle G NICHT mehr",
+           "regime" not in _lage5
+           and not any("Regime" in s for s in PO5.saetze(_lage5)),
+           "2.549 von 2.549 Signalen trugen 'baer' - eine Konstante mit "
+           "Richtungsaussage schiebt JEDE Antwort in dieselbe Richtung")
+    pruefe(P, "und die Zeilenfabrik des Aufrufers bleibt unberuehrt",
            _mem.row_factory is None,
-           "die Zeilenfabrik wird geliehen, nicht uebernommen - `conn` kann "
-           "dem Aufrufer gehoeren")
-    # NICHT `[-1]` - die Saetze ueber FEHLENDE Angaben stehen hinter dem
-    # Regime, und in dieser Testverbindung fehlt der Terminmarkt ganz. Meine
-    # erste Fassung nahm den letzten Satz und pruefte damit die falsche Zeile.
-    _reg5 = next((s for s in PO5.saetze(_lage5) if "Regime" in s), "")
-    pruefe(P, "die Dauer steht auch im Satz",
-           "seit" in _reg5 and "Tagen" in _reg5,
-           "der Wert im dict nuetzt nichts, wenn der Satz ihn nicht traegt")
+           "wird hier wieder etwas geliehen, muss es zurueckgegeben werden")
 
     # --- DER BOERSENFLUSS (16.08.2026, Schritt 2) ---------------------
     #

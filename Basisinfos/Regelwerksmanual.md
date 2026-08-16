@@ -3407,6 +3407,23 @@ schlimmer als keiner.
 Selbsttest) — abgegrenzt gegen `pruefe_fakten_bezugsgroessen.py`, das dieselbe
 Frage auf **JSON-Feldern** der alten Pipelines stellt, nicht auf Sätzen.
 
+**R-T12 — kein Etikett in die Gegenprüfung (neu 2026-08-16 abends).** Ein
+fertiges Urteil, das wir selbst gerechnet haben, darf nicht als Fakt in eine
+Rolle, die urteilen soll. Anlass: das Marktregime stand in Rolle G, war in
+**2.549 von 2.549** Signalen `'baer'`, und das Modell gab den Satz **wörtlich
+als Einwand** zurück, während jeder echte Positionierungsfakt „im gewohnten
+Bereich" sagte.
+
+> **Die Wächter konnten es nicht sehen.** `enthaelt_werturteile` und
+> `finde_konstanten` prüfen **Feldnamen in einem dict**; Rolle G bekommt
+> **Sätze**. Dieselbe Lücke wie zwischen `pruefe_fakten_bezugsgroessen` und
+> `pruefe_zahlen_in_prompts` — deshalb prüft letzteres jetzt auch **N4
+> (Etikett)** und **N5 (über alle Symbole wortgleich)**.
+
+**Der Fall war aktenkundig:** `finde_konstanten` nennt ihn im eigenen
+Docstring — *„`regime` war auf allen 1.022 Fällen 'baer' … kam deshalb 1 von
+1.022 Mal auf LONG"*. Derselbe Feldname, dieselbe Rolle, Wochen später erneut.
+
 **Vor jedem Lauf, ohne Modellaufruf:** Werturteil-Wächter
 (`enthaelt_werturteile`), Konstanten-Wächter (`finde_konstanten`),
 Kausalitätsprobe (Beschreibung aus voller Reihe gegen abgeschnittene, bitgleich).

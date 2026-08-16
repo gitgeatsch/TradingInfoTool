@@ -7561,3 +7561,192 @@ G1 und G2 aus einer Hand. Bei Krypto trägt G2 allein der Terminmarkt.
 | 2 | zweite Art für Rohstoffe | EIA deckt nur Erdgas, braucht einen Schlüssel |
 | 3 | Themen-ETF und Absicherung | **keine kostenlose Quelle bekannt** (Kap. 57) |
 | 4 | `funding_rate`/`long_account_pct` unter fremdem Börsenetikett | Kap. 56.8 |
+
+---
+
+## Kapitel 61 — Das Regime raus, der Anker je Gruppe, und warum kein Wächter angeschlagen hat (16.08.2026 abends)
+
+### 61.1 Der Fund kam aus einer Mail, nicht aus einer Messung
+
+**Nutzerfrage:** *„warum haben wir das Regime hier angeführt — haben wir damit
+nicht bereits eine LLM-Bewertung auf nur eine Seite gezwungen?"*
+
+**Die Antwort stand in seiner eigenen Signalmail vom 17:39:**
+
+```
+EINWAND - die Positionierung spricht dagegen: Der Gesamtmarkt steht
+im Regime 'baer', seit 27 Tagen ununterbrochen.
+```
+
+**Das Modell griff aus sechs Faktensätzen genau den EINEN heraus, der ein
+Urteil enthält, und gab ihn als Begründung zurück** — während jeder echte
+Positionierungsfakt daneben *„im gewohnten Bereich"* sagte. Die Gegenprüfung
+stand damit nicht auf der Positionierung, sondern auf einem Etikett, das wir
+selbst gerechnet und selbst hineingelegt hatten.
+
+**Nachgezählt am Produktionsbestand:**
+
+| Tabelle | Zeilen mit Regime | verschiedene Werte |
+|---|---:|---:|
+| `signals` | 2.549 | **1** (`baer`) |
+| `hebel_signals` | 1.819 | **1** (`baer`) |
+
+**Vier eigene Regeln auf einmal verletzt:**
+
+| | |
+|---|---|
+| **R-T2** | ein Etikett statt eines beschriebenen Sachverhalts |
+| **R-T3** | ein Werturteil, dem Prüfer fertig hingelegt |
+| **R-T6** | ein konstantes Feld |
+| **P3** | aus BTC-Kurs und Fear & Greed gerechnet — beides sieht Rolle A bereits; **unsere** Ableitung, keine fremde Information |
+
+**Und die ursprüngliche Begründung war längst entfallen.** Sie stand wörtlich
+im Modulkopf: das Regime sei nötig, *„weil sie sonst nur eine Quelle hätte"*.
+Seit heute hat Krypto Terminmarkt **und** On-Chain, Aktien Leerverkäufer
+**und** Insider. **Der Grund war weg, das Feld war geblieben.**
+
+### 61.2 Der Fehler ist aktenkundig — seit Wochen
+
+`szenario_fakten.finde_konstanten` trägt ihn im Docstring:
+
+> `regime` war auf allen 1.022 Fällen „baer" — der Gegenprüfer las eine
+> Konstante mit Richtungsaussage und kam deshalb **1 von 1.022 Mal** auf LONG.
+
+**Derselbe Feldname, dieselbe Wirkung, dieselbe Rolle.** Ich habe ihn am
+16.08. wieder eingebaut.
+
+**Warum kein Wächter angeschlagen hat:** `enthaelt_werturteile` und
+`finde_konstanten` prüfen **Feldnamen in einem dict**. Rolle G bekommt
+**Sätze**. Der Wächter konnte es strukturell nicht sehen.
+
+> **Dieselbe Lücke wie heute Vormittag zwischen
+> `pruefe_fakten_bezugsgroessen` (Felder) und `pruefe_zahlen_in_prompts`
+> (Sätze) — zum zweiten Mal an einem Tag, und beim zweiten Mal hat sie
+> gekostet.**
+
+### 61.3 Der Prüfauftrag, nachgeschärft
+
+`pruefe_zahlen_in_prompts.py` prüft jetzt fünf Formen statt drei:
+
+| | | |
+|---|---|---|
+| N1 | Rechenaufgabe | zwei Werte UND ihr Abstand (R-T10) |
+| N2 | ungedeckte Zahl | kein Fenster, kein Bezug (R-T1/R-T5) |
+| N3 | ohne Einordnung | Perzentil ohne Wort dazu (R-T11) |
+| **N4** | **Etikett** | **ein fertiges Urteil (R-T2/R-T3)** |
+| **N5** | **Konstante** | **bei fast jedem Symbol wortgleich (R-T6)** |
+
+**Der Selbsttest trägt den echten Mailsatz als Positivprobe** — und einen
+beschriebenen Sachverhalt derselben Art als Gegenprobe, damit N4 nicht jede
+Richtungsangabe meldet. **9 von 9.**
+
+> ⚠️ **Und der Prüfer hatte selbst eine Lücke:** er rief `lage()` **ohne
+> Assetklasse** auf und sah damit nur den Terminmarkt — ausgerechnet die
+> Sätze, die heute dazugekommen sind, waren unsichtbar. Behoben; er rendert
+> jetzt je Gruppe.
+
+### 61.4 Was N5 sofort gefunden hat — und was es bedeutet
+
+```
+12/12  [G/krypto] Am 2026-08-15 flossen mehr Bitcoin auf die Boersen
+                  als von ihnen herunter.
+```
+
+**Der Börsenfluss aus Schritt 2 ist über alle Kryptosymbole wortgleich** — er
+ist BTC-weit. Damit teilt er eine Eigenschaft mit dem Regime, das gerade
+entfernt wurde.
+
+**Der Unterschied, und er ist real, aber schmaler als mir lieb ist:**
+
+| | Regime | Börsenfluss |
+|---|---|---|
+| Herkunft | **unsere** Ableitung | fremde Messung (CoinMetrics) |
+| Form | **Etikett** (`'baer'`) | beschriebener Vorgang |
+| Deutung im Satz | Richtung eingebaut | **keine** |
+| über Symbole | konstant | konstant |
+
+**Offen zur Entscheidung, nicht eigenmächtig geändert.** Die gängige Lesart
+„Zuflüsse = Verkaufsdruck" steht nicht im Satz, kann aber im Modell entstehen —
+und dann schiebt sie jedes Kryptourteil in dieselbe Richtung.
+
+### 61.5 Die drei Formulierungen aus der Mail
+
+| vorher | nachher |
+|---|---|
+| `um 0.0 % gefallen` | `praktisch unveraendert geblieben` |
+| `67 % der Konten stehen long; das ist das 0. Perzentil - aussergewoehnlich wenige` | `Der Anteil der Konten auf der Kaufseite steht im 82. Perzentil … - im gewohnten Bereich` |
+| `uneinheitlich` bei Spanne im **7. Perzentil** | `weitgehend gleichlaeufig`, sobald das Perzentil unten liegt |
+
+**Alle drei sagten mehr, als der Messwert hergab** — eine Richtung bei null,
+eine rohe Zahl neben ihrer eigenen Widerlegung, ein Wort gegen sein Perzentil.
+
+### 61.6 Der Ankertag — vier von sechs Gruppen standen still
+
+**Aus dem NB-Export vom 16.08., nach dem Neustart um 17:15:**
+
+| Gruppe | Ankertag | fakten (bestanden, verloren) | Signale |
+|---|---|---|---:|
+| krypto/hebel | 2026-08-16 | 41, 0 | **16** |
+| krypto/spot | 2026-08-16 | 13, 0 | 1 |
+| aktien/spot | 2026-08-16 | **0, 2** | 0 |
+| hedge | 2026-08-16 | **0, 2** | 0 |
+| rohstoffe | 2026-08-16 | **0, 4** | 0 |
+| themen_etf | 2026-08-16 | **0, 5** | 0 |
+
+**Der 16.08. war ein Samstag.** Krypto handelt durchgehend, die Börsen nicht.
+
+**Die Ursache:** `rollen_job` übergibt **alle** Kursreihen — Lagebild und
+Gleichlauf brauchen sie, denn sie beschreiben den gesamten Markt. `symbole`
+ist dagegen auf die Gruppe gefiltert. **Der Ankertag wurde über alle sechzig
+gerechnet:** 41 Kryptoreihen mit Samstagskerze sind 68 % und reißen die
+60-%-Schranke — also ankerte auch der Aktienlauf auf einem Tag, an dem keine
+seiner Reihen einen Kurs hat.
+
+> **Der Docstring von `_ankertag` beschreibt genau diesen Fehler, eine Ebene
+> tiefer:** *„EIN einziges Symbol setzt den Anker für alle."* Dass er auch
+> zwischen **Assetklassen** auftritt, ist niemandem aufgefallen, weil `reihen`
+> ungefiltert durchgereicht wird.
+
+**Behoben chirurgisch:** nur `_ankertag` rechnet über die Reihen der Gruppe;
+Lagebild und Gleichlauf bekommen weiterhin alle.
+
+**Nachgestellt und belegt** — die Zahlen decken sich Zeile für Zeile mit dem
+Produktionslog:
+
+| Gruppe | Anker alt | Anker neu | ALT hätte verloren | Log |
+|---|---|---|---|---|
+| aktien | 16.08. | **14.08.** | 2 von 2 | `(0, 2)` ✓ |
+| hedge | 16.08. | **14.08.** | 2 von 2 | `(0, 2)` ✓ |
+| rohstoffe | 16.08. | **14.08.** | 4 von 4 | `(0, 4)` ✓ |
+| themen_etf | 16.08. | **14.08.** | 5 von 5 | `(0, 5)` ✓ |
+| krypto | 16.08. | 16.08. | — | 16 Signale ✓ |
+
+> ⚠️ **Und der erste Versuch, es zu belegen, ging daneben:** das NB-Backup
+> endet überall am 14.08. und enthält die Samstagskerzen nicht. **Die Eingabe
+> stellte den Fall nicht her** — zum sechsten Mal diese Woche. Erst
+> nachgestellte Samstagskerzen für die 41 Kryptoreihen zeigten ihn.
+
+### 61.7 Was der Export sonst noch sagte
+
+| | |
+|---|---|
+| Neue Reihen | **alle zehn da**, `veraltet: []`, Abruf 0,0 h alt |
+| Abdeckung | krypto=onchain · rohstoffe=cot · **aktien=finra+sec_edgar** |
+| API-Gesundheit | alle vier Quellen mit Erfolg um 15:33–15:34 UTC |
+| Jobläufe | **zwei App-Starts** (17:15:55 und 17:33:06); der erste schrieb 2.072 Punkte ohne Aktiendaten, der zweite 2.423 mit |
+| SEC | keine Sperre am Notebook |
+| Selbstprüfung | `nicht_erwaehnt: ["job_laeufe"]` — kleiner offener Punkt aus früherer Arbeit |
+
+### 61.8 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **916, alle bestanden** — zwei Regime-Zusicherungen sind zur **Gegenwache** geworden |
+| freie Namen | 0 |
+| `pruefe_zahlen_in_prompts.py` | **Selbsttest 9/9**, 344 Sätze je Assetklasse, kein Befund |
+| `pruefe_phase1.py` | bestanden |
+| Simulation | 6 Gruppen, 12 Signale, 14 Mails, **0 Fehler** |
+
+**Aus einer gelöschten Prüfung wird nichts gelernt.** Die beiden Zusicherungen,
+die das Regime verlangten, prüfen jetzt das Gegenteil: dass es nicht
+zurückkommt.

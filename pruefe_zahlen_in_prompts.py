@@ -79,6 +79,26 @@ MASSSTAB = ("Perzentil", "Messungen", "Handelstag", "Tage", "Stunden",
 EINORDNUNG = ("gewohnt", "aussergewoehnlich", "ungewoehnlich", "auseinander",
               "beieinander", "extrem", "selten", "haeufig", "typisch")
 
+# --- N4: ETIKETTEN (16.08.2026, nach dem Regime-Fund) ----------------------
+#
+# WAS EIN ETIKETT IST: ein fertiges Urteil, das jemand anders gefaellt hat und
+# das wir dem Modell als Tatsache hinlegen. Der Prüfer kann es nur noch
+# uebernehmen - genau das ist am 16.08. passiert:
+#
+#     EINWAND - die Positionierung spricht dagegen: Der Gesamtmarkt steht
+#     im Regime 'baer', seit 27 Tagen ununterbrochen.
+#
+# Das Modell griff aus sechs Saetzen den EINEN mit einem Urteil heraus.
+#
+# BEWUSST ENG. "steigend" und "gefallen" sind beschriebene Sachverhalte und
+# stehen NICHT hier - sonst meldet der Prüfer jeden zweiten Satz und niemand
+# liest ihn mehr. Gesucht sind Marktzustands-Etiketten und Richtungsworte,
+# die eine HANDLUNG nahelegen.
+ETIKETTEN = ("regime", "'baer'", '"baer"', "'bulle'", "baermarkt",
+             "bullenmarkt", "bullish", "bearish", "ueberkauft", "ueberverkauft",
+             "guenstige gelegenheit", "attraktiv", "riskant", "gefaehrlich",
+             "spricht dafuer", "spricht dagegen", "empfehlung", "sollte man")
+
 
 def _zahlen(satz: str) -> list[float]:
     aus = []
@@ -129,7 +149,53 @@ def pruefe_satz(satz: str) -> list[str]:
     if "Perzentil" in satz and not any(w in satz for w in EINORDNUNG):
         fund.append("N3 Perzentil ohne Einordnung - das Modell muss selbst "
                     "entscheiden, ob das viel ist")
+
+    # N4: ein fertiges Etikett statt eines beschriebenen Sachverhalts.
+    for wort in ETIKETTEN:
+        if wort in satz.lower():
+            fund.append(f"N4 Etikett '{wort}' - ein vorgefertigtes Urteil, "
+                        "das der Prüfer nur noch uebernehmen kann (R-T2/R-T3)")
+            break
     return fund
+
+
+# --- N5: WAS UEBERALL WORTGLEICH DASTEHT (16.08.2026) ----------------------
+#
+# DIE SIGNATUR DES REGIME-FEHLERS. "Der Gesamtmarkt steht im Regime 'baer',
+# seit 27 Tagen ununterbrochen" stand ZEICHENGLEICH bei jedem Symbol - nicht
+# nur in der Form, sondern mit denselben Zahlen. Ein Wert, der sich nie
+# aendert, kann nichts unterscheiden (R-T6).
+#
+# `szenario_fakten.finde_konstanten` tut dasselbe fuer FELDER eines dicts und
+# nennt diesen Fall sogar im Docstring. Rolle G bekommt Saetze; der Waechter
+# konnte sie strukturell nicht sehen. Diese Funktion schliesst die Luecke.
+#
+# ⚠️ KONSTANT IST NICHT AUTOMATISCH FALSCH. Erklaersaetze sind absichtlich
+# ueberall gleich ("Die Eindeckungsdauer sagt, wie viele Handelstage ...") -
+# sie tragen keine Richtung, sie erklaeren eine Groesse. Gefaehrlich wird die
+# Kombination: ueberall gleich UND mit einer Richtung darin. Deshalb wird hier
+# aufgelistet und der Fall mit Etikett getrennt ausgewiesen - die Entscheidung
+# bleibt beim Leser, die Sichtbarkeit nicht.
+KONSTANT_AB_ANTEIL = 0.8
+
+
+def finde_konstante_saetze(saetze: list) -> list[tuple[str, int, int, bool]]:
+    """(Satz, Vorkommen, Bezuege der Rolle, traegt_ein_Etikett)."""
+    je_rolle: dict = {}
+    for rolle, bezug, satz in saetze:
+        d = je_rolle.setdefault(rolle, {"bezuege": set(), "saetze": {}})
+        d["bezuege"].add(bezug)
+        d["saetze"].setdefault(satz, set()).add(bezug)
+    raus = []
+    for rolle, d in je_rolle.items():
+        n = len(d["bezuege"])
+        if n < 3:
+            continue
+        for satz, bez in d["saetze"].items():
+            if len(bez) >= KONSTANT_AB_ANTEIL * n:
+                raus.append((f"[{rolle}] {satz}", len(bez), n,
+                             any(w in satz.lower() for w in ETIKETTEN)))
+    return sorted(raus, key=lambda x: (-x[3], -x[1]))
 
 
 def _saetze_aller_rollen(conn) -> list[tuple[str, str, str]]:
@@ -156,12 +222,25 @@ def _saetze_aller_rollen(conn) -> list[tuple[str, str, str]]:
     raus: list[tuple[str, str, str]] = []
     conn.row_factory = sqlite3.Row
 
-    # --- Rolle G ---
-    for r in conn.execute(
-            "SELECT DISTINCT symbol FROM open_interest_snapshot LIMIT 40"):
-        sym = str(r[0])
-        for s in positionierung.saetze(positionierung.lage(conn, sym)):
-            raus.append(("G", sym, s))
+    # --- Rolle G, JE ASSETKLASSE ---
+    #
+    # ⚠️ OHNE DIE KLASSE SIEHT DIESER PRUEFER DIE HALBE ROLLE NICHT. `lage()`
+    # entscheidet an ihr, ob COT, Leerverkaufsposition, Insider oder
+    # Boersenfluss ueberhaupt entstehen; ein Aufruf ohne sie rendert nur den
+    # Terminmarkt. Die erste Fassung tat genau das - und haette damit
+    # ausgerechnet die Saetze uebersehen, die am 16.08. dazugekommen sind.
+    from agent import assetklassen as AK
+
+    for gruppe, symbole in (AK.gruppiere() or {}).items():
+        for sym in list(symbole)[:12]:
+            try:
+                lage_ = positionierung.lage(conn, str(sym).upper(),
+                                            assetklasse=gruppe)
+            except Exception as exc:                      # noqa: BLE001
+                print(f"  (G {sym}/{gruppe} nicht renderbar: {exc})")
+                continue
+            for s in positionierung.saetze(lage_):
+                raus.append((f"G/{gruppe}", str(sym), s))
 
     # --- Rolle A: der echte Produktionswortlaut ---
     try:
@@ -232,6 +311,13 @@ SELBSTTEST = (
      "dieses Werts - im gewohnten Bereich.", None),
     # N2: eine Zahl voellig ohne Bezug.
     ("Der Wert liegt bei 3.2.", "N2"),
+    # N4: DER SATZ AUS DER ECHTEN MAIL VOM 16.08. - der Grund fuer diese
+    # Pruefung. Das Modell hat ihn woertlich als Einwand zurueckgegeben.
+    ("Der Gesamtmarkt steht im Regime 'baer', seit 27 Tagen ununterbrochen.",
+     "N4"),
+    # ... und ein beschriebener Sachverhalt derselben Art muss schweigen.
+    ("Die offenen Kontrakte sind auf Binance in den letzten 8 Stunden um "
+     "1.3 % gefallen.", None),
 )
 
 
@@ -271,8 +357,19 @@ def main() -> int:
         for f in pruefe_satz(satz):
             treffer.setdefault(f.split(":")[0], []).append((rolle, bezug, satz, f))
 
-    if not treffer:
-        print("KEIN BEFUND - kein Satz rechnet dem Modell etwas vor.")
+    konstant = finde_konstante_saetze(saetze)
+    mit_etikett = [k for k in konstant if k[3]]
+    if konstant:
+        print("=== N5 Saetze, die bei fast jedem Symbol WORTGLEICH dastehen ===")
+        for satz, n, gesamt, etikett in konstant:
+            print(f"  {'⚠️' if etikett else '  '} {n}/{gesamt}  {satz[:104]}")
+        print("  (Erklaersaetze duerfen konstant sein - sie tragen keine "
+              "Richtung.\n   ⚠️ markiert heisst: konstant UND mit einem "
+              "Etikett darin.)\n")
+
+    if not treffer and not mit_etikett:
+        print("KEIN BEFUND - kein Satz rechnet dem Modell etwas vor, "
+              "und keine Konstante traegt eine Richtung.")
         return 0
 
     for art in sorted(treffer):

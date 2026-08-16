@@ -497,66 +497,46 @@ def lage(conn, symbol: str, assetklasse: str | None = None) -> dict:
             aus.setdefault("fehlt_rahmen", []).append(
                 "Boersenzu- und -abfluesse")
 
-    # DAS REGIME MIT SEINER DAUER (16.08.2026). Es ist gerechnet und stand
-    # bisher in keinem Prompt. Fuer Rolle G gehoert es hierher und NICHT zu
-    # Rolle BC: es beschreibt nicht diesen Wert, sondern den Rahmen, in dem
-    # jedes Urteil steht - und die Trennung der Informationsgrenzen ist die
-    # Konstruktionsbedingung der zweiten Stufe.
+    # ⚠️ HIER STAND DAS MARKTREGIME - HERAUSGENOMMEN AM 16.08.2026 ABENDS.
     #
-    # DIE DAUER IST DER EIGENTLICHE PUNKT. "baer" allein ist ueber alle
-    # Signale eines Tages identisch und damit ein konstantes Feld (R-T6);
-    # "seit 27 Tagen" macht daraus eine Aussage, die sich bewegt.
-    # NICHT AUS EINER TABELLE - es gibt keine. Das Regime steht auf der
-    # juengsten Signalzeile, die Dauer rechnet `regime.regime_persistenz_tage()`.
-    # Meine erste Fassung fragte `regime_status` ab; die Tabelle existiert
-    # nicht, und der Fail-soft haette das stillschweigend als "keine Angabe"
-    # gemeldet - richtig gefangen, aber dauerhaft leer.
-    try:
-        r = conn.execute(
-            "SELECT regime FROM signals WHERE regime IS NOT NULL "
-            "ORDER BY created_at DESC LIMIT 1").fetchone()
-        if r and r[0]:
-            aus["regime"] = str(r[0])
-            # DIE DAUER SEPARAT - faellt sie aus, ist das Regime trotzdem da.
-            # Erste Fassung fing beides gemeinsam: die Zeile "Regime baer" UND
-            # "keine Angabe zum Marktregime" standen nebeneinander in derselben
-            # Ausgabe. Ein Widerspruch, den der Leser nicht aufloesen kann.
-            #
-            # ⚠️ DIE DAUER KAM IM BETRIEB NIE AN (gefunden 16.08. abends beim
-            # Rendern fuer die Parameteruebersicht). `regime_persistenz_tage`
-            # liest ueber `get_hebel_regime_tageshistorie()`, und die greift
-            # mit `row["tag"]` auf die Spalten zu - das setzt
-            # `conn.row_factory = sqlite3.Row` voraus. `rolle_g` oeffnet aber
-            # eine gewoehnliche Verbindung. Ergebnis: TypeError, vom breiten
-            # `except` verschluckt, und in JEDER Ausgabe stand nur "Regime
-            # 'baer'" ohne Dauer.
-            #
-            # DAS WAR GENAU DER SCHADEN, gegen den die Dauer eingebaut wurde:
-            # das Regime allein ist ueber alle Signale eines Tages identisch -
-            # ein konstantes Feld (R-T6). Erst "seit 27 Tagen" bewegt sich.
-            # Fail-soft ist fail-silent, hier in seiner teuersten Form.
-            #
-            # DIE ZEILENFABRIK WIRD GELIEHEN, NICHT UEBERNOMMEN. `conn` kann
-            # dem Aufrufer gehoeren; sie bleibt hinterher, wie sie war.
-            try:
-                from agent.krypto.regime import regime_persistenz_tage
-
-                _alt = conn.row_factory
-                try:
-                    conn.row_factory = sqlite3.Row
-                    aus["regime_tage"] = regime_persistenz_tage(conn, str(r[0]))
-                finally:
-                    conn.row_factory = _alt
-            except Exception as exc:                         # noqa: BLE001
-                # GEZAEHLT STATT VERSCHLUCKT. Ohne diese Zeile war der Ausfall
-                # nur daran zu sehen, dass ein Halbsatz fehlte.
-                logger.info("Regime-Dauer fuer %s nicht ermittelbar: %s",
-                            sym, exc)
-        else:
-            aus["fehlt"].append("Marktregime")
-    except Exception as exc:                                 # noqa: BLE001
-        logger.info("Regime nicht lesbar: %s", exc)
-        aus["fehlt"].append("Marktregime")
+    # DER NUTZER HAT ES AN EINER ECHTEN MAIL GESEHEN, nicht an einer Messung:
+    #
+    #     EINWAND - die Positionierung spricht dagegen: Der Gesamtmarkt
+    #     steht im Regime 'baer', seit 27 Tagen ununterbrochen.
+    #
+    # Das Modell griff aus sechs Faktensaetzen genau den EINEN heraus, der ein
+    # Urteil enthaelt, und gab ihn als Begruendung zurueck - waehrend jeder
+    # echte Positionierungsfakt daneben "im gewohnten Bereich" sagte. Die
+    # Gegenpruefung stand damit nicht auf der Positionierung, sondern auf einem
+    # Etikett, das wir selbst gerechnet und selbst hineingelegt hatten.
+    #
+    # NACHGEZAEHLT AM PRODUKTIONSBESTAND: `regime` ist in 2.549 von 2.549
+    # `signals` und 1.819 von 1.819 `hebel_signals` gleich "baer". Ein Wert,
+    # der sich nie aendert, kann nichts unterscheiden - er kann nur schieben.
+    #
+    # VIER EIGENE REGELN AUF EINMAL:
+    #     R-T2  ein Etikett statt eines beschriebenen Sachverhalts
+    #     R-T3  ein Werturteil, dem Pruefer fertig hingelegt
+    #     R-T6  ein konstantes Feld
+    #     P3    aus BTC-Kurs und Fear & Greed gerechnet - beides sieht Rolle A
+    #           bereits, es ist UNSERE Ableitung und keine fremde Information
+    #
+    # UND DER FEHLER IST AKTENKUNDIG. `szenario_fakten.finde_konstanten` traegt
+    # ihn seit Wochen im Docstring: *"`regime` war auf allen 1.022 Faellen
+    # 'baer' - der Gegenpruefer las eine Konstante mit Richtungsaussage und kam
+    # deshalb 1 von 1.022 Mal auf LONG."* Derselbe Feldname, dieselbe Wirkung.
+    #
+    # WARUM DER WAECHTER NICHT ANSCHLUG: `enthaelt_werturteile` und
+    # `finde_konstanten` pruefen FELDNAMEN in einem dict. Rolle G bekommt
+    # SAETZE. Der Waechter konnte es strukturell nicht sehen - dieselbe Luecke
+    # wie zwischen `pruefe_fakten_bezugsgroessen` und
+    # `pruefe_zahlen_in_prompts`. Deshalb prueft letzteres jetzt auch auf
+    # Etiketten (N4) und auf ueber alle Symbole identische Saetze (N5).
+    #
+    # DIE URSPRUENGLICHE BEGRUENDUNG IST ENTFALLEN. Sie stand hier woertlich:
+    # das Regime sei noetig, "weil sie sonst nur eine Quelle haette". Seit
+    # heute hat Krypto Terminmarkt UND On-Chain, Aktien Leerverkaeufer UND
+    # Insider. Der Grund war weg, das Feld war geblieben.
     return aus
 
 
@@ -570,16 +550,26 @@ def saetze(e: dict) -> list[str]:
     z: list[str] = []
 
     if e.get("oi_aenderung_pct") is not None:
-        richtung = "gestiegen" if e["oi_aenderung_pct"] > 0 else "gefallen"
+        # ⚠️ "UM 0.0 % GEFALLEN" STAND SO IN DER MAIL VOM 16.08. Bei einer
+        # gerundeten Null gibt es keine Richtung; sie zu behaupten ist eine
+        # Aussage, die die Zahl nicht hergibt.
+        richtung = ("gestiegen" if e["oi_aenderung_pct"] > 0.05 else
+                    "gefallen" if e["oi_aenderung_pct"] < -0.05 else "")
         # DIE BOERSE WIRD SEIT 16.08. GENANNT. Solange nur eine Zahl dastand,
         # war "der Terminmarkt" eine zulaessige Verkuerzung. Jetzt folgt ein
         # Satz, der Boersen beim Namen nennt - und eine unbeschriftete Zahl
         # daneben laesst offen, welche der drei gemeint ist. Genau die Sorte
         # Mehrdeutigkeit, die R-T1 mit "das Fenster nennen" ausschliesst.
-        z.append(
-            f"Die offenen Kontrakte am Terminmarkt sind auf Binance in den "
-            f"letzten {e['oi_fenster_stunden']:.0f} Stunden um "
-            f"{abs(e['oi_aenderung_pct']):.1f} % {richtung}.")
+        if richtung:
+            z.append(
+                f"Die offenen Kontrakte am Terminmarkt sind auf Binance in "
+                f"den letzten {e['oi_fenster_stunden']:.0f} Stunden um "
+                f"{abs(e['oi_aenderung_pct']):.1f} % {richtung}.")
+        else:
+            z.append(
+                f"Die offenen Kontrakte am Terminmarkt sind auf Binance in "
+                f"den letzten {e['oi_fenster_stunden']:.0f} Stunden "
+                "praktisch unveraendert geblieben.")
 
     # DIE BOERSEN NEBENEINANDER - OHNE DEUTUNG (16.08.2026).
     #
@@ -602,8 +592,13 @@ def saetze(e: dict) -> list[str]:
         # GLEICHLAUF IST AUCH EINE AUSSAGE - und "uneinheitlich" waere dann
         # schlicht falsch. Die Werte sind auf eine Stelle gerundet; zwei
         # Boersen koennen danach denselben Wert tragen.
-        if abs(d["spanne_pp"]) < 0.1:
-            z.append("Die Boersen entwickeln sich dabei gleichlaeufig.")
+        # ⚠️ "UNEINHEITLICH" BEI EINER SPANNE IM 7. PERZENTIL stand am
+        # 16.08. in der Mail - also "ungewoehnlich EINIG" laut Messwert und
+        # "uneinheitlich" laut Wortwahl. Das Wort richtet sich jetzt nach dem
+        # Perzentil, nicht nach dem blossen Vorhandensein einer Differenz.
+        if abs(d["spanne_pp"]) < 0.1 or d["spanne_perzentil"] <= EXTREM_UNTEN:
+            z.append("Die Boersen entwickeln sich dabei weitgehend "
+                     "gleichlaeufig.")
         else:
             if d["hoch_pct"] > 0 > d["tief_pct"]:
                 lage_ = f"auf {hoch} nehmen sie zu, auf {tief} gleichzeitig ab"
@@ -651,7 +646,13 @@ def saetze(e: dict) -> list[str]:
 
     if e.get("long_anteil_pct") is not None:
         lp = e.get("long_perzentil")
-        satz = f"{e['long_anteil_pct']:.0f} % der Konten stehen long"
+        # ⚠️ "67 % DER KONTEN STEHEN LONG; DAS IST DAS 0. PERZENTIL -
+        # AUSSERGEWOEHNLICH WENIGE" stand am 16.08. in der Mail. Rechnerisch
+        # richtig und trotzdem unlesbar: die rohe Zahl klingt nach viel, die
+        # Einordnung sagt wenig, und beides steht in einem Satz. Das Perzentil
+        # traegt die Aussage - die rohe Zahl ist genau die nackte Zahl, gegen
+        # die R-T5 geschrieben wurde.
+        satz = "Der Anteil der Konten auf der Kaufseite"
         if lp is not None:
             # ⚠️ ZWEI MAENGEL, GEFUNDEN AM 16.08. von
             # `pruefe_zahlen_in_prompts.py` - beide aelter als der Fund.
@@ -667,8 +668,10 @@ def saetze(e: dict) -> list[str]:
             wie = ("aussergewoehnlich viele" if lp >= EXTREM_OBEN else
                    "aussergewoehnlich wenige" if lp <= EXTREM_UNTEN else
                    "im gewohnten Bereich")
-            satz += (f"; das ist das {lp}. Perzentil der letzten "
+            satz += (f" steht im {lp}. Perzentil der letzten "
                      f"{e.get('long_n', 0)} Messungen - {wie}")
+        else:
+            satz += " laesst sich nicht einordnen"
         z.append(satz + ".")
 
     # DIE ZWEITE INFORMATIONSART. Kein Wort ueber Richtung oder Folgen: dass
@@ -746,12 +749,6 @@ def saetze(e: dict) -> list[str]:
         z.append(f"Am {f['datum']} {richtung}.")
         z.append(f"Gemessen an den letzten {f['n']} Tagen steht diese Bewegung "
                  f"im {pf}. Perzentil - {wie}.")
-
-    if e.get("regime"):
-        satz = f"Der Gesamtmarkt steht im Regime {e['regime']!r}"
-        if e.get("regime_tage") is not None:
-            satz += f", seit {e['regime_tage']} Tagen ununterbrochen"
-        z.append(satz + ".")
 
     for f in (e.get("fehlt_rahmen") or []):
         # ANDERER WORTLAUT ALS BEI `fehlt`: es fehlt nichts ZU DIESEM WERT,

@@ -350,10 +350,37 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
     # Lagebild-Eingabe VOR der Pruefung auf die Aufzeichnung - bei leeren
     # Kursreihen stuerzte sie dort ab, statt mit einer Begruendung
     # abzubrechen. Ein Absturz sagt nicht, was fehlt.
+    # ⚠️ DER ANKER GILT FUER DIESE GRUPPE, NICHT FUER DAS GANZE UNIVERSUM
+    # (16.08.2026, aus dem NB-Export).
+    #
+    # `rollen_job` uebergibt ALLE Kursreihen - das Lagebild und der Gleichlauf
+    # brauchen sie, denn sie beschreiben den GESAMTEN Markt. `symbole` ist
+    # dagegen auf die Gruppe gefiltert. Der Ankertag wurde bis heute ueber
+    # `reihen` gerechnet, also ueber alle sechzig.
+    #
+    # WAS DAS AN EINEM SAMSTAG ANRICHTET: Krypto handelt durchgehend und hatte
+    # am 16.08. eine Kerze, Aktien, ETF und Rohstoffe nicht. 41 von 60 sind
+    # 68 % und reissen die 60-%-Schranke - also ankerte AUCH der Aktienlauf auf
+    # dem Samstag, an dem keine seiner Reihen einen Kurs hat.
+    #
+    #     aktien/spot     fakten (0 bestanden, 2 verloren)
+    #     hedge           fakten (0 bestanden, 2 verloren)
+    #     rohstoffe/spot  fakten (0 bestanden, 4 verloren)
+    #     themen_etf      fakten (0 bestanden, 5 verloren)
+    #     krypto/hebel    fakten (41 bestanden, 0 verloren), 16 Signale
+    #
+    # VIER VON SECHS GRUPPEN OHNE EIN EINZIGES URTEIL, und der Lauf meldete
+    # "0 Signale, 0 Fehler" - er sah aus wie ein ruhiger Markt.
+    #
+    # DER DOCSTRING VON `_ankertag` BESCHREIBT GENAU DIESEN FEHLER, eine Ebene
+    # tiefer: "EIN einziges Symbol setzt den Anker fuer alle". Dass er auch
+    # zwischen ASSETKLASSEN auftritt, ist niemandem aufgefallen, weil `reihen`
+    # ungefiltert durchgereicht wird.
+    eigene_reihen = {s: reihen[s] for s in (symbole or []) if s in reihen}
     if datum:
-        tag, gedeckt, gesamt = datum, len(reihen), len(reihen)
+        tag, gedeckt, gesamt = datum, len(eigene_reihen), len(eigene_reihen)
     else:
-        tag, gedeckt, gesamt = _ankertag(reihen)
+        tag, gedeckt, gesamt = _ankertag(eigene_reihen or reihen)
     ergebnis["ankertag"] = {"tag": tag, "gedeckt": gedeckt, "gesamt": gesamt}
     if not reihen:
         raise LaufAbgebrochen(
