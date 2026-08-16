@@ -4200,6 +4200,61 @@ def update_signal_zai_gegenpruefung(
     conn.commit()
 
 
+# --- WANN LIEF DIESER JOB ZULETZT? (16.08.2026) ---------------------------
+#
+# DER ANLASS, gemessen am NB-Export vom 16.08.: fuenf taegliche Cron-Jobs
+# zwischen 06:00 und 07:15 liefen in 48 Stunden zusammen VIER Mal - der
+# Ausstiegs-Job gar nicht.
+#
+#     ausstiegs_job          0x   (cron 07:15)
+#     backward_tracking      1x   (cron 06:00)
+#     portfolio_wert         1x   (cron 06:30)
+#     refresh_ohlc           1x   (24-h-Takt)
+#
+# KEIN DEFEKT IN DEN JOBS. Die App war 24,6 von 48 Stunden aus, in 16 Fenstern
+# ueber zehn Minuten, bei elf Neustarts - und ein Cron trifft nur, wenn sie zur
+# Uhrzeit laeuft. APScheduler holt nichts nach: der Jobstore liegt im Speicher
+# und ist nach einem Neustart leer.
+#
+# WARUM NICHT EINFACH "BEIM START IMMER LAUFEN". Genau davor warnt der
+# Kommentar an `refresh_ohlc` seit dem 12.07.: ein teurer Job waere dann bei
+# JEDEM Neustart faellig, auch nach einem Absturz vor fuenf Minuten. Bei elf
+# Neustalten am Tag waere das elfmal.
+#
+# Deshalb ein Zeitstempel: nachgeholt wird nur, was HEUTE noch nicht lief.
+def merke_joblauf(conn: sqlite3.Connection, job_id: str) -> None:
+    """Haelt fest, dass dieser Job gelaufen ist.
+
+    STILL BEI EINEM FEHLER. Ein Job, der seine Arbeit getan hat, darf nicht
+    daran scheitern, dass die Buchhaltung darueber klemmt."""
+    try:
+        conn.execute("CREATE TABLE IF NOT EXISTS job_laeufe ("
+                     "job_id TEXT PRIMARY KEY, zuletzt_am TEXT NOT NULL)")
+        conn.execute("INSERT INTO job_laeufe (job_id, zuletzt_am) VALUES (?,?) "
+                     "ON CONFLICT(job_id) DO UPDATE SET zuletzt_am = excluded.zuletzt_am",
+                     (str(job_id), _now_iso()))
+        conn.commit()
+    except sqlite3.Error as exc:
+        logger.info("Joblauf %s nicht vermerkt: %s", job_id, exc)
+
+
+def letzter_joblauf(conn: sqlite3.Connection, job_id: str) -> str | None:
+    """Zeitstempel des letzten Laufs - oder None, wenn nie gelaufen.
+
+    None heisst NIE, nicht 'unbekannt': fehlt die Tabelle, hat auch nie ein
+    Job sie gefuellt. Der Aufrufer darf daraus 'jetzt nachholen' machen."""
+    try:
+        conn.execute("CREATE TABLE IF NOT EXISTS job_laeufe ("
+                     "job_id TEXT PRIMARY KEY, zuletzt_am TEXT NOT NULL)")
+        r = conn.execute("SELECT zuletzt_am FROM job_laeufe WHERE job_id = ?",
+                         (str(job_id),)).fetchone()
+        return (r["zuletzt_am"] if r is not None and hasattr(r, "keys")
+                else (r[0] if r else None))
+    except sqlite3.Error as exc:
+        logger.info("Joblauf %s nicht lesbar: %s", job_id, exc)
+        return None
+
+
 def record_api_health_success(conn: sqlite3.Connection, source: str) -> None:
     """Passives API-Gesundheits-Tracking (2026-07-15, siehe database/api_health.py::
     track_api_health()) - Upsert, laesst etwaige Fehler-Felder unangetastet (ein

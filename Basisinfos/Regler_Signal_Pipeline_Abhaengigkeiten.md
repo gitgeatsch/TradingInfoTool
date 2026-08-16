@@ -147,7 +147,9 @@ die von diesen Abhängigkeiten betroffen ist).
 
 ---
 
-> ## ⚠️ STANDVERMERK 16.08.2026 — diese Matrix kennt die Rollen-Kette NICHT
+> ## ⚠️ STANDVERMERK 16.08.2026 — ~~diese Matrix kennt die Rollen-Kette NICHT~~ NACHGETRAGEN
+>
+> **Erledigt am selben Tag** — siehe den Nachtrag am Ende der Datei. Der Vermerk bleibt stehen, weil er den Zustand erklärt, in dem die Regel „vor jeder Prompt-Änderung prüfen“ ins Leere lief.
 >
 > Geprüft auf Nutzerfrage: kein einziger Treffer für `lagebeschreibung`,
 > `rollen_eingabe`, `rolle_analyst`, `rolle_trader` oder `Rolle A`/`Rolle BC`.
@@ -161,3 +163,46 @@ die von diesen Abhängigkeiten betroffen ist).
 > Bis sie nachgezogen ist, tragen `pruefe_pakete.py` (853 Prüfungen) und
 > `finde_freie_namen.py` diese Rolle für die neue Kette — statisch, nicht als
 > Abhängigkeitskarte.
+
+---
+
+# Nachtrag 2026-08-16: die Rollen-Kette
+
+**Die Matrix darüber beschreibt die alte Kette.** Dieser Abschnitt trägt die
+neue nach — soweit sie Regler und Prompts berührt.
+
+## Was einen Prompt verändert
+
+| Datei | wirkt auf | Prüfen mit |
+|---|---|---|
+| `agent/lagebeschreibung.py` | **Rolle BC** — alle neun Blöcke des Faktensatzes | `erhebe_prompts.py` (rendert), `pruefe_phase1.py` |
+| `agent/marktlage.py` | **Rolle A** — die 15 Aussagen des Lagebilds | `pruefe_marktlage.py` |
+| `agent/rolle_trader.py` | **Rolle BC** — die Frage. `PROMPT_STAND` mitziehen | `pruefe_pakete.py` |
+| `agent/rolle_analyst.py` | **Rolle A** — die Frage. Eigener `PROMPT_STAND` | dito |
+| `agent/positionierung.py` | **Rolle G** — die vier Anhaltspunkte | `pruefe_pakete.py` |
+| `agent/rollen_eingabe.py` | Verdrahtung aller drei | `erhebe_prompts.py` |
+
+> ⚠️ **Jede Änderung an diesen sechs Dateien ändert den Prompt-Stand** und macht
+> frühere Messungen unvergleichbar. Der Stand gehört mitgezogen — mit
+> Buchstaben, wenn am selben Tag zweimal (`2026-08-16` / `2026-08-16b`).
+
+## Regler, die den Durchsatz steuern
+
+| Schlüssel in `config.yaml` | wirkt |
+|---|---|
+| `rollen_kette.aktiv_fuer` | welche Gruppen über die neue Kette laufen. Leer = alte Kette |
+| `rollen_kette.betriebsart` | `trocken` / `probe` / `scharf` |
+| **`anlass.aktiv`** | Sperre bei identischem Faktensatz — **vor** dem Modellaufruf |
+| `anlass.abdruck` / `ignoriere_bloecke` / `mindest_bloecke` | Feinjustierung derselben Sperre |
+| `risiko.*` | Stopuntergrenzen RM-1b/RM-1c, CRV, Beträge |
+| `risiko.ausstieg_trailing_ausloese_r` | schaltet den Ausstiegs-Job ab (0) |
+
+## Was die Kette selbst nicht steuert
+
+**Die Frische der Kursreihen.** Sie hängt an `refresh_ohlc_job` (Kraken, 24 h)
+und an `staleness.KRYPTO_OHLC_STALE_THRESHOLD_DAYS`. Steht die Reihe, urteilt
+die Kette auf alten Charts, ohne es zu merken — am 16.08. zwei Tage lang.
+
+**Die Laufzeit der App.** Jobs mit langem Takt kommen nicht dran, wenn zu oft
+neu gestartet wird. Seit dem 16.08. gibt es dafür `db.merke_joblauf()` und den
+Nachholer in `build_scheduler()`.

@@ -5469,6 +5469,57 @@ def paket_15() -> None:
            "eine grosse Zahl ohne Zeitbezug ueberdeckt die echten Funde "
            "daneben - 11.953 von 11.970 stammten aus 36 Minuten")
 
+    # ------------------------------------------------------------------
+    # NACHHOLEN, WAS HEUTE NICHT LIEF (16.08.2026). Fuenf taegliche Cron-Jobs
+    # zwischen 06:00 und 07:15 liefen in 48 Stunden zusammen viermal, der
+    # Ausstiegs-Job gar nicht - die App war 51 % der Zeit aus, und
+    # APScheduler holt nichts nach (Jobstore im Speicher).
+    import sqlite3 as _sq7
+    from datetime import datetime as _dt7, timedelta as _td7
+
+    import database.db as _db7
+
+    _c7 = _sq7.connect(":memory:")
+    _c7.row_factory = _sq7.Row
+    pruefe(P, "ein nie gelaufener Job meldet None",
+           _db7.letzter_joblauf(_c7, "neu") is None,
+           "None heisst NIE, nicht 'unbekannt' - der Aufrufer darf daraus "
+           "'jetzt nachholen' machen")
+    _db7.merke_joblauf(_c7, "neu")
+    _z7 = _db7.letzter_joblauf(_c7, "neu")
+    pruefe(P, "nach dem Lauf steht ein Zeitstempel da",
+           isinstance(_z7, str) and _z7.startswith(str(_dt7.now().year)),
+           "ohne ihn holte der Nachholer bei JEDEM Neustart erneut nach - "
+           "bei elf Neustarts am Tag waeren das elf Mails")
+    pruefe(P, "und ein zweiter Lauf ueberschreibt ihn",
+           (_db7.merke_joblauf(_c7, "neu"),
+            _db7.letzter_joblauf(_c7, "neu") >= _z7)[1],
+           "sonst waere die Frage 'lief er heute schon' nicht beantwortbar")
+    _c7.close()
+    _q7 = _quelltext("scheduler/background.py")
+    pruefe(P, "die drei taeglichen Jobs vermerken ihren Lauf",
+           _q7.count("merke_joblauf(") >= 3,
+           "wer nicht vermerkt, wird bei jedem Neustart nachgeholt")
+    # ⚠️ NICHT UEBER DIE TEXTPOSITION. Meine erste Fassung verglich, wo die
+    # drei Aufrufe im Quelltext STEHEN - dort steht der Ausstiegs-Job zuerst.
+    # Die Reihenfolge steckt aber in den VERSATZSEKUNDEN, nicht in der
+    # Schreibreihenfolge. Derselbe Fehler wie bei der steigenden Testreihe:
+    # der Test hing am falschen Gegenstand.
+    import re as _re7
+    _versatz = {m.group(1): int(m.group(2)) for m in
+                _re7.finditer(r'_nachholen\("(\w+)",\s*(\d+)\)', _q7)}
+    pruefe(P, "und der Nachholer haelt die Reihenfolge ein",
+           _versatz.get("backward_tracking", 9e9)
+           < _versatz.get("portfolio_wert", 9e9)
+           < _versatz.get("ausstiegs_empfehlungen", 9e9),
+           f"Versatz gemessen: {_versatz}. 'Die Reihenfolge ist noetig, nicht "
+           f"kosmetisch' - die Ausstiegsregel rechnet auf Werten, die das "
+           f"Backward-Tracking vorher fortschreibt")
+    pruefe(P, "im Zweifel wird NICHT nachgeholt",
+           "Job laeuft wie bisher zur Uhrzeit" in _q7,
+           "ein Nachholer, der bei einer Luecke feuert, macht aus einem "
+           "Lesefehler einen Modellaufruf")
+
     import staleness as ST5
 
     pruefe(P, "Krypto hat eine eigene, engere Frischeschwelle",

@@ -521,6 +521,18 @@ def ausstiegs_job(conn_factory, watchlist_provider) -> None:
     from agent.krypto.backward_tracking import compute_ausstiegs_empfehlungen
 
     cfg = config_module.load_config()
+    # DEN LAUF VERMERKEN, UND ZWAR BEI JEDEM AUSGANG (16.08.2026).
+    #
+    # Der Nachholer in `build_scheduler()` fragt "lief er heute schon?". Wuerde
+    # nur der Erfolgsfall vermerkt, holte er bei jedem Neustart erneut nach -
+    # bei elf Neustalten am Tag waeren das elf Mails. Der Job hatte seine
+    # Gelegenheit, auch wenn er nichts zu melden fand.
+    _c0 = conn_factory()
+    try:
+        db.merke_joblauf(_c0, "ausstiegs_empfehlungen")
+    finally:
+        _c0.close()
+
     _ausloese, _abstand, aktiv = parameter_aus_config(cfg)
     if not aktiv:
         logger.info("Ausstiegsregel deaktiviert (ausstieg_trailing_ausloese_r <= 0)")
@@ -757,6 +769,8 @@ def portfolio_wert_job(conn_factory, watchlist_provider) -> None:
         logger.exception("portfolio_wert_job fehlgeschlagen")
         _notify_job_failure("portfolio_wert_job")
     finally:
+        # Siehe `merke_joblauf()` - der Nachholer beim Start fragt danach.
+        db.merke_joblauf(conn, "portfolio_wert")
         conn.close()
 
 
@@ -797,6 +811,11 @@ def backward_tracking_job(conn_factory, watchlist_provider) -> None:
         logger.exception("Backward-Tracking fehlgeschlagen")
         _notify_job_failure("backward_tracking", f"Backward-Tracking fehlgeschlagen: {exc}")
     finally:
+        # EIGENER SCHLUESSEL neben `set_backward_tracking_last_run_date`. Jene
+        # Zeile steuert die FACHLICHE Fortschreibung; diese hier nur, ob der
+        # Nachholer beim naechsten Start feuern muss. Zwei Fragen, zwei
+        # Zeilen - sonst haengt die eine an der Semantik der anderen.
+        db.merke_joblauf(conn, "backward_tracking")
         conn.close()
 
 
@@ -3477,6 +3496,47 @@ def build_scheduler(
     # Auswertung bereits vorhandener Kursdaten) - feste Uhrzeit nach dem ueblichen
     # naechtlichen Refresh-Fenster, keine harte Abhaengigkeit (holt am naechsten Tag
     # nach, falls refresh_history/refresh_ohlc an dem Tag noch nicht durch waren).
+    # --- NACHHOLEN, WAS HEUTE NOCH NICHT LIEF (16.08.2026) ----------------
+    #
+    # Begruendung und Messwerte stehen bei `database.db.merke_joblauf()`.
+    # Kurz: fuenf taegliche Cron-Jobs zwischen 06:00 und 07:15 liefen in 48
+    # Stunden zusammen viermal, der Ausstiegs-Job gar nicht - weil die App zur
+    # Uhrzeit nicht lief und APScheduler nichts nachholt.
+    #
+    # DIE REIHENFOLGE BLEIBT ERHALTEN, und das ist kein Schmuck: der Kommentar
+    # am Ausstiegs-Job sagt ausdruecklich "Die Reihenfolge ist noetig, nicht
+    # kosmetisch" - die Regel rechnet auf Werten, die das Backward-Tracking
+    # vorher fortschreibt. Wuerden alle fuenf gleichzeitig nachgeholt, liefe
+    # sie auf dem Stand von gestern. Deshalb der Versatz.
+    def _nachholen(job_id: str, versatz_sekunden: int) -> dict:
+        """kwargs fuer `add_job` - sofort, wenn heute noch nicht gelaufen.
+
+        IM ZWEIFEL NICHT NACHHOLEN. Faellt die Abfrage aus, kommt ein leeres
+        dict und der Job laeuft wie bisher zur Uhrzeit. Ein Nachholer, der bei
+        einer Luecke feuert, macht aus einem Lesefehler einen Modellaufruf."""
+        try:
+            c = db_conn_factory()
+            try:
+                zuletzt = db.letzter_joblauf(c, job_id)
+            finally:
+                c.close()
+            if zuletzt is not None:
+                dann = datetime.fromisoformat(str(zuletzt))
+                if dann.tzinfo is not None:
+                    dann = dann.astimezone().replace(tzinfo=None)
+                if dann.date() >= datetime.now().date():
+                    return {}          # heute schon gelaufen
+            logger.info("Job %s heute noch nicht gelaufen (zuletzt %s) - "
+                        "wird in %d s nachgeholt", job_id, zuletzt or "nie",
+                        versatz_sekunden)
+            return {"next_run_time": datetime.now() + timedelta(
+                        seconds=versatz_sekunden),
+                    "misfire_grace_time": _IMMEDIATE_START_MISFIRE_GRACE_SECONDS}
+        except Exception:                                    # noqa: BLE001
+            logger.exception("Nachhol-Pruefung fuer %s fehlgeschlagen - "
+                             "Job laeuft wie bisher zur Uhrzeit", job_id)
+            return {}
+
     # Ausstiegs-Empfehlungen (2026-08-05) - taeglich 7:15, also NACH dem
     # Backward-Tracking (6:00) und dem Portfoliowert (6:30). Die Reihenfolge
     # ist noetig, nicht kosmetisch: die Regel rechnet auf
@@ -3489,6 +3549,7 @@ def build_scheduler(
         minute=15,
         args=[db_conn_factory, watchlist_provider],
         id="ausstiegs_empfehlungen",
+        **_nachholen("ausstiegs_empfehlungen", 240),
     )
     scheduler.add_job(
         backward_tracking_job,
@@ -3497,6 +3558,7 @@ def build_scheduler(
         minute=0,
         args=[db_conn_factory, watchlist_provider],
         id="backward_tracking",
+        **_nachholen("backward_tracking", 30),
     )
     # Portfolio-Wert + Z-3/RM-7 (2026-08-04, Task #612) - taeglich 6:30, aus
     # demselben Grund wie das Backward-Tracking darueber nach dem naechtlichen
@@ -3510,6 +3572,7 @@ def build_scheduler(
         minute=30,
         args=[db_conn_factory, watchlist_provider],
         id="portfolio_wert",
+        **_nachholen("portfolio_wert", 120),
     )
     # Marktscan-Erfolgsmessung (2026-07-30, Teil 2 der Reifegrad-/Erfolgsmessung-
     # Runde) - taeglich, 1 Std. nach dem Spot/Hebel-Backward-Tracking (analoges

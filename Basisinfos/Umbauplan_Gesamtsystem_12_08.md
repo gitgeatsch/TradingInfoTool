@@ -6085,3 +6085,102 @@ nicht laufen, wenn die längste ununterbrochene Laufzeit darunter liegt.
 | Klasse-1-Doppelung | `struktur` + `bewegung` → `verlauf` |
 | **Anlass-Sperre** | gebaut, Ende zu Ende bewiesen |
 | Export | Anlassblock ergänzt, zwei Fehlalarme entschärft |
+
+---
+
+## Kapitel 50 — Die Betriebspunkte abgearbeitet (16.08.2026)
+
+**Nutzereinwand:** *„warum können wir die offenen Punkte nicht noch vor Punkt 2
+erledigen? sonst vergessen wir wieder."*
+
+**Er hat recht, und die Projektgeschichte gibt ihm recht** — diese Sitzung hat
+mehrfach Dinge gefunden, die „gebaut, aber nie verdrahtet" oder „behoben, aber
+nicht ausgerollt" waren. „Blockiert nicht" heisst hier erfahrungsgemäss „wird
+vergessen".
+
+### 50.1 Der Nachholer — A2b an der Wurzel
+
+**Der Befund war:** fünf tägliche Cron-Jobs zwischen 06:00 und 07:15 liefen in
+48 Stunden zusammen **viermal**, der Ausstiegs-Job **gar nicht**.
+
+```
+ausstiegs_job       0x   cron 07:15
+backward_tracking   1x   cron 06:00
+portfolio_wert      1x   cron 06:30
+refresh_ohlc        1x   24-h-Takt
+```
+
+**Kein Defekt in den Jobs.** Die App war 24,6 von 48 Stunden aus, und **ein
+Cron trifft nur, wenn sie zur Uhrzeit läuft.** APScheduler holt nichts nach —
+der Jobstore liegt im Speicher und ist nach einem Neustart leer.
+
+**Gebaut: ein Zeitstempel je Job.**
+
+```
+db.merke_joblauf(conn, "ausstiegs_empfehlungen")
+db.letzter_joblauf(conn, "ausstiegs_empfehlungen")
+```
+
+Beim Aufbau des Schedulers fragt `_nachholen(job_id, versatz)`: **lief er heute
+schon?** Wenn nein → `next_run_time = jetzt + Versatz`.
+
+> **Warum nicht einfach „beim Start immer laufen".** Genau davor warnt der
+> Kommentar an `refresh_ohlc` seit dem 12.07.: ein teurer Job wäre dann bei
+> **jedem** Neustart fällig, auch nach einem Absturz vor fünf Minuten. Bei elf
+> Neustarts am Tag wären das elf Läufe — und beim Ausstiegs-Job elf Mails.
+
+**Der Versatz erhält die Reihenfolge**, und die ist nicht kosmetisch — der
+Kommentar am Ausstiegs-Job sagt es selbst: die Regel rechnet auf Werten, die
+das Backward-Tracking vorher fortschreibt.
+
+| Job | Versatz |
+|---|---|
+| `backward_tracking` | +30 s |
+| `portfolio_wert` | +120 s |
+| `ausstiegs_empfehlungen` | +240 s |
+
+**Vermerkt wird bei JEDEM Ausgang**, auch wenn der Job nichts zu melden fand.
+Sonst holte der Nachholer bei jedem Neustart erneut nach.
+
+**Im Zweifel wird NICHT nachgeholt:** fällt die Abfrage aus, läuft der Job wie
+bisher zur Uhrzeit. Ein Nachholer, der bei einer Lücke feuert, macht aus einem
+Lesefehler einen Modellaufruf.
+
+### 50.2 Funktional getestet, nicht nur am Quelltext
+
+| Fall | Ergebnis |
+|---|---|
+| Job nie gelaufen | **NACHHOLEN** |
+| Job läuft jetzt | ruhig |
+| **Neustart am selben Tag** | **ruhig** — kein Doppelfeuer |
+| Lauf war gestern | **NACHHOLEN** |
+
+Der dritte Fall ist der wichtige: er ist genau das Szenario mit elf Neustarts.
+
+### 50.3 D-2 erledigt
+
+`Regler_Signal_Pipeline_Abhaengigkeiten.md` kennt die Rollen-Kette jetzt: die
+**sechs Dateien, die einen Prompt verändern** (samt der Pflicht, den
+`PROMPT_STAND` mitzuziehen), die Regler in `config.yaml` — und ausdrücklich das,
+was die Kette **nicht** steuert:
+
+> **Die Frische der Kursreihen** und **die Laufzeit der App.** Beides hat am
+> 16.08. Signale erzeugt bzw. verhindert, ohne dass die Kette es merkte.
+
+Der Standvermerk bleibt stehen — er erklärt den Zustand, in dem die Regel
+*„vor jeder Prompt-Änderung prüfen"* ins Leere lief.
+
+### 50.4 Was jetzt noch offen ist
+
+| | | warum nicht jetzt |
+|---|---|---|
+| **51 % Ausfallzeit** | die App läuft nicht durch | **Betrieb, nicht Code.** Der Nachholer mildert die Folge, nicht die Ursache |
+| **D-1** `.docx` | seit 02.08. still | kein Werkzeug zum Erzeugen vorhanden |
+| **Marktscan-Schwelle** | 0 von 34 im Bärenregime | **Ihre Entscheidung**, kein Defekt |
+| **prompt_stand** | 30 Signale ohne | der Verkaufspfad setzt das Feld nicht — Messlücke, kein Fehlverhalten |
+
+> ⚠️ **Ein eigener Fehler beim Prüfen, zum dritten Mal derselbe Typ.** Mein
+> Reihenfolgetest verglich, **wo die Aufrufe im Quelltext stehen** — dort steht
+> der Ausstiegs-Job zuerst. Die Reihenfolge steckt aber in den
+> **Versatzsekunden**. Der Test hing am falschen Gegenstand, wie schon bei der
+> streng steigenden Testreihe und beim Blocknamen mit Leerzeichen.
