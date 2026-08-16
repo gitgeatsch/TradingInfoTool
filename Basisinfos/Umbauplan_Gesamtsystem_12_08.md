@@ -3879,6 +3879,13 @@ Das ist deterministisch, kostenlos, sofort messbar und immer verfügbar. Ein
 Modell dafür zu bezahlen wäre derselbe Fehler wie beim Richtungsabgleich —
 nur mit anderen Zahlen.
 
+> ⚠️ **STANDVERMERK 16.08.2026 abends: diese Gabelung wurde NICHT
+> genommen.** Die Voraussetzung war, dass die Positionierungsfakten zu
+> deterministischen Regeln werden. Gebaut wurde das Gegenteil — Rolle G
+> ist die **Positionierungsrolle mit eigenen Quellen** (Kapitel 55–60).
+> Damit entfaellt die Begruendung, ihr die Nachrichten zu geben; sie
+> gehoeren zu **BC**, siehe Kapitel 63 und R-R6.
+>
 > **Die ehrliche Konsequenz: Rolle C sollte die Nachrichten- und
 > Katalysator-Rolle sein, nicht die Zahlen-Rolle.** Die Positionierungsfakten
 > werden deterministische Einwände im Faktentext — sichtbar für B, ohne
@@ -7907,3 +7914,116 @@ sein Belegstand, nicht seine Nützlichkeit.*
 
 **Nie in beiden.** A erreicht BC — ein Fakt in A und G ist ein Fakt, den der
 Prüfer und der Geprüfte teilen, und dann prüft niemand mehr.
+
+---
+
+## Kapitel 63 — Wohin die Nachrichten gehören: eine Gabelung, die niemand geschlossen hat (16.08.2026 abends)
+
+**Nutzerhinweis:** *„was ist mit der Nachrichtenschiene für die LLMs — hätte
+diese eher im primären LLM gesehen, aber aktuell nicht bewertbar."*
+
+**Der Hinweis hat einen Widerspruch aufgedeckt, der tiefer liegt als eine
+Formulierung.**
+
+### 63.1 Drei Aussagen, zwei Antworten
+
+| Stelle | sagt | Datum |
+|---|---|---|
+| `positionierung.py` Modulkopf | Nachrichten gehören **zu Rolle G** | 16.08. früh |
+| Umbauplan ~Kap. 39 | *„Rolle C sollte die **Nachrichten- und Katalysator-Rolle** sein, nicht die Zahlen-Rolle"* | 15.08. |
+| Kapitel 55.3 | „Katalysator / Nachrichten" steht unter den **BC-Lücken** | 16.08. |
+
+**Zwei gegen eine — und die Mehrheit lag falsch.**
+
+### 63.2 Es war keine Unachtsamkeit, sondern eine nicht geschlossene Gabelung
+
+**Die Planstelle hatte eine Voraussetzung**, die im selben Absatz steht:
+
+> *„Die Positionierungsfakten werden **deterministische Einwände** im
+> Faktentext — sichtbar für B, ohne zusätzlichen Aufruf."*
+
+**Der Gedanke war schlüssig:** wenn die Zahlen ohnehin als Regel gerechnet
+werden können, soll das zweite Modell das tun, was nur ein Modell kann —
+Sprache lesen. Dann wäre G die Nachrichtenrolle.
+
+> ⚠️ **Diese Gabelung wurde nicht genommen.** Gebaut wurde am 16.08. das
+> Gegenteil: Rolle G ist die **Positionierungsrolle mit eigenen Quellen** —
+> Terminmarkt, On-Chain, COT, Leerverkäufer, Insider (Kapitel 55–60).
+
+**Mit der Voraussetzung entfällt die Folgerung.** Der Satz blieb trotzdem
+stehen, und ein zweiter, davon abgeleiteter Satz wanderte in einen Modulkopf —
+also genau dorthin, wo jemand ihn liest, **bevor** er baut.
+
+### 63.3 Wohin sie gehören: zu BC
+
+**Der entscheidende Grund ist die Einseitigkeit, die R-R6 festhält.**
+
+**Rolle G kann nur einwenden, nie befürworten** — *„sie entscheidet nichts; der
+Einwand kippt die Empfehlung nicht"* (Nutzervorgabe 29.07., unverändert).
+
+> **Ein Katalysator, der ausschließlich vetieren kann, ist keiner.** Eine gute
+> Quartalszahl könnte in Rolle G nichts bewirken, eine schlechte alles. Die
+> Hälfte der Information ginge verloren, und zwar systematisch dieselbe.
+
+**Dazu die Systematik selbst:** in der CSTI-Gliederung ist die Nachricht der
+**Trigger** — der Grund, warum ein Setup *jetzt* handelbar wird. Das ist Teil
+des Einstiegs, nicht seiner Prüfung.
+
+### 63.4 Wo R-R6 nicht greift — und was daraus folgt
+
+**Nach Belegstand wäre die Antwort G.** Die Ablationsstudie ist externe
+Literatur, also P2 **Rang 2**, und R-R6 schickt Rang 2 in den einseitigen Kanal.
+
+**Hier greift die Regel nicht, und der Grund ist kategorial:**
+
+| | beschreibt | Beispiel |
+|---|---|---|
+| alles bisher Platzierte | einen **Zustand** | „der Anteil steht im 82. Perzentil" |
+| eine Nachricht | ein **Ereignis** | „die Quartalszahlen liegen vor" |
+
+**Ein Zustand kann geprüft werden. Ein Ereignis ändert die Fakten, statt eine
+zu sein.** R-R6 ordnet Zustandsbeschreibungen; für Ereignisse entscheidet die
+Wirkrichtung, und die verlangt einen zweiseitigen Kanal.
+
+**R-R6 trägt diesen Zusatz jetzt.**
+
+### 63.5 Warum sie trotzdem nicht bewertbar ist — der Nutzer hat recht
+
+**Erstens: es gibt keine Quelle.** Kein einziger Nachrichten-Client im Projekt.
+Und für unser gemischtes Universum — 43 Kryptowerte, 2 US-Aktien, europäische
+ETFs, WisdomTree-Zertifikate — ist keine kostenlose Quelle offensichtlich.
+
+**Zweitens: ohne Verdrahtung kein gepaarter Vergleich**, also keine Messung.
+
+**Drittens, und das ist der harte Teil:**
+
+> ⚠️ **Eine Schlagzeile ist von Natur aus ein Etikett.** *„Unternehmen
+> übertrifft Erwartungen"* **ist** ein fertiges Urteil — genau das, was am
+> selben Abend als Regime aus Rolle G geflogen ist (R-T2, R-T3, R-T12).
+
+Sie in eine beschreibende Form zu übersetzen ist selbst eine Modellleistung.
+**Wir würden einen ungemessenen LLM-Schritt VOR das LLM setzen** — und damit
+die Fehlerquelle einbauen, gegen die die ganze Faktenschicht geschrieben ist.
+
+**Was sie bewertbar machen würde**, in dieser Reihenfolge:
+
+| | |
+|---|---|
+| **1** | die **Übersetzung** festlegen: Ereignisart, zeitlicher Abstand, Betroffenheit — **ohne Wertung** |
+| **2** | eine kostenlose Quelle für die tatsächliche Watchlist finden |
+| **3** | gepaart messen, wie jede andere Änderung |
+
+**Dieselbe Reihenfolge wie heute bei allem anderen: erst die Form, dann die
+Quelle, dann die Wirkung.** Wer bei der Quelle anfängt, baut ein Etikett ein.
+
+### 63.6 Was geändert wurde
+
+| Stelle | |
+|---|---|
+| `positionierung.py` Modulkopf | Nachrichten ausdrücklich **nicht** in Rolle G, mit Begründung und Verweis |
+| Umbauplan Kap. 39 | **Standvermerk**: die Gabelung wurde nicht genommen — die Stelle bleibt lesbar, sie war eine ernsthafte Überlegung |
+| Regelwerksmanual R-R6 | Zusatz **Zustand gegen Ereignis** |
+
+**Kein Code, nur Zuordnung.** Gebaut wird nichts — die Schiene bleibt hinten.
+Aber sie steht jetzt an der richtigen Stelle, bevor jemand sie nach dem alten
+Modulkopf in die falsche Rolle baut.

@@ -23,8 +23,22 @@ aufgestellt. Open Interest, Finanzierungsrate als Extremwert, Anteil der
 Long-Konten. Das ist keine zweite Lesart des Charts - es ist eine Information,
 die im Chart nicht steht.
 
-NICHT hier: Nachrichten und Termine. Sie gehoeren ebenfalls zu Rolle G, sind
-aber eine eigene Quelle und ein eigenes Vorhaben (Phase IV).
+⚠️ NICHT HIER, UND AUCH NICHT IN ROLLE G: Nachrichten und Termine.
+
+Hier stand bis zum 16.08.2026 abends, sie gehoerten "ebenfalls zu Rolle G".
+Das stammt aus einem Entwurf, in dem die Positionierung zu
+DETERMINISTISCHEN Regeln werden sollte und die zweite Stufe nur noch
+Nachrichten gelesen haette (Umbauplan Kapitel 39). Diese Gabelung wurde
+NICHT genommen - gebaut wurde das Gegenteil: Rolle G ist die
+Positionierungsrolle mit eigenen Quellen (Kapitel 55-60).
+
+WOHIN SIE GEHOEREN: zu Rolle BC. Eine Nachricht ist der KATALYSATOR -
+der Grund, warum ein Setup JETZT handelbar ist, also Teil des Einstiegs
+und nicht seiner Pruefung. Rolle G kann nur einwenden, nie befuerworten;
+ein Katalysator, der ausschliesslich vetieren kann, ist keiner. Eine gute
+Quartalszahl koennte dort nichts bewirken, eine schlechte alles.
+
+Begruendung und Gegenrede: Umbauplan Kapitel 63, Regel R-R6.
 
 ALLE SAETZE MIT BEZUG, KEINE NACKTE ZAHL. Dieselbe Regel wie in
 `lagebeschreibung.py`, und aus demselben Grund: eine Zahl ohne Massstab wird

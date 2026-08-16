@@ -3742,6 +3742,26 @@ geht als `marktlage_beurteilung` in die Eingabe der Rolle BC
 | **Rang 2** — Praxis, unbelegt | **G** | setzt nur eine Fahne, die ein Mensch liest |
 | **Rang 3** — Vermutung | **gar nicht** | nicht aufnahmefähig |
 
+### Zustand oder Ereignis — wo R-R6 nicht greift (Zusatz 16.08. abends)
+
+Die Tabelle oben ordnet **Zustandsbeschreibungen**. Für **Ereignisse** gilt sie
+nicht:
+
+| | beschreibt | Beispiel |
+|---|---|---|
+| Zustand | wie es steht | „der Anteil steht im 82. Perzentil" |
+| **Ereignis** | was geschehen ist | „die Quartalszahlen liegen vor" |
+
+**Ein Zustand kann geprüft werden; ein Ereignis ändert die Fakten, statt eine
+zu sein.** Für Ereignisse entscheidet die **Wirkrichtung**: sie brauchen einen
+Kanal, der in beide Richtungen wirkt — also **A / BC**, nie G.
+
+> **Angewandt auf Nachrichten:** nach Belegstand (Rang 2) läge die Antwort bei
+> G — nach Wirkrichtung bei **BC**. Eine Nachricht ist der *Katalysator*, und
+> ein Katalysator, der ausschließlich vetieren kann, ist keiner. Siehe
+> Kapitel 63; dort auch, warum die Schiene trotzdem noch nicht bewertbar ist
+> (eine Schlagzeile **ist** ein Etikett — R-T12).
+
 **Angewandt am Börsenfluss (16.08.):** Rang 2 → bleibt in **G**. Die Platzierung
 gilt bis zur ersten Messung — trägt er, gehört er nach A; unterscheidet er
 nichts, fliegt er ganz raus.
