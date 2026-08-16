@@ -59,8 +59,42 @@ def baue_lagebild_eingabe(reihen: dict, datum: str) -> dict:
     haette er nach der Streichung jeden Grad als unbelegt gemeldet, auch den
     wahren."""
     from agent.marktlage import beschreibe_marktlage
-    return {"marktlage": beschreibe_marktlage(reihen, datum, lade_stimmung(),
-                                              lade_makro())}
+
+    saetze = beschreibe_marktlage(reihen, datum, lade_stimmung(), lade_makro())
+
+    # ⚠️ FEHLENDE DIMENSIONEN MELDEN, NICHT WEGLASSEN (16.08.2026).
+    #
+    # GEMESSEN AM NB-BACKUP: Rolle A bekam in der Produktion **12 statt 15**
+    # Aussagen. Es fehlten Netto-Liquiditaet, Zinskurve und Anlegerstimmung -
+    # also GENAU die drei, die nicht aus der Kursreihe stammen.
+    #
+    # DIE URSACHE LIEGT NICHT IM CODE. Die Nachladelaeufe vom 12.08. sind nie
+    # auf dem Notebook gelaufen:
+    #
+    #     macro_snapshot        36 Zeilen statt 3.384
+    #     fear_greed_value      36 Werte  statt 3.111  (250er-Perzentil unmoeglich)
+    #     netto_liquiditaet     SPALTE FEHLT   (Desktop: 501)
+    #     rendite_10j           SPALTE FEHLT   (Desktop: 2.414)
+    #
+    # `lade_makro()` und `lade_stimmung()` sind fail-soft und geben ein leeres
+    # dict zurueck - der Satz entfaellt dann lautlos. Das ist fuer den
+    # EINZELausfall richtig; dass die halbe Makro-Dimension seit Tagen fehlt,
+    # darf aber niemandem entgehen.
+    #
+    # "Fail-soft ist fail-silent" - hier mit einer Zeile geheilt, die sagt,
+    # WELCHE Dimension fehlt und nicht nur, dass etwas fehlt.
+    fehlend = [name for name, wort in (
+        ("Netto-Liquiditaet", "Netto-Liquiditaet"),
+        ("Zinskurve", "zehnjaehriger"),
+        ("Anlegerstimmung", "Anlegerstimmung"))
+        if not any(wort in s for s in saetze)]
+    if fehlend:
+        logger.warning(
+            "Lagebild ohne %s - %d Aussagen statt der erwarteten %d. "
+            "Pruefen, ob `lade_makro_historie_nach.py` und "
+            "`lade_fear_greed_nach.py` auf DIESEM Geraet gelaufen sind.",
+            ", ".join(fehlend), len(saetze), len(saetze) + len(fehlend))
+    return {"marktlage": saetze}
 
 
 def lade_stimmung(db: str = "data/tradinginfotool.db") -> dict:

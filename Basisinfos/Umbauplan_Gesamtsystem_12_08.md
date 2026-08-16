@@ -6406,3 +6406,139 @@ Entwicklungsbestand. Dort fehlen sechs Reihen (Rohstoffe, 3QSS, X136), und
 genau die Gruppen mit den dünnsten Daten wären ungeprüft geblieben.
 
 Das Backup liegt bei jedem Export daneben und muss nicht angefordert werden.
+
+---
+
+## Kapitel 53 — Gegenprüfung der grünen Punkte: ein Ausfall und ein Schatz (16.08.2026)
+
+**Nutzerfrage vor Phase III:** *„haben wir alle grünen Punkte und Parameter
+erledigt oder haben wir hier noch Schätze — sind für alle drei Rollen
+ausreichend Mindestkriterien je Assetgruppe vorhanden, und haben wir die
+Information, ob unsere Quellen noch Daten für uns haben?"*
+
+**Antwort: nein, und in beide Richtungen.** Ein Punkt, der als erledigt galt,
+ist es in der Produktion nicht — und eine Tabelle mit 99 Jahren Historie sieht
+keine Rolle.
+
+### 53.1 Der Ausfall: Rolle A bekommt in der Produktion 12 statt 15 Aussagen
+
+**Gemessen am NB-Backup, am echten Lagebild der Produktion:**
+
+```
+Rolle A bekam 12 Aussagen.
+FEHLT: Netto-Liquiditaet, Zinskurve, Anlegerstimmung
+```
+
+**Es fehlen genau die drei, die NICHT aus der Kursreihe stammen** — also die
+gesamte Dimension A4 (Liquidität/Makro) und A5 (Stimmung). In Kapitel 42 stand
+A4 als **„erfüllt"**. Das galt für den Desktop.
+
+**Die Ursache liegt nicht im Code:**
+
+| | NB (Produktion) | Desktop |
+|---|---:|---:|
+| `macro_snapshot` Zeilen | **36** | 3.384 |
+| Fear & Greed | **36** | 3.111 |
+| `netto_liquiditaet_mrd` | **Spalte fehlt** | 501 |
+| `rendite_10j_pct` | **Spalte fehlt** | 2.414 |
+
+**Die Nachladeläufe vom 12.08. sind nie auf dem Notebook gelaufen.** Die
+Skripte liegen im Repo (`lade_makro_historie_nach.py`,
+`lade_fear_greed_nach.py`) — sie wurden dort nur nie ausgeführt.
+
+> **36 Zeilen reichen nicht für ein 250er-Perzentil.** Deshalb entfällt auch
+> der Stimmungssatz, obwohl `fear_greed_value` befüllt ist.
+
+**„Fail-soft ist fail-silent", zum wievielten Mal.** `lade_makro()` und
+`lade_stimmung()` geben bei einem Fehler ein leeres dict zurück, und der Satz
+entfällt lautlos. Für den Einzelausfall richtig — dass die halbe
+Makro-Dimension seit Tagen fehlt, darf niemandem entgehen.
+
+**Behoben, soweit im Code möglich:** das Lagebild meldet jetzt, **welche**
+Dimension fehlt.
+
+```
+WARNING Lagebild ohne Netto-Liquiditaet, Zinskurve, Anlegerstimmung -
+        12 Aussagen statt der erwarteten 15. Pruefen, ob
+        `lade_makro_historie_nach.py` und `lade_fear_greed_nach.py`
+        auf DIESEM Geraet gelaufen sind.
+```
+
+> ⚠️ **Der Rest liegt beim Nutzer:** die beiden Skripte müssen **auf dem
+> Notebook** laufen. Ohne sie urteilt Rolle A weiter ohne Makro und ohne
+> Stimmung — und jede frühere Aussage über die Qualität des Lagebilds steht auf
+> zwölf statt fünfzehn Aussagen.
+
+### 53.2 Der Schatz: 99 Jahre Makro-Historie, die keine Rolle sieht
+
+`makro_historie_monat` — **1.185 Monate, ab 1927, aktuell bis 2026-08**:
+
+| Kennzahl | Monate | ab |
+|---|---:|---|
+| `spx_close`, `spx_trend_deviation_std` | **1.185** | **1927-12** |
+| `oel_wti` | 967 | 1946 |
+| `cpi_yoy_prozent` | 942 | 1948 |
+| `fed_funds_rate` | 865 | 1954 |
+| **`rendite_10y`** | **776** | **1962** |
+| `dxy_proxy` | 248 | 2006 |
+
+**Sie wird von `makro_analog_job` gefüllt** (12 Läufe im Fenster) und von
+**keinem Prompt gelesen**.
+
+**Zwei Dinge sind daran bemerkenswert:**
+
+**Erstens:** `rendite_10y` ist genau die Größe, die Rolle A heute fehlt — nur
+in einer anderen Tabelle und in monatlicher Auflösung. Makro **ist** monatlich
+(CPI, Fed), also ist das kein Nachteil.
+
+**Zweitens:** `spx_trend_deviation_std` ist die Abweichung des breiten Marktes
+vom eigenen Langfristtrend **in Standardabweichungen, über 99 Jahre**. Das ist
+bereits die Form, die R-T5 verlangt — relativ zur eigenen Historie, nicht
+absolut.
+
+**Durch die sieben Aufnahmeprüfungen (R-R4):**
+
+| | | |
+|---|---|---|
+| P1 | Auftrag | Marktlage → **Rolle A** ✓ |
+| P2 | Eignung | Praxis: Makro ist eine der vier Dimensionen ✓ |
+| P3 | Nicht-Redundanz | stammt aus **keiner** unserer Kursreihen ✓ |
+| P4 | Informationsgrenze | LLM1, kein Konflikt mit Rolle G ✓ |
+| P5a | gehört es ins Modell? | beschreibend, kein Etikett ✓ |
+| P5b | übersetzt? | *„1,6 Standardabweichungen über dem Langfristtrend"* ✓ |
+| P6 | Unterscheidungskraft | bewegt sich monatlich ✓ |
+| P7 | Risikoklasse | **grün** ✓ |
+
+**Ein Kandidat, der alle sieben besteht — und er kostet keinen einzigen neuen
+Abruf.**
+
+### 53.3 Der Stand der Mindestkriterien, korrigiert
+
+| Rolle | Soll | Produktion |
+|---|---|---|
+| **A** | 4 Dimensionen + Stimmung | **2 von 4** — Trend ✓, Volatilität ✓, Breite gestrichen, **Makro ✗**, **Stimmung ✗** |
+| **BC** | CSTI + 4 | 3 von 4 CSTI, **Auslöser fehlt** · 1,5 von 4 Auswahlkriterien |
+| **G** | 2 unabhängige Quellen | **1** — und nur bei Krypto |
+
+> **Rolle A galt als die am besten aufgestellte Rolle.** Nach dieser Messung
+> ist sie es nicht: von vier Praxisdimensionen liefert die Produktion zwei.
+
+### 53.4 Was NICHT gefunden wurde
+
+Alle 38 Spalten in `macro_snapshot` sind befüllt und aktuell — VIX, Dollar-Index,
+M2 für vier Währungsräume, CPI, fünf Leitzinsen, BTC-Dominanz, Zyklusrisiko.
+**Sie erreichen keine Rolle**, sind aber auch nicht als grüne Punkte geführt;
+sie durch P1–P7 zu schicken ist eigene Arbeit, keine Nachlese.
+
+`hebel_triggers` mit **52.770** Zeilen bleibt der bekannte Fall: gerechnet,
+niemand liest ihn — und als Prompt-Parameter durch P4 gesperrt (Kapitel 43).
+
+### 53.5 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **886, alle bestanden** |
+| freie Namen | 0 |
+| Simulation gegen NB-Backup | 6 Gruppen, 0 Fehler, 0 Lücken |
+| `pruefe_phase1.py` | bestanden |
+| Warnung funktional geprüft | schlägt gegen das NB-Backup an, schweigt bei vollständigen Daten |

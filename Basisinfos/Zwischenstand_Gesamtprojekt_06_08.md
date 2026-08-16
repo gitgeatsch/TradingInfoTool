@@ -1750,6 +1750,13 @@ verdoppeln.
 
 ### Rolle A
 
+> ⚠️ **KORREKTUR 16.08.2026 (abends).** Rolle A galt als die am besten aufgestellte Rolle. Am NB-Backup gemessen bekommt sie in der PRODUKTION **12 statt 15 Aussagen** - es fehlen Netto-Liquiditaet, Zinskurve und Anlegerstimmung, also die gesamte Makro-Dimension und die Stimmung.
+>
+> **Ursache:** die Nachladelaeufe vom 12.08. sind nie auf dem Notebook gelaufen (`macro_snapshot` 36 statt 3.384 Zeilen, zwei Spalten fehlen ganz). **Der Nutzer muss `lade_makro_historie_nach.py` und `lade_fear_greed_nach.py` auf dem NB ausfuehren.** Das Lagebild meldet den Ausfall seit heute.
+>
+> **Und ein Fund in die andere Richtung:** `makro_historie_monat` traegt 1.185 Monate ab 1927 (Rendite 10J, CPI, WTI, Fed Funds, S&P-Trendabweichung in Standardabweichungen) - aktuell bis 2026-08 und von keinem Prompt gelesen. Umbauplan Kapitel 53.
+
+
 | # | offen | Klasse |
 |---|---|---|
 | A-5 | Stimmung über BTC hinaus — **VIX liegt vor, aber nur ein Wert in der Historie** | grün, blockiert durch Datenlage |
