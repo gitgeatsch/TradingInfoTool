@@ -4788,3 +4788,285 @@ Vorhaben, eigene Recherche.
 > bekannt ist, ob die eine funktioniert, wäre Bauen statt Messen. **V-1 ist
 > klein genug, um beides zu tun:** Rohstoffe anschließen, dann eine Woche
 > Verteilung, dann entscheiden.
+
+---
+
+## Kapitel 41 — Das Aufnahmekriterium für Parameter, verbindlich (16.08.2026, abends)
+
+**Nutzervorgabe, wörtlich:** *„Ein Parameter soll zu einer Rolle aufgenommen
+werden, wenn er die erforderlichen Kriterien erfüllt UND für die Aufgabe, also
+unser Ziel, tatsächlich geeignet bzw. erforderlich ist — nicht weil ihn eine
+Quelle liefert."*
+
+Bis heute gab es dieses Kriterium nicht. Jede Ergänzung wurde einzeln
+begründet, und die Begründung lautete meistens *„es ist gerechnet und liegt
+ungenutzt herum"*. **Das ist eine Verfügbarkeitsbegründung, keine
+Eignungsbegründung** — genau der Einwand des Nutzers.
+
+### 41.1 Die sieben Prüfungen, in dieser Reihenfolge
+
+Die Reihenfolge ist nicht kosmetisch: **der billigste Ausschlussgrund steht
+vorn.** Wer zuerst die LLM-Tauglichkeit prüft, formuliert einen Satz sorgfältig
+aus, der schon an Prüfung 1 scheitert.
+
+| | Prüfung | Frage | fällt durch, wenn |
+|---|---|---|---|
+| **P1** | **Auftrag** | Braucht die AUFGABE dieser Rolle den Parameter? | er gehört zur Aufgabe einer anderen Rolle oder zu keiner |
+| **P2** | **Eignung** | Ist der Zusammenhang **gemessen** oder **in der Praxis etabliert**? | er ist nur plausibel |
+| **P3** | **Nicht-Redundanz** | Sagt er etwas, das die vorhandenen Parameter dieser Rolle nicht schon sagen? | er ist eine weitere Übersetzung desselben Fakts |
+| **P4** | **Informationsgrenze** | Hat ihn die andere Stufe schon? | ja — dann verlieren beide Stufen ihre Unabhängigkeit |
+| **P5** | **LLM-Tauglichkeit** | Satz mit Maßstab, keine nackte Zahl, kein Etikett? | Rohwert oder Wertung (R-T1/T3/T5) |
+| **P6** | **Unterscheidungskraft** | Bewegt er sich über Assets **oder** über die Zeit? | er ist über beides konstant (R-T6) |
+| **P7** | **Risikoklasse** | grün, gelb oder rot? | gelb/rot **ohne** gepaarten Vergleich |
+
+**P2 hat drei Stufen, und sie sind nicht gleichwertig:**
+
+| Rang | Beleg | zulässig |
+|---|---|---|
+| 1 | in unseren Daten **gemessen** | ja |
+| 2 | in der **Praxis** durchgängig angewendet | ja — Nutzervorgabe vom 16.08.: *„die Information sollte tragen, weil es in der Praxis so angewendet wird"* |
+| 3 | plausibel, aber unbelegt | **nein** |
+
+> **Warum Rang 2 zulässig ist, obwohl er kein Beweis ist.** Rang 1 ist uns
+> derzeit weitgehend verschlossen: **kein Verfahren schlägt in unseren Daten die
+> Basisrate** (8.441 Fälle, zwei Verfahren, beide Merkmalsfamilien). Bestünde
+> man auf Rang 1, dürfte gar nichts aufgenommen werden. Rang 2 ist die
+> nächstbeste Vorannahme — und sie ist **falsifizierbar**, weil jeder aufgenommene
+> Parameter danach gegen die Basisrate gemessen wird.
+
+### 41.2 Die Obergrenze — Aufnehmen ist nicht kostenlos
+
+**Das ist die zweite Hälfte des Nutzerauftrags und wurde bisher völlig
+übersehen.** Ein Parameter mehr ist nicht neutral, sondern verdrängt
+Aufmerksamkeit:
+
+| Befund | Quelle |
+|---|---|
+| **Fünf oder mehr Indikatoren → schlechtere Ergebnisse** als ein bis zwei klare Regeln | eigene Methodik 2.21.3 |
+| Ab **12 Indikatoren** verlangsamt sich die Entscheidung messbar (3–8 s je Trade) | Praxisliteratur |
+| Eine Standardabweichung mehr Informationskomplexität → **18 % langsamere** Verarbeitung, **23 % längere** Fehlbewertung | Fed-Studie, Überlastungsindex bis 1885 |
+| Mehrere Indikatoren erzeugen in der Regel **Redundanz und widersprüchliche Signale**, keine bessere Trefferquote | Praxisliteratur |
+
+> **Daraus folgt eine harte Regel:** ab der Obergrenze ist eine Aufnahme ein
+> **Tausch**, keine Ergänzung. Wer etwas aufnimmt, benennt, was dafür geht.
+
+**Vorgeschlagene Budgets** (Aussagen, nicht Datenpunkte):
+
+| Rolle | Budget | heute | Kopfraum |
+|---|---|---|---|
+| Rolle A | **16** | 15 | 1 |
+| Rolle BC | **14** | ~12 (Krypto Spot) | 2 |
+| Rolle G | **8** | 4 | 4 |
+
+Rolle BC hat das kleinste Budget bei der größten Lückenliste — **das ist der
+eigentliche Engpass des Systems**, und er lässt sich nur durch Streichen von
+Redundanz auflösen, nicht durch Hinzufügen.
+
+### 41.3 Was die Recherche bestätigt — und was sie korrigiert
+
+**BESTÄTIGT, und schärfer als erwartet: die Konstruktionsbedingung ist ein
+mathematischer Satz, keine Faustregel.**
+
+> Erhalten zwei Prüfer **identische** Eingaben, bildet die Debatte ein
+> **Martingal**: die erwartete Korrektheit verbessert sich über Runden **nicht**.
+> Sie kommen unabhängig zu denselben Schlüssen, und der Austausch verstärkt nur
+> den geteilten Prior. Hinzu kommt: **LLM-Fehler korrelieren zu über 60 %**,
+> ein naives Ensemble hat also einen Fehlerboden ungleich null.
+>
+> **Was hilft, ist gezielte Informationsasymmetrie.** Sie verwandelt das
+> Martingal in echte Meinungsrevision. Die Debatte verbessert die Genauigkeit
+> des Urteilenden **dann, wenn der Prüfer Information hat, die dem Urteilenden
+> fehlt.** Mit komplementärem privatem Wissen fiel der Brier-Score in einem
+> Versuch von 0,45 auf 0,004.
+
+Damit ist der Umbau vom 16.08. früh nicht mehr nur begründet, sondern **die
+einzige Konstruktion, die überhaupt funktionieren kann**. Und die Messung des
+alten Richtungsabgleichs — 17× LONG in 2.469 Prüfungen — ist genau das
+vorhergesagte Martingal.
+
+**KORRIGIERT: unsere größte Lücke ist nicht die Positionierung, sondern die
+Nachrichten.**
+
+> In einer Ablationsstudie über LLM-Handelsagenten sind **Nachrichten und
+> Fundamentaldaten die beiden tragenden Quellen** — sie liefern komplementäre
+> Signale (Stimmung bzw. Verankerung). Werden sie nacheinander entfernt,
+> **sinkt die kumulierte Rendite**; ohne beide bricht die Leistung deutlich ein.
+
+Das deckt sich mit unserem eigenen Grundbefund (*Nachrichten* als einer von drei
+Wegen, die das Vorzeichen drehen können) — **und es stellt die bisherige
+Reihenfolge in Frage.** Phase VIII war das Letzte; nach dieser Studie ist es
+das Wirksamste.
+
+**PRÄZISIERT: COT trägt nur am Extremwert.**
+
+> Die Positionierung des „Managed Money" ist **dann** aussagekräftig, wenn sie
+> **historische Extremwerte** erreicht: Rekord-Netto-Long geht Korrekturen oft
+> voraus, extreme Shorts markieren häufig Böden.
+
+**Konsequenz für den Satzbau:** COT gehört als **Perzentil der eigenen
+Historie** in den Prompt, nicht als Netto-Position — genau die Form, die die
+Finanzierungsrate schon hat. Ein Rohwert würde P5 verletzen und wäre nach
+dieser Quelle zusätzlich inhaltlich schwach.
+
+### 41.4 Die Rollen, verbindlich definiert
+
+**Bis heute steht nirgends verbindlich, was die zweite Stufe tut.** Im
+`Regelwerksmanual.md` finden sich zwei Halbsätze; alles Übrige lebt in
+Code-Kommentaren. Eine Rolle ohne festgeschriebenen Auftrag lässt sich weder
+prüfen noch widerlegen.
+
+| | **Rolle A** | **Rolle BC** | **Rolle G** *(Name offen)* |
+|---|---|---|---|
+| **Stufe** | LLM1, Aufruf 1 | LLM1, Aufruf 2 | LLM2, Aufruf 3 |
+| **Aufgabe** | Wie steht der MARKT? | Was tun wir mit DIESEM Wert? | Spricht etwas AUSSERHALB unserer Kursdaten dagegen? |
+| **Grundlage** | Leitmärkte, Makro, Stimmung | Kursreihe + Depot + Auftrag + Lagebild | ausschließlich Fremdquellen |
+| **darf NICHT** | einzelne Assets beurteilen | Positionsgröße oder Hebel wählen | die Empfehlung kippen |
+| **Ausgabe** | Lage + Einstufung je Klasse | Belege, Aktion, Begründung, Falsifikator | Einwand ja/nein/unklar + Grund |
+| **Mindestgrundlage** | drei Leitmärkte | Struktur + Bestand + Auftrag | **offen — siehe 41.5** |
+| **Messkriterium** | Zuspitzungswächter | gegen die Basisrate | gegen die Basisrate, **plus Verteilung** |
+
+> ⚠️ **Die Benennung ist zu entscheiden.** „Rolle C" ist doppelt vergeben: das
+> **C in „BC"** ist der Entscheider in LLM1 (seit dem 10.08. mit B in einem
+> Aufruf). Z.ai am 16.08. ebenfalls „C" zu nennen war mein Fehler — und zwar in
+> derselben Ecke, in der der Nutzer am 12.08. bereits reklamiert hatte.
+> Vorschlag: **Rolle G — Gegenprüfer.** „Z" ist im Projekt für Regeln vergeben
+> (Z-2, Z-3).
+
+### 41.5 Bestandsabgleich — alle Parameter gegen die sieben Prüfungen
+
+#### Rolle A — 15 Aussagen
+
+| Parameter | P1 | P2 | P3 | P5 | P6 | Urteil |
+|---|:--:|:--:|:--:|:--:|:--:|---|
+| Netto-Liquidität (26-Wochen-Bezug) | ✓ | Praxis | ✓ | ✓ | ✓ | bleibt |
+| Zinskurven-Spread + Perzentil | ✓ | Praxis | ✓ | ✓ | ✓ | bleibt |
+| Trend 250/60 je Leitmarkt (3×) | ✓ | Praxis | ✓ | ✓ | ✓ | bleibt |
+| **Spanne Hoch/Tief je Leitmarkt (3×)** | ✓ | Praxis | **⚠** | ✓ | ✓ | **prüfen** |
+| Volatilität + Perzentil (3×) | ✓ | Praxis | ✓ | ✓ | ✓ | bleibt |
+| Liquidität (Amihud) + Perzentil (3×) | ✓ | Praxis | ✓ | ✓ | ✓ | bleibt |
+| Stimmung, nur BTC | ✓ | Praxis | ✓ | ✓ | ✓ | **ausweiten** |
+
+> ⚠️ **P3-Fund, am gerenderten Satz sichtbar:**
+> ```
+> Bitcoin steht 37.6 % unter seinem Schlusskurs von vor 250 Handelstagen ...
+> Bitcoin liegt 37.6 % unter dem Schlusskurs-Hoch dieser 250 Handelstage ...
+> ```
+> **Dieselbe Zahl in zwei Sätzen.** Liegt das Hoch am Anfang des Fensters — in
+> einem Abwärtstrend der Regelfall —, fallen Trend und Spanne zusammen. Der
+> zweite Satz sieht dann wie ein zweiter Fakt aus und ist keiner. Bei Aktien
+> und Rohstoffen trennen sich die Zahlen; die Redundanz ist also **bedingt**,
+> nicht strukturell. **Zu klären, nicht sofort zu streichen.**
+
+#### Rolle BC — Krypto Spot, rund 12 Aussagen
+
+| Parameter | P1 | P2 | P3 | P5 | P6 | Urteil |
+|---|:--:|:--:|:--:|:--:|:--:|---|
+| Auftrag (2 Sätze) | ✓ | Praxis | ✓ | ✓ | je Gruppe | bleibt |
+| Bestand + Gegenseite | ✓ | **gemessen** (KAS-Fall) | ✓ | ✓ | ✓ | bleibt |
+| **Struktur (2)** | ✓ | Praxis | **⚠** | ✓ | ✓ | **Familie** |
+| **Bewegung (1)** | ✓ | Praxis | **⚠** | ✓ | ✓ | **Familie** |
+| **Marken (2)** | ✓ | Praxis | **⚠** | ✓ | ✓ | **Familie** |
+| Volumen (2) | ✓ | Praxis | ✓ | ✓ | ✓ | bleibt |
+| Lücken (0–3) | ✓ | **gemessen** (KAS-Fall) | ✓ | ✓ | je Gruppe | bleibt |
+| Lagebild + Klasseneinstufung | ✓ | Praxis | ✓ | ✓ | ✓ | bleibt |
+| Liquidationsabstand (nur Hebel) | ✓ | Praxis | ✓ | ✓ | ✓ | bleibt |
+| Sektorbezug (nur ETF) | ✓ | Praxis | ✓ | ✓ | ✓ | bleibt |
+| Finanzierung (nur Hebel) | ✓ | Praxis | ✓ | ✓ | ✓ | bleibt |
+
+> ⚠️ **Der größte P3-Befund des ganzen Systems, und er steht seit dem 11.08. im
+> eigenen Quelltext:** *„Struktur, Bewegung und Niveaus sind derselbe Fakt in
+> drei Übersetzungen."* Das sind **fünf von zwölf Aussagen aus einer Familie.**
+>
+> Nach mRMR ist genau das der Fall, den man vermeidet: hohe Relevanz, aber hohe
+> Redundanz untereinander. Und es erklärt eine eigene Messung, für die es bisher
+> keine Erklärung gab — **das Modell zählte in 72 % der Fälle nur ein bis zwei
+> unabhängige Faktoren.** Es hat die Redundanz korrekt erkannt.
+>
+> **Das ist der Grund, warum BC keinen Kopfraum hat.** Der Auslöser, die
+> Handelbarkeit und der Katalysator passen erst hinein, wenn die Familie
+> zusammengefasst ist.
+
+#### Rolle G — 4 Aussagen
+
+| Parameter | P1 | P2 | P3 | **P4** | P6 | Urteil |
+|---|:--:|:--:|:--:|:--:|:--:|---|
+| Offene Kontrakte, Änderung | ✓ | Praxis | ✓ | ✓ | ✓ | bleibt |
+| Finanzierungsrate, Perzentil | ✓ | Praxis | **⚠ dieselbe Tabelle** | ✓ | ✓ | bleibt |
+| Anteil Long-Konten, Perzentil | ✓ | Praxis | **⚠ dieselbe Tabelle** | ✓ | ✓ | bleibt |
+| **Marktregime + Dauer** | ✓ | Praxis | ✓ | **✗** | global | **Konflikt** |
+
+> ⚠️ **Zwei Befunde, und beide sind ernst.**
+>
+> **P3:** die drei Terminmarktzahlen stammen aus **einer** Tabelle
+> (`open_interest_snapshot`) und beschreiben dieselbe Menge Menschen auf
+> derselben Börse. Drei Zahlen, aber **eine** Quelle.
+>
+> **P4:** das Regime wird aus **unserer** Kursreihe gerechnet (BTC gegen
+> EMA50/200) plus Fear & Greed — beides sieht Rolle A bereits. Streng nach der
+> Konstruktionsbedingung gehört es damit auf die LLM1-Seite. Es steht heute bei
+> G, weil G sonst nur **eine** Quelle hätte.
+>
+> **Ehrlich zusammengefasst: Rolle G hat heute eine symbolspezifische
+> Fremdquelle.** Nach dem Martingal-Satz ist das der Grenzfall, in dem eine
+> Gegenprüfung gerade eben etwas beitragen kann — und keine Reserve hat.
+
+#### Rolle BC — die übrigen fünf Körbe
+
+Die Tabelle oben zeigt Krypto Spot. Die anderen Körbe teilen **dieselben fünf
+Grundblöcke** und unterscheiden sich in dem, was dazukommt oder fehlt:
+
+| Korb | Aussagen | zusätzlich | fehlt | P3-Lage |
+|---|:--:|---|---|---|
+| Krypto Spot | ~12 | — | Auslöser, Handelbarkeit, Katalysator | **Familie 5/12** |
+| Krypto Hebel | ~15 | Liquidationsabstand (2), Finanzierung (1) | Kostenhöhe (rot), Haltedauer | Familie 5/15 |
+| Aktien | ~12 | — | **Termine, Fundamentaldaten**, Handelszeiten | Familie 5/12 |
+| Rohstoffe | ~10 | Lücken-Satz (Umsatz) | Volumen, **Zertifikatsnatur**, Basiswert, Emittent | Familie 5/10 — **am schwersten** |
+| Themen-ETF | ~14 | Sektorbezug (2) | TER, Spread, Handelszeiten | Familie 5/14 |
+| Absicherung | ~15 | **Absicherungslage (5)** — Exposure, Deckung, Hebelfaktor, nötiger Einsatz, laufende Gebühr | Volumen, zweite Marke | Familie 5/15, **am günstigsten** |
+
+> **Zwei Dinge fallen dabei auf.**
+>
+> **Die Absicherung ist die am besten zugeschnittene Gruppe** — als einzige hat
+> sie einen eigenen, auftragsspezifischen Block, und der besteht aus fünf
+> Aussagen, die zu keiner anderen redundant sind.
+>
+> **Rohstoffe sind der schlechteste Fall:** die wenigsten Aussagen, davon der
+> größte Anteil aus der redundanten Familie, und die einzige Gruppe, bei der
+> die Natur des Instruments (Zertifikat, Emittent, Bezugsverhältnis) im Prompt
+> gar nicht vorkommt.
+
+#### Was dieser Abgleich NICHT abdeckt
+
+**Er ist vollständig für die Parameter, die heute im Prompt stehen — und für
+nichts darüber hinaus.** Ausdrücklich offen:
+
+| offen | warum |
+|---|---|
+| **P2 auf Rang 1** (gemessen) für fast alle Zeilen | steht auf „Praxis", weil kein Verfahren die Basisrate schlägt. Das ist kein Versäumnis dieses Abgleichs, sondern der Stand des Projekts |
+| **P7 (Risikoklasse)** je Zeile | nur für die Neuzugänge vergeben; die Altbestände sind nie eingestuft worden |
+| **Rolle G für Aktien, Rohstoffe, ETF** | es gibt sie nicht — nichts abzugleichen |
+| **Die alte Kette** (`krypto/`, `aktien/`, `rohstoff/`, `hedge/`, `themen_etf/`) | läuft parallel mit eigenen, viel größeren Faktenblöcken. Dieser Abgleich betrifft **nur** die Rollen-Kette |
+| **Ausgabeseite** | was die Rollen ZURÜCKgeben, ist hier nicht geprüft — eigener Schritt |
+
+### 41.6 Was daraus für die Reihenfolge folgt
+
+**Die Recherche dreht meine eigene Priorität an zwei Stellen:**
+
+| | bisher | jetzt | Grund |
+|---|---|---|---|
+| Nachrichten | Phase VIII, zuletzt | **hoch** | Ablationsstudie: Nachrichten und Fundamentaldaten tragen; ohne sie sinkt die Rendite |
+| Deribit für Krypto | Phase V-3 | **zurück** | DVOL/Skew stehen für **BTC als marktweites Barometer** — innerhalb Krypto bekäme jeder Coin denselben Satz. Global wie das Regime, keine symbolspezifische Quelle |
+| Redundanz bei BC | gar nicht im Plan | **neu, vorn** | fünf von zwölf Aussagen sind eine Familie; ohne Zusammenfassen kein Kopfraum |
+| CFTC / FINRA | Phase V-1 / V-2 | **bleibt vorn** | die einzigen symbolspezifischen Fremdquellen, die wir schon haben |
+
+**Und eine Regel, die ab jetzt für jeden Schritt gilt:** vor der Umsetzung wird
+der Parameter durch P1–P7 geschickt und das Ergebnis im Plan vermerkt. Fällt er
+durch, steht **warum** dort — nicht nur, dass er nicht kam.
+
+**Quellen:**
+[Diverse Evidence, Better Forecasts — Deliberation unter Informationsasymmetrie](https://arxiv.org/html/2607.01661v1) ·
+[StockBench — Ablation über Datenquellen](https://arxiv.org/html/2510.02209v1) ·
+[Fed: Effects of Information Overload on Financial Markets](https://www.federalreserve.gov/econres/ifdp/effects-of-information-overload-on-financial-markets-how-much-is-too-much.htm) ·
+[mRMR — Relevanz und Redundanz](https://en.wikipedia.org/wiki/Minimum_redundancy_feature_selection) ·
+[CFTC Commitments of Traders](https://www.cftc.gov/MarketReports/CommitmentsofTraders/index.htm) ·
+[Are more indicators better for trading decisions?](https://www.swissquote.com/en-ch/private/inspire/blog/technical-analysis/are-more-indicators-better-trading-decisions)
