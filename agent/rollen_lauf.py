@@ -1332,8 +1332,8 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     def _nacharbeit() -> None:
         try:
             zweite = ZM.hole(faktentext=bc_ein, urteil=befund,
-                             symbol=symbol, zai_client=zai_client,
-                             config=config)
+                             symbol=symbol, assetklasse=assetklasse,
+                             zai_client=zai_client, config=config)
             if zweite:
                 eintrag["zweite_meinung"] = zweite
                 eintrag["betreff"], eintrag["text"] = baue(ZM.zeilen(zweite))

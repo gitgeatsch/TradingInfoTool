@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import logging
 import sqlite3
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -171,8 +172,87 @@ def _perzentil(werte: list, wert: float) -> int | None:
     return int(round(100.0 * kleiner / len(werte)))
 
 
-def lage(conn, symbol: str) -> dict:
+# --- DIE ZWEITE INFORMATIONSART (16.08.2026, Schritt 2) --------------------
+#
+# WARUM UEBERHAUPT. Rolle G hatte bis heute EINE Quellenart: den Terminmarkt.
+# Drei Boersen daraus zu machen (Schritt 1) hat den Fakt verbessert, aber die
+# Art nicht vermehrt - offene Kontrakte bleiben offene Kontrakte. R-R3 verlangt
+# zwei UNABHAENGIGE Quellen, und unabhaengig heisst: andere Erhebung, andere
+# Frage. Boersenzu- und -abfluesse sind gezaehlte Muenzbewegungen auf der Kette,
+# kein Positionsstand an einem Terminmarkt.
+#
+# WARUM DER FLUSS UND NICHT MVRV. Gemessen am 16.08. ueber das letzte Jahr,
+# Perzentil im 730-Tage-Fenster:
+#
+#     Netto-Boersenfluss   Median 47, Streuung 0..99, 97 verschiedene Werte
+#     MVRV                 Median  5, Streuung 0..74, 68 % Extremtage
+#
+# MVRV liegt seit einem Jahr fast durchgehend im untersten Dezil - der Satz
+# hiesse fast immer "aussergewoehnlich niedrig". Das ist ein konstantes Feld
+# (R-T6), und zwar gemessen statt vermutet. Dazu kommt P3: `regime.py` haelt
+# ausdruecklich fest, dass MVRV, Log-Regressions-Risiko und Fear & Greed
+# DIESELBE Frage beantworten - und Fear & Greed sieht Rolle A bereits.
+#
+# ⚠️ ES IST BTC-WEIT, NICHT SYMBOLSPEZIFISCH. Fuer ein SEI-Signal beschreibt es
+# den Rahmen, nicht den Wert - dieselbe Begruendung, unter der auch das Regime
+# hier steht. G2 (symbolspezifisch) traegt weiterhin der Terminmarkt; dieser
+# Fakt erfuellt G1 (zweite Art), nicht G2. Wer beides aus einer Quelle zaehlt,
+# taeuscht sich selbst.
+#
+# WIE LANG DAS FENSTER. 730 Tage - zwei Marktjahre. Kuerzer waere anfaellig fuer
+# eine einzelne Phase, laenger wuerde die Halving-Zyklen mischen.
+FLUSS_FENSTER_TAGE = 730
+FLUSS_MINDESTREIHE = 120
+
+# EIN ABRUF JE TAG, NICHT JE SYMBOL. Rolle G laeuft fuer jedes Signal; der Wert
+# gilt fuer den ganzen Kryptomarkt. Ohne diesen Zwischenspeicher holte ein Lauf
+# mit zwanzig Signalen zwanzigmal dieselben 800 Zeilen - an einer Schnittstelle
+# mit 10 Anfragen je 6 Sekunden.
+#
+# BEWUSST IM PROZESS UND NICHT IN DER DATENBANK: eine neue Tabelle mitten in
+# einer laufenden Messkampagne ist ein Schemaeingriff in die Produktion. Der
+# Cache faellt beim Neustart weg, und dann wird einmal neu geholt - das ist
+# tragbar. Persistenz steht als offener Punkt im Umbauplan.
+_fluss_cache: dict[str, list] = {}
+
+
+def _fluss_reihe() -> list:
+    """Die Netto-Boersenfluesse, hoechstens einmal je Kalendertag geholt."""
+    schluessel = datetime.now(timezone.utc).date().isoformat()
+    if schluessel in _fluss_cache:
+        return _fluss_cache[schluessel]
+    try:
+        from api.onchain import get_btc_exchange_flow_history
+
+        reihe = get_btc_exchange_flow_history(tage=FLUSS_FENSTER_TAGE + 70)
+    except Exception as exc:                                  # noqa: BLE001
+        # GEZAEHLT, NICHT VERSCHLUCKT - und der leere Eintrag verhindert, dass
+        # ein Lauf mit zwanzig Signalen zwanzigmal in denselben Fehler laeuft.
+        logger.info("Boersenfluss nicht abrufbar: %s", exc)
+        reihe = []
+    _fluss_cache.clear()                     # nur der heutige Tag bleibt
+    _fluss_cache[schluessel] = reihe
+    return reihe
+
+
+def _boersenfluss() -> dict | None:
+    """Wo steht der heutige Netto-Zufluss in seiner eigenen Geschichte?"""
+    reihe = _fluss_reihe()
+    if len(reihe) < FLUSS_MINDESTREIHE:
+        return None
+    fenster = [w for _, w in reihe[-FLUSS_FENSTER_TAGE:]]
+    datum, jetzt = reihe[-1]
+    return {"datum": datum, "netto": jetzt, "n": len(fenster),
+            "perzentil": _perzentil(fenster, jetzt)}
+
+
+def lage(conn, symbol: str, assetklasse: str | None = None) -> dict:
     """Die Positionierungslage - oder ein leeres dict, wenn nichts vorliegt.
+
+    `assetklasse` entscheidet ueber den Boersenfluss und nichts sonst. Fehlt
+    sie, bleibt er WEG - fail-closed. Ein Satz ueber Bitcoin-Bewegungen in der
+    Beurteilung einer Aktie waere kein fehlender Fakt, sondern ein falscher,
+    und P1 (Auftrag) schliesst ihn aus.
 
     FAIL-SOFT MIT VERMERK: was fehlt, steht unter `fehlt` und wird im Satzbau
     BENANNT. Ein stiller Ausfall waere hier besonders teuer, weil die ganze
@@ -218,6 +298,30 @@ def lage(conn, symbol: str) -> dict:
     div = _divergenz(conn, sym)
     if div:
         aus["divergenz"] = div
+
+    # NUR FUER KRYPTO, und die Liste ist bewusst eng. "krypto" und "coin"
+    # decken die Gruppenvokabeln ab, die die Kette fuehrt; alles andere - auch
+    # ein unbekannter Wert - faellt heraus. Genau die Vokabelverwirrung
+    # (`etf` gegen `themen_etf`) hat am 16.08. zwei Fakten stillgelegt.
+    if str(assetklasse or "").lower() in ("krypto", "coin", "crypto"):
+        fluss = _boersenfluss()
+        if fluss:
+            aus["boersenfluss"] = fluss
+        else:
+            # ⚠️ EIGENER SCHLUESSEL, NICHT `fehlt` - und das ist kein Stil,
+            # sondern ein Fehler, den diese Zeile verhindert.
+            #
+            # `zweite_meinung.rolle_g` bricht ab, wenn `len(fehlt) >= 3` ist
+            # (G5: ueber nichts wird nicht gefragt). Haenge ich den Fluss dort
+            # an, kann eine ZUSAETZLICHE Quelle die Rolle STILLLEGEN, sobald
+            # sie ausfaellt - genau verkehrt herum. Gefunden beim Nachlesen der
+            # Aufrufstelle, nicht vom Test: die Simulation lief gruen.
+            #
+            # UND DER WORTLAUT WAERE FALSCH GEWESEN. `fehlt` erzeugt den Satz
+            # "Zu diesem Wert liegt keine Angabe vor" - der Boersenfluss sagt
+            # aber nichts ueber diesen Wert, er beschreibt den Rahmen.
+            aus.setdefault("fehlt_rahmen", []).append(
+                "Boersenzu- und -abfluesse")
 
     # DAS REGIME MIT SEINER DAUER (16.08.2026). Es ist gerechnet und stand
     # bisher in keinem Prompt. Fuer Rolle G gehoert es hierher und NICHT zu
@@ -393,11 +497,35 @@ def saetze(e: dict) -> list[str]:
                      f"{e.get('long_n', 0)} Messungen - {wie}")
         z.append(satz + ".")
 
+    # DIE ZWEITE INFORMATIONSART. Kein Wort ueber Richtung oder Folgen: dass
+    # Zufluesse Verkaufsdruck ANKUENDIGEN, ist eine gaengige Lesart und in
+    # unseren Daten nie gemessen - also P2 Rang 3 und nicht aufnahmefaehig.
+    # `onchain.py` nennt sie im Feldkommentar "potenziell Verkaufsdruck"; genau
+    # dieses "potenziell" gehoert nicht in einen Faktensatz.
+    f = e.get("boersenfluss")
+    if f and f.get("perzentil") is not None:
+        pf = f["perzentil"]
+        richtung = ("flossen mehr Bitcoin auf die Boersen als von ihnen herunter"
+                    if f["netto"] > 0 else
+                    "flossen mehr Bitcoin von den Boersen herunter als auf sie")
+        wie = ("aussergewoehnlich viel" if pf >= EXTREM_OBEN else
+               "aussergewoehnlich wenig" if pf <= EXTREM_UNTEN else
+               "im gewohnten Bereich")
+        z.append(f"Am {f['datum']} {richtung}.")
+        z.append(f"Gemessen an den letzten {f['n']} Tagen steht diese Bewegung "
+                 f"im {pf}. Perzentil - {wie}.")
+
     if e.get("regime"):
         satz = f"Der Gesamtmarkt steht im Regime {e['regime']!r}"
         if e.get("regime_tage") is not None:
             satz += f", seit {e['regime_tage']} Tagen ununterbrochen"
         z.append(satz + ".")
+
+    for f in (e.get("fehlt_rahmen") or []):
+        # ANDERER WORTLAUT ALS BEI `fehlt`: es fehlt nichts ZU DIESEM WERT,
+        # sondern eine Angabe ueber den Markt. Verschwiegen wird trotzdem
+        # nichts - "fail-soft ist fail-silent".
+        z.append(f"Zum Gesamtmarkt liegt keine Angabe vor: {f}.")
 
     for f in (e.get("fehlt") or []):
         # BENANNT, NICHT VERSCHWIEGEN. Ohne diesen Satz liest das Modell die

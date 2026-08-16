@@ -3370,6 +3370,19 @@ Entscheidung als Beleg mit Gewicht *hoch*. Prüfung:
 (3,2 pp bei 5,3-fachem Rauschboden). „Bestand zuerst" ist der Anwendungsfall —
 mit der Einschränkung, dass genau das die Belege einfärben kann (offen, 8c.3/M3).
 
+**Stand R-R3 (16.08.2026 abends).** Rolle G erfüllt ihre Mindestgrundlage für
+**Krypto**: Terminmarkt (`open_interest_snapshot`) und Börsenzu-/-abflüsse
+(CoinMetrics) sind zwei Erhebungen mit zwei Fragen. Für Aktien, Rohstoffe,
+Themen-ETF und Absicherung steht es bei **null** Quellen — die Clients liegen
+fertig in `api/` und sind nicht verdrahtet.
+
+> **Drei Börsen sind eine Quelle.** `QUELLEN_G` zählt nach Informationsart,
+> nicht nach Endpunkt. G1 durch dreifaches Zählen derselben Größe zu erfüllen
+> wäre eine Selbsttäuschung im Code.
+>
+> **Und G2 wird getrennt geprüft.** Eine marktweite Größe wie der BTC-Fluss
+> deckt G1 ab und **nie** G2 — sie sagt über ein einzelnes Symbol nichts.
+
 **R-T10 — der Prompt rechnet nicht vor (neu 2026-08-16).** Stehen zwei Werte
 UND ihr Abstand im selben Satz, ist die dritte Zahl eine Rechenaufgabe an ein
 Modell, das nicht rechnen soll — und obendrein redundant. Anlass war der eigene

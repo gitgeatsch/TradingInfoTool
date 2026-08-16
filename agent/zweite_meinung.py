@@ -314,7 +314,7 @@ Kein Einwand ist eine gueltige Antwort und die haeufigere. Erfinde nichts hinzu;
 
 
 def rolle_g(client, urteil: dict, conn=None, db: str | None = None,
-            symbol: str | None = None,
+            symbol: str | None = None, assetklasse: str | None = None,
             db_config: dict | None = None) -> dict | None:
     """Rolle G - die Gegenrede mit EIGENER Informationsgrundlage (16.08.2026).
 
@@ -373,7 +373,10 @@ def rolle_g(client, urteil: dict, conn=None, db: str | None = None,
             import sqlite3
             eigene = sqlite3.connect(
                 f"file:{db or 'data/tradinginfotool.db'}?mode=ro", uri=True)
-        lage = PO.lage(eigene, sym)
+        # DIE KLASSE WIRD DURCHGEREICHT, NICHT ERRATEN. Sie entscheidet
+        # ueber den Boersenfluss (BTC-weit, nur fuer Krypto sinnvoll).
+        # Fehlt sie, bleibt er weg - fail-closed, siehe `PO.lage`.
+        lage = PO.lage(eigene, sym, assetklasse=assetklasse)
         saetze = PO.saetze(lage)
     finally:
         if conn is None and eigene is not None:
@@ -395,10 +398,12 @@ def rolle_g(client, urteil: dict, conn=None, db: str | None = None,
     # die es geht: die Pruefung traegt nur, wenn der Pruefer Information hat,
     # die dem Urteilenden fehlt - drei Zahlen aus einer Tabelle sind eine.
     #
-    # ⚠️ HEUTE ERFUELLT ROLLE G IHRE EIGENE MINDESTGRUNDLAGE NICHT: eine
-    # Quelle statt zwei. Deshalb wird nur GEMELDET, nicht gesperrt - sonst
-    # legte diese Zeile die Rolle beim Einspielen still. Wer sperren will,
-    # traegt "G" in `config.yaml mindestkriterien.sperren` ein.
+    # STAND 16.08. ABENDS: fuer KRYPTO ist G1 erfuellt - Terminmarkt UND
+    # Boersenzu-/-abfluesse, zwei Erhebungen mit zwei Fragen. Fuer Aktien,
+    # Rohstoffe und ETF steht es weiter bei NULL. Deshalb wird weiterhin
+    # nur GEMELDET, nicht gesperrt: eine scharfe Schranke legte drei von
+    # fuenf Gruppen still. Wer sperren will, traegt "G" in
+    # `config.yaml mindestkriterien.sperren` ein.
     from agent import mindestkriterien as MK
 
     if MK.melde("G", MK.pruefe_g(lage), db_config, bezug=sym):
@@ -428,7 +433,8 @@ def rolle_g(client, urteil: dict, conn=None, db: str | None = None,
 
 
 def hole(*, faktentext: dict, urteil: dict, zai_client,
-         symbol: str | None = None, config: dict | None = None,
+         symbol: str | None = None, assetklasse: str | None = None,
+         config: dict | None = None,
          warte_max_s: float = WARTE_MAX_SEKUNDEN) -> dict:
     """Beide Z.ai-Aufrufe, begrenzt auf `warte_max_s`. Nie eine Ausnahme.
 
@@ -522,6 +528,7 @@ def hole(*, faktentext: dict, urteil: dict, zai_client,
             # Muster wie beim Symbol.
             r = _mit_platz(rolle_g, zai_client, urteil,
                            symbol=symbol or faktentext.get('asset'),
+                           assetklasse=assetklasse,
                            db_config=config)
             if r:
                 aus["einwand"] = r.get("einwand")

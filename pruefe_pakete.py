@@ -5392,6 +5392,67 @@ def paket_15() -> None:
     pruefe(P, "die Dauer steht auch im Satz",
            "seit" in _reg5 and "Tagen" in _reg5,
            "der Wert im dict nuetzt nichts, wenn der Satz ihn nicht traegt")
+
+    # --- DER BOERSENFLUSS (16.08.2026, Schritt 2) ---------------------
+    #
+    # FUNKTIONAL UND OHNE NETZ. `_fluss_reihe` wird ersetzt, sonst haengt
+    # eine Paketpruefung an CoinMetrics - und eine Pruefung, die bei
+    # Netzausfall rot wird, sagt nichts ueber den Code.
+    _echt5 = PO5._fluss_reihe
+    try:
+        PO5._fluss_reihe = lambda: [(f"2026-01-{i%28+1:02d}", float(i % 40 - 20))
+                                    for i in range(400)]
+        _kr5 = PO5.lage(_mem, "TST", assetklasse="krypto")
+        _ak5 = PO5.lage(_mem, "TST", assetklasse="aktien")
+        pruefe(P, "der Boersenfluss erreicht NUR Krypto",
+               bool(_kr5.get("boersenfluss")) and not _ak5.get("boersenfluss"),
+               "BTC-Bewegungen in der Beurteilung einer Aktie waeren kein "
+               "fehlender Fakt, sondern ein falscher (P1)")
+        pruefe(P, "ohne Assetklasse bleibt er weg (fail-closed)",
+               not PO5.lage(_mem, "TST").get("boersenfluss"),
+               "ein unbekannter Aufrufer darf nicht versehentlich einen "
+               "marktweiten Fakt in ein Einzelurteil tragen")
+        _s5 = " ".join(PO5.saetze(_kr5))
+        pruefe(P, "der Flusssatz nennt Richtung UND Perzentil mit Einordnung",
+               "Bitcoin" in _s5 and "Perzentil" in _s5
+               and ("gewohnten Bereich" in _s5 or "aussergewoehnlich" in _s5),
+               "R-T11: ein Perzentil ohne Wort dazu, ob das viel ist, "
+               "verlangt vom Modell die Rechenleistung, die es nicht hat")
+
+        # ⚠️ DIE WICHTIGSTE DER VIER. Faellt der Fluss aus, darf das Rolle G
+        # NICHT stilllegen - `rolle_g` bricht bei `len(fehlt) >= 3` ab, und
+        # eine ZUSAETZLICHE Quelle, die beim Ausfall eine Rolle abschaltet,
+        # waere genau verkehrt herum.
+        PO5._fluss_reihe = lambda: []
+        _aus5 = PO5.lage(_mem, "TST", assetklasse="krypto")
+        pruefe(P, "ein ausgefallener Fluss zaehlt NICHT gegen die G5-Schranke",
+               not _aus5.get("boersenfluss")
+               and "Boersenzu- und -abfluesse" not in (_aus5.get("fehlt") or [])
+               and "Boersenzu- und -abfluesse" in (_aus5.get("fehlt_rahmen") or [])
+               and any("Gesamtmarkt liegt keine Angabe" in s
+                       for s in PO5.saetze(_aus5)),
+               "sonst legt eine zusaetzliche Quelle beim Ausfall die Rolle "
+               "still - und verschwiegen werden darf der Ausfall trotzdem nicht")
+    finally:
+        PO5._fluss_reihe = _echt5
+        PO5._fluss_cache.clear()
+
+    # --- G2 IST NICHT DURCH EINE MARKTWEITE GROESSE ZU ERFUELLEN ------
+    from agent import mindestkriterien as MK5
+
+    pruefe(P, "der Boersenfluss deckt G1, aber NIE G2",
+           "onchain" in MK5.QUELLEN_G
+           and "onchain" not in MK5.SYMBOLSPEZIFISCH_G
+           and any("G2" in f for f in MK5.pruefe_g(
+               {"boersenfluss": {"perzentil": 50}})),
+           "eine BTC-weite Groesse sagt ueber SEI nichts - wer sie fuer G2 "
+           "zaehlt, taeuscht sich selbst")
+    pruefe(P, "drei Boersen bleiben EINE Quellenart",
+           MK5.QUELLEN_G["terminmarkt"].count("divergenz") == 1
+           and len(MK5.quellen_g({"oi_aenderung_pct": 1, "divergenz": {},
+                                  "long_anteil_pct": 60})) == 1,
+           "G1 durch dreifaches Zaehlen derselben Groesse zu erfuellen waere "
+           "eine Selbsttaeuschung im Code")
     _mem.close()
 
     # ------------------------------------------------------------------

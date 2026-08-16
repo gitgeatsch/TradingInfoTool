@@ -25,7 +25,7 @@ api/kraken.py fuer die bestehende Funding-Rate-Anbindung)."""
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import requests
 
@@ -173,6 +173,52 @@ def get_btc_exchange_flows(session: requests.Session | None = None) -> ExchangeF
         date=str(entry["time"]).split("T")[0], inflow_btc=inflow, outflow_btc=outflow,
         net_flow_btc=inflow - outflow,
     )
+
+
+@track_api_health("coinmetrics")
+def get_btc_exchange_flow_history(
+    tage: int = 800, session: requests.Session | None = None
+) -> list[tuple[str, float]]:
+    """Die NETTO-Boersenfluesse als Reihe - [(datum, netto_btc), ...], aufsteigend.
+
+    WOFUER (2026-08-16, Schritt 2 des Quellenausbaus). `get_btc_exchange_flows()`
+    liefert einen Tageswert. Eine nackte Zahl wie "1.225 BTC netto" traegt fuer
+    ein Sprachmodell nichts (R-T5) - erst die Lage in der eigenen Geschichte ist
+    eine Aussage. Dafuer braucht es die Reihe.
+
+    DAS GRATIS-TIER GIBT SIE HER, und zwar reichlich: live geprueft am 16.08.
+    stehen **5.593 Tage ab 2011-04-24 ohne eine einzige Luecke** bereit. Die
+    Modul-Kopfzeile spricht von einem ~30-Tage-Fenster - das galt fuer die
+    PREIS-Historie ueber einen anderen Weg, nicht fuer diese Metrik.
+
+    WARUM TROTZDEM BEGRENZT. 800 Tage reichen fuer ein 730-Tage-Perzentil mit
+    Puffer; die vollen 5.593 Zeilen bei jedem Abruf zu holen waere Verschwendung
+    an einer Schnittstelle mit 10 Anfragen je 6 Sekunden."""
+    session = session or requests.Session()
+    start = (datetime.now(timezone.utc) - timedelta(days=int(tage))).date().isoformat()
+    response = session.get(
+        COINMETRICS_BASE_URL,
+        params={
+            "assets": "btc",
+            "metrics": "FlowInExNtv,FlowOutExNtv",
+            "frequency": "1d",
+            "page_size": 10000,
+            "sort": "time",
+            "start_time": start,
+        },
+        timeout=30,
+    )
+    response.raise_for_status()
+    reihe: list[tuple[str, float]] = []
+    for e in (response.json().get("data") or []):
+        rein, raus = e.get("FlowInExNtv"), e.get("FlowOutExNtv")
+        if rein is None or raus is None:
+            # KEIN GERATENER WERT (P-10) - ein Tag ohne beide Seiten faellt aus
+            # der Reihe. Bei 0 Luecken in 5.593 Tagen ist das ein Vorsichtsfall,
+            # kein Regelfall.
+            continue
+        reihe.append((str(e["time"]).split("T")[0], float(rein) - float(raus)))
+    return reihe
 
 
 @dataclass

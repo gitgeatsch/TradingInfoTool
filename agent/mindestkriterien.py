@@ -17,9 +17,15 @@ ist fail-soft, der Satz entfaellt lautlos.
 MELDEN IST DIE VORGABE, SPERREN DIE AUSNAHME. Ein Modul, das beim blossen
 Einspielen eine Rolle stilllegt, nimmt dem Nutzer die Entscheidung ab -
 dieselbe Regel wie bei `rollen_kette.aktiv_fuer` und `anlass.aktiv`. Und hier
-waere sie besonders teuer: Rolle G erfuellt ihre eigene Mindestgrundhabe HEUTE
-NICHT (eine Quelle statt zwei), ein scharfes Kriterium wuerde sie sofort
-stilllegen.
+waere sie besonders teuer: Rolle G erfuellte ihre eigene Mindestgrundlage bei
+Einfuehrung NICHT (eine Quelle statt zwei), ein scharfes Kriterium haette sie
+sofort stillgelegt.
+
+STAND 16.08. ABENDS: fuer KRYPTO ist G1 erfuellt - Terminmarkt und
+Boersenzu-/-abfluesse sind zwei verschiedene Erhebungen mit verschiedenen
+Fragen. Fuer Aktien, Rohstoffe und ETF steht es weiterhin bei NULL Quellen;
+die Clients liegen fertig in `api/` (finra, sec_edgar, cftc_cot) und sind
+nicht verdrahtet. `sperren` bleibt deshalb leer.
 
 WAS HIER NICHT GEPRUEFT WIRD: ob die Kriterien die RICHTIGEN sind. Sie stammen
 aus der Praxisrecherche (Umbauplan 33, 41, 42) und sind damit auf Rang 2 der
@@ -75,14 +81,29 @@ PFLICHT_BLOECKE_BC = ("bestand", "verlauf")
 # beschreiben dieselbe Menge Menschen auf derselben Boerse - drei Zahlen, eine
 # Quelle. Das Regime ist die zweite, aber es kommt aus unserer eigenen
 # Kursreihe und zaehlt deshalb nicht als fremde.
+# DREI BOERSEN SIND EINE QUELLE. Seit dem 16.08. liest `positionierung.py`
+# Binance, Bybit und OKX - das verbessert den Fakt, vermehrt aber die ART
+# nicht. Offene Kontrakte bleiben offene Kontrakte. Hier nach Endpunkten zu
+# zaehlen hiesse, G1 durch dreifaches Zaehlen derselben Groesse zu erfuellen.
 QUELLEN_G = {
-    "terminmarkt": ("oi_aenderung_pct", "funding_perzentil", "long_anteil_pct"),
+    "terminmarkt": ("oi_aenderung_pct", "funding_perzentil", "long_anteil_pct",
+                    "divergenz"),
+    # DIE ZWEITE ART, seit 16.08. verdrahtet (Umbauplan 58): gezaehlte
+    # Muenzbewegungen auf der Kette, nicht Positionsstaende an einer Boerse.
+    # ⚠️ BTC-WEIT, NICHT SYMBOLSPEZIFISCH - deckt G1 ab, NIE G2.
+    "onchain": ("boersenfluss",),
     # Die naechsten, sobald verdrahtet - siehe Umbauplan 40.1.
     "cot": ("cot_perzentil",),
     "short_interest": ("short_interest_perzentil",),
     "insider": ("insider_kaeufe_90d",),
     "optionsmarkt": ("dvol", "skew"),
 }
+
+# WELCHE QUELLEN EINEN EINZELNEN WERT BESCHREIBEN. G2 verlangt genau das - und
+# ohne diese Liste wuerde eine BTC-weite Groesse wie der Boersenfluss die
+# Bedingung miterfuellen, obwohl sie ueber SEI nichts aussagt.
+SYMBOLSPEZIFISCH_G = ("terminmarkt", "cot", "short_interest", "insider",
+                      "optionsmarkt")
 MINDEST_QUELLEN_G = 2
 
 
@@ -134,7 +155,12 @@ def pruefe_g(lage: dict) -> list[str]:
     if len(q) < MINDEST_QUELLEN_G:
         fehlt.append(f"G1: {len(q)} von {MINDEST_QUELLEN_G} unabhaengigen "
                      f"Quellen ({', '.join(q) or 'keine'})")
-    if not q:
+    # G2 GETRENNT GEPRUEFT, NICHT AUS G1 ABGELEITET (16.08.2026). Vorher stand
+    # hier `if not q` - also "irgendeine Quelle reicht". Mit dem Boersenfluss
+    # waere das falsch geworden: er ist BTC-weit, und ein Symbol ohne
+    # Terminmarktdaten haette G2 durch eine Marktgroesse erfuellt, die ueber
+    # dieses Symbol nichts sagt.
+    if not [n for n in q if n in SYMBOLSPEZIFISCH_G]:
         fehlt.append("G2: keine symbolspezifische Quelle")
     return fehlt
 

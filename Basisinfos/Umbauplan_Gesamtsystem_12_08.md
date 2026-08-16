@@ -7080,3 +7080,148 @@ sortiert sie sich nach Informationsart:**
 
 **Schritt 2 ist jetzt der erste** — nicht weil er der billigste ist, sondern
 weil er als einziger eine zweite **Informationsart** bringt.
+
+---
+
+## Kapitel 58 — Schritt 2: Rolle G bekommt eine zweite Informationsart (16.08.2026)
+
+**Bis heute hatte Rolle G EINE Quellenart.** Schritt 1 hat drei Börsen daraus
+gemacht — das verbessert den Fakt, vermehrt aber die Art nicht: offene
+Kontrakte bleiben offene Kontrakte. **R-R3 verlangt zwei unabhängige Quellen,
+und unabhängig heißt: andere Erhebung, andere Frage.**
+
+### 58.1 Die Messung hat den Kandidaten ausgewählt, nicht die Plausibilität
+
+`api/onchain.py` bietet MVRV, NUPL, Realized Price, **Börsenzu- und -abflüsse**
+und Stablecoin-Angebot. Bevor irgendetwas gebaut wurde, die Frage aus R-T6:
+**bewegt sich das überhaupt?** Gemessen über das letzte Jahr, Perzentil im
+730-Tage-Fenster:
+
+| | Median | Streuung | verschiedene Werte | Extremtage |
+|---|---:|---|---:|---:|
+| **Netto-Börsenfluss** | **47** | 0–99 | **97** von 365 | 17 % |
+| MVRV | **5** | 0–74 | 55 von 365 | **68 %** |
+
+> **MVRV liegt seit einem Jahr fast durchgehend im untersten Dezil.** Der Satz
+> hieße fast immer „außergewöhnlich niedrig" — ein konstantes Feld (R-T6), und
+> zwar **gemessen statt vermutet.**
+
+**Dazu kommt P3 (Nicht-Redundanz), und die Quelle dafür ist unser eigener Code.**
+`agent/krypto/regime.py` hält seit dem 08.07. fest, dass MVRV, das
+Log-Regressions-Risiko und Fear & Greed **dieselbe Frage** beantworten — und
+Fear & Greed sieht Rolle A bereits.
+
+**Stablecoin-Angebot fällt aus einem dritten Grund weg:** `get_stablecoin_supply`
+liefert nur den Momentanwert, ohne Historie gibt es kein Perzentil und damit
+keinen R-T5-konformen Satz.
+
+**Der Netto-Börsenfluss bleibt — und er ist genau das, was fehlte:** gezählte
+Münzbewegungen auf der Kette, keine Positionsstände an einem Terminmarkt.
+
+### 58.2 Die Gratis-Stufe gibt weit mehr her, als die Kopfzeile sagt
+
+**Live geprüft am 16.08.:**
+
+| Metrik | Tage | ab | Lücken |
+|---|---:|---|---:|
+| `FlowInExNtv` / `FlowOutExNtv` | **5.593** | 2011-04-24 | **0** |
+| `CapMVRVCur` u. a. | 6.434 | 2009-01-03 | 561 (die frühen Jahre) |
+
+Die Modul-Kopfzeile spricht von einem „~30-Tage-Fenster" — **das galt für die
+Preishistorie über einen anderen Weg, nicht für diese Metrik.** Wieder ein Fall
+für *„immer an der Quelle prüfen"*: eine Kopfzeile ist eine Beschreibung, keine
+Festlegung.
+
+Abgerufen werden trotzdem nur **800 Tage** — genug für ein 730-Tage-Perzentil
+mit Puffer, und schonend an einer Schnittstelle mit 10 Anfragen je 6 Sekunden.
+
+### 58.3 Der Satz, nach R-T10 und R-T11
+
+```
+Am 2026-08-15 flossen mehr Bitcoin auf die Boersen als von ihnen herunter.
+Gemessen an den letzten 730 Tagen steht diese Bewegung im 72. Perzentil
+  - im gewohnten Bereich.
+```
+
+**Richtung ohne Zahl, Perzentil mit Fenster und Einordnung.** Der Zahlenprüfer
+findet nichts.
+
+> **Bewusst ohne Deutung.** Dass Zuflüsse Verkaufsdruck *ankündigen*, ist eine
+> gängige Lesart — und in unseren Daten nie gemessen, also P2 Rang 3.
+> `onchain.py` nennt sie im Feldkommentar „potenziell Verkaufsdruck"; genau
+> dieses *potenziell* gehört nicht in einen Faktensatz.
+
+### 58.4 Zwei Absicherungen, die das Ganze erst tragfähig machen
+
+**Erstens: nur für Krypto, fail-closed.** Ein Satz über Bitcoin-Bewegungen in
+der Beurteilung einer Aktie wäre kein fehlender Fakt, sondern ein falscher (P1).
+Die Assetklasse wird deshalb **explizit durchgereicht** —
+`rollen_lauf` → `ZM.hole` → `rolle_g` → `PO.lage` —, nicht erraten. Fehlt sie,
+bleibt der Fakt weg.
+
+**Zweitens: G2 ist damit NICHT erfüllt.** Der Fluss ist BTC-weit; über SEI sagt
+er nichts. `mindestkriterien` führt deshalb jetzt `SYMBOLSPEZIFISCH_G` getrennt,
+und `pruefe_g` leitet G2 nicht mehr aus G1 ab.
+
+```
+vorher:  if not q:                    -> irgendeine Quelle reicht
+nachher: if not [n for n in q if n in SYMBOLSPEZIFISCH_G]:
+```
+
+> **Ohne diese Änderung hätte ein Symbol ohne Terminmarktdaten G2 durch eine
+> Marktgröße erfüllt, die über dieses Symbol nichts aussagt.**
+
+### 58.5 Ein Regressionsfehler in der eigenen Änderung — gefunden beim Nachlesen
+
+`zweite_meinung.rolle_g` bricht ab, wenn `len(fehlt) >= 3` (G5: über nichts
+wird nicht gefragt). Meine erste Fassung hängte den ausgefallenen Fluss an
+`fehlt` an.
+
+> ⚠️ **Damit hätte eine ZUSÄTZLICHE Quelle die Rolle STILLGELEGT, sobald sie
+> ausfällt.** Genau verkehrt herum — und die Simulation lief grün.
+
+Behoben mit einem eigenen Schlüssel `fehlt_rahmen`. **Der Wortlaut wäre
+ohnehin falsch gewesen:** `fehlt` erzeugt *„Zu diesem Wert liegt keine Angabe
+vor"*, der Fluss beschreibt aber den Rahmen — jetzt *„Zum Gesamtmarkt liegt
+keine Angabe vor"*. Verschwiegen wird nichts.
+
+**Gefunden nicht von einem Test, sondern beim Lesen der Aufrufstelle.** Jetzt
+steht es als Paketprüfung.
+
+### 58.6 Der Stand der Mindestkriterien
+
+| Gruppe | Quellenarten | G1 | G2 |
+|---|---|---|---|
+| **Krypto** | **Terminmarkt + On-Chain** | **erfüllt** | **erfüllt** |
+| Aktien | — | fehlt | fehlt |
+| Rohstoffe | — | fehlt | fehlt |
+| Themen-ETF | — | fehlt | fehlt |
+| Absicherung | — | fehlt | fehlt |
+
+**Eine von fünf Gruppen steht.** `sperren` bleibt leer — eine scharfe Schranke
+legte vier Gruppen still.
+
+### 58.7 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **904, alle bestanden** (6 neue) |
+| freie Namen | 0 |
+| `pruefe_zahlen_in_prompts.py` | Selbsttest 7/7, 445 Sätze, **kein Befund** |
+| `pruefe_phase1.py` | bestanden |
+| Simulation | 6 Gruppen, 12 Signale, 14 Mails, **0 Fehler, 0 Lücken** |
+| **Ende-zu-Ende-Nachweis** | **12 Rolle-G-Aufrufe mitgeschnitten — 4 Krypto tragen den Fluss, 8 Nicht-Krypto nicht** |
+| Gegenprobe Ausfall | `fehlt` bleibt leer, G5 greift nicht, Satz erscheint trotzdem |
+| Tagescache | erster Abruf 1,9 s, zweiter 0,04 s |
+
+**Der Ende-zu-Ende-Nachweis war nötig, nicht schmückend.** „0 Fehler" hat Rolle
+G drei Tage lang als fertig ausgewiesen, während sie nie lief.
+
+### 58.8 Offen
+
+| | Punkt | Warum nicht jetzt |
+|---|---|---|
+| 1 | **Persistenz des Flusses** | heute Prozess-Cache; eine neue Tabelle wäre ein Schemaeingriff mitten in der Messkampagne |
+| 2 | `cftc_cot.py` an Rolle G (Rohstoffe) | Schritt 3 |
+| 3 | `finra.py` + `sec_edgar.py` (Aktien) | Schritt 4 |
+| 4 | `funding_rate`/`long_account_pct` unter fremdem Börsenetikett | Kapitel 56.8 |
