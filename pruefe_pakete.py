@@ -5370,6 +5370,34 @@ def paket_15() -> None:
            "der Wert im dict nuetzt nichts, wenn der Satz ihn nicht traegt")
     _mem.close()
 
+    # ------------------------------------------------------------------
+    # DIE KURSREIHEN MUESSEN FRISCH SEIN (17.08.2026, aus dem NB-Export).
+    #
+    # Am 16.08. endeten ALLE 61 Reihen am Freitag, 14.08. - die Kette urteilte
+    # am Sonntag auf Charts vom Freitag, und die Mail nannte einen zwei Tage
+    # alten Kurs. Drei Dinge kamen zusammen: der 24-h-Takt beginnt bei jedem
+    # Neustart neu (dreimal an dem Tag), der Sofortlauf greift erst bei MEHR
+    # als zwei Tagen, und der Watchdog benutzt dieselbe Schwelle.
+    import staleness as ST5
+
+    pruefe(P, "Krypto hat eine eigene, engere Frischeschwelle",
+           ST5.KRYPTO_OHLC_STALE_THRESHOLD_DAYS == 1
+           and ST5.HISTORY_STALE_THRESHOLD_DAYS == 2,
+           "Krypto handelt rund um die Uhr - zwei Tage Rueckstand sind dort "
+           "kein Wochenende, sondern ein Ausfall")
+    pruefe(P, "und der echte Ausfall wuerde jetzt erkannt",
+           ST5.is_history_stale("2026-08-14", schwelle_tage=1)
+           is not ST5.is_history_stale("2026-08-14"),
+           "Freitag-Kerze am Sonntag: alte Schwelle schweigt, neue schlaegt an")
+    pruefe(P, "die geteilte Schwelle bleibt unangetastet",
+           "HISTORY_STALE_THRESHOLD_DAYS = 2" in _quelltext("staleness.py"),
+           "an ihr haengen die Anzeige und das Gate R-5.0 der alten Kette - "
+           "sie zu senken waere die Verschlimmbesserung")
+    pruefe(P, "der Kraken-Check benutzt die engere",
+           "schwelle_tage=staleness.KRYPTO_OHLC_STALE_THRESHOLD_DAYS"
+           in _quelltext("scheduler/background.py"),
+           "sonst greift der Sofortlauf beim Neustart weiterhin nicht")
+
     from agent import rolle_trader as RT5
 
     pruefe(P, "der Prompt-Stand ist mitgezogen",

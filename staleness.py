@@ -37,12 +37,34 @@ def format_price_age(fetched_at: str | None) -> str:
     return f"vor {age_hours} Std."
 
 
-def is_history_stale(last_date: str | None) -> bool:
+# Fuer Maerkte, die RUND UM DIE UHR handeln (2026-08-17). Bei Krypto gibt es
+# keine Wochenenden und keine Feiertage: eine juengste Kerze, die aelter als
+# gestern ist, bedeutet, dass der Nachladelauf nicht stattgefunden hat.
+#
+# WARUM NICHT 0. Die Kerze des LAUFENDEN Tages entsteht erst mit seinem Ende.
+# "aelter als heute" waere deshalb dauerhaft wahr und wuerde den Nachholer im
+# Watchdog-Takt feuern lassen statt alle 24 Stunden - eine Verschlimmbesserung.
+# 1 toleriert den offenen Tag und faengt den Ausfall.
+KRYPTO_OHLC_STALE_THRESHOLD_DAYS = 1
+
+
+def is_history_stale(last_date: str | None,
+                     schwelle_tage: int | None = None) -> bool:
+    """Ist diese Reihe veraltet?
+
+    `schwelle_tage` (2026-08-17) erlaubt dem Aufrufer eine ENGERE Schwelle,
+    ohne die geteilte Konstante zu verschieben. Das ist kein Geschmack: an
+    `HISTORY_STALE_THRESHOLD_DAYS` haengen auch die Anzeige (`ui/formatting`)
+    und das Datenqualitaets-Gate R-5.0 der alten Kette. Wer sie senkt, aendert
+    beides mit - und genau das waere die Verschlimmbesserung, die hier vermieden
+    werden soll."""
     if last_date is None:
         return True
     last = datetime.fromisoformat(last_date).date()
     today = datetime.now(timezone.utc).date()
-    return (today - last).days > HISTORY_STALE_THRESHOLD_DAYS
+    grenze = (HISTORY_STALE_THRESHOLD_DAYS if schwelle_tage is None
+              else int(schwelle_tage))
+    return (today - last).days > grenze
 
 
 # Makro-Daten (api/macro.py, api/onchain.py) haben eine grundlegend andere natuerliche

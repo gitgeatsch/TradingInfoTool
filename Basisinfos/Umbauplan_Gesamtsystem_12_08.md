@@ -5405,3 +5405,119 @@ Hebel-Mail, Rolle G bei **Krypto** — und bei Aktien und ETF ausdrücklich
 **Und ein Satz, der ab jetzt gilt:** eine Stufe gilt erst als gebaut, wenn
 `simuliere_kette.py` sie **in der fertigen Mail** nachweist. Rolle G war drei
 Tage lang „fertig".
+
+---
+
+## Kapitel 44 — Produktionsanalyse am NB-Export vom 16.08. (17.08.2026)
+
+**Nutzervorgabe:** *„wichtig immer sauber gegenprüfen, damit wir nichts
+verschlimmbessern auf Basis einer Annahme oder eines fehlenden Logeintrags."*
+
+### 44.1 Der Kursstillstand — zwei Tage alte Charts für 77 % der Aufrufe
+
+**In der Signalmail sichtbar:** *„BNB · Kurs 523,48 EUR · **2026-08-14**"* — in
+einer Mail vom Sonntag, 16.08. 09:15.
+
+**Im Export bestätigt:** **alle 61 Kursreihen enden am Freitag, 14.08.** Auch
+BTC, ETH, SOL — Werte, die rund um die Uhr handeln.
+
+```
+2026-08-14 20:57  Kraken-OHLC-Refresh: 37/57 Assets aktualisiert
+2026-08-16 00:14  Aktien-OHLC-Refresh: 2/2      (kein Kraken-Lauf)
+2026-08-16 06:40  Aktien-OHLC-Refresh: 2/2      (kein Kraken-Lauf)
+2026-08-16 07:55  Aktien-OHLC-Refresh: 2/2      (kein Kraken-Lauf)
+```
+
+**Drei Dinge mussten zusammenkommen** — jedes für sich harmlos:
+
+| | |
+|---|---|
+| **Takt** | 24 Stunden, und er beginnt bei **jedem Neustart neu**. Am 16.08. wurde dreimal neu gestartet — der reguläre Lauf kam nie dran |
+| **Sofortlauf** | greift erst bei **mehr als zwei** Tagen Rückstand. Freitag → Sonntag sind **genau zwei** |
+| **Watchdog** | benutzt **dieselbe** Schwelle und griff deshalb ebenfalls nicht |
+
+Der letzte Kraken-Lauf am 14.08. 20:57 kam nur zustande, weil ein Neustart ihn
+auslöste — die Reihen waren damals *mehr* als zwei Tage alt.
+
+> **Die Rollen-Kette urteilte am Sonntag auf Charts vom Freitag.** Struktur,
+> Marken, Bewegung, Volumen — alles zwei Tage alt. Für Krypto, also **77 % aller
+> Aufrufe**.
+
+**Korrigiert, und zwar schmal.** `HISTORY_STALE_THRESHOLD_DAYS = 2` bleibt
+unangetastet — an ihr hängen die Anzeige und das Datenqualitäts-Gate **R-5.0**
+der alten Kette. Stattdessen bekommt der Kraken-Check eine **eigene, engere**
+Schwelle:
+
+```python
+KRYPTO_OHLC_STALE_THRESHOLD_DAYS = 1
+```
+
+`_ohlc_data_is_stale()` sieht **ausschliesslich Kraken-gelistete Assets** an,
+also Krypto — und dort ist ein Rückstand von zwei Tagen kein Wochenende,
+sondern ein Ausfall.
+
+**Nachgerechnet am echten Fall:**
+
+| Kerze | heute | Rückstand | alt (> 2) | neu (> 1) |
+|---|---|---|---|---|
+| 14.08. | 16.08. | 2 Tage | **schweigt** | **schlägt an** |
+| 15.08. | 16.08. | 1 Tag | schweigt | schweigt |
+
+**Warum nicht 0:** die Kerze des laufenden Tages entsteht erst mit seinem Ende.
+„Älter als heute" wäre dauerhaft wahr und liesse den Nachholer im
+Watchdog-Takt feuern statt alle 24 Stunden — eine Verschlimmbesserung.
+
+### 44.2 Die Doppelung, in der echten Mail
+
+```
+Zum Vergleich: ueber 60 Handelstage steht der Kurs -1.9 %.
+Kursentwicklung: 5 Tage +0.6 %, 20 Tage +6.5 %, 60 Tage -1.9 %.
+```
+
+**Der Klasse-1-Befund, im Produktionstext.** Behoben am 17.08. (Kapitel 42.3);
+dieselbe Mail zeigt zugleich den neuen Liquidationsabstand aus Phase I.
+
+### 44.3 Die Gegenprüfung, Tag für Tag
+
+| Tag | Rollen-Signale | Konsistenz | Richtungsabgleich |
+|---|---|---|---|
+| 14.08. | 46 | 11 | 2 |
+| 15.08. | 180 | 57 | 30 |
+| **16.08.** | **59** | **25** | **0** |
+
+**Alles drei bestätigt sich an echten Daten:**
+
+* **Der Richtungsabgleich ist sauber aus** — 0 am 16.08., letzter Eintrag
+  15.08. 20:14. Die Stilllegung hat gewirkt.
+* **Die Konsistenzprüfung lief weiter** — 25 von 34 Einstiegen an einem halben
+  Tag. Genau die, die der Nutzer am 16.08. abgelehnt hatte. Am 17.08. entfernt.
+* **Rolle G hat null Einträge** — sie hat nie stattgefunden (Kapitel 43.2).
+
+> Die 28 Z.ai-Aufrufe des Diagnosebildschirms waren also **nicht** die
+> Gegenprüfung, die gewünscht war, sondern die, die abgelehnt war.
+
+**Nebenbefund:** 9 von 34 Einstiegen bekamen gar keine Prüfung — Andrang oder
+Zeitüberschreitung. Mit einem Aufruf statt vier sollte das verschwinden.
+
+### 44.4 Was NICHT defekt ist — geprüft statt vermutet
+
+| Vermutung | Befund |
+|---|---|
+| Marktscan kaputt | **nein.** Er läuft (cron 4 und 16 Uhr): *„34 Kandidaten bewertet (0 Treffer, Regime baer)"*. Die Mail feuert nur bei `kaufkandidat`; die Schwelle liegt bei Score 70, und im Bärenregime erreicht keiner der 34 auch nur 50. Letzter Kaufkandidat: Juli |
+| Altbestand läuft mit | **nein.** Alle 59 Signale des 16.08. tragen `quelle_kette: rollen`. Budget-Allocator und Multi-Asset-Batch überspringen sich selbst |
+| 11.970 Tracebacks | **behoben.** 11.953 davon sind **ein** Fehler, alle am 14.08. zwischen 09:35 und 10:11 — 36 Minuten, bevor der NB den Fix `4cd8d68` zog. Seither keiner mehr |
+| Doppelte Ausstiegsmails | **nein.** Der Ausstiegs-Job lief in 72 Stunden **kein einziges Mal** (offener Punkt A2b) |
+
+> ⚠️ **Zwei eigene Fehlgriffe in dieser Analyse, beide gefangen:** ich habe die
+> Z.ai-Belegung zuerst über die Spalte `zai_urteil` gezählt — sie heisst
+> `zai_gegenpruefung_urteil` — und daraufhin „0 von 285" gemeldet. Und einmal
+> `zai_stimmen` statt des Urteils. **Beide Male wäre der Schluss gewesen, die
+> Gegenprüfung erreiche die Datenbank nicht.** Sie tut es.
+
+### 44.5 Was offen bleibt
+
+| | |
+|---|---|
+| **A2b** | der Ausstiegs-Job ist in 72 Stunden nicht gelaufen |
+| **Signalzahl** | 30 ERÖFFNEN am 16.08., in zwei Wellen zu je ~15 in drei Minuten |
+| **Fehlalarm-Muster** | `pruefe_export_standard.py` meldet „11970 Tracebacks im Log-Fenster" **ohne Zeitbezug**. Eine grosse Zahl aus 36 Minuten von vor zwei Tagen liest sich wie ein akuter Ausfall |

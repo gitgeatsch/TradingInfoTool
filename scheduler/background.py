@@ -3198,14 +3198,40 @@ def _ohlc_data_is_stale(conn, watchlist) -> bool:
     """Analog zu _history_data_is_stale(), fuer den Kraken-OHLC-Job. Prueft nur
     Assets/Waehrungen mit echtem Kraken-Listing (KRAKEN_PAIR_MAP) - fehlende
     Listings sind eine bekannte, dokumentierte Deckungsluecke (siehe
-    api/kraken_history.py), kein Staleness-Fall."""
+    api/kraken_history.py), kein Staleness-Fall.
+
+    ⚠️ EIGENE, ENGERE SCHWELLE SEIT DEM 17.08.2026 - wegen eines Ausfalls, der
+    zwei Tage lang niemandem auffiel.
+
+    GEMESSEN AM NB-EXPORT vom 16.08. 09:41: **alle 61 Kursreihen endeten am
+    Freitag, 14.08.** Der letzte Kraken-Refresh lief am 14.08. um 20:57, und
+    zwar nur, weil ein Neustart ihn ausloeste. Die Rollen-Kette urteilte damit
+    am Sonntag auf Charts vom Freitag - fuer Krypto, also 77 % aller Aufrufe -
+    und die Signalmail nannte einen zwei Tage alten Kurs als "Kurs".
+
+    DREI DINGE MUSSTEN ZUSAMMENKOMMEN:
+      * der Takt ist 24 Stunden und beginnt bei JEDEM Neustart neu. Am 16.08.
+        wurde dreimal neu gestartet (00:14, 06:40, 07:55) - der regulaere Lauf
+        kam nie dran
+      * der Sofortlauf beim Start greift erst bei MEHR als zwei Tagen
+        Rueckstand. Freitag -> Sonntag sind genau zwei
+      * der Watchdog benutzt dieselbe Schwelle und griff deshalb ebenfalls nicht
+
+    HIER LIEGT DIE RICHTIGE STELLE. Diese Funktion sieht ausschliesslich
+    Kraken-gelistete Assets an, also Krypto - und Krypto handelt rund um die
+    Uhr. Ein Rueckstand von zwei Tagen ist dort kein Wochenende, sondern ein
+    Ausfall. Die Schwelle in `staleness.py` bleibt unangetastet: an ihr haengen
+    die Anzeige (`ui/formatting`) und das Datenqualitaets-Gate R-5.0 der alten
+    Kette. Wer sie dort senkt, aendert beides mit."""
     try:
         for asset in watchlist:
             pair_map = KRAKEN_PAIR_MAP.get(asset.symbol)
             if pair_map is None:
                 continue
             for currency in pair_map:
-                if staleness.is_history_stale(db.get_last_ohlc_date(conn, asset.symbol, currency)):
+                if staleness.is_history_stale(
+                        db.get_last_ohlc_date(conn, asset.symbol, currency),
+                        schwelle_tage=staleness.KRYPTO_OHLC_STALE_THRESHOLD_DAYS):
                     return True
         return False
     except Exception:
