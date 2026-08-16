@@ -2267,3 +2267,35 @@ Im Entwicklungsbestand fehlen sechs Kursreihen - **Rohstoffe, 3QSS und X136**. G
 > ⚠️ **Die Simulation datiert die Signale in der KOPIE um 30 Tage zurueck.** Ohne das sperrt der echte Cooldown des Produktionsstands jedes Symbol - der Test bestaetigt dann, dass der Cooldown funktioniert, und sagt nichts ueber die Kette. Gemessen: hedge und themen_etf kamen mit **0 Modellaufrufen** durch.
 
 Das Backup liegt bei jedem Export in `Claude_Austauschordner/DB_Backups/` und muss nicht angefordert werden.
+
+## 2.25 Rechnet unser Prompt dem Modell etwas vor? (neu 2026-08-16)
+
+**Auslöser:** neuer Parameter für eine Rolle, oder eine geänderte Formulierung
+in `marktlage.py`, `lagebeschreibung.py`, `positionierung.py`.
+
+```bash
+python pruefe_zahlen_in_prompts.py --db <NB-Backup>
+```
+
+**Sucht drei Formen, die ein Blick in den Quelltext nicht sieht:**
+
+| | | |
+|---|---|---|
+| **N1** | Rechenaufgabe | zwei Werte UND ihr Abstand im selben Satz (R-T10) |
+| **N2** | ungedeckte Zahl | keine Bezugsgröße, kein Fenster (R-T1/R-T5) |
+| **N3** | ohne Einordnung | Perzentil ohne Wort, ob das viel ist (R-T11) |
+
+**Es rendert aus echten Daten** — Rolle A aus `lagebilder.fakten_json`, also dem
+Produktionswortlaut selbst, BC und G aus den Bausteinen. Ein f-String im Code
+sagt nichts darüber, was am Ende dasteht; genau daran ist der Sektor-Bezug am
+16.08. vorbeigelaufen.
+
+> **Der Selbsttest läuft immer mit** (`--selbsttest` allein, oder automatisch
+> vor jedem Scan). Er enthält beide Fehlalarme des ersten Laufs als Gegenprobe:
+> ein Tageszähler gegen ein Prozent, und die Ziffer in „3QSS". Schlägt er fehl,
+> ist der Befund darunter nicht belastbar — und das Skript sagt es.
+
+**Nicht verwechseln mit `pruefe_fakten_bezugsgroessen.py`** (2.x, vom 09.08.):
+das prüft dieselbe Frage auf **JSON-Feldern** der alten Pipelines. Ein Satz ist
+kein Feld — drei Zahlen mit je tadellosem Bezug können zusammen eine
+Rechenaufgabe sein.

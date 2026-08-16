@@ -3370,6 +3370,30 @@ Entscheidung als Beleg mit Gewicht *hoch*. Prüfung:
 (3,2 pp bei 5,3-fachem Rauschboden). „Bestand zuerst" ist der Anwendungsfall —
 mit der Einschränkung, dass genau das die Belege einfärben kann (offen, 8c.3/M3).
 
+**R-T10 — der Prompt rechnet nicht vor (neu 2026-08-16).** Stehen zwei Werte
+UND ihr Abstand im selben Satz, ist die dritte Zahl eine Rechenaufgabe an ein
+Modell, das nicht rechnen soll — und obendrein redundant. Anlass war der eigene
+Entwurf der Börsendivergenz (*„OKX +0,0 %, Bybit −1,3 %"* plus *„Spanne 1,3
+Prozentpunkte"*); Nutzerhinweis: *„LLMs können nicht mit Zahlen umgehen bzw.
+sollen auch nicht rechnen."*
+
+> **Die Richtung trägt die Aussage, das Perzentil den Maßstab.** Aus den drei
+> Zahlen wurde ein zahlenfreier Richtungssatz plus ein Perzentil mit Fenster.
+
+**R-T11 — ein Perzentil ohne Einordnung ist eine halbe Angabe.** *„Das 92.
+Perzentil"* verlangt vom Leser die Entscheidung, ob das viel ist. Jedes
+Perzentil trägt ein Wort dazu (*„im gewohnten Bereich"*, *„außergewöhnlich
+viele"*), und zwar aus **denselben** Grenzen — zwei Maßstäbe nebeneinander wären
+schlimmer als keiner.
+
+> Rückwirkend geprüft am 16.08. über **445 gerenderte Sätze** aller drei Rollen:
+> ein Fund, der Long-Anteil in Rolle G, in **37 von 37** Fällen. Er verstieß
+> gegen R-T11 und gegen R-T1 (Fenster nicht genannt) und ist älter als der Fund.
+
+**Prüfung:** `pruefe_zahlen_in_prompts.py` (rendert echte Daten, mit
+Selbsttest) — abgegrenzt gegen `pruefe_fakten_bezugsgroessen.py`, das dieselbe
+Frage auf **JSON-Feldern** der alten Pipelines stellt, nicht auf Sätzen.
+
 **Vor jedem Lauf, ohne Modellaufruf:** Werturteil-Wächter
 (`enthaelt_werturteile`), Konstanten-Wächter (`finde_konstanten`),
 Kausalitätsprobe (Beschreibung aus voller Reihe gegen abgeschnittene, bitgleich).

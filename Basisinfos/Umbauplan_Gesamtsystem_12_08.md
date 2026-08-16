@@ -6671,6 +6671,14 @@ schliessen sind, und **ob es das kostenlos gibt.**
 
 ### 55.1 Der grösste Fund liegt in der eigenen Datenbank
 
+> ⚠️ **TEILWEISE WIDERRUFEN durch Kapitel 56 (16.08., später am Tag).**
+> Von den drei Feldern ist nur das **Open Interest** wirklich je Börse
+> erhoben. `funding_rate` (Kraken) und `long_account_pct` (Binance)
+> werden je einmal geholt und unter alle drei Börsenetiketten
+> geschrieben — 0 von 41.547 bzw. 0 von 40.033 gemeinsamen
+> Zeitpunkten weichen ab. Die Zeilenzahlen unten stimmen, ihre
+> Deutung als *zweite Quelle* gilt nur für das Open Interest.
+
 `positionierung.py` liest `WHERE exchange = 'binance'`. In derselben Tabelle
 stehen:
 
@@ -6790,3 +6798,173 @@ nicht aufnahmefähig.
 [Massive/ETF Global — Fund Flows, ab 99 $](https://massive.com/docs/rest/partners/etf-global/fundflows) ·
 [Intrinio — ETF NAV Flows](https://docs.intrinio.com/documentation/web_api/get_etf_nav_flows_v2) ·
 [CFTC Commitments of Traders](https://www.cftc.gov/MarketReports/CommitmentsofTraders/index.htm)
+
+---
+
+## Kapitel 56 — Schritt 1 gebaut, und Kapitel 55 zur Hälfte widerrufen (16.08.2026)
+
+### 56.1 Die Korrektur zuerst: zwei von drei Feldern sind Kopien
+
+**Kapitel 55 hat gemeldet, Bybit und OKX seien eine zweite Quelle für Rolle G.
+Das stimmt nur für ein Feld von dreien.** Nachgezählt am Produktionsbestand:
+
+| Feld | gemeinsame Zeitpunkte | davon verschieden |
+|---|---:|---:|
+| `long_account_pct` | 41.547 | **0** |
+| `funding_rate` | 40.033 | **0** |
+| `open_interest` | 41.551 | **41.551** |
+
+**Die Ursache steht in `hebel_screening._hole_und_speichere`** (Zeilen 75–124):
+die Finanzierungsrate wird **einmal bei Kraken** geholt, der Long-Anteil
+**einmal bei Binance** — und beide dann in **alle drei** Börsenzeilen
+geschrieben. Nur das Open Interest wird je Börse wirklich abgerufen.
+
+> ⚠️ **Die Spalte `exchange` behauptet für zwei von drei Feldern etwas, das die
+> Daten nicht hergeben.** Wer `WHERE exchange = 'bybit'` schreibt und eine
+> Finanzierungsrate liest, bekommt Kraken-Daten unter falschem Etikett.
+
+**Gefunden nicht durch Lesen, sondern durch Rechnen.** Der Plan sah plausibel
+aus, die Zeilenzahlen sahen plausibel aus. Erst die Frage *„weichen die Werte
+überhaupt voneinander ab?"* hat es aufgedeckt — dieselbe Lehre wie am 12.08.
+und am 13.08.: **ein Plan ist eine Absicht, eine Tabelle ist keine Messung.**
+
+### 56.2 Was von Schritt 1 übrig bleibt — und es trägt
+
+**Open Interest je Börse ist echt.** Gemessen über **8.087 gepaarte
+Zeitpunkte** und 22 Symbole, 8-Stunden-Fenster:
+
+| | Spanne der OI-Änderung zwischen den Börsen |
+|---|---|
+| Median | **3,00 pp** |
+| 90. Perzentil | 10,93 pp |
+| Maximum | 70,88 pp |
+| Anteil > 1 pp | **85,3 %** |
+
+**Das ist kein konstantes Feld** (R-T6) — die Perzentile der ausgelieferten
+Sätze streuen über 0 bis 96.
+
+**Nur Änderungen, nie Niveaus.** Binance führt ein Vielfaches der Kontrakte von
+OKX; absolute Stände zu vergleichen hieße, Börsengrößen zu messen statt
+Verhalten.
+
+**Abdeckung: 35 von 39 Symbolen.** Gegenprobe mit nur einer Börse in der
+Tabelle: keine Divergenz, die übrigen Sätze bleiben vollständig.
+
+### 56.3 Der Nutzerhinweis, der den Satzbau umgeworfen hat
+
+> *„wurde der Parameter ausreichend gegengeprüft, ob es positiv für unsere
+> LLM-Config ist bzw. nicht schädlich — da LLMs nicht mit Zahlen umgehen bzw.
+> auch nicht rechnen sollen."*
+
+**Mein Entwurf verstieß dagegen.** Er lieferte:
+
+```
+"... an den Boersen ungleich: OKX +0.0 %, Bybit -1.3 %."
+"Die Spanne zwischen den 3 Boersen betraegt 1.3 Prozentpunkte; ..."
+```
+
+**Drei Zahlen, und die dritte ist die Differenz der ersten beiden.** Ein Modell,
+dem man Summand, Summand und Summe hinlegt, prüft nach statt zu urteilen.
+
+**Die Fassung, die ausgeliefert wird:**
+
+```
+Die offenen Kontrakte am Terminmarkt sind auf Binance in den letzten
+  8 Stunden um 0.1 % gefallen.
+Die Boersen entwickeln sich dabei uneinheitlich: auf Bybit nehmen sie
+  staerker ab als auf OKX.                                    <- keine Zahl
+Wie weit sie auseinanderliegen, steht im 26. Perzentil der letzten
+  368 Messungen dieses Werts - im gewohnten Bereich.
+```
+
+**Der Richtungssatz trägt null Zahlen**, das Perzentil trägt seinen Maßstab und
+seine Einordnung. Daraus sind **R-T10** und **R-T11** geworden.
+
+> **Bewusst ohne Deutung.** Beim Funding steht ein Hinweis, was ein Extremwert
+> bedeutet — er ist durch die Praxisliteratur gedeckt. Für die Börsendivergenz
+> ist er das **nicht**: die Literatur führt die Spanne als Arbitrage-Größe, nicht
+> als Richtungssignal. Eine Deutung wäre meine Vermutung, Rang 3 der
+> Eignungsleiter (P2), und damit nicht aufnahmefähig.
+
+### 56.4 Rückwirkende Prüfung: 445 Sätze, ein echter Fund
+
+**Nutzervorgabe:** *„prüfe rückwirkend, ob wir weitere solche Fehler bereits im
+System haben — bei den zukünftigen Punkten bitte prüfen."*
+
+Dafür `pruefe_zahlen_in_prompts.py`, gerendert aus **echten** Daten:
+
+| Rolle | Quelle der Sätze |
+|---|---|
+| A | `lagebilder.fakten_json` — der Produktionswortlaut selbst |
+| BC | `lagebeschreibung.geteilt()` über 30 echte Reihen |
+| G | `positionierung.saetze()` über 40 Symbole |
+
+**Der eine Fund — und er ist älter als der Umbau:**
+
+```
+vorher:  66 % der Konten stehen long; das ist das 92. Perzentil der
+         eigenen Historie.
+nachher: 67 % der Konten stehen long; das ist das 82. Perzentil der
+         letzten 400 Messungen - im gewohnten Bereich.
+```
+
+**Zwei Mängel in einem Satz, in 37 von 37 Fällen:** keine Einordnung (R-T11)
+und kein genanntes Fenster (R-T1). Der Nachbarsatz über die Finanzierungsrate
+macht beides seit jeher richtig.
+
+> ⚠️ **Der erste Lauf meldete 33 Fälle, von denen 31 Fehlalarme waren** — mein
+> Prüfer rechnete einen Tageszähler gegen ein Prozent (*„5 Tage −3,4 %"* gegen
+> *„20 Tage −8,4 %"*) und hielt die Ziffer in **3QSS** für eine nackte Zahl.
+> Behoben durch Einheitenbindung und eine Wortgrenze — **und durch einen
+> Selbsttest mit sieben Fällen**, darunter mein eigener Entwurf als
+> Positivprobe und beide Fehlalarme als Gegenprobe.
+>
+> **Ein Prüfer ohne Prüfung ist eine Meinung.**
+
+### 56.5 Kein zweites Werkzeug für dieselbe Frage
+
+**Nutzerhinweis:** *„prüfe, ob du nicht bereits ein geeignetes Werkzeug gebaut
+hast für LLM-Prüfung — damit du es nicht mehrfach baust."*
+
+**Es gab eines** — `pruefe_fakten_bezugsgroessen.py` vom 09.08. Die Grenze steht
+jetzt **in beiden Dateien**:
+
+| | `pruefe_fakten_bezugsgroessen.py` | `pruefe_zahlen_in_prompts.py` |
+|---|---|---|
+| Gegenstand | JSON-Faktendicts der alten Pipelines | gerenderte **Sätze** der Rollen A/BC/G |
+| entstanden | 09.08. | 16.08. (die Rollen kamen 10.–16.08.) |
+| N2 nackte Zahl | ✓ je Feld | ✓ je Satz |
+| N1 Rechenaufgabe | — | ✓ |
+| N3 Perzentil ohne Einordnung | — | ✓ |
+
+**Ein Satz ist kein Feld:** *„OKX +0,0 %, Bybit −1,3 %, Spanne 1,3 Punkte"* hat
+je Zahl einen tadellosen Bezug und ist trotzdem eine Rechenaufgabe.
+
+### 56.6 Was Schritt 1 für die Mindestkriterien NICHT tut
+
+**Rolle G erfüllt G1 weiterhin nicht.** `mindestkriterien.QUELLEN_G` gruppiert
+nach **Informationsart**, nicht nach Endpunkt — drei Börsen bleiben *eine*
+Terminmarktquelle. Das ist Absicht: G1 zu erfüllen, indem man dieselbe Größe
+dreimal zählt, wäre eine Selbsttäuschung im Code.
+
+> **Schritt 1 macht Rolle G inhaltlich besser, nicht formal vollständig.** Die
+> zweite Informationsart bleibt offen — Optionsmarkt, COT, Short Interest.
+
+### 56.7 Gegenprüfung
+
+| | |
+|---|---|
+| `pruefe_zahlen_in_prompts.py` | Selbsttest **7/7**, 445 Sätze, **kein Befund** |
+| Paketprüfungen | **898, alle bestanden** |
+| freie Namen | 0 |
+| `pruefe_phase1.py` | bestanden |
+| Simulation gegen NB-Backup | **6 Gruppen**, 12 Signale, 14 Mails, **0 Fehler, 0 Lücken** |
+| Gegenprobe Divergenz | eine Börse allein → keine Divergenz, übrige Sätze vollständig |
+
+### 56.8 Offen aus diesem Kapitel
+
+| | Punkt | Warum nicht jetzt |
+|---|---|---|
+| **1** | **`funding_rate`/`long_account_pct` unter fremdem Börsenetikett** | `compute_funding_rate_percentile` liest sie aus den Binance-Zeilen — ein Eingriff trifft das Hebel-Screening in der Produktion |
+| **2** | echte Funding-Divergenz | `get_bybit_funding_history` existiert und ist live geprüft; kostet einen zusätzlichen Abruf je Symbol und Lauf |
+| 3 | Long-Anteil je Börse | Bybit/OKX haben Endpunkte, gebaut ist keiner |

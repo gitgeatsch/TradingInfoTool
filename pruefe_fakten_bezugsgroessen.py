@@ -26,6 +26,13 @@ Gebrauch:
     median / mittel / spanne      Bezug innerhalb derselben Groesse
     hinweis / lesehilfe           Klartext-Einordnung im selben Block
 
+SCHWESTERWERKZEUG (16.08.2026): `pruefe_zahlen_in_prompts.py` prueft
+dieselbe Frage an den GERENDERTEN SAETZEN der Rollen A/BC/G - die es am
+09.08. noch nicht gab. Es findet zusaetzlich zwei Formen, die auf
+Feldebene unsichtbar sind: die Rechenaufgabe (zwei Werte UND ihr Abstand
+im selben Satz) und das Perzentil ohne Einordnung. Wer hier etwas
+erweitert, sehe zuerst dort nach - und umgekehrt.
+
 WAS DIESE DATEI NICHT TUT: entscheiden, ob ein Fakt einen Bezug BRAUCHT.
 Manche Zahlen sind selbsterklaerend (ein Kurs, eine Anzahl, ein Datum). Die
 Datei liefert die Liste; die Entscheidung je Fakt gehoert in die
