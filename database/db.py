@@ -257,6 +257,16 @@ CREATE TABLE IF NOT EXISTS open_interest_snapshot (
 );
 CREATE INDEX IF NOT EXISTS idx_oi_snapshot_symbol_fetched ON open_interest_snapshot(symbol, exchange, fetched_at);
 
+CREATE TABLE IF NOT EXISTS externe_reihe (
+    quelle      TEXT NOT NULL,
+    schluessel  TEXT NOT NULL,
+    datum       TEXT NOT NULL,
+    wert        REAL NOT NULL,
+    geholt_am   TEXT NOT NULL,
+    PRIMARY KEY (quelle, schluessel, datum)
+);
+CREATE INDEX IF NOT EXISTS idx_externe_reihe ON externe_reihe(quelle, schluessel, datum);
+
 CREATE TABLE IF NOT EXISTS hebel_triggers (
     id                          INTEGER PRIMARY KEY AUTOINCREMENT,
     symbol                      TEXT NOT NULL,
@@ -4222,6 +4232,90 @@ def update_signal_zai_gegenpruefung(
 # Neustalten am Tag waere das elfmal.
 #
 # Deshalb ein Zeitstempel: nachgeholt wird nur, was HEUTE noch nicht lief.
+# --- EXTERNE ZEITREIHEN (16.08.2026) ---------------------------------------
+#
+# EINE TABELLE STATT DREI. Rolle G bekommt Zug um Zug Quellen, die alle
+# dieselbe Form haben: eine Groesse je Datum, von aussen geholt, gebraucht wird
+# ihr PERZENTIL in der eigenen Geschichte. COT (woechentlich), Boersenfluesse
+# (taeglich), spaeter Short Interest (halbmonatlich) und Insiderkaeufe.
+#
+# Drei eigene Tabellen waeren drei Schemamigrationen, drei Lesefunktionen und
+# drei Stellen, an denen dasselbe Perzentil anders gerechnet wird. Die
+# Entscheidung faellt hier einmal - Nutzervorgabe vom 16.08.: *"entscheide du
+# wegen Cache und Datenbank"*.
+#
+# WARUM UEBERHAUPT SPEICHERN, wo die Anbieter doch Historie liefern? Drei
+# Gruende, und der dritte ist der wichtigste:
+#   1. Rolle G laeuft je Signal - ohne Speicher holt ein Lauf dieselbe Reihe
+#      mehrfach.
+#   2. Faellt das Netz aus, steht sonst gar kein Fakt zur Verfuegung.
+#   3. NACHVOLLZIEHBARKEIT: was das Modell damals sah, laesst sich spaeter
+#      nur nachlesen, wenn es jemand aufgeschrieben hat. Genau daran ist die
+#      Bewertung der Signale vom 14.08. gescheitert.
+def schreibe_externe_reihe(conn: sqlite3.Connection, quelle: str,
+                           schluessel: str, punkte: list) -> int:
+    """`punkte` sind (datum, wert)-Paare. Gibt die Zahl der Zeilen zurueck.
+
+    UPSERT statt INSERT: die Anbieter korrigieren Berichte nachtraeglich - die
+    CFTC tut das regelmaessig. Ein `INSERT OR IGNORE` wuerde die Korrektur
+    verwerfen und dauerhaft den ersten, falschen Wert fuehren."""
+    stempel = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    zeilen = [(str(quelle), str(schluessel), str(d), float(w), stempel)
+              for d, w in (punkte or []) if w is not None]
+    if not zeilen:
+        return 0
+    conn.executemany(
+        "INSERT INTO externe_reihe (quelle, schluessel, datum, wert, geholt_am) "
+        "VALUES (?, ?, ?, ?, ?) "
+        "ON CONFLICT(quelle, schluessel, datum) DO UPDATE SET "
+        "wert = excluded.wert, geholt_am = excluded.geholt_am", zeilen)
+    conn.commit()
+    return len(zeilen)
+
+
+def lies_externe_reihe(conn: sqlite3.Connection, quelle: str, schluessel: str,
+                       grenze: int = 400) -> list:
+    """Die juengsten `grenze` Punkte, AUFSTEIGEND - [(datum, wert), ...].
+
+    Aufsteigend, weil jeder Aufrufer die Reihe chronologisch braucht; das
+    Umdrehen an vier Stellen waere vier Gelegenheiten, es zu vergessen."""
+    try:
+        zeilen = conn.execute(
+            "SELECT datum, wert FROM externe_reihe "
+            "WHERE quelle = ? AND schluessel = ? "
+            "ORDER BY datum DESC LIMIT ?",
+            (str(quelle), str(schluessel), int(grenze))).fetchall()
+    except sqlite3.Error as exc:
+        logger.info("externe Reihe %s/%s nicht lesbar: %s", quelle, schluessel, exc)
+        return []
+    return [(str(z[0]), float(z[1])) for z in reversed(zeilen)]
+
+
+def alter_externe_reihe(conn: sqlite3.Connection, quelle: str,
+                        schluessel: str) -> float | None:
+    """Wie viele Stunden ist der juengste ABRUF her? None heisst: nie geholt.
+
+    NICHT das Datum des juengsten Punktes - das ist bei woechentlichen
+    Berichten bis zu sieben Tage alt, ohne dass etwas fehlt. Gefragt ist, wann
+    wir zuletzt NACHGESEHEN haben."""
+    try:
+        z = conn.execute(
+            "SELECT MAX(geholt_am) FROM externe_reihe "
+            "WHERE quelle = ? AND schluessel = ?",
+            (str(quelle), str(schluessel))).fetchone()
+    except sqlite3.Error:
+        return None
+    if not z or not z[0]:
+        return None
+    try:
+        gestempelt = datetime.fromisoformat(str(z[0]))
+        if gestempelt.tzinfo is None:
+            gestempelt = gestempelt.replace(tzinfo=timezone.utc)
+        return (datetime.now(timezone.utc) - gestempelt).total_seconds() / 3600.0
+    except ValueError:
+        return None
+
+
 def merke_joblauf(conn: sqlite3.Connection, job_id: str) -> None:
     """Haelt fest, dass dieser Job gelaufen ist.
 

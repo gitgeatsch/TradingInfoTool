@@ -892,6 +892,60 @@ def makro_analog_job(conn_factory, fred_api_key) -> None:
         conn.close()
 
 
+def externe_reihen_job(conn_factory) -> None:
+    """Die Fremdquellen der Rolle G auffrischen (2026-08-16, Schritt 3).
+
+    WARUM ES DIESEN JOB GIBT. `zweite_meinung.rolle_g` oeffnet die Datenbank
+    mit `mode=ro` - sie kann nicht schreiben. Ohne einen Job haenge jedes
+    Urteil unmittelbar am Netz: faellt CoinMetrics oder die CFTC aus, faellt
+    der Fakt aus, und ein Signal ohne Gegenpruefung sieht aus wie eines, das
+    sie bestanden hat ("fail-soft ist fail-silent").
+
+    Dieselbe Arbeitsteilung wie beim Terminmarkt: `hebel_screening` schreibt
+    `open_interest_snapshot`, `positionierung` liest nur.
+
+    JEDE QUELLE EINZELN GEFANGEN. Faellt die CFTC aus, soll der Boersenfluss
+    trotzdem aktuell werden - dasselbe Muster wie in `run_makro_analog_update`.
+
+    ZAEHLT NICHT ALS FEHLSCHLAG, wenn eine Reihe leer bleibt: die CFTC
+    veroeffentlicht freitags, an sechs von sieben Tagen aendert sich nichts.
+    Gemeldet wird nur, was gar nicht erreichbar war."""
+    conn = conn_factory()
+    geschrieben = 0
+    try:
+        from agent.rohstoff.pipeline import SYMBOL_ZU_COT_ROHSTOFF
+        from api.cftc_cot import get_cot_long_anteil_history
+        from api.onchain import get_btc_exchange_flow_history
+        from database import db as DB
+
+        try:
+            reihe = get_btc_exchange_flow_history(tage=800)
+            geschrieben += DB.schreibe_externe_reihe(
+                conn, "coinmetrics", "btc_netto_boersenfluss", reihe)
+        except Exception as exc:                             # noqa: BLE001
+            logger.info("Boersenfluesse nicht auffrischbar: %s", exc)
+
+        # `set()` - vier Symbole, aber je Rohstoff nur ein Bericht. Ohne das
+        # waeren es vier identische Abrufe, sobald zwei ETCs denselben
+        # Basiswert haetten.
+        for stoff in sorted(set(SYMBOL_ZU_COT_ROHSTOFF.values())):
+            try:
+                geschrieben += DB.schreibe_externe_reihe(
+                    conn, "cftc_cot", stoff,
+                    get_cot_long_anteil_history(stoff))
+            except Exception as exc:                         # noqa: BLE001
+                logger.info("COT %s nicht auffrischbar: %s", stoff, exc)
+
+        logger.info("Externe Reihen aufgefrischt: %d Punkte geschrieben.",
+                    geschrieben)
+    except Exception as exc:
+        logger.exception("Auffrischen der externen Reihen fehlgeschlagen")
+        _notify_job_failure("externe_reihen",
+                            f"Externe Reihen fehlgeschlagen: {exc}")
+    finally:
+        conn.close()
+
+
 def kategorie_vorschlaege_job(conn_factory) -> None:
     """#333 KI-Vorschlaege-Job fuer Kategorie-Schwerpunkte (2026-07-24, siehe
     agent/kategorie_vorschlaege.py Modul-Docstring) - taeglich: prueft alle
@@ -3604,6 +3658,21 @@ def build_scheduler(
         args=[db_conn_factory, fred_api_key],
         id="makro_analog",
         next_run_time=_staggered_start(4),
+        misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
+    )
+    # Fremdquellen der Rolle G (2026-08-16) - taeglich um 06:35, also VOR den
+    # Signallaeufen. Der Zeitpunkt ist nicht beliebig: die Rollen-Kette liest
+    # diese Reihen, und was sie nicht findet, holt sie im Urteil selbst aus dem
+    # Netz. `next_run_time` bootstrapt sie sofort nach dem Einspielen, sonst
+    # stuende die Tabelle bis zum naechsten Morgen leer.
+    scheduler.add_job(
+        externe_reihen_job,
+        "cron",
+        hour=6,
+        minute=35,
+        args=[db_conn_factory],
+        id="externe_reihen",
+        next_run_time=_staggered_start(5),
         misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
     )
     # #333 KI-Vorschlaege-Job (2026-07-24) - gleiches Muster wie makro_analog

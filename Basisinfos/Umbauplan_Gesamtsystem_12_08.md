@@ -7225,3 +7225,164 @@ G drei Tage lang als fertig ausgewiesen, während sie nie lief.
 | 2 | `cftc_cot.py` an Rolle G (Rohstoffe) | Schritt 3 |
 | 3 | `finra.py` + `sec_edgar.py` (Aktien) | Schritt 4 |
 | 4 | `funding_rate`/`long_account_pct` unter fremdem Börsenetikett | Kapitel 56.8 |
+
+---
+
+## Kapitel 59 — Schritt 3: COT für Rohstoffe, und eine Tabelle für alle Fremdquellen (16.08.2026)
+
+### 59.1 Die Entscheidung, die der Nutzer delegiert hat
+
+> *„mit Persistenz — ok und entscheide du wegen Cache und Datenbank"*
+
+**Eine generische Tabelle statt drei Einzellösungen.**
+
+```sql
+CREATE TABLE externe_reihe (
+    quelle, schluessel, datum, wert, geholt_am,
+    PRIMARY KEY (quelle, schluessel, datum)
+);
+```
+
+**Begründung:** COT (wöchentlich), Börsenflüsse (täglich), später Short
+Interest (halbmonatlich) und Insiderkäufe haben dieselbe Form — eine Größe je
+Datum, von außen geholt, gebraucht wird ihr **Perzentil in der eigenen
+Geschichte**. Drei eigene Tabellen wären drei Migrationen, drei Lesefunktionen
+und drei Stellen, an denen dasselbe Perzentil anders gerechnet wird.
+
+**UPSERT statt INSERT** — die CFTC revidiert Berichte nachträglich. Ein
+`INSERT OR IGNORE` würde die Korrektur verwerfen und dauerhaft den ersten,
+falschen Wert führen. Steht als Dauerprüfung.
+
+### 59.2 Das Konstruktionsproblem, das die Architektur bestimmt hat
+
+> ⚠️ **`zweite_meinung.rolle_g` öffnet die Datenbank mit `mode=ro`.**
+
+Persistenz kann dort **nicht** stattfinden. Damit war die Frage nicht *ob*,
+sondern *wo* — und die Antwort steht schon im Projekt: `hebel_screening`
+schreibt `open_interest_snapshot`, `positionierung` liest nur.
+
+**Also ein Job:** `scheduler/background.py::externe_reihen_job`, täglich 06:35,
+also **vor** den Signalläufen. `next_run_time` bootstrapt sofort nach dem
+Einspielen, sonst stünde die Tabelle bis zum nächsten Morgen leer.
+
+**Gelesen wird in drei Stufen** — Datenbank, Prozessspeicher, Netz:
+
+| Stufe | wofür |
+|---|---|
+| **Datenbank** | der Normalfall im Betrieb |
+| Prozessspeicher | Läufe ohne Job: Simulation, Messskripte, erster Start |
+| Netz | höchstens einmal je Prozess und Kalendertag |
+
+**Gemessen:** Job schreibt 2.072 Punkte in 4,6 s. Danach liest Rolle G in
+**0,06 s mit null Netzabrufen.**
+
+> **Ohne Stufe 1 hinge jedes Urteil unmittelbar am Netz** — und ein Signal ohne
+> Gegenprüfung sieht aus wie eines, das sie bestanden hat.
+
+### 59.3 Die Messung hat wieder die Größe gewählt
+
+Anteil der Wochen mit Extremwert (Perzentil ≥90 oder ≤10), 156-Wochen-Fenster:
+
+| | Gold | Silber | Kupfer | Erdgas |
+|---|---:|---:|---:|---:|
+| **Long-Anteil am OI** | **50 %** | **15 %** | **4 %** | **35 %** |
+| Netto Managed Money | 63 % | 39 % | 41 % | 21 % |
+
+**Der Anteil gewinnt** — er ist bereits normiert, während die Nettoposition an
+der absoluten Marktgröße hängt und mit ihr wandert. Dieselbe Überlegung, aus
+der `positionierung.py` nur OI-**Änderungen** vergleicht und keine Niveaus.
+
+**Fenster 156 Wochen (drei Jahre).** Die Länge ändert die Extremhäufigkeit
+kaum — 104/156/208 Wochen ergeben Gold 35/50/44 %, Silber 20/15/13 %, Kupfer
+7/4/6 %, Erdgas 33/35/38 %. Entschieden hat deshalb nicht die Extremrate,
+sondern dass drei Jahre einen Rohstoffzyklus decken und alle vier Märkte sie
+tragen (Kupfer und Erdgas haben 236 Berichte).
+
+> **Golds Häufung ist eine Markteigenschaft, kein Mangel der Größe.** Der
+> aktuelle Wert steht beim 58. Perzentil; die Verteilung nutzt den vollen
+> Bereich. Anders als MVRV in Kapitel 58, das an einem Ende klebte.
+
+### 59.4 Ein Fehler, der tadellos aussah
+
+**Die erste Fassung meldete für Gold und Silber den Bericht vom 2014-02-04** —
+mit einem einwandfreien 46. Perzentil.
+
+```
+$order: ASC + $limit: 400   ->  die AELTESTEN 400 Berichte
+```
+
+Gold und Silber tragen mehr als 400 Zeilen; Kupfer und Erdgas haben nur 236 und
+waren deshalb **zufällig richtig** — was den Fehler beinahe verdeckt hätte.
+
+> **Die Messung, die das Fenster festgelegt hat, benutzte `DESC`.** Dieselbe
+> Abfrage, andere Daten. *„Immer an der Quelle prüfen"* gilt auch für die eigene
+> Messung von vor zehn Minuten.
+
+Golds Perzentil springt nach der Korrektur von 46 auf **58**.
+
+### 59.5 Der Satz
+
+```
+Die US-Aufsicht meldet woechentlich, wie stark die grossen spekulativen Fonds
+  auf der Kaufseite stehen - im Terminmarkt des Basiswerts, nicht in diesem
+  Zertifikat.
+Im Bericht vom 2026-08-11 steht dieser Anteil im 58. Perzentil der letzten
+  156 Wochenberichte - im gewohnten Bereich.
+```
+
+**Der Basiswert wird ausdrücklich genannt.** Wir halten WisdomTree-Zertifikate,
+die Behörde misst den Future an der COMEX — nah genug, um etwas zu sagen, aber
+nicht dasselbe Instrument. Wer das verschweigt, lässt das Modell glauben, es
+lese eine Aussage über unser Papier.
+
+**Erste Fassung des Einleitungssatzes endete auf *„einen Teil der offenen
+Kontrakte auf der Kaufseite"*** — grammatisch tadellos und ohne Information.
+Ersetzt.
+
+### 59.6 Der Stand — ehrlich
+
+| Gruppe | Quellenarten | G1 (zwei Arten) | G2 (symbolspezifisch) |
+|---|---|---|---|
+| **Krypto** | Terminmarkt + On-Chain | **erfüllt** | **erfüllt** |
+| **Rohstoffe** | **COT** | **fehlt** (1 von 2) | **erfüllt** |
+| Aktien | — | fehlt | fehlt |
+| Themen-ETF | — | fehlt | fehlt |
+| Absicherung | — | fehlt | fehlt |
+
+> **Schritt 3 hat Rohstoffe von null auf eine Quelle gebracht, nicht auf zwei.**
+> COT ist eine Informationsart; G1 verlangt zwei. Das ist kein Versäumnis des
+> Schritts, sondern der Umfang, den eine Quelle hat.
+
+**Die zweite Art für Rohstoffe wäre `api/eia.py`** — Erdgas-Lagerbestände, also
+physische Bestände statt Positionierung. Sie deckt aber **nur Erdgas**; für
+Gold, Silber und Kupfer ist keine kostenlose zweite Art bekannt. Und EIA
+braucht als einzige unserer Quellen einen Schlüssel.
+
+### 59.7 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **910, alle bestanden** (6 neue) |
+| freie Namen | 0 |
+| `pruefe_zahlen_in_prompts.py` | Selbsttest 7/7, 445 Sätze, kein Befund |
+| `pruefe_phase1.py` | bestanden |
+| Simulation | 6 Gruppen, 12 Signale, 14 Mails, **0 Fehler, 0 Lücken** |
+| **Ende-zu-Ende** | **12 Rolle-G-Aufrufe — OD7H und OD7C tragen COT, 4 Krypto den Fluss, 6 andere nichts** |
+| Persistenz | Migration auf Bestands-DB, 2.072 Punkte, Revision schlägt durch |
+| Netzentkopplung | mit gefüllter Tabelle **null** Abrufe |
+
+> ⚠️ **Zwei eigene Fehler in den neuen Prüfungen.** Die Schritt-2-Prüfung hing
+> am Namen `_fluss_reihe`, den Schritt 3 umbenannt hat — sie prüft jetzt den
+> **Netzabruf** selbst, also die Stelle, an der der Sachverhalt heute entsteht.
+> Und mein Testbestand hatte 48 Punkte bei `COT_MINDESTREIHE = 60`: **die
+> Eingabe stellte den Fall nicht her, den sie prüfen wollte** — zum fünften Mal
+> diese Woche.
+
+### 59.8 Offen
+
+| | Punkt | |
+|---|---|---|
+| 1 | zweite Art für Rohstoffe | EIA deckt nur Erdgas, braucht einen Schlüssel |
+| 2 | `finra.py` + `sec_edgar.py` an Rolle G | Schritt 4, Aktien |
+| 3 | Themen-ETF und Absicherung | **keine kostenlose Quelle bekannt** (Kap. 57) |
+| 4 | `funding_rate`/`long_account_pct` unter fremdem Börsenetikett | Kap. 56.8 |

@@ -78,6 +78,80 @@ def _fetch_latest_report(market_name: str, session: requests.Session | None = No
     return rows[0] if rows else None
 
 
+@track_api_health("cftc_cot")
+def get_cot_long_anteil_history(rohstoff: str, grenze: int = 400,
+                                session: requests.Session | None = None) -> list:
+    """Der Long-Anteil des Managed Money am Open Interest als Reihe.
+
+    [(bericht_datum, anteil_prozent), ...], AUFSTEIGEND.
+
+    WOFUER (2026-08-16, Schritt 3). `get_cot_snapshot()` liefert einen Stand.
+    "142.318 Kontrakte netto long" traegt fuer ein Sprachmodell nichts - erst
+    die Lage in der eigenen Geschichte ist eine Aussage (R-T5). Dafuer die
+    Reihe.
+
+    WARUM DER ANTEIL UND NICHT DIE NETTOPOSITION. Gemessen am 16.08. ueber die
+    letzten zwei Jahre, Anteil der Wochen mit Extremwert (Perzentil >=90 oder
+    <=10) im 156-Wochen-Fenster:
+
+        Long-Anteil am OI     Gold 50 %  Silber 15 %  Kupfer  4 %  Erdgas 35 %
+        Netto Managed Money   Gold 63 %  Silber 39 %  Kupfer 41 %  Erdgas 21 %
+
+    Die Nettoposition haengt an der absoluten Marktgroesse und wandert mit
+    ihr; der Anteil ist bereits normiert - dieselbe Ueberlegung, aus der
+    `positionierung.py` nur OI-AENDERUNGEN vergleicht und keine Niveaus.
+
+    LIVE GEPRUEFT am 16.08.: Gold und Silber tragen 400 Berichte ab 2018-12-18,
+    Kupfer und Erdgas 236 ab 2022-02-08 - die Folge der dokumentierten
+    CME-Umbenennungen. Fuer ein 156-Wochen-Fenster reicht beides."""
+    market_name = COT_MARKET_NAMES.get(rohstoff)
+    if market_name is None:
+        raise ValueError(f"Unbekannter Rohstoff-Schluessel: {rohstoff!r}")
+    session = session or requests.Session()
+    response = session.get(
+        CFTC_DISAGGREGATED_URL,
+        params={
+            "$where": f"market_and_exchange_names = '{market_name}'",
+            "$select": "report_date_as_yyyy_mm_dd,open_interest_all,"
+                       "m_money_positions_long_all",
+            # ⚠️ ABSTEIGEND SORTIEREN UND ERST IN PYTHON DREHEN.
+            #
+            # `ASC` mit `$limit` liefert die AELTESTEN Berichte, nicht die
+            # juengsten. Gold und Silber tragen mehr als 400 Zeilen; die erste
+            # Fassung dieser Funktion lieferte damit den Stand von 2014 - mit
+            # einem einwandfrei aussehenden 46. Perzentil. Kupfer und Erdgas
+            # haben nur 236 Berichte und waren deshalb zufaellig richtig, was
+            # den Fehler beinahe verdeckt haette.
+            #
+            # Die Messung, die das Fenster festgelegt hat, benutzte `DESC` -
+            # dieselbe Abfrage, andere Daten. "Immer an der Quelle pruefen"
+            # gilt auch fuer die eigene Messung von vor zehn Minuten.
+            "$order": "report_date_as_yyyy_mm_dd DESC",
+            "$limit": int(grenze),
+        },
+        timeout=30,
+    )
+    response.raise_for_status()
+    raus = []
+    for z in (response.json() or []):
+        try:
+            oi = int(z["open_interest_all"])
+            lang = int(z["m_money_positions_long_all"])
+        except (KeyError, TypeError, ValueError):
+            # KEIN GERATENER WERT (P-10) - eine unvollstaendige Woche faellt
+            # aus der Reihe, statt als 0 in das Perzentil einzugehen.
+            continue
+        if oi > 0:
+            raus.append((str(z["report_date_as_yyyy_mm_dd"])[:10],
+                         round(100.0 * lang / oi, 2)))
+    if not raus:
+        logger.warning(
+            "CFTC COT: keine Historie fuer Marktname %r (%s) - evtl. umbenannt",
+            market_name, rohstoff)
+    # Zurueck in die Zeitrichtung, die jeder Aufrufer erwartet.
+    return list(reversed(raus))
+
+
 def get_cot_snapshot(rohstoff: str, session: requests.Session | None = None) -> CotSnapshot | None:
     """`rohstoff`: einer der Schluessel in COT_MARKET_NAMES ("gold"/"silber"/
     "kupfer"/"erdgas"/"rohoel_wti"/"rohoel_brent"). Gibt None zurueck, wenn der Marktname keine Daten mehr

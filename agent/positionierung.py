@@ -215,35 +215,110 @@ FLUSS_MINDESTREIHE = 120
 # tragbar. Persistenz steht als offener Punkt im Umbauplan.
 _fluss_cache: dict[str, list] = {}
 
+# --- WOHER EINE EXTERNE REIHE KOMMT (16.08.2026, Schritt 3) ----------------
+#
+# ⚠️ ROLLE G DARF NICHT SCHREIBEN. `zweite_meinung.rolle_g` oeffnet die
+# Datenbank mit `mode=ro` - ein Schreibversuch von hier aus scheitert immer.
+# Persistenz gehoert deshalb in einen Job (`scheduler/background.py::
+# externe_reihen_job`), genau wie `open_interest_snapshot` vom Screening
+# geschrieben und hier nur gelesen wird.
+#
+# DREI STUFEN, IN DIESER REIHENFOLGE:
+#   1. DATENBANK - was der Job hinterlegt hat. Der Normalfall im Betrieb.
+#   2. PROZESSSPEICHER - fuer Laeufe ohne Job: Simulation, Messskripte, der
+#      erste Start nach dem Einspielen.
+#   3. NETZ - hoechstens einmal je Prozess und Kalendertag.
+#
+# OHNE STUFE 1 HAENGT JEDES URTEIL AM NETZ; ohne Stufe 2 holt ein Lauf mit
+# zwanzig Signalen zwanzigmal dieselbe Reihe. Stufe 3 ohne die anderen beiden
+# waere der Zustand von Schritt 2, den dieser Schritt aufloest.
+HOECHSTALTER_REIHE_STUNDEN = 30.0
 
-def _fluss_reihe() -> list:
-    """Die Netto-Boersenfluesse, hoechstens einmal je Kalendertag geholt."""
-    schluessel = datetime.now(timezone.utc).date().isoformat()
-    if schluessel in _fluss_cache:
-        return _fluss_cache[schluessel]
+
+def _gepflegte_reihe(conn, quelle: str, schluessel: str, holen) -> list:
+    """Die Reihe aus der Datenbank, sonst aus dem Speicher, sonst aus dem Netz."""
+    from database import db as DB
+
+    if conn is not None:
+        alter = DB.alter_externe_reihe(conn, quelle, schluessel)
+        if alter is not None and alter <= HOECHSTALTER_REIHE_STUNDEN:
+            aus_db = DB.lies_externe_reihe(conn, quelle, schluessel)
+            if aus_db:
+                return aus_db
+
+    tagesschluessel = f"{quelle}/{schluessel}/{datetime.now(timezone.utc).date()}"
+    if tagesschluessel in _fluss_cache:
+        return _fluss_cache[tagesschluessel]
     try:
-        from api.onchain import get_btc_exchange_flow_history
-
-        reihe = get_btc_exchange_flow_history(tage=FLUSS_FENSTER_TAGE + 70)
+        reihe = holen()
     except Exception as exc:                                  # noqa: BLE001
         # GEZAEHLT, NICHT VERSCHLUCKT - und der leere Eintrag verhindert, dass
         # ein Lauf mit zwanzig Signalen zwanzigmal in denselben Fehler laeuft.
-        logger.info("Boersenfluss nicht abrufbar: %s", exc)
+        logger.info("Reihe %s/%s nicht abrufbar: %s", quelle, schluessel, exc)
         reihe = []
     _fluss_cache.clear()                     # nur der heutige Tag bleibt
-    _fluss_cache[schluessel] = reihe
+    _fluss_cache[tagesschluessel] = reihe
     return reihe
 
 
-def _boersenfluss() -> dict | None:
+def _boersenfluss(conn=None) -> dict | None:
     """Wo steht der heutige Netto-Zufluss in seiner eigenen Geschichte?"""
-    reihe = _fluss_reihe()
+    from api.onchain import get_btc_exchange_flow_history
+
+    reihe = _gepflegte_reihe(
+        conn, "coinmetrics", "btc_netto_boersenfluss",
+        lambda: get_btc_exchange_flow_history(tage=FLUSS_FENSTER_TAGE + 70))
     if len(reihe) < FLUSS_MINDESTREIHE:
         return None
     fenster = [w for _, w in reihe[-FLUSS_FENSTER_TAGE:]]
     datum, jetzt = reihe[-1]
     return {"datum": datum, "netto": jetzt, "n": len(fenster),
             "perzentil": _perzentil(fenster, jetzt)}
+
+
+# --- DIE ROHSTOFFSEITE (16.08.2026, Schritt 3) ------------------------------
+#
+# WAS COT IST: die US-Aufsicht veroeffentlicht woechentlich, wie die grossen
+# Marktteilnehmer im Terminmarkt aufgestellt sind. "Managed Money" sind die
+# grossen spekulativen Fonds - naeher an "Stimmung der Profis" als die alte
+# Kategorie "Non-Commercial".
+#
+# WARUM ES FUER ROLLE G TAUGT: es ist eine Erhebung einer Behoerde ueber
+# fremde Positionen. Weder aus unserer Kursreihe abgeleitet noch fuer Rolle BC
+# sichtbar - die Informationsgrenze, die R-R2 verlangt.
+#
+# ⚠️ ES BESCHREIBT DEN FUTURE, NICHT UNSER ZERTIFIKAT. Wir halten
+# WisdomTree-ETCs; COT misst den Gold-Future an der COMEX. Das ist der
+# BASISWERT unseres Papiers, also nah genug, um etwas zu sagen - aber es ist
+# nicht dasselbe Instrument, und der Satz sagt das auch.
+#
+# FENSTER 156 WOCHEN. Drei Jahre decken einen Rohstoffzyklus, und alle vier
+# Maerkte tragen es (Kupfer und Erdgas haben 236 Berichte). Die Fensterlaenge
+# aendert die Extremhaeufigkeit kaum - gemessen 104/156/208 Wochen: Gold
+# 35/50/44 %, Silber 20/15/13 %, Kupfer 7/4/6 %, Erdgas 33/35/38 %.
+COT_FENSTER_WOCHEN = 156
+COT_MINDESTREIHE = 60
+
+
+def _cot(conn, symbol: str) -> dict | None:
+    """Die COT-Positionierung zum BASISWERT dieses Zertifikats."""
+    from agent.rohstoff.pipeline import SYMBOL_ZU_COT_ROHSTOFF
+    from api.cftc_cot import get_cot_long_anteil_history
+
+    # DIE ZUORDNUNG WIRD GELIEHEN, NICHT NACHGEBAUT. Sie steht seit dem 18.07.
+    # in der Rohstoff-Pipeline; eine zweite Fassung hier waere die naechste
+    # Stelle zum Auseinanderlaufen - dieselbe Ueberlegung wie bei `geteilt()`.
+    stoff = SYMBOL_ZU_COT_ROHSTOFF.get(str(symbol or "").upper())
+    if not stoff:
+        return None
+    reihe = _gepflegte_reihe(conn, "cftc_cot", stoff,
+                             lambda: get_cot_long_anteil_history(stoff))
+    if len(reihe) < COT_MINDESTREIHE:
+        return None
+    fenster = [w for _, w in reihe[-COT_FENSTER_WOCHEN:]]
+    datum, jetzt = reihe[-1]
+    return {"rohstoff": stoff, "datum": datum, "anteil": jetzt,
+            "n": len(fenster), "perzentil": _perzentil(fenster, jetzt)}
 
 
 def lage(conn, symbol: str, assetklasse: str | None = None) -> dict:
@@ -303,8 +378,20 @@ def lage(conn, symbol: str, assetklasse: str | None = None) -> dict:
     # decken die Gruppenvokabeln ab, die die Kette fuehrt; alles andere - auch
     # ein unbekannter Wert - faellt heraus. Genau die Vokabelverwirrung
     # (`etf` gegen `themen_etf`) hat am 16.08. zwei Fakten stillgelegt.
+    # ROHSTOFFE: die Positionierung im Basiswert. Anders als der Boersenfluss
+    # ist sie SYMBOLSPEZIFISCH - Gold, Silber, Kupfer und Erdgas haben je einen
+    # eigenen Bericht. Damit deckt sie G1 UND G2.
+    if str(assetklasse or "").lower() in ("rohstoffe", "rohstoff"):
+        c = _cot(conn, sym)
+        if c:
+            aus["cot"] = c
+            aus["cot_perzentil"] = c["perzentil"]
+        else:
+            aus["fehlt_rahmen"] = (aus.get("fehlt_rahmen") or []) + [
+                "Positionierung der grossen Fonds im Basiswert"]
+
     if str(assetklasse or "").lower() in ("krypto", "coin", "crypto"):
-        fluss = _boersenfluss()
+        fluss = _boersenfluss(conn)
         if fluss:
             aus["boersenfluss"] = fluss
         else:
@@ -502,6 +589,24 @@ def saetze(e: dict) -> list[str]:
     # unseren Daten nie gemessen - also P2 Rang 3 und nicht aufnahmefaehig.
     # `onchain.py` nennt sie im Feldkommentar "potenziell Verkaufsdruck"; genau
     # dieses "potenziell" gehoert nicht in einen Faktensatz.
+    # DIE ROHSTOFFSEITE. Der Satz nennt ausdruecklich den BASISWERT und nicht
+    # das gehaltene Papier: wir halten ein WisdomTree-Zertifikat, die Behoerde
+    # misst den Future an der COMEX. Wer das verschweigt, laesst das Modell
+    # glauben, es lese eine Aussage ueber unser Instrument.
+    ct = e.get("cot")
+    if ct and ct.get("perzentil") is not None:
+        pc = ct["perzentil"]
+        wie = ("aussergewoehnlich stark" if pc >= EXTREM_OBEN else
+               "aussergewoehnlich schwach" if pc <= EXTREM_UNTEN else
+               "im gewohnten Bereich")
+        z.append(
+            "Die US-Aufsicht meldet woechentlich, wie stark die grossen "
+            "spekulativen Fonds auf der Kaufseite stehen - im Terminmarkt des "
+            "Basiswerts, nicht in diesem Zertifikat.")
+        z.append(
+            f"Im Bericht vom {ct['datum']} steht dieser Anteil im {pc}. "
+            f"Perzentil der letzten {ct['n']} Wochenberichte - {wie}.")
+
     f = e.get("boersenfluss")
     if f and f.get("perzentil") is not None:
         pf = f["perzentil"]

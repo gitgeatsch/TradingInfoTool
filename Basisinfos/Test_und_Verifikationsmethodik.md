@@ -2299,3 +2299,31 @@ sagt nichts darüber, was am Ende dasteht; genau daran ist der Sektor-Bezug am
 das prüft dieselbe Frage auf **JSON-Feldern** der alten Pipelines. Ein Satz ist
 kein Feld — drei Zahlen mit je tadellosem Bezug können zusammen eine
 Rechenaufgabe sein.
+
+## 2.26 Externe Reihen: der Job schreibt, die Rolle liest (neu 2026-08-16)
+
+**Auslöser:** eine neue Fremdquelle für Rolle G.
+
+`zweite_meinung.rolle_g` öffnet die Datenbank mit `mode=ro` und **kann nicht
+schreiben**. Jede Fremdquelle braucht deshalb zwei Teile:
+
+| | |
+|---|---|
+| **schreiben** | `scheduler/background.py::externe_reihen_job`, täglich vor den Signalläufen |
+| **lesen** | `positionierung.py::_gepflegte_reihe` — Datenbank, dann Prozessspeicher, dann Netz |
+
+**Zu prüfen ist beides getrennt.** Eine Prüfung, die nur das Lesen abdeckt,
+bleibt grün, während die Tabelle leer bleibt und jedes Urteil am Netz hängt.
+
+```bash
+python pruefe_pakete.py        # Reihenfolge, Revision, Netzentkopplung, fail-closed
+```
+
+> **Die Netzentkopplung ist die wichtigste der vier:** mit gefüllter Tabelle
+> darf `lage()` **null** Abrufe machen. Sonst fällt der Fakt mit dem Anbieter
+> aus — und ein Signal ohne Gegenprüfung sieht aus wie eines, das sie bestanden
+> hat.
+
+**Und die Testeingabe muss den Fall herstellen.** `COT_MINDESTREIHE = 60`: ein
+Testbestand mit 48 Punkten lässt drei Prüfungen fehlschlagen, ohne dass am Code
+etwas falsch wäre.

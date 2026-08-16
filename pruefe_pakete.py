@@ -5398,10 +5398,19 @@ def paket_15() -> None:
     # FUNKTIONAL UND OHNE NETZ. `_fluss_reihe` wird ersetzt, sonst haengt
     # eine Paketpruefung an CoinMetrics - und eine Pruefung, die bei
     # Netzausfall rot wird, sagt nichts ueber den Code.
-    _echt5 = PO5._fluss_reihe
+    # ⚠️ DIE NAHT HAT SICH IN SCHRITT 3 VERSCHOBEN. Bis dahin lag sie bei
+    # `_fluss_reihe`; jetzt geht der Weg ueber `_gepflegte_reihe` (DB,
+    # dann Speicher, dann Netz), und ersetzt wird der NETZABRUF selbst.
+    # Damit prueft der Test denselben Sachverhalt an der Stelle, an der
+    # er heute entsteht - statt an einem Namen, den es nicht mehr gibt.
+    import api.onchain as OC5
+
+    _echt5 = OC5.get_btc_exchange_flow_history
     try:
-        PO5._fluss_reihe = lambda: [(f"2026-01-{i%28+1:02d}", float(i % 40 - 20))
-                                    for i in range(400)]
+        PO5._fluss_cache.clear()
+        OC5.get_btc_exchange_flow_history = (
+            lambda *a, **k: [(f"2026-01-{i%28+1:02d}", float(i % 40 - 20))
+                             for i in range(400)])
         _kr5 = PO5.lage(_mem, "TST", assetklasse="krypto")
         _ak5 = PO5.lage(_mem, "TST", assetklasse="aktien")
         pruefe(P, "der Boersenfluss erreicht NUR Krypto",
@@ -5423,7 +5432,8 @@ def paket_15() -> None:
         # NICHT stilllegen - `rolle_g` bricht bei `len(fehlt) >= 3` ab, und
         # eine ZUSAETZLICHE Quelle, die beim Ausfall eine Rolle abschaltet,
         # waere genau verkehrt herum.
-        PO5._fluss_reihe = lambda: []
+        PO5._fluss_cache.clear()
+        OC5.get_btc_exchange_flow_history = lambda *a, **k: []
         _aus5 = PO5.lage(_mem, "TST", assetklasse="krypto")
         pruefe(P, "ein ausgefallener Fluss zaehlt NICHT gegen die G5-Schranke",
                not _aus5.get("boersenfluss")
@@ -5434,11 +5444,81 @@ def paket_15() -> None:
                "sonst legt eine zusaetzliche Quelle beim Ausfall die Rolle "
                "still - und verschwiegen werden darf der Ausfall trotzdem nicht")
     finally:
-        PO5._fluss_reihe = _echt5
+        OC5.get_btc_exchange_flow_history = _echt5
         PO5._fluss_cache.clear()
 
-    # --- G2 IST NICHT DURCH EINE MARKTWEITE GROESSE ZU ERFUELLEN ------
+    # --- COT UND DIE PERSISTENZ (16.08.2026, Schritt 3) ---------------
+    #
+    # OHNE NETZ, mit einer eigenen Speicherdatenbank. Geprueft wird die
+    # Mechanik - Reihenfolge, Fenster, Zuordnung -, nicht die CFTC.
+    import sqlite3 as _sq6
+
     from agent import mindestkriterien as MK5
+    from database import db as DB6
+
+    _spk = _sq6.connect(":memory:")
+    _spk.row_factory = _sq6.Row
+    DB6.init_db(_spk)
+    # ⚠️ 156 WOCHENPUNKTE, NICHT 48. Die erste Fassung schrieb ein Jahr
+    # mit vier Punkten je Monat - unter `COT_MINDESTREIHE` (60), also gab
+    # `_cot()` zu Recht None zurueck, und drei Pruefungen schlugen fehl.
+    # Nicht der Code war falsch, sondern die Testeingabe: sie stellte den
+    # Fall nicht her, den sie pruefen wollte. Dieselbe Falle wie bei der
+    # streng steigenden Reihe und dem Blocknamen mit Leerzeichen.
+    from datetime import date, timedelta
+
+    _start = date(2023, 1, 3)
+    _punkte = [((_start + timedelta(weeks=i)).isoformat(),
+                20.0 + (i * 7) % 30) for i in range(156)]
+    DB6.schreibe_externe_reihe(_spk, "cftc_cot", "gold", _punkte)
+    pruefe(P, "eine externe Reihe kommt AUFSTEIGEND zurueck",
+           [d for d, _ in DB6.lies_externe_reihe(_spk, "cftc_cot", "gold")]
+           == sorted(d for d, _ in _punkte),
+           "jeder Aufrufer braucht sie chronologisch - das Umdrehen an vier "
+           "Stellen waere vier Gelegenheiten, es zu vergessen")
+    DB6.schreibe_externe_reihe(_spk, "cftc_cot", "gold", [(_punkte[0][0], 99.9)])
+    pruefe(P, "eine nachtraegliche Berichtskorrektur schlaegt durch",
+           DB6.lies_externe_reihe(_spk, "cftc_cot", "gold")[0][1] == 99.9
+           and _spk.execute("SELECT COUNT(*) FROM externe_reihe").fetchone()[0]
+           == len(_punkte),
+           "die CFTC revidiert regelmaessig - INSERT OR IGNORE wuerde dauerhaft "
+           "den ersten, falschen Wert fuehren")
+
+    # `init_db` legt open_interest_snapshot bereits an - eine zweite
+    # CREATE-Anweisung waere eine zweite Schemadefinition und bricht.
+    _netz6 = []
+    import api.cftc_cot as CC6
+
+    _echtcot = CC6.get_cot_long_anteil_history
+    try:
+        CC6.get_cot_long_anteil_history = (
+            lambda *a, **k: _netz6.append("cot") or [])
+        _r6 = PO5.lage(_spk, "OD7H", assetklasse="rohstoffe")
+        pruefe(P, "COT kommt aus der Datenbank, nicht aus dem Netz",
+               _r6.get("cot") is not None and not _netz6,
+               "`rolle_g` oeffnet mit mode=ro und kann nicht schreiben - haengt "
+               "die Reihe am Netz, faellt der Fakt mit dem Anbieter aus")
+        pruefe(P, "und das Perzentil traegt das Fenster im Satz",
+               any("Wochenberichte" in s and "Perzentil" in s
+                   for s in PO5.saetze(_r6)),
+               "R-T1: das Fenster gehoert in den Satz")
+        pruefe(P, "COT erreicht NUR Rohstoffe",
+               PO5.lage(_spk, "OD7H", assetklasse="krypto").get("cot") is None
+               and PO5.lage(_spk, "OD7H").get("cot") is None
+               and PO5.lage(_spk, "BTC", assetklasse="rohstoffe").get("cot") is None,
+               "ein Symbol ohne COT-Zuordnung darf keinen fremden Bericht "
+               "bekommen - fail-closed wie beim Boersenfluss")
+        pruefe(P, "COT deckt G1 UND G2 - es ist symbolspezifisch",
+               "cot" in MK5.SYMBOLSPEZIFISCH_G
+               and "cot_perzentil" in MK5.QUELLEN_G["cot"]
+               and _r6.get("cot_perzentil") is not None,
+               "Gold, Silber, Kupfer und Erdgas haben je einen eigenen Bericht "
+               "- anders als der BTC-weite Boersenfluss")
+    finally:
+        CC6.get_cot_long_anteil_history = _echtcot
+        _spk.close()
+
+    # --- G2 IST NICHT DURCH EINE MARKTWEITE GROESSE ZU ERFUELLEN ------
 
     pruefe(P, "der Boersenfluss deckt G1, aber NIE G2",
            "onchain" in MK5.QUELLEN_G
