@@ -596,7 +596,7 @@ def beschreibe_trend(reihen: dict, klasse: str, datum: str) -> list[str]:
         # weiter zu machen, damit der eigene Text hindurchpasst, ist die
         # Umkehrung seines Zwecks - und der naechste, der eine Ausnahme
         # braucht, findet dann schon eine vor. Der Preis ist ein Wort.
-        # ⚠️ WANN HOCH UND TIEF LAGEN - ergaenzt 17.08.2026, und das ist kein
+        # ⚠️ WANN HOCH UND TIEF LAGEN - ergaenzt 16.08.2026, und das ist kein
         # Schmuck. Der Abstand allein FAELLT MIT DEM SATZ DAVOR ZUSAMMEN,
         # sobald das Hoch am Anfang des Fensters liegt - im Abwaertstrend der
         # Regelfall. Gemessen am 16.08.:

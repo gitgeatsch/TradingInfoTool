@@ -1211,7 +1211,7 @@ LLM-Verbrauchern.
 **"cerebras (2)" in der Provider-Performance:** korrekte historische
 Anzeige, kein Bug - diese 2 Hebel-Signale wurden vor der vollstaendigen
 Cerebras-Entfernung erzeugt und sind seither aufgeloest (siehe
-project_cerebras_free_tier_aenderung_2026-08-17.md). Kein Code aendert das
+project_cerebras_free_tier_aenderung_2026-08-16.md). Kein Code aendert das
 mehr, es ist reine Vergangenheitsdaten-Anzeige.
 
 **Groq "Fehler (vor 20 Min)":** ebenfalls kein Bug - echter 429-Rate-Limit
@@ -3075,7 +3075,7 @@ sauber gelöst: Richtung-Feld zeigt bei `hauptgruppe=absicherung` automatisch
 Aktiv/Inaktiv statt Übergewichten/Neutral/Meiden (schließt Lücke 3 aus
 Folge 6 GUI-seitig). Transparenz-Prinzip live umgesetzt: der
 `review_am`-Vorschlag erscheint direkt neben dem Feld mit konkretem Datum
-UND Begründungstext (z. B. "Vorschlag: 2026-08-17 (heute + 28 Tage) -
+UND Begründungstext (z. B. "Vorschlag: 2026-08-16 (heute + 28 Tage) -
 CFTC-COT-Berichte erscheinen wöchentlich..."), nie eine stille Vorbelegung.
 Statuswechsel (aktiv → erledigt/verworfen) über eigene Listen-Buttons, nicht
 im Dialog (eine neue These startet immer aktiv/manuell).

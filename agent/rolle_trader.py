@@ -282,14 +282,18 @@ SYSTEM_PROMPT_TRADER_OHNE_PERSONA = _baue_prompt(mit_betragsfrage=False,
 #                ALLE VIER IN EINEM STAND, nicht in vieren: fuenf Aenderungen
 #                an fuenf Tagen erzeugen fuenf Staende, zwischen denen niemand
 #                mehr vergleichen kann (Umbauplan 36.4).
-#   2026-08-17   KLASSE 1: eine woertliche DOPPELUNG entfernt. Die
+#   2026-08-16   KLASSE 1: eine woertliche DOPPELUNG entfernt. Die
 #                60-Tage-Bewegung stand in `struktur` UND in `bewegung`,
 #                bitgleich gerechnet - 42 von 42 Reihen, keine Ausnahme.
 #                Beide Bloecke sind zu `verlauf` zusammengelegt; die
 #                Nachbarschaft von Strukturaussage und 60-Tage-Zahl bleibt
 #                (sie war der Fix vom 11.08.), die zweite Nennung entfaellt.
 #                Ein Satz weniger, kein Fakt weniger.
-PROMPT_STAND = "2026-08-17"
+# ⚠️ BUCHSTABE, WEIL DER TAG SCHON VERGEBEN IST. Phase I lief in der
+# Produktion unter "2026-08-16" - 29 Signale tragen ihn. Klasse 1 kam
+# am selben Tag; ohne den Buchstaben waeren genau die Signale nicht
+# trennbar, deren Unterschied gemessen werden soll.
+PROMPT_STAND = "2026-08-16b"
 
 
 # --- Die abgeleiteten Zonen (Paket 1, 12.08.2026) -------------------------

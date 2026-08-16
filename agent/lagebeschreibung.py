@@ -163,7 +163,7 @@ def _struktur(c: np.ndarray, h: np.ndarray, l: np.ndarray, i: int) -> list[str]:
 
 
 # ⚠️ HIER STAND EIN ZWEITER SATZ, UND ER WAR EINE WOERTLICHE DOPPELUNG
-# (entfernt 17.08.2026).
+# (entfernt 16.08.2026).
 #
 #     _struktur:  "Zum Vergleich: ueber 60 Handelstage steht der Kurs -32.0 %."
 #     _bewegung:  "Kursentwicklung: 5 Tage -2.5 %, ..., 60 Tage -32.0 %."
@@ -198,7 +198,7 @@ def _bewegung(c: np.ndarray, i: int) -> list[str]:
     ein Niveau, keine Bewegung - das Modell weiss nicht, ob der Kurs steigt oder
     faellt.
 
-    "IM SELBEN RAHMEN" (17.08.2026) - das ist kein Fuellwort. Der Satz steht
+    "IM SELBEN RAHMEN" (16.08.2026) - das ist kein Fuellwort. Der Satz steht
     seit heute direkt unter der Strukturaussage, und die 60-Tage-Zahl ist der
     uebergeordnete Massstab, gegen den sie zu lesen ist. Vorher stand dieser
     Bezug als eigener Satz im Struktur-Block und wiederholte dabei die Zahl."""
@@ -621,7 +621,7 @@ def beschreibe_lage(*, symbol: str, reihe: list, index: int,
 #   luecken         ZULETZT. Was fehlt, soll gesagt sein - aber es darf nicht
 #                   schwerer wiegen als das, was da ist (R-T9)
 #
-# `struktur` UND `bewegung` SIND EIN BLOCK GEWORDEN (17.08.2026): `verlauf`.
+# `struktur` UND `bewegung` SIND EIN BLOCK GEWORDEN (16.08.2026): `verlauf`.
 # Grund und Messwert stehen bei `_struktur()`. Die Saetze selbst sind
 # unveraendert bis auf die entfallene Doppelung und den Bezug "im selben
 # Rahmen" - die Reihenfolge der uebrigen Bloecke bleibt, wie sie war.

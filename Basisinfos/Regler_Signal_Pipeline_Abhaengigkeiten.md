@@ -147,7 +147,7 @@ die von diesen Abhängigkeiten betroffen ist).
 
 ---
 
-> ## ⚠️ STANDVERMERK 17.08.2026 — diese Matrix kennt die Rollen-Kette NICHT
+> ## ⚠️ STANDVERMERK 16.08.2026 — diese Matrix kennt die Rollen-Kette NICHT
 >
 > Geprüft auf Nutzerfrage: kein einziger Treffer für `lagebeschreibung`,
 > `rollen_eingabe`, `rolle_analyst`, `rolle_trader` oder `Rolle A`/`Rolle BC`.

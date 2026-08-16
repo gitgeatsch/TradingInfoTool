@@ -1714,7 +1714,7 @@ VIX stand am 08.08. bei 14,9 („ruhig"). Das ist beabsichtigt.
 
 ---
 
-## 8c. Offene Punkte — Stand 17.08.2026 (LLM-Ebene)
+## 8c. Offene Punkte — Stand 16.08.2026 (LLM-Ebene)
 
 **Abschnitt 8 und 8b bleiben stehen.** Sie tragen die Begründungen; hier steht,
 was von der LLM-Ebene nach dem Umbau vom 15.–17.08. offen ist. Diese Liste ist

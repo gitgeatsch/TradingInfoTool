@@ -1,6 +1,6 @@
 # Rollenkonzept — Ein- und Ausgang je Rolle (ENTWURF, 2026-08-10)
 
-> ## ⚠️ STANDVERMERK 17.08.2026 — dieses Dokument ist ÜBERHOLT
+> ## ⚠️ STANDVERMERK 16.08.2026 — dieses Dokument ist ÜBERHOLT
 >
 > **Der Text unten bleibt vollständig stehen.** Seine Begründungen sind der
 > wertvollere Teil, und mehrere davon gelten unverändert — allen voran die

@@ -3,7 +3,7 @@
 *Der Masterplan für den Umbau: WAS jede Rolle bekommt, was sie liefert, und
 wie daraus eine Empfehlung für den Nutzer wird.*
 
-> ⚠️ **Korrigiert am 17.08.2026.** Hier stand, dieser Plan löse
+> ⚠️ **Korrigiert am 16.08.2026.** Hier stand, dieser Plan löse
 > `Rollenkonzept_Entwurf_10_08.md` *„nicht ab, sondern setze darauf auf: das
 > Rollenkonzept sagt, WER urteilt"*. Das galt am 12.08. und gilt nicht mehr —
 > jenes Dokument ordnet Funding, OI-Squeeze und Long/Short der **Rolle B** zu
@@ -3503,7 +3503,7 @@ dasselbe für die zweite Stufe (Z.ai) mit **anderen, selektierten** Werten.
 
 ### 32.1 Der erste Befund: Rolle C gibt es nicht
 
-> ⚠️ **UMBENANNT 17.08.2026.** Was dieses Kapitel „Rolle C" nennt, heisst seit dem 17.08. **Rolle G — Gegenprüfer**. Der Buchstabe C war doppelt vergeben: das C in **„Rolle BC"** ist der Entscheider in LLM1 und hat mit Z.ai nichts zu tun. Der Kapiteltext bleibt im Wortlaut von damals stehen.
+> ⚠️ **UMBENANNT 16.08.2026.** Was dieses Kapitel „Rolle C" nennt, heisst seit dem 17.08. **Rolle G — Gegenprüfer**. Der Buchstabe C war doppelt vergeben: das C in **„Rolle BC"** ist der Entscheider in LLM1 und hat mit Z.ai nichts zu tun. Der Kapiteltext bleibt im Wortlaut von damals stehen.
 
 Der Nutzer: *„Es sollten drei sein — Marktanalyst 1. Stufe, 2. Stufe Trader und
 Bewerter — A, B und C."*
@@ -5084,7 +5084,7 @@ durch, steht **warum** dort — nicht nur, dass er nicht kam.
 
 ---
 
-## Kapitel 42 — Basis-Sets je Rolle, und der Klasse-1-Umbau (17.08.2026)
+## Kapitel 42 — Basis-Sets je Rolle, und der Klasse-1-Umbau (16.08.2026)
 
 ### 42.1 „LLM-Integration prüfen" sind ZWEI Prüfungen
 
@@ -5286,7 +5286,7 @@ ist der Entscheider in LLM1. `Rolle BC` bleibt unangetastet.
 
 ---
 
-## Kapitel 43 — Die Abrufkette von Anfang bis Ende, simuliert (17.08.2026)
+## Kapitel 43 — Die Abrufkette von Anfang bis Ende, simuliert (16.08.2026)
 
 **Nutzervorgabe:** *„die Abrufkette prüfen und simulieren bzw. testen — von
 Anfang bis zum Ende."* Ergebnis: `simuliere_kette.py`, und der erste Lauf hat
@@ -5408,7 +5408,7 @@ Tage lang „fertig".
 
 ---
 
-## Kapitel 44 — Produktionsanalyse am NB-Export vom 16.08. (17.08.2026)
+## Kapitel 44 — Produktionsanalyse am NB-Export vom 16.08. (16.08.2026)
 
 **Nutzervorgabe:** *„wichtig immer sauber gegenprüfen, damit wir nichts
 verschlimmbessern auf Basis einer Annahme oder eines fehlenden Logeintrags."*
@@ -5524,7 +5524,7 @@ Zeitüberschreitung. Mit einem Aufruf statt vier sollte das verschwinden.
 
 ---
 
-## Kapitel 45 — A2b geklärt, und die Basislinie vor dem glatten Schnitt (17.08.2026)
+## Kapitel 45 — A2b geklärt, und die Basislinie vor dem glatten Schnitt (16.08.2026)
 
 ### 45.1 A2b: der Ausstiegs-Job ist NICHT defekt — er hatte keine Gelegenheit
 
@@ -5628,3 +5628,142 @@ jede Zahl sähe anders aus, und niemand könnte sagen, ob besser oder nur anders
 | Sinkt die Signalzahl, oder steigt nur der HALTEN-Anteil? | 67 ERÖFFNEN gegen 62 HALTEN am 15.08. |
 | Erreicht Rolle G mehr Einstiege als die alte Prüfung? | Konsistenz 25 von 34 (74 %), Rolle G **0** |
 | Läuft die Kette überhaupt öfter? | 51 % Ausfallzeit, `refresh_ohlc` 1× in 48 h |
+
+---
+
+## Kapitel 46 — Sind die Signale der letzten Tage brauchbar? (16.08.2026)
+
+**Nutzerfrage:** *„Kann man sagen, alle Signale und Bewertungen der letzten
+Tage sind unvollständig bzw. fehlerhaft — d. h. auch eine Gegenüberstellung
+Kauf/Verkauf/Halten bzw. Hebel Einstiege/Ausstiege ist unbrauchbar, oder kann
+man daraus etwas lesen?"*
+
+**Antwort: teils, und die Trennlinie lässt sich exakt ziehen.** Die Signale
+tragen ihren `prompt_stand` — die Zuordnung ist keine Schätzung.
+
+### 46.1 Die Aufteilung, gemessen
+
+| Prompt-Stand | 14.08. | 15.08. | 16.08. | Σ | Einstiege |
+|---|---:|---:|---:|---:|---|
+| **2026-08-12** | 46 | 154 | 26 | **226** | 117 (52 %) |
+| **2026-08-16** (Phase I) | – | – | 29 | **29** | 20 (69 %) |
+| **ohne Stand** | – | 26 | 4 | **30** | 0 |
+
+Die 30 ohne Stand sind **ausschliesslich** Verkaufsseite (28 REDUZIEREN,
+2 VERKAUFEN) — der Ausstiegspfad setzt das Feld nicht.
+
+### 46.2 Welcher Defekt wirkte auf welche Signale
+
+| Defekt | betroffen | Wirkung |
+|---|---|---|
+| **60-Tage-Doppelung** | **alle 285** | eine Zahl zweimal im Prompt — Gewichtung verzerrt, aber **gleichmässig** |
+| Klassen-Einstufung fehlt bei `themen_etf`/`hedge` | diese Gruppen, seit 12.08. | Lagebild-Einstufung fehlte |
+| Sektorbezug greift nie | Themen-ETF | fehlender Block |
+| **fehlende Kerze** | **nur 16.08., 59 Signale** | am 15.08. war die 14.08.-Kerze die **normale Vortageskerze** |
+| **Rolle G tot** | alle | es gab **keine** zweite Stimme — die Empfehlung selbst ist unberührt |
+| Konsistenzprüfung | 93 Einstiege | eine Zeile in der Mail; sie **kippt nichts** (Nutzervorgabe 29.07.) |
+| **51 % Ausfallzeit** | alle | verzerrt, **welche** Assets wann drankamen |
+
+> ⚠️ **Korrektur an meiner eigenen früheren Aussage.** Ich hatte geschrieben,
+> die Kette habe „auf zwei Tage alten Charts" geurteilt. Das gilt **nur für den
+> 16.08.** — am 15.08. war die jüngste Kerze vom 14.08., also die normale
+> Vortageskerze. Betroffen sind **59 von 285**, nicht alle.
+
+### 46.3 Was sich daraus NICHT lesen lässt
+
+**Kein Erfolgsvergleich.** Von 285 Signalen haben **8** einen aufgelösten
+Ausgang:
+
+```
+nicht_anwendbar 214 · ohne Status 58 · take_profit 6 · offen 5 · stop_loss 2
+```
+
+> **Eine Gegenüberstellung Kauf/Verkauf/Halten kann derzeit gar keine
+> Erfolgsmessung sein** — es gibt fast nichts Aufgelöstes. Wer aus 6 Treffern
+> und 2 Stopps etwas ableitet, misst Rauschen.
+
+**Kein Vergleich über Stände hinweg.** 226 gegen 29 Signale, und die 29 stehen
+zusätzlich auf der fehlenden Kerze. Der Unterschied 52 % → 69 % Einstiege sieht
+nach Phase I aus, ist aber bei n=29 an einem Tag mit fehlender Kerze **nicht
+belastbar**.
+
+**Keine Rate je Asset.** Bei 51 % Ausfallzeit ist „x % der Assets" eine Aussage
+über die Laufzeit, nicht über den Markt.
+
+### 46.4 Was sich sehr wohl lesen lässt
+
+**Die Verteilung innerhalb eines Stands** — 226 Signale, ein Prompt, ein
+Modell, dieselbe Doppelung für alle:
+
+```
+HALTEN 98 · ERÖFFNEN 81 · KAUFEN 22 · NACHKAUFEN 14 · REDUZIEREN 9 · VERKAUFEN 2
+```
+
+**52 % Einstiege.** Das ist keine Datenfrage, sondern das Verhalten des Modells
+unter bekannten Bedingungen. Die Doppelung verzerrt es, aber **für alle gleich**
+— ein systematischer Versatz, kein Rauschen.
+
+**Und die Verkaufsseite ist auffällig dünn:** 11 von 226 sind VERKAUFEN oder
+REDUZIEREN (5 %), gegen 117 Einstiege. Das deckt sich mit O-29.
+
+### 46.5 Der Anlassfilter hat geantwortet — und deutlich
+
+Die Messung aus O-36 lief im Betrieb mit. **2.665 Beobachtungen**, 15.08. 16:30
+bis 16.08. 07:29:
+
+| Instrument | Urteile | wörtliche Wiederholung |
+|---|---:|---:|
+| spot | 1.759 | **80 %** |
+| hebel | 864 | **81 %** |
+| absicherung | 42 | **93 %** |
+| **gesamt** | **2.665** | **81 %** |
+
+**Vier von fünf Modellaufrufen stellen dieselbe Frage noch einmal.**
+Median-Abstand zur vorigen Frage: **0,2 Stunden** — das ist der Takt, nicht der
+Markt. Einzelne Symbole: 66 von 70 Urteilen identisch.
+
+> **Eine Vermutung ist damit widerlegt — meine eigene.** Ich hatte erwartet,
+> das Lagebild mache die Fragen künstlich „neu", weil es Modellprosa ist und
+> alle drei Stunden wechselt. Der Unterschied zwischen *mit* und *ohne*
+> Lagebild beträgt **2 Prozentpunkte** (79 % gegen 81 %). Es macht fast nichts
+> aus.
+
+**Was eine Frage wirklich neu macht:**
+
+| Block | Anteil |
+|---|---:|
+| **marken** | **15 %** |
+| bestand | 4 % |
+| finanzierung · hebelgeometrie · lücken · referenz | je 3 % |
+| bewegung · struktur · volumen | je 2 % |
+
+**Die Marken allein tragen die Hälfte aller echten Änderungen.** Sie sind
+kursnah und bewegen sich, sobald ein Tick über eine Clustergrenze läuft.
+
+### 46.6 Was das für die Signalzahl bedeutet
+
+**Die 67 ERÖFFNEN an einem Tag entstehen nicht, weil das Modell 67-mal etwas
+Neues sieht** — sondern weil es 2.665-mal gefragt wird und in 81 % der Fälle
+dieselbe Frage bekommt.
+
+**Damit steht die Bremse auf einer Messung statt auf einer Schätzung.** Und sie
+ist keine Einschränkung im Sinne von *„weniger, damit es weniger ist"*: sie
+entfernt Wiederholungen, keine Urteile.
+
+**Offen bleibt die Nebenwirkung.** Greift der Filter, sinkt die Zahl der
+Aufrufe um rund 80 % — und damit auch die Zahl der Gelegenheiten, bei denen ein
+Asset zufällig im richtigen Moment gefragt wird. Ob das schadet, sagt keine
+dieser Zahlen.
+
+### 46.7 Zwei eigene Fehler dieser Runde
+
+> ⚠️ **Das Datum.** Ich habe die gesamte Dokumentation dieser Sitzung auf den
+> **17.08.** datiert — es ist der **16.08.**, ein Sonntag. 42 Stellen in 16
+> Dateien, korrigiert. Der Fehler zerstört genau die Zuordnung, um die es in
+> diesem Kapitel geht.
+
+> ⚠️ **Der Prompt-Stand wäre kollidiert.** Die Datumskorrektur hätte den
+> Klasse-1-Stand auf `2026-08-16` gesetzt — denselben Schlüssel, den Phase I in
+> der Produktion bereits trägt (29 Signale). Genau die Signale, deren
+> Unterschied gemessen werden soll, wären nicht mehr trennbar gewesen. Jetzt
+> **`2026-08-16b`**, nach der Buchstabenkonvention der Datei.

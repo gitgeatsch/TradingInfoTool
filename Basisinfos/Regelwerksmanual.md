@@ -367,7 +367,7 @@ dieselbe Datenbank — der Unterschied ist nur, ob du selbst klicken musst.
 | `refresh_history` | alle 24 Std. | Tages-Historie (für Indikatoren wie EMA-200) | CoinGecko |
 | `refresh_ohlc` | alle 24 Std. | Echtes OHLC (für ATR/Swing-Highs-Lows) | Kraken |
 | `marktscan` | 2× täglich, fix 04:00 + 16:00 Uhr | Kompletter Marktscan-Lauf (Stufe A-D, Kap. 13) — rein deterministisch, **kein** Groq-Aufruf mehr direkt in diesem Job (seit Phase 5, siehe unten) | CoinGecko + Kraken |
-| `hebel_screening` (+ Budget-Allocator huckepack) | alle 15 Min | Hebel-Screening (Kap. 7) UND die zentrale Tagesbudget-Verteilung über drei Verbraucher: Hebel-Kandidaten (Tier 1), Marktscan-Kaufkandidaten-Begründung (Tier 2), Spot-Rotation für die am längsten überfälligen Krypto-Assets (Tier 3 — ersetzt seit 2026-07-14/Phase 5 den ehemaligen eigenen `signal_batch`-05:00-Cron) | Binance/Bybit/OKX/Kraken (Screening) + Groq→Mistral→Cerebras→Gemini (je Tier budget-limitiert, Cerebras nur bis 2026-08-17 siehe Kap. 14 Nachtrag) |
+| `hebel_screening` (+ Budget-Allocator huckepack) | alle 15 Min | Hebel-Screening (Kap. 7) UND die zentrale Tagesbudget-Verteilung über drei Verbraucher: Hebel-Kandidaten (Tier 1), Marktscan-Kaufkandidaten-Begründung (Tier 2), Spot-Rotation für die am längsten überfälligen Krypto-Assets (Tier 3 — ersetzt seit 2026-07-14/Phase 5 den ehemaligen eigenen `signal_batch`-05:00-Cron) | Binance/Bybit/OKX/Kraken (Screening) + Groq→Mistral→Cerebras→Gemini (je Tier budget-limitiert, Cerebras nur bis 2026-08-16 siehe Kap. 14 Nachtrag) |
 | `backward_tracking` | 1× täglich, fix 06:00 Uhr | Prüft vergangene KAUFEN/NACHKAUFEN-Signale gegen die Kurshistorie — Take-Profit oder Stop-Loss erreicht? | keine (nur bereits vorhandene DB-Daten) |
 | `bitpanda_holdings` | alle 30 Min (nur mit gesetztem `BITPANDA_API_KEY`) | **Seit 2026-07-16 der komplette Bestandsabgleich** (Krypto + Aktien/ETF/Rohstoffe + EUR-Cash) — ursprünglich (2026-07-11) nur der EUR-Fiat-Cash-Anteil, siehe Nachtrag unten | Bitpanda (Wallets + Transaktionshistorie) |
 
@@ -2077,8 +2077,8 @@ komplette Hebel-Roadmap (alle 6 Phasen) abgeschlossen.
 
 ### Nachtrag (2026-07-17): Mistral als neue zweite Fallback-Stufe, Cerebras-Rückbau vorbereitet
 
-**Auslöser:** Cerebras beendet seinen kostenlosen API-Tier zum **2026-08-17**
-(siehe Memory `project_cerebras_free_tier_aenderung_2026-08-17`) — nach dem
+**Auslöser:** Cerebras beendet seinen kostenlosen API-Tier zum **2026-08-16**
+(siehe Memory `project_cerebras_free_tier_aenderung_2026-08-16`) — nach dem
 $5-Einmalguthaben ist die API ohne echte Bezahlung nutzlos (harter Stopp,
 kein Auto-Billing, aber auch keine dauerhafte Lösung). Ausgiebige Recherche
 über vier Runden (Cerebras' eigene PayGo-FAQ, NVIDIA NIMs echte Terms of
@@ -2098,7 +2098,7 @@ Service, Groq/Cerebras/Mistral/Gemini-Vertragsvergleich) führte zu:
   endgültig abgelehnt — Produktivbetrieb ist ohne kostenpflichtige
   Enterprise-Lizenz vertraglich verboten, kein Grenzfall für ein Hobby-Projekt.
 - **Neue Ziel-Reihenfolge:** Groq → Mistral → Cerebras (nur noch bis
-  2026-08-17) → Gemini.
+  2026-08-16) → Gemini.
 
 **Echter Nebenfund + Bugfix:** Cerebras war bisher an zwei Stellen
 UNBEDINGT vorausgesetzt statt optional (anders als Gemini) —
@@ -2109,7 +2109,7 @@ Budget-Allocator nur laufen, `if groq_client is not None and cerebras_client
 is not None` — ohne CEREBRAS_API_KEY wäre der gesamte Allocator
 stillgelegt worden, nicht nur die Cerebras-Stufe. Beide Stellen jetzt
 korrigiert (Cerebras ist jetzt genauso optional wie Gemini/Mistral) — die
-Entfernung zum 2026-08-17 ist damit nur noch "Key aus `.env` löschen", kein
+Entfernung zum 2026-08-16 ist damit nur noch "Key aus `.env` löschen", kein
 weiterer Code-Eingriff nötig.
 
 **Neu:** `api/mistral.py::MistralClient` (identisches `.chat()`-Interface wie
@@ -2125,9 +2125,9 @@ einfacher Chat-Call sowie ein Call mit
 `analyst.py:656`) beide erfolgreich — Mistral verhält sich formatkompatibel
 zu den anderen drei OpenAI-kompatiblen Anbietern.
 
-### Nachtrag (2026-07-17, gleicher Tag): Korrektur — Cerebras sofort vollständig entfernt statt bis 2026-08-17 auslaufen zu lassen
+### Nachtrag (2026-07-17, gleicher Tag): Korrektur — Cerebras sofort vollständig entfernt statt bis 2026-08-16 auslaufen zu lassen
 
-Der oben dokumentierte Plan ("Cerebras bleibt bis 2026-08-17 als dritte
+Der oben dokumentierte Plan ("Cerebras bleibt bis 2026-08-16 als dritte
 Stufe aktiv") war der zum damaligen Zeitpunkt abgesegnete Stand. Der Nutzer
 hat sich nach Sichtung der Remote-Steuer-Seite (Provider-Performance zeigte
 weiterhin echte Cerebras-Calls) explizit umentschieden: Cerebras sollte
@@ -2148,7 +2148,7 @@ Bewusst NICHT angetastet: historische DB-Einträge mit `"cerebras:..."`-
 Provider-Präfix (Provider-Performance-Statistik) sowie
 `provider_from_label()` (bleibt generisch, liest Altbestand weiterhin
 korrekt). Details siehe Memory
-`project_cerebras_free_tier_aenderung_2026-08-17.md`, Abschnitt "KORREKTUR".
+`project_cerebras_free_tier_aenderung_2026-08-16.md`, Abschnitt "KORREKTUR".
 
 ### Nachtrag (2026-07-17): Selektiver Desktop↔Notebook-Sync für manuelle Einstandspreise
 
@@ -3582,7 +3582,7 @@ nichts aus dem Lauf. Über 20 echte Antworten: **null Verstöße.**
 
 ---
 
-# Nachtrag 2026-08-17: Die drei Rollen, verbindlich
+# Nachtrag 2026-08-16: Die drei Rollen, verbindlich
 
 **Warum dieser Abschnitt existiert.** Die Aufgabe der zweiten Stufe war
 **nirgends festgeschrieben** — im ganzen Manual standen zwei Halbsätze

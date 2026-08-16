@@ -14,7 +14,7 @@ DER NAME IST ABSICHT. Es gibt in diesem Projekt bereits `gegenpruefer_rollen`
 Zwei Ebenen, zwei Fragen. `zweite_meinung` heisst dieses Modul, damit die
 Verwechslung nicht ueber den Dateinamen zurueckkommt.
 
-WAS Z.AI HEUTE SIEHT - EIN Aufruf, EIGENE Fakten (Stand 17.08.2026):
+WAS Z.AI HEUTE SIEHT - EIN Aufruf, EIGENE Fakten (Stand 16.08.2026):
 
     Rolle G   die Positionierung am Terminmarkt aus `positionierung.py`:
               offene Kontrakte, Finanzierungsrate als Perzentil, Anteil der
@@ -338,7 +338,7 @@ def rolle_g(client, urteil: dict, conn=None, db: str | None = None,
     from agent import positionierung as PO
     from api.llm_basis import extrahiere_inhalt
 
-    # ⚠️ DAS SYMBOL KOMMT VOM AUFRUFER, NICHT AUS DEM URTEIL (17.08.2026).
+    # ⚠️ DAS SYMBOL KOMMT VOM AUFRUFER, NICHT AUS DEM URTEIL (16.08.2026).
     #
     # DIESE ZEILE HAT ROLLE G VOLLSTAENDIG TOTGELEGT, vom ersten Tag an.
     # `urteil` ist die validierte Antwort von Rolle BC, und die traegt WEDER
@@ -428,7 +428,7 @@ def hole(*, faktentext: dict, urteil: dict, zai_client,
     aus: dict = {}
 
     def arbeite() -> None:
-        # ⚠️ HIER STAND DIE KONSISTENZPRUEFUNG - entfernt am 17.08.2026.
+        # ⚠️ HIER STAND DIE KONSISTENZPRUEFUNG - entfernt am 16.08.2026.
         #
         # SIE HAETTE AM 16.08. GEHEN SOLLEN und ist beim Umbau uebersehen
         # worden. Der Nutzer war unmissverstaendlich:
@@ -480,7 +480,7 @@ def hole(*, faktentext: dict, urteil: dict, zai_client,
             # DAS SYMBOL DURCHREICHEN - siehe die Notiz in `rolle_g`.
             # Ohne diesen Wert kehrt sie in der zweiten Zeile zurueck,
             # und das ist sie vom 16. bis zum 17.08. auch.
-            # ⚠️ DURCH `_mit_platz`, NICHT DIREKT (17.08.2026).
+            # ⚠️ DURCH `_mit_platz`, NICHT DIREKT (16.08.2026).
             #
             # Der Andrangdeckel `MAX_GLEICHZEITIG = 2` haengt an dieser
             # Funktion - und er umschloss bis heute NUR die
@@ -556,7 +556,7 @@ def zeilen(ergebnis: dict) -> list[str]:
         return []
     z: list[str] = []
     # ⚠️ HIER STAND DIE KONSISTENZZEILE - "Ein zweites Modell nennt die
-    # Begruendung schluessig". Entfernt am 17.08.2026 zusammen mit dem Aufruf,
+    # Begruendung schluessig". Entfernt am 16.08.2026 zusammen mit dem Aufruf,
     # der sie erzeugte: der Nutzer hat sie am 16.08. ausdruecklich abgelehnt
     # ("war nie meine Anforderung"), und sie stand auf derselben
     # Informationsgrenze wie Rolle BC. `urteil`/`kurzbegruendung` bleiben im

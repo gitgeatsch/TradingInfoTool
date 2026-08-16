@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""DIE BASISLINIE VOR DEM GLATTEN SCHNITT - aus dem NB-Export (17.08.2026).
+"""DIE BASISLINIE VOR DEM GLATTEN SCHNITT - aus dem NB-Export (16.08.2026).
 
 NUTZERVORGABE: *„halte den alten Stand vom NB-Export fest und versuche, so viel
 Information und Messungen zu erstellen, um einen Vergleich bzw. Anhaltspunkte

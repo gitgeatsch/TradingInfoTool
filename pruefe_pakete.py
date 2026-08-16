@@ -5270,7 +5270,7 @@ def paket_15() -> None:
            "das, was da ist (R-T9)")
 
     # ------------------------------------------------------------------
-    # KLASSE 1 (17.08.2026) - die woertliche Doppelung ist weg.
+    # KLASSE 1 (16.08.2026) - die woertliche Doppelung ist weg.
     #
     # Die 60-Tage-Bewegung stand in `struktur` UND in `bewegung`, bitgleich
     # gerechnet. Ueber alle Reihen mit voller Historie: 42 von 42 identisch.
@@ -5371,7 +5371,7 @@ def paket_15() -> None:
     _mem.close()
 
     # ------------------------------------------------------------------
-    # DIE KURSREIHEN MUESSEN FRISCH SEIN (17.08.2026, aus dem NB-Export).
+    # DIE KURSREIHEN MUESSEN FRISCH SEIN (16.08.2026, aus dem NB-Export).
     #
     # Am 16.08. endeten ALLE 61 Reihen am Freitag, 14.08. - die Kette urteilte
     # am Sonntag auf Charts vom Freitag, und die Mail nannte einen zwei Tage
@@ -5401,7 +5401,7 @@ def paket_15() -> None:
     from agent import rolle_trader as RT5
 
     pruefe(P, "der Prompt-Stand ist mitgezogen",
-           RT5.PROMPT_STAND == "2026-08-17",
+           RT5.PROMPT_STAND == "2026-08-16b",
            "jeder Messbefund gehoert zu einem Stand - ohne den Sprung waeren "
            "Messungen vor und nach Phase I nicht unterscheidbar")
 

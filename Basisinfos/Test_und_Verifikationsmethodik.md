@@ -2227,7 +2227,7 @@ Marken — dieselbe kaputte Kursreihe wie am 06.08.), HYPE (167 Handelstage), MO
 (232). Keines davon stand in der Bestandserhebung; alle drei sagen es jetzt
 selbst im Faktensatz.
 
-# 2.24 Werkzeugkasten-Nachtrag (2026-08-17): die Kette von Anfang bis Ende
+# 2.24 Werkzeugkasten-Nachtrag (2026-08-16): die Kette von Anfang bis Ende
 
 | Skript | Frage | Ausloeser |
 |---|---|---|

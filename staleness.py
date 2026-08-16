@@ -37,7 +37,7 @@ def format_price_age(fetched_at: str | None) -> str:
     return f"vor {age_hours} Std."
 
 
-# Fuer Maerkte, die RUND UM DIE UHR handeln (2026-08-17). Bei Krypto gibt es
+# Fuer Maerkte, die RUND UM DIE UHR handeln (2026-08-16). Bei Krypto gibt es
 # keine Wochenenden und keine Feiertage: eine juengste Kerze, die aelter als
 # gestern ist, bedeutet, dass der Nachladelauf nicht stattgefunden hat.
 #
@@ -52,7 +52,7 @@ def is_history_stale(last_date: str | None,
                      schwelle_tage: int | None = None) -> bool:
     """Ist diese Reihe veraltet?
 
-    `schwelle_tage` (2026-08-17) erlaubt dem Aufrufer eine ENGERE Schwelle,
+    `schwelle_tage` (2026-08-16) erlaubt dem Aufrufer eine ENGERE Schwelle,
     ohne die geteilte Konstante zu verschieben. Das ist kein Geschmack: an
     `HISTORY_STALE_THRESHOLD_DAYS` haengen auch die Anzeige (`ui/formatting`)
     und das Datenqualitaets-Gate R-5.0 der alten Kette. Wer sie senkt, aendert

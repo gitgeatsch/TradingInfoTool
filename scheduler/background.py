@@ -2727,8 +2727,8 @@ def hebel_screening_job(
 
     **2026-07-17:** Cerebras vollstaendig aus der Fallback-Kette entfernt
     (Mistral hat dessen Rolle uebernommen, siehe Memory
-    project_cerebras_free_tier_aenderung_2026-08-17.md - urspruenglich war
-    nur die Entfernung zum 2026-08-17 geplant, der Nutzer hat sich aber
+    project_cerebras_free_tier_aenderung_2026-08-16.md - urspruenglich war
+    nur die Entfernung zum 2026-08-16 geplant, der Nutzer hat sich aber
     bewusst fuer die sofortige vollstaendige Entfernung entschieden).
 
     **2026-07-26:** Groq ebenfalls vollstaendig entfernt (reproduzierter Test
@@ -3200,7 +3200,7 @@ def _ohlc_data_is_stale(conn, watchlist) -> bool:
     Listings sind eine bekannte, dokumentierte Deckungsluecke (siehe
     api/kraken_history.py), kein Staleness-Fall.
 
-    ⚠️ EIGENE, ENGERE SCHWELLE SEIT DEM 17.08.2026 - wegen eines Ausfalls, der
+    ⚠️ EIGENE, ENGERE SCHWELLE SEIT DEM 16.08.2026 - wegen eines Ausfalls, der
     zwei Tage lang niemandem auffiel.
 
     GEMESSEN AM NB-EXPORT vom 16.08. 09:41: **alle 61 Kursreihen endeten am
