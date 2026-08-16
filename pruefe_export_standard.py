@@ -120,7 +120,34 @@ def main() -> None:
     if crit:
         melde(f"{crit} CRITICAL-Zeilen im Log")
     if tb > 5:
-        melde(f"{tb} Tracebacks im Log-Fenster")
+        # ⚠️ MIT ZEITBEZUG UND HAEUFIGSTER URSACHE (16.08.2026).
+        #
+        # "11970 Tracebacks im Log-Fenster" liest sich wie ein akuter Ausfall.
+        # Nachgesehen waren 11.953 davon EIN Fehler, alle aus 36 Minuten am
+        # 14.08. - vor dem Pull, der ihn behob. Seither keiner mehr.
+        #
+        # Eine grosse Zahl ohne Zeitbezug ist ein Fehlalarm-Muster: sie
+        # ueberdeckt die echten Funde daneben. Deshalb sagt die Meldung jetzt
+        # WANN und WORAN.
+        import collections as _c2
+        import re as _re2
+        stempel, letzte = [], None
+        arten = _c2.Counter()
+        for zeile in lg:
+            m = _re2.match(r"(\d{4}-\d\d-\d\d \d\d:\d\d)", zeile)
+            if m:
+                letzte = m.group(1)
+            if "Traceback" in zeile and letzte:
+                stempel.append(letzte)
+            f2 = _re2.search(r"(\w+(?:Error|Exception)): (.{0,60})", zeile)
+            if f2:
+                arten[f"{f2.group(1)}: {f2.group(2).strip()[:50]}"] += 1
+        spanne = (f", alle zwischen {min(stempel)} und {max(stempel)}"
+                  if stempel else "")
+        haeufigste = arten.most_common(1)
+        ursache = (f" - haeufigste Ursache {haeufigste[0][1]}x "
+                   f"{haeufigste[0][0]}" if haeufigste else "")
+        melde(f"{tb} Tracebacks im Log-Fenster{spanne}{ursache}")
     jf = d.get("job_fehlschlaege", [])
     if jf:
         arten = Counter((str(x.get("job") or x.get("name") or "?")) for x in jf

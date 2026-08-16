@@ -6005,3 +6005,83 @@ Marken.
 **Und sie löst Problem 2 nicht:** gute von schlechten Einstiegen zu
 unterscheiden. Sie war nie dafür gedacht — dass ich beides vermischt habe, war
 der Fehler in Kapitel 47.
+
+---
+
+## Kapitel 49 — Die Restpunkte aus der NB-Analyse (16.08.2026)
+
+**Nutzerfrage vor Punkt 2:** *„haben wir noch offene Punkte und Fixes aus der
+NB-Analyse?"* — **Ja, drei kleine. Alle drei betreffen die Diagnose selbst.**
+
+### 49.1 Der Export trug die Anlassmessung nicht
+
+**Und das war seit heute Mittag dringend:** die Sperre ist scharf, der Export
+kannte den Block nicht. Um zu sehen, ob sie greift, hätte jedes Mal das
+DB-Backup ausgepackt werden müssen.
+
+**Exportiert wird die Auswertung, nicht die Rohzeilen** — über 2.600 in
+15 Stunden, und die JSON ist ohnehin 155 MB. Je Instrument, je Block,
+Median-Abstand, dazu der Satz, der die Fehldeutung verhindert:
+
+> *„Die Stufe sitzt VOR dem Cooldown — sie sieht jedes Symbol, auch die, die
+> der Cooldown danach entfernt. Die Quote ist deshalb NICHT der Anteil
+> vermeidbarer Modellaufrufe."*
+
+Genau diesen Satz hätte ich heute früh selbst gebraucht — ich hatte die 81 %
+als Modellaufrufe gelesen.
+
+### 49.2 Zwei Fehlalarme, die echte Funde überdecken
+
+> ⚠️ **13 „Auffälligkeiten", die keine sind.** Der Export prüft
+> `gate_passed = 0` **und** Aktion ≠ HALTEN → Widerspruch. Das ist die
+> Semantik der **alten** Kette.
+>
+> In der Rollen-Kette bedeutet `gate_passed = 0` etwas anderes:
+> `_schreibe_nein()` bucht damit die **Nein-Messung** — eine Zeile, die
+> festhält, was das Modell gesagt *hätte*, obwohl keine Empfehlung herauskam.
+> Aktion und Flag stehen dort **absichtlich** nebeneinander.
+>
+> Betroffen: 11 Verkaufsseite vom 14.08. und zweimal TURBO ERÖFFNEN. **Keiner
+> davon ist ein Defekt.**
+
+> ⚠️ **„11970 Tracebacks im Log-Fenster"** — ohne Zeitbezug. 11.953 davon waren
+> **ein** Fehler aus 36 Minuten am 14.08., behoben durch einen Pull.
+>
+> Die Meldung nennt jetzt **Zeitraum und häufigste Ursache**:
+> ```
+> 11970 Tracebacks, alle zwischen 2026-08-14 09:35 und 2026-08-15 22:50
+>   - haeufigste Ursache 11953x TypeError: RemoteStatus.__init__() ...
+> ```
+
+**Warum das zählt:** eine große Zahl ohne Einordnung liest sich wie ein akuter
+Ausfall und **überdeckt die echten Funde daneben**. Von vier gemeldeten
+Auffälligkeiten waren zwei Fehlalarme — und der Kursstillstand, der wirklich
+zwei Tage lang wirkte, stand in **keiner**.
+
+### 49.3 Was aus der NB-Analyse offen BLEIBT
+
+| | Punkt | Art |
+|---|---|---|
+| **A2b** | Ausstiegs-Job lief 0× — **kein Defekt**, die App lief zur Cron-Zeit nicht | **Betrieb** |
+| **Laufzeit** | **51 % Ausfallzeit**, elf Neustarts in 48 h. Erklärt A2b, den Kursstillstand und `refresh_ohlc` 1× | **Betrieb** |
+| Nachhollogik | Jobs mit langem Takt bräuchten einen Zeitstempel des letzten Laufs — **berührt das Schema**, deshalb eine Entscheidung | offen |
+| Marktscan | läuft, findet im Bärenregime 0 von 34. **Kein Defekt** — die Frage ist, ob Sie das so wollen | Entscheidung |
+| **D-1** | `.docx`-Pendants stehen seit 02.08. still | Doku |
+| **D-2** | `Regler_Signal_Pipeline_Abhaengigkeiten.md` kennt die Rollen-Kette nicht | Doku |
+| prompt_stand | 30 Signale ohne — der Verkaufspfad setzt das Feld nicht | Messlücke |
+
+**Keiner dieser Punkte blockiert Punkt 2.** Die beiden Betriebspunkte sind die
+gewichtigsten, und sie lassen sich nicht im Code lösen: ein 24-Stunden-Job kann
+nicht laufen, wenn die längste ununterbrochene Laufzeit darunter liegt.
+
+### 49.4 Was heute behoben wurde
+
+| | |
+|---|---|
+| Kursstillstand | eigene Frischeschwelle für Krypto (24/7-Markt) |
+| **Rolle G lief nie** | Symbol kommt vom Aufrufer |
+| Konsistenzprüfung | entfernt — vom Nutzer am 16.08. abgelehnt |
+| Andrangdeckel | lag auf der entfernten Prüfung, jetzt auf Rolle G |
+| Klasse-1-Doppelung | `struktur` + `bewegung` → `verlauf` |
+| **Anlass-Sperre** | gebaut, Ende zu Ende bewiesen |
+| Export | Anlassblock ergänzt, zwei Fehlalarme entschärft |

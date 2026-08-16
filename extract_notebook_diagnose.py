@@ -1287,6 +1287,52 @@ def _rollen_kette(conn) -> dict:
     else:
         aus["gate_durchlaessigkeit"] = {
             "nicht_vorhanden": "Tabelle fehlt (aeltere Datei)"}
+
+    # --- DIE ANLASSMESSUNG (16.08.2026) -----------------------------------
+    #
+    # SIE FEHLTE, und das fiel erst auf, als sie gebraucht wurde. Die Stufe
+    # schreibt seit dem 15.08. mit, seit dem 16.08. SPERRT sie - und der
+    # Export trug den Block nicht. Um zu sehen, ob die Sperre greift, musste
+    # das DB-Backup ausgepackt werden.
+    #
+    # NICHT DIE ROHZEILEN. Es sind ueber 2.600 in 15 Stunden; die JSON ist
+    # ohnehin 155 MB. Exportiert wird die AUSWERTUNG - je Instrument und je
+    # Block -, also genau das, was `messe_anlass.py` druckt.
+    if "anlass_beobachtung" in vorhanden:
+        import collections as _c
+        roh = [dict(r) for r in conn.execute(
+            "SELECT instrument, wuerde_sperren_voll, wuerde_sperren_asset, "
+            "alter_stunden, geaenderte_bloecke FROM anlass_beobachtung "
+            "WHERE erfasst_am >= datetime('now', '-7 days')")]
+        je_instr, schuld = {}, _c.Counter()
+        mit_vorgaenger, abstaende = 0, []
+        for r in roh:
+            i = str(r["instrument"])
+            e2 = je_instr.setdefault(i, {"n": 0, "voll": 0, "asset": 0})
+            e2["n"] += 1
+            e2["voll"] += int(r["wuerde_sperren_voll"] or 0)
+            e2["asset"] += int(r["wuerde_sperren_asset"] or 0)
+            if r["alter_stunden"] is not None:
+                mit_vorgaenger += 1
+                abstaende.append(float(r["alter_stunden"]))
+                for b in str(r["geaenderte_bloecke"] or "").split(","):
+                    if b:
+                        schuld[b] += 1
+        abstaende.sort()
+        aus["anlass"] = {
+            "beobachtungen": len(roh),
+            "je_instrument": je_instr,
+            "mit_vorgaenger": mit_vorgaenger,
+            "abstand_median_h": (abstaende[len(abstaende) // 2]
+                                 if abstaende else None),
+            "geaenderte_bloecke": dict(schuld.most_common()),
+            "hinweis": ("Die Stufe sitzt VOR dem Cooldown - sie sieht jedes "
+                        "Symbol, auch die, die der Cooldown danach entfernt. "
+                        "Die Quote ist deshalb NICHT der Anteil vermeidbarer "
+                        "Modellaufrufe."),
+        }
+    else:
+        aus["anlass"] = {"nicht_vorhanden": "Tabelle fehlt (aeltere Datei)"}
     return aus
 
 
@@ -1681,7 +1727,20 @@ def _auffaelligkeiten(hebel_rows: list[dict], spot_rows: list[dict]) -> list[dic
                     "symbol": zeile.get("symbol"), "created_at": zeile.get("created_at"),
                     "action": zeile.get("action"), "risk_veto_reason": zeile.get("risk_veto_reason"),
                 })
-            if not zeile.get("gate_passed", True) and zeile.get("action") not in ("HALTEN", None):
+            # ⚠️ NUR FUER DIE ALTE KETTE (16.08.2026). In der Rollen-Kette
+            # bedeutet `gate_passed = 0` etwas ANDERES: `_schreibe_nein()`
+            # bucht damit die NEIN-MESSUNG - eine Zeile, die festhaelt, was
+            # das Modell gesagt haette, obwohl keine Empfehlung herauskam.
+            # Aktion und Flag stehen dort absichtlich nebeneinander.
+            #
+            # Ohne diese Unterscheidung meldete jeder Export dieselben 13
+            # Scheinfunde (11 Verkaufsseite vom 14.08., 2x TURBO EROEFFNEN) -
+            # und echte Funde gehen in solchem Rauschen unter. Derselbe
+            # Fehlalarm-Typ wie die 11.970 Tracebacks aus einem 36-Minuten-
+            # Fenster.
+            if (zeile.get("quelle_kette") != "rollen"
+                    and not zeile.get("gate_passed", True)
+                    and zeile.get("action") not in ("HALTEN", None)):
                 funde.append({
                     "typ": "gate_nicht_bestanden_ohne_halten", "assetklasse": assetklasse,
                     "symbol": zeile.get("symbol"), "created_at": zeile.get("created_at"),

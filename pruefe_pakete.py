@@ -5446,6 +5446,29 @@ def paket_15() -> None:
            "sonst verschwaende mit der Sperre die Zahl, an der man sie "
            "spaeter beurteilen koennte")
 
+    # ------------------------------------------------------------------
+    # DER EXPORT MUSS DIE ANLASSMESSUNG TRAGEN (16.08.2026). Ohne sie liess
+    # sich nach dem Scharfschalten der Sperre nur durch Auspacken des
+    # DB-Backups sehen, ob sie greift.
+    _q_ex = _quelltext("extract_notebook_diagnose.py")
+    pruefe(P, "der Export traegt die Anlassmessung",
+           'aus["anlass"]' in _q_ex and "anlass_beobachtung" in _q_ex,
+           "eine Stufe, die sperrt, muss im Export sichtbar sein - sonst "
+           "sieht man nur, dass weniger kommt, nicht warum")
+    pruefe(P, "und nennt ihre eigene Einschraenkung",
+           "VOR dem Cooldown" in _q_ex,
+           "die Quote ist NICHT der Anteil vermeidbarer Modellaufrufe - wer "
+           "das nicht dazuschreibt, laedt zur Fehldeutung ein")
+    # FEHLALARME: die alte Gate-Semantik galt auch fuer die neue Kette.
+    pruefe(P, "die Gate-Auffaelligkeit gilt nur der ALTEN Kette",
+           'zeile.get("quelle_kette") != "rollen"' in _q_ex,
+           "in der Rollen-Kette ist gate_passed=0 die NEIN-Messung, kein "
+           "Widerspruch - sonst 13 Scheinfunde in jedem Export")
+    pruefe(P, "und die Traceback-Meldung nennt Zeitraum und Ursache",
+           "haeufigste Ursache" in _quelltext("pruefe_export_standard.py"),
+           "eine grosse Zahl ohne Zeitbezug ueberdeckt die echten Funde "
+           "daneben - 11.953 von 11.970 stammten aus 36 Minuten")
+
     import staleness as ST5
 
     pruefe(P, "Krypto hat eine eigene, engere Frischeschwelle",
