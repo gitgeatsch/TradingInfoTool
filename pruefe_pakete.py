@@ -5520,6 +5520,25 @@ def paket_15() -> None:
            "ein Nachholer, der bei einer Luecke feuert, macht aus einem "
            "Lesefehler einen Modellaufruf")
 
+    # ------------------------------------------------------------------
+    # JEDE SIGNALZEILE TRAEGT IHREN PROMPT-STAND (16.08.2026).
+    #
+    # 30 von 285 trugen keinen - ausschliesslich Verkaufszeilen (28
+    # REDUZIEREN, 2 VERKAUFEN). Der Ausstiegspfad uebergab `prompt_stand=None`.
+    # Folge: die Verkaufsseite faellt aus jedem Vorher-Nachher-Vergleich
+    # heraus - ausgerechnet der Teil, ueber den am wenigsten bekannt ist
+    # (O-29: kein Merkmal trennt Verkaufen von Halten).
+    _q8 = _quelltext("agent/rollen_lauf.py")
+    pruefe(P, "auch die Ausstiegszeile traegt den Prompt-Stand",
+           "prompt_stand=None" not in _q8,
+           "jeder Messbefund gehoert zu einem Stand - eine Zeile ohne ihn "
+           "ist spaeter keinem Vergleich zuzuordnen")
+    pruefe(P, "und es ist DERSELBE wie beim Einstieg",
+           _q8.count('getattr(RT2, "PROMPT_STAND"') == 1
+           or _q8.count('PROMPT_STAND') >= 3,
+           "`befund` ist die Antwort von Rolle BC und entsteht aus demselben "
+           "Prompt - ein eigener Stand waere eine Erfindung")
+
     import staleness as ST5
 
     pruefe(P, "Krypto hat eine eigene, engere Frischeschwelle",

@@ -6184,3 +6184,87 @@ Der Standvermerk bleibt stehen — er erklärt den Zustand, in dem die Regel
 > der Ausstiegs-Job zuerst. Die Reihenfolge steckt aber in den
 > **Versatzsekunden**. Der Test hing am falschen Gegenstand, wie schon bei der
 > streng steigenden Testreihe und beim Blocknamen mit Leerzeichen.
+
+---
+
+## Kapitel 51 — Die letzten drei Punkte (16.08.2026)
+
+**Nutzervorgabe:** *„vorher noch die offenen Punkte hier."*
+
+### 51.1 D-1: das Werkzeug gab es seit dem 02.08.
+
+Ich hatte geschrieben *„kein Werkzeug zum Erzeugen vorhanden"*. **Falsch, und
+zum dritten Mal derselbe Fehler an einem Tag** — eine Behauptung statt
+nachzusehen. Es gibt `build_docx.py` seit dem 02.08., und `python-docx` ist
+installiert.
+
+```
+python build_docx.py --pruefen   ->  5 von 6 veraltet
+python build_docx.py             ->  alle neu erzeugt
+```
+
+Fünf Lesekopien waren zwei Wochen zurück, jetzt alle **AKTUELL**. Die
+`.md`-Dateien bleiben die Quelle der Wahrheit; die `.docx` sind reproduzierbar.
+
+### 51.2 Die Messlücke geschlossen
+
+`_sende_ausstieg()` übergab `prompt_stand=None` — deshalb trugen **30 von 285**
+Signalen keinen Stand, und es waren **ausschliesslich Verkaufszeilen** (28
+REDUZIEREN, 2 VERKAUFEN).
+
+> **Warum das zählt:** die Verkaufsseite fiel damit aus jedem
+> Vorher-Nachher-Vergleich heraus — ausgerechnet der Teil, über den am
+> wenigsten bekannt ist. O-29 hat gemessen, dass **kein** Merkmal Verkaufen von
+> Halten trennt.
+
+Es ist **derselbe** Stand wie beim Einstieg: `befund` ist die Antwort von Rolle
+BC und entsteht aus demselben Prompt.
+
+### 51.3 Marktscan — was ich falsch dargestellt hatte
+
+> ⚠️ **Zwei meiner Aussagen waren falsch.** Ich hatte geschrieben, keiner der
+> 34 Kandidaten erreiche auch nur 50, und der letzte Kaufkandidat sei aus dem
+> Juli. Beides stützte sich auf die **Desktop-Dev-Datenbank** (Daten bis 10.07.)
+> und auf **eine einzelne Logzeile**.
+
+**An den NB-Daten:**
+
+| | |
+|---|---|
+| bewertet, letzte 30 Tage | 164 |
+| davon **Score ≥ 70** | **45 (27 %)** |
+| Kaufkandidaten im August | **3** — M (83,8), COTI (71,1), **H (74,8) am 14.08.** |
+| Mail dazu | **verschickt**, 14.08. 16:02 |
+
+**Der Marktscan funktioniert vollständig, inklusive Versand.** „Ewig keine"
+heisst: **selten** — drei im August.
+
+**Und der eigentliche Befund liegt woanders:**
+
+> **24 von 64 Kandidaten mit Score ≥ 70 wurden herabgestuft** — 37 %. Grund:
+> nicht bei Bitpanda gelistet, oder Small-Cap-Budget im Regime *bär*
+> ausgeschöpft (4 % statt 12 % im Bullenmarkt).
+>
+> **Der Nutzer erfährt davon nie.** Sie verschwinden lautlos nach
+> `watchlist_wuerdig`.
+
+**Was zur Entscheidung steht — und was NICHT:**
+
+| Option | Wirkung |
+|---|---|
+| **A** alles lassen | ~3 Mails/Monat, nur Handelbares |
+| **B** Herabgestufte **in derselben Mail** nennen | keine zusätzliche Mail, schliesst die Informationslücke |
+| **C** Schwelle 70 → 60 | **120 statt 45** Kandidaten → ~4 Mails **pro Tag** |
+
+**Die Schwelle ist nicht das Problem** — sie liefert drei Mails im Monat. Die
+Lücke ist die stille Herabstufung.
+
+### 51.4 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **881, alle bestanden** |
+| freie Namen | 0 |
+| Ende-zu-Ende-Simulation | 0 Fehler, 0 Lücken |
+| `pruefe_phase1.py` | bestanden |
+| `.docx` | 6 von 6 aktuell |

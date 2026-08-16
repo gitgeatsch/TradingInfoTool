@@ -1364,9 +1364,26 @@ def _sende_ausstieg(*, symbol, befund, verkauf, kurs_e, instrument, strategie,
     if betriebsart == TROCKEN:
         return
     try:
+        # ⚠️ DER PROMPT-STAND STAND HIER AUF `None` - eine Messluecke, keine
+        # Absicht (gefunden 16.08.2026 am NB-Export). 30 von 285 Signalen
+        # trugen keinen Stand, und es waren AUSSCHLIESSLICH Verkaufszeilen:
+        # 28 REDUZIEREN und 2 VERKAUFEN.
+        #
+        # WARUM DAS ZAEHLT. Jeder Messbefund gehoert zu einem Prompt-Stand -
+        # ohne ihn faellt die Verkaufsseite aus jedem Vorher-Nachher-Vergleich
+        # heraus. Und ausgerechnet sie ist der Teil, ueber den am wenigsten
+        # bekannt ist: O-29 hat gemessen, dass KEIN Merkmal Verkaufen von
+        # Halten trennt.
+        #
+        # ES IST DERSELBE STAND WIE BEIM EINSTIEG: `befund` ist die Antwort
+        # von Rolle BC, und die entsteht aus demselben Prompt. Ein eigener
+        # Stand waere hier eine Erfindung.
+        from agent import rolle_trader as RT2
+
         felder = SA2.felder_aus_entscheidung(
             befund, fakten={"asset": symbol}, lagebild_id=lagebild_id,
-            prompt_stand=None, eur_je_usd=None, familien=None,
+            prompt_stand=getattr(RT2, "PROMPT_STAND", "?"),
+            eur_je_usd=None, familien=None,
             rechnung=None, modell=modell)
         # `gate_passed = 1`, weil es eine HANDLUNG ist - anders als die
         # Nein-Buchung, die eine Messung ist.
