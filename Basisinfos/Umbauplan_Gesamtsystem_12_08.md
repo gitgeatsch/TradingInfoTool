@@ -6655,3 +6655,138 @@ hat die Hälfte.
 | Simulation Entwicklungsstand | 4 Gruppen, 0 Fehler |
 | `pruefe_phase1.py` | bestanden |
 | Sperr-Gegentest | je Rolle nachgewiesen |
+
+---
+
+## Kapitel 55 — Recherche vor Phase III: wie die Lücken je Assetgruppe zu schliessen sind (16.08.2026)
+
+**Nutzervorgabe:** *„es wäre wünschenswert, wenn wir jedenfalls die Lücken
+schliessen können und eine brauchbare Rolle G haben — alle Rollen haben die
+erforderlichen Mindestkriterien, LLM-fähig, und diese je Assetgruppe bzw.
+Handelsstrategie; erst danach können wir über eine Erweiterung nachdenken."*
+
+**Damit ist die Reihenfolge gesetzt: Mindestkriterien zuerst, Optimierung
+später.** Diese Recherche fragt deshalb nur eines — **womit** die Lücken zu
+schliessen sind, und **ob es das kostenlos gibt.**
+
+### 55.1 Der grösste Fund liegt in der eigenen Datenbank
+
+`positionierung.py` liest `WHERE exchange = 'binance'`. In derselben Tabelle
+stehen:
+
+| Börse | Zeilen | Symbole | aktuellster Stand |
+|---|---:|---:|---|
+| binance | 43.310 | 37 | 16.08. 07:40 |
+| **bybit** | **40.177** | **35** | 16.08. 07:40 |
+| **okx** | **36.681** | **31** | 16.08. 07:40 |
+
+**Alle drei Felder je Börse befüllt** — offene Kontrakte, Finanzierungsrate,
+Long-Konten. **22 Symbole tragen mindestens zwei Börsen**, vierzehn davon alle
+drei. Kostenlos, ohne Schlüssel, seit Monaten laufend — und `api/derivatives.py`
+holt sie bereits.
+
+> **Damit ist G1 für Krypto formal erfüllbar, ohne eine einzige neue Quelle.**
+
+**Aber ehrlich zur Qualität — und das entscheidet, ob es ein Lückenschluss oder
+ein Scheinlückenschluss ist:**
+
+Bybit und OKX sind eine **andere Stichprobe derselben Grundgesamtheit**, nicht
+eine andere Informationsart. Sie messen dasselbe Phänomen an anderen
+Teilnehmern. Nach der Debattenliteratur zählt aber die **Informationsgrenze**,
+nicht die Zahl der Endpunkte.
+
+**Was WIRKLICH neu ist, ist die Divergenz.** Die Praxisliteratur führt die
+Funding-Spanne zwischen Börsen als eigene Grösse — allerdings primär als
+**Arbitrage**-Gelegenheit, nicht als Richtungssignal. Für uns heisst das:
+
+```
+"Auf Binance stehen 65 % der Konten long, auf OKX 52 % -
+ die Positionierung ist zwischen den Boersen uneinig."
+```
+
+Das ist eine Aussage über **Uneinigkeit**, die weder BC noch die heutige Rolle G
+hat. Sie ist LLM-tauglich (zwei Zahlen mit Bezug zueinander) und grün.
+
+> **Meine Einordnung:** die zweite Börse erfüllt G1 dem Buchstaben nach und
+> **halb** dem Sinn nach. Der Gewinn liegt in der Divergenz, nicht in der
+> Verdopplung. Als **echte** zweite Informationsart bleibt der Optionsmarkt.
+
+### 55.2 Was je Assetgruppe fehlt — und was es kostenlos gibt
+
+| Gruppe | Rolle G braucht | vorhanden? | Kosten |
+|---|---|---|---|
+| **Krypto** | 2. Quelle | **Bybit + OKX in der DB** · Deribit gebaut | **frei** |
+| **Aktien** | 2 Quellen | **FINRA Short Interest** + **SEC Form 4** gebaut, live geprüft | **frei** |
+| **Rohstoffe** | 2 Quellen | **CFTC COT** (4 Symbole gemappt) + **EIA** | frei, **EIA braucht Schlüssel** |
+| **ETF / Absicherung** | 2 Quellen | ⚠️ **nichts** | — |
+
+> ⚠️ **Für ETF gibt es keine kostenlose Quelle.** Fondsflüsse, NAV-Prämie und
+> Positionierung liegen bei Massive/ETF Global (ab 99 $/Monat), Intrinio, EPFR,
+> Cbonds — durchgängig kostenpflichtig. Die Nutzervorgabe *„nur kostenfreie
+> Quellen"* schliesst sie aus.
+>
+> **Der einzige freie Weg wäre indirekt:** CFTC COT auf die **Index-Futures**
+> (E-mini S&P 500, E-mini Nasdaq-100). Das trifft nicht den ETF, sondern seinen
+> Referenzindex — für DBPK (S&P) und 3QSS (Nasdaq) ist das nah genug, für einen
+> Kupfer- oder Rüstungs-ETF nicht. **Die Marktnamen sind unverifiziert.**
+
+**Konsequenz, die ich klar sagen muss:** *„alle Rollen haben die
+Mindestkriterien je Assetgruppe"* ist für **Themen-ETF nicht erreichbar**,
+solange nur kostenlose Quellen zulässig sind. Erreichbar sind vier von fünf
+Gruppen plus die Absicherung über den Referenzindex.
+
+### 55.3 Die BC-Lücken — zwei liegen ebenfalls schon da
+
+| Lücke | Quelle | Stand |
+|---|---|---|
+| **Aktientermine** (Quartalszahlen) | `yfinance_client.naechstes_earnings_datum` | **gebaut**, in der alten Pipeline |
+| **Fundamentaldaten** | KGV, Forward-KGV, Gewinnwachstum, Dividende, Analystenkonsens | **gebaut**, dieselbe Stelle |
+| Handelbarkeit / Spread | Bitpanda-Listung + Override | gerechnet, **gelb** |
+| Auslöser | `hebel_screening` | **gesperrt durch P4** (Kapitel 43) |
+| Katalysator / Nachrichten | — | **keine Quelle** |
+| Zertifikatsnatur | — | eigener Rechercheschritt |
+
+**Die Ablationsstudie nennt Nachrichten und Fundamentaldaten als die beiden
+tragenden Quellen.** Die Fundamentaldaten haben wir — sie erreichen nur keine
+Rolle.
+
+### 55.4 Was das für Phase III bedeutet
+
+**Phase III ist gelb und rot** — Kostenhöhe, Aktientermine, Zertifikatsnatur,
+Handelbarkeit. Sie darf erst laufen, wenn die Mindestkriterien stehen, denn
+sonst misst der gepaarte Vergleich die Lücke statt die Änderung.
+
+**Die Reihenfolge, die aus dieser Recherche folgt:**
+
+| | Schritt | Gruppe | Aufwand | Klasse |
+|---|---|---|---|---|
+| **1** | **Bybit/OKX in Rolle G** — Divergenz als eigene Aussage | Krypto | **klein**, Daten liegen | grün |
+| **2** | **CFTC COT** in Rolle G — als Perzentil, nicht als Netto-Position | Rohstoffe | mittel, **braucht Persistenz** | grün |
+| **3** | **FINRA + SEC Form 4** in Rolle G | Aktien | mittel | grün |
+| **4** | **Fundamentaldaten + Termine** zu BC | Aktien | mittel, als **Tausch** | grün/gelb |
+| **5** | COT auf Index-Futures | Absicherung | **Marktnamen prüfen** | grün |
+| — | Themen-ETF | — | **nicht kostenlos lösbar** | — |
+| **dann** | **Phase III** | alle | gepaarter Vergleich | gelb/rot |
+
+**Schritt 1 ist der einzige, der heute ohne neue Anbindung geht** — und er
+schliesst die Lücke, die als einzige beziffert vor uns liegt.
+
+### 55.5 Was die Recherche NICHT hergegeben hat
+
+**Keine kostenlose ETF-Flussquelle.** Alle geprüften Anbieter sind
+kostenpflichtig; ETF.com, VettaFi und ICI aggregieren, geben aber keine freie
+API.
+
+**Kein Beleg, dass die Funding-Divergenz die RICHTUNG vorhersagt.** Die
+Literatur führt sie als Arbitrage-Grösse. Als Fakt über die Positionierung ist
+sie zulässig; als Richtungssignal wäre sie unbelegt — und damit P2 Rang 3, also
+nicht aufnahmefähig.
+
+**Quellen:**
+[CoinGlass — Derivatedaten je Börse](https://www.coinglass.com/CryptoApi) ·
+[CoinAPI — historische Funding-Raten](https://www.coinapi.io/blog/historical-crypto-funding-rates-api-coinapi) ·
+[Funding-Rate-Arbitrage Binance/Bybit/OKX](https://yieldo.me/blog/funding/funding-rate-arbitrage-guide) ·
+[Funding-Raten lesen](https://zipmex.com/blog/how-to-analyze-funding-rates-in-crypto/) ·
+[Massive/ETF Global — Fund Flows, ab 99 $](https://massive.com/docs/rest/partners/etf-global/fundflows) ·
+[Intrinio — ETF NAV Flows](https://docs.intrinio.com/documentation/web_api/get_etf_nav_flows_v2) ·
+[CFTC Commitments of Traders](https://www.cftc.gov/MarketReports/CommitmentsofTraders/index.htm)
