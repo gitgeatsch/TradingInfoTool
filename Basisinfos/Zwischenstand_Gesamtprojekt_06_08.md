@@ -1755,7 +1755,11 @@ verdoppeln.
 | A-5 | Stimmung über BTC hinaus — **VIX liegt vor, aber nur ein Wert in der Historie** | grün, blockiert durch Datenlage |
 | A-6 | Makro-Terminkalender (FOMC, CPI) | grün, **keine Quelle** |
 
-### VERWORFEN 16.08.2026 - der Anlassfilter
+### ~~VERWORFEN~~ GEBAUT 16.08.2026 - der Anlassfilter
+
+> ⚠️ **Die Verwerfung galt einen halben Tag.** Der Nutzer hat den Fehlschluss darin benannt: „Schaden“ setzt voraus, dass die entfallenden Einstiege einen Wert haben - und im selben Absatz stand, dass sie keinen haben. Das tragende Argument ist ein KORREKTHEITSargument, kein Renditeargument. **Gebaut, siehe Umbauplan Kapitel 48.** Der Absatz unten bleibt als Begruendungsquelle stehen.
+
+#### Was gegen sie sprach (Stand mittags)
 
 **O-36 wird nicht scharf geschaltet, weder als Sperre noch als Mailfilter.** Gemessen: er haette **zehn von 21 Symbolen** ihre einzige Einstiegsgelegenheit genommen (SOL, SUI, TURBO, CAT ...), 82 von 121 Einstiegen stammen aus Wiederholungen.
 

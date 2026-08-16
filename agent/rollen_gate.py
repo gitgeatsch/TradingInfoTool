@@ -70,6 +70,12 @@ STUFEN = (
     # jetzt": Kostenfilter, Nutzerentscheidung, Qualitaetsfilter. Nur der
     # dritte traegt Deadloop-Risiko. Sie in einer Stufe zu mischen macht genau
     # die Messung unmoeglich, fuer die das Gate gebaut wurde.
+    # EIGENE STUFE SEIT 16.08.2026 - und aus demselben Grund wie der Cooldown
+    # eine eigene bekam: sie kostet KEINEN Modellaufruf. Wer sie mit
+    # `wiederholung` zusammenlegt, kann hinterher nicht mehr sagen, ob eine
+    # Zeitregel oder ein identischer Faktensatz gebremst hat - und das sind
+    # zwei verschiedene Aussagen ueber dieselbe Zahl.
+    ("anlass", "Faktensatz hat sich geaendert"),
     ("wiederholung", "nicht kuerzlich schon gefragt"),
     ("urteil", "Urteil geliefert und vertragskonform"),
     ("aktion", "Aktion ist ein Einstieg"),

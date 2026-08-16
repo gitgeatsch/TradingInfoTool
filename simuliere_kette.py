@@ -365,6 +365,42 @@ def main() -> int:
                     f"Liquidationsabstand fehlt in der Mail")
         gesamt["gruppen_gelaufen"].append(f"{gruppe}/{instrument}")
 
+        # --- DERSELBE LAUF NOCH EINMAL, MIT AKTIVER ANLASS-SPERRE ---------
+        #
+        # DER EIGENTLICHE ENDE-ZU-ENDE-BEWEIS. Die Kursreihen sind dieselben,
+        # der Faktensatz also bitgleich - genau der Fall, den die Sperre
+        # entfernen soll. Kaeme hier auch nur ein Signal heraus, sperrte sie
+        # nicht; kaeme im ERSTEN Lauf keines, prueften wir gegen nichts.
+        #
+        # Die Attrappe wird NEU gebaut: sonst zaehlte sie im Aktionsvokabular
+        # weiter und der zweite Lauf bekaeme andere Antworten - der Test
+        # wuerde dann die Attrappe messen statt die Sperre.
+        modell2 = Attrappe(instrument)
+        conn = _verbindung(db)
+        try:
+            e2 = RL.fuehre_lauf(
+                conn=conn, reihen=reihen, symbole=auswahl,
+                betriebsart="probe", instrument=instrument,
+                strategie="einstieg", client=modell2, modell="attrappe",
+                db=db, zai_client=ZaiAttrappe(), assetklasse=gruppe,
+                versand=None, config={"anlass": {"aktiv": True}})
+            conn.commit()
+        finally:
+            conn.close()
+        n2 = len(e2.get("signale") or [])
+        a2 = modell2.aufrufe
+        print(f"    zweiter Lauf MIT Sperre: {n2} Signale, "
+              f"{a2} Modellaufrufe (vorher {len(e.get('signale') or [])} / "
+              f"{modell.aufrufe})")
+        if n2:
+            gesamt["luecken"].append(
+                f"{gruppe}/{instrument}: Sperre wirkungslos - {n2} Signale "
+                f"auf identischem Faktensatz")
+        if a2 > 1:
+            gesamt["luecken"].append(
+                f"{gruppe}/{instrument}: Sperre kam ZU SPAET - {a2} "
+                f"Modellaufrufe trotz identischer Fakten")
+
     # --- Was ist in der Datenbank angekommen? -----------------------------
     print("\n" + "=" * 76)
     print("WAS IN DER DATENBANK ANGEKOMMEN IST")

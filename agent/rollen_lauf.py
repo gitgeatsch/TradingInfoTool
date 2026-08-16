@@ -683,14 +683,26 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # und einen ohne das Lagebild. Das Lagebild ist Modellprosa und wechselt
     # alle drei Stunden - naehme man es mit, waere fast jede Frage "neu". Ob
     # das der richtige Schnitt ist, soll die Messung sagen.
+    _anlass_sperrt, _anlass_grund = False, ""
     if betriebsart != TROCKEN:
         try:
             from agent import anlass as AN
 
+            _beob = AN.beobachte(conn, symbol=symbol, instrument=instrument,
+                                 fakten=bc_ein, bloecke=_bloecke_anlass)
             ergebnis.setdefault("anlass", []).append(dict(
-                AN.beobachte(conn, symbol=symbol, instrument=instrument,
-                             fakten=bc_ein, bloecke=_bloecke_anlass),
-                symbol=symbol, instrument=instrument))
+                _beob, symbol=symbol, instrument=instrument))
+            # SEIT 16.08.2026 SPERRT SIE - wenn der Nutzer sie einschaltet.
+            #
+            # Die Entscheidung steht in `config.yaml` unter `anlass.aktiv`;
+            # die Vorgabe im Code ist AUS. Begruendung, Messwerte und die
+            # Feinjustierung stehen im Kopf von `agent/anlass.py`.
+            #
+            # DIE BEOBACHTUNG WIRD TROTZDEM GESCHRIEBEN, auch wenn gesperrt
+            # wird. Sonst verschwaende mit der Sperre auch die Zahl, an der man
+            # sie spaeter beurteilen koennte - und man saehe nur noch, dass
+            # weniger kommt, nicht warum.
+            _anlass_sperrt, _anlass_grund = AN.sperrt(_beob, config)
         except Exception as exc:                             # noqa: BLE001
             # EINE MESSUNG DARF DEN BETRIEB NICHT ANHALTEN - aber sie muss
             # sagen, wenn sie ausfaellt. Sonst ist sie ein stiller Ausfall,
@@ -700,6 +712,15 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             ergebnis.setdefault("fehler", []).append(
                 f"{symbol}: Anlass-Messung: {exc}")
 
+        # DIE SPERRE WIRKT HIER, NICHT IM `try` DARUEBER. Ein Fehler in der
+        # Messung darf nicht dazu fuehren, dass gesperrt wird - `sperrt()`
+        # gibt bei jeder Luecke `False` zurueck, und ein abgestuerzter
+        # `try`-Block laesst die Vorbelegung `False` stehen. Im Zweifel
+        # durchlassen.
+        if _anlass_sperrt:
+            durchlauf.verloren(symbol, "anlass", _anlass_grund)
+            return
+
         sperre = WH.gesperrt_bis(conn, symbol, instrument, config=config,
                                  gruppe=assetklasse)
         if sperre:
@@ -708,6 +729,10 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             durchlauf.verloren(symbol, "wiederholung",
                                f"Cooldown bis {sperre[:16]}")
             return
+    # BEIDE STUFEN AUSSERHALB DES `if`. Im Trockenlauf laeuft weder die
+    # Anlassmessung noch der Cooldown - gebucht werden muessen sie trotzdem,
+    # sonst klafft im Trichter ein Loch und die Summe stimmt nicht mehr.
+    durchlauf.bestanden(symbol, "anlass")
     durchlauf.bestanden(symbol, "wiederholung")
 
     # --- Stufe: Urteil ---

@@ -5867,3 +5867,141 @@ zwar an der richtigen Stelle: bevor es gebaut wurde.
 
 **Werkzeuge, die bleiben:** `messe_anlass.py` (wie oft wäre gesperrt worden),
 `messe_filterschaden.py` (was hätte es gekostet).
+
+---
+
+## Kapitel 48 — Die Anlass-Sperre, gebaut (16.08.2026)
+
+**Kapitel 47 kam zum Schluss, sie nicht zu bauen. Der Nutzer hat den
+Fehlschluss darin benannt, und er hatte recht.**
+
+> Ich hatte gemessen, der Filter „koste" 82 von 121 Einstiegen — und im selben
+> Absatz geschrieben, dass diese Einstiege nichts wert sind. **„Kosten" setzt
+> einen Wert voraus.** Aus „Erwartungswert null" folgt nicht „also egal",
+> sondern: dann entscheidet alles andere.
+
+**Das tragende Argument ist ein Korrektheitsargument:**
+
+> **Eine Empfehlung, die auf identischen Daten beruht wie eine vorherige
+> NICHT-Empfehlung, ist keine Empfehlung — sie ist die Streuung des Modells.**
+
+Es hängt nicht davon ab, ob das System je Geld verdient. Und der Nutzer hat den
+zweiten Halbsatz gleich mitgeliefert: *„kein Rauschen messen"* — es geht nicht
+darum, die Streuung zu vermessen, sondern sie nicht zu versenden.
+
+### 48.1 Was vor dem Bauen gemessen war
+
+| | |
+|---|---|
+| Wiederholungen bei **intakter** Datenlage (15.08.) | **74 %** |
+| mit stehenden Kursen (16.08.) | 83 % |
+| Einstiege auf einem Faktensatz, den es schon gab | **82 von 121** |
+| Wiederholungen, die die **Aktion kippten** | **11 von 26** |
+
+Der Kursstillstand hebt die Quote um neun Punkte — **er erzeugt sie nicht.**
+
+### 48.2 Wo die Sperre sitzt
+
+**Vor dem Modellaufruf**, in einer **eigenen Gate-Stufe**.
+
+```
+auftrag → fakten → lagebild → ANLASS → wiederholung → urteil → ...
+```
+
+**Eigene Stufe, aus demselben Grund wie der Cooldown am 14.08.:** sie kostet
+keinen Modellaufruf. Wer sie mit `wiederholung` zusammenlegt, kann hinterher
+nicht mehr sagen, ob eine **Zeitregel** oder ein **identischer Faktensatz**
+gebremst hat.
+
+**Vor dem Aufruf, nicht danach:** wer die Antwort erst holt und dann wegwirft,
+hat das Kontingent ausgegeben und das Rauschen bereits erzeugt — er versteckt
+es nur. Genau das war mein verworfener Mailvorschlag.
+
+**Die Beobachtung wird trotzdem geschrieben**, auch wenn gesperrt wird. Sonst
+verschwände mit der Sperre die Zahl, an der man sie später beurteilen könnte —
+und man sähe nur noch, dass weniger kommt, nicht warum.
+
+### 48.3 Feinjustierung ohne Codeänderung
+
+```yaml
+anlass:
+  aktiv: true
+  abdruck: asset          # ohne Lagebild - macht gemessen 2 Punkte aus
+  hoechstalter_stunden: 24.0
+  ignoriere_bloecke: []   # z.B. [marken]
+  mindest_bloecke: 1
+```
+
+**Beide Regler können nur MEHR sperren, nie weniger** — ein identischer Abdruck
+ist immer eine Wiederholung.
+
+> **`ignoriere_bloecke: [marken]` ist der vorbereitete Fall.** Die Marken tragen
+> **15 %** aller echten Änderungen, sind kursnah und springen, sobald ein Tick
+> über eine Clustergrenze läuft. Ob das eine neue Lage ist oder Rauschen, ist
+> **offen** — deshalb ein Regler und keine Setzung.
+
+**Die Vorgabe im Code ist AUS.** Eingeschaltet wird in `config.yaml` — dieselbe
+Regel wie bei `rollen_kette.aktiv_fuer`: ein Modul, das beim blossen Einspielen
+die Produktion umstellt, nimmt dem Nutzer die Entscheidung ab.
+
+### 48.4 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **869, alle bestanden** (10 neue) |
+| freie Namen | 0 |
+
+**Die Prüfungen decken auch die Gegenrichtung ab:** eine echte Änderung geht
+durch, eine erste Frage wird nie gesperrt, und ein defektes Urteil sperrt
+**nicht** — eine Sperre, die bei einer Lücke zuschlägt, entfernt Signale aus
+einem Grund, den niemand sieht.
+
+### 48.5 Der Ende-zu-Ende-Beweis
+
+`simuliere_kette.py` fährt jede Gruppe jetzt **zweimal**: einmal frisch, einmal
+mit identischen Kursreihen und aktiver Sperre.
+
+| Gruppe | erster Lauf | zweiter Lauf, mit Sperre |
+|---|---|---|
+| aktien/spot | 2 Signale, 3 Aufrufe | **0 / 0** |
+| krypto/spot | 2 Signale, 2 Aufrufe | **0 / 0** |
+| krypto/hebel | 2 Signale, 3 Aufrufe | **0 / 0** |
+| themen_etf/spot | 2 Signale, 3 Aufrufe | **0 / 0** |
+
+**Null Modellaufrufe im Wiederholungslauf** — die Sperre greift vor dem Aufruf.
+Und der erste Lauf liefert weiterhin Signale, sonst prüfte der Test gegen
+nichts.
+
+Die Attrappe wird für den zweiten Lauf **neu gebaut**: sonst zählte sie im
+Aktionsvokabular weiter, und der Test würde die Attrappe messen statt die
+Sperre.
+
+### 48.6 Was der LLM-Umbau daran ändern wird
+
+**Nutzerhinweis, und er trifft:** *„nach dieser Änderung werden wir die LLMs
+durchführen, und diese kann einen Einfluss auf diesen Punkt haben — u. U. nur im
+Positiven, da wir mehr unabhängige Parameter bekommen."*
+
+**Richtig, und die Richtung ist vorhersagbar:** je mehr Blöcke der Faktensatz
+trägt, desto wahrscheinlicher bewegt sich einer — die Sperre greift **seltener**.
+Das ist kein Fehler, sondern der gewünschte Zustand: sie soll nur dort greifen,
+wo wirklich nichts Neues vorliegt.
+
+**Aber es hat eine Kehrseite, und dafür sind die Regler da.** Ein Block, der
+sich häufig aus sich selbst bewegt — wie die Marken —, macht jede Frage „neu",
+ohne dass die Lage eine andere wäre. Kommen weitere solche Blöcke dazu, sinkt
+die Wirkung der Sperre, ohne dass sich etwas verbessert hätte.
+
+**Deshalb gehört nach jedem Umbauschritt `messe_anlass.py` erneut gelaufen** —
+die Blockaufschlüsselung sagt, welcher neue Parameter tickt und welcher trägt.
+
+### 48.7 Was offen bleibt
+
+**Die Sperre ist grob, nicht scharf.** Sie entfernt das Offensichtliche —
+identische Fakten —, nicht das Feine. Ein Signal hängt danach daran, dass sich
+*irgendein* Block bewegt hat, und in 15 % der Fälle sind das die kursnahen
+Marken.
+
+**Und sie löst Problem 2 nicht:** gute von schlechten Einstiegen zu
+unterscheiden. Sie war nie dafür gedacht — dass ich beides vermischt habe, war
+der Fehler in Kapitel 47.

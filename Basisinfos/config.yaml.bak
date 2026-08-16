@@ -1978,3 +1978,22 @@ rollen_kette:
   # statt nach dem Risiko, das sie absichern sollen.
   aktiv_fuer: ["krypto", "aktien", "rohstoffe", "themen_etf", "hedge"]
   betriebsart: scharf
+
+# Anlassfilter (16.08.2026) - keine zweite Frage auf identischen Fakten.
+#
+# GEMESSEN vor dem Einschalten: 74 % Wiederholungen bei intakter
+# Datenlage, 82 von 121 Einstiegen auf einem Faktensatz, den es schon gab,
+# und 11 von 26 Wiederholungen kippten die Aktion bei bitgleicher Eingabe.
+# Begruendung im Kopf von agent/anlass.py, Umbauplan Kapitel 47/48.
+anlass:
+  aktiv: true
+  # 'asset' laesst das Lagebild weg - es ist Modellprosa und macht
+  # gemessen nur zwei Prozentpunkte aus.
+  abdruck: asset
+  hoechstalter_stunden: 24.0
+  # FEINJUSTIERUNG - beide Regler koennen nur MEHR sperren, nie weniger.
+  # ignoriere_bloecke: [marken]   <- Marken tragen 15 % der Aenderungen,
+  #   sind kursnah und springen bei kleinen Bewegungen. Offen, ob das
+  #   eine neue Lage ist oder Rauschen.
+  ignoriere_bloecke: []
+  mindest_bloecke: 1

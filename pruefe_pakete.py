@@ -5378,6 +5378,74 @@ def paket_15() -> None:
     # alten Kurs. Drei Dinge kamen zusammen: der 24-h-Takt beginnt bei jedem
     # Neustart neu (dreimal an dem Tag), der Sofortlauf greift erst bei MEHR
     # als zwei Tagen, und der Watchdog benutzt dieselbe Schwelle.
+    # ------------------------------------------------------------------
+    # DIE ANLASS-SPERRE (16.08.2026) - die Stufe sperrt, wenn der Nutzer sie
+    # einschaltet. Gebaut NACH der Messung, nicht davor.
+    from agent import anlass as AN6
+
+    _aus = {"aktiv": False}
+    _an = {"aktiv": True}
+    _wdh = {"alter_stunden": 0.3, "gleich_asset": True, "gleich_voll": True,
+            "geaenderte_bloecke": []}
+    _neu = {"alter_stunden": 0.3, "gleich_asset": False, "gleich_voll": False,
+            "geaenderte_bloecke": ["marken", "bestand"]}
+    _erst = {"alter_stunden": None, "gleich_asset": False,
+             "gleich_voll": False, "geaenderte_bloecke": []}
+    pruefe(P, "die Vorgabe im Code sperrt NICHTS",
+           not AN6.SPERRE_VORGABE["aktiv"]
+           and AN6.sperrt(_wdh, None)[0] is False,
+           "ein Modul, das beim blossen Einspielen die Produktion umstellt, "
+           "nimmt dem Nutzer die Entscheidung ab")
+    pruefe(P, "eingeschaltet sperrt sie den identischen Faktensatz",
+           AN6.sperrt(_wdh, {"anlass": _an})[0] is True,
+           "eine Empfehlung auf identischen Daten wie eine vorherige "
+           "NICHT-Empfehlung ist keine Empfehlung")
+    pruefe(P, "und laesst eine echte Aenderung durch",
+           AN6.sperrt(_neu, {"anlass": _an})[0] is False,
+           "sonst waere es keine Bremse, sondern ein Deckel")
+    pruefe(P, "ohne Vorgaengerfrage wird nie gesperrt",
+           AN6.sperrt(_erst, {"anlass": _an})[0] is False,
+           "es gibt nichts zu wiederholen - im Zweifel durchlassen")
+    # FEINJUSTIERUNG: beide Regler duerfen nur MEHR sperren, nie weniger.
+    pruefe(P, "ignoriere_bloecke sperrt zusaetzlich",
+           AN6.sperrt({**_neu, "geaenderte_bloecke": ["marken"]},
+                      {"anlass": {**_an, "ignoriere_bloecke": ["marken"]}})[0]
+           is True,
+           "Marken tragen 15 % der Aenderungen und springen kursnah - ob das "
+           "eine neue Lage ist, ist offen, deshalb ein Regler")
+    pruefe(P, "mindest_bloecke ebenso",
+           AN6.sperrt({**_neu, "geaenderte_bloecke": ["marken"]},
+                      {"anlass": {**_an, "mindest_bloecke": 2}})[0] is True
+           and AN6.sperrt(_neu, {"anlass": {**_an, "mindest_bloecke": 2}})[0]
+           is False,
+           "zwei bewegte Bloecke sind eine andere Aussage als einer")
+    pruefe(P, "ein defektes Urteil sperrt NICHT",
+           AN6.sperrt(None, {"anlass": _an})[0] is False
+           and AN6.sperrt({}, {"anlass": _an})[0] is False,
+           "eine Sperre, die bei einer Luecke zuschlaegt, entfernt Signale "
+           "aus einem Grund, den niemand sieht")
+    # DIE STUFE MUSS EIGENSTAENDIG SEIN - sonst ist hinterher nicht zu sehen,
+    # ob eine Zeitregel oder ein identischer Faktensatz gebremst hat.
+    from agent import rollen_gate as RG6
+
+    pruefe(P, "der Anlass hat eine EIGENE Gate-Stufe",
+           "anlass" in RG6.STUFEN_NAMEN
+           and RG6.STUFEN_NAMEN.index("anlass")
+           < RG6.STUFEN_NAMEN.index("wiederholung")
+           and RG6.STUFEN_NAMEN.index("anlass")
+           < RG6.STUFEN_NAMEN.index("urteil"),
+           "sie kostet keinen Modellaufruf - dieselbe Trennung wie beim "
+           "Cooldown am 14.08.")
+    pruefe(P, "und sie sperrt VOR dem Modellaufruf",
+           _quelltext("agent/rollen_lauf.py").index("_anlass_sperrt")
+           < _quelltext("agent/rollen_lauf.py").index("RT.prompt_fuer"),
+           "wer die Antwort erst holt und dann wegwirft, hat das Kontingent "
+           "schon ausgegeben und das Rauschen bereits erzeugt")
+    pruefe(P, "die Beobachtung wird auch beim Sperren geschrieben",
+           "_beob = AN.beobachte(" in _quelltext("agent/rollen_lauf.py"),
+           "sonst verschwaende mit der Sperre die Zahl, an der man sie "
+           "spaeter beurteilen koennte")
+
     import staleness as ST5
 
     pruefe(P, "Krypto hat eine eigene, engere Frischeschwelle",

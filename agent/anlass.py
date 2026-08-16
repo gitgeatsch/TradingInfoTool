@@ -87,6 +87,115 @@ def bloeckeabdruecke(bloecke: dict | None) -> dict:
     return {str(k): _hash(v) for k, v in (bloecke or {}).items()}
 
 
+# ---------------------------------------------------------------------------
+# DIE SPERRE (16.08.2026) - aus der Messung, nicht aus einer Schaetzung.
+#
+# DER WEG HIERHER, weil er die Vorgaben erklaert. Diese Stufe hat vom 15. bis
+# zum 16.08. NUR gemessen. Die Messung ergab:
+#
+#     74 % Wiederholungen bei intakter Datenlage (83 % mit stehenden Kursen)
+#     82 von 121 Einstiegen auf einem Faktensatz, den es schon gab
+#     11 von 26 Wiederholungen kippten die AKTION - bei bitgleicher Eingabe
+#
+# ICH HABE DARAUS ZUERST DEN FALSCHEN SCHLUSS GEZOGEN: der Filter "kostet" 82
+# Einstiege, also lohne er nicht. Der Nutzer hat den Fehlschluss benannt -
+# "Schaden" setzt voraus, dass diese Einstiege einen Wert haben, und im selben
+# Absatz stand, dass sie keinen haben.
+#
+# DAS TRAGENDE ARGUMENT IST EIN KORREKTHEITSARGUMENT, kein Renditeargument:
+#
+#     Eine Empfehlung, die auf identischen Daten beruht wie eine vorherige
+#     NICHT-Empfehlung, ist keine Empfehlung - sie ist die Streuung des
+#     Modells.
+#
+# Es haengt nicht davon ab, ob das System je Geld verdient.
+#
+# VOR DEM MODELLAUFRUF, nicht danach. Wer die Antwort erst holt und dann
+# wegwirft, hat das Kontingent schon ausgegeben und das Rauschen bereits
+# erzeugt - er versteckt es nur.
+
+# Vorgabe: AUS. Ein Modul, das beim blossen Einspielen die Produktion
+# umstellt, nimmt dem Nutzer die Entscheidung ab - dieselbe Regel wie bei
+# `rollen_kette.aktiv_fuer`. Eingeschaltet wird in `config.yaml`.
+SPERRE_VORGABE = {
+    "aktiv": False,
+    # Welcher Abdruck entscheidet. "asset" laesst das Lagebild weg - es ist
+    # Modellprosa und wechselt alle drei Stunden. GEMESSEN macht es nur zwei
+    # Prozentpunkte aus (79 % gegen 81 %), aber die zwei Punkte waeren
+    # ausschliesslich Prosa.
+    "abdruck": "asset",
+    "hoechstalter_stunden": HOECHSTALTER_STUNDEN,
+    # --- FEINJUSTIERUNG, ohne Codeaenderung ---------------------------------
+    #
+    # Beide Regler greifen NUR, wenn der Abdruck sich unterscheidet - sie
+    # koennen also nur MEHR sperren, nie weniger. Ein identischer Abdruck ist
+    # immer eine Wiederholung.
+    #
+    # `ignoriere_bloecke`  Bloecke, deren Aenderung NICHT als neue Frage zaehlt.
+    #                      Der Kandidat ist `marken`: sie tragen 15 % aller
+    #                      echten Aenderungen, sind kursnah und springen, sobald
+    #                      ein Tick ueber eine Clustergrenze laeuft. Ob das eine
+    #                      neue Lage ist oder Rauschen, ist offen - deshalb ein
+    #                      Regler und keine Setzung.
+    # `mindest_bloecke`    wie viele Bloecke sich bewegt haben muessen. 1 ist
+    #                      die heutige Bedeutung von "geaendert".
+    "ignoriere_bloecke": [],
+    "mindest_bloecke": 1,
+}
+
+
+def sperre_konfig(config: dict | None = None) -> dict:
+    """Die Sperreinstellungen - Vorgabe, ueberschrieben aus `config.yaml`.
+
+    LIEST NICHT SELBST. Die Kette reicht ihre `config` durch; ein Modul, das
+    sich seine Konfiguration selbst holt, laesst sich in keiner Simulation
+    umlenken - und genau das brauchen `simuliere_kette.py` und die
+    Paketpruefungen."""
+    aus = dict(SPERRE_VORGABE)
+    roh = ((config or {}).get("anlass") or {}) if isinstance(config, dict) else {}
+    for k in aus:
+        if k in roh:
+            aus[k] = roh[k]
+    return aus
+
+
+def sperrt(beobachtung: dict, config: dict | None = None) -> tuple[bool, str]:
+    """Ist das eine Wiederholung? (ja/nein, Begruendung fuer das Protokoll)
+
+    NIMMT DIE BEOBACHTUNG ENTGEGEN, statt selbst zu rechnen - `beobachte()`
+    hat den Abdruck und die geaenderten Bloecke bereits ermittelt, und zwar
+    aus DEMSELBEN Faktensatz, der ans Modell geht. Eine zweite Rechnung waere
+    die naechste Stelle zum Auseinanderlaufen.
+
+    GIBT IMMER `False` ZURUECK, WENN ETWAS FEHLT. Eine Sperre, die bei einer
+    Luecke zuschlaegt, entfernt Signale aus einem Grund, den niemand sieht -
+    fail-soft heisst hier ausdruecklich: im Zweifel durchlassen."""
+    cfg = sperre_konfig(config)
+    if not cfg.get("aktiv"):
+        return False, ""
+    if not isinstance(beobachtung, dict):
+        return False, ""
+    # Ohne Vorgaengerfrage im Fenster gibt es nichts zu wiederholen.
+    if beobachtung.get("alter_stunden") is None:
+        return False, ""
+
+    schluessel = ("gleich_voll" if str(cfg.get("abdruck")) == "voll"
+                  else "gleich_asset")
+    alter = beobachtung.get("alter_stunden")
+    if beobachtung.get(schluessel):
+        return True, (f"Faktensatz unveraendert seit {alter:.1f} h "
+                      f"({cfg.get('abdruck')})")
+
+    # --- Feinjustierung: was zaehlt als Aenderung? --------------------------
+    geaendert = [b for b in (beobachtung.get("geaenderte_bloecke") or [])
+                 if b not in set(cfg.get("ignoriere_bloecke") or ())]
+    if len(geaendert) < int(cfg.get("mindest_bloecke", 1)):
+        gesehen = ", ".join(beobachtung.get("geaenderte_bloecke") or []) or "keine"
+        return True, (f"nur {len(geaendert)} zaehlende Blockaenderung(en) seit "
+                      f"{alter:.1f} h (bewegt: {gesehen})")
+    return False, ""
+
+
 def fingerabdruecke(fakten: dict) -> tuple[str, str]:
     """(voll, asset) - beide aus DEMSELBEN Faktensatz, den das Modell bekommt.
 
