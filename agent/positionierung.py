@@ -132,12 +132,37 @@ def lage(conn, symbol: str) -> dict:
             # Erste Fassung fing beides gemeinsam: die Zeile "Regime baer" UND
             # "keine Angabe zum Marktregime" standen nebeneinander in derselben
             # Ausgabe. Ein Widerspruch, den der Leser nicht aufloesen kann.
+            #
+            # ⚠️ DIE DAUER KAM IM BETRIEB NIE AN (gefunden 16.08. abends beim
+            # Rendern fuer die Parameteruebersicht). `regime_persistenz_tage`
+            # liest ueber `get_hebel_regime_tageshistorie()`, und die greift
+            # mit `row["tag"]` auf die Spalten zu - das setzt
+            # `conn.row_factory = sqlite3.Row` voraus. `rolle_c` oeffnet aber
+            # eine gewoehnliche Verbindung. Ergebnis: TypeError, vom breiten
+            # `except` verschluckt, und in JEDER Ausgabe stand nur "Regime
+            # 'baer'" ohne Dauer.
+            #
+            # DAS WAR GENAU DER SCHADEN, gegen den die Dauer eingebaut wurde:
+            # das Regime allein ist ueber alle Signale eines Tages identisch -
+            # ein konstantes Feld (R-T6). Erst "seit 27 Tagen" bewegt sich.
+            # Fail-soft ist fail-silent, hier in seiner teuersten Form.
+            #
+            # DIE ZEILENFABRIK WIRD GELIEHEN, NICHT UEBERNOMMEN. `conn` kann
+            # dem Aufrufer gehoeren; sie bleibt hinterher, wie sie war.
             try:
                 from agent.krypto.regime import regime_persistenz_tage
 
-                aus["regime_tage"] = regime_persistenz_tage(conn, str(r[0]))
-            except Exception:                                # noqa: BLE001
-                pass
+                _alt = conn.row_factory
+                try:
+                    conn.row_factory = sqlite3.Row
+                    aus["regime_tage"] = regime_persistenz_tage(conn, str(r[0]))
+                finally:
+                    conn.row_factory = _alt
+            except Exception as exc:                         # noqa: BLE001
+                # GEZAEHLT STATT VERSCHLUCKT. Ohne diese Zeile war der Ausfall
+                # nur daran zu sehen, dass ein Halbsatz fehlte.
+                logger.info("Regime-Dauer fuer %s nicht ermittelbar: %s",
+                            sym, exc)
         else:
             aus["fehlt"].append("Marktregime")
     except Exception as exc:                                 # noqa: BLE001

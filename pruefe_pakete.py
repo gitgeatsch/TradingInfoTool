@@ -5238,6 +5238,53 @@ def paket_15() -> None:
            and LB3.BLOCK_REIHENFOLGE[-1] == "luecken",
            "und was FEHLT steht zuletzt - es darf nicht schwerer wiegen als "
            "das, was da ist (R-T9)")
+    # ROLLE C: DIE REGIME-DAUER MUSS ANKOMMEN.
+    #
+    # Sie kam es im Betrieb NIE. `regime_persistenz_tage()` liest ueber
+    # `get_hebel_regime_tageshistorie()`, und die greift mit `row["tag"]` zu -
+    # das setzt `conn.row_factory = sqlite3.Row` voraus. `rolle_c` oeffnet eine
+    # gewoehnliche Verbindung; der TypeError verschwand im breiten `except`,
+    # und in jeder Ausgabe stand nur "Regime 'baer'".
+    #
+    # OHNE DAUER IST DAS REGIME EIN KONSTANTES FELD (R-T6) - ueber alle
+    # Signale eines Tages identisch. Genau deshalb wird hier FUNKTIONAL
+    # geprueft, an einer Verbindung OHNE row_factory, und nicht am Quelltext.
+    import sqlite3 as _sq5
+
+    from agent import positionierung as PO5
+
+    _mem = _sq5.connect(":memory:")
+    _mem.execute("CREATE TABLE signals (regime TEXT, created_at TEXT)")
+    _mem.execute("CREATE TABLE hebel_signals (regime TEXT, regime_source TEXT,"
+                 " created_at TEXT)")
+    _mem.execute("CREATE TABLE open_interest_snapshot (symbol TEXT, "
+                 "exchange TEXT, fetched_at TEXT, open_interest REAL, "
+                 "funding_rate REAL, long_account_pct REAL)")
+    _mem.execute("INSERT INTO signals VALUES ('baer', '2026-08-16 10:00:00')")
+    for _t in ("2026-08-14", "2026-08-15", "2026-08-16"):
+        _mem.execute("INSERT INTO hebel_signals VALUES "
+                     "('baer', 'regelbasiert', ?)", (f"{_t} 09:00:00",))
+    _lage5 = PO5.lage(_mem, "TST")
+    pruefe(P, "Rolle C bekommt die Regime-DAUER, nicht nur das Regime",
+           _lage5.get("regime") == "baer"
+           and isinstance(_lage5.get("regime_tage"), int)
+           and _lage5["regime_tage"] >= 3,
+           "ohne Dauer ist 'Regime baer' ueber alle Signale eines Tages "
+           "identisch - ein konstantes Feld (R-T6), und damit genau das, "
+           "wogegen es eingebaut wurde")
+    pruefe(P, "und die Verbindung des Aufrufers bleibt, wie sie war",
+           _mem.row_factory is None,
+           "die Zeilenfabrik wird geliehen, nicht uebernommen - `conn` kann "
+           "dem Aufrufer gehoeren")
+    # NICHT `[-1]` - die Saetze ueber FEHLENDE Angaben stehen hinter dem
+    # Regime, und in dieser Testverbindung fehlt der Terminmarkt ganz. Meine
+    # erste Fassung nahm den letzten Satz und pruefte damit die falsche Zeile.
+    _reg5 = next((s for s in PO5.saetze(_lage5) if "Regime" in s), "")
+    pruefe(P, "die Dauer steht auch im Satz",
+           "seit" in _reg5 and "Tagen" in _reg5,
+           "der Wert im dict nuetzt nichts, wenn der Satz ihn nicht traegt")
+    _mem.close()
+
     from agent import rolle_trader as RT5
 
     pruefe(P, "der Prompt-Stand ist mitgezogen",

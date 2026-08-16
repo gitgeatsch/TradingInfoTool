@@ -4627,3 +4627,39 @@ werden. Beides in derselben Messung, beides ab dem ersten Lauf sichtbar.
 | Phase IV | Nachrichten und Katalysator |
 | Rohstoffe | eigener Rechercheschritt (35.4) |
 | Rolle A | Terminkalender, Stimmung über BTC hinaus |
+
+---
+
+## Kapitel 39 — Die Regime-Dauer kam im Betrieb nie an (16.08.2026, abends)
+
+Gefunden beim Rendern der Parameterübersicht, nicht durch Lesen.
+
+```
+vorher:  Der Gesamtmarkt steht im Regime 'baer'.
+jetzt:   Der Gesamtmarkt steht im Regime 'baer', seit 2 Tagen ununterbrochen.
+```
+
+**Die Ursache.** `regime_persistenz_tage()` liest über
+`get_hebel_regime_tageshistorie()`, und die greift mit `row["tag"]` auf die
+Spalten zu — das setzt `conn.row_factory = sqlite3.Row` voraus. `rolle_c`
+öffnet aber eine gewöhnliche Verbindung. Der `TypeError` verschwand im breiten
+`except Exception: pass`, und in **jeder** Ausgabe stand nur das Regime.
+
+> ⚠️ **Das war genau der Schaden, gegen den die Dauer eingebaut wurde.** Das
+> Regime allein ist über alle Signale eines Tages identisch — ein konstantes
+> Feld (R-T6). Erst *„seit 27 Tagen"* macht daraus eine Aussage, die sich
+> bewegt. Und es ist zugleich das Argument, mit dem in 38.1 begründet wurde,
+> warum das Regime bei Rolle C richtig aufgehoben ist. **Es galt zu diesem
+> Zeitpunkt nicht.**
+
+**Fail-soft ist fail-silent, hier in seiner teuersten Form:** kein Ausfall, den
+man sieht, sondern ein Halbsatz, der fehlt.
+
+**Behoben** durch Leihe statt Übernahme — die Zeilenfabrik wird für den einen
+Aufruf gesetzt und danach zurückgestellt, weil `conn` dem Aufrufer gehören
+kann. Der Fehlerfang **zählt** jetzt statt zu schlucken.
+
+**Drei neue Prüfungen, funktional statt am Quelltext:** an einer
+In-Memory-Datenbank ohne `row_factory` muss `lage()` eine Dauer liefern, der
+Satz muss sie tragen, und die Verbindung des Aufrufers muss hinterher
+unverändert sein. **848 Prüfungen, alle bestanden.**
