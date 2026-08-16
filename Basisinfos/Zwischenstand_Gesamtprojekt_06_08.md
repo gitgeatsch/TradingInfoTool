@@ -1755,6 +1755,14 @@ verdoppeln.
 | A-5 | Stimmung über BTC hinaus — **VIX liegt vor, aber nur ein Wert in der Historie** | grün, blockiert durch Datenlage |
 | A-6 | Makro-Terminkalender (FOMC, CPI) | grün, **keine Quelle** |
 
+### VERWORFEN 16.08.2026 - der Anlassfilter
+
+**O-36 wird nicht scharf geschaltet, weder als Sperre noch als Mailfilter.** Gemessen: er haette **zehn von 21 Symbolen** ihre einzige Einstiegsgelegenheit genommen (SOL, SUI, TURBO, CAT ...), 82 von 121 Einstiegen stammen aus Wiederholungen.
+
+**Und er haette die Qualitaet nicht geaendert** - ein Einstieg aus einem Zufall ist genauso viel wert wie einer aus der Erstfrage, naemlich brutto null (Grundbefund: kein Verfahren schlaegt die Basisrate). Nutzerfrage, die es beendet hat: *„ist das Ziel, das Rauschen zu messen?“*
+
+Die MESSUNG laeuft weiter - sie kostet nichts. Umbauplan Kapitel 47.
+
 ### Erst nach der ersten Blockmessung
 
 | # | | warum |

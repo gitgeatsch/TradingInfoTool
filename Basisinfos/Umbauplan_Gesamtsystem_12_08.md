@@ -5767,3 +5767,103 @@ dieser Zahlen.
 > der Produktion bereits trägt (29 Signale). Genau die Signale, deren
 > Unterschied gemessen werden soll, wären nicht mehr trennbar gewesen. Jetzt
 > **`2026-08-16b`**, nach der Buchstabenkonvention der Datei.
+
+---
+
+## Kapitel 47 — Schadet der Anlassfilter? Ja. Und er wird trotzdem nicht gebaut (16.08.2026)
+
+**Nutzerfrage:** *„mach die Messung, ob der Filter schadet"* — und die
+Nachfrage, die das Vorhaben beendet hat: *„bringt uns das weiter? Die
+LLM-Aufrufe werden trotzdem durchgeführt … was ist das Ziel — das Rauschen zu
+messen?"*
+
+### 47.1 Zwei eigene Zahlen, die ich korrigieren muss
+
+> ⚠️ **„Vier von fünf Modellaufrufen stellen dieselbe Frage noch einmal" war
+> falsch.** Die Anlassstufe sitzt **vor** dem Cooldown — sie sieht jedes Symbol,
+> auch die, die der Cooldown unmittelbar danach entfernt.
+>
+> | | |
+> |---|---|
+> | Anlass-Beobachtungen | **2.665** |
+> | davon mit zugeordnetem Signal | **258 (9,7 %)** |
+>
+> Die 81 % sind **81 % der Beobachtungen, nicht der Modellaufrufe.** Der
+> Cooldown leistet die Arbeit bereits.
+
+> ⚠️ **Die 42,3 % Antwortwechsel stehen auf n=26.** 2.127 von 2.153 Paaren sind
+> nicht zuordenbar, weil gar kein zweiter Modellaufruf stattfand. Die Richtung
+> ist belastbar, die Prozentzahl nicht.
+
+### 47.2 Der Filter schadet — und zwar nicht geringfügig
+
+| | |
+|---|---|
+| Symbole mit **erstmaligem** Einstieg | 17 |
+| Symbole mit **Wiederholungs**-Einstieg | 21 |
+| davon **nur** über eine Wiederholung | **10** |
+
+```
+3QSS 1x · BEAMX 2x · CAT 5x · CEBS 1x · PLTR 1x
+PLUME 1x · SOL 4x · SUI 5x · TURBO 4x · VIRTUAL 2x
+```
+
+**Zehn von 21 Symbolen hätten ohne die Wiederholung nie einen Einstieg
+bekommen** — darunter SOL, SUI und TURBO. Von 121 zuordenbaren Einstiegen
+stammen **82 aus Wiederholungen**, nur 39 aus Erstfragen.
+
+> **Die Wiederholung ist nicht „dasselbe Signal noch einmal".** Es ist
+> *dieselbe Frage mit anderer Antwort* — die erste Frage erzeugte kein Signal,
+> die zweite schon. Genau die Varianz aus 47.1.
+
+**Der Einwand des Nutzers trifft also, und stärker als er ihn formuliert hat:**
+es ist nicht geringfügig, es sind zwei Drittel der Einstiege.
+
+### 47.3 Und trotzdem wird der Filter nicht gebaut
+
+**Die Nachfrage des Nutzers beendet das Vorhaben, und sie hat recht.**
+
+Ein Filter, der Wiederholungen unterdrückt, würde die Signalzahl senken.
+**Er würde die Qualität nicht ändern** — und das ist keine Vermutung, sondern
+der Grundbefund dieses Projekts:
+
+> **Kein Verfahren schlägt die Basisrate** (8.441 Fälle, zwei Verfahren, beide
+> Merkmalsfamilien). Ein Barrierensystem auf einem driftfreien Pfad hat brutto
+> den Erwartungswert null.
+
+Daraus folgt hart: ein Einstieg, der aus einem Zufall entstand, ist **genauso
+viel wert** wie einer aus der Erstfrage — nämlich brutto null und nach Kosten
+negativ. **Wer ihn entfernt, entfernt nichts Wertvolles. Wer ihn behält, behält
+nichts Wertvolles.**
+
+> **„Ist das Ziel, das Rauschen zu messen?" — Nein.** Und mein Vorschlag, den
+> Filter auf den Mailversand zu beschränken, war halbherzig: er hätte das
+> Symptom versteckt und die Aufrufe weiterlaufen lassen. Der Nutzer hat den
+> Grund benannt, bevor ich ihn selbst gesehen habe.
+
+### 47.4 Was daraus wirklich folgt
+
+**Die Signalzahl ist nicht das Problem — sie ist sein Symptom.** Sie ist hoch,
+weil wir gute von schlechten Einstiegen nicht unterscheiden können. Jede
+Bremse, die nicht an dieser Unterscheidung ansetzt, verschiebt eine Zahl.
+
+**Drei Dinge bleiben, in dieser Reihenfolge:**
+
+| | | warum |
+|---|---|---|
+| **1** | **Bündelung des Versands** — eine Mail je Lauf statt eine je Signal | löst genau das, was stört (das Postfach), ohne die Kette, die Urteile oder die Messung anzufassen. **Keine Bewertung, nur Zustellung** |
+| **2** | **Neustarts reduzieren** | elf in 48 Stunden, jeder löst einen Sofortlauf aus. Das ist die konkreteste Ursache für Signalspitzen — und sie liegt im Betrieb, nicht im Modell |
+| **3** | **S2 — Drift statt Timing** | von den drei bekannten Wegen (Drift · Nachrichten · Kosten) der einzige, der das Vorzeichen drehen kann, und der einzige, der **nie gemessen** wurde |
+
+**Was NICHT weiterverfolgt wird:** der Anlassfilter als Sperre oder als
+Mailfilter. Die Messung bleibt laufen — sie kostet nichts und beantwortet
+später, ob sich das Bild ändert.
+
+### 47.5 Der Wert dieser Runde
+
+Es wurde nichts gebaut, und das ist das Ergebnis. **Ein Vorhaben, das seit dem
+15.08. im Plan stand (O-36), ist an seiner eigenen Messung gescheitert** — und
+zwar an der richtigen Stelle: bevor es gebaut wurde.
+
+**Werkzeuge, die bleiben:** `messe_anlass.py` (wie oft wäre gesperrt worden),
+`messe_filterschaden.py` (was hätte es gekostet).
