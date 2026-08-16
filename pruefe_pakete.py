@@ -2989,15 +2989,15 @@ def paket_15() -> None:
     aus2 = ZM.hole(faktentext={"a": 1}, urteil={"aktion": "KAUFEN"},
                    zai_client=_HalbKaputt(), warte_max_s=20)
     # UMGESCHRIEBEN 16.08.2026: der Richtungsabgleich ist entfernt, an seine
-    # Stelle tritt Rolle C mit EIGENER Faktengrundlage. Die Sorge dahinter
+    # Stelle tritt Rolle G mit EIGENER Faktengrundlage. Die Sorge dahinter
     # bleibt gueltig und wird weiter geprueft: zwei getrennte try-Bloecke,
     # damit ein Ausfall der einen Pruefung die andere nicht mitnimmt.
-    pruefe(P, "die Konsistenzpruefung und Rolle C sind getrennt gefangen",
+    pruefe(P, "die Konsistenzpruefung und Rolle G sind getrennt gefangen",
            _quelltext("agent/zweite_meinung.py").count(
                "except Exception:                                    # noqa: BLE001") >= 2,
            "ein gemeinsamer try-Block haette beim ersten Fehler beide verloren")
-    pruefe(P, "Rolle C bekommt eine EIGENE Grundlage, nicht den Faktentext",
-           "def rolle_c(client, urteil" in _quelltext("agent/zweite_meinung.py")
+    pruefe(P, "Rolle G bekommt eine EIGENE Grundlage, nicht den Faktentext",
+           "def rolle_g(client, urteil" in _quelltext("agent/zweite_meinung.py")
            and "positionierung" in _quelltext("agent/zweite_meinung.py"),
            "derselbe Faktentext waere wieder Homogeneous Debate")
     pruefe(P, "und sie fragt gar nicht, wenn keine Positionierung vorliegt",
@@ -3009,7 +3009,7 @@ def paket_15() -> None:
     pruefe(P, "ohne Ergebnis entsteht KEINE leere Mailzeile", ZM.zeilen({}) == [],
            "ein Abschnitt 'Zweite Meinung: -' saehe aus wie ein Befund und "
            "waere ein Ausfall - der Leser kann beides nicht unterscheiden")
-    # UMGESCHRIEBEN 16.08.2026 auf Rolle C. Die Sorge bleibt dieselbe: ein
+    # UMGESCHRIEBEN 16.08.2026 auf Rolle G. Die Sorge bleibt dieselbe: ein
     # Einwand darf nicht in einem Nebensatz verschwinden.
     _mit = ZM.zeilen({"einwand": "ja",
                       "einwand_grund": "Finanzierungsrate im 96. Perzentil"})
@@ -5231,18 +5231,74 @@ def paket_15() -> None:
     # DIE REIHENFOLGE DER ALTEN BLOECKE IST UNVERAENDERT. Die neuen sind
     # eingeschoben, nicht dazwischengemischt - sonst muesste ein Vergleich
     # zweier Prompt-Staende zusaetzlich eine Umsortierung mitmessen.
-    _alt = ("bestand", "struktur", "bewegung", "marken", "volumen",
-            "finanzierung")
-    pruefe(P, "die sechs alten Bloecke stehen weiter in ihrer Reihenfolge",
+    # `struktur` und `bewegung` sind seit dem 17.08. der Block `verlauf` -
+    # die RELATIVE Reihenfolge der uebrigen ist davon unberuehrt.
+    _alt = ("bestand", "verlauf", "marken", "volumen", "finanzierung")
+    pruefe(P, "die alten Bloecke stehen weiter in ihrer Reihenfolge",
            [b for b in LB3.BLOCK_REIHENFOLGE if b in _alt] == list(_alt)
            and LB3.BLOCK_REIHENFOLGE[-1] == "luecken",
            "und was FEHLT steht zuletzt - es darf nicht schwerer wiegen als "
            "das, was da ist (R-T9)")
+
+    # ------------------------------------------------------------------
+    # KLASSE 1 (17.08.2026) - die woertliche Doppelung ist weg.
+    #
+    # Die 60-Tage-Bewegung stand in `struktur` UND in `bewegung`, bitgleich
+    # gerechnet. Ueber alle Reihen mit voller Historie: 42 von 42 identisch.
+    # Zwei Schaeden, nicht nur Redundanz: eine doppelt genannte Zahl wiegt
+    # schwerer (Wiederholung als Gewicht), und ein Beleg, der sie zitiert, ist
+    # KEINEM Block zuordenbar - die Blockmessung lief durch genau den Fehler,
+    # den sie messen sollte.
+    # SCHWINGENDE REIHE, nicht die streng steigende der uebrigen Tests: ohne
+    # Wendepunkte findet `_swings()` nichts, `_struktur()` liefert dann gar
+    # keinen Satz, und der Test misst eine Reihe statt der Zusammenlegung.
+    # Derselbe Stolperstein wie beim Luecken-Gegenfall - zum zweiten Mal.
+    class _KV(_K):
+        def __init__(_s, i):
+            import math
+            _s.close = 100.0 + 0.3 * i + 8.0 * math.sin(i / 7.0)
+            _s.high = _s.close * 1.01
+            _s.low = _s.close * 0.99
+            _s.volume = 1000.0 + (i % 13) * 40
+            _s.date = f"2026-01-{(i % 28) + 1:02d}"
+
+    _rv = [_KV(i) for i in range(90)]
+    _v = LB3.geteilt(symbol="TST", reihe=_rv, index=89,
+                     kurs_eur=144.5, atr=1.2)["verlauf"]
+    pruefe(P, "Struktur und Bewegung sind EIN Block",
+           "struktur" not in LB3.BLOCK_REIHENFOLGE
+           and "bewegung" not in LB3.BLOCK_REIHENFOLGE
+           and len(_v) == 2,
+           "getrennt gezaehlt bewegten sie sich gemeinsam - der Anlassfilter "
+           "sah zwei Abdruecke fuer eine Sache")
+    _prozente = _re3.findall(r"([+-][\d.]+) %", " ".join(_v))
+    pruefe(P, "und keine Prozentzahl steht darin zweimal",
+           len(_prozente) == len(set(_prozente)),
+           f"gefunden: {_prozente} - eine Zahl, die zweimal dasteht, wiegt "
+           f"schwerer, und das war nie beabsichtigt")
+    pruefe(P, "die Nachbarschaft von Struktur und 60-Tage-Zahl bleibt",
+           "Marktstruktur" in _v[0] and "60 Tage" in _v[1]
+           and "im selben Rahmen" in _v[1],
+           "sie war der Fix vom 11.08. (ETH-Fall: Etikett hoch gewichtet, "
+           "Zahl daneben gering) - entfallen ist die zweite NENNUNG, nicht "
+           "der Bezug")
+    # ROLLE A, derselbe Fehler in bedingter Form: Abstand zum Hoch faellt mit
+    # dem 250-Tage-Trend zusammen, sobald das Hoch am Fensteranfang liegt.
+    # NICHT gestrichen, sondern aufgewertet - die LAGE der Extrema in der Zeit
+    # steht sonst nirgends.
+    from agent import marktlage as ML5
+
+    _q_ml = _quelltext("agent/marktlage.py")
+    pruefe(P, "Rolle A nennt, WANN Hoch und Tief lagen",
+           "das Hoch " in _q_ml and "liegt {wo_hoch} Handelstage zurueck" in _q_ml
+           and "nanargmax" in _q_ml and "nanargmin" in _q_ml,
+           "ohne diese Angabe wiederholt der Satz bei einem Hoch am "
+           "Fensteranfang nur die Zahl des vorigen")
     # ROLLE C: DIE REGIME-DAUER MUSS ANKOMMEN.
     #
     # Sie kam es im Betrieb NIE. `regime_persistenz_tage()` liest ueber
     # `get_hebel_regime_tageshistorie()`, und die greift mit `row["tag"]` zu -
-    # das setzt `conn.row_factory = sqlite3.Row` voraus. `rolle_c` oeffnet eine
+    # das setzt `conn.row_factory = sqlite3.Row` voraus. `rolle_g` oeffnet eine
     # gewoehnliche Verbindung; der TypeError verschwand im breiten `except`,
     # und in jeder Ausgabe stand nur "Regime 'baer'".
     #
@@ -5265,7 +5321,7 @@ def paket_15() -> None:
         _mem.execute("INSERT INTO hebel_signals VALUES "
                      "('baer', 'regelbasiert', ?)", (f"{_t} 09:00:00",))
     _lage5 = PO5.lage(_mem, "TST")
-    pruefe(P, "Rolle C bekommt die Regime-DAUER, nicht nur das Regime",
+    pruefe(P, "Rolle G bekommt die Regime-DAUER, nicht nur das Regime",
            _lage5.get("regime") == "baer"
            and isinstance(_lage5.get("regime_tage"), int)
            and _lage5["regime_tage"] >= 3,
@@ -5288,7 +5344,7 @@ def paket_15() -> None:
     from agent import rolle_trader as RT5
 
     pruefe(P, "der Prompt-Stand ist mitgezogen",
-           RT5.PROMPT_STAND == "2026-08-16",
+           RT5.PROMPT_STAND == "2026-08-17",
            "jeder Messbefund gehoert zu einem Stand - ohne den Sprung waeren "
            "Messungen vor und nach Phase I nicht unterscheidbar")
 
@@ -5831,18 +5887,31 @@ def paket_15() -> None:
             ("Am Terminmarkt war die Finanzierungsrate positiv", "finanzierung"),
             ("Von den letzten 20 Tagen entfielen 85 % des Umsatzes auf "
              "Aufwaertstage", "volumen"),
-            ("Die Marktstruktur zeigt hoehere Hochs", "struktur"),
-            ("Kursentwicklung: 5 Tage +6.7 %", "bewegung"),
+            ("Die Marktstruktur zeigt hoehere Hochs", "verlauf"),
+            ("Kursentwicklung im selben Rahmen: 5 Tage +6.7 %", "verlauf"),
             ("BTC ist bereits im Bestand: 150 EUR investiert", "bestand"),
             ("Ein Satz ohne bekannte Woerter", "unbekannt")):
         pruefe(P, f"Beleg -> Block: {_erwartet}",
                MB.block_fuer(_satz) == _erwartet,
                f"{_satz[:48]!r} ergab {MB.block_fuer(_satz)!r}")
-    pruefe(P, "die Reihenfolge geht vom Spezifischen zum Generischen",
-           list(MB.BLOCK_WOERTER).index("volumen")
-           < list(MB.BLOCK_WOERTER).index("bewegung"),
-           "der erste Treffer gewinnt - 'bewegung' mit '20 tage' hat in der "
-           "ersten Fassung den Umsatzsatz geschluckt")
+    # DIE GENERISCHEN ANKER STEHEN SEIT DEM 17.08. IN EINER ZWEITEN TABELLE,
+    # die erst NACH der ersten geprueft wird. Grund: `struktur` und `bewegung`
+    # sind zu `verlauf` zusammengelegt, und ein dict kann denselben Schluessel
+    # nicht zweimal fuehren - die Reihenfolge ist hier aber Teil der
+    # Definition. Meine erste Fassung behalf sich mit dem Schluessel
+    # `"verlauf "` (mit Leerzeichen); das haette in jeder Auswertung einen
+    # zweiten, fast gleichnamigen Block erzeugt.
+    pruefe(P, "die generischen Anker werden ZULETZT geprueft",
+           "volumen" in MB.BLOCK_WOERTER
+           and "volumen" not in MB.BLOCK_WOERTER_GENERISCH
+           and set(MB.BLOCK_WOERTER_GENERISCH) == {"verlauf"},
+           "der erste Treffer gewinnt - 'vergleich' oder '5 tage' kommen in "
+           "mehreren Bloecken vor und duerfen nicht entscheiden")
+    pruefe(P, "und kein Blockname traegt Leerraum",
+           all(b == b.strip() for b in
+               (*MB.BLOCK_WOERTER, *MB.BLOCK_WOERTER_GENERISCH)),
+           "ein Schluessel mit Leerzeichen erzeugt lautlos einen zweiten, "
+           "fast gleichnamigen Block in jeder Auswertung")
 
     # AE3 DER BERICHT DARF VERTEILUNG NICHT MIT ERFOLG VERWECHSELN.
     _leer = MB.messe.__wrapped__ if hasattr(MB.messe, "__wrapped__") else None

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Die Fakten, die der Trader NICHT sieht - Grundlage der Rolle C (16.08.2026).
+"""Die Fakten, die der Trader NICHT sieht - Grundlage der Rolle G (16.08.2026).
 
 WOZU. Die zweite Stufe bekam bisher denselben Faktentext wie Rolle BC und
 beantwortete dieselbe Frage. Nach der Literatur ist das der Fehlerfall
@@ -16,14 +16,14 @@ hier steht, darf NICHT in den Faktentext von BC - sonst ist die zweite Stufe
 wieder das, was sie war.
 
     LLM1 (Rolle BC)  was aus Kursreihe und Depot folgt
-    LLM2 (Rolle C)   was AUSSERHALB davon liegt - Positionierung
+    LLM2 (Rolle G)   was AUSSERHALB davon liegt - Positionierung
 
 WAS HIER STEHT UND WAS NICHT. Positionierung heisst: wie sind die anderen
 aufgestellt. Open Interest, Finanzierungsrate als Extremwert, Anteil der
 Long-Konten. Das ist keine zweite Lesart des Charts - es ist eine Information,
 die im Chart nicht steht.
 
-NICHT hier: Nachrichten und Termine. Sie gehoeren ebenfalls zu Rolle C, sind
+NICHT hier: Nachrichten und Termine. Sie gehoeren ebenfalls zu Rolle G, sind
 aber eine eigene Quelle und ein eigenes Vorhaben (Phase IV).
 
 ALLE SAETZE MIT BEZUG, KEINE NACKTE ZAHL. Dieselbe Regel wie in
@@ -75,7 +75,7 @@ def lage(conn, symbol: str) -> dict:
 
     FAIL-SOFT MIT VERMERK: was fehlt, steht unter `fehlt` und wird im Satzbau
     BENANNT. Ein stiller Ausfall waere hier besonders teuer, weil die ganze
-    Rolle C auf diesen Zahlen steht - eine leere Antwort saehe aus wie
+    Rolle G auf diesen Zahlen steht - eine leere Antwort saehe aus wie
     'kein Einwand'."""
     sym = str(symbol or "").strip().upper()
     aus: dict = {"symbol": sym, "fehlt": []}
@@ -109,7 +109,7 @@ def lage(conn, symbol: str) -> dict:
         aus["fehlt"].append("Anteil der Long-Konten")
 
     # DAS REGIME MIT SEINER DAUER (16.08.2026). Es ist gerechnet und stand
-    # bisher in keinem Prompt. Fuer Rolle C gehoert es hierher und NICHT zu
+    # bisher in keinem Prompt. Fuer Rolle G gehoert es hierher und NICHT zu
     # Rolle BC: es beschreibt nicht diesen Wert, sondern den Rahmen, in dem
     # jedes Urteil steht - und die Trennung der Informationsgrenzen ist die
     # Konstruktionsbedingung der zweiten Stufe.
@@ -137,7 +137,7 @@ def lage(conn, symbol: str) -> dict:
             # Rendern fuer die Parameteruebersicht). `regime_persistenz_tage`
             # liest ueber `get_hebel_regime_tageshistorie()`, und die greift
             # mit `row["tag"]` auf die Spalten zu - das setzt
-            # `conn.row_factory = sqlite3.Row` voraus. `rolle_c` oeffnet aber
+            # `conn.row_factory = sqlite3.Row` voraus. `rolle_g` oeffnet aber
             # eine gewoehnliche Verbindung. Ergebnis: TypeError, vom breiten
             # `except` verschluckt, und in JEDER Ausgabe stand nur "Regime
             # 'baer'" ohne Dauer.
@@ -172,7 +172,7 @@ def lage(conn, symbol: str) -> dict:
 
 
 def saetze(e: dict) -> list[str]:
-    """Die Positionierung als Aussagen - fuer Rolle C.
+    """Die Positionierung als Aussagen - fuer Rolle G.
 
     JEDE ZAHL MIT IHREM MASSSTAB. "Die Finanzierungsrate liegt im 96.
     Perzentil der letzten 400 Messungen" traegt; "0.0312 %" traegt nicht."""

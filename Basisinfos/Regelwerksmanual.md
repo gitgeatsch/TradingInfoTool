@@ -3579,3 +3579,88 @@ stillste: läge sie unter dem Einstieg, könnte sie nie greifen.
 Vier Regeln (Zahlendeckung · Richtungstreue · Zuspitzung · Leerlauf). Ein
 Verstoß wird in der Durchlässigkeit vermerkt und steht in der Mail — er nimmt
 nichts aus dem Lauf. Über 20 echte Antworten: **null Verstöße.**
+
+---
+
+# Nachtrag 2026-08-17: Die drei Rollen, verbindlich
+
+**Warum dieser Abschnitt existiert.** Die Aufgabe der zweiten Stufe war
+**nirgends festgeschrieben** — im ganzen Manual standen zwei Halbsätze
+(*„Die Gegenprüfung läuft weiterhin über Z.ai"* und eine Formatnotiz). Alles
+Übrige lebte in Code-Kommentaren. Eine Rolle ohne festgeschriebenen Auftrag
+lässt sich weder prüfen noch widerlegen.
+
+## R-R1 Die Rollen und ihre Namen
+
+| | **Rolle A** | **Rolle BC** | **Rolle G** |
+|---|---|---|---|
+| Name | Marktanalyst | Händler | **Gegenprüfer** |
+| Stufe | LLM1, Aufruf 1 | LLM1, Aufruf 2 | **LLM2**, Aufruf 3 |
+| Aufgabe | Wie steht der MARKT? | Was tun wir mit DIESEM Wert? | Spricht etwas AUSSERHALB unserer Kursdaten dagegen? |
+| Grundlage | Leitmärkte, Makro, Stimmung | Kursreihe, Depot, Auftrag, Lagebild | **ausschließlich Fremdquellen** |
+| darf NICHT | einzelne Assets beurteilen | Positionsgröße oder Hebelfaktor wählen | **die Empfehlung kippen** |
+| Ausgabe | Lage + Einstufung je Klasse | Belege, Aktion, Begründung, Falsifikator | Einwand ja/nein/unklar + Grund + Grundlage |
+
+> **Das B und das C in „Rolle BC" gehören LLM1** — B beurteilt, C handelt; seit
+> dem 10.08. in einem Aufruf. **Z.ai ist NICHT dieses C.** Es hieß bis zum
+> 17.08. so und war eine Namenskollision.
+
+## R-R2 Die Konstruktionsbedingung
+
+**Ein Parameter gehört zu GENAU EINEM Modell.**
+
+Das ist keine Sparregel. Erhalten zwei Prüfer identische Eingaben, bildet die
+Debatte ein **Martingal** — die erwartete Korrektheit verbessert sich über
+Runden nicht; LLM-Fehler korrelieren zu über 60 %. Was hilft, ist
+**Informationsasymmetrie**: die Prüfung trägt nur, wenn der Prüfer Information
+hat, die dem Urteilenden fehlt.
+
+**Gemessen am eigenen System:** der Richtungsabgleich bekam dieselben Fakten wie
+Rolle BC und sagte in 2.469 Prüfungen **17-mal LONG**. Genau das vorhergesagte
+Verhalten.
+
+## R-R3 Mindestgrundlage der Rolle G
+
+| | |
+|---|---|
+| G1 | mindestens **zwei unabhängige Quellen** |
+| G2 | davon mindestens eine **symbolspezifisch** |
+| G3 | **keine** davon im Faktentext von Rolle BC |
+| G4 | jede Aussage als **Perzentil oder Extremwert**, nie als Rohwert |
+| G5 | liegt zu einem Wert **keine** Grundlage vor, wird **nicht gefragt** |
+
+**G1 ist heute nicht erfüllt** — die drei Terminmarktzahlen stammen aus einer
+Tabelle. Der Zustand ist dokumentiert, nicht behoben; die Schwelle ist
+vorläufig „höchstens zwei fehlende Angaben".
+
+## R-R4 Aufnahme eines Parameters — sieben Prüfungen
+
+| | Prüfung | fällt durch, wenn |
+|---|---|---|
+| P1 | **Auftrag** | gehört zur Aufgabe einer anderen Rolle |
+| P2 | **Eignung** | nur plausibel — **gemessen > Praxis > Vermutung** |
+| P3 | **Nicht-Redundanz** | weitere Übersetzung desselben Fakts |
+| P4 | **Informationsgrenze** | die andere Stufe hat ihn schon |
+| **P5a** | **Gehört er ins Modell?** | verzerrt, etikettiert oder verdrängt mehr, als er trägt |
+| **P5b** | **Korrekt übersetzt?** | Rohwert, fehlender Maßstab, Wertung im Satz |
+| P6 | **Unterscheidungskraft** | über Assets **und** Zeit konstant |
+| P7 | **Risikoklasse** | gelb/rot ohne gepaarten Vergleich |
+
+**Verfügbarkeit ist kein Aufnahmegrund.** *„Es ist gerechnet und liegt ungenutzt
+herum"* beantwortet keine dieser Prüfungen.
+
+**Und Aufnehmen ist ein Tausch, keine Ergänzung.** Ab fünf Indikatoren sinkt die
+Trefferquote gegenüber ein bis zwei klaren Regeln; ab zwölf verlangsamt sich die
+Entscheidung messbar. Budgets: Rolle A **16**, Rolle BC **14**, Rolle G **8**
+Aussagen.
+
+## R-R5 Textregeln, unverändert gültig
+
+R-T1 Fenster nennen · R-T2 kein Etikett · R-T3 keine Wertung · R-T5 relativ
+statt roh · R-T6 kein konstantes Feld · R-T8 Widerspruch prüfbar halten ·
+R-T9 was zuerst steht, wiegt schwerer.
+
+> **R-T9 gilt auch für WIEDERHOLUNG.** Eine Zahl, die zweimal im selben Prompt
+> steht, wiegt schwerer — dieselbe Mechanik über eine andere Achse. Am 17.08.
+> an der 60-Tage-Bewegung gefunden: sie stand in zwei Blöcken, bitgleich
+> gerechnet, in **42 von 42** Reihen.

@@ -275,14 +275,21 @@ SYSTEM_PROMPT_TRADER_OHNE_PERSONA = _baue_prompt(mit_betragsfrage=False,
 #
 #                DER FUENFTE SCHRITT DES PLANS IST NICHT GEBAUT: Regime und
 #                Persistenz fuer Rolle A. Er verletzt die
-#                Konstruktionsbedingung der zweiten Stufe - Rolle C hat beides
+#                Konstruktionsbedingung der zweiten Stufe - Rolle G hat beides
 #                seit dem 16.08. frueh, und ein Parameter gehoert zu GENAU
 #                EINEM Modell. Begruendung im Umbauplan, Kapitel 38.
 #
 #                ALLE VIER IN EINEM STAND, nicht in vieren: fuenf Aenderungen
 #                an fuenf Tagen erzeugen fuenf Staende, zwischen denen niemand
 #                mehr vergleichen kann (Umbauplan 36.4).
-PROMPT_STAND = "2026-08-16"
+#   2026-08-17   KLASSE 1: eine woertliche DOPPELUNG entfernt. Die
+#                60-Tage-Bewegung stand in `struktur` UND in `bewegung`,
+#                bitgleich gerechnet - 42 von 42 Reihen, keine Ausnahme.
+#                Beide Bloecke sind zu `verlauf` zusammengelegt; die
+#                Nachbarschaft von Strukturaussage und 60-Tage-Zahl bleibt
+#                (sie war der Fix vom 11.08.), die zweite Nennung entfaellt.
+#                Ein Satz weniger, kein Fakt weniger.
+PROMPT_STAND = "2026-08-17"
 
 
 # --- Die abgeleiteten Zonen (Paket 1, 12.08.2026) -------------------------

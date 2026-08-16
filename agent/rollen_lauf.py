@@ -1101,8 +1101,7 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             # Leser soll denselben Faktensatz sehen wie das Modell - und
             # gerade der Luecken-Block gehoert ihm: er sagt, worueber diese
             # Empfehlung NICHTS weiss.
-            coin_fakten=((_bloecke.get("struktur") or [])
-                         + (_bloecke.get("bewegung") or [])
+            coin_fakten=((_bloecke.get("verlauf") or [])
                          + (_bloecke.get("hebelgeometrie") or [])
                          + (_bloecke.get("referenz") or [])
                          + (_bloecke.get("volumen") or [])

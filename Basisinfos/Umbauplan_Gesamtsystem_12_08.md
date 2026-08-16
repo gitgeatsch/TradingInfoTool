@@ -5070,3 +5070,205 @@ durch, steht **warum** dort — nicht nur, dass er nicht kam.
 [mRMR — Relevanz und Redundanz](https://en.wikipedia.org/wiki/Minimum_redundancy_feature_selection) ·
 [CFTC Commitments of Traders](https://www.cftc.gov/MarketReports/CommitmentsofTraders/index.htm) ·
 [Are more indicators better for trading decisions?](https://www.swissquote.com/en-ch/private/inspire/blog/technical-analysis/are-more-indicators-better-trading-decisions)
+
+---
+
+## Kapitel 42 — Basis-Sets je Rolle, und der Klasse-1-Umbau (17.08.2026)
+
+### 42.1 „LLM-Integration prüfen" sind ZWEI Prüfungen
+
+**Nutzervorgabe, wörtlich:** *„Wenn ich sage die LLM-Integration zu PRÜFEN — sind
+das zwei Sachen. 1. Benötigen wir diesen Parameter im LLM oder ist dieser
+schädlich, Bias, Zahlen etc. für unsere Bewertung. 2. Wenn erforderlich, dann
+korrekt für das LLM übersetzen, damit wir keine Nebeneffekte, sondern das
+gewünschte Ziel erreichen."*
+
+P5 aus Kapitel 41 zerfällt damit in zwei, und die erste ist die härtere:
+
+| | Frage | fällt durch, wenn |
+|---|---|---|
+| **P5a** | **Gehört der Parameter überhaupt ins Modell?** | er verzerrt, etikettiert oder verdrängt mehr, als er trägt |
+| **P5b** | **Ist er korrekt übersetzt?** | Rohwert, fehlender Maßstab, Wertung im Satz |
+
+**P5a hat in diesem Projekt eine gemessene Grundlage** — es ist kein
+theoretischer Punkt:
+
+| Parameter | Wirkung | Urteil |
+|---|---|---|
+| Kosten- und Ausführbarkeitshinweis | ERÖFFNEN **93 % → 3 %** | P5a **durchgefallen** |
+| Etikett *„intakter Abwärtstrend"* | Modell gewichtete das Wort hoch, die Zahl daneben gering | P5a **durchgefallen** |
+| Konfidenz in Prozent | 77,5 % vorhergesagt gegen 33,3 % tatsächlich | P5a **durchgefallen** |
+| Marktbreite | Richtung gemessen **invers** | P5a **durchgefallen** |
+| nackte Zahlen (`"rsi_14": 55.0`) | Tokenisierung zerlegt sie | P5b **durchgefallen** |
+| **doppelt genannte Zahl** | Wiederholung wirkt wie Position (R-T9) | **P5b, neu — siehe 42.3** |
+
+**Vier von sechs Fällen sind P5a.** Die Frage „schadet er?" hat in unserer
+eigenen Geschichte mehr Parameter aussortiert als die Frage „ist er richtig
+formuliert?".
+
+### 42.2 Die Basis-Sets — was jede Rolle mindestens braucht
+
+Bisher gab es eine **Liste des Vorhandenen**, kein Soll. Ein Basis-Set leitet
+sich aus der **Aufgabe** ab, nicht aus der Datenlage.
+
+#### Rolle A — Marktanalyst · Basis-Set 4+2
+
+| # | Praxis verlangt | haben wir | P5a | P5b | Status |
+|---|---|---|:--:|:--:|---|
+| A1 | Trend je Leitmarkt | 250/60 Tage, 3 Leitmärkte | ✓ | ✓ | **erfüllt** |
+| A2 | Volatilität | täglich + Perzentil | ✓ | ✓ | **erfüllt** |
+| A3 | Breite | **ersatzlos gestrichen** — Richtung invers | **✗** | — | **begründet weg** |
+| A4 | Liquidität/Makro | Amihud + Netto-Liquidität + Zinskurve | ✓ | ✓ | **erfüllt** |
+| A5 | Stimmung | **nur BTC** | ✓ | ✓ | Lücke, billig |
+| A6 | Terminkalender | ✗ | ✓ | offen | **Lücke** |
+
+**3 von 4 Kerndimensionen, die vierte an P5a gescheitert.**
+
+#### Rolle BC — Händler · Basis-Set CSTI + 4
+
+| # | Praxis verlangt | haben wir | P5a | P5b | Status |
+|---|---|---|:--:|:--:|---|
+| **C** | Bedingung | Lagebild + Klasseneinstufung | ✓ | ✓ | **erfüllt** |
+| **S** | Aufbau | Struktur + Marken | ✓ | ✓ | **erfüllt** |
+| **T** | **Auslöser** | ✗ — `hebel_screening` läuft, niemand liest es | ✓ | offen | **LÜCKE** |
+| **I** | Widerlegung | Pflichtfeld + Preis + Datum | ✓ | ✓ | **erfüllt, stark** |
+| Z1 | Umsatzbestätigung | ✓, Fehlen benannt | ✓ | ✓ | **erfüllt** |
+| Z2 | mehrere Zeitebenen | 5/20/60, ohne Ausrichtungsaussage | ✓ | teilw. | teilweise |
+| Z3 | Liquidität/Spread | ✗ | **fraglich** | — | **LÜCKE, gelb** |
+| Z4 | Katalysator | ✗ | ✓ | offen | **LÜCKE** |
+| — | Positionsgröße | **nicht beim Modell** | — | — | besser als Praxis |
+
+> **Z3 ist der Fall, an dem P5a wirklich beißt.** Handelbarkeit und Spread
+> stehen in jeder Praxisliste — und ihr nächster Verwandter, der
+> Ausführbarkeitshinweis, hat die ERÖFFNEN-Quote von 93 auf 3 % gedrückt.
+> **Praxisbedarf und LLM-Verträglichkeit widersprechen sich hier.** Nur mit
+> gepaartem Vergleich, sonst gar nicht.
+
+**Je Korb obendrauf:** Krypto Hebel 1/3 · Aktien **0/3** · Rohstoffe **0/4** ·
+Themen-ETF 1/3 · Absicherung **4/4**.
+
+> ⚠️ **Fund ohne bisherige Zuordnung:** die Ablationsstudie nennt Nachrichten
+> **und Fundamentaldaten** als die beiden tragenden Quellen. Die
+> Fundamentaldaten **haben wir** — KGV, Forward-KGV, Gewinnwachstum,
+> Dividendenrendite, Analystenkonsens, **nächster Quartalstermin** — in
+> `api/yfinance_client.py`, benutzt von der **alten** Aktien-Pipeline. In der
+> Rollen-Kette gehören sie **keiner Rolle**. Nach P1 gehören sie zu **BC**: sie
+> beschreiben die Qualität *dieses* Wertes, nicht die Aufstellung anderer.
+
+#### Rolle G — Gegenprüfer · Basis-Set nach EIGENSCHAFT
+
+**Für „zweites Modell prüft erstes" gibt es keinen Praxismaßstab.** Die
+Debattenliteratur liefert stattdessen eine Bedingung — und damit ein Basis-Set,
+das nicht aus einer Liste besteht:
+
+| # | Bedingung | heute |
+|---|---|:--:|
+| G1 | mindestens **zwei unabhängige Quellen** | ✗ — **eine** |
+| G2 | davon mindestens eine **symbolspezifisch** | ✓ |
+| G3 | **keine** davon im Faktentext von BC | ✓ |
+| G4 | jede Aussage als Perzentil/Extremwert | ✓ |
+| G5 | für **jede** Assetklasse erfüllbar | ✗ — nur Krypto |
+
+| Klasse | Quelle 1 | Quelle 2 | Status |
+|---|---|---|---|
+| Krypto | Binance OI/Funding/Long ✓ | **fehlt** | **1 von 2** |
+| Aktien | FINRA Short Interest | SEC Form 4 | **2 von 2, unverdrahtet** |
+| Rohstoffe | CFTC COT (4 Symbole gemappt) | EIA | **2 von 2, unverdrahtet** |
+| ETF / Absicherung | COT auf Index-Futures | Nachrichten | **0 von 2** |
+
+> **Der Befund kehrt sich um: Aktien und Rohstoffe hätten das vollständige
+> Basis-Set — Krypto, die einzige Klasse, für die Rolle G heute läuft, erreicht
+> es nicht.**
+
+### 42.3 Klasse 1 — gebaut, in einem Zug
+
+**Rolle BC: eine wörtliche Doppelung.**
+
+```
+_struktur:  b60 = 100.0 * (c[i] / c[i - 60] - 1.0)
+_bewegung:  100.0 * (c[i] / c[i - tage] - 1.0)     # tage = 60
+```
+
+| | |
+|---|---|
+| identische Zahl in beiden Blöcken | **42 von 42 Reihen** |
+| abweichend | **0** |
+
+**Zwei Schäden, nicht nur Redundanz:**
+
+**Gewicht** — eine Zahl, die zweimal dasteht, wiegt schwerer. Dieselbe Mechanik
+wie R-T9, nur über Wiederholung statt Position, und **nicht beabsichtigt**.
+
+**Messung** — `messe_begruendungen.py` ordnet Belege ihrem Block zu. Die Anker
+*„zum vergleich"* und *„60 handelstage"* standen unter `bewegung`, der Satz aber
+in `struktur`. **Die Blockmessung lief durch genau den Fehler, den sie messen
+sollte.**
+
+**Gelöst durch Zusammenlegen, nicht durch Löschen:**
+
+```
+[verlauf] Auf Sicht der letzten 17 Handelstage zeigt die Marktstruktur hoehere
+          Hochs und hoehere Tiefs; der letzte Wendepunkt liegt 9 Handelstage
+          zurueck.
+[verlauf] Kursentwicklung im selben Rahmen: 5 Tage -2.5 %, 20 Tage -10.3 %,
+          60 Tage -32.0 %.
+```
+
+Die 60-Tage-Zahl wurde am 11.08. **absichtlich** neben die Strukturaussage
+gesetzt (ETH-Fall: Etikett hoch gewichtet, Zahl daneben gering). Das
+Zusammenlegen **erhält die Nachbarschaft** und entfernt nur die zweite Nennung.
+Eine reine Löschung hätte den Fix von damals rückgängig gemacht.
+
+**Rolle A: dieselbe Doppelung, bedingt — und aufgewertet statt gestrichen.**
+
+```
+vorher:  Bitcoin liegt 37.6 % unter dem Schlusskurs-Hoch und 9.9 % ueber dem
+         Schlusskurs-Tief dieser 250 Handelstage.
+jetzt:   ... dieser 250 Handelstage; das Hoch liegt 250 Handelstage zurueck,
+         das Tief 19.
+```
+
+Der Abstand allein fällt mit dem Satz davor zusammen, sobald das Hoch am
+Fensteranfang liegt. **Die Lage der Extrema in der Zeit steht sonst nirgends** —
+ein Hoch von vor 240 Tagen beschreibt eine andere Lage als eines von vor 12, bei
+identischem Abstand. Und im BTC-Fall erklärt der Satz jetzt selbst, **warum**
+die Zahl sich wiederholt.
+
+**Z.ai heißt ab jetzt Rolle G.** „Rolle C" war doppelt vergeben — das C in „BC"
+ist der Entscheider in LLM1. `Rolle BC` bleibt unangetastet.
+
+### 42.4 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **853, alle bestanden** (8 neue) |
+| freie Namen | 0 |
+| `pruefe_phase1.py` an echten Reihen | bestanden |
+| Reihen mit wiederholter Prozentzahl im `verlauf`-Block | **0 von 42** |
+| Belegzuordnung | Struktur- **und** Bewegungssätze → `verlauf` |
+
+> ⚠️ **Drei eigene Fehler in dieser Runde, alle beim Prüfen, nicht beim Bauen:**
+>
+> **Der Blockname mit Leerzeichen.** Um zwei Wörterbuch-Einträge für denselben
+> Block zu führen, hatte ich den Schlüssel `"verlauf "` benutzt. Das hätte
+> funktioniert und in **jeder Auswertung lautlos einen zweiten, fast
+> gleichnamigen Block** erzeugt. Jetzt zwei getrennte Tabellen, und eine
+> Prüfung verbietet Leerraum in Blocknamen.
+>
+> **Die streng steigende Testreihe, zum zweiten Mal.** Sie hat keine
+> Wendepunkte, also liefert `_struktur()` gar keinen Satz — der Test maß eine
+> Reihe statt der Zusammenlegung. Derselbe Stolperstein wie beim
+> Lücken-Gegenfall am Vortag.
+>
+> **Der Suchtext über einen f-String-Umbruch.** `"das Hoch liegt {wo_hoch}
+> Handelstage zurueck"` steht im Quelltext auf zwei Zeilen verteilt und war als
+> ein Stück nicht zu finden.
+
+### 42.5 Was als Nächstes ansteht
+
+| | Schritt | Klasse |
+|---|---|---|
+| 1 | **Auslöser (T)** aus `hebel_screening` — vor den Aufruf, nicht in den Prompt | grün |
+| 2 | **Rolle G: Rohstoffe (CFTC) und Aktien (FINRA)** — dort ist das Basis-Set vollständig erfüllbar | additiv |
+| 3 | **Fundamentaldaten und Termine zu BC** — als **Tausch**, nicht als Ergänzung | grün/gelb |
+| 4 | Klasse 2 (`struktur` ↔ `marken`) | **erst nach der Blockmessung** |

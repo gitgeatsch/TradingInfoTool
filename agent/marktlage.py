@@ -596,8 +596,28 @@ def beschreibe_trend(reihen: dict, klasse: str, datum: str) -> list[str]:
         # weiter zu machen, damit der eigene Text hindurchpasst, ist die
         # Umkehrung seines Zwecks - und der naechste, der eine Ausnahme
         # braucht, findet dann schon eine vor. Der Preis ist ein Wort.
+        # ⚠️ WANN HOCH UND TIEF LAGEN - ergaenzt 17.08.2026, und das ist kein
+        # Schmuck. Der Abstand allein FAELLT MIT DEM SATZ DAVOR ZUSAMMEN,
+        # sobald das Hoch am Anfang des Fensters liegt - im Abwaertstrend der
+        # Regelfall. Gemessen am 16.08.:
+        #
+        #     "Bitcoin steht 37.6 % unter seinem Schlusskurs von vor 250 ..."
+        #     "Bitcoin liegt 37.6 % unter dem Schlusskurs-Hoch dieser 250 ..."
+        #
+        # Dieselbe Zahl, zwei Saetze - der zweite sieht wie ein zweiter Fakt
+        # aus und ist keiner. Bei Aktien und Rohstoffen trennen sich die
+        # Zahlen; die Doppelung ist also BEDINGT, nicht strukturell.
+        #
+        # NICHT GESTRICHEN, SONDERN AUFGEWERTET. Die LAGE der Extrema in der
+        # Zeit ist eine Angabe, die sonst nirgends steht: ein Hoch von vor 240
+        # Tagen beschreibt eine andere Lage als eines von vor 12, bei
+        # identischem Abstand. Damit traegt der Satz auch dann, wenn die
+        # Prozentzahl sich wiederholt.
+        wo_hoch = len(fenster) - 1 - int(np.nanargmax(fenster))
+        wo_tief = len(fenster) - 1 - int(np.nanargmin(fenster))
         saetze.append(
             f"{name} liegt {100.0 * (1.0 - jetzt / hoch):.1f} % unter dem "
             f"Schlusskurs-Hoch und {100.0 * (jetzt / tief - 1.0):.1f} % ueber "
-            f"dem Schlusskurs-Tief dieser {TREND_LANG} Handelstage.")
+            f"dem Schlusskurs-Tief dieser {TREND_LANG} Handelstage; das Hoch "
+            f"liegt {wo_hoch} Handelstage zurueck, das Tief {wo_tief}.")
     return saetze

@@ -292,7 +292,7 @@ def kehre_saetze_um(faktentext: dict) -> dict:
     return aus
 
 
-SYSTEM_ROLLE_C = """Du pruefst einen geplanten Handel - aber du siehst NICHT, worauf er sich stuetzt. Du bekommst ausschliesslich Angaben zur POSITIONIERUNG am Terminmarkt: offene Kontrakte, Finanzierungsrate und die Verteilung der Konten. Diese Angaben standen dem Entscheider NICHT zur Verfuegung.
+SYSTEM_ROLLE_G = """Du pruefst einen geplanten Handel - aber du siehst NICHT, worauf er sich stuetzt. Du bekommst ausschliesslich Angaben zur POSITIONIERUNG am Terminmarkt: offene Kontrakte, Finanzierungsrate und die Verteilung der Konten. Diese Angaben standen dem Entscheider NICHT zur Verfuegung.
 
 DEINE EINZIGE AUFGABE: sage, ob in DIESEN Angaben etwas gegen den geplanten Handel spricht.
 
@@ -302,8 +302,8 @@ Antworte AUSSCHLIESSLICH mit JSON:
 Kein Einwand ist eine gueltige Antwort und die haeufigere. Erfinde nichts hinzu; steht eine Angabe nicht da, ist sie kein Argument."""
 
 
-def rolle_c(client, urteil: dict, conn=None, db: str | None = None) -> dict | None:
-    """Rolle C - die Gegenrede mit EIGENER Informationsgrundlage (16.08.2026).
+def rolle_g(client, urteil: dict, conn=None, db: str | None = None) -> dict | None:
+    """Rolle G - die Gegenrede mit EIGENER Informationsgrundlage (16.08.2026).
 
     DER UNTERSCHIED ZUM ALTEN RICHTUNGSABGLEICH ist nicht die Frage, sondern
     die Grundlage. Der alte bekam dieselben Marktfakten wie Rolle BC und sollte
@@ -317,7 +317,7 @@ def rolle_c(client, urteil: dict, conn=None, db: str | None = None) -> dict | No
 
     SIE ENTSCHEIDET NICHTS. Der Einwand steht in der Mail und in der Zeile; er
     kippt die Empfehlung nicht. Nutzervorgabe vom 29.07., unveraendert."""
-    # LOKALE IMPORTE: `rolle_c` ist eine Funktion auf Modulebene und
+    # LOKALE IMPORTE: `rolle_g` ist eine Funktion auf Modulebene und
     # sieht die Importe von `hole()` nicht. Genau diese Falle hat am
     # 14./15.08. dreimal zugeschlagen - `VK`, `_wl`, `assetklasse` -,
     # und `finde_freie_namen.py` hat sie hier sofort gemeldet.
@@ -356,7 +356,7 @@ def rolle_c(client, urteil: dict, conn=None, db: str | None = None) -> dict | No
         "positionierung": saetze,
     }
     roh = client.chat(
-        [{"role": "system", "content": SYSTEM_ROLLE_C},
+        [{"role": "system", "content": SYSTEM_ROLLE_G},
          {"role": "user", "content": json.dumps(eingabe, ensure_ascii=False)}],
         temperature=0.2, response_format={"type": "json_object"})
     a = json.loads(extrahiere_inhalt(roh) if not isinstance(roh, str) else roh)
@@ -432,13 +432,13 @@ def hole(*, faktentext: dict, urteil: dict, zai_client,
             # AN SEINE STELLE TRITT ROLLE C: dieselbe Idee, aber mit einer
             # EIGENEN Grundlage - der Positionierung am Terminmarkt, die
             # Rolle BC nicht sieht.
-            r = rolle_c(zai_client, urteil)
+            r = rolle_g(zai_client, urteil)
             if r:
                 aus["einwand"] = r.get("einwand")
                 aus["einwand_grund"] = r.get("grund")
                 aus["grundlage"] = r.get("grundlage")
         except Exception:                                    # noqa: BLE001
-            logger.info("Z.ai-Rolle C fehlgeschlagen (P-8)", exc_info=True)
+            logger.info("Z.ai-Rolle G fehlgeschlagen (P-8)", exc_info=True)
 
     faden = threading.Thread(target=arbeite, daemon=True,
                              name="zweite-meinung")

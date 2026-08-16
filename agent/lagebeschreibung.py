@@ -157,13 +157,38 @@ def _struktur(c: np.ndarray, h: np.ndarray, l: np.ndarray, i: int) -> list[str]:
     # Aussage ueber wenige Tage wie eine ueber jeden Zeitraum.
     spanne = i - min(hi[-2], lo[-2])
     seit = i - max(hi[-1], lo[-1])
-    aus = [f"Auf Sicht der letzten {spanne} Handelstage zeigt die Marktstruktur "
-           f"{s}; der letzte Wendepunkt liegt {seit} Handelstage zurueck."]
-    if i >= 60:
-        b60 = 100.0 * (c[i] / c[i - 60] - 1.0)
-        aus.append(f"Zum Vergleich: ueber 60 Handelstage steht der Kurs "
-                   f"{b60:+.1f} %.")
-    return aus
+    return [f"Auf Sicht der letzten {spanne} Handelstage zeigt die "
+            f"Marktstruktur {s}; der letzte Wendepunkt liegt {seit} "
+            f"Handelstage zurueck."]
+
+
+# ⚠️ HIER STAND EIN ZWEITER SATZ, UND ER WAR EINE WOERTLICHE DOPPELUNG
+# (entfernt 17.08.2026).
+#
+#     _struktur:  "Zum Vergleich: ueber 60 Handelstage steht der Kurs -32.0 %."
+#     _bewegung:  "Kursentwicklung: 5 Tage -2.5 %, ..., 60 Tage -32.0 %."
+#
+# Bitgleiche Formel `100 * (c[i]/c[i-60] - 1)`, dieselbe Zahl, zwei Saetze.
+# Gemessen ueber alle Reihen mit voller Historie: 42 von 42 identisch, KEINE
+# Ausnahme - also in jedem Prompt und jedem Lauf.
+#
+# ZWEI SCHAEDEN, nicht nur Redundanz:
+#   GEWICHT   eine Zahl, die zweimal dasteht, wiegt schwerer. Das ist
+#             dieselbe Mechanik wie R-T9 (was zuerst steht, wiegt schwerer),
+#             nur ueber Wiederholung statt ueber Position - und sie war
+#             nicht beabsichtigt.
+#   MESSUNG   `messe_begruendungen.py` ordnet Belege ihrem Block zu. Ein
+#             Beleg "60 Tage -32 %" war NICHT zuordenbar; das Woerterbuch
+#             fuehrte "zum vergleich" und "60 handelstage" unter `bewegung`,
+#             der Satz stand aber in `struktur`. Die Blockmessung lief durch
+#             genau den Fehler, den sie messen sollte.
+#
+# WARUM DER SATZ TROTZDEM NICHT ERSATZLOS VERSCHWINDET. Er wurde am 11.08.
+# ABSICHTLICH neben die Strukturaussage gesetzt: im ETH-Fall vom 24.06.
+# gewichtete das Modell das Etikett hoch und die Zahl daneben gering. Diese
+# Nachbarschaft war der Fix. Deshalb werden die beiden BLOECKE zusammengelegt
+# (`verlauf`) statt eine Zeile zu loeschen - die Nachbarschaft bleibt, die
+# zweite Nennung geht.
 
 
 def _bewegung(c: np.ndarray, i: int) -> list[str]:
@@ -171,12 +196,18 @@ def _bewegung(c: np.ndarray, i: int) -> list[str]:
 
     Der heutige Faktensatz enthaelt NUR den Abstand zu einem Durchschnitt. Das ist
     ein Niveau, keine Bewegung - das Modell weiss nicht, ob der Kurs steigt oder
-    faellt."""
+    faellt.
+
+    "IM SELBEN RAHMEN" (17.08.2026) - das ist kein Fuellwort. Der Satz steht
+    seit heute direkt unter der Strukturaussage, und die 60-Tage-Zahl ist der
+    uebergeordnete Massstab, gegen den sie zu lesen ist. Vorher stand dieser
+    Bezug als eigener Satz im Struktur-Block und wiederholte dabei die Zahl."""
     teile = []
     for tage in (5, 20, 60):
         if i >= tage:
             teile.append(f"{tage} Tage {100.0 * (c[i] / c[i - tage] - 1.0):+.1f} %")
-    return [f"Kursentwicklung: {', '.join(teile)}."] if teile else []
+    return ([f"Kursentwicklung im selben Rahmen: {', '.join(teile)}."]
+            if teile else [])
 
 
 # Ein Niveau, das direkt am Kurs liegt, ist keine Marke - es ist Rauschen.
@@ -327,7 +358,7 @@ def _finanzierung(zusammenfassung: dict | None,
     in 63 % der Spot-Urteile als Beleg zitiert: ein Fakt, der zur Sache nichts
     beitraegt, hat dort ein Sechstel der Begruendungen getragen.
 
-    DIE INFORMATION GEHT NICHT VERLOREN, sie wechselt die Stufe. Rolle C
+    DIE INFORMATION GEHT NICHT VERLOREN, sie wechselt die Stufe. Rolle G
     (`agent/positionierung.py`) liest dieselbe Finanzierungsrate als
     Perzentil - und zwar fuer Spot GENAUSO wie fuer Hebel. Damit ist die
     Konstruktionsbedingung der zweiten Stufe erfuellt: bei Spot gehoert das
@@ -589,7 +620,12 @@ def beschreibe_lage(*, symbol: str, reihe: list, index: int,
 #   referenz        daneben, aus demselben Grund: eine Einordnung von aussen
 #   luecken         ZULETZT. Was fehlt, soll gesagt sein - aber es darf nicht
 #                   schwerer wiegen als das, was da ist (R-T9)
-BLOCK_REIHENFOLGE = ("bestand", "struktur", "bewegung", "marken",
+#
+# `struktur` UND `bewegung` SIND EIN BLOCK GEWORDEN (17.08.2026): `verlauf`.
+# Grund und Messwert stehen bei `_struktur()`. Die Saetze selbst sind
+# unveraendert bis auf die entfallene Doppelung und den Bezug "im selben
+# Rahmen" - die Reihenfolge der uebrigen Bloecke bleibt, wie sie war.
+BLOCK_REIHENFOLGE = ("bestand", "verlauf", "marken",
                      "hebelgeometrie", "referenz", "volumen",
                      "finanzierung", "luecken")
 
@@ -636,8 +672,12 @@ def geteilt(*, symbol: str, reihe: list, index: int,
     return {
         "bestand": _bestand(symbol, menge, einstand_eur, kurs_eur,
                             instrument=instrument, gegenseite=gegenseite),
-        "struktur": _struktur(c, h, l, i),
-        "bewegung": _bewegung(c, i),
+        # EIN BLOCK, ZWEI SATZBAUER. Die Funktionen bleiben getrennt - sie
+        # rechnen Verschiedenes (Wendepunkte bzw. Prozentveraenderungen) -,
+        # aber ihre Saetze gehoeren zusammen gelesen und werden deshalb
+        # zusammen gezaehlt. Der Anlassfilter sieht damit EINEN Abdruck fuer
+        # den Verlauf statt zweier, die sich gemeinsam bewegen.
+        "verlauf": _struktur(c, h, l, i) + _bewegung(c, i),
         "marken": marken,
         "hebelgeometrie": _hebelgeometrie(atr, float(c[i]), instrument),
         "referenz": _referenz(referenz),

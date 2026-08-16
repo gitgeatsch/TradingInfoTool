@@ -70,10 +70,19 @@ BLOCK_WOERTER = {
                 # `verkaufsrechnung`/`ausstiegsrechnung` sprechen von der
                 # Position, nicht vom Bestand.
                 "position ist", "position bereits", "bestehende position"),
-    "struktur": ("marktstruktur", "hoehere hochs", "höhere hochs",
-                 "tiefere hochs", "tiefere tiefs", "wendepunkt",
-                 "bodenbildung", "trendwende", "abwaertstrend",
-                 "abwärtstrend", "aufwaertstrend", "aufwärtstrend"),
+    # `struktur` UND `bewegung` SIND SEIT DEM 17.08. EIN BLOCK (`verlauf`).
+    #
+    # DIE ZUSAMMENLEGUNG BEHEBT EINE FALSCHZUORDNUNG, die hier lange stand:
+    # der Satz "Zum Vergleich: ueber 60 Handelstage steht der Kurs -32,0 %"
+    # gehoerte zum Block `struktur`, seine Anker "zum vergleich" und "60
+    # handelstage" standen aber unter `bewegung`. Ein Beleg, der ihn zitierte,
+    # wurde also dem falschen Block gutgeschrieben - und weil die Zahl in
+    # BEIDEN Bloecken stand, war er ueberhaupt nicht eindeutig zuordenbar.
+    # Die Blockmessung lief durch genau den Fehler, den sie messen sollte.
+    "verlauf": ("marktstruktur", "hoehere hochs", "höhere hochs",
+                "tiefere hochs", "tiefere tiefs", "wendepunkt",
+                "bodenbildung", "trendwende", "abwaertstrend",
+                "abwärtstrend", "aufwaertstrend", "aufwärtstrend"),
     # DAS LAGEBILD ZITIERT DAS MODELL MIT SEINEN EIGENEN WORTEN, nicht mit
     # unseren. Gemessen am 15.08.: "der Krypto-Sektor befindet sich in einer
     # Schwaechephase", "das Krypto-Marktumfeld", "Krypto insgesamt in einer
@@ -92,9 +101,24 @@ BLOCK_WOERTER = {
     # "60-Tage-Entwicklung" und "60-Tage-Vergleich" statt unserer eigenen
     # Formulierung. Dieselbe Aussage, andere Worte - und deshalb 12 Belege in
     # `unbekannt`.
-    "bewegung": ("kursentwicklung", "handelstage steht", "zum vergleich",
-                 "60 handelstage", "5-tage", "60-tage", "5 tage", "60 tage",
-                 "performance", "entwicklung bei", "vergleich"),
+}
+
+# DIE GENERISCHEN ANKER, GETRENNT UND ZULETZT GEPRUEFT.
+#
+# Sie gehoeren zu `verlauf`, duerfen aber nicht in derselben Tabelle stehen:
+# ein dict kann denselben Schluessel nicht zweimal fuehren, und die Reihenfolge
+# ist hier Teil der Definition - "vergleich" oder "5 tage" kommen in mehreren
+# Bloecken vor und duerfen erst entscheiden, wenn kein spezifischer Begriff
+# gegriffen hat.
+#
+# Meine erste Fassung loeste das mit dem Schluessel `"verlauf "` - mit einem
+# Leerzeichen. Das haette funktioniert und in jeder Auswertung einen zweiten,
+# fast gleichnamigen Block erzeugt. Genau die Sorte stiller Fehler, die dieses
+# Projekt teuer bezahlt hat.
+BLOCK_WOERTER_GENERISCH = {
+    "verlauf": ("kursentwicklung", "im selben rahmen", "handelstage steht",
+                "60 handelstage", "5-tage", "60-tage", "5 tage", "60 tage",
+                "performance", "entwicklung bei", "vergleich"),
 }
 VERKAUFSSEITE = ("REDUZIEREN", "VERKAUFEN", "SCHLIESSEN")
 KAUFSEITE = ("KAUFEN", "NACHKAUFEN", "ERÖFFNEN")
@@ -108,9 +132,10 @@ def block_fuer(text: str) -> str:
     ohnehin nicht eindeutig zu einem - ihn doppelt zu zaehlen wuerde die Summe
     ueber 100 % treiben und den Vergleich zwischen den Bloecken zerstoeren."""
     t = str(text or "").lower()
-    for block, woerter in BLOCK_WOERTER.items():
-        if any(w in t for w in woerter):
-            return block
+    for tabelle in (BLOCK_WOERTER, BLOCK_WOERTER_GENERISCH):
+        for block, woerter in tabelle.items():
+            if any(w in t for w in woerter):
+                return block
     return "unbekannt"
 
 
