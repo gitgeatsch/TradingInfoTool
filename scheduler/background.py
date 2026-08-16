@@ -892,6 +892,82 @@ def makro_analog_job(conn_factory, fred_api_key) -> None:
         conn.close()
 
 
+def _aktien_symbole() -> list:
+    """Die Aktien der Watchlist - aus der Konfiguration, nicht aus einer Liste.
+
+    Eine zweite, hier gepflegte Aufzaehlung waere die naechste Stelle, an der
+    ein neuer Wert vergessen wird."""
+    import config as config_module
+
+    raus = []
+
+    def geh(o):
+        if isinstance(o, dict):
+            if o.get("symbol") and str(o.get("assetklasse", "")).lower() in (
+                    "aktien", "aktie"):
+                raus.append(str(o["symbol"]).upper())
+            for v in o.values():
+                geh(v)
+        elif isinstance(o, list):
+            for v in o:
+                geh(v)
+
+    geh(config_module.load_config())
+    return sorted(set(raus))
+
+
+def _aktien_reihen(conn) -> int:
+    """Leerverkaufsposition und Insiderzaehlung je Aktie - beide persistiert.
+
+    ⚠️ DIE INSIDERZAHLEN GEHOEREN ZWINGEND HIERHER und nicht in die Rolle.
+    Ein Form-4-Abruf sind mehrere Anfragen je Symbol; die SEC drosselt bei
+    zehn je Sekunde, und `get_recent_insider_transactions` faengt jeden
+    Filing-Fehler einzeln ab. Eine Sperre erschiene damit als "keine
+    Insider-Aktivitaet" - eine Aussage ueber das Unternehmen, die niemand
+    geprueft hat. Am 16.08. ist genau das passiert, deshalb gibt es jetzt
+    `SecGesperrtError`: hier wird sie GEMELDET statt verschluckt."""
+    from api.finra import get_days_to_cover_history
+    from api.sec_edgar import (
+        SecGesperrtError,
+        get_recent_insider_transactions,
+        summarize_insider_activity,
+    )
+    from database import db as DB
+
+    heute = datetime.now(timezone.utc).date().isoformat()
+    geschrieben = 0
+    for sym in _aktien_symbole():
+        try:
+            geschrieben += DB.schreibe_externe_reihe(
+                conn, "finra", f"{sym}_days_to_cover",
+                get_days_to_cover_history(sym))
+        except Exception as exc:                             # noqa: BLE001
+            logger.info("Leerverkaufsposition %s nicht auffrischbar: %s", sym, exc)
+        try:
+            tr = get_recent_insider_transactions(sym, max_filings=40,
+                                                 lookback_tage=90)
+            z = summarize_insider_activity(tr) or {}
+            # AUCH NULL WIRD GESCHRIEBEN. "Niemand hat gekauft" ist ein Fakt;
+            # ohne die Zeile waere er von "wir haben nicht nachgesehen" nicht
+            # zu unterscheiden - und ueber die Zeit entsteht so nebenbei die
+            # Reihe, die ein spaeteres Perzentil braucht.
+            geschrieben += DB.schreibe_externe_reihe(
+                conn, "sec_edgar", f"{sym}_insider_kaeufe",
+                [(heute, float(z.get("anzahl_kaeufe") or 0))])
+            geschrieben += DB.schreibe_externe_reihe(
+                conn, "sec_edgar", f"{sym}_insider_verkaeufe",
+                [(heute, float(z.get("anzahl_verkaeufe") or 0))])
+        except SecGesperrtError as exc:
+            # LAUT, NICHT LEISE: eine Sperre ist ein Betriebsvorfall. Nichts
+            # wird geschrieben - der gestrige Stand bleibt stehen und ist
+            # ehrlicher als eine frisch datierte Null.
+            logger.warning("SEC gesperrt, Insiderzahlen fuer %s NICHT "
+                           "aufgefrischt: %s", sym, exc)
+        except Exception as exc:                             # noqa: BLE001
+            logger.info("Insiderzahlen %s nicht auffrischbar: %s", sym, exc)
+    return geschrieben
+
+
 def externe_reihen_job(conn_factory) -> None:
     """Die Fremdquellen der Rolle G auffrischen (2026-08-16, Schritt 3).
 
@@ -936,6 +1012,7 @@ def externe_reihen_job(conn_factory) -> None:
             except Exception as exc:                         # noqa: BLE001
                 logger.info("COT %s nicht auffrischbar: %s", stoff, exc)
 
+        geschrieben += _aktien_reihen(conn)
         logger.info("Externe Reihen aufgefrischt: %d Punkte geschrieben.",
                     geschrieben)
     except Exception as exc:

@@ -79,6 +79,32 @@ def get_short_interest_history(
     ]
 
 
+def get_days_to_cover_history(symbol: str, grenze: int = 400,
+                              session: requests.Session | None = None) -> list:
+    """Die Eindeckungsdauer als Reihe - [(datum, tage), ...], AUFSTEIGEND.
+
+    WOFUER (2026-08-16, Schritt 4). Fuer Rolle G zaehlt nicht die Menge, sondern
+    ihre Lage in der eigenen Geschichte (R-T5). "68 Millionen leerverkaufte
+    Stueck" traegt fuer ein Sprachmodell nichts.
+
+    WARUM DIE EINDECKUNGSDAUER UND NICHT DIE STUECKZAHL. `days_to_cover` ist
+    die Leerverkaufsposition geteilt durch den taeglichen Umsatz - also bereits
+    NORMIERT. Die Stueckzahl haengt an der Groesse des Unternehmens und wandert
+    mit ihr; dieselbe Ueberlegung, aus der `cftc_cot` den Long-ANTEIL nimmt und
+    nicht die Nettoposition, und `positionierung` nur OI-AENDERUNGEN vergleicht.
+
+    LIVE GEPRUEFT am 16.08.: PLTR traegt 140 Meldeperioden ab 2020-10-15, VST
+    207 ab 2017-12-29 - `days_to_cover` fehlt in KEINER einzigen. FINRA meldet
+    halbmonatlich, 140 Perioden sind also rund sechs Jahre.
+
+    EIN EINZIGER ABRUF je Symbol, anders als bei den Form-4-Filings. Deshalb
+    braucht diese Quelle keinen Begrenzer."""
+    gelesen = get_short_interest_history(symbol, n_periods=int(grenze),
+                                         session=session)
+    return [(r.settlement_date[:10], float(r.days_to_cover))
+            for r in gelesen if r.days_to_cover is not None]
+
+
 def summarize_short_interest(readings: list[ShortInterestReading]) -> dict | None:
     """Vergleicht die letzte mit der vorletzten Meldeperiode, um eine
     Richtungsaussage abzuleiten - reine Lesefunktion, keine Bewertung (bleibt

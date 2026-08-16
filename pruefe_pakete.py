@@ -5518,6 +5518,65 @@ def paket_15() -> None:
         CC6.get_cot_long_anteil_history = _echtcot
         _spk.close()
 
+    # --- DIE AKTIENSEITE (16.08.2026, Schritt 4) ----------------------
+    _spk2 = _sq6.connect(":memory:")
+    _spk2.row_factory = _sq6.Row
+    DB6.init_db(_spk2)
+    from datetime import date as _dt6
+    from datetime import timedelta as _td6
+
+    _st6 = _dt6(2023, 1, 15)
+    DB6.schreibe_externe_reihe(
+        _spk2, "finra", "TST_days_to_cover",
+        [((_st6 + _td6(days=15 * i)).isoformat(), 1.0 + (i * 3) % 25 / 10.0)
+         for i in range(104)])
+    DB6.schreibe_externe_reihe(_spk2, "sec_edgar", "TST_insider_kaeufe",
+                               [("2026-08-16", 0.0)])
+    DB6.schreibe_externe_reihe(_spk2, "sec_edgar", "TST_insider_verkaeufe",
+                               [("2026-08-16", 55.0)])
+    _ak6 = PO5.lage(_spk2, "TST", assetklasse="aktien")
+    _s6 = " ".join(PO5.saetze(_ak6))
+    pruefe(P, "Aktien: Leerverkaufsposition UND Insider erreichen Rolle G",
+           _ak6.get("short_interest") is not None
+           and _ak6.get("insider") is not None
+           and not MK5.pruefe_g(_ak6),
+           "als einzige Gruppe traegt sie zwei SYMBOLSPEZIFISCHE Quellen - "
+           "damit sind G1 und G2 aus einer Hand erfuellt")
+    pruefe(P, "der Insidersatz nennt BEIDE Seiten, auch die Null",
+           "keinen Kauf" in _s6 and "55 Verkaeufe" in _s6,
+           "gemessen ueber 730 Tage kaufte bei PLTR dreimal jemand und bei VST "
+           "keinmal - die Null IST die Aussage, nicht die fehlende Haelfte")
+    pruefe(P, "und er deutet nicht",
+           not any(w in _s6.lower() for w in
+                   ("signal", "bearish", "bullish", "schlechtes zeichen",
+                    "vertrauen", "zuversicht")),
+           "Fuehrungskraefte bekommen Aktien als Verguetung und verkaufen sie "
+           "planmaessig - `sec_edgar.py` sagt das im Modulkopf selbst")
+    pruefe(P, "Aktienquellen erreichen NUR Aktien",
+           PO5.lage(_spk2, "TST", assetklasse="krypto").get("short_interest") is None
+           and PO5.lage(_spk2, "TST").get("insider") is None,
+           "fail-closed wie bei Boersenfluss und COT")
+
+    # ⚠️ DIE SEC-SPERRE - der Fall, der am 16.08. tatsaechlich eintrat.
+    import api.sec_edgar as SE6
+
+    pruefe(P, "eine SEC-Sperre hat eine EIGENE Fehlerklasse",
+           issubclass(SE6.SecGesperrtError, Exception)
+           and "SecGesperrtError" in _quelltext("scheduler/background.py"),
+           "ohne sie endet eine Drosselung als leere Liste - und damit als "
+           "Aussage ueber das Unternehmen, die niemand geprueft hat")
+    pruefe(P, "und der Job schreibt bei einer Sperre NICHTS",
+           _quelltext("scheduler/background.py").count(
+               "except SecGesperrtError") >= 1,
+           "der gestrige Stand ist ehrlicher als eine frisch datierte Null")
+    pruefe(P, "SEC-Abrufe laufen im Takt",
+           hasattr(SE6, "_im_takt")
+           and SE6._MAX_JE_SEKUNDE <= 10.0
+           and _quelltext("api/sec_edgar.py").count("_im_takt()") >= 3,
+           "die SEC drosselt bei zehn Anfragen je Sekunde - ein Lauf mit 120 "
+           "Filings hat die Sperre am 16.08. real ausgeloest")
+    _spk2.close()
+
     # --- G2 IST NICHT DURCH EINE MARKTWEITE GROESSE ZU ERFUELLEN ------
 
     pruefe(P, "der Boersenfluss deckt G1, aber NIE G2",

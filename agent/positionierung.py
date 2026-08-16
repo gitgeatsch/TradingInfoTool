@@ -321,6 +321,73 @@ def _cot(conn, symbol: str) -> dict | None:
             "n": len(fenster), "perzentil": _perzentil(fenster, jetzt)}
 
 
+# --- DIE AKTIENSEITE (16.08.2026, Schritt 4) --------------------------------
+#
+# ZWEI QUELLEN, ZWEI SEHR VERSCHIEDENE QUALITAETEN - und der Unterschied ist
+# gemessen, nicht geschaetzt.
+#
+# EINDECKUNGSDAUER (FINRA): stark. PLTR traegt 140 Meldeperioden ab 2020,
+# VST 207 ab 2017, `days_to_cover` fehlt in KEINER. Der Wert ist bereits
+# normiert - Leerverkaufsposition geteilt durch Tagesumsatz -, also genau die
+# Form, die R-T5 verlangt. Ein Abruf je Symbol.
+#
+# INSIDERGESCHAEFTE (SEC Form 4): schwach als Perzentil, brauchbar als Zaehlung.
+# Gemessen ueber 730 Tage: PLTR 572 Transaktionen, davon **3 Kaeufe**; VST
+# 9 Transaktionen, davon **0 Kaeufe**. Ein Satz ueber Insiderkaeufe hiesse fast
+# immer "keine" - ein konstantes Feld (R-T6), dieselbe Absage wie an MVRV.
+#
+#     Was BLEIBT, ist die Zaehlung: wie viele Insider verkauft haben und ob
+#     ueberhaupt jemand gekauft hat. Das schwankt (PLTR acht Personen, VST
+#     sechs) und steht in keiner Kursreihe.
+#
+# WARUM KEIN VOLUMEN-PERZENTIL. Es waere die bessere Groesse - das monatliche
+# Verkaufsvolumen von PLTR schwankt um das 13,2-fache. Aber es gibt nur
+# 18 Monatspunkte, und dafuer muessten je Symbol rund 120 Filings einzeln
+# geholt werden. Beides spricht dagegen; vermerkt als offener Punkt.
+SHORT_FENSTER_PERIODEN = 104          # rund vier Jahre bei halbmonatlicher Meldung
+SHORT_MINDESTREIHE = 40
+INSIDER_FENSTER_TAGE = 90
+
+
+def _short_interest(conn, symbol: str) -> dict | None:
+    """Wo steht die Eindeckungsdauer in ihrer eigenen Geschichte?"""
+    from api.finra import get_days_to_cover_history
+
+    sym = str(symbol or "").upper()
+    reihe = _gepflegte_reihe(conn, "finra", f"{sym}_days_to_cover",
+                             lambda: get_days_to_cover_history(sym))
+    if len(reihe) < SHORT_MINDESTREIHE:
+        return None
+    fenster = [w for _, w in reihe[-SHORT_FENSTER_PERIODEN:]]
+    datum, jetzt = reihe[-1]
+    return {"datum": datum, "tage": jetzt, "n": len(fenster),
+            "perzentil": _perzentil(fenster, jetzt)}
+
+
+def _insider(conn, symbol: str) -> dict | None:
+    """Wer hat in den letzten Monaten gekauft, wer verkauft?
+
+    LIEST NUR, HOLT NIE. Anders als die uebrigen Quellen geht hier KEIN
+    Netzabruf ab - `externe_reihen_job` legt beide Zahlen taeglich ab. Grund
+    ist die Drosselung: ein Form-4-Abruf sind mehrere Anfragen je Symbol, und
+    bei einer Sperre gaebe es keine leere, sondern eine FALSCHE Antwort."""
+    from database import db as DB
+
+    sym = str(symbol or "").upper()
+    # ⚠️ GESCHAEFTE, NICHT PERSONEN. `summarize_insider_activity` zaehlt
+    # Transaktionen; die erste Fassung nannte den Schluessel "kaeufer" und
+    # den Satz "55 verkauft" - beides haette Personen behauptet. Bei PLTR
+    # waren es 55 Geschaefte von acht Personen.
+    kauf = DB.lies_externe_reihe(conn, "sec_edgar", f"{sym}_insider_kaeufe", 1)
+    verkauf = DB.lies_externe_reihe(conn, "sec_edgar", f"{sym}_insider_verkaeufe", 1)
+    if not verkauf and not kauf:
+        return None
+    datum = (verkauf or kauf)[-1][0]
+    return {"datum": datum,
+            "kaeufe": int(kauf[-1][1]) if kauf else 0,
+            "verkaeufe": int(verkauf[-1][1]) if verkauf else 0}
+
+
 def lage(conn, symbol: str, assetklasse: str | None = None) -> dict:
     """Die Positionierungslage - oder ein leeres dict, wenn nichts vorliegt.
 
@@ -378,6 +445,26 @@ def lage(conn, symbol: str, assetklasse: str | None = None) -> dict:
     # decken die Gruppenvokabeln ab, die die Kette fuehrt; alles andere - auch
     # ein unbekannter Wert - faellt heraus. Genau die Vokabelverwirrung
     # (`etf` gegen `themen_etf`) hat am 16.08. zwei Fakten stillgelegt.
+    # AKTIEN: Leerverkaeufer und Insider. Beide sind SYMBOLSPEZIFISCH und
+    # zaehlen als zwei verschiedene Arten - die eine misst, wer gegen den Wert
+    # steht, die andere, was die Leute im Haus tun. Damit deckt die
+    # Aktiengruppe als einzige G1 aus zwei symbolspezifischen Quellen.
+    if str(assetklasse or "").lower() in ("aktien", "aktie"):
+        si = _short_interest(conn, sym)
+        if si:
+            aus["short_interest"] = si
+            aus["short_interest_perzentil"] = si["perzentil"]
+        else:
+            aus["fehlt"].append("Leerverkaufsposition")
+        ins = _insider(conn, sym)
+        if ins:
+            aus["insider"] = ins
+            # DER SCHLUESSEL, DEN `mindestkriterien` SUCHT. Auch eine Null ist
+            # eine Angabe: "niemand hat gekauft" ist ein Fakt, kein Ausfall.
+            aus["insider_kaeufe_90d"] = ins["kaeufe"]
+        else:
+            aus["fehlt"].append("Insidergeschaefte")
+
     # ROHSTOFFE: die Positionierung im Basiswert. Anders als der Boersenfluss
     # ist sie SYMBOLSPEZIFISCH - Gold, Silber, Kupfer und Erdgas haben je einen
     # eigenen Bericht. Damit deckt sie G1 UND G2.
@@ -589,6 +676,46 @@ def saetze(e: dict) -> list[str]:
     # unseren Daten nie gemessen - also P2 Rang 3 und nicht aufnahmefaehig.
     # `onchain.py` nennt sie im Feldkommentar "potenziell Verkaufsdruck"; genau
     # dieses "potenziell" gehoert nicht in einen Faktensatz.
+    si = e.get("short_interest")
+    if si and si.get("perzentil") is not None:
+        ps = si["perzentil"]
+        wie = ("aussergewoehnlich lang" if ps >= EXTREM_OBEN else
+               "aussergewoehnlich kurz" if ps <= EXTREM_UNTEN else
+               "im gewohnten Bereich")
+        z.append(
+            "Die Eindeckungsdauer sagt, wie viele Handelstage die "
+            "Leerverkaeufer braeuchten, um ihre Positionen zurueckzukaufen.")
+        z.append(
+            f"Zum Stichtag {si['datum']} steht sie im {ps}. Perzentil der "
+            f"letzten {si['n']} Meldeperioden - {wie}.")
+
+    ins = e.get("insider")
+    if ins:
+        # KEINE DEUTUNG (R-T3, P2). Dass Insiderverkaeufe ein schlechtes
+        # Zeichen seien, ist die gaengige Lesart - und falsch verkuerzt:
+        # Fuehrungskraefte bekommen Aktien als Verguetung und verkaufen sie
+        # planmaessig. Der Modulkopf von `sec_edgar.py` sagt das ausdruecklich.
+        # Gezaehlt wird, gedeutet nicht.
+        # BEIDE SEITEN IMMER NENNEN. Die erste Fassung liess die Kaufseite
+        # weg, wenn sie null war - und genau die NULL ist die Aussage:
+        # gemessen ueber 730 Tage kaufte bei PLTR dreimal jemand und bei
+        # VST keinmal. "55 Verkaeufe" allein liest sich wie eine Haelfte,
+        # deren andere jemand vergessen hat.
+        # DIE MEHRZAHL WIRD UEBERGEBEN, NICHT GEBILDET. Ein angehaengtes "e"
+        # machte aus "Kauf" ein "Kaufe" und aus "Verkauf" ein "Verkaufe";
+        # dazu hiess es "kein Kauf" statt "keinen Kauf". Ein Faktensatz, der
+        # holpert, liest sich wie ein Fehler - und genau das soll er nicht.
+        def _seite(anzahl: int, einzahl: str, mehrzahl: str) -> str:
+            if anzahl == 0:
+                return f"keinen {einzahl}"
+            return f"{anzahl} {einzahl}" if anzahl == 1 else f"{anzahl} {mehrzahl}"
+
+        z.append(
+            f"Insider meldeten in den letzten {INSIDER_FENSTER_TAGE} Tagen "
+            f"{_seite(ins['kaeufe'], 'Kauf', 'Kaeufe')} und "
+            f"{_seite(ins['verkaeufe'], 'Verkauf', 'Verkaeufe')} am offenen "
+            "Markt - Zuteilungen und Optionsausuebungen zaehlen nicht mit.")
+
     # DIE ROHSTOFFSEITE. Der Satz nennt ausdruecklich den BASISWERT und nicht
     # das gehaltene Papier: wir halten ein WisdomTree-Zertifikat, die Behoerde
     # misst den Future an der COMEX. Wer das verschweigt, laesst das Modell

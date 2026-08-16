@@ -3,8 +3,13 @@
 project_selbstverifikation_ki_trimmen.md). Komplett kostenlos, offiziell, kein
 API-Key noetig - nur ein aussagekraeftiger User-Agent-Header ist Pflicht (SEC-
 Vorgabe, siehe https://www.sec.gov/os/accessing-edgar-data). Rate-Limit laut SEC:
-10 Requests/Sekunde/IP - bei unserem Nutzungsmuster (wenige Aktien, Cooldown
-24-72h) nie annaehernd erreicht, daher kein eigener Rate-Limiter noetig.
+10 Requests/Sekunde/IP.
+
+⚠️ HIER STAND BIS ZUM 16.08.2026: "bei unserem Nutzungsmuster (wenige Aktien,
+Cooldown 24-72h) nie annaehernd erreicht, daher kein eigener Rate-Limiter
+noetig." Das stimmte fuer `max_filings=5`. Ein Lauf mit 120 Filings hat die
+Sperre am 16.08. tatsaechlich ausgeloest - siehe `_im_takt()` weiter unten.
+Die Annahme galt fuer eine Nutzung, nicht fuer die Schnittstelle.
 
 Live verifiziert (2026-07-19) fuer VST (CIK 1692819) und PLTR (CIK 1321655):
 - `company_tickers.json` liefert Ticker->CIK.
@@ -23,6 +28,8 @@ Fehlinterpretation als Kauf-/Verkaufssignal)."""
 from __future__ import annotations
 
 import logging
+import threading
+import time
 from dataclasses import dataclass
 
 import requests
@@ -56,6 +63,49 @@ class InsiderTransaction:
     filing_date: str
 
 
+# --- DER BEGRENZER, DEN ES BIS HEUTE NICHT GAB (16.08.2026) ----------------
+#
+# ⚠️ DIE ANNAHME IM MODULKOPF IST UEBERHOLT. Dort steht, ein eigener Begrenzer
+# sei "bei unserem Nutzungsmuster nie annaehernd erreicht, daher nicht noetig".
+# Das galt fuer `max_filings=5` und einen Cooldown von 24 bis 72 Stunden.
+#
+# AM 16.08. HAT ES ZUGESCHLAGEN: ein Lauf mit `max_filings=120` machte rund
+# 120 Abrufe in vier Sekunden - etwa 30 je Sekunde bei einem SEC-Limit von 10.
+# Die Folge war ein hartes `429 Too Many Requests`, und zwar noch Minuten
+# spaeter fuer JEDEN weiteren Abruf, auch fuer die Tickerliste.
+#
+# DER SCHADEN WAERE STILL GEWESEN. `get_recent_insider_transactions` faengt
+# jeden Filing-Fehler EINZELN ab, damit ein kaputtes Filing die anderen nicht
+# blockiert - richtig gedacht. Bei einer Sperre scheitern aber ALLE, und die
+# Funktion gibt eine leere Liste zurueck: ununterscheidbar von "dieser Wert hat
+# keine Insider-Aktivitaet". Ein gesperrter Abruf haette als Tatsache im Prompt
+# gestanden.
+#
+# ACHT STATT ZEHN je Sekunde - der Puffer kostet nichts und die SEC nennt zehn
+# als Obergrenze, nicht als Zusage.
+_MAX_JE_SEKUNDE = 8.0
+_MINDESTABSTAND = 1.0 / _MAX_JE_SEKUNDE
+_letzter_abruf = [0.0]
+_takt_sperre = threading.Lock()
+
+
+def _im_takt() -> None:
+    """Wartet, bis der naechste Abruf erlaubt ist. Prozessweit."""
+    with _takt_sperre:
+        wartezeit = _MINDESTABSTAND - (time.monotonic() - _letzter_abruf[0])
+        if wartezeit > 0:
+            time.sleep(wartezeit)
+        _letzter_abruf[0] = time.monotonic()
+
+
+class SecGesperrtError(RuntimeError):
+    """Die SEC hat uns gedrosselt - das ist KEIN 'keine Daten'.
+
+    Eigene Klasse, damit der Aufrufer den Unterschied sehen kann. Ohne sie
+    endet eine Sperre als leere Liste und damit als Aussage ueber das
+    Unternehmen, die niemand geprueft hat."""
+
+
 def _headers() -> dict[str, str]:
     return {"User-Agent": USER_AGENT}
 
@@ -71,7 +121,10 @@ def get_cik_for_ticker(ticker: str, session: requests.Session | None = None) -> 
         return _cik_cache[ticker_upper]
 
     session = session or requests.Session()
+    _im_takt()
     response = session.get(TICKER_CIK_URL, headers=_headers(), timeout=15)
+    if response.status_code == 429:
+        raise SecGesperrtError("SEC drosselt (429) - Tickerliste")
     response.raise_for_status()
     data = response.json()
     for entry in data.values():
@@ -83,7 +136,10 @@ def get_cik_for_ticker(ticker: str, session: requests.Session | None = None) -> 
 def _fetch_recent_form4_filings(cik: int, session: requests.Session, max_filings: int, lookback_tage: int) -> list[dict]:
     from datetime import date, timedelta
 
+    _im_takt()
     response = session.get(SUBMISSIONS_URL_TEMPLATE.format(cik=cik), headers=_headers(), timeout=15)
+    if response.status_code == 429:
+        raise SecGesperrtError(f"SEC drosselt (429) - Filingliste CIK {cik}")
     response.raise_for_status()
     recent = response.json()["filings"]["recent"]
     cutoff = (date.today() - timedelta(days=lookback_tage)).isoformat()
@@ -166,9 +222,19 @@ def get_recent_insider_transactions(
         raw_filename = filing["primaryDocument"].split("/")[-1]
         url = f"{ARCHIVES_BASE_URL}/{cik}/{accession_nodash}/{raw_filename}"
         try:
+            _im_takt()
             response = session.get(url, headers=_headers(), timeout=15)
+            if response.status_code == 429:
+                # NICHT in den Einzelfang unten: eine Sperre betrifft ALLE
+                # folgenden Filings. Weiterzumachen hiesse, 119 weitere
+                # Fehlschlaege zu sammeln und am Ende 'keine Aktivitaet' zu
+                # melden.
+                raise SecGesperrtError(
+                    f"SEC drosselt (429) bei Filing {filing['accessionNumber']}")
             response.raise_for_status()
             transactions.extend(_parse_form4_xml(response.text, filing["filingDate"]))
+        except SecGesperrtError:
+            raise
         except Exception as exc:  # noqa: BLE001 - ein fehlerhaftes Einzel-Filing darf die anderen nicht blockieren
             logger.info("SEC EDGAR: Form-4-Filing %s fuer %s konnte nicht geparst werden: %s", filing["accessionNumber"], ticker, exc)
     return transactions

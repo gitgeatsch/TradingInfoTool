@@ -7386,3 +7386,178 @@ braucht als einzige unserer Quellen einen Schlüssel.
 | 2 | `finra.py` + `sec_edgar.py` an Rolle G | Schritt 4, Aktien |
 | 3 | Themen-ETF und Absicherung | **keine kostenlose Quelle bekannt** (Kap. 57) |
 | 4 | `funding_rate`/`long_account_pct` unter fremdem Börsenetikett | Kap. 56.8 |
+
+---
+
+## Kapitel 60 — Schritt 4: Aktien, und eine Sperre, die wir selbst ausgelöst haben (16.08.2026)
+
+### 60.1 Zwei Quellen, zwei sehr verschiedene Qualitäten — gemessen
+
+**Eindeckungsdauer (FINRA): stark.**
+
+| | Meldeperioden | ab | `days_to_cover` fehlt |
+|---|---:|---|---:|
+| PLTR | 140 | 2020-10-15 | **0** |
+| VST | 207 | 2017-12-29 | **0** |
+
+Der Wert ist **bereits normiert** — Leerverkaufsposition geteilt durch
+Tagesumsatz. Genau die Form, die R-T5 verlangt, und dieselbe Überlegung, aus
+der COT den Long-*Anteil* nimmt und nicht die Nettoposition. **Ein Abruf je
+Symbol.**
+
+**Insidergeschäfte (SEC Form 4): schwach als Perzentil, brauchbar als Zählung.**
+
+Gemessen über 730 Tage: **PLTR 572 Transaktionen, davon 3 Käufe. VST 9
+Transaktionen, davon 0 Käufe.**
+
+> Ein Satz über Insider*käufe* hieße fast immer „keine" — ein konstantes Feld
+> (R-T6), dieselbe Absage wie an MVRV in Kapitel 58.
+
+**Was bleibt, ist die Zählung** beider Seiten. Sie schwankt und steht in keiner
+Kursreihe.
+
+**Kein Volumen-Perzentil**, obwohl es die bessere Größe wäre: PLTRs monatliches
+Verkaufsvolumen schwankt um das **13,2-fache**. Aber es gibt nur 18
+Monatspunkte, und dafür müssten je Symbol rund 120 Filings einzeln geholt
+werden. Vermerkt als offener Punkt.
+
+### 60.2 Die Sperre — und was sie über das Fehlerverhalten verriet
+
+Beim Messen dieses Volumens machte ein Lauf **rund 120 Abrufe in vier
+Sekunden**, etwa 30 je Sekunde bei einem SEC-Limit von zehn.
+
+```
+429 Too Many Requests   (Server: AkamaiGHost, kein Retry-After)
+```
+
+**Die Sperre hielt über eine Viertelstunde** und traf jeden weiteren Abruf,
+auch die Tickerliste.
+
+> ⚠️ **Der Schaden wäre still gewesen.** `get_recent_insider_transactions`
+> fängt jeden Filing-Fehler EINZELN ab, damit ein kaputtes Filing die anderen
+> nicht blockiert — richtig gedacht. Bei einer Sperre scheitern aber **alle**,
+> und die Funktion gibt eine leere Liste zurück: ununterscheidbar von „dieser
+> Wert hat keine Insider-Aktivität". **Ein gesperrter Abruf hätte als Tatsache
+> im Prompt gestanden.**
+
+**Der Modulkopf hatte es sogar begründet:** *„bei unserem Nutzungsmuster nie
+annähernd erreicht, daher kein eigener Rate-Limiter nötig."* Das stimmte für
+`max_filings=5`. **Die Annahme galt für eine Nutzung, nicht für die
+Schnittstelle** — und sie stand fast einen Monat unwidersprochen im Code.
+
+**Drei Änderungen:**
+
+| | |
+|---|---|
+| `_im_takt()` | prozessweiter Begrenzer, **8 statt 10** je Sekunde, vor allen drei Abrufstellen |
+| `SecGesperrtError` | eigene Klasse — eine Drosselung ist **kein** „keine Daten" |
+| Job meldet laut | bei Sperre wird **nichts** geschrieben; der gestrige Stand ist ehrlicher als eine frisch datierte Null |
+
+**Live nachgewiesen, beide Richtungen:** während der Sperre meldete der Job
+*„SEC gesperrt, Insiderzahlen für PLTR NICHT aufgefrischt"* und schrieb nichts;
+nach dem Ablauf lief er **live in 14 Sekunden** durch, ohne erneute Sperre.
+
+### 60.3 Der Fakt liest, holt aber nie
+
+**`_insider()` macht keinen einzigen Netzabruf** — anders als alle übrigen
+Quellen. Grund ist genau die Drosselung: ein Form-4-Abruf sind mehrere Anfragen
+je Symbol, und bei einer Sperre gäbe es keine leere, sondern eine **falsche**
+Antwort. Geschrieben wird ausschließlich im Job.
+
+> Sichtbar in der Simulation: dort steht bei PLTR und VST nur
+> `short_interest`, weil der Job gegen die Simulationskopie nie lief. **Das ist
+> das gewünschte Verhalten**, nicht ein Ausfall.
+
+### 60.4 Zwei Fehler im Satz, beide inhaltlich
+
+**Erstens verschwieg er die Kaufseite**, wenn sie null war:
+
+```
+vorher:  Bei den Insidern haben in den letzten 90 Tagen 55 verkauft.
+nachher: Insider meldeten in den letzten 90 Tagen keinen Kauf und
+         55 Verkaeufe am offenen Markt - Zuteilungen und
+         Optionsausuebungen zaehlen nicht mit.
+```
+
+**Genau die Null ist die Aussage.** „55 Verkäufe" allein liest sich wie eine
+Hälfte, deren andere jemand vergessen hat.
+
+**Zweitens zählte er Geschäfte und nannte sie Personen.**
+`summarize_insider_activity` zählt Transaktionen; mein Schlüssel hieß
+`insider_verkaeufer`. Bei PLTR waren es **55 Geschäfte von acht Personen**.
+Schlüssel und Satz sagen jetzt beide *Geschäfte*.
+
+*(Dazu zwei Grammatikfehler aus einer selbstgebauten Mehrzahl — „kein Kauf"
+statt „keinen Kauf", „Verkaufe" statt „Verkaeufe". Ein Faktensatz, der
+holpert, liest sich wie ein Fehler.)*
+
+**Und keine Deutung.** Dass Insiderverkäufe ein schlechtes Zeichen seien, ist
+die gängige Lesart und falsch verkürzt: Führungskräfte bekommen Aktien als
+Vergütung und verkaufen sie planmäßig. `sec_edgar.py` sagt das im Modulkopf
+selbst. **Gezählt wird, gedeutet nicht** — steht als Prüfung.
+
+### 60.5 Das Monitoring auf der Remoteseite
+
+> **Nutzervorgabe:** *„vergiss auch nicht für alle Neuanbindungen die du heute
+> gemacht hast, API etc., diese auch in das Monitoring auf der Remoteseite zu
+> berücksichtigen."*
+
+**Die API-Gesundheit war bereits abgedeckt** — `@track_api_health` steht an
+allen vier Quellen, und `api_health_status` führt `coinmetrics`, `cftc_cot`,
+`finra` und `sec_edgar` seit Juli. Die neue Nutzung läuft durch dieselben
+Dekoratoren.
+
+**Was fehlte, ist die Frage, die im Betrieb zählt: sind die Reihen aktuell?**
+Dafür der neue Exportabschnitt `_externe_reihen`:
+
+```
+abdeckung : krypto=onchain · rohstoffe=cot · aktien=finra+sec_edgar
+            themen_etf/absicherung = keine kostenlose Quelle bekannt
+veraltet  : (Liste, Schwelle 48 h)
+reihen    : je Quelle/Schluessel Punkte, Zeitraum, ABRUF-Alter
+```
+
+**Gemeldet wird das Alter des ABRUFS, nicht des jüngsten Punktes.** Ein
+COT-Bericht ist zwischen zwei Freitagen bis zu sieben Tage alt, ohne dass etwas
+fehlt; die Frage ist, wann wir zuletzt **nachgesehen** haben.
+
+> Der Export prüft sich selbst: Tabellen, die er nicht kennt, meldet er unter
+> `nicht_erwaehnt`. `externe_reihe` wäre dort aufgetaucht — die Selbstprüfung
+> hat funktioniert.
+
+### 60.6 Der Stand
+
+| Gruppe | Quellenarten | G1 | G2 |
+|---|---|---|---|
+| **Krypto** | Terminmarkt + On-Chain | **erfüllt** | **erfüllt** |
+| **Aktien** | **Leerverkäufer + Insider** | **erfüllt** | **erfüllt** |
+| Rohstoffe | COT | fehlt (1 von 2) | **erfüllt** |
+| Themen-ETF | — | fehlt | fehlt |
+| Absicherung | — | fehlt | fehlt |
+
+**Aktien sind die einzige Gruppe, deren beide Quellen symbolspezifisch sind** —
+G1 und G2 aus einer Hand. Bei Krypto trägt G2 allein der Terminmarkt.
+
+**Zwei von fünf Gruppen stehen vollständig.** `sperren` bleibt leer.
+
+### 60.7 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **917, alle bestanden** (7 neue) |
+| freie Namen | 0 |
+| `pruefe_zahlen_in_prompts.py` | Selbsttest 7/7, 445 Sätze, kein Befund |
+| `pruefe_phase1.py` | bestanden |
+| Simulation | 6 Gruppen, 12 Signale, 14 Mails, **0 Fehler** |
+| **Job live** | **14 s inkl. SEC, keine Sperre**, PLTR und VST auf G1+G2 |
+| Sperrfall live | Job meldet laut, schreibt nichts, Fakt sagt „keine Angabe" |
+| Exportabschnitt | Abdeckung, Veraltung, Abruf-Alter — gegen echte Daten gerendert |
+
+### 60.8 Offen
+
+| | Punkt | |
+|---|---|---|
+| 1 | Volumen-Perzentil für Insider | 18 Monatspunkte, ~120 Filings je Symbol |
+| 2 | zweite Art für Rohstoffe | EIA deckt nur Erdgas, braucht einen Schlüssel |
+| 3 | Themen-ETF und Absicherung | **keine kostenlose Quelle bekannt** (Kap. 57) |
+| 4 | `funding_rate`/`long_account_pct` unter fremdem Börsenetikett | Kap. 56.8 |

@@ -2327,3 +2327,46 @@ python pruefe_pakete.py        # Reihenfolge, Revision, Netzentkopplung, fail-cl
 **Und die Testeingabe muss den Fall herstellen.** `COT_MINDESTREIHE = 60`: ein
 Testbestand mit 48 Punkten lässt drei Prüfungen fehlschlagen, ohne dass am Code
 etwas falsch wäre.
+
+## 2.27 Eine gedrosselte Schnittstelle ist kein leeres Ergebnis (neu 2026-08-16)
+
+**Auslöser:** eine neue Quelle, die MEHRERE Anfragen je Symbol braucht.
+
+Am 16.08. hat ein Messlauf die SEC mit rund 30 Anfragen je Sekunde bedient —
+Limit sind zehn. Die Antwort war ein `429`, über eine Viertelstunde lang, ohne
+`Retry-After`.
+
+> ⚠️ **Der Schaden wäre still gewesen.** Der Abruf fängt jeden Filing-Fehler
+> einzeln ab; bei einer Sperre scheitern alle, und die Funktion gibt eine leere
+> Liste zurück — ununterscheidbar von „dieses Unternehmen hat keine
+> Insider-Aktivität". Der gesperrte Abruf hätte als Tatsache im Prompt
+> gestanden.
+
+**Drei Punkte, bei jeder mehrstufigen Quelle zu prüfen:**
+
+| | |
+|---|---|
+| **Takt** | ein prozessweiter Begrenzer unter dem Anbieterlimit |
+| **eigene Fehlerklasse** | eine Drosselung ist kein „keine Daten" — sonst kann kein Aufrufer den Unterschied sehen |
+| **Schreibverhalten** | bei Sperre wird **nichts** geschrieben; der gestrige Stand ist ehrlicher als eine frisch datierte Null |
+
+**Und der Modulkopf ist keine Zusage.** In `sec_edgar.py` stand fast einen Monat
+*„bei unserem Nutzungsmuster nie annähernd erreicht, daher kein eigener
+Rate-Limiter nötig"*. Das galt für fünf Filings. **Die Annahme galt für eine
+Nutzung, nicht für die Schnittstelle.**
+
+## 2.28 Neue Quellen gehören ins Remote-Monitoring (neu 2026-08-16)
+
+**Nutzervorgabe:** *„vergiss auch nicht für alle Neuanbindungen … diese auch in
+das Monitoring auf der Remoteseite zu berücksichtigen."*
+
+| | |
+|---|---|
+| **API-Gesundheit** | `@track_api_health("…")` an jeder Abruffunktion — landet automatisch in `api_health_status` und im Export |
+| **Aktualität** | `extract_notebook_diagnose._externe_reihen` — Abdeckung je Assetgruppe, Veraltungsliste, **Alter des ABRUFS** |
+
+**Das Alter des Abrufs, nicht das des jüngsten Punktes.** Ein COT-Bericht ist
+zwischen zwei Freitagen sieben Tage alt, ohne dass etwas fehlt.
+
+> Der Export meldet unbekannte Tabellen selbst unter `nicht_erwaehnt` — wer eine
+> neue Tabelle anlegt und den Abschnitt vergisst, sieht es beim nächsten Export.

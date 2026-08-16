@@ -1229,6 +1229,71 @@ _TABELLEN_OHNE = {
 }
 
 
+# Ab wann eine Fremdreihe als veraltet gilt. Der Job laeuft taeglich; zwei
+# Tage Puffer decken einen verpassten Lauf ab, ohne bei jedem Ausfall zu
+# schreien.
+_REIHE_VERALTET_STUNDEN = 48.0
+
+
+def _externe_reihen(conn) -> dict:
+    """Sind die Fremdquellen der Rolle G aktuell? (2026-08-16, Schritt 3+4)
+
+    WOZU DIESER ABSCHNITT. Rolle G steht auf Reihen, die ein Job schreibt und
+    die Rolle nur liest. Bleibt der Job aus, faellt kein Fehler an: die Rolle
+    findet eine alte Reihe und urteilt weiter, oder sie findet nichts und
+    laesst den Fakt weg. Beides sieht in der Mail aus wie ein bestandener
+    Durchlauf - "fail-soft ist fail-silent" in seiner teuersten Form.
+
+    GEMELDET WIRD DAS ALTER DES ABRUFS, nicht das des juengsten Punktes. Ein
+    COT-Bericht ist zwischen zwei Freitagen bis zu sieben Tage alt, ohne dass
+    etwas fehlt; die Frage ist, wann wir zuletzt NACHGESEHEN haben.
+
+    Nutzervorgabe 16.08.: *"vergiss auch nicht fuer alle Neuanbindungen die du
+    heute gemacht hast, API etc., diese auch in das Monitoring auf der
+    Remoteseite zu beruecksichtigen."*"""
+    vorhanden = {r[0] for r in conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table'")}
+    if "externe_reihe" not in vorhanden:
+        return {"tabelle_fehlt": True,
+                "hinweis": "Diese Datei stammt von vor dem 16.08. - die "
+                           "Fremdquellen der Rolle G gab es noch nicht."}
+    zeilen = []
+    veraltet = []
+    for r in conn.execute(
+            "SELECT quelle, schluessel, COUNT(*) n, MIN(datum) von, "
+            "MAX(datum) bis, MAX(geholt_am) geholt FROM externe_reihe "
+            "GROUP BY quelle, schluessel ORDER BY quelle, schluessel"):
+        eintrag = {"quelle": r[0], "schluessel": r[1], "punkte": r[2],
+                   "von": r[3], "bis": r[4], "zuletzt_geholt": r[5]}
+        try:
+            gestempelt = datetime.fromisoformat(str(r[5]))
+            if gestempelt.tzinfo is None:
+                gestempelt = gestempelt.replace(tzinfo=timezone.utc)
+            stunden = (datetime.now(timezone.utc) - gestempelt).total_seconds() / 3600.0
+            eintrag["abruf_alter_stunden"] = round(stunden, 1)
+            if stunden > _REIHE_VERALTET_STUNDEN:
+                veraltet.append(f"{r[0]}/{r[1]} ({stunden:.0f} h)")
+        except ValueError:
+            eintrag["abruf_alter_stunden"] = None
+        zeilen.append(eintrag)
+
+    # WELCHE GRUPPEN DAMIT VERSORGT SIND - die eigentliche Frage, und sie
+    # laesst sich nicht aus der Zeilenzahl ablesen.
+    quellen = {z["quelle"] for z in zeilen}
+    return {
+        "reihen": zeilen,
+        "veraltet": veraltet,
+        "abdeckung": {
+            "krypto": "onchain" if "coinmetrics" in quellen else "FEHLT",
+            "rohstoffe": "cot" if "cftc_cot" in quellen else "FEHLT",
+            "aktien": "+".join(
+                [q for q in ("finra", "sec_edgar") if q in quellen]) or "FEHLT",
+            "themen_etf": "keine kostenlose Quelle bekannt (Umbauplan 57)",
+            "absicherung": "keine kostenlose Quelle bekannt (Umbauplan 57)",
+        },
+    }
+
+
 def _rollen_kette(conn) -> dict:
     """Die zwei Tabellen der neuen Kette - vom Drift-Waechter selbst gemeldet.
 
@@ -1981,6 +2046,10 @@ def main() -> None:
         except Exception as exc:  # noqa: BLE001
             rollen_kette = {"nicht_verfuegbar": str(exc)}
         try:
+            externe_reihen = _externe_reihen(conn)
+        except Exception as exc:  # noqa: BLE001
+            externe_reihen = {"nicht_verfuegbar": str(exc)}
+        try:
             spaltendrift = _spaltendrift(conn)
         except Exception as exc:  # noqa: BLE001
             spaltendrift = {"nicht_verfuegbar": str(exc)}
@@ -2284,6 +2353,7 @@ def main() -> None:
         "llm_kontingent": llm_kontingent,
         "konfiguration_und_makro": konfiguration_und_makro,
         "rollen_kette": rollen_kette,
+            "externe_reihen": externe_reihen,
         "spaltendrift": spaltendrift,
         "deep_dive": {
             "symbol": DEEP_DIVE_SYMBOL,
