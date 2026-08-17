@@ -2433,3 +2433,36 @@ Prüfung scheiterte — **ohne dass sich am Code etwas geändert hätte.**
 > Eine Prüfung auf „die beiden Ergebnisse sind verschieden" ist auch dann grün,
 > wenn beide aus dem falschen Grund verschieden sind — und rot, wenn beide aus
 > dem richtigen Grund gleich sind.
+
+## 2.32 Die Zuordnungsmatrix als ausführbarer Test (neu 2026-08-17)
+
+**Auslöser:** ein neuer Parameter für eine Rolle, oder eine geänderte
+Zuordnung je Assetklasse/Handelsform.
+
+```bash
+python pruefe_prompt_matrix.py --db <NB-Backup>
+```
+
+**Es ist das vierte Prüfwerkzeug und deckt als einziges die ZUORDNUNG ab:**
+
+| Werkzeug | prüft |
+|---|---|
+| `pruefe_pakete.py` | Einzelteile |
+| `simuliere_kette.py` | den Durchlauf |
+| `pruefe_zahlen_in_prompts.py` | die **Form** der Sätze |
+| **`pruefe_prompt_matrix.py`** | die **Zuordnung** — Rolle × Assetklasse × Handelsform |
+
+**Kapitel 66 des Umbauplans steht dort als Code.** Ändert sich die Matrix, ist
+dieses Skript mitzuziehen — sonst prüft es einen Stand, den es nicht mehr gibt.
+
+> ⚠️ **`JOBABHAENGIG` unterscheidet fehlende Rohdaten von fehlender
+> Verdrahtung.** Ein Backup, das älter ist als der Job, hat keine
+> Fundamentaldaten — und dann fehlt der Satz **zu Recht**. Ohne diese
+> Unterscheidung meldete der erste Lauf drei Lücken, die keine waren.
+>
+> **Ein Prüfer, der eine korrekte Auslassung als Fehler meldet, wird nach dem
+> dritten Mal ignoriert.**
+
+**Der Musterfall, den es abdeckt:** `krypto/hebel` zeigt in Rolle G **kein**
+Funding — das ist die Vorschrift (R-R2 je Instrument), nicht ein Defekt. Ohne
+dieses Werkzeug hält das jeder für einen Fehler.

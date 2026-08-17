@@ -8508,3 +8508,117 @@ wo sie gefunden wurde. Jetzt überall, mit **einer** Definition
 | Rolle G Spot/Hebel | Funding genau einmal, G1/G2 in beiden erfüllt |
 | Kausalität | Anker 2020-03 liefert −0,2 SD (25. Perzentil) gegen heute +1,6 SD (100.) |
 | Simulation | 6 Gruppen, 12 Signale, 14 Mails, **0 Fehler** |
+
+---
+
+## Kapitel 67 — Ende-zu-Ende-Test aller neuen Parameter: die Matrix wird ausführbar (17.08.2026)
+
+**Nutzervorgabe:** *„mache für alle zuletzt neu hinzugefügten LLM-Parameter der
+Rollen einen sauberen Ende-zu-Ende-Test und eine detaillierte Fehler- und
+Promptanalyse."*
+
+### 67.1 Warum ein viertes Prüfwerkzeug — und kein drittes zu viel
+
+| Werkzeug | prüft |
+|---|---|
+| `pruefe_pakete.py` | **Einzelteile** — jede Funktion für sich |
+| `simuliere_kette.py` | den **Durchlauf** — kommt eine Mail heraus |
+| `pruefe_zahlen_in_prompts.py` | die **Form** der Sätze — Zahlen, Etiketten, Konstanten |
+| **`pruefe_prompt_matrix.py`** | die **Zuordnung** — steht der Parameter bei der richtigen Rolle, Assetklasse **und Handelsform** |
+
+**Die Matrix aus Kapitel 66 steht jetzt als Code.** Weicht der Betrieb ab,
+meldet das Skript es — und niemand muss raten, ob eine fehlende Zeile ein
+Fehler oder eine begründete Auslassung ist.
+
+> **Drei der letzten fünf Funde waren keine Fehler, sondern Zuordnungen, deren
+> Grund nirgends stand.** Genau dagegen ist es gebaut.
+
+### 67.2 Das Ergebnis — Rolle BC
+
+| Gruppe / Instrument | Sätze | aus der Kerzenreihe | Blöcke |
+|---|---:|---:|---|
+| krypto/spot | 8 | **75 %** | bestand, verlauf, marken, volumen, **umschlag** |
+| krypto/hebel | 10 | **80 %** | + hebelgeometrie, (finanzierung) |
+| **aktien/spot** | 10 | **60 %** | + **fundamental** |
+| rohstoffe/spot | 6 | 67 % | bestand, verlauf, marken, lücken |
+| **themen_etf/spot** | 7 | **86 %** | bestand, verlauf, marken, volumen |
+| hedge/absicherung | 6 | 50 % | bestand, verlauf, marken, lücken |
+
+### 67.3 Das Ergebnis — Rolle G
+
+| Gruppe / Instrument | Sätze | Merkmale |
+|---|---:|---|
+| krypto/spot | 8 | terminmarkt · divergenz · **funding** · long_anteil · börsenfluss |
+| **krypto/hebel** | 6 | terminmarkt · divergenz · long_anteil · börsenfluss — **kein funding** |
+| rohstoffe/spot | 5 | cot |
+| aktien/spot | 6 | short · insider |
+| themen_etf · hedge | 3 | — |
+
+> **Die Zeile `krypto/hebel` ist der eigentliche Nachweis.** Dort fehlt das
+> Funding — und das ist die Vorschrift, nicht ein Defekt (R-R2 je Instrument).
+> Ohne dieses Werkzeug hätte das jeder für einen Fehler gehalten.
+
+### 67.4 Fehleranalyse — der Test hat zuerst sich selbst gefunden
+
+**Fünf Abweichungen im ersten Lauf, davon zwei aus meinem eigenen Prüfmuster:**
+
+| | Meldung | Urteil |
+|---|---|---|
+| 1 | `boersenfluss` fehlt bei krypto/spot | ⚠️ **mein Fehler** — der Satz hat **zwei Formen** („auf die Börsen" / „von den Börsen herunter"), mein Muster kannte eine |
+| 2 | dito bei krypto/hebel | dito |
+| 3 | `fundamental` fehlt bei PLTR | **kein Fehler** — das Test-Backup ist älter als der Job, der die Daten schreibt |
+| 4 | aktien 86 % Kerzenreihe | Folge von 3 — **mit** Jobdaten sind es **60 %** |
+| 5 | themen_etf 86 % Kerzenreihe | **echt und bekannt** — keine kostenlose Quelle (Kap. 57) |
+
+**Daraus zwei Verbesserungen am Werkzeug selbst:**
+
+- **Zwei Satzformen** statt einer im Muster
+- **`JOBABHAENGIG`** — fehlen die Rohdaten, meldet das Skript *„ohne Rohdaten,
+  Job lief gegen diese Datei nicht"* statt einer Lücke. **Ein Prüfer, der eine
+  korrekte Auslassung als Fehler meldet, wird nach dem dritten Mal ignoriert.**
+
+**Nach der Korrektur, mit vollständigen Jobdaten: eine einzige Abweichung** —
+Themen-ETF bei 86 %.
+
+### 67.5 Promptanalyse — was sich heute bewegt hat
+
+| Gruppe | Kerzenreihe vorher | nachher | wodurch |
+|---|---:|---:|---|
+| **aktien/spot** | 85 % | **60 %** | Gewinn-/Umsatzwachstum |
+| **krypto/spot** | ~90 % | **75 %** | Umschlag |
+| krypto/hebel | ~88 % | 80 % | Umschlag (Funding war schon da) |
+| themen_etf · rohstoffe | ~86 % | unverändert | **keine Quelle** |
+
+**Und Rolle A**, die über das Lagebild in **jede** Gruppe eingeht:
+
+| | vorher | nachher |
+|---|---:|---:|
+| Aussagen | 15 | **17** |
+| davon kursabgeleitet | 12 (80 %) | 12 (**71 %**) |
+| Perzentile **ohne** Einordnung | **8** | **0** |
+
+### 67.6 Was der Test NICHT beantwortet
+
+**Er prüft Zuordnung und Form, nicht Wirkung.** Ob die neuen Sätze die Urteile
+verbessern, weiß niemand — dafür braucht es den gepaarten Vergleich, und der
+braucht Läufe unter dem neuen Stand (`2026-08-17b`).
+
+**Drei Auslegungen stehen weiterhin zur Prüfung und nicht zur Ableitung:**
+
+| | Auslegung | Prüfbar durch |
+|---|---|---|
+| 1 | Der **Umschlag** steht in BC, obwohl R-R6 für Rang 2 den einseitigen Kanal vorsieht — Begründung: keine eingebaute Richtung | Vergleich der Einstiegsquote mit/ohne |
+| 2 | Der **Börsenfluss** bleibt in G, obwohl er über alle Symbole wortgleich ist | Einwandrate gegen Fluss-Perzentil |
+| 3 | **Zwei** Makroaussagen statt sechs — wegen der Überlastungsgrenze | Vergleich mit einem Arm, der mehr trägt |
+
+### 67.7 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **932, alle bestanden** |
+| freie Namen | 0 |
+| `pruefe_zahlen_in_prompts.py` | Selbsttest 9/9, kein Befund |
+| **`pruefe_prompt_matrix.py`** | **1 Abweichung** — themen_etf, bekannt und dokumentiert |
+| `pruefe_phase1.py` | bestanden |
+| Simulation | 6 Gruppen, 12 Signale, 14 Mails, **0 Fehler, 0 Lücken** |
+| Form über alle Rollen | **kein Satz rechnet dem Modell etwas vor** |
