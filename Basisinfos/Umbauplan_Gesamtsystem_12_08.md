@@ -4717,6 +4717,19 @@ strukturell nicht sieht.
 
 ### 40.2 Was je Rolle offen ist — nach Klasse sortiert
 
+> ⚠️ **KORRIGIERT 17.08.2026 — beide Zeilen unten stimmen nicht mehr.**
+>
+> **A-1 ist NICHT umsetzbar.** Dort steht *„liegt vor, wird nur für BTC
+> gerendert"*. Nachgezählt: die einzige Stimmungsquelle mit Historie ist
+> **Fear & Greed** (3.116 Werte, Krypto), `vix_wert` hat **25 Werte** — für
+> ein Perzentil zu dünn. Eine Stimmung über BTC hinaus **existiert nicht**.
+>
+> **Und der „Schatz" `macro_snapshot` ist keiner.** Von 42 Spalten haben
+> **sechs** eine brauchbare Historie — und alle vier inhaltlichen davon
+> (`fear_greed_value`, `netto_liquiditaet_mrd`, `rendite_10j_pct`,
+> `rendite_kurz_pct`) stehen **bereits in Rolle A**. Die übrigen 36 tragen
+> zwischen 1 und 100 Werte. Sie sind nicht ungenutzt, sie sind **leer**.
+
 **Rolle A (Marktanalyst) — zwei kleine Lücken, beide grün**
 
 | | Lücke | Datenlage |
