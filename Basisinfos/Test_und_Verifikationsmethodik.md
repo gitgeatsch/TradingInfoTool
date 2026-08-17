@@ -2575,3 +2575,29 @@ Beides ist ein Befund, und beides sieht man erst nach der Zaehlung. Der
 Nutzer hat sie eingefordert (*„bitte vorher pruefen, um hier nicht einen
 Deckel ueber ein Asset zu legen bzw. der Fehler liegt an anderer Stelle"*) -
 und der Fehler lag an anderer Stelle.
+
+## 2.36 Ein Kriterium veraltet mit dem System (neu 2026-08-17)
+
+**Drei Pruefungen haben an einem Tag denselben Fehler gezeigt:** sie
+beschrieben einen Zustand, den es nicht mehr gibt.
+
+| Pruefung | stand da | warum es fiel |
+|---|---|---|
+| `pruefe_prompt_matrix` | zaehlte alle Bloecke | `_marken_werte` kam dazu und ist kein Satzblock |
+| `pruefe_pakete` (G5) | suchte den QUELLTEXT der Schranke | die Schranke wurde ersetzt |
+| `simuliere_kette` | `gruppe != "krypto"` = keine Grundlage | Aktien haben seit dem 16.08. eine |
+
+**Die Regel dahinter:** ein Kriterium, das eine Gruppe, einen Namen oder eine
+Codezeile nennt, veraltet mit dem System. Eines, das die **Bedingung** fragt,
+nicht.
+
+```
+schlecht   if gruppe != "krypto":            # eine Aufzaehlung
+gut        if not _hat_eigene_grundlage(...) # die Bedingung selbst
+```
+
+> **Und: eine Einstellung ist keine Luecke.** Dass Rolle G bei zwei Symbolen
+> auf BTC-weiter Grundlage urteilt, ist gemeldet und nicht gesperrt - eine
+> Entscheidung des Nutzers. Sie als Fehler zu zaehlen faerbt jeden Lauf rot
+> und traegt dem Auge bei, Befunde zu ueberlesen. Die Simulation fuehrt sie
+> deshalb unter "BEKANNTE ZUSTAENDE".

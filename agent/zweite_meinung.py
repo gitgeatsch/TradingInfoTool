@@ -390,6 +390,17 @@ def rolle_g(client, urteil: dict, conn=None, db: str | None = None,
     # Positionierung vor - bei Aktien, ETF und Rohstoffen der Regelfall -,
     # wird nicht gefragt. Ein Modell, das ueber nichts urteilt, urteilt
     # trotzdem, und das waere die naechste Konstante.
+    #
+    # ⚠️ SEIT DEM 17.08. TRAEGT DIESER WAECHTER ALLEIN. Weiter unten stand
+    # eine zweite, groebere Schranke: `len(lage["fehlt"]) >= 3`. Sie
+    # funktionierte nur, solange JEDE Assetklasse dieselben drei
+    # Terminmarktluecken meldete - auch dort, wo es die Groessen gar nicht
+    # gibt. Seit `positionierung._melde()` diese Nicht-Luecken filtert,
+    # steht bei einem Themen-ETF `fehlt = []`, und die alte Schranke
+    # haette durchgelassen.
+    #
+    # Die Zahl der SAETZE ist ohnehin die richtige Groesse: sie misst, was
+    # das Modell zu sehen bekommt, statt was wir vermissen.
     if not saetze:
         return None
     # MINDESTGRUNDLAGE (R-R3, 16.08.2026 abends). Hier stand `len(fehlt) >= 3`
@@ -409,11 +420,6 @@ def rolle_g(client, urteil: dict, conn=None, db: str | None = None,
     from agent import mindestkriterien as MK
 
     if MK.melde("G", MK.pruefe_g(lage), db_config, bezug=sym):
-        return None
-    # DIE ALTE GROBE SCHRANKE BLEIBT als unterste Grenze: liegt zu einem Wert
-    # GAR NICHTS vor, wird nicht gefragt (G5). Ein Modell, das ueber nichts
-    # urteilt, urteilt trotzdem.
-    if len(lage.get("fehlt") or []) >= 3:
         return None
 
     eingabe = {

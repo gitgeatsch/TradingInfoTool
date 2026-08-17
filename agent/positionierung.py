@@ -532,6 +532,56 @@ def _optionsmarkt(conn, symbol: str) -> dict | None:
     return {"dvol": dvol, "skew": skew}
 
 
+# WELCHE GROESSEN ES IN WELCHER ASSETKLASSE UEBERHAUPT GIBT (17.08.2026).
+#
+# DER FUND: Rolle G meldete bei JEDER Assetklasse drei Luecken -
+#
+#     aktien/PLTR:  Zu diesem Wert liegt keine Angabe vor: Finanzierungsrate.
+#                   Zu diesem Wert liegt keine Angabe vor: Open Interest.
+#                   Zu diesem Wert liegt keine Angabe vor: Anteil der Long-Konten.
+#
+# Eine Aktie hat keine Finanzierungsrate. Das ist keine Luecke, sondern
+# eine Groesse, die es dort nicht gibt - und bei Aktien und Rohstoffen
+# waren das DREI VON SECHS Saetzen, bei Themen-ETF alle drei.
+#
+# ⚠️ DIE RICHTIGE BEHANDLUNG STAND SCHON IM SELBEN CODE, zwei Zeilen
+# weiter unten, nur je INSTRUMENT statt je ASSETKLASSE:
+#
+#     "NUR MELDEN, WENN SIE HIER HINGEHOERT. Beim Hebel ist ihre
+#      Abwesenheit Absicht, kein Mangel - keine Angabe waere gelogen."
+#
+# Genau dieselbe Ueberlegung, eine Ebene hoeher.
+#
+# `open_interest_snapshot` wird ausschliesslich vom `hebel_screening`
+# fuer Krypto gefuellt - fuer alles andere gibt es diese drei Zahlen
+# nicht, und es wird sie auch nicht geben.
+TERMINMARKT_GROESSEN = ("Open Interest", "Finanzierungsrate",
+                        "Anteil der Long-Konten")
+TERMINMARKT_KLASSEN = ("krypto", "kryptowaehrung")
+
+
+def _luecke_melden(name: str, assetklasse: str | None) -> bool:
+    """Gehoert diese Groesse in diese Assetklasse - fehlt sie also wirklich?
+
+    ⚠️ FUER DIESE DREI IST DAS FAIL-CLOSED, UND ZWAR BEWUSST. Meine
+    erste Fassung hatte "fail-open" in den Kommentar geschrieben und
+    fail-closed gebaut; die Paketpruefung hat den Widerspruch gefunden.
+
+    Richtig ist fail-closed: Open Interest, Finanzierungsrate und
+    Long-Anteil stehen ausschliesslich in `open_interest_snapshot`, und
+    die fuellt `hebel_screening` NUR fuer Krypto. Eine neue Assetklasse
+    bekaeme diese Zahlen also nicht dadurch, dass wir ihre Abwesenheit
+    melden - die Meldung waere in jedem Fall Rauschen.
+
+    FEHLT DIE KLASSE GANZ (None oder leer), wird gemeldet: dann ist
+    unklar, worueber wir reden, und eine Luecke zu viel ist besser als
+    eine verschwiegene."""
+    if name not in TERMINMARKT_GROESSEN:
+        return True
+    kl = str(assetklasse or "").strip().lower()
+    return (not kl) or kl in TERMINMARKT_KLASSEN
+
+
 def lage(conn, symbol: str, assetklasse: str | None = None,
          instrument: str | None = None) -> dict:
     """Die Positionierungslage - oder ein leeres dict, wenn nichts vorliegt.
@@ -547,6 +597,12 @@ def lage(conn, symbol: str, assetklasse: str | None = None,
     'kein Einwand'."""
     sym = str(symbol or "").strip().upper()
     aus: dict = {"symbol": sym, "fehlt": []}
+
+    def _melde(name: str) -> None:
+        """Eine Luecke nur melden, wenn es die Groesse hier ueberhaupt
+        gibt - siehe `_luecke_melden`."""
+        if _luecke_melden(name, assetklasse):
+            aus["fehlt"].append(name)
 
     oi = _reihe(conn, sym, "open_interest")
     # ⚠️ NICHT MEHR ueber `_reihe`: die Finanzierungsrate stammt von KRAKEN
@@ -592,7 +648,7 @@ def lage(conn, symbol: str, assetklasse: str | None = None,
             aus["oi_aenderung_pct"] = round(100.0 * (oi[0] - oi[n]) / oi[n], 2)
             aus["oi_fenster_stunden"] = round(n / 4.0, 1)
     else:
-        aus["fehlt"].append("Open Interest")
+        _melde("Open Interest")
 
     if fund:
         aus["funding_jetzt"] = fund[0]
@@ -601,14 +657,14 @@ def lage(conn, symbol: str, assetklasse: str | None = None,
     elif str(instrument or "") != "hebel":
         # NUR MELDEN, WENN SIE HIER HINGEHOERT. Beim Hebel ist ihre
         # Abwesenheit Absicht, kein Mangel - "keine Angabe" waere gelogen.
-        aus["fehlt"].append("Finanzierungsrate")
+        _melde("Finanzierungsrate")
 
     if lang:
         aus["long_anteil_pct"] = round(float(lang[0]), 1)
         aus["long_perzentil"] = _perzentil(lang, lang[0])
         aus["long_n"] = len(lang)
     else:
-        aus["fehlt"].append("Anteil der Long-Konten")
+        _melde("Anteil der Long-Konten")
 
     # KEIN `fehlt`-VERMERK, WENN SIE AUSBLEIBT. Die Divergenz braucht zwei
     # Boersen mit langer Reihe; bei den meisten Symbolen gibt es sie, bei

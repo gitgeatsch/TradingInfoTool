@@ -3146,9 +3146,32 @@ def paket_15() -> None:
            "def rolle_g(client, urteil" in _quelltext("agent/zweite_meinung.py")
            and "positionierung" in _quelltext("agent/zweite_meinung.py"),
            "derselbe Faktentext waere wieder Homogeneous Debate")
+    # ⚠️ GEMESSEN STATT IM QUELLTEXT GESUCHT (17.08.2026). Hier stand die
+    # Suche nach `len(lage["fehlt"]) >= 3` - dem Text der GROBEN Schranke.
+    # Sie ist heute entfallen: seit die Nicht-Luecken je Assetklasse
+    # gefiltert werden, steht bei einem Themen-ETF `fehlt = []`, und eine
+    # Zaehlung der Luecken haette durchgelassen. Der verbliebene Waechter
+    # misst die SAETZE - und das prueft dieser Test jetzt am Verhalten.
+    import agent.positionierung as _PO9
+    from agent import zweite_meinung as _ZM9
+
+    class _KnalltSofort:
+        def chat(self, *a, **k):
+            raise AssertionError("Rolle G haette gar nicht fragen duerfen")
+
+    _echt9 = _PO9.saetze
+    try:
+        _PO9.saetze = lambda lage: []
+        _ohne = _ZM9.rolle_g(_KnalltSofort(), {"aktion": "KAUFEN"},
+                             symbol="CEBS", assetklasse="etf",
+                             instrument="spot",
+                             db="data/tradinginfotool.db")
+    except AssertionError:
+        _ohne = "GEFRAGT"
+    finally:
+        _PO9.saetze = _echt9
     pruefe(P, "und sie fragt gar nicht, wenn keine Positionierung vorliegt",
-           'len(lage.get("fehlt") or []) >= 3' in _quelltext(
-               "agent/zweite_meinung.py"),
+           _ohne is None,
            "ein Modell, das ueber nichts urteilt, urteilt trotzdem - und das "
            "waere die naechste Konstante")
 
@@ -8138,10 +8161,61 @@ def paket_provider() -> None:
            "die Warnung ersetzt die Entscheidung nicht")
 
 
+def paket_luecken() -> None:
+    """Eine Luecke nur melden, wo es die Groesse ueberhaupt gibt (17.08.2026).
+
+    Gefunden bei der Abdeckungspruefung: Rolle G meldete bei JEDER
+    Assetklasse "keine Angabe: Finanzierungsrate" - auch bei einer Aktie.
+    Drei von sechs Saetzen bei Aktien und Rohstoffen, bei Themen-ETF alle
+    drei."""
+    from agent import positionierung as _PO
+
+    P = "Luecken"
+
+    pruefe(P, "Krypto meldet die Terminmarktluecken weiterhin",
+           all(_PO._luecke_melden(n, "krypto")
+               for n in _PO.TERMINMARKT_GROESSEN),
+           "dort gibt es die Groessen - fehlen sie, ist das ein Mangel")
+    for klasse in ("aktien", "rohstoffe", "etf", "hedge"):
+        pruefe(P, f"{klasse} meldet sie nicht mehr",
+               not any(_PO._luecke_melden(n, klasse)
+                       for n in _PO.TERMINMARKT_GROESSEN),
+               "eine Aktie hat keine Finanzierungsrate - das ist keine "
+               "Luecke, sondern eine Groesse, die es dort nicht gibt")
+    pruefe(P, "andere Luecken bleiben in JEDER Klasse meldbar",
+           all(_PO._luecke_melden("Leerverkaufsposition", k)
+               for k in ("aktien", "krypto", "etf")),
+           "gefiltert wird nur, was strukturell nicht vorkommt")
+    # ⚠️ ZWEI VERSCHIEDENE FAELLE, und mein erster Kommentar warf sie
+    # zusammen ("fail-open"). Die Pruefung hat den Widerspruch gefunden.
+    for leer in (None, ""):
+        pruefe(P, f"OHNE Klasse ({leer!r}) wird gemeldet",
+               _PO._luecke_melden("Open Interest", leer),
+               "dann ist unklar, worueber wir reden - eine Luecke zu viel "
+               "ist besser als eine verschwiegene")
+    pruefe(P, "eine NEUE Klasse meldet sie nicht",
+           not _PO._luecke_melden("Open Interest", "voellig_neue_klasse"),
+           "die drei Zahlen stehen nur in `open_interest_snapshot`, und die "
+           "fuellt `hebel_screening` nur fuer Krypto - die Meldung waere in "
+           "jedem Fall Rauschen")
+
+    # ⚠️ DER WAECHTER, DEN DIE FILTERUNG ENTSCHAERFT HAETTE.
+    _q = _quelltext("agent/zweite_meinung.py")
+    pruefe(P, "G5 haengt nicht mehr an der Zahl der Luecken",
+           'len(lage.get("fehlt") or []) >= 3' not in _q,
+           "seit die Nicht-Luecken gefiltert sind, steht bei einem "
+           "Themen-ETF `fehlt = []` - eine Zaehlung der Luecken haette "
+           "durchgelassen und Rolle G mit LEERER Positionierung gefragt")
+    pruefe(P, "es gibt genau EINEN Waechter, nicht zwei",
+           _q.count("if not saetze:") == 1,
+           "meine erste Fassung stellte einen zweiten daneben - der erste "
+           "stand schon da")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider,
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider, "Luecken": paket_luecken,
           "Frische": paket_frische}
 
 

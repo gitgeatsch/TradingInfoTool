@@ -57,16 +57,26 @@ AKTIONEN_JE_INSTRUMENT = {
 }
 
 
-def _hat_terminmarkt(conn, symbol: str) -> bool:
-    """Liegen zu DIESEM Wert eigene Terminmarktdaten vor?
+def _hat_eigene_grundlage(conn, symbol: str, assetklasse: str) -> bool:
+    """Liegt zu DIESEM Wert eine symbolspezifische Grundlage vor?
 
     Der BTC-weite Boersenfluss zaehlt nicht - er sagt ueber ein einzelnes
-    Symbol nichts, und genau daran haengt G5."""
+    Symbol nichts, und genau daran haengt G5.
+
+    ⚠️ DIE KLASSE WIRD DURCHGEREICHT, NICHT AUF "krypto" GESETZT
+    (17.08.2026). Vorher stand hier fest `assetklasse="krypto"` - fuer
+    eine Aktie wurden damit die Aktienquellen (Leerverkaeufer, Insider)
+    gar nicht erst geholt, und die Antwort war immer False.
+
+    Genau daran haengt die Pruefung unten: sie meldete jede Aktie mit
+    Gegenpruefung als "urteilt OHNE Grundlage" - obwohl beide Aktien G1
+    UND G2 erfuellen, seit FINRA und SEC am 16.08. dazugekommen sind.
+    Das Kriterium beschrieb einen Zustand, den es nicht mehr gibt."""
     from agent import mindestkriterien as MK
     from agent import positionierung as PO
 
     try:
-        lage = PO.lage(conn, str(symbol).upper(), assetklasse="krypto")
+        lage = PO.lage(conn, str(symbol).upper(), assetklasse=assetklasse)
     except Exception:                                    # noqa: BLE001
         return False
     return any(q in MK.SYMBOLSPEZIFISCH_G for q in MK.quellen_g(lage))
@@ -431,17 +441,42 @@ def main() -> int:
             # derselben Bedingung, die `mindestkriterien.SYMBOLSPEZIFISCH_G`
             # fuehrt. Ein Kriterium, das eine korrekte Entscheidung als
             # Fehler meldet, wird nach dem dritten Mal ignoriert.
+            # ⚠️ NACH DER GRUNDLAGE FRAGEN, NICHT NACH DER GRUPPE
+            # (17.08.2026). Hier stand `gruppe != "krypto"` - eine
+            # Abkuerzung aus der Zeit, als ausser Krypto nichts eine
+            # Positionierung hatte. Seit dem 16.08. erfuellen beide
+            # Aktien G1 und G2 (Leerverkaeufer + Insider), und die
+            # Simulation meldete sie als "urteilt OHNE Grundlage".
+            #
+            # Ein Kriterium, das eine korrekte Entscheidung als Fehler
+            # meldet, wird nach dem dritten Mal ignoriert.
             hat_g = "GEGENPRUEFUNG" in text
-            if gruppe == "krypto" and not hat_g and _hat_terminmarkt(
-                    conn, str(eintrag.get("symbol") or "")):
+            _sym = str(eintrag.get("symbol") or "")
+            _grundlage = _hat_eigene_grundlage(conn, _sym, gruppe)
+            if _grundlage and not hat_g:
                 gesamt["luecken"].append(
-                    f"{gruppe}/{instrument} {eintrag.get('symbol', '?')}: "
-                    f"Rolle G fehlt, obwohl SYMBOLSPEZIFISCHE "
-                    f"Positionierungsdaten vorliegen")
-            if gruppe != "krypto" and hat_g:
-                gesamt["luecken"].append(
-                    f"{gruppe}/{instrument} {eintrag.get('symbol', '?')}: "
-                    f"Rolle G urteilt OHNE Grundlage (R-R3/G5)")
+                    f"{gruppe}/{instrument} {_sym}: Rolle G fehlt, obwohl "
+                    f"SYMBOLSPEZIFISCHE Positionierungsdaten vorliegen")
+            # ⚠️ EINE EINSTELLUNG IST KEINE LUECKE (17.08.2026). Rolle G
+            # urteilt bei AIOZ und ASTER allein auf dem BTC-weiten
+            # Boersenfluss - G2 ist nicht erfuellt, und `mindestkriterien`
+            # MELDET das auch. Gesperrt wird nur, wenn der Nutzer "G" in
+            # `mindestkriterien.sperren` eintraegt.
+            #
+            # Solange er das nicht tut, ist der Zustand gewollt. Ihn als
+            # Luecke zu zaehlen hiesse, jeden Lauf rot zu faerben fuer eine
+            # Entscheidung, die getroffen wurde.
+            if hat_g and not _grundlage:
+                from agent import mindestkriterien as _MK9
+
+                if "G" in (_MK9.konfig().get("sperren") or ()):
+                    gesamt["luecken"].append(
+                        f"{gruppe}/{instrument} {_sym}: Rolle G urteilt "
+                        f"OHNE Grundlage, obwohl G gesperrt sein sollte")
+                else:
+                    gesamt.setdefault("hinweise", []).append(
+                        f"{gruppe}/{instrument} {_sym}: Rolle G urteilt auf "
+                        f"BTC-weiter Grundlage (G2 offen, nicht gesperrt)")
             # UND DIE KONSISTENZZEILE DARF NICHT ZURUECKKOMMEN.
             if "nennt die Begruendung" in text:
                 gesamt["luecken"].append(
@@ -529,6 +564,13 @@ def main() -> int:
     if gesamt["luecken"]:
         print("\nWAS IN DER MAIL NICHT ANKAM:")
         for z in gesamt["luecken"]:
+            print(f"  {z}")
+
+    # BEKANNT UND NICHT GESPERRT - sichtbar, aber nicht als Fehler.
+    if gesamt.get("hinweise"):
+        print("")
+        print("BEKANNTE ZUSTAENDE (gemeldet, nicht gesperrt):")
+        for z in sorted(set(gesamt["hinweise"])):
             print(f"  {z}")
 
     print("\n" + "=" * 76)

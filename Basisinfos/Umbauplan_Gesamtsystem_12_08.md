@@ -10436,3 +10436,139 @@ registriert ist er weiterhin nicht.
 | freie Namen | 0 |
 
 **Prompt und Kette sind nicht berührt** — der ruhige Messtag bleibt intakt.
+
+---
+
+## Kapitel 84 — Bestandsaufnahme der Basisabdeckung, und eine Lücke, die keine war (17.08.2026)
+
+**Gemessen an der Produktionsdatenbank von 18:28**, nicht an der
+Entwicklungsdatei.
+
+### 84.1 Wo der glatte Schnitt heute steht
+
+**Rolle BC — BC3: mindestens ein Fakt außerhalb der Kerzenreihe**
+
+| Gruppe | erfüllt | woher |
+|---|---:|---|
+| krypto/spot · hebel | **41/41** | Umschlag |
+| aktien/spot | **2/2** | Fundamentaldaten |
+| **rohstoffe/spot** | **0/4** | — |
+| etf (5 Themen + 2 Hedge) | 0/7 | zurückgestellt |
+
+**Rolle G — G1: zwei Quellen · G2: eine symbolspezifisch**
+
+| Gruppe | erfüllt | Quellen |
+|---|---:|---|
+| krypto/spot · hebel | **37/44** | onchain 44 · terminmarkt 37 |
+| aktien/spot | **2/2** | short_interest · insider |
+| **rohstoffe/spot** | 0/4 | nur cot → **G1 fehlt** |
+| etf | 0/7 | nichts |
+
+**G1 fehlt 25×, G2 fehlt 21×.** Davon lösen sich zwei von selbst: der
+ETF-Bestand schließt G1 für drei von vier Rohstoffen in rund drei Monaten;
+die sieben Kryptowerte ohne Terminmarkt sind **nicht behebbar** (die Börsen
+führen dort keine Kontrakte).
+
+### 84.2 Der Fund: Lücken, die es nicht gab
+
+```
+aktien/PLTR:  Zu diesem Wert liegt keine Angabe vor: Finanzierungsrate.
+              Zu diesem Wert liegt keine Angabe vor: Open Interest.
+              Zu diesem Wert liegt keine Angabe vor: Anteil der Long-Konten.
+```
+
+**Eine Aktie hat keine Finanzierungsrate.** Das war **die Hälfte** der
+G-Sätze bei Aktien und Rohstoffen und **alles** bei Themen-ETF.
+
+> ⚠️ **Die richtige Behandlung stand schon im selben Code**, zwei Zeilen
+> weiter, nur je *Instrument* statt je *Assetklasse*:
+>
+> *„NUR MELDEN, WENN SIE HIER HINGEHÖRT. Beim Hebel ist ihre Abwesenheit
+> Absicht, kein Mangel — ‚keine Angabe' wäre gelogen."*
+
+**Ergebnis:**
+
+| | vorher | nachher |
+|---|---:|---:|
+| aktien/PLTR | 6 Sätze | **3**, alle mit Inhalt |
+| rohstoffe/OD7H | 6 | **3** |
+| themen_etf/CEBS | 3 | **0** |
+| krypto/BTC | 8 | **8** — unverändert |
+
+### 84.3 Und die Nebenwirkung, die es fast gegeben hätte
+
+**Die Filterung entschärfte den Wächter, der leere Aufrufe verhindert.** G5
+zählte die *gemeldeten Lücken*:
+
+```python
+if len(lage.get("fehlt") or []) >= 3:    # <- funktionierte nur, solange
+    return None                          #    jede Klasse dieselben drei meldete
+```
+
+Bei einem Themen-ETF steht seit der Filterung `fehlt = []` **und**
+`saetze = []` — die alte Schranke hätte durchgelassen und **Rolle G mit einer
+leeren Positionierung gefragt.** Genau der Fall, den sie verhindern soll.
+
+> **Der richtige Wächter stand schon eine Zeile höher** (`if not saetze`) —
+> meine erste Fassung stellte einen zweiten daneben. Jetzt gibt es genau
+> einen, und er misst, **was das Modell zu sehen bekommt**, statt was wir
+> vermissen.
+
+### 84.4 Drei Prüfungen, die veraltet waren
+
+| | stand da | jetzt |
+|---|---|---|
+| `pruefe_prompt_matrix` | zählte `_marken_werte` als Faktenblock → **50 %** statt 75 % Kursreihenanteil | nur Satzblöcke |
+| `pruefe_pakete` G5 | suchte den **Quelltext** der alten Schranke | prüft das **Verhalten** |
+| `simuliere_kette` | `gruppe != "krypto"` ⇒ Rolle G ohne Grundlage | fragt die **Mindestkriterien** |
+
+Die dritte meldete beide Aktien als „urteilt OHNE Grundlage" — **obwohl beide
+seit dem 16.08. G1 und G2 erfüllen.** Das Kriterium beschrieb einen Zustand,
+den es nicht mehr gibt.
+
+**Und die Simulation trennt jetzt Lücke von Einstellung:** dass Rolle G bei
+AIOZ und ASTER allein auf dem BTC-weiten Fluss urteilt, ist gemeldet und
+**nicht gesperrt** — eine Entscheidung, keine Lücke. Sie steht unter
+*„BEKANNTE ZUSTÄNDE"*, nicht unter den Fehlern.
+
+### 84.5 Regelkonformität und Parameterqualität
+
+| | |
+|---|---|
+| N1–N5 | **kein Befund** — kein Satz rechnet vor, keine Konstante trägt Richtung |
+| Belege gegen Fakten unter `17e` | **0 von 183** (17b: 19 von 272 = 6,99 %) |
+
+**Der Umschlag-Umbau ist damit belastbar bestätigt:** zur alten Rate wären
+13 Befunde zu erwarten gewesen; null zu sehen hat eine Wahrscheinlichkeit von
+rund **zwei zu einer Million**.
+
+**Extern geprüft:** Funding-Rate und Open Interest haben dokumentierte
+Vorhersagekraft — **nur an den Extremen** (Granger-Tests über 35,7 Mio.
+Minutenbeobachtungen). Unsere Sätze sagen in vier von fünf Fällen „im
+gewohnten Bereich", also genau dort, wo die Literatur nichts findet. Die
+Parameter sind richtig gewählt; sie sagen nur meistens nichts.
+
+**Rohstoff-Lagerbestände, dritte Recherche:** COMEX und LME sind frei
+**einsehbar**, aber nicht frei **abrufbar** — Oberflächen ohne API,
+Fastmarkets nur nach Registrierung mit einem Tag Verzug. **Kein
+schlüsselloser Weg.**
+
+### 84.6 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **1.046**, alle bestanden — **11 neu unter `--paket Luecken`** |
+| Filterung | krypto meldet weiter · aktien/rohstoffe/etf/hedge nicht mehr · andere Lücken unberührt |
+| ohne Klasse | meldet weiter · **neue Klasse** meldet nicht |
+| ⚠️ Kommentar gegen Umsetzung | die Prüfung fand meinen Widerspruch: „fail-open" geschrieben, fail-closed gebaut — Kommentar korrigiert |
+| G5 | genau **ein** Wächter, am Verhalten geprüft |
+| freie Namen · Zahlenprüfer · Belegprüfer · Phase 1 | 0 · 9/9 · 9/9 · bestanden |
+| Simulation | 4 Gruppen, 8 Signale, **0 Fehler, 0 Lücken**, 4 bekannte Zustände |
+
+### 84.7 Was offen bleibt
+
+| | Stand |
+|---|---|
+| **Rohstoffe BC3** | nur die Haltekostenquote käme in Frage — **gelb**, je Zertifikat von Hand zu recherchieren |
+| **Themen-ETF** | zurückgestellt, wie entschieden |
+| Krypto G2, 7 Symbole | nicht behebbar — keine Kontrakte an den Börsen |
