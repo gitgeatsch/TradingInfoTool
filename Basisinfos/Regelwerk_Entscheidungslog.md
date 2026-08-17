@@ -16579,3 +16579,84 @@ trägt jetzt einen Standvermerk und bleibt als Begründungsquelle stehen; die
 Einleitung des Umbauplans, die es zum Zielbild erklärte, ist korrigiert.
 
 **Verbindlich für WER urteilt ist ab sofort `Regelwerksmanual.md` R-R1…R-R5.**
+
+
+---
+
+## 2026-08-17 — Z.ai-Regler: die Wartezeit war die Ursache, nicht das Limit
+
+**Anlass:** Rolle G bekam bei **85 von 159 Urteilen** keine Gegenprüfung.
+
+**Was NICHT die Ursache war.** Z.ais Concurrency-Limit von 2
+(`api/zai.py::MAX_CONCURRENT_REQUESTS`, aus der Anbieterdoku für
+glm-4.5-flash) begrenzt, wie viele Aufrufe **gleichzeitig** laufen — nicht,
+wie viele insgesamt drankommen. Bei zwei Plätzen und ~30 s je Aufruf liegt die
+Kapazität bei **~240 Aufrufen je Stunde**; ein Umlauf braucht 20–40.
+
+> Der erste Vorschlag lautete „Gleichzeitigkeit herauf". **An der Quelle
+> geprüft war er falsch** — die 2 sind hart, alles darüber wird per 429
+> abgewiesen (Zustand vom 28.07., 210 Logzeilen).
+
+**Umgesetzt (`agent/zweite_meinung.py`):**
+
+| Regler | vorher | jetzt | Begründung |
+|---|---:|---:|---|
+| `WARTE_AUF_PLATZ_SEKUNDEN` | 180 | **480** | 2 × 180/30 = 12 Signale; jetzt ~32 |
+| `WARTE_MAX_SEKUNDEN` | 240 | **540** | Warteschlange muss **vor** dem Hauptfaden aufgeben |
+| `ZEITGRENZE_ROLLE_G_SEKUNDEN` | — | **75** | neu, nur für Rolle G |
+| `MAX_GLEICHZEITIG` | 2 | **2** | Anbieterlimit, unverändert |
+| `api/zai.py::REQUEST_TIMEOUT_SECONDS` | 150 | **150** | unverändert |
+
+**Warum die Zeitgrenze NICHT global gesenkt wurde.** Die 150 s sind an einem
+Prompt mit **34.611** Zeichen gemessen (~109 s Antwortzeit, Eintrag oben vom
+2026-07-20). Rolle G schickt **1.495** Zeichen und antwortet live in
+22,4 / 29,7 / 33,1 s, ein Ausreißer bei 65,5 s. Global senken hätte die alten
+Pipelines (aktien, hedge, hebel) abgeschnitten, die über
+`fuehre_beide_calls_im_hintergrund` weiter den großen Prompt schicken.
+**Deshalb ein Parameter an `chat()` mit Vorgabe `REQUEST_TIMEOUT_SECONDS`** —
+wer nichts angibt, bekommt was er immer bekam.
+
+**Nebenbefund, unabhängig von der Änderung:** ein Faden durfte 180 + 150 =
+330 s brauchen, aber `rollen_lauf.py` gab nach 240 + 60 = **300 s** auf. Der
+Faden lief als Daemon weiter, **seine Mail ging mit dem Einwand raus**, und
+`ZM.schreibe` fiel aus — die Mail zeigte einen Befund, den die Datenbank nicht
+kennt.
+
+**Passt in den Takt:** 600 s Aufgabegrenze gegen
+`HEBEL_SCREENING_INTERVAL_MINUTES = 15` (900 s).
+
+---
+
+## 2026-08-17 — Abbruch nach drei Transportfehlern in Folge
+
+**Anlass:** der Preis der Änderung oben. Mit 480 s wartet bei einem
+Anbieterausfall jeder von vierzig Fäden acht Minuten aufs Nichts.
+
+**`AUSFALL_SCHWELLE = 3` Transportfehler in Folge brechen den Umlauf ab**,
+`beginne_umlauf()` (in `scheduler/rollen_job.py::fuehre_umlauf`) setzt je Takt
+zurück.
+
+| Entscheidung | Begründung |
+|---|---|
+| **in Folge**, nicht insgesamt | ein toter Anbieter lässt *alles* scheitern, ein wackliger lässt Erfolge dazwischen zu |
+| **drei**, nicht eins | einzelne HTTP-Fehler kamen am 17.08. vereinzelt vor, ohne Ausfall |
+| nur **Transport**, kein Inhalt | eine kaputte Antwort heißt: der Anbieter lebt |
+| je **Umlauf**, nicht dauerhaft | beim nächsten Takt kostet ein fortdauernder Ausfall 3 Aufrufe statt 40 |
+| `Ausfall` **erbt** von `Andrang` | die Folge ist dieselbe — der Aufruf hat nicht stattgefunden |
+
+**Zweimal gefragt, nicht einmal:** vor *und* nach dem Warten. Wer beim
+Eintritt in die Schlange stand, hat den Abbruch nicht gesehen; ohne die zweite
+Frage brennt jeder wartende Faden noch seine eigene Zeitgrenze ab.
+
+**Gemessen (1:100, 40 Signale, toter Anbieter):** 4 statt 14 Aufrufe ins
+Leere, 150 s statt 525 s. Vier statt drei, weil zwei gleichzeitig laufen —
+wer unterwegs ist, wird nicht zurückgerufen.
+
+**Verworfen:** ein dauerhafter Abbruch über Umläufe hinweg. Er hätte einen
+kurzen Anbieterausfall in eine stundenlange Stille verwandelt, ohne dass
+jemand sie bemerkt.
+
+**Mitgezogen:** `aus["uebersprungen"]` wurde seit jeher gesetzt und **nirgends
+gelesen** — eine ausgefallene Gegenprüfung sah in der Mail aus wie eine, die
+es zu diesem Wert gar nicht gibt. Jetzt drei unterscheidbare Sätze, grau (`●`)
+statt rot (`▼`): ein Ausfall unserer Technik ist kein Befund über den Handel.

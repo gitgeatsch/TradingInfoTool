@@ -2601,3 +2601,123 @@ gut        if not _hat_eigene_grundlage(...) # die Bedingung selbst
 > Entscheidung des Nutzers. Sie als Fehler zu zaehlen faerbt jeden Lauf rot
 > und traegt dem Auge bei, Befunde zu ueberlesen. Die Simulation fuehrt sie
 > deshalb unter "BEKANNTE ZUSTAENDE".
+
+
+## 2.37 Eine Prüfregel, die nie anschlägt, beweist nichts (neu 2026-08-17)
+
+**Die Prüfung war selbst der Fehler.** Beim Vereinheitlichen der
+Zahlenschreibweise sollte diese Regel englische Dezimalpunkte finden:
+
+```python
+re.findall(r"(?<!\d\.)\b\d+\.\d\b", text)     # erste Fassung
+```
+
+| Eingabe | gefunden |
+|---|---|
+| `2.5 x ATR` | ✓ |
+| `3.81 bis 3,85` | **✗** — das `\b` scheitert an der zweiten Ziffer |
+
+**Der erste Lauf über alle Mails meldete „0 Lücken".** Erst die gehärtete
+Regel fand sieben — in jeder Gruppe.
+
+> **Sie meldete sauber, wo es nicht sauber war.** Eine Prüfung, deren
+> Negativfall nie erprobt wurde, ist kein Nachweis, sondern eine Behauptung
+> mit grünem Häkchen.
+
+### Die Pflicht daraus
+
+**Jede neue Prüfregel wird in BEIDEN Richtungen erprobt**, und beide Proben
+stehen als eigene Prüfungen daneben:
+
+```python
+pruefe(P, "der Tausenderpunkt gilt NICHT als englische Schreibweise",
+       not _englische_zahlen("1.234,5 EUR und 1.234.567,8 EUR"))
+pruefe(P, "und mehrstellige Nachkommastellen werden gefunden",
+       _englische_zahlen("3.81 bis 3,85") == ["3.81"])
+```
+
+Dasselbe gilt für Wächter: `paket_ausfall` prüft nicht nur, **dass** drei
+Fehler in Folge abbrechen, sondern auch, dass **zwei es nicht tun** und ein
+Erfolg dazwischen zurücksetzt.
+
+**Und die Regel lebt an EINER Stelle.** `pruefe_pakete.py` importiert
+`_englische_zahlen` aus `simuliere_kette.py` — zwei Messungen, die verschieden
+zählen, sind schlimmer als eine.
+
+---
+
+## 2.38 Am Produkt prüfen, nicht am Beispiel (neu 2026-08-17)
+
+**Nutzervorgabe:** *„für alle eMail prüfen bitte"* — und genau darin lag der
+Unterschied.
+
+| | prüft | fand |
+|---|---|---|
+| `pruefe_pakete.py` | **eine** Beispielrechnung | nichts |
+| `simuliere_kette.py` | die **echten** Mails aller Gruppen | sofort einen Fehler in **jeder** Gruppe |
+
+Der Fund war eine rohe Python-Liste mitten in einer deutschen Mail:
+
+```
+Z-1: 2 Zahl(en) stehen nicht in der Eingabe: [42.0, 17.0]
+```
+
+Eckige Klammern, englische Punkte, und ein `.0`, das eine Genauigkeit
+vortäuscht, die das Modell nie hatte.
+
+> **Ein Beispiel beweist, dass etwas funktionieren KANN.** Ob es im Produkt
+> funktioniert, beweist nur das Produkt. Wo eine Aussage über *alle* Mails
+> gilt, gehört die Prüfung in `simuliere_kette.py`, nicht in eine
+> Beispielrechnung.
+
+### Was dort jetzt über jede Mail läuft
+
+* keine Zahl in englischer Schreibweise
+* die sechs Handelsparameter (Einstiegszone, Stop, Take-Profit/TP,
+  Haltedauer, Betrag, Hebel) tragen den Fett-Schwarz-Griff — geprüft am
+  **gerenderten HTML**, nicht an der Formatregel: dazwischen liegt die
+  Reihenfolge der Regeln
+
+**Nicht abgedeckt:** Rohstoffe und Absicherung — die Simulation überspringt
+sie mangels Kursreihe im Bestand.
+
+---
+
+## 2.39 Fail-soft ist fail-silent — zum dritten Mal (neu 2026-08-17)
+
+**Gefunden beim Nachweis gegen einen toten Anbieter**, nicht durch eine
+Prüfung: `agent/zweite_meinung.py` setzte seit jeher ein Feld
+
+```python
+aus["uebersprungen"] = str(e)
+```
+
+**das nirgends gelesen wurde.** `zeilen()` lieferte nur bei gesetztem
+`einwand` etwas — bei Andrang, Ausfall **und** Fehlschlag fehlte der Abschnitt
+ersatzlos.
+
+> **Eine ausgefallene Gegenprüfung sah aus wie eine, die es zu diesem Wert gar
+> nicht gibt.** Ein Signal ohne Gegenprüfungszeilen war vom Leser nicht von
+> einem zu unterscheiden, das die Prüfung bestanden hat.
+
+### Die Prüffrage
+
+Ein gesetztes Feld ist **kein** Nachweis. Zu jedem „wir merken uns das"
+gehört die Gegenfrage: **wer liest es, und was passiert, wenn niemand es
+tut?**
+
+```bash
+grep -rn 'get("feldname")' --include=*.py .    # gibt es einen Leser?
+```
+
+Fand sich keiner, ist das Feld entweder überflüssig oder ein stiller
+Ausfall — beides ein Befund.
+
+### Und die Darstellung trägt die Unterscheidung mit
+
+Drei Lagen, drei Sätze: *zu viele Signale* · *nicht erreichbar* · *hat nicht
+geantwortet*. Alle mit `●` (grau), nicht `▼` (rot):
+
+> **Ein Ausfall unserer Technik ist kein Befund über den Handel.** Ihn rot zu
+> setzen hieße, dem Leser eine Warnung über sein Geschäft zu geben, wo eine
+> über unser Werkzeug gemeint ist.
