@@ -9,7 +9,23 @@ automatisches Verschieben von Entry/CRV/Hebel basierend auf Zonen. Gleiche
 Philosophie wie der Schwerpunkte-Stufe-1-Rollout: erst sichtbar machen, Wirkung
 erst spaeter und nur mit echten Daten kalibrieren. Krypto Spot+Hebel only (24/7-
 Markt + hoher Retail-/Hebel-Anteil, klassische Marketmaker-Dynamik-Annahme) -
-NICHT fuer Aktien/Rohstoffe/Hedge/Themen-ETF verdrahtet."""
+NICHT fuer Aktien/Rohstoffe/Hedge/Themen-ETF verdrahtet.
+
+⚠️ DIE NEUE ROLLEN-KETTE BENUTZT DIESES MODUL NICHT (Stand 17.08.2026).
+Sie rechnet dieselben Swing-Cluster in `agent/lagebeschreibung.py`
+(`_swings` / `_cluster_mit_art` / `niveaus_werte`) und nennt sie dort
+MARKEN. Wer hier etwas aendert, aendert die alte Kette - die laeuft nur
+noch, wenn jemand in der Oberflaeche von Hand ein Signal ausloest.
+
+WAS DIE NEUE KETTE VON HIER UEBERNOMMEN HAT (17.08.2026): die Trennung
+nach Richtung (buyside/sellside -> `nach_unten_gedreht`/`gehalten`) und
+die Erkennung "bereits gefegt" (-> `gefegt`). Beides fehlte ihr, und
+beides stand hier seit dem 23.07. richtig.
+
+WAS SIE NICHT UEBERNOMMEN HAT: die Toleranz. Hier 0,5 % relativ, dort
+0,3 ATR absolut - zwei Wege, dieselbe Absicht. Das ist bewusst nicht
+vereinheitlicht: die ATR-Variante passt sich dem Rauschen des Symbols
+an, und die neue Kette rechnet ohnehin durchgehend in ATR."""
 from __future__ import annotations
 
 from indicators.calculations import TechnicalSnapshot

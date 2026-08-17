@@ -282,7 +282,8 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
               zeitpunkt: str | None = None,
               gegenpruefung: list | None = None,
               marken_werte: dict | None = None,
-              umgeworfen_preis_eur: float | None = None) -> tuple[str, str]:
+              umgeworfen_preis_eur: float | None = None,
+              assetklasse: str | None = None) -> tuple[str, str]:
     """Betreff und Text. Reine Formatierung - hier wird nichts gerechnet.
 
     `rechnung` kommt aus `entscheidungsrechnung.rechne()`, `urteil` ist die
@@ -446,7 +447,24 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
     elif aktion in AKTIONEN_MIT_EINSTIEG:
         zwei += ([""] if zwei else []) + (
             ["Zusaetzlicher Einstieg:"] if ausstieg else []) + [
-            f"  {z}" if ausstieg else z for z in ER.saetze(rechnung)]
+            f"  {z}" if ausstieg else z
+            # ⚠️ DER NAME NUR FUER KRYPTO SPOT UND HEBEL (17.08.2026,
+            # Nutzerentscheidung). "Liquiditaetszone" traegt eine Deutung
+            # - Stop-Hunt, Marketmaker -, die am 23.07. ausdruecklich auf
+            # den 24/7-Markt mit hohem Retail- und Hebelanteil begrenzt
+            # wurde. Die Marken selbst gibt es ueberall; sie bei einem
+            # WisdomTree-Zertifikat so zu nennen hiesse, eine Annahme
+            # mitzuimportieren, die dort nie geprueft wurde.
+            #
+            # OBEN ODER UNTEN: bei SHORT liegt das Ziel unter dem Kurs,
+            # im Weg stehen dann die Unterstuetzungen.
+            for z in ER.saetze(
+                rechnung,
+                (marken_werte or {}).get(
+                    "unten" if str(urteil.get("richtung")) == "SHORT"
+                    else "oben"),
+                liquiditaetszonen=(str(assetklasse or "").lower()
+                                   == "krypto"))]
     elif not ausstieg:
         zwei = [f"Kein Einstieg geplant - die Empfehlung lautet {aktion}.",
                 "Zone, Stop und Ziel werden erst gerechnet, wenn gehandelt wird."]

@@ -198,7 +198,13 @@ def _ziel(kurs: float, abstand: float, atr: float,
     richtung = -1.0 if ist_short else 1.0
     ziel_mech = kurs + richtung * GRENZEN["crv"] * abstand
     if not widerstand:
-        return ziel_mech, GRENZEN["crv"], "kein Widerstand in Reichweite"
+        # ⚠️ NICHT MEHR "kein Widerstand in Reichweite" (17.08.2026).
+        # Der Deckel wird seit heute NICHT mehr angewandt (Begruendung in
+        # `marken_saetze`), also bekommt diese Funktion keinen Widerstand
+        # mehr uebergeben. Der alte Text behauptete dann, es gebe keinen -
+        # direkt ueber einer Liste von vier Marken. Was hier gilt, ist
+        # schlicht die Rechnung.
+        return ziel_mech, GRENZEN["crv"], "mechanisch, 2x Risiko"
 
     preis, beruehrungen = float(widerstand[0]), int(widerstand[1])
     # Bei SHORT ist die Marke im Weg eine UNTERSTUETZUNG, und sie liegt
@@ -636,12 +642,90 @@ def preis(wert: float) -> str:
     return f"{float(wert):,.{stellen}f}".translate(str.maketrans(",.", ".,"))
 
 
-def saetze(e: dict) -> list[str]:
+# Wieviele Marken die Mail hoechstens auflistet. Nutzerentscheidung
+# 17.08.2026: die drei naechsten. Gemessen liegen bis zu sieben zwischen
+# Kurs und Ziel - alle zu nennen waere eine Liste, die niemand liest.
+MARKEN_IN_DER_MAIL = 3
+
+# Der Erlaeuterungstext unter der Markenliste. Nutzerwunsch 17.08.2026:
+# "mit sinnvollem Ergaenzungstext zur Nutzung (vorerst temporaer)".
+#
+# Er sagt DREI Dinge, und jedes davon beantwortet eine Nutzerfrage:
+#   - was eine Marke ist (frueher gedrehte Preise, dort liegen Auftraege)
+#   - was die Zahl bedeutet (mehr Umkehrpunkte = eher wieder)
+#   - was das Ziel NICHT ist (keine Prognose, sondern eine Bedingung)
+_MARKEN_ERKLAERUNG = (
+    "  Was das heisst: an diesen Preisen hat der Kurs frueher gedreht - "
+    "dort liegen Auftraege.",
+    "  Je mehr Umkehrpunkte, desto eher passiert es wieder; "
+    "'durchbrochen' heisst, die",
+    "  Marke hat zuletzt nicht gehalten. Das Ziel ist GERECHNET, nicht "
+    "vorhergesagt: es",
+    "  sagt, wie weit der Kurs laufen muesste, damit sich der Trade traegt.",
+)
+
+
+def marken_saetze(e: dict, marken: list | None,
+                  liquiditaetszonen: bool = False) -> list[str]:
+    """Die Marken auf dem Weg zum Ziel - genannt, nicht angewandt.
+
+    ⚠️ WARUM SIE NICHT DECKELN (gemessen 17.08.2026). Ein frueherer Bau
+    liess die naechste Marke das Ziel begrenzen. Ergebnis: bei 44 von 44
+    Symbolen gedeckelt, 98 % unter CRV 0,5, Median 0,21. Der Grund ist
+    strukturell - zwischen Kurs und einem 2R-Ziel liegen im Median DREI
+    Wendepunkte, bei FLOKI 143 im ganzen Chart. Auf Tagesfraktalen ist
+    immer eine Marke im Weg; ein Deckel darauf hiesse "es gibt nie ein
+    2R-Ziel".
+
+    Also: das Ziel bleibt gerechnet, die Marken stehen daneben. Kein
+    stiller Deckel und keine stille Behauptung, es gaebe keinen
+    Widerstand.
+
+    `liquiditaetszonen` nur fuer Krypto Spot und Hebel - die Bezeichnung
+    traegt eine Deutung (Stop-Hunt, Marketmaker), die am 23.07.2026
+    ausdruecklich auf diese beiden begrenzt wurde. Die Marken selbst gibt
+    es ueberall; nur der Name ist begrenzt."""
+    if not marken or not e.get("ziel_bis_eur"):
+        return []
+    von = min(float(e["einstieg_bis_eur"]), float(e["ziel_bis_eur"]))
+    bis = max(float(e["einstieg_bis_eur"]), float(e["ziel_bis_eur"]))
+    im_weg = [m for m in marken
+              if von < float(m.get("preis_eur") or 0) <= bis]
+    if not im_weg:
+        return ["  Bis zum Ziel liegt keine Marke im Weg."]
+    gezeigt = im_weg[:MARKEN_IN_DER_MAIL]
+    # "liegen 1 Marke" stand in der ersten Fassung.
+    wie_viele = (f"liegen {len(im_weg)} Marken" if len(im_weg) > 1
+                 else "liegt 1 Marke")
+    kopf = ("  Auf dem Weg dorthin " + wie_viele
+            + (" (Liquiditaetszonen)" if liquiditaetszonen else "")
+            + (", die " + str(len(gezeigt)) + " naechsten:"
+               if len(im_weg) > len(gezeigt) else ":"))
+    z = [kopf]
+    for m in gezeigt:
+        teile = []
+        if m.get("nach_unten_gedreht"):
+            teile.append(str(m["nach_unten_gedreht"]) + "x nach unten gedreht")
+        if m.get("gehalten"):
+            teile.append(str(m["gehalten"]) + "x gehalten")
+        z.append("    " + preis(m["preis_eur"]) + " EUR  +"
+                 + _eur(m["abstand_atr"], 1) + " Schwankungsbreiten - "
+                 + str(m["beruehrungen"]) + " Umkehrpunkte")
+        z.append("      (" + ", ".join(teile) + ")"
+                 + (", zuletzt " + str(m["letzte_beruehrung"])
+                    if m.get("letzte_beruehrung") else "")
+                 + (" - seither durchbrochen" if m.get("gefegt") else ""))
+    return z + list(_MARKEN_ERKLAERUNG)
+
+
+def saetze(e: dict, marken: list | None = None,
+           liquiditaetszonen: bool = False) -> list[str]:
     """Die Rechnung in der Form, in der sie in die E-Mail gehoert."""
     z = [f"Einstiegszone   {preis(e['einstieg_von_eur'])} bis {preis(e['einstieg_bis_eur'])} EUR",
          f"Stop            {preis(e['stop_eur'])} EUR  ({_eur(100 * e['stop_relativ'], 1)} % - {e['stop_regel']})",
          f"Take-Profit     {preis(e['ziel_von_eur'])} bis {preis(e['ziel_bis_eur'])} EUR  "
          f"(CRV {_eur(e['crv'], 1)} - {e['ziel_regel']})"]
+    z += marken_saetze(e, marken, liquiditaetszonen)
     if not e["crv_erreicht"]:
         z.append(f"                !! Der Weg bis dorthin traegt nur CRV "
                  f"{_eur(e['crv'], 1)}, verlangt sind {_eur(GRENZEN['crv'], 1)}")

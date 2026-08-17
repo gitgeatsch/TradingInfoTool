@@ -1136,25 +1136,19 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                              # dreht Stop, Ziel und Liquidation. Bei Spot gibt
                              # es sie nicht - dort ist LONG die einzige Lage.
                              ist_short=(befund.get("richtung") == "SHORT"),
-                             # ⚠️ DIE MARKE, DIE DIESELBE MAIL NENNT
-                             # (17.08.2026, Nutzerpruefung).
+                             # ⚠️ KEIN DECKEL MEHR (17.08.2026, gemessen).
+                             # Heute frueh reichte diese Stelle den
+                             # naechsten Widerstand an `_ziel` durch. Das
+                             # Ergebnis: 44 von 44 Symbolen gedeckelt,
+                             # 98 % unter CRV 0,5, Median 0,21 - weil auf
+                             # Tagesfraktalen im Median DREI Marken
+                             # zwischen Kurs und 2R-Ziel liegen.
                              #
-                             # `_ziel()` legt das Ziel kurz VOR den
-                             # naechsten Widerstand - der Praxisstandard,
-                             # eigener Regelzweig, eigene CRV-Ausweisung.
-                             # Nur hat diesen Parameter NIE EIN AUFRUFER
-                             # GEFUELLT, also lief immer der Zweig "kein
-                             # Widerstand in Reichweite". In der SOL-Mail
-                             # stand der Widerstand bei 66,55 EUR im Text
-                             # und das Ziel bei 67,67-68,53 dahinter.
-                             #
-                             # BEI SHORT IST DIE MARKE IM WEG DIE
-                             # UNTERSTUETZUNG - `_ziel()` erwartet die,
-                             # die zwischen Kurs und Ziel liegt, und bei
-                             # SHORT liegt das Ziel unten.
-                             widerstand=_marke_im_weg(
-                                 _bloecke_anlass,
-                                 befund.get("richtung") == "SHORT"),
+                             # Die Marken stehen jetzt in der Mail, statt
+                             # das Ziel zu begrenzen. `_marke_im_weg`
+                             # bleibt als Werkzeug bestehen - wer den
+                             # Deckel je will, findet hier, warum er
+                             # abgeschaltet wurde.
                              kostenklasse=_kostenklasse(assetklasse),
             umgeworfen_tage=_tage_bis(
                                  befund.get("umgeworfen_bis"), tag))
@@ -1272,6 +1266,11 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             # ANDERE meint (17.08.2026).
             marken_werte=_bloecke.get("_marken_werte"),
             umgeworfen_preis_eur=befund.get("umgeworfen_preis_eur"),
+            # Sie entscheidet ueber den NAMEN der Marken, nicht ueber
+            # ihre Berechnung: "Liquiditaetszone" gilt nur fuer Krypto
+            # Spot und Hebel (Nutzerentscheidung 23.07., bestaetigt
+            # 17.08.).
+            assetklasse=assetklasse,
             # DIE DREI NEUEN BLOECKE STEHEN HIER MIT DRIN (Phase I). Der
             # Leser soll denselben Faktensatz sehen wie das Modell - und
             # gerade der Luecken-Block gehoert ihm: er sagt, worueber diese
@@ -1342,7 +1341,17 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
 
         _png = render_trade_chart(
             reihe=reihe, index=idx, rechnung=rechnung, symbol=symbol,
-            marken=None,
+            # ⚠️ HIER STAND `None` (17.08.2026). Der Chart zeichnete die
+            # Marken nie, obwohl er es konnte - dieselbe Sorte nicht
+            # gefuellter Parameter wie beim Widerstand in der
+            # Zielrechnung, nur eine Stelle weiter.
+            #
+            # DIE DREI NAECHSTEN JE SEITE. Mehr macht das Bild voll; die
+            # Mail nennt ohnehin nur die drei auf dem Weg zum Ziel.
+            marken=(((_bloecke.get("_marken_werte") or {}).get("oben")
+                     or [])[:3]
+                    + ((_bloecke.get("_marken_werte") or {}).get("unten")
+                       or [])[:3]),
             fx_eur_je_usd=RE.fx_eur_je_usd(symbol, reihe, idx, db))
         if _png:
             _bilder.append({"png": _png, "alt": f"{symbol} - geplanter Trade",

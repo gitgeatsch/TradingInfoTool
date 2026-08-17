@@ -264,57 +264,137 @@ def _cluster(punkte: list, atr: float) -> list[tuple[float, int]]:
     return aus
 
 
+def _cluster_mit_art(punkte: list, atr: float) -> list[dict]:
+    """Wie `_cluster`, aber es merkt sich, WORAUS ein Niveau besteht.
+
+    `punkte` sind (preis, art, index) - art ist "hoch" oder "tief".
+
+    ⚠️ DIE RICHTUNG IST NICHT EGAL (17.08.2026, Nutzerfrage: *"die Punkte
+    sind immer eine Trendwende - Kurs geht wieder nach unten - und nicht
+    hat Kurs erreicht und ist durchgegangen"*).
+
+    Er hat recht, und die Antwort ist zweigeteilt: JA, jeder Punkt ist
+    eine bestaetigte Umkehr (Williams-Fraktal). ABER `_cluster` warf
+    Hochs und Tiefs in einen Topf, und "7-mal beruehrt" verschwieg dann,
+    in welche Richtung. Am echten BTC-Niveau bei 65.652 waren es DREI
+    Wenden nach unten und FUENF nach oben.
+
+    ⚠️ DIESELBE SACHE HAT ZWEI NAMEN. Was hier MARKEN heisst, heisst in
+    der alten Kette LIQUIDITAETSZONEN (`agent/krypto/liquidity_zones.py`,
+    gebaut 23.07.2026, Stufe 2 per Backtest verworfen: keine Kante,
+    p = 0,53). Die neue Kette benutzt jenes Modul nicht - sie rechnet
+    dieselben Swing-Cluster noch einmal. In der Mail traegt der Name
+    "(Liquiditaetszonen)" NUR bei Krypto Spot und Hebel, weil die Deutung
+    dahinter (Stop-Hunt, Marketmaker) am 23.07. ausdruecklich darauf
+    begrenzt wurde.
+
+    Die alte Kette macht es seit dem 23.07. richtig:
+    `indicators.calculations.liquidity_pools` trennt buyside und
+    sellside und sagt ausdruecklich "hier ist die Richtung der ganze
+    Punkt". Diese Funktion holt den Gedanken in die neue Kette.
+
+        hoch   der Kurs stieg dorthin und drehte NACH UNTEN
+               - die Marke hat abgewiesen
+        tief   der Kurs fiel dorthin und drehte NACH OBEN
+               - die Marke hat gehalten
+
+    Beide gehoeren in dasselbe Niveau (aus Unterstuetzung wird
+    Widerstand), aber sie bedeuten Verschiedenes."""
+    if not punkte:
+        return []
+    aus: list[dict] = []
+    for preis, art, idx in sorted(punkte, key=lambda x: x[0]):
+        if aus and abs(preis - aus[-1]["preis"]) <= NIVEAU_CLUSTER_ATR * atr:
+            e = aus[-1]
+            n = e["hoch"] + e["tief"]
+            e["preis"] = (e["preis"] * n + preis) / (n + 1)
+            e[art] += 1
+            e["letzter_index"] = max(e["letzter_index"], idx)
+        else:
+            aus.append({"preis": preis, "hoch": 0, "tief": 0,
+                        "letzter_index": idx})
+            aus[-1][art] += 1
+    return aus
+
+
+def _gefegt(c: np.ndarray, preis: float, ab_index: int, oben: bool) -> bool:
+    """Hat der Kurs die Marke seit ihrer letzten Beruehrung DURCHBROCHEN?
+
+    Uebernommen aus `liquidity_pools._ist_gefegt` - dort heisst es
+    "bereits gefegt". Ohne diese Angabe sagt eine Marke mit fuenf
+    Umkehrpunkten nichts darueber, ob sie zuletzt gehalten hat; sie
+    koennte laengst gebrochen sein.
+
+    Auf SCHLUSSKURSEN, nicht auf Hochs und Tiefs: ein Docht durch die
+    Marke ist genau der Stop-Hunt, den das Konzept beschreibt - erst ein
+    Schlusskurs jenseits davon ist ein Bruch."""
+    nach = c[ab_index + 1:]
+    if not len(nach):
+        return False
+    return bool(np.any(nach > preis) if oben else np.any(nach < preis))
+
+
 def niveaus_werte(c: np.ndarray, h: np.ndarray, l: np.ndarray, i: int,
-                  atr: float, kurs_eur: float,
-                  kurs_quelle: float) -> dict:
-    """Widerstand und Unterstuetzung als ZAHLEN in EUR - {(preis, n)}.
+                  atr: float, kurs_eur: float, kurs_quelle: float,
+                  daten: list | None = None) -> dict:
+    """Die Marken als ZAHLEN in EUR - mit Richtung und Bruchstatus.
 
     ⚠️ DER ANLASS: DIE ZIELRECHNUNG HAT DIESE MARKEN NIE GESEHEN
-    (17.08.2026, Nutzerpruefung einer echten SOL-Mail).
+    (17.08.2026). `entscheidungsrechnung._ziel()` kann ein Ziel kurz VOR
+    den naechsten Widerstand legen - der Parameter dafuer wurde von
+    keinem Aufrufer je gefuellt.
 
-    `entscheidungsrechnung._ziel()` kann ein Ziel KURZ VOR den naechsten
-    Widerstand legen - der Praxisstandard, ausfuehrlich begruendet, mit
-    eigenem Regelzweig und eigener CRV-Ausweisung. Der Parameter dafuer
-    heisst `widerstand`, und **kein einziger Aufrufer hat ihn je gefuellt**.
-    Also lief immer der Zweig "kein Widerstand in Reichweite".
+    ⚠️ UND GEDECKELT WIRD TROTZDEM NICHT. Gemessen am 17.08.: bei 44 von
+    44 Symbolen liegt mindestens eine Marke zwischen Kurs und
+    mechanischem Ziel, im Median DREI. Der naechste Wendepunkt ist auf
+    Tagesfraktalen immer im Weg; ein Deckel darauf hiesse "es gibt nie
+    ein 2R-Ziel". Die Marken werden deshalb GENANNT, nicht angewandt.
 
-    In der SOL-Mail stand deshalb beides nebeneinander:
+    EINE ERMITTLUNG, MEHRERE ABNEHMER: `_niveaus()` schreibt seinen Satz
+    aus demselben Ergebnis, die Mail listet die Marken auf dem Weg zum
+    Ziel, der Chart beschriftet sie.
 
-        Der naechste Widerstand liegt ... bei 66.55 EUR (5-mal beruehrt).
-        + Widerstand bei 66.55 EUR bietet klares Ziel      [Beleg]
-        Take-Profit  67,67 bis 68,53 EUR (kein Widerstand in Reichweite)
-
-    Das Ziel lag 1,7 % JENSEITS der Mauer, die dieselbe Mail zweimal
-    nannte - und die Klammer bestritt, dass es sie gibt.
-
-    EINE RECHNUNG, ZWEI ABNEHMER. Diese Funktion liefert die Werte, und
-    `_niveaus()` schreibt seinen Satz aus DEMSELBEN Ergebnis. Eine zweite
-    Ermittlung waere die naechste Stelle zum Auseinanderlaufen (Umbauplan
-    70.4).
-
-    IN EUR, wie `entscheidungsrechnung.rechne()` sie erwartet. Die
-    Swing-Punkte stehen in der Waehrung der Kursreihe; `faktor` rechnet
-    sie um - dieselbe Umrechnung, die der Satz fuer seine Anzeige
-    benutzt. Sie hier zu vergessen waere ein Einheitenfehler in einer
-    Zielrechnung, und die kosten in diesem Projekt Geld."""
+    IN EUR, wie `entscheidungsrechnung.rechne()` sie erwartet - die
+    Swing-Punkte stehen in der Waehrung der Kursreihe."""
     hi, lo = _swings(h, l, i)
+    leer = {"widerstand": None, "unterstuetzung": None,
+            "oben": [], "unten": []}
     if (not hi and not lo) or atr <= 0:
-        return {"widerstand": None, "unterstuetzung": None}
+        return leer
     faktor = kurs_eur / kurs_quelle if kurs_quelle else 1.0
     kurs = float(c[i])
     grenze = NIVEAU_MIN_ABSTAND_ATR * atr
-    niveaus = _cluster([float(h[j]) for j in hi] + [float(l[j]) for j in lo],
-                       atr)
-    drueber = [(p, n) for p, n in niveaus if p - kurs >= grenze]
-    drunter = [(p, n) for p, n in niveaus if kurs - p >= grenze]
-    w = min(drueber, key=lambda x: x[0]) if drueber else None
-    u = max(drunter, key=lambda x: x[0]) if drunter else None
-    return {
-        "widerstand": ({"preis_eur": w[0] * faktor, "beruehrungen": w[1],
-                        "abstand_atr": (w[0] - kurs) / atr} if w else None),
-        "unterstuetzung": ({"preis_eur": u[0] * faktor, "beruehrungen": u[1],
-                            "abstand_atr": (kurs - u[0]) / atr}
-                           if u else None)}
+    niveaus = _cluster_mit_art(
+        [(float(h[j]), "hoch", j) for j in hi]
+        + [(float(l[j]), "tief", j) for j in lo], atr)
+
+    def bau(e: dict, oben: bool) -> dict:
+        return {"preis_eur": e["preis"] * faktor,
+                "beruehrungen": e["hoch"] + e["tief"],
+                "nach_unten_gedreht": e["hoch"],
+                "gehalten": e["tief"],
+                "gefegt": _gefegt(c, e["preis"], e["letzter_index"], oben),
+                "abstand_atr": (abs(e["preis"] - kurs) / atr),
+                # DAS DATUM DER LETZTEN BERUEHRUNG (17.08.2026,
+                # Nutzerentscheidung statt eines Zeitfensters). Die
+                # BTC-Marke bei 65.652 besteht aus Punkten ueber 800
+                # Handelstage - ohne Datum wirkt sie aktueller, als sie
+                # ist. Ein hartes Fenster waere eine gesetzte Zahl; das
+                # Datum laesst den Leser selbst urteilen.
+                "letzte_beruehrung": (str(daten[e["letzter_index"]])[:10]
+                                      if daten is not None
+                                      and e["letzter_index"] < len(daten)
+                                      else None)}
+
+    oben = sorted((bau(e, True) for e in niveaus
+                   if e["preis"] - kurs >= grenze),
+                  key=lambda x: x["abstand_atr"])
+    unten = sorted((bau(e, False) for e in niveaus
+                    if kurs - e["preis"] >= grenze),
+                   key=lambda x: x["abstand_atr"])
+    return {"widerstand": oben[0] if oben else None,
+            "unterstuetzung": unten[0] if unten else None,
+            "oben": oben, "unten": unten}
 
 
 def _niveaus(c: np.ndarray, h: np.ndarray, l: np.ndarray, i: int,
@@ -999,7 +1079,8 @@ def geteilt(*, symbol: str, reihe: list, index: int,
         # diesen Schluessel weiterreicht, muss ihn vorher entfernen -
         # `nur_saetze()` tut das.
         "_marken_werte": niveaus_werte(c, h, l, i, atr, kurs_eur,
-                                       float(c[i])),
+                                       float(c[i]),
+                                       [k.date for k in hist]),
     }
 
 

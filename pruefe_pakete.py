@@ -7502,11 +7502,16 @@ def paket_mail() -> None:
     mit = _ER.rechne(kurs=64.86, atr=1.30, risiko_eur=20.0,
                      betrag_wunsch_eur=800.0, kostenklasse="krypto",
                      widerstand=(66.55, 5))
+    # ⚠️ UMGESCHRIEBEN AM SELBEN TAG (17.08.2026). Hier stand "kein
+    # Widerstand in Reichweite" - der Text des Zweigs, solange gedeckelt
+    # wurde. Gemessen wurde der Deckel danach verworfen (44 von 44
+    # gedeckelt, Median CRV 0,21), und der Text behauptete dann etwas
+    # Falsches direkt ueber einer Liste von vier Marken.
     pruefe(P, "A2: ohne Marke bleibt es beim mechanischen Ziel",
-           ohne["ziel_regel"] == "kein Widerstand in Reichweite"
+           ohne["ziel_regel"] == "mechanisch, 2x Risiko"
            and ohne["ziel_bis_eur"] > 66.55,
-           "so sah die SOL-Mail aus: Ziel JENSEITS des Widerstands, den sie "
-           "zwei Zeilen vorher selbst nannte")
+           "die Rechnung sagt jetzt, was sie ist - statt zu behaupten, es "
+           "gebe keinen Widerstand")
     pruefe(P, "A2: mit Marke endet das Ziel davor",
            mit["ziel_bis_eur"] <= 66.55
            and "vor dem Widerstand" in mit["ziel_regel"],
@@ -7955,10 +7960,147 @@ def paket_btcmail() -> None:
            "eine zweite Zeitquelle waere eine zweite Wahrheit")
 
 
+def paket_marken() -> None:
+    """Die Marken: Richtung, Bruchstatus, Name - und KEIN Deckel.
+
+    Nutzerfrage 17.08.2026: *"Die Punkte sind immer eine Trendwende, Kurs
+    geht wieder nach unten - und nicht hat Kurs erreicht und ist
+    durchgegangen. Ist das korrekt?"* Ja - aber die Richtung stand nicht
+    dabei, und ob die Marke zuletzt gehalten hat, auch nicht."""
+    import numpy as _np
+
+    from agent import entscheidungsrechnung as _ER
+    from agent import lagebeschreibung as _LB
+    from agent import signal_mail as _SM
+
+    P = "Marken"
+
+    # Eine gebaute Reihe: der Kurs dreht dreimal bei 110 nach unten und
+    # zweimal bei 90 nach oben.
+    n = 200
+    c = _np.full(n, 100.0)
+    h = _np.full(n, 101.0)
+    l = _np.full(n, 99.0)
+    for j in (30, 70, 110):
+        h[j] = 110.0
+    for j in (50, 90):
+        l[j] = 90.0
+    v = _LB.niveaus_werte(c, h, l, n - 1, 5.0, 100.0, 100.0,
+                          [f"2026-01-{1 + (j % 28):02d}" for j in range(n)])
+
+    oben = [m for m in v["oben"] if abs(m["preis_eur"] - 110.0) < 1]
+    unten = [m for m in v["unten"] if abs(m["preis_eur"] - 90.0) < 1]
+    pruefe(P, "drei Wenden nach unten werden als solche gezaehlt",
+           bool(oben) and oben[0]["nach_unten_gedreht"] == 3
+           and oben[0]["gehalten"] == 0,
+           str(oben[:1]))
+    pruefe(P, "zwei Wenden nach oben ebenso",
+           bool(unten) and unten[0]["gehalten"] == 2
+           and unten[0]["nach_unten_gedreht"] == 0,
+           str(unten[:1]))
+    pruefe(P, "die Summe ist die alte Beruehrungszahl",
+           bool(oben) and oben[0]["beruehrungen"] == 3,
+           "'7-mal beruehrt' war richtig, sagte nur nicht wohin")
+    pruefe(P, "und das Datum der letzten Beruehrung steht dabei",
+           bool(oben) and oben[0]["letzte_beruehrung"],
+           "die BTC-Marke bei 65.652 besteht aus Punkten ueber 800 "
+           "Handelstage - ohne Datum wirkt sie aktueller, als sie ist")
+
+    # BEREITS DURCHBROCHEN: der Kurs schliesst nach der letzten Beruehrung
+    # ueber der Marke.
+    c2 = c.copy()
+    c2[150:] = 115.0
+    v2 = _LB.niveaus_werte(c2, h, l, n - 1, 5.0, 100.0, 100.0)
+    gebrochen = [m for m in (v2["oben"] + v2["unten"])
+                 if abs(m["preis_eur"] - 110.0) < 1]
+    pruefe(P, "eine durchbrochene Marke wird als solche erkannt",
+           bool(gebrochen) and gebrochen[0]["gefegt"] is True,
+           "uebernommen aus `liquidity_pools._ist_gefegt` - ohne sie sagt "
+           "eine Marke mit fuenf Umkehrpunkten nichts darueber, ob sie "
+           "zuletzt gehalten hat")
+    pruefe(P, "eine ungebrochene nicht",
+           bool(oben) and oben[0]["gefegt"] is False)
+
+    # ⚠️ KEIN DECKEL. Gemessen: 44 von 44 Symbolen gedeckelt, Median 0,21.
+    _r = _ER.rechne(kurs=100.0, atr=5.0, risiko_eur=25.0,
+                    betrag_wunsch_eur=1000.0)
+    pruefe(P, "das Ziel bleibt mechanisch",
+           _r["ziel_regel"] == "mechanisch, 2x Risiko"
+           and abs(_r["crv"] - 2.0) < 1e-9,
+           "der Deckel haette bei 44 von 44 Symbolen zugeschlagen, 98 % "
+           "unter CRV 0,5 - auf Tagesfraktalen ist immer eine Marke im Weg")
+    pruefe(P, "und die Kette fuettert den Deckel nicht mehr",
+           "widerstand=_marke_im_weg" not in _quelltext("agent/rollen_lauf.py"),
+           "die Funktion bleibt, der Aufruf ist weg - wer sie je will, "
+           "findet im Kommentar, warum sie abgeschaltet wurde")
+
+    # DIE MARKEN STEHEN STATTDESSEN IN DER MAIL.
+    marken = [{"preis_eur": 105.0, "abstand_atr": 1.0, "beruehrungen": 3,
+               "nach_unten_gedreht": 3, "gehalten": 0, "gefegt": False,
+               "letzte_beruehrung": "2026-07-15"},
+              {"preis_eur": 108.0, "abstand_atr": 1.6, "beruehrungen": 2,
+               "nach_unten_gedreht": 1, "gehalten": 1, "gefegt": True,
+               "letzte_beruehrung": "2024-11-04"}]
+    z = " ".join(_ER.saetze(_r, marken))
+    pruefe(P, "die Marken stehen unter dem Take-Profit",
+           "Auf dem Weg dorthin" in z and "105,00 EUR" in z)
+    pruefe(P, "mit Richtung, Datum und Bruchstatus",
+           "3x nach unten gedreht" in z and "zuletzt 2024-11-04" in z
+           and "seither durchbrochen" in z)
+    pruefe(P, "und mit dem Erlaeuterungstext",
+           "dort liegen Auftraege" in z and "GERECHNET, nicht vorhergesagt" in z,
+           "Nutzerwunsch: ein sinnvoller Ergaenzungstext zur Nutzung")
+    pruefe(P, "hoechstens drei, auch wenn mehr im Weg liegen",
+           _ER.MARKEN_IN_DER_MAIL == 3)
+    pruefe(P, "liegt keine im Weg, steht auch das da",
+           "keine Marke im Weg" in " ".join(
+               _ER.saetze(_r, [{"preis_eur": 500.0, "abstand_atr": 9.0,
+                                "beruehrungen": 1, "nach_unten_gedreht": 1,
+                                "gehalten": 0, "gefegt": False}])),
+           "sonst waere unklar, ob geprueft wurde")
+    pruefe(P, "Singular und Plural stimmen",
+           "liegt 1 Marke" in " ".join(_ER.saetze(_r, marken[:1]))
+           and "liegen 2 Marken" in z)
+
+    # DER NAME NUR FUER KRYPTO.
+    def _mail(klasse):
+        return _SM.baue_mail(
+            symbol="X", name="X", kurs_eur=100.0, instrument="spot",
+            strategie="einstieg", rechnung=_r,
+            urteil={"aktion": "KAUFEN", "begruendung": "x"},
+            marken_werte={"oben": marken}, assetklasse=klasse)[1]
+
+    pruefe(P, "Krypto nennt sie Liquiditaetszonen",
+           "(Liquiditaetszonen)" in _mail("krypto"))
+    for klasse in ("rohstoffe", "aktien", "etf", "hedge"):
+        pruefe(P, f"{klasse} nennt sie nicht so",
+               "(Liquiditaetszonen)" not in _mail(klasse)
+               and "Auf dem Weg dorthin" in _mail(klasse),
+               "die Marken gibt es ueberall, der Name traegt eine Deutung, "
+               "die am 23.07. auf Krypto begrenzt wurde")
+
+    # DER CHART BESCHRIFTET SIE.
+    import inspect as _i
+
+    from ui import trade_chart as _TC
+
+    _src = _i.getsource(_TC.render_trade_chart)
+    pruefe(P, "der Chart beschriftet die Marken",
+           "annotate" in _src and "beruehrungen" in _src,
+           "hier stand 'ohne Beschriftung im Bild' - das galt, solange im "
+           "Text EINE Marke stand")
+    pruefe(P, "und vertraegt weiterhin eine reine Preisliste",
+           "isinstance(eintrag, dict)" in _src,
+           "kein Aufrufer soll brechen")
+    pruefe(P, "die Kette reicht die Marken jetzt durch",
+           "marken=None," not in _quelltext("agent/rollen_lauf.py"),
+           "der Chart konnte es immer, bekam aber None")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail,
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken,
           "Frische": paket_frische}
 
 

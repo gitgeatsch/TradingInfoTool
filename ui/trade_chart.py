@@ -94,13 +94,34 @@ def render_trade_chart(*, reihe: list, index: int, rechnung: dict,
                 ax.axhline(float(wert), color=farbe, linewidth=1.1,
                            linestyle="--", label=name)
 
-        # DIE MARKEN NUR ALS DUENNE LINIE, ohne Beschriftung im Bild. Sie
-        # stehen im Text mit Zahl und Beruehrungszahl; sie hier noch einmal zu
-        # beschriften macht das Bild voll, ohne etwas hinzuzufuegen.
-        for wert in (marken or []):
+        # ⚠️ JETZT MIT BESCHRIFTUNG (17.08.2026, Nutzerwunsch). Hier stand
+        # "ohne Beschriftung im Bild ... macht das Bild voll, ohne etwas
+        # hinzuzufuegen". Das galt, solange im Text EINE Marke stand.
+        # Seit die Mail bis zu drei Marken mit Umkehrzahl auflistet, ist
+        # das Bild die Stelle, an der man sie schneller erfasst - aber nur,
+        # wenn man weiss, welche Linie welche ist.
+        #
+        # `marken` darf beides sein: eine Liste von Preisen (alte Form)
+        # oder von dicts aus `niveaus_werte`. Die alte Form bleibt gueltig,
+        # damit kein Aufrufer bricht.
+        for eintrag in (marken or []):
             try:
-                ax.axhline(float(wert), color="#888888", linewidth=0.7,
-                           alpha=0.6)
+                if isinstance(eintrag, dict):
+                    wert = float(eintrag.get("preis_eur"))
+                    n = eintrag.get("beruehrungen")
+                    text = (f"{wert:,.0f}".replace(",", ".")
+                            + (f"  {n}x" if n else ""))
+                else:
+                    wert, text = float(eintrag), None
+                ax.axhline(wert, color="#888888", linewidth=0.7, alpha=0.6)
+                if text:
+                    # Rechts am Rand, damit die Beschriftung die Kurslinie
+                    # nicht kreuzt.
+                    ax.annotate(text, xy=(1.0, wert),
+                                xycoords=("axes fraction", "data"),
+                                xytext=(2, 0), textcoords="offset points",
+                                fontsize=6, color="#666666",
+                                va="center", ha="left")
             except (TypeError, ValueError):
                 continue
 

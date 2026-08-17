@@ -10232,3 +10232,130 @@ schwarze Leiste. Das Datum kommt aus **derselben Kerze** wie der Kurs.
 **Offen und zur Entscheidung:** ob CRV < 1 den Einstieg sperren soll (die
 BTC-Mail bot 150 EUR Risiko für 35 EUR Chance), und ob die Belege Pfeile
 bekommen oder die Mail auf HTML umgestellt wird.
+
+---
+
+## Kapitel 82 — Der Deckel fällt, die Marken bleiben (17.08.2026)
+
+### 82.1 Die Bestandsaufnahme, die den Vormittag widerlegt hat
+
+**Heute früh habe ich die Zielrechnung an den nächsten Widerstand
+gekoppelt** (Kapitel 76, A2). Der Nutzer bat, vor einer Verschärfung zu
+prüfen — *„um hier nicht einen Deckel über ein Asset zu legen bzw. der Fehler
+an anderer Stelle liegt."* **Er hatte recht:**
+
+| | |
+|---|---:|
+| Symbole mit Widerstand | 44 von 44 |
+| davon **gedeckelt** | **44** |
+| CRV danach unter 0,5 | **43 (98 %)** — Median **0,21** |
+| deckelnder Widerstand, Median | **0,79 ATR** |
+| **maximaler** Abstand überhaupt | **1,94 ATR** |
+
+**Und der Grund ist strukturell:**
+
+```
+Marken ZWISCHEN Kurs und mechanischem Ziel (Median 1,50 ATR):
+   1 Marke :  3 Symbole      3 Marken: 18   <- der Normalfall
+   2 Marken: 13              4 Marken:  9
+                             7 Marken:  1
+   -> bei 44 von 44 mindestens eine
+```
+
+FLOKI hat 143 Marken oberhalb, APT 154, W 166. **Auf Tagesfraktalen liegt
+immer eine Marke im Weg.** Eine Schwelle kann das nicht reparieren: bei
+1,5 ATR wären noch **1 von 44** gedeckelt — der Deckel wäre faktisch aus.
+
+> **Ein Deckel auf die nächste Marke heißt: „es gibt nie ein 2R-Ziel."**
+> Der Deckel ist damit abgeschaltet. `_marke_im_weg` und der Zweig in
+> `_ziel` bleiben stehen, mit dem Grund im Kommentar.
+
+**Und die Klammer sagt jetzt, was sie ist:** aus *„kein Widerstand in
+Reichweite"* wird *„mechanisch, 2x Risiko"*. Der alte Text hätte über einer
+Liste von vier Marken behauptet, es gebe keine.
+
+### 82.2 Was der Nutzer gefragt hat — und was daraus wurde
+
+> *„Die Punkte sind immer eine Trendwende — Kurs geht wieder nach unten — und
+> nicht: hat Kurs erreicht und ist durchgegangen. Ist das korrekt?"*
+
+**Ja — und nein.** Jeder Punkt ist ein bestätigtes Williams-Fraktal, also eine
+echte Umkehr. Aber `_cluster` warf Hochs und Tiefs in einen Topf. Am echten
+BTC-Niveau bei 65.652:
+
+```
+3x Swing-Hoch  -> der Kurs stieg dorthin und drehte NACH UNTEN
+4x Swing-Tief  -> der Kurs fiel dorthin und drehte NACH OBEN
+```
+
+**„7-mal berührt" verschwieg, wohin.** Jetzt steht es dabei.
+
+### 82.3 Zwei Begriffe aus der alten Kette geholt
+
+**Dieselbe Sache hatte zwei Namen.** `agent/krypto/liquidity_zones.py`
+(gebaut 23.07., Stufe 2 per Backtest verworfen, p = 0,53) rechnet dieselben
+Swing-Cluster — **und kann zwei Dinge mehr:**
+
+| | neue Kette (vorher) | alt `liquidity_pools` |
+|---|---|---|
+| Richtung | gemischt | **getrennt** |
+| „bereits gefegt" | nein | **ja** |
+
+**Beide sind jetzt übernommen.** Die neue Kette entsprach bis heute
+`support_resistance_levels` — der *schwächeren* der beiden alten Funktionen.
+Sie „Liquiditätszonen" zu nennen wäre eine Falschetikettierung gewesen.
+
+> ⚠️ **Der Name gilt nur für Krypto Spot und Hebel.** Die Deutung dahinter
+> (Stop-Hunt, Marketmaker) wurde am 23.07. ausdrücklich auf den
+> 24/7-Markt mit hohem Retail- und Hebelanteil begrenzt. **Die Marken selbst
+> gibt es überall** — nur der Name ist begrenzt.
+
+Beide Module tragen jetzt einen Querverweis aufeinander.
+
+### 82.4 Wie es in der Mail aussieht
+
+```
+Take-Profit     72.880,75 bis 73.781,25 EUR  (CRV 2,0 - mechanisch, 2x Risiko)
+  Auf dem Weg dorthin liegen 4 Marken (Liquiditaetszonen), die 3 naechsten:
+    65.652,00 EUR  +0,7 Schwankungsbreiten - 7 Umkehrpunkte
+      (3x nach unten gedreht, 4x gehalten), zuletzt 2026-07-15
+    66.671,00 EUR  +1,3 Schwankungsbreiten - 7 Umkehrpunkte
+      (3x nach unten gedreht, 4x gehalten), zuletzt 2024-11-04 - seither durchbrochen
+    67.284,00 EUR  +1,6 Schwankungsbreiten - 4 Umkehrpunkte
+      (3x nach unten gedreht, 1x gehalten), zuletzt 2026-06-15
+  Was das heisst: an diesen Preisen hat der Kurs frueher gedreht - dort liegen Auftraege.
+  Je mehr Umkehrpunkte, desto eher passiert es wieder; 'durchbrochen' heisst, die
+  Marke hat zuletzt nicht gehalten. Das Ziel ist GERECHNET, nicht vorhergesagt: es
+  sagt, wie weit der Kurs laufen muesste, damit sich der Trade traegt.
+```
+
+**Das Datum ist die Antwort auf die Zeitfensterfrage.** Statt einer gesetzten
+Grenze steht da, wann zuletzt gedreht wurde — die zweite Marke oben stammt aus
+dem **November 2024** und ist längst gebrochen. Ohne Datum wirkt sie aktuell.
+
+**Im Chart** dieselben Marken als beschriftete Linien (Preis + Umkehrzahl),
+drei je Seite. Dort stand bisher `marken=None` — der Chart konnte es immer und
+bekam nie etwas.
+
+### 82.5 Nutzerentscheidungen, festgehalten
+
+| | |
+|---|---|
+| Gruppen | Marken **überall**, Name nur Krypto |
+| Anzahl in der Mail | **drei** (es sind bis zu sieben) |
+| Marken mit einer Umkehr | **zeigen** — sie sind ein Drittel |
+| Zeitfenster | **keins**, dafür das Datum der letzten Berührung |
+
+### 82.6 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **1.030**, alle bestanden — **22 neu unter `--paket Marken`** |
+| Richtung | 3 Wenden nach unten / 2 nach oben an einer gebauten Reihe nachgewiesen |
+| „durchbrochen" | erkannt **und** nicht erkannt, je nach Kursverlauf |
+| kein Deckel | Ziel bleibt mechanisch · die Kette füttert ihn nicht mehr |
+| Mailtext | Richtung, Datum, Bruchstatus, Erläuterung, Singular/Plural, „keine Marke im Weg" |
+| Name | Krypto **ja**, rohstoffe/aktien/etf/hedge **nein** — einzeln geprüft |
+| Chart | beschriftet **und** verträgt weiterhin eine reine Preisliste |
+| freie Namen · Zahlenprüfer · Belegprüfer · Phase 1 | 0 · 9/9 · 9/9 · bestanden |
+| Simulation | 4 Gruppen, 8 Signale, **0 Fehler, 0 Lücken** |

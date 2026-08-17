@@ -2546,3 +2546,32 @@ Kette gegen einen alten Stand laufen lassen, ohne Fehler.**
 **Regel: eine Datenbank wird über `Connection.backup()` kopiert, nie über das
 Dateisystem** — gefolgt von `PRAGMA integrity_check` auf der Kopie. Der
 NB-Export (`_db_backup`) macht es seit jeher so; die Simulation seit heute.
+
+## 2.35 Eine Schwelle beantwortet eine Frage - nicht zwei (neu 2026-08-17)
+
+**Der Fall.** `NIVEAU_MIN_ABSTAND_ATR = 0,5` beantwortet: *„ab wann lohnt es,
+eine Marke zu ERWAEHNEN?"* Ich habe dieselbe Schwelle benutzt fuer:
+*„ab wann muss mein ZIEL davor enden?"*
+
+**Ergebnis: 44 von 44 Symbolen gedeckelt, 98 % unter CRV 0,5, Median 0,21.**
+
+> **Die Konstante war nicht falsch. Die zweite Frage war es.**
+
+**Woran man es erkennt:** eine Konstante, die fuer einen neuen Zweck
+uebernommen wird, ohne dass jemand die Verteilung fuer DIESEN Zweck misst.
+Der Kommentar an der Konstante beschrieb ausdruecklich den alten Zweck
+(„naeher als das ist keine eigene Marke") - er haette gereicht.
+
+**Die Pruefung, die es gefunden haette** - und die vor jedem solchen Umbau
+gehoert:
+
+```
+Wie oft greift die neue Regel ueber ALLE Symbole?
+   greift sie bei 100 %, ist sie kein Filter, sondern eine Setzung.
+   greift sie bei 2 %, ist sie kein Filter, sondern Dekoration.
+```
+
+Beides ist ein Befund, und beides sieht man erst nach der Zaehlung. Der
+Nutzer hat sie eingefordert (*„bitte vorher pruefen, um hier nicht einen
+Deckel ueber ein Asset zu legen bzw. der Fehler liegt an anderer Stelle"*) -
+und der Fehler lag an anderer Stelle.
