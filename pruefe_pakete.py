@@ -7443,10 +7443,148 @@ def paket_frische() -> None:
            "")
 
 
+def paket_mail() -> None:
+    """Die Funde der Mailpruefung vom 17.08.2026 - je einer als Test.
+
+    Alle stammen aus EINER echten SOL-Mail, die der Nutzer Zeile fuer Zeile
+    durchgegangen ist. Vier davon waren keine Anzeigefehler."""
+    import numpy as _np
+
+    from agent import ausstiegsrechnung as _AR
+    from agent import entscheidungsrechnung as _ER
+    from agent import lagebeschreibung as _LB
+    from agent import rollen_lauf as _RL
+    from agent import signal_mail as _SM
+    from agent import trefferbilanz as _TB
+
+    P = "Mail"
+
+    # --- A2: das Ziel darf nicht hinter der Marke liegen, die dieselbe Mail
+    # nennt. Der Parameter `widerstand` existierte seit jeher - und wurde von
+    # KEINEM Aufrufer je gefuellt.
+    ohne = _ER.rechne(kurs=64.86, atr=1.30, risiko_eur=20.0,
+                      betrag_wunsch_eur=800.0, kostenklasse="krypto")
+    mit = _ER.rechne(kurs=64.86, atr=1.30, risiko_eur=20.0,
+                     betrag_wunsch_eur=800.0, kostenklasse="krypto",
+                     widerstand=(66.55, 5))
+    pruefe(P, "A2: ohne Marke bleibt es beim mechanischen Ziel",
+           ohne["ziel_regel"] == "kein Widerstand in Reichweite"
+           and ohne["ziel_bis_eur"] > 66.55,
+           "so sah die SOL-Mail aus: Ziel JENSEITS des Widerstands, den sie "
+           "zwei Zeilen vorher selbst nannte")
+    pruefe(P, "A2: mit Marke endet das Ziel davor",
+           mit["ziel_bis_eur"] <= 66.55
+           and "vor dem Widerstand" in mit["ziel_regel"],
+           f"{mit['ziel_von_eur']:.2f}-{mit['ziel_bis_eur']:.2f} EUR, "
+           f"{mit['ziel_regel']}")
+    pruefe(P, "A2: und die zu kleine CRV wird AUSGEWIESEN, nicht geschoent",
+           mit["crv"] < 2.0 and mit["crv_erreicht"] is False
+           and any("traegt nur CRV" in z for z in _ER.saetze(mit)),
+           f"CRV {mit['crv']:.2f} - ein Ziel hinter einer Mauer ist kein Ziel")
+
+    # Die Marke muss auch WIRKLICH ankommen - der Fehler war nicht die
+    # Rechnung, sondern der nie gefuellte Parameter.
+    _bl = {"_marken_werte": {"widerstand": {"preis_eur": 66.55,
+                                            "beruehrungen": 5},
+                             "unterstuetzung": {"preis_eur": 63.44,
+                                                "beruehrungen": 4}}}
+    pruefe(P, "A2: LONG bekommt den Widerstand",
+           _RL._marke_im_weg(_bl, False) == (66.55, 5))
+    pruefe(P, "A2: SHORT bekommt die Unterstuetzung",
+           _RL._marke_im_weg(_bl, True) == (63.44, 4),
+           "bei SHORT liegt das Ziel unten - im Weg steht die Unterstuetzung")
+    pruefe(P, "A2: ohne Marken bleibt es None",
+           _RL._marke_im_weg({}, False) is None,
+           "dann stimmt die Klammer 'kein Widerstand in Reichweite' auch")
+
+    # EINE Ermittlung fuer Satz und Zahl.
+    _n = 80
+    _c = _np.linspace(60.0, 64.86, _n)
+    _h = _c + 1.0
+    _l = _c - 1.0
+    _h[20] = _h[40] = _h[60] = 70.0
+    _saetze = _LB._niveaus(_c, _h, _l, _n - 1, 1.3, 64.86, float(_c[-1]))
+    _werte = _LB.niveaus_werte(_c, _h, _l, _n - 1, 1.3, 64.86, float(_c[-1]))
+    _w = _werte.get("widerstand")
+    pruefe(P, "A2: Satz und Zahl stammen aus derselben Ermittlung",
+           bool(_w) and any("Widerstand" in z for z in _saetze),
+           f"Satz: {_saetze[:1]} / Zahl: {_w}")
+
+    # --- A3: 34 gegen 36 - zwei Zahlen fuer dieselbe Groesse.
+    _b = {"basisrate": 0.34, "wahrscheinlichkeit": 0.36, "breakeven": 0.73,
+          "traegt": False, "belastbar": False, "faelle": 3, "crv": 2.0,
+          "treffer": 1, "abgelaufen": 0, "anteil_entschieden": 1.0}
+    _z = " ".join(_TB.satz(_b, einstieg=64.86, stop=63.24,
+                           einsatz_eur=800.0, klasse="krypto"))
+    pruefe(P, "A3: die zweite Zahl wird erklaert statt danebengestellt",
+           "Erfahrungsrate von 34" in _z and "angepasst um 3 eigene" in _z,
+           "vorher stand 'Gemessen an der Erfahrungsrate' unter einer Zahl, "
+           "die nicht die Erfahrungsrate ist")
+    pruefe(P, "A3: die Entscheidung steht weiter auf der angepassten Zahl",
+           "36 erreichen das Ziel" in _z and "noetig waeren 73" in _z,
+           "sie ist die bessere Schaetzung - nur war sie falsch beschriftet")
+
+    # --- A4: zwei Zahlen unter einem Wort.
+    _aus = _AR.bewerte(einstieg=63.00, stop_original=60.90,
+                       kurs_aktuell=63.90, mfe_r=0.41,
+                       umgeworfen_durch="Schlusskurs unter der Unterstuetzung")
+    _aus["empfehlung"] = "HALTEN"
+    _aus["ist_bestand"] = True
+    _, _txt = _SM.baue_mail(symbol="SOL", name="SOL", kurs_eur=64.86,
+                            instrument="spot", strategie="bestand",
+                            rechnung={}, urteil={"aktion": "HALTEN"},
+                            ausstieg=_aus,
+                            marken_werte=_bl["_marken_werte"],
+                            umgeworfen_preis_eur=63.64)
+    pruefe(P, "A4: beide Unterstuetzungen stehen da, mit ihrer Quelle",
+           "Unsere Markenrechnung" in _txt and "63,44" in _txt
+           and "63,64" in _txt,
+           "die SOL-Mail nannte 'die Unterstuetzung' dreimal, zweimal bei "
+           "63,44 und einmal bei 63,64 - ohne zu sagen, wessen Zahl das ist")
+    _, _gleich = _SM.baue_mail(symbol="SOL", name="SOL", kurs_eur=64.86,
+                               instrument="spot", strategie="bestand",
+                               rechnung={}, urteil={"aktion": "HALTEN"},
+                               ausstieg=_aus,
+                               marken_werte=_bl["_marken_werte"],
+                               umgeworfen_preis_eur=63.45)
+    pruefe(P, "A4: bei praktisch gleicher Zahl schweigt der Hinweis",
+           "Unsere Markenrechnung" not in _gleich,
+           "ein Hinweis, der immer kommt, wird nicht gelesen")
+
+    # --- A5: der Hoechststand kann nicht unter dem aktuellen Stand liegen.
+    _alt = _AR.bewerte(einstieg=63.00, stop_original=60.90,
+                       kurs_aktuell=63.90, mfe_r=0.41)
+    _alt["empfehlung"] = "HALTEN"
+    _s = " ".join(_AR.saetze(_alt))
+    pruefe(P, "A5: die Alterung wird benannt statt gedruckt",
+           "Hoechststand noch nicht nachgefuehrt" in _s
+           and "hoechster Buchgewinn" not in _s,
+           "+0.43 R neben 'hoechster Buchgewinn +0.41 R' ist arithmetisch "
+           "unmoeglich und laesst den Leser der ganzen Zeile misstrauen")
+    _neu = _AR.bewerte(einstieg=63.00, stop_original=60.90,
+                       kurs_aktuell=63.90, mfe_r=1.20)
+    _neu["empfehlung"] = "HALTEN"
+    _s2 = " ".join(_AR.saetze(_neu))
+    pruefe(P, "A5: ein echter Hoechststand steht weiterhin da",
+           "hoechster Buchgewinn" in _s2,
+           "sonst waere die Korrektur ein Informationsverlust")
+    pruefe(P, "B1: Prozent vor R, und R nur noch in Klammern",
+           "%" in _s2 and "(+0.43 R)" in _s2,
+           "R ist eine interne Einheit - die Umrechnung lag seit dem 12.08. "
+           "fertig im Code und wurde nie benutzt")
+
+    # --- A1: die Zahlenbeigabe darf in keiner Blockzaehlung landen.
+    pruefe(P, "die Markenwerte zaehlen nicht als Faktenblock",
+           list(_LB.nur_saetze({"marken": ["x"], "_marken_werte": {"a": 1}}))
+           == ["marken"],
+           "Anlassfilter und Mindestkriterien zaehlen Bloecke - ein Eintrag "
+           "mit Zahlen wuerde beide Messungen verschieben")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15,
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail,
           "Frische": paket_frische}
 
 

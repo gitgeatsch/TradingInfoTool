@@ -262,6 +262,59 @@ def _cluster(punkte: list, atr: float) -> list[tuple[float, int]]:
     return aus
 
 
+def niveaus_werte(c: np.ndarray, h: np.ndarray, l: np.ndarray, i: int,
+                  atr: float, kurs_eur: float,
+                  kurs_quelle: float) -> dict:
+    """Widerstand und Unterstuetzung als ZAHLEN in EUR - {(preis, n)}.
+
+    ⚠️ DER ANLASS: DIE ZIELRECHNUNG HAT DIESE MARKEN NIE GESEHEN
+    (17.08.2026, Nutzerpruefung einer echten SOL-Mail).
+
+    `entscheidungsrechnung._ziel()` kann ein Ziel KURZ VOR den naechsten
+    Widerstand legen - der Praxisstandard, ausfuehrlich begruendet, mit
+    eigenem Regelzweig und eigener CRV-Ausweisung. Der Parameter dafuer
+    heisst `widerstand`, und **kein einziger Aufrufer hat ihn je gefuellt**.
+    Also lief immer der Zweig "kein Widerstand in Reichweite".
+
+    In der SOL-Mail stand deshalb beides nebeneinander:
+
+        Der naechste Widerstand liegt ... bei 66.55 EUR (5-mal beruehrt).
+        + Widerstand bei 66.55 EUR bietet klares Ziel      [Beleg]
+        Take-Profit  67,67 bis 68,53 EUR (kein Widerstand in Reichweite)
+
+    Das Ziel lag 1,7 % JENSEITS der Mauer, die dieselbe Mail zweimal
+    nannte - und die Klammer bestritt, dass es sie gibt.
+
+    EINE RECHNUNG, ZWEI ABNEHMER. Diese Funktion liefert die Werte, und
+    `_niveaus()` schreibt seinen Satz aus DEMSELBEN Ergebnis. Eine zweite
+    Ermittlung waere die naechste Stelle zum Auseinanderlaufen (Umbauplan
+    70.4).
+
+    IN EUR, wie `entscheidungsrechnung.rechne()` sie erwartet. Die
+    Swing-Punkte stehen in der Waehrung der Kursreihe; `faktor` rechnet
+    sie um - dieselbe Umrechnung, die der Satz fuer seine Anzeige
+    benutzt. Sie hier zu vergessen waere ein Einheitenfehler in einer
+    Zielrechnung, und die kosten in diesem Projekt Geld."""
+    hi, lo = _swings(h, l, i)
+    if (not hi and not lo) or atr <= 0:
+        return {"widerstand": None, "unterstuetzung": None}
+    faktor = kurs_eur / kurs_quelle if kurs_quelle else 1.0
+    kurs = float(c[i])
+    grenze = NIVEAU_MIN_ABSTAND_ATR * atr
+    niveaus = _cluster([float(h[j]) for j in hi] + [float(l[j]) for j in lo],
+                       atr)
+    drueber = [(p, n) for p, n in niveaus if p - kurs >= grenze]
+    drunter = [(p, n) for p, n in niveaus if kurs - p >= grenze]
+    w = min(drueber, key=lambda x: x[0]) if drueber else None
+    u = max(drunter, key=lambda x: x[0]) if drunter else None
+    return {
+        "widerstand": ({"preis_eur": w[0] * faktor, "beruehrungen": w[1],
+                        "abstand_atr": (w[0] - kurs) / atr} if w else None),
+        "unterstuetzung": ({"preis_eur": u[0] * faktor, "beruehrungen": u[1],
+                            "abstand_atr": (kurs - u[0]) / atr}
+                           if u else None)}
+
+
 def _niveaus(c: np.ndarray, h: np.ndarray, l: np.ndarray, i: int,
              atr: float, kurs_eur: float, kurs_quelle: float) -> list[str]:
     """Block 4 - Widerstand und Unterstuetzung, in ATR und in EUR.
@@ -269,27 +322,21 @@ def _niveaus(c: np.ndarray, h: np.ndarray, l: np.ndarray, i: int,
     Genannt wird das naechste Niveau, das WEIT GENUG entfernt ist, um eine
     Marke zu sein - und mit der Zahl seiner Beruehrungen, denn ein dreimal
     bestaetigtes Niveau ist etwas anderes als ein einmaliger Wendepunkt."""
-    hi, lo = _swings(h, l, i)
-    if (not hi and not lo) or atr <= 0:
-        return []
-    faktor = kurs_eur / kurs_quelle if kurs_quelle else 1.0
-    kurs = float(c[i])
-    grenze = NIVEAU_MIN_ABSTAND_ATR * atr
-    niveaus = _cluster([float(h[j]) for j in hi] + [float(l[j]) for j in lo], atr)
-
+    # AUS DERSELBEN RECHNUNG WIE DIE ZAHLEN, die an die Zielrechnung gehen
+    # (17.08.2026). Vorher stand die Ermittlung hier ein zweites Mal - und
+    # genau daran ist am 70.4 schon einmal etwas auseinandergelaufen.
+    werte = niveaus_werte(c, h, l, i, atr, kurs_eur, kurs_quelle)
     aus = []
-    drueber = [(p, n) for p, n in niveaus if p - kurs >= grenze]
-    if drueber:
-        p, n = min(drueber, key=lambda x: x[0])
-        aus.append(f"Der naechste Widerstand liegt {(p - kurs) / atr:.1f} "
-                   f"Schwankungsbreiten hoeher, bei {_kurs(p * faktor)} EUR "
-                   f"({n}-mal beruehrt).")
-    drunter = [(p, n) for p, n in niveaus if kurs - p >= grenze]
-    if drunter:
-        p, n = max(drunter, key=lambda x: x[0])
-        aus.append(f"Die naechste Unterstuetzung liegt {(kurs - p) / atr:.1f} "
-                   f"Schwankungsbreiten tiefer, bei {_kurs(p * faktor)} EUR "
-                   f"({n}-mal beruehrt).")
+    w = werte.get("widerstand")
+    if w:
+        aus.append(f"Der naechste Widerstand liegt {w['abstand_atr']:.1f} "
+                   f"Schwankungsbreiten hoeher, bei {_kurs(w['preis_eur'])} "
+                   f"EUR ({w['beruehrungen']}-mal beruehrt).")
+    u = werte.get("unterstuetzung")
+    if u:
+        aus.append(f"Die naechste Unterstuetzung liegt {u['abstand_atr']:.1f} "
+                   f"Schwankungsbreiten tiefer, bei {_kurs(u['preis_eur'])} "
+                   f"EUR ({u['beruehrungen']}-mal beruehrt).")
     if not aus:
         # Auch das ist eine Aussage: der Kurs steht im freien Feld.
         aus.append(f"Im Umkreis von {NIVEAU_MIN_ABSTAND_ATR:.1f} "
@@ -897,4 +944,33 @@ def geteilt(*, symbol: str, reihe: list, index: int,
         # ohne dass eine Pruefung anschlaegt. Dieselbe Ueberlegung wie bei
         # `geteilt()` selbst.
         "luecken": _luecken(len(hist), volumen, marken),
+        # ⚠️ KEINE SAETZE, SONDERN ZAHLEN - und deshalb mit einem Namen, der
+        # das sagt (17.08.2026). Jeder andere Schluessel hier traegt eine
+        # Liste von Saetzen fuer das Modell; dieser traegt die Marken als
+        # Werte fuer die ZIELRECHNUNG.
+        #
+        # DER GRUND: `entscheidungsrechnung._ziel()` kann das Ziel kurz vor
+        # den naechsten Widerstand legen - der Parameter dafuer wurde von
+        # keinem Aufrufer je gefuellt. Die Mail nannte den Widerstand also
+        # im Text und setzte das Ziel dahinter, mit der Klammer "kein
+        # Widerstand in Reichweite".
+        #
+        # ⚠️ NICHT AN DAS MODELL. Der Anlassfilter und die Mindestkriterien
+        # zaehlen Bloecke von SAETZEN; ein Eintrag mit Zahlen darin wuerde
+        # dort als Block mitzaehlen und beide Messungen verschieben. Wer
+        # diesen Schluessel weiterreicht, muss ihn vorher entfernen -
+        # `nur_saetze()` tut das.
+        "_marken_werte": niveaus_werte(c, h, l, i, atr, kurs_eur,
+                                       float(c[i])),
     }
+
+
+def nur_saetze(bloecke: dict | None) -> dict:
+    """Die Bloecke OHNE die Zahlenbeigabe - alles, was ans Modell darf.
+
+    Ein Schluessel, der keine Saetze traegt, hat in keiner Zaehlung von
+    Bloecken etwas verloren: der Anlassfilter bildet je Block einen
+    Fingerabdruck, `mindestkriterien` rechnet den Kursreihenanteil daraus.
+    Beide wuerden sich um einen Eintrag verschieben, den niemand liest."""
+    return {k: v for k, v in (bloecke or {}).items()
+            if not str(k).startswith("_")}

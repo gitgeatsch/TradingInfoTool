@@ -471,11 +471,31 @@ def satz(bewertung: dict, einstieg=None, stop=None,
                       + ("" if b["belastbar"] else " Gemessen an der "
                          "Erfahrungsrate - eine eigene Zahl gibt es noch nicht."))
     else:
+        # ⚠️ ZWEI ZAHLEN FUER DASSELBE, VIER ZEILEN AUSEINANDER (17.08.2026,
+        # Nutzerpruefung einer echten SOL-Mail).
+        #
+        #     Von hundert solchen Einstiegen erreichen erfahrungsgemaess 34 ...
+        #     --> Traegt sich NICHT: 36 erreichen das Ziel, noetig waeren 73.
+        #
+        # Beide Zahlen sind richtig und meinen Verschiedenes: 34 ist die
+        # ERFAHRUNGSRATE, 36 die um die eigenen Faelle angepasste Schaetzung
+        # (`geschrumpft()` zieht sie bei wenigen Faellen zur Erfahrungsrate
+        # hin). Die Entscheidung `traegt` steht auf der angepassten - richtig
+        # so, das ist die bessere Schaetzung.
+        #
+        # FALSCH WAR DIE BESCHRIFTUNG: "Gemessen an der Erfahrungsrate" stand
+        # unter einer Zahl, die eben NICHT die Erfahrungsrate ist. Wer beides
+        # liest, haelt eine der zwei Zeilen fuer einen Fehler - und weiss
+        # nicht, welche.
         zeilen.append(f"--> Traegt sich NICHT: "
                       f"{100 * b['wahrscheinlichkeit']:.0f} erreichen das Ziel, "
                       f"noetig waeren {100 * b['breakeven']:.0f}."
-                      + ("" if b["belastbar"] else " Gemessen an der "
-                         "Erfahrungsrate; eine eigene Zahl gibt es noch nicht."))
+                      + ("" if b["belastbar"] else
+                         f" Die {100 * b['wahrscheinlichkeit']:.0f} sind die "
+                         f"Erfahrungsrate von {100 * b['basisrate']:.0f}, "
+                         f"angepasst um {b['faelle']} eigene "
+                         f"{'Fall' if b['faelle'] == 1 else 'Faelle'} - fuer "
+                         f"eine eigene Zahl sind es zu wenige."))
     if b.get("abgelaufen"):
         zeilen.append(f"    ({b['abgelaufen']} weitere Faelle liefen ohne "
                       f"Entscheidung aus - die Quote steht auf "

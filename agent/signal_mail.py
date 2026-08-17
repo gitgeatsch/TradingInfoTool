@@ -173,7 +173,9 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
               einordnung: list[str] | None = None,
               modell: str | None = None,
               zeitpunkt: str | None = None,
-              gegenpruefung: list | None = None) -> tuple[str, str]:
+              gegenpruefung: list | None = None,
+              marken_werte: dict | None = None,
+              umgeworfen_preis_eur: float | None = None) -> tuple[str, str]:
     """Betreff und Text. Reine Formatierung - hier wird nichts gerechnet.
 
     `rechnung` kommt aus `entscheidungsrechnung.rechne()`, `urteil` ist die
@@ -270,6 +272,32 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
         zwei += [("Bestehende Position:" if ausstieg.get("ist_bestand")
                   else "Verfolgter Einstiegsvorschlag (NICHT im Bestand):")
                  ] + [f"  {z}" for z in AR.saetze(ausstieg)]
+        # ZWEI ZAHLEN UNTER EINEM WORT (17.08.2026, Nutzerpruefung).
+        #
+        # Die SOL-Mail nannte "die Unterstuetzung" dreimal - zweimal bei
+        # 63,44 EUR (unsere Markenrechnung) und einmal bei 63,64 EUR (der
+        # Widerlegungspreis, den das Modell genannt hat). Wer das liest,
+        # kann nicht wissen, welche gilt.
+        #
+        # BEIDE BLEIBEN STEHEN. Die Zahl des Modells ist seine Bedingung -
+        # sie zu ueberschreiben hiesse, sein Urteil zu veraendern (R-5.x:
+        # kein deterministischer Eingriff in das Werturteil). Was fehlte,
+        # war die Einordnung: WESSEN Zahl ist das, und wie steht sie zu
+        # unserer.
+        _u = (marken_werte or {}).get("unterstuetzung") or {}
+        _up = _u.get("preis_eur")
+        # EIN PROMILLE, NICHT EIN HALBES PROZENT. Mein erster Entwurf nahm
+        # 0,5 % - und schwieg damit ausgerechnet im gemeldeten Fall: 63,44
+        # gegen 63,64 sind 0,32 %. Auf einen Stop, der 2,5 % entfernt liegt,
+        # ist das ein Achtel des Risikos, also keine Rundung.
+        if (ausstieg.get("umgeworfen_durch") and umgeworfen_preis_eur
+                and _up and abs(float(umgeworfen_preis_eur) - float(_up))
+                > 0.001 * float(_up)):
+            zwei.append(f"    Unsere Markenrechnung sieht die Unterstuetzung "
+                        f"bei {preis(_up)} EUR "
+                        f"({_u.get('beruehrungen', 0)}-mal beruehrt) - das "
+                        f"Modell nennt {preis(float(umgeworfen_preis_eur))} "
+                        f"EUR. Zwei Zahlen, zwei Quellen.")
     # KEIN NACHKAUF AUF EINE POSITION, DIE GESCHLOSSEN GEHOERT. In der ersten
     # Fassung standen beide untereinander: "Stop auf 59.100 nachziehen" und
     # daneben "Einstiegszone 57.581 bis 58.419" - zwei Anweisungen fuer

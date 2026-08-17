@@ -125,6 +125,27 @@ def _fuehrung_zu(ergebnis: dict, symbol: str, instrument: str) -> dict:
             .get((str(symbol).upper(), str(instrument))) or {})
 
 
+def _marke_im_weg(bloecke: dict | None, ist_short: bool) -> tuple | None:
+    """Die Marke zwischen Kurs und Ziel - (Preis in EUR, Beruehrungen).
+
+    Bei LONG ist das der naechste WIDERSTAND, bei SHORT die naechste
+    UNTERSTUETZUNG: `entscheidungsrechnung._ziel()` will die Marke, die
+    dem Ziel im Weg steht, und das Ziel liegt bei SHORT unten.
+
+    `None`, wenn keine da ist - dann greift das mechanische Ziel, und die
+    Klammer "kein Widerstand in Reichweite" stimmt dann auch.
+
+    LIEST, RECHNET NICHT. Die Werte stehen in `_marken_werte`, das
+    `lagebeschreibung.geteilt()` aus DERSELBEN Ermittlung liefert wie den
+    Satz in der Mail. Sie hier neu zu bestimmen waere die zweite Stelle,
+    an der beide auseinanderlaufen koennen."""
+    m = ((bloecke or {}).get("_marken_werte") or {}).get(
+        "unterstuetzung" if ist_short else "widerstand")
+    if not m or not m.get("preis_eur"):
+        return None
+    return (float(m["preis_eur"]), int(m.get("beruehrungen") or 1))
+
+
 def _jetzt() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -648,7 +669,15 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # `config.yaml mindestkriterien.sperren` steht.
     from agent import mindestkriterien as MK
 
-    _mk_fehlt = MK.pruefe_bc(bc_ein, _bloecke_anlass or None)
+    # ⚠️ NUR DIE SATZBLOECKE (17.08.2026). `geteilt()` liefert seit heute
+    # zusaetzlich `_marken_werte` - Zahlen fuer die Zielrechnung, keine
+    # Saetze. Beide Zaehlungen hier arbeiten ueber die ZAHL der Bloecke
+    # (Kursreihenanteil, Fingerabdruck je Block); ein Eintrag mehr wuerde
+    # sie verschieben, ohne dass jemand etwas liest.
+    from agent import lagebeschreibung as _LB
+
+    _bloecke_saetze = _LB.nur_saetze(_bloecke_anlass)
+    _mk_fehlt = MK.pruefe_bc(bc_ein, _bloecke_saetze or None)
     if MK.melde("BC", _mk_fehlt, config, bezug=f"{symbol}/{instrument}"):
         durchlauf.verloren(symbol, "fakten",
                            "Mindestgrundlage: " + "; ".join(_mk_fehlt))
@@ -746,7 +775,7 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             from agent import anlass as AN
 
             _beob = AN.beobachte(conn, symbol=symbol, instrument=instrument,
-                                 fakten=bc_ein, bloecke=_bloecke_anlass,
+                                 fakten=bc_ein, bloecke=_bloecke_saetze,
                                  schreiben=betriebsart != TROCKEN)
             ergebnis.setdefault("anlass", []).append(dict(
                 _beob, symbol=symbol, instrument=instrument))
@@ -1107,6 +1136,25 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                              # dreht Stop, Ziel und Liquidation. Bei Spot gibt
                              # es sie nicht - dort ist LONG die einzige Lage.
                              ist_short=(befund.get("richtung") == "SHORT"),
+                             # ⚠️ DIE MARKE, DIE DIESELBE MAIL NENNT
+                             # (17.08.2026, Nutzerpruefung).
+                             #
+                             # `_ziel()` legt das Ziel kurz VOR den
+                             # naechsten Widerstand - der Praxisstandard,
+                             # eigener Regelzweig, eigene CRV-Ausweisung.
+                             # Nur hat diesen Parameter NIE EIN AUFRUFER
+                             # GEFUELLT, also lief immer der Zweig "kein
+                             # Widerstand in Reichweite". In der SOL-Mail
+                             # stand der Widerstand bei 66,55 EUR im Text
+                             # und das Ziel bei 67,67-68,53 dahinter.
+                             #
+                             # BEI SHORT IST DIE MARKE IM WEG DIE
+                             # UNTERSTUETZUNG - `_ziel()` erwartet die,
+                             # die zwischen Kurs und Ziel liegt, und bei
+                             # SHORT liegt das Ziel unten.
+                             widerstand=_marke_im_weg(
+                                 _bloecke_anlass,
+                                 befund.get("richtung") == "SHORT"),
                              kostenklasse=_kostenklasse(assetklasse),
             umgeworfen_tage=_tage_bis(
                                  befund.get("umgeworfen_bis"), tag))
@@ -1219,6 +1267,11 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             # wichtige zuerst." Habe ich das ueberhaupt, ist die erste Frage.
             bestand=(_bloecke.get("bestand") or [None])[0],
             marken=_bloecke.get("marken") or None,
+            # DIE MARKEN ALS ZAHLEN - damit die Mail sagen kann, wessen
+            # Unterstuetzung sie gerade nennt, wenn das Modell eine
+            # ANDERE meint (17.08.2026).
+            marken_werte=_bloecke.get("_marken_werte"),
+            umgeworfen_preis_eur=befund.get("umgeworfen_preis_eur"),
             # DIE DREI NEUEN BLOECKE STEHEN HIER MIT DRIN (Phase I). Der
             # Leser soll denselben Faktensatz sehen wie das Modell - und
             # gerade der Luecken-Block gehoert ihm: er sagt, worueber diese
