@@ -321,7 +321,18 @@ SYSTEM_PROMPT_TRADER_OHNE_PERSONA = _baue_prompt(mit_betragsfrage=False,
 #              nennt seinen Bezug (Umlaufbestand gegen eigenen
 #              Durchschnitt). Die Zeile aus 17c bleibt - sie schadet
 #              nicht und deckt den Rest.
-PROMPT_STAND = "2026-08-17d"
+# 2026-08-17e: EINE ZAHLENSCHREIBWEISE. Dieselbe Mail schrieb "2,3 % je
+#              Tag" (Faktenblock) und sechs Zeilen tiefer "5 Tage -1.2 %"
+#              (Lagebeschreibung). Der Faktentext ist jetzt durchgehend
+#              deutsch - und damit aendert sich, was das Modell liest.
+#
+#              ⚠️ DER ORDNUNGSPUNKT BLEIBT: "im 84. Perzentil" ist keine
+#              Dezimalzahl. `schreibweise.de()` formatiert deshalb die
+#              ZAHL und bekommt nie einen Satz zu sehen - anders als das
+#              `.replace(",", ".")` ueber einen ganzen Satz, das in
+#              `marktlage` stand und nur solange stimmte, wie der Satz
+#              kein zweites Komma hatte.
+PROMPT_STAND = "2026-08-17e"
 
 
 # --- Die abgeleiteten Zonen (Paket 1, 12.08.2026) -------------------------

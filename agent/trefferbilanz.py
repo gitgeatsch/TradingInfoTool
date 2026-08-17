@@ -401,8 +401,16 @@ def bewerte(bilanz: dict, schluessel: tuple, kosten_r: float = 0.0,
 
 
 def _de(wert: float, stellen: int = 1) -> str:
-    """Komma statt Punkt - siehe signal_mail.eur()."""
-    return f"{wert:,.{stellen}f}".translate(str.maketrans(",.", ".,"))
+    """Deutsche Schreibweise - jetzt aus `agent/schreibweise.py`.
+
+    ⚠️ HIER STAND EINE EIGENE KOPIE, und es gab VIER davon
+    (faktenblock, ausstiegsrechnung, trefferbilanz, signal_mail.eur),
+    die sich nur in der Vorgabe fuer die Stellenzahl unterschieden.
+    Die Vorgabe bleibt hier - sie gehoert zum Verwendungszweck -,
+    die Rechnung nicht."""
+    from agent.schreibweise import de as _s_de
+
+    return _s_de(wert, stellen)
 
 
 def satz(bewertung: dict, einstieg=None, stop=None,

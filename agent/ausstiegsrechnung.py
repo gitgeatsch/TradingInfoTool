@@ -80,11 +80,16 @@ HALTEN = "HALTEN"
 
 
 def _de(wert: float, stellen: int = 2) -> str:
-    """Deutsche Schreibweise. Die erste Fassung hat die ganze AUSGABEZEILE
-    durch `translate` geschickt - das trifft dann auch Text, der kein Zahl ist,
-    und in einer anderen Zeile stand "50,901.00 EUR" unuebersetzt daneben.
-    Zwei Schreibweisen in einer Nachricht sind genau der Fehler aus 12.5."""
-    return f"{float(wert):,.{stellen}f}".translate(str.maketrans(",.", ".,"))
+    """Deutsche Schreibweise - jetzt aus `agent/schreibweise.py`.
+
+    ⚠️ HIER STAND EINE EIGENE KOPIE, und es gab VIER davon
+    (faktenblock, ausstiegsrechnung, trefferbilanz, signal_mail.eur),
+    die sich nur in der Vorgabe fuer die Stellenzahl unterschieden.
+    Die Vorgabe bleibt hier - sie gehoert zum Verwendungszweck -,
+    die Rechnung nicht."""
+    from agent.schreibweise import de as _s_de
+
+    return _s_de(wert, stellen)
 
 
 def _als_datum(wert) -> date | None:

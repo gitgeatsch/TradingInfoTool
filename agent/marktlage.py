@@ -38,6 +38,8 @@ from __future__ import annotations
 
 import numpy as np
 
+from agent import schreibweise as S
+
 BENCHMARK = {
     "krypto": "BTC",
     "aktien": "_THEMEN_ETF_BENCHMARK_SPY",
@@ -166,7 +168,7 @@ def beschreibe_volatilitaet(reihen: dict, klasse: str, datum: str) -> list[str]:
     fenster = gueltig[-FENSTER_HISTORIE:]
     p = _perzentil(fenster, aktuell)
     name = BENCHMARK_NAME.get(sym, sym)
-    return [f"{name} schwankt taeglich um {aktuell:.1f} % des Kurses; das "
+    return [f"{name} schwankt taeglich um {S.de(aktuell, 1)} % des Kurses; das "
             f"liegt im {p}. Perzentil der letzten {len(fenster)} "
             f"Handelstage - "
             f"{_einordnung(p, 'aussergewoehnlich unruhig', 'aussergewoehnlich ruhig')}."]
@@ -217,11 +219,17 @@ def beschreibe_makro(makro: dict, datum: str) -> list[str]:
         if davor:
             richtung, betrag = _richtung(100.0 * (jetzt / davor - 1.0))
             aus.append(
+                # ⚠️ HIER STAND `.replace(",", ".")` UEBER DEM GANZEN SATZ
+                # (behoben 17.08.2026). Es tat das Richtige nur, solange
+                # der Satz kein anderes Komma enthielt - genau die Falle,
+                # an der die Betragsformatierung am 14.08. schon einmal
+                # gescheitert ist ("die erste Fassung schickte die ganze
+                # Zeile durch translate"). Jetzt formatiert `S.de` die
+                # ZAHL und sieht den Satz nie.
                 f"Die Netto-Liquiditaet des US-Finanzsystems betraegt "
-                f"{jetzt:,.0f} Mrd. USD und liegt damit {betrag:.1f} % "
-                f"{richtung} ihrem Stand von vor "
-                f"{FENSTER_LIQUIDITAET_WOCHEN} Wochen."
-                .replace(",", "."))
+                f"{S.de(jetzt, 0)} Mrd. USD und liegt damit "
+                f"{S.de(betrag, 1)} % {richtung} ihrem Stand von vor "
+                f"{FENSTER_LIQUIDITAET_WOCHEN} Wochen.")
 
     zins = {t: v for t, v in (makro.get("zinskurve") or {}).items() if t <= datum}
     if len(zins) >= FENSTER_HISTORIE // 2:
@@ -232,7 +240,7 @@ def beschreibe_makro(makro: dict, datum: str) -> list[str]:
         p = _perzentil(fenster, aktuell)
         aus.append(
             f"Der Abstand zwischen zehnjaehriger und kurzfristiger US-Rendite "
-            f"betraegt {aktuell:+.2f} Prozentpunkte; das liegt im {p}. "
+            f"betraegt {S.de(aktuell, 2, True)} Prozentpunkte; das liegt im {p}. "
             f"Perzentil der letzten {len(fenster)} Handelstage - "
             f"{_einordnung(p, 'aussergewoehnlich steil', 'aussergewoehnlich flach')}.")
     return aus
@@ -295,7 +303,7 @@ def beschreibe_lange_sicht(reihen_monat: dict | None, datum: str) -> list[str]:
         p = _perzentil(np.array(fenster, dtype=float), jetzt)
         wo = "ueber" if jetzt >= 0 else "unter"
         aus.append(
-            f"Der breite US-Aktienmarkt steht {abs(jetzt):.1f} "
+            f"Der breite US-Aktienmarkt steht {S.de(abs(jetzt), 1)} "
             f"Standardabweichungen {wo} seinem langfristigen Trend, gemessen "
             f"an {len(abw)} Monaten Historie; das liegt im {p}. Perzentil der "
             f"letzten {len(fenster)} Monate - "
@@ -311,7 +319,7 @@ def beschreibe_lange_sicht(reihen_monat: dict | None, datum: str) -> list[str]:
         # wie heute frueh im Fundamentalsatz, zwei Stunden spaeter.
         wo = "ueber" if jetzt >= 0 else "unter"
         aus.append(
-            f"Die US-Verbraucherpreise liegen {abs(jetzt):.1f} % {wo} dem "
+            f"Die US-Verbraucherpreise liegen {S.de(abs(jetzt), 1)} % {wo} dem "
             f"Vorjahr; das liegt im {p}. Perzentil der letzten "
             f"{len(fenster)} Monate - "
             f"{_einordnung(p, 'aussergewoehnlich hoch', 'aussergewoehnlich niedrig')}.")
@@ -396,7 +404,7 @@ def beschreibe_stimmung(stimmung: dict, datum: str) -> list[str]:
             f"letzten {len(fenster)} Messungen "
             f"({_einordnung(p, 'aussergewoehnlich zuversichtlich', 'aussergewoehnlich furchtsam')}); "
             f"auf der Skala von 0 bis 100 "
-            f"steht sie bei {aktuell:.0f}. An {hoeher} % der Tage dieses "
+            f"steht sie bei {S.de(aktuell, 0)}. An {hoeher} % der Tage dieses "
             f"Zeitraums war sie zuversichtlicher als heute."]
 
 
@@ -696,8 +704,8 @@ def beschreibe_trend(reihen: dict, klasse: str, datum: str) -> list[str]:
         rl, vl = _richtung(100.0 * (jetzt / lang - 1.0))
         rk, vk = _richtung(100.0 * (jetzt / kurz - 1.0))
         saetze.append(
-            f"{name} steht {vl:.1f} % {rl} seinem Schlusskurs von vor "
-            f"{TREND_LANG} Handelstagen und {vk:.1f} % {rk} dem von vor "
+            f"{name} steht {S.de(vl, 1)} % {rl} seinem Schlusskurs von vor "
+            f"{TREND_LANG} Handelstagen und {S.de(vk, 1)} % {rk} dem von vor "
             f"{TREND_KURZ} Handelstagen.")
 
     # +1, damit "dieser 250 Handelstage" WOERTLICH dieselbe Spanne meint wie
@@ -737,8 +745,8 @@ def beschreibe_trend(reihen: dict, klasse: str, datum: str) -> list[str]:
         wo_hoch = len(fenster) - 1 - int(np.nanargmax(fenster))
         wo_tief = len(fenster) - 1 - int(np.nanargmin(fenster))
         saetze.append(
-            f"{name} liegt {100.0 * (1.0 - jetzt / hoch):.1f} % unter dem "
-            f"Schlusskurs-Hoch und {100.0 * (jetzt / tief - 1.0):.1f} % ueber "
+            f"{name} liegt {S.de(100.0 * (1.0 - jetzt / hoch), 1)} % unter dem "
+            f"Schlusskurs-Hoch und {S.de(100.0 * (jetzt / tief - 1.0), 1)} % ueber "
             f"dem Schlusskurs-Tief dieser {TREND_LANG} Handelstage; das Hoch "
             f"liegt {wo_hoch} Handelstage zurueck, das Tief {wo_tief}.")
     return saetze

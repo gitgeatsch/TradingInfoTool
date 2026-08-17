@@ -37,6 +37,8 @@ from __future__ import annotations
 
 import numpy as np
 
+from agent import schreibweise as S
+
 FENSTER_SWING = 2  # Williams-Fraktal, 5-Kerzen-Muster
 
 
@@ -99,7 +101,7 @@ def _bestand(symbol: str, menge: float | None, einstand_eur: float | None,
         # Bei einer Hebelposition ist das der REGELFALL und kein Mangel: sie
         # fuehrt keinen Einstandspreis je Stueck, der Buchwert steckt im
         # Positionswert (`hebel_positions` hat keine solche Spalte).
-        return [f"{symbol} hat {was} ({menge:.4f} Stueck), aber Einstand "
+        return [f"{symbol} hat {was} ({S.de(menge, 4)} Stueck), aber Einstand "
                 f"oder aktueller Kurs fehlen - Gewinn und Verlust dieser "
                 f"Position sind unbekannt."] + hinweis
     investiert = menge * einstand_eur
@@ -108,8 +110,8 @@ def _bestand(symbol: str, menge: float | None, einstand_eur: float | None,
     pct = 100.0 * diff / investiert if investiert else 0.0
     lage = "im Plus" if diff > 0 else "im Minus"
     return [
-        f"{symbol} ist bereits im Bestand: {investiert:.0f} EUR investiert, "
-        f"aktuell {wert:.0f} EUR wert - {abs(diff):.0f} EUR {lage} ({pct:+.1f} %).",
+        f"{symbol} ist bereits im Bestand: {S.de(investiert, 0)} EUR investiert, "
+        f"aktuell {S.de(wert, 0)} EUR wert - {S.de(abs(diff), 0)} EUR {lage} ({S.de(pct, 1, True)} %).",
     ] + hinweis
 
 
@@ -205,7 +207,7 @@ def _bewegung(c: np.ndarray, i: int) -> list[str]:
     teile = []
     for tage in (5, 20, 60):
         if i >= tage:
-            teile.append(f"{tage} Tage {100.0 * (c[i] / c[i - tage] - 1.0):+.1f} %")
+            teile.append(f"{tage} Tage {S.de(100.0 * (c[i] / c[i - tage] - 1.0), 1, True)} %")
     return ([f"Kursentwicklung im selben Rahmen: {', '.join(teile)}."]
             if teile else [])
 
@@ -236,12 +238,12 @@ def _kurs(wert: float) -> str:
     if w >= 1000:
         return f"{wert:,.0f}".replace(",", ".")
     if w >= 100:
-        return f"{wert:.1f}"
+        return f"{S.de(wert, 1)}"
     if w >= 1:
-        return f"{wert:.2f}"
+        return f"{S.de(wert, 2)}"
     if w >= 0.01:
-        return f"{wert:.4f}"
-    return f"{wert:.6f}"
+        return f"{S.de(wert, 4)}"
+    return f"{S.de(wert, 6)}"
 
 
 def _cluster(punkte: list, atr: float) -> list[tuple[float, int]]:
@@ -329,17 +331,17 @@ def _niveaus(c: np.ndarray, h: np.ndarray, l: np.ndarray, i: int,
     aus = []
     w = werte.get("widerstand")
     if w:
-        aus.append(f"Der naechste Widerstand liegt {w['abstand_atr']:.1f} "
+        aus.append(f"Der naechste Widerstand liegt {S.de(w['abstand_atr'], 1)} "
                    f"Schwankungsbreiten hoeher, bei {_kurs(w['preis_eur'])} "
                    f"EUR ({w['beruehrungen']}-mal beruehrt).")
     u = werte.get("unterstuetzung")
     if u:
-        aus.append(f"Die naechste Unterstuetzung liegt {u['abstand_atr']:.1f} "
+        aus.append(f"Die naechste Unterstuetzung liegt {S.de(u['abstand_atr'], 1)} "
                    f"Schwankungsbreiten tiefer, bei {_kurs(u['preis_eur'])} "
                    f"EUR ({u['beruehrungen']}-mal beruehrt).")
     if not aus:
         # Auch das ist eine Aussage: der Kurs steht im freien Feld.
-        aus.append(f"Im Umkreis von {NIVEAU_MIN_ABSTAND_ATR:.1f} "
+        aus.append(f"Im Umkreis von {S.de(NIVEAU_MIN_ABSTAND_ATR, 1)} "
                    f"Schwankungsbreiten liegt keine markante Marke.")
     return aus
 
@@ -373,7 +375,7 @@ def _volumen(c: np.ndarray, v: np.ndarray, i: int,
     # die nicht den Markt beschreibt, sondern die Uhrzeit des Datenabrufs.
     aus = []
     if tag_vollstaendig:
-        aus.append(f"Der Umsatz liegt beim {v[i] / d20:.1f}-fachen "
+        aus.append(f"Der Umsatz liegt beim {S.de(v[i] / d20, 1)}-fachen "
                    f"des 20-Tage-Schnitts.")
     # Auch hier endet das Fenster VOR dem Teiltag - sonst verzerrt ein halber
     # Handelstag das Verhaeltnis von Auf- zu Abwaertsumsatz.
@@ -385,7 +387,7 @@ def _volumen(c: np.ndarray, v: np.ndarray, i: int,
         wer = ("ueberwiegend auf Aufwaertstagen" if q >= 60 else
                "ueberwiegend auf Abwaertstagen" if q <= 40 else
                "ohne klares Uebergewicht")
-        aus.append(f"Von den letzten 20 Tagen entfielen {q:.0f} % des Umsatzes "
+        aus.append(f"Von den letzten 20 Tagen entfielen {S.de(q, 0)} % des Umsatzes "
                    f"auf Aufwaertstage - {wer}.")
     ueber = sum(1 for j in range(ende - 10, ende) if v[j] > d20)
     art = ("stetig ueber mehrere Sitzungen" if ueber >= 6 else
@@ -499,8 +501,8 @@ def _hebelgeometrie(atr: float, close: float,
         return []
     if not close or close <= 0 or not atr or atr <= 0:
         return []
-    teile = [f"bei {h:.0f}-fach {100.0 / h:.0f} %, also "
-             f"{(float(close) / h) / float(atr):.1f} Schwankungsbreiten"
+    teile = [f"bei {S.de(h, 0)}-fach {S.de(100.0 / h, 0)} %, also "
+             f"{S.de((float(close) / h) / float(atr), 1)} Schwankungsbreiten"
              for h in GRENZHEBEL]
     return ["Der Abstand zur Zwangsaufloesung haengt allein am Hebelfaktor: "
             + "; ".join(teile) + ".",
@@ -541,7 +543,7 @@ def _referenz(referenz: dict | None) -> list[str]:
             continue
         wie = "besser" if wert >= 0 else "schlechter"
         z.append(f"Ueber die letzten {tage} Handelstage lief dieser Wert "
-                 f"{abs(float(wert)):.1f} Prozentpunkte {wie} als "
+                 f"{S.de(abs(float(wert)), 1)} Prozentpunkte {wie} als "
                  f"{referenz.get('name', 'der breite Markt')}.")
     return z
 
@@ -624,7 +626,7 @@ def _fundamental(fundamentaldaten: dict | None) -> list[str]:
 
     if umsatz is not None:
         z.append(f"Der Umsatz des Unternehmens ist gegenueber dem "
-                 f"Vorjahreszeitraum um {abs(umsatz):.0f} % {_wort(umsatz)}.")
+                 f"Vorjahreszeitraum um {S.de(abs(umsatz), 0)} % {_wort(umsatz)}.")
     if gewinn is not None:
         # ⚠️ "IM SELBEN ZEITRAUM" BRAUCHT EINEN VORSATZ. Fehlt das
         # Umsatzwachstum, stand hier ein Verweis ins Leere - und der
@@ -633,7 +635,7 @@ def _fundamental(fundamentaldaten: dict | None) -> list[str]:
         # der vielleicht gar nicht da ist.
         rahmen = ("im selben Zeitraum" if umsatz is not None
                   else "gegenueber dem Vorjahreszeitraum")
-        z.append(f"Der Gewinn ist {rahmen} um {abs(gewinn):.0f} % "
+        z.append(f"Der Gewinn ist {rahmen} um {S.de(abs(gewinn), 0)} % "
                  f"{_wort(gewinn)}.")
     # DAS VERHAELTNIS - die eigentliche Aussage, und sie braucht keine
     # Vergleichsgruppe. Nur wenn beide vorliegen und sich unterscheiden.
@@ -756,7 +758,7 @@ def _umschlag(umschlag: dict | None) -> list[str]:
     # Nebensatz. Und der Unterschied zum Volumenblock steht dabei: der
     # eine misst gegen den UMLAUFBESTAND, der andere gegen den eigenen
     # Durchschnitt.
-    return [f"Der Umschlag dieses Werts betraegt {anteil:.1f} %: so viel "
+    return [f"Der Umschlag dieses Werts betraegt {S.de(anteil, 1)} %: so viel "
             f"vom Umlaufbestand hat binnen 24 Stunden den Besitzer "
             f"gewechselt. Dieser Umschlag liegt im {p}. Perzentil der "
             f"letzten {u.get('n', 0)} Messungen - {wie}."]

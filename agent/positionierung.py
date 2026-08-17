@@ -48,6 +48,8 @@ Block haelt denselben Stand.
 """
 from __future__ import annotations
 
+from agent import schreibweise as S
+
 import logging
 import sqlite3
 from datetime import datetime, timezone
@@ -748,12 +750,12 @@ def saetze(e: dict) -> list[str]:
         if richtung:
             z.append(
                 f"Die offenen Kontrakte am Terminmarkt sind auf Binance in "
-                f"den letzten {e['oi_fenster_stunden']:.0f} Stunden um "
-                f"{abs(e['oi_aenderung_pct']):.1f} % {richtung}.")
+                f"den letzten {S.de(e['oi_fenster_stunden'], 0)} Stunden um "
+                f"{S.de(abs(e['oi_aenderung_pct']), 1)} % {richtung}.")
         else:
             z.append(
                 f"Die offenen Kontrakte am Terminmarkt sind auf Binance in "
-                f"den letzten {e['oi_fenster_stunden']:.0f} Stunden "
+                f"den letzten {S.de(e['oi_fenster_stunden'], 0)} Stunden "
                 "praktisch unveraendert geblieben.")
 
     # DIE BOERSEN NEBENEINANDER - OHNE DEUTUNG (16.08.2026).

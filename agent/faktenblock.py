@@ -165,8 +165,16 @@ _ZUSATZ = {
 
 
 def _de(wert: float, stellen: int = 0) -> str:
-    """Deutsche Schreibweise - Punkt als Tausender, Komma als Dezimaltrenner."""
-    return f"{float(wert):,.{stellen}f}".translate(str.maketrans(",.", ".,"))
+    """Deutsche Schreibweise - jetzt aus `agent/schreibweise.py`.
+
+    ⚠️ HIER STAND EINE EIGENE KOPIE, und es gab VIER davon
+    (faktenblock, ausstiegsrechnung, trefferbilanz, signal_mail.eur),
+    die sich nur in der Vorgabe fuer die Stellenzahl unterschieden.
+    Die Vorgabe bleibt hier - sie gehoert zum Verwendungszweck -,
+    die Rechnung nicht."""
+    from agent.schreibweise import de as _s_de
+
+    return _s_de(wert, stellen)
 
 
 ATR_FENSTER = 14

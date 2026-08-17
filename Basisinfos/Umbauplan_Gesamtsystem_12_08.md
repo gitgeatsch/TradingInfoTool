@@ -9991,3 +9991,108 @@ nirgends).
 > „2,3 %" aus dem Faktenblock neben „−1.2 %" aus der Lagebeschreibung. Das
 > betrifft viele Sätze auf einmal und damit den Prompt; getrennt zu
 > entscheiden.
+
+---
+
+## Kapitel 80 — Eine Zahlenschreibweise (17.08.2026)
+
+### 80.1 Was daran gefährlich war — die Prüfung vorab
+
+**Nutzervorgabe:** *„prüfe aber vorher, ob es Nebenwirkungen gibt."* Zu Recht:
+die Fakten gehen in denselben Text, den drei Wächter und vier Prüfwerkzeuge
+lesen.
+
+| Leser | Muster | Urteil |
+|---|---|---|
+| `pruefe_zahlen_in_prompts.ZAHL` | `-?\d+(?:[.,]\d+)?` | ✓ kennt **beide** |
+| `gegenpruefer_rollen._ZAHL` | `[.,]` + `float(roh.replace(",", "."))` | ✓ normalisiert selbst |
+| `waechter_zuspitzung._BEZUG` | `im (\d+)\. perzentil` | ✓ **Ordnungszahl**, nicht betroffen |
+| `pruefe_belege_gegen_fakten` | `(\d{1,3})\.\s*Perzentil` | ✓ dito |
+| Paketprüfungen | prüfen **Wörter**, nicht Zahlenformate | ✓ |
+| **`pruefe_pakete` „übergenau"** | `\d{4,}\.\d{3,}` | ⚠️ **wäre still blind geworden** |
+
+> **⚠️ DER ORDNUNGSPUNKT IST DIE FALLE.** „im 84. Perzentil" ist kein
+> Dezimalpunkt. Ein Ersetzen über dem Satz macht daraus „im 84, Perzentil" und
+> zerstört nebenbei zwei Wächtermuster. Deshalb formatiert `schreibweise.de()`
+> die **Zahl** und bekommt nie einen Satz zu sehen.
+
+### 80.2 Eine bestehende Falle, gefunden beim Hinsehen
+
+```python
+f"Die Netto-Liquiditaet ... betraegt {jetzt:,.0f} Mrd. USD und liegt
+  damit {betrag:.1f} % {richtung} ihrem Stand ..."
+  .replace(",", ".")        # <- ueber dem GANZEN Satz
+```
+
+**Das tat nur das Richtige, solange der Satz kein zweites Komma enthielt** —
+genau die Falle, an der die Betragsformatierung am 14.08. schon einmal
+gescheitert ist. Behoben.
+
+### 80.3 Vier Kopien derselben Zeile
+
+```
+faktenblock._de          Vorgabe 0 Stellen
+ausstiegsrechnung._de    Vorgabe 2 Stellen
+trefferbilanz._de        Vorgabe 1 Stelle
+signal_mail.eur          Vorgabe 0 Stellen
+```
+
+**Vier Definitionen desselben Begriffs** — und drei Module, die gar keine
+hatten und deshalb englisch schrieben. Jetzt `agent/schreibweise.py`, einmal;
+die Vorgabe für die Stellenzahl bleibt am Verwendungsort, die Rechnung nicht.
+
+**35 Formate umgestellt** — 22 in `lagebeschreibung`, 10 in `marktlage`,
+3 in `positionierung`.
+
+```
+vorher   Kursentwicklung im selben Rahmen: 5 Tage -1.2 %, 20 Tage +1.6 %
+nachher  Kursentwicklung im selben Rahmen: 5 Tage -1,2 %, 20 Tage +1,6 %
+
+         Die Netto-Liquiditaet betraegt 5.840 Mrd. USD und liegt damit
+         2,5 % ueber ihrem Stand von vor 26 Wochen.
+         ... betraegt +0,95 Prozentpunkte; das liegt im 95. Perzentil ...
+```
+
+### 80.4 Eine Prüfung, die den Quelltext las statt das Ergebnis
+
+**Zwei Prüfungen sind fehlgeschlagen — beide zu Recht, eine davon aufschlussreich:**
+
+```python
+"maketrans" in _quelltext(datei)        # <- suchte ein WORT im Code
+```
+
+Sie fiel, weil die vier Kopien durch eine gemeinsame Funktion ersetzt wurden:
+**das Verhalten war richtig, die Prüfung sah nur das falsche Wort.**
+
+> Eine Prüfung, die den Quelltext liest statt das Ergebnis, fällt bei jeder
+> Aufräumarbeit an — und wird dann *angepasst* statt ernstgenommen.
+> **„Katalog ist keine Messung."**
+
+Ersetzt durch fünf Messungen: jede Formatierung muss `1234.5` als **„1.234,50"**
+liefern, und alle vier Module müssen dieselbe Funktion importieren.
+
+### 80.5 Was der Nutzer erwarten muss
+
+**`PROMPT_STAND` → `2026-08-17e`.** Der Faktentext ändert sich, also auch das,
+was das Modell liest.
+
+> ⚠️ **Die Anlassbremse ist für eine Runde offen.** Der Fingerabdruck ist der
+> Prompttext selbst; ändert sich seine Schreibweise, ist jede Frage einmal
+> „neu". Nach dem Neustart läuft also ein voller Durchgang ohne Bremse —
+> erwartet, einmalig, und in den Zahlen des nächsten Exports sichtbar.
+
+### 80.6 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **990**, alle bestanden — **6 neu**, 2 nachgezogen |
+| Ordnungszahlen | „95. Perzentil" unversehrt, 0 Dezimalpunkte im Makrotext |
+| Tausenderpunkt | „1.936 EUR investiert" — deutsch, nicht englisch |
+| übergenau-Prüfung | liest jetzt **beide** Schreibweisen |
+| Schreibweise | fünf Module gemessen, nicht im Quelltext gesucht |
+| freie Namen · Zahlenprüfer · Belegprüfer · Phase 1 | 0 · 9/9 · 9/9 · bestanden |
+| Simulation | 4 Gruppen, 8 Signale, **0 Fehler, 0 Lücken** |
+
+**Nicht angefasst:** reine Zählungen bleiben ohne Tausenderpunkt („1184
+Monaten", „366 Messungen"). Sie sind Anzahlen, keine Messwerte — ein Punkt
+darin läse sich wie eine Genauigkeit, die es nicht gibt.

@@ -97,7 +97,12 @@ def eur(wert: float, stellen: int = 0) -> str:
     Python formatiert mit `,` als Tausendertrenner - in einer deutschen Mail
     liest sich "55,500.00 EUR" als fuenfundfuenfzigeinhalb. Die erste Fassung
     der Mail hatte genau das."""
-    return f"{wert:,.{stellen}f}".translate(str.maketrans(",.", ".,"))
+    # AUS `agent/schreibweise.py` - die vierte Kopie dieser Zeile ist damit
+    # weg. Die Vorgabe fuer die Stellenzahl bleibt hier, sie gehoert zum
+    # Verwendungszweck.
+    from agent.schreibweise import de as _s_de
+
+    return _s_de(wert, stellen)
 
 
 def preis(wert: float) -> str:

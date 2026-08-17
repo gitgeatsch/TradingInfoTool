@@ -2547,12 +2547,37 @@ def gesamtpruefung() -> None:
            "RM-1b/RM-1c - wer die config aendert, muss hier mitziehen")
 
     # --- EINHEITEN: eine Waehrung, eine Schreibweise? ---
-    for datei in ("agent/signal_mail.py", "agent/faktenblock.py",
-                  "agent/ausstiegsrechnung.py", "agent/entscheidungsrechnung.py"):
-        pruefe(P, f"{datei.split('/')[-1]} schreibt Zahlen deutsch",
-               "maketrans" in _quelltext(datei),
-               "zwei Schreibweisen in einer Nachricht sind der Fehler aus "
-               "Umbauplan 12.5")
+    # ⚠️ GEMESSEN STATT IM QUELLTEXT GESUCHT (17.08.2026). Hier stand
+    # `"maketrans" in _quelltext(datei)` - eine Suche nach einer
+    # Schreibweise im CODE. Sie ist heute fehlgeschlagen, weil die vier
+    # Kopien der Formatierung durch EINE gemeinsame ersetzt wurden: das
+    # Verhalten war richtig, die Pruefung sah nur das falsche Wort.
+    #
+    # Eine Pruefung, die den Quelltext liest statt das Ergebnis, faellt
+    # bei jeder Aufraeumarbeit an - und wird dann angepasst statt
+    # ernstgenommen. "Katalog ist keine Messung."
+    from agent.ausstiegsrechnung import _de as _de_a
+    from agent.faktenblock import _de as _de_f
+    from agent.schreibweise import de as _de_s
+    from agent.trefferbilanz import _de as _de_t
+
+    for name, fn, stellen in (("schreibweise", _de_s, 2),
+                              ("faktenblock", _de_f, 2),
+                              ("ausstiegsrechnung", _de_a, 2),
+                              ("trefferbilanz", _de_t, 2),
+                              ("signal_mail.eur", SM.eur, 2)):
+        pruefe(P, f"{name} schreibt Zahlen deutsch",
+               fn(1234.5, stellen) == "1.234,50",
+               f"bekommen: {fn(1234.5, stellen)!r} - zwei Schreibweisen in "
+               f"einer Nachricht sind der Fehler aus Umbauplan 12.5")
+    pruefe(P, "und alle vier rechnen mit DERSELBEN Funktion",
+           all("from agent.schreibweise import de" in _quelltext(d)
+               for d in ("agent/faktenblock.py",
+                         "agent/ausstiegsrechnung.py",
+                         "agent/trefferbilanz.py",
+                         "agent/signal_mail.py")),
+           "vier Kopien derselben Zeile waren vier Stellen zum "
+           "Auseinanderlaufen")
 
     # --- ERREICHBARKEIT: was ist gebaut und ruft niemand? ---
     module = ["entscheidungsrechnung", "faktenblock", "faktenblock_quellen",
@@ -3369,8 +3394,11 @@ def paket_15() -> None:
            f"vorher stand dort '57402.8132 EUR' - die Marke stammt aus einem "
            f"Cluster von Hochs und Tiefs und ist auf hundert Euro genau, "
            f"nicht auf einen Zehntelcent")
+    # DEUTSCH SEIT 17.08. - vorher stand hier "0.000346" mit Punkt, und
+    # zwei Zeilen weiter oben "57.403" mit deutschem Tausenderpunkt. In
+    # EINER Mail.
     pruefe(P, "ein Kleinwert behaelt seine Stellen",
-           _kurs(0.00034567) == "0.000346",
+           _kurs(0.00034567) == "0,000346",
            "die Genauigkeit haengt an der Groessenordnung, nicht an einer "
            "Konstante - sonst waere die Marke fuer ein Token unbrauchbar")
     import json as _json
@@ -3379,7 +3407,13 @@ def paket_15() -> None:
                           index=len(reihen[symbole[0]]) - 1, reihen=reihen,
                           db="data/tradinginfotool.db", mit_finanzierung=False)
     _text = _json.dumps(_bc, ensure_ascii=False)
-    _uebergenau = _re.findall(r"\d{4,}\.\d{3,}", _text)
+    # ⚠️ BEIDE SCHREIBWEISEN (17.08.2026). Seit die Faktensaetze
+    # deutsch formatiert sind, heisst 1234.5678 dort "1.234,568" - das alte
+    # Muster haette diese Zahl nicht mehr gefunden, und die Pruefung waere
+    # STILL blind geworden. Rohe Floats im Dict stehen weiterhin mit Punkt,
+    # deshalb bleiben beide Muster.
+    _uebergenau = (_re.findall(r"\d{4,}\.\d{3,}", _text)
+                   + _re.findall(r"\d{1,3}(?:\.\d{3})+,\d{3,}", _text))
     pruefe(P, "auch im ECHTEN Faktentext steht keine solche Zahl mehr",
            not _uebergenau, f"gefunden: {_uebergenau[:3]}")
 
@@ -6146,7 +6180,7 @@ def paket_15() -> None:
     # nichts.
     # Zuletzt 2026-08-17c: eine Zeile gegen erfundene Perzentile (A6).
     pruefe(P, "der Prompt-Stand ist mitgezogen",
-           RT5.PROMPT_STAND == "2026-08-17d",
+           RT5.PROMPT_STAND == "2026-08-17e",
            "die Eingabe UND die Anweisung der Rolle BC haben sich "
            "geaendert - ohne neuen Stand waeren die Urteile davor und "
            "danach nicht auseinanderzuhalten")
@@ -7697,7 +7731,7 @@ def paket_belege() -> None:
            "kein Perzentil, und der Leser kann es nicht unterscheiden")
 
     pruefe(P, "A6: und der Promptstand wurde mitgezogen",
-           RT.PROMPT_STAND == "2026-08-17d",
+           RT.PROMPT_STAND == "2026-08-17e",
            f"{RT.PROMPT_STAND} - sonst waeren Signale vor und nach der "
            f"Aenderung nicht trennbar")
 
