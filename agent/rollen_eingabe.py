@@ -164,7 +164,26 @@ def lade_makro(db: str = "data/tradinginfotool.db") -> dict:
                 "SELECT date, rendite_10j_pct, rendite_kurz_pct FROM "
                 "macro_snapshot WHERE rendite_10j_pct IS NOT NULL "
                 "AND rendite_kurz_pct IS NOT NULL")}
-            return {"liquiditaet": liq, "zinskurve": zins}
+            # DIE LANGE SICHT (17.08.2026). `makro_historie_monat`
+            # traegt 1.185 Monate ab 1927, wird taeglich vom
+            # `makro_analog_job` gepflegt - und wurde von KEINEM Prompt
+            # gelesen. Nur die beiden Felder, die Rolle A nicht schon
+            # hat und die keine Kursreihe sind (P3, siehe
+            # `marktlage.beschreibe_lange_sicht`).
+            monat: dict = {}
+            try:
+                for feld in ("spx_trend_deviation_std",
+                             "cpi_yoy_prozent"):
+                    monat[feld] = {m: w for m, w in con.execute(
+                        f"SELECT monat, {feld} FROM makro_historie_monat "
+                        f"WHERE {feld} IS NOT NULL")}
+            except sqlite3.Error:
+                # FAIL-SOFT WIE DER REST: auf einer aelteren Datei gibt
+                # es die Tabelle nicht, und die zwei Saetze entfallen -
+                # die uebrigen dreizehn bleiben.
+                monat = {}
+            return {"liquiditaet": liq, "zinskurve": zins,
+                    "monatsreihen": monat}
         finally:
             con.close()
     except Exception:                                        # noqa: BLE001

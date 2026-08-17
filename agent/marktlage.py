@@ -102,6 +102,36 @@ def _perzentil(werte: np.ndarray, aktuell: float) -> int:
     return int(round(100.0 * float((werte < aktuell).mean())))
 
 
+# --- R-T11 AUCH FUER ROLLE A (17.08.2026) ----------------------------
+#
+# ⚠️ ACHT VON FUENFZEHN AUSSAGEN trugen ein Perzentil ohne ein Wort dazu,
+# ob das viel ist. Die Regel steht seit gestern im Regelwerk und wurde
+# nur auf Rolle G angewandt - dort, wo sie entstand.
+#
+# WARUM DAS MEHR WIEGT ALS BEI G: Rolle A speist ueber das Lagebild JEDE
+# Gruppe und damit 100 % der Urteile. "Das liegt im 0. Perzentil" zwingt
+# das Modell zu genau der Rechenleistung, die es nicht hat - und zwar in
+# jedem einzelnen Prompt.
+#
+# DIESELBEN GRENZEN WIE IN `positionierung.py` (90/10). Zwei Massstaebe
+# nebeneinander waeren schlimmer als keiner; eine Paketpruefung haelt sie
+# zusammen.
+EXTREM_OBEN, EXTREM_UNTEN = 90, 10
+
+
+def _einordnung(p: int, hoch: str = "aussergewoehnlich hoch",
+                tief: str = "aussergewoehnlich niedrig") -> str:
+    """Das Wort zum Perzentil - beschreibend, nicht wertend (R-T3).
+
+    "aussergewoehnlich hoch" sagt, wo der Wert in SEINER Historie steht.
+    "guenstig" oder "riskant" waere ein Urteil und damit ein Etikett."""
+    if p >= EXTREM_OBEN:
+        return hoch
+    if p <= EXTREM_UNTEN:
+        return tief
+    return "im gewohnten Bereich"
+
+
 def beschreibe_volatilitaet(reihen: dict, klasse: str, datum: str) -> list[str]:
     """Dimension 1 von vier: wie stark schwankt dieser Markt gerade?
 
@@ -138,7 +168,8 @@ def beschreibe_volatilitaet(reihen: dict, klasse: str, datum: str) -> list[str]:
     name = BENCHMARK_NAME.get(sym, sym)
     return [f"{name} schwankt taeglich um {aktuell:.1f} % des Kurses; das "
             f"liegt im {p}. Perzentil der letzten {len(fenster)} "
-            f"Handelstage."]
+            f"Handelstage - "
+            f"{_einordnung(p, 'aussergewoehnlich unruhig', 'aussergewoehnlich ruhig')}."]
 
 
 FENSTER_LIQUIDITAET_WOCHEN = 26     # ein halbes Jahr, das Fenster der Quelle
@@ -202,7 +233,88 @@ def beschreibe_makro(makro: dict, datum: str) -> list[str]:
         aus.append(
             f"Der Abstand zwischen zehnjaehriger und kurzfristiger US-Rendite "
             f"betraegt {aktuell:+.2f} Prozentpunkte; das liegt im {p}. "
-            f"Perzentil der letzten {len(fenster)} Handelstage.")
+            f"Perzentil der letzten {len(fenster)} Handelstage - "
+            f"{_einordnung(p, 'aussergewoehnlich steil', 'aussergewoehnlich flach')}.")
+    return aus
+
+
+# --- DIE LANGE SICHT (17.08.2026) ------------------------------------------
+#
+# DER ANLASS. `makro_historie_monat` traegt 1.185 Monate ab 1927, wird vom
+# `makro_analog_job` taeglich gepflegt - und wurde von KEINEM Prompt gelesen.
+# Sie stand seit dem 16.08. als "Schatz" in Kapitel 53.2, mit allen sieben
+# Aufnahmepruefungen bestanden.
+#
+# WARUM SIE JETZT DRANKOMMT: 93 % aller Urteile sind Krypto, und Rolle A
+# erreicht ueber das Lagebild JEDE Gruppe. Von ihren 15 Aussagen sind heute
+# ZWOELF kursabgeleitet - dieselbe Unterernaehrung wie eine Ebene tiefer, nur
+# eine Ebene hoeher.
+#
+# ⚠️ NUR ZWEI AUSSAGEN, NICHT SECHS. Die Tabelle traegt auch Oel, Dollarindex
+# und die Kursstaende selbst. Sie alle aufzunehmen hiesse, 15 auf 21 Aussagen
+# zu bringen - und die Literatur, auf der dieses Projekt steht, ist eindeutig:
+# ab fuenf Indikatoren verschlechtern sich Ergebnisse, ab zwoelf verlangsamt
+# sich die Aufnahme messbar. Mehr Fakten sind nicht mehr Information.
+#
+# AUSGEWAEHLT NACH NICHT-REDUNDANZ (P3):
+#   spx_trend_deviation_std   1.185 Monate, und bereits in Standardabweichungen
+#                             - die Form, die R-T5 verlangt. Sagt etwas, das
+#                             KEINE andere Aussage sagt: wie weit der breite
+#                             Markt von seinem eigenen Jahrhunderttrend weg ist.
+#   cpi_yoy_prozent            942 Monate. Die Inflation fehlt Rolle A ganz,
+#                             und sie ist keine Kursgroesse.
+#
+# NICHT AUFGENOMMEN: `rendite_10y` (steckt schon in der Zinskurve - P3),
+# `spx_close`/`btc_close` (Rolle A beschreibt beide Maerkte bereits),
+# `oel_wti` und `dxy_proxy` (weitere Kursreihen - genau das Gegenteil dessen,
+# was hier gebraucht wird).
+FENSTER_HISTORIE_MONATE = 240          # zwanzig Jahre - lang genug fuer ein
+                                       # Perzentil, kurz genug fuer Vergleichbarkeit
+MINDEST_MONATE = 60
+
+
+def beschreibe_lange_sicht(reihen_monat: dict | None, datum: str) -> list[str]:
+    """Zwei Aussagen aus 99 Jahren Makrohistorie - fuer Rolle A.
+
+    `reihen_monat` ist {feld: {monat: wert}}; die Zeitschranke ist derselbe
+    Ankertag wie ueberall, nur auf Monate gerundet. STRENG KAUSAL: ein heute
+    geholter Wert in einem Anker von 2022 waere ein Leck."""
+    if not reihen_monat:
+        return []
+    monat = str(datum or "")[:7]
+    aus: list[str] = []
+
+    def _reihe(feld: str) -> list[float]:
+        d = reihen_monat.get(feld) or {}
+        return [float(d[m]) for m in sorted(d) if m <= monat and d[m] is not None]
+
+    abw = _reihe("spx_trend_deviation_std")
+    if len(abw) >= MINDEST_MONATE:
+        jetzt = abw[-1]
+        fenster = abw[-FENSTER_HISTORIE_MONATE:]
+        p = _perzentil(np.array(fenster, dtype=float), jetzt)
+        wo = "ueber" if jetzt >= 0 else "unter"
+        aus.append(
+            f"Der breite US-Aktienmarkt steht {abs(jetzt):.1f} "
+            f"Standardabweichungen {wo} seinem langfristigen Trend, gemessen "
+            f"an {len(abw)} Monaten Historie; das liegt im {p}. Perzentil der "
+            f"letzten {len(fenster)} Monate - "
+            f"{_einordnung(p, 'aussergewoehnlich weit oben', 'aussergewoehnlich weit unten')}.")
+
+    cpi = _reihe("cpi_yoy_prozent")
+    if len(cpi) >= MINDEST_MONATE:
+        jetzt = cpi[-1]
+        fenster = cpi[-FENSTER_HISTORIE_MONATE:]
+        p = _perzentil(np.array(fenster, dtype=float), jetzt)
+        # ⚠️ "-0.1 % UEBER DEM VORJAHR" stand im ersten Entwurf - bei
+        # Deflation ist "ueber" schlicht falsch. Derselbe Vorzeichenfehler
+        # wie heute frueh im Fundamentalsatz, zwei Stunden spaeter.
+        wo = "ueber" if jetzt >= 0 else "unter"
+        aus.append(
+            f"Die US-Verbraucherpreise liegen {abs(jetzt):.1f} % {wo} dem "
+            f"Vorjahr; das liegt im {p}. Perzentil der letzten "
+            f"{len(fenster)} Monate - "
+            f"{_einordnung(p, 'aussergewoehnlich hoch', 'aussergewoehnlich niedrig')}.")
     return aus
 
 
@@ -281,7 +393,9 @@ def beschreibe_stimmung(stimmung: dict, datum: str) -> list[str]:
     # konkurrieren.
     hoeher = 100 - p
     return [f"Die Anlegerstimmung zu Bitcoin liegt im {p}. Perzentil der "
-            f"letzten {len(fenster)} Messungen; auf der Skala von 0 bis 100 "
+            f"letzten {len(fenster)} Messungen "
+            f"({_einordnung(p, 'aussergewoehnlich zuversichtlich', 'aussergewoehnlich furchtsam')}); "
+            f"auf der Skala von 0 bis 100 "
             f"steht sie bei {aktuell:.0f}. An {hoeher} % der Tage dieses "
             f"Zeitraums war sie zuversichtlicher als heute."]
 
@@ -310,7 +424,13 @@ def beschreibe_marktlage(reihen: dict, datum: str, stimmung: dict | None = None,
     # der RAHMEN, in dem alle Leitmaerkte stehen - anders als die uebrigen
     # Fakten gilt es fuer alle drei zugleich. Am Ende gelesen saehe es aus wie
     # eine Fussnote zum Rohstoffblock.
-    aus: list[str] = list(beschreibe_makro(makro or {}, datum))
+    # DIE LANGE SICHT VOR DEM TAGESMAKRO (17.08.2026, R-T9). Sie ist der
+    # weiteste Rahmen ueberhaupt - 99 Jahre gegen zwoelf Wochen. Wer die
+    # Jahrhundertlage hinter die Wochenliquiditaet setzt, dreht die
+    # Groessenordnungen um.
+    aus: list[str] = list(beschreibe_lange_sicht(
+        (makro or {}).get("monatsreihen"), datum))
+    aus += list(beschreibe_makro(makro or {}, datum))
     for klasse in BENCHMARK:
         sym = BENCHMARK[klasse]
         if sym in gesehen:
@@ -514,7 +634,8 @@ def beschreibe_liquiditaet(reihen: dict, klasse: str, datum: str) -> list[str]:
     # Ohne ihn ist die Zahl nicht benutzbar, und eine unbenutzbare Zahl im
     # Faktensatz ist schlechter als gar keine.
     return [f"{name} verzeichnet je gehandeltem Euro Umsatz eine Kursbewegung "
-            f"im {p}. Perzentil der letzten {len(fenster)} Handelstage, "
+            f"im {p}. Perzentil der letzten {len(fenster)} Handelstage "
+            f"({_einordnung(p, 'aussergewoehnlich duenn', 'aussergewoehnlich dick')}), "
             f"gemittelt ueber {FENSTER_LIQUIDITAET} Handelstage; je hoeher "
             f"dieser Wert, desto weniger Umsatz loest eine Kursbewegung aus."]
 

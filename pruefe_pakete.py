@@ -443,9 +443,19 @@ def paket_4() -> None:
     from backtest_llm1_historisch import lade_reihen_aus_db
     alle = ML.beschreibe_marktlage(lade_reihen_aus_db(), "2026-07-17",
                                    RE.lade_stimmung(), makro)
-    pruefe(P, "die Makrolage steht VOR dem ersten Leitmarkt",
-           alle[:2] == saetze,
-           f"{len(alle)} Aussagen; Makro rahmt alle drei Maerkte zugleich")
+    # ⚠️ SEIT 17.08.2026 STEHEN ZWEI MAKROBLOECKE VORN, nicht einer:
+    # zuerst die LANGE SICHT (99 Jahre Historie aus
+    # `makro_historie_monat`), dann das TAGESMAKRO. Die Reihenfolge ist
+    # nicht beliebig - R-T9 ist gemessen, und der weiteste Rahmen gehoert
+    # nach vorn: die Jahrhundertlage hinter die Wochenliquiditaet zu
+    # setzen hiesse, die Groessenordnungen umzudrehen.
+    _lang = ML.beschreibe_lange_sicht(
+        (makro or {}).get("monatsreihen"), "2026-07-17")
+    pruefe(P, "beide Makrobloecke stehen VOR dem ersten Leitmarkt",
+           alle[:len(_lang) + len(saetze)] == list(_lang) + list(saetze),
+           f"{len(alle)} Aussagen, davon {len(_lang)} lange Sicht und "
+           f"{len(saetze)} Tagesmakro - beide rahmen alle drei Maerkte "
+           "zugleich")
 
 
 # ---------------------------------------------------------------- Paket 5 ---

@@ -3708,6 +3708,47 @@ Trefferquote gegenüber ein bis zwei klaren Regeln; ab zwölf verlangsamt sich d
 Entscheidung messbar. Budgets: Rolle A **16**, Rolle BC **14**, Rolle G **8**
 Aussagen.
 
+## R-R7 Die Zuordnungsmatrix ist Teil der Regel (neu 2026-08-17)
+
+**Nutzervorgabe:** *„die unterschiedlichen Zuordnungen der Parameter je Asset
+und Handelsform bitte sauber dokumentieren — sonst vermutet man Fehler, wo
+keine sind."*
+
+**Wo ein Parameter steht, ist begründet — und die Begründung gehört
+aufgeschrieben.** Die vollständige Matrix je Rolle, Assetklasse und
+Handelsform steht in **Umbauplan Kapitel 66**.
+
+### Die fünf Fragen, in dieser Reihenfolge
+
+| | Frage | Antwort |
+|---|---|---|
+| 1 | Beschreibt es **den Markt** oder **diesen Wert**? | Markt → **A**, Wert → **BC/G** (P1) |
+| 2 | Ist der Wert bei uns **gemessen**? | ja → **A/BC**, nein → **G** (R-R6) |
+| 3 | Steht es schon in einer anderen Rolle? | dann **nirgends sonst** (R-R2) |
+| 4 | **Ereignis** statt Zustand? | dann **A/BC**, nie G |
+| 5 | Hat der Wert den Gegenstand überhaupt? | nein → **kein Satz**, fail-closed |
+
+> ⚠️ **Frage 5 ist der häufigste Grund für scheinbare Fehler.** Ein
+> Spot-Käufer zahlt keine Finanzierung, ein Zertifikat hat keinen Gewinn, ein
+> Coin kein Umsatzwachstum. Der fehlende Satz ist die richtige Antwort.
+
+**Der Musterfall — Finanzierungsrate über Kreuz:**
+
+| | Rolle BC | Rolle G |
+|---|:-:|:-:|
+| **Spot** | — | ✓ |
+| **Hebel** | ✓ | — |
+
+Bei Spot in G, weil sie dort **gemessen** in 63 % der Urteile zitiert wurde,
+obwohl ein Spot-Käufer kein Funding zahlt. Beim Hebel in BC, weil sie dort ein
+echter Kostenfaktor **und** der einzige Nicht-Chart-Fakt der entscheidenden
+Rolle ist.
+
+> **Bis zum 17.08. stand sie in beiden** — kein Beschluss, sondern ein
+> Nebenprodukt: der Plan sprach nur vom Spot-Prompt und schwieg zum Hebel.
+
+---
+
 ## R-R6 Ein Fakt, eine Rolle — und welche, entscheidet der Belegstand (neu 2026-08-16)
 
 **Nutzerfrage:** *„warum kann dieser Fakt nicht in A und G sein — welche Regel

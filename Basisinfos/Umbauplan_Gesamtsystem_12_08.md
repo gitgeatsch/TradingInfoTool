@@ -8328,3 +8328,166 @@ prüft beide Seiten einzeln, statt nur auf Ungleichheit.
 
 **Damit ist die Liste vom 15./16.08. abgearbeitet.** Was bleibt, ist entweder
 Betrieb, eine Entscheidung oder eine Messung, die Läufe braucht.
+
+---
+
+## Kapitel 66 — Die Zuordnungsmatrix: welcher Parameter in welche Rolle, je Assetklasse und Handelsform — und warum (17.08.2026)
+
+**Nutzervorgabe:** *„die unterschiedlichen Zuordnungen der Parameter je Asset
+und Handelsform bitte sauber zur Nachvollziehbarkeit dokumentieren — sonst
+vermutet man Fehler, wo keine sind, bzw. wissen wir, warum Spot und Hebel
+unterschiedlich sind."*
+
+**Das ist der wichtigste Abschnitt dieses Kapitels.** Drei der letzten fünf
+Funde waren keine Fehler, sondern Zuordnungen, deren Grund nirgends stand.
+
+### 66.1 Die Matrix
+
+| Parameter | Rolle | Krypto Spot | Krypto Hebel | Aktien | Rohstoffe | ETF · Absicherung |
+|---|---|:-:|:-:|:-:|:-:|:-:|
+| Bestand · Verlauf · Marken · Volumen | **BC** | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Hebelgeometrie (Liquidationsabstand) | **BC** | — | ✓ | — | — | — |
+| **Finanzierungsrate** (Anteil positiver Perioden) | **BC** | **—** | **✓** | — | — | — |
+| Referenzindex | **BC** | — | — | — | — | ✓ |
+| **Gewinn-/Umsatzwachstum** | **BC** | — | — | **✓** | — | — |
+| Lange Sicht + Tagesmakro + Stimmung | **A** | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Offene Kontrakte · Börsendivergenz · Long-Anteil | **G** | ✓ | ✓ | — | — | — |
+| **Finanzierungsrate** (Perzentil) | **G** | **✓** | **—** | — | — | — |
+| Börsenzu-/-abflüsse (BTC-weit) | **G** | ✓ | ✓ | — | — | — |
+| COT „Managed Money" | **G** | — | — | — | ✓ | — |
+| Leerverkäufer · Insider | **G** | — | — | ✓ | — | — |
+
+### 66.2 Warum Spot und Hebel sich unterscheiden — die drei Fälle
+
+**Fall 1: Hebelgeometrie nur beim Hebel.** Ein Spot-Käufer wird nicht
+zwangsliquidiert. Der Satz hätte dort keinen Gegenstand.
+
+**Fall 2: Finanzierungsrate — und zwar über Kreuz.**
+
+| | Rolle BC | Rolle G |
+|---|:-:|:-:|
+| **Spot** | — | ✓ |
+| **Hebel** | ✓ | — |
+
+**Warum überhaupt getrennt:** R-R2 verlangt, dass ein Parameter zu genau
+**einem** Modell gehört. Steht er in beiden, hat der Prüfer nichts, was dem
+Geprüften fehlt — und die zweite Stufe ist wieder das, was sie vor dem Umbau
+war (17× LONG in 2.469 Prüfungen).
+
+**Warum bei Spot in G:** gemessen (O-34) wurde die Finanzierungsrate in **63 %
+der Spot-Urteile** als Beleg zitiert — obwohl ein Spot-Käufer weder Funding
+zahlt noch erhält. Ein Fakt ohne Gegenstand trug dort ein Sechstel der
+Begründungen. Er wurde deshalb im August aus dem Spot-Prompt entfernt.
+
+**Warum beim Hebel in BC:** dort ist er ein *echter Kostenfaktor* — und
+zugleich der **einzige** Fakt der entscheidenden Rolle, der nicht aus der
+Kerzenreihe stammt. Nähme man ihn weg, stünde BC beim Hebel bei **100 % Chart**
+— und genau diese Unterernährung ist der gemessene Grundbefund (von allen
+Merkmalen trennt nur das Momentum Einstieg von Halten, p = 0,000).
+
+> ⚠️ **Bis zum 17.08. stand er in BEIDEN.** Das war keine Entscheidung: der
+> Plan (Kap. 36.1, Schritt 2) sagt *„Funding aus dem **Spot**-Prompt
+> entfernen"* und schweigt zum Hebel. Der Modulkopf hält fest, bei Spot gehöre
+> es *„jetzt zu genau einem Modell"* — über den Hebel steht dort nichts.
+> **Ein Nebenprodukt, das niemand geprüft hat.**
+
+**Fall 3: Börsenzu-/-abflüsse in beiden Instrumenten, aber nur in G.** Sie sind
+BTC-weit und damit über alle Kryptosymbole eines Laufs identisch. Sie decken
+**G1** (zweite Informationsart) und **nie G2** (symbolspezifisch) — das ist in
+`mindestkriterien.SYMBOLSPEZIFISCH_G` kodiert und nicht Auslegung.
+
+### 66.3 Warum manche Gruppen weniger haben — und das kein Defekt ist
+
+| Gruppe | Rolle G hat | Grund |
+|---|---|---|
+| Krypto | 4–5 Größen | Terminmarkt existiert, kostenlos, symbolweise |
+| Rohstoffe | COT | eine Informationsart; EIA deckt **nur Erdgas** und braucht einen Schlüssel |
+| Aktien | Leerverkäufer + Insider | beide symbolspezifisch — als **einzige** Gruppe G1 und G2 aus einer Hand |
+| **ETF · Absicherung** | **nichts** | **keine kostenlose Quelle bekannt** (Kap. 57) — eine Grenze, keine Lücke |
+
+**Und in Rolle BC:**
+
+| Gruppe | nicht-kursabgeleiteter Fakt | Anteil Kerzenreihe |
+|---|---|---|
+| Krypto Hebel | Finanzierungsrate | ~88 % |
+| **Aktien** | **Gewinn-/Umsatzwachstum** | **60 %** |
+| Krypto Spot · Rohstoffe · ETF | **keiner** | **~90 %** |
+
+> **Das ist der offene Kern.** 93 % aller Urteile sind Krypto, und Krypto Spot
+> hat in der entscheidenden Rolle keinen einzigen Fakt von außen.
+
+### 66.4 Die Regel, nach der zugeordnet wird
+
+| Frage | Antwort | Regel |
+|---|---|---|
+| Beschreibt es **den Markt** oder **diesen Wert**? | Markt → **A**, Wert → **BC/G** | P1 |
+| Hat es **belegten** Wert (bei uns gemessen)? | ja → **A/BC**, nein → **G** | **R-R6** |
+| Steht es schon in einer anderen Rolle? | dann **nirgends sonst** | **R-R2** |
+| Ist es ein **Ereignis** statt eines Zustands? | dann **A/BC**, nie G | R-R6-Zusatz |
+| Hat der Wert diesen Gegenstand überhaupt? | nein → **kein Satz** | P1, fail-closed |
+
+**Rolle A geht über das Lagebild in Rolle BC ein** (`rollen_lauf.py:799`).
+Deshalb kann ein Fakt nicht in A **und** G stehen — BC wüsste ihn dann, und G
+hätte nichts mehr, was BC fehlt.
+
+### 66.5 Was in diesem Durchgang gebaut wurde
+
+**Punkt 1 — die Funding-Doppelung aufgelöst.** Rolle G verzichtet beim Hebel,
+Rolle BC beim Spot. Betrifft **56 %** aller Urteile.
+
+**Punkt 2 — `makro_historie_monat` erreicht Rolle A.** 1.185 Monate ab 1927,
+täglich gepflegt, **von keinem Prompt gelesen**. Zwei Aussagen:
+
+```
+Der breite US-Aktienmarkt steht 1.5 Standardabweichungen ueber seinem
+  langfristigen Trend, gemessen an 1184 Monaten Historie; das liegt im
+  100. Perzentil der letzten 240 Monate - aussergewoehnlich weit oben.
+Die US-Verbraucherpreise liegen 3.5 % ueber dem Vorjahr; das liegt im
+  78. Perzentil der letzten 240 Monate - im gewohnten Bereich.
+```
+
+> **Nur zwei, nicht sechs.** Die Tabelle trägt auch Öl, Dollarindex und die
+> Kursstände selbst. Alle aufzunehmen hieße, 15 auf 21 Aussagen zu bringen —
+> und die Literatur, auf der dieses Projekt steht, ist eindeutig: **ab fünf
+> Indikatoren verschlechtern sich Ergebnisse, ab zwölf verlangsamt sich die
+> Aufnahme messbar.** Mehr Fakten sind nicht mehr Information.
+>
+> Ausgeschlossen nach **P3**: `rendite_10y` steckt schon in der Zinskurve,
+> `spx_close`/`btc_close` beschreibt Rolle A bereits, `oel_wti` und
+> `dxy_proxy` wären weitere **Kursreihen** — das Gegenteil dessen, was
+> gebraucht wird.
+
+**Punkt 4 — das Stablecoin-Angebot läuft ab heute mit.** Es erzeugt **keinen
+Satz**: DefiLlama liefert nur den Momentanwert, ohne Historie kein Perzentil.
+Aber die Reihe muss anfangen zu wachsen — in drei Monaten trägt sie ein
+90-Tage-Perzentil, und dann ist sie eine **dritte** Informationsart für Krypto
+(weder Kursreihe noch Terminmarkt).
+
+### 66.6 Zwei Funde aus der Gegenprüfung
+
+**R-T11 galt nur für Rolle G.** Von Rolle As fünfzehn Aussagen trugen **acht**
+ein Perzentil ohne ein Wort dazu, ob das viel ist — und Rolle A speist **100 %
+der Urteile**. Die Regel entstand gestern bei Rolle G und wurde dort angewandt,
+wo sie gefunden wurde. Jetzt überall, mit **einer** Definition
+(`marktlage._einordnung`, dieselben Grenzen 90/10 wie in `positionierung`).
+
+**Nach der Korrektur: 0 Befunde statt 8.**
+
+> ⚠️ **Und derselbe Vorzeichenfehler zum zweiten Mal an einem Tag.** Der erste
+> Entwurf schrieb *„Die US-Verbraucherpreise liegen **−0,1 % über** dem
+> Vorjahr"* — bei Deflation ist „über" schlicht falsch. Zwei Stunden zuvor
+> stand derselbe Fehler im Fundamentalsatz („der Umsatz wächst schneller",
+> obwohl beide schrumpften). **Ein Muster, kein Zufall: ich formuliere den
+> Regelfall und prüfe die Vorzeichen nicht.**
+
+### 66.7 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **928, alle bestanden** |
+| freie Namen | 0 |
+| `pruefe_zahlen_in_prompts.py` | Selbsttest 9/9, kein Befund |
+| Rolle A | 17 Aussagen, **0 Befunde** (vorher 8) |
+| Rolle G Spot/Hebel | Funding genau einmal, G1/G2 in beiden erfüllt |
+| Kausalität | Anker 2020-03 liefert −0,2 SD (25. Perzentil) gegen heute +1,6 SD (100.) |
+| Simulation | 6 Gruppen, 12 Signale, 14 Mails, **0 Fehler** |

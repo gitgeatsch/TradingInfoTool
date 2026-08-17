@@ -1374,6 +1374,7 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         try:
             zweite = ZM.hole(faktentext=bc_ein, urteil=befund,
                              symbol=symbol, assetklasse=assetklasse,
+                             instrument=instrument,
                              zai_client=zai_client, config=config)
             if zweite:
                 eintrag["zweite_meinung"] = zweite

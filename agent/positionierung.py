@@ -416,7 +416,8 @@ def _insider(conn, symbol: str) -> dict | None:
             "verkaeufe": int(verkauf[-1][1]) if verkauf else 0}
 
 
-def lage(conn, symbol: str, assetklasse: str | None = None) -> dict:
+def lage(conn, symbol: str, assetklasse: str | None = None,
+         instrument: str | None = None) -> dict:
     """Die Positionierungslage - oder ein leeres dict, wenn nichts vorliegt.
 
     `assetklasse` entscheidet ueber den Boersenfluss und nichts sonst. Fehlt
@@ -436,9 +437,34 @@ def lage(conn, symbol: str, assetklasse: str | None = None) -> dict:
     # und stand bis zum 16.08. unter allen drei Boersenetiketten. Seit die
     # Etiketten stimmen, weiss genau eine Stelle, wo sie liegt - und sie
     # deckt den Uebergang von den Altzeilen mit ab.
+    #
+    # ⚠️ UND BEIM HEBEL GAR NICHT (17.08.2026, R-R2 je Instrument).
+    #
+    # Dieselbe Kraken-Zahl stand bis heute in BEIDEN Rollen: hier als
+    # Perzentil und in `lagebeschreibung._finanzierung` als Anteil
+    # positiver Perioden. Die Gegenpruefung pruefte damit mit etwas, das
+    # der Gepruefte schon wusste - genau der Zustand, gegen den die zweite
+    # Stufe gebaut wurde (17x LONG in 2.469 Pruefungen).
+    #
+    # ⚠️ DAS WAR KEINE ENTSCHEIDUNG, SONDERN EIN NEBENPRODUKT. Der Plan
+    # (Kapitel 36.1, Schritt 2) sagt "Funding aus dem SPOT-Prompt
+    # entfernen" und schweigt zum Hebel; der Modulkopf von
+    # `_finanzierung` haelt fest, bei Spot gehoere es "jetzt zu GENAU
+    # EINEM Modell" - ueber den Hebel steht dort nichts.
+    #
+    # WARUM G VERZICHTET UND NICHT BC: beim Hebel ist das Funding der
+    # EINZIGE Fakt der entscheidenden Rolle, der nicht aus der Kerzenreihe
+    # stammt. Naehme man es dort weg, stuende BC bei 100 % Chart - und
+    # genau diese Unterernaehrung ist der gemessene Grundbefund (nur das
+    # Momentum trennt Einstieg von Halten). G behaelt vier Groessen.
+    #
+    # BEI SPOT BLEIBT ES UMGEKEHRT: dort wurde Funding im August bewusst
+    # aus BC entfernt, weil es in 63 % der Spot-Urteile zitiert wurde,
+    # obwohl ein Spot-Kaeufer keine Finanzierung zahlt. Das war richtig.
     from database import db as _DB
 
-    fund = _DB.lies_funding_reihe(conn, sym)
+    fund = ([] if str(instrument or "") == "hebel"
+            else _DB.lies_funding_reihe(conn, sym))
     lang = _reihe(conn, sym, "long_account_pct")
 
     if oi:
@@ -456,7 +482,9 @@ def lage(conn, symbol: str, assetklasse: str | None = None) -> dict:
         aus["funding_jetzt"] = fund[0]
         aus["funding_perzentil"] = _perzentil(fund, fund[0])
         aus["funding_n"] = len(fund)
-    else:
+    elif str(instrument or "") != "hebel":
+        # NUR MELDEN, WENN SIE HIER HINGEHOERT. Beim Hebel ist ihre
+        # Abwesenheit Absicht, kein Mangel - "keine Angabe" waere gelogen.
         aus["fehlt"].append("Finanzierungsrate")
 
     if lang:

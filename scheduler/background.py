@@ -1020,6 +1020,34 @@ def externe_reihen_job(conn_factory) -> None:
         except Exception as exc:                             # noqa: BLE001
             logger.info("Boersenfluesse nicht auffrischbar: %s", exc)
 
+        # DAS STABLECOIN-ANGEBOT (17.08.2026) - heute OHNE Wirkung, und
+        # genau deshalb jetzt.
+        #
+        # `get_stablecoin_supply()` liefert nur den Momentanwert; DefiLlama
+        # hat keinen Historienendpunkt, den wir kostenlos lesen koennten.
+        # Ohne Historie kein Perzentil, ohne Perzentil kein Satz (R-T5) -
+        # deshalb entsteht heute KEINE Aussage daraus.
+        #
+        # WARUM SIE TROTZDEM AB HEUTE LAEUFT: die Reihe muss irgendwann
+        # anfangen zu wachsen, und jeder Tag Verzoegerung ist ein Tag
+        # spaeter, an dem sie brauchbar wird. Bei taeglichem Takt ist ein
+        # 90-Tage-Perzentil in drei Monaten da. Kostet einen Abruf.
+        #
+        # WOFUER: das Gesamtangebot aller Stablecoins ist das
+        # "Trockenpulver" - Kapital, das im Kryptomarkt liegt, aber nicht
+        # investiert ist. Es ist WEDER aus einer Kursreihe abgeleitet NOCH
+        # eine Positionierung am Terminmarkt, also eine dritte
+        # Informationsart fuer Krypto.
+        try:
+            from api.onchain import get_stablecoin_supply
+
+            s = get_stablecoin_supply()
+            geschrieben += DB.schreibe_externe_reihe(
+                conn, "defillama", "stablecoin_angebot_usd",
+                [(s.date, float(s.total_usd))])
+        except Exception as exc:                             # noqa: BLE001
+            logger.info("Stablecoin-Angebot nicht auffrischbar: %s", exc)
+
         # `set()` - vier Symbole, aber je Rohstoff nur ein Bericht. Ohne das
         # waeren es vier identische Abrufe, sobald zwei ETCs denselben
         # Basiswert haetten.
