@@ -8169,3 +8169,162 @@ ohne lesbare Schalter gar nicht beurteilt wird.
 | 4 | TURBO-Phantomposition | im nächsten Export nachsehen |
 | 5 | **O-33** Hedge-Instrumente ohne Codeeingriff | offen |
 | 6 | `job_laeufe` in den Export | offen |
+
+---
+
+## Kapitel 65 — Die Restpunkte: zwei geklärt, zwei gebaut (17.08.2026)
+
+### 65.1 TURBO war nie eine hängengebliebene Zeile
+
+**Offener Punkt seit dem 15.08.:** *„TURBO trug eine offene Hebelposition,
+obwohl der Nutzer keine hält."*
+
+**Nachgesehen im Export:** `hebel_positions` hat **188 Zeilen und keine einzige
+für TURBO.**
+
+> Der Phantombestand war der Mailbetreff-Fehler, der am 15.08. bereits behoben
+> wurde: `signal_mail.py` übernahm die deterministische Ausstiegsempfehlung in
+> den Betreff, sobald sie mit SCHLIESSEN begann. **Der Punkt war seit zwei
+> Tagen erledigt und stand nur noch auf der Liste.**
+
+**Ein Nebenbefund bleibt:** vier Positionen aus **Oktober 2025** stehen auf
+`wahrscheinlich_liquidiert` (LINK, TAO ×2, SUI) und wurden nie aufgelöst.
+`fix_stuck_hebel_positions.py` gibt es dafür — kein Betriebsproblem, aber
+Altbestand, den niemand angesehen hat.
+
+### 65.2 Die Ausfallzeit — beziffert statt geschätzt
+
+**Die Zahl in der Liste war zu niedrig.** Gemessen über das Logfenster:
+
+| | |
+|---|---|
+| Beobachtungsfenster | **57,6 h** |
+| Stille (Lücken > 8 min) | **41,0 h** |
+| **Ausfall** | **71 %** — nicht 51 % |
+
+**Die vier längsten Lücken:**
+
+| Lücke | Dauer |
+|---|---|
+| 14.08. 21:58 → 15.08. 07:57 | **10,0 h** |
+| 15.08. 13:39 → 18:27 | 4,8 h |
+| 14.08. 10:11 → 14:18 | 4,1 h |
+| 16.08. 13:43 → 17:15 | 3,5 h |
+
+> **Das ist kein Absturzmuster.** Zehn Stunden am Stück in der Nacht sind eine
+> Maschine, die nicht läuft — bei einem Gerät, das ein 24/7-Server sein soll.
+
+**Nicht die Zahl der Neustarts.** Die ist irreführend: an Entwicklungstagen
+startet die App zehnmal, und das ist kein Ausfall. Gezählt wird die **Stille
+zwischen zwei Logzeilen**.
+
+**Im Code nicht behebbar — aber messbar.** Der Export trägt jetzt einen
+Abschnitt `laufzeit`, damit die Zahl nicht bei jedem Mal von Hand
+ausgerechnet wird und dann drei Tage veraltet in einer Liste steht:
+
+```
+fenster_stunden · fehlende_stunden · ausfall_prozent
+luecken_gesamt  · laengste (10)    · schwelle_minuten
+```
+
+> **Warum das die wichtigste Betriebszahl ist:** ein System, das zwei von drei
+> Stunden nicht läuft, verpasst Gelegenheiten **unsystematisch** — und jede
+> Messung darauf hat eine Lücke, die im Ergebnis niemand sieht. Die
+> Trichterzahlen sagen, *wo* die Kette verliert; diese sagt, ob sie überhaupt
+> gelaufen ist.
+
+### 65.3 `job_laeufe` im Export
+
+Die Selbstprüfung meldete die Tabelle seit dem 16.08. unter `nicht_erwaehnt` —
+**genau dafür gibt es sie.** Jetzt sichtbar: je Job der letzte Lauf, sein Alter
+und eine Liste `ueberfaellig` (älter als 26 Stunden = ein Tageslauf ist
+ausgefallen **und** der Nachholer hat ihn nicht geholt).
+
+**Zusammen beantworten die beiden Abschnitte die Betriebsfrage:** `laufzeit`
+sagt, ob die App lief — `joblaeufe` sagt, ob die Arbeit trotzdem getan wurde.
+
+> ⚠️ **Spaltenname geraten statt nachgesehen.** Ich schrieb `gelaufen_am`, sie
+> heißt `zuletzt_am`. Der erste Testaufruf hat es sofort gefangen — aber es ist
+> genau der Fehler, gegen den *„immer an der Quelle prüfen"* geschrieben wurde.
+
+### 65.4 O-33: Absicherungsinstrumente ohne Codeeingriff
+
+> *„berücksichtige im Plan einen nachgelagerten Punkt, um Börsenwerte (Hedge
+> über Nasdaq etc.) zu den Hedge-Positionen hinzufügen zu können, ohne dass wir
+> in den Code eingreifen müssen."*
+
+**Elf Module lesen `SYMBOL_ZU_HEBEL_FAKTOR` — und das war die gute Nachricht.**
+Weil alle über *dieselbe* Stelle gehen, genügte es, diese eine aus der
+Konfiguration zu speisen. **Kein Aufrufer musste angefasst werden.**
+
+```yaml
+hedge:
+  instrumente:
+    DBPK: {hebel: 2, referenz: "S&P 500"}
+    3QSS: {hebel: 3, referenz: "Nasdaq-100"}
+```
+
+**Fünf Fälle einzeln belegt:**
+
+| Fall | Ergebnis |
+|---|---|
+| neues Instrument dazu | `DBPK 2, 3QSS 3, XSPS 5` |
+| Hebel geändert | `DBPK 4` |
+| Eintrag **ohne** `hebel` | verworfen, mit Warnung |
+| Abschnitt leer | **Vorgaben** |
+| Konfiguration wirft | **Vorgaben** |
+
+**Ohne `hebel` keine Aufnahme.** Der Faktor ist die Größenlogik — *benötigter
+Einsatz = abzusicherndes Exposure / Hebelfaktor*. Ein geratener Wert über- oder
+unterhedgt **still**.
+
+**Die Code-Liste bleibt als Rückfall.** Eine Konfiguration, die bei einem
+Tippfehler die Absicherung abschaltet, wäre der schlechtere Tausch.
+
+**Die drei Fallstricke aus Kapitel 25.2 stehen jetzt in der `config.yaml`
+selbst** — dort, wo jemand liest, der ein Instrument ergänzt: Hedge ist keine
+Assetklasse (Watchlist-Eintrag als `etf` nötig), der Hebel ist die
+Größenlogik, und ein neues Instrument braucht eine Kursreihe. Letzteres meldet
+`rollen_job` bereits von selbst (*„n Symbole ohne Kursreihe"*).
+
+### 65.5 Eine Prüfung, die mit der Zeit ablief
+
+> ⚠️ **Zum achten Mal diese Woche stellte eine Eingabe den Fall nicht her — und
+> diesmal, weil sie aufgehört hat, ihn herzustellen.**
+
+```python
+    ST5.is_history_stale("2026-08-14", schwelle_tage=1)
+    is not ST5.is_history_stale("2026-08-14")
+```
+
+Am 16.08. war der 14.08. **zwei** Tage zurück: die Krypto-Schwelle (1 Tag)
+schlug an, die geteilte (2 Tage) schwieg — der Unterschied war da. Einen Tag
+später sind es **drei** Tage, beide schlagen an, und die Prüfung scheiterte.
+
+**Sie maß den Kalender statt den Code.** Jetzt rechnet sie relativ zu heute und
+prüft beide Seiten einzeln, statt nur auf Ungleichheit.
+
+### 65.6 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **922, alle bestanden** (3 neue für O-33) |
+| freie Namen | 0 |
+| `pruefe_zahlen_in_prompts.py` | Selbsttest 9/9, 344 Sätze, kein Befund |
+| `pruefe_phase1.py` | bestanden |
+| Simulation | 6 Gruppen, 12 Signale, 14 Mails, **0 Fehler** |
+| `config.yaml` | 2.034 CRLF, **0 reine LF** |
+| Exportabschnitte | gegen echte Daten gerendert, fail-soft geprüft |
+
+### 65.7 Was jetzt noch offen ist
+
+| | Punkt | Art |
+|---|---|---|
+| **1** | **71 % Ausfallzeit** | **Betrieb** — im Code nicht lösbar, ab jetzt in jedem Export sichtbar |
+| 2 | vier Positionen auf `wahrscheinlich_liquidiert` seit Oktober 2025 | Altbestand |
+| 3 | zweite Quellenart für Rohstoffe (EIA, nur Erdgas, braucht Schlüssel) | **Entscheidung** |
+| 4 | Themen-ETF und Absicherung: keine kostenlose Quelle | **Grenze** |
+| 5 | Einwandrate gegen Fluss-Perzentil (R-R6) | wartet auf Daten |
+
+**Damit ist die Liste vom 15./16.08. abgearbeitet.** Was bleibt, ist entweder
+Betrieb, eine Entscheidung oder eine Messung, die Läufe braucht.

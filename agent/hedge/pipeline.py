@@ -53,14 +53,94 @@ PIPELINE_VERSION = "1"
 # Manuell gepflegt (analog SYMBOL_ZU_FUTURES_TICKER in agent/rohstoff/pipeline.py) -
 # bei einem neuen Hedge-Instrument hier ergaenzen. hebel_faktor bestimmt, wie viel
 # USD "effektive Abdeckung" 1 USD Positionswert liefert (2x/3x taeglich gehebelt).
-SYMBOL_ZU_HEBEL_FAKTOR = {
+# --- ABSICHERUNGSINSTRUMENTE OHNE CODEEINGRIFF (O-33, 17.08.2026) -------
+#
+# NUTZERVORGABE: *"beruecksichtige im Plan einen nachgelagerten Punkt, um
+# Boersenwerte (Hedge ueber Nasdaq etc.) zu den Hedge-Positionen
+# hinzufuegen zu koennen, ohne dass wir in den Code eingreifen muessen."*
+#
+# ELF MODULE LESEN DIESE BEIDEN WOERTERBUECHER - und das ist die gute
+# Nachricht: weil alle ueber DIESELBE Stelle gehen, genuegt es, sie aus
+# der Konfiguration zu speisen. Kein Aufrufer muss angefasst werden.
+#
+#     hedge:
+#       instrumente:
+#         DBPK: {hebel: 2, referenz: "S&P 500"}
+#         3QSS: {hebel: 3, referenz: "Nasdaq-100"}
+#
+# ⚠️ DREI DINGE, DIE DABEI NICHT VERGESSEN WERDEN DUERFEN (Umbauplan 25.2):
+#
+#   1. HEDGE IST KEINE ASSETKLASSE. Ein neues Instrument steht in der
+#      Watchlist als `etf` und wird NUR ueber diese Zuordnung zur
+#      Absicherung. Genau daran ist der OHLC-Refresh am 06.08. gescheitert.
+#   2. DER HEBELFAKTOR IST DIE GROESSENLOGIK, nicht Schmuck:
+#      benoetigter Einsatz = abzusicherndes Exposure / Hebelfaktor. Ein
+#      falscher Faktor ueber- oder unterhedgt STILL.
+#   3. EIN NEUES INSTRUMENT BRAUCHT EINE KURSREIHE. 3QSS und DBPK stehen
+#      in EUR und werden zur Laufzeit rekonstruiert. Wer eines ergaenzt,
+#      ohne das zu pruefen, bekommt eine Gruppe ohne Daten.
+#
+# DIE CODE-LISTE BLEIBT ALS RUECKFALL. Fehlt der Abschnitt oder ist er
+# unlesbar, laeuft alles weiter wie bisher - eine Konfiguration, die bei
+# einem Tippfehler die Absicherung abschaltet, waere der schlechtere
+# Tausch.
+VORGABE_HEBEL_FAKTOR = {
     "DBPK": 2.0,
     "3QSS": 3.0,
 }
-SYMBOL_ZU_REFERENZ_INDEX = {
+VORGABE_REFERENZ_INDEX = {
     "DBPK": "S&P 500",
     "3QSS": "Nasdaq-100",
 }
+
+
+def _aus_konfiguration() -> tuple[dict, dict]:
+    """(hebel, referenz) aus `config.yaml`, sonst die Vorgaben.
+
+    EINMAL BEIM IMPORT, nicht je Aufruf: die elf Leser greifen sehr oft
+    zu, und die Konfiguration aendert sich nur beim Neustart. Wer ein
+    Instrument ergaenzt, startet die App ohnehin neu."""
+    try:
+        import config as config_module
+
+        roh = ((config_module.load_config() or {}).get("hedge") or {}
+               ).get("instrumente") or {}
+    except Exception as exc:                             # noqa: BLE001
+        logger.info("Hedge-Instrumente nicht aus der Konfiguration "
+                    "lesbar (%s) - es gelten die Vorgaben", exc)
+        return dict(VORGABE_HEBEL_FAKTOR), dict(VORGABE_REFERENZ_INDEX)
+    if not isinstance(roh, dict) or not roh:
+        return dict(VORGABE_HEBEL_FAKTOR), dict(VORGABE_REFERENZ_INDEX)
+
+    hebel, referenz = {}, {}
+    for sym, eintrag in roh.items():
+        s = str(sym).strip().upper()
+        e = eintrag if isinstance(eintrag, dict) else {}
+        try:
+            faktor = float(e.get("hebel"))
+        except (TypeError, ValueError):
+            # OHNE FAKTOR KEINE AUFNAHME. Ein Instrument ohne Hebel
+            # wuerde die Groessenrechnung durch Null oder durch eine
+            # geratene Eins schicken - beides hedgt still falsch.
+            logger.warning("Hedge-Instrument %s ohne brauchbaren "
+                           "`hebel` - wird NICHT aufgenommen", s)
+            continue
+        if faktor <= 0:
+            logger.warning("Hedge-Instrument %s mit Hebel %s - wird "
+                           "NICHT aufgenommen", s, faktor)
+            continue
+        hebel[s] = faktor
+        referenz[s] = str(e.get("referenz") or "").strip() or None
+    if not hebel:
+        logger.warning("Abschnitt `hedge.instrumente` enthaelt kein "
+                       "brauchbares Instrument - es gelten die Vorgaben")
+        return dict(VORGABE_HEBEL_FAKTOR), dict(VORGABE_REFERENZ_INDEX)
+    logger.info("Hedge-Instrumente aus der Konfiguration: %s",
+                ", ".join(f"{k} {v:g}x" for k, v in sorted(hebel.items())))
+    return hebel, {k: v for k, v in referenz.items() if v}
+
+
+SYMBOL_ZU_HEBEL_FAKTOR, SYMBOL_ZU_REFERENZ_INDEX = _aus_konfiguration()
 
 
 def ist_hedge_instrument(asset_oder_symbol) -> bool:

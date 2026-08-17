@@ -1235,6 +1235,98 @@ _TABELLEN_OHNE = {
 _REIHE_VERALTET_STUNDEN = 48.0
 
 
+# Ab welcher Stille eine Luecke gezaehlt wird. Der dichteste Takt im Betrieb
+# ist das Hebel-Screening mit 15 Minuten; acht Minuten sind also grosszuegig
+# und melden keinen normalen Leerlauf.
+_LUECKE_AB_MINUTEN = 8.0
+
+
+def _joblaeufe(conn) -> dict:
+    """Wann lief welcher taegliche Job zuletzt? (2026-08-17)
+
+    WOZU. `job_laeufe` traegt der Nachholer, der am 16.08. gebaut wurde: fuenf
+    taegliche Cronjobs waren in 48 Stunden VIERMAL gelaufen statt achtmal,
+    weil die App zu den Cron-Zeiten nicht lief. Der Nachholer merkt sich den
+    letzten Lauf und holt ihn beim naechsten Start nach.
+
+    OHNE DIESEN ABSCHNITT IST ER UNSICHTBAR. Die Selbstpruefung des Exports
+    meldete die Tabelle seit dem 16.08. unter `nicht_erwaehnt` - genau dafuer
+    gibt es sie.
+
+    Gemeinsam mit `laufzeit` beantwortet das die Betriebsfrage: die eine Zahl
+    sagt, ob die App lief, diese sagt, ob die Arbeit trotzdem getan wurde."""
+    vorhanden = {r[0] for r in conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table'")}
+    if "job_laeufe" not in vorhanden:
+        return {"tabelle_fehlt": True,
+                "hinweis": "Datei von vor dem 16.08. - den Nachholer gab es noch nicht"}
+    zeilen = []
+    for r in conn.execute("SELECT job_id, zuletzt_am FROM job_laeufe "
+                          "ORDER BY job_id"):
+        eintrag = {"job_id": r[0], "zuletzt": r[1]}
+        try:
+            gestempelt = datetime.fromisoformat(str(r[1]))
+            if gestempelt.tzinfo is None:
+                gestempelt = gestempelt.replace(tzinfo=timezone.utc)
+            eintrag["alter_stunden"] = round(
+                (datetime.now(timezone.utc) - gestempelt).total_seconds() / 3600.0, 1)
+        except (TypeError, ValueError):
+            eintrag["alter_stunden"] = None
+        zeilen.append(eintrag)
+    # UEBER 26 STUNDEN heisst: ein taeglicher Lauf ist ausgefallen UND der
+    # Nachholer hat ihn nicht geholt. Zwei Stunden Puffer auf den Tagestakt.
+    return {"jobs": zeilen,
+            "ueberfaellig": [z["job_id"] for z in zeilen
+                             if (z.get("alter_stunden") or 0) > 26]}
+
+
+def _laufzeit(logzeilen: list) -> dict:
+    """Wie lange lief die App wirklich? (2026-08-17)
+
+    WOZU. Die Ausfallzeit stand seit Tagen als offener Punkt in der Liste - mit
+    einer Zahl, die einmal von Hand ausgerechnet wurde und danach niemand mehr
+    nachgerechnet hat. Sie war zu niedrig: gemessen ueber 57,6 Stunden fehlten
+    **41 Stunden**, nicht die Haelfte davon.
+
+    WARUM DAS DIE WICHTIGSTE BETRIEBSZAHL IST. Ein Signalsystem, das zwei von
+    drei Stunden nicht laeuft, verpasst nicht zwei Drittel der Gelegenheiten -
+    es verpasst sie unsystematisch, und jede Messung darauf hat eine Luecke,
+    die niemand im Ergebnis sieht. Die Trichterzahlen sagen, WO die Kette
+    verliert; diese Zahl sagt, ob sie ueberhaupt gelaufen ist.
+
+    NICHT die Zahl der Neustarts. Die ist irrefuehrend - an Entwicklungstagen
+    startet der Nutzer die App zehnmal, und das ist kein Ausfall. Gezaehlt wird
+    die STILLE zwischen zwei Logzeilen.
+
+    ⚠️ SIE MISST NUR, WAS IM LOG STEHT. Laeuft die App und schreibt nichts,
+    zaehlt das als Luecke - bei einem dichtesten Takt von 15 Minuten ist das
+    unwahrscheinlich, aber es ist eine Naeherung und keine Betriebszeitmessung
+    des Betriebssystems."""
+    stempel = sorted({m.group(1) for z in logzeilen
+                      if (m := re.match(r"(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)",
+                                        str(z).strip().strip('"')))})
+    if len(stempel) < 2:
+        return {"nicht_messbar": "zu wenige Logzeilen mit Zeitstempel"}
+    anfang = datetime.fromisoformat(stempel[0])
+    ende = datetime.fromisoformat(stempel[-1])
+    fenster_min = (ende - anfang).total_seconds() / 60.0
+    luecken = []
+    for a, b in zip(stempel, stempel[1:]):
+        d = (datetime.fromisoformat(b) - datetime.fromisoformat(a)).total_seconds() / 60.0
+        if d > _LUECKE_AB_MINUTEN:
+            luecken.append({"von": a, "bis": b, "stunden": round(d / 60.0, 2)})
+    fehlend = sum(l["stunden"] for l in luecken)
+    return {
+        "fenster_stunden": round(fenster_min / 60.0, 1),
+        "fehlende_stunden": round(fehlend, 1),
+        "ausfall_prozent": (round(100.0 * fehlend * 60.0 / fenster_min, 1)
+                            if fenster_min else None),
+        "luecken_gesamt": len(luecken),
+        "laengste": sorted(luecken, key=lambda x: -x["stunden"])[:10],
+        "schwelle_minuten": _LUECKE_AB_MINUTEN,
+    }
+
+
 def _externe_reihen(conn) -> dict:
     """Sind die Fremdquellen der Rolle G aktuell? (2026-08-16, Schritt 3+4)
 
@@ -2050,6 +2142,10 @@ def main() -> None:
         except Exception as exc:  # noqa: BLE001
             externe_reihen = {"nicht_verfuegbar": str(exc)}
         try:
+            joblaeufe = _joblaeufe(conn)
+        except Exception as exc:  # noqa: BLE001
+            joblaeufe = {"nicht_verfuegbar": str(exc)}
+        try:
             spaltendrift = _spaltendrift(conn)
         except Exception as exc:  # noqa: BLE001
             spaltendrift = {"nicht_verfuegbar": str(exc)}
@@ -2245,6 +2341,10 @@ def main() -> None:
     log_zeilen = _log_zeilen_im_fenster(log_pfad, LOG_FENSTER_STUNDEN)
     job_fehlschlaege = _job_fehlschlaege_aus_log(log_zeilen)
     groq_erschoepfung = _groq_erschoepfung_aus_log(log_zeilen)
+    try:
+        laufzeit = _laufzeit(log_zeilen)
+    except Exception as exc:  # noqa: BLE001
+        laufzeit = {"nicht_verfuegbar": str(exc)}
     auffaelligkeiten = _auffaelligkeiten(hebel_rows, spot_rows)
 
     # Watchlist-Stammdaten je Symbol (2026-08-04, Phase 1 Schritt a).
@@ -2354,6 +2454,8 @@ def main() -> None:
         "konfiguration_und_makro": konfiguration_und_makro,
         "rollen_kette": rollen_kette,
             "externe_reihen": externe_reihen,
+            "joblaeufe": joblaeufe,
+            "laufzeit": laufzeit,
         "spaltendrift": spaltendrift,
         "deep_dive": {
             "symbol": DEEP_DIVE_SYMBOL,

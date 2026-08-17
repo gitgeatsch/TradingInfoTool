@@ -2412,3 +2412,24 @@ zwar rückwirkend auch in jeder Messung, die mit ihm gemacht wurde.
 **Grössenordnung:** die Anlass-Stufe stoppte am 16.08. **35 von 41**
 Kryptosymbolen. Ein Trockenlauf ohne sie meldet eine Zahl, die es im Betrieb
 nicht gibt.
+
+## 2.31 Eine Prüfung darf nicht am Kalender hängen (neu 2026-08-17)
+
+```python
+    is_history_stale("2026-08-14", schwelle_tage=1)
+    is not is_history_stale("2026-08-14")
+```
+
+Am 16.08. war der 14.08. **zwei** Tage zurück und der Unterschied zwischen den
+Schwellen bestand. Einen Tag später sind es **drei**, beide schlagen an, und die
+Prüfung scheiterte — **ohne dass sich am Code etwas geändert hätte.**
+
+| | |
+|---|---|
+| **Falsch** | ein festes Datum, das zufällig heute den Fall herstellt |
+| **Richtig** | relativ zu `date.today()` rechnen |
+| **Und** | beide Seiten einzeln prüfen (`is True` / `is False`), nicht nur auf Ungleichheit |
+
+> Eine Prüfung auf „die beiden Ergebnisse sind verschieden" ist auch dann grün,
+> wenn beide aus dem falschen Grund verschieden sind — und rot, wenn beide aus
+> dem richtigen Grund gleich sind.

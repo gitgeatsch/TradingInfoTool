@@ -5640,6 +5640,42 @@ def paket_15() -> None:
            "Filings hat die Sperre am 16.08. real ausgeloest")
     _spk2.close()
 
+    # --- O-33: HEDGE-INSTRUMENTE OHNE CODEEINGRIFF (17.08.2026) --------
+    import importlib
+
+    import config as _cm6
+    from agent.hedge import pipeline as _hp6
+
+    _echt_cfg = _cm6.load_config
+    try:
+        _cm6.load_config = lambda: {"hedge": {"instrumente": {
+            "DBPK": {"hebel": 2, "referenz": "S&P 500"},
+            "XSPS": {"hebel": 5, "referenz": "S&P 500"}}}}
+        importlib.reload(_hp6)
+        pruefe(P, "ein Hedge-Instrument kommt aus der Konfiguration",
+               _hp6.SYMBOL_ZU_HEBEL_FAKTOR.get("XSPS") == 5.0
+               and _hp6.ist_hedge_instrument("XSPS"),
+               "elf Module lesen dieselbe Stelle - wer eines ergaenzen "
+               "will, soll nicht in den Code greifen muessen")
+
+        _cm6.load_config = lambda: {"hedge": {"instrumente": {
+            "DBPK": {"hebel": 2}, "KAPUTT": {"referenz": "x"}}}}
+        importlib.reload(_hp6)
+        pruefe(P, "ein Eintrag OHNE Hebel wird verworfen",
+               "KAPUTT" not in _hp6.SYMBOL_ZU_HEBEL_FAKTOR,
+               "der Hebel ist die Groessenlogik - ein geratener Wert "
+               "ueber- oder unterhedgt STILL")
+
+        _cm6.load_config = lambda: (_ for _ in ()).throw(RuntimeError("x"))
+        importlib.reload(_hp6)
+        pruefe(P, "und eine kaputte Konfiguration faellt auf die Vorgaben",
+               _hp6.SYMBOL_ZU_HEBEL_FAKTOR == _hp6.VORGABE_HEBEL_FAKTOR,
+               "eine Konfiguration, die bei einem Tippfehler die "
+               "Absicherung abschaltet, waere der schlechtere Tausch")
+    finally:
+        _cm6.load_config = _echt_cfg
+        importlib.reload(_hp6)
+
     # --- G2 IST NICHT DURCH EINE MARKTWEITE GROESSE ZU ERFUELLEN ------
 
     pruefe(P, "der Boersenfluss deckt G1, aber NIE G2",
@@ -5941,10 +5977,20 @@ def paket_15() -> None:
            and ST5.HISTORY_STALE_THRESHOLD_DAYS == 2,
            "Krypto handelt rund um die Uhr - zwei Tage Rueckstand sind dort "
            "kein Wochenende, sondern ein Ausfall")
+    # ⚠️ RELATIV ZU HEUTE, NICHT MIT FESTEM DATUM (korrigiert 17.08.2026).
+    # Hier stand "2026-08-14" - am 16.08. war das zwei Tage zurueck und der
+    # Fall traf zu. Einen Tag spaeter sind es drei, beide Schwellen
+    # schlagen an, und die Pruefung scheiterte. Sie mass den Kalender
+    # statt den Code und lief mit der Zeit ab.
+    from datetime import date as _d5
+    from datetime import timedelta as _td5
+
+    _zwei_tage_alt = (_d5.today() - _td5(days=2)).isoformat()
     pruefe(P, "und der echte Ausfall wuerde jetzt erkannt",
-           ST5.is_history_stale("2026-08-14", schwelle_tage=1)
-           is not ST5.is_history_stale("2026-08-14"),
-           "Freitag-Kerze am Sonntag: alte Schwelle schweigt, neue schlaegt an")
+           ST5.is_history_stale(_zwei_tage_alt, schwelle_tage=1) is True
+           and ST5.is_history_stale(_zwei_tage_alt) is False,
+           f"Kerze von {_zwei_tage_alt}: die geteilte Schwelle (2 Tage) "
+           "schweigt, die Krypto-Schwelle (1 Tag) schlaegt an")
     pruefe(P, "die geteilte Schwelle bleibt unangetastet",
            "HISTORY_STALE_THRESHOLD_DAYS = 2" in _quelltext("staleness.py"),
            "an ihr haengen die Anzeige und das Gate R-5.0 der alten Kette - "
