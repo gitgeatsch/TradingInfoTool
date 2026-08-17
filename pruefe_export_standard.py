@@ -49,6 +49,29 @@ def main() -> None:
     # 2 Signal-Volumen
     sv = d.get("signal_volumen_heute", {})
     print(f"\n 2. Signal-Volumen heute: {sv}")
+    # DER WIDERSPRUCH, DER DEN TOTEN ZAEHLER VERRATEN HAETTE (17.08.2026).
+    #
+    # Der Export meldete "spot 0, hebel 0" und zwei Bloecke weiter
+    # "gemini: 86 Aufrufe". Beides stand nebeneinander, monatelang, und
+    # niemandem fiel es auf - weil eine Null kein Fehler ist, sondern
+    # aussieht wie ein ruhiger Tag.
+    #
+    # Ein Modellaufruf OHNE Urteil ist entweder ein toter Zaehler oder ein
+    # Ausfall der Kette. Beides gehoert gemeldet, und zwar hier.
+    rk = (sv or {}).get("rollen_kette") or {}
+    aufrufe = sum(int(v or 0) for v in
+                  (d.get("llm_aufrufe_heute") or {}).values())
+    if rk.get("nicht_verfuegbar"):
+        melde(f"Rollen-Urteile nicht zaehlbar: {rk['nicht_verfuegbar']}")
+    elif aufrufe > 20 and int(rk.get("gesamt") or 0) == 0:
+        melde(f"{aufrufe} Modellaufrufe, aber NULL Urteile der Rollen-Kette "
+              f"- toter Zaehler oder ausgefallene Kette")
+    elif rk.get("gesamt"):
+        anteil = 100.0 * int(rk.get("mit_handlung") or 0) / int(rk["gesamt"])
+        print(f"     Rollen-Kette: {rk['gesamt']} Urteile "
+              f"({rk['hebel']} Hebel / {rk['spot']} Spot), "
+              f"{rk.get('mit_handlung')} mit Handlung ({anteil:.0f} %)")
+        print(f"     Aktionen: {rk.get('aktionen')}")
 
     # 3 Provider-Performance
     pp = d.get("provider_performance", {})

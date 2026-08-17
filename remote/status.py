@@ -1117,18 +1117,17 @@ def _get_rollen_budget(conn: sqlite3.Connection) -> dict:
 
     # Die Signale der neuen Kette - ueber `quelle_kette`, nicht ueber eine
     # Spalte der alten.
+    # SEIT 17.08. AUS `db.zaehle_rollen_urteile_heute()`. Die Zaehlung stand
+    # hier inline - und der NB-Export brauchte sie auch. Zwei Kopien einer
+    # Zaehlung sind zwei Stellen zum Auseinanderlaufen; dieselbe Lehre wie
+    # bei `KURSREIHENBLOECKE` gegen den Matrixtest (Umbauplan 70.4).
     try:
-        spalten = {r[1] for r in conn.execute("PRAGMA table_info(signals)")}
-        if "quelle_kette" in spalten:
-            heute = datetime.now(timezone.utc).strftime("%Y-%m-%dT00:00:00")
-            zeile = conn.execute(
-                "SELECT COUNT(*), SUM(hebel IS NOT NULL), "
-                "SUM(gate_passed = 1) FROM signals "
-                "WHERE quelle_kette = 'rollen' AND created_at >= ?",
-                (heute,)).fetchone()
-            aus["signale_heute"] = int(zeile[0] or 0)
-            aus["davon_hebel"] = int(zeile[1] or 0)
-            aus["davon_handlung"] = int(zeile[2] or 0)
+        z = db.zaehle_rollen_urteile_heute(conn)
+        aus["signale_heute"] = z["gesamt"]
+        aus["davon_hebel"] = z["hebel"]
+        aus["davon_handlung"] = z["mit_handlung"]
+        if z.get("nicht_verfuegbar"):
+            aus["fehler"] = aus["fehler"] or z["nicht_verfuegbar"]
     except Exception as exc:                                 # noqa: BLE001
         aus["fehler"] = aus["fehler"] or f"{type(exc).__name__}: {exc}"
     return aus

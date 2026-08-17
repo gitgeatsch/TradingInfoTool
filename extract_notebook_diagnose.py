@@ -2156,10 +2156,25 @@ def main() -> None:
             p: db.get_llm_budget_zaehler(conn, p)
             for p in ("groq", "mistral", "gemini", "zai", "openrouter")
         }
+        # ⚠️ DIE DREI OBEREN ZAEHLEN DIE ALTE KETTE - und die ist tot
+        # (17.08.2026, Nutzerfund an diesem Export). Sie filtern auf
+        # `groq_raw_response IS NOT NULL`, eine Spalte, die ausschliesslich
+        # die alte Kette geschrieben hat; seit dem Schnitt steht dort
+        # strukturell null. Sie bleiben stehen, weil sie nicht falsch sind -
+        # sie beantworten nur eine Frage, die niemand mehr stellt - aber
+        # sie heissen jetzt so, wie sie zaehlen.
+        #
+        # Gemeldet wurde die Luecke von diesem Export selbst: "spot 0,
+        # hebel 0" neben "gemini 86 Aufrufe" und 76 Urteilen in den
+        # Rohzeilen derselben Datei.
         signal_volumen_heute = {
-            "spot": db.count_real_signals_today(conn),
-            "hebel": db.count_real_hebel_signals_today(conn),
-            "marktscan_writeups": db.count_real_marktscan_writeups_today(conn),
+            "alte_kette_spot": db.count_real_signals_today(conn),
+            "alte_kette_hebel": db.count_real_hebel_signals_today(conn),
+            "alte_kette_marktscan_writeups":
+                db.count_real_marktscan_writeups_today(conn),
+            # Die neue Kette, aus derselben Funktion, die auch die
+            # Fernsteuerkarte fuellt.
+            "rollen_kette": db.zaehle_rollen_urteile_heute(conn),
         }
 
         # 3b) Neue Tabellen seit 2026-07-18/19/20, bisher unsichtbar im Export

@@ -9329,3 +9329,96 @@ heißt etwas anderes als bei ausgeschalteter.
 | Einstellung ohne Beobachtungstabelle | **erscheint trotzdem** |
 | `config.yaml` | Zeilenenden geprüft, einheitlich CRLF, lädt unverändert |
 | Quelle je Schlüssel | fünf von fünf aus `config.yaml`, nicht aus der Vorgabe |
+
+---
+
+## Kapitel 74 — Der Zähler, der seit dem Kettenschnitt null meldet (17.08.2026)
+
+### 74.1 Der Widerspruch stand im selben Export
+
+```
+signal_volumen_heute : {"spot": 0, "hebel": 0}
+llm_aufrufe_heute    : {"gemini": 86, "zai": 41}
+spot_signals         : 76 Rohzeilen von heute
+```
+
+**Null Signale bei 86 Modellaufrufen** — und die Urteile lagen als Rohzeilen
+in derselben Datei. Die Zahlen widersprachen einander, und niemandem fiel es
+auf: **eine Null ist kein Fehler, sie sieht aus wie ein ruhiger Tag.**
+
+**Ursache**, dieselbe wie am 14.08. auf der Fernsteuerkarte, nur eine Stelle
+weiter: `count_real_signals_today()` und `count_real_hebel_signals_today()`
+filtern auf `groq_raw_response IS NOT NULL` — eine Spalte, die
+**ausschließlich die alte Kette** geschrieben hat. Die neue schreibt
+`quelle_kette = 'rollen'` mit `modell = gemini-3.1-flash-lite`.
+
+> **Die Bedingung kann strukturell nie mehr wahr werden.**
+
+### 74.2 Die alten Zähler bleiben — unverändert
+
+**Sie sind nicht falsch.** Sie zählen die alte Kette, und die ist tot (0/180).
+Sie umzubauen hieße, den Budgetpfad in `signal_batch.py` mitzuverbiegen, der
+auf ihrer heutigen Bedeutung steht.
+
+> **Ein toter Zähler wird ersetzt, nicht umdefiniert.**
+
+Im Export heißen sie jetzt so, wie sie zählen: `alte_kette_spot`,
+`alte_kette_hebel`, `alte_kette_marktscan_writeups` — daneben `rollen_kette`.
+
+### 74.3 Eine Zählung, zwei Abnehmer
+
+`db.zaehle_rollen_urteile_heute()` — **die eine Definition.** Die Zählung
+stand bis heute **inline in `remote/status.py`**; der Export hätte sie
+kopieren müssen. Zwei Kopien einer Zählung sind zwei Stellen zum
+Auseinanderlaufen — wie `KURSREIHENBLOECKE` gegen den Matrixtest (67 % gegen
+89 % für dieselbe Gruppe, Kap. 70.4).
+
+**Gegen die echten Produktionszeilen geprüft — exakte Übereinstimmung:**
+
+| | gezählt | erwartet | Hauptfenster |
+|---|---:|---:|---:|
+| Urteile | **76** | 76 | 76 |
+| davon Hebel | **43** | 43 | 43 |
+| davon Spot | 33 | 33 | — |
+| mit Handlung | **48** | 48 | 48 |
+
+**Neu mitgezählt: die Aufteilung nach Aktion.** Sie war bisher nur zu
+bekommen, indem 3.467 Rohzeilen aus dem Export nachgezählt wurden.
+
+| Aktion | | |
+|---|---:|---:|
+| **ERÖFFNEN + KAUFEN + NACHKAUFEN** | **45** | **59 %** |
+| HALTEN | 28 | 37 % |
+| REDUZIEREN | 3 | 4 % |
+
+### 74.4 Und die Prüfung, die den Widerspruch gefunden hätte
+
+`pruefe_export_standard.py` meldet ab jetzt: **Modellaufrufe ohne Urteile.**
+Ein Aufruf ohne Ergebnis ist entweder ein toter Zähler oder eine ausgefallene
+Kette — beides gehört gemeldet.
+
+**Vier Fälle gegengeprüft:**
+
+| Fall | Ausgabe |
+|---|---|
+| der Fall von heute früh | ⚠️ *„127 Modellaufrufe, aber NULL Urteile"* |
+| Zähler lebt | „76 Urteile (43 Hebel / 33 Spot), 48 mit Handlung (63 %)" |
+| alte Datei, Spalte fehlt | ⚠️ *„nicht zaehlbar: Spalte quelle_kette fehlt"* |
+| **ruhiger Tag** | **kein Befund** |
+
+> ⚠️ **Mein erster Gegentest war wertlos** und meldete in allen vier Fällen
+> dasselbe: er rief `main()` im selben Prozess auf, das seinen Pfad aus
+> `sys.argv` nimmt — gelesen wurde also jedes Mal der echte Export. Zum
+> wiederholten Mal derselbe Typ: **die Eingabe stellte den Fall nicht her.**
+
+### 74.5 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | 940, alle bestanden |
+| gegen echte Produktionszeilen | 76 / 43 / 33 / 48 **exakt** |
+| leere Datei | meldet `nicht_verfuegbar`, **nicht** 0 |
+| Exportprüfer | 4 Fälle, 3 Befunde, ruhiger Tag stumm |
+| Fernsteuerkarte | rechnet mit derselben Funktion |
+| freie Namen | 0 |
+| Simulation | 4 Gruppen, 8 Signale, **0 Fehler, 0 Lücken** |

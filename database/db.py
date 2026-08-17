@@ -3989,6 +3989,77 @@ def get_latest_hebel_signal_per_symbol_and_angefragte_richtung(
     return {(row["symbol"], row["angefragte_richtung"]): _row_to_hebel_signal(row) for row in rows}
 
 
+def zaehle_rollen_urteile_heute(conn: sqlite3.Connection) -> dict:
+    """Was die ROLLEN-KETTE heute geurteilt hat - die eine Definition davon.
+
+    DER ANLASS (17.08.2026, Nutzerfund im NB-Export):
+
+        signal_volumen_heute : {"spot": 0, "hebel": 0}
+        llm_aufrufe_heute    : {"gemini": 86, "zai": 41}
+
+    Null Signale bei 86 Modellaufrufen - und im selben Export standen 76
+    Urteile als Rohzeilen. Es ist derselbe Fehler wie am 14.08. auf der
+    Fernsteuerkarte, nur eine Stelle weiter: `count_real_signals_today()`
+    und `count_real_hebel_signals_today()` filtern auf
+    `groq_raw_response IS NOT NULL` - eine Spalte, die AUSSCHLIESSLICH die
+    alte Kette geschrieben hat. Seit dem Schnitt kann die Bedingung
+    strukturell nie mehr wahr werden.
+
+    ⚠️ DIE ALTEN ZAEHLER BLEIBEN, UND ZWAR UNVERAENDERT. Sie sind nicht
+    falsch - sie zaehlen die ALTE Kette, und die ist tot. Sie umzubauen
+    hiesse, den Budgetpfad in `signal_batch.py` mitzuverbiegen, der auf
+    ihrer heutigen Bedeutung steht. Ein toter Zaehler wird ersetzt, nicht
+    umdefiniert.
+
+    HIER UND NICHT IN DER ANZEIGE. Dieselbe Zaehlung stand bis heute
+    INLINE in `remote/status.py::_get_rollen_budget`. Der Export haette
+    sie kopieren muessen - und zwei Kopien einer Zaehlung sind zwei
+    Stellen zum Auseinanderlaufen, wie `KURSREIHENBLOECKE` gegen den
+    Matrixtest (67 % gegen 89 % fuer dieselbe Gruppe, Umbauplan 70.4).
+
+    WAS `spot` HIER HEISST: alles ohne Hebelfaktor - also Krypto-Spot,
+    Aktien, Rohstoffe, Themen-ETF zusammen. Die alte Trennung
+    "Krypto-only gegen Multi-Asset" gibt es in der Rollen-Kette nicht
+    mehr; sie laeuft ueber alle sechs Gruppen mit derselben Kette.
+
+    Gibt bei fehlender Spalte oder Tabelle NULLEN mit `nicht_verfuegbar`
+    zurueck - nicht ein leeres dict. Ein leeres Ergebnis liest sich wie
+    "nichts passiert", und genau diese Verwechslung ist der Anlass."""
+    aus = {"gesamt": 0, "hebel": 0, "spot": 0, "mit_handlung": 0,
+           "aktionen": {}, "nicht_verfuegbar": None}
+    try:
+        spalten = {r[1] for r in conn.execute("PRAGMA table_info(signals)")}
+    except sqlite3.Error as exc:
+        aus["nicht_verfuegbar"] = f"Tabelle signals: {exc}"
+        return aus
+    if "quelle_kette" not in spalten:
+        aus["nicht_verfuegbar"] = ("Spalte quelle_kette fehlt - diese Datei "
+                                   "stammt von vor der Rollen-Kette")
+        return aus
+    seit = datetime.now(timezone.utc).strftime("%Y-%m-%dT00:00:00")
+    try:
+        zeile = conn.execute(
+            "SELECT COUNT(*), SUM(hebel IS NOT NULL), SUM(gate_passed = 1) "
+            "FROM signals WHERE quelle_kette = 'rollen' AND created_at >= ?",
+            (seit,)).fetchone()
+        aus["gesamt"] = int(zeile[0] or 0)
+        aus["hebel"] = int(zeile[1] or 0)
+        aus["spot"] = aus["gesamt"] - aus["hebel"]
+        aus["mit_handlung"] = int(zeile[2] or 0)
+        # DIE AUFTEILUNG NACH AKTION - der Wert, um den es beim
+        # Weiterschauen wirklich geht. Am 17.08. waren 45 von 76 Urteilen
+        # ein Einstieg (59 %), und das liess sich nur ermitteln, indem
+        # 3.467 Rohzeilen aus dem Export nachgezaehlt wurden.
+        if "action" in spalten:
+            aus["aktionen"] = {str(a): int(n) for a, n in conn.execute(
+                "SELECT action, COUNT(*) FROM signals WHERE "
+                "quelle_kette = 'rollen' AND created_at >= ? "
+                "GROUP BY action ORDER BY COUNT(*) DESC", (seit,))}
+    except sqlite3.Error as exc:
+        aus["nicht_verfuegbar"] = str(exc)
+    return aus
+
+
 def count_real_hebel_signals_today(conn: sqlite3.Connection) -> int:
     """Fuer den kuenftigen Budget-Allocator (docs/budget_queue_design.md), analog
     count_real_signals_today() - zaehlt echte LLM-Analysen (Groq ODER Cerebras)
