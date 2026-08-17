@@ -120,6 +120,10 @@ QUELLEN_G = {
     "onchain": ("boersenfluss",),
     # Die naechsten, sobald verdrahtet - siehe Umbauplan 40.1.
     "cot": ("cot_perzentil",),
+    # DIE ZWEITE ART FUER ROHSTOFFE (17.08.2026): wie viel Metall
+    # tatsaechlich hinterlegt ist. COT misst Terminpositionen, dies
+    # physische Bestaende - zwei Erhebungen, zwei Fragen.
+    "etf_bestand": ("etf_bestand",),
     "short_interest": ("short_interest_perzentil",),
     "insider": ("insider_kaeufe_90d",),
     "optionsmarkt": ("dvol", "skew"),
@@ -128,8 +132,11 @@ QUELLEN_G = {
 # WELCHE QUELLEN EINEN EINZELNEN WERT BESCHREIBEN. G2 verlangt genau das - und
 # ohne diese Liste wuerde eine BTC-weite Groesse wie der Boersenfluss die
 # Bedingung miterfuellen, obwohl sie ueber SEI nichts aussagt.
+# `etf_bestand` ist symbolspezifisch im tragenden Sinn: der Gold-ETF ist
+# nicht der Silber-ETF. Dieselbe Ueberlegung wie bei COT, das den Future
+# des Basiswerts misst und nicht unser Zertifikat.
 SYMBOLSPEZIFISCH_G = ("terminmarkt", "cot", "short_interest", "insider",
-                      "optionsmarkt")
+                      "optionsmarkt", "etf_bestand")
 MINDEST_QUELLEN_G = 2
 
 

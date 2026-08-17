@@ -326,6 +326,52 @@ COT_FENSTER_WOCHEN = 156
 COT_MINDESTREIHE = 60
 
 
+# --- WIE VIEL METALL TATSAECHLICH HINTERLEGT IST (17.08.2026) ---------
+#
+# ⚠️ DIE VERAENDERUNG IST DIE AUSSAGE, NICHT DER STAND. Ein Perzentil auf
+# den Stueckzahl-STAND waere wertlos: die Reihe waechst oder faellt
+# langsam, und der juengste Wert laege fast immer im 0. oder 100.
+# Perzentil - ein konstantes Feld in Zeitlupe (R-T6).
+#
+# Gemessen wird deshalb die Veraenderung ueber ein Fenster, und ihr
+# Perzentil gegen die eigene Geschichte. Dieselbe Form wie beim
+# Boersenfluss - und aus demselben Grund.
+#
+# WARTEZEIT: 90 Punkte bei taeglichem Takt, also rund drei Monate. Der
+# Satz entsteht von selbst, sobald sie da sind.
+ETF_BESTAND_MINDESTREIHE = 90
+ETF_BESTAND_FENSTER_TAGE = 20
+ETF_BESTAND_PERZENTILBASIS = 250
+
+
+def _etf_bestand(conn, symbol: str) -> dict | None:
+    """Wie hat sich die hinterlegte Menge veraendert - und wie ungewoehnlich?
+
+    NUR FUER ROHSTOFFE MIT ETF. Kupfer fehlt, weil CPER keine Stueckzahl
+    ausweist; fuer OD7C entsteht deshalb kein Satz."""
+    from agent.rohstoff.pipeline import SYMBOL_ZU_COT_ROHSTOFF
+    from database import db as DB
+
+    stoff = SYMBOL_ZU_COT_ROHSTOFF.get(str(symbol or "").upper())
+    if not stoff or conn is None:
+        return None
+    reihe = DB.lies_externe_reihe(conn, "etf_bestand", f"{stoff}_stueckzahl",
+                                  ETF_BESTAND_PERZENTILBASIS
+                                  + ETF_BESTAND_FENSTER_TAGE + 20)
+    if len(reihe) < ETF_BESTAND_MINDESTREIHE:
+        return None
+    werte = [w for _, w in reihe]
+    f = ETF_BESTAND_FENSTER_TAGE
+    aend = [100.0 * (werte[i] - werte[i - f]) / werte[i - f]
+            for i in range(f, len(werte)) if werte[i - f]]
+    if len(aend) < 30:
+        return None
+    jetzt = aend[-1]
+    return {"stoff": stoff, "datum": reihe[-1][0], "aenderung_pct": jetzt,
+            "n": len(aend), "fenster": f,
+            "perzentil": _perzentil(aend, jetzt)}
+
+
 def _cot(conn, symbol: str) -> dict | None:
     """Die COT-Positionierung zum BASISWERT dieses Zertifikats."""
     from agent.rohstoff.pipeline import SYMBOL_ZU_COT_ROHSTOFF
@@ -603,6 +649,9 @@ def lage(conn, symbol: str, assetklasse: str | None = None,
         if c:
             aus["cot"] = c
             aus["cot_perzentil"] = c["perzentil"]
+        eb = _etf_bestand(conn, sym)
+        if eb:
+            aus["etf_bestand"] = eb
         else:
             aus["fehlt_rahmen"] = (aus.get("fehlt_rahmen") or []) + [
                 "Positionierung der grossen Fonds im Basiswert"]
@@ -885,6 +934,23 @@ def saetze(e: dict) -> list[str]:
         z.append(f"Am {f['datum']} {richtung}.")
         z.append(f"Gemessen an den letzten {f['n']} Tagen steht diese Bewegung "
                  f"im {pf}. Perzentil - {wie}.")
+
+    eb = e.get("etf_bestand")
+    if eb:
+        p_ = eb["perzentil"]
+        wie = ("aussergewoehnlich stark" if p_ >= EXTREM_OBEN else
+               "aussergewoehnlich schwach" if p_ <= EXTREM_UNTEN else
+               "im gewohnten Bereich")
+        richtung = ("aufgebaut" if eb["aenderung_pct"] > 0 else "abgebaut")
+        # KEINE DEUTUNG. Dass ein Bestandsaufbau steigende Preise
+        # ankuendigt, ist gaengige Lesart und bei uns nie gemessen.
+        z.append(
+            f"Die in boersengehandelten Fonds physisch hinterlegte Menge "
+            f"dieses Rohstoffs wurde in den letzten {eb['fenster']} Tagen "
+            f"{richtung}.")
+        z.append(
+            f"Wie stark, steht im {p_}. Perzentil der letzten {eb['n']} "
+            f"Messungen - {wie}.")
 
     st = e.get("stablecoin")
     if st:

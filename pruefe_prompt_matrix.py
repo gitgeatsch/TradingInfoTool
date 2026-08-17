@@ -255,6 +255,58 @@ def _bc_bloecke(conn, db: str, symbol: str, gruppe: str, instrument: str):
         umschlag=RE.umschlag(symbol, db, gruppe))
 
 
+# --- WAS BEI EINEM NEUEN WERT PASSIERT (17.08.2026) ------------------
+#
+# NUTZERFRAGE: *"ist dies nur fuer den Bestand implementiert oder
+# funktioniert dies auch bei neuen Werten? Sonst bekommen wir einen
+# Schiefstand, wenn gehandelt wird."*
+#
+# DIE PARAMETER ZERFALLEN IN ZWEI KLASSEN, und nur eine davon ist
+# gefaehrlich:
+#
+#   VON SELBST - sie leiten sich aus der Watchlist oder aus Tabellen ab,
+#   die je Symbol gefuellt werden. Ein neuer Wert bekommt sie, sobald
+#   Daten da sind, ohne dass jemand etwas eintraegt:
+#       Umschlag, Fundamentaldaten, Leerverkaeufer, Insider,
+#       Terminmarkt, Boersendivergenz, Sektorbezug, Bestand, Verlauf
+#
+#   ⚠️ NUR MIT EINTRAG - eine von Hand gepflegte Zuordnung entscheidet,
+#   ob der Parameter ueberhaupt entsteht. Fehlt der Eintrag, faellt er
+#   STILL aus: kein Fehler, keine Logzeile, nur ein Satz weniger.
+#
+# GENAU DAS IST DER SCHIEFSTAND. Ein neuer Rohstoff waere ohne Eintrag
+# in `SYMBOL_ZU_COT_ROHSTOFF` in Rolle G voellig blind - und niemand
+# saehe es, weil dieselbe Rolle bei den vier bestehenden liefert.
+HANDPFLEGE = {
+    "COT + ETF-Bestand (Rohstoffe)":
+        ("rohstoffe", "agent.rohstoff.pipeline", "SYMBOL_ZU_COT_ROHSTOFF"),
+    "Hebelfaktor (Absicherung)":
+        ("hedge", "agent.hedge.pipeline", "SYMBOL_ZU_HEBEL_FAKTOR"),
+}
+
+
+def _neuzugaenge(gruppen: dict) -> list[str]:
+    """Welche Symbole der Watchlist fehlen in einer Handzuordnung?"""
+    import importlib
+
+    luecken = []
+    for name, (gruppe, modul, attribut) in HANDPFLEGE.items():
+        try:
+            zuordnung = getattr(importlib.import_module(modul), attribut)
+        except Exception as exc:                          # noqa: BLE001
+            luecken.append(f"{name}: Zuordnung nicht lesbar ({exc})")
+            continue
+        fehlend = [str(s).upper() for s in gruppen.get(gruppe, [])
+                   if str(s).upper() not in zuordnung]
+        print(f"  {name:34}{len(zuordnung):>3} Eintraege, "
+              f"{len(gruppen.get(gruppe, [])):>2} Symbole"
+              f"{'  -> FEHLEN: ' + ', '.join(fehlend) if fehlend else '  vollstaendig'}")
+        for s in fehlend:
+            luecken.append(f"{gruppe}/{s}: fehlt in {attribut} - der "
+                           f"Parameter faellt STILL aus")
+    return luecken
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--db", required=True)
@@ -360,6 +412,11 @@ def main() -> int:
                     f"{gruppe}/{instrument} ({sym}): Rolle-G-Satz mit "
                     f"Selbstbezug/Kosten {w} - das gehoert zu BC")
 
+    print()
+    print("=" * 78)
+    print("NEUE WERTE - welche Parameter brauchen einen Handeintrag?")
+    print("=" * 78)
+    abweichungen += _neuzugaenge(gruppen)
     print()
     print("=" * 78)
     if zahlenbefunde:

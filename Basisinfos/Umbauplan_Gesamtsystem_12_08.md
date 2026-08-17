@@ -8966,3 +8966,111 @@ die Matrix die eine Definition.
 | `pruefe_prompt_matrix.py` | Sektorbezug ergänzt, **eine** Definition für „Kursreihe" |
 | Krypto-Abdeckung | je Symbol gezählt, Ausfälle beziffert |
 | Rohstoff-Recherche | vier Anbieter geprüft, drei von vier Metallen abgedeckt |
+
+---
+
+## Kapitel 71 — ETF-Bestände für Rohstoffe, und was bei einem neuen Wert passiert (17.08.2026)
+
+### 71.1 Die hinterlegte Menge — Rohstoffe bekommen ihre zweite Quellenart
+
+**Gebaut nach demselben Muster wie Stablecoin und Deribit: vollständig, mit
+Selbsteinschaltung.** Der Job sammelt ab heute, der Satz entsteht ab 90
+Punkten — **rund drei Monate**.
+
+| Rohstoff | ETF | Stückzahl | Stand 17.08. |
+|---|---|---|---:|
+| **Gold** | GLD | `sharesOutstanding` | 260.300.000 |
+| **Silber** | SLV | dito | 341.449.984 |
+| **Erdgas** | UNG | dito | 12.084.600 |
+| Kupfer | CPER | **nicht ausgewiesen** | — |
+
+> **Warum die Stückzahl und nicht das Fondsvolumen:** das Volumen ist
+> *Stück × Preis* und damit eine Kursgröße. Die Stückzahl eines physisch
+> hinterlegten ETF ändert sich **nur, wenn Metall tatsächlich ein- oder
+> ausgelagert wird** — eine echte Nachfragegröße. Derselbe Gedanke wie beim
+> Krypto-Umschlag.
+
+**⚠️ Die Veränderung ist die Aussage, nicht der Stand.** Ein Perzentil auf den
+Stand wäre wertlos: die Reihe wächst oder fällt langsam, und der jüngste Wert
+läge fast immer im 0. oder 100. Perzentil — **ein konstantes Feld in
+Zeitlupe** (R-T6). Gemessen wird die Veränderung über 20 Tage und ihr
+Perzentil gegen die eigene Geschichte.
+
+**Nachgewiesen mit nachgestellter Historie:**
+
+```
+Die in boersengehandelten Fonds physisch hinterlegte Menge dieses
+  Rohstoffs wurde in den letzten 20 Tagen abgebaut.
+Wie stark, steht im 20. Perzentil der letzten 120 Messungen -
+  im gewohnten Bereich.
+```
+
+| Symbol | Quellen | G1 | G2 |
+|---|---|---|---|
+| **OD7H** (Gold) | cot · **etf_bestand** | **erfüllt** | **erfüllt** |
+| OD7C (Kupfer) | cot | fehlt | erfüllt |
+
+**Damit schließt sich Lücke 3 aus Kapitel 69 für drei von vier Rohstoffen** —
+ohne Schlüssel, anders als EIA.
+
+### 71.2 Die Frage, die den Schiefstand verhindert
+
+**Nutzerfrage:** *„ist dies nur für den Bestand implementiert oder funktioniert
+das auch bei neuen Werten? Sonst bekommen wir einen Schiefstand, wenn
+gehandelt wird."*
+
+**Die Parameter zerfallen in zwei Klassen, und nur eine ist gefährlich:**
+
+| | Klasse | Parameter |
+|---|---|---|
+| ✓ | **von selbst** — leiten sich aus der Watchlist oder aus Tabellen ab, die je Symbol gefüllt werden | Umschlag · Fundamentaldaten · Leerverkäufer · Insider · Terminmarkt · Börsendivergenz · Sektorbezug · Bestand · Verlauf · Marken · Volumen |
+| ⚠️ | **nur mit Eintrag** — eine von Hand gepflegte Zuordnung entscheidet, ob der Parameter überhaupt entsteht | **COT + ETF-Bestand** (`SYMBOL_ZU_COT_ROHSTOFF`) · **Hebelfaktor** (`SYMBOL_ZU_HEBEL_FAKTOR`) |
+
+> **Fehlt der Eintrag, fällt der Parameter STILL aus:** kein Fehler, keine
+> Logzeile, nur ein Satz weniger. Ein neuer Rohstoff wäre in Rolle G **völlig
+> blind** — und niemand sähe es, weil dieselbe Rolle bei den vier bestehenden
+> liefert.
+
+**Stand heute: beide Zuordnungen vollständig.**
+
+```
+COT + ETF-Bestand (Rohstoffe)    4 Eintraege,  4 Symbole   vollstaendig
+Hebelfaktor (Absicherung)        2 Eintraege,  2 Symbole   vollstaendig
+```
+
+**Und die Prüfung schlägt an, sobald das nicht mehr gilt** — gegengeprüft mit
+zwei erfundenen Neuzugängen:
+
+```
+⚠️ rohstoffe/OD7X: fehlt in SYMBOL_ZU_COT_ROHSTOFF - faellt STILL aus
+⚠️ hedge/XSPS:     fehlt in SYMBOL_ZU_HEBEL_FAKTOR - faellt STILL aus
+```
+
+**`pruefe_prompt_matrix.py` führt das ab jetzt bei jedem Lauf.** Wer einen
+Wert aufnimmt, sieht beim nächsten Prüflauf, was ihm fehlt — statt es
+Wochen später an einer stillen Lücke zu merken.
+
+### 71.3 Der Stand der Mindestabdeckung
+
+| Gruppe | BC3 | G1 | G2 | Änderung heute |
+|---|---|---|---|---|
+| krypto/spot · hebel | ✓ 100 % | 96 % | 96 % | — |
+| aktien/spot | ✓ | ✓ | ✓ | — |
+| **rohstoffe** | ✗ | **3 von 4 ab ~3 Monaten** | ✓ | **ETF-Bestand** |
+| themen_etf · hedge | ✗ | ✗ | ✗ | zurückgestellt |
+
+**Offen bleibt bei Rohstoffen BC3** — dafür käme nur die Haltekostenquote in
+Frage, und die ist gelb.
+
+### 71.4 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **932, alle bestanden** |
+| freie Namen | 0 |
+| `pruefe_zahlen_in_prompts.py` | Selbsttest 9/9, **360 Sätze**, kein Befund |
+| `pruefe_prompt_matrix.py` | 2 bekannte Abweichungen, Neuzugangsprüfung **vollständig** |
+| Job live | 3 ETF-Bestände geschrieben, 0 Fehler |
+| Selbsteinschaltung | mit Historie 2 Sätze, ohne Historie 0 |
+| Gegenprobe Neuzugang | 2 erfundene Symbole, **2 Lücken gemeldet** |
+| Simulation | 6 Gruppen, 12 Signale, **0 Fehler, 0 Lücken** |

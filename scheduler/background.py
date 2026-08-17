@@ -892,6 +892,19 @@ def makro_analog_job(conn_factory, fred_api_key) -> None:
         conn.close()
 
 
+# Welcher physisch hinterlegte ETF steht fuer welchen Rohstoff.
+# MANUELL GEPFLEGT wie `SYMBOL_ZU_COT_ROHSTOFF` - eine Heuristik ueber
+# Namen waere fragiler, und es sind drei Zeilen.
+#
+# Kupfer fehlt absichtlich: CPER liefert keine `sharesOutstanding`
+# (live geprueft 17.08.).
+ROHSTOFF_ZU_ETF = {
+    "gold": "GLD",
+    "silber": "SLV",
+    "erdgas": "UNG",
+}
+
+
 def _aktien_symbole() -> list:
     """Die Aktien der Watchlist - aus der Konfiguration, nicht aus einer Liste.
 
@@ -1095,6 +1108,31 @@ def externe_reihen_job(conn_factory) -> None:
                     get_cot_long_anteil_history(stoff))
             except Exception as exc:                         # noqa: BLE001
                 logger.info("COT %s nicht auffrischbar: %s", stoff, exc)
+
+        # DIE HINTERLEGTE METALLMENGE (17.08.2026). Rohstoffe hatten in
+        # Rolle G genau EINE Quelle (COT) - G1 verlangt zwei.
+        #
+        # WARUM DIE STUECKZAHL UND NICHT DAS FONDSVOLUMEN: das Volumen ist
+        # Stueck x Preis und damit eine Kursgroesse. Die STUECKZAHL eines
+        # physisch hinterlegten ETF aendert sich nur, wenn Metall
+        # tatsaechlich ein- oder ausgelagert wird - eine echte
+        # Nachfragegroesse, unabhaengig vom Preis. Derselbe Gedanke wie
+        # beim Krypto-Umschlag.
+        #
+        # ⚠️ KUPFER FEHLT. Live geprueft: CPER liefert keine
+        # `sharesOutstanding`. Drei von vier ist trotzdem deutlich mehr
+        # als EIA, das nur Erdgas deckt und einen Schluessel braucht.
+        try:
+            import yfinance as _yf
+
+            for stoff, etf in ROHSTOFF_ZU_ETF.items():
+                stueck = (_yf.Ticker(etf).info or {}).get("sharesOutstanding")
+                if stueck:
+                    geschrieben += DB.schreibe_externe_reihe(
+                        conn, "etf_bestand", f"{stoff}_stueckzahl",
+                        [(heute, float(stueck))])
+        except Exception as exc:                             # noqa: BLE001
+            logger.info("ETF-Bestaende nicht auffrischbar: %s", exc)
 
         geschrieben += _aktien_reihen(conn)
         # SICH SELBST BUCHEN. Ohne diese Zeile fehlte der Job im

@@ -2466,3 +2466,34 @@ dieses Skript mitzuziehen — sonst prüft es einen Stand, den es nicht mehr gib
 **Der Musterfall, den es abdeckt:** `krypto/hebel` zeigt in Rolle G **kein**
 Funding — das ist die Vorschrift (R-R2 je Instrument), nicht ein Defekt. Ohne
 dieses Werkzeug hält das jeder für einen Fehler.
+
+## 2.33 Funktioniert es auch bei einem NEUEN Wert? (neu 2026-08-17)
+
+**Nutzerfrage:** *„ist dies nur für den Bestand implementiert oder funktioniert
+das auch bei neuen Werten? Sonst bekommen wir einen Schiefstand, wenn
+gehandelt wird."*
+
+**Zwei Klassen, und nur eine ist gefährlich:**
+
+| | Klasse | woran erkennbar |
+|---|---|---|
+| ✓ | **von selbst** | leitet sich aus der Watchlist oder aus einer Tabelle ab, die je Symbol gefüllt wird |
+| ⚠️ | **nur mit Eintrag** | eine von Hand gepflegte Zuordnung im Code entscheidet |
+
+**Heute handgepflegt:** `SYMBOL_ZU_COT_ROHSTOFF` (COT + ETF-Bestand) und
+`SYMBOL_ZU_HEBEL_FAKTOR` (Hebelfaktor, inzwischen aus `config.yaml` speisbar).
+
+> ⚠️ **Fehlt der Eintrag, fällt der Parameter STILL aus** — kein Fehler, keine
+> Logzeile, nur ein Satz weniger. Ein neuer Rohstoff wäre in Rolle G völlig
+> blind, und niemand sähe es, weil dieselbe Rolle bei den bestehenden liefert.
+
+```bash
+python pruefe_prompt_matrix.py --db <NB-Backup>
+```
+
+Der Abschnitt **„NEUE WERTE"** vergleicht jede Handzuordnung mit der Watchlist
+und meldet jedes Symbol, das fehlt. **Wer einen Wert aufnimmt, sieht es beim
+nächsten Prüflauf** — statt es Wochen später an einer stillen Lücke zu merken.
+
+**Beim Anlegen einer neuen Handzuordnung ist `HANDPFLEGE` mitzuziehen**, sonst
+prüft der Abschnitt eine Liste, die nicht mehr vollständig ist.
