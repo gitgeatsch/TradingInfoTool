@@ -86,6 +86,18 @@ RETRY_ON_429_BASIS_WARTEZEIT_SEKUNDEN = 5.0
 # haengt statt an erster Stelle, faellt die zusaetzliche Wartezeit kaum
 # noch ins Gewicht - 150s geben glm-4.5-flash realistisch eine echte Chance.
 REQUEST_TIMEOUT_SECONDS = 150
+# ⚠️ DIESE 150 GELTEN NICHT MEHR FUER JEDEN AUFRUFER (17.08.2026).
+#
+# Sie sind an EINEM Prompt gemessen: 34.611 Zeichen, ca. 109 s. Rolle G der
+# neuen Kette schickt 1.495 Zeichen und antwortet gemessen in 22-33 s. Fuer
+# sie sind 150 s keine Reserve, sondern Schaden: das Concurrency-Limit ist 2,
+# also blockiert ein haengender Aufruf die HAELFTE der Kapazitaet - und zwar
+# so lange wie fuenf normale Aufrufe gedauert haetten.
+#
+# Global senken geht nicht: die alten Pipelines (aktien, hedge, hebel) laufen
+# ueber `fuehre_beide_calls_im_hintergrund` weiter mit dem grossen Prompt.
+# Deshalb ein Parameter je Aufruf, dessen Vorgabe genau dieser Wert bleibt -
+# wer nichts angibt, bekommt was er immer bekam.
 
 
 class ZaiClient:
@@ -115,6 +127,7 @@ class ZaiClient:
         model: str = DEFAULT_MODEL,
         temperature: float = 0.3,
         response_format: dict | None = None,
+        timeout: float | None = None,
     ) -> str:
         self._respect_rate_limit()
         zaehle_aufruf("zai")
@@ -130,7 +143,8 @@ class ZaiClient:
             versuch = 0
             while True:
                 response = self._session.post(
-                    BASE_URL, json=payload, headers=headers, timeout=REQUEST_TIMEOUT_SECONDS
+                    BASE_URL, json=payload, headers=headers,
+                    timeout=timeout or REQUEST_TIMEOUT_SECONDS,
                 )
                 if response.status_code == 429 and versuch < RETRY_ON_429_MAX_VERSUCHE:
                     versuch += 1

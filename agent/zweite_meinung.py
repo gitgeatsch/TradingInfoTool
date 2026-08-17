@@ -83,7 +83,16 @@ logger = logging.getLogger(__name__)
 # Sie deckt den schlimmsten Fall NICHT ab (3 x 150 s Timeout = 450 s) - das ist
 # keine Luecke, sondern P-8: bei einem Z.ai-Timeout geht die Mail OHNE die
 # Gegenpruefungszeilen raus statt gar nicht.
-WARTE_MAX_SEKUNDEN = 240
+# ⚠️ 240 -> 540 (17.08.2026). Der alte Wert war KLEINER als das, worauf ein
+# Faden warten durfte: 180 s auf einen Platz plus 150 s Aufruf = 330 s, aber
+# `rollen_lauf` gab nach WARTE_MAX_SEKUNDEN + 60 = 300 s auf. Der Hauptfaden
+# stieg also aus, bevor die Warteschlange es tat - der Faden lief als Daemon
+# weiter, seine Mail ging MIT dem Einwand raus, und `ZM.schreibe` fiel aus.
+# Die Mail zeigte dann einen Befund, den die Datenbank nicht kennt.
+#
+# Die Regel dahinter: die Warteschlange muss VOR dem Hauptfaden aufgeben.
+# Schlimmster Fall neu 480 + 75 = 555 s, Aufgabegrenze 540 + 60 = 600 s.
+WARTE_MAX_SEKUNDEN = 540
 
 # WIE VIELE Z.AI-AUFRUFE GLEICHZEITIG LAUFEN DUERFEN (14.08.2026).
 #
@@ -103,10 +112,42 @@ WARTE_MAX_SEKUNDEN = 240
 MAX_GLEICHZEITIG = 2
 _PLATZ = threading.Semaphore(MAX_GLEICHZEITIG)
 
+# WIE LANGE EIN ROLLE-G-AUFRUF LAUFEN DARF (17.08.2026).
+#
+# NICHT die globale Zeitgrenze von Z.ai (150 s) - die ist an einem Prompt mit
+# 34.611 Zeichen gemessen und gilt weiter fuer die alten Pipelines. Rolle G
+# schickt 1.495 Zeichen; live gemessen kam die Antwort nach 22,4 / 29,7 /
+# 33,1 s, der einzige Ausreisser lag bei 65,5 s.
+#
+# 75 s decken den Ausreisser und schneiden alles ab, was danach kommt. Der
+# Grund ist die Knappheit: bei zwei Plaetzen kostet ein haengender Aufruf
+# die halbe Kapazitaet, und zwar so lange wie fuenf normale Aufrufe.
+ZEITGRENZE_ROLLE_G_SEKUNDEN = 75
+
 # Wie lange ein Faden auf einen freien Platz wartet, bevor er aufgibt.
 # Grosszuegig, weil ein Aufruf selten laenger als 30 s braucht - aber ENDLICH,
 # damit ein haengender Aufruf nicht die ganze Reihe blockiert.
-WARTE_AUF_PLATZ_SEKUNDEN = 180
+# ⚠️ 180 -> 480 (17.08.2026) - DIE EIGENTLICHE URSACHE DER AUSFAELLE.
+#
+# 85 von 159 Urteilen bekamen keine Gegenpruefung. Der Grund war NICHT das
+# Limit des Anbieters, sondern unsere Geduld:
+#
+#   Kapazitaet  2 Plaetze * 3600 s / 30 s  =  ~240 Aufrufe je Stunde
+#   gebraucht   20-40 je Umlauf
+#
+# Die Kapazitaet ist also reichlich da. Wir sind nur nach 180 s aus der
+# Schlange gegangen: 2 * 180/30 = 12 Signale kamen dran, der Rest bekam
+# `Andrang`. Das Limit begrenzt, wie viele GLEICHZEITIG laufen - nicht, wie
+# viele insgesamt drankommen.
+#
+# 480 s reichen fuer 2 * 480/30 = ~32 Signale. Ein Andrang von 40 (der Fall
+# NACH einem Neustart, nicht der Normalbetrieb) bleibt teilweise unbedient -
+# sichtbar als `Andrang`, nicht als stille Zustimmung.
+#
+# PASST IN DEN TAKT: die Kette laeuft alle 15 Minuten
+# (`HEBEL_SCREENING_INTERVAL_MINUTES`). Schlimmster Fall 480 + 75 = 555 s,
+# Aufgabegrenze 600 s - zehn von fuenfzehn Minuten, fuenf Minuten Luft.
+WARTE_AUF_PLATZ_SEKUNDEN = 480
 
 
 def _mit_platz(fn, *a, **kw):
@@ -430,7 +471,8 @@ def rolle_g(client, urteil: dict, conn=None, db: str | None = None,
     roh = client.chat(
         [{"role": "system", "content": SYSTEM_ROLLE_G},
          {"role": "user", "content": json.dumps(eingabe, ensure_ascii=False)}],
-        temperature=0.2, response_format={"type": "json_object"})
+        temperature=0.2, response_format={"type": "json_object"},
+        timeout=ZEITGRENZE_ROLLE_G_SEKUNDEN)
     a = json.loads(extrahiere_inhalt(roh) if not isinstance(roh, str) else roh)
     wort = str(a.get("einwand") or "").strip().lower()
     if wort not in ("ja", "nein", "unklar"):

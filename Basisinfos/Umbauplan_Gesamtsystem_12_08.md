@@ -10686,3 +10686,105 @@ verschieden zählen, sind schlimmer als eine.
 |---|---|
 | **Rolle G, Regler** | Vorschlag liegt vor — **Entscheidung beim Nutzer** |
 | Rohstoffe/Hedge in der Simulation | übersprungen, keine Kursreihe im Bestand — die Mailprüfung sah sie nicht |
+
+---
+
+## Kapitel 86 — Die 85 fehlenden Gegenprüfungen: es war unsere Geduld (17.08.2026)
+
+### 86.1 Was nicht ging
+
+**Die 2 sind hart.** `api/zai.py:66` zitiert Z.ais eigene Doku: *„Concurrency
+limit: 2"* für glm-4.5-flash. Alles darüber wird serverseitig mit 429
+abgewiesen — genau der Zustand vom 28.07. (210 Logzeilen, praktisch alle
+429). **Mein erster Vorschlag „Gleichzeitigkeit herauf" war an dieser Stelle
+falsch.**
+
+**Und die Zeitgrenze ist geteilt.** Die 150 s gelten auch für die alten
+Pipelines (aktien, hedge, hebel), die über
+`fuehre_beide_calls_im_hintergrund` weiter den großen Prompt schicken.
+
+### 86.2 Die eigentliche Ursache
+
+Ein Befund macht die Rechnung erst klar: **es ist heute EIN Z.ai-Aufruf je
+Signal**, nicht zwei — `mehrheit()` (drei Stimmen) ist seit dem 16.08.
+abgeschaltet.
+
+```
+Kapazität   2 Plätze × 3.600 s / 30 s  =  ~240 Aufrufe je Stunde
+gebraucht   20–40 je Umlauf
+```
+
+**Die Kapazität war die ganze Zeit da.** Wir sind nur nach 180 Sekunden aus
+der Warteschlange gegangen: 2 × 180/30 = **12 Signale** kamen dran, der Rest
+bekam `Andrang`.
+
+> **Das Limit begrenzt, wie viele GLEICHZEITIG laufen — nicht, wie viele
+> insgesamt drankommen.** Die 180 s waren unsere Geduld, nicht die Grenze des
+> Anbieters.
+
+### 86.3 Der Fund nebenbei: heute schon widersprüchlich
+
+| | |
+|---|---:|
+| ein Faden durfte warten | 180 s + 150 s = **330 s** |
+| `rollen_lauf.py:582` gab auf nach | 240 + 60 = **300 s** |
+
+**Der Hauptfaden stieg aus, bevor die Warteschlange es tat.** Der Faden lief
+als Daemon weiter, **seine Mail ging MIT dem Einwand raus**, und `ZM.schreibe`
+fiel aus. Die Mail zeigte dann einen Befund, den die Datenbank nicht kennt.
+
+**Die Regel daraus:** die Warteschlange muss **vor** dem Hauptfaden aufgeben.
+
+### 86.4 Was gebaut wurde
+
+| Regler | vorher | jetzt | |
+|---|---:|---:|---|
+| `WARTE_AUF_PLATZ_SEKUNDEN` | 180 | **480** | 12 → 32 Signale |
+| `WARTE_MAX_SEKUNDEN` | 240 | **540** | Aufgabegrenze 600 s > 555 s |
+| Zeitgrenze Rolle G | 150 (global) | **75 (nur hier)** | eigener Parameter |
+| `MAX_GLEICHZEITIG` | 2 | **2** | Anbieterlimit, unberührt |
+| `REQUEST_TIMEOUT_SECONDS` | 150 | **150** | alte Pipelines unberührt |
+
+Die Zeitgrenze als **Parameter an `chat()` mit Vorgabe
+`REQUEST_TIMEOUT_SECONDS`** — wer nichts angibt, bekommt was er immer bekam.
+
+**Warum 75:** live gemessen 22,4 / 29,7 / 33,1 s, ein Ausreißer bei 65,5 s —
+auf einem Prompt von **1.495** Zeichen, nicht den 34.611, an denen die 150 s
+gemessen wurden. Bei zwei Plätzen kostet ein hängender Aufruf die halbe
+Kapazität, und zwar so lange wie **fünf** normale Aufrufe.
+
+### 86.5 Der Nachweis am Andrang selbst
+
+Maßstab 1:100 (ein Aufruf 0,30 s statt 30 s), 40 Signale:
+
+| | mit Gegenprüfung | `Andrang` | Umlauf |
+|---|---:|---:|---:|
+| vorher 180 s | **14** von 40 | 26 | 210 s |
+| jetzt 480 s | **32** von 40 | 8 | 481 s |
+
+Vorhergesagt hatte ich 12 → 32. **Die acht offenen sind der Andrangfall nach
+einem Neustart, nicht der Normalbetrieb** — und sie sind als `Andrang`
+sichtbar, nicht als stille Zustimmung.
+
+### 86.6 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **1.080**, alle bestanden — **12 neu unter `--paket Andrang`** |
+| Zeitgrenze am Draht | gemessen an `requests`: 150 / **75** / 150 |
+| Deckel | 20 Fäden, gemessene Spitze **2** |
+| `Andrang` | wird geworfen, nicht stillschweigend übersprungen |
+| Reihenfolge | 555 s < 600 s, und die 600 stehen am Code, nicht in der Rechnung |
+| Takt | 600 s < 900 s (`HEBEL_SCREENING_INTERVAL_MINUTES = 15`) |
+| freie Namen · Zahlenprüfer · Belegprüfer · Darstellung | 0 · 9/9 · 9/9 · bestanden |
+| Simulation | 4 Gruppen, 9 Mails, **0 Fehler, 0 Lücken** |
+
+### 86.7 Was das kostet, und was offen bleibt
+
+**Mails eines Umlaufs treffen über ~8 Minuten verteilt ein statt über ~3.**
+Bei Haltedauern um 25 Handelstage folgenlos.
+
+⚠️ **Der eine echte Nachteil:** ist Z.ai ausgefallen, wartet jetzt jeder Faden
+8 statt 3 Minuten aufs Nichts. Sauber lösen würde das ein Abbruch nach *n*
+Transportfehlern im selben Umlauf — **nicht gebaut**, das ist eigene Mechanik
+und war nicht beauftragt.

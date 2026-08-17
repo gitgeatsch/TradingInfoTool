@@ -8264,6 +8264,119 @@ def paket_fett() -> None:
            _ZL([1234.5, 3.25]) == "1.234,50 und 3,25")
 
 
+def paket_andrang() -> None:
+    """Rolle G kam bei 85 von 159 Urteilen nicht dran (17.08.2026).
+
+    Nicht wegen des Anbieterlimits, sondern wegen unserer Geduld: bei zwei
+    Plaetzen und ~30 s je Aufruf reichten 180 s Wartezeit fuer 12 Signale,
+    ein Umlauf hat 20-40. Die Kapazitaet (2 * 3600/30 = ~240 Aufrufe je
+    Stunde) war die ganze Zeit da."""
+    import inspect as _i
+
+    from agent import zweite_meinung as _ZM
+    from api import zai as _ZAI
+
+    P = "Andrang"
+
+    # ---- DAS ANBIETERLIMIT IST HART UND BLEIBT ----
+    pruefe(P, "zwei gleichzeitig - an BEIDEN Stellen",
+           _ZM.MAX_GLEICHZEITIG == 2 == _ZAI.MAX_CONCURRENT_REQUESTS,
+           "Z.ais eigene Doku fuer glm-4.5-flash nennt 'Concurrency limit: "
+           "2'; alles darueber wird serverseitig per 429 abgewiesen - genau "
+           "der Zustand vom 28.07. mit 210 Logzeilen, praktisch alle 429")
+
+    # ---- DIE REIHENFOLGE DES AUFGEBENS ----
+    # Wer zuerst aufgibt, entscheidet, ob ein Befund verloren geht oder nur
+    # spaet kommt.
+    _schlimmster = (_ZM.WARTE_AUF_PLATZ_SEKUNDEN
+                    + _ZM.ZEITGRENZE_ROLLE_G_SEKUNDEN)
+    _aufgabe = _ZM.WARTE_MAX_SEKUNDEN + 60          # rollen_lauf.py::join
+    pruefe(P, "die Warteschlange gibt VOR dem Hauptfaden auf",
+           _schlimmster < _aufgabe,
+           f"{_schlimmster} s gegen {_aufgabe} s - war bis heute umgekehrt "
+           f"(180+150=330 gegen 240+60=300): der Hauptfaden stieg aus, der "
+           f"Faden lief als Daemon weiter, seine Mail ging MIT dem Einwand "
+           f"raus und ZM.schreibe fiel aus. Die Mail zeigte einen Befund, "
+           f"den die Datenbank nicht kennt")
+    _q = _quelltext("agent/rollen_lauf.py")
+    pruefe(P, "und die Aufgabegrenze steht wirklich an dieser Zahl",
+           "faden.join(timeout=ZM.WARTE_MAX_SEKUNDEN + 60)" in _q,
+           "die Rechnung oben ist nur so viel wert wie ihr Bezug zum Code")
+
+    # ---- UND DAS GANZE PASST IN DEN TAKT ----
+    _takt = _konst_aus("scheduler/background.py",
+                       "HEBEL_SCREENING_INTERVAL_MINUTES")
+    pruefe(P, "der Umlauf endet vor dem naechsten Takt",
+           bool(_takt) and _aufgabe < _takt * 60,
+           f"{_aufgabe} s gegen {(_takt or 0) * 60:.0f} s - sonst faellt "
+           f"jeder zweite Takt aus (APScheduler laesst keine zweite Instanz)")
+
+    # ---- KAPAZITAET: WAS DIE ZAHL BEDEUTET ----
+    _vorher = 2 * 180 // 30
+    _jetzt = 2 * _ZM.WARTE_AUF_PLATZ_SEKUNDEN // 30
+    pruefe(P, f"Wartezeit traegt {_jetzt} Signale statt {_vorher}",
+           _jetzt >= 30,
+           "2 Plaetze * Wartezeit / 30 s je Aufruf - das Limit begrenzt, "
+           "wie viele GLEICHZEITIG laufen, nicht wie viele drankommen")
+
+    # ---- DIE EIGENE ZEITGRENZE, OHNE DIE ALTEN ZU TREFFEN ----
+    pruefe(P, "die globale Z.ai-Zeitgrenze ist UNVERAENDERT",
+           _ZAI.REQUEST_TIMEOUT_SECONDS == 150,
+           "die alten Pipelines (aktien, hedge, hebel) schicken ueber "
+           "fuehre_beide_calls_im_hintergrund weiter den grossen Prompt - "
+           "global senken haette sie abgeschnitten")
+    pruefe(P, "chat() nimmt eine eigene Zeitgrenze entgegen",
+           "timeout" in _i.signature(_ZAI.ZaiClient.chat).parameters
+           and _i.signature(_ZAI.ZaiClient.chat)
+                 .parameters["timeout"].default is None,
+           "Vorgabe None heisst: wer nichts angibt, bekommt was er immer "
+           "bekam")
+    pruefe(P, "und reicht sie an requests durch",
+           "timeout=timeout or REQUEST_TIMEOUT_SECONDS"
+           in _quelltext("api/zai.py"),
+           "ein Parameter, der nicht am Draht ankommt, ist Dekoration")
+    pruefe(P, "Rolle G uebergibt ihre eigene",
+           "timeout=ZEITGRENZE_ROLLE_G_SEKUNDEN"
+           in _quelltext("agent/zweite_meinung.py"))
+    pruefe(P, "und die deckt den gemessenen Ausreisser",
+           _ZM.ZEITGRENZE_ROLLE_G_SEKUNDEN > 65.5,
+           "live gemessen 22,4 / 29,7 / 33,1 s, ein Ausreisser bei 65,5 s - "
+           "auf einem Prompt von 1.495 Zeichen, nicht den 34.611, an denen "
+           "die 150 s gemessen wurden")
+    pruefe(P, "sie ist deutlich kleiner als die globale",
+           _ZM.ZEITGRENZE_ROLLE_G_SEKUNDEN < _ZAI.REQUEST_TIMEOUT_SECONDS / 1.5,
+           "bei zwei Plaetzen blockiert ein haengender Aufruf die halbe "
+           "Kapazitaet - 150 s davon sind fuenf normale Aufrufe")
+
+    # ---- WER NICHT DRANKAM, MUSS SICH VOM REST UNTERSCHEIDEN ----
+    # "Fail-soft ist fail-silent": ein Signal ohne Gegenpruefungszeilen sieht
+    # in der Mail sonst aus wie eines, das die Pruefung bestanden hat.
+    import threading as _th
+    import time as _t
+
+    _alt = _ZM.WARTE_AUF_PLATZ_SEKUNDEN
+    _ZM.WARTE_AUF_PLATZ_SEKUNDEN = 0.05
+    _blocker = [_th.Thread(target=lambda: _ZM._mit_platz(_t.sleep, 1.0))
+                for _ in range(_ZM.MAX_GLEICHZEITIG)]
+    try:
+        for _b in _blocker:
+            _b.start()
+        _t.sleep(0.2)
+        _geworfen = False
+        try:
+            _ZM._mit_platz(lambda: "durch")
+        except _ZM.Andrang:
+            _geworfen = True
+        pruefe(P, "wer keinen Platz bekommt, bekommt Andrang",
+               _geworfen,
+               "nicht None, nicht ein leeres Ergebnis - der Aufrufer bucht "
+               "es als uebersprungen, nicht als bestanden")
+    finally:
+        _ZM.WARTE_AUF_PLATZ_SEKUNDEN = _alt
+        for _b in _blocker:
+            _b.join()
+
+
 def paket_luecken() -> None:
     """Eine Luecke nur melden, wo es die Groesse ueberhaupt gibt (17.08.2026).
 
@@ -8318,7 +8431,7 @@ def paket_luecken() -> None:
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider, "Luecken": paket_luecken, "Fett": paket_fett,
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider, "Luecken": paket_luecken, "Fett": paket_fett, "Andrang": paket_andrang,
           "Frische": paket_frische}
 
 
