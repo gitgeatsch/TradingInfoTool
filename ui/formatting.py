@@ -263,6 +263,19 @@ _RISK_TAG_BY_SYMBOL = {"▲": "risk_positiv", "●": "risk_neutral", "▼": "ris
 _FAZIT_TAG_BY_SYMBOL = {"▲": "fazit_positiv", "●": "fazit_neutral", "▼": "fazit_negativ"}
 
 
+# Womit eine Zeile beginnen muss, damit sie als Handelsparameter gilt.
+# Nutzervorgabe 17.08.2026: *"folgende Bereiche der eMail FETT und schwarz -
+# da dies die wesentlichen Parameter des Handels sind: Einstiegszone, Stop
+# (stoploss?), TP, Haltedauer, Betrag und Hebel."*
+#
+# "Take-Profit" heisst in der Mail so, nicht "TP" - beide stehen hier,
+# damit eine spaetere Umbenennung nicht still die Hervorhebung verliert.
+HANDELSPARAMETER = frozenset({
+    "Einstiegszone", "Stop", "Take-Profit", "TP", "Haltedauer", "Betrag",
+    "Hebel",
+})
+
+
 def classify_detail_line(line: str) -> str | None:
     """Erkennt bekannte Zeilenmuster in den Signal-Detail-Textbloecken rein per
     Text-Pattern (keine Aenderung an den Zeilen-Bau-Funktionen selbst noetig):
@@ -274,6 +287,15 @@ def classify_detail_line(line: str) -> str | None:
     stripped = line.strip()
     if not stripped:
         return None
+    # DIE HANDELSPARAMETER - vor allen anderen Regeln, weil ihre Zeilen
+    # sonst als Fliesstext durchfallen (sie enden nicht auf ":" und sind
+    # nicht durchgehend gross).
+    #
+    # AM ERSTEN WORT ERKANNT, nicht am Vorkommen irgendwo: "Stop" steht
+    # auch mitten in Saetzen ("der Trailing-Stop loest erst aus"), und die
+    # sollen NICHT fett werden.
+    if stripped.split(" ", 1)[0].rstrip(":") in HANDELSPARAMETER:
+        return "handelsparameter"
     if stripped[0] in "⚠":
         return "warning"
     if stripped[0] in _RISK_TAG_BY_SYMBOL:
@@ -315,6 +337,12 @@ def classify_detail_line(line: str) -> str | None:
 _HTML_STYLE_BY_TAG = {
     "section_header": "font-weight:bold;font-size:1.05em;color:#0056b3;",
     "sub_header": "font-weight:bold;color:#000000;",
+    # DIE SECHS ZAHLEN, NACH DENEN GEHANDELT WIRD (17.08.2026,
+    # Nutzervorgabe): Einstiegszone, Stop, Take-Profit, Haltedauer, Betrag,
+    # Hebel. Sie standen in derselben Farbe wie der Beitext, obwohl der
+    # Leser genau sie sucht - und sie sind das einzige in der Mail, wonach
+    # tatsaechlich eine Order eingegeben wird.
+    "handelsparameter": "font-weight:bold;color:#000000;",
     "warning": "font-weight:bold;color:#c0392b;",
     "risk_positiv": "color:#1a7f37;",
     "risk_neutral": "color:#4a4a4a;",

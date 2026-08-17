@@ -61,6 +61,8 @@ tun, sagt er nicht - das entscheidet eine Wirkungsmessung, kein Waechter.
 """
 from __future__ import annotations
 
+from agent.schreibweise import de
+
 import re
 
 # Zahlen mit Dezimaltrenner in beiden Schreibweisen, mit optionalem Vorzeichen.
@@ -135,10 +137,23 @@ def pruefe_zahlendeckung(ausgabe: dict, eingabe) -> dict:
     # beruht.
     return {"regel": "Z-1", "ungedeckt": ungedeckt, "geprueft": geprueft,
             "verstoss": bool(ungedeckt),
-            "grund": (f"{len(ungedeckt)} Zahl(en) stehen nicht in der Eingabe: "
-                      f"{ungedeckt}") if ungedeckt else
+            # ⚠️ DIESER SATZ STEHT IN DER MAIL, nicht nur im Log
+            # (17.08.2026). Er schrieb die Python-Liste roh hin -
+            # "[42.0, 17.0]" mitten in einer sonst deutschen Mail. Die
+            # Pruefung ueber alle Mails hat ihn in JEDER Gruppe gefunden.
+            "grund": (f"{len(ungedeckt)} Zahl(en) stehen nicht in der "
+                      f"Eingabe: {_zahlenliste(ungedeckt)}")
+                     if ungedeckt else
                      (f"{geprueft} Zahl(en) gedeckt" if geprueft else
                       "keine Zahl im Text - nichts zu pruefen")}
+
+
+def _zahlenliste(werte) -> str:
+    """Zahlen fuer einen Lesersatz: deutsch, und ohne ".0" bei ganzen."""
+    teile = [de(w, 0 if float(w) == int(float(w)) else 2) for w in werte]
+    if len(teile) <= 1:
+        return "".join(teile)
+    return ", ".join(teile[:-1]) + " und " + teile[-1]
 
 
 def pruefe_richtungstreue(ausgabe: dict, gleichlauf_wert: str | None) -> dict:

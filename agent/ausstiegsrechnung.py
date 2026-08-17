@@ -79,7 +79,8 @@ STOP_NACHZIEHEN = "STOP NACHZIEHEN"
 HALTEN = "HALTEN"
 
 
-def _de(wert: float, stellen: int = 2) -> str:
+def _de(wert: float, stellen: int = 2,
+        vorzeichen: bool = False) -> str:
     """Deutsche Schreibweise - jetzt aus `agent/schreibweise.py`.
 
     ⚠️ HIER STAND EINE EIGENE KOPIE, und es gab VIER davon
@@ -89,7 +90,7 @@ def _de(wert: float, stellen: int = 2) -> str:
     die Rechnung nicht."""
     from agent.schreibweise import de as _s_de
 
-    return _s_de(wert, stellen)
+    return _s_de(wert, stellen, vorzeichen)
 
 
 def _als_datum(wert) -> date | None:
@@ -277,8 +278,13 @@ def saetze(e: dict) -> list[str]:
     if e.get("stand_r") is not None:
         _p = e.get("stand_prozent")
         zeile = ("Stand        "
-                 + (f"{_p * 100:+.1f} %" if _p is not None else "")
-                 + f" ({e['stand_r']:+.2f} R)")
+                 # ⚠️ DEUTSCH, WIE DER REST DER MAIL (17.08.2026). Hier
+                 # stand ein eigener f-String - in einer Mail, die sonst
+                 # durchgehend "3,83 EUR" und "+3,3 %" schreibt, stand
+                 # dann "+4.6 %". Beim Vereinheitlichen habe ich `_de`
+                 # umgestellt und diese Zeile uebersehen.
+                 + (_de(100 * _p, 1, True) + " %" if _p is not None else "")
+                 + f" ({_de(e['stand_r'], 2, True)} R)")
         # ⚠️ KEIN HOECHSTSTAND UNTER DEM AKTUELLEN STAND. Der hoechste
         # Buchgewinn kann rechnerisch nicht kleiner sein als der jetzige -
         # in einer echten Mail vom 17.08. stand "+0.43 R, hoechster
@@ -291,18 +297,19 @@ def saetze(e: dict) -> list[str]:
         if _mfe is not None and _mfe >= _stand:
             _mp = e.get("mfe_prozent")
             zeile += (", hoechster Buchgewinn "
-                      + (f"{_mp * 100:+.1f} %" if _mp is not None else "")
-                      + f" ({_mfe:+.2f} R)")
+                      + (_de(100 * _mp, 1, True) + " %"
+                         if _mp is not None else "")
+                      + f" ({_de(_mfe, 2, True)} R)")
         elif _mfe is not None:
             zeile += " - Hoechststand noch nicht nachgefuehrt"
         z.append(zeile)
     if e.get("stop_empfohlen") is not None:
         z.append(f"Stop         auf {_de(e['stop_empfohlen'])} EUR nachziehen "
-                 f"- sichert {e['gesicherte_r']:+.2f} R")
+                 f"- sichert {_de(e['gesicherte_r'], 2, True)} R")
     elif e.get("mfe_r") is not None and not e.get("trailing_aktiv"):
         z.append(f"Stop         unveraendert - der Trailing-Stop loest erst "
                  f"aus, wenn der Gewinn so gross ist wie das Risiko "
-                 f"(+{AUSLOESE_R:.1f} R)")
+                 f"(+{_de(AUSLOESE_R, 1)} R)")
     for g in e.get("gruende", []):
         z.append(f"  {g}")
     if e.get("umgeworfen_durch"):

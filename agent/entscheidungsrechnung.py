@@ -42,6 +42,7 @@ from __future__ import annotations
 import math
 
 from agent.krypto.hebel_risk_gate import max_safe_hebel
+from agent.schreibweise import de
 
 # ---------------------------------------------------------------------------
 # DIE GRENZEN. Jede mit Quelle - wer eine aendert, muss die Quelle mitaendern.
@@ -170,7 +171,9 @@ def _stop_aus_atr(kurs: float, atr: float) -> tuple[float, str]:
         return min_abstand, "RM-1b/1c: Untergrenze"
     if ziel > max_abstand:
         return max_abstand, f"Obergrenze {100 * GRENZEN['stop_max_relativ']:.0f} % des Kurses"
-    return ziel, f"{GRENZEN['stop_ziel_atr']:g} x ATR"
+    # ':g' schrieb "2.5 x ATR" - die einzige englische Zahl, die nach der
+    # Vereinheitlichung noch in der Mail stand (17.08.2026).
+    return ziel, f"{de(GRENZEN['stop_ziel_atr'], 1)} x ATR"
 
 
 def _ziel(kurs: float, abstand: float, atr: float,

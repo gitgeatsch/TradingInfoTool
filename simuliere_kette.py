@@ -39,6 +39,23 @@ AUFRUF:  python simuliere_kette.py [--db PFAD] [--gruppe krypto]
 from __future__ import annotations
 
 import argparse
+import re as _re
+
+from ui import formatting as _FORM
+
+# ⚠️ EIN PUNKT ZWISCHEN ZIFFERN IST NUR ALS TAUSENDERPUNKT ERLAUBT.
+# Meine erste Fassung war `\d+\.\d` und fand nur einstellige
+# Nachkommastellen: "2.5" ja, "3.81" nein - das  scheitert an der
+# zweiten Ziffer. Sie meldete sauber, wo es nicht sauber war.
+_ENG_ZAHL = _re.compile(r"(?<![\d.])\d+\.(\d+)")
+
+
+def _englische_zahlen(text: str) -> list[str]:
+    """Zahlen in englischer Schreibweise. Genau drei Ziffern nach dem Punkt
+    gelten als Tausendergruppe (1.234,5) und zaehlen nicht."""
+    return sorted({m.group(0) for m in _ENG_ZAHL.finditer(text)
+                   if len(m.group(1)) != 3})
+
 import json
 import sqlite3
 import sys
@@ -415,6 +432,32 @@ def main() -> int:
             # Luecken gemeldet, die keine sind.
             if str(eintrag.get("symbol") or "").lower().startswith("(sammel"):
                 continue
+            # ⚠️ JEDE MAIL, NICHT NUR DIE, DIE ICH GEBAUT HABE
+            # (Nutzervorgabe 17.08.2026: "fuer alle eMail pruefen bitte").
+            # Die Paketpruefung baut EINE Beispielrechnung; hier laufen die
+            # echten Mails aller Gruppen durch - Spot wie Hebel, Einstieg
+            # wie Bestand.
+            _punkt = _englische_zahlen(text)
+            if _punkt:
+                gesamt["luecken"].append(
+                    f"{gruppe}/{instrument} {eintrag.get('symbol', '?')}: "
+                    f"englische Zahlschreibweise {_punkt[:4]}")
+            # Und die sechs Handelsparameter muessen den Fett-Schwarz-Griff
+            # bekommen - geprueft am gerenderten HTML, weil dazwischen die
+            # Reihenfolge der Formatregeln liegt.
+            _hat = {z.split(" ", 1)[0].rstrip(":")
+                    for z in text.splitlines() if z.strip()
+                    } & _FORM.HANDELSPARAMETER
+            if _hat:
+                _html = _FORM.render_detail_html(text)
+                _fett = _re.findall(
+                    r"font-weight:bold;color:#000000;\">([^< ]+)", _html)
+                _fehlt = _hat - {w.rstrip(":") for w in _fett}
+                if _fehlt:
+                    gesamt["luecken"].append(
+                        f"{gruppe}/{instrument} "
+                        f"{eintrag.get('symbol', '?')}: nicht fett "
+                        f"hervorgehoben {sorted(_fehlt)}")
             if "Marktstruktur" not in text:
                 gesamt["luecken"].append(
                     f"{gruppe}/{instrument} {eintrag.get('symbol', '?')}: "

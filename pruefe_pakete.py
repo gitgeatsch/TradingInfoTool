@@ -2278,7 +2278,9 @@ def paket_12d() -> None:
            "Fuellstoff")
     mit = Z1.satz(Z1.pruefe(erfunden, eingabe, "uneinheitlich"))
     pruefe(P, "mit Befund nennt sie die Regel und den Grund",
-           any("Z-1" in z for z in mit) and any("62.0" in z for z in mit))
+           any("Z-1" in z for z in mit) and any("62" in z for z in mit),
+           "seit dem 17.08. deutsch und ohne Liste: '62' statt '[62.0]' "
+           "- der Satz steht in der MAIL, nicht nur im Log")
     pruefe(P, "und sagt, was sie NICHT bedeutet",
            any("kein Urteil ueber die Empfehlung" in z for z in mit),
            "Z1 prueft die Treue zur Eingabe, nicht die Guete des Urteils")
@@ -7632,7 +7634,7 @@ def paket_mail() -> None:
            "hoechster Buchgewinn" in _s2,
            "sonst waere die Korrektur ein Informationsverlust")
     pruefe(P, "B1: Prozent vor R, und R nur noch in Klammern",
-           "%" in _s2 and "(+0.43 R)" in _s2,
+           "%" in _s2 and "(+0,43 R)" in _s2,
            "R ist eine interne Einheit - die Umrechnung lag seit dem 12.08. "
            "fertig im Code und wurde nie benutzt")
 
@@ -8161,6 +8163,107 @@ def paket_provider() -> None:
            "die Warnung ersetzt die Entscheidung nicht")
 
 
+def paket_fett() -> None:
+    """Die Handelsparameter fett und schwarz, und alle Zahlen deutsch.
+
+    Nutzervorgabe 17.08.2026: *"bitte folgende Bereiche der eMail FETT und
+    schwarz - da dies die wesentlichen Parameter des Handels sind:
+    Einstiegszone, Stop (stoploss?), TP, Haltedauer, Betrag und Hebel"* -
+    und danach *"fuer alle eMail pruefen bitte"*."""
+    import re as _re
+
+    from agent import ausstiegsrechnung as _AR
+    from agent import entscheidungsrechnung as _ER
+    from agent import schreibweise as _SW
+    from ui import formatting as _F
+
+    P = "Fett"
+    _FETT = 'style="font-weight:bold;color:#000000;"'
+
+    pruefe(P, "genau die sechs vom Nutzer genannten Groessen",
+           _F.HANDELSPARAMETER == frozenset({
+               "Einstiegszone", "Stop", "Take-Profit", "TP", "Haltedauer",
+               "Betrag", "Hebel"}),
+           "'Take-Profit' und 'TP' sind dieselbe Groesse in zwei "
+           "Schreibweisen - beide muessen drin sein")
+
+    # AM ERSTEN WORT, nicht am Vorkommen. Das ist der ganze Unterschied
+    # zwischen "Stop  3,60 EUR" und "der Trailing-Stop loest erst aus".
+    for zeile in ("Einstiegszone   3,81 bis 3,85 EUR",
+                  "Stop            3,60 EUR  (5,9 % - 2,5 x ATR)",
+                  "Take-Profit     4,26 bis 4,30 EUR",
+                  "TP              4,26 EUR",
+                  "Haltedauer      etwa 25 Handelstage",
+                  "Betrag          374 EUR",
+                  "Hebel           2,0"):
+        pruefe(P, f"fett: {zeile.split(' ', 1)[0]}",
+               _F.classify_detail_line(zeile) == "handelsparameter")
+    for zeile in ("der Trailing-Stop loest erst ab 1,0 R aus",
+                  "Stopabstand und Ziel stammen aus derselben Rechnung",
+                  "Ihr Betrag im Bestand bleibt unberuehrt"):
+        pruefe(P, f"NICHT fett: {zeile[:34]}",
+               _F.classify_detail_line(zeile) != "handelsparameter",
+               "sonst wuerde jeder Fliesstext fett, der zufaellig mit "
+               "einem Parameternamen beginnt - und fett heisst dann nichts "
+               "mehr")
+
+    # ... und die Regel muss VOR den anderen greifen, sonst faellt die
+    # Zeile als Fliesstext durch.
+    _r = _ER.rechne(kurs=3.83, atr=0.09, risiko_eur=22.0,
+                    betrag_wunsch_eur=800.0, instrument="hebel")
+    _html = _F.render_detail_html("\n".join(_ER.saetze(_r)))
+    _fett = _re.findall(_FETT.replace('"', '"') + r">([^<]+)", _html)
+    for name in ("Einstiegszone", "Stop", "Take-Profit", "Haltedauer",
+                 "Betrag"):
+        pruefe(P, f"in der fertigen Mail fett: {name}",
+               any(z.startswith(name) for z in _fett),
+               "geprueft am gerenderten HTML, nicht an der Regel - "
+               "dazwischen liegt die Reihenfolge der Regeln")
+
+    # DEUTSCHE SCHREIBWEISE, ueber die ganze Mail.
+    pruefe(P, "der Formatierer dreht Punkt und Komma",
+           (_SW.de(1234.5) == "1.234,5"
+            and _SW.de(0.9, 2, True) == "+0,90"
+            and _SW.de(-0.9, 2, True) == "-0,90"))
+
+    _a = _AR.bewerte(einstieg=3.66, stop_original=3.56, kurs_aktuell=3.83,
+                     mfe_r=1.9)
+    _a["empfehlung"] = "STOP NACHZIEHEN"
+    _text = "\n".join(_ER.saetze(_r) + _AR.saetze(_a))
+    # ⚠️ DIESELBE REGEL WIE IN simuliere_kette.py. Zwei Messungen,
+    # die verschieden zaehlen, sind schlimmer als eine - und meine erste
+    # Fassung fand nur EINSTELLIGE Nachkommastellen: "2.5" ja, "3.81"
+    # nein (das \b scheitert an der zweiten Ziffer). Sie meldete sauber,
+    # wo es nicht sauber war.
+    from simuliere_kette import _englische_zahlen
+    _punkte = _englische_zahlen(_text)
+    pruefe(P, "der Tausenderpunkt gilt NICHT als englische Schreibweise",
+           not _englische_zahlen("1.234,5 EUR und 1.234.567,8 EUR"),
+           "sonst meldet die Pruefung genau die Schreibweise als Fehler, "
+           "die sie durchsetzen soll")
+    pruefe(P, "und mehrstellige Nachkommastellen werden gefunden",
+           _englische_zahlen("3.81 bis 3,85") == ["3.81"],
+           "daran ist meine erste Fassung gescheitert")
+
+    pruefe(P, "keine einzige Zahl mit englischem Punkt",
+           not _punkte,
+           f"gefunden: {_punkte} - zuletzt hingen hier zwei: die "
+           f"Trailing-Begruendung ('1.90 R' neben '+1,70 R' zwei Zeilen "
+           f"hoeher) und der Stopfaktor ('2.5 x ATR' aus ':g')")
+
+
+    # ⚠️ GEFUNDEN DURCH DIE PRUEFUNG UEBER ALLE MAILS, in JEDER
+    # Gruppe: der Treuebefund Z-1 schrieb die Python-Liste roh hinein.
+    from agent.gegenpruefer_rollen import _zahlenliste as _ZL
+    pruefe(P, "der Z-1-Befund nennt die Zahlen als Satz, nicht als Liste",
+           _ZL([42.0, 17.0]) == "42 und 17",
+           "in der Mail stand '[42.0, 17.0]' - englische Punkte, eckige "
+           "Klammern und ein '.0', das eine Genauigkeit vortaeuscht, "
+           "die das Modell nicht hatte")
+    pruefe(P, "und Nachkommastellen bleiben, wo es welche gibt",
+           _ZL([1234.5, 3.25]) == "1.234,50 und 3,25")
+
+
 def paket_luecken() -> None:
     """Eine Luecke nur melden, wo es die Groesse ueberhaupt gibt (17.08.2026).
 
@@ -8215,7 +8318,7 @@ def paket_luecken() -> None:
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider, "Luecken": paket_luecken,
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider, "Luecken": paket_luecken, "Fett": paket_fett,
           "Frische": paket_frische}
 
 

@@ -42,6 +42,8 @@ gemeldet wird.
 """
 from __future__ import annotations
 
+from agent.schreibweise import de as _de
+
 from dataclasses import dataclass
 
 # Gemessene Bestwerte, siehe Modul-Docstring. Ueber config.yaml
@@ -129,9 +131,14 @@ def stopempfehlung(entry: float, stop_original: float, hoechstkurs: float,
     tatsaechlich = ((entry - neuer) if ist_short else (neuer - entry)) / risiko
     return Stopempfehlung(
         aktiv=True, stop_empfohlen=neuer, mfe_r=mfe_r, gesicherte_r=tatsaechlich,
-        begruendung=(f"Position stand bei {mfe_r:.2f} R - Stop auf "
-                     f"{neuer:.6g} nachziehen, sichert {tatsaechlich:+.2f} R "
-                     f"(Trailing ab {ausloese_r:.1f} R, Abstand {abstand_r:.1f} R)"))
+        # DEUTSCH, WIE DER REST DER MAIL (17.08.2026). Dieser Satz steht
+        # unter der Stopzeile und schrieb als einziger dort "1.90 R"
+        # neben "+1,70 R" zwei Zeilen hoeher.
+        begruendung=(f"Position stand bei {_de(mfe_r, 2)} R - Stop auf "
+                     f"{_de(neuer, 4)} nachziehen, sichert "
+                     f"{_de(tatsaechlich, 2, True)} R "
+                     f"(Trailing ab {_de(ausloese_r, 1)} R, Abstand "
+                     f"{_de(abstand_r, 1)} R)"))
 
 
 def parameter_aus_config(config: dict) -> tuple[float, float, bool]:

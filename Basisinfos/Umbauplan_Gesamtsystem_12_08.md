@@ -10572,3 +10572,117 @@ schlüsselloser Weg.**
 | **Rohstoffe BC3** | nur die Haltekostenquote käme in Frage — **gelb**, je Zertifikat von Hand zu recherchieren |
 | **Themen-ETF** | zurückgestellt, wie entschieden |
 | Krypto G2, 7 Symbole | nicht behebbar — keine Kontrakte an den Börsen |
+
+---
+
+## Kapitel 85 — Warum Rolle G so oft ausfällt, und die sechs fetten Zeilen (17.08.2026)
+
+### 85.1 Der Ausfall von Rolle G — gemessen, nicht vermutet
+
+**85 von 159 Urteilen bekamen keine Gegenprüfung.** Zwei unabhängige
+Ursachen, beide belegt:
+
+**(a) Der Durchsatz.**
+
+| Regler | Wert | Folge |
+|---|---:|---|
+| `MAX_GLEICHZEITIG` | **2** | zwei Anfragen zugleich |
+| `WARTE_AUF_PLATZ_SEKUNDEN` | **180** | wer länger wartet, fällt aus |
+| `REQUEST_TIMEOUT_SECONDS` | **150** | — |
+
+Zwei Plätze × 180 s reichen bei gemessenen ~25 s je Aufruf für rund **13
+Signale je Umlauf**. Ein Umlauf hat 20–40.
+
+**(b) Die Zeitgrenze passt zu einem anderen Prompt.**
+
+> Die 150 s stammen aus einer Messung von 109 s — **an einem Prompt mit
+> 34.611 Zeichen.** Rolle G schickt heute **1.495**.
+
+**Live nachgemessen:** HTTP 200 nach **22,4 · 29,7 · 33,1 s**, ein Ausreißer
+bei 65,5 s, dazwischen vereinzelt vorübergehende HTTP-Fehler.
+
+**Ein Aufruf, der nach 150 s noch läuft, kommt nicht mehr** — er hält nur
+einen der zwei Plätze besetzt. Die Zeitgrenze schützt hier nichts, sie
+blockiert.
+
+⚠️ **Nicht umgesetzt.** Der Vorschlag (Zeitgrenze herunter, Gleichzeitigkeit
+herauf) ist eine Änderung an einem fremden Anbieterlimit und liegt beim
+Nutzer.
+
+### 85.2 Sechs Zeilen fett und schwarz
+
+**Nutzervorgabe:** *„Einstiegszone, Stop, TP, Haltedauer, Betrag und Hebel"* —
+die Größen, nach denen tatsächlich gehandelt wird.
+
+**Am ERSTEN WORT erkannt, nicht am Vorkommen:**
+
+```python
+if stripped.split(" ", 1)[0].rstrip(":") in HANDELSPARAMETER:
+```
+
+> „Stop" steht auch mitten in Sätzen — *„der Trailing-Stop löst erst aus"*.
+> Würde jedes Vorkommen fett, hieße fett bald nichts mehr.
+
+### 85.3 „Für alle eMail prüfen" — und was das gefunden hat
+
+Die Paketprüfung baut **eine** Beispielrechnung. Die Nutzervorgabe verlangt
+**jede** Mail, also läuft die Prüfung jetzt in `simuliere_kette.py` über die
+echten Mails aller Gruppen.
+
+**Sofort ein Fund, in JEDER Gruppe:**
+
+```
+Z-1: 2 Zahl(en) stehen nicht in der Eingabe: [42.0, 17.0]
+```
+
+Eine rohe Python-Liste in einer sonst deutschen Mail — englische Punkte,
+eckige Klammern, und ein `.0`, das eine Genauigkeit vortäuscht, die das
+Modell nie hatte. **Jetzt:** *„2 Zahl(en) stehen nicht in der Eingabe: 42 und
+17."*
+
+### 85.4 Die Prüfregel war selbst der zweite Fehler
+
+| | |
+|---|---|
+| erste Fassung | `\b\d+\.\d\b` |
+| fand | `2.5` |
+| fand **nicht** | `3.81` — das `\b` scheitert an der zweiten Ziffer |
+
+**Sie meldete sauber, wo es nicht sauber war.** Der erste Simulationslauf gab
+„0 Lücken" aus; erst die gehärtete Regel fand die sieben.
+
+```python
+_ENG_ZAHL = re.compile(r"(?<![\d.])\d+\.(\d+)")   # 3 Ziffern = Tausendergruppe
+```
+
+Beide Werkzeuge benutzen jetzt **dieselbe** Funktion — zwei Messungen, die
+verschieden zählen, sind schlimmer als eine.
+
+### 85.5 Die letzten englischen Zahlen
+
+| Stelle | stand da | jetzt |
+|---|---|---|
+| `ausstiegsregel.trailing_begruendung` | `1.90 R` — direkt unter `+1,70 R` | `1,90 R` |
+| `entscheidungsrechnung._ziel()` | `2.5 x ATR` (aus `:g`) | `2,5 x ATR` |
+| `gegenpruefer_rollen` Z-1 | `[42.0, 17.0]` | `42 und 17` |
+
+### 85.6 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **1.068**, alle bestanden — **22 neu unter `--paket Fett`** |
+| fett | sechs Größen am gerenderten **HTML** geprüft, nicht an der Regel |
+| nicht fett | drei Fließtextzeilen, die mit einem Parameternamen beginnen |
+| Zahlregel | beide Richtungen — Tausenderpunkt bleibt, `3.81` wird gefunden |
+| alle Mails | **9 Mails, 4 Gruppen, 0 Lücken** — Spot wie Hebel, Einstieg wie Bestand |
+| freie Namen · Zahlenprüfer · Belegprüfer · Darstellung | 0 · 9/9 · 9/9 · bestanden |
+
+**Eine bestehende Prüfung schlug fehl und hatte recht:** sie erwartete
+`62.0` im Z-1-Satz. Erwartung nachgezogen, nicht die Änderung.
+
+### 85.7 Offen
+
+| | |
+|---|---|
+| **Rolle G, Regler** | Vorschlag liegt vor — **Entscheidung beim Nutzer** |
+| Rohstoffe/Hedge in der Simulation | übersprungen, keine Kursreihe im Bestand — die Mailprüfung sah sie nicht |
