@@ -559,8 +559,9 @@ def bestand(symbol: str, db: str | None = None, instrument: str = "spot"):
                 "order by eroeffnet_am asc limit 1", (symbol,)).fetchone()
             return (r[0], None) if r else (None, None)
         r = c.execute(
-            "select quantity, avg_buy_price_eur, avg_buy_price_manual_eur "
-            "from holdings where symbol=?", (symbol,)).fetchone()
+            "select quantity, avg_buy_price_eur, avg_buy_price_manual_eur, "
+            "staked_quantity from holdings where symbol=?",
+            (symbol,)).fetchone()
     except sqlite3.Error:
         # FEHLT DIE TABELLE, IST DAS KEINE AUSSAGE UEBER DEN BESTAND. Ein
         # leeres Ergebnis wuerde hier als "nicht im Bestand" gelesen - genau
@@ -569,8 +570,35 @@ def bestand(symbol: str, db: str | None = None, instrument: str = "spot"):
         return (None, None)
     if not r:
         return (None, None)
-    menge, berechnet, manuell = r
-    return (menge, manuell if manuell is not None else berechnet)
+    menge, berechnet, manuell, gestakt = r
+    # ⚠️ GESTAKTES ZAEHLT MIT (17.08.2026, Nutzerfund an einer echten Mail).
+    #
+    # Der Nutzer haelt SOL seit Langem. Die Mail sagte "SOL ist nicht im
+    # Bestand" - und im selben Schreiben stand darunter eine bestehende
+    # Position. Beides stammte aus dieser Zeile.
+    #
+    # DER GRUND STEHT IM SYNC-CODE, live gegen den echten Account
+    # verifiziert (`importer/bitpanda_avg_cost.compute_staked_quantities`):
+    #
+    #     "gestakte Bestaende sind ueber die normalen Wallet-Endpunkte
+    #      STRUKTURELL NICHT SICHTBAR - Bitpanda bucht einen stake-Transfer
+    #      als ABGANG aus der normalen Wallet"
+    #
+    # `quantity` ist also der FREIE Bestand, `staked_quantity` kommt
+    # ADDITIV dazu. Ein vollstaendig gestakter Wert steht mit Menge 0 in
+    # der Tabelle - und genau das las diese Funktion als "nicht im
+    # Bestand". Im Export haben 23 von 56 Zeilen die Menge 0.
+    #
+    # DIE ALTE KETTE HAT ES AN SIEBEN STELLEN RICHTIG GEMACHT
+    # (`(h.quantity or 0) + (h.staked_quantity or 0) > 0` in
+    # krypto/analyst, multi_asset_batch, signal_batch, risk_gate, db ...).
+    # Beim Umbau ist genau diese Addition verlorengegangen.
+    #
+    # UND ES IST DERSELBE FEHLERTYP WIE AM 15.08., nur eine Spalte weiter:
+    # der Ausfuehrungspfad kannte das Staking, die FAKTEN, auf die das
+    # Modell antwortet, kannten es nicht.
+    gesamt = float(menge or 0.0) + float(gestakt or 0.0)
+    return (gesamt or None, manuell if manuell is not None else berechnet)
 
 
 def gegenbestand_satz(symbol: str, db: str | None = None,

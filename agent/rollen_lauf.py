@@ -936,10 +936,25 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                           if str(x.symbol).upper() == str(symbol).upper()),
                          None)
                 if h is not None:
-                    menge = getattr(h, "quantity", None)
+                    gestakt = getattr(h, "staked_quantity", None)
+                    # ⚠️ GESAMTMENGE, NICHT NUR DIE FREIE (17.08.2026).
+                    #
+                    # `quantity` ist der freie Wallet-Bestand; das Gestakte
+                    # kommt ADDITIV dazu (Bitpanda bucht einen Stake als
+                    # Abgang aus der Wallet, siehe
+                    # `rollen_eingabe.bestand()`). `verkaufsrechnung.rechne`
+                    # zieht das Gestakte selbst wieder ab, um die
+                    # verkaeufliche Menge zu bekommen - bekam sie bis heute
+                    # aber die FREIE Menge, zog also ein zweites Mal ab.
+                    #
+                    # FOLGE: bei einem vollstaendig gestakten Wert ergab das
+                    # `frei = 0 - gestakt` und damit `None` - kein Auftrag,
+                    # obwohl der Wert gehalten wird. Bei einem teilweise
+                    # gestakten war der Verkaufsbetrag zu klein.
+                    menge = (float(getattr(h, "quantity", 0.0) or 0.0)
+                             + float(gestakt or 0.0)) or None
                     einstand = (getattr(h, "avg_buy_price_manual_eur", None)
                                 or getattr(h, "avg_buy_price_eur", None))
-                    gestakt = getattr(h, "staked_quantity", None)
                     bestand_row = h
         except Exception as exc:                             # noqa: BLE001
             ergebnis.setdefault("fehler", []).append(
@@ -960,7 +975,15 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             # man nicht haelt, ist kein Fehler des Modells - es kennt den
             # Bestand nicht. Es ist aber auch keine Handlung, also wird es
             # gebucht wie ein HALTEN und misst mit, wie oft das vorkommt.
-            durchlauf.verloren(symbol, "aktion", f"{aktion} ohne Bestand")
+            #
+            # ZWEI SEHR VERSCHIEDENE GRUENDE, EIN WORT (17.08.2026). "Ohne
+            # Bestand" stimmte fuer den leeren Fall - und log bei einem
+            # vollstaendig GESTAKTEN Wert: dort gibt es den Bestand, er ist
+            # nur nicht frei verkaeuflich. Wer das im Protokoll als "ohne
+            # Bestand" liest, sucht den Fehler an der falschen Stelle.
+            _grund = ("vollstaendig gestakt, nicht frei verkaeuflich"
+                      if (menge or 0.0) > 0 else "ohne Bestand")
+            durchlauf.verloren(symbol, "aktion", f"{aktion} {_grund}")
             if betriebsart != TROCKEN:
                 _schreibe_nein(symbol=symbol, befund=befund, kurs_e=kurs_e,
                                atr_e=atr_e, tag=tag, reihe=reihe, idx=idx,

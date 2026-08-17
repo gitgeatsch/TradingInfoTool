@@ -9422,3 +9422,124 @@ Kette — beides gehört gemeldet.
 | Fernsteuerkarte | rechnet mit derselben Funktion |
 | freie Namen | 0 |
 | Simulation | 4 Gruppen, 8 Signale, **0 Fehler, 0 Lücken** |
+
+---
+
+## Kapitel 75 — Gestaktes galt als nicht vorhanden (17.08.2026)
+
+**Nutzerfund an einer echten SOL-Mail:** *„SOL wird schon lange gehalten"* —
+die Mail sagte oben **„SOL ist nicht im Bestand"** und zwanzig Zeilen tiefer
+**„Bestehende Position: HALTEN, +0.43 R"**.
+
+### 75.1 Beide Sätze stimmten — und beide kamen aus derselben Lücke
+
+Der Beweis steht im eigenen Sync-Code, live gegen den Account verifiziert
+(`importer/bitpanda_avg_cost.compute_staked_quantities`):
+
+> *„gestakte Bestände sind über die normalen Wallet-Endpunkte **strukturell
+> nicht sichtbar** — Bitpanda bucht einen stake-Transfer als **ABGANG** aus
+> der normalen Wallet."*
+
+**`quantity` ist also der FREIE Bestand, `staked_quantity` kommt ADDITIV dazu.
+Ein vollständig gestakter Wert steht mit Menge 0 in der Tabelle.**
+
+> **Im Export haben 23 von 56 Zeilen die Menge 0.**
+
+**Die alte Kette hat es an sieben Stellen richtig gemacht** —
+`(h.quantity or 0) + (h.staked_quantity or 0) > 0` in `krypto/analyst`,
+`multi_asset_batch`, `signal_batch`, `risk_gate`, `db`, `aktien/analyst`,
+`rohstoff/analyst`. **Beim Umbau ist genau diese Addition verlorengegangen.**
+
+### 75.2 Drei Stellen, eine Wurzel
+
+| | Stelle | Wirkung |
+|---|---|---|
+| 1 | `rollen_eingabe.bestand()` las nur `quantity` | das Modell hörte **„nicht im Bestand"** und entschied über einen Neukauf |
+| 2 | `rollen_lauf` übergab `menge=quantity` an `verkaufsrechnung.rechne`, die das Gestakte **selbst noch einmal abzieht** | `frei = 0 − gestakt` → **kein Verkaufsauftrag**, obwohl gehalten |
+| 3 | `backward_tracking`: `SELECT ... WHERE quantity > 0` | `ist_bestand = False` → die Führung galt als **bloße Signalverfolgung** |
+
+> ⚠️ **Derselbe Fehlertyp wie am 15.08., nur eine Spalte weiter:** der
+> Ausführungspfad kannte das Staking, die **Fakten, auf die das Modell
+> antwortet**, kannten es nicht.
+
+**Nachgewiesen am gemeldeten Fall:**
+
+```
+vorher   SOL ist nicht im Bestand.
+nachher  SOL ist bereits im Bestand: 839 EUR investiert,
+         aktuell 811 EUR wert - 28 EUR im Minus (-3.4 %).
+```
+
+Und die Verkaufsrechnung, die vorher gar nichts ergab:
+
+| | vorher | nachher |
+|---|---|---|
+| voll gestakt | kein Auftrag | kein Auftrag — **richtig**, gestaktes ist nicht frei |
+| **halb gestakt** | **kein Auftrag** | **10 Stück, 649 EUR** |
+| frei | 20 Stück | 20 Stück |
+
+Und das Protokoll nennt jetzt den Unterschied: *„VERKAUFEN vollständig
+gestakt, nicht frei verkäuflich"* statt *„VERKAUFEN ohne Bestand"* — zwei sehr
+verschiedene Gründe hatten ein Wort.
+
+### 75.3 Wie weit es reicht
+
+**39 von 76 Urteilen des 17.08. liefen auf Symbolen mit Menge 0** — davon
+**27 Einstiege** (20 ERÖFFNEN, 7 KAUFEN). Das sind **60 % aller Einstiege des
+Tages**.
+
+> **Noch nicht beziffert, wie viele der 23 Nullzeilen gestakt und wie viele
+> wirklich verkauft sind** — der Export trug `staked_quantity` bis heute
+> nicht. Er trägt sie ab jetzt. SOL ist durch den Nutzer bestätigt.
+
+**Das ist eine ernstzunehmende Spur zur Einstiegsquote**, an der wir seit
+Tagen sitzen: das Modell empfahl zu kaufen, was der Nutzer bereits hält.
+
+### 75.4 Gehalten oder nur verfolgt — jetzt steht es dran
+
+**Nutzervorgabe:** *„es sollte unterscheidbar sein, was tatsächlich gehalten
+wird und was nur als Signal getrackt wird — das brauchen wir beim Kauf, Halten
+und Verkauf, sonst verwirrt der Inhalt."*
+
+```
+mit Bestand   Bestehende Position:
+ohne          Verfolgter Einstiegsvorschlag (NICHT im Bestand):
+```
+
+**Die Unterscheidung gab es seit dem 13.08.** — `ist_bestand`, entstanden aus
+dem Nutzersatz *„diese Aktionen sind teilweise fiktiv"* (von 45
+Signal-Symbolen lagen 28 gar nicht im Bestand). **Sie stand nur nirgends in
+der Mail.**
+
+### 75.5 R übersetzt — die Rechnung war seit dem 12.08. da
+
+`bewerte()` rechnet `stand_prozent` und `mfe_prozent` aus, mit genau dieser
+Begründung im Kommentar: *„R ist eine interne Einheit; Prozent versteht jeder."*
+Die **Sammelmail** hat den Umstieg damals vollzogen, die **Einzelmail nicht**.
+
+```
+vorher   Stand   +0.43 R, hoechster Buchgewinn +0.41 R
+nachher  Stand   +1.4 % (+0.43 R) - Hoechststand noch nicht nachgefuehrt
+```
+
+> **Der höchste Buchgewinn kann nicht kleiner sein als der aktuelle Stand.**
+> Kein Rechenfehler: `mfe_r` kommt aus dem Backward-Tracking (letzter Lauf
+> 04:00), `stand_r` aus dem aktuellen Kurs. Aber es liest sich als
+> Unmöglichkeit — und dann glaubt der Leser der ganzen Zeile nicht mehr. Also
+> wird die Alterung **benannt statt gedruckt**.
+
+Und der Trailing-Stop sagt jetzt, was er meint: *„löst erst aus, wenn der
+Gewinn so groß ist wie das Risiko (+1.0 R)"*.
+
+### 75.6 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **942**, alle bestanden (2 neu) |
+| ⚠️ zwei bestehende Prüfungen **schlugen zuerst fehl** | sie führten kein `ist_bestand` — der Test prüfte ab der Änderung einen anderen Fall als den, den er beschreibt. Behoben, nicht umgangen |
+| gemeldeter Fall | „nicht im Bestand" → **„bereits im Bestand: 839 EUR"** |
+| Gegenprobe | ein Symbol mit Menge 0 **und** ohne Staking bleibt „nicht im Bestand" |
+| Verkaufsrechnung | drei Fälle, halb gestakt von **0 auf 10 Stück** |
+| beide Überschriften | im Test belegt, in beide Richtungen |
+| freie Namen | 0 · Zahlenprüfer 9/9 |
+| Simulation | 4 Gruppen, 8 Signale, **0 Fehler, 0 Lücken** |

@@ -257,16 +257,47 @@ def saetze(e: dict) -> list[str]:
     if not e:
         return []
     z = [f"Empfehlung   {e['empfehlung']}"]
+    # PROZENT STATT R (17.08.2026, Nutzervorgabe: *"Inhalte mit R-Werten und
+    # Perzentil sollten fuer mich uebersetzt werden."*).
+    #
+    # ⚠️ DIE UEBERSETZUNG WAR SEIT DEM 12.08. GEBAUT UND WURDE NIE BENUTZT.
+    # `bewerte()` rechnet `stand_prozent` und `mfe_prozent` aus, mit genau
+    # dieser Begruendung im Kommentar - "R ist eine interne Einheit; Prozent
+    # versteht jeder und ist waehrungsfrei". Die SAMMELMAIL hat den Umstieg
+    # damals vollzogen (siehe GRUPPEN, Punkt 2), diese Einzelmail nicht.
+    #
+    # R bleibt IN KLAMMERN stehen, wo eine Regel darauf steht: der
+    # Trailing-Stop loest bei +1 R aus, und diese Schwelle laesst sich ohne
+    # die Einheit nicht nennen.
     if e.get("stand_r") is not None:
-        z.append(f"Stand        {e['stand_r']:+.2f} R"
-                 + (f", hoechster Buchgewinn {e['mfe_r']:+.2f} R"
-                    if e.get("mfe_r") is not None else ""))
+        _p = e.get("stand_prozent")
+        zeile = ("Stand        "
+                 + (f"{_p * 100:+.1f} %" if _p is not None else "")
+                 + f" ({e['stand_r']:+.2f} R)")
+        # ⚠️ KEIN HOECHSTSTAND UNTER DEM AKTUELLEN STAND. Der hoechste
+        # Buchgewinn kann rechnerisch nicht kleiner sein als der jetzige -
+        # in einer echten Mail vom 17.08. stand "+0.43 R, hoechster
+        # Buchgewinn +0.41 R". Kein Rechenfehler: `mfe_r` kommt aus dem
+        # Backward-Tracking (letzter Lauf 04:00), `stand_r` aus dem
+        # aktuellen Kurs. Es ist eine Alterung - aber sie liest sich als
+        # Unmoeglichkeit, und dann glaubt der Leser der ganzen Zeile nicht
+        # mehr. Also wird sie benannt statt gedruckt.
+        _mfe, _stand = e.get("mfe_r"), e.get("stand_r")
+        if _mfe is not None and _mfe >= _stand:
+            _mp = e.get("mfe_prozent")
+            zeile += (", hoechster Buchgewinn "
+                      + (f"{_mp * 100:+.1f} %" if _mp is not None else "")
+                      + f" ({_mfe:+.2f} R)")
+        elif _mfe is not None:
+            zeile += " - Hoechststand noch nicht nachgefuehrt"
+        z.append(zeile)
     if e.get("stop_empfohlen") is not None:
         z.append(f"Stop         auf {_de(e['stop_empfohlen'])} EUR nachziehen "
                  f"- sichert {e['gesicherte_r']:+.2f} R")
     elif e.get("mfe_r") is not None and not e.get("trailing_aktiv"):
-        z.append(f"Stop         unveraendert - der Trailing-Stop loest erst ab "
-                 f"+{AUSLOESE_R:.1f} R aus")
+        z.append(f"Stop         unveraendert - der Trailing-Stop loest erst "
+                 f"aus, wenn der Gewinn so gross ist wie das Risiko "
+                 f"(+{AUSLOESE_R:.1f} R)")
     for g in e.get("gruende", []):
         z.append(f"  {g}")
     if e.get("umgeworfen_durch"):

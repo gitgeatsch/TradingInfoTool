@@ -251,7 +251,25 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
     # nicht, ob man noch mehr davon kauft.
     zwei = []
     if ausstieg:
-        zwei += ["Bestehende Position:"] + [f"  {z}" for z in AR.saetze(ausstieg)]
+        # GEHALTEN ODER NUR VERFOLGT - die Ueberschrift sagt es jetzt
+        # (17.08.2026, Nutzervorgabe: *"es sollte unterscheidbar sein, was
+        # tatsaechlich gehalten wird und was nur als Signal getrackt wird -
+        # das brauchen wir beim Kauf, Halten und Verkauf, sonst verwirrt der
+        # Inhalt."*).
+        #
+        # DER FALL, DER ES AUSGELOEST HAT. Eine SOL-Mail sagte oben "SOL ist
+        # nicht im Bestand" und zwanzig Zeilen tiefer "Bestehende Position:
+        # HALTEN, +0.43 R". Beide Saetze stimmten fuer sich - der erste kam
+        # aus `holdings`, der zweite aus einer Zeile je SIGNAL. Wer das liest,
+        # muss glauben, er halte etwas.
+        #
+        # DIE UNTERSCHEIDUNG GAB ES LAENGST: `ist_bestand` trennt seit dem
+        # 13.08. die offene Position von der alten Signalzeile ("von 45
+        # Signal-Symbolen lagen 28 gar nicht im Bestand"). Sie stand nur
+        # nirgends in der Mail.
+        zwei += [("Bestehende Position:" if ausstieg.get("ist_bestand")
+                  else "Verfolgter Einstiegsvorschlag (NICHT im Bestand):")
+                 ] + [f"  {z}" for z in AR.saetze(ausstieg)]
     # KEIN NACHKAUF AUF EINE POSITION, DIE GESCHLOSSEN GEHOERT. In der ersten
     # Fassung standen beide untereinander: "Stop auf 59.100 nachziehen" und
     # daneben "Einstiegszone 57.581 bis 58.419" - zwei Anweisungen fuer

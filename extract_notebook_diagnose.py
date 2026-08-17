@@ -2115,8 +2115,16 @@ def main() -> None:
 
         # 1) Holdings-Check: hat der selektive Sync die Einstandspreise
         # korrekt uebernommen?
+        # ⚠️ `staked_quantity` UND `updated_at` MUSSTEN NACHGEZOGEN WERDEN
+        # (17.08.2026). Der Nutzer meldete, SOL werde seit Langem gehalten -
+        # in diesem Abschnitt stand Menge 0,0, und mehr war nicht zu sehen.
+        # Erst der Code verriet, warum: Bitpanda bucht einen Stake als ABGANG
+        # aus der Wallet, das Gestakte kommt additiv in `staked_quantity`
+        # dazu. Ohne die Spalte war der wichtigste Teil des Bestands aus dem
+        # Export nicht ablesbar - 23 von 56 Zeilen stehen auf Menge 0.
         holdings = conn.execute(
-            "SELECT symbol, quantity, avg_buy_price_eur, avg_buy_price_manual_eur FROM holdings"
+            "SELECT symbol, quantity, staked_quantity, avg_buy_price_eur, "
+            "avg_buy_price_manual_eur, updated_at, source FROM holdings"
         ).fetchall()
 
         # 2) API-Gesundheit aller Quellen

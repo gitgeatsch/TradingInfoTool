@@ -4784,9 +4784,17 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
     # EMPFEHLUNGEN, nicht Positionen. Von 45 Signal-Symbolen lagen 28 gar nicht
     # im Bestand; dort waere "SCHLIESSEN" eine Anweisung fuer etwas, das es
     # nicht gibt. Was gehalten wird, steht in `holdings` und `hebel_positions`.
+    # ⚠️ GESTAKTES IST GEHALTEN (17.08.2026). `quantity` ist der FREIE
+    # Wallet-Bestand - Bitpanda bucht einen Stake als Abgang aus der Wallet,
+    # das Gestakte kommt additiv in `staked_quantity` dazu (live verifiziert,
+    # siehe `importer/bitpanda_avg_cost.compute_staked_quantities`). Ein
+    # vollstaendig gestakter Wert stand hier deshalb als NICHT gehalten, und
+    # seine Ausstiegsfuehrung galt als blosse Signalverfolgung. Der Nutzer
+    # haelt SOL seit Langem; im Export haben 23 von 56 Zeilen die Menge 0.
     try:
         gehalten = {r[0] for r in conn.execute(
-            "SELECT symbol FROM holdings WHERE quantity > 0")}
+            "SELECT symbol FROM holdings WHERE "
+            "COALESCE(quantity, 0) + COALESCE(staked_quantity, 0) > 0")}
     except Exception:
         gehalten = set()
     try:

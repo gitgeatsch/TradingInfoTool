@@ -1884,6 +1884,13 @@ def paket_14() -> None:
     # EIN SCHON UNTERSCHRITTENER TRAILING-STOP. Gefunden an der fertigen Mail:
     # dort stand "Stop auf 59.100 nachziehen" neben einem Kurs von 58.000.
     spaet = lauf(kurs_aktuell=58000, hoechstkurs=ein + 1.8 * 4500)
+    # ⚠️ ECHTER BESTAND (17.08.2026). Seit heute haengt die Ueberschrift der
+    # Mail an `ist_bestand`, und die folgenden Pruefungen meinen den Fall
+    # einer WIRKLICH gehaltenen Position - der faellige Ausstieg, der einen
+    # Nachkauf verhindert, setzt sie ohnehin voraus (rollen_lauf, O-37).
+    # Ohne dieses Feld pruefte der Test ab heute einen anderen Fall als den,
+    # den er beschreibt.
+    spaet["ist_bestand"] = True
     pruefe(P, "ein bereits unterschrittener Trailing-Stop heisst SCHLIESSEN",
            spaet["stop_bereits_unterschritten"] is True
            and spaet["empfehlung"] == AR.SCHLIESSEN,
@@ -1939,6 +1946,9 @@ def paket_14() -> None:
            _b_halten)
 
     ruhig = lauf(kurs_aktuell=62000, hoechstkurs=ein + 1.8 * 4500)
+    # Auch hier ein ECHTER Bestand: die Pruefung heisst 'Bestand UND
+    # Nachkauf nebeneinander' und meint genau den.
+    ruhig["ist_bestand"] = True
     _, txt2 = _SM.baue_mail(symbol="BTC", name="B", kurs_eur=62000,
                             instrument="hebel", strategie="swing", rechnung=_r,
                             ausstieg=ruhig, urteil={"aktion": "NACHKAUFEN"})
@@ -1948,6 +1958,28 @@ def paket_14() -> None:
            "--- 2. DIE POSITION ---" in txt2,
            "bei einem Bestand ist die dringendere Frage, was mit ihm "
            "geschieht - nicht, ob man noch mehr davon kauft")
+
+    # GEHALTEN ODER NUR VERFOLGT - die Ueberschrift muss es sagen
+    # (17.08.2026, Nutzerfund an einer echten SOL-Mail).
+    #
+    # Die Mail sagte oben "SOL ist nicht im Bestand" und zwanzig Zeilen
+    # tiefer "Bestehende Position: HALTEN, +0.43 R". Beide Saetze stimmten
+    # fuer sich: der erste kam aus `holdings`, der zweite aus einer Zeile je
+    # SIGNAL. Wer das liest, muss glauben, er halte etwas.
+    _nur_verfolgt = dict(ruhig)
+    _nur_verfolgt["ist_bestand"] = False
+    _, _txt_v = _SM.baue_mail(symbol="BTC", name="B", kurs_eur=62000,
+                              instrument="hebel", strategie="swing",
+                              rechnung=_r, ausstieg=_nur_verfolgt,
+                              urteil={"aktion": "NACHKAUFEN"})
+    pruefe(P, "ohne Bestand heisst der Block nicht 'Bestehende Position'",
+           "Verfolgter Einstiegsvorschlag" in _txt_v
+           and "Bestehende Position" not in _txt_v,
+           "von 45 Signal-Symbolen lagen 28 gar nicht im Bestand")
+    pruefe(P, "mit Bestand aber schon",
+           "Bestehende Position" in txt2
+           and "Verfolgter Einstiegsvorschlag" not in txt2,
+           "sonst waere die Unterscheidung nur eine Umbenennung")
 
     # EINE SCHREIBWEISE.
     zahlen = " ".join(AR.saetze(lauf(kurs_aktuell=50900,
