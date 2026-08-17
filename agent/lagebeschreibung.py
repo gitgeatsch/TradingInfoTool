@@ -629,6 +629,67 @@ def _fundamental(fundamentaldaten: dict | None) -> list[str]:
     return z
 
 
+# --- WIE VIEL VOM WERT TAEGLICH DEN BESITZER WECHSELT (17.08.2026) ---------
+#
+# DER ANLASS. Krypto stellt 93 % aller Urteile, davon 37 % Spot - und Rolle BC
+# hatte fuer Spot KEINEN einzigen Fakt, der nicht aus der Kerzenreihe stammt.
+# Beim Hebel gibt es die Finanzierungsrate, beim Spot gehoert sie zu Rolle G
+# (gemessen: dort wurde sie in 63 % der Spot-Urteile zitiert, obwohl ein
+# Spot-Kaeufer kein Funding zahlt).
+#
+# WARUM DER PREIS SICH HERAUSKUERZT - und das ist der ganze Punkt:
+#
+#     Umsatz in USD      Stueck x Preis      Stueck
+#     -------------  =  ----------------  =  ------
+#     Marktkap. USD      Umlauf x Preis      Umlauf
+#
+# Uebrig bleibt der Anteil des Umlaufbestands, der den Besitzer wechselt. Das
+# ist KEINE Kursgroesse, obwohl beide Zaehler in USD stehen.
+#
+# ⚠️ NICHT DASSELBE WIE DER VOLUMENBLOCK. Der beschreibt die VERTEILUNG des
+# Umsatzes ueber die Tage ("53 % auf Aufwaertstage", "an 6 von 10 Tagen ueber
+# dem Schnitt"). Diese Groesse beschreibt das VERHAELTNIS zur Groesse des
+# Werts. BNB liegt im Median bei 0,68 %, BIO bei 19,18 % - beide koennen
+# gleichzeitig "ueber ihrem Schnitt" liegen.
+#
+# GEMESSEN AM PRODUKTIONSBESTAND: 102.316 Werte ueber 44 Symbole, Median
+# 4,77 %, zehntes Perzentil 0,92 %, neunzigstes 16,12 %. Und es bewegt sich
+# auch INNERHALB eines Symbols (BRETT 3,06 bis 48,49) - kein konstantes Feld.
+#
+# ⚠️ OFFEN, UND ICH SAGE ES AUSDRUECKLICH: nach R-R6 gehoert ein Fakt vom
+# Belegstand "Praxis" (Rang 2) in den EINSEITIGEN Kanal, also zu Rolle G.
+# Dieser hier steht trotzdem in BC, und zwar aus einem Grund, den die Regel
+# nicht kennt: sie hat KEINE eingebaute Richtung. "Viel Umschlag" ist weder
+# Kauf noch Verkauf - anders als der Boersenfluss, dessen gaengige Lesart
+# "Zufluss = Verkaufsdruck" das Modell auch dann mitbringt, wenn wir sie nicht
+# schreiben. Ein richtungsloser Kontextfakt in einem zweiseitigen Kanal kann
+# nicht systematisch schieben; er kann nur einordnen.
+#
+# Das ist eine Auslegung, keine Ableitung - und sie gehoert vor der naechsten
+# Messung geprueft (Kapitel 67.4).
+UMSCHLAG_FENSTER = 400
+UMSCHLAG_MINDESTREIHE = 60
+
+
+def _umschlag(umschlag: dict | None) -> list[str]:
+    """Welcher Anteil des Umlaufbestands wechselt taeglich den Besitzer?
+
+    `umschlag` ist {"anteil_pct": float, "perzentil": int, "n": int} - gerechnet
+    wird in `rollen_eingabe`, weil die Reihe aus der Datenbank kommt und diese
+    Datei keine oeffnet."""
+    u = umschlag or {}
+    anteil, p = u.get("anteil_pct"), u.get("perzentil")
+    if anteil is None or p is None:
+        return []
+    # DIESELBEN GRENZEN WIE UEBERALL (90/10) - zwei Massstaebe nebeneinander
+    # waeren schlimmer als keiner.
+    wie = ("aussergewoehnlich lebhaft" if p >= 90 else
+           "aussergewoehnlich ruhig" if p <= 10 else "im gewohnten Bereich")
+    return [f"Vom gesamten Umlaufbestand dieses Werts wechselten in den "
+            f"letzten 24 Stunden {anteil:.1f} % den Besitzer; das liegt im "
+            f"{p}. Perzentil der letzten {u.get('n', 0)} Messungen - {wie}."]
+
+
 def _luecken(hist_laenge: int, volumen: list, marken: list) -> list[str]:
     """Was FEHLT - benannt, statt stillschweigend weggelassen.
 
@@ -688,6 +749,7 @@ def beschreibe_lage(*, symbol: str, reihe: list, index: int,
                     gegenseite: str | None = None,
                     referenz: dict | None = None,
                     fundamentaldaten: dict | None = None,
+                    umschlag: dict | None = None,
                     bloecke_ziel: dict | None = None) -> list[str]:
     """Die Lage als Aussagen - der EINZIGE Weg von Kursdaten zur Beschreibung.
 
@@ -730,7 +792,8 @@ def beschreibe_lage(*, symbol: str, reihe: list, index: int,
                       einstand_eur=einstand_eur, finanzierung=finanzierung,
                       instrument=instrument, gegenseite=gegenseite,
                       referenz=referenz,
-                      fundamentaldaten=fundamentaldaten)
+                      fundamentaldaten=fundamentaldaten,
+                      umschlag=umschlag)
     if bloecke_ziel is not None:
         bloecke_ziel.clear()
         bloecke_ziel.update(bloecke)
@@ -763,8 +826,11 @@ def beschreibe_lage(*, symbol: str, reihe: list, index: int,
 # stammt, hinter sieben Chartsaetzen zu verstecken hiesse, ihn zu
 # uebergeben. Der Bestand bleibt davor: er beantwortet die Frage, ob es
 # ueberhaupt um einen Einstieg geht.
+# `umschlag` steht bei den uebrigen Umsatzaussagen, NICHT vorn: er ist
+# Kontext zur Handelbarkeit, nicht der Anlass. `fundamental` steht vorn,
+# weil es die Ertragslage des Unternehmens ist - eine andere Kategorie.
 BLOCK_REIHENFOLGE = ("bestand", "fundamental", "verlauf", "marken",
-                     "hebelgeometrie", "referenz", "volumen",
+                     "hebelgeometrie", "referenz", "volumen", "umschlag",
                      "finanzierung", "luecken")
 
 
@@ -776,7 +842,8 @@ def geteilt(*, symbol: str, reihe: list, index: int,
             instrument: str = "spot",
             gegenseite: str | None = None,
             referenz: dict | None = None,
-            fundamentaldaten: dict | None = None) -> dict:
+            fundamentaldaten: dict | None = None,
+            umschlag: dict | None = None) -> dict:
     """Dieselben Saetze, aber nach Bloecken getrennt (14.08.2026).
 
     WOFUER. Die Kaufmail kann Bestand, Marken und Coin-Fakten getrennt
@@ -820,6 +887,7 @@ def geteilt(*, symbol: str, reihe: list, index: int,
         "marken": marken,
         "hebelgeometrie": _hebelgeometrie(atr, float(c[i]), instrument),
         "fundamental": _fundamental(fundamentaldaten),
+        "umschlag": _umschlag(umschlag),
         "referenz": _referenz(referenz),
         "volumen": volumen,
         "finanzierung": _finanzierung(finanzierung, instrument),

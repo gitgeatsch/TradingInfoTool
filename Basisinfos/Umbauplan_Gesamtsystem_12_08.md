@@ -8350,6 +8350,7 @@ Funde waren keine Fehler, sondern Zuordnungen, deren Grund nirgends stand.
 | **Finanzierungsrate** (Anteil positiver Perioden) | **BC** | **—** | **✓** | — | — | — |
 | Referenzindex | **BC** | — | — | — | — | ✓ |
 | **Gewinn-/Umsatzwachstum** | **BC** | — | — | **✓** | — | — |
+| **Umschlag** (Umsatz / Umlaufbestand) | **BC** | **✓** | **✓** | — | — | — |
 | Lange Sicht + Tagesmakro + Stimmung | **A** | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Offene Kontrakte · Börsendivergenz · Long-Anteil | **G** | ✓ | ✓ | — | — | — |
 | **Finanzierungsrate** (Perzentil) | **G** | **✓** | **—** | — | — | — |
@@ -8411,10 +8412,26 @@ BTC-weit und damit über alle Kryptosymbole eines Laufs identisch. Sie decken
 |---|---|---|
 | Krypto Hebel | Finanzierungsrate | ~88 % |
 | **Aktien** | **Gewinn-/Umsatzwachstum** | **60 %** |
-| Krypto Spot · Rohstoffe · ETF | **keiner** | **~90 %** |
+| **Krypto Spot** | **Umschlag** (seit 17.08. abends) | **75 %** |
+| Rohstoffe · ETF · Absicherung | **keiner** | **~90 %** |
 
-> **Das ist der offene Kern.** 93 % aller Urteile sind Krypto, und Krypto Spot
-> hat in der entscheidenden Rolle keinen einzigen Fakt von außen.
+> **Nachtrag 17.08. abends:** Krypto Spot hat seitdem den **Umschlag** —
+> den Anteil des Umlaufbestands, der täglich den Besitzer wechselt. Der
+> Preis kürzt sich heraus: (Stück × Preis)/(Umlauf × Preis). Gemessen über
+> **102.316 Werte und 44 Symbole**: Median 4,77 %, p10 0,92, p90 16,12 —
+> und er bewegt sich auch innerhalb eines Symbols (BRETT 3,06 → 48,49).
+>
+> ⚠️ **Er steht in BC, obwohl R-R6 für Rang 2 den einseitigen Kanal
+> vorsieht.** Begründung: er hat **keine eingebaute Richtung** — „viel
+> Umschlag" ist weder Kauf noch Verkauf, anders als der Börsenfluss, dessen
+> Lesart „Zufluss = Verkaufsdruck" das Modell mitbringt, auch wenn wir sie
+> nicht schreiben. Ein richtungsloser Kontextfakt kann in einem
+> zweiseitigen Kanal nicht systematisch schieben. **Das ist eine Auslegung,
+> keine Ableitung** — und sie gehört vor der nächsten Messung geprüft.
+>
+> **Offen bleiben Rohstoffe, ETF und Absicherung** — zusammen 5 % der
+> Urteile, und für sie ist keine kostenlose nicht-kursabgeleitete Quelle
+> bekannt.
 
 ### 66.4 Die Regel, nach der zugeordnet wird
 

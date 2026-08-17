@@ -5685,6 +5685,30 @@ def paket_15() -> None:
            "ein Zertifikat hat keinen Gewinn, ein Coin kein "
            "Umsatzwachstum - fail-closed wie beim Boersenfluss")
 
+    # --- DER UMSCHLAG FUER KRYPTO SPOT (17.08.2026) -------------------
+    #
+    # Krypto stellt 93 % aller Urteile, davon 37 % Spot - und Rolle BC
+    # hatte dort KEINEN Fakt ausserhalb der Kerzenreihe.
+    _u8 = LB8._umschlag({"anteil_pct": 4.8, "perzentil": 62, "n": 400})
+    pruefe(P, "der Umschlag nennt Anteil, Fenster UND Einordnung",
+           len(_u8) == 1 and "Perzentil" in _u8[0]
+           and "gewohnten Bereich" in _u8[0],
+           "R-T1 und R-T11 - Fenster im Satz, und ein Wort dazu, ob das "
+           "viel ist")
+    pruefe(P, "ohne Daten entsteht kein Satz",
+           LB8._umschlag(None) == [] and LB8._umschlag({}) == [],
+           "fail-closed wie ueberall")
+    pruefe(P, "und er erreicht NUR Krypto",
+           RE8.umschlag("PLTR", None, "aktien") is None
+           and RE8.umschlag("BTC", None, None) is None,
+           "`price_cache` fuehrt Marktkapitalisierung nur fuer Coins - eine "
+           "ETF-Marktkapitalisierung waere etwas anderes")
+    pruefe(P, "er steht bei den Umsatzaussagen, nicht vorn",
+           LB8.BLOCK_REIHENFOLGE.index("umschlag")
+           > LB8.BLOCK_REIHENFOLGE.index("volumen"),
+           "er ist Kontext zur Handelbarkeit, nicht der Anlass - anders "
+           "als die Ertragslage eines Unternehmens")
+
     # --- ROLLE G LANDET AUCH IN DER DATENBANK (17.08.2026) -------------
     #
     # `hole()` liefert einwand/einwand_grund/grundlage, `schreibe()` las
@@ -6089,7 +6113,7 @@ def paket_15() -> None:
     # Vorher-Nachher-Vergleich, der beide Haelften vermischt, misst
     # nichts.
     pruefe(P, "der Prompt-Stand ist mitgezogen",
-           RT5.PROMPT_STAND == "2026-08-17",
+           RT5.PROMPT_STAND == "2026-08-17b",
            "die Eingabe der Rolle BC hat sich geaendert (Fundamentaldaten) "
            "- ohne neuen Stand waeren die Urteile davor und danach nicht "
            "auseinanderzuhalten")

@@ -230,6 +230,55 @@ def fundamentaldaten(symbol: str, db: str | None = None,
     return aus or None
 
 
+def umschlag(symbol: str, db: str | None = None,
+             assetklasse: str | None = None) -> dict | None:
+    """Anteil des Umlaufbestands, der in 24 Stunden den Besitzer wechselt.
+
+    NUR KRYPTO. `price_cache` fuehrt Marktkapitalisierung und Tagesumsatz
+    von CoinGecko; fuer Aktien, Zertifikate und ETF steht dort nichts
+    Vergleichbares, und eine ETF-Marktkapitalisierung waere ohnehin etwas
+    anderes als der Umlaufbestand eines Coins.
+
+    DER PREIS KUERZT SICH HERAUS: (Stueck x Preis)/(Umlauf x Preis).
+    Genau deshalb ist diese Groesse fuer Rolle BC brauchbar - sie ist die
+    einzige verfuegbare, die NICHT aus der Kursreihe stammt und trotzdem
+    symbolbezogen ist.
+
+    LIEST NUR. Die Reihe schreibt der Preis-Job; hier wird nichts geholt."""
+    if str(assetklasse or "").lower() not in ("krypto", "coin", "crypto"):
+        return None
+    import sqlite3
+
+    from agent.lagebeschreibung import (UMSCHLAG_FENSTER,
+                                        UMSCHLAG_MINDESTREIHE)
+
+    sym = str(symbol or "").upper()
+    try:
+        conn = sqlite3.connect(
+            f"file:{db or 'data/tradinginfotool.db'}?mode=ro", uri=True)
+    except sqlite3.Error:
+        return None
+    try:
+        werte = [100.0 * float(v) / float(m) for m, v in conn.execute(
+            "SELECT market_cap_usd, volume_24h_usd FROM price_cache "
+            "WHERE symbol = ? AND market_cap_usd > 0 "
+            "AND volume_24h_usd > 0 ORDER BY fetched_at DESC LIMIT ?",
+            (sym, UMSCHLAG_FENSTER))]
+    except sqlite3.Error:
+        return None
+    finally:
+        try:
+            conn.close()
+        except Exception:                                # noqa: BLE001
+            pass
+    if len(werte) < UMSCHLAG_MINDESTREIHE:
+        return None
+    jetzt = werte[0]                       # DESC - der juengste zuerst
+    kleiner = sum(1 for w in werte if w < jetzt)
+    return {"anteil_pct": jetzt, "n": len(werte),
+            "perzentil": int(round(100.0 * kleiner / len(werte)))}
+
+
 def baue_befund_eingabe(*, symbol: str, reihe: list, index: int,
                         kurs_eur: float, atr: float,
                         menge: float | None = None,
@@ -242,6 +291,7 @@ def baue_befund_eingabe(*, symbol: str, reihe: list, index: int,
                         gegenseite: str | None = None,
                         referenz: dict | None = None,
                         fundamentaldaten: dict | None = None,
+                        umschlag_daten: dict | None = None,
                         bloecke_ziel: dict | None = None) -> dict:
     """Eingabe fuer Befund und Entscheidung - alle Bloecke an einer Stelle.
 
@@ -277,6 +327,7 @@ def baue_befund_eingabe(*, symbol: str, reihe: list, index: int,
                                     gegenseite=gegenseite,
                                     referenz=referenz,
                                     fundamentaldaten=fundamentaldaten,
+                                    umschlag=umschlag_daten,
                                     bloecke_ziel=bloecke_ziel)}
     if lagebild:
         beurteilung = {"lage": lagebild.get("lage")}
@@ -720,5 +771,6 @@ def baue_fall(*, symbol: str, reihe: list, index: int, reihen: dict,
                             referenz=ref,
                             fundamentaldaten=fundamentaldaten(symbol, db,
                                                              assetklasse),
+                            umschlag_daten=umschlag(symbol, db, assetklasse),
                             bloecke_ziel=bloecke_ziel),
     )
