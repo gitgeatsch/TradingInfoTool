@@ -141,10 +141,112 @@ def preis(wert: float) -> str:
     return f"{float(wert):,.{stellen}f}".translate(str.maketrans(",.", ".,"))
 
 
-def _abschnitt(titel: str, zeilen: list[str]) -> list[str]:
+# --- WAS DER NUTZER LIEST, IST NICHT WAS DAS MODELL LIEST (17.08.2026) ---
+#
+# NUTZERFRAGE, die das ausgeloest hat: *"was soll mir die Einordnung -
+# im gewohnten Bereich - sagen? Der Nutzen ist mir nicht klar."*
+#
+# Er hat recht, und zwar strukturell. `_einordnung()` kennt drei Woerter
+# mit Schwellen bei 90 und 10 - **79 von 100 moeglichen Perzentilwerten**
+# landen auf "im gewohnten Bereich". Der Satz ist per Konstruktion in vier
+# von fuenf Faellen derselbe. In der gemeldeten SOL-Mail standen VIER
+# Perzentilzeilen, alle vier "im gewohnten Bereich".
+#
+# Das ist ein konstantes Feld (R-T6) - genau das, was beim Regime
+# entfernt wurde (2.549 von 2.549 identisch).
+#
+# ⚠️ DIE EINORDNUNG WAR NIE FUER DEN NUTZER GEBAUT. R-T11 ("kein
+# Perzentil ohne Einordnung") entstand fuer das MODELL: ein Sprachmodell
+# kann mit einer nackten Zahl nicht umgehen. Sie ist in die Mail
+# durchgerutscht, weil Nutzertext und Modelltext aus denselben Saetzen
+# gebaut werden.
+#
+# DAS MODELL BEHAELT ALLES. Diese Funktion wirkt NUR auf dem Weg zur
+# Mail. Dem Modell die Einordnung wegzunehmen waere eine Aenderung
+# seiner Grundlage, keine Darstellungsfrage.
+GEWOHNT = "im gewohnten Bereich"
+
+
+def ohne_gewohntes(zeilen: list | None, was: str = "Angaben") -> list[str]:
+    """Nur was auffaellt - plus EIN Satz fuer den Rest.
+
+    "Nichts Auffaelliges" ist nicht wertlos: dass die Gegenpruefung nichts
+    gefunden hat, ist eine Aussage. Aber dafuer reicht ein Satz fuer den
+    ganzen Abschnitt, nicht vier gleichlautende Zeilen.
+
+    Zeilen OHNE Perzentil bleiben unangetastet - sie tragen ihre eigene
+    Aussage ("Am 16.08. flossen mehr Bitcoin von den Boersen herunter als
+    auf sie") und haben mit dieser Frage nichts zu tun.
+
+    ALLE oder NUR EINIGE - der Sammelsatz sagt es. Bleibt keine auffaellige
+    Zeile uebrig, war wirklich nichts; bleibt eine, waeren "3 weitere" der
+    richtige Ausdruck. Ein Satz, der beides gleich nennt, laesst den Leser
+    im Unklaren, ob er etwas uebersehen hat."""
+    zeilen = list(zeilen or [])
+    behalten, gewohnt, auffaellig = [], 0, 0
+    for z in zeilen:
+        if "Perzentil" not in z:
+            behalten.append(z)
+        elif GEWOHNT in z:
+            gewohnt += 1
+        else:
+            auffaellig += 1
+            behalten.append(z)
+    if gewohnt:
+        # ⚠️ IM SINGULAR WIRD DAS HAUPTWORT GAR NICHT BENUTZT. `was` ist
+        # ein Plural ("Angaben zur Positionierung"); "Die Angaben zum
+        # Umfeld LIEGT" war die erste Fassung, und eine Mail, die so
+        # schreibt, wirkt auf den Rest genauso sorgfaeltig.
+        if gewohnt == 1:
+            behalten.append("Eine weitere Angabe dazu liegt im gewohnten "
+                            "Bereich." if auffaellig else
+                            "Die einzige Angabe dazu liegt im gewohnten "
+                            "Bereich.")
+        elif auffaellig:
+            behalten.append(f"{gewohnt} weitere {was} liegen im gewohnten "
+                            f"Bereich.")
+        else:
+            behalten.append(f"Alle {gewohnt} {was} liegen im gewohnten "
+                            f"Bereich.")
+    return behalten
+
+
+# WOHER DIE ANGABEN EINES ABSCHNITTS STAMMEN (17.08.2026).
+#
+# NUTZERVORSCHLAG: *"je eMail-Bereich die tatsaechliche Quelle angeben -
+# eigene Berechnung deterministisch, oder nur Daten einer Datenquelle,
+# LLM1 und LLM2."*
+#
+# UMGESETZT AUF DER ACHSE "WIE WISSEN WIR DAS", nicht "wer hat geredet".
+# Der Modellname sagt nichts darueber, ob ein Satz nachpruefbar ist;
+# "gemessen" oder "behauptet" sagt es. Und die beiden Modelle sind nicht
+# dieselbe Art Aussage: Rolle BC faellt ein URTEIL, Rolle G erhebt einen
+# EINWAND AUS EINER ANDEREN QUELLE - sie "LLM1/LLM2" zu nennen machte sie
+# zu Geschwistern, die sie ausdruecklich nicht sein sollen.
+#
+# ⚠️ GEMISCHT IST DER EHRLICHE FALL. Der Stop ist arithmetisch exakt und
+# ruht auf einem Prozentsatz, den eine Regel aus einer MODELLAUSSAGE
+# abgeleitet hat. Ihn "eigene Berechnung" zu nennen waere falsche
+# Sicherheit - genau das, was die Angabe verhindern soll.
+HERKUNFT = {
+    "wert": "GEMESSEN - Kurse und Fremdquellen",
+    "position": "GERECHNET aus Ihren Zahlen, Zone und Stop teils aus einer "
+                "Modellangabe",
+    "rechnung": "GERECHNET aus Ihren Zahlen, Zone und Stop teils aus einer "
+                "Modellangabe",
+    "urteil": "BEHAUPTET - Rolle Haendler",
+    "einordnung": "GERECHNET aus der gemessenen Erfahrungsrate",
+    "gegenpruefung": "BEHAUPTET - andere Quelle: Terminmarkt und Kette",
+}
+
+
+def _abschnitt(titel: str, zeilen: list[str],
+               herkunft: str | None = None) -> list[str]:
     if not zeilen:
         return []
-    return [f"--- {titel} ---", *zeilen, ""]
+    kopf = f"--- {titel} ---"
+    return ([kopf] + ([f"    [{herkunft}]"] if herkunft else [])
+            + list(zeilen) + [""])
 
 
 # Wie der erste Abschnitt heisst. Frueher fest "DER COIN" - siehe die Notiz
@@ -237,7 +339,9 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
         eins += ([""] if eins else []) + faktenblock
     eins += list(coin_fakten or [])
     if lage_fakten:
-        eins += ["", "Umfeld:"] + [f"  {z}" for z in lage_fakten]
+        eins += ["", "Umfeld:"] + [
+            f"  {z}" for z in ohne_gewohntes(lage_fakten,
+                                             "Angaben zum Umfeld")]
 
     # 2. DIE RECHNUNG. Alle Zahlen, jede mit ihrer Regel dahinter.
     #
@@ -345,17 +449,28 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
         # Kein Defekt der Kette - aber ein Etikett, das dem Leser etwas
         # anderes sagt, als vor ihm liegt. Dieselbe Regel wie bei den
         # Faktensaetzen: was dasteht, muss stimmen.
-        + _abschnitt(_ueberschrift_wert(instrument), eins)
-        + _abschnitt("2. DIE POSITION" if ausstieg else "2. DIE RECHNUNG", zwei)
-        + _abschnitt("3. DAS URTEIL DES MODELLS", drei)
-        + _abschnitt("4. EINORDNUNG", list(einordnung or []))
+        + _abschnitt(_ueberschrift_wert(instrument), eins,
+                     HERKUNFT["wert"])
+        + _abschnitt("2. DIE POSITION" if ausstieg else "2. DIE RECHNUNG",
+                     zwei,
+                     HERKUNFT["position" if ausstieg else "rechnung"])
+        + _abschnitt("3. DAS URTEIL DES MODELLS", drei,
+                     HERKUNFT["urteil"])
+        + _abschnitt("4. EINORDNUNG", list(einordnung or []),
+                     HERKUNFT["einordnung"])
         # EIGENE UEBERSCHRIFT (Nutzervorgabe 16.08.2026). Die Zeilen der
         # zweiten Stufe standen bisher hinten in der EINORDNUNG - dort
         # sahen sie aus wie ein Nachsatz unserer eigenen Rechnung. Sie
         # sind aber die Aussage einer ANDEREN Quelle und gehoeren
         # entsprechend abgesetzt.
+        # DIE PERZENTILE, DIE NICHTS UNTERSCHEIDEN, FALLEN HIER WEG
+        # (17.08.2026). Vier gleichlautende Zeilen "im gewohnten Bereich"
+        # werden zu einer. Das MODELL hat sie alle bekommen - hier steht
+        # nur, was der Nutzer liest.
         + _abschnitt("5. GEGENPRUEFUNG (zweites Modell)",
-                     list(gegenpruefung or []))
+                     ohne_gewohntes(gegenpruefung,
+                                    "Angaben zur Positionierung"),
+                     HERKUNFT["gegenpruefung"])
         + [TRENNER,
            "Ausfuehrung manuell ueber die Bitpanda-App. Details im Hebel-Tab."
            if instrument == "hebel" else

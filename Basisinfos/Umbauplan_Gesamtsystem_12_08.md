@@ -9765,3 +9765,131 @@ der die Perzentile zurückhält, nicht im Werkzeug.
 
 **Ob die Promptzeile trägt, sagt der nächste Export** — die Quote steht
 jetzt in jedem drin, mit dem Promptstand daneben.
+
+---
+
+## Kapitel 78 — Der Nutzertext trennt sich vom Modelltext (17.08.2026)
+
+### 78.1 „Was soll mir ‚im gewohnten Bereich' sagen?"
+
+**Die Nutzerfrage war berechtigt, und zwar strukturell.** `_einordnung()`
+kennt drei Wörter mit Schwellen bei 90 und 10:
+
+```
+>= 90   "aussergewoehnlich hoch"
+<= 10   "aussergewoehnlich niedrig"
+sonst   "im gewohnten Bereich"
+```
+
+> **79 von 101 möglichen Perzentilwerten landen auf „im gewohnten Bereich".**
+> Der Satz ist per Konstruktion in vier von fünf Fällen derselbe — ein
+> **konstantes Feld (R-T6)**, genau das, was beim Regime entfernt wurde
+> (2.549 von 2.549 identisch). In der gemeldeten SOL-Mail standen **vier**
+> Perzentilzeilen, **alle vier** „im gewohnten Bereich".
+
+**⚠️ Die Einordnung war nie für den Nutzer gebaut.** R-T11 („kein Perzentil
+ohne Einordnung") entstand für das **Modell**: ein Sprachmodell kann mit einer
+nackten Zahl nicht umgehen. Sie ist in die Mail durchgerutscht, weil Nutzer-
+und Modelltext aus denselben Sätzen gebaut werden.
+
+**Die Antwort ist deshalb nicht besser übersetzen, sondern weglassen.**
+
+```
+vorher   Wie weit sie auseinanderliegen, steht im 71. Perzentil ... - im gewohnten Bereich.
+         Die Finanzierungsrate steht im 77. Perzentil ... - im gewohnten Bereich.
+         Der Anteil der Konten steht im 72. Perzentil ... - im gewohnten Bereich.
+         Gemessen an 730 Tagen steht diese Bewegung im 44. Perzentil - im gewohnten Bereich.
+
+nachher  Alle 4 Angaben zur Positionierung liegen im gewohnten Bereich.
+```
+
+**Was auffällt, bleibt wortgleich stehen** — mit Zahl, weil sie dann etwas
+bedeutet. Dann heißt der Sammelsatz *„3 weitere …"* statt *„Alle 3 …"*, sonst
+wüsste der Leser nicht, ob er etwas übersehen hat.
+
+> ⚠️ **Das Modell behält alles.** Der Filter sitzt in `signal_mail`, nicht in
+> `lagebeschreibung`, `marktlage` oder `positionierung` — geprüft. Dem Modell
+> die Einordnung wegzunehmen wäre eine Änderung seiner Grundlage, keine
+> Darstellungsfrage.
+
+### 78.2 Die Herkunft je Abschnitt
+
+**Nutzervorschlag:** *„je eMail-Bereich die tatsächliche Quelle angeben —
+eigene Berechnung deterministisch, oder nur Daten einer Datenquelle, LLM1 und
+LLM2."*
+
+**Umgesetzt auf der Achse „wie wissen wir das", nicht „wer hat geredet":**
+
+```
+--- 1. DER WERT ---
+    [GEMESSEN - Kurse und Fremdquellen]
+--- 2. DIE POSITION ---
+    [GERECHNET aus Ihren Zahlen, Zone und Stop teils aus einer Modellangabe]
+--- 3. DAS URTEIL DES MODELLS ---
+    [BEHAUPTET - Rolle Haendler]
+--- 4. EINORDNUNG ---
+    [GERECHNET aus der gemessenen Erfahrungsrate]
+--- 5. GEGENPRUEFUNG (zweites Modell) ---
+    [BEHAUPTET - andere Quelle: Terminmarkt und Kette]
+```
+
+**Warum nicht „LLM1 / LLM2":** der Modellname sagt, *wer* geredet hat — nicht,
+*wie viel es wert ist*. Und die beiden Modelle sind nicht dieselbe Art
+Aussage: Rolle BC fällt ein **Urteil**, Rolle G erhebt einen **Einwand aus
+einer anderen Quelle**. Sie zu Geschwistern zu machen wäre das Gegenteil des
+Rollenumbaus.
+
+> **GEMISCHT ist der ehrliche Fall.** Der Stop ist arithmetisch exakt **und**
+> ruht auf einem Prozentsatz, den eine Regel aus einer Modellaussage abgeleitet
+> hat. Ihn „eigene Berechnung" zu nennen wäre falsche Sicherheit — genau das,
+> was die Angabe verhindern soll.
+
+### 78.3 Ein Fund am Rande, der A6 korrigiert
+
+**Der Export nach Promptstand aufgeschlüsselt:**
+
+| Promptstand | Belege | erfundene Perzentile |
+|---|---:|---:|
+| 2026-08-12 · 16 · 16b | 1.484 | **0** |
+| **2026-08-17b** | 272 | **19 (6,99 %)** |
+| 2026-08-17c (nach dem Neustart) | 46 | 2 (4,35 %) |
+
+**Das Verhalten beginnt exakt mit 17b** — dem Stand, der Krypto-Spot den
+**Umschlag** gegeben hat. Und dessen Satz trägt ein Perzentil:
+
+```
+Vom gesamten Umlaufbestand dieses Werts wechselten in den letzten
+24 Stunden 6,0 % den Besitzer; das liegt im 84. Perzentil ...
+```
+
+Der Beleg des Modells dazu lautete:
+
+```
+MON: Umsatzvolumen 6.0 % (84. Perzentil) deutet auf Liquiditaet hin
+```
+
+> ⚠️ **Beide Zahlen sind UNSERE.** Das Modell hat sie nicht erfunden — es hat
+> sie **umbenannt**: aus „Umlaufbestand, der den Besitzer wechselt" wurde
+> „Umsatzvolumen". Und das kollidiert mit dem Volumenblock, der direkt daneben
+> steht und bewusst **kein** Perzentil hat.
+
+**Meine Schlussfolgerung von Kapitel 77 war damit zur Hälfte falsch:** es ist
+überwiegend eine **Namensverwechslung**, keine freie Erfindung. Frei erfunden
+bleiben die Fensterlängen („der letzten 400 Tage" — die gibt es nirgends).
+
+**Folge für den Eingriff:** die Promptzeile aus 17c behandelt ein Symptom. Der
+Ursachenweg wäre, den Umschlagsatz so zu benennen, dass er nicht mit dem
+Volumenblock verwechselt werden kann. **Zur Entscheidung vorgelegt, nicht
+gebaut** — er ändert den Prompt ein drittes Mal an einem Tag.
+
+### 78.4 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **981**, alle bestanden — **13 neu unter `--paket Lesbar`** |
+| das Argument selbst | 79 von 101 Werten heißen „im gewohnten Bereich" — nachgezählt, nicht behauptet |
+| vier Sprachfälle | alle · weitere · Singular · nichts |
+| **das Modell behält alles** | `ohne_gewohntes` kommt in keiner Faktendatei vor — geprüft |
+| Herkunft | sechs Abschnitte · kein Modellname · gemischter Fall benannt |
+| freie Namen · Zahlenprüfer · Belegprüfer · Phase 1 | 0 · 9/9 · 9/9 · bestanden |
+| Simulation | 4 Gruppen, 8 Signale, **0 Fehler, 0 Lücken** |

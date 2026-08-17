@@ -7656,10 +7656,100 @@ def paket_belege() -> None:
            f"Aenderung nicht trennbar")
 
 
+def paket_lesbar() -> None:
+    """Was der Nutzer liest, ist nicht was das Modell liest (17.08.2026).
+
+    Nutzerfrage: *"was soll mir die Einordnung - im gewohnten Bereich -
+    sagen? Der Nutzen ist mir nicht klar."* Und der Nutzervorschlag, je
+    Abschnitt die Herkunft zu nennen."""
+    from agent import marktlage as _ML
+    from agent import signal_mail as _SM
+
+    P = "Lesbar"
+    _P = "X steht im 50. Perzentil - im gewohnten Bereich."
+    _A = "Y steht im 95. Perzentil - aussergewoehnlich hoch."
+    _K = "Ein Satz ohne Perzentil."
+
+    # DAS ARGUMENT IN EINER ZEILE: die Schwellen machen den Satz konstant.
+    _gewohnt = sum(1 for p in range(101)
+                   if _ML._einordnung(p) == _SM.GEWOHNT)
+    pruefe(P, "vier von fuenf Perzentilwerten heissen 'im gewohnten Bereich'",
+           _gewohnt == 79,
+           f"{_gewohnt} von 101 moeglichen Werten - der Satz ist per "
+           f"Konstruktion fast immer derselbe (R-T6)")
+
+    # BEIDE RICHTUNGEN, und alle vier Sprachfaelle.
+    pruefe(P, "alles gewohnt: eine Zeile statt drei",
+           _SM.ohne_gewohntes([_P, _P, _P], "Angaben zur Positionierung")
+           == ["Alle 3 Angaben zur Positionierung liegen im gewohnten "
+               "Bereich."])
+    pruefe(P, "was auffaellt, bleibt WORTGLEICH stehen",
+           _A in _SM.ohne_gewohntes([_P, _P, _A], "Angaben"),
+           "genau dafuer ist die Zeile da - sie zu kuerzen hiesse, die "
+           "einzige Zeile zu verlieren, die etwas sagt")
+    pruefe(P, "und dann heisst es 'weitere', nicht 'alle'",
+           "2 weitere" in _SM.ohne_gewohntes([_P, _P, _A], "Angaben")[-1],
+           "sonst waere unklar, ob der Leser etwas uebersehen hat")
+    pruefe(P, "im Singular wird das Hauptwort umgangen",
+           _SM.ohne_gewohntes([_P], "Angaben zur Positionierung")[-1]
+           == "Die einzige Angabe dazu liegt im gewohnten Bereich.",
+           "'Die Angaben zum Umfeld LIEGT' war die erste Fassung")
+    pruefe(P, "Zeilen ohne Perzentil bleiben unangetastet",
+           _SM.ohne_gewohntes([_K], "Angaben") == [_K],
+           "sie tragen ihre eigene Aussage und haben mit dieser Frage "
+           "nichts zu tun")
+    pruefe(P, "leer bleibt leer",
+           _SM.ohne_gewohntes(None, "Angaben") == []
+           and _SM.ohne_gewohntes([], "Angaben") == [])
+
+    # ⚠️ DAS MODELL BEHAELT ALLES. Der Filter darf NUR auf dem Weg zur Mail
+    # wirken - sonst waere es eine Aenderung der Entscheidungsgrundlage.
+    import inspect as _i
+
+    _quelle = _i.getsource(_SM)
+    pruefe(P, "der Filter steht in der MAIL, nicht in den Fakten",
+           "ohne_gewohntes" not in _quelltext("agent/lagebeschreibung.py")
+           and "ohne_gewohntes" not in _quelltext("agent/marktlage.py")
+           and "ohne_gewohntes" not in _quelltext("agent/positionierung.py")
+           and "def ohne_gewohntes" in _quelle,
+           "dem Modell die Einordnung wegzunehmen waere eine Aenderung "
+           "seiner Grundlage, keine Darstellungsfrage")
+
+    # --- DIE HERKUNFTSANGABE JE ABSCHNITT ------------------------------
+    pruefe(P, "jeder Abschnitt hat eine Herkunft",
+           set(_SM.HERKUNFT) == {"wert", "position", "rechnung", "urteil",
+                                 "einordnung", "gegenpruefung"},
+           str(sorted(_SM.HERKUNFT)))
+    pruefe(P, "sie sagt WIE wir es wissen, nicht WER geredet hat",
+           all("LLM" not in v and "Gemini" not in v
+               for v in _SM.HERKUNFT.values()),
+           "der Modellname sagt nichts darueber, ob ein Satz nachpruefbar "
+           "ist - 'gemessen' oder 'behauptet' sagt es")
+    pruefe(P, "der gemischte Fall wird als solcher benannt",
+           "teils aus einer Modellangabe" in _SM.HERKUNFT["rechnung"],
+           "der Stop ist arithmetisch exakt und ruht auf einem Prozentsatz "
+           "aus einer Modellaussage - 'eigene Berechnung' waere falsche "
+           "Sicherheit")
+
+    _, _txt = _SM.baue_mail(
+        symbol="SOL", name="SOL", kurs_eur=64.86, instrument="spot",
+        strategie="bestand", rechnung={},
+        urteil={"aktion": "HALTEN", "begruendung": "x"},
+        gegenpruefung=[_P, _P, _K],
+        bestand="SOL ist bereits im Bestand: 398 EUR investiert.")
+    pruefe(P, "die Herkunft steht in der fertigen Mail",
+           "[GEMESSEN - Kurse und Fremdquellen]" in _txt
+           and "[BEHAUPTET - andere Quelle" in _txt,
+           "je Abschnitt eine Zeile, nicht je Satz")
+    pruefe(P, "und die gewohnten Zeilen sind dort verschwunden",
+           _txt.count("im gewohnten Bereich") == 1 and _K in _txt,
+           "aus zwei gleichlautenden Zeilen wird eine, der Rest bleibt")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege,
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar,
           "Frische": paket_frische}
 
 
