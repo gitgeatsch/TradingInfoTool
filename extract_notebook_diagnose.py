@@ -1427,6 +1427,39 @@ def _externe_reihen(conn) -> dict:
     }
 
 
+def _anlass_einstellungen() -> dict:
+    """Wie die Wiederholungsbremse eingestellt IST - aus derselben Funktion,
+    die auch die Kette fragt.
+
+    NICHT `config.yaml` SELBST LESEN. `anlass.sperre_konfig()` legt die
+    Vorgabe aus dem Code unter die Datei; wer hier die YAML aufmachte,
+    bekaeme bei einem fehlenden Schluessel `None` statt der geltenden
+    Vorgabe - und meldete "aus", wo "an" gilt. Zwei Definitionen desselben
+    Begriffs sind in diesem Projekt schon einmal auseinandergelaufen
+    (Umbauplan 70.4).
+
+    `quelle` sagt, WOHER der Wert kommt: steht er in der Datei oder gilt
+    die Vorgabe? Ohne das waere ein `aktiv: false` mehrdeutig - bewusst
+    abgeschaltet oder nie eingeschaltet."""
+    try:
+        import config as _cfg
+        from agent import anlass as _AN
+
+        datei = _cfg.load_config() or {}
+        roh = (datei.get("anlass") or {}) if isinstance(datei, dict) else {}
+        geltend = _AN.sperre_konfig(datei)
+        return {
+            "geltend": geltend,
+            "quelle": {k: ("config.yaml" if k in roh else "Vorgabe im Code")
+                       for k in geltend},
+            "hoechstalter_stunden_code": _AN.HOECHSTALTER_STUNDEN,
+        }
+    except Exception as exc:                                 # noqa: BLE001
+        # LAUT, NICHT LEER. Ein leerer Abschnitt liest sich wie "nichts
+        # eingestellt" - genau die Verwechslung, gegen die er gebaut ist.
+        return {"nicht_ermittelbar": f"{type(exc).__name__}: {exc}"}
+
+
 def _rollen_kette(conn) -> dict:
     """Die zwei Tabellen der neuen Kette - vom Drift-Waechter selbst gemeldet.
 
@@ -1528,9 +1561,28 @@ def _rollen_kette(conn) -> dict:
                         "Symbol, auch die, die der Cooldown danach entfernt. "
                         "Die Quote ist deshalb NICHT der Anteil vermeidbarer "
                         "Modellaufrufe."),
+            # DIE EINSTELLUNG, NICHT NUR DIE WIRKUNG (17.08.2026).
+            #
+            # DER ANLASS ist eine Nutzerfrage: *"funktioniert der
+            # Fingerabdruck?"* Der Abschnitt zeigte, dass gesperrt WURDE -
+            # daraus liess sich schliessen, dass die Sperre an ist. Haette
+            # sie AUS gestanden, saehe er genauso aus wie "es gab nichts zu
+            # sperren". Zwei sehr verschiedene Lagen, ein Bild.
+            #
+            # ⚠️ DIE DATEI ALLEIN REICHT NICHT, auch wenn sie im Git liegt
+            # (`Basisinfos/config.yaml`). Sie sagt, was eingespielt WURDE -
+            # nicht, was das laufende Notebook geladen hat. Zwischen Pull
+            # und Neustart liegt bei 70 % Ausfallzeit regelmaessig ein
+            # halber Tag. Der Export sagt, was GALT.
         }
     else:
         aus["anlass"] = {"nicht_vorhanden": "Tabelle fehlt (aeltere Datei)"}
+    # AUSSERHALB DES ZWEIGS - und das war kein Schoenheitsfehler. Mein
+    # erster Entwurf haengte die Einstellung an den Ja-Zweig; fehlt die
+    # Tabelle, verschwaende mit der Wirkung auch die Einstellung. Genau
+    # dann will man sie aber wissen: "keine Zeilen" bei eingeschalteter
+    # Sperre heisst etwas anderes als bei ausgeschalteter.
+    aus["anlass"]["einstellungen"] = _anlass_einstellungen()
     return aus
 
 

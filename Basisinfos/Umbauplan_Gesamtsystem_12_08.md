@@ -9232,3 +9232,100 @@ Beileger. Danach `PRAGMA integrity_check`, derselbe Maßstab wie beim NB-Export
 | Scheduler | 19 Jobs, `lagebild_reihen` cron 06:40, Sofortstart |
 | freie Namen | 0 |
 | Simulation | 4 Gruppen, 8 Signale, 9 Mails, **0 Fehler, 0 Lücken** |
+
+---
+
+## Kapitel 73 — Warum nach jedem Start viele Signale kommen (17.08.2026)
+
+**Nutzerfrage:** *„Gibt es einen Fehler oder Grund, warum weiterhin nach einem
+App-Start wieder viele Signale kommen? Funktioniert der Fingerabdruck? Ist es
+ein neuer Lauf oder ein Fehler in der Bremse?"*
+
+### 73.1 Die Bremse funktioniert — nachweislich
+
+**Sie ist scharf** (`Basisinfos/config.yaml`, `anlass.aktiv: true`) und
+arbeitet. Drei Läufe um 02:58, aus dem Export von 05:07:
+
+| Lauf | hinein | von der Bremse gestoppt | Grund |
+|---|---:|---:|---|
+| 1 | 5 | **5** | „Faktensatz unveraendert seit 0.2 h (asset)" |
+| 2 | 4 | **4** | dito |
+| 3 | 41 | **18** von 24 | dito |
+
+Über 7.308 Beobachtungen: **75,8 %** der Spot- und **74,5 %** der
+Hebel-Fragen sind Wiederholungen und werden **vor** dem Modellaufruf
+verworfen. Der Trichter aus Lauf 3 im Ruhebetrieb:
+
+```
+41 Symbole -> 17 Hebel abgeschaltet -> 24 zur Bremse
+  -> 18 gestoppt, 6 durch -> Cooldown 4 weg, 2 durch -> 1 Signal
+```
+
+**Ein Signal aus 41 Symbolen. Das ist kein Defekt.**
+
+### 73.2 Es ist ein neuer Lauf, kein Fehler in der Prüfung
+
+**Zwei Mechanismen, die sich addieren:**
+
+**Die Bremse stoppt nur, was *identisch* ist.** Nach einer Betriebspause sind
+die Kurse gelaufen, der Faktensatz ist echt anders — die Frage ist tatsächlich
+neu. Sie greift gegen die 15-Minuten-Wiederholungen *innerhalb* einer
+Laufphase (Medianabstand **0,25 h**). Der Fall „gar kein Vorgänger" ist selten:
+**78 von 7.308 = 1 %**.
+
+**Beim Start feuert alles auf einmal.** Jeder Job trägt `next_run_time` =
+sofort. Das Hebel-Screening läuft sonst alle 15 Minuten und verteilt sich —
+beim Start geht eine volle Runde in einem Zug los. Genau das zeigt der
+Screenshot: **12 Mails zwischen 08:48 und 08:52**.
+
+> **Der Treiber ist die Betriebszeit, nicht die Logik.**
+> Fenster 67,4 h · fehlend 47,3 h · **Ausfall 70,2 %** · längste Lücke 9,99 h.
+> Bei 70 % Ausfall verbringt das System die meiste Zeit in dem Zustand, in dem
+> jede Frage berechtigt neu ist. **Durchlaufen zu lassen wäre wirksamer als
+> jede Verschärfung der Bremse.**
+
+### 73.3 Wo der Hebel läge — und eine Zahl, die falsch im Code stand
+
+| Block | Änderungen | Anteil |
+|---|---:|---:|
+| **marken** | **1.579** | **59,3 %** |
+| bestand | 314 | 11,8 % |
+| acht weitere | je 77–117 | zusammen 28,9 % |
+
+> ⚠️ **`agent/anlass.py` und `config.yaml` behaupteten beide 15 %.** Gemessen
+> sind es **59,3 %** (1.579 von 2.663). Das war eine Schätzung an der Stelle,
+> an der der Nutzer entscheidet — beide Stellen sind korrigiert.
+
+Mit `mindest_bloecke: 1` reicht **dieser eine** kursnahe Block, damit eine
+Frage als neu gilt. Er ist damit der größte einzelne Grund, warum die Bremse
+durchlässt. Beide Regler stehen in `config.yaml`, **kein Codeeingriff** — ob
+ein verschobener Marken-Block eine neue Lage ist oder Rauschen, entscheidet
+nur eine Messung mit umgestelltem Regler.
+
+### 73.4 Die Einstellung steht jetzt im Export
+
+**Der Abschnitt zeigte die *Wirkung* der Bremse, nicht ihre *Einstellung*.**
+Dass sie scharf ist, ließ sich nur daraus schließen, dass sie gestoppt hat —
+stünde sie auf aus, sähe der Abschnitt aus wie „es gab nichts zu sperren".
+**Zwei sehr verschiedene Lagen, ein Bild.**
+
+Neu unter `rollen_kette.anlass.einstellungen`: `geltend` (was gilt), `quelle`
+(aus der Datei oder Vorgabe im Code) und das Höchstalter aus dem Code.
+
+> **Die Datei allein reicht nicht**, obwohl sie im Git liegt. Sie sagt, was
+> eingespielt *wurde* — nicht, was das laufende Notebook geladen hat. Zwischen
+> Pull und Neustart liegt bei 70 % Ausfallzeit regelmäßig ein halber Tag.
+
+**Außerhalb des Tabellenzweigs**, damit die Einstellung auch dann erscheint,
+wenn es keine Beobachtungen gibt — „keine Zeilen" bei eingeschalteter Sperre
+heißt etwas anderes als bei ausgeschalteter.
+
+### 73.5 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | 940, alle bestanden |
+| freie Namen | 0 |
+| Einstellung ohne Beobachtungstabelle | **erscheint trotzdem** |
+| `config.yaml` | Zeilenenden geprüft, einheitlich CRLF, lädt unverändert |
+| Quelle je Schlüssel | fünf von fünf aus `config.yaml`, nicht aus der Vorgabe |

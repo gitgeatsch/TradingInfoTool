@@ -132,11 +132,18 @@ SPERRE_VORGABE = {
     # immer eine Wiederholung.
     #
     # `ignoriere_bloecke`  Bloecke, deren Aenderung NICHT als neue Frage zaehlt.
-    #                      Der Kandidat ist `marken`: sie tragen 15 % aller
-    #                      echten Aenderungen, sind kursnah und springen, sobald
-    #                      ein Tick ueber eine Clustergrenze laeuft. Ob das eine
-    #                      neue Lage ist oder Rauschen, ist offen - deshalb ein
-    #                      Regler und keine Setzung.
+    #                      Der Kandidat ist `marken`. ⚠️ NACHGEMESSEN AM
+    #                      17.08. an 7.308 Beobachtungen: sie tragen
+    #                      59,3 % aller Blockaenderungen (1.579 von 2.663) -
+    #                      hier stand bis dahin 15 %, und das war eine
+    #                      Schaetzung, keine Messung. Sie sind kursnah und
+    #                      springen, sobald ein Tick ueber eine
+    #                      Clustergrenze laeuft; mit `mindest_bloecke: 1`
+    #                      reicht dieser eine Block. Er ist damit der
+    #                      groesste einzelne Grund, warum die Bremse
+    #                      durchlaesst. Ob das eine neue Lage ist oder
+    #                      Rauschen, ist offen - deshalb ein Regler und
+    #                      keine Setzung.
     # `mindest_bloecke`    wie viele Bloecke sich bewegt haben muessen. 1 ist
     #                      die heutige Bedeutung von "geaendert".
     "ignoriere_bloecke": [],

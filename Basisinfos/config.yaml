@@ -2012,9 +2012,14 @@ anlass:
   abdruck: asset
   hoechstalter_stunden: 24.0
   # FEINJUSTIERUNG - beide Regler koennen nur MEHR sperren, nie weniger.
-  # ignoriere_bloecke: [marken]   <- Marken tragen 15 % der Aenderungen,
-  #   sind kursnah und springen bei kleinen Bewegungen. Offen, ob das
-  #   eine neue Lage ist oder Rauschen.
+  # ignoriere_bloecke: [marken]   <- NACHGEMESSEN 17.08.: Marken tragen
+  #   59,3 % aller Blockaenderungen (1.579 von 2.663) - nicht 15 %, wie
+  #   hier bis heute stand. Sie sind kursnah und springen, sobald ein
+  #   Tick ueber eine Clustergrenze laeuft. Mit mindest_bloecke: 1
+  #   reicht dieser eine Block, damit die Frage als neu gilt - er ist
+  #   also der groesste einzelne Grund, warum die Bremse durchlaesst.
+  #   Offen bleibt, ob das eine neue Lage ist oder Rauschen; das
+  #   entscheidet nur eine Messung mit umgestelltem Regler.
   ignoriere_bloecke: []
   mindest_bloecke: 1
 
