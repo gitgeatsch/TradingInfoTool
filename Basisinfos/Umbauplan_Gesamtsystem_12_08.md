@@ -8849,3 +8849,120 @@ benennen.
 | `pruefe_phase1.py` | bestanden |
 | Simulation | 6 Gruppen, 12 Signale, 14 Mails, **0 Fehler, 0 Lücken** |
 | Abdeckung | je Symbol gezählt, nicht je Gruppe geschätzt |
+
+---
+
+## Kapitel 70 — Krypto steht, Rohstoffe haben einen Weg, Themen-ETF nicht (17.08.2026)
+
+### 70.1 Krypto — die Basisabdeckung steht
+
+| | |
+|---|---|
+| **BC3** (Nicht-Chart-Fakt) | **43/43 = 100 %** — der Umschlag |
+| **G1 + G2** | 37/43 Symbole = **96 % der Urteile** |
+
+**Die sechs Ausfälle kosten 15 von 428 Urteilen = 4 %** — und zwei davon
+(CANTON, VSN) erzeugen ohnehin keine, weil ihnen die Kursreihe fehlt.
+
+| Symbol | Urteile | OI-Zeilen |
+|---|---:|---:|
+| AIOZ · SUPRA · XNO | je 4 | 217 · 0 · 0 |
+| FLOKI | 3 | 557 |
+| CANTON · VSN | **0** | 0 |
+
+**Nicht behebbar:** die Börsen führen für diese Werte keine Terminkontrakte.
+Das ist eine Datenlage, keine Verdrahtung.
+
+### 70.2 Rohstoffe — ein Weg, und er deckt drei von vier
+
+**Nutzerhinweis:** *„Erdgas alleine ist den Aufwand u. U. nicht wert."*
+**Richtig — und die Recherche hat etwas Besseres ergeben.**
+
+Freie Schnittstellen ohne Schlüssel für Lagerbestände, ETF-Bestände oder
+Zentralbankkäufe gibt es nicht: [Heavy Metal
+Stats](https://heavymetalstats.com/) und
+[MetalCharts](https://metalcharts.org/comex) sind Oberflächen, keine APIs;
+[Metals-API](https://metals-api.com/) und
+[Commodities-API](https://commodities-api.com/) liefern **Preise** — genau das,
+wovon wir zu viel haben.
+
+**Aber derselbe Trick wie beim Krypto-Umschlag trägt:** die **Stückzahl** eines
+physisch hinterlegten ETF ist eine Mengenangabe, kein Preis. Sie ändert sich
+nur, wenn Metall tatsächlich ein- oder ausgelagert wird — eine echte
+Nachfragegröße.
+
+| Rohstoff | ETF | `sharesOutstanding` | frei |
+|---|---|---:|---|
+| **Gold** | GLD | 260.300.000 | ✓ yfinance |
+| **Silber** | SLV | 341.449.984 | ✓ |
+| **Erdgas** | UNG | 12.084.600 | ✓ |
+| Kupfer | CPER | **nicht verfügbar** | ✗ |
+
+> **Drei von vier statt Erdgas allein** — und ohne Schlüssel, anders als EIA.
+
+**Einschränkungen, offen gesagt:** yfinance liefert nur den Momentanwert, also
+**dieselbe Wartezeit wie beim Stablecoin** (~3 Monate bis zum Perzentil). Und
+die Größe gehört nach dem Prinzip 66.3b zu **Rolle G** — sie beschreibt, wie
+die anderen aufgestellt sind. **Sie schließt G1, nicht BC3.**
+
+**Für BC3 bliebe bei Rohstoffen die Haltekostenquote.** Sie ist heute nirgends
+hinterlegt — nur die Absicherung hat eine, und die ist ausdrücklich
+*„geschätzt, nicht belegt"*. Sie müsste je Instrument recherchiert werden und
+ist **gelb**: der Kostenhinweis hat die ERÖFFNEN-Quote schon einmal von 93 %
+auf 3 % gerissen.
+
+### 70.3 Themen-ETF — die Abgrenzung ist wirklich unklar
+
+**Nutzerhinweis:** *„bei den Themen-ETF bin ich mir schon bei der Abgrenzung
+unsicher."* **Zu Recht, und das lässt sich zeigen:**
+
+| Symbol | Thema |
+|---|---|
+| VVMX | seltene Erden |
+| X136 | erneuerbare Energie |
+| EXH3 | Basiskonsum |
+| **CEBS** | **Kupfer** |
+| ISOC | Agrar, diversifiziert |
+
+> **CEBS ist ein Kupfer-ETF in der Gruppe `themen_etf`, während OD7C ein
+> Kupfer-Zertifikat unter `rohstoffe` steht.** Dieselbe Sache, zwei Gruppen.
+> Fünf Symbole, fünf verschiedene Themen — eine Gruppe ist das nur der Form
+> nach.
+
+**Was sie schon haben, und es funktioniert:** den **Sektorbezug** — relative
+Stärke zum breiten Markt, gebaut in Kapitel 35.5 genau für diesen Fall. Er
+streut kräftig (VVMX −15,3 %/−30,0 % gegen X136 +5,7 %/−1,1 %).
+
+> ⚠️ **Mein Matrixtest hat ihn übersehen** — ich übergab `referenz` nicht und
+> meldete daraufhin, die Gruppe habe keinen. Behoben. Zum wiederholten Mal
+> derselbe Typ: die Eingabe stellte den Fall nicht her, den sie prüfen wollte.
+
+**Aber er löst BC3 nicht:** die relative Stärke vergleicht **zwei Kursreihen**
+und ist damit selbst eine. Mit ihm steht die Gruppe bei **89 % Kursanteil** —
+dem schlechtesten Wert überhaupt.
+
+**Was helfen würde, gibt es nicht als eine Quelle:** jedes der fünf Themen
+bräuchte seine eigene — seltene Erden, Erneuerbare, Basiskonsum, Kupfer, Agrar.
+**Fünf Quellen für fünf Symbole und 3 % der Urteile.**
+
+> **Empfehlung, dem Nutzervorschlag folgend: zurückstellen.** Nicht weil es
+> unwichtig wäre, sondern weil der Aufwand je Urteil um Größenordnungen über
+> allem liegt, was wir sonst tun könnten — und weil die Gruppe vorher eine
+> **Abgrenzung** braucht, keine Parameter.
+
+### 70.4 Ein eigener Fund am Rande
+
+**Zwei Definitionen desselben Begriffs.** `mindestkriterien.KURSREIHENBLOECKE`
+führte `referenz` als Kursreihe, `pruefe_prompt_matrix` nicht — und sie liefen
+sofort auseinander: **67 % gegen 89 %** für dieselbe Gruppe. Jetzt importiert
+die Matrix die eine Definition.
+
+### 70.5 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **932, alle bestanden** |
+| freie Namen | 0 |
+| `pruefe_prompt_matrix.py` | Sektorbezug ergänzt, **eine** Definition für „Kursreihe" |
+| Krypto-Abdeckung | je Symbol gezählt, Ausfälle beziffert |
+| Rohstoff-Recherche | vier Anbieter geprüft, drei von vier Metallen abgedeckt |

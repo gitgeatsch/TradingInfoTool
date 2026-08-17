@@ -164,7 +164,14 @@ def _quelle_vorhanden(conn, schluessel: str, symbol: str) -> bool:
 # 17.08. lag er bei Krypto Spot bei 90 % - und genau daran haengt der
 # Grundbefund (nur das Momentum trennt Einstieg von Halten).
 KERZENANTEIL_WARNUNG = 0.85
-KERZENBLOECKE = ("verlauf", "marken", "hebelgeometrie", "volumen")
+
+# ⚠️ EINE DEFINITION, NICHT ZWEI. Hier stand eine eigene Liste ohne
+# `referenz` - `mindestkriterien.KURSREIHENBLOECKE` fuehrt ihn dagegen
+# mit, und zu Recht: die relative Staerke vergleicht ZWEI Kursreihen und
+# ist damit selbst eine. Zwei Listen desselben Begriffs sind genau die
+# Stelle, an der sie auseinanderlaufen - und sie taten es sofort
+# (Themen-ETF 67 % hier gegen 86 % dort).
+from agent.mindestkriterien import KURSREIHENBLOECKE as KERZENBLOECKE
 
 
 # --- DAS PRINZIP HINTER DER MATRIX (17.08.2026) ----------------------
@@ -226,9 +233,24 @@ def _bc_bloecke(conn, db: str, symbol: str, gruppe: str, instrument: str):
     h = [float(k.high) for k in reihe[-15:]]
     t = [float(k.low) for k in reihe[-15:]]
     atr = sum(a - b for a, b in zip(h, t)) / len(h)
+    # ⚠️ DER SEKTORBEZUG MUSS MIT (korrigiert 17.08.2026). Mein erster
+    # Entwurf uebergab ihn nicht - und die Matrix meldete daraufhin, die
+    # Themen-ETF haetten keinen Referenzblock. Sie haben einen, er
+    # funktioniert, und er streut kraeftig (VVMX -15,3 gegen X136 +5,7).
+    # Zum wiederholten Mal derselbe Typ: die Eingabe stellte den Fall
+    # nicht her, den sie pruefen wollte.
+    ref = None
+    if gruppe in ("etf", "themen_etf"):
+        try:
+            from agent.hedge.pipeline import ist_hedge_instrument
+
+            if not ist_hedge_instrument(symbol):
+                ref = RE.relative_staerke(reihe, i, db)
+        except Exception:                                # noqa: BLE001
+            ref = None
     return LB.geteilt(
         symbol=symbol, reihe=reihe, index=i, kurs_eur=float(reihe[-1].close),
-        atr=atr, instrument=instrument,
+        atr=atr, instrument=instrument, referenz=ref,
         fundamentaldaten=RE.fundamentaldaten(symbol, db, gruppe),
         umschlag=RE.umschlag(symbol, db, gruppe))
 
