@@ -1013,6 +1013,10 @@ def externe_reihen_job(conn_factory) -> None:
                 logger.info("COT %s nicht auffrischbar: %s", stoff, exc)
 
         geschrieben += _aktien_reihen(conn)
+        # SICH SELBST BUCHEN. Ohne diese Zeile fehlte der Job im
+        # `joblaeufe`-Abschnitt des Exports - gebaut, aber unsichtbar.
+        # Aufgefallen im ersten Export, der den Abschnitt trug.
+        DB.merke_joblauf(conn, "externe_reihen")
         logger.info("Externe Reihen aufgefrischt: %d Punkte geschrieben.",
                     geschrieben)
     except Exception as exc:

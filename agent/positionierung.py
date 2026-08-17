@@ -249,14 +249,25 @@ _fluss_cache: dict[str, list] = {}
 HOECHSTALTER_REIHE_STUNDEN = 30.0
 
 
-def _gepflegte_reihe(conn, quelle: str, schluessel: str, holen) -> list:
-    """Die Reihe aus der Datenbank, sonst aus dem Speicher, sonst aus dem Netz."""
+def _gepflegte_reihe(conn, quelle: str, schluessel: str, holen,
+                     grenze: int = 400) -> list:
+    """Die Reihe aus der Datenbank, sonst aus dem Speicher, sonst aus dem Netz.
+
+    ⚠️ `grenze` MUSS ZUM FENSTER DES AUFRUFERS PASSEN (17.08.2026).
+    `lies_externe_reihe` liest ohne Angabe 400 Punkte. Der Boersenfluss
+    rechnet aber ueber 730 Tage - und lieferte deshalb still ein
+    400-Tage-Perzentil. Der Satz sagte es ehrlich ("die letzten 400 Tage"),
+    aber es war nicht das entworfene Fenster.
+
+    GEFUNDEN AM GERENDERTEN SATZ, nicht im Code: solange die Reihe aus dem
+    Netz kam, stimmte es; erst der Umzug in die Datenbank hat das Fenster
+    beschnitten."""
     from database import db as DB
 
     if conn is not None:
         alter = DB.alter_externe_reihe(conn, quelle, schluessel)
         if alter is not None and alter <= HOECHSTALTER_REIHE_STUNDEN:
-            aus_db = DB.lies_externe_reihe(conn, quelle, schluessel)
+            aus_db = DB.lies_externe_reihe(conn, quelle, schluessel, grenze)
             if aus_db:
                 return aus_db
 
@@ -281,7 +292,8 @@ def _boersenfluss(conn=None) -> dict | None:
 
     reihe = _gepflegte_reihe(
         conn, "coinmetrics", "btc_netto_boersenfluss",
-        lambda: get_btc_exchange_flow_history(tage=FLUSS_FENSTER_TAGE + 70))
+        lambda: get_btc_exchange_flow_history(tage=FLUSS_FENSTER_TAGE + 70),
+        grenze=FLUSS_FENSTER_TAGE + 70)
     if len(reihe) < FLUSS_MINDESTREIHE:
         return None
     fenster = [w for _, w in reihe[-FLUSS_FENSTER_TAGE:]]
@@ -326,7 +338,8 @@ def _cot(conn, symbol: str) -> dict | None:
     if not stoff:
         return None
     reihe = _gepflegte_reihe(conn, "cftc_cot", stoff,
-                             lambda: get_cot_long_anteil_history(stoff))
+                             lambda: get_cot_long_anteil_history(stoff),
+                             grenze=COT_FENSTER_WOCHEN + 40)
     if len(reihe) < COT_MINDESTREIHE:
         return None
     fenster = [w for _, w in reihe[-COT_FENSTER_WOCHEN:]]
@@ -369,7 +382,8 @@ def _short_interest(conn, symbol: str) -> dict | None:
 
     sym = str(symbol or "").upper()
     reihe = _gepflegte_reihe(conn, "finra", f"{sym}_days_to_cover",
-                             lambda: get_days_to_cover_history(sym))
+                             lambda: get_days_to_cover_history(sym),
+                             grenze=SHORT_FENSTER_PERIODEN + 40)
     if len(reihe) < SHORT_MINDESTREIHE:
         return None
     fenster = [w for _, w in reihe[-SHORT_FENSTER_PERIODEN:]]
