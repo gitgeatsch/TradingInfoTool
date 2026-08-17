@@ -8677,3 +8677,86 @@ braucht Läufe unter dem neuen Stand (`2026-08-17b`).
 | `pruefe_phase1.py` | bestanden |
 | Simulation | 6 Gruppen, 12 Signale, 14 Mails, **0 Fehler, 0 Lücken** |
 | Form über alle Rollen | **kein Satz rechnet dem Modell etwas vor** |
+
+---
+
+## Kapitel 68 — Zwei Parameter, die sich selbst einschalten (17.08.2026)
+
+**Nutzerfrage:** *„damit diese zukünftigen Parameter auch nicht vergessen
+werden — sind diese alle dokumentiert und im Plan, bzw. hast du diese bereits
+fertig umgesetzt und wir warten nur?"*
+
+> ⚠️ **Beim Stablecoin-Angebot lautete die Antwort: NEIN.** Ich hatte nur das
+> **Sammeln** gebaut. In drei Monaten hätte sich jemand erinnern müssen, dass
+> da eine Reihe wächst, für die noch kein Satz existiert — **und genau so
+> gehen Dinge verloren.**
+
+### 68.1 Was jetzt gilt
+
+**Beide Wege stehen vollständig.** Der Satz entsteht, sobald die Reihe lang
+genug ist; bis dahin entsteht keiner. **Es gibt nichts zu merken und nichts
+nachzubauen — die Zeit allein schaltet sie ein.**
+
+| Parameter | Rolle | ab | Takt | brauchbar in |
+|---|---|---:|---|---|
+| **Stablecoin-Angebot** | G, Krypto | 90 Punkten | täglich | ~3 Monaten |
+| **DVOL** (implizite Schwankung) | G, **nur BTC/ETH** | 60 Punkten | täglich | ~2 Monaten |
+| **Skew** (Schieflage der Absicherungskosten) | G, **nur BTC/ETH** | 60 Punkten | täglich | ~2 Monaten |
+
+**Nachgewiesen, nicht behauptet** — mit nachgestellter Historie erscheinen alle
+drei Sätze, ohne sie keiner:
+
+```
+Das insgesamt im Kryptomarkt liegende Stablecoin-Kapital steht im
+  99. Perzentil der letzten 120 Messungen - aussergewoehnlich viel.
+Am Optionsmarkt preisen die Haendler die Schwankung der naechsten Wochen
+  im 78. Perzentil der letzten 90 Messungen ein - im gewohnten Bereich.
+Dabei ist Absicherung nach unten die teurere Seite; wie deutlich, steht
+  im 84. Perzentil der letzten 90 Messungen - im gewohnten Bereich.
+```
+
+**Gegenprobe SOL:** kein Optionsmarkt (Deribit führt ihn nicht), aber das
+marktweite Stablecoin-Kapital sehr wohl.
+
+### 68.2 Warum zu Rolle G
+
+**Nach dem Prinzip aus 66.3b:** beide beschreiben, **wie die anderen
+aufgestellt sind** — das verfügbare, noch nicht investierte Kapital und das,
+was der Optionsmarkt für die nächsten Wochen einpreist. Keine davon ist eine
+Eigenschaft *meines* Trades.
+
+**DVOL ist dabei die einzige vorausschauende Größe im ganzen System.** Alles
+andere — Kurs, Umsatz, Positionierung, Flüsse — beschreibt, was **war**.
+
+### 68.3 Und die Matrix weiß davon
+
+`pruefe_prompt_matrix.py` führt beide, aber **nur unter `darf_nicht`** für die
+fremden Gruppen — nicht unter `muss`. Sonst meldete sie drei Monate lang eine
+Lücke, die keine ist.
+
+> **Ein Prüfer, der eine korrekte Auslassung als Fehler meldet, wird nach dem
+> dritten Mal ignoriert.** Das ist inzwischen der dritte Ort, an dem dieselbe
+> Überlegung steht.
+
+### 68.4 Ein freier Name, gefangen bevor er lief
+
+> ⚠️ Mein erster Entwurf benutzte `heute` im Deribit-Block des Jobs — **dort
+> ist es nicht definiert**, es gehört zu `_aktien_reihen`. Ein `NameError`, den
+> der breite Fang als *„Optionsmarkt nicht auffrischbar"* verschluckt hätte:
+> die Reihe wäre nie gewachsen, und in drei Monaten hätte jemand gerätselt,
+> warum kein Satz kommt.
+>
+> **`finde_freie_namen.py` hat ihn gefangen** — zum vierten Mal in zwei Tagen,
+> und dieses Mal vor dem ersten Lauf.
+
+### 68.5 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **932, alle bestanden** |
+| freie Namen | **0** (einer gefunden und behoben) |
+| `pruefe_zahlen_in_prompts.py` | Selbsttest 9/9, **356 Sätze**, kein Befund |
+| `pruefe_prompt_matrix.py` | 2 bekannte Abweichungen (Testbestand ohne Jobdaten) |
+| Job live | 5 neue Reihen geschrieben, **0 Fehler** |
+| Selbsteinschaltung | mit Historie 3 Sätze, ohne Historie 0 |
+| Simulation | 6 Gruppen, 12 Signale, **0 Fehler, 0 Lücken** |

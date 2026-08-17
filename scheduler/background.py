@@ -1007,6 +1007,13 @@ def externe_reihen_job(conn_factory) -> None:
     Gemeldet wird nur, was gar nicht erreichbar war."""
     conn = conn_factory()
     geschrieben = 0
+    # ⚠️ HIER, NICHT IN `_aktien_reihen`. Mein erster Entwurf benutzte
+    # `heute` im Deribit-Block, wo es nicht definiert ist - ein
+    # NameError, den der breite Fang als "nicht auffrischbar"
+    # verschluckt haette. `finde_freie_namen.py` hat ihn gefangen,
+    # bevor er lief; genau dafuer gibt es das Werkzeug (viermal in
+    # zwei Tagen, zuletzt `assetklasse` mit zwei Vormittagen).
+    heute = datetime.now(timezone.utc).date().isoformat()
     try:
         from agent.rohstoff.pipeline import SYMBOL_ZU_COT_ROHSTOFF
         from api.cftc_cot import get_cot_long_anteil_history
@@ -1047,6 +1054,36 @@ def externe_reihen_job(conn_factory) -> None:
                 [(s.date, float(s.total_usd))])
         except Exception as exc:                             # noqa: BLE001
             logger.info("Stablecoin-Angebot nicht auffrischbar: %s", exc)
+
+        # DER OPTIONSMARKT (17.08.2026) - wie das Stablecoin-Angebot:
+        # heute ohne Satz, ab dem ersten Perzentil mit.
+        #
+        # WAS IHN BESONDERS MACHT: DVOL ist die IMPLIZITE Volatilitaet -
+        # was der Markt fuer die naechsten Wochen ERWARTET, nicht was war.
+        # Als einzige unserer Quellen ist er vorausschauend und
+        # marktgepreist. Der Skew sagt dazu, ob Absicherung nach unten
+        # teurer ist als Spekulation nach oben.
+        #
+        # ⚠️ NUR BTC UND ETH. Live geprueft: SOL liefert nichts, und das
+        # gilt fuer die uebrigen 41 Kryptowerte genauso - Deribit fuehrt
+        # nur fuer diese beiden einen liquiden Optionsmarkt.
+        try:
+            from api.deribit import (get_options_skew,
+                                     get_volatility_index)
+
+            for waehrung in ("BTC", "ETH"):
+                dvol = get_volatility_index(waehrung)
+                if dvol is not None:
+                    geschrieben += DB.schreibe_externe_reihe(
+                        conn, "deribit", f"{waehrung}_dvol",
+                        [(heute, float(dvol))])
+                skew = get_options_skew(waehrung) or {}
+                if skew.get("skew_prozentpunkte") is not None:
+                    geschrieben += DB.schreibe_externe_reihe(
+                        conn, "deribit", f"{waehrung}_skew",
+                        [(heute, float(skew["skew_prozentpunkte"]))])
+        except Exception as exc:                             # noqa: BLE001
+            logger.info("Optionsmarkt nicht auffrischbar: %s", exc)
 
         # `set()` - vier Symbole, aber je Rohstoff nur ein Bericht. Ohne das
         # waeren es vier identische Abrufe, sobald zwei ETCs denselben

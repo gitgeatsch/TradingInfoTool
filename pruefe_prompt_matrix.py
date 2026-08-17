@@ -86,6 +86,13 @@ G_MERKMALE = {
     "cot":         "US-Aufsicht meldet woechentlich",
     "short":       "Eindeckungsdauer",
     "insider":     "Insider meldeten",
+    # ⚠️ DIESE ZWEI SIND NOCH NICHT DA - und das ist Absicht. Sie
+    # entstehen, sobald ihre Reihe lang genug ist (Stablecoin 90 Punkte,
+    # Optionsmarkt 60). Bis dahin stehen sie in KEINEM "muss", nur im
+    # "darf_nicht" der fremden Gruppen - sonst meldete die Matrix drei
+    # Monate lang eine Luecke, die keine ist.
+    "stablecoin":  "Stablecoin-Kapital",
+    "optionsmarkt": "Am Optionsmarkt preisen",
 }
 G_MATRIX = {
     ("krypto", "spot"): {
@@ -102,11 +109,12 @@ G_MATRIX = {
     ("rohstoffe", "spot"): {
         "muss": {"cot"},
         "darf_nicht": {"terminmarkt", "funding", "boersenfluss", "short",
-                       "insider"},
+                       "insider", "stablecoin", "optionsmarkt"},
     },
     ("aktien", "spot"): {
         "muss": {"short"},          # Insider braucht den Job - nur "darf"
-        "darf_nicht": {"terminmarkt", "funding", "boersenfluss", "cot"},
+        "darf_nicht": {"terminmarkt", "funding", "boersenfluss", "cot",
+                       "stablecoin", "optionsmarkt"},
     },
     ("themen_etf", "spot"): {
         "muss": set(),

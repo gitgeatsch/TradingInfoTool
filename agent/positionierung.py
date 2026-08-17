@@ -416,6 +416,74 @@ def _insider(conn, symbol: str) -> dict | None:
             "verkaeufe": int(verkauf[-1][1]) if verkauf else 0}
 
 
+# --- ZWEI QUELLEN, DIE SICH SELBST EINSCHALTEN (17.08.2026) ----------------
+#
+# NUTZERFRAGE: *"sind diese alle dokumentiert und im Plan, bzw. hast du diese
+# bereits fertig umgesetzt und wir warten nur?"*
+#
+# ⚠️ BEIM STABLECOIN-ANGEBOT WAR DIE ANTWORT: NEIN. Ich hatte nur das SAMMELN
+# gebaut. In drei Monaten haette sich jemand erinnern muessen, dass da eine
+# Reihe waechst, fuer die noch kein Satz existiert - und genau so gehen Dinge
+# verloren.
+#
+# BEIDE WEGE STEHEN JETZT VOLLSTAENDIG. Der Satz entsteht, sobald die Reihe
+# lang genug ist; bis dahin entsteht keiner. Es gibt nichts zu merken und
+# nichts nachzubauen - die Zeit allein schaltet sie ein.
+#
+#     Stablecoin-Angebot   ab   90 Punkten   (taeglich -> rund drei Monate)
+#     DVOL / Skew          ab   60 Punkten   (taeglich -> rund zwei Monate)
+#
+# WARUM SIE ZU ROLLE G GEHOEREN (Prinzip aus Kapitel 66.3b): beide beschreiben,
+# wie DIE ANDEREN aufgestellt sind - das verfuegbare, noch nicht investierte
+# Kapital und das, was der Optionsmarkt fuer die naechsten Wochen einpreist.
+# Keine davon ist eine Eigenschaft MEINES Trades.
+STABLECOIN_MINDESTREIHE = 90
+STABLECOIN_FENSTER = 365
+OPTIONEN_MINDESTREIHE = 60
+OPTIONEN_FENSTER = 365
+DERIBIT_WAEHRUNGEN = ("BTC", "ETH")
+
+
+def _aus_reihe(conn, quelle: str, schluessel: str, mindest: int,
+               fenster: int) -> dict | None:
+    """Juengster Wert und sein Perzentil - oder None, solange es zu wenige gibt."""
+    from database import db as DB
+
+    if conn is None:
+        return None
+    reihe = DB.lies_externe_reihe(conn, quelle, schluessel, fenster + 40)
+    if len(reihe) < mindest:
+        return None
+    werte = [w for _, w in reihe[-fenster:]]
+    datum, jetzt = reihe[-1]
+    return {"datum": datum, "wert": jetzt, "n": len(werte),
+            "perzentil": _perzentil(werte, jetzt)}
+
+
+def _stablecoin(conn) -> dict | None:
+    """Das \"Trockenpulver\" - Kapital, das im Kryptomarkt liegt, aber nicht
+    investiert ist."""
+    return _aus_reihe(conn, "defillama", "stablecoin_angebot_usd",
+                      STABLECOIN_MINDESTREIHE, STABLECOIN_FENSTER)
+
+
+def _optionsmarkt(conn, symbol: str) -> dict | None:
+    """Erwartete Schwankung und Schieflage der Absicherungskosten.
+
+    NUR BTC UND ETH - Deribit fuehrt nur fuer diese beiden einen liquiden
+    Optionsmarkt (live geprueft: SOL liefert nichts)."""
+    sym = str(symbol or "").upper()
+    if sym not in DERIBIT_WAEHRUNGEN:
+        return None
+    dvol = _aus_reihe(conn, "deribit", f"{sym}_dvol",
+                      OPTIONEN_MINDESTREIHE, OPTIONEN_FENSTER)
+    skew = _aus_reihe(conn, "deribit", f"{sym}_skew",
+                      OPTIONEN_MINDESTREIHE, OPTIONEN_FENSTER)
+    if not dvol and not skew:
+        return None
+    return {"dvol": dvol, "skew": skew}
+
+
 def lage(conn, symbol: str, assetklasse: str | None = None,
          instrument: str | None = None) -> dict:
     """Die Positionierungslage - oder ein leeres dict, wenn nichts vorliegt.
@@ -543,6 +611,12 @@ def lage(conn, symbol: str, assetklasse: str | None = None,
         fluss = _boersenfluss(conn)
         if fluss:
             aus["boersenfluss"] = fluss
+        st = _stablecoin(conn)
+        if st:
+            aus["stablecoin"] = st
+        op = _optionsmarkt(conn, sym)
+        if op:
+            aus["optionsmarkt"] = op
         else:
             # ⚠️ EIGENER SCHLUESSEL, NICHT `fehlt` - und das ist kein Stil,
             # sondern ein Fehler, den diese Zeile verhindert.
@@ -811,6 +885,44 @@ def saetze(e: dict) -> list[str]:
         z.append(f"Am {f['datum']} {richtung}.")
         z.append(f"Gemessen an den letzten {f['n']} Tagen steht diese Bewegung "
                  f"im {pf}. Perzentil - {wie}.")
+
+    st = e.get("stablecoin")
+    if st:
+        p_ = st["perzentil"]
+        wie = ("aussergewoehnlich viel" if p_ >= EXTREM_OBEN else
+               "aussergewoehnlich wenig" if p_ <= EXTREM_UNTEN else
+               "im gewohnten Bereich")
+        # KEINE DEUTUNG. Dass viel Stablecoin-Kapital "Kaufkraft" sei, ist
+        # eine gaengige Lesart und bei uns nie gemessen (P2 Rang 3).
+        z.append(
+            "Das insgesamt im Kryptomarkt liegende Stablecoin-Kapital "
+            f"steht im {p_}. Perzentil der letzten {st['n']} Messungen "
+            f"- {wie}.")
+
+    op = e.get("optionsmarkt") or {}
+    dvol = op.get("dvol")
+    if dvol:
+        p_ = dvol["perzentil"]
+        wie = ("aussergewoehnlich hoch" if p_ >= EXTREM_OBEN else
+               "aussergewoehnlich niedrig" if p_ <= EXTREM_UNTEN else
+               "im gewohnten Bereich")
+        z.append(
+            "Am Optionsmarkt preisen die Haendler die Schwankung der "
+            f"naechsten Wochen im {p_}. Perzentil der letzten "
+            f"{dvol['n']} Messungen ein - {wie}.")
+    skew = op.get("skew")
+    if skew:
+        p_ = skew["perzentil"]
+        # DIE RICHTUNG QUALITATIV (R-T10): ein negativer Skew heisst,
+        # Absicherung nach unten kostet mehr als Spekulation nach oben.
+        seite = ("Absicherung nach unten" if skew["wert"] < 0
+                 else "Spekulation nach oben")
+        wie = ("aussergewoehnlich ausgepraegt" if p_ >= EXTREM_OBEN else
+               "aussergewoehnlich schwach" if p_ <= EXTREM_UNTEN else
+               "im gewohnten Bereich")
+        z.append(
+            f"Dabei ist {seite} die teurere Seite; wie deutlich, steht im "
+            f"{p_}. Perzentil der letzten {skew['n']} Messungen - {wie}.")
 
     for f in (e.get("fehlt_rahmen") or []):
         # ANDERER WORTLAUT ALS BEI `fehlt`: es fehlt nichts ZU DIESEM WERT,
