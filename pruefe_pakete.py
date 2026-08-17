@@ -8097,10 +8097,51 @@ def paket_marken() -> None:
            "der Chart konnte es immer, bekam aber None")
 
 
+def paket_provider() -> None:
+    """Kein lebender Pfad ruft einen toten Provider (17.08.2026).
+
+    Nutzerfrage an der Budgetanzeige: *"wie kann es sein, dass Mistral
+    einen Aufruf hatte?"* Antwort: `marktscan_backward_tracking_job`
+    waehlte `mistral_client or gemini_client` - Mistral zuerst. Sein
+    Free-Plan ist seit dem 07.08. kostenpflichtig, jeder Aufruf endet mit
+    402. Die Kategorie-Synthese wurde am 14.08. genau so bereinigt; diese
+    Stelle blieb stehen."""
+    P = "Provider"
+    _bg = _quelltext("scheduler/background.py")
+
+    pruefe(P, "kein lebender Pfad zieht Mistral dem Rueckfall vor",
+           "mistral_client or gemini_client" not in _bg,
+           "der Aufruf kostete nichts ausser einer Fehlerzeile - und einer "
+           "'1' in der Budgetanzeige, die eine Nutzung behauptet, die es "
+           "nicht gab")
+    pruefe(P, "der Parameter bleibt in der Signatur",
+           "def marktscan_backward_tracking_job(" in _bg
+           and "mistral_client=None, gemini_client=None," in _bg,
+           "der Scheduler uebergibt ihn - ihn dort zu entfernen waere eine "
+           "Aenderung an mehreren Aufrufstellen fuer nichts")
+    pruefe(P, "und der Job waehlt jetzt Gemini",
+           "llm_client = gemini_client" in _bg)
+
+    # Der Kanarienvogel haengt am selben toten Provider - er laeuft nicht,
+    # aber wer ihn aktiviert, muss es wissen.
+    import inspect as _i
+
+    from scheduler import background as _BG
+
+    _kv = _i.getdoc(_BG.kanarienvogel_job) or ""
+    pruefe(P, "der Kanarienvogel warnt vor seinem eigenen Provider",
+           "402" in _kv and "PROVIDER TAUSCHEN" in _kv,
+           "zehn Fehlschlaege taeglich und eine Drift-Messung, die nichts "
+           "misst - und anders als sonst gibt es hier KEINEN Rueckfall")
+    pruefe(P, "er ist weiterhin nicht registriert",
+           'id="kanarienvogel"' not in _bg,
+           "die Warnung ersetzt die Entscheidung nicht")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken,
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider,
           "Frische": paket_frische}
 
 

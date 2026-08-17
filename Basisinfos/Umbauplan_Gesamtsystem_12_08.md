@@ -10359,3 +10359,80 @@ bekam nie etwas.
 | Chart | beschriftet **und** verträgt weiterhin eine reine Preisliste |
 | freie Namen · Zahlenprüfer · Belegprüfer · Phase 1 | 0 · 9/9 · 9/9 · bestanden |
 | Simulation | 4 Gruppen, 8 Signale, **0 Fehler, 0 Lücken** |
+
+---
+
+## Kapitel 83 — Der eine Mistral-Aufruf (17.08.2026)
+
+**Nutzerfrage an der Budgetanzeige:** *„spannend — wie kann es sein, dass
+Mistral einen Aufruf hatte?"*
+
+```
+LLM Budget (2026-08-17)
+   Gemini:   164/500 (33%)
+   Z.ai:     80 calls
+   Mistral:  1 call
+```
+
+### 83.1 Die Quelle
+
+`marktscan_backward_tracking_job` (Tagesjob, 07:00):
+
+```python
+llm_client = mistral_client or gemini_client      # Mistral ZUERST
+```
+
+Der Job misst den Erfolg von Marktscan-Kandidaten und holt bei einem Erfolg
+eine kurze Begründung. **Ein Erfolg heute → ein Aufruf.**
+
+### 83.2 Warum es ein Rest ist
+
+**Dieselbe Zeile wurde am 14.08. an der Kategorie-Synthese bereinigt**, mit
+einer Begründung, die auch hier gilt:
+
+> Mistrals Free-Plan wurde am 07.08. kostenpflichtig; seither beantwortet er
+> jeden Aufruf mit **„402 Payment Required"**. Der Rückfall auf Gemini
+> funktionierte jedes Mal — der Mistral-Ruf war reine Verzögerung plus eine
+> Fehlerzeile je Durchlauf.
+>
+> *„Ein Fehler, der bei JEDEM Lauf auftritt und nichts bedeutet, ist schlimmer
+> als keiner: er trainiert das Auge, Fehlerzeilen zu überlesen."*
+
+**Zwei Stellen, eine Behandlung — die zweite blieb stehen.**
+
+| | |
+|---|---|
+| Kosten | **keine** — der Aufruf schlägt fehl, es fließt kein Geld |
+| Wirkung | Rückfall auf Gemini, der Job läuft durch |
+| Schaden | eine bedeutungslose Fehlerzeile — **und eine „1" in der Anzeige, die eine Nutzung behauptet, die es nicht gab** |
+
+Der Parameter bleibt in der Signatur: der Scheduler übergibt ihn, und ihn dort
+zu entfernen wäre eine Änderung an mehreren Aufrufstellen für nichts.
+
+### 83.3 Ein zweiter Fund am selben Provider
+
+**Der Kanarienvogel** (`kanarienvogel_job`, tägliche LLM-Drift-Messung, 10
+Aufrufe) hängt ebenfalls an Mistral. Er ist **bewusst nicht registriert** —
+aber sein Docstring beschreibt nur, wie man ihn aktiviert, nicht dass er heute
+ins Leere liefe.
+
+> ⚠️ **Und hier gibt es KEINEN Rückfall.** Der Kanarienvogel misst ein
+> bestimmtes Modell; ein Ersatzprovider wäre eine andere Messung. Wer ihn
+> einschaltet, bekommt zehn Fehlschläge täglich und eine Drift-Messung, die
+> nichts misst.
+
+Die Warnung steht jetzt im Docstring. **Sie ersetzt die Entscheidung nicht** —
+registriert ist er weiterhin nicht.
+
+### 83.4 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **1.035**, alle bestanden — **5 neu unter `--paket Provider`** |
+| kein lebender Pfad zieht Mistral vor | geprüft über den ganzen Scheduler |
+| Parameter bleibt | Signatur unverändert, Scheduler-Aufruf unberührt |
+| Kanarienvogel | Warnung im Docstring · **weiterhin nicht registriert** |
+| Scheduler | baut 19 Jobs, `marktscan_backward_tracking` dabei |
+| freie Namen | 0 |
+
+**Prompt und Kette sind nicht berührt** — der ruhige Messtag bleibt intakt.

@@ -652,6 +652,15 @@ def kanarienvogel_job(mistral_client) -> None:
     Vergleich ueberhaupt moeglich ist. Aktivieren heisst: einen add_job()-Aufruf
     in start_scheduler() ergaenzen (taeglich, vor dem Backward-Tracking).
 
+    ⚠️ VOR EINER AKTIVIERUNG DEN PROVIDER TAUSCHEN (17.08.2026). Dieser
+    Job laeuft ueber MISTRAL, und dessen Free-Plan ist seit dem 07.08.
+    kostenpflichtig - jeder Aufruf endet mit "402 Payment Required". Wer
+    ihn nach dem obigen Absatz einfach registriert, bekommt zehn
+    Fehlschlaege taeglich und eine Drift-Messung, die nichts misst.
+    Anders als bei den uebrigen Stellen gibt es hier KEINEN Rueckfall:
+    der Kanarienvogel misst ein bestimmtes Modell, ein Ersatzprovider
+    waere eine andere Messung.
+
     REVISIT-BEDINGUNG: sobald ein zweiter unerklaerter Verhaltenssprung
     auftritt - dann ist die Wiederholungswahrscheinlichkeit belegt statt
     vermutet."""
@@ -841,7 +850,26 @@ def marktscan_backward_tracking_job(
         if not config_dict.get("marktscan", {}).get("aktiv", True):
             logger.info("Marktscan-Erfolgsmessung: Marktscan deaktiviert - übersprungen")
             return
-        llm_client = mistral_client or gemini_client
+        # ⚠️ MISTRAL IST RAUS - DIESELBE BEHANDLUNG WIE BEI DER
+        # KATEGORIE-SYNTHESE AM 14.08., hier nachgezogen am 17.08.2026
+        # (Nutzerfrage an der Budgetanzeige: *"wie kann es sein, dass
+        # Mistral einen Aufruf hatte?"*).
+        #
+        # Hier stand `mistral_client or gemini_client` - Mistral ZUERST.
+        # Sein Free-Plan wurde am 07.08. kostenpflichtig; seither
+        # beantwortet er jeden Aufruf mit "402 Payment Required", der
+        # Rueckfall auf Gemini traegt. Der Ruf kostete also nichts ausser
+        # Verzoegerung, einer Fehlerzeile - und einer "1" in der
+        # Budgetanzeige, die eine Nutzung behauptet, die es nicht gab.
+        #
+        # Am 14.08. wurde genau das an der Kategorie-Synthese bereinigt.
+        # Diese Stelle blieb stehen: dieselbe Zeile, zwei Behandlungen.
+        #
+        # DER PARAMETER BLEIBT in der Signatur - der Scheduler uebergibt
+        # ihn, und ihn dort zu entfernen waere eine Aenderung an mehreren
+        # Aufrufstellen fuer nichts. Wer Mistral wieder bezahlt, traegt
+        # ihn hier wieder ein.
+        llm_client = gemini_client
         result = run_marktscan_backward_tracking(
             conn_factory, coingecko_client, kraken_client, llm_client, watchlist, fred_api_key, config_dict,
         )
