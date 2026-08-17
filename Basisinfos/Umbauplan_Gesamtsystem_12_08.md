@@ -8433,6 +8433,48 @@ BTC-weit und damit über alle Kryptosymbole eines Laufs identisch. Sie decken
 > Urteile, und für sie ist keine kostenlose nicht-kursabgeleitete Quelle
 > bekannt.
 
+### 66.3b Das Prinzip — die Matrix ist ableitbar, nicht auswendig zu lernen
+
+**Nutzerfrage 17.08.:** *„prüfe noch einmal, ob die Spot- und Hebelzuordnung
+korrekt ist — Funding wird grundsätzlich nur bei Hebel eingesetzt, sonst bauen
+wir hier einen Fehler ein."*
+
+**Die Frage führt weiter, als sie gestellt war.** Gilt sie für Funding, gilt
+sie auch für offene Kontrakte, Long-Anteil und Börsendivergenz — es sind
+**alles** Terminmarktgrößen, und ein Spot-Käufer hält keinen Terminkontrakt.
+
+**Extern geprüft:** die Praxisliteratur ist eindeutig — Funding-Raten werden
+**auch von Spot-Händlern** als Stimmungsmaß gelesen, und Extremwerte gehen
+Umkehrungen voraus. Die Größe ist für Spot zulässig, **aber nicht als Kosten**.
+
+> **Rolle BC bekommt, was MEINEN Trade ausmacht** — seinen Gegenstand, seine
+> Kosten, seine Ausführbarkeit.
+> **Rolle G bekommt, wie DIE ANDEREN aufgestellt sind.**
+
+**Angewandt löst das jeden Einzelfall:**
+
+| Parameter | Rolle | weil |
+|---|---|---|
+| Funding **Hebel** | **BC** | eine Zahlung, die mein Trade leistet — *„dann zahlen die Long-Positionen an die Short-Positionen"* |
+| Funding **Spot** | **G** | ich zahle sie nicht; sie sagt nur, wie die anderen stehen |
+| Hebelgeometrie | BC | Eigenschaft **meiner** Position |
+| Umschlag | BC | **Ausführbarkeit** meines Trades |
+| Gewinn-/Umsatzwachstum | BC | **was ich kaufe** |
+| OI · Long-Anteil · Divergenz · Fluss · COT · Short · Insider | **G** | wie die anderen stehen — unabhängig davon, ob ich selbst am Terminmarkt bin |
+
+**Und die Formulierung folgt dem Prinzip, nicht nur die Platzierung.** Der
+BC-Satz beim Hebel nennt die **Zahlung**, der G-Satz beim Spot den
+**Extremwert** — dieselbe Zahl, zwei Aussagen.
+
+> **Nachgeprüft und abgesichert:** kein Satz der Rolle G trägt einen
+> Selbstbezug („du", „dein", „zahlst") oder ein Kostenwort — **0 Treffer über
+> alle Gruppen und Instrumente**. `pruefe_prompt_matrix.py` hält das fest.
+
+**Quellen zur Spot-Nutzung der Funding-Rate:**
+[Zipmex](https://zipmex.com/blog/how-to-analyze-funding-rates-in-crypto/) ·
+[CryptoQuant](https://userguide.cryptoquant.com/cryptoquant-metrics/market/funding-rates) ·
+[Altrady](https://www.altrady.com/blog/crypto-trading-strategies/crypto-funding-rates-explained)
+
 ### 66.4 Die Regel, nach der zugeordnet wird
 
 | Frage | Antwort | Regel |

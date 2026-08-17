@@ -159,6 +159,49 @@ KERZENANTEIL_WARNUNG = 0.85
 KERZENBLOECKE = ("verlauf", "marken", "hebelgeometrie", "volumen")
 
 
+# --- DAS PRINZIP HINTER DER MATRIX (17.08.2026) ----------------------
+#
+# NUTZERFRAGE: *"pruefe noch einmal, ob die Spot- und Hebelzuordnung
+# korrekt ist - Funding wird grundsaetzlich nur bei Hebel eingesetzt,
+# sonst bauen wir hier einen Fehler ein."*
+#
+# Die Frage fuehrt weiter, als sie gestellt war: gilt sie fuer Funding,
+# gilt sie auch fuer offene Kontrakte, Long-Anteil und Boersendivergenz -
+# es sind ALLES Terminmarktgroessen, und ein Spot-Kaeufer haelt keinen
+# Terminkontrakt.
+#
+# EXTERN GEPRUEFT: die Praxisliteratur ist eindeutig - Funding-Raten
+# werden AUCH von Spot-Haendlern als Stimmungsmass gelesen, und
+# Extremwerte gehen Umkehrungen voraus. Die Groesse ist fuer Spot
+# zulaessig, aber NICHT als Kosten.
+#
+# DARAUS DAS PRINZIP, das die ganze Matrix ableitbar macht:
+#
+#     Rolle BC  bekommt, was MEINEN Trade ausmacht:
+#               seinen Gegenstand, seine Kosten, seine Ausfuehrbarkeit
+#     Rolle G   bekommt, wie DIE ANDEREN aufgestellt sind
+#
+# Angewandt loest es jeden Einzelfall ohne Auswendiglernen:
+#
+#     Funding beim HEBEL   -> BC   es ist eine Zahlung, die mein Trade
+#                                  leistet ("dann zahlen die
+#                                  Long-Positionen an die Short-")
+#     Funding beim SPOT    -> G    ich zahle sie nicht; sie sagt nur,
+#                                  wie die anderen stehen
+#     Hebelgeometrie       -> BC   Eigenschaft MEINER Position
+#     Umschlag             -> BC   Ausfuehrbarkeit MEINES Trades
+#     Fundamentaldaten     -> BC   was ich kaufe
+#     OI, Long-Anteil,     -> G    wie die anderen stehen - unabhaengig
+#     Divergenz, Fluss,         davon, ob ich selbst am Terminmarkt bin
+#     COT, Short, Insider
+#
+# NACHGEPRUEFT UND HIER ABGESICHERT: kein Satz der Rolle G traegt einen
+# Selbstbezug ("du", "dein", "zahlst") oder ein Kostenwort. Faende sich
+# einer, waere er entweder falsch platziert oder falsch formuliert.
+SELBSTBEZUG = ("du ", "dein", "zahlst", "kostet dich", "deine Position")
+KOSTENWORT = ("Gebuehr", "kostet", "Finanzierungskosten", "laufende Kosten")
+
+
 def _bc_bloecke(conn, db: str, symbol: str, gruppe: str, instrument: str):
     """Die Bloecke der Rolle BC fuer genau dieses Paar - wie im Betrieb."""
     import database.db as DB
@@ -279,6 +322,13 @@ def main() -> int:
             f = PZ.pruefe_satz(s)
             if f:
                 zahlenbefunde.append((f"G {gruppe}/{instrument}", s, f[0]))
+            # DAS PRINZIP, gegengeprueft: Rolle G beschreibt DIE ANDEREN.
+            w = [x for x in SELBSTBEZUG + KOSTENWORT
+                 if x.lower() in s.lower()]
+            if w:
+                abweichungen.append(
+                    f"{gruppe}/{instrument} ({sym}): Rolle-G-Satz mit "
+                    f"Selbstbezug/Kosten {w} - das gehoert zu BC")
 
     print()
     print("=" * 78)
