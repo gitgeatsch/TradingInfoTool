@@ -5640,6 +5640,41 @@ def paket_15() -> None:
            "Filings hat die Sperre am 16.08. real ausgeloest")
     _spk2.close()
 
+    # --- FUNDAMENTALDATEN ZU ROLLE BC (17.08.2026) --------------------
+    #
+    # Der erste Fakt der ENTSCHEIDENDEN Rolle, der nicht aus der
+    # Kerzenreihe stammt. Gemessen war der Anteil bei 85 %; von allen
+    # Merkmalen trennte nur das Momentum Einstieg von Halten.
+    from agent import lagebeschreibung as LB8
+    from agent import rollen_eingabe as RE8
+
+    _f8 = LB8._fundamental({"gewinnwachstum_pct": 215.4,
+                            "umsatzwachstum_pct": 92.8})
+    pruefe(P, "Gewinn und Umsatz stehen mit ihrem VERHAELTNIS da",
+           len(_f8) == 3 and any("schneller als der Umsatz" in s for s in _f8),
+           "das Verhaeltnis ist die eigentliche Aussage - und es braucht "
+           "keine erfundene Schwelle und keine Vergleichsgruppe")
+    pruefe(P, "und es steht KEIN Analystenurteil darin",
+           not any(w in " ".join(_f8).lower() for w in
+                   ("buy", "kaufen", "kursziel", "empfehl", "analyst")),
+           "`analysten_konsens` ist ein fertiges Urteil eines Dritten und "
+           "`analysten_kursziel` ein Anker - beide ROT (R-T2/R-T3)")
+    pruefe(P, "ohne Daten entsteht KEIN Satz",
+           LB8._fundamental(None) == [] and LB8._fundamental({}) == [],
+           "eine Zeile 'keine Angabe' bei 54 Assets, die gar keine haben "
+           "koennen, waere Rauschen")
+    pruefe(P, "der Block steht VOR dem Verlauf",
+           LB8.BLOCK_REIHENFOLGE.index("fundamental")
+           < LB8.BLOCK_REIHENFOLGE.index("verlauf"),
+           "R-T9 ist gemessen: was zuerst steht, wiegt schwerer - den "
+           "einzigen Nicht-Chart-Satz hinten zu verstecken hiesse, ihn "
+           "zu uebergeben")
+    pruefe(P, "und er erreicht NUR Aktien",
+           RE8.fundamentaldaten("BTC", None, "krypto") is None
+           and RE8.fundamentaldaten("PLTR", None, None) is None,
+           "ein Zertifikat hat keinen Gewinn, ein Coin kein "
+           "Umsatzwachstum - fail-closed wie beim Boersenfluss")
+
     # --- ROLLE G LANDET AUCH IN DER DATENBANK (17.08.2026) -------------
     #
     # `hole()` liefert einwand/einwand_grund/grundlage, `schreibe()` las
@@ -6034,10 +6069,20 @@ def paket_15() -> None:
 
     from agent import rolle_trader as RT5
 
+    # ⚠️ DIESE ZEILE WIRD BEI JEDER AENDERUNG AN DER EINGABE DER ROLLE BC
+    # MITGEZOGEN - das ist ihr Zweck, nicht ihr Wartungsaufwand. Zuletzt
+    # am 17.08.2026: die Fundamentaldaten sind dazugekommen, damit sieht
+    # das Modell etwas anderes als vorher.
+    #
+    # Jeder Messbefund gehoert zu einem Stand. Ohne den Sprung waeren
+    # Urteile vor und nach der Aenderung nicht unterscheidbar - und ein
+    # Vorher-Nachher-Vergleich, der beide Haelften vermischt, misst
+    # nichts.
     pruefe(P, "der Prompt-Stand ist mitgezogen",
-           RT5.PROMPT_STAND == "2026-08-16b",
-           "jeder Messbefund gehoert zu einem Stand - ohne den Sprung waeren "
-           "Messungen vor und nach Phase I nicht unterscheidbar")
+           RT5.PROMPT_STAND == "2026-08-17",
+           "die Eingabe der Rolle BC hat sich geaendert (Fundamentaldaten) "
+           "- ohne neuen Stand waeren die Urteile davor und danach nicht "
+           "auseinanderzuhalten")
 
     # ------------------------------------------------------------------
     # AA. DIE VERKAUFSSEITE (14.08.2026) - der groesste Fund des Echtbetriebs.

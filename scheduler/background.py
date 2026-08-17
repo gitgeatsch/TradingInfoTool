@@ -943,6 +943,25 @@ def _aktien_reihen(conn) -> int:
                 get_days_to_cover_history(sym))
         except Exception as exc:                             # noqa: BLE001
             logger.info("Leerverkaufsposition %s nicht auffrischbar: %s", sym, exc)
+        # FUNDAMENTALDATEN (17.08.2026). Sie gehen an Rolle BC, nicht an G -
+        # der erste Fakt der entscheidenden Rolle, der nicht aus der
+        # Kerzenreihe stammt. Als ZEITREIHE abgelegt, obwohl heute nur der
+        # letzte Wert gelesen wird: damit baut sich nebenbei die Historie
+        # auf, die ein spaeteres Perzentil braucht - und ein Wachstum gegen
+        # die eigene Vergangenheit ist eine bessere Aussage als eines gegen
+        # nichts.
+        try:
+            from api.yfinance_client import fetch_fundamentals
+
+            f = fetch_fundamentals(sym, sym)
+            for feld in ("gewinnwachstum_pct", "umsatzwachstum_pct"):
+                wert = getattr(f, feld, None)
+                if wert is not None:
+                    geschrieben += DB.schreibe_externe_reihe(
+                        conn, "yfinance", f"{sym}_{feld}",
+                        [(heute, float(wert))])
+        except Exception as exc:                             # noqa: BLE001
+            logger.info("Fundamentaldaten %s nicht auffrischbar: %s", sym, exc)
         try:
             tr = get_recent_insider_transactions(sym, max_filings=40,
                                                  lookback_tage=90)

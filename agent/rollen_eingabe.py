@@ -171,6 +171,46 @@ def lade_makro(db: str = "data/tradinginfotool.db") -> dict:
         return {}
 
 
+def fundamentaldaten(symbol: str, db: str | None = None,
+                     assetklasse: str | None = None) -> dict | None:
+    """Gewinn- und Umsatzwachstum - NUR fuer Aktien, NUR aus der Datenbank.
+
+    LIEST, HOLT NIE. Dieselbe Arbeitsteilung wie bei allen Fremdquellen
+    seit dem 16.08.: `externe_reihen_job` schreibt, die Kette liest. Ein
+    yfinance-Abruf mitten im Urteil haenge das Signal an eine fremde
+    Schnittstelle - und faellt sie aus, entstuende keine leere, sondern
+    eine LUECKENHAFTE Faktenlage, die niemand als solche erkennt.
+
+    NUR AKTIEN, fail-closed. Ein Zertifikat hat keinen Gewinn und ein
+    Coin kein Umsatzwachstum; bei unbekannter Klasse entsteht nichts.
+    Dieselbe Regel wie beim Boersenfluss (P1: Auftrag)."""
+    if str(assetklasse or "").lower() not in ("aktien", "aktie"):
+        return None
+    import sqlite3
+
+    from database import db as DB
+
+    sym = str(symbol or "").upper()
+    aus: dict = {}
+    try:
+        conn = sqlite3.connect(
+            f"file:{db or 'data/tradinginfotool.db'}?mode=ro", uri=True)
+    except sqlite3.Error:
+        return None
+    try:
+        for feld in ("gewinnwachstum_pct", "umsatzwachstum_pct"):
+            reihe = DB.lies_externe_reihe(conn, "yfinance",
+                                          f"{sym}_{feld}", 1)
+            if reihe:
+                aus[feld] = reihe[-1][1]
+    finally:
+        try:
+            conn.close()
+        except Exception:                                # noqa: BLE001
+            pass
+    return aus or None
+
+
 def baue_befund_eingabe(*, symbol: str, reihe: list, index: int,
                         kurs_eur: float, atr: float,
                         menge: float | None = None,
@@ -182,6 +222,7 @@ def baue_befund_eingabe(*, symbol: str, reihe: list, index: int,
                         assetklasse: str | None = None,
                         gegenseite: str | None = None,
                         referenz: dict | None = None,
+                        fundamentaldaten: dict | None = None,
                         bloecke_ziel: dict | None = None) -> dict:
     """Eingabe fuer Befund und Entscheidung - alle Bloecke an einer Stelle.
 
@@ -216,6 +257,7 @@ def baue_befund_eingabe(*, symbol: str, reihe: list, index: int,
                                     instrument=instrument,
                                     gegenseite=gegenseite,
                                     referenz=referenz,
+                                    fundamentaldaten=fundamentaldaten,
                                     bloecke_ziel=bloecke_ziel)}
     if lagebild:
         beurteilung = {"lage": lagebild.get("lage")}
@@ -657,5 +699,7 @@ def baue_fall(*, symbol: str, reihe: list, index: int, reihen: dict,
                             gegenseite=gegenbestand_satz(symbol, db,
                                                          instrument),
                             referenz=ref,
+                            fundamentaldaten=fundamentaldaten(symbol, db,
+                                                             assetklasse),
                             bloecke_ziel=bloecke_ziel),
     )

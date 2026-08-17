@@ -293,7 +293,7 @@ SYSTEM_PROMPT_TRADER_OHNE_PERSONA = _baue_prompt(mit_betragsfrage=False,
 # Produktion unter "2026-08-16" - 29 Signale tragen ihn. Klasse 1 kam
 # am selben Tag; ohne den Buchstaben waeren genau die Signale nicht
 # trennbar, deren Unterschied gemessen werden soll.
-PROMPT_STAND = "2026-08-16b"
+PROMPT_STAND = "2026-08-17"
 
 
 # --- Die abgeleiteten Zonen (Paket 1, 12.08.2026) -------------------------

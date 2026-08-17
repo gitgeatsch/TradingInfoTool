@@ -73,7 +73,9 @@ MASSSTAB = ("Perzentil", "Messungen", "Handelstag", "Tage", "Stunden",
             "Monat", "Jahr", "seit", "Fenster", "Durchschnitt", "Median",
             "Schwankungsbreite", "ATR", "seiner", "eigenen", "Historie",
             "hoeher", "tiefer", "ueber", "unter", "je ", "von ", "das sind",
-            "Rahmen", "Bestand", "beruehrt", "Regime", "Hebel", "deckt")
+            "Rahmen", "Bestand", "beruehrt", "Regime", "Hebel", "deckt",
+            # Zeitfenster der Fundamentaldaten (17.08.2026)
+            "Vorjahreszeitraum", "selben Zeitraum")
 
 # Woertliche Einordnung eines Perzentils - eines davon muss dabeistehen.
 EINORDNUNG = ("gewohnt", "aussergewoehnlich", "ungewoehnlich", "auseinander",

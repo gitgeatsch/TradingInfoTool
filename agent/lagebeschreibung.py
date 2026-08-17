@@ -499,6 +499,136 @@ def _referenz(referenz: dict | None) -> list[str]:
     return z
 
 
+# --- WAS DAS UNTERNEHMEN VERDIENT (17.08.2026) -----------------------------
+#
+# DER ANLASS. Gemessen an einer echten Signalmail stammen SIEBEN VON NEUN
+# Faktensaetzen der Rolle BC aus derselben Kerzenreihe; genau einer kommt von
+# aussen (die Finanzierungsrate, und nur beim Hebel). Die Folge ist an den
+# Urteilen sichtbar: von allen gespeicherten Merkmalen trennt EINZIG das
+# Momentum-Perzentil Einstieg von Halten (0,760 gegen 0,624, p = 0,000).
+#
+#     Das Modell entscheidet auf Momentum, weil Momentum fast alles ist,
+#     was es bekommt. Das ist kein Bias, sondern eine unterernaehrte Rolle.
+#
+# Und es trifft den Grundbefund des Projekts: die Information ist nicht in den
+# Kursdaten (8.441 Faelle, kein Verfahren schlaegt die Basisrate). Wer zu 78 %
+# Kursdaten sieht, kann sie nicht schlagen - unabhaengig vom Modell.
+#
+# ⚠️ WAS HIER NICHT STEHT, UND WARUM (P1-P7 je Feld, 17.08.2026):
+#
+#   ROT - `analysten_konsens` ("buy", "strong_buy")
+#       Ein FERTIGES URTEIL, und zwar das eines Dritten. Genau die Form, die
+#       am 16.08. als Marktregime herausgeflogen ist (R-T2, R-T3, R-T12). Ein
+#       Modell, das "strong_buy" liest, hat die Frage nicht mehr zu
+#       beantworten, sondern nur noch zu uebernehmen.
+#
+#   ROT - `analysten_kursziel_usd` (191,68 bei PLTR)
+#       Eine PROGNOSE, und der Anker in Reinform: die Rolle muss Einstieg,
+#       Stop und Ziel selbst bestimmen: ihr vorher eine fremde Zielmarke
+#       hinzulegen, ist die dokumentierteste Fehlwirkung, die es bei
+#       Sprachmodellen gibt.
+#
+#   GELB - `kgv` (148,8 bei PLTR gegen 25,0 bei VST)
+#       Ohne Vergleichsgruppe bedeutungslos, und die haben wir nicht: weder
+#       eine Sektorreihe noch eine eigene Historie. 148 gegen 25 zu stellen
+#       waere ein Vergleich zwischen Technologie und Versorger - also keiner.
+#       Ein erfundenes Band ("ueber 30 ist teuer") waere P2 Rang 3.
+#
+#   GELB - `naechstes_earnings_datum`
+#       Der wertvollste Einzelfakt und trotzdem nicht hier. Er traegt
+#       RISIKOCHARAKTER, und dafuer gibt es einen gemessenen Praezedenzfall:
+#       der Kosten-/Ausfuehrbarkeitshinweis hat die EROEFFNEN-Quote von 93 %
+#       auf 3 % gerissen. So etwas wird gepaart gemessen, nicht eingeschaltet.
+#       Steht im Plan als B-3, gelb.
+#
+#   ROT (still) - `sektor`, `market_cap_usd`
+#       Je Symbol KONSTANT. Ein Merkmal, das sich nie aendert, kann nichts
+#       unterscheiden (R-T6) - es kostet nur Platz im Prompt.
+#
+# WAS BLEIBT, UND WARUM ES TRAEGT: Gewinn- und Umsatzwachstum.
+#
+#   1. NICHT AUS DER KURSREIHE. Das ist der ganze Punkt.
+#   2. SIE HABEN EINEN NATUERLICHEN NULLPUNKT. Ein Wachstum ist gegen "gar
+#      kein Wachstum" lesbar, ohne Vergleichsgruppe - anders als ein KGV.
+#      Deshalb sind sie gruen und das KGV ist es nicht.
+#   3. IHR VERHAELTNIS ZUEINANDER ist eine eigene Aussage, und sie kostet
+#      keine erfundene Schwelle: waechst der Gewinn schneller als der Umsatz,
+#      verdient das Unternehmen an jedem Euro mehr als zuvor.
+def _fundamental(fundamentaldaten: dict | None) -> list[str]:
+    """Gewinn- und Umsatzwachstum - der erste Fakt der Rolle BC, der nicht
+    aus der Kerzenreihe stammt.
+
+    LEER FUER ALLES AUSSER AKTIEN. Ein Zertifikat hat keinen Gewinn, ein Coin
+    kein Umsatzwachstum; `rollen_eingabe` uebergibt deshalb nur fuer Aktien
+    etwas. Fehlt der Wert, entsteht KEIN Satz - eine Zeile "keine Angabe" bei
+    56 Assets, von denen 54 gar keine haben koennen, waere Rauschen."""
+    f = fundamentaldaten or {}
+    gewinn = f.get("gewinnwachstum_pct")
+    umsatz = f.get("umsatzwachstum_pct")
+    if gewinn is None and umsatz is None:
+        return []
+    z: list[str] = []
+
+    def _wort(wert: float) -> str:
+        # KEINE ERFUNDENEN BAENDER. "stark" oder "moderat" waere eine Schwelle,
+        # die niemand gemessen hat (P2 Rang 3). Das Vorzeichen und die Groesse
+        # stehen da; die Einordnung macht das Modell.
+        return "gewachsen" if wert >= 0 else "geschrumpft"
+
+    if umsatz is not None:
+        z.append(f"Der Umsatz des Unternehmens ist gegenueber dem "
+                 f"Vorjahreszeitraum um {abs(umsatz):.0f} % {_wort(umsatz)}.")
+    if gewinn is not None:
+        # ⚠️ "IM SELBEN ZEITRAUM" BRAUCHT EINEN VORSATZ. Fehlt das
+        # Umsatzwachstum, stand hier ein Verweis ins Leere - und der
+        # Zahlenpruefer hat ihn als ungedeckte Zahl gemeldet (N2), zu
+        # Recht: R-T1 verlangt das Fenster IM Satz, nicht im Nachbarsatz,
+        # der vielleicht gar nicht da ist.
+        rahmen = ("im selben Zeitraum" if umsatz is not None
+                  else "gegenueber dem Vorjahreszeitraum")
+        z.append(f"Der Gewinn ist {rahmen} um {abs(gewinn):.0f} % "
+                 f"{_wort(gewinn)}.")
+    # DAS VERHAELTNIS - die eigentliche Aussage, und sie braucht keine
+    # Vergleichsgruppe. Nur wenn beide vorliegen und sich unterscheiden.
+    #
+    # ⚠️ DAS WORT MUSS ZU DEN VORZEICHEN PASSEN (Nutzerfrage 17.08.: *"hast du
+    # das Risiko bzw. die Nutzung fuer die LLMs geprueft?"*).
+    #
+    # Meine erste Fassung kannte nur "waechst schneller". Bei zwei NEGATIVEN
+    # Werten stand dann woertlich:
+    #
+    #     Der Umsatz ist um 10 % geschrumpft.
+    #     Der Gewinn ist um 50 % geschrumpft.
+    #     Der Umsatz waechst damit schneller als der Gewinn.
+    #
+    # Drei Saetze, und der dritte widerspricht den ersten beiden. Ein
+    # Faktensatz, der sich selbst widerspricht, ist schlimmer als ein
+    # fehlender: das Modell muss den Widerspruch aufloesen, statt zu urteilen -
+    # und keine unserer Regeln haette ihn gefangen, weil jede Zahl ihren Bezug
+    # trug.
+    #
+    # DIE MARGE STIMMT IN ALLEN VIER FAELLEN: sie verbessert sich genau dann,
+    # wenn der Gewinn staerker steigt (oder schwaecher faellt) als der Umsatz.
+    # Nur das VERB muss den Vorzeichen folgen.
+    if gewinn is not None and umsatz is not None and abs(gewinn - umsatz) >= 1.0:
+        besser = gewinn > umsatz
+        vorn, hinten = ("Gewinn", "Umsatz") if besser else ("Umsatz", "Gewinn")
+        if gewinn >= 0 and umsatz >= 0:
+            wie = f"Der {vorn} waechst damit schneller als der {hinten}"
+        elif gewinn < 0 and umsatz < 0:
+            # Beide schrumpfen: der mit dem GROESSEREN Wert schrumpft LANGSAMER.
+            wie = f"Der {hinten} schrumpft damit schneller als der {vorn}"
+        else:
+            waechst = "Gewinn" if gewinn >= 0 else "Umsatz"
+            faellt = "Umsatz" if gewinn >= 0 else "Gewinn"
+            wie = (f"Der {waechst} waechst damit, waehrend der {faellt} "
+                   f"zurueckgeht")
+        folge = ("mehr" if besser else "weniger")
+        z.append(f"{wie} - das Unternehmen behaelt von jedem Euro {folge} "
+                 "als zuvor.")
+    return z
+
+
 def _luecken(hist_laenge: int, volumen: list, marken: list) -> list[str]:
     """Was FEHLT - benannt, statt stillschweigend weggelassen.
 
@@ -557,6 +687,7 @@ def beschreibe_lage(*, symbol: str, reihe: list, index: int,
                     instrument: str = "spot",
                     gegenseite: str | None = None,
                     referenz: dict | None = None,
+                    fundamentaldaten: dict | None = None,
                     bloecke_ziel: dict | None = None) -> list[str]:
     """Die Lage als Aussagen - der EINZIGE Weg von Kursdaten zur Beschreibung.
 
@@ -598,7 +729,8 @@ def beschreibe_lage(*, symbol: str, reihe: list, index: int,
                       kurs_eur=kurs_eur, atr=atr, menge=menge,
                       einstand_eur=einstand_eur, finanzierung=finanzierung,
                       instrument=instrument, gegenseite=gegenseite,
-                      referenz=referenz)
+                      referenz=referenz,
+                      fundamentaldaten=fundamentaldaten)
     if bloecke_ziel is not None:
         bloecke_ziel.clear()
         bloecke_ziel.update(bloecke)
@@ -625,7 +757,13 @@ def beschreibe_lage(*, symbol: str, reihe: list, index: int,
 # Grund und Messwert stehen bei `_struktur()`. Die Saetze selbst sind
 # unveraendert bis auf die entfallene Doppelung und den Bezug "im selben
 # Rahmen" - die Reihenfolge der uebrigen Bloecke bleibt, wie sie war.
-BLOCK_REIHENFOLGE = ("bestand", "verlauf", "marken",
+# ⚠️ `fundamental` STEHT VOR `verlauf` (17.08.2026) - und das ist keine
+# Kosmetik. R-T9 ist gemessen: was zuerst steht, wiegt schwerer (3,2 pp bei
+# 5,3-fachem Rauschboden). Der einzige Satz, der NICHT aus der Kerzenreihe
+# stammt, hinter sieben Chartsaetzen zu verstecken hiesse, ihn zu
+# uebergeben. Der Bestand bleibt davor: er beantwortet die Frage, ob es
+# ueberhaupt um einen Einstieg geht.
+BLOCK_REIHENFOLGE = ("bestand", "fundamental", "verlauf", "marken",
                      "hebelgeometrie", "referenz", "volumen",
                      "finanzierung", "luecken")
 
@@ -637,7 +775,8 @@ def geteilt(*, symbol: str, reihe: list, index: int,
             finanzierung: dict | None = None,
             instrument: str = "spot",
             gegenseite: str | None = None,
-            referenz: dict | None = None) -> dict:
+            referenz: dict | None = None,
+            fundamentaldaten: dict | None = None) -> dict:
     """Dieselben Saetze, aber nach Bloecken getrennt (14.08.2026).
 
     WOFUER. Die Kaufmail kann Bestand, Marken und Coin-Fakten getrennt
@@ -680,6 +819,7 @@ def geteilt(*, symbol: str, reihe: list, index: int,
         "verlauf": _struktur(c, h, l, i) + _bewegung(c, i),
         "marken": marken,
         "hebelgeometrie": _hebelgeometrie(atr, float(c[i]), instrument),
+        "fundamental": _fundamental(fundamentaldaten),
         "referenz": _referenz(referenz),
         "volumen": volumen,
         "finanzierung": _finanzierung(finanzierung, instrument),
