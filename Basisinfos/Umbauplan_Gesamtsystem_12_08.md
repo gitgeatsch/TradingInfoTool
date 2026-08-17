@@ -9658,3 +9658,110 @@ der Leser der ganzen Zeile nicht mehr.**
 | an echten Reihen | **39 von 39** Symbolen haben einen Widerstand in Reichweite |
 | freie Namen | 0 · Zahlenprüfer 9/9 |
 | Simulation | 4 Gruppen, 8 Signale, **0 Fehler, 0 Lücken** |
+
+---
+
+## Kapitel 77 — A6: das Modell hat sich die Zahl selbst ausgedacht (17.08.2026)
+
+**Der Verdacht aus der Mailprüfung ist bestätigt — und er ist systematisch.**
+
+### 77.1 Der Befund
+
+In der SOL-Mail stand im **Belegblock**:
+
+```
+- Umsatzvolumen im 35. Perzentil deutet auf fehlendes Momentum hin  [gering]
+```
+
+Im **Faktenblock derselben Mail** stand *„Volumen das 0,4-fache des Mittels
+(Vortag)"* — kein Perzentil. Und `faktenblock.kern()` sagt es ausdrücklich:
+
+> *„Das Perzentil erscheint **NICHT** im Text — es bestimmt nur das
+> Urteilswort."*
+
+**Gemessen über alle gespeicherten Belege der Rollen-Kette:**
+
+```
+484 Signale, 1.834 Belege
+14 Befunde in 14 verschiedenen Symbolen  (0,76 %)
+```
+
+| Symbol | Beleg |
+|---|---|
+| MORPHO | *„Handelsvolumen im 100. Perzentil **der letzten 400 Tage**"* |
+| KAITO | *„Umsatzvolumen im 92. Perzentil deutet auf Kapitulationsphase hin"* |
+| MON | *„Umsatzvolumen 6.0 % (84. Perzentil) deutet auf Liquidität hin"* |
+| VIRTUAL | *„Umsatzvolumen im 3. Perzentil (außergewöhnlich ruhig)"* |
+
+> ⚠️ **„der letzten 400 Tage" kommt in keinem unserer Sätze vor.** Das Modell
+> hat nicht nur eine Zahl erfunden, sondern auch ein Messfenster dazu.
+
+### 77.2 Was hier passiert ist
+
+**Es ist die Umkehrung von R-T12.** Wir geben ein **Etikett**
+(GUENSTIG/UNGUENSTIG) und halten die Zahl zurück — weil der Nutzer rohe
+Perzentile abgelehnt hatte (*„Perzentil 74 war genau der Einwand"*). Das
+Modell rechnet aus dem Etikett eine plausible Zahl **zurück** und schreibt sie
+als Messung hin.
+
+**Warum das mehr ist als ein Schönheitsfehler:** die Belege sind der Block,
+den die Mail als **Beweis** präsentiert — mit Gewicht und gezählt als
+„unabhängige Faktoren". Eine erfundene Messung darin ist eine **Behauptung mit
+Siegel**, und sie ist nicht als solche erkennbar: *„im 92. Perzentil der
+letzten 400 Tage"* liest sich exakt wie unsere echten Sätze.
+
+### 77.3 Der Eingriff — ein Satz, an der Stelle, wo es passiert
+
+```
+Erfinde nichts. Zu Schwankung, Kursentwicklung und Volumen bekommst du
+KEIN Perzentil, sondern ein Urteilswort - nenne dort auch keines.
+```
+
+> **„Erfinde nichts" stand schon da** — seit jeher, im selben Absatz. Es hat
+> nicht getragen. **Eine allgemeine Ermahnung schlägt keine konkrete Lücke;**
+> die Stelle muss benannt werden.
+
+`PROMPT_STAND` → **`2026-08-17c`**. Ohne den Sprung wären Urteile vor und nach
+der Änderung nicht trennbar.
+
+**Nicht gemacht — und warum:**
+
+| Weg | verworfen, weil |
+|---|---|
+| dem Modell das Perzentil geben | widerspricht der Entscheidung, die der Nutzer selbst getroffen hat |
+| den Beleg löschen | ein deterministischer Eingriff in das Werturteil des Modells |
+| nur beobachten | die Zahl steht in der Mail und liest sich wie eine Messung |
+
+### 77.4 `pruefe_belege_gegen_fakten.py`
+
+**Es prüft nicht jede Zahl gegen die Fakten des Laufs** — die werden je Signal
+nicht gespeichert und ließen sich ohne Ankertagsverletzung nicht
+rekonstruieren. Es prüft die Fälle, in denen wir **ohne den Lauf zu kennen**
+wissen, dass es die Zahl nicht gegeben haben kann.
+
+> **Keine Fehlalarme, dafür unvollständig — in dieser Reihenfolge.**
+
+**`auch_woanders` ist der ganze Trick.** Die Schwankung *hat* ein Perzentil —
+im Lagebild, für den Markt (*„Bitcoin-Volatilität im 0. Perzentil"*). Ein
+Beleg, der das zitiert, ist korrekt, und ihn zu melden wäre ein Fehlalarm.
+**Von 33 Funden der ersten Promptprüfung waren 31 genau solche.**
+
+Die Liste steht in **`faktenblock.PERZENTIL_NUR_INTERN`** — neben dem Code,
+der die Perzentile zurückhält, nicht im Werkzeug.
+
+### 77.5 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **968**, alle bestanden — **11 neu unter `--paket Belege`** |
+| Selbsttest des Werkzeugs | **9/9**, beide Richtungen |
+| erkannt | der gemeldete Satz · die erfundene Fensterlänge · die Zählung über viele Zeilen |
+| **nicht** erkannt (richtig so) | Finanzierungsrate · Marktvolatilität · unser eigener Volumensatz · leer/None |
+| Herkunft der Liste | aus `faktenblock`, nicht kopiert |
+| Promptstand | mitgezogen, und die bestehende Prüfung darauf nachgeführt |
+| Export | neuer Abschnitt `belege_gegen_fakten` |
+| freie Namen · Zahlenprüfer · `pruefe_phase1` | 0 · 9/9 · bestanden |
+| Simulation | 4 Gruppen, 8 Signale, **0 Fehler, 0 Lücken** |
+
+**Ob die Promptzeile trägt, sagt der nächste Export** — die Quote steht
+jetzt in jedem drin, mit dem Promptstand daneben.

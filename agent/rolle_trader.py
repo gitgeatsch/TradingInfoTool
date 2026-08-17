@@ -94,7 +94,8 @@ _BETRAGSSATZ = (" Bei allem ausser NICHTS_TUN nenne den Betrag - 100, 300 oder "
 _SCHRITTE = """1. BELEGE sammeln. Gehe die Angaben durch und notiere, was fuer \
 einen Einstieg spricht und was dagegen - je mit einem Gewicht \
 (hoch/mittel/gering). Zwischen zwei und acht. Nenne den Wert, auf den sich der \
-Beleg stuetzt. Erfinde nichts.
+Beleg stuetzt. Erfinde nichts. Zu Schwankung, Kursentwicklung und Volumen \
+bekommst du KEIN Perzentil, sondern ein Urteilswort - nenne dort auch keines.
 
 2. UNABHAENGIGE FAKTOREN zaehlen. Wie viele deiner Belege sagen wirklich \
 VERSCHIEDENE Dinge? Zwei Belege, die beide auf denselben Abwaertstrend zeigen, \
@@ -293,7 +294,20 @@ SYSTEM_PROMPT_TRADER_OHNE_PERSONA = _baue_prompt(mit_betragsfrage=False,
 # Produktion unter "2026-08-16" - 29 Signale tragen ihn. Klasse 1 kam
 # am selben Tag; ohne den Buchstaben waeren genau die Signale nicht
 # trennbar, deren Unterschied gemessen werden soll.
-PROMPT_STAND = "2026-08-17b"
+# 2026-08-17c: EIN SATZ GEGEN EINE ERFUNDENE ZAHL. In den Belegen echter
+#              Signale stand vierzehnmal ein Volumen-Perzentil - "im 92.
+#              Perzentil der letzten 400 Tage", samt einer Fensterlaenge,
+#              die in keinem unserer Saetze vorkommt. `faktenblock.kern()`
+#              haelt dieses Perzentil bewusst zurueck und gibt nur ein
+#              Urteilswort; das Modell hat daraus eine plausible Zahl
+#              zurueckgerechnet.
+#
+#              "Erfinde nichts" stand schon da und hat nicht getragen -
+#              eine allgemeine Ermahnung schlaegt keine konkrete Luecke.
+#              Jetzt wird die Stelle benannt, an der es passiert ist.
+#              Gemessen wird es weiter von `pruefe_belege_gegen_fakten.py`:
+#              14 von 1.834 Belegen (0,76 %) vor der Aenderung.
+PROMPT_STAND = "2026-08-17c"
 
 
 # --- Die abgeleiteten Zonen (Paket 1, 12.08.2026) -------------------------

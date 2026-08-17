@@ -6144,11 +6144,12 @@ def paket_15() -> None:
     # Urteile vor und nach der Aenderung nicht unterscheidbar - und ein
     # Vorher-Nachher-Vergleich, der beide Haelften vermischt, misst
     # nichts.
+    # Zuletzt 2026-08-17c: eine Zeile gegen erfundene Perzentile (A6).
     pruefe(P, "der Prompt-Stand ist mitgezogen",
-           RT5.PROMPT_STAND == "2026-08-17b",
-           "die Eingabe der Rolle BC hat sich geaendert (Fundamentaldaten) "
-           "- ohne neuen Stand waeren die Urteile davor und danach nicht "
-           "auseinanderzuhalten")
+           RT5.PROMPT_STAND == "2026-08-17c",
+           "die Eingabe UND die Anweisung der Rolle BC haben sich "
+           "geaendert - ohne neuen Stand waeren die Urteile davor und "
+           "danach nicht auseinanderzuhalten")
 
     # ------------------------------------------------------------------
     # AA. DIE VERKAUFSSEITE (14.08.2026) - der groesste Fund des Echtbetriebs.
@@ -7581,10 +7582,84 @@ def paket_mail() -> None:
            "mit Zahlen wuerde beide Messungen verschieben")
 
 
+def paket_belege() -> None:
+    """A6 - behauptet das Modell Zahlen, die es nie bekommen hat? (17.08.2026)
+
+    Nutzerpruefung einer echten SOL-Mail: im Belegblock stand "Umsatzvolumen
+    im 35. Perzentil", im Faktenblock derselben Mail "das 0,4-fache des
+    Mittels". `faktenblock.kern()` haelt das Perzentil bewusst zurueck."""
+    import pruefe_belege_gegen_fakten as PB
+    from agent import faktenblock as FB
+    from agent import rolle_trader as RT
+
+    P = "Belege"
+
+    # BEIDE RICHTUNGEN. Eine Pruefung, die nur Alarm schlagen kann, ist keine.
+    pruefe(P, "A6: das erfundene Volumen-Perzentil wird gefunden",
+           bool(PB.pruefe_beleg("Umsatzvolumen im 35. Perzentil deutet auf "
+                                "fehlendes Momentum hin")),
+           "genau der Satz aus der gemeldeten SOL-Mail")
+    pruefe(P, "A6: auch mit erfundener Fensterlaenge",
+           bool(PB.pruefe_beleg("MORPHO Handelsvolumen im 100. Perzentil "
+                                "der letzten 400 Tage")),
+           "'400 Tage' kommt in keinem unserer Saetze vor")
+    pruefe(P, "A6: die Finanzierungsrate darf ein Perzentil nennen",
+           not PB.pruefe_beleg("Finanzierungsrate im 72. Perzentil bei "
+                               "positiven Werten"),
+           "dort STEHT eines in den Fakten - ein Befund waere ein Fehlalarm")
+    pruefe(P, "A6: und die Marktvolatilitaet auch",
+           not PB.pruefe_beleg("Marktlage: Bitcoin-Volatilitaet im 0. "
+                               "Perzentil"),
+           "das Lagebild gibt eines fuer den MARKT - `auch_woanders`")
+    pruefe(P, "A6: unser eigener Volumensatz loest nichts aus",
+           not PB.pruefe_beleg("Volumen das 0,4-fache des Mittels deutet "
+                               "auf wenig Beteiligung"),
+           "er nennt kein Perzentil, und genau so ist er gebaut")
+    pruefe(P, "A6: leer und None knallen nicht",
+           PB.pruefe_beleg("") == [] and PB.pruefe_beleg(None) == [])
+
+    # DIE LISTE STEHT NEBEN DEM CODE, DER ZURUECKHAELT - nicht im Werkzeug.
+    pruefe(P, "A6: die Familien kommen aus `faktenblock`",
+           set(PB._familien()) <= set(FB.PERZENTIL_NUR_INTERN)
+           and "volumen" in PB._familien(),
+           f"{sorted(PB._familien())} aus "
+           f"{sorted(FB.PERZENTIL_NUR_INTERN)}")
+    pruefe(P, "A6: eine Familie mit Perzentil ANDERSWO wird ausgenommen",
+           "schwankung" in FB.PERZENTIL_NUR_INTERN
+           and FB.PERZENTIL_NUR_INTERN["schwankung"]["auch_woanders"] is True
+           and "schwankung" not in PB._familien(),
+           "von 33 Funden der ersten Promptpruefung waren 31 Fehlalarme")
+
+    # Und die Zaehlung ueber viele Zeilen.
+    _e = PB.aus_zeilen([
+        {"symbol": "SOL", "created_at": "2026-08-17",
+         "belege_json": '[{"fakt": "Umsatzvolumen im 35. Perzentil"},'
+                        ' {"fakt": "Finanzierungsrate im 72. Perzentil"}]'},
+        {"symbol": "BTC", "created_at": "2026-08-17",
+         "belege_json": '[{"fakt": "Marktstruktur mit tieferen Tiefs"}]'},
+        # Kaputtes JSON darf die Zaehlung nicht anhalten.
+        {"symbol": "X", "belege_json": "{kaputt"},
+    ])
+    pruefe(P, "A6: die Zaehlung findet genau den einen Befund",
+           len(_e["befunde"]) == 1 and _e["signale_betroffen"] == 1
+           and _e["belege"] == 3,
+           f"{len(_e['befunde'])} Befunde, {_e['belege']} Belege")
+
+    # DIE PROMPTZEILE, die den Fall an der Wurzel adressiert.
+    pruefe(P, "A6: der Prompt benennt die Stelle konkret",
+           "bekommst du KEIN Perzentil" in RT._SCHRITTE,
+           "'Erfinde nichts' stand schon da und hat nicht getragen - eine "
+           "allgemeine Ermahnung schlaegt keine konkrete Luecke")
+    pruefe(P, "A6: und der Promptstand wurde mitgezogen",
+           RT.PROMPT_STAND == "2026-08-17c",
+           f"{RT.PROMPT_STAND} - sonst waeren Signale vor und nach der "
+           f"Aenderung nicht trennbar")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail,
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege,
           "Frische": paket_frische}
 
 

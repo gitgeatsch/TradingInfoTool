@@ -2265,6 +2265,24 @@ def main() -> None:
             datenfrische = _datenfrische(conn)
         except Exception as exc:  # noqa: BLE001
             datenfrische = {"nicht_verfuegbar": str(exc)}
+        # ERFUNDENE ZAHLEN IN DEN BELEGEN (17.08.2026, Nutzerfund A6).
+        # Das Modell hat vierzehnmal ein Volumen-Perzentil genannt, das
+        # `faktenblock.kern()` bewusst zurueckhaelt. Ob die Promptzeile
+        # dagegen traegt, sieht man nur, wenn es weiter gezaehlt wird.
+        try:
+            import pruefe_belege_gegen_fakten as _PB
+
+            _zeilen = [row_to_dict(r) for r in conn.execute(
+                "SELECT symbol, created_at, prompt_stand, belege_json "
+                "FROM signals WHERE quelle_kette = 'rollen' "
+                "AND belege_json IS NOT NULL")]
+            belege_gegen_fakten = _PB.aus_zeilen(_zeilen)
+            # Nur die Zusammenfassung plus eine Handvoll Beispiele - die
+            # JSON ist ohnehin 155 MB.
+            _b = belege_gegen_fakten["befunde"]
+            belege_gegen_fakten["befunde"] = _b[:25]
+        except Exception as exc:  # noqa: BLE001
+            belege_gegen_fakten = {"nicht_verfuegbar": str(exc)}
         try:
             spaltendrift = _spaltendrift(conn)
         except Exception as exc:  # noqa: BLE001
@@ -2577,6 +2595,7 @@ def main() -> None:
             "joblaeufe": joblaeufe,
             "laufzeit": laufzeit,
         "datenfrische": datenfrische,
+        "belege_gegen_fakten": belege_gegen_fakten,
         "spaltendrift": spaltendrift,
         "deep_dive": {
             "symbol": DEEP_DIVE_SYMBOL,

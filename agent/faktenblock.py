@@ -286,6 +286,40 @@ def _urteil(perzentil: float, hoch_ist_gut: bool) -> str:
     return _URTEIL[0] if gut_ende else (_URTEIL[2] if schlecht_ende else _URTEIL[1])
 
 
+# WELCHE PERZENTILE DAS MODELL NIE ZU SEHEN BEKOMMT (17.08.2026).
+#
+# DER ANLASS: das Modell hat sie sich selbst ausgedacht. In den Belegen
+# echter Signale stand
+#
+#     "Umsatzvolumen im 8. Perzentil (extrem ruhig)"
+#     "Umsatzvolumen im 92. Perzentil der letzten 400 Tage"
+#     "MORPHO Handelsvolumen im 100. Perzentil der letzten 400 Tage"
+#
+# - vierzehnmal, samt einer Fensterlaenge ("400 Tage"), die in keinem
+# unserer Saetze vorkommt. `kern()` sagt es ausdruecklich: *"Das Perzentil
+# erscheint NICHT im Text - es bestimmt nur das Urteilswort."* Das Modell
+# hat aus dem Urteilswort (GUENSTIG/UNGUENSTIG) eine plausible Zahl
+# zurueckgerechnet und sie als Messung hingeschrieben.
+#
+# Es ist die Umkehrung von R-T12: wir geben ein Etikett, und das Modell
+# baut daraus die Zahl, die wir ihm bewusst nicht gegeben haben.
+#
+# ⚠️ `auch_woanders` IST DER GANZE TRICK. Die Schwankung hat sehr wohl ein
+# Perzentil - im LAGEBILD, fuer den Markt ("Bitcoin-Volatilitaet im 0.
+# Perzentil"). Ein Beleg, der das zitiert, ist korrekt, und ihn zu melden
+# waere ein Fehlalarm. Von 33 Funden der ersten Prompt-Pruefung waren 31
+# genau solche; nach dem dritten Fehlalarm liest niemand mehr hin.
+PERZENTIL_NUR_INTERN = {
+    "volumen": {"woerter": ("umsatzvolumen", "handelsvolumen",
+                            "umsatz", "volumen"),
+                "auch_woanders": False},
+    "schwankung": {"woerter": ("schwankung", "volatilit"),
+                   "auch_woanders": True},
+    "momentum": {"woerter": ("kursentwicklung", "60-tage-hoch"),
+                 "auch_woanders": False},
+}
+
+
 def _block(schluessel: str, wert_text: str, perzentil: float) -> list[str]:
     k = KERN[schluessel]
     urteil = _urteil(perzentil, k["hoch_ist_gut"])
