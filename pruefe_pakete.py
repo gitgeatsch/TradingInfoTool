@@ -7963,6 +7963,19 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
 
 
 def main() -> int:
+    # ⚠️ DIE KONSOLE MUSS DIE ZEICHEN AUSHALTEN, DIE DAS PRODUKT BENUTZT
+    # (17.08.2026). Seit die Mail wieder ▲/●/▼ verwendet, stehen diese
+    # Zeichen in Pruefdetails - und Windows gibt hier cp1252 aus. Die
+    # ganze Suite brach mit einem UnicodeEncodeError ab, also gab ein
+    # Werkzeug, das Fehler finden soll, selbst einen aus.
+    #
+    # `errors="replace"` statt Zeichen zu meiden: was das Produkt
+    # schreibt, soll die Pruefung zeigen duerfen - notfalls mit einem
+    # Ersatzzeichen, aber nie mit einem Abbruch.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:                                        # noqa: BLE001
+        pass
     ap = argparse.ArgumentParser()
     ap.add_argument("--paket", default=None, help="nur dieses Paket pruefen")
     a = ap.parse_args()

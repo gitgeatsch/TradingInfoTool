@@ -633,10 +633,13 @@ def zeilen(ergebnis: dict) -> list[str]:
         # DIE SORGE BLEIBT ABER BERECHTIGT, und sie ist hier anders geloest:
         # die Bestaetigung nennt die Zahlen, auf die sie sich stuetzt. Damit
         # ist sie KEIN konstantes Feld - der Text bewegt sich mit den Daten.
+        # MIT MARKER (17.08.2026). `ui.formatting.render_detail_html` faerbt
+        # ▼ rot, ▲ gruen, ● grau - das Urteil ist die wichtigste Zeile des
+        # Abschnitts und stand bisher in derselben Farbe wie der Beitext.
         kopf = {
-            "ja": "EINWAND - die Positionierung spricht dagegen",
-            "nein": "kein Einwand - die Positionierung stuetzt den Handel",
-            "unklar": "nicht eindeutig - die Positionierung laesst beides zu",
+            "ja": "▼ EINWAND - die Positionierung spricht dagegen",
+            "nein": "▲ kein Einwand - die Positionierung stuetzt den Handel",
+            "unklar": "● nicht eindeutig - die Positionierung laesst beides zu",
         }.get(ergebnis["einwand"])
         # ⚠️ EIN UNBEKANNTES URTEIL VERSCHWAND LAUTLOS (17.08.2026,
         # Nutzerfund an einer BTC-Mail). Stand in `einwand` etwas anderes
@@ -656,7 +659,7 @@ def zeilen(ergebnis: dict) -> list[str]:
             logger.warning("Gegenpruefung mit unbekanntem Urteil %r - die "
                            "Mail nennt es jetzt, statt es wegzulassen",
                            ergebnis.get("einwand"))
-            z.append(f"Die Gegenpruefung lief, ihr Urteil ist aber nicht "
+            z.append(f"⚠ Die Gegenpruefung lief, ihr Urteil ist aber nicht "
                      f"lesbar ({ergebnis.get('einwand')!r}) - bitte nur "
                      f"die Angaben darunter werten.")
         # WORAUF ES BERUHT - die Saetze, die das zweite Modell gesehen hat.

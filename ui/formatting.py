@@ -285,6 +285,14 @@ def classify_detail_line(line: str) -> str | None:
         return "legend"
     if stripped.startswith("--- ") and stripped.endswith(" ---"):
         return "section_header"
+    # DIE HERKUNFTSZEILE DER NEUEN MAIL (17.08.2026). Sie steht eingerueckt
+    # in eckigen Klammern unter jedem Abschnittskopf - "[GEMESSEN - Kurse
+    # und Fremdquellen]". Ohne diese Regel faellt sie in den Zweig
+    # darunter und bleibt schwarzer Fliesstext; sie ist aber Beiwerk zum
+    # Kopf, kein Inhalt, und gehoert damit in dieselbe Klasse wie die
+    # Legende: kursiv und grau.
+    if stripped.startswith("[") and stripped.endswith("]"):
+        return "legend"
     if line.startswith(" "):
         return None  # eingerueckte Detailzeilen nie als Kopfzeile behandeln
     core = stripped.split("(", 1)[0].strip()  # z.B. "STUFE-B-SCORES (0-100 je Kategorie)" -> "STUFE-B-SCORES"

@@ -475,8 +475,20 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
     if belege:
         n = urteil.get("unabhaengige_faktoren")
         drei += ["", f"Belege ({len(belege)}, davon {n} unabhaengige Faktoren):"
-                 if n else f"Belege ({len(belege)}):"]
-        zeichen = {"dafuer": "+", "dagegen": "-", "neutral": "o"}
+                 if n else f"Belege ({len(belege)}):",
+                 # Dieselbe Legende wie in der alten Mail - der Renderer
+                 # erkennt sie an "Warnsignal" und setzt sie kursiv grau.
+                 "(▲ spricht dafuer · ● neutral · ▼ Warnsignal/spricht dagegen)"]
+        # ⚠️ DIE MARKER DES RENDERERS, NICHT EIGENE (17.08.2026,
+        # Nutzerhinweis mit einem Beispiel aus der ALTEN Mail).
+        #
+        # Die Mail geht laengst als HTML raus - `api/email_notify` haengt
+        # `ui.formatting.render_detail_html` davor, und der faerbt ▲ gruen,
+        # ▼ rot, ● grau und macht Abschnittskoepfe blau und fett. Die neue
+        # Kette schrieb aber "+/-/o" - Zeichen, die der Renderer nicht
+        # kennt. Die Farbe war nie weg; der Text hat nur aufgehoert, sie
+        # anzufordern.
+        zeichen = {"dafuer": "▲", "dagegen": "▼", "neutral": "●"}
         for b in belege:
             drei.append(f"  {zeichen.get(b.get('richtung'), '?')} "
                         f"{b.get('fakt', '')} [{b.get('gewicht', '?')}]")
