@@ -413,6 +413,34 @@ def _de(wert: float, stellen: int = 1) -> str:
     return _s_de(wert, stellen)
 
 
+def _herkunft_der_quote(b: dict) -> str:
+    """Woher die genannte Quote stammt - oder nichts, wenn sie traegt.
+
+    ⚠️ EINE TAUTOLOGIE VERMEIDEN (17.08.2026, Nutzerpruefung einer
+    BTC-Mail). Mein Fix vom selben Tag schrieb:
+
+        "Die 83 sind die Erfahrungsrate von 83, angepasst um 1 eigene Fall"
+
+    Bei CRV 0,2 liegt die Erfahrungsrate bei 83 %, und ein einzelner
+    eigener Fall verschiebt sie nicht sichtbar - beide Zahlen runden auf
+    denselben Wert. Der Satz erklaert dann nichts und liest sich wie ein
+    Fehler.
+
+    Die Unterscheidung haengt an der GERUNDETEN Zahl, nicht am Rohwert:
+    was der Leser sieht, entscheidet, ob eine Erklaerung noetig ist."""
+    if b.get("belastbar"):
+        return ""
+    n = int(b.get("faelle") or 0)
+    wort = "Fall" if n == 1 else "Faelle"
+    if round(100 * b["wahrscheinlichkeit"]) == round(100 * b["basisrate"]):
+        return (f" Das ist die Erfahrungsrate - {n} eigene{'r' if n == 1 else ''} "
+                f"{wort} {'verschiebt' if n == 1 else 'verschieben'} sie noch "
+                f"nicht.")
+    return (f" Die {100 * b['wahrscheinlichkeit']:.0f} sind die "
+            f"Erfahrungsrate von {100 * b['basisrate']:.0f}, angepasst um "
+            f"{n} eigene {wort} - fuer eine eigene Zahl sind es zu wenige.")
+
+
 def satz(bewertung: dict, einstieg=None, stop=None,
          einsatz_eur=None, klasse: str = "krypto") -> list[str]:
     """Der Entscheider-Block fuer die E-Mail.
@@ -498,12 +526,7 @@ def satz(bewertung: dict, einstieg=None, stop=None,
         zeilen.append(f"--> Traegt sich NICHT: "
                       f"{100 * b['wahrscheinlichkeit']:.0f} erreichen das Ziel, "
                       f"noetig waeren {100 * b['breakeven']:.0f}."
-                      + ("" if b["belastbar"] else
-                         f" Die {100 * b['wahrscheinlichkeit']:.0f} sind die "
-                         f"Erfahrungsrate von {100 * b['basisrate']:.0f}, "
-                         f"angepasst um {b['faelle']} eigene "
-                         f"{'Fall' if b['faelle'] == 1 else 'Faelle'} - fuer "
-                         f"eine eigene Zahl sind es zu wenige."))
+                      + _herkunft_der_quote(b))
     if b.get("abgelaufen"):
         zeilen.append(f"    ({b['abgelaufen']} weitere Faelle liefen ohne "
                       f"Entscheidung aus - die Quote steht auf "

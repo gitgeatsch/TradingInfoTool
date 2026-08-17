@@ -7826,10 +7826,139 @@ def paket_lesbar() -> None:
            "aus zwei gleichlautenden Zeilen wird eine, der Rest bleibt")
 
 
+def paket_btcmail() -> None:
+    """Die sechs Funde der BTC-Hebelmail vom 17.08.2026.
+
+    Vier stammen vom Nutzer, zwei von mir - darunter eine Tautologie, die
+    ich am selben Tag selbst eingebaut hatte."""
+    from agent import ausstiegsrechnung as _AR
+    from agent import entscheidungsrechnung as _ER
+    from agent import lagebeschreibung as _LB
+    from agent import signal_mail as _SM
+    from agent import trefferbilanz as _TB
+    from agent import zweite_meinung as _ZM
+
+    P = "BTC-Mail"
+    _a = _AR.bewerte(einstieg=56000.0, stop_original=54600.0,
+                     kurs_aktuell=54266.0, mfe_r=0.13)
+    _a["empfehlung"] = "HALTEN"
+
+    def _mail(inst="hebel", **flags):
+        e = dict(_a)
+        e.update(flags)
+        return _SM.baue_mail(
+            symbol="BTC", name="BTC", kurs_eur=54266.36, instrument=inst,
+            strategie="bestand", rechnung={},
+            urteil={"aktion": "HALTEN", "begruendung": "x",
+                    "was_dagegen": "Schwaeche",
+                    "umgeworfen_durch": "Schlusskurs unter 53.274 EUR"},
+            ausstieg=e,
+            bestand="In BTC besteht keine offene Hebelposition.")[1]
+
+    # --- P2: drei Zustaende statt zweier. Der gemeldete Fall ist der
+    # mittlere: BTC liegt im SPOT, die Mail handelt vom HEBEL.
+    _echt = _mail(ist_bestand=True)
+    _gegen = _mail(ist_bestand=False, ist_bestand_gegenseite=True)
+    _nichts = _mail(ist_bestand=False, ist_bestand_gegenseite=False)
+    pruefe(P, "P2: eine echte Position heisst weiterhin so",
+           "Bestehende Position:" in _echt)
+    pruefe(P, "P2: der GEMELDETE Fall nennt die andere Seite",
+           "Sie halten diesen Wert im Spot, aber keine Hebelposition"
+           in _gegen and "Bestehende Position:" not in _gegen,
+           "die Mail sagte oben 'keine offene Hebelposition' und unten "
+           "'Bestehende Position' - weil beide Toepfe verschmolzen waren")
+    pruefe(P, "P2: und im Spot-Lauf steht es andersherum",
+           "Sie halten eine Hebelposition auf diesen Wert" in
+           _mail("spot", ist_bestand=False, ist_bestand_gegenseite=True))
+    pruefe(P, "P2: ohne alles bleibt es der verfolgte Vorschlag",
+           "(NICHT im Bestand)" in _nichts)
+    pruefe(P, "P2: kein zusammengesteckter Artikel",
+           "eine Spot-Bestand" not in _gegen,
+           "mein erster Entwurf baute 'eine {_andere}' zusammen")
+
+    # --- P5: ein unbekanntes Urteil darf nicht lautlos verschwinden.
+    _g = ["Die offenen Kontrakte sind gefallen."]
+    pruefe(P, "P5: ein bekanntes Urteil steht wie bisher da",
+           "kein Einwand" in _ZM.zeilen(
+               {"einwand": "nein", "einwand_grund": "x", "grundlage": _g})[0])
+    _unbek = _ZM.zeilen({"einwand": "keine", "grundlage": _g})
+    pruefe(P, "P5: ein unbekanntes wird BENANNT statt weggelassen",
+           _unbek and "nicht lesbar" in _unbek[0],
+           "vorher zeigte der Abschnitt die Fakten samt Schlusssatz, aber "
+           "kein Urteil - genau die Mail, die gemeldet wurde")
+    pruefe(P, "P5: gar kein Urteil bleibt ein leerer Abschnitt",
+           _ZM.zeilen({"grundlage": _g}) == [],
+           "ein Abschnitt ohne Inhalt saehe aus wie ein Befund")
+
+    # --- B: meine eigene Tautologie.
+    def _bilanz(basis, wahr, faelle):
+        return {"basisrate": basis, "wahrscheinlichkeit": wahr,
+                "breakeven": 0.94, "traegt": False, "belastbar": False,
+                "faelle": faelle, "crv": 0.2, "treffer": 1,
+                "abgelaufen": 0, "anteil_entschieden": 1.0}
+
+    _btc = " ".join(_TB.satz(_bilanz(0.83, 0.834, 1), einstieg=100.0,
+                             stop=97.5, einsatz_eur=1000.0))
+    _sol = " ".join(_TB.satz(_bilanz(0.34, 0.36, 3), einstieg=100.0,
+                             stop=97.5, einsatz_eur=1000.0))
+    pruefe(P, "B: keine 'Erfahrungsrate von 83' neben einer 83",
+           "Erfahrungsrate von 83" not in _btc
+           and "Das ist die Erfahrungsrate" in _btc,
+           "bei CRV 0,2 runden beide Zahlen auf denselben Wert - der Satz "
+           "erklaerte dann nichts und las sich wie ein Fehler")
+    pruefe(P, "B: wo sie sich unterscheiden, wird es weiter erklaert",
+           "Erfahrungsrate von 34, angepasst um 3 eigene Faelle" in _sol,
+           "sonst waere die Korrektur ein Informationsverlust")
+    pruefe(P, "B: und der Singular stimmt",
+           "1 eigener Fall verschiebt sie noch nicht" in _btc, _btc[-90:])
+
+    # --- C: keine Anrede an das Modell im Nutzertext.
+    _hg = " ".join(_LB._hebelgeometrie(900.0, 54266.0, "hebel"))
+    pruefe(P, "C: kein 'du' im Faktentext",
+           " du " not in f" {_hg} " and "deiner" not in _hg,
+           "Faktentexte gehen an BEIDE Leser - wer einen anspricht, "
+           "schreibt fuer den anderen falsch")
+    pruefe(P, "C: die Aussage bleibt vollstaendig",
+           "Risikobudget" in _hg and "Stopabstand" in _hg
+           and "nach der Entscheidung" in _hg,
+           "sie haelt das Modell davon ab, selbst einen Faktor zu waehlen")
+
+    # --- D: Grammatik.
+    _r = _ER.rechne(kurs=100.0, atr=2.0, risiko_eur=25.0, instrument="spot",
+                    betrag_wunsch_eur=1000.0)
+    _eins = dict(_r, haltedauer_tage=1)
+    _drei = dict(_r, haltedauer_tage=3)
+    pruefe(P, "D: 'etwa 1 Handelstag', nicht 'Handelstage'",
+           any("etwa 1 Handelstag " in z for z in _ER.saetze(_eins)))
+    pruefe(P, "D: der Plural bleibt Plural",
+           any("etwa 3 Handelstage " in z for z in _ER.saetze(_drei)))
+
+    # --- P3: der Bezug wird ausgeschrieben.
+    pruefe(P, "P3: kein Fuerwort, dessen Bezug man raten muss",
+           "Die Entscheidung HALTEN waere widerlegt durch" in _echt
+           and "Widerlegt waere das durch" not in _echt,
+           "'Was dagegen spricht ...' und 'Widerlegt waere DAS durch ...' "
+           "standen direkt untereinander")
+
+    # --- P1: die Zeitachse.
+    import inspect as _i
+
+    from ui import trade_chart as _TC
+
+    _src = _i.getsource(_TC.render_trade_chart)
+    pruefe(P, "P1: der Chart setzt Zeitmarken statt keiner",
+           "set_xticklabels" in _src and "set_xlabel" in _src,
+           "hier stand `ax.set_xticks([])` - ob der Verlauf zwei Wochen "
+           "oder ein halbes Jahr zeigt, aendert alles an seiner Bedeutung")
+    pruefe(P, "P1: das Datum kommt aus DERSELBEN Kerze wie der Kurs",
+           'getattr(hist[i], "date"' in _src,
+           "eine zweite Zeitquelle waere eine zweite Wahrheit")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar,
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail,
           "Frische": paket_frische}
 
 

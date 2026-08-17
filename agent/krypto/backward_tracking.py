@@ -4791,17 +4791,28 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
     # vollstaendig gestakter Wert stand hier deshalb als NICHT gehalten, und
     # seine Ausstiegsfuehrung galt als blosse Signalverfolgung. Der Nutzer
     # haelt SOL seit Langem; im Export haben 23 von 56 Zeilen die Menge 0.
+    #
+    # ⚠️ UND JE INSTRUMENT GETRENNT (17.08.2026, Nutzerfund an einer
+    # BTC-Hebelmail). Beide Mengen standen bis heute in EINEM `gehalten`:
+    #
+    #     Abschnitt 1:  In BTC besteht keine offene Hebelposition.
+    #     Abschnitt 2:  Bestehende Position: Empfehlung HALTEN
+    #
+    # BTC liegt im SPOT-Bestand - damit galt `ist_bestand` auch im
+    # HEBEL-Lauf, und die Mail widersprach sich zwanzig Zeilen weiter.
+    # Es ist derselbe Fehler wie am 15.08. beim Bestandsblock ("meinte
+    # den SPOT-Bestand"), nur an der Kennzeichnung statt an den Fakten.
     try:
-        gehalten = {r[0] for r in conn.execute(
+        gehalten_spot = {r[0] for r in conn.execute(
             "SELECT symbol FROM holdings WHERE "
             "COALESCE(quantity, 0) + COALESCE(staked_quantity, 0) > 0")}
     except Exception:
-        gehalten = set()
+        gehalten_spot = set()
     try:
-        gehalten |= {r[0] for r in conn.execute(
+        gehalten_hebel = {r[0] for r in conn.execute(
             "SELECT symbol FROM hebel_positions WHERE status = 'offen'")}
     except Exception:
-        pass
+        gehalten_hebel = set()
     for tabelle, ist_hebel in (("signals", False), ("hebel_signals", True)):
         spalten = {r[1] for r in conn.execute(f"PRAGMA table_info({tabelle})")}
         if "outcome_max_realisiertes_crv" not in spalten:
@@ -4880,7 +4891,14 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
                     # DERSELBEN Zeile des Preis-Caches (price_eur/price_usd) -
                     # eine zweite Umrechnungsquelle waere eine zweite Wahrheit.
                     "eur_je_usd": _eur_je_usd(preise.get(row["symbol"])),
-                    "ist_bestand": row["symbol"] in gehalten,
+                    # DAS EIGENE INSTRUMENT entscheidet, ob es eine
+                    # Position ist. Die andere Seite wird BENANNT statt
+                    # verschwiegen - sie gehoert dem Leser, nur eben
+                    # nicht unter dieser Ueberschrift.
+                    "ist_bestand": row["symbol"] in (
+                        gehalten_hebel if ist_hebel else gehalten_spot),
+                    "ist_bestand_gegenseite": row["symbol"] in (
+                        gehalten_spot if ist_hebel else gehalten_hebel),
                     **voll})
 
             e = stopempfehlung_aus_mfe(
@@ -4938,7 +4956,15 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
         for row in rows:
             # NUR WAS WIRKLICH IM DEPOT LIEGT. Ein erreichtes Ziel auf einem
             # nie gekauften Signal ist ein Messpunkt, kein Verkaufsauftrag.
-            if row["symbol"] not in gehalten:
+            #
+            # ⚠️ UND ZWAR IM PASSENDEN INSTRUMENT (17.08.2026). Hier stand
+            # das verschmolzene `gehalten` - ein Spot-Bestand haette einen
+            # Verkaufshinweis fuer eine Hebelposition erzeugt, die es nicht
+            # gibt. `finde_freie_namen.py` hat diese Zeile gefunden,
+            # nachdem die Menge oben aufgeteilt war; ohne das Werkzeug waere
+            # sie ein NameError hinter einem breiten Fang gewesen.
+            if row["symbol"] not in (gehalten_hebel if ist_hebel
+                                     else gehalten_spot):
                 continue
             ergebnis["ziel_erreicht"].append({
                 "symbol": row["symbol"],

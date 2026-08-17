@@ -378,9 +378,36 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
         # 13.08. die offene Position von der alten Signalzeile ("von 45
         # Signal-Symbolen lagen 28 gar nicht im Bestand"). Sie stand nur
         # nirgends in der Mail.
-        zwei += [("Bestehende Position:" if ausstieg.get("ist_bestand")
-                  else "Verfolgter Einstiegsvorschlag (NICHT im Bestand):")
-                 ] + [f"  {z}" for z in AR.saetze(ausstieg)]
+        # DREI ZUSTAENDE, NICHT ZWEI (17.08.2026, Nutzerfund an einer
+        # BTC-Hebelmail). Die Mail sagte oben "In BTC besteht keine offene
+        # Hebelposition" und zwanzig Zeilen tiefer "Bestehende Position" -
+        # weil BTC im SPOT liegt und `ist_bestand` beide Toepfe
+        # verschmolz. Jetzt sagt die Ueberschrift, WORAUF sich die
+        # Empfehlung bezieht:
+        #
+        #   dieses Instrument   "Bestehende Position"
+        #   die andere Seite    "Ihr Bestand auf der anderen Seite"
+        #   nur verfolgt        "Verfolgter Einstiegsvorschlag"
+        #
+        # Die andere Seite wird BENANNT statt verschwiegen - sie gehoert
+        # dem Leser, nur eben nicht unter der ersten Ueberschrift.
+        # Dieselbe Entscheidung wie bei `rollen_eingabe.gegenbestand_satz`.
+        # ⚠️ ZWEI FESTE SAETZE STATT EINES BAUSTEINS. Mein erster Entwurf
+        # setzte "eine {_andere}" zusammen und schrieb "eine
+        # Spot-Bestand" - eine Mail, die so schreibt, wirkt auf den Rest
+        # genauso sorgfaeltig. Deutsche Artikel lassen sich nicht
+        # zusammenstecken.
+        _gegen = ("Sie halten diesen Wert im Spot, aber keine "
+                  "Hebelposition darauf" if instrument == "hebel" else
+                  "Sie halten eine Hebelposition auf diesen Wert, aber "
+                  "keinen Bestand im Spot")
+        if ausstieg.get("ist_bestand"):
+            _kopf = "Bestehende Position:"
+        elif ausstieg.get("ist_bestand_gegenseite"):
+            _kopf = f"Verfolgter Einstiegsvorschlag - {_gegen}:"
+        else:
+            _kopf = "Verfolgter Einstiegsvorschlag (NICHT im Bestand):"
+        zwei += [_kopf] + [f"  {z}" for z in AR.saetze(ausstieg)]
         # ZWEI ZAHLEN UNTER EINEM WORT (17.08.2026, Nutzerpruefung).
         #
         # Die SOL-Mail nannte "die Unterstuetzung" dreimal - zweimal bei
@@ -432,7 +459,18 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
     if urteil.get("was_dagegen"):
         drei += ["", f"Was dagegen spricht: {urteil['was_dagegen']}"]
     if urteil.get("umgeworfen_durch"):
-        drei += ["", f"Widerlegt waere das durch: {urteil['umgeworfen_durch']}"]
+        # ⚠️ WAS IST "DAS"? (17.08.2026, Nutzerpruefung einer BTC-Mail).
+        # Die beiden Saetze standen direkt untereinander:
+        #
+        #     Was dagegen spricht: Die negative Kursentwicklung ...
+        #     Widerlegt waere DAS durch: Schlusskurs unter 53.274 EUR
+        #
+        # Gemeint ist die ENTSCHEIDUNG des Modells - der Leser muss aber
+        # raten, ob die Schwaeche widerlegt wird, die eine Zeile hoeher
+        # steht. Ein Fuerwort, dessen Bezug man erraten muss, ist in einer
+        # Handelsempfehlung eines zu viel.
+        drei += ["", f"Die Entscheidung {aktion} waere widerlegt durch: "
+                     f"{urteil['umgeworfen_durch']}"]
     belege = urteil.get("belege") or []
     if belege:
         n = urteil.get("unabhaengige_faktoren")

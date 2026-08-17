@@ -106,7 +106,36 @@ def render_trade_chart(*, reihe: list, index: int, rechnung: dict,
 
         ax.set_title(f"{symbol} - der geplante Trade", fontsize=10)
         ax.tick_params(labelsize=8)
-        ax.set_xticks([])
+        # DIE ZEITACHSE WAR LEER (17.08.2026, Nutzerhinweis). Hier stand
+        # `ax.set_xticks([])` - das Bild zeigte einen Verlauf ohne
+        # Zeitangabe, und ob er ueber zwei Wochen oder ueber ein halbes
+        # Jahr laeuft, aendert alles an seiner Bedeutung.
+        #
+        # VIER BIS FUENF MARKEN, NICHT ALLE. Bei 120 Kerzen waeren 120
+        # Datumsangaben eine schwarze Leiste; die Enden und drei Punkte
+        # dazwischen sagen dasselbe und bleiben lesbar. Das Datum kommt
+        # aus DERSELBEN Kerze wie der Kurs - eine zweite Zeitquelle waere
+        # eine zweite Wahrheit.
+        marken_x, marken_text = [], []
+        schritt = max(1, (len(hist) - 1) // 4)
+        for i in range(0, len(hist), schritt):
+            tag = str(getattr(hist[i], "date", "") or "")[:10]
+            if not tag:
+                continue
+            marken_x.append(i)
+            # Tag und Monat reichen - das Jahr steht ohnehin im Mailkopf,
+            # und vier volle Datumsangaben nebeneinander liest niemand.
+            marken_text.append(f"{tag[8:10]}.{tag[5:7]}.")
+        if marken_x:
+            ax.set_xticks(marken_x)
+            ax.set_xticklabels(marken_text, fontsize=7)
+            # Wieviel Zeit das Bild ueberhaupt zeigt - die Frage, die man
+            # sonst aus den Marken zusammenrechnen muesste.
+            ax.set_xlabel(f"{len(hist)} Handelstage bis "
+                          f"{str(getattr(hist[-1], 'date', '') or '')[:10]}",
+                          fontsize=7)
+        else:
+            ax.set_xticks([])
         ax.grid(True, alpha=0.2)
         ax.legend(fontsize=7, loc="best", framealpha=0.85)
         fig.tight_layout()

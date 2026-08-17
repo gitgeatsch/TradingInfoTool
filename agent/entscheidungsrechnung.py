@@ -646,7 +646,9 @@ def saetze(e: dict) -> list[str]:
         z.append(f"                !! Der Weg bis dorthin traegt nur CRV "
                  f"{_eur(e['crv'], 1)}, verlangt sind {_eur(GRENZEN['crv'], 1)}")
     z += [
-         f"Haltedauer      etwa {e['haltedauer_tage']} Handelstage "
+         # "etwa 1 Handelstage" stand in einer echten Mail.
+         f"Haltedauer      etwa {e['haltedauer_tage']} "
+         f"{'Handelstag' if e['haltedauer_tage'] == 1 else 'Handelstage'} "
          f"({e.get('haltedauer_quelle', 'geschaetzt')})",
          f"Betrag          {_eur(e['betrag_eur'])} EUR"
          + (f"  - begrenzt durch {e['betrag_gedeckelt_durch']}"

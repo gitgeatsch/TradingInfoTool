@@ -506,9 +506,20 @@ def _hebelgeometrie(atr: float, close: float,
              for h in GRENZHEBEL]
     return ["Der Abstand zur Zwangsaufloesung haengt allein am Hebelfaktor: "
             + "; ".join(teile) + ".",
+            # ⚠️ KEINE ANREDE AN DAS MODELL IN EINEM SATZ, DEN DER NUTZER
+            # LIEST (17.08.2026, Nutzerpruefung einer BTC-Mail). Hier stand
+            # "dem Stopabstand, den DU nennst - gerechnet wird er nach
+            # DEINER Antwort". Fuer das Modell stimmte das; in der Mail
+            # stand es dann vor einem Leser, der nichts genannt hat.
+            #
+            # Die Aussage bleibt vollstaendig - sie haelt das Modell davon
+            # ab, selbst einen Faktor zu waehlen (Kapitel 11.6: der Faktor
+            # ist ein Risikoparameter, kein Urteil). Nur die Anrede faellt
+            # weg. Faktentexte gehen an BEIDE Leser; wer einen davon
+            # anspricht, schreibt fuer den anderen falsch.
             "Welcher Faktor es wird, folgt aus dem Risikobudget und dem "
-            "Stopabstand, den du nennst - gerechnet wird er nach deiner "
-            "Antwort."]
+            "gewaehlten Stopabstand - er wird erst nach der Entscheidung "
+            "gerechnet."]
 
 
 def _referenz(referenz: dict | None) -> list[str]:

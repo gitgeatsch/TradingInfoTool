@@ -10096,3 +10096,139 @@ was das Modell liest.
 **Nicht angefasst:** reine Zählungen bleiben ohne Tausenderpunkt („1184
 Monaten", „366 Messungen"). Sie sind Anzahlen, keine Messwerte — ein Punkt
 darin läse sich wie eine Genauigkeit, die es nicht gibt.
+
+---
+
+## Kapitel 81 — Sechs Funde aus einer BTC-Hebelmail (17.08.2026)
+
+Vier vom Nutzer, zwei von mir — darunter eine Tautologie, die ich am selben
+Tag selbst eingebaut hatte.
+
+### 81.1 P2 — „Bestehende Position" bei einer Position, die es nicht gibt
+
+```
+Abschnitt 1:  In BTC besteht keine offene Hebelposition.
+Abschnitt 2:  Bestehende Position: Empfehlung HALTEN, Stand -3,8 %
+```
+
+**Beide Mengen standen in einem `gehalten`:**
+
+```python
+gehalten  = {symbol FROM holdings ...}
+gehalten |= {symbol FROM hebel_positions WHERE status='offen'}
+ist_bestand = row["symbol"] in gehalten
+```
+
+BTC liegt im **Spot**-Bestand — damit galt `ist_bestand` auch im
+**Hebel**-Lauf. **Es ist derselbe Fehler wie am 15.08. beim Bestandsblock**
+(*„meinte den SPOT-Bestand"*), nur an der Kennzeichnung statt an den Fakten.
+
+**Drei Zustände statt zweier**, und die andere Seite wird benannt statt
+verschwiegen — dieselbe Entscheidung wie bei `gegenbestand_satz`:
+
+| Lage | Überschrift |
+|---|---|
+| dieses Instrument | `Bestehende Position:` |
+| **die andere Seite** | `Verfolgter Einstiegsvorschlag - Sie halten diesen Wert im Spot, aber keine Hebelposition darauf:` |
+| nur verfolgt | `Verfolgter Einstiegsvorschlag (NICHT im Bestand):` |
+
+> ⚠️ **`finde_freie_namen.py` hat einen Rest gefunden, bevor er lief.** Nach
+> dem Aufteilen der Menge blieb in der Take-Profit-Nachlese ein `gehalten`
+> stehen — ein Spot-Bestand hätte dort einen Verkaufshinweis für eine
+> Hebelposition erzeugt, die es nicht gibt. Ohne das Werkzeug ein NameError
+> hinter einem breiten Fang.
+
+> ⚠️ **Und mein erster Entwurf schrieb „eine Spot-Bestand".** Deutsche Artikel
+> lassen sich nicht zusammenstecken; jetzt zwei feste Sätze je Instrument.
+
+### 81.2 P5 — das Urteil der Gegenprüfung verschwand lautlos
+
+| `einwand` | Ausgabe **vorher** |
+|---|---|
+| `nein` | Urteil + Fakten + Schlusssatz |
+| fehlt | gar nichts |
+| **unbekanntes Wort** | **Fakten + Schlusssatz, aber kein Urteil** |
+
+**Der dritte Fall ist die gemeldete Mail** — deterministisch nachgestellt. Wo
+der unbekannte Wert herkommt, ist **noch offen**: `rolle_g` lässt nur
+ja/nein/unklar durch. Die Zeile macht den Fall jetzt sichtbar, statt auf die
+Ursache zu warten:
+
+```
+Die Gegenpruefung lief, ihr Urteil ist aber nicht lesbar ('keine') -
+bitte nur die Angaben darunter werten.
+```
+
+Dazu eine Warnung im Log. **Im Export ist es keine Randerscheinung: 69 von 119
+Urteilen tragen gar keine Gegenprüfung.**
+
+### 81.3 B — meine eigene Tautologie
+
+> „Die 83 sind die Erfahrungsrate von 83, angepasst um 1 eigene Fall"
+
+Bei **CRV 0,2** liegt die Erfahrungsrate bei 83 %, und ein einzelner eigener
+Fall verschiebt sie nicht sichtbar — beide Zahlen runden auf denselben Wert.
+Mein Fix von heute Vormittag hätte das erkennen müssen.
+
+```
+nachher   Das ist die Erfahrungsrate - 1 eigener Fall verschiebt sie
+          noch nicht.
+```
+
+Die Unterscheidung hängt an der **gerundeten** Zahl: was der Leser sieht,
+entscheidet, ob eine Erklärung nötig ist.
+
+### 81.4 C — ein Satz sprach das Modell an, nicht den Leser
+
+```
+vorher   ... und dem Stopabstand, den DU nennst - gerechnet wird er nach
+         DEINER Antwort.
+nachher  ... und dem gewaehlten Stopabstand - er wird erst nach der
+         Entscheidung gerechnet.
+```
+
+Die Aussage bleibt vollständig — sie hält das Modell davon ab, selbst einen
+Faktor zu wählen (Kapitel 11.6). **Faktentexte gehen an beide Leser; wer einen
+davon anspricht, schreibt für den anderen falsch.**
+
+### 81.5 P3 und D — Bezug und Grammatik
+
+```
+vorher   Was dagegen spricht: Die negative Kursentwicklung ...
+         Widerlegt waere DAS durch: Schlusskurs unter 53.274 EUR
+nachher  Die Entscheidung EROEFFNEN waere widerlegt durch: ...
+```
+
+**Ein Fürwort, dessen Bezug man erraten muss, ist in einer Handelsempfehlung
+eines zu viel.** Dazu: „etwa 1 Handelstag" statt „1 Handelstage".
+
+### 81.6 P1 — die Zeitachse
+
+Hier stand `ax.set_xticks([])`. **Ob ein Verlauf zwei Wochen oder ein halbes
+Jahr zeigt, ändert alles an seiner Bedeutung.**
+
+```
+21.04.      13.05.      04.06.      26.06.      18.07.
+        90 Handelstage bis 2026-07-19
+```
+
+Vier bis fünf Marken, nicht alle — bei 120 Kerzen wären 120 Datumsangaben eine
+schwarze Leiste. Das Datum kommt aus **derselben Kerze** wie der Kurs.
+
+### 81.7 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **1.008**, alle bestanden — **18 neu unter `--paket BTC`** |
+| P2 | vier Lagen · kein zusammengesteckter Artikel |
+| P5 | bekannt · **unbekannt benannt** · gar keines bleibt leer |
+| B | Tautologie weg · Erklärung bleibt, wo sie trägt · Singular |
+| C | kein „du" · Aussage vollständig |
+| D · P3 · P1 | Singular und Plural · Bezug ausgeschrieben · Achse gezeichnet |
+| freie Namen | 0 — **nach einem Fund**, der ohne das Werkzeug still gewesen wäre |
+| Zahlenprüfer · Belegprüfer · Phase 1 | 9/9 · 9/9 · bestanden |
+| Simulation | 4 Gruppen, 8 Signale, **0 Fehler, 0 Lücken** |
+
+**Offen und zur Entscheidung:** ob CRV < 1 den Einstieg sperren soll (die
+BTC-Mail bot 150 EUR Risiko für 35 EUR Chance), und ob die Belege Pfeile
+bekommen oder die Mail auf HTML umgestellt wird.

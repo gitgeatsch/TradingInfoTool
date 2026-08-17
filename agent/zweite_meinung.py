@@ -638,9 +638,27 @@ def zeilen(ergebnis: dict) -> list[str]:
             "nein": "kein Einwand - die Positionierung stuetzt den Handel",
             "unklar": "nicht eindeutig - die Positionierung laesst beides zu",
         }.get(ergebnis["einwand"])
+        # ⚠️ EIN UNBEKANNTES URTEIL VERSCHWAND LAUTLOS (17.08.2026,
+        # Nutzerfund an einer BTC-Mail). Stand in `einwand` etwas anderes
+        # als ja/nein/unklar, war `kopf` None - und der Abschnitt zeigte
+        # die FAKTEN samt Schlusssatz, aber kein Urteil. Der Leser sieht
+        # eine gelaufene Gegenpruefung ohne Ergebnis und kann nicht
+        # unterscheiden, ob sie nichts gefunden hat oder ob etwas fehlt.
+        #
+        # Nachgestellt: mit `einwand="keine"` entsteht exakt die Mail, die
+        # gemeldet wurde. Wo der Wert herkommt, ist noch offen - `rolle_g`
+        # laesst nur die drei Woerter durch. Diese Zeile macht den Fall
+        # sichtbar, statt auf die Ursache zu warten.
         if kopf:
             z.append(kopf + (f": {ergebnis['einwand_grund']}"
                              if ergebnis.get("einwand_grund") else "."))
+        else:
+            logger.warning("Gegenpruefung mit unbekanntem Urteil %r - die "
+                           "Mail nennt es jetzt, statt es wegzulassen",
+                           ergebnis.get("einwand"))
+            z.append(f"Die Gegenpruefung lief, ihr Urteil ist aber nicht "
+                     f"lesbar ({ergebnis.get('einwand')!r}) - bitte nur "
+                     f"die Angaben darunter werten.")
         # WORAUF ES BERUHT - die Saetze, die das zweite Modell gesehen hat.
         # Ohne sie waere auch die Bestaetigung eine Behauptung.
         for satz in (ergebnis.get("grundlage") or []):
