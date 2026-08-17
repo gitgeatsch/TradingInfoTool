@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Behauptet das Modell Zahlen, die es nie bekommen hat? (17.08.2026)
+"""Nennt das Modell ein Perzentil, wo es keines gibt? (17.08.2026)
 
 DER ANLASS - Nutzerpruefung einer echten SOL-Mail, Punkt A6:
 
@@ -22,6 +22,20 @@ den die Mail als BEWEIS praesentiert - mit Gewicht (hoch/mittel/gering) und
 gezaehlt als "unabhaengige Faktoren". Eine erfundene Messung darin ist eine
 Behauptung mit Siegel. Und sie ist nicht als solche erkennbar: "im 92.
 Perzentil der letzten 400 Tage" liest sich exakt wie unsere echten Saetze.
+
+⚠️ NACHTRAG AM SELBEN TAG - DIE ERSTE DEUTUNG WAR ZUR HAELFTE FALSCH.
+Nach Promptstand aufgeschluesselt beginnen die Befunde exakt mit dem
+Stand, der Krypto-Spot den UMSCHLAG gegeben hat (0 davor, 19 von 272
+danach). Und dessen Satz traegt ein Perzentil. Der Beleg "MON:
+Umsatzvolumen 6.0 % (84. Perzentil)" enthaelt BEIDE unsere Zahlen: das
+Modell hat sie nicht erfunden, sondern UMBENANNT - in den Namen des
+Blocks nebenan, der bewusst kein Perzentil hat.
+
+Der Befund bleibt trotzdem ein Befund: zu DIESER Groesse gibt es kein
+Perzentil, und der Leser kann die beiden nicht auseinanderhalten. Nur
+heisst er jetzt richtig - "Perzentil zu einer Groesse, die keines hat",
+nicht "erfunden". Frei erfunden bleiben die Fensterlaengen ("der letzten
+400 Tage" - die gibt es nirgends).
 
 WAS DIESES WERKZEUG NICHT KANN. Es prueft nicht jede Zahl gegen die Fakten
 des jeweiligen Laufs - die Fakten werden je Signal nicht gespeichert, und
@@ -176,7 +190,7 @@ def main() -> int:
 
     e = aus_zeilen(zeilen)
     print("=" * 78)
-    print("BELEGE GEGEN DIE FAKTEN - erfundene Perzentile")
+    print("BELEGE GEGEN DIE FAKTEN - Perzentile zu Groessen, die keines haben")
     print("=" * 78)
     print(f"  Signale {e['signale']}, Belege {e['belege']}")
     print(f"  geprueft auf: {', '.join(e['geprueft_auf'])}")

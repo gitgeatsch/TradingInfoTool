@@ -9893,3 +9893,101 @@ gebaut** — er ändert den Prompt ein drittes Mal an einem Tag.
 | Herkunft | sechs Abschnitte · kein Modellname · gemischter Fall benannt |
 | freie Namen · Zahlenprüfer · Belegprüfer · Phase 1 | 0 · 9/9 · 9/9 · bestanden |
 | Simulation | 4 Gruppen, 8 Signale, **0 Fehler, 0 Lücken** |
+
+---
+
+## Kapitel 79 — Der Umschlag bekommt ein Hauptwort (17.08.2026)
+
+### 79.1 Die Ursache statt des Symptoms
+
+**Kapitel 77 nannte es eine Erfindung. Es war eine Umbenennung.**
+
+```
+unser Satz:  Vom gesamten Umlaufbestand ... wechselten in den letzten
+             24 Stunden 6,0 % den Besitzer; das liegt im 84. Perzentil ...
+das Modell:  MON: Umsatzvolumen 6.0 % (84. Perzentil) deutet auf
+             Liquiditaet hin
+```
+
+**Beide Zahlen sind unsere.** Und „Umsatzvolumen" ist der Name des Blocks
+direkt daneben — der bewusst **kein** Perzentil hat.
+
+| Promptstand | Belege | Perzentile zu einer Größe ohne Perzentil |
+|---|---:|---:|
+| 12.08. · 16. · 16b | 1.484 | **0** |
+| **17b** (Umschlag kam dazu) | 272 | **19 (6,99 %)** |
+
+**Der Zusammenhang ist nicht zu übersehen.**
+
+### 79.2 Warum der alte Satz einlud, ihn umzubenennen
+
+**Er hatte kein eigenes Hauptwort.** Er begann mit *„Vom gesamten
+Umlaufbestand"*, und das Perzentil hing an einem **„das"** auf einen
+Nebensatz. Wer daraus zitiert, muss sich selbst einen Namen dafür suchen — und
+der naheliegende stand zwei Zeilen weiter oben.
+
+**Die Abhilfe ist ein Hauptwort:**
+
+```
+vorher   Vom gesamten Umlaufbestand dieses Werts wechselten in den letzten
+         24 Stunden 6,0 % den Besitzer; das liegt im 84. Perzentil der
+         letzten 120 Messungen - im gewohnten Bereich.
+
+nachher  Der Umschlag dieses Werts betraegt 6,0 %: so viel vom
+         Umlaufbestand hat binnen 24 Stunden den Besitzer gewechselt.
+         Dieser Umschlag liegt im 84. Perzentil der letzten 120
+         Messungen - im gewohnten Bereich.
+```
+
+Drei Änderungen, jede mit einem Zweck:
+
+| | |
+|---|---|
+| **„Der Umschlag"** als Subjekt | ein benanntes Ding, kein Vorgang |
+| **„Dieser Umschlag liegt im …"** | das Perzentil hängt an DIESEM Wort, nicht an einem „das" |
+| **„vom Umlaufbestand"** | der Bezug steht dabei — der Volumenblock misst gegen den eigenen Durchschnitt, der Umschlag gegen den Umlaufbestand |
+
+**Und das Wort „Umsatz" kommt darin nicht mehr vor** — es gehört dem Block
+nebenan.
+
+**Die beiden nebeneinander, wie das Modell sie liest:**
+
+```
+Der Umschlag dieses Werts betraegt 6,0 % ... Dieser Umschlag liegt im
+84. Perzentil der letzten 120 Messungen - im gewohnten Bereich.
+
+Volumen      das 0,4-fache des Mittels                MITTEL
+  Wie viel heute gehandelt wird, verglichen mit den letzten 20 Tagen.
+```
+
+`PROMPT_STAND` → **`2026-08-17d`**. Die Zeile aus 17c bleibt — sie schadet
+nicht und deckt den Rest.
+
+### 79.3 Der Prüfer heißt jetzt richtig
+
+**Meine erste Deutung war zur Hälfte falsch, und das steht jetzt im Werkzeug**
+— nicht nur im Umbauplan:
+
+> „Perzentile zu Größen, die keines haben" statt „erfundene Perzentile".
+
+**Der Befund bleibt trotzdem ein Befund:** zu dieser Größe gibt es kein
+Perzentil, und der Leser kann die beiden nicht auseinanderhalten. **Frei
+erfunden bleiben die Fensterlängen** („der letzten 400 Tage" — die gibt es
+nirgends).
+
+### 79.4 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **988**, alle bestanden — **7 neu (A6b)** |
+| der neue Satz | Hauptwort · Perzentil hängt daran · Bezug genannt · **„Umsatz" kommt nicht vor** |
+| der Block daneben | hat weiterhin **kein** Perzentil — sonst hätte die Umbenennung eine zweite Quelle |
+| Prüfer, beide Richtungen | „Umschlag im 84. Perzentil" **erlaubt** · „Umsatzvolumen (84. Perzentil)" **gemeldet** |
+| Promptstand | mitgezogen, bestehende Prüfungen nachgeführt |
+| freie Namen · Zahlenprüfer · Belegprüfer · Phase 1 | 0 · 9/9 · 9/9 · bestanden |
+| Simulation | 4 Gruppen, 8 Signale, **0 Fehler, 0 Lücken** |
+
+> **Offen und nicht angefasst:** die Mail mischt zwei Zahlenschreibweisen —
+> „2,3 %" aus dem Faktenblock neben „−1.2 %" aus der Lagebeschreibung. Das
+> betrifft viele Sätze auf einmal und damit den Prompt; getrennt zu
+> entscheiden.

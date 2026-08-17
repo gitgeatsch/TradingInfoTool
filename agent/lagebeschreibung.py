@@ -732,9 +732,34 @@ def _umschlag(umschlag: dict | None) -> list[str]:
     # waeren schlimmer als keiner.
     wie = ("aussergewoehnlich lebhaft" if p >= 90 else
            "aussergewoehnlich ruhig" if p <= 10 else "im gewohnten Bereich")
-    return [f"Vom gesamten Umlaufbestand dieses Werts wechselten in den "
-            f"letzten 24 Stunden {anteil:.1f} % den Besitzer; das liegt im "
-            f"{p}. Perzentil der letzten {u.get('n', 0)} Messungen - {wie}."]
+    # ⚠️ DER UMSCHLAG MUSS SICH SELBST BENENNEN (17.08.2026).
+    #
+    # Hier stand ein Satz OHNE eigenes Hauptwort: "Vom gesamten
+    # Umlaufbestand ... wechselten 6,0 % den Besitzer; das liegt im 84.
+    # Perzentil ...". Das Modell hat daraus gemacht:
+    #
+    #     "MON: Umsatzvolumen 6.0 % (84. Perzentil) deutet auf
+    #      Liquiditaet hin"
+    #
+    # Beide Zahlen sind unsere - es hat sie nicht erfunden, sondern
+    # UMBENANNT. Und "Umsatzvolumen" ist der Name des Blocks direkt
+    # daneben, der bewusst KEIN Perzentil hat (`faktenblock.kern`: "Das
+    # Perzentil erscheint NICHT im Text"). Damit stand in den Belegen ein
+    # Perzentil zu einer Groesse, die keines hat.
+    #
+    # GEMESSEN: unter dem Promptstand davor null solcher Belege, unter
+    # dem Stand mit dem Umschlag 19 von 272 (6,99 %). Der Zusammenhang
+    # ist nicht zu uebersehen.
+    #
+    # DIE ABHILFE IST EIN HAUPTWORT. Das Perzentil haengt jetzt an einem
+    # benannten Ding ("Dieser Umschlag"), nicht an einem "das" auf einen
+    # Nebensatz. Und der Unterschied zum Volumenblock steht dabei: der
+    # eine misst gegen den UMLAUFBESTAND, der andere gegen den eigenen
+    # Durchschnitt.
+    return [f"Der Umschlag dieses Werts betraegt {anteil:.1f} %: so viel "
+            f"vom Umlaufbestand hat binnen 24 Stunden den Besitzer "
+            f"gewechselt. Dieser Umschlag liegt im {p}. Perzentil der "
+            f"letzten {u.get('n', 0)} Messungen - {wie}."]
 
 
 def _luecken(hist_laenge: int, volumen: list, marken: list) -> list[str]:

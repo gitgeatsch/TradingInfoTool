@@ -6146,7 +6146,7 @@ def paket_15() -> None:
     # nichts.
     # Zuletzt 2026-08-17c: eine Zeile gegen erfundene Perzentile (A6).
     pruefe(P, "der Prompt-Stand ist mitgezogen",
-           RT5.PROMPT_STAND == "2026-08-17c",
+           RT5.PROMPT_STAND == "2026-08-17d",
            "die Eingabe UND die Anweisung der Rolle BC haben sich "
            "geaendert - ohne neuen Stand waeren die Urteile davor und "
            "danach nicht auseinanderzuhalten")
@@ -7650,8 +7650,54 @@ def paket_belege() -> None:
            "bekommst du KEIN Perzentil" in RT._SCHRITTE,
            "'Erfinde nichts' stand schon da und hat nicht getragen - eine "
            "allgemeine Ermahnung schlaegt keine konkrete Luecke")
+
+    # --- DER UMSCHLAG MUSS SICH SELBST BENENNEN (17.08.2026) -----------
+    #
+    # Nach Promptstand aufgeschluesselt begannen die falschen
+    # Volumen-Perzentile exakt mit 17b - dem Stand, der Krypto-Spot den
+    # Umschlag gegeben hat. Der Beleg "MON: Umsatzvolumen 6.0 % (84.
+    # Perzentil)" enthaelt BEIDE unsere Zahlen: keine Erfindung, eine
+    # Umbenennung.
+    from agent import faktenblock as _FB2
+    from agent import lagebeschreibung as _LB2
+
+    _u = _LB2._umschlag({"anteil_pct": 6.0, "perzentil": 84, "n": 120})
+    pruefe(P, "A6b: der Umschlagsatz nennt sein Hauptwort",
+           _u and _u[0].startswith("Der Umschlag dieses Werts"),
+           "vorher begann er mit 'Vom gesamten Umlaufbestand' - das "
+           "Perzentil hing an einem 'das' auf einen Nebensatz")
+    pruefe(P, "A6b: und das Perzentil haengt an DIESEM Hauptwort",
+           _u and "Dieser Umschlag liegt im 84. Perzentil" in _u[0],
+           _u[0] if _u else "kein Satz")
+    pruefe(P, "A6b: der Bezug steht dabei - Umlaufbestand, nicht Mittel",
+           _u and "vom Umlaufbestand" in _u[0],
+           "der Volumenblock misst gegen den eigenen Durchschnitt, der "
+           "Umschlag gegen den Umlaufbestand - der Unterschied ist der "
+           "ganze Punkt")
+    pruefe(P, "A6b: das Wort 'Umsatz' kommt darin NICHT vor",
+           _u and "msatz" not in _u[0],
+           "es ist der Name des Blocks nebenan, der bewusst kein "
+           "Perzentil hat")
+    pruefe(P, "A6b: der Volumenblock hat weiterhin KEIN Perzentil",
+           all("Perzentil" not in z for z in _FB2.kern(
+               atr_relativ=0.023, schwankung_perzentil=0.3,
+               rueckgang_60t=-0.085, momentum_perzentil=0.4,
+               volumen_relativ=0.4, volumen_perzentil=0.35)[0]),
+           "sonst haette die Umbenennung eine zweite Quelle")
+    # Und der Pruefer darf den neuen Satz NICHT melden.
+    import pruefe_belege_gegen_fakten as _PB2
+
+    pruefe(P, "A6b: ein Beleg ueber den Umschlag ist erlaubt",
+           not _PB2.pruefe_beleg("Der Umschlag liegt im 84. Perzentil"),
+           "dort STEHT ein Perzentil in den Fakten - ein Befund waere ein "
+           "Fehlalarm")
+    pruefe(P, "A6b: die Umbenennung bleibt ein Befund",
+           bool(_PB2.pruefe_beleg("Umsatzvolumen 6.0 % (84. Perzentil)")),
+           "auch wenn die Zahlen unsere sind - zu DIESER Groesse gibt es "
+           "kein Perzentil, und der Leser kann es nicht unterscheiden")
+
     pruefe(P, "A6: und der Promptstand wurde mitgezogen",
-           RT.PROMPT_STAND == "2026-08-17c",
+           RT.PROMPT_STAND == "2026-08-17d",
            f"{RT.PROMPT_STAND} - sonst waeren Signale vor und nach der "
            f"Aenderung nicht trennbar")
 

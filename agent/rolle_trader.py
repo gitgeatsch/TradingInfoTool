@@ -307,7 +307,21 @@ SYSTEM_PROMPT_TRADER_OHNE_PERSONA = _baue_prompt(mit_betragsfrage=False,
 #              Jetzt wird die Stelle benannt, an der es passiert ist.
 #              Gemessen wird es weiter von `pruefe_belege_gegen_fakten.py`:
 #              14 von 1.834 Belegen (0,76 %) vor der Aenderung.
-PROMPT_STAND = "2026-08-17c"
+# 2026-08-17d: DIE URSACHE STATT DES SYMPTOMS. Nach Promptstand
+#              aufgeschluesselt begannen die falschen Volumen-Perzentile
+#              exakt mit 17b - dem Stand, der Krypto-Spot den UMSCHLAG
+#              gegeben hat: 0 Belege davor, 19 von 272 danach (6,99 %).
+#              Der Beleg "MON: Umsatzvolumen 6.0 % (84. Perzentil)"
+#              enthaelt BEIDE unsere Zahlen - das Modell hat nichts
+#              erfunden, sondern den Umschlag in "Umsatzvolumen"
+#              umbenannt, den Namen des Blocks nebenan, der bewusst kein
+#              Perzentil hat.
+#
+#              Der Umschlagsatz traegt jetzt ein eigenes Hauptwort und
+#              nennt seinen Bezug (Umlaufbestand gegen eigenen
+#              Durchschnitt). Die Zeile aus 17c bleibt - sie schadet
+#              nicht und deckt den Rest.
+PROMPT_STAND = "2026-08-17d"
 
 
 # --- Die abgeleiteten Zonen (Paket 1, 12.08.2026) -------------------------
