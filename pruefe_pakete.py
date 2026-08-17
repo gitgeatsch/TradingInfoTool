@@ -7294,10 +7294,128 @@ def _konst_aus(datei, name):
     return float(m.group(1)) if m else None
 
 
+def paket_frische() -> None:
+    """Die Frischepruefung: findet sie Stillstand, und meldet sie nichts,
+    wenn alles laeuft? (17.08.2026)
+
+    DER ANLASS. Drei von vier Nicht-Kurs-Aussagen der Rolle A standen seit
+    dem 12.08. still, und nichts meldete es: `beschreibe_makro` nimmt den
+    juengsten Wert <= Ankertag ohne Altersgrenze, der Satz entsteht also
+    weiter - nur mit immer aelteren Zahlen.
+
+    ⚠️ BEIDE RICHTUNGEN. Eine Pruefung, die nur Alarm schlagen kann, ist
+    keine - sie waere mit `return "veraltet"` erfuellt. Deshalb hier zwei
+    Datenbanken im Speicher: eine stillstehende und eine frische.
+
+    UND DIE VOLLSTAENDIGKEIT. Dieselbe Falle wie bei
+    `SYMBOL_ZU_COT_ROHSTOFF`: eine neue Quelle, die niemand eintraegt,
+    wird still nicht ueberwacht. Die Registratur wird deshalb gegen
+    `mindestkriterien.QUELLEN_G` gehalten - was Rolle G als Quelle zaehlt,
+    muss auch auf Frische geprueft werden."""
+    import sqlite3
+    from datetime import date, timedelta
+
+    from agent import datenfrische as DF
+    from agent import mindestkriterien as MK
+
+    P = "Frische"
+
+    def bau(alter_tage: int) -> sqlite3.Connection:
+        """Eine Datenbank, in der jede Quelle genau `alter_tage` alt ist."""
+        c = sqlite3.connect(":memory:")
+        heute = date.today()
+        stand = (heute - timedelta(days=alter_tage)).isoformat()
+        c.execute("CREATE TABLE macro_snapshot (date TEXT PRIMARY KEY, "
+                  "netto_liquiditaet_mrd REAL, rendite_10j_pct REAL, "
+                  "fear_greed_value INT, fetched_at TEXT)")
+        c.execute("INSERT INTO macro_snapshot VALUES (?,?,?,?,?)",
+                  (stand, 5900.0, 4.5, 30, stand))
+        c.execute("CREATE TABLE makro_historie_monat (monat TEXT PRIMARY KEY)")
+        c.execute("INSERT INTO makro_historie_monat VALUES (?)", (stand[:7],))
+        c.execute("CREATE TABLE job_laeufe (job_id TEXT PRIMARY KEY, "
+                  "zuletzt_am TEXT)")
+        c.execute("INSERT INTO job_laeufe VALUES ('makro_analog', ?)", (stand,))
+        c.execute("CREATE TABLE externe_reihe (quelle TEXT, schluessel TEXT, "
+                  "datum TEXT, wert REAL, geholt_am TEXT)")
+        for q in ("coinmetrics", "defillama", "deribit", "cftc_cot",
+                  "etf_bestand", "finra", "sec_edgar", "yfinance"):
+            c.execute("INSERT INTO externe_reihe VALUES (?,?,?,?,?)",
+                      (q, "x", stand, 1.0, stand))
+        c.execute("CREATE TABLE open_interest_snapshot (symbol TEXT, "
+                  "fetched_at TEXT)")
+        c.execute("INSERT INTO open_interest_snapshot VALUES ('BTC', ?)",
+                  (stand,))
+        c.execute("CREATE TABLE price_history_ohlc (symbol TEXT, date TEXT, "
+                  "fetched_at TEXT)")
+        c.execute("INSERT INTO price_history_ohlc VALUES ('BTC', ?, ?)",
+                  (stand, stand))
+        c.execute("CREATE TABLE holdings (symbol TEXT, updated_at TEXT)")
+        c.execute("INSERT INTO holdings VALUES ('BTC', ?)", (stand,))
+        c.commit()
+        return c
+
+    frisch = DF.pruefe(bau(0))
+    pruefe(P, "frische Datei: kein einziger Befund",
+           not DF.auffaellig(frisch),
+           f"{len(DF.auffaellig(frisch))} von {len(frisch)} auffaellig")
+    pruefe(P, "frische Datei: alle Quellen geprueft",
+           len(frisch) == len(DF.REGISTRATUR),
+           f"{len(frisch)} Zeilen, {len(DF.REGISTRATUR)} Quellen")
+
+    # 30 Tage: laenger als jede Abrufgrenze, kuerzer als die grosszuegigste
+    # Datengrenze (yfinance, 120) - so wird sichtbar, dass das ABRUFALTER
+    # das Urteil traegt, nicht das Datenalter.
+    tot = DF.pruefe(bau(30))
+    pruefe(P, "stillstehende Datei: jede Quelle faellt auf",
+           len(DF.auffaellig(tot)) == len(tot),
+           f"{len(DF.auffaellig(tot))} von {len(tot)}")
+    pruefe(P, "stillstehende Datei: Urteil ist 'abruf', nicht 'daten'",
+           all(z["urteil"] == "abruf" for z in tot),
+           str(sorted({z["urteil"] for z in tot})))
+
+    # Eine leere Datei ist NICHT "alles frisch" - der Fehler, der die
+    # Pruefung wertlos machen wuerde.
+    leer = sqlite3.connect(":memory:")
+    ohne = DF.pruefe(leer)
+    pruefe(P, "leere Datei meldet 'fehlt', nicht 'frisch'",
+           all(z["urteil"] == "fehlt" for z in ohne),
+           str(sorted({z["urteil"] for z in ohne})))
+
+    # VOLLSTAENDIGKEIT gegen die einzige andere Stelle, die Quellen fuehrt.
+    #
+    # ⚠️ ZWEI NAMENSRAEUME, UND SIE SIND NICHT DIESELBEN. `QUELLEN_G`
+    # fuehrt MERKMALE ("onchain", "cot"), die Registratur fuehrt
+    # ANBIETER ("coinmetrics", "cftc_cot"). Eine Mengendifferenz der
+    # beiden waere immer leer und die Pruefung damit wertlos - genau die
+    # Sorte gruener Haken, die am 16.08. drei Tage lang einen Ausfall
+    # verdeckt hat. Deshalb eine ausdrueckliche Zuordnung: kommt in
+    # `QUELLEN_G` ein Merkmal dazu, das hier nicht steht, faellt die
+    # Pruefung.
+    MERKMAL_ZU_ANBIETER = {
+        "terminmarkt": "terminmarkt", "onchain": "coinmetrics",
+        "cot": "cftc_cot", "etf_bestand": "etf_bestand",
+        "short_interest": "finra", "insider": "sec_edgar",
+        "optionsmarkt": "deribit",
+    }
+    registriert = {q.name for q in DF.REGISTRATUR}
+    ohne_zuordnung = sorted(set(MK.QUELLEN_G) - set(MERKMAL_ZU_ANBIETER))
+    pruefe(P, "jedes Merkmal der Rolle G hat einen Anbieter",
+           not ohne_zuordnung, str(ohne_zuordnung))
+    ohne_pruefung = sorted(a for a in MERKMAL_ZU_ANBIETER.values()
+                           if a not in registriert)
+    pruefe(P, "jeder Anbieter der Rolle G wird auf Frische geprueft",
+           not ohne_pruefung, str(ohne_pruefung))
+    pruefe(P, "jede Registraturzeile hat Tabelle, Job und Zweck",
+           all(q.tabelle and q.job and q.zweck and q.max_datenalter > 0
+               for q in DF.REGISTRATUR),
+           "")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15}
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15,
+          "Frische": paket_frische}
 
 
 def main() -> int:

@@ -40,7 +40,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import shutil
 import sqlite3
 import sys
 import tempfile
@@ -185,16 +184,54 @@ def _kurs_aus_fakten(eingabe: dict) -> float:
 
 
 def _kopie(quelle: str) -> str:
-    """Die Datenbank in den Scratchpad kopieren - MIT den WAL-Dateien.
+    """Die Datenbank in den Scratchpad kopieren - ueber SQLites eigene
+    Sicherung, nicht ueber das Dateisystem.
 
-    Ohne sie fehlt der juengste, noch nicht eingecheckte Stand, und die Kopie
-    sieht aelter aus als das Original. Dass WAL-Dateien im Projekt schon
-    einmal versehentlich eingecheckt wurden, macht sie nicht unwichtig."""
+    ⚠️ HIER STAND EINE DATEIKOPIE, UND SIE IST AM 17.08. GEBROCHEN.
+
+    Die Fassung davor kopierte drei Dateien einzeln (`.db`, `-wal`, `-shm`)
+    und begruendete das richtig: ohne das WAL fehlt der juengste Stand. Nur
+    ist das ZIEL dasselbe, jeden Lauf. Steht dort noch ein WAL von 08:19
+    (102 MB) und die Quelle hat inzwischen eingecheckt (0 Byte), passen
+    Hauptdatei und Beileger nicht mehr zusammen:
+
+        sqlite3.DatabaseError: database disk image is malformed
+
+    Genau so ist die Simulation heute gescheitert - und das ist der
+    freundliche Ausgang. Ein WAL, das zufaellig noch LESBAR ist, haette
+    keinen Fehler geworfen, sondern die Kette gegen einen alten Stand
+    laufen lassen, und niemand haette es gesehen.
+
+    `Connection.backup()` loest beides: es liest ueber SQLite (das WAL ist
+    also automatisch drin), schreibt EINE in sich stimmige Datei, und
+    braucht danach keine Beileger mehr. Die Quelle wird `mode=ro`
+    geoeffnet - gelesen, nie geschrieben."""
     ziel = Path(tempfile.gettempdir()) / "simuliere_kette.db"
+    # Erst die Reste des letzten Laufs weg. Ohne das liegt neben der frisch
+    # gesicherten Datei weiter das alte WAL - und genau daran ist es
+    # gescheitert.
     for endung in ("", "-wal", "-shm"):
-        q = Path(str(quelle) + endung)
-        if q.exists():
-            shutil.copy2(q, str(ziel) + endung)
+        alt = Path(str(ziel) + endung)
+        if alt.exists():
+            alt.unlink()
+    quell_conn = sqlite3.connect(f"file:{quelle}?mode=ro", uri=True)
+    try:
+        ziel_conn = sqlite3.connect(str(ziel))
+        try:
+            quell_conn.backup(ziel_conn)
+            # Derselbe Massstab wie beim NB-Export: die Kopie wird geprueft,
+            # bevor jemand ihr glaubt. Sonst ersetzt eine Vermutung
+            # ("backup() wird schon stimmen") die alte Vermutung, die eben
+            # gebrochen ist.
+            befund = ziel_conn.execute(
+                "PRAGMA integrity_check").fetchone()[0]
+            if befund != "ok":
+                raise SystemExit(f"[ABBRUCH] Die Kopie ist beschaedigt: "
+                                 f"{befund[:200]}")
+        finally:
+            ziel_conn.close()
+    finally:
+        quell_conn.close()
     return str(ziel)
 
 

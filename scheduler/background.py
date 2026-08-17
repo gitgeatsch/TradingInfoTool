@@ -878,6 +878,16 @@ def makro_analog_job(conn_factory, fred_api_key) -> None:
 
         config_dict = config_module.load_config()
         fakt = run_makro_analog_update(conn, fred_api_key, config_dict)
+        # SICH SELBST BUCHEN (17.08.2026) - aus demselben Grund wie beim
+        # `externe_reihen_job`, hier aber mit einer zweiten Folge: die
+        # Monatstabelle fuehrt keinen Abrufstempel. Ohne diese Zeile
+        # koennte die Frischepruefung nicht zwischen "der Anbieter hat
+        # nichts Neues" (normal, monatlich) und "der Job laeuft nicht"
+        # (Ausfall) unterscheiden - und meldete jeden Tag einen Ausfall,
+        # bis niemand mehr hinsieht.
+        from database import db as _DB
+
+        _DB.merke_joblauf(conn, "makro_analog")
         if fakt is not None:
             logger.info(
                 "Makro-Analog-Vergleich: %d historische Analoge gefunden (aktueller Monat %s)",
@@ -1147,6 +1157,177 @@ def externe_reihen_job(conn_factory) -> None:
                             f"Externe Reihen fehlgeschlagen: {exc}")
     finally:
         conn.close()
+
+
+# Wie weit der Tagesjob zurueckgreift. Grosszuegig genug, dass eine
+# Betriebspause von Wochen ohne Handgriff wieder aufgeholt wird - und kurz
+# genug, dass der taegliche Abruf nicht jedes Mal neun Jahre holt.
+LAGEBILD_FENSTER_TAGE = 120
+
+
+def lagebild_reihen_job(conn_factory, fred_api_key) -> None:
+    """Die drei Nicht-Kurs-Fakten der Rolle A taeglich auffrischen
+    (17.08.2026).
+
+    DER ANLASS - der unangenehmste Fund dieser Woche.
+
+    Netto-Liquiditaet, Zinskurve und Fear & Greed sind drei von vier
+    Aussagen der Rolle A, die NICHT aus einer Kursreihe stammen. Sie kamen
+    alle drei aus zwei Skripten, die ein Mensch am 12.08. von Hand
+    gestartet hat - und seither aus gar nichts:
+
+        netto_liquiditaet_mrd   letzter Wert 2026-08-05
+        rendite_10j_pct         letzter Wert 2026-08-11
+        fear_greed_value        letzter Wert 2026-08-12, und alle 3.111
+                                Zeilen mit demselben fetched_at
+
+    WARUM DAS NIEMAND SAH. `marktlage.beschreibe_makro` nimmt den
+    juengsten Wert <= Ankertag - ohne Altersgrenze. Der Satz faellt also
+    nicht aus, wenn die Reihe stehenbleibt; er wird weiter erzeugt, weiter
+    an das Modell gegeben, weiter geglaubt - nur immer aelter. Ein
+    fehlender Satz faellt auf, ein alter sieht aus wie ein frischer.
+
+    ⚠️ NEUE WERTE GEWINNEN, ANDERS ALS BEIM NACHLADEN. Das Nachladeskript
+    benutzt `COALESCE(bestand, neu)` - es darf einen live geschriebenen
+    Wert nicht mit Historie ueberschreiben. Hier ist es umgekehrt:
+    `COALESCE(neu, bestand)`. Die Fed revidiert WALCL nachtraeglich, und
+    ein frisch geholter Wert ist die Korrektur, nicht der Fehler -
+    dieselbe Ueberlegung wie beim UPSERT in `schreibe_externe_reihe`.
+
+    NUR EIN KURZES FENSTER. 120 Tage statt neun Jahre: der Job laeuft
+    taeglich, und ein voller Historienabruf waere jeden Tag dieselbe
+    Arbeit fuer dieselben Zahlen. Fuer das Nachladen gibt es das Skript.
+
+    JEDE QUELLE EINZELN GEFANGEN - wie im `externe_reihen_job`. Faellt
+    FRED aus, soll die Stimmung trotzdem aktuell werden.
+
+    AM ENDE DIE FRISCHEPRUEFUNG. Sie prueft nicht nur, was dieser Job
+    schreibt, sondern ALLE zwoelf Quellen aus `agent/datenfrische.py` -
+    und loggt jede veraltete als Warnung. Ein Job, der nur sich selbst
+    prueft, findet genau die Luecke nicht, die es diesmal war."""
+    from datetime import timedelta
+
+    conn = conn_factory()
+    geschrieben = 0
+    fenster = (datetime.now(timezone.utc).date()
+               - timedelta(days=LAGEBILD_FENSTER_TAGE)).isoformat()
+    jetzt = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    try:
+        from database import db as DB
+
+        # NETTO-LIQUIDITAET UND ZINSKURVE. Beide Abrufe stehen im
+        # Nachladeskript und werden von dort benutzt statt kopiert - zwei
+        # Kopien waeren zwei Stellen, an denen die Einheitenumrechnung
+        # (Mio. gegen Mrd.) auseinanderlaufen kann.
+        liq: dict = {}
+        zins: dict = {}
+        if fred_api_key:
+            try:
+                from lade_makro_historie_nach import hole_netto_liquiditaet
+
+                liq = hole_netto_liquiditaet(fred_api_key, fenster)
+            except Exception as exc:                         # noqa: BLE001
+                logger.info("Netto-Liquiditaet nicht auffrischbar: %s", exc)
+        else:
+            # LAUT, NICHT LEISE. Ohne Schluessel entsteht keine Liquiditaet -
+            # und das ist kein Randfall, sondern der Ausfall einer von vier
+            # Aussagen der Rolle A.
+            logger.warning("Lagebild-Reihen: FRED_API_KEY fehlt - die "
+                           "Netto-Liquiditaet bleibt stehen.")
+        try:
+            from lade_makro_historie_nach import hole_zinsen
+
+            zins = hole_zinsen(fenster)
+        except Exception as exc:                             # noqa: BLE001
+            logger.info("Zinskurve nicht auffrischbar: %s", exc)
+
+        if liq or zins:
+            zeilen = [(t, liq.get(t), (zins.get(t) or (None, None))[0],
+                       (zins.get(t) or (None, None))[1], jetzt)
+                      for t in sorted(set(liq) | set(zins))]
+            conn.executemany(
+                "INSERT INTO macro_snapshot (date, netto_liquiditaet_mrd, "
+                "rendite_10j_pct, rendite_kurz_pct, fetched_at) "
+                "VALUES (?, ?, ?, ?, ?) ON CONFLICT(date) DO UPDATE SET "
+                "netto_liquiditaet_mrd = COALESCE(excluded.netto_liquiditaet_mrd, "
+                "macro_snapshot.netto_liquiditaet_mrd), "
+                "rendite_10j_pct = COALESCE(excluded.rendite_10j_pct, "
+                "macro_snapshot.rendite_10j_pct), "
+                "rendite_kurz_pct = COALESCE(excluded.rendite_kurz_pct, "
+                "macro_snapshot.rendite_kurz_pct), "
+                # DER ABRUFSTEMPEL WANDERT IMMER MIT, auch wenn kein Wert
+                # neu ist. Er beantwortet "wann haben wir zuletzt
+                # nachgesehen", nicht "wann hat sich etwas geaendert" -
+                # und genau diese Frage stellt die Frischepruefung. Ohne
+                # die Zeile meldete eine woechentliche Reihe an sechs von
+                # sieben Tagen einen Jobausfall.
+                "fetched_at = excluded.fetched_at", zeilen)
+            conn.commit()
+            geschrieben += len(zeilen)
+
+        # FEAR & GREED. Die API gibt mit `limit=0` ihre gesamte Historie
+        # her; auf das Fenster wird hier gekuerzt, nicht dort.
+        try:
+            from lade_fear_greed_nach import hole_alles
+
+            alle = {t: v for t, v in hole_alles().items() if t >= fenster}
+            if alle:
+                conn.executemany(
+                    "INSERT INTO macro_snapshot (date, fear_greed_value, "
+                    "fear_greed_label, fetched_at) VALUES (?, ?, ?, ?) "
+                    "ON CONFLICT(date) DO UPDATE SET "
+                    "fear_greed_value = COALESCE(excluded.fear_greed_value, "
+                    "macro_snapshot.fear_greed_value), "
+                    "fear_greed_label = COALESCE(excluded.fear_greed_label, "
+                    "macro_snapshot.fear_greed_label), "
+                    "fetched_at = excluded.fetched_at",
+                    [(t, w, k, jetzt) for t, (w, k) in sorted(alle.items())])
+                conn.commit()
+                geschrieben += len(alle)
+        except Exception as exc:                             # noqa: BLE001
+            logger.info("Fear & Greed nicht auffrischbar: %s", exc)
+
+        DB.merke_joblauf(conn, "lagebild_reihen")
+        logger.info("Lagebild-Reihen aufgefrischt: %d Punkte geschrieben.",
+                    geschrieben)
+        _melde_datenfrische(conn)
+    except Exception as exc:
+        logger.exception("Auffrischen der Lagebild-Reihen fehlgeschlagen")
+        _notify_job_failure("lagebild_reihen",
+                            f"Lagebild-Reihen fehlgeschlagen: {exc}")
+    finally:
+        conn.close()
+
+
+def _melde_datenfrische(conn) -> int:
+    """Jede veraltete Faktenquelle als Logzeile - und die Zahl zurueck.
+
+    WARUM IM JOB UND NICHT NUR IM EXPORT. Der Export entsteht, wenn ein
+    Mensch ihn anstoesst; die Reihen veralten auch dazwischen. Diese
+    Pruefung laeuft taeglich, ohne dass jemand daran denkt.
+
+    EIGENER FANG. Faellt die Pruefung aus, darf sie nicht den Job
+    mitreissen, der seine Arbeit schon getan hat."""
+    try:
+        from agent import datenfrische
+
+        zeilen = datenfrische.pruefe(conn)
+        schlecht = datenfrische.auffaellig(zeilen)
+        if not schlecht:
+            logger.info("Datenfrische: alle %d Faktenquellen frisch.",
+                        len(zeilen))
+            return 0
+        for z in schlecht:
+            logger.warning(
+                "Datenfrische [%s]: %s (Rolle %s, Job %s) - Datenstand %s "
+                "(%s Tage), letzter Abruf %s (%s Tage)",
+                z["urteil"], z["quelle"], z["rolle"], z["job"],
+                z["datenstand"], z["datenalter_tage"],
+                str(z["abrufstand"] or "-")[:10], z["abrufalter_tage"])
+        return len(schlecht)
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Frischepruefung fehlgeschlagen")
+        return 0
 
 
 def kategorie_vorschlaege_job(conn_factory) -> None:
@@ -3876,6 +4057,28 @@ def build_scheduler(
         args=[db_conn_factory],
         id="externe_reihen",
         next_run_time=_staggered_start(5),
+        misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
+    )
+    # DIE NICHT-KURS-FAKTEN DER ROLLE A (17.08.2026). Netto-Liquiditaet,
+    # Zinskurve und Fear & Greed kamen bis heute aus zwei Skripten, die
+    # jemand von Hand starten musste - und seit dem 12.08. aus gar nichts.
+    # Der Satz im Prompt entstand trotzdem weiter, nur mit immer aelteren
+    # Zahlen (siehe lagebild_reihen_job()-Docstring).
+    #
+    # 06:40, also NACH `externe_reihen` (06:35): beide holen von aussen,
+    # und ein gestaffelter Start haelt die Minute frei, in der ein
+    # Anbieter langsam antwortet.
+    #
+    # `next_run_time` bootstrapt sofort - sonst bliebe die Luecke bis zum
+    # naechsten Morgen bestehen, und genau darum geht es hier.
+    scheduler.add_job(
+        lagebild_reihen_job,
+        "cron",
+        hour=6,
+        minute=40,
+        args=[db_conn_factory, fred_api_key],
+        id="lagebild_reihen",
+        next_run_time=_staggered_start(6),
         misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
     )
     # #333 KI-Vorschlaege-Job (2026-07-24) - gleiches Muster wie makro_analog

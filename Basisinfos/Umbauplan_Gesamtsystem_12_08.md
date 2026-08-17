@@ -9074,3 +9074,161 @@ Frage, und die ist gelb.
 | Selbsteinschaltung | mit Historie 2 Sätze, ohne Historie 0 |
 | Gegenprobe Neuzugang | 2 erfundene Symbole, **2 Lücken gemeldet** |
 | Simulation | 6 Gruppen, 12 Signale, **0 Fehler, 0 Lücken** |
+
+---
+
+## Kapitel 72 — Was beim Umbau liegengeblieben ist, und die Reihen, die stillstanden (17.08.2026)
+
+**Nutzerfrage:** *„diverse Parameter sind weggefallen beim Umbau — M2 Money
+Supply, ISM, Consumer Index. Wurden diese einfach verworfen oder haben wir sie
+aktiv entfernt? Prüfe ob wir sie nutzen, nicht nutzen und warum — LLM-Tauglichkeit?"*
+
+### 72.1 Die Antwort ist unangenehmer als beide Möglichkeiten
+
+**Weder verworfen noch entfernt — es wurde nie entschieden.** Die Felder
+schreibt `agent/krypto/pipeline.py::_update_macro_snapshot`, also die **alte**
+Pipeline. Die läuft heute nur noch, wenn jemand in der Oberfläche von Hand ein
+Signal auslöst. Als die Rollenkette sie ersetzte, hörte der Schreiber auf zu
+laufen; die Spalten stehen alle noch da, mit 7 bis 9 Zeilen.
+
+| Parameter | in der DB | erreicht eine Rolle |
+|---|---|---|
+| M2 USA (`M2SL`) | 7 Zeilen, bis 15.07. | ✗ |
+| M2 Eurozone / China / Japan | je 9, bis 19.07. | ✗ |
+| ISM-Ersatz (Philly Fed) | 7 Zeilen, bis 15.07. | ✗ |
+| CPI headline / core | 7 Zeilen, bis 15.07. | ✓ als `cpi_yoy_prozent` |
+| **Consumer Confidence** | — | **nie gebaut** |
+
+> **Den echten ISM hatten wir nie.** FRED verlor die Lizenz 2016 — `NAPM`
+> antwortet heute *„series does not exist"* (live geprüft). Was gespeichert
+> ist, ist der Philadelphia-Fed-Index als Stellvertreter: eine **regionale**
+> Umfrage für eine nationale, zwischen zwei Monatswerten 10,3 → 41,4.
+
+### 72.2 LLM-Tauglichkeit — und warum nichts davon zurückkommt
+
+| | Parameter | Urteil |
+|---|---|---|
+| 🔴 | **M2** | **Redundant gegen etwas Besseres, das schon drin ist.** Die Netto-Liquidität (WALCL − TGA − RRP) misst dieselbe Frage — wie viel Geld im System ist — **wöchentlich statt monatlich** und näher am Mechanismus. M2 ging nicht verloren, es wurde ersetzt. **P3.** |
+| 🔴 | **ISM / Philly Fed** | Stellvertreter eines Stellvertreters (Rang 2–3), und er trägt ein **Etikett**: über/unter 50 heißt „Expansion/Kontraktion" — dasselbe fertige Urteil, das beim Regime herausgeflogen ist. **R-T12.** |
+| 🟡 | **Consumer Confidence** | Fachlich sauber, keine Kursgröße, über `UMCSENT` frei (live geprüft: Juni 2026 = 49,5). Aber **monatlich mit ~2 Monaten Verzug** — M2 steht Mitte August auf dem Juni-Wert. |
+| 🟢 | **CPI** | **Ist seit 16.08. drin** und war von den dreien die richtige Wahl: 942 Monate, keine Kursgröße, als Perzentil mit Einordnung. |
+
+Dazu die Überlastungsgrenze: Rolle A trägt **17 Aussagen**. Alle drei
+nachzuziehen hieße 20 — und die zwei stärksten davon sind rot.
+
+### 72.3 Der eigentliche Fund: drei Reihen standen still
+
+**Bei der Prüfung fiel etwas Schlimmeres auf als eine fehlende Zahl.** Die
+zwei Makro-Fakten der Rolle A und die Stimmung stammten aus **Skripten, die
+ein Mensch von Hand startet** — `lade_makro_historie_nach.py` und
+`lade_fear_greed_nach.py`. Kein `add_job()`, nirgends.
+
+```
+netto_liquiditaet_mrd   letzter Wert 2026-08-05   (12 Tage)
+rendite_10j_pct         letzter Wert 2026-08-11   ( 6 Tage)
+fear_greed_value        letzter Wert 2026-08-12   ( 5 Tage)
+                        alle 3.111 Zeilen mit demselben fetched_at
+```
+
+> **⚠️ Warum das niemand sah.** `marktlage.beschreibe_makro` nimmt den
+> jüngsten Wert **≤ Ankertag — ohne Altersgrenze**. Der Satz verschwindet
+> also nicht, wenn die Reihe stehenbleibt. Er wird weiter erzeugt, weiter an
+> das Modell gegeben, weiter geglaubt — nur immer älter.
+>
+> **Ein fehlender Satz fällt auf. Ein alter sieht aus wie ein frischer.**
+
+**Das ist „fail-soft ist fail-silent" in seiner unangenehmsten Form: hier
+fällt nicht einmal etwas aus. Es steht nur still.**
+
+### 72.4 Was gebaut wurde
+
+**`lagebild_reihen_job`, täglich 06:40, mit Sofortstart.** Holt beide
+Makrogrößen und Fear & Greed über ein 120-Tage-Fenster; benutzt die Abrufe der
+Nachladeskripte statt sie zu kopieren — zwei Kopien wären zwei Stellen, an
+denen die Einheitenumrechnung (Mio. gegen Mrd.) auseinanderlaufen kann.
+
+| | Nachladen | Tagesjob |
+|---|---|---|
+| Fenster | 2017 bis heute | 120 Tage |
+| Konflikt | `COALESCE(bestand, neu)` | **`COALESCE(neu, bestand)`** |
+| Grund | Historie darf einen Live-Wert nicht überschreiben | die Fed **revidiert** WALCL — der frische Wert ist die Korrektur |
+
+> **Der Abrufstempel wandert immer mit**, auch wenn kein Wert neu ist. Er
+> beantwortet *„wann haben wir zuletzt nachgesehen"*, nicht *„wann hat sich
+> etwas geändert"*. Ohne diese Zeile meldete eine wöchentliche Reihe an sechs
+> von sieben Tagen einen Jobausfall — und nach dem dritten Fehlalarm sieht
+> niemand mehr hin.
+
+**Nachgewiesen an einer Kopie, nie an der Quelle:**
+
+```
+Liquiditaet  2026-08-05 -> 2026-08-12      Zins  2026-08-11 -> 2026-08-14
+Fear & Greed 2026-08-12 -> 2026-08-17      203 Punkte, 0 Fehler
+```
+
+Werte plausibel und anschlussfähig (5.839,6 → 5.795,3 Mrd.; Spread 0,95 →
+1,00; F&G 29–34) — **keine Einheitenverschiebung.**
+
+### 72.5 `agent/datenfrische.py` — damit es das nächste Mal auffällt
+
+**Eine Registratur aller fünfzehn Quellen, die ein Prompt tatsächlich liest**,
+über alle drei Rollen. Der Kern ist die Unterscheidung zweier Alter:
+
+| | misst | hängt an | Folge |
+|---|---|---|---|
+| **Datenstand** | wie alt die Information ist | dem **Anbieter** | ein hohes Alter kann völlig richtig sein — die CFTC veröffentlicht freitags |
+| **Abrufstand** | wann wir zuletzt erfolgreich nachgesehen haben | **uns** | älter als 2 Tage = **es läuft kein Job** |
+
+> **Ein Anbieter, der nichts Neues hat, ist normal. Ein Job, der nicht läuft,
+> ist es nie.** Deshalb wird nur das Abrufalter als Fehler gewertet.
+
+**Vier Urteile, nach Dringlichkeit:** `fehlt` · `abruf` · `daten` · `frisch`.
+
+**Mitgenommen wurden auch die drei größten Quellen, die nicht in
+`externe_reihe` stehen** — Terminmarkt (93 % aller Urteile), Kursreihe (jeder
+Satz jeder Rolle), Bestand. Sie wegzulassen hieße, ausgerechnet die
+wichtigsten herauszuhalten, weil sie in einer anderen Tabelle liegen.
+
+**Drei Abnehmer:** der Tagesjob loggt jede veraltete Quelle als Warnung · der
+NB-Export trägt den Abschnitt `datenfrische` · `pruefe_pakete.py --paket
+Frische` prüft die Prüfung.
+
+### 72.6 Ein zweiter Fund: die Simulation las eine kaputte Kopie
+
+**`simuliere_kette.py` kopierte drei Dateien einzeln** (`.db`, `-wal`, `-shm`)
+in ein **immer gleiches Ziel**. Lag dort noch ein WAL von 08:19 (102 MB) und
+die Quelle hatte inzwischen eingecheckt (0 Byte), passten Hauptdatei und
+Beileger nicht mehr zusammen:
+
+```
+sqlite3.DatabaseError: database disk image is malformed
+```
+
+> **Das ist der freundliche Ausgang.** Ein WAL, das zufällig noch lesbar ist,
+> wirft keinen Fehler — es lässt die Kette gegen einen **alten Stand** laufen,
+> und niemand sieht es.
+
+**Ersetzt durch `Connection.backup()`** — liest über SQLite (das WAL ist
+automatisch drin), schreibt **eine** in sich stimmige Datei, braucht keine
+Beileger. Danach `PRAGMA integrity_check`, derselbe Maßstab wie beim NB-Export
+(der es längst richtig macht).
+
+> ⚠️ **Korrektur an meiner eigenen Meldung von heute Vormittag.** Der Wert
+> *„6 Gruppen, 12 Signale"* stammte aus einem Lauf gegen eine Kopie mit
+> ebendiesem 102-MB-WAL. Mit sauberer Kopie sind es **4 Gruppen, 8 Signale** —
+> Rohstoffe und Absicherung haben in der Entwicklungsdatei keine Kursreihe.
+> *0 Fehler, 0 Lücken* gilt in beiden Läufen.
+
+### 72.7 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **940**, alle bestanden (8 neu) |
+| Frischeprüfung, **beide Richtungen** | frische Datei **0 von 15** auffällig · stillstehende **15 von 15** |
+| leere Datei | meldet `fehlt`, **nicht** `frisch` |
+| Vollständigkeit | jedes Merkmal der Rolle G hat einen Anbieter, jeder Anbieter eine Frischeprüfung |
+| Gegenprobe | erfundenes Merkmal `wetterdienst` → **gemeldet** |
+| Joblauf live | 203 Punkte, 0 Fehler, drei Reihen aufgeholt |
+| Scheduler | 19 Jobs, `lagebild_reihen` cron 06:40, Sofortstart |
+| freie Namen | 0 |
+| Simulation | 4 Gruppen, 8 Signale, 9 Mails, **0 Fehler, 0 Lücken** |

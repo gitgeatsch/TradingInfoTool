@@ -71,12 +71,19 @@ def _spalten_anlegen(con: sqlite3.Connection) -> list[str]:
     return neu
 
 
-def hole_netto_liquiditaet(fred_key: str) -> dict[str, float]:
+def hole_netto_liquiditaet(fred_key: str, start: str = START) -> dict[str, float]:
     """WALCL - TGA - RRP, je WALCL-Datum (woechentlich).
 
     RRP ist taeglich und wird auf das jeweilige WALCL-Datum bezogen: der
     letzte bekannte Wert am oder vor diesem Tag. Anders herum - den naechsten
-    Wert NACH dem Datum zu nehmen - waere ein Blick in die Zukunft."""
+    Wert NACH dem Datum zu nehmen - waere ein Blick in die Zukunft.
+
+    `start` ist seit dem 17.08. ein Parameter, weil derselbe Abruf zweimal
+    gebraucht wird: einmal als Nachladen ueber neun Jahre, und taeglich vom
+    `lagebild_reihen_job` ueber ein kurzes Fenster. Zwei Kopien desselben
+    Abrufs waeren zwei Stellen, an denen die Einheitenumrechnung
+    auseinanderlaufen kann - und die hat dieses Projekt schon einmal Geld
+    gekostet."""
     from api.macro import get_fred_history
 
     def reihe(kuerzel: str) -> dict[str, float]:
@@ -86,7 +93,7 @@ def hole_netto_liquiditaet(fred_key: str) -> dict[str, float]:
         # Subtraktion waere im Schreiblauf ein Abbruch mitten im Schreiben
         # gewesen.
         return {o.date: float(o.value)
-                for o in get_fred_history(kuerzel, fred_key, START)
+                for o in get_fred_history(kuerzel, fred_key, start)
                 if o.value is not None}
 
     walcl, tga, rrp = reihe("WALCL"), reihe("WTREGEN"), reihe("RRPONTSYD")
@@ -104,15 +111,18 @@ def hole_netto_liquiditaet(fred_key: str) -> dict[str, float]:
     return aus
 
 
-def hole_zinsen() -> dict[str, tuple[float, float]]:
-    """^TNX (10 Jahre) und ^IRX (13 Wochen), je Tag mit beiden Werten."""
+def hole_zinsen(start: str = START) -> dict[str, tuple[float, float]]:
+    """^TNX (10 Jahre) und ^IRX (13 Wochen), je Tag mit beiden Werten.
+
+    `start` aus demselben Grund wie oben: der Tagesjob holt ein kurzes
+    Fenster, das Nachladen neun Jahre."""
     import warnings
 
     import yfinance as yf
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        tnx = yf.Ticker("^TNX").history(start=START, interval="1d")
-        irx = yf.Ticker("^IRX").history(start=START, interval="1d")
+        tnx = yf.Ticker("^TNX").history(start=start, interval="1d")
+        irx = yf.Ticker("^IRX").history(start=start, interval="1d")
     a = {str(i)[:10]: float(v) for i, v in tnx["Close"].items()}
     b = {str(i)[:10]: float(v) for i, v in irx["Close"].items()}
     return {t: (a[t], b[t]) for t in sorted(set(a) & set(b))}

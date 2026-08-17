@@ -1327,6 +1327,47 @@ def _laufzeit(logzeilen: list) -> dict:
     }
 
 
+def _datenfrische(conn) -> dict:
+    """Wie alt sind die Fakten, mit denen geurteilt wird? (17.08.2026)
+
+    DER ANLASS. `_externe_reihen` deckt die Fremdquellen der Rolle G ab -
+    und nur die. Am 17.08. stellte sich heraus, dass die drei Nicht-Kurs-
+    Fakten der ROLLE A seit dem 12.08. stillstanden: sie kamen aus zwei
+    Skripten von Hand, kein Job frischte sie auf. Kein Abschnitt des
+    Exports haette das gezeigt.
+
+    Dieser Abschnitt prueft alle zwoelf Quellen aus `agent/datenfrische.py`
+    ueber alle drei Rollen - Registratur und Schwellen stehen dort, nicht
+    hier. Zwei Definitionen desselben Begriffs sind in diesem Projekt schon
+    einmal auseinandergelaufen (Umbauplan 70.4).
+
+    ⚠️ AUCH DER EXPORTEUR HAT DIE REGISTRATUR NICHT ZU KENNEN. Faellt der
+    Import aus, weil die Datei aus einer aelteren Fassung stammt, steht das
+    hier als Befund - nicht als leerer Abschnitt."""
+    try:
+        from agent import datenfrische as _df
+    except Exception as exc:                                 # noqa: BLE001
+        return {"nicht_verfuegbar": f"agent/datenfrische.py fehlt: {exc}"}
+    zeilen = _df.pruefe(conn)
+    schlecht = _df.auffaellig(zeilen)
+    return {
+        "quellen": zeilen,
+        "auffaellig": [f"{z['quelle']} [{z['urteil']}] Daten {z['datenstand']} "
+                       f"({z['datenalter_tage']} T), Abruf "
+                       f"{str(z['abrufstand'] or '-')[:10]} "
+                       f"({z['abrufalter_tage']} T)" for z in schlecht],
+        "anzahl_geprueft": len(zeilen),
+        "anzahl_auffaellig": len(schlecht),
+        # Je Rolle, weil die Folge davon abhaengt: eine tote Quelle der
+        # Rolle A trifft JEDES Urteil ueber das Lagebild, eine der Rolle G
+        # nur die Gegenpruefung einer Gruppe.
+        "auffaellig_je_rolle": {
+            r: sorted(z["quelle"] for z in schlecht if z["rolle"] == r)
+            for r in sorted({z["rolle"] for z in schlecht})},
+        "max_abrufalter_tage": _df.MAX_ABRUFALTER_TAGE,
+    }
+
+
 def _externe_reihen(conn) -> dict:
     """Sind die Fremdquellen der Rolle G aktuell? (2026-08-16, Schritt 3+4)
 
@@ -2146,6 +2187,10 @@ def main() -> None:
         except Exception as exc:  # noqa: BLE001
             joblaeufe = {"nicht_verfuegbar": str(exc)}
         try:
+            datenfrische = _datenfrische(conn)
+        except Exception as exc:  # noqa: BLE001
+            datenfrische = {"nicht_verfuegbar": str(exc)}
+        try:
             spaltendrift = _spaltendrift(conn)
         except Exception as exc:  # noqa: BLE001
             spaltendrift = {"nicht_verfuegbar": str(exc)}
@@ -2456,6 +2501,7 @@ def main() -> None:
             "externe_reihen": externe_reihen,
             "joblaeufe": joblaeufe,
             "laufzeit": laufzeit,
+        "datenfrische": datenfrische,
         "spaltendrift": spaltendrift,
         "deep_dive": {
             "symbol": DEEP_DIVE_SYMBOL,

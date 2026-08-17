@@ -2497,3 +2497,52 @@ nächsten Prüflauf** — statt es Wochen später an einer stillen Lücke zu mer
 
 **Beim Anlegen einer neuen Handzuordnung ist `HANDPFLEGE` mitzuziehen**, sonst
 prüft der Abschnitt eine Liste, die nicht mehr vollständig ist.
+
+## 2.34 Steht eine Reihe still? (neu 2026-08-17)
+
+**Der teuerste Fehlertyp dieses Projekts hat heute seine reinste Form
+gezeigt:** drei von vier Nicht-Kurs-Aussagen der Rolle A standen seit fünf
+Tagen still, und **nichts fiel aus**. `marktlage.beschreibe_makro` nimmt den
+jüngsten Wert ≤ Ankertag ohne Altersgrenze — der Satz entsteht weiter, nur mit
+immer älteren Zahlen.
+
+> **Ein fehlender Satz fällt auf. Ein alter sieht aus wie ein frischer.**
+
+### Die zwei Alter
+
+| | misst | hängt an | als Fehler gewertet |
+|---|---|---|---|
+| **Datenstand** | wie alt die Information ist | dem Anbieter | nein, nur berichtet |
+| **Abrufstand** | wann wir zuletzt nachgesehen haben | **uns** | **ja, ab 2 Tagen** |
+
+Ein Anbieter, der nichts Neues hat, ist normal. Ein Job, der nicht läuft, ist
+es nie.
+
+### Werkzeug
+
+```bash
+python pruefe_pakete.py --paket Frische
+```
+
+Registratur und Schwellen stehen in `agent/datenfrische.py` — **an einer
+Stelle**, weil zwei Definitionen desselben Begriffs in diesem Projekt schon
+einmal auseinandergelaufen sind (Umbauplan 70.4). Im Betrieb loggt der
+`lagebild_reihen_job` jede veraltete Quelle täglich; im NB-Export steht der
+Abschnitt `datenfrische`.
+
+> ⚠️ **Neue Quelle = neue Zeile in der Registratur.** Fehlt sie, wird die
+> Quelle **still nicht überwacht** — dieselbe Falle wie bei
+> `SYMBOL_ZU_COT_ROHSTOFF`. `paket_frische` hält die Registratur deshalb gegen
+> `mindestkriterien.QUELLEN_G`.
+
+### 2.34b Eine Datenbankkopie ist nicht drei Dateien
+
+`simuliere_kette.py` kopierte `.db`, `-wal` und `-shm` einzeln in ein immer
+gleiches Ziel. Blieb dort ein WAL aus einem früheren Lauf liegen, passten
+Hauptdatei und Beileger nicht mehr zusammen — `database disk image is
+malformed`. **Das war der freundliche Ausgang: ein noch lesbares WAL hätte die
+Kette gegen einen alten Stand laufen lassen, ohne Fehler.**
+
+**Regel: eine Datenbank wird über `Connection.backup()` kopiert, nie über das
+Dateisystem** — gefolgt von `PRAGMA integrity_check` auf der Kopie. Der
+NB-Export (`_db_backup`) macht es seit jeher so; die Simulation seit heute.
