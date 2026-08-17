@@ -58,6 +58,21 @@ AKTIONEN_JE_INSTRUMENT = {
 }
 
 
+def _hat_terminmarkt(conn, symbol: str) -> bool:
+    """Liegen zu DIESEM Wert eigene Terminmarktdaten vor?
+
+    Der BTC-weite Boersenfluss zaehlt nicht - er sagt ueber ein einzelnes
+    Symbol nichts, und genau daran haengt G5."""
+    from agent import mindestkriterien as MK
+    from agent import positionierung as PO
+
+    try:
+        lage = PO.lage(conn, str(symbol).upper(), assetklasse="krypto")
+    except Exception:                                    # noqa: BLE001
+        return False
+    return any(q in MK.SYMBOLSPEZIFISCH_G for q in MK.quellen_g(lage))
+
+
 class Attrappe:
     """Ein Modell-Client, der die Form der echten hat und nichts abruft.
 
@@ -366,11 +381,26 @@ def main() -> int:
             # vier Luecken, die Regelkonformitaet waren. Umgekehrt gilt aber
             # auch: bei Krypto MUSS er da sein, und bei den uebrigen darf er
             # NICHT erscheinen - beides wird geprueft.
+            # ⚠️ "KRYPTO" REICHT ALS BEDINGUNG NICHT MEHR (17.08.2026).
+            # Seit dem Boersenfluss dazugekommen ist, hat JEDES
+            # Kryptosymbol Positionierungssaetze - auch eines ganz ohne
+            # Terminmarktdaten. Rolle G ueberspringt es dann zu Recht
+            # (G5: ueber nichts wird nicht gefragt), und diese Pruefung
+            # meldete es als Luecke. AIOZ hat es gezeigt: kein Open
+            # Interest, keine Finanzierungsrate, kein Long-Anteil - nur
+            # der BTC-weite Fluss, der ueber AIOZ nichts aussagt.
+            #
+            # GEFRAGT WIRD JETZT NACH SYMBOLSPEZIFISCHEN Daten, also nach
+            # derselben Bedingung, die `mindestkriterien.SYMBOLSPEZIFISCH_G`
+            # fuehrt. Ein Kriterium, das eine korrekte Entscheidung als
+            # Fehler meldet, wird nach dem dritten Mal ignoriert.
             hat_g = "GEGENPRUEFUNG" in text
-            if gruppe == "krypto" and not hat_g:
+            if gruppe == "krypto" and not hat_g and _hat_terminmarkt(
+                    conn, str(eintrag.get("symbol") or "")):
                 gesamt["luecken"].append(
                     f"{gruppe}/{instrument} {eintrag.get('symbol', '?')}: "
-                    f"Rolle G fehlt, obwohl Positionierungsdaten vorliegen")
+                    f"Rolle G fehlt, obwohl SYMBOLSPEZIFISCHE "
+                    f"Positionierungsdaten vorliegen")
             if gruppe != "krypto" and hat_g:
                 gesamt["luecken"].append(
                     f"{gruppe}/{instrument} {eintrag.get('symbol', '?')}: "

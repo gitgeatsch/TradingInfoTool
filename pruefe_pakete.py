@@ -5640,6 +5640,38 @@ def paket_15() -> None:
            "Filings hat die Sperre am 16.08. real ausgeloest")
     _spk2.close()
 
+    # --- ROLLE G LANDET AUCH IN DER DATENBANK (17.08.2026) -------------
+    #
+    # `hole()` liefert einwand/einwand_grund/grundlage, `schreibe()` las
+    # aber nur die ALTEN Schluessel. Die Mail zeigte den Einwand, die
+    # Datenbank bekam nichts - zwoelf EROEFFNEN-Signale am 17.08. ohne eine
+    # einzige gespeicherte Gegenpruefung. Eine Messluecke, kein Ausfall,
+    # und sie machte JEDE Auswertung der zweiten Stufe unmoeglich.
+    import database.db as _db_mod7
+    from agent import zweite_meinung as ZM7
+
+    _sig7 = sqlite3.connect(":memory:")
+    _sig7.row_factory = sqlite3.Row
+    _db_mod7.init_db(_sig7)
+    _pflicht7 = [d[1] for d in _sig7.execute("pragma table_info(signals)")
+                 if d[3] and d[1] != "id"]
+    _w7 = {"symbol": "BTC", "created_at": "2026-08-17", "action": "X"}
+    for _f7 in _pflicht7:
+        _w7.setdefault(_f7, 1 if ("gate" in _f7 or "version" in _f7) else "x")
+    _sig7.execute(
+        f"INSERT INTO signals (id,{','.join(_w7)}) VALUES "
+        f"(9,{','.join('?' * len(_w7))})", tuple(_w7.values()))
+    _sig7.commit()
+    ZM7.schreibe(_sig7, 9, {"einwand": "ja", "einwand_grund": "weil"})
+    _r7 = _sig7.execute(
+        "SELECT zai_gegenpruefung_urteil, zai_gegenpruefung_kurzbegruendung "
+        "FROM signals WHERE id = 9").fetchone()
+    pruefe(P, "der Einwand der Rolle G landet auf der Signalzeile",
+           _r7[0] == "ja" and _r7[1] == "weil",
+           "die Mail zeigte ihn, die Datenbank bekam nichts - damit war "
+           "jede Auswertung der zweiten Stufe unmoeglich")
+    _sig7.close()
+
     # --- O-33: HEDGE-INSTRUMENTE OHNE CODEEINGRIFF (17.08.2026) --------
     import importlib
 

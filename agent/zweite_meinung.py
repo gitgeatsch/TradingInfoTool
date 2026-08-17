@@ -557,14 +557,35 @@ def hole(*, faktentext: dict, urteil: dict, zai_client,
 
 
 def schreibe(conn, signal_id: int, ergebnis: dict) -> bool:
-    """Das Ergebnis auf die Signalzeile - durch die UEBERGEBENE Verbindung."""
+    """Das Ergebnis auf die Signalzeile - durch die UEBERGEBENE Verbindung.
+
+    ⚠️ DER SCHREIBPFAD WAR BEIM UMBAU LIEGENGEBLIEBEN (gefunden 17.08.2026
+    an den echten Signalen). `hole()` liefert seit dem 16.08. die
+    Schluessel `einwand`, `einwand_grund` und `grundlage`; hier standen
+    ausschliesslich die ALTEN - `urteil`, `kurzbegruendung`,
+    `eigene_richtung`. Der Kommentar in `zeilen()` sagt es sogar
+    ausdruecklich: *"erzeugt werden sie nicht mehr"*.
+
+    DIE FOLGE WAR EINE MESSLUECKE, KEIN AUSFALL. Die Mail zeigte den
+    Einwand (dort liest `zeilen()` die richtigen Schluessel), die
+    Datenbank bekam NICHTS. Am 17.08. gingen zwoelf EROEFFNEN-Signale
+    raus, und keine einzige Zeile trug eine Gegenpruefung - obwohl Rolle
+    G gelaufen ist.
+
+    Damit war jede Auswertung der zweiten Stufe unmoeglich, auch die
+    unter R-R6 geplante (Einwandrate gegen Fluss-Perzentil).
+
+    DIE ALTEN SCHLUESSEL BLEIBEN als Rueckfall: Zeilen aus der alten
+    Kette sollen weiter geschrieben werden koennen, solange es sie gibt."""
     if not ergebnis or signal_id is None:
         return False
     from database import db as DB
     try:
         DB.update_signal_zai_gegenpruefung(
-            conn, signal_id, ergebnis.get("urteil"),
-            ergebnis.get("kurzbegruendung"), ergebnis.get("eigene_richtung"),
+            conn, signal_id,
+            ergebnis.get("einwand") or ergebnis.get("urteil"),
+            ergebnis.get("einwand_grund") or ergebnis.get("kurzbegruendung"),
+            ergebnis.get("eigene_richtung"),
             ergebnis.get("uebereinstimmung"),
             ergebnis.get("richtung_kurzbegruendung"))
         # DIE STIMMENZAHL IN EINER EIGENEN SPALTE, nicht im Begruendungstext.
