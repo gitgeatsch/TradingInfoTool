@@ -70,6 +70,32 @@ DIMENSIONEN_A = (
 PFLICHT_BC = ("auftrag", "stand")
 PFLICHT_BLOECKE_BC = ("bestand", "verlauf")
 
+# --- BC3: MINDESTENS EIN FAKT AUSSERHALB DER KURSREIHE (17.08.2026) ----
+#
+# NUTZERVORGABE: *"es fehlen noch einige fuer den geplanten glatten Schnitt
+# zur alten Kette und dem angestrebten Ziel - sonst messen wir aber wieder
+# nur einen Ausschnitt."*
+#
+# DER GRUND, WARUM DIESES KRITERIUM DAZUKOMMT, ist gemessen: von allen
+# gespeicherten Merkmalen trennt EINZIG das Momentum-Perzentil Einstieg
+# von Halten (0,760 gegen 0,624 ueber 340 Urteile, p = 0,000). Nicht weil
+# das Modell darauf fixiert waere, sondern weil an einer echten Signalmail
+# nachgezaehlt SIEBEN VON NEUN Saetzen aus derselben Kerzenreihe stammen.
+#
+#     Ein Urteil auf einer einzigen Datenquelle ist kein Urteil,
+#     sondern eine Umformulierung dieser Quelle.
+#
+# UND ES TRIFFT DEN GRUNDBEFUND DES PROJEKTS: die Information ist nicht in
+# den Kursdaten (8.441 Faelle, kein Verfahren schlaegt die Basisrate). Wer
+# nur Kursdaten sieht, kann sie nicht schlagen - unabhaengig vom Modell.
+#
+# ⚠️ ES WIRD GEMELDET, NICHT GESPERRT. Drei von sechs Gruppen erfuellen es
+# heute NICHT (Rohstoffe, Themen-ETF, Absicherung), und fuer sie ist keine
+# kostenlose Quelle bekannt. Ein scharfes Kriterium legte sie still.
+NICHT_AUS_DER_KURSREIHE = ("fundamental", "umschlag", "finanzierung")
+KURSREIHENBLOECKE = ("verlauf", "marken", "hebelgeometrie", "volumen",
+                     "referenz")
+
 # --- ROLLE G: die Bedingung, nicht die Liste (R-R3) ------------------------
 #
 # Fuer "zweites Modell prueft erstes" gibt es keinen Praxismassstab. Die
@@ -135,7 +161,25 @@ def pruefe_bc(fakten: dict, bloecke: dict | None = None) -> list[str]:
     fehlt = [k for k in PFLICHT_BC if not (fakten or {}).get(k)]
     if bloecke is not None:
         fehlt += [f"Block {b}" for b in PFLICHT_BLOECKE_BC if not bloecke.get(b)]
+        # BC3 - siehe oben. Geprueft wird die ANWESENHEIT mindestens eines
+        # Blocks, der nicht aus der Kerzenreihe stammt.
+        if not any(bloecke.get(b) for b in NICHT_AUS_DER_KURSREIHE):
+            fehlt.append("BC3: kein Fakt ausserhalb der Kursreihe")
     return fehlt
+
+
+def kursreihenanteil(bloecke: dict | None) -> float | None:
+    """Welcher Anteil der Saetze stammt aus der Kerzenreihe dieses Werts?
+
+    Die Zahl, an der die Unterernaehrung sichtbar wird - und die einzige,
+    die ueber Gruppen hinweg vergleichbar ist."""
+    if not bloecke:
+        return None
+    gesamt = sum(len(v or []) for v in bloecke.values())
+    if not gesamt:
+        return None
+    kurs = sum(len(bloecke.get(b) or []) for b in KURSREIHENBLOECKE)
+    return kurs / gesamt
 
 
 def quellen_g(lage: dict) -> list[str]:

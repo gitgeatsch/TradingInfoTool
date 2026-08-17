@@ -8760,3 +8760,92 @@ Lücke, die keine ist.
 | Job live | 5 neue Reihen geschrieben, **0 Fehler** |
 | Selbsteinschaltung | mit Historie 3 Sätze, ohne Historie 0 |
 | Simulation | 6 Gruppen, 12 Signale, **0 Fehler, 0 Lücken** |
+
+---
+
+## Kapitel 69 — Die Mindestabdeckung, gezählt statt eingeschätzt (17.08.2026)
+
+**Nutzervorgabe:** *„es fehlen noch einige für den geplanten glatten Schnitt zur
+alten Kette und dem angestrebten Ziel — also hier müssen wir dranbleiben und
+eine brauchbare Ausgangslage schaffen, sonst messen wir aber wieder nur einen
+Ausschnitt."*
+
+**Damit die Aussage prüfbar wird und nicht Einschätzung bleibt, ist sie jetzt
+ein Kriterium im Code: BC3.**
+
+### 69.1 BC3 — mindestens ein Fakt außerhalb der Kursreihe
+
+> **Ein Urteil auf einer einzigen Datenquelle ist kein Urteil, sondern eine
+> Umformulierung dieser Quelle.**
+
+**Der Grund ist gemessen:** von allen gespeicherten Merkmalen trennt einzig das
+Momentum-Perzentil Einstieg von Halten (0,760 gegen 0,624 über 340 Urteile,
+p = 0,000) — nicht weil das Modell fixiert wäre, sondern weil an einer echten
+Signalmail nachgezählt **sieben von neun** Sätzen aus derselben Kerzenreihe
+stammen. Und es trifft den Grundbefund: *die Information ist nicht in den
+Kursdaten* (8.441 Fälle).
+
+**Gemeldet, nicht gesperrt** — drei von sechs Gruppen erfüllen es heute nicht.
+
+### 69.2 Die Ausgangslage, je Symbol gezählt
+
+| Gruppe / Instrument | Symbole | **BC3** | **G1** | **G2** | Kursanteil |
+|---|---:|---:|---:|---:|---:|
+| krypto/spot | 43 | **43/43** | 37/43 | 37/43 | 75 % |
+| krypto/hebel | 43 | **43/43** | 37/43 | 37/43 | 73 % |
+| **aktien/spot** | 2 | **2/2** | **2/2** | **2/2** | **63 %** |
+| rohstoffe/spot | 4 | **0/4** | 0/4 | 4/4 | 67 % |
+| **themen_etf/spot** | 5 | **0/5** | **0/5** | **0/5** | **86 %** |
+| hedge/absicherung | 2 | **0/2** | 0/2 | 0/2 | 61 % |
+
+> **Aktien ist die einzige Gruppe, die alle drei Kriterien vollständig
+> erfüllt** — und sie stellt **1 %** der Urteile.
+
+### 69.3 Was zur brauchbaren Ausgangslage fehlt
+
+| | Lücke | Umfang | Aussicht |
+|---|---|---|---|
+| **1** | **6 von 43 Kryptowerten ohne Terminmarktdaten** → G1 und G2 fallen | ~14 % der Kryptosymbole | Datenlage der Börsen, **nicht behebbar** |
+| **2** | **Rohstoffe: kein Nicht-Chart-Fakt für BC** | 4 Symbole, 3 % der Urteile | **offen** — COT liegt bei G, für BC fehlt etwas Eigenes |
+| **3** | **Rohstoffe: G1 bei einer Quelle** | dito | EIA, **nur Erdgas**, braucht Schlüssel |
+| **4** | **Themen-ETF: alles** | 5 Symbole | **keine kostenlose Quelle** |
+| **5** | **Absicherung: alles** | 2 Symbole | **keine kostenlose Quelle** |
+
+**Nach Urteilen gewichtet** sind das 5 % — nach Gruppen die Hälfte. **Für einen
+glatten Schnitt zählt die zweite Zahl:** eine Gruppe, die strukturell weniger
+sieht, ist im Vorher-Nachher-Vergleich nicht vergleichbar, egal wie selten sie
+auftritt.
+
+### 69.4 Was in den kommenden Wochen von selbst dazukommt
+
+| Parameter | Rolle | brauchbar in | Wirkung auf |
+|---|---|---|---|
+| Stablecoin-Angebot | G | ~3 Monaten | Krypto, **alle 43** |
+| DVOL · Skew | G | ~2 Monaten | **nur BTC/ETH** |
+
+**Keiner davon schließt eine der fünf Lücken oben.** Sie vertiefen, wo es schon
+Abdeckung gibt.
+
+### 69.5 Die ehrliche Folgerung
+
+**Der glatte Schnitt ist heute nicht messbar.** Ein gepaarter Vergleich über
+alle Gruppen würde bei Rohstoffen, Themen-ETF und Absicherung eine
+Faktengrundlage vergleichen, die es in der alten Kette so nie gab — und bei
+Krypto sechs Symbole ohne zweite Stufe.
+
+**Was heute geht:** ein Vergleich **innerhalb** von Krypto und Aktien, also
+über **94 %** der Urteile. Das ist kein Ausschnitt im Sinne der Warnung,
+sondern die Menge, für die die Ausgangslage steht — und sie wäre als solche zu
+benennen.
+
+### 69.6 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **932, alle bestanden** |
+| freie Namen | 0 |
+| `pruefe_zahlen_in_prompts.py` | Selbsttest 9/9, **356 Sätze**, kein Befund |
+| `pruefe_prompt_matrix.py` | 2 bekannte Abweichungen |
+| `pruefe_phase1.py` | bestanden |
+| Simulation | 6 Gruppen, 12 Signale, 14 Mails, **0 Fehler, 0 Lücken** |
+| Abdeckung | je Symbol gezählt, nicht je Gruppe geschätzt |
