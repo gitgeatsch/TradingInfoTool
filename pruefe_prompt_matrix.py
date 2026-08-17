@@ -248,11 +248,20 @@ def _bc_bloecke(conn, db: str, symbol: str, gruppe: str, instrument: str):
                 ref = RE.relative_staerke(reihe, i, db)
         except Exception:                                # noqa: BLE001
             ref = None
-    return LB.geteilt(
+    # ⚠️ NUR DIE SATZBLOECKE (17.08.2026). `geteilt()` liefert seit heute
+    # zusaetzlich `_marken_werte` - Zahlen fuer Mail und Chart, keine
+    # Saetze. Ohne `nur_saetze()` zaehlte dieser Pruefer sie als Block mit
+    # und wies dadurch einen falschen Kursreihenanteil aus.
+    #
+    # DASSELBE MUSTER WIE AM 16.08.: `mindestkriterien` und der
+    # Anlassfilter wurden beim Bau abgeschirmt, dieser Pruefer nicht -
+    # die dritte Stelle, die dieselben Bloecke zaehlt, und die einzige,
+    # die es niemandem meldet.
+    return LB.nur_saetze(LB.geteilt(
         symbol=symbol, reihe=reihe, index=i, kurs_eur=float(reihe[-1].close),
         atr=atr, instrument=instrument, referenz=ref,
         fundamentaldaten=RE.fundamentaldaten(symbol, db, gruppe),
-        umschlag=RE.umschlag(symbol, db, gruppe))
+        umschlag=RE.umschlag(symbol, db, gruppe)))
 
 
 # --- WAS BEI EINEM NEUEN WERT PASSIERT (17.08.2026) ------------------
